@@ -1,0 +1,18 @@
+{
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": null,
+  "durableArtifacts": null,
+  "calibration": null,
+  "params": null,
+  "gcps": {
+    "rows": [
+      {
+        "row": "remove",
+        "key": "gcp-corner"
+      }
+    ]
+  },
+  "results": null
+}

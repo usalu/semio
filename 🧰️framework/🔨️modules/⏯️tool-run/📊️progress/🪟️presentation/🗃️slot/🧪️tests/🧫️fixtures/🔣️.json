@@ -1,0 +1,1 @@
+{"toolId":"draw.command","interruptAfter":[0,1,9,40,200,1100],"expectedEntities":["7","11"],"restartEntity":"13","captureState":"running","orders":["slotFirst","captureFirst"]}

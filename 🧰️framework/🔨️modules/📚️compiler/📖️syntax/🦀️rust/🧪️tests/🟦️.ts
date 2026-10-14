@@ -8,7 +8,7 @@ import ts from "typescript";
 
 const owner = resolve(import.meta.dir, "..");
 const contract = JSON.parse(readFileSync(resolve(owner, "🔣️.json"), "utf8"));
-const fixture = JSON.parse(readFileSync(resolve(owner, "🧫️fixtures/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
 async function api() { const module = await import(resolve(owner, "🟦️.ts")); expect(typeof module.inspectRustCompileReferences).toBe("function"); return module; }
 
 test("language-neutral syntax examples have unique identifiers", () => {

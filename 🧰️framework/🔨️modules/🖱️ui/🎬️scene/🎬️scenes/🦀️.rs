@@ -267,7 +267,7 @@ impl FromValue for Canvas2dScene {
 }
 
 /// 🚚️ The canvas-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — the 2d twin of
-/// [`World3dSceneLane`], pinned against `🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json` on both sides.
+/// [`World3dSceneLane`], pinned against `🧪️tests/🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json` on both sides.
 /// `layers_json` stays in the spine: it is a bounded per-frame descriptor, while a trace delta scales
 /// with the run.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -727,7 +727,7 @@ impl FromValue for World3dScene {
 ///
 /// Mirrored in TypeScript by `WORLD3D_SCENE_LANES` in `🧰️framework/🔨️modules/🔺️mesh/🟦️.ts`. Both
 /// sides are pinned against the one language-neutral declaration in
-/// `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json`, so neither can drift.
+/// `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json`, so neither can drift.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum World3dSceneLane {
     Meshes,
@@ -1018,7 +1018,7 @@ pub fn scene_lane_hash(payload: &str) -> String {
 /// not carried as a field. `value_type` is the comma-joined declared schema list a renderer
 /// intersects to decide whether a drawn wire may land — undeclared means connectable.
 ///
-/// @see `🧫️fixtures/🔌️port-types/🔣️.json` — the law both node-graph renderers answer
+/// @see `🧪️tests/🧫️fixtures/🔌️port-types/🔣️.json` — the law both node-graph renderers answer
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodeGraphPortRecord {
@@ -2101,7 +2101,7 @@ impl SceneDoc for Paint2dScene {
 
 /// 🚚️ The paint-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — the raster twin
 /// of [`Canvas2dSceneLane`]/[`Board2dSceneLane`], pinned against
-/// `🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json` on both sides.
+/// `🧪️tests/🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json` on both sides.
 ///
 /// Document, assets and completed pixel coverage can exceed the fixed scene header capacity.
 /// Camera, layer selection and brush settings remain in the bounded header.
@@ -2383,7 +2383,7 @@ impl SceneDoc for TiledMapScene {
 
 /// 🚚️ The tiled-map payload field that rides OUTSIDE the fixed-capacity surface doc — the map twin of
 /// [`Board2dSceneLane`]/[`Paint2dSceneLane`], pinned against
-/// `🧫️fixtures/🚚️tiledmap-scene-lanes/🔣️.json` on both sides.
+/// `🧪️tests/🧫️fixtures/🚚️tiledmap-scene-lanes/🔣️.json` on both sides.
 ///
 /// `map_descriptor_json` is the whole map descriptor (`{ positions, routes, regions }`, one opaque
 /// payload per feature), so it scales with the DOCUMENT, not with the frame: the gis `demo` map's
@@ -2715,7 +2715,7 @@ impl SceneDoc for Board2dScene {
 }
 
 /// 🚚️ The board-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — the board twin of
-/// [`Canvas2dSceneLane`], pinned against `🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json` on both sides.
+/// [`Canvas2dSceneLane`], pinned against `🧪️tests/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json` on both sides.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Board2dSceneLane {
     /// 🧩️ The whole fixture graph — the one payload that outgrows the 32 KiB surface doc (Nakagin's

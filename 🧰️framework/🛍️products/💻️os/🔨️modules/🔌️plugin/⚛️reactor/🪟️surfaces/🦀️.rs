@@ -2,7 +2,7 @@
 
 use semio_framework::{UiRefreshSection, ViewModel};
 
-struct SurfaceContext {
+pub(crate) struct SurfaceContext {
     pub(crate) body_key: String,
     pub(crate) view_state: ViewModel,
 }

@@ -11,7 +11,7 @@ fn fake_now_us() -> Option<u64> {
 }
 
 fn law() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🪜️clock-stride-law.json")).expect("clock-stride law fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🪜️clock-stride-law.json")).expect("clock-stride law fixture")
 }
 
 /// 🏃️ Runs units of `unit_cost_us` in one step that began at `start_us` until the step's clock
@@ -74,16 +74,14 @@ struct StagedStep {
 }
 
 impl InteractiveJob for StagedStep {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,ValueError> {cx.set_stage("stage");JobOutcomeBorrow::admit_yield(cx)}
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure> {cx.set_stage("stage");JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from)}
     fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{match descriptor.kind(){JobOutcomeKind::Yield=>descriptor.yielded(),JobOutcomeKind::Cancelled=>descriptor.cancelled(),_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fixture requires original yielded descriptor"))}}
 
     fn begin_close(&mut self) {
         self.closing = true;
     }
 
-    fn close_step(&mut self, _grant:RetainedCloneGrant) -> InteractiveJobCloseStep {
-        InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()}
-    }
+    fn close_step(&mut self,_:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
 
     fn terminal_is_empty(&self) -> bool {
         self.closing

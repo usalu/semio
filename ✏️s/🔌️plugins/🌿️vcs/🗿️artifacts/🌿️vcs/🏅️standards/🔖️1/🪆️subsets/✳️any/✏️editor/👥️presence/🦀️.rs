@@ -4,7 +4,7 @@
 //! no separate shareable live surface (history selection is framework interaction state).
 
 use protocol::Mutation;
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Presence
 #[derive(Clone, Debug, PartialEq, Default, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
@@ -36,7 +36,7 @@ impl protocol::DiffAlgebra<VcsDemoPresence> for VcsDemoPresenceDiff {
     }
 }
 
-impl store::os_store::serialization::ArtifactDsl for VcsDemoPresence {
+impl pack::snapshot::ArtifactDsl for VcsDemoPresence {
     const EXTENSION: &'static str = "vcs.presence";
     fn envelope_id() -> &'static str {
         "vcs.presence"
@@ -61,14 +61,17 @@ impl ArtifactPack for VcsDemoPresence {
             return Ok(Self::default());
         }
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+        if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         if !inner.is_empty() {
             return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"vcs presence pack must be empty")));
         }
         Ok(Self::default())
     }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for VcsDemoPresence {
+
 }
 //#endregion 🔖️Presence
 

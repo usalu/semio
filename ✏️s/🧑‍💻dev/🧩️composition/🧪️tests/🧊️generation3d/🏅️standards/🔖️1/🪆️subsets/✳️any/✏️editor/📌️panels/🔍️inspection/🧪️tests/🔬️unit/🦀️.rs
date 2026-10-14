@@ -76,7 +76,7 @@ fn inspector_brep_controls_keep_geometry_connected_and_numeric_commits_localized
     use semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::Generation3dLabels;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     crate::flow_operators::installed();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     fn node<'a>(tree: &'a serde_json::Value, key: &str) -> Option<&'a serde_json::Value> {
         if tree["key"] == key { return Some(tree); }
         tree["children"].as_array()?.iter().find_map(|child| node(child, key))

@@ -14,7 +14,7 @@ export type OrderedAppendBroadcastFixture = {
 
 /** 📣️ Validates the neutral append/broadcast law and the exact single-writer production seam. */
 export function orderedDirectoryPublicationOracle(repoRoot: string): number {
-  const base = join(repoRoot, "🌎️hub/📇️directory/🧫️fixtures/📣️ordered-append-broadcast-v1");
+  const base = join(repoRoot, "🌎️hub/📇️directory/🧪️tests/🧫️fixtures/📣️ordered-append-broadcast-v1");
   const fixture = JSON.parse(readFileSync(join(base, "🔣️.json"), "utf8")) as OrderedAppendBroadcastFixture;
   const caseIds = ["concurrent-single-events", "paired-user-member-events", "append-failure", "empty-idempotent-decision"] as const;
   if (fixture.schema !== "semio.hub.directory.ordered-append-broadcast/v1" || fixture.maximumEventsPerDecision !== 2) throw new Error("ordered directory publication fixture envelope drift");

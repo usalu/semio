@@ -5,7 +5,7 @@ import Ajv from "ajv";
 
 /** 🧪️ Answers the same language-neutral fixture as the Rust creation command. */
 export function generation3dWidgetCreationSelfTests(): number {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validate = new Ajv({ strict: false, allErrors: true }).compile(schema);
   assert.deepEqual(schema.properties.format.enum,fixture.exportFormats);
@@ -19,6 +19,14 @@ export function generation3dWidgetCreationSelfTests(): number {
     assert.deepEqual(descriptor,row.descriptor);
     checks += 2;
   }
+  for (const row of fixture.connected) {
+    assert.equal(validate(row.payload),true,row.name);
+    const {sourceWidget,sourcePort,targetPort,sourceRevision,...descriptor}=row.payload;
+    assert.deepEqual(descriptor,row.descriptor);
+    assert.deepEqual([sourceWidget,sourcePort,targetPort],["shape",row.sourcePort,row.targetPort]);
+    assert.deepEqual([...Buffer.from(sourceRevision,"hex")],Array(32).fill(1));
+    checks+=4;
+  }
   for (const row of fixture.placements) {
     let [x, y] = [row.x ?? 120, row.y ?? 120];
     if (row.x === undefined || row.y === undefined) {
@@ -31,15 +39,15 @@ export function generation3dWidgetCreationSelfTests(): number {
     }
     assert.deepEqual([x, y], row.expected, row.name); checks++;
   }
-  const names = JSON.parse(readFileSync(new URL("../../../../📌️panels/🛍️catalogue/🧫️fixtures/🗣️.json", import.meta.url), "utf8"));
-  const terminology = JSON.parse(readFileSync(new URL("../../../../../🧫️fixtures/🗣️terminology.json", import.meta.url), "utf8"));
+  const names = JSON.parse(readFileSync(new URL("../../../../📌️panels/🛍️catalogue/🧪️tests/🧫️fixtures/🗣️.json", import.meta.url), "utf8"));
+  const terminology = JSON.parse(readFileSync(new URL("../../../../../🧪️tests/🧫️fixtures/🗣️terminology.json", import.meta.url), "utf8"));
   for (const row of names) {
     const field = `catalogue_${row.id.replaceAll(".", "_").replace(/([a-z])([A-Z])/gu, "$1_$2").toLowerCase()}`;
     assert.equal(terminology.labels[field].nativeEn, row.en);
     assert.equal(terminology.labels[field].nativeDe, row.de);
     checks += 2;
   }
-  const inputs = JSON.parse(readFileSync(new URL("../../../../📌️panels/🛍️catalogue/🧫️fixtures/🎛️inputs.json", import.meta.url), "utf8"));
+  const inputs = JSON.parse(readFileSync(new URL("../../../../📌️panels/🛍️catalogue/🧪️tests/🧫️fixtures/🎛️inputs.json", import.meta.url), "utf8"));
   for (const row of inputs) {
     const field = `input_name_${row.id.replace(/([a-z])([A-Z])/gu, "$1_$2").toLowerCase()}`;
     assert.equal(terminology.labels[field].nativeEn, row.en);

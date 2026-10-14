@@ -191,7 +191,7 @@ static NAKAGIN_EXAMPLE_SNAPSHOT: LazyLock<Puzzle3dSceneSnapshot> = LazyLock::new
 static EMPTY_EXAMPLE_SNAPSHOT: LazyLock<Puzzle3dSceneSnapshot> = LazyLock::new(empty_scene_snapshot);
 
 fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
-    let projection = <Puzzle3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example scene_snapshot parses as dsl: {error}"));
+    let projection = <Puzzle3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example scene_snapshot parses as dsl: {error}"));
     to_json_string(&projection)
 }
 
@@ -2732,11 +2732,11 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Puzzle3dInstance
         self.retirement.demands(body)
     }
 
-    fn maintenance_step(&mut self, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
         Ok(semio_framework_plugin::PluginLifecycleStep::Complete(Default::default()))
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
         if self.retirement.is_empty() && !self.brush_suggestions.is_empty() {
             self.retirement.stage(std::mem::take(&mut self.brush_suggestions));
         }
@@ -7046,6 +7046,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

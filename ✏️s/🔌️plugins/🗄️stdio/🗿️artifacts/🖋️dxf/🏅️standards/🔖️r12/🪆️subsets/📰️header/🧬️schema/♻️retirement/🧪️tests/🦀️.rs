@@ -8,7 +8,7 @@ fn close<T:RetireOwned>(value:T,original:usize){
 }
 #[test]
 fn original_dxf_schema_owners_close_every_concrete_field_under_real_grants(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();assert_eq!(fixture["copyGrant"],7);
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/♻️retirement/🔣️.json")).unwrap();assert_eq!(fixture["copyGrant"],7);
  let text=fixture["snapshot"].to_string();let(snapshot,allocated,released)=crate::test_allocation::observe_backing(||semio_framework_pack_json::from_json_str::<DxfSnapshot>(&text,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());let oracle:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&snapshot)).unwrap();assert_eq!(oracle["schema"],fixture["snapshot"]["schema"]);assert_eq!(snapshot.tables.styles[0].font_name,"Ä Font");assert_eq!(snapshot.entities.len(),1);close(snapshot,allocated-released);
  let text=fixture["mutation"].to_string();let(mutation,allocated,released)=crate::test_allocation::observe_backing(||semio_framework_pack_json::from_json_str::<DxfMutation>(&text,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());assert!(matches!(&mutation,DxfMutation::SetHeaderVar(value) if value.name=="$CUSTOM"));close(mutation,allocated-released);
 }

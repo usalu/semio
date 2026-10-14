@@ -2,7 +2,7 @@ use super::*;
 use semio_framework_pack_json::{JsonMemberPolicy, Value};
 
 fn fixture() -> Value {
-    semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"), JsonMemberPolicy::Reject).expect("closed shared path fixture")
+    semio_framework_pack_json::parse(include_str!("🧫️fixtures/🔣️.json"), JsonMemberPolicy::Reject).expect("closed shared path fixture")
 }
 
 fn expected(value: &Value) -> RustPathLiteral {

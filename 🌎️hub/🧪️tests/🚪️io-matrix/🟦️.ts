@@ -53,7 +53,7 @@ const IO_FORMATS: readonly IoFormat[] = ["json", "csv", "text", "svg", "png", "p
 
 /** 📌️ Reads and checks the pins: every import reads a declared export of its own program, every format is known. */
 export function readIoMatrixPins(): IoMatrixPins {
-  const pins = JSON.parse(readFileSync(join(import.meta.dir, "..", "..", "🧫️fixtures", "🚪️io-matrix.json"), "utf8")) as IoMatrixPins;
+  const pins = JSON.parse(readFileSync(join(import.meta.dir, "..", "..", "🧪️tests/🧫️fixtures", "🚪️io-matrix.json"), "utf8")) as IoMatrixPins;
   if (pins.schema !== "semio.os-dev.io-matrix/v1") throw new Error(`io matrix pins: unexpected schema ${String(pins.schema)}`);
   for (const [key, program] of Object.entries(pins.programs)) {
     const exports = new Set(program.exports.map((pin) => pin.id));

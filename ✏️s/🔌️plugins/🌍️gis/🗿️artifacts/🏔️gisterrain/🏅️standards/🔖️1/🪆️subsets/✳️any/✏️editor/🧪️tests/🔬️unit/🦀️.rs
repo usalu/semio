@@ -76,7 +76,7 @@ use crate::editor::gis3d::unit_tests::context::{app, close, dispatch, gis3d_app_
 use semio_framework_plugin::EditorApp;
 use serde_json::json;
 
-const RETAINED_LIMITS: &str = include_str!("../../🧫️fixtures/🧫️retained-command-limits/🔣️.json");
+const RETAINED_LIMITS: &str = include_str!("../🧫️fixtures/🧫️retained-command-limits/🔣️.json");
 
 //#region 🔖️CommandSurface
 /// 🎯️ One value per `app_commands!` row, in row order.

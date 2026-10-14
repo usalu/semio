@@ -3,11 +3,9 @@ import { expect, test } from "bun:test";
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import * as ts from "typescript";
-
-
+import contract from "./🧫️fixtures/🔣️.json";
 const root = process.env.NX_WORKSPACE_ROOT ?? process.cwd();
 const decoder = "🧰️framework/🔨️modules/🌱️value/🛬️decode";
-const contract = JSON.parse(readFileSync(resolve(root, decoder, "🧫️fixtures/🧩️ownership/🔣️.json"), "utf8")) as { absentRoots: string[] };
 
 test("the original neutral decoder closure excludes products, S, Hub and fixture runtime inputs", async () => {
   const { inspectRuntimeGraphV1 } = await import(resolve(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts"));
@@ -33,7 +31,7 @@ test("the original neutral decoder closure excludes products, S, Hub and fixture
     }
   }
   expect((graph.edges as typeof independent).toSorted((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toEqual(independent.toSorted((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))));
-  const fixture = decoder + "/🧫️fixtures/🔣️.json";
+  const fixture = decoder + "/🧪️tests/🧫️fixtures/🔣️.json";
   expect(inspectRuntimeGraphV1([fixture], { read: (path: string) => readFileSync(resolve(root, path), "utf8") }).findings.map((row: {code: string}) => row.code)).toEqual(["runtime-fixture-edge"]);
   console.log("[DEBUG] Original neutral decoder closure nodes=" + graph.nodes.length + " edges=" + graph.edges.length + " TypeScriptImportOracle=true lexicalRealSpecializations=0 fixtureRuntimeEdges=0 actualFixtureRefused=true SourceCopies=0");
 });

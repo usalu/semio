@@ -5,7 +5,7 @@ import {existsSync,readFileSync} from "node:fs";
 import {resolve} from "node:path";
 
 import TOML from "@iarna/toml";
-import fixture from "../../🧫️fixtures/⚠️refusal/🔣️.json";
+import fixture from "../../🧪️tests/🧫️fixtures/⚠️refusal/🔣️.json";
 const owner=resolve(import.meta.dir,"../.."),read=(path:string)=>readFileSync(resolve(owner,path),"utf8");
 
 test("every refusal class and owned path has an independent schema and JSON output authority",()=>{
@@ -30,7 +30,7 @@ test("the actual error provider is independent of Replication and preserves an o
 });
 
 import {Database} from "bun:sqlite";
-import textFixture from "../../🧫️fixtures/📍️text-refusal/🔣️.json";
+import textFixture from "../../🧪️tests/🧫️fixtures/📍️text-refusal/🔣️.json";
 import {PackError} from "../../🟦️.ts";
 import {TextError} from "../../../../⚠️diagnostic/🚧️text-error/🟦️.ts";
 const refusalKinds={InvalidValue:"invalidValue",Canceled:"canceled",OwnershipLimit:"ownershipLimit",AllocationFailed:"allocationFailed",WorkLimit:"workLimit",DepthLimit:"depthLimit",UnsupportedOwner:"unsupportedOwner",InvariantViolated:"invariantViolated"} as const;

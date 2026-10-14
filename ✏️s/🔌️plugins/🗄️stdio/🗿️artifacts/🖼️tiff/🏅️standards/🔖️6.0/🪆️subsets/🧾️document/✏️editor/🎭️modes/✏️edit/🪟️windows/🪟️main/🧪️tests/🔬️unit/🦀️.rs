@@ -2,7 +2,7 @@ use super::*;
 use semio_framework_plugin::{ActionBinding, Component};
 
 fn selection_fixture() -> (TiffSnapshot, TiffEditorConfig, Vec<u8>) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️ifd-selection/🔣️.json")).expect("neutral IFD selection fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧬️ifd-selection/🔣️.json")).expect("neutral IFD selection fixture");
     let mut snapshot = crate::schema::blank_tiff_snapshot();
     snapshot.ifds.clear();
     for page in fixture["pages"].as_array().expect("fixture pages") {

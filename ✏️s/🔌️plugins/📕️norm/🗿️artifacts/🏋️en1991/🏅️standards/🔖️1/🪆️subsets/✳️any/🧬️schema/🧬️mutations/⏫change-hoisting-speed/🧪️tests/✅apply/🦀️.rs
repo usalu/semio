@@ -5,11 +5,11 @@
 /// ⏫ The committed `change-hoisting-speed` vector holds the specification-vector law.
 const VECTOR: super::Vector = super::Vector {
         kind: "change-hoisting-speed",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/⏫change-hoisting-speed/✅apply/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/⏫change-hoisting-speed/✅apply/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/⏫change-hoisting-speed/✅apply/📸️snapshot/➡️after/🔣️.json"),
-        diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/⏫change-hoisting-speed/✅apply/🔺️diff/🔣️.json"),
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/⏫change-hoisting-speed/✅apply/🎯️outcome/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⏫change-hoisting-speed/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⏫change-hoisting-speed/✅apply/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⏫change-hoisting-speed/✅apply/📸️snapshot/➡️after/🔣️.json"),
+        diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⏫change-hoisting-speed/✅apply/🔺️diff/🔣️.json"),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⏫change-hoisting-speed/✅apply/🎯️outcome/🔣️.json"),
 };
 
 #[test]

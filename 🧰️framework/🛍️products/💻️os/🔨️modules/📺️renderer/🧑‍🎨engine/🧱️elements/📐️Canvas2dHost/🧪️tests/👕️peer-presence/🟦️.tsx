@@ -6,7 +6,7 @@ import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { createElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { canvasPointToScreen } from "@semio-tech/framework-replication";
-import fixture from "../../🧫️fixtures/👕️peer-presence/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/👕️peer-presence/🔣️.json" with { type: "json" };
 import { clearArtifactPresenceRosterV1, clearLocalPresenceWindowViewV1, collectLocalPresenceWindowViewsV1, publishArtifactPresenceRosterV1, publishLocalPresenceActorV1 } from "../../../👕️canvas-presence/🟦️.ts";
 
 vi.mock("@semio-tech/canvas-react-renderer", async (importOriginal) => {

@@ -39,7 +39,7 @@ pub use body::BodyReader;
 
 /// 📦️ Encodes a fault as the ABI `pack` `completion-result.fault` and every `host-async` Err arm carry.
 /// Schema: `🔌️plugin/🧬️schema/📜️.wit` `type pack = list<u8>` — no JSON string on this data path.
-fn encode_fault_pack(fault: &Fault) -> Vec<u8> {
+pub(crate) fn encode_fault_pack(fault: &Fault) -> Vec<u8> {
     store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(fault))
 }
 

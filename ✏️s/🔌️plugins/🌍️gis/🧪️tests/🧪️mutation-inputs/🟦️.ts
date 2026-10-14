@@ -4,7 +4,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { Validator } from "jsonschema";
 import { argControl, mutationInputAudit } from "../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️.ts";
-import fixture from "../../🧫️fixtures/🎛️mutation-inputs/🔣️.json";
+import fixture from "../🧫️fixtures/🎛️mutation-inputs/🔣️.json";
 
 const root = resolve(import.meta.dir, "../..");
 const documents = new Map<string, object>();

@@ -162,7 +162,7 @@ pub struct ModuleRenderPayload {
 
 //#region 🔖️ArtifactCodec
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::os_store::serialization::ArtifactDsl for ModuleRenderPayload {
+impl pack::snapshot::ArtifactDsl for ModuleRenderPayload {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         "playbook.procedural"
@@ -177,22 +177,22 @@ impl store::os_store::serialization::ArtifactDsl for ModuleRenderPayload {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::os_store::serialization::ArtifactPack for ModuleRenderPayload {
+impl pack::snapshot::ArtifactPack for ModuleRenderPayload {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+        if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)
@@ -200,6 +200,9 @@ impl store::os_store::serialization::ArtifactPack for ModuleRenderPayload {
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for ModuleRenderPayload {
+
 }
 
 /// 🧒️ Composition view of the module payload — every field is a scalar or the untyped `params`
@@ -526,15 +529,15 @@ impl ArtifactInstanceOperationOwner for ModuleGeometryOwner {
         Ok(RetirementDemand { copy_bytes: self.session.next_close_copy_byte_demand()?, capacity_bytes: self.session.next_close_capacity_byte_demand(body)?, release_bytes: self.session.next_close_release_byte_demand()?, depth: self.session.next_close_depth_demand()? })
     }
 
-    fn maintenance_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(PluginLifecycleStep::Progress(Default::default())); }
-        if !self.stale.is_empty() { return Ok(PluginLifecycleStep::Progress(self.admit_stale(grant).map_err(module_value_fault)?)); }
+        if !self.stale.is_empty() { return Ok(PluginLifecycleStep::Progress(self.admit_stale(grant)?)); }
         if self.retirement.terminal_is_empty() { return Ok(PluginLifecycleStep::Progress(Default::default())); }
-        let step = self.retirement.close_step(grant).map_err(module_value_fault)?;
+        let step = self.retirement.close_step(grant)?;
         Ok(PluginLifecycleStep::Progress(step.progress()))
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
         if self.terminal_is_empty() { return Ok(PluginLifecycleStep::Complete(Default::default())); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(PluginLifecycleStep::Progress(Default::default())); }
         if !self.closing {
@@ -543,15 +546,15 @@ impl ArtifactInstanceOperationOwner for ModuleGeometryOwner {
             self.retire_import_cache();
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
-        if !self.stale.is_empty() { return Ok(PluginLifecycleStep::Progress(self.admit_stale(grant).map_err(module_value_fault)?)); }
-        if !self.retirement.terminal_is_empty() { return self.maintenance_step(grant); }
+        if !self.stale.is_empty() { return Ok(PluginLifecycleStep::Progress(self.admit_stale(grant)?)); }
+        if !self.retirement.terminal_is_empty() { return self.maintenance_step(cx,grant); }
         let step = if !self.registry_retirement.terminal_is_empty() {
             self.registry_retirement.close_step(grant)
         } else {
             self.session.close_step(grant)
         }
         .and_then(|step| semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, self.registry_retirement.terminal_is_empty() && self.session.terminal_is_empty(), "original procedural geometry owner"))
-        .map_err(module_value_fault)?;
+        ?;
         Ok(PluginLifecycleStep::retained(step, self.terminal_is_empty()))
     }
 
@@ -914,7 +917,8 @@ impl ArtifactCommandWork<ModuleApp> for ModuleGeometryCommandWork {
         module_retained_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ModuleApp>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ModuleApp>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ModuleApp>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ModuleApp>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed { return Err(Fault::from("playbook.module.procedural.geometry-work-repeated")); }
         self.consumed = true;
         self.instance_owner.with_mut::<ModuleGeometryOwner, _>(|owner| {
@@ -925,6 +929,9 @@ impl ArtifactCommandWork<ModuleApp> for ModuleGeometryCommandWork {
             }
             Ok(ArtifactCommandWorkStep::Complete(Emit::mutations(vec![ModulePayloadMutation::SetPayload(SetPayload { payload })])))
         })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -1079,6 +1086,7 @@ impl ArtifactApp for ModuleApp {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

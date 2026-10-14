@@ -6,8 +6,20 @@ import ts from "typescript";
 import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import Ajv from "ajv";
-import fixture from "../../🧫️fixtures/🧱️io-boundary.json";
+import fixture from "../🧫️fixtures/🧱️io-boundary.json";
 import {verifyInstalledServiceLawsV1} from "../🟦️.ts";
+import {build} from "esbuild";
+import {resolve,join} from "node:path";
+import ownership from "../🧫️fixtures/🧱️source-ownership.json";
+
+test("intrinsic service laws bundle with every specific owner unavailable",async()=>{
+  const workspace=resolve(import.meta.dir,"../../../../../../../../");
+  const refused=ownership.removedOwners.map(owner=>resolve(workspace,owner).replaceAll("\\","/")+"/");
+  const result=await build({entryPoints:[join(workspace,ownership.owner,ownership.entry)],bundle:true,platform:"node",format:"esm",external:["bun:test"],write:false,metafile:true,logLevel:"silent",plugins:[{name:"removed-service-consumer",setup(builder){builder.onLoad({filter:/.*/},input=>refused.some(prefix=>input.path.replaceAll("\\","/").startsWith(prefix))?{errors:[{text:"Intrinsic service law requires removed owner: "+input.path}]}:undefined);}}]});
+  const specificSources=Object.keys(result.metafile!.inputs).filter(path=>ownership.removedOwners.some(owner=>path.replaceAll("\\","/").startsWith(owner+"/")));
+  expect(result.outputFiles).toHaveLength(1);expect(specificSources).toHaveLength(ownership.expectedSpecificSources);
+  console.log("[DEBUG] Intrinsic installed service removal proof",{sourceCount:Object.keys(result.metafile!.inputs).length,specificSources:specificSources.length});
+},15_000);
 
 test("existing neutral service operations, lifecycle and independent Ajv laws replay",()=>{
   const counts=verifyInstalledServiceLawsV1();expect(counts.envelopeVectors).toBe(4);

@@ -40,7 +40,7 @@ fn retire(inverse: PagedList<Puzzle2dMutation, {usize::MAX}>) {
 #[test]
 fn history_edit_puzzle2d_owned_move_inverse_preserves_literal_ids_and_controlled_cancellation() {
     assert!(size_of::<Puzzle2dMoveNodeInverseCursor>() <= 4096);
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/🎮️prepare/🔣️.json")).unwrap();
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap(); match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let scalar = |value: &serde_json::Value| match value.as_str() { Some("nan") => f64::NAN, Some("positive-infinity") => f64::INFINITY, None => value.as_f64().unwrap(), _ => panic!("unknown authored scalar") };
     for case in corpus["cases"].as_array().unwrap() {

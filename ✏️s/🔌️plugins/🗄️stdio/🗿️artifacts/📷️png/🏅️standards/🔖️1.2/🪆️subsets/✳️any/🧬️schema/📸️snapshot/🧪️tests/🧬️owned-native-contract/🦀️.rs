@@ -3,7 +3,7 @@ use crate::schema::{snapshot::{PngSnapshot,PngRegion,PngNativePaint},operations:
 use protocol::{DiffAlgebra,MutationDiff};
 #[test]
 fn neutral_native_samples_preserve_metadata_and_inverse_laws() {
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap() {
   let base:PngSnapshot=semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();base.validate().unwrap();let input=&row["paint"];let region=PngRegion {x:input["x"].as_u64().unwrap()as u32,y:input["y"].as_u64().unwrap()as u32,width:input["width"].as_u64().unwrap()as u32,height:input["height"].as_u64().unwrap()as u32};
   let paint:PngNativePaint=semio_framework_pack_json::from_json_str(&serde_json::json!({"profile":input["profile"],"first":input["first"],"second":input["second"],"third":input["third"],"fourth":input["fourth"]}).to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

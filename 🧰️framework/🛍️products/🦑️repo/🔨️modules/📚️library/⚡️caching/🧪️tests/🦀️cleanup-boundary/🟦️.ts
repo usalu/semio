@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 
 /** 🦀️ Native Cargo leaves finish without launching detached storage management behind Nx. */
 export async function testCargoCleanupBoundary(workspace: string, output: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🦀️cleanup-boundary/🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🦀️cleanup-boundary/🔣️.json"), "utf8"));
   const project = JSON.parse(readFileSync(join(import.meta.dir, "../../📋️project.json"), "utf8")), [owner, target] = fixture.rootTarget.split(":");
   assert.equal(project.name, owner); assert.equal(project.targets[target].cache, false);
   assert.equal(project.targets[target].options.command, "bun ./📜️script.ts cache-prune");
@@ -23,7 +23,7 @@ export async function testCargoCleanupBoundary(workspace: string, output: string
   process.once("SIGINT", stop); process.once("SIGTERM", stop);
   let passed = false;
   try {
-    const cargo = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/📦️native-dependencies/🔣️.json"), "utf8")).cargo;
+    const cargo = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/📦️native-dependencies/🔣️.json"), "utf8")).cargo;
     for (const [path, contents] of Object.entries(cargo.files)) writeFileSync(join(root, path), contents as string);
     writeFileSync(join(root, "package.json"), JSON.stringify({ name: "workspace", private: true }));
     writeFileSync(join(root, "nx.json"), "{}");

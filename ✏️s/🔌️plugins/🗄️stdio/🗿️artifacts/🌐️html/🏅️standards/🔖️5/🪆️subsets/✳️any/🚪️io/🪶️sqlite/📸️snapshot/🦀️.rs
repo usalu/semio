@@ -1,7 +1,8 @@
 //! 🌐️ HTML's own element, text, comment, raw-text and optional attribute relations.
 
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind};
-use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use std::collections::{BTreeMap, BTreeSet};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_os_kernel::io_schema::IoError;
@@ -46,7 +47,7 @@ fn measure(snapshot: &HtmlSnapshot, control: &mut SqliteSnapshotControl<'_>) -> 
     Ok(rows)
 }
 
-impl ArtifactSqliteSnapshot for HtmlSnapshot {
+impl ArtifactSqliteSnapshotHost for HtmlSnapshot {
     fn decode_sqlite_snapshot_native(payload:&semio_framework_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
         native_owner.receive::<Self,Self>(|slot,native_control,body|{
             let value=native::decode(payload,control,native_control)?;
@@ -87,8 +88,13 @@ impl ArtifactSqliteSnapshot for HtmlSnapshot {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(IoError::from_value_error)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
     }
 
-    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
+    
+    
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for HtmlSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0)?; let total = measure(self, control)?; let mut checked = 0usize;
         let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
         push(&mut database, "html_document", vec![text(&self.schema,control)?, self.doctype.as_deref().map(|v|text(v,control)).transpose()?.unwrap_or(SqliteValue::Null), SqliteValue::Integer(1)])?;
@@ -111,7 +117,7 @@ impl ArtifactSqliteSnapshot for HtmlSnapshot {
         }
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, total, total)?; Ok(database)
     }
-    fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
         control.check_database(database, SqliteSnapshotPhase::ReconstructSnapshot)?;
         validate_sqlite_database_schema(database, Self::SQLITE_SCHEMA, control.limits())?;
         for name in TABLES { database.table(name)?; } let total = database.tables.iter().map(|table| table.rows.len()).sum(); let mut checked = 0usize;

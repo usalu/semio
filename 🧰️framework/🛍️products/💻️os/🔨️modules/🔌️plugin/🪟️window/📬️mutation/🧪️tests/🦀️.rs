@@ -1,10 +1,11 @@
 //! 🧪️ Actual window wrapper backing stays in custody until independently funded retirement.
 use semio_framework_value::{RetainedCloneGrant,retirement::{RetireOwned,controlled::ControlledRetirement,OwnedValueRetirementFactory}};
 use std::sync::Arc;
-fn close_original<T:RetireOwned>(value:T){close_with(value,||{});}
-fn close_with<T:RetireOwned>(value:T,mut pump:impl FnMut()){
+pub(crate) fn close_original<T:RetireOwned>(value:T){close_with(value,||{});}
+pub(crate) fn close_with<T:RetireOwned>(value:T,mut pump:impl FnMut()){
  let mut owner=ControlledRetirement::new(value).map_err(|(error,_)|error).unwrap();
- for _ in 0..1000000{if owner.terminal_is_empty(){return;}let copy=owner.next_copy_byte_demand().unwrap();let release=owner.next_release_byte_demand().unwrap();owner.step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy.max(4096),maximum_capacity_bytes:owner.next_capacity_byte_demand(if copy>0{copy}else{release}).unwrap(),maximum_release_bytes:release,maximum_depth:owner.next_depth_demand().unwrap()}).unwrap();pump();}
+ let grant=crate::app_testing::artifact_app_laws::fixture_mounted_policy().close;
+ for _ in 0..1000000{if owner.terminal_is_empty(){return;}assert!(owner.next_copy_byte_demand().unwrap()<=grant.maximum_copy_bytes&&owner.next_capacity_byte_demand(grant.maximum_copy_bytes).unwrap()<=grant.maximum_capacity_bytes&&owner.next_release_byte_demand().unwrap()<=grant.maximum_release_bytes&&owner.next_depth_demand().unwrap()<=grant.maximum_depth);owner.step(grant).unwrap();pump();}
  panic!("original test owner did not reach physical terminal emptiness");
 }
 
@@ -13,7 +14,7 @@ struct RefreshSnapshot{window_id:String,payload:String}
 impl super::WindowRefreshSnapshot for RefreshSnapshot{fn swap_address(&mut self,other:&mut Self){std::mem::swap(&mut self.window_id,&mut other.window_id);}}
 #[test]
 fn original_window_refresh_admits_displaced_snapshot_under_actual_currencies(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🔄️refresh/🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🔄️refresh/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for body in law["copyGrants"].as_array().unwrap(){let body=body.as_u64().unwrap()as usize;
   let((mut current,mut pending,mut retired),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||(RefreshSnapshot{window_id:law["windowId"].as_str().unwrap().into(),payload:law["before"].as_str().unwrap().into()},Some(RefreshSnapshot{window_id:String::new(),payload:law["after"].as_str().unwrap().into()}),semio_framework_value::retirement::queue::RetirementQueue::default()));
   let held=heap.requested_bytes-heap.released_bytes;let address=current.window_id.as_ptr();let payload=pending.as_ref().unwrap().payload.as_ptr();let(mut born,mut released,mut ready)=(0usize,0usize,false);
@@ -39,7 +40,7 @@ fn run<T:RetireOwned+Send+'static>(construct:impl FnOnce()->T,body:usize){
 }
 #[test]
 fn window_original_mutation_wrappers_have_exact_physical_custody(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();for body in law["copyGrants"].as_array().unwrap(){let body=body.as_u64().unwrap()as usize;for kind in ["canvas","layers"]{let text=law["payload"].as_str().unwrap();let capacity=law["capacity"].as_u64().unwrap()as usize;let window=law["windowId"].as_str().unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();for body in law["copyGrants"].as_array().unwrap(){let body=body.as_u64().unwrap()as usize;for kind in ["canvas","layers"]{let text=law["payload"].as_str().unwrap();let capacity=law["capacity"].as_u64().unwrap()as usize;let window=law["windowId"].as_str().unwrap();
  run(||{let mut payload=String::with_capacity(capacity);payload.push_str(text);crate::WindowConfigMutation::from_issued(window,kind,payload,Arc::new(OwnedValueRetirementFactory::<String>::default()))},body);
  run(||{let mut payload=String::with_capacity(capacity);payload.push_str(text);crate::WindowTransientMutation::from_issued(window,kind,payload,Arc::new(OwnedValueRetirementFactory::<String>::default()))},body);
  }}

@@ -119,7 +119,7 @@
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
     },
     "PlayExampleLabel": {
-      "description": "The exact text the pane's navbar example picker renders for its curated example: the example's `label.native.en`, because every play shell is locked to terminology `native` and locale `en`. Authored prose, never the id spelled out (`tower-stack` renders \"Tower With A Cantilever\"), so an acceptance check can compare label to label instead of guessing one from the other.",
+      "description": "The exact text the pane's navbar example picker renders for its curated example: the example's `label.native.en`, for the explicit English browser-language acceptance fixture and native terminology. Authored prose, never the id spelled out (`tower-stack` renders \"Tower With A Cantilever\"), so an acceptance check can compare label to label instead of guessing one from the other.",
       "type": "string",
       "minLength": 1
     },

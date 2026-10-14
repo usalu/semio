@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "📑️set-sheet/✅️renames",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/📑️set-sheet/✅️renames/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/📑️set-sheet/✅️renames/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/📑️set-sheet/✅️renames/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/📑️set-sheet/✅️renames/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/📑️set-sheet/✅️renames/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📑️set-sheet/✅️renames/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📑️set-sheet/✅️renames/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📑️set-sheet/✅️renames/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📑️set-sheet/✅️renames/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📑️set-sheet/✅️renames/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

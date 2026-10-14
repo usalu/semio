@@ -14,7 +14,7 @@ use semio_framework_tool_run::{ToolRunId, ToolRunVerdict, TOOL_RUN_ACTION_IDS};
 use serde_json::Value;
 use std::collections::BTreeMap;
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🎞️layout-run.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/🎞️layout-run.json");
 
 fn fixture() -> Value {
     serde_json::from_str(FIXTURE).expect("reorganize fixture parses")

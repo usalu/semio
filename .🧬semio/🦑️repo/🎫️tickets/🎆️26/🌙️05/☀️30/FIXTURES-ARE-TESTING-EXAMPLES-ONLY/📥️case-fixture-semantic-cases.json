@@ -1,0 +1,67 @@
+{
+  "cases": [
+    {
+      "id": "legal-case-fixtures",
+      "path": "owner/🧪️tests/🔬️case/🧫️fixtures/🔣️input.json",
+      "expectedLayout": [],
+      "expectedCaseChild": "accepted opaque fixture collection"
+    },
+    {
+      "id": "opaque-source-specimen",
+      "path": "owner/🧪️tests/🔬️case/🧫️fixtures/specimen.ts",
+      "source": "export function test_sample() { return 1; }",
+      "expectedLayout": [],
+      "expectedRunnableCases": []
+    },
+    {
+      "id": "opaque-feature-specimen",
+      "path": "owner/🧪️tests/🧫️fixtures/🥒️.feature",
+      "source": "Feature: parser specimen\n Scenario: inert\n Given plain input",
+      "expectedRunnableCases": []
+    },
+    {
+      "id": "local-uri-original-reader",
+      "uri": "local://🔣️input.json",
+      "caseDir": "owner/🧪️tests/🔬️case",
+      "fixturePath": "owner/🧪️tests/🔬️case/🧫️fixtures/🔣️input.json",
+      "expectedResolved": "owner/🧪️tests/🔬️case/🧫️fixtures/🔣️input.json"
+    },
+    {
+      "id": "case-extra-executable-folder",
+      "path": "owner/🧪️tests/🔬️case/helpers/🟦️.ts",
+      "expectedCaseChild": "unknown-case-child"
+    },
+    {
+      "id": "module-named-fixtures",
+      "path": "owner/🔨️modules/🧫️fixtures/🟦️.ts",
+      "expectedCollection": false
+    },
+    {
+      "id": "parser-schema-field-label",
+      "path": "owner/🧪️tests/🧫️fixtures/🔣️case.json",
+      "data": {
+        "schema": "semio.test.corpus.v1",
+        "cases": [
+          {
+            "input": 1,
+            "expected": 1
+          }
+        ]
+      },
+      "expectedSchemaAuthority": false
+    },
+    {
+      "id": "fixture-schema-facet-cannot-be-inert",
+      "path": "owner/🧪️tests/🧫️fixtures/🧬️schema/🔣️.json",
+      "data": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "integer"
+          }
+        }
+      },
+      "expectedSchemaFinding": "schema-fixture-defines-schema"
+    }
+  ]
+}

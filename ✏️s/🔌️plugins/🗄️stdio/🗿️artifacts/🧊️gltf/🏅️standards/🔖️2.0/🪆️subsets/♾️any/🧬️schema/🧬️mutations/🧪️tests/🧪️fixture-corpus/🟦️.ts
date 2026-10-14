@@ -16,7 +16,7 @@ import { parseGltfMutation } from "../../../../🚪️io/📝️text/🧬️muta
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
 const mutations = join(import.meta.dir, "../..");
-const corpus = join(import.meta.dir, "../../../../🧫️fixtures/🧬️mutations");
+const corpus = join(import.meta.dir, "../../../../🧪️tests/🧫️fixtures/🧬️mutations");
 const document = (path: string): { $id: string; oneOf?: { properties: { mutation: { const: string } } }[] } => JSON.parse(readFileSync(path, "utf8"));
 const assertWireFields=(owned:unknown,wire:Json):void=>{
  if(owned!==null&&typeof owned==="object"&&!Array.isArray(owned)&&"kind"in owned){const value=owned as {kind:string;value?:unknown;values?:unknown[];members?:[string,unknown][]};switch(value.kind){case"null":expect(wire).toBeNull();return;case"boolean":case"string":assertWireFields(value.value,wire);return;case"number":assertWireFields(value.value,wire);return;case"array":assertWireFields(value.values,wire);return;case"object":assertWireFields(value.members,wire);return}}

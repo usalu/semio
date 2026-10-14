@@ -4,7 +4,7 @@ use semio_framework_value::{DslValue,NativeEncodeControl,NativeDecodeControl,Val
 
 fn octets(text:&str)->Vec<u8>{text.as_bytes().chunks_exact(2).map(|word|u8::from_str_radix(std::str::from_utf8(word).unwrap(),16).unwrap()).collect()}
 fn tagged(value:&DslValue)->serde_json::Value{serde_json::Value::from(semio_framework_value::intrinsic_json::encode(value))}
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn literal(row:&serde_json::Value)->DslValue{semio_framework_value::intrinsic_json::decode(&DslValue::from(&row["value"])).unwrap()}
 fn reference_record(value:&DslValue)->(semio_framework_dsl_record::RecordSpec,semio_framework_dsl_record::RecordValue){
     use semio_framework_dsl_record::{RecordSpec,RecordLayout,FieldSpec,Shape,RecordFields,RecordValue,FieldValue};
@@ -26,7 +26,7 @@ impl semio_framework_dsl_record::native_encoding::FieldProjectionSource for Orig
     }
     fn projection_key(&self,path:&[usize],index:usize)->Result<&str,semio_framework_value::ValueError>{match self.at(path)?{DslValue::Object(items)=>items.get(index).map(|(key,_)|key.as_str()).ok_or_else(semio_framework_dsl_record::native_encoding::projection_path_error),_=>Err(semio_framework_dsl_record::native_encoding::projection_path_error())}}
 }
-fn occurrence_order_fixture()->serde_json::Value{serde_json::from_str(include_str!("../🔢️occurrence-order/🧫️fixtures/🔣️.json")).unwrap()}
+fn occurrence_order_fixture()->serde_json::Value{serde_json::from_str(include_str!("../🔢️occurrence-order/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn close_output(output:&mut protocol::io::binary::operation_bytes::OwnedOperationBytes){use protocol::io::binary::operation_bytes::OperationByteCloseStep as Step;let backing=output.allocated_bytes();let mut retired=0;for _ in 0..17000{let(step,birth,free)=crate::test_allocation::observe_backing(||output.close_one(1,4096).unwrap());assert_eq!(birth,0);let release=match step{Step::Pending{released_items,released_bytes}=>{assert!(released_items<=1&&released_bytes<=4096);released_bytes},Step::Complete=>0};assert_eq!(free,release);retired+=free;if step==Step::Complete{break}}assert!(output.terminal_is_empty());assert_eq!(output.allocated_bytes(),0);assert_eq!(retired,backing);}
 
 #[test]

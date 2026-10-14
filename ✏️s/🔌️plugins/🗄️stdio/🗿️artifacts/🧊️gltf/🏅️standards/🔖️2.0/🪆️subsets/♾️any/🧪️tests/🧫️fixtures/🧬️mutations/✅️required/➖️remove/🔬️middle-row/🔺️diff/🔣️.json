@@ -1,0 +1,12 @@
+{
+  "extensionsRequired": {
+    "removed": [
+      {
+        "id": "KHR_b",
+        "index": 1
+      }
+    ],
+    "inserted": [],
+    "moved": []
+  }
+}

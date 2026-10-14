@@ -9,7 +9,7 @@ fn json(value:&DslValue)->serde_json::Value{
 }
 #[test]
 fn neutral_vocabulary_preserves_shared_literal_identity_and_independent_json(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🏛️ownership/🔣️.json")).unwrap();
     for value in fixture["references"].as_array().unwrap(){
         let expected=reference(value);let mut allow=|_|true;let mut control=NativeEncodeControl::new(16384,&mut allow);
         let native=expected.to_value_controlled(&mut control).unwrap();assert_eq!(json(&native),*value);
@@ -21,7 +21,7 @@ fn neutral_vocabulary_preserves_shared_literal_identity_and_independent_json(){
 }
 #[test]
 fn neutral_vocabulary_preserves_shared_controlled_refusal_categories(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../📝️text/🗿️artifact-reference/🪆️binding/🧫️fixtures/🚦️refusals/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../📝️text/🗿️artifact-reference/🪆️binding/🧪️tests/🧫️fixtures/🚦️refusals/🔣️.json")).unwrap();
     let identity=&fixture["identity"];let expected=ArtifactRef{artifact_id:identity["artifactId"].as_str().unwrap().into(),dialect:ArtifactDialect{artifact_kind:identity["artifactKind"].as_str().unwrap().into(),standard:identity["standard"].as_str().unwrap().into(),subset:identity["subset"].as_str().unwrap().into()}};
     let mut allow=|_|true;let mut control=NativeEncodeControl::new(16384,&mut allow);let native=expected.to_value_controlled(&mut control).unwrap();
     let mut deny=|_|false;let mut control=NativeDecodeControl::new(16384,&mut deny);let canceled=ArtifactRef::from_value_controlled(&native,&mut control).unwrap_err();

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🖌️set-material/🚫️negative-conductivity",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️set-material/🚫️negative-conductivity/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️set-material/🚫️negative-conductivity/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️set-material/🚫️negative-conductivity/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️set-material/🚫️negative-conductivity/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️set-material/🚫️negative-conductivity/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️set-material/🚫️negative-conductivity/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️set-material/🚫️negative-conductivity/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️set-material/🚫️negative-conductivity/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️set-material/🚫️negative-conductivity/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️set-material/🚫️negative-conductivity/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

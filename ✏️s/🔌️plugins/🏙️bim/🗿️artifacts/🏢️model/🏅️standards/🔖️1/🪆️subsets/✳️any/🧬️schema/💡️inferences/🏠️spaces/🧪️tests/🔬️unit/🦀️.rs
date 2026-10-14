@@ -219,8 +219,8 @@ async fn the_model_inference_carries_the_rooms() {
     assert!(compute_spaces(&ModelSnapshot::default()).is_empty(), "default");
 }
 
-const ROOMS: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🛋️spaces/🏡️rooms/📸️snapshot/🔣️.json");
-const ROOMS_TABLE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🛋️spaces/🏡️rooms/💡️inference/🏠️spaces/🔣️.json");
+const ROOMS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛋️spaces/🏡️rooms/📸️snapshot/🔣️.json");
+const ROOMS_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛋️spaces/🏡️rooms/💡️inference/🏠️spaces/🔣️.json");
 
 #[semio_framework_async_macros::async_test]
 async fn the_subject_reproduces_the_third_party_oracle_table() {
@@ -321,8 +321,8 @@ async fn editing_a_ceiling_changes_the_clear_height_through_the_session_and_a_re
     assert!(close(deeper["sp"].clear_height, 3.0 - 0.6 - 0.2), "the layers of the type are read as well");
 }
 
-const HUNG_EDIT: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🛋️spaces/🔲️hung-edit/📸️snapshot/🔣️.json");
-const HUNG_EDIT_TABLE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🛋️spaces/🔲️hung-edit/💡️inference/🏠️spaces/🔣️.json");
+const HUNG_EDIT: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛋️spaces/🔲️hung-edit/📸️snapshot/🔣️.json");
+const HUNG_EDIT_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛋️spaces/🔲️hung-edit/💡️inference/🏠️spaces/🔣️.json");
 
 #[semio_framework_async_macros::async_test]
 async fn the_subject_reproduces_the_oracle_table_of_the_rooms_after_the_ceiling_edits() {

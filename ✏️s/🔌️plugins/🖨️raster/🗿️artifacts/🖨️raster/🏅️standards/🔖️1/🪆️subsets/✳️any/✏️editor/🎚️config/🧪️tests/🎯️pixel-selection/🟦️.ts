@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import {restoreSelection} from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🟦️.ts";
-import sharedSelections from "../../🧫️fixtures/🎯️pixel-selection/🔣️.json";
+import sharedSelections from "../🧫️fixtures/🎯️pixel-selection/🔣️.json";
 
 for(const row of sharedSelections.cases)test("restores shared coverage: "+row.name,async()=>{
   const selected=row.selection;

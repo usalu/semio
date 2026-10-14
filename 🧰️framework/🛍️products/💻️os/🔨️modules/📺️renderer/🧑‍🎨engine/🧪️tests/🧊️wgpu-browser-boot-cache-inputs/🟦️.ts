@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 
 /** 🧊️ Verifies runtime selection and native compiler independence from the canonical default session. */
 export async function testWgpuBootInputs(workspace: string, generated: string): Promise<void> {
-  const require = createRequire(import.meta.url), ts = require("typescript"), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧊️wgpu-browser-boot-cache-inputs/🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), ts = require("typescript"), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧊️wgpu-browser-boot-cache-inputs/🔣️.json"), "utf8"));
   const entry = resolve(import.meta.dir, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts");
   const packageRoot = resolve(entry, "../../📦️packages/🟦️typescript"), project = JSON.parse(readFileSync(join(packageRoot, "📋️project.json"), "utf8"));
   assert.equal(project.targets["check-browser-worker"].cache, true, "Generated-file freshness checks must stay cached — a repeat check without a source change is otherwise a wasted 🧵️Trunk-less bundle rebuild every single run");

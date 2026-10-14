@@ -139,7 +139,7 @@ func TestFixNonAutofixableNotFixed(t *testing.T) {
 	defer func() { workspace.RootDir = oldRoot }()
 
 	bundles := LoadBundles()
-	path := "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-invalid/🟦️.tsx"
+	path := "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures/📁️some/📁️folder/🧪️file-invalid/🟦️.tsx"
 	scope := workspace.Scope{Kind: workspace.ScopeFile, FilePath: path}
 	ctx := statutes.NewPolicyContextWithFiles(scope, bundles, []string{path})
 	breachs, err := statutes.CheckPoliciesWithContext(ctx, []string{"code"})
@@ -185,7 +185,7 @@ func TestFixNonAutofixableNotFixed(t *testing.T) {
 }
 
 func TestFixtureBreachsGroupedInline(t *testing.T) {
-	path := "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-invalid/🟦️.tsx"
+	path := "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures/📁️some/📁️folder/🧪️file-invalid/🟦️.tsx"
 	bundles := LoadBundles()
 	scope := workspace.Scope{Kind: workspace.ScopeFile, FilePath: path}
 	ctx := statutes.NewPolicyContextWithFiles(scope, bundles, []string{path})
@@ -218,15 +218,15 @@ func TestFixtureBreachsByLanguage(t *testing.T) {
 		requiredKinds []model.Statute
 	}{
 		{
-			path:          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-invalid/🐍️.py",
+			path:          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures/📁️some/📁️folder/🧪️file-invalid/🐍️.py",
 			requiredKinds: []model.Statute{model.BreachCodeDefMissingSummary},
 		},
 		{
-			path:          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-invalid/🔷️.cs",
+			path:          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures/📁️some/📁️folder/🧪️file-invalid/🔷️.cs",
 			requiredKinds: []model.Statute{model.BreachCodeSectionMissingSummary},
 		},
 		{
-			path:          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-invalid/🐹️.go",
+			path:          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures/📁️some/📁️folder/🧪️file-invalid/🐹️.go",
 			requiredKinds: []model.Statute{model.BreachCodeSectionMissingSummary},
 		},
 	}
@@ -251,10 +251,10 @@ func TestFixtureBreachsByLanguage(t *testing.T) {
 		}
 	}
 	clean := []string{
-		"🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-fixed/🟦️.tsx",
-		"🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-fixed/🐍️.py",
-		"🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-fixed/🔷️.cs",
-		"🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-fixed/🐹️.go",
+		"🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures/📁️some/📁️folder/🧪️file-fixed/🟦️.tsx",
+		"🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures/📁️some/📁️folder/🧪️file-fixed/🐍️.py",
+		"🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures/📁️some/📁️folder/🧪️file-fixed/🔷️.cs",
+		"🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures/📁️some/📁️folder/🧪️file-fixed/🐹️.go",
 	}
 	for _, path := range clean {
 		scope := workspace.Scope{Kind: workspace.ScopeFile, FilePath: path}

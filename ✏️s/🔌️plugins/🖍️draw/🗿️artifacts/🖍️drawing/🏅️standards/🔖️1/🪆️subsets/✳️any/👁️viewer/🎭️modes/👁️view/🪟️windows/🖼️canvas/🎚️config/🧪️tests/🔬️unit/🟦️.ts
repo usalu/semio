@@ -3,7 +3,7 @@ import { expect,test } from "bun:test";
 import Ajv from "ajv/dist/2020.js";
 import draft7 from "ajv/dist/refs/json-schema-draft-07.json" with { type: "json" };
 import { applyPatch } from "fast-json-patch";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import { applyDrawingViewerCanvasWindowConfigMutation,parseDrawingViewerCanvasWindowConfig,type DrawingViewerCanvasWindowConfig } from "../../🧬️schema/🟦️.ts";
 

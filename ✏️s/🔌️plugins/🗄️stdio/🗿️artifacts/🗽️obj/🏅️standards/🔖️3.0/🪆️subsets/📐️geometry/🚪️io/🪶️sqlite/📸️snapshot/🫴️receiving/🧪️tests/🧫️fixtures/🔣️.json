@@ -1,0 +1,230 @@
+{
+  "version": 1,
+  "fields": [
+    "schema",
+    "vertices",
+    "texcoords",
+    "normals",
+    "faces",
+    "groups",
+    "objects",
+    "mtllib",
+    "usemtl",
+    "smoothingGroups",
+    "unknownStatements"
+  ],
+  "tables": {
+    "obj_document": 3,
+    "obj_vertex": 15,
+    "obj_texcoord": 12,
+    "obj_normal": 12,
+    "obj_face": 3,
+    "obj_face_vertex": 9,
+    "obj_group": 4,
+    "obj_group_face": 6,
+    "obj_object": 4,
+    "obj_object_face": 6,
+    "obj_face_boundary": 4,
+    "obj_material_range": 7,
+    "obj_smoothing_range": 7,
+    "obj_unknown_statement": 6
+  },
+  "originalGrant": {
+    "maximumItems": 1048576,
+    "maximumCopyBytes": 16777216,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 4096
+  },
+  "nativeMaximumBytes": 67108864,
+  "sqlMaximumAllocationBytes": 67108864,
+  "maximumCloseTurns": 65536,
+  "signedOffsets": [
+    -1,
+    -1000
+  ],
+  "textChunkBytes": 256,
+  "literal": "OBJ \u0000語\r\n/|exact",
+  "u64Words": [
+    "0",
+    "9007199254740993",
+    "18446744073709551615"
+  ],
+  "binary64Words": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000001234",
+    "fff0000000001234"
+  ],
+  "malformed": [
+    "duplicateId",
+    "idAlias",
+    "missingRow",
+    "extraRow",
+    "width",
+    "orphanParent",
+    "duplicateOrdinal",
+    "gapOrdinal",
+    "sourceWord",
+    "resolvedRelationship",
+    "floatClass",
+    "floatQuery",
+    "floatBits",
+    "optionalPresence",
+    "schema",
+    "literalText"
+  ],
+  "fieldEdits": [
+    {
+      "id": "schema",
+      "table": "obj_document",
+      "column": 1,
+      "storage": "text",
+      "value": "wrong schema"
+    },
+    {
+      "id": "mtllib-presence",
+      "table": "obj_document",
+      "column": 2,
+      "storage": "null",
+      "value": null
+    },
+    {
+      "id": "vertex-query",
+      "table": "obj_vertex",
+      "column": 3,
+      "storage": "real",
+      "value": 13.0
+    },
+    {
+      "id": "vertex-class",
+      "table": "obj_vertex",
+      "column": 8,
+      "storage": "text",
+      "value": "nan"
+    },
+    {
+      "id": "vertex-word",
+      "table": "obj_vertex",
+      "column": 7,
+      "storage": "integer",
+      "value": 1
+    },
+    {
+      "id": "texcoord-query",
+      "table": "obj_texcoord",
+      "column": 3,
+      "storage": "real",
+      "value": 13.0
+    },
+    {
+      "id": "normal-query",
+      "table": "obj_normal",
+      "column": 5,
+      "storage": "real",
+      "value": 13.0
+    },
+    {
+      "id": "face-source-word",
+      "table": "obj_face_vertex",
+      "column": 3,
+      "storage": "integer",
+      "value": 4294967295
+    },
+    {
+      "id": "face-option",
+      "table": "obj_face_vertex",
+      "column": 4,
+      "storage": "null",
+      "value": null,
+      "constraint": true
+    },
+    {
+      "id": "face-resolved-link",
+      "table": "obj_face_vertex",
+      "column": 6,
+      "storage": "integer",
+      "value": 2
+    },
+    {
+      "id": "group-name",
+      "table": "obj_group",
+      "column": 3,
+      "storage": "text",
+      "value": "wrong group"
+    },
+    {
+      "id": "group-source-high",
+      "table": "obj_group_face",
+      "column": 3,
+      "storage": "integer",
+      "value": 1
+    },
+    {
+      "id": "object-name",
+      "table": "obj_object",
+      "column": 3,
+      "storage": "text",
+      "value": "wrong object"
+    },
+    {
+      "id": "object-source-low",
+      "table": "obj_object_face",
+      "column": 4,
+      "storage": "integer",
+      "value": 1
+    },
+    {
+      "id": "boundary-order",
+      "table": "obj_face_boundary",
+      "column": 3,
+      "storage": "integer",
+      "value": 2
+    },
+    {
+      "id": "material-text",
+      "table": "obj_material_range",
+      "column": 6,
+      "storage": "text",
+      "value": "wrong material"
+    },
+    {
+      "id": "material-source-low",
+      "table": "obj_material_range",
+      "column": 4,
+      "storage": "integer",
+      "value": 1
+    },
+    {
+      "id": "smoothing-option",
+      "table": "obj_smoothing_range",
+      "column": 6,
+      "storage": "null",
+      "value": null
+    },
+    {
+      "id": "smoothing-source-low",
+      "table": "obj_smoothing_range",
+      "column": 4,
+      "storage": "integer",
+      "value": 1
+    },
+    {
+      "id": "unknown-raw",
+      "table": "obj_unknown_statement",
+      "column": 5,
+      "storage": "text",
+      "value": "wrong raw"
+    },
+    {
+      "id": "unknown-source-low",
+      "table": "obj_unknown_statement",
+      "column": 4,
+      "storage": "integer",
+      "value": 1
+    }
+  ]
+}

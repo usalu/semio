@@ -92,7 +92,7 @@ describe("plugin identity is the same in every authority", () => {
     let checked = 0;
     for (const entry of registry) {
       const owner = identityOwner(entry.cratePath);
-      const fixturePath = join(owner, "🧫️fixtures", "🧫️plugin-identity", "🔣️.json");
+      const fixturePath = join(owner, "🧪️tests/🧫️fixtures", "🧫️plugin-identity", "🔣️.json");
       if (!existsSync(fixturePath)) continue;
       const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Record<string, string>;
       const schema = JSON.parse(readFileSync(join(owner, "🧬️schema", "🪪️plugin-identity", "🔣️.json"), "utf8"));

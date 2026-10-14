@@ -40,11 +40,11 @@ mod agent_lane_preview_tests {
     }
 
     impl semio_framework_job::InteractiveJob for ScriptedPreviewJob {
-        fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
             use crate::tool_contract::ReservedOutcomeKind;
             use semio_framework_job::JobOutcomeBorrow;
             if cx.is_cancelled() {
-                return JobOutcomeBorrow::admit_cancelled(cx);
+                return JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
             }
             if self.outcomes.is_delivered() {
                 self.outcomes.retire(cx)?;
@@ -65,9 +65,9 @@ mod agent_lane_preview_tests {
                     let applied_progress = self.cursor as u64;
                     (ReservedOutcomeKind::Checkpoint { applied_progress }, applied_progress.to_le_bytes().to_vec())
                 }
-                ScriptedStep::Yield => return JobOutcomeBorrow::admit_yield(cx),
+                ScriptedStep::Yield => return JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
                 ScriptedStep::Complete => (ReservedOutcomeKind::Commit, Vec::new()),
-                ScriptedStep::Cancelled => return JobOutcomeBorrow::admit_cancelled(cx),
+                ScriptedStep::Cancelled => return JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
                 ScriptedStep::Fault(detail) => (ReservedOutcomeKind::Fault, detail.clone()),
             });
             Ok(None)
@@ -86,16 +86,19 @@ mod agent_lane_preview_tests {
         fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.outcomes.close_demands()?.release_bytes) }
         fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.outcomes.close_demands()?.depth) }
 
-        fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-            if !self.closing {
-                return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure> {
+            if !self.closing||cx.should_yield() {
+                return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
             }
+            let grant=cx.retained_grant();
             self.pending = None;
             if !self.outcomes.terminal_is_empty() {
-                return crate::tool_contract::close_result(self.outcomes.close_step(grant));
+                let step=self.outcomes.close_step(grant).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
+                cx.consume_retained(step.progress()).map_err(semio_framework_job::OriginalTurnFailure::from)?;if step.progress()!=Default::default(){cx.consume_fuel(1);}
+                return Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()}});
             }
             self.released = true;
-            semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }
+            Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() })
         }
 
         fn terminal_is_empty(&self) -> bool {
@@ -121,7 +124,7 @@ mod agent_lane_preview_tests {
     /// `interactive-job.preview-close` instead).
     #[test]
     fn agent_lane_preview_verdicts_match_the_language_agnostic_fixture() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🤖️agent-lane-preview-verdicts.json")).expect("agent-lane preview fixture parses");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🤖️agent-lane-preview-verdicts.json")).expect("agent-lane preview fixture parses");
         assert_eq!(fixture["budget"]["wallMicros"].as_u64(), Some(AGENT_LANE_PREVIEW_WALL_US), "the fixture states the driver's wall budget");
         assert_eq!(fixture["budget"]["turns"].as_u64(), Some(AGENT_LANE_PREVIEW_TURNS), "the fixture states the driver's turn budget");
         let cases = fixture["cases"].as_array().expect("cases");
@@ -162,7 +165,7 @@ mod agent_lane_preview_tests {
     /// every lane the preview refuses in the order it names them, and the presentation lanes.
     #[test]
     fn agent_lane_carriage_matches_the_language_agnostic_fixture() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🤖️agent-lane-carriage.json")).expect("agent-lane carriage fixture parses");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🤖️agent-lane-carriage.json")).expect("agent-lane carriage fixture parses");
         let lanes = fixture["lanes"].as_array().expect("lanes").iter().map(|lane| lane.as_str().expect("lane name")).collect::<Vec<_>>();
         assert_eq!(lanes, AGENT_LANE_UNCARRIED_LANES, "the fixture names every uncarried lane in refusal order");
         let presentation = fixture["presentation"].as_array().expect("presentation").iter().map(|lane| lane.as_str().expect("lane name")).collect::<Vec<_>>();

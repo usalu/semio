@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 /** 🧪️ Validates language-neutral target vectors and independently compares shipping coverage with Cargo metadata. */
 export function rustWarningScopeChecks(root: string, rustWarningTargetScope: (root: string, target: string | undefined) => { packages: string[]; scopeArgs: string[]; targetArgs: string[]; packageArgs: Record<string, string[]> }): number {
-  const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/🦀️rust-warnings/🔣️.json"), "utf8")) as {
+  const fixture = JSON.parse(readFileSync(join(root, "🧪️tests/🧫️fixtures/🦀️rust-warnings/🔣️.json"), "utf8")) as {
     cases: { target: string; requiredPackages: string[]; scopeArgs: string[]; targetArgs: string[]; rendererFeatures: string[] }[];
     rejectedTargets: string[];
   };

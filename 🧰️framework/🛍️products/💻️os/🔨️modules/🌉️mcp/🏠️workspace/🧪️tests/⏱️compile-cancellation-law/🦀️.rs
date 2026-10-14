@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/⏱️compile-cancellation-law.json")).expect("compile-cancellation law fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/⏱️compile-cancellation-law.json")).expect("compile-cancellation law fixture")
 }
 
 /// 🧩️ The smallest staged plugin component: the cheapest real compile that still runs long enough

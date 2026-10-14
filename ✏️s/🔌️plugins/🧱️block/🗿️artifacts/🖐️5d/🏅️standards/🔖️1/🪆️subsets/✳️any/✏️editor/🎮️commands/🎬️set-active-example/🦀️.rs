@@ -9,7 +9,7 @@ pub const BLOCK5D_EXAMPLE_CAPSULE: &str = "nakagin-capsule";
 /// 🗃️ The whole-document load an example switch or a JSON edit answers with. A `LoadDocument` effect is NOT an edit:
 /// it carries no mutation rows, no diff and no history row, so re-selecting the open example leaves `canUndo` false.
 pub fn load_document_effect(document: &Block5dSnapshot) -> semio_framework::kernel::Effect {
-    let pack = <Block5dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let pack = <Block5dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("block5d", crate::BLOCK_5D_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }

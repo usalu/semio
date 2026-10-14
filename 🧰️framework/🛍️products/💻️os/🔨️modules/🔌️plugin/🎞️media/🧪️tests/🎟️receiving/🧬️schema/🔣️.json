@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "port", "kind", "data", "sourcePointersPreserved", "exporterCalls", "terminalDropHeap"],
+  "properties": {
+    "schema": {"const": "semio.media.original-receiving-success/v1"},
+    "port": {"const": "value:original"},
+    "kind": {"const": "fixture.original-output"},
+    "data": {"const": [0,255,172,0]},
+    "sourcePointersPreserved": {"const": true},
+    "exporterCalls": {"const": 1},
+    "terminalDropHeap": {"const": [0,0]}
+  }
+}

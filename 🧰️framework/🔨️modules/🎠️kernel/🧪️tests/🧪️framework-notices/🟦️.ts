@@ -3,7 +3,7 @@
  * exactly its rows, and a guest fault under one of its codes resolves to its notice in both locales. */
 import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
-import fixture from "../../🧫️fixtures/🧫️framework-notices/🔣️.json";
+import fixture from "../🧫️fixtures/🧫️framework-notices/🔣️.json";
 import schema from "../../🧬️schema/🔣️framework-notices/🔣️.json";
 import { FRAMEWORK_FAULT_NOTICE_LABELS, faultNotice, frameworkFaultNotice, historyNotice } from "../../🟦️.ts";
 

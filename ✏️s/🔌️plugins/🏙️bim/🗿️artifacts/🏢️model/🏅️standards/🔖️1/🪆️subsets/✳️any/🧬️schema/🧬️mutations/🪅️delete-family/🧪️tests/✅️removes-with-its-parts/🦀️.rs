@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🪅️delete-family/✅️removes-with-its-parts",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪅️delete-family/✅️removes-with-its-parts/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪅️delete-family/✅️removes-with-its-parts/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪅️delete-family/✅️removes-with-its-parts/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪅️delete-family/✅️removes-with-its-parts/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪅️delete-family/✅️removes-with-its-parts/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪅️delete-family/✅️removes-with-its-parts/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪅️delete-family/✅️removes-with-its-parts/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪅️delete-family/✅️removes-with-its-parts/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪅️delete-family/✅️removes-with-its-parts/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪅️delete-family/✅️removes-with-its-parts/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

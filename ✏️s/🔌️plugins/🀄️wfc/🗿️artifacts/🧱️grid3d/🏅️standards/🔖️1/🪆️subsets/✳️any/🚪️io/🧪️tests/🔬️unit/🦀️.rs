@@ -16,7 +16,7 @@ fn io_declares_the_stdio_txt_channel_and_no_foreign_entries() {
 #[test]
 fn the_derived_composition_rebuilds_blocks_from_the_native_dialect() {
     let document = blocks::snapshot();
-    let pack = <Grid3dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&document);
+    let pack = <Grid3dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&document);
     let dialect = Dialect { artifact_kind: "s.wfc.grid3d", standard: StandardId("1"), subset: SubsetId("*") };
     let sources = [ComposeSource { dialect, payload: AnalyzeSource::Binary(&pack) }];
     let composition = Grid3dComposerComposition::compose(&sources).expect("native dialect composes");

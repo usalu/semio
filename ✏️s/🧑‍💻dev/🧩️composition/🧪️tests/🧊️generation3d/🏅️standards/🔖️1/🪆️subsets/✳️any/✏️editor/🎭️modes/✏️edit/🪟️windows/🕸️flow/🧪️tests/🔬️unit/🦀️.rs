@@ -50,7 +50,7 @@ async fn the_app_catalogue_section_carries_the_registered_operators() {
 /// 🕸️ The law both implementations of this window answer to: one committed flow fixture in, the exact
 /// node/port/wire rows and the exact interaction bindings out. Language-agnostic on purpose — the row
 /// vocabulary is the `🟦️.ts` twin's too (`Generation3dFlowOutline`).
-const GRAPH_OUTLINE_LAW: &str = include_str!("../../../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧫️fixtures/🔬️unit/🔣️.json");
+const GRAPH_OUTLINE_LAW: &str = include_str!("../../../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧪️tests/🧫️fixtures/🔬️unit/🔣️.json");
 
 /// 🚦 A node row's description is the localized `NodeEvalStatus` the flow session reported for that
 /// widget — English and German, no default language.

@@ -1,5 +1,0 @@
-{
-  "mutation": "changeOutdoorAirSystemEconomizerEnabled",
-  "id": 99,
-  "newEconomizerEnabled": true
-}

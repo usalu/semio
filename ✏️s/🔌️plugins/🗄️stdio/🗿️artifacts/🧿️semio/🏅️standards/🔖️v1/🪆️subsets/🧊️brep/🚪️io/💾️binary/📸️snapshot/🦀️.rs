@@ -543,25 +543,28 @@ pub(crate) fn decode_brep_snapshot_binary(bytes: &[u8]) -> Result<SemioBrepSnaps
     Ok(SemioBrepSnapshot { schema, vertices, edges, loops, faces, shells, solids, coedges, next_label })
 }
 
-impl store::os_store::serialization::ArtifactPack for SemioBrepSnapshot {
+impl pack::snapshot::ArtifactPack for SemioBrepSnapshot {
     /// 🪶️ Publishes the owned typed relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec()) }
+    
 
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_brep_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+        if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let _ = options;
         decode_brep_snapshot_binary(&inner).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
     }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SemioBrepSnapshot {
+fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec()) }
 }
 }
 
@@ -581,12 +584,12 @@ use crate::io::text::snapshot::*;
 /// against each other on the two real committed artifacts instead of against itself.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_brep_pack(bytes: &[u8]) -> Result<SemioBrepSnapshot, String> {
-    <SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
+    <SemioBrepSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
 }
-/// 📤️ The `store::os_store::serialization::ArtifactPack::encode_pack` inverse of [`decode_semio_brep_pack`].
+/// 📤️ The `pack::snapshot::ArtifactPack::encode_pack` inverse of [`decode_semio_brep_pack`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_semio_brep_pack(snapshot: &SemioBrepSnapshot) -> Vec<u8> {
-    <SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(snapshot)
+    <SemioBrepSnapshot as pack::snapshot::ArtifactPack>::encode_pack(snapshot)
 }
 }
 pub use native_snapshot_codec::*;

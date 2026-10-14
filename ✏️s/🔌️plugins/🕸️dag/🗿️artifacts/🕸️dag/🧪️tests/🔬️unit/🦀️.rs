@@ -22,7 +22,7 @@ async fn node_edge_content_round_trips_through_the_composed_child_snapshot() {
 /// so a decoded parent never needs a working scene on its handle (design §20.15).
 #[semio_framework_async_macros::async_test]
 async fn only_derivable_children_have_a_genesis_pack() {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     let demo = default_snapshot();
     let pack = genesis_dag_child_pack(&demo, "content", &demo.content.child_id).expect("the demo content is derivable");
     assert_eq!(dag_scene_of_content(&SemioGraphSnapshot::decode_pack(&pack).expect("genesis pack decodes")), examples::demo::scene());

@@ -5,7 +5,7 @@
 
 use super::*;
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🧫️history-patch/🔣️.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/🧫️history-patch/🔣️.json");
 
 fn cases(section: &str) -> Vec<(String, serde_json::Value, serde_json::Value)> {
     let fixture: serde_json::Value = serde_json::from_str(FIXTURE).expect("the history patch fixture is JSON");

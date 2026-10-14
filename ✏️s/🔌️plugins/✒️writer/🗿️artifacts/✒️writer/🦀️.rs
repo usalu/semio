@@ -132,7 +132,7 @@ pub fn writer_snapshot_with_text(schema: &str, id: &str, language_id: &str, uri:
 /// `Effect::LoadDocument`) derives the slot here; without it the archive closure completes
 /// `Incomplete` and the load is refused (`document-archive-replacement.closure-rejected`).
 pub fn genesis_writer_child_pack(snapshot: &WriterSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     (slot == "document" && child_id == snapshot.document.child_id).then(|| <SemioDocumentSnapshot as ArtifactPack>::encode_pack(&document_snapshot_from_text(&snapshot.text, &snapshot.language_id)))
 }
 //#endregion 🔖️WorkingScene

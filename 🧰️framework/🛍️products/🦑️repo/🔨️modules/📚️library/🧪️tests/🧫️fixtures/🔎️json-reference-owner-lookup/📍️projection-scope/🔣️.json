@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "contract": "mutation-reference-projection-scope-v1",
+  "activeKeys": ["domains/🗿️artifacts/🧊️cube\u00001\u0000any"],
+  "movingTargets": ["domains/🗿️artifacts/🧊️cube/source/🔣️.json"],
+  "semantics": {
+    "physicalReferences": "existing-exact-destination-membership",
+    "fallback": "exact-artifact-owner-and-active-profile",
+    "templates": "complete-owner-or-profile-scope",
+    "unprovedOwnedReferences": "unresolved",
+    "foreignOrMissingOwner": "inactive"
+  },
+  "oracle": {
+    "active": {
+      "type": "object",
+      "required": ["owner", "profile", "scope", "target", "hasTarget"],
+      "properties": {"target": {"type": "null"}, "hasTarget": {"const": false}, "owner": {"const": "domains/🗿️artifacts/🧊️cube"}},
+      "anyOf": [
+        {"properties": {"profile": {"const": "1\u0000any"}, "scope": {"enum": ["", "domains", "domains/🗿️artifacts/🧊️cube", "domains/🗿️artifacts/🧊️cube/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations"]}}},
+        {"properties": {"profile": {"const": "*"}, "scope": {"enum": ["", "domains", "domains/🗿️artifacts/🧊️cube"]}}}
+      ]
+    },
+    "unproven": {
+      "type": "object",
+      "required": ["owner", "profile", "scope", "target", "hasTarget"],
+      "properties": {"target": {"type": "null"}, "owner": {"const": "domains/🗿️artifacts/🧊️cube"}, "profile": {"enum": ["1\u0000any", "*"]}},
+      "anyOf": [
+        {"properties": {"hasTarget": {"const": true}}},
+        {"properties": {"profile": {"const": "1\u0000any"}, "scope": {"not": {"enum": ["", "domains", "domains/🗿️artifacts/🧊️cube", "domains/🗿️artifacts/🧊️cube/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations"]}}}},
+        {"properties": {"profile": {"const": "*"}, "scope": {"not": {"enum": ["", "domains", "domains/🗿️artifacts/🧊️cube"]}}}}
+      ]
+    }
+  },
+  "cases": [
+    {"id": "owned-template-whole-workspace", "owner": "domains/🗿️artifacts/🧊️cube", "profile": "1\u0000any", "scope": "", "target": null, "hasTarget": false, "state": "active"},
+    {"id": "owned-template-parent-scope", "owner": "domains/🗿️artifacts/🧊️cube", "profile": "1\u0000any", "scope": "domains", "target": null, "hasTarget": false, "state": "active"},
+    {"id": "owned-template-complete-owner", "owner": "domains/🗿️artifacts/🧊️cube", "profile": "1\u0000any", "scope": "domains/🗿️artifacts/🧊️cube", "target": null, "hasTarget": false, "state": "active"},
+    {"id": "owned-template-complete-profile", "owner": "domains/🗿️artifacts/🧊️cube", "profile": "1\u0000any", "scope": "domains/🗿️artifacts/🧊️cube/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations", "target": null, "hasTarget": false, "state": "active"},
+    {"id": "ownerless-same-profile", "owner": "", "profile": "1\u0000any", "scope": "", "target": null, "hasTarget": false, "state": "inactive"},
+    {"id": "foreign-same-profile", "owner": "domains/🗿️artifacts/🌐️sphere", "profile": "1\u0000any", "scope": "", "target": null, "hasTarget": false, "state": "inactive"},
+    {"id": "owner-prefix-lookalike", "owner": "domains/🗿️artifacts/🧊️cube-extra", "profile": "1\u0000any", "scope": "", "target": null, "hasTarget": false, "state": "inactive"},
+    {"id": "inactive-profile", "owner": "domains/🗿️artifacts/🧊️cube", "profile": "2\u0000any", "scope": "", "target": null, "hasTarget": false, "state": "inactive"},
+    {"id": "missing-owned-concrete-target", "owner": "domains/🗿️artifacts/🧊️cube", "profile": "1\u0000any", "scope": "", "target": null, "hasTarget": true, "state": "unproven"},
+    {"id": "partial-owned-profile", "owner": "domains/🗿️artifacts/🧊️cube", "profile": "1\u0000any", "scope": "domains/🗿️artifacts/🧊️cube/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit", "target": null, "hasTarget": false, "state": "unproven"},
+    {"id": "scope-prefix-lookalike", "owner": "domains/🗿️artifacts/🧊️cube", "profile": "1\u0000any", "scope": "domain", "target": null, "hasTarget": false, "state": "unproven"},
+    {"id": "owned-wildcard-complete-owner", "owner": "domains/🗿️artifacts/🧊️cube", "profile": "*", "scope": "domains/🗿️artifacts/🧊️cube", "target": null, "hasTarget": false, "state": "active"},
+    {"id": "owned-wildcard-partial-owner", "owner": "domains/🗿️artifacts/🧊️cube", "profile": "*", "scope": "domains/🗿️artifacts/🧊️cube/🏅️standards/🔖️1", "target": null, "hasTarget": false, "state": "unproven"},
+    {"id": "ownerless-wildcard", "owner": "", "profile": "*", "scope": "", "target": null, "hasTarget": false, "state": "inactive"},
+    {"id": "foreign-wildcard", "owner": "domains/🗿️artifacts/🌐️sphere", "profile": "*", "scope": "", "target": null, "hasTarget": false, "state": "inactive"},
+    {"id": "physical-moved-target-needs-no-fallback", "owner": "domains/🗿️artifacts/🧊️cube", "profile": "1\u0000any", "scope": "", "target": "domains/🗿️artifacts/🧊️cube/source/🔣️.json", "hasTarget": true, "state": "inactive"},
+    {"id": "physical-unmoved-target-never-projects-by-profile", "owner": "domains/🗿️artifacts/🧊️cube", "profile": "1\u0000any", "scope": "", "target": "domains/🗿️artifacts/🧊️cube/unmoved/🔣️.json", "hasTarget": true, "state": "inactive"}
+  ]
+}

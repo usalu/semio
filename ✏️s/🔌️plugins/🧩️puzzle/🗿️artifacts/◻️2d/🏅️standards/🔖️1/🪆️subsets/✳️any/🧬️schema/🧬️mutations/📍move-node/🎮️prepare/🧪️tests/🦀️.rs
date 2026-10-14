@@ -22,7 +22,7 @@ fn close(cursor: &mut Puzzle2dMoveNodePreparationCursor) {
 #[test]
 fn history_edit_puzzle2d_scalar_move_preparation_preserves_inverse_and_refusal_without_owned_payload_copy() {
     assert!(std::mem::size_of::<Puzzle2dMoveNodePreparationCursor>() <= 4096);
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/🎮️prepare/🔣️.json")).unwrap();
     let controls = &corpus["control"];
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap(); match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", controls["largePrefix"].as_str().unwrap().repeat(controls["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let scalar = |value: &serde_json::Value| match value.as_str() { Some("nan") => f64::NAN, Some("positive-infinity") => f64::INFINITY, None => value.as_f64().unwrap(), _ => panic!("unknown neutral scalar") };

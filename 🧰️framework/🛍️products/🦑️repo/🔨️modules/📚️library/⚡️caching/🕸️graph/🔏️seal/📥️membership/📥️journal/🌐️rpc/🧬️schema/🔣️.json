@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.caching/FilesystemJournalRpcV1",
+  "title": "Filesystem Journal RPC V1",
+  "$ref": "#/$defs/Request",
+  "$defs": {
+    "Scope": {
+      "$ref": "schema://framework.filesystem.observation/LiveFilesystemJournalV1#/$defs/Scope"
+    },
+    "Witness": {
+      "$ref": "schema://framework.filesystem.observation/LiveFilesystemJournalV1#/$defs/Witness"
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "version",
+        "scope"
+      ],
+      "properties": {
+        "type": {
+          "const": "GET_SEMIO_FILESYSTEM_JOURNAL"
+        },
+        "version": {
+          "const": 1
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        }
+      }
+    },
+    "Response": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "toolingIdentity",
+            "witness"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "toolingIdentity": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "witness": {
+              "$ref": "#/$defs/Witness"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

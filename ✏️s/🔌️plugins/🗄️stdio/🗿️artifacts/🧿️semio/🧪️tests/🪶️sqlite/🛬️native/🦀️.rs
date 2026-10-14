@@ -1,8 +1,8 @@
 //! 🛬️ Explicit concrete Semio declaration owners and controlled native construction.
-use store::{os_store::serialization::ArtifactSqliteSnapshot,os_store::serialization::ArtifactDsl,os_store::serialization::ArtifactPack,os_store::serialization::ArtifactCodec};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack,os_store::serialization::ArtifactCodec};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding};
 
-fn check<P:ArtifactSqliteSnapshot+ArtifactDsl+ArtifactPack+Default+PartialEq+std::fmt::Debug+'static>(name:&str,subset:&str,codec:ArtifactCodec,failures:&mut Vec<String>){
+fn check<P:ArtifactSqliteSnapshotHost+ArtifactDsl+ArtifactPack+Default+PartialEq+std::fmt::Debug+'static>(name:&str,subset:&str,codec:ArtifactCodec,failures:&mut Vec<String>){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();assert!(fixture["owners"].as_array().unwrap().iter().any(|value|value.as_str()==Some(name)));
     let snapshot=P::default();
     let Some(provider)=codec.snapshot_sqlite.as_ref() else{failures.push(format!("{name}: declaration has no capability"));return};

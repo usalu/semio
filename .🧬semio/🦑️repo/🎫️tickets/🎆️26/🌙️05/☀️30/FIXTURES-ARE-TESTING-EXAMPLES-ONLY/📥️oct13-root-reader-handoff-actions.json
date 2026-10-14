@@ -1,0 +1,841 @@
+{
+  "exclusive": false,
+  "actions": [
+    {
+      "path": "📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "955512368cedf250ec573707b16a9ab8b2068957c51da17a4a2a083d49684cf5",
+      "afterSha256": "98d61c8721c09e8156ced2137e8285ad0fcec18385c5d01a12e89dc2d33c0383",
+      "inputs": [
+        "📥️actor-job-readers.json",
+        "📥️core-readers.json"
+      ],
+      "edits": [
+        {
+          "from": "🧰️framework/🔨️modules/🧵️job/🧫️fixtures/📇️fixed-operation-registry-law.json",
+          "to": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📇️fixed-operation-registry-law.json",
+          "occurrences": 2
+        },
+        {
+          "from": "🧰️framework/🔨️modules/🧵️job/🧫️fixtures/⚖️shared-framework-action-routes-law.json",
+          "to": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/⚖️shared-framework-action-routes-law.json",
+          "occurrences": 1
+        },
+        {
+          "from": "🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json",
+          "to": "🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json",
+          "occurrences": 1
+        },
+        {
+          "from": "🧰️framework/🔨️modules/🛂️manifest/🧫️fixtures/🖐️gumball-verb-audience.json",
+          "to": "🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🖐️gumball-verb-audience.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🔔️deferred-wake-ownership/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "404779032055fea278fb7e35c8a81728a801be779e27d68c73b64051cfc70831",
+      "afterSha256": "779942d8f8db6bee34a80b699ed02786cf8ad1b4b6fcb0ddb6ab32100f94f10e",
+      "inputs": [
+        "📥️valueasync-readers.json"
+      ],
+      "edits": [
+        {
+          "from": "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧫️fixtures/🔣️.json",
+          "to": "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧪️tests/🧫️fixtures/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🔐️pool-use-ownership/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "289fee039582a5f70304ebeb69d2f625c5717aea9007c5ea50d38fc2d269fea5",
+      "afterSha256": "9d851ca9bff625bad996b78904ec47ed692f93cc256bccf1f1cb69755a219c53",
+      "inputs": [
+        "📥️valueasync-readers.json"
+      ],
+      "edits": [
+        {
+          "from": "🧰️framework/🔨️modules/⏳️async/🔐️use/🧫️fixtures/🔣️.json",
+          "to": "🧰️framework/🔨️modules/⏳️async/🔐️use/🧪️tests/🧫️fixtures/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "operation": "updated",
+      "beforeSha256": "8d78667a1b597ce3b32689272b1355374b2ab5313c15ba36b741c3e546bdae1f",
+      "afterSha256": "4f4f5eb443ecf01a78b1f36c5e3bdb54224bba0f4b703327b4d2c518cd44b17b",
+      "inputs": [
+        "📥️core-readers.json"
+      ],
+      "edits": [
+        {
+          "from": "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+          "to": "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json",
+          "occurrences": 1
+        },
+        {
+          "from": "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/**/*",
+          "to": "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/**/*",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "operation": "updated",
+      "beforeSha256": "26ddbdf7cad97ad98660e4b7b18b0b1faa86f6bd0fbc06031cb747c2d58dc89e",
+      "afterSha256": "e4355e3e3d42a9ceeccef17f1087b05604a75ae4e902289c0e9c47cb324ad4dd",
+      "inputs": [
+        "📥️core-readers.json"
+      ],
+      "edits": [
+        {
+          "from": "🧰️framework/🔨️modules/🕸️graph/🧫️fixtures/🔣️outputs.json",
+          "to": "🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧫️fixtures/🔣️outputs.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/📋️orchestration/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "308a25de80483e21929ab52807b1bf9eaca38728bd667b22ec983e79b72712ab",
+      "afterSha256": "1707a4f319aad23e1fa6d738862024dd49f09d47f8f2254107f0c8ac01ff4630",
+      "inputs": [
+        "📥️core-readers.json"
+      ],
+      "edits": [
+        {
+          "from": "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/🧫️framework-notices/🔣️.json",
+          "to": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧫️framework-notices/🔣️.json",
+          "occurrences": 1
+        },
+        {
+          "from": "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/🧫️history-notices/🔣️.json",
+          "to": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧫️history-notices/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️puzzle/🧪️tests/🔺️diff-parsers/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "ab708238f4444944d5d5131083919d318bd725cd580269a3254e6197a2434625",
+      "afterSha256": "7cebf203371d3d52c4aa448b89532a23b826796358d9156a1ec41ae3547654b9",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "\"../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧫️fixtures/🔢️native-fields/🔣️.json\"",
+          "to": "\"../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔺️diff/🔢️native-fields/🔣️.json\"",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🔁️generation3d-incremental-eval/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "5f0a64c4311ea8b2e2dba2d2447b245579d0924ce6e165484522e5b9d5d4673e",
+      "afterSha256": "f8bcf49b99b6d3a8d5549c606965e63721ebd181425be2262c825d44e1be2c49",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🔁️incremental-eval.json",
+          "to": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔁️incremental-eval.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "0412504bf07211c4009ba9e8428174648f315a1e19cae3e761f80cf8ab5eb423",
+      "afterSha256": "af5f7be2b18e65285b916b0a7cfeb0495db77a687430a39ff2ba73709a4f9a6f",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🧫️fixtures/🔣️.json",
+          "occurrences": 3
+        },
+        {
+          "from": "../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧫️fixtures/🥽️topology/🔣️.json",
+          "to": "../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🧫️fixtures/🥽️topology/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "b41e55fb14dfff11d5c89cbc51df706dcb8ddf7a81e892f85114b9a36d8c88e1",
+      "afterSha256": "cae8d3afc4a2f12ecb1753110eb5ca680935037292ed3017847ebbeb1d4e7151",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️navigate-graph/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "7e33db7b052d36bb1ec8d0e0629f3770b6c223a138d21d6f7517a69be5878d78",
+      "afterSha256": "5d0175c3c434bdaec9bdea1a791dbeddb90dbbc86868c6043d1ee8e013cbfddd",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧭️graph-keyboard-navigation.json",
+          "to": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧭️graph-keyboard-navigation.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔓️flow-eval-release/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "57a7fdba14a78d66f966c0d1b407f029d93ac40c8e06c38ced2949828c96d1dc",
+      "afterSha256": "1c2051057288d48e693935a5bffbdab694d56cc1b8598449b07700438ade7ae9",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/⏯️preview-eval-run.json",
+          "to": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏯️preview-eval-run.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "5371e72e847e850c7a00fdd9e88ca7817ffa3057387d0060c532c06be08f5610",
+      "afterSha256": "23361b2ff09c0549d391019b4eb7a064ae0157b877dffe1ce19f837a829be62b",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🧫️fixtures/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️flow-eval-resolve/🧪️tests/🔬️budget/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "c02a95776cd69a633eda166f67d49077e04766dcd392b78ba39fec249aec3e81",
+      "afterSha256": "89ac09e6bae23cb9a432e7e7038f4dcbecb78cc848167bf4a504381f87f7e06b",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/⏱️evaluate-budget.json",
+          "to": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏱️evaluate-budget.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "12112832178356c0e31a441cd08a9e3746eb3e4d163631c3716397bbe370ddb6",
+      "afterSha256": "96ea1102fa1daf36b159e4f44ba25295dceee5a5071975c221026fe3ec25f847",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json",
+          "occurrences": 3
+        },
+        {
+          "from": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "f5f067445b3ad37223d3d0ac642f1da1b1c176dacbcf1ef246d3bd0f126707d5",
+      "afterSha256": "a0bb621b1bff37fada77d7fd562c0d34b4209bbf2851773ffbfd6700d3665334",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🎚️slider-gesture.json",
+          "to": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎚️slider-gesture.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏱️flow-eval-tick/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "d48ba3dcd8293c9b740db5dfca73603e5d6cb5fa4657c875696d5b6ad19cf05b",
+      "afterSha256": "c89d1786c19495e4a23050dfa697ed97fafb73577c82b4b42052e568ecba0cc4",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🚧️contribution-gated-arming.json",
+          "to": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/🚧️contribution-gated-arming.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "133b7dc104792f4757b76f9348e4fb444d5890145813cec65ae61a3dedcd6790",
+      "afterSha256": "1c6d3005f6705c53a49849b75d164c8255c4a226ab511e40b81af2d4b4b848a5",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧫️fixtures/🔬️unit/🔣️.json",
+          "to": "../../../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧪️tests/🧫️fixtures/🔬️unit/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🎚️slider-values/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "d7bdcb45868fd37400f6a58a4c55918daa9fef53e89801685025ad78423a4aac",
+      "afterSha256": "2b5325a856bb3a49de1b1cfae57ea0a263b5bcbc5e0835566de4c46a1872733f",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🎚️slider-values.json",
+          "to": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎚️slider-values.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️mode-panels/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "8a5270962917ee69b0789af56645f261dc207c26c274240a1f7243d9440d3d9f",
+      "afterSha256": "9b11db1d2cb57ec1f8db974a8b7c7e0015ef3640ac8cc9755c61d8732a3abacb",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/📌️mode-panel-publication.json",
+          "to": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📌️mode-panel-publication.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️tick-addressing/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "1aaa9064684e60658a2e30df636424c847c0b93169eaf8db6ffe25b19fb7ecb9",
+      "afterSha256": "64ed1fcca907f986bc38eedb49fb7dcc2e3f18c42e59e64c20a9c7d781ebe598",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🪟️tick-addressing.json",
+          "to": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪟️tick-addressing.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "8958cef745ac349695b42ad53cd387961040f4b728be333d6b9465ff7bf3823a",
+      "afterSha256": "47ff48c33dd1dfba018e231062955c8071f9a2915e3701147342817c0df8404b",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json",
+          "occurrences": 2
+        },
+        {
+          "from": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json",
+          "occurrences": 3
+        },
+        {
+          "from": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️transforms/🧫️fixtures/🧷️gesture/🔣️.json",
+          "to": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️transforms/🧪️tests/🧫️fixtures/🧷️gesture/🔣️.json",
+          "occurrences": 1
+        },
+        {
+          "from": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/💥️extension-evaluate-fault.json",
+          "to": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/💥️extension-evaluate-fault.json",
+          "occurrences": 1
+        },
+        {
+          "from": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🚪️io/🗿️artifact-surface.json",
+          "to": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🚪️io/🗿️artifact-surface.json",
+          "occurrences": 1
+        },
+        {
+          "from": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/⌨️keyboard-reachability.json",
+          "to": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⌨️keyboard-reachability.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️example-switch/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "e8bf3314d3244cc88ff234337625019f506ba95d3f0751727b7dd5d73b66196f",
+      "afterSha256": "a19ca393eda2fb1dbca607f6678c862fad36e473b2d48787059172769187d825",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🎨️example-switch.json",
+          "to": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️example-switch.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️generate-interactions/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "7e8a28b442f2f346b00d067eb17c3453987baea52fbd22ce739ad093d70ee097",
+      "afterSha256": "33113e08a011a732b15f0685e1dc5208b374af87b0171af1b36b19e43d6b1589",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🎛️generate-mode-interactions.json",
+          "to": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎛️generate-mode-interactions.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🕹️interaction-scope/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "f87e8966c1eb9db31506e0cb56b8d48fa7ee8fc2fb61a93c3d00da88e4ccd03c",
+      "afterSha256": "7a364f4433017c836c4f238b89ff0d96b2ce1d24cbed7fa9ab90d28dbdd3b2da",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🕹️interaction-scope.json",
+          "to": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🕹️interaction-scope.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "a62be8e9418f8050f6ed0367226111feda29133e19e5291f0705c914a74f2c6e",
+      "afterSha256": "4f71a7dd4d618b2a8abe8d81128144d127b4fe1d8e2790ee5a5c59867d13687c",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧫️fixtures/🗣️.json",
+          "to": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🧫️fixtures/🗣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "66982a65e9f893d6500cbed129c780ca77a915331ac04b6d4e3553ae67408f53",
+      "afterSha256": "179ac58875cc7ca78d1b78e468aca0b4d23ce491217338d249fd25e7c9bb733a",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "603b6dc14bb7f9087ac9674eeff3a1a80a0d0d6c955606ce8ac18b9e058860e5",
+      "afterSha256": "fbb0bfd75442d6889f5fd1acf30d6d17413b7bb904722075071d9b82734cfc42",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧫️fixtures/🔬️unit/🔣️.json",
+          "to": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🧫️fixtures/🔬️unit/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🎨️set-active-example/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "d6dff5e4d97349fa5e8a367bf23a8ddf7a8eff044767290e377a3f95cb66e914",
+      "afterSha256": "ce04760e2b2feed7f9a38fcd4df9fa724722e2106e4e9419de4a4757f4b2241f",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🎨️example-switch.json",
+          "to": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️example-switch.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️status-contract/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "1632e926835954fd368d0a5077f5a26a35db35fcfa66498eba15c59a684a177f",
+      "afterSha256": "3ee7156f9c857d4d8d8383b6ef77f35d215b05c66d4eae3b28fdcb2db4afa109",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🛑️preview-cancel.json",
+          "to": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🛑️preview-cancel.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️eval-chain/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "a80dc9b9bcaa88ab78e0fadd3202341bf9aff8f55d3c135b07d9567cbb2f3622",
+      "afterSha256": "2b95179fbffd5211a673555cb366fc481ae0eec905c0e9653a500ea71cb0b9b8",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🪟️tick-addressing.json",
+          "to": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪟️tick-addressing.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "c0e0b60b64b713530168bea2f5ad7675bd0c1061564df5eb24875323f8a7cfeb",
+      "afterSha256": "06e04e73640a7fb69f47873a90e627a310e46a394b808293d38a472e9156ea0b",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/⏯️preview-eval-run.json",
+          "to": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏯️preview-eval-run.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🎬️sequence-runtime/🪟️windows/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "dbbb4caad194c9fc6d6a0c701838c742de7d17eebea2b4f7ac46d99dd8f7acbc",
+      "afterSha256": "1c6560194a1642bd877d1f5261328048055c1232718d51561a44a07c0fd772c1",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📽️main/🎚️config/🧫️fixtures/🔬️window-ownership/🔣️.json",
+          "to": "../../../../../🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📽️main/🎚️config/🧪️tests/🧫️fixtures/🔬️window-ownership/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧩️generation3d-example-geometry/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "6cac7610a06fa4c7bd271df79b3546d93950a73d80f5c971d22085a16fcf5c57",
+      "afterSha256": "071602aa494678a5b4680089b98786e447de02a1e1fac8258f64a9cdcef5307d",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍩️sphere-cut-with-torus/🧫️fixtures/🧩️example/🔣️.json",
+          "to": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍩️sphere-cut-with-torus/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+          "occurrences": 2
+        },
+        {
+          "from": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧲️sphere-box-fuse/🧫️fixtures/🧩️example/🔣️.json",
+          "to": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧲️sphere-box-fuse/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+          "occurrences": 2
+        },
+        {
+          "from": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📐️box-fillet-preview/🧫️fixtures/🧩️example/🔣️.json",
+          "to": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📐️box-fillet-preview/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+          "occurrences": 2
+        },
+        {
+          "from": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🐚️box-shell-preview/🧫️fixtures/🧩️example/🔣️.json",
+          "to": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🐚️box-shell-preview/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+          "occurrences": 2
+        },
+        {
+          "from": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom-column/🧫️fixtures/🧩️example/🔣️.json",
+          "to": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom-column/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+          "occurrences": 2
+        },
+        {
+          "from": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧹️face-sweep-extrude/🧫️fixtures/🧩️example/🔣️.json",
+          "to": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧹️face-sweep-extrude/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+          "occurrences": 2
+        },
+        {
+          "from": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️rectangle-extrude-volume/🧫️fixtures/🧩️example/🔣️.json",
+          "to": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️rectangle-extrude-volume/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+          "occurrences": 2
+        },
+        {
+          "from": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🪢️rectangle-wire-preview/🧫️fixtures/🧩️example/🔣️.json",
+          "to": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🪢️rectangle-wire-preview/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+          "occurrences": 2
+        },
+        {
+          "from": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧫️fixtures/⏱️budget-calibration/🔣️.json",
+          "to": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests/🧫️fixtures/⏱️budget-calibration/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "10a27e103d4c5379ba967fb0b46ae4db404ae25400cfd1762777a0b8c73aa3fc",
+      "afterSha256": "e75ec09ec5af4dddbb50a1b30a8b484a75274c91816b71093e0a09f0ba316437",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "join(base, \"🧫️fixtures/🧫️retained-command-limits/🔣️.json\")",
+          "to": "join(base, \"🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json\")",
+          "occurrences": 1
+        },
+        {
+          "from": "join(base, \"🫧️transient/🧫️fixtures/📇️projection-wire-v1/🔣️.json\")",
+          "to": "join(base, \"🫧️transient/🧪️tests/🧫️fixtures/📇️projection-wire-v1/🔣️.json\")",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪐️space/🧪️tests/🔬️interactive-job-catalog/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "0600492928413955880ac3d6a65dff69ab2628d8858ff2dc809b4356a1897200",
+      "afterSha256": "a1107b8522e6cd7a595f83dbbc917e231aa7fc786c5cda8928d2ba02861ca8a7",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🧫️retained-command-limits/🔣️.json",
+          "to": "../../../../../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json",
+          "occurrences": 1
+        },
+        {
+          "from": "../../../../../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🧫️retained-command-limits/🔣️.json",
+          "to": "../../../../../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪐️space/🧪️testing/🧪️tests/🔮️ownership/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "133a47fca90da7889882bba809ded9b33d6b6cc321c8c41a4d6da739e804e893",
+      "afterSha256": "6337bd5c3072537c5cc324599ff0e0066ee6bb8dd7b2519850dee5b45682aefb",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "\"../../../../../../✏️s/🔌️plugins/🪐️space/🫀️core/📄️documents/🧫️fixtures/🔣️.json\"",
+          "to": "\"../../../../../../✏️s/🔌️plugins/🪐️space/🫀️core/📄️documents/🧪️tests/🧫️fixtures/🔣️.json\"",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "dbae7a61cbf13b80fc58066553339b87d1833d5d567d873101f7b103908ab109",
+      "afterSha256": "c9000b113416af2ff82bc405874a626e570dd29356269f0027f9181434247d74",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "join(this.repoRoot, PLUGIN_OWNER, \"🧫️fixtures/📇️mutation-leaf-taxonomy-v1/🔣️.json\")",
+          "to": "join(this.repoRoot, \"✏️s/🔌️plugins/📕️norm/🧪️tests/🧫️fixtures/📇️mutation-leaf-taxonomy-v1/🔣️.json\")",
+          "occurrences": 2
+        },
+        {
+          "from": "join(configRoot, \"🧫️fixtures\", \"🔣️.json\")",
+          "to": "join(configRoot, \"🧪️tests/🧫️fixtures/🔣️.json\")",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📕️norm/🖥️app-surface/🧪️tests/🖥️app-surface/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "45112dd4c161f52c858125bd4c61aff979f5555d67477d25544cb5e9afac03ff",
+      "afterSha256": "1ba4e1b38e905c05425d21f1caa472fcfac10b50296226ed276faa339fe3839a",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../../✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🧫️fixtures/🧫️retained-command-dispositions/🔣️.json",
+          "to": "../../../../../../✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🧪️tests/🧫️fixtures/🧫️retained-command-dispositions/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️editable-controls/🟦️.tsx",
+      "operation": "updated",
+      "beforeSha256": "8f842afe3d47137e8d854a425b73563f7fe4350114c96ae2f312c6c50abb8c50",
+      "afterSha256": "8d9c2d26b824871b10fc4b6d6fd6219df42b5537883210ecbab90345aa0ebdac",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "\"../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗣️terminology.json\"",
+          "to": "\"../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🗣️terminology.json\"",
+          "occurrences": 1
+        },
+        {
+          "from": "\"../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧫️fixtures/🔣️.json\"",
+          "to": "\"../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json\"",
+          "occurrences": 1
+        },
+        {
+          "from": "\"../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures/🔣️.json\"",
+          "to": "\"../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️.json\"",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "d376032fa9d5015287ebf74a3e3a584edb707da527238c3fd8912c1d09940288",
+      "afterSha256": "87a09c2bba893e58f82e633572aaad68457cd9a267e4d0d4100f0710ba8c0c8c",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "\"../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧫️fixtures/🛑️interruption/🔣️.json\"",
+          "to": "\"../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧪️tests/🧫️fixtures/🛑️interruption/🔣️.json\"",
+          "occurrences": 1
+        },
+        {
+          "from": "\"../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧫️fixtures/🔣️.json\"",
+          "to": "\"../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧪️tests/🧫️fixtures/🔣️.json\"",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧪️tests/🧪️staged-arg-controls/🟦️.tsx",
+      "operation": "updated",
+      "beforeSha256": "7378544c2dd0135ffc97ca3602dceb4481c4b4f27a76dcec6b5a5aec8dbeb952",
+      "afterSha256": "82aa99f9b443c67165f38192126af1c5d1a23aab2368670575c5ea9c8c0e1ce6",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "\"../../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/➕️create-layer/🧫️fixtures/🎛️input-choices/🔣️.json\"",
+          "to": "\"../../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/➕️create-layer/🎛️input-choices/🔣️.json\"",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "cef5d0b349408699c747cb99dac85b4f2bef982cd124c57256b6f2a4ebb992b4",
+      "afterSha256": "e9bb19feed778161c3f4dc8d5c8af6ee67c4119c1bb35219de6c59bb61435c3a",
+      "inputs": [
+        "📥️oct13pluginfinish-shared-reader-spans.json"
+      ],
+      "edits": [
+        {
+          "from": "\"✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🛣️retained-command-routes.json\"",
+          "to": "\"./✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/🛣️retained-command-routes.json\"",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📱️app-verification-source-ownership/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "7e287caabc811b52854e0bdb1b031b064003d6650dbbc384c0bfb6a15f6e7044",
+      "afterSha256": "4c28da7978854027549dc21d6c0f647d5c8b801e3aaa45bd67bbb222d3a7230c",
+      "inputs": [
+        "📥️oct13plugin-b2-root-library-ref-input.json"
+      ],
+      "edits": [
+        {
+          "from": "resolve(repoRoot, \"✏️s/🔌️plugins/➗️mathematical/🧫️fixtures/📣️publication-authority/🔣️.json\")",
+          "to": "resolve(repoRoot, \"✏️s/🔌️plugins/➗️mathematical/🧪️tests/🧫️fixtures/📣️publication-authority/🔣️.json\")",
+          "occurrences": 1
+        }
+      ]
+    }
+  ],
+  "peerObservations": []
+}

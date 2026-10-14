@@ -173,7 +173,7 @@ fn a_component_of_a_missing_family_is_noted_and_not_written() {
     assert!(!tags(&document, "IFCBUILDINGELEMENTPROXY").contains(&"cmp-pillar".to_string()));
 }
 
-const COMPONENTS_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🪑️components");
+const COMPONENTS_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🪑️components");
 
 fn read_components(name: &str) -> Vec<u8> {
     std::fs::read(format!("{COMPONENTS_DIR}/{name}")).unwrap_or_else(|error| panic!("{name}: {error}. Run the test with BIM_BLESS=1 to write the file, then `python 🐍️.py write` of the export case."))

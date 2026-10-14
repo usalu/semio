@@ -15,7 +15,7 @@ type Result = {
 };
 
 const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
-const fixture = read("../../🧫️fixtures/🔣️.json") as Fixture;
+const fixture = read("../🧫️fixtures/🔣️.json") as Fixture;
 const ajv = new Ajv({ allErrors: true, strict: true, strictRequired: false, allowUnionTypes: true });
 const validateRequest = ajv.compile(read("../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🛰️service/📥️request.json"));
 const validateResult = ajv.compile(read("../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🛰️service/📤️result.json"));

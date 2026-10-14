@@ -1,7 +1,7 @@
 /** 🎯️ Three.js independently validates the transformed selection fixture. */
 import { expect, test } from "bun:test";
 import { CubicBezierCurve, Vector2, Matrix3, ShapeUtils } from "three";
-import fixture from "../../🧫️fixtures/🎯️selection/🔣️.json";
+import fixture from "../🧫️fixtures/🎯️selection/🔣️.json";
 
 test("nested curve selection agrees with independent transformed geometry", () => {
   const start = fixture.segments[0]!.to!;

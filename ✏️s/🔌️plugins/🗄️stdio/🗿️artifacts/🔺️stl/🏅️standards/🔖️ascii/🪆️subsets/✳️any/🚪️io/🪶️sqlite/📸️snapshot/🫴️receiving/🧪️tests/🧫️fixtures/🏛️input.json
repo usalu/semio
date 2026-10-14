@@ -1,0 +1,264 @@
+{
+  "tables": [
+    {
+      "name": "stl_solid",
+      "sql": "CREATE TABLE stl_solid (\n  id INTEGER PRIMARY KEY,\n  schema TEXT NOT NULL,\n  name TEXT NOT NULL\n)",
+      "rows": [
+        {
+          "rowid": "-19",
+          "values": [
+            {
+              "integer": "-19"
+            },
+            "literal/schema λ\u0000",
+            "Original 世界\u0000 name"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "stl_facet",
+      "sql": "CREATE TABLE stl_facet (\n  id INTEGER PRIMARY KEY,\n  solid_id INTEGER NOT NULL REFERENCES stl_solid(id),\n  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),\n  normal_x REAL,\n  normal_y REAL,\n  normal_z REAL,\n  normal_x_ieee754_bits INTEGER NOT NULL,\n  normal_x_numeric_class TEXT NOT NULL CHECK(normal_x_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')),\n  normal_y_ieee754_bits INTEGER NOT NULL,\n  normal_y_numeric_class TEXT NOT NULL CHECK(normal_y_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')),\n  normal_z_ieee754_bits INTEGER NOT NULL,\n  normal_z_numeric_class TEXT NOT NULL CHECK(normal_z_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan'))\n)",
+      "rows": [
+        {
+          "rowid": "41",
+          "values": [
+            {
+              "integer": "41"
+            },
+            {
+              "integer": "-19"
+            },
+            {
+              "integer": "1"
+            },
+            1.25,
+            0,
+            0,
+            {
+              "integer": "4608308318706860032"
+            },
+            "finite",
+            {
+              "integer": "0"
+            },
+            "finite",
+            {
+              "integer": "0"
+            },
+            "finite"
+          ]
+        },
+        {
+          "rowid": "73",
+          "values": [
+            {
+              "integer": "73"
+            },
+            {
+              "integer": "-19"
+            },
+            {
+              "integer": "0"
+            },
+            0,
+            null,
+            0,
+            {
+              "integer": "-9223372036854775808"
+            },
+            "finite",
+            {
+              "integer": "9221140253039434428"
+            },
+            "nan",
+            {
+              "integer": "0"
+            },
+            "finite"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "stl_vertex",
+      "sql": "CREATE TABLE stl_vertex (\n  id INTEGER PRIMARY KEY,\n  facet_id INTEGER NOT NULL REFERENCES stl_facet(id),\n  ordinal INTEGER NOT NULL CHECK (ordinal BETWEEN 0 AND 2),\n  x REAL,\n  y REAL,\n  z REAL,\n  x_ieee754_bits INTEGER NOT NULL,\n  x_numeric_class TEXT NOT NULL CHECK(x_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')),\n  y_ieee754_bits INTEGER NOT NULL,\n  y_numeric_class TEXT NOT NULL CHECK(y_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')),\n  z_ieee754_bits INTEGER NOT NULL,\n  z_numeric_class TEXT NOT NULL CHECK(z_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan'))\n)",
+      "rows": [
+        {
+          "rowid": "106",
+          "values": [
+            {
+              "integer": "106"
+            },
+            {
+              "integer": "41"
+            },
+            {
+              "integer": "2"
+            },
+            0,
+            0,
+            0,
+            {
+              "integer": "0"
+            },
+            "finite",
+            {
+              "integer": "0"
+            },
+            "finite",
+            {
+              "integer": "0"
+            },
+            "finite"
+          ]
+        },
+        {
+          "rowid": "103",
+          "values": [
+            {
+              "integer": "103"
+            },
+            {
+              "integer": "73"
+            },
+            {
+              "integer": "2"
+            },
+            0,
+            0,
+            0,
+            {
+              "integer": "0"
+            },
+            "finite",
+            {
+              "integer": "0"
+            },
+            "finite",
+            {
+              "integer": "0"
+            },
+            "finite"
+          ]
+        },
+        {
+          "rowid": "101",
+          "values": [
+            {
+              "integer": "101"
+            },
+            {
+              "integer": "73"
+            },
+            {
+              "integer": "0"
+            },
+            0,
+            0,
+            0,
+            {
+              "integer": "0"
+            },
+            "finite",
+            {
+              "integer": "0"
+            },
+            "finite",
+            {
+              "integer": "0"
+            },
+            "finite"
+          ]
+        },
+        {
+          "rowid": "104",
+          "values": [
+            {
+              "integer": "104"
+            },
+            {
+              "integer": "41"
+            },
+            {
+              "integer": "0"
+            },
+            0,
+            0,
+            0,
+            {
+              "integer": "0"
+            },
+            "finite",
+            {
+              "integer": "0"
+            },
+            "finite",
+            {
+              "integer": "0"
+            },
+            "finite"
+          ]
+        },
+        {
+          "rowid": "102",
+          "values": [
+            {
+              "integer": "102"
+            },
+            {
+              "integer": "73"
+            },
+            {
+              "integer": "1"
+            },
+            0,
+            0,
+            0,
+            {
+              "integer": "0"
+            },
+            "finite",
+            {
+              "integer": "0"
+            },
+            "finite",
+            {
+              "integer": "0"
+            },
+            "finite"
+          ]
+        },
+        {
+          "rowid": "105",
+          "values": [
+            {
+              "integer": "105"
+            },
+            {
+              "integer": "41"
+            },
+            {
+              "integer": "1"
+            },
+            0,
+            0,
+            0,
+            {
+              "integer": "0"
+            },
+            "finite",
+            {
+              "integer": "0"
+            },
+            "finite",
+            {
+              "integer": "0"
+            },
+            "finite"
+          ]
+        }
+      ]
+    }
+  ]
+}

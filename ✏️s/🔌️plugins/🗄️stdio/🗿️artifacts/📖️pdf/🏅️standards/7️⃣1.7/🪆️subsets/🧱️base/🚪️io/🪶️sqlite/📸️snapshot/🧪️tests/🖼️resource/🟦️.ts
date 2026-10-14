@@ -12,7 +12,7 @@ import { writePdfShading,readPdfShading,writePdfPattern,readPdfPattern } from ".
 import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 test("Native JSON resource admission uses the canonical owned Binary64 domain",async()=>{
-  const fixture=JSON.parse(await Bun.file(new URL("../../../../📝️text/📸️snapshot/🪪️native-json/🖼️resource/🧫️fixtures/🔣️.json",import.meta.url)).text());
+  const fixture=JSON.parse(await Bun.file(new URL("../../../../📝️text/📸️snapshot/🪪️native-json/🖼️resource/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).text());
   expect(parsePdfImage(pdfImageFromNativeJson(fixture.image)).decode).toEqual([{bits:0n},{bits:0x3ff0000000000000n}]);
   expect(parsePdfExtGState(pdfStateFromNativeJson(fixture.state)).lineWidth).toEqual({bits:0x3ff0000000000000n});
   expect(parsePdfFormXObject(pdfFormFromNativeJson(fixture.form)).bbox[2]).toEqual({bits:0x3ff0000000000000n});
@@ -21,7 +21,7 @@ test("Native JSON resource admission uses the canonical owned Binary64 domain",a
 });
 
 test("PDF image resources preserve logical samples and foreign artifact references, masks and complete semantic fields",async()=>{
-  const fixture=JSON.parse(await Bun.file(new URL("../../🖼️resource/🧫️fixtures/🔣️.json",import.meta.url)).text(),(key,value)=>key==="bits"?BigInt(value):value);
+  const fixture=JSON.parse(await Bun.file(new URL("../../🖼️resource/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).text(),(key,value)=>key==="bits"?BigInt(value):value);
   for(const [index,body]of(fixture.bodies as PdfImageBody[]).entries()){
     const mask:PdfImageMask|null=fixture.masks[index%fixture.masks.length];const value:PdfImage={...fixture.image,body,mask,matte:index%2===0?null:[]};
     const out=await PdfProjection.create(PDF17_SQLITE_SCHEMA,{},pdfResourceNumberColumns);const root=await writePdfImage(out,value);const bytes=await exportSqliteDatabase(await out.finish());const sql=Database.deserialize(bytes);
@@ -32,8 +32,8 @@ test("PDF image resources preserve logical samples and foreign artifact referenc
 },{timeout:30_000});
 
 test("PDF resource import rejects independently authored partial tuples and mixed mask fields",async()=>{
-  const stateFixture=JSON.parse(await Bun.file(new URL("../../🖼️resource/🎚️state/🧫️fixtures/🔣️.json",import.meta.url)).text(),(key,value)=>key==="bits"?BigInt(value):value);
-  const shadeFixture=JSON.parse(await Bun.file(new URL("../../🖼️resource/🌈️shading/🧫️fixtures/🔣️.json",import.meta.url)).text(),(key,value)=>key==="bits"?BigInt(value):value);
+  const stateFixture=JSON.parse(await Bun.file(new URL("../../🖼️resource/🎚️state/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).text(),(key,value)=>key==="bits"?BigInt(value):value);
+  const shadeFixture=JSON.parse(await Bun.file(new URL("../../🖼️resource/🌈️shading/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).text(),(key,value)=>key==="bits"?BigInt(value):value);
   const out=await PdfProjection.create(PDF17_SQLITE_SCHEMA,{},pdfResourceNumberColumns);const state=await writePdfState(out,stateFixture.states[1]);const shade=await writePdfShading(out,shadeFixture.shadings[0]);
   const bytes=await exportSqliteDatabase(await out.finish());
   const font=Database.deserialize(bytes);font.exec("UPDATE pdf_ext_g_state SET font_name=NULL");const fontReader=await PdfReader.create(await importSqliteDatabase(font.serialize()),PDF17_SQLITE_SCHEMA,{},pdfResourceNumberColumns);await expect(readPdfState(fontReader,state)).rejects.toThrow("both name and size");font.close();
@@ -42,7 +42,7 @@ test("PDF resource import rejects independently authored partial tuples and mixe
 },{timeout:30_000});
 
 test("PDF shading and patterns expose every variant as explicit SQL entities",async()=>{
-  const fixture=JSON.parse(await Bun.file(new URL("../../🖼️resource/🌈️shading/🧫️fixtures/🔣️.json",import.meta.url)).text(),(key,value)=>key==="bits"?BigInt(value):value);
+  const fixture=JSON.parse(await Bun.file(new URL("../../🖼️resource/🌈️shading/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).text(),(key,value)=>key==="bits"?BigInt(value):value);
   const out=await PdfProjection.create(PDF17_SQLITE_SCHEMA,{},pdfResourceNumberColumns);const shades:bigint[]=[];const patterns:bigint[]=[];
   for(const value of fixture.shadings)shades.push(await writePdfShading(out,value));for(const value of fixture.patterns)patterns.push(await writePdfPattern(out,value));
   const bytes=await exportSqliteDatabase(await out.finish());const sql=Database.deserialize(bytes);
@@ -54,7 +54,7 @@ test("PDF shading and patterns expose every variant as explicit SQL entities",as
 },{timeout:30_000});
 
 test("PDF graphics state and forms preserve absent and empty relations and exact IEEE words",async()=>{
-  const fixture=JSON.parse(await Bun.file(new URL("../../🖼️resource/🎚️state/🧫️fixtures/🔣️.json",import.meta.url)).text(),(key,value)=>key==="bits"?BigInt(value):value);
+  const fixture=JSON.parse(await Bun.file(new URL("../../🖼️resource/🎚️state/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).text(),(key,value)=>key==="bits"?BigInt(value):value);
   const out=await PdfProjection.create(PDF17_SQLITE_SCHEMA,{},pdfResourceNumberColumns);const keys:bigint[]=[];
   for(const state of fixture.states)keys.push(await writePdfState(out,state));const form=await writePdfForm(out,fixture.form);
   const bytes=await exportSqliteDatabase(await out.finish());const sql=Database.deserialize(bytes);

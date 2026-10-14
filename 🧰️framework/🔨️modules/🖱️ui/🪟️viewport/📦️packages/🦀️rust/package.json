@@ -6,5 +6,8 @@
   "scripts": {
     "test:native": "nx run @semio-tech/framework-ui-viewport-rs:test-native",
     "test:binding": "nx run @semio-tech/framework-ui-viewport-rs:test-binding"
+  },
+  "devDependencies": {
+    "@semio-tech/process": "workspace:*"
   }
 }

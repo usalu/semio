@@ -1,4 +1,4 @@
-import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts";
+import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 /** 🐳️ The hub's container image, proven the way an operator meets it: a cold `docker build` of `🌎️hub/Dockerfile` from the
  * repository root, then the built image run in its production posture (network bind inside the container, credential
  * sign-in, origin allowlist, `OS_HUB_TRUSTED_FORWARDING=proxy`) on a fresh named volume seeded with a copy of a published

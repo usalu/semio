@@ -87,7 +87,7 @@ const DXF_ANY_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
 fn dxf_any_editor_example_snapshot(example_id: &str) -> DxfSnapshot {
     if example_id == crate::examples::demo::ID {
-        <DxfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+        <DxfSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         DxfSnapshot::default()
     }
@@ -227,6 +227,7 @@ impl ArtifactEditor for DxfAnyEditor {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

@@ -13,6 +13,7 @@ use std::collections::BTreeMap;
 
 /// 📊️ What the last run did: the proof an edit recomputed only what it touched.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct UpdateReport {
     pub gated: bool,
     pub cancelled: bool,
@@ -104,6 +105,7 @@ impl SessionRun {
 }
 
 /// 🧠️ The inference state of one open document.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct ModelInferenceSession {
     cache: InferenceCache,
     engine: InferenceSession,

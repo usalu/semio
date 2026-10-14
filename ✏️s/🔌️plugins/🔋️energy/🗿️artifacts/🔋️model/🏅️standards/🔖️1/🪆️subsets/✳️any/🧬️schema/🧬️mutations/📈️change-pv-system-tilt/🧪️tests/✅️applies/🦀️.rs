@@ -9,11 +9,11 @@ use crate::mutations::fixtures::{self, snapshot, zone, Case};
 use crate::mutations::EnergyModelMutation;
 use crate::EnergyModelSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📈️change-pv-system-tilt/✅️applies/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📈️change-pv-system-tilt/✅️applies/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📈️change-pv-system-tilt/✅️applies/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📈️change-pv-system-tilt/✅️applies/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📈️change-pv-system-tilt/✅️applies/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📈️change-pv-system-tilt/✅️applies/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📈️change-pv-system-tilt/✅️applies/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📈️change-pv-system-tilt/✅️applies/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📈️change-pv-system-tilt/✅️applies/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📈️change-pv-system-tilt/✅️applies/🎯️outcome/🔣️.json");
 
 #[allow(unused_variables, unused_mut)]
 fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {

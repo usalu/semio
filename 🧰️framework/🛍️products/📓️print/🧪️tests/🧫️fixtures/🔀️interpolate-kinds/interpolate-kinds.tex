@@ -1,0 +1,66 @@
+% 🧪 Probe fixture of case interpolate-kinds, every scenario.
+% `\SemioVizInterpolate` is the public form of the kernel's interpolators, so what it must be held
+% to is that every kind it names dispatches onto the interpolator it promises. The command itself
+% typesets and is therefore not expandable; the probe calls the protected form behind it and emits
+% the token list it fills, which is the same value the document would have set.
+% Colours and comma lists travel as strings prefixed with a vertical bar so no digit is lost to the
+% probe protocol's numeric classification.
+\documentclass{article}
+\usepackage{semio-viz-scale}
+\usepackage{semio-viz-probe}
+\ExplSyntaxOn
+\tl_new:N \l_probe_result_tl
+
+% 🔀 Writes one interpolated colour of the kind #2 between #3 and #4 at #5, as a string.
+\cs_new_protected:Npn \probeinterpolate #1#2#3#4#5 {
+  \semio_viz_interpolate:nnnnN {#2} {#3} {#4} {#5} \l_probe_result_tl
+  \semio_viz_probe_values:nx {#1} { { | \l_probe_result_tl } }
+}
+
+% 🔢 Writes one interpolated number or list of numbers, so the tolerance profile applies to them.
+\cs_new_protected:Npn \probeinterpolatenum #1#2#3#4#5 {
+  \semio_viz_interpolate:nnnnN {#2} {#3} {#4} {#5} \l_probe_result_tl
+  \semio_viz_probe_values:nx {#1} { \l_probe_result_tl }
+}
+\ExplSyntaxOff
+\begin{document}
+
+\SemioVizProbeBegin{interpolate-kinds}{number}
+\ExplSyntaxOn
+\probeinterpolatenum{interpolate/number/0}{number}{10}{20}{0}
+\probeinterpolatenum{interpolate/number/1}{number}{10}{20}{0.25}
+\probeinterpolatenum{interpolate/number/2}{number}{10}{20}{0.5}
+\probeinterpolatenum{interpolate/number/3}{number}{10}{20}{1}
+\probeinterpolatenum{interpolate/number/4}{number}{-4}{6}{0.3}
+\probeinterpolatenum{interpolate/number/5}{number}{7}{7}{0.75}
+\ExplSyntaxOff
+
+\SemioVizProbeBegin{interpolate-kinds}{round}
+\ExplSyntaxOn
+\probeinterpolatenum{interpolate/round/0}{round}{10}{21}{0}
+\probeinterpolatenum{interpolate/round/1}{round}{10}{21}{0.25}
+\probeinterpolatenum{interpolate/round/2}{round}{10}{21}{0.5}
+\probeinterpolatenum{interpolate/round/3}{round}{10}{21}{1}
+\probeinterpolatenum{interpolate/round/4}{round}{-4}{7}{0.3}
+\ExplSyntaxOff
+
+\SemioVizProbeBegin{interpolate-kinds}{colour}
+\ExplSyntaxOn
+\probeinterpolate{interpolate/rgb/0}{rgb}{ff344f}{34d1bf}{0.25}
+\probeinterpolate{interpolate/rgb/1}{rgb}{ff344f}{34d1bf}{0.75}
+\probeinterpolate{interpolate/lab/0}{lab}{ff344f}{34d1bf}{0.25}
+\probeinterpolate{interpolate/lab/1}{lab}{ff344f}{34d1bf}{0.75}
+\probeinterpolate{interpolate/hcl/0}{hcl}{ff344f}{34d1bf}{0.25}
+\probeinterpolate{interpolate/hcl/1}{hcl}{ff344f}{34d1bf}{0.75}
+\ExplSyntaxOff
+
+\SemioVizProbeBegin{interpolate-kinds}{array}
+\ExplSyntaxOn
+\probeinterpolatenum{interpolate/array/0}{array}{0,10,100}{10,20,200}{0}
+\probeinterpolatenum{interpolate/array/1}{array}{0,10,100}{10,20,200}{0.5}
+\probeinterpolatenum{interpolate/array/2}{array}{0,10,100}{10,20,200}{1}
+\probeinterpolatenum{interpolate/array/3}{array}{-2,0,3}{2,8,-1}{0.25}
+\ExplSyntaxOff
+
+\SemioVizProbePage
+\end{document}

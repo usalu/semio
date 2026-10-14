@@ -96,7 +96,7 @@ pub fn document() -> Grid2dSnapshot {
 }
 
 pub fn source() -> ExampleSource {
-    ExampleSource::new(ID, label(), store::os_store::serialization::ArtifactDsl::print_dsl(&document()), ICON)
+    ExampleSource::new(ID, label(), pack::snapshot::ArtifactDsl::print_dsl(&document()), ICON)
 }
 
 //#region 🧪️Tests

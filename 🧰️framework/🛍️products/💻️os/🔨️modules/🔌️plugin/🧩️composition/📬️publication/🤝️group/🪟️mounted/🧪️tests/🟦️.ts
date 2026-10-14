@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { applyPatch } from "fast-json-patch";
-import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 
 test("mounted original typed child groups preserve every live lane until one funded common decision", async () => {
 

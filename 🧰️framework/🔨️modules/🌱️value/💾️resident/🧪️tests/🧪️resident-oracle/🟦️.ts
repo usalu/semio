@@ -5,14 +5,14 @@ import { runInThisContext } from "node:vm";
 import Ajv from "ajv";
 import { produce } from "immer";
 import ts from "typescript";
-import { BundleScript } from "../../../../🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { OwnedResidentLedger } from "../../🟦️.ts";
 import * as resident from "../../🟦️.ts";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../🧫️fixtures/🔣️.json";
 import fixtureSchema from "../../🧬️schema/🔣️.json";
 import admissionContract from "../../📨️admission/🤝️contract.json";
 import admissionContractSchema from "../../📨️admission/🧬️schema/🔣️.json";
-import admissionFixture from "../../📨️admission/🧫️fixtures/🔣️.json";
+import admissionFixture from "../../📨️admission/🧪️tests/🧫️fixtures/🔣️.json";
 
 export class TestScript extends BundleScript {
   async run(): Promise<void> {

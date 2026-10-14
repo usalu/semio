@@ -11,7 +11,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 use crate::JackSnapshot;
-use store::{os_store::serialization::ArtifactPack, PackError};
+use store::{pack::snapshot::ArtifactPack, PackError};
 
 /// 📦️ Encodes a `JackSnapshot` to its binary pack form.
 pub fn encode(document: &JackSnapshot) -> Vec<u8> {
@@ -34,13 +34,13 @@ mod native_codec {
 use crate::JackSnapshot;
 #[cfg(test)] use semio_framework_diagnostic::TextError;
 #[cfg(test)] use semio_framework_diagnostic::TextSpan;
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
 use store::PackDecodeOptions;
 use store::PackEncodeOptions;
 use store::PackError;
 use crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord;
 
-impl store::os_store::serialization::ArtifactPack for JackSnapshot {
+impl pack::snapshot::ArtifactPack for JackSnapshot {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = store::pack_rt::encode_document(&JackPackRecord::__dsl_spec(), &JackPackRecord::from_snapshot(self).__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| PackError::from(e.into_value_error()))?;
@@ -58,12 +58,15 @@ impl store::os_store::serialization::ArtifactPack for JackSnapshot {
         Ok(snapshot)
     }
 
-    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())
-    }
+    
 
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(JackPackRecord::__dsl_spec())
+    }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for JackSnapshot {
+fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())
     }
 }
 }

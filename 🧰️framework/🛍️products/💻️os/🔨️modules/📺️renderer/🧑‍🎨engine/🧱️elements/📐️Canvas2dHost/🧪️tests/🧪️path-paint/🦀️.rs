@@ -5,7 +5,7 @@
 use super::*;
 use serde_json::Value;
 
-const CORPUS: &str = include_str!("../../🧫️fixtures/🧫️path-paint/🔣️.json");
+const CORPUS: &str = include_str!("../🧫️fixtures/🧫️path-paint/🔣️.json");
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]

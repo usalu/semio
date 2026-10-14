@@ -4,7 +4,7 @@ import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 test("one-item preparation closure forwards every admitted axis exactly once",()=>{
  const db=new Database(":memory:");db.exec("CREATE TABLE admitted(axis TEXT PRIMARY KEY, bytes INTEGER)");
- const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+ const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
  for(const [axis,bytes] of Object.entries(law.grant) as [string,number][])db.query("INSERT INTO admitted VALUES(?,?)").run(axis,bytes);
  expect(db.query("SELECT SUM(bytes) AS total FROM admitted").get()).toEqual({total:law.total});
  const root=readFileSync(new URL("../../../🦀️.rs",import.meta.url),"utf8");

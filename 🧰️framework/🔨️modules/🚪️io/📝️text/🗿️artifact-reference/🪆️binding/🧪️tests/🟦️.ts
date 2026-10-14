@@ -4,7 +4,7 @@ import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
 import {parseArtifactRef} from "../../../../🧬️schema/🗿️artifact-reference/🟦️.ts";
 import contract from "../../🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 
 test("owned reference strings remain literal under schema and independent SQL admission",()=>{
   const ajv=new Ajv({strict:false});ajv.addSchema(contract);const admit=ajv.compile({$ref:`${contract.$id}#/$defs/ArtifactRef`});

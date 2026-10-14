@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout, refusal};
 use crate::{Axis, ModelMutation, ModelSnapshot, Point2};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/〰️set-wall-axis/✅️stretches-under-an-opening/📸️snapshot/⬅️before/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/〰️set-wall-axis/✅️stretches-under-an-opening/📸️snapshot/⬅️before/🔣️.json");
 
 fn reshaped(axis: Axis) -> ModelSnapshot {
     apply_model_mutation(&decode(BEFORE), &ModelMutation::SetWallAxis(SetWallAxis { id: "w-south".into(), axis })).expect("the axis edit applies")

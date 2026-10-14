@@ -2,12 +2,12 @@ import Ajv from "ajv/dist/2020.js";
 import viewport from "../../../../../../../../../🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json";
 import sceneContract from "../../../../../../../../../🔨️modules/🗺️surface/🕸️node-graph/📡️scene/🧬️schema/🔣️.json";
 import inputContract from "../../📡️scene/🧬️schema/🔣️.json";
-import inputCorpus from "../../📡️scene/🧫️fixtures/🔣️.json";
+import inputCorpus from "../../📡️scene/🧪️tests/🧫️fixtures/🔣️.json";
 import{expect,test}from"bun:test";
 import{readFileSync}from"node:fs";
 import{join,resolve}from"node:path";
 import{parse as parseToml}from"@iarna/toml";
-import refusalCorpus from "../../⚠️refusal/🧫️fixtures/🔣️.json";
+import refusalCorpus from "../../⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
 type CargoManifest={package:{name:string};lib?:{name?:string};dependencies:Record<string,{path?:string}>};
 test("OS graph public refusal interfaces use their defining general packages", () => {
   const owner = resolve(import.meta.dir, "../..");

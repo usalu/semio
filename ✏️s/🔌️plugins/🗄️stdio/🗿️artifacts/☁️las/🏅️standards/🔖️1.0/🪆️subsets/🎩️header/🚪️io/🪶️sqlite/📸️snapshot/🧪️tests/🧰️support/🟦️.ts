@@ -1,4 +1,4 @@
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../🧫️fixtures/🔣️.json";
 import type {LasSnapshot} from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 const f=(index:number)=>({bits:BigInt("0x"+fixture.float64Bits[index%fixture.float64Bits.length]!)});
 export const lasSnapshotFixture:LasSnapshot={schema:fixture.schema,header:{versionMajor:255,versionMinor:255,systemIdentifier:"owned 🌠",generatingSoftware:"SQL",creationDayOfYear:65535,creationYear:65535,headerSize:65535,offsetToPointData:4294967295,numberOfVlrs:4294967295,pointDataFormatId:255,pointDataRecordLength:65535,numberOfPointRecords:4294967295,pointsByReturn:[4294967295,0,17,17,1],xScale:f(6),yScale:f(7),zScale:f(8),xOffset:f(1),yOffset:f(4),zOffset:f(5),maxX:f(3),minX:f(2),maxY:f(0),minY:f(6),maxZ:f(7),minZ:f(8)},vlrs:fixture.vlrs.map(v=>({...v,data:[...v.data]})),points:[

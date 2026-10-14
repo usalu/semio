@@ -2,7 +2,7 @@ use super::*;
 
 //#region ✂️DetachRefusal
 async fn observe_refusal(case_id: &str) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let case = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == case_id).unwrap();
     let cleanup_grant = |name: &str| {
         let policy = &fixture["cleanup"][name];

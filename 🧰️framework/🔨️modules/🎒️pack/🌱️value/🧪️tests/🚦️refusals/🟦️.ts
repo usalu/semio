@@ -3,7 +3,7 @@ import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
-import fixture from "../../🧫️fixtures/🚦️refusals/🔣️.json";
+import fixture from "../../🧪️tests/🧫️fixtures/🚦️refusals/🔣️.json";
 import "../🎞️intrinsic-media/🟦️.ts";
 import "../🔃️ordering/🟦️.ts";
 import "../../🧭️tooling/🧪️tests/🟦️.ts";
@@ -26,7 +26,7 @@ test("neutral controlled Pack refusals retain explicit category and literal Unic
 
 test("reference refusal corpus keeps unrestricted four-field identity independent of a URI",()=>{
     const root=resolve(import.meta.dir,"../../../../../.."),owner=resolve(root,"🧰️framework/🔨️modules/🚪️io/📝️text/🗿️artifact-reference/🪆️binding");
-    const fixture=JSON.parse(readFileSync(resolve(owner,"🧫️fixtures/🚦️refusals/🔣️.json"),"utf8")) as {identity:Record<string,string>;cases:{id:string;kind:string}[]};
+    const fixture=JSON.parse(readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/🚦️refusals/🔣️.json"),"utf8")) as {identity:Record<string,string>;cases:{id:string;kind:string}[]};
     const database=new Database(":memory:");try{database.exec("CREATE TABLE identity(field TEXT PRIMARY KEY,value BLOB NOT NULL)");for(const[field,value]of Object.entries(fixture.identity))database.query("INSERT INTO identity VALUES(?,?)").run(field,Buffer.from(value));
         for(const[field,value]of Object.entries(fixture.identity))expect(database.query("SELECT hex(value) AS word FROM identity WHERE field=?").get(field)).toEqual({word:Buffer.from(value).toString("hex").toUpperCase()});
     }finally{database.close();}

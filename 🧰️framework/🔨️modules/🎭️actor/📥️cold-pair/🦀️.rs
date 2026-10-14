@@ -9,6 +9,7 @@ const COLD_PAIR_ID_MAXIMUM_BYTES: usize = 512;
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct ColdDocumentPairFrontier {
     pub document_id: String,
     pub head_edit_ordinal: u64,

@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 test("prepared publication identity fields are native paged text owners", () => {
   const root = new URL("../", import.meta.url);
   const read = (path: string) => JSON.parse(readFileSync(new URL(path, root), "utf8"));
-  const fixture = read("🧫️fixtures/🔣️.json");
+  const fixture = read("🧪️tests/🧫️fixtures/🔣️.json");
   expect(new Ajv2020({ strict: true }).compile(read("🧬️schema/🔣️.json"))(fixture)).toBe(true);
   const actor = fixture.actor.repeat(fixture.repeat);
   expect(Buffer.byteLength(actor)).toBeGreaterThan(fixture.copyCapacityLimit);

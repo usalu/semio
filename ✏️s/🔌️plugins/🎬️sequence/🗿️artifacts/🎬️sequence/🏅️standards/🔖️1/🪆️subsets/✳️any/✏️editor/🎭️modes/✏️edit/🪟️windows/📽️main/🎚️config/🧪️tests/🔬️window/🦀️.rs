@@ -4,7 +4,7 @@ use protocol::{Mutation, OpBinary, OpText};
 
 #[semio_framework_async_macros::async_test]
 async fn sequence_window_ownership_mutations_match_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window-ownership/🔣️.json")).unwrap();
     let base_config: SequenceMainWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let base_transient: SequenceScriptWindowTransient = semio_framework_pack_json::from_json_str(&fixture["baseTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in fixture["configMutations"].as_array().unwrap() {

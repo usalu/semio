@@ -1,0 +1,248 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {
+      "pluginId": "app",
+      "dependsOn": [
+        "service"
+      ],
+      "consumes": [
+        "forms"
+      ]
+    },
+    {
+      "pluginId": "service",
+      "dependsOn": [
+        "cycle"
+      ],
+      "consumes": [
+        "flow"
+      ]
+    },
+    {
+      "pluginId": "cycle",
+      "dependsOn": [
+        "service"
+      ]
+    },
+    {
+      "pluginId": "forms-extension",
+      "contributes": [
+        "forms"
+      ],
+      "dependsOn": [
+        "forms-base"
+      ],
+      "consumes": [
+        "nested"
+      ]
+    },
+    {
+      "pluginId": "forms-base"
+    },
+    {
+      "pluginId": "flow-extension",
+      "contributes": [
+        "flow"
+      ],
+      "dependsOn": [
+        "flow-base"
+      ]
+    },
+    {
+      "pluginId": "flow-base"
+    },
+    {
+      "pluginId": "nested-extension",
+      "contributes": [
+        "nested"
+      ]
+    },
+    {
+      "pluginId": "unrelated",
+      "contributes": [
+        "unused"
+      ]
+    },
+    {
+      "pluginId": "host",
+      "host": true
+    }
+  ],
+  "cases": [
+    {
+      "name": "transitive-consumption",
+      "roots": [
+        "app"
+      ],
+      "expected": [
+        "app",
+        "cycle",
+        "flow-base",
+        "flow-extension",
+        "forms-base",
+        "forms-extension",
+        "nested-extension",
+        "service"
+      ]
+    },
+    {
+      "name": "minimal-service",
+      "roots": [
+        "service"
+      ],
+      "expected": [
+        "cycle",
+        "flow-base",
+        "flow-extension",
+        "service"
+      ]
+    },
+    {
+      "name": "union-deduplicates",
+      "roots": [
+        "service",
+        "app",
+        "service"
+      ],
+      "expected": [
+        "app",
+        "cycle",
+        "flow-base",
+        "flow-extension",
+        "forms-base",
+        "forms-extension",
+        "nested-extension",
+        "service"
+      ]
+    },
+    {
+      "name": "host-complete",
+      "roots": [
+        "host"
+      ],
+      "expected": [
+        "app",
+        "cycle",
+        "flow-base",
+        "flow-extension",
+        "forms-base",
+        "forms-extension",
+        "host",
+        "nested-extension",
+        "service",
+        "unrelated"
+      ]
+    },
+    {
+      "name": "empty",
+      "roots": [],
+      "expected": []
+    }
+  ],
+  "invalid": [
+    {
+      "name": "unknown-root",
+      "roots": [
+        "missing"
+      ],
+      "components": [
+        {
+          "pluginId": "app",
+          "dependsOn": [
+            "service"
+          ],
+          "consumes": [
+            "forms"
+          ]
+        },
+        {
+          "pluginId": "service",
+          "dependsOn": [
+            "cycle"
+          ],
+          "consumes": [
+            "flow"
+          ]
+        },
+        {
+          "pluginId": "cycle",
+          "dependsOn": [
+            "service"
+          ]
+        },
+        {
+          "pluginId": "forms-extension",
+          "contributes": [
+            "forms"
+          ],
+          "dependsOn": [
+            "forms-base"
+          ],
+          "consumes": [
+            "nested"
+          ]
+        },
+        {
+          "pluginId": "forms-base"
+        },
+        {
+          "pluginId": "flow-extension",
+          "contributes": [
+            "flow"
+          ],
+          "dependsOn": [
+            "flow-base"
+          ]
+        },
+        {
+          "pluginId": "flow-base"
+        },
+        {
+          "pluginId": "nested-extension",
+          "contributes": [
+            "nested"
+          ]
+        },
+        {
+          "pluginId": "unrelated",
+          "contributes": [
+            "unused"
+          ]
+        },
+        {
+          "pluginId": "host",
+          "host": true
+        }
+      ]
+    },
+    {
+      "name": "unknown-dependency",
+      "roots": [
+        "broken"
+      ],
+      "components": [
+        {
+          "pluginId": "broken",
+          "dependsOn": [
+            "missing"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "duplicate",
+      "roots": [
+        "app"
+      ],
+      "components": [
+        {
+          "pluginId": "app"
+        },
+        {
+          "pluginId": "app"
+        }
+      ]
+    }
+  ]
+}

@@ -18,7 +18,7 @@ pub(crate) struct PrivateChildPublicationInput {
     ready: bool,
     closing: bool,
 }
-struct PrivateChildPublicationInputParts {
+pub(crate) struct PrivateChildPublicationInputParts {
     pub(crate) source: OwnedChildEmit,
     pub(crate) metadata: PrivateChildMemberMetadata,
     pub(crate) request: Option<store::MemberOpenRequest>,

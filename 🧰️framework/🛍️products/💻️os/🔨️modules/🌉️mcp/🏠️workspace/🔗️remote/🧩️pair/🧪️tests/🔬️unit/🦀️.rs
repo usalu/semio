@@ -8,7 +8,7 @@ use std::sync::atomic::{AtomicU64, AtomicUsize};
 use std::sync::{Arc, Mutex};
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("canonical pair cache fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("canonical pair cache fixture")
 }
 
 fn decode_hex(value: &str) -> Vec<u8> {
@@ -330,7 +330,7 @@ async fn canonical_pair_actor_keys_cache_and_mount_to_one_binding_and_evicts_by_
 #[tokio::test]
 async fn authenticated_hub_checkpoint_resource_projects_exact_verified_pair_and_never_crosses_scope() {
     let contract = fixture();
-    let resource_contract: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🔐️canonical-checkpoint-resource/🔣️.json")).unwrap();
+    let resource_contract: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔐️canonical-checkpoint-resource/🔣️.json")).unwrap();
     let wire = decode_hex(contract["valid"]["wireHex"].as_str().unwrap());
     let etag = contract["valid"]["etag"].as_str().unwrap().to_string();
     let scope = DocumentScope::new(contract["binding"]["spaceId"].as_str().unwrap(), contract["binding"]["documentId"].as_str().unwrap());

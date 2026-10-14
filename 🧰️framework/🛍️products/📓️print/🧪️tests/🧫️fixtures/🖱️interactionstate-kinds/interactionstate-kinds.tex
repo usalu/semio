@@ -1,0 +1,43 @@
+\documentclass{article}
+\usepackage{tikz}
+\usetikzlibrary{calc,arrows.meta,shapes.geometric,decorations.pathreplacing,patterns}
+\usepackage{semio-viz-family}
+\usepackage{semio-viz-interactionstate}
+\usepackage{semio-viz-catalog}
+\usepackage{semio-viz-probe}
+\ExplSyntaxOn
+% 🧪 One §45 catalogue kind: its own probe scenario, then the kind run straight out of the
+% generated registration, so the probe measures the catalogue entry and not a transcription of it.
+\cs_new_protected:Npn \semio_probe_state:nn #1#2 {
+  \semio_viz_probe_begin:nn { interactionstate-kinds } { #1/#2 }
+  \semio_viz_kind_run:nn {#2} { }
+}
+% 🧪 Every kind of family #1, from the comma list #2 of its catalogue slugs.
+\cs_new_protected:Npn \semio_probe_state_family:nn #1#2 {
+  \clist_map_inline:nn {#2} { \semio_probe_state:nn {#1} {##1} }
+}
+\ExplSyntaxOff
+\begin{document}
+\ExplSyntaxOn
+\tl_set:Nn \l_semio_language_tl { en }
+\bool_set_true:N \l_semio_viz_in_figure_bool
+\ExplSyntaxOff
+\SemioVizProbeOn
+\begin{tikzpicture}[x=1mm,y=1mm]
+\ExplSyntaxOn
+\fp_set:Nn \l_semio_viz_width_fp { 80 }
+\fp_set:Nn \l_semio_viz_height_fp { 40 }
+\semio_probe_state_family:nn { state-overview }
+  { overview-plus-detail-panel, brush-selection-depiction, focus-plus-context-chart,
+    magnified-region, zoom-inset }
+\semio_probe_state_family:nn { state-selection }
+  { selected-node-network-state, hover-state-callout-rendered-statically,
+    filtered-vs-unfiltered-comparison }
+\semio_probe_state_family:nn { state-sequence }
+  { transition-sequence, keyframe-sequence, morph-sequence, animated-path-frames,
+    small-multiple-animation-frames, interactive-state-storyboard,
+    before-after-filtering-panels }
+\ExplSyntaxOff
+\end{tikzpicture}
+\SemioVizProbeEnd
+\end{document}

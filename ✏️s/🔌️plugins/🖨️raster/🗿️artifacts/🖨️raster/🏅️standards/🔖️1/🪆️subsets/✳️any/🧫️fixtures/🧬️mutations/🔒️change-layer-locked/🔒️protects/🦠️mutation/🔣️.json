@@ -1,6 +1,0 @@
-{
-  "mutation": "changeLayerLocked",
-  "layerId": "sketch",
-  "expected": false,
-  "locked": true
-}

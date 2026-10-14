@@ -1,8 +1,10 @@
-import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import {join} from "node:path";
+import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {buildBudgetMs} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { repoCacheDirectory } from "../../🟦️.ts";
-import { acquireResourceLease } from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import { CACHE_POLICY } from "../../🔍️discovery/📂️source/🟦️.ts";
-import {compactCargoIncrementalSessionsV1, deleteUnit, formatBytes, planCachePrune, type PrunePlan } from "../🟦️.ts";
+import {compactCargoIncrementalSessionsV1,withCargoCacheMaintenanceV1, deleteUnit, formatBytes, planCachePrune, type PrunePlan } from "../🟦️.ts";
 import {cargoDirectories} from "../../🦀️cargo/🟦️.ts";
 import { areaUnitRoot, pruneTestEvidence, scanCacheAreas } from "../🌐️workspace/🟦️.ts";
 
@@ -36,35 +38,25 @@ export class CacheReportScript extends BundleScript {
   }
 }
 
-/** 🧹️ Serializes explicit cleanup and applies age/budget policy; the age guard is not an active-build lock. */
+/** 🧹️ Applies age and budget policy under original cancellation and live compiler store exclusion. */
 export class CachePruneScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    const controller = new AbortController(),
-      cancel = (): void => controller.abort(new Error("Cache prune cancelled"));
-    process.once("SIGINT", cancel);
-    process.once("SIGTERM", cancel);
+    const signal = this.invocation.control.signal;
     const dryRun = args.includes("--dry-run");
-    try {
+    {
       if(args.includes("--stale-incremental-only")){
         const index=args.indexOf("--profile"),profile=args[index+1];if(index<0||!profile||profile.startsWith("-")||args.some((arg,position)=>!["--stale-incremental-only","--dry-run","--profile"].includes(arg)&&position!==index+1))throw Error("Incremental compaction requires exactly one explicit Cargo profile");
-        const result=await compactCargoIncrementalSessionsV1({buildDirectory:cargoDirectories(this.repoRoot).build,leaseDirectory:repoCacheDirectory(this.repoRoot,"agents/resource-leases"),profile,signal:controller.signal,dryRun,onUnit:unit=>console.log(`[DEBUG] Incremental compaction ${dryRun?"planned":"removing"} ${unit.path} bytes=${unit.bytes}`)});
+        const result=await compactCargoIncrementalSessionsV1({buildDirectory:cargoDirectories(this.repoRoot).build,leaseDirectory:join(this.repoRoot,".cache","framework","leases"),profile,control:scriptCompilerAdmissionControlV1(this.invocation,"cache:incremental-compaction",buildBudgetMs()),dryRun,onUnit:unit=>console.log(`[DEBUG] Incremental compaction ${dryRun?"planned":"removing"} ${unit.path} bytes=${unit.bytes}`)});
         console.log(`[DEBUG] Incremental compaction result=${JSON.stringify(result)}`);return;
       }
-      const lease = await acquireResourceLease({
-        directory: repoCacheDirectory(this.repoRoot, "agents/resource-leases"),
-        resource: "cache-prune",
-        mode: "exclusive",
-        signal: controller.signal,
-        onWait: (wait) => console.log(`[cache-prune] waiting for exclusive access elapsedMs=${wait.elapsedMs}`),
-      });
-      try {
-        const areas = scanCacheAreas(this.repoRoot, controller.signal, (area, unit) => console.log(`[cache-prune] scanned ${area}/${unit.path}`));
+      await withCargoCacheMaintenanceV1({leaseDirectory:join(this.repoRoot,".cache","framework","leases"),buildDirectory:cargoDirectories(this.repoRoot).build,control:scriptCompilerAdmissionControlV1(this.invocation,"cache:shared-maintenance",buildBudgetMs())},async()=>{
+        const areas = scanCacheAreas(this.repoRoot, signal, (area, unit) => console.log(`[cache-prune] scanned ${area}/${unit.path}`));
         const plan: PrunePlan = planCachePrune(areas, Date.now(), CACHE_POLICY.storage.guardAgeMs);
         let deletedBytes = 0,
           deletedCount = 0;
         for (const area of plan.areas) {
           for (const unit of [...area.ageDeletions, ...area.budgetDeletions]) {
-            controller.signal.throwIfAborted();
+            signal.throwIfAborted();
             console.log(`[cache-prune] ${dryRun ? "would delete" : "deleting"} ${area.name}/${unit.path} (${formatBytes(unit.bytes)})`);
             if (!dryRun) deleteUnit(areaUnitRoot(this.repoRoot, area.name, unit), unit);
             deletedBytes += unit.bytes;
@@ -73,14 +65,9 @@ export class CachePruneScript extends BundleScript {
           if (area.guardedOverBudgetBytes) console.log(`[cache-prune] ${area.name}: ${formatBytes(area.guardedOverBudgetBytes)} over budget but touched within the last ${Math.round(CACHE_POLICY.storage.guardAgeMs / 3600000)}h; left in place`);
         }
         console.log(`[cache-prune] ${dryRun ? "would delete" : "deleted"} ${deletedCount} units; ${formatBytes(deletedBytes)}`);
-        controller.signal.throwIfAborted();
+        signal.throwIfAborted();
         console.log(`[cache-prune] tests: ${await pruneTestEvidence(this.repoRoot, dryRun)}`);
-      } finally {
-        lease.release();
-      }
-    } finally {
-      process.removeListener("SIGINT", cancel);
-      process.removeListener("SIGTERM", cancel);
+      });
     }
   }
 }

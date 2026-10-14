@@ -11,7 +11,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { WasmCanvas, React, createDemandFrameScheduler } = dependencies;
   const { describe, expect, it, vi, beforeEach, afterEach } = vitest;
   const { createRoot } = await import("react-dom/client");
-  const fixture = (await import("../../../🧫️fixtures/🪶️demand-frames/🔣️.json", { with: { type: "json" } })).default as {
+  const fixture = (await import("../../../🧪️tests/🧫️fixtures/🪶️demand-frames/🔣️.json", { with: { type: "json" } })).default as {
     readonly cases: readonly { readonly id: string; readonly steps: readonly Step[] }[];
     readonly scheduler: readonly { readonly id: string; readonly trailingWindowMs: number; readonly steps: readonly Step[] }[];
   };

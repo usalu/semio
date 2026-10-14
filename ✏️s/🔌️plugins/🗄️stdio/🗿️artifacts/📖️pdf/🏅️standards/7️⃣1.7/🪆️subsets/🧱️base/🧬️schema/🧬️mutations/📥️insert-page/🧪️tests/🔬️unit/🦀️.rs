@@ -10,7 +10,7 @@ fn semantic_identity_is_owned_by_this_leaf() {
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
-    let (before, _after) = support::snapshots(include_bytes!("../../../../../🧫️fixtures/📥️insert-page/⬅️before.pdf"), include_bytes!("../../../../../🧫️fixtures/📥️insert-page/➡️after.pdf"));
+    let (before, _after) = support::snapshots(include_bytes!("../../../../../🧪️tests/🧫️fixtures/📥️insert-page/⬅️before.pdf"), include_bytes!("../../../../../🧪️tests/🧫️fixtures/📥️insert-page/➡️after.pdf"));
     assert_mutation_inverse_sum_law(&PdfMutation::InsertPage(InsertPage { index: 1, page: PdfPage::new(10.0, 20.0) }), &before).await;
 }
 

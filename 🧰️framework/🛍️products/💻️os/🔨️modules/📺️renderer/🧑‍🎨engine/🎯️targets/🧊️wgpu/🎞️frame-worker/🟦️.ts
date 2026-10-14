@@ -1,3 +1,4 @@
+import {componentPackageReceiptSource} from "../../../../../🔌️plugin/📥️receipt/🟦️.ts";
 import { publishedPageUrl } from "../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { admitWgpuPluginRegistrySelection } from "../🧩️plugin-modules/🛂️admission/🟦️.ts";
 import { admitWgpuPluginModules, prepareWgpuPluginModules, assertWgpuPluginPlan, type WgpuPluginModule } from "../🧩️plugin-modules/🟦️.ts";
@@ -354,6 +355,7 @@ scope.onunhandledrejection = (event) => {
 };
 
 async function receive(message: BrowserFrameUiMessage): Promise<void> {
+  if (message.kind === "original-stock-result") return;
   if (message.kind === "boot") {
     await boot(message);
     return;
@@ -716,7 +718,7 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
       now: () => performance.now(),
       maxDescriptors: explicitPluginModules.length,
       yieldTurn: macrotask,
-      readDescriptor: (id, url, signal, heartbeat) => monitoredSuspension(`plugin-descriptor:${id}`, () => fetchPackageDescriptor(id, url, signal, heartbeat), suspensionLedger),
+      readDescriptor: (id, url, signal, heartbeat) => monitoredSuspension(`plugin-descriptor:${id}`, () => fetchPackageDescriptor(id, url, componentPackageReceiptSource, signal, heartbeat), suspensionLedger),
       progress: (id, index, count) => progress(`plugin-descriptor:${id}`, 0.25 + 0.025 * index / Math.max(1, count)),
     });
     const selection = admitWgpuPluginRegistrySelection(message.pluginRegistrySelection);

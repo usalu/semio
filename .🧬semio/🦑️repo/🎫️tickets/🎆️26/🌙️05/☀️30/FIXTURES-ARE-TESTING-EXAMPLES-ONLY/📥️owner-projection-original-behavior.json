@@ -1,0 +1,14 @@
+{
+  "test": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🏠️owner-projection-policy/🟦️.ts",
+    "before": "c5746b5c8f1b8e3f9b3ba644ba657b7a9d20142196c07a8f1c514c0189cc906b",
+    "after": "2c5fdde10352cbb09148b64e55306028e76dde2996d2f7f175ed37f4d17530c8"
+  },
+  "input": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🏠️owner-projection-policy/🔣️.json",
+    "before": "81fbc871269f381f33973f0cf147914e89cd16615026417b8f21e31a94be7ebb",
+    "after": "f1a565e74157ffbb2296a93565c5c591b8139d9a43a80f2a39f8561a01bc39b0"
+  },
+  "cases": 13,
+  "oracle": "independent SQLite CASE evaluator for frozen source, occupancy, publisher, generator and canonical policy facts"
+}

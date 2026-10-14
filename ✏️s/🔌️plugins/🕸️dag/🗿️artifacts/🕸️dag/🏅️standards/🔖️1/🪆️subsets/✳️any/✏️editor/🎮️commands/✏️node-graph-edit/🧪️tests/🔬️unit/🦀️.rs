@@ -283,5 +283,5 @@ fn the_renderer_row_fixture_decodes_exactly() {
 }
 
 /// 🧾️ The framework's committed node-graph row vocabulary (schema `🧰️framework/🔨️modules/🛠️tool-machine/🧬️schema/🔣️node-graph-edit-rows`).
-const NODE_GRAPH_EDIT_ROWS: &str = include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
+const NODE_GRAPH_EDIT_ROWS: &str = include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
 //#endregion ✋️GestureLaws

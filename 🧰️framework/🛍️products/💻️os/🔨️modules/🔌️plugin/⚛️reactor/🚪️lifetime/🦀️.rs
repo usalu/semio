@@ -54,7 +54,7 @@ enum GuestTerminalRelease {
 /// 🧾️ The terminal witness carries the ORIGINATING fault, never a rewritten summary of it: every
 /// participant below a guest lifetime answers with the exact `Fault` its own authority raised, so a
 /// close that dies names the authority that refused instead of the ladder rung that noticed.
-trait GuestLifetimeOwner: terminal_owner::Sealed {
+pub(crate) trait GuestLifetimeOwner: terminal_owner::Sealed {
     fn terminal_is_empty(&self) -> Result<bool, semio_framework::Fault>;
     fn release_terminal(owner: &mut Option<Self>, maximum_items: usize, maximum_bytes: usize) -> Result<GuestTerminalRelease, semio_framework::Fault>
     where
@@ -73,7 +73,7 @@ enum Phase {
 }
 
 /// 🪪️ Lives in the runtime registry before callbacks; an unwind never removes its owner.
-struct GuestLifecycleCell<O: GuestLifetimeOwner> {
+pub(crate) struct GuestLifecycleCell<O: GuestLifetimeOwner> {
     open: ActorInstanceOpenRequest,
     lifetime: ActorInstanceLifetime,
     owner: ManuallyDrop<Option<O>>,
@@ -115,7 +115,7 @@ impl<O: GuestLifetimeOwner> GuestLifecycleCell<O> {
     pub(crate) fn owner_mut(&mut self) -> Option<&mut O> {
         self.owner.as_mut()
     }
-    fn retained_receipt(&self) -> Option<ActorInstanceLifecycleReceipt> {
+    pub(crate) fn retained_receipt(&self) -> Option<ActorInstanceLifecycleReceipt> {
         self.receipt
     }
     pub(crate) fn is_live(&self) -> bool {
@@ -401,7 +401,7 @@ impl<PA: crate::plugin_app::PluginApp> GuestLifetimeOwner for NativeLifetimeOwne
     }
 }
 
-struct NativeLifetimeSlot<PA: crate::plugin_app::PluginApp> {
+pub(crate) struct NativeLifetimeSlot<PA: crate::plugin_app::PluginApp> {
     pub(crate) cell: NativeCell<PA>,
     pub(crate) native_created: bool,
     patch_sequence: u64,

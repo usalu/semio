@@ -1,0 +1,5 @@
+{
+  "mutation": "editNodeText",
+  "id": "node-a",
+  "newText": "Alpha Prime"
+}

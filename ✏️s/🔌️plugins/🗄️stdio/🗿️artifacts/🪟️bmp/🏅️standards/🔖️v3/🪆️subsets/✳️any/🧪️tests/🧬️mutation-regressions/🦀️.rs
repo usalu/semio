@@ -3,11 +3,11 @@ use crate::schema::mutations::{BmpMutation, PaintDirectRegion, PaintIndexedRegio
 use protocol::Mutation;
 
 fn direct() -> crate::BmpSnapshot {
-    crate::standards::v_v3::subsets::any::io::decode_bmp(include_bytes!("../../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp")).unwrap()
+    crate::standards::v_v3::subsets::any::io::decode_bmp(include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp")).unwrap()
 }
 
 fn indexed() -> crate::BmpSnapshot {
-    crate::standards::v_v3::subsets::any::io::decode_bmp(include_bytes!("../../🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb4-duplicate-palette.bmp")).unwrap()
+    crate::standards::v_v3::subsets::any::io::decode_bmp(include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb4-duplicate-palette.bmp")).unwrap()
 }
 
 #[test]

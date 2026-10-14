@@ -30,7 +30,7 @@ fn retained_fixed_list_pages_typed_retirement_meters_backing_as_items() {
 
 //#region 🧪️PagedStorageLaws
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
 
 #[test]

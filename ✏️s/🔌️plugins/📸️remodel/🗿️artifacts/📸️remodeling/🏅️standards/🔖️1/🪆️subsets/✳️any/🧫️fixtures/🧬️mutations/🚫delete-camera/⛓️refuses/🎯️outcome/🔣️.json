@@ -1,8 +1,0 @@
-{
-  "status": "rejected",
-  "code": "mutation.target-referenced",
-  "path": [
-    "orbit-secondary",
-    "calibration.rig.orbit-cam-secondary"
-  ]
-}

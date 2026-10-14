@@ -61,6 +61,7 @@ impl<T: RetireOwned> crate::ErasedSnapshotRetirement for ControlledRetirement<T>
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { Self::next_capacity_byte_demand(self, copy) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Self::next_release_byte_demand(self) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Self::next_depth_demand(self) }
+    fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError> {Self::selected_demand(self,body)}
     fn terminal_is_empty(&self) -> bool { Self::terminal_is_empty(self) }
 }
 
@@ -96,10 +97,16 @@ impl<T: RetireOwned> ControlledRetirement<T> {
         if cursor.terminal_is_empty() { Ok(0) } else { cursor.next_work_byte_demand() }
     }
 
+    /// 🧩️ Borrows all currencies from the same selected source, structural birth, payload or physical release event.
+    pub fn selected_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError> {
+        let copy=if self.value.is_none()&&self.cursors.has_reserved_slot() {self.cursors.get(self.cursors.len().saturating_sub(1)).map_or(Ok(0),|cursor|if cursor.terminal_is_empty(){Ok(0)}else {cursor.next_selected_work_byte_demand(body)})?}else {0};
+        Ok(crate::RetirementDemand {copy_bytes:copy,capacity_bytes:self.next_capacity_byte_demand(body)?,release_bytes:self.next_release_byte_demand()?,depth:self.next_depth_demand()?})
+    }
+
     /// 📏️ Exposes the next complete constructor allocation before the caller grants it.
     pub fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, ValueError> {
         if self.terminal_is_empty() || (self.value.is_none() && (self.cursors.is_empty() || self.cursors.get(self.cursors.len() - 1).is_some_and(|cursor| cursor.terminal_is_empty()))) { return Ok(0); }
-        if !self.cursors.has_reserved_slot() { return self.cursors.next_capacity_allocation_bytes(self.cursors.len() + 1).map_err(ValueError::from)?.ok_or_else(|| refusal("retirement frontier lost its capacity demand")); }
+        if !self.cursors.has_reserved_slot() { return self.cursors.next_allocation_bytes().map_err(ValueError::from); }
         let demand = if let Some(value) = self.value.as_ref() { value.retirement_birth_bytes() } else { self.cursors.get(self.cursors.len() - 1).and_then(|cursor| cursor.next_birth_bytes(maximum_body_bytes)) };
         demand.ok_or_else(|| refusal("retirement owner has no controlled birth authority"))
     }
@@ -167,7 +174,7 @@ impl<T: RetireOwned> ControlledRetirement<T> {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes: bytes }));
         }
         if !self.cursors.has_reserved_slot() {
-            let demand = self.cursors.next_capacity_allocation_bytes(self.cursors.len() + 1).map_err(ValueError::from)?.ok_or_else(|| refusal("retirement frontier lost its capacity demand"))?;
+            let demand = self.cursors.next_allocation_bytes().map_err(ValueError::from)?;
             if demand > grant.maximum_capacity_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
             return self.reserve_cursor_slot(grant.maximum_capacity_bytes, PagedList::reserve_one);
         }
@@ -245,6 +252,7 @@ impl<T: RetireOwned> RetirementCursor for ControlledRetirement<T> {
     fn terminal_is_empty(&self) -> bool { ControlledRetirement::terminal_is_empty(self) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { ControlledRetirement::next_depth_demand(self) }
     fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.next_copy_byte_demand()}
+    fn next_selected_work_byte_demand(&self,body:usize)->Result<usize,ValueError> {Ok(self.selected_demand(body)?.copy_bytes)}
     fn allows_admitted_narrow_work(&self)->bool{true}
     fn next_close_byte_demand(&self) -> Option<usize> { self.next_release_byte_demand().ok() }
     fn next_birth_bytes(&self, maximum_bytes: usize) -> Option<usize> { self.next_capacity_byte_demand(maximum_bytes).ok() }

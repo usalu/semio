@@ -2,7 +2,27 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
-const law=JSON.parse(readFileSync(new URL("../../../🧫️fixtures/👷️reserved/🔣️.json",import.meta.url),"utf8"));
+import Ajv from "ajv";
+const law=JSON.parse(readFileSync(new URL("../../../🧪️tests/🧫️fixtures/👷️reserved/🔣️.json",import.meta.url),"utf8"));
+
+test("reserved session admission borrows original control and keeps both refusal owners",()=>{
+ const validate=new Ajv({strict:true}).compile({type:"object",additionalProperties:false,required:["control","sameCancellationNode","wholeFailure","recipient"],properties:{control:{const:"originalStepContext"},sameCancellationNode:{const:true},wholeFailure:{const:true},recipient:{const:"originalRecipient"}}});
+ expect(validate(law.admission)).toBe(true);expect(validate({...law.admission,clock:0})).toBe(false);
+ const db=new Database(":memory:");try{expect(db.query("select ? as deadline, ? as fuel, ? as capacity").get(law.caller.deadline,law.caller.fuel,law.caller.source.maximumCapacityBytes)).toEqual({deadline:1500,fuel:1,capacity:65536});}finally{db.close();}
+ const source=readFileSync(new URL("../../🚪️session/🦀️.rs",import.meta.url),"utf8"),start=source.indexOf("macro_rules! admit_session"),admission=source.slice(start);
+ expect(admission).toContain("$cx");expect(admission).toContain("try_admit_owned(&mut job, &mut params, $cx)");
+ expect(admission).not.toContain("WorkerJobAdmissionContext::new");expect(admission).not.toContain("StepBudget::new");
+ expect(source).toContain("ManuallyDrop<Option<OriginalTurnFailure>>");expect(source).toContain("ControlledRetirement<OriginalTurnFailure>");
+ console.log("[DEBUG] Ajv/SQLite reserved admission requires actual original1500 deadline/fuel1/65536 capacity supplier and whole primary plus independent refusal custody");
+});
+
+test("reserved close preserves original typed depth refusal before the shared cursor gate",()=>{
+ expect(law.zeroDepth).toBe("sameOwnerDepthLimit");const db=new Database(":memory:");try{expect(db.query("select ? < ? as denied, ? as owned").get(0,law.grant.depth,law.backingBytes)).toEqual({denied:1,owned:16384});}finally{db.close();}
+ const source=readFileSync(new URL("../../🏛️reserved/🦀️.rs",import.meta.url),"utf8"),start=source.indexOf("fn close_step(&mut self,cx:"),body=source.slice(start,source.indexOf("fn next_close_copy_byte_demand",start));
+ expect(start).toBeGreaterThanOrEqual(0);expect(body).toContain("remaining.maximum_depth<demand.depth");expect(body).toContain("ValueRefusalKind::DepthLimit");expect(body).toContain("OriginalTurnFailure::from");
+ expect(body.indexOf("remaining.maximum_depth<demand.depth")).toBeLessThan(body.indexOf("close_original_retained_step"));
+ console.log("[DEBUG] SQLite zero-depth reference keeps all original16384 backing bytes; native reserved close must retain complete typed depth failure before pending currency gate");
+});
 test("original reserved job retains spare capacity until exact physical release",async()=>{
  const implementation=await import("../🟦️.ts");
  const db=new Database(":memory:");db.run("CREATE TABLE owner(length INTEGER,capacity INTEGER)");db.run("INSERT INTO owner VALUES(?,?)",law.payloadBytes,law.backingBytes);

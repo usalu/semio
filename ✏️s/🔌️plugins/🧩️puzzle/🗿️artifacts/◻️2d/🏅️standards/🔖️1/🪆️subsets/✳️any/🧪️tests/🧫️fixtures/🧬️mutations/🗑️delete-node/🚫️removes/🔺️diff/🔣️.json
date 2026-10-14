@@ -1,0 +1,29 @@
+{
+  "artifact": null,
+  "camera": null,
+  "edges": {
+    "inserted": [],
+    "modified": [],
+    "moved": [],
+    "removed": [
+      {
+        "id": "edge-1",
+        "index": 0
+      }
+    ]
+  },
+  "meta": null,
+  "nodes": {
+    "inserted": [],
+    "modified": [],
+    "moved": [],
+    "removed": [
+      {
+        "id": "node-a",
+        "index": 0
+      }
+    ]
+  },
+  "schema": null,
+  "targetRegions": null
+}

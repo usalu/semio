@@ -170,7 +170,7 @@ fn decode_tiles_round_trips_tile_provenance() {
 fn grid_domain_constraints_enumeration_and_cancellation_match_neutral_oracle() {
     use crate::constraint::PatternSelector;
     use crate::constraints_card::{CardinalityConstraint, Scope};
-    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🎲️solver-contracts/🔣️.json")).unwrap();
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🎲️solver-contracts/🔣️.json")).unwrap();
     let row = &oracle["grid2d"];
     let size = row["size"].as_u64().unwrap() as usize;
     let nodes = row["nodes"].as_u64().unwrap() as usize;

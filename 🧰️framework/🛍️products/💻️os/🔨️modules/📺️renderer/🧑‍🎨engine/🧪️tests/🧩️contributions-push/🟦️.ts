@@ -10,7 +10,7 @@
 
 import { describe, expect, it } from "vitest";
 import { createContributionsPublisher, type ContributionsPublishOutcome, type ContributionsSessionKey } from "../../🧱️elements/🛠️ShellHelpers/🧩️contributions/🟦️.ts";
-import fixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🧩️contributions-push/🔣️.json";
+import fixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧩️contributions-push/🔣️.json";
 
 type Scenario = (typeof fixture.scenarios)[number] & { readonly retireInstanceId?: number; readonly nextInstanceId?: number };
 

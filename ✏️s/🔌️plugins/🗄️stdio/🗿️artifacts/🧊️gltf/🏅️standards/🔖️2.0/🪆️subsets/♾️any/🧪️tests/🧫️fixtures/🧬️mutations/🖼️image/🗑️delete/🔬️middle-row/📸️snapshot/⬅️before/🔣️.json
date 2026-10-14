@@ -1,0 +1,21 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "images": [
+      {
+        "uri": "image0.png"
+      },
+      {
+        "uri": "image1.png"
+      },
+      {
+        "uri": "image2.png"
+      }
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

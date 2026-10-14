@@ -3,7 +3,7 @@ import * as artifactSqlite0 from "../🟦️.ts";
 /** 🧩️ Native Puzzle5d parent identities and exact scalar domains share neutral oracle vectors. */
 import {expect,test} from 'bun:test';
 import Ajv from 'ajv';
-import laws from "../🧫️fixtures/🔣️.json";
+import laws from "./🧫️fixtures/🔣️.json";
 import * as artifact from "../../../../🧬️schema/🟦️.ts";
 import * as io from "../../../🟦️.ts";
 import * as snapshot from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
@@ -152,7 +152,7 @@ test('SQLite Puzzle5d every persisted field retains its authored artifact state 
  for(const field of laws.persistedFields)expect(Reflect.get(artifactSchema.properties,field)['x-semio-state']).toBe('artifact');
 });
 for(let batch=0;batch<12;batch++)test('SQLite Puzzle5d neutral mutation snapshot batch '+batch+' retains declared JSON state through relational reconstruction',async()=>{
- const root=new URL('../../../../🧫️fixtures/',import.meta.url),ajv=new Ajv({strict:false}).addSchema(artifactReferenceSchema);ajv.addSchema(ioSchema);const validate=ajv.compile(artifactSchema);let index=0,count=0;
+ const root=new URL("../../../../🧪️tests/🧫️fixtures",import.meta.url),ajv=new Ajv({strict:false}).addSchema(artifactReferenceSchema);ajv.addSchema(ioSchema);const validate=ajv.compile(artifactSchema);let index=0,count=0;
  for await(const path of new Bun.Glob('**/📸️snapshot/**/🔣️.json').scan({cwd:fileURLToPath(root)})){if(index++%12!==batch)continue;const source=await Bun.file(new URL(path,root)).text(),original=JSON.parse(source);expect(validate(original)).toBe(true);const value=io.puzzle5dSnapshotFromJsonText(source),database=await artifactSqlite0.puzzle5dSnapshotToSqliteDatabase(value),restored=await artifactSqlite0.puzzle5dSnapshotFromSqliteDatabase(database);expect(restored).toEqual(value);expect(io.puzzle5dSnapshotFromJsonText(io.puzzle5dSnapshotToJsonText(restored))).toEqual(value);count++}
  expect(index).toBe(laws.snapshotAssetCount);expect(count).toBe(Math.floor((laws.snapshotAssetCount+11-batch)/12));
 });
@@ -171,7 +171,7 @@ test("Puzzle5d borrowed Scale and diff metadata preserve the authored neutral re
 });
 
 test("Puzzle5d nullable delta retains omission, clearing and exact typed replacement",async()=>{
- const nullable=await Bun.file(new URL("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🪆️optional/🧫️fixtures/🔣️.json",import.meta.url)).json();
+ const nullable=await Bun.file(new URL("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🧫️fixtures/🪆️binding/🪆️optional/🔣️.json",import.meta.url)).json();
  const validate=new Ajv({strict:true}).addSchema(artifactReferenceSchema).compile({type:"object",properties:{label:{type:"object",properties:{value:{type:"string"}},additionalProperties:false}},additionalProperties:false});
  for(const sample of nullable.samples){expect(validate(sample.physical)).toBe(true);expect(JSON.parse(JSON.stringify(sample.physical))).toEqual(sample.physical);const semantic=!("label" in sample.physical)?{}:!("value" in sample.physical.label)?{label:null}:{label:sample.physical.label.value};expect(semantic).toEqual(sample.json)}
  for(const sample of nullable.invalid)expect(validate(sample)).toBe(false);

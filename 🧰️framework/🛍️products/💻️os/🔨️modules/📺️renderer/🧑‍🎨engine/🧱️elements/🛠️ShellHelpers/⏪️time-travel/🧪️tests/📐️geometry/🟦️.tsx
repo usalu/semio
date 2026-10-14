@@ -25,7 +25,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const shellHelpers = join(here, "..", "..", "..");
 const framework = join(here, "..", "..", "..", "..", "..", "..", "..", "..", "..", "..");
 const stylesPath = join(framework, "🔨️modules", "🖱️ui", "🎨️styling", "🖌️ui", "🎨️.css");
-const corpus = JSON.parse(readFileSync(join(shellHelpers, "🧫️fixtures", "🧫️time-travel-band", "🔣️.json"), "utf8")) as {
+const corpus = JSON.parse(readFileSync(join(shellHelpers, "🧪️tests/🧫️fixtures", "🧫️time-travel-band", "🔣️.json"), "utf8")) as {
   readonly controllerId: string;
   readonly axes: { readonly terminology: string };
   readonly cases: readonly { readonly name: string; readonly session: HistoryTimeTravel; readonly controls: readonly unknown[] }[];

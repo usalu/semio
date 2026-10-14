@@ -5,7 +5,7 @@ import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import Ajv from "ajv";
-import laws from "../🧫️fixtures/🔣️.json";
+import laws from "./🧫️fixtures/🔣️.json";
 import * as owner from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 /** 🔢️ Reconstructs independent expected SQLite samples from authored IEEE words. */
 function expectedFloatSample(bits:number):number{const bytes=Buffer.alloc(4);bytes.writeUInt32LE(bits);return bytes.readFloatLE()}
@@ -66,7 +66,7 @@ import {readdirSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {join} from 'node:path';
 test("SQLite remodeling every committed snapshot fixture owns the canonical document domain",()=>{
- const root=fileURLToPath(new URL('../../../../🧫️fixtures/🧬️mutations',import.meta.url));let count=0;const errors:string[]=[];
+ const root=fileURLToPath(new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations",import.meta.url));let count=0;const errors:string[]=[];
  const validator=new Ajv({strict:false,validateFormats:false}).compile(documentSchema);
  for(const slug of readdirSync(root))for(const name of readdirSync(join(root,slug)))for(const direction of ['⬅️before','➡️after']){const file=join(root,slug,name,'📸️snapshot',direction,'🔣️.json'),wire=JSON.parse(readFileSync(file,'utf8'));count++;try{const value=ownerPhysical0.decodeRemodelingSnapshot(wire);expect(validator(JSON.parse(ownerPhysical0.remodelingSnapshotToJsonText(value)))).toBe(true)}catch(error){errors.push(slug+'/'+name+'/'+direction+': '+String(error))}}
  expect(count).toBe(272);expect(errors.slice(0,8)).toEqual([]);
@@ -77,7 +77,7 @@ import {decodeRemodelingDiff} from "../../../📝️text/🔺️diff/🔣️json
 import {applyRemodelingDiff} from "../../../../🧬️schema/🔺️diff/🟦️.ts";
 import {existsSync} from 'node:fs';
 test("SQLite remodeling committed mutation and diff replay preserves typed snapshots",()=>{
- const root=fileURLToPath(new URL('../../../../🧫️fixtures/🧬️mutations',import.meta.url));let count=0;const errors:string[]=[];
+ const root=fileURLToPath(new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations",import.meta.url));let count=0;const errors:string[]=[];
  for(const slug of readdirSync(root))for(const name of readdirSync(join(root,slug))){const dir=join(root,slug,name),read=(path:string)=>JSON.parse(readFileSync(join(dir,path),'utf8'));count++;try{const before=ownerPhysical0.decodeRemodelingSnapshot(read('📸️snapshot/⬅️before/🔣️.json')),after=ownerPhysical0.decodeRemodelingSnapshot(read('📸️snapshot/➡️after/🔣️.json')),mutation=decodeRemodelingMutation(read('🦠️mutation/🔣️.json'));expect(applyRemodelingMutation(before,mutation)).toEqual(after);if(existsSync(join(dir,'🔺️diff/🔣️.json')))expect(applyRemodelingDiff(decodeRemodelingDiff(read('🔺️diff/🔣️.json')),before)).toEqual(after)}catch(error){errors.push(slug+'/'+name+': '+String(error))}}
  expect(count).toBe(136);expect(errors.slice(0,8)).toEqual([]);
 });
@@ -87,7 +87,7 @@ test("SQLite remodeling semantic relationship construction reports its known can
  const controller=new AbortController();let canceled=false;await expect(ownerSqlite0.remodelingSnapshotFromSqliteDatabase(database,{signal:controller.signal,onProgress:event=>{if(event.phase==='reconstructSnapshot'&&event.total===1024&&event.completed===256){canceled=true;controller.abort()}}})).rejects.toThrow();expect(canceled).toBe(true);
 },15000);
 test("SQLite remodeling committed JSON snapshot spelling matches its declared exact word writer",()=>{
- const root=fileURLToPath(new URL('../../../../🧫️fixtures/🧬️mutations',import.meta.url)),errors:string[]=[];let count=0;
+ const root=fileURLToPath(new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations",import.meta.url)),errors:string[]=[];let count=0;
  for(const slug of readdirSync(root))for(const name of readdirSync(join(root,slug)))for(const direction of['⬅️before','➡️after']){const file=join(root,slug,name,'📸️snapshot',direction,'🔣️.json'),text=readFileSync(file,'utf8').trimEnd();count++;if(ownerPhysical0.remodelingSnapshotToJsonText(ownerPhysical0.decodeRemodelingSnapshot(JSON.parse(text)))!==text)errors.push(slug+'/'+name+'/'+direction)}expect(count).toBe(272);expect(errors.slice(0,8)).toEqual([]);
 });
 
@@ -112,7 +112,7 @@ test("SQLite remodeling all semantic cells have independent exact and one-short 
 });
 
 test("SQLite remodeling structured durable content is authoritative in scalar relations",async()=>{
- const law=(await import("../🧫️fixtures/🧱️content/🔣️.json")).default;
+ const law=(await import("./🧫️fixtures/🧱️content/🔣️.json")).default;
  const snapshot=ownerPhysical0.decodeRemodelingSnapshot(laws.snapshotJson);
  for(const source of[law.sparse,law.mesh])snapshot.durableArtifacts[source.contentId]={kind:source.kind,mime:source.mime,width:source.width,height:source.height,chunks:source.chunks.map(chunk=>Uint8Array.from(chunk.sourceOctets))};
  snapshot.results.sparse={points:{kind:"content",contentId:law.sparse.contentId,chunkCount:BigInt(law.sparse.reference.chunkCount)},colors:null};
@@ -140,7 +140,7 @@ test("SQLite remodeling structured durable content is authoritative in scalar re
 });
 
 test("SQLite remodeling preserves every authored structured fragment without opaque content",async()=>{
- const law=(await import("../🧫️fixtures/🧱️content/🧩️fragments/🔣️.json")).default;
+ const law=(await import("./🧫️fixtures/🧱️content/🧩️fragments/🔣️.json")).default;
  for(const value of law.cases){
   const snapshot=ownerPhysical0.decodeRemodelingSnapshot(laws.snapshotJson),key="independent-fragment:"+value.name;snapshot.durableArtifacts[key]={kind:value.kind,mime:null,width:0,height:0,chunks:value.chunks.map(chunk=>Uint8Array.from(chunk.sourceOctets))};
   const database=await ownerSqlite0.remodelingSnapshotToSqliteDatabase(snapshot),db=Database.deserialize(await exportSqliteDatabase(database));

@@ -22,7 +22,7 @@ impl Deserializer<EquationSnapshot> for CsvIntoEquation {
             return Err(crate::standards::v1::subsets::any::io::invalid_payload("CsvIntoEquation", "expected a binary csv payload"));
         };
         let _ = STDIO_CSV_DOCUMENT_SCHEMA;
-        let csv = <CsvSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| crate::standards::v1::subsets::any::io::pack_decode_refusal("CsvIntoEquation", error))?;
+        let csv = <CsvSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| crate::standards::v1::subsets::any::io::pack_decode_refusal("CsvIntoEquation", error))?;
         let nodes: Vec<EquationNode> = csv
             .records
             .iter()

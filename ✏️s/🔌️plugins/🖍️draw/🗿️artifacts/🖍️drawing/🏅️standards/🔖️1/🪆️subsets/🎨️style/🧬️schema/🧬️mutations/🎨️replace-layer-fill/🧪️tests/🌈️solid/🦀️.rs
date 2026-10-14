@@ -10,11 +10,11 @@ use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutat
 use crate::schema::{find_drawing_layer, layer_base};
 use crate::{DrawingSnapshot, FillStyle};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨️replace-layer-fill/🌈️solid/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨️replace-layer-fill/🌈️solid/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨️replace-layer-fill/🌈️solid/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨️replace-layer-fill/🌈️solid/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨️replace-layer-fill/🌈️solid/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️replace-layer-fill/🌈️solid/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️replace-layer-fill/🌈️solid/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️replace-layer-fill/🌈️solid/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️replace-layer-fill/🌈️solid/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️replace-layer-fill/🌈️solid/🎯️outcome/🔣️.json");
 
 fn before() -> DrawingSnapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")

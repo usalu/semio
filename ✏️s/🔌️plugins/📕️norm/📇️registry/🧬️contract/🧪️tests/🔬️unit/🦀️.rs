@@ -1,7 +1,7 @@
 use super::*;
 
-const VALID: &str = include_str!("../../🧫️fixtures/✅️valid/🔣️.json");
-const INVALID: &str = include_str!("../../🧫️fixtures/❌️invalid/🔣️.json");
+const VALID: &str = include_str!("../🧫️fixtures/✅️valid/🔣️.json");
+const INVALID: &str = include_str!("../🧫️fixtures/❌️invalid/🔣️.json");
 
 #[test]
 fn package_schema_matches_third_party_json_oracle() {

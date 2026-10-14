@@ -4,7 +4,7 @@ use protocol::command::DiffAlgebra;
 use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff};
 
 fn namespace_formatting_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/🏷️namespace-formatting/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🏷️namespace-formatting/🔣️.json")).unwrap()
 }
 
 fn namespace_formatting_snapshot(case: &serde_json::Value) -> DocxSnapshot {
@@ -240,7 +240,7 @@ fn identical_run_insertion_invalidates_the_original_canonical_address() {
     use quick_xml::reader::Reader;
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
 
-    let authored: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧭️identical-run-displacement/🔣️.json")).unwrap();
+    let authored: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️identical-run-displacement/🔣️.json")).unwrap();
     let before_xml = authored["beforeXml"].as_str().unwrap();
     let displaced_xml = authored["displacedXml"].as_str().unwrap();
     for (xml, expected) in [(before_xml, 3usize), (displaced_xml, 4usize)] {
@@ -277,7 +277,7 @@ fn canonical_xml_addresses_support_empty_and_default_namespaces_and_reject_unbou
     use quick_xml::reader::Reader;
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
 
-    let authored: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧭️xml-address-namespaces/🔣️.json")).unwrap();
+    let authored: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️xml-address-namespaces/🔣️.json")).unwrap();
     let part_path = authored["partPath"].as_str().unwrap();
     let target_path = authored["targetPath"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize).collect::<Vec<_>>();
     for case in authored["cases"].as_array().unwrap() {
@@ -310,7 +310,7 @@ fn run_text_edit_replaces_all_text_contributions_and_has_compact_exact_inverse()
     use quick_xml::reader::Reader;
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text, xml_document_to_text};
 
-    let authored: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔤️run-text-fidelity/🔣️.json")).unwrap();
+    let authored: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔤️run-text-fidelity/🔣️.json")).unwrap();
     let part_path = authored["partPath"].as_str().unwrap();
     for case in authored["cases"].as_array().unwrap() {
         let mut snapshot = fixture();
@@ -383,8 +383,8 @@ fn identical_natural_run_text_is_a_no_op_without_restructuring_xml() {
 #[semio_framework_async_macros::async_test]
 async fn snapshot_pack_retains_complete_xml_authority() {
     let snapshot = fixture();
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snapshot);
-    let decoded = <DocxSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&snapshot);
+    let decoded = <DocxSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snapshot);
     assert_eq!(project(&decoded), project(&snapshot));
 }
@@ -402,7 +402,7 @@ fn kinds_const_matches_enum_variants_in_declaration_order() {
 async fn top_level_table_projection_matches_independent_xml_text_order() {
     use quick_xml::{events::Event, Reader};
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧭️table-run-projection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧭️table-run-projection/🔣️.json")).unwrap();
     let xml = fixture["xml"].as_str().unwrap();
     let mut reader = Reader::from_str(xml);
     let mut oracle = Vec::new();
@@ -436,7 +436,7 @@ async fn top_level_table_projection_matches_independent_xml_text_order() {
 fn empty_paragraph_text_edit_preserves_markup_and_roundtrips_through_independent_xml() {
     use quick_xml::{events::Event, name::ResolveResult, reader::NsReader};
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text, xml_document_to_text};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/✍️empty-paragraphs/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/✍️empty-paragraphs/🔣️.json")).unwrap();
     let replacement = fixture["replacement"].as_str().unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument::default());

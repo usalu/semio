@@ -1,0 +1,104 @@
+{
+  "cases": [
+    {
+      "id": "shared-fixture-feature-is-opaque",
+      "features": [
+        "owner/🧪️tests/🧫️fixtures"
+      ],
+      "children": [],
+      "expected": [],
+      "unknown": []
+    },
+    {
+      "id": "nested-feature-specimen-is-opaque",
+      "features": [
+        "owner/🧪️tests/🧫️fixtures/🧪️tests/🧪️sample"
+      ],
+      "children": [],
+      "expected": [],
+      "unknown": []
+    },
+    {
+      "id": "case-fixture-directory-is-accepted",
+      "features": [
+        "owner/🧪️tests/🧪️case"
+      ],
+      "children": [
+        {
+          "case": "owner/🧪️tests/🧪️case",
+          "name": "🧫️fixtures"
+        }
+      ],
+      "expected": [
+        "owner/🧪️tests/🧪️case"
+      ],
+      "unknown": []
+    },
+    {
+      "id": "ordinary-case-child-is-rejected",
+      "features": [
+        "owner/🧪️tests/🧪️case"
+      ],
+      "children": [
+        {
+          "case": "owner/🧪️tests/🧪️case",
+          "name": "data"
+        }
+      ],
+      "expected": [
+        "owner/🧪️tests/🧪️case"
+      ],
+      "unknown": [
+        "owner/🧪️tests/🧪️case/data"
+      ]
+    },
+    {
+      "id": "module-named-fixtures-keeps-real-tests",
+      "features": [
+        "owner/🔨️modules/🧫️fixtures/🧪️tests/🧪️case"
+      ],
+      "children": [],
+      "expected": [
+        "owner/🔨️modules/🧫️fixtures/🧪️tests/🧪️case"
+      ],
+      "unknown": []
+    },
+    {
+      "id": "module-named-tests-is-not-collection",
+      "features": [
+        "owner/🔨️modules/🧪️tests/🧪️sample"
+      ],
+      "children": [],
+      "expected": [],
+      "unknown": []
+    },
+    {
+      "id": "module-named-tests-keeps-inner-collection",
+      "features": [
+        "owner/🔨️modules/🧪️tests/🧪️tests/🧪️case"
+      ],
+      "children": [],
+      "expected": [
+        "owner/🔨️modules/🧪️tests/🧪️tests/🧪️case"
+      ],
+      "unknown": []
+    },
+    {
+      "id": "case-local-source-shaped-specimens-are-opaque",
+      "features": [
+        "owner/🧪️tests/🧪️case",
+        "owner/🧪️tests/🧪️case/🧫️fixtures/🧪️tests/🧪️sample"
+      ],
+      "children": [
+        {
+          "case": "owner/🧪️tests/🧪️case",
+          "name": "🧫️fixtures"
+        }
+      ],
+      "expected": [
+        "owner/🧪️tests/🧪️case"
+      ],
+      "unknown": []
+    }
+  ]
+}

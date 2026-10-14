@@ -3,7 +3,7 @@ use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunTraceStore};
 use serde_json::Value;
 use std::collections::BTreeMap;
 
-const TRACE_PAGES: &str = include_str!("../../../../../../../../🔨️modules/⏯️tool-run/🧫️fixtures/📼️trace-pages.json");
+const TRACE_PAGES: &str = include_str!("../../../../../../../../🔨️modules/⏯️tool-run/🧪️tests/🧫️fixtures/📼️trace-pages.json");
 
 fn fixture() -> Value {
     serde_json::from_str(TRACE_PAGES).expect("📼️ trace-pages fixture parses")
@@ -221,7 +221,7 @@ fn fade_starts_opaque_and_bottoms_out_at_the_floor_token() {
 }
 
 /// 🎲️ The board-2d lane contract: its `traceShapes` footprints and its round-trip lane text.
-const BOARD2D_SCENE_LANES: &str = include_str!("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json");
+const BOARD2D_SCENE_LANES: &str = include_str!("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json");
 
 /// ⚖️ LAW: a board's placement2d footprints are exactly the `traceShapes` rows of the board-2d lane contract, a malformed
 /// catalog has none, and every placement2d record of the contract's lane becomes one footprint draw with its record's

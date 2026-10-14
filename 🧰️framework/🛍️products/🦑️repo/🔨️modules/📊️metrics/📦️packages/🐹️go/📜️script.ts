@@ -1,12 +1,13 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🧭️ `@semio-tech/repo-metrics-go` router: `bun ./📜️script.ts build|test`. */
 import { join } from "node:path";
-import { goCoverageArgs, goLevelTestArgs, runCmd, runRepositoryTestCommand } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { goCoverageArgs, goLevelTestArgs, runCanonicalGoBuild, runRepositoryTestCommand } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const PACKAGE_DIR = import.meta.dir;
 
@@ -15,8 +16,8 @@ function goEnvironment(repoRoot: string): NodeJS.ProcessEnv {
 }
 
 class BuildScript extends BundleScript {
-  run(): void {
-    runCmd("go", ["build", "..."], { cwd: PACKAGE_DIR, env: goEnvironment(this.repoRoot), budgetMs: buildBudgetMs() });
+  async run(): Promise<void> {
+    await runCanonicalGoBuild(PACKAGE_DIR, ["./..."], { control: scriptCompilerAdmissionControlV1(this.invocation, "go:build", 0),  env: goEnvironment(this.repoRoot), budgetMs: buildBudgetMs(),  });
   }
 }
 

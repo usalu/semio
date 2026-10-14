@@ -10,7 +10,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const sha = (seed: string): string => seed.repeat(64).slice(0, 64);
   const lane = (name: string, plugins: readonly (readonly [string, string, number])[]) => ({
     lane: name,
-    receipt: { schema: "semio.dev.activation/v1", variant: name, profile: "dev", plugins: plugins.map(([pluginId, seed, rebuiltAt]) => ({ pluginId, artifactSha256: sha(seed), rebuiltAt })) },
+    receipt: { schema: "semio.dev.activation/v1", variant: name, profile: "prototype", plugins: plugins.map(([pluginId, seed, rebuiltAt]) => ({ pluginId, artifactSha256: sha(seed), rebuiltAt })) },
   });
 
   describe("demonstratorActivationLanes", () => {
@@ -34,7 +34,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       );
       expect(merged.schema).toBe("semio.dev.activation/v1");
       expect(merged.variant).toBe("generator");
-      expect(merged.profile).toBe("dev");
+      expect(merged.profile).toBe("prototype");
       expect(merged.plugins.map((row: any) => row.pluginId)).toEqual(["demonstrator", "energy", "fem", "procedural"]);
     });
 
@@ -71,7 +71,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("refuses a release receipt in a development lane", () => {
       const release = lane("energy", [["energy", "d", 7]]);
       expect(() => mergeDemonstratorActivationReceipts([{ ...release, receipt: { ...release.receipt, profile: "release" } }], ["energy"]))
-        .toThrow(/Demonstrator activation lane energy is not a dev activation: release/);
+        .toThrow(/Demonstrator activation lane energy is not a prototype activation: release/);
     });
   });
   //#endregion 🧪️DemonstratorUnionReceiptTests

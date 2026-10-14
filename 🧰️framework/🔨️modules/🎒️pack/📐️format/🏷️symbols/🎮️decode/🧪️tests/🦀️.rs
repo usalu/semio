@@ -99,7 +99,7 @@ fn prepared(wire: Vec<u8>, expected: &[String], prefix: usize, cancel_at: Option
 
 #[test]
 fn retained_inline_symbols_native_canonical_utf8_paged_indices_and_exact_granted_close() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut original = admitted_source(vec![1, 1, b'x']);
     let mut changed = admitted_source(vec![1, 1, b'y']);
     let mut bound = RetainedInlineSymbols::new(0, 2048, 262144);

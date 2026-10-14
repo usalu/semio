@@ -32,7 +32,7 @@ impl<T: RetainedClone> Drop for Held<T> {
     }
 }
 
-fn law() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
+fn law() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
 
 fn number(value: &serde_json::Value, name: &str) -> usize { value[name].as_u64().unwrap() as usize }
 

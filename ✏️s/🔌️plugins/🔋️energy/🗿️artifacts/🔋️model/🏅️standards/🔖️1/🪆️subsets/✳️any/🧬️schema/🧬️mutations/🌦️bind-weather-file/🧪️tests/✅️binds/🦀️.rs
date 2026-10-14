@@ -9,11 +9,11 @@ use crate::mutations::fixtures::{self, snapshot, Case};
 use crate::mutations::EnergyModelMutation;
 use crate::EnergyModelSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌦️bind-weather-file/✅️binds/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌦️bind-weather-file/✅️binds/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌦️bind-weather-file/✅️binds/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌦️bind-weather-file/✅️binds/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌦️bind-weather-file/✅️binds/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌦️bind-weather-file/✅️binds/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌦️bind-weather-file/✅️binds/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌦️bind-weather-file/✅️binds/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌦️bind-weather-file/✅️binds/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌦️bind-weather-file/✅️binds/🎯️outcome/🔣️.json");
 
 #[allow(unused_variables, unused_mut)]
 fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {

@@ -4,9 +4,9 @@ import { createHash } from "node:crypto";
 import { lstatSync, readFileSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, resolve, relative, sep } from "node:path";
 import Ajv from "ajv";
-import fixture from "../../🧫️fixtures/🧫️private-reader/🔣️.json";
+import fixture from "../🧫️fixtures/🧫️private-reader/🔣️.json";
 
-import composition from "../../🧫️fixtures/🧩️composition/🔣️.json";
+import composition from "../🧫️fixtures/🧩️composition/🔣️.json";
 import { assertPrivateReaderInput, assertPrivateReaderBindings } from "./🧩️preservation/🟦️.ts";
 import { inspectRustCompileReferences } from "../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
@@ -55,13 +55,13 @@ test("the original three macro rows and all fifteen include targets are unchange
 test("the private reader reconstructs every original frozen caller byte", () => {
   const original = assertPrivateReaderBindings(witness.source, read(witness.source), ports);
   expect(original).toBe(read(witness.source));
-  expect(inspectRustCompileReferences(original).some(({ path }) => path.endsWith("🧫️fixtures/🦀️.rs"))).toBe(true);
+  expect(inspectRustCompileReferences(original).some(({ path }) => path.endsWith("🧪️tests/🧫️fixtures/🦀️.rs"))).toBe(true);
   expect(assertPrivateReaderBindings("unrelated-source.rs", "unchanged", ports)).toBe("unchanged");
 });
 
 test("changed reader bindings, flags, assets, and physical identity refuse restoration", () => {
   const source = read(witness.source), helper = read(witness.helper);
-  const brokenSources = [source.replace(witness.currentRegion, ""), source.replace("🧫️fixtures/🦀️.rs", "🧫️elsewhere/🦀️.rs"), source.replace(witness.importAnchor, ""), source + "\n" + witness.currentRegion, source.replace(witness.importAnchor, "")];
+  const brokenSources = [source.replace(witness.currentRegion, ""), source.replace("🧪️tests/🧫️fixtures/🦀️.rs", "🧫️elsewhere/🦀️.rs"), source.replace(witness.importAnchor, ""), source + "\n" + witness.currentRegion, source.replace(witness.importAnchor, "")];
   for (const broken of brokenSources) expect(() => assertPrivateReaderBindings(witness.source, broken, ports)).toThrow();
   for (const replacement of [helper.replace("observable: true", "observable: false"), helper.replace("no committed vector", "accepted missing vector"), helper.replace("✅️apply", "🟰️apply")]) {
     expect(() => assertPrivateReaderBindings(witness.source, source, { ...ports, read: (path) => path === witness.helper ? replacement : read(path) })).toThrow();

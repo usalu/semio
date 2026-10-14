@@ -6,7 +6,7 @@ import Ajv from "ajv/dist/2020.js";
 import { EditorError } from "../🟦️.ts";
 import type { EditorErrorKind } from "../🟦️.ts";
 
-const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 
 test("owned Editor error preserves kind, display and original diagnostic", () => {
   for (const row of fixture.cases) {

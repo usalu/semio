@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readGeneratedCatalogProjection } from "../../../../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import { COMPONENT_MODULE_DIRECTORIES } from "../../../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { pluginModulesRootIn } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import { moduleDirectoryName } from "../../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE, TRUSTED_PLUGIN_MODULE_RECEIPT_FILE } from "../../../../../../🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
@@ -18,15 +19,15 @@ const registryPath = "🧰️framework/🛍️products/💻️os/🔨️modules/
 /** 📥️ Builds exactly the session's components through the build driver, then publishes the native runtime from their modules and the session. */
 class PublishScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    const [variant, selectedProfile] = args, profile = selectedProfile as "dev" | "release", repo = this.repoRoot, controller = new AbortController(), cancel = () => controller.abort();
-    if (args.length !== 2) throw new Error("publish <variant> <dev|release>");
+    const [variant, selectedProfile] = args, profile = selectedProfile as "prototype" | "release", repo = this.repoRoot, controller = new AbortController(), cancel = () => controller.abort();
+    if (args.length !== 2) throw new Error("publish <variant> <prototype|release>");
     nativeRuntimeDirectory(".", variant, profile);
     process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
     try {
       const catalog = readGeneratedCatalogProjection(join(repo,registryPath,"dist/sessions",variant)).entries;
       const session = (await import(pathToFileURL(join(repo, registryPath, "dist/sessions", variant, "🎮️playground-session/🟦️.ts")).href)).PLAYGROUND_SESSION;
       if (session.variant !== variant || !Array.isArray(session.plugins)) throw new Error("Native session identity mismatch");
-      await buildComponentClosureV1(repo, new Set(session.plugins.map((plugin: { pluginId: string }) => plugin.pluginId)), { signal: AbortSignal.any([controller.signal, this.invocation.control.signal]) });
+      await buildComponentClosureV1(repo, new Set(session.plugins.map((plugin: { pluginId: string }) => plugin.pluginId)), { control: scriptCompilerAdmissionControlV1(this.invocation, "native:driver", 0) });
       const modules = session.plugins.map((plugin: { pluginId: string }) => {
         const entry = catalog.find((row: { pluginId: string }) => row.pluginId === plugin.pluginId);
         if (!entry) throw new Error(`Missing native catalog component: ${plugin.pluginId}`);

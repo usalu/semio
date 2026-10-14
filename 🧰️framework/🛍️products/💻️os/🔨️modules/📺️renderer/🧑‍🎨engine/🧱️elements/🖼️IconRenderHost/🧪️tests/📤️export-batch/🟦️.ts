@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const read = (path: string) => JSON.parse(readFileSync(resolve(root, path), "utf8"));
-const fixture = read("🧫️fixtures/📤️export-batch/🔣️.json");
+const fixture = read("🧪️tests/🧫️fixtures/📤️export-batch/🔣️.json");
 const queueCases = fixture.queueCases as readonly { name: string; groups: readonly number[]; cancelBeforeGroup: number | null; expected: { admitted: number; failed: number; discarded: number; phase: string } }[];
 
 describe("Icon export batch admission", () => {

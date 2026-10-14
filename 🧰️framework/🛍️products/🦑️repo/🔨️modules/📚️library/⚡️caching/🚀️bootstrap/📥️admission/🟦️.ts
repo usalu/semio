@@ -5,12 +5,21 @@ import { isAbsolute, join, resolve } from "node:path";
 type AdmissionPolicy = { generatedDirectories: readonly string[]; manifestBasenames: readonly string[] };
 type CollectionPolicy = { names: readonly string[]; moduleMember: string };
 
+/** 🧭️ Resolves complete structural collection sequences, including nested taxonomy roots. */
+export function moduleCollectionAncestry(parts: readonly string[], collections: CollectionPolicy): { inside: boolean; invalid: boolean } {
+  const positions = collections.names.flatMap(name => {
+    const sequence = name.split("/");
+    return parts.flatMap((_, index) => sequence.every((part, offset) => parts[index + offset] === part) ? [index] : []);
+  });
+  return { inside: positions.some(index => parts[index - 1] === collections.moduleMember), invalid: positions.some(index => parts[index - 1] !== collections.moduleMember) };
+}
+
 /** 🧫️ Admits exact module collection ancestry independently of version-control tracking. */
 export function collectionManifestCandidate(path: string, policy: AdmissionPolicy, collections: CollectionPolicy): boolean {
   const parts = path.split("/");
   if (isAbsolute(path) || parts.some(part => !part || part === "." || part === ".." || part === ".🧬semio" || ["🤖️generated", "pkg", ...policy.generatedDirectories].includes(part))) return false;
-  if (parts.some((part, index) => collections.names.includes(part) && parts[index - 1] !== collections.moduleMember)) return false;
-  if (!parts.some((part, index) => collections.names.includes(part) && parts[index - 1] === collections.moduleMember)) return false;
+  const ancestry = moduleCollectionAncestry(parts, collections);
+  if (ancestry.invalid || !ancestry.inside) return false;
   return policy.manifestBasenames.some(name => name === "*.patch" ? parts.at(-1)!.endsWith(".patch") : parts.at(-1) === name);
 }
 
@@ -29,10 +38,17 @@ export async function gitCollectionManifests(root: string, policy: AdmissionPoli
   const top = await read(["rev-parse", "--show-toplevel"]);
   if (top === undefined || resolve(top.trim()) !== resolve(root)) return undefined;
   const indexed = await read(["ls-files", "-z", "--cached"]);
-  const ordinary = await read(["ls-files", "-z", "--others", "--exclude-standard", "--", `:(glob)**/${collections.moduleMember}/**`]);
-  if (indexed === undefined || ordinary === undefined) return undefined;
+  if (indexed === undefined) return undefined;
+  const ordinary = await untrackedStructuralModules(root, indexed, policy, collections, signal);
+
+  if (ordinary === undefined) return undefined;
+  return collectionManifestsFromInventory(root, [indexed, ordinary], policy, collections, signal);
+}
+
+/** 📂️ Observes membership only inside structural collection roots supplied by the native source inventory. */
+export async function collectionManifestsFromInventory(root: string, inventory: readonly string[], policy: AdmissionPolicy, collections: CollectionPolicy, signal?: AbortSignal): Promise<string[]> {
   const modules = new Set<string>();
-  for (const path of [...indexed.split("\0"), ...ordinary.split("\0")]) {
+  for (const path of inventory.flatMap(value => value.split("\0"))) {
     const parts = path.split("/");
     for (let index = 0; index < parts.length; index++) if (parts[index] === collections.moduleMember) modules.add(parts.slice(0, index + 1).join("/"));
   }
@@ -51,4 +67,35 @@ export async function gitCollectionManifests(root: string, policy: AdmissionPoli
   };
   for (const module of modules) for (const collection of collections.names) await walk(`${module}/${collection}`);
   return [...found].sort();
+}
+
+/** 🌳️ Finds newly introduced structural roots through indexed module ancestry and freshly read untracked trees. */
+async function untrackedStructuralModules(root: string, indexed: string, policy: AdmissionPolicy, collections: CollectionPolicy, signal?: AbortSignal): Promise<string> {
+  const indexedDirectories = new Set<string>(), observed = new Set<string>([""]), modules = new Set<string>();
+  for (const path of indexed.split("\0")) {
+    const parts = path.split("/");
+    if (parts.some(part => [".🧬semio", ".codex", ".claude", "compose", "temp", "🤖️generated", "pkg", ...policy.generatedDirectories].includes(part))) continue;
+    if (moduleCollectionAncestry(parts, collections).invalid) continue;
+    for (let index = 1; index < parts.length; index++) indexedDirectories.add(parts.slice(0, index).join("/"));
+    for (let index = 0; index < parts.length; index++) if (parts[index] === collections.moduleMember) {
+      for (let ancestor = 1; ancestor <= index + 2 && ancestor < parts.length; ancestor++) observed.add(parts.slice(0, ancestor).join("/"));
+    }
+  }
+  const excluded = new Set([".🧬semio", ".codex", ".claude", "compose", "temp", "🤖️generated", "pkg", ...policy.generatedDirectories]);
+  let inspected = 0;
+  const inspect = async (directory: string, fresh: boolean): Promise<void> => {
+    if (++inspected % 1024 === 0) console.log(`[nx] Admitting structural source membership (${inspected} directories)`);
+    signal?.throwIfAborted();
+    let entries;
+    try { entries = await readdir(join(root, directory), { withFileTypes: true }); }
+    catch (error) { if (["ENOENT", "ENOTDIR"].includes((error as NodeJS.ErrnoException).code ?? "")) return; throw error; }
+    for (const entry of entries) {
+      if (!entry.isDirectory() || entry.isSymbolicLink() || excluded.has(entry.name)) continue;
+      const child = directory ? `${directory}/${entry.name}` : entry.name;
+      if (entry.name === collections.moduleMember) modules.add(`${child}/`);
+      if (fresh || !indexedDirectories.has(child)) await inspect(child, true);
+    }
+  };
+  for (const directory of observed) await inspect(directory, false);
+  return [...modules].join("\0");
 }

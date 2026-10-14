@@ -259,7 +259,7 @@ impl ArtifactCanonicalJson for FailClosedOp {
 /// closes to its terminal-empty witness when the test ends.
 #[semio_framework_async_macros::async_test]
 async fn a_refused_apply_retires_everything_its_replay_built() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️replay-retirement/🔣️.json")).expect("the corpus parses");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️replay-retirement/🔣️.json")).expect("the corpus parses");
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, FailClosedOp>("demo/v1", "replay-retirement", DemoSnapshot { n: Some(0) }, None)).await;
     store.set_merge_policy(crate::os_spr::MergePolicy::Normal);
     fixture_author(&mut store, ArtifactCommand::Apply { mutations: vec![FailClosedOp::of(DemoMutation::SetN(SetN { n: 1 }), Fault::None)], transaction: None }).await.expect("a clean edit applies");

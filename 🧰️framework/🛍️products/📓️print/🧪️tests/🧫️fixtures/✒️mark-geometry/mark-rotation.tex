@@ -1,0 +1,31 @@
+\documentclass{article}
+\usepackage{semio-viz-probe}
+\usepackage{semio-viz-mark}
+\ExplSyntaxOn
+% 🌀 Draws one section 0 mark with no ink at the shared point, rotated by #2 degrees.
+\cs_new_protected:Npn \semio_probe_mark_rotated:nn #1#2 {
+  \semio_viz_mark_draw:nnn {#1}
+    { fill = none, stroke = none, size = 12, radius = 9, rotate = #2 }
+    { 28, 12 }
+}
+\ExplSyntaxOff
+\begin{document}
+\ExplSyntaxOn
+\bool_set_true:N \l_semio_viz_in_figure_bool
+\ExplSyntaxOff
+\SemioVizProbeOn
+\ExplSyntaxOn
+\SemioVizProbeBegin{mark-geometry}{rotation}
+\ExplSyntaxOff
+\begin{tikzpicture}[x=1mm,y=1mm]
+\ExplSyntaxOn
+\semio_probe_mark_rotated:nn { triangle } { 0 }
+\semio_probe_mark_rotated:nn { triangle } { 30 }
+\semio_probe_mark_rotated:nn { rectangle } { 0 }
+\semio_probe_mark_rotated:nn { rectangle } { 45 }
+\ExplSyntaxOff
+\end{tikzpicture}
+\ExplSyntaxOn
+\SemioVizProbeEnd
+\ExplSyntaxOff
+\end{document}

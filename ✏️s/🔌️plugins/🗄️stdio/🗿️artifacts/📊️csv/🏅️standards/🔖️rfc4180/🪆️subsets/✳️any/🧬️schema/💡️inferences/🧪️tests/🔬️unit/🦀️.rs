@@ -46,7 +46,7 @@ mod conformance_laws {
     async fn protocol_walk_law() {
         // Pack (snapshot binary facet).
         let snap = crate::standards::v_rfc4180::subsets::any::io::text::snapshot::demo_csv_snapshot();
-        let pack_bytes = <snapshot::CsvSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
+        let pack_bytes = <snapshot::CsvSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
         let (_, payload) = store::semio_format::unwrap_binary(&pack_bytes).expect("unwrap_binary");
         let pack_protocol = semio_framework_dsl::parse_protocol(crate::standards::v_rfc4180::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
         let trace = semio_framework_dsl::walk_protocol(&pack_protocol, &payload).expect("walk snapshot protocol");
@@ -74,11 +74,11 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn fixture_honesty_law() {
         let demo = crate::standards::v_rfc4180::subsets::any::io::text::snapshot::demo_csv_snapshot();
-        assert_eq!(<snapshot::CsvSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap(), demo);
-        assert_eq!(<snapshot::CsvSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&demo), crate::examples::demo::PRIMARY_TEXT);
+        assert_eq!(<snapshot::CsvSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap(), demo);
+        assert_eq!(<snapshot::CsvSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&demo), crate::examples::demo::PRIMARY_TEXT);
 
-        assert_eq!(<snapshot::CsvSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(crate::examples::demo::PACK_BYTES).unwrap(), demo);
-        assert_eq!(<snapshot::CsvSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&demo), crate::examples::demo::PACK_BYTES.to_vec());
+        assert_eq!(<snapshot::CsvSnapshot as pack::snapshot::ArtifactPack>::decode_pack(crate::examples::demo::PACK_BYTES).unwrap(), demo);
+        assert_eq!(<snapshot::CsvSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&demo), crate::examples::demo::PACK_BYTES.to_vec());
     }
 
     /// 🧪️ P2-P1 item 6: every committed grammar/protocol file for this standard genuinely

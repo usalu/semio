@@ -5,7 +5,7 @@
 mod tests {
     use serde_json::Value;
 
-    const FIXTURE: &str = include_str!("../../🧫️fixtures/🤝️two-client-document-v1/🔣️.json");
+    const FIXTURE: &str = include_str!("../🧫️fixtures/🤝️two-client-document-v1/🔣️.json");
 
     #[test]
     fn two_client_document_fixture_names_the_shared_scenario() {

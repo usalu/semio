@@ -7,7 +7,7 @@ import { isGeneratedPath, repoCacheDirectory } from "../../../../../../../../�
 const require = createRequire(import.meta.url);
 const memoize: (factory: (owner: string) => State) => ((owner: string) => State) = require("lodash/memoize");
 type State = { locale: string; retained: string[]; constructions: number };
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8"));
 const interpreter = resolve(import.meta.dir, "../../🎯️targets/🧊️wgpu/🦀️.rs");
 
 test("closed independent lifecycle corpus retains exact admission and thread identities", () => {

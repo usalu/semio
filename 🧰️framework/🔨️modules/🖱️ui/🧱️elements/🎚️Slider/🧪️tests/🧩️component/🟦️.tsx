@@ -2,8 +2,8 @@
 import * as React from "react";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import sliderPresentationFixture from "../../../../🧫️fixtures/🎚️slider-presentation/🔣️.json";
-import numberControlsFixture from "../../../../🧬️contract/🧫️fixtures/🧫️number-controls/🔣️.json";
+import sliderPresentationFixture from "../../../../🧪️tests/🧫️fixtures/🎚️slider-presentation/🔣️.json";
+import numberControlsFixture from "../../../../🧬️contract/🧪️tests/🧫️fixtures/🧫️number-controls/🔣️.json";
 
 import { Slider, clampSliderValuesToReady, normalizeSliderRange, normalizeSliderValues, resolveSliderDraftClear, sliderValuesMatch } from "../../🟦️.tsx";
 import { sliderAxisPosition } from "../../../../🧬️contract/🧩️component/🟦️.ts";
@@ -363,7 +363,7 @@ describe("Slider", () => {
 });
 // #endregion 🎚️SliderMatrix
 
-import exactEntry from "../../🧫️fixtures/⌨️exact-entry/🔣️.json";
+import exactEntry from "../🧫️fixtures/⌨️exact-entry/🔣️.json";
 import { computeAccessibleName } from "dom-accessibility-api";
 
 

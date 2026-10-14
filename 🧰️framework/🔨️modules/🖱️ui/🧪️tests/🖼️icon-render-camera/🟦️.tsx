@@ -1,6 +1,6 @@
 import type { IconRenderRequest } from "@semio-tech/ui-styling";
 import Ajv from "ajv";
-import fixture from "../../🧫️fixtures/🖼️icon-render-camera/🔣️.json";
+import fixture from "../🧫️fixtures/🖼️icon-render-camera/🔣️.json";
 /** 📐️ three.js itself, the oracle the icon camera is measured against (a test of the ui module, the library's interface owner). */
 import * as THREE from "three";
 

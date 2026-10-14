@@ -1,0 +1,40 @@
+{
+  "schema": "semio.directory.event-page-fixture/v1",
+  "limits": {
+    "maximumRawRows": 128,
+    "maximumPageBytes": 65536,
+    "maximumEventBytes": 49152
+  },
+  "valid": {
+    "schema": "semio.directory.event-page.v1",
+    "sessionBindingSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "authorizationGeneration": 7,
+    "afterSeqExclusive": 3,
+    "throughSeqInclusive": 5,
+    "hasMore": true,
+    "events": [
+      {
+        "seq": 5,
+        "id": "event-雪",
+        "hlc": { "physicalMs": 2000000000000, "logical": 0 },
+        "actor": { "kind": "user", "id": "user:u1#s1" },
+        "spaceId": "space-α",
+        "body": { "kind": "space.renamed", "spaceId": "space-α", "name": "Werkstatt 雪" },
+        "recordedAtMs": 2000000000001
+      }
+    ],
+    "receiptSha256": "caf9c1ed2ba77ea86c1ba0b5548b978260c6bfd22ecd387c74b8017e0b4fb59f"
+  },
+  "canonicalUnsigned": "{\"schema\":\"semio.directory.event-page.v1\",\"sessionBindingSha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"authorizationGeneration\":7,\"afterSeqExclusive\":3,\"throughSeqInclusive\":5,\"hasMore\":true,\"events\":[{\"seq\":5,\"id\":\"event-雪\",\"hlc\":{\"physicalMs\":2000000000000,\"logical\":0},\"actor\":{\"kind\":\"user\",\"id\":\"user:u1#s1\"},\"spaceId\":\"space-α\",\"body\":{\"kind\":\"space.renamed\",\"spaceId\":\"space-α\",\"name\":\"Werkstatt 雪\"},\"recordedAtMs\":2000000000001}]}",
+  "expectedReceiptSha256": "caf9c1ed2ba77ea86c1ba0b5548b978260c6bfd22ecd387c74b8017e0b4fb59f",
+  "hostileMutations": [
+    { "name": "uppercase-binding", "path": "sessionBindingSha256", "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" },
+    { "name": "unsafe-generation", "path": "authorizationGeneration", "value": 9007199254740992 },
+    { "name": "frontier-substitution", "path": "afterSeqExclusive", "value": 5 },
+    { "name": "event-before-frontier", "path": "events.0.seq", "value": 3 },
+    { "name": "forged-receipt", "path": "receiptSha256", "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" },
+    { "name": "control-character", "path": "events.0.body.name", "value": "bad\u0001name" },
+    { "name": "unknown-field", "path": "unexpected", "value": true }
+  ],
+  "rawHostiles": ["duplicate-key", "trailing-byte"]
+}

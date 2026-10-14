@@ -60,7 +60,7 @@ impl IdentityAssertionVerifier for TestIdentityVerifier {
 
 #[test]
 fn typed_capabilities_match_neutral_sha256_vectors_and_fixed_boundaries() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔐️auth/🧫️fixtures/🔑️capability-v1/🔣️.json")).expect("auth capability fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔐️auth/🧪️tests/🧫️fixtures/🔑️capability-v1/🔣️.json")).expect("auth capability fixture");
     let session = SessionCapability::parse(fixture["session"]["capability"].as_str().expect("session capability")).expect("session parser");
     let share = ShareCapability::parse(fixture["share"]["capability"].as_str().expect("share capability")).expect("share parser");
     let invite = InviteCapability::parse(fixture["invite"]["capability"].as_str().expect("invite capability")).expect("invite parser");
@@ -144,7 +144,7 @@ fn descriptor(space_id: &str, document_id: &str) -> DocumentDescriptor {
 }
 
 fn artifact_projection_fixture() -> (DocumentDescriptor, PublishedArtifactCheckpoint, PublishedArtifactCheckpoint, ArtifactRetention, u64) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📸️artifact-checkpoint-projection/🔣️.json")).expect("checkpoint projection fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📸️artifact-checkpoint-projection/🔣️.json")).expect("checkpoint projection fixture");
     let decode = |field: &str| DslValue::from(fixture.get(field).expect("fixture field").clone());
     (
         DocumentDescriptor::from_value(decode("descriptor")).expect("fixture descriptor"),
@@ -189,7 +189,7 @@ const FIXTURE_PARENT_DIALECT_KIND: &str = "s.gis.gismap";
 
 async fn publish_fixture_genesis<S: ArtifactChunkCasStorage>(service: &DirectoryService, user_id: &str, mut descriptor: DocumentDescriptor, storage: Arc<S>, context: &OperationContext<'_>) -> (DocumentDescriptor, ArtifactCheckpoint) {
     use crate::artifact_authority::creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationActorV1, ArtifactCreationFactBodyV1, ArtifactCreationPreparedV1};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗿️artifact-authority/🌱️creation/🧫️fixtures/📚️operation-v1/🔣️.json")).expect("creation fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗿️artifact-authority/🌱️creation/🧪️tests/🧫️fixtures/📚️operation-v1/🔣️.json")).expect("creation fixture");
     let mut intent = ArtifactCreationIntentV1::from_value(DslValue::from(fixture["intent"].clone())).expect("creation intent");
     let mut prepared = ArtifactCreationPreparedV1::from_value(DslValue::from(fixture["prepared"].clone())).expect("creation pair");
     let issued = service
@@ -604,7 +604,7 @@ async fn create_space(service: &DirectoryService, owner: &DirectoryActor, kind: 
 /// 📣️ A committed page cannot be overtaken on the live channel while it still owns the writer guard.
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn directory_append_and_live_broadcast_share_one_writer_guard_and_projection_order() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📣️ordered-append-broadcast-v1/🔣️.json")).expect("language-neutral ordered publication fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📣️ordered-append-broadcast-v1/🔣️.json")).expect("language-neutral ordered publication fixture");
     assert_eq!(fixture["schema"], "semio.hub.directory.ordered-append-broadcast/v1");
     assert_eq!(fixture["cases"].as_array().expect("ordered publication cases").len(), 4);
 
@@ -806,7 +806,7 @@ async fn artifact_chunk_cas_failed_epoch_advance_releases_directory_lease() {
 
 #[tokio::test]
 async fn artifact_chunk_cas_two_service_sweep_and_reservation_race_is_serialized_before_rewrite() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗿️artifact-authority/🧫️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("artifact CAS fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗿️artifact-authority/🧪️tests/🧫️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("artifact CAS fixture");
     let barrier = &fixture["deleteBarrier"];
     assert_eq!(barrier["leaseMaximumMs"].as_u64(), Some(ARTIFACT_CAS_DELETE_LEASE_TTL_MS));
     assert_eq!(barrier["dryRunAdvancesEpoch"].as_bool(), Some(false));
@@ -1077,7 +1077,7 @@ async fn artifact_checkpoint_publication_is_atomic_bounded_idempotent_and_replay
 #[test]
 fn memory_projection_is_atomic_and_fixed_caps_reject_max_plus_one() {
     let (descriptor, first, second, retention, fixture_maximum) = artifact_projection_fixture();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📸️artifact-checkpoint-projection/🔣️.json")).expect("checkpoint projection fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📸️artifact-checkpoint-projection/🔣️.json")).expect("checkpoint projection fixture");
     let genesis = PublishedArtifactCheckpoint::from_value(DslValue::from(fixture["genesis"].clone())).expect("fixture genesis");
     let entry = directory::os_directory::DocumentIndexEntryV1::from_value(DslValue::from(fixture["indexEntry"].clone())).expect("fixture index entry");
     let mut announced = artifact_event(1, DirectoryEventBody::DocumentAnnounced { descriptor });
@@ -1127,7 +1127,7 @@ fn memory_projection_is_atomic_and_fixed_caps_reject_max_plus_one() {
 
 #[test]
 fn artifact_public_scalars_and_private_locators_obey_exact_max_plus_one_laws() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📸️artifact-checkpoint-projection/🔣️.json")).expect("checkpoint projection fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📸️artifact-checkpoint-projection/🔣️.json")).expect("checkpoint projection fixture");
     assert_eq!(fixture["wireIntegerMaximum"].as_u64(), Some(DIRECTORY_WIRE_INTEGER_MAX));
     assert_eq!(fixture["privateLocatorMaximumBytes"].as_u64(), Some(ARTIFACT_PRIVATE_LOCATOR_MAX_BYTES as u64));
     assert_eq!(fixture["eventReadMaximum"].as_u64(), Some(DIRECTORY_EVENT_READ_MAX as u64));
@@ -1498,7 +1498,7 @@ impl ProjectionRebuildControl for DirectoryRebuildWriterProbe {
 /// 🏛️ Independent service writers cannot retain or restore an Author after the archive event.
 #[tokio::test]
 async fn invite_archive_projection_serializes_independent_service_decisions() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
     for row in fixture["backendOrders"].as_array().unwrap() {
         let root = crate::test_artifact_root::test_artifact_root().join(format!("archive-writers-{}", time_ordered_id()));
         std::fs::create_dir_all(&root).unwrap();
@@ -1584,7 +1584,7 @@ async fn invite_archive_projection_serializes_independent_service_decisions() {
 /// 🌫️ A lost commit acknowledgement retains the exact claim and never repeats its durable mutation.
 #[tokio::test]
 async fn directory_command_uncertain_commit_retains_claim_and_never_reexecutes() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
     let row = fixture["receiptRelease"].as_array().unwrap().iter().find(|row| row["outcome"] == "uncertain").unwrap();
     assert_eq!(row["release"], false);
     let backend = SqliteDirectory::connect(":memory:").await.unwrap();
@@ -1698,7 +1698,7 @@ mod exhaustive {
 
     #[tokio::test]
     async fn artifact_chunk_cas_opaque_continuation_converges_after_page_overflow_cancel_and_resume() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗿️artifact-authority/🧫️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("artifact CAS fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗿️artifact-authority/🧪️tests/🧫️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("artifact CAS fixture");
         let law = &fixture["sweepContinuation"];
         let object_counts = law["planObjectCounts"].as_array().expect("plan object counts");
         let total_objects = law["totalObjects"].as_u64().expect("total objects");

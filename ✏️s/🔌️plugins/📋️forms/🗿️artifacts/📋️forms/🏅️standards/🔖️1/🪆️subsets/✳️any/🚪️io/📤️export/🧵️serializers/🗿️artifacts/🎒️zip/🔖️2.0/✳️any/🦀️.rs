@@ -15,6 +15,6 @@ impl Serializer<FormsSnapshot> for FormsIntoZip {
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn serialize(from: &FormsSnapshot, _: &ArchiveChildren, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let archive = decode_zip(&encode_document_archive(from).map_err(|e| IoError::from_value_error(e.into_value_error()))?).map_err(|e| IoError::from_value_error(e.into_value_error()))?;
-        Ok(IoOutcome::clean(IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(&archive))))
+        Ok(IoOutcome::clean(IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&archive))))
     }
 }

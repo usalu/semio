@@ -141,11 +141,11 @@ fn the_bridge_reads_stroke_points_in_both_spellings_and_refuses_garbage() {
 fn the_solve_transient_prints_and_packs_its_own_envelope() {
     use crate::editor::bitmap::transient::BitmapTransient;
     let transient = BitmapTransient { output_pixels: Some(encode_base64(&[0, 1, 2, 1])), contradiction: false, output_width: 2, output_height: 2 };
-    let text = <BitmapTransient as store::os_store::serialization::ArtifactDsl>::print_dsl(&transient);
+    let text = <BitmapTransient as pack::snapshot::ArtifactDsl>::print_dsl(&transient);
     assert!(text.starts_with("semio wfc.bitmaptransient.dsl v1"), "unexpected transient preamble: {:?}", text.lines().next());
-    assert_eq!(<BitmapTransient as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("the transient parses back"), transient);
-    let packed = <BitmapTransient as store::os_store::serialization::ArtifactPack>::encode_pack(&transient);
-    assert_eq!(<BitmapTransient as store::os_store::serialization::ArtifactPack>::decode_pack(&packed).expect("the transient unpacks"), transient);
+    assert_eq!(<BitmapTransient as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("the transient parses back"), transient);
+    let packed = <BitmapTransient as pack::snapshot::ArtifactPack>::encode_pack(&transient);
+    assert_eq!(<BitmapTransient as pack::snapshot::ArtifactPack>::decode_pack(&packed).expect("the transient unpacks"), transient);
 }
 
 /// 🫧️ The `Solve` verb's own transient write really carries a collapse — not a uniform square, not a
@@ -285,7 +285,7 @@ fn a_contradiction_transient_paints_a_distinct_overlay() {
 #[test]
 fn the_python_oracle_vector_matches_the_rust_payload_shape() {
     use crate::editor::bitmap::modes::edit::tools::fill::{payload_from_assignment, BitmapFillPayload};
-    let text = include_str!("../../🎭️modes/✏️edit/🛠️tools/🌡fill/🧫️fixtures/🐍️python-fill-oracle/🔣️.json");
+    let text = include_str!("../../🎭️modes/✏️edit/🛠️tools/🌡fill/🧪️tests/🧫️fixtures/🐍️python-fill-oracle/🔣️.json");
     let payload = BitmapFillPayload::decode_json(text).expect("vector decodes");
     assert_eq!(payload.width, 2);
     assert_eq!(payload.height, 2);

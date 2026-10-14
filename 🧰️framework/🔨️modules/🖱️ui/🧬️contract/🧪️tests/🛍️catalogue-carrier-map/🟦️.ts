@@ -29,7 +29,7 @@ function packedLeaf(value: string, dataAttributes: { readonly [key: string]: str
 }
 
 export function catalogueCarrierMapSelfTests(): number {
-  const fixture: CarrierMapFixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🛍️catalogue-carrier-map.json", import.meta.url), "utf8"));
+  const fixture: CarrierMapFixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🛍️catalogue-carrier-map.json", import.meta.url), "utf8"));
   let checks = 0;
 
   assert.equal(fixture.ascendingKeys.length, fixture.uiFixedListItems, "the carrier packs exactly one full map");

@@ -4,7 +4,7 @@ use super::*;
 use std::future::Future as _;
 
 fn law() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🚪️lifetime/🧫️fixtures/⏱️execution.json")).unwrap()
+    serde_json::from_str(include_str!("../../../🚪️lifetime/🧪️tests/🧫️fixtures/⏱️execution.json")).unwrap()
 }
 
 fn drive_with_suspension(suspension_us: u64) -> (u64, u64) {

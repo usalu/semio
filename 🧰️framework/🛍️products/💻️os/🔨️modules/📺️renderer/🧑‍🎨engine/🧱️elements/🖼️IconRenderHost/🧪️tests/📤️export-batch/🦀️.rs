@@ -2,7 +2,7 @@
 use super::*;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/📤️export-batch/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/📤️export-batch/🔣️.json")).unwrap()
 }
 
 fn requests(value: &serde_json::Value) -> Vec<semio_framework::kernel::IconRenderExportItem> {

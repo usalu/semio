@@ -66,7 +66,7 @@ use semio_framework_plugin::WindowEngagementPossible;
 use semio_framework_plugin::WindowEngagementStatus;
 use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
@@ -968,7 +968,8 @@ impl ArtifactCommandWork<EditorApp<LowpolyPlayApp>> for LowpolyRetainedCommandWo
         (lowpoly_command_disposition(command.command_id()).is_some()).then_some(2)
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LowpolyPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<LowpolyPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LowpolyPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<LowpolyPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config, history, interaction, hover: _hover, context, operation } = *input;
         if self.complete {
             return Err(Fault::from("lowpoly-retained-work-repeated"));
@@ -999,6 +1000,9 @@ impl ArtifactCommandWork<EditorApp<LowpolyPlayApp>> for LowpolyRetainedCommandWo
         let step = lowpoly_retained_reduce(command, snapshot, config, history, interaction, context, operation)?;
         self.complete = true;
         Ok(step)
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn checkpoint_byte(&self, index: usize) -> Option<u8> {
@@ -1694,6 +1698,7 @@ impl ArtifactEditor for LowpolyPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

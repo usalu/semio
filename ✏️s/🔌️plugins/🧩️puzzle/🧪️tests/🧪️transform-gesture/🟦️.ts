@@ -1,7 +1,7 @@
 /** 🧩️ Independent xstate oracle for the phase fixture consumed by both native puzzle transform charts. */
 import { expect, test } from "vitest";
 import { initialTransition, setup, transition } from "xstate";
-import fixture from "../../🧫️fixtures/🛠️transform-gesture/🔣️.json";
+import fixture from "../🧫️fixtures/🛠️transform-gesture/🔣️.json";
 
 const chart = setup({
   types: { events: {} as { type: string; offset: number[] } },

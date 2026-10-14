@@ -3,13 +3,13 @@ import {expect,test} from "bun:test";
 import Ajv from "ajv/dist/2020";
 import {applyPatch} from "fast-json-patch";
 import schema from "../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import {ToolRunEntityEdit} from "../🟦️.ts";
 import versionSchema from "../📸️version/🧬️schema/🔣️.json";
-import versionFixture from "../📸️version/🧫️fixtures/🔣️.json";
+import versionFixture from "../📸️version/🧪️tests/🧫️fixtures/🔣️.json";
 import {ToolRunEntityVersion,ToolRunEntityVersionEdit} from "../📸️version/🟦️.ts";
 import provenanceSchema from "../🧾️provenance/🧬️schema/🔣️.json";
-import provenanceFixture from "../🧾️provenance/🧫️fixtures/🔣️.json";
+import provenanceFixture from "../🧾️provenance/🧪️tests/🧫️fixtures/🔣️.json";
 import {ToolRunEntityProvenanceEdit} from "../🧾️provenance/🟦️.ts";
 
 test("original ToolRun rollback provenance retains earlier introductions and captured originals",()=>{

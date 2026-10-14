@@ -3,7 +3,7 @@ use crate::os_store::store_schema::ArtifactCommand;
 
 #[test]
 fn original_command_all_variants_retire_whole_physical_custody(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  assert!(ArtifactCommand::<String>::controlled_retirement_supported());
  let rows=fixture["commands"].as_array().unwrap();assert_eq!(rows.len(),20);
  for row in rows{for body in fixture["copyBodies"].as_array().unwrap(){

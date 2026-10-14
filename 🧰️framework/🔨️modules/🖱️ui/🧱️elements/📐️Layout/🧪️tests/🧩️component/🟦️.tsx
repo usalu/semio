@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 // is a real runtime cycle, and entering it at the element leaves `PanelTabButton`'s own imports
 // undefined in jsdom ("Element type is invalid … Check the render method of `PanelTabButton`").
 import { Layout } from "@semio-tech/ui-react";
-import reserveFixture from "../../../../🧫️fixtures/🛟️panel-window-reservation/🔣️.json";
+import reserveFixture from "../../../../🧪️tests/🧫️fixtures/🛟️panel-window-reservation/🔣️.json";
 // #endregion 🔌️Adapters
 
 describe("Layout panel overlay", () => {
@@ -79,7 +79,7 @@ describe("Shared native panel overlay contract", () => {
 
 /** 🪪️ Keeps shared React and native vectors at their physical neutral owner. */
 it("shared UI examples have one neutral owner and no corpus contracts", async () => {
-  const [{ existsSync }, { join }, { findWorkspaceRoot }, { default: corpus }] = await Promise.all([import("node:fs"), import("node:path"), import("../../../../../🏃️process/🧭️routing/🟦️.ts"), import("../../../../🧫️fixtures/🪪️fixture-ownership/🔣️.json")]);
+  const [{ existsSync }, { join }, { findWorkspaceRoot }, { default: corpus }] = await Promise.all([import("node:fs"), import("node:path"), import("../../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"), import("../../../../🧪️tests/🧫️fixtures/🪪️fixture-ownership/🔣️.json")]);
   const root = findWorkspaceRoot(process.cwd());
   for (const row of corpus.cases) {
     expect(existsSync(join(root, row.fixture)), row.fixture).toBe(true);

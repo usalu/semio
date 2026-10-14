@@ -5,7 +5,7 @@ import { join, resolve } from "node:path";
 import emojiRegex from "emoji-regex";
 import ts from "typescript";
 import { leadingEmojiIdentity } from "../🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 
 test("neutral grapheme vectors preserve exact leading emoji, first grapheme and original rest", () => {
   expect(new Set(fixture.cases.map((row) => row.id)).size).toBe(fixture.cases.length);

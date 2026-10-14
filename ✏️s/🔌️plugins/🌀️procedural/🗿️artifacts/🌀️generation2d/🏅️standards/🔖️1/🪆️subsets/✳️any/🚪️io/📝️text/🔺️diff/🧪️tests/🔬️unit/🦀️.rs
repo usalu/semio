@@ -4,7 +4,7 @@ use semio_framework_value::{FromValue, ToValue};
 /// 🧫️ Original sparse diff text/binary records preserve complete field values against serde_json.
 #[test]
 fn generation2d_original_diff_record_preserves_sparse_domain_fields_and_serde_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture["contract"]["fieldIds"], serde_json::json!({"schema":0,"camera":1,"widgets":2,"synapses":3,"layout":4,"generations":5,"selectedGeneration":6,"previewText":7}));
     for case in fixture["cases"].as_array().unwrap() {
         let source = Generation2dDiffRead::new(semio_framework_pack_json::from_json_str(&case["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());

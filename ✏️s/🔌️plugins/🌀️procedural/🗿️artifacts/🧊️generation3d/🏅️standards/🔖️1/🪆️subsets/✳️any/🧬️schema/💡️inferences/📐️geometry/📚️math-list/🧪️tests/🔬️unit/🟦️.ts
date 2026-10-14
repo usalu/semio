@@ -4,7 +4,7 @@ import { MathUtils } from "three";
 import { disagreements, type FixtureCase, type OracleResult } from "../../../🧪️tests/🧰️oracle-support/🟦️.ts";
 
 type Fixture = { tolerance: number; cases: FixtureCase[] };
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(new URL("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/📚️math-list/🔣️.json", import.meta.url), "utf8")) as Fixture;
 const prefix = "generation3d.geometry.";
 
 const overflowing = (numbers: number[]): OracleResult => (numbers.every(Number.isFinite) ? { outputs: { numbers } } : { fault: { code: `${prefix}math-overflow` } });

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeThermostatZone",
+  "id": 10,
+  "newZoneId": 99
+}

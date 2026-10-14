@@ -5,7 +5,7 @@ import Ajv2020 from "ajv/dist/2020";
 import { createHash } from "node:crypto";
 import { snapshotEditSource, snapshotFromEditSource, applySnapshotEdit, SnapshotEditError, type SnapshotEditCodec, type SnapshotEditEvent, type SnapshotValue } from "../../🟦️";
 
-const retainedNativeFixture = await Bun.file(new URL("../../🧫️fixtures/🧵️retained-native/🔣️.json", import.meta.url)).json() as {
+const retainedNativeFixture = await Bun.file(new URL("../🧫️fixtures/🧵️retained-native/🔣️.json", import.meta.url)).json() as {
   routeCases: { id: string; mutation: number; recognized: boolean; primaryAccepts: boolean; expected: "primary" | "fallback" | "refused" }[];
   lifecycle: { units: number; cancelAfter: number; expectedProgress: number[]; expectedCloseSteps: number };
   textCopy: { byteLength: number; pageBytes: number; expectedDataSteps: number; cancelAfterBytes: number; expectedCloseSteps: number; interruptedUnicode: string; partialByteStops: number[] };
@@ -14,12 +14,12 @@ const retainedNativeFixture = await Bun.file(new URL("../../🧫️fixtures/🧵
   documentCopy: { siblingByteLength: number; replacementText: string; replacementRepeats: number; pageBytes: number; cancelAfterTurns: number; minimumCompleteTurns: number };
 };
 
-const sourceDiagnosticFixture = await Bun.file(new URL("../../🧫️fixtures/🩺️source-diagnostic/🔣️.json", import.meta.url)).json() as {
+const sourceDiagnosticFixture = await Bun.file(new URL("../🧫️fixtures/🩺️source-diagnostic/🔣️.json", import.meta.url)).json() as {
   cases: { id: string; source: string; expected: { code: string; line: number; column: number; length: number } }[];
 };
 
 
-const fixture = await Bun.file(new URL("../../🧫️fixtures/🪆️snapshot-edits/🔣️patch-cases.json", import.meta.url)).json() as {
+const fixture = await Bun.file(new URL("../🧫️fixtures/🪆️snapshot-edits/🔣️patch-cases.json", import.meta.url)).json() as {
   base: SnapshotValue;
   sourceRoundTrip: SnapshotValue;
   wideIntegerSource: string;
@@ -155,7 +155,7 @@ test("typed edit codecs cannot silently discard unrelated details", () => {
   expect(fixture.base).toEqual(oracle(fixture.base, []));
 });
 
-const pathFixture = await Bun.file(new URL("../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔁️codec/🧭️path/🧫️fixtures/🔣️.json", import.meta.url)).json() as {
+const pathFixture = await Bun.file(new URL("../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔁️codec/🧭️path/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json() as {
   accepted: { id: string; before: SnapshotValue; path: string[]; edit: { operation: "set" | "insert" | "remove"; value?: SnapshotValue }; expected: SnapshotValue }[];
 };
 const pathSchema = await Bun.file(new URL("../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔁️codec/🧭️path/🧬️schema/🔣️.json", import.meta.url)).json();
@@ -177,7 +177,7 @@ describe("shared typed path fixture", () => {
 
 test("original editor preparation preserves canonical refusal receipts and original mutation slots",async()=>{
   const root=new URL("../../../../../../../../",import.meta.url);
-  const law=await Bun.file(new URL("../../🧫️fixtures/🧵️retained-native/🧾️refusal.json",import.meta.url)).json();
+  const law=await Bun.file(new URL("../🧫️fixtures/🧵️retained-native/🧾️refusal.json",import.meta.url)).json();
   const schema=await Bun.file(new URL("🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔁️codec/🧬️schema/🔣️.json",root)).json();
   const {ValueError}=await import(new URL("🧰️framework/🔨️modules/🌱️value/⚠️refusal/🟦️.ts",root).href);
   const {Database}=await import("bun:sqlite");const db=new Database(":memory:");const valid=new Ajv2020({strict:true}).compile(schema);
@@ -189,7 +189,7 @@ test("original editor preparation preserves canonical refusal receipts and origi
 
 test("original editor preparation closes retained refusal owners under independent policy",async()=>{
   const root=new URL("../../../../../../../../",import.meta.url);
-  const law=await Bun.file(new URL("../../🧫️fixtures/🧵️retained-native/🧾️refusal.json",import.meta.url)).json();
+  const law=await Bun.file(new URL("../🧫️fixtures/🧵️retained-native/🧾️refusal.json",import.meta.url)).json();
   const schema=await Bun.file(new URL("🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json",root)).json();
   const valid=new Ajv({strict:true}).compile(schema);
   expect(valid(law.closeGrant)).toBe(true);
@@ -212,7 +212,7 @@ test("original editor preparation closes retained refusal owners under independe
 
 test("original unit preparation preserves typed semantic refusal custody",async()=>{
   const root=new URL("../../../../../../../../",import.meta.url);
-  const law=await Bun.file(new URL("../../🧫️fixtures/🧵️retained-native/🧾️refusal.json",import.meta.url)).json();
+  const law=await Bun.file(new URL("../🧫️fixtures/🧵️retained-native/🧾️refusal.json",import.meta.url)).json();
   const {ValueError}=await import(new URL("🧰️framework/🔨️modules/🌱️value/⚠️refusal/🟦️.ts",root).href);
   for(const row of law.wireCases){const error=new ValueError(row.kind,row.message).withRetainedProgress(row.retainedProgress);expect(JSON.parse(Buffer.from(JSON.stringify(error.retainedProgress)).toString("utf8"))).toEqual(row.retainedProgress);}
   const source=await Bun.file(new URL("🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",root)).text();

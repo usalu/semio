@@ -1,6 +1,6 @@
 /** 🎨️ Materializes the canonical print paints for the native LaTeX renderer. */
 import { join } from "node:path";
-import { writeGeneratedFileIfChanged } from "../../../../🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts";
+import { writeGeneratedFileIfChanged } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 import { getWorkspaceRoot } from "../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { renderPrintLatexTokenStylesheet } from "./🧮️resolution/🟦️.ts";
 export * from "./🧮️resolution/🟦️.ts";

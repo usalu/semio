@@ -39,7 +39,7 @@ test("component description verifies the shipped bytes with its native emitter p
   const crate = "🌎️hub/🧩️compositions/🖍️draw/🧩️component/📦️packages/🦀️rust", emitter = "@semio-tech/os-plugin-describe-rs:build";
   const targets = await cacheInternals.componentBuildTargets(crate, workspace);
   expect(targets.component.dependsOn).toContain(emitter);
-  expect(targets.component.options.command).toContain("native component --manifest");
+  expect(targets.component.options.command).toContain("component --manifest");
   const { createTaskGraph } = createRequire(import.meta.url)("nx/src/tasks-runner/create-task-graph");
   const graph = { nodes: { consumer: { name: "consumer", type: "lib", data: { name: "consumer", root: crate, targets } } }, dependencies: { consumer: [] } } as any;
   for (const dependency of targets.component.dependsOn) {
@@ -53,7 +53,9 @@ test("component description verifies the shipped bytes with its native emitter p
   const { componentDeliverableV1, SHIPPED_COMPONENT_PROFILE } = await import(pathToFileURL(join(workspace, driver, "🖨️describe/🏷️component-receipt/🟦️.ts")).href);
   const manifest = join(workspace, crate, "Cargo.toml"), name = (Bun.TOML.parse(readFileSync(manifest, "utf8")) as { package: { name: string } }).package.name;
   const deliverable = componentDeliverableV1(join(workspace, crate), name, SHIPPED_COMPONENT_PROFILE);
-  const stages = componentDriverStagesV1(workspace)({ pass: { id: "shipped", profile: SHIPPED_COMPONENT_PROFILE }, package: { name, manifest }, staged: deliverable.wasm });
+  const { admitNativeBuildPlanV1 } = await import(pathToFileURL(join(workspace, "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts")).href);
+  const plan = admitNativeBuildPlanV1({ version: 1, passes: [{ id: "shipped", manifest, packages: [{ name, manifest }], target: "wasm32-wasip2", profile: SHIPPED_COMPONENT_PROFILE, output: "dist/components/release" }] });
+  const pass = plan.passes[0], stages = componentDriverStagesV1(workspace)({ pass, package: pass.packages[0], wasm: deliverable.wasm, staged: deliverable.wasm });
   expect(stages.find((stage: any) => stage.name === "describe")).toBeDefined();
   expect(stages.find((stage: any) => stage.name === "publish").after).toContain("describe");
   expect(stages.find((stage: any) => stage.name === "publish").after).toContain("probe");
@@ -69,7 +71,7 @@ test("a session reads the committed semantic descriptors of its closure without 
   expect(targets["session-draw"].dependsOn).toEqual(["generate"]);
   expect(targets["session-draw"].inputs).toContain("{workspaceRoot}/🌎️hub/🧩️compositions/🖍️draw/🧩️component/🛂️.descriptor.semio");
   const {createTaskGraph} = createRequire(import.meta.url)("nx/src/tasks-runner/create-task-graph");
-  const graph = {nodes:{registry:{name:"registry",type:"lib",data:{name:"registry",root:".",targets:{...Object.fromEntries(Object.entries(targets).map(([name,target])=>[name,{...target,executor:"nx:run-commands"}])),generate:{executor:"nx:run-commands",options:{command:"bun ./📜️script.ts generate"}}}}},"@semio-tech/draw-plugin":{name:"@semio-tech/draw-plugin",type:"lib",data:{name:"@semio-tech/draw-plugin",root:crate,targets:{describe:{executor:"nx:run-commands",options:{command:"bun ./📜️script.ts describe"}}}}}},dependencies:{registry:[],"@semio-tech/draw-plugin":[]}};
+  const graph = {nodes:{registry:{name:"registry",type:"lib",data:{name:"registry",root:".",targets:{...Object.fromEntries(Object.entries(targets).map(([name,target])=>{if(target===null||typeof target!=="object"||Array.isArray(target))throw Error("Actual session target must be an object: "+name);return [name,{...target,executor:"nx:run-commands"}];})),generate:{executor:"nx:run-commands",options:{command:"bun ./📜️script.ts generate"}}}}},"@semio-tech/draw-plugin":{name:"@semio-tech/draw-plugin",type:"lib",data:{name:"@semio-tech/draw-plugin",root:crate,targets:{describe:{executor:"nx:run-commands",options:{command:"bun ./📜️script.ts describe"}}}}}},dependencies:{registry:[],"@semio-tech/draw-plugin":[]}};
   expect(createTaskGraph(graph,{},["registry"],["session-draw"],undefined,{},false).dependencies["registry:session-draw"]).toEqual(["registry:generate"]);
 });
 

@@ -49,7 +49,7 @@ async fn zip_round_trips_every_example_as_a_real_archive() {
 /// 🧫️ The exact json bytes the TypeScript mirror (`🚪️io/🧪️tests/🟦️.ts`) writes for the same
 /// example assets — a disagreement fails HERE as well as in `bun test`, so neither
 /// implementation can drift silently.
-const JSON_PARITY_FIXTURES: &[(&str, &str)] = &[("hexagonal-cut-concrete-forest-left", include_str!("../../🧫️fixtures/⬅️hexagonal-cut-concrete-forest-left.json")), ("nakagin-capsule", include_str!("../../🧫️fixtures/🏢️nakagin-capsule.json"))];
+const JSON_PARITY_FIXTURES: &[(&str, &str)] = &[("hexagonal-cut-concrete-forest-left", include_str!("../🧫️fixtures/⬅️hexagonal-cut-concrete-forest-left.json")), ("nakagin-capsule", include_str!("../🧫️fixtures/🏢️nakagin-capsule.json"))];
 
 #[semio_framework_async_macros::async_test]
 async fn json_matches_the_typescript_parity_fixture() {

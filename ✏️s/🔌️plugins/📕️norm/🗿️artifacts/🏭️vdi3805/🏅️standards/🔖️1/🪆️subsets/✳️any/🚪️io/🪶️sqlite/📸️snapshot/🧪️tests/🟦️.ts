@@ -1,7 +1,7 @@
 import * as sqliteOwner from "../🟦️.ts";
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import artifactSchema from "../../../../🧬️schema/🔣️.json";
 test("VDI3805 owning facade exposes both complete semantic SQLite directions",()=>{expect(Object.hasOwn(sqliteOwner,"vdi3805SnapshotToSqliteDatabase")).toBe(true);expect(Object.hasOwn(sqliteOwner,"vdi3805SnapshotFromSqliteDatabase")).toBe(true)});
@@ -12,10 +12,10 @@ test("VDI3805 schema enforces exact native widths and closed edition and quantit
 
 import {Database} from "bun:sqlite";
 import {Buffer} from "node:buffer";
-import words from "../🧫️fixtures/🔢️binary64.json";
-import controls from "../🧫️fixtures/🎛️control.json";
-import choices from "../🧫️fixtures/🛂️choices.json";
-import malformed from "../🧫️fixtures/⚠️malformed.json";
+import words from "./🧫️fixtures/🔢️binary64.json";
+import controls from "./🧫️fixtures/🎛️control.json";
+import choices from "./🧫️fixtures/🛂️choices.json";
+import malformed from "./🧫️fixtures/⚠️malformed.json";
 import { parseVdi3805Snapshot, type SheetAttributes, type VdiQuantityKind } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { VDI3805_SQLITE_SCHEMA, vdi3805SnapshotToSqliteDatabase, vdi3805SnapshotFromSqliteDatabase, type Vdi3805SqliteAttributes, type Vdi3805SqliteSnapshot } from "../🟦️.ts";
 import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
@@ -48,7 +48,7 @@ test("VDI3805 nested manufacturer records and owned text support bounded progres
 });
 
 import NormSemanticAjv from "ajv/dist/2020.js";
-import normSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {vdi3805SnapshotToSqliteDatabase as normSemanticProject,vdi3805SnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
 import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
@@ -60,7 +60,7 @@ test("VDI3805 complete independent cells preserve copied limits and required emp
  }console.log("[DEBUG] VDI3805 complete independent SQLite cells and metadata preserve full and empty semantic limits");
 });
 
-import vdiDuplicateMaps from "../🧫️fixtures/🗺️duplicate-maps.json";
+import vdiDuplicateMaps from "./🧫️fixtures/🗺️duplicate-maps.json";
 test("VDI3805 neutral duplicate maps retain last literal key and exact independent cells",async()=>{
  expect(vdiDuplicateMaps.cases.map(c=>c.id)).toEqual(["catalogExtension","fileExtension","productExtension","recordExtension","edition","geometry","geometryParameter","curve"]);
  for(const item of vdiDuplicateMaps.cases){const expected=ownedFixture(),raw=structuredClone(fixture);let parent:unknown=raw;for(const step of item.sourcePath.slice(0,-1))parent=(parent as Record<string,unknown>)[String(step)];(parent as Record<string,unknown>)[String(item.sourcePath.at(-1))]=Object.fromEntries(item.entries);expect(raw).toEqual(fixture);const source=ownedFixture(raw);expect(source).toEqual(expected);

@@ -1,13 +1,12 @@
 import { describe, expect, it } from "bun:test";
 import { createHash } from "node:crypto";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import Ajv from "ajv";
 import { COMPONENT_PROFILE_POLICIES, ITERATE_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, componentProfileV1, componentProvenanceDigestsV1, componentReceiptFindingsV1, encodeComponentReceiptV1, parseComponentReceiptV1, readComponentReceiptV1, rustToolchainIdentityFromVersionV1, writeComponentReceiptV1, type ComponentProfileV1, type ComponentProvenanceObservationV1, type ComponentReceiptV1 } from "../🟦️.ts";
 
 const schema = JSON.parse(readFileSync(join(import.meta.dir, "../🧬️schema/🔣️.json"), "utf8"));
-const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔣️.json"), "utf8")) as {
+const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8")) as {
   receipts: { id: string; valid: boolean; value: Record<string, unknown> }[];
   deliverables: { crateRoot: string; packageName: string; profile: ComponentProfileV1; directory: string; wasm: string; receipt: string }[];
   toolchain: { verbose: string; identity: string | null }[];
@@ -82,7 +81,10 @@ describe("ComponentReceiptV1", () => {
   });
 
   it("writes atomically and reads back only regular canonical files", () => {
-    const directory = mkdtempSync(join(tmpdir(), "component-receipt-"));
+    const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    if (!artifacts) throw Error("Component receipt tests require explicit SEMIO_TEST_ARTIFACT_DIR");
+    mkdirSync(artifacts, { recursive: true });
+    const directory = mkdtempSync(join(artifacts, "component-receipt-"));
     try {
       const path = join(directory, "🧾️receipt.json"), receipt = fixture.receipts[0]!.value as ComponentReceiptV1;
       writeComponentReceiptV1(path, receipt);

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🏛️create-column/🔻️top-below-base",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏛️create-column/🔻️top-below-base/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏛️create-column/🔻️top-below-base/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏛️create-column/🔻️top-below-base/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏛️create-column/🔻️top-below-base/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏛️create-column/🔻️top-below-base/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-column/🔻️top-below-base/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-column/🔻️top-below-base/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-column/🔻️top-below-base/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-column/🔻️top-below-base/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-column/🔻️top-below-base/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

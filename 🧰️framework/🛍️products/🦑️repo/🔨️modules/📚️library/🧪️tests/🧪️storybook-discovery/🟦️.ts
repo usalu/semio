@@ -15,7 +15,7 @@ type StoryIdentity = Readonly<{
 type Fixture = Readonly<{ version: 1; stories: readonly StoryIdentity[] }>;
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
-const fixturePath = resolve(import.meta.dir, "../../🧫️fixtures/🧫️storybook-discovery/🔣️.json");
+const fixturePath = resolve(import.meta.dir, "../🧫️fixtures/🧫️storybook-discovery/🔣️.json");
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Fixture;
 const normalize = (path: string): string => path.split(sep).join("/");
 

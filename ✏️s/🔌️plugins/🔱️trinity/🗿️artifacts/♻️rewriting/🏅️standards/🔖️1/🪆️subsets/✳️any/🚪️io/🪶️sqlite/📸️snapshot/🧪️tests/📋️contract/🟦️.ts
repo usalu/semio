@@ -1,7 +1,7 @@
 /** ♻️ Handwritten Rewriting SQL interpreted independently before provider opt-in. */
 import { test, expect } from "bun:test";
 import { Database } from "bun:sqlite";
-import corpus from "../../🧫️fixtures/🔣️.json";
+import corpus from "../🧫️fixtures/🔣️.json";
 import sql from "../../🗄️.sql" with { type: "text" };
 
 type PropertyCase = { variant: string; value?: boolean | string; elements?: readonly PropertyCase[]; members?: readonly { key: string; value: PropertyCase }[] };

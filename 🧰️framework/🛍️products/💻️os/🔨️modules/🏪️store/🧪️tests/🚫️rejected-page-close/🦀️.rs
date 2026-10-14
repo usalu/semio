@@ -2,6 +2,7 @@
 
 use super::*;
 use serde::Deserialize;
+use semio_framework_job::InteractiveJob;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -95,7 +96,7 @@ struct Expected {
 }
 
 fn fixture() -> Fixture {
-    let fixture: Fixture = serde_json::from_str(include_str!("../../🧫️fixtures/🚫️rejected-page-close/🔣️.json")).expect("canonical rejected-page vectors");
+    let fixture: Fixture = serde_json::from_str(include_str!("../🧫️fixtures/🚫️rejected-page-close/🔣️.json")).expect("canonical rejected-page vectors");
     assert_eq!(fixture.version, 3);
     assert_eq!(fixture.page_bytes, OWNED_SCHEMA_DECODE_PAGE_BYTES);
     assert_eq!(fixture.directory_slot_bytes, std::mem::size_of::<OwnedSchemaDecodePage>());
@@ -363,19 +364,24 @@ impl Subject {
         };
         let ticket = authority.field_ticket;
         let diagnostic = OwnedSchemaDecodeDiagnostic { code: "test.rejected-page-close", offset: 0, line: 1, column: 1, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
+        let grant=Grant::generous(1).retained();
+        let mut caller=super::tests::OriginalEnvelopeCaller::admit_cleanup("rejected-setup");
+        let mut cx=caller.context();
         match authority.reject(diagnostic) {
-            Ok(rejected) => Some(Self::Registered { rejected: Box::new(rejected), registry, ticket }),
+            Ok(rejected) => {drop(cx);caller.retire(grant);Some(Self::Registered { rejected: Box::new(rejected), registry, ticket })},
             Err(mut authority) => {
                 failures.push("unstarted public reject refused setup".into());
                 let close_bound = authority_close_bound(authority.record.as_ref().map_or(0, |record| record.tokens.pages.page_count()));
                 for _ in 0..close_bound {
                     detach_and_close(&registry, Some(ticket), None, failures);
-                    semio_framework_job::InteractiveJob::close_step(&mut authority, Grant::generous(1).retained());
+                    if let Err(error)=cx.with_retained_loan(grant,|cx|authority.close_step(cx)){failures.push(format!("original rejected setup close: {error:?}"));}
                     if authority.terminal_is_empty() {
                         break;
                     }
                 }
                 note(failures, "refused rejection bounded terminal", authority.terminal_is_empty(), authority.terminal_is_empty());
+                drop(cx);
+                caller.retire(grant);
                 None
             }
         }
@@ -536,7 +542,7 @@ fn unadmitted_rejected_pages_obey_zero_short_and_exact_grants() {
 #[test]
 fn original_field_release_survives_registered_and_unadmitted_refusal() {
     let vectors=fixture();
-    let expected:serde_json::Value=serde_json::from_str(include_str!("../../🚪️io/🧬️schema/⚠️diagnostic/🧫️fixtures/field-close.json")).unwrap();
+    let expected:serde_json::Value=serde_json::from_str(include_str!("../../🚪️io/🧪️tests/🧫️fixtures/⚠️diagnostic/field-close.json")).unwrap();
     for registered in [false,true] {
         let original=record(&pages(&vectors.cases[0]));
         let counts=Arc::new(Counts::default());

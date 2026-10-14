@@ -19,7 +19,7 @@ import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
 import { parseGisMapArtifact } from "../../🟦️.ts";
 import { parseGisMapSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseGisMapDiff } from "../../🔺️diff/🟦️.ts";
-import vectors from "../../🧫️fixtures/🪪️document/🔣️.json" with { type: "json" };
+import vectors from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json" with { type: "json" };
 
 
 function foreignValue(value:unknown):GisMapValue{if(value===null)return{kind:"null"};if(typeof value==="boolean")return{kind:"boolean",value};if(typeof value==="string")return{kind:"text",value};if(typeof value==="number")return Number.isSafeInteger(value)?value>=0?{kind:"unsigned",value:BigInt(value)}:{kind:"signed",value:BigInt(value)}:{kind:"float",value:binary64(value)};if(Array.isArray(value))return{kind:"array",items:value.map(foreignValue)};if(typeof value==="object")return{kind:"object",members:Object.entries(value).map(([name,value])=>({name,value:foreignValue(value)}))};throw Error("foreign JSON value required");}
@@ -41,7 +41,7 @@ export function testMapDocumentContractOracle(): void {
     diff: { schema: diffSchema, parse: value=>parseGisMapDiff(foreignDiff(value)), nativeJson },
     validDocuments: [{ input: vectors.document, output: vectors.document }],
     invalidDocuments: vectors.invalidDocuments, invalidDiffs: vectors.invalidDiffs,
-    mutationRoots: [join(import.meta.dir, "../../../🧫️fixtures/🧬️mutations")],
+    mutationRoots: [join(import.meta.dir, "../../../🧪️tests/🧫️fixtures/🧬️mutations")],
     committed: { snapshots: 36, diffs: 18 },
   });
   assert.deepEqual(nativeJson(parseGisMapDiff(foreignDiff(vectors.diff))), vectors.diff);
@@ -52,7 +52,7 @@ test("GIS map foreign JSON contract matches typed intrinsic feature meaning",tes
 
 
 test("GIS sparse feature patches match all nine neutral payload/property mutations and independent JSON Patch",()=>{
- const root=join(import.meta.dir,"../../../🧫️fixtures/🧬️mutations");
+ const root=join(import.meta.dir, "../../../🧪️tests/🧫️fixtures/🧬️mutations");
  const read=(file:string)=>JSON.parse(readFileSync(file,"utf8"));
  let count=0;
  for(const path of readdirSync(root,{recursive:true}).map(String).filter(path=>path.endsWith("/🔺️diff/🔣️.json"))){

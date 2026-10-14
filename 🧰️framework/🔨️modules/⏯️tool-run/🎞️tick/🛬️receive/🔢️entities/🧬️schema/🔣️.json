@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "wireField", "scalarBytes", "grant", "sameFinalColumn", "includesSourceAllocation", "allocationCeiling", "cases"],
+  "properties": {
+    "contract": {"const": "original-tick-entity-column/v1"},
+    "wireField": {"const": 7},
+    "scalarBytes": {"const": 8},
+    "sameFinalColumn": {"const": true},
+    "includesSourceAllocation": {"const": true},
+    "allocationCeiling": {"const": {"maximumTotalAllocationBytes": 25144, "maximumCursorAllocationBytes": 24576, "sourceBytes": 24576, "frameBytes": 568}},
+    "grant": {
+      "type": "array",
+      "prefixItems": [{"const": 1}, {"const": 17}, {"const": 65536}, {"const": 262144}, {"const": 64}],
+      "items": false,
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["hex", "entities", "interruptAfter"],
+        "properties": {
+          "hex": {"type": "string", "pattern": "^(?:[0-9a-f]{16})*$"},
+          "entities": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 4294967295}},
+          "interruptAfter": {"type": "array", "items": {"type": "integer", "minimum": 0}, "minItems": 1}
+        }
+      }
+    }
+  }
+}

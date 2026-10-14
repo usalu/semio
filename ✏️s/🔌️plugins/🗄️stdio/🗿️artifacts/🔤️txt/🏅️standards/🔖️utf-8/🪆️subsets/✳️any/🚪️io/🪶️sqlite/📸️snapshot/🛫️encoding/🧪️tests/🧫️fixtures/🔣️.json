@@ -1,0 +1,146 @@
+{
+  "format": 1,
+  "carrier": "originalNativeEncoder",
+  "prefix": {
+    "magic": [
+      137,
+      83,
+      69,
+      77,
+      13,
+      10,
+      26,
+      10
+    ],
+    "token": "stdio.txt.pack v1",
+    "bytes": 29
+  },
+  "source": {
+    "unit": "文🌠",
+    "repeat": 20000,
+    "bytes": 140000,
+    "cancelAfterBytes": 65536
+  },
+  "bodyGrant": {
+    "maximumItems": 65536,
+    "maximumCopyBytes": 1048576,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 4096
+  },
+  "closeGrant": {
+    "maximumItems": 4096,
+    "maximumCopyBytes": 1048576,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 4096
+  },
+  "deniedCloseGrant": {
+    "maximumItems": 0,
+    "maximumCopyBytes": 0,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 0,
+    "maximumDepth": 0
+  },
+  "nativeMaximumBytes": 16777216,
+  "maximumCloseTurns": 65536,
+  "cases": [
+    {
+      "id": "empty",
+      "lines": [],
+      "trailingNewline": false,
+      "lineEnding": "lf",
+      "body": ""
+    },
+    {
+      "id": "empty-trailing",
+      "lines": [],
+      "trailingNewline": true,
+      "lineEnding": "crLf",
+      "body": "\r\n"
+    },
+    {
+      "id": "one-empty",
+      "lines": [
+        ""
+      ],
+      "trailingNewline": false,
+      "lineEnding": "lf",
+      "body": ""
+    },
+    {
+      "id": "two-empty",
+      "lines": [
+        "",
+        ""
+      ],
+      "trailingNewline": false,
+      "lineEnding": "lf",
+      "body": "\n"
+    },
+    {
+      "id": "leading-unicode",
+      "lines": [
+        "",
+        "文🌠",
+        ""
+      ],
+      "trailingNewline": true,
+      "lineEnding": "lf",
+      "body": "\n文🌠\n\n"
+    },
+    {
+      "id": "crlf-nul",
+      "lines": [
+        "a",
+        "\u0000",
+        "ß"
+      ],
+      "trailingNewline": true,
+      "lineEnding": "crLf",
+      "body": "a\r\n\u0000\r\nß\r\n"
+    },
+    {
+      "id": "embedded",
+      "lines": [
+        "a\nb",
+        ""
+      ],
+      "trailingNewline": false,
+      "lineEnding": "crLf",
+      "body": "a\nb\r\n"
+    }
+  ],
+  "nativeCause": {
+    "kind": "Canceled",
+    "message": "native encoding canceled",
+    "storage": "borrowedLiteral"
+  },
+  "sqlCause": {
+    "kind": "Canceled",
+    "message": "relational SQLite transfer cancelled",
+    "storage": "borrowedLiteral"
+  },
+  "copy": {
+    "chunkBytes": 65536,
+    "prefixItems": 3,
+    "receivingDepth": 2
+  },
+  "ownerRefusals": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth",
+    "native",
+    "sqlAllocation"
+  ],
+  "census": {
+    "lines": 8192,
+    "cancelAfterCheckpoints": 3
+  },
+  "publication": {
+    "seam": "afterBodyBeforeOwnerClose",
+    "sameOriginalCancellationCell": true
+  }
+}

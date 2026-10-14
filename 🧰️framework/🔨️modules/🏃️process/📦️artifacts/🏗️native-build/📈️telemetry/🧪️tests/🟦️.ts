@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { mkdtempSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import type { UnitRecordV1 } from "../../🎟️admission/🟦️.ts";
 import { buildThroughBrokerV1, tinyCargoWorkspaceV1 } from "../../🧪️tests/🦀️cargo/🟦️.ts";

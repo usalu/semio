@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🧹️delete-site/🌊️cascades-its-buildings",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️delete-site/🌊️cascades-its-buildings/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️delete-site/🌊️cascades-its-buildings/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️delete-site/🌊️cascades-its-buildings/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️delete-site/🌊️cascades-its-buildings/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️delete-site/🌊️cascades-its-buildings/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️delete-site/🌊️cascades-its-buildings/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️delete-site/🌊️cascades-its-buildings/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️delete-site/🌊️cascades-its-buildings/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️delete-site/🌊️cascades-its-buildings/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️delete-site/🌊️cascades-its-buildings/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

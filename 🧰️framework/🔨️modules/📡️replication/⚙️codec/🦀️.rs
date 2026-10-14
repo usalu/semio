@@ -1,13 +1,16 @@
 //! 🧾 Pack varint, byte I/O, CRC, and compression codec primitives.
 
 use crate::codec::ids::{ByteRange, ChunkId, CodecId, ContentHash};
-use semio_framework_pack_error::PackRefusal;
+pub use semio_framework_pack_error::PackRefusal;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 
 #[path="🛬️retained/🦀️.rs"]
 mod retained_wire_field;
 pub use retained_wire_field::{RetainedWireFieldDecode,RetainedWireFieldStep,RetainedWireByteSource,OriginalWireSourceIdentity};
 pub(crate) use retained_wire_field::RetainedWireUtf8Validation;
+#[path="🎟️history-limits/🦀️.rs"]
+mod history_limits;
+pub use history_limits::HistoryReadLimits;
 
 //#region 🔖️Errors
 //#endregion 🔖️Errors
@@ -502,8 +505,8 @@ impl DeflateRetainedCursor {
     pub fn retirement_demands(&self) -> semio_framework_value::RetirementDemand {
         use semio_framework_value::RetirementDemand;
         if self.closed { return Default::default(); }
-        if self.pending.is_some() { return RetirementDemand { copy_bytes: size_of::<u8>(), depth: 1, ..Default::default() }; }
-        self.inflater.as_ref().map_or(RetirementDemand { depth: 1, ..Default::default() }, |owner| if owner.retained_terminal_is_empty() { RetirementDemand { copy_bytes: size_of::<semio_framework_deflate::Inflater>(), depth: 1, ..Default::default() } } else { owner.retained_retirement_demands() })
+        if self.pending.is_some() { return RetirementDemand { depth: 1, ..Default::default() }; }
+        self.inflater.as_ref().map_or(RetirementDemand { depth: 1, ..Default::default() }, |owner| if owner.retained_terminal_is_empty() { RetirementDemand { depth: 1, ..Default::default() } } else { owner.retained_retirement_demands() })
     }
     pub fn try_new(expected: u64, limit: u64, maximum_allocation_bytes: usize) -> Result<Self, PackRefusal> {
         if expected > limit {

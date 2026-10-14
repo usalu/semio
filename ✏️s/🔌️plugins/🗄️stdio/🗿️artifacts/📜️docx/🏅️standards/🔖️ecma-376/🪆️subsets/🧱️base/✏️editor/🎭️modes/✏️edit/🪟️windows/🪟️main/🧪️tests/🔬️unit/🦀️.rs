@@ -11,7 +11,7 @@ async fn definition_declares_a_document_window() {
     let def = definition();
     assert_eq!(def.id, WINDOW_KIND_ID);
     assert_eq!(def.body_key, BODY_KEY);
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧫️fixtures/🎨️run-formatting-action/🔣️.json")).expect("language-neutral formatting action fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🎨️run-formatting-action/🔣️.json")).expect("language-neutral formatting action fixture");
     let action = def.actions.iter().find(|action| action.id == fixture["action"].as_str().unwrap()).expect("formatting action");
     assert_eq!(action.label, LocalizedLabel::native(fixture["label"]["en"].as_str().unwrap(), fixture["label"]["de"].as_str().unwrap()));
     assert_eq!(action.args.iter().map(|argument| argument.id.as_str()).collect::<Vec<_>>(), fixture["fields"].as_array().unwrap().iter().map(|field| field["id"].as_str().unwrap()).collect::<Vec<_>>());
@@ -89,7 +89,7 @@ async fn render_emits_one_page_per_top_level_block() {
 #[semio_framework_async_macros::async_test]
 async fn nested_table_text_remains_editable_in_the_document_window() {
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧫️fixtures/🧭️table-run-projection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🧭️table-run-projection/🔣️.json")).unwrap();
     let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(crate::schema::snapshot::DocxDocument::default());
     let part_path = crate::standards::v_ecma_376::subsets::base::schema::inferences::document::main_document_path(&snapshot.opc).unwrap();
     snapshot.xml_part_mut(&part_path).unwrap().replace_document(xml_document_from_text(fixture["xml"].as_str().unwrap()).unwrap()).unwrap();

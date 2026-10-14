@@ -4,7 +4,7 @@ use semio_framework_ui_locale::Terminology;
 use semio_framework_tool_run::{ToolRunId, ToolRunTick};
 
 const RUN_SCHEMA: &str = include_str!("../../../✏️editor/🧵️simulation-session/🔣️.json");
-const RUN_FIXTURE: &str = include_str!("../../../✏️editor/🧵️simulation-session/🧫️fixtures/🔣️.json");
+const RUN_FIXTURE: &str = include_str!("../../../✏️editor/🧵️simulation-session/🧪️tests/🧫️fixtures/🔣️.json");
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(RUN_FIXTURE).expect("run fixture parses")

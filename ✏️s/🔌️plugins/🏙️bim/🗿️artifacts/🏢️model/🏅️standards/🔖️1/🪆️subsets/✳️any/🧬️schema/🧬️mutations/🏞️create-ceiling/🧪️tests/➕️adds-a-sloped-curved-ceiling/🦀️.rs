@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🏞️create-ceiling/➕️adds-a-sloped-curved-ceiling",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏞️create-ceiling/➕️adds-a-sloped-curved-ceiling/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏞️create-ceiling/➕️adds-a-sloped-curved-ceiling/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏞️create-ceiling/➕️adds-a-sloped-curved-ceiling/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏞️create-ceiling/➕️adds-a-sloped-curved-ceiling/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏞️create-ceiling/➕️adds-a-sloped-curved-ceiling/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏞️create-ceiling/➕️adds-a-sloped-curved-ceiling/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏞️create-ceiling/➕️adds-a-sloped-curved-ceiling/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏞️create-ceiling/➕️adds-a-sloped-curved-ceiling/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏞️create-ceiling/➕️adds-a-sloped-curved-ceiling/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏞️create-ceiling/➕️adds-a-sloped-curved-ceiling/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

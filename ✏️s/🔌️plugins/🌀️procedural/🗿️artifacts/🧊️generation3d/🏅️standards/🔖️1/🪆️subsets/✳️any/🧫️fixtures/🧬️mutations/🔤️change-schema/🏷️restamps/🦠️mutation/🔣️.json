@@ -1,4 +1,0 @@
-{
-  "mutation": "changeSchema",
-  "newSchema": "flow.hostSnapshot.solid"
-}

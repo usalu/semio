@@ -1,5 +1,0 @@
-{
-  "mutation": "changeFaultType",
-  "id": 440,
-  "newFaultType": "SensorBias"
-}

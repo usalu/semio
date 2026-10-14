@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn flow_diff_codecs_preserve_the_neutral_schema_and_child_handles() {
     use protocol::{DiffBinary, DiffText};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️codec/🔣️.json")).expect("neutral Flow diff codec fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🔁️codec/🔣️.json")).expect("neutral Flow diff codec fixture");
     let cases = fixture["cases"].as_array().expect("diff cases");
     assert_eq!(cases.len(), 3);
     for expected in cases {

@@ -1,0 +1,25 @@
+{
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": null,
+  "durableArtifacts": null,
+  "calibration": null,
+  "params": null,
+  "gcps": null,
+  "results": {
+    "sparse": null,
+    "dense": null,
+    "mesh": null,
+    "trajectory": null,
+    "tracks": null,
+    "geo": {
+      "value": {
+        "dsmAssetId": "asset-dsm",
+        "dtmAssetId": "asset-dtm",
+        "orthoAssetId": "asset-ortho"
+      }
+    },
+    "qc": null
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "mutation": "reorderPrimitiveAttributes",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "mesh": 0,
+      "primitive": 0,
+      "order": [
+        "NORMAL",
+        "POSITION"
+      ]
+    }
+  }
+}

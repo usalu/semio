@@ -1,7 +1,7 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { configDefaults, defineConfig } from "vitest/config";
-import { repoCacheDirectory } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import { testCacheDirectoryV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
 
 const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 
@@ -224,7 +224,7 @@ const exhaustiveInSourceSuites = [
 
 export default defineConfig({
   root: testRoot,
-  cacheDir: repoCacheDirectory(repoRoot, "vite", "renderer-react"),
+  cacheDir: testCacheDirectoryV1(process.env, "renderer-react"),
   resolve: {
     alias: [
       { find: "@semio-tech/ui-react/test", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖌️render/🟦️.ts") },

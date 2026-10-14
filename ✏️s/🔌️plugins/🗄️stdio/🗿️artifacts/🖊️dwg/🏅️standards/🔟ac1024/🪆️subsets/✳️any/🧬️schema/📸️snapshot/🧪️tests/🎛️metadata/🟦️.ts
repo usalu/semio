@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 
 interface Field { readonly id: number; readonly key: string; readonly optional: boolean; readonly labels: readonly { readonly label: string; readonly ordinal: number }[] }
 interface Case { readonly factory: string; readonly owner: string; readonly fields: readonly Field[] }
-const fixture: { readonly cases: readonly Case[]; readonly genericWitnesses: readonly unknown[] } = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🎛️metadata/🔣️.json", import.meta.url), "utf8"));
+const fixture: { readonly cases: readonly Case[]; readonly genericWitnesses: readonly unknown[] } = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🎛️metadata/🔣️.json", import.meta.url), "utf8"));
 const source = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");
 
 test("independent closed metadata descriptors retain all eleven record contracts", () => {

@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "pane": "generation3d",
+  "graph": "[data-host-snapshot-json]",
+  "controlKey": "procedural-play-inspector.value.input",
+  "focusKey": "ArrowDown",
+  "selectKey": " ",
+  "commitKey": "Tab",
+  "increment": 0.1,
+  "history": {
+    "undo": "ControlOrMeta+z",
+    "redo": "ControlOrMeta+Shift+z"
+  },
+  "gpu": {
+    "minimumInteriorColors": 3,
+    "requireCurrentSource": true,
+    "minimumChangedInteriorPixels": 8
+  },
+  "locales": [
+    {
+      "browser": "en-US",
+      "valueLabel": "Value",
+      "cancelLabel": "Cancel",
+      "cancelExampleLabel": "Sphere Cut With Torus"
+    },
+    {
+      "browser": "de-DE",
+      "valueLabel": "Wert",
+      "cancelLabel": "Abbrechen",
+      "cancelExampleLabel": "Kugel mit Torus geschnitten"
+    }
+  ],
+  "sourceNavigation": {
+    "controlSuffix": ".source",
+    "inputPrefix": "procedural-play-inspector.input.",
+    "selectionField": "selectedIds",
+    "documentUnchanged": [
+      "widgets",
+      "synapses"
+    ]
+  },
+  "analysis": {
+    "operator": "brep.measure.volume",
+    "targetPort": "geometry",
+    "buttonSuffix": ".analysis.brep.measure.volume",
+    "outputKey": "procedural-play-inspector.output.volume",
+    "sourceField": "from",
+    "targetField": "to",
+    "undoRemovesCreatedWidgetAndWire": true,
+    "redoRestoresExactGraph": true,
+    "resultSchema": "number",
+    "minimumVolume": 0
+  },
+  "cancel": {
+    "example": "sphere-cut-with-torus",
+    "examplePicker": "playground.navbar.fixture",
+    "sourceOperator": "brep.bool.cut",
+    "action": "toolRunAbort",
+    "minimumObservations": 2,
+    "minimumElapsedMilliseconds": 250,
+    "terminalPhase": "cancelled",
+    "documentUnchanged": [
+      "widgets",
+      "synapses"
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schemas/plugin/inference-service/original-caller/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "generation",
+    "deadlineUs",
+    "clockUs",
+    "fuel",
+    "stock"
+  ],
+  "properties": {
+    "operation": {
+      "const": 17
+    },
+    "generation": {
+      "const": 9
+    },
+    "deadlineUs": {
+      "const": 12345
+    },
+    "clockUs": {
+      "const": 12000
+    },
+    "fuel": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "stock": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }
+}

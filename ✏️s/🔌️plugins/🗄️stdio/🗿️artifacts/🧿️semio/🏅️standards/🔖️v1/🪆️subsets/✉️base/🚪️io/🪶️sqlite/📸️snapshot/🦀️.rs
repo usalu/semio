@@ -2,6 +2,7 @@
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::{native, native_decoding};
 
@@ -24,10 +25,10 @@ use semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot;
 use semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot;
 use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
 use semio_s_artifact_stdio_semio_video::schema::snapshot::SemioVideoSnapshot;
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase}};
 const SQL:&str=concat!(include_str!("🗄️.sql"),include_str!("../../../../🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../📑️document/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../📊️table/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../📦️object/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"));
 fn selection(tag:&str)->Result<(usize,&'static str),ValueError>{match tag{"brep"=>Ok((3,"semio_brep_")),"mesh"=>Ok((4,"semio_mesh_")),"model"=>Ok((5,"semio_model_")),"value"=>Ok((6,"semio_value_")),"document"=>Ok((7,"semio_document_")),"cad"=>Ok((8,"semio_cad_")),"drawing"=>Ok((9,"semio_drawing_")),"image"=>Ok((10,"semio_image_")),"video"=>Ok((11,"semio_video_")),"audio"=>Ok((12,"semio_audio_")),"animation"=>Ok((13,"semio_animation_")),"presentation"=>Ok((14,"semio_presentation_")),"flow"=>Ok((15,"semio_flow_")),"text"=>Ok((16,"semio_text_")),"table"=>Ok((17,"semio_table_")),"graph"=>Ok((18,"semio_graph_")),"object"=>Ok((19,"semio_object_")),"kit"=>Ok((20,"semio_kit_")),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown Semio subset discriminator"))}}
-impl ArtifactSqliteSnapshot for SemioSnapshot{
+impl ArtifactSqliteSnapshotHost for SemioSnapshot{
 fn retire_sqlite_snapshot(self){drop(native_decoding::Owned::new(self));}
 
 fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{union_encoding::encode_snapshot(self,encoding,control,native_owner)}
@@ -43,6 +44,11 @@ if row.rowid!=1||row.integer(0)?!=1||row.text(1)?!=self.schema{return Err(ValueE
 let tag=match &self.subset{SemioSubsetSnapshot::Brep(_)=>"brep",SemioSubsetSnapshot::Mesh(_)=>"mesh",SemioSubsetSnapshot::Model(_)=>"model",SemioSubsetSnapshot::Value(_)=>"value",SemioSubsetSnapshot::Document(_)=>"document",SemioSubsetSnapshot::Cad(_)=>"cad",SemioSubsetSnapshot::Drawing(_)=>"drawing",SemioSubsetSnapshot::Image(_)=>"image",SemioSubsetSnapshot::Video(_)=>"video",SemioSubsetSnapshot::Audio(_)=>"audio",SemioSubsetSnapshot::Animation(_)=>"animation",SemioSubsetSnapshot::Presentation(_)=>"presentation",SemioSubsetSnapshot::Flow(_)=>"flow",SemioSubsetSnapshot::Text(_)=>"text",SemioSubsetSnapshot::Table(_)=>"table",SemioSubsetSnapshot::Graph(_)=>"graph",SemioSubsetSnapshot::Object(_)=>"object",SemioSubsetSnapshot::Kit(_)=>"kit"};if row.text(2)?!=tag{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio union owned variant differs from selected relational subset"));}
 control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))})();result.map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
 
+
+
+
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for SemioSnapshot {
 const SQLITE_SCHEMA:&'static str=SQL;
 fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.project_sqlite_database(c)}
 fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{reconstruction::reconstruct(database,control)}

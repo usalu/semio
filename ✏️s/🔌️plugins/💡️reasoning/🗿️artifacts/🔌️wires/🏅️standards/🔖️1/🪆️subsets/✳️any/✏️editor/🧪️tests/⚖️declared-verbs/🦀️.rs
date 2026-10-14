@@ -7,7 +7,7 @@ use semio_framework_plugin::artifact_app_laws::{assert_declared_verbs_honour_the
 
 #[semio_framework_async_macros::async_test]
 async fn every_declared_wires_verb_honours_its_declaration() {
-    let examples = include_str!("../../🧫️fixtures/⚖️declared-verb-examples.json");
+    let examples = include_str!("../🧫️fixtures/⚖️declared-verb-examples.json");
     let probes = assert_declared_verbs_honour_their_declarations::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(create_wires_app, Some(examples), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     assert_eq!(probes.len(), 8, "the wires editor declares eight verbs");
     let relate = declared_verb_probe(&probes, "addRelationship");

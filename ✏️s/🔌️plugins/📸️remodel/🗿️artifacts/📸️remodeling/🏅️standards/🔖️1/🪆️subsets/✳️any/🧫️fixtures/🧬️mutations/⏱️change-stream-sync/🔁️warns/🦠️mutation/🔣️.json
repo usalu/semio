@@ -1,5 +1,0 @@
-{
-  "mutation": "changeStreamSync",
-  "id": "orbit-primary",
-  "newSyncOffsetMs": 0.0
-}

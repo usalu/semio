@@ -11,7 +11,7 @@ type EditorCase = { name: string; canonical: EditorSurface; overlay: EditorOverl
  * (`fast-json-patch`) and `lodash` for the editor block, `jsonc-parser` edits for the in-place JSONC rewrite, `@iarna/toml` for
  * the nextest scopes and `yaml` for dependabot; then proves the checked-in files are derived and that drift is reported. */
 export async function testDerivedConfig(workspace: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/📝️derived-config/🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/📝️derived-config/🔣️.json"), "utf8"));
   const jsonpatch = require("fast-json-patch"), lodash = require("lodash"), jsonc = require("jsonc-parser"), toml = require("@iarna/toml"), yaml = require("yaml");
   const pointer = (key: string): string => `/${key.replaceAll("~", "~0").replaceAll("/", "~1")}`;
   for (const row of fixture.editor as EditorCase[]) {

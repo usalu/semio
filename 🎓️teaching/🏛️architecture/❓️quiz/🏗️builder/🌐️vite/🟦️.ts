@@ -1,4 +1,6 @@
-import { readBuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { canonicalWasmBuildVitePlugin } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts";
+import { viteCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
+import { readBuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 // #region 🔌️Adapters
 import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -119,12 +121,13 @@ function quizReleaseDocumentVitePlugin(proctorOrigin: string): OwnedBuildPlugin 
  * @see ../../🚀️deploy/🔣️.json — the site and proctor hosts
  * @see ../../🚀️deploy/🟦️.ts — `publish`, which verifies and stages this build for the CDN
  * @see ../../🧱️stack/🟦️.ts — the local stack that starts this server beside the proctor */
-export default defineOwnedBuildConfigFactory(({ command }) => ({
+export default defineOwnedBuildConfigFactory(({ command, mode }) => ({
   root: siteRoot,
   base: "/",
   publicDir: false,
-  cacheDir: process.env.TEACHING_ARCHITECTURE_QUIZ_CACHE,
+  cacheDir: viteCacheDirectory(process.env.TEACHING_ARCHITECTURE_QUIZ_CACHE ?? resolve(repoRoot, ".🧬semio/🦑️repo/⚡️cache/vite/architecture-quiz"), { ...process.env, SEMIO_BUILD_MODE: readBuildMode(mode) }, import.meta.url),
   plugins: [
+      canonicalWasmBuildVitePlugin(repoRoot, readBuildMode(mode)),
     semioServeCloseVitePlugin(),
     semioServeUpgradeVitePlugin(),
     ...semioHostHtmlVitePlugin(repoRoot, quizHostDocument),
@@ -134,7 +137,7 @@ export default defineOwnedBuildConfigFactory(({ command }) => ({
     uiReactBuildPlugin(),
     quizReleaseDocumentVitePlugin(proctorOrigin),
   ],
-  build: playgroundStaticSiteBuildOptions({ ...semioViteBuild(), outDir: resolve(bundleRoot, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE)) }),
+  build: playgroundStaticSiteBuildOptions({ ...semioViteBuild(undefined, readBuildMode(mode)), outDir: resolve(bundleRoot, "dist", readBuildMode(mode)) }),
   define: { "import.meta.vitest": "undefined", ...(command === "build" ? { "import.meta.env.VITE_PROCTOR_URL": JSON.stringify(proctorOrigin) } : {}) },
   server: {
     fs: { allow: [repoRoot] },

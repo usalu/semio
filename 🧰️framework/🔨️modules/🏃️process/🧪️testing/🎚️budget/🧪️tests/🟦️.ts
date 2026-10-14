@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 
 import ts from "typescript";
 import { TEST_LEVELS, TEST_LEVEL_BUDGET_MS } from "../🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 
 test("neutral test vocabulary preserves portable levels and exact budgets", () => {
   expect<readonly string[]>(TEST_LEVELS).toEqual(Object.keys(fixture.levels));

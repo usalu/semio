@@ -1,0 +1,60 @@
+{
+  "meshes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "primitives": {
+            "modified": [
+              {
+                "index": 0,
+                "diff": {
+                  "attributes": {
+                    "removed": [
+                      {
+                        "id": "POSITION",
+                        "index": 0
+                      }
+                    ],
+                    "inserted": [
+                      {
+                        "index": 0,
+                        "row": {
+                          "semantic": "POSITION",
+                          "accessor": 1
+                        }
+                      }
+                    ],
+                    "moved": []
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "accessors": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "componentType": 5125,
+          "count": 6,
+          "kind": "SCALAR"
+        }
+      }
+    ],
+    "added": [
+      {
+        "index": 1,
+        "item": {
+          "componentType": 5126,
+          "count": 3,
+          "type": "VEC3"
+        }
+      }
+    ]
+  }
+}

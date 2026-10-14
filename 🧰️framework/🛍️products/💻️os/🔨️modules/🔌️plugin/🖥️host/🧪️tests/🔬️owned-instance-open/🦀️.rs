@@ -299,7 +299,7 @@ async fn guest_runtimes_forwards_all_four_codec_exports_to_the_runtime_beneath_i
 
 #[test]
 fn neutral_component_inventory_is_portable_and_names_both_independent_runtime_oracles() {
-    let source=include_str!("../../🧪️testing/🧩️component/🧫️fixtures/🔣️.json");
+    let source=include_str!("../../🧪️testing/🧩️component/🧪️tests/🧫️fixtures/🔣️.json");
     let law:serde_json::Value=serde_json::from_str(source).unwrap();
     let owned:semio_framework_value::DslValue=semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&owned)).unwrap(),law);

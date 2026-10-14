@@ -10,11 +10,11 @@
 use crate::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
 use crate::{RemodelingDiff, RemodelingSnapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-rig-extrinsic/✂️unplaces/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-rig-extrinsic/✂️unplaces/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-rig-extrinsic/✂️unplaces/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-rig-extrinsic/✂️unplaces/🎯️outcome/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-rig-extrinsic/✂️unplaces/🔺️diff/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-rig-extrinsic/✂️unplaces/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-rig-extrinsic/✂️unplaces/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-rig-extrinsic/✂️unplaces/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-rig-extrinsic/✂️unplaces/🎯️outcome/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-rig-extrinsic/✂️unplaces/🔺️diff/🔣️.json");
 
 fn before() -> RemodelingSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

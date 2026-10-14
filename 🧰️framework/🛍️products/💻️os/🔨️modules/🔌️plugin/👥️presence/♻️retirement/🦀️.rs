@@ -84,7 +84,7 @@ pub fn no_presence_peer_retirement_factory() -> Arc<dyn store::SnapshotRetiremen
 /// Declaring an owner explicitly still wins — this is `or_else`, not a replacement.
 pub fn bounded_presence_root_retirement_factory<P>() -> Arc<dyn store::SnapshotRetirementFactory<P>>
 where
-    P: store::os_store::serialization::ArtifactDsl + Send + Sync + 'static,
+    P: pack::snapshot::ArtifactDsl + Send + Sync + 'static,
 {
     Arc::new(BoundedPresenceRootRetirementFactory::<P>(std::marker::PhantomData))
 }
@@ -94,7 +94,7 @@ struct BoundedPresenceRootRetirementFactory<P>(std::marker::PhantomData<fn() -> 
 
 impl<P> store::SnapshotRetirementFactory<P> for BoundedPresenceRootRetirementFactory<P>
 where
-    P: store::os_store::serialization::ArtifactDsl + Send + Sync + 'static,
+    P: pack::snapshot::ArtifactDsl + Send + Sync + 'static,
 {
     fn retirement_birth_bytes(&self, _snapshot: &Arc<P>) -> usize { size_of::<BoundedPresenceRootRetirement<P>>() }
 
@@ -103,7 +103,7 @@ where
             Ok(progress) => progress,
             Err(error) => return Err((error, snapshot)),
         };
-        let retained_bytes = store::os_store::serialization::ArtifactDsl::print_dsl(snapshot.as_ref()).len();
+        let retained_bytes = pack::snapshot::ArtifactDsl::print_dsl(snapshot.as_ref()).len();
         Ok((Box::new(BoundedPresenceRootRetirement { root: Some(snapshot), retained_bytes }), progress))
     }
 }

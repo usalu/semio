@@ -1,0 +1,35 @@
+{
+  "note": "🔩️ The crate-manifest reader behind a mutation leaf's schema search trees (`mutation_manifest_path_dependencies` of `#[derive(MutationLeaf)]`, twin `mutationManifestPathDependencies` of the repo test platform; design §20 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): a leaf references across exactly the plugins its crate's `[dependencies]` name by `path`. Every case's `paths` are the inline `path` values of the `[dependencies]` table only, resolved beside `manifest` and normalized lexically, in manifest order; Bun's TOML parser is the third-party oracle of every case.",
+  "cases": [
+    {
+      "name": "inline-path-dependencies-only",
+      "manifest": "r/s/Cargo.toml",
+      "text": "[package]\npath = \"p\"\n[dependencies]\na = { path = \"../a\", features = [\"x\", \"y\"] }\r\nb = { version = \"1\", path = \"b\" }\nxpath = \"v\"\nc = { pathx = \"c\" }\n[dev-dependencies]\nd = { path = \"../d\" }\n",
+      "paths": ["r/a", "r/s/b"]
+    },
+    {
+      "name": "no-dependencies-table",
+      "manifest": "Cargo.toml",
+      "text": "[package]\nname = \"x\"\n",
+      "paths": []
+    },
+    {
+      "name": "workspace-dependencies-are-not-crate-dependencies",
+      "manifest": "w/Cargo.toml",
+      "text": "[workspace.dependencies]\na = { path = \"a\" }\n[build-dependencies]\nb = { path = \"b\" }\n",
+      "paths": []
+    },
+    {
+      "name": "parent-and-current-segments-normalize",
+      "manifest": "a/b/c/Cargo.toml",
+      "text": "[dependencies]\nx = { path = \"../../d/./e\" }\ny = { workspace = true }\n",
+      "paths": ["a/d/e"]
+    },
+    {
+      "name": "a-cross-plugin-artifact-dependency",
+      "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust/Cargo.toml",
+      "text": "[dependencies]\nsemio-framework-value = { path = \"../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust\" }\nsemio-s-artifact-forms-forms = { path = \"../../../../../📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust\" }\n",
+      "paths": ["🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust", "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust"]
+    }
+  ]
+}

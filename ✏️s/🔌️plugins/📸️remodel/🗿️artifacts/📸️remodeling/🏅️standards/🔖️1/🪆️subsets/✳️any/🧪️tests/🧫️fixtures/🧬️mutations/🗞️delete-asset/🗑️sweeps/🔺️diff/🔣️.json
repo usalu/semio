@@ -1,0 +1,26 @@
+{
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": {
+    "rows": [
+      {
+        "row": "remove",
+        "key": "orbit-orphan"
+      }
+    ]
+  },
+  "durableArtifacts": {
+    "rows": [
+      {
+        "row": "truncate",
+        "id": "remodeling-asset-92c03cc2233e34dc",
+        "from": "0"
+      }
+    ]
+  },
+  "calibration": null,
+  "params": null,
+  "gcps": null,
+  "results": null
+}

@@ -16,7 +16,7 @@
   },
   "environment": {
     "SEMIO_BUILD_MODE": "release",
-    "SEMIO_RELEASE_GENERATION": "fresh",
+    "SEMIO_NATIVE_BUILD_GENERATION": "fresh",
     "NX_DAEMON": "false",
     "NX_SKIP_NX_CACHE": "true",
     "NX_SKIP_REMOTE_CACHE": "true",
@@ -25,7 +25,7 @@
   "driver": {
     "target": "release",
     "command": "bun ./📜️script.ts release",
-    "generationEnvironment": "SEMIO_RELEASE_GENERATION",
+    "generationEnvironment": "SEMIO_NATIVE_BUILD_GENERATION",
     "generationPrefix": "f",
     "stores": {
       "target": "t",

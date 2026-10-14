@@ -1,7 +1,7 @@
 mod tests {
  use super::*;
  use crate::standards::v_jfif_1_01::subsets::document::io::{inspect_jpg_native_header,inspect_jpg_native_header_controlled,decode_jpg};
- fn native()->Vec<u8>{include_bytes!("../../../🧫️fixtures/🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg").to_vec()}
+ fn native()->Vec<u8>{include_bytes!("../../../🧪️tests/🧫️fixtures/🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg").to_vec()}
  fn marker(bytes:&[u8],code:u8)->usize{bytes.windows(2).position(|word|word==[0xff,code]).expect("native marker")}
  #[test]
  fn native_observations_and_pure_facts_keep_profile_axes(){

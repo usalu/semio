@@ -6,7 +6,7 @@ fn grant(demand:RetirementDemand)->RetainedCloneGrant{assert!(demand.copy_bytes+
 fn exact(step:RetainedCloneStep,heap:(usize,usize),grant:RetainedCloneGrant){assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
 #[test]
 fn paged_native_utf8_append_pure_advance_demands_admit_exact_original_work_and_cancel(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for text in fixture["texts"].as_array().unwrap(){for repeat in [1,4097]{for pause in [Some(0),Some(1),Some(3),Some(17),None]{
   let source=text.as_str().unwrap().repeat(repeat);let pointer=source.as_ptr();let mut destination=PagedUtf8::<{usize::MAX}>::new();let(mut cursor,heap)=observe(PagedUtf8AppendCursor::default);assert_eq!(heap,(0,0));let mut turns=0;let mut complete=false;
   loop{assert!(turns<100000);if pause==Some(turns){break;}let(demand,heap)=observe(||cursor.next_advance_demand(&source,&destination).unwrap());assert_eq!(heap,(0,0));let admitted=grant(demand);let(step,heap)=observe(||cursor.advance(&source,&mut destination,Default::default()).unwrap());exact(step,heap,Default::default());assert_eq!(step.progress(),Default::default());

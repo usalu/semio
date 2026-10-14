@@ -1,8 +1,9 @@
 //! 💬️ Handwritten topic, viewpoint, camera and component relationships.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v2_1::subsets::any::schema::snapshot::*;
 use std::collections::BTreeMap;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{NativeEncodingBound,Cell,RowWriter,FloatColumn,FloatRow,reconstruct_text,reconstruct_blob},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteDatabaseLimits,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase},os_store::serialization::ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{NativeEncodingBound,Cell,RowWriter,FloatColumn,FloatRow,reconstruct_text,reconstruct_blob},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteDatabaseLimits,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase},os_store::serialization::ArtifactSqliteSnapshotHost};
 
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn work(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::WorkLimit,message)}
@@ -42,14 +43,14 @@ fn visit_rows(snapshot:&BcfSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueE
   for(ordinal,part)in snapshot.parts.iter().enumerate(){out.insert("bcf_raw_part",&[Cell::Integer(1),Cell::Integer(i64::try_from(ordinal).map_err(|error|work(error.to_string()))?),Cell::Text(&part.name),Cell::Blob(&part.data)])?;}out.checkpoint()
  }
 
-impl ArtifactSqliteSnapshot for BcfSnapshot{
+impl ArtifactSqliteSnapshotHost for BcfSnapshot{
  fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
-  let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic::admit_record(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
+  let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic::admit_record(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
  }
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+ 
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
   admit_native(self,SqliteSnapshotPhase::EncodeNative,control)?;
-  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
 
  fn preflight_sqlite_snapshot_encoding(&self, _encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(),ValueError> {
@@ -88,8 +89,13 @@ impl ArtifactSqliteSnapshot for BcfSnapshot{
   bound.finish()
  }
 
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{admit_layout(control.limits())?;let mut out=RowWriter::new(Self::SQLITE_SCHEMA,control)?;visit_rows(self,&mut out)?;out.finish()}
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+ 
+ 
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for BcfSnapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{admit_layout(control.limits())?;let mut out=RowWriter::new(Self::SQLITE_SCHEMA,control)?;visit_rows(self,&mut out)?;out.finish()}
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
   admit_layout(control.limits())?;validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
   let documents=entities(database,"bcf_document",3,control)?;if documents.len()!=1||!documents.contains_key(&1){return Err(invalid("BCF requires document identity one"));}let topic_entities=entities(database,"bcf_topic",10,control)?;let topics_order=groups(&topic_entities,&documents,control)?;let labels=groups(&entities(database,"bcf_topic_label",4,control)?,&topic_entities,control)?;let comments=groups(&entities(database,"bcf_comment",8,control)?,&topic_entities,control)?;let view_entities=entities(database,"bcf_viewpoint",4,control)?;let views=groups(&view_entities,&topic_entities,control)?;
   let cameras=entities(database,"bcf_camera",29,control)?;same_owner(&cameras,&view_entities,control)?;let perspectives=entities(database,"bcf_perspective_camera",4,control)?;same_owner(&perspectives,&cameras,control)?;let orthogonals=entities(database,"bcf_orthogonal_camera",4,control)?;same_owner(&orthogonals,&cameras,control)?;let component_entities=entities(database,"bcf_components",2,control)?;same_owner(&component_entities,&view_entities,control)?;let selections=groups(&entities(database,"bcf_selection",4,control)?,&component_entities,control)?;let exceptions=groups(&entities(database,"bcf_visibility_exception",4,control)?,&component_entities,control)?;let coloring_entities=entities(database,"bcf_coloring",4,control)?;let colorings=groups(&coloring_entities,&component_entities,control)?;let colored=groups(&entities(database,"bcf_coloring_component",4,control)?,&coloring_entities,control)?;let images=entities(database,"bcf_snapshot_image",2,control)?;same_owner(&images,&view_entities,control)?;let parts_order=groups(&entities(database,"bcf_raw_part",5,control)?,&documents,control)?;

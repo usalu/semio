@@ -1,0 +1,22 @@
+{
+  "artifact": null,
+  "attractions": null,
+  "domain": null,
+  "meta": null,
+  "objects": null,
+  "references": null,
+  "schema": null,
+  "targetVolumes": {
+    "inserted": [],
+    "modified": [
+      {
+        "id": "volume-1",
+        "patch": {
+          "locked": true
+        }
+      }
+    ],
+    "moved": [],
+    "removed": []
+  }
+}

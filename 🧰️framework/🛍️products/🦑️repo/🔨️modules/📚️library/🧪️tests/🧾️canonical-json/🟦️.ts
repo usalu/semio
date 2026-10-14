@@ -7,7 +7,7 @@ import ts from "typescript";
 
 type RuntimeKind = "object-undefined" | "array-undefined" | "undefined" | "function" | "symbol";
 type Corpus = Readonly<{ schemaVersion: 1; contractId: string; cases: readonly Readonly<{ id: string; input: unknown; oracle: unknown; canonical: string }>[]; runtimeCases: readonly Readonly<{ id: string; kind: RuntimeKind; canonical?: string; error?: string }>[] }>;
-const bytes = readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧾️canonical-json/🔣️.json"), "utf8");
+const bytes = readFileSync(join(import.meta.dir, "../🧫️fixtures/🧾️canonical-json/🔣️.json"), "utf8");
 const corpus = JSON.parse(bytes) as Corpus;
 const oracle = (value: unknown): string => applyEdits("", modify("", [], value, {}));
 

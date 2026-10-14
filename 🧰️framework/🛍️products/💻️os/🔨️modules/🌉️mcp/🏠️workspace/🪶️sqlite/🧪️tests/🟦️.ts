@@ -4,12 +4,12 @@ import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import retirementContract from "../../../../../../../🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json";
 const validateGrant=new Ajv({strict:true}).addSchema(retirementContract).compile({$ref:retirementContract.$id+"#/$defs/Grant"});
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import {readFileSync} from "node:fs";
-import semanticFixture from "../🫴️semantic/🧫️fixtures/🔣️.json";
-import guestInputFixture from "../🧫️fixtures/guest-input-slot.json";
+import semanticFixture from "../🫴️semantic/🧪️tests/🧫️fixtures/🔣️.json";
+import guestInputFixture from "./🧫️fixtures/guest-input-slot.json";
 import guestInputSchema from "../🧬️schema/guest-input-slot.json";
-import coordinateFixture from "../🧫️fixtures/coordinate.json";
+import coordinateFixture from "./🧫️fixtures/coordinate.json";
 import coordinateSchema from "../🧬️schema/coordinate.json";
 
 test("Guest coordinate quotes exact original allocation before copying",()=>{
@@ -55,12 +55,12 @@ test("Probe semantic edge policies preserve exact numeric TEXT and shuffled sour
   for(const word of fixture.semanticEdges.numericWords){const bytes=database.query("SELECT length(CAST(? AS BLOB)) AS bytes").get(word.text) as {bytes:number};expect(bytes.bytes).toBe(word.bytes);expect(database.query("SELECT length(CAST(? AS BLOB))<=? AS admitted").get(word.text,word.bytes-1)).toEqual({admitted:0});expect(database.query("SELECT length(CAST(? AS BLOB))<=? AS admitted").get(word.text,word.bytes)).toEqual({admitted:1});if(word.exactKind!=="float")expect(BigInt(word.text).toString()).toBe(word.text);else if(word.text==="-0.0")expect(Object.is(JSON.parse(word.text),-0)).toBe(true);}
   const names=fixture.semanticEdges.longCommonNames;expect(database.query("SELECT CAST(? AS BLOB)=CAST(? AS BLOB) AS duplicate").get(names[0],names[1])).toEqual({duplicate:0});expect(database.query("SELECT CAST(? AS BLOB)=CAST(? AS BLOB) AS duplicate").get(names[0],names[0])).toEqual({duplicate:1});
  }finally{database.close();}
- const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8"),start=source.indexOf("fn number_value"),end=source.indexOf("impl store::os_store::serialization::ArtifactSqliteSnapshot",start),number=source.slice(start,end);
+ const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8"),start=source.indexOf("fn number_value"),end=source.indexOf("impl store::os_store::serialization::ArtifactSqliteSnapshotHost",start),number=source.slice(start,end);
  expect(number).toContain("control.check_value_bytes(text.len())?");expect(number).not.toContain("semio_framework_pack_json::parse(");
  expect(source).toContain("to_sqlite_database_receiving");expect(source).toContain("from_sqlite_database_receiving");
  console.error("[DEBUG] Probe semantic neutral policies match independent SQLite exact numeric bytes, shuffled source ordinals and long UTF8 name identity");
 });
-import nativeFixture from "../🫴️native/🧫️fixtures/🔣️.json";
+import nativeFixture from "../🫴️native/🧪️tests/🧫️fixtures/🔣️.json";
 import {exportSqliteDatabase,importSqliteDatabase,parseSqliteDatabaseSchema,type SqliteValue} from "../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 test("Probe native examples preserve canonical grants and independent semantic witnesses",()=>{

@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "🌳️ui-contract-presentation", "🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "🌳️ui-contract-presentation", "🔣️.json"), "utf8"));
 const typedComponents: readonly Component[] = [
   { type: "tree", interactionDomain: null },
   { type: "tree", presentation: "compact", interactionDomain: null },

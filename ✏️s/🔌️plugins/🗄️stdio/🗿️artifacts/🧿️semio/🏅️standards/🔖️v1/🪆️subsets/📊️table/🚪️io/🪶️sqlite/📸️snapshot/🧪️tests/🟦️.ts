@@ -1,7 +1,7 @@
 /** 📊️ Native table columns and fully typed SemioValue cells are independent domains. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import f from "../🧫️fixtures/🔣️.json";
+import f from "./🧫️fixtures/🔣️.json";
 import type {SemioTableSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {SEMIO_TABLE_SQLITE_SCHEMA,semioTableSnapshotToSqliteDatabase,semioTableSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
@@ -13,14 +13,14 @@ test("quick::Semio table native construction frontier matches independent cells 
 
 
 test("Semio Table code-admitted intermediate owner survives independently queried physical SQLite",async()=>{
- const neutral=await Bun.file(new URL("../🧫️fixtures/🧩️intermediate/🔣️.json",import.meta.url)).json();
+ const neutral=await Bun.file(new URL("🧫️fixtures/🧩️intermediate/🔣️.json",import.meta.url)).json();
  const {default:Ajv}=await import("ajv");expect(neutral["role"]).toEqual("codeAdmittedIntermediateOwner");expect(neutral["snapshot"]).toEqual({"schema":"table\u0000世界","columns":[{"name":"same\u0000Ä","kind":"str"},{"name":"same\u0000Ä","kind":"str"}],"rows":[{"cells":[{"kind":"null"},{"kind":"bool","value":true},{"kind":"int","lexeme":"18446744073709551616"},{"kind":"float","lexeme":"1.234567890123456789"},{"kind":"str","value":"NUL\u0000世界"},{"kind":"bytes","value":[0,255]},{"kind":"list","items":[]},{"kind":"map","entries":[{"key":"same","value":{"kind":"null"}},{"key":"same","value":{"kind":"bool","value":false}}]},{"kind":"ref","id":{"value":"external\u0000Ä"}}]},{"cells":[]}]});expect(neutral["query"]).toEqual("SELECT count(*) AS n FROM semio_table_cell");expect(neutral["expectedRows"]).toEqual([{"n":9}]);
  const input=structuredClone(neutral.snapshot);
  const db=Database.deserialize(await exportSqliteDatabase(await semioTableSnapshotToSqliteDatabase(input)));
  try{expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(db.query(neutral.query).all()).toEqual(neutral.expectedRows);expect(await semioTableSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).toEqual(input);db.query("UPDATE semio_table_value SET string_value=? WHERE kind='str'").run("independently edited");input.rows[0].cells[4]={kind:"str",value:"independently edited"};expect(await semioTableSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).toEqual(input);console.log("[DEBUG] Semio table retains duplicate declaration names, arbitrary row widths and all nine independently queried native cell variants");}finally{db.close();}
 });
 
-import completeSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import completeSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 import{independentSqliteExtent as completeIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
 test("Semio Table Native matched full and metadata empty independently preserve all complete cells",async()=>{
  for(const item of completeSemanticContract.cases){const source=structuredClone(item.sourceSnapshot)as SemioTableSnapshot;const database=await semioTableSnapshotToSqliteDatabase(source),bytes=await exportSqliteDatabase(database);expect(completeIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:completeSemanticContract.schemaBytes,tableWidths:completeSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:completeSemanticContract.schemaBytes,maxTables:7,maxColumns:8};expect(await semioTableSnapshotToSqliteDatabase(source,limits)).toEqual(database);expect(await semioTableSnapshotFromSqliteDatabase(await importSqliteDatabase(bytes),limits)).toEqual(source);

@@ -1,7 +1,7 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 test("original camera and selection preparation preserve native semantics and issuer custody",async()=>{
  expect(new Ajv({strict:true,allowUnionTypes:true}).compile(schema)(fixture)).toBe(true);

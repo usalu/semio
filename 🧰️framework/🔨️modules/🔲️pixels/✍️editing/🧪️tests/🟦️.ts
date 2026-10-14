@@ -2,7 +2,7 @@
 import { describe, expect, test } from "bun:test";
 import sharp from "sharp";
 import Ajv from "ajv";
-import fixtures from "../🧫️fixtures/🔣️.json";
+import fixtures from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import { editImage, selectionMask, selectPixels, combineSelections, SelectionCombineJob, type SelectionMerge, floodSelection, paintStroke, PixelEditJob, PixelSelectionJob, strokeBounds, validateImage, type PixelOperation, type PixelPoint, type SelectionShape } from "../🟦️.ts";
 

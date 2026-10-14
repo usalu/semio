@@ -582,7 +582,7 @@ pub fn record_input_leaves(record: &Widget, wanted: &[(&str, crate::standards::v
     wanted
         .iter()
         .filter_map(|(channel, value)| {
-            let stored = WidgetInputValue::of_literal(&semio_framework_value::ToValue::to_value(params.get(channel)?))?;
+            let stored = WidgetInputValue::of_neural_value(params.get(channel)?)?;
             let typed = match (value, &stored) {
                 (WidgetInputValue::Point(axes) | WidgetInputValue::Vector(axes), WidgetInputValue::Point(_)) => WidgetInputValue::Point(*axes),
                 (WidgetInputValue::Point(axes) | WidgetInputValue::Vector(axes), WidgetInputValue::Vector(_)) => WidgetInputValue::Vector(*axes),

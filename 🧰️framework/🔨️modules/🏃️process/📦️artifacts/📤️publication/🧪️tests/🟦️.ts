@@ -9,7 +9,7 @@ import { acquireResourceLease } from "../../../🔒️leases/🟦️.ts";
 
 /** 📦️ Verifies portable publication, cancellation and complete bytes through independent Python. */
 export async function testArtifactPublication(output: string): Promise<void> {
-  const fixture = JSON.parse(readFileSync(resolve(import.meta.dirname, "../🧫️fixtures/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(resolve(import.meta.dirname, "🧫️fixtures/🔣️.json"), "utf8"));
   assert.ok(new (createRequire(import.meta.url)("ajv").default)({strict:true}).validate(JSON.parse(readFileSync(resolve(import.meta.dirname,"../🧬️schema/🔣️.json"),"utf8")),fixture));
   const root = mkdtempSync(join(output, "artifact-publication-")), staging = join(root, "dist"), leaseDirectory = join(root, "leases");
   const files = new Map<string, string>();

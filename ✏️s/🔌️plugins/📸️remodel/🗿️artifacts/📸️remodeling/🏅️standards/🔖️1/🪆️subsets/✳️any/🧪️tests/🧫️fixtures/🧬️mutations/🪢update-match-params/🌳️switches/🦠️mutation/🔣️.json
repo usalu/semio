@@ -1,0 +1,11 @@
+{
+  "mutation": "updateMatchParams",
+  "params": {
+    "matcher": "kd-tree",
+    "ratioTest": 0.625,
+    "crossCheck": false,
+    "sequentialWindow": 16,
+    "maxPairsPerFrame": 32,
+    "loopClosure": false
+  }
+}

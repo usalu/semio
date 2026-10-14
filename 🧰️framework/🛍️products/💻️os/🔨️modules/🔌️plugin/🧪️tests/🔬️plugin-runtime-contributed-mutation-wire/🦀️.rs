@@ -1,7 +1,8 @@
 mod contributed_mutation_wire_tests {
     use super::*;
     use crate::contributed_mutation_wire::{AddValue, WireTestMutation, WireTestSnapshot};
-    use store::{os_store::serialization::ArtifactPack, OpBinary};
+    use pack::snapshot::ArtifactPack;
+    use store::OpBinary;
 
     async fn commit_test_contribution(artifact_kind: &str, target_artifact_schema: &str, contributor: &str, delta: i32) -> String {
         let contribution = crate::artifact_registration::ArtifactContribution::builder(artifact_kind).await.mutation::<WireTestSnapshot, WireTestMutation, AddValue>(target_artifact_schema, 1, 1).await.build();

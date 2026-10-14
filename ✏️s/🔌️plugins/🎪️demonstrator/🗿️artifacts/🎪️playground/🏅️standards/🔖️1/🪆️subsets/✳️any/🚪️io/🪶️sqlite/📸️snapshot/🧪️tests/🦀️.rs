@@ -1,9 +1,11 @@
 #[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
 mod original_owners;
+use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::PlaygroundSnapshot;
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()
 }
 #[test]
 fn sqlite_snapshot_playground_actual_bare_owner_has_capability() {
@@ -77,7 +79,7 @@ fn sqlite_snapshot_playground_actual_erased_native_formats_use_queryable_parent(
 
 #[test]
 fn sqlite_snapshot_playground_owned_rows_are_literal_and_refuse_hostile_shapes() {
-    use store::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshot};
+    use store::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
     let source = PlaygroundSnapshot { schema: fixture()["nativeCases"][2]["schema"].as_str().unwrap().into() };
     let limits = SqliteDatabaseLimits { max_rows: fixture()["controls"]["domainRows"].as_u64().unwrap() as usize, ..SqliteDatabaseLimits::default() };
     let database = original_owners::with_sqlite_recipient(limits,&mut |_| true,|sqlite_control|source.to_sqlite_database(sqlite_control)).unwrap();
@@ -117,7 +119,7 @@ fn sqlite_snapshot_playground_owned_rows_are_literal_and_refuse_hostile_shapes()
 
 #[test]
 fn sqlite_snapshot_playground_controlled_copies_refuse_inside_all_four_phases() {
-    use store::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshot};
+    use store::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
     let f = fixture();
     let source = PlaygroundSnapshot { schema: f["largeTextUnit"].as_str().unwrap().repeat(f["largeTextRepeats"].as_u64().unwrap() as usize) };
     let database = original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|source.to_sqlite_database(sqlite_control)).unwrap();
@@ -184,7 +186,7 @@ async fn sqlite_snapshot_playground_typed_io_and_independent_edit_use_final_meta
     use store::{
         io::io_mechanism::{io_export_sqlite_snapshot, io_import_sqlite_snapshot},
         sqlite_snapshot::*,
-        os_store::serialization::ArtifactSqliteSnapshot,
+        os_store::serialization::ArtifactSqliteSnapshotHost,
     };
     semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("demonstrator")
         .label("Playground Typed SQLite Declaration")
@@ -198,24 +200,23 @@ async fn sqlite_snapshot_playground_typed_io_and_independent_edit_use_final_meta
     let limits = SqliteDatabaseLimits { max_rows: fixture()["controls"]["finalRows"].as_u64().unwrap() as usize, ..SqliteDatabaseLimits::default() };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let mut phases = Vec::new();
-        let bytes = io_export_sqlite_snapshot(&dialect, &source, encoding, limits, &mut |p| {
+        let bytes = async{let original_file_dialect=&dialect;let original_file_input=&source;let original_file_encoding=encoding;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |p| {
             phases.push(p.phase);
             true
-        })
-        .await
+        };store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await
         .unwrap()
         .value;
         assert!(!phases.iter().any(|p| matches!(p, SqliteSnapshotPhase::DecodeNative | SqliteSnapshotPhase::EncodeNative)));
         let database = import_sqlite_database(&bytes, limits, &mut |_| true).unwrap();
         assert_eq!(database.tables.iter().map(|table| table.rows.len()).sum::<usize>(), limits.max_rows);
-        assert_eq!(io_import_sqlite_snapshot::<PlaygroundSnapshot>(&dialect, &bytes, limits, &mut |_| true).await.unwrap().value, source);
-        assert!(io_export_sqlite_snapshot(&dialect, &source, encoding, SqliteDatabaseLimits { max_rows: limits.max_rows - 1, ..limits }, &mut |_| true).await.is_err());
+        assert_eq!(async{let original_file_dialect=&dialect;let original_file_input=&bytes;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<PlaygroundSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value, source);
+        assert!(async{let original_file_dialect=&dialect;let original_file_input=&source;let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits { max_rows: limits.max_rows - 1, ..limits };let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.is_err());
         let script = "import{Database}from'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));db.query('UPDATE playground_document SET id=1001,schema=?').run('independent 日本\\0');if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');await Bun.write(Bun.stdout,db.serialize());db.close();";
         let mut child = Command::new("bun").args(["-e", script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
         child.stdin.take().unwrap().write_all(&bytes).unwrap();
         let edited = child.wait_with_output().unwrap();
         assert!(edited.status.success(), "{}", String::from_utf8_lossy(&edited.stderr));
-        assert_eq!(io_import_sqlite_snapshot::<PlaygroundSnapshot>(&dialect, &edited.stdout, limits, &mut |_| true).await.unwrap().value.schema, "independent 日本\0");
+        assert_eq!(async{let original_file_dialect=&dialect;let original_file_input=&edited.stdout;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<PlaygroundSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value.schema, "independent 日本\0");
     }
     println!("[DEBUG] Playground typed I/O and independent Bun mutation preserve literal schema at identity1001");
 }
@@ -223,9 +224,9 @@ async fn sqlite_snapshot_playground_typed_io_and_independent_edit_use_final_meta
 /// 📏️ Uses SQLite's actual UTF8 storage to demand every field at its exact native semantic ceiling.
 #[test]
 fn sqlite_snapshot_playground_independent_exact_semantic_native_limits(){
- use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding,export_sqlite_database}};
+ use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding,export_sqlite_database}};
  use std::{io::Write,process::{Command,Stdio}};
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let sources=corpus["nativeCases"].as_array().unwrap().iter().map(|case|PlaygroundSnapshot{schema:case["schema"].as_str().unwrap().into()}).chain(std::iter::once(PlaygroundSnapshot{schema:corpus["largeTextUnit"].as_str().unwrap().repeat(corpus["largeTextRepeats"].as_u64().unwrap()as usize)}));
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let sources=corpus["nativeCases"].as_array().unwrap().iter().map(|case|PlaygroundSnapshot{schema:case["schema"].as_str().unwrap().into()}).chain(std::iter::once(PlaygroundSnapshot{schema:corpus["largeTextUnit"].as_str().unwrap().repeat(corpus["largeTextRepeats"].as_u64().unwrap()as usize)}));
  for source in sources{
   let database=original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|source.to_sqlite_database(sqlite_control)).unwrap();
   let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();

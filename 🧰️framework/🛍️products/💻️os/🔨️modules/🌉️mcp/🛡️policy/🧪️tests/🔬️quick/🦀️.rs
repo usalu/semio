@@ -440,7 +440,7 @@ fn a_cancelled_tool_call_ends_its_parked_shell_approval_instead_of_waiting_out_t
 /// stopped waiting (cancel, countdown, a newer shell) — and a superseded request moves to the newer shell.
 #[test]
 fn every_published_approval_closes_on_its_shell_with_a_decision_or_a_named_withdrawal() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪦️approval-withdrawal.json")).expect("approval withdrawal law");
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪦️approval-withdrawal.json")).expect("approval withdrawal law");
     let closing = |frame: &GatewayToShell| {
         let value = serde_json::to_value(frame).expect("frame json");
         let mut kept = serde_json::Map::new();

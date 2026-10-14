@@ -80,7 +80,7 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { dirname, join } = await import("node:path");
     const { fileURLToPath } = await import("node:url");
     const root = dirname(fileURLToPath(source.url));
-    const fixture = await readFile(join(root, "🔗️causal/🧫️fixtures/🧫️history-transition/🔣️.json"), "utf8");
+    const fixture = await readFile(join(root, "🔗️causal/🧪️tests/🧫️fixtures/🧫️history-transition/🔣️.json"), "utf8");
     return { fixture: JSON.parse(fixture) as Fixture };
   }
 

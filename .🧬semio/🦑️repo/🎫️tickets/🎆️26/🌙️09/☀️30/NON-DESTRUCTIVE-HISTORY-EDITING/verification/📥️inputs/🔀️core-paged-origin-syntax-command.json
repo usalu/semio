@@ -1,0 +1,42 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "exec",
+    "--projects=workspace",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "bun",
+    "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+    "rust-syntax",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️origin/🔣️json/🦀️.rs",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️origin/🔣️json/🧪️tests/🦀️.rs"
+  ],
+  "selection": [
+    "nx",
+    "exec",
+    "--projects=workspace",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "bun",
+    "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+    "rust-syntax",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️origin/🔣️json/🦀️.rs",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️origin/🔣️json/🧪️tests/🦀️.rs"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
+    "transport": {
+      "maximumBytes": 536870912,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": false
+    }
+  }
+}

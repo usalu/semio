@@ -9,11 +9,11 @@ async fn empty_snapshot_matches_schema() {
 #[semio_framework_async_macros::async_test]
 async fn codec_round_trip() {
     let snap = crate::standards::v2_0::subsets::any::schema::empty_gltf_snapshot();
-    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snap);
-    let parsed = <GltfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = pack::snapshot::ArtifactDsl::print_dsl(&snap);
+    let parsed = <GltfSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(parsed.schema, snap.schema);
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
-    let decoded = <GltfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&snap);
+    let decoded = <GltfSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded.schema, snap.schema);
     assert_eq!(decoded.document, snap.document);
     assert_eq!(decoded.buffers, snap.buffers);

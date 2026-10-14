@@ -5,7 +5,7 @@ use semio_framework_value::FromValue;
 
 #[test]
 fn neutral_native_sample_paints_preserve_metadata_and_inverse() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let base = BmpSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(row["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
         base.validate().unwrap();

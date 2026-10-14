@@ -9,7 +9,7 @@ async fn widget_input_graph_selection_projects_the_same_retained_inspector() {
     use semio_s_artifact_procedural_generation3d::editor::generation3d::{Generation3dCommand, panels::inspection::GENERATION_3D_PLAY_BODY_INSPECTION};
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let case = &fixture["selectionPublication"];
     let mut app = context::app().await;
     let mut snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
@@ -64,7 +64,7 @@ async fn widget_input_mesh_source_actions_publish_evaluate_and_restore_history()
     use semio_s_artifact_procedural_generation3d::editor::generation3d::{Generation3dCommand, modes::edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN};
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for group in ["meshSource", "meshAssets"] {
     for case in fixture[group]["cases"].as_array().unwrap().iter().filter(|case| case["error"] != true) {
         let mut app = context::app().await;
@@ -141,7 +141,7 @@ async fn widget_input_collection_actions_publish_evaluate_and_restore_history() 
     use semio_s_artifact_procedural_generation3d::editor::generation3d::{Generation3dCommand, modes::edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN};
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["runtimeCollections"].as_array().unwrap() {
         let mut app = context::app().await;
         let mut snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
@@ -248,7 +248,7 @@ async fn widget_input_texture_picker_retains_source_scope_and_restores_history()
     use semio_s_artifact_procedural_generation3d::editor::generation3d::{Generation3dCommand, commands::{import_document, import_document_request}};
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut app = context::app().await;
     let mut snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
     let projected = with_host(&snapshot.host_snapshot, |host| {

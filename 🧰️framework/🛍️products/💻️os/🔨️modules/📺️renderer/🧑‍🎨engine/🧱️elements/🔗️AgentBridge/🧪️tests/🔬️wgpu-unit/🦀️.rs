@@ -9,9 +9,9 @@ use super::*;
 
 /// 🧾️ The shared, cross-implementation frame corpus — the same file the Rust SSOT and the TS twin
 /// assert against, read at compile time so a moved fixture is a build error, not a skipped test.
-const FRAME_FIXTURES: &str = include_str!("../../../../../../🌉️mcp/🧵️bridge/🧫️fixtures/📨️frames.json");
-const CANCELLATION_FIXTURE: &str = include_str!("../../🧫️fixtures/🛑️cancellation/🔣️.json");
-const HANDSHAKE_FIXTURE: &str = include_str!("../../🧫️fixtures/🤝️handshake/🔣️.json");
+const FRAME_FIXTURES: &str = include_str!("../../../../../../🌉️mcp/🧵️bridge/🧪️tests/🧫️fixtures/📨️frames.json");
+const CANCELLATION_FIXTURE: &str = include_str!("../🧫️fixtures/🛑️cancellation/🔣️.json");
+const HANDSHAKE_FIXTURE: &str = include_str!("../🧫️fixtures/🤝️handshake/🔣️.json");
 
 /// 📨️ Shell→Gateway variants this shell deliberately does not model — the four snapshot-carrying
 /// frames that only a `ShellState`-mirroring shell produces (see [`ShellToGateway`]'s own doc).
@@ -101,7 +101,7 @@ fn a_simulated_approval_requested_frame_parks_a_pending_approval() {
 /// shell's own decoder and state: a withdrawn request leaves nothing waiting and its row says why.
 #[test]
 fn a_withdrawn_approval_retires_its_affordance_and_keeps_the_reason() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🌉️mcp/🛡️policy/🧫️fixtures/🪦️approval-withdrawal.json")).expect("approval withdrawal law");
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🌉️mcp/🛡️policy/🧪️tests/🧫️fixtures/🪦️approval-withdrawal.json")).expect("approval withdrawal law");
     for row in law["retiredAffordances"].as_array().expect("retiredAffordances") {
         let name = row["name"].as_str().expect("name");
         let mut state = AgentBridgeState::default();

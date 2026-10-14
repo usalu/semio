@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "↗️create-leader/🛑️anchor-missing",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/↗️create-leader/🛑️anchor-missing/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/↗️create-leader/🛑️anchor-missing/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/↗️create-leader/🛑️anchor-missing/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/↗️create-leader/🛑️anchor-missing/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/↗️create-leader/🛑️anchor-missing/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↗️create-leader/🛑️anchor-missing/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↗️create-leader/🛑️anchor-missing/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↗️create-leader/🛑️anchor-missing/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↗️create-leader/🛑️anchor-missing/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↗️create-leader/🛑️anchor-missing/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

@@ -1,0 +1,16 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📱️app-verification-source-ownership/🟦️.ts",
+    "beforeSha256": "7e287caabc811b52854e0bdb1b031b064003d6650dbbc384c0bfb6a15f6e7044",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 6569,
+        "end": 6661,
+        "before": "resolve(repoRoot, \"✏️s/🔌️plugins/➗️mathematical/🧫️fixtures/📣️publication-authority/🔣️.json\")",
+        "after": "resolve(repoRoot, \"✏️s/🔌️plugins/➗️mathematical/🧪️tests/🧫️fixtures/📣️publication-authority/🔣️.json\")",
+        "role": "ts-static-path-call"
+      }
+    ]
+  }
+]

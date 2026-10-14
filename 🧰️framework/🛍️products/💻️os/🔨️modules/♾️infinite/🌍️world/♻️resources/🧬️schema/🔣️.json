@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "const": {
+    "version": 1,
+    "cuts": [
+      0,
+      1,
+      16,
+      79,
+      80
+    ],
+    "aliases": [
+      "unique",
+      "borrowed"
+    ],
+    "grant": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 65536,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 1048576,
+      "maximumDepth": 128
+    },
+    "expected": {
+      "contextBirth": 0,
+      "deniedBirth": 0,
+      "backingPages": 80,
+      "terminalDrop": 0
+    }
+  }
+}

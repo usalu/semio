@@ -4,7 +4,7 @@ import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️
 import { fileURLToPath } from "node:url";
 import aggregate from "../../🔣️.json";
 import documentSchema from "../../../🔣️.json";
-import fixture from "../../../../../🎨️style/🧬️schema/🧬️mutations/📝️update-text/🧫️fixtures/🔣️.json";
+import fixture from "../../../../../🎨️style/🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text/🔣️.json";
 
 it("validates every canonical tagged mutation through the aggregate schema", async () => {
   const ajv = semioSchemaAjvV1({allErrors: true}).addSchema(documentSchema);
@@ -25,7 +25,7 @@ it("validates every canonical tagged mutation through the aggregate schema", asy
 });
 
 import diffSchema from "../../../🔺️diff/🔣️.json";
-import fieldCases from "../../🧫️fixtures/🎛️field-patch/🔣️.json";
+import fieldCases from "../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️field-patch/🔣️.json";
 import blendSchema from "../../../../../🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🧬️schema/🔣️.json";
 import {diff as blendDiff} from "../../../../../🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🔺️diff/🟦️.ts";
 import {binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";

@@ -1,6 +1,6 @@
 use crate::{DslValue, NativeDecodeControl, NativeEncodeControl, ValueError, ValueRefusalKind};
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
 fn intrinsic(value: &serde_json::Value) -> DslValue { serde_json::from_value(value.clone()).unwrap() }
 fn wire(row: &serde_json::Value) -> DslValue {
     let schema:serde_json::Value=serde_json::from_str(include_str!("../🧬️schema/🔣️.json")).unwrap();

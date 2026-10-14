@@ -3,7 +3,9 @@
   "additionalProperties": false,
   "required": [
     "grant",
-    "messages"
+    "messages",
+    "source",
+    "limits"
   ],
   "properties": {
     "grant": {
@@ -82,6 +84,48 @@
             "minimum": 0
           }
         }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "operation",
+        "generation",
+        "pageBytes",
+        "prefixHex",
+        "suffixHex"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": 43
+        },
+        "generation": {
+          "const": 7
+        },
+        "pageBytes": {
+          "const": 3
+        },
+        "prefixHex": {
+          "const": "aa"
+        },
+        "suffixHex": {
+          "const": "bb"
+        }
+      }
+    },
+    "limits": {
+      "const": {
+        "fileBytes": 67108864,
+        "frameBodyBytes": 1048576,
+        "records": 8192,
+        "maximumFields": 128,
+        "maximumTextBytes": 1048576,
+        "maximumBinaryBytes": 1048576,
+        "maximumJsonBytes": 1048576,
+        "maximumJsonAllocationBytes": 8388608,
+        "maximumJsonItems": 65536,
+        "maximumJsonDepth": 64
       }
     }
   }

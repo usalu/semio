@@ -55,6 +55,7 @@ pub type ToolRunJob = Box<dyn semio_framework_job::InteractiveJob + Send>;
 /// - `member_ops` is a member run's provisional op list (that member's `OpBinary` ops), the one the job continues
 ///   from or revalidates; empty for a run on the document's own store.
 pub struct ToolRunJobRequest<'a, A: ArtifactApp> {
+    pub receiving: &'a semio_framework_tool_run::ToolRunReceivingLimits,
     pub tool_id: &'a str,
     pub definition: &'a ToolRunDefinition,
     pub purpose: ToolRunJobPurpose,
@@ -114,12 +115,12 @@ pub trait ToolRunRetargetableJob<C>: semio_framework_job::InteractiveJob + Send 
 /// costs no turn; whoever folds the awaited answer calls [`ToolRunJobPort::wake`].
 #[derive(Clone, Default)]
 pub struct ToolRunJobPort {
-    inner: Arc<ToolRunJobPortState>,
+    pub(crate) inner: Arc<ToolRunJobPortState>,
 }
 
 #[derive(Default)]
-struct ToolRunJobPortState {
-    effects: std::sync::Mutex<std::collections::VecDeque<Effect>>,
+pub(crate) struct ToolRunJobPortState {
+    pub(crate) effects: std::sync::Mutex<std::collections::VecDeque<Effect>>,
     waiting: std::sync::atomic::AtomicBool,
 }
 
@@ -187,8 +188,8 @@ fn tool_original_grant_funds(grant:RetainedCloneGrant,demand:RetirementDemand)->
 
 /// ♻️ Keeps atomic final-port queue custody until its original backing closes.
 pub struct OriginalToolRunJobPortRetirement{
-    source:ManuallyDrop<Option<ToolRunJobPort>>,
-    effects:ManuallyDrop<Option<std::collections::VecDeque<Effect>>>,
+    pub(crate) source:ManuallyDrop<Option<ToolRunJobPort>>,
+    pub(crate) effects:ManuallyDrop<Option<std::collections::VecDeque<Effect>>>,
 }
 
 impl OriginalToolRunJobPortRetirement{

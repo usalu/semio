@@ -7,7 +7,7 @@ import * as blocks from "../../🧩️blocks/🟦️.ts";
 import * as actions from "../../🎬️actions/🟦️.ts";
 import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
 import { dwgBodyKind } from "../../✏️drawing/🟦️.ts";
-import fixture from "../../🧫️fixtures/🎭️bodies/🔣️.json";
+import fixture from "../🧫️fixtures/🎭️bodies/🔣️.json";
 import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import { dwgBlockBodies as bodies } from "../🧰️support/🧩️blocks/🟦️.ts";
 async function project(p:DwgProjection,id:bigint,b:DwgLogicalObjectBody){switch(b.kind){

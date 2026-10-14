@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn sampled_function_neutral_words_preserve_native_twelve_bit_extent() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🌈️color/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🌈️color/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let case = &fixture["sampled12"];
     let words: Vec<u32> = serde_json::from_value(case["sampleWords"].clone()).unwrap();
     let bytes: Vec<u8> = serde_json::from_value(case["nativeBytes"].clone()).unwrap();
@@ -32,7 +32,7 @@ fn sampled_function_typed_diff_inverse_and_native_document_preserve_words() {
     use crate::standards::v1_7::subsets::base::schema::mutations::set_shading::SetShading;
     use crate::standards::v1_7::subsets::base::schema::snapshot::*;
     use protocol::{DiffCodec,Mutation};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🌈️color/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🌈️color/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let case = &fixture["sampled12"];
     let words: Vec<u32> = serde_json::from_value(case["sampleWords"].clone()).unwrap();
     let function = PdfFunction::Sampled { domain: vec![0.0,1.0], range: vec![0.0,1.0], size: vec![2], bits_per_sample: 12, order: None, encode: None, decode: None, samples: words.clone() };

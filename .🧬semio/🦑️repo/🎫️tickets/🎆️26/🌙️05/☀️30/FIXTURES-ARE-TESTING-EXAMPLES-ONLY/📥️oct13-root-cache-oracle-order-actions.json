@@ -1,0 +1,7 @@
+{
+  "exclusive": false,
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/📐️test-layout/🟦️.ts",
+  "beforeSha256": "8615022771ada882ce89e394abf4ae8a7432e2b78eee1af08aea1b95b72a2669",
+  "afterSha256": "68a4d4abfd1f6e9f7a8debc3ed616d2741305e20075351c201c805ab07199519",
+  "reason": "Nx exclusions independently subtract from the positive union after named input expansion"
+}

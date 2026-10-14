@@ -5,7 +5,7 @@ use semio_framework_value::{FromValue, ToValue};
 
 #[test]
 fn value_codec_portable_witnesses() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let value = |key: &str| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&fixture[key].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     let oracle = |projection: &semio_framework_value::DslValue| serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(projection))).unwrap();
     assert_eq!(oracle(&Localized::from_value(value("localized")).unwrap().to_value()), fixture["localized"]);
@@ -36,7 +36,7 @@ fn widget_descriptor_io_admission_precedes_native_creation() {
     use crate::standards::v1::subsets::any::schema::{empty_generation3d_snapshot, with_host, GraphEditor};
     use semio_framework_artifact_flow_flow::WidgetDescriptor;
     let _serial = crate::test_serial::lock();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let base = empty_generation3d_snapshot();
     for row in fixture["descriptors"].as_array().unwrap() {
         let text = row["value"].to_string();

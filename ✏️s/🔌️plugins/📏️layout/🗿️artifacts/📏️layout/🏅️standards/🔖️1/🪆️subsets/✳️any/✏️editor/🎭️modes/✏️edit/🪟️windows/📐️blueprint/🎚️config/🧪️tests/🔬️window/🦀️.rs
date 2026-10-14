@@ -110,7 +110,7 @@ fn layout_window_ownership_runtime_isolates_restores_and_resets_exact_windows() 
 
 #[test]
 fn layout_window_ownership_mutations_match_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
     let base_config: LayoutWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let base_transient: LayoutWindowTransient = semio_framework_pack_json::from_json_str(&fixture["baseTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in fixture["configMutations"].as_array().unwrap() {

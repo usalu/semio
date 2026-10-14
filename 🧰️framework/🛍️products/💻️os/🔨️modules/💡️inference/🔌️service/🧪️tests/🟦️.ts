@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import { DOCUMENT_SERVICE_TOPIC_V1, InstalledServiceRegistryV1, boundedServicePayloadV1, admitDocumentServiceDeclarationV1, parseInstalledServiceOperationV1, type InstalledServiceDriverV1 } from "../🟦️.ts";
 import {compileDocumentSchemaV1} from "../../../📇️directory/🔌️client/🌐️document-http/🧬️schema/🟦️.ts";
 import {documentServiceRequestV1} from "../🚪️io/🟦️.ts";

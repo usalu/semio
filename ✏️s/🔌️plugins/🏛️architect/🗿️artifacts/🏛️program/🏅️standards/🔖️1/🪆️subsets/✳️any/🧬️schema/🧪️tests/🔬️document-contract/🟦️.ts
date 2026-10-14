@@ -15,8 +15,8 @@ type JsonObject = Record<string, any>;
 const here = dirname(fileURLToPath(import.meta.url));
 const schemaRoot = join(here, "../..");
 const subsetRoot = join(schemaRoot, "..");
-const snapshotRoot = join(subsetRoot, "🧫️fixtures/🧬️mutations");
-const neutralPath = join(schemaRoot, "🧫️fixtures/🔬️document-contract/🔣️.json");
+const snapshotRoot = join(subsetRoot, "🧪️tests/🧫️fixtures/🧬️mutations");
+const neutralPath = join(schemaRoot, "../🧪️tests/🧫️fixtures/🔬️contract/🔬️document-contract/🔣️.json");
 let repoRoot = here;
 while (!existsSync(join(repoRoot, "📋️project.json"))) {
   const parent = dirname(repoRoot);

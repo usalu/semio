@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import Ajv, { type AnySchema } from "ajv/dist/2020.js";
 import { applyPatch, getValueByPointer, type Operation } from "fast-json-patch";
 import { buildSpacePanelState, isSpacePanelState, panelJsonFromState, parsePanelState } from "../../../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
-import routing from "../../../../🧫️fixtures/🎯️spawned-document-routing/🔣️.json";
+import routing from "../../../../🧪️tests/🧫️fixtures/🎯️spawned-document-routing/🔣️.json";
 
 type SpawnedAppEntry = {
   id: string;
@@ -29,7 +29,7 @@ type Fixture = {
 };
 
 const schema = JSON.parse(readFileSync(new URL("../../🔣️.json", import.meta.url), "utf8")) as AnySchema;
-const fixture = JSON.parse(readFileSync(new URL("../../../../🧫️fixtures/📌️panel-state/🔣️.json", import.meta.url), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/📌️panel-state/🔣️.json", import.meta.url), "utf8")) as Fixture;
 const control = /[\u0000-\u001f\u007f]/u;
 
 function identifier(value: unknown): value is string {

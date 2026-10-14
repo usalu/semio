@@ -16,7 +16,7 @@ use crate::standards::v2_0::subsets::base::schema::snapshot::*;
 use crate::STDIO_ZIP_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
-impl store::os_store::serialization::ArtifactDsl for ZipSnapshot {
+impl pack::snapshot::ArtifactDsl for ZipSnapshot {
     const EXTENSION:&'static str="zip";
     fn envelope_id()->&'static str{"stdio.zip"}
     fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{

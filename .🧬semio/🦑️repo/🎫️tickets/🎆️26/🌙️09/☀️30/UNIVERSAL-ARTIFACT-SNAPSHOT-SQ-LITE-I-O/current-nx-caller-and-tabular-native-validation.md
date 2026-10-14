@@ -96,3 +96,15 @@ Actor genuine Native caller corpus was updated to current constructors and seman
 ## Current Actor Accessor Source Terminal Outcome
 
 Original owning Source session 10047 terminated with exit 1 before the strict TypeScript or Bun test child. The current process capture refused `Complete original capture policy required` in captureOwnedProcess, invoked by executeCommandV1. Zero Actor laws ran. The six repaired original_actor callers retain the current original_input accessor and actual budget_for input carrier. Process owner agent has the exact refusal for repair; no unchanged replay was launched.
+
+## October 13 Actor Source Strict Import Frontier
+
+Original registered Source34948 completed exit1 before Bun laws, strict TS2307 in receiving/tests line6 for the fixture module specifier. Its terminal log timestamp16:28:52UTC precedes the actual Source file correction timestamp16:29:25UTC; current import is relative ./fixtures and the actual file exists. This verified changed input justifies a new Source invocation; no legacy path restoration or policy/deadline change is made. Process prerequisites have genuine current strict Source receipts capture17/149, command4/97, WGPU4/66, separately recorded by their owner.
+
+## Current Actor Semantic Source Red
+
+Owning Source53273 completed exit1 after strict TS and real Bun:11pass2fail154expectations. Receiving/conservation/Host current four laws passed; lane policy and dispatch Source guards still asserted the old separate authority carrier and old arbitrary Budget override callback. Current production uses borrowed TurnGrant.original_input from sole Budget.retained, lane constructors receive caller input and scaling copies it unchanged, Host callbacks receive only seven ShardResourceBudget resource fields. Root corrected those exact two stale Source assertions to the actual original-input constructor/scaling and resource-only dispatcher. No Actor or Host production/layout was changed and no fallback was added. Fresh changed Source qualification follows.
+
+## Actor Current Semantic Source Result — 2026-10-13
+
+The fresh original GUI invocation after correcting the fixture import and two stale authority source guards ended with terminal `34902`, exit 0. Strict TypeScript completed before Bun; Bun ran 13 tests in 5 files, 13 passed, 0 failed, 171 expectations. The retained log reached all 13 law bodies and their `[DEBUG]` independent Ajv/SQLite/Buffer observations. This qualifies current Source behavior only; it does not qualify native scheduler or dispatch execution. The producer and final issue/return Native law remain a separate obligation.

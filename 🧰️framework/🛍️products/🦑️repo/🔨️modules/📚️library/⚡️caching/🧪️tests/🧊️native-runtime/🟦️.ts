@@ -16,10 +16,10 @@ function writeNativeComponentInputs(directory: string, pluginId: string, bytes: 
 
 /** 🧊️ Qualifies native variant prerequisites and completed component publication through native Nx. */
 export async function testNativeRuntime(workspace: string, output: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧊️native-runtime/🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧊️native-runtime/🔣️.json"), "utf8"));
   const root = mkdtempSync(join(output, "native-runtime-")), owner = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript";
   const put = (path: string, value: string) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), value); };
-  for (const [path, name] of [["🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", "surface"], ["🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust", "editor"], ["🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust", "flow"], ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript", "renderer"]]) put(join(path!, "📋️project.json"), JSON.stringify({ name, targets: { wasm: {}, "wasm-release": {} } }));
+  for (const [path, name] of [["🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", "surface"], ["🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust", "editor"], ["🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust", "flow"], ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript", "renderer"]]) put(join(path!, "📋️project.json"), JSON.stringify({ name, targets: { wasm: {configurations:{prototype:{env:{SEMIO_BUILD_MODE:"prototype"}},release:{env:{SEMIO_BUILD_MODE:"release"}}}} } }));
   put(join(owner, "package.json"), '{"name":"native-owner","private":true}');
   put("component/Cargo.toml", '[package]\nname = "sample"\nversion = "0.1.0"\n[package.metadata.component]\npackage = "semio:sample"\n[package.metadata.semio]\ncomponent-kind = "plugin"\n[[package.metadata.semio.playground]]\nvariant = "fixture"\n'.replaceAll("\\n", "\n"));
   const { cacheInternals, libraryBootstrap } = await import("../../../🟨️.mjs");
@@ -36,22 +36,20 @@ export async function testNativeRuntime(workspace: string, output: string): Prom
       const target = targets[`${operation}-${fixture.variant}-native-${profile}`];
       assert.equal(target.cache, false);
       assert.equal(target.continuous, false);
-      assert.deepEqual(target.dependsOn, [`prepare-${fixture.variant}-native-${profile}`, `renderer:native-build${profile === "release" ? "-release" : ""}`]);
+      assert.deepEqual(target.dependsOn, [`prepare-${fixture.variant}-native-${profile}`, "renderer:native-build"]);
     }
   }
 
   const native = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint"), publication = await import(join(native, "📦️modules/🟦️.ts"));
   const execution = await import(join(native, "📜️script.ts"));
-  const ts = require("typescript"), launcher = ts.createSourceFile("launcher.ts", readFileSync(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
-  const declaration = launcher.statements.find((node: any) => node.name?.text === "resolveNxInvocation");
-  const resolveInvocation = new Function("process", ts.transpileModule(declaration.getText(launcher), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText.replace("export ", "") + "; return resolveNxInvocation;")({ env: { SEMIO_PLUGIN: fixture.variant } });
+  const { resolveNxInvocation: resolveInvocation } = await import("../../🚀️bootstrap/📜️script.ts");
   for (const profile of fixture.profiles) for (const operation of ["run", "smoke"]) {
-    const target = `@semio-tech/framework-os-dev:${operation}-${fixture.variant}-native-${profile}`, resolved = resolveInvocation(["run", target]);
+    const target = `@semio-tech/framework-os-dev:${operation}-${fixture.variant}-native-${profile}`, resolved = resolveInvocation(["run", target], {});
     assert.deepEqual(resolved.args, ["run", target], "The generated per-playground native target is the only entry; the registry resolves playground:<variant> renderer=wgpu-native to it");
     assert.deepEqual(resolved.env, { SEMIO_PLUGIN: fixture.variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "release" : "prototype" });
   }
-  for (const retired of [["--", fixture.variant, "--release"], ["--", fixture.variant, "--smoke"], []]) assert.deepEqual(resolveInvocation(["run", "@semio-tech/framework-renderer-wgpu:native", ...retired]).args, ["run", "@semio-tech/framework-renderer-wgpu:native", ...retired], "The hard-coded native alias no longer picks a variant");
-  assert.deepEqual(resolveInvocation(["run", `@semio-tech/framework-os-dev:run-${fixture.variant}-native-release`]).env, { SEMIO_PLUGIN: fixture.variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: "release" });
+  for (const retired of [["--", fixture.variant, "--release"], ["--", fixture.variant, "--smoke"], []]) assert.deepEqual(resolveInvocation(["run", "@semio-tech/framework-renderer-wgpu:native", ...retired], {}).args, ["run", "@semio-tech/framework-renderer-wgpu:native", ...retired], "The hard-coded native alias no longer picks a variant");
+  assert.deepEqual(resolveInvocation(["run", `@semio-tech/framework-os-dev:run-${fixture.variant}-native-release`], {}).env, { SEMIO_PLUGIN: fixture.variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: "release" });
   const script = readFileSync(join(native, "📜️script.ts"), "utf8"), old = readFileSync(join(native, "../📦️packages/🟦️typescript/📜️script.ts"), "utf8");
   assert.ok(!/runCmdStatus|new NativeRunScript|\["nx", "run"/.test(script));
   assert.ok(!/class NativeRunScript|ensureAssetServer/.test(old));
@@ -63,7 +61,7 @@ export async function testNativeRuntime(workspace: string, output: string): Prom
     nxTargets[`materialize-${profile}`] = { executor: "nx:run-commands", cache: true, inputs: [`{workspaceRoot}/source/${profile}/*`, "{workspaceRoot}/📜️script.ts"], outputs: [`{workspaceRoot}/compiled/${profile}`], options: { command: `${command} materialize ${profile}` } };
     nxTargets[`prepare-${profile}`] = { executor: "nx:run-commands", cache: true, inputs: ["{workspaceRoot}/📜️script.ts", { dependentTasksOutputFiles: "**/*" }], dependsOn: [`materialize-${profile}`], outputs: [`{workspaceRoot}/dist/runtime/native/${profile}/${fixture.variant}`], options: { command: `${command} publish ${profile}` } };
     nxTargets[`consume-${profile}`] = { executor: "nx:run-commands", cache: false, outputs: [], dependsOn: [`prepare-${profile}`], options: { command: `${command} run ${profile}` } };
-    const bytes = Buffer.concat([Buffer.from(fixture.componentHex, "hex"), Buffer.from([0, 3, 1, 112, profile === "dev" ? 100 : 114])]);
+    const bytes = Buffer.concat([Buffer.from(fixture.componentHex, "hex"), Buffer.from([0, 3, 1, 112, profile === "prototype" ? 100 : 114])]);
     put(`source/${profile}/component.wasm`, "");
     writeFileSync(join(root, `source/${profile}/component.wasm`), bytes);
     writeNativeComponentInputs(join(root, "source", profile), fixture.pluginId, bytes);
@@ -162,7 +160,7 @@ if (operation === "consumer" || operation === "waiting") {
       assert.deepEqual(JSON.parse(rows), manifest.modules.map(({ pluginId, wasmSha256 }: any) => ({ pluginId, wasmSha256 })));
       await assert.rejects(() => runTool(binary,[path, "wrong-variant"],root,compile.signal,true,nativeEnv,{version:1,directory:output}), /failed \(2\)/);
     }
-    const path = join(root, "reader/manifest.json"), valid = JSON.parse(readFileSync(join(publication.nativeRuntimeDirectory(root, fixture.variant, "dev"), "🔣️runtime.json"), "utf8"));
+    const path = join(root, "reader/manifest.json"), valid = JSON.parse(readFileSync(join(publication.nativeRuntimeDirectory(root, fixture.variant, "prototype"), "🔣️runtime.json"), "utf8"));
     const validateNative = async (value: unknown, accepted: boolean) => {
       put("reader/manifest.json", typeof value === "string" ? value : JSON.stringify(value));
       const result = runTool(binary,[path, fixture.variant, "validate"],root,compile.signal,true,nativeEnv,{version:1,directory:output});
@@ -183,27 +181,27 @@ if (operation === "consumer" || operation === "waiting") {
     await validateNative(text + " ".repeat(fixture.manifestLimitBytes - bytes) + "null", false);
   } finally { clearTimeout(deadline); process.removeListener("SIGINT", cancelCompile); process.removeListener("SIGTERM", cancelCompile); }
   put("source/unrelated.test.ts", "throw new Error('unrelated')");
-  await run("dev");
-  assert.equal(readFileSync(join(root, ".counts"), "utf8").trim().split("\n").filter(value => value === "dev").length, 1);
+  await run("prototype");
+  assert.equal(readFileSync(join(root, ".counts"), "utf8").trim().split("\n").filter(value => value === "prototype").length, 1);
   const changed = Buffer.concat([Buffer.from(fixture.componentHex, "hex"), Buffer.from([0, 3, 1, 112, 120])]);
   writeFileSync(join(root, "source/dev/component.wasm"), changed);
   writeNativeComponentInputs(join(root, "source/dev"), fixture.pluginId, changed);
-  await run("dev");
+  await run("prototype");
   await run("release");
   const counts = readFileSync(join(root, ".counts"), "utf8").trim().split("\n");
-  assert.equal(counts.filter(value => value === "dev").length, 2);
+  assert.equal(counts.filter(value => value === "prototype").length, 2);
   assert.equal(counts.filter(value => value === "release").length, 1);
   const before = readFileSync(join(root, "dist/runtime/native/dev", fixture.variant, "🔣️runtime.json"), "utf8");
   const source = { pluginId: fixture.pluginId, wasm: join(root, "source/dev/component.wasm"), descriptor: join(root, "source/dev/descriptor.json"), descriptorPack: join(root, "source/dev/descriptor.semio"), receipt: join(root, "source/dev/🧾️receipt.json") };
-  await assert.rejects(() => publication.publishNativeRuntime(root, fixture.variant, "dev", [source], AbortSignal.abort(new Error("cancelled"))), /cancelled/);
+  await assert.rejects(() => publication.publishNativeRuntime(root, fixture.variant, "prototype", [source], AbortSignal.abort(new Error("cancelled"))), /cancelled/);
   writeNativeComponentInputs(join(root, "source/dev"), fixture.pluginId, changed, "3".repeat(64));
-  await assert.rejects(() => publication.publishNativeRuntime(root, fixture.variant, "dev", [source], new AbortController().signal), /digest mismatch/);
+  await assert.rejects(() => publication.publishNativeRuntime(root, fixture.variant, "prototype", [source], new AbortController().signal), /digest mismatch/);
   writeFileSync(source.wasm, Buffer.from("0061736d01000000", "hex"));
-  await assert.rejects(() => publication.publishNativeRuntime(root, fixture.variant, "dev", [source], new AbortController().signal), /component-model/);
+  await assert.rejects(() => publication.publishNativeRuntime(root, fixture.variant, "prototype", [source], new AbortController().signal), /component-model/);
   assert.equal(readFileSync(join(root, "dist/runtime/native/dev", fixture.variant, "🔣️runtime.json"), "utf8"), before);
   const controller = new AbortController();
   let server: ReturnType<typeof createServer> | undefined, port = 0;
-  const running = execution.runNativeSession("node", [join(root, "📜️script.ts"), "waiting", "dev"], env, root, controller.signal, () => {
+  const running = execution.runNativeSession("node", [join(root, "📜️script.ts"), "waiting", "prototype"], env, root, controller.signal, () => {
     server = createServer((_request, response) => response.end(fixture.asset));
     server.once("listening", () => { port = (server!.address() as any).port; });
     server.listen(0, "127.0.0.1");

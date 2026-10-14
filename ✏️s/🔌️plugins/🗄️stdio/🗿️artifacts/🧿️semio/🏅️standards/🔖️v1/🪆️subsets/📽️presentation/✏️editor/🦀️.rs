@@ -86,7 +86,7 @@ const SEMIO_PRESENTATION_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
 fn semio_presentation_editor_example_snapshot(example_id: &str) -> SemioPresentationSnapshot {
     if example_id == semio_s_artifact_stdio_semio_base::examples::demo::ID {
-        <SemioPresentationSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(semio_s_artifact_stdio_semio_base::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+        <SemioPresentationSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_stdio_semio_base::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         SemioPresentationSnapshot::default()
     }
@@ -229,6 +229,7 @@ impl ArtifactEditor for SemioPresentationEditor {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

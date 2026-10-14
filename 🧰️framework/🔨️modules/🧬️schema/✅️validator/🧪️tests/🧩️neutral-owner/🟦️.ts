@@ -2,7 +2,7 @@ import { test, expect } from "bun:test";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, join, relative, dirname } from "node:path";
 import * as toml from "@iarna/toml";
-import { runOwnedCommand } from "../../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import { runOwnedCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { proveSchemaValidatorOwnershipV1 } from "../📏️ownership/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../..");

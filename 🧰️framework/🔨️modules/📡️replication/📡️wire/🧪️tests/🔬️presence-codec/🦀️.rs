@@ -2,7 +2,7 @@
 use super::{PresenceDomain, PresenceHistoryEdit, PresenceHistoryEditStage, PresenceInteraction, PresencePeer, PresencePrincipalKind, PresenceToolRun, PresenceToolRunState, PresenceTyping, PresenceUi, PresenceViewKind, PresenceWindowView, PRESENCE_TYPING_EXCERPT_BYTES, decode_presence_history_edit, decode_presence_peer, decode_presence_tool_run, encode_presence_history_edit, encode_presence_peer, encode_presence_tool_run};
 
 fn bounded_codec_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🧫️fixtures/👥️presence-peer-codec-v1/🔣️.json")).expect("presence peer codec fixture")
+    serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/👥️presence-peer-codec-v1/🔣️.json")).expect("presence peer codec fixture")
 }
 
 fn fixture_hex(value: &str) -> Vec<u8> {

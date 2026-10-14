@@ -6,7 +6,7 @@ import { WORKSPACE_ROOT, toolJobOwnerSourceEvidence } from "../../../../../../..
 /** 🧪️ Checks scalar Config publication laws against Immer and exact live source policy witnesses. */
 export function toolJobScalarConfigCohortSelfTests(): { routes: number; migrated: number; batchOnly: number; forbidden: number; mutationOracles: number; hostileCases: number } {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command");
-  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🎚️scalar-config-cohort.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🎚️scalar-config-cohort.json"), "utf8"));
   const requireTest = createRequire(import.meta.url);
   const { produceWithPatches, applyPatches, enablePatches } = requireTest("immer");
   enablePatches();

@@ -1,0 +1,21 @@
+{
+  "names": ["field", "record", "control", "value", "fields", "keyword"],
+  "cases": [
+    {
+      "field": "slider",
+      "record": 7,
+      "control": true,
+      "value": ["low", "high"],
+      "fields": "optional",
+      "keyword": "probe"
+    },
+    {
+      "field": "Fenster 🪟️",
+      "record": 0,
+      "control": false,
+      "value": [],
+      "fields": null,
+      "keyword": "record"
+    }
+  ]
+}

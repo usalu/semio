@@ -1,7 +1,7 @@
-import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { buildRegisteredPrintTemplate, printTemplatePdfNames } from "./🟦️.ts";
 import { printDocuments, printDocumentOutputDirectory } from "./📇️catalog/🟦️.ts";
 

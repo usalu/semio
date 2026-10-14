@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🧨️delete-stair/🧮️takes-its-hosted-railing-with-it",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨️delete-stair/🧮️takes-its-hosted-railing-with-it/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨️delete-stair/🧮️takes-its-hosted-railing-with-it/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨️delete-stair/🧮️takes-its-hosted-railing-with-it/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨️delete-stair/🧮️takes-its-hosted-railing-with-it/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨️delete-stair/🧮️takes-its-hosted-railing-with-it/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧨️delete-stair/🧮️takes-its-hosted-railing-with-it/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧨️delete-stair/🧮️takes-its-hosted-railing-with-it/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧨️delete-stair/🧮️takes-its-hosted-railing-with-it/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧨️delete-stair/🧮️takes-its-hosted-railing-with-it/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧨️delete-stair/🧮️takes-its-hosted-railing-with-it/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

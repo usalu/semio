@@ -2,7 +2,7 @@
 import { cleanup,render } from "@semio-tech/ui-react/test";
 import { act,createElement,StrictMode } from "react";
 import { afterEach,expect,it } from "vitest";
-import fixture from "../../🧱️elements/🐚️Shell/🎬️initial-example/🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "../../🧱️elements/🐚️Shell/🎬️initial-example/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import { useInitialExampleReadiness } from "../../🧱️elements/🐚️Shell/🎬️initial-example/🟦️.ts";
 afterEach(cleanup);
 for (const law of fixture.cases) it(law.name,async () => {

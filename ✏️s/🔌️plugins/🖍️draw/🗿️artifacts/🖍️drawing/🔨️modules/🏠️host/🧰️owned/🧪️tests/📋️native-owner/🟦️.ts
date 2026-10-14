@@ -9,7 +9,7 @@ import {semioSchemaAjvV1} from "../../../../../../../../../../🧰️framework/�
 test("Drawing initializer closes the original catalog one exactly admitted page at a time",()=>{
   const owner=resolve(import.meta.dir,"../..");
   const directory=join(owner,"🏗️initialization/📚️catalog");
-  const law=JSON.parse(readFileSync(join(directory,"🧫️fixtures/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(directory, "🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
   const database=new Database(":memory:");
   try{
     database.exec("CREATE TABLE pages (ordinal INTEGER PRIMARY KEY, lane TEXT UNIQUE NOT NULL, bytes INTEGER NOT NULL)");
@@ -40,7 +40,7 @@ test("Drawing initializer closes the original catalog one exactly admitted page 
 
 test("Drawing initializer transfers original active owners into inline typed retirement",()=>{
   const owner=resolve(import.meta.dir,"../..");
-  const law=JSON.parse(readFileSync(join(owner,"♻️retirement/🧫️fixtures/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(owner, "♻️retirement/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
   const database=new Database(":memory:");
   try{
     database.exec("CREATE TABLE pending (ordinal INTEGER PRIMARY KEY, kind TEXT UNIQUE NOT NULL, backingBytes INTEGER NOT NULL)");
@@ -63,7 +63,7 @@ test("Drawing initializer transfers original active owners into inline typed ret
 test("Drawing native retirement retains typed variants under independent physical grants",()=>{
   const owner=resolve(import.meta.dir,"../..");
   const directory=join(owner,"♻️retirement");
-  const law=JSON.parse(readFileSync(join(directory,"🧫️fixtures/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(directory, "🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
   const database=new Database(":memory:");
   try{
     database.exec("CREATE TABLE owners (ordinal INTEGER PRIMARY KEY, kind TEXT UNIQUE NOT NULL); CREATE TABLE backing (ordinal INTEGER PRIMARY KEY, bytes INTEGER NOT NULL)");
@@ -89,7 +89,7 @@ test("Drawing native retirement retains typed variants under independent physica
 
 test("Drawing decoded field close admits payload work separately from physical backing",()=>{
   const owner=resolve(import.meta.dir,"../..");
-  const contract=resolve(import.meta.dir,"../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/♻️retirement/🧫️fixtures/📏️copy-demand");
+  const contract=resolve(import.meta.dir,"../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧫️fixtures/📏️copy-demand");
   const law=JSON.parse(readFileSync(join(contract,"🔣️.json"),"utf8"));
   const database=new Database(":memory:");
   try{
@@ -113,7 +113,7 @@ test("Drawing decoded field close admits payload work separately from physical b
 
 test("Drawing duplicate cancellation preserves the caller grant and physical axes",()=>{
   const owner=resolve(import.meta.dir,"../..");
-  const law=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
   const database=new Database(":memory:");
   try{
     database.exec("CREATE TABLE grants (bytes INTEGER PRIMARY KEY)");
@@ -132,8 +132,8 @@ test("Drawing duplicate cancellation preserves the caller grant and physical axe
 test("Drawing duplicate rewrite preserves root names and internal reference ownership",()=>{
   const owner=resolve(import.meta.dir,"../..");
   const root=resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
-  const input=JSON.parse(readFileSync(resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"),"utf8"));
-  const corpus=JSON.parse(readFileSync(join(root,"🎬️scene/🔀️booleans/🧫️fixtures/🔣️.json"),"utf8"));
+  const input=JSON.parse(readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"),"utf8"));
+  const corpus=JSON.parse(readFileSync(join(root, "../🧪️tests/🧫️fixtures/🎬️scene/🔀️booleans/🔣️.json"),"utf8"));
   const boolean=structuredClone(corpus[0].document.layers.find((value:any)=>value.kind==="boolean"));
   if(boolean.attributes.stroke===null)delete boolean.attributes.stroke;
   boolean.id="boolean-copy-source";boolean.children=["text-a","external"];
@@ -164,7 +164,7 @@ test("Drawing duplicate rewrite preserves root names and internal reference owne
 
 test("Drawing decoded field close admits actual typed retirement births and releases",()=>{
   const owner=resolve(import.meta.dir,"../..");
-  const law=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
   const database=new Database(":memory:");
   try{
     database.exec("CREATE TABLE backing (ordinal INTEGER PRIMARY KEY, capacity INTEGER NOT NULL)");
@@ -184,7 +184,7 @@ test("Drawing decoded field close admits actual typed retirement births and rele
 
 test("Drawing duplicate identity consumes admitted native target keys",()=>{
   const owner=resolve(import.meta.dir,"../..");
-  const law=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
   const database=new Database(":memory:");
   try{
     for(const id of [...law.duplicateIdentity.ids,law.text.repeat(law.repeat)+"\0"]){
@@ -207,7 +207,7 @@ test("Drawing duplicate identity consumes admitted native target keys",()=>{
 test("Drawing sparse path patches preserve native array ownership and semantic restoration",()=>{
   const owner=resolve(import.meta.dir,"../..");
   const root=resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
-  const fixture=resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape");
+  const fixture=resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape");
   const before=JSON.parse(readFileSync(join(fixture,"📸️snapshot/⬅️before/🔣️.json"),"utf8"));
   const after=JSON.parse(readFileSync(join(fixture,"📸️snapshot/➡️after/🔣️.json"),"utf8"));
   const delta=JSON.parse(readFileSync(join(fixture,"🔺️diff/🔣️.json"),"utf8"));
@@ -233,7 +233,7 @@ test("Drawing sparse path patches preserve native array ownership and semantic r
 
 test("Drawing native identifier equality reads separate bounded chunk owners",()=>{
   const owner=resolve(import.meta.dir,"../..");
-  const law=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
   const cases=[...law.textEquality,{left:law.text.repeat(law.repeat)+"\0",right:law.text.repeat(law.repeat)+"\0",equal:true},{left:law.text.repeat(law.repeat)+"x",right:law.text.repeat(law.repeat)+"y",equal:false}];
   const database=new Database(":memory:");
   try{
@@ -256,8 +256,8 @@ test("Drawing native identifier equality reads separate bounded chunk owners",()
 
 test("Drawing text mutation candidates adopt one native copy and retire the displaced field",()=>{
   const owner=resolve(import.meta.dir,"../..");
-  const law=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
-  const input=JSON.parse(readFileSync(resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
+  const input=JSON.parse(readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"),"utf8"));
   const root=resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
   const validate=semioSchemaAjvV1({allErrors:true}).addSchema(JSON.parse(readFileSync(join(root,"🔣️.json"),"utf8"))).compile(JSON.parse(readFileSync(join(root,"📸️snapshot/🔣️.json"),"utf8")));
   const long=law.text.repeat(law.repeat)+"\0";
@@ -282,9 +282,9 @@ test("Drawing text mutation candidates adopt one native copy and retire the disp
 
 test("Drawing root and asset census reads original native field owners once",()=>{
   const owner=resolve(import.meta.dir,"../..");
-  const law=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
   const root=resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
-  const input=JSON.parse(readFileSync(resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"),"utf8"));
+  const input=JSON.parse(readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"),"utf8"));
   const long=law.text.repeat(law.repeat)+"\0";
   input.id=input.title=long;input.assets={[long]:{width:long.length,height:1,samples:Array.from({length:long.length},()=>[1,2,3,4])}};
   const validate=semioSchemaAjvV1({allErrors:true}).addSchema(JSON.parse(readFileSync(join(root,"🔣️.json"),"utf8"))).compile(JSON.parse(readFileSync(join(root,"📸️snapshot/🔣️.json"),"utf8")));
@@ -314,9 +314,9 @@ test("Drawing root and asset census reads original native field owners once",()=
 
 test("Drawing direct layer footprint keeps native owner backing separate from nested group fields",()=>{
   const owner=resolve(import.meta.dir,"../..");
-  const law=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
   const root=resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
-  const input=JSON.parse(readFileSync(resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"),"utf8"));
+  const input=JSON.parse(readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"),"utf8"));
   const nested=input.layers[1].children[0];
   nested.id=nested.name=nested.content=law.text.repeat(law.repeat)+"\0";
   const validate=semioSchemaAjvV1({allErrors:true}).addSchema(JSON.parse(readFileSync(join(root,"🔣️.json"),"utf8"))).compile(JSON.parse(readFileSync(join(root,"📸️snapshot/🔣️.json"),"utf8")));
@@ -347,7 +347,7 @@ test("Drawing direct layer footprint keeps native owner backing separate from ne
 
 test("Drawing native text digest preserves the exact semantic field stream over bounded chunks",()=>{
   const owner=resolve(import.meta.dir,"../..");
-  const law=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
   const text=law.text.repeat(law.repeat)+"\0";
   const bytes=Buffer.from(text,"utf8");
   const prefix=Buffer.alloc(11);prefix[0]=0xd8;prefix.writeUInt16BE(law.textDigest.tag,1);prefix.writeBigUInt64BE(BigInt(bytes.length),3);
@@ -367,7 +367,7 @@ test("Drawing native text digest preserves the exact semantic field stream over 
 
 test("Drawing retained text footprint reads original chunk backing without materialization",()=>{
   const owner=resolve(import.meta.dir,"../..");
-  const law=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
   const database=new Database(":memory:");
   try{
     database.exec("CREATE TABLE chunks (ordinal INTEGER PRIMARY KEY, capacity INTEGER NOT NULL)");
@@ -392,9 +392,9 @@ test("Drawing retained text footprint reads original chunk backing without mater
 test("Drawing typed field clone uses semantic arrays and text without whole reservations",()=>{
   const owner=resolve(import.meta.dir,"../..");
   const schemaRoot=resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
-  const law=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
-  const input=JSON.parse(readFileSync(resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"),"utf8"));
-  const gradient=JSON.parse(readFileSync(join(schemaRoot,"🎨️fill/🧫️fixtures/🔣️.json"),"utf8"))[0].after;
+  const law=JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
+  const input=JSON.parse(readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"),"utf8"));
+  const gradient=JSON.parse(readFileSync(join(schemaRoot, "../🧪️tests/🧫️fixtures/🎨️fill/🔣️.json"),"utf8"))[0].after;
   gradient.stops=Array.from({length:law.repeat},(_,index)=>structuredClone(gradient.stops[index%gradient.stops.length]));
   input.layers[0].attributes.fill=gradient;
   input.layers[1].children[0].content=law.text.repeat(law.repeat)+"\0";
@@ -416,7 +416,7 @@ test("Drawing typed field clone uses semantic arrays and text without whole rese
 
 test("Drawing native asset cursor follows retained entry ordinals without copying keys",()=>{
   const owner=resolve(import.meta.dir,"../..");
-  const law=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
   const keys=(law.assetKeyOrder as string[]).map(key=>key==="long"?law.text.repeat(law.repeat)+"\0":key);
   const database=new Database(":memory:");
   try{
@@ -435,8 +435,8 @@ test("Drawing native asset cursor follows retained entry ordinals without copyin
 
 test("Drawing initial snapshot copying retains native paged assets and separate grants",()=>{
   const owner=resolve(import.meta.dir,"../..");
-  const law=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
-  const input=JSON.parse(readFileSync(resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
+  const input=JSON.parse(readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"),"utf8"));
   const long=law.text.repeat(law.repeat)+"\0";
   input.id=long;input.title=long;input.assets={[long]:{width:long.length,height:1,samples:Array.from({length:long.length},()=>[1,2,3,4])}};
   const schema=resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
@@ -457,7 +457,7 @@ test("Drawing initial snapshot copying retains native paged assets and separate 
 
 test("Drawing closure moves inline owners under copy and frees pages under release",()=>{
   const owner=resolve(import.meta.dir,"../..");
-  const law=JSON.parse(readFileSync(resolve(owner,"../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧫️fixtures/📏️release-authority/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(resolve(owner,"../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority/🔣️.json"),"utf8"));
   const original={active:{byte:law.inputByte},closing:null,page:{bytes:law.physicalCursorBytes}};
   const moved=applyPatch(original,[{op:"move",from:"/active",path:"/closing"}],true,false).newDocument;
   const database=new Database(":memory:");
@@ -483,8 +483,8 @@ test("Drawing closure moves inline owners under copy and frees pages under relea
 
 test("Drawing native paged owner preserves semantic snapshot and UTF-8 keys", () => {
   const owner = resolve(import.meta.dir, "../..");
-  const law = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📋️native-owner/🔣️.json"), "utf8"));
-  const input = JSON.parse(readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"), "utf8"));
+  const law = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json"), "utf8"));
+  const input = JSON.parse(readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"), "utf8"));
   const text = law.text.repeat(law.repeat);
   input.id = text; input.title = text; input.assets = {[text]:{width:1,height:1,samples:[[1,2,3,4]]}};
   const longLayerText = text + "\0";
@@ -522,8 +522,8 @@ test("Drawing native paged owner preserves semantic snapshot and UTF-8 keys", ()
 
 test("Drawing paged borrowed lookup follows first native depth-first identity", () => {
   const owner = resolve(import.meta.dir, "../..");
-  const law = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📋️native-owner/🔣️.json"), "utf8"));
-  const input = JSON.parse(readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"), "utf8"));
+  const law = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json"), "utf8"));
+  const input = JSON.parse(readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"), "utf8"));
   const database = new Database(":memory:");
   try {
     database.exec("CREATE TABLE nodes (ordinal INTEGER PRIMARY KEY, id TEXT NOT NULL, name TEXT NOT NULL, path TEXT NOT NULL)");
@@ -564,8 +564,8 @@ test("Drawing paged borrowed lookup follows first native depth-first identity", 
 
 test("Drawing borrowed rename preparation preserves first-target inverse and native names", () => {
   const owner = resolve(import.meta.dir, "../..");
-  const law = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📋️native-owner/🔣️.json"), "utf8"));
-  const input = JSON.parse(readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"), "utf8"));
+  const law = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json"), "utf8"));
+  const input = JSON.parse(readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"), "utf8"));
   const long = law.text.repeat(law.repeat) + "\0";
   input.layers[1].children[0].name = long;
   input.layers.push({...structuredClone(input.layers[0]), id:long, name:"Long Identity"});

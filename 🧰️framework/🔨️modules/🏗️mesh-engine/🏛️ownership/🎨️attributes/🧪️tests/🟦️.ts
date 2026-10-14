@@ -8,9 +8,9 @@ import Ajv from "ajv/dist/2020.js";
 import JSON5 from "json5";
 import {Matrix4,Vector3} from "three";
 
-import {runBudgetedTestCommand} from "../../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
-import {testLevelBudgetMs} from "../../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-const root = fileURLToPath(new URL("../../../", import.meta.url)), fixturePath = resolve(root, "🧫️fixtures/🎨️attributes/🔣️.json"), polygonPath = resolve(root, "🧬️schema/🥽️polygon/🔣️.json"), nativePath = resolve(root, "🧪️tests/🔬️mesh-data-from-value-round-trip/🦀️.rs");
+import {runBudgetedTestCommand} from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import {testLevelBudgetMs} from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+const root = fileURLToPath(new URL("../../../", import.meta.url)), fixturePath = resolve(root, "🧪️tests/🧫️fixtures/🎨️attributes/🔣️.json"), polygonPath = resolve(root, "🧬️schema/🥽️polygon/🔣️.json"), nativePath = resolve(root, "🧪️tests/🔬️mesh-data-from-value-round-trip/🦀️.rs");
 const read=(path:string)=>readFileSync(path,"utf8"),fixture=()=>JSON.parse(read(fixturePath));
 const sha=(body:string)=>createHash("sha256").update(body).digest("hex");
 function nativeInputs(source:string,path:string):string[]{return [...source.matchAll(/include_str!\("([^"]*🎨️attributes\/🔣️.json)"\)/g)].map(match=>resolve(dirname(path),match[1]!));}

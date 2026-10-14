@@ -18,7 +18,7 @@ use std::sync::OnceLock;
 // #endregion 🔖️Imports
 
 // #region 🧰️Fixture
-const FIXTURE: &str = include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧫️fixtures/🔌️port-types/🔣️.json");
+const FIXTURE: &str = include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧪️tests/🧫️fixtures/🔌️port-types/🔣️.json");
 
 struct Row {
     source: String,

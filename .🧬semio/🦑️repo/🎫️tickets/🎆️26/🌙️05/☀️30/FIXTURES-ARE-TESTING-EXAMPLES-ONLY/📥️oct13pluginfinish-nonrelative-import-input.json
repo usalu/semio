@@ -1,0 +1,707 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/♻️close/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 195
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 539
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔢️binary64.json",
+    "index": 580
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️control.json",
+    "index": 631
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 8691
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 168
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️control.json",
+    "index": 211
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 588
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔢️ieee754/🔣️.json",
+    "index": 627
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 8965
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 612
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️control.json",
+    "index": 655
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 174
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 11952
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 173
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 20640
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 539
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️control.json",
+    "index": 582
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 119
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔢️float32.json",
+    "index": 160
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🧭️indices.json",
+    "index": 209
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🧵️frontiers/🔣️.json",
+    "index": 14261
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎚️presence/🔣️.json",
+    "index": 21503
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🎮️commands/🎨️paint-region/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 61
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 601
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️control.json",
+    "index": 6659
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🧭️boundaries/🔣️.json",
+    "index": 285
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/💰️backing/🔣️.json",
+    "index": 488
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 698
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 369
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 172
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🧩️component.json",
+    "index": 6851
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 9375
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 176
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 4684
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 164
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 3681
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 145
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 3491
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 176
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 5525
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 179
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 6049
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 453
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 11200
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 172
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 4561
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 183
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 5486
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 166
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 4997
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 170
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 5282
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎚️hex-float.json",
+    "index": 7215
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 181
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 5059
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 183
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🧩️intermediate/🔣️.json",
+    "index": 7293
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 9129
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 168
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 6782
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 144
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 8589
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️complete-semantic.json",
+    "index": 10554
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 168
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 3563
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 189
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 5334
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 177
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 5287
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 169
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 5418
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/💾️binary/🧬️mutations/🧭️path/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 190
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 186
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 273
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🛬️native-control/🔣️.json",
+    "index": 7374
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 9904
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/✏️editor/🧪️tests/🟦️.test.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 496
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 351
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🚦️subsets.json",
+    "index": 3471
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🚦️native.json",
+    "index": 8082
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 12067
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 173
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 11509
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🧭️authority/🔣️.json",
+    "index": 845
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 900
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/💰️backing/🔣️.json",
+    "index": 1426
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/💰️backing/🔬️requests/🔣️.json",
+    "index": 1489
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 504
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 181
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/📏️cohort/🔣️.json",
+    "index": 222
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🛬️controlled.json",
+    "index": 280
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 11875
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 186
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 313
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/💾️binary/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🧮️native-profiles/🔣️.json",
+    "index": 308
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 270
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🧬️schema/🔣️.json",
+    "index": 311
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 435
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🛂️native.json",
+    "index": 483
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🫴️receiving.json",
+    "index": 13536
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 188
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🛬️native-control/🔣️.json",
+    "index": 6985
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🛂️semantic/🔣️.json",
+    "index": 8374
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🎮️commands/🩹️patch-pixel-region/🧪️tests/🟦️.test.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 99
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎭️bodies/🔣️.json",
+    "index": 160
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/📏️encoding.json",
+    "index": 219
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 225
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 204
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/💰️backing/🔣️.json",
+    "index": 12209
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/💰️backing/🔬️requests/🔣️.json",
+    "index": 12270
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 600
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔢️ieee754/🔣️.json",
+    "index": 639
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/📋️declaration-state.json",
+    "index": 9813
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🧩️independent-values.json",
+    "index": 11939
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🧱️topology-laws.json",
+    "index": 12799
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 204
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/💰️backing/🔣️.json",
+    "index": 7428
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/💰️backing/🔬️requests/🔣️.json",
+    "index": 7489
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🗂️retained-metadata/🔣️.json",
+    "index": 7562
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🚦️cohort/🔣️.json",
+    "index": 43
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 170
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 5788
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 1334
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 1335
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 1472
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🛬️native-control/🔣️.json",
+    "index": 8501
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/💰️backing/🔣️.json",
+    "index": 10828
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🧠️logical-owner/🔣️.json",
+    "index": 14427
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🛂️semantic/🔣️.json",
+    "index": 20595
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 1567
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🛬️native-control/🔣️.json",
+    "index": 10767
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/💰️backing/🔣️.json",
+    "index": 13050
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🧠️logical-owner/🔣️.json",
+    "index": 16617
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🛂️semantic/🔣️.json",
+    "index": 20778
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 586
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔢️ieee754/🔣️.json",
+    "index": 625
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔗️source-indices.json",
+    "index": 683
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔗️surrogate-indices.json",
+    "index": 748
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🧮️int64/🔣️.json",
+    "index": 870
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️semantic.json",
+    "index": 17740
+  }
+]

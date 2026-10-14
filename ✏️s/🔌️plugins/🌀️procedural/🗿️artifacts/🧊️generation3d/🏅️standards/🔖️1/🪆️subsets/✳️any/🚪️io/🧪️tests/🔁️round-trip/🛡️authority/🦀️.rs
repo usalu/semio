@@ -113,7 +113,7 @@ fn inspect_directory(directory: &Path, fixture: &Fixture) {
 
 #[test]
 fn generation3d_io_authority_is_renderer_neutral_in_parsed_rust() {
-    let fixture: Fixture = serde_json::from_str(include_str!("../../../🧫️fixtures/🛡️authority/🔣️.json")).expect("neutral authority fixture");
+    let fixture: Fixture = serde_json::from_str(include_str!("../../🧫️fixtures/🛡️authority/🔣️.json")).expect("neutral authority fixture");
     for case in &fixture.cases {
         assert_eq!(violations(&case.source, &fixture).is_empty(), case.allowed, "{}", case.id);
     }

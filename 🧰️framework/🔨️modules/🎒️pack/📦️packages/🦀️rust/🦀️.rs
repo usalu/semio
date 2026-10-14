@@ -68,3 +68,7 @@ pub mod record;
 
 #[path = "../../🌱️intrinsic/🦀️.rs"]
 pub mod intrinsic;
+
+/// 📸️ Domain-neutral representation contracts owned by framework IO.
+#[path="../../../🚪️io/📸️snapshot/🦀️.rs"]
+pub mod snapshot;

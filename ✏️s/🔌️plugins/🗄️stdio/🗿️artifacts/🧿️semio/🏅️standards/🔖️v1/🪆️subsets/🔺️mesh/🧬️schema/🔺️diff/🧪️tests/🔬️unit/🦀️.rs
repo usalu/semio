@@ -66,7 +66,7 @@ async fn diff_codec_text_binary_roundtrip_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn material_texture_refs_roundtrip_sparse_clear_inverse_and_absorb() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📸️snapshot/🧫️fixtures/🎨️material-textures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🎨️material-textures/🔣️.json")).unwrap();
     let before = snapshot_a();
     let mut set = before.clone();
     set.materials[0].base_color_texture = Some(fixture["bindings"]["baseColorTexture"].as_str().unwrap().into());

@@ -2,7 +2,7 @@
 import {expect,test} from "bun:test";
 import {Matrix3,Vector2} from "three";
 import {drawingTransformToMatrix,drawingMatrixToTransform} from "../../🟦️.ts";
-import cases from "../../🧫️fixtures/🔣️.json";
+import cases from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/↗️affine/🔣️.json";
 
 for (const sample of cases) test(`affine roundtrip: ${sample.name}`, () => {
   const matrix = sample.matrix as [number,number,number,number,number,number];

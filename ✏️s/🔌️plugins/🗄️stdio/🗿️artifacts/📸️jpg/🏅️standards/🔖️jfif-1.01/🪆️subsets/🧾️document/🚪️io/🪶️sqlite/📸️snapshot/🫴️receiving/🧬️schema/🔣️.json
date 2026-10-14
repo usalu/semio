@@ -1,0 +1,231 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "fields",
+    "imageFields",
+    "tables",
+    "originalGrant",
+    "nativeMaximumBytes",
+    "sqlMaximumBytes",
+    "maximumCloseTurns",
+    "checkpointBytes",
+    "literal",
+    "signedOffsets",
+    "densityUnits",
+    "pixels",
+    "thumbnails",
+    "segments",
+    "edits",
+    "emptyImage"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "fields": {
+      "const": [
+        "schema",
+        "image"
+      ]
+    },
+    "imageFields": {
+      "const": [
+        "width",
+        "height",
+        "pixels",
+        "jfifVersion",
+        "jfifDensityUnits",
+        "jfifXDensity",
+        "jfifYDensity",
+        "jfifThumbnail",
+        "otherSegments"
+      ]
+    },
+    "tables": {
+      "const": {
+        "jpg_document": 9,
+        "jpg_rgba_pixel": 7,
+        "jpg_thumbnail": 3,
+        "jpg_thumbnail_rgb_pixel": 6,
+        "jpg_segment": 4,
+        "jpg_segment_octet": 4
+      }
+    },
+    "originalGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1048576
+        },
+        "maximumCopyBytes": {
+          "const": 16777216
+        },
+        "maximumCapacityBytes": {
+          "const": 16777216
+        },
+        "maximumReleaseBytes": {
+          "const": 16777216
+        },
+        "maximumDepth": {
+          "const": 4096
+        }
+      }
+    },
+    "nativeMaximumBytes": {
+      "const": 67108864
+    },
+    "sqlMaximumBytes": {
+      "const": 67108864
+    },
+    "maximumCloseTurns": {
+      "const": 65536
+    },
+    "checkpointBytes": {
+      "const": 256
+    },
+    "literal": {
+      "type": "string"
+    },
+    "signedOffsets": {
+      "const": [
+        0,
+        -1,
+        -1000
+      ]
+    },
+    "densityUnits": {
+      "const": [
+        "aspect",
+        "pixelsPerInch",
+        "pixelsPerCm"
+      ]
+    },
+    "pixels": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "$ref": "#/definitions/octets"
+      }
+    },
+    "thumbnails": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "width",
+              "height",
+              "rgbData"
+            ],
+            "properties": {
+              "width": {
+                "$ref": "#/definitions/octet"
+              },
+              "height": {
+                "$ref": "#/definitions/octet"
+              },
+              "rgbData": {
+                "$ref": "#/definitions/octets"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "segments": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "marker",
+          "data"
+        ],
+        "properties": {
+          "marker": {
+            "$ref": "#/definitions/octet"
+          },
+          "data": {
+            "$ref": "#/definitions/octets"
+          }
+        }
+      }
+    },
+    "edits": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "sql",
+          "reconstruct"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "sql": {
+            "type": "string"
+          },
+          "reconstruct": {
+            "enum": [
+              "invalid",
+              "changed"
+            ]
+          }
+        }
+      }
+    },
+    "emptyImage": {
+      "const": {
+        "width": 0,
+        "height": 0,
+        "pixels": [],
+        "jfifVersion": [
+          1,
+          1
+        ],
+        "jfifDensityUnits": "aspect",
+        "jfifXDensity": 1,
+        "jfifYDensity": 1,
+        "otherSegments": []
+      }
+    }
+  },
+  "definitions": {
+    "octet": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "octets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/octet"
+      }
+    }
+  }
+}

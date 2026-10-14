@@ -57,7 +57,7 @@ fn text_edit_requires_an_explicit_change_set_and_allows_intentional_empty_bytes(
 /// corpus's `replace-byte-range` per touched byte run (last first), or refused; applying them lands on the bytes the digits mean.
 #[test]
 fn an_applied_change_set_is_exactly_the_corpus_byte_ranges() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/✂️hex-splices/🔣️.json")).expect("hex-splices corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/✂️hex-splices/🔣️.json")).expect("hex-splices corpus");
     for case in corpus["cases"].as_array().expect("cases") {
         let id = case["id"].as_str().expect("id");
         let source = BinarySnapshot { bytes: parse_hex_dump(case["before"].as_str().expect("before")).expect("corpus hex"), ..BinarySnapshot::default() };

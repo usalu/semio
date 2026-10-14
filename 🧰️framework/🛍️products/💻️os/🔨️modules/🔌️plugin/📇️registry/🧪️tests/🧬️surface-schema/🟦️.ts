@@ -25,7 +25,7 @@ type FixtureCase = {
 };
 
 const repoRoot = getWorkspaceRoot();
-const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/🧬️surface-schema/🔣️.json"), "utf8")) as { readonly version: number; readonly cases: readonly FixtureCase[] };
+const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧫️fixtures/🧬️surface-schema/🔣️.json"), "utf8")) as { readonly version: number; readonly cases: readonly FixtureCase[] };
 
 const ownerOf = (row: FixtureCase): SurfaceSchemaOwner => {
   const laneDir = row.lane === "config" ? "🎚️config" : "👥️presence";

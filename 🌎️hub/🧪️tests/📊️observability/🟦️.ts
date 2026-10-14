@@ -24,7 +24,7 @@ import { HUB_OBSERVABILITY_SCHEMA, type HubObservabilityV1 } from "../../📊️
 
 const hubRoot = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const read = (...parts: string[]) => JSON.parse(readFileSync(join(hubRoot, ...parts), "utf8"));
-const fixture = read("🧫️fixtures", "📊️observability-v1", "🔣️.json");
+const fixture = read("🧪️tests/🧫️fixtures", "📊️observability-v1", "🔣️.json");
 const observability = read("📊️observability", "🧬️schema", "🔣️.json");
 const trustedCatalog = read("🗿️artifact-authority", "🔏️trusted-catalog", "🧬️schema", "🔣️.json");
 const directory = read("..", "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📇️directory", "🧬️schema", "🔣️.json");

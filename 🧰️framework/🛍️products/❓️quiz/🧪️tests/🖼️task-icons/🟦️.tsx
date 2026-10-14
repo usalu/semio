@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import { MOTIONS, type Sheet } from "@semio-tech/quiz";
 import { ICON_HOSTS, ICON_LOOP_MS, IconLabel, PreferencesPanel, TaskGlyph, TaskView, effectiveIconMotion, playTappedIcons, localStore, memoryStorageOrigin, quizText, readPreferences, textPresentation, withIcons } from "@semio-tech/quiz-react";
-import sheets from "../../🧫️fixtures/🃏️sheet-assembly/🔣️.json";
+import sheets from "../🧫️fixtures/🃏️sheet-assembly/🔣️.json";
 
 const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../🎯️targets/⚛️react/🎨️.css"), "utf8");
 const glyph = (container: HTMLElement): HTMLElement | null => container.querySelector<HTMLElement>(".quiz-glyph");

@@ -3,7 +3,7 @@ import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {generation2dSnapshotToSqliteDatabase,generation2dSnapshotFromSqliteDatabase,GENERATION2D_SQLITE_SCHEMA} from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import corpus from"../🧫️fixtures/🔣️.json";
+import corpus from"./🧫️fixtures/🔣️.json";
 import{proceduralSnapshotFixture}from"../../../../../../../../../../🫀️core/🧬️generation/🪶️sqlite/🧪️tests/🧰️support/🟦️.ts";
 
 import {GenerationValue} from "../../../../../../../../../../🫀️core/🧬️generation/🧬️schema/📸️snapshot/🟦️.ts";
@@ -38,7 +38,7 @@ test("procedural owned field shapes reject unsupported inactive or extraneous st
 test("projection admits the closed owned shape under bounded cancellation",async()=>{const s=proceduralSnapshotFixture(corpus);await expect(generation2dSnapshotToSqliteDatabase({...s,extra:true} as typeof s)).rejects.toThrow("unsupported procedural owned field");const large={...s,generation:{generations:[{id:"",name:"",values:Object.fromEntries(Array.from({length:1024},(_,i)=>[String(i),{kind:"null" as const}]))}]}};const controller=new AbortController();let checkpoints=0;await expect(generation2dSnapshotToSqliteDatabase(large,{signal:controller.signal,onProgress:p=>{if(p.phase==="projectSnapshot"&&p.completed===256){checkpoints++;controller.abort();}}})).rejects.toHaveProperty("kind","canceled");expect(checkpoints).toBe(1);});
 
 
-import semanticCells from "../../../../../../../../../../🫀️core/🧬️generation/🪶️sqlite/🧫️fixtures/📏️semantic-cells.json";
+import semanticCells from "../../../../../../../../../../🫀️core/🧬️generation/🪶️sqlite/🧪️tests/🧫️fixtures/📏️semantic-cells.json";
 test("complete SQL semantic cells match both independently owned native families",async()=>{
  for(const c of semanticCells.cases){
   const s=proceduralSnapshotFixture(corpus);if(c.word!==null)s.hostSnapshot.camera.x={bits:BigInt("0x"+c.word)};

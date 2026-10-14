@@ -1,0 +1,30 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "nodes": [
+      {
+        "skin": 1
+      },
+      {
+        "skin": 0
+      }
+    ],
+    "skins": [
+      {
+        "joints": [
+          1
+        ]
+      },
+      {
+        "joints": [
+          0
+        ]
+      }
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

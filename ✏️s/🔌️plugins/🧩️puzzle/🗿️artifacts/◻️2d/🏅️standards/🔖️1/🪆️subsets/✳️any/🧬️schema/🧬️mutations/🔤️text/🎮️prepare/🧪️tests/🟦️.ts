@@ -3,7 +3,7 @@ import {Database} from "bun:sqlite";
 import {applyPatch} from "fast-json-patch";
 import {existsSync,readFileSync} from "node:fs";
 import {resolve} from "node:path";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔤️text/🎮️prepare/🔣️.json";
 
 test("Puzzle2d optional native text preparation preserves SQLite equality and RFC6902 intent",()=>{
  const db=new Database(":memory:");db.exec("CREATE TABLE target(id TEXT PRIMARY KEY,value TEXT)");

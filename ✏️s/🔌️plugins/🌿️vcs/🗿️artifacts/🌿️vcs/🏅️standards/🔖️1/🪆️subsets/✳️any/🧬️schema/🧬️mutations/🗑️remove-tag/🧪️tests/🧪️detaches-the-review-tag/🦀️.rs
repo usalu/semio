@@ -9,11 +9,11 @@ use crate::mutations::{inverse_vcs_mutation, VcsDemoMutation};
 use crate::VcsSnapshot;
 use crate::central_apply::{apply_vcs_mutation};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🧪️detaches-the-review-tag/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🧪️detaches-the-review-tag/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🧪️detaches-the-review-tag/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🧪️detaches-the-review-tag/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🧪️detaches-the-review-tag/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-tag/🧪️detaches-the-review-tag/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-tag/🧪️detaches-the-review-tag/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-tag/🧪️detaches-the-review-tag/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-tag/🧪️detaches-the-review-tag/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-tag/🧪️detaches-the-review-tag/🎯️outcome/🔣️.json");
 
 fn before() -> VcsSnapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")

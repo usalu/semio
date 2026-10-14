@@ -2,7 +2,7 @@
 use super::super::super::*;
 
 /// 📜️ Handcrafted ArtifactDsl (P6): derive no longer emits ArtifactDsl/ArtifactPack.
-impl crate::os_store::serialization::ArtifactDsl for FlowHostSnapshotDsl {
+impl pack::snapshot::ArtifactDsl for FlowHostSnapshotDsl {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -17,25 +17,25 @@ impl crate::os_store::serialization::ArtifactDsl for FlowHostSnapshotDsl {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::serialization::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         crate::os_store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
-impl crate::os_store::serialization::ArtifactDsl for FlowHostSnapshot {
+impl pack::snapshot::ArtifactDsl for FlowHostSnapshot {
     const EXTENSION: &'static str = "flow";
 
     fn envelope_id() -> &'static str {
-        <FlowHostSnapshotDsl as crate::os_store::serialization::ArtifactDsl>::envelope_id()
+        <FlowHostSnapshotDsl as pack::snapshot::ArtifactDsl>::envelope_id()
     }
 
     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
-        let dsl_fixture = <FlowHostSnapshotDsl as crate::os_store::serialization::ArtifactDsl>::parse_dsl(text)?;
+        let dsl_fixture = <FlowHostSnapshotDsl as pack::snapshot::ArtifactDsl>::parse_dsl(text)?;
         flow_host_snapshot_dsl_to_host_snapshot(dsl_fixture).map_err(|message| crate::os_store::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message, crate::os_store::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        <FlowHostSnapshotDsl as crate::os_store::serialization::ArtifactDsl>::print_dsl(&flow_host_snapshot_to_dsl(self))
+        <FlowHostSnapshotDsl as pack::snapshot::ArtifactDsl>::print_dsl(&flow_host_snapshot_to_dsl(self))
     }
 }
 
@@ -153,7 +153,7 @@ pub(crate) enum NeuronNodeDsl {
 /// 🔌️ DSL-only mirror of `SynapseSpec` (and of `neural::Synapse`, its foreign twin embedded in
 /// `Tree`) — models the `from`/`fromPort` -> `to`/`toPort` connection as a single unified
 /// `crate::os_dsl::Wire` literal (`from@fromPort->to@toPort`) instead of four separate string fields, per
-/// the unified syntax law for graph edges/connections. Converts at the `crate::os_store::serialization::ArtifactDsl`/
+/// the unified syntax law for graph edges/connections. Converts at the `pack::snapshot::ArtifactDsl`/
 /// `crate::os_store::OpText` boundary through the shared intrinsic field lowering and artifact conversion,
 /// plus `tree_to_tree_dsl`/`tree_dsl_to_tree` for the nested neural-tree case); `SynapseSpec`
 /// itself (JSON shape, `tree_from_host_snapshot`, every other consumer

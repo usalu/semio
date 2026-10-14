@@ -1,0 +1,5 @@
+{
+  "mutation": "changeEdgeLocked",
+  "id": "edge-1",
+  "newLocked": true
+}

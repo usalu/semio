@@ -8,14 +8,14 @@ import { validateJsonSchemaSubset } from "../../../../../../🧰️framework/�
 import { inspectRustCargoManifest, inspectRustModuleGraphFacts, inspectRustStructure } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import { inspectRustCompileReferences, rustTokenPairs, rustTokens } from "../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { packagesForOwner } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🟨️.mjs";
-import contract from "../../🧫️fixtures/🧩️composition/🔣️.json";
-import selection from "../../🧫️fixtures/🌳️contribution-selection/🔣️.json";
+import contract from "../🧫️fixtures/🧩️composition/🔣️.json";
+import selection from "../🧫️fixtures/🌳️contribution-selection/🔣️.json";
 
-import deletion from "../../🧫️fixtures/🚮️artifact-deletion/🔣️.json";
+import deletion from "../🧫️fixtures/🚮️artifact-deletion/🔣️.json";
 
-import development from "../../🧫️fixtures/🧪️development-dependencies/🔣️.json";
+import development from "../🧫️fixtures/🧪️development-dependencies/🔣️.json";
 
-import drawing from "../../🧫️fixtures/🖊️drawing-reader/🔣️.json";
+import drawing from "../🧫️fixtures/🖊️drawing-reader/🔣️.json";
 import { originalDrawingSource } from "../🖊️drawing-reader/🧩️preservation/🟦️.ts";
 
 

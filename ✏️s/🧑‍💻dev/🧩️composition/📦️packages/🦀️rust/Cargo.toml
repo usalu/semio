@@ -73,6 +73,7 @@ name = "generation3d-app-laws"
 path = "../../🧪️tests/🧊️generation3d/🦀️.rs"
 
 [dependencies]
+semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }

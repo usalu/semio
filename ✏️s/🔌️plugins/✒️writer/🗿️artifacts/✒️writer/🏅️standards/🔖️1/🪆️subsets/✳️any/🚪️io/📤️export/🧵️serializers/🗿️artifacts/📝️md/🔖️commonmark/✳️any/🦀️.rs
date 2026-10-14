@@ -23,7 +23,7 @@ impl Serializer<WriterSnapshot> for WriterIntoMd {
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn serialize(from: &WriterSnapshot, _: &ArchiveChildren, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let md = MdSnapshot::from_text(&writer_text(from));
-        Ok(IoOutcome { value: IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(&md)), diagnostics: Vec::new() })
+        Ok(IoOutcome { value: IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&md)), diagnostics: Vec::new() })
     }
 }
 //#endregion 🔖️Serializer

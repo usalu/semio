@@ -7,7 +7,7 @@
     ]
   },
   "targets": {
-    "prepare-dev": {
+    "prepare-prototype": {
       "executor": "nx:run-commands",
       "cache": true,
       "outputs": [],
@@ -18,53 +18,57 @@
         }
       ],
       "dependsOn": [
-        "@semio-tech/framework-os-dev:prepare-demonstrator-react-dev",
-        "@semio-tech/framework-os-dev:prepare-imperative-react-dev",
-        "@semio-tech/framework-os-dev:prepare-stdio-png-react-dev",
-        "@semio-tech/framework-os-dev:prepare-lowpoly-react-dev",
-        "@semio-tech/framework-os-dev:prepare-remodel-react-dev",
-        "@semio-tech/framework-os-dev:prepare-draw-react-dev",
-        "@semio-tech/framework-os-dev:prepare-raster-react-dev",
-        "@semio-tech/framework-os-dev:prepare-layout-react-dev",
-        "@semio-tech/framework-os-dev:prepare-shooting-react-dev",
-        "@semio-tech/framework-os-dev:prepare-block2d-react-dev",
-        "@semio-tech/framework-os-dev:prepare-wfc2d-react-dev",
-        "@semio-tech/framework-os-dev:prepare-fem2d-react-dev",
-        "@semio-tech/framework-os-dev:prepare-energy-react-dev",
-        "@semio-tech/framework-os-dev:prepare-architect-react-dev",
-        "@semio-tech/framework-os-dev:prepare-din4108-react-dev",
-        "@semio-tech/framework-os-dev:prepare-note-react-dev",
-        "@semio-tech/framework-os-dev:prepare-writer-react-dev",
-        "@semio-tech/framework-os-dev:prepare-forms-react-dev",
-        "@semio-tech/framework-os-dev:prepare-mathematical-react-dev",
-        "@semio-tech/framework-os-dev:prepare-reasoning-wires-react-dev",
-        "@semio-tech/framework-os-dev:prepare-dag-react-dev",
-        "@semio-tech/framework-os-dev:prepare-trinity-jack-react-dev",
-        "@semio-tech/framework-os-dev:prepare-stdio-mp4-react-dev",
-        "@semio-tech/framework-os-dev:prepare-stdio-step-react-dev",
-        "@semio-tech/framework-os-dev:prepare-bim-react-dev",
-        "@semio-tech/framework-os-dev:prepare-stdio-ifc-2x3-react-dev",
-        "@semio-tech/framework-os-dev:prepare-stdio-gltf-react-dev",
-        "@semio-tech/framework-os-dev:prepare-stdio-pdf-1-4-a-react-dev",
-        "@semio-tech/framework-os-dev:prepare-stdio-docx-react-dev",
-        "@semio-tech/framework-os-dev:prepare-stdio-semio-brep-react-dev",
-        "@semio-tech/framework-os-dev:prepare-stdio-binary-react-dev",
-        "@semio-tech/framework-os-dev:prepare-animate-react-dev",
-        "@semio-tech/framework-os-dev:prepare-sequence-react-dev",
-        "@semio-tech/framework-os-dev:prepare-vcs-react-dev",
-        "@semio-tech/framework-os-dev:prepare-home-react-dev"
+        "@semio-tech/framework-os-dev:prepare-demonstrator-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-imperative-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-stdio-png-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-lowpoly-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-remodel-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-draw-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-raster-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-layout-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-shooting-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-block2d-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-wfc2d-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-fem2d-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-energy-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-architect-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-din4108-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-note-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-writer-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-forms-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-mathematical-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-reasoning-wires-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-dag-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-trinity-jack-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-stdio-mp4-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-stdio-step-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-bim-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-stdio-ifc-2x3-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-stdio-gltf-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-stdio-pdf-1-4-a-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-stdio-docx-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-stdio-semio-brep-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-stdio-binary-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-animate-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-sequence-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-vcs-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-home-react-prototype"
       ],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
         "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare",
-        "forwardAllArgs": false
-      }
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_BUILD_MODE": "prototype"
+        }
+      },
+      "defaultConfiguration": "prototype"
     },
-    "activate-dev": {
+    "activate-prototype": {
       "executor": "nx:run-commands",
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist/♻️activation/dev"
+        "{projectRoot}/dist/♻️activation/prototype"
       ],
       "inputs": [
         {
@@ -73,48 +77,52 @@
         }
       ],
       "dependsOn": [
-        "prepare-dev",
-        "@semio-tech/framework-os-dev:activate-demonstrator-react-dev",
-        "@semio-tech/framework-os-dev:activate-imperative-react-dev",
-        "@semio-tech/framework-os-dev:activate-stdio-png-react-dev",
-        "@semio-tech/framework-os-dev:activate-lowpoly-react-dev",
-        "@semio-tech/framework-os-dev:activate-remodel-react-dev",
-        "@semio-tech/framework-os-dev:activate-draw-react-dev",
-        "@semio-tech/framework-os-dev:activate-raster-react-dev",
-        "@semio-tech/framework-os-dev:activate-layout-react-dev",
-        "@semio-tech/framework-os-dev:activate-shooting-react-dev",
-        "@semio-tech/framework-os-dev:activate-block2d-react-dev",
-        "@semio-tech/framework-os-dev:activate-wfc2d-react-dev",
-        "@semio-tech/framework-os-dev:activate-fem2d-react-dev",
-        "@semio-tech/framework-os-dev:activate-energy-react-dev",
-        "@semio-tech/framework-os-dev:activate-architect-react-dev",
-        "@semio-tech/framework-os-dev:activate-din4108-react-dev",
-        "@semio-tech/framework-os-dev:activate-note-react-dev",
-        "@semio-tech/framework-os-dev:activate-writer-react-dev",
-        "@semio-tech/framework-os-dev:activate-forms-react-dev",
-        "@semio-tech/framework-os-dev:activate-mathematical-react-dev",
-        "@semio-tech/framework-os-dev:activate-reasoning-wires-react-dev",
-        "@semio-tech/framework-os-dev:activate-dag-react-dev",
-        "@semio-tech/framework-os-dev:activate-trinity-jack-react-dev",
-        "@semio-tech/framework-os-dev:activate-stdio-mp4-react-dev",
-        "@semio-tech/framework-os-dev:activate-stdio-step-react-dev",
-        "@semio-tech/framework-os-dev:activate-bim-react-dev",
-        "@semio-tech/framework-os-dev:activate-stdio-ifc-2x3-react-dev",
-        "@semio-tech/framework-os-dev:activate-stdio-gltf-react-dev",
-        "@semio-tech/framework-os-dev:activate-stdio-pdf-1-4-a-react-dev",
-        "@semio-tech/framework-os-dev:activate-stdio-docx-react-dev",
-        "@semio-tech/framework-os-dev:activate-stdio-semio-brep-react-dev",
-        "@semio-tech/framework-os-dev:activate-stdio-binary-react-dev",
-        "@semio-tech/framework-os-dev:activate-animate-react-dev",
-        "@semio-tech/framework-os-dev:activate-sequence-react-dev",
-        "@semio-tech/framework-os-dev:activate-vcs-react-dev",
-        "@semio-tech/framework-os-dev:activate-home-react-dev"
+        "prepare-prototype",
+        "@semio-tech/framework-os-dev:activate-demonstrator-react-prototype",
+        "@semio-tech/framework-os-dev:activate-imperative-react-prototype",
+        "@semio-tech/framework-os-dev:activate-stdio-png-react-prototype",
+        "@semio-tech/framework-os-dev:activate-lowpoly-react-prototype",
+        "@semio-tech/framework-os-dev:activate-remodel-react-prototype",
+        "@semio-tech/framework-os-dev:activate-draw-react-prototype",
+        "@semio-tech/framework-os-dev:activate-raster-react-prototype",
+        "@semio-tech/framework-os-dev:activate-layout-react-prototype",
+        "@semio-tech/framework-os-dev:activate-shooting-react-prototype",
+        "@semio-tech/framework-os-dev:activate-block2d-react-prototype",
+        "@semio-tech/framework-os-dev:activate-wfc2d-react-prototype",
+        "@semio-tech/framework-os-dev:activate-fem2d-react-prototype",
+        "@semio-tech/framework-os-dev:activate-energy-react-prototype",
+        "@semio-tech/framework-os-dev:activate-architect-react-prototype",
+        "@semio-tech/framework-os-dev:activate-din4108-react-prototype",
+        "@semio-tech/framework-os-dev:activate-note-react-prototype",
+        "@semio-tech/framework-os-dev:activate-writer-react-prototype",
+        "@semio-tech/framework-os-dev:activate-forms-react-prototype",
+        "@semio-tech/framework-os-dev:activate-mathematical-react-prototype",
+        "@semio-tech/framework-os-dev:activate-reasoning-wires-react-prototype",
+        "@semio-tech/framework-os-dev:activate-dag-react-prototype",
+        "@semio-tech/framework-os-dev:activate-trinity-jack-react-prototype",
+        "@semio-tech/framework-os-dev:activate-stdio-mp4-react-prototype",
+        "@semio-tech/framework-os-dev:activate-stdio-step-react-prototype",
+        "@semio-tech/framework-os-dev:activate-bim-react-prototype",
+        "@semio-tech/framework-os-dev:activate-stdio-ifc-2x3-react-prototype",
+        "@semio-tech/framework-os-dev:activate-stdio-gltf-react-prototype",
+        "@semio-tech/framework-os-dev:activate-stdio-pdf-1-4-a-react-prototype",
+        "@semio-tech/framework-os-dev:activate-stdio-docx-react-prototype",
+        "@semio-tech/framework-os-dev:activate-stdio-semio-brep-react-prototype",
+        "@semio-tech/framework-os-dev:activate-stdio-binary-react-prototype",
+        "@semio-tech/framework-os-dev:activate-animate-react-prototype",
+        "@semio-tech/framework-os-dev:activate-sequence-react-prototype",
+        "@semio-tech/framework-os-dev:activate-vcs-react-prototype",
+        "@semio-tech/framework-os-dev:activate-home-react-prototype"
       ],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
         "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts activate",
-        "forwardAllArgs": false
-      }
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_BUILD_MODE": "prototype"
+        }
+      },
+      "defaultConfiguration": "prototype"
     },
     "dev": {
       "metadata": {
@@ -129,7 +137,7 @@
       },
       "executor": "nx:run-commands",
       "dependsOn": [
-        "activate-dev"
+        "activate-prototype"
       ],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
@@ -169,7 +177,7 @@
       "continuous": true,
       "outputs": [],
       "dependsOn": [
-        "activate-dev"
+        "activate-prototype"
       ]
     },
     "build": {
@@ -202,6 +210,7 @@
                 "after": [],
                 "profile": "host-tool",
                 "target": "host",
+                "workerProtocol": "jobserver",
                 "policies": [
                   "process",
                   "cargo"
@@ -218,6 +227,7 @@
                 "after": [],
                 "profile": "release",
                 "target": "host",
+                "workerProtocol": "jobserver",
                 "policies": [
                   "process",
                   "cargo"
@@ -236,6 +246,7 @@
                 ],
                 "profile": "release",
                 "target": "host",
+                "workerProtocol": "jobserver",
                 "policies": [
                   "process",
                   "cargo"
@@ -254,6 +265,7 @@
                 ],
                 "profile": "release",
                 "target": "host",
+                "workerProtocol": "reserved",
                 "policies": [
                   "process"
                 ]
@@ -270,6 +282,7 @@
                 "lane": "wasm-release",
                 "profile": "wasm-release",
                 "target": "wasm32-unknown-unknown",
+                "workerProtocol": "exclusive",
                 "policies": [
                   "process",
                   "cargo",
@@ -288,6 +301,7 @@
                 "lane": "wasm-release",
                 "profile": "wasm-release",
                 "target": "wasm32-unknown-unknown",
+                "workerProtocol": "exclusive",
                 "policies": [
                   "process",
                   "cargo",
@@ -306,6 +320,7 @@
                 "lane": "wasm-release",
                 "profile": "wasm-release",
                 "target": "wasm32-unknown-unknown",
+                "workerProtocol": "exclusive",
                 "policies": [
                   "process",
                   "cargo",
@@ -323,6 +338,7 @@
                 "after": [],
                 "profile": "release",
                 "target": "host",
+                "workerProtocol": "reserved",
                 "policies": [
                   "process"
                 ]
@@ -343,6 +359,7 @@
                 ],
                 "profile": "release",
                 "target": "host",
+                "workerProtocol": "reserved",
                 "policies": [
                   "process"
                 ]
@@ -362,6 +379,7 @@
                 ],
                 "profile": "release",
                 "target": "host",
+                "workerProtocol": "reserved",
                 "policies": [
                   "process"
                 ]
@@ -395,7 +413,7 @@
       "cache": false,
       "outputs": [],
       "dependsOn": [
-        "activate-dev",
+        "activate-prototype",
         "workspace:deps-browsers"
       ],
       "options": {
@@ -444,6 +462,19 @@
         "cwd": "🏢️semio-tech/🎡️play",
         "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test-release",
         "forwardAllArgs": true
+      }
+    },
+    "test-e2e-enduser": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "serve-e2e"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test-enduser",
+        "forwardAllArgs": false
       }
     },
     "test-e2e": {

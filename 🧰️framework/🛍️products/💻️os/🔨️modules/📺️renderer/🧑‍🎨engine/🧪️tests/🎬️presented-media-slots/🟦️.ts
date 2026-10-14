@@ -3,10 +3,10 @@ import { describe, expect, test } from "vitest";
 import { createHash } from "node:crypto";
 import Ajv2020 from "ajv/dist/2020";
 import draft7 from "ajv/dist/refs/json-schema-draft-07.json";
-import fixture from "../../🧫️fixtures/🎬️presented-media-slots/🔣️.json";
+import fixture from "../🧫️fixtures/🎬️presented-media-slots/🔣️.json";
 import contract from "../../🎯️targets/🧊️wgpu/🎬️media-slots/🧬️contract/🔣️.json";
 import mediaContract from "../../../../🔌️plugin/🪟️window-kits/🎬️media/🧬️contract/🔣️.json";
-import reservation from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎬️media-transport-reservation/🔣️.json";
+import reservation from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎬️media-transport-reservation/🔣️.json";
 
 describe("🎬️ presented media slots", () => {
   test("admissible UI labels reach the aggregate descriptor byte ceiling before the slot ceiling", () => {

@@ -12,7 +12,7 @@ import { decodePackValue, encodePackValue, packValueToExactJson, type PackValue 
 type Case = Readonly<{ id: string; authored: PackValue; canonical: PackValue; expectedPackHex: string }>;
 type Fixture = Readonly<{ cases: readonly Case[] }>;
 
-const FIXTURE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧫️fixtures/🧫️canonical-descriptor-pack";
+const FIXTURE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🧫️fixtures/🧫️canonical-descriptor-pack";
 
 /** 🔃️ `value` with the members of every object in UTF-8 key-byte order, recursively. */
 export function canonicalDescriptorValue(value: PackValue): PackValue {

@@ -4,7 +4,7 @@ import { copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSy
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { devToolingEnv } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runRepositoryCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { runArtifactRustPackageMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import { cargoRepositoryPackages, cargoWorkspaceForManifest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
@@ -110,11 +110,12 @@ class DeletionProofScript extends BundleScript {
     await runRepositoryCommand(this.invocation,"cargo",["check", "--offline", ...checkedPackages.flatMap((name) => ["-p", name]), "--lib"],workspaceRoot,"stdio-deletion-proof",{version:1,maximumElapsedMilliseconds:0,output:null},{env});
     const probeRoot = join(workspaceRoot, "🧪️sqlite-required");
     mkdirSync(probeRoot);
-    writeFileSync(join(probeRoot, "Cargo.toml"), '[package]\nname = "semio-stdio-sql-required-probe"\nversion = "0.1.0"\nedition = "2021"\n[lib]\npath = "🦀️.rs"\n[dependencies]\nsemio-framework-os-kernel.workspace = true\n');
-    writeFileSync(join(probeRoot, "🦀️.rs"), `use semio_framework_os_kernel::{artifact_codec, os_store::serialization::ArtifactCodec, os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack, ToValue, FromValue, OpText, OpBinary, Mutation};
+    writeFileSync(join(probeRoot, "Cargo.toml"), '[package]\nname = "semio-stdio-sql-required-probe"\nversion = "0.1.0"\nedition = "2021"\n[lib]\npath = "🦀️.rs"\n[dependencies]\nsemio-framework-os-kernel.workspace = true\nsemio-framework-pack.workspace = true\n');
+    writeFileSync(join(probeRoot, "🦀️.rs"), `use pack::snapshot::{ArtifactDsl,ArtifactPack};
+use semio_framework_os_kernel::{artifact_codec, os_store::serialization::{ArtifactCodec,ArtifactStoreSnapshot}, ToValue, FromValue, OpText, OpBinary, Mutation,ArtifactCanonicalJsonTree};
 pub fn required<P, M>(schema: &str) -> ArtifactCodec
-where P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
-M: Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + Send + Sync + 'static {
+where P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + ArtifactStoreSnapshot + semio_framework_os_kernel::__value::retirement::RetireOwned + Send + Sync + 'static,
+M: Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_os_kernel::__value::retirement::RetireOwned + ArtifactCanonicalJsonTree + Send + Sync + 'static {
     artifact_codec::<P, M>(schema)
 }
 `);
@@ -129,8 +130,8 @@ M: Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + Send + Sy
     try { diagnostic = await new Response(probe.stderr).text(); status = await probe.exited; }
     finally { clearTimeout(timeout); process.off("SIGINT", cancel); process.off("SIGTERM", cancel); }
     writeFileSync(join(workspaceRoot, "sqlite-required-refusal.txt"), diagnostic);
-    if (status === 0 || !diagnostic.includes("ArtifactSqliteSnapshot") || !diagnostic.includes("E0277")) throw new Error("explicit SQLite constructor did not refuse a pack-only generic caller with the required bound");
-    writeFileSync(join(output, "stdio-deletion-proof.json"), JSON.stringify({ schema: "semio.stdio.deletion-proof/v1", artifactsAbsent, regularFiles: files, owners: [...closure.keys()].sort(), checkedPackages, sqliteRequiredRefusal: "E0277 ArtifactSqliteSnapshot" }, null, 2) + "\n");
+    if (status === 0 || !diagnostic.includes("ArtifactSqliteSnapshotHost") || !diagnostic.includes("E0277")) throw new Error("explicit SQLite constructor did not refuse a pack-only generic caller with the required bound");
+    writeFileSync(join(output, "stdio-deletion-proof.json"), JSON.stringify({ schema: "semio.stdio.deletion-proof/v1", artifactsAbsent, regularFiles: files, owners: [...closure.keys()].sort(), checkedPackages, sqliteRequiredRefusal: "E0277 ArtifactSqliteSnapshotHost" }, null, 2) + "\n");
   }
 }
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-plugin-stdio", { twins: [{ name: "authored-assembly", run: runAssemblyChecks }], commands: { "deletion-proof": DeletionProofScript } });

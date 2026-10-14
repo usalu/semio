@@ -1,7 +1,7 @@
 /** 🧮️ Owns the actual OS semantic decoder comparisons for the original neutral wire corpus. */
 import {test,expect} from "bun:test";
 import equal from "fast-deep-equal";
-import fixture from "../../../../🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🧮️wire-materialization/🔣️.json";
+import fixture from "../../../../🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🧮️wire-materialization/🔣️.json";
 import {decodePackValue,packValueToExactJson} from "../../🟦️.ts";
 
 test("OS semantic Pack outputs preserve every original wire materialization comparison",()=>{

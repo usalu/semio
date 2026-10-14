@@ -7,7 +7,7 @@ use ui_wgpu::wgpu::Theme;
 
 /// 🧾️ The shared summary corpus — the same file the React `parseApprovalSummary` asserts against,
 /// read at compile time so a moved fixture is a build error, not a skipped test.
-const SUMMARY_FIXTURE: &str = include_str!("../../🧫️fixtures/🛡️summary/🔣️.json");
+const SUMMARY_FIXTURE: &str = include_str!("../🧫️fixtures/🛡️summary/🔣️.json");
 
 fn parked(id: &str, summary: &str) -> PendingAgentApproval {
     PendingAgentApproval { approval_id: id.into(), summary: summary.into(), requested_at_ms: 0.0 }

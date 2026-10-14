@@ -419,7 +419,8 @@ impl ArtifactCommandWork<EditorApp<WavEditor>> for EditAudioWork {
         Ok(semio_framework_value::RetirementDemand { copy_bytes: PATCH_PAYLOAD_BYTES, depth: 1, ..Default::default() })
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<WavEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<WavEditor>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<WavEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<WavEditor>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.closing || self.complete {
             return Err(fault("stdio.wav.audio-work-closed", "WAV audio edit work is already closed"));
         }
@@ -460,6 +461,9 @@ impl ArtifactCommandWork<EditorApp<WavEditor>> for EditAudioWork {
         self.complete = true;
         let mutations = std::mem::take(&mut self.mutations);
         Ok(ArtifactCommandWorkStep::Complete(Emit { artifact_mutations: mutations, ..Default::default() }))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) {
@@ -537,7 +541,7 @@ mod tests {
 
     #[test]
     fn channel_rewrite_is_chunked_reversible_and_format_coherent() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🎚️natural-edit/🔣️.json")).expect("neutral audio-edit fixture parses");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🎚️natural-edit/🔣️.json")).expect("neutral audio-edit fixture parses");
         let base: WavSnapshot = semio_framework_pack_json::from_json_str(&serde_json::to_string(&fixture["before"]).expect("fixture before prints"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture before decodes");
         let command = EditAudio::InsertChannel { channel: fixture["insertChannel"]["channel"].as_u64().expect("channel") as u32, revision: "rev".into() };
         let plan = AudioPlan::new(&command, &base).expect("channel insertion plans");

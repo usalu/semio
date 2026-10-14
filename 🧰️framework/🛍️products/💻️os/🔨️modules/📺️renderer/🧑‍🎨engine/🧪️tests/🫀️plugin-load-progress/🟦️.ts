@@ -1,3 +1,4 @@
+import {componentPackageReceiptSource} from "../../../../🔌️plugin/📥️receipt/🟦️.ts";
 /** 🫀️ The plugin-load liveness accounting: what counts as progress, who it counts for, and why a
  * slow-but-moving load may not be failed as dead.
  *
@@ -146,12 +147,7 @@ describe("descriptor fetch progress", () => {
   const streamingResponse = (chunks: readonly string[]): Response => {
     const encoder = new TextEncoder();
     let index = 0;
-    return {
-      ok: true,
-      headers: { get: () => "application/json" },
-      body: { getReader: () => ({ read: async () => (index < chunks.length ? { done: false, value: encoder.encode(chunks[index++]!) } : { done: true, value: undefined }) }) },
-      text: async () => chunks.join(""),
-    } as unknown as Response;
+    return new Response(new ReadableStream<Uint8Array>({ pull(stream) { if (index < chunks.length) stream.enqueue(encoder.encode(chunks[index++]!)); else stream.close(); } }, { highWaterMark: 0 }), { headers: { "content-type": "application/json" } });
   };
 
   const withFetch = async <T,>(response: Response, run: () => Promise<T>): Promise<T> => {
@@ -170,12 +166,13 @@ describe("descriptor fetch progress", () => {
     expect(beats).toBe(1 + chunks.length);
   });
 
-  it("still reads a body with no reader, and still beats once for the headers", async () => {
-    const unreadable = { ok: true, headers: { get: () => "application/json" }, text: async () => descriptor } as unknown as Response;
+  it("reads the response stream without an opaque text read and reports headers and body", async () => {
+    const unreadable = new Response(descriptor, { headers: { "content-type": "application/json" } });
+    unreadable.text = async () => { throw Error("opaque response text read"); };
     let beats = 0;
     const manifest = await withFetch(unreadable, () => fetchDescriptorManifest("demonstrator", "/plugin-modules/demonstrator/bridge.js", undefined, () => { beats += 1; }));
     expect(manifest.pluginId).toBe("demonstrator");
-    expect(beats).toBe(1);
+    expect(beats).toBe(2);
   });
 
   /** 🪪️ LAW: a served module answers the identity hub documents bind by — its semantic descriptor's package id and the
@@ -185,18 +182,18 @@ describe("descriptor fetch progress", () => {
     const receipt = (overrides: Record<string, unknown> = {}): string => `${JSON.stringify({ schema: "semio.plugin.component-receipt/v1", pluginId: "demonstrator", packageId: "semio:demonstrator", profile: "wasm-release", target: "wasm32-wasip2", wasmSha256: "a".repeat(64), wasmBytes: 4096, semanticDescriptorSha256: "b".repeat(64), toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "c".repeat(64), provenanceSha256: "d".repeat(64), ...overrides }, null, 2)}\n`;
     const withModule = async <T,>(descriptorText: string, receiptText: string | null, run: () => Promise<T>): Promise<T> => {
       const original = globalThis.fetch;
-      globalThis.fetch = stubFetch(async (input: URL | RequestInfo) => (String(input).endsWith("🧾️receipt.json") ? (receiptText === null ? ({ ok: false, status: 404, headers: { get: () => "text/plain" }, text: async () => "" } as unknown as Response) : streamingResponse([receiptText])) : streamingResponse([descriptorText])));
+      globalThis.fetch = stubFetch(async (input: URL | RequestInfo) => (String(input).endsWith("🧾️receipt.json") ? (receiptText === null ? new Response(null, { status: 404, headers: { "content-type": "text/plain" } }) : streamingResponse([receiptText])) : streamingResponse([descriptorText])));
       try { return await run(); } finally { globalThis.fetch = original; }
     };
     const identified = JSON.stringify({ packageId: "semio:demonstrator", manifest: { pluginId: "demonstrator", apps: [] } });
-    const read = await withModule(identified, receipt(), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js"));
+    const read = await withModule(identified, receipt(), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js", componentPackageReceiptSource));
     expect({ packageId: read.packageId, componentSha256: read.componentSha256, pluginId: read.manifest.pluginId }).toEqual({ packageId: "semio:demonstrator", componentSha256: "a".repeat(64), pluginId: "demonstrator" });
-    await expect(withModule(descriptor, receipt(), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js"))).rejects.toThrow("missing package identity");
-    await expect(withModule(identified, null, () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js"))).rejects.toThrow("plugin.descriptor-invalid");
-    await expect(withModule(identified, receipt({ packageId: "semio:impostor" }), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js"))).rejects.toThrow("missing package identity");
-    await expect(withModule(identified, receipt({ wasmSha256: "A".repeat(64) }), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js"))).rejects.toThrow("plugin.descriptor-invalid");
+    await expect(withModule(descriptor, receipt(), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js", componentPackageReceiptSource))).rejects.toThrow("missing package identity");
+    await expect(withModule(identified, null, () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js", componentPackageReceiptSource))).rejects.toThrow("plugin.descriptor-invalid");
+    await expect(withModule(identified, receipt({ packageId: "semio:impostor" }), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js", componentPackageReceiptSource))).rejects.toThrow("missing package identity");
+    await expect(withModule(identified, receipt({ wasmSha256: "A".repeat(64) }), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js", componentPackageReceiptSource))).rejects.toThrow("plugin.descriptor-invalid");
     const bound = JSON.stringify({ packageId: "semio:demonstrator", hashes: { wasmSha256: "a".repeat(64) }, manifest: { pluginId: "demonstrator", apps: [] } });
-    await expect(withModule(bound, receipt(), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js"))).rejects.toThrow("missing package identity");
+    await expect(withModule(bound, receipt(), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js", componentPackageReceiptSource))).rejects.toThrow("missing package identity");
   });
 
   /** 🔤️ A chunk boundary is a BYTE boundary, and this repo's descriptors are full of multi-byte emoji
@@ -208,11 +205,7 @@ describe("descriptor fetch progress", () => {
     const halves = [raw.slice(0, split), raw.slice(split)];
     let index = 0;
     let beats = 0;
-    const response = {
-      ok: true,
-      headers: { get: () => "application/json" },
-      body: { getReader: () => ({ read: async () => (index < halves.length ? { done: false, value: halves[index++]! } : { done: true, value: undefined }) }) },
-    } as unknown as Response;
+    const response = new Response(new ReadableStream<Uint8Array>({ pull(stream) { if (index < halves.length) stream.enqueue(halves[index++]!); else stream.close(); } }, { highWaterMark: 0 }), { headers: { "content-type": "application/json" } });
     const manifest = await withFetch(response, () => fetchDescriptorManifest("demonstrator", "/plugin-modules/demonstrator/bridge.js", undefined, () => { beats += 1; }));
     expect((manifest.apps as readonly { readonly id: string }[])[0]!.id).toBe("🧺️demonstrator");
     expect(beats).toBe(3);

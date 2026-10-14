@@ -88,7 +88,7 @@ fn a_press_on_the_surface_keeps_the_gesture_on_it_and_releases_it_again() {
 
 #[test]
 fn fixed_pointer_captures_keep_independent_positions_and_release_only_their_owner() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).expect("neutral scene owner fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).expect("neutral scene owner fixture");
     let capacity = fixture["captureCapacity"].as_u64().expect("fixed capture grant") as usize;
     let press = &fixture["press"];
     let x = press[0].as_f64().unwrap() as f32;

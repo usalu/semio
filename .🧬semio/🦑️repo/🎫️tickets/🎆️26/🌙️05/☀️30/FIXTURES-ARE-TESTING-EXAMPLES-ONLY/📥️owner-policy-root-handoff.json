@@ -1,0 +1,155 @@
+{
+  "schemas": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🏠️owner-projection-policy/🔣️.json",
+      "sha256": "c60c4bd131a95d0d1d5a7b76491b4c192b3324ca5125927d55b92b8608fde386",
+      "id": "https://json.schemas.assets.semio-tech.com/repo/library/owner-projection-policy/schema.json",
+      "definitions": [
+        "OwnerProjectionEntry",
+        "SourcePreimage"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔖️readme-current-source-revision/🔣️.json",
+      "sha256": "f4758d4744b6147edcec37340583cf1feb74479dc200a9b0060452d0e60d8418",
+      "definitions": [
+        "CurrentSourceApproval",
+        "CurrentSourceApprovalDocument"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🚚️readme-move-source-authority/🔣️.json",
+      "sha256": "7c59b115770f83cdb2147c515663558ceba2c27f86d1317743294a5f3dd643a4",
+      "definitions": [
+        "filePreimage",
+        "sourceAuthority"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "sha256": "5a9278f8d97817708f17978388a309dc2185809282dbdc21c95cc6316b569b38"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+      "sha256": "bcadd69af5c5e4a9c6f8fdd56fffa1d73ea75f5f3a8795e3d977e4e762ebe988"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🔣️taxonomy/🟦️.ts",
+      "sha256": "ed64df44934ec86378c21243dee5e16f94544caa79682946f6dd5a488e94479e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "sha256": "1a9bb2232bda038bfb8f1d1baccce95fcf284c34a21a39a052b3785b64a674c7"
+    }
+  ],
+  "tests": [
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🏠️owner-projection-policy/🟦️.ts",
+      "sha256": "5f0779b4c8c0ccfc6221f2ab8b7bf19c643bc1b2d38de4544325be948b0ef100"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚨️transaction-sentinel-policy/🟦️.ts",
+      "sha256": "e457916229bd5a64a92ef96f59db3c79f5ec8565c10401685e71d912333b4b00"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🗝️transaction-fixture-key-exactness/🟦️.ts",
+      "sha256": "c7a68f9ea2c13a6198105d96e21757c157361a8fcd2ff14fff321ebd0028721f"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔖️readme-current-source-revision/🟦️.ts",
+      "sha256": "5bda6b9e69c619325a57ebe99e95b16efa2aa14af4d7ea78dac5e633b9e16858"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟢️readme-current-source-activation/🟦️.ts",
+      "sha256": "c136aa76aac4ddac6aba8eedf1e76b55356ab0fa2d1dee795212cc690acd4de5"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/👀️readme-reviewed-fixture-inputs/🟦️.ts",
+      "sha256": "143be2070ed8d83107f6015af481c38320c9cf620c9e2f01715a14023b69a09f"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🗺️testing-readme-coordinates/🟦️.ts",
+      "sha256": "deb9c1c96424f6db1e150fc3275c4dcac05d0fe65884e5b6568944c7d2f74ec0"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🖼️runtime-taxonomy-asset-paths/🟦️.ts",
+      "sha256": "7ded8de1a53bbf4c8aca4c10733bbece4a6882d2eb2785aa1270108b314da510"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧊️fixture-payload/🟦️.ts",
+      "sha256": "0840e0c01eb8c6a0ba2bc6bac4c4c946db32f50750212965b9ed2de30fa849f1"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧵️cad-bindings/🟦️.ts",
+      "sha256": "830cc787fd555a3c182868587dc15618727a59978e1e5dd56a6bfa73ad09b917"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🕰️historical-json-source-encoding/🟦️.ts",
+      "sha256": "1970748bea90900e2568e5ec57375ba0b75640bd2a1c437c5dd5502c0133e382"
+    }
+  ],
+  "globalOwners": [
+    "schema catalog",
+    "schema-document DSL index",
+    "project/package/launch registration",
+    "Root script"
+  ],
+  "publicTypes": [
+    "OwnerProjectionPolicy",
+    "OwnerProjectionEntry",
+    "CurrentSourceApproval",
+    "CurrentSourceApprovalSnapshot",
+    "CurrentSourceApprovalResult",
+    "Existing test collection policy fields testsDirName/testFixturesDirName reused, no fixture-data DTO"
+  ],
+  "codecs": [
+    "parseOwnerProjectionPolicy",
+    "parseCurrentSourceApprovals",
+    "ownerProjectionPolicyCensus",
+    "taxonomyFixturePayloadPath"
+  ],
+  "removedTypes": [
+    "SemanticExactOwnedFileCatalog",
+    "SemanticExactOwnedFileCase",
+    "SemanticOwnedCurrentSourceRevision",
+    "SemanticOwnedCurrentSourceExpectation",
+    "SemanticOwnedCurrentSourcePreimageResult"
+  ],
+  "removedCodec": "parseSemanticOwnedCurrentSourceRevisions",
+  "removedRuntimeAssetPaths": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/⚖️readme-license-owner-authority/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🚨️transaction-sentinel-cases/🔣️.json"
+  ],
+  "transportKind": "exact-owner-current-source-approval-v1",
+  "transportRoles": [
+    "schema",
+    "catalog",
+    "approval"
+  ],
+  "retiredRemovalKind": "serialized-path-sentinel",
+  "retiredRemovalRationale": "serialized-platform-sentinel-v1",
+  "registration": "Existing original reader routes retained; new owner-projection-policy and transaction-sentinel-policy Source files need ordinary permanent routes or selected Root resumed-corpus registration; private tests target currently executes actual files",
+  "removedSchemas": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔣️cad-draw-live-bindings/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔣️frozen-seal-ledger/🔣️.json"
+  ],
+  "opacity": "Physical fixture bytes remain inventory/move/hash subjects; inside canonical Tests/Fixtures, content produces no production graph edges or frozen/reference/preflight/symlink authorization. Host Source imports stay genuine edges.",
+  "cadOriginalSelector": {
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+    "pattern": "CAD plain live binding examples retain exact mapping and reject escaping carriers|CAD frozen scenario bindings read exact current bytes and reject missing, duplicate, or extra identities"
+  },
+  "originalCallerPatch": {
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+    "sha256": "d0d9de06592d9dea5dc757f182fe3452c565b2fa3e2af5e9945e62ae8df7dce0",
+    "spans": "Sentinel original reader path + CAD wrapper schema declaration/whole-example compile removal only; all unrelated Source retained"
+  },
+  "finalSource": {
+    "suite": "156 pass, 0 fail, 1077 assertions across 11 permanent files",
+    "nx": "47.5 seconds, skip-nx-cache",
+    "log": "🗑️generated/owner-policy-complete-source-green.log",
+    "cadOriginal": "2 pass,239 assertions,836 filtered out,6.6s through registered finite original Source target with genuine supported long level",
+    "cadGuiRequiredLevel": "long"
+  }
+}

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "💧️create-mep-element/🛑️duct-without-width",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/💧️create-mep-element/🛑️duct-without-width/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/💧️create-mep-element/🛑️duct-without-width/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/💧️create-mep-element/🛑️duct-without-width/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/💧️create-mep-element/🛑️duct-without-width/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/💧️create-mep-element/🛑️duct-without-width/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💧️create-mep-element/🛑️duct-without-width/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💧️create-mep-element/🛑️duct-without-width/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💧️create-mep-element/🛑️duct-without-width/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💧️create-mep-element/🛑️duct-without-width/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💧️create-mep-element/🛑️duct-without-width/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

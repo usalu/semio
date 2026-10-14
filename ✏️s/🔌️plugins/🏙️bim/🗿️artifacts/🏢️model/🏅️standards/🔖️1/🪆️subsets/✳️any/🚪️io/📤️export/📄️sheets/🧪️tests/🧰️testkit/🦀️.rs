@@ -7,10 +7,10 @@ use crate::{IsoSize, ModelInference, ModelSnapshot, Orientation, Paper, Point2, 
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 /// 📄️ The committed room with its sheet set: three sheets (A3 landscape, A4 portrait, custom paper), seven cropped viewports and two revision rows.
-pub const ROOM: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/📄️sheet-layout/🏠️room/📸️snapshot/🔣️.json");
+pub const ROOM: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/📄️sheet-layout/🏠️room/📸️snapshot/🔣️.json");
 
 /// 📁️ The directory of the committed sheet exports of the room (one SVG per sheet and the PDF of the set) that the lxml + shapely and pypdf oracles read.
-pub const ROOM_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🚪️sheets/🏠️room");
+pub const ROOM_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🚪️sheets/🏠️room");
 
 /// 📄️ The decoded room with its sheet set.
 pub fn room() -> ModelSnapshot {

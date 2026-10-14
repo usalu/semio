@@ -86,6 +86,30 @@
         "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-original-fixed-limits native"
       }
+    },
+    "test-original-physical-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-physical source"
+      }
+    },
+    "test-original-physical-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-physical native"
+      }
     }
   }
 }

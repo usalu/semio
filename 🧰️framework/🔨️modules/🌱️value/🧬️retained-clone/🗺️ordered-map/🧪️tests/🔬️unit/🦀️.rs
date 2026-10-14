@@ -8,7 +8,7 @@ fn physical_grant(work:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_ite
 #[test]
 fn ordered_map_clone_advance_quotes_balance_original_heap_and_refused_currencies() {
     use crate::retirement::controlled::ControlledRetirement;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️clone/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️clone/🔣️.json")).unwrap();
     assert_eq!(fixture["pageCapacity"].as_u64().unwrap()as usize,RETAINED_ORDERED_MAP_PAGE_CAPACITY);
     let body=fixture["workBytes"].as_u64().unwrap()as usize;
     let quote=|d:crate::RetirementDemand|RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};
@@ -68,7 +68,7 @@ fn close_lookup<K:BoundedOrd>(cursor:&mut RetainedOrderedMapLookupCursor<K>){
 
 #[test]
 fn ordered_comparison_custody_refuses_unadmitted_constructor_and_closes_original_aliases() {
-    let fixture: serde_json::Value=serde_json::from_str(include_str!("../../♻️custody/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value=serde_json::from_str(include_str!("../../♻️custody/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut oracle=std::process::Command::new("bun").args(["-e","const x=JSON.parse(await Bun.stdin.text());console.log(JSON.stringify(x.fixture.keys.map(x=>[x,...new TextEncoder().encode(x)]))); "]).stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped()).spawn().unwrap();
     use std::io::Write;
     oracle.stdin.take().unwrap().write_all(serde_json::json!({"fixture":fixture}).to_string().as_bytes()).unwrap();
@@ -155,7 +155,7 @@ struct Expected {
 }
 
 fn fixture() -> Fixture {
-    serde_json::from_str(include_str!("../../🧫️fixtures/📦️paging/🔣️.json")).expect("retained ordered-map fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/📦️paging/🔣️.json")).expect("retained ordered-map fixture")
 }
 
 fn oracle(fixture: &Fixture) -> BTreeMap<String, String> {
@@ -453,7 +453,7 @@ fn cancelled_partial_insertion_retires_candidate_and_shifted_workspace() {
 
 #[test]
 fn cold_clone_terminal_frame_denies_partial_funding_and_reports_actual_same_turn_release() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📏️close/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️close/🔣️.json")).unwrap();
     let admission = fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize;
     let mut mismatches = 0;
     for row in fixture["cases"].as_array().unwrap() {
@@ -503,7 +503,7 @@ fn cold_clone_terminal_frame_denies_partial_funding_and_reports_actual_same_turn
 #[test]
 fn ordered_wire_cold_context_map_matches_serde_and_bun() {
     use crate::{FromValue,ToValue,retirement::controlled::ControlledRetirement};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📋️wire/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📋️wire/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let entries:Vec<(String,String)>=serde_json::from_value(case["entries"].clone()).unwrap();
         let map:RetainedOrderedMap<String,String>=entries.into_iter().collect();

@@ -1,0 +1,66 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/framework-plugin:test",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--configuration=prototype",
+    "--",
+    "long",
+    "--offline",
+    "--lib",
+    "-E",
+    "test(original_job_registry_cold_admission_denial_and_saturation_preserve_sources) | test(original_job_kind_lookup_preserves_denied_frontiers_and_whole_sources) | test(original_job_cancellation_preserves_denied_and_foreign_sources) | test(original_job_body_failure_retains_exact_owner_and_error_until_paid_close) | test(original_job_cancelled_context_publishes_terminal_reply_after_paid_close)",
+    "--",
+    "--nocapture"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+    "transport": {
+      "maximumBytes": 134217728,
+      "maximumLines": 1000000
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 3600000
+    },
+    "network": {
+      "offline": true
+    }
+  },
+  "selection": [
+    "nx",
+    "run",
+    "@semio-tech/framework-plugin:test",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--configuration=prototype",
+    "--",
+    "long",
+    "--offline",
+    "--lib",
+    "-E",
+    "test(original_job_registry_cold_admission_denial_and_saturation_preserve_sources) | test(original_job_kind_lookup_preserves_denied_frontiers_and_whole_sources) | test(original_job_cancellation_preserves_denied_and_foreign_sources) | test(original_job_body_failure_retains_exact_owner_and_error_until_paid_close) | test(original_job_cancelled_context_publishes_terminal_reply_after_paid_close)",
+    "--",
+    "--nocapture"
+  ],
+  "launches": [
+    [
+      "nx",
+      "run",
+      "@semio-tech/framework-plugin:test",
+      "--skip-nx-cache",
+      "--excludeTaskDependencies",
+      "--configuration=prototype",
+      "--",
+      "long",
+      "--offline",
+      "--lib",
+      "-E",
+      "test(original_job_registry_cold_admission_denial_and_saturation_preserve_sources) | test(original_job_kind_lookup_preserves_denied_frontiers_and_whole_sources) | test(original_job_cancellation_preserves_denied_and_foreign_sources) | test(original_job_body_failure_retains_exact_owner_and_error_until_paid_close) | test(original_job_cancelled_context_publishes_terminal_reply_after_paid_close)",
+      "--",
+      "--nocapture"
+    ]
+  ]
+}

@@ -3,7 +3,7 @@ use super::super::mesh_support::harness as h;
 
 fn admitted()->Vec<ComputeEntry> {COMPUTES.iter().chain(crate::standards::v1::subsets::any::io::geometry::mesh_source::COMPUTES).copied().collect()}
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🔣️.json");
+const FIXTURE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🥽️mesh-primitive/🔣️.json");
 
 #[test]
 fn the_compute_table_and_the_fixture_cover_exactly_the_catalogue_kinds() {

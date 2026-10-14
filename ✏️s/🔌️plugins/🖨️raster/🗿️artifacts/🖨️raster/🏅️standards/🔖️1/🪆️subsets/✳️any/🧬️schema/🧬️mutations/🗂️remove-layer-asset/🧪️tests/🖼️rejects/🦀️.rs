@@ -17,10 +17,10 @@ use crate::mutations::{inverse_raster_mutation, RasterMutation};
 use crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation;
 use crate::{RasterDiff, RasterSnapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️remove-layer-asset/🖼️rejects/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️remove-layer-asset/🖼️rejects/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️remove-layer-asset/🖼️rejects/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️remove-layer-asset/🖼️rejects/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗂️remove-layer-asset/🖼️rejects/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗂️remove-layer-asset/🖼️rejects/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗂️remove-layer-asset/🖼️rejects/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗂️remove-layer-asset/🖼️rejects/🎯️outcome/🔣️.json");
 
 fn before() -> RasterSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

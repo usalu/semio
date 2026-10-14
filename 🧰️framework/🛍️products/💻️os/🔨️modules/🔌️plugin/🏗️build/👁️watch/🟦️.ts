@@ -1,5 +1,6 @@
-import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { scriptCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🧩️ Semantic plugin build watch owner. */
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
@@ -7,8 +8,8 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import type { PluginBuildTargetV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
 
@@ -29,14 +30,14 @@ import { resolvePluginBuildTargets } from "../📋️plan/🟦️.ts";
  * loop only ever runs one `buildPlugin` at a time. Shared by both the standalone `plugin watch` command
  * and `DevScript`'s streaming boot, which folds this in right after the initial build pass so plugin
  * edits keep hot-swapping the running shell for the rest of the dev session. */
-async function watchPluginRebuilds(targets: readonly PluginBuildTargetV1[]): Promise<void> {
+async function watchPluginRebuilds(targets: readonly PluginBuildTargetV1[], control: CompilerAdmissionControl): Promise<void> {
   const { nativeSourceWatchPlanV1 } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🟨️.mjs");
   const { startNativeSourceWatchV1, nativeSourceWatchSelectedV1 } = await import("./📋️plan/🟦️.ts");
   const plans = new Map<string, import("./📋️plan/🟦️.ts").NativeSourceWatchPlanV1>();
   let observation: { close(): Promise<void> } | undefined;
-  const controller = new AbortController();
-  const close = (): void => { controller.abort(); void observation?.close(); process.removeListener("SIGINT", close); process.removeListener("SIGTERM", close); };
-  process.once("SIGINT", close); process.once("SIGTERM", close);
+  const signal = control.signal;
+  const close = (): void => { void observation?.close(); signal.removeEventListener("abort", close); };
+  signal.addEventListener("abort", close, { once: true });
   const byPluginId = new Map(targets.map((target) => [target.pluginId, target] as const));
   const dirty = new Set<string>();
   let draining = false;
@@ -45,13 +46,13 @@ async function watchPluginRebuilds(targets: readonly PluginBuildTargetV1[]): Pro
     if (draining) return;
     draining = true;
     try {
-      while (dirty.size > 0 && !controller.signal.aborted) {
+      while (dirty.size > 0 && !signal.aborted) {
         const [pluginId] = dirty;
         dirty.delete(pluginId!);
         const target = byPluginId.get(pluginId!);
         if (!target) continue;
         try {
-          await buildPlugin(target);
+          await buildPlugin(target, control);
           plans.set(target.pluginId, await nativeSourceWatchPlanV1(target.cratePath, repoRoot));
           await refresh();
         } catch (error) {
@@ -69,7 +70,7 @@ async function watchPluginRebuilds(targets: readonly PluginBuildTargetV1[]): Pro
     observation = await startNativeSourceWatchV1(repoRoot, combined, path => {
       for (const [id, plan] of plans) if (nativeSourceWatchSelectedV1(plan, path)) dirty.add(id);
       void drain();
-    }, { signal: controller.signal, selected: path => [...plans.values()].some(plan => nativeSourceWatchSelectedV1(plan, path)) });
+    }, { signal: signal, selected: path => [...plans.values()].some(plan => nativeSourceWatchSelectedV1(plan, path)) });
     await prior?.close();
   };
   try {
@@ -82,9 +83,10 @@ async function watchPluginRebuilds(targets: readonly PluginBuildTargetV1[]): Pro
 class PluginWatchScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND;
-    await buildPlugins(filterPlugin || undefined);
+    const control = scriptCompilerAdmissionControlV1(this.invocation, "plugins:watch", 0);
+    await buildPlugins(control, filterPlugin || undefined);
     const targets = resolvePluginBuildTargets(filterPlugin || undefined);
-    await watchPluginRebuilds(targets);
+    await watchPluginRebuilds(targets, control);
   }
 }
 

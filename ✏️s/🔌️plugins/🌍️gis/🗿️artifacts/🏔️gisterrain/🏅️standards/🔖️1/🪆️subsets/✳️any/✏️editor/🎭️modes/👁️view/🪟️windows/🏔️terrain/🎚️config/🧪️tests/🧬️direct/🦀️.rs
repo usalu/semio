@@ -4,11 +4,11 @@ use super::{GisTerrainWindowConfig, GisTerrainWindowConfigDiff, GisTerrainWindow
 use protocol::{Mutation, MutationDiff, MutationKind, MutationLeaf, OpBinary, OpText};
 use serde_json::Value;
 use std::fmt::Debug;
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 //#region 🧫️NeutralFixture
 fn vectors() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🧬️direct/🔣️.json")).expect("domain neutral vectors")
+    serde_json::from_str(include_str!("../🧫️fixtures/🧬️direct/🔣️.json")).expect("domain neutral vectors")
 }
 
 fn decode<T: semio_framework_value::FromValue>(value: &Value) -> T {
@@ -39,7 +39,7 @@ fn strict_snapshot_and_aggregate_json_vectors() {
         let snapshot: GisTerrainWindowConfig = decode(value);
         assert_eq!(serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&snapshot)).expect("snapshot JSON"), *value);
     }
-    store::os_store::test_support::assert_wire_witness::<GisTerrainWindowConfigMutation>(include_str!("../../🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    store::os_store::test_support::assert_wire_witness::<GisTerrainWindowConfigMutation>(include_str!("../🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"));
     for value in fixture["mutations"]["invalid"].as_array().expect("invalid operations") {
         assert!(semio_framework_pack_json::from_json_str::<GisTerrainWindowConfigMutation>(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "accepted {value}");
     }

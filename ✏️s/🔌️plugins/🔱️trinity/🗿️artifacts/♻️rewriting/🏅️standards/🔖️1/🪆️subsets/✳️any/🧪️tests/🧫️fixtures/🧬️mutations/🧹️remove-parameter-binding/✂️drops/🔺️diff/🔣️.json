@@ -1,0 +1,17 @@
+{
+  "workingGraph": null,
+  "lhs": null,
+  "rhs": null,
+  "parameterBindings": {
+    "entries": [
+      {
+        "key": "repeat",
+        "precondition": "present",
+        "operation": {
+          "kind": "remove"
+        }
+      }
+    ]
+  },
+  "ruleLayout": null
+}

@@ -7,11 +7,11 @@
 
 use super::laws;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚚️move-selection/📌️pins/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚚️move-selection/📌️pins/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚚️move-selection/📌️pins/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚚️move-selection/📌️pins/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚚️move-selection/📌️pins/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-selection/📌️pins/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-selection/📌️pins/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-selection/📌️pins/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-selection/📌️pins/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-selection/📌️pins/🎯️outcome/🔣️.json");
 
 /// ▶️ The motion carries `before` to exactly the committed `after` and produces exactly the committed delta.
 #[test]

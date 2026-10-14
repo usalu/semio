@@ -4,7 +4,7 @@ use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3d
 use semio_framework_plugin::{ArtifactEditor, PluginApp};
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧫️fixtures/🔣️.json")).expect("creation fixture")
+    serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🧫️fixtures/🔣️.json")).expect("creation fixture")
 }
 
 fn payload(value: &serde_json::Value) -> AddWidget {

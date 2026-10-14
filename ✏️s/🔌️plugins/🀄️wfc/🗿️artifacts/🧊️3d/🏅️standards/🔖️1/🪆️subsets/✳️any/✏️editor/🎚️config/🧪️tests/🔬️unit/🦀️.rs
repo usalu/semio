@@ -7,10 +7,10 @@ use protocol::Mutation;
 #[test]
 fn the_config_round_trips_through_its_own_text_and_pack_envelopes() {
     let config = Wfc3dConfig { camera_x: 1.5, camera_y: -2.0, camera_zoom: 3.0, active_tile_id: "room".into() };
-    let text = <Wfc3dConfig as store::os_store::serialization::ArtifactDsl>::print_dsl(&config);
-    assert_eq!(<Wfc3dConfig as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("config text parses"), config);
-    let bytes = <Wfc3dConfig as store::os_store::serialization::ArtifactPack>::encode_pack(&config);
-    assert_eq!(<Wfc3dConfig as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("config pack decodes"), config);
+    let text = <Wfc3dConfig as pack::snapshot::ArtifactDsl>::print_dsl(&config);
+    assert_eq!(<Wfc3dConfig as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("config text parses"), config);
+    let bytes = <Wfc3dConfig as pack::snapshot::ArtifactPack>::encode_pack(&config);
+    assert_eq!(<Wfc3dConfig as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("config pack decodes"), config);
 }
 
 #[test]

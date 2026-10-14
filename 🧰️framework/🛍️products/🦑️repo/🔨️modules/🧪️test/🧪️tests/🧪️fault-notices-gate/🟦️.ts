@@ -1,4 +1,4 @@
-/** 📢️ The `schema-fault-notice` gate (design §20.12) over `🧫️fixtures/🧫️fault-notices-gate/🔣️.json` (Ajv-validated against its schema):
+/** 📢️ The `schema-fault-notice` gate (design §20.12) over `🧪️tests/🧫️fixtures/🧫️fault-notices-gate/🔣️.json` (Ajv-validated against its schema):
  * every snippet's fault code sites read by the token gate — string literals, named `const`s, parameter and fixed-code refusal-helper
  * calls, none inside `#[cfg(test)]` items, each with its enclosing `fn` and trait-default flag — equal those of an independent
  * tree-sitter-rust oracle, and one planted plugin plus a planted plugin SDK — sources, committed descriptor and framework table written
@@ -20,7 +20,7 @@ type Fixture = {
 };
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧫️fault-notices-gate/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🧫️fault-notices-gate/🔣️.json"), "utf8")) as Fixture;
 
 
 await Parser.init();

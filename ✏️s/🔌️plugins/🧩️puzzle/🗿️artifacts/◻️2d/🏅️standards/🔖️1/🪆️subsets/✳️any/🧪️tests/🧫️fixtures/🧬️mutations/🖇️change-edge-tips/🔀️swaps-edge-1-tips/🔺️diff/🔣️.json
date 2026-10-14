@@ -1,0 +1,22 @@
+{
+  "artifact": null,
+  "camera": null,
+  "edges": {
+    "inserted": [],
+    "modified": [
+      {
+        "id": "edge-1",
+        "patch": {
+          "sourceTip": "arrow",
+          "targetTip": "none"
+        }
+      }
+    ],
+    "moved": [],
+    "removed": []
+  },
+  "meta": null,
+  "nodes": null,
+  "schema": null,
+  "targetRegions": null
+}

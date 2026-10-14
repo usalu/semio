@@ -3,10 +3,10 @@ import Ajv from "ajv";
 import deepEqual from "fast-deep-equal";
 import { fireEvent, render } from "@semio-tech/ui-react/test";
 import { describe, expect, it, vi } from "vitest";
-import artifactCreationProgressFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🔣️.json";
-import artifactCreationCatalogAuthorityFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🪪️catalog-authority/🔣️.json";
+import artifactCreationProgressFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🌱️artifact-creation/🔣️.json";
+import artifactCreationCatalogAuthorityFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🌱️artifact-creation/🪪️catalog-authority/🔣️.json";
 import directorySchema from "../../../../📇️directory/🧬️schema/🔣️.json" with { type: "json" };
-import artifactCreationReadyOpeningFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🚪️ready-opening/🔣️.json";
+import artifactCreationReadyOpeningFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🌱️artifact-creation/🚪️ready-opening/🔣️.json";
 
 import { runArtifactCreationReadyOpeningV1 } from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
 import {

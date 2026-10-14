@@ -21,7 +21,7 @@ type Vectors = {
   readonly decays: readonly { readonly id: string; readonly x: number; readonly reference: number; readonly expected: { readonly value: number; readonly bits: string } }[];
 };
 
-const VECTORS = JSON.parse(readFileSync(new URL("../../../../🧫️fixtures/📐️turn-trigonometry/🔣️.json", import.meta.url), "utf8")) as Vectors;
+const VECTORS = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/📐️turn-trigonometry/🔣️.json", import.meta.url), "utf8")) as Vectors;
 const SOURCE = readFileSync(new URL("../../🟦️.ts", import.meta.url), "utf8");
 const BOUND = 1e-12;
 const ULP = 2 ** -52;

@@ -4,7 +4,7 @@ import { Database } from "bun:sqlite";
 import { applyPatch } from "fast-json-patch";
 import { readFileSync, existsSync } from "node:fs";
 
-const law = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+const law = JSON.parse(readFileSync(new URL("../🧪️tests/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 
 test("📦️ paged original rows preserve one final stable severity/omission authority", () => {
   expect(law.pauseDepth).toBeLessThan(law.minimumDepth);

@@ -65,7 +65,7 @@
       "activationFails": false,
       "outcome": "ready",
       "trace": [
-        "@semio-tech/framework-os-dev:activate-puzzle2d-react-dev",
+        "@semio-tech/framework-os-dev:activate-puzzle2d-react-prototype",
         "spawn",
         "stop"
       ]
@@ -81,7 +81,7 @@
       "activationFails": false,
       "outcome": "ready",
       "trace": [
-        "@semio-tech/framework-os-dev:activate-draw-wgpu-dev",
+        "@semio-tech/framework-os-dev:activate-draw-wgpu-prototype",
         "spawn",
         "stop"
       ]
@@ -109,7 +109,7 @@
       "activationFails": true,
       "outcome": "error",
       "trace": [
-        "@semio-tech/framework-os-dev:activate-puzzle2d-react-dev"
+        "@semio-tech/framework-os-dev:activate-puzzle2d-react-prototype"
       ]
     },
     {
@@ -135,7 +135,7 @@
       "activationFails": false,
       "outcome": "error",
       "trace": [
-        "@semio-tech/framework-os-dev:activate-draw-wgpu-dev"
+        "@semio-tech/framework-os-dev:activate-draw-wgpu-prototype"
       ]
     },
     {
@@ -173,7 +173,7 @@
       "activationFails": false,
       "outcome": "reused",
       "trace": [
-        "@semio-tech/framework-os-dev:activate-puzzle2d-react-dev"
+        "@semio-tech/framework-os-dev:activate-puzzle2d-react-prototype"
       ],
       "afterActivationAnswers": true,
       "afterActivationOccupied": true
@@ -189,7 +189,7 @@
       "activationFails": false,
       "outcome": "error",
       "trace": [
-        "@semio-tech/framework-os-dev:activate-puzzle2d-react-dev"
+        "@semio-tech/framework-os-dev:activate-puzzle2d-react-prototype"
       ],
       "afterActivationAnswers": false,
       "afterActivationOccupied": true

@@ -3,7 +3,7 @@ use super::*;
 #[path = "../../../🧪️tests/🧰️oracle-support/🦀️.rs"]
 mod support;
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🔣️.json");
+const FIXTURE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🔢️math-values/🔣️.json");
 
 #[test]
 fn the_compute_table_and_the_fixture_cover_exactly_the_catalogue_kinds() {

@@ -1,8 +1,9 @@
 //! 🫴️ Original CSV relational receiving laws retain refused SQL and logical record backing.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
 #[test]
 fn sqlite_snapshot_csv_receiving_original_subset_validation_uses_both_original_controls(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🛂️validation/🧫️fixtures/🔣️.json")).unwrap();let source=snapshot(&fixture());let database=input(&source);let pointers=(source.schema.as_ptr(),database.tables.as_ptr());let incoming=grant(&law["grant"]);
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🛂️validation/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let source=snapshot(&fixture());let database=input(&source);let pointers=(source.schema.as_ptr(),database.tables.as_ptr());let incoming=grant(&law["grant"]);
  macro_rules! direction{
   ($native:ident,$owner:ident,$method:ident)=>{
    for case in law["cases"].as_array().unwrap(){
@@ -18,15 +19,15 @@ fn sqlite_snapshot_csv_receiving_original_subset_validation_uses_both_original_c
  direction!(NativeEncodeControl,NativeSnapshotEncodeOwner,validate_sqlite_snapshot_subset_encoding);
  eprintln!("[DEBUG] CSV original subset receiving validation matches eight neutral directional cases with exact borrowed pointers, original native and SQL cancellation, zero physical allocation/release and literal unsupported policy");
 }
-use store::os_store::serialization::ArtifactSqliteSnapshot as _;
+use store::os_store::serialization::ArtifactSqliteSnapshotHost as _;
 use std::cell::Cell;
 use std::sync::atomic::{AtomicUsize,Ordering as AtomicOrdering};
 #[path="../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
 mod heap;
 #[global_allocator]
 static CSV_RECEIVING_HEAP:heap::RequestedAllocator=heap::RequestedAllocator;
-fn policy()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()}
+fn policy()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn grant(value:&serde_json::Value)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:value["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:value["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:value["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:value["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:value["maximumDepth"].as_u64().unwrap()as usize}}
 fn snapshot(value:&serde_json::Value)->CsvSnapshot{CsvSnapshot{schema:value["schema"].as_str().unwrap().to_string(),has_header:value["hasHeader"].as_bool().unwrap(),records:value["records"].as_array().unwrap().iter().map(|record|CsvRecord{fields:record["fields"].as_array().unwrap().iter().map(|field|CsvField{value:field["value"].as_str().unwrap().to_string(),quoted:field["quoted"].as_bool().unwrap()}).collect()}).collect()}}
 fn long_snapshot(law:&serde_json::Value)->CsvSnapshot{CsvSnapshot{schema:"owned-λ🙂".to_string(),has_header:true,records:vec![CsvRecord{fields:Vec::new()},CsvRecord{fields:vec![CsvField{value:law["stringUnit"].as_str().unwrap().repeat(law["stringRepetitions"].as_u64().unwrap()as usize),quoted:true},CsvField{value:"tail".to_string(),quoted:false}]},CsvRecord{fields:Vec::new()}]}}
@@ -68,7 +69,7 @@ fn sqlite_snapshot_csv_receiving_original_native_cancellation_keeps_staged_outpu
 fn sqlite_snapshot_csv_receiving_original_subset_validation_typed_destination_keeps_original_children(){
  use semio_framework_dsl_record::{FieldValue,RecordValue};
  use semio_framework_value::{native_decoding::NativeDecodeProgress,retirement::controlled::ControlledRetirement};
- let law:serde_json::Value=serde_json::from_str(include_str!("../../🛂️admission/🧫️fixtures/🔣️.json")).unwrap();let source=&law["source"];let text=source["unit"].as_str().unwrap().repeat(source["repeat"].as_u64().unwrap()as usize);assert_eq!(text.len(),source["bytes"].as_u64().unwrap()as usize);
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../🛂️admission/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let source=&law["source"];let text=source["unit"].as_str().unwrap().repeat(source["repeat"].as_u64().unwrap()as usize);assert_eq!(text.len(),source["bytes"].as_u64().unwrap()as usize);
  let normal=grant(&law["bodyGrant"]);let closing=grant(&law["closeGrant"]);
  let make_record=|schema:&str,value:&str|{let row=|fields|FieldValue::Record(RecordValue{fields:[(0,FieldValue::List(fields))].into_iter().collect()});let field=|value:&str,quoted|FieldValue::Record(RecordValue{fields:[(0,FieldValue::Text(value.into())),(1,FieldValue::Bool(quoted))].into_iter().collect()});RecordValue{fields:[(0,FieldValue::Text(schema.into())),(1,FieldValue::Bool(source["hasHeader"].as_bool().unwrap())),(2,FieldValue::List(vec![row(vec![]),row(vec![field(value,source["quoted"].as_bool().unwrap()),field("",source["emptyQuoted"].as_bool().unwrap())]),row(vec![])]))].into_iter().collect()}};
  let record=make_record(source["schema"].as_str().unwrap(),&text);let demanded=super::super::admission::binding_demands(&record).unwrap();

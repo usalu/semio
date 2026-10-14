@@ -1,0 +1,19 @@
+{
+  "source": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🕰️historical-json-source-encoding/🟦️.ts",
+    "before": "b172586bb57442c0dbe19c055c8d43cf82a651373831fadb7df5eb25cf2bf537",
+    "after": "1970748bea90900e2568e5ec57375ba0b75640bd2a1c437c5dd5502c0133e382"
+  },
+  "schema": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔣️frozen-seal-ledger/🔣️.json",
+    "sha256": "d9700b211f18f046565ed05e56e523d9d8adc2d3bc3ed93538b460eaa746df77",
+    "size": 10394
+  },
+  "fixture": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧫️frozen-seal-ledger/🔣️.json",
+    "sha256": "13bfc4d2cf24eb4d839f16f56ea55216792343c5e6cbfad2951e7e4842f8ab29",
+    "size": 17982,
+    "unchanged": true
+  },
+  "semantics": "Retire whole-test-ledger Ajv admission; preserve pure per-record escaped JSON/digest/root/selector/retirement/coordinate and genuine current catalog loader oracles. Removed fixture enrollments are historical examples, not production seal members. Newly extracted owner policy binds actual current typed bytes; obsolete historical whole-corpus hash cannot authorize it."
+}

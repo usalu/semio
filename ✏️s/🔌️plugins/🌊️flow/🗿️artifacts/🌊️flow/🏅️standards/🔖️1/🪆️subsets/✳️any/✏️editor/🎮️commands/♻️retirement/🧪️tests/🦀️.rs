@@ -8,7 +8,7 @@ fn observe<T>(work:impl FnOnce()->T)->(T,usize,usize){let(value,heap)=semio_fram
 
 #[test]
 fn original_flow_commands_close_full_sources_with_system_receipts(){
- let corpus:Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for copy in [1,3,64]{for cancel in [0,1,9,37]{
   let(commands,born,free)=observe(unit_tests::every_command);assert_eq!(commands.len(),corpus["commands"].as_array().unwrap().len());let original=born-free;let(mut births,mut releases)=(0,0);
   let(mut owner,born,free)=observe(||ControlledRetirement::new(commands).unwrap_or_else(|_|unreachable!("every defining command must retain full close authority")));assert_eq!((born,free),(0,0));let mut idle=0;let mut cancelled=false;
@@ -37,7 +37,7 @@ fn original_flow_snapshot_preserves_local_scene_and_full_system_receipts(){
 #[test]
 fn original_flow_completion_rejection_admits_whole_source_and_exact_system_receipts(){
  type Source=semio_framework_plugin::ArtifactToolCompletionRejection<semio_framework_plugin::EditorApp<FlowPlayApp>>;
- let corpus:Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📬️completion/♻️retirement/🚫️refusal/🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📬️completion/♻️retirement/🚫️refusal/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for copy in corpus["copies"].as_array().unwrap().iter().map(|copy|copy.as_u64().unwrap()as usize){for row in corpus["receivingCases"].as_array().unwrap(){
   let(source,born,free)=observe(||{
    let fault=||{let mut fault=Fault::new(semio_framework_diagnostic::FaultOrigin::App,"original-completion-rejection",row["message"].as_str().unwrap());fault.scope.module=Some(row["scope"].as_str().unwrap().into());fault.params=Some(Box::new(semio_framework_diagnostic::FaultParams(vec![("original".into(),row["parameter"].as_str().unwrap().into())])));fault};

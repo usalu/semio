@@ -81,7 +81,7 @@ fn random_seg(rng: &mut Lcg) -> BulgeSeg {
 #[test]
 fn arc_measures_match_kurbo() {
     let mut rng = Lcg(0x1234_5678_9ABC_DEF0);
-    let mut cases: Vec<BulgeSeg> = fixture(include_str!("../../🧫️fixtures/🌙️bulge/🔣️.json"))["arcs"].as_array().unwrap().iter().map(seg).collect();
+    let mut cases: Vec<BulgeSeg> = fixture(include_str!("../🧫️fixtures/🌙️bulge/🔣️.json"))["arcs"].as_array().unwrap().iter().map(seg).collect();
     cases.extend((0..300).map(|_| random_seg(&mut rng)));
     for (index, s) in cases.iter().enumerate() {
         if s.chord() < 0.1 {
@@ -171,7 +171,7 @@ fn random_loop(rng: &mut Lcg) -> Vec<Vertex> {
 #[test]
 fn loop_area_centroid_perimeter_bounds_and_winding_match_kurbo() {
     let mut rng = Lcg(0xFEED_FACE_0000_0007);
-    let mut cases: Vec<Vec<Vertex>> = fixture(include_str!("../../🧫️fixtures/➰️loops/🔣️.json"))["loops"]
+    let mut cases: Vec<Vec<Vertex>> = fixture(include_str!("../🧫️fixtures/➰️loops/🔣️.json"))["loops"]
         .as_array()
         .unwrap()
         .iter()
@@ -248,7 +248,7 @@ fn plane(v: &Value) -> ZPlane {
 
 #[test]
 fn solids_agree_with_parry3d_mass_properties_area_and_bounds() {
-    let doc = fixture(include_str!("../../🧫️fixtures/🕸️mesh/🔣️.json"));
+    let doc = fixture(include_str!("../🧫️fixtures/🕸️mesh/🔣️.json"));
     for case in doc["extrusions"].as_array().unwrap() {
         let m = extrude(&ring(&case["outer"]), &rings(&case["holes"]), plane(&case["bottom"]), plane(&case["top"]));
         agree_with_parry(case["name"].as_str().unwrap(), &m);
@@ -295,7 +295,7 @@ fn random_transformed_solids_agree_with_parry3d() {
 
 #[test]
 fn plan_sections_agree_with_parry3d_plane_intersections() {
-    let doc = fixture(include_str!("../../🧫️fixtures/🔪️section/🔣️.json"));
+    let doc = fixture(include_str!("../🧫️fixtures/🔪️section/🔣️.json"));
     for case in doc.as_array().unwrap() {
         let name = case["name"].as_str().unwrap();
         let m = extrude(&ring(&case["outer"]), &rings(&case["holes"]), ZPlane::flat(case["bottom"].as_f64().unwrap()), ZPlane::flat(case["top"].as_f64().unwrap()));
@@ -318,7 +318,7 @@ fn plan_sections_agree_with_parry3d_plane_intersections() {
 
 #[test]
 fn triangulated_area_matches_kurbo_polygon_area() {
-    let doc = fixture(include_str!("../../🧫️fixtures/🔺️triangulation/🔣️.json"));
+    let doc = fixture(include_str!("../🧫️fixtures/🔺️triangulation/🔣️.json"));
     for case in doc.as_array().unwrap() {
         let (outer, holes) = (ring(&case["outer"]), rings(&case["holes"]));
         let poly = |points: &[Point]| {

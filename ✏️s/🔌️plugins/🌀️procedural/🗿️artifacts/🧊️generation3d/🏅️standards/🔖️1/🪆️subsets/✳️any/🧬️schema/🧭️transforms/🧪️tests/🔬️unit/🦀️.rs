@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn per_axis_scale_matches_shared_matrix_fixtures() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧭️transforms/🔣️.json")).unwrap();
     for case in fixture["scales"].as_array().unwrap() {
         let vector = |key: &str| [0, 1, 2].map(|axis| case[key][axis].as_f64().unwrap());
         assert_eq!(compose_scale(vector("current"), vector("next")).unwrap(), vector("expected"));
@@ -21,7 +21,7 @@ struct Rotation { axis: [f64; 3], angle: f64 }
 
 #[test]
 fn composed_rotations_match_shared_world_axis_fixtures() {
-    let fixtures: Fixture = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixtures: Fixture = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧭️transforms/🔣️.json")).unwrap();
     for case in fixtures.cases {
         let mut result = AxisAngle::IDENTITY;
         for rotation in case.rotations {

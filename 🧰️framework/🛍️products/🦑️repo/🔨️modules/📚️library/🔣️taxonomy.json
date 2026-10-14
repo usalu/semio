@@ -721,32 +721,6 @@
     }
   },
   "frozenCoordinateEvidenceContracts": {
-    "readme-current-source-revision-input": {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🔖️readme-current-source-revision/🔣️.json",
-      "sha256": "2db36a012d6e79f970ea103bb156f7a789ac6fa5d2aa34bcc2252a09dfe9d6e3",
-      "schemaVersion": 1,
-      "coordinates": [
-        {
-          "pointer": "/revisions/testing-readme-protocol-v2-reviewed/sourcePath",
-          "kind": "source"
-        },
-        {
-          "pointer": "/cases/8/changes/0/value/sourcePath",
-          "kind": "source"
-        }
-      ]
-    },
-    "readme-reviewed-expectation-input": {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/👀️readme-reviewed-fixture-inputs/🎯️reviewed-expectations/🔣️.json",
-      "sha256": "e821d6835b7bc0054ae7d0d3c4e7907692263b7ad947c3d7230a4c848c730320",
-      "schemaVersion": 1,
-      "coordinates": [
-        {
-          "pointer": "/documents/readme",
-          "kind": "source"
-        }
-      ]
-    },
     "energy-history-fixture-audit": {
       "retired": {
         "ticket": "2026/08/23/END-TO-END-TESTING-REFACTOR",
@@ -761,39 +735,6 @@
           "pointer": "/16/fixtures/0/path",
           "kind": "source",
           "representation": "json-escaped-source-path"
-        }
-      ]
-    },
-    "remaining-package-purity-history-v1": {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
-      "sha256": "c3e39ed5122709c5f963f14a0bc7f53b93ec7caad414a9c6db39bc5c19ce5be9",
-      "schemaVersion": 1,
-      "coordinates": [
-        {
-          "pointer": "/mappings/*/0",
-          "kind": "source"
-        },
-        {
-          "pointer": "/mappings/29/3",
-          "kind": "source",
-          "representation": "recorded-package-owner-identity",
-          "identityPrefix": "unmarked:"
-        },
-        {
-          "pointer": "/mappings/29/4",
-          "kind": "source"
-        },
-        {
-          "pointer": "/mappings/29/5",
-          "kind": "source"
-        },
-        {
-          "pointer": "/mappings/29/6",
-          "kind": "destination"
-        },
-        {
-          "pointer": "/mappings/69/10",
-          "kind": "destination"
         }
       ]
     },
@@ -1519,29 +1460,6 @@
         {
           "pointer": "/globalPayloadStores/35/file",
           "kind": "source"
-        }
-      ]
-    },
-    "cad-draw-projection-vectors-v1": {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
-      "sha256": "eca5acc066ccf1ec2f686a1a4cc98fccc3089a87dd354e3c5aa72f687a8b6080",
-      "schemaVersion": 1,
-      "coordinates": [
-        {
-          "pointer": "/projections/*/sourceRoot",
-          "kind": "source"
-        },
-        {
-          "pointer": "/projections/*/destinationRoot",
-          "kind": "destination"
-        },
-        {
-          "pointer": "/projections/*/mappings/*/sourcePath",
-          "kind": "source"
-        },
-        {
-          "pointer": "/projections/*/mappings/*/destinationPath",
-          "kind": "destination"
         }
       ]
     },
@@ -3876,13 +3794,25 @@
       "emoji": "🧩️",
       "slugPattern": "^compositions$",
       "allowEmojiOnly": false,
-      "parentKindIds": ["hub"]
+      "parentKindIds": [
+        "hub"
+      ]
     },
     "component-crate": {
       "emoji": "🧩️",
       "slugPattern": "^component$",
       "allowEmojiOnly": false,
-      "parentKindIds": ["members-of-hub-compositions", "members-of-plan", "members-of-modules", "members-of-operating-system", "members-of-elements", "distribution-puzzle", "stdio", "text", "windows"]
+      "parentKindIds": [
+        "members-of-hub-compositions",
+        "members-of-plan",
+        "members-of-modules",
+        "members-of-operating-system",
+        "members-of-elements",
+        "distribution-puzzle",
+        "stdio",
+        "text",
+        "windows"
+      ]
     },
     "ui-contract-component": {
       "emoji": "🧩️",
@@ -4629,7 +4559,10 @@
       "emoji": "🔤️",
       "slugPattern": "^codec$",
       "allowEmojiOnly": false,
-      "parentKindIds": ["text", "binary"]
+      "parentKindIds": [
+        "text",
+        "binary"
+      ]
     },
     "serializers": {
       "emoji": "🧵️",
@@ -8092,31 +8025,41 @@
       "emoji": "🏗️",
       "slugPattern": "^build$",
       "allowEmojiOnly": false,
-      "parentKindIds": ["process"]
+      "parentKindIds": [
+        "process"
+      ]
     },
     "process-build-mode": {
       "emoji": "🎚️",
       "slugPattern": "^mode$",
       "allowEmojiOnly": false,
-      "parentKindIds": ["process-build"]
+      "parentKindIds": [
+        "process-build"
+      ]
     },
     "repo-library-build": {
       "emoji": "🏗️",
       "slugPattern": "^build$",
       "allowEmojiOnly": false,
-      "parentKindIds": ["repo-server-library"]
+      "parentKindIds": [
+        "repo-server-library"
+      ]
     },
     "repo-library-build-storybook": {
       "emoji": "📖️",
       "slugPattern": "^storybook$",
       "allowEmojiOnly": false,
-      "parentKindIds": ["repo-library-build"]
+      "parentKindIds": [
+        "repo-library-build"
+      ]
     },
     "repo-library-build-cmake": {
       "emoji": "🛠️",
       "slugPattern": "^cmake$",
       "allowEmojiOnly": false,
-      "parentKindIds": ["repo-library-build"]
+      "parentKindIds": [
+        "repo-library-build"
+      ]
     },
     "repo-process-owned-execution": {
       "emoji": "🎛️",
@@ -16990,26 +16933,25 @@
     },
     "readme-license-owner-leaves-v1": {
       "contractKind": "exact-owner-path-catalog",
-      "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/⚖️readme-license-owner-authority/🔣️.json",
-      "authorityCatalogSha256": "b60f16acbde34545d29abfeb50a55d5db6115b2d316b33011db07da34ca7afe9",
+      "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🏠️owner-projection-policy/🔣️.json",
+      "authorityCatalogSha256": "82d188a512e0051d2a9435715cd62d851911081b07294f81f64c287fe88e8333",
       "currentSourceRevisions": {
-        "testing-readme-protocol-v2-reviewed": {
-          "catalogCaseIndex": 31,
+        "testing-readme-owner-current": {
           "sourcePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/README.md",
           "baselineCommit": "9f449b10659b95148c8bcb3f91ce583bf7446973",
           "baselineBlob": "97c9cd961ac67eb875f714da1a17a8d2121446dc",
           "baselinePreimage": {
             "sha256": "f35bd37e2fb97b232b310eec053d0d93b23b9561eab17f583dd4e35c8756c804",
-            "size": 7205,
-            "mode": "0644"
+            "mode": "0644",
+            "size": 7205
           },
           "currentPreimage": {
-            "sha256": "20fa38e056c09959c00b652f0ed2985b65cf47b0115df0a6ca9418258dab85fc",
-            "size": 12511,
+            "sha256": "eee6c989f9adf1e317d3389a07a18b7ce85367a5cd19dbe3b69ed0ebd2516f86",
+            "size": 15146,
             "mode": "0644"
           },
-          "expectationsPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🗺️testing-readme-coordinates/🔣️.json",
-          "expectationsSha256": "e821d6835b7bc0054ae7d0d3c4e7907692263b7ad947c3d7230a4c848c730320"
+          "approvalPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🪪️current-source-approval/🔣️.json",
+          "approvalSha256": "126f209116d9fb65d0d9481682487c8562e934527caa52efad81a20a2094a130"
         }
       },
       "sourceFileKindId": "markdown",
@@ -17055,14 +16997,6 @@
       "generatorOwnerIds": [
         "assets-build"
       ],
-      "expectedCounts": {
-        "fixed": 4,
-        "license": 8,
-        "projected": 36,
-        "readme": 32,
-        "referenceBindings": 62,
-        "total": 40
-      },
       "authoredDocumentCorrections": {
         "repo-library-script-filename-v1": {
           "contractKind": "exact-owner-content-splices",
@@ -17446,6 +17380,10 @@
       {
         "kindId": "subset",
         "capture": "subsetId"
+      },
+      {
+        "kindId": "tests",
+        "literal": "🧪️tests"
       },
       {
         "kindId": "fixtures",
@@ -24555,13 +24493,13 @@
       "expires": null
     },
     "repo-analyzer-path-fixture": {
-      "pathPattern": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some",
+      "pathPattern": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures/📁️some",
       "authority": "Repo analyzer fixture contract",
       "reason": "This fixture intentionally preserves generic and colliding path identities as analyzer input and expected autofix evidence",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some"
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures/📁️some"
       },
       "descendants": "reserved",
       "verification": "repo statutes analyzer fixture tests",
@@ -27007,31 +26945,31 @@
           "inclusion": "tracked"
         },
         {
-          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
           "inclusion": "tracked"
         },
         {
-          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
           "inclusion": "tracked"
         },
         {
-          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
           "inclusion": "tracked"
         },
         {
-          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
           "inclusion": "tracked"
         },
         {
-          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
           "inclusion": "tracked"
         },
         {
-          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
           "inclusion": "tracked"
         },
         {
-          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
           "inclusion": "tracked"
         }
       ],
@@ -27140,7 +27078,7 @@
         "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📽️projection/🟦️.ts",
         "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
         "🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧩️suite/🟦️.ts",
-        "🧰️framework/🔨️modules/🕸️graph/🧫️fixtures/🔣️outputs.json",
+        "🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧫️fixtures/🔣️outputs.json",
         "🧰️framework/🔨️modules/🪪️identity/🛣️path/🟦️.ts",
         "🧰️framework/🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts"
       ],

@@ -11,7 +11,7 @@ pub(super) fn authored_source(law:&serde_json::Value)->HalfedgeMesh{
 fn original_mesh_tessellation_metadata_capture_borrows_exact_source_rows(){
     use crate::test_support::observe_tessellation_system as observe;
     use protocol::value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
     for copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){
         let(mut job,source)=observe(||MeshTessellationJob::new(super::tessellation_metadata_tests::authored_source(&law)));
         let mut originals=[(0usize,0usize);3];for(index,(key,attribute))in job.mesh.attributes.iter().enumerate(){originals[index]=(key.as_ptr()as usize,attribute.values.as_ptr()as usize);}

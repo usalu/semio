@@ -1,4 +1,7 @@
 //! ⚖️ App laws and the test modules of the app vocabulary.
+#[path="🎟️caller/🦀️.rs"]
+mod original_fixture_caller;
+pub use original_fixture_caller::OriginalFixtureCaller;
 #[cfg(test)] use crate::store_publication::PendingArtifactStorePublication;
 #[cfg(test)] use crate::window_kits::nothing_selected;
 #[cfg(test)] use crate::window_kits::NodeGraphDeleteDispatch;
@@ -42,7 +45,8 @@ use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: `AsyncTask`'s boxed `run` closure/future.
 use std::future::Future;
-use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, os_store::serialization::ArtifactPack, ArtifactStore, ConfigStore, os_store::store_schema::HistoryLane, MemberFactory, Mutation, NoMembers, SpaceMember};
+use pack::snapshot::ArtifactPack;
+use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, ArtifactStore, ConfigStore, os_store::store_schema::HistoryLane, MemberFactory, Mutation, NoMembers, SpaceMember};
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_ui_locale::Terminology;
@@ -197,7 +201,7 @@ use crate::window_surface::UiAssemblyResult;
 
 #[cfg(test)]
 #[path = "../🧪️tests/🧬️mutation-fixtures/🦀️.rs"]
-mod mutation_fixture;
+pub(crate) mod mutation_fixture;
 
 #[cfg(test)]
 #[path = "../🧪️tests/🚫️empty-state/🦀️.rs"]
@@ -259,6 +263,7 @@ pub mod artifact_app_laws {
     //! `terminology_tests`/`panel_kit_tests` above for the sibling pattern of testing SDK primitives
     //! themselves inline.
 
+    pub use super::OriginalFixtureCaller;
     use super::{register_framework_reserved_factories, ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactToolFactoryRegistry, PluginApp, TypedOperationResultLane, VcsArtifactApp};
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
     use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
@@ -419,7 +424,7 @@ pub mod artifact_app_laws {
     pub async fn plugin_load_document_text<PA, S, Mutation>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, instance_id: u32, files: &store::os_store::text_format::ArtifactTextFiles, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), super::Fault>
     where
         PA: PluginApp,
-        S: Clone + store::os_store::serialization::ArtifactDsl + store::os_store::serialization::ArtifactPack + 'static,
+        S: Clone + pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
         Mutation: store::OpText + store::OpBinary + store::Mutation<S> + 'static,
     {
         let parsed: store::os_store::text_format::ParsedDocumentText<S, Mutation> = store::os_store::text_format::parse_document_text(&files.dsl, &files.ops).await.map_err(semio_framework_diagnostic::FaultFrom::into_fault)?;
@@ -477,7 +482,7 @@ pub mod artifact_app_laws {
     /// Backspace/Delete remove one character, arrows move one character, Home/End reach the line edges, Enter inserts a line
     /// break) — the model the editor's own text-input law and Chromium's native textarea answer identically.
     pub fn typing_run() -> TypingRun {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⌨️typing-run/🔣️.json")).expect("typing-run fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/⌨️typing-run/🔣️.json")).expect("typing-run fixture");
         let initial = fixture["initial"].as_str().expect("typing-run initial").to_string();
         let mut text: Vec<char> = initial.chars().collect();
         let mut caret = text.len();
@@ -521,16 +526,11 @@ pub mod artifact_app_laws {
         TypingRun { initial, texts, expected }
     }
 
-    /// 🎟️ The runtime's lifecycle grant widened on every axis to the owner's own quoted next demand, one item per turn.
+    /// 🎟️ The fixture's original policy admits each quoted demand without creating new authority.
     fn fixture_lifecycle_grant(demand: super::RetirementDemand) -> super::RetainedCloneGrant {
-        let base = crate::plugin_runtime::runtime_lifecycle_grant();
-        super::RetainedCloneGrant {
-            maximum_items: 1,
-            maximum_copy_bytes: base.maximum_copy_bytes.max(demand.copy_bytes),
-            maximum_capacity_bytes: base.maximum_capacity_bytes.max(demand.capacity_bytes),
-            maximum_release_bytes: base.maximum_release_bytes.max(demand.release_bytes),
-            maximum_depth: base.maximum_depth.max(demand.depth),
-        }
+        let grant = fixture_mounted_policy().maintenance;
+        assert!(grant.maximum_items > 0 && grant.maximum_copy_bytes >= demand.copy_bytes && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_release_bytes >= demand.release_bytes && grant.maximum_depth >= demand.depth, "fixture demand exceeds its original mounted policy");
+        grant
     }
 
     /// 🌡️ Spends the maintenance the plugin runtime spends on a pressured instance: while a displaced-owner queue of the
@@ -542,7 +542,7 @@ pub mod artifact_app_laws {
     pub fn drain_maintenance_pressure<P: PluginApp>(app: &mut P) {
         let mut idle_stages = 0;
         while app.maintenance_under_pressure() {
-            let grant = fixture_lifecycle_grant(PluginApp::maintenance_retirement_demands(app, crate::plugin_runtime::runtime_lifecycle_grant().maximum_copy_bytes).expect("quoted maintenance demand"));
+            let grant = fixture_lifecycle_grant(PluginApp::maintenance_retirement_demands(app, fixture_mounted_policy().maintenance.maximum_copy_bytes).expect("quoted maintenance demand"));
             match PluginApp::maintenance_step(app, grant).expect("bounded maintenance") {
                 crate::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress != super::RetainedCloneProgress::default() => idle_stages = 0,
                 _ => idle_stages += 1,
@@ -768,7 +768,7 @@ pub mod artifact_app_laws {
         Ok(scene)
     }
 
-    fn observe_and_retire_fixture_tree<R>(tree: super::ComponentTree, project: impl FnOnce(&super::BuiltNode) -> R) -> R {
+    pub(crate) fn observe_and_retire_fixture_tree<R>(tree: super::ComponentTree, project: impl FnOnce(&super::BuiltNode) -> R) -> R {
         let projected = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| project(&tree.root)));
         let mut retirement = semio_framework_ui_contract::BuiltTreeRetirement::new(tree.root);
         while !retirement.terminal_is_empty() {
@@ -886,7 +886,7 @@ pub mod artifact_app_laws {
     /// 🚰️ Drains a standalone Store's displaced-owner maintenance queue to terminal emptiness under its own quoted grant — the caller no scheduler funds — so a fixture that edits a long history frees the fixed 1 024-slot retirement authority between batches.
     pub fn drain_store_displaced_retirements<P, Mutation>(store: &mut store::ArtifactStore<P, Mutation>)
     where
-        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::os_store::serialization::ArtifactPack + Send + Sync + 'static,
+        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
         Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + store::OpBinary + store::OpText + Send + 'static,
     {
         for _ in 0..1_000_000 {
@@ -961,34 +961,29 @@ pub mod artifact_app_laws {
     /// 📜️ A pending history patch (a time-travel stage change) rides a UI-progress frame the host takes every turn;
     /// left untaken it kept `has_pending_typed_operations` true until the deadline for the first operation after a
     /// history edit (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, forms frozen-press law).
-    pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiver: u32, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TypedOperationFixtureReceipt, super::Fault> {
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+    pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiver: u32, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<TypedOperationFixtureReceipt, crate::PluginLifecycleFailure> {
+        let mut turns=0;let maximum_turns=OriginalFixtureCaller::maximum_turns();
         let mut receipt = TypedOperationFixtureReceipt { ownership_receipts: Vec::new(), lanes: Vec::new(), effects: Vec::new(), events: Vec::new(), ui_scope: None, completions: 0, completion_operations: Vec::new(), revisions: Vec::new(), composed: Vec::new() };
         retain_registered_ownership_receipts(app, mounted_policy, &mut receipt)?;
         while app.has_pending_typed_operations() {
-            if std::time::Instant::now() >= deadline {
-                return Err(super::Fault::from(format!("registered fixture typed operation did not retire within 30 seconds: {}", app.typed_operation_diagnostic())));
-            }
+            if cx.should_yield()||turns>=maximum_turns{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture settlement exhausted its caller opportunity").into())}turns+=1;
             let grant = mounted_policy.maintenance;
-            let demand = app.maintenance_retirement_demands(grant.maximum_copy_bytes).map_err(|error| super::Fault::from(error.into_message()))?;
-            let maintenance = crate::bounded_ownership::runtime_lifecycle_step(demand, grant, |grant| {
-                let step = app.maintenance_step(grant)?;
+            let demand = app.maintenance_retirement_demands(grant.maximum_copy_bytes)?;
+            let maintenance = crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant| {
+                let step = app.maintenance_step(same,grant)?;
                 Ok((step, app.maintenance_terminal_is_empty()))
             })?;
             if let Some(progress) = maintenance.progress() { receipt.ownership_receipts.push(TypedOperationFixtureOwnershipReceipt::Maintenance { grant, progress }); }
-            app.advance_typed_operation_publication(identity,mounted_policy.preparation).await?;
-            if let Some(refusal) = app.typed_operation_refusal() {
-                return Err(super::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("interactive-job.owner-refused"), refusal));
-            }
+            app.advance_typed_operation_publication(identity,cx).await?;
             retain_registered_ownership_receipts(app, mounted_policy, &mut receipt)?;
             while let Some(page) = app.take_typed_operation_result_page(receiver) {
                 let lane = page.lane;
                 let fault = (lane == TypedOperationResultLane::Fault).then(|| crate::tool_contract::decode_typed_operation_fault_page(page.bytes()));
                 if !app.acknowledge_typed_operation_result(page.token)? {
-                    return Err(super::Fault::from("registered fixture typed operation rejected its exact result ACK"));
+                    return Err(super::Fault::from("registered fixture typed operation rejected its exact result ACK").into());
                 }
                 receipt.lanes.push(lane);
-                if let Some(fault) = fault { return Err(fault); }
+                if let Some(fault) = fault { return Err(fault.into()); }
             }
             while let Some(effect) = app.take_typed_operation_effect() {
                 receipt.effects.push(effect);
@@ -1014,7 +1009,7 @@ pub mod artifact_app_laws {
                 if let protocol::LocalInteractionQueryReply::Page { page } = reply {
                     let token = protocol::LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity.clone(), ordinal: page.ordinal };
                     if !app.acknowledge_local_interaction_query(&token) {
-                        return Err(super::Fault::from("registered fixture typed operation rejected its exact local-interaction ACK"));
+                        return Err(super::Fault::from("registered fixture typed operation rejected its exact local-interaction ACK").into());
                     }
                 }
             }
@@ -1028,7 +1023,7 @@ pub mod artifact_app_laws {
     }
 
     /// 🧾️ Collects original producer receipts once before any subsequent semantic fixture callback.
-    fn retain_original_ownership_receipts<P: PluginApp>(app: &mut P, policy: crate::MountedOwnerPolicyV1, recipient: &mut Vec<TypedOperationFixtureOwnershipReceipt>) -> Result<(), super::Fault> {
+    pub(crate) fn retain_original_ownership_receipts<P: PluginApp>(app: &mut P, policy: crate::MountedOwnerPolicyV1, recipient: &mut Vec<TypedOperationFixtureOwnershipReceipt>) -> Result<(), super::Fault> {
         if let Some((kind, phase, grant, progress)) = app.take_constructor_receipt() {
             let original = match phase { crate::document_ingress::ArtifactStoreConstructorPhase::Preparation => policy.preparation, crate::document_ingress::ArtifactStoreConstructorPhase::Close => fixture_close_grant(policy) };
             if grant != original || !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() { return Err(super::Fault::from("registered fixture constructor receipt differs from its original caller authority")); }
@@ -1099,8 +1094,7 @@ pub mod artifact_app_laws {
         action_meta: &ActionMeta,
         serve: &mut dyn FnMut(&PendingExtensionInvocation) -> Result<Vec<u8>, super::Fault>,
         mounted_policy: crate::MountedOwnerPolicyV1,
-        identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
-    ) -> Result<SettledExtensionInvocations, super::Fault> {
+        identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<SettledExtensionInvocations,crate::PluginLifecycleFailure> {
         use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
         let mut settled = SettledExtensionInvocations { ownership_receipts: Vec::new(), answered: 0, effects: Vec::new() };
         for effect in crate::reactor::drain_queued_effects(receiver) {
@@ -1121,7 +1115,7 @@ pub mod artifact_app_laws {
             let invocation = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: String::new(), app_id }, command_id: action }, arguments };
             let meta = ActionMeta { instance_id: instance, ..action_meta.clone() };
             app.handle_command(&invocation, None, &meta, identity).await?;
-            let receipt = settle_registered_typed_operation(app, receiver, mounted_policy, identity).await?;
+            let receipt = settle_registered_typed_operation(app, receiver, mounted_policy, identity,cx).await?;
             settled.ownership_receipts.extend(receipt.ownership_receipts);
             settled.effects.extend(receipt.effects);
             settled.answered += 1;
@@ -1135,22 +1129,22 @@ pub mod artifact_app_laws {
     }
 
     /// 🧹️ Closes one registered fixture through the exact retained app close state machine.
-    pub fn close_registered_fixture_app<A: PluginApp>(app: &mut A, mounted_policy: crate::MountedOwnerPolicyV1) -> Vec<TypedOperationFixtureOwnershipReceipt> {
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+    pub fn close_registered_fixture_app<A: PluginApp>(app: &mut A, mounted_policy: crate::MountedOwnerPolicyV1,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<TypedOperationFixtureOwnershipReceipt>,crate::PluginLifecycleFailure> {
         let mut pending_authority = None;
         let mut last_quote = None;
-        let mut close_turn = 0usize;
+        let mut close_turn = 0usize;let maximum_turns=OriginalFixtureCaller::maximum_turns();
         let mut ownership_receipts = Vec::new();
-        retain_original_ownership_receipts(app, mounted_policy, &mut ownership_receipts).expect("original fixture pre-close receipts");
-        while std::time::Instant::now() < deadline {
-            if app.close_terminal_is_empty() { return ownership_receipts; }
+        retain_original_ownership_receipts(app, mounted_policy, &mut ownership_receipts)?;
+        while close_turn<maximum_turns {
+            if app.close_terminal_is_empty() { return Ok(ownership_receipts); }
+            if cx.should_yield(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture close exhausted its caller opportunity").into())}
             let grant = fixture_close_grant(mounted_policy);
-            let demand = app.close_retirement_demands(grant.maximum_copy_bytes).expect("registered fixture descriptive close demand");
+            let demand = app.close_retirement_demands(grant.maximum_copy_bytes)?;
             last_quote = Some((demand, grant));
-            let step = crate::bounded_ownership::runtime_lifecycle_step(demand, grant, |grant| {
-                Ok((app.close_step(grant)?, app.close_terminal_is_empty()))
-            }).expect("registered fixture close");
-            retain_original_ownership_receipts(app, mounted_policy, &mut ownership_receipts).expect("original fixture close receipts");
+            let step = crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant| {
+                Ok((app.close_step(same,grant)?, app.close_terminal_is_empty()))
+            })?;
+            retain_original_ownership_receipts(app, mounted_policy, &mut ownership_receipts)?;
             match step {
                 super::PluginLifecycleStep::Progress(progress) | super::PluginLifecycleStep::Complete(progress) => {
                     assert!(progress.fits(grant), "registered fixture close turn {close_turn} exceeded its exact physical grant");
@@ -1165,7 +1159,7 @@ pub mod artifact_app_laws {
             close_turn = close_turn.saturating_add(1);
         }
         assert!(app.close_terminal_is_empty(), "registered fixture did not reach its exact terminal-empty witness{}{}", pending_authority.map(|reason| format!(", last pending close authority: {reason}")).unwrap_or_default(), last_quote.map(|(demand, grant)| format!(", last close quote {demand:?} against grant {grant:?} on rung {}", app.close_diagnostic())).unwrap_or_default());
-        ownership_receipts
+        Ok(ownership_receipts)
     }
 
     /// 🔗️ Two registry-less store-only instances joined by an in-memory backbone on `channel`.
@@ -1218,14 +1212,14 @@ pub mod artifact_app_laws {
     /// `undo did not revert to the expected snapshot` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     /// A non-retained app admits no spawn job and
     /// [`super::settle_framework_reserved_admission`] hands the same result straight back.
-    pub async fn settle_history_verb<A, M>(app: &mut VcsArtifactApp<A, M>, action: &str, receiver: u32, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
+    pub async fn settle_history_verb<A, M>(app: &mut VcsArtifactApp<A, M>, action: &str, receiver: u32, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)
     where
         A: ArtifactApp,
         M: super::SpaceMember + super::MemberFactory + Send + 'static,
     {
         let admitted = app.handle_action(action, None, &meta("local"), identity).await.unwrap_or_else(|fault| panic!("history verb {action} admission: {fault:?}"));
         super::settle_framework_reserved_admission(app, admitted).await.unwrap_or_else(|fault| panic!("history verb {action} reserved-job commit: {fault:?}"));
-        settle_registered_typed_operation(app, receiver, mounted_policy, identity).await.unwrap_or_else(|fault| panic!("history verb {action} publication: {fault:?}"));
+        settle_registered_typed_operation(app, receiver, mounted_policy, identity,cx).await.unwrap_or_else(|fault| panic!("history verb {action} publication: {fault:?}"));
     }
 
     /// 🧪️ Runs `command` once via the typed channel, asserts `probe(app)` matches `after`, undoes (still
@@ -1237,7 +1231,7 @@ pub mod artifact_app_laws {
     /// receipt, so probing straight after it observes the pre-command document and the
     /// round trip passes or fails against the wrong state entirely. A non-retained app has
     /// nothing pending and settles in zero turns (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub async fn assert_undo_redo_round_trip<A, M, P>(app: &mut VcsArtifactApp<A, M>, command: A::Command, probe: impl Fn(&VcsArtifactApp<A, M>) -> P, before: P, after: P, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
+    pub async fn assert_undo_redo_round_trip<A, M, P>(app: &mut VcsArtifactApp<A, M>, command: A::Command, probe: impl Fn(&VcsArtifactApp<A, M>) -> P, before: P, after: P, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)
     where
         A: ArtifactApp,
         M: super::SpaceMember + super::MemberFactory + Send + 'static,
@@ -1245,11 +1239,11 @@ pub mod artifact_app_laws {
     {
         let receiver = meta("local").instance_id;
         app.dispatch_typed(command, &meta("local"), identity).await.expect("apply command");
-        settle_registered_typed_operation(app, receiver, mounted_policy, identity).await.expect("apply command publication");
+        settle_registered_typed_operation(app, receiver, mounted_policy, identity,cx).await.expect("apply command publication");
         assert_eq!(probe(app), after, "command did not produce the expected snapshot");
-        settle_history_verb(app, "undo", receiver, mounted_policy, identity).await;
+        settle_history_verb(app, "undo", receiver, mounted_policy, identity,cx).await;
         assert_eq!(probe(app), before, "undo did not revert to the expected snapshot");
-        settle_history_verb(app, "redo", receiver, mounted_policy, identity).await;
+        settle_history_verb(app, "redo", receiver, mounted_policy, identity,cx).await;
         assert_eq!(probe(app), after, "redo did not reapply the expected snapshot");
     }
 
@@ -1334,16 +1328,21 @@ pub mod artifact_app_laws {
     /// read back afterwards. The declaration (`ActionKind`, audience, `effects.destructive`, args) is
     /// what users, collaborators and agents rely on; these laws hold the handler to it
     /// (ticket 26/09/23/END-TO-END-OS-HUB-COLLABORATION-MCP, slice P8).
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Debug)]
     pub enum DeclaredVerbOutcome {
         /// 🚪️ The dispatch infrastructure refused the verb before any handler ran (`interactive-job.*`,
         /// `app.command.unsupported`) — the declared verb cannot be invoked at all.
-        Unreachable { code: String, detail: String },
+        Unreachable { code: String, detail: String, failure:Option<crate::PluginLifecycleFailure> },
         /// 🛑️ The handler refused this invocation by name.
-        Refused { code: String, detail: String },
+        Refused { code: String, detail: String, failure:Option<crate::PluginLifecycleFailure> },
         /// ✅️ The operation settled; see [`DeclaredVerbEffect`].
         Settled(DeclaredVerbEffect),
     }
+
+    impl PartialEq for DeclaredVerbOutcome{
+        fn eq(&self,other:&Self)->bool{match(self,other){(Self::Unreachable{code:a,detail:b,..},Self::Unreachable{code:c,detail:d,..})|(Self::Refused{code:a,detail:b,..},Self::Refused{code:c,detail:d,..})=>a==c&&b==d,(Self::Settled(a),Self::Settled(b))=>a==b,_=>false}}
+    }
+    impl Eq for DeclaredVerbOutcome{}
 
     /// 📤️ The observable effect of one settled dispatch — published lanes, requested host effects and
     /// the document/config change read back from the stores.
@@ -1377,7 +1376,7 @@ pub mod artifact_app_laws {
     /// 🧪️ One declared verb probed on its app's own boot fixture, from every window kind that presents
     /// it (a window-claimed verb from its own window, an app-level verb from each window a shell can
     /// dispatch it from — a window-config verb only acts from its own window).
-    #[derive(Clone, Debug, PartialEq)]
+    #[derive(Debug, PartialEq)]
     pub struct DeclaredVerbProbe {
         pub verb: String,
         pub kind: semio_framework::ActionKind,
@@ -1393,7 +1392,7 @@ pub mod artifact_app_laws {
 
     /// 🪟️ The verb dispatched from one window kind: once with the staged declared defaults, then twice
     /// per perturbable declared argument with two distinct valid values.
-    #[derive(Clone, Debug, PartialEq)]
+    #[derive(Debug, PartialEq)]
     pub struct DeclaredVerbWindowProbe {
         pub window: String,
         pub staged: DeclaredVerbOutcome,
@@ -1403,7 +1402,7 @@ pub mod artifact_app_laws {
     /// 🔀️ The same verb dispatched with two distinct values of one declared argument. `others_specified`
     /// says every OTHER declared argument carried a value (a declared default or the surface's example),
     /// so a refusal cannot be blamed on a missing sibling.
-    #[derive(Clone, Debug, PartialEq)]
+    #[derive(Debug, PartialEq)]
     pub struct DeclaredArgumentProbe {
         pub argument: String,
         pub others_specified: bool,
@@ -1616,13 +1615,9 @@ pub mod artifact_app_laws {
     /// 🚪️ Infrastructure refusals (the verb never reached its handler) versus a handler's own refusal.
     /// `interactive-job.app-owned-output` is the code a retained job's fault page carries when the
     /// handler's own `Fault` crossed the publication boundary, so it is the handler's refusal.
-    fn declared_verb_refusal(fault: super::Fault) -> DeclaredVerbOutcome {
-        let code = fault.code.0.clone();
-        if (code.starts_with("interactive-job.") && code != "interactive-job.app-owned-output") || code == "app.command.unsupported" {
-            DeclaredVerbOutcome::Unreachable { code, detail: fault.message }
-        } else {
-            DeclaredVerbOutcome::Refused { code, detail: fault.message }
-        }
+    fn declared_verb_refusal(failure:impl Into<crate::PluginLifecycleFailure>)->DeclaredVerbOutcome{
+        let failure=failure.into();let(code,detail)=match &failure.primary{crate::PluginLifecyclePrimary::Fault(fault)=>(fault.code.0.clone(),fault.message.clone()),crate::PluginLifecyclePrimary::Value(error)=>("interactive-job.owner-refused".to_string(),format!("{error:?}"))};
+        if(code.starts_with("interactive-job.")&&code!="interactive-job.app-owned-output")||code=="app.command.unsupported"{DeclaredVerbOutcome::Unreachable{code,detail,failure:Some(failure)}}else{DeclaredVerbOutcome::Refused{code,detail,failure:Some(failure)}}
     }
 
     /// 🎬️ How a fresh probe fixture boots the app's own example: its `setActiveExample` invocation (the
@@ -1652,7 +1647,7 @@ pub mod artifact_app_laws {
 
     /// 🧫️ The per-probe fixture: the registered app, bound as instance 1, booted with the app's own
     /// example when it declares one.
-    async fn declared_verb_fixture_app<A, M>(definition: &semio_framework::AppDefinition, boot: Option<&DeclaredVerbBoot>, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<A, M>
+    async fn declared_verb_fixture_app<A, M>(definition: &semio_framework::AppDefinition, boot: Option<&DeclaredVerbBoot>, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> VcsArtifactApp<A, M>
     where
         A: ArtifactApp + Default,
         M: super::SpaceMember + super::MemberFactory + Send + 'static,
@@ -1663,7 +1658,7 @@ pub mod artifact_app_laws {
         if let Some(boot) = boot {
             let action_meta = ActionMeta { view_state: Some(boot.view.clone()), ..meta("local") };
             let result = app.handle_action("setActiveExample", Some(&boot.args), &action_meta, identity).await.unwrap_or_else(|fault| panic!("the app's own boot example must be admitted: {fault:?}"));
-            let receipt = settle_registered_typed_operation(&mut app, action_meta.instance_id, mounted_policy, identity).await.unwrap_or_else(|fault| panic!("the app's own boot example must settle: {fault:?}"));
+            let receipt = settle_registered_typed_operation(&mut app, action_meta.instance_id, mounted_policy, identity,cx).await.unwrap_or_else(|fault| panic!("the app's own boot example must settle: {fault:?}"));
             for effect in result.requested_effects.into_iter().chain(receipt.effects) {
                 if let semio_framework::kernel::Effect::LoadDocument { pack, spr } = effect {
                     load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, identity).await.unwrap_or_else(|fault| panic!("the app's own boot example must load: {fault:?}"));
@@ -1680,14 +1675,14 @@ pub mod artifact_app_laws {
         A: ArtifactApp,
         M: super::SpaceMember + super::MemberFactory + Send + 'static,
     {
-        let mut document = app.snapshot().map(|snapshot| store::os_store::serialization::ArtifactPack::encode_pack(&snapshot)).unwrap_or_default();
+        let mut document = app.snapshot().map(|snapshot| pack::snapshot::ArtifactPack::encode_pack(&snapshot)).unwrap_or_default();
         for child in PluginApp::child_packs(app).await.unwrap_or_default() {
             document.extend_from_slice(child.slot.as_bytes());
             document.extend_from_slice(child.child_id.as_bytes());
             document.extend_from_slice(&child.envelope_pack);
         }
         let config = match app.refresh_cache().await {
-            Ok(()) => app.cache.as_ref().map(|(_, _, config, _)| store::os_store::serialization::ArtifactPack::encode_pack(config.as_ref())).unwrap_or_default(),
+            Ok(()) => app.cache.as_ref().map(|(_, _, config, _)| pack::snapshot::ArtifactPack::encode_pack(config.as_ref())).unwrap_or_default(),
             Err(_) => Vec::new(),
         };
         (document, config)
@@ -1719,14 +1714,17 @@ pub mod artifact_app_laws {
         A: ArtifactApp + Default,
         M: super::SpaceMember + super::MemberFactory + Send + 'static,
     {
-        let mut app = declared_verb_fixture_app::<A, M>(definition, boot, mounted_policy, identity).await;
+        let mut original_caller=OriginalFixtureCaller::admit().expect("closed original fixture caller admission");
+        let mut original_context=original_caller.context();let cx=&mut original_context;
+        let result=async{
+        let mut app = declared_verb_fixture_app::<A, M>(definition, boot, mounted_policy, identity,cx).await;
         let (document_before, config_before) = declared_verb_state(&mut app).await;
         let unheld_before = declared_verb_unheld_children(&app).await;
         let action_meta = ActionMeta { view_state: Some(view.clone()), ..meta("local") };
         let receiver = action_meta.instance_id;
         let outcome = match app.handle_action(verb, Some(args), &action_meta, identity).await {
             Err(fault) => declared_verb_refusal(fault),
-            Ok(result) => match settle_registered_typed_operation(&mut app, receiver, mounted_policy, identity).await {
+            Ok(result) => match settle_registered_typed_operation(&mut app, receiver, mounted_policy, identity,cx).await {
                 Err(fault) => declared_verb_refusal(fault),
                 Ok(receipt) => {
                     let effects = result.requested_effects.iter().chain(receipt.effects.iter()).map(|effect| format!("{effect:?}")).collect::<Vec<_>>();
@@ -1761,8 +1759,12 @@ pub mod artifact_app_laws {
                 }
             },
         };
-        close_registered_fixture_app(&mut app, mounted_policy);
+        close_registered_fixture_app(&mut app, mounted_policy,cx).expect("registered fixture original close");
         outcome
+    
+        }.await;
+        let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original fixture caller paid terminal retirement");
+        result
     }
 
     /// 🤖️ Previews `verb` with `args` exactly as the MCP gateway's `action_prepare` does — the agent lane's typed command
@@ -1803,7 +1805,10 @@ pub mod artifact_app_laws {
         A: ArtifactApp + Default,
         M: super::SpaceMember + super::MemberFactory + Send + 'static,
     {
-        let mut app = declared_verb_fixture_app::<A, M>(definition, boot, mounted_policy, identity).await;
+        let mut original_caller=OriginalFixtureCaller::admit().expect("closed original fixture caller admission");
+        let mut original_context=original_caller.context();let cx=&mut original_context;
+        let result=async{
+        let mut app = declared_verb_fixture_app::<A, M>(definition, boot, mounted_policy, identity,cx).await;
         let app_id = app.app.instance_id().await.to_string();
         let arguments = match args {
             semio_framework::DslValue::Object(entries) => entries.iter().cloned().collect(),
@@ -1833,8 +1838,12 @@ pub mod artifact_app_laws {
                 DeclaredVerbOutcome::Settled(DeclaredVerbEffect { lanes, document_changed: document != 0, document_replaced: false, config_changed: config != 0, user_path_written: false, host_effects, fingerprint, orphaned_children: Vec::new() })
             }
         };
-        close_registered_fixture_app(&mut app, mounted_policy);
+        close_registered_fixture_app(&mut app, mounted_policy,cx).expect("registered fixture original close");
         outcome
+    
+        }.await;
+        let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original fixture caller paid terminal retirement");
+        result
     }
 
     /// 🧪️ Probes every verb `definition` declares, on the app's own boot example: each window kind's
@@ -2006,12 +2015,17 @@ pub mod artifact_app_laws {
         A: ArtifactApp + Default,
         P: PartialEq + std::fmt::Debug,
     {
+        let mut original_caller=OriginalFixtureCaller::admit().unwrap();let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
         let (mut instance_a, mut instance_b) = paired_apps::<A>(channel, mounted_policy, identity).await;
         let genesis = probe(&instance_a);
         instance_a.dispatch_typed(command_a, &meta("actor-a"), identity).await.expect("a applies its edit");
         instance_b.dispatch_typed(command_b, &meta("actor-b"), identity).await.expect("b applies its edit");
-        exchange_and_assert_convergence(&mut instance_a, &mut instance_b, "actor-a", &probe, mounted_policy, identity).await;
+        exchange_and_assert_convergence(&mut instance_a, &mut instance_b, "actor-a", &probe, mounted_policy, identity,cx).await;
         assert_ne!(probe(&instance_a), genesis, "the replicated edits must actually land, not converge on the untouched genesis");
+    
+        close_registered_fixture_app(&mut instance_a,mounted_policy,cx).expect("original first app close");close_registered_fixture_app(&mut instance_b,mounted_policy,cx).expect("original second app close");
+
+        }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).unwrap();result
     }
 
     /// 🧬️ Registered twin of [`assert_two_instances_converge`]: every typed command is settled until its
@@ -2037,25 +2051,32 @@ pub mod artifact_app_laws {
         Manifest: std::future::Future<Output = App>,
         Build: Fn() -> Manifest,
     {
+        let mut original_caller=OriginalFixtureCaller::admit().expect("closed original fixture caller admission");
+        let mut original_context=original_caller.context();let cx=&mut original_context;
+        let result=async{
         let (mut instance_a, mut instance_b) = paired_registered_apps_with_members::<A, M, Manifest, Build>(channel, manifest, mounted_policy, identity).await;
         let genesis = probe(&instance_a);
         let receiver = meta("actor-a").instance_id;
         instance_a.dispatch_typed(command_a, &meta("actor-a"), identity).await.expect("a applies its edit");
-        settle_registered_typed_operation(&mut instance_a, receiver, mounted_policy, identity).await.expect("a's edit publishes");
+        settle_registered_typed_operation(&mut instance_a, receiver, mounted_policy, identity,cx).await.expect("a's edit publishes");
         instance_b.dispatch_typed(command_b, &meta("actor-b"), identity).await.expect("b applies its edit");
-        settle_registered_typed_operation(&mut instance_b, receiver, mounted_policy, identity).await.expect("b's edit publishes");
-        exchange_and_assert_convergence(&mut instance_a, &mut instance_b, "actor-a", &probe, mounted_policy, identity).await;
+        settle_registered_typed_operation(&mut instance_b, receiver, mounted_policy, identity,cx).await.expect("b's edit publishes");
+        exchange_and_assert_convergence(&mut instance_a, &mut instance_b, "actor-a", &probe, mounted_policy, identity,cx).await;
         assert_ne!(probe(&instance_a), genesis, "the replicated edits must actually land, not converge on the untouched genesis");
         instance_a.detach_backbone().await.expect("a releases its backbone");
         instance_b.detach_backbone().await.expect("b releases its backbone");
-        close_registered_fixture_app(&mut instance_a, mounted_policy);
-        close_registered_fixture_app(&mut instance_b, mounted_policy);
+        close_registered_fixture_app(&mut instance_a, mounted_policy,cx).expect("registered fixture original close");
+        close_registered_fixture_app(&mut instance_b, mounted_policy,cx).expect("registered fixture original close");
+    
+        }.await;
+        let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original fixture caller paid terminal retirement");
+        result
     }
 
     /// 🔀️ Both replicas fold each other's events, `a` commits a checkpoint over everything it holds, `b`
     /// folds that commit — `probe` must agree after each exchange: edits and structural history alike
     /// converge by projection of the shared event log.
-    async fn exchange_and_assert_convergence<A, M, P>(instance_a: &mut VcsArtifactApp<A, M>, instance_b: &mut VcsArtifactApp<A, M>, actor_a: &str, probe: &impl Fn(&VcsArtifactApp<A, M>) -> P, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
+    async fn exchange_and_assert_convergence<A, M, P>(instance_a: &mut VcsArtifactApp<A, M>, instance_b: &mut VcsArtifactApp<A, M>, actor_a: &str, probe: &impl Fn(&VcsArtifactApp<A, M>) -> P, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)
     where
         A: ArtifactApp,
         M: super::SpaceMember + super::MemberFactory + Send + 'static,
@@ -2067,7 +2088,7 @@ pub mod artifact_app_laws {
         let receiver = meta(actor_a).instance_id;
         let admitted = instance_a.handle_action("commitCheckpoint", None, &meta(actor_a), identity).await.expect("a commits a checkpoint");
         super::settle_framework_reserved_admission(instance_a, admitted).await.expect("a's checkpoint commit settles");
-        settle_registered_typed_operation(instance_a, receiver, mounted_policy, identity).await.expect("a's checkpoint publication settles");
+        settle_registered_typed_operation(instance_a, receiver, mounted_policy, identity,cx).await.expect("a's checkpoint publication settles");
         instance_b.tick_backbone(identity).await.expect("b folds a's checkpoint");
         assert_eq!(probe(instance_a), probe(instance_b), "a replicated checkpoint keeps both instances converged");
     }
@@ -2131,12 +2152,15 @@ pub mod artifact_app_laws {
         Manifest: std::future::Future<Output = App>,
         Build: Fn() -> Manifest,
     {
+        let mut original_caller=OriginalFixtureCaller::admit().expect("closed original fixture caller admission");
+        let mut original_context=original_caller.context();let cx=&mut original_context;
+        let result=async{
         let mut sender = new_registered_app_with_members::<A, M, _>(manifest(), protocol::ActorId(super::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await;
         sender.bind_instance_id(meta("local").instance_id).await;
         let (near, mut far) = MemoryBackbone::pair("mem://testkit-idempotent", "mem://testkit-idempotent").await;
         sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach sender");
         sender.dispatch_typed(command, &meta("local"), identity).await.expect("apply command");
-        settle_registered_typed_operation(&mut sender, meta("local").instance_id, mounted_policy, identity).await.expect("the edit publishes");
+        settle_registered_typed_operation(&mut sender, meta("local").instance_id, mounted_policy, identity,cx).await.expect("the edit publishes");
         let mut envelopes = Vec::new();
         for message in far.receive().await.expect("receive") {
             if let BackboneMessage::Mutations { envelopes: operations } = message {
@@ -2154,18 +2178,22 @@ pub mod artifact_app_laws {
         receiver.ingest_operations(&operations, identity).await.expect("ingest twice");
         assert_eq!(probe(&receiver), once, "feeding the same operation twice must not double-apply");
         sender.detach_backbone().await.expect("sender releases its backbone");
-        close_registered_fixture_app(&mut sender, mounted_policy);
-        close_registered_fixture_app(&mut receiver, mounted_policy);
+        close_registered_fixture_app(&mut sender, mounted_policy,cx).expect("registered fixture original close");
+        close_registered_fixture_app(&mut receiver, mounted_policy,cx).expect("registered fixture original close");
+    
+        }.await;
+        let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original fixture caller paid terminal retirement");
+        result
     }
 
     /// 🔀️ Dispatches `command` and asserts it produced a `TransactionProposalDraft` instead of
     /// applying anything (contract §5.1) — the guest-side half of "propose instead of apply".
     /// Returns the draft so a test can inspect `local_ops`/`foreign`.
-    pub async fn assert_proposes_transaction<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, command: A::Command, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> super::TransactionProposalDraft {
+    pub async fn assert_proposes_transaction<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, command: A::Command, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> super::TransactionProposalDraft {
         let generation_before = app.store.generation();
         let edits_before = app.store.envelope().vcs.edits.len();
         app.dispatch_typed(command, &meta("local"), identity).await.expect("dispatch a command whose mutations carry foreign steps");
-        settle_registered_typed_operation(app, meta("local").instance_id, mounted_policy, identity).await.expect("a proposing dispatch settles its own operation");
+        settle_registered_typed_operation(app, meta("local").instance_id, mounted_policy, identity,cx).await.expect("a proposing dispatch settles its own operation");
         assert_eq!(app.store.generation(), generation_before, "a proposed transaction must not bump the document store's generation");
         assert_eq!(app.store.envelope().vcs.edits.len(), edits_before, "a proposed transaction must not add an Edit");
         app.take_pending_transaction_proposal().await.expect("dispatch_emit must stash a TransactionProposalDraft when foreign steps are present")
@@ -2217,7 +2245,7 @@ pub mod artifact_app_laws {
     // subregion, appended after the peer `🧫️fixtures` subregion above without touching it.
     use super::{declarations, ArtifactEditor, ArtifactViewer, ViewerApp};
 
-    struct BoundedViewerFixture<V: ArtifactViewer>(std::marker::PhantomData<V>);
+    pub(crate) struct BoundedViewerFixture<V: ArtifactViewer>(std::marker::PhantomData<V>);
 
     impl<V: ArtifactViewer> Default for BoundedViewerFixture<V> {
         fn default() -> Self {
@@ -2518,6 +2546,9 @@ pub mod artifact_app_laws {
         V: ArtifactViewer<Presence = super::NoPresence, PresenceMutation = super::NoPresenceMutation, Transient = super::NoTransient, TransientMutation = super::NoTransientMutation>,
         V::Command: Default,
     {
+        let mut original_caller=OriginalFixtureCaller::admit().expect("closed original fixture caller admission");
+        let mut original_context=original_caller.context();let cx=&mut original_context;
+        let result=async{
         use super::{ArtifactView, ConfigView, DraftView, InteractionHoverState, InteractionView, NoDraft, PeerPresenceRoot};
         let mut app: VcsArtifactApp<ViewerApp<BoundedViewerFixture<V>>, V::Members> = VcsArtifactApp::new(ViewerApp::<BoundedViewerFixture<V>>::default(), protocol::ActorId(super::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await;
         app.refresh_cache().await.expect("viewer fixture cache");
@@ -2533,11 +2564,15 @@ pub mod artifact_app_laws {
             let interaction = InteractionView { state: &state, hover: &hover, peers: &peers, draft_references: super::empty_draft_references() };
             ViewerApp::<V>::handle(&V::Command::default(), &doc, &cfg, &interaction, None, &draft, &semio_framework_2d::compute::EngineHandles::empty()).await.map(|emit| (emit.artifact_mutations.is_empty(), emit.draft_mutations.is_empty()))
         };
-        close_registered_fixture_app(&mut app, mounted_policy);
+        close_registered_fixture_app(&mut app, mounted_policy,cx).expect("registered fixture original close");
         if let Ok((artifact_is_empty, draft_is_empty)) = result {
             assert!(artifact_is_empty, "a viewer must never emit document mutations");
             assert!(draft_is_empty, "a viewer must never emit draft mutations");
         }
+    
+        }.await;
+        let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original fixture caller paid terminal retirement");
+        result
     }
 
     /// ✏️👁️ Contract §2.5 helper 2/3 — an editor and its viewer over the same subset must resolve

@@ -20,7 +20,7 @@ pub use schema::mutations::PngMutation;
 pub use schema::snapshot::PngSnapshot;
 pub use schema::PngArtifact;
 /// 🧾️ The DSL contract `PngSnapshot` implements, re-exported for clients that print or parse it.
-pub use semio_framework_os_kernel::os_store::serialization::ArtifactDsl;
+pub use pack::snapshot::ArtifactDsl;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_PNG_DOCUMENT_SCHEMA: &str = "stdio.png";

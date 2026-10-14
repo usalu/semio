@@ -1,0 +1,63 @@
+{
+  "annex": null,
+  "site": null,
+  "buildings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bridges": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "assessments": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "as-1",
+        "patch": {
+          "knowledgeLevel": null,
+          "limitState": null,
+          "supportedBuildingId": null,
+          "rKN": 650000.0,
+          "gammaEl": null
+        }
+      }
+    ]
+  },
+  "silos": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tanks": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "foundations": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "retainingWalls": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "towers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

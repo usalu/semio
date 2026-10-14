@@ -16,7 +16,7 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 fn natural_file_route_enforces_tiny_and_publishes_the_decoded_snapshot() {
     let codec = <SvgTinyEditor as ArtifactEditor>::natural_file_codec().expect("SVG Tiny natural codec");
     assert_eq!((codec.format_kind, codec.extension, codec.media_type, codec.binary), ("s.stdio.svg@1.1", ".svg", "image/svg+xml", false));
-    let source = include_bytes!("../../../🧫️fixtures/✍️set-text-applied/➡️after.svg");
+    let source = include_bytes!("../../../🧪️tests/🧫️fixtures/✍️set-text-applied/➡️after.svg");
     let imported = <SvgTinyEditor as ArtifactEditor>::decode_natural_file(source).expect("SVG Tiny natural import");
     let exported = <SvgTinyEditor as ArtifactEditor>::encode_natural_file(&imported).expect("SVG Tiny natural export");
     let independent = semio_s_artifact_stdio_svg_test_oracle::standards::v1_1::subsets::tiny::oracle_round_trip(&exported).expect("quick-xml reopens SVG Tiny export");

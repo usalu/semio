@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
-import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️laws/🟦️.ts";
 /** 📦️ flow flow Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
-import { runCmd, runCargo, runVitest, runRepositoryExactCargoLaws, runRepositoryTestCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { runCmd, runCargo, runVitest, runRepositoryExactCargoLaws, runRepositoryTestCommand, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { strict as assert } from "node:assert";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
@@ -37,7 +37,7 @@ class SourceTestScript extends BundleScript {
 class ChildIdentityCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts");
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, cargoArgs: segments, groups: [
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, cargoArgs: segments, groups: [
         {
           package: "semio-s-artifact-flow-flow",
           target: { kind: "lib" },
@@ -65,7 +65,7 @@ class ChildIdentityCheckScript extends BundleScript {
 class ChildEditCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts");
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, cargoArgs: segments, groups: [
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, cargoArgs: segments, groups: [
         {
           package: "semio-s-artifact-flow-flow",
           target: { kind: "lib" },
@@ -83,8 +83,8 @@ class ChildEditCheckScript extends BundleScript {
 
 class AddWidgetRetainedCheckScript extends BundleScript {
   async oracle(): Promise<void> {
-    const root = new URL("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor", import.meta.url);
-    const fixture = await Bun.file(new URL("🧫️fixtures/🧵️add-widget-retained/🔣️.json", root)).json();
+    const root = new URL("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/", import.meta.url);
+    const fixture = await Bun.file(new URL("./🧪️tests/🧫️fixtures/🧵️add-widget-retained/🔣️.json", root)).json();
     const deny = { accepted: false, sessionCalls: 0, parentMutations: 0, childGroups: 0, visibleGroups: 0 };
     const model = (request: any) => {
       const textBytes = Buffer.byteLength(request.command.kind) + Buffer.byteLength(request.command.neuronKind ?? "");
@@ -181,7 +181,7 @@ class AddWidgetRetainedCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await this.oracle();
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, cargoArgs: segments, groups: [{ package: "semio-s-artifact-flow-flow", target: { kind: "lib" }, laws: ["retained_add_widget_factory_is_exact_child_only_and_legacy_closed", "retained_add_widget_dispatches_one_acknowledged_child_group_and_retires"] }] });
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, cargoArgs: segments, groups: [{ package: "semio-s-artifact-flow-flow", target: { kind: "lib" }, laws: ["retained_add_widget_factory_is_exact_child_only_and_legacy_closed", "retained_add_widget_dispatches_one_acknowledged_child_group_and_retires"] }] });
     console.log(`Flow retained addWidget native laws: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
   }
 }

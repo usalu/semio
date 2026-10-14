@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import { parseSchemaRecord } from "../../🟦️.ts";
-import vectors from "../../🧫️fixtures/🔣️.json" with { type: "json" };
+import vectors from "../🧫️fixtures/🔣️.json" with { type: "json" };
 import emptySchema from "../../🔣️.json" with { type: "json" };
 
 /** 🧾️ Checks allowed field ownership without evaluating foreign accessors. */

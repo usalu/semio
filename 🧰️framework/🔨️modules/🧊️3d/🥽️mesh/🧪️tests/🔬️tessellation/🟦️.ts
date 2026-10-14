@@ -1,7 +1,7 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {BufferGeometry,Float32BufferAttribute,Mesh,EdgesGeometry,ShapeUtils,Vector2,DataTexture,MeshStandardMaterial} from "three";
-import law from "../../🧫️fixtures/🧩️tessellation/🎟️owners.json";
+import law from "../🧫️fixtures/🧩️tessellation/🎟️owners.json";
 import schema from "../../🧬️schema/🧩️tessellation/🎟️owners.json";
 
 test("original tessellation cancellation preserves retained buffers until closure",()=>{

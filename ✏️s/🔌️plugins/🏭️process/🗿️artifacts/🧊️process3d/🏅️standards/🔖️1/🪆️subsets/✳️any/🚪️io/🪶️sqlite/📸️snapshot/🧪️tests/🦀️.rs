@@ -1,11 +1,12 @@
 //! 🏭️ Genuine Process3d parent capability and complete persisted-state baselines.
 #[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
 mod original_owners;
+use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::Process3dSnapshot;
 use crate::*;
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 fn laws() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()
 }
 fn words() -> Vec<u64> {
     laws()["binary64Bits"].as_array().unwrap().iter().map(|v| u64::from_str_radix(v.as_str().unwrap(), 16).unwrap()).collect()
@@ -265,17 +266,17 @@ async fn sqlite_snapshot_process3d_actual_public_file_preserves_complete_parent_
         let expected = public_cohort::Owned::new(full(word));
         for encoding in [store::sqlite_snapshot::SnapshotEncoding::Binary, store::sqlite_snapshot::SnapshotEncoding::Text] {
             let limits = store::sqlite_snapshot::SqliteDatabaseLimits::default();
-            let file = store::io::io_mechanism::io_export_sqlite_snapshot(&dialect, &*expected, encoding, limits, &mut |_| true).await.unwrap().value;
+            let file = async{let original_file_dialect=&dialect;let original_file_input=&*expected;let original_file_encoding=encoding;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|store::io::io_mechanism::io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
             assert!(file.starts_with(b"SQLite format 3\0"));
-            let actual = public_cohort::Owned::new(store::io::io_mechanism::io_import_sqlite_snapshot::<Process3dSnapshot>(&dialect, &file, limits, &mut |_| true).await.unwrap().value);
+            let actual = public_cohort::Owned::new(async{let original_file_dialect=&dialect;let original_file_input=&file;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|store::io::io_mechanism::io_import_sqlite_snapshot::<Process3dSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value);
             public_cohort::inspect(&file, word, encoding);
             assert_full(&actual, &expected, word);
             assert_eq!(actual.encode_pack(), expected.encode_pack());
             assert_eq!(actual.print_dsl(), expected.print_dsl());
             let edited = public_cohort::edit(&file);
-            let actual = public_cohort::Owned::new(store::io::io_mechanism::io_import_sqlite_snapshot::<Process3dSnapshot>(&dialect, &edited, limits, &mut |_| true).await.unwrap().value);
+            let actual = public_cohort::Owned::new(async{let original_file_dialect=&dialect;let original_file_input=&edited;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|store::io::io_mechanism::io_import_sqlite_snapshot::<Process3dSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value);
             let mut literal = public_cohort::Owned::new(full(word));
-            let public: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚦️public/🔣️.json")).unwrap();
+            let public: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🚦️public/🔣️.json")).unwrap();
             assert_eq!(public["retirement"], "explicit");
             literal.stock_payload.label = public["independentEdit"]["value"].as_str().unwrap().into();
             assert_full(&actual, &literal, word);

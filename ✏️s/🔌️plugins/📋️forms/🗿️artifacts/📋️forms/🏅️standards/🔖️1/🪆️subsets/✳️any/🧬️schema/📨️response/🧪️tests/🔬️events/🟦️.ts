@@ -1,8 +1,8 @@
 import {parseFormsJsonResponse,formsResponseJson,parseFormsJsonDefinition,parseFormsJsonValue} from "../../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import assert from "node:assert/strict";
 import { applyPatch, compare } from "fast-json-patch";
-import fixture from "../../🧫️fixtures/🔣️events.json";
-import timestamps from "../../🧫️fixtures/🔣️timestamps.json";
+import fixture from "../../../../🧪️tests/🧫️fixtures/📨️response/🔣️events.json";
+import timestamps from "../../../../🧪️tests/🧫️fixtures/📨️response/🔣️timestamps.json";
 import responseSchema from "../../🔣️.json";
 import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { parseFormsResponse, applyResponseEvent, inverseResponseEvent, type FormsResponseEvent } from "../../🟦️.ts";
@@ -31,7 +31,7 @@ export function testFormsResponses(): void {
 /** ✅️ Submission validates every step and snapshots only visible answer fields. */
 export async function testFormsSubmission(): Promise<void> {
   const { prepareResponse } = await import("../../🟦️.ts");
-  const { default: input } = await import("../../🧫️fixtures/🔣️submission.json");
+  const { default: input } = await import("../../../../🧪️tests/🧫️fixtures/📨️response/🔣️submission.json");
   const { default: responseSchema } = await import("../../🔣️.json");
   const validate = semioSchemaAjvV1().compile(responseSchema);
   for (const test of input.cases) {

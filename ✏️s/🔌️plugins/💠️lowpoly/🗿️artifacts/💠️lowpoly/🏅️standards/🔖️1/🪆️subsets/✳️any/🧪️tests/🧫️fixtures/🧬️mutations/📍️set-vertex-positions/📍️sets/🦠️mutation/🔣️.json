@@ -1,0 +1,24 @@
+{
+  "SetVertexPositions": {
+    "objectId": "obj-plane",
+    "positions": [
+      {
+        "vertex": 1,
+        "position": [
+          2.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "vertex": 2,
+        "position": [
+          2.0,
+          0.0,
+          1.0
+        ]
+      }
+    ],
+    "channels": []
+  }
+}

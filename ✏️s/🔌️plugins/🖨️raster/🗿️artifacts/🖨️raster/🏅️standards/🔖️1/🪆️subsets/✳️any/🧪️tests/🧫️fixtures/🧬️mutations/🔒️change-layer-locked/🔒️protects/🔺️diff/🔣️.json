@@ -1,0 +1,28 @@
+{
+  "schema": null,
+  "id": null,
+  "title": null,
+  "layers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "sketch",
+        "patch": {
+          "name": null,
+          "visible": null,
+          "locked": true,
+          "opacity": null,
+          "blendMode": null,
+          "transformX": null,
+          "transformY": null,
+          "width": null,
+          "height": null,
+          "adjustmentKind": null
+        }
+      }
+    ]
+  },
+  "assets": null
+}

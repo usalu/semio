@@ -1,0 +1,7 @@
+[
+  { "id": "enabled", "label": "Open", "disabled": false, "reason": null, "focusable": true, "actionable": true, "description": null },
+  { "id": "disabled-unexplained", "label": "Uninstall", "disabled": true, "reason": null, "focusable": false, "actionable": false, "description": null },
+  { "id": "disabled-empty-explanation", "label": "Uninstall", "disabled": true, "reason": "", "focusable": false, "actionable": false, "description": null },
+  { "id": "disabled-explained-en", "label": "Edit", "disabled": true, "reason": "Not possible right now", "focusable": true, "actionable": false, "description": "Not possible right now" },
+  { "id": "disabled-explained-de", "label": "Bearbeiten", "disabled": true, "reason": "Zurzeit nicht möglich", "focusable": true, "actionable": false, "description": "Zurzeit nicht möglich" }
+]

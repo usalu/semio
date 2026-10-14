@@ -243,7 +243,7 @@ export async function registerFolderArchiveRestoreTests(
       const { default: Ajv } = await import("ajv");
       const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
       type PresenceCase = { readonly name: string; readonly bootstrap: string; readonly steps: readonly ({ readonly read: string } | { readonly write: string })[]; readonly expected: { readonly absent: number; readonly puts: number } };
-      const corpus = read("../../🔨️modules/🏪️store/🧫️fixtures/🧫️folder-archive-presence/🔣️.json") as { readonly cases: readonly PresenceCase[] };
+      const corpus = read("../../🔨️modules/🏪️store/🧪️tests/🧫️fixtures/🧫️folder-archive-presence/🔣️.json") as { readonly cases: readonly PresenceCase[] };
       const bytesOf = (name: string): Uint8Array => encodeDocumentArchiveBytes({ parent_pack: Array.from(new TextEncoder().encode(name)), parent_spr: [], members: [] });
       const same = (left: Uint8Array | null, right: Uint8Array | null): boolean => (left === null || right === null ? left === right : left.length === right.length && left.every((byte, index) => byte === right[index]));
       const originalFetch = globalThis.fetch;

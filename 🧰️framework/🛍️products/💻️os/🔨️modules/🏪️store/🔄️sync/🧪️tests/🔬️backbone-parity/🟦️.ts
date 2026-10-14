@@ -1,4 +1,4 @@
-import examples from "../../⚖️parity/🧫️fixtures/🔣️.json";
+import examples from "../../⚖️parity/🧪️tests/🧫️fixtures/🔣️.json";
 import Ajv from "ajv";
 import { HISTORY_TRANSITION_DIFF_SCHEMA, encodeClientFrame, encodePresencePeer, type MutationEnvelope, type ServerFrame, type WireFrontierSummary, type WireMutationEnvelope } from "@semio-tech/framework-replication";
 import { decodeBackboneMessage, type ArtifactActorConfig } from "../../../../../🟦️.ts";

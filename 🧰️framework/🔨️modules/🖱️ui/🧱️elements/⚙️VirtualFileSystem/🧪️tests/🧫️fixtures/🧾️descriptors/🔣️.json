@@ -1,0 +1,141 @@
+{
+  "schema": "vfs-descriptor-presentation@1",
+  "kinds": {
+    "text": {
+      "id": "text",
+      "name": "Text",
+      "presentation": "text"
+    },
+    "avatar": {
+      "id": "avatar",
+      "name": "Author",
+      "presentation": "avatar"
+    },
+    "time": {
+      "id": "time",
+      "name": "Updated",
+      "presentation": "time",
+      "format": "datetime"
+    }
+  },
+  "cases": [
+    {
+      "id": "text",
+      "kind": "text",
+      "value": {
+        "presentation": "text",
+        "text": "Alpha"
+      },
+      "expect": {
+        "text": "Alpha"
+      }
+    },
+    {
+      "id": "empty",
+      "kind": "text",
+      "value": {
+        "presentation": "text",
+        "text": ""
+      },
+      "expect": {
+        "text": ""
+      }
+    },
+    {
+      "id": "unicode",
+      "kind": "text",
+      "value": {
+        "presentation": "text",
+        "text": "Größe 🧊"
+      },
+      "expect": {
+        "text": "Größe 🧊"
+      }
+    },
+    {
+      "id": "mismatch",
+      "kind": "text",
+      "value": {
+        "presentation": "avatar",
+        "name": "Ada Lovelace"
+      },
+      "expect": {
+        "text": ""
+      }
+    },
+    {
+      "id": "absent",
+      "kind": "text",
+      "value": null,
+      "expect": {
+        "text": ""
+      }
+    },
+    {
+      "id": "avatar",
+      "kind": "avatar",
+      "value": {
+        "presentation": "avatar",
+        "name": "Ada Lovelace"
+      },
+      "expect": {
+        "text": "AL",
+        "name": "Ada Lovelace"
+      }
+    },
+    {
+      "id": "avatar-extra-space",
+      "kind": "avatar",
+      "value": {
+        "presentation": "avatar",
+        "name": "  Ada  Lovelace  "
+      },
+      "expect": {
+        "text": "A",
+        "name": "Ada  Lovelace"
+      }
+    },
+    {
+      "id": "avatar-image",
+      "kind": "avatar",
+      "value": {
+        "presentation": "avatar",
+        "name": "Grace Hopper",
+        "icon": "/grace.png"
+      },
+      "expect": {
+        "text": "GH",
+        "name": "Grace Hopper",
+        "icon": "/grace.png"
+      }
+    },
+    {
+      "id": "invalid-time",
+      "kind": "time",
+      "value": {
+        "presentation": "time",
+        "iso": "not-a-date"
+      },
+      "expect": {
+        "text": "not-a-date"
+      }
+    }
+  ],
+  "avatarGeometry": {
+    "rect": [
+      0,
+      0,
+      20,
+      20
+    ],
+    "radius": 10,
+    "oversizedRadius": 100,
+    "uv": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "alpha": 1
+  }
+}

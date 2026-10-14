@@ -3,7 +3,7 @@ use super::*;
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
-const FIXTURE: &str = include_str!("../../../🧫️fixtures/⏱️operation-jobs/🔣️.json");
+const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/⏱️operation-jobs/🔣️.json");
 
 /// 🧭️ Reads a fixture vector.
 fn vec3(value: &Value) -> [f64; 3] {

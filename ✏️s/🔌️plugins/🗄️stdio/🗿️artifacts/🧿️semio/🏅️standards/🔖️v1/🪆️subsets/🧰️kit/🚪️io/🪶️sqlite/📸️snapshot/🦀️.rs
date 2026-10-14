@@ -1,4 +1,5 @@
 //! 🧰️ Kit types, designs, placed pieces, connections, typed child handles and history pins.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 
@@ -9,7 +10,7 @@ use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
 use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
 use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
 use {semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion}, semio_s_artifact_stdio_semio_base::schema::child::validate_semio_child_identity};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 /// 🔍️ Resolves a retained, paid identity frontier with bounded text comparisons.
@@ -87,7 +88,7 @@ fn kit_invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::Inval
 fn kit_blob_size(text:&str)->Result<u64,ValueError>{
  if text.is_empty()||text.len()>20||(text.len()>1&&text.as_bytes()[0]==b'0')||!text.bytes().all(|byte|byte.is_ascii_digit()){return Err(kit_invalid("invalid Semio kit blob identity or size"))}text.parse::<u64>().map_err(|error|kit_invalid(&error.to_string()))
 }
-impl ArtifactSqliteSnapshot for SemioKitSnapshot{
+impl ArtifactSqliteSnapshotHost for SemioKitSnapshot{
 fn retire_sqlite_snapshot(self){drop(semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
 fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native_decoding::decode(payload,control,native_control.native())}
@@ -100,6 +101,11 @@ let row=database.table("semio_kit_document")?.single_row()?;
 if row.rowid!=1||row.integer(0)?!=1||row.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned document identity differs from projected semantic fields"));}
 control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))})().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
 
+
+
+
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for SemioKitSnapshot {
 const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
 fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.project_sqlite_database(control)}
 fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError> {semantic::layout(control.limits())?;Self::reconstruct_sqlite_database(database, control, Self::SQLITE_SCHEMA)}

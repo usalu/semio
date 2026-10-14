@@ -40,6 +40,8 @@ pub trait RetirementCursor: Send {
         None
     }
     fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {Ok(0)}
+    /// 🎯️ Quotes payload work for the same event selected by the incoming body grant.
+    fn next_selected_work_byte_demand(&self,_maximum_body_bytes:usize)->Result<usize,crate::ValueError> {self.next_work_byte_demand()}
     /// 🪆️ Declares a separately funded child when a complete inline item exceeds this work grant.
     fn allows_admitted_narrow_work(&self) -> bool { false }
     fn next_birth_bytes(&self, _maximum_bytes: usize) -> Option<usize> { None }
@@ -198,6 +200,10 @@ impl<T: RetireOwned> RetirementCursor for Collection<T> {
     }
     fn next_close_byte_demand(&self)->Option<usize>{Some(if self.0.is_empty(){self.0.capacity()*size_of::<T>()}else{0})}
     fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {Ok(if !std::mem::needs_drop::<T>()&&!self.0.is_empty(){T::retirement_element_copy_bytes()}else{0})}
+    fn next_selected_work_byte_demand(&self,maximum_body_bytes:usize)->Result<usize,crate::ValueError> {
+        let atom=self.next_work_byte_demand()?;
+        Ok(if maximum_body_bytes<atom&&self.next_birth_bytes(maximum_body_bytes).is_some_and(|bytes|bytes!=0) {0}else {atom})
+    }
     fn allows_admitted_narrow_work(&self)->bool{!std::mem::needs_drop::<T>()&&!self.0.is_empty()&&T::retirement_element_copy_bytes()!=0}
     fn next_birth_bytes(&self, maximum_bytes: usize) -> Option<usize> {
         if self.0.is_empty() || (!std::mem::needs_drop::<T>() && T::retirement_element_copy_bytes() != 0 && maximum_bytes >= T::retirement_element_copy_bytes()) { Some(0) }
@@ -466,14 +472,26 @@ impl<T: RetireOwned, const N: usize> RetirementCursor for PlainArray<T, N> {
             return RetirementStep::ProcessedBytes(0);
         }
         let count = (grant.maximum_copy_bytes / width).min(self.remaining);
-        if count == 0 { return RetirementStep::BudgetExhausted; }
+        if count == 0 {
+            let Some(birth)=self.next_birth_bytes(grant.maximum_copy_bytes) else {return RetirementStep::BudgetExhausted;};
+            if birth==0||grant.maximum_capacity_bytes<birth||grant.maximum_depth==0 {return RetirementStep::BudgetExhausted;}
+            let value=unsafe {std::ptr::read(&self.items[self.remaining-1])};
+            self.remaining-=1;
+            return RetirementStep::Child(value.retirement());
+        }
         self.remaining -= count;
         RetirementStep::ProcessedBytes(count * width)
     }
     fn terminal_is_empty(&self) -> bool { self.remaining == 0 }
     fn next_work_byte_demand(&self) -> Result<usize, crate::ValueError> { Ok(if self.remaining != 0 { T::retirement_element_copy_bytes() } else { 0 }) }
+    fn next_selected_work_byte_demand(&self,body:usize)->Result<usize,crate::ValueError> {
+        let atom=self.next_work_byte_demand()?;
+        Ok(if body<atom&&self.next_birth_bytes(body).is_some_and(|bytes|bytes!=0) {0}else {atom})
+    }
     fn allows_admitted_narrow_work(&self) -> bool { self.remaining != 0 }
-    fn next_birth_bytes(&self, _: usize) -> Option<usize> { Some(0) }
+    fn next_birth_bytes(&self,body:usize)->Option<usize> {
+        if self.remaining!=0&&body<T::retirement_element_copy_bytes() {self.items[self.remaining-1].retirement_birth_bytes()}else {Some(0)}
+    }
     fn terminal_release_bytes(&self) -> Option<usize> { self.terminal_is_empty().then_some(size_of::<Self>()) }
 }
 impl<T: RetireOwned, const N: usize> Drop for PlainArray<T, N> {
@@ -489,6 +507,7 @@ impl<T: RetireOwned, const N: usize> RetireOwned for [T; N] {
     }
     fn retirement_birth_bytes(&self) -> Option<usize> { Some(if plain_elements::<T>() { size_of::<PlainArray<T, N>>() } else { size_of::<FixedArray<T, N>>() }) }
     fn controlled_retirement_supported() -> bool { T::controlled_retirement_supported() }
+    fn retirement_element_copy_bytes() -> usize { if plain_elements::<T>() { size_of::<Self>() } else { 0 } }
 }
 
 struct Sequence(ManuallyDrop<Vec<Box<dyn RetirementCursor>>>);
@@ -611,6 +630,7 @@ impl RetirementCursor for ErasedCursor {
     }
     fn terminal_is_empty(&self)->bool {self.0.terminal_is_empty()}
     fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {self.0.next_copy_byte_demand()}
+    fn next_selected_work_byte_demand(&self,body:usize)->Result<usize,crate::ValueError> {Ok(self.0.next_demand(body)?.copy_bytes)}
     fn next_birth_bytes(&self,copy:usize)->Option<usize> {self.0.next_capacity_byte_demand(copy).ok()}
     fn next_close_byte_demand(&self)->Option<usize> {self.0.next_release_byte_demand().ok()}
     fn next_depth_demand(&self)->Result<usize,crate::ValueError> {self.0.next_depth_demand()}

@@ -4,7 +4,7 @@ import {Graph,alg} from "graphlib";
 import {applyPatch} from "fast-json-patch";
 import schema from "../../../🗿️artifacts/🌊️flow/🧵️retained/🧬️schema/🔣️.json";
 import grant from "../../../../../../../🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 
 test("original Host source duplicate cycle port and nested custody corpus agrees with independent authorities",()=>{
  const ajv=new Ajv({strict:true,allErrors:true}).addSchema(grant).addSchema(schema);

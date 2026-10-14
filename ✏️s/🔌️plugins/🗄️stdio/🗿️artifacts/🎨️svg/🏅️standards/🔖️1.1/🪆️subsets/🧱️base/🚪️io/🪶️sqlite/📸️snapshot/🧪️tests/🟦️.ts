@@ -2,15 +2,15 @@ import Ajv from "ajv";
 import {parseSvgNode} from "../../../../🧬️schema/📸️snapshot/🧩️document/🟦️.ts";
 import {bindSvgAttribute,printSvgAttribute,nativeSvgDocument} from "../../../📝️text/📸️snapshot/🧮️attributes/🟦️.ts";
 import { SaxesParser } from "saxes";
-import boundaryContract from "../🧫️fixtures/🧭️boundaries/🔣️.json";
+import boundaryContract from "./🧫️fixtures/🧭️boundaries/🔣️.json";
 
 import { validateXmlDocumentWireBoundary } from "../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
-import ownership from "../🧫️fixtures/💰️backing/🔣️.json";
+import ownership from "./🧫️fixtures/💰️backing/🔣️.json";
 
 /** 🧫️ SVG's shared typed XML corpus retains independent SVG table names. */
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import { parseSvgSnapshot, type SvgSnapshot } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { SVG_SQLITE_SCHEMA, svgSnapshotToSqliteDatabase, svgSnapshotFromSqliteDatabase } from "../🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework";
@@ -92,7 +92,7 @@ test("SVG SQLite retains declaration encoding metadata independently of an exter
   const database = await svgSnapshotToSqliteDatabase(input);
   const db = Database.deserialize(await exportSqliteDatabase(database));
   try {
-    const control = await Bun.file(new URL("../🧫️fixtures/🛂️native.json", import.meta.url)).json();
+    const control = await Bun.file(new URL("🧫️fixtures/🛂️native.json", import.meta.url)).json();
     db.query("UPDATE svg_declaration SET version=?,encoding=?").run(control.metadata.version, control.metadata.encoding);
     db.query("UPDATE svg_doctype SET prolog_position_decimal=?").run(control.metadata.prologPosition);
     const restored = await svgSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())));
@@ -104,7 +104,7 @@ test("SVG SQLite retains declaration encoding metadata independently of an exter
 
 
 test("SVG neutral native controls retain the full Unicode field and independently counted entity rows", async () => {
-  const control = await Bun.file(new URL("../🧫️fixtures/🛂️native.json", import.meta.url)).json();
+  const control = await Bun.file(new URL("🧫️fixtures/🛂️native.json", import.meta.url)).json();
   const text = control.text.repeat(control.repeat);
   const value: SvgSnapshot = { schema: control.literalSchema, doc: { prolog: [], epilog: [], root: { kind: "element", name: "svg", attrs: [], children: [{ kind: "text", text }] } } };
   expect(parseSvgSnapshot(value)).toEqual(value);
@@ -141,7 +141,7 @@ test("SVG actual paid owner keeps literal native fields distinct from external m
 
 test("SVG owned metadata and boundary nodes remain literal while external XML validates publication",async()=>{
  
- const authored=await Bun.file(new URL("../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧫️fixtures/🧭️document-boundaries/🔣️.json",import.meta.url)).json();
+ const authored=await Bun.file(new URL("../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🧭️document-boundaries/🔣️.json",import.meta.url)).json();
  expect(authored.invalidAuthored.map((item:{id:string})=>item.id)).toEqual(boundaryContract.cases);
  const mutationSchema=await Bun.file(new URL("../../../../🧬️schema/🧬️mutations/🔣️.json",import.meta.url)).json();
  expect(mutationSchema.oneOf.map((item:{properties:{mutation:{const:string}}})=>item.properties.mutation.const.replace(/[A-Z]/g,letter=>"-"+letter.toLowerCase()))).toEqual(boundaryContract.mutationKinds);
@@ -169,7 +169,7 @@ test("SVG owned metadata and boundary nodes remain literal while external XML va
 
 
 test("SVG typed attribute corpus agrees with independent Saxes native attribute admission",async()=>{
- const corpus=await Bun.file(new URL("../../../../🧫️fixtures/🧩️typed-attributes/🔣️.json",import.meta.url)).json();
+ const corpus=await Bun.file(new URL("../../../../🧪️tests/🧫️fixtures/🧩️typed-attributes/🔣️.json",import.meta.url)).json();
  for(const row of corpus.cases){
   let observed:string|undefined;const parser=new SaxesParser();parser.on("opentag",tag=>{observed=String(tag.attributes[row.name]);});parser.write(`<svg ${row.name}="${row.native}"/>`).close();
   expect(observed).toBe(row.native);const owned=bindSvgAttribute(row.name,observed!);expect(owned).toEqual(row.owned);expect(bindSvgAttribute(row.name,printSvgAttribute(owned))).toEqual(row.owned);

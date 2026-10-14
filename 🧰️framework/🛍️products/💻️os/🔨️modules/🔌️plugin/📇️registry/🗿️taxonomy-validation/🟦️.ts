@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, wri
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { discoverPackages, getWorkspaceRoot, inspectRustModuleGraph, inspectRustModuleGraphFacts, isDiscoverySkipDirectory, schemaFacetFormatEntries } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { registrySchemaValidator } from "../✅️catalog-verification/🟦️.ts";
 import { EXAMPLES_DIRNAME, EXAMPLE_ASSETS_DIRNAME, EXAMPLE_RUST_LEAF, EXAMPLE_TESTS_DIRNAME, EXAMPLE_TS_LEAF, FORBIDDEN_EXAMPLE_PLURAL_DIRS, PLUGIN_AREAS, RUST_LANG, TAXONOMY, isExampleSlugName, primaryFilenameForKind } from "../🔎️discovery/🟦️.ts";
 import { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";
@@ -725,7 +725,7 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
 /** 🧪️ Compares exact registry mounts with Rust compiler dependency membership over neutral trees. */
 export class RustTaxonomyMountsCheckScript extends BundleScript {
   async run(): Promise<void> {
-    const fixtureRoot = join(import.meta.dir, "..", "🧫️fixtures/🕸️rust-taxonomy-mounts");
+    const fixtureRoot = join(import.meta.dir, "..", "🧪️tests/🧫️fixtures/🕸️rust-taxonomy-mounts");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as { cases: { id: string; files: Record<string, string>; neighbourFiles?: Record<string, string>; expectedCodes: string[]; expectedUnmounted: string[]; rustcSuccess: boolean }[] };
     
     
@@ -791,7 +791,7 @@ export class RustTaxonomyMountsCheckScript extends BundleScript {
 /** 🪴️ Checks required root ownership with neutral trees and an independent SQLite relation. */
 export class PluginRootOwnershipCheckScript extends BundleScript {
   async run(): Promise<void> {
-    const fixtureRoot = join(import.meta.dir, "..", "🧫️fixtures/🌳️plugin-root-ownership");
+    const fixtureRoot = join(import.meta.dir, "..", "🧪️tests/🧫️fixtures/🌳️plugin-root-ownership");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as { cases: { id: string; files: string[]; expected: string[] }[] };
     
     

@@ -1,0 +1,6 @@
+{
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+  "before": "b018fcc208a08e59c6c07e88d00bf4e6d5c2d633a331a62ac28ca00b08e9877a",
+  "after": "9a879b6bcc0cf5de2f0ee863d780f382c8fb4ac9f3f35a1ab80b87d1755d7710",
+  "reason": "Original narrowed normalization schema does not carry test collection names; use real declared discoverySchema policy, with no inferred default or invented DTO"
+}

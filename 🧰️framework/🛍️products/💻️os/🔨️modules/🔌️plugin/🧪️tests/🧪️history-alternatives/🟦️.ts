@@ -10,7 +10,7 @@ type Row = Readonly<{ id: string; name: string; current: boolean; author: string
 type Case = Readonly<{ id: string; alternatives: readonly Readonly<{ id: string; name: string }>[]; active: string | null; facts: readonly Fact[]; expected: readonly Row[] }>;
 type Fixture = Readonly<{ cases: readonly Case[] }>;
 
-const FIXTURE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧫️history-alternatives";
+const FIXTURE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🧫️history-alternatives";
 
 /** 📆️ RFC 3339 UTC with milliseconds only when nonzero, through `Date`. */
 function rfc3339(at: number): string {

@@ -472,7 +472,7 @@ fn an_aborted_catalog_verification_leaves_no_interpretation_for_the_runtime_to_w
 
 #[test]
 fn trusted_descriptor_wire_materialization_matches_neutral_boundaries() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🧮️wire-materialization/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🧮️wire-materialization/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let encoded = row["rawHex"].as_str().unwrap();
         let bytes: Vec<_> = (0..encoded.len()).step_by(2).map(|index| u8::from_str_radix(&encoded[index..index + 2], 16).unwrap()).collect();
@@ -682,11 +682,11 @@ fn fixture_component_bytes(fixture: &serde_json::Value) -> Vec<u8> {
 }
 
 fn snapshot_json() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/👥️two-package/🔣️.json")).expect("trusted-catalog fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/👥️two-package/🔣️.json")).expect("trusted-catalog fixture")
 }
 
 fn synthetic_browser_actor(component: &str, descriptor: &str, path: &str) -> serde_json::Value {
-    let mut fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌐️browser-actor/🔣️.json")).unwrap();
+    let mut fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌐️browser-actor/🔣️.json")).unwrap();
     let mut actor = fixture["closed"].take();
     actor["sourceComponentSha256"] = component.into();
     actor["sourceDescriptorByteSha256"] = descriptor.into();
@@ -998,7 +998,7 @@ async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> Fi
             serde_json::json!({ "artifactKind": identity.artifact_kind, "artifactSchema": identity.schema, "packSchemaHash": hex_lower(&identity.pack_schema_hash) })
         })
         .collect();
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json")).expect("neutral frozen binding corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json")).expect("neutral frozen binding corpus");
     let binding = &corpus["binding"];
     let package = serde_json::json!({ "pluginId": descriptor.manifest.plugin_id, "packageId": descriptor.package_id, "version": descriptor.manifest.version });
     let mut target = serde_json::json!({
@@ -1134,7 +1134,7 @@ async fn gis_native_provider_selection_binds_literal_owner_version_and_cancellat
         fn report(&self, _progress: AuthorityProgress) {}
     }
     let _registry = crate::artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📇️native-openable-provider/🧫️fixtures/🌍️gis-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📇️native-openable-provider/🧪️tests/🧫️fixtures/🌍️gis-v1/🔣️.json")).unwrap();
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json")).unwrap();
     assert_eq!(fixture["packageVersion"], expected["packageVersion"]);
     let providers = NativeCodecProviderSetV1::linked();
@@ -1214,7 +1214,7 @@ async fn selected_native_provider_failure_substitution_and_conflict_publish_no_p
 
 #[tokio::test]
 async fn selected_native_provider_descriptor_and_cancellation_fences_precede_publication() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
     for case in cases["descriptorPreviewCases"].as_array().unwrap() {
         let mut invalid = prepared_fixture();
         let source = FixtureProviderSource::new(invalid.make_two_codec_bindings());
@@ -1424,7 +1424,7 @@ async fn verified_trusted_catalog_document_open_generation_and_resolution_are_ex
     }
     assert!(catalog.resolve_document_open(&descriptor, Some("s.fixture.document@1/*#viewer"), true).is_none());
     assert!(catalog.resolve_document_open(&descriptor, Some("foreign"), false).is_none());
-    let roles: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️identity-roles/🔣️.json")).unwrap();
+    let roles: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️identity-roles/🔣️.json")).unwrap();
     for case in roles["cases"].as_array().unwrap() {
         let mut candidate = descriptor.clone();
         let mut surface = "s.fixture.document@1/*#editor".to_owned();
@@ -1462,7 +1462,7 @@ async fn trusted_browser_actor_loader_verifies_retains_and_cancels_before_public
             self.control.report(progress);
         }
     }
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌐️browser-actor/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌐️browser-actor/🔣️.json")).unwrap();
     for law in corpus["loadCases"].as_array().unwrap() {
         let mut fixture = prepared_fixture();
         let path = fixture.root.join(fixture.bundle["packages"][0]["browserActor"]["path"].as_str().unwrap());
@@ -1616,7 +1616,7 @@ async fn trusted_catalog_opened_handle_is_swap_stable_bounded_and_cancel_safe() 
 
 #[test]
 fn trusted_catalog_relative_paths_match_the_neutral_no_link_corpus() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛡️opened-root/🔣️.json")).expect("opened-root corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛡️opened-root/🔣️.json")).expect("opened-root corpus");
     let rows = corpus["relativePaths"].as_array().expect("relative path rows");
     assert_eq!(rows.len(), 15);
     for row in rows {
@@ -2008,7 +2008,7 @@ async fn descriptor_owned_surface_is_required_before_any_catalog_or_codec_public
 
 #[test]
 fn descriptor_open_targets_follow_the_one_pairing_rule_and_validate_as_published() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️descriptor-open-targets/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️descriptor-open-targets/🔣️.json")).unwrap();
     let schema = "fixture.document@1";
     for case in fixture["cases"].as_array().unwrap() {
         let name = case["name"].as_str().unwrap();
@@ -2081,7 +2081,7 @@ fn bundle_rejects_incomplete_duplicate_conflicting_and_escaping_declarations() {
 
 #[test]
 fn trusted_profile_generation_binds_zero_target_package_and_every_codec_row() {
-    let dependency_fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
+    let dependency_fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
     for row in dependency_fixture["encodingCases"].as_array().unwrap() {
         let identities: Vec<TrustedBundleIdentityV1> = serde_json::from_value(row["identities"].clone()).unwrap();
         let mut encoded = Vec::new();
@@ -2251,7 +2251,7 @@ mod long {
     #[tokio::test]
     async fn linked_stdio_gis_descriptor_failures_never_publish_a_partial_codec_closure() {
         let _registry = crate::artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;
-        let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
+        let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
         let mut fixture = prepared_gis_binding_fixture(false, false).await;
         for receipt in semio_hub_gis::native_codecs::native_codec_factory_receipts().unwrap() {
             let native = receipt.into_codec().unwrap();
@@ -2493,7 +2493,7 @@ fn creation_prefers_the_owners_editor_over_a_hosts() {
 /// `artifact_codec_owner` answers `codec.*` by — for the candidates as listed and reversed (order never decides).
 #[test]
 fn the_most_general_dialect_rule_answers_the_shared_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧫️fixtures/🌳️most-general-dialect/🔣️.json")).expect("shared most-general-dialect fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧪️tests/🧫️fixtures/🌳️most-general-dialect/🔣️.json")).expect("shared most-general-dialect fixture");
     let cases = fixture["cases"].as_array().expect("fixture cases");
     assert!(cases.len() >= 10, "the shared fixture keeps its cases");
     for case in cases {

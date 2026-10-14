@@ -13,7 +13,7 @@ fn el(name: &str, attrs: Vec<HtmlAttr>, children: Vec<HtmlNode>) -> HtmlNode {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture() -> HtmlSnapshot {
-    <HtmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl("<!DOCTYPE html>\n<html><body><p id=\"x\" width=\"5\">hi</p></body></html>\n").unwrap()
+    <HtmlSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl("<!DOCTYPE html>\n<html><body><p id=\"x\" width=\"5\">hi</p></body></html>\n").unwrap()
 }
 
 #[semio_framework_async_macros::async_test]

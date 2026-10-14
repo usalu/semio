@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎨️icon-svg-lighting/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎨️icon-svg-lighting/🔣️.json"), "utf8"));
 
 function renderFill(record: any): string {
   const geometry = new BufferGeometry();

@@ -317,14 +317,14 @@ fn dsl_object_insert(entries: &mut Vec<(String, DslValue)>, key: String, value: 
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum UiCommandJsonStep {
+pub(crate) enum UiCommandJsonStep {
     MoreWork,
     Ready,
     Cancelled,
     Fault,
 }
 
-struct UiCommandJsonProducer {
+pub(crate) struct UiCommandJsonProducer {
     stack: UiFixedList<UiCommandJsonFrame, UI_COMMAND_VALUE_DEPTH>,
     pending: Option<UiValue>,
     ready: Option<DslValue>,
@@ -443,7 +443,7 @@ impl UiCommandJsonProducer {
     }
 }
 
-async fn ui_value_to_dsl_retained(value: &UiValue) -> Result<DslValue, Fault> {
+pub(crate) async fn ui_value_to_dsl_retained(value: &UiValue) -> Result<DslValue, Fault> {
     let mut producer = UiCommandJsonProducer::try_new(value)?;
     loop {
         match producer.drive_one(false, false) {
@@ -537,7 +537,7 @@ impl ActionFactory {
 /// An empty registry is a store-only construction path; command dispatch rejects every key.
 #[derive(Clone, Default)]
 pub struct AppActionRegistry {
-    actions: HashMap<String, ActionDefinition>,
+    pub(crate) actions: HashMap<String, ActionDefinition>,
     window_actions: HashMap<String, HashMap<String, ActionDefinition>>,
     app_commands: HashMap<String, CommandDefinition>,
     mode_commands: HashMap<String, HashMap<String, CommandDefinition>>,
@@ -575,7 +575,7 @@ pub(crate) fn validate_ui_dispatch_classification(owner: &str, id: &str, classif
 
 impl AppActionRegistry {
     #[cfg(test)]
-    fn test_with_controller_id(controller_id: String) -> Self {
+    pub(crate) fn test_with_controller_id(controller_id: String) -> Self {
         Self { controller_id, ..Self::default() }
     }
 
@@ -786,12 +786,12 @@ impl AppActionRegistry {
     }
 
     #[cfg(test)]
-    fn test_set_action_classification(&mut self, id: &str, classification: semio_framework::InteractiveJobClassification) {
+    pub(crate) fn test_set_action_classification(&mut self, id: &str, classification: semio_framework::InteractiveJobClassification) {
         self.actions.get_mut(id).expect("test action declaration").semantics.execution.interactive_job = classification;
     }
 
     #[cfg(test)]
-    fn test_set_app_command_classification(&mut self, id: &str, classification: semio_framework::InteractiveJobClassification) {
+    pub(crate) fn test_set_app_command_classification(&mut self, id: &str, classification: semio_framework::InteractiveJobClassification) {
         self.app_commands.get_mut(id).expect("test app command declaration").semantics.execution.interactive_job = classification;
     }
 

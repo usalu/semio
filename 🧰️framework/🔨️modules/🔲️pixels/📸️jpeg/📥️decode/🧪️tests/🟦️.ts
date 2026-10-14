@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import Ajv2020 from "ajv/dist/2020";
 import sharp from "sharp";
 import schema from "../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import {JpegDecodeJob,type JpegDecodeInput,type JpegGrant} from "../🟦️.ts";
 const validate=new Ajv2020({strict:true}).compile(schema);
 const grant=(job:JpegDecodeJob):JpegGrant=>({maximumItems:1,maximumCopyBytes:job.nextCopyBytes(),maximumCapacityBytes:job.nextCapacityBytes(),maximumReleaseBytes:0,maximumDepth:1});

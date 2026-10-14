@@ -1,0 +1,253 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/📤️effect/🧬️schema/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [
+      "schema",
+      "fields",
+      "sharedLeases",
+      "originalHeadersCopyBytes",
+      "decoderRootSameArc",
+      "instanceFaultOriginalSource",
+      "completeStateAbsent",
+      "completeOutputAbsent",
+      "copies",
+      "terminalDropBytes",
+      "jobFields",
+      "completionRefusalFields"
+    ],
+    "schema": {
+      "const": "semio.flow.host-effect-retirement.v1"
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️retirement/🧬️schema/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [
+      "schema",
+      "commands",
+      "nested",
+      "copies",
+      "cancelAfter",
+      "originalHeadersCopyBytes",
+      "terminalDropBytes"
+    ],
+    "schema": {
+      "const": "semio.flow.command-retirement.v1"
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/♻️retirement/📸️snapshot/🧬️schema/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [
+      "schema",
+      "snapshotFields",
+      "childFields",
+      "sceneFields",
+      "ownedFields",
+      "sourceFields",
+      "originalHeadersCopyBytes",
+      "localRootSameArc",
+      "localTypeMismatchReturnsOriginal",
+      "sceneDropSkippedOnTransfer",
+      "copies",
+      "terminalDropBytes",
+      "presenceFields",
+      "cameraFields",
+      "presenceHandoffCopyBytes"
+    ],
+    "schema": {
+      "const": "semio.flow.editor-snapshot-retirement.v1"
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/💾️binary/📸️snapshot/🧬️schema/🧾️original/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [
+      "schema",
+      "policy",
+      "stops",
+      "workGrants",
+      "denials",
+      "terminal"
+    ],
+    "schema": {
+      "const": "semio.flow.original-close/v1"
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🫙️prefix/🌳️forest.json",
+    "id": null,
+    "title": null,
+    "properties": [
+      "contract",
+      "schema",
+      "key",
+      "text",
+      "integerLexeme",
+      "floatLexeme",
+      "octets",
+      "nodeId",
+      "kinds",
+      "stops",
+      "interiorPhases"
+    ],
+    "schema": {
+      "const": "stdio.semio.value"
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🫙️prefix/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [
+      "policy",
+      "stops",
+      "interiorPhases",
+      "labelRepetitions",
+      "protocol",
+      "encodings",
+      "currencies",
+      "domains",
+      "flow"
+    ],
+    "schema": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🫙️prefix/✉️envelope.json",
+    "id": null,
+    "title": null,
+    "properties": [
+      "contract",
+      "schema",
+      "subset",
+      "selectedDocument",
+      "unselectedDocuments",
+      "deniedAxes"
+    ],
+    "schema": {
+      "const": "stdio.semio"
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🫙️prefix/🧮️projection.json",
+    "id": null,
+    "title": null,
+    "properties": [
+      "contract",
+      "domains",
+      "schema",
+      "language",
+      "content",
+      "kind",
+      "href",
+      "expectedRows"
+    ],
+    "schema": {
+      "const": "stdio.semio.text"
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🫙️prefix/🛫️encoding.json",
+    "id": null,
+    "title": null,
+    "properties": [
+      "schema",
+      "language",
+      "unit",
+      "repeat",
+      "preamble",
+      "encodings",
+      "stops",
+      "policy"
+    ],
+    "schema": {
+      "type": "string"
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🎛️control/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [
+      "schema",
+      "mapCount",
+      "cancelAfterWork",
+      "maxRows",
+      "keys",
+      "binary64Words",
+      "commonPrefix"
+    ],
+    "schema": {
+      "const": "bim.sqlite.control/v1"
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️set-schedule/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-schedule/schema.json",
+    "title": "SetSchedule",
+    "properties": [
+      "mutation",
+      "id",
+      "name",
+      "category",
+      "columns",
+      "sort",
+      "filter",
+      "group",
+      "itemize",
+      "storeys",
+      "phases"
+    ],
+    "schema": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧬️schema/🔣️.json",
+    "id": "semio:forms.inspection",
+    "title": null,
+    "properties": [
+      "scope",
+      "ids",
+      "fields"
+    ],
+    "schema": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️canonical/🧬️schema/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [
+      "copyCapacityLimit",
+      "turnLimit",
+      "pauses",
+      "cases",
+      "scalar",
+      "scalarExpected"
+    ],
+    "schema": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧵️publication/🧬️schema/🔣️.json",
+    "id": "https://semio.tech/s/draw/import-image-publication",
+    "title": null,
+    "properties": [
+      "schema",
+      "identity",
+      "phases",
+      "maximumNodes",
+      "maximumDepth",
+      "name",
+      "selection",
+      "mutations",
+      "deniedAxes",
+      "cancelAfter"
+    ],
+    "schema": {
+      "const": "https://semio.tech/s/draw/import-image-publication"
+    }
+  }
+]

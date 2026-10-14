@@ -33,7 +33,7 @@ interface Vectors {
   readonly devices: readonly Seen[];
 }
 
-const vectors = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../🧰️framework/🛍️products/❓️quiz/🧫️fixtures/📐️adaptive-layout/🔣️.json"), "utf8")) as Vectors;
+const vectors = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../🧰️framework/🛍️products/❓️quiz/🧪️tests/🧫️fixtures/📐️adaptive-layout/🔣️.json"), "utf8")) as Vectors;
 
 /** 📏️ The least width in rem from which `part` takes its roomier layout (its first tier). */
 function tier(part: string): number {

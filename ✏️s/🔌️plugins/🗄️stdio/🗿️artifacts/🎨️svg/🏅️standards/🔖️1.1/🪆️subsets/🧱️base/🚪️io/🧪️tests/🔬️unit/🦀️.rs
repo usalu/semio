@@ -8,7 +8,7 @@ const SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: S
 /// 🧫️ This crate's OWN tracked stand-in for a third-party generator's output. It used to be
 /// `<repo>/temp/artifacts.svg` — a 423 KB dvisvgm file that git does not track, so a sweep of
 /// `temp/` turned both laws below into a "read temp/artifacts.svg" panic instead of a verdict.
-const NATIVE_THIRD_PARTY_SVG: &str = include_str!("../../../🧫️fixtures/🎨️native-third-party-shape.svg");
+const NATIVE_THIRD_PARTY_SVG: &str = include_str!("../../../🧪️tests/🧫️fixtures/🎨️native-third-party-shape.svg");
 
 #[semio_framework_async_macros::async_test]
 async fn empty_snapshot_matches_schema() {
@@ -19,11 +19,11 @@ async fn empty_snapshot_matches_schema() {
 #[semio_framework_async_macros::async_test]
 async fn codec_round_trip() {
     let snap = empty_svg_snapshot();
-    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snap);
-    let parsed = <SvgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = pack::snapshot::ArtifactDsl::print_dsl(&snap);
+    let parsed = <SvgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(parsed.schema, snap.schema);
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
-    let decoded = <SvgSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&snap);
+    let decoded = <SvgSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
 }
 
@@ -74,7 +74,7 @@ fn assert_native_routing_is_a_fixpoint(route: impl Fn(AnalyzeSource<'_>) -> SvgS
     assert!(printed.starts_with("<?xml version='1.0' encoding='UTF-8'?>"), "{label}: the declaration keeps the delimiter the source used, got {:?}", &printed[..printed.find('\n').unwrap_or(printed.len())]);
 
     // 📦️ The pack lane is the text lane.
-    let pack = store::os_store::serialization::ArtifactPack::encode_pack(&first);
+    let pack = pack::snapshot::ArtifactPack::encode_pack(&first);
     let from_pack = route(AnalyzeSource::Binary(&pack));
     assert_eq!(from_pack, first, "{label}: the pack lane must recover the same snapshot as the text lane");
     assert_eq!(from_pack.export_utf8().expect("export the pack-recovered snapshot"), printed.as_bytes(), "{label}: the pack lane must print the same bytes as the text lane");
@@ -127,7 +127,7 @@ mod conformance_laws {
     async fn grammar_conformance_law() {
         let grammar = semio_framework_dsl::parse_grammar(crate::standards::v1_1::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
-        let text = store::os_store::serialization::ArtifactDsl::print_dsl(&demo_svg_snapshot());
+        let text = pack::snapshot::ArtifactDsl::print_dsl(&demo_svg_snapshot());
         let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
         let reconstructed = format!("{}\n{body}", envelope.envelope_id());
         assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
@@ -166,7 +166,7 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
         let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v1_1::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
-        let packed = store::os_store::serialization::ArtifactPack::encode_pack(&demo_svg_snapshot());
+        let packed = pack::snapshot::ArtifactPack::encode_pack(&demo_svg_snapshot());
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
         let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
@@ -197,13 +197,13 @@ mod conformance_laws {
 
         let demo = demo_svg_snapshot();
 
-        let parsed = <SvgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        let parsed = <SvgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_svg_snapshot()");
-        assert_eq!(store::os_store::serialization::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_svg_snapshot()) drifted from the shipped .dsl.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_svg_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-        let decoded = <SvgSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+        let decoded = <SvgSnapshot as pack::snapshot::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_svg_snapshot()");
-        assert_eq!(store::os_store::serialization::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_svg_snapshot()) drifted from the shipped .pack.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_svg_snapshot()) drifted from the shipped .pack.semio fixture");
     }
 
 

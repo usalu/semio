@@ -32,7 +32,7 @@ const guestSource = resolve(repoRoot, "🧰️framework/🔨️modules/🛠️to
 type EditRow = Record<string, unknown>;
 type FixtureCase = { readonly name: string; readonly rule: string; readonly gesture: Record<string, unknown>; readonly expectedEdits?: readonly EditRow[]; readonly expectedSelection?: readonly string[]; readonly expectedCameraMoves?: boolean };
 
-const law = JSON.parse(readFileSync(resolve(engineRoot, "🧫️fixtures/🫳️node-graph-gestures/🔣️.json"), "utf8")) as {
+const law = JSON.parse(readFileSync(resolve(engineRoot, "🧪️tests/🧫️fixtures/🫳️node-graph-gestures/🔣️.json"), "utf8")) as {
   readonly rules: Record<string, string>;
   readonly graph: Record<string, unknown> & { readonly freeInputs: readonly string[]; readonly wiredInputs: readonly string[]; readonly outputs: readonly string[] };
   readonly cases: readonly FixtureCase[];

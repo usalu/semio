@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import Ajv from "ajv";
 import { parseForeignStep, parseForeignSteps } from "../🧬️schema/🟦️.ts";
 const root=resolve(import.meta.dir,"..");
-const examples=JSON.parse(readFileSync(resolve(root,"🧫️fixtures/🔣️.json"),"utf8"));
+const examples=JSON.parse(readFileSync(resolve(root,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
 const schema=JSON.parse(readFileSync(resolve(root,"🧬️schema/🔣️.json"),"utf8"));
 const admit=new Ajv({strict:false}).compile(schema);
 for(const row of examples.cases){const{ id,...payload}=row;assert.equal(admit(payload),true,id);assert.deepEqual(JSON.parse(JSON.stringify(payload)),payload);for(const text of [payload.target.artifactId,payload.target.artifactKind,payload.target.dialect??"",payload.mutationId,payload.label])assert.deepEqual(Buffer.from(text),Buffer.from(new TextEncoder().encode(text)));assert.equal(admit({...payload,payload:[256]}),false);assert.equal(admit({...payload,target:{artifactKind:"note"}}),false);}

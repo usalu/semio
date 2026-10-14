@@ -3,7 +3,7 @@ use semio_framework_value::{DslValue,FromValue,ToValue};
 
 #[test]
 fn config_owned_customization_semantics_match_independent_json_without_projection_bridge(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🌱️owned-customization/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🎨️ui-preferences/🌱️owned-customization/🔣️.json")).unwrap();
     for sample in fixture["samples"].as_array().unwrap(){
         let value:DslValue=semio_framework_pack_json::from_json_str(&serde_json::to_string(sample).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let driver=UiDriver{driver_id:fixture["driverId"].as_str().unwrap().into(),label:fixture["label"].as_str().unwrap().into(),config:value.clone()};

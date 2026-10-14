@@ -1,4 +1,4 @@
-//! 🔬️ Adapter for the language-agnostic pointer routing table `🧫️fixtures/🖱️pointer-routing/🔣️.json`
+//! 🔬️ Adapter for the language-agnostic pointer routing table `🧪️tests/🧫️fixtures/🖱️pointer-routing/🔣️.json`
 //! (feature `🧪️tests/🖱️pointer-routing/🥒️.feature`). The vitest oracle in that folder re-derives every
 //! chrome expectation from the golden frame and the declared chips, so engine, painter and table agree.
 
@@ -14,7 +14,7 @@ use semio_framework_pack_json::{parse, JsonMemberPolicy, Value};
 use std::collections::BTreeMap;
 use ui_styling::appearance::AppearanceName;
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🖱️pointer-routing/🔣️.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/🖱️pointer-routing/🔣️.json");
 
 /// 🥒️ The language-agnostic feature this adapter runs, bound at compile time so renaming it breaks the build.
 const FEATURE: &str = include_str!("../🖱️pointer-routing/🥒️.feature");

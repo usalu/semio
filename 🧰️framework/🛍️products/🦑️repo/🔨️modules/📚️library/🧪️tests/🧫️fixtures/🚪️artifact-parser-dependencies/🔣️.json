@@ -1,0 +1,115 @@
+{
+  "cases": [
+    {
+      "id": "lexer",
+      "source": "import { Lexer } from 'chevrotain'; export const lexer = Lexer;",
+      "forbidden": [
+        "chevrotain"
+      ]
+    },
+    {
+      "id": "parser",
+      "source": "import * as parser from 'chevrotain'; export const grammar = parser;",
+      "forbidden": [
+        "chevrotain"
+      ]
+    },
+    {
+      "id": "type-only",
+      "source": "import type { CstNode } from 'chevrotain'; export type Tree = CstNode;",
+      "forbidden": [
+        "chevrotain"
+      ]
+    },
+    {
+      "id": "mixed-type",
+      "source": "import { type CstNode, Lexer } from 'chevrotain'; export const value = Lexer;",
+      "forbidden": [
+        "chevrotain"
+      ]
+    },
+    {
+      "id": "type-export",
+      "source": "export type { CstNode } from 'chevrotain';",
+      "forbidden": [
+        "chevrotain"
+      ]
+    },
+    {
+      "id": "parser-export",
+      "source": "export { CstParser as Parser } from 'chevrotain';",
+      "forbidden": [
+        "chevrotain"
+      ]
+    },
+    {
+      "id": "scoped-parser",
+      "source": "import { tokenize } from '@chevrotain/utils'; export const tokens = tokenize;",
+      "forbidden": [
+        "@chevrotain/utils"
+      ]
+    },
+    {
+      "id": "dynamic-parser",
+      "source": "export async function parser() { return import('chevrotain'); }",
+      "forbidden": [
+        "chevrotain"
+      ]
+    },
+    {
+      "id": "required-parser",
+      "source": "const parser = require('chevrotain'); export const grammar = parser;",
+      "forbidden": [
+        "chevrotain"
+      ]
+    },
+    {
+      "id": "comment",
+      "source": "// import { Lexer } from 'chevrotain';\nexport const value = 1;",
+      "forbidden": []
+    },
+    {
+      "id": "literal",
+      "source": "export const label = \"import { Lexer } from 'chevrotain';\";",
+      "forbidden": []
+    },
+    {
+      "id": "unrelated-package",
+      "source": "import { Value } from 'chevrotain-domain'; export const value = Value;",
+      "forbidden": []
+    },
+    {
+      "id": "typed-ast",
+      "source": "export type ConstructAst = { statements: readonly { name: string }[] };",
+      "forbidden": []
+    },
+    {
+      "id": "io-owner",
+      "owner": "io",
+      "source": "import { Lexer } from 'chevrotain'; export const lexer = Lexer;",
+      "forbidden": [
+        "chevrotain"
+      ]
+    },
+    {
+      "id": "test-probe",
+      "testOnly": true,
+      "source": "import { Lexer } from 'chevrotain'; export const lexer = Lexer;",
+      "forbidden": [
+        "chevrotain"
+      ]
+    },
+    {
+      "id": "executable-native-parser",
+      "source": "#!/usr/bin/env bun\nimport { Lexer } from 'chevrotain'; export const lexer = Lexer;",
+      "forbidden": [
+        "chevrotain"
+      ]
+    },
+    {
+      "id": "executable-typed-owner",
+      "source": "#!/usr/bin/env bun\nexport type ConstructAst = { name: string };",
+      "forbidden": []
+    }
+  ]
+}

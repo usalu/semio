@@ -9,11 +9,11 @@ use crate::mutations::LayoutMutation;
 use crate::LayoutSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗜️scale-frames/↔️stretches/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗜️scale-frames/↔️stretches/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗜️scale-frames/↔️stretches/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗜️scale-frames/↔️stretches/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗜️scale-frames/↔️stretches/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/↔️stretches/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/↔️stretches/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/↔️stretches/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/↔️stretches/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/↔️stretches/🎯️outcome/🔣️.json");
 
 fn before() -> LayoutSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("scale-frames/stretches-the-rect-sideways: before snapshot decodes")

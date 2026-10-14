@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🏟️create-curtain-wall-type/➕️adds-explicit-lines-and-a-solid-panel",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/➕️adds-explicit-lines-and-a-solid-panel/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/➕️adds-explicit-lines-and-a-solid-panel/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/➕️adds-explicit-lines-and-a-solid-panel/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/➕️adds-explicit-lines-and-a-solid-panel/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/➕️adds-explicit-lines-and-a-solid-panel/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/➕️adds-explicit-lines-and-a-solid-panel/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/➕️adds-explicit-lines-and-a-solid-panel/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/➕️adds-explicit-lines-and-a-solid-panel/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/➕️adds-explicit-lines-and-a-solid-panel/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/➕️adds-explicit-lines-and-a-solid-panel/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

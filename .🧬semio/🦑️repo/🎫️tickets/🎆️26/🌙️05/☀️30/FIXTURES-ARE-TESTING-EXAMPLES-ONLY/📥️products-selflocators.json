@@ -1,0 +1,65 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/⏯️execution-target-resume-v1.json",
+    "start": 540,
+    "end": 653,
+    "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json",
+    "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/🧩️execution-target-module-resolution-v1.json",
+    "start": 37,
+    "end": 150,
+    "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json",
+    "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/🧩️jcoprobe/🧪️destination-cases.json",
+    "start": 247,
+    "end": 310,
+    "from": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest",
+    "to": "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/🔌️jcoprobe/👽️guest"
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🧫️fixtures/🖨️macro-staging/🔣️.json",
+    "start": 1680,
+    "end": 1733,
+    "from": "🧰️framework/🛍️products/📓️print/🧫️fixtures/📐️.tex",
+    "to": "🧰️framework/🛍️products/📓️print/🧪️tests/🧫️fixtures/📐️.tex"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🧫️fixtures/🎬️draw-list/🔣️.json",
+    "start": 1005,
+    "end": 1137,
+    "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🧫️fixtures/🕸️wgpu-node-graph/🔣️.json",
+    "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🧪️tests/🧫️fixtures/🕸️wgpu-node-graph/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏷️ownership/🧪️tests/🧫️fixtures/🔣️.json",
+    "start": 2034,
+    "end": 2129,
+    "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧫️fixtures/📝️browser-types/🔣️.json",
+    "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🧫️fixtures/📝️browser-types/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏷️ownership/🧪️tests/🧫️fixtures/🔣️.json",
+    "start": 3595,
+    "end": 3686,
+    "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧫️fixtures/📝️browser-types.json",
+    "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🧫️fixtures/📝️browser-types.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏷️ownership/🧪️tests/🧫️fixtures/🔣️.json",
+    "start": 10946,
+    "end": 11064,
+    "from": "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏷️ownership/🧫️fixtures/🔣️.json",
+    "to": "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏷️ownership/🧪️tests/🧫️fixtures/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏷️ownership/🧪️tests/🧫️fixtures/🔣️.json",
+    "start": 11917,
+    "end": 12028,
+    "from": "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧫️fixtures/📝️browser-types/🔣️.json",
+    "to": "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🧫️fixtures/📝️browser-types/🔣️.json"
+  }
+]

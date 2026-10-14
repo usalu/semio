@@ -1,21 +1,21 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, checkScriptInvocation, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { DEMONSTRATOR_RUNTIME_TARGETS, demonstratorRuntimeModuleLayout } from "./🟦️.ts";
 import { serveVite } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
 import { readDemonstratorActivation } from "./♻️activation/🟦️.ts";
 import { closeServiceSession, openServiceSession, publishServiceReady, readServiceSession } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session/🟦️.ts";
 import { DEMONSTRATOR_E2E_OWNER, demonstratorE2eInvocationPid, demonstratorE2eSessionRoot } from "./🧪️e2e/🟦️.ts";
-import { readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 
 /** 🎪️ Verifies the runtime union completed by the outer Nx preparation graph. */
 class PreparationScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Preparation mode belongs to the Nx prototype or release configuration");
-    const mode = readBuildMode(process.env.SEMIO_BUILD_MODE), profile = mode === "prototype" ? "dev" : "release";
+    const mode = readBuildMode(process.env.SEMIO_BUILD_MODE), profile = mode;
     const plugin = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin");
     const moduleRoot = join(plugin, "📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
     const { pluginModuleDirNames, extensionModuleDirNames } = demonstratorRuntimeModuleLayout(DEMONSTRATOR_RUNTIME_TARGETS.map(row => row.pluginId));
@@ -32,12 +32,21 @@ class PreparationScript extends BundleScript {
   }
 }
 
+/** 🏁️ Completes the selected component lane prerequisites owned by Nx. */
+class CompleteScript extends BundleScript {
+  run(args: string[]): void {
+    if (args.length) throw new Error("Runtime lane completion accepts no arguments");
+    checkScriptInvocation(this.invocation);
+    console.log(`Prepared Demonstrator component lanes: ${readBuildMode(process.env.SEMIO_BUILD_MODE)}`);
+  }
+}
+
 /** 📡️ Validates activation after all outer preparation prerequisites have completed. */
 class ActivationScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Demonstrator activation accepts no arguments");
     const { receipt, laneReceiptDirectories } = readDemonstratorActivation(this.repoRoot);
-    console.log(`Activated Demonstrator dev: ${receipt.plugins.length} completed components from ${laneReceiptDirectories.length} lanes`);
+    console.log(`Activated Demonstrator prototype: ${receipt.plugins.length} completed components from ${laneReceiptDirectories.length} lanes`);
   }
 }
 
@@ -50,7 +59,7 @@ class ServeScript extends BundleScript {
     const interrupt = (): void => { process.exitCode = 130; controller.abort(); }, terminate = (): void => { process.exitCode = 143; controller.abort(); };
     process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
     try {
-      await serveVite({ root, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), host: process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1", port: Number(process.env.MIT_BESTAND_DEMONSTRATOR_PORT ?? 6029), signal: controller.signal, ready: url => console.log(`Demonstrator ready: ${url}`) });
+      await serveVite({ invocation: this.invocation, root, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), host: process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1", port: Number(process.env.MIT_BESTAND_DEMONSTRATOR_PORT ?? 6029), signal: this.invocation.control.signal, ready: url => console.log(`Demonstrator ready: ${url}`) });
     } finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }
   }
 }
@@ -75,10 +84,10 @@ class ServeTestScript extends BundleScript {
     process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
     try {
       readDemonstratorActivation(this.repoRoot);
-      await serveVite({ root, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), host: "127.0.0.1", port: 0, signal: controller.signal, session, ready: async url => { await publishServiceReady(sessionRoot, session, url, controller.signal); console.log(`Demonstrator E2E ready: ${url}`); } });
+      await serveVite({ invocation: this.invocation, root, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), host: "127.0.0.1", port: 0, signal: this.invocation.control.signal, session, ready: async url => { await publishServiceReady(sessionRoot, session, url, controller.signal); console.log(`Demonstrator E2E ready: ${url}`); } });
     } finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); await closeServiceSession(sessionRoot, session); }
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("prepare", PreparationScript).register("activate", ActivationScript).register("serve", ServeScript).register("prepare-test", PrepareTestScript).register("serve-test", ServeTestScript);
+const router = new ScriptRouter(import.meta.dir).register("prepare", PreparationScript).register("complete", CompleteScript).register("activate", ActivationScript).register("serve", ServeScript).register("prepare-test", PrepareTestScript).register("serve-test", ServeTestScript);
 if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));

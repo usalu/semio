@@ -7,7 +7,7 @@ use semio_framework_value::{list::PagedList, retained_clone::{RetainedCloneGrant
 #[test]
 fn paged_native_drawing_snapshot_duplicate_close_preserves_physical_grant_axes() {
     use super::super::{DrawingDuplicateRewriteAuthority, initial_snapshot_clone_grant};
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
     let retained = law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize);
     for partial in law["cancelAt"].as_array().unwrap() {
         let partial = partial.as_u64().unwrap() as usize;
@@ -51,7 +51,7 @@ fn paged_native_drawing_snapshot_duplicate_close_preserves_physical_grant_axes()
 
 #[test]
 fn paged_native_drawing_snapshot_decoded_field_close_admits_actual_birth_and_release() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
     for bytes in law["decodedFieldClose"]["physicalBackingCapacities"].as_array().unwrap() {
         let bytes = bytes.as_u64().unwrap() as usize;
         let mut field = String::with_capacity(bytes);
@@ -90,7 +90,7 @@ fn paged_native_drawing_snapshot_decoded_field_close_admits_actual_birth_and_rel
 
 #[test]
 fn paged_native_drawing_snapshot_duplicate_identity_consumes_admitted_target() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
     let mut ids: Vec<String> = law["duplicateIdentity"]["ids"].as_array().unwrap().iter().map(|value| value.as_str().unwrap().into()).collect();
     ids.push(law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize) + "\0");
     for id in ids {
@@ -131,9 +131,9 @@ fn paged_native_drawing_snapshot_duplicate_identity_consumes_admitted_target() {
 
 #[test]
 fn paged_native_drawing_snapshot_sparse_path_patch_preserves_semantics_and_native_retirement() {
-    const BEFORE: &str = include_str!("../../../../../../🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/⬅️before/🔣️.json");
-    const AFTER: &str = include_str!("../../../../../../🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/➡️after/🔣️.json");
-    const DELTA: &str = include_str!("../../../../../../🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🔺️diff/🔣️.json");
+    const BEFORE: &str = include_str!("../../../../../../🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/⬅️before/🔣️.json");
+    const AFTER: &str = include_str!("../../../../../../🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/➡️after/🔣️.json");
+    const DELTA: &str = include_str!("../../../../../../🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🔺️diff/🔣️.json");
     let before: DrawingSnapshot = serde_json::from_str(BEFORE).unwrap();
     let mut delta: crate::diff::DrawingDiff = serde_json::from_str(DELTA).unwrap();
     let after = protocol::apply_diff(&delta, &before).unwrap();
@@ -162,7 +162,7 @@ fn paged_native_drawing_snapshot_sparse_path_patch_preserves_semantics_and_nativ
 
 #[test]
 fn paged_native_drawing_snapshot_identifier_equality_obeys_independent_unicode_law() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
     let mut cases: Vec<(String, String, bool)> = law["textEquality"].as_array().unwrap().iter().map(|value| (value["left"].as_str().unwrap().into(), value["right"].as_str().unwrap().into(), value["equal"].as_bool().unwrap())).collect();
     let long = law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize);
     cases.push((long.clone() + "\0", long.clone() + "\0", true));
@@ -212,7 +212,7 @@ fn paged_native_drawing_snapshot_identifier_equality_obeys_independent_unicode_l
 
 #[test]
 fn paged_native_drawing_snapshot_record_footprint_matches_actual_root_and_asset_heap() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
     let long = law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize) + "\0";
     let (snapshot, allocation) = observe(|| crate::schema::default_drawing_document(&long, Some(&long)));
     assert!(!allocation.overflowed);
@@ -256,7 +256,7 @@ fn paged_native_drawing_snapshot_record_footprint_matches_actual_root_and_asset_
 
 #[test]
 fn paged_native_drawing_snapshot_direct_layer_footprint_matches_actual_retained_heap() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
     let long = law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize) + "\0";
     for kind in 0..7 {
         let (source, allocation) = observe(|| {
@@ -309,7 +309,7 @@ fn paged_native_drawing_snapshot_direct_layer_footprint_matches_actual_retained_
 
 #[test]
 fn paged_native_drawing_snapshot_text_digest_matches_independent_chunked_sha256() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
     let text = law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize) + "\0";
     let source = PagedUtf8::<{usize::MAX}>::try_from_str(&text).unwrap();
     let foreign = PagedUtf8::<{usize::MAX}>::default();
@@ -360,7 +360,7 @@ fn paged_native_drawing_snapshot_text_digest_matches_independent_chunked_sha256(
 
 #[test]
 fn paged_native_drawing_snapshot_text_footprint_counts_empty_spare_backing_exactly() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
     let capacities: [usize; 4] = std::array::from_fn(|index| law["ownedChunkCapacities"][index].as_u64().unwrap() as usize);
     let (source, allocation) = observe(|| {
         let chunks: [String; 4] = std::array::from_fn(|index| String::with_capacity(capacities[index]));

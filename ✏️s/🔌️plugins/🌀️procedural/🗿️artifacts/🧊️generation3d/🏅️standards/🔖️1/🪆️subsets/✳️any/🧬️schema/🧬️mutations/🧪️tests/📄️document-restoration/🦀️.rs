@@ -10,7 +10,7 @@ use crate::central_apply::{apply_generation3d_mutation};
 
 #[test]
 fn document_restoration_selection_preview_mutation_algebra_matches_neutral_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️document-restoration/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📄️document-restoration/🔣️.json")).unwrap();
     let mut base = Generation3dSnapshotRead::new(<Generation3dPlayApp as ArtifactEditor>::initial_snapshot());
     let before = serde_json::to_string(&fixture["before"]).unwrap();
     let state: semio_framework_artifact_playbook_playbook::GenerationPlayState = semio_framework_pack_json::from_json_str(&before, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

@@ -98,7 +98,7 @@ fn mixed_crlf_lf_is_still_a_lossless_round_trip() {
 /// and the feature's `mixed-crlf-and-bare-lf` specification vector.
 #[test]
 fn the_real_terminal_log_is_read_identically_by_bstr_and_the_documented_rule() {
-    let bytes = include_bytes!("../../../🧫️fixtures/🔤️.txt");
+    let bytes = include_bytes!("../../../🧪️tests/🧫️fixtures/🔤️.txt");
     let body = std::str::from_utf8(bytes).expect("fixture is valid UTF-8");
     let (lines, trailing, crlf) = independent_split(body);
     assert!(!crlf, "the committed terminal log carries no CRLF");
@@ -161,7 +161,7 @@ fn csv_cross_check_agrees_with_independent_split_on_the_real_single_style_fixtur
     // can cross-check only the NON-BLANK line count, never the true line count, on any real
     // prose that has blank lines at all — a narrower substitute than first assumed, recorded
     // here rather than silently worked around.
-    let bytes = include_bytes!("../../../🧫️fixtures/🎙️interview-transkript.tex");
+    let bytes = include_bytes!("../../../🧪️tests/🧫️fixtures/🎙️interview-transkript.tex");
     let body = std::str::from_utf8(bytes).expect("fixture is valid UTF-8");
     let (lines, _, _) = independent_split(body);
     let non_blank = lines.iter().filter(|line| !line.is_empty()).count();
@@ -197,7 +197,7 @@ fn csv_cross_check_genuinely_disagrees_on_mixed_content_and_that_is_documented_n
 //#region 🧪️RealFixtureLaws
 /// 📄️ The real committed German interview transcript this subset's case names as its input —
 /// 170 LF-terminated lines, 81 of them blank, genuine umlauts, no CR anywhere.
-const REAL_FIXTURE: &[u8] = include_bytes!("../../../🧫️fixtures/🎙️interview-transkript.tex");
+const REAL_FIXTURE: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/🎙️interview-transkript.tex");
 
 /// 🎬️ The `@id-mutate`/`@id-inverse` Examples table of
 /// `../🧪️tests/📝️mutate-txt-utf-8/🥒️.feature`, verbatim — the same seven rows,

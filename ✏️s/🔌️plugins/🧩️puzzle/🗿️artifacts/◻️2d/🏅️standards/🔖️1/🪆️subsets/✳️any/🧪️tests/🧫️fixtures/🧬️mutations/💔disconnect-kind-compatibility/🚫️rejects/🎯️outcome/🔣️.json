@@ -1,0 +1,8 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-missing",
+  "path": [
+    "roof circular bottom",
+    "core circular top"
+  ]
+}

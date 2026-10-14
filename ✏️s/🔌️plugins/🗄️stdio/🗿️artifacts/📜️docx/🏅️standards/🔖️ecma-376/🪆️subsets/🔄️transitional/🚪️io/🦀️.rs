@@ -55,8 +55,8 @@ use semio_framework_diagnostic::TextSpan;
 
         async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <DocxSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <DocxSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <DocxSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).ok(),
+                IoPayload::Text(text) => <DocxSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => check_transitional_conformance(&snapshot),

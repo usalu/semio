@@ -278,7 +278,7 @@ fn close_jack_initializer(authority: &mut JackStoreInitializationAuthority) {
 }
 
 fn jack_close_refusal_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🚫️close-refusal/🔣️.json")).expect("closed language-neutral Jack refusal corpus")
+    serde_json::from_str(include_str!("../🧫️fixtures/🚫️close-refusal/🔣️.json")).expect("closed language-neutral Jack refusal corpus")
 }
 
 #[test]

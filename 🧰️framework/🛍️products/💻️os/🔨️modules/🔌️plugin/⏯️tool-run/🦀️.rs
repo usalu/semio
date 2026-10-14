@@ -43,6 +43,9 @@ pub(crate) const TOOL_RUN_JOB_SITE: &str = "tool-run.step";
 #[path="🎟️publication/🦀️.rs"]
 mod publication_ingress;
 use publication_ingress::ToolRunPublicationIngress;
+#[path="👷️job/🎟️receiving/🦀️.rs"]
+mod original_job_receiving;
+pub(crate) use original_job_receiving::OriginalToolRunPayload;
 //#endregion 🔖️Limits
 
 //#region 🔖️Selection
@@ -62,12 +65,12 @@ macro_rules! selected_entry_mut {
         }
     };
 }
-use selected_entry;
-use selected_entry_mut;
+pub(crate) use selected_entry;
+pub(crate) use selected_entry_mut;
 
 #[path="🎞️tick/📦️payload/🦀️.rs"]
 mod original_tick_payload;
-#[cfg(test)] use original_tick_payload::{advance_original_tick_payload,close_original_tick_payload};
+#[cfg(test)] pub(crate) use original_tick_payload::{advance_original_tick_payload,close_original_tick_payload};
 
 #[cfg(test)]
 #[path="📮️port/♻️retirement/🧪️tests/🦀️.rs"]
@@ -89,20 +92,25 @@ pub(crate) enum ToolRunJobHandle<C> {
 }
 
 pub(crate) struct ToolRunJobSlot<C> {
-    job: ToolRunJobHandle<C>,
-    purpose: ToolRunJobPurpose,
-    operation: semio_framework_job::OperationId,
-    generation: semio_framework_job::Generation,
-    cancel: Option<semio_framework_job::CancelToken>,
+    pub(crate) receiving: semio_framework_tool_run::ToolRunReceivingLimits,
+    pub(crate) job: ToolRunJobHandle<C>,
+    pub(crate) purpose: ToolRunJobPurpose,
+    pub(crate) operation: semio_framework_job::OperationId,
+    pub(crate) generation: semio_framework_job::Generation,
+    pub(crate) cancel: Option<semio_framework_job::CancelToken>,
     cancel_retirement: Option<semio_framework_async::CancelTokenRetirement>,
-    preview_sequence: u64,
-    context: Option<semio_framework_job::StepContextOwner>,
+    pub(crate) preview_sequence: u64,
+    pub(crate) authority: Option<semio_framework_job::JobPayloadAuthority>,
+    pub(crate) outcome: Option<semio_framework_job::JobOutcomeDescriptor>,
+    pub(crate) outcome_received: bool,
+    pub(crate) original_failure: std::mem::ManuallyDrop<Option<semio_framework_job::OriginalTurnFailure>>,
+    failure_retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
     closing: bool,
 }
 
 impl<C> ToolRunJobSlot<C> {
-    pub(crate) fn new(job: ToolRunJobHandle<C>, purpose: ToolRunJobPurpose, generation: u32) -> Self {
-        Self { job, purpose, operation: semio_framework_job::allocate_operation_id(), generation: semio_framework_job::Generation(u64::from(generation)), cancel: Some(semio_framework_job::CancelToken::root_now()), cancel_retirement: None, preview_sequence: 0, context: None, closing: false }
+    pub(crate) fn new(job: ToolRunJobHandle<C>, purpose: ToolRunJobPurpose, generation: u32, receiving: semio_framework_tool_run::ToolRunReceivingLimits) -> Self {
+        Self { receiving, job, purpose, operation: semio_framework_job::allocate_operation_id(), generation: semio_framework_job::Generation(u64::from(generation)), cancel: None, cancel_retirement: None, preview_sequence: 0, authority: None, outcome:None, outcome_received:false, original_failure:std::mem::ManuallyDrop::new(None), failure_retirement:None, closing: false }
     }
 
     fn interactive(&mut self) -> &mut dyn semio_framework_job::InteractiveJob {
@@ -120,7 +128,7 @@ impl<C> ToolRunJobSlot<C> {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.job_is_empty() && self.context.as_ref().is_none_or(semio_framework_job::StepContextOwner::terminal_is_empty) && self.cancel.is_none() && self.cancel_retirement.is_none()
+        self.job_is_empty() && self.authority.is_none() && self.outcome.is_none() && self.original_failure.is_none() && self.failure_retirement.is_none() && self.cancel.is_none() && self.cancel_retirement.is_none()
     }
 
     /// 📐️ Bytes of the boxed job frame once every owner inside it is returned: the last allocation a retiring slot still holds.
@@ -131,9 +139,9 @@ impl<C> ToolRunJobSlot<C> {
         }
     }
 
-    fn retargetable(&mut self) -> Option<&mut dyn ToolRunRetargetableJob<C>> {
+    pub(crate) fn retargetable(&mut self) -> Option<&mut dyn ToolRunRetargetableJob<C>> {
         match &mut self.job {
-            ToolRunJobHandle::Retargetable(job) if !self.closing => Some(job.as_mut()),
+            ToolRunJobHandle::Retargetable(job) if !self.closing && self.outcome.is_none() => Some(job.as_mut()),
             _ => None,
         }
     }
@@ -148,55 +156,48 @@ impl<C> ToolRunJobSlot<C> {
         }
     }
 
+    pub(crate) fn borrow_outcome(&self)->Result<Option<semio_framework_job::JobOutcomeView<'_>>,ValueError>{
+        let Some(descriptor)=self.outcome.as_ref()else{return Ok(None)};
+        let job:&dyn semio_framework_job::InteractiveJob=match &self.job{ToolRunJobHandle::Plain(job)=>job.as_ref(),ToolRunJobHandle::Retargetable(job)=>job.as_ref()};
+        job.borrow_outcome(descriptor).map(Some)
+    }
+
     fn next_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+        if self.outcome.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
+        if let Some(owner)=self.failure_retirement.as_ref(){return Ok(if owner.terminal_is_empty(){RetirementDemand{release_bytes:size_of_val(owner.as_ref()),depth:1,..Default::default()}}else{RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original ToolRun failure depth overflow"))?}})}
+        if self.original_failure.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<semio_framework_job::OriginalTurnFailure>(),depth:2,..Default::default()})}
         let job:&dyn semio_framework_job::InteractiveJob=match &self.job{ToolRunJobHandle::Plain(job)=>job.as_ref(),ToolRunJobHandle::Retargetable(job)=>job.as_ref()};
         if self.closing&&job.terminal_is_empty(){
-            if let Some(owner)=self.context.as_ref(){return Ok(RetirementDemand{release_bytes:owner.next_close_release_byte_demand()?,depth:owner.next_close_depth_demand()?,..Default::default()});}
-            if let Some(retirement)=self.cancel_retirement.as_ref(){return if retirement.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<semio_framework_async::CancelTokenRetirement>>(),depth:1,..Default::default()})}else{retirement.retirement_demands()};}
-            if self.cancel.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<semio_framework_job::CancelToken>>(),depth:1,..Default::default()});}
+            if let Some(owner)=self.authority.as_ref(){return Ok(if owner.terminal_is_empty(){RetirementDemand{depth:1,..Default::default()}}else{owner.retirement_demands()})}
+            if let Some(retirement)=self.cancel_retirement.as_ref(){return if retirement.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{retirement.retirement_demands()}}
+            if self.cancel.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
         }
-        if !self.closing||job.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"a terminal tool job slot is removed by its ledger, never quoted"));}
+        if !self.closing||job.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"a terminal tool job slot is removed by its ledger, never quoted"))}
         Ok(RetirementDemand{copy_bytes:job.next_close_copy_byte_demand()?,capacity_bytes:job.next_close_capacity_byte_demand(body)?,release_bytes:job.next_close_release_byte_demand()?,depth:job.next_close_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"tool job close depth overflow"))?})
     }
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{
-        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-        let demand=self.next_demands(grant.maximum_copy_bytes).map_err(FaultFrom::into_fault)?;
-        if !tool_grant_funds(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if self.job_is_empty(){if let Some(owner)=self.context.as_mut(){return match owner.close_step(grant){
-            semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>{if owner.terminal_is_empty(){self.context=None;}Ok(RetainedCloneStep::Progress(progress))},
-            semio_framework_job::InteractiveJobCloseStep::Blocked=>Ok(RetainedCloneStep::Progress(Default::default())),
-            semio_framework_job::InteractiveJobCloseStep::Refused{kind,progress}=>Err(ValueError::literal(kind,"tool job step context original close refused its admitted grant").with_retained_progress(progress).into_fault()),
-        };}
-        if let Some(retirement)=self.cancel_retirement.as_mut(){
-            if retirement.terminal_is_empty(){drop(self.cancel_retirement.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
-            return match retirement.close_step(grant){
-                Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),
-                Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(RetainedCloneStep::Progress(Default::default())),
-                Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error.into_fault()),
-            };
-        }
-        if let Some(token)=self.cancel.take(){self.cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(token));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
-        }
-        let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-        let terminal=self.job_is_empty();
-        let step=self.interactive().close_step(child).admit(child,terminal);
-        match step{
-            semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>Ok(RetainedCloneStep::Progress(progress)),
-            semio_framework_job::InteractiveJobCloseStep::Blocked=>Ok(RetainedCloneStep::Progress(Default::default())),
-            semio_framework_job::InteractiveJobCloseStep::Refused{kind,progress}=>Err(ValueError::literal(kind,"tool job original close refused its admitted grant").with_retained_progress(progress).into_fault()),
-        }
-    }
-}
 
-pub(crate) fn job_payload_bytes(payload: &semio_framework_job::RetainedJobPayload, limit: usize) -> Option<Vec<u8>> {
-    if payload.len() > limit {
-        return None;
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,semio_framework_job::OriginalTurnFailure>{
+        let grant=cx.retained_grant();
+        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
+        let demand=self.next_demands(grant.maximum_copy_bytes)?;
+        if !tool_grant_funds(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
+        if self.outcome.is_none()&&self.failure_retirement.is_none()&&self.original_failure.is_none()&&!self.job_is_empty(){
+            if cx.should_yield()||!tool_grant_funds(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
+            let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let step=cx.with_retained_loan(child,|cx|self.interactive().close_step(cx))?;
+            return Ok(RetainedCloneStep::Progress(step.progress()))
+        }
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{
+        if let Some(descriptor)=self.outcome.as_mut(){if !descriptor.is_acknowledged(){return Ok(RetainedCloneStep::Progress(descriptor.acknowledge(grant).progress()))}drop(self.outcome.take());self.outcome_received=false;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
+        if let Some(owner)=self.failure_retirement.as_mut(){if owner.terminal_is_empty(){drop(self.failure_retirement.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))}let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.close_step(child)?;admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original ToolRun callback failure")?;return Ok(RetainedCloneStep::Progress(step.progress()))}
+        if let Some(original)=self.original_failure.take(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};return match semio_framework_value::retirement::admit_owned_retirement(original,child){Ok((owner,progress))=>{self.failure_retirement=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Err((error,original))=>{*self.original_failure=Some(original);Err(error)}}}
+        if self.job_is_empty(){
+            if let Some(owner)=self.authority.as_mut(){if owner.terminal_is_empty(){drop(self.authority.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}return owner.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()))}
+            if let Some(retirement)=self.cancel_retirement.as_mut(){if retirement.terminal_is_empty(){drop(self.cancel_retirement.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}return match retirement.close_step(grant){Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(RetainedCloneStep::Progress(Default::default())),Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error)}}
+            if let Some(token)=self.cancel.take(){self.cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(token));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
+        }
+            Ok(RetainedCloneStep::Complete(Default::default()))
+        })?;Ok(RetainedCloneStep::Progress(step.progress()))
     }
-    let mut bytes = Vec::with_capacity(payload.len());
-    for index in 0..payload.page_count() {
-        bytes.extend_from_slice(payload.page(index)?);
-    }
-    Some(bytes)
 }
 
 /// 📼️ Lane text of one delta: `None` for an empty, non-clearing delta, else its base64url (unpadded) pack body.
@@ -264,7 +265,7 @@ pub(crate) fn inject_tool_run_trace_lane_into(surface: &mut BuiltNode, lane: &st
 /// the refolded overlay is whole: a retract refold waits for the job's next checkpoint, completion or close,
 /// so a retract followed by re-appends spread over several ticks never renders a half re-appended overlay —
 /// the previous overlay stays rendered until then.
-struct ToolRunRefold<P> {
+pub(crate) struct ToolRunRefold<P> {
     running: Option<P>,
     cursor: usize,
     boundary: bool,
@@ -282,8 +283,8 @@ pub(crate) enum ToolRunRefoldTurn {
 /// window kind the `(window id, values)` of every partition it reads.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(crate) struct ToolRunSettingsValues {
-    config: Vec<Option<DslValue>>,
-    window_config: Vec<(String, String, Vec<Option<DslValue>>)>,
+    pub(crate) config: Vec<Option<DslValue>>,
+    pub(crate) window_config: Vec<(String, String, Vec<Option<DslValue>>)>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -295,54 +296,54 @@ pub(crate) enum ToolRunFinalizePhase {
 }
 
 pub(crate) struct ToolRunFinalize<A: ArtifactApp> {
-    phase: ToolRunFinalizePhase,
+    pub(crate) phase: ToolRunFinalizePhase,
     pub(crate) publication: Option<store::os_store::one_item_publication::ArtifactStoreBatchPublication<A::Snapshot, A::Mutation>>,
     pub(crate) ingress: ToolRunPublicationIngress,
-    rejected: bool,
-    retracted: u32,
-    published: bool,
+    pub(crate) rejected: bool,
+    pub(crate) retracted: u32,
+    pub(crate) published: bool,
 }
 
 pub(crate) struct ToolRunEntry<A: ArtifactApp> {
     pub(crate) tool_id: String,
-    actor: semio_framework_value::SharedUtf8,
+    pub(crate) actor: semio_framework_value::SharedUtf8,
     pub(crate) definition: ToolRunDefinition,
     pub(crate) slot: ToolRunSlot,
     pub(crate) identity: ToolRunIdentity,
     pub(crate) base: Arc<A::Snapshot>,
     pub(crate) base_generation: u64,
     pub(crate) settings_generation: (u64, u64),
-    settings_values: ToolRunSettingsValues,
+    pub(crate) settings_values: ToolRunSettingsValues,
     pub(crate) window: Option<(String, String)>,
-    window_bodies: Vec<String>,
-    payload: Option<Arc<Vec<u8>>>,
+    pub(crate) window_bodies: Vec<String>,
+    pub(crate) payload: Option<Arc<Vec<u8>>>,
     pub(crate) trace_keys: ToolRunTraceKeys,
     pub(crate) provisional: Vec<A::Mutation>,
     pub(crate) entity_marks: Vec<(u32, u64)>,
-    entities: Arc<BTreeSet<u64>>,
-    overlay: Arc<A::Snapshot>,
-    refold: Option<ToolRunRefold<A::Snapshot>>,
-    trace: ToolRunTraceStore,
-    recent_trace: std::collections::VecDeque<u64>,
-    stage: u16,
-    completed: u64,
-    total: Option<u64>,
-    counters: Vec<ToolRunCounter>,
-    steps: ToolRunStepRing,
-    step_sequence: u64,
-    sequence: u64,
-    conflicts: u32,
-    rate_origin: Option<(u64, u64)>,
-    units_per_second: f32,
-    job: Option<ToolRunJobSlot<A::Config>>,
+    pub(crate) entities: Arc<BTreeSet<u64>>,
+    pub(crate) overlay: Arc<A::Snapshot>,
+    pub(crate) refold: Option<ToolRunRefold<A::Snapshot>>,
+    pub(crate) trace: ToolRunTraceStore,
+    pub(crate) recent_trace: std::collections::VecDeque<u64>,
+    pub(crate) stage: u16,
+    pub(crate) completed: u64,
+    pub(crate) total: Option<u64>,
+    pub(crate) counters: Vec<ToolRunCounter>,
+    pub(crate) steps: ToolRunStepRing,
+    pub(crate) step_sequence: u64,
+    pub(crate) sequence: u64,
+    pub(crate) conflicts: u32,
+    pub(crate) rate_origin: Option<(u64, u64)>,
+    pub(crate) units_per_second: f32,
+    pub(crate) job: Option<ToolRunJobSlot<A::Config>>,
     pub(crate) checkpoint: Option<Vec<u8>>,
-    pending_step: bool,
+    pub(crate) pending_step: bool,
     pub(crate) finalize: Option<ToolRunFinalize<A>>,
-    announced: Option<(ToolRunState, u64, String)>,
+    pub(crate) announced: Option<(ToolRunState, u64, String)>,
     pub(crate) port: ToolRunJobPort,
     /// ♻️ Snapshot aliases this run let go (a replaced base or overlay, a superseded fold result), owed to the store's
     /// alias retirement ([`ToolRunLedger::retire_step`]); never dropped plainly.
-    displaced: Vec<Arc<A::Snapshot>>,
+    pub(crate) displaced: Vec<Arc<A::Snapshot>>,
     /// 🧩️ The owned member a member run edits (`ToolRunDefinition::member`); `None` for a run on the document's store.
     pub(crate) member: Option<ToolRunMemberRun>,
 }
@@ -388,31 +389,31 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
             }
     }
 
-    fn framework_step(&mut self, kind: ToolRunStepKind, reason: u16, args: &[ToolRunStepArg]) {
+    pub(crate) fn framework_step(&mut self, kind: ToolRunStepKind, reason: u16, args: &[ToolRunStepArg]) {
         self.step_sequence = self.step_sequence.saturating_add(1);
         self.steps.push(ToolRunStep { sequence: self.step_sequence, kind, stage: self.stage, reason, subject: None, repeat: 1, args: args.to_vec() });
     }
 
-    fn begin_refold(&mut self, boundary: bool) {
+    pub(crate) fn begin_refold(&mut self, boundary: bool) {
         if let Some(running) = self.refold.replace(ToolRunRefold { running: None, cursor: 0, boundary }).and_then(|refold| refold.running) {
             self.displaced.push(Arc::new(running));
         }
     }
 
     /// ♻️ Replaces the overlay, owing the previous one to the store's alias retirement.
-    fn replace_overlay(&mut self, overlay: Arc<A::Snapshot>) {
+    pub(crate) fn replace_overlay(&mut self, overlay: Arc<A::Snapshot>) {
         let previous = std::mem::replace(&mut self.overlay, overlay);
         self.displaced.push(previous);
     }
 
     /// ♻️ Replaces the base, owing the previous one to the store's alias retirement.
-    fn replace_base(&mut self, base: Arc<A::Snapshot>) {
+    pub(crate) fn replace_base(&mut self, base: Arc<A::Snapshot>) {
         let previous = std::mem::replace(&mut self.base, base);
         self.displaced.push(previous);
     }
 
     /// 🏁️ The job reached a point where the refolded overlay is whole.
-    fn settle_refold(&mut self) {
+    pub(crate) fn settle_refold(&mut self) {
         if let Some(refold) = self.refold.as_mut() {
             refold.boundary = true;
         }
@@ -443,7 +444,7 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
 
     /// 🔁️ Folds provisional ops from `base` until the wall deadline; the overlay is replaced once every op is
     /// folded and the refold reached its boundary.
-    fn refold_turn(&mut self, deadline_us: u64) -> ToolRunRefoldTurn {
+    pub(crate) fn refold_turn(&mut self, deadline_us: u64) -> ToolRunRefoldTurn {
         let Some(mut refold) = self.refold.take() else { return ToolRunRefoldTurn::Swapped };
         while refold.cursor < self.provisional.len() {
             let source = refold.running.as_ref().unwrap_or(&self.base);
@@ -635,7 +636,7 @@ pub struct ToolRunLedger<A: ArtifactApp> {
 }
 
 /// 🪟️ One scene window the trace lane was delivered to: its body key and what its renderer last echoed.
-struct ToolRunTraceWindow {
+pub(crate) struct ToolRunTraceWindow {
     body_key: String,
     echoed: Option<ToolRunTraceCursor>,
     answered: bool,
@@ -1041,31 +1042,35 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         if !self.retired_members.is_empty()||!self.trace_windows.is_empty(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool member and trace metadata retain their granted retirement authority"));}
         Ok(Default::default())
     }
-    pub(crate) fn retire_step(&mut self,store:&mut ArtifactStore<A::Snapshot,A::Mutation>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,Fault>{
+    pub(crate) fn retire_step(&mut self,store:&mut ArtifactStore<A::Snapshot,A::Mutation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<RetainedCloneStep>,semio_framework_job::OriginalTurnFailure>{
+        let grant=cx.retained_grant();if cx.should_yield(){return Ok(Some(RetainedCloneStep::Progress(Default::default())))}
         if self.has_original_receipt(){return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
         if grant.maximum_items==0{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
-        let demand=self.retirement_demands(store,grant.maximum_copy_bytes).map_err(FaultFrom::into_fault)?;
+        let demand=self.retirement_demands(store,grant.maximum_copy_bytes)?;if demand==RetirementDemand::default(){return Ok(None)}
         if !tool_grant_funds(grant,demand){return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
         if let Some(job)=self.retired_jobs.last_mut(){
-            if job.terminal_is_empty(){let released_bytes=job.scaffold_release_bytes();drop(self.retired_jobs.pop());return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes,..Default::default()})));}
-            return job.close_step(grant).map(Some);
+            if job.terminal_is_empty(){let released_bytes=job.scaffold_release_bytes();let step=semio_framework_job::close_original_retained_step(cx,demand,|_|{drop(self.retired_jobs.pop());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes,..Default::default()}))})?;return Ok(Some(RetainedCloneStep::Progress(step.progress())));}
+            return job.close_step(cx).map(Some);
         }
+        if self.terminal_is_empty(){return Ok(None)}
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{
         if let Some(publication)=self.retired_publications.last_mut(){
-            if publication.terminal_is_empty(){drop(self.retired_publications.pop());return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})));}
-            publication.begin_close();let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let step=publication.close_step(child).map_err(FaultFrom::into_fault)?;
-            let step=admit_retained_clone_close(child,step,publication.terminal_is_empty(),"tool publication original").map_err(FaultFrom::into_fault)?;return Ok(Some(RetainedCloneStep::Progress(step.progress())));
+            if publication.terminal_is_empty(){drop(self.retired_publications.pop());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
+            publication.begin_close();let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let step=publication.close_step(child)?;
+            let step=admit_retained_clone_close(child,step,publication.terminal_is_empty(),"tool publication original")?;return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if self.snapshot_retirement.is_some(){return close_tool_erased_retirement(&mut self.snapshot_retirement,grant).map(Some).map_err(FaultFrom::into_fault);}
-        if self.pending_snapshot_alias.is_some(){let result=store.retire_snapshot_alias(&mut self.pending_snapshot_alias,grant).map_err(FaultFrom::into_fault)?;return Ok(Some(RetainedCloneStep::Progress(match result{Some((owner,progress))=>{self.snapshot_retirement=Some(owner);progress},None=>Default::default()})));}
-        if self.pending_discarded.is_some(){let result=store.retire_owned_mutation(&mut self.pending_discarded,grant).map_err(FaultFrom::into_fault)?;return Ok(Some(RetainedCloneStep::Progress(match result{Some((owner,progress))=>{self.snapshot_retirement=Some(owner);progress},None=>Default::default()})));}
+        if self.snapshot_retirement.is_some(){return close_tool_erased_retirement(&mut self.snapshot_retirement,grant);}
+        if self.pending_snapshot_alias.is_some(){let result=store.retire_snapshot_alias(&mut self.pending_snapshot_alias,grant)?;return Ok(RetainedCloneStep::Progress(match result{Some((owner,progress))=>{self.snapshot_retirement=Some(owner);progress},None=>Default::default()}));}
+        if self.pending_discarded.is_some(){let result=store.retire_owned_mutation(&mut self.pending_discarded,grant)?;return Ok(RetainedCloneStep::Progress(match result{Some((owner,progress))=>{self.snapshot_retirement=Some(owner);progress},None=>Default::default()}));}
         let alias=self.retired_snapshots.pop().or_else(||self.entries.iter_mut().find(|entry|!entry.displaced.is_empty()).and_then(|entry|entry.displaced.pop()));
-        if let Some(alias)=alias{self.pending_snapshot_alias=Some(alias);return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})));}
-        if let Some(operation)=self.discarded.pop(){self.pending_discarded=Some(operation);return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})));}
-        if let Some((key,window))=self.trace_windows.pop_first(){let released_bytes=key.capacity().saturating_add(window.body_key.capacity());drop((key,window));return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes,..Default::default()})));}
-        macro_rules! ledger_release {($field:ident)=>{if let Some(step)=close_ledger_backing(&mut self.$field,grant).map_err(FaultFrom::into_fault)?{return Ok(Some(step));}};}
+        if let Some(alias)=alias{self.pending_snapshot_alias=Some(alias);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
+        if let Some(operation)=self.discarded.pop(){self.pending_discarded=Some(operation);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
+        if let Some((key,window))=self.trace_windows.pop_first(){let released_bytes=key.capacity().saturating_add(window.body_key.capacity());drop((key,window));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes,..Default::default()}));}
+        macro_rules! ledger_release {($field:ident)=>{if let Some(step)=close_ledger_backing(&mut self.$field,grant)?{return Ok(step);}};}
         ledger_release!(entries);ledger_release!(retired_jobs);ledger_release!(retired_publications);ledger_release!(retired_snapshots);ledger_release!(discarded);ledger_release!(retired_members);
-        if !self.retired_members.is_empty()||!self.trace_windows.is_empty(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool metadata retains its granted retirement authority").into_fault());}
-        Ok(None)
+        if !self.retired_members.is_empty()||!self.trace_windows.is_empty(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool metadata retains its granted retirement authority"));}
+        Ok(RetainedCloneStep::Complete(Default::default()))
+        })?;Ok(Some(RetainedCloneStep::Progress(step.progress())))
     }
 
     /// 🚪️ Document close, instance retirement or reload: same as abort, ephemeral state vanishes (§2.2).
@@ -1078,9 +1083,9 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     }
 
     /// 🧹️ One bounded close unit of every retiring owner.
-    pub fn close_step(&mut self,store:&mut ArtifactStore<A::Snapshot,A::Mutation>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{
-        if !self.closing{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"tool run close requires granted entry cancellation before cleanup").into_fault());}
-        Ok(self.retire_step(store,grant)?.unwrap_or(RetainedCloneStep::Complete(Default::default())))
+    pub fn close_step(&mut self,store:&mut ArtifactStore<A::Snapshot,A::Mutation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,semio_framework_job::OriginalTurnFailure>{
+        if !self.closing{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"tool run close requires granted entry cancellation before cleanup").into());}
+        Ok(self.retire_step(store,cx)?.unwrap_or(RetainedCloneStep::Complete(Default::default())))
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -1092,9 +1097,9 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
 //#region 🔖️Member
 /// 🧬️ The typed owners of a member run (`ToolRunDefinition::member`): the member snapshot the run rests on, the overlay its
 /// provisional ops fold to, and every alias it let go — all owed to that member store's alias retirement, never dropped plainly.
-trait ToolRunMemberOwners: Send {
+pub(crate) trait ToolRunMemberOwners: Send {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
-    pub(crate) fn has_displaced(&self) -> bool;
+    fn has_displaced(&self) -> bool;
     fn is_empty(&self) -> bool;
 }
 
@@ -1170,7 +1175,7 @@ impl ToolRunMemberRun {
 
 /// 📏️ Where one member fold left the overlay: the ops it shows, the ops that did not apply, and — once every op is shown —
 /// the leased read of the overlay with the member's revision (`None`: no op, the render seams read the live member).
-struct ToolRunMemberFolded {
+pub(crate) struct ToolRunMemberFolded {
     pub(crate) shown: usize,
     pub(crate) conflicts: u32,
     pub(crate) read: Option<(store::os_store::snapshot_read::ErasedSnapshotRead, [u8; 32])>,
@@ -1178,11 +1183,11 @@ struct ToolRunMemberFolded {
 
 /// 🔁️ Folds a member run's ops onto its overlay within the turn wall budget: a rebase restarts from the member head.
 pub(crate) struct ToolRunMemberFold<'a> {
-    owners: &'a mut Option<Box<dyn ToolRunMemberOwners>>,
-    ops: &'a [Vec<u8>],
-    shown: usize,
-    rebase: bool,
-    deadline_us: u64,
+    pub(crate) owners: &'a mut Option<Box<dyn ToolRunMemberOwners>>,
+    pub(crate) ops: &'a [Vec<u8>],
+    pub(crate) shown: usize,
+    pub(crate) rebase: bool,
+    pub(crate) deadline_us: u64,
 }
 
 impl store::MemberStoreVisitor for ToolRunMemberFold<'_> {
@@ -1190,7 +1195,7 @@ impl store::MemberStoreVisitor for ToolRunMemberFold<'_> {
 
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
     {
         let owners = self.owners.get_or_insert_with(|| Box::new(ToolRunMemberState::<P> { base: Some(store.derived_snapshot_head()), overlay: None, displaced: Vec::new(), pending_alias: None }));
@@ -1313,18 +1318,18 @@ impl<M> Drop for ToolRunMemberEmissionState<M>{
 }
 
 pub(crate) struct ToolRunMemberEmit<'a>{
-    slot:&'a str,
-    child_id:&'a str,
-    ops:&'a [Vec<u8>],
-    emit:&'a mut Option<ChildEmit>,
-    owner:&'a mut Option<Box<dyn ToolRunMemberEmissionOwner>>,
-    grant:RetainedCloneGrant,
+    pub(crate) slot:&'a str,
+    pub(crate) child_id:&'a str,
+    pub(crate) ops:&'a [Vec<u8>],
+    pub(crate) emit:&'a mut Option<ChildEmit>,
+    pub(crate) owner:&'a mut Option<Box<dyn ToolRunMemberEmissionOwner>>,
+    pub(crate) grant:RetainedCloneGrant,
 }
 impl store::MemberStoreVisitor for ToolRunMemberEmit<'_>{
     type Output=Result<(bool,RetainedCloneProgress),Fault>;
     fn visit<P,Mu>(self,store:&ArtifactStore<P,Mu>)->Self::Output
     where
-        P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack+semio_framework_schema_composition::ArtifactCompositionFields+Send+Sync+'static,
+        P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot+semio_framework_schema_composition::ArtifactCompositionFields+Send+Sync+'static,
         Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+::protocol::Mutation<P>+protocol::SemanticMutation<P>+::protocol::OpBinary+::protocol::OpText+Send+'static,
     {
         if self.grant.maximum_items==0{return Ok((false,Default::default()));}
@@ -1345,12 +1350,12 @@ impl store::MemberStoreVisitor for ToolRunMemberEmit<'_>{
         Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"tool member emission requires genuinely granted typed operation decoding and wire preparation").into_fault())
     }
 }
-pub(crate) struct ToolRunMemberEmissionRetire<'a>{owner:&'a mut(dyn ToolRunMemberEmissionOwner+'static),grant:RetainedCloneGrant}
+pub(crate) struct ToolRunMemberEmissionRetire<'a>{pub(crate) owner:&'a mut(dyn ToolRunMemberEmissionOwner+'static),pub(crate) grant:RetainedCloneGrant}
 impl store::MemberStoreVisitor for ToolRunMemberEmissionRetire<'_>{
     type Output=Result<RetainedCloneStep,Fault>;
     fn visit<P,Mu>(self,store:&ArtifactStore<P,Mu>)->Self::Output
     where
-        P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack+semio_framework_schema_composition::ArtifactCompositionFields+Send+Sync+'static,
+        P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot+semio_framework_schema_composition::ArtifactCompositionFields+Send+Sync+'static,
         Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+::protocol::Mutation<P>+protocol::SemanticMutation<P>+::protocol::OpBinary+::protocol::OpText+Send+'static,
     {
         if self.grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
@@ -1370,7 +1375,7 @@ impl store::MemberStoreVisitor for ToolRunMemberGeneration {
 
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
     {
         store.generation()
@@ -1379,12 +1384,12 @@ impl store::MemberStoreVisitor for ToolRunMemberGeneration {
 
 /// ♻️ Hands one alias of a member run's owners to the member store's bounded alias retirement: displaced aliases first,
 /// and with `everything` the base and overlay too (the run left its slot).
-pub(crate) struct ToolRunMemberRetire<'a>{owners:&'a mut(dyn ToolRunMemberOwners+'static),everything:bool,grant:RetainedCloneGrant}
+pub(crate) struct ToolRunMemberRetire<'a>{pub(crate) owners:&'a mut(dyn ToolRunMemberOwners+'static),pub(crate) everything:bool,pub(crate) grant:RetainedCloneGrant}
 impl store::MemberStoreVisitor for ToolRunMemberRetire<'_>{
     type Output=Result<(Option<Box<dyn store::ErasedSnapshotRetirement>>,RetainedCloneProgress),Fault>;
     fn visit<P,Mu>(self,store:&ArtifactStore<P,Mu>)->Self::Output
     where
-        P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack+semio_framework_schema_composition::ArtifactCompositionFields+Send+Sync+'static,
+        P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot+semio_framework_schema_composition::ArtifactCompositionFields+Send+Sync+'static,
         Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+::protocol::Mutation<P>+protocol::SemanticMutation<P>+::protocol::OpBinary+::protocol::OpText+Send+'static,
     {
         if self.grant.maximum_items==0{return Ok((None,Default::default()));}

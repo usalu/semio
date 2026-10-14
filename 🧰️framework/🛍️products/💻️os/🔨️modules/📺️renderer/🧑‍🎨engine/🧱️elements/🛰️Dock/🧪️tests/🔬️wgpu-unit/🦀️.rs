@@ -87,7 +87,7 @@ fn concrete_window_instances_round_trip_without_kind_collapse() {
         layout: WindowLayout,
         expected: Vec<ExpectedWindow>,
     }
-    let fixture: Fixture = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️concrete-window-instances.json")).expect("concrete window fixture");
+    let fixture: Fixture = serde_json::from_str(include_str!("../🧫️fixtures/🪟️concrete-window-instances.json")).expect("concrete window fixture");
     let mut dock = DockState::from_app(&sample_app(&["canvas"], Some(fixture.layout)), Some("canvas-copy"));
     let actual = dock.window_instances();
     assert_eq!(actual, fixture.expected.iter().map(|window| (window.id.clone(), window.window_kind_id.clone())).collect::<Vec<_>>());
@@ -1084,7 +1084,7 @@ fn split_resize_conserves_the_pair_total_and_floors_at_eight_percent() {
 #[test]
 fn split_resize_moves_the_separator_by_the_pointer_delta_on_react_percentage_weights() {
     let repo = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../../../..");
-    let fixture_path = repo.join("🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/📐️dock-axis-geometry/🔣️.json");
+    let fixture_path = repo.join("🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/📐️dock-axis-geometry/🔣️.json");
     let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&fixture_path).unwrap_or_else(|error| panic!("read {}: {error}", fixture_path.display()))).expect("dock axis fixture");
     let oracle = &fixture["resizeOracle"];
     let axis_extent = oracle["axisExtentPixels"].as_f64().expect("axis extent") as f32;
@@ -1320,7 +1320,7 @@ fn tab_insert_index_follows_the_painted_gapless_chip_run() {
 #[test]
 fn themed_axis_geometry_matches_the_shared_react_fixture() {
     let repo = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../../../..");
-    let fixture_path = repo.join("🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/📐️dock-axis-geometry/🔣️.json");
+    let fixture_path = repo.join("🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/📐️dock-axis-geometry/🔣️.json");
     let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&fixture_path).unwrap_or_else(|error| panic!("read {}: {error}", fixture_path.display()))).expect("dock axis fixture");
     let token = fixture["oracleSample"]["tokenPixels"].as_f64().expect("token pixels") as f32;
     let width = fixture["viewport"]["width"].as_f64().expect("viewport width") as f32;

@@ -15,6 +15,7 @@
     "includedScripts": []
   },
   "devDependencies": {
-    "@webassemblyjs/leb128": "1.13.2"
+    "@webassemblyjs/leb128": "1.13.2",
+    "@semio-tech/process": "workspace:*"
   }
 }

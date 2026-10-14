@@ -9,7 +9,7 @@ pub(crate) struct CompletionCell<A:ArtifactApp>{inner:ManuallyDrop<Arc<Cell<A>>>
 impl<A:ArtifactApp> CompletionCell<A>{
     pub(crate) fn new()->Self{Self{inner:ManuallyDrop::new(Arc::new(Cell{value:Mutex::new(None),authoring:Mutex::new(None)})),returned:false}}
     pub(crate) fn try_lock(&self)->TryLockResult<MutexGuard<'_,Option<ArtifactToolCompletionValue<A>>>>{self.inner.value.try_lock()}
-    fn lock(&self)->std::sync::LockResult<MutexGuard<'_,Option<ArtifactToolCompletionValue<A>>>>{self.inner.value.lock()}
+    pub(crate) fn lock(&self)->std::sync::LockResult<MutexGuard<'_,Option<ArtifactToolCompletionValue<A>>>>{self.inner.value.lock()}
     pub(crate) fn try_lock_authoring(&self)->TryLockResult<MutexGuard<'_,Option<crate::tool_contract::OriginalAuthoringEffect>>>{self.inner.authoring.try_lock()}
     pub(crate) fn strong_count(&self)->usize{Arc::strong_count(&self.inner)}
     pub(crate) fn same_cell(&self,other:&Self)->bool{Arc::ptr_eq(&self.inner,&other.inner)}

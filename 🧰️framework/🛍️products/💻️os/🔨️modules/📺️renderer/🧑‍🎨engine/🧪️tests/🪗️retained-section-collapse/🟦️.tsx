@@ -12,7 +12,7 @@ import { afterEach, describe, expect, test } from "vitest";
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
 const uiRoot = resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui");
-const fixture = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/🪗️retained-section-collapse/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(uiRoot, "🧪️tests/🧫️fixtures/🪗️retained-section-collapse/🔣️.json"), "utf8"));
 
 afterEach(cleanup);
 

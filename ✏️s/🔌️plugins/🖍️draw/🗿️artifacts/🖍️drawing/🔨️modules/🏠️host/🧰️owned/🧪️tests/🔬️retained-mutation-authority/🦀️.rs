@@ -8,7 +8,7 @@ use crate::mutations::{
 #[test]
 fn paged_native_drawing_snapshot_initialization_catalog_admits_one_original_page_and_empty_drop() {
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🏗️initialization/📚️catalog/🧫️fixtures/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🏗️initialization/📚️catalog/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let lanes = law["lanes"].as_array().unwrap();
     let mut catalog = Some(store::ArtifactStoreInitializationOwnerCatalog::try_new().unwrap());
     let original = catalog.as_ref().unwrap().admitted_items();
@@ -48,8 +48,8 @@ fn paged_native_drawing_snapshot_initialization_catalog_admits_one_original_page
 fn paged_native_drawing_snapshot_retirement_keeps_original_variants_and_exact_grants() {
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     use semio_framework_value::{list::PagedList, paged::PagedUtf8};
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/🧫️fixtures/🔣️.json")).unwrap();
-    let snapshot: DrawingSnapshot = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let snapshot: DrawingSnapshot = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json")).unwrap();
     let layer = snapshot.layers[0].clone();
     let owners = vec![
         DrawingRetirementOwner::Snapshot(snapshot),
@@ -149,7 +149,7 @@ fn paged_native_drawing_snapshot_decoded_field_close_admits_payload_and_physical
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         eprintln!("[DEBUG] Drawing decoded field kind={} exactCopy={copied} physicalRelease={released}; constructor/demand/zero/below0heap, copy-free0 and terminal0heap", row["kind"]);
     }
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/♻️retirement/🧫️fixtures/📏️copy-demand/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧫️fixtures/📏️copy-demand/🔣️.json")).unwrap();
     for row in law["cases"].as_array().unwrap() {
         match row["kind"].as_str().unwrap() {
             "u32" => run(row["value"].as_u64().unwrap() as u32, row),
@@ -164,7 +164,7 @@ fn paged_native_drawing_snapshot_decoded_field_close_admits_payload_and_physical
 fn paged_native_drawing_snapshot_asset_cursor_preserves_actual_ordinal_and_zero_heap() {
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     use semio_framework_value::paged::{PagedMap, PagedUtf8};
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
     let long = format!("{}\0",law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize));
     let keys = law["assetKeyOrder"].as_array().unwrap().iter().map(|key| if key == "long" { long.clone() } else { key.as_str().unwrap().to_owned() }).collect::<Vec<_>>();
     let assets = PagedMap::<_, {usize::MAX}>::try_from_entries(keys.iter().map(|key| (PagedUtf8::try_from_str(key).unwrap(), DrawingImageAsset { width: 1, height: 1, samples: vec![[0,0,0,0];1].into() }))).unwrap();
@@ -194,8 +194,8 @@ fn paged_native_drawing_snapshot_asset_cursor_preserves_actual_ordinal_and_zero_
 fn paged_native_drawing_snapshot_clone_preserves_the_neutral_schema() {
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     use semio_framework_value::{retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep}, retirement::controlled::ControlledRetirement};
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
-    let mut input: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
+    let mut input: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json")).unwrap();
     let text = law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize);
     input["id"] = serde_json::Value::String(text.clone());
     input["title"] = serde_json::Value::String(text.clone());
@@ -203,7 +203,7 @@ fn paged_native_drawing_snapshot_clone_preserves_the_neutral_schema() {
     input["layers"][1]["children"][0]["name"] = serde_json::Value::String(format!("{text}\0"));
     input["layers"][1]["children"][0]["content"] = serde_json::Value::String(format!("{text}\0"));
     input["assets"] = serde_json::json!({text.clone(): {"mime":"image/png","data":text}});
-    let gradients: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🧫️fixtures/🔣️.json")).unwrap();
+    let gradients: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️fill/🔣️.json")).unwrap();
     let mut gradient = gradients[0]["after"].clone();
     let stops = gradient["stops"].as_array().unwrap();
     let repeated: Vec<serde_json::Value> = (0..law["repeat"].as_u64().unwrap() as usize).map(|index| stops[index % stops.len()].clone()).collect();
@@ -289,8 +289,8 @@ fn paged_native_drawing_snapshot_borrowed_lookup_measures_frames_and_alias_closu
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     use semio_framework_value::{retained_clone::{RetainedCloneSource, RetainedCloneStep}, paged::PagedUtf8};
     use crate::standards::v1::subsets::any::schema::snapshot::lookup::{DrawingLayerLookupCursor, DrawingLayerLookupStep};
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
-    let mut input: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
+    let mut input: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json")).unwrap();
     let budget = law["bodyBytes"].as_u64().unwrap() as usize;
     let duplicate = { let mut value = input["layers"][1]["children"][0].clone(); value["name"] = "Later Duplicate".into(); value };
     input["layers"].as_array_mut().unwrap().push(duplicate);
@@ -375,8 +375,8 @@ fn paged_native_drawing_snapshot_rename_preparation_preserves_borrowed_inverse_b
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     use semio_framework_value::retained_clone::{RetainedCloneSource, RetainedCloneStep};
     use crate::standards::v1::subsets::metadata::schema::mutations::rename_layer::prepare::{DrawingRenamePreparationCursor, DrawingRenamePreparationStep};
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
-    let mut input: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
+    let mut input: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json")).unwrap();
     let long = format!("{}\0", law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize));
     input["layers"][1]["children"][0]["name"] = long.clone().into();
     let mut long_identity = input["layers"][0].clone();
@@ -459,8 +459,8 @@ fn paged_native_drawing_snapshot_owned_rename_preparation_preserves_original_bin
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     use semio_framework_value::retained_clone::{RetainedCloneSource, RetainedCloneStep};
     use crate::standards::v1::subsets::metadata::schema::mutations::rename_layer::prepare::owned::{DrawingOwnedRenamePreparationCursor, DrawingOwnedRenamePreparationStep};
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
-    let mut input: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
+    let mut input: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json")).unwrap();
     let long = format!("{}\0", law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize));
     input["layers"][1]["children"][0]["name"] = long.clone().into();
     let mut long_identity = input["layers"][0].clone();
@@ -577,8 +577,8 @@ fn paged_native_drawing_snapshot_rename_inverse_measures_every_owned_page_and_re
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     use semio_framework_value::{retained_clone::{RetainedCloneSource, RetainedCloneStep}, retirement::controlled::ControlledRetirement};
     use crate::standards::v1::subsets::metadata::schema::mutations::rename_layer::prepare::inverse::DrawingRenameInverseCursor;
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
-    let mut input: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
+    let mut input: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json")).unwrap();
     let long = format!("{}\0", law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize));
     input["layers"][1]["children"][0]["name"] = long.clone().into();
     let mut long_identity = input["layers"][0].clone();
@@ -679,8 +679,8 @@ fn paged_native_drawing_snapshot_owned_lookup_measures_root_alias_and_native_pag
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     use semio_framework_value::{paged::PagedUtf8, retained_clone::{RetainedCloneSource, RetainedCloneStep}};
     use crate::standards::v1::subsets::any::schema::snapshot::lookup::owned::{DrawingOwnedLayerLookupCursor, DrawingOwnedLayerLookupStep};
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
-    let mut input: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
+    let mut input: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json")).unwrap();
     let mut duplicate = input["layers"][1]["children"][0].clone();
     duplicate["name"] = "Later Duplicate".into();
     input["layers"].as_array_mut().unwrap().push(duplicate);
@@ -1127,8 +1127,8 @@ fn retained_drawing_mutation_candidate_covers_all_variants_and_returns_exact_own
 }
 #[test]
 fn retained_image_asset_mutations_replay_sparse_delta_and_reference_refusal(){
-    let before:DrawingSnapshot=serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/📥️import-image-asset/➕️adds/📸️snapshot/⬅️before/🔣️.json")).unwrap();
-    let after:DrawingSnapshot=serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/📥️import-image-asset/➕️adds/📸️snapshot/➡️after/🔣️.json")).unwrap();
+    let before:DrawingSnapshot=serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/📥️import-image-asset/➕️adds/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let after:DrawingSnapshot=serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/📥️import-image-asset/➕️adds/📸️snapshot/➡️after/🔣️.json")).unwrap();
     let mutation=crate::mutations::import_image_asset("bitmap".into(),after.assets.get("bitmap").unwrap().clone());let imported=apply(before.clone(),&mutation).unwrap();assert_eq!(imported,after);drain_mutation(mutation);
     let removal=crate::mutations::remove_image_asset("bitmap".into());let restored=apply(imported,&removal).unwrap();assert_eq!(restored,before);drain_snapshot(restored);
     let mut referenced=after.clone();let mut image=crate::schema::create_drawing_image_layer(crate::schema::identity::DrawingIdentity::admit((("Image")).to_string().into()).expect("nonempty authored identity"), "Image","bitmap");crate::schema::layer_base_mut(&mut image).id="image".into();referenced.layers.push(image);let expected=referenced.clone();let (rejected,error)=apply(referenced,&removal).unwrap_err();assert_eq!(error,"drawing-store.asset-still-referenced");assert_eq!(rejected,expected);drain_snapshot(rejected);
@@ -1216,7 +1216,7 @@ fn bootstrap_yield_clock() -> Option<u64> {
 
 #[test]
 fn retained_drawing_arena_bootstrap_deadline_between_guards_preserves_and_resumes_its_owner() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧮️mutation-admission/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧮️mutation-admission/🔣️.json")).unwrap();
     let law = &fixture["bootstrapYield"];
     let mut bootstrap = DrawingMutationArenaPoolBootstrap::production(DrawingMutationArenaBootstrapAdmission::fixed().unwrap());
     assert_eq!(step_arena_bootstrap(&mut bootstrap), Ok(false));
@@ -2009,7 +2009,7 @@ fn retained_drawing_duplicate_plans_exact_clone_work_before_overlay_and_source_h
 
 #[test]
 fn drawing_mutation_admission_fixture_matches_native_dispositions_and_serde_json_carriers() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧮️mutation-admission/🔣️.json")).expect("neutral Drawing mutation-admission fixture parses through serde_json 1");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧮️mutation-admission/🔣️.json")).expect("neutral Drawing mutation-admission fixture parses through serde_json 1");
     assert_eq!(fixture["schema"], "drawing.mutation-admission/v1");
     assert_eq!(fixture["limits"]["documentBytes"].as_u64(), Some(DRAWING_MAXIMUM_NESTED_BYTES as u64));
     assert_eq!(fixture["limits"]["fieldBytes"].as_u64(), Some(DRAWING_OWNED_FIELD_BYTES as u64));
@@ -2228,7 +2228,7 @@ fn retained_drawing_committed_candidate_finishes_exact_owner_return_after_late_c
 
 #[test]
 fn retained_path_geometry_mutation_preserves_appearance_and_retires_segments() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🧫️fixtures/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/🔣️.json"))).unwrap();
     let before: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}> = serde_json::from_value(fixture["before"].clone()).unwrap();
     let after: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}> = serde_json::from_value(fixture["after"].clone()).unwrap();
     let mut layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Curve")).to_string().into()).expect("nonempty authored identity"), "Curve", before);
@@ -2341,7 +2341,7 @@ fn isolation_mutation_digest_observes_the_boolean() {
 
 #[test]
 fn retained_blend_mutations_validate_vocabulary_and_return_unchanged_rejections() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧫️fixtures/🎛️field-patch/🔣️.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🎛️field-patch/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap().iter().filter(|case| case["patch"]["field"] == "blendMode") {
         let source = nested_snapshot();
         let id = crate::schema::layer_id(&source.layers[0]).to_owned();

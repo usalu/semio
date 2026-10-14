@@ -5,7 +5,7 @@ import { disagreements, type FixtureCase, type OracleResult } from "../../../�
 
 type Triple = [number, number, number];
 type Fixture = { tolerance: number; cases: FixtureCase[] };
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(new URL("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🔢️math-values/🔣️.json", import.meta.url), "utf8")) as Fixture;
 const catalogue = JSON.parse(readFileSync(new URL("../../../../../🗂️catalogue/🔣️math-values.json", import.meta.url), "utf8")) as { kinds: { id: string }[] };
 
 const triple = (v: Vector3): Triple => [v.x, v.y, v.z];

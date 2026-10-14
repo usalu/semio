@@ -1,7 +1,7 @@
 /** 📤️ Bounded base64 output agrees with the platform encoder and PNG fixture agrees with libvips. */
 import {expect,test} from "bun:test";
 import sharp from "sharp";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import {base64OutputPage} from "../🟦️.ts";
 for(const row of fixture.base64Cases)test("Export base64 "+row.bytes.length,()=>{expect(new TextDecoder().decode(base64OutputPage(Uint8Array.from(row.bytes)))).toBe(row.expected);});
 for(const length of fixture.boundaryLengths)test("Export chunk boundary "+length,()=>{

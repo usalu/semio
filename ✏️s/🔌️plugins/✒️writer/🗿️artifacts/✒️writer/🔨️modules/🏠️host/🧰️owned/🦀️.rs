@@ -95,7 +95,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
             store::os_store::owned_schema_decode::OwnedSchemaHexStep::Pending => Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending),
             store::os_store::owned_schema_decode::OwnedSchemaHexStep::Complete => {
                 let bytes = authority.as_bytes().ok_or_else(|| diagnostic("writer-envelope.snapshot-pack-missing", token.start))?;
-                let value = <WriterSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|_| diagnostic("writer-envelope.snapshot-pack-malformed", token.start))?;
+                let value = <WriterSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|_| diagnostic("writer-envelope.snapshot-pack-malformed", token.start))?;
                 assert!(authority.release(), "completed Writer snapshot pack releases its inline bytes exactly once");
                 *self.value = Some(value);
                 self.state = WriterSnapshotDecodeState::Ready;

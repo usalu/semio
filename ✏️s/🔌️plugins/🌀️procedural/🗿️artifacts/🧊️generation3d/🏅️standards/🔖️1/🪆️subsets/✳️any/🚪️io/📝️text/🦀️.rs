@@ -12,3 +12,6 @@ pub mod diff;
 #[path = "💡️inferences/🦀️.rs"]
 pub mod inferences;
 
+
+#[path = "🔣️value/🦀️.rs"]
+pub mod value;

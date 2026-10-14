@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Nx Cache Budget",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "availableBytes"
+  ],
+  "properties": {
+    "availableBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "override": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

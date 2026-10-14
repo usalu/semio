@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "📊️create-schedule/🔎️filter-without-a-value",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/📊️create-schedule/🔎️filter-without-a-value/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/📊️create-schedule/🔎️filter-without-a-value/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/📊️create-schedule/🔎️filter-without-a-value/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/📊️create-schedule/🔎️filter-without-a-value/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/📊️create-schedule/🔎️filter-without-a-value/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📊️create-schedule/🔎️filter-without-a-value/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📊️create-schedule/🔎️filter-without-a-value/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📊️create-schedule/🔎️filter-without-a-value/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📊️create-schedule/🔎️filter-without-a-value/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📊️create-schedule/🔎️filter-without-a-value/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

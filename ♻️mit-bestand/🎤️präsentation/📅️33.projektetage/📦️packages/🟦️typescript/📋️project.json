@@ -51,7 +51,7 @@
       },
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist"
+        "{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}"
       ]
     },
     "test": {

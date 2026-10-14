@@ -1,0 +1,24 @@
+{
+  "schema": "semio.os.artifact-creation-ready-opening/v1",
+  "mountCases": [
+    { "id": "same-generation", "actions": ["current"], "accepted": [true], "outcome": "ready", "committed": true },
+    { "id": "rotated-generation", "actions": ["rotated"], "accepted": [false], "outcome": "failed", "committed": false },
+    { "id": "missing-generation", "actions": ["missing"], "accepted": [false], "outcome": "failed", "committed": false },
+    { "id": "closed-before-mount", "actions": ["close", "current"], "accepted": [false], "outcome": "failed", "committed": false },
+    { "id": "duplicate-current", "actions": ["current", "current"], "accepted": [true, true], "outcome": "ready", "committed": true },
+    { "id": "refused-before-current", "actions": ["rotated", "current"], "accepted": [false, false], "outcome": "failed", "committed": false },
+    { "id": "closed-after-mount", "actions": ["current", "close", "current"], "accepted": [true, false], "outcome": "ready", "committed": false },
+    { "id": "rebootstrap-before-port-ready", "actions": ["close"], "accepted": [], "outcome": "failed", "committed": false }
+  ],
+  "cases": [
+    { "id": "source-closed", "current": [false], "prepare": "unused", "open": "unused", "outcome": "retired", "release": "unused", "publish": false, "failure": false },
+    { "id": "target-unavailable", "current": [true, true], "prepare": "missing", "open": "unused", "outcome": "failed", "release": "unused", "publish": false, "failure": true },
+    { "id": "replaced-after-prepare", "current": [true, false], "prepare": "ready", "open": "unused", "outcome": "retired", "release": "success", "publish": false, "failure": false },
+    { "id": "socket-refused", "current": [true, true, true], "prepare": "ready", "open": "retired", "outcome": "failed", "release": "success", "publish": false, "failure": true },
+    { "id": "attach-failed", "current": [true, true, true], "prepare": "ready", "open": "failed", "outcome": "failed", "release": "success", "publish": false, "failure": true },
+    { "id": "replaced-after-commit", "current": [true, true, false], "prepare": "ready", "open": "committed", "outcome": "retired", "release": "success", "publish": false, "failure": false },
+    { "id": "release-fails-current", "current": [true, true, true], "prepare": "ready", "open": "retired", "outcome": "failed", "release": "failed", "publish": false, "failure": true },
+    { "id": "release-fails-retired", "current": [true, false], "prepare": "ready", "open": "unused", "outcome": "retired", "release": "failed", "publish": false, "failure": false },
+    { "id": "opened", "current": [true, true, true], "prepare": "ready", "open": "committed", "outcome": "opened", "release": "unused", "publish": true, "failure": false }
+  ]
+}

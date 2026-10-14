@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "kind": "actor",
+  "mode": "release",
+  "contents": "import { host } from \"semio:actor-host\"; import { wasi } from \"semio:actor-wasi\"; export const answer = host + wasi;",
+  "runtime": {
+    "host": "export const host = 2;",
+    "wasi": "export const wasi = 3;"
+  }
+}

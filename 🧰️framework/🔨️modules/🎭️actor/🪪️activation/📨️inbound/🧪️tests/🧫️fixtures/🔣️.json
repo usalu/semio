@@ -1,0 +1,13 @@
+{
+  "actorId": "extension-requester",
+  "requestId": "reused-effect-request",
+  "cases": [
+    { "name": "exact", "effects": 1, "traps": 1 },
+    { "name": "missing-generation", "effects": 0, "traps": 0 },
+    { "name": "foreign-generation", "effects": 0, "traps": 0 },
+    { "name": "replaced-worker", "effects": 0, "traps": 0 },
+    { "name": "reactivated", "effects": 0, "traps": 0 },
+    { "name": "closing", "effects": 0, "traps": 0 },
+    { "name": "foreign-envelope", "effects": 0, "traps": 1 }
+  ]
+}

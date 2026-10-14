@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import fixture from "../../../../🧫️fixtures/🪆️embedded-browser/🔣️.json";
+import fixture from "../../../../🧪️tests/🧫️fixtures/🪆️embedded-browser/🔣️.json";
 
 type Configuration = { renderer: "react" | "wgpu"; serve: string; libraryModuleUrl: string; styleModuleUrl?: string; sessionFactoryModules?: { moduleUrl: string; exportName: string }[]; rendererModuleUrl?: string; rendererWasmUrl?: string; frameWorkerUrl?: string; roots: { rootId: string; plugins: { pluginId: string; moduleUrl: string }[] }[] };
 type State = { id: string; locale: string; ready: boolean; error: string | null; intro: boolean; palette: boolean; controls: { id: string; rect: number[] }[]; surfaces: string[]; text: string; canvases: number; layout: number[] };

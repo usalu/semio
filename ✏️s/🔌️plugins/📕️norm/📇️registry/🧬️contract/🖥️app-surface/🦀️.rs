@@ -942,7 +942,7 @@ where
 /// offers — so every example the picker shows loads, and nothing outside it does. An empty id is the
 /// empty document, an id outside the roster is `None` (the no-op a picker's stale selection needs),
 /// and an example body that does not parse is a named fault, never a silent fallback.
-pub fn roster_example_snapshot<D: store::os_store::serialization::ArtifactDsl + Default>(examples: Vec<ExampleSource>, example_id: &str) -> Result<Option<D>, Fault> {
+pub fn roster_example_snapshot<D: pack::snapshot::ArtifactDsl + Default>(examples: Vec<ExampleSource>, example_id: &str) -> Result<Option<D>, Fault> {
     let id = example_id.trim();
     if id.is_empty() {
         return Ok(Some(D::default()));
@@ -1702,7 +1702,7 @@ pub fn norm_io(variant: &str, artifact_schema: &str) -> AppIo {
 pub fn export_media<F>(port: &str, variant: &str, artifact_schema: &str, document: &F::Document) -> Result<Media, MediaError>
 where
     F: NormFamily,
-    F::Document: store::os_store::serialization::ArtifactPack,
+    F::Document: pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
 {
     if port == "report:out" {
         let report = cached_report_for::<F>(document).unwrap_or_else(|| {
@@ -1716,7 +1716,7 @@ where
     if port != "artifact:out" {
         return Err(MediaError::NotImplemented);
     }
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(document);
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(document);
     Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: artifact_schema.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
 }
 
@@ -2318,6 +2318,7 @@ pub fn build_norm_tool_job<A: NormRetainedEditor>(request: semio_framework_plugi
         semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
             command: *request.command,
             snapshot: request.snapshot,
+            snapshot_read: request.snapshot_read,
             config: request.config,
             history: request.history,
             interaction_state: request.interaction_state,

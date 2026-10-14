@@ -12,12 +12,12 @@ use super::*;
 use {semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::ExampleDefinition,semio_framework::ModeDefinition,semio_framework::Modes,semio_framework::WindowKindDefinition,semio_framework::WindowKinds};
 use ui_wgpu::wgpu::WindowLayout;
 
-const EXAMPLE_PICKER_FIXTURE: &str = include_str!("../../../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/📚️example-picker.json");
-const SURFACE_SWITCH_FIXTURE: &str = include_str!("../../../🏛️ShellHost/🧫️fixtures/🔀️surface-switch/🔣️.json");
-const SURFACE_CONTROLS_FIXTURE: &str = include_str!("../../🧫️fixtures/🛑️surface-controls/🔣️.json");
-const CHROME_PANEL_SAFE_AREA_FIXTURE: &str = include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🛟️chrome-panel-safe-area/🔣️.json");
-const BOOT_EXAMPLE_FIXTURE: &str = include_str!("../../🧫️fixtures/📚️boot-example/🔣️.json");
-const WINDOW_ICON_OVERRIDE_FIXTURE: &str = include_str!("../../🧫️fixtures/🪟️window-icon-overrides/🔣️.json");
+const EXAMPLE_PICKER_FIXTURE: &str = include_str!("../../../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/📚️example-picker.json");
+const SURFACE_SWITCH_FIXTURE: &str = include_str!("../../../🏛️ShellHost/🧪️tests/🧫️fixtures/🔀️surface-switch/🔣️.json");
+const SURFACE_CONTROLS_FIXTURE: &str = include_str!("../🧫️fixtures/🛑️surface-controls/🔣️.json");
+const CHROME_PANEL_SAFE_AREA_FIXTURE: &str = include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🛟️chrome-panel-safe-area/🔣️.json");
+const BOOT_EXAMPLE_FIXTURE: &str = include_str!("../🧫️fixtures/📚️boot-example/🔣️.json");
+const WINDOW_ICON_OVERRIDE_FIXTURE: &str = include_str!("../🧫️fixtures/🪟️window-icon-overrides/🔣️.json");
 const WGPU_SHELL_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
 
 /// 🪪️ A dialect with no coordinate at all — how this target spells the fixture's `"dialect": null`
@@ -164,7 +164,7 @@ fn the_example_picker_offers_every_example_of_the_open_dialect_and_nothing_else(
 
 #[test]
 fn viewer_example_offer_matches_declared_action_authority() {
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/📚️example-offer/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/📚️example-offer/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let dialect = ArtifactDialect { artifact_kind: "neutral.media".into(), standard: "1".into(), subset: "*".into() };
         let mut app = parity_app(row["name"].as_str().unwrap(), fixture_role(row["role"].as_str().unwrap()), dialect.clone(), "Surface", "Fläche", &["view"]);
@@ -748,7 +748,7 @@ fn asking_for_the_role_already_mounted_creates_and_retires_nothing() {
 
 //#region ⌨️WindowScope
 
-const WINDOW_SCOPE_FIXTURE: &str = include_str!("../../../🏛️ShellHost/🧫️fixtures/⌨️window-scope/🔣️.json");
+const WINDOW_SCOPE_FIXTURE: &str = include_str!("../../../🏛️ShellHost/🧪️tests/🧫️fixtures/⌨️window-scope/🔣️.json");
 
 /// 🪟️ Rebuilds a fixture layout node as the wgpu dock tree. The fixture is authored in the React
 /// shell's own layout vocabulary (`window` / `stack` + `activeId` / `row` / `column`), which is the
@@ -1087,7 +1087,7 @@ fn the_overlay_row_steps_clear_of_an_open_floating_panel() {
 
 #[test]
 fn incoming_layout_identity_resets_maximize_and_identical_sync_preserves_it() {
-    let law: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️maximize-resync/🔣️.json")).unwrap();
+    let law: Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️maximize-resync/🔣️.json")).unwrap();
     let layout = |weights: &Value, change: Option<&Value>| {
         let children = law["windows"]
             .as_array()
@@ -1208,7 +1208,7 @@ fn incoming_layout_prunes_unknown_windows_against_the_react_instance_roster() {
             }
         }
     }
-    let law: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️maximize-resync/🔣️.json")).unwrap();
+    let law: Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️maximize-resync/🔣️.json")).unwrap();
     for case in law["ingressCases"].as_array().unwrap() {
         let mut shell = super::panel_anchor_model_tests::host_test_shell();
         let prototype = shell.session.as_ref().unwrap().app.window_kinds.first().clone();

@@ -1,13 +1,17 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
-import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
-import { advanceScriptInvocation } from "../../../../🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { advanceScriptInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { admitJsonReadSourceOwner } from "../../📥️decode/🧪️testing/📥️invocation/🟦️.ts";
-import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import { runBudgetedTestCommand } from "../../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { resolveTestLevel, testLevelBudgetMs } from "../../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runBudgetedTestCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel, testLevelBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { buildBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { scriptInvocationBudget } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runRepositoryExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🧩️ Runs strict schema, canonical ownership and mandatory JSON source-policy laws. */
 class ReadPolicyScript extends BundleScript {
@@ -47,10 +51,18 @@ class OwnershipScript extends BundleScript {
 /** 🧾️ Executes every original JSON primitive law and additive explicit-member law. */
 class NativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if(segments[0]==="tree-wire"){
+      await runRepositoryExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,buildBudgetMs()),lawMilliseconds:600000},cwd:this.repoRoot,cargoArgs:segments.slice(1),groups:[{package:"semio-framework-pack-json",target:{kind:"lib"},laws:["original_tree_wire_source_same_pointer_two_pass_system_denial_and_full_close","original_tree_wire_cancel_retains_every_partial_typed_source_and_destination"]}]});return;
+    }
+    if(segments[0]==="tree-header"){
+      await runRepositoryExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,buildBudgetMs()),lawMilliseconds:600000},cwd:this.repoRoot,cargoArgs:segments.slice(1),groups:[{package:"semio-framework-pack-json",target:{kind:"lib"},laws:["original_canonical_tree_constructor_moves_header_without_payload_copy","original_canonical_tree_nested_headers_preserve_body_minima_and_complete_custody"]}]});return;
+    }
     const {rest} = resolveTestLevel(segments);
     await runCargoTestsV1({manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-pack-json"], cwd: this.root, extraArgs: rest, signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds()}, readCargoTestPolicyV1(process.env));
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test-read-policy-source", ReadPolicyScript).register("test-reference", ReferenceScript).register("test-ownership", OwnershipScript).register("test-native", NativeScript);
+/** 📨️ Differential neutral laws for the original typed Tree wire source. */
+class TreeWireSourceScript extends BundleScript{async run(args:string[]):Promise<void>{if(args.length)throw Error("test-tree-wire-source accepts no arguments");const file=resolve(this.root,"../../🛫️encode/🧭️tree/📨️wire/🧪️tests/🟦️.ts");for(const arguments_ of [[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",file],["test",file]])await runBudgetedTestCommand(process.execPath,arguments_,{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal,throwOnFailure:true})}}
+const router = new ScriptRouter(import.meta.dir).register("test-tree-wire-source",TreeWireSourceScript).register("test-read-policy-source", ReadPolicyScript).register("test-reference", ReferenceScript).register("test-ownership", OwnershipScript).register("test-native", NativeScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test-ownership" }));

@@ -38,8 +38,7 @@ mod retirement;
 // former `#[derive(Serialize, Deserialize)]` (needed transitively for `authors: Vec<Author>`) goes
 // with it; no production or test consumer anywhere in the repo ever called `serde_json` on
 // `Author` directly, so its derive drops outright rather than going `cfg_attr(test, …)`.
-#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Author {
     pub id: String,

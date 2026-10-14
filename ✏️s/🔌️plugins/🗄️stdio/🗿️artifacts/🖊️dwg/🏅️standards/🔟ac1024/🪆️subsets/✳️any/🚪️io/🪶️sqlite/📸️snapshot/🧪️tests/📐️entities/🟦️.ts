@@ -5,7 +5,7 @@ import { DwgProjection } from "../../🔢️number/🟦️.ts";
 import { DwgReader } from "../../🫳️reader/🟦️.ts";
 import { dwgProjectEntity,dwgReconstructEntity } from "../../📐️entities/🟦️.ts";
 import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
-import fixture from "../../🧫️fixtures/📐️entities/🔣️.json";
+import fixture from "../🧫️fixtures/📐️entities/🔣️.json";
 import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import { dwgEntityFixtures as entities } from "../🧰️support/📐️entities/🟦️.ts";
 test("DWG all nineteen native entity variants preserve exact geometry, presence, colors and references",async()=>{

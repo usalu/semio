@@ -1,8 +1,8 @@
-import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { resolveTestLevel } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { delimiter, join, resolve } from "node:path";
 import { runCmd, runProbe, runRepositoryTestCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { ensureOracleTool, oracleEnvironment, oracleManifest, oracleToolDirectory } from "../🛠️toolchain/🟦️.ts";
 
 const PYTHON_OWNER = "✏️s/🔌️plugins/🔋️energy/🔮️oracles/🏃️execution";

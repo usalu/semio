@@ -48,7 +48,7 @@ interface EncodingFixture {
 
 function loadFixture(): EncodingFixture {
   const here = dirname(fileURLToPath(import.meta.url));
-  return JSON.parse(readFileSync(join(here, "../../🧫️fixtures/⬇️media-export-encoding/🔣️.json"), "utf8")) as EncodingFixture;
+  return JSON.parse(readFileSync(join(here, "../🧫️fixtures/⬇️media-export-encoding/🔣️.json"), "utf8")) as EncodingFixture;
 }
 
 function friendlyDownload(encoding: unknown, data: string, filename: string, mimeType: string): { readonly filename: string; readonly mimeType: string; readonly data: string; readonly encoding?: string } {

@@ -1,5 +1,5 @@
 /** 🔌️ Owns the neutral scenario adapter protocol and registration contract. */
-import type { TestLevel } from "../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import type { TestLevel } from "../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 
 export const IMPLEMENTATIONS = ["rust", "typescript", "go", "python", "dotnet"] as const;
 

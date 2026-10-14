@@ -1,0 +1,10 @@
+[
+  "grouping",
+  "merging",
+  "operands",
+  "canonicalizing",
+  "canonicalCleanup",
+  "canonicalContours",
+  "canonicalSourceCleanup",
+  "waveCleanup"
+]

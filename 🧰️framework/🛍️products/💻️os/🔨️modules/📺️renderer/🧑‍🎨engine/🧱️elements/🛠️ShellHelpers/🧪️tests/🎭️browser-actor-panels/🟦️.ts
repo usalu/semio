@@ -15,7 +15,7 @@ import equal from "fast-deep-equal";
 import type { PluginUiRefreshRequest, PluginViewState } from "@semio-tech/framework";
 import { applyBrowserActorUiPatchesV1, BROWSER_ACTOR_SECTION_KEYS, browserActorPanelKeysV1, browserActorSectionValuesV1, withoutUiRefreshSectionsV1, type BrowserActorUiStoresV1 } from "../../🟦️.tsx";
 import visibleSurfaces from "../../../../../../🏪️store/👷️worker/🪟️visible-surfaces/🔣️.json";
-import corpus from "../../🧫️fixtures/🎭️browser-actor-panels/🔣️.json";
+import corpus from "../🧫️fixtures/🎭️browser-actor-panels/🔣️.json";
 import schema from "../../../../../../🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🧬️schema/🔣️.json";
 // #endregion 🔌️Adapters
 

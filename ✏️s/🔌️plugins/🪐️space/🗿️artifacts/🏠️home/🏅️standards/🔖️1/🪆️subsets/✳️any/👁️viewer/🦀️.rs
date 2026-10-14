@@ -242,7 +242,7 @@ impl ArtifactViewer for HomeViewer {
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(
-            ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion },
+            ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, snapshot_read:request.snapshot_read, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion },
             HomeViewCommand::action_id,
             HOME_DIRECTORY_PAGE_BYTES,
             1,

@@ -186,7 +186,7 @@ fn fixture_box(v: &Value) -> TriMesh {
 
 #[test]
 fn fixture_cases_agree_with_parry3d_where_parry_has_an_answer() {
-    let cases: Value = serde_json::from_str(include_str!("../../🧫️fixtures/💥️collision/🔣️.json")).unwrap();
+    let cases: Value = serde_json::from_str(include_str!("../🧫️fixtures/💥️collision/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let name = case["name"].as_str().unwrap();
         let (a, b) = (fixture_box(&case["a"]), fixture_box(&case["b"]));

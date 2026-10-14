@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "sql": "CREATE TABLE document (id INTEGER PRIMARY KEY, text TEXT NOT NULL);",
+  "table": "document",
+  "rowid": "1",
+  "text": "literal custom Ω\u0000\r\nembedded\nseparator",
+  "expectedFileBytes": 8192,
+  "pageBytes": 4096,
+  "nativeMaximumBytes": 33554432,
+  "sqlLimits": {
+    "maxFileBytes": 1048576,
+    "maxValueBytes": 1048576,
+    "maxAllocationBytes": 33554432,
+    "maxSchemaBytes": 65536,
+    "maxRows": 4096,
+    "maxColumns": 64,
+    "maxTables": 64,
+    "maxPages": 256
+  },
+  "originalGrant": {
+    "maximumItems": 1048576,
+    "maximumCopyBytes": 33554432,
+    "maximumCapacityBytes": 33554432,
+    "maximumReleaseBytes": 33554432,
+    "maximumDepth": 256
+  },
+  "cancelFinalCheckpoint": 2,
+  "expectedRefusalKind": "canceled",
+  "expectedRefusalMessage": "original native receiving observer canceled",
+  "expectedRefusedReleasedBytes": 0,
+  "requiredCustody": [
+    "writerPages",
+    "recordBytes",
+    "parserCells",
+    "schemaTokens",
+    "finalOutput"
+  ],
+  "originalObserverRequired": true,
+  "expectedDirectNativeRefusalMessage": "native decoding canceled",
+  "maximumRetirementTurns": 512,
+  "expectedRefusedPrefixBytes": 4096,
+  "expectedEncoderRefusalMessage": "native encoding canceled",
+  "forest": {
+    "sql": "CREATE TABLE payload (id INTEGER PRIMARY KEY, text TEXT NOT NULL, blob BLOB NOT NULL, value REAL NOT NULL);",
+    "table": "payload",
+    "rows": 300,
+    "firstRowId": -150,
+    "lastRowId": 149,
+    "textSeed": "Ω\u0000\r\nembedded\n",
+    "firstTextRepeats": 8192,
+    "otherTextRepeats": 64,
+    "blob": [
+      0,
+      1,
+      255,
+      128
+    ],
+    "real": 1.25
+  }
+}

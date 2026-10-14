@@ -1,7 +1,7 @@
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { applyPatch } from "fast-json-patch";
-import law from "../🧫️fixtures/🔣️.json";
+import law from "../🧪️tests/🧫️fixtures/🔣️.json";
 test("causal fixed slots separate exact owners from bounded physical pages",()=>{
  const pages=law.capacity/law.pageSlots;expect(pages).toBe(128);expect((pages+6)*3).toBeLessThanOrEqual(law.maximumCloseTurns);
  for(const row of law.cases){const model={ids:Array.from({length:row.occupied},(_,i)=>i),released:0};const identity=Buffer.from(new Uint16Array(model.ids).buffer);expect(identity.length).toBe(row.occupied*2);const copy=applyPatch(structuredClone(model),[{op:"replace",path:"/released",value:law.pageSlots}],false,false).newDocument;expect(copy.ids).toEqual(model.ids);expect(model.released).toBe(0);expect(copy.released).toBe(law.pageSlots);}

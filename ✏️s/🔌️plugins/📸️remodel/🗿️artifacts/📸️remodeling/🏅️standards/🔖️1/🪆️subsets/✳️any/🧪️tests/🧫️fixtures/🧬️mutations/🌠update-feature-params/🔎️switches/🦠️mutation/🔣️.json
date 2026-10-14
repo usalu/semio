@@ -1,0 +1,9 @@
+{
+  "mutation": "updateFeatureParams",
+  "params": {
+    "detector": "akaze",
+    "targetCount": 8000,
+    "octaves": 5,
+    "edgeThreshold": 12.5
+  }
+}

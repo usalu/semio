@@ -3,15 +3,14 @@ import Ajv from "ajv";
 import { parse as parseToml } from "@iarna/toml";
 import { minimatch } from "minimatch";
 import { build } from "esbuild";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { tmpdir } from "node:os";
 import { pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import ts from "typescript";
 import { inspectTestLayoutSources, repoRootFromHere, scanTestLayout, TEST_LAYOUT_FINDING_CODES, testTaxonomy, validateCaseContract, type DiscoveredCase, type OracleRegistry, type TestLayoutFinding, type TestLayoutSource } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import protocol from "../../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json";
-import vectors from "../../🧫️fixtures/📐️test-layout/🔣️.json";
+import vectors from "../🧫️fixtures/📐️test-layout/🔣️.json";
 
 type Expected = Readonly<{ code: string; path: string; line: number | null }>;
 type VectorCase = Readonly<{ id: string; sources: readonly TestLayoutSource[]; directories?: readonly string[]; expected: readonly Expected[] }>;
@@ -19,8 +18,23 @@ type VectorCase = Readonly<{ id: string; sources: readonly TestLayoutSource[]; d
 const identity = (finding: Expected | TestLayoutFinding): Expected => ({ code: finding.code, path: finding.path, line: finding.line });
 const sort = (findings: readonly Expected[]): Expected[] => [...findings].sort((left, right) => left.path.localeCompare(right.path) || left.code.localeCompare(right.code) || (left.line ?? 0) - (right.line ?? 0));
 const taxonomy = testTaxonomy(repoRootFromHere());
+const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
+if (!output) throw Error("Caller-owned ticket output required for layout verification");
+mkdirSync(output, { recursive: true });
 
 describe("📐️ canonical test layout", () => {
+  test("fixture ancestry agrees with independent minimatch and preserves named modules", () => {
+    for (const vector of vectors.cases.filter(row => row.id.startsWith("strict-"))) {
+      for (const path of [...vector.sources.map(row => row.path), ...((vector as VectorCase).directories ?? [])]) {
+        const segments = path.split("/"), index = segments.findIndex((segment, index) => segment === taxonomy.testFixturesDirName && segments[index - 1] !== taxonomy.schemaScopeOwnerLevels.moduleMemberDirName);
+        const fixture = index < 0 ? null : segments.slice(0,index + 1).join("/");
+        const trueTestPrefixes = segments.flatMap((segment, index) => segment === taxonomy.testsDirName && segments[index - 1] !== taxonomy.schemaScopeOwnerLevels.moduleMemberDirName ? [segments.slice(0,index + 1).join("/")] : []);
+        const refused = fixture !== null && !trueTestPrefixes.some(prefix => minimatch(fixture, prefix + "/**", { dot: true }));
+        expect(inspectTestLayoutSources(taxonomy, vector.sources, (vector as VectorCase).directories).some(row => row.path === path && row.code === "fixture-outside-tests"), path).toBe(refused);
+      }
+    }
+  });
+
   test("the protocol declares the layout finding vocabulary", () => {
     expect(protocol.$defs.TestLayoutFindingCode.enum).toEqual([...TEST_LAYOUT_FINDING_CODES]);
   });
@@ -92,7 +106,7 @@ describe("📐️ canonical test layout", () => {
 
   test("the filesystem scan reports empty obsolete testing directories", async () => {
     const vector = (vectors.cases as readonly VectorCase[]).find(({ id }) => id === "empty-obsolete-testing-category-directories")!;
-    const root = mkdtempSync(join(tmpdir(), "test-layout-empty-directories-")), taxonomyPath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
+    const root = mkdtempSync(join(output, "l")), taxonomyPath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
     try {
       mkdirSync(join(root, dirname(taxonomyPath)), { recursive: true });
       writeFileSync(join(root, taxonomyPath), JSON.stringify(taxonomy));
@@ -107,9 +121,9 @@ describe("📐️ canonical test layout", () => {
   test("fixture manifests agree with independent TOML parsing and Cargo package discovery", () => {
     for (const vector of vectors.cases.filter(row => row.id.startsWith("fixture-manifest-") && row.sources[0]!.path.endsWith("Cargo.toml"))) expect(Bun.TOML.parse(vector.sources[0]!.source)).toEqual(parseToml(vector.sources[0]!.source));
     const vector = vectors.cases.find(row => row.id === "fixture-manifest-workspace-fixture")!;
-    const root = mkdtempSync(join(tmpdir(), "semio-fixture-manifest-"));
+    const root = mkdtempSync(join(output, "m"));
     try {
-      for (const source of [...vector.sources, { path: "owner/🧫️fixtures/guest/src/lib.rs", source: "pub const VALUE: i32 = 1;" }]) {
+      for (const source of [...vector.sources, { path: "owner/🧪️tests/🧫️fixtures/guest/src/lib.rs", source: "pub const VALUE: i32 = 1;" }]) {
         const path = join(root, source.path);
         mkdirSync(dirname(path), { recursive: true });
         writeFileSync(path, source.source);
@@ -124,7 +138,7 @@ describe("📐️ canonical test layout", () => {
   });
 
   test("fixture file reads agree with Node filesystem and esbuild module execution", async () => {
-    const directory = mkdtempSync(join(tmpdir(), "semio-fixture-read-"));
+    const directory = mkdtempSync(join(output, "r"));
     try {
       for (const vector of vectors.cases.filter(row => /^fixture-read-(?:node-url|node-alias|node-namespace|asset-url)$/u.test(row.id))) {
         const root = join(directory, vector.id);
@@ -145,7 +159,7 @@ describe("📐️ canonical test layout", () => {
   });
 
   test("fixture import boundaries agree with esbuild's resolved dependency graph", async () => {
-    const directory = mkdtempSync(join(tmpdir(), "semio-fixture-import-"));
+    const directory = mkdtempSync(join(output, "i"));
     try {
       for (const vector of vectors.cases.filter(row => /^production-typescript-(?:fixture-import|fixture-reexport|asset-import)$/u.test(row.id))) {
         const root = join(directory, vector.id);
@@ -162,7 +176,7 @@ describe("📐️ canonical test layout", () => {
   });
 
   test("Rust module path bases agree with the compiler", () => {
-    const directory = mkdtempSync(join(tmpdir(), "semio-test-layout-"));
+    const directory = mkdtempSync(join(output, "t"));
     try {
       for (const vector of (vectors.cases as readonly VectorCase[]).filter(vector => vector.id.startsWith("rust-module-base-"))) {
         const root = join(directory, vector.id);
@@ -185,7 +199,7 @@ describe("📐️ canonical test layout", () => {
   }, 60_000);
 
   test("Go in-package test classification agrees with go list", () => {
-    const directory = mkdtempSync(join(tmpdir(), "semio-test-layout-go-"));
+    const directory = mkdtempSync(join(output, "g"));
     try {
       const vector = (vectors.cases as readonly VectorCase[]).find(({ id }) => id === "go-in-package-tests")!;
       const findings = inspectTestLayoutSources(taxonomy, vector.sources);
@@ -259,17 +273,24 @@ describe("📐️ canonical test layout", () => {
   test("Nx hashes semantic-owner cases while production excludes them", async () => {
     const repoRoot = repoRootFromHere(), { cacheInternals, libraryBootstrap } = await import("../../../📚️library/🟨️.mjs");
     await libraryBootstrap;
-    const targetRoot = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript";
-    const owner = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine";
-    const project = JSON.parse(readFileSync(join(repoRoot, targetRoot, "📋️project.json"), "utf8"));
-    const inputs = cacheInternals.projectInputs(project, targetRoot, repoRoot, new Map());
-    expect(inputs.default.some((input: unknown) => typeof input === "string" && input.startsWith(`{workspaceRoot}/${owner}/`))).toBe(true);
-    expect(inputs.production).toContain(`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`);
-    const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library", libraryRoot = `${library}/📦️packages/🟦️typescript`;
-    const libraryProject = JSON.parse(readFileSync(join(repoRoot, libraryRoot, "📋️project.json"), "utf8"));
-    const libraryInputs = cacheInternals.projectInputs(libraryProject, libraryRoot, repoRoot, new Map());
-    expect(libraryInputs.default).not.toContain(`!{workspaceRoot}/${library}/**/🧪️tests/**/*`);
-    expect(libraryInputs.production).toContain(`!{workspaceRoot}/${library}/**/🧪️tests/**/*`);
+    const expanded = (groups: Record<string, readonly unknown[]>, name: string, seen = new Set<string>()): unknown[] => {
+      if (seen.has(name)) throw Error("Cyclic original Nx named input " + name);
+      const next = new Set(seen).add(name);
+      return groups[name]!.flatMap(value => typeof value === "string" && Object.hasOwn(groups, value) ? expanded(groups, value, next) : [value]);
+    };
+    const contains = (values: readonly unknown[], target: string, project: string): boolean => {
+      const matches = (value: string): boolean => minimatch(target, value.replaceAll("{workspaceRoot}/", "").replaceAll("{projectRoot}/", project + "/"), { dot: true });
+      const patterns = values.filter((value): value is string => typeof value === "string");
+      return patterns.some(value => !value.startsWith("!") && matches(value)) && !patterns.some(value => value.startsWith("!") && matches(value.slice(1)));
+    };
+    for (const row of vectors.cacheOwnership) {
+      const project = JSON.parse(readFileSync(join(repoRoot, row.projectRoot, "📋️project.json"), "utf8"));
+      const groups = cacheInternals.projectInputs(project, row.projectRoot, repoRoot, new Map());
+      expect(existsSync(join(repoRoot, row.path)), row.id).toBe(true);
+      expect(contains(expanded(groups, "default"), row.path, row.projectRoot), row.id).toBe(row.defaults);
+      expect(contains(expanded(groups, "production"), row.path, row.projectRoot), row.id).toBe(row.production);
+      console.log("[DEBUG] original Nx semantic inputs " + JSON.stringify({ id: row.id, defaults: row.defaults, production: row.production }));
+    }
   });
 
 

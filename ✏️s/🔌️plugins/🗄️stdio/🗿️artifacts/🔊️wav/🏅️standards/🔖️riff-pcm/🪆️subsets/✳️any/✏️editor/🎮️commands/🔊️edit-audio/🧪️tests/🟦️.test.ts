@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import type { WavMutation, WavSnapshot } from "../../../../🧬️schema/🧬️mutations/🟦️";
 import { assertWavAudioRevision, wavAudioEditMutations } from "../🟦️";
 
-const fixture = await Bun.file(new URL("../🧫️fixtures/🎚️natural-edit/🔣️.json", import.meta.url)).json() as Readonly<{
+const fixture = await Bun.file(new URL("🧫️fixtures/🎚️natural-edit/🔣️.json", import.meta.url)).json() as Readonly<{
   before: WavSnapshot;
   insertChannel: Readonly<{ channel: number; expectedData: readonly number[]; expectedChannels: number; expectedBlockAlign: number; expectedByteRate: number }>;
   setSample: Readonly<{ frame: number; channel: number; value: string; expectedData: readonly number[] }>;
@@ -43,7 +43,7 @@ describe("WAV natural audio editing", () => {
   });
 
   it("preserves every neutral IEEE word while inserting a silent channel", async () => {
-    const corpus = await Bun.file(new URL("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔢️float32.json", import.meta.url)).json() as {ieee754Binary32Bits: number[]};
+    const corpus = await Bun.file(new URL("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔢️float32.json", import.meta.url)).json() as {ieee754Binary32Bits: number[]};
     const source: WavSnapshot = {
       ...fixture.before,
       fmt: {...fixture.before.fmt, audioFormat: 3, channels: 2, bitsPerSample: 32, blockAlign: 8, byteRate: fixture.before.fmt.sampleRate * 8},

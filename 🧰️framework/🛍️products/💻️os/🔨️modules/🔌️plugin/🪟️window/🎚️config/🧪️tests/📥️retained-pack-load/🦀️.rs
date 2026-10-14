@@ -24,7 +24,7 @@ pub(super) fn quoted(demand: semio_framework_value::RetirementDemand, copy_floor
 }
 
 fn retained_load_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/📥️retained-pack-load/🔣️.json")).expect("retained-load fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/📥️retained-pack-load/🔣️.json")).expect("retained-load fixture")
 }
 
 #[test]
@@ -59,7 +59,7 @@ pub(super) struct RetainedLoadCameraConfig {
 
 semio_framework_value::artifact_retire_leaf!(RetainedLoadCameraConfig);
 
-impl store::os_store::serialization::ArtifactDsl for RetainedLoadCameraConfig {
+impl pack::snapshot::ArtifactDsl for RetainedLoadCameraConfig {
     const EXTENSION: &'static str = "retainedloadcameracfg";
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -71,20 +71,20 @@ impl store::os_store::serialization::ArtifactDsl for RetainedLoadCameraConfig {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid retained-load camera envelope");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid retained-load camera envelope");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
-impl store::os_store::serialization::ArtifactPack for RetainedLoadCameraConfig {
+impl pack::snapshot::ArtifactPack for RetainedLoadCameraConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let body = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &body))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+        if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "retained-load camera pack envelope mismatch")));
         }
         let (record, _) = store::pack_rt::decode_document(&body, &Self::__dsl_spec(), options)?;
@@ -99,6 +99,9 @@ impl store::os_store::serialization::ArtifactPack for RetainedLoadCameraConfig {
     fn borrowed_record_spec_producer() -> Option<store::BorrowedRecordSpecProducer> {
         Some(Self::__artifact_borrowed_record_spec_producer())
     }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for RetainedLoadCameraConfig {
+
 }
 
 impl store::ConfigRecord for RetainedLoadCameraConfig {}
@@ -135,7 +138,7 @@ impl protocol::DiffAlgebra<RetainedLoadCameraConfig> for RetainedLoadCameraConfi
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = store)]
 #[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
-enum RetainedLoadCameraConfigMutation {
+pub(crate) enum RetainedLoadCameraConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -201,7 +204,7 @@ impl protocol::Mutation<RetainedLoadCameraConfig> for RetainedLoadCameraConfigMu
 }
 
 #[path="🧬️preparation/🦀️.rs"]
-mod preparation;
+pub(crate) mod preparation;
 pub(super) use preparation::{CameraRetainedEdit,CameraRetainedEditCursor};
 
 pub(super) struct RetainedLoadOwnerA;

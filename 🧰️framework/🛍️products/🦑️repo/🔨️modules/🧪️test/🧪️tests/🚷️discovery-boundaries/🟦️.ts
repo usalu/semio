@@ -6,11 +6,12 @@ import { basename, dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import Ajv from "ajv";
 import glob from "fast-glob";
-import layoutVectors from "../../🧫️fixtures/📐️test-layout/🔣️.json";
+import layoutVectors from "../🧫️fixtures/📐️test-layout/🔣️.json";
+import discoveryFixtureSchema from "../🧫️fixtures/🚷️discovery-boundaries/🔣️schema.json";
 
-type Vector = Readonly<{ schemaVersion: number; features: readonly string[]; links: readonly { path: string; target: string; file?: boolean }[]; expected: readonly string[]; candidateCases: readonly {id:string;inputs:readonly string[];expected:readonly string[];mutation?:{path:string;operation:"add"|"remove"}}[]; authorityCases:readonly {id:string;path:string;authority:"root"|"taxonomy"|"policy"}[] }>;
+type Vector = Readonly<{ schemaVersion: number; features: readonly string[]; links: readonly { path: string; target: string; file?: boolean }[]; expected: readonly string[]; candidateCases: readonly {id:string;inputs:readonly string[];expected:readonly string[];mutation?:{path:string;operation:"add"|"remove"}}[]; authorityCases:readonly {id:string;path:string;authority:"root"|"taxonomy"|"policy"}[];bootstrapOrder:Readonly<{expected:readonly string[]}> }>;
 const owner = resolve(import.meta.dir, "../.."), repo = resolve(owner, "../../../../..");
-const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🚷️discovery-boundaries/🔣️.json"), "utf8")) as Vector;
+const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🚷️discovery-boundaries/🔣️.json"), "utf8")) as Vector;
 
 const taxonomyPath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
 const vocabulary = JSON.parse(readFileSync(join(repo, taxonomyPath), "utf8"));
@@ -20,6 +21,7 @@ const feature = `${kind.emoji}${kind.extensionChains[0]}`;
 
 test("portable no-follow discovery fixtures satisfy their schema", () => {
   
+  expect(new Ajv({strict:true}).compile(discoveryFixtureSchema)(fixture)).toBe(true);
   expect(fixture["schemaVersion"]).toEqual(1);
 });
 
@@ -89,7 +91,7 @@ test("fresh authority links and resident Node and Bun source mutations fail clos
   }
   const changed=structuredClone(vocabulary);changed.pathExclusions.fixture={path:fixture.expected[0]};put(taxonomyPath,JSON.stringify(changed));expect(await plugin.default.createNodesV2[1]([featurePath],{}, {workspaceRoot:root})).toEqual([]);put(taxonomyPath,JSON.stringify(vocabulary));
   const helper=readFileSync(join(owner,"🕸️dependencies/🟨️.mjs"),"utf8");
-  put("plugin/🟨️.mjs",readFileSync(join(owner,"🟨️.mjs"),"utf8"));put("plugin/🕸️dependencies/🟨️.mjs",helper);put("📚️library/🟨️.mjs",`export {cacheInternals} from ${JSON.stringify(pathToFileURL(join(repo,library,"🟨️.mjs")).href)};\n`);put("📚️library/🔌️nx-plugin/👁️observation/🟨️.mjs",`export {observeDependencies,observedFs,observeInference} from ${JSON.stringify(pathToFileURL(join(repo,library,"🔌️nx-plugin/👁️observation/🟨️.mjs")).href)};\n`);
+  put("plugin/🟨️.mjs",readFileSync(join(owner,"🟨️.mjs"),"utf8"));put("plugin/🕸️dependencies/🟨️.mjs",helper);put("📚️library/🟨️.mjs",`export {cacheInternals,libraryBootstrap} from ${JSON.stringify(pathToFileURL(join(repo,library,"🟨️.mjs")).href)};\n`);put("📚️library/🔌️nx-plugin/👁️observation/🟨️.mjs",`export {observeDependencies,observedFs,observeInference} from ${JSON.stringify(pathToFileURL(join(repo,library,"🔌️nx-plugin/👁️observation/🟨️.mjs")).href)};\n`);put("📚️library/🔌️nx-plugin/🎚️mode/🟨️.mjs",`export * from ${JSON.stringify(pathToFileURL(join(repo,library,"🔌️nx-plugin/🎚️mode/🟨️.mjs")).href)};\n`);put("📚️library/🔌️nx-plugin/📥️inputs/🟨️.mjs",`export {compactSourceInputs} from ${JSON.stringify(pathToFileURL(join(repo,library,"🔌️nx-plugin/📥️inputs/🟨️.mjs")).href)};\n`);
   const code=`import assert from "node:assert/strict";import{readFileSync,writeFileSync}from"node:fs";import{join}from"node:path";import{pathToFileURL}from"node:url";const root=${JSON.stringify(root)},feature=${JSON.stringify(featurePath)},path=join(root,"plugin/🕸️dependencies/🟨️.mjs"),source=readFileSync(path,"utf8"),resident=(await import(pathToFileURL(join(root,"plugin/🟨️.mjs")).href)).default;assert.equal((await resident.createNodesV2[1]([feature],{}, {workspaceRoot:root})).length,1);writeFileSync(path,source+"\\nexport const invalid = ;\\n");await assert.rejects(()=>resident.createNodesV2[1]([feature],{}, {workspaceRoot:root}),/Unexpected|Expected|Parse|Syntax|stale ESM/i);writeFileSync(path,source);assert.equal((await resident.createNodesV2[1]([feature],{}, {workspaceRoot:root})).length,1);console.log("fresh resident source accepted/refused/accepted");`;
   for(const runtime of ["node",process.execPath]){const child=spawnSync(runtime,[...(runtime==="node"?["--input-type=module"]:[]),"--eval",code],{encoding:"utf8",timeout:10000});expect(child.status,child.stdout+child.stderr).toBe(0);expect(child.stdout.trim()).toBe("fresh resident source accepted/refused/accepted");}
  }finally{rmSync(root,{recursive:true,force:true});}
@@ -120,3 +122,21 @@ test("Nx discovers the same canonical names and semantic owners as the layout ve
       }
     } finally { rmSync(root, { recursive: true, force: true }); }
   });
+
+test("test inference awaits the exact library bootstrap before command helpers",async()=>{
+ const output=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir());mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"bootstrap-order-")),put=(path:string,bytes:string)=>{mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),bytes);},library=dirname(taxonomyPath),featurePath=`${fixture.expected[0]}/${feature}`;
+ try{
+  put(taxonomyPath,JSON.stringify(vocabulary));put(`${library}/⚡️caching/🔣️policy.json`,readFileSync(join(repo,library,"⚡️caching/🔣️policy.json"),"utf8"));put(featurePath,"Feature: Bootstrap ordering\n");put(`${vocabulary.testDomainPath}/📜️script.ts`,"export {};\n");
+  put("plugin/🟨️.mjs",readFileSync(join(owner,"🟨️.mjs"),"utf8"));put("plugin/🕸️dependencies/🟨️.mjs",readFileSync(join(owner,"🕸️dependencies/🟨️.mjs"),"utf8"));
+  put("📚️library/🔌️nx-plugin/👁️observation/🟨️.mjs",`export {observeDependencies,observedFs,observeInference} from ${JSON.stringify(pathToFileURL(join(repo,library,"🔌️nx-plugin/👁️observation/🟨️.mjs")).href)};\n`);
+  put("📚️library/🔌️nx-plugin/🎚️mode/🟨️.mjs",`export * from ${JSON.stringify(pathToFileURL(join(repo,library,"🔌️nx-plugin/🎚️mode/🟨️.mjs")).href)};\n`);
+  put("📚️library/🔌️nx-plugin/📥️inputs/🟨️.mjs",`export {compactSourceInputs} from ${JSON.stringify(pathToFileURL(join(repo,library,"🔌️nx-plugin/📥️inputs/🟨️.mjs")).href)};\n`);
+  const wrapper=`import {cacheInternals as original,libraryBootstrap as originalBootstrap} from ${JSON.stringify(pathToFileURL(join(repo,library,"🟨️.mjs")).href)};export const events=[];let ready=false;export const libraryBootstrap={then(accept,reject){return originalBootstrap.then(()=>{ready=true;events.push("ready");return accept();},reject)}};export const cacheInternals=new Proxy(original,{get(target,key){const value=Reflect.get(target,key);if(key!=="relativeScriptInputs")return value;return(...args)=>{events.push("inputs");if(!ready)throw Error("Original test library bootstrap was not received");return value(...args)}}});\n`;
+  put("📚️library/🟨️.mjs",wrapper);
+  const copied=await import(pathToFileURL(join(root,"plugin/🟨️.mjs")).href),result=await copied.default.createNodesV2[1]([featurePath],{},{workspaceRoot:root});expect(result).toHaveLength(1);
+  const revision=new Bun.CryptoHasher("sha256").update(wrapper).digest("hex"),received=await import(pathToFileURL(join(root,"📚️library/🟨️.mjs")).href+"?revision="+revision);
+  expect(received.events).toEqual(fixture.bootstrapOrder.expected);
+  const oracle=spawnSync("node",["--input-type=module","--eval",'const events=[];let ready=false;const bootstrap={then(accept){ready=true;events.push("ready");accept();}};await bootstrap;if(!ready)throw Error("not ready");events.push("inputs");console.log(JSON.stringify(events));'],{encoding:"utf8",timeout:3000});expect(oracle.status,oracle.stderr).toBe(0);expect(JSON.parse(oracle.stdout)).toEqual(fixture.bootstrapOrder.expected);
+  console.log("[DEBUG] Actual test inference receives canonical library readiness before helpers; independent Node thenable ordering agrees");
+ }finally{rmSync(root,{recursive:true,force:true});}
+},30000);

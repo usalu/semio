@@ -1,6 +1,6 @@
 /** 🗺️ Language-neutral complete intrinsic values and independently editable domain entities. */
 import{Database}from"bun:sqlite";import{expect,test}from"bun:test";
-import fixture from"../🧫️fixtures/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
 import type{GisMapValue}from"../../../../🧬️schema/📍️feature/🟦️.ts";
 import{gisMapSnapshotToSqliteDatabase,gisMapSnapshotFromSqliteDatabase,validateGisMapSnapshotSqliteDialect}from"../🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

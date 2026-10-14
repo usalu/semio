@@ -1,0 +1,576 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "f7ef769b0c356d3233bc2b05cdda46c441baf88498adffa469e60a979e54534f",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 736,
+        "end": 804,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗣️terminology.json",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🗣️terminology.json",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🎯️brep-evaluate/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "dc790cb6b48faba506dd06a364fbad3d08807b7dbc0de70f310a62d1b638b157",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 375,
+        "end": 481,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🎯️brep-evaluate/🧫️fixtures/🔣️.json",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🎯️brep-evaluate/🔣️.json",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🛠️brep-feature/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "4cd329e33bc02bb2ba8dbbe2b9558e17fcf960bec8f0404a6ffd0656e29e9a28",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 374,
+        "end": 479,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🛠️brep-feature/🧫️fixtures/🔣️.json",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🛠️brep-feature/🔣️.json",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔁️brep-transform/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "e5e11ec06db291d9e9e0760d0b5518999a2420481099fa47351ca16787fb63f4",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 328,
+        "end": 435,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔁️brep-transform/🧫️fixtures/🔣️.json",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🔁️brep-transform/🔣️.json",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✂️brep-intersect/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "7a6b12dd1d8c3f9c86e06bfcccc01b42d5d8c92b8495d391e54677ed80a35810",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 308,
+        "end": 415,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✂️brep-intersect/🧫️fixtures/🔣️.json",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/✂️brep-intersect/🔣️.json",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🐚️brep-topology/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "7586c930adf8fe45f4e7036a80ab1f9ae28a38d9c8be2eed41a27921b288ef13",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 375,
+        "end": 481,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🐚️brep-topology/🧫️fixtures/🔣️.json",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🐚️brep-topology/🔣️.json",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/💾️brep-interchange/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "6d8c03bddfe7e2b3a3b8746e39f4ffff802004a4e5b05aebd992e3086ed921fb",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 351,
+        "end": 443,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/💾️brep-interchange/🧫️fixtures/🔣️.json",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/💾️brep-interchange/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "1dfc886b4412247a8620bb222cb1a9c22c9c72347037cc8f8902a22a1fb58287",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 1140,
+        "end": 1211,
+        "before": "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧫️fixtures/🔣️.json",
+        "after": "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "b716c33a2ebde0f249d99e2734c391228d02aa2d4766d17cdd254824c1b1ca2e",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 4274,
+        "end": 4345,
+        "before": "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧫️fixtures/🔣️.json",
+        "after": "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "3c97e183a30d77b964cb7e64d0c4072212d4e2567bc5cab15886319181e6906e",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 8586,
+        "end": 8657,
+        "before": "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧫️fixtures/🔣️.json",
+        "after": "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "a80f411d4b060aaaef0c2bc1f1fb1fdb001e9b13de2ab9d0fe5b4f7cf3c0b4c6",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 1140,
+        "end": 1211,
+        "before": "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧫️fixtures/🔣️.json",
+        "after": "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "f5f55708ad1d9fae8f567857c661b350233f871e06d1580419763526964c1999",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 14879,
+        "end": 14950,
+        "before": "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧫️fixtures/🔣️.json",
+        "after": "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/🦀️.rs",
+    "beforeSha256": "22ec156541cb937009f9d33ded389014aaaefd40386bc9d8e53b134f29029d50",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 155765,
+        "end": 155872,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🧫️fixtures/🔣️.json",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/🔣️.json",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧪️transform-tool/🦀️.rs",
+    "beforeSha256": "02286bd8a208a387ee4a6f84e384ebf352b9a89ebfcad5033de6cd68c50b98d5",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 10636,
+        "end": 10687,
+        "before": "/../../../../🧫️fixtures/🛠️transform-gesture/🔣️.json",
+        "after": "/../../../../🧪️tests/🧫️fixtures/🛠️transform-gesture/🔣️.json",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧪️transform-tool/🦀️.rs",
+    "beforeSha256": "e7d04fbfc5ee808f86fe69f7e186eb48f8ff3a46f53364b86d3611c05af49aca",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 11601,
+        "end": 11652,
+        "before": "/../../../../🧫️fixtures/🛠️transform-gesture/🔣️.json",
+        "after": "/../../../../🧪️tests/🧫️fixtures/🛠️transform-gesture/🔣️.json",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️committed-fixtures/🦀️.rs",
+    "beforeSha256": "fe9c4a84eb2cb95cb4d44ea1a832b1e8bfc67c1e5b8f21f6c90570bbf3c010aa",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 883,
+        "end": 944,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "ce7f88a343f3611a579f39a3c997980fd7b88a5eb3e27311a744501a882f7c28",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 35468,
+        "end": 35529,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/✏️editor/📬️preparation/🦀️.rs",
+    "beforeSha256": "ab38a34997f48c1a9b76934e52de8ad3b0fc76b1c530c3b71181aebcdc82d53c",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 6060,
+        "end": 6153,
+        "before": "/../../../../../../../../📇️registry/🧬️contract/✏️editing/🧫️fixtures/🧵️retained-native/🔣️.json",
+        "after": "/../../../../../../../../📇️registry/🧬️contract/✏️editing/🧪️tests/🧫️fixtures/🧵️retained-native/🔣️.json",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "beforeSha256": "d147f5887cd4dc81a2c125904db2bf30119a24b310bba05f99c181b01a00e2a2",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 20050,
+        "end": 20146,
+        "before": "/../../🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧩️component.json",
+        "after": "/../../🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧩️component.json",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️graph/🧪️tests/🦀️.rs",
+    "beforeSha256": "0bbc8f117fba00feb65686764f7f467a9f84ddc8844570b3a10b37c4d8584306",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 485,
+        "end": 555,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🛠️graph-tool/🔣️.json",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🛠️graph-tool/🔣️.json",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🪟️bmp/🔖️v3/✳️any/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "d1643444c985e5f91e23cb4a761bb9f1c25ace0dcb19d04339b8367d6cc021fc",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 1222,
+        "end": 1361,
+        "before": "/../../../../../../../../../🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb8-duplicate-palette.bmp",
+        "after": "/../../../../../../../../../🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb8-duplicate-palette.bmp",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/✏️editor/📬️preparation/🦀️.rs",
+    "beforeSha256": "d23bb53f3cb3c2c8e1b6abb348d1cabecd26b058db07445f6376c5e27dd9e256",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 4666,
+        "end": 4759,
+        "before": "/../../../../../../../../📇️registry/🧬️contract/✏️editing/🧫️fixtures/🧵️retained-native/🔣️.json",
+        "after": "/../../../../../../../../📇️registry/🧬️contract/✏️editing/🧪️tests/🧫️fixtures/🧵️retained-native/🔣️.json",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "fc1c540546b4d78da023c930682f1aa2a33f8dc17b3ad4c1dcac8bc4bd90147c",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 7964,
+        "end": 8043,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/💡️inferences/🧊️element-solids",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📊️csv/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "df6e03f5309928143730a56828f5b0d3000f23301da9c39b46cb89fbad71982f",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 4323,
+        "end": 4418,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📤️export",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📤️export",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🔋️energy/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "4cebc6c269259e4e69a702c881a28e38df0a3bb675f304a069923fc30d013fcc",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 852,
+        "end": 910,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🚪️energy",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🚪️energy",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📄️sheets/🧪️tests/🧰️testkit/🦀️.rs",
+    "beforeSha256": "455fb137bc28c4f26066959d549c103e5a21b3e4592a3ebdaad2f3c311f10c12",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 1095,
+        "end": 1160,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🚪️sheets/🏠️room",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🚪️sheets/🏠️room",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧊️gltf/🧪️tests/🧰️testkit/🦀️.rs",
+    "beforeSha256": "daa70bc80f2109a3f62900ca286ea391919864622315a38749586bd9f1187662",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 1933,
+        "end": 2002,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧊️gltf/🪑️components",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧊️gltf/🪑️components",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      },
+      {
+        "start": 644,
+        "end": 708,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧊️gltf/🏠️house",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧊️gltf/🏠️house",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🎨️svg/🧪️tests/🧰️testkit/🦀️.rs",
+    "beforeSha256": "a860f8d971a2e9b3c10d10d5743fe000e6a129e09d3092c47a2157873711ce14",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 1204,
+        "end": 1269,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🚪️svg/🪧️notated",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🚪️svg/🪧️notated",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      },
+      {
+        "start": 645,
+        "end": 708,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🚪️svg/🏠️house",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🚪️svg/🏠️house",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧾️json/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "542680eb6014ec665da8c01e4882c0e9934c7a51f99536413385867e3deeb222",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 4520,
+        "end": 4615,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📤️export",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📤️export",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🌿️gbxml/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "fb8c33919bc729c44097d0135eed1bf1466ca671bec7bb81f85ed2c604eae0b5",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 9435,
+        "end": 9492,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🌿️gbxml",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🌿️gbxml",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🏗️ifc/🔬️projection/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "6322969495f05aad3f7dec66928ddfcb143d17504427ae5c89f5a68796dbbac3",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 10343,
+        "end": 10406,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🏷️psets",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🏷️psets",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      },
+      {
+        "start": 7625,
+        "end": 7691,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🔲️ceilings",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🔲️ceilings",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      },
+      {
+        "start": 4196,
+        "end": 4261,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🪧️notated",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🪧️notated",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      },
+      {
+        "start": 166,
+        "end": 229,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🏠️house",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🏠️house",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🏗️ifc/🏗️frame/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "52ea2ab2296289a25542bec6b2751cb2efe3a4ac53450b08e08356a3aa5d9f95",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 10395,
+        "end": 10458,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🏗️frame",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🏗️frame",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🏗️ifc/🏘️zoning/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "b3a69e7201c3b5875192b75bf78ec7cf59090c77a5a4a8f248080719a73f744f",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 9792,
+        "end": 9855,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🏘️zoned",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🏘️zoned",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🏗️ifc/🏰️walls/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "8fde00f4322d21a7ecf88a4f83d600fe73647aba5ad035a86898c46f5ba1eeef",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 13354,
+        "end": 13422,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🧗️wall-depth",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🧗️wall-depth",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🏗️ifc/🔥️energy/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "1e2b73b4c9a10ed17414386ee6484a3e2cb7462e733d8e795d9b82476bb55d14",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 6817,
+        "end": 6881,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🔥️energy",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🔥️energy",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🏗️ifc/🧪️tests/🔭️schema4/🦀️.rs",
+    "beforeSha256": "639193227712fd29a963b1b55ee14e9ff45c5c59df1a9749e118c862cc259a95",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 12677,
+        "end": 12726,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🏗️ifc/🪑️components/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "2f50b4e98f01c84fb23055489e2beb988d9162270722b41c9ee1c800004c7780",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 11347,
+        "end": 11415,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🪑️components",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🪑️components",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🏗️ifc/🛝️ramps/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "29caf77d6b51f41860b0a72a58da64cfbacb29b054b07b7476c4430f2d7b5e43",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 5337,
+        "end": 5400,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🛝️ramps",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🛝️ramps",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      },
+      {
+        "start": 5223,
+        "end": 5272,
+        "before": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+        "after": "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+        "role": "manifest-anchored-concat-fixture-coordinate"
+      }
+    ]
+  }
+]

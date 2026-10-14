@@ -12,7 +12,7 @@ impl JsonReadSource for ObservedSource<'_>{
 
 #[test]
 fn original_source_constructor_captures_all_limits_without_reads_or_heap_birth(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap(){
         let text=row["source"].as_str().unwrap();let policy=&row["limits"];
         let limits=JsonReadLimits{maximum_bytes:policy["maximumBytes"].as_u64().unwrap(),maximum_allocation_bytes:policy["maximumAllocationBytes"].as_u64().unwrap()as usize,maximum_depth:policy["maximumDepth"].as_u64().unwrap()as usize,maximum_items:policy["maximumItems"].as_u64().unwrap()};

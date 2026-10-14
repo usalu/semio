@@ -1,0 +1,37 @@
+{
+  "maximumItems": 1,
+  "maximumTurnBytes": 4096,
+  "journeys": ["firstNodeOnly", "firstMatchingEdgeId", "duplicateTargetRefusal", "sortedOriginalOrdinals", "allUntouchedOwners", "zeroGrant", "sourceSwap", "cancelDuringCascade", "cancelDuringSnapshotCopy", "cancelDuringRemoval", "takeOnce", "controlledRetirement"],
+  "cases": [
+    {
+      "id": "earlier-unmatched-duplicate",
+      "nodes": [{"id": "a", "handles": ["h"]}, {"id": "retained", "handles": []}],
+      "edges": [{"id": "same", "source": "outside", "target": "outside"}, {"id": "same", "source": "h", "target": "outside"}, {"id": "keep", "source": "outside", "target": "outside"}],
+      "target": "a",
+      "status": "changed",
+      "removed": [0],
+      "afterNodes": ["retained"],
+      "afterEdges": ["same", "keep"]
+    },
+    {
+      "id": "duplicate-removal-target",
+      "nodes": [{"id": "a", "handles": ["h"]}],
+      "edges": [{"id": "same", "source": "h", "target": "outside"}, {"id": "same", "source": "outside", "target": "h"}],
+      "target": "a",
+      "status": "refused",
+      "removed": [],
+      "afterNodes": ["a"],
+      "afterEdges": ["same", "same"]
+    },
+    {
+      "id": "resolved-ordinals-change-order",
+      "nodes": [{"id": "a", "handles": ["h"]}],
+      "edges": [{"id": "second", "source": "outside", "target": "outside"}, {"id": "first", "source": "h", "target": "outside"}, {"id": "second", "source": "h", "target": "outside"}],
+      "target": "a",
+      "status": "changed",
+      "removed": [0, 1],
+      "afterNodes": [],
+      "afterEdges": ["second"]
+    }
+  ]
+}

@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import Ajv from "ajv";
 import { inspectRustCompileReferences, type RustGeneratedTokenOutput } from "../../🟦️.ts";
 
-const owner = resolve(import.meta.dir, ".."), fixture = JSON.parse(readFileSync(resolve(owner, "🧫️fixtures/🔣️.json"), "utf8"));
+const owner = resolve(import.meta.dir, ".."), fixture = JSON.parse(readFileSync(resolve(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
 const outputContract = JSON.parse(readFileSync(resolve(owner, "🔣️.json"), "utf8"));
 
 test("quote token output retains every generated input and every outside authored include", () => {

@@ -5,11 +5,11 @@
 fn vector() -> super::Vector {
     super::Vector {
         kind: "insert-effect",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/📎insert-effect/✅apply/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/📎insert-effect/✅apply/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/📎insert-effect/✅apply/📸️snapshot/➡️after/🔣️.json"),
-        diff: Some(include_str!("../../../../../🧫️fixtures/🧬️mutations/📎insert-effect/✅apply/🔺️diff/🔣️.json")),
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/📎insert-effect/✅apply/🎯️outcome/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎insert-effect/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎insert-effect/✅apply/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎insert-effect/✅apply/📸️snapshot/➡️after/🔣️.json"),
+        diff: Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎insert-effect/✅apply/🔺️diff/🔣️.json")),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎insert-effect/✅apply/🎯️outcome/🔣️.json"),
     }
 }
 

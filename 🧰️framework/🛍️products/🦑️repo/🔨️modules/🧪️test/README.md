@@ -13,17 +13,18 @@ adapter per implementation.
 ```
 <owner>/
 ├── 🖼️assets/                       static production data
-├── 🧫️fixtures/                     immutable testing input owned by this domain
 ├── 📚️examples/<example>/           executable usage projects, with their own 🧪️tests
-├── 🔮️oracles/<oracle>/             real reference or comparator implementations, with their own 🧪️tests
-├── 🧪️tests/<emoji><kebab-case>/    one leading emoji identity, exactly as every other path segment
-│   ├── 🧫️fixtures/                 immutable, private to this case
-│   ├── 🥒️.feature                 the normative, language-neutral contract
-│   ├── 🦀️.rs                      one adapter per implementation that claims the capability
-│   ├── 🟦️.ts
-│   ├── 🐹️.go
-│   ├── 🐍️.py
-│   └── 🔷️.cs
+├── 🔮️oracles/<oracle>/             real reference implementations, with their own 🧪️tests
+├── 🧪️tests/
+│   ├── 🧫️fixtures/                 immutable examples shared by this owner's tests
+│   └── <emoji><kebab-case>/         one case for a language-neutral capability
+│       ├── 🧫️fixtures/             immutable examples private to this case
+│       ├── 🥒️.feature             the normative, language-neutral contract
+│       ├── 🦀️.rs                  one adapter per claimed implementation
+│       ├── 🟦️.ts
+│       ├── 🐹️.go
+│       ├── 🐍️.py
+│       └── 🔷️.cs
 └── 📦️packages/<language>/          the implementations under test
 ```
 
@@ -184,9 +185,9 @@ held to the unchanged rule.
 * A missing tool fails setup. A timeout fails the case. There is no quarantine list, no known-broken
   allowlist and no mechanism anywhere that turns a failure into a skip.
 * Fixtures are immutable. A scenario that needs to mutate one copies it into the case work directory
-  first. `shared://` resolves under the semantic owner’s `🧫️fixtures`; `asset://` resolves
-  under its `🖼️assets`. Test-case directories contain only their feature and implementations.
-  Production code must use assets and must never depend on testing fixtures.
+  first. `shared://` resolves under the semantic owner’s `🧪️tests/🧫️fixtures`; `asset://` resolves
+  under its `🖼️assets`. Test-case directories contain their feature, implementations, and optional private `🧫️fixtures`.
+  Fixtures are plain test inputs without their own schema. Production code must never depend on them.
 * Comparison belongs to an owned profile, never to an adapter.
 * Generated hosts and outputs live only under `.🧬semio/🦑️repo/⚡️cache/tests/`, carry an ownership
   marker, and are safe to delete. A committed generated wrapper is a taxonomy breach.

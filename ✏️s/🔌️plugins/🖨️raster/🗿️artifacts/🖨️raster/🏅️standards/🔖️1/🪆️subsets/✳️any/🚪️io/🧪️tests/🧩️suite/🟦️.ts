@@ -1,6 +1,6 @@
 /** 🧪️ raster io — cross-language parity for the `🪟️bmp` leaves.
  *
- * `🧫️fixtures/*.json` is the single shared oracle: the Rust `🚪️io/🦀️.rs` test
+ * `🧪️tests/🧫️fixtures/*.json` is the single shared oracle: the Rust `🚪️io/🦀️.rs` test
  * `bmp_export_matches_the_typescript_parity_fixture` asserts the SAME `bmpHex` from
  * `raster_composite_image` → stdio's `SemioImageToBmp` → stdio's `encode_bmp`, and
  * `bmp_import_matches_the_typescript_parity_fixture` asserts the same `rgba8` comes back out of the

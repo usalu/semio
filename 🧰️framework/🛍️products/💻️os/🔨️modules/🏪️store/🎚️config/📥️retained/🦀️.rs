@@ -68,7 +68,7 @@ where
     fold_auxiliary: ManuallyDrop<Option<(Vec<String>, Vec<crate::os_spr::Conflict>)>>,
     fold_completed: u64,
     progress_high_water: std::cell::Cell<u64>,
-    source_edits: ManuallyDrop<Option<super::resident_backing::SourceIterator<crate::os_spr::HistoryEdit>>>,
+    source_edits: ManuallyDrop<Option<super::resident_backing::PagedSourceIterator<crate::os_spr::HistoryEdit>>>,
     source_forwards: ManuallyDrop<Option<super::resident_backing::SourceIterator<crate::os_spr::OpPayload>>>,
     source_inverse: ManuallyDrop<Option<super::resident_backing::SourceIterator<crate::os_spr::OpPayload>>>,
     source_metadata: ManuallyDrop<Option<super::resident_backing::SourceIterator<crate::os_spr::HistoryOpMeta>>>,
@@ -184,6 +184,8 @@ where
         }
     }
 
+    fn vacant_history_edit()->crate::os_spr::HistoryEdit{crate::os_spr::HistoryEdit{id:String::new(),actor:None,started_at:String::new(),finished_at:None,verb:None,line:None,ops:Vec::new(),inverse:Vec::new(),meta:None,lane:None}}
+
     fn reject(&mut self, diagnostic: ConfigStoreHydrationDiagnostic) -> ConfigStoreHydrationStep<P, M> {
         self.diagnostic.get_or_insert(diagnostic);
         self.phase = Phase::Rejected;
@@ -222,7 +224,7 @@ where
 
     pub fn last_retirement_progress(&self) -> RetainedCloneProgress { self.last_retirement_progress }
 
-    fn close_source<T: semio_framework_value::retirement::RetireOwned>(source: &mut Option<super::resident_backing::SourceIterator<T>>, grant: RetainedCloneGrant) -> Result<(bool, RetainedCloneProgress), ValueError> {
+    fn close_source<R:ErasedSnapshotRetirement>(source:&mut Option<R>,grant:RetainedCloneGrant) -> Result<(bool, RetainedCloneProgress), ValueError> {
         let Some(owner) = source.as_mut() else { return Ok((true, Default::default())); };
         let depth = owner.next_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "config source parent depth overflow"))?;
         if grant.maximum_items == 0 { return Ok((false, Default::default())); }
@@ -245,7 +247,7 @@ where
     pub fn demand_bytes(&self) -> Result<usize, ValueError> {
         if self.phase == Phase::Fold { return self.fold_job.as_ref().map_or(Ok(0), |job| job.next_copy_byte_demand()); }
         Ok(match self.phase {
-            Phase::BeginEdit => self.source_edits.as_ref().and_then(|edits| edits.as_slice().first()).map_or(0, |edit| edit.id.len().saturating_mul(2)),
+            Phase::BeginEdit => self.source_edits.as_ref().and_then(|edits| edits.peek()).map_or(0,|edit|edit.id.len().saturating_mul(2).max(size_of::<Option<crate::os_spr::HistoryEdit>>()+size_of::<usize>())),
             Phase::DecodeForward | Phase::DecodeInverse => self.pending_payload.as_ref().map_or(0, Self::payload_bytes).max(size_of::<M>()),
             Phase::DecodeMetadata => size_of::<crate::os_spr::MutationMeta>().max(self.pending_metadata.as_ref().map_or(0, Self::metadata_retained_bytes)),
             Phase::FinishEdit => self.pending_edit.as_ref().map_or(0, |edit| edit.id.len()),
@@ -369,7 +371,7 @@ where
                 envelope.history_shape = crate::os_spr::HistoryShape::Config;
                 envelope.cursor = Some(crate::os_store::store_schema::ArtifactCursor::new(Vec::new(), Vec::new(), fold.checkpoint.take()));
                 envelope.transitions = self.normalized_transitions.take().expect("normalized config transitions remain retained");
-                *self.source_edits = Some(super::resident_backing::SourceIterator::new(std::mem::take(&mut history.edits)));
+                *self.source_edits = Some(super::resident_backing::PagedSourceIterator::new(std::mem::take(&mut history.edits),Self::vacant_history_edit));
                 *self.runtime = Some(ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, std::sync::Arc::new(current), self.initial_digest, crate::os_spr::ActorId(std::mem::take(&mut self.actor.0))));
                 *self.expected_id = Some(expected_id);
                 *self.schema = Some(schema);
@@ -393,7 +395,9 @@ where
                 ConfigStoreHydrationStep::Pending(self.progress())
             }
             Phase::BeginEdit => {
-                let Some(source) = self.source_edits.as_mut().expect("config source edits remain retained").next() else {
+                let transfer=if self.source_edits.as_ref().expect("config source edits remain retained").publication_complete(){Ok(None)}else{self.source_edits.as_mut().expect("config source edits remain retained").take_next_into(&mut self.pending_source_edit,grant)};
+                match transfer{Ok(Some(progress))=>{self.last_retirement_progress=progress;if self.pending_source_edit.is_none(){return ConfigStoreHydrationStep::Pending(self.progress());}},Ok(None)=>{},Err(_)=>return self.reject(ConfigStoreHydrationDiagnostic::Initialization)}
+                let Some(source)=self.pending_source_edit.take()else{
                     match Self::close_source(&mut self.source_edits, grant) {
                         Ok((terminal, progress)) => { self.last_retirement_progress = progress; if !terminal { return ConfigStoreHydrationStep::Pending(self.progress()); } }
                         Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Initialization),

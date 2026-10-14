@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import { PNG } from "pngjs";
 import { describe, expect, it } from "vitest";
 import { paint2dAssetExtent, paint2dPaintWitnessDom } from "../../🟦️.tsx";
-import contract from "../../🧫️fixtures/🔬️paint-witness/🔣️.json";
+import contract from "../🧫️fixtures/🔬️paint-witness/🔣️.json";
 // #endregion 🔌️Adapters
 
 //#region 🔬️PaintWitness

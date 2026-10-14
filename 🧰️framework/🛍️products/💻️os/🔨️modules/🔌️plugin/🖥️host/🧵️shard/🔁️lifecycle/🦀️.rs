@@ -40,10 +40,11 @@ pub(super) enum LifecycleRetry {
 pub(super) struct AdmittedAuthority {
     pub(super) allocation: Option<ShardActorAllocation>,
     pub(super) authority: DeferredAuthority,
-    pub(super) budget: Option<IssuedShardTurn>,
+    pub(super) budget: Option<semio_framework_actor::Budget>,
     pub(super) lane: semio_framework_actor::Lane,
     pub(super) owner_bytes: usize,
     pub(super) retry: LifecycleRetry,
+    pub(super) original_event:Option<super::OriginalShardEvent>,
 }
 
 impl DeferredAuthority {
@@ -61,8 +62,8 @@ impl DeferredAuthority {
 }
 
 impl AdmittedAuthority {
-    pub(super) fn new(allocation: Option<ShardActorAllocation>, budget: Option<IssuedShardTurn>, authority: DeferredAuthority, lane: semio_framework_actor::Lane, owner_bytes: usize) -> Self {
-        Self { allocation, authority, budget, lane, owner_bytes, retry: LifecycleRetry::None }
+    pub(super) fn new(allocation: Option<ShardActorAllocation>, budget: Option<semio_framework_actor::Budget>, authority: DeferredAuthority, lane: semio_framework_actor::Lane, owner_bytes: usize) -> Self {
+        Self { allocation, authority, budget, lane, owner_bytes, retry: LifecycleRetry::None,original_event:None }
     }
 
     pub(super) fn retries(&self) -> bool {
@@ -107,8 +108,8 @@ impl ShardLoop {
         for ring in [&mut self.pending_interactive, &mut self.pending_background] {
             for offset in 0..ring.len {
                 if let Some(slot) = ring.slots[ring.order[offset]].as_mut() {
-                    if slot.owner.budget.is_none() {
-                        slot.owner.budget = self.granted_budgets.get(&slot.owner.authority.actor()).cloned();
+                    if slot.owner.budget.is_none()&&slot.owner.original_event.is_none() {
+                        slot.owner.budget = self.granted_budgets.get(&slot.owner.authority.actor()).filter(|turn|turn.remaining_input().is_ok()).map(|turn| turn.budget);
                     }
                 }
             }
@@ -177,6 +178,7 @@ impl ShardLoop {
 
     pub(super) fn retain_lifecycle_retry(&mut self, mut owner: AdmittedAuthority) -> Result<(), PluginHostError> {
         owner.retry = LifecycleRetry::YieldPeer;
+        owner.budget=None;
         let bytes = owner.owner_bytes;
         let ring = if Self::is_high_priority_lane(owner.lane) { &mut self.pending_interactive } else { &mut self.pending_background };
         if let Err(rejected) = ring.try_push(owner, bytes) {

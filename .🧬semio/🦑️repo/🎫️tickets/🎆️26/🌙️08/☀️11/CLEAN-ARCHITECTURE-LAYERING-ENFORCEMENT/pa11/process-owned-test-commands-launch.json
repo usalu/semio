@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "🏃️Process 🔒️Cargo build leases 🧪️contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-process:test-cargo-build-lease",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "9_gates",
+        "order": 900.05722
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/${input:processContractArtifacts}"
+      }
+    },
+    {
+      "name": "🏃️Process 🦀️native artifact publication 🧪️contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-process:test-native-artifact-publication",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "9_gates",
+        "order": 900.05722
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/${input:processContractArtifacts}"
+      }
+    }
+  ],
+  "retireNames": []
+}

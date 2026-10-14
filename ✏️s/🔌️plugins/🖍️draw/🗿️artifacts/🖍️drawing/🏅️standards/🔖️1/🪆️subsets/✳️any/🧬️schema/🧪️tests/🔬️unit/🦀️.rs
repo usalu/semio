@@ -561,7 +561,7 @@ fn duplicated_group_remaps_internal_boolean_references() {
 
 #[test]
 fn text_line_layout_matches_the_shared_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🧫️fixtures/🔣️.json" )).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🧪️tests/🧫️fixtures/🔣️.json" )).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let content = case["content"].as_str().unwrap();
         let size = case["size"].as_f64().unwrap();

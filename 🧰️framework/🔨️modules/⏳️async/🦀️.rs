@@ -340,6 +340,14 @@ impl CancelToken {
         }
     }
 
+    /// 🚩️ Marks only the same original node; waiter ownership remains intact for separately funded notification and closure.
+    pub fn signal_cancelled_flag_step(&self,grant:semio_framework_value::RetainedCloneGrant)->Option<semio_framework_value::RetainedCloneProgress>{
+        if self.0.local.load(Ordering::SeqCst)>=2{return Some(Default::default())}
+        if grant.maximum_items==0||grant.maximum_depth==0{return None}
+        self.0.local.store(2,Ordering::SeqCst);
+        Some(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})
+    }
+
     /// 🔔️ Resolves once this token or any ancestor is cancelled. The waiter is registered on every
     /// node of the chain, so an ancestor's [`CancelToken::cancel_now`] wakes it directly — no timer,
     /// no poll interval. Dropping the future removes its registrations.
@@ -2917,3 +2925,7 @@ mod publication_tests;
 #[cfg(test)]
 #[global_allocator]
 static ASYNC_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
+#[path="🎰️slots/📄️pages/🦀️.rs"]
+mod original_fixed_slot_pages;
+pub use original_fixed_slot_pages::OriginalFixedSlotPages;

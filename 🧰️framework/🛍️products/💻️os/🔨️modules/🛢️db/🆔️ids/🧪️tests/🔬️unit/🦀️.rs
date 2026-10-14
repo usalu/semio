@@ -51,7 +51,7 @@ async fn check_len_rejects_over_limit_before_any_allocation_would_happen() {
 #[semio_framework_async_macros::async_test]
 async fn pack_refusal_kind_controls_db_category_and_owned_message() {
     use semio_framework_value::{ValueError,ValueRefusalKind};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/⚠️error/🎒️pack/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⚠️error/🎒️pack/🔣️.json")).unwrap();
     fn kind(value:&str)->ValueRefusalKind{match value{"InvalidValue"=>ValueRefusalKind::InvalidValue,"Canceled"=>ValueRefusalKind::Canceled,"OwnershipLimit"=>ValueRefusalKind::OwnershipLimit,"AllocationFailed"=>ValueRefusalKind::AllocationFailed,"WorkLimit"=>ValueRefusalKind::WorkLimit,"DepthLimit"=>ValueRefusalKind::DepthLimit,"UnsupportedOwner"=>ValueRefusalKind::UnsupportedOwner,"InvariantViolated"=>ValueRefusalKind::InvariantViolated,_=>panic!("unknown authored kind")}}
     for row in fixture["cases"].as_array().unwrap(){
         let mut retained=None;

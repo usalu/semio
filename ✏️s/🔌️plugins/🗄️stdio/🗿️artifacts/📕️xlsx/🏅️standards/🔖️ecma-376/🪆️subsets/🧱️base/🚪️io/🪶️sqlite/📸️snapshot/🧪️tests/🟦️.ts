@@ -2,7 +2,7 @@
 import{expect,test}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
-import fixture from"../🧫️fixtures/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
 import schema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import xmlSchema from"../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json";
 import{XLSX_SQLITE_SCHEMA,xlsxSnapshotToSqliteDatabase,xlsxSnapshotFromSqliteDatabase}from"../../../../../../../../🟦️.ts";
@@ -10,7 +10,7 @@ import type{OpcPackage,XlsxSnapshot}from"../../../../../../../../🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase}from"@semio-tech/framework";
 import{parseXmlDocumentJson as parseXmlDocument}from"../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import{validateXlsxSnapshotProfile}from"../../../../../../../../🟦️.ts";
-import profiles from"../../../../🧬️schema/📸️snapshot/🧫️fixtures/🛡️profile/🔣️.json";
+import profiles from"../../../../🧪️tests/🧫️fixtures/📸️snapshot/🛡️profile/🔣️.json";
 
 const input={...fixture,xmlParts:fixture.xmlParts.map(part=>({...part,document:parseXmlDocument(part.document)}))} as unknown as XlsxSnapshot;
 function profileSnapshot(plan:typeof profiles.cases[number]):XlsxSnapshot{
@@ -38,11 +38,11 @@ test("XLSX aggregate domain rows include package and XML ownership exactly",asyn
 test("XLSX dangling references and shared OPC/XML owners are refused",async()=>{const database=await xlsxSnapshotToSqliteDatabase(input);for(const[name,row,column,value]of[["xlsx_document",0,2,2n],["xlsx_xml_part",1,4,1n],["xlsx_relationship",0,1,99n],["xlsx_default_content_type",0,2,99n],["xlsx_relationship_owner",1,2,""]]as const){const edited={tables:database.tables.map(table=>table.name!==name?table:{...table,rows:table.rows.map((entry,index)=>index!==row?entry:{...entry,values:entry.values.map((cell,at)=>at===column?value:cell)})})};await expect(xlsxSnapshotFromSqliteDatabase(edited),name).rejects.toThrow();}});
 test("XLSX intrinsic large-part copies have interior ownership cancellation",async()=>{const snapshot=structuredClone(input);snapshot.opc.parts[0]!.bytes=new Array(100000).fill(0x97);const database=await xlsxSnapshotToSqliteDatabase(snapshot);for(const phase of["projectSnapshot","reconstructSnapshot"]as const){const controller=new AbortController();let reached=false;const options={signal:controller.signal,onProgress:(event:{phase:string;completed:number;total:number})=>{if(event.phase===phase&&event.total===100000&&event.completed>=65536&&event.completed<event.total){reached=true;controller.abort();}}};await expect(phase==="projectSnapshot"?xlsxSnapshotToSqliteDatabase(snapshot,options):xlsxSnapshotFromSqliteDatabase(database,options)).rejects.toHaveProperty("kind","canceled");expect(reached).toBe(true);}});
 
-import opcNative from "../../../../../../../../../🎒️zip/📦️opc/🧩️native/🧫️fixtures/🔣️.json";
+import opcNative from "../../../../../../../../../🎒️zip/📦️opc/🧩️native/🧪️tests/🧫️fixtures/🔣️.json";
 
 import Ajv2020 from "ajv/dist/2020";
 import {Buffer}from"node:buffer";
-import nativeLiterals from"../../../../🧬️schema/📸️snapshot/🧫️fixtures/🧩️native-literals/🔣️.json";
+import nativeLiterals from"../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧩️native-literals/🔣️.json";
 
 import artifactDefinition from"../../../../../../../../📜️artifact-definition.json";
 import{createHash}from"node:crypto";
@@ -61,8 +61,8 @@ test("OPC native component fixture exposes literal duplicated defaults and indep
  const model={schema:"literal OPC cursor",opc:p,xmlParts:[]}as unknown as XlsxSnapshot;const database=await xlsxSnapshotToSqliteDatabase(model);expect(database.tables.reduce((sum,table)=>sum+table.rows.length,0)).toBe(opcNative.rows+1);const sql=Database.deserialize(await exportSqliteDatabase(database));try{expect(sql.query("SELECT extension,content_type FROM xlsx_default_content_type ORDER BY ordinal").all()).toEqual([{extension:"XML",content_type:"a"},{extension:"XML",content_type:"b"}]);expect(sql.query("SELECT data AS bytes FROM xlsx_binary_part").get()).toEqual({bytes:Uint8Array.of(0,255)});}finally{sql.close();}
 });
 
-import paidOwner from"../🧫️fixtures/💰️backing/🔣️.json";
-import requestSettlement from"../🧫️fixtures/💰️backing/🔬️requests/🔣️.json";
+import paidOwner from"./🧫️fixtures/💰️backing/🔣️.json";
+import requestSettlement from"./🧫️fixtures/💰️backing/🔬️requests/🔣️.json";
 
 
 test("XLSX neutral ownership roles retain independently measured full fields",async()=>{

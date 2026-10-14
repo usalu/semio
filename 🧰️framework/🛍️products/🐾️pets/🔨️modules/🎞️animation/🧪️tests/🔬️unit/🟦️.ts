@@ -25,7 +25,7 @@ const STEPS = sampled(64, 1024, 4096);
 
 /** 🧫️ One committed fixture of the product. */
 function fixture<T>(name: string): T {
-  return JSON.parse(readFileSync(resolve(HERE, "../../../../🧫️fixtures", name, "🔣️.json"), "utf8")) as T;
+  return JSON.parse(readFileSync(resolve(HERE, "../../../../🧪️tests/🧫️fixtures", name, "🔣️.json"), "utf8")) as T;
 }
 
 type SamplingVectors = {

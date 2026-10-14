@@ -578,6 +578,8 @@ impl host_async_bindings::semio::framework::pure::Host for AsyncActorHostState {
         eprintln!("[actor-async:{}:{level}] {message}", self.actor);
     }
 
+    fn operation_clock_us(&mut self)->Option<u64>{None}
+
     fn now_ms(&mut self) -> i64 {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as i64)
     }
@@ -955,6 +957,7 @@ impl host_async_bindings::semio::framework::pure::HostWithStore<AsyncActorHostSt
 
 /// 🪟️ The actual asynchronous actor state retains its own inline receiving slot.
 impl super::operation::wasmtime::OperationHostStore for AsyncActorHostState {
+    fn operation_clock_us(&mut self)->Option<u64>{host_async_bindings::semio::framework::pure::Host::operation_clock_us(self)}
  fn operation_slot(&mut self)->&mut super::operation::slot::OperationSlot{&mut self.operation_slot}
  fn operation_log(&mut self,level:String,message:String){host_async_bindings::semio::framework::pure::Host::log(self,level,message)}
  fn operation_now_ms(&mut self)->i64{host_async_bindings::semio::framework::pure::Host::now_ms(self)}

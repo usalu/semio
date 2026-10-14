@@ -1,0 +1,6 @@
+{
+  "mutation": "changeStoreyDriftXM",
+  "buildingIndex": 0,
+  "storeyIndex": 1,
+  "newDriftXM": 0.012
+}

@@ -342,7 +342,8 @@ impl ArtifactCommandWork<EditorApp<Block3dPlayApp>> for Block3dWindowPreviewWork
         (targets_world && command.command_id() == self.tool_id).then_some(1)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Block3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Block3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Block3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Block3dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("block3d-window-preview-work-repeated"));
         }
@@ -379,6 +380,9 @@ impl ArtifactCommandWork<EditorApp<Block3dPlayApp>> for Block3dWindowPreviewWork
             emit,
             ephemeral: EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![mutation] },
         })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -777,7 +781,7 @@ impl ArtifactEditor for Block3dPlayApp {
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, snapshot_read:request.snapshot_read, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             Block3dCommand::command_id,
             BLOCK3D_RETAINED_RAW_BYTES,
             BLOCK3D_RETAINED_WORK_ITEMS,
@@ -965,7 +969,7 @@ impl ArtifactEditor for Block3dPlayApp {
                 return Err(MediaError::NotImplemented);
             }
             let media_type = Self::io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.artifact_media_type);
-            let bytes = store::os_store::serialization::ArtifactPack::encode_pack(doc.snapshot);
+            let bytes = pack::snapshot::ArtifactPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
         let fragment = crate::standards::v1::subsets::any::io::puzzle_catalog::puzzle3d_catalog_fragment(doc.snapshot, &[]);

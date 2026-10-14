@@ -18,7 +18,7 @@ use framework_schema::ArtifactSchema;
 use crate::schema::snapshot::{SvgAttr, SvgDocument, SvgNode};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text, xml_document_to_text_checked};
 
-impl store::os_store::serialization::ArtifactDsl for SvgSnapshot {
+impl pack::snapshot::ArtifactDsl for SvgSnapshot {
     const EXTENSION: &'static str = "svg";
     fn envelope_id() -> &'static str {
         "stdio.svg"
@@ -38,7 +38,7 @@ impl store::os_store::serialization::ArtifactDsl for SvgSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = crate::standards::v1_1::subsets::base::io::text::snapshot::encode_snapshot(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }

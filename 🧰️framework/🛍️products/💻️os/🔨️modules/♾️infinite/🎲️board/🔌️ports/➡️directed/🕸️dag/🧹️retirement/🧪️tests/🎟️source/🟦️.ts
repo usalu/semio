@@ -6,7 +6,7 @@ import stable from "fast-json-stable-stringify";
 
 export function testDagSourceCustodyContract(): void {
   const base=resolve(import.meta.dir,"../..");
-  const law=JSON.parse(readFileSync(resolve(base,"🧫️fixtures/🎟️source/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(resolve(base,"🧪️tests/🧫️fixtures/🎟️source/🔣️.json"),"utf8"));
   assert.equal(new Set(law.dagFields).size,law.dagFields.length);
   assert.equal(new Set(law.engineFields).size,law.engineFields.length);
   const text=law.text.repeat(law.repeat);

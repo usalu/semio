@@ -1,0 +1,302 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "original-complete",
+      "value": {
+        "version": 1,
+        "repositoryRoot": "/caller",
+        "artifactDirectory": "/caller/artifacts",
+        "command": {
+          "kind": "native-owner-command",
+          "manifest": "owner/Cargo.toml",
+          "workingDirectory": "owner",
+          "program": "bun",
+          "arguments": [
+            "owner/📜️script.ts",
+            "portable"
+          ]
+        },
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 65536
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 60000
+        },
+        "network": {
+          "offline": true
+        }
+      },
+      "accepted": true
+    },
+    {
+      "id": "missing-version",
+      "value": {
+        "repositoryRoot": "/caller",
+        "artifactDirectory": "/caller/artifacts",
+        "command": {
+          "kind": "native-owner-command",
+          "manifest": "owner/Cargo.toml",
+          "workingDirectory": "owner",
+          "program": "bun",
+          "arguments": [
+            "owner/📜️script.ts",
+            "portable"
+          ]
+        },
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 65536
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 60000
+        },
+        "network": {
+          "offline": true
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-repositoryRoot",
+      "value": {
+        "version": 1,
+        "artifactDirectory": "/caller/artifacts",
+        "command": {
+          "kind": "native-owner-command",
+          "manifest": "owner/Cargo.toml",
+          "workingDirectory": "owner",
+          "program": "bun",
+          "arguments": [
+            "owner/📜️script.ts",
+            "portable"
+          ]
+        },
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 65536
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 60000
+        },
+        "network": {
+          "offline": true
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-artifactDirectory",
+      "value": {
+        "version": 1,
+        "repositoryRoot": "/caller",
+        "command": {
+          "kind": "native-owner-command",
+          "manifest": "owner/Cargo.toml",
+          "workingDirectory": "owner",
+          "program": "bun",
+          "arguments": [
+            "owner/📜️script.ts",
+            "portable"
+          ]
+        },
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 65536
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 60000
+        },
+        "network": {
+          "offline": true
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-command",
+      "value": {
+        "version": 1,
+        "repositoryRoot": "/caller",
+        "artifactDirectory": "/caller/artifacts",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 65536
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 60000
+        },
+        "network": {
+          "offline": true
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-transport",
+      "value": {
+        "version": 1,
+        "repositoryRoot": "/caller",
+        "artifactDirectory": "/caller/artifacts",
+        "command": {
+          "kind": "native-owner-command",
+          "manifest": "owner/Cargo.toml",
+          "workingDirectory": "owner",
+          "program": "bun",
+          "arguments": [
+            "owner/📜️script.ts",
+            "portable"
+          ]
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 60000
+        },
+        "network": {
+          "offline": true
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-child",
+      "value": {
+        "version": 1,
+        "repositoryRoot": "/caller",
+        "artifactDirectory": "/caller/artifacts",
+        "command": {
+          "kind": "native-owner-command",
+          "manifest": "owner/Cargo.toml",
+          "workingDirectory": "owner",
+          "program": "bun",
+          "arguments": [
+            "owner/📜️script.ts",
+            "portable"
+          ]
+        },
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 65536
+        },
+        "network": {
+          "offline": true
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-network",
+      "value": {
+        "version": 1,
+        "repositoryRoot": "/caller",
+        "artifactDirectory": "/caller/artifacts",
+        "command": {
+          "kind": "native-owner-command",
+          "manifest": "owner/Cargo.toml",
+          "workingDirectory": "owner",
+          "program": "bun",
+          "arguments": [
+            "owner/📜️script.ts",
+            "portable"
+          ]
+        },
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 65536
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 60000
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "unauthorised-zero-child",
+      "value": {
+        "version": 1,
+        "repositoryRoot": "/caller",
+        "artifactDirectory": "/caller/artifacts",
+        "command": {
+          "kind": "native-owner-command",
+          "manifest": "owner/Cargo.toml",
+          "workingDirectory": "owner",
+          "program": "bun",
+          "arguments": [
+            "owner/📜️script.ts",
+            "portable"
+          ]
+        },
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 65536
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 0
+        },
+        "network": {
+          "offline": true
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "fractional-transport",
+      "value": {
+        "version": 1,
+        "repositoryRoot": "/caller",
+        "artifactDirectory": "/caller/artifacts",
+        "command": {
+          "kind": "native-owner-command",
+          "manifest": "owner/Cargo.toml",
+          "workingDirectory": "owner",
+          "program": "bun",
+          "arguments": [
+            "owner/📜️script.ts",
+            "portable"
+          ]
+        },
+        "transport": {
+          "maximumBytes": 1.5,
+          "maximumLines": 65536
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 60000
+        },
+        "network": {
+          "offline": true
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "foreign-grant",
+      "value": {
+        "version": 1,
+        "repositoryRoot": "/caller",
+        "artifactDirectory": "/caller/artifacts",
+        "command": {
+          "kind": "native-owner-command",
+          "manifest": "owner/Cargo.toml",
+          "workingDirectory": "owner",
+          "program": "bun",
+          "arguments": [
+            "owner/📜️script.ts",
+            "portable"
+          ]
+        },
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 65536
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 60000
+        },
+        "network": {
+          "offline": true
+        },
+        "authority": "unowned"
+      },
+      "accepted": false
+    }
+  ]
+}

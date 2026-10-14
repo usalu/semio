@@ -3,7 +3,7 @@ import { Buffer } from "node:buffer";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { applyPatch } from "fast-json-patch";
-import fixture from "../../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
 
 test("member constructor admission retains neutral original owners before any unfunded birth", () => {
   for (const row of fixture.cases) {

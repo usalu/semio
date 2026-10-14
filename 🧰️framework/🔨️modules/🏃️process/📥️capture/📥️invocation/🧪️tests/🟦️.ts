@@ -3,11 +3,11 @@ import Ajv from "ajv";
 import { existsSync, mkdtempSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { setImmediate, setTimeout } from "node:timers/promises";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import policySchema from "../../📋️policy/🧬️schema/🔣️.json";
 import { captureOwnedProcess, type OwnedProcessCaptureResult } from "../../🟦️.ts";
 import { type ScriptInvocation } from "../../../🧭️routing/📥️invocation/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
 if (!artifactRoot) throw Error("Original ticket artifact owner required");
@@ -24,7 +24,7 @@ test("a finite original capture stays finite with an explicit zero child ceiling
   const row = corpus.finiteWithoutChildCeiling, started = performance.now(), root = mkdtempSync(join(artifactRoot, "capture-zero-child-")), controller = new AbortController();
   const invocation: ScriptInvocation = { policy: { version: 1, owner: "finite-zero-child", maximumElapsedMilliseconds: row.originalMilliseconds }, capabilities: { artifactDirectory: root }, control: { signal: controller.signal, remainingMilliseconds: () => row.originalMilliseconds - (performance.now() - started), publish() {}, async yieldContinuation() { await setImmediate(); } } };
   const result = await captureOwnedProcess(process.execPath, ["--eval", "process.stdout.write('ready');setInterval(()=>{},1000)"], { invocation, cwd: root, env: process.env, budgetMs: row.childMilliseconds, maxOutputBytes: row.maximumOutputBytes, stdoutPath: join(root, "stdout"), stderrPath: join(root, "stderr") });
-  expect(result.reason).toBe(row.reason);
+  expect(result.reason === row.reason).toBe(true);
   expect(result.stdout).toBe("ready");
   expect(performance.now() - started).toBeLessThan(row.maximumObservedMilliseconds);
   console.log("[DEBUG] Original finite capture expired through same remaining port with zero extra child ceiling");

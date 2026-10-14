@@ -198,7 +198,7 @@ fn physical_byte_order_options_preserve_owned_large_sample_identity() {
 #[test]
 fn payload_detail_edits_publish_the_exact_requested_value() {
     register_document_schema();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧫️fixtures/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json"))).unwrap();
     let mut snapshot = crate::schema::blank_tiff_snapshot();
     snapshot.ifds[0].entries.push(TiffTag{tag:65000,values:crate::schema::snapshot::TiffValues::Undefined(vec![7,9])});
     let payload_path=format!("/ifds/0/entries/{}/values/value",snapshot.ifds[0].entries.len()-1);

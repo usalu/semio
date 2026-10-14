@@ -21,7 +21,7 @@ fn document(width:u32,height:u32,pixels:Vec<u8>)->RasterSnapshot {
 
 #[test]
 fn export_pages_match_neutral_base64_vectors() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(BASE64_INPUT_BYTES,fixture["base64InputBytesPerGrant"].as_u64().unwrap() as usize);assert_eq!(ArtifactOutputChunks::CHUNK_BYTES,fixture["outputChunkBytes"].as_u64().unwrap() as usize);
     for row in fixture["base64Cases"].as_array().unwrap() {let bytes:Vec<u8>=serde_json::from_value(row["bytes"].clone()).unwrap();assert_eq!(String::from_utf8(base64_output_page(&bytes).unwrap()).unwrap(),row["expected"].as_str().unwrap());}
     for row in fixture["boundaryLengths"].as_array().unwrap() {let bytes:Vec<u8>=(0..row.as_u64().unwrap() as usize).map(|i|i as u8).collect();let mut output=Vec::new();for part in bytes.chunks(BASE64_INPUT_BYTES){let chunk=base64_output_page(part).unwrap();assert!(chunk.len()<=ArtifactOutputChunks::CHUNK_BYTES);output.extend(chunk);}assert_eq!(String::from_utf8(output).unwrap(),base64_codec::base64_standard_encode(bytes));}
@@ -30,7 +30,7 @@ fn export_pages_match_neutral_base64_vectors() {
 
 #[test]
 fn export_work_preserves_rgba_and_yields_each_stage() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let image=&fixture["image"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let image=&fixture["image"];
     let pixels:Vec<u8>=serde_json::from_value(image["pixels"].clone()).unwrap();let document=document(2,2,pixels.clone());
     let mut work=ImageExportWork::default();assert!(work.advance(&document,0).unwrap().is_none());assert!(work.preparing.is_none());
     let mut stages=std::collections::BTreeSet::new();let mut output=Vec::new();
@@ -73,7 +73,7 @@ async fn retained_image_export_completes_or_cancels_without_mutating_history() {
 
 #[test]
 fn export_progress_uses_neutral_localized_stage_labels() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for stage in fixture["stages"].as_array().unwrap() {let bytes=progress_payload(stage.as_str().unwrap(),7);let payload:serde_json::Value=serde_json::from_slice(&bytes).unwrap();assert_eq!(payload["stage"],*stage);assert_eq!(payload["completedUnits"],7);for locale in ["en","de"]{assert_eq!(payload[locale],fixture["labels"][stage.as_str().unwrap()][locale]);}}
 }
 
@@ -93,7 +93,7 @@ async fn retained_export_refuses_a_superseded_document_and_retires_its_output() 
 async fn png_command_download_survives_operation_retirement_and_preserves_history() {
     use semio_framework_plugin::{PluginApp,artifact_app_laws,app::TypedOperationResultLane};
     use crate::editor::raster::{unit_tests::context,RasterCommand,commands::{add_layer,export_png}};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let expected=&fixture["download"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let expected=&fixture["download"];
     let command=<RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action(expected["action"].as_str().unwrap(),None).unwrap();assert!(matches!(command,RasterCommand::ExportPng(_)));
     store::os_store::test_support::assert_op_text_binary_equivalence(&command);
     let mut app=context::app().await;context::dispatch(&mut app,RasterCommand::AddLayer(add_layer::AddLayer {kind:"pixel".into()})).await;

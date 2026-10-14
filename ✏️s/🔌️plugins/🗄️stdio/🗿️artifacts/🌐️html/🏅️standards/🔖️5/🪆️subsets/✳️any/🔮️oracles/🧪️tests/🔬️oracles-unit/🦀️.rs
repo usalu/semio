@@ -1,7 +1,7 @@
 mod tests {
     use super::*;
 
-    const REAL_FIXTURE: &[u8] = include_bytes!("../../../🧫️fixtures/🏚️zukunft-bau-entwerfen-mit-bestand/🌐️.html");
+    const REAL_FIXTURE: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/🏚️zukunft-bau-entwerfen-mit-bestand/🌐️.html");
 
     fn obj(pairs: Vec<(&str, Json)>) -> Json {
         Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())

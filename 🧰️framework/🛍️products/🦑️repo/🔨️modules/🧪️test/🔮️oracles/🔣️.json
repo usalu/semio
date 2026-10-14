@@ -25,7 +25,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "homepage": "https://github.com/tree-sitter/tree-sitter/tree/master/lib/binding_web",
-      "rationale": "The independent syntax-tree reading of every label site in `🧪️tests/🧪️mutation-history-gates`: the `schema mutation-labels` token gate and the tree-sitter-rust parse must give the same verdict on every corpus case of `🧫️fixtures/🧫️mutation-labels`."
+      "rationale": "The independent syntax-tree reading of every label site in `🧪️tests/🧪️mutation-history-gates`: the `schema mutation-labels` token gate and the tree-sitter-rust parse must give the same verdict on every corpus case of `🧪️tests/🧫️fixtures/🧫️mutation-labels`."
     },
     {
       "id": "mutation-label-tree-sitter-rust-grammar",

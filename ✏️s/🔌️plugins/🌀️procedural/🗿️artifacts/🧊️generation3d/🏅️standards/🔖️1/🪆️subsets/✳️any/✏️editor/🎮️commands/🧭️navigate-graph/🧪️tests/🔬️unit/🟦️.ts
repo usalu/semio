@@ -71,7 +71,7 @@ function stepTarget(fixture: NavigationFixture, order: readonly string[], select
 
 /** 🧭️ Answers every row of the shared fixture, returning how many assertions it carried. */
 export function generation3dGraphKeyboardSelfTests(): number {
-  const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("../../../../../🧫️fixtures/🧭️graph-keyboard-navigation.json", import.meta.url)), "utf8")) as NavigationFixture;
+  const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("../../../../../🧪️tests/🧫️fixtures/🧭️graph-keyboard-navigation.json", import.meta.url)), "utf8")) as NavigationFixture;
   let checks = 0;
 
   const order = readingOrder(fixture.graph.nodes);

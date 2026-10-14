@@ -1,0 +1,30 @@
+{
+  "packs": [
+    {
+      "text": "0",
+      "snapshot": 0
+    },
+    {
+      "text": " 0 ",
+      "snapshot": 0
+    },
+    {
+      "text": "-42",
+      "snapshot": -42
+    },
+    {
+      "text": "9223372036854775807",
+      "snapshot": 9223372036854775807
+    }
+  ],
+  "control": {
+    "packBytes": 4096,
+    "encodeBytes": 8192
+  },
+  "invalidHex": [
+    "",
+    "7",
+    "7B",
+    "zz"
+  ]
+}

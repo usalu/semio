@@ -1,6 +1,6 @@
 use super::*;
 
-fn fixture_compute_grant()->semio_framework_job::RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧮️compute-retained/🔣️.json")).unwrap();serde_json::from_value(law["callerGrant"].clone()).unwrap()}
+fn fixture_compute_grant()->semio_framework_job::RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧮️compute-retained/🔣️.json")).unwrap();serde_json::from_value(law["callerGrant"].clone()).unwrap()}
 
 fn fixture_io_retirement_permits(demand:semio_framework_value::RetirementDemand,grant:RetainedCloneGrant){
     assert!(demand.copy_bytes<=grant.maximum_copy_bytes);
@@ -60,10 +60,12 @@ fn materialize_test_value(value: NativeIoValue) -> TestNativeIoValue {
 
 fn run(request: NativeIoRequest) -> Result<TestNativeIoValue, String> {
     let grant = fixture_compute_grant();
+    let operation=semio_framework_job::allocate_operation_id();let generation=semio_framework_job::Generation(1);
+    let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(operation,generation,grant,semio_framework_job::default_now_us,u64::MAX,1);
     let params = semio_framework_job::BatchJobParams {
-        operation: semio_framework_job::allocate_operation_id(),
-        generation: semio_framework_job::Generation(1),
-        cancel: semio_framework_job::root_cancel_token(),
+        operation,
+        generation,
+        cancel: caller.admit_alias(grant),
         config: semio_framework_job::BatchDriveConfig {
             retained: grant,
             site: "native_io_test",
@@ -117,11 +119,12 @@ fn run(request: NativeIoRequest) -> Result<TestNativeIoValue, String> {
         if session.terminal_is_empty() { break; }
         let grant = fixture_compute_grant();
         fixture_io_retirement_permits(session.retirement_demands(grant.maximum_copy_bytes).expect("original session demand"), grant);
-        let step = session.close_step(grant);
+        let step = caller.close_owner(grant,&mut session).unwrap();
         assert!(step.progress().fits(grant));
-        assert!(!matches!(step, semio_framework_job::WorkerJobCloseStep::Refused{..}));
+        assert_eq!(step.progress(),caller.receipt());
     }
     assert!(session.terminal_is_empty());
+    caller.retire(grant);
     result
 }
 
@@ -139,6 +142,7 @@ fn resident_memory_observation_does_not_spawn_a_process() {
 
 #[test]
 fn path_set_max_plus_one_identity_zero_grant_and_job_close_are_exact() {
+    let source=fixture_compute_grant();let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),source,semio_framework_job::default_now_us,u64::MAX,1);
     let mut paths = NativePathSet::new();
     for index in 0..NATIVE_IO_PATH_CAPACITY {
         paths.try_push(PathBuf::from(format!("/retained-native-path-{index:04}"))).expect("fixed path capacity");
@@ -150,15 +154,15 @@ fn path_set_max_plus_one_identity_zero_grant_and_job_close_are_exact() {
     drop(returned);
     let mut job = NativeIoJob::new(NativeIoRequest::Modified(paths));
     job.begin_close();
-    assert_eq!(job.close_step(RetainedCloneGrant::default()), InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::WorkLimit,progress:Default::default()});
+    assert_eq!(caller.turn(RetainedCloneGrant::default(),|cx|job.close_step(cx)).unwrap(),InteractiveJobCloseStep::Pending{progress:Default::default()});
     let mut released = 0;
     while !job.terminal_is_empty() {
-        if let InteractiveJobCloseStep::Pending { progress } = job.close_step(native_io_close_grant()) {
+        if let InteractiveJobCloseStep::Pending { progress } = caller.turn(native_io_close_grant(),|cx|job.close_step(cx)).unwrap() {
             assert!(progress.copied_items <= 1);
             released += progress.copied_items;
         }
     }
-    assert!(released >= NATIVE_IO_PATH_CAPACITY);
+    assert!(released >= NATIVE_IO_PATH_CAPACITY);caller.retire(source);
 }
 
 #[test]
@@ -188,6 +192,7 @@ fn chunked_read_write_scan_and_modified_round_trip() {
 
 #[test]
 fn close_preserves_original_empty_path_and_error_backing_until_exact_release() {
+    let source=fixture_compute_grant();let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),source,semio_framework_job::default_now_us,u64::MAX,1);
     let mut path = PathBuf::with_capacity(128);
     path.push("original"); path.clear();
     let pointer = path.as_os_str().as_encoded_bytes().as_ptr();
@@ -196,25 +201,26 @@ fn close_preserves_original_empty_path_and_error_backing_until_exact_release() {
     job.begin_close();
     assert_eq!(job.next_close_release_byte_demand().unwrap(), capacity);
     let granted = RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: capacity, maximum_depth: 1, ..RetainedCloneGrant::default() };
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧮️compute-retained/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧮️compute-retained/🔣️.json")).unwrap();
     for (index,denied) in [RetainedCloneGrant { maximum_items: 0, ..granted }, RetainedCloneGrant { maximum_release_bytes: capacity - 1, ..granted }, RetainedCloneGrant { maximum_depth: 0, ..granted }].into_iter().enumerate() {
-        let refusal=match fixture["nativeIoDenials"][index]["refusal"].as_str().unwrap(){"WorkLimit"=>ValueRefusalKind::WorkLimit,"OwnershipLimit"=>ValueRefusalKind::OwnershipLimit,"DepthLimit"=>ValueRefusalKind::DepthLimit,_=>panic!("canonical Native I/O denial class")};
-        assert_eq!(job.close_step(denied), InteractiveJobCloseStep::Refused{kind:refusal,progress:Default::default()});
+        assert_eq!(fixture["nativeIoDenials"][index]["progress"],serde_json::json!({"copiedItems":0,"copiedBytes":0,"retainedCapacityBytes":0,"releasedBytes":0}));
+        assert_eq!(caller.turn(denied,|cx|job.close_step(cx)).unwrap(), InteractiveJobCloseStep::Pending{progress:Default::default()});
         assert_eq!(job.retained_request_backing_identity(), Some(pointer));
         assert_eq!(job.next_close_release_byte_demand().unwrap(), capacity);
     }
-    assert_eq!(job.close_step(granted).progress(), RetainedCloneProgress { copied_items: 1, released_bytes: capacity, ..RetainedCloneProgress::default() });
+    assert_eq!(caller.turn(granted,|cx|job.close_step(cx)).unwrap().progress(), RetainedCloneProgress { copied_items: 1, released_bytes: capacity, ..RetainedCloneProgress::default() });
     let mut error = String::with_capacity(256);error.push_str("failed");error.clear();
     let capacity = error.capacity();let pointer = error.as_ptr();
     job.state = NativeIoState::Finished;job.result = Some(Err(error));
     let denied = RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: capacity - 1, maximum_depth: 1, ..RetainedCloneGrant::default() };
-    assert_eq!(job.close_step(denied), InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::OwnershipLimit,progress:Default::default()});
+    assert_eq!(caller.turn(denied,|cx|job.close_step(cx)).unwrap(),InteractiveJobCloseStep::Pending{progress:Default::default()});
     assert_eq!(job.result.as_ref().unwrap().as_ref().unwrap_err().as_ptr(), pointer);
-    let step = job.close_step(RetainedCloneGrant { maximum_release_bytes: capacity, ..denied });
+    let step = caller.turn(RetainedCloneGrant { maximum_release_bytes: capacity, ..denied },|cx|job.close_step(cx)).unwrap();
     assert_eq!(step.progress().released_bytes, capacity);
     assert_eq!(job.result.as_ref().unwrap().as_ref().unwrap_err().capacity(), 0);
     assert!(!job.terminal_is_empty());
-    assert_eq!(job.close_step(RetainedCloneGrant { maximum_items: 1, maximum_depth: 1, ..RetainedCloneGrant::default() }).progress().copied_items, 1);
+    assert_eq!(caller.turn(RetainedCloneGrant { maximum_items: 1, maximum_depth: 1, ..RetainedCloneGrant::default() },|cx|job.close_step(cx)).unwrap().progress().copied_items, 1);
     assert!(job.terminal_is_empty());
+    caller.retire(source);
     println!("[DEBUG] native IO original empty PathBuf/String backing retained on zero item/depth and one-below physical release; exact capacities and separate result terminal turn");
 }

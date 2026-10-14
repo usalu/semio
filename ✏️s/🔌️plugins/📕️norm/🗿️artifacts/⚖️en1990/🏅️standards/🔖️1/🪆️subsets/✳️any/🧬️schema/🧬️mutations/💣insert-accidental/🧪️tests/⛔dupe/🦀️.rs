@@ -7,10 +7,10 @@
 fn insert_accidental_dupe() {
     super::assert_vector(super::Vector {
         kind: "insert-accidental",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/💣insert-accidental/⛔dupe/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/💣insert-accidental/⛔dupe/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/💣insert-accidental/⛔dupe/📸️snapshot/➡️after/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💣insert-accidental/⛔dupe/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💣insert-accidental/⛔dupe/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💣insert-accidental/⛔dupe/📸️snapshot/➡️after/🔣️.json"),
         diff: None,
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/💣insert-accidental/⛔dupe/🎯️outcome/🔣️.json"),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💣insert-accidental/⛔dupe/🎯️outcome/🔣️.json"),
     });
 }

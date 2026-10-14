@@ -5,8 +5,11 @@
     "includedScripts": []
   },
   "scripts": {
-    
     "test-command-ingress-consumer": "nx run @semio-tech/framework-plugin:test-command-ingress-consumer",
-    "test-snapshot-sqlite-admission": "nx run @semio-tech/framework-plugin:test-snapshot-sqlite-admission"
+    "test-snapshot-sqlite-admission": "nx run @semio-tech/framework-plugin:test-snapshot-sqlite-admission",
+    "test-original-job-native": "nx run @semio-tech/framework-plugin:test-original-job-native"
+  },
+  "devDependencies": {
+    "@semio-tech/process": "workspace:*"
   }
 }

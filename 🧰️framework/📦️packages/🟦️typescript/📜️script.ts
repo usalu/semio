@@ -1,28 +1,29 @@
 #!/usr/bin/env bun
-import { typecheckProject } from "../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️typescript/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { resolve as compilerStatePath } from "node:path";
+import { typecheckProject } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧰️ `@semio-tech/framework` router: `bun ./📜️script.ts test`. */
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { runVitestV1, readVitestPolicyV1 } from "../../🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
-import { runOwnedCommand } from "../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import { cmdBudgetMs } from "../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { runVitestV1, readVitestPolicyV1 } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
+import { runOwnedCommand } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { cmdBudgetMs } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 function retainedUiNativeStripOnly(): void {
   const source = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts", import.meta.url).href;
   const numeric = new URL("../../🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts", import.meta.url).href;
-  const fixture = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧫️fixtures/🌳️owned-nodes/🔣️.json", import.meta.url).href;
+  const fixture = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🌳️owned-nodes/🔣️.json", import.meta.url).href;
   const validation = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🟦️.ts", import.meta.url).href;
   const nodes = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🗂️nodes/🟦️.ts", import.meta.url).href;
-  const validationFixture = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧫️fixtures/🛡️owned-validation/🔣️.json", import.meta.url).href;
+  const validationFixture = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🛡️owned-validation/🔣️.json", import.meta.url).href;
   const hash = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔢️hash/🟦️.ts", import.meta.url).href;
-  const hashFixture = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧫️fixtures/🔏️owned-hash/🔣️.json", import.meta.url).href;
+  const hashFixture = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🔏️owned-hash/🔣️.json", import.meta.url).href;
   const readLease = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📖️read-lease/🟦️.ts", import.meta.url).href;
-  const readLeaseFixture = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧫️fixtures/🎟️read-lease/🔣️.json", import.meta.url).href;
+  const readLeaseFixture = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🎟️read-lease/🔣️.json", import.meta.url).href;
   const program = `
     import assert from "node:assert/strict";
     import { createHash } from "node:crypto";
@@ -384,7 +385,7 @@ class TestScript extends BundleScript {
 /** 🔎️ Type-checks every `🧰️framework/🔨️modules/**` and `🧰️framework/📦️packages/**` source file against `tsconfig.json`. */
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await typecheckProject({ workspace: this.repoRoot, cwd: this.root, project: "tsconfig.json", owner: "framework:typescript", args: segments, timeoutMs: 120_000, execution: { signal: this.invocation.control.signal } });
+    await typecheckProject({ workspace: this.repoRoot, stateRoot: compilerStatePath(this.repoRoot, ".cache", "framework"), leaseDirectory: compilerStatePath(this.repoRoot, ".cache", "framework", "leases"), invocation: this.invocation, cwd: this.root, project: "tsconfig.json", owner: "framework:typescript", args: segments, timeoutMs: 120_000 });
   }
 }
 

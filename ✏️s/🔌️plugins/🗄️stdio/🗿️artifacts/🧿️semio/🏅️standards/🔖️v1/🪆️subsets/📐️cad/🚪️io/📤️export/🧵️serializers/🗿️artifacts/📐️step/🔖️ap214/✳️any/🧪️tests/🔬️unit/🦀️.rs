@@ -22,8 +22,8 @@ async fn real_text_round_trip_through_step_codec() {
     assert_eq!(step.header.file_schema.schemas, vec!["AUTOMOTIVE_DESIGN".to_string()]);
     assert_eq!(step.entities.len(), 7, "4 for LINE + 3 for CIRCLE; Text is dropped");
 
-    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&step);
-    let reparsed = <StepSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("reparse real step text");
+    let text = pack::snapshot::ArtifactDsl::print_dsl(&step);
+    let reparsed = <StepSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("reparse real step text");
     assert_eq!(reparsed, step, "step's own codec_retention_law must hold on our emitted graph");
 
     let line_count = reparsed.entities.iter().filter(|e| e.name == "LINE").count();

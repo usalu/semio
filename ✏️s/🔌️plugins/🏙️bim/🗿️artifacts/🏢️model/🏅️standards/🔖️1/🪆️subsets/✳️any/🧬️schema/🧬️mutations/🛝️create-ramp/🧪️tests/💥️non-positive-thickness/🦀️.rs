@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🛝️create-ramp/💥️non-positive-thickness",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛝️create-ramp/💥️non-positive-thickness/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛝️create-ramp/💥️non-positive-thickness/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛝️create-ramp/💥️non-positive-thickness/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛝️create-ramp/💥️non-positive-thickness/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛝️create-ramp/💥️non-positive-thickness/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛝️create-ramp/💥️non-positive-thickness/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛝️create-ramp/💥️non-positive-thickness/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛝️create-ramp/💥️non-positive-thickness/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛝️create-ramp/💥️non-positive-thickness/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛝️create-ramp/💥️non-positive-thickness/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

@@ -1,16 +1,8 @@
 #!/usr/bin/env bun
-import {cargoPreparationStorageFromEnvironmentV1} from "./📦️storage/🟦️.ts";
-import {withPreparedCargoDependencyPairV1} from "./🟦️.ts";
-import {runOwnedCommand} from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import {randomBytes,createHash} from "node:crypto";
+import {createHash} from "node:crypto";
 import {readFileSync} from "node:fs";
 import {dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
 import {cargoPreparationInputV1,cargoPreparationSourceRootV1,cargoPreparationProgramRootV1,type CargoPreparationInputV1,type CargoPreparationResolutionV1} from "./🧾️custody/🟦️.ts";
-import {acquireQueuedResourceLease} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {receiveScriptProcessInvocation} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import {Script,ScriptRouter} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import {getWorkspaceRoot} from "../../🟦️.ts";
-import {cargoWorkspaceForManifest,prepareCargoOwners,publishCargoWorkspaceMembership,logCargoPreparationDiagnosticV1} from "../🟦️.ts";
 
 /** 📚️ Captures a program closure in one fresh resolver process. */
 function captureProgram(root:string,entry:string):Readonly<{sourceRoot:string;sources:readonly CargoPreparationInputV1[];resolverInputs:readonly CargoPreparationInputV1[];inputs:readonly CargoPreparationInputV1[];resolutions:readonly CargoPreparationResolutionV1[]}> {
@@ -26,32 +18,6 @@ function captureProgram(root:string,entry:string):Readonly<{sourceRoot:string;so
  return{sourceRoot,sources:[...files.values()],resolverInputs:[...resolverConfiguration.values()],inputs:[...configuration.values()],resolutions};
 }
 
-/** 🛠️ Prepares the selected authored Cargo owner under its exclusive cancellable lease. */
-export class PreparationScript extends Script {
-  async run(args: string[]): Promise<void> {
-    if(args.length<2 || args[0]!=="--manifest" || (args.length-2)%2 || args.slice(2).some((value,index)=>index%2===0?value!=="--package":!value))throw new Error("prepare --manifest <selected-scope> [--package <name>...]");
-    const names=args.filter((_,index)=>index>=3 && index%2===1);
-    const controller=new AbortController(), stop=():void=>controller.abort();process.once("SIGINT",stop);process.once("SIGTERM",stop);
-    let lease: Awaited<ReturnType<typeof acquireQueuedResourceLease>> | undefined;
-    try { const waiting=performance.now();lease=await acquireQueuedResourceLease({directory:cargoPreparationStorageFromEnvironmentV1(process.env).directory,resource:`cargo-preparation:${this.root}`,mode:"exclusive",owner:randomBytes(16).toString("base64url"),signal:controller.signal,onWait:process.env.SEMIO_CARGO_PREPARATION_TIMING==="1"?()=>logCargoPreparationDiagnosticV1("lease-wait",args[1]!,performance.now()-waiting,1):undefined});
-    logCargoPreparationDiagnosticV1("lease",args[1]!,performance.now()-waiting,1);
-    const scope=cargoWorkspaceForManifest(this.root,args[1]!);prepareCargoOwners(this.root,scope,names);const publishing=performance.now();const changed=publishCargoWorkspaceMembership(this.root,cargoWorkspaceForManifest(this.root,scope.manifest),"write");logCargoPreparationDiagnosticV1("publication",scope.manifest,performance.now()-publishing,Number(changed)); }
-    finally { lease?.release();process.off("SIGINT",stop);process.off("SIGTERM",stop); }
-  }
-}
-
-/** 🔗️ Synchronizes the actual selected owner lock after one fresh local recipe closure. */
-export class SynchronizeScript extends Script {
- async run(args:string[]):Promise<void> {
-  if(args.length<2||args[0]!=="--manifest"||(args.length-2)%2||args.slice(2).some((value,index)=>index%2===0?value!=="--package":!value))throw Error("synchronize --manifest <selected-owner> [--package <name>...]");
-  const packages=args.filter((_,index)=>index>=3&&index%2===1);if(new Set(packages).size!==packages.length)throw Error("Duplicate selected Cargo package");
-  const controller=new AbortController();let cancelled:NodeJS.Signals|undefined;
-  const stop=(signal:NodeJS.Signals):void=>{cancelled??=signal;controller.abort();};const interrupt=():void=>stop("SIGINT"),terminate=():void=>stop("SIGTERM");process.once("SIGINT",interrupt);process.once("SIGTERM",terminate);
-  try {const owner=cargoWorkspaceForManifest(this.root,args[1]!);await withPreparedCargoDependencyPairV1(cargoPreparationStorageFromEnvironmentV1(process.env),this.root,owner.manifest,controller.signal,(argv,cwd,signal)=>runOwnedCommand("cargo",argv,cwd,"cargo:selected-dependencies",0,{signal}),[],packages);}
-  catch(error){if(!cancelled)throw error;process.exitCode=cancelled==="SIGINT"?130:143;}
-  finally{process.off("SIGINT",interrupt);process.off("SIGTERM",terminate);}
- }
-}
 
 if(import.meta.main){
  if(process.argv[2]==="capture-program"){
@@ -60,5 +26,5 @@ if(import.meta.main){
   if(process.argv.length!==3)throw Error("resolve-program accepts only its owned input stream");
   const edges=JSON.parse(await Bun.stdin.text());if(!Array.isArray(edges)||edges.some(edge=>typeof edge.source!=="string"||typeof edge.specifier!=="string"))throw Error("Invalid program resolution request");
   console.log(JSON.stringify(edges.map(edge=>Bun.resolveSync(edge.specifier,dirname(edge.source)))));
- }else await receiveScriptProcessInvocation(process.env,original=>new ScriptRouter(getWorkspaceRoot()).register("prepare",PreparationScript).register("synchronize",SynchronizeScript).run(process.argv.slice(2),original));
+ }else throw Error("Select capture-program or resolve-program");
 }

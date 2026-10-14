@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn retained_paged_list_owner_page_ceiling_preserves_order_and_exact_retirement() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📏️owner-page-ceiling.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️owner-page-ceiling.json")).unwrap();
     let ceiling = fixture["ownerPayloadPageBytes"].as_u64().unwrap() as usize;
     for invalid in fixture["invalidPayloadPageBytes"].as_array().unwrap() {
         assert_eq!(PagedList::<u64, 200>::with_payload_page_bytes(invalid.as_u64().unwrap() as usize).err().unwrap().kind, PagedListRefusalKind::OwnershipLimit);
@@ -52,7 +52,7 @@ fn retained_paged_list_owner_page_ceiling_preserves_order_and_exact_retirement()
 
 #[test]
 fn retained_paged_list_neutral_order_capacity_and_close() {
-    let data: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let data: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let grant = data["maximumPageBytes"].as_u64().unwrap() as usize;
     let mut list = PagedList::<u64, 600>::default();
     let mut admitted = 0;
@@ -127,7 +127,7 @@ fn retained_paged_list_capacity_admission_and_exact_release_grants() {
 #[test]
 fn paged_child_source_returns_genuine8194_backing_to_parent_without_physical_credit(){
     use crate::retirement::allocation_return::{ParentAllocationReturn,AllocationReturnStep};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🏠️parent-return.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🏠️parent-return.json")).unwrap();
     let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;
     let exact=fixture["wireBytes"].as_u64().unwrap()as usize;
     let mut source=PagedList::<u8,8194>::empty();
@@ -174,7 +174,7 @@ fn paged_child_source_returns_genuine8194_backing_to_parent_without_physical_cre
 #[test]
 fn paged_actual_height_preserves_maximum_authority_pointer_and_parent_handoff(){
     use crate::retirement::allocation_return::{ParentAllocationReturn,AllocationReturnStep};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🌳️actual-height.json")).unwrap();assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["maximumBytes"],4096);assert_eq!(fixture["ownerWords"],7);assert_eq!(size_of::<PagedList<u64,{isize::MAX as usize}>>(),7*size_of::<usize>());
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🌳️actual-height.json")).unwrap();assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["maximumBytes"],4096);assert_eq!(fixture["ownerWords"],7);assert_eq!(size_of::<PagedList<u64,{isize::MAX as usize}>>(),7*size_of::<usize>());
     let mut scalar=PagedList::<u64,{isize::MAX as usize}>::empty();let mut allocations=0;while !scalar.has_reserved_slot(){let required=scalar.next_allocation_bytes().unwrap();assert!(required<=4096);let step=scalar.reserve_one(4096).unwrap();assert!(step.progressed);assert_eq!(step.allocated_bytes,required);allocations+=1;}assert!(scalar.push_reserved(fixture["scalar"].as_u64().unwrap()).is_ok());assert!(allocations<=2,"one scalar preallocated maximum-height scaffolding");assert!(scalar.allocated_bytes()<=8192);assert_eq!(scalar[0],7);scalar.pop();while !scalar.terminal_is_empty(){assert!(scalar.release_empty_page(4096).unwrap().progressed)}
     for bytes in fixture["growthPayloadBytes"].as_array().unwrap(){
         let length=bytes.as_u64().unwrap()as usize;let mut owner=PagedList::<u8,{isize::MAX as usize}>::empty();let mut first=None;assert_eq!(owner.next_push_depth_demand().unwrap_err().kind,PagedListRefusalKind::OwnershipLimit);let mut depths=Vec::new();
@@ -193,7 +193,7 @@ fn paged_actual_height_preserves_maximum_authority_pointer_and_parent_handoff(){
 #[test]
 fn paged_formatted_exact_extent_preserves_full_source_and_four_locale_cells_at_original_64k(){
     use crate::{NativeEncodeControl,paged_text::{PagedText,InlineTextBuffer,TextReadSource,write_encoding_format},ErasedSnapshotRetirement,retained_clone::RetainedCloneStep};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🏷️formatted-exact-extent.json")).unwrap();assert_eq!(fixture["maximumAllocationBytes"],65536);assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["maximumBytes"],4096);assert_eq!(fixture["payloadBytes"],8194);assert_eq!(fixture["originalWireBytes"],8194);
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🏷️formatted-exact-extent.json")).unwrap();assert_eq!(fixture["maximumAllocationBytes"],65536);assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["maximumBytes"],4096);assert_eq!(fixture["payloadBytes"],8194);assert_eq!(fixture["originalWireBytes"],8194);
     struct Wire;impl TextReadSource for Wire{fn byte_len(&self)->usize{8194}fn byte_at(&self,index:usize)->Option<u8>{if index>=8194{None}else{Some(if index==0{b'1'}else if index==1{b'7'}else{b' '})}}}
     let value="x".repeat(8194);let pointer=value.as_ptr();let mut owners:[PagedText<{isize::MAX as usize}>;5]=std::array::from_fn(|_|PagedText::empty());let mut inlines:[InlineTextBuffer;5]=std::array::from_fn(|_|InlineTextBuffer::empty());let mut paged=[false;5];let mut allow=|_|true;let mut control=NativeEncodeControl::new(65536,&mut allow);let mut refusal=None;
     if let Err(error)=owners[0].read_from_encoding_source(&Wire,&mut control){refusal=Some(error);}
@@ -207,7 +207,7 @@ fn paged_formatted_exact_extent_preserves_full_source_and_four_locale_cells_at_o
 #[test]
 fn paged_formatted_exact_extent_retains_every_refused_prefix_and_complete_utf8_borrow(){
     use crate::{NativeEncodeControl,native_encoding::NativeEncodeProgress,paged_text::{PagedText,InlineTextBuffer,write_encoding_format},ErasedSnapshotRetirement,retained_clone::RetainedCloneStep};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/❌️formatted-exact-extent.json")).unwrap();assert_eq!(fixture["sourceBytes"],8194);assert_eq!(fixture["maximumAllocationBytes"],65536);assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["maximumBytes"],4096);assert_eq!(fixture["initialAllocationBytes"],4096);assert_eq!(fixture["interiorBytes"],256);
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/❌️formatted-exact-extent.json")).unwrap();assert_eq!(fixture["sourceBytes"],8194);assert_eq!(fixture["maximumAllocationBytes"],65536);assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["maximumBytes"],4096);assert_eq!(fixture["initialAllocationBytes"],4096);assert_eq!(fixture["interiorBytes"],256);
     struct Changed<'a>{calls:std::cell::Cell<usize>,first:&'a str,second:&'a str}
     impl std::fmt::Display for Changed<'_>{fn fmt(&self,output:&mut std::fmt::Formatter<'_>)->std::fmt::Result{let call=self.calls.get();self.calls.set(call+1);output.write_str(if call==0{self.first}else{self.second})}}
     struct Refused;impl std::fmt::Display for Refused{fn fmt(&self,output:&mut std::fmt::Formatter<'_>)->std::fmt::Result{output.write_str("short")?;Err(std::fmt::Error)}}
@@ -226,7 +226,7 @@ fn paged_formatted_exact_extent_retains_every_refused_prefix_and_complete_utf8_b
 #[test]
 fn paged_list_exact_final_extent_preserves_original_8194_and_parent_authority(){
     use crate::{NativeEncodeControl,retirement::allocation_return::{ParentAllocationReturn,AllocationReturnStep}};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📏️exact-final-extent.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📏️exact-final-extent.json")).unwrap();
     assert_eq!(fixture["ownerWords"],7);assert_eq!(fixture["sourceBytes"],8194);assert_eq!(fixture["sourceCount"],5);assert_eq!(fixture["maximumAllocationBytes"],65536);assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["maximumBytes"],4096);assert_eq!(size_of::<PagedList<u8,{isize::MAX as usize}>>(),7*size_of::<usize>());
     let mut allow=|_|true;let mut control=NativeEncodeControl::new(65536,&mut allow);let mut owners:[PagedList<u8,{isize::MAX as usize}>;5]=std::array::from_fn(|_|PagedList::empty());let mut pointers=[None;5];let mut total=0;
     for(ordinal,owner)in owners.iter_mut().enumerate(){

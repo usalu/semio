@@ -1,0 +1,121 @@
+{
+  "limits": {
+    "decodedItemBytes": 67108864,
+    "slotCapacity": 4,
+    "poolBytes": 268435456,
+    "leaseCapacityPerSlot": 64,
+    "encodedByteCapacity": 16777216,
+    "sourcePixelCapacity": 16777216,
+    "activeWorkerDecodeCapacity": 1,
+    "activePageDecodeCapacity": 1,
+    "activeNativeDecodeCapacity": 1,
+    "workerBitmapBytes": 67108864,
+    "workerCanvasBytes": 67108864,
+    "pageBitmapBytes": 67108864,
+    "nativeDecodeBytes": 67108864,
+    "readbackChunkBytes": 1048576,
+    "uploadChunkBytes": 1048576,
+    "retireChunkBytes": 1048576,
+    "liveUploadPerSurface": 1,
+    "gpuResidentBytes": 268435456
+  },
+  "profiles": [
+    {
+      "id": "reference-image-map-v1",
+      "consumer": "reference-underlay",
+      "mediaPath": "image-map",
+      "rendererReachable": true,
+      "version": 1,
+      "pixelFormat": "rgba8unorm",
+      "orientation": "from-image",
+      "alphaMode": "straight",
+      "decodeColourConversion": "browser-default",
+      "materialColourSpace": "none",
+      "resampling": "linear"
+    },
+    {
+      "id": "reference-canvas-raster-v1",
+      "consumer": "reference-underlay",
+      "mediaPath": "canvas-raster",
+      "rendererReachable": false,
+      "version": 1,
+      "pixelFormat": "rgba8unorm",
+      "orientation": "from-image",
+      "alphaMode": "straight",
+      "decodeColourConversion": "browser-default",
+      "materialColourSpace": "srgb",
+      "resampling": "linear"
+    },
+    {
+      "id": "mesh-paint-map-v1",
+      "consumer": "mesh-paint",
+      "mediaPath": "paint-map",
+      "rendererReachable": true,
+      "version": 1,
+      "pixelFormat": "rgba8unorm",
+      "orientation": "from-image",
+      "alphaMode": "straight",
+      "decodeColourConversion": "browser-default",
+      "materialColourSpace": "none",
+      "resampling": "linear"
+    }
+  ],
+  "capabilities": {
+    "browserMetadata": ["image/png", "image/jpeg", "image/gif", "image/webp", "image/bmp", "image/svg+xml"],
+    "browserWorkerDecode": ["image/png", "image/jpeg", "image/gif", "image/webp", "image/bmp"],
+    "browserPageDecode": ["image/svg+xml"],
+    "nativeDecode": ["image/png", "image/jpeg", "image/gif", "image/webp"],
+    "fullQualityAcceptance": ["image/png", "image/jpeg"],
+    "unreachableRendererRoutes": ["image/svg+xml", "application/pdf"],
+    "unimplementedWgpu": ["image/avif", "image/tiff", "application/pdf"]
+  },
+  "creditLifetimes": {
+    "encodedSource": "decode-input-accepted",
+    "decodeWorkspace": "pool-seal-or-terminal-refusal",
+    "decodedPool": "zero-leases-and-retirement-terminal",
+    "preparedLogical": "gpu-commit-or-partial-retirement-terminal",
+    "gpuUploadLogical": "committed-ack-or-partial-retirement-terminal",
+    "gpuResident": "texture-retirement-terminal"
+  },
+  "upload": {
+    "progress": ["uploadedBytes", "totalBytes"],
+    "committedAckRequired": true,
+    "replacementPolicy": "keep-old-until-new-commit",
+    "cancelPolicy": "retire-partial-before-release"
+  },
+  "naturalReference": {
+    "sourceDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+    "width": 2275,
+    "height": 2560,
+    "rgbaBytes": 23296000,
+    "orientation": 1,
+    "expectedWidth": 2275,
+    "expectedHeight": 2560,
+    "expectedUploadChunks": 23
+  },
+  "leaseReuse": {
+    "owners": ["pane-top", "pane-perspective"],
+    "expectedDecodeCount": 1,
+    "expectedLeaseCount": 2,
+    "allLiveSlots": 4,
+    "fifthIdentityOutcome": "retryable-backpressure"
+  },
+  "meshPaint": {
+    "meshKey": "painted-mesh",
+    "meshRevision": 7,
+    "uvWitness": 24,
+    "staleRevisionOutcome": "terminal-refusal",
+    "missingUvOutcome": "terminal-refusal",
+    "matchingSealOutcome": "ready-lease"
+  },
+  "terminalVectors": [
+    "source-format-refusal",
+    "all-live-pool",
+    "cancel-during-decode",
+    "cancel-during-pool-push",
+    "cancel-during-gpu-upload",
+    "close-during-page-fallback",
+    "stale-token-at-seal",
+    "changed-identity-replacement"
+  ]
+}

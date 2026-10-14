@@ -2,7 +2,7 @@
 import {Database} from "bun:sqlite";
 import {test,expect} from "bun:test";
 import {BMP_SQLITE_SCHEMA,bmpSnapshotToSqliteDatabase,bmpSnapshotFromSqliteDatabase} from "../../🟦️.ts";
-import fixture from "../../../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json";
+import fixture from "../../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json";
 import {parseBmpSnapshot} from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {exportSqliteDatabase} from "@semio-tech/framework";
 test("BMP SQL contains only typed image metadata, precise sample variants and owned opaque occurrences",async()=>{

@@ -1,7 +1,7 @@
 use super::*;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 use semio_framework_plugin::WindowConfigOwner;
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 fn block_on_generation2d_window_ownership<F: std::future::Future>(mut future: std::pin::Pin<Box<F>>) -> F::Output {
     let waker = std::task::Waker::noop();
@@ -52,7 +52,7 @@ fn generation2d_window_camera_ownership_matches_neutral_fixture_and_exact_codecs
     use crate::editor::generation2d::modes::edit::windows::{flow, preview as edit_preview};
     use crate::editor::generation2d::modes::generate::windows::preview as generate_preview;
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️generation2d-window-camera-ownership/🔣️.json")).expect("neutral Generation2d window fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️generation2d-window-camera-ownership/🔣️.json")).expect("neutral Generation2d window fixture");
     let main_base: flow::config::Generation2dMainWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfigs"][flow::GENERATION2D_PLAY_WINDOW_MAIN].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral main config");
     let main_next: flow::config::Generation2dMainWindowConfig = semio_framework_pack_json::from_json_str(&fixture["expected"]["main-left"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral main next config");
     let main_mutation = flow::config::Generation2dMainWindowConfigMutation::SetViewport(main_next.viewport.clone());
@@ -170,7 +170,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     (app, observed)
                 }
 
-                let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️generation2d-window-camera-ownership/🔣️.json")).expect("neutral runtime fixture");
+                let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️generation2d-window-camera-ownership/🔣️.json")).expect("neutral runtime fixture");
                 let all = ViewModel {
                     window_instances: fixture["windowInstances"].as_array().expect("window instances").iter().map(|row| ViewWindowInstance {
                         id: row["id"].as_str().expect("window id").into(),

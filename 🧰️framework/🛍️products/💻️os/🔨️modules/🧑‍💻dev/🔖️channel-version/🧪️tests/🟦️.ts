@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 
 import TOML from "@iarna/toml";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import { channelVersionIsDescribeOutputV1 } from "../🟦️.ts";
 
 /** 🔬️Checks output ownership against strict JSON schema and independent Cargo TOML admission. */

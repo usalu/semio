@@ -2,7 +2,7 @@
 import { expect, test } from "vitest";
 import { LinesAndColumns } from "lines-and-columns";
 import { drawingTextLines, drawingTextFallbackExtent } from "../../🟦️.ts";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../🧫️fixtures/🔣️.json";
 
 for (const item of fixture.cases) test(`line layout ${JSON.stringify(item.content)}`, () => {
   const lines = [...drawingTextLines(item.content)];

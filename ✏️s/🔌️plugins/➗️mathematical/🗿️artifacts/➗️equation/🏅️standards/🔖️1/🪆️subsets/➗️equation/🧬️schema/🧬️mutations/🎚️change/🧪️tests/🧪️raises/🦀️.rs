@@ -18,11 +18,11 @@ use crate::standards::v1::subsets::equation::schema::mutations::change_coefficie
 use crate::{EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_value::ToValue;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️change/🧪️raises/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️change/🧪️raises/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️change/🧪️raises/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️change/🧪️raises/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️change/🧪️raises/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change/🧪️raises/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change/🧪️raises/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change/🧪️raises/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change/🧪️raises/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change/🧪️raises/🎯️outcome/🔣️.json");
 
 /// 🪪 The label the committed payload addresses — the leading coefficient of `2·x²`.
 const COEFFICIENT: EquationNodeLabel = EquationNodeLabel(2);

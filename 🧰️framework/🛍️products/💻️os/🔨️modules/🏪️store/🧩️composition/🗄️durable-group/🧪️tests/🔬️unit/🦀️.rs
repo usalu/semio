@@ -3,7 +3,7 @@ use super::super::tests::{DemoOneItemPreparationFactory, DemoSnapshot, demo_clos
 use super::*;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("durable group fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("durable group fixture")
 }
 
 fn copy_grant(bytes: usize) -> crate::os_store::one_item::ArtifactStoreOneItemGrant {

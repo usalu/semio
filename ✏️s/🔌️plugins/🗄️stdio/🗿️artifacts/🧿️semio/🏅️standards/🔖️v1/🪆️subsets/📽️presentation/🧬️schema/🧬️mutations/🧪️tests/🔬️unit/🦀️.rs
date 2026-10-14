@@ -277,8 +277,8 @@ async fn absorb_law() {
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
     let snap = fixture();
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
-    let decoded = <SemioPresentationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&snap);
+    let decoded = <SemioPresentationSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
 }
 //#endregion 🔖️FieldSweep

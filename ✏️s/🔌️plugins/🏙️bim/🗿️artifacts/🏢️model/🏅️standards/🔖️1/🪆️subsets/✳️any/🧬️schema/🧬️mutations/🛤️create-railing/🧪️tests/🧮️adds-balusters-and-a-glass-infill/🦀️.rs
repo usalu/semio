@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🛤️create-railing/🧮️adds-balusters-and-a-glass-infill",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛤️create-railing/🧮️adds-balusters-and-a-glass-infill/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛤️create-railing/🧮️adds-balusters-and-a-glass-infill/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛤️create-railing/🧮️adds-balusters-and-a-glass-infill/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛤️create-railing/🧮️adds-balusters-and-a-glass-infill/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛤️create-railing/🧮️adds-balusters-and-a-glass-infill/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛤️create-railing/🧮️adds-balusters-and-a-glass-infill/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛤️create-railing/🧮️adds-balusters-and-a-glass-infill/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛤️create-railing/🧮️adds-balusters-and-a-glass-infill/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛤️create-railing/🧮️adds-balusters-and-a-glass-infill/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛤️create-railing/🧮️adds-balusters-and-a-glass-infill/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

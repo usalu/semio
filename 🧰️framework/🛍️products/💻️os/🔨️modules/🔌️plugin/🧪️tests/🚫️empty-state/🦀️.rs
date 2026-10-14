@@ -1,8 +1,8 @@
 fn verify_empty_state<T>()
 where
-    T: semio_framework_value::FromValue + store::os_store::serialization::ArtifactDsl + store::os_store::serialization::ArtifactPack + Default + PartialEq + std::fmt::Debug,
+    T: semio_framework_value::FromValue + pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Default + PartialEq + std::fmt::Debug,
 {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚫️empty-state/🔣️.json")).expect("empty-state fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚫️empty-state/🔣️.json")).expect("empty-state fixture");
     for row in fixture["json"].as_array().expect("JSON vectors") {
         assert_eq!(
             semio_framework_pack_json::from_json_str::<T>(&row["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_ok(),

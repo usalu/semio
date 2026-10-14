@@ -28,7 +28,7 @@ fn golden_mesh() -> semio_framework::MeshData {
 }
 
 fn fixture() -> semio_framework_pack_json::Value {
-    semio_framework_pack_json::parse(include_str!("../../../../🧫️fixtures/🧊️mesh/mesh-pack-body-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mesh pack fixture parses")
+    semio_framework_pack_json::parse(include_str!("../../../../🧪️tests/🧫️fixtures/🧊️mesh/mesh-pack-body-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mesh pack fixture parses")
 }
 // #endregion 🧰️Fixtures
 
@@ -93,7 +93,7 @@ fn an_oversized_body_is_split_into_several_chunks() {
 
 #[test]
 fn retained_mesh_pack_preserves_indexed_metadata_and_cancels_bounded_encoding() {
-    let fixture=semio_framework_pack_json::parse(include_str!("../../../../🧫️fixtures/🧊️mesh/mesh-pack-attributes.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture=semio_framework_pack_json::parse(include_str!("../../../../🧪️tests/🧫️fixtures/🧊️mesh/mesh-pack-attributes.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mesh=<semio_framework::MeshData as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&fixture["mesh"])).expect("canonical retained mesh fixture");
     assert_eq!(mesh.attributes["normal"].values.len(),1);
     let mut job=MeshPackEncodingJob::new(mesh.clone(),64000000).unwrap();let mut steps=0;
@@ -109,7 +109,7 @@ fn retained_mesh_pack_preserves_indexed_metadata_and_cancels_bounded_encoding() 
 #[test]
 fn mesh_pack_preserves_lossless_analytic_component_references() {
     use semio_framework_value::FromValue;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
     let source = serde_json::json!({"positions":fixture["transfer"]["position"],"normals":fixture["transfer"]["normal"],"indices":fixture["transfer"]["index"],"faceIds":fixture["expected"]["faceIds"],"edgePositions":fixture["transfer"]["edges"],"edgeIds":fixture["expected"]["edgeIds"],"componentReferences":fixture["expected"]["componentReferences"]});
     let source = semio_framework_pack_json::parse(&source.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mesh = semio_framework::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&source)).unwrap();

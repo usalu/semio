@@ -20,16 +20,16 @@ type ResourceLeaseChild = { process: Bun.Subprocess<"pipe", "pipe", "pipe">; out
 /** 🔒️ Compares resource ownership against independent Node, Bun and Python SQLite processes. */
 export async function testResourceLeases(generated: string): Promise<void> {
   const moduleRoot = join(dirname(fileURLToPath(import.meta.url)), "../.."), implementation = join(moduleRoot, "🟦️.ts");
-  const fixture: ResourceLeaseFixture = JSON.parse(readFileSync(join(moduleRoot, "🧫️fixtures/🔣️.json"), "utf8"));
+  const fixture: ResourceLeaseFixture = JSON.parse(readFileSync(join(moduleRoot, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
   const api = await import(pathToFileURL(implementation).href);
-  const queueLaw = JSON.parse(readFileSync(join(moduleRoot,"🧫️fixtures/📜️queue.json"),"utf8"));
+  const queueLaw = JSON.parse(readFileSync(join(moduleRoot,"🧪️tests/🧫️fixtures/📜️queue.json"),"utf8"));
   const queueSchema = JSON.parse(readFileSync(join(moduleRoot,"🧬️schema/📜️ticket.json"),"utf8"));
   const {default:Ajv}=await import("ajv");const validateQueue=new Ajv({strict:true}).compile(queueSchema);
   const owner=Buffer.from(queueLaw.ownerBytes).toString("base64url");
   const arrivals=queueLaw.arrivals.map((arrivedAtMs:number)=>{const request={arrivedAtMs,pid:queueLaw.pid,owner};assert(validateQueue(request));const actual=api.resourceQueueTicketV1(request);const oracle=[BigInt(arrivedAtMs).toString(16).padStart(12,"0"),String(queueLaw.pid).padStart(10,"0"),owner].join("-");assert.equal(actual,oracle);return actual;});assert.deepEqual([...arrivals].sort(),arrivals);assert.deepEqual(Buffer.from(owner,"base64url"),Buffer.from(queueLaw.ownerBytes));
   const root = mkdtempSync(join(generated, "resource-leases-")), directory = join(root, "store");
   const worker = join(root, "📜️script.ts");
-  const readLaw = JSON.parse(readFileSync(join(moduleRoot, "🧫️fixtures/🔁️interrupted-read.json"), "utf8"));
+  const readLaw = JSON.parse(readFileSync(join(moduleRoot, "🧪️tests/🧫️fixtures/🔁️interrupted-read.json"), "utf8"));
   const readRoot = join(root, "interrupted-read");
   const { mkdirSync } = await import("node:fs");
   mkdirSync(readRoot);

@@ -1,7 +1,7 @@
 /** 🏔️ Exact terrain words and independently editable SQL parameters. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import {gisTerrainSnapshotToSqliteDatabase,gisTerrainSnapshotFromSqliteDatabase,validateGisTerrainSnapshotSqliteDialect} from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 function snapshot(word:string,mesh=true){return {exaggeration:{bits:BigInt("0x"+word)},...(mesh?{mesh:fixture.child}:{})};}
@@ -11,7 +11,7 @@ test("GIS terrain admits budgets before copies and reports cancellation through 
 import {parseGisTerrainArtifact} from "../../../../🧬️schema/🟦️.ts";
 import {Buffer} from "node:buffer";
 import Ajv from "ajv";
-import importedMapFixture from "../🧫️fixtures/🗺️imported-map/🔣️.json";
+import importedMapFixture from "./🧫️fixtures/🗺️imported-map/🔣️.json";
 
 import {parseIntrinsicValue,type IntrinsicValue,type IntrinsicMember} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
 type MapWireValue={kind:string;value?:string|boolean;word?:string;hex?:string;items?:MapWireValue[];members?:{name:string;value:MapWireValue}[]};
@@ -83,7 +83,7 @@ test("typed map admission retains broad records repeated IDs unknown properties 
 import {existsSync,readFileSync} from "node:fs";
 import {resolve} from "node:path";
 test("GIS native literal semantic bytes are distinct from backing and codec framing",()=>{
- const path=resolve(import.meta.dir,"../🧫️fixtures/📏️native-values/🔣️.json");expect(existsSync(path),"closed native semantic byte contract").toBe(true);
+ const path=resolve(import.meta.dir, "🧫️fixtures/📏️native-values/🔣️.json");expect(existsSync(path),"closed native semantic byte contract").toBe(true);
  const f=JSON.parse(readFileSync(path,"utf8"));
  expect(f["format"]).toEqual(1);expect(f["encodings"]).toEqual(["binary","text"]);expect(f["semantic"]).toEqual("borrowedLiteralLeafBytes");expect(f["physical"]).toEqual("sameCallerOwnedBacking");expect(f["maximumValueBytes"]).toEqual(4096);expect(f["maximumAllocationBytes"]).toEqual(16777216);expect(f["property"]).toEqual("literal");expect(f["text"]).toEqual("literal intrinsic text 世界");expect(f["repetitions"]).toEqual(10000);expect(f["textBytes"]).toEqual(290000);expect(f["totalBytes"]).toEqual(290015);
  const text=f.text.repeat(f.repetitions);expect(Buffer.byteLength(text)).toBe(f.textBytes);expect(new TextEncoder().encode(text).length).toBe(f.textBytes);

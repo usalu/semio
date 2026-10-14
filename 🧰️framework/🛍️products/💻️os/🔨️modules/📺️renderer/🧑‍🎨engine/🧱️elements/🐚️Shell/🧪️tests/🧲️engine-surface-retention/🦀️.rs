@@ -80,7 +80,7 @@ fn retained_engine_hit_provenance_reaches_each_dedicated_pointer_and_wheel_route
 }
 
 fn law() -> Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/🧲️engine-surface-retention/🔣️.json")).expect("engine surface retention fixture")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧲️engine-surface-retention/🔣️.json")).expect("engine surface retention fixture")
 }
 
 fn rect(value: &Value) -> Rect {

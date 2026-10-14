@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "🏃️Process Whole Build Mode Public Enumeration Whole Green 1",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-process:test-build-mode --configuration=prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "9_gates",
+        "order": 900.05735
+      },
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/bmg1",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/bmg1",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "{\"version\":1,\"policy\":{\"version\":1,\"owner\":\"🏃️Process Whole Build Mode Public Enumeration Whole Green 1\",\"maximumElapsedMilliseconds\":0},\"deadlineEpochMilliseconds\":null,\"capabilities\":{}}"
+      }
+    },
+    {
+      "name": "📚️Library Whole17 Actual Build Mode Public Enumeration Receiving Red 59",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/📜️script.ts\" receive pa11-red27 a15fc4c81e4a0b5d567ef766b964c6dee8c31100cbe93f69dc40c1e037af328b 528ee64458ad0ed94486003d6733aa9e9e9b0ca773f299e36baea76d77595208 528ee64458ad0ed94486003d6733aa9e9e9b0ca773f299e36baea76d77595208",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-red27/cache",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-red27/data",
+        "SEMIO_TEST_LEVEL": "quick",
+        "SEMIO_TEST_BUDGET_MS": "45000",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-red27/a"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 902.11
+      }
+    },
+    {
+      "name": "📥️catalogue49-actual-default-preparation-original-control-complete78-stream-red8🧪️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-interface-current-origin --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/crd49/📜️script.ts\" run red8 4400a08f2f050ce5b15243b5add6427a71688c7f248980ad122f42f037cb691b > \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/crd49/red8.outer.log\" 2>&1",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-origin/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-origin/🧪️nx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/crd49/nx-data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/crd49/nx-cache",
+        "SEMIO_CARGO_PREPARATION_STORAGE": "{\"version\":1,\"directory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s49\"}"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 901.9
+      }
+    }
+  ],
+  "retireNames": [
+    "📥️catalogue49-actual-default-preparation-original-control-complete78-stream-red7🧪️"
+  ]
+}

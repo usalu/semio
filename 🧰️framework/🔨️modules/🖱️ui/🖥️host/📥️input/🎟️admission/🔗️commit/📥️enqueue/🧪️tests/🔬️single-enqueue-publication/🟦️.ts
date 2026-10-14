@@ -43,7 +43,7 @@ type SingleEnqueuePublicationFixture = {
 };
 
 export function testSingleEnqueuePublicationFixture(): void {
-  const fixture: SingleEnqueuePublicationFixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture: SingleEnqueuePublicationFixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   
   
   

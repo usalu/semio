@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn member_owned_batch_copy_query_preserves_zero_work_and_exact_physical_receipts() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let original: Vec<i32> = serde_json::from_value(fixture["values"].clone()).unwrap();
     for row in fixture["copyDemand"]["rowCounts"].as_array().unwrap() {
         let count = row.as_u64().unwrap() as usize;
@@ -42,7 +42,7 @@ fn member_owned_batch_copy_query_preserves_zero_work_and_exact_physical_receipts
 
 #[test]
 fn member_owned_batch_borrowed_admission_preserves_original_parent_source() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let source:Vec<i32>=serde_json::from_value(fixture["values"].clone()).unwrap();
     let pointer=source.as_ptr();let capacity=source.capacity();let mut source=Some(source);
     let birth=MemberStoreOwnedBatch::scaffold_byte_demand::<i32>();
@@ -64,7 +64,7 @@ fn member_owned_batch_borrowed_admission_preserves_original_parent_source() {
 
 #[test]
 fn member_owned_batch_phase_queries_fund_actual_scalar_retirement_births() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let values: Vec<i32> = serde_json::from_value(fixture["values"].clone()).unwrap();
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
     let (mut batch, _) = MemberStoreOwnedBatch::try_new(values, grant).unwrap_or_else(|_| panic!("funded scalar owner"));
@@ -83,7 +83,7 @@ fn member_owned_batch_phase_queries_fund_actual_scalar_retirement_births() {
 
 #[test]
 fn member_owned_batch_retains_exact_type_source_and_physical_grants() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let source: Vec<i32> = serde_json::from_value(fixture["values"].clone()).unwrap();
     let pointer = source.as_ptr();
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
@@ -133,7 +133,7 @@ fn member_owned_batch_retains_exact_type_source_and_physical_grants() {
 
 #[test]
 fn member_owned_batch_constructor_refusals_preserve_exact_original_allocation() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["constructorRefusals"].as_array().unwrap() {
         let source: Vec<i32> = serde_json::from_value(fixture["values"].clone()).unwrap();
         let pointer = source.as_ptr();
@@ -153,7 +153,7 @@ fn member_owned_batch_constructor_refusals_preserve_exact_original_allocation() 
 
 #[test]
 fn member_owned_batch_child_depth_refusal_keeps_original_before_allocating_retirement() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let values: Vec<i32> = serde_json::from_value(fixture["values"].clone()).unwrap();
     let pointer = values.as_ptr();
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };

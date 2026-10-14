@@ -30,7 +30,7 @@ const nodeGraphSource = resolve(repoRoot, "🧰️framework/🛍️products/💻
 type EditRow = Record<string, string>;
 type FixtureCase = { readonly name: string; readonly gesture: { readonly kind: string; readonly from?: string; readonly to?: string }; readonly expectedEdits?: readonly EditRow[]; readonly expectedEdges?: readonly { readonly source: string; readonly target: string }[] };
 
-const law = JSON.parse(readFileSync(resolve(dagRoot, "🧫️fixtures/🔗️wire-edit/🔣️.json"), "utf8")) as {
+const law = JSON.parse(readFileSync(resolve(dagRoot, "🧪️tests/🧫️fixtures/🔗️wire-edit/🔣️.json"), "utf8")) as {
   readonly rules: Record<string, string>;
   readonly graph: { readonly nodes: readonly { readonly id: string; readonly inputs: readonly string[]; readonly outputs: readonly string[] }[] };
   readonly cases: readonly FixtureCase[];

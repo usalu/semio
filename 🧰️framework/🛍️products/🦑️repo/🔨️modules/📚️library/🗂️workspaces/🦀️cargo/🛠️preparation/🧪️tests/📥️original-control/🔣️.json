@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "callerCeilingMilliseconds": 10000,
+  "native": {
+    "transport": {
+      "maximumBytes": 134217728,
+      "maximumLines": 1000000
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 3600000
+    },
+    "network": {
+      "offline": false
+    }
+  },
+  "workspace": "[workspace]\nresolver=\"2\"\nmembers=[\"kernel\"]\n[workspace.metadata.semio.repository]\nschema-version=1\nexclude-patterns=[]\nowner-manifests=[\"*/Cargo.toml\"]\nmember-manifests=[\"kernel/Cargo.toml\"]\n[workspace.package]\nedition=\"2021\"\n",
+  "package": "[package]\nname=\"original-preparation-kernel\"\nversion=\"0.1.0\"\nedition.workspace=true\n[lib]\npath=\"lib.rs\"\n",
+  "cases": [
+    {
+      "id": "Default Preparation Retains Original Publication",
+      "command": "prepare",
+      "mode": "normal",
+      "expectedCommands": 0,
+      "expectedRefusal": ""
+    },
+    {
+      "id": "Default Synchronization Owns Actual Update And Locked Fetch",
+      "command": "synchronize",
+      "mode": "normal",
+      "expectedCommands": 2,
+      "expectedRefusal": ""
+    },
+    {
+      "id": "Default Preparation Awaits Original Publisher Refusal",
+      "command": "prepare",
+      "mode": "publisher-refused",
+      "expectedCommands": 0,
+      "expectedRefusal": "Original default preparation publication refused"
+    },
+    {
+      "id": "Default Synchronization Awaits Original Publisher Refusal",
+      "command": "synchronize",
+      "mode": "publisher-refused",
+      "expectedCommands": 0,
+      "expectedRefusal": "Original default preparation publication refused"
+    },
+    {
+      "id": "Default Preparation Cancels Original Queued Lease",
+      "command": "prepare",
+      "mode": "queued-cancel",
+      "expectedCommands": 0,
+      "expectedRefusal": "Original default preparation cancelled"
+    },
+    {
+      "id": "Default Synchronization Cancels Original Queued Lease",
+      "command": "synchronize",
+      "mode": "queued-cancel",
+      "expectedCommands": 0,
+      "expectedRefusal": "Original default preparation cancelled"
+    },
+    {
+      "id": "Default Preparation Refuses Missing Original Native Grant",
+      "command": "prepare",
+      "mode": "missing-grant",
+      "expectedCommands": 0,
+      "expectedRefusal": "Original native caller capabilities required"
+    },
+    {
+      "id": "Default Synchronization Refuses Missing Original Native Grant",
+      "command": "synchronize",
+      "mode": "missing-grant",
+      "expectedCommands": 0,
+      "expectedRefusal": "Original native caller capabilities required"
+    },
+    {
+      "id": "Default Orchestration Preparation Receives Original Nx Caller",
+      "command": "prepare",
+      "mode": "normal-caller",
+      "expectedCommands": 0,
+      "expectedRefusal": ""
+    },
+    {
+      "id": "Default Orchestration Synchronization Receives Finite Grant Under Ordinary Parent",
+      "command": "synchronize",
+      "mode": "normal-caller",
+      "expectedCommands": 2,
+      "expectedRefusal": ""
+    }
+  ],
+  "identity": {
+    "id": "Default Synchronization Bounds Actual Cargo Identity Through Original Control",
+    "arguments": [
+      "--version"
+    ],
+    "expectedCalls": 1,
+    "expectedProgram": "cargo"
+  },
+  "recipe": {
+    "id": "Default Authored Recipe Cancels Through The Original Operation Before Publication",
+    "delayMilliseconds": 2000,
+    "maximumCancellationMilliseconds": 1000,
+    "command": [
+      "prepare-original"
+    ],
+    "metadata": "\n[package.metadata.semio.preparation]\nscript=\"📜️script.ts\"\ncommand=[\"prepare-original\"]\n",
+    "program": "import {writeFileSync} from \"node:fs\";\nimport {setTimeout} from \"node:timers/promises\";\nif(process.argv[2]!==\"prepare-original\")throw Error(\"Original recipe scope changed\");\nwriteFileSync(\"started.json\",JSON.stringify({pid:process.pid}));\nawait setTimeout({DELAY});\nwriteFileSync(\"forbidden.txt\",\"Original recipe published after cancellation\");\n"
+  }
+}

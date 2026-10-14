@@ -1,7 +1,7 @@
 //! 📏️ Domain-neutral world-3d modelling primitives a B-Rep or mesh modelling app needs: an annotation
 //! layer, scalar field colouring with a legend, a pick granularity filter, a section plane and
 //! sub-element highlight tokens. The language-neutral contract is
-//! `🧬️schema/📏️world3d-modelling/🔣️.json` plus `🧫️fixtures/📏️world3d-modelling/🔣️.json`; the
+//! `🧬️schema/📏️world3d-modelling/🔣️.json` plus `🧪️tests/🧫️fixtures/📏️world3d-modelling/🔣️.json`; the
 //! TypeScript twin is `🟦️.ts` beside this file, and both are pinned against those two files.
 //!
 //! Every type has two codecs. `serde` carries the structure for [`crate::World3dScene`]'s own JSON

@@ -4,7 +4,7 @@ import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import {applyPatch} from "fast-json-patch";
 test("📝️ actual history drafts own first-party original arena and displaced keys",()=>{
-  const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+  const law=JSON.parse(readFileSync(new URL("../🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
   const database=new Database(":memory:");try{
     database.exec("CREATE TABLE drafts(id TEXT PRIMARY KEY, value TEXT NOT NULL)");const insert=database.prepare("INSERT INTO drafts VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET value=excluded.value");const original:Record<string,unknown>={};
     for(const row of law.entries){const value=row.withdrawn?{kind:"withdrawn"}:{kind:"input",schema:row.schema,payload:row.payload};insert.run(row.id,JSON.stringify(value));original[row.id]=value;expect(Buffer.byteLength(row.id)).toBeLessThanOrEqual(law.textCapacity);expect(row.payload.length).toBeLessThanOrEqual(law.payloadCapacity);}

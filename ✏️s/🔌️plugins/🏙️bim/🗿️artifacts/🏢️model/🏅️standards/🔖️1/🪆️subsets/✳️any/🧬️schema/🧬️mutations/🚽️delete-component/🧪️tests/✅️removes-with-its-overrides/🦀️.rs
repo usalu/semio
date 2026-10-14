@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🚽️delete-component/✅️removes-with-its-overrides",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚽️delete-component/✅️removes-with-its-overrides/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚽️delete-component/✅️removes-with-its-overrides/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚽️delete-component/✅️removes-with-its-overrides/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚽️delete-component/✅️removes-with-its-overrides/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚽️delete-component/✅️removes-with-its-overrides/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚽️delete-component/✅️removes-with-its-overrides/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚽️delete-component/✅️removes-with-its-overrides/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚽️delete-component/✅️removes-with-its-overrides/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚽️delete-component/✅️removes-with-its-overrides/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚽️delete-component/✅️removes-with-its-overrides/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

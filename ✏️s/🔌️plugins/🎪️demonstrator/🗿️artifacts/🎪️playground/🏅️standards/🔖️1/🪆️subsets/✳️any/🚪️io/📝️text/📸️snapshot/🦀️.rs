@@ -13,12 +13,12 @@ pub const PLAYGROUND_DEMO_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../�
 
 /// 📖️ Parses playground DSL text into a `PlaygroundSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<PlaygroundSnapshot, semio_framework_diagnostic::TextError> {
-    <PlaygroundSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <PlaygroundSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `PlaygroundSnapshot` back to DSL text.
 pub fn print_dsl(snapshot: &PlaygroundSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
+    pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 
 //#region 🧪️Tests
@@ -39,7 +39,7 @@ use crate::standards::v1::subsets::any::schema::snapshot::*;
 use crate::PLAYGROUND_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
 
-impl store::os_store::serialization::ArtifactDsl for PlaygroundSnapshot {
+impl pack::snapshot::ArtifactDsl for PlaygroundSnapshot {
     const EXTENSION: &'static str = "playground";
     fn envelope_id() -> &'static str {
         "playground.playground"
@@ -54,7 +54,7 @@ impl store::os_store::serialization::ArtifactDsl for PlaygroundSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -70,7 +70,7 @@ use semio_framework_pack_json::{array, from_dsl_value, from_json_str, object, to
 
 /// 🔁️ Parses, prints, and reparses one language-neutral playground document.
 pub fn round_trip_playground_dsl(text: &str) -> Result<String, String> {
-    use store::os_store::serialization::ArtifactDsl;
+    use pack::snapshot::ArtifactDsl;
     let parsed = <PlaygroundSnapshot as ArtifactDsl>::parse_dsl(text).map_err(|error| format!("the committed playground example does not parse: {error:?}"))?;
     let printed = <PlaygroundSnapshot as ArtifactDsl>::print_dsl(&parsed);
     let reparsed = <PlaygroundSnapshot as ArtifactDsl>::parse_dsl(&printed).map_err(|error| format!("the reprinted playground document does not parse: {error:?}"))?;

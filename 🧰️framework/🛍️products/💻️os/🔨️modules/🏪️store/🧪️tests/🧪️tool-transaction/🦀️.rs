@@ -100,7 +100,7 @@ async fn publish_batch(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, op
 /// and every operation a commit announces carries the transaction's ref.
 #[semio_framework_async_macros::async_test]
 async fn tool_transaction_corpus_matches_the_store() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️tool-transaction/🔣️.json")).expect("corpus parses");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️tool-transaction/🔣️.json")).expect("corpus parses");
     assert_eq!(corpus["tool"], TOOL);
     let operations = |value: &serde_json::Value| value.as_array().expect("operations").iter().map(|operation| DemoMutation::from_value(operation.clone().into()).expect("corpus operations decode")).collect::<Vec<_>>();
     let mut steps = 0;
@@ -171,7 +171,7 @@ async fn tool_transaction_corpus_matches_the_store() {
 /// it refuses every empty operation block) they print and parse as text to the same command.
 #[semio_framework_async_macros::async_test]
 async fn tool_transaction_command_vectors_match_both_codecs() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️tool-transaction/🔣️.json")).expect("corpus parses");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️tool-transaction/🔣️.json")).expect("corpus parses");
     let vectors = corpus["codec"].as_array().expect("codec vectors");
     assert_eq!(vectors.len(), 3);
     for vector in vectors {

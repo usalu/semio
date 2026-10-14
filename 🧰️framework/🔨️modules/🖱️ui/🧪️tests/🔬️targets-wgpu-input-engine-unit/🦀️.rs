@@ -51,7 +51,7 @@ fn shared_tree_drag_fixture_projects_driver_specific_row_and_handle_targets() {
     use crate::wgpu::Label;
     use std::collections::HashMap;
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌳️tree-drag-handles/🔣️.json")).expect("tree drag fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌳️tree-drag-handles/🔣️.json")).expect("tree drag fixture");
     let metrics = TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default());
     let row_width = fixture["rowWidth"].as_f64().expect("row width") as f32;
     for row in fixture["rows"].as_array().expect("rows") {

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🛹️set-ramp/🛤️carries-railings-on-both-sides",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛹️set-ramp/🛤️carries-railings-on-both-sides/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛹️set-ramp/🛤️carries-railings-on-both-sides/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛹️set-ramp/🛤️carries-railings-on-both-sides/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛹️set-ramp/🛤️carries-railings-on-both-sides/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛹️set-ramp/🛤️carries-railings-on-both-sides/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛹️set-ramp/🛤️carries-railings-on-both-sides/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛹️set-ramp/🛤️carries-railings-on-both-sides/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛹️set-ramp/🛤️carries-railings-on-both-sides/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛹️set-ramp/🛤️carries-railings-on-both-sides/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛹️set-ramp/🛤️carries-railings-on-both-sides/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

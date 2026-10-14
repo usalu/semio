@@ -99,7 +99,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: Vec::new(),
         interactions: Vec::new(),
-        params_schema: Some(<EnergyModelConfig as store::os_store::serialization::ArtifactDsl>::envelope_id().into()),
+        params_schema: Some(<EnergyModelConfig as pack::snapshot::ArtifactDsl>::envelope_id().into()),
         artifact_snapshot_schema: Some(crate::ENERGY_MODEL_DOCUMENT_SCHEMA.into()),
         input_event_schema: None,
         output_schema: Some(crate::energy_simulation_session::ENERGY_SIMULATION_RUN_SCHEMA.into()),

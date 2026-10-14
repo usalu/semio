@@ -1,5 +1,5 @@
 //! 📦️ Equation artifact — binary document surface + laws (constitutional: pack). The
-//! `store::os_store::serialization::ArtifactPack` impl for `EquationSnapshot` encodes the derived `EquationPackRecord` spec.
+//! `pack::snapshot::ArtifactPack` impl for `EquationSnapshot` encodes the derived `EquationPackRecord` spec.
 
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::EquationSnapshot;
@@ -45,16 +45,19 @@ pub(crate) fn reconstruct_pack_record_controlled(record:&semio_framework_dsl_rec
 pub(crate) fn print_pack_record_text(snapshot:&EquationSnapshot)->String{semio_framework_dsl_record::print(&EquationPackRecord::from_snapshot(snapshot).__dsl_to_record(),&EquationPackRecord::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document)}
 /// 📖️ Parse every owned field and refuse trailing unrelated native text.
 pub(crate) fn parse_pack_record_text(body:&str)->Result<EquationSnapshot,semio_framework_diagnostic::TextError>{let record=semio_framework_dsl_record::parse_exact(body,&EquationPackRecord::__dsl_spec(),&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits::default(),mode:semio_framework_dsl_record::SourceMode::Document})?;EquationPackRecord::__dsl_from_record(&record)?.into_snapshot().map_err(|error|semio_framework_diagnostic::TextError::from_value_error(error,semio_framework_diagnostic::TextSpan::at(1,1)))}
-impl store::os_store::serialization::ArtifactPack for EquationSnapshot{
- fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())}
- fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,PackError>{let inner=store::pack_rt::encode_document(&EquationPackRecord::__dsl_spec(),&EquationPackRecord::from_snapshot(self).__dsl_to_record(),options)?;let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|e| PackError::from(e.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&inner))}
- fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,PackError>{let(envelope,inner)=store::semio_format::unwrap_binary(bytes).map_err(|e| PackError::from(e.into_value_error()))?;if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(PackError::from(ValueError::new(ValueRefusalKind::InvalidValue, "Equation logical native identity differs")))}let(record,_)=store::pack_rt::decode_document(&inner,&EquationPackRecord::__dsl_spec(),options)?;EquationPackRecord::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)?.into_snapshot().map_err(|error|PackError::from(error))}
+impl pack::snapshot::ArtifactPack for EquationSnapshot{
+ 
+ fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,PackError>{let inner=store::pack_rt::encode_document(&EquationPackRecord::__dsl_spec(),&EquationPackRecord::from_snapshot(self).__dsl_to_record(),options)?;let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|e| PackError::from(e.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&inner))}
+ fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,PackError>{let(envelope,inner)=store::semio_format::unwrap_binary(bytes).map_err(|e| PackError::from(e.into_value_error()))?;if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(PackError::from(ValueError::new(ValueRefusalKind::InvalidValue, "Equation logical native identity differs")))}let(record,_)=store::pack_rt::decode_document(&inner,&EquationPackRecord::__dsl_spec(),options)?;EquationPackRecord::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)?.into_snapshot().map_err(|error|PackError::from(error))}
  fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(EquationPackRecord::__dsl_spec())}
 }
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for EquationSnapshot {
+fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())}
+}
 /// 📦️ Encode the owned logical Equation record.
-pub fn encode(snapshot:&EquationSnapshot)->Vec<u8>{store::os_store::serialization::ArtifactPack::encode_pack(snapshot)}
+pub fn encode(snapshot:&EquationSnapshot)->Vec<u8>{pack::snapshot::ArtifactPack::encode_pack(snapshot)}
 /// 📖️ Decode the owned logical Equation record.
-pub fn decode(bytes:&[u8])->Result<EquationSnapshot,PackError>{<EquationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)}
+pub fn decode(bytes:&[u8])->Result<EquationSnapshot,PackError>{<EquationSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)}
 
 //#region 🔖️Store
 
@@ -80,7 +83,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 /// 🫴️ Declares this owner’s actual controlled native record factories.
-impl store::ArtifactNativeSnapshot for EquationSnapshot {
- fn decode_native_snapshot(payload:store::NativeSnapshotInput<'_>,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{store::decode_native_snapshot_record(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),EquationPackRecord::__dsl_spec_producer(),|record,native|{let maximum=native.maximum_bytes();controlled::reconstruct(record,native,maximum)},control)}
- fn encode_native_snapshot(&self,encoding:store::NativeSnapshotEncoding,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{store::encode_native_snapshot_record(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),EquationPackRecord::__dsl_spec_producer(),|native|{let maximum=native.maximum_bytes();controlled_output::project(self,maximum,native)},control)}
+impl pack::snapshot::ArtifactNativeSnapshot for EquationSnapshot {
+ fn decode_native_snapshot(payload:pack::snapshot::NativeSnapshotInput<'_>,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{store::decode_native_snapshot_record(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),EquationPackRecord::__dsl_spec_producer(),|record,native|{let maximum=native.maximum_bytes();controlled::reconstruct(record,native,maximum)},control)}
+ fn encode_native_snapshot(&self,encoding:pack::snapshot::NativeSnapshotEncoding,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{store::encode_native_snapshot_record(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),EquationPackRecord::__dsl_spec_producer(),|native|{let maximum=native.maximum_bytes();controlled_output::project(self,maximum,native)},control)}
 }

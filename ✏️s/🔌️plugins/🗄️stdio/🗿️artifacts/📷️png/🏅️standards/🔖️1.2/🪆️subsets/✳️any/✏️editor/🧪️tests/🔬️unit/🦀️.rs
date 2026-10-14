@@ -104,7 +104,7 @@ fn native_profile_action_parses_checked_samples_and_rejects_mismatch() {
     let command = png_editor_command_from_action(paint_native_region::GRAYSCALE_ACTION_ID, Some(&arguments)).unwrap();
     let PngEditCommand::Native(PngNativeEditCommand::PaintNativeRegion(command)) = command else { panic!("native PNG command") };
     assert_eq!(command.paint, crate::standards::v1_2::subsets::any::schema::snapshot::PngNativePaint::grayscale(0x1234));
-    let indexed = crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/indexed-2bit-duplicate-palette.png")).unwrap();
+    let indexed = crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/indexed-2bit-duplicate-palette.png")).unwrap();
     assert!(crate::standards::v1_2::subsets::any::schema::operations::validate_native_paint(&indexed, command.region, command.paint).unwrap_err().contains("profile"));
 }
 
@@ -116,13 +116,13 @@ fn native_profile_action_defaults_are_valid_for_eight_and_sixteen_bit_sources() 
         semio_framework_value::DslValue::object(action.args.iter().map(|argument| (argument.id.clone(), argument.default.clone().expect("native paint argument default"))))
     };
     let rgba = png_editor_command_from_action(paint_native_region::RGBA_ACTION_ID, Some(&arguments(paint_native_region::RGBA_ACTION_ID))).unwrap();
-    let rgba8 = crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/rgba8-adam7.png")).unwrap();
+    let rgba8 = crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/rgba8-adam7.png")).unwrap();
     let PngEditCommand::Native(PngNativeEditCommand::PaintNativeRegion(rgba)) = rgba else { panic!("RGBA native paint") };
     assert!(crate::standards::v1_2::subsets::any::schema::operations::validate_native_paint(&rgba8, rgba.region, rgba.paint).is_ok());
     assert_eq!(rgba.paint.fourth, u16::from(u8::MAX));
 
     let grayscale = png_editor_command_from_action(paint_native_region::GRAYSCALE_ACTION_ID, Some(&arguments(paint_native_region::GRAYSCALE_ACTION_ID))).unwrap();
-    let grayscale16 = crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png")).unwrap();
+    let grayscale16 = crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png")).unwrap();
     let PngEditCommand::Native(PngNativeEditCommand::PaintNativeRegion(grayscale)) = grayscale else { panic!("grayscale native paint") };
     assert!(crate::standards::v1_2::subsets::any::schema::operations::validate_native_paint(&grayscale16, grayscale.region, grayscale.paint).is_ok());
 }
@@ -130,7 +130,7 @@ fn native_profile_action_defaults_are_valid_for_eight_and_sixteen_bit_sources() 
 #[test]
 fn retained_native_profile_work_publishes_one_revision_guarded_mutation() {
     use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
-    let reader = std::sync::Arc::new(crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png")).unwrap());
+    let reader = std::sync::Arc::new(crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png")).unwrap());
     let snapshot = reader.as_ref();
     let command = PngEditCommand::Native(PngNativeEditCommand::PaintNativeRegion(paint_native_region::PaintNativeRegion {
         region: crate::standards::v1_2::subsets::any::schema::snapshot::PngRegion { x: 1, y: 0, width: 1, height: 1 },
@@ -193,9 +193,9 @@ fn natural_file_route_exports_edited_and_committed_native_profiles_exactly() {
     assert_eq!(reopened, edited);
 
     let fixtures: &[(&str, &[u8], png::ColorType, png::BitDepth, bool)] = &[
-        ("16-bit grayscale", include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png"), png::ColorType::Grayscale, png::BitDepth::Sixteen, false),
-        ("indexed duplicate palette", include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/indexed-2bit-duplicate-palette.png"), png::ColorType::Indexed, png::BitDepth::Two, false),
-        ("Adam7 RGBA", include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/rgba8-adam7.png"), png::ColorType::Rgba, png::BitDepth::Eight, true),
+        ("16-bit grayscale", include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png"), png::ColorType::Grayscale, png::BitDepth::Sixteen, false),
+        ("indexed duplicate palette", include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/indexed-2bit-duplicate-palette.png"), png::ColorType::Indexed, png::BitDepth::Two, false),
+        ("Adam7 RGBA", include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/rgba8-adam7.png"), png::ColorType::Rgba, png::BitDepth::Eight, true),
     ];
     for &(name, source, color_type, bit_depth, interlaced) in fixtures {
         let snapshot = <PngEditor as ArtifactEditor>::decode_natural_file(source).unwrap_or_else(|error| panic!("{name}: natural decode failed: {error}"));
@@ -309,7 +309,7 @@ async fn registered_pixel_region_refuses_an_equal_length_later_snapshot() {
 #[test]
 fn metadata_edit_and_inverse_preserve_exact_source_authority() {
     use protocol::{Mutation, MutationDiff, OpBinary, OpText};
-    let base = crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/rgba8-multi-idat-private.png")).unwrap();
+    let base = crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/rgba8-multi-idat-private.png")).unwrap();
     let mutation = PngMutation::ChangeGamma(crate::schema::mutations::ChangeGammaMutation { revision: crate::standards::v1_2::subsets::any::schema::operations::png_revision(&base), gama: Some(50_000) });
     assert_eq!(PngMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
     assert_eq!(PngMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);

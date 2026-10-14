@@ -1401,6 +1401,7 @@ impl ArtifactEditor for LayoutPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,
@@ -1481,7 +1482,7 @@ impl ArtifactEditor for LayoutPlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, LayoutSnapshot>) -> Result<Media, MediaError> {
         match port {
             "artifact:out" => {
-                let bytes = store::os_store::serialization::ArtifactPack::encode_pack(doc.snapshot);
+                let bytes = pack::snapshot::ArtifactPack::encode_pack(doc.snapshot);
                 Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: crate::LAYOUT_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             "layout:out" => Err(MediaError::NotImplemented),

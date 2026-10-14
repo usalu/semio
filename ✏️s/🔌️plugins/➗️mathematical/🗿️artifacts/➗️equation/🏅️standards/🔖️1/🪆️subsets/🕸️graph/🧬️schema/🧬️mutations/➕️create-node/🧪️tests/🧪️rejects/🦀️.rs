@@ -15,10 +15,10 @@ use crate::standards::v1::subsets::graph::schema::mutations::create_node::Create
 use crate::{EquationDiff, EquationGraph, EquationMutation, EquationNode, EquationSnapshot};
 use semio_framework_value::ToValue;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️create-node/🧪️rejects/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️create-node/🧪️rejects/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️create-node/🧪️rejects/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️create-node/🧪️rejects/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️create-node/🧪️rejects/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️create-node/🧪️rejects/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️create-node/🧪️rejects/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️create-node/🧪️rejects/🎯️outcome/🔣️.json");
 
 fn mutation() -> EquationMutation {
     semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")

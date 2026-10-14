@@ -11,11 +11,11 @@ use crate::mutations::LayoutMutation;
 use crate::LayoutSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏛️update-page-columns/🏛️splits/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏛️update-page-columns/🏛️splits/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏛️update-page-columns/🏛️splits/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏛️update-page-columns/🏛️splits/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏛️update-page-columns/🏛️splits/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️update-page-columns/🏛️splits/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️update-page-columns/🏛️splits/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️update-page-columns/🏛️splits/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️update-page-columns/🏛️splits/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️update-page-columns/🏛️splits/🎯️outcome/🔣️.json");
 
 fn before() -> LayoutSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("update-page-columns/splits-page-1-into-three-columns: before snapshot decodes")

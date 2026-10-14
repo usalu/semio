@@ -48,7 +48,7 @@ impl ArtifactApp for SingleDocumentApp {
     /// `encode_pack` plus a bare `store::os_store::text_format::empty_document_spr` naming the APP, not the live store.
     /// This lane never passed through the runtime's identity stamp.
     async fn pending_effects(_owner: &ArtifactInstanceOperationOwnerHandle, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
-        let pack = <TestSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&TestSnapshot { count: 42, label: "example".into(), slot: Vec::new() });
+        let pack = <TestSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&TestSnapshot { count: 42, label: "example".into(), slot: Vec::new() });
         let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(Self::APP_ID, Self::DOCUMENT_SCHEMA));
         vec![Effect::LoadDocument { pack, spr }]
     }
@@ -106,7 +106,7 @@ type SingleDocumentAppUnderTest = VcsArtifactApp<SingleDocumentApp, TestMembers>
 /// This is what leaves the command handler, NOT what may legally reach the archive loader.
 async fn raw_single_document_archive(doc_id: &str, snapshot: &TestSnapshot) -> protocol::DocumentArchivePack {
     protocol::DocumentArchivePack {
-        parent_pack: <TestSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(snapshot),
+        parent_pack: <TestSnapshot as pack::snapshot::ArtifactPack>::encode_pack(snapshot),
         parent_spr: Box::pin(store::os_store::text_format::empty_document_spr(doc_id, SingleDocumentApp::DOCUMENT_SCHEMA)).await,
         members: Vec::new(),
     }
@@ -322,4 +322,20 @@ async fn a_document_archive_round_trip_lists_every_history_row_of_its_source() {
     assert_eq!(after, before, "the loaded instance lists exactly the source's rows (it listed {replaced:?} before the load)");
     close_member_admission_app(&mut source);
     close_member_admission_app(&mut target);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn original_lifecycle_archive_pending_status_observation_preserves_retained_source(){
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let mut app=Box::pin(VcsArtifactApp::<SingleDocumentApp,TestMembers>::new(SingleDocumentApp,protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()),crate::app::artifact_app_laws::fixture_mounted_policy(),&mut crate::app::artifact_app_laws::fixture_identity())).await;
+    let operation=law["operation"].as_u64().unwrap();let archive=Box::pin(stamped_single_document_archive(&app,&TestSnapshot{count:42,label:"example".into(),slot:Vec::new()})).await;
+    PluginApp::begin_document_archive_load(&mut app,operation,archive).unwrap();
+    let mut identity=crate::app::artifact_app_laws::fixture_identity();
+    let first=semio_framework_async::poll::resolve_ready(PluginApp::poll_document_archive_load(&mut app,operation,&mut identity)).unwrap();assert_eq!(first.state,protocol::DocumentArchiveLoadState::Pending);
+    for _ in 0..law["observations"].as_u64().unwrap(){
+        let(status,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_async::poll::resolve_ready(PluginApp::poll_document_archive_load(&mut app,operation,&mut identity)).unwrap());
+        assert_eq!(status,first);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(app.snapshot().unwrap().count,0);
+    }
+    PluginApp::cancel_document_archive_load(&mut app,operation).unwrap();close_member_admission_app(&mut app);
+    eprintln!("[DEBUG] original archive repeated status same pending operation unchanged graph System0 no maintenance authority");
 }

@@ -1,0 +1,52 @@
+{
+  "schema": "semio.ui.row-action-admission.v1",
+  "owner": {
+    "pluginId": "stdio",
+    "appId": "csv",
+    "sessionInstanceId": 17,
+    "runtimeKey": "document-row-actions",
+    "clientInstanceId": "client-a"
+  },
+  "initial": {
+    "target": {
+      "scope": "stdio.csv",
+      "version": 1,
+      "args": {
+        "row": 4,
+        "revision": "0000000000000001"
+      },
+      "activation": null
+    },
+    "action": {
+      "icon": "trash-2",
+      "label": "Remove",
+      "verb": "remove-row",
+      "placement": "row",
+      "disabled": false
+    }
+  },
+  "replacement": {
+    "target": {
+      "scope": "stdio.csv.rebased",
+      "version": 2,
+      "args": {
+        "row": 9,
+        "revision": "0000000000000002"
+      },
+      "activation": null
+    },
+    "action": {
+      "icon": "copy",
+      "label": "Duplicate",
+      "verb": "duplicate-row",
+      "placement": "row",
+      "disabled": false
+    }
+  },
+  "expected": {
+    "pendingDispatches": 1,
+    "replacementDispatches": 2,
+    "tableRowName": "Table row",
+    "treeRowName": "Tree row"
+  }
+}

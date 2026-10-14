@@ -5,7 +5,7 @@ import {resolve} from "node:path";
 import {Database} from "bun:sqlite";
 
 import TOML from "@iarna/toml";
-import fixture from "../../🧫️fixtures/⚠️refusal/🔣️.json";
+import fixture from "../🧫️fixtures/⚠️refusal/🔣️.json";
 import {ValueError,type ValueRefusalKind} from "../../../🌱️value/⚠️refusal/🟦️.ts";
 
 test("all owned callback and retained-allocation kinds have independent closed projections",()=>{

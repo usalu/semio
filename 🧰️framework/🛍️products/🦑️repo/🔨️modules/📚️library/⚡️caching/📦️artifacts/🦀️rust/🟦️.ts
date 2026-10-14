@@ -1,9 +1,10 @@
-import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import type { ScriptControl } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
-import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { startNativeProgress } from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type { ScriptControl } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { startNativeProgress } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { relative, resolve } from "node:path";
-import { BundleScript, ScriptRouter, scriptInvocationBudget, type ScriptCommand } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, scriptInvocationBudget, type ScriptCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { artifactRustCargoArguments, validateNativeCargoArguments } from "../🎛️native-input/🟦️.ts";
 import { buildRepositoryCargoArtifacts } from "../🏗️native-build/🟦️.ts";
@@ -52,7 +53,7 @@ export async function runArtifactRustPackageMain(packageRoot: string, cargoName:
   class BuildScript extends BundleScript {
     async run(segments: string[]): Promise<void> {
       const { cargoArgs } = artifactRustCargoArguments("build", segments);
-      await buildRepositoryCargoArtifacts(relative(this.repoRoot, resolve(this.root, "Cargo.toml")), cargoArgs, this.repoRoot);
+      await buildRepositoryCargoArtifacts(relative(this.repoRoot, resolve(this.root, "Cargo.toml")), cargoArgs, this.repoRoot, { control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0) });
     }
   }
   class CheckScript extends BundleScript {

@@ -109,7 +109,7 @@
       "networkDuringExecution": false,
       "homepage": "https://github.com/mfogel/polygon-clipping",
       "hostPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
-      "rationale": "Judges the glass of 🥞️layered-overview-geometry in `🧪️tests/🔬️unit`: for every veil vector of `🧫️fixtures/🥞️layered-overview`, the boolean difference view − hole computed by polygon-clipping must have the area the fixture declares, and so must our single `clip-path: polygon(evenodd, …)` vertex list under the evenodd rule — so one clipped glass layer covers exactly what the landings' four rectangles covered."
+      "rationale": "Judges the glass of 🥞️layered-overview-geometry in `🧪️tests/🔬️unit`: for every veil vector of `🧪️tests/🧫️fixtures/🥞️layered-overview`, the boolean difference view − hole computed by polygon-clipping must have the area the fixture declares, and so must our single `clip-path: polygon(evenodd, …)` vertex list under the evenodd rule — so one clipped glass layer covers exactly what the landings' four rectangles covered."
     },
     {
       "id": "d3-ease",
@@ -162,7 +162,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "homepage": "https://github.com/Qix-/color-string",
-      "rationale": "Judges `ui_color_hex`/`parse_ui_color_hex` in `🧬️contract/🧪️tests/🧪️color-input` over `🧫️fixtures/🧫️color-input`: color-string parses every accepted text to the same channels and alpha, refuses every refused one and prints the same hex, so the colour input commits the colour the user typed."
+      "rationale": "Judges `ui_color_hex`/`parse_ui_color_hex` in `🧬️contract/🧪️tests/🧪️color-input` over `🧪️tests/🧫️fixtures/🧫️color-input`: color-string parses every accepted text to the same channels and alpha, refuses every refused one and prints the same hex, so the colour input commits the colour the user typed."
     },
     {
       "id": "ui-number-controls-d3-scale",
@@ -186,7 +186,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "homepage": "https://d3js.org/d3-scale",
-      "rationale": "Judges the number controls in `🧬️contract/🧪️tests/🧪️number-controls` (design §18) over `🧫️fixtures/🧫️number-controls`: d3-scale's `scaleLog`/`scaleLinear` are the independent slider axis (position and inverse) and display-factor oracles."
+      "rationale": "Judges the number controls in `🧬️contract/🧪️tests/🧪️number-controls` (design §18) over `🧪️tests/🧫️fixtures/🧫️number-controls`: d3-scale's `scaleLog`/`scaleLinear` are the independent slider axis (position and inverse) and display-factor oracles."
     },
     {
       "id": "ui-text-splice-fast-check",
@@ -234,7 +234,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "homepage": "https://mikemcl.github.io/decimal.js",
-      "rationale": "The independent rounding and ladder oracle of `🧬️contract/🧪️tests/🧪️number-controls` over `🧫️fixtures/🧫️number-controls`: it rounds the EXACT binary expansion of every value half away from zero, so a twin that rounded the shortest decimal would disagree on `1.005`/`2.675`."
+      "rationale": "The independent rounding and ladder oracle of `🧬️contract/🧪️tests/🧪️number-controls` over `🧪️tests/🧫️fixtures/🧫️number-controls`: it rounds the EXACT binary expansion of every value half away from zero, so a twin that rounded the shortest decimal would disagree on `1.005`/`2.675`."
     },
     {
       "id": "three-damp",

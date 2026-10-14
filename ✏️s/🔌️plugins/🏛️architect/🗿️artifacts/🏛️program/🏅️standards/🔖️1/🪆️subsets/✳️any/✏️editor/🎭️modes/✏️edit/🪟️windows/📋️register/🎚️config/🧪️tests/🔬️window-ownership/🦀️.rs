@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::architect::modes::edit::windows::{adjacency, graph, report};
 use protocol::{Mutation, OpBinary, OpText};
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 fn block_on_architect_windows<F: std::future::Future>(mut future: std::pin::Pin<Box<F>>) -> F::Output {
     let waker = std::task::Waker::noop();
@@ -16,7 +16,7 @@ fn block_on_architect_windows<F: std::future::Future>(mut future: std::pin::Pin<
 
 #[semio_framework_async_macros::async_test]
 async fn architect_window_ownership_matches_the_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-ownership/🔣️.json")).expect("neutral Architect window fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window-ownership/🔣️.json")).expect("neutral Architect window fixture");
     let app_config = crate::editor::architect::config::ArchitectConfig::default();
     assert_eq!(<crate::editor::architect::config::ArchitectConfig as ArtifactDsl>::envelope_id(), "architect.config");
     assert_eq!(crate::editor::architect::config::ArchitectConfig::parse_dsl(&app_config.print_dsl()).expect("Architect app-config DSL"), app_config);

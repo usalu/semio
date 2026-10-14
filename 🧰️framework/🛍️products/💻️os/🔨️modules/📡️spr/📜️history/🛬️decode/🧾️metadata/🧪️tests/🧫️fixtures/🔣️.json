@@ -1,0 +1,126 @@
+{
+  "source": {
+    "operation": 43,
+    "generation": 7,
+    "pageBytes": 3,
+    "prefixHex": "aa",
+    "suffixHex": "bb"
+  },
+  "grant": {
+    "items": 1,
+    "copyBytes": 2,
+    "capacityBytes": 65536,
+    "releaseBytes": 262144,
+    "depth": 64
+  },
+  "limits": {
+    "fileBytes": 67108864,
+    "frameBodyBytes": 1048576,
+    "records": 8192,
+    "maximumFields": 128,
+    "maximumTextBytes": 1048576,
+    "maximumBinaryBytes": 1048576,
+    "maximumJsonBytes": 1048576,
+    "maximumJsonAllocationBytes": 8388608,
+    "maximumJsonItems": 65536,
+    "maximumJsonDepth": 64
+  },
+  "priorEditIds": [
+    "prior-original"
+  ],
+  "metadata": [
+    {
+      "wireHex": "00000701",
+      "expected": {
+        "opId": null,
+        "dependencies": [],
+        "baseVersion": 7,
+        "authorId": null,
+        "hlt": null,
+        "undoPolicy": 1,
+        "payloadHash": null,
+        "groupId": null,
+        "origin": {
+          "kind": "owner"
+        },
+        "messages": [],
+        "transaction": null
+      }
+    },
+    {
+      "wireHex": "ff00026f700200056465702d31030009000a617574686f722de6bca203090201000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f000767726f75702d31107b226b696e64223a226f776e6572227d010200066e6f7469636503e6bca20203666f6f02c3a9018101000374786e0004746f6f6c",
+      "expected": {
+        "opId": "op",
+        "dependencies": [
+          "dep-1",
+          "prior-original"
+        ],
+        "baseVersion": 9,
+        "authorId": "author-漢",
+        "hlt": [
+          3,
+          -5,
+          2
+        ],
+        "undoPolicy": 1,
+        "payloadHash": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31
+        ],
+        "groupId": "group-1",
+        "origin": {
+          "kind": "owner"
+        },
+        "messages": [
+          {
+            "level": 2,
+            "code": "notice",
+            "message": "漢",
+            "target": [
+              "foo",
+              "é"
+            ],
+            "opIndex": 129
+          }
+        ],
+        "transaction": {
+          "id": "txn",
+          "tool": "tool"
+        }
+      }
+    }
+  ],
+  "control": {
+    "maximumAllocationBytes": 8388608
+  }
+}

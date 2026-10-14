@@ -26,7 +26,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import workerFreshness from "../../🧫️fixtures/👷️worker-freshness/🔣️.json" with { type: "json" };
+import workerFreshness from "../🧫️fixtures/👷️worker-freshness/🔣️.json" with { type: "json" };
 import { createServer, type ViteDevServer } from "vite";
 import { semioServeCloseVitePlugin } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🟦️.ts";
@@ -42,7 +42,7 @@ type HotUpdateFixture = {
 type HotState = { readonly value: string; readonly updates: number };
 type Page = import("playwright").Page;
 
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/♨️hot-update.json", import.meta.url), "utf8")) as HotUpdateFixture;
+const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/♨️hot-update.json", import.meta.url), "utf8")) as HotUpdateFixture;
 const longLevel = ["long", "exhaustive"].includes(process.env.SEMIO_TEST_LEVEL ?? "");
 const runtime = process.versions.bun ? `bun ${process.versions.bun}` : `node ${process.versions.node}`;
 

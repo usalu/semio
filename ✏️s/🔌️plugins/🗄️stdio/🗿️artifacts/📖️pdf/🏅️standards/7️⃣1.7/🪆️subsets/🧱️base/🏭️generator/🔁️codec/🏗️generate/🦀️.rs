@@ -81,7 +81,7 @@ fn fixture_directory(kind: &str) -> &'static str {
 }
 
 fn main() {
-    let out_root = env::args().nth(1).unwrap_or_else(|| "../../🧫️fixtures".to_string());
+    let out_root = env::args().nth(1).unwrap_or_else(|| "../../🧪️tests/🧫️fixtures".to_string());
     let seed = build_seed();
     let mut failures: Vec<String> = Vec::new();
     let mut written = 0usize;

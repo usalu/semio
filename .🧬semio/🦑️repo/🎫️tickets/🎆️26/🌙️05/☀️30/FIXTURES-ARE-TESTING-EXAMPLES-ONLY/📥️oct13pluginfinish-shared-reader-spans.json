@@ -1,0 +1,779 @@
+[
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️puzzle/🧪️tests/🔺️diff-parsers/🟦️.ts",
+    "beforeSha256": "ab708238f4444944d5d5131083919d318bd725cd580269a3254e6197a2434625",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 6801,
+        "end": 6933,
+        "before": "\"../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧫️fixtures/🔢️native-fields/🔣️.json\"",
+        "after": "\"../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔺️diff/🔢️native-fields/🔣️.json\"",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🔁️generation3d-incremental-eval/🦀️.rs",
+    "beforeSha256": "5f0a64c4311ea8b2e2dba2d2447b245579d0924ce6e165484522e5b9d5d4673e",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 2319,
+        "end": 2447,
+        "before": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🔁️incremental-eval.json",
+        "after": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔁️incremental-eval.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "0412504bf07211c4009ba9e8428174648f315a1e19cae3e761f80cf8ab5eb423",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 9393,
+        "end": 9550,
+        "before": "../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧫️fixtures/🔣️.json",
+        "after": "../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 5964,
+        "end": 6121,
+        "before": "../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧫️fixtures/🔣️.json",
+        "after": "../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 4735,
+        "end": 4892,
+        "before": "../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧫️fixtures/🔣️.json",
+        "after": "../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 160,
+        "end": 328,
+        "before": "../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧫️fixtures/🥽️topology/🔣️.json",
+        "after": "../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🧫️fixtures/🥽️topology/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "b41e55fb14dfff11d5c89cbc51df706dcb8ddf7a81e892f85114b9a36d8c88e1",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 271,
+        "end": 453,
+        "before": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/🧫️fixtures/🔣️.json",
+        "after": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️navigate-graph/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "7e33db7b052d36bb1ec8d0e0629f3770b6c223a138d21d6f7517a69be5878d78",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 566,
+        "end": 730,
+        "before": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧭️graph-keyboard-navigation.json",
+        "after": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧭️graph-keyboard-navigation.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔓️flow-eval-release/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "57a7fdba14a78d66f966c0d1b407f029d93ac40c8e06c38ced2949828c96d1dc",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 169,
+        "end": 324,
+        "before": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/⏯️preview-eval-run.json",
+        "after": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏯️preview-eval-run.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "5371e72e847e850c7a00fdd9e88ca7817ffa3057387d0060c532c06be08f5610",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 284,
+        "end": 456,
+        "before": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧫️fixtures/🔣️.json",
+        "after": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️flow-eval-resolve/🧪️tests/🔬️budget/🦀️.rs",
+    "beforeSha256": "c02a95776cd69a633eda166f67d49077e04766dcd392b78ba39fec249aec3e81",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 736,
+        "end": 890,
+        "before": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/⏱️evaluate-budget.json",
+        "after": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏱️evaluate-budget.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "12112832178356c0e31a441cd08a9e3746eb3e4d163631c3716397bbe370ddb6",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 21618,
+        "end": 21796,
+        "before": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧫️fixtures/🔣️.json",
+        "after": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 12307,
+        "end": 12485,
+        "before": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧫️fixtures/🔣️.json",
+        "after": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 5478,
+        "end": 5656,
+        "before": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧫️fixtures/🔣️.json",
+        "after": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 778,
+        "end": 948,
+        "before": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures/🔣️.json",
+        "after": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "f5f067445b3ad37223d3d0ac642f1da1b1c176dacbcf1ef246d3bd0f126707d5",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 5035,
+        "end": 5188,
+        "before": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🎚️slider-gesture.json",
+        "after": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎚️slider-gesture.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏱️flow-eval-tick/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "d48ba3dcd8293c9b740db5dfca73603e5d6cb5fa4657c875696d5b6ad19cf05b",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 1530,
+        "end": 1703,
+        "before": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🚧️contribution-gated-arming.json",
+        "after": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/🚧️contribution-gated-arming.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "133b7dc104792f4757b76f9348e4fb444d5890145813cec65ae61a3dedcd6790",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 3564,
+        "end": 3757,
+        "before": "../../../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧫️fixtures/🔬️unit/🔣️.json",
+        "after": "../../../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧪️tests/🧫️fixtures/🔬️unit/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🎚️slider-values/🦀️.rs",
+    "beforeSha256": "d7bdcb45868fd37400f6a58a4c55918daa9fef53e89801685025ad78423a4aac",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 1422,
+        "end": 1568,
+        "before": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🎚️slider-values.json",
+        "after": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎚️slider-values.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️mode-panels/🦀️.rs",
+    "beforeSha256": "8a5270962917ee69b0789af56645f261dc207c26c274240a1f7243d9440d3d9f",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 1108,
+        "end": 1263,
+        "before": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/📌️mode-panel-publication.json",
+        "after": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📌️mode-panel-publication.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️tick-addressing/🦀️.rs",
+    "beforeSha256": "1aaa9064684e60658a2e30df636424c847c0b93169eaf8db6ffe25b19fb7ecb9",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 649,
+        "end": 797,
+        "before": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🪟️tick-addressing.json",
+        "after": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪟️tick-addressing.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "8958cef745ac349695b42ad53cd387961040f4b728be333d6b9465ff7bf3823a",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 239151,
+        "end": 239323,
+        "before": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧫️fixtures/🔣️.json",
+        "after": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 234690,
+        "end": 234862,
+        "before": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧫️fixtures/🔣️.json",
+        "after": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 214900,
+        "end": 215075,
+        "before": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧫️fixtures/🔣️.json",
+        "after": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 207183,
+        "end": 207358,
+        "before": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧫️fixtures/🔣️.json",
+        "after": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 197348,
+        "end": 197524,
+        "before": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️transforms/🧫️fixtures/🧷️gesture/🔣️.json",
+        "after": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️transforms/🧪️tests/🧫️fixtures/🧷️gesture/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 192905,
+        "end": 193080,
+        "before": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧫️fixtures/🔣️.json",
+        "after": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 181948,
+        "end": 182114,
+        "before": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/💥️extension-evaluate-fault.json",
+        "after": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/💥️extension-evaluate-fault.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 43651,
+        "end": 43805,
+        "before": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🚪️io/🗿️artifact-surface.json",
+        "after": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🚪️io/🗿️artifact-surface.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 74,
+        "end": 228,
+        "before": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/⌨️keyboard-reachability.json",
+        "after": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⌨️keyboard-reachability.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️example-switch/🦀️.rs",
+    "beforeSha256": "e8bf3314d3244cc88ff234337625019f506ba95d3f0751727b7dd5d73b66196f",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 10799,
+        "end": 10946,
+        "before": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🎨️example-switch.json",
+        "after": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️example-switch.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️generate-interactions/🦀️.rs",
+    "beforeSha256": "7e8a28b442f2f346b00d067eb17c3453987baea52fbd22ce739ad093d70ee097",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 811,
+        "end": 970,
+        "before": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🎛️generate-mode-interactions.json",
+        "after": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎛️generate-mode-interactions.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🕹️interaction-scope/🦀️.rs",
+    "beforeSha256": "f87e8966c1eb9db31506e0cb56b8d48fa7ee8fc2fb61a93c3d00da88e4ccd03c",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 1397,
+        "end": 1547,
+        "before": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🕹️interaction-scope.json",
+        "after": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🕹️interaction-scope.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "a62be8e9418f8050f6ed0367226111feda29133e19e5291f0705c914a74f2c6e",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 11958,
+        "end": 12127,
+        "before": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧫️fixtures/🗣️.json",
+        "after": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🧫️fixtures/🗣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "66982a65e9f893d6500cbed129c780ca77a915331ac04b6d4e3553ae67408f53",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 6608,
+        "end": 6778,
+        "before": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures/🔣️.json",
+        "after": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "603b6dc14bb7f9087ac9674eeff3a1a80a0d0d6c955606ce8ac18b9e058860e5",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 496,
+        "end": 671,
+        "before": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧫️fixtures/🔬️unit/🔣️.json",
+        "after": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🧫️fixtures/🔬️unit/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🎨️set-active-example/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "d6dff5e4d97349fa5e8a367bf23a8ddf7a8eff044767290e377a3f95cb66e914",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 983,
+        "end": 1136,
+        "before": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🎨️example-switch.json",
+        "after": "../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️example-switch.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️status-contract/🦀️.rs",
+    "beforeSha256": "1632e926835954fd368d0a5077f5a26a35db35fcfa66498eba15c59a684a177f",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 1031,
+        "end": 1178,
+        "before": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🛑️preview-cancel.json",
+        "after": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🛑️preview-cancel.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️eval-chain/🦀️.rs",
+    "beforeSha256": "a80dc9b9bcaa88ab78e0fadd3202341bf9aff8f55d3c135b07d9567cbb2f3622",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 986,
+        "end": 1134,
+        "before": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🪟️tick-addressing.json",
+        "after": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪟️tick-addressing.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "c0e0b60b64b713530168bea2f5ad7675bd0c1061564df5eb24875323f8a7cfeb",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 308,
+        "end": 457,
+        "before": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/⏯️preview-eval-run.json",
+        "after": "../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏯️preview-eval-run.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🎬️sequence-runtime/🪟️windows/🦀️.rs",
+    "beforeSha256": "dbbb4caad194c9fc6d6a0c701838c742de7d17eebea2b4f7ac46d99dd8f7acbc",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 4005,
+        "end": 4183,
+        "before": "../../../../../🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📽️main/🎚️config/🧫️fixtures/🔬️window-ownership/🔣️.json",
+        "after": "../../../../../🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📽️main/🎚️config/🧪️tests/🧫️fixtures/🔬️window-ownership/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🧩️generation3d-example-geometry/🦀️.rs",
+    "beforeSha256": "6cac7610a06fa4c7bd271df79b3546d93950a73d80f5c971d22085a16fcf5c57",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 81915,
+        "end": 82072,
+        "before": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍩️sphere-cut-with-torus/🧫️fixtures/🧩️example/🔣️.json",
+        "after": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍩️sphere-cut-with-torus/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 81484,
+        "end": 81635,
+        "before": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧲️sphere-box-fuse/🧫️fixtures/🧩️example/🔣️.json",
+        "after": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧲️sphere-box-fuse/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 81068,
+        "end": 81222,
+        "before": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📐️box-fillet-preview/🧫️fixtures/🧩️example/🔣️.json",
+        "after": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📐️box-fillet-preview/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 80644,
+        "end": 80797,
+        "before": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🐚️box-shell-preview/🧫️fixtures/🧩️example/🔣️.json",
+        "after": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🐚️box-shell-preview/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 80215,
+        "end": 80376,
+        "before": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom-column/🧫️fixtures/🧩️example/🔣️.json",
+        "after": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom-column/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 79776,
+        "end": 79930,
+        "before": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧹️face-sweep-extrude/🧫️fixtures/🧩️example/🔣️.json",
+        "after": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧹️face-sweep-extrude/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 79345,
+        "end": 79505,
+        "before": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️rectangle-extrude-volume/🧫️fixtures/🧩️example/🔣️.json",
+        "after": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️rectangle-extrude-volume/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 78898,
+        "end": 79056,
+        "before": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🪢️rectangle-wire-preview/🧫️fixtures/🧩️example/🔣️.json",
+        "after": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🪢️rectangle-wire-preview/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 42083,
+        "end": 42240,
+        "before": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍩️sphere-cut-with-torus/🧫️fixtures/🧩️example/🔣️.json",
+        "after": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍩️sphere-cut-with-torus/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 41627,
+        "end": 41778,
+        "before": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧲️sphere-box-fuse/🧫️fixtures/🧩️example/🔣️.json",
+        "after": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧲️sphere-box-fuse/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 41191,
+        "end": 41345,
+        "before": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📐️box-fillet-preview/🧫️fixtures/🧩️example/🔣️.json",
+        "after": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📐️box-fillet-preview/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 40748,
+        "end": 40901,
+        "before": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🐚️box-shell-preview/🧫️fixtures/🧩️example/🔣️.json",
+        "after": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🐚️box-shell-preview/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 40301,
+        "end": 40462,
+        "before": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom-column/🧫️fixtures/🧩️example/🔣️.json",
+        "after": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom-column/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 39840,
+        "end": 39994,
+        "before": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧹️face-sweep-extrude/🧫️fixtures/🧩️example/🔣️.json",
+        "after": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧹️face-sweep-extrude/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 39391,
+        "end": 39551,
+        "before": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️rectangle-extrude-volume/🧫️fixtures/🧩️example/🔣️.json",
+        "after": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️rectangle-extrude-volume/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 38924,
+        "end": 39082,
+        "before": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🪢️rectangle-wire-preview/🧫️fixtures/🧩️example/🔣️.json",
+        "after": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🪢️rectangle-wire-preview/🧪️tests/🧫️fixtures/🧩️example/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 10278,
+        "end": 10422,
+        "before": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧫️fixtures/⏱️budget-calibration/🔣️.json",
+        "after": "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests/🧫️fixtures/⏱️budget-calibration/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/📜️script.ts",
+    "beforeSha256": "10a27e103d4c5379ba967fb0b46ae4db404ae25400cfd1762777a0b8c73aa3fc",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 10722,
+        "end": 10780,
+        "before": "join(base, \"🧫️fixtures/🧫️retained-command-limits/🔣️.json\")",
+        "after": "join(base, \"🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json\")",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 2865,
+        "end": 2930,
+        "before": "join(base, \"🫧️transient/🧫️fixtures/📇️projection-wire-v1/🔣️.json\")",
+        "after": "join(base, \"🫧️transient/🧪️tests/🧫️fixtures/📇️projection-wire-v1/🔣️.json\")",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🪐️space/🧪️tests/🔬️interactive-job-catalog/🦀️.rs",
+    "beforeSha256": "0600492928413955880ac3d6a65dff69ab2628d8858ff2dc809b4356a1897200",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 1016,
+        "end": 1158,
+        "before": "../../../../../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🧫️retained-command-limits/🔣️.json",
+        "after": "../../../../../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 823,
+        "end": 964,
+        "before": "../../../../../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🧫️retained-command-limits/🔣️.json",
+        "after": "../../../../../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🪐️space/🧪️testing/🧪️tests/🔮️ownership/🟦️.ts",
+    "beforeSha256": "133a47fca90da7889882bba809ded9b33d6b6cc321c8c41a4d6da739e804e893",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 339,
+        "end": 418,
+        "before": "\"../../../../../../✏️s/🔌️plugins/🪐️space/🫀️core/📄️documents/🧫️fixtures/🔣️.json\"",
+        "after": "\"../../../../../../✏️s/🔌️plugins/🪐️space/🫀️core/📄️documents/🧪️tests/🧫️fixtures/🔣️.json\"",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/📜️script.ts",
+    "beforeSha256": "dbae7a61cbf13b80fc58066553339b87d1833d5d567d873101f7b103908ab109",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 27173,
+        "end": 27256,
+        "before": "join(this.repoRoot, PLUGIN_OWNER, \"🧫️fixtures/📇️mutation-leaf-taxonomy-v1/🔣️.json\")",
+        "after": "join(this.repoRoot, \"✏️s/🔌️plugins/📕️norm/🧪️tests/🧫️fixtures/📇️mutation-leaf-taxonomy-v1/🔣️.json\")",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 26679,
+        "end": 26762,
+        "before": "join(this.repoRoot, PLUGIN_OWNER, \"🧫️fixtures/📇️mutation-leaf-taxonomy-v1/🔣️.json\")",
+        "after": "join(this.repoRoot, \"✏️s/🔌️plugins/📕️norm/🧪️tests/🧫️fixtures/📇️mutation-leaf-taxonomy-v1/🔣️.json\")",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 9870,
+        "end": 9911,
+        "before": "join(configRoot, \"🧫️fixtures\", \"🔣️.json\")",
+        "after": "join(configRoot, \"🧪️tests/🧫️fixtures/🔣️.json\")",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/📕️norm/🖥️app-surface/🧪️tests/🖥️app-surface/🦀️.rs",
+    "beforeSha256": "45112dd4c161f52c858125bd4c61aff979f5555d67477d25544cb5e9afac03ff",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 7182,
+        "end": 7293,
+        "before": "../../../../../../✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🧫️fixtures/🧫️retained-command-dispositions/🔣️.json",
+        "after": "../../../../../../✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🧪️tests/🧫️fixtures/🧫️retained-command-dispositions/🔣️.json",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️editable-controls/🟦️.tsx",
+    "beforeSha256": "870871098a28984dc7b2cd4e948ebe8135cb73f0de34d819cd0fd9d639ab8f25",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 41137,
+        "end": 41278,
+        "before": "\"../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗣️terminology.json\"",
+        "after": "\"../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🗣️terminology.json\"",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 40933,
+        "end": 41102,
+        "before": "\"../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧫️fixtures/🔣️.json\"",
+        "after": "\"../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json\"",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 40746,
+        "end": 40907,
+        "before": "\"../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures/🔣️.json\"",
+        "after": "\"../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️.json\"",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
+    "beforeSha256": "d376032fa9d5015287ebf74a3e3a584edb707da527238c3fd8912c1d09940288",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 936,
+        "end": 1101,
+        "before": "\"../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧫️fixtures/🛑️interruption/🔣️.json\"",
+        "after": "\"../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧪️tests/🧫️fixtures/🛑️interruption/🔣️.json\"",
+        "role": "fresh-exact-reader-coordinate"
+      },
+      {
+        "start": 565,
+        "end": 715,
+        "before": "\"../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧫️fixtures/🔣️.json\"",
+        "after": "\"../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧪️tests/🧫️fixtures/🔣️.json\"",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧪️tests/🧪️staged-arg-controls/🟦️.tsx",
+    "beforeSha256": "7378544c2dd0135ffc97ca3602dceb4481c4b4f27a76dcec6b5a5aec8dbeb952",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 24777,
+        "end": 24960,
+        "before": "\"../../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/➕️create-layer/🧫️fixtures/🎛️input-choices/🔣️.json\"",
+        "after": "\"../../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/➕️create-layer/🎛️input-choices/🔣️.json\"",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts",
+    "beforeSha256": "cef5d0b349408699c747cb99dac85b4f2bef982cd124c57256b6f2a4ebb992b4",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 8161,
+        "end": 8296,
+        "before": "\"✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🛣️retained-command-routes.json\"",
+        "after": "\"./✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/🛣️retained-command-routes.json\"",
+        "role": "fresh-exact-reader-coordinate"
+      }
+    ]
+  }
+]

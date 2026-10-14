@@ -1,0 +1,45 @@
+{
+  "changes": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🦀️.rs",
+      "exclusive": false,
+      "beforeSha256": "3a8450384ebf21969eb5e03091db7c5dbf8e4708fe7c898b6e3b7ebc86579351",
+      "afterSha256": "6e5d3bad7f8c6239c7b282dfa2eea42854e2433dee13de75e2e8002d3d86dfca",
+      "spans": [
+        {
+          "before": "fn runtime_lifecycle_grant()->RetainedCloneGrant {",
+          "after": "pub(crate) fn runtime_lifecycle_grant()->RetainedCloneGrant {"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs",
+      "exclusive": false,
+      "beforeSha256": "947f682c567b713e9ab5c3e2ea2101d2e9061892cb3788138e63fa5db76f8a76",
+      "afterSha256": "157acefa117ae6f42dc4c6d754293578b14b08f359174513650a6f452383e29c",
+      "spans": [
+        {
+          "before": "fn drain_queued_effects(instance: u32) -> Vec<Effect> {",
+          "after": "pub(crate) fn drain_queued_effects(instance: u32) -> Vec<Effect> {"
+        },
+        {
+          "before": "fn take_extension_response(req: semio_framework::kernel::RequestId,",
+          "after": "pub(crate) fn take_extension_response(req: semio_framework::kernel::RequestId,"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/🦀️.rs",
+      "exclusive": false,
+      "beforeSha256": "f1f0d86fed8844efebe4bb3c054c9287a09fa1dbc0c339e8e9d2fff9399bc3dd",
+      "afterSha256": "50d5e8905c9d7d5bb123883fdc4aff9fd1df7d99fcc85d3bbfd4cafc460f011b",
+      "spans": [
+        {
+          "before": "    #[cfg(any(test, feature = \"artifact-app-testing\"))]\n    now_ms: Option<u64>,",
+          "after": "    #[cfg(any(test, feature = \"artifact-app-testing\"))]\n    pub(crate) now_ms: Option<u64>,"
+        }
+      ]
+    }
+  ],
+  "reason": "Actual Rust compiler4privacy errors in required FrameworkPlugin dependency after module split. Allow only samecrate access; original function bodies/native grants/protocols unchanged. now_ms remains gated test/artifact-app-testing; current set_tool_clock_ms requires field, no internal setter exists."
+}

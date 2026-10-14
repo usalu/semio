@@ -531,14 +531,14 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/⏸️no-mutation-applied/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/⏸️no-mutation-applied/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
         },
         {
           "role": "expected-after-avi",
-          "path": "../🧫️fixtures/⏸️no-mutation-applied/➡️after.avi",
+          "path": "../🧪️tests/🧫️fixtures/⏸️no-mutation-applied/➡️after.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
@@ -581,14 +581,14 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/🧾️set-main-header-applied/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/🧾️set-main-header-applied/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
         },
         {
           "role": "expected-after-avi",
-          "path": "../🧫️fixtures/🧾️set-main-header-applied/➡️after.avi",
+          "path": "../🧪️tests/🧫️fixtures/🧾️set-main-header-applied/➡️after.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:91d3f817cc998fd68fc1d70d038ea865d1c4affbb4b8ae2ebe34164ea7af3856",
           "bytes": 498
@@ -631,14 +631,14 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/📥️insert-stream-applied/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/📥️insert-stream-applied/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
         },
         {
           "role": "expected-after-avi",
-          "path": "../🧫️fixtures/📥️insert-stream-applied/➡️after.avi",
+          "path": "../🧪️tests/🧫️fixtures/📥️insert-stream-applied/➡️after.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:7c0b1e426095a42285f70653ab43e45246a3feedf8ddc26a1cfe5d62cc85bfed",
           "bytes": 590
@@ -681,7 +681,7 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/⛔️insert-stream-rejected-out-of-bounds/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/⛔️insert-stream-rejected-out-of-bounds/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
@@ -724,14 +724,14 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/📤️remove-stream-applied/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/📤️remove-stream-applied/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
         },
         {
           "role": "expected-after-avi",
-          "path": "../🧫️fixtures/📤️remove-stream-applied/➡️after.avi",
+          "path": "../🧪️tests/🧫️fixtures/📤️remove-stream-applied/➡️after.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:8191ad79298f31a9b4a3779f8d5122c94c01182438fc111018e13aa61f1c9910",
           "bytes": 338
@@ -774,7 +774,7 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/❓️remove-stream-rejected-missing/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/❓️remove-stream-rejected-missing/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
@@ -817,14 +817,14 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/🎞️set-stream-header-applied/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/🎞️set-stream-header-applied/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
         },
         {
           "role": "expected-after-avi",
-          "path": "../🧫️fixtures/🎞️set-stream-header-applied/➡️after.avi",
+          "path": "../🧪️tests/🧫️fixtures/🎞️set-stream-header-applied/➡️after.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:a9028ab452f1768d4d70d259b1c303cb1659c317b2b8b287764fc2d9bb97df22",
           "bytes": 498
@@ -867,7 +867,7 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/⚠️set-stream-header-rejected-missing-stream/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/⚠️set-stream-header-rejected-missing-stream/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
@@ -910,14 +910,14 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/🎨️set-stream-format-applied/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/🎨️set-stream-format-applied/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
         },
         {
           "role": "expected-after-avi",
-          "path": "../🧫️fixtures/🎨️set-stream-format-applied/➡️after.avi",
+          "path": "../🧪️tests/🧫️fixtures/🎨️set-stream-format-applied/➡️after.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:0a4374f73cb69374b542c0ae94a24811ada1a0b9ce16e000693fb94a0ce130b4",
           "bytes": 498
@@ -960,7 +960,7 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/🚫️set-stream-format-rejected-missing-stream/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/🚫️set-stream-format-rejected-missing-stream/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498

@@ -1,6 +1,6 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖼️replace-image/🔣️.json";
 import snapshotSchema from "../../../📸️snapshot/🔣️.json";
 import payloadSchema from "../🧬️schema/🔣️.json";
 import type {JpgImage,JpgSnapshot} from "../../../📸️snapshot/🟦️.ts";

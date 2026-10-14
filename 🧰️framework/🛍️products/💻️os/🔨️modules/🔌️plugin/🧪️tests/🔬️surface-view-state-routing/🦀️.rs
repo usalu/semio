@@ -88,7 +88,7 @@ async fn surface_routing_render(runtime: &super::PluginRuntime<VcsArtifactApp<Te
 /// measures — the same rule `close_fixture_app_to_terminal_emptiness` states for every fixture app.
 #[semio_framework_async_macros::async_test]
 async fn every_mounted_surface_renders_against_its_own_view_state_while_one_pick_reaches_every_body() {
-    let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-view-state-routing/🔣️.json")).expect("surface view-state routing fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧪️tests/🧫️fixtures/🪟️surface-view-state-routing/🔣️.json")).expect("surface view-state routing fixture");
     let node_key = fixture["pickedNodeKey"].as_str().expect("picked node");
     let domain = fixture["domainId"].as_str().expect("domain");
     let mut identity = crate::app_testing::artifact_app_laws::fixture_identity();

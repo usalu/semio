@@ -1,0 +1,17 @@
+{
+  "catalog": null,
+  "stockExtra": null,
+  "curated": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "beam-glulam-240",
+        "patch": {
+          "count": 20
+        }
+      }
+    ]
+  }
+}

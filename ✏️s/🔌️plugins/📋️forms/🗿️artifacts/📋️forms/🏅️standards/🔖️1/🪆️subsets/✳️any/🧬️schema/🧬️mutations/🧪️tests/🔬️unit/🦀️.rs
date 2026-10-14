@@ -400,8 +400,8 @@ async fn create_family_missing_target_is_error() {
 /// `FromValue` and re-encodes to exactly the committed JSON.
 #[test]
 fn committed_wire_witnesses_are_the_canonical_wire() {
-    store::os_store::test_support::assert_wire_witness::<FormMutation>(include_str!("../../../../🧫️fixtures/🧬️mutations/➕create-block/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    store::os_store::test_support::assert_wire_witness::<FormMutation>(include_str!("../../../../🧫️fixtures/🧬️mutations/🎛️change-block-field/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    store::os_store::test_support::assert_wire_witness::<FormMutation>(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕create-block/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    store::os_store::test_support::assert_wire_witness::<FormMutation>(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-block-field/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }
 //#endregion 🧾️WireWitnesses
 

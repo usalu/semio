@@ -9,7 +9,7 @@ const POLL_BOUND: usize = 2 * JOB_PAYLOAD_OPERATION_PAGES + 64;
 const GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("neutral publication vectors")
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("neutral publication vectors")
 }
 
 fn source(value: &serde_json::Value) -> Vec<u8> {

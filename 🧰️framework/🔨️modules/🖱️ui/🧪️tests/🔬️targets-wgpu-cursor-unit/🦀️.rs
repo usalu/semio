@@ -57,7 +57,7 @@ fn dark_theme_cursor_urls_use_dark_assets() {
 
 #[test]
 fn browser_cursor_fixture_matches_every_canonical_theme_projection() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎯️targets/🧊️wgpu/👆️cursor/🧫️fixtures/🔣️.json")).expect("browser cursor fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧊️wgpu/👆️cursor/🔣️.json")).expect("browser cursor fixture");
     let cases = fixture["cases"].as_array().expect("browser cursor cases");
     assert_eq!(cases.len(), 30);
     let mut covered = std::collections::HashSet::new();

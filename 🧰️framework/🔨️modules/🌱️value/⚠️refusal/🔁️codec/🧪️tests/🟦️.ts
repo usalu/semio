@@ -5,7 +5,7 @@ import { test } from "bun:test";
 import { ValueError, type ValueRefusalKind, type ValueErrorRetainedProgress } from "../../🟦️.ts";
 import { NativeDecodeControl } from "../../../🛬️decode/🟦️.ts";
 import type { IntrinsicValue } from "../../../🧬️schema/🌳️intrinsic/🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 
 interface Control { checkpoint(): Promise<void>; charge(bytes: number): Promise<void>; step(): Promise<void>; advance(units: number): Promise<void>; beginStage(total: number): Promise<void>; scopedStage<T>(operation: () => Promise<T>): Promise<T> }

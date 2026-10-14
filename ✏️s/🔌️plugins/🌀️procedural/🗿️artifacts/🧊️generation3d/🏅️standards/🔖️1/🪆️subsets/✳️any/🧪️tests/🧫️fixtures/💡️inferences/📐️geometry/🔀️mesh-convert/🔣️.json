@@ -1,0 +1,305 @@
+{
+ "description": "Language-agnostic laws of the mesh.convert widgets. Shapes are named by a recipe (box size is width depth height). A mesh becomes a B-Rep as triangles: a closed oriented mesh a solid, an open one a shell.",
+ "tolerance": 1e-05,
+ "cases": [
+  {
+   "name": "a box shape becomes twelve triangles",
+   "kind": "mesh.convert.fromBrep",
+   "inputs": {
+    "shape": {
+     "recipe": "box",
+     "size": [
+      1,
+      2,
+      3
+     ]
+    },
+    "deflection": 0.1
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 8,
+     "faces": 12,
+     "edges": 18,
+     "euler": 2,
+     "closed": true,
+     "oriented": true,
+     "area": 22,
+     "volume": 6,
+     "bbox": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       2,
+       3
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "a cylinder shape approaches its analytic volume",
+   "kind": "mesh.convert.fromBrep",
+   "inputs": {
+    "shape": {
+     "recipe": "cylinder",
+     "radius": 1,
+     "height": 2
+    },
+    "deflection": 0.001
+   },
+   "outputs": {
+    "mesh": {
+     "euler": 2,
+     "closed": true,
+     "oriented": true,
+     "volume": 6.283185307179586,
+     "area": 18.84955592153876
+    }
+   },
+   "tolerance": 0.003
+  },
+  {
+   "name": "a mesh cube becomes a closed solid",
+   "kind": "mesh.convert.toBrep",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    }
+   },
+   "outputs": {
+    "shape": {
+     "kind": "solid",
+     "volume": 1,
+     "area": 6
+    }
+   }
+  },
+  {
+   "name": "an open mesh becomes a shell",
+   "kind": "mesh.convert.toBrep",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ]
+     ]
+    }
+   },
+   "outputs": {
+    "shape": {
+     "kind": "shell",
+     "area": 5
+    }
+   }
+  },
+  {
+   "name": "three triangles on one edge are refused",
+   "kind": "mesh.convert.toBrep",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       -1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       1,
+       2
+      ],
+      [
+       1,
+       0,
+       3
+      ],
+      [
+       0,
+       1,
+       4
+      ]
+     ]
+    }
+   },
+   "fault": {
+    "code": "generation3d.geometry.kernel"
+   }
+  }
+ ]
+}

@@ -22,7 +22,7 @@ Standard 140 §5.2 (`shared_resources/bestest_resources.osm`,
 `shared_resources/Bestest_Geo_South_12_0_0.osm` and `measures/…envelope…/measure.rb`, fetched
 2026-09-06 from https://github.com/NREL/BESTEST-GSR) rather than paraphrased from the standard's
 copyrighted text. The weather year is that repository's own `725650TYCST.epw`, committed once at
-`../../../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🌦️denver-tmy/🌦️.epw`.
+`../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🌦️denver-tmy/🌦️.epw`.
 
 TWO THINGS THE SEMIO SCHEMA DOES NOT SAY, DECLARED RATHER THAN GUESSED SILENTLY:
 

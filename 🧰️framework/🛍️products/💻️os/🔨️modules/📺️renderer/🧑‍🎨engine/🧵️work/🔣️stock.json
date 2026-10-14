@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "stock": {
+    "grant": {
+      "maximumItems": 67108864,
+      "maximumCopyBytes": 4294967296,
+      "maximumCapacityBytes": 4294967296,
+      "maximumReleaseBytes": 4294967296,
+      "maximumDepth": 128
+    },
+    "fuel": 1099511627776,
+    "maximumElapsedUs": "120000000"
+  },
+  "operation": {
+    "grant": {
+      "maximumItems": 1048576,
+      "maximumCopyBytes": 16777216,
+      "maximumCapacityBytes": 33554432,
+      "maximumReleaseBytes": 33554432,
+      "maximumDepth": 64
+    },
+    "fuel": 50000000,
+    "maximumElapsedUs": "30000000"
+  }
+}

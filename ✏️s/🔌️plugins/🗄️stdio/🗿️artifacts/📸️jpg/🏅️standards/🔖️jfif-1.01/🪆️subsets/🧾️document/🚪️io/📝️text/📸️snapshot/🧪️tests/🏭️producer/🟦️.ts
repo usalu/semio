@@ -1,6 +1,6 @@
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import fixture from "../../🧫️fixtures/🏭️producer/🔣️.json";
+import fixture from "../🧫️fixtures/🏭️producer/🔣️.json";
 
 test("scalar snapshot metadata agrees with the independent SQLite field roster",async()=>{
  const db=new Database(":memory:");try{

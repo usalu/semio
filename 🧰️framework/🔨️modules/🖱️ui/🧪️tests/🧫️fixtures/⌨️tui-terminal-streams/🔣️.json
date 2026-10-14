@@ -1,0 +1,454 @@
+{
+ "provenance": {
+  "what": "Byte streams a child writes to its terminal and the screen grid (rows, trailing blanks trimmed) and cursor they leave behind, plus the language-neutral oracle for the embedded terminal's VT parser.",
+  "why": "The dashboard's embedded terminal replaced ad-hoc parsing with a table-driven VT screen; every stream here is replayed by pyte 0.8.2 (a third-party VT emulator) and by the Rust screen, and both must show the same grid.",
+  "oracle": "pyte 0.8.2 `Screen.display` and `Screen.cursor`; a null cursor marks streams that end in a pending wrap, where pyte reports column == width and xterm reports the last column.",
+  "regenerate": "python r2-tc-oracle.py generate --libs <dir holding pyte>"
+ },
+ "cases": [
+  {
+   "id": "text-and-crlf",
+   "cols": 10,
+   "rows": 3,
+   "stream": "hello\r\nworld",
+   "screen": [
+    "hello",
+    "world",
+    ""
+   ],
+   "cursor": [
+    5,
+    1
+   ]
+  },
+  {
+   "id": "linefeed-keeps-the-column",
+   "cols": 10,
+   "rows": 3,
+   "stream": "ab\ncd\nef",
+   "screen": [
+    "ab",
+    "  cd",
+    "    ef"
+   ],
+   "cursor": [
+    6,
+    2
+   ]
+  },
+  {
+   "id": "autowrap-at-the-right-edge",
+   "cols": 5,
+   "rows": 3,
+   "stream": "abcdefgh",
+   "screen": [
+    "abcde",
+    "fgh",
+    ""
+   ],
+   "cursor": [
+    3,
+    1
+   ]
+  },
+  {
+   "id": "scroll-at-the-bottom",
+   "cols": 4,
+   "rows": 2,
+   "stream": "a\r\nb\r\nc\r\nd",
+   "screen": [
+    "c",
+    "d"
+   ],
+   "cursor": [
+    1,
+    1
+   ]
+  },
+  {
+   "id": "cursor-moves",
+   "cols": 10,
+   "rows": 5,
+   "stream": "\u001b[3;4HX\u001b[2AY\u001b[3BZ\u001b[2C!\u001b[3D?",
+   "screen": [
+    "    Y",
+    "",
+    "   X",
+    "     Z? !",
+    ""
+   ],
+   "cursor": [
+    7,
+    3
+   ]
+  },
+  {
+   "id": "column-and-row-absolute",
+   "cols": 10,
+   "rows": 4,
+   "stream": "\u001b[2;5HA\u001b[1GB\u001b[4dC",
+   "screen": [
+    "",
+    "B   A",
+    "",
+    " C"
+   ],
+   "cursor": [
+    2,
+    3
+   ]
+  },
+  {
+   "id": "cursor-stays-inside-the-screen",
+   "cols": 6,
+   "rows": 3,
+   "stream": "\u001b[99;99H\u001b[99A\u001b[99D",
+   "screen": [
+    "",
+    "",
+    ""
+   ],
+   "cursor": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "erase-display-below",
+   "cols": 6,
+   "rows": 3,
+   "stream": "aaaaaa\r\nbbbbbb\r\ncccccc\u001b[2;3H\u001b[J",
+   "screen": [
+    "aaaaaa",
+    "bb",
+    ""
+   ],
+   "cursor": [
+    2,
+    1
+   ]
+  },
+  {
+   "id": "erase-display-above",
+   "cols": 6,
+   "rows": 3,
+   "stream": "aaaaaa\r\nbbbbbb\r\ncccccc\u001b[2;3H\u001b[1J",
+   "screen": [
+    "",
+    "   bbb",
+    "cccccc"
+   ],
+   "cursor": [
+    2,
+    1
+   ]
+  },
+  {
+   "id": "erase-display-all",
+   "cols": 6,
+   "rows": 3,
+   "stream": "aaaaaa\r\nbbbbbb\r\ncccccc\u001b[2;3H\u001b[2J",
+   "screen": [
+    "",
+    "",
+    ""
+   ],
+   "cursor": [
+    2,
+    1
+   ]
+  },
+  {
+   "id": "erase-line-modes",
+   "cols": 6,
+   "rows": 3,
+   "stream": "aaaaaa\r\nbbbbbb\r\ncccccc\u001b[1;3H\u001b[K\u001b[2;3H\u001b[1K\u001b[3;3H\u001b[2K",
+   "screen": [
+    "aa",
+    "   bbb",
+    ""
+   ],
+   "cursor": [
+    2,
+    2
+   ]
+  },
+  {
+   "id": "insert-and-delete-characters",
+   "cols": 10,
+   "rows": 2,
+   "stream": "abcdef\u001b[1;3H\u001b[2@XY\u001b[1;7H\u001b[2P",
+   "screen": [
+    "abXYcd",
+    ""
+   ],
+   "cursor": [
+    6,
+    0
+   ]
+  },
+  {
+   "id": "erase-characters",
+   "cols": 10,
+   "rows": 1,
+   "stream": "abcdef\u001b[1;2H\u001b[3X",
+   "screen": [
+    "a   ef"
+   ],
+   "cursor": [
+    1,
+    0
+   ]
+  },
+  {
+   "id": "insert-and-delete-lines",
+   "cols": 4,
+   "rows": 4,
+   "stream": "aaaa\r\nbbbb\r\ncccc\r\ndddd\u001b[2;1H\u001b[L\u001b[3;1H\u001b[M",
+   "screen": [
+    "aaaa",
+    "",
+    "cccc",
+    ""
+   ],
+   "cursor": [
+    0,
+    2
+   ]
+  },
+  {
+   "id": "scroll-region-linefeed",
+   "cols": 5,
+   "rows": 5,
+   "stream": "\u001b[1;1HAAAAA\u001b[2;1HBBBBB\u001b[3;1HCCCCC\u001b[4;1HDDDDD\u001b[5;1HEEEEE\u001b[2;4r\u001b[4;1H\n",
+   "screen": [
+    "AAAAA",
+    "CCCCC",
+    "DDDDD",
+    "",
+    "EEEEE"
+   ],
+   "cursor": [
+    0,
+    3
+   ]
+  },
+  {
+   "id": "reverse-index-scrolls-the-region-down",
+   "cols": 5,
+   "rows": 5,
+   "stream": "\u001b[1;1HAAAAA\u001b[2;1HBBBBB\u001b[3;1HCCCCC\u001b[2;4r\u001b[2;1H\u001bM",
+   "screen": [
+    "AAAAA",
+    "",
+    "BBBBB",
+    "CCCCC",
+    ""
+   ],
+   "cursor": [
+    0,
+    1
+   ]
+  },
+  {
+   "id": "index-and-reverse-index",
+   "cols": 20,
+   "rows": 4,
+   "stream": "A\u001bDB\u001bMC",
+   "screen": [
+    "A C",
+    " B",
+    "",
+    ""
+   ],
+   "cursor": [
+    3,
+    0
+   ]
+  },
+  {
+   "id": "tab-stops-set-and-clear",
+   "cols": 30,
+   "rows": 2,
+   "stream": "a\tb\u001bH\u001b[3g\r\n\u001b[1;5H\u001bH\u001b[2;1H\tX",
+   "screen": [
+    "a       b",
+    "    X"
+   ],
+   "cursor": [
+    5,
+    1
+   ]
+  },
+  {
+   "id": "default-tab-stops",
+   "cols": 24,
+   "rows": 1,
+   "stream": "a\tb\tc",
+   "screen": [
+    "a       b       c"
+   ],
+   "cursor": [
+    17,
+    0
+   ]
+  },
+  {
+   "id": "origin-mode-confines-the-cursor",
+   "cols": 10,
+   "rows": 5,
+   "stream": "\u001b[2;4r\u001b[?6h\u001b[1;1HX\u001b[2;3HY",
+   "screen": [
+    "",
+    "X",
+    "  Y",
+    "",
+    ""
+   ],
+   "cursor": [
+    3,
+    2
+   ]
+  },
+  {
+   "id": "save-and-restore-cursor",
+   "cols": 10,
+   "rows": 5,
+   "stream": "\u001b[2;3HA\u001b7\u001b[5;1HB\u001b8C",
+   "screen": [
+    "",
+    "  AC",
+    "",
+    "",
+    "B"
+   ],
+   "cursor": [
+    4,
+    1
+   ]
+  },
+  {
+   "id": "utf8-text",
+   "cols": 20,
+   "rows": 1,
+   "stream": "héllo wörld €",
+   "screen": [
+    "héllo wörld €"
+   ],
+   "cursor": [
+    13,
+    0
+   ]
+  },
+  {
+   "id": "wide-characters",
+   "cols": 10,
+   "rows": 2,
+   "stream": "a好b世界c",
+   "screen": [
+    "a好b世界c",
+    ""
+   ],
+   "cursor": [
+    9,
+    0
+   ]
+  },
+  {
+   "id": "backspace-overwrites",
+   "cols": 10,
+   "rows": 1,
+   "stream": "abc\b\bX",
+   "screen": [
+    "aXc"
+   ],
+   "cursor": [
+    2,
+    0
+   ]
+  },
+  {
+   "id": "alignment-test",
+   "cols": 4,
+   "rows": 2,
+   "stream": "\u001b#8",
+   "screen": [
+    "EEEE",
+    "EEEE"
+   ],
+   "cursor": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "sgr-leaves-text-untouched",
+   "cols": 24,
+   "rows": 1,
+   "stream": "\u001b[1;31mred\u001b[0m \u001b[38;5;196mx\u001b[48;2;1;2;3my\u001b[0mz",
+   "screen": [
+    "red xyz"
+   ],
+   "cursor": [
+    7,
+    0
+   ]
+  },
+  {
+   "id": "osc-title-is-not-text",
+   "cols": 10,
+   "rows": 1,
+   "stream": "\u001b]0;title\u0007text\u001b]2;two\u001b\\!",
+   "screen": [
+    "text!"
+   ],
+   "cursor": [
+    5,
+    0
+   ]
+  },
+  {
+   "id": "unknown-sequences-are-swallowed",
+   "cols": 10,
+   "rows": 1,
+   "stream": "a\u001b[?9999hb\u001b[>cc\u001b[1;2;3;4;5xd",
+   "screen": [
+    "abcd"
+   ],
+   "cursor": [
+    4,
+    0
+   ]
+  },
+  {
+   "id": "carriage-return-rewrite",
+   "cols": 10,
+   "rows": 2,
+   "stream": "hello\rHE\r\nx",
+   "screen": [
+    "HEllo",
+    "x"
+   ],
+   "cursor": [
+    1,
+    1
+   ]
+  },
+  {
+   "id": "decstbm-homes-the-cursor",
+   "cols": 6,
+   "rows": 4,
+   "stream": "abc\u001b[2;3r\u001b[Hx",
+   "screen": [
+    "xbc",
+    "",
+    "",
+    ""
+   ],
+   "cursor": [
+    1,
+    0
+   ]
+  }
+ ]
+}

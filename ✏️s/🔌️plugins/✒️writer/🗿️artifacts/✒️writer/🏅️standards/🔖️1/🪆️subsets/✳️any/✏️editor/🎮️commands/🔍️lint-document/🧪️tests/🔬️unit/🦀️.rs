@@ -19,6 +19,6 @@ async fn lint_is_a_view_action_and_example_default_materializes() {
     let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("expected a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
-    let projection = <WriterSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+    let projection = <WriterSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
     assert!(!writer_text(&projection).is_empty(), "jack default materialized from the registry");
 }

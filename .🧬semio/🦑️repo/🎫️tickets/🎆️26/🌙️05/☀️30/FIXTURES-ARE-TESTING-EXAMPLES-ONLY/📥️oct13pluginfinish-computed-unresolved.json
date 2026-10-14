@@ -1,0 +1,1718 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧪️tests/🔬️extension-guest-standalone/🟦️.ts",
+    "expression": "resolve(root, \"🧪️tests/🧫️fixtures/🪪️channels/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧪️tests/🔬️extension-guest-standalone/🟦️.ts",
+    "expression": "resolve(directory, \"../../🧪️tests/🧫️fixtures/🚪️retirement\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧪️tests/🔬️extension-guest-standalone/🟦️.ts",
+    "expression": "resolve(root, \"🧪️tests/🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🎨️attributes/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/⏱️output-budget/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/✂️knife-cut/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🧭️component-transform/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/🛠️modeling/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🔎️inspection/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../🧪️tests/🧫️fixtures/🪪️channels/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🧵️merge-faces/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/🛠️modeling/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/🛠️modeling/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/🛠️modeling/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/🛠️modeling/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/🛠️modeling/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/🛠️modeling/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/🛠️modeling/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/🛠️modeling/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/🛠️modeling/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/🛠️modeling/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/🛠️modeling/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/⏱️output-budget/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/🛠️modeling/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/🛠️modeling/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/⏱️output-budget/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript/📜️script.ts",
+    "expression": "resolve(flowRoot, \"🧪️tests/🧫️fixtures/🎬️action-cohort/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript/📜️script.ts",
+    "expression": "resolve(noteRoot, \"🧪️tests/🧫️fixtures/🧪️action-cohort/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📜️script.ts",
+    "expression": "new URL(\"./🧪️tests/🧫️fixtures/🧵️add-widget-retained/🔣️.json\", root)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️retirement/🧪️tests/🟦️.ts",
+    "expression": "resolve(repository,\"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/♻️retirement/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️retirement/🧪️tests/🟦️.ts",
+    "expression": "resolve(repository,\"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/♻️root/👁️read/🧪️tests/🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️retirement/🧪️tests/🟦️.ts",
+    "expression": "resolve(refusalDir,\"🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️retirement/🧪️tests/🟦️.ts",
+    "expression": "resolve(admissionDir,\"🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts",
+    "expression": "join(outFlagDir ?? process.env.SEMIO_FIXTURE_OUT ?? join(HERE, \"..\", \"..\", subset, \"🧪️tests/🧫️fixtures\"), name)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts",
+    "expression": "join(HERE, \"..\", \"..\", subset, \"🧪️tests/🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts",
+    "expression": "join(HERE, \"..\", \"..\", subset, \"🧪️tests/🧫️fixtures\", directoryName)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts",
+    "expression": "new URL(\"../../../🧫️fixtures/🧬️mutations\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🎟️contributions/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🎟️contributions/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🧒️child-add-widget/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🖼️tree-projection/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/📡️host-wire/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🧪️tests/🧫️fixtures/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🧫️grant-frontier/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🧫️fixtures/📸️snapshot/🏷️slider-labels.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🧹️delete-cascade/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🪪️content-identity/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🏪️store-owners/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/👥️presence-owners/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🫧️transient-owners/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts",
+    "expression": "new URL(\"../../../👁️viewer/🧪️tests/🧫️fixtures/🧹️owners/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../../../../../🌎️hub/🧩️compositions/🌊️flow/🧫️fixtures/🧹️surface-owners/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🧮️interactive-job/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/📜️script.ts",
+    "expression": "resolve(plugin, \"🧪️tests/🧫️fixtures/🧪️publication-authority\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🪟️generation2d-window-camera-ownership/🟦️.ts",
+    "expression": "join(editor, \"🧪️tests/🧫️fixtures/🪟️generation2d-window-camera-ownership/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🧠️logical-owner/🎒️\"+index+\".pack.semio\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🧠️logical-owner/🗣️\"+index+\".dsl.semio\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🛬️native-control/🎟️original.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🛬️native-control/🎟️original.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "expression": "resolve(root,`🧫️fixtures/🧬️history-edits/${row.id}/🦠️mutation/🔣️.json`)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🧠️logical-owner/🎒️\"+index+\".pack.semio\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🧠️logical-owner/🗣️\"+index+\".dsl.semio\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../🛂️admission/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🛬️native-control/🎟️original.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🛬️native-control/🎟️original.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🛬️native-control/🎟️original.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️navigate-graph/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../🧪️tests/🧫️fixtures/🧭️graph-keyboard-navigation.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../📌️panels/🛍️catalogue/🧪️tests/🧫️fixtures/🗣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../🧪️tests/🧫️fixtures/🗣️terminology.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../📌️panels/🛍️catalogue/🧪️tests/🧫️fixtures/🎛️inputs.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️flow-eval-resolve/🧪️tests/🔬️budget/🟦️.ts",
+    "expression": "new URL(\"../../../../../🧪️tests/🧫️fixtures/⏱️evaluate-budget.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts",
+    "expression": "new URL(`../../🧫️fixtures/${name}`, import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🗣️terminology.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🏗️brep-solid/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🏗️brep-solid/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔢️math-values/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🔢️math-values/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✅️analysis-check/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/✅️analysis-check/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/📚️math-list/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/📚️math-list/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧮️math-arithmetic/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🧮️math-arithmetic/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧊️brep-primitive/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🧊️brep-primitive/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧱️mesh-support/🧪️tests/🔬️oracle/🟦️.ts",
+    "expression": "new URL(folder===\"📼️mesh-interchange\"?\"../../../../../../🚪️io/📐️geometry/📼️mesh-interchange/🧫️fixtures/🔣️.json\":`../../../${folder}/🧫️fixtures/🔣️.json`, import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔗️brep-boolean/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🔗️brep-boolean/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/📏️analysis-measure/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/📏️analysis-measure/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/⏱️phased-job/🧪️tests/🧰️support/🟦️.ts",
+    "expression": "new URL(\"../../🧫️fixtures/🔣️.json\", testFile)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/➡️math-vector/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/➡️math-vector/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🏳️brep-surface/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🏳️brep-surface/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/〰️brep-curve/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/〰️brep-curve/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🌳️typed/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🌳️typed/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🌳️typed/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🌳️typed/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🌳️typed/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🌳️typed/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🌳️typed/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🗂️layout/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/💡️inference/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🌳️typed/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/💡️inference/🎛️flat/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🌳️typed/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🌳️typed/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🌳️typed/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🌳️typed/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧪️tests/🧫️fixtures/📸️snapshot/🔣️json/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧪️tests/🧫️fixtures/🧬️mutations\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/📸️snapshot/🪆️child/👁️capture\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🌳️typed/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/📸️snapshot/🪆️child/🧵️lifetime/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧪️tests/🔬️window-config-ownership/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🔬️window-config-ownership/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧪️tests/🔬️window-config-ownership/🟦️.ts",
+    "expression": "new URL(`./../../🧫️fixtures/🧬️mutations/${row.witness}/🧾️wire-witness/🦠️mutation/🔣️.json`, import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/♻️retirement/🧪️tests/🔬️document-retirement/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/♻️retirement/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/♻️retirement/🧪️tests/🔬️document-retirement/🟦️.ts",
+    "expression": "new URL(\"../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🌳️typed/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/🧪️tests/🔬️window/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🔬️window/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔢️binary64-transport/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧭️transforms/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧭️transforms/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts",
+    "expression": "new URL(\"../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🌳️typed/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🗂️catalogue/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../🧪️tests/🧫️fixtures/🗂️catalogue/🔣️.json\", folder)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🗂️catalogue/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../🧪️tests/🧫️fixtures/🗂️catalogue/🧩️admitted-context/🔣️.json\", folder)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🎨️surface/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🎨️surface/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🚧️import-admission/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🔁️authored-attributes/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🎬️scene-import/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🧩️polygon-import/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🎨️surface/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔁️round-trip/🛡️authority/🟦️.ts",
+    "expression": "new URL(\"../../🧫️fixtures/🛡️authority/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧪️tests/📦️wire-types/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🌳️ast/📦️wire-types/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts",
+    "expression": "new URL(\"../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/📇️directory-projection/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "join(root, \"✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📇️projection-wire-v1/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "expression": "resolve(root,`${row.subset}/🧫️fixtures/🧬️history-edits/${row.id}/🦠️mutation/🔣️.json`)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🔢️words/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🌱️minimal/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🔢️words/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🌱️minimal/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🪹️empty-entities/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/💰️backing/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "expression": "join(subset, \"🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts",
+    "expression": "new URL(\"../../../🧪️tests/🧫️fixtures/🧬️mutations\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts",
+    "expression": "join(base, \"🧪️tests/🧫️fixtures/♻️retirement/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts",
+    "expression": "join(storeBase, \"🧫️fixtures/🧹️retirement.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts",
+    "expression": "join(storeBase, \"🧫️fixtures/📌️peer-commit.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts",
+    "expression": "join(storeBase, \"🧫️fixtures/🛂️peer-admission.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts",
+    "expression": "join(WORKSPACE_ROOT, \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧫️fixtures/🧬️request-context.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../../../../🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧪️tests/🧫️fixtures/📦️set-object-applied/⬅️before.obj\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🎛️metadata/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/📸️snapshot/🎛️metadata/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "expression": "resolve(owner, \"🧫️fixtures/🧬️history-edits/version-info/🦠️mutation/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript/📜️script.ts",
+    "expression": "join(plugin, \"🧫️fixtures\", \"🧫️retained-command-dispositions\", \"🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧩️partial/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🧩️partial/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🔬️window/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🧬️owned-native-contract/🟦️.test.ts",
+    "expression": "new URL(\"../../../../✏️editor/🧬️publication/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔤️native-source-hex/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🔤️native-source-hex/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority\"+file,import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority\"+entry.file,import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/🎮️commands/🔊️edit-audio/🧪️tests/🟦️.test.ts",
+    "expression": "new URL(\"🧫️fixtures/🎚️natural-edit/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/🎮️commands/🔊️edit-audio/🧪️tests/🟦️.test.ts",
+    "expression": "new URL(\"../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔢️float32.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🛂️native.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🛂️native.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🧭️document-boundaries/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧩️typed-attributes/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🦀️rust/📜️script.ts",
+    "expression": "join(owner,'🧫️fixtures/🔣️.json')",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🟦️.test.ts",
+    "expression": "new URL(\"../../../🧪️tests/🧫️fixtures/🧭️serialization-boundaries/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🧬️owned-native-contract/🟦️.test.ts",
+    "expression": "new URL(\"../../../../✏️editor/🧬️publication/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/💰️backing/🔬️requests/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🎛️controls.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/📏️cells/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🔬️independent/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../🫴️receiving/🧪️tests/🧫️fixtures/🧬️schema/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts",
+    "expression": "join(outDir, recipe.subset, \"🧫️fixtures\", recipe.directory)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🧮️census/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🧬️mvd/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "expression": "resolve(root,`🪆️subsets/${subset}/🧫️fixtures/🧬️history-edits/view/🦠️mutation/🔣️.json`)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/📜️script.ts",
+    "expression": "resolve(plugin, \"🧫️fixtures/🧪️publication-authority\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/📜️script.ts",
+    "expression": "resolve(subset, \"🧬️schema/🧬️mutations/🧫️fixtures/🎛️field-patch\")",
+    "resolved": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧫️fixtures/🎛️field-patch",
+    "destination": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🎛️field-patch"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🔢ieee.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🔢ieee.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🟦️.test.ts",
+    "expression": "new URL(\"🧫️fixtures/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../🛫️encoding/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../🛫️encoding/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧪️tests/🔬️unit/🟦️.test.ts",
+    "expression": "new URL(\"../🧫️fixtures/🧵️retained-native/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧪️tests/🔬️unit/🟦️.test.ts",
+    "expression": "new URL(\"../🧫️fixtures/🩺️source-diagnostic/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧪️tests/🔬️unit/🟦️.test.ts",
+    "expression": "new URL(\"../🧫️fixtures/🪆️snapshot-edits/🔣️patch-cases.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧪️tests/🔬️unit/🟦️.test.ts",
+    "expression": "new URL(\"../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔁️codec/🧭️path/🧪️tests/🧫️fixtures/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧪️tests/🔬️unit/🟦️.test.ts",
+    "expression": "new URL(\"../🧫️fixtures/🧵️retained-native/🧾️refusal.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧪️tests/🔬️unit/🟦️.test.ts",
+    "expression": "new URL(\"../🧫️fixtures/🧵️retained-native/🧾️refusal.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧪️tests/🔬️unit/🟦️.test.ts",
+    "expression": "new URL(\"../🧫️fixtures/🧵️retained-native/🧾️refusal.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🖼️raster/🧪️tests/🟦️.test.ts",
+    "expression": "new URL(\"🧫️fixtures/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/💰️backing/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../../\"+folder+\"/🧫️fixtures/🧬️history-snapshots/📋️rename-file/\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🧩️intermediate/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🧩️intermediate/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts",
+    "expression": "join(HERE, \"..\", \"..\", coordinate[0], \"🧪️tests/🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(root+\"🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../➕️add-layer/🧪️tests/🧫️fixtures/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/📏️depth/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🧭️dialects/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "expression": "resolve(root,`🧫️fixtures/🧬️history-edits/${row.id}/🦠️mutation/🔣️.json`)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/💰️backing/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/💰️backing/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🧩️intermediate/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🧩️intermediate/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🧪️tests/📐️bounds/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "expression": "join(process.cwd(), \"🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🧾outline/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/💡️inferences/🧾outline/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "expression": "join(owner,\"🧫️fixtures/🎛️history-inputs\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "expression": "join(owner,\"🧫️fixtures/🎛️history-inputs/restore-entities/🦠️mutation/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "expression": "join(owner,\"🧫️fixtures/🎛️history-inputs\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "expression": "join(root,subset,\"🧫️fixtures/🎛️history-inputs\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "expression": "join(root,subset,\"🧫️fixtures/🎛️history-inputs\",directory,\"🦠️mutation/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧪️tests/♻️retirement/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/📸️snapshot/♻️retirement/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/📜️script.ts",
+    "expression": "resolve(puzzleRoot, \"🧪️tests/🧫️fixtures/🔏️publication-authority/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🎯️navigation/🟦️.ts",
+    "expression": "new URL(\"../../../../📝️text/📸️snapshot/🪪️native-json/🎯️navigation/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🎯️navigation/🟦️.ts",
+    "expression": "new URL(\"../../🎯️navigation/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🎯️navigation/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🌲️deep.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🎯️navigation/🟦️.ts",
+    "expression": "new URL(\"../../🎯️navigation/🔖️bookmark/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📇️metadata/🟦️.ts",
+    "expression": "new URL(\"../../📇️metadata/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📇️metadata/🟦️.ts",
+    "expression": "new URL(\"../../📇️metadata/📆️date/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📇️metadata/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/♿️ua-initial/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📇️metadata/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🌈️x-vt-initial/🖨️x.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📇️metadata/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🌈️x-vt-initial/🌈️sRGB2014.icc\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📇️metadata/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🌈️x-vt-initial/🧾️vt-negatives.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📇️metadata/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🌈️x-vt-initial/🧾️vt.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📇️metadata/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🌈️x-vt-initial/🌈️sRGB2014.icc\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📄️document/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🛂️semantic/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📄️document/🟦️.ts",
+    "expression": "new URL(\"../../📄️document/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📄️document/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🔢ieee.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📄️document/🟦️.ts",
+    "expression": "new URL(\"../../📄️document/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📄️document/🟦️.ts",
+    "expression": "new URL(\"../../📄️document/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📄️document/🟦️.ts",
+    "expression": "new URL(\"../../📄️document/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📄️document/🟦️.ts",
+    "expression": "new URL(\"../../📄️document/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📄️document/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🛫️row-admission.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📄️document/🟦️.ts",
+    "expression": "new URL(\"../../📄️document/🧪️tests/🧫️fixtures/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📄️document/🟦️.ts",
+    "expression": "new URL(\"../../../../../🧪️tests/🧫️fixtures/🪪️stream-roles/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🖼️resource/🟦️.ts",
+    "expression": "new URL(\"../../../../📝️text/📸️snapshot/🪪️native-json/🖼️resource/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🖼️resource/🟦️.ts",
+    "expression": "new URL(\"../../🖼️resource/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🖼️resource/🟦️.ts",
+    "expression": "new URL(\"../../🖼️resource/🎚️state/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🖼️resource/🟦️.ts",
+    "expression": "new URL(\"../../🖼️resource/🌈️shading/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🖼️resource/🟦️.ts",
+    "expression": "new URL(\"../../🖼️resource/🌈️shading/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🖼️resource/🟦️.ts",
+    "expression": "new URL(\"../../🖼️resource/🎚️state/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🌈️color/🟦️.ts",
+    "expression": "new URL(\"../../🌈️color/🧪️tests/🧫️fixtures/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🌈️color/🟦️.ts",
+    "expression": "new URL(\"../../🌈️color/🧪️tests/🧫️fixtures/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧩️cos/🟦️.ts",
+    "expression": "new URL(\"../../🧩️cos/🧪️tests/🧫️fixtures/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧩️cos/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🪪️retained-text/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🖋️content/🟦️.ts",
+    "expression": "new URL(\"../../🖋️content/🧪️tests/🧫️fixtures/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🖋️content/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🔢️logical-character-codes/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🔤️font/🟦️.ts",
+    "expression": "new URL(\"../../🔤️font/🧪️tests/🧫️fixtures/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🔤️font/🟦️.ts",
+    "expression": "new URL(\"../../../../📝️text/📸️snapshot/🪪️native-json/🔤️font/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📝️form/🟦️.ts",
+    "expression": "new URL(\"../../../../📝️text/📸️snapshot/🪪️native-json/📝️form/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📝️form/🟦️.ts",
+    "expression": "new URL(\"../../📝️form/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📝️form/🟦️.ts",
+    "expression": "new URL(\"../../📝️form/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📌️annotation/🟦️.ts",
+    "expression": "new URL(\"../../../../📝️text/📸️snapshot/🪪️native-json/📌️annotation/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📌️annotation/🟦️.ts",
+    "expression": "new URL(\"../../📌️annotation/🎭️appearance/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📌️annotation/🟦️.ts",
+    "expression": "new URL(\"../../📌️annotation/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📌️annotation/🟦️.ts",
+    "expression": "new URL(\"../../📌️annotation/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📌️annotation/🟦️.ts",
+    "expression": "new URL(\"../../📌️annotation/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️canonical/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../🧪️tests/🧫️fixtures/🧬️mutations/🧵️canonical/🔣️.json\",root)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../📝️text/🔺️diff/🧪️tests/🧫️fixtures/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧬️retained-clone/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧬️retained-clone/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧬️retained-clone/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/📸️snapshot/🔎️lookup/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/🎮️prepare/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/🎮️prepare/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/🎮️prepare/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🔣️.json\",root)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🔣️.json\",root)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🔣️.json\",root)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🔣️.json\",root)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🔣️.json\",root)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🔣️.json\",root)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🔣️.json\",root)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/📸️candidate/🔣️.json\",root)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(base+\"../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🔣️.json\",root)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🔣️.json\",root)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🔣️.json\",root)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/📸️candidate/🔣️.json\",root)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🧫️fixtures/🪆️binding/🪆️optional/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/💰️backing/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/💰️backing/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/💰️backing/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/💰️backing/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "expression": "resolve(root,`🧫️fixtures/🧬️history-edits/${row.id}/🦠️mutation/🔣️.json`)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🧪️tests/🧪️wire-twins/🟦️.ts",
+    "expression": "join(subset, \"🧫️fixtures/🧬️mutations\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🧪️tests/🪪️document-contract/🟦️.ts",
+    "expression": "join(root, \"../🧫️fixtures/🧬️mutations\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🧪️tests/🪪️document-contract/🟦️.ts",
+    "expression": "join(root, \"../🧫️fixtures/🧬️mutations\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🧪️tests/🔮️oracle-source-ownership/🟦️.ts",
+    "expression": "join(root, control.plugin, \"🧫️fixtures/🔮️oracle-source-ownership/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️frame-selection/🟦️.ts",
+    "expression": "join(here, \"../../../../🧪️tests/🧫️fixtures/🧬️mutations\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏭️process/📦️packages/🟦️typescript/📜️script.ts",
+    "expression": "resolve(pluginRoot, \"🗿️artifacts/🧊️process3d/🧪️tests/🧫️fixtures/⚖️retained-route-laws/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/production-envelope-edit\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "expression": "resolve(root,`🧫️fixtures/🧬️history-edits/${row.id}/🦠️mutation/🔣️.json`)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts",
+    "expression": "new URL(\"../../../🧪️tests/🧫️fixtures/🧬️mutations\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🧮️census/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🎚️config/🧪️tests/🔬️window-config-ownership/🟦️.ts",
+    "expression": "new URL(\"../../🧫️fixtures/🔬️window/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/➗️mathematical/🧪️tests/📣️publication-authority/🟦️.ts",
+    "expression": "resolve(plugin, \"🧫️fixtures/📣️publication-authority\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/📜️script.ts",
+    "expression": "join(subset, \"🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🧩️intermediate/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🔺️mutate-semio-mesh/🗣️.dsl.semio\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🧩️intermediate/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts",
+    "expression": "new URL(\"../../../🧪️tests/🧫️fixtures/🧬️mutations\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🧩️intermediate/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🔬️independent/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🫙️prefix/✉️envelope.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts",
+    "expression": "resolve(owner,\"🔗️link/🧫️fixtures/♻️retirement/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🫙️prefix/🛫️encoding.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📋️register/🎚️config/🧪️tests/🔬️window-ownership/🟦️.ts",
+    "expression": "new URL(\"../../🧫️fixtures/🔬️window/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🎨️samples/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "new URL(\"../../../../🧪️tests/🧫️fixtures/🧮️geometry/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts",
+    "expression": "new URL(\"../../../🧪️tests/🧫️fixtures/🧬️mutations\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/📜️script.ts",
+    "expression": "resolve(this.root,\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/📏️counts/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🧪️tests/🔬️ownership/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/📦️extrude-orientation/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🔁️retained-extrusion/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/▶️try/🎚️config/🧪️tests/🔬️window/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🔬️window/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts",
+    "expression": "join(root, \"../..\", subset, \"🧫️fixtures/🧬️mutations\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts",
+    "expression": "join(outDir, recipe.subsetDirectoryName, \"🧫️fixtures\", recipe.directoryName)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🔣️.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🔢️ieee.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🔢️ieee.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🌲️deep.json\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🚦️control.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🧪️change-block-field/🟦️.ts",
+    "expression": "new URL(\"../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-block-field\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts",
+    "expression": "new URL(\"../../../🧪️tests/🧫️fixtures/🧬️mutations\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts",
+    "expression": "join(root, \"../🧪️tests/🧫️fixtures/🧬️mutations\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts",
+    "expression": "join(root, \"../🧪️tests/🧫️fixtures/📨️response/🔣️events.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts",
+    "expression": "new URL(\"../../../🧪️tests/🧫️fixtures/🧬️mutations\", import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../../🧫️fixtures/🧬️mutations\"+folder+\"/\"+caseName+\"/📸️snapshot/➡️after/🔣️.json\",import.meta.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🧩️suite/🟦️.ts",
+    "expression": "join(here, \"../../../🧪️tests/🧫️fixtures/🧬️mutations\")",
+    "resolved": null
+  }
+]

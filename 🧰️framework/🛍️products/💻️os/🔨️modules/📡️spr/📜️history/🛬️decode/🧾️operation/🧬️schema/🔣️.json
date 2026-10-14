@@ -1,1 +1,116 @@
-{"type":"object","required":["payloads","grant","metadataCopyBytes"],"properties":{"payloads":{"type":"array","items":{"type":"object","required":["wireHex","text","binaryHex"],"properties":{"wireHex":{"type":"string","pattern":"^[0-9a-f]*$"},"text":{"type":["string","null"]},"binaryHex":{"type":["string","null"]}},"additionalProperties":false}},"grant":{"type":"object","required":["items","copyBytes","capacityBytes","releaseBytes","depth"],"properties":{"items":{"const":1},"copyBytes":{"const":2},"capacityBytes":{"const":65536},"releaseBytes":{"const":65536},"depth":{"const":8}},"additionalProperties":false},"metadataCopyBytes":{"const":0}},"additionalProperties":false}
+{
+  "type": "object",
+  "required": [
+    "payloads",
+    "grant",
+    "metadataCopyBytes",
+    "limits",
+    "source"
+  ],
+  "properties": {
+    "payloads": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "wireHex",
+          "text",
+          "binaryHex"
+        ],
+        "properties": {
+          "wireHex": {
+            "type": "string",
+            "pattern": "^[0-9a-f]*$"
+          },
+          "text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "binaryHex": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "grant": {
+      "type": "object",
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "const": 1
+        },
+        "copyBytes": {
+          "const": 2
+        },
+        "capacityBytes": {
+          "const": 65536
+        },
+        "releaseBytes": {
+          "const": 65536
+        },
+        "depth": {
+          "const": 8
+        }
+      },
+      "additionalProperties": false
+    },
+    "metadataCopyBytes": {
+      "const": 0
+    },
+    "limits": {
+      "const": {
+        "fileBytes": 67108864,
+        "frameBodyBytes": 1048576,
+        "records": 8192,
+        "maximumFields": 128,
+        "maximumTextBytes": 1048576,
+        "maximumBinaryBytes": 1048576,
+        "maximumJsonBytes": 1048576,
+        "maximumJsonAllocationBytes": 8388608,
+        "maximumJsonItems": 65536,
+        "maximumJsonDepth": 64
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "operation",
+        "generation",
+        "pageBytes",
+        "prefixHex",
+        "suffixHex"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": 43
+        },
+        "generation": {
+          "const": 7
+        },
+        "pageBytes": {
+          "const": 3
+        },
+        "prefixHex": {
+          "const": "aa"
+        },
+        "suffixHex": {
+          "const": "bb"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

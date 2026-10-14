@@ -99,7 +99,7 @@ fn advance_timestep_with_airflow_network() {
 fn weekly_schedule_lookup_reads_sunday_first_slots() {
     use crate::model::ScheduleId;
     use crate::schedule::{DailySchedule, ScheduleContext, ScheduleInterpolation, ScheduleSet, WeeklySchedule};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗓️schedule/🧫️fixtures/weekly-day-slots/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗓️schedule/🧪️tests/🧫️fixtures/weekly-day-slots/🔣️.json")).unwrap();
     let hour = fixture["hour"].as_u64().unwrap() as u8;
     let mut daily = Vec::new();
     let mut ids = [ScheduleId(0); 7];

@@ -137,7 +137,7 @@ fn a_plain_beam_stays_a_swept_extrusion_without_a_record() {
     assert!(property_sets(&document, "b-1", "Semio_Authoring").iter().all(|row| text_of(row, "Beam").is_none()));
 }
 
-const FRAME_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🏗️frame");
+const FRAME_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🏗️frame");
 
 /// 🏗️ The frame model: [`leaning`] with the door, open and window panels of the curtain wall of the curtain wall export tests.
 pub(crate) fn frame() -> ModelSnapshot {

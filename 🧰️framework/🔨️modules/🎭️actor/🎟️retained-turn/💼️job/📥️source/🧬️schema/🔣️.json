@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Job Source Loan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "copyPolicies",
+    "operation",
+    "generation",
+    "epoch",
+    "deadlineUs",
+    "wholeOriginalSource",
+    "headerCopyBytes",
+    "guestCloseRequired",
+    "deadlineRefill",
+    "terminalDrop",
+    "workUnitsIssued",
+    "workUnitsSpent",
+    "workUnitsRemaining",
+    "receiptReplayAccepted"
+  ],
+  "properties": {
+    "copyPolicies": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "operation": {
+      "const": 71
+    },
+    "generation": {
+      "const": 3
+    },
+    "epoch": {
+      "const": 19
+    },
+    "deadlineUs": {
+      "const": 12345
+    },
+    "wholeOriginalSource": {
+      "const": true
+    },
+    "headerCopyBytes": {
+      "const": 0
+    },
+    "guestCloseRequired": {
+      "const": true
+    },
+    "deadlineRefill": {
+      "const": false
+    },
+    "terminalDrop": {
+      "const": 0
+    },
+    "workUnitsIssued": {
+      "const": 7
+    },
+    "workUnitsSpent": {
+      "const": 4
+    },
+    "workUnitsRemaining": {
+      "const": 3
+    },
+    "receiptReplayAccepted": {
+      "const": false
+    }
+  }
+}

@@ -8,9 +8,9 @@ import { blake3Hex } from "../../../../../../../🔨️modules/🔏️hash/🟦�
 
 /** 🧪️ Exercises semantic byte joins using plain cases and independent JSON Schema/WebCrypto oracles. */
 export async function testProtectedActorPublicationV1(root: string): Promise<void> {
-  const cases=JSON.parse(readFileSync(join(import.meta.dir,"../🧫️fixtures/🔣️.json"),"utf8"));
+  const cases=JSON.parse(readFileSync(join(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));
   for(const row of cases.childUrls){const actual=new URL(protectedActorChildUrlV1(row.root,row.baseUrl));assert.equal(actual.origin,new URL(row.baseUrl).origin);assert(actual.pathname.startsWith(row.prefix),row.root);}
-  const source=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json"),"utf8"));
+  const source=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json"),"utf8"));
   const fields=structuredClone(source.manifest), body=Object.fromEntries(["component","descriptor","actor"].map(name=>[name,Buffer.from(cases[name])]));
   const claim=(bytes:Uint8Array)=>({sha256:createHash("sha256").update(bytes).digest("hex"),byteLength:bytes.byteLength});
   Object.assign(fields.component,claim(body.component),{blake3:blake3Hex(body.component)});Object.assign(fields.descriptor,claim(body.descriptor));
@@ -69,7 +69,7 @@ export interface ProtectedActorBrowserTestPortV1 extends ProtectedActorBrowserPo
 }
 
 export async function testProtectedActorChildExecutionV1(root:string,page:ProtectedActorBrowserTestPortV1,baseUrl:string):Promise<void>{
-  const cases=JSON.parse(readFileSync(join(import.meta.dir,"../🧫️fixtures/🔣️.json"),"utf8"));let oracleCount=0;
+  const cases=JSON.parse(readFileSync(join(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));let oracleCount=0;
   for(const row of cases.unfinishedResponses)for(const phase of cases.responsePhases){
     let output:string;
     if(row.cancelAfterMs===null){
@@ -83,7 +83,7 @@ export async function testProtectedActorChildExecutionV1(root:string,page:Protec
   assert.equal(oracleCount,8);
 
   const {encodePackValue}=await import("../../../../../🟦️.ts");
-  const descriptor=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🧫️fixtures/🔣️.json"),"utf8")).descriptor,staged=encodePackValue(descriptor);
+  const descriptor=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).descriptor,staged=encodePackValue(descriptor);
   const guest=encodePackValue(descriptor),actor=Buffer.from(`export async function activate(){return{async invoke(path,args){if(path.join('.')!=='describe.describe'||args.length)throw Error('neutral describe path');return new Uint8Array(${JSON.stringify(Array.from(guest))});},async close(){}};}`);
   const joined={actor,descriptor:staged} as Parameters<typeof executeProtectedActorChildV1>[2];
   const childUrl=protectedActorChildUrlV1(root,baseUrl);

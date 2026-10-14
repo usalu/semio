@@ -4,13 +4,13 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 #[path = "➕️add-value/🦀️.rs"]
 mod add_value;
-use add_value::AddValue;
+pub(crate) use add_value::AddValue;
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, dsl::Mutations)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
 #[mutations(snapshot=JobTestSnapshot,diff=JobTestDiff,schema="jobtest.mutation-plan.document")]
-enum JobTestOp {
+pub(crate) enum JobTestOp {
     AddValue(AddValue),
 }
 

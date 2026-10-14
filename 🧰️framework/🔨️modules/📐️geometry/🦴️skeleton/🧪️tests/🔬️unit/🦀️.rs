@@ -401,7 +401,7 @@ fn fixture_rings(case: &serde_json::Value) -> Vec<Ring> {
 
 #[test]
 fn fixtures_reproduce_the_third_party_face_areas_and_unswept_areas() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🦴️skeleton/🔣️.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🦴️skeleton/🔣️.json")).unwrap();
     assert!(cases.as_array().unwrap().len() >= 50);
     for case in cases.as_array().unwrap() {
         let name = case["name"].as_str().unwrap();

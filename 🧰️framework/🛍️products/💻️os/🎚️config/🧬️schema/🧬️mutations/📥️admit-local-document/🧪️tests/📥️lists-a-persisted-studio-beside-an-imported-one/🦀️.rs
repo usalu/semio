@@ -8,11 +8,11 @@
 
 use super::{LocalCatalogDiff, LocalCatalog, LocalCatalogConfigMutation};
 
-const BEFORE: &str = include_str!("../../🧫️fixtures/📥️lists-a-persisted-studio-beside-an-imported-one/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../🧫️fixtures/📥️lists-a-persisted-studio-beside-an-imported-one/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../🧫️fixtures/📥️lists-a-persisted-studio-beside-an-imported-one/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../🧫️fixtures/📥️lists-a-persisted-studio-beside-an-imported-one/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../🧫️fixtures/📥️lists-a-persisted-studio-beside-an-imported-one/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥️admit-local-document/📥️lists-a-persisted-studio-beside-an-imported-one/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥️admit-local-document/📥️lists-a-persisted-studio-beside-an-imported-one/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥️admit-local-document/📥️lists-a-persisted-studio-beside-an-imported-one/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥️admit-local-document/📥️lists-a-persisted-studio-beside-an-imported-one/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥️admit-local-document/📥️lists-a-persisted-studio-beside-an-imported-one/🎯️outcome/🔣️.json");
 
 fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")

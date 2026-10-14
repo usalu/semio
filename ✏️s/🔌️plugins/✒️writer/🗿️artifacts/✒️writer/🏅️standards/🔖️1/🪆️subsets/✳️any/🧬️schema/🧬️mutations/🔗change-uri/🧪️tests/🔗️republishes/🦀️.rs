@@ -14,11 +14,11 @@ use crate::WriterDiff;
 use crate::WriterSnapshot;
 use crate::central_apply::{apply_writer_mutation};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/🎯️outcome/🔣️.json");
 
 fn before() -> WriterSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before writer document decodes")

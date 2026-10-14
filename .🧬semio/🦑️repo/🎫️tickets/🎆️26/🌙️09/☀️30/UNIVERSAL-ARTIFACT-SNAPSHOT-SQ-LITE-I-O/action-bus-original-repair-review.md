@@ -1,0 +1,11 @@
+# ActionBus Original Repair Review
+
+Fresh read-only source; no build/runtime qualification. Source88173 and owning Native outcomes remain their actual original executions.
+
+Actual ActionBus owner `🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs:312–326` ErasedToolJob step and close now accept the exact borrowed StepContext and return complete OriginalTurnFailure. Both delegate directly to the retained boxed inner InteractiveJob. No context construction, progress conversion, primary truncation or second debit exists in this adapter. Full canonical failure and inner job slot remain retained; caller still owns scheduling/accounting.
+
+Fresh scans of Framework and plugins find no type named ActionPendingRetirement. The concrete physical wire owner currently present is RetainedToolWireInput close182: takes supplied unchanged RetainedCloneGrant and returns Result<InteractiveJobCloseStep,ValueError>. It retains page Vec/admitted extent on zero items, inadequate release or depth refusal. Its depth error is exact borrowed `original wire input close exceeds caller depth`; complete release returns actual Vec capacity*sizeof ToolWirePage, one item, no copy. It performs no StepContext debit, correctly leaving that to its caller. Do not convert this physical interface to Job context merely because its result uses a common close-step enum.
+
+Existing standalone wire-retirement tests explicitly check pointer/admitted extent unchanged across zero/underfunded/depth denial and funded exact receipt, but their Native execution is not claimed here. No direct production ActionBus root close caller exists beyond erased delegation in the scanned root; tool dispatch hands the erased job to actual worker owners. Remaining Plugin runtime grant/removed-variant calls (runtime1233/1256/1602/1627 at inspection) belong to High's separate ongoing caller migration, not a failure of this repaired adapter. Their complete protocol must be reconciled at true parent context boundaries and not masked with a legacy variant.
+
+If ActionPendingRetirement refers to a newly moved concurrent owner outside these scanned definitions, its defining path must be established before claiming it inspected. This report deliberately qualifies only the actual present source above.

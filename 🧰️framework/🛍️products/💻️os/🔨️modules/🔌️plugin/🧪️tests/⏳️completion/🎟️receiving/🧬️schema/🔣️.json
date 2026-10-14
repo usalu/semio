@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["transientClose"],
+  "properties": {
+    "transientClose": {
+      "type": "object",
+      "required": ["originalGrant", "deniedAxes"],
+      "properties": {
+        "originalGrant": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["maximumItems", "maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes", "maximumDepth"],
+          "properties": {
+            "maximumItems": {"const": 1},
+            "maximumCopyBytes": {"const": 7},
+            "maximumCapacityBytes": {"const": 65536},
+            "maximumReleaseBytes": {"const": 262144},
+            "maximumDepth": {"const": 64}
+          }
+        },
+        "deniedAxes": {"const": ["items", "copy", "capacity", "release", "depth"]}
+      }
+    }
+  }
+}

@@ -19699,10 +19699,5 @@
         "children": []
       }
     ]
-  },
-  "hashes": {
-    "wasmSha256": "2209b68e537af2df2e060d5a8ddf944c66f14dd60ad55cd298a696dd088d03f9",
-    "coreWasmSha256": "0d40925f5a7e0ba36c96f93f5687d4179ccb5c5d21a54855cbc84fa98e869a70",
-    "descriptorSha256": "da6d3fa4e911bcb93068761c85ecafa7c3ca8bc179a2d78e942d252e2e5b644a"
   }
 }

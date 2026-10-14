@@ -267,7 +267,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const { DirectedGraph } = await import("graphology");
-      const fixturesDir = join(dirname(fileURLToPath(source.url)), "🧫️fixtures");
+      const fixturesDir = join(dirname(fileURLToPath(source.url)), "🧪️tests/🧫️fixtures");
       const paths = readdirSync(fixturesDir, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => join(fixturesDir, entry.name, "🔣️.json")).filter((path) => { try { return JSON.parse(readFileSync(path, "utf8")).expectedDeliveries !== undefined; } catch { return false; } });
       expect(paths).toHaveLength(5);
       for (const path of paths) {
@@ -369,13 +369,13 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
 
     it("covers every declared integer boundary example", async () => {
-      const { default: corpus } = await import("../../🧫️fixtures/🎒️pack-dynamic-integer-v1/🔣️.json");
+      const { default: corpus } = await import("../🧫️fixtures/🎒️pack-dynamic-integer-v1/🔣️.json");
       expect(corpus.accept).toHaveLength(6);
       expect(corpus.reject.map((row: { id: string }) => row.id)).toEqual(["truncated-u64", "u64-overflow", "nonminimal-u64", "nonminimal-zigzag-i64"]);
     });
 
     it("encodes and decodes every accepted corpus row byte-exactly with its exact carrier kind", async () => {
-      const { default: corpus } = await import("../../🧫️fixtures/🎒️pack-dynamic-integer-v1/🔣️.json");
+      const { default: corpus } = await import("../🧫️fixtures/🎒️pack-dynamic-integer-v1/🔣️.json");
       for (const row of corpus.accept) {
         const value = corpusValue(row.value);
         expect(bytesToHex(encodePackValue(value)), row.id).toBe(row.wireHex);
@@ -393,7 +393,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("rejects every corpus reject row at the documented boundary", async () => {
-      const { default: corpus } = await import("../../🧫️fixtures/🎒️pack-dynamic-integer-v1/🔣️.json");
+      const { default: corpus } = await import("../🧫️fixtures/🎒️pack-dynamic-integer-v1/🔣️.json");
       for (const row of corpus.reject) {
         const bytes = hexToBytes(row.wireHex);
         if (row.outcome === "decode-error") expect(() => decodePackValue(bytes), row.id).toThrow();
@@ -770,7 +770,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
-      const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "🧫️fixtures", "📡️channel", "🪟️window-config.json"), "utf8")) as Record<string, string>;
+      const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "🧪️tests/🧫️fixtures", "📡️channel", "🪟️window-config.json"), "utf8")) as Record<string, string>;
       const hex = (bytes: Uint8Array) => Buffer.from(bytes).toString("hex");
       expect(hex(encodeAppCommand({ LoadWindowConfig: { seq: 1, entry: { window_id: "w1", window_kind_id: "graph", envelope_pack: [1, 2] } } }))).toBe(fixture.loadWindowConfig);
       expect(hex(encodeAppCommand({ ReadWindowConfigs: { seq: 1 } }))).toBe(fixture.readWindowConfigs);
@@ -801,13 +801,13 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(source.url));
-      const pin = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📡️channel", "🔖️channel-version.json"), "utf8")) as { channelVersion: number };
+      const pin = JSON.parse(readFileSync(join(here, "🧪️tests/🧫️fixtures", "📡️channel", "🔖️channel-version.json"), "utf8")) as { channelVersion: number };
       expect(APP_CHANNEL_VERSION).toBe(pin.channelVersion);
     });
 
     it("admits only a guest of the host's own channel version, naming both versions when it refuses (shared handshake corpus)", async () => {
       const { readFileSync } = await import("node:fs");
-      const law = JSON.parse(readFileSync(new URL("./🔨️modules/📡️spr/🧵️channel/🧫️fixtures/🧫️channel-handshake/🔣️.json", source.url), "utf8")) as { code: string; cases: { name: string; guestOffset: number; hostOffset?: number; admitted: boolean }[] };
+      const law = JSON.parse(readFileSync(new URL("./🔨️modules/📡️spr/🧵️channel/🧪️tests/🧫️fixtures/🧫️channel-handshake/🔣️.json", source.url), "utf8")) as { code: string; cases: { name: string; guestOffset: number; hostOffset?: number; admitted: boolean }[] };
       expect(law.code).toBe(CHANNEL_MISMATCH_CODE);
       for (const row of law.cases) {
         const guest = APP_CHANNEL_VERSION + row.guestOffset;
@@ -824,7 +824,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(source.url));
-      const channelFixturesDir = join(here, "🧫️fixtures", "📡️channel");
+      const channelFixturesDir = join(here, "🧪️tests/🧫️fixtures", "📡️channel");
       const commandVectors = JSON.parse(readFileSync(join(channelFixturesDir, "🧾️app-command-transaction.json"), "utf8")) as Record<string, string>;
       const frameVectors = JSON.parse(readFileSync(join(channelFixturesDir, "📨️app-frame-transaction.json"), "utf8")) as Record<string, string>;
       const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
@@ -868,7 +868,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(source.url));
-      const channelFixturesDir = join(here, "🧫️fixtures", "📡️channel");
+      const channelFixturesDir = join(here, "🧪️tests/🧫️fixtures", "📡️channel");
       const commandVectors = JSON.parse(readFileSync(join(channelFixturesDir, "🚪️app-command-opening.json"), "utf8")) as Record<string, string>;
       const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 
@@ -898,7 +898,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(source.url));
-      const channelFixturesDir = join(here, "🧫️fixtures", "📡️channel");
+      const channelFixturesDir = join(here, "🧪️tests/🧫️fixtures", "📡️channel");
       const commandVectors = JSON.parse(readFileSync(join(channelFixturesDir, "🔀️app-command-merge.json"), "utf8")) as Record<string, string>;
       const frameVectors = JSON.parse(readFileSync(join(channelFixturesDir, "📢️app-frame-merge.json"), "utf8")) as Record<string, string>;
       const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
@@ -954,7 +954,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("matches the shared Rust vectors and the independent LEB128 encoder without rounding", async () => {
       const { readFileSync } = await import("node:fs");
-      const directory = "./🔨️modules/📡️spr/🧵️channel/🧫️fixtures/🎬️media-export-wire/";
+      const directory = "./🔨️modules/📡️spr/🧵️channel/🧪️tests/🧫️fixtures/🎬️media-export-wire";
       const fixture = JSON.parse(readFileSync(new URL(directory + "🔣️.json", source.url), "utf8"));
       const oracleModule = "@webassemblyjs/leb128/lib/leb.js";
       const imported = await import(oracleModule);
@@ -1025,7 +1025,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       if (!oracle || typeof oracle !== "object") throw new Error("invalid LEB128 oracle interface");
       const encodeUnsigned: unknown = Reflect.get(oracle, "encodeUIntBuffer");
       if (typeof encodeUnsigned !== "function") throw new Error("missing LEB128 oracle encoder");
-      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json", source.url), "utf8"));
       const read: AppCommandValue = { LocalInteractionQuery: { seq: 9, command: { kind: "read", requestId: "13" } } };
       const rejected: AppFrameValue = { LocalInteractionQuery: { reply: { kind: "rejected", requestId: "13", code: "busy" } } };
       const u64 = (value: bigint): number[] => {
@@ -1057,7 +1057,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("keeps each instance's last published Ephemeral frame as its presence snapshot, from any outcome", async () => {
       const { decodePresenceInteraction, encodePresenceInteraction } = await import("../../../../🔨️modules/📡️replication/🟦️.ts");
-      const presence = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/👕️canvas-presence/🔣️.json", source.url), "utf8")) as { readonly paint: readonly { readonly roster: readonly { readonly actor: string; readonly interaction?: Parameters<typeof encodePresenceInteraction>[0] }[] }[] };
+      const presence = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/👕️canvas-presence/🔣️.json", source.url), "utf8")) as { readonly paint: readonly { readonly roster: readonly { readonly actor: string; readonly interaction?: Parameters<typeof encodePresenceInteraction>[0] }[] }[] };
       const selecting = presence.paint[0]!.roster.find((row) => row.actor === "peer-a")!.interaction!;
       const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
       const handle: AppChannelHandle = { enqueue: () => undefined, outcomes: broadcast.stream };
@@ -1082,7 +1082,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("local interaction client fixture lifecycles preserve ACK ownership and ordinary replies", async () => {
       const { readFileSync } = await import("node:fs");
-      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json", source.url), "utf8"));
       for (const row of fixture.lifecycles) {
         const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
         const sent: AppCommandValue[] = [];
@@ -1154,7 +1154,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
     it("local interaction sequence admission matches the checked shared-owner fixture", async () => {
       const { readFileSync } = await import("node:fs");
-      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json", source.url), "utf8"));
       for (const row of fixture.sequenceCases) {
         const owner = new AppChannelRequestSequence(row.sequence, BigInt(row.request));
         const allocate = () => row.operation === "query" ? owner.nextQuery() : { sequence: owner.nextSequence(), cancelSequence: null, request: null };
@@ -1168,7 +1168,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("local interaction reopened clients reject delayed Started pages and ordinary receipts", async () => {
       const { readFileSync } = await import("node:fs");
-      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json", source.url), "utf8")).reopen;
+      const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json", source.url), "utf8")).reopen;
       const owner = new AppChannelRequestSequence();
       const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
       const sent: AppCommandValue[] = [];
@@ -1327,7 +1327,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
-      const vectors = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "🧫️fixtures", "📡️channel", "🏁️app-frame-operation-completed.json"), "utf8")) as Record<string, string>;
+      const vectors = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "🧪️tests/🧫️fixtures", "📡️channel", "🏁️app-frame-operation-completed.json"), "utf8")) as Record<string, string>;
       for (const [key, operation, revision] of [["OperationCompleted", 7n, 5n], ["OperationCompletedWideRevision", 7n, 0xfedc_ba98_7654_3210n], ["OperationCompletedWideOperation", 0xffff_ffff_ffff_ffffn, 5n]] as const) {
         const frame: AppFrameValue = { OperationCompleted: { operation, revision, ui_scope: [1], history_patch: [2] } };
         const hex = Array.from(encodeAppFrame(frame), (byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -1340,7 +1340,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
-      const vectors = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "🧫️fixtures", "📡️channel", "🧲️document-archive-merge.json"), "utf8")) as { seq: number; archive: { parent_pack: number[]; parent_spr: number[]; members: [] }; LoadDocumentArchive: string; MergeDocumentArchive: string; status: { in_reply_to: number; operation: number; state: string; completed: number; total: number; ahead: number; fault: number[] }; DocumentArchiveLoad: string };
+      const vectors = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "🧪️tests/🧫️fixtures", "📡️channel", "🧲️document-archive-merge.json"), "utf8")) as { seq: number; archive: { parent_pack: number[]; parent_spr: number[]; members: [] }; LoadDocumentArchive: string; MergeDocumentArchive: string; status: { in_reply_to: number; operation: number; state: string; completed: number; total: number; ahead: number; fault: number[] }; DocumentArchiveLoad: string };
       const hex = (bytes: Uint8Array) => Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
       const load = { LoadDocumentArchive: { seq: vectors.seq, archive: vectors.archive } };
       const merge = { MergeDocumentArchive: { seq: vectors.seq, archive: vectors.archive } };
@@ -1491,7 +1491,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("publishes only accepted document cache candidates and owns both byte arrays", async () => {
       const { readFileSync } = await import("node:fs");
-      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/📦️document-cache/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🧫️fixtures/📦️document-cache/🔣️.json", source.url), "utf8"));
       const pair = (value: { pack: number[]; spr: number[] }) => ({ pack: Uint8Array.from(value.pack), spr: Uint8Array.from(value.spr) });
       const archiveOf = (value: { pack: number[]; spr: number[] }) => ({ parent_pack: [...value.pack], parent_spr: [...value.spr], members: [] });
       for (const row of fixture.cases) {
@@ -1587,7 +1587,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(source.url));
-      const commandVectors = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📡️channel", "🔀️app-command-merge.json"), "utf8")) as Record<string, string>;
+      const commandVectors = JSON.parse(readFileSync(join(here, "🧪️tests/🧫️fixtures", "📡️channel", "🔀️app-command-merge.json"), "utf8")) as Record<string, string>;
       const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 
       const seen: AppCommandValue[] = [];
@@ -1881,7 +1881,7 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(source.url));
-      const raw = readFileSync(join(here, "🧫️fixtures", "📇️directory", "⚡️events.json"), "utf8");
+      const raw = readFileSync(join(here, "🧪️tests/🧫️fixtures", "📇️directory", "⚡️events.json"), "utf8");
       return (JSON.parse(raw) as { events: DirectoryEvent[] }).events;
     };
 
@@ -1921,7 +1921,7 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(source.url));
-      const fixture = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📇️directory", "🪪️document-descriptor.json"), "utf8")) as { valid: import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor; canonical: string };
+      const fixture = JSON.parse(readFileSync(join(here, "🧪️tests/🧫️fixtures", "📇️directory", "🪪️document-descriptor.json"), "utf8")) as { valid: import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor; canonical: string };
       expect(JSON.stringify(fixture.valid)).toBe(fixture.canonical);
     });
 
@@ -1931,7 +1931,7 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(source.url));
-      const fixture = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📇️directory", "🛡️artifact-authority.json"), "utf8")) as { descriptor: DocumentDescriptor; descriptorEncodingHex: string; descriptorDigestV1: number[] };
+      const fixture = JSON.parse(readFileSync(join(here, "🧪️tests/🧫️fixtures", "📇️directory", "🛡️artifact-authority.json"), "utf8")) as { descriptor: DocumentDescriptor; descriptorEncodingHex: string; descriptorDigestV1: number[] };
       const encoded = descriptorDigestEncodingV1(fixture.descriptor);
       expect(Buffer.from(encoded).toString("hex")).toBe(fixture.descriptorEncodingHex);
       expect(Array.from(await descriptorDigestV1(fixture.descriptor))).toEqual(fixture.descriptorDigestV1);
@@ -1947,7 +1947,7 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(source.url));
-      const fixture = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📇️directory", "🪪️document-descriptor.json"), "utf8")) as { valid: import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor; conflictingSchemaHash: import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor };
+      const fixture = JSON.parse(readFileSync(join(here, "🧪️tests/🧫️fixtures", "📇️directory", "🪪️document-descriptor.json"), "utf8")) as { valid: import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor; conflictingSchemaHash: import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor };
       const created: DirectoryEvent = { seq: 1, id: "space", hlc: { physicalMs: 1, logical: 0 }, actor: { kind: "system", id: "system:test" }, spaceId: fixture.valid.spaceId, body: { kind: "space.created", spaceId: fixture.valid.spaceId, name: "Fixture", spaceKind: "studio", visibility: "private", ownerUserId: "user-owner" }, recordedAtMs: 1 };
       const announced: DirectoryEvent = { seq: 2, id: "document", hlc: { physicalMs: 2, logical: 0 }, actor: { kind: "user", id: "user:user-owner#test" }, spaceId: fixture.valid.spaceId, body: { kind: "document.announced", descriptor: fixture.valid }, recordedAtMs: 2 };
       const conflictReplay: DirectoryEvent = { ...announced, seq: 3, id: "conflict", body: { kind: "document.announced", descriptor: fixture.conflictingSchemaHash } };
@@ -2046,7 +2046,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("admits inference opening only after its exact worker receipt", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/💡️inference/🚪️opening/🧫️fixtures/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/💡️inference/🚪️opening/🧪️tests/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const { InferencePortOpeningMailboxV1, parseInferencePortClosedV1, parseInferencePortOpeningResultV1 } = await import("../../🔨️modules/💡️inference/🚪️opening/🟦️.ts");
       expect(equal(parseInferencePortClosedV1(fixture.closed), fixture.closed)).toBe(true);
       expect(equal(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(fixture.closed)), fixture.closed)).toBe(true);
@@ -2083,7 +2083,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("projects real browser intent publications and preserves bounded owned inference effects", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧪️tests/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧬️schema/🔣️.json", source.url), "utf8"));
 
 
@@ -2202,7 +2202,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("settles only the exact live browser intent mailbox and retires pending work", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧪️tests/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const { BrowserActorActionMailboxV1, browserActorActionRefusalReasonV1 } = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts");
       const { actionSequence: _sequence, ...owner } = fixture.request;
       const intent = { ...fixture.uiIntent, seq: BigInt(fixture.uiIntent.seq) };
@@ -2354,7 +2354,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("preserves the complete browser UI intent and its unsigned sequence above JSON precision", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧪️tests/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧬️schema/🔣️.json", source.url), "utf8"));
       const validRequest = semioSchemaAjvV1({ strict: true }).compile({ ...schema, $ref: "#/definitions/request" });
       const validIntent = semioSchemaAjvV1({ strict: true }).compile({ ...schema, $ref: "#/definitions/uiIntent" });
@@ -2378,7 +2378,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("admits only exact direct browser intent owners on the private worker wire", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧪️tests/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const request = { ...fixture.request, clientInstanceId: "12345678-1234-4123-8123-123456789abc" };
       const response = { ...fixture.acknowledged, clientInstanceId: "12345678-1234-4123-8123-123456789abc" };
       expect(equal(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest(request)), request)).toBe(true);
@@ -2394,11 +2394,11 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("admits only closed semantically valid directory administration requests", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/📇️directory/🏛️administration-worker-wire-v1.json", source.url), "utf8")) as {
+      const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🧫️fixtures/📇️directory/🏛️administration-worker-wire-v1.json", source.url), "utf8")) as {
         valid: readonly BackboneWorkerRequest[];
         invalid: readonly { name: string; request: unknown }[];
       };
-      const commandFixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🏛️administration/🧫️fixtures/🛂️command-admission/🔣️.json", source.url), "utf8")) as {
+      const commandFixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🏛️administration/🛂️command-admission/🔣️.json", source.url), "utf8")) as {
         allowed: readonly { command: unknown }[];
         unrelated: readonly unknown[];
         malformed: readonly unknown[];
@@ -2576,7 +2576,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("carries every directory command across the worker wire back into its declaration order, so the worker can seal it", async () => {
       const { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } = await import("../../🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts");
-      const corpus = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🧫️fixtures/📇️directory/🧾️command-receipt-v1.json", source.url), "utf8")) as { readonly requests: readonly { readonly name: string; readonly requestId: string; readonly command: DirectoryCommand; readonly canonical: string }[] };
+      const corpus = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🧪️tests/🧫️fixtures/📇️directory/🧾️command-receipt-v1.json", source.url), "utf8")) as { readonly requests: readonly { readonly name: string; readonly requestId: string; readonly command: DirectoryCommand; readonly canonical: string }[] };
       const reordered = corpus.requests.filter((row) => Object.keys(row.command).join(",") !== Object.keys(row.command).sort().join(","));
       expect(reordered.map((row) => row.command.kind)).toEqual(expect.arrayContaining(["upsert-member", "rename-space", "create-invite"]));
       for (const row of corpus.requests) {
@@ -2601,7 +2601,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
 
       const event: BackboneWorkerResponse = { kind: "event", documentId: "same-document", clientInstanceId, scope: { spaceId: "space-a", documentId: "same-document" }, event: { kind: "status", persisted: true, pendingMutations: 0, remote: { kind: "live", peerCount: 1 } } };
       expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(event))).toEqual(event);
-      const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🧫️fixtures/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🧪️tests/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const offer = parseBrowserActorUiPatchOfferV1(fixture.offer);
       const result = parseBrowserActorUiPatchResultV1(fixture.acknowledged);
       expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse({ ...offer, clientInstanceId }))).toEqual({ ...offer, clientInstanceId });
@@ -2643,7 +2643,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("withholds creation authority and document coordinates until an exact ready status", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/📇️directory/🌱️space-artifact-creation-generation-v1.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🧫️fixtures/📇️directory/🌱️space-artifact-creation-generation-v1.json", source.url), "utf8"));
       const requestId = "1".repeat(32);
       const catalogGenerationId = "3".repeat(64);
       const clientInstanceId = "12345678-1234-4123-8123-123456789abc";
@@ -3032,7 +3032,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(source.url));
-      const fixturesDir = join(here, "🧫️fixtures");
+      const fixturesDir = join(here, "🧪️tests/🧫️fixtures");
       const owners = readdirSync(fixturesDir, { withFileTypes: true }).filter((entry) => entry.isDirectory() && readdirSync(join(fixturesDir, entry.name)).some((name) => name === "🗣️.dsl" || name === "📦️.spk"));
       expect(owners.length).toBeGreaterThanOrEqual(5);
       for (const owner of owners) {

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🕹️set-opening/🧭️sets-a-sill-override",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/🧭️sets-a-sill-override/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/🧭️sets-a-sill-override/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/🧭️sets-a-sill-override/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/🧭️sets-a-sill-override/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/🧭️sets-a-sill-override/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/🧭️sets-a-sill-override/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/🧭️sets-a-sill-override/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/🧭️sets-a-sill-override/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/🧭️sets-a-sill-override/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/🧭️sets-a-sill-override/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

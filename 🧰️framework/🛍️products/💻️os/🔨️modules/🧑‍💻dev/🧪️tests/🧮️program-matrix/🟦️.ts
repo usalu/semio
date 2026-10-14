@@ -51,7 +51,7 @@ export type MatrixRenderedEdit = Readonly<{ control: string; value: string }>;
 
 /** 📌️ Reads the pins (`🧑‍💻dev/🧫️fixtures/🧮️program-matrix.json`). */
 export function readMatrixPins(): MatrixPins {
-  const pins = JSON.parse(readFileSync(fileURLToPath(new URL("../../🧫️fixtures/🧮️program-matrix.json", import.meta.url)), "utf8")) as MatrixPins;
+  const pins = JSON.parse(readFileSync(fileURLToPath(new URL("../🧫️fixtures/🧮️program-matrix.json", import.meta.url)), "utf8")) as MatrixPins;
   if (pins.schema !== "semio.os-dev.program-matrix-pins/v1") throw new Error(`program matrix pins: unexpected schema ${String(pins.schema)}`);
   return pins;
 }
@@ -72,7 +72,7 @@ function normSnapshot(repoRoot: string, kind: string): string | null {
   const root = join(repoRoot, "✏️s", "🔌️plugins", "📕️norm", "🗿️artifacts");
   const dir = readdirSync(root).find((name) => name.endsWith(kind));
   if (!dir) return null;
-  const mutations = join(root, dir, "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "🧫️fixtures", "🧬️mutations");
+  const mutations = join(root, dir, "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "🧪️tests/🧫️fixtures", "🧬️mutations");
   if (!existsSync(mutations)) return null;
   for (const mutation of readdirSync(mutations).sort()) {
     for (const example of readdirSync(join(mutations, mutation)).sort()) {

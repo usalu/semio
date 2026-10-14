@@ -14,7 +14,7 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
-import { Script } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { DEPENDENCY_INTERFACE_OWNERS, dependencyTestDomain } from "../../../📚️library/🕸️dependencies/📇️inventory/🟦️.ts";
 //#endregion 🔌️Adapters
 
@@ -966,7 +966,7 @@ export function debugTagHitsOfText(path: string, text: string): DebugTagHit[] {
 }
 
 /** 🐞️ The census's own rule vocabulary — this module and the source-census fixture name the tag they look for. */
-export const DEBUG_TAG_CENSUS_EXEMPT: readonly string[] = ["🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🧫️fixtures/🧮️source-census/🔣️.json"];
+export const DEBUG_TAG_CENSUS_EXEMPT: readonly string[] = ["🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🧪️tests/🧫️fixtures/🧮️source-census/🔣️.json"];
 
 /** 🐞️ The `[DEBUG]` census over every tracked text source outside the ticket tree, Markdown prose and
  * {@link DEBUG_TAG_CENSUS_EXEMPT}, cross-checked file by file against `git grep -c` (the oracle). Progress every 5000

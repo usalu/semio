@@ -2,7 +2,7 @@ use super::*;
 
 //#region 🔄️RefreshCycle
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
 
 fn surfaces(data: &serde_json::Value) -> Vec<(String, usize)> {

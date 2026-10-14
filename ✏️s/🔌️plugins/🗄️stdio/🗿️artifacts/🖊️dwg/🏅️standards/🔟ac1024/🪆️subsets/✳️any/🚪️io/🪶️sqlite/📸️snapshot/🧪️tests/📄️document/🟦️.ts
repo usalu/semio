@@ -1,6 +1,6 @@
 import { expect,test } from "bun:test";
 import { Database } from "bun:sqlite";
-import fixture from "../../🧫️fixtures/📄️document/🔣️.json";
+import fixture from "../🧫️fixtures/📄️document/🔣️.json";
 import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
 import { dwgProjectDocument,dwgReconstructDocument,type DwgDocumentState } from "../../📄️document/🟦️.ts";
 import { DwgProjection } from "../../🔢️number/🟦️.ts";

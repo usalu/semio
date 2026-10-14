@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "👣️set-roof-footprint/➕️curves-an-edge",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/👣️set-roof-footprint/➕️curves-an-edge/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/👣️set-roof-footprint/➕️curves-an-edge/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/👣️set-roof-footprint/➕️curves-an-edge/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/👣️set-roof-footprint/➕️curves-an-edge/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/👣️set-roof-footprint/➕️curves-an-edge/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👣️set-roof-footprint/➕️curves-an-edge/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👣️set-roof-footprint/➕️curves-an-edge/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👣️set-roof-footprint/➕️curves-an-edge/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👣️set-roof-footprint/➕️curves-an-edge/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👣️set-roof-footprint/➕️curves-an-edge/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

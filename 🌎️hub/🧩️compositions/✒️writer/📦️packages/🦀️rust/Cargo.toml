@@ -18,6 +18,7 @@ role = "hub"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-writer-writer = { workspace = true }
 semio-framework-job.workspace = true

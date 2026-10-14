@@ -12,11 +12,11 @@
 use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/✅️decision/🌱️create/🌱️creates/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/✅️decision/🌱️create/🌱️creates/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/✅️decision/🌱️create/🌱️creates/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/✅️decision/🌱️create/🌱️creates/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/✅️decision/🌱️create/🌱️creates/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✅️decision/🌱️create/🌱️creates/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✅️decision/🌱️create/🌱️creates/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✅️decision/🌱️create/🌱️creates/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✅️decision/🌱️create/🌱️creates/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✅️decision/🌱️create/🌱️creates/🎯️outcome/🔣️.json");
 
 fn before() -> ProgramSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("create-decision/creates-decision-a: before snapshot decodes")

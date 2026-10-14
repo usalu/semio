@@ -96,7 +96,7 @@ macro_rules! lopdf_vector {
     ($name:ident, $directory:literal, $derive:expr) => {
         #[test]
         fn $name() {
-            holds($directory, include_bytes!(concat!("../../../../🧫️fixtures/", $directory, "/⬅️before.pdf")), include_bytes!(concat!("../../../../🧫️fixtures/", $directory, "/➡️after.pdf")), $derive);
+            holds($directory, include_bytes!(concat!("../../../../🧪️tests/🧫️fixtures", $directory, "/⬅️before.pdf")), include_bytes!(concat!("../../../../🧪️tests/🧫️fixtures", $directory, "/➡️after.pdf")), $derive);
         }
     };
 }

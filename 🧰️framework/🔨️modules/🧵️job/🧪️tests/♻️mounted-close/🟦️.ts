@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {applyPatch} from "fast-json-patch";
 import {readFileSync} from "node:fs";
-const root=new URL("../../",import.meta.url),read=(path:string)=>JSON.parse(readFileSync(new URL(path,root),"utf8")),fixture=read("🧫️fixtures/♻️mounted-close/🔣️.json");
+const root=new URL("../../",import.meta.url),read=(path:string)=>JSON.parse(readFileSync(new URL(path,root),"utf8")),fixture=read("🧪️tests/🧫️fixtures/♻️mounted-close/🔣️.json");
 test("canonical mounted closure exact receipts replay independently through SQLite and RFC6902",()=>{
  const validate=new Ajv({strict:true}).compile(read("🧬️schema/♻️mounted-close/🔣️.json"));expect(validate(fixture)).toBe(true);
  for(const profile of fixture.profiles){const db=new Database(":memory:");try{

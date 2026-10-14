@@ -11,11 +11,11 @@ use crate::mutations::CadMutation;
 use crate::CadSnapshot;
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱create-shape-model/🧱️rehandles/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱create-shape-model/🧱️rehandles/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱create-shape-model/🧱️rehandles/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱create-shape-model/🧱️rehandles/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱create-shape-model/🧱️rehandles/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧱create-shape-model/🧱️rehandles/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧱create-shape-model/🧱️rehandles/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧱create-shape-model/🧱️rehandles/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧱create-shape-model/🧱️rehandles/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧱create-shape-model/🧱️rehandles/🎯️outcome/🔣️.json");
 
 fn before() -> CadSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("create-shape-model/rehandles-the-occupied-shape-slot: before snapshot decodes")

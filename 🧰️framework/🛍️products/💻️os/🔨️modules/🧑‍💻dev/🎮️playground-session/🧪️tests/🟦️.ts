@@ -5,7 +5,7 @@ import Ajv from "ajv";
 import { transformSync } from "esbuild";
 import ts from "typescript";
 import schema from "../🧬️schema/🔣️.json";
-import cases from "../🧫️fixtures/🔣️.json";
+import cases from "./🧫️fixtures/🔣️.json";
 import { parsePlaygroundSessionPublicationRequestV1 } from "../🧬️schema/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../../.."), general = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev", specific = "✏️s/🧑‍💻dev", library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
@@ -34,7 +34,7 @@ test("actual session owner routes admit domain instances and never read test fix
   const { loadCatalogTaxonomy, generatorPreviewExecution } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts");
   const taxonomy = loadCatalogTaxonomy();
   for (const id of ["playground-session", "s-playground-session"]) {
-    const contract = taxonomy.generatorContracts![id]!; expect(contract.inputPatterns!.every(path => !path.includes("🧫️fixtures") && !path.includes("🧪️tests"))).toBe(true);
+    const contract = taxonomy.generatorContracts![id]!; expect(contract.inputPatterns!.every(path => !path.includes("🧪️tests/🧫️fixtures") && !path.includes("🧪️tests"))).toBe(true);
     expect(contract.inputPatterns).toContain(id === "playground-session" ? general + "/🎮️playground-session/🔣️.json" : specific + "/🧩️catalog/🎮️session/🔣️.json");
     const project = JSON.parse(read(contract.ownerPath + "/📋️project.json")), target = project.targets[contract.previewTarget!.split(":").at(-1)!];
     expect(generatorPreviewExecution(contract, target).args).toEqual(["./📜️script.ts", "playground-session", "preview"]);

@@ -9,7 +9,7 @@ use protocol::MutationReplayOutcome;
 use semio_framework_diagnostic::Severity;
 use serde_json::Value;
 
-const LAW: &str = include_str!("../../🧫️fixtures/🧫️lifecycle-law/🔣️.json");
+const LAW: &str = include_str!("../🧫️fixtures/🧫️lifecycle-law/🔣️.json");
 
 fn law() -> Value {
     serde_json::from_str(LAW).expect("fixture parses")

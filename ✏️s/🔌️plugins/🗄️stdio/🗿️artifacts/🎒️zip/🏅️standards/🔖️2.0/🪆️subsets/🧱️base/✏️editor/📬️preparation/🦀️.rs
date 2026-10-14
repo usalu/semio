@@ -151,7 +151,7 @@ mod tests {
     use crate::schema::snapshot::{ZipCentralHeaderMetadata, ZipEntry, ZipEntryMetadata, ZipExtraField, ZipLocalHeaderMetadata};
 
     fn fixture() -> serde_json::Value {
-        serde_json::from_str(include_str!("🧫️fixtures/🧵️bounded-copy/🔣️.json")).expect("bounded ZIP preparation fixture")
+        serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🧵️bounded-copy/🔣️.json")).expect("bounded ZIP preparation fixture")
     }
 
     fn snapshot() -> ZipSnapshot {

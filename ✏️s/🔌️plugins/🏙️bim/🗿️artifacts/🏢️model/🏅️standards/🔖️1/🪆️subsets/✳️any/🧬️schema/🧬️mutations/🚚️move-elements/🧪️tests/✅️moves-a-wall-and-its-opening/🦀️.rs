@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🚚️move-elements/✅️moves-a-wall-and-its-opening",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚚️move-elements/✅️moves-a-wall-and-its-opening/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚚️move-elements/✅️moves-a-wall-and-its-opening/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚚️move-elements/✅️moves-a-wall-and-its-opening/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚚️move-elements/✅️moves-a-wall-and-its-opening/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚚️move-elements/✅️moves-a-wall-and-its-opening/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-elements/✅️moves-a-wall-and-its-opening/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-elements/✅️moves-a-wall-and-its-opening/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-elements/✅️moves-a-wall-and-its-opening/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-elements/✅️moves-a-wall-and-its-opening/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-elements/✅️moves-a-wall-and-its-opening/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

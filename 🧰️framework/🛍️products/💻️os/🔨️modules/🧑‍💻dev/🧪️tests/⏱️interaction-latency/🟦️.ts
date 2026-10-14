@@ -36,7 +36,7 @@ export type LatencyScenarios = Readonly<{ schema: "semio.os-dev.interaction-late
 
 /** 📖️ Reads `🧑‍💻dev/🧫️fixtures/⏱️interaction-latency.json`. */
 export function readLatencyScenarios(): LatencyScenarios {
-  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "..", "..", "🧫️fixtures", "⏱️interaction-latency.json"), "utf8")) as LatencyScenarios;
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "..", "..", "🧪️tests/🧫️fixtures", "⏱️interaction-latency.json"), "utf8")) as LatencyScenarios;
   if (fixture.schema !== "semio.os-dev.interaction-latency-scenarios/v1") throw new Error(`interaction latency: unexpected schema ${String(fixture.schema)}`);
   return fixture;
 }

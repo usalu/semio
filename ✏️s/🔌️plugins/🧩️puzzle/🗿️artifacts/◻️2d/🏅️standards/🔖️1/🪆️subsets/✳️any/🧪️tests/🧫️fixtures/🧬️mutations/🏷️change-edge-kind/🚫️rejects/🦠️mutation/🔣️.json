@@ -1,0 +1,5 @@
+{
+  "mutation": "changeEdgeKind",
+  "id": "02d43618-0e15-482b-9335-702d795f8074",
+  "newEdgeKind": "edge.link"
+}

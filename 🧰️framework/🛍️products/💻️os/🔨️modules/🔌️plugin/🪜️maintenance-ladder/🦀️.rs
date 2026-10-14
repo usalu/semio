@@ -171,20 +171,16 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         })
     }
 
-    fn maintenance_unit_step(&mut self, unit: MaintenanceUnit, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
-        match unit {
-            MaintenanceUnit::CommandPrune => self.advance_command_prune_step(grant, false),
-            MaintenanceUnit::PrivateChildGroup(operation) => match self.close_private_child_group_operation_step(operation, grant)? {
-                semio_framework_job::InteractiveJobCloseStep::Pending { progress } | semio_framework_job::InteractiveJobCloseStep::Complete { progress } => Ok(PluginLifecycleStep::Progress(progress)),
-                semio_framework_job::InteractiveJobCloseStep::Blocked => Ok(PluginLifecycleStep::Blocked { reason: "private child group close awaits its owner" }),
-                semio_framework_job::InteractiveJobCloseStep::Refused { kind, .. } => Err(plugin_sdk_fault(format!("private child group close was refused: {kind:?}"))),
-            },
-            MaintenanceUnit::DirectIngress => self.window_config_store.close_direct_ingress(grant).map(progressed).map_err(plugin_retirement_fault),
-            MaintenanceUnit::GrantedMounted => self.granted_mounted_retirement_step(grant).map(progressed).map_err(plugin_retirement_fault),
-            MaintenanceUnit::ToolOverlay => self.tool_overlay_retirement_step(grant).map(progressed).map_err(plugin_retirement_fault),
-            MaintenanceUnit::ToolRuns => Ok(self.tool_run_retire_step(grant)?.map_or_else(idle, progressed)),
-            MaintenanceUnit::TimeTravel => Ok(self.time_travel_retire_step(grant)?.map_or_else(idle, progressed)),
-            MaintenanceUnit::Pressure(stage) | MaintenanceUnit::Stage(stage) => self.maintenance_stage_step(stage, grant),
+    fn maintenance_unit_step(&mut self,unit:MaintenanceUnit,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+        match unit{
+            MaintenanceUnit::CommandPrune=>self.advance_command_prune_step(grant,false).map_err(Into::into),
+            MaintenanceUnit::PrivateChildGroup(operation)=>Ok(match self.close_private_child_group_operation_step(operation,grant)?{semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),semio_framework_job::InteractiveJobCloseStep::Blocked=>PluginLifecycleStep::Blocked{reason:"original private child group awaits custody"}}),
+            MaintenanceUnit::DirectIngress=>self.window_config_store.close_direct_ingress(grant).map(progressed).map_err(Into::into),
+            MaintenanceUnit::GrantedMounted=>self.granted_mounted_retirement_step(cx).map(progressed),
+            MaintenanceUnit::ToolOverlay=>self.tool_overlay_retirement_step(grant).map(progressed).map_err(Into::into),
+            MaintenanceUnit::ToolRuns=>Ok(self.tool_run_retire_step(cx)?.map_or_else(idle,progressed)),
+            MaintenanceUnit::TimeTravel=>Ok(self.time_travel_retire_step(grant)?.map_or_else(idle,progressed)),
+            MaintenanceUnit::Pressure(stage)|MaintenanceUnit::Stage(stage)=>self.maintenance_stage_step(stage,cx,grant),
         }
     }
 
@@ -201,54 +197,31 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
 
     /// 🎡️ Visits units in fair order and spends the grant on the first one that releases something. An empty or unfunded
     /// unit never consumes the call; a blocked or input-starved unit is remembered and reported only when nothing else moved.
-    pub(crate) fn maintenance_ladder_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
-        let started_us = semio_framework_job::default_now_us();
-        let empty = RetainedCloneProgress::default();
-        let mut spent = empty;
-        loop {
-            let remaining = crate::plugin_runtime::remaining_plugin_turn_grant(grant, spent);
-            let unit = match self.maintenance_ladder_unit_step(remaining)? {
-                PluginLifecycleStep::Progress(progress) if progress != empty => progress,
-                step => return Ok(if spent == empty { step } else { PluginLifecycleStep::Progress(spent) }),
-            };
-            spent = spent.checked_add(unit).map_err(plugin_retirement_fault)?;
-            if unit.copied_items == 0 || crate::plugin_runtime::remaining_plugin_turn_grant(grant, spent).maximum_items == 0 || started_us.is_some_and(|started_us| semio_framework_job::default_now_us().is_some_and(|now_us| now_us.saturating_sub(started_us) >= INTERACTIVE_TURN_WORKER_WALL_US)) {
-                return Ok(PluginLifecycleStep::Progress(spent));
-            }
+    pub(crate) fn maintenance_ladder_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+        let empty=RetainedCloneProgress::default();let mut spent=empty;
+        loop{
+            if cx.should_yield(){return Ok(PluginLifecycleStep::Progress(spent))}
+            let remaining=crate::plugin_runtime::remaining_plugin_turn_grant(loan,spent);
+            let unit=match self.maintenance_ladder_unit_step(cx,remaining)?{PluginLifecycleStep::Progress(progress)if progress!=empty=>progress,step=>return Ok(if spent==empty{step}else{PluginLifecycleStep::Progress(spent)})};
+            spent=spent.checked_add(unit)?;if unit.copied_items==0||crate::plugin_runtime::remaining_plugin_turn_grant(loan,spent).maximum_items==0{return Ok(PluginLifecycleStep::Progress(spent))}
         }
     }
 
-    /// 🎡️ One fair unit of the rotation under what the host turn still owns; [`Self::maintenance_ladder_step`] chains units while the turn's grant lasts.
-    fn maintenance_ladder_unit_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
-        LAST_MAINTENANCE_STAGE.store(u64::MAX, std::sync::atomic::Ordering::Relaxed);
-        let empty = RetainedCloneProgress::default();
-        if grant.maximum_items == 0 {
-            return Ok(PluginLifecycleStep::Progress(empty));
+    fn maintenance_ladder_unit_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+        LAST_MAINTENANCE_STAGE.store(u64::MAX,std::sync::atomic::Ordering::Relaxed);let empty=RetainedCloneProgress::default();let cursor=self.maintenance_stage;let mut awaiting=None;let mut blocked=None;
+        for position in 0..MAINTENANCE_POSITIONS{
+            if cx.should_yield(){return Ok(PluginLifecycleStep::Progress(empty))}
+            let grant=crate::bounded_ownership::original_lifecycle_grant(cx,loan);if grant.maximum_items==0{return Ok(PluginLifecycleStep::Progress(empty))}
+            let Some(unit)=self.maintenance_unit_at(position,cursor)else{cx.consume_fuel(1);continue};
+            let Some(demand)=self.maintenance_unit_demand(unit,grant.maximum_copy_bytes)?else{cx.consume_fuel(1);continue};
+            if !crate::bounded_ownership::plugin_grant_funds(demand,grant){cx.consume_fuel(1);continue}
+            let step=crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|{
+                if let MaintenanceUnit::Stage(stage)=unit{self.maintenance_stage=(stage+1)%MAINTENANCE_STAGES}LAST_MAINTENANCE_STAGE.store(unit.trace(),std::sync::atomic::Ordering::Relaxed);
+                let step=self.maintenance_unit_step(unit,same,actual)?;Ok((step,true))
+            })?;
+            match step{PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress)if progress!=empty=>return Ok(PluginLifecycleStep::Progress(progress)),step@PluginLifecycleStep::AwaitingInput{..}=>awaiting=awaiting.or(Some(step)),step@PluginLifecycleStep::Blocked{..}=>blocked=blocked.or(Some(step)),PluginLifecycleStep::Progress(_)|PluginLifecycleStep::Complete(_)=>{}}
         }
-        let cursor = self.maintenance_stage;
-        let mut awaiting = None;
-        let mut blocked = None;
-        for position in 0..MAINTENANCE_POSITIONS {
-            let Some(unit) = self.maintenance_unit_at(position, cursor) else { continue };
-            if let MaintenanceUnit::Stage(stage) = unit {
-                self.maintenance_stage = (stage + 1) % MAINTENANCE_STAGES;
-            }
-            let Some(demand) = self.maintenance_unit_demand(unit, grant.maximum_copy_bytes).map_err(plugin_retirement_fault)? else { continue };
-            if !plugin_turn_admitted(demand, grant)? {
-                continue;
-            }
-            LAST_MAINTENANCE_STAGE.store(unit.trace(), std::sync::atomic::Ordering::Relaxed);
-            match self.maintenance_unit_step(unit, grant)? {
-                PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) if progress != empty => return Ok(PluginLifecycleStep::Progress(progress)),
-                step @ PluginLifecycleStep::AwaitingInput { .. } => awaiting = awaiting.or(Some(step)),
-                step @ PluginLifecycleStep::Blocked { .. } => blocked = blocked.or(Some(step)),
-                PluginLifecycleStep::Progress(_) | PluginLifecycleStep::Complete(_) => {}
-            }
-        }
-        if let Some(step) = awaiting.or(blocked) {
-            return Ok(step);
-        }
-        Ok(if self.maintenance_terminal_is_empty() { PluginLifecycleStep::Complete(empty) } else { PluginLifecycleStep::Progress(empty) })
+        Ok(awaiting.or(blocked).unwrap_or_else(||if self.maintenance_terminal_is_empty(){PluginLifecycleStep::Complete(empty)}else{PluginLifecycleStep::Progress(empty)}))
     }
 
     fn maintenance_tool_selection(&self) -> MaintenanceTool {
@@ -352,7 +325,12 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         })
     }
 
-    fn maintenance_stage_step(&mut self, stage: u8, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn maintenance_stage_step(&mut self,stage:u8,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+        if stage==16{return self.instance_operation_owner.maintenance_step(cx,grant)}
+        if stage==15{return match self.live_runtime_instance_id{Some(instance)=>A::mounted_job_maintenance_step(instance,cx,grant),None=>Ok(idle())}}
+        if stage==14{return self.drive_store_replacement_jobs(cx,grant,false)}
+        if stage==23{return Ok(match semio_framework_job::pump_worker_job_retirements(1,cx)?{semio_framework_job::WorkerJobCloseStep::Pending{progress}|semio_framework_job::WorkerJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),semio_framework_job::WorkerJobCloseStep::Blocked=>PluginLifecycleStep::Blocked{reason:"original worker retirement awaits custody"}})}
+        let result=(||->Result<PluginLifecycleStep,Fault>{
         let value_fault = plugin_retirement_fault;
         match stage {
             0 => match self.maintenance_tool_selection() {
@@ -481,12 +459,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             11 => self.drive_envelope_decode_jobs(grant, false),
             12 => self.drive_envelope_field_decoder_returns(grant, false),
             13 => self.drive_envelope_completed_record_returns(grant, false),
-            14 => self.drive_store_replacement_jobs(grant, false),
-            15 => match self.live_runtime_instance_id {
-                Some(instance_id) => A::mounted_job_maintenance_step(instance_id, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant }),
-                None => Ok(idle()),
-            },
-            16 => self.instance_operation_owner.maintenance_step(grant),
+
+
             17 => self.latest_wins_keys.advance(grant).map(progressed),
             18 => {
                 if self.tool_cancellations.cleanup_finished_slot(self.maintenance_cancellation_cursor)?.is_none() {
@@ -499,10 +473,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             MAINTENANCE_CHILD_MEMBER_STAGE => self.child_member_retirement_step(grant).map(PluginLifecycleStep::Progress),
             21 => self.retire_document_windows_step(grant, false),
             22 => self.window_transient_store.maintenance_step(grant),
-            23 => {
-                let step = semio_framework_job::pump_worker_job_retirements(1, grant);
-                Ok(plugin_worker_close_progress(step, grant, !semio_framework_job::worker_job_retirements_are_parked())?.map_or(PluginLifecycleStep::Blocked { reason: "a parked worker-job session awaits its genuine handback" }, PluginLifecycleStep::Progress))
-            }
+
             24 => self.drive_document_archive_load_retirements(grant, false),
             MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE => {
                 let step = if !self.config_store.maintenance_retirements_terminal_is_empty() {
@@ -518,6 +489,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             }
             _ => unreachable!("fixed maintenance stage"),
         }
+        })();result.map_err(Into::into)
     }
 
     /// 🧭️ Walks one mounted peer roster through decode, validation, atomic publication and outcome hand-off, or through its cleanup once faulted.
@@ -675,7 +647,17 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
     }
 
     /// 🎟️ One granted turn of the next store replacement; a closing app cancels it first and removes it once terminal.
-    pub(crate) fn drive_store_replacement_jobs(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
+    pub(crate) fn drive_store_replacement_jobs(&mut self,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+        let demand=self.store_replacement_demands(closing,loan.maximum_copy_bytes)?;
+        crate::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,grant|{
+            let step=self.drive_store_replacement_original(same,grant,closing)?;
+            let terminal=self.store_replacement_jobs.is_empty();
+            let step=if !terminal{match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step}}else{step};
+            Ok((step,terminal))
+        })
+    }
+
+    fn drive_store_replacement_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep,crate::PluginLifecycleFailure> {
         use ActiveArtifactStoreReplacementState as State;
         let empty = RetainedCloneProgress::default();
         let item = item();
@@ -702,7 +684,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             if let Some(now_ms) = semio_framework_job::default_now_ms() {
                 pool.pump(now_ms);
             }
-            return step;
+            return step.map_err(Into::into);
         }
         if matches!(state, State::AwaitingMembers | State::OpeningMembers | State::ClosingRejectedMember | State::ValidatingClosure | State::PreparingCandidateViews) && active.cancelled() {
             active.refuse(ArtifactStoreReplacementRefusal::Cancelled);
@@ -723,27 +705,27 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
                 self.complete_store_replacement_genesis(operation_id)?;
                 Ok(PluginLifecycleStep::Progress(item))
             }
-            State::OpeningMembers => active.drive_member_open(grant),
+            State::OpeningMembers => active.drive_member_open(cx,grant),
             State::ClosingRejectedMember => {
                 active.state = State::RetiringRejectedMembers;
                 Ok(PluginLifecycleStep::Progress(item))
             }
-            State::ValidatingClosure => active.drive_closure(grant),
-            State::PreparingCandidateViews => active.drive_candidate_views(grant),
+            State::ValidatingClosure => active.drive_closure(grant).map_err(Into::into),
+            State::PreparingCandidateViews => active.drive_candidate_views(grant).map_err(Into::into),
             State::RetiringRejectedMembers | State::RetiringCommittedMembers => {
                 if active.retained_store.is_some() && active.retained_disposer.is_none() {
                     *active.retained_disposer = Some(A::build_document_store_disposer().ok_or_else(|| plugin_sdk_fault("app did not supply the required rejected-candidate disposer"))?);
                 }
-                active.drive_rejected_members(&self.child_content_root, grant)
+                active.drive_rejected_members(&self.child_content_root,cx,grant)
             }
-            State::CandidateReady => self.commit_store_replacement_candidate(operation_id, closing),
-            State::RetiringCommittedStore | State::RetiringRejectedCandidate => active.drive_retained_store(grant),
+            State::CandidateReady => self.commit_store_replacement_candidate(operation_id, closing).map_err(Into::into),
+            State::RetiringCommittedStore | State::RetiringRejectedCandidate => active.drive_retained_store(grant).map_err(Into::into),
             State::Complete | State::Initializing => {
                 if !closing {
                     return Ok(PluginLifecycleStep::Complete(empty));
                 }
                 if !active.terminal_is_empty() {
-                    return Err(maintenance_fault("artifact-store.replacement-terminal-not-empty", "store replacement reported terminal before every exact owner was empty"));
+                    return Err(maintenance_fault("artifact-store.replacement-terminal-not-empty", "store replacement reported terminal before every exact owner was empty").into());
                 }
                 let active = self.store_replacement_jobs.remove(operation_id).ok_or_else(|| maintenance_fault("artifact-store.replacement-owner", "terminal store replacement changed before exact close removal"))?;
                 drop(active);

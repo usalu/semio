@@ -1,0 +1,222 @@
+{
+  "cases": [
+    {
+      "id": "history-before-geometry",
+      "steps": [
+        {
+          "action": "bind",
+          "instance": 7,
+          "job": "41",
+          "owned": [
+            "41"
+          ],
+          "accepted": [
+            "41"
+          ]
+        },
+        {
+          "action": "bind",
+          "instance": 7,
+          "job": "42",
+          "owned": [
+            "41",
+            "42"
+          ],
+          "accepted": [
+            "42"
+          ]
+        },
+        {
+          "action": "complete",
+          "instance": 7,
+          "job": "41",
+          "owned": [
+            "42"
+          ],
+          "accepted": [
+            "42"
+          ]
+        },
+        {
+          "action": "complete",
+          "instance": 7,
+          "job": "42",
+          "owned": [],
+          "accepted": []
+        }
+      ]
+    },
+    {
+      "id": "geometry-before-history",
+      "steps": [
+        {
+          "action": "bind",
+          "instance": 7,
+          "job": "41",
+          "owned": [
+            "41"
+          ],
+          "accepted": [
+            "41"
+          ]
+        },
+        {
+          "action": "bind",
+          "instance": 7,
+          "job": "42",
+          "owned": [
+            "41",
+            "42"
+          ],
+          "accepted": [
+            "42"
+          ]
+        },
+        {
+          "action": "complete",
+          "instance": 7,
+          "job": "42",
+          "owned": [
+            "41"
+          ],
+          "accepted": []
+        },
+        {
+          "action": "complete",
+          "instance": 7,
+          "job": "41",
+          "owned": [],
+          "accepted": []
+        }
+      ]
+    },
+    {
+      "id": "independent-instances",
+      "steps": [
+        {
+          "action": "bind",
+          "instance": 7,
+          "job": "41",
+          "owned": [
+            "41"
+          ],
+          "accepted": [
+            "41"
+          ]
+        },
+        {
+          "action": "bind",
+          "instance": 8,
+          "job": "42",
+          "owned": [
+            "41",
+            "42"
+          ],
+          "accepted": [
+            "41",
+            "42"
+          ]
+        },
+        {
+          "action": "close",
+          "instance": 7,
+          "job": "0",
+          "owned": [
+            "42"
+          ],
+          "accepted": [
+            "42"
+          ]
+        },
+        {
+          "action": "complete",
+          "instance": 8,
+          "job": "42",
+          "owned": [],
+          "accepted": []
+        }
+      ]
+    },
+    {
+      "id": "close-all-owned-jobs",
+      "steps": [
+        {
+          "action": "bind",
+          "instance": 7,
+          "job": "41",
+          "owned": [
+            "41"
+          ],
+          "accepted": [
+            "41"
+          ]
+        },
+        {
+          "action": "bind",
+          "instance": 7,
+          "job": "42",
+          "owned": [
+            "41",
+            "42"
+          ],
+          "accepted": [
+            "42"
+          ]
+        },
+        {
+          "action": "close",
+          "instance": 7,
+          "job": "0",
+          "owned": [],
+          "accepted": []
+        }
+      ]
+    },
+    {
+      "id": "full-u64-authority",
+      "steps": [
+        {
+          "action": "bind",
+          "instance": 4294967295,
+          "job": "18446744073709551614",
+          "owned": [
+            "18446744073709551614"
+          ],
+          "accepted": [
+            "18446744073709551614"
+          ]
+        },
+        {
+          "action": "bind",
+          "instance": 4294967295,
+          "job": "18446744073709551615",
+          "owned": [
+            "18446744073709551614",
+            "18446744073709551615"
+          ],
+          "accepted": [
+            "18446744073709551615"
+          ]
+        },
+        {
+          "action": "complete",
+          "instance": 4294967295,
+          "job": "18446744073709551614",
+          "owned": [
+            "18446744073709551615"
+          ],
+          "accepted": [
+            "18446744073709551615"
+          ]
+        },
+        {
+          "action": "close",
+          "instance": 4294967295,
+          "job": "0",
+          "owned": [],
+          "accepted": []
+        }
+      ]
+    }
+  ]
+}

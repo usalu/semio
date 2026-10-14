@@ -1,0 +1,102 @@
+[
+  {
+    "id": "dangling-root",
+    "table": "json_document",
+    "rowid": 1,
+    "column": 2,
+    "value": {
+      "integer": "999"
+    }
+  },
+  {
+    "id": "multiple-owner-root",
+    "table": "json_array_element",
+    "rowid": 1,
+    "column": 3,
+    "value": {
+      "integer": "1"
+    }
+  },
+  {
+    "id": "ordinal-gap",
+    "table": "json_array_element",
+    "rowid": 1,
+    "column": 2,
+    "value": {
+      "integer": "19"
+    }
+  },
+  {
+    "id": "duplicate-ordinal",
+    "table": "json_array_element",
+    "rowid": 2,
+    "column": 2,
+    "value": {
+      "integer": "0"
+    }
+  },
+  {
+    "id": "wrong-parent-kind",
+    "table": "json_object_member",
+    "rowid": 1,
+    "column": 1,
+    "value": {
+      "integer": "3"
+    }
+  },
+  {
+    "id": "dangling-child",
+    "table": "json_object_member",
+    "rowid": 1,
+    "column": 4,
+    "value": {
+      "integer": "999"
+    }
+  },
+  {
+    "id": "derived-query",
+    "table": "json_value",
+    "rowid": 11,
+    "column": 5,
+    "value": 2.0
+  },
+  {
+    "id": "inactive-scalar",
+    "table": "json_value",
+    "rowid": 4,
+    "column": 4,
+    "value": "unexpected"
+  },
+  {
+    "id": "identity-word",
+    "table": "json_value",
+    "rowid": 4,
+    "column": 0,
+    "value": {
+      "integer": "54"
+    }
+  },
+  {
+    "id": "duplicate-id",
+    "table": "json_value",
+    "rowid": 4,
+    "duplicate": true
+  },
+  {
+    "id": "unknown-tag",
+    "table": "json_value",
+    "rowid": 4,
+    "column": 1,
+    "value": "unknown"
+  },
+  {
+    "id": "owner-missing",
+    "table": "json_array_element",
+    "rowid": 1,
+    "remove": true
+  },
+  {
+    "id": "disconnected-cycle",
+    "cycle": true
+  }
+]

@@ -116,10 +116,10 @@ pub(super) fn decode_scope(value: &DslValue, c: &mut NativeDecodeControl<'_>) ->
     let [plugin_id, app_id, instance_id, module, body_key] = fields(value, ["pluginId", "appId", "instanceId", "module", "bodyKey"], c)?;
     Ok(FaultScope { plugin_id: optional_text(plugin_id, "expected a string for FaultScope.pluginId", c)?, app_id: optional_text(app_id, "expected a string for FaultScope.appId", c)?, instance_id: optional_text(instance_id, "expected a string for FaultScope.instanceId", c)?, module: optional_text(module, "expected a string for FaultScope.module", c)?, body_key: optional_text(body_key, "expected a string for FaultScope.bodyKey", c)? })
 }
-pub(super) fn encode_cause(value: &FaultCause, c: &mut NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { record(c, 1 + usize::from(value.code.is_some()), |fields, c| { push(fields, "message", &value.message, c)?; if let Some(value) = &value.code { push(fields, "code", value, c)?; } Ok(()) }) }
+pub(super) fn encode_cause(value: &FaultCause, c: &mut NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { record(c, 1 + usize::from(value.code.is_some()) + usize::from(value.retained_progress.is_some()), |fields, c| { push(fields, "message", &value.message, c)?; if let Some(value) = &value.code { push(fields, "code", value, c)?; } if let Some(value) = &value.retained_progress { push(fields, "retainedProgress", value, c)?; } Ok(()) }) }
 pub(super) fn decode_cause(value: &DslValue, c: &mut NativeDecodeControl<'_>) -> Result<FaultCause, ValueError> {
-    let [message, code] = fields(value, ["message", "code"], c)?;
-    Ok(FaultCause { message: text(required(message, "missing FaultCause.message")?, "expected a string for FaultCause.message", c)?, code: optional(code, c)? })
+    let [message, code, retained_progress] = fields(value, ["message", "code", "retainedProgress"], c)?;
+    Ok(FaultCause { message: text(required(message, "missing FaultCause.message")?, "expected a string for FaultCause.message", c)?, code: optional(code, c)?, retained_progress: retained_progress.map(|value| semio_framework_value::RetainedCloneProgress::from_value_controlled(value,c)).transpose()? })
 }
 pub(super) fn encode_diagnostic(value: &Diagnostic, c: &mut NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
     record(c, 5 + usize::from(value.expected.is_some()), |fields, c| { push(fields, "code", &value.code, c)?; push(fields, "severity", &value.severity, c)?; push(fields, "span", &value.span, c)?; push(fields, "message", &value.message, c)?; if let Some(value) = &value.expected { push(fields, "expected", value, c)?; } push(fields, "scope", &value.scope, c) })
@@ -157,10 +157,10 @@ pub(super) fn decode_params(value: &DslValue, c: &mut NativeDecodeControl<'_>) -
 }
 pub(super) fn encode_fault(value: &Fault, c: &mut NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
     let params = value.params.as_deref().filter(|params| !params.0.is_empty());
-    record(c, 7 + usize::from(value.span.is_some()) + usize::from(!value.causes.is_empty()) + usize::from(params.is_some()), |fields, c| { push(fields, "origin", &value.origin, c)?; push(fields, "code", &value.code, c)?; push(fields, "severity", &value.severity, c)?; push(fields, "message", &value.message, c)?; push(fields, "scope", &*value.scope, c)?; push(fields,"retainedProgress",&value.retained_progress,c)?; if let Some(value) = &value.span { push(fields, "span", value, c)?; } if !value.causes.is_empty() { push(fields, "causes", &value.causes, c)?; } if let Some(params) = params { push(fields, "params", params, c)?; } push(fields, "retryable", &value.retryable, c) })
+    record(c, 7 + usize::from(value.source.is_some()) + usize::from(value.span.is_some()) + usize::from(!value.causes.is_empty()) + usize::from(params.is_some()), |fields, c| { push(fields, "origin", &value.origin, c)?; push(fields, "code", &value.code, c)?; push(fields, "severity", &value.severity, c)?; push(fields, "message", &value.message, c)?; push(fields, "scope", &*value.scope, c)?; push(fields,"retainedProgress",&value.retained_progress,c)?; if let Some(value) = &value.span { push(fields, "span", value, c)?; } if let Some(value)=&value.source{push(fields,"source",value,c)?;} if !value.causes.is_empty() { push(fields, "causes", &value.causes, c)?; } if let Some(params) = params { push(fields, "params", params, c)?; } push(fields, "retryable", &value.retryable, c) })
 }
 pub(super) fn decode_fault(value: &DslValue, c: &mut NativeDecodeControl<'_>) -> Result<Fault, ValueError> {
-    let [origin, code, severity, message, scope, span, causes, params, retryable, retained_progress] = fields(value, ["origin", "code", "severity", "message", "scope", "span", "causes", "params", "retryable", "retainedProgress"], c)?;
+    let [origin, code, severity, message, scope, span, causes, params, retryable, retained_progress, source] = fields(value, ["origin", "code", "severity", "message", "scope", "span", "causes", "params", "retryable", "retainedProgress", "source"], c)?;
     let retained_progress=semio_framework_value::RetainedCloneProgress::from_value_controlled(required(retained_progress,"missing Fault.retainedProgress")?,c)?;
     let origin = FaultOrigin::from_value_controlled(required(origin, "missing Fault.origin")?, c)?;
     let code = FaultCode::from_value_controlled(required(code, "missing Fault.code")?, c)?.guard_decoded();
@@ -169,10 +169,20 @@ pub(super) fn decode_fault(value: &DslValue, c: &mut NativeDecodeControl<'_>) ->
     c.charge(size_of::<FaultScope>())?;
     let scope = optional::<FaultScope>(scope, c)?.unwrap_or_default().guard_decoded();
     let span = optional::<TextSpan>(span, c)?;
+    let source = optional::<FaultSource>(source, c)?;
     let causes = optional::<Vec<FaultCause>>(causes, c)?.unwrap_or_default().guard_decoded();
     let params = optional::<FaultParams>(params, c)?.filter(|params| !params.0.is_empty()).guard_decoded();
     if params.get().is_some() { c.charge(size_of::<FaultParams>())?; }
     let retryable = optional::<bool>(retryable, c)?.unwrap_or(false);
     c.checkpoint()?;
-    Ok(Fault { retained_progress,origin, code: code.take(), severity, message: message.take(), scope: Box::new(scope.take()), span, causes: causes.take(), params: params.take().map(Box::new), retryable })
+    Ok(Fault { retained_progress,origin, code: code.take(), severity, message: message.take(), scope: Box::new(scope.take()), span, source, causes: causes.take(), params: params.take().map(Box::new), retryable })
+}
+
+pub(crate) fn encode_source(value:&FaultSource,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{
+ record(c,usize::from(value.offset.is_some())+usize::from(value.byte.is_some())+usize::from(value.depth.is_some()),|fields,c|{if let Some(value)=value.offset{push(fields,"offset",&value,c)?}if let Some(value)=value.byte{push(fields,"byte",&u64::from(value),c)?}if let Some(value)=value.depth{push(fields,"depth",&value,c)?}Ok(())})
+}
+pub(crate) fn decode_source(value:&DslValue,c:&mut NativeDecodeControl<'_>)->Result<FaultSource,ValueError>{
+ let[offset,byte,depth]=fields(value,["offset","byte","depth"],c)?;
+ let read=|value:Option<&DslValue>,c:&mut NativeDecodeControl<'_>|->Result<Option<u64>,ValueError>{match value{None=>Ok(None),Some(DslValue::Number(value))=>{scalar(c)?;value.as_u64().map(Some).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"expected exact unsigned Fault.source scalar"))},_=>Err(ValueError::literal(ValueRefusalKind::InvalidValue,"expected exact unsigned Fault.source scalar"))}};
+ Ok(FaultSource{offset:read(offset,c)?,byte:read(byte,c)?.map(|value|u8::try_from(value).map_err(|_|ValueError::literal(ValueRefusalKind::InvalidValue,"Fault.source byte exceeds u8"))).transpose()?,depth:read(depth,c)?})
 }

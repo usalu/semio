@@ -3,7 +3,7 @@ use super::*;
 use protocol::{command::DiffAlgebra, DiffBinary,DiffCodec,DiffText, MutationDiff};
 
 fn canonical_diff_fixture()->serde_json::Value{
- serde_json::from_str(include_str!("../../../../🧫️fixtures/🧬️canonical-diff/🔣️.json")).expect("language-neutral canonical field replacement laws")
+ serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️canonical-diff/🔣️.json")).expect("language-neutral canonical field replacement laws")
 }
 
 #[test]

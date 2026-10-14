@@ -8,11 +8,11 @@
 use crate::opening_config::mutations::UiPreferencesConfigMutation;
 use crate::opening_config::{UiPreferences, UiPreferencesDiff};
 
-const BEFORE: &str = include_str!("../../🧫️fixtures/🟰️keeps-driver/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../🧫️fixtures/🟰️keeps-driver/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../🧫️fixtures/🟰️keeps-driver/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../🧫️fixtures/🟰️keeps-driver/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../🧫️fixtures/🟰️keeps-driver/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-driver/🟰️keeps-driver/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-driver/🟰️keeps-driver/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-driver/🟰️keeps-driver/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-driver/🟰️keeps-driver/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-driver/🟰️keeps-driver/🎯️outcome/🔣️.json");
 
 fn before() -> UiPreferences {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before preferences decode")

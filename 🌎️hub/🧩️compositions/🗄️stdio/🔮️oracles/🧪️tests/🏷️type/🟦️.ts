@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import contract from "../../🧫️fixtures/🏷️type/🔣️.json";
+import contract from "../🧫️fixtures/🏷️type/🔣️.json";
 
 
 const root = resolve(import.meta.dir, "../../../../../..");

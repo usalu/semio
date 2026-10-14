@@ -7,9 +7,9 @@ import { describe, expect, it } from "vitest";
 import viewContextSchema from "../../../../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔣️.json";
 import { parseResolvedPluginViewState } from "../../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { Matrix4, Quaternion, Vector3, BoxGeometry, type InstancedMesh } from "three";
-import fixture from "../../../../../../../../../../🔨️modules/⏯️tool-run/🧫️fixtures/📼️trace-pages.json";
-import canvas2dLanes from "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json";
-import base64UrlVectors from "../../../../../../../../../../🔨️modules/🚪️io/🔤️base64/🧫️fixtures/🔣️rfc4648-base64url-vectors.json";
+import fixture from "../../../../../../../../../../🔨️modules/⏯️tool-run/🧪️tests/🧫️fixtures/📼️trace-pages.json";
+import canvas2dLanes from "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json";
+import base64UrlVectors from "../../../../../../../../../../🔨️modules/🚪️io/🔤️base64/🧪️tests/🧫️fixtures/🔣️rfc4648-base64url-vectors.json";
 import { base64UrlDecode, base64UrlEncode } from "../../../../../../../../../../🔨️modules/🚪️io/🔤️base64/🟦️.ts";
 import {
   encodeToolRunTraceDelta,

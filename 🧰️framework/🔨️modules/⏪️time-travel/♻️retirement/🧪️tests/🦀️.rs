@@ -2,7 +2,7 @@
 use crate::{TimeTravelSession,TimeTravelBase,TimeTravelStage,TimeTravelDraft,TimeTravelTarget,TimeTravelPending,TimeTravelProgress};
 use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep},ValueRefusalKind};
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
-fn original_native_grant()->RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let policy=&law["originalRetirementGrant"];RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:policy["release"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize}}
+fn original_native_grant()->RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let policy=&law["originalRetirementGrant"];RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:policy["release"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize}}
 fn original_discard_demand(owner:&crate::TimeTravelDiscardCursor,session:&TimeTravelSession,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if owner.is_validating(){Ok(owner.validation_demands(session))}else if owner.prepared_stage().is_some(){owner.commit_demands(session)}else{owner.retirement_demands(body)}}
 fn text(value:&str,capacity:usize)->String{let mut original=String::with_capacity(capacity);original.push_str(value);original}
 fn input(capacity:usize)->protocol::InputReplacement{let mut payload=Vec::with_capacity(capacity);payload.extend_from_slice(&[0,34,255]);protocol::InputReplacement::Input{schema:text("native.v1",capacity),payload}}
@@ -13,7 +13,7 @@ fn drafts(capacity:usize,original_grant:RetainedCloneGrant)->semio_framework_val
 #[test]
 fn time_travel_session_retirement_original_drafts_reports_and_empty_capacities(){
  let original_grant=original_native_grant();
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for cap in fixture["capacities"].as_array().unwrap(){let capacity=cap.as_u64().unwrap()as usize;for copy in fixture["copyGrants"].as_array().unwrap(){let copy=copy.as_u64().unwrap()as usize;for cut in fixture["cancelCuts"].as_array().unwrap(){let cut=cut.as_u64().unwrap()as usize;
   let(original,heap)=observe_heap_allocations_on_this_thread(||{
    let mut accepted=drafts(capacity,original_grant);accepted.push(TimeTravelDraft{target:target(capacity),replacement:input(capacity)});
@@ -35,7 +35,7 @@ fn time_travel_session_retirement_original_drafts_reports_and_empty_capacities()
 #[test]
 fn time_travel_event_retirement_original_pending_commands(){
  use crate::{TimeTravelEvent as E,TimeTravelChoice};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧫️lifecycle-law/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🧫️lifecycle-law/🔣️.json")).unwrap();
  for capacity in [0,8192,65536]{for body in [1,17,4096]{for cut in [0,3]{for(key,value)in fixture["events"].as_object().unwrap(){
   let(original,heap)=observe_heap_allocations_on_this_thread(||{let mut original=super::super::tests::event(value);match &mut original{
    E::Begin{target,original}|E::BeginWithdrawn{target,original}=>{grow_text(&mut target.mutation.0,capacity);grow_input(original,capacity)},
@@ -83,7 +83,7 @@ fn time_travel_session_paged_accepted_original_growth_and_retirement(){
 fn time_travel_discard_original_semantic_transition_and_residue(){
  let original_grant=original_native_grant();
  use crate::{TimeTravelDiscardCursor,TimeTravelEvent,TimeTravelRefusal};
- let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧫️lifecycle-law/🔣️.json")).unwrap();let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🧫️lifecycle-law/🔣️.json")).unwrap();let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["discardCases"].as_array().unwrap(){for capacity in [0,8192,65536]{for body in [1,17,4096]{for cut in [0,3]{
   let(mut session,heap)=observe_heap_allocations_on_this_thread(||{let mut session=super::super::tests::session(&law["contexts"][row["context"].as_str().unwrap()]);if let Some(pending)=session.pending.as_mut(){grow_text(&mut pending.target.mutation.0,capacity);grow_input(&mut pending.original,capacity);grow_input(&mut pending.replacement,capacity);}if session.accepted.is_empty()&&capacity>0{session.accepted=drafts(capacity,original_grant);}session});let held=heap.requested_bytes-heap.released_bytes;let pointer=session.pending.as_ref().map(|pending|pending.target.mutation.0.as_ptr());let before=session.clone();let mut event=Some(TimeTravelEvent::Discard{generation:row["generation"].as_u64().unwrap()as u32});
   for grant in [RetainedCloneGrant::default(),RetainedCloneGrant{maximum_items:1,maximum_depth:0,..Default::default()}]{let(result,heap)=observe_heap_allocations_on_this_thread(||TimeTravelDiscardCursor::admit_original(&mut event,grant).unwrap());assert!(result.is_none());assert!(event.is_some());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
@@ -103,7 +103,7 @@ fn time_travel_discard_original_semantic_transition_and_residue(){
 fn time_travel_discard_completion_waits_for_original_retirement(){
  let original_grant=original_native_grant();
  use crate::{TimeTravelDiscardCursor,TimeTravelEvent};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧫️lifecycle-law/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🧫️lifecycle-law/🔣️.json")).unwrap();
  for context in ["editing.fromInactive.changed","editing.fromReviewing.changed"]{
   let(mut session,heap)=observe_heap_allocations_on_this_thread(||super::super::tests::session(&fixture["contexts"][context]));let held=heap.requested_bytes-heap.released_bytes;let mut event=Some(TimeTravelEvent::Discard{generation:session.generation});
   let(mut owner,_)=TimeTravelDiscardCursor::admit_original(&mut event,original_grant).unwrap().unwrap();let mut premature=false;let mut births=0;let mut releases=0;let mut turns=0;
@@ -116,7 +116,7 @@ fn time_travel_discard_completion_waits_for_original_retirement(){
 fn time_travel_discard_validates_before_effect_admission_and_explicit_commit(){
  let original_grant=original_native_grant();
  use crate::{TimeTravelDiscardCursor,TimeTravelEvent};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧫️lifecycle-law/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🧫️lifecycle-law/🔣️.json")).unwrap();
  for context in ["editing.fromInactive.changed","editing.fromReviewing.changed"]{for body in [1,17,4096]{for cancel in [false,true]{
   let(mut session,heap)=observe_heap_allocations_on_this_thread(||{let mut session=super::super::tests::session(&fixture["contexts"][context]);let pending=session.pending.as_mut().unwrap();grow_text(&mut pending.target.mutation.0,65536);grow_input(&mut pending.original,65536);session});let held=heap.requested_bytes-heap.released_bytes;let before=session.clone();let pointer=session.pending.as_ref().unwrap().target.mutation.0.as_ptr();let mut event=Some(TimeTravelEvent::Discard{generation:session.generation});
   let(mut owner,_)=TimeTravelDiscardCursor::admit_original(&mut event,original_grant).unwrap().unwrap();let metadata=original_grant;let(error,heap)=observe_heap_allocations_on_this_thread(||owner.commit(&mut session,metadata).unwrap_err());assert_eq!(error.kind,ValueRefusalKind::WorkLimit);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(session,before);
@@ -133,7 +133,7 @@ fn time_travel_discard_validates_before_effect_admission_and_explicit_commit(){
 #[test]
 fn time_travel_pending_command_pays_slot_frame_and_original_transfer_separately(){
  use crate::{TimeTravelCommandCustody,TimeTravelEvent};use semio_framework_value::retirement::queue::RetirementQueue;
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let policy=&law["pendingCommandGrant"];let grant=RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:policy["release"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize};
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let policy=&law["pendingCommandGrant"];let grant=RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:policy["release"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize};
  let mut original=Some(TimeTravelEvent::Discard{generation:5});
  for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(value,heap)=observe_heap_allocations_on_this_thread(||TimeTravelCommandCustody::admit_original(&mut original,denied).unwrap());assert!(value.is_none());assert!(original.is_some());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
  let((mut command,receipt),heap)=observe_heap_allocations_on_this_thread(||TimeTravelCommandCustody::admit_original(&mut original,grant).unwrap().unwrap());assert_eq!(receipt.copied_items,1);assert_eq!(receipt.copied_bytes,TimeTravelCommandCustody::admission_copy_bytes());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(original.is_none());let mut queue=RetirementQueue::default();
@@ -159,6 +159,6 @@ fn drive_discard(owner:&mut crate::TimeTravelDiscardCursor,session:&mut TimeTrav
 fn time_travel_discard_preparation_rejects_changed_prospective_stage(){
  let original_grant=original_native_grant();
  use crate::{TimeTravelDiscardCursor,TimeTravelEvent};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧫️lifecycle-law/🔣️.json")).unwrap();let(mut session,heap)=observe_heap_allocations_on_this_thread(||super::super::tests::session(&fixture["contexts"]["editing.fromInactive.changed"]));let held=heap.requested_bytes-heap.released_bytes;let pointer=session.pending.as_ref().unwrap().target.mutation.0.as_ptr();let mut event=Some(TimeTravelEvent::Discard{generation:session.generation});let grant=original_grant;let(mut owner,_)=TimeTravelDiscardCursor::admit_original(&mut event,grant).unwrap().unwrap();owner.validate(&session,grant).unwrap();assert_eq!(owner.prepared_stage(),Some(TimeTravelStage::Inactive));session.pending.as_mut().unwrap().return_stage=TimeTravelStage::Reviewing;
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🧫️lifecycle-law/🔣️.json")).unwrap();let(mut session,heap)=observe_heap_allocations_on_this_thread(||super::super::tests::session(&fixture["contexts"]["editing.fromInactive.changed"]));let held=heap.requested_bytes-heap.released_bytes;let pointer=session.pending.as_ref().unwrap().target.mutation.0.as_ptr();let mut event=Some(TimeTravelEvent::Discard{generation:session.generation});let grant=original_grant;let(mut owner,_)=TimeTravelDiscardCursor::admit_original(&mut event,grant).unwrap().unwrap();owner.validate(&session,grant).unwrap();assert_eq!(owner.prepared_stage(),Some(TimeTravelStage::Inactive));session.pending.as_mut().unwrap().return_stage=TimeTravelStage::Reviewing;
  let(result,heap)=observe_heap_allocations_on_this_thread(||owner.commit(&mut session,grant));let denied=result.is_err();let inert=(heap.requested_bytes,heap.released_bytes)==(0,0);let unchanged=session.stage==TimeTravelStage::Editing&&session.pending.as_ref().is_some_and(|pending|pending.target.mutation.0.as_ptr()==pointer);let mut births=heap.requested_bytes;let mut release=heap.released_bytes;owner.begin_close();while !owner.terminal_is_empty(){let demand=owner.retirement_demands(17).unwrap();let(_,heap)=observe_heap_allocations_on_this_thread(||owner.close_step(grant).unwrap());births+=heap.requested_bytes;release+=heap.released_bytes;}let(_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));close_event_original(session,held+births-release,17,4,"prospective.stage.contention",0);assert!(denied,"changed original return stage invalidates prospective Store preparation");assert!(inert);assert!(unchanged);eprintln!("[DEBUG] Original Discard prospective Store stage contention retains same pending pointer, no Session transfer, no heap, cancellation terminalDrop0");
 }

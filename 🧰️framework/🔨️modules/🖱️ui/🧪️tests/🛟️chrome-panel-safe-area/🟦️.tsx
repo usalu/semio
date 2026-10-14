@@ -5,7 +5,7 @@ import {expect,it} from "vitest";
 import {createMemoryStoragePort} from "@semio-tech/framework";
 import {Pane,PaneHost,Window,publishShellChromePanelBox,uiSpacingPx,type Anchor} from "../../🎯️targets/⚛️react/🟦️.tsx";
 import {ShellScopeProvider,createShellScope} from "../../🧱️elements/🐚️ShellScope/🟦️.tsx";
-import fixture from "../../🧫️fixtures/🛟️chrome-panel-safe-area/🔣️.json";
+import fixture from "../🧫️fixtures/🛟️chrome-panel-safe-area/🔣️.json";
 
 const rect=(box:readonly number[],inline=0,block=0):DOMRect=>({x:box[0]!+inline,y:box[1]!+block,left:box[0]!+inline,top:box[1]!+block,right:box[0]!+inline+box[2]!,bottom:box[1]!+block+box[3]!,width:box[2]!,height:box[3]!,toJSON:()=>({})}) as DOMRect;
 

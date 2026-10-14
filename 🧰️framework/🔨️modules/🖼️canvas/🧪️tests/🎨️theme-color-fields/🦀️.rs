@@ -10,7 +10,7 @@ fn theme_color_fields_match_owned_rows_and_independent_serde_peniko_oracles() {
     fn rgba(value: &serde_json::Value) -> [u8; 4] {
         serde_json::from_value(value.clone()).expect("schema-declared RGBA bytes")
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎨️theme-color-fields/🔣️.json")).expect("neutral theme rows");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️theme-color-fields/🔣️.json")).expect("neutral theme rows");
     let before = rgba(&fixture["before"]);
     for row in fixture["cases"].as_array().expect("theme cases") {
         let key = row["key"].as_str().expect("field name");

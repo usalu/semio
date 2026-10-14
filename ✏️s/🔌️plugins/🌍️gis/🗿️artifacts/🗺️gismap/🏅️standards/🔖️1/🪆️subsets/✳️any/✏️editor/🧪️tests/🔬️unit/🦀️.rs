@@ -224,7 +224,7 @@ async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_o
 /// produce and on each codec round trip that reaches the candidate store.
 #[test]
 fn every_gis_map_parent_snapshot_projects_its_canonical_child_handles() {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
 
     let admit = |label: &str, snapshot: &GisMapSnapshot| {
         let projection = store::ChildRestoreProjection::from_snapshot(snapshot).unwrap_or_else(|error| panic!("{label} parent is not projectable: {error:?} (drawing {:?}/{:?}, image {:?}, value {:?}/{:?})", snapshot.drawing.child_id, snapshot.drawing.target, snapshot.image, snapshot.value.child_id, snapshot.value.target));
@@ -239,12 +239,12 @@ fn every_gis_map_parent_snapshot_projects_its_canonical_child_handles() {
     for (label, snapshot) in [("empty", empty_gis_map_snapshot()), ("default-document", default_document())] {
         admit(label, &snapshot);
         admit(&format!("{label} pack round trip"), &GisMapSnapshot::decode_pack(&snapshot.encode_pack()).unwrap_or_else(|error| panic!("{label} parent pack round trip: {error}")));
-        admit(&format!("{label} dsl round trip"), &<GisMapSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&<GisMapSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot)).unwrap_or_else(|error| panic!("{label} parent dsl round trip: {error}")));
+        admit(&format!("{label} dsl round trip"), &<GisMapSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&<GisMapSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snapshot)).unwrap_or_else(|error| panic!("{label} parent dsl round trip: {error}")));
     }
 }
 
 fn gis_map_envelope_wire() -> Vec<u8> {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
 
     let snapshot = empty_gis_map_snapshot();
     let snapshot_pack = snapshot.encode_pack();

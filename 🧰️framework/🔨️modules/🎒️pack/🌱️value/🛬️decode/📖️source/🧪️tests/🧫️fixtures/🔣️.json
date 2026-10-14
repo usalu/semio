@@ -1,0 +1,37 @@
+{
+  "source": {
+    "operation": 43,
+    "generation": 7,
+    "pageBytes": 3,
+    "prefixHex": "aa",
+    "suffixHex": "bb",
+    "bodyHex": "0103e6bca20101047f"
+  },
+  "expected": {
+    "symbol": "漢",
+    "unsigned": 127
+  },
+  "limits": {
+    "bytes": 262144,
+    "segmentBytes": 262144,
+    "symbols": 1,
+    "depth": 8,
+    "items": 64,
+    "totalAllocationBytes": 1048576,
+    "symbolUtf8Bytes": 3,
+    "symbolScalars": 1,
+    "allocationBytes": 1048576
+  },
+  "grant": {
+    "items": 1,
+    "copyBytes": 17,
+    "capacityBytes": 65536,
+    "releaseBytes": 262144,
+    "depth": 64
+  },
+  "allocationQuote": {
+    "pure": true,
+    "capturedCursor": true,
+    "terminalZero": true
+  }
+}

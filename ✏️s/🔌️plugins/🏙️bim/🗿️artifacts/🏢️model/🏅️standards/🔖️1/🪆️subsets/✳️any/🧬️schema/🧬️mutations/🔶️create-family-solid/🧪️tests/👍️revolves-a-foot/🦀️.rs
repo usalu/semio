@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔶️create-family-solid/👍️revolves-a-foot",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔶️create-family-solid/👍️revolves-a-foot/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔶️create-family-solid/👍️revolves-a-foot/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔶️create-family-solid/👍️revolves-a-foot/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔶️create-family-solid/👍️revolves-a-foot/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔶️create-family-solid/👍️revolves-a-foot/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔶️create-family-solid/👍️revolves-a-foot/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔶️create-family-solid/👍️revolves-a-foot/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔶️create-family-solid/👍️revolves-a-foot/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔶️create-family-solid/👍️revolves-a-foot/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔶️create-family-solid/👍️revolves-a-foot/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

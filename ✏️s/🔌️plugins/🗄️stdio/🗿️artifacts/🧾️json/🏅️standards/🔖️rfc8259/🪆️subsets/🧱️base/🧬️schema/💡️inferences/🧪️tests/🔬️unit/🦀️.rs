@@ -49,7 +49,7 @@ mod conformance_laws {
     async fn grammar_conformance_law() {
         let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_rfc8259::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
-        let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot::demo_json_snapshot());
+        let text = pack::snapshot::ArtifactDsl::print_dsl(&snapshot::demo_json_snapshot());
         let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
         let reconstructed = format!("{}\n{body}", envelope.envelope_id());
         assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
@@ -88,7 +88,7 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
         let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
-        let packed = store::os_store::serialization::ArtifactPack::encode_pack(&snapshot::demo_json_snapshot());
+        let packed = pack::snapshot::ArtifactPack::encode_pack(&snapshot::demo_json_snapshot());
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
         let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
@@ -119,13 +119,13 @@ mod conformance_laws {
 
         let demo = snapshot::demo_json_snapshot();
 
-        let parsed = <JsonSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        let parsed = <JsonSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_json_snapshot()");
-        assert_eq!(store::os_store::serialization::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_json_snapshot()) drifted from the shipped .dsl.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_json_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-        let decoded = <JsonSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+        let decoded = <JsonSnapshot as pack::snapshot::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_json_snapshot()");
-        assert_eq!(store::os_store::serialization::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_json_snapshot()) drifted from the shipped .pack.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_json_snapshot()) drifted from the shipped .pack.semio fixture");
     }
 }
 //#endregion 🔖️ConformanceLaws

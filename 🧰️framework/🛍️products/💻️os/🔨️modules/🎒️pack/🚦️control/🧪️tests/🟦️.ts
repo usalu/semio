@@ -1,7 +1,7 @@
 import {expect,test} from "bun:test";
 
 import {readFileSync} from "node:fs";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 test("command transport exposes authored finite admission, cancellation and progress before external operations",()=>{
  const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");
  expect(fixture.readPageBytes).toBe(65536);

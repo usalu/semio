@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const root = resolve(import.meta.dir, "../..");
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../../🧪️tests/🧫️fixtures/🔺️diff/🔗️native-roles/🔣️.json"), "utf8"));
 
 test("native Architect sparse collection roles preserve schema and independent SQL order", () => {
   const schema = JSON.parse(readFileSync(resolve(root, "🔣️.json"), "utf8"));

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🕹️set-opening/➕️clears-the-width-override",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/➕️clears-the-width-override/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/➕️clears-the-width-override/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/➕️clears-the-width-override/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/➕️clears-the-width-override/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/➕️clears-the-width-override/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/➕️clears-the-width-override/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/➕️clears-the-width-override/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/➕️clears-the-width-override/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/➕️clears-the-width-override/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/➕️clears-the-width-override/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

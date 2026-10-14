@@ -366,7 +366,7 @@ describe("one shell-scope context per page", () => {
     const second = (await import(/* @vite-ignore */ secondEvaluation)) as typeof first;
     expect(second).not.toBe(first);
     expect(second.ShellScopeContext).toBe(first.ShellScopeContext);
-    const scope = first.createShellScope({ shellId: "shell-identity", storage: createMemoryStoragePort() });
+    const scope = first.createShellScope({ shellId: "shell-identity", storage: createMemoryStoragePort(), initialLocale: "en" });
     const seen: string[] = [];
     function Probe(): React.ReactElement {
       seen.push(second.useShellScope().shellId);

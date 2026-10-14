@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 
-/** 🧭️ Resolves every source and fixture authority that defines one aggregate transaction run. */
+/** 🧭️ Resolves source and test input identities for one aggregate verification run. */
 export function transactionV2IdentityPaths(repoRoot: string): Record<string, string> {
   const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
   return {
@@ -14,8 +14,8 @@ export function transactionV2IdentityPaths(repoRoot: string): Record<string, str
     normalization: join(repoRoot, library, "🧹️normalization/🟦️.ts"),
     discovery: join(repoRoot, library, "🔍️discovery/🟦️.ts"),
     taxonomy: join(repoRoot, library, "🔣️taxonomy.json"),
-    ledgerBoundaries: join(repoRoot, library, "🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json"),
-    harness: join(repoRoot, library, "🧫️fixtures/🪢️transaction-harness-retention/🔣️.json"),
+    ledgerBoundaries: join(repoRoot, library, "🧪️tests/🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json"),
+    harness: join(repoRoot, library, "🧪️tests/🧫️fixtures/🪢️transaction-harness-retention/🔣️.json"),
   };
 }
 

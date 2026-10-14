@@ -17,11 +17,11 @@
 use super::*;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
-const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🪪️change-jfif/🎯️direct/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🪪️change-jfif/🎯️direct/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🪪️change-jfif/🎯️direct/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🪪️change-jfif/🎯️direct/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🪪️change-jfif/🎯️direct/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪪️change-jfif/🎯️direct/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪪️change-jfif/🎯️direct/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪪️change-jfif/🎯️direct/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪪️change-jfif/🎯️direct/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪪️change-jfif/🎯️direct/🎯️outcome/🔣️.json");
 
 fn before() -> JpgSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed before-snapshot decodes")

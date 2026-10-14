@@ -1,10 +1,11 @@
 #[path = "../../🧪️testing/🧬️mutation-fixtures/🎲️dummy/🧬️mutations/🦀️.rs"]
 pub mod mutations;
-use mutations::{DummyMutation, SetDummyCount};
+pub(crate) use mutations::{DummyMutation, SetDummyCount};
 crate::app_testing::mutation_fixture::wire::fixture_operation_text!(DummyMutation);
 
 // 🧪️ Proves each `artifact_app_laws` primitive against a minimal dummy `ArtifactApp` before any real app
 // adopts them.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::app_testing::artifact_app_laws::{assert_registered_ingest_idempotent, assert_registered_ingest_idempotent_with_members, assert_two_registered_instances_converge, assert_two_registered_instances_converge_with_members, assert_undo_redo_round_trip, close_registered_fixture_app, meta, new_app, new_registered_app};
 use crate::window_surface::{built_text_to_component_tree, UiAssemblyResult};
 use crate::app_contract::ArtifactApp;
@@ -26,13 +27,18 @@ use serde::{Deserialize, Serialize};
 
 #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[artifact(extension = "testkit-dummy")]
-struct DummySnapshot {
-    count: i32,
+pub(crate) struct DummySnapshot {
+    pub(crate) count: i32,
 }
 
-impl store::os_store::serialization::ArtifactSqliteSnapshot for DummySnapshot {
-    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
-    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
+impl store::os_store::serialization::ArtifactSqliteSnapshotHost for DummySnapshot {
+    
+    
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for DummySnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
         use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotPhase, SqliteValue};
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
         let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
@@ -40,7 +46,7 @@ impl store::os_store::serialization::ArtifactSqliteSnapshot for DummySnapshot {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
         Ok(database)
     }
-    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
         let rows = &database.table("dummy_state")?.rows;
         if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 {
@@ -59,7 +65,7 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for DummySnap
 }
 
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack for SDK test double (artifact coincides with snapshot only in tests).
-impl store::os_store::serialization::ArtifactDsl for DummySnapshot {
+impl pack::snapshot::ArtifactDsl for DummySnapshot {
     const EXTENSION: &'static str = "testkit-dummy";
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if text.trim().is_empty() {
@@ -72,11 +78,9 @@ impl store::os_store::serialization::ArtifactDsl for DummySnapshot {
     }
 }
 
-impl store::os_store::serialization::ArtifactPack for DummySnapshot {
+impl pack::snapshot::ArtifactPack for DummySnapshot {
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())
-    }
+    
 
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         serde_json::to_vec(self).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))
@@ -88,10 +92,15 @@ impl store::os_store::serialization::ArtifactPack for DummySnapshot {
         serde_json::from_slice(bytes).map_err(|error| match (u32::try_from(error.line()), u32::try_from(error.column())) { (Ok(line), Ok(column)) => store::PackError::from(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(line, column))), _ => store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, error.to_string())) })
     }
 }
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for DummySnapshot {
+fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())
+    }
+}
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-struct DummyDiff {
-    count: Option<i32>,
+pub(crate) struct DummyDiff {
+    pub(crate) count: Option<i32>,
 }
 
 impl protocol::DiffAlgebra<DummySnapshot> for DummyDiff {
@@ -299,10 +308,10 @@ impl ArtifactApp for DummyApp {
     const DOCUMENT_SCHEMA: &'static str = "semio.testkit/v1";
     fn catalogue_example_document(example_id: &str) -> Option<Result<String, semio_framework::Fault>> {
         if example_id.is_empty() {
-            return Some(Ok(<DummySnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&DummySnapshot::default())));
+            return Some(Ok(<DummySnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&DummySnapshot::default())));
         }
         if example_id == "four" {
-            return Some(Ok(<DummySnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&DummySnapshot { count: 4 })));
+            return Some(Ok(<DummySnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&DummySnapshot { count: 4 })));
         }
         Some(Err(semio_framework::Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new("app.example.unknown"), format!("no registered example '{example_id}'"))))
     }
@@ -409,6 +418,7 @@ fn dummy_fixture_caller() -> (crate::MountedOwnerPolicyV1, usize) {
 
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_loads_the_registered_catalogue_without_a_declared_action() {
+    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let (mounted_policy, maximum_identity_bytes) = dummy_fixture_caller();
     let mut observer = |_| true;
     let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -418,12 +428,14 @@ async fn set_active_example_loads_the_registered_catalogue_without_a_declared_ac
     let semio_framework::kernel::Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("load effect") else {
         panic!("expected LoadDocument");
     };
-    let loaded = <DummySnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("pack");
+    let loaded = <DummySnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("pack");
     assert_eq!(loaded, DummySnapshot { count: 4 });
     let missing = semio_framework_value::DslValue::object([("exampleId".to_string(), semio_framework_value::DslValue::String("missing".to_string()))]);
     let refused = app.dispatch_action("setActiveExample", Some(&missing), &meta("actor"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect_err("unknown example");
     assert_eq!(refused.code.0, "app.example.unknown");
-    close_registered_fixture_app(&mut app, mounted_policy);
+    close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original fixture terminal close");
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
@@ -435,6 +447,7 @@ async fn meta_carries_actor_and_local_instance_id() {
 
 #[semio_framework_async_macros::async_test]
 async fn new_app_constructs_a_registry_less_wrapper() {
+    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let (mounted_policy, maximum_identity_bytes) = dummy_fixture_caller();
     let mut observer = |_| true;
     let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -443,17 +456,22 @@ async fn new_app_constructs_a_registry_less_wrapper() {
     assert_eq!(error.code.0, "interactive-job.unknown-key");
     assert!(error.message.contains("no exact manifest declaration"), "the registry-less wrapper fails on the missing declaration, not on a missing factory: {}", error.message);
     assert_eq!(app.snapshot().unwrap().count, 0, "a fail-closed dispatch never reaches the reducer");
-    close_registered_fixture_app(&mut app, mounted_policy);
+    close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original fixture terminal close");
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn assert_undo_redo_round_trip_passes_for_a_real_operation() {
+    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let (mounted_policy, maximum_identity_bytes) = dummy_fixture_caller();
     let mut observer = |_| true;
     let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let mut app = new_registered_app::<DummyApp, _>(dummy_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
-    assert_undo_redo_round_trip(&mut app, DummyCommand::Increment, |app| app.snapshot().unwrap().count, 0, 1, mounted_policy, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-    close_registered_fixture_app(&mut app, mounted_policy);
+    assert_undo_redo_round_trip(&mut app, DummyCommand::Increment, |app| app.snapshot().unwrap().count, 0, 1, mounted_policy, &mut crate::app_testing::artifact_app_laws::fixture_identity(),cx).await;
+    close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original fixture terminal close");
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
@@ -477,6 +495,8 @@ async fn assert_ingest_idempotent_does_not_double_apply() {
 // independently owned instance of the identical shape, exactly as the plugin-runtime fixture's
 // `TestMembers` is. Its only purpose is to be a roster that is NOT `NoMembers`.
 store::space_members! {
+    history_limits:semio_framework_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
+    maximum_history_allocation_bytes:8388608,
     pub enum DummyMembers, DummyMembersOpen {
         Child("s.test.dummy-child", "native", "*", "semio.testkit-child/v1") => (DummySnapshot, DummyMutation),
     }

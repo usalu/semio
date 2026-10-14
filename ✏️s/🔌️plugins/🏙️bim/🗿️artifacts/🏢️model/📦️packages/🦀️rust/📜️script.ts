@@ -1,14 +1,30 @@
 #!/usr/bin/env bun
 /** 🏢️ BIM model owning SQLite and Rust package commands, plus the repository test-platform roles (`test oracle|subject|parity [level]`). */
-import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
+import { runArtifactRustPackageMain,runArtifactRustTests } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import {runCmd} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import {BundleScript} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import {BundleScript,scriptInvocationBudget,type ScriptInvocation} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {resolve} from "node:path";
-import { runBudgetedTestCommand } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts";
-import { resolveTestLevel, testLevelBudgetMs } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { runBudgetedTestCommand } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import { resolveTestLevel, testLevelBudgetMs } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 
 import {readFileSync,writeFileSync} from "node:fs";
 import {Database} from "bun:sqlite";
+
+/** 🧩️ Qualifies the complete authored model input and actual owning semantic projection. */
+class CompleteSqliteSource extends BundleScript{
+ async run(args:string[]):Promise<void>{
+  if(args.length)throw Error("test-complete-sqlite-source accepts no arguments");
+  const source=resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧩️complete/🟦️.ts");
+  const sources=[source,resolve(source,"../../🟦️.ts")];
+  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",...sources],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,["test",...sources],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal,throwOnFailure:true});
+ }
+}
+
+/** 🦀️ Qualifies only the complete semantic laws in the actual mounted BIM owner. */
+class CompleteSqliteNative extends CompleteSqliteSource {
+ async run(args:string[]):Promise<void>{await super.run(args);await runArtifactRustTests("semio-s-artifact-bim-model",this.repoRoot,["--lib","sqlite_snapshot_bim_complete_","--no-fail-fast"],this.invocation.control);}
+}
 
 /** 🔎️ Independent SQLite interpretation and authoritative edits over original public IO files. */
 class SqliteOracle extends BundleScript {
@@ -19,7 +35,7 @@ class SqliteOracle extends BundleScript {
   try{
    if(db.query<{integrity_check:string},[]>("PRAGMA integrity_check").get()?.integrity_check!=="ok"||db.query("PRAGMA foreign_key_check").all().length)throw Error("Independent SQLite file integrity refused");
    const tables=db.query<{name:string},[]>("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").all();
-   const counts=JSON.parse(readFileSync(resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/📏️counts/🔣️.json"),"utf8"))as{tableCount:number;totalRows:number;tables:Record<string,number>};
+   const counts=JSON.parse(readFileSync(resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/📏️counts/🔣️.json"),"utf8"))as{tableCount:number;totalRows:number;tables:Record<string,number>};
    if(tables.length!==counts.tableCount)throw Error("Independent SQLite table cardinality");
    let totalRows=0,populatedWords=0,declaredRoles=0,populatedRoles=0;
    for(const{name}of tables){const n=db.query<{n:bigint},[]>("SELECT count(*) AS n FROM "+quote(name)).get()!.n;if(n!==BigInt(counts.tables[name]??-1))throw Error("Independent SQLite row cardinality "+name);totalRows+=Number(n)}
@@ -41,7 +57,7 @@ class SqliteOracle extends BundleScript {
       }if(roleWords===0)throw Error("Independent binary64 role has no witness "+name+"."+base);populatedRoles++;
      }
     }
-    if(declaredRoles!==184||populatedRoles!==184||populatedWords===0)throw Error("Independent word corpus misses declared float roles");
+    if(declaredRoles!==231||populatedRoles!==231||populatedWords===0)throw Error("Independent word corpus misses declared float roles");
     process.stdout.write(JSON.stringify({schema:"bim.sqlite.oracle/v1",mode,word,tableCount:tables.length,totalRows,populatedWords,declaredRoles,populatedRoles,checked:true})+"\n");
    }else{
     if(db.query<{n:bigint},[]>("SELECT count(*) AS n FROM bim_project").get()!.n!==1n)throw Error("Independent project cardinality");
@@ -69,7 +85,7 @@ class CostTests extends BundleScript {
 class SqliteVerify extends BundleScript { run(args:string[]):void{if(args.length!==1||args[0]!=="source")throw Error("verify-snapshot-sqlite source");const owner=resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any");runCmd("bun",[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--skipLibCheck",resolve(owner,"🧬️schema/🟦️.ts"),resolve(owner,"🧬️schema/📸️snapshot/🟦️.ts"),resolve(owner,"🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"),resolve(owner,"🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"),resolve(this.root,"📜️script.ts")],{cwd:this.repoRoot});}}
 
 /** 🧪️ Runs one platform role over every case the BIM plugin owns; `--case <slug>` narrows to one. @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts */
-function platformRole(role: "oracle" | "subject" | "parity"): new (root: string, repoRoot: string) => BundleScript {
+function platformRole(role: "oracle" | "subject" | "parity"): new (root: string, repoRoot: string, invocation:ScriptInvocation) => BundleScript {
   return class extends BundleScript {
     async run(args: string[]): Promise<void> {
       const { level, rest } = resolveTestLevel(args);
@@ -79,7 +95,7 @@ function platformRole(role: "oracle" | "subject" | "parity"): new (root: string,
 }
 
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-bim-model", {
-  commands: { "verify-snapshot-sqlite": SqliteVerify, "sqlite-oracle": SqliteOracle, "test-costs-source": CostTests },
+  commands: { "test-complete-sqlite-source":CompleteSqliteSource,"test-complete-sqlite-native":CompleteSqliteNative, "verify-snapshot-sqlite": SqliteVerify, "sqlite-oracle": SqliteOracle, "test-costs-source": CostTests },
   snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"],
   testCommands: { oracle: platformRole("oracle"), subject: platformRole("subject"), parity: platformRole("parity") },
 });

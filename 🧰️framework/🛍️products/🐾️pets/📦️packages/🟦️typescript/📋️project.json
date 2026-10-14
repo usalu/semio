@@ -8,7 +8,7 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧬️schema/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🔨️modules/**/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧪️tests/**/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧫️fixtures/**/*"
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧪️tests/🧫️fixtures/**/*"
     ]
   },
   "targets": {

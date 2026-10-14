@@ -1,10 +1,11 @@
 //! 🔁️ The actual public snapshot hop retains native, metadata and physical ownership together.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_artifact_reference::{ArtifactDialect,Dialect,StandardId,SubsetId};
 use semio_framework_os_kernel::{self as store,io_schema::*,io::{register_native_snapshot_codec,io_mechanism::{io_route,io_run_with_snapshot_control,IoRunControl}},sqlite_snapshot::*};
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind,native_decoding::NativeDecodeProgress,native_encoding::NativeEncodeProgress};
 use std::{io::Write,process::{Command,Stdio}};
 const DOMAIN:&str="CREATE TABLE transfer_literal (id INTEGER PRIMARY KEY, literal TEXT NOT NULL);";
-fn neutral()->serde_json::Value{serde_json::from_str(include_str!("../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧫️fixtures/🔁️transfer/🔣️.json")).unwrap()}
+fn neutral()->serde_json::Value{serde_json::from_str(include_str!("../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🧫️fixtures/🔁️transfer/🔣️.json")).unwrap()}
 fn snapshot_grant()->semio_framework_value::RetainedCloneGrant{serde_json::from_value(neutral()["snapshotGrant"].clone()).unwrap()}
 fn dialect()->Dialect{Dialect{artifact_kind:"fixture.sqlite-transfer",standard:StandardId("1"),subset:SubsetId("*")}}
 fn reserve<T>(count:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<T>,ValueError>{control.admit_allocation_bytes(count.checked_mul(std::mem::size_of::<T>()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"transfer fixture backing overflow"))?)?;let mut v=Vec::new();v.try_reserve_exact(count).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"transfer fixture allocation failed"))?;Ok(v)}
@@ -43,28 +44,28 @@ impl store::OpBinary for TransferMutation {
  fn encode_op(&self)->Result<Vec<u8>,store::ProtocolError>{Ok(self.literal.as_bytes().to_vec())}
  fn decode_op(bytes:&[u8])->Result<Self,store::ProtocolError>{std::str::from_utf8(bytes).map(|text|Self{literal:text.to_owned()}).map_err(|error|store::ProtocolError::from(store::PackError::from(ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))))}
 }
-impl store::os_store::serialization::ArtifactDsl for TransferSnapshot {
+impl pack::snapshot::ArtifactDsl for TransferSnapshot {
  const EXTENSION:&'static str="transfer";
  fn parse_dsl(text:&str)->Result<Self,store::TextError>{Ok(Self(text.to_owned()))}
  fn print_dsl(&self)->String{self.0.clone()}
 }
-impl store::os_store::serialization::ArtifactPack for TransferSnapshot {
+impl pack::snapshot::ArtifactPack for TransferSnapshot {
  fn encode_pack_with(&self,_:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{Ok(self.0.as_bytes().to_vec())}
  fn decode_pack_with(bytes:&[u8],_:&store::PackDecodeOptions)->Result<Self,store::PackError>{std::str::from_utf8(bytes).map(|text|Self(text.to_owned())).map_err(|error|store::PackError::from(ValueError::new(ValueRefusalKind::InvalidValue,error.to_string())))}
 }
-impl store::os_store::serialization::ArtifactSqliteSnapshot for TransferSnapshot {
- const SQLITE_SCHEMA:&'static str=DOMAIN;
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for TransferSnapshot {
+
+}
+impl store::os_store::serialization::ArtifactSqliteSnapshotHost for TransferSnapshot {
+ 
  fn decode_sqlite_snapshot_native(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
   control.check_rows(1)?;let before=native_owner.native().owned_bytes();let bytes=match payload{IoPayload::Text(text)=>text.len(),IoPayload::Binary(bytes)=>bytes.len()};control.check_value_bytes(bytes)?;if bytes>native_owner.native().maximum_bytes().saturating_sub(before){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"transfer snapshot exceeds original native decode capacity"));}
   let grant=native_owner.remaining_grant();let mut performed=Default::default();
   let result=control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative,|remaining,progress|{let mut callback=|event:NativeDecodeProgress|progress(event.completed,event.total);let result=native_owner.native().scoped_observer(&mut callback,|native|native.scoped_maximum(before.saturating_add(remaining),|native|{let mut child=store::NativeSnapshotDecodeOwner::new(native,grant);let result=child.receive::<Self,Self>(|slot,native,body|{body.admit_frontier(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes,maximum_capacity_bytes:bytes,maximum_release_bytes:0,maximum_depth:1})?;*slot=Some(Self(String::new()));let copied=(||{let text=match payload{IoPayload::Text(text)=>text.as_str(),IoPayload::Binary(bytes)=>native.borrow_text(bytes)?};native.copy_text_into(text,&mut slot.as_mut().unwrap().0)})();let original=&slot.as_ref().unwrap().0;body.record_progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:original.len(),retained_capacity_bytes:original.capacity(),released_bytes:0})?;copied?;Ok(slot.take().unwrap())});performed=child.progress();result}));(result,native_owner.native().owned_bytes()-before)});
   native_owner.record_progress(performed)?;result?
  }
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
-  control.check_rows(1)?;control.check_value_bytes(self.0.len())?;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1)?;let literal=copy_decode(&self.0,SqliteSnapshotPhase::ProjectSnapshot,control)?;
-  let mut values=reserve(2,control)?;values.push(SqliteValue::Integer(1));values.push(SqliteValue::Text(literal));let mut rows=reserve(1,control)?;rows.push(SqliteRow{rowid:1,values});let name=copy_decode("transfer_literal",SqliteSnapshotPhase::ProjectSnapshot,control)?;let sql=copy_decode(DOMAIN,SqliteSnapshotPhase::ProjectSnapshot,control)?;let mut tables=reserve(1,control)?;tables.push(SqliteTable{name,sql,rows});control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(SqliteDatabase{tables})
- }
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{let literal=database.table("transfer_literal")?.single_row()?.text(1)?;control.check_value_bytes(literal.len())?;copy_decode(literal,SqliteSnapshotPhase::ReconstructSnapshot,control).map(Self)}
+ 
+ 
  fn preflight_sqlite_snapshot_encoding(&self,_:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{control.check_value_bytes(self.0.len())}
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotEncodeOwner<'_, '_>)->Result<IoPayload,ValueError>{
   self.preflight_sqlite_snapshot_encoding(encoding,control)?;let before=native_owner.native().owned_bytes();if self.0.len()>native_owner.native().maximum_bytes().saturating_sub(before){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"transfer snapshot exceeds original native encode capacity"));}
@@ -77,14 +78,22 @@ impl store::os_store::serialization::ArtifactSqliteSnapshot for TransferSnapshot
   native_owner.record_progress(performed)?;result?
  }
 }
+impl pack::snapshot::ArtifactSqliteSnapshot for TransferSnapshot {
+const SQLITE_SCHEMA:&'static str=DOMAIN;
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
+  control.check_rows(1)?;control.check_value_bytes(self.0.len())?;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1)?;let literal=copy_decode(&self.0,SqliteSnapshotPhase::ProjectSnapshot,control)?;
+  let mut values=reserve(2,control)?;values.push(SqliteValue::Integer(1));values.push(SqliteValue::Text(literal));let mut rows=reserve(1,control)?;rows.push(SqliteRow{rowid:1,values});let name=copy_decode("transfer_literal",SqliteSnapshotPhase::ProjectSnapshot,control)?;let sql=copy_decode(DOMAIN,SqliteSnapshotPhase::ProjectSnapshot,control)?;let mut tables=reserve(1,control)?;tables.push(SqliteTable{name,sql,rows});control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(SqliteDatabase{tables})
+ }
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{let literal=database.table("transfer_literal")?.single_row()?.text(1)?;control.check_value_bytes(literal.len())?;copy_decode(literal,SqliteSnapshotPhase::ReconstructSnapshot,control).map(Self)}
+}
 fn publish(){let codec=store::artifact_codec::<TransferSnapshot,TransferMutation>("fixture.sqlite-transfer/v1");register_native_snapshot_codec(dialect(),codec).unwrap();}
 fn close_original(native:&mut IoRunControl<'_, '_>)->Result<(),ValueError>{
  {let mut owner=native.snapshot_decode()?;while owner.native().has_retirement_owner(){let grant=owner.remaining_grant();let result=owner.native().close_retirement_recipient(grant);let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};owner.record_progress(progress)?;result?;}}
  {let mut owner=native.snapshot_encode()?;while owner.native().has_retirement_owner(){let grant=owner.remaining_grant();let result=owner.native().close_retirement_recipient(grant);let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};owner.record_progress(progress)?;result?;}}Ok(())
 }
 async fn run(route:&IoRoute,payload:IoPayload,limit:SqliteDatabaseLimits,progress:&mut dyn FnMut(SqliteSnapshotProgress)->bool,native:&mut IoRunControl<'_, '_>)->IoResult<IoPayload>{let mut snapshot=SqliteSnapshotControl::new(progress,limit);let result=io_run_with_snapshot_control(route,&mut Some(payload),native,&mut snapshot).await;close_original(native).unwrap();result}
-fn export(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotDecodeOwner<'_, '_>)->IoResult<SqliteDatabase>{let provider=<TransferSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec();(provider.export)("fixture.sqlite-transfer/v1",&ArtifactDialect::from(dialect()),payload,control,native)}
-fn import(database:&mut Option<SqliteDatabase>,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_, '_>)->IoResult<IoPayload>{let provider=<TransferSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec();(provider.import)("fixture.sqlite-transfer/v1",&ArtifactDialect::from(dialect()),database,encoding,control,native)}
+fn export(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotDecodeOwner<'_, '_>)->IoResult<SqliteDatabase>{let provider=<TransferSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec();(provider.export)("fixture.sqlite-transfer/v1",&ArtifactDialect::from(dialect()),payload,control,native)}
+fn import(database:&mut Option<SqliteDatabase>,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_, '_>)->IoResult<IoPayload>{let provider=<TransferSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec();(provider.import)("fixture.sqlite-transfer/v1",&ArtifactDialect::from(dialect()),database,encoding,control,native)}
 fn input(encoding:SnapshotEncoding)->IoPayload{let literal=neutral()["literal"].as_str().unwrap().to_string();match encoding{SnapshotEncoding::Binary=>IoPayload::Binary(literal.into_bytes()),SnapshotEncoding::Text=>IoPayload::Text(literal)}}
 fn limits()->SqliteDatabaseLimits{SqliteDatabaseLimits{max_allocation_bytes:usize::try_from(neutral()["maximumAllocationBytes"].as_u64().unwrap()).unwrap(),..Default::default()}}
 fn independent(bytes:&[u8]){let script="import{Database}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok')throw Error('integrity');const r=d.query('SELECT literal FROM transfer_literal WHERE id=1').get();console.log(JSON.stringify(r));d.close();";let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));assert_eq!(serde_json::from_slice::<serde_json::Value>(&output.stdout).unwrap()["literal"],neutral()["literal"]);}
@@ -98,7 +107,7 @@ async fn sqlite_snapshot_transfer_allocation_export_retains_native_before_metada
   for phase in [SqliteSnapshotPhase::DecodeNative,SqliteSnapshotPhase::ProjectSnapshot,SqliteSnapshotPhase::WritePages]{assert!(stages.contains(&phase));assert!(run(&route,payload.clone(),limits(),&mut|progress|progress.phase!=phase,&mut native).await.is_err());}
   assert!(run(&route,payload,SqliteDatabaseLimits{max_allocation_bytes:used,..limits()},&mut|_|true,&mut native).await.is_err(),"typed native and relational backing exhaust the allowance before metadata and SQLite pages may allocate");
  }
- let payload=input(SnapshotEncoding::Text);let mut yes=|_|true;let grant=snapshot_grant();let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(0,&mut yes);native.install_retirement_recipient(&mut recipient).unwrap();let mut checkpoint=|_|true;let mut snapshot=SqliteSnapshotControl::new(&mut checkpoint,limits());let(before,after)=(native.owned_bytes(),snapshot.allocation_remaining_bytes());let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||<TransferSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native(&payload,&mut snapshot,&mut store::NativeSnapshotDecodeOwner::new(&mut native,grant)));assert!(result.is_err());assert_eq!((native.owned_bytes(),snapshot.allocation_remaining_bytes()),(before,after));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+ let payload=input(SnapshotEncoding::Text);let mut yes=|_|true;let grant=snapshot_grant();let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(0,&mut yes);native.install_retirement_recipient(&mut recipient).unwrap();let mut checkpoint=|_|true;let mut snapshot=SqliteSnapshotControl::new(&mut checkpoint,limits());let(before,after)=(native.owned_bytes(),snapshot.allocation_remaining_bytes());let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||<TransferSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::decode_sqlite_snapshot_native(&payload,&mut snapshot,&mut store::NativeSnapshotDecodeOwner::new(&mut native,grant)));assert!(result.is_err());assert_eq!((native.owned_bytes(),snapshot.allocation_remaining_bytes()),(before,after));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  eprintln!("[DEBUG] genuine TransferSnapshot typed export preserves original native refusal, phase cancellation and independent Bun SQLite rows");
 }
 #[semio_framework_async_macros::async_test]
@@ -111,7 +120,7 @@ async fn sqlite_snapshot_transfer_allocation_import_retains_physical_before_reco
   for phase in [SqliteSnapshotPhase::ReadPages,SqliteSnapshotPhase::ReconstructSnapshot,SqliteSnapshotPhase::EncodeNative]{assert!(stages.contains(&phase));assert!(run(&import_route,file.clone(),limits(),&mut|progress|progress.phase!=phase,&mut native).await.is_err());}
   assert!(run(&import_route,file,SqliteDatabaseLimits{max_allocation_bytes:used,..limits()},&mut|_|true,&mut native).await.is_err(),"physical relational ownership must leave less allowance for reconstruction and native output");
  }
- let snapshot=TransferSnapshot(neutral()["literal"].as_str().unwrap().to_owned());let mut checkpoint=|_|true;let mut control=SqliteSnapshotControl::new(&mut checkpoint,limits());let mut yes=|_|true;let grant=snapshot_grant();let mut recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut native=NativeEncodeControl::new(0,&mut yes);native.install_retirement_recipient(&mut recipient).unwrap();let before=control.allocation_remaining_bytes();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||<TransferSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&snapshot,SnapshotEncoding::Binary,&mut control,&mut store::NativeSnapshotEncodeOwner::new(&mut native,grant)));assert!(result.is_err());assert_eq!(native.owned_bytes(),0);assert_eq!(control.allocation_remaining_bytes(),before);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+ let snapshot=TransferSnapshot(neutral()["literal"].as_str().unwrap().to_owned());let mut checkpoint=|_|true;let mut control=SqliteSnapshotControl::new(&mut checkpoint,limits());let mut yes=|_|true;let grant=snapshot_grant();let mut recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut native=NativeEncodeControl::new(0,&mut yes);native.install_retirement_recipient(&mut recipient).unwrap();let before=control.allocation_remaining_bytes();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||<TransferSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::encode_sqlite_snapshot_native(&snapshot,SnapshotEncoding::Binary,&mut control,&mut store::NativeSnapshotEncodeOwner::new(&mut native,grant)));assert!(result.is_err());assert_eq!(native.owned_bytes(),0);assert_eq!(control.allocation_remaining_bytes(),before);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  eprintln!("[DEBUG] genuine TransferSnapshot typed import preserves physical/native ledgers, phase cancellation and exact native refusal");
 }
 

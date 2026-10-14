@@ -1,3 +1,4 @@
+import { phaseCompilerAdmissionControlV1 } from "../../../../🏗️build/🎟️capacity/🟦️.ts";
 import { expect } from "bun:test";
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
@@ -9,7 +10,7 @@ import type { BuildScriptRunV1 } from "../../📈️telemetry/🟦️.ts";
 const artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
 
 /** 🛠️ The scheduler binary every Cargo-backed law shares, compiled once per test process into the artifact directory. */
-export const schedulerBinaries = (): Promise<ReadonlyMap<string, string>> => (globalThis as any).__semioScheduler ??= buildSchedulerV1({ cwd: process.cwd(), targetDirectory: join(artifacts, "st"), buildDirectory: join(artifacts, "sb"), environment: process.env, examples: true, signal: AbortSignal.timeout(600_000) });
+export const schedulerBinaries = (): Promise<ReadonlyMap<string, string>> => (globalThis as any).__semioScheduler ??= buildSchedulerV1({ cwd: process.cwd(), targetDirectory: join(artifacts, "st"), buildDirectory: join(artifacts, "sb"), environment: process.env, examples: true, control: phaseCompilerAdmissionControlV1(AbortSignal.timeout(600_000),600_000,()=>undefined,()=>new Promise(done=>setImmediate(done))) });
 
 /** 🦀️ A dependency-free Cargo workspace: `base` ← `left`, `right` ← `top` (rlibs), so pipelining, fan-in and a critical chain are observable in seconds; `right` is ten times `left`, so the chain through it is unambiguous. */
 export function tinyCargoWorkspaceV1(root: string, crates: readonly string[]): string {

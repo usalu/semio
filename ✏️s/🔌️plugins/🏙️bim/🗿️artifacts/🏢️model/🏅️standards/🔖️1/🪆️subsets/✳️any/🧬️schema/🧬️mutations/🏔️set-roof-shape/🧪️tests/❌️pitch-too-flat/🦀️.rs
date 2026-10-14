@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🏔️set-roof-shape/❌️pitch-too-flat",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏔️set-roof-shape/❌️pitch-too-flat/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏔️set-roof-shape/❌️pitch-too-flat/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏔️set-roof-shape/❌️pitch-too-flat/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏔️set-roof-shape/❌️pitch-too-flat/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏔️set-roof-shape/❌️pitch-too-flat/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏔️set-roof-shape/❌️pitch-too-flat/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏔️set-roof-shape/❌️pitch-too-flat/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏔️set-roof-shape/❌️pitch-too-flat/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏔️set-roof-shape/❌️pitch-too-flat/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏔️set-roof-shape/❌️pitch-too-flat/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

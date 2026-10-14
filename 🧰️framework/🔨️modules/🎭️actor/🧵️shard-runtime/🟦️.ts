@@ -39,7 +39,7 @@ export function shardWorkerUrl(): string {
  * this is that budget's shared web default. A caller with a genuinely different budget need (a batch
  * job actor, say) still passes its own `ShardBudget` to `ActivationRegistry`/turn calls directly —
  * this constant is only the sane default for "a plugin instance doing normal interactive work". */
-export const DEFAULT_SHARD_BUDGET: ShardBudget = { fuel: 50_000_000, wallMs: 100, memoryBytes: 256 * 1024 * 1024, uiNodes: 20_000, mailboxLen: 64, maxEffects: 64, maxPatchBytes: 1 << 20 };
+export const DEFAULT_SHARD_BUDGET: ShardBudget = { fuel: 50_000_000, wallMs: 100, memoryBytes: 256 * 1024 * 1024, uiNodes: 20_000, mailboxLen: 64, maxEffects: 64, maxPatchBytes: 1 << 20, maxFrames:8 };
 
 /** 🧮️ `min(hardwareConcurrency-1, 4)` (design-runtime.md §1 `ShardTable`) — "how many wasm-boundary
  * hops can genuinely run at once on this device". Falls back to `5` (so the clamp lands on `4`) when
@@ -58,7 +58,7 @@ export function poolConcurrency(): number {
  * function itself is untestable in isolation since it hardcodes a real DOM `Worker`, which a `jsdom`
  * suite doesn't provide). */
 export function buildShardClientOptions(
-  overrides: Partial<ShardClientOptions> & { readonly residentLedger: ShardClientOptions["residentLedger"]; readonly onShardLost: ShardClientOptions["onShardLost"]; readonly onActorTrap?: ShardClientOptions["onActorTrap"] },
+  overrides: Partial<ShardClientOptions> & { readonly residentLedger: ShardClientOptions["residentLedger"]; readonly originalWorkStock: ShardClientOptions["originalWorkStock"]; readonly onShardLost: ShardClientOptions["onShardLost"]; readonly onActorTrap?: ShardClientOptions["onActorTrap"] },
 ): ShardClientOptions {
   return {
     shardCount: poolConcurrency(),
@@ -82,6 +82,7 @@ export interface PooledActorRuntime {
  * `PluginRuntime`'s own `currentPluginRuntimeActor` doc already flags for actor identity). */
 export function createPooledActorRuntime(options: {
   readonly residentLedger: ShardClientOptions["residentLedger"];
+  readonly originalWorkStock: ShardClientOptions["originalWorkStock"];
   readonly onActorTrap?: ShardClientOptions["onActorTrap"];
   readonly onShardLost: ShardClientOptions["onShardLost"];
   readonly createWorker?: ShardClientOptions["createWorker"];

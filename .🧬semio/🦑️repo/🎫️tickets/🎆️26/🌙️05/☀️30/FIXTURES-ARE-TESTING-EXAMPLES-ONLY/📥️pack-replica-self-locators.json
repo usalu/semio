@@ -1,0 +1,14 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧪️tests/🧫️fixtures/🔣️.json",
+    "beforeSha256": "effb636a27c879f7963d8d2658d9989fd8ceae715ce3939a9e370788b3a8c50f",
+    "afterSha256": "db9ad18f9786c9fe4d9eaada9b26df8bd6f71a3cf91aa49a245892c467c5be70",
+    "reason": "self-locator path only"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🧫️fixtures/🧬️mutations/➕️causal-add/🧪️descriptor/🔣️.json",
+    "beforeSha256": "5b405b953d70cd1e405f7677bf29ed0a95e93dcf2a1a07f4cd676c67b12650ec",
+    "afterSha256": "45bf99ccd4df8e99f60587297746240d4d11058df0131e7850c510ef6a32a860",
+    "reason": "self-locator path only"
+  }
+]

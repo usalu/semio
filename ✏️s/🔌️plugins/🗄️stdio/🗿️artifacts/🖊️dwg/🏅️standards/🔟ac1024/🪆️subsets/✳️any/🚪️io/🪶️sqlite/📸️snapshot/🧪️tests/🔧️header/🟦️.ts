@@ -1,6 +1,6 @@
 import { expect,test } from "bun:test";
 import { Database } from "bun:sqlite";
-import fixture from "../../🧫️fixtures/🔢️numbers/🔣️.json";
+import fixture from "../🧫️fixtures/🔢️numbers/🔣️.json";
 import type { DwgHeaderVariables,DwgHeaderSpaceGeometry } from "../../../../../🧬️schema/🟦️.ts";
 import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
 import { dwgProjectHeader,dwgReconstructHeader } from "../../🔧️header/🟦️.ts";

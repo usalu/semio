@@ -1,0 +1,15 @@
+{
+  "copyPolicies": [
+    1,
+    3,
+    64
+  ],
+  "source": "Original↔Retained",
+  "metadataBytes": 256,
+  "rootItems": 1,
+  "sameSource": true,
+  "heapClone": false,
+  "coldFallback": false,
+  "childNarrowDelegation": true,
+  "rootCopyBytes": 0
+}

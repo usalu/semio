@@ -11,7 +11,7 @@ impl crate::retirement::RetireOwned for Unsupported {
 
 #[test]
 fn retirement_queue_admits_original_frames_and_releases_exact_terminal_backings() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {for count in fixture["ownerCounts"].as_array().unwrap() {for copy in fixture["copyGrants"].as_array().unwrap() {
         let mut queue=RetirementQueue::default();let mut original=0;let mut births=0;let mut released=0;let mut copied=0;
         for _ in 0..count.as_u64().unwrap() {
@@ -47,7 +47,7 @@ fn retirement_queue_admits_original_frames_and_releases_exact_terminal_backings(
 #[test]
 fn partial_retirement_queue_transfers_to_the_actual_generic_retained_owner() {
     use crate::retirement::controlled::ControlledRetirement;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {for cut in fixture["cancelCuts"].as_array().unwrap() {for copy in fixture["copyGrants"].as_array().unwrap() {
         let mut queue=RetirementQueue::default();let mut original=0;let mut births=0;let mut released=0;let mut copied=0;
         for _ in 0..257 {
@@ -79,7 +79,7 @@ fn partial_retirement_queue_transfers_to_the_actual_generic_retained_owner() {
 #[test]
 fn retirement_queue_retains_original_snapshot_frames_and_closes_mixed_custody() {
     use crate::retirement::{admit_owned_retirement,owned_retirement_birth_bytes,controlled::ControlledRetirement};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for copy in fixture["copyGrants"].as_array().unwrap(){for cut in fixture["cancelCuts"].as_array().unwrap(){
         let mut queue=RetirementQueue::default();let mut originals=0;let mut births=0;let mut released=0;let mut copied=0;
         for kind in fixture["frameKinds"].as_array().unwrap(){

@@ -178,7 +178,7 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
         let grammar=semio_framework_dsl::parse_grammar(crate::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).unwrap();
-        let text=store::os_store::serialization::ArtifactDsl::print_dsl(&demo_docx_snapshot().await);
+        let text=pack::snapshot::ArtifactDsl::print_dsl(&demo_docx_snapshot().await);
         let(envelope,body)=store::semio_format::split_text_preamble(&text).unwrap();
         assert!(semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments").recognize(&format!("{}\n{body}",envelope.envelope_id())).unwrap());
     }
@@ -212,7 +212,7 @@ mod conformance_laws {
     async fn protocol_walk_law() {
         let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
         let demo = demo_docx_snapshot().await;
-        let packed = store::os_store::serialization::ArtifactPack::encode_pack(&demo);
+        let packed = pack::snapshot::ArtifactPack::encode_pack(&demo);
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
         let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk must consume every literal snapshot byte");
@@ -244,13 +244,13 @@ mod conformance_laws {
 
         let demo = demo_docx_snapshot().await;
 
-        let parsed = <DocxSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        let parsed = <DocxSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_docx_snapshot().await");
-        assert_eq!(store::os_store::serialization::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_docx_snapshot().await) drifted from the shipped .dsl.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_docx_snapshot().await) drifted from the shipped .dsl.semio fixture");
 
-        let decoded = <DocxSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+        let decoded = <DocxSnapshot as pack::snapshot::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_docx_snapshot().await");
-        assert_eq!(store::os_store::serialization::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_docx_snapshot().await) drifted from the shipped .pack.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_docx_snapshot().await) drifted from the shipped .pack.semio fixture");
 
         let native = encode_docx(&demo).expect("encode native docx");
         assert_eq!(native.as_slice(), include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/📜️example.docx"), "encode_docx(demo) drifted from 📜️example.docx");
@@ -267,7 +267,7 @@ fn save_preserves_relationship_selected_part_paths_and_clears_the_last_style() {
     use crate::standards::v_ecma_376::subsets::base::{schema::{vocabulary::{MAIN_DOCUMENT_CONTENT_TYPE,MAIN_DOCUMENT_PART,REL_TYPE_STYLES,STYLES_CONTENT_TYPE}}};
     use semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT;
     use std::io::Read;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📦️save-part-identity/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📦️save-part-identity/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let main = case["main"].as_str().unwrap();
         let styles = case["styles"].as_str().unwrap();
@@ -339,7 +339,7 @@ fn canonical_authority_fixture() -> (DocxSnapshot, serde_json::Value) {
     use crate::standards::v_ecma_376::subsets::base::{schema::{vocabulary::{MAIN_DOCUMENT_CONTENT_TYPE,REL_TYPE_STYLES,STYLES_CONTENT_TYPE}}};
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
     use semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️canonical-xml-authority/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️canonical-xml-authority/🔣️.json")).unwrap();
     let main = &fixture["parts"][0];
     let styles = &fixture["parts"][1];
     let main_path = main["path"].as_str().unwrap();

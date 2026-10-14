@@ -1,5 +1,5 @@
 //! 🧪️ LAW: the wgpu target mounts and paints every accept case of the language-neutral conformance corpus
-//! (`🧬️contract/🧫️fixtures/🧪️conformance/`) — the same `📇️catalog.json` the Rust contract harness
+//! (`🧬️contract/🧪️tests/🧫️fixtures/🧪️conformance`) — the same `📇️catalog.json` the Rust contract harness
 //! (`🔬️conformance-unit`) and the React interpreter (`🧪️unknown-component-placeholder`) walk — and carries
 //! each component's own facts into its retained node: a slider's detents paint one tick each, a stepper and
 //! a number field carry their precision, a recipe keeps its keys, a dialog's choices stay buttons.
@@ -10,7 +10,7 @@ use crate::wgpu::text::FontAtlas;
 use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiRevision};
 
 fn corpus_dir() -> std::path::PathBuf {
-    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧬️contract/🧫️fixtures/🧪️conformance")
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧬️contract/🧪️tests/🧫️fixtures/🧪️conformance")
 }
 
 fn read(path: &std::path::Path) -> serde_json::Value {

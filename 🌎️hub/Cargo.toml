@@ -404,25 +404,11 @@ opt-level = 3
 opt-level = 3
 
 # 🎚️ Answers `capability: evaluate`/`tessellate` for the BREP operators the example drives.
-[profile.prototype]
-inherits = "dev"
-opt-level = 0
-lto = false
-codegen-units = 256
-incremental = true
-
+# 🎚️ Shared native optimizer policy lives in .cargo/config.toml; this owner opts into path trimming.
 [profile.release]
-opt-level = 3
-lto = "thin"
-codegen-units = 1
-strip = "debuginfo"
-incremental = false
 trim-paths = "object"
 
-# 🪶️ The ONE shipped component profile (ticket 26/09/23 wave A2): wasm32-wasip2 plugin and extension components and
-# the wasm-bindgen browser modules. `describe`, provenance, receipts, module materialization and the trusted catalog all
-# act on these exact bytes; nothing else is ever described for commit or shipped. Inherits ship-oriented
-# `[profile.release]` above, then overrides for wasm size/runtime:
+# `# 🪶️ WASM inherits central native release policy and overrides size/runtime settings.
 #
 # - opt-level "s" (not "z"): "z" measurably slows hot numeric loops in geometry/FEM solvers for a
 #   few extra percent of size; the wasm-opt -Oz post-pass of module materialization gets the "z"-class

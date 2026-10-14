@@ -4,7 +4,7 @@ use semio_framework_value::ToValue;
 
 #[test]
 fn installed_owner_service_effects_match_the_portable_and_serde_oracles() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/💡️service-operation/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/💡️service-operation/🔣️.json")).unwrap();
     for vector in fixture["effects"].as_array().unwrap() {
         let oracle: Effect = serde_json::from_value(vector.clone()).unwrap();
         let value = semio_framework_pack_json::from_json_str::<DslValue>(&vector.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

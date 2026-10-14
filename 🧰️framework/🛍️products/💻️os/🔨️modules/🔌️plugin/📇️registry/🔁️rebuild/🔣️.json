@@ -8,7 +8,7 @@
     { "id": "describe", "stage": "descriptors", "command": ["nx", "run", "workspace:components", "describe", "--all"] },
     { "id": "generate", "stage": "registry", "command": ["nx", "run", "@semio-tech/plugin-registry:generate"] },
     { "id": "check", "stage": "registry", "command": ["nx", "run", "@semio-tech/plugin-registry:check"] },
-    { "id": "activate-s", "stage": "guests", "command": ["nx", "run", "@semio-tech/framework-os-dev:activate-s-react-dev"] },
+    { "id": "activate-s", "stage": "guests", "command": ["nx", "run", "@semio-tech/framework-os-dev:activate-s-react-prototype"] },
     { "id": "verify-s", "stage": "guests", "command": ["nx", "run", "@semio-tech/plugin-registry:verify-staged", "--variant", "s"] },
     { "id": "flow-core-bindings", "stage": "guests", "command": ["nx", "run", "semio-framework-os-flow-core:wasm"] },
     { "id": "preflight-catalog", "stage": "catalog", "command": ["nx", "run", "os-hub:trusted-catalog-preflight", "--packages", "all"] },

@@ -1,0 +1,109 @@
+# Current Plugin Whole Media Compiler Frontier 25
+
+The exact full registered Plugin gate reached actual OS-kernel native compilation and reported110 library errors. Its dependent jobs were still running at this snapshot. No Plugin native assertions or specific receive_media_output / RegisteredOriginalActorJobs missing declaration ran. Original full roster, 600000/60000 budgets and mandatory capabilities remain unchanged.
+
+- E0432: unresolved import `crate::os_store::NativeSnapshotBodyWallet` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧵️channel/📦️archive/🛬️decode/🦀️.rs:4:5`
+- E0432: unresolved import `semio_framework_os_kernel::os_store::serialization` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:3:44`
+- E0432: unresolved imports `crate::os_store::NativeSnapshotDecodeOwner`, `crate::os_store::NativeSnapshotEncodeOwner` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🧰️testing/🦀️.rs:2:24`
+- E0432: unresolved import `crate::os_store::snapshot_read` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/./📤️serialization/📦️owned/🦀️.rs:6:22`
+- E0432: unresolved import `crate::os_store::test_support` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs:276:9`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🪪️bindings/🏛️catalog/🦀️.rs:11:42`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🪪️bindings/🏛️catalog/🦀️.rs:15:40`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🪪️bindings/🏛️catalog/🦀️.rs:31:47`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🪪️bindings/🏛️catalog/🦀️.rs:34:248`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🪪️bindings/🏛️catalog/🦀️.rs:34:328`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🪪️bindings/🏛️catalog/🦀️.rs:45:101`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🪪️bindings/🏛️catalog/🦀️.rs:51:179`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🪪️bindings/🦀️.rs:22:39`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🪪️bindings/🦀️.rs:29:211`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🪪️bindings/🦀️.rs:33:45`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🪪️bindings/🦀️.rs:34:65`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🪪️bindings/🦀️.rs:34:164`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🪪️bindings/🦀️.rs:38:56`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🪪️bindings/🦀️.rs:40:217`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🪪️bindings/🦀️.rs:40:305`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🪪️bindings/🦀️.rs:42:143`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🪪️bindings/🦀️.rs:72:99`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🪪️bindings/🦀️.rs:86:97`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🪪️bindings/🦀️.rs:92:175`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:1905:47`
+- E0433: cannot find `codec_registry` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:1906:50`
+- E0433: cannot find `codec_registry` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:1926:32`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:1950:81`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:1952:67`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:1952:166`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:1960:52`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:1968:81`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:1970:67`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:1970:166`
+- E0433: cannot find `codec_registry` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:1979:45`
+- E0433: cannot find `codec_registry` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2005:22`
+- E0433: cannot find `codec_registry` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2015:22`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2231:37`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2236:82`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2242:84`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2281:88`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2281:187`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2599:48`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2633:63`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2638:71`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2670:63`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2675:71`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2710:64`
+- E0433: cannot find `snapshot_read` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2710:197`
+- E0433: cannot find `serialization` in `os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2716:64`
+- E0433: cannot find `serialization` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2727:81`
+- E0433: cannot find `serialization` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2727:144`
+- E0433: cannot find `snapshot_read` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2736:87`
+- E0425: cannot find type `NativeSnapshotDecodeOwner` in module `crate::os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧵️channel/📦️archive/🛬️decode/🦀️.rs:14:89`
+- E0425: cannot find type `NativeSnapshotDecodeOwner` in module `crate::os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧵️channel/📦️archive/🛬️decode/🦀️.rs:16:88`
+- E0425: cannot find type `NativeSnapshotDecodeOwner` in module `crate::os_store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧵️channel/📦️archive/🛬️decode/🦀️.rs:17:51`
+- E0425: cannot find type `NativeSnapshotDecodeOwner` in module `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2141:63`
+- E0425: cannot find type `NativeSnapshotDecodeOwner` in module `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2633:282`
+- E0425: cannot find type `NativeSnapshotDecodeOwner` in module `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2638:290`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2657:41`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0425: cannot find type `NativeSnapshotEncodeOwner` in module `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2670:256`
+- E0425: cannot find type `NativeSnapshotEncodeOwner` in module `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2675:264`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2686:41`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0425: cannot find type `NativeSnapshotDecodeOwner` in module `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2710:315`
+- E0425: cannot find type `NativeSnapshotEncodeOwner` in module `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2716:290`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2721:33`
+- E0425: cannot find type `NativeSnapshotDecodeOwner` in module `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2736:205`
+- E0425: cannot find type `NativeSnapshotEncodeOwner` in module `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2741:185`
+- E0425: cannot find type `NativeSnapshotBodyWallet` in module `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2745:140`
+- E0425: cannot find type `NativeSnapshotDecodeOwner` in module `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2754:137`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2754:214`
+- E0425: cannot find type `NativeSnapshotEncodeOwner` in module `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2755:137`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2755:214`
+- E0425: cannot find type `NativeSnapshotEncodeOwner` in module `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2756:103`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2756:194`
+- E0425: cannot find type `NativeSnapshotDecodeOwner` in module `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2766:175`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2769:29`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2776:29`
+- E0425: cannot find type `NativeSnapshotEncodeOwner` in module `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2779:122`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2781:29`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2811:41`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2815:41`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2835:37`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`
+- E0433: cannot find `NativeSnapshotBodyWallet` in `store` — `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️.rs:2626:33`

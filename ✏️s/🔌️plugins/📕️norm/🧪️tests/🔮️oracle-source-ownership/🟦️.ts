@@ -9,7 +9,7 @@ import { loadCatalogTaxonomy, semanticDirectoryKindId, implementationLeafBasenam
 import { buildCasePlan, loadOracleRegistry, oracleHostPackagesFor, testProjectName } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟦️.ts";
 import { parseFeature } from "../../../../../🧰️framework/🔨️modules/🧪️test/🥒️gherkin/🟦️.ts";
 import { oracleHostPython, pythonHostArguments } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🖥️host/🏗️materialization/🟦️.ts";
-import control from "../../🧫️fixtures/🔮️oracle-source-ownership/🔣️.json";
+import control from "../🧫️fixtures/🔮️oracle-source-ownership/🔣️.json";
 
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../..");

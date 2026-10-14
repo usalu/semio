@@ -1,0 +1,429 @@
+{
+  "schema": "framework.plugin.tool-run.v1",
+  "contract": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️13/INTERACTIVE-TOOLS-VISIBLE-PROCESS/📋️tool-run-contract.md §2.2, §2.7, §2.8, §3.2, §3.3, §3.4, §4.1",
+  "toolId": "toyFill",
+  "freezeToolId": "toyFreeze",
+  "actor": "local",
+  "defaultTarget": 5,
+  "opsPerUnit": 2,
+  "labelPrefix": "unit-",
+  "reasons": {
+    "fits": 1,
+    "conflict": 2
+  },
+  "overlay": {
+    "units": 5,
+    "overlayCount": 5,
+    "committedCount": 0,
+    "provisionalOps": 10,
+    "entities": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "traceRecords": 5,
+    "mainBodyText": "count=5",
+    "committedBodyText": "count=0"
+  },
+  "panel": {
+    "bodyKey": "framework.body.toolRun",
+    "rootId": "framework.toolRun",
+    "status": {
+      "id": "framework.toolRun.{run}.status",
+      "live": "polite"
+    },
+    "progress": {
+      "id": "framework.toolRun.{run}.progress",
+      "type": "progress",
+      "completed": 5,
+      "total": 5
+    },
+    "finalize": {
+      "id": "framework.toolRun.{run}.toolRunFinalize",
+      "shortcut": "mod+shift+enter"
+    },
+    "abort": {
+      "id": "framework.toolRun.{run}.toolRunAbort",
+      "shortcut": "mod+."
+    },
+    "groupId": "framework.toolRun.{run}",
+    "step": {
+      "id": "framework.toolRun.{run}.toolRunStep"
+    }
+  },
+  "partialFinalize": {
+    "target": 1000,
+    "unitsBeforeFinalize": 3,
+    "editsAdded": 1,
+    "groupId": "toolRun:1"
+  },
+  "largeFinalize": {
+    "note": "A finalize folds one op per publication step, each prepared against the root the previous step produced. Those roots return to the document Store's read registry and must be reclaimed as the publication goes, never piled up for maintenance: a 408-placement puzzle 3d finalize kept one whole document per op and trapped the guest at its memory ceiling.",
+    "units": 400,
+    "maximumReturnedReads": 1
+  },
+  "abort": {
+    "target": 1000,
+    "unitsBeforeAbort": 1,
+    "state": "aborted"
+  },
+  "finalize": {
+    "units": 5,
+    "editsAdded": 1,
+    "commandRowsAdded": 1,
+    "storeGenerationAdded": 1,
+    "mutationsMessages": 1,
+    "genesisMessages": 0,
+    "groupId": "toolRun:1",
+    "countAfterFinalize": 5,
+    "labelAfterFinalize": "unit-5",
+    "countAfterUndo": 0,
+    "labelAfterUndo": ""
+  },
+  "conflict": {
+    "remoteCount": 100,
+    "retracted": 10,
+    "generationAfterRebase": 1,
+    "generationAfterConflict": 2,
+    "state": "complete"
+  },
+  "stale": {
+    "wrongGeneration": 7,
+    "wrongRun": 99,
+    "code": "toolRun.stale"
+  },
+  "illegal": {
+    "code": "toolRun.illegal"
+  },
+  "busy": {
+    "code": "toolRun.busy"
+  },
+  "pauseStep": {
+    "target": 1000,
+    "opsPerStep": 2,
+    "steps": 3
+  },
+  "reconfigure": {
+    "initialTarget": 5,
+    "raisedTarget": 8,
+    "loweredTarget": 3,
+    "resumedFrom": 5,
+    "generationAfterRaise": 1,
+    "generationAfterLower": 2
+  },
+  "bench": {
+    "ticks": 771,
+    "labelBytes": 96,
+    "budgetUs": 2000,
+    "allowedPreemptedTicks": 3
+  },
+  "traceLane": {
+    "units": 200,
+    "unitsPerTick": 64,
+    "windowId": "world",
+    "bodyKey": "world",
+    "surfaceId": "world.scene",
+    "laneName": "toolRunTrace",
+    "laneKey": "framework.scene.world3d.toolRunTrace",
+    "otherWindowId": "main",
+    "resumePage": 1,
+    "stallRefreshes": 4,
+    "pageByteBudget": 1
+  },
+  "dirtyScope": {
+    "windowBodies": [
+      "world"
+    ],
+    "panelBodies": [
+      "framework.body.toolRun"
+    ],
+    "excludedWindowBody": "main"
+  },
+  "presence": {
+    "running": "running",
+    "complete": "complete",
+    "aborted": "aborted",
+    "raisedTotal": 8,
+    "loweredTotal": 3
+  },
+  "provisional": {
+    "units": 5,
+    "flaggedInstances": [
+      "unit-1",
+      "unit-2",
+      "unit-3",
+      "unit-4",
+      "unit-5"
+    ]
+  },
+  "port": {
+    "toolId": "toyWait",
+    "hopAction": "toyExternalHop",
+    "hops": 3,
+    "traceRecords": 3,
+    "state": "complete"
+  },
+  "actionArgCarriers": {
+    "note": "How a §2.5 action argument (`runId`, `generation`) reads out of the wire value that carried it. A JSON number that is an exact non-negative integer IS the identity it names, whichever carrier the sender minted it with: the shell's own action arguments build `generation` as a float (`UiValue::Number`), a guest mints it with `DslValue::uint`, and a targeted action's `runId` travels as text. A reader that accepts only some of these does not reject a wrong value, it silently misreads a right one — `generation` reading `None` is `toolRun.stale`, so EVERY finalize of EVERY app was refused, runs reached `complete` and stayed there, and a start against a live run is `toolRun.busy`. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
+    "rows": [
+      {
+        "id": "an-exact-unsigned-integer",
+        "carrier": "uint",
+        "value": 3,
+        "reads": 3
+      },
+      {
+        "id": "a-json-float-that-is-an-exact-integer",
+        "carrier": "float",
+        "value": 3.0,
+        "reads": 3
+      },
+      {
+        "id": "zero-as-a-float",
+        "carrier": "float",
+        "value": 0.0,
+        "reads": 0
+      },
+      {
+        "id": "a-decimal-string",
+        "carrier": "string",
+        "value": "3",
+        "reads": 3
+      },
+      {
+        "id": "a-fractional-number-names-no-identity",
+        "carrier": "float",
+        "value": 2.5,
+        "reads": null
+      },
+      {
+        "id": "a-negative-number-names-no-identity",
+        "carrier": "float",
+        "value": -1.0,
+        "reads": null
+      },
+      {
+        "id": "text-that-is-not-a-number-names-no-identity",
+        "carrier": "string",
+        "value": "seven",
+        "reads": null
+      }
+    ],
+    "finalizeCarrier": "float"
+  },
+  "readOnlyRun": {
+    "toolId": "toyReadOnlyFill",
+    "units": 3,
+    "note": "A run that declares `mutating: false` authors no provisional edit, so there is nothing for a finalize to publish and nothing for a user to review: its completion IS its finalization, applied in the same driver turn that completed the job. Leaving it parked in `complete` only holds the tool's single run slot open, and a start against a non-terminal run is `toolRun.busy` — which is how a read-only preview run could run exactly once per session. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
+    "stateAfterJobCompletes": "finalizing",
+    "startsAgainWithoutAnyFinalizeAction": true
+  },
+  "settingsReads": {
+    "note": "The toy run declares `settings.config = [\"/selected\"]` (its target). A config publication that republishes the same value and a window-config publication (a camera move) are not settings changes; a changed target is. A run that declares no settings reads is never reconfigured by any settings publication.",
+    "config": [
+      "/selected"
+    ],
+    "undeclaredToolId": "toyUndeclared",
+    "target": 1000,
+    "changedTarget": 1200,
+    "generationAfterUnrelatedPublications": 0,
+    "generationAfterChangedTarget": 1
+  },
+  "retarget": {
+    "note": "A job built through `build_retargetable_tool_run_job` stays resident while its run is complete and is retargeted in place: a raise and a lower reconfigure it without a rebuild (its resumedFrom counter stays 0), and a base change rebinds it to the next generation without a rebuild.",
+    "toolId": "toyRetarget",
+    "initialTarget": 5,
+    "raisedTarget": 8,
+    "loweredTarget": 3,
+    "resumedFrom": 0,
+    "generationAfterRaise": 1,
+    "generationAfterLower": 2,
+    "remoteCount": 100
+  },
+  "rebind": {
+    "note": "A base change during a run hands every later tick the new identity: a plain job is rebuilt under it from its checkpoint, a retargetable job is rebound in place; either way the run keeps appending after the rebase.",
+    "target": 100000,
+    "unitsBeforeRebase": 1,
+    "remoteCount": 100,
+    "generationAfterRebase": 1
+  },
+  "chord": {
+    "note": "A §2.5 action without any identity argument — what a keyboard chord dispatches — targets the instance's live run at its generation of this dispatch; an identity argument that is stale still no-ops.",
+    "target": 1000,
+    "windowArgument": "world"
+  },
+  "compact": {
+    "note": "A retract followed by re-appends spread over several ticks keeps the previous overlay rendered until the job reaches its next checkpoint, so the renderer never shows a half re-appended overlay.",
+    "toolId": "toyCompact",
+    "initialCount": 5,
+    "compactCounts": [
+      1,
+      2,
+      3
+    ],
+    "renderedWhileCompacting": "count=5",
+    "renderedAfterCheckpoint": "count=3"
+  },
+  "traceKeys": {
+    "note": "Every job of a run shares one trace key allocator: keys it hands out lie above every key the run's ticks upserted and every key allocated before.",
+    "units": 5,
+    "nextAfterRun": 6,
+    "allocate": 3,
+    "allocated": [
+      6,
+      9
+    ],
+    "nextAfterAllocation": 9
+  },
+  "startWindow": {
+    "windowId": "world",
+    "windowKindId": "world"
+  },
+  "boardLane": {
+    "note": "A board-2d scene surface carries the toolRunTrace lane exactly like a world-3d one: the spine names the lane and the paged carrier holds the delta.",
+    "windowId": "board",
+    "bodyKey": "board",
+    "surfaceId": "board.scene",
+    "laneName": "toolRunTrace",
+    "units": 5
+  },
+  "windowSettingsReads": {
+    "note": "A run started from a window declares the window-config fields its jobs read per window kind: its job request carries that window's config snapshot, a publication on another window of the same kind or an unchanged value never reconfigures, and a changed value on the starting window does.",
+    "toolId": "toyWindowSettings",
+    "windowKindId": "world",
+    "startWindowId": "world",
+    "otherWindowId": "world-2",
+    "pointer": "/selected",
+    "target": 1000,
+    "generationAfterOtherWindow": 0,
+    "generationAfterStartWindow": 1
+  },
+  "readerWindows": {
+    "note": "A run declares the window kinds whose bodies render its state (ToolRunDefinition.windows): every tick dirties them next to the panel and the scene windows, and their render reads the run's progress, steps and the latest tick payload through ArtifactView::tool_run().",
+    "toolId": "toyReader",
+    "windows": [
+      "main"
+    ],
+    "target": 1000,
+    "windowBodies": [
+      "tool-run.main",
+      "world"
+    ],
+    "panelBodies": [
+      "framework.body.toolRun"
+    ]
+  },
+  "concurrentReadOnly": {
+    "note": "Read-only runs run concurrently, one per (tool, window), each with its own run id, trace and panel group; a second mutating start while a mutating run is non-terminal is toolRun.busy; actions address a run by its runId; presence follows the mutating run, else the most recent run.",
+    "readOnlyToolId": "toyReadOnlyWait",
+    "windows": [
+      "world",
+      "main"
+    ],
+    "target": 1000,
+    "mutatingToolId": "toyFill",
+    "secondMutatingToolId": "toyFreeze",
+    "busy": "toolRun.busy"
+  },
+  "verdictRevisions": {
+    "toolId": "toyWait",
+    "upserts": [
+      [
+        1,
+        "testing"
+      ],
+      [
+        1,
+        "success"
+      ],
+      [
+        2,
+        "testing"
+      ],
+      [
+        2,
+        "danger"
+      ],
+      [
+        3,
+        "testing"
+      ]
+    ],
+    "traceRows": [
+      3,
+      2,
+      1
+    ]
+  },
+  "readyGroup": {
+    "toolId": "toyWait",
+    "groupId": "framework.toolRun.ready",
+    "startButtonId": "framework.toolRun.ready.toolRunStart",
+    "status": "Ready to start",
+    "startLabel": "Start"
+  },
+  "terminalQuiet": {
+    "note": "A run that is OVER cannot ask to be driven again. Every wake a tool run hands the host is a request the host answers by dispatching an action back into the guest, so a request a TERMINAL run keeps re-making is an endless action storm on a shell nobody is touching: generation3d's finalized `previewEval` re-armed its pace wake once per presentation retry and filled the console with `toolRunPace` on a quiet, converged editor (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, 2026-09-14 23:25). The latch is read once per ANSWER, never once per REFRESH.",
+    "turns": 64,
+    "rows": [
+      {
+        "id": "a-read-only-run-that-finalized-itself",
+        "toolId": "toyReadOnlyFill",
+        "units": 3,
+        "terminalBy": "self",
+        "expected": {
+          "hasPendingWork": false,
+          "effects": 0
+        }
+      },
+      {
+        "id": "a-mutating-run-the-user-aborted",
+        "toolId": "toyFill",
+        "units": 3,
+        "terminalBy": "abort",
+        "expected": {
+          "hasPendingWork": false,
+          "effects": 0
+        }
+      }
+    ]
+  },
+  "member": {
+    "toolId": "toyMemberFill",
+    "slot": "slot",
+    "childId": "child-1",
+    "childDialect": {
+      "artifactKind": "s.test.child",
+      "standard": "native",
+      "subset": "*"
+    },
+    "units": 5,
+    "groupId": "toolRun:1",
+    "countAfterFinalize": 5,
+    "labelAfterFinalize": "unit-5",
+    "memberEditsAdded": 1,
+    "parentEditsAdded": 0,
+    "transactionRowsAdded": 1,
+    "countAfterUndo": 0,
+    "labelAfterUndo": "",
+    "toolLabel": {
+      "en": "Toy member fill",
+      "de": "Spielfüllung im Mitglied"
+    },
+    "abort": {
+      "target": 1000,
+      "unitsBeforeAbort": 1
+    },
+    "pauseStep": {
+      "target": 1000,
+      "opsPerStep": 2,
+      "steps": 3
+    },
+    "capped": {
+      "target": 3000,
+      "memberOpsMax": 4096
+    }
+  }
+}

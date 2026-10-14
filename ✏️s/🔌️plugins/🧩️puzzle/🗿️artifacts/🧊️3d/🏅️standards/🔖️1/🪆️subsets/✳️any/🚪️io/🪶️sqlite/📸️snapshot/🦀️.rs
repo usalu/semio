@@ -1,4 +1,5 @@
 //! 🧩️ Complete Puzzle3d inline catalogs and literal relationships.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle3dSnapshot;
 use crate::*;
 use std::collections::{BTreeMap, BTreeSet};
@@ -7,7 +8,7 @@ use store::{
         artifact::{Cell, Projection, Reconstruction},
         SnapshotEncoding, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue,
     },
-    os_store::serialization::ArtifactSqliteSnapshot,
+    os_store::serialization::ArtifactSqliteSnapshotHost,
 };
 use semio_framework_value::{ValueError, ValueRefusalKind};
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
@@ -406,15 +407,15 @@ impl<'a, 'c, 'p> Cursor<'a, 'c, 'p> {
         Ok(())
     }
 }
-impl ArtifactSqliteSnapshot for Puzzle3dSnapshot {
-    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+impl ArtifactSqliteSnapshotHost for Puzzle3dSnapshot {
+    
     fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
         admit_schema(c)?;
         c.check_rows(2)?;
         let maximum = c.limits().max_rows;
         store::decode_sqlite_snapshot_record_native(
             payload,
-            <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),
+            <Self as pack::snapshot::ArtifactDsl>::envelope_id(),
             Self::__dsl_spec_producer(),
             |record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
                 admit_native_rows(record, maximum, native)?;
@@ -425,9 +426,22 @@ impl ArtifactSqliteSnapshot for Puzzle3dSnapshot {
     }
     fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
         forecast(self, c, SqliteSnapshotPhase::EncodeNative)?;
-        store::encode_sqlite_snapshot_record_native(encoding, <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), c,native_owner)
+        store::encode_sqlite_snapshot_record_native(encoding, <Self as pack::snapshot::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), c,native_owner)
     }
-    fn to_sqlite_database(&self, c: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
+    
+    
+    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, _d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
+        c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1).map_err(store::io_schema::IoError::from_value_error)?;
+        if dialect.artifact_kind != "s.puzzle.puzzle3d" || dialect.standard != "1" || dialect.subset != "*" {
+            return Err(store::io_schema::IoError::from_value_error(invalid("Puzzle3d owned dialect differs")));
+        }
+        c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1).map_err(store::io_schema::IoError::from_value_error)?;
+        Ok(store::io_schema::IoOutcome::clean(()))
+    }
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for Puzzle3dSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+fn to_sqlite_database(&self, c: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
         let total = forecast(self, c, SqliteSnapshotPhase::ProjectSnapshot)?;
         let mut out = Projection::new(Self::SQLITE_SCHEMA, c)?;
         let doc = out.insert(TABLES[0].0, &[Cell::Text(&self.schema), Cell::Text(&self.domain)])?;
@@ -580,16 +594,8 @@ impl ArtifactSqliteSnapshot for Puzzle3dSnapshot {
         out.checkpoint_total(total)?;
         out.finish()
     }
-    fn from_sqlite_database(d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+fn from_sqlite_database(d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
         reconstruct(d, c)
-    }
-    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, _d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
-        c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1).map_err(store::io_schema::IoError::from_value_error)?;
-        if dialect.artifact_kind != "s.puzzle.puzzle3d" || dialect.standard != "1" || dialect.subset != "*" {
-            return Err(store::io_schema::IoError::from_value_error(invalid("Puzzle3d owned dialect differs")));
-        }
-        c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1).map_err(store::io_schema::IoError::from_value_error)?;
-        Ok(store::io_schema::IoOutcome::clean(()))
     }
 }
 struct Rows<'a> {
@@ -880,14 +886,10 @@ fn reconstruct(d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<
     rows.finish(c)?;
     Ok(Puzzle3dSnapshot { schema, domain, meta: Puzzle3dMeta { kind_catalogs, kind_compatibility }, objects, attractions, target_volumes, references })
 }
-impl ArtifactSqliteSnapshot for Puzzle3dPlaySnapshot {
-    const SQLITE_SCHEMA: &'static str = Puzzle3dSnapshot::SQLITE_SCHEMA;
-    fn to_sqlite_database(&self, c: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
-        self.typed().to_sqlite_database(c)
-    }
-    fn from_sqlite_database(d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
-        Puzzle3dSnapshot::from_sqlite_database(d, c).map(Self::from_typed)
-    }
+impl ArtifactSqliteSnapshotHost for Puzzle3dPlaySnapshot {
+    
+    
+    
     fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
         Puzzle3dSnapshot::decode_sqlite_snapshot_native(payload, c,native_control).map(Self::from_typed)
     }
@@ -896,6 +898,15 @@ impl ArtifactSqliteSnapshot for Puzzle3dPlaySnapshot {
     }
     fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
         self.typed().validate_sqlite_snapshot_subset(dialect, d, c)
+    }
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for Puzzle3dPlaySnapshot {
+const SQLITE_SCHEMA: &'static str = Puzzle3dSnapshot::SQLITE_SCHEMA;
+fn to_sqlite_database(&self, c: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
+        self.typed().to_sqlite_database(c)
+    }
+fn from_sqlite_database(d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+        Puzzle3dSnapshot::from_sqlite_database(d, c).map(Self::from_typed)
     }
 }
 

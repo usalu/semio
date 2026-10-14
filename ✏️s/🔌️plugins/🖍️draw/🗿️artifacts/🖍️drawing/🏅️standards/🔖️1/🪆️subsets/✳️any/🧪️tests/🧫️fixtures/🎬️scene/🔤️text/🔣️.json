@@ -1,0 +1,402 @@
+[
+  {
+    "name": "Real German Glyph Paint",
+    "content": "AV O äö",
+    "x": 4,
+    "y": 3,
+    "size": 20,
+    "transform": [
+      1,
+      0,
+      0.18,
+      1,
+      0,
+      0
+    ],
+    "fillRule": "nonzero",
+    "fill": {
+      "kind": "solid",
+      "color": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "stroke": null,
+    "expectedGlyphs": 7,
+    "width": 128,
+    "height": 64,
+    "fontFamily": "anta"
+  },
+  {
+    "name": "Reflected Multiline Glyph Paint",
+    "content": "ÄV\r\nöß",
+    "x": 2,
+    "y": 2,
+    "size": 18,
+    "transform": [
+      -1,
+      0,
+      0.1,
+      1,
+      64,
+      0
+    ],
+    "fillRule": "nonzero",
+    "fill": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 60,
+      "y2": 40,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            0,
+            0,
+            1,
+            0.5
+          ]
+        }
+      ]
+    },
+    "stroke": null,
+    "expectedGlyphs": 4,
+    "width": 128,
+    "height": 64,
+    "fontFamily": "anta"
+  },
+  {
+    "name": "Authored Kelly Slab Glyph Paint",
+    "content": "AV O äö",
+    "x": 4,
+    "y": 3,
+    "size": 20,
+    "transform": [
+      1,
+      0,
+      0.18,
+      1,
+      0,
+      0
+    ],
+    "fillRule": "nonzero",
+    "fill": {
+      "kind": "solid",
+      "color": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "stroke": null,
+    "expectedGlyphs": 7,
+    "width": 128,
+    "height": 64,
+    "fontFamily": "kellySlab"
+  },
+  {
+    "name": "Authored Share Tech Mono Glyph Paint",
+    "content": "AV O 12",
+    "x": 4,
+    "y": 3,
+    "size": 20,
+    "transform": [
+      1,
+      0,
+      0.18,
+      1,
+      0,
+      0
+    ],
+    "fillRule": "nonzero",
+    "fill": {
+      "kind": "solid",
+      "color": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "stroke": null,
+    "expectedGlyphs": 7,
+    "width": 128,
+    "height": 64,
+    "fontFamily": "shareTechMono"
+  },
+  {
+    "name": "Authored Noto Emoji Glyph Paint",
+    "content": "😀",
+    "x": 4,
+    "y": 3,
+    "size": 20,
+    "transform": [
+      1,
+      0,
+      0.18,
+      1,
+      0,
+      0
+    ],
+    "fillRule": "nonzero",
+    "fill": {
+      "kind": "solid",
+      "color": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "stroke": null,
+    "expectedGlyphs": 1,
+    "width": 128,
+    "height": 64,
+    "fontFamily": "notoEmoji"
+  },
+  {
+    "name": "Canonical Source Glyph Paint",
+    "content": "ÄV ö",
+    "x": 4,
+    "y": 3,
+    "size": 20,
+    "transform": [
+      1,
+      0,
+      0.18,
+      1,
+      0,
+      0
+    ],
+    "fillRule": "nonzero",
+    "fill": {
+      "kind": "solid",
+      "color": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "stroke": null,
+    "expectedGlyphs": 4,
+    "width": 128,
+    "height": 64,
+    "fontFamily": "anta"
+  },
+  {
+    "name": "Across Grapheme Ligature Scene",
+    "content": "fi ffi office",
+    "x": 4,
+    "y": 3,
+    "size": 20,
+    "transform": [
+      1,
+      0,
+      0.18,
+      1,
+      0,
+      0
+    ],
+    "fillRule": "nonzero",
+    "fill": {
+      "color": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "kind": "solid"
+    },
+    "stroke": null,
+    "expectedGlyphs": 10,
+    "width": 128,
+    "height": 64,
+    "fontFamily": "anta"
+  },
+  {
+    "name": "Joined Emoji Profession Scene",
+    "content": "👩‍💻",
+    "x": 4,
+    "y": 3,
+    "size": 20,
+    "transform": [
+      1,
+      0,
+      0.18,
+      1,
+      0,
+      0
+    ],
+    "fillRule": "nonzero",
+    "fill": {
+      "color": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "kind": "solid"
+    },
+    "stroke": null,
+    "expectedGlyphs": 1,
+    "width": 128,
+    "height": 64,
+    "fontFamily": "notoEmoji",
+    "oracleFace": "people",
+    "oracleGlyphs": [
+      152
+    ]
+  },
+  {
+    "name": "Original Positioned Mark Scene",
+    "content": "A͏̀",
+    "x": 4,
+    "y": 3,
+    "size": 20,
+    "transform": [
+      1,
+      0,
+      0.18,
+      1,
+      0,
+      0
+    ],
+    "fillRule": "nonzero",
+    "fill": {
+      "color": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "kind": "solid"
+    },
+    "stroke": null,
+    "expectedGlyphs": 2,
+    "width": 128,
+    "height": 64,
+    "fontFamily": "anta",
+    "oracleFace": "latin",
+    "oracleGlyphs": [
+      1,
+      214
+    ],
+    "oraclePositions": [
+      [
+        1361,
+        0,
+        0
+      ],
+      [
+        0,
+        -978,
+        374
+      ]
+    ]
+  },
+  {
+    "name": "Regional Context Scene",
+    "content": "🇩🇪🇺🇸",
+    "x": 4,
+    "y": 3,
+    "size": 20,
+    "transform": [
+      1,
+      0,
+      0.18,
+      1,
+      0,
+      0
+    ],
+    "fillRule": "nonzero",
+    "fill": {
+      "color": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "kind": "solid"
+    },
+    "stroke": null,
+    "expectedGlyphs": 2,
+    "width": 128,
+    "height": 64,
+    "fontFamily": "notoEmoji",
+    "oracleFace": "regions",
+    "oracleGlyphs": [
+      148,
+      324
+    ],
+    "oraclePositions": [
+      [
+        2600,
+        0,
+        0
+      ],
+      [
+        2600,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "name": "Unsupported Country Context Scene",
+    "content": "🇦🇦",
+    "x": 4,
+    "y": 3,
+    "size": 20,
+    "transform": [
+      1,
+      0,
+      0.18,
+      1,
+      0,
+      0
+    ],
+    "fillRule": "nonzero",
+    "fill": {
+      "color": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "kind": "solid"
+    },
+    "stroke": null,
+    "expectedGlyphs": 1,
+    "width": 128,
+    "height": 64,
+    "fontFamily": "notoEmoji",
+    "oracleFace": "regions",
+    "oracleGlyphs": [
+      337
+    ],
+    "oraclePositions": [
+      [
+      2600,
+      0,
+      0
+      ]
+    ]
+  },
+  {"name":"Original Right Direction Glyph Scene","content":"\u202eAV\u202c","oracleText":"AV","oracleDirection":"rtl","x":4,"y":3,"size":20,"transform":[1,0,0.18,1,0,0],"fillRule":"nonzero","fill":{"kind":"solid","color":[0,0,0,1]},"stroke":null,"expectedGlyphs":2,"width":128,"height":64,"fontFamily":"anta","oracleFace":"latin","oracleGlyphs":[53,1],"oraclePositions":[[1171,0,0],[1361,0,0]]},
+  {"name":"Original Right Direction Ligature Scene","content":"\u202eif\u202c","oracleText":"if","oracleDirection":"rtl","x":4,"y":3,"size":20,"transform":[1,0,0.18,1,0,0],"fillRule":"nonzero","fill":{"kind":"solid","color":[0,0,0,1]},"stroke":null,"expectedGlyphs":1,"width":128,"height":64,"fontFamily":"anta","oracleFace":"latin","oracleGlyphs":[119],"oraclePositions":[[1175,0,0]]},
+  {"name":"Original Mirrored Direction Glyph Scene","content":"\u202e(AV)\u202c","oracleText":"(AV)","oracleDirection":"rtl","x":4,"y":3,"size":20,"transform":[1,0,0.18,1,0,0],"fillRule":"nonzero","fill":{"kind":"solid","color":[0,0,0,1]},"stroke":null,"expectedGlyphs":4,"width":128,"height":64,"fontFamily":"anta","oracleFace":"latin","oracleGlyphs":[166,53,1,167],"oraclePositions":[[677,0,0],[1171,0,0],[1361,0,0],[677,0,0]]}
+]

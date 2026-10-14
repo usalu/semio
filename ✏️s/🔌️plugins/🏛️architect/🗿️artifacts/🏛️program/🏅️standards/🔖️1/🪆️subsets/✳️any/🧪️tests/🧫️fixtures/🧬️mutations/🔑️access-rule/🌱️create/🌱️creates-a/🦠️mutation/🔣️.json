@@ -1,0 +1,39 @@
+{
+  "mutation": "createAccessRule",
+  "accessRule": {
+    "id": "access-rule-a",
+    "name": "Access Rule A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "subjectIds": [],
+    "resourceIds": [],
+    "accessLevel": "public",
+    "accessMode": "unrestricted",
+    "authentication": [],
+    "authorization": [],
+    "timeRestrictions": [],
+    "escortPolicy": null,
+    "visitorPolicy": null,
+    "emergencyOverride": false,
+    "auditRequired": false,
+    "badgeRequired": false,
+    "biometricRequired": false,
+    "zoneIds": [],
+    "exceptions": [],
+    "regulatoryBasis": [],
+    "enforcementMethod": null,
+    "revocationPolicy": null,
+    "trainingRequired": false,
+    "ownerId": null
+  }
+}

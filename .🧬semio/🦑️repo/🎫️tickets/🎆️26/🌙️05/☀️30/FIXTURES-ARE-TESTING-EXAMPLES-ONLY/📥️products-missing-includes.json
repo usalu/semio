@@ -1,0 +1,112 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️peer/🦀️.rs",
+    "from": "../../../../../🔨️modules/📡️replication/🧫️fixtures/👥️presence-peer-codec-v1/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/🧫️fixtures/👥️presence-peer-codec-v1/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs",
+    "from": "../../../../../../🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧫️fixtures/📄️pages/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧫️fixtures/📄️pages/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-owned-media-error/🦀️.rs",
+    "from": "../../../../../../🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🎞️intrinsic-media/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🎞️intrinsic-media/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🚦️control/🧪️tests/🦀️.rs",
+    "from": "../🧫️fixtures/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🚦️control/🧫️fixtures/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🚦️control/🧪️tests/🦀️.rs",
+    "from": "../🧫️fixtures/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🚦️control/🧫️fixtures/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔎️scalar-witness/🧪️tests/🔎️scalar-witness/🦀️.rs",
+    "from": "../../🧫️fixtures/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔎️scalar-witness/🧫️fixtures/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧪️tests/🚦️refusals/🦀️.rs",
+    "from": "../../🧫️fixtures/🚦️refusals/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🚦️refusals/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔬️schema-hash/🦀️.rs",
+    "from": "../../🧫️fixtures/🔑️schema-hash/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🔑️schema-hash/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs",
+    "from": "../../../../🎒️pack/🚦️control/🧫️fixtures/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🚦️control/🧫️fixtures/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🔬️mutation-source-authority/🦀️.rs",
+    "from": "../../../../../../../🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs",
+    "from": "../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs",
+    "from": "../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs",
+    "from": "../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs",
+    "from": "../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🔐️authority/🧪️tests/🔐️authority/🦀️.rs",
+    "from": "../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🔐️topology-authority/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🔐️topology-authority/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📡️live/🧪️tests/📡️live/🦀️.rs",
+    "from": "../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📡️live/🧪️tests/📡️live/🦀️.rs",
+    "from": "../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/♻️retirement/🧪️tests/♻️retirement/🦀️.rs",
+    "from": "../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/♻️retirement/🧪️tests/♻️retirement/🦀️.rs",
+    "from": "../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/♻️retirement/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/♻️retirement/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📖️capture/🧪️tests/📖️capture/🦀️.rs",
+    "from": "../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔬️schema-hash/💰️storage/🦀️.rs",
+    "from": "../../../../../../../../🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🔑️schema-hash/💰️storage/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🔑️schema-hash/💰️storage/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs",
+    "from": "../../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json",
+    "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json"
+  }
+]

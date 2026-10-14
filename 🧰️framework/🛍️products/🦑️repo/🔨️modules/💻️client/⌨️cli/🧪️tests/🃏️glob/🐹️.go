@@ -10,7 +10,7 @@ import (
 
 // 🃏️ TestCanonicalFixtureGlob verifies policy scope selection against shared path examples.
 func TestCanonicalFixtureGlob(t *testing.T) {
-	data, err := os.ReadFile(filepath.Join(GetRootDir(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🃏️glob/🔣️.json"))
+	data, err := os.ReadFile(filepath.Join(GetRootDir(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧪️tests/🧫️fixtures/🃏️glob/🔣️.json"))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -4,9 +4,9 @@ use crate::{Axis, Entry, MaterialPatch, ModelDiff, Point2, StoreyPatch, Wall, Wa
 use protocol::{Inference, InferredField};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const HOUSE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
-const FULL: &str = include_str!("../../../../../🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
-const JOINS: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json");
+const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
+const FULL: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
+const JOINS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json");
 
 fn decode(text: &str) -> ModelSnapshot {
     from_json_str(text, JsonMemberPolicy::Reject).expect("the snapshot decodes")

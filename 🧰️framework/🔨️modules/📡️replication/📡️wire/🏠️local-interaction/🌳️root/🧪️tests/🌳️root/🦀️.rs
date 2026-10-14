@@ -1,7 +1,7 @@
 use super::*;
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap() }
-fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../../../🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
+fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap() }
 
 #[test]
 fn local_interaction_root_composes_real_typed_payload_and_physical_retirement() {

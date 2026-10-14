@@ -15,7 +15,7 @@ static OBSERVED_SYSTEM:ObservedSystem=ObservedSystem;
 
 #[test]
 fn flow_all_widget_fields_close_under_independent_work_birth_release_and_depth() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧬️fields/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧬️fields/🔣️.json")).unwrap();
     let expected=fixture["expectedCopyBytes"].as_u64().unwrap()as usize;
     assert_eq!(fixture["ownedStrings"].as_array().unwrap().iter().map(|text|text.as_str().unwrap().len()).sum::<usize>(),expected);
     for copy in fixture["copyGrants"].as_array().unwrap() {

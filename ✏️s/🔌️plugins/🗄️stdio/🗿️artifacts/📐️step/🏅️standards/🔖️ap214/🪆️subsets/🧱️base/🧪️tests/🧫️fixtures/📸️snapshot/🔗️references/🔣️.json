@@ -1,0 +1,191 @@
+{
+  "cases": [
+    {
+      "id": "empty",
+      "entities": [],
+      "error": null
+    },
+    {
+      "id": "forward",
+      "entities": [
+        {
+          "id": 10,
+          "name": "THING",
+          "args": [
+            {
+              "reference": 20
+            }
+          ],
+          "complex": []
+        },
+        {
+          "id": 20,
+          "name": "THING",
+          "args": [],
+          "complex": []
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "self-cycle",
+      "entities": [
+        {
+          "id": 10,
+          "name": "THING",
+          "args": [
+            {
+              "reference": 10
+            }
+          ],
+          "complex": []
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "mutual-cycle",
+      "entities": [
+        {
+          "id": 10,
+          "name": "THING",
+          "args": [
+            {
+              "reference": 20
+            }
+          ],
+          "complex": []
+        },
+        {
+          "id": 20,
+          "name": "THING",
+          "args": [
+            {
+              "reference": 10
+            }
+          ],
+          "complex": []
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "missing-direct",
+      "entities": [
+        {
+          "id": 10,
+          "name": "THING",
+          "args": [
+            {
+              "reference": 99
+            }
+          ],
+          "complex": []
+        }
+      ],
+      "error": {
+        "code": "mutation.apply.dangling-reference",
+        "target": [
+          "entities",
+          "10",
+          "args",
+          "0"
+        ]
+      }
+    },
+    {
+      "id": "missing-nested",
+      "entities": [
+        {
+          "id": 10,
+          "name": "THING",
+          "args": [
+            {
+              "aggregate": [
+                {
+                  "typedValue": {
+                    "typeName": "SELECT",
+                    "value": {
+                      "reference": 99
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "complex": []
+        }
+      ],
+      "error": {
+        "code": "mutation.apply.dangling-reference",
+        "target": [
+          "entities",
+          "10",
+          "args",
+          "0",
+          "0",
+          "value"
+        ]
+      }
+    },
+    {
+      "id": "missing-complex",
+      "entities": [
+        {
+          "id": 10,
+          "name": "THING",
+          "args": [],
+          "complex": [
+            {
+              "name": "EXTRA",
+              "args": [
+                {
+                  "reference": 99
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "error": {
+        "code": "mutation.apply.dangling-reference",
+        "target": [
+          "entities",
+          "10",
+          "complex",
+          "0",
+          "args",
+          "0"
+        ]
+      }
+    },
+    {
+      "id": "duplicate-priority",
+      "entities": [
+        {
+          "id": 10,
+          "name": "THING",
+          "args": [
+            {
+              "reference": 99
+            }
+          ],
+          "complex": []
+        },
+        {
+          "id": 10,
+          "name": "THING",
+          "args": [],
+          "complex": []
+        }
+      ],
+      "error": {
+        "code": "mutation.apply.duplicate-entity-id",
+        "target": [
+          "entities",
+          "10"
+        ]
+      }
+    }
+  ]
+}

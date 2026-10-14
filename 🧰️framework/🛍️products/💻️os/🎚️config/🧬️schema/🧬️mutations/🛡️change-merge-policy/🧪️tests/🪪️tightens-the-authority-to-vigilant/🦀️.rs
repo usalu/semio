@@ -16,11 +16,11 @@
 
 use super::{MergePolicyConfigMutation, MergePolicyDiff, MergePolicySetting};
 
-const BEFORE: &str = include_str!("../../🧫️fixtures/🪪️tightens-the-authority-to-vigilant/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../🧫️fixtures/🪪️tightens-the-authority-to-vigilant/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../🧫️fixtures/🪪️tightens-the-authority-to-vigilant/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../🧫️fixtures/🪪️tightens-the-authority-to-vigilant/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../🧫️fixtures/🪪️tightens-the-authority-to-vigilant/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/🎯️outcome/🔣️.json");
 
 fn before() -> MergePolicySetting {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before merge-policy setting decodes")

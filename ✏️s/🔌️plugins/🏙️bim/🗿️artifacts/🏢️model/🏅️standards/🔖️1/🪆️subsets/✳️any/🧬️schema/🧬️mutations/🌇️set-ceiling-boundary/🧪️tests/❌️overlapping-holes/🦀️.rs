@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🌇️set-ceiling-boundary/❌️overlapping-holes",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/❌️overlapping-holes/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/❌️overlapping-holes/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/❌️overlapping-holes/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/❌️overlapping-holes/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/❌️overlapping-holes/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/❌️overlapping-holes/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/❌️overlapping-holes/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/❌️overlapping-holes/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/❌️overlapping-holes/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/❌️overlapping-holes/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

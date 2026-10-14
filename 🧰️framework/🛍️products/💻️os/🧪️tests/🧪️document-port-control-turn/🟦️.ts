@@ -17,7 +17,7 @@ type Answer = "receipt" | "stale" | "refused" | "absent" | "twice" | "damaged" |
 type Step = "bind" | "retire";
 type Case = { readonly id: string; readonly answers: readonly Answer[]; readonly steps: readonly Step[]; readonly outcomes: readonly string[]; readonly controls: readonly string[]; readonly told: readonly string[] };
 
-const fixtures = new URL("🧫️fixtures/", import.meta.url);
+const fixtures = new URL("🧪️tests/🧫️fixtures", import.meta.url);
 const corpus = JSON.parse(readFileSync(new URL("🔣️.json", fixtures), "utf8")) as { readonly cases: readonly Case[] };
 const owner = { runtimeKey: "board.ports.directed.v1", clientInstanceId: "client-a", scope: null, actorId: "actor-1", activationGeneration: 1n, instanceId: 4 } as const;
 const limits = { messageBytes: 1_024, pendingBytes: 4_096, pendingMessages: 8 };
@@ -149,7 +149,7 @@ test("over arbitrary answers and steps every step settles, a failed bind tells i
 
 test("the control maps are the golden wire bytes the Rust law pins too", () => {
   type Row = { readonly id: string; readonly value: Omit<DocumentBackboneControlV1, "bindingGeneration"> & { readonly bindingGeneration: string }; readonly hex: string };
-  const binding = JSON.parse(readFileSync(new URL("../../🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as { readonly codec: { readonly control: readonly Row[] } };
+  const binding = JSON.parse(readFileSync(new URL("../../🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as { readonly codec: { readonly control: readonly Row[] } };
   const hex = (bytes: Uint8Array): string => Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
   const rows = binding.codec.control;
   expect(rows.map((row) => `${row.value.schema.endsWith("receipt.v1") ? "receipt" : "command"}:${row.value.operation}`).sort()).toEqual(expect.arrayContaining(["command:bind", "command:retire", "receipt:bound", "receipt:refused", "receipt:retired"]));

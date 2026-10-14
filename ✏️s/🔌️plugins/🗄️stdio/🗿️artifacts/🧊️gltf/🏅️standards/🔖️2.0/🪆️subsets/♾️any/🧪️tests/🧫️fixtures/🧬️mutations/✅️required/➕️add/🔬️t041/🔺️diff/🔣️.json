@@ -1,0 +1,12 @@
+{
+  "extensionsRequired": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 0,
+        "row": "KHR_materials_unlit"
+      }
+    ],
+    "moved": []
+  }
+}

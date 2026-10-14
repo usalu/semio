@@ -1,0 +1,28 @@
+{
+  "artifact": null,
+  "attractions": null,
+  "domain": null,
+  "meta": {
+    "kindCatalogs": {
+      "attractions": [],
+      "cables": [],
+      "objects": [],
+      "vortices": [
+        {
+          "color": "#3366ff",
+          "compatibleWith": [
+            "vortex-kind-b"
+          ],
+          "defaultCableKind": "cable-kind-a",
+          "description": "Alpha port",
+          "icon": "circle",
+          "id": "vortex-kind-a"
+        }
+      ]
+    }
+  },
+  "objects": null,
+  "references": null,
+  "schema": null,
+  "targetVolumes": null
+}

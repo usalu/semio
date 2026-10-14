@@ -28,11 +28,11 @@ type FixtureSection = { readonly id: string; readonly label?: string; readonly i
 type FixtureRect = { readonly path: readonly string[]; readonly x: number; readonly y: number; readonly width: number; readonly height: number };
 type FixtureCase = { readonly name: string; readonly treeWidth: number; readonly treeHeight: number; readonly tree: { readonly sections: readonly FixtureSection[] }; readonly rects: readonly FixtureRect[] };
 
-const law = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/🌳️tree-row-rects/🔣️.json"), "utf8")) as {
+const law = JSON.parse(readFileSync(resolve(uiRoot, "🧪️tests/🧫️fixtures/🌳️tree-row-rects/🔣️.json"), "utf8")) as {
   readonly metrics: { readonly rowHeightPx: number; readonly uiSpacingCompactPx: number; readonly treeRowUiSpacing: number };
   readonly cases: readonly FixtureCase[];
 };
-const density = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/🌳️tree-row-density/🔣️.json"), "utf8")) as {
+const density = JSON.parse(readFileSync(resolve(uiRoot, "🧪️tests/🧫️fixtures/🌳️tree-row-density/🔣️.json"), "utf8")) as {
   readonly rowHeightPx: number;
   readonly rowIconPx: number;
   readonly intrinsicContentHeightPx: number;

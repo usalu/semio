@@ -5,7 +5,7 @@ import { resolveWgpuBootDescriptor, type WgpuBootOverrides } from "../../🎯️
 
 interface SelectionCase { readonly id: string; readonly input: { readonly modules: readonly { readonly pluginId: string }[]; readonly baseUrl: string; readonly hash?: string; readonly overrides?: WgpuBootOverrides }; readonly expected: { readonly variant: string; readonly selection: "all" | "variant" } }
 
-const fixtures: readonly SelectionCase[] = JSON.parse(readFileSync(new URL("../../🧬️schema/🧪️tests/🧩️embedded-selection/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+const fixtures: readonly SelectionCase[] = JSON.parse(readFileSync(new URL("../🧫️fixtures/🧩️embedded-selection/🔣️.json", import.meta.url), "utf8"));
 
 describe("Explicit embedded contribution selection", () => {
   it("preserves contribution and override inputs during selection", () => {

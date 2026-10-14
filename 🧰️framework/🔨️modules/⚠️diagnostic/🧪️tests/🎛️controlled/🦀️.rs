@@ -3,7 +3,7 @@ use semio_framework_value::{NativeDecodeControl, NativeEncodeControl, Number};
 use std::{io::Write, process::{Command, Stdio}};
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🎛️controlled/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🎛️controlled/🔣️.json")).unwrap()
 }
 
 fn refusal(error: semio_framework_value::ValueError, operation: &str) {
@@ -126,7 +126,7 @@ fn controlled_diagnostic_long_text_lists_and_interior_cancellation() {
     let cutoff = stress["cancelAt"].as_u64().unwrap() as usize;
     let message = stress["text"].as_str().unwrap().repeat(stress["textRepetitions"].as_u64().unwrap() as usize);
     let mut fault = Fault::new(FaultOrigin::Framework, "framework.controlled", message);
-    fault.causes = (0..count).map(|index| FaultCause { message: index.to_string(), code: Some(FaultCode::new("cause")) }).collect();
+    fault.causes = (0..count).map(|index| FaultCause { retained_progress:None, message: index.to_string(), code: Some(FaultCode::new("cause")) }).collect();
     let value = fault.to_value(); let mut accept = |_| true;
     let decoded = Fault::from_value_controlled(&value, &mut NativeDecodeControl::new(maximum, &mut accept)).unwrap();
     assert_eq!(decoded, fault);

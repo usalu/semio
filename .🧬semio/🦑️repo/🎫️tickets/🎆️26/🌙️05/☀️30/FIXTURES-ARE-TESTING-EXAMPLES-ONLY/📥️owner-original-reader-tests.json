@@ -1,0 +1,12 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🖼️runtime-taxonomy-asset-paths/🟦️.ts",
+    "before": "00c8a29b5d8857ccc140360c2cb3bd8cc2aba6e0d6d0744672feb1a18653e5fc",
+    "after": "7ded8de1a53bbf4c8aca4c10733bbece4a6882d2eb2785aa1270108b314da510"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/👀️readme-reviewed-fixture-inputs/🟦️.ts",
+    "after": "143be2070ed8d83107f6015af481c38320c9cf620c9e2f01715a14023b69a09f",
+    "qualification": "Fresh guarded rewrite was completed; before-digest instrumentation failed after write; original plain manifest/source/expectation payloads remain untouched"
+  }
+]

@@ -45,7 +45,7 @@ import {
   type QuizConnection,
   type RefreshOutcome,
 } from "@semio-tech/quiz-react";
-import limits from "../../🧫️fixtures/🚦️rate-limits/🔣️.json";
+import limits from "../🧫️fixtures/🚦️rate-limits/🔣️.json";
 
 interface Fixture {
   readonly retryAfter: { readonly capMs: number; readonly now: string; readonly headers: readonly { readonly header: string | null; readonly ms: number | null }[] };

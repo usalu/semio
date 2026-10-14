@@ -8,11 +8,11 @@ fn fixture()->Json{semio_repo_test_host::parse_json(include_str!("🔣️.json")
 
 #[test]
 fn oracle_owned_recipe_pairs_match_independently_generated_samples(){
- let before=include_bytes!("../../../🧫️fixtures/🎨️paint-region-applied/⬅️before.tiff");
+ let before=include_bytes!("../../../🧪️tests/🧫️fixtures/🎨️paint-region-applied/⬅️before.tiff");
  let revision=oracle_revision(&read_tiff(before).unwrap()).unwrap();
  for(kind,params,expected)in[
-  ("paint-region",format!(r#"{{"revision":"{revision}","ifdIndex":0,"x":1,"y":1,"width":1,"height":1,"red":9,"green":8,"blue":7,"alpha":255}}"#),include_bytes!("../../../🧫️fixtures/🎨️paint-region-applied/➡️after.tiff").as_slice()),
-  ("replace-samples",r#"{"ifdIndex":0,"block":0,"offset":0,"samples":[{"lo":24,"hi":0},{"lo":96,"hi":0},{"lo":192,"hi":0}]}"#.into(),include_bytes!("../../../🧫️fixtures/🧮️replace-samples-applied/➡️after.tiff").as_slice())
+  ("paint-region",format!(r#"{{"revision":"{revision}","ifdIndex":0,"x":1,"y":1,"width":1,"height":1,"red":9,"green":8,"blue":7,"alpha":255}}"#),include_bytes!("../../../🧪️tests/🧫️fixtures/🎨️paint-region-applied/➡️after.tiff").as_slice()),
+  ("replace-samples",r#"{"ifdIndex":0,"block":0,"offset":0,"samples":[{"lo":24,"hi":0},{"lo":96,"hi":0},{"lo":192,"hi":0}]}"#.into(),include_bytes!("../../../🧪️tests/🧫️fixtures/🧮️replace-samples-applied/➡️after.tiff").as_slice())
  ]{
   let spec=Json::Object(vec![("kind".into(),Json::String(kind.into())),("params".into(),semio_repo_test_host::parse_json(&params).unwrap())]);
   let after=oracle_apply_mutation(before,&spec).unwrap();

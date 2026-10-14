@@ -1,0 +1,2122 @@
+{
+  "changes": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🦀️.rs",
+      "beforeSha256": "60697f0f09708efe85c9f02bba33ddef0225c105d104a588ec5819096109de5c",
+      "afterSha256": "cac2cdbc14822f3811f2f8832c0610fffb11e8731024972ea8402c3203a4f2d0",
+      "edits": [
+        {
+          "start": 11893,
+          "end": 11948,
+          "from": "../../../🧵️job/📬️outcome/🤝️loan/🧫️fixtures/🔣️.json",
+          "to": "../../../🧵️job/📬️outcome/🤝️loan/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 9198,
+          "end": 9253,
+          "from": "../../../🧵️job/📬️outcome/🤝️loan/🧫️fixtures/🔣️.json",
+          "to": "../../../🧵️job/📬️outcome/🤝️loan/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 5148,
+          "end": 5203,
+          "from": "../../../🧵️job/📬️outcome/🤝️loan/🧫️fixtures/🔣️.json",
+          "to": "../../../🧵️job/📬️outcome/🤝️loan/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🖥️host/🧪️tests/🔬️window-unit/🦀️.rs",
+      "beforeSha256": "cca9f90b96700bc3247de857bd7f95fb82c12340afba68f2613b98750229ccad",
+      "afterSha256": "f47c24163534f8001cd94aaa2b2b379b6a5935ab928d95fbd3ab6647cd270f54",
+      "edits": [
+        {
+          "start": 31281,
+          "end": 31339,
+          "from": "../../../../🧵️job/📬️outcome/🤝️loan/🧫️fixtures/🔣️.json",
+          "to": "../../../../🧵️job/📬️outcome/🤝️loan/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 28533,
+          "end": 28591,
+          "from": "../../../../🧵️job/📬️outcome/🤝️loan/🧫️fixtures/🔣️.json",
+          "to": "../../../../🧵️job/📬️outcome/🤝️loan/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 24311,
+          "end": 24369,
+          "from": "../../../../🧵️job/📬️outcome/🤝️loan/🧫️fixtures/🔣️.json",
+          "to": "../../../../🧵️job/📬️outcome/🤝️loan/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🔨️modules/🛡️admin/🧪️tests/🔬️dist-assets-bll2-7qi-unit/🦀️.rs",
+      "beforeSha256": "58f0458b353ef059bce1f4be46699c1557a219e9de371803d4b7ad18efa94a9d",
+      "afterSha256": "ce6bbbe0471909ff3cb1409d25023b8001604ddc3099173f076958a46f6f36c5",
+      "edits": [
+        {
+          "start": 3310,
+          "end": 3390,
+          "from": "../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json",
+          "to": "../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🧪️tests/🔬️reconcile-unit/🦀️.rs",
+      "beforeSha256": "7c8105582cc8ab36ae5bc4bc39ab03f76b8a62c93e94c782b9891627a414e412",
+      "afterSha256": "6db6b9e57e819d84e712dc687fccca3a0594dcda7073cdf05849683be3741296",
+      "edits": [
+        {
+          "start": 5074,
+          "end": 5127,
+          "from": "../../../../🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json",
+          "to": "../../../../🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🧪️tests/⏱️budget/🦀️.rs",
+      "beforeSha256": "dd85ebbb61d5cfb6955a85f9e1529493efaf0a57110ac7fb62b70e46d6ddb933",
+      "afterSha256": "590b2c920bbb7aaa722b7f51f701ca00b891e3faca3102c85a4bde4d172aba0d",
+      "edits": [
+        {
+          "start": 33147,
+          "end": 33205,
+          "from": "../../../⏱️context/📦️owner/⚠️failure/🧫️fixtures/🔣️.json",
+          "to": "../../../⏱️context/📦️owner/⚠️failure/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 27226,
+          "end": 27252,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 3424,
+          "end": 3450,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/👷️authority/🧪️tests/🟦️.ts",
+      "beforeSha256": "c553ec6533c2768c4441bca0bb6e24e1359cdb3ba912b36793367e6d2ac2f7a3",
+      "afterSha256": "496d4495a8ebeeb96c0948cc3f783fa2fcac031d3fd4e0715de9c5791725d32a",
+      "edits": [
+        {
+          "start": 5930,
+          "end": 5953,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 4004,
+          "end": 4027,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 2821,
+          "end": 2844,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 412,
+          "end": 435,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/👷️authority/🧪️tests/🦀️.rs",
+      "beforeSha256": "0b4ac09c066be714d737356cc978288975f222c17da843099e953bf4317fa979",
+      "afterSha256": "3f76f2648271b57092134d7d85115d7fcbaf2230e2947e1ff0e822baff011582",
+      "edits": [
+        {
+          "start": 21601,
+          "end": 21678,
+          "from": "../../../👷️worker/🚪️admission/🚚️staged/📦️destination/🧫️fixtures/🔣️.json",
+          "to": "../../../👷️worker/🚪️admission/🚚️staged/📦️destination/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 18950,
+          "end": 19012,
+          "from": "../../../👷️worker/🚪️admission/🚚️staged/🧫️fixtures/🔣️.json",
+          "to": "../../../👷️worker/🚪️admission/🚚️staged/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 5431,
+          "end": 5454,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/🔔️wake/🧪️tests/🟦️.ts",
+      "beforeSha256": "8630bd903dbd463b68124b85d58e4801628b44c7951d45808a0ea53b961e9e77",
+      "afterSha256": "60aef6e224dd224bb2b059ddf48264ecda53518853af5bc909f4f64d09d9cc69",
+      "edits": [
+        {
+          "start": 402,
+          "end": 425,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/🔔️wake/🧪️tests/🦀️.rs",
+      "beforeSha256": "d57f36f472209ca70dc39019b134878faea2bb0c5b7429c97964461812bfc9ea",
+      "afterSha256": "38500dd9d0888897b3ed0d4821a6f15c5225f9917cc121a9d28d85d0b603ee9b",
+      "edits": [
+        {
+          "start": 820,
+          "end": 843,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🧪️tests/🟦️.ts",
+      "beforeSha256": "105751aaf0aaeb20ba69eae7809e1ff62b67ffc5eb6e0bff3c2f082bf9d5ae27",
+      "afterSha256": "8602f7c10fc4353afb14598f1c7c40034dbb4630150b490a69a15ed9f658e71c",
+      "edits": [
+        {
+          "start": 6358,
+          "end": 6381,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 4121,
+          "end": 4144,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 1962,
+          "end": 1985,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 418,
+          "end": 441,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🧪️tests/🦀️.rs",
+      "beforeSha256": "493859c20051376c492fd5f2d593123070e665f114e1400bedd4ae7e913dd68e",
+      "afterSha256": "b463e48dfde8eebd5aa3ea53b6e61d9ba4df223247aa3a3b0415579a63b9bb67",
+      "edits": [
+        {
+          "start": 11398,
+          "end": 11421,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 7882,
+          "end": 7905,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 3194,
+          "end": 3217,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🔭️preview/🎟️drive/🧪️tests/🟦️.ts",
+      "beforeSha256": "67701cce29dab1a02e2c5e3d20f38725900f11893b3a36fa224f830e5cb03f56",
+      "afterSha256": "8610c73e8f52f53e9bf5b96d7d8636dbd19920a72524c80755e35829d176d45c",
+      "edits": [
+        {
+          "start": 365,
+          "end": 388,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🔭️preview/🎟️drive/🧪️tests/🦀️.rs",
+      "beforeSha256": "eee9524c521f9ec813608c6d7ffc9021ae632a0faba627d3b1f0a42d771cbe54",
+      "afterSha256": "22677596f1586fcfe178028ba4df50098b31682a6852ce8c1a5dd06ecf034d6a",
+      "edits": [
+        {
+          "start": 4460,
+          "end": 4483,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🧪️tests/🟦️.ts",
+      "beforeSha256": "62a9c6e0473e70798031b664a94b42f3be38eff37d561f3e59647256791c1bf5",
+      "afterSha256": "fd45f998de5188ac52a75a7c6f53be4625d6a70f0a3f9de1f9c84b2858df0271",
+      "edits": [
+        {
+          "start": 2675,
+          "end": 2717,
+          "from": "../🤝️acknowledgement/🧫️fixtures/🔣️.json",
+          "to": "../🤝️acknowledgement/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 520,
+          "end": 543,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🧪️tests/🦀️.rs",
+      "beforeSha256": "bd9c020d8786746c216d5f76766bcb139e27468f44e986fb3a8b2bab994553df",
+      "afterSha256": "0ec4cd5fe23b87a31392253705ca2252a7f72f0273b06d5bd9312e53e9a042ec",
+      "edits": [
+        {
+          "start": 470,
+          "end": 493,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🧪️tests/🟦️.ts",
+      "beforeSha256": "cf869bb8d23b81b109b77e53d29109cbdeef32ec5fde722265ba3d14e775e5d4",
+      "afterSha256": "02e4eeefa04fb3a3cff29f26d8af59ae7e32510172cb933589bb00eb2b14285b",
+      "edits": [
+        {
+          "start": 470,
+          "end": 493,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🧪️tests/🦀️.rs",
+      "beforeSha256": "6f0629286c773b1c9bca9f3fcef68b922f426856fcc27320cb254631889b027b",
+      "afterSha256": "03c11cc79883c74bf888f60b993bd755a3af203f0e7d0aa7ea13f5036eef47f2",
+      "edits": [
+        {
+          "start": 426,
+          "end": 449,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/🧪️tests/🟦️.ts",
+      "beforeSha256": "7510264805feb9d679677cad4f250681e6a46e99225a25c7e29d42ea310f3759",
+      "afterSha256": "b713fc59c97190679dfa7e802b566bd2f8bf34dde8426a08a97e82d2b5eaa593",
+      "edits": [
+        {
+          "start": 460,
+          "end": 480,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/🧪️tests/🦀️.rs",
+      "beforeSha256": "e06190f88b1e5db47b49e59a01d1b474ecc7dd854a2f696d089c0915c1316620",
+      "afterSha256": "3773d8c89e0bc56aebb73ecd16ed391165afcb575f78dfcc2cc14e7ff7be1516",
+      "edits": [
+        {
+          "start": 838,
+          "end": 861,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📖️source/🧪️tests/🟦️.ts",
+      "beforeSha256": "a65f7b4b4c9bc3b2026f7918b2806e77a3e8a778a4797e5cd6faf201677aa87d",
+      "afterSha256": "9380d1821b88a0efd7febe990de28ba93dd801f2f41267e13434bf0f59eb76e6",
+      "edits": [
+        {
+          "start": 359,
+          "end": 382,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧪️tests/🟦️.ts",
+      "beforeSha256": "d57ca7881f5c6f80bcd9107bcec30b41ef75a7baf8ebd12dade44cd840efef13",
+      "afterSha256": "17f5b428b41d3604ce8c2735ad4cc9f1e05f2740f071ef55bc1a0921773f029a",
+      "edits": [
+        {
+          "start": 3845,
+          "end": 3868,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 2429,
+          "end": 2452,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 422,
+          "end": 445,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧪️tests/🦀️.rs",
+      "beforeSha256": "f7661c582d19d51cbadb9fe5a8c5bbf237bbb8c94db8d928764690c9866cd187",
+      "afterSha256": "43c0fa3279de39c07beef964678dc71db04312ec10ec50ea7688dffe54026448",
+      "edits": [
+        {
+          "start": 10971,
+          "end": 11004,
+          "from": "../📏️extent/🧫️fixtures/🔣️.json",
+          "to": "../📏️extent/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 7059,
+          "end": 7082,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 490,
+          "end": 513,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📏️extent/🧪️tests/🟦️.ts",
+      "beforeSha256": "53a312f5fdf3294c9b3efc219f7040bab8df37455d7ff6457827571a2ea5b5fa",
+      "afterSha256": "43ef305f8f83ea0fe25932666916415a57fb3e15b46260e623a13f34cbe151f3",
+      "edits": [
+        {
+          "start": 353,
+          "end": 376,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧪️tests/🟦️.ts",
+      "beforeSha256": "188cedf2f05a28c37f177fce6514c6fcb75427dda25e13258f93c9213d7dd597",
+      "afterSha256": "79134ce1e8015b9ca52644b1c26609dc047638b848bc5ea792320e5d6718dcfe",
+      "edits": [
+        {
+          "start": 2569,
+          "end": 2627,
+          "from": "../../../👷️worker/🎟️turn/🤝️receipt/🧫️fixtures/🔣️.json",
+          "to": "../../../👷️worker/🎟️turn/🤝️receipt/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 568,
+          "end": 591,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧪️tests/🦀️.rs",
+      "beforeSha256": "5c5dabedc7c64a3c0c133b95c11876e8ee2025ac1229201c019de13a0c92e1cb",
+      "afterSha256": "ed720de426cfa2e3c2e0268b39b3c1272d3b7a03f8b02f6138d3fa59a6dc4d71",
+      "edits": [
+        {
+          "start": 2089,
+          "end": 2112,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/⚠️fault-binding/🧪️tests/🟦️.ts",
+      "beforeSha256": "3c197f04e6a1cbb1746713a40a0be8225f65954dc27093f39f2b8eabe4dcfccd",
+      "afterSha256": "1d4be998d187a00b7c2bba202ac74cf7078eb4c31973cac9b6e47c3cbe7adee7",
+      "edits": [
+        {
+          "start": 294,
+          "end": 317,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/⚠️fault-binding/🧪️tests/🦀️.rs",
+      "beforeSha256": "9524f3628bc1bad22b51f72ea925de611541a7dd58428b75ffe31a97be62ac27",
+      "afterSha256": "442dd64644e54f7063a4a2ec5d977387a3eab31c1836303e07327cd9d4fa529f",
+      "edits": [
+        {
+          "start": 266,
+          "end": 289,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️owner/🧪️tests/🟦️.ts",
+      "beforeSha256": "98c07b100a4b123aef2c50d041a8f17275ac03375deed99564ea5a1c232f8ea5",
+      "afterSha256": "76066f8f2e8b81f695a7c3966d511dd45ab91742a857e4c711365cc0703dd39a",
+      "edits": [
+        {
+          "start": 5022,
+          "end": 5055,
+          "from": "../⚠️failure/🧫️fixtures/🔣️.json",
+          "to": "../⚠️failure/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 2118,
+          "end": 2156,
+          "from": "../../../⏱️budget/🧫️fixtures/🔣️.json",
+          "to": "../../../⏱️budget/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 272,
+          "end": 295,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️owner/🧪️tests/🦀️.rs",
+      "beforeSha256": "e5d6368b7cffb63b02c61fdb921e4544ef6ffcca03e4f78be18bdcfffa5a5dd8",
+      "afterSha256": "6b25361907747478c9c4a8d23ff386a4589ef74f6a49ef42ad112fd54fdb7444",
+      "edits": [
+        {
+          "start": 254,
+          "end": 277,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🏃️work/🎟️grant/🧪️tests/🟦️.ts",
+      "beforeSha256": "4d3aca27aee0a5bc9d01ed3658a81780f2fdf22411d1d4597a3aab4bf1876f48",
+      "afterSha256": "685dd56a1eb1690a32ac8c0ee5c69517fff92faa7e517d61fbe63613884183cc",
+      "edits": [
+        {
+          "start": 130,
+          "end": 153,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🏃️work/🎟️grant/🧪️tests/🦀️.rs",
+      "beforeSha256": "d2987db6ab8d7ba41ce6824ad938b525d25c041c9836cfdbefbc889e09371e51",
+      "afterSha256": "06af48aa231b41696cb0bb50e65116c826567eb4dc3c017626cb66935f002b6d",
+      "edits": [
+        {
+          "start": 3620,
+          "end": 3643,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 873,
+          "end": 896,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🚚️staged/🎟️metadata/🧪️tests/🟦️.ts",
+      "beforeSha256": "1a01da2606d6ee9fee70d2ada5220565b9f441758f29b5f9ace24be4ac4722c6",
+      "afterSha256": "b721beda2d89b07d1d55274dde6a40cfac1d9423b6791ccac207968ad38a1970",
+      "edits": [
+        {
+          "start": 2202,
+          "end": 2225,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 344,
+          "end": 367,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🏗️preparation/🧪️tests/🟦️.ts",
+      "beforeSha256": "fbf5052dd91b44526392d87fb3591b54e31eaf782da1773c07569bead2c2b684",
+      "afterSha256": "9e887531866a014064856915cfe27011feab38880125b339d1b47d000bdc0a37",
+      "edits": [
+        {
+          "start": 2675,
+          "end": 2698,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 380,
+          "end": 403,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️turn/🧪️tests/🟦️.ts",
+      "beforeSha256": "efdf9b311ed6572ea0daea03239c5c3a5d3bc231e65ff7d3db653383c4fcd3f9",
+      "afterSha256": "84b95f1e6692d43ba28fc45ca8ff14887929724525420e773fe0a454de887748",
+      "edits": [
+        {
+          "start": 10138,
+          "end": 10202,
+          "from": "../../🚪️admission/🚚️staged/📦️destination/🧫️fixtures/🔣️.json",
+          "to": "../../🚪️admission/🚚️staged/📦️destination/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 8727,
+          "end": 8776,
+          "from": "../../🚪️admission/🚚️staged/🧫️fixtures/🔣️.json",
+          "to": "../../🚪️admission/🚚️staged/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 5739,
+          "end": 5788,
+          "from": "../../🚪️admission/🚚️staged/🧫️fixtures/🔣️.json",
+          "to": "../../🚪️admission/🚚️staged/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 4336,
+          "end": 4375,
+          "from": "../../🚪️admission/🧫️fixtures/🔣️.json",
+          "to": "../../🚪️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 2508,
+          "end": 2547,
+          "from": "../../🚪️admission/🧫️fixtures/🔣️.json",
+          "to": "../../🚪️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 388,
+          "end": 411,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️turn/🧪️tests/🦀️.rs",
+      "beforeSha256": "1e3b0b8487d29ea1ad7523947782e417f85c96ff28efe8918b0b0b968fc0a0ba",
+      "afterSha256": "04d5193fbed49ee2514fc48db18d03e2ce40fa1eb12854c9afc52a89485508d4",
+      "edits": [
+        {
+          "start": 11971,
+          "end": 11994,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 11837,
+          "end": 11896,
+          "from": "../../../🎟️context/🛑️cancel/🤝️alias/🧫️fixtures/🔣️.json",
+          "to": "../../../🎟️context/🛑️cancel/🤝️alias/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 8821,
+          "end": 8860,
+          "from": "../../🚪️admission/🧫️fixtures/🔣️.json",
+          "to": "../../🚪️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 6018,
+          "end": 6041,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 2087,
+          "end": 2110,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️retained-ownership/🦀️.rs",
+      "beforeSha256": "a473c68405178f314e97446c349835d97960c3aaddb0705088bb53cfef3ed884",
+      "afterSha256": "9fd0398eeb1dfeaca484dfb4c672ad1048867a65119997a66f584d9697da2197",
+      "edits": [
+        {
+          "start": 11860,
+          "end": 11902,
+          "from": "../../🧫️fixtures/♻️mounted-close/🔣️.json",
+          "to": "../🧫️fixtures/♻️mounted-close/🔣️.json"
+        },
+        {
+          "start": 6132,
+          "end": 6176,
+          "from": "../../🧫️fixtures/📦️physical-close/🔣️.json",
+          "to": "../🧫️fixtures/📦️physical-close/🔣️.json"
+        },
+        {
+          "start": 1081,
+          "end": 1125,
+          "from": "../../🧫️fixtures/📦️physical-close/🔣️.json",
+          "to": "../🧫️fixtures/📦️physical-close/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️clock-stride/🦀️.rs",
+      "beforeSha256": "722b2be24fc2b15f5621956a2571e8dea38fba58f5d88bc971e8ae2ce9469a21",
+      "afterSha256": "065ef5b0a968029519f1f89d4a7e296f0c0d5a7756c0284f538ef3d278fe07b2",
+      "edits": [
+        {
+          "start": 428,
+          "end": 470,
+          "from": "../../🧫️fixtures/🪜️clock-stride-law.json",
+          "to": "../🧫️fixtures/🪜️clock-stride-law.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/♻️mounted-close/🟦️.ts",
+      "beforeSha256": "0b20fb909f60ca1fe66dae9da09f1c9c67b824c94ceb680082cf2eba2e7717fd",
+      "afterSha256": "96b4b34d8a77b273a26220a6cfe623e02de53c22d1f6de7e03f4e11a6a0cca33",
+      "edits": [
+        {
+          "start": 311,
+          "end": 347,
+          "from": "🧫️fixtures/♻️mounted-close/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/♻️mounted-close/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/📦️physical-close/🟦️.ts",
+      "beforeSha256": "407572ed78ee4c0b95a92c7bce8719631e8d0945f37c0fbf318e7bbc86e9d055",
+      "afterSha256": "cdcd7984ae1cf139c01563d3a48fe109fdd198e102d9235abc6031bf55194d4a",
+      "edits": [
+        {
+          "start": 108,
+          "end": 152,
+          "from": "../../🧫️fixtures/📦️physical-close/🔣️.json",
+          "to": "../🧫️fixtures/📦️physical-close/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/📦️physical-close/🔮️oracle/🟦️.ts",
+      "beforeSha256": "cb4753a173abdb0399f38626126fd713009327a42e9c116b20651758936ecc54",
+      "afterSha256": "c3d74806ce81db29261deeed48d248964b5ae60e124cb61046d889265ef2226e",
+      "edits": [
+        {
+          "start": 754,
+          "end": 802,
+          "from": "🧫️fixtures/📇️fixed-operation-registry-law.json",
+          "to": "🧪️tests/🧫️fixtures/📇️fixed-operation-registry-law.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🎟️context/🛑️cancel/🤝️alias/🧪️tests/🟦️.ts",
+      "beforeSha256": "5f3b46660c8679bb41528f0a50b48fcc871faac5022971142551189a81cf310c",
+      "afterSha256": "41be06ec429298c8229b3981eb1a192f9da910cf929196d0e797b73ae988f2b0",
+      "edits": [
+        {
+          "start": 352,
+          "end": 375,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧪️tests/🔬️contract/🟦️.ts",
+      "beforeSha256": "c053eabfe59c0235a5931d8186f46f14abd099fc8e092dcd1098e0d5b4f8da8f",
+      "afterSha256": "702aa701cf29be3b39f577c94510130c6306b280b9c12927a8fa98864f9ff27a",
+      "edits": [
+        {
+          "start": 387,
+          "end": 413,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧪️tests/🔬️contract/🦀️.rs",
+      "beforeSha256": "8e323fb8e27e9f2da2398303dd5992668a65c3a56901bc8eecc22d87a8de7260",
+      "afterSha256": "985dc7c454d96fe6bcac325f610591f64798d6e99bf1197b736a51ca2a108e09",
+      "edits": [
+        {
+          "start": 162,
+          "end": 188,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️session-return/🧪️tests/🟦️.ts",
+      "beforeSha256": "0c412d7302a3e674d5c96e217b37418fd2e902e30397fa723d38b19c08405c3d",
+      "afterSha256": "15ca7ece15364c2e02107c4d9d03306e8602bb36af3d1d0c04fa587bab422e7d",
+      "edits": [
+        {
+          "start": 236,
+          "end": 259,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️session-return/🧪️tests/🦀️.rs",
+      "beforeSha256": "9d3eab26fbff7e38a74b0187cffccdaedc3a0ff96d2b777959b810a886404f27",
+      "afterSha256": "4a81aa6ca3831c9337ef1d539653f5d4c3bb906ef769d2dd3d25f7cc6c233779",
+      "edits": [
+        {
+          "start": 1790,
+          "end": 1813,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧪️tests/🧪️ownedactorturnoutput/🟦️.ts",
+      "beforeSha256": "8dcfc5c37363d95e55b0b01d22bf053a0ef93b512164583100d03c72c48eccd1",
+      "afterSha256": "5bed356a207bd6b51920fb957248be36dd7321a91497094e45b8b9cd7b5ffe3a",
+      "edits": [
+        {
+          "start": 19713,
+          "end": 19739,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 17644,
+          "end": 17670,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 15311,
+          "end": 15337,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 13324,
+          "end": 13359,
+          "from": "../../🧯️fault/🧫️fixtures/🔣️.json",
+          "to": "../../🧯️fault/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 11266,
+          "end": 11301,
+          "from": "../../🧯️fault/🧫️fixtures/🔣️.json",
+          "to": "../../🧯️fault/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 9520,
+          "end": 9546,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 6351,
+          "end": 6390,
+          "from": "../../🏘️admission/🧫️fixtures/🔣️.json",
+          "to": "../../🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 4976,
+          "end": 5016,
+          "from": "../../🚪️retirement/🧫️fixtures/🔣️.json",
+          "to": "../../🚪️retirement/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 3495,
+          "end": 3535,
+          "from": "../../🚪️retirement/🧫️fixtures/🔣️.json",
+          "to": "../../🚪️retirement/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 1737,
+          "end": 1777,
+          "from": "../../🚪️retirement/🧫️fixtures/🔣️.json",
+          "to": "../../🚪️retirement/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 1122,
+          "end": 1161,
+          "from": "../../🏘️admission/🧫️fixtures/🔣️.json",
+          "to": "../../🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧪️tests/📥️cold-pair/🦀️.rs",
+      "beforeSha256": "b4fa75c505955e5a5aa75fb4b9a9be20fb3b74a0050431889f439c0cd135fbc3",
+      "afterSha256": "c96a4443bd99d0d253611bb28e44f40073aaf088e7b49f9e88872a8e80a2a135",
+      "edits": [
+        {
+          "start": 1876,
+          "end": 1902,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧪️tests/🧪️cold-pair-wit-status-codec-agrees-with-the-neutral-schema-and-rejects-ev/🟦️.ts",
+      "beforeSha256": "7e141760ed613b99ca30b07e8dcbe96f6967e39d8b6f9c11de1926b2a9a07764",
+      "afterSha256": "fc0032ea4d84b62cca71c1355fd8272ff2a98d0e89367c942e0e6e84324e783f",
+      "edits": [
+        {
+          "start": 639,
+          "end": 661,
+          "from": "./🧫️fixtures/🔣️.json",
+          "to": "./🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧪️tests/🧪️actor-ui-patch-receipt-matches-shared-canonical-vectors-and-the-independ/🟦️.ts",
+      "beforeSha256": "39ef87b1800bbf18716af3c1706df91242b28ed7e5299dfceb3b04878a8418a5",
+      "afterSha256": "f1739872a6d146c33ae1d8e688da5a2700b0e1dc637d8ede8f85cc204086ab9e",
+      "edits": [
+        {
+          "start": 3523,
+          "end": 3545,
+          "from": "./🧫️fixtures/🔣️.json",
+          "to": "./🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 882,
+          "end": 904,
+          "from": "./🧫️fixtures/🔣️.json",
+          "to": "./🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧪️tests/🩹️patch/🦀️.rs",
+      "beforeSha256": "c439a498d63534fb53790b666c7a66d4a625d060f5a0382ddc5cac932aeb66b4",
+      "afterSha256": "4cd8eb4992f34330de294a37a523cae5348feec41b0076357d0d5b77f43c0839",
+      "edits": [
+        {
+          "start": 3771,
+          "end": 3820,
+          "from": "../../../../🎟️retained-turn/🧫️fixtures/🔣️.json",
+          "to": "../../../../🎟️retained-turn/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 2644,
+          "end": 2693,
+          "from": "../../../../🎟️retained-turn/🧫️fixtures/🔣️.json",
+          "to": "../../../../🎟️retained-turn/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 126,
+          "end": 152,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te/🟦️.ts",
+      "beforeSha256": "d9381b0ebc69d7017f80f67cfa31220f659ea58146b22deca8ef99f3d14aa24d",
+      "afterSha256": "90d768333835652eb946249548f0bca846f47c549490553d9baa45079a8d9153",
+      "edits": [
+        {
+          "start": 22498,
+          "end": 22520,
+          "from": "./🧫️fixtures/🔣️.json",
+          "to": "./🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 18868,
+          "end": 18890,
+          "from": "./🧫️fixtures/🔣️.json",
+          "to": "./🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 13746,
+          "end": 13768,
+          "from": "./🧫️fixtures/🔣️.json",
+          "to": "./🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "8e08457f8a0cb6619f3cf5d5e40aa983d686b77373095479619d1f3878453f08",
+      "afterSha256": "dd4bf2444d93080c4b789fcf3218033cf5a86713f6e4e36cd98eb04b9771b919",
+      "edits": [
+        {
+          "start": 6029,
+          "end": 6075,
+          "from": "../../../🎟️retained-turn/🧫️fixtures/🔣️.json",
+          "to": "../../../🎟️retained-turn/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 91,
+          "end": 117,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎠️activation-reservation/🧪️tests/🎠️activation-reservation/🦀️.rs",
+      "beforeSha256": "6807c168a1c6b296cfd62ba63990d1c65e73d7e9a584cc4d629c87a545072157",
+      "afterSha256": "353d32e86d8baca6a1cb84ea82ff07099fc1c39eac8e3e26f62c9517ecffac47",
+      "edits": [
+        {
+          "start": 5955,
+          "end": 5981,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 977,
+          "end": 1003,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📃️page/🧪️tests/🧪️actorbytepage-matches-shared-vectors-and-node-buffer-for-every-fixed-wor/🟦️.ts",
+      "beforeSha256": "9930365b18c3529279cf4d6815f1d212873cd879c0aaccfe0c87769bb4a0ec8e",
+      "afterSha256": "ee55c9702bc7474ec4f523d94e2436830b5e95c5ef5e3ad9a510a9ec0f9dd167",
+      "edits": [
+        {
+          "start": 5770,
+          "end": 5796,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 3269,
+          "end": 3295,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 612,
+          "end": 638,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📃️page/🧪️tests/📃️page/🦀️.rs",
+      "beforeSha256": "598f92f60b4d2e657b3c34405307c471679eb99fdec744987a431c5ecb64b886",
+      "afterSha256": "118cf46ebbb2c6ee216d2b907910793cc88c3288d232ee119021c4c8d19c19bb",
+      "edits": [
+        {
+          "start": 167,
+          "end": 193,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📤️return/🧪️tests/🧪️actorreturn-codecs-load-natively-in-node-strip-only-mode-and-preserve-ev/🟦️.ts",
+      "beforeSha256": "17789ba4707a21bf48b02f28ed69a1236ff1a5df7688ffebdc2ab48661a05ffe",
+      "afterSha256": "267d76738ecb26d5a88de3172de8353cff57f2311503ebe51c1b445705e15bd1",
+      "edits": [
+        {
+          "start": 25260,
+          "end": 25286,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 23968,
+          "end": 23994,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 20677,
+          "end": 20714,
+          "from": "../../🌿️framing/🧫️fixtures/🔣️.json",
+          "to": "../../🌿️framing/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 20604,
+          "end": 20630,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 19062,
+          "end": 19088,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 16548,
+          "end": 16574,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 14172,
+          "end": 14198,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 13293,
+          "end": 13319,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 10429,
+          "end": 10455,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 7169,
+          "end": 7195,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 1859,
+          "end": 1885,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📤️return/🧪️tests/📤️return/🦀️.rs",
+      "beforeSha256": "256e533363d6ab6266e4f16540e384cb25363d02ed90f4e26d0b063063c825c6",
+      "afterSha256": "d08838d9949f0f901f484cb35447059ead2517b12b47c1b9dc75506ea31fde8e",
+      "edits": [
+        {
+          "start": 196,
+          "end": 222,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🧪️tests/🟦️.ts",
+      "beforeSha256": "7944d08b267965f31e49b041de71531857fcd34e236df351ab6b1a4b59c0093c",
+      "afterSha256": "2c105dd3e79dd08012969f7b974e865f49e06b5f4796c5eb2412440a398834d6",
+      "edits": [
+        {
+          "start": 349,
+          "end": 372,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🧪️tests/🦀️.rs",
+      "beforeSha256": "691ef98a5488ff7da86add5723850dea994136fde03db039e441041809322b66",
+      "afterSha256": "20be2fa8d8781c126688e677dbea4adb00a70912d5f080acf25867d888521ae4",
+      "edits": [
+        {
+          "start": 14947,
+          "end": 14980,
+          "from": "../📃️policy/🧫️fixtures/🔣️.json",
+          "to": "../📃️policy/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 11623,
+          "end": 11646,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 5420,
+          "end": 5453,
+          "from": "../📃️policy/🧫️fixtures/🔣️.json",
+          "to": "../📃️policy/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 5269,
+          "end": 5305,
+          "from": "../🫴️receiving/🧫️fixtures/🔣️.json",
+          "to": "../🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/🧪️tests/🟦️.ts",
+      "beforeSha256": "62a0a3e07e35306f4493cf912db4db6a78a638cb013154a1afe34c1c2d61490a",
+      "afterSha256": "4f195cac784c9a637d778b9f260722b7f3348799e83ce0257e7d31699a8ba2c9",
+      "edits": [
+        {
+          "start": 407,
+          "end": 430,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/🧪️tests/🦀️.rs",
+      "beforeSha256": "5549279b74bbdf29b6b5239ba3f34896bd654bebdc58543a0af68db53cfcfdee",
+      "afterSha256": "b1008869a0604899ef1b3bd9307e941b46e864f76bdf3ee11e6e86997cd708e7",
+      "edits": [
+        {
+          "start": 5362,
+          "end": 5385,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 1066,
+          "end": 1089,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🟦️.ts",
+      "beforeSha256": "6fdb6622f1de7a8a61b64357986c0f0991ffd0f982a5119acc76644fcd7b36d6",
+      "afterSha256": "455842343630e558f6f788ac02c749d5f239473b3bde80b010563df23b5a7f2e",
+      "edits": [
+        {
+          "start": 588,
+          "end": 611,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🫴️receiving/🧪️tests/🟦️.ts",
+      "beforeSha256": "c0e8d948a8f4eea94cb0251d3bdb88430583963f5014c086c58f022bb60f64d2",
+      "afterSha256": "0894d54af5a72486024298026a105384811628ad886f1b15167f94b75c28d976",
+      "edits": [
+        {
+          "start": 487,
+          "end": 523,
+          "from": "../../📃️policy/🧫️fixtures/🔣️.json",
+          "to": "../../📃️policy/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 441,
+          "end": 464,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🫴️receiving/🧪️tests/📬️public/🦀️.rs",
+      "beforeSha256": "4b88f50b275a19a9af3cea03975e1dc748c60078a06f7b0f4b0b113ca15e7cb7",
+      "afterSha256": "3b413ed4eca742f3278223ac180fe4e6aa8174050920ac496b1865bbf94c6436",
+      "edits": [
+        {
+          "start": 7664,
+          "end": 7703,
+          "from": "../../../📃️policy/🧫️fixtures/🔣️.json",
+          "to": "../../../📃️policy/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 676,
+          "end": 715,
+          "from": "../../../📃️policy/🧫️fixtures/🔣️.json",
+          "to": "../../../📃️policy/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 539,
+          "end": 565,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+      "beforeSha256": "ea68e9b5267c701f423cb9146b77828c76335efa30a48c758bb379815be9e5cc",
+      "afterSha256": "9e9f56f75b5e554a8a7aefd0429b7647145ca024bd488560a1a138e61f40d673",
+      "edits": [
+        {
+          "start": 65141,
+          "end": 65206,
+          "from": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json",
+          "to": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 48817,
+          "end": 48882,
+          "from": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json",
+          "to": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 42569,
+          "end": 42643,
+          "from": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧫️fixtures/🔣️.json",
+          "to": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 38933,
+          "end": 38994,
+          "from": "🧰️framework/🔨️modules/🎭️actor/📃️page/🧫️fixtures/🔣️.json",
+          "to": "🧰️framework/🔨️modules/🎭️actor/📃️page/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🕹️wgpu-selection-roundtrip/🟦️.ts",
+      "beforeSha256": "26353f73d8fad64da94095b01c0afe04124bb860aac88c3777f99962f7c2ff5f",
+      "afterSha256": "211e4fca87faf1904745a00f3be5e6fbde4d59b496c51cb8de0db614359e4e21",
+      "edits": [
+        {
+          "start": 1299,
+          "end": 1384,
+          "from": "../../../../../../../🔨️modules/🎭️actor/🧫️fixtures/🕹️reserved-verb-answer/🔣️.json",
+          "to": "../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🕹️reserved-verb-answer/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌉️ProgramBridge/🧪️tests/🕹️wgpu-reserved-verb-answer/🦀️.rs",
+      "beforeSha256": "809e0923c3a478f5b91c3b3150539ba9f0dcdab94c1a91adab7a8f46e28bb188",
+      "afterSha256": "33487df6f7c523c220dec780ea2f4d378e253bedb629765cec5cd0d6f3ce55ed",
+      "edits": [
+        {
+          "start": 683,
+          "end": 774,
+          "from": "../../../../../../../../../🔨️modules/🎭️actor/🧫️fixtures/🕹️reserved-verb-answer/🔣️.json",
+          "to": "../../../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🕹️reserved-verb-answer/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🧪️typedwire/🟦️.tsx",
+      "beforeSha256": "431fe0e5b94af2b1a829f443ab9ff2bc987583cb321858f13c2674bf092609ba",
+      "afterSha256": "13c333f7ba5f3aa34dd55de095dd5e86569109f6a2d1184c98d750faa40dd632",
+      "edits": [
+        {
+          "start": 137801,
+          "end": 137883,
+          "from": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 134371,
+          "end": 134453,
+          "from": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 131419,
+          "end": 131501,
+          "from": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 129332,
+          "end": 129414,
+          "from": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 125585,
+          "end": 125667,
+          "from": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 123021,
+          "end": 123103,
+          "from": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 118765,
+          "end": 118847,
+          "from": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 114042,
+          "end": 114124,
+          "from": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 111841,
+          "end": 111923,
+          "from": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 108640,
+          "end": 108722,
+          "from": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 104820,
+          "end": 104902,
+          "from": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 37598,
+          "end": 37714,
+          "from": "../../../../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 37006,
+          "end": 37110,
+          "from": "../../../../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs",
+      "beforeSha256": "0147b233ce2401d54cdcd284e2f39b61501fc8fce9a5afc5b1dc7bc15ac15d10",
+      "afterSha256": "393ce122ce19ec3ab1c7eeb30c367cfa3486df1e99a72677c4c1a1a7f0a71c9e",
+      "edits": [
+        {
+          "start": 23772,
+          "end": 23851,
+          "from": "../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 20315,
+          "end": 20394,
+          "from": "../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📤️segmented-download/🦀️.rs",
+      "beforeSha256": "2f7e6ae73bb5d6dd798ba1dc2acde5e3e9c0060dd91ce607c778166c452c3fe3",
+      "afterSha256": "8c8fc3f84c4cea5e5004e016d604ed9013dd15f37c5140c7dadb41795562b11c",
+      "edits": [
+        {
+          "start": 758,
+          "end": 854,
+          "from": "../../../../../../🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🟦️.ts",
+      "beforeSha256": "97fc03f9c03c303a13eb52736df20dfb6bf1500a4a0f776156130c19fbe6cb9e",
+      "afterSha256": "48f2ba434a1bf4a383d892170901feb1a4b3571e9f1253af0c112378d0b71ecb",
+      "edits": [
+        {
+          "start": 57614,
+          "end": 57694,
+          "from": "../../../../../../🔨️modules/🧵️job/♻️retirement/📄️payload/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🧵️job/♻️retirement/📄️payload/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 51493,
+          "end": 51573,
+          "from": "../../../../../../🔨️modules/🧵️job/♻️retirement/📄️payload/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🧵️job/♻️retirement/📄️payload/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 49028,
+          "end": 49108,
+          "from": "../../../../../../🔨️modules/🧵️job/♻️retirement/📄️payload/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🧵️job/♻️retirement/📄️payload/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 46992,
+          "end": 47072,
+          "from": "../../../../../../🔨️modules/🧵️job/♻️retirement/📄️payload/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🧵️job/♻️retirement/📄️payload/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️actorreturnresponseframing-uses-canonical-vectors-with-no-payload-copies/🟦️.ts",
+      "beforeSha256": "62593c5342d4ad70721b588f0ef6edf8dc318864aedd5bfd6792da9bb2c4b903",
+      "afterSha256": "465f7f2ae52940f9edafdeb7cd76d69baa1693f662ec09958dfa05004ad60a4d",
+      "edits": [
+        {
+          "start": 39672,
+          "end": 39752,
+          "from": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 38213,
+          "end": 38293,
+          "from": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 36352,
+          "end": 36420,
+          "from": "../../../../../../🔨️modules/🎭️actor/📤️return/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 36220,
+          "end": 36300,
+          "from": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 34775,
+          "end": 34855,
+          "from": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 32639,
+          "end": 32719,
+          "from": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 28801,
+          "end": 28891,
+          "from": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 26782,
+          "end": 26862,
+          "from": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 25597,
+          "end": 25677,
+          "from": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 22977,
+          "end": 23079,
+          "from": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 15982,
+          "end": 16093,
+          "from": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/📥️inbox/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/📥️inbox/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 8667,
+          "end": 8778,
+          "from": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/📥️inbox/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/📥️inbox/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 5820,
+          "end": 5888,
+          "from": "../../../../../../🔨️modules/🎭️actor/📤️return/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 5688,
+          "end": 5768,
+          "from": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 2115,
+          "end": 2183,
+          "from": "../../../../../../🔨️modules/🎭️actor/📤️return/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 1987,
+          "end": 2067,
+          "from": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 1845,
+          "end": 1936,
+          "from": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🌿️framing/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🌿️framing/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts",
+      "beforeSha256": "6fd19d8c6ecf25809649e1b55b27538775560f8cdc7226a49ab95589b75a8372",
+      "afterSha256": "7e41177b31acf4b69302c62154945583d409313702439203acec29926c130340",
+      "edits": [
+        {
+          "start": 281643,
+          "end": 281739,
+          "from": "../../../../../../🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 278267,
+          "end": 278341,
+          "from": "../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 247405,
+          "end": 247477,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 130646,
+          "end": 130728,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 130147,
+          "end": 130254,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 129442,
+          "end": 129537,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 126927,
+          "end": 127022,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 125580,
+          "end": 125662,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 123519,
+          "end": 123622,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧯️fault/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧯️fault/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 119095,
+          "end": 119202,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 117621,
+          "end": 117728,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 114269,
+          "end": 114376,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 113326,
+          "end": 113433,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 111837,
+          "end": 111932,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 106508,
+          "end": 106603,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 103294,
+          "end": 103389,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 102434,
+          "end": 102529,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 97860,
+          "end": 97955,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 94989,
+          "end": 95084,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 94838,
+          "end": 94934,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🚪️retirement/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🚪️retirement/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 93811,
+          "end": 93907,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🚪️retirement/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🚪️retirement/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 91284,
+          "end": 91379,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 91126,
+          "end": 91222,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🚪️retirement/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🚪️retirement/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 89284,
+          "end": 89378,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 86957,
+          "end": 87051,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 86278,
+          "end": 86385,
+          "from": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 74651,
+          "end": 74724,
+          "from": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 70781,
+          "end": 70854,
+          "from": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 69104,
+          "end": 69177,
+          "from": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 66820,
+          "end": 66893,
+          "from": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 62897,
+          "end": 62970,
+          "from": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 60626,
+          "end": 60699,
+          "from": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 58238,
+          "end": 58311,
+          "from": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 56551,
+          "end": 56624,
+          "from": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 53727,
+          "end": 53800,
+          "from": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 50595,
+          "end": 50668,
+          "from": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 47702,
+          "end": 47775,
+          "from": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 44629,
+          "end": 44702,
+          "from": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 40398,
+          "end": 40471,
+          "from": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 38674,
+          "end": 38747,
+          "from": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 16385,
+          "end": 16458,
+          "from": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 9572,
+          "end": 9658,
+          "from": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 7324,
+          "end": 7410,
+          "from": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 6386,
+          "end": 6472,
+          "from": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️reactor-contract-oracles/🟦️.ts",
+      "beforeSha256": "3bc9e9d90237904e357bb83b7f0f88f579d94463f7d625be91d69e08b70ad602",
+      "afterSha256": "2ea4a4cf78b5363209f249ba2b6dc717d18f2164f740bd4fbaef5fb1d2d43c2e",
+      "edits": [
+        {
+          "start": 6748,
+          "end": 6814,
+          "from": "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧫️fixtures/🔣️.json",
+          "to": "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️component-codec-reply/🟦️.ts",
+      "beforeSha256": "3697f03bf79edd008eab5d2d087e38a4e1e054a75456a1bd1a06dbdee33ebc5a",
+      "afterSha256": "db8c668d2c171634e2508054e8561807e039d78c745076a8e99e0b836284a417",
+      "edits": [
+        {
+          "start": 1010,
+          "end": 1103,
+          "from": "../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/♻️retirement/🧪️tests/🟦️.ts",
+      "beforeSha256": "de06a98f253f329718e32e3e97e9af67adf3bd1c81954d9a97aaaafa9b7fb271",
+      "afterSha256": "2e9b1fad1e9b910a4e1fcc8c8df1ba75eab562e7a88155d1f1e05ad9577e88b1",
+      "edits": [
+        {
+          "start": 9486,
+          "end": 9506,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📤️return/🧪️tests/🧪️pluginreturnwit-maps-every-canonical-drive-to-the-exact-wit-nesting-and/🟦️.ts",
+      "beforeSha256": "50e7ba98970e2dad1172dc5045c8eb62f105619297bb059fd8425e1f1ec95fb8",
+      "afterSha256": "b61abb0a1a9d49dcff8fdf0277143fe48495205cb27f05b756b9d98a0e7da75b",
+      "edits": [
+        {
+          "start": 9165,
+          "end": 9236,
+          "from": "../../../../../../../🔨️modules/🎭️actor/📤️return/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 7809,
+          "end": 7880,
+          "from": "../../../../../../../🔨️modules/🎭️actor/📤️return/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 4467,
+          "end": 4538,
+          "from": "../../../../../../../🔨️modules/🎭️actor/📤️return/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 2288,
+          "end": 2359,
+          "from": "../../../../../../../🔨️modules/🎭️actor/📤️return/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+      "beforeSha256": "b9ebea913c5d2fdadec22f99492e34639e452d2d5aa87e4f2b9720f35b8411d6",
+      "afterSha256": "2689ba22bceb7de783fd4f1264ec8a8a143d3834961efc4fcf1b928379a994d4",
+      "edits": [
+        {
+          "start": 14374,
+          "end": 14385,
+          "from": "🧫️fixtures",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🛂️receiving/🦀️.rs",
+      "beforeSha256": "746b2758bc1c428d6b046d97de23a80ed441a4367e19945f67e56bc77938ac84",
+      "afterSha256": "d4ce1d86b15346eb4130d4dae7d1686d6942dbca901bb1bd439f485f00e8041b",
+      "edits": [
+        {
+          "start": 2006,
+          "end": 2094,
+          "from": "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📥️cold-pair/🧪️tests/📥️cold-pair/🦀️.rs",
+      "beforeSha256": "5c27620c8e3529b4e47e9239b11938c90edf443788711ca6ab2d3e4de5178984",
+      "afterSha256": "d60edc9594722a7c6ab9dfe77172f1140062925c7343764b1b06d61e11ba426d",
+      "edits": [
+        {
+          "start": 3689,
+          "end": 3766,
+          "from": "../../../../../../../../🔨️modules/🎭️actor/📥️cold-pair/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../🔨️modules/🎭️actor/📥️cold-pair/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🧵️executor/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "6913745443b5eb55c4cc72989228541882eaa6d70dab1e45413b4335790bccdc",
+      "afterSha256": "8310679fd20577d9cc7cbc36ded143211e93149b555243537398e655066a2c24",
+      "edits": [
+        {
+          "start": 138,
+          "end": 232,
+          "from": "../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "75c7ab4933ac6f20b581ef968b3c805188b0ee4282aba9c5d84f9d53cd034d38",
+      "afterSha256": "1b04524a91daff70fcc11af26086bb830c01e7650fabfa6e3c28a0a4fea6bcef",
+      "edits": [
+        {
+          "start": 10033,
+          "end": 10109,
+          "from": "../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 3145,
+          "end": 3236,
+          "from": "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 299,
+          "end": 390,
+          "from": "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🔁️lifecycle/🧪️tests/🔁️lifecycle/🦀️.rs",
+      "beforeSha256": "eb35de49ce04826e02704cd7eb3804926de9d5273ded486d0a206cf3112d4b94",
+      "afterSha256": "0c9a6ca36053b005e9805b15c599b93aabee1c0725bcfc0ddc9c0cdb3f7290f1",
+      "edits": [
+        {
+          "start": 138,
+          "end": 232,
+          "from": "../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📨️pending/🧪️tests/🔬️instance-lifetime-patch-close/🦀️.rs",
+      "beforeSha256": "ce497b863b909aae54475a13450cb1d0f0271f2668d800c6b51a73ffc9c7bddf",
+      "afterSha256": "e68495ceb4c7aab3aa9d76810b40c641bbaf8225043f1ff800a0fb84c41a47d2",
+      "edits": [
+        {
+          "start": 4142,
+          "end": 4218,
+          "from": "../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    }
+  ],
+  "held": [
+    {
+      "path": "📜️script.ts",
+      "beforeSha256": "c8d1bdc33e338a1314e765f821d375dc8514a360a7cafc75b52860086c4e8a28",
+      "afterSha256": "cc37921614f72ed5cbf63fe455d4f80af88b8b6a1eae223b7cbf8380821ad73b",
+      "edits": [
+        {
+          "start": 406083,
+          "end": 406162,
+          "from": "🧰️framework/🔨️modules/🧵️job/🧫️fixtures/📇️fixed-operation-registry-law.json",
+          "to": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📇️fixed-operation-registry-law.json"
+        },
+        {
+          "start": 397677,
+          "end": 397761,
+          "from": "🧰️framework/🔨️modules/🧵️job/🧫️fixtures/⚖️shared-framework-action-routes-law.json",
+          "to": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/⚖️shared-framework-action-routes-law.json"
+        },
+        {
+          "start": 388614,
+          "end": 388693,
+          "from": "🧰️framework/🔨️modules/🧵️job/🧫️fixtures/📇️fixed-operation-registry-law.json",
+          "to": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📇️fixed-operation-registry-law.json"
+        }
+      ]
+    }
+  ],
+  "unresolved": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🧪️tests/🔬️tool-job-microsecond-budget/🟦️.ts",
+      "from": "🧫️fixtures/🔣️.json",
+      "reason": "no moved static target"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🧪️tests/🔮️corpus-oracles/🟦️.ts",
+      "from": "../../../../⏱️trace/⏱️clock/🧫️fixtures/🧪️contention/🔣️.json",
+      "reason": "no moved static target"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/📏️close-demand/🟦️.ts",
+      "from": "../🧫️fixtures/📏️close-demand/🔣️.json",
+      "reason": "no moved static target"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧪️tests/📥️command-ingress-pages/🟦️.ts",
+      "from": "../../📡️replication/📡️wire/🎮️command/📥️ingress/🧫️fixtures/📄️pages/🔣️.json",
+      "reason": "no moved static target"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📨️effect-wire-routes/🟦️.ts",
+      "from": "../🧫️fixtures/📨️effect-wire-routes/🔣️.json",
+      "reason": "no moved static target"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🗞️typed-operation-page/🟦️.ts",
+      "from": "../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json",
+      "reason": "no moved static target"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🎁️effect-params-nesting/🟦️.ts",
+      "from": "../🧫️fixtures/🎁️effect-params-nesting/🔣️.json",
+      "reason": "no moved static target"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📤️return/🧪️tests/🧪️actorreturn-codecs-load-natively-in-node-strip-only-mode-and-preserve-ev/🟦️.ts",
+      "from": "./🧫️fixtures/🔣️.json",
+      "reason": "no moved static target"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "from": "🧫️fixtures",
+      "reason": "no moved static target"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "from": "/**/🧫️fixtures/**/*",
+      "reason": "no moved static target"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "from": "🧫️fixtures",
+      "reason": "no moved static target"
+    }
+  ]
+}

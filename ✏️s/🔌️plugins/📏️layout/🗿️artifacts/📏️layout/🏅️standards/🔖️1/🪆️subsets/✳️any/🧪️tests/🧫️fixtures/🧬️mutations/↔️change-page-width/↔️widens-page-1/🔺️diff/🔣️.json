@@ -1,0 +1,56 @@
+{
+  "schema": null,
+  "name": null,
+  "grid": null,
+  "paragraphStyles": null,
+  "characterStyles": null,
+  "stories": null,
+  "links": null,
+  "parentPages": null,
+  "spreads": null,
+  "pages": {
+    "inserted": [],
+    "removed": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "page-1",
+        "patch": {
+          "name": null,
+          "width": 240.0,
+          "height": null,
+          "margin_top": null,
+          "margin_right": null,
+          "margin_bottom": null,
+          "margin_left": null,
+          "columns_count": null,
+          "columns_gutter": null,
+          "parent_page_id": null,
+          "guides": null,
+          "overrides": {
+            "removed": [],
+            "inserted": [],
+            "moved": []
+          },
+          "frames": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "layers": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          }
+        }
+      }
+    ]
+  },
+  "printTarget": null,
+  "backgroundDrawing": null,
+  "drawingTexts": [],
+  "referencedModel": null,
+  "dataFields": null
+}

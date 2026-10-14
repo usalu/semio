@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "💠️array-elements/⛔️spacing-without-length",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/💠️array-elements/⛔️spacing-without-length/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/💠️array-elements/⛔️spacing-without-length/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/💠️array-elements/⛔️spacing-without-length/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/💠️array-elements/⛔️spacing-without-length/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/💠️array-elements/⛔️spacing-without-length/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💠️array-elements/⛔️spacing-without-length/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💠️array-elements/⛔️spacing-without-length/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💠️array-elements/⛔️spacing-without-length/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💠️array-elements/⛔️spacing-without-length/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💠️array-elements/⛔️spacing-without-length/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

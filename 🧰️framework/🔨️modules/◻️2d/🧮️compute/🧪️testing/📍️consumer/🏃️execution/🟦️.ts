@@ -1,8 +1,8 @@
 /** 🧪️ Runs an explicitly declared compute source law with strict types and the normal budget. */
 import {resolve} from "node:path";
-import {BundleScript} from "../../../../../🏃️process/🧭️routing/🟦️.ts";
-import {runBudgetedTestCommand} from "../../../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
-import {resolveTestLevel,testLevelBudgetMs} from "../../../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import {BundleScript} from "../../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {runBudgetedTestCommand} from "../../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import {resolveTestLevel,testLevelBudgetMs} from "../../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 export abstract class ComputeOwnershipTestScript extends BundleScript{
  abstract readonly source:string;
  async run(segments:string[]):Promise<void>{

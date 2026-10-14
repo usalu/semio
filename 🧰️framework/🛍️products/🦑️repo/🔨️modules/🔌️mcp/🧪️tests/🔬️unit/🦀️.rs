@@ -89,7 +89,7 @@ fn a_broken_chain_is_refused() {
 
 #[test]
 fn the_g2_golden_vectors_match_byte_for_byte() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/2️⃣g2-contract.json")).expect("fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/2️⃣g2-contract.json")).expect("fixture");
     assert_eq!(fixture["schema"], "semio.mcp.contract/1");
     assert_eq!(fixture["protocolVersion"], PROTOCOL_VERSION);
     for vector in fixture["vectors"].as_array().expect("vectors") {
@@ -108,7 +108,7 @@ fn the_g2_golden_vectors_match_byte_for_byte() {
 
 #[test]
 fn the_entrypoint_contract_holds() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚪️entrypoint-contract.json")).expect("fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚪️entrypoint-contract.json")).expect("fixture");
     assert_eq!(fixture["schema"], "semio.repo.mcp.entrypoint/1");
     assert_eq!(fixture["profileEnvironment"], PROFILE_ENVIRONMENT);
     let versions: Vec<&str> = fixture["protocolVersions"].as_array().expect("versions").iter().map(|value| value.as_str().expect("version")).collect();

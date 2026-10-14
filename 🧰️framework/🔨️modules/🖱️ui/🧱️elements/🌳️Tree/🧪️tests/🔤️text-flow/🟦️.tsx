@@ -9,8 +9,8 @@ import { chromium } from "playwright";
 import { describe, expect, it } from "vitest";
 import { Tree, TreeContext, TreeItem } from "../../🟦️.tsx";
 import { FlowProvider } from "../../../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
-import fixture from "../../🧫️fixtures/🔤️text-flow/🔣️.json";
-import anchorFixture from "../../🧫️fixtures/📏️row-anchor/🔣️.json";
+import fixture from "../🧫️fixtures/🔤️text-flow/🔣️.json";
+import anchorFixture from "../🧫️fixtures/📏️row-anchor/🔣️.json";
 
 const ui = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const cssPath = resolve(ui, "🎨️styling/🖌️ui/🎨️.css");

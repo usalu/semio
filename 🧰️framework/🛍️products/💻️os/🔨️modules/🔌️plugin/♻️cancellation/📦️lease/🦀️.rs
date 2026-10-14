@@ -30,7 +30,7 @@ impl CancellationLeaseParts {
   }
  }
 }
-struct ToolCancellationLeaseRetirement { original:Option<ManuallyDrop<ToolCancellationLease>>, operation:Option<ManuallyDrop<ToolDocumentCancellationScope>>, document:Option<ManuallyDrop<ToolKeyedDocumentCancellationScope>>, parts:ManuallyDrop<Option<CancellationLeaseParts>>, detached:bool }
+pub(crate) struct ToolCancellationLeaseRetirement { original:Option<ManuallyDrop<ToolCancellationLease>>, operation:Option<ManuallyDrop<ToolDocumentCancellationScope>>, document:Option<ManuallyDrop<ToolKeyedDocumentCancellationScope>>, parts:ManuallyDrop<Option<CancellationLeaseParts>>, detached:bool }
 impl ToolCancellationLeaseRetirement {
  fn new(original:ToolCancellationLease)->Self{Self{original:Some(ManuallyDrop::new(original)),operation:None,document:None,parts:ManuallyDrop::new(None),detached:false}}
  fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.operation.is_none()&&self.document.is_none()&&self.parts.is_none()}

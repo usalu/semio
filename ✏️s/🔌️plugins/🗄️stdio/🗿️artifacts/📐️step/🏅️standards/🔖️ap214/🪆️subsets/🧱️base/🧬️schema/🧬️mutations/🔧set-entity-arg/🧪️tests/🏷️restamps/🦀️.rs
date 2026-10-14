@@ -19,11 +19,11 @@ use crate::standards::v_ap214::subsets::base::schema::diff::StepDiff;
 use crate::standards::v_ap214::subsets::base::schema::mutations::{apply_step_mutation, StepMutation};
 use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧set-entity-arg/🏷️restamps/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧set-entity-arg/🏷️restamps/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧set-entity-arg/🏷️restamps/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧set-entity-arg/🏷️restamps/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧set-entity-arg/🏷️restamps/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧set-entity-arg/🏷️restamps/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧set-entity-arg/🏷️restamps/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧set-entity-arg/🏷️restamps/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧set-entity-arg/🏷️restamps/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧set-entity-arg/🏷️restamps/🎯️outcome/🔣️.json");
 
 fn before() -> StepSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

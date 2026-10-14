@@ -6,10 +6,10 @@ import { WORKSPACE_ROOT } from "../../../../../../../../../../📜️script.ts";
 
 /** 🧪️ Validates neutral generation values, ordinal keys and independent five-currency conservation. */
 export function proceduralGenerationRootSelfTests(): number {
-  const base=join(WORKSPACE_ROOT,"🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation"),read=(path:string)=>JSON.parse(readFileSync(join(base,path),"utf8")),schema=read("🧬️schema/🔣️.json"),fixture=read("🧫️fixtures/🔣️.json"),Ajv=createRequire(import.meta.url)("ajv"),validate=new Ajv({strict:true,allErrors:true}).compile({...schema,$ref:"#/$defs/GenerationValueV1"});
+  const base=join(WORKSPACE_ROOT,"🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation"),read=(path:string)=>JSON.parse(readFileSync(join(base,path),"utf8")),schema=read("🧬️schema/🔣️.json"),fixture=read("🧪️tests/🧫️fixtures/🔣️.json"),Ajv=createRequire(import.meta.url)("ajv"),validate=new Ajv({strict:true,allErrors:true}).compile({...schema,$ref:"#/$defs/GenerationValueV1"});
   for(const generation of fixture.generation.generations)for(const value of Object.values(generation.values))if(!validate(value))throw Error("generation value violates its semantic contract");
   const wire=JSON.stringify(fixture.generation);if(Buffer.byteLength(wire)<=16384||JSON.stringify(JSON.parse(wire))!==wire)throw Error("independent JSON lost large nested generation content");
-  const law=read("🧫️fixtures/♻️retirement/🔣️.json");
+  const law=read("🧪️tests/🧫️fixtures/♻️retirement/🔣️.json");
   const db=new Database(":memory:");let checks=3;
   try{
     db.run("CREATE TABLE entry(key TEXT PRIMARY KEY,value TEXT NOT NULL)");

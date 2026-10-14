@@ -1,0 +1,21 @@
+{
+  "artifact": null,
+  "camera": null,
+  "edges": {
+    "inserted": [],
+    "modified": [
+      {
+        "id": "13c6ff51-664b-46a2-a291-9cf044bef338",
+        "patch": {
+          "gap": 1.5
+        }
+      }
+    ],
+    "moved": [],
+    "removed": []
+  },
+  "meta": null,
+  "nodes": null,
+  "schema": null,
+  "targetRegions": null
+}

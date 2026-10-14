@@ -16,7 +16,7 @@ import {
   startedDirectoryOperationIdV1,
 } from "../../🧱️elements/🏛️ShellHost/📇️directory-bootstrap/🟦️.tsx";
 import directorySchema from "../../../../📇️directory/🧬️schema/🔣️.json" with { type: "json" };
-import fixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/📇️directory-bootstrap/🔣️.json";
+import fixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/📇️directory-bootstrap/🔣️.json";
 
 afterEach(cleanup);
 

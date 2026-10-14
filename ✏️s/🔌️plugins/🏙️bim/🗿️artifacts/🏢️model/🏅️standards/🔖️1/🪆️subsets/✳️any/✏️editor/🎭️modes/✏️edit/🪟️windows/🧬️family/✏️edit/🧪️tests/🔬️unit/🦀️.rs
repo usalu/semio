@@ -2,7 +2,7 @@ use super::*;
 use crate::mutations::apply_model_mutation;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const TABLE: &str = include_str!("../../../../../../../../🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json");
+const TABLE: &str = include_str!("../../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json");
 
 fn model() -> ModelSnapshot {
     from_json_str(TABLE, JsonMemberPolicy::Reject).expect("the table decodes")

@@ -1,0 +1,22 @@
+{
+  "artifact": null,
+  "camera": null,
+  "edges": null,
+  "meta": null,
+  "nodes": null,
+  "schema": null,
+  "targetRegions": {
+    "inserted": [],
+    "modified": [
+      {
+        "id": "region-1",
+        "patch": {
+          "x": 4.5,
+          "y": -6.5
+        }
+      }
+    ],
+    "moved": [],
+    "removed": []
+  }
+}

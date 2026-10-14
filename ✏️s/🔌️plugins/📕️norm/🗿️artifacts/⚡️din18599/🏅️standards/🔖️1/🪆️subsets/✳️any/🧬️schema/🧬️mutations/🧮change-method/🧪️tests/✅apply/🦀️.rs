@@ -1,11 +1,11 @@
 //! 🧪️ Fixture `🧮change-method/✅apply`.
 use crate::{Din18599Diff, Din18599Mutation, Din18599Snapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮change-method/✅apply/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮change-method/✅apply/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮change-method/✅apply/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮change-method/✅apply/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮change-method/✅apply/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧮change-method/✅apply/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧮change-method/✅apply/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧮change-method/✅apply/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧮change-method/✅apply/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧮change-method/✅apply/🎯️outcome/🔣️.json");
 
 fn before() -> Din18599Snapshot { serde_json::from_str(BEFORE).unwrap() }
 fn expected_after() -> Din18599Snapshot { serde_json::from_str(AFTER).unwrap() }

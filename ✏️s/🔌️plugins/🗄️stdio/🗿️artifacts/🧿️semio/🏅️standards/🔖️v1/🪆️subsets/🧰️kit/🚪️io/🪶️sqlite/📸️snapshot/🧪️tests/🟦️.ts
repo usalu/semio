@@ -1,7 +1,7 @@
 /** 🧰️ Typed Kit catalog/design entities and independent child/link history boundaries. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import f from "../🧫️fixtures/🔣️.json";
+import f from "./🧫️fixtures/🔣️.json";
 import type {SemioKitSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {SEMIO_KIT_SQLITE_SCHEMA,semioKitSnapshotToSqliteDatabase,semioKitSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import {binary64,exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
@@ -13,7 +13,7 @@ test("Semio Kit exact placement states, relationship integrity and controls",asy
 
 test("Semio kit distinct local child aliases preserve independent target identities",async()=>{for(const alias of f.distinctAliases){const s=structuredClone(input);s.objects[0]={childId:alias.childId,target:{artifactId:alias.artifactId,dialect:{artifactKind:"s.stdio.semio",standard:"v1",subset:"object"}}};const db=Database.deserialize(await exportSqliteDatabase(await semioKitSnapshotToSqliteDatabase(s)));try{expect(db.query("SELECT child_id,artifact_id FROM semio_kit_object_child JOIN semio_kit_reference ON target_reference_id=semio_kit_reference.id WHERE ordinal=0").get()).toEqual({child_id:alias.childId,artifact_id:alias.artifactId});expect(await semioKitSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).toEqual(s);}finally{db.close();}}});
 
-import completeSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import completeSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 import{independentSqliteExtent as completeIndependentExtent}from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
 test("Semio Kit Native matched full and metadata empty independently preserve all complete cells",async()=>{
  for(const item of completeSemanticContract.cases){const source=structuredClone(item.sourceSnapshot)as unknown as SemioKitSnapshot;const hydrate=(value:unknown):unknown=>Array.isArray(value)?value.map(hydrate):value!==null&&typeof value==="object"?("bits"in value?{bits:String((value as {bits:string}).bits).length===8?Number.parseInt(String((value as {bits:string}).bits),16):BigInt("0x"+String((value as {bits:string}).bits))}:Object.fromEntries(Object.entries(value).map(([key,item])=>[key,hydrate(item)]))):value;Object.assign(source,hydrate(source));for(const link of source.representations){if(link.pin.kind==="snapshot")link.pin.blob.size=BigInt(link.pin.blob.size)};const database=await semioKitSnapshotToSqliteDatabase(source),bytes=await exportSqliteDatabase(database);expect(completeIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:completeSemanticContract.schemaBytes,tableWidths:completeSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:completeSemanticContract.schemaBytes,maxTables:11,maxColumns:35};expect(await semioKitSnapshotToSqliteDatabase(source,limits)).toEqual(database);expect(await semioKitSnapshotFromSqliteDatabase(await importSqliteDatabase(bytes),limits)).toEqual(source);

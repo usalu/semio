@@ -52,7 +52,7 @@ mod opaque_scene_retirement_tests {
 #[test]
 #[cfg(not(target_arch = "wasm32"))]
 fn opaque_scene_retirement_slot_table_is_heap_first_and_fits_a_bounded_thread_stack() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
     let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
         .as_array()
         .expect("🧱️ the budget lists its tables")

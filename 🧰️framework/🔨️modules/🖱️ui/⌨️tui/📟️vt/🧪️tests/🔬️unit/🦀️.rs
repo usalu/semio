@@ -76,7 +76,7 @@ fn names_capability(feature: &str, capability: &str) -> bool {
 #[test]
 fn shared_streams_reproduce_every_screen_pyte_shows() {
     assert!(names_capability(include_str!("../../../../🧪️tests/⌨️tui-terminal-streams/🥒️.feature"), "tui-terminal-screen"));
-    let corpus = corpus(include_str!("../../../../🧫️fixtures/⌨️tui-terminal-streams/🔣️.json"));
+    let corpus = corpus(include_str!("../../../../🧪️tests/🧫️fixtures/⌨️tui-terminal-streams/🔣️.json"));
     let cases = corpus["cases"].as_array().expect("cases");
     assert!(cases.len() >= 30);
     for case in cases {
@@ -126,7 +126,7 @@ fn fixture_keypad(name: &str) -> KeypadKey {
 #[test]
 fn shared_keys_encode_to_the_bytes_terminfo_promises() {
     assert!(names_capability(include_str!("../../../../🧪️tests/⌨️tui-terminal-keys/🥒️.feature"), "tui-terminal-keys"));
-    let corpus = corpus(include_str!("../../../../🧫️fixtures/⌨️tui-terminal-keys/🔣️.json"));
+    let corpus = corpus(include_str!("../../../../🧪️tests/🧫️fixtures/⌨️tui-terminal-keys/🔣️.json"));
     let cases = corpus["cases"].as_array().expect("cases");
     assert!(cases.len() >= 150);
     for case in cases {
@@ -149,7 +149,7 @@ fn shared_keys_encode_to_the_bytes_terminfo_promises() {
 #[test]
 fn shared_pointer_events_encode_to_the_reports_prompt_toolkit_decodes() {
     assert!(names_capability(include_str!("../../../../🧪️tests/⌨️tui-terminal-mouse/🥒️.feature"), "tui-terminal-mouse"));
-    let corpus = corpus(include_str!("../../../../🧫️fixtures/⌨️tui-terminal-mouse/🔣️.json"));
+    let corpus = corpus(include_str!("../../../../🧪️tests/🧫️fixtures/⌨️tui-terminal-mouse/🔣️.json"));
     let cases = corpus["cases"].as_array().expect("cases");
     assert!(cases.len() >= 300);
     for case in cases {

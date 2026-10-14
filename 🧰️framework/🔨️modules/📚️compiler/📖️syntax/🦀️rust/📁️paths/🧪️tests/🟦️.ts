@@ -8,7 +8,7 @@ import Parser from "web-tree-sitter";
 import JSON5 from "json5";
 import ts from "typescript";
 const owner = resolve(import.meta.dir, "..");
-const fixture = JSON.parse(readFileSync(resolve(owner, "🧫️fixtures/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
 async function api() { return await import(resolve(owner, "🟦️.ts")); }
 const calls = new Set(["std::path::Path::new", "std::path::PathBuf::from", ...["read", "read_to_string", "read_dir", "write", "metadata", "symlink_metadata", "canonicalize", "create_dir", "create_dir_all", "remove_file", "remove_dir", "remove_dir_all"].map(name => "std::fs::" + name), "std::fs::File::open", "std::fs::File::create"]);
 function decode(text: string): string {

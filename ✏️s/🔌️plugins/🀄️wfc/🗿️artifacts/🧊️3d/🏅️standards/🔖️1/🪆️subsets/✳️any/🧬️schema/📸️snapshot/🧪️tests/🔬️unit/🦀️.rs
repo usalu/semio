@@ -58,7 +58,7 @@ fn every_example_slot_carries_a_positive_box() {
 #[test]
 fn declared_nested_mesh_child_projection_preserves_full_identity_and_inline_media(){
  use semio_framework_schema_composition::{ArtifactCompositionFields,ChildRefFields,ChildRefVisitor};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪆️mesh-child/🔣️.json")).expect("closed nested media contract");
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🪆️mesh-child/🔣️.json")).expect("closed nested media contract");
  let text=|value:&serde_json::Value|value.as_str().expect("text").to_string();
  let tiles=fixture["tiles"].as_array().expect("tiles").iter().map(|row|{let media=&row["media"];Tile{id:text(&row["id"]),label:None,weight:1.0,media:match media["kind"].as_str().expect("kind"){
  "mesh"=>TileMedia3d::Mesh{positions:media["positions"].as_array().expect("positions").iter().map(|v|v.as_f64().expect("coordinate")).collect(),indices:media["indices"].as_array().expect("indices").iter().map(|v|u32::try_from(v.as_u64().expect("index")).expect("u32")).collect(),color:None},
@@ -95,7 +95,7 @@ fn declared_nested_mesh_child_admission_requires_exact_type_dialect_and_retained
             Ok(())
         }
     }
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪆️mesh-child/🔣️.json")).expect("closed admission contract");
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🪆️mesh-child/🔣️.json")).expect("closed admission contract");
     let row=&fixture["tiles"][1]["media"];
     let text=|value:&serde_json::Value|value.as_str().expect("identity").to_string();
     let child=store::os_store::artifact_child::ArtifactChild::new(text(&row["childId"]),semio_framework_artifact_reference::ArtifactRef{artifact_id:text(&row["artifactId"]),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:text(&row["artifactKind"]),standard:text(&row["standard"]),subset:text(&row["subset"])}});

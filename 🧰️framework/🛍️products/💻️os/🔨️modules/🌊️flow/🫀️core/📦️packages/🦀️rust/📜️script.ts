@@ -1,12 +1,13 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel, TEST_LEVEL_BUDGET_MS } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel, TEST_LEVEL_BUDGET_MS } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🦀️ `@semio-tech/flow-core` router: `bun ./📜️script.ts <wasm|test>` — wasm-bindgen package for the flow engine session. */
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { runCargo, runRepositoryTestCommand, runRepositoryCargoTests, buildRepositoryWasmWebV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { bundleFlowBrowserModule, previewFlowBrowserPackage, publishFlowBrowserDeclarations, publishFlowBrowserPackage } from "../../../🕸️wasm/🌐️browser/📦️publication/🟦️.ts";
 
 const FAMILY_RS_DIR = join(import.meta.dir, "../../../📦️packages/🦀️rust");
@@ -23,19 +24,18 @@ class BrowserDeclarationsScript extends BundleScript {
 class BrowserOwnershipScript extends BundleScript {
   async run(): Promise<void> {
     const { testFlowBrowserOwnership } = await import("../../../🕸️wasm/🌐️browser/🏷️ownership/🧪️tests/🏷️browser-ownership/🟦️.ts");
-    await testFlowBrowserOwnership();
+    await testFlowBrowserOwnership(this.invocation);
   }
 }
 
 class WasmScript extends BundleScript {
   async run(): Promise<void> {
-    await buildRepositoryWasmWebV1({
+    await buildRepositoryWasmWebV1({ control: scriptCompilerAdmissionControlV1(this.invocation, "wasm:build", 0), 
       rsDir: FAMILY_RS_DIR,
       componentDir: resolve(FAMILY_RS_DIR, "../../🧩️component/📦️packages/🦀️rust"),
       logPrefix: "os/flow/core",
       wasmBaseName: "flow_core",
       outputDirectory: "🕸️bindings",
-      shipProfile: "wasm-release",
       pkg: {
         name: "@semio-tech/flow-core",
         files: ["flow_core_bg.wasm", "flow_core.js", "flow_core.d.ts", "flow_core_bg.wasm.d.ts"],
@@ -44,13 +44,13 @@ class WasmScript extends BundleScript {
         types: "flow_core.d.ts",
       },
     });
-    await publishFlowBrowserPackage(join(FAMILY_RS_DIR, "🕸️bindings"));
+    await publishFlowBrowserPackage(join(FAMILY_RS_DIR, "🕸️bindings"), this.invocation);
   }
 }
 
 class PreviewGeneratedScript extends BundleScript {
   async run(): Promise<void> {
-    const preview = await previewFlowBrowserPackage(join(FAMILY_RS_DIR, "🕸️bindings"));
+    const preview = await previewFlowBrowserPackage(join(FAMILY_RS_DIR, "🕸️bindings"), this.invocation);
     console.log(`Flow browser package preview: ${preview.files.length} files, ${preview.browserBytes} browser bytes, ${preview.declarationBytes} declaration bytes`);
   }
 }
@@ -87,6 +87,9 @@ class EvaluationSeedsTestScript extends BundleScript {async run():Promise<void>{
 /** 🧵️ Validates original source/snapshot/Work custody with independent semantic oracles. */
 class EvaluationWorkTestScript extends BundleScript{async run():Promise<void>{await runRepositoryTestCommand(process.execPath,["test",... ["../../../🖥️host/📥️evaluation-source/🧪️tests/🟦️.ts","../../../🖥️host/📥️evaluation-source/🌱️seeds/🧪️tests/🟦️.ts","../../../🖥️host/📥️evaluation-source/🧵️work/🧪️tests/🟦️.ts","../../../🖥️host/📤️publication/🖼️display/🧪️tests/🟦️.ts","../../../🖥️host/📤️publication/📡️invocation/🧪️tests/🟦️.ts","../../../../🧠️neural/⚙️engine/⏱️evaluation/🌊️wave/🧪️tests/🟦️.ts"].map(path=>join(import.meta.dir,path))],{cwd:this.repoRoot,budgetMs:TEST_LEVEL_BUDGET_MS.quick});}}
 
+/** 🔎️ Validates original read, preview wire and normal tick intake against independent neutral oracles. */
+class SourceReadTestScript extends BundleScript{async run():Promise<void>{await runRepositoryTestCommand(process.execPath,["test",join(import.meta.dir,"../../../🖥️host/📥️evaluation-source/🔎️read/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:TEST_LEVEL_BUDGET_MS.quick});}}
+
 class SourceTestScript extends BundleScript {
   async run(): Promise<void> {
     const { flowExtensionManifestAdmissionSelfTests } = await import("../../../📔️registry/🧪️tests/🪪️manifest-admission/🟦️.ts");
@@ -94,7 +97,7 @@ class SourceTestScript extends BundleScript {
     await import("../../../🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts");
     await import("../../../🕸️wasm/🧪️tests/🧬️schema-oracle/🟨️.js");
     const { testFlowOpenOwnership } = await import("../../../🕸️wasm/🧪️tests/🔓️open-ownership/🟦️.ts");
-    const fixture = JSON.parse(readFileSync(join(FAMILY_RS_DIR, "../../🕸️wasm/🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(FAMILY_RS_DIR, "../../🕸️wasm/🧪️tests/🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json"), "utf8"));
     await testFlowOpenOwnership(fixture.openFailure);
   }
 }
@@ -108,7 +111,7 @@ class BrowserTestScript extends BundleScript {
   async run(): Promise<void> {
     await import("../../../🕸️wasm/🧪️tests/🖥️host/🟨️.js");
     await import("../../../🕸️wasm/🧪️tests/🎬️draw-list/🟨️.js");
-    const outputs = await bundleFlowBrowserModule(false);
+    const outputs = await bundleFlowBrowserModule(false, this.invocation);
     const module = await outputs[0]?.text();
     if (outputs.length !== 1 || !module?.includes('import("../flow_core.js")') || !module.includes('from "../🖥️host/🟨️.js"') || module.includes("../../🕸️bindings")) throw new Error("Flow browser package lost its exact sibling module bindings");
     console.log("Flow packaged browser entry preserves its generated initializer and owned host sibling without external source-tree paths");
@@ -136,6 +139,6 @@ class HostSourceCustodyScript extends BundleScript{async run():Promise<void>{con
 
 class OriginalVcsClosureScript extends BundleScript{async run():Promise<void>{const {testOriginalVcsClosure}=await import("../../../🌿️vcs/♻️retirement/🧪️tests/🟦️.ts");testOriginalVcsClosure();}}
 
-const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("test", TestScript).register("test-source", SourceTestScript).register("test-session-source", SessionSourceTestScript).register("test-evaluation-source",EvaluationSourceTestScript).register("test-evaluation-seeds",EvaluationSeedsTestScript).register("test-evaluation-work",EvaluationWorkTestScript).register("test-geometry-ownership", GeometryOwnershipTestScript).register("test-browser", BrowserTestScript).register("test-browser-clock", BrowserClockTestScript).register("test-retained-grant-source", RetainedGrantSourceScript).register("test-retained-receipt-source",RetainedReceiptSourceScript).register("test-vcs-source",OriginalVcsClosureScript).register("test-host-source",HostSourceCustodyScript).register("test-dag-source",DagSourceCustodyScript).register("test-browser-ownership", BrowserOwnershipScript).register("declarations", BrowserDeclarationsScript);
+const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("test", TestScript).register("test-source", SourceTestScript).register("test-session-source", SessionSourceTestScript).register("test-evaluation-source",EvaluationSourceTestScript).register("test-evaluation-seeds",EvaluationSeedsTestScript).register("test-evaluation-work",EvaluationWorkTestScript).register("test-source-read",SourceReadTestScript).register("test-geometry-ownership", GeometryOwnershipTestScript).register("test-browser", BrowserTestScript).register("test-browser-clock", BrowserClockTestScript).register("test-retained-grant-source", RetainedGrantSourceScript).register("test-retained-receipt-source",RetainedReceiptSourceScript).register("test-vcs-source",OriginalVcsClosureScript).register("test-host-source",HostSourceCustodyScript).register("test-dag-source",DagSourceCustodyScript).register("test-browser-ownership", BrowserOwnershipScript).register("declarations", BrowserDeclarationsScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "wasm" }) }));

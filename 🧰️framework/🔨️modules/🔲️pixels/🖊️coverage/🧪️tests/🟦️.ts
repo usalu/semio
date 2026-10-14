@@ -3,9 +3,9 @@ import {expect,test,spyOn} from "bun:test";
 import Ajv from "ajv";
 import sharp from "sharp";
 import polygonClipping from "polygon-clipping";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
-import retirementCases from "../🧫️fixtures/🧹️retirement/🔣️.json";
+import retirementCases from "./🧫️fixtures/🧹️retirement/🔣️.json";
 import {CoverageJob,polygonCoverage,type CoverageInput} from "../🟦️.ts";
 
 const validate=new Ajv({strict:true}).compile(schema);

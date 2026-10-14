@@ -172,7 +172,8 @@ impl ArtifactCommandWork<EditorApp<SemioMeshEditor>> for SemioMeshSetVertexWork 
         Ok(semio_framework_value::RetirementDemand { copy_bytes: text, capacity_bytes: text.saturating_add(size_of::<SemioMeshMutation>()), release_bytes: 0, depth: 1 })
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<SemioMeshEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<SemioMeshEditor>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<SemioMeshEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<SemioMeshEditor>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.complete {
             return Err(Fault::from("stdio.semio.mesh.set-vertex.work-closed"));
         }
@@ -227,6 +228,9 @@ impl ArtifactCommandWork<EditorApp<SemioMeshEditor>> for SemioMeshSetVertexWork 
             vertex_index: args.vertex_index,
             new_point,
         })])))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) {

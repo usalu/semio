@@ -85,7 +85,7 @@ const STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 const STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] };
 fn mp4_editor_example_snapshot(example_id: &str) -> Mp4Snapshot {
     if example_id == crate::examples::demo::ID {
-        <Mp4Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+        <Mp4Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         Mp4Snapshot::default()
     }
@@ -261,6 +261,7 @@ impl ArtifactEditor for Mp4Editor {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

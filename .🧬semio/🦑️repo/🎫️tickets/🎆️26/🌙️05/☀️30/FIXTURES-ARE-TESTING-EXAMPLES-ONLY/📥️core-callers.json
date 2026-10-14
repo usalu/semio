@@ -1,0 +1,79 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🗺️surface/🧪️tests/🧩️suite/🟦️.ts",
+    "from": "join(owner, \"🧫️fixtures/🗺️vector-tiles\", row.file)",
+    "to": "join(owner, \"🧪️tests/🧫️fixtures/🗺️vector-tiles\", row.file)",
+    "before": "c0214afbe142b61e35311e68b0f2471c0625f23318e5614ae15206071bbf35ee",
+    "after": "be1a1f41ce998b8d8ba14134879ede75df1fa79ff83fa2ea88eb368c45285e7b"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️analysis-oracles/🟦️.ts",
+    "from": "./🥽️mesh/🧫️fixtures/",
+    "to": "./🥽️mesh/🧪️tests/🧫️fixtures/",
+    "before": "ce297b55c3fbfa0e740f63c596b2b7ad180ed692481d81db46fcb5e17dc7a2ef",
+    "after": "47f465b3c12c5bb8d62c3cedb4c9b7b9d704a070acfbcd53fd5bafd5d6075942"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️analysis-oracles/🟦️.ts",
+    "from": "./📐️brep/🧫️fixtures/",
+    "to": "./📐️brep/🧪️tests/🧫️fixtures/",
+    "before": "47f465b3c12c5bb8d62c3cedb4c9b7b9d704a070acfbcd53fd5bafd5d6075942",
+    "after": "2747af3d37c0eefe29a88c986e875ec175ab5527b01f9a368986375bb944fc43"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/🧪️tests/🔬️differential/🟦️.ts",
+    "from": "./📐️brep/🛠️operations/🔀️boolean/🧫️fixtures/",
+    "to": "./📐️brep/🛠️operations/🔀️boolean/🧪️tests/🧫️fixtures/",
+    "before": "02b319c9c95b35b7ac6176828e51934e27c5931b92d19861e821971af7903edd",
+    "after": "2ff30ed53d34c1467f4f9326adf01f28466daa74f78f9a9227586d56878ebe5d"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/📍️ownership/🧭️direction/🟦️.ts",
+    "from": "owner + \"/🧫️fixtures/",
+    "to": "owner + \"/🧪️tests/🧫️fixtures/",
+    "before": "4249543750b4b4cc14b570beebdcba72eaf8617f3ab6250cb40e46aef8af28a5",
+    "after": "0ae4223e91ead0064a9533aea5791ea76022cf65a334752c6767d09f47c62ef2"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🕹️interaction/👆️gesture/🧪️tests/🔬️unit/🟦️.ts",
+    "from": "\"🧪️tests/🧫️fixtures/🤏️recognizer.json\", \"🤏️recognizer.json\"",
+    "to": "\"🧪️tests/🧫️fixtures\", \"🤏️recognizer.json\"",
+    "before": "cc7145f17ef518510ec2c9f5806df67e2e2769272a54cced5162cea9358aba2a",
+    "after": "c6d4d98967273496691c8b7fd56993a9efd21e2838f482f81a9637595acf5ee6"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/📋️project.json",
+    "from": "/**/🧫️fixtures/**/*",
+    "to": "/**/🧪️tests/**/🧫️fixtures/**/*",
+    "before": "1cbd22845d1ec0ce02bc102157c6e1176edcfa42d8c86ebdac23bccd864c8008",
+    "after": "93cd4246364d054b4bcd21165ad9ada23e6315a875ea8d5d2bc805bf91d212b4"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛂️manifest/🔖️channel-version/📇️consumers.json",
+    "from": "🔨️modules/🛂️manifest/🧫️fixtures/",
+    "to": "🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/",
+    "before": "01cfc0fb00528bea5de8aec102947687a12648b9b285564f66d8b4b85da597ac",
+    "after": "ff2937031e716d7a8ff533717dde84e7a505e8ee2c7242a8dbdcbd66f62b9745"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛂️manifest/🔮️oracles/🔣️.json",
+    "from": "over `🧫️fixtures/🧫️number-facets`",
+    "to": "over `🧪️tests/🧫️fixtures/🧫️number-facets`",
+    "before": "e1071757305b5c44b95410181747868a46279c2705020f4cb8fb1b29f0823621",
+    "after": "97ea8fa7d28a5462e4700440ed93c632c95899101dbe9f48a075b4220c506598"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⏱️trace/📝️record/🧬️schema/🔣️.json",
+    "from": "⏱️trace/🧫️fixtures/",
+    "to": "⏱️trace/🧪️tests/🧫️fixtures/",
+    "before": "1abc6861a6a153b2706c756343258a6b93d5c37e57b093d6c20a9d7a3666a1ae",
+    "after": "3360e13ce097693b3ee9af6acdceb126a47841ce3eac014a113c3cfd3edcda9e"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🔣️.json",
+    "from": "🧫️fixtures/🔣️.json",
+    "to": "🧪️tests/🧫️fixtures/🔣️.json",
+    "before": "71a583f1ebafed30c0ff23385d559fca131f0be0350299d59e18c39808e8c1b6",
+    "after": "adf8a93ef4885014eda2548bffd02c5dec0cba72d7677b6e4f0f0f94b789eba5"
+  }
+]

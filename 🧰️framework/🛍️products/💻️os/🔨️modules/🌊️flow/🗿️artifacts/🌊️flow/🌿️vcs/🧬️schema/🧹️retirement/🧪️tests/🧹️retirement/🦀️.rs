@@ -8,7 +8,7 @@ use super::super::{AddSynapse, AddWidget, ChangeLayout, ChangeSynapse, ChangeWid
 
 //#region 🧭️Fixtures
 fn fixture() -> FlowHostSnapshot {
-    let vectors = semio_framework_pack_json::parse(include_str!("../../../🔺️diff/🧫️fixtures/🧾️ownership/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("actual retained ownership vectors");
+    let vectors = semio_framework_pack_json::parse(include_str!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🧾️ownership/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("actual retained ownership vectors");
     semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(vectors.get("base").expect("base fixture"))).expect("actual retained Flow fixture")
 }
 

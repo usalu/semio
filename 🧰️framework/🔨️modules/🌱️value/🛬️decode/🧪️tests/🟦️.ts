@@ -2,12 +2,12 @@ import Ajv from "ajv/dist/2020";
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
 import {NativeDecodeControl} from "../🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json";
-import stageFixture from "../🧫️fixtures/🪆️stage/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+import stageFixture from "./🧫️fixtures/🪆️stage/🔣️.json";
 import {stageOracle,type StageCase,type StageOperation,type StageResult} from "./🪆️stage/🟦️.ts";
 import ChildAjv from "ajv";
 import childSchema from "../🧬️child/🧬️schema/🔣️.json";
-import childFixture from "../🧬️child/🧫️fixtures/🔣️.json";
+import childFixture from "../🧬️child/🧪️tests/🧫️fixtures/🔣️.json";
 import {NativeDecodeChildLoan,NativeDecodeRetirementRecipient} from "../🧬️child/🟦️.ts";
 
 test("original native decode child loans keep cumulative SQLite ownership and original recipients",async()=>{
@@ -19,7 +19,7 @@ test("original native decode child loans keep cumulative SQLite ownership and or
 });
 
 test("original shared actor lease authority preserves UTF8 and admits no replacement frame",async()=>{
- const fixture=(await import("../../📝️shared-utf8/♻️original-lease/🧫️fixtures/🔣️.json")).default;
+ const fixture=(await import("../../📝️shared-utf8/♻️original-lease/🧪️tests/🧫️fixtures/🔣️.json")).default;
  const schema=(await import("../../📝️shared-utf8/♻️original-lease/🧬️schema/🔣️.json")).default;
  const validate=new Ajv({strict:true,allErrors:true}).compile(schema);expect(validate(fixture)).toBe(true);
  for(const bad of [{...fixture,unknown:true},{...fixture,grant:{...fixture.grant,maximumCapacityBytes:1}},{...fixture,values:["changed"]}])expect(validate(bad)).toBe(false);
@@ -36,7 +36,7 @@ test("original shared actor lease authority preserves UTF8 and admits no replace
 
 
 test("borrowed native scopes intersect retained turn capacity before every original allocation",async()=>{
- const fixture=(await import("../📏️maximum/🧫️fixtures/🔣️.json")).default;
+ const fixture=(await import("../📏️maximum/🧪️tests/🧫️fixtures/🔣️.json")).default;
  const schema=(await import("../📏️maximum/🧬️schema/🔣️.json")).default;
  const validate=new Ajv({strict:true,allErrors:true}).compile(schema);expect(validate(fixture)).toBe(true);
  for(const bad of [{...fixture,unknown:true},{...fixture,initialBytes:-1},{...fixture,cases:fixture.cases.slice(1)},{...fixture,cases:fixture.cases.map((row,index)=>index===0?{...row,ownedBytes:-1}:row)}])expect(validate(bad)).toBe(false);
@@ -98,7 +98,7 @@ test("native materialization retains cumulative bounds and interior cancellation
 
 
 test("borrowed native observers preserve original cancellation, complete cumulative debit and unwind restoration",async()=>{
-  const {default:fixture}=await import("../🧫️fixtures/🔭️observer/🔣️.json");
+  const {default:fixture}=await import("./🧫️fixtures/🔭️observer/🔣️.json");
   for(const sample of fixture.cases){
     const parentEvents:number[]=[],observerEvents:number[]=[];let active=false,capturing=false;
     const control=new NativeDecodeControl(sample.maximumBytes,event=>{if(capturing)parentEvents.push(event.ownedBytes);return !active||sample.parentRejectAt===null||event.ownedBytes<sample.parentRejectAt;});
@@ -120,7 +120,7 @@ test("borrowed native observers preserve original cancellation, complete cumulat
 
 
 test("native_detached_receiving_preserves_original_cumulative_ledger", async () => {
- const fixture=(await import("../🧫️fixtures/🔌️detached/🔣️.json")).default;
+ const fixture=(await import("./🧫️fixtures/🔌️detached/🔣️.json")).default;
  const schema=(await import("../🧬️schema/🔌️detached/🔣️.json")).default;
  expect(new Ajv({strict:true,allErrors:true}).compile(schema)(fixture)).toBe(true);
  const db=new Database(":memory:");

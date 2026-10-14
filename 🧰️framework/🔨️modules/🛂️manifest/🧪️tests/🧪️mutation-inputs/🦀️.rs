@@ -5,7 +5,7 @@
 
 use super::*;
 
-const CORPUS: &str = include_str!("../../🧫️fixtures/🧫️mutation-inputs/🔣️.json");
+const CORPUS: &str = include_str!("../🧫️fixtures/🧫️mutation-inputs/🔣️.json");
 
 fn corpus() -> DslValue {
     semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(CORPUS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the corpus is JSON"))

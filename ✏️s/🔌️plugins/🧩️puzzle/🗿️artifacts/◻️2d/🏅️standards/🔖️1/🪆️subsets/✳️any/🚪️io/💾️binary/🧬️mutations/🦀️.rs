@@ -96,21 +96,24 @@ use crate::standards::v1::subsets::any::schema::mutations::scale_selection::{sca
 
 /// 📦️ Packs through the typed authority, so the play kind shares `Puzzle2dSnapshot`'s derived record
 /// layout and pack-schema identity.
-impl store::os_store::serialization::ArtifactPack for Puzzle2dPlaySnapshot {
-    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())
-    }
+impl pack::snapshot::ArtifactPack for Puzzle2dPlaySnapshot {
+    
 
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         self.typed().encode_pack_with(options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        <Puzzle2dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack_with(bytes, options).map(Self::from_typed)
+        <Puzzle2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack_with(bytes, options).map(Self::from_typed)
     }
 
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-        <Puzzle2dSnapshot as store::os_store::serialization::ArtifactPack>::record_spec()
+        <Puzzle2dSnapshot as pack::snapshot::ArtifactPack>::record_spec()
+    }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Puzzle2dPlaySnapshot {
+fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())
     }
 }
 }

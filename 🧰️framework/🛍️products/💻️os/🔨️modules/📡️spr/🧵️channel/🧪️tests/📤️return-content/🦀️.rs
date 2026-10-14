@@ -1,6 +1,6 @@
 //! 📤️ Original return-content invocation crosses the OS AppFrame channel exactly.
 use semio_framework::kernel::{Effect, MessageEndpoint, PluginInstanceId};
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 fn unhex(value: &str) -> Vec<u8> { (0..value.len()).step_by(2).map(|offset| u8::from_str_radix(&value[offset..offset + 2], 16).unwrap()).collect() }
 
 #[semio_framework_async_macros::async_test]

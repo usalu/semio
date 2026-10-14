@@ -1,5 +1,6 @@
-import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import {checkScriptInvocation,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { runRepositoryCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { COMPONENT_MODULE_DIRECTORIES } from "../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 /** 🧩️ Semantic activation execution owner. */
@@ -7,7 +8,7 @@ import { COMPONENT_MODULE_DIRECTORIES } from "../../../🔌️plugin/📇️regi
 import { artifactFiles } from "../../../🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 
 import { newestComponentSourceMtime, stagedModuleMtime, readStagedSourceContentHash, writeStagedSourceContentHash, writeStagedSourceFreshness } from "../../../🔌️plugin/🏗️build/🔍️freshness/🟦️.ts";
-import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, healthyPreparedComponents, nextActivationReceipt, playgroundSessionOutputPath, pluginModulesRoot, preparedComponentReportLines, preparedComponentVerdict, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, activationSourceFreshnessDirectory, developmentRuntimeRoot, healthyPreparedComponents, nextActivationReceipt, playgroundSessionOutputPath, builtPluginModulesRootIn, preparedComponentReportLines, preparedComponentVerdict, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
 
 import { FONT_ASSET, validateFontAsset } from "../../../../../../🔨️modules/🖼️canvas/🔤️fonts/🟦️.ts";
 
@@ -20,8 +21,8 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from "node:pat
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import { filterProjectedPluginRegistry, readGeneratedCatalogProjection } from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 
@@ -57,9 +58,9 @@ import { playgroundCatalog } from "../../../🔌️plugin/🏗️build/📋️pl
 
 class ActivationScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    const [variant, renderer, selectedProfile] = args, profile = selectedProfile as "dev" | "release";
-    if (args.length !== 3 || !["react", "wgpu"].includes(renderer) || !["dev", "release"].includes(profile) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("activate <variant> react|wgpu <dev|release>");
-    const moduleRoot = pluginModulesRoot();
+    const [variant, renderer, selectedProfile] = args, profile = selectedProfile as "prototype" | "release";
+    if (args.length !== 3 || !["react", "wgpu"].includes(renderer) || !["prototype", "release"].includes(profile) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("activate <variant> react|wgpu <prototype|release>");
+    const moduleRoot = builtPluginModulesRootIn(repoRoot, profile);
     const sessionPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", variant, "🎮️playground-session", "🟦️.ts");
     const session = (await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION;
     if (session.variant !== variant) throw new Error("Activation session identity mismatch");
@@ -88,7 +89,7 @@ class ActivationScript extends BundleScript {
         let warm = healthy.prepared.length > 0 && prior.size === healthy.prepared.length;
         for (const pluginId of healthy.prepared) {
           const moduleDirectory = join(moduleRoot, moduleDirectoryName(pluginId, COMPONENT_MODULE_DIRECTORIES));
-          const staged = readStagedSourceContentHash(moduleDirectory);
+          const staged = readStagedSourceContentHash(activationSourceFreshnessDirectory(runtime, pluginId));
           const row = prior.get(pluginId);
           // Trust receipt ↔ staged-marker agreement; live source re-hash is the serve freshness pass.
           if (!row?.sourceContentSha256 || staged !== row.sourceContentSha256) { warm = false; break; }
@@ -104,7 +105,7 @@ class ActivationScript extends BundleScript {
         const digest = await activationFilesDigest(artifactFiles(moduleDirectory), controller.signal);
         const catalogEntry = catalog.get(pluginId);
         const sourceRoot = catalogEntry ? join(repoRoot, componentOwnerRootV1(catalogEntry.cratePath)) : moduleDirectory;
-        const sourceContentSha256 = await writeStagedSourceFreshness(moduleDirectory, sourceRoot, controller.signal);
+        const sourceContentSha256 = await writeStagedSourceFreshness(activationSourceFreshnessDirectory(runtime, pluginId), sourceRoot, controller.signal);
         completed.push({ pluginId, artifactSha256: createHash("sha256").update(supportDigest + digest).digest("hex"), sourceContentSha256 });
       }
       const previous = existsSync(join(receiptRoot, ACTIVATION_RECEIPT_FILE)) ? readActivationReceipt(receiptRoot) : undefined;
@@ -123,7 +124,7 @@ class ActivationScript extends BundleScript {
 }
 
 /** 🎯️ Resolves the authored activation producer for one admitted playground runtime. */
-export function playgroundActivationTargetV1(variant: string, profile: "dev" | "release", renderer: "react" | "wgpu"): string {
+export function playgroundActivationTargetV1(variant: string, profile: "prototype" | "release", renderer: "react" | "wgpu"): string {
   if (!playgroundCatalog.some(row => row.variant === variant)) throw Error(`Missing generated playground ${variant}`);
   return `@semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`;
 }
@@ -136,10 +137,11 @@ export function playgroundActivationTargetV1(variant: string, profile: "dev" | "
  * own `wasm` producer(s), `@semio-tech/plugin-registry:session-<variant>`, then `prepare` and `activate`.
  * Delegating rather than re-listing that closure here is what makes "reuse whatever is already fresh"
  * Nx's cache decision instead of a second, drifting freshness rule — react and wgpu share this one path. */
-async function activatePlaygroundRuntime(variant: string, profile: "dev" | "release", renderer: "react" | "wgpu" = "react", options: { signal?: AbortSignal } = {}): Promise<void> {
+async function activatePlaygroundRuntime(invocation:ScriptInvocation,variant: string, profile: "prototype" | "release", renderer: "react" | "wgpu"): Promise<void> {
+  checkScriptInvocation(invocation);
   const target = playgroundActivationTargetV1(variant, profile, renderer);
   console.log(`[dev] activating ${variant} ${renderer} ${profile} via ${target}`);
-  await runRepositoryCommand("bun", ["nx", "run", target], repoRoot, `playground-activation:${variant}:${renderer}:${profile}`, buildBudgetMs(), { signal: options.signal });
+  await runRepositoryCommand(invocation,"bun", ["nx", "run", target], repoRoot, `playground-activation:${variant}:${renderer}:${profile}`, {version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null});
 }
 
 export { ActivationScript, activatePlaygroundRuntime };

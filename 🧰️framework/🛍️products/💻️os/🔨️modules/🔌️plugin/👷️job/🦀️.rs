@@ -60,7 +60,8 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use semio_framework_artifact_reference::ArtifactRef;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use store::{os_store::store_schema::ArtifactCommand, ConfigStore};
-use store::{os_store::serialization::ArtifactPack, ArtifactStore, Mutation, MutationDiff};
+use pack::snapshot::ArtifactPack;
+use store::{ArtifactStore, Mutation, MutationDiff};
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_ui_locale::Terminology;
@@ -224,7 +225,7 @@ pub(crate) struct PendingTransaction<Op> {
     pub(crate) txn_id: String,
     pub(crate) ops: Vec<Op>,
     pub(crate) children: Vec<ChildEmit>,
-    origin: protocol::MutationOrigin,
+    pub(crate) origin: protocol::MutationOrigin,
     pub(crate) base_generation: u64,
 }
 
@@ -249,20 +250,20 @@ pub struct TransactionProposalDraft {
 }
 
 #[cfg(test)]
-fn test_unregistered_tool_job_admission_rejected<A: ArtifactApp>(catalog: &AppActionRegistry, generated: &[&str]) -> bool {
+pub(crate) fn test_unregistered_tool_job_admission_rejected<A: ArtifactApp>(catalog: &AppActionRegistry, generated: &[&str]) -> bool {
     crate::reserved_jobs::tool_job_registration::<A>(catalog, A::APP_ID, A::DOCUMENT_SCHEMA, generated, &semio_framework::ActionBus::new(), &BTreeMap::new()).is_err()
 }
 
 /// 🧪 Executes hostile proof substitutions inside the private authority module in test builds only.
 #[cfg(test)]
-fn test_retained_factory_proof_join<A, F, G, W>(mut catalog: AppActionRegistry, controller: &'static str, tool: &'static str, factory: F)
+pub(crate) fn test_retained_factory_proof_join<A, F, G, W>(mut catalog: AppActionRegistry, controller: &'static str, tool: &'static str, factory: F)
 where
     A: ArtifactApp,
     F: ArtifactOwnedToolJobFactory<Owner = A>,
     G: ArtifactOwnedToolJobFactory<Owner = A>,
     W: ArtifactApp,
 {
-    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️tool-factory-proof.json")).expect("language-neutral factory join fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔬️tool-factory-proof.json")).expect("language-neutral factory join fixture");
     let bus = semio_framework::ActionBus::new();
     let empty_bus = semio_framework::ActionBus::new();
     let contract = semio_framework::ToolJobFactory::execution_contract(&factory);
@@ -514,8 +515,8 @@ pub(crate) struct TypedOperationCompletionWitness {
 pub struct TypedOperationResultPage {
     pub token: TypedOperationResultToken,
     pub lane: TypedOperationResultLane,
-    bytes: [u8; TYPED_OPERATION_RESULT_PAGE_BYTES],
-    len: usize,
+    pub(crate) bytes: [u8; TYPED_OPERATION_RESULT_PAGE_BYTES],
+    pub(crate) len: usize,
 }
 
 /// 📦️ The Download lane's wire shape is a flat 4-element JSON array — matching what
@@ -524,10 +525,10 @@ pub struct TypedOperationResultPage {
 /// 3 elements, and a `#[derive(ToValue)]` struct encodes as an object, not an array, so this
 /// hand-written impl is the local (no shared-file edit) way to keep the array shape exact.
 pub(crate) struct DownloadResultPayload<'a> {
-    filename: &'a str,
-    mime_type: &'a str,
-    encoding: Option<&'a str>,
-    bytes: usize,
+    pub(crate) filename: &'a str,
+    pub(crate) mime_type: &'a str,
+    pub(crate) encoding: Option<&'a str>,
+    pub(crate) bytes: usize,
 }
 
 impl semio_framework_value::ToValue for DownloadResultPayload<'_> {
@@ -620,30 +621,30 @@ pub(crate) struct TypedCommandRoots<A: ArtifactApp> {
     pub(crate) interaction_hover: InteractionHoverState,
     pub(crate) presence_peers: std::sync::Arc<store::os_store::presence::PresencePeersRoot<A::Presence>>,
     pub(crate) transient: std::sync::Arc<A::Transient>,
-    peer_presence: std::sync::Arc<PeerPresenceRoot>,
+    pub(crate) peer_presence: std::sync::Arc<PeerPresenceRoot>,
     pub(crate) canonical_base_revision: [u8; 32],
     pub(crate) base_revision: semio_framework_job::RevisionId,
     pub(crate) generation: semio_framework_job::Generation,
-    config_generation: u64,
+    pub(crate) config_generation: u64,
     pub(crate) draft_generation: u64,
-    presence_generation: u64,
+    pub(crate) presence_generation: u64,
     pub(crate) transient_generation: u64,
     pub(crate) window_config_authority: Option<super::window_config::WindowConfigAuthority>,
     pub(crate) window_transient_authority: Option<super::window_transient::WindowTransientAuthority>,
 }
 
 #[cfg(test)]
-fn test_artifact_owned_tool_job_context_identity_digest(app_instance_id: u32, canonical_base_revision: [u8; 32], draft_generation: u64, transient_generation: u64, children_digest: u64) -> u64 {
+pub(crate) fn test_artifact_owned_tool_job_context_identity_digest(app_instance_id: u32, canonical_base_revision: [u8; 32], draft_generation: u64, transient_generation: u64, children_digest: u64) -> u64 {
     artifact_owned_tool_job_context_identity_digest(app_instance_id, None, canonical_base_revision, draft_generation, transient_generation, children_digest, (None, None))
 }
 
 #[cfg(test)]
-fn test_window_transient_context_identity(snapshot: Option<&WindowTransientSnapshot>) -> u64 {
+pub(crate) fn test_window_transient_context_identity(snapshot: Option<&WindowTransientSnapshot>) -> u64 {
     artifact_owned_tool_job_context_identity_digest(7, None, [17; 32], 0, 0, 0, (None, snapshot))
 }
 
 #[cfg(test)]
-fn test_window_config_context_identity(snapshot: Option<&WindowConfigSnapshot>) -> u64 {
+pub(crate) fn test_window_config_context_identity(snapshot: Option<&WindowConfigSnapshot>) -> u64 {
     artifact_owned_tool_job_context_identity_digest(7, None, [17; 32], 0, 0, 0, (snapshot, None))
 }
 
@@ -680,7 +681,7 @@ pub(crate) fn agent_lane_uncarried_fault(verb: &str, lanes: &str) -> Fault {
 /// the app's own words beside its localized text for `app.command.no-effect`.
 pub(crate) fn agent_lane_no_effect_fault(verb: &str, effects: &[Effect]) -> Fault {
     let mut fault = Fault::new(FaultOrigin::App, FaultCode::new("app.command.no-effect"), format!("action '{verb}' changes nothing here"));
-    fault.causes = effects.iter().filter_map(|effect| if let Effect::Notify { message } = effect { Some(semio_framework::FaultCause { message: message.clone(), code: Some(FaultCode::new("app.notice")) }) } else { None }).collect();
+    fault.causes = effects.iter().filter_map(|effect| if let Effect::Notify { message } = effect { Some(semio_framework::FaultCause { retained_progress:None, message: message.clone(), code: Some(FaultCode::new("app.notice")) }) } else { None }).collect();
     fault
 }
 
@@ -832,27 +833,27 @@ fn agent_lane_uncarried_lanes(publication: &AgentLanePublication<'_>) -> Vec<&'s
 /// exhausted budget or a lost step is refused by name. The session is closed on every path: to terminal-empty, or
 /// handed to the worker-session retirement pump when its close stalls.
 pub(crate) struct ChildEmissionPreviewJob<A:ArtifactApp>{
-    emit:Option<Emit<A::Mutation,A::ConfigMutation,A::DraftMutation>>,
-    ephemeral:Option<EphemeralEmit<A>>,
-    completion:Option<ArtifactToolCompletion<A>>,
-    retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
-    retirement_payload:Option<ArtifactToolCompletionValue<A>>,
-    retirement_fault:Option<Fault>,
-    rejection:Option<ArtifactToolCompletionRejection<A>>,
-    completion_retirement:Option<ControlledRetirement<ArtifactToolCompletion<A>>>,
-    maximum_bytes:usize,
-    wire_mode:bool,
-    fault_publication:semio_framework_job::RetainedFaultPublication,
-    closing:bool,
+    pub(crate) emit:Option<Emit<A::Mutation,A::ConfigMutation,A::DraftMutation>>,
+    pub(crate) ephemeral:Option<EphemeralEmit<A>>,
+    pub(crate) completion:Option<ArtifactToolCompletion<A>>,
+    pub(crate) retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
+    pub(crate) retirement_payload:Option<ArtifactToolCompletionValue<A>>,
+    pub(crate) retirement_fault:Option<Fault>,
+    pub(crate) rejection:Option<ArtifactToolCompletionRejection<A>>,
+    pub(crate) completion_retirement:Option<ControlledRetirement<ArtifactToolCompletion<A>>>,
+    pub(crate) maximum_bytes:usize,
+    pub(crate) wire_mode:bool,
+    pub(crate) fault_publication:semio_framework_job::RetainedFaultPublication,
+    pub(crate) closing:bool,
 }
 
 impl<A:ArtifactApp> semio_framework_job::InteractiveJob for ChildEmissionPreviewJob<A>{
-    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,ValueError>{
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::JobOutcomeBorrow;
-        if cx.is_cancelled(){return JobOutcomeBorrow::admit_cancelled(cx)}
+        if cx.is_cancelled(){return JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
         if cx.should_yield(){return Ok(None)}
-        if let Some(fault)=self.retirement_fault.as_ref().or_else(||self.rejection.as_ref().map(|original|&original.fault)){return self.fault_publication.advance_from_fault(fault,cx)}
-        let Some(emit)=self.emit.as_mut()else{return JobOutcomeBorrow::admit_complete(cx,None,None)};
+        if let Some(fault)=self.retirement_fault.as_ref().or_else(||self.rejection.as_ref().map(|original|&original.fault)){return self.fault_publication.advance_from_fault(fault,cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
+        let Some(emit)=self.emit.as_mut()else{return JobOutcomeBorrow::admit_complete(cx,None,None).map_err(semio_framework_job::OriginalTurnFailure::from)};
         cx.set_stage("agent-child-emission-preparation");
         let grant=cx.retained_grant();
         let demand=emit.child_preparation_demands(grant.maximum_copy_bytes)?;
@@ -872,7 +873,7 @@ impl<A:ArtifactApp> semio_framework_job::InteractiveJob for ChildEmissionPreview
                 if progress!=RetainedCloneProgress::default(){return Ok(None)}
                 if cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(None)}
                 let completion=self.completion.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original child preview completion owner is absent"))?;
-                if self.ephemeral.is_none(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original child preview ephemeral owner is absent"))}
+                if self.ephemeral.is_none(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original child preview ephemeral owner is absent").into())}
                 cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;
                 let ephemeral=self.ephemeral.take().expect("original ephemeral owner was borrowed before transfer");
                 let emit=self.emit.take().expect("ready preview retains its original complete emission");
@@ -892,10 +893,12 @@ impl<A:ArtifactApp> semio_framework_job::InteractiveJob for ChildEmissionPreview
         }
     }
     fn begin_close(&mut self){self.closing=true;}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::InteractiveJobCloseStep as Step;
-        if !self.closing{return Step::Blocked;}
-        match self.close_owned_turn(grant){Ok(progress)=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Err(error)=>Step::Refused{kind:error.kind,progress:error.retained_progress()}}
+        if !self.closing||cx.should_yield(){return Ok(Step::Blocked);}
+        let demand=self.close_owned_demands(cx.retained_grant().maximum_copy_bytes)?;
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|self.close_owned_turn(grant).map(RetainedCloneStep::Progress))?;
+        Ok(match step{Step::Pending{progress}|Step::Complete{progress}=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Step::Blocked=>Step::Blocked})
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.copy_bytes)}
     fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.close_owned_demands(copy)?.capacity_bytes)}

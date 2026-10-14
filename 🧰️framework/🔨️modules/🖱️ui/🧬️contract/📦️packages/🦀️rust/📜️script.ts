@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
-import { configuredExactCargoLawPolicyV1 } from "../../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { runExactCargoLaws } from "../../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { runOwnedCommand } from "../../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runExactCargoLaws } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { runOwnedCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { resolve } from "node:path";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { resolveTestLevel } from "../../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../🏃️process/⏱️budget/🟦️.ts";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** ⚙️ Runs the `semio-framework-ui-contract` test suite and the guest-target compile gates.
  *
  * The wasm gates are the point of this crate: the contract is what `wasm32-wasip2` plugin components
@@ -17,10 +17,10 @@ import { basename, dirname, join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { seedGeneratedFile } from "../../../../🏃️process/📦️artifacts/🗂️files/🟦️.ts";
+import { seedGeneratedFile } from "../../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 
-import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { testBuiltTreeRetirementFixture } from "../../♻️retirement/🌲️built/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
 import { fixedListStorageSelfTests } from "../../🧪️tests/🔬️fixed-list-storage/🟦️.ts";
 import { conformanceCorpusSelfTests } from "../../🧪️tests/🔬️conformance-corpus/🟦️.ts";
@@ -66,7 +66,7 @@ class TestScript extends BundleScript {
 
 
 /** 🧪️ Runs only `🔬️conformance.rs`'s corpus harness — every fixture under
- * `🧫️fixtures/🧪️conformance/` deserializes, validates/patches through this crate's own
+ * `🧪️tests/🧫️fixtures/🧪️conformance` deserializes, validates/patches through this crate's own
  * `validate_snapshot`/`apply_patch`, and matches its declarative expectation. Same test binary as
  * `test`, filtered to the `conformance::` module path so iterating on the corpus does not pay for the
  * whole crate's suite. */

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "👣️set-roof-footprint/⛔️too-few-vertices",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/👣️set-roof-footprint/⛔️too-few-vertices/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/👣️set-roof-footprint/⛔️too-few-vertices/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/👣️set-roof-footprint/⛔️too-few-vertices/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/👣️set-roof-footprint/⛔️too-few-vertices/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/👣️set-roof-footprint/⛔️too-few-vertices/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👣️set-roof-footprint/⛔️too-few-vertices/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👣️set-roof-footprint/⛔️too-few-vertices/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👣️set-roof-footprint/⛔️too-few-vertices/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👣️set-roof-footprint/⛔️too-few-vertices/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👣️set-roof-footprint/⛔️too-few-vertices/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

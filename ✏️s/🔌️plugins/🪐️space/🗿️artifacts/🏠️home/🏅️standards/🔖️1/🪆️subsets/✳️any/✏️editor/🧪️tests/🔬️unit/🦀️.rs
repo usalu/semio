@@ -4,7 +4,7 @@ use super::*;
 //#region 🧪️RetainedCommandEnvelope
 #[test]
 fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
-    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧫️retained-command-limits/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral retained fixture");
+    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🧫️retained-command-limits/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral retained fixture");
     let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"] == "Migrated").map(|row| row["id"].as_str().expect("route id")).collect();
     assert_eq!(migrated, HOME_RETAINED_TOOL_IDS);
     assert_eq!(HOME_RETAINED_PUBLICATION_CONTRACTS.len(), migrated.len());
@@ -246,7 +246,7 @@ fn catalog_home() -> SHomeSnapshot {
 }
 
 fn studio_dsl(name: &str) -> String {
-    <semio_framework_artifact_space_space::SpaceSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&empty_space_snapshot(name, SpaceKind::Atelier, SpaceVisibility::Private))
+    <semio_framework_artifact_space_space::SpaceSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&empty_space_snapshot(name, SpaceKind::Atelier, SpaceVisibility::Private))
 }
 
 fn catalog_entries_named(name: &str) -> usize {

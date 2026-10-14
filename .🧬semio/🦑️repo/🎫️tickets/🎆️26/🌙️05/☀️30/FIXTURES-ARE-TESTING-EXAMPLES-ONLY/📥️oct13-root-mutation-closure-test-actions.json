@@ -1,0 +1,20 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔭️mutation-fixture-placement/🟦️.ts",
+      "action": "created",
+      "beforeSha256": null,
+      "afterSha256": "99ad9d28b43cd0071c802275ac6df009c354c939704b64dfb57e06a0a337b20c",
+      "exclusive": false,
+      "scope": "Portable mutation closure examples under real tests, with independent minimatch/Node path oracle and actual defining resolver"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🔭️mutation-fixture-placement/🔣️.json",
+      "action": "created",
+      "beforeSha256": null,
+      "afterSha256": "0641a6ff34fb4c3a86cf31b062ce2d934c3d191f2ebf9beb8efeedfd13196671",
+      "exclusive": false,
+      "scope": "Portable mutation closure examples under real tests, with independent minimatch/Node path oracle and actual defining resolver"
+    }
+  ]
+}

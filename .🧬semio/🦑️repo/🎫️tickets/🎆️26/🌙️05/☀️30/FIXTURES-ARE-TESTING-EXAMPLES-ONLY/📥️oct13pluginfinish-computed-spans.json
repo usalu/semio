@@ -1,0 +1,443 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts",
+    "beforeSha256": "7a0c962ccafcade4c6e08e031e3c67a4be5c8a054a40dc9fd44be46ce6659caa",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 8745,
+        "end": 8755,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🏭️generator/📜️script.ts",
+    "beforeSha256": "88530d920638417858a296d57d527c6b6a9b2657df81156086a71f9f56bf6574",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 14317,
+        "end": 14327,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      },
+      {
+        "start": 13304,
+        "end": 13314,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      },
+      {
+        "start": 2971,
+        "end": 2981,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts",
+    "beforeSha256": "a40d5ad289a05c23cc2bc7038d4c765651bb4014f3a26aaa6738b6e330a674b6",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 9171,
+        "end": 9181,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      },
+      {
+        "start": 9103,
+        "end": 9113,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      },
+      {
+        "start": 9005,
+        "end": 9015,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🏗️grammar/🟦️.ts",
+    "beforeSha256": "74dd36392966123c22c2289e4923229058e9f2298ace3d6175250bd868ee2910",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 325,
+        "end": 353,
+        "before": "🧫️fixtures/🏗️grammar/🔣️.json",
+        "after": "🧪️tests/🧫️fixtures/🏗️grammar/🔣️.json",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📜️script.ts",
+    "beforeSha256": "e8596e28062b9213a974399fb51547a77ce6ad658837af51e34595ca9281a164",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 8212,
+        "end": 8222,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "beforeSha256": "5214a5b7583b87fc3f26e68ed2cde83bcc4be0117f53ce36586e3a5f1dd93abe",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 8893,
+        "end": 8903,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "beforeSha256": "d49c9a086b8f2fb8895869e5e69d15f4ba9ce8a9571e842932f07b56c234422a",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 1364,
+        "end": 1415,
+        "before": "🧫️fixtures/🧬️history-edits/title/🦠️mutation/🔣️.json",
+        "after": "🧪️tests/🧫️fixtures/🧬️history-edits/title/🦠️mutation/🔣️.json",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts",
+    "beforeSha256": "b728a267d9989aad951f94698b77ff0c543765f79eb4e3e2a5e8d8f477ae60d0",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 9220,
+        "end": 9230,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🏭️generator/📜️script.ts",
+    "beforeSha256": "d7fdecc1a375aaa87077aef747d9d8e657873cf95aa0a670ad407478608043b0",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 3236,
+        "end": 3246,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "beforeSha256": "5437377f211bd82c28235e8e054a09498bb292596b3b54f90f4b82808929e46d",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 3186,
+        "end": 3196,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/📜️script.ts",
+    "beforeSha256": "a2b2ddbe2c59f8dda1e425753a9310720c8ce52ca7b58b6501ed430d409e09e5",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 33239,
+        "end": 33307,
+        "before": "../../../../🔨️modules/🏠️host/🧰️owned/🧫️fixtures/🧮️mutation-admission",
+        "after": "../../../../🔨️modules/🏠️host/🧰️owned/🧪️tests/🧫️fixtures/🧮️mutation-admission",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🏭️generator/📜️script.ts",
+    "beforeSha256": "b487f1c91c2e35a10e11bd3e778bfdf443253f798dc0e4fefdcc64aaa9ad44e6",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 3182,
+        "end": 3192,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/📜️script.ts",
+    "beforeSha256": "481fc9c7743fd57fb9328111daf020af57b6ae55aa01d8c3a59326d1a1a78a44",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 3249,
+        "end": 3259,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts",
+    "beforeSha256": "c265f911fd7a8f897a9350212f6d486b8c1a62ce3367e60c0bf7c9ad87707340",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 7439,
+        "end": 7449,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📜️script.ts",
+    "beforeSha256": "06f214d65b81190e3402782ac19f0b370390ad418d2ae57f21407b89ac582766",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 3226,
+        "end": 3236,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🏭️generator/📜️script.ts",
+    "beforeSha256": "fb8f78748f9eb22c3842287e50a2308ed900a0d80189e97be39f9484d51969aa",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 3237,
+        "end": 3247,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "beforeSha256": "35ff1e3a312a818f43150445f36267b1dee2fe9e2843fcaf3451d2e9a4850f6b",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 8273,
+        "end": 8283,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/📜️script.ts",
+    "beforeSha256": "92a974e9bb900f336ddf21618f3daa24a12736637cad6a89357382d9683337a0",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 3226,
+        "end": 3236,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts",
+    "beforeSha256": "7fc7048ddd4fff6b67747f58b8896bf2cd2d45befdbcacca890e8fdd3cc8d5ac",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 25093,
+        "end": 25103,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts",
+    "beforeSha256": "ea2cb0308d15ef9e4c952b84d7c30cc1f2350fea29902ded1aaa8a5f92130755",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 3232,
+        "end": 3242,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🏭️generator/📜️script.ts",
+    "beforeSha256": "aedb8c26f424c5d5caa842b564f3a5be03a499421b8ca4f881bdd87208627684",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 3223,
+        "end": 3233,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/💾️binary/🧬️mutations/🫳️borrowed/🧪️tests/🟦️.ts",
+    "beforeSha256": "042399a3779a22df83a5db1e035ad6fefae413150b465d8f20091a356aec493a",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 230,
+        "end": 248,
+        "before": "🧫️fixtures/🔣️.json",
+        "after": "🧪️tests/🧫️fixtures/🔣️.json",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts",
+    "beforeSha256": "fa0c9864ad44aae1c7734f179d0ac449eaa15d54de146872777ec60d86b3e1aa",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 28775,
+        "end": 28785,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      },
+      {
+        "start": 25560,
+        "end": 25570,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+    "beforeSha256": "67bbd66d3b62ae21351f3eac5e6deb3d28d60973104b73f7759b59cba44afc99",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 29821,
+        "end": 29831,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      },
+      {
+        "start": 29011,
+        "end": 29021,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/📜️script.ts",
+    "beforeSha256": "925e7b91c4e0e7e99c43a0e21f65337ed269ee002f5751d90e2e7a2c6df33b87",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 7604,
+        "end": 7614,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts",
+    "beforeSha256": "c3befc350e78ab5969da31fcd1894a2315c7eb3e5d15243e9bcd0b10dfdb2c4d",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 4407,
+        "end": 4417,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      },
+      {
+        "start": 3835,
+        "end": 3845,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+    "beforeSha256": "1bd0254f27326d2b016fe5c4f1806bdb34d69f2da6f9c0fd6475d9e57cb852bf",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 50592,
+        "end": 50602,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      },
+      {
+        "start": 49091,
+        "end": 49101,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      },
+      {
+        "start": 38621,
+        "end": 38631,
+        "before": "🧫️fixtures",
+        "after": "🧪️tests/🧫️fixtures",
+        "role": "resolved-computed-fixture-coordinate"
+      }
+    ]
+  }
+]

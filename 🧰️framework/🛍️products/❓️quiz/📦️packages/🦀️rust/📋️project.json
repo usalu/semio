@@ -12,7 +12,7 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/**/*.rs",
-      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧫️fixtures/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧪️tests/🧫️fixtures/**/*",
       "{projectRoot}/**/*"
     ]
   },

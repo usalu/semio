@@ -5,7 +5,7 @@
 use super::{commands_frames_within, document_pack_schema_hash, document_socket_authority_admits, document_socket_hello, document_socket_protocols, replica_hlc_seed, DocumentSocketBinding};
 use crate::os_directory::client::DocumentSocketAuthorityV1;
 
-const FIXTURE: &str = include_str!("../../../🧫️fixtures/document-socket-connect-v1/🔣️.json");
+const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/document-socket-connect-v1/🔣️.json");
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(FIXTURE).expect("document-socket-connect fixture json")

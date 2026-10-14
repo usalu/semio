@@ -1,0 +1,3110 @@
+[
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🏠️host/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🏠️host/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️executor",
+    "files": 1,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🌳️ast",
+    "files": 1,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract",
+    "files": 1,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🗂️reorganize/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🗂️reorganize/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧪️tests/🧫️fixtures",
+    "files": 6,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 11,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 6,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📸️snapshot",
+    "files": 2,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔺️diff",
+    "files": 1,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract",
+    "files": 1,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/♻️retirement/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/♻️retirement",
+    "files": 1,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 3,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧹️reorganize/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧹️reorganize/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 70,
+    "owner": "🔱️trinity"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 3,
+    "owner": "📸️remodel"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures",
+    "files": 4,
+    "owner": "📸️remodel"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔄relative-pose/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/🔄relative-pose",
+    "files": 1,
+    "owner": "📸️remodel"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧊️model/🪟️windows/🧊️model/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧊️model/🪟️windows/🧊️model/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📸️remodel"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📸️remodel"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📸️remodel"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️reconstruction-session/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️reconstruction-session/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📸️remodel"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 683,
+    "owner": "📸️remodel"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures",
+    "files": 3,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract",
+    "files": 3,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 4,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️document/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️document/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🎭️masks/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🎭️masks/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖱️selection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖱️selection/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️mask-from-selection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️mask-from-selection/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥞️flatten-layers/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥞️flatten-layers/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🫳️merge-down/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🫳️merge-down/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📋️duplicate-layer/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📋️duplicate-layer/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️move-layer/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️move-layer/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📤️export/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📤️export/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 263,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖨️raster/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖨️raster/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖨️raster"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 3,
+    "owner": "🏭️process"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🏭️process"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 75,
+    "owner": "🏭️process"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🧪️tests/🧫️fixtures",
+    "files": 3,
+    "owner": "🏭️process"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/⚖️compliance/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/⚖️compliance/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🪟️results/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🪟️results/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 3,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🧪️tests/🧫️fixtures",
+    "files": 4,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 340,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 100,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 325,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 4,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔺️diff",
+    "files": 1,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 230,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 400,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 235,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 310,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 140,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 165,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 245,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 131,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 405,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 185,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 7,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 105,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 4,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 130,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📕️norm/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📕️norm/🧪️tests/🧫️fixtures",
+    "files": 3,
+    "owner": "📕️norm"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🎪️demonstrator"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🎪️demonstrator"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "🎪️demonstrator"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧱️block/🗂️catalog/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧱️block/🗂️catalog/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🧱️block"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧱️block/🧬️schema/🧱️shared/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧱️block/🧪️tests/🧫️fixtures/🧱️shared",
+    "files": 1,
+    "owner": "🧱️block"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 4,
+    "owner": "🧱️block"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🫧️transient/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🫧️transient/🧪️tests/🧫️fixtures",
+    "files": 7,
+    "owner": "🧱️block"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🧱️block"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 185,
+    "owner": "🧱️block"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 3,
+    "owner": "🧱️block"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🧱️block"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 205,
+    "owner": "🧱️block"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🧱️block"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🧱️block"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 131,
+    "owner": "🧱️block"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧱️block/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧱️block/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🧱️block"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🕸️dag"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🕸️dag"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract",
+    "files": 1,
+    "owner": "🕸️dag"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/🧭topology",
+    "files": 1,
+    "owner": "🕸️dag"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 11,
+    "owner": "🕸️dag"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🧫️fixtures",
+    "files": 6,
+    "owner": "🕸️dag"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🗂️reorganize/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🗂️reorganize/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🕸️dag"
+  },
+  {
+    "source": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "💡️reasoning"
+  },
+  {
+    "source": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract",
+    "files": 1,
+    "owner": "💡️reasoning"
+  },
+  {
+    "source": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "💡️reasoning"
+  },
+  {
+    "source": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🗂️reorganize/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🗂️reorganize/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "💡️reasoning"
+  },
+  {
+    "source": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 10,
+    "owner": "💡️reasoning"
+  },
+  {
+    "source": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🧪️tests/🧫️fixtures",
+    "files": 6,
+    "owner": "💡️reasoning"
+  },
+  {
+    "source": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 4,
+    "owner": "💡️reasoning"
+  },
+  {
+    "source": "✏️s/🔌️plugins/💡️reasoning/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/💡️reasoning/🧪️tests/🧫️fixtures",
+    "files": 0,
+    "owner": "💡️reasoning"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🎬️sequence"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🎬️sequence"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📸️snapshot",
+    "files": 1,
+    "owner": "🎬️sequence"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🎬️sequence"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "🎬️sequence"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📽️main/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📽️main/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🎬️sequence"
+  },
+  {
+    "source": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.4/🧱️base/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.4/🧱️base/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "✒️writer"
+  },
+  {
+    "source": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 3,
+    "owner": "✒️writer"
+  },
+  {
+    "source": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 11,
+    "owner": "✒️writer"
+  },
+  {
+    "source": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures",
+    "files": 16,
+    "owner": "✒️writer"
+  },
+  {
+    "source": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "✒️writer"
+  },
+  {
+    "source": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 27,
+    "owner": "✒️writer"
+  },
+  {
+    "source": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "✒️writer"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🎞️animate"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🎞️animate"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📸️snapshot",
+    "files": 1,
+    "owner": "🎞️animate"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract",
+    "files": 1,
+    "owner": "🎞️animate"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 6,
+    "owner": "🎞️animate"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🎞️animate"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🧫️fixtures",
+    "files": 6,
+    "owner": "🎞️animate"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🎞️animate"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 41,
+    "owner": "🎞️animate"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎞️animate/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎞️animate/🧪️tests/🧫️fixtures",
+    "files": 0,
+    "owner": "🎞️animate"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪐️space/🫀️core/📄️documents/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪐️space/🫀️core/📄️documents/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🪐️space"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪐️space/🫀️core/🕰️time/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪐️space/🫀️core/🕰️time/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🪐️space"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪐️space/🫀️core/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪐️space/🫀️core/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🪐️space"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🪐️space"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🪐️space"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 0,
+    "owner": "🪐️space"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🪐️space"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧪️tests/🧫️fixtures",
+    "files": 16,
+    "owner": "🪐️space"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "🪐️space"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏭️bridge/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏭️bridge/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🪐️space"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🪐️space"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📸️snapshot",
+    "files": 0,
+    "owner": "🪐️space"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🪐️space"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 20,
+    "owner": "🪐️space"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏭️bridge/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏭️bridge/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🪐️space"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪐️space/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪐️space/🧪️tests/🧫️fixtures",
+    "files": 0,
+    "owner": "🪐️space"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🧪️tests/🧫️fixtures",
+    "files": 0,
+    "owner": "🪐️space"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🫀️core/🧬️generation/🪶️sqlite/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🫀️core/🧬️generation/🪶️sqlite/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🔨️modules/🏠️host/📐️geometry-service/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🔨️modules/🏠️host/📐️geometry-service/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🐚️box-shell-preview/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🐚️box-shell-preview/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧹️face-sweep-extrude/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧹️face-sweep-extrude/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom-column/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom-column/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍩️sphere-cut-with-torus/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍩️sphere-cut-with-torus/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧲️sphere-box-fuse/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧲️sphere-box-fuse/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🪢️rectangle-wire-preview/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🪢️rectangle-wire-preview/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️rectangle-extrude-volume/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️rectangle-extrude-volume/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📐️box-fillet-preview/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📐️box-fillet-preview/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/💾️brep-interchange/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/💾️brep-interchange/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/📼️mesh-interchange/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/📼️mesh-interchange/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures",
+    "files": 6,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔣️value/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔣️value/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗂️catalogue/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🗂️catalogue",
+    "files": 2,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧭️transforms/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧭️transforms",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔺️diff",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/〰️brep-curve/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/〰️brep-curve",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🏳️brep-surface/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🏳️brep-surface",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔀️mesh-convert/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🔀️mesh-convert",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/➡️math-vector/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/➡️math-vector",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🐚️brep-topology/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🐚️brep-topology",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🗺️mesh-uv/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🗺️mesh-uv",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✂️brep-intersect/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/✂️brep-intersect",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/📏️analysis-measure/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/📏️analysis-measure",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔎️mesh-inspect/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🔎️mesh-inspect",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🛰️service/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🛰️service",
+    "files": 0,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔗️brep-boolean/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🔗️brep-boolean",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🥽️mesh-primitive/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🥽️mesh-primitive",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔁️brep-transform/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🔁️brep-transform",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧊️brep-primitive/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🧊️brep-primitive",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧮️math-arithmetic/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🧮️math-arithmetic",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/📚️math-list/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/📚️math-list",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/↔️mesh-transform/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/↔️mesh-transform",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🎚️mesh-component/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🎚️mesh-component",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✏️mesh-edit/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/✏️mesh-edit",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🩹️mesh-repair/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🩹️mesh-repair",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🛠️brep-feature/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🛠️brep-feature",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✅️analysis-check/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/✅️analysis-check",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔢️math-values/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🔢️math-values",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🎯️brep-evaluate/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🎯️brep-evaluate",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🏗️brep-solid/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🏗️brep-solid",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🌗️mesh-shading/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🌗️mesh-shading",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 25,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧪️tests/🧫️fixtures",
+    "files": 10,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 40,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🪪️identity/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🪪️identity/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🫧️transient/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🫧️transient/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️transforms/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️transforms/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧪️tests/🧫️fixtures",
+    "files": 6,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 159,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔺️diff",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧪️tests/🧫️fixtures",
+    "files": 6,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 112,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌀️procedural/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌀️procedural/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🌀️procedural"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🌿️vcs"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 3,
+    "owner": "🌿️vcs"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 30,
+    "owner": "🌿️vcs"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌿️vcs/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌿️vcs/🧪️tests/🧫️fixtures",
+    "files": 0,
+    "owner": "🌿️vcs"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🪶️sqlite/🎨️bitmap/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🪶️sqlite/🎨️bitmap/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🗼️tower-stack/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🗼️tower-stack/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧱️wall-roof-facade-strip/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧱️wall-roof-facade-strip/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🚪️two-room-corridor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🚪️two-room-corridor/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 15,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/📑️fill/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/📑️fill/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 91,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏭️bridge/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏭️bridge/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🪠️pipes-3d/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🪠️pipes-3d/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧱️blocks/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧱️blocks/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🌐️scene-projection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🌐️scene-projection/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 70,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏭️bridge/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏭️bridge/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🌡fill/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🌡fill/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 61,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏭️bridge/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏭️bridge/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 15,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🔣️fill/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🔣️fill/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 91,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏭️bridge/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏭️bridge/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🪣fill/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🪣fill/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 70,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏭️bridge/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏭️bridge/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🧪️tests/🧫️fixtures",
+    "files": 0,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/💼️job/📤️publication/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/💼️job/📤️publication/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/🧪️tests/🧫️fixtures",
+    "files": 3,
+    "owner": "🀄️wfc"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📜️imperative"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract",
+    "files": 1,
+    "owner": "📜️imperative"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 31,
+    "owner": "📜️imperative"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📜️imperative"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📜️imperative"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 4,
+    "owner": "🏙️bim"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🖌️render/🧊️world/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🖌️render/🧊️world/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🏙️bim"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 8029,
+    "owner": "🏙️bim"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "🪵️sourcing"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔺️diff",
+    "files": 1,
+    "owner": "🪵️sourcing"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract",
+    "files": 2,
+    "owner": "🪵️sourcing"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 18,
+    "owner": "🪵️sourcing"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "🗒️note"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🗒️note"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract",
+    "files": 1,
+    "owner": "🗒️note"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🗒️note"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🧫️fixtures",
+    "files": 6,
+    "owner": "🗒️note"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🗒️note"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "🗒️note"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧪️tests/🧫️fixtures",
+    "files": 97,
+    "owner": "🗒️note"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📊️table/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📊️table/🧪️tests/🧫️fixtures",
+    "files": 20,
+    "owner": "🗒️note"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧪️tests/🧫️fixtures",
+    "files": 21,
+    "owner": "🗒️note"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧪️tests/🧫️fixtures",
+    "files": 30,
+    "owner": "🗒️note"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧮️math/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧮️math/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "🗒️note"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📜️document/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📜️document/🧪️tests/🧫️fixtures",
+    "files": 7,
+    "owner": "🗒️note"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧪️tests/🧫️fixtures",
+    "files": 26,
+    "owner": "🗒️note"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📝️text/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📝️text/🧪️tests/🧫️fixtures",
+    "files": 9,
+    "owner": "🗒️note"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🗒️note/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🗒️note/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🗒️note"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 4,
+    "owner": "📋️forms"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/📨️response/📤️export/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/📨️response/📤️export/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📋️forms"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✅️validation",
+    "files": 1,
+    "owner": "📋️forms"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📨️response",
+    "files": 3,
+    "owner": "📋️forms"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract",
+    "files": 4,
+    "owner": "📋️forms"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 11,
+    "owner": "📋️forms"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📋️forms"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/❓️questions/🫥️visibility/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/❓️questions/🫥️visibility/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📋️forms"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/❓️questions/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/❓️questions/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "📋️forms"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/❓️questions/🧩️extensions/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/❓️questions/🧩️extensions/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "📋️forms"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/❓️questions/📍️placement/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/❓️questions/📍️placement/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "📋️forms"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/🧱️builder/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/🧱️builder/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📋️forms"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/▶️try/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/▶️try/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📋️forms"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/▶️try/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/▶️try/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📋️forms"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️set-try-value/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️set-try-value/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "📋️forms"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 77,
+    "owner": "📋️forms"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📋️forms"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🏛️architect"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🏛️architect"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract",
+    "files": 1,
+    "owner": "🏛️architect"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 11,
+    "owner": "🏛️architect"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🏛️architect"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🧫️fixtures",
+    "files": 11,
+    "owner": "🏛️architect"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧭️trace/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧭️trace/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🏛️architect"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📋️register/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📋️register/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🏛️architect"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 1691,
+    "owner": "🏛️architect"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🏛️architect"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🎥️shooting"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 31,
+    "owner": "🎥️shooting"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🎥️shooting"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🧫️fixtures",
+    "files": 6,
+    "owner": "🎥️shooting"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🎥️shooting"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📷️shot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📷️shot/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🎥️shooting"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 155,
+    "owner": "🎥️shooting"
+  },
+  {
+    "source": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "➗️mathematical"
+  },
+  {
+    "source": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "➗️mathematical"
+  },
+  {
+    "source": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌱roots/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/🌱roots",
+    "files": 1,
+    "owner": "➗️mathematical"
+  },
+  {
+    "source": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 12,
+    "owner": "➗️mathematical"
+  },
+  {
+    "source": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧪️tests/🧫️fixtures",
+    "files": 26,
+    "owner": "➗️mathematical"
+  },
+  {
+    "source": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧪️tests/🧫️fixtures",
+    "files": 67,
+    "owner": "➗️mathematical"
+  },
+  {
+    "source": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/➗️equation/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/➗️equation/🧪️tests/🧫️fixtures",
+    "files": 7,
+    "owner": "➗️mathematical"
+  },
+  {
+    "source": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "➗️mathematical"
+  },
+  {
+    "source": "✏️s/🔌️plugins/➗️mathematical/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/➗️mathematical/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "➗️mathematical"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 7,
+    "owner": "📏️layout"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📏️layout"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract",
+    "files": 1,
+    "owner": "📏️layout"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📏️layout"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️blueprint/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️blueprint/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📏️layout"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 272,
+    "owner": "📏️layout"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📏️layout/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📏️layout/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📏️layout"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🔨️modules/🎲️board/🎬️scene/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🔨️modules/🎲️board/🎬️scene/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏛️ownership/🧮️compute/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏛️ownership/🧮️compute/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔺️diff",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📍️flat-position/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📍️flat-position",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🖌️brush/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🖌️brush/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 323,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📡️proximity-connect/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📡️proximity-connect/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️precompute/🪣️fill/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️precompute/🪣️fill/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 373,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔎️lookup/♻️close/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📸️snapshot/🔎️lookup/♻️close",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔎️lookup/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📸️snapshot/🔎️lookup",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📸️snapshot",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🔤️text/🎮️prepare/📨️messages",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📸️candidate/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🔤️text/🎮️prepare/📸️candidate",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🔤️text/🎮️prepare",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/↩️inverse/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🔤️text/↩️inverse",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎮️prepare/🧰️child/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🎮️prepare/🧰️child",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-node/🎮️prepare/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/🎮️prepare",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🎮️prepare/📸️candidate/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🎮️prepare/📸️candidate",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🎮️prepare/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🎮️prepare",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🎮️prepare/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🌱create-node/🎮️prepare",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/🪢️edge/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🪢️edge",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/📸️candidate/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/📸️candidate",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/↩️inverse/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/↩️inverse",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/↩️inverse/📑️ordered-restoration/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/↩️inverse/📑️ordered-restoration",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️canonical/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🧵️canonical",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/🏁️region/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/⚑️flag/🎮️prepare/🏁️region",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/🌟️root/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/⚑️flag/🎮️prepare/🌟️root",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/📸️candidate/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/⚑️flag/🎮️prepare/📸️candidate",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/↩️inverse/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/⚑️flag/🎮️prepare/↩️inverse",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/⚑️flag/🎮️prepare",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 3,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-snapshot/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 602,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🧫️fixtures",
+    "files": 3,
+    "owner": "🧩️puzzle"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures",
+    "files": 236,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧪️tests/🧫️fixtures",
+    "files": 77,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧪️tests/🧫️fixtures",
+    "files": 67,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures",
+    "files": 370,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🎚️config/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🎚️config/🧪️tests/🧫️fixtures/🔬️contract",
+    "files": 1,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/🧪️tests/🧫️fixtures/🔬️contract",
+    "files": 1,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🧫️fixtures",
+    "files": 7,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧪️tests/🧫️fixtures",
+    "files": 66,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures",
+    "files": 231,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧪️tests/🧫️fixtures",
+    "files": 77,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧪️tests/🧫️fixtures",
+    "files": 67,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures",
+    "files": 356,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🎚️config/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🎚️config/🧪️tests/🧫️fixtures/🔬️contract",
+    "files": 1,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/🧪️tests/🧫️fixtures/🔬️contract",
+    "files": 1,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧪️tests/🧫️fixtures",
+    "files": 7,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🫧️transient/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🫧️transient/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🧫️fixtures",
+    "files": 7,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧪️tests/🧫️fixtures",
+    "files": 32,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏗️fem/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🏗️fem/🧪️tests/🧫️fixtures",
+    "files": 4,
+    "owner": "🏗️fem"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🏗️initialization/📚️catalog/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🏗️initialization/📚️catalog/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/♻️retirement/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/♻️retirement/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🛤️path/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🛤️path/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/↗️transform/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/↗️transform/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/📄️document/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/📄️document/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🖼️image/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🖼️image/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️owned/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️owned/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🧫️fixtures",
+    "files": 3,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🎨️color/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🎨️color/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📏️arrangement/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/📏️arrangement",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/✏️editing/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/✏️editing",
+    "files": 6,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🎨️paint",
+    "files": 3,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️picking/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking",
+    "files": 2,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/📷️raster",
+    "files": 5,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/↔️translation/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/↔️translation",
+    "files": 2,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎛️handles/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/🎛️handles",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/↗️affine/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/↗️affine",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry",
+    "files": 3,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️selection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/🎯️selection",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️framing/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/📷️framing",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/🔀️booleans",
+    "files": 2,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/🔍️trace",
+    "files": 2,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/🔤️text",
+    "files": 2,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/📷️raster",
+    "files": 7,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🪪️identity/🚦️admission/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/🪪️identity/🚦️admission",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🪪️identity/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/🪪️identity",
+    "files": 2,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/🧹️retire",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/📏️physical/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/🧹️retire/📏️physical",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/👁️view",
+    "files": 4,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/🎨️paint",
+    "files": 7,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎯️query/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/📋️prepare/🎯️query",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/📋️prepare",
+    "files": 3,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧩️compositing/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/🧩️compositing",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📍️placement/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/📍️placement",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧭️selection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🧭️selection",
+    "files": 2,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/📋️prepare",
+    "files": 7,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔷️shape/✏️coordinates/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔷️shape/✏️coordinates",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🌀️rule/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️fill/🌀️rule",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️fill/🎨️sampling",
+    "files": 2,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️fill",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🖊️stroke/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🖊️stroke",
+    "files": 2,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🖼️canvas/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📬️completion/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📬️completion/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧮️status/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧮️status/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️properties/🎬️actions/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️properties/🎬️actions/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️properties/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️properties/🧪️tests/🧫️fixtures",
+    "files": 4,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️layers/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️layers/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🎯️points/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🎯️points/🧪️tests/🧫️fixtures",
+    "files": 4,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧩️ungroup/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧩️ungroup/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🗂️stack/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🗂️stack/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🧫️fixtures",
+    "files": 3,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧵️publication/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧵️publication/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔀️combine-boolean/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔀️combine-boolean/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️move-layer/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️move-layer/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-layer/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-layer/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-layer/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-layer/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔷️shape-coordinate/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/🔷️shape-coordinate",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures",
+    "files": 43,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/➕️create-layer/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/➕️create-layer",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures",
+    "files": 38,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧪️tests/🧫️fixtures",
+    "files": 21,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/📝️update-text/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🖼️update-image/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧪️tests/🧫️fixtures/🧬️mutations/🖼️update-image",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧪️tests/🧫️fixtures",
+    "files": 47,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🖍️draw/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🖍️draw/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "🖍️draw"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "📖️playbook"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract",
+    "files": 1,
+    "owner": "📖️playbook"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🧫️fixtures",
+    "files": 11,
+    "owner": "📖️playbook"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🏗️builder/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🏗️builder/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📖️playbook"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📖️playbook"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 5,
+    "owner": "📖️playbook"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "📖️playbook"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧪️tests/🧫️fixtures",
+    "files": 7,
+    "owner": "📖️playbook"
+  },
+  {
+    "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures",
+    "files": 2,
+    "owner": "💠️lowpoly"
+  },
+  {
+    "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "💠️lowpoly"
+  },
+  {
+    "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures",
+    "files": 202,
+    "owner": "💠️lowpoly"
+  },
+  {
+    "source": "✏️s/🔌️plugins/💠️lowpoly/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/💠️lowpoly/🧪️tests/🧫️fixtures",
+    "files": 1,
+    "owner": "💠️lowpoly"
+  }
+]

@@ -1,0 +1,377 @@
+[
+  {
+    "schema": "literal/schema 世界\u0000",
+    "value": {
+      "kind": "object",
+      "members": [
+        {
+          "key": "duplicate\u0000世界",
+          "value": {
+            "kind": "number",
+            "lexeme": "900719925474099312345"
+          }
+        },
+        {
+          "key": "items",
+          "value": {
+            "kind": "array",
+            "items": [
+              {
+                "kind": "null"
+              },
+              {
+                "kind": "bool",
+                "value": false
+              },
+              {
+                "kind": "bool",
+                "value": true
+              },
+              {
+                "kind": "string",
+                "value": "Grüße 世界\u0000"
+              },
+              {
+                "kind": "array",
+                "items": []
+              },
+              {
+                "kind": "object",
+                "members": []
+              }
+            ]
+          }
+        },
+        {
+          "key": "duplicate\u0000世界",
+          "value": {
+            "kind": "number",
+            "lexeme": "-0"
+          }
+        },
+        {
+          "key": "exponent",
+          "value": {
+            "kind": "number",
+            "lexeme": "1e+000"
+          }
+        },
+        {
+          "key": "precision",
+          "value": {
+            "kind": "number",
+            "lexeme": "0.12345678901234567890123456789"
+          }
+        },
+        {
+          "key": "overflow",
+          "value": {
+            "kind": "number",
+            "lexeme": "1e9999"
+          }
+        },
+        {
+          "key": "literal",
+          "value": {
+            "kind": "number",
+            "lexeme": "arbitrary intermediate lexeme"
+          }
+        },
+        {
+          "key": "nested",
+          "value": {
+            "kind": "object",
+            "members": [
+              {
+                "key": "leaf",
+                "value": {
+                  "kind": "string",
+                  "value": "nested\u0000value"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "invalid",
+          "value": {
+            "kind": "number",
+            "lexeme": "01"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "schema": "root/null",
+    "value": {
+      "kind": "null"
+    }
+  },
+  {
+    "schema": "root/boolean",
+    "value": {
+      "kind": "bool",
+      "value": true
+    }
+  },
+  {
+    "schema": "root/number",
+    "value": {
+      "kind": "number",
+      "lexeme": "1e+000"
+    }
+  },
+  {
+    "schema": "root/string",
+    "value": {
+      "kind": "string",
+      "value": "scalar\u0000世界"
+    }
+  },
+  {
+    "schema": "root/array",
+    "value": {
+      "kind": "array",
+      "items": []
+    }
+  },
+  {
+    "schema": "root/object",
+    "value": {
+      "kind": "object",
+      "members": []
+    }
+  },
+  {
+    "schema": "geo/point",
+    "value": {
+      "kind": "object",
+      "members": [
+        {
+          "key": "type",
+          "value": {
+            "kind": "string",
+            "value": "Point"
+          }
+        },
+        {
+          "key": "coordinates",
+          "value": {
+            "kind": "array",
+            "items": [
+              {
+                "kind": "number",
+                "lexeme": "1"
+              },
+              {
+                "kind": "number",
+                "lexeme": "2"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "schema": "geo/feature",
+    "value": {
+      "kind": "object",
+      "members": [
+        {
+          "key": "type",
+          "value": {
+            "kind": "string",
+            "value": "Feature"
+          }
+        },
+        {
+          "key": "geometry",
+          "value": {
+            "kind": "null"
+          }
+        },
+        {
+          "key": "properties",
+          "value": {
+            "kind": "object",
+            "members": []
+          }
+        }
+      ]
+    }
+  },
+  {
+    "schema": "geo/feature-collection",
+    "value": {
+      "kind": "object",
+      "members": [
+        {
+          "key": "type",
+          "value": {
+            "kind": "string",
+            "value": "FeatureCollection"
+          }
+        },
+        {
+          "key": "features",
+          "value": {
+            "kind": "array",
+            "items": []
+          }
+        }
+      ]
+    }
+  },
+  {
+    "schema": "geo/geometry-collection",
+    "value": {
+      "kind": "object",
+      "members": [
+        {
+          "key": "type",
+          "value": {
+            "kind": "string",
+            "value": "GeometryCollection"
+          }
+        },
+        {
+          "key": "geometries",
+          "value": {
+            "kind": "array",
+            "items": [
+              {
+                "kind": "object",
+                "members": [
+                  {
+                    "key": "type",
+                    "value": {
+                      "kind": "string",
+                      "value": "Point"
+                    }
+                  },
+                  {
+                    "key": "coordinates",
+                    "value": {
+                      "kind": "array",
+                      "items": [
+                        {
+                          "kind": "number",
+                          "lexeme": "1"
+                        },
+                        {
+                          "kind": "number",
+                          "lexeme": "2"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "schema": "geo/legacy-mercator",
+    "value": {
+      "kind": "object",
+      "members": [
+        {
+          "key": "type",
+          "value": {
+            "kind": "string",
+            "value": "Point"
+          }
+        },
+        {
+          "key": "coordinates",
+          "value": {
+            "kind": "array",
+            "items": [
+              {
+                "kind": "number",
+                "lexeme": "0"
+              },
+              {
+                "kind": "number",
+                "lexeme": "0"
+              }
+            ]
+          }
+        },
+        {
+          "key": "crs",
+          "value": {
+            "kind": "object",
+            "members": [
+              {
+                "key": "type",
+                "value": {
+                  "kind": "string",
+                  "value": "name"
+                }
+              },
+              {
+                "key": "properties",
+                "value": {
+                  "kind": "object",
+                  "members": [
+                    {
+                      "key": "name",
+                      "value": {
+                        "kind": "string",
+                        "value": "urn:ogc:def:crs:EPSG::3857"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "schema": "geo/bad-coordinate",
+    "value": {
+      "kind": "object",
+      "members": [
+        {
+          "key": "type",
+          "value": {
+            "kind": "string",
+            "value": "Point"
+          }
+        },
+        {
+          "key": "coordinates",
+          "value": {
+            "kind": "array",
+            "items": [
+              {
+                "kind": "number",
+                "lexeme": "1"
+              },
+              {
+                "kind": "number",
+                "lexeme": "99"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "schema": "geo/noncharacter",
+    "value": {
+      "kind": "string",
+      "value": "original﷐世界\u0000"
+    }
+  }
+]

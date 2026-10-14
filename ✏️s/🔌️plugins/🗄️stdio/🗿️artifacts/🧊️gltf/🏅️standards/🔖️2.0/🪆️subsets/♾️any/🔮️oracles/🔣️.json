@@ -3168,14 +3168,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/add-required-extension-applied/before.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/add-required-extension-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/add-required-extension-applied/after.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/add-required-extension-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:2801ac4caa194114ce00e415f35f3cdd5a1da3f223f0eec3dffbae39ecbf5ad6",
           "bytes": 16589
@@ -3218,14 +3218,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/add-used-extension-applied/before.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/add-used-extension-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/add-used-extension-applied/after.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/add-used-extension-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:55520baf34925d99efe1ea78f3fda26ee5d1d147d990ebcaa37370463fee6994",
           "bytes": 16551
@@ -3268,14 +3268,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🏠️default-scene/🔗️bind/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🏠️default-scene/🔗️bind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🏠️default-scene/🔗️bind/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🏠️default-scene/🔗️bind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:1e52892c375a988140bd44a7d36a4effac7c1ac75aa40118a52e4344cdc6228d",
           "bytes": 16532
@@ -3318,14 +3318,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🎚️morph-attribute/🔗️bind/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🎚️morph-attribute/🔗️bind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🎚️morph-attribute/🔗️bind/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🎚️morph-attribute/🔗️bind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:684009437ae0004b49fae51b40f797e5159999a375df7fbfbb1a28ce09ceaa3a",
           "bytes": 16743
@@ -3368,14 +3368,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/📷️node-camera/🔗️bind/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/📷️node-camera/🔗️bind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/📷️node-camera/🔗️bind/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/📷️node-camera/🔗️bind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:67a64476fedf8f268fae34bd93c559db27cc99bfc551d0a693233c1429d5d67a",
           "bytes": 16551
@@ -3418,14 +3418,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌿️node-child/🔗️bind/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌿️node-child/🔗️bind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:180062fd65104f5bbf871dbdfe44a787b0d0c465db8397c23d06dc711e791fbc",
           "bytes": 16521
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌿️node-child/🔗️bind/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌿️node-child/🔗️bind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:44ebbc158aae88b6949292fa8f12e60996a997c73990c30d2142705966a017ab",
           "bytes": 16560
@@ -3468,14 +3468,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🏗️node-mesh/🔗️bind/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🏗️node-mesh/🔗️bind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🏗️node-mesh/🔗️bind/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🏗️node-mesh/🔗️bind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:469f4aa3d2afed40b924f4734b0f7e1d68d7f0aba78fe02db596ac237f74e43b",
           "bytes": 16549
@@ -3518,14 +3518,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🩻️node-skin/🔗️bind/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🩻️node-skin/🔗️bind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🩻️node-skin/🔗️bind/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🩻️node-skin/🔗️bind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:b99673168b515be9cd4cfc5bbb57c44cc2fe98cb721a99f6ce1a18e07a706b7b",
           "bytes": 16549
@@ -3568,14 +3568,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔤️primitive-attribute/🔗️bind/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔤️primitive-attribute/🔗️bind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔤️primitive-attribute/🔗️bind/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔤️primitive-attribute/🔗️bind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:70ac6e43af8a963c1bc25094d491f5d365ba0e0997fd7a3f10d2d3386a7a2f00",
           "bytes": 16742
@@ -3618,14 +3618,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔢️primitive-indices/🔗️bind/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔢️primitive-indices/🔗️bind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:05f0b30ff99fec996f854272f59b87ebaba204d42c2798ed4b05faebd8bb3d55",
           "bytes": 16508
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔢️primitive-indices/🔗️bind/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔢️primitive-indices/🔗️bind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:74f48a293bdb648d5b5c3c04e1a4aeb9a23dcb23b120a9f693e8151da1327e3b",
           "bytes": 16718
@@ -3668,14 +3668,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🧱️primitive-material/🔗️bind/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🧱️primitive-material/🔗️bind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🧱️primitive-material/🔗️bind/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🧱️primitive-material/🔗️bind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:5e5cac2d79ac5fe8678a7f7cb59a6b1d43c6e4a9f0d1ae0d2caf826773f02bab",
           "bytes": 16532
@@ -3718,14 +3718,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌲️scene-root/🔗️bind/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌲️scene-root/🔗️bind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:180062fd65104f5bbf871dbdfe44a787b0d0c465db8397c23d06dc711e791fbc",
           "bytes": 16521
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌲️scene-root/🔗️bind/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌲️scene-root/🔗️bind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:d7bc22e41e674c549cc32628bb4f791b82fdb7c7005f39aa9366df9ed7d504ad",
           "bytes": 16532
@@ -3768,14 +3768,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/change-asset-descriptive-metadata-applied/before.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/change-asset-descriptive-metadata-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/change-asset-descriptive-metadata-applied/after.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/change-asset-descriptive-metadata-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:25c9a67fd6fe2d81112c10b4c93196ca95f2a7d49a89c99eb32d1819719404ad",
           "bytes": 16547
@@ -3818,14 +3818,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/change-asset-extension-data-applied/before.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/change-asset-extension-data-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/change-asset-extension-data-applied/after.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/change-asset-extension-data-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:698eab5bbbd229555a73634b72d22ad5837839bbe8f49d3a92270d86b53dcca3",
           "bytes": 16609
@@ -3868,14 +3868,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/change-asset-extra-data-applied/before.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/change-asset-extra-data-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/change-asset-extra-data-applied/after.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/change-asset-extra-data-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:cd7c2db0c69ccc4e0cdc1558395535c1418f7a6ed060474fddb0b1457d7310d7",
           "bytes": 16532
@@ -3918,14 +3918,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/change-asset-version-applied/before.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/change-asset-version-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/change-asset-version-applied/after.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/change-asset-version-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:c8535952600cc855cc2260610fb56f8dfa8eb862b6389ceb5a220301e8e45576",
           "bytes": 16534
@@ -3968,14 +3968,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/change-document-extension-data-applied/before.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/change-document-extension-data-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/change-document-extension-data-applied/after.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/change-document-extension-data-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:e3b50942eb614aa758419aa4c7cade662dfbe4d0f2e10f1e0dce81b385f20471",
           "bytes": 16599
@@ -4018,14 +4018,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/change-document-extra-data-applied/before.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/change-document-extra-data-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/change-document-extra-data-applied/after.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/change-document-extra-data-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:1b20e8b39d6981e7c152486e5028c2a4245768f0f7c823dd5c0fac15b5cb9e7a",
           "bytes": 16523
@@ -4068,14 +4068,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/change-material-alpha-mode-applied/before.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/change-material-alpha-mode-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:1545b383900b76608def62365e3440b524d7b63c580f44eacefcdb19371b6ee0",
           "bytes": 16561
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/change-material-alpha-mode-applied/after.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/change-material-alpha-mode-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:e5d8752b51b65a37c2acb32d2e9239588021f6dd2e09447af0d45e8b459672cf",
           "bytes": 16560
@@ -4118,14 +4118,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/change-material-double-sided-applied/before.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/change-material-double-sided-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:d2d33fe3a6acb6c7970c36be03bd02df7793eebe8d442f12090ed0865bda22bd",
           "bytes": 16560
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/change-material-double-sided-applied/after.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/change-material-double-sided-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:1bbf452cdab75e2a37e310132950190c9cc589853cfb0460fbebfafef5b0c04f",
           "bytes": 16559
@@ -4168,14 +4168,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🧩️change-extensions/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/🧩️change-extensions/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🧩️change-extensions/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/🧩️change-extensions/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:78d35d90f8c04fa9976538e4b550d77ea71a04c7693dd49b4ad95858297a921f",
           "bytes": 16619
@@ -4218,14 +4218,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🕸️mesh/📝️change-extras/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/📝️change-extras/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🕸️mesh/📝️change-extras/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/📝️change-extras/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:b0b621f1589a1689d9d57d265036cd387f9c6612fa6eacaf972444bf2f5389b1",
           "bytes": 16560
@@ -4268,14 +4268,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🕸️mesh/⚖️change-weights/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/⚖️change-weights/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🕸️mesh/⚖️change-weights/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/⚖️change-weights/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:522b12edd9c2f971a32c9331b393112b22b12662d49cc13e941f0f646405a61a",
           "bytes": 16533
@@ -4318,14 +4318,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🏷️rename/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/🏷️rename/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🏷️rename/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/🏷️rename/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:f68e9166feafd38b3972aba67755d2a06ee0c1d7de1f247d458ea471afd058b7",
           "bytes": 16562
@@ -4368,14 +4368,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/🧩️change-extensions/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/🧩️change-extensions/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/🧩️change-extensions/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/🧩️change-extensions/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3b69e15ed41128e9336ddc9496aa8aa56569261524dcd53b07db7795b0c03a4d",
           "bytes": 16619
@@ -4418,14 +4418,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/📝️change-extras/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/📝️change-extras/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/📝️change-extras/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/📝️change-extras/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:05406f419fa48f7715d268c72f01ac2cbc628ae58854b0e58d0a5c51b6dfbe37",
           "bytes": 16560
@@ -4468,14 +4468,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/⚖️change-weights/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/⚖️change-weights/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/⚖️change-weights/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/⚖️change-weights/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:72582a3aed7b923b2656fed71429881dbc74441fdb1c4d1b89a5d2e8fa960d8c",
           "bytes": 16572
@@ -4518,14 +4518,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/🏷️rename/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/🏷️rename/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/🏷️rename/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/🏷️rename/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:8577af97589652e97a78e82d5474820bbf3e5f1b2c3658c40466af705a6db46c",
           "bytes": 16539
@@ -4568,14 +4568,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/📐️transform/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/📐️transform/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/📐️transform/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/📐️transform/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:70e482eafd8876d29ab4bc2fe9884e29e3b1667546c0cc8fbc7948344f3ea92b",
           "bytes": 16596
@@ -4618,14 +4618,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🧩️change-extensions/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔺️primitive/🧩️change-extensions/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🧩️change-extensions/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔺️primitive/🧩️change-extensions/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:d0a9ad9f3f750f69d4583ab821e47127ea0203d369cad5fbec7ff9d3a4d54bc8",
           "bytes": 16639
@@ -4668,14 +4668,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔺️primitive/📝️change-extras/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔺️primitive/📝️change-extras/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔺️primitive/📝️change-extras/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔺️primitive/📝️change-extras/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:31a39c173df4a472878b7d165f0a70c458785be9890632d4ab1f79d95ec3152e",
           "bytes": 16598
@@ -4718,14 +4718,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔺️primitive/📐️change-topology/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔺️primitive/📐️change-topology/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔺️primitive/📐️change-topology/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔺️primitive/📐️change-topology/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:f68694429255925434bd537fab69dd30020943281b855af3aef5544dcd949e8f",
           "bytes": 16532
@@ -4768,14 +4768,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🎬️scene/🧩️change-extensions/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🎬️scene/🧩️change-extensions/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🎬️scene/🧩️change-extensions/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🎬️scene/🧩️change-extensions/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:d5f7af5b1708f29e55cd48e95c453e0008d421755a6c949deeec5909a283e43d",
           "bytes": 16619
@@ -4818,14 +4818,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🎬️scene/📝️change-extras/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🎬️scene/📝️change-extras/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🎬️scene/📝️change-extras/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🎬️scene/📝️change-extras/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:b4cf039305ef7f2ec5553fa942bde7049f686412ee45ee35d6e944713ecf3a42",
           "bytes": 16560
@@ -4868,14 +4868,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🎬️scene/🏷️rename/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🎬️scene/🏷️rename/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🎬️scene/🏷️rename/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🎬️scene/🏷️rename/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:73decb6ab4be8df347dac5659da1fe24ea3754682a013aeffbd10715f1ddaddd",
           "bytes": 16539
@@ -4918,14 +4918,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎞️animation/🧫️fixtures/🌱️create-animation-applied/⬅️before.gltf",
+          "path": "../../🎞️animation/🧪️tests/🧫️fixtures/🌱️create-animation-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎞️animation/🧫️fixtures/🌱️create-animation-applied/➡️after.gltf",
+          "path": "../../🎞️animation/🧪️tests/🧫️fixtures/🌱️create-animation-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:f0cdefe2da62be6a7fb8438d3be84e7fa1db9fc2a45f2f46247d7ba999ac26fe",
           "bytes": 17193
@@ -4968,14 +4968,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/⬅️before.gltf",
+          "path": "../../🎥️camera/🧪️tests/🧫️fixtures/🌱️create-camera-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/➡️after.gltf",
+          "path": "../../🎥️camera/🧪️tests/🧫️fixtures/🌱️create-camera-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:0267466cbcf24d2065f07f51690a6d1e0ac5fdd0a4c6791f731cad3d46ba55db",
           "bytes": 16645
@@ -5018,14 +5018,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/create-material-applied/before.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/create-material-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/create-material-applied/after.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/create-material-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:4308e565bd052cf55428e8a7d7b2bb97b5159de2f9c49e975f6b4b533f0d560c",
           "bytes": 16540
@@ -5068,14 +5068,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🌱️create/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/🌱️create/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🌱️create/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/🌱️create/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:fe75d945136a10a1d68fdb7e9f8be4389d6dfe02973d7e074b8d3bb8657093a0",
           "bytes": 16597
@@ -5118,14 +5118,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🧬️morph-target/🌱️create/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️morph-target/🌱️create/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🧬️morph-target/🌱️create/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️morph-target/🌱️create/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:102d5e87280dc6c39079aaf819637164ce4c13956cfdeb24a49da35cdac5af20",
           "bytes": 16548
@@ -5168,14 +5168,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/🌱️create/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/🌱️create/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/🌱️create/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/🌱️create/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3ba79173941659e7be0047fb163ec458d0ee2e7220c129032a4352825eb48f47",
           "bytes": 16573
@@ -5218,14 +5218,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🌱️create/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔺️primitive/🌱️create/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🌱️create/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔺️primitive/🌱️create/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:4dabf432c173bc1c6828955dc10323a2c00ec53e1d29cfdae00955b544082922",
           "bytes": 16580
@@ -5268,14 +5268,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🎬️scene/🌱️create/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🎬️scene/🌱️create/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🎬️scene/🌱️create/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🎬️scene/🌱️create/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:66cf5d5fc864cc02d05417017f9b44c7dd1f76de97345bc054c24f9b6cfacd6f",
           "bytes": 16621
@@ -5318,14 +5318,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🦴️skin/🧫️fixtures/🌱️create-skin-applied/⬅️before.gltf",
+          "path": "../../🦴️skin/🧪️tests/🧫️fixtures/🌱️create-skin-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🦴️skin/🧫️fixtures/🌱️create-skin-applied/➡️after.gltf",
+          "path": "../../🦴️skin/🧪️tests/🧫️fixtures/🌱️create-skin-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:86fc051c3cfed583eb1c68c554972080b7b5b6eeaffc3c8b9e908ee22ebee417",
           "bytes": 16581
@@ -5368,14 +5368,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎞️animation/🧫️fixtures/🗑️delete-animation-applied/⬅️before.gltf",
+          "path": "../../🎞️animation/🧪️tests/🧫️fixtures/🗑️delete-animation-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎞️animation/🧫️fixtures/🗑️delete-animation-applied/➡️after.gltf",
+          "path": "../../🎞️animation/🧪️tests/🧫️fixtures/🗑️delete-animation-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:1d30d59c1d67453999668132410f4cc832bcc7240fb07fe296161ea8834e32fe",
           "bytes": 16199
@@ -5418,14 +5418,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎥️camera/🧫️fixtures/🗑️delete-camera-applied/⬅️before.gltf",
+          "path": "../../🎥️camera/🧪️tests/🧫️fixtures/🗑️delete-camera-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎥️camera/🧫️fixtures/🗑️delete-camera-applied/➡️after.gltf",
+          "path": "../../🎥️camera/🧪️tests/🧫️fixtures/🗑️delete-camera-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:a45f9f36134d310c46279da093575838f588458fec3008434bfc6d2e56e525c4",
           "bytes": 16297
@@ -5468,14 +5468,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/delete-material-applied/before.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/delete-material-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/delete-material-applied/after.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/delete-material-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:22f9c47801cd2ebcaccf8f3394a80f7886715b1ff85510ac9e63071d65e39679",
           "bytes": 16202
@@ -5518,14 +5518,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🗑️delete/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/🗑️delete/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🗑️delete/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/🗑️delete/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:5b9a3f89d4b546bd3d568f881620e400685157b6f5a21e5dfb5c51660f9886de",
           "bytes": 16207
@@ -5568,14 +5568,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🧬️morph-target/🗑️delete/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️morph-target/🗑️delete/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:8909a086cf27fbc79ca2a9506c1cbacc773fe17195bea6843b79dc6a81a4b36d",
           "bytes": 16492
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🧬️morph-target/🗑️delete/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️morph-target/🗑️delete/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:e9b77e6252541fed3e6548644c8f6f556dfaa30163258fdcb94cc6f24dfae050",
           "bytes": 16425
@@ -5618,14 +5618,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/🗑️delete/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/🗑️delete/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/🗑️delete/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/🗑️delete/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:15965c7609a55dd93cf077543d3c356a1519a33c252c6af98e08085a02005f67",
           "bytes": 16420
@@ -5668,14 +5668,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🗑️delete/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔺️primitive/🗑️delete/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🗑️delete/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔺️primitive/🗑️delete/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:7e4a82232e5196e586b2b6a0370cd9eac8fbf8157241919922c90fecb2767c11",
           "bytes": 16225
@@ -5718,14 +5718,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🎬️scene/🗑️delete/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🎬️scene/🗑️delete/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🎬️scene/🗑️delete/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🎬️scene/🗑️delete/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:29bafcc607be85630f14e1408d541253c9a73fe537969f01b8bd799645bb6a1c",
           "bytes": 16402
@@ -5768,14 +5768,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🦴️skin/🧫️fixtures/🗑️delete-skin-applied/⬅️before.gltf",
+          "path": "../../🦴️skin/🧪️tests/🧫️fixtures/🗑️delete-skin-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🦴️skin/🧫️fixtures/🗑️delete-skin-applied/➡️after.gltf",
+          "path": "../../🦴️skin/🧪️tests/🧫️fixtures/🗑️delete-skin-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:82b4e8f4d835b9f122ce7c5976ef68486967b865f5a81dd203ec5d865742add0",
           "bytes": 16410
@@ -5818,14 +5818,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎞️animation/🧫️fixtures/🚚️move-animation-applied/⬅️before.gltf",
+          "path": "../../🎞️animation/🧪️tests/🧫️fixtures/🚚️move-animation-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3247191e9429e852b649bfed5ca31f46337c0f43aa2d8367df1c7e44327c2eea",
           "bytes": 16863
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎞️animation/🧫️fixtures/🚚️move-animation-applied/➡️after.gltf",
+          "path": "../../🎞️animation/🧪️tests/🧫️fixtures/🚚️move-animation-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:141b0531662fb87a5b974b0e76df30d3578b5a7284dde9ec060187d95e01971c",
           "bytes": 16863
@@ -5868,14 +5868,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎥️camera/🧫️fixtures/🚚️move-camera-applied/⬅️before.gltf",
+          "path": "../../🎥️camera/🧪️tests/🧫️fixtures/🚚️move-camera-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:04854ef0cce8b75d09bb44570c6fbc62bc601fd3341bbecce21f1af3bb32dbab",
           "bytes": 16648
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎥️camera/🧫️fixtures/🚚️move-camera-applied/➡️after.gltf",
+          "path": "../../🎥️camera/🧪️tests/🧫️fixtures/🚚️move-camera-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:1bf1a482d9080562c16efca1b51233923bff705cffbd7535ad3115c59f0145c4",
           "bytes": 16648
@@ -5918,14 +5918,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/move-material-applied/before.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/move-material-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/move-material-applied/after.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/move-material-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:ba78d928f1b5ccd305a8548140c8e5d378619117409b5ea6d81b84067311b83e",
           "bytes": 16532
@@ -5968,14 +5968,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🚚️move/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/🚚️move/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🚚️move/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/🚚️move/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:4eedd0dc54b6aeb240117f7ba2a5f56cddf045fa6344d0b1d67ca4df4a355781",
           "bytes": 16532
@@ -6018,14 +6018,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🧬️morph-target/🚚️move/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️morph-target/🚚️move/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:fba4191dabe28bf080d2d212b0132f16876256e2240093a6be9abb52c6aeaa12",
           "bytes": 16826
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🧬️morph-target/🚚️move/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️morph-target/🚚️move/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:10372572dd70ba6a52e5da9d4412d497004837d46ba34d53847e9bf751c2bf30",
           "bytes": 16826
@@ -6068,14 +6068,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🎚️morph-attribute/🚚️move/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🎚️morph-attribute/🚚️move/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:684009437ae0004b49fae51b40f797e5159999a375df7fbfbb1a28ce09ceaa3a",
           "bytes": 16743
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🎚️morph-attribute/🚚️move/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🎚️morph-attribute/🚚️move/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:26c2ffca64f3e33dc0120dd3f1fdc4510801f1b3d11ece81ea803074473f2781",
           "bytes": 16743
@@ -6118,14 +6118,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/🚚️move/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/🚚️move/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/🚚️move/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/🚚️move/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:8561e9d78b89246c2c93a8c237dc58bf306eae72cef67423153532baf9767f4f",
           "bytes": 16532
@@ -6168,14 +6168,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌿️node-child/🚚️move/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌿️node-child/🚚️move/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌿️node-child/🚚️move/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌿️node-child/🚚️move/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:7c4f3c2474f5cb20b1e086a3ca77cb2129c44321ef49232234cf0edcc58d29ee",
           "bytes": 16532
@@ -6218,14 +6218,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/🌿️reparent/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/🌿️reparent/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/🌿️reparent/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/🌿️reparent/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:eb52a3f22bc94f49d6ff1e8f209eaaf5162fb9ad38a90ad230cc66700c0b4644",
           "bytes": 16560
@@ -6268,14 +6268,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🚚️move/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔺️primitive/🚚️move/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:4dabf432c173bc1c6828955dc10323a2c00ec53e1d29cfdae00955b544082922",
           "bytes": 16580
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🚚️move/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔺️primitive/🚚️move/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:c0cd18e5c2dcd19e7997714137f3016a82d2353d246419d900301993f1d3a09a",
           "bytes": 16580
@@ -6318,14 +6318,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔤️primitive-attribute/🚚️move/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔤️primitive-attribute/🚚️move/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔤️primitive-attribute/🚚️move/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔤️primitive-attribute/🚚️move/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:f22b8056b93c61fb83ac3913d2e6811168e4828764e65335266aa530fd995bec",
           "bytes": 16532
@@ -6368,14 +6368,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/move-required-extension-applied/before.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/move-required-extension-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:0195612fc6a895ef4f09d249ed7e20c9ebe55d92f30df08a33921a75aa03c896",
           "bytes": 16627
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/move-required-extension-applied/after.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/move-required-extension-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:6818afaab6d1cda42ae5bb2f2350d265ad447c2344d4377b8250750d5089aa84",
           "bytes": 16627
@@ -6418,14 +6418,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🎬️scene/🚚️move/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🎬️scene/🚚️move/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🎬️scene/🚚️move/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🎬️scene/🚚️move/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:78b3763a2e45e88996d398db73220010d0971a45dbec5f6a6a7c078da2bc232b",
           "bytes": 16532
@@ -6468,14 +6468,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌲️scene-root/🚚️move/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌲️scene-root/🚚️move/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:1aee62d6679a4779b23f7d4d1806fd6444c7e5d84fc4719ca456fa47b64a3798",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌲️scene-root/🚚️move/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌲️scene-root/🚚️move/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:535399e0919f2faff498b6a4db25578e25b31bfd7250300f9f5d5bde95121f91",
           "bytes": 16532
@@ -6518,14 +6518,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🦴️skin/🧫️fixtures/🚚️move-skin-applied/⬅️before.gltf",
+          "path": "../../🦴️skin/🧪️tests/🧫️fixtures/🚚️move-skin-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:cb86f99cd6eea657a7a6a3c54c7b63bed126cea9946f6ff024a6154343665f2a",
           "bytes": 16581
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🦴️skin/🧫️fixtures/🚚️move-skin-applied/➡️after.gltf",
+          "path": "../../🦴️skin/🧪️tests/🧫️fixtures/🚚️move-skin-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:c4f10147754f65d21a75905ddd536d6ad751f7c643506e6dc46fbcd1ceaf7329",
           "bytes": 16581
@@ -6568,14 +6568,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/move-used-extension-applied/before.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/move-used-extension-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:55520baf34925d99efe1ea78f3fda26ee5d1d147d990ebcaa37370463fee6994",
           "bytes": 16551
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/move-used-extension-applied/after.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/move-used-extension-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:8edadc27abac0afe0f7c615b63ea5eebe054ba8db7c179f53b7d8759adea609b",
           "bytes": 16551
@@ -6618,14 +6618,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/remove-required-extension-applied/before.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/remove-required-extension-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:2801ac4caa194114ce00e415f35f3cdd5a1da3f223f0eec3dffbae39ecbf5ad6",
           "bytes": 16589
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/remove-required-extension-applied/after.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/remove-required-extension-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:a4852042b8f0a67b98784d67fad87e43969c3ef64b37830a7f4c4917e559c3eb",
           "bytes": 16560
@@ -6668,14 +6668,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/remove-used-extension-applied/before.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/remove-used-extension-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/remove-used-extension-applied/after.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/remove-used-extension-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:af2002f76ff7f9d181c30459063b46d34ec43176a2cbcbcf7133d115c5236413",
           "bytes": 16503
@@ -6718,14 +6718,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎞️animation/🧫️fixtures/🔀️reorder-animations-applied/⬅️before.gltf",
+          "path": "../../🎞️animation/🧪️tests/🧫️fixtures/🔀️reorder-animations-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3247191e9429e852b649bfed5ca31f46337c0f43aa2d8367df1c7e44327c2eea",
           "bytes": 16863
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎞️animation/🧫️fixtures/🔀️reorder-animations-applied/➡️after.gltf",
+          "path": "../../🎞️animation/🧪️tests/🧫️fixtures/🔀️reorder-animations-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:141b0531662fb87a5b974b0e76df30d3578b5a7284dde9ec060187d95e01971c",
           "bytes": 16863
@@ -6768,14 +6768,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎥️camera/🧫️fixtures/🔀️reorder-cameras-applied/⬅️before.gltf",
+          "path": "../../🎥️camera/🧪️tests/🧫️fixtures/🔀️reorder-cameras-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:04854ef0cce8b75d09bb44570c6fbc62bc601fd3341bbecce21f1af3bb32dbab",
           "bytes": 16648
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎥️camera/🧫️fixtures/🔀️reorder-cameras-applied/➡️after.gltf",
+          "path": "../../🎥️camera/🧪️tests/🧫️fixtures/🔀️reorder-cameras-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:1bf1a482d9080562c16efca1b51233923bff705cffbd7535ad3115c59f0145c4",
           "bytes": 16648
@@ -6818,14 +6818,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/reorder-materials-applied/before.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/reorder-materials-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/reorder-materials-applied/after.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/reorder-materials-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:ba78d928f1b5ccd305a8548140c8e5d378619117409b5ea6d81b84067311b83e",
           "bytes": 16532
@@ -6868,14 +6868,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🔀️reorder/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/🔀️reorder/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🔀️reorder/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/🔀️reorder/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:64374d21440a6edd9c1c6faa971408745499752d7c58b118753cf5d1d1ad5349",
           "bytes": 16532
@@ -6918,14 +6918,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🎚️morph-attribute/🔀️reorder/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🎚️morph-attribute/🔀️reorder/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:684009437ae0004b49fae51b40f797e5159999a375df7fbfbb1a28ce09ceaa3a",
           "bytes": 16743
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🎚️morph-attribute/🔀️reorder/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🎚️morph-attribute/🔀️reorder/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:26c2ffca64f3e33dc0120dd3f1fdc4510801f1b3d11ece81ea803074473f2781",
           "bytes": 16743
@@ -6968,14 +6968,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🧬️morph-target/🔀️reorder/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️morph-target/🔀️reorder/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:fba4191dabe28bf080d2d212b0132f16876256e2240093a6be9abb52c6aeaa12",
           "bytes": 16826
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🧬️morph-target/🔀️reorder/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️morph-target/🔀️reorder/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:10372572dd70ba6a52e5da9d4412d497004837d46ba34d53847e9bf751c2bf30",
           "bytes": 16826
@@ -7018,14 +7018,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌿️node-child/🔀️reorder/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌿️node-child/🔀️reorder/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌿️node-child/🔀️reorder/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌿️node-child/🔀️reorder/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:5fc7d134d9472a37d3db582168f3fe31605e9213262384805b0590c7c370bc61",
           "bytes": 16532
@@ -7068,14 +7068,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/🔀️reorder/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/🔀️reorder/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌳️node/🔀️reorder/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌳️node/🔀️reorder/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:d07a6b4a1b1a95471383385b2624a840a897047b420a282179c7ed6c1fc9905d",
           "bytes": 16532
@@ -7118,14 +7118,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔤️primitive-attribute/🔀️reorder/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔤️primitive-attribute/🔀️reorder/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔤️primitive-attribute/🔀️reorder/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔤️primitive-attribute/🔀️reorder/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:adedd8e60cc92dcca114f0faac4e70ab69a35f1100d2db2d56b04aed47d29447",
           "bytes": 16532
@@ -7168,14 +7168,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🔀️reorder/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔺️primitive/🔀️reorder/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:4dabf432c173bc1c6828955dc10323a2c00ec53e1d29cfdae00955b544082922",
           "bytes": 16580
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🔀️reorder/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔺️primitive/🔀️reorder/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:c0cd18e5c2dcd19e7997714137f3016a82d2353d246419d900301993f1d3a09a",
           "bytes": 16580
@@ -7218,14 +7218,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/reorder-required-extensions-applied/before.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/reorder-required-extensions-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:0195612fc6a895ef4f09d249ed7e20c9ebe55d92f30df08a33921a75aa03c896",
           "bytes": 16627
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/reorder-required-extensions-applied/after.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/reorder-required-extensions-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:6818afaab6d1cda42ae5bb2f2350d265ad447c2344d4377b8250750d5089aa84",
           "bytes": 16627
@@ -7268,14 +7268,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌲️scene-root/🔀️reorder/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌲️scene-root/🔀️reorder/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:1aee62d6679a4779b23f7d4d1806fd6444c7e5d84fc4719ca456fa47b64a3798",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌲️scene-root/🔀️reorder/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌲️scene-root/🔀️reorder/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:535399e0919f2faff498b6a4db25578e25b31bfd7250300f9f5d5bde95121f91",
           "bytes": 16532
@@ -7318,14 +7318,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🎬️scene/🔀️reorder/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🎬️scene/🔀️reorder/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🎬️scene/🔀️reorder/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🎬️scene/🔀️reorder/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:78b3763a2e45e88996d398db73220010d0971a45dbec5f6a6a7c078da2bc232b",
           "bytes": 16532
@@ -7368,14 +7368,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🦴️skin/🧫️fixtures/🔀️reorder-skins-applied/⬅️before.gltf",
+          "path": "../../🦴️skin/🧪️tests/🧫️fixtures/🔀️reorder-skins-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:cb86f99cd6eea657a7a6a3c54c7b63bed126cea9946f6ff024a6154343665f2a",
           "bytes": 16581
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🦴️skin/🧫️fixtures/🔀️reorder-skins-applied/➡️after.gltf",
+          "path": "../../🦴️skin/🧪️tests/🧫️fixtures/🔀️reorder-skins-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:c4f10147754f65d21a75905ddd536d6ad751f7c643506e6dc46fbcd1ceaf7329",
           "bytes": 16581
@@ -7418,14 +7418,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/reorder-used-extensions-applied/before.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/reorder-used-extensions-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:55520baf34925d99efe1ea78f3fda26ee5d1d147d990ebcaa37370463fee6994",
           "bytes": 16551
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🪪️asset/🧫️fixtures/reorder-used-extensions-applied/after.gltf",
+          "path": "../../🪪️asset/🧪️tests/🧫️fixtures/reorder-used-extensions-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:8edadc27abac0afe0f7c615b63ea5eebe054ba8db7c179f53b7d8759adea609b",
           "bytes": 16551
@@ -7468,14 +7468,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🏠️default-scene/✂️unbind/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🏠️default-scene/✂️unbind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🏠️default-scene/✂️unbind/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🏠️default-scene/✂️unbind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:84e4fc1801d03e9f1616423a3ca90fcc0fcbdc3dcd077cd087d6c550fa9770bd",
           "bytes": 16518
@@ -7518,14 +7518,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🎚️morph-attribute/✂️unbind/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🎚️morph-attribute/✂️unbind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🎚️morph-attribute/✂️unbind/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🎚️morph-attribute/✂️unbind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:97ae56789519fcd5f94bc3444b5084af36ff28cdc295441d0c7d93fbd9672d5d",
           "bytes": 16491
@@ -7568,14 +7568,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/📷️node-camera/✂️unbind/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/📷️node-camera/✂️unbind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/📷️node-camera/✂️unbind/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/📷️node-camera/✂️unbind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:6fbf2a8a77bf9c39dc42bd3ae631f204d8a0475c9c95b20eb6cd70fe812921db",
           "bytes": 16513
@@ -7618,14 +7618,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌿️node-child/✂️unbind/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌿️node-child/✂️unbind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌿️node-child/✂️unbind/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌿️node-child/✂️unbind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:180062fd65104f5bbf871dbdfe44a787b0d0c465db8397c23d06dc711e791fbc",
           "bytes": 16521
@@ -7668,14 +7668,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🏗️node-mesh/✂️unbind/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🏗️node-mesh/✂️unbind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🏗️node-mesh/✂️unbind/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🏗️node-mesh/✂️unbind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:d963ff16a9cfffddbc1165e4d98115ce2d04e4f47e288e58b3f6c085acd24f75",
           "bytes": 16515
@@ -7718,14 +7718,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🩻️node-skin/✂️unbind/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🩻️node-skin/✂️unbind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🩻️node-skin/✂️unbind/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🩻️node-skin/✂️unbind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:0451c04d88c71132cae91af523dc00de88095bec2c016c00348a56d219be9125",
           "bytes": 16515
@@ -7768,14 +7768,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔤️primitive-attribute/✂️unbind/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔤️primitive-attribute/✂️unbind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔤️primitive-attribute/✂️unbind/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔤️primitive-attribute/✂️unbind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:2ab1da08a651ab7989ffc38957755ac509a6858c0da179113f6954d8caf9cbcf",
           "bytes": 16507
@@ -7818,14 +7818,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔢️primitive-indices/✂️unbind/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔢️primitive-indices/✂️unbind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🔢️primitive-indices/✂️unbind/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🔢️primitive-indices/✂️unbind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:05f0b30ff99fec996f854272f59b87ebaba204d42c2798ed4b05faebd8bb3d55",
           "bytes": 16508
@@ -7868,14 +7868,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🧱️primitive-material/✂️unbind/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🧱️primitive-material/✂️unbind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/🧱️primitive-material/✂️unbind/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/🧱️primitive-material/✂️unbind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:2149badec4d72286c5ddb27e90bdb641a74077d3a1d2dd33f3ab8ac76c205980",
           "bytes": 16507
@@ -7918,14 +7918,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌲️scene-root/✂️unbind/⬅️before.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌲️scene-root/✂️unbind/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🎬️scene/🧫️fixtures/🌲️scene-root/✂️unbind/➡️after.gltf",
+          "path": "../../🎬️scene/🧪️tests/🧫️fixtures/🌲️scene-root/✂️unbind/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:67f3bf5a2044488c5d29fb8a3f2ab4b1e7eb782a482aec1ccace6a777f23160f",
           "bytes": 16515
@@ -7968,14 +7968,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/📐️accessor/🌱️create/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/📐️accessor/🌱️create/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:15d6a1a63471f96930e5de8be5554c9ae40b3cf27b96e0b693a91e649446666f",
           "bytes": 16669
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/📐️accessor/🌱️create/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/📐️accessor/🌱️create/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3c3dc1fdbb2c72ef88cec758f4f14ce90177200a6a3e49a4e5319acd51b49807",
           "bytes": 16809
@@ -8014,14 +8014,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💿️buffer/🧫️fixtures/🌱️create-buffer-applied/⬅️before.gltf",
+          "path": "../../💿️buffer/🧪️tests/🧫️fixtures/🌱️create-buffer-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:eadf0d5619301dc04d8302a50b4be4bdc884b0cb2aaa121b4cad358b13e35435",
           "bytes": 16658
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💿️buffer/🧫️fixtures/🌱️create-buffer-applied/➡️after.gltf",
+          "path": "../../💿️buffer/🧪️tests/🧫️fixtures/🌱️create-buffer-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:803aa232c225b014f9dcf56aba7fcaf7e6d417349f4634672732e5e7465b0e55",
           "bytes": 16786
@@ -8060,14 +8060,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💿️buffer/🧫️fixtures/🪟️create-buffer-view-applied/⬅️before.gltf",
+          "path": "../../💿️buffer/🧪️tests/🧫️fixtures/🪟️create-buffer-view-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:59d5375d271bc7cf706821c14f96944c969897e7a3dba0c4b80af8c1777cd40c",
           "bytes": 16642
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💿️buffer/🧫️fixtures/🪟️create-buffer-view-applied/➡️after.gltf",
+          "path": "../../💿️buffer/🧪️tests/🧫️fixtures/🪟️create-buffer-view-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:00624d024e0a5f86481bd547e51fad2cfb0f1d8c7ff48f02b7399c6ac5b1f6a1",
           "bytes": 16755
@@ -8106,14 +8106,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/create-image-applied/before.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/create-image-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:91d5bd73cd637f1bfaab624a71fdea37d23b89443c0621f2e700a1e11eeb7964",
           "bytes": 17666
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/create-image-applied/after.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/create-image-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:e7cd3aa96122c7dc24eefb47cd33524cff99421243a99b6ede99d521fea10173",
           "bytes": 17874
@@ -8152,14 +8152,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/create-sampler-applied/before.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/create-sampler-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:407e2b233f2a4aece8771641b092f56659dc75964efa13ca0ebe6db9e47d7d5c",
           "bytes": 17596
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/create-sampler-applied/after.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/create-sampler-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:8456edbb2e94f3dc062602a7d89fef9ce4a7b77b3b87deec91b3d9efb7a67b82",
           "bytes": 17734
@@ -8198,14 +8198,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/create-texture-applied/before.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/create-texture-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:ac74c183cf9f17482db814011019bd324e7779db968227a8d76b9923491a0dfc",
           "bytes": 17541
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/create-texture-applied/after.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/create-texture-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:69bce51c083494447f3ad3b0cb06ecb6424e715b089e09225b4d13dc5172862b",
           "bytes": 17624
@@ -8244,14 +8244,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/📐️accessor/🗑️delete/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/📐️accessor/🗑️delete/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:15d6a1a63471f96930e5de8be5554c9ae40b3cf27b96e0b693a91e649446666f",
           "bytes": 16669
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/📐️accessor/🗑️delete/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/📐️accessor/🗑️delete/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
@@ -8290,14 +8290,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💿️buffer/🧫️fixtures/🗑️delete-buffer-applied/⬅️before.gltf",
+          "path": "../../💿️buffer/🧪️tests/🧫️fixtures/🗑️delete-buffer-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:eadf0d5619301dc04d8302a50b4be4bdc884b0cb2aaa121b4cad358b13e35435",
           "bytes": 16658
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💿️buffer/🧫️fixtures/🗑️delete-buffer-applied/➡️after.gltf",
+          "path": "../../💿️buffer/🧪️tests/🧫️fixtures/🗑️delete-buffer-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
@@ -8336,14 +8336,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💿️buffer/🧫️fixtures/✂️delete-buffer-view-applied/⬅️before.gltf",
+          "path": "../../💿️buffer/🧪️tests/🧫️fixtures/✂️delete-buffer-view-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:59d5375d271bc7cf706821c14f96944c969897e7a3dba0c4b80af8c1777cd40c",
           "bytes": 16642
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💿️buffer/🧫️fixtures/✂️delete-buffer-view-applied/➡️after.gltf",
+          "path": "../../💿️buffer/🧪️tests/🧫️fixtures/✂️delete-buffer-view-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3137a027d2b8cafae1b3b61e470aed8881ec1ba0e3ab60f53eb27ebdb8794132",
           "bytes": 16532
@@ -8382,14 +8382,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/delete-image-applied/before.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/delete-image-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:91d5bd73cd637f1bfaab624a71fdea37d23b89443c0621f2e700a1e11eeb7964",
           "bytes": 17666
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/delete-image-applied/after.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/delete-image-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:b20d6809bca20b3d69b4f748a34316be591852123e448ce07ecdfc7c7de80b93",
           "bytes": 17460
@@ -8428,14 +8428,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/delete-sampler-applied/before.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/delete-sampler-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:407e2b233f2a4aece8771641b092f56659dc75964efa13ca0ebe6db9e47d7d5c",
           "bytes": 17596
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/delete-sampler-applied/after.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/delete-sampler-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:b20d6809bca20b3d69b4f748a34316be591852123e448ce07ecdfc7c7de80b93",
           "bytes": 17460
@@ -8474,14 +8474,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/delete-texture-applied/before.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/delete-texture-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:ac74c183cf9f17482db814011019bd324e7779db968227a8d76b9923491a0dfc",
           "bytes": 17541
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/delete-texture-applied/after.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/delete-texture-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:b20d6809bca20b3d69b4f748a34316be591852123e448ce07ecdfc7c7de80b93",
           "bytes": 17460
@@ -8520,14 +8520,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/📐️accessor/🚚️move/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/📐️accessor/🚚️move/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:15d6a1a63471f96930e5de8be5554c9ae40b3cf27b96e0b693a91e649446666f",
           "bytes": 16669
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/📐️accessor/🚚️move/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/📐️accessor/🚚️move/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:529b3363cac0d08d0beb57c6dd07b60b76c5b23d225506f7acf632cca07c4593",
           "bytes": 16670
@@ -8566,14 +8566,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💿️buffer/🧫️fixtures/🚚️move-buffer-applied/⬅️before.gltf",
+          "path": "../../💿️buffer/🧪️tests/🧫️fixtures/🚚️move-buffer-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:eadf0d5619301dc04d8302a50b4be4bdc884b0cb2aaa121b4cad358b13e35435",
           "bytes": 16658
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💿️buffer/🧫️fixtures/🚚️move-buffer-applied/➡️after.gltf",
+          "path": "../../💿️buffer/🧪️tests/🧫️fixtures/🚚️move-buffer-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:da14362a57791590b4ce9369ddff33516fbf133afe4f1cb304e8925496ba6664",
           "bytes": 16658
@@ -8612,14 +8612,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💿️buffer/🧫️fixtures/➡️move-buffer-view-applied/⬅️before.gltf",
+          "path": "../../💿️buffer/🧪️tests/🧫️fixtures/➡️move-buffer-view-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:59d5375d271bc7cf706821c14f96944c969897e7a3dba0c4b80af8c1777cd40c",
           "bytes": 16642
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💿️buffer/🧫️fixtures/➡️move-buffer-view-applied/➡️after.gltf",
+          "path": "../../💿️buffer/🧪️tests/🧫️fixtures/➡️move-buffer-view-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:72f5c4c2e7bf10bf70021f7aabde842a2694c555677cfaa1ecd0f704da2bac29",
           "bytes": 16643
@@ -8658,14 +8658,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/move-image-applied/before.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/move-image-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:91d5bd73cd637f1bfaab624a71fdea37d23b89443c0621f2e700a1e11eeb7964",
           "bytes": 17666
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/move-image-applied/after.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/move-image-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:5344f8b91cf54c086b5e6695a93d53a09f7353306faf858494d54f1b18c117fe",
           "bytes": 17666
@@ -8704,14 +8704,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/move-sampler-applied/before.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/move-sampler-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:407e2b233f2a4aece8771641b092f56659dc75964efa13ca0ebe6db9e47d7d5c",
           "bytes": 17596
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/move-sampler-applied/after.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/move-sampler-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:6b0096d2616588d0f227bbe6b47958c54ae2975318ddda50b9788f2276f62958",
           "bytes": 17596
@@ -8750,14 +8750,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/move-texture-applied/before.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/move-texture-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:ac74c183cf9f17482db814011019bd324e7779db968227a8d76b9923491a0dfc",
           "bytes": 17541
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/move-texture-applied/after.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/move-texture-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:33a1527d58bed16d14146a9bf47d72c4b252fd9ded585c984ccc1c68fa391f5c",
           "bytes": 17541
@@ -8796,14 +8796,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/📐️accessor/🔀️reorder/⬅️before.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/📐️accessor/🔀️reorder/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:15d6a1a63471f96930e5de8be5554c9ae40b3cf27b96e0b693a91e649446666f",
           "bytes": 16669
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../🕸️mesh/🧫️fixtures/📐️accessor/🔀️reorder/➡️after.gltf",
+          "path": "../../🕸️mesh/🧪️tests/🧫️fixtures/📐️accessor/🔀️reorder/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:948b4af7c3a45418d7fbe773ffaef3d7d77c9ff850a0a1add65eb4358ed0365f",
           "bytes": 16670
@@ -8842,14 +8842,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💿️buffer/🧫️fixtures/🔀️reorder-buffers-applied/⬅️before.gltf",
+          "path": "../../💿️buffer/🧪️tests/🧫️fixtures/🔀️reorder-buffers-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:eadf0d5619301dc04d8302a50b4be4bdc884b0cb2aaa121b4cad358b13e35435",
           "bytes": 16658
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💿️buffer/🧫️fixtures/🔀️reorder-buffers-applied/➡️after.gltf",
+          "path": "../../💿️buffer/🧪️tests/🧫️fixtures/🔀️reorder-buffers-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:da14362a57791590b4ce9369ddff33516fbf133afe4f1cb304e8925496ba6664",
           "bytes": 16658
@@ -8888,14 +8888,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💿️buffer/🧫️fixtures/🔢️reorder-buffer-views-applied/⬅️before.gltf",
+          "path": "../../💿️buffer/🧪️tests/🧫️fixtures/🔢️reorder-buffer-views-applied/⬅️before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:59d5375d271bc7cf706821c14f96944c969897e7a3dba0c4b80af8c1777cd40c",
           "bytes": 16642
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💿️buffer/🧫️fixtures/🔢️reorder-buffer-views-applied/➡️after.gltf",
+          "path": "../../💿️buffer/🧪️tests/🧫️fixtures/🔢️reorder-buffer-views-applied/➡️after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:3674f2df490c2a56b8a5ff87e49840e4848e235e7cd98618b6f92f574dc63b31",
           "bytes": 16643
@@ -8934,14 +8934,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/reorder-images-applied/before.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/reorder-images-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:91d5bd73cd637f1bfaab624a71fdea37d23b89443c0621f2e700a1e11eeb7964",
           "bytes": 17666
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/reorder-images-applied/after.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/reorder-images-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:a1096cfa548f968365520251e867076eb8dcc5717ec7034f622527aee093244e",
           "bytes": 17666
@@ -8980,14 +8980,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/reorder-samplers-applied/before.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/reorder-samplers-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:407e2b233f2a4aece8771641b092f56659dc75964efa13ca0ebe6db9e47d7d5c",
           "bytes": 17596
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/reorder-samplers-applied/after.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/reorder-samplers-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:0e2ea7a4c93adbbc45ec8765a0fb96ecbd29d12fd63e40b3f5f6d810ab9883a9",
           "bytes": 17596
@@ -9026,14 +9026,14 @@
       "files": [
         {
           "role": "expected-before-gltf",
-          "path": "../../💎️material/🧫️fixtures/reorder-textures-applied/before.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/reorder-textures-applied/before.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:ac74c183cf9f17482db814011019bd324e7779db968227a8d76b9923491a0dfc",
           "bytes": 17541
         },
         {
           "role": "expected-after-gltf",
-          "path": "../../💎️material/🧫️fixtures/reorder-textures-applied/after.gltf",
+          "path": "../../💎️material/🧪️tests/🧫️fixtures/reorder-textures-applied/after.gltf",
           "mediaType": "model/gltf+json",
           "sha256": "sha256:d65daef8ecf544023c8541b21737201bb9c2f8907de17a038b9465074f1164fc",
           "bytes": 17541
@@ -9072,14 +9072,14 @@
       "files": [
         {
           "role": "expected-before-glb",
-          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
+          "path": "../🧪️tests/🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
           "mediaType": "model/gltf-binary",
           "sha256": "sha256:70e9696fc69433b90aba4927e9da1c067a723dd2c429381611864f30f956bf3f",
           "bytes": 284452
         },
         {
           "role": "expected-after-glb",
-          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🔗️bind-node-child/➡️after.glb",
+          "path": "../🧪️tests/🧫️fixtures/🧊️mutate-gltf-2-0/🔗️bind-node-child/➡️after.glb",
           "mediaType": "model/gltf-binary",
           "sha256": "sha256:cfe5a103be32f290c4d927e6918b8f6921a31c41897e9174ba2d4a9a865f6458",
           "bytes": 280628
@@ -9114,14 +9114,14 @@
       "files": [
         {
           "role": "expected-before-glb",
-          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
+          "path": "../🧪️tests/🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
           "mediaType": "model/gltf-binary",
           "sha256": "sha256:70e9696fc69433b90aba4927e9da1c067a723dd2c429381611864f30f956bf3f",
           "bytes": 284452
         },
         {
           "role": "expected-after-glb",
-          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/✂️unbind-node-child/➡️after.glb",
+          "path": "../🧪️tests/🧫️fixtures/🧊️mutate-gltf-2-0/✂️unbind-node-child/➡️after.glb",
           "mediaType": "model/gltf-binary",
           "sha256": "sha256:d10913fa3c2e5829730d79e0360ce0892ff3bebcd08ec0a3c29024d91517fe2c",
           "bytes": 280612
@@ -9156,14 +9156,14 @@
       "files": [
         {
           "role": "expected-before-glb",
-          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
+          "path": "../🧪️tests/🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
           "mediaType": "model/gltf-binary",
           "sha256": "sha256:70e9696fc69433b90aba4927e9da1c067a723dd2c429381611864f30f956bf3f",
           "bytes": 284452
         },
         {
           "role": "expected-after-glb",
-          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🌲️bind-scene-root-node/➡️after.glb",
+          "path": "../🧪️tests/🧫️fixtures/🧊️mutate-gltf-2-0/🌲️bind-scene-root-node/➡️after.glb",
           "mediaType": "model/gltf-binary",
           "sha256": "sha256:b3a7fc8959d21e034b412a76afc60c4f68280e27696d7981abc01ae774ca6cab",
           "bytes": 280616
@@ -9198,14 +9198,14 @@
       "files": [
         {
           "role": "expected-before-glb",
-          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
+          "path": "../🧪️tests/🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
           "mediaType": "model/gltf-binary",
           "sha256": "sha256:70e9696fc69433b90aba4927e9da1c067a723dd2c429381611864f30f956bf3f",
           "bytes": 284452
         },
         {
           "role": "expected-after-glb",
-          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🍂️unbind-scene-root-node/➡️after.glb",
+          "path": "../🧪️tests/🧫️fixtures/🧊️mutate-gltf-2-0/🍂️unbind-scene-root-node/➡️after.glb",
           "mediaType": "model/gltf-binary",
           "sha256": "sha256:b2e3bc5190ed4c217f3c00bae3db91a4076324f6305442d459b4d90863988f2b",
           "bytes": 280612
@@ -9240,14 +9240,14 @@
       "files": [
         {
           "role": "expected-before-glb",
-          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
+          "path": "../🧪️tests/🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
           "mediaType": "model/gltf-binary",
           "sha256": "sha256:70e9696fc69433b90aba4927e9da1c067a723dd2c429381611864f30f956bf3f",
           "bytes": 284452
         },
         {
           "role": "expected-after-glb",
-          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🎭️change-material-alpha-mode/➡️after.glb",
+          "path": "../🧪️tests/🧫️fixtures/🧊️mutate-gltf-2-0/🎭️change-material-alpha-mode/➡️after.glb",
           "mediaType": "model/gltf-binary",
           "sha256": "sha256:83509669286e9171edc69a6513fcbf94283b4b97a615d6806dae130dc46d92ed",
           "bytes": 280632
@@ -9282,14 +9282,14 @@
       "files": [
         {
           "role": "expected-before-glb",
-          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
+          "path": "../🧪️tests/🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
           "mediaType": "model/gltf-binary",
           "sha256": "sha256:70e9696fc69433b90aba4927e9da1c067a723dd2c429381611864f30f956bf3f",
           "bytes": 284452
         },
         {
           "role": "expected-after-glb",
-          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🪞️change-material-double-sided/➡️after.glb",
+          "path": "../🧪️tests/🧫️fixtures/🧊️mutate-gltf-2-0/🪞️change-material-double-sided/➡️after.glb",
           "mediaType": "model/gltf-binary",
           "sha256": "sha256:56110ae0beae13512032586e4987b297e53d6030ee97cbabde1fa8fb8abcd2f5",
           "bytes": 280632
@@ -9324,14 +9324,14 @@
       "files": [
         {
           "role": "expected-before-glb",
-          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
+          "path": "../🧪️tests/🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb",
           "mediaType": "model/gltf-binary",
           "sha256": "sha256:70e9696fc69433b90aba4927e9da1c067a723dd2c429381611864f30f956bf3f",
           "bytes": 284452
         },
         {
           "role": "expected-after-glb",
-          "path": "../🧫️fixtures/🧊️mutate-gltf-2-0/🎬️create-scene/➡️after.glb",
+          "path": "../🧪️tests/🧫️fixtures/🧊️mutate-gltf-2-0/🎬️create-scene/➡️after.glb",
           "mediaType": "model/gltf-binary",
           "sha256": "sha256:410ddd25e3d086b8cd4713306a8302fc10c5d333e4eb5048b50910a1d16c687c",
           "bytes": 280616

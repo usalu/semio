@@ -1,0 +1,8 @@
+[
+  {
+    "from": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔁️transfer/🫴️receiving/🧫️fixtures/🔣️.json",
+    "to": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔁️transfer/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json",
+    "plannedSha256": "e41e4ac845de661b4d1229f4755b7fd498f6f6836ee166fd0e9486796706dba2",
+    "observedBeforeSha256": "88b337f80d48d5eff00c8f52270fe7818ae10e96f299e217216a2b27ae447b53"
+  }
+]

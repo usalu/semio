@@ -1,7 +1,10 @@
+import { receiveScriptProcessInvocation, type ScriptInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { readBuildMode } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { stageRepositoryArtifacts } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 /** 🏷️ Proves Flow browser source, declaration, publication and consumer ownership from one portable contract. */
 import assert from "node:assert/strict";
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -25,7 +28,7 @@ const sourcePath = fileURLToPath(import.meta.url).replaceAll("\\", "/");
 const workspaceMarker = "/🧰️framework/";
 const workspaceRoot = sourcePath.slice(0, sourcePath.indexOf(workspaceMarker));
 const ownershipRoot = dirname(dirname(dirname(sourcePath)));
-const fixturePath = join(ownershipRoot, "🧫️fixtures", "🔣️.json");
+const fixturePath = join(ownershipRoot, "🧪️tests/🧫️fixtures", "🔣️.json");
 
 function sorted(values: readonly string[]): string[] {
   return [...values].sort((left, right) => left.localeCompare(right, "en"));
@@ -45,7 +48,7 @@ async function moduleExportNames(path: string): Promise<string[]> {
 }
 
 /** 🧪️ Runs the portable Flow browser ownership, projection, package and bundle oracle. */
-export async function testFlowBrowserOwnership(): Promise<void> {
+export async function testFlowBrowserOwnership(invocation: ScriptInvocation): Promise<void> {
   await testColdFlowDeclaration();
   const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Fixture;
   assert.equal(fixture.owners.length, 4);
@@ -115,7 +118,7 @@ export async function testFlowBrowserOwnership(): Promise<void> {
   const hostOwner = fixture.owners.find((owner) => owner.id === "host-runtime")!;
   assert.equal(readFileSync(join(workspaceRoot, hostOwner.path), "utf8"), readFileSync(join(packageRoot, hostExport), "utf8"));
   const publisher = await import(`${pathToFileURL(join(workspaceRoot, fixture.owners.find((owner) => owner.id === "browser-publication")!.path)).href}?ownership=${Date.now()}`);
-  const outputs = await publisher.bundleFlowBrowserModule(false);
+  const outputs = await publisher.bundleFlowBrowserModule(false, invocation);
   assert.equal(outputs.length, 1);
   const bundled = await outputs[0].text();
   assert.ok(bundled.includes('import("../flow_core.js")'));
@@ -128,24 +131,25 @@ export async function testFlowBrowserOwnership(): Promise<void> {
   const sandbox = mkdtempSync(join(artifactRoot, "flow-browser-publication-"));
   const nativeFiles = ["flow_core_bg.wasm", "flow_core.js", "flow_core.d.ts", "flow_core_bg.wasm.d.ts"] as const;
   try {
-    const family = join(sandbox, "family");
+    const mode = readBuildMode(process.env.SEMIO_BUILD_MODE), sourceOwner = join(sandbox, "family"), family = join(sourceOwner, "dist/wasm", mode);
     const published = join(sandbox, "published");
-    mkdirSync(family);
+    mkdirSync(family, { recursive: true });
     for (const name of nativeFiles) copyFileSync(join(packageRoot, name), join(family, name));
-    writeFileSync(join(family, "package.json"), `${JSON.stringify({ type: "module", version: "0.1.0", name: "@semio-tech/flow-core" })}\n`);
-    await publisher.publishFlowBrowserPackage(family, published);
-    assert.equal(existsSync(join(family, "package.json")), false);
+    writeFileSync(join(family, "package.json"), `${JSON.stringify({ type: "module", version: "0.1.0", name: "@semio-tech/flow-core", semioWasmOwner: { version: 1, sourceOwner: relative(workspaceRoot, sourceOwner).replaceAll("\\", "/"), mode, output: `dist/wasm/${mode}` } })}\n`);
+    await stageRepositoryArtifacts(family, "flow-native:fixture", new Map([...nativeFiles, "package.json"].map(name => [name, join(family, name)])));
+    await publisher.publishFlowBrowserPackage(family, invocation, published);
+    assert.equal(existsSync(join(family, "package.json")), true);
     assert.equal(JSON.parse(readFileSync(join(published, "package.json"), "utf8")).name, fixture.package.name);
 
-    const brokenFamily = join(sandbox, "broken-family");
+    const brokenOwner = join(sandbox, "broken-family"), brokenFamily = join(brokenOwner, "dist/wasm", mode);
     const preserved = join(sandbox, "preserved");
-    mkdirSync(brokenFamily);
+    mkdirSync(brokenFamily, { recursive: true });
     mkdirSync(preserved);
     for (const name of nativeFiles.slice(0, -1)) copyFileSync(join(packageRoot, name), join(brokenFamily, name));
-    writeFileSync(join(brokenFamily, "package.json"), '{"name":"@semio-tech/flow-core"}\n');
+    writeFileSync(join(brokenFamily, "package.json"), JSON.stringify({ name: "@semio-tech/flow-core", semioWasmOwner: { version: 1, sourceOwner: relative(workspaceRoot, brokenOwner).replaceAll("\\", "/"), mode, output: `dist/wasm/${mode}` } }));
     writeFileSync(join(preserved, "package.json"), '{"name":"preserved"}\n');
     writeFileSync(join(preserved, "sentinel"), "unchanged\n");
-    await assert.rejects(publisher.publishFlowBrowserPackage(brokenFamily, preserved), /did not emit flow_core_bg\.wasm\.d\.ts/u);
+    await assert.rejects(publisher.publishFlowBrowserPackage(brokenFamily, invocation, preserved), /did not emit flow_core_bg\.wasm\.d\.ts/u);
     assert.equal(readFileSync(join(preserved, "package.json"), "utf8"), '{"name":"preserved"}\n');
     assert.equal(readFileSync(join(preserved, "sentinel"), "utf8"), "unchanged\n");
     assert.equal(existsSync(join(brokenFamily, "package.json")), true);
@@ -165,7 +169,7 @@ export async function testFlowBrowserOwnership(): Promise<void> {
   console.log(`Flow browser ownership: ${fixture.owners.length} owners, ${fixture.consumers.length} consumers, ${fixture.target.inputs.length} exact Nx inputs, staged publication, pre-promotion preservation and native TypeScript/Bun projection parity PASS`);
 }
 
-if (import.meta.main) await testFlowBrowserOwnership();
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, testFlowBrowserOwnership);
 
 /** 🧊️ Publishes the ABI declaration into absent parent directories and admits it through TypeScript. */
 async function testColdFlowDeclaration():Promise<void>{

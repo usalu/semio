@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import schema from "../../🧬️schema/🔣️.json";
-import fixture from "../../🧫️fixtures/🌐️geometry-lifetime/🔣️.json";
+import fixture from "../🧫️fixtures/🌐️geometry-lifetime/🔣️.json";
 
 test("durable geometry inputs and canonical identities agree with the independent schema oracle", () => {
   const ajv = new Ajv({ strict: true });

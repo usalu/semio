@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "id": "reservation-trial",
+      "path": "📋️list/🧪️tests/🧫️fixtures/🎟️reservation.schema.json",
+      "present": false
+    },
+    {
+      "id": "funding-trial",
+      "path": "📦️paged/🎮️append/🧪️tests/🧫️fixtures/🎟️funding.schema.json",
+      "present": false
+    },
+    {
+      "id": "append-trial",
+      "path": "📦️paged/🎮️append/🧬️schema/🔣️.json",
+      "present": false
+    },
+    {
+      "id": "original-reservation",
+      "path": "📋️list/🧪️tests/🧫️fixtures/🎟️reservation.json",
+      "present": true
+    },
+    {
+      "id": "original-funding",
+      "path": "📦️paged/🎮️append/🧪️tests/🧫️fixtures/🎟️funding.json",
+      "present": true
+    },
+    {
+      "id": "actual-retained-grant",
+      "path": "🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json",
+      "present": true
+    }
+  ]
+}

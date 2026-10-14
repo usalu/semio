@@ -257,7 +257,7 @@ async fn content_addressed_entity_and_mint_helpers_are_deterministic() {
 /// ↔️ Paged traversal follows the portable deque oracle across front/back crossings and exhaustion.
 #[test]
 fn paged_history_stack_traversal_follows_the_portable_deque_vectors() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📸️paged-history-stack/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📸️paged-history-stack/🔣️.json")).unwrap();
     for vector in corpus["vectors"].as_array().unwrap() {
         let mut stack: HistoryPageStack<String> = (0..vector["pushes"].as_u64().unwrap()).map(|i| i.to_string()).collect();
         if let Some(index) = vector["removeLogical"].as_u64() { stack.remove(index as usize); }
@@ -284,7 +284,7 @@ fn paged_history_stack_traversal_follows_the_portable_deque_vectors() {
 
 #[semio_framework_async_macros::async_test]
 async fn history_branch_provenance_follows_portable_required_wire_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌿️branch-provenance/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌿️branch-provenance/🔣️.json")).unwrap();
     for vector in fixture["vectors"].as_array().unwrap() {
         let decoded = crate::os_spr::Edit::<DslValue>::from_value(vector["edit"].clone().into());
         assert_eq!(decoded.is_ok(), vector["valid"].as_bool().unwrap(), "{}", vector["id"]);

@@ -106,7 +106,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { fileURLToPath } = await import("node:url");
 
     const here = dirname(fileURLToPath(source.url));
-    const corpusRoot = join(here, "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🧪️conformance");
+    const corpusRoot = join(here, "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🧪️conformance");
 
     type CorpusExpectation = {
       readonly case: string;

@@ -8,11 +8,11 @@
 use crate::opening_config::mutations::UiPreferencesConfigMutation;
 use crate::opening_config::{UiPreferences, UiPreferencesDiff};
 
-const BEFORE: &str = include_str!("../../🧫️fixtures/🟰️keeps-terminology/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../🧫️fixtures/🟰️keeps-terminology/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../🧫️fixtures/🟰️keeps-terminology/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../🧫️fixtures/🟰️keeps-terminology/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../🧫️fixtures/🟰️keeps-terminology/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📖️set-terminology/🟰️keeps-terminology/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📖️set-terminology/🟰️keeps-terminology/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📖️set-terminology/🟰️keeps-terminology/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📖️set-terminology/🟰️keeps-terminology/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📖️set-terminology/🟰️keeps-terminology/🎯️outcome/🔣️.json");
 
 fn before() -> UiPreferences {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before preferences decode")

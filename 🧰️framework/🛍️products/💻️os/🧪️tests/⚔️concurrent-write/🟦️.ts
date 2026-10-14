@@ -8,7 +8,7 @@
  * NON-DESTRUCTIVE-HISTORY-EDITING `📋️design.md` §2, §9.1). */
 export async function registerConcurrentWriteTests(vitest: NonNullable<ImportMeta["vitest"]>): Promise<void> {
   const { describe, it, expect } = vitest;
-  const { default: fixture } = await import("../../🔨️modules/🛢️db/🗿️artifact/🧫️fixtures/⚔️concurrent-write/🔣️.json");
+  const { default: fixture } = await import("../../🔨️modules/🛢️db/🗿️artifact/🧪️tests/🧫️fixtures/⚔️concurrent-write/🔣️.json");
   type Supersede = { readonly inputs: readonly { readonly target: string; readonly replacement: string }[]; readonly target: readonly string[] };
   type Writes = { readonly target?: readonly string[]; readonly paths?: readonly string[]; readonly transition?: boolean; readonly supersede?: Supersede };
   type Write = { readonly id: string; readonly actor: string; readonly observed: string | null; readonly writes: Writes };

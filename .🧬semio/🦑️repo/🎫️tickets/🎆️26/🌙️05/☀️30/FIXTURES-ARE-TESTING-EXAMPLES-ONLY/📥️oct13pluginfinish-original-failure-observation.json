@@ -1,0 +1,170 @@
+[
+  {
+    "case": "✗ Graph properties retain actual original source indices and shared value pages [0.39ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:11:184)",
+    "expected": "Expected: true",
+    "received": "Received: false"
+  },
+  {
+    "case": "✗ Table cells share the actual original Value traversal [0.13ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:14:184)",
+    "expected": "Expected: true",
+    "received": "Received: false"
+  },
+  {
+    "case": "✗ Value projection retains original scalar tree pages across both real traversals [0.38ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:17:147)",
+    "expected": "Expected to contain: \"projection::project(self\"",
+    "received": "Received: \"//! 🔢️ Typed Semio value primitives, structural ownership and referential graph nodes.\\nuse semio_framework_value::{ValueError,ValueRefusalKind};\\nuse semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;\\nuse crate::sche"
+  },
+  {
+    "case": "✗ original typed prefix source brep [0.44ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:55:366)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ original typed prefix source mesh [0.31ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:55:366)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ original typed prefix source model [0.18ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:55:366)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ original typed prefix source value [0.37ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:55:366)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ original typed prefix source document [0.32ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:55:366)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ original typed prefix source cad [0.25ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:55:366)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ original typed prefix source drawing [0.22ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:55:366)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ original typed prefix source image [0.24ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:55:366)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ original typed prefix source video [0.10ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:55:366)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ original typed prefix source audio [0.23ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:55:366)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ original typed prefix source animation [0.10ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:55:366)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ original typed prefix source presentation [0.19ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:55:366)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ original typed prefix source flow [0.11ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:55:366)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ original typed prefix source text [0.21ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:55:366)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ original typed prefix source table [0.10ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:55:366)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ original typed prefix source graph [0.22ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:55:366)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ original typed prefix source object [0.20ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:55:366)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ original typed prefix source kit [0.26ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:55:366)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ native encoder keeps original output and admission children through cancellation [1.49ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts:81:100)",
+    "expected": "Expected to contain: \"struct EncodingPrefix\"",
+    "received": "Received: \"//! 🛫️ Borrowed explicit Semio native fields are measured and emitted under one ownership control.\\nuse semio_framework_value::{ValueError,ValueRefusalKind};\\nuse semio_framework_value::native_encoding::NativeEncodeControl;\\nuse store::sql"
+  },
+  {
+    "case": "",
+    "stack": "",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ BIM SQLite original script independently inspects eleven words and edits physical files [660.14ms]",
+    "stack": "at receiveScriptProcessInvocation (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts:54:33)",
+    "expected": "Expected: 0",
+    "received": "Received: 1"
+  },
+  {
+    "case": "✗ Puzzle canonical native fields cover all authored mutation payload owners [1.08ms]",
+    "stack": "at read (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️canonical/🧪️tests/🟦️.ts:6:116)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "",
+    "stack": "",
+    "expected": "Expected to contain: \"#[derive(semio_framework_value::RetireOwned)]\\n    pub enum FlowCommand\"",
+    "received": "Received: \"//! 🖥️ Flow play app — the `ArtifactEditor` impl (dispatch-only), the aggregated command enum and the\\n//! manifest stitch.\\n//!\\n//! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in\\n//!"
+  },
+  {
+    "case": "✗ every original Flow command owns its complete defining retirement [5.04ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️retirement/🧪️tests/🟦️.ts:8:280)",
+    "expected": "",
+    "received": ""
+  },
+  {
+    "case": "✗ TSV original typed receiving and bounded quote Rust syntax parses [26.36ms]",
+    "stack": "at <anonymous> (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts:247:365)",
+    "expected": "Expected: false",
+    "received": "Received: true"
+  }
+]

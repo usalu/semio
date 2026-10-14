@@ -2,7 +2,7 @@ use semio_framework_plugin::plugin_runtime::{install_plugin_bundle_result, Plugi
 
 #[test]
 fn vcs_guest_descriptor_has_one_canonical_native_openable_identity() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️native-openable-identity/🧬️v1/🔣️.json")).expect("neutral identity fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️native-openable-identity/🧬️v1/🔣️.json")).expect("neutral identity fixture");
     let authority = &fixture["authority"];
     let bundle = semio_hub_vcs::plugin().expect("schema-owned VCS plugin");
     assert_eq!(bundle.manifest.plugin_id, authority["pluginId"].as_str().unwrap());
@@ -12,7 +12,7 @@ fn vcs_guest_descriptor_has_one_canonical_native_openable_identity() {
     let codec = semio_s_artifact_vcs_vcs::standards::v1::subsets::any::io::io().native.codec;
     assert_eq!(codec.schema, authority["artifactSchema"].as_str().unwrap());
     assert_eq!(codec.extension, "vcs");
-    let record = <semio_s_artifact_vcs_vcs::VcsSnapshot as semio_framework_os_kernel::os_store::serialization::ArtifactPack>::record_spec().expect("VCS schema-owned record");
+    let record = <semio_s_artifact_vcs_vcs::VcsSnapshot as pack::snapshot::ArtifactPack>::record_spec().expect("VCS schema-owned record");
     assert_eq!(codec.pack_schema_hash, semio_framework_os_kernel::os_pack::schema_hash(&record));
     assert_ne!(codec.pack_schema_hash, [0; 32]);
     let runtime = PluginRuntime::<semio_hub_vcs::VcsApps>::new(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");

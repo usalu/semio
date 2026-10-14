@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import Ajv2020 from "ajv/dist/2020";
 import schema from "../../🧬️schema/🧮️allocation/🔣️.json";
-import fixture from "../../🧫️fixtures/🧮️allocation/🔣️.json";
+import fixture from "../🧫️fixtures/🧮️allocation/🔣️.json";
 
 
 
@@ -82,14 +82,14 @@ test("shared provider semantic bytes and late copy frontiers have independent SQ
 function cancellationDiagnosticLedger(corpus:typeof fixture.cancellationDiagnostics){const backing=(kind:string,text:string)=>kind==="borrowed"?0:new TextEncoder().encode(text).length;return corpus.cases.map(row=>({id:row.id,parent:row.parent,child:row.child,requestedBytes:row.parent*backing(corpus.parentBacking,corpus.parentMessage)+row.child*backing(corpus.childBacking,corpus.childMessage)}));}
 test("shared cancellation diagnostic ledger has one exact borrowed owner",()=>{const corpus=fixture.cancellationDiagnostics,own=cancellationDiagnosticLedger(corpus),database=new Database(":memory:");try{const oracle=corpus.cases.map(row=>({id:row.id,parent:row.parent,child:row.child,...database.query("SELECT ?*(CASE WHEN ?='borrowed' THEN 0 ELSE length(CAST(? AS BLOB)) END)+?*(CASE WHEN ?='borrowed' THEN 0 ELSE length(CAST(? AS BLOB)) END) AS requestedBytes").get(row.parent,corpus.parentBacking,corpus.parentMessage,row.child,corpus.childBacking,corpus.childMessage) as {requestedBytes:number}}));expect(own).toEqual(corpus.cases);expect(oracle).toEqual(corpus.cases);expect(database.query("SELECT length(CAST(? AS BLOB)) AS parent,length(CAST(? AS BLOB)) AS child").get(corpus.parentMessage,corpus.childMessage)).toEqual({parent:new TextEncoder().encode(corpus.parentMessage).length,child:new TextEncoder().encode(corpus.childMessage).length});console.log("[DEBUG] Five cancellation diagnostic ledgers have borrowed backing0 and unchanged UTF8 messages; independent SQLite/UTF8 agree; native heap observation remains required");}finally{database.close();}});
 
-import fileBoundFixture from "../../🧫️fixtures/📏️file-bound/🔣️.json";
+import fileBoundFixture from "../🧫️fixtures/📏️file-bound/🔣️.json";
 
 test("native file forecasts retain a separate closed semantic cell budget",()=>{
  
  const db=new Database(":memory:");try{db.exec("CREATE TABLE physical_extent(bytes INTEGER NOT NULL)");for(const bytes of fileBoundFixture.chunks)db.run("INSERT INTO physical_extent VALUES(?)",[bytes]);expect((db.query("SELECT sum(bytes) AS bytes FROM physical_extent").get() as {bytes:number}).bytes).toBe(fileBoundFixture.expectedBytes);expect(fileBoundFixture.expectedBytes).toBe(fileBoundFixture.maxFileBytes);expect(fileBoundFixture.maxSemanticBytes).toBe(0);}finally{db.close();}
 });
 
-import extentFixture from "../../🧫️fixtures/🔮️semantic-extent/🔣️.json";
+import extentFixture from "../🧫️fixtures/🔮️semantic-extent/🔣️.json";
 
 import {independentSqliteExtent} from "../../../🧪️tests/🔮️semantic-extent/🟦️.ts";
 test("independent SQLite semantic census preserves the authored zero-byte NULL payload",()=>{

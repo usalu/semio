@@ -3,15 +3,15 @@
 use super::*;
 
 fn law() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🖼️raster-residency/🔣️.json")).expect("raster residency fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🖼️raster-residency/🔣️.json")).expect("raster residency fixture")
 }
 
 fn capacity_law() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🖼️raster-capacity-followup/🔣️.json")).expect("raster capacity fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🖼️raster-capacity-followup/🔣️.json")).expect("raster capacity fixture")
 }
 
 fn scene_raster_law() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🖼️scene-raster-ownership/🔣️.json")).expect("scene raster ownership fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🖼️scene-raster-ownership/🔣️.json")).expect("scene raster ownership fixture")
 }
 
 fn witness(operation: u64) -> RasterTextureWitness {
@@ -275,7 +275,7 @@ fn neutral_capacity_fixture_pins_identity_peak_policy_and_single_engine_target()
 #[test]
 fn authored_mip_upload_bounds_each_slice_and_cancellation_retires_the_same_owner() {
     use crate::wgpu::raster_ownership::{SceneRasterBegin, SceneRasterPool, SceneRasterPoolLimits, SceneRasterProfile, SceneRasterWriteMode};
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🖌️render/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🖌️render/🧪️tests/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
     assert!(law["pixelCases"].as_array().unwrap().iter().any(|row| row["id"] == "authoredMipLinear"));
     let _guard = RASTER_TABLE_GPU_LAW_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let Some(mut harness) = semio_framework_async::block_on(RasterTableGpuHarness::new()) else { return };

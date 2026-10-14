@@ -1,0 +1,91 @@
+{
+  "provenance": {
+    "what": "React Slider token geometry, formatted readout, outer-flow placement, and track-only pointer mapping shared with the retained WGPU renderer.",
+    "implementations": {
+      "rust": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-layout-unit/🦀️.rs",
+      "typescript": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🧪️tests/🧩️component/🟦️.tsx"
+    }
+  },
+  "tokens": {
+    "spacing": 3.2,
+    "rowHeight": 22.4,
+    "readoutWidth": 28.8,
+    "railHeight": 3.2,
+    "thumbSize": 16.0
+  },
+  "cases": [
+    {
+      "id": "minimum",
+      "inline": "ltr",
+      "bounds": [10.0, 20.0, 104.0, 22.4],
+      "value": 0.0,
+      "min": 0.0,
+      "max": 10.0,
+      "formatted": "0",
+      "trackCell": [10.0, 20.0, 75.2, 22.4],
+      "valueCell": [85.2, 20.0, 28.8, 22.4],
+      "rail": [10.0, 29.6, 75.2, 3.2],
+      "range": [10.0, 29.6, 0.0, 3.2],
+      "thumb": [2.0, 23.2, 16.0, 16.0]
+    },
+    {
+      "id": "fractional-middle",
+      "inline": "ltr",
+      "bounds": [10.0, 20.0, 104.0, 22.4],
+      "value": 2.5,
+      "min": 0.0,
+      "max": 10.0,
+      "formatted": "2.5",
+      "trackCell": [10.0, 20.0, 75.2, 22.4],
+      "valueCell": [85.2, 20.0, 28.8, 22.4],
+      "rail": [10.0, 29.6, 75.2, 3.2],
+      "range": [10.0, 29.6, 18.8, 3.2],
+      "thumb": [20.8, 23.2, 16.0, 16.0]
+    },
+    {
+      "id": "maximum",
+      "inline": "ltr",
+      "bounds": [10.0, 20.0, 104.0, 22.4],
+      "value": 10.0,
+      "min": 0.0,
+      "max": 10.0,
+      "formatted": "10",
+      "trackCell": [10.0, 20.0, 75.2, 22.4],
+      "valueCell": [85.2, 20.0, 28.8, 22.4],
+      "rail": [10.0, 29.6, 75.2, 3.2],
+      "range": [10.0, 29.6, 75.2, 3.2],
+      "thumb": [77.2, 23.2, 16.0, 16.0]
+    },
+    {
+      "id": "outer-rtl-inner-ltr",
+      "inline": "rtl",
+      "bounds": [10.0, 20.0, 104.0, 22.4],
+      "value": 2.5,
+      "min": 0.0,
+      "max": 10.0,
+      "formatted": "2.5",
+      "trackCell": [38.8, 20.0, 75.2, 22.4],
+      "valueCell": [10.0, 20.0, 28.8, 22.4],
+      "rail": [38.8, 29.6, 75.2, 3.2],
+      "range": [38.8, 29.6, 18.8, 3.2],
+      "thumb": [49.6, 23.2, 16.0, 16.0]
+    }
+  ],
+  "unit": {
+    "value": 2.5,
+    "unit": "mm",
+    "internalReadout": "2.5",
+    "externalReadout": "2.5 mm",
+    "accessibleValueText": "2.5 mm",
+    "gap": 3.2,
+    "placements": [
+      { "id": "standalone-ltr", "inline": "ltr", "bounds": [10.0, 60.0, 180.0, 22.4], "kind": "standalone" },
+      { "id": "tree-control-rtl", "inline": "rtl", "bounds": [10.0, 90.0, 160.0, 22.4], "kind": "treeControl" }
+    ]
+  },
+  "pointer": [
+    { "case": "fractional-middle", "point": [90.0, 31.2], "emits": null },
+    { "case": "fractional-middle", "point": [47.6, 31.2], "emits": 5.0 },
+    { "case": "outer-rtl-inner-ltr", "point": [76.4, 31.2], "emits": 5.0 }
+  ]
+}

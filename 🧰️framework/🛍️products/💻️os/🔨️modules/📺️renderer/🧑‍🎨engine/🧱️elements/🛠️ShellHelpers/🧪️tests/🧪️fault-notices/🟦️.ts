@@ -11,7 +11,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import Ajv2020 from "ajv/dist/2020.js";
 import type { FaultNoticeDefinition } from "@semio-tech/framework";
 import { appFaultNoticeV1, historyInputDraftDispositionV1, syncShellLabelLocale } from "../../🟦️.tsx";
-import corpus from "../../../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🧫️fault-notices/🔣️.json";
+import corpus from "../../../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🧫️fault-notices/🔣️.json";
 import faultSchema from "../../../../../../../../../🔨️modules/⚠️diagnostic/🧬️schema/🎛️controlled/🔣️.json";
 import valueSchema from "../../../../../../../../../🔨️modules/🌱️value/⚠️refusal/🧬️schema/🔣️.json";
 // #endregion 🔌️Adapters

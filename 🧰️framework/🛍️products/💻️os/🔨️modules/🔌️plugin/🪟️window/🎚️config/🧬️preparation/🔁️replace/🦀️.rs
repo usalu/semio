@@ -1,5 +1,5 @@
 //! 🔁️ Whole-record replace edit for fixed-size window configs: copies the replacement into the post record, boxes the previous record as the inverse row, and retires both through original custody.
-use super::preparation_custody::WindowEditCustody;
+use crate::store::snapshot_clone_preparation::RetainedEditCustody;
 use crate::store;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedClone,RetainedCloneBirthDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep}};
 use semio_framework_value::retirement::RetireOwned;
@@ -23,7 +23,7 @@ impl<S: 'static, M: 'static> Default for WindowConfigReplaceEdit<S, M> { fn defa
 pub struct WindowConfigReplaceCursor<S: Copy + RetireOwned + 'static, M: RetireOwned + 'static> {
     stage: u8,
     cancelled: bool,
-    custody: WindowEditCustody<(Option<Box<S>>, Option<Vec<M>>)>,
+    custody: RetainedEditCustody<(Option<Box<S>>, Option<Vec<M>>)>,
 }
 
 impl<S, M> RetainedCloneEdit<S, M> for WindowConfigReplaceEdit<S, M>
@@ -39,7 +39,7 @@ where S: RetainedClone + Copy + RetireOwned + Send + Sync + 'static, M: WindowCo
         let mut receipt = self.begin_demand().admit(grant)?;
         receipt.copied_bytes = size_of::<Self::Cursor>();
         if !receipt.fits(grant) { return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "window config replace cursor transfer exceeds grant")); }
-        Ok((WindowConfigReplaceCursor { stage: 0, cancelled: false, custody: WindowEditCustody::new((None, None)) }, receipt))
+        Ok((WindowConfigReplaceCursor { stage: 0, cancelled: false, custody: RetainedEditCustody::new((None, None)) }, receipt))
     }
 }
 

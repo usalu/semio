@@ -236,7 +236,7 @@ impl ShootingRetainedCatalogOracle for SerdeJsonShootingRetainedCatalogOracle {
 
 #[semio_framework_async_macros::async_test]
 async fn retained_command_catalog_matches_the_serde_json_oracle() {
-    let oracle = SerdeJsonShootingRetainedCatalogOracle.summarize(include_str!("../../🧫️fixtures/🧫️retained-command-limits/🔣️.json"));
+    let oracle = SerdeJsonShootingRetainedCatalogOracle.summarize(include_str!("../🧫️fixtures/🧫️retained-command-limits/🔣️.json"));
     let mut command_ids = every_command().iter().map(|command| command.command_id().to_string()).collect::<std::collections::BTreeSet<_>>();
     command_ids.insert("setActiveUtility".to_string());
     let bounded_ids = SHOOTING_BOUNDED_TOOL_IDS.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
@@ -262,7 +262,7 @@ async fn retained_command_catalog_matches_the_serde_json_oracle() {
 
 #[semio_framework_async_macros::async_test]
 async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
-    let fixture = include_str!("../../🧫️fixtures/🧫️retained-command-limits/🔣️.json");
+    let fixture = include_str!("../🧫️fixtures/🧫️retained-command-limits/🔣️.json");
     let expected = ["importSnapshotJson", "setActiveExample", "resetSnapshot", "worldPointerDown", "worldPointerMove", "saveDownload", "importAssetRequest", "exportActiveShot", "exportAllShots"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
     assert_eq!(SerdeJsonShootingRetainedCatalogOracle.summarize(fixture).host_only_ids, expected);
     let wrong_lane = fixture.replacen("\"HostOnly\"", "\"Artifact\"", 1);
@@ -638,7 +638,7 @@ async fn every_example_load_settles_through_the_host_document_archive_door() {
         let settled = artifact_app_laws::settle_registered_typed_operation(&mut *app, context::SHOOTING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity()).await.expect("the example settles");
         let loaded = settled.effects.into_iter().find_map(|effect| if let Effect::LoadDocument { pack, spr } = effect { Some((pack, spr)) } else { None });
         let (parent_pack, parent_spr) = loaded.expect("an example publishes one whole-document load");
-        let expected = <ShootingSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&parent_pack).expect("the load carries a shooting document");
+        let expected = <ShootingSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&parent_pack).expect("the load carries a shooting document");
         PluginApp::begin_document_archive_load(&mut *app, archive_id, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
         let mut status = None;
         for _ in 0..1_000_000 {

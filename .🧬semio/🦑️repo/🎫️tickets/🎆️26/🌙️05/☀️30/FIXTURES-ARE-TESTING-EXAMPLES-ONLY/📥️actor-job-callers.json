@@ -1,0 +1,67 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🧪️tests/🔬️tool-job-microsecond-budget/🟦️.ts",
+    "sha256Before": "39605f9e53b82459ad4f1d183a8d8695a6b54fcc67c609afdb8358d9c7f662e6",
+    "sha256After": "073f4a12227d650d6f824cf973b29be36d27c845111c678ada268a0fc3e3c851",
+    "edits": [
+      {
+        "start": 540,
+        "end": 560,
+        "from": "🧫️fixtures/🔣️.json",
+        "to": "🧪️tests/🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📨️effect-wire-routes/🟦️.ts",
+    "sha256Before": "ae9b9ed315b85c9d04bdfc7395c3734829796f089f77019fcfbd83cd07ac5de6",
+    "sha256After": "41e88515aa5ec840e123a12aa79e25d4bb5140b9052e609a014cc9450261ec32",
+    "edits": [
+      {
+        "start": 1236,
+        "end": 1281,
+        "from": "../🧫️fixtures/📨️effect-wire-routes/🔣️.json",
+        "to": "../🧪️tests/🧫️fixtures/📨️effect-wire-routes/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🎁️effect-params-nesting/🟦️.ts",
+    "sha256Before": "c461e3ee7bea3862b8f9d261a1861700030138107c86ad6bb20cbfc19786d9bb",
+    "sha256After": "71b53557f0219d566e77b14197be8b8eba068d883ae842228138cba76755ecd3",
+    "edits": [
+      {
+        "start": 1207,
+        "end": 1255,
+        "from": "../🧫️fixtures/🎁️effect-params-nesting/🔣️.json",
+        "to": "../🧪️tests/🧫️fixtures/🎁️effect-params-nesting/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/📤️return/🧪️tests/🧪️actorreturn-codecs-load-natively-in-node-strip-only-mode-and-preserve-ev/🟦️.ts",
+    "sha256Before": "267d76738ecb26d5a88de3172de8353cff57f2311503ebe51c1b445705e15bd1",
+    "sha256After": "861a06d16872c412bafeb0495b16623493cd892c0e5e4096fc3f1f3cde5ac0ae",
+    "edits": [
+      {
+        "start": 4380,
+        "end": 4402,
+        "from": "./🧫️fixtures/🔣️.json",
+        "to": "./🧪️tests/🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧪️tests/📥️command-ingress-pages/🟦️.ts",
+    "sha256Before": "19ebc437b8b02ee348ad605e1f92b0464c23d620ce895846a3f32e3f08ca4a71",
+    "sha256After": "dcd6af8c0b6f2cb46fb8d0f746842e446edad5745381c35cd10895fbd8f920fd",
+    "edits": [
+      {
+        "start": 2608,
+        "end": 2688,
+        "from": "../../📡️replication/📡️wire/🎮️command/📥️ingress/🧫️fixtures/📄️pages/🔣️.json",
+        "to": "../../📡️replication/📡️wire/🎮️command/📥️ingress/🧪️tests/🧫️fixtures/📄️pages/🔣️.json"
+      }
+    ]
+  }
+]

@@ -24,7 +24,7 @@ type TwoPeers = Readonly<{
 type Fixture = Readonly<{ steps: readonly Step[]; readerEdit: Edit; afterReload: Edit; expected: Readonly<{ author: Author; reader: Program }>; twoPeers: TwoPeers }>;
 type Fold = Readonly<{ head: Head; superseded: readonly number[]; unchanged: readonly number[] }>;
 
-const FIXTURE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧫️folder-reload-route";
+const FIXTURE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🧫️folder-reload-route";
 
 /** 🌐️ A history row names both explicit locales. */
 function assertLabel(label: unknown): void {

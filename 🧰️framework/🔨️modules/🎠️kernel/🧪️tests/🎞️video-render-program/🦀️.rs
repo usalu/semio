@@ -2,7 +2,7 @@ use super::*;
 
 /// 🧫️ `🧫️fixtures/🎞️video-render-program/🔣️.json` — read by this law and its TypeScript twin alike.
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🎞️video-render-program/🔣️.json")).expect("video render program fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🎞️video-render-program/🔣️.json")).expect("video render program fixture")
 }
 
 fn program(value: &serde_json::Value) -> VideoRenderProgram {

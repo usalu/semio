@@ -3,9 +3,9 @@ import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {Matrix3,Vector3} from "three";
 import schema from "../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import {reframe,compose,decompose,type AffineControls} from "../🟦️.ts";
-import controlsFixture from "../🧫️fixtures/🎛️components.json";
+import controlsFixture from "./🧫️fixtures/🎛️components.json";
 import controlsSchema from "../🧬️schema/🎛️components.json";
 import {multiply,type CompositeAffine} from "../../🟦️.ts";
 

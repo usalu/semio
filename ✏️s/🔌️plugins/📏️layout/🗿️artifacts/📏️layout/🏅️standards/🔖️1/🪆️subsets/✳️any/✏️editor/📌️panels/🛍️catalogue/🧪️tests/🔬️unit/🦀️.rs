@@ -34,7 +34,7 @@ fn catalogue_roster_offers_every_native_artifact() {
 
 #[test]
 fn catalogue_declares_the_neutral_kind_witness_and_drop_payload() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../🧫️fixtures/🛍️canvas-catalogue/🔣️.json" )).expect("neutral catalogue producer");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../🧪️tests/🧫️fixtures/🛍️canvas-catalogue/🔣️.json" )).expect("neutral catalogue producer");
     for case in fixture["cases"].as_array().unwrap().iter().filter(|case| case["action"] == "canvasDrop" && case["kind"].is_string()) {
         let kind = case["kind"].as_str().unwrap();
         let item = catalogue_tree_item(kind, Label::data(kind), "square").expect("catalogue row");

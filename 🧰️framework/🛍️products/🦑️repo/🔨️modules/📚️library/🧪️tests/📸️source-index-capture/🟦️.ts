@@ -26,7 +26,7 @@ const descriptorRelative = "🧰️framework/🛍️products/🦑️repo/🔨️
 const taxonomyRelative = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
 const sourceIndexPath = join(library, "🧹️normalization/🧬️mutation/📇️index/🟦️.ts");
 
-const vectors = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/📋️mutation-inventory/📸️source-index-capture/🔣️.json"), "utf8")) as {
+const vectors = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/📋️mutation-inventory/📸️source-index-capture/🔣️.json"), "utf8")) as {
   readonly schemaVersion: 1;
   readonly expectedRoots: readonly string[];
   readonly existingEvidence: readonly string[];

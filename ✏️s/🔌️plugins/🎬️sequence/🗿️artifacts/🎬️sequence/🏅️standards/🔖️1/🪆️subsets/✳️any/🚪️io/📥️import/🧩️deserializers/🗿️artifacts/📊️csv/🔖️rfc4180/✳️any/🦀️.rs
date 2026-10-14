@@ -27,7 +27,7 @@ impl Deserializer<SequenceSnapshot> for CsvIntoSequence {
             return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, "CsvIntoSequence: expected a binary csv payload".to_string())));
         };
         let _ = STDIO_CSV_DOCUMENT_SCHEMA;
-        let csv = <CsvSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError::from_value_error(match error.into_value_error() { Ok(error) => error.under("CsvIntoSequence"), Err(error) => ValueError::new(ValueRefusalKind::InvariantViolated, format!("CsvIntoSequence: in-memory decode reported a transport failure: {error}")) }))?;
+        let csv = <CsvSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError::from_value_error(match error.into_value_error() { Ok(error) => error.under("CsvIntoSequence"), Err(error) => ValueError::new(ValueRefusalKind::InvariantViolated, format!("CsvIntoSequence: in-memory decode reported a transport failure: {error}")) }))?;
         let steps = csv
             .records
             .iter()

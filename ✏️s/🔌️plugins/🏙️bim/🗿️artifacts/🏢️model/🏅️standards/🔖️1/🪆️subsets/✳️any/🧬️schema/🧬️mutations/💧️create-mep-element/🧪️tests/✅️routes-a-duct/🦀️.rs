@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "💧️create-mep-element/✅️routes-a-duct",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/💧️create-mep-element/✅️routes-a-duct/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/💧️create-mep-element/✅️routes-a-duct/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/💧️create-mep-element/✅️routes-a-duct/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/💧️create-mep-element/✅️routes-a-duct/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/💧️create-mep-element/✅️routes-a-duct/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💧️create-mep-element/✅️routes-a-duct/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💧️create-mep-element/✅️routes-a-duct/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💧️create-mep-element/✅️routes-a-duct/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💧️create-mep-element/✅️routes-a-duct/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💧️create-mep-element/✅️routes-a-duct/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

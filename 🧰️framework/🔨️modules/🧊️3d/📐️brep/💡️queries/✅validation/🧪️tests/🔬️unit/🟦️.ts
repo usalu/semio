@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import Ajv2020 from "ajv/dist/2020";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BufferGeometry, Float32BufferAttribute, Triangle, Vector3 } from "three";
@@ -50,4 +51,56 @@ test("cold validation neutral tetrahedron agrees with independent topology and v
   expect(samples - (fixture.budget.sameParameterBaseSamples + 1) + deviations.length).toBe(probe.totalBodySamples);
   geometry.dispose();
   console.log(`[DEBUG] independent cold validation edges=${uses.size} faces=${indices.count / 3} volume=${volume} samples=${samples} maximumDeviation=${maximumDeviation} adaptiveSamples=${deviations.length} adaptiveDeviation=${worst.deviation} adaptiveWorst=${worst.s}`);
+});
+
+test("original retained validation planning separates reserve and entity currencies", () => {
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧊️cold-planning/🔣️.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🧊️cold-planning/🔣️.json"), "utf8"));
+  expect(new Ajv2020({ strict: false }).compile(schema)(fixture)).toBe(true);
+  const law = fixture.retainedPlanning;
+  const geometry = new BufferGeometry();
+  geometry.setAttribute("position", new Float32BufferAttribute(fixture.vertices.flat(), 3));
+  geometry.setIndex(fixture.faces.flat());
+  const edges = new Set<string>();
+  const index = geometry.getIndex()!;
+  for (let i = 0; i < index.count; i += 3) for (let j = 0; j < 3; j++) {
+    const a = index.getX(i + j), b = index.getX(i + (j + 1) % 3);
+    edges.add(`${Math.min(a, b)}:${Math.max(a, b)}`);
+  }
+  expect(edges.size).toBe(fixture.expected.edges);
+  expect(index.count / 3).toBe(fixture.expected.faces);
+  for (const count of [edges.size, index.count / 3]) {
+    const events = [{ birth: count * law.entityCopyBytes, release: 0, copy: law.reserveCopyBytes }, ...Array.from({ length: count }, () => ({ birth: 0, release: 0, copy: law.entityCopyBytes }))];
+    expect(events[0].copy).toBe(0);
+    expect(events.slice(1).every(event => event.copy === law.entityCopyBytes)).toBe(true);
+    expect(events.reduce((total, event) => total + event.birth - event.release, 0)).toBe(count * law.entityCopyBytes);
+    for (const body of law.bodyBytes) expect(body >= law.entityCopyBytes).toBe(body === 64);
+  }
+  for (const count of law.sourceTetrahedra) {
+    expect(edges.size * count).toBe(fixture.expected.edges * count);
+    expect(index.count / 3 * count).toBe(fixture.expected.faces * count);
+  }
+  expect(law.metadataCopyBytes).toBe(0);
+  expect(law.deniedAxes).toEqual(["items", "copy", "capacity", "release", "depth"]);
+  geometry.dispose();
+  console.log(`[DEBUG] independent retained validation planning edges=${edges.size} faces=${index.count / 3} reserveCopy=0 entityCopy=${law.entityCopyBytes}`);
+});
+
+
+test("original retained validation loops keep original neighbor order and independent diagnostic text", () => {
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧊️cold-planning/🔣️.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🧊️cold-planning/🔣️.json"), "utf8"));
+  const validate = new Ajv2020({strict:false}).compile(schema);
+  expect(validate(fixture)).toBe(true);
+  expect(validate({...fixture,retainedLoops:{...fixture.retainedLoops,coedgeCopyBytes:4}})).toBe(false);
+  const geometry = new BufferGeometry(); geometry.setAttribute("position",new Float32BufferAttribute(fixture.vertices.flat(),3)); geometry.setIndex(fixture.faces.flat());
+  const indices=geometry.getIndex()!;
+  const loops=Array.from({length:indices.count/3},(_,face)=>Array.from({length:3},(_,corner)=>({start:indices.getX(face*3+corner),end:indices.getX(face*3+(corner+1)%3),next:(corner+1)%3,prev:(corner+2)%3})));
+  for(const ring of loops)for(let index=0;index<ring.length;index++){const next=(index+1)%ring.length;expect(ring[index].end).toBe(ring[next].start);expect(ring[index].next).toBe(next);expect(ring[next].prev).toBe(index);}
+  const broken=fixture.retainedLoops.brokenNeighbor;const original=loops[broken.loop];original[broken.next].prev=broken.next;
+  const issues=original.flatMap((row,index)=>{const next=(index+1)%original.length;return row.next!==next||original[next].prev!==index?[{entity:`loop-${broken.loop}`,code:"next-prev-mismatch",message:`coedge ${index}'s next/prev pointers are not symmetric with its ring neighbor`}]:[];});
+  expect(issues).toEqual([{entity:broken.entity,code:broken.code,message:broken.message}]);
+  for(const body of fixture.retainedLoops.bodyBytes){let text="";for(const scalar of broken.message){if(body>0)text+=scalar;}expect(text).toBe(body===0?"":broken.message);}
+  for(const count of fixture.retainedLoops.sourceTetrahedra)expect(loops.length*3*count).toBe(fixture.expected.faces*3*count);
+  geometry.dispose();console.log(`[DEBUG] independent original loop count=${loops.length} coedgeBytes=8 diagnostic=${issues[0].message}`);
 });

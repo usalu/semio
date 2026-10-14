@@ -1,0 +1,25 @@
+{
+  "cases": [
+    {
+      "id": "interior-cancel",
+      "kind": "canceled"
+    },
+    {
+      "id": "frontier-admission",
+      "kind": "ownershipLimit"
+    },
+    {
+      "id": "symbol-depth",
+      "kind": "depthLimit"
+    }
+  ],
+  "symbols": [
+    "z",
+    "a\u0000λ",
+    "z"
+  ],
+  "orderedSymbols": [
+    "a\u0000λ",
+    "z"
+  ]
+}

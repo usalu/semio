@@ -1,0 +1,11 @@
+{
+  "cases": [
+    { "id": "neutral-owner", "path": "🎭️actor/🧪️tests/🧫️fixtures/example.json", "accepted": true },
+    { "id": "test-subject", "path": "🎭️actor/🧪️tests/🧭️example/🧫️fixtures/example.json", "accepted": true },
+    { "id": "outside-tests", "path": "🎭️actor/🧫️fixtures/example.json", "accepted": false },
+    { "id": "tests-after-fixtures", "path": "🎭️actor/🧫️fixtures/🧪️tests/example.json", "accepted": false },
+    { "id": "package-owned", "path": "🎭️actor/📦️packages/🟦️typescript/🧪️tests/🧫️fixtures/example.json", "accepted": false },
+    { "id": "target-owned", "path": "🎭️actor/🎯️targets/⚛️react/🧪️tests/🧫️fixtures/example.json", "accepted": false },
+    { "id": "implementation-owned", "path": "🎭️actor/🧩️implementations/native/🧪️tests/🧫️fixtures/example.json", "accepted": false }
+  ]
+}

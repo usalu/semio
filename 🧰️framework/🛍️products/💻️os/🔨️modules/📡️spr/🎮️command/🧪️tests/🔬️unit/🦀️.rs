@@ -218,7 +218,7 @@ fn str_eq_matches_std_partial_eq() {
             index += 1;
         }
     };
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔤️string-equality/🔣️.json")).expect("language-neutral equality vectors");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔤️string-equality/🔣️.json")).expect("language-neutral equality vectors");
     for row in fixture["cases"].as_array().expect("equality cases") {
         let left = row["left"].as_str().expect("left string");
         let right = row["right"].as_str().expect("right string");
@@ -249,7 +249,7 @@ fn approved_verbs_are_unique_and_lowercase() {
 
 #[test]
 fn space_history_verbs_match_the_language_neutral_contract() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🗣️verb-vocabulary/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🗣️verb-vocabulary/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let verb = case["verb"].as_str().unwrap();
         let expected = case["record"].as_str();
@@ -276,7 +276,7 @@ fn mutation_descriptor_semantics_participate_in_immutable_identity() {
 fn derive_mutations_wires_complete_leaf_and_atomic_registration() {
     use super::registry_fixture::*;
     let base = MiniDoc { name: "a".into() };
-    let witness: serde_json::Value = serde_json::from_str(include_str!("../../🧪️testing/📔️registry/🧬️mutations/📛️rename-mini/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json")).unwrap();
+    let witness: serde_json::Value = serde_json::from_str(include_str!("../../🧪️testing/📔️registry/🧬️mutations/📛️rename-mini/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json")).unwrap();
     let mutation: MiniMutation = semio_framework_pack_json::from_json_str(&witness.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rename-mini wire witness");
     assert_eq!(mutation, RenameMini { new_name: "b".into() }.into());
     assert_eq!(json_oracle(&mutation), witness);
@@ -347,7 +347,7 @@ fn mutation_leaf_descriptor_fixture() -> MutationLeafDescriptor {
 }
 
 fn mutation_leaf_descriptor_fixture_json() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🪪️mutation-leaf-descriptor/🔣️.json")).expect("valid neutral descriptor fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🪪️mutation-leaf-descriptor/🔣️.json")).expect("valid neutral descriptor fixture")
 }
 
 static MUTATION_LEAF_DESCRIPTOR_DUPLICATE_OUTCOMES: [MutationOutcomeClass; 2] = [MutationOutcomeClass::Applied, MutationOutcomeClass::Applied];

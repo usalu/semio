@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "original": {
+    "operation": 17,
+    "generation": 9
+  },
+  "turn": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 65536,
+    "maximumDepth": 128
+  },
+  "maximumCloseTurns": 10000,
+  "ownedJobBytes": 128,
+  "message": "original worker 源\u0000\r\n",
+  "cases": [
+    {
+      "kind": "value",
+      "receipt": null,
+      "context": null
+    },
+    {
+      "kind": "fault",
+      "receipt": "original receipt 源",
+      "context": "original context 源"
+    }
+  ],
+  "sameContext": true,
+  "fullCause": true,
+  "retainedParameters": true,
+  "paidCancel": true,
+  "paidError": true,
+  "terminalDropBytes": 0,
+  "whole": {
+    "maximumItems": 10000,
+    "maximumCopyBytes": 4194304,
+    "maximumCapacityBytes": 4194304,
+    "maximumReleaseBytes": 4194304,
+    "maximumDepth": 128
+  },
+  "fuel": 10000,
+  "deadlineMicros": 600000000,
+  "paidErasedBox": true,
+  "deferredInitialWorker": true,
+  "originalInferenceFactoryOnly": true
+}

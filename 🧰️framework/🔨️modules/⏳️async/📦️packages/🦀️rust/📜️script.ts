@@ -1,21 +1,21 @@
 #!/usr/bin/env bun
-import { configuredExactCargoLawPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { runExactCargoLaws } from "../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runExactCargoLaws } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { resolve } from "node:path";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
-import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { runBudgetedTestCommand } from "../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
-import { buildBudgetMs } from "../../../🏃️process/⏱️budget/🟦️.ts";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import { buildBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🦀️ `@semio-tech/framework-async` task router: `bun ./📜️script.ts <test|typegen>`. */
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
 import assert from "node:assert/strict";
 
-import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 function exactCargoStageEnvironments() {
   return {
@@ -29,7 +29,7 @@ class WorkerMaintenanceCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-maintenance-check accepts only --native");
     const owner = join(this.root, "../../🔔️maintenance");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     const owners = new Map<string, { requested: boolean; running: boolean; closing: boolean }>();
     for (const step of fixture.lifecycle) {
       const entry = owners.get(step.owner);
@@ -65,7 +65,7 @@ class WorkerParkingCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-parking-check accepts only --native");
     const owner = join(this.root, "../../🔔️worker-parking");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     const model = (kase: string, timerDue: boolean): string => {
       let signal = 0, closed = false, keeper = false, sleepers = 0;
       const observed = () => signal;
@@ -113,7 +113,7 @@ class WorkerDeferredWakeCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-deferred-wake-check accepts only --native");
     const owner = join(this.root, "../../🔔️deferred-wake");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     const capacity = fixture.capacity;
     assert.equal(capacity.totalWaiters, capacity.partitions * capacity.slotsPerPartition);
     assert.equal(new Set(fixture.cases.map((row: { id: string }) => row.id)).size, fixture.cases.length);
@@ -155,7 +155,7 @@ class WorkerPoolUseCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-pool-use-check accepts only --native");
     const owner = join(this.root, "../../🔐️use");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     for (const row of fixture.cases) {
       let state = "open";
       let uses = 0;

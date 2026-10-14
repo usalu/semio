@@ -3,6 +3,45 @@
   "$id": "semio.repo.dependency-direction/v1",
   "$ref": "#/$defs/DependencyDirections",
   "$defs": {
+    "GraphRuleAuthorityCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "rules", "reportedRules", "accept"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "rules": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/GraphDirectionRule"}},
+        "reportedRules": {"type": "array", "items": {"type": "object"}},
+        "accept": {"type": "boolean"}
+      }
+    },
+    "GraphDirectionRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "severity", "from", "to"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "severity": {"const": "error"},
+        "comment": {"type": "string"},
+        "scope": {"const": "module"},
+        "from": {"$ref": "#/$defs/GraphDirectionSelector"},
+        "to": {"$ref": "#/$defs/GraphDirectionSelector"}
+      }
+    },
+    "GraphDirectionSelector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": {"$ref": "#/$defs/GraphDirectionPaths"},
+        "pathNot": {"$ref": "#/$defs/GraphDirectionPaths"}
+      }
+    },
+    "GraphDirectionPaths": {
+      "anyOf": [
+        {"type": "string"},
+        {"type": "array", "items": {"type": "string", "minLength": 1}}
+      ]
+    },
     "DependencyDirections": {
       "type": "object",
       "additionalProperties": false,

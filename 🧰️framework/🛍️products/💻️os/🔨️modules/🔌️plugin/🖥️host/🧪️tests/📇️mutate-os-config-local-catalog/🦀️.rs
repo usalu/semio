@@ -18,16 +18,16 @@ const KINDS: &[&str] = &["admit-local-document", "retire-local-document"];
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "admit-local-document" => (
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🧫️fixtures/📥️lists-a-persisted-studio-beside-an-imported-one/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🧫️fixtures/📥️lists-a-persisted-studio-beside-an-imported-one/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🧫️fixtures/📥️lists-a-persisted-studio-beside-an-imported-one/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🧫️fixtures/📥️lists-a-persisted-studio-beside-an-imported-one/🎯️outcome/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/📥️admit-local-document/📥️lists-a-persisted-studio-beside-an-imported-one/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/📥️admit-local-document/📥️lists-a-persisted-studio-beside-an-imported-one/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/📥️admit-local-document/📥️lists-a-persisted-studio-beside-an-imported-one/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/📥️admit-local-document/📥️lists-a-persisted-studio-beside-an-imported-one/🎯️outcome/🔣️.json"),
         ),
         "retire-local-document" => (
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🧫️fixtures/📤️unlists-the-studio-and-keeps-its-sibling/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🧫️fixtures/📤️unlists-the-studio-and-keeps-its-sibling/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🧫️fixtures/📤️unlists-the-studio-and-keeps-its-sibling/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🧫️fixtures/📤️unlists-the-studio-and-keeps-its-sibling/🎯️outcome/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-os-config-local-catalog: no specification vector registered for kind {other:?}"),
     }

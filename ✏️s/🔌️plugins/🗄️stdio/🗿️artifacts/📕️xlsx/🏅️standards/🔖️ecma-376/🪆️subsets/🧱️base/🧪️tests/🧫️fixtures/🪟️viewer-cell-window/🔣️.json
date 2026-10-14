@@ -1,0 +1,53 @@
+{
+  "sheets": [
+    {
+      "name": "First",
+      "values": [
+        "before",
+        "one",
+        "two"
+      ]
+    },
+    {
+      "name": "Empty",
+      "values": []
+    },
+    {
+      "name": "Überblick",
+      "values": [
+        "three",
+        "四",
+        "five"
+      ]
+    }
+  ],
+  "sheetIndex": 0,
+  "rowOffset": 1,
+  "rows": 2,
+  "columnOffset": 0,
+  "columns": 2,
+  "expectedKeys": [
+    "xlsx-viewer-sheet-0-row-2",
+    "xlsx-viewer-sheet-0-row-3"
+  ],
+  "expectedCells": [
+    [
+      "one",
+      ""
+    ],
+    [
+      "two",
+      ""
+    ]
+  ],
+  "labels": {
+    "en": {
+      "row": "Row",
+      "column": "Column"
+    },
+    "de": {
+      "row": "Zeile",
+      "column": "Spalte"
+    }
+  }
+}

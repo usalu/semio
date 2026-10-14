@@ -1,6 +1,7 @@
 import "../🪆️record-owner/🟦️.ts";
 import "../♻️cold-properties/🟦️.ts";
 import "../../🛂️manifest/🧪️tests/🏷️type/🟦️.ts";
+import "../../🛂️manifest/📥️admission/🧪️tests/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
@@ -9,11 +10,11 @@ import { findManifestFiles, readGraphManifestDocuments } from "../../🛂️mani
 import { parseGraphOutputCatalog } from "../../🛂️manifest/📇️catalog/🟦️.ts";
 import { renderGraphArtifacts } from "../../🛂️manifest/📽️projection/🟦️.ts";
 import { writeGraphArtifacts } from "../../🛂️manifest/📤️publication/🟦️.ts";
-import fixture from "../../🧫️fixtures/🔣️outputs.json";
+import fixture from "../🧫️fixtures/🔣️outputs.json";
 import schema from "../../🛂️manifest/🧬️schema/🔣️.json";
 function testArtifactRoot(): string {
-  const root = process.env.SEMIO_TEST_ARTIFACTS_DIR;
-  if (!root) throw new Error("Graph contract requires caller-owned SEMIO_TEST_ARTIFACTS_DIR");
+  const root = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  if (!root) throw new Error("Graph contract requires caller-owned SEMIO_TEST_ARTIFACT_DIR");
   mkdirSync(root, { recursive: true });
   return root;
 }
@@ -22,7 +23,7 @@ import currentInput from "../../🛂️manifest/📇️outputs.json";
 const current = parseGraphOutputCatalog(currentInput, currentInput.manifests.map((row: { id: string }) => row.id));
 const emptyCatalog = parseGraphOutputCatalog(fixture.empty, []);
 const fixtureCatalog = parseGraphOutputCatalog(fixture.catalog, fixture.manifestIds);
-import consumption from "../../🛂️manifest/🧫️fixtures/🧩️consumption/🔣️.json";
+import consumption from "../../🛂️manifest/🧪️tests/🧫️fixtures/🧩️consumption/🔣️.json";
 
 test("graph admission and projection run with every product physically unavailable to an independent Node loader", async () => {
   const { build } = await import("esbuild");
@@ -97,7 +98,7 @@ test("independent owner previews execute with every specific owner unavailable",
       mkdirSync(join(sandbox, "owner", "🛂️manifest"), { recursive: true });
       writeFileSync(catalogPath, JSON.stringify(catalog));
       const execution = resolve(import.meta.dir, "../../🛂️manifest/🏃️execution/🟦️.ts");
-      const processInvocation = resolve(import.meta.dir, "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts");
+      const processInvocation = resolve(import.meta.dir, "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
       const program = `import {PreviewGeneratedScript} from ${JSON.stringify(execution)};import {createScriptProcessEnvelope,withScriptProcessEnvelope} from ${JSON.stringify(processInvocation)};await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"graph-preview-owner-test",maximumElapsedMilliseconds:0},{},Date.now()),async invocation=>{await new PreviewGeneratedScript(${JSON.stringify(packageRoot)},${JSON.stringify(sandbox)},invocation).run();});`;
       const result = await build({ stdin: { contents: program, resolveDir: import.meta.dir }, bundle: true, platform: "node", format: "esm", write: false, plugins: [{ name: "removed-specific-owners", setup(builder) { builder.onLoad({ filter: /.*/ }, (input) => refused.some((prefix) => input.path.replaceAll("\\", "/").startsWith(prefix)) ? { errors: [{ text: "General preview loads a removed owner: " + input.path }] } : undefined); } }] });
       const child = Bun.spawnSync(["node", "--input-type=module"], { stdin: Buffer.from(result.outputFiles![0]!.text), stdout: "pipe", stderr: "pipe" });
@@ -250,7 +251,7 @@ test("cached graph routes hash every direct owner, oracle and source-data input"
   const project = JSON.parse(readFileSync(new URL("../../📦️packages/🦀️rust/📋️project.json", import.meta.url), "utf8")) as { namedInputs: { default: string[];generatorSources:string[] } };
   const required = [
     "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧩️suite/🟦️.ts",
-    "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧫️fixtures/🔣️outputs.json",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧫️fixtures/🔣️outputs.json",
     "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📥️admission/🟦️.ts",
     "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📇️catalog/🟦️.ts",
     "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📤️publication/🟦️.ts",

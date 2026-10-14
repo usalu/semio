@@ -4716,6 +4716,7 @@ dependencies = [
  "semio-framework-graph",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-schema-state",
@@ -4737,6 +4738,7 @@ dependencies = [
  "semio-framework-dsl-record-derive",
  "semio-framework-graph",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema-state",
  "semio-framework-ui-locale",
@@ -4755,6 +4757,7 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-ui",
  "semio-framework-ui-locale",
@@ -4783,6 +4786,7 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -4799,6 +4803,7 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -4815,6 +4820,7 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema-composition",
  "semio-framework-schema-state",
@@ -4834,6 +4840,7 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema",
  "semio-framework-schema-composition",
@@ -5119,6 +5126,7 @@ dependencies = [
  "semio-framework-dsl-record-derive",
  "semio-framework-io-base64",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-pixels",
  "semio-framework-plugin",
@@ -5143,6 +5151,7 @@ dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema-state",
  "semio-framework-ui-locale",
@@ -5175,6 +5184,7 @@ dependencies = [
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-replication",
@@ -5208,6 +5218,7 @@ dependencies = [
  "semio-framework-io-base64",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-pixels",
  "semio-framework-tool-run",
@@ -5276,6 +5287,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-hash",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-replication",
  "semio-framework-trace",
  "semio-framework-value",
@@ -5327,6 +5339,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-os-kernel",
  "semio-framework-os-services",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
@@ -5356,6 +5369,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-os",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
@@ -5384,6 +5398,8 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-hash",
+ "semio-framework-io-schema",
+ "semio-framework-io-sqlite-snapshot",
  "semio-framework-pack-error",
  "semio-framework-pack-json",
  "semio-framework-replication",
@@ -5434,6 +5450,7 @@ dependencies = [
  "semio-framework-io-base64",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin-mounted-owner",
  "semio-framework-replication",
@@ -5471,6 +5488,7 @@ dependencies = [
  "semio-framework-os-config",
  "semio-framework-os-kernel",
  "semio-framework-os-services",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin-interpreter",
  "semio-framework-trace",
@@ -5498,6 +5516,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -5656,6 +5675,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-pack",
+ "semio-framework-replication",
  "semio-framework-ui",
  "semio-framework-ui-locale",
  "semio-framework-value",
@@ -5825,6 +5845,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-db",
  "semio-framework-os-mcp",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
@@ -5866,6 +5887,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pixels",
  "semio-framework-plugin",
  "semio-framework-raster",
@@ -5898,6 +5920,7 @@ name = "semio-hub-animate-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-animate",
 ]
@@ -5911,6 +5934,7 @@ dependencies = [
  "semio-framework-graph",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-tool-run",
@@ -5936,6 +5960,7 @@ name = "semio-hub-architect-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-architect",
 ]
@@ -5959,6 +5984,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-os-run",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui-contract",
@@ -5975,6 +6001,7 @@ name = "semio-hub-bim-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-bim",
 ]
@@ -5988,6 +6015,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-block-2d",
@@ -6002,6 +6030,7 @@ name = "semio-hub-block-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-block",
 ]
@@ -6019,6 +6048,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-math",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-tool-run",
@@ -6040,6 +6070,7 @@ name = "semio-hub-cad-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-cad",
 ]
@@ -6055,6 +6086,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-tool-run",
@@ -6078,6 +6110,7 @@ name = "semio-hub-dag-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-dag",
 ]
@@ -6091,6 +6124,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui-locale",
@@ -6118,6 +6152,7 @@ name = "semio-hub-demonstrator-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-demonstrator",
 ]
@@ -6134,6 +6169,7 @@ dependencies = [
  "semio-framework-io-base64",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pixels",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
@@ -6155,6 +6191,7 @@ name = "semio-hub-draw-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-draw",
 ]
@@ -6192,6 +6229,7 @@ name = "semio-hub-energy-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-energy",
 ]
@@ -6204,6 +6242,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-fem-2d",
@@ -6215,6 +6254,7 @@ name = "semio-hub-fem-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-fem",
 ]
@@ -6234,6 +6274,7 @@ dependencies = [
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-dsl-derive",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -6257,6 +6298,7 @@ name = "semio-hub-flow-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-flow",
 ]
@@ -6272,6 +6314,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os-flow",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui-contract",
@@ -6293,6 +6336,7 @@ name = "semio-hub-forms-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-forms",
 ]
@@ -6310,6 +6354,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
  "semio-framework-schema",
@@ -6328,6 +6373,7 @@ name = "semio-hub-gis-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-gis",
 ]
@@ -6366,6 +6412,7 @@ name = "semio-hub-imperative-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-imperative",
 ]
@@ -6382,6 +6429,7 @@ dependencies = [
  "semio-framework-os",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui-contract",
@@ -6404,6 +6452,7 @@ name = "semio-hub-layout-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-layout",
 ]
@@ -6419,6 +6468,7 @@ dependencies = [
  "semio-framework-io-base64",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pixels",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -6444,6 +6494,7 @@ name = "semio-hub-lowpoly-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-lowpoly",
 ]
@@ -6481,6 +6532,7 @@ name = "semio-hub-mathematical-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-mathematical",
 ]
@@ -6493,6 +6545,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-ui-locale",
  "semio-framework-value",
@@ -6522,6 +6575,7 @@ name = "semio-hub-norm-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-norm",
 ]
@@ -6537,6 +6591,7 @@ dependencies = [
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-os-run",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui-contract",
@@ -6558,6 +6613,7 @@ name = "semio-hub-note-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-note",
 ]
@@ -6573,6 +6629,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os-flow",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui",
@@ -6592,6 +6649,7 @@ name = "semio-hub-playbook-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-playbook",
 ]
@@ -6605,6 +6663,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-tool-run",
  "semio-framework-trace",
@@ -6620,6 +6679,7 @@ name = "semio-hub-procedural-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-procedural",
 ]
@@ -6636,6 +6696,7 @@ dependencies = [
  "semio-framework-io-base64",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-value",
@@ -6659,6 +6720,7 @@ name = "semio-hub-process-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-process",
 ]
@@ -6671,6 +6733,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-tool-run",
  "semio-framework-value",
@@ -6684,6 +6747,7 @@ name = "semio-hub-puzzle-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-puzzle",
 ]
@@ -6700,6 +6764,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-value",
@@ -6721,6 +6786,7 @@ name = "semio-hub-raster-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-raster",
 ]
@@ -6735,6 +6801,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-tool-run",
@@ -6755,6 +6822,7 @@ name = "semio-hub-reasoning-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-reasoning",
 ]
@@ -6801,6 +6869,7 @@ name = "semio-hub-remodel-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-remodel",
 ]
@@ -6817,6 +6886,7 @@ dependencies = [
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui-contract",
@@ -6838,6 +6908,7 @@ name = "semio-hub-sequence-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-sequence",
 ]
@@ -6852,6 +6923,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui-contract",
@@ -6878,6 +6950,7 @@ name = "semio-hub-shooting-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-shooting",
 ]
@@ -6891,6 +6964,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-tool-run",
@@ -6914,6 +6988,7 @@ name = "semio-hub-sourcing-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-sourcing",
 ]
@@ -6967,6 +7042,7 @@ name = "semio-hub-space-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-space",
 ]
@@ -7077,6 +7153,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-bcf",
  "semio-s-artifact-stdio-contract",
@@ -7088,6 +7165,7 @@ name = "semio-hub-stdio-bim-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-stdio-bim",
 ]
@@ -7100,6 +7178,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-binary",
  "semio-s-artifact-stdio-contract",
@@ -7113,6 +7192,7 @@ name = "semio-hub-stdio-binary-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-stdio-binary",
 ]
@@ -7125,6 +7205,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-dwg",
@@ -7139,6 +7220,7 @@ name = "semio-hub-stdio-cad-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-stdio-cad",
 ]
@@ -7205,6 +7287,7 @@ name = "semio-hub-stdio-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-stdio",
 ]
@@ -7217,6 +7300,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-bmp",
  "semio-s-artifact-stdio-contract",
@@ -7232,6 +7316,7 @@ name = "semio-hub-stdio-image-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-stdio-image",
 ]
@@ -7244,6 +7329,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-avi",
  "semio-s-artifact-stdio-contract",
@@ -7257,6 +7343,7 @@ name = "semio-hub-stdio-media-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-stdio-media",
 ]
@@ -7269,6 +7356,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-gltf",
@@ -7286,6 +7374,7 @@ name = "semio-hub-stdio-mesh-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-stdio-mesh",
 ]
@@ -7295,6 +7384,7 @@ name = "semio-hub-stdio-mutation-bridge"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-s-artifact-stdio-avi",
  "semio-s-artifact-stdio-bcf",
@@ -7361,6 +7451,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-docx",
@@ -7373,6 +7464,7 @@ name = "semio-hub-stdio-office-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-stdio-office",
 ]
@@ -7385,6 +7477,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-pdf",
@@ -7395,6 +7488,7 @@ name = "semio-hub-stdio-pdf-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-stdio-pdf",
 ]
@@ -7407,6 +7501,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-semio",
@@ -7437,6 +7532,7 @@ name = "semio-hub-stdio-semio-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-stdio-semio",
 ]
@@ -7449,6 +7545,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-tool-run",
  "semio-framework-value",
@@ -7462,6 +7559,7 @@ name = "semio-hub-trinity-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-trinity",
 ]
@@ -7477,6 +7575,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui-contract",
@@ -7498,6 +7597,7 @@ name = "semio-hub-vcs-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-vcs",
 ]
@@ -7511,6 +7611,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-tool-run",
  "semio-framework-trace",
@@ -7528,6 +7629,7 @@ name = "semio-hub-wfc-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-wfc",
 ]
@@ -7542,6 +7644,7 @@ dependencies = [
  "semio-framework-editor",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui-contract",
@@ -7563,6 +7666,7 @@ name = "semio-hub-writer-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-hub-writer",
 ]
@@ -7585,6 +7689,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-pixels",
  "semio-framework-plugin",
@@ -7632,6 +7737,7 @@ dependencies = [
  "semio-framework-graph",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -7673,6 +7779,7 @@ dependencies = [
  "semio-framework-io-base64",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -7817,6 +7924,7 @@ dependencies = [
  "semio-framework-math",
  "semio-framework-mesh-engine",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -7865,6 +7973,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -7903,6 +8012,7 @@ dependencies = [
  "semio-framework-dsl-record-derive",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -7938,6 +8048,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-machine",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-pixels",
  "semio-framework-plugin",
@@ -8103,6 +8214,7 @@ dependencies = [
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-dsl-derive",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -8142,6 +8254,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os-flow",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -8311,6 +8424,7 @@ dependencies = [
  "semio-framework-machine",
  "semio-framework-os",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -8358,6 +8472,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-machine",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-pixels",
  "semio-framework-plugin",
@@ -8893,6 +9008,7 @@ dependencies = [
  "semio-framework-machine",
  "semio-framework-os",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-pixels",
  "semio-framework-plugin",
@@ -8935,6 +9051,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os-flow",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -9085,6 +9202,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-machine",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -9281,6 +9399,7 @@ dependencies = [
  "semio-framework-machine",
  "semio-framework-os",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-pixels",
  "semio-framework-plugin",
@@ -9330,6 +9449,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-replication",
@@ -9430,6 +9550,7 @@ dependencies = [
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -9468,6 +9589,7 @@ dependencies = [
  "semio-framework-machine",
  "semio-framework-os",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -9512,6 +9634,7 @@ dependencies = [
  "semio-framework-dsl-record-derive",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -9648,6 +9771,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -9679,6 +9803,7 @@ dependencies = [
  "semio-framework-dsl-record-derive",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -9816,6 +9941,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -9841,6 +9967,7 @@ dependencies = [
  "semio-framework-dsl",
  "semio-framework-hash",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-ui-locale",
  "semio-s-artifact-stdio-contract",
@@ -9855,6 +9982,7 @@ dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-ui-locale",
@@ -9878,6 +10006,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-mesh-engine",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -9895,6 +10024,7 @@ name = "semio-s-artifact-stdio-dwg-read"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-value",
  "semio-s-artifact-stdio-binary",
  "semio-s-artifact-stdio-dwg-model",
@@ -9905,6 +10035,7 @@ name = "semio-s-artifact-stdio-dwg-write"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-value",
  "semio-s-artifact-stdio-binary",
  "semio-s-artifact-stdio-dwg-model",
@@ -9950,6 +10081,7 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -10001,6 +10133,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-dsl",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-ui-locale",
@@ -10019,6 +10152,7 @@ dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-ui-locale",
@@ -10074,6 +10208,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema-composition",
  "semio-framework-schema-state",
@@ -10477,6 +10612,7 @@ dependencies = [
  "semio-framework-graph",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -10517,6 +10653,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -10536,6 +10673,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-gif",
  "semio-s-artifact-stdio-gltf-model",
@@ -10550,6 +10688,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-gif",
@@ -10568,6 +10707,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -10587,6 +10727,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-mp3",
@@ -10601,6 +10742,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-mp3",
  "semio-s-artifact-stdio-semio-audio",
@@ -10617,6 +10759,7 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-ui-locale",
@@ -10660,6 +10803,7 @@ dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-mesh-engine",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-contract",
@@ -10678,6 +10822,7 @@ dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-mesh-engine",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-dwg-model",
@@ -10696,6 +10841,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -10716,6 +10862,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-dwg-model",
@@ -10731,6 +10878,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-dwg-model",
@@ -10744,6 +10892,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-semio-catalog"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-semio",
@@ -10785,6 +10934,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -10804,6 +10954,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-docx",
  "semio-s-artifact-stdio-md",
@@ -10819,6 +10970,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-docx",
@@ -10838,6 +10990,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -10860,6 +11013,7 @@ dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-dwg-model",
@@ -10881,6 +11035,7 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-dsl-record",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-dwg-model",
@@ -10902,6 +11057,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -10922,6 +11078,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-semio-base",
@@ -10934,6 +11091,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-json",
@@ -10951,6 +11109,7 @@ dependencies = [
  "semio-framework-graph",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -10974,6 +11133,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -10993,6 +11153,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-bmp",
@@ -11010,6 +11171,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-bmp",
@@ -11030,6 +11192,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -11058,6 +11221,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -11080,6 +11244,7 @@ dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-dwg-model",
@@ -11103,6 +11268,7 @@ dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-dwg-model",
@@ -11125,6 +11291,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -11144,6 +11311,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-bcf",
  "semio-s-artifact-stdio-contract",
@@ -11158,6 +11326,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-bcf",
  "semio-s-artifact-stdio-contract",
@@ -11175,6 +11344,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -11201,6 +11371,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -11221,6 +11392,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-pptx",
  "semio-s-artifact-stdio-semio-base",
@@ -11234,6 +11406,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-pptx",
@@ -11253,6 +11426,7 @@ dependencies = [
  "semio-framework-graph",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -11276,6 +11450,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -11299,6 +11474,7 @@ dependencies = [
  "semio-framework-geometry",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -11318,6 +11494,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-csv",
@@ -11333,6 +11510,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-csv",
  "semio-s-artifact-stdio-json",
@@ -11350,6 +11528,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -11369,6 +11548,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-avi",
  "semio-s-artifact-stdio-mp4",
@@ -11382,6 +11562,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-avi",
  "semio-s-artifact-stdio-mp4",
@@ -11616,6 +11797,7 @@ dependencies = [
  "semio-framework-dsl",
  "semio-framework-hash",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -11673,6 +11855,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -11792,6 +11975,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -12018,6 +12202,7 @@ dependencies = [
  "semio-framework-graph",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -12047,6 +12232,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -12063,6 +12249,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-value",
@@ -12077,6 +12264,7 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-value",
 ]
@@ -12086,6 +12274,7 @@ name = "semio-s-plugin-block-catalog"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-pack",
  "semio-framework-ui-locale",
 ]
 
@@ -12094,6 +12283,7 @@ name = "semio-s-plugin-stdio"
 version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-contract",
 ]
@@ -12107,6 +12297,7 @@ dependencies = [
  "semio-framework-graph",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -12120,6 +12311,7 @@ dependencies = [
  "semio-framework-artifact-space-space",
  "semio-framework-os",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-ui-locale",
@@ -12138,6 +12330,7 @@ dependencies = [
  "semio-framework-mesh-engine",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-value",
  "wasm-bindgen",

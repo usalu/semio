@@ -97,7 +97,7 @@ export function testRetainedCommandSchemaOwnership(): { readonly fixtures: numbe
     for (const route of example.routes) validateValue("RetainedCommandRoute", route);
     for (const contract of example.publicationContracts ?? []) validateValue("RetainedCommandPublicationContract", contract);
   }
-  const directFixture = readJson("✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🛣️retained-command-routes.json");
+  const directFixture = readJson("./✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/🛣️retained-command-routes.json");
   const classificationRef = `${OWNER_ID}#/$defs/InteractiveJobClassification`;
   for (const route of directFixture.routes) {
     assert(ajv.validate(classificationRef, route.disposition), ajv.errorsText());

@@ -10,7 +10,7 @@ test("declared compiled refusal owner closes all i32 fields and eight exact dial
  const validate=new Ajv({strict:true}).addKeyword({keyword:"x-semio-state",schemaType:"string"}).compile(JSON.parse(readFileSync(join(snapshot,"🔣️.json"),"utf8")));
  for(const value of [-2147483648,-1,0,1,2147483647])expect(validate({value})).toBe(true);
  for(const value of [{},{value:null},{value:"0"},{value:0.5},{value:-2147483649},{value:2147483648},{value:0,other:1}])expect(validate(value)).toBe(false);
- const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+ const fixture=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
  expect(fixture.subsets).toEqual(["invalid-value","canceled","ownership-limit","allocation-failed","work-limit","depth-limit","unsupported-owner","invariant-violated"]);
  const sql=readFileSync(new URL("../🗄️.sql",import.meta.url),"utf8");
  for(const [index,value]of fixture.values.entries()){

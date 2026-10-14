@@ -8,7 +8,7 @@ fn document()->DrawingSnapshot {
 }
 #[test]
 fn drawing_boolean_command_fixtures() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let before=document();
     for case in fixture["cases"].as_array().unwrap() {
         let ids=serde_json::from_value::<Vec<String>>(case["ids"].clone()).unwrap();
@@ -26,7 +26,7 @@ fn drawing_boolean_command_fixtures() {
 }
 #[test]
 fn drawing_boolean_command_preserves_parent_and_checks_ancestor_admission() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["parentCases"].as_array().unwrap() {
         let mut group=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("parent")).to_string().into()).expect("nonempty authored identity"), "parent");layer_base_mut(&mut group).id="parent".into();
         layer_base_mut(&mut group).locked=case["locked"].as_bool().unwrap();layer_base_mut(&mut group).visible=case["visible"].as_bool().unwrap();

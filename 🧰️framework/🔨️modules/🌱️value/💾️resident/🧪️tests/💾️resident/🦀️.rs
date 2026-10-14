@@ -70,7 +70,7 @@ fn capacity(value: &serde_json::Value) -> Result<ResidentCapacity, ResidentFault
 }
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
 
 #[test]
@@ -183,7 +183,7 @@ impl Drop for ResidentDropProbe {
 }
 
 fn admission_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../📨️admission/🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../📨️admission/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 fn admission_grant(bytes: u64) -> ResidentGrant {
     ResidentGrant::new(1, bytes).unwrap()

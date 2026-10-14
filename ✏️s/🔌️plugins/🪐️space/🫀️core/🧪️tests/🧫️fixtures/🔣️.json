@@ -1,0 +1,15 @@
+{
+  "schema": "s.space.shared-authority/v1",
+  "sharedPackage": "semio-s-space-core",
+  "artifacts": [
+    "s.space.home",
+    "s.space.space"
+  ],
+  "sharedSources": [
+    "🫀️core/📄️documents",
+    "🫀️core/🕰️time",
+    "🫀️core/🦀️.rs"
+  ],
+  "specificIndexOwner": "🗿️artifacts/🪐️space/🫀️index",
+  "foreignLocks": "source-bearing-blocks-byte-identical"
+}

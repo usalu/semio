@@ -2,6 +2,21 @@
   "name": "ticket-fixture-verification",
   "root": ".",
   "targets": {
+    "root-cad-bindings-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts root-cad-bindings-source"
+      }
+    },
+    "plugin-bim-components-measure": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts plugin-bim-components-measure",
+        "forwardAllArgs": true
+      }
+    },
     "plugin-value-ghost-closure": {
       "executor": "nx:run-commands",
       "cache": false,

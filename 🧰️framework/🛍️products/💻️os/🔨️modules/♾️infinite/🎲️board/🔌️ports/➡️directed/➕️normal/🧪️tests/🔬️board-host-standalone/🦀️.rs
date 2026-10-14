@@ -380,7 +380,7 @@
 #[cfg(test)]
     #[test]
     fn board_snapshot_json_vectors_match_the_json_oracle() {
-        let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️board-ingress.json")).unwrap();
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️board-ingress.json")).unwrap();
         for fixture in vectors.as_array().unwrap() {
             let mut host = BoardHost::default();
             assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);crate::infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&fixture.to_string(),&mut control)});

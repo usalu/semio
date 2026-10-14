@@ -1,0 +1,14 @@
+{
+  "operation": 72,
+  "generation": 4,
+  "fuel": 4096,
+  "deadlineUs": 23456,
+  "clockUs": 2,
+  "grant": {
+    "maximumItems": 2,
+    "maximumCopyBytes": 128,
+    "maximumCapacityBytes": 512,
+    "maximumReleaseBytes": 1024,
+    "maximumDepth": 4
+  }
+}

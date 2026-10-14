@@ -21,7 +21,7 @@ use semio_framework_plugin::Emit;
 use semio_framework_tool_machine::{GesturePhase, GestureTool, ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 
 //#region 🔖️MeshEdit
 /// 🧯️ `clippy::needless_pass_by_value` — takes `MeshKernelError` by value on purpose: every call site uses it as a

@@ -73,7 +73,7 @@ async fn changing_any_collection_misses_the_cache() {
 #[test]
 fn owned_dependency_matches_neutral_fixture_and_serde_oracle() {
     use store::InferredField;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🌱️owned-dependency/🔣️.json")).expect("neutral dependency");
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/✅validation-report/🌱️owned-dependency/🔣️.json")).expect("neutral dependency");
     let snapshot=SemioBrepSnapshot::default();
     let dependency=BrepValidationReport::dep_input(&snapshot,&"document".into(),&[]);
     let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&dependency)).expect("owned dependency output");

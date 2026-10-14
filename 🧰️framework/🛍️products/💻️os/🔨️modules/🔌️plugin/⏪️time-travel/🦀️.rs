@@ -20,13 +20,13 @@ use semio_framework_value::{RetirementDemand,ValueError,retained_clone::{Retaine
 #[path="♻️retirement/🦀️.rs"]
 mod original_retirement;
 #[cfg(test)]
-use original_retirement::assert_session_original;
+pub(crate) use original_retirement::assert_session_original;
 #[cfg(test)]
-use original_retirement::assert_pending_command_original;
+pub(crate) use original_retirement::assert_pending_command_original;
 #[cfg(test)]
-use original_retirement::assert_discard_publication_original;
+pub(crate) use original_retirement::assert_discard_publication_original;
 #[cfg(test)]
-use original_retirement::native_original_actor_grant;
+pub(crate) use original_retirement::native_original_actor_grant;
 
 //#region 🔖️Limits
 /// ⏱️ Wall budget of one replay slice per reactor turn.
@@ -163,8 +163,8 @@ pub(crate) struct TimeTravelMemberMetadata {pub(crate) key:MemberKey,pub(crate) 
 
 pub(crate) struct TimeTravelReviewChildren {
     pub(crate) view: ChildContentView,
-    base: TimeTravelBase,
-    generation: u32,
+    pub(crate) base: TimeTravelBase,
+    pub(crate) generation: u32,
 }
 
 impl TimeTravelReviewChildren {
@@ -218,7 +218,7 @@ pub struct TimeTravelLedger<A: ArtifactApp> {
 /// stepped per reactor turn, and how it finalizes (unscoped, or within the history edit's own line).
 pub(crate) struct SupersedeAuthoring<P, Mu: ::protocol::Mutation<P>> {
     pub(crate) replay: store::os_store::snapshot_read::ArtifactDerivedReplay<P, Mu>,
-    finalization: store::HistoryFinalization,
+    pub(crate) finalization: store::HistoryFinalization,
 }
 
 /// 🧮️ Where authoring the undo or redo of a finalize stands.
@@ -265,7 +265,7 @@ impl<A: ArtifactApp> Default for TimeTravelLedger<A> {
 impl<A: ArtifactApp> TimeTravelLedger<A> {
     /// ⏱️ Replaces the clock every driver turn reads its wall deadline from (laws drive a counted clock).
     #[cfg(test)]
-    fn set_turn_clock(&mut self, clock: fn() -> Option<u64>) {
+    pub(crate) fn set_turn_clock(&mut self, clock: fn() -> Option<u64>) {
         self.turn_clock = clock;
     }
 
@@ -287,7 +287,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
 
     /// ✏️ The draft editor for a law that exercises a descriptor the fixture app's leaves do not declare.
     #[cfg(test)]
-    fn editor_mut(&mut self) -> Option<&mut TimeTravelEditor> {
+    pub(crate) fn editor_mut(&mut self) -> Option<&mut TimeTravelEditor> {
         self.editor.as_mut()
     }
 
@@ -709,7 +709,7 @@ pub(crate) enum TimeTravelQueryOutput {
 
 impl<P, Mu> TimeTravelStoreState<P, Mu>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
 {
     /// 🏗️ Owners at rest, labelling the store's operations with `label_of`.
@@ -1012,7 +1012,7 @@ where
 
 impl<P, Mu> TimeTravelOwners for TimeTravelStoreState<P, Mu>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
 {
     fn replaying(&self) -> bool {
@@ -1061,7 +1061,7 @@ impl store::MemberStoreVisitorMut for TimeTravelMemberRun<'_> {
 
     async fn visit_mut<P, Mu>(self, store: &mut ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
     {
         for documents in <Mu as ::protocol::Mutation<P>>::INPUT_SCHEMA_DOCUMENTS {
@@ -1087,7 +1087,7 @@ impl store::MemberStoreVisitorMut for TimeTravelMemberCommit<'_, '_> {
 
     async fn visit_mut<P, Mu>(self, store: &mut ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
     {
         let state = self.owners.as_deref_mut().and_then(|owners| owners.as_any_mut().downcast_mut::<TimeTravelStoreState<P, Mu>>()).ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("timeTravel.member-store-kind"), "a composed member's history-edit owners belong to another store kind"))?;
@@ -1106,7 +1106,7 @@ impl store::MemberStoreVisitor for TimeTravelMemberSettle<'_> {
 
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
     {
         self.owners.as_any_mut().downcast_mut::<TimeTravelStoreState<P, Mu>>().ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("timeTravel.member-store-kind"), "a composed member's history-edit owners belong to another store kind"))?.settle(store, self.stage)
@@ -1124,7 +1124,7 @@ impl store::MemberStoreVisitor for TimeTravelMemberQuery<'_> {
 
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
     {
         TimeTravelStoreState::<P, Mu>::query(self.owners.and_then(|owners| owners.as_any().downcast_ref::<TimeTravelStoreState<P, Mu>>()), store, self.query)
@@ -1435,7 +1435,7 @@ pub struct TimeTravelListItem {
 /// flattened into their fields, and a list input (an array of any item kind) as its own row ([`TimeTravelList`], which
 /// adds an item) followed by every item `value` holds — an object item as one item row then its fields, any other item as
 /// its own row ([`TimeTravelListItem`], which removes the item); a hidden input is never a row.
-fn time_travel_input_rows(inputs: &[ActionArgDef], value: &DslValue) -> Vec<TimeTravelInputRow> {
+pub(crate) fn time_travel_input_rows(inputs: &[ActionArgDef], value: &DslValue) -> Vec<TimeTravelInputRow> {
     fn nested(parent: &LocalizedLabel, child: &LocalizedLabel) -> LocalizedLabel {
         LocalizedLabel::from_fn(|terminology, locale| format!("{} \u{b7} {}", parent.resolve(terminology, locale), child.resolve(terminology, locale)))
     }
@@ -1514,7 +1514,7 @@ pub(crate) fn time_travel_resolve_snaps(rows: &mut [TimeTravelInputRow], mut spa
 /// of an object, or, where the walk stands on an array, the record whose own `field` member equals it
 /// (`/hostSnapshot/widgets/{id}/params`: the `params` of the widget whose `id` is the payload's `id`). `None` while a member
 /// is missing or nothing matches.
-fn time_travel_option_target<'a>(template: &str, payload: &DslValue, document: &'a DslValue) -> Option<&'a DslValue> {
+pub(crate) fn time_travel_option_target<'a>(template: &str, payload: &DslValue, document: &'a DslValue) -> Option<&'a DslValue> {
     let text = |value: &DslValue| match value {
         DslValue::String(text) => Some(text.clone()),
         other => other.as_i64().map(|number| number.to_string()).or_else(|| other.as_u64().map(|number| number.to_string())),
@@ -1603,7 +1603,7 @@ pub(crate) fn time_travel_coerce(input: &ActionArgDef, element: bool, value: &Ds
 
 /// 🎨️ The sRGB components (`0..=1`) of a colour text by the UI contract's colour law ([`parse_ui_color_hex`]): three
 /// for a text without alpha (the draft keeps the stored alpha), four for one with it.
-fn time_travel_color_components(text: &str) -> Option<Vec<f64>> {
+pub(crate) fn time_travel_color_components(text: &str) -> Option<Vec<f64>> {
     let rgba = parse_ui_color_hex(text)?;
     let digits = text.trim().trim_start_matches('#').len();
     Some(if digits == 4 || digits == 8 { rgba.to_vec() } else { rgba[..3].to_vec() })
@@ -1618,7 +1618,7 @@ fn time_travel_color_rgba(value: &DslValue) -> Vec<f64> {
 /// range become detents when at most [`UI_FIXED_LIST_ITEMS`] of them fit, else the spacing becomes the step. A `Step`
 /// source is left to the control; a resolved or unresolvable `Config`/`Snapshot` source is cleared, so a host only ever
 /// sees numbers.
-fn time_travel_apply_snap_spacing(schema: &mut ArgSchema, spacing: Option<f64>) {
+pub(crate) fn time_travel_apply_snap_spacing(schema: &mut ArgSchema, spacing: Option<f64>) {
     let (snaps, snap_source, step, low, high) = match schema {
         ArgSchema::Number { snaps, snap_source, step, min, max, soft_min, soft_max, .. } => (snaps, snap_source, step, soft_min.or(*min), soft_max.or(*max)),
         ArgSchema::Vector { snaps, snap_source, step, min, max, .. } => (snaps, snap_source, step, *min, *max),
@@ -1795,7 +1795,7 @@ thread_local! {
 /// mutation whose inputs are all hidden is not editable, it keeps Withdraw): an input that is not hidden — an object one
 /// through its fields ([`time_travel_input_rows`]). A schema that cannot be read answers `true` and is not remembered:
 /// its editor opens naming why (the referenced documents may register later).
-fn time_travel_schema_shows_inputs(schema: &'static str) -> bool {
+pub(crate) fn time_travel_schema_shows_inputs(schema: &'static str) -> bool {
     fn shown(input: &ActionArgDef) -> bool {
         input.presentation != Some(ArgPresentation::Hidden) && !matches!(&input.schema, ArgSchema::Object { fields } if !fields.is_empty() && !fields.iter().any(shown))
     }
@@ -1846,7 +1846,7 @@ where
 /// 🔢️ Which operations of an edit of `len` operations one history row projects (audit W2A-11): the first
 /// [`HISTORY_ROW_MUTATION_ROWS`], then at most as many later `flagged` ones (index and worst severity — `None` for a
 /// supersession without an outcome), the most severe first and the earliest among equals, all back in op order.
-fn history_projected_operations(len: usize, flagged: impl IntoIterator<Item = (usize, Option<semio_framework_diagnostic::Severity>)>) -> Vec<usize> {
+pub(crate) fn history_projected_operations(len: usize, flagged: impl IntoIterator<Item = (usize, Option<semio_framework_diagnostic::Severity>)>) -> Vec<usize> {
     let mut later: Vec<(usize, Option<semio_framework_diagnostic::Severity>)> = flagged.into_iter().filter(|(index, _)| *index >= HISTORY_ROW_MUTATION_ROWS && *index < len).collect();
     later.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
     later.truncate(HISTORY_ROW_MUTATION_ROWS);
@@ -1997,7 +1997,7 @@ impl store::MemberStoreVisitor for MemberHistoryVisitor<'_, '_> {
 
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
     {
         let edits = &store.envelope().vcs.edits;
@@ -2054,7 +2054,7 @@ impl store::MemberStoreVisitor for MemberMutationPageVisitor<'_> {
 
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
     {
         let unlabelled = HashMap::new();
@@ -2075,7 +2075,7 @@ impl store::MemberStoreVisitor for MemberMutationPageVisitor<'_> {
 /// 🧾️ One backfilled history row of composed-member edits no row carries yet: every unlogged member edit of one
 /// transaction (or one edit without a transaction), ordered by its moment, labelled from its first leaf.
 #[derive(Clone, Debug, PartialEq)]
-struct MemberBackfillGroup {
+pub(crate) struct MemberBackfillGroup {
     pub at: Option<HybridLogicalTimestamp>,
     pub transaction: Option<String>,
     pub edit_ids: Vec<String>,
@@ -2145,7 +2145,7 @@ pub(crate) struct HistoryStoreStamp {
 /// 🧭️ The [`HistoryStoreStamp`] of `store`: O(1) plus one lookup of the applied top from the ledger's tail.
 pub(crate) fn history_store_stamp<P, Mu>(store: &ArtifactStore<P, Mu>) -> HistoryStoreStamp
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
 {
     let envelope = store.envelope();
@@ -2236,7 +2236,7 @@ impl store::MemberStoreVisitor for MemberLedgerTailVisitor<'_> {
 
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
     {
         let edits = &store.envelope().vcs.edits;
@@ -2260,7 +2260,7 @@ impl store::MemberStoreVisitor for MemberHistoryStampVisitor<'_> {
 
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
     {
         let stamp = history_store_stamp(store);
@@ -2813,7 +2813,7 @@ fn time_travel_value_args(generation: u32, path: &str, value: UiValue) -> UiAsse
 }
 
 /// 🧮️ Why a list edit is disabled, localized: "Maximum 8 items" (`maxItems` reached), "Minimum 1 item" (`minItems` left).
-fn time_travel_item_limit_text(limit: u32, max: bool, locale: Locale) -> String {
+pub(crate) fn time_travel_item_limit_text(limit: u32, max: bool, locale: Locale) -> String {
     let text = match (max, limit == 1) {
         (true, true) => HistoryPanelText::MaxItem,
         (true, false) => HistoryPanelText::MaxItems,

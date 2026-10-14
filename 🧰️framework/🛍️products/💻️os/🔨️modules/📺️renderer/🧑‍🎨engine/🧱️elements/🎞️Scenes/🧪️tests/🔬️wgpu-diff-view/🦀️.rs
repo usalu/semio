@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn neutral_diff_fixture_matches_the_native_operation_sequence() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🆚️diff-view-produced-surface/🔣️.json")).expect("DiffView fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🆚️diff-view-produced-surface/🔣️.json")).expect("DiffView fixture");
     let before = fixture["before"].as_str().unwrap().lines().collect::<Vec<_>>();
     let after = fixture["after"].as_str().unwrap().lines().collect::<Vec<_>>();
     let actual = diff_lines(&before, &after)
@@ -75,7 +75,7 @@ fn oversized_inputs_use_the_positional_fallback_without_panicking() {
 
 #[test]
 fn neutral_presentation_fixture_drives_mono_geometry_color_and_pre_wrap() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🆚️diff-view-presentation/🔣️.json")).expect("DiffView presentation fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🆚️diff-view-presentation/🔣️.json")).expect("DiffView presentation fixture");
     let theme = Theme::default();
     let metrics = diff_view_metrics(Rect::new(0.0, 0.0, fixture["host"]["width"].as_f64().unwrap() as f32, fixture["host"]["height"].as_f64().unwrap() as f32), &theme);
     let close = |actual: f32, expected: f64| assert!((actual - expected as f32).abs() <= 0.1, "{actual} != {expected}");

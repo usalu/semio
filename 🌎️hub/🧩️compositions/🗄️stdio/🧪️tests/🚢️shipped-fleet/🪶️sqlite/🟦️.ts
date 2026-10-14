@@ -2,7 +2,7 @@
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework";
-import fixture from "../../../🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧠️owners/🔣️.json";
+import fixture from "../../🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧠️owners/🔣️.json";
 import { binarySnapshotToSqliteDatabase, binarySnapshotFromSqliteDatabase } from "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
 import { txtSnapshotToSqliteDatabase, txtSnapshotFromSqliteDatabase } from "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
 import { jsonSnapshotToSqliteDatabase, jsonSnapshotFromSqliteDatabase } from "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";

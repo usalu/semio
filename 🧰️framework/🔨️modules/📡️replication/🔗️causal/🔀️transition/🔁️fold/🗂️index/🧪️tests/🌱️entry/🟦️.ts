@@ -1,7 +1,7 @@
 /** 🌱️ Checks original lazy entry examples with independent canonical JSON. */
 import {strict as assert} from "node:assert";
 import stableStringify from "fast-json-stable-stringify";
-const fixture=await Bun.file(new URL("../../🧫️fixtures/🌱️entry/🔣️.json",import.meta.url)).json();
+const fixture=await Bun.file(new URL("../../🧪️tests/🧫️fixtures/🌱️entry/🔣️.json",import.meta.url)).json();
 const map=new Map<number,string>(fixture.sourceRows);
 let occupied=0;let vacant=0;
 if(!map.has(fixture.occupiedKey)){occupied++;map.set(fixture.occupiedKey,"unused");}

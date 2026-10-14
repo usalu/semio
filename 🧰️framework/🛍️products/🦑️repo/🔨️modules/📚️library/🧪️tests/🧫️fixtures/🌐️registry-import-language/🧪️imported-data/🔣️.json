@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "contractId": "registry-compiler-input-dependencies-v1",
+  "selection": "physical-extension-and-requested-role",
+  "dataGrammar": "strict-json",
+  "fallback": "none",
+  "cases": [
+    { "id": "json-object-is-data", "path": "🧩️module/🔣️.json", "role": "static-import", "source": "{\"text\":\"import './never.ts';\",\"value\":42,\"emoji\":\"🌱️\"}\n", "expected": { "kind": "json-data", "imports": [] } },
+    { "id": "json-array-is-data", "path": "🧩️module/🔣️.json", "role": "static-import", "source": "[null,true,3,\"export * from './never.ts'\"]", "expected": { "kind": "json-data", "imports": [] } },
+    { "id": "json-scalar-is-data", "path": "🧩️module/🔣️.json", "role": "static-import", "source": "null", "expected": { "kind": "json-data", "imports": [] } },
+    { "id": "typescript-import-remains-module", "path": "📜️script.ts", "role": "implementation-entry", "source": "import value from './🧩️module/🔣️.json'; import again from './🧩️module/🔣️.json'; export const result = [value, again];", "expected": { "kind": "module", "imports": ["./🧩️module/🔣️.json"] } },
+    { "id": "json-entry-rejected", "path": "🧩️module/🔣️.json", "role": "implementation-entry", "source": "{}", "error": "language is not supported" },
+    { "id": "json-comments-rejected", "path": "🧩️module/🔣️.json", "role": "static-import", "source": "{/* comment */\"value\":1}", "error": "imported JSON is invalid" },
+    { "id": "json-trailing-comma-rejected", "path": "🧩️module/🔣️.json", "role": "static-import", "source": "{\"value\":1,}", "error": "imported JSON is invalid" },
+    { "id": "json-multiple-values-rejected", "path": "🧩️module/🔣️.json", "role": "static-import", "source": "{} {}", "error": "imported JSON is invalid" },
+    { "id": "json-truncated-rejected", "path": "🧩️module/🔣️.json", "role": "static-import", "source": "{\"value\":", "error": "imported JSON is invalid" },
+    { "id": "jsonc-is-not-json", "path": "🧩️module/🔣️.jsonc", "role": "static-import", "source": "{}", "error": "language is not supported" },
+    { "id": "unknown-extension-rejected", "path": "🧩️module/value.txt", "role": "static-import", "source": "{}", "error": "language is not supported" },
+    { "id": "uppercase-extension-rejected", "path": "🧩️module/value.JSON", "role": "static-import", "source": "{}", "error": "language is not supported" }
+  ],
+  "graph": {
+    "entries": ["📜️script.ts"],
+    "dataPath": "🧩️module/🔣️.json",
+    "files": [
+      { "path": "📜️script.ts", "mode": 420, "content": "import value from './🧩️module/🔣️.json'; import again from './🧩️module/🔣️.json'; import { identity } from './🧩️module/🟦️.ts'; export default identity([value, again]);\n" },
+      { "path": "🧩️module/🟦️.ts", "mode": 420, "content": "export const identity = <T>(value: T) => value;\n" },
+      { "path": "🧩️module/🔣️.json", "mode": 416, "content": "{\"text\":\"import './never.ts';\",\"value\":42,\"emoji\":\"🌱️\"}\n" }
+    ]
+  }
+}

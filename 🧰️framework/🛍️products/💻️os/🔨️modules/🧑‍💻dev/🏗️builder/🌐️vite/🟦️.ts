@@ -1,5 +1,6 @@
+import { canonicalWasmBuildVitePlugin } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts";
 import { builtPluginModulesRootIn } from "../../♻️activation/🟦️.ts";
-import { buildModePolicy, readBuildMode } from "../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { buildModePolicy, readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { viteCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
 import type { AssetDeliveryProviderV1 } from "../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import type { DeployedRegistryEntryV1 } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
@@ -7,7 +8,7 @@ import type { PlaygroundEntry } from "../../../🔌️plugin/📇️registry/�
 import type { ModuleDirectory } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 export type FrameworkOsDevBuildInventoryV1 = { readonly plugins: readonly DeployedRegistryEntryV1[]; readonly extensions: readonly DeployedRegistryEntryV1[]; readonly playgrounds: readonly PlaygroundEntry[]; readonly moduleDirectories: readonly ModuleDirectory[]; readonly assetProviders: readonly AssetDeliveryProviderV1[]; readonly defaultVariant?: string };
 import { createAssetBuildPluginsV1, resolveAssetDeliveryModeV1 } from "../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
-import { BUILD_BUDGET_MS as _semioProcessGraphAnchor } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { BUILD_BUDGET_MS as _semioProcessGraphAnchor } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { requirePlaygroundVariant } from "../../../🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
 import type { ShellBrand } from "@semio-tech/framework";
 import { resolveShellBrandById } from "../../🏷️brand/🟦️.ts";
@@ -21,7 +22,7 @@ import { PREVIEW2_VENDOR_RELATIVE } from "../../../🔌️plugin/🌐️browser-
 import { devStreamMuxServer, semioAgentBridgeRendezvousVitePlugin, semioAgentCredentialInstallVitePlugin, semioLocalHubSessionVitePlugin, semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioPlaygroundReactRefreshCoherenceVitePlugin, semioProductionTestBoundaryVitePlugin, semioServiceWorkerScopeVitePlugin, semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🟦️.ts";
 import { loadFrameworkOsPlaygroundCatalog as _semioPlaygroundGraphAnchor } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
 
-import { developmentRuntimeRoot, playgroundSessionViteAlias, pluginModulesRoot, readActivationReceipt } from "../../♻️activation/🟦️.ts";
+import { developmentRuntimeRoot, playgroundSessionViteAlias, readActivationReceipt } from "../../♻️activation/🟦️.ts";
 import { resolveTestBrowserHostRootsV1 } from "../../♻️activation/🌐️browser-host/🟦️.ts";
 import { productionBrowserArtifactsVitePlugin, selectProductionBrowserComponents } from "../../🚚️distribution/🔌️components/🟦️.ts";
 import { DISTRIBUTION_LAYOUT, distributionChunkName, distributionAssetName } from "../../🚚️distribution/🟦️.ts";
@@ -31,7 +32,7 @@ const playDir = path.resolve(configDir, "../..");
 const repoRoot = path.resolve(playDir, "../../../../..");
 /** 🏗️ Builds a neutral shell using entry points and brands supplied by its owner. */
 export function createFrameworkOsDevConfig(options: { readonly inventory: FrameworkOsDevBuildInventoryV1; readonly brands: readonly ShellBrand[]; readonly browserEntry: string }) {
-return defineOwnedBuildConfigFactory(async ({ command }): Promise<OwnedBuildConfig> => {
+return defineOwnedBuildConfigFactory(async ({ command, mode }): Promise<OwnedBuildConfig> => {
 const { plugins, extensions, playgrounds, moduleDirectories, assetProviders } = options.inventory;
 
 /** 📦️ Config-shaped graph: heavy owners load through opaque dynamic imports so Vite's native
@@ -44,13 +45,13 @@ void _semioProcessGraphAnchor;
 
 const renderer = process.env.SEMIO_RENDERER ?? "react";
 const plugin = requirePlaygroundVariant(process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? options.inventory.defaultVariant ?? "framework-empty");
-const buildMode = readBuildMode(process.env.SEMIO_BUILD_MODE), profile = buildMode === "prototype" ? "dev" : "release";
-const rendererModulesDir = path.resolve(playDir, "../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist", buildModePolicy(buildMode).wasmProfile);
+const buildMode = readBuildMode(mode), profile = buildMode;
+const rendererModulesDir = path.resolve(playDir, `../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/wasm-${buildMode}`);
 const runtimeRoot = developmentRuntimeRoot(configDir, plugin, profile, "react");
 const testBrowserHost = command === "serve" ? resolveTestBrowserHostRootsV1(process.env) : undefined;
 const receiptDirectory = testBrowserHost?.activationRoot ?? path.join(runtimeRoot, "activation");
 const activated = command === "serve" ? readActivationReceipt(receiptDirectory) : undefined;
-const pluginModulesDir = command === "build" ? builtPluginModulesRootIn(repoRoot, buildMode) : testBrowserHost?.moduleRoot ?? pluginModulesRoot();
+const pluginModulesDir = testBrowserHost?.moduleRoot ?? builtPluginModulesRootIn(repoRoot, buildMode);
 const installedExtensionsDir = command === "build" ? pluginModulesDir : testBrowserHost ? path.join(testBrowserHost.browserHostRoot, "extensions") : path.join(runtimeRoot, "extensions");
 const fontsDir = path.resolve(configDir, "../../../♾️infinite/📦️packages/🦀️rust/dist/fonts");
 const sessionRoot = path.resolve(configDir, "../../../🔌️plugin/📇️registry/dist/sessions");
@@ -90,7 +91,7 @@ const registryEngineOptimizeDepsExclude = [...new Set(playgrounds.filter((target
  * `node_modules`. The profile belongs in the key: a `dev` and a `release` serve of the same variant run
  * side by side, and sharing one `deps/` directory means whichever re-optimizes last rewrites the modules
  * the other has already handed to a browser. */
-const playgroundCacheDir = viteCacheDirectory(repoCacheDirectory(repoRoot, "vite", "os-dev", `${plugin}-${renderer}`), process.env, import.meta.url);
+const playgroundCacheDir = viteCacheDirectory(repoCacheDirectory(repoRoot, "vite", "os-dev", `${plugin}-${renderer}`), { ...process.env, SEMIO_BUILD_MODE: readBuildMode(mode) }, import.meta.url);
 
 /** 🚫️ Keeps Node-only browser automation packages outside Vite's browser dependency optimizer. */
 const nodeOnlyOptimizeDepsExclude = ["playwright", "playwright-core", "chromium-bidi", "fsevents"];
@@ -113,7 +114,7 @@ const resolvedPluginId = playgrounds.find((target) => target.variant === plugin 
 // copied and every single-variant production build 404s the shard worker at first plugin activation.
 if (!resolvedPluginId) throw new Error(`Unknown playground module identity: ${plugin}`);
 const extensionIds = new Set(extensions.map((target) => target.pluginId));
-const productionComponents = command === "build" ? selectProductionBrowserComponents((await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION, plugin, resolvedPluginId, [...plugins, ...extensions]) : undefined;
+const productionComponents = command === "build" ? selectProductionBrowserComponents((await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION, plugin, resolvedPluginId, [...plugins, ...extensions], buildMode) : undefined;
 const pluginModuleDirNames = [PREVIEW2_VENDOR_RELATIVE, MODULE_SHARD_DIRECTORY, ...(activated?.plugins ?? []).filter((row) => !extensionIds.has(row.pluginId)).map((row) => moduleDirectoryName(row.pluginId, moduleDirectories))];
 
 /** 🔎️ The components the activation-receipt watcher checks for staleness — every declared build
@@ -137,7 +138,7 @@ return {
   // 🏷️ A brand's own `distDir` (e.g. the Aggregator's `♻️/aggregator/dist`) keeps its build output
   // self-contained alongside its brand config/assets instead of the shared playground `dist/`.
   build: {
-    ...semioViteBuild(),
+    ...semioViteBuild(undefined, readBuildMode(mode)),
     outDir: path.join(playDir, DISTRIBUTION_LAYOUT.directory, buildMode),
     assetsDir: DISTRIBUTION_LAYOUT.bundles,
     emptyOutDir: false,
@@ -210,6 +211,7 @@ return {
     watch: null,
   },
   plugins: [
+      canonicalWasmBuildVitePlugin(repoRoot, readBuildMode(mode)),
     semioServeCloseVitePlugin(),
     semioProductionTestBoundaryVitePlugin(),
     ...semioHostHtmlVitePlugin(repoRoot, {

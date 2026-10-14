@@ -27,11 +27,11 @@ fn retire_all(retirement: &mut Box<dyn store::ErasedSnapshotRetirement>) -> usiz
 #[test]
 fn a_mounted_document_round_trips_through_both_envelopes() {
     let document = crate::examples::wall_roof_facade_strip::document();
-    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&document);
-    let parsed = <Wfc2dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("the printed document parses");
+    let text = pack::snapshot::ArtifactDsl::print_dsl(&document);
+    let parsed = <Wfc2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("the printed document parses");
     assert_eq!(parsed, document);
-    let bytes = <Wfc2dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&document);
-    let decoded = <Wfc2dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("the packed document decodes");
+    let bytes = <Wfc2dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&document);
+    let decoded = <Wfc2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("the packed document decodes");
     assert_eq!(decoded, document);
 }
 
@@ -40,7 +40,7 @@ fn a_mounted_document_round_trips_through_both_envelopes() {
 #[test]
 fn decode_in_place_retires_the_displaced_document() {
     let mut live = crate::examples::two_room_corridor::document();
-    let bytes = <Wfc2dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&crate::examples::hex_ring::document());
+    let bytes = <Wfc2dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&crate::examples::hex_ring::document());
     let (mut retirement, birth) = crate::standards::v1::subsets::any::io::binary::snapshot::decode_into(&mut live, &bytes, admission()).expect("decode in place");
     assert!(birth.fits(admission()));
     assert_eq!(live, crate::examples::hex_ring::document());

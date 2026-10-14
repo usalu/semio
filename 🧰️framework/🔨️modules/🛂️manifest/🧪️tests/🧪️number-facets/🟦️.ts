@@ -6,7 +6,7 @@
 import { describe, expect, test } from "bun:test";
 import Decimal from "decimal.js";
 
-import corpus from "../../🧫️fixtures/🧫️number-facets/🔣️.json" with { type: "json" };
+import corpus from "../🧫️fixtures/🧫️number-facets/🔣️.json" with { type: "json" };
 
 import { numberRangeIsValid, snapsAreValid } from "../../../🖱️ui/🧬️contract/🛡️limits/🟦️.ts";
 import { actionArgNumberFacets, actionArgUnitSymbol, type ActionArgDef, type ActionArgNumberFacets, type ShellLocale } from "../../🟦️.ts";

@@ -2,7 +2,7 @@
 
 use crate::manifest::MediaType;
 use semio_framework_value::DslValue;
-pub use semio_framework_actor::{RetainedTurnInput,RetainedTurnReceipt};
+pub use semio_framework_actor::{RetainedTurnInput,RetainedTurnReceipt,OriginalJobSource,OriginalJobSourceCursor,OriginalJobTurnLoan,OriginalJobBudget,OriginalJobCallFailure,OriginalJobStartReply,OriginalJobStepReply,OriginalJobCancelReply,OriginalJobOutputState,OriginalJobOutcome,OriginalJobOutputChunk,OriginalJobOutputReply,OriginalJobOutputAckReply};
 pub use semio_framework_diagnostic::Diagnostic;
 pub use semio_framework_diagnostic::Fault;
 pub use semio_framework_diagnostic::FaultCause;
@@ -66,6 +66,7 @@ pub struct AssetHandle(pub u128);
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct CapabilityToken(pub u128);
+semio_framework_value::artifact_retire_leaf!(CapabilityToken);
 
 /// 🌉️ Hand-written, not derived — see [`ArtifactHandle`]'s impl doc above (same `u128`
 /// decimal-string mirror).
@@ -121,6 +122,7 @@ pub struct CommandId(pub String);
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
 #[value(transparent)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct AppInstanceId(pub String);
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -2583,6 +2585,7 @@ pub use cold_pair::{ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumen
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[expect(clippy::large_enum_variant, reason = "Command ingress carries one fixed bounded page inline; delivery must not allocate an indirect page owner.")]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum Event {
     /// 🐣️ First event an instance receives — config/assets/capabilities/quotas are preloaded so
     /// the first `poll` never blocks. `actor` is a placeholder `String` until the concurrently
@@ -2700,6 +2703,7 @@ pub enum Event {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum ActivationEvent {
     OnCommand { id: String },
     OnViewVisible { id: String },
@@ -2729,7 +2733,7 @@ pub use semio_framework_ui_contract::{PresenceUpdate, UiPatch, UiPatchOp};
 pub struct Budget {
     pub retained: RetainedTurnInput,
     pub fuel: u64,
-    pub deadline_ms: u32,
+    pub deadline_us: u64,
     pub max_effects: u32,
     pub max_patch_bytes: u32,
     pub max_frames: u32,
@@ -3657,6 +3661,7 @@ pub struct CapabilityRequest {
 /// report's naming-collision note.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct BrokerCapabilityGrant {
     /// 🔢️ `u128` has no JavaScript number equivalent, so the mirror carries it as a decimal string —
     /// same treatment `PluginDependency.version` gets in `🛂️manifest`.
@@ -3672,6 +3677,7 @@ pub struct BrokerCapabilityGrant {
 /// `Fault(capability-revoked)`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum CapabilityChange {
     Granted { id: CapabilityId, grant: BrokerCapabilityGrant },
     Revoked { id: CapabilityId },
@@ -3685,6 +3691,7 @@ pub enum CapabilityChange {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct QuotaSchema {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]

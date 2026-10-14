@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Cargo Lock Closure",
+  "type": "object",
+  "required": [
+    "version",
+    "packages"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "packages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "version",
+          "dependencies"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "checksum": {
+            "type": "string"
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "CargoLockInventory": {
+      "type": "object",
+      "required": [
+        "version",
+        "manifest"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "manifest": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.?(/|$))[^\\\\\\u0000]+$"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

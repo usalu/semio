@@ -1,14 +1,14 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { runOwnedCommand } from "../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import { cmdBudgetMs } from "../../../../🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts";
-import { readProcessOwnerContextV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📋️context/🟦️.ts";
+import { runOwnedCommand } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { cmdBudgetMs } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { readProcessOwnerContextV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/🟦️.ts";
 import { getWorkspaceRoot, packageTestBudgetMs, runRepositoryTestCommand } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { finishLocalHub, startLocalHub, waitForReadiness } from "../../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { runHubCollaborationCli } from "./🤝️collaboration/🟦️.ts";
 import { nativeRuntimeDirectory } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/🟦️.ts";
@@ -63,7 +63,7 @@ async function withLiveHub(principals: readonly LiveHubPrincipal[], body: (env: 
 /** 📦️ Stages a completed plugin release component as the native runtime (the `native-entrypoint` publish verb, no
  * compilation; release because the 88 MB dev block2d component exceeds the 64 MiB execution-target component bound) and answers
  * the directory the native live laws mount it from (`SEMIO_PLUGIN_MODULES`). */
-function stageNativeRuntime(variant: string, profile: "dev" | "release"): string {
+function stageNativeRuntime(variant: string, profile: "prototype" | "release"): string {
   const publisher = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/📜️script.ts");
   const published = spawnSync(process.execPath, [publisher, "publish", variant, profile], { cwd: repoRoot, encoding: "utf8" });
   if (published.status !== 0) throw new Error(`native ${variant} runtime publish failed: ${published.stderr}${published.stdout}`);

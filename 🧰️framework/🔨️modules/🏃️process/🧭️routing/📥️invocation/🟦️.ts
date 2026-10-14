@@ -1,5 +1,5 @@
-import schema from "./🧬️schema/🔣️.json";
-import { requireExactKeys, requireRecord, validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/🟦️.ts";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+import { requireExactKeys, requireRecord, validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🧬️ Names the original caller's finite or ordinary no-deadline command authority. */
 export type ScriptPolicy = Readonly<{ version: 1; owner: string; maximumElapsedMilliseconds: number }>;

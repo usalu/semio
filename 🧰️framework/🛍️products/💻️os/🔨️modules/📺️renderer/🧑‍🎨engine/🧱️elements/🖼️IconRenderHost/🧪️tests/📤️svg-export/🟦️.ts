@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
 
 const host = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const read = (path: string) => JSON.parse(readFileSync(resolve(host, path), "utf8"));
-const fixture = read("🧫️fixtures/📤️svg-export/🔣️.json");
+const fixture = read("🧪️tests/🧫️fixtures/📤️svg-export/🔣️.json");
 
 function renderFixture(): string {
   const geometry = new BufferGeometry();

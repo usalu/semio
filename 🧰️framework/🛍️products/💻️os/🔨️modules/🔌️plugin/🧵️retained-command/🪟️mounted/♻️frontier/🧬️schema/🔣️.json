@@ -1,1 +1,108 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","$id":"https://json.schemas.assets.semio-tech.com/framework/os/plugin/publication-outcome/schema.json","title":"Mounted Publication Outcome Custody","type":"object","additionalProperties":false,"required":["schema","cases"],"properties":{"schema":{"const":"framework.plugin.publication-outcome.v1"},"cases":{"type":"array","minItems":4,"items":{"type":"object","additionalProperties":false,"required":["lane","reason","existingFault","faultTerminals","successTerminals","reportCode","transitions"],"properties":{"lane":{"enum":["artifact","config","draft","presence","transient","windowConfig","windowTransient"]},"reason":{"type":"string","minLength":1},"existingFault":{"type":["string","null"]},"faultTerminals":{"type":"integer","minimum":0,"maximum":1},"successTerminals":{"const":0},"reportCode":{"type":["string","null"]},"transitions":{"const":["capture","body","frame","deliver"]}}}}}}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/publication-outcome/schema.json",
+  "title": "Mounted Publication Outcome Custody",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases",
+    "originalClose"
+  ],
+  "properties": {
+    "schema": {
+      "const": "framework.plugin.publication-outcome.v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "lane",
+          "reason",
+          "existingFault",
+          "faultTerminals",
+          "successTerminals",
+          "reportCode",
+          "transitions"
+        ],
+        "properties": {
+          "lane": {
+            "enum": [
+              "artifact",
+              "config",
+              "draft",
+              "presence",
+              "transient",
+              "windowConfig",
+              "windowTransient"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "existingFault": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "faultTerminals": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "successTerminals": {
+            "const": 0
+          },
+          "reportCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "transitions": {
+            "const": [
+              "capture",
+              "body",
+              "frame",
+              "deliver"
+            ]
+          }
+        }
+      }
+    },
+    "originalClose": {
+      "const": {
+        "caller": "original-borrowed-context",
+        "carrier": "complete-original-turn-failure",
+        "receiptDebit": "once",
+        "primary": {
+          "message": "Original mounted close failure 源🌊",
+          "source": {
+            "offset": 17,
+            "byte": 255
+          },
+          "progress": {
+            "copiedItems": 1,
+            "copiedBytes": 3,
+            "retainedCapacityBytes": 17,
+            "releasedBytes": 5
+          }
+        },
+        "receiptRefusal": {
+          "message": "Original receipt refusal Ω",
+          "kind": "ownershipLimit"
+        },
+        "singleFamilyPerLiveTurn": true,
+        "memberPaths": [
+          "storeReplacement",
+          "privateChildGroup"
+        ]
+      }
+    }
+  }
+}

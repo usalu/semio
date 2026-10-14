@@ -6,7 +6,7 @@ fn original_transient_grant() -> RetainedCloneGrant { RetainedCloneGrant { maxim
 
 #[test]
 fn window_config_paged_registry_actual_transient_partition_custody() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🎚️config/🗂️registry/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🎚️config/🗂️registry/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let copies = fixture["owningCopies"].as_u64().unwrap() as usize;
     let (mut registry, birth) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
         let mut registry = WindowTransientOwnerRegistry::for_document_generation(9);
@@ -53,7 +53,7 @@ fn window_config_paged_registry_actual_transient_partition_custody() {
 
 #[test]
 fn retained_window_input_preserves_owner_generation() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️retained-window-input/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️retained-window-input/🔣️.json")).unwrap();
     let mut identities = std::collections::BTreeSet::new();
     let mut digests = std::collections::BTreeSet::new();
     let mut owner = WindowTransientStore::<ReplacementWindow>::new(Default::default());
@@ -101,7 +101,7 @@ impl WindowTransientOwner for ReplacementWindow {
 
 #[test]
 fn retained_window_input_replacement_rejects_old_authority_and_publication() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️retained-window-input/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️retained-window-input/🔣️.json")).unwrap();
     let expected = &fixture["documentReplacement"];
     let mut old = WindowTransientOwnerRegistry::default();
     old.register::<ReplacementWindow>().unwrap();
@@ -193,7 +193,7 @@ impl ArtifactOwnedDisposer<WindowTransientStore<ReplacementWindow>> for PausedPa
 }
 #[test]
 fn retained_window_input_retirement_reaches_later_partitions_and_kinds() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️retained-window-input/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️retained-window-input/🔣️.json")).unwrap();
     let fairness = &fixture["retirementFairness"];
     let paused = Arc::new(std::sync::atomic::AtomicBool::new(true));
     let mut owner = TypedWindowTransientStoreOwner::<ReplacementWindow> { partitions: WindowRegistry::new(), owners: Some(ReplacementWindow::build_owners()), factory_close: [None, None, None], partition_close_cursor: 0, partition_open: 0, partition_address: None };
@@ -230,7 +230,7 @@ fn retained_window_input_retirement_reaches_later_partitions_and_kinds() {
 
 #[test]
 fn retained_window_input_refresh_admits_live_generation_after_a_committed_write() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️retained-window-input/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️retained-window-input/🔣️.json")).unwrap();
     let expected = &fixture["liveWriteGeneration"];
     let mut registry = WindowTransientOwnerRegistry::default();
     registry.register::<ReplacementWindow>().unwrap();

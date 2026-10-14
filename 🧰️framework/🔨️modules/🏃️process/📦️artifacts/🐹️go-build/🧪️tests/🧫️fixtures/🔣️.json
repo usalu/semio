@@ -1,0 +1,19 @@
+{
+  "source": "package main\nimport \"fmt\"\nfunc main(){fmt.Print(\"go-mode-runtime-ok\")}\n",
+  "stdout": "go-mode-runtime-ok",
+  "modes": [
+    {
+      "mode": "prototype",
+      "flags": [
+        "-gcflags=all=-N -l"
+      ]
+    },
+    {
+      "mode": "release",
+      "flags": [
+        "-trimpath",
+        "-ldflags=-s -w"
+      ]
+    }
+  ]
+}

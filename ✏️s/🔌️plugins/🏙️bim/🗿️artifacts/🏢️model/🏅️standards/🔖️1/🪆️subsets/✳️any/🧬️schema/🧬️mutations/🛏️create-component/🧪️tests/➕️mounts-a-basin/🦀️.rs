@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🛏️create-component/➕️mounts-a-basin",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛏️create-component/➕️mounts-a-basin/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛏️create-component/➕️mounts-a-basin/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛏️create-component/➕️mounts-a-basin/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛏️create-component/➕️mounts-a-basin/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛏️create-component/➕️mounts-a-basin/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛏️create-component/➕️mounts-a-basin/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛏️create-component/➕️mounts-a-basin/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛏️create-component/➕️mounts-a-basin/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛏️create-component/➕️mounts-a-basin/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛏️create-component/➕️mounts-a-basin/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

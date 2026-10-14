@@ -13,7 +13,7 @@ struct Case {
 }
 
 fn cases() -> Vec<Case> {
-    let root = parse(include_str!("../../🧫️fixtures/📏️text-width/🔣️.json"), JsonMemberPolicy::Reject).expect("the width fixture is valid JSON");
+    let root = parse(include_str!("../🧫️fixtures/📏️text-width/🔣️.json"), JsonMemberPolicy::Reject).expect("the width fixture is valid JSON");
     let list = root.as_object().and_then(|object| object.get("cases")).and_then(Value::as_array).expect("cases array");
     list.iter()
         .map(|entry| {

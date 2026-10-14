@@ -1,11 +1,13 @@
 //! ♻️ Actual Rewriting parent fields and semantic SQL, before Native provider opt-in.
 #[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
 mod original_owners;
+use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::PropertyValue;
 use crate::*;
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 fn laws() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()
 }
 fn words() -> Vec<u64> {
     laws()["binary64Bits"].as_array().unwrap().iter().map(|v| u64::from_str_radix(v.as_str().unwrap(), 16).unwrap()).collect()
@@ -249,7 +251,7 @@ fn sqlite_snapshot_rewriting_actual_erased_parent_queries_independent_authored_s
 #[test]
 fn sqlite_snapshot_rewriting_composed_child_retains_actual_rich_graph_fields() {
     use semio_framework_value::{DslValue, FromValue, Number, ToValue};
-    use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot, sqlite_snapshot::*};
+    use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::*};
     use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
     fn read(value: &serde_json::Value) -> DslValue {
         match value {
@@ -274,7 +276,7 @@ fn sqlite_snapshot_rewriting_composed_child_retains_actual_rich_graph_fields() {
             DslValue::Object(fields) => serde_json::Value::Object(fields.iter().map(|(key, value)| (key.clone(), view(value))).collect()),
         }
     }
-    let vector: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌳️typed/🔣️.json")).unwrap();
+    let vector: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🌳️typed/🔣️.json")).unwrap();
     let expected = &vector["childSnapshot"];
     let snapshot = SemioGraphSnapshot::from_value(read(expected)).unwrap();
     assert_eq!(view(&ToValue::to_value(&snapshot)), *expected);
@@ -310,10 +312,10 @@ mod populated_public_owner {
         let dialect=ArtifactDialect{artifact_kind:"s.trinity.rewriting".into(),standard:"1".into(),subset:"*".into()};let sqlite=ArtifactDialect::from(SQLITE_SNAPSHOT);
         for route in[io_route(&dialect,&sqlite,1).await.unwrap().value,io_route(&sqlite,&dialect,1).await.unwrap().value]{assert_eq!(route.hops.len(),1);assert_eq!(route.fidelity,IoFidelity::Exact);}
         for word in words(){let expected=Owned::new(full(word));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
-            let bytes=io_export_sqlite_snapshot(&dialect,&*expected,encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;
-            let before=Owned::new(io_import_sqlite_snapshot::<RewritingSnapshot>(&dialect,&bytes,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value);assert_full(&before,&expected);assert_eq!(before.encode_pack_with(&store::PackEncodeOptions::default()).unwrap(),expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap());assert_eq!(before.print_dsl(),expected.print_dsl());
+            let bytes=async{let original_file_dialect=&dialect;let original_file_input=&*expected;let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
+            let before=Owned::new(async{let original_file_dialect=&dialect;let original_file_input=&bytes;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<RewritingSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value);assert_full(&before,&expected);assert_eq!(before.encode_pack_with(&store::PackEncodeOptions::default()).unwrap(),expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap());assert_eq!(before.print_dsl(),expected.print_dsl());
             let script=r#"import{Database}from'bun:sqlite';const c=JSON.parse(process.argv[1]);const d=Database.deserialize(await Bun.stdin.bytes(),{safeIntegers:true});if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');if(d.query('SELECT COUNT(*) AS n FROM sqlite_schema WHERE type=\'table\'').get().n!==31n)throw Error('all30domainTablesPlusMetadata');const row=d.query('SELECT g.name,g.query FROM rewriting_document r JOIN jack_document g ON g.id=r.working_graph_id').get();if(row.name!==c.workingGraph.name||row.query!==c.workingGraph.query)throw Error('literalRichChild');const m=d.query('SELECT * FROM semio_snapshot').get();if(JSON.stringify(Object.keys(m))!==JSON.stringify(['id','artifact_kind','standard','subset','schema_version','native_encoding'])||m.id!==1n||m.schema_version!==1n)throw Error('completePublicMetadata');if(m.artifact_kind!=='s.trinity.rewriting'||m.standard!=='1'||m.subset!=='*'||m.native_encoding!==process.argv[2])throw Error('metadata');d.query('UPDATE jack_document SET name=?').run('independent Ω\u0000graph');await Bun.write(Bun.stdout,d.serialize());d.close();"#;
-            let mut child=Command::new("bun").args(["--eval",script,&laws()["nativeCase"].to_string(),encoding.as_str()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let actual=Owned::new(io_import_sqlite_snapshot::<RewritingSnapshot>(&dialect,&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value);let mut literal=full(word);literal.working_graph.name="independent Ω\0graph".into();let literal=Owned::new(literal);assert_full(&actual,&literal);assert_eq!(actual.encode_pack_with(&store::PackEncodeOptions::default()).unwrap(),literal.encode_pack_with(&store::PackEncodeOptions::default()).unwrap());assert_eq!(actual.print_dsl(),literal.print_dsl());
+            let mut child=Command::new("bun").args(["--eval",script,&laws()["nativeCase"].to_string(),encoding.as_str()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let actual=Owned::new(async{let original_file_dialect=&dialect;let original_file_input=&output.stdout;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<RewritingSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value);let mut literal=full(word);literal.working_graph.name="independent Ω\0graph".into();let literal=Owned::new(literal);assert_full(&actual,&literal);assert_eq!(actual.encode_pack_with(&store::PackEncodeOptions::default()).unwrap(),literal.encode_pack_with(&store::PackEncodeOptions::default()).unwrap());assert_eq!(actual.print_dsl(),literal.print_dsl());
         }}
         eprintln!("[DEBUG] Rewriting public complete owner words both forms independent composed child edit and retirement");
     }

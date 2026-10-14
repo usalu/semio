@@ -21,7 +21,7 @@ use server::contract::ActorKey;
 use server::gateway::{ErrorBody, ServerError};
 
 /// 🧫️ The shared contract document, read from the product root rather than copied into this target.
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🔌️wire/🔣️.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/🔌️wire/🔣️.json");
 
 /// 🛣️ The gateway source, so the declared route table is checked against the router that exists.
 const GATEWAY: &str = include_str!("../../🔨️modules/📡️gateway/🦀️.rs");

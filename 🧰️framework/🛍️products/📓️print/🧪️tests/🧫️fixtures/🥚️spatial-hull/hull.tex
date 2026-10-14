@@ -1,0 +1,18 @@
+\documentclass{article}
+\usepackage{semio-viz-spatial}
+\begin{document}
+\SemioVizProbeBegin{spatial-hull}{convex-hull}
+\SemioVizProbePage
+\SemioVizProbePrecision{9}
+\ExplSyntaxOn
+\clist_map_inline:nn { demo-points }
+  {
+    \SemioVizHull { #1 }
+    \use:x
+      {
+        \exp_not:N \SemioVizProbeEval { spatial/hull }
+          { \seq_use:Nn \g_semio_viz_spatial_hull_seq { , } }
+      }
+  }
+\ExplSyntaxOff
+\end{document}

@@ -1,7 +1,7 @@
 //! ♻️ Original SQLite fields retire through actual supplied physical authority.
 use super::*;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,retirement::{RetireOwned,controlled::ControlledRetirement}};
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn row(f:&serde_json::Value)->SqliteRow{let t=&f["table"];SqliteRow{rowid:t["rowid"].as_i64().unwrap(),values:vec![SqliteValue::Integer(t["integer"].as_i64().unwrap()),SqliteValue::Real(t["real"].as_f64().unwrap()),SqliteValue::Text(t["text"].as_str().unwrap().into()),SqliteValue::Null,SqliteValue::Blob(serde_json::from_value(t["blob"].clone()).unwrap())]}}
 fn table(f:&serde_json::Value)->SqliteTable{SqliteTable{name:f["table"]["name"].as_str().unwrap().into(),sql:f["table"]["sql"].as_str().unwrap().into(),rows:vec![row(f)]}}
 fn row_backing(row:&SqliteRow)->usize{row.values.capacity()*std::mem::size_of::<SqliteValue>()+row.values.iter().map(|value|match value{SqliteValue::Text(text)=>text.capacity(),SqliteValue::Blob(bytes)=>bytes.capacity(),_=>0}).sum::<usize>()}

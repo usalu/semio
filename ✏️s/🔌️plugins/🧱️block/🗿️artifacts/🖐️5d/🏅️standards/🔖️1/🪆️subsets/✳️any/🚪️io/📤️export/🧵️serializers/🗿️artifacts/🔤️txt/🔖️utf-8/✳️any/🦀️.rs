@@ -11,7 +11,7 @@ pub struct Block5dIntoTxt;
 
 /// 🏗 This subset snapshot as UTF-8 DSL text — also the body the zip container leaf embeds.
 pub fn dsl_text(from: &Block5dSnapshot) -> String {
-    <Block5dSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(from)
+    <Block5dSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(from)
 }
 
 impl Serializer<Block5dSnapshot> for Block5dIntoTxt {

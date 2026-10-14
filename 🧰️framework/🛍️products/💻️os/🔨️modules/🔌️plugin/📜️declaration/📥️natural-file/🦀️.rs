@@ -14,6 +14,7 @@ use semio_framework_value::RetirementDemand;
 use semio_framework_value::ValueError;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
+use semio_framework_value::retained_clone::RetainedCloneStep;
 use crate::app_contract::NaturalFileDecodeOwner;
 use crate::app_contract::NaturalFileDecodeProgress;
 use crate::app_contract::NaturalFileDecodeStep;
@@ -159,10 +160,10 @@ impl<E: ArtifactEditor> NaturalFileImportJob<E> {
 }
 
 impl<E: ArtifactEditor> semio_framework_job::InteractiveJob for NaturalFileImportJob<E> {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, ValueError> {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         use crate::tool_contract::ReservedOutcomeKind;
         if cx.is_cancelled() {
-            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         if self.outcomes.is_delivered() {
             self.outcomes.retire(cx)?;
@@ -177,7 +178,7 @@ impl<E: ArtifactEditor> semio_framework_job::InteractiveJob for NaturalFileImpor
             return Ok(outcome);
         }
         if cx.should_yield() {
-            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
+            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         if self.pending_completion_rejection.is_some() {
             self.fail("natural-file import completion remains rejected");
@@ -228,7 +229,7 @@ impl<E: ArtifactEditor> semio_framework_job::InteractiveJob for NaturalFileImpor
                     return Ok(None);
                 }
                 if units > cx.fuel_remaining() as usize {
-                    return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
+                    return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
                 }
                 match self.decode_synchronous() {
                     Ok(emit) => self.emit = Some(emit),
@@ -279,17 +280,11 @@ impl<E: ArtifactEditor> semio_framework_job::InteractiveJob for NaturalFileImpor
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant:RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        use semio_framework_job::InteractiveJobCloseStep;
-        self.closing=true;
-        self.pending=None;
-        if !self.outcomes.terminal_is_empty(){return crate::tool_contract::close_result(self.outcomes.close_step(grant));}
-        match self.close_owned_turn(grant){
-            Ok(PluginLifecycleStep::Progress(progress))=>InteractiveJobCloseStep::Pending{progress},
-            Ok(PluginLifecycleStep::Complete(progress))=>InteractiveJobCloseStep::Complete{progress},
-            Ok(PluginLifecycleStep::Blocked{..}|PluginLifecycleStep::AwaitingInput{..})=>InteractiveJobCloseStep::Blocked,
-            Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()},
-        }
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_job::InteractiveJobCloseStep as Step;
+        self.closing=true;let demand=self.close_owned_demands(cx.retained_grant().maximum_copy_bytes)?;
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{self.pending=None;if !self.outcomes.terminal_is_empty(){return self.outcomes.close_step(grant)}self.close_owned_turn(grant).map(|step|match step{PluginLifecycleStep::Progress(progress)=>RetainedCloneStep::Progress(progress),PluginLifecycleStep::Complete(progress)=>RetainedCloneStep::Complete(progress),PluginLifecycleStep::Blocked{..}|PluginLifecycleStep::AwaitingInput{..}=>RetainedCloneStep::Progress(Default::default())})})?;
+        Ok(match step{Step::Pending{progress}|Step::Complete{progress}=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Step::Blocked=>Step::Blocked})
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.copy_bytes)}
     fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_owned_demands(body)?.capacity_bytes)}

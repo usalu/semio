@@ -1,0 +1,17 @@
+{
+  "scenes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "extras": {
+            "state": "present",
+            "value": {
+              "units": "metre"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

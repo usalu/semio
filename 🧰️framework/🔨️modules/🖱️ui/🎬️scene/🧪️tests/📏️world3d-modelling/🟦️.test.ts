@@ -2,7 +2,7 @@ import Ajv2020 from "ajv/dist/2020.js";
 import { expect, test } from "bun:test";
 import { Color, ColorManagement, Plane, Vector3 } from "three";
 
-import fixture from "../../🧫️fixtures/📏️world3d-modelling/🔣️.json";
+import fixture from "../🧫️fixtures/📏️world3d-modelling/🔣️.json";
 import schema from "../../🧬️schema/📏️world3d-modelling/🔣️.json";
 import { WORLD3D_SCENE_LANES, world3dSceneFromLanes, type World3dScene } from "../../🟦️.ts";
 import {

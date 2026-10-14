@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.member.original-history-receiving.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "historyLimits",
+    "maximumHistoryAllocationBytes",
+    "expected",
+    "caller"
+  ],
+  "properties": {
+    "historyLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fileBytes",
+        "frameBodyBytes",
+        "records",
+        "maximumFields",
+        "maximumTextBytes",
+        "maximumBinaryBytes",
+        "maximumJsonBytes",
+        "maximumJsonAllocationBytes",
+        "maximumJsonItems",
+        "maximumJsonDepth"
+      ],
+      "properties": {
+        "fileBytes": {
+          "const": 67108864
+        },
+        "frameBodyBytes": {
+          "const": 1048576
+        },
+        "records": {
+          "const": 8192
+        },
+        "maximumFields": {
+          "const": 128
+        },
+        "maximumTextBytes": {
+          "const": 1048576
+        },
+        "maximumBinaryBytes": {
+          "const": 1048576
+        },
+        "maximumJsonBytes": {
+          "const": 1048576
+        },
+        "maximumJsonAllocationBytes": {
+          "const": 8388608
+        },
+        "maximumJsonItems": {
+          "const": 65536
+        },
+        "maximumJsonDepth": {
+          "const": 64
+        }
+      }
+    },
+    "maximumHistoryAllocationBytes": {
+      "const": 8388608
+    },
+    "expected": {
+      "const": {
+        "sameOriginalPages": true,
+        "sameSupplierIdentity": true,
+        "sameLedgerRecipient": true,
+        "requiredDeclaration": true,
+        "noGather": true,
+        "noDefaultLimits": true,
+        "paidPartial": true,
+        "borrowedClose": true,
+        "fullFailure": true,
+        "stableCloseSource": true,
+        "noDoubleDebit": true
+      }
+    },
+    "caller": {
+      "const": {
+        "operation": 1,
+        "generation": 1,
+        "clockUs": 1,
+        "deadlineUs": 999,
+        "fuel": 8192,
+        "maximumTurns": 65536
+      }
+    }
+  }
+}

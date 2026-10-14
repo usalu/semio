@@ -7,11 +7,11 @@ fn direct_language_neutral_vectors_match_lopdf_and_concrete_inverse() {
     macro_rules! vector {
         ($mutation:literal) => {
             (
-                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round/🎯️outcome/🔣️.json")),
-                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round/📸️snapshot/⬅️before/🔣️.json")),
-                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round/📸️snapshot/➡️after/🔣️.json")),
-                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round/🔺️diff/🔣️.json")),
-                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round/🦠️mutation/🔣️.json")),
+                include_str!(concat!("../../../🧪️tests/🧫️fixtures/🧬️mutations", $mutation, "/🔄️round/🎯️outcome/🔣️.json")),
+                include_str!(concat!("../../../🧪️tests/🧫️fixtures/🧬️mutations", $mutation, "/🔄️round/📸️snapshot/⬅️before/🔣️.json")),
+                include_str!(concat!("../../../🧪️tests/🧫️fixtures/🧬️mutations", $mutation, "/🔄️round/📸️snapshot/➡️after/🔣️.json")),
+                include_str!(concat!("../../../🧪️tests/🧫️fixtures/🧬️mutations", $mutation, "/🔄️round/🔺️diff/🔣️.json")),
+                include_str!(concat!("../../../🧪️tests/🧫️fixtures/🧬️mutations", $mutation, "/🔄️round/🦠️mutation/🔣️.json")),
             )
         };
     }

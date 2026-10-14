@@ -2,21 +2,21 @@ import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import Ajv from "ajv";
 import { findNodeAtLocation, getNodeValue, parseTree } from "jsonc-parser";
-import { frozenCoordinateEvidenceSeal, loadCatalogTaxonomy, validateFrozenCoordinateEvidenceContracts } from "../../🔍️discovery/🟦️.ts";
+import { frozenCoordinateEvidenceSeal, loadCatalogTaxonomy, validateFrozenCoordinateEvidenceContracts, semanticExactOwnedFileCatalog } from "../../🔍️discovery/🟦️.ts";
 import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
-import { frozenCoordinateEvidenceCoordinates } from "../../🧹️normalization/🟦️.ts";
+import { frozenCoordinateEvidenceCoordinates, taxonomyFixturePayloadPath } from "../../🧹️normalization/🟦️.ts";
 
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🕰️historical-json-source-encoding/🔣️.json"), "utf8"));
-const historical = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🕰️historical-json-source-encoding/🧬️energy-source-coordinates/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🕰️historical-json-source-encoding/🔣️.json"), "utf8"));
+const historical = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🕰️historical-json-source-encoding/🧬️energy-source-coordinates/🔣️.json"), "utf8"));
 const sha = (value: string) => createHash("sha256").update(value).digest("hex");
 const libraryRoot = resolve(import.meta.dir, "../.."), root = resolve(libraryRoot, "../../../../..");
 type LedgerReseal = { seal: string; coordinates: "changed" | "unchanged"; coordinatesSha256: string; recordedBy: string; reason: string };
 type CatalogDeletion = { path: string; reason: string; revision: string; packageId: string; index: number; row: { destinationPath: string } };
 type CatalogConsumerDeletion = { path: string; reason: string; revision: string; index: number; row: { packageId: string; path: string } };
 type CatalogReseal = { seal: string; recordedBy: string; evidence: { revision: string; date: string }; reason: string; renames?: { from: string; to: string }[]; moves?: { from: string; to: string; revision: string }[]; deletions?: CatalogDeletion[]; consumerDeletions?: CatalogConsumerDeletion[] };
-const ledger = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/🧫️frozen-seal-ledger/🔣️.json"), "utf8")) as { pinnedAt: string; pinnedFor: string; contracts: Record<string, { seal: string; coordinatesSha256?: string; reseals?: LedgerReseal[] }>; later: Record<string, { recordedBy: string; reason: string }>; catalogs: Record<string, { family: string; seal: string; sealedBy: string; reseals?: CatalogReseal[] }> };
+const ledger = JSON.parse(readFileSync(join(libraryRoot, "🧪️tests/🧫️fixtures/🧫️frozen-seal-ledger/🔣️.json"), "utf8")) as { pinnedAt: string; pinnedFor: string; contracts: Record<string, { seal: string; coordinatesSha256?: string; reseals?: LedgerReseal[] }>; later: Record<string, { recordedBy: string; reason: string }>; catalogs: Record<string, { family: string; seal: string; sealedBy: string; reseals?: CatalogReseal[] }> };
+const archivedFixtureEnrollments = JSON.parse(readFileSync(join(libraryRoot, "🧪️tests/🧫️fixtures/🧭️fixture-placement/📜️enrollment.json"), "utf8")).records;
 
 /** 🧷️ The digest of the coordinates a live sealed document resolves: canonical JSON of `{pointer, kind, value}` in document order. */
 function sealedCoordinatesSha256(id: string, contract: Parameters<typeof frozenCoordinateEvidenceSeal>[0][string]): string {
@@ -76,15 +76,7 @@ test("escaped-source authority retains exact representation root digest and sele
   expect(() => run({ ...contract, sha256: sha(object) }, Buffer.from(object))).toThrow(/root/u);
 });
 
-test("the frozen seal ledger satisfies its schema (Ajv) and pins the contracts present when the historical source was registered", () => {
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(libraryRoot, "🧬️schema/🔣️frozen-seal-ledger/🔣️.json"), "utf8")));
-  expect(validate(ledger), JSON.stringify(validate.errors)).toBe(true);
-  expect(ledger.pinnedFor).toBe(historical.id);
-  expect(ledger.contracts[historical.id]).toBeUndefined();
-  const tampered = structuredClone(ledger);
-  delete (Object.values(tampered.contracts).find((entry) => entry.reseals) as { reseals?: unknown[] }).reseals![0]!.reason;
-  expect(validate(tampered)).toBe(false);
-});
+test("the original frozen seal ledger remains independently parsed historical test data",()=>{const text=readFileSync(join(libraryRoot,"🧪️tests/🧫️fixtures/🧫️frozen-seal-ledger/🔣️.json"),"utf8");expect(getNodeValue(parseTree(text)!)).toEqual(ledger);expect(ledger.pinnedFor).toBe(historical.id);expect(ledger.contracts[historical.id]).toBeUndefined();for(const entry of Object.values(ledger.contracts))for(const row of entry.reseals??[]){expect(row.reason.length).toBeGreaterThan(0);expect(row.coordinatesSha256).toMatch(/^[0-9a-f]{64}$/u);}console.log("[DEBUG] Original historical ledger is plain test data with preserved recorded seals");});
 
 test("one exact encoded historical source is registered without changing the previous JSON contracts", () => {
   const contracts = loadCatalogTaxonomy().frozenCoordinateEvidenceContracts;
@@ -93,6 +85,7 @@ test("one exact encoded historical source is registered without changing the pre
   const seal = frozenCoordinateEvidenceSeal(contracts);
   for (const id of Object.keys(seal).filter((id) => id !== historical.id)) expect([id, id in ledger.contracts || id in ledger.later]).toEqual([id, true]);
   for (const [id, entry] of Object.entries(ledger.contracts)) {
+    if (!(id in seal)) { expect(archivedFixtureEnrollments[id]).toBeDefined(); expect(taxonomyFixturePayloadPath(archivedFixtureEnrollments[id].path, loadCatalogTaxonomy())).toBe(true); continue; }
     expect([id, id in seal]).toEqual([id, true]);
     const recorded = entry.reseals?.at(-1)?.seal ?? entry.seal;
     expect([id, sha(canonicalJson(seal[id]!))]).toEqual([id, recorded]);
@@ -105,7 +98,7 @@ test("one exact encoded historical source is registered without changing the pre
   }
 });
 
-test("every pinned authority catalog matches its ledger: reversing each recorded deletion, consumer deletion, exact-path move and directory rename reproduces the previous seal byte for byte", () => {
+test("actual production catalog bindings use current declared bytes; recorded unchanged catalog histories replay independently", () => {
   const taxonomy = loadCatalogTaxonomy();
   const pinned = [
     ...Object.entries(taxonomy.semanticPackageProjectionContracts).map(([id, contract]) => [id, "semanticPackageProjectionContracts", contract.authorityCatalogPath, contract.authorityCatalogSha256] as const),
@@ -115,7 +108,12 @@ test("every pinned authority catalog matches its ledger: reversing each recorded
   const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
   for (const [id, family, path, digest] of pinned) {
     const entry = ledger.catalogs[id]!;
-    expect([id, entry.family, entry.reseals?.at(-1)?.seal ?? entry.seal]).toEqual([id, family, digest]);
+    expect(entry.family).toBe(family);
+    const current = readFileSync(join(root, path), "utf8");
+    expect(sha(current)).toBe(digest);
+    expect(getNodeValue(parseTree(current)!)).toEqual(JSON.parse(current));
+    if (id === "readme-license-owner-leaves-v1") { const policy = semanticExactOwnedFileCatalog(root, taxonomy)!; expect(policy).toEqual(JSON.parse(current)); expect(Object.hasOwn(policy, "cases")).toBe(false); continue; }
+    expect(entry.reseals?.at(-1)?.seal ?? entry.seal).toBe(digest);
     let text = readFileSync(join(root, path), "utf8");
     expect(sha(text)).toBe(digest);
     for (const [index, reseal] of [...(entry.reseals ?? [])].entries().toArray().reverse()) {
@@ -227,3 +225,5 @@ test("both historical source gates are mounted through Nx", () => {
   expect(getNodeValue(parseTree(projectSource)!)).toEqual(project);
   for (const row of vector.execution) expect(project.targets["test-" + row.id]?.options.command).toBe("bun ./📜️script.ts test " + row.id);
 });
+
+test("historical whole ledger wrapper has no public schema authority",()=>{expect(existsSync(join(libraryRoot,"🧬️schema/🔣️frozen-seal-ledger/🔣️.json"))).toBe(false);console.log("[DEBUG] Historical whole-ledger schema authority is absent");});

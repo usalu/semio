@@ -1,8 +1,5 @@
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
-import corpus from "../🧫️fixtures/🔣️.json";
-import schema from "../🧬️schema/🔣️.json";
-import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/🟦️.ts";
+import corpus from "./🧫️fixtures/🔣️.json";
 import { runOwnedCommand } from "../../🟦️.ts";
 
 for (const row of corpus.cases) test(row.id, async () => {
@@ -10,8 +7,6 @@ for (const row of corpus.cases) test(row.id, async () => {
   const deadline = setTimeout(() => controller.abort(), corpus.callerCeilingMilliseconds);
   const pending: Promise<void>[] = [];
   let publications = 0, published = false;
-  expect(new Ajv({ strict: true }).compile(schema)(corpus)).toBe(true);
-  expect(validateJsonSchemaSubset(schema, corpus)).toEqual([]);
   const oracleCode = 'const c=JSON.parse(process.argv[1]),r=JSON.parse(process.argv[2]);let done=false;const publication=new Promise((resolve,reject)=>setTimeout(()=>setTimeout(()=>{done=true;r.rejectPublication?reject(Error("publisher refused")):resolve()},c.publicationMilliseconds),c.progressIntervalMilliseconds));publication.catch(()=>{});const child=new Promise((resolve,reject)=>{const p=require("node:child_process").spawn(process.execPath,["--eval",`setTimeout(()=>{},${c.childMilliseconds})`]);p.once("error",reject);p.once("close",code=>code===0?resolve():reject(Error("child refused")))});Promise.all([child,publication]).then(()=>console.log(JSON.stringify({terminal:"completed",publishedBeforeTerminal:done})),()=>console.log(JSON.stringify({terminal:"rejected",publishedBeforeTerminal:done})));';
   const oracle = Bun.spawn(["node", "--eval", oracleCode, JSON.stringify(corpus), JSON.stringify(row)], { stdout: "pipe", stderr: "pipe" });
   const publish = (): Promise<void> => {

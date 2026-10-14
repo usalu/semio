@@ -3,7 +3,7 @@ use super::super::{declared_envelope_prefix_len,wrap_binary_controlled,wrap_text
 use semio_framework_value::{NativeEncodeControl,ValueError};
 #[test]
 fn controlled_envelope_emission_retains_typed_refusal_and_exact_wire() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/⚠️emission/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⚠️emission/🔣️.json")).unwrap();
     for row in cases.as_array().unwrap() {
         let id=row["id"].as_str().unwrap();
         let version=u16::try_from(row["version"].as_u64().unwrap()).unwrap();

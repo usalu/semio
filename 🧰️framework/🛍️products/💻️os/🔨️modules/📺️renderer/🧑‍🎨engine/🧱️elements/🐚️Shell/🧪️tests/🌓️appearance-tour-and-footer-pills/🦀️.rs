@@ -351,7 +351,7 @@ fn the_footer_pills_are_not_gated_off_the_browser_build() {
 /// 🎓️ Embedded and background shells obey the same authored first-frame policy as React.
 #[test]
 fn embedded_host_introduction_policy_matches_neutral_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🎓️host-introduction/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🎓️host-introduction/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let actual = should_auto_start_introduction(case["appId"].as_str().unwrap(), case["hasIntroduction"].as_bool().unwrap(), case["tutorialActive"].as_bool().unwrap(), case["seenOnDevice"].as_bool().unwrap(), case["replayOnLoad"].as_bool().unwrap(), case["expectedSuppressed"].as_bool().unwrap());
         assert_eq!(actual, case["expectedAutoStart"].as_bool().unwrap(), "{}", case["id"].as_str().unwrap());

@@ -1,0 +1,28 @@
+{
+  "schema": null,
+  "seed": 99,
+  "slots": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "edges": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tiles": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "rules": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

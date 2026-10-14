@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "tests": [
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📥️capture/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/📥️original-control/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📤️fractional/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🛠️preparation/🧪️tests/🟦️.ts"
+  ],
+  "bindings": [
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🧫️fixtures/📨️managed-output.json",
+    "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📥️capture/🧪️tests/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📋️policy/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧪️tests/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/📥️capture/📋️policy/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
+    "package.json",
+    "bun.lock",
+    ".cargo/config.toml"
+  ],
+  "controls": {
+    "testLevel": "long",
+    "bunTimeoutMilliseconds": 60000,
+    "maximumUnits": 8388608,
+    "maximumOwnedBytes": 67108864,
+    "maximumDepth": 64,
+    "nativeBudgetMilliseconds": 120000,
+    "phaseBudgetMilliseconds": 600000,
+    "maximumOutputBytes": 67108864
+  }
+}

@@ -86,7 +86,7 @@ const SEMIO_ANY_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
 fn semio_any_editor_example_snapshot(example_id: &str) -> SemioSnapshot {
     if example_id == semio_s_artifact_stdio_semio_base::examples::demo::ID {
-        <SemioSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(semio_s_artifact_stdio_semio_base::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+        <SemioSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_stdio_semio_base::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         SemioSnapshot::default()
     }
@@ -229,6 +229,7 @@ impl ArtifactEditor for SemioAnyEditor {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

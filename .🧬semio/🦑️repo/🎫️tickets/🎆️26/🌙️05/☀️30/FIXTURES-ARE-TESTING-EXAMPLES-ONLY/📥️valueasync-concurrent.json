@@ -1,0 +1,38 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🦀️.rs",
+    "observedBeforeSha256": "b0044fc9f08986366e53bf9139b3b3b757bce1d0403efc0c910566641936c6e4",
+    "edits": [
+      {
+        "start": 14487,
+        "end": 14519,
+        "from": "../🧫️fixtures/🎯️array/🔣️.json",
+        "to": "🧫️fixtures/🎯️array/🔣️.json"
+      },
+      {
+        "start": 10576,
+        "end": 10611,
+        "from": "../🧫️fixtures/🎯️selected/🔣️.json",
+        "to": "🧫️fixtures/🎯️selected/🔣️.json"
+      },
+      {
+        "start": 6567,
+        "end": 6598,
+        "from": "../🧫️fixtures/📥️root/🔣️.json",
+        "to": "🧫️fixtures/📥️root/🔣️.json"
+      },
+      {
+        "start": 4278,
+        "end": 4312,
+        "from": "../🧫️fixtures/🔣️reservation.json",
+        "to": "🧫️fixtures/🔣️reservation.json"
+      },
+      {
+        "start": 382,
+        "end": 416,
+        "from": "../🧫️fixtures/🔣️reservation.json",
+        "to": "🧫️fixtures/🔣️reservation.json"
+      }
+    ]
+  }
+]

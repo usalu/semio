@@ -23,7 +23,15 @@
     "./process/context": "./🏃️process/📋️context/🟦️.ts",
     "./process/command": "./🏃️process/🎛️command/🟦️.ts",
     "./schema": "./🧬️schema/🟦️.ts",
-    "./filesystem": "./📁️filesystem/🟦️.ts"
+    "./filesystem": "./📁️filesystem/🟦️.ts",
+    "./process/build-mode": "./🏃️process/🏗️build/🎚️mode/🟦️.ts",
+    "./process/compiler-capacity": "./🏃️process/🏗️build/🎟️capacity/🟦️.ts",
+    "./process/native-receipt": "./🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts",
+    "./process/native-release": "./🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts",
+    "./process/native-cache": "./🏃️process/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts",
+    "./process/go-build": "./🏃️process/📦️artifacts/🐹️go-build/🟦️.ts",
+    "./process/compiler-state": "./🏃️process/🏗️build/🗃️state/🟦️.ts",
+    "./process/typescript-check": "./🏃️process/🏗️build/🟦️typescript/🟦️.ts"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/framework:test",
@@ -36,7 +44,9 @@
     "d3-scale": "4.0.2",
     "decimal.js": "10.6.0",
     "fast-check": "3.23.2",
-    "xstate": "^5.32.5"
+    "xstate": "^5.32.5",
+    "@semio-tech/schema-validator-ts": "workspace:*",
+    "@semio-tech/process": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

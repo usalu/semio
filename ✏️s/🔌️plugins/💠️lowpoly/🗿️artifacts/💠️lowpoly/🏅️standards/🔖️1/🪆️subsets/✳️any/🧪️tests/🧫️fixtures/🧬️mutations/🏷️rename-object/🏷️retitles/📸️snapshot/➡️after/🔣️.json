@@ -1,0 +1,75 @@
+{
+  "objects": [
+    {
+      "id": "obj-hull",
+      "mesh": {
+        "childId": "mesh-hull-01",
+        "target": {
+          "artifactId": "obj-hull-mesh",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "mesh"
+          }
+        }
+      },
+      "meshContent": "",
+      "name": "Hull, revised",
+      "paintLayers": [
+        {
+          "blendMode": "normal",
+          "name": "Base",
+          "opacity": 1.0,
+          "pixels": "//////////8=",
+          "visible": true
+        }
+      ],
+      "smoothShading": false,
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "meshState": null
+    },
+    {
+      "id": "obj-fin",
+      "mesh": null,
+      "meshContent": "",
+      "name": "Fin",
+      "paintLayers": [],
+      "smoothShading": true,
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "meshState": null
+    }
+  ],
+  "schema": "lowpoly.document"
+}

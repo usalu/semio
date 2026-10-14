@@ -8,7 +8,7 @@ fn required_nullable<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Resul
 #[canonical_json(owner = store)]
 #[mutation_leaf(contract=::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct ChangeTestConfigSelection {
+pub(crate) struct ChangeTestConfigSelection {
     #[serde(deserialize_with = "required_nullable")]
     pub selected: Option<String>,
 }

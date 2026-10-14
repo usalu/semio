@@ -2,6 +2,61 @@
   "name": "repo",
   "projectType": "application",
   "targets": {
+    "debug-bun-bundle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": ".",
+        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️bun/📜️script.ts debug",
+        "forwardAllArgs": true
+      }
+    },
+    "digest-source-inventory": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": ".",
+        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📥️inputs/🧮️digest/📜️script.ts digest",
+        "forwardAllArgs": true
+      }
+    },
+    "digest-source-closure": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": ".",
+        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📥️inputs/🧮️digest/📜️script.ts source",
+        "forwardAllArgs": true
+      }
+    },
+    "digest-cargo-lock": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": ".",
+        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📥️inputs/🔒️lock/📜️script.ts digest",
+        "forwardAllArgs": true
+      }
+    },
+    "emit-typescript-declarations": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": ".",
+        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts emit-declarations",
+        "forwardAllArgs": true
+      }
+    },
     "ci-baseline": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -37,7 +92,7 @@
       "inputs": [
         "{projectRoot}/📜️script.ts",
         "{projectRoot}/🧪️tests/🗿️artifact-source/**/*",
-        "{projectRoot}/🧫️fixtures/🗿️artifact-source/**/*",
+        "{projectRoot}/🧪️tests/🧫️fixtures/🗿️artifact-source/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"
       ],
       "outputs": [],
@@ -128,7 +183,7 @@
         "{projectRoot}/📜️script.ts",
         "{projectRoot}/🦀️cargo/**/*",
         "{projectRoot}/🧪️tests/🧾️cargo-provenance/**/*",
-        "{projectRoot}/🧫️fixtures/🧾️cargo-provenance/**/*",
+        "{projectRoot}/🧪️tests/🧫️fixtures/🧾️cargo-provenance/**/*",
         "{projectRoot}/🧬️schema/🧾️cargo-provenance/**/*",
         "{workspaceRoot}/rust-toolchain.toml"
       ],
@@ -196,7 +251,7 @@
         "{workspaceRoot}/nx.json",
         "{projectRoot}/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/⚡️production-cache-input-boundary/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/⚡️production-cache-input-boundary/**/*",
         "{workspaceRoot}/.nxignore",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧬️schema/🔣️.json",
@@ -234,12 +289,138 @@
         "command": "bun ./📜️script.ts test build-mode"
       }
     },
+    "test-next-runtime": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "@semio-tech/repo-coordinator:build"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts test next-runtime"
+      }
+    },
     "test-web-build": {
       "executor": "nx:run-commands",
       "cache": false,
       "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test web-build"
+      }
+    },
+    "test-graph-seal": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test graph-seal",
+        "forwardAllArgs": false
+      }
+    },
+    "test-next-dev-runtime": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test next-runtime dev"
+      }
+    },
+    "test-selected-graph": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test selected-graph"
+      }
+    },
+    "test-authorizers": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test authorizers",
+        "forwardAllArgs": false
+      }
+    },
+    "test-sdk-snapshot": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test sdk-snapshot",
+        "forwardAllArgs": false
+      }
+    },
+    "test-pruning": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test pruning",
+        "forwardAllArgs": false
+      }
+    },
+    "test-journal-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test journal-source",
+        "forwardAllArgs": false
+      }
+    },
+    "test-daemon-journal": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": ".",
+        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts test daemon-journal",
+        "env": {
+          "NX_DAEMON": "true"
+        },
+        "forwardAllArgs": false
+      }
+    },
+    "test-daemon-journal-workspace": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": ".",
+        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts test daemon-journal workspace",
+        "env": {
+          "NX_DAEMON": "true"
+        },
+        "forwardAllArgs": false
+      }
+    },
+    "cargo-prepare": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation",
+        "command": "bun ./📜️script.ts prepare --manifest Cargo.toml"
+      }
+    },
+    "cargo-synchronize": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation",
+        "command": "bun ./📜️script.ts synchronize",
+        "forwardAllArgs": true
       }
     }
   },
@@ -272,7 +453,7 @@
       "{projectRoot}/🧪️tests/⚡️cache-contracts/🟦️.ts",
       "{projectRoot}/🧪️tests/🧱️command-source/🟦️.ts",
       "{projectRoot}/🧬️schema/🧱️command-source/🔣️.json",
-      "{projectRoot}/🧫️fixtures/🧱️command-source/🔣️.json",
+      "{projectRoot}/🧪️tests/🧫️fixtures/🧱️command-source/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
@@ -281,7 +462,7 @@
       "{projectRoot}/📦️artifacts/🎛️native-input/🟦️.ts",
       "{projectRoot}/📦️artifacts/🏗️native-build/🟦️.ts",
       "{projectRoot}/📦️artifacts/📋️native-orchestration/🟦️.ts",
-      "{projectRoot}/🧫️fixtures/command-boundaries/🧫️cases.json",
+      "{projectRoot}/🧪️tests/🧫️fixtures/command-boundaries/🧫️cases.json",
       "{projectRoot}/🧫️fixtures/command-boundaries/🛂️schema/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts"
     ]

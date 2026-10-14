@@ -19,9 +19,9 @@ import {
   retainInferencePortOwnerAfterCloseV1,
   type InferencePortOwnerV1,
 } from "../../🧱️elements/🏛️ShellHost/🪪️host-bootstrap/🟦️.tsx";
-import fixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/👥️presence-scope/🔣️.json";
+import fixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/👥️presence-scope/🔣️.json";
 import presenceSchema from "../../../../🏪️store/👥️presence/🧬️schema/🔣️.json" with { type: "json" };
-import presenceLiveness from "../../../../../../../🔨️modules/📡️replication/🧫️fixtures/💓️presence-liveness-v1/🔣️.json" with { type: "json" };
+import presenceLiveness from "../../../../../../../🔨️modules/📡️replication/🧪️tests/🧫️fixtures/💓️presence-liveness-v1/🔣️.json" with { type: "json" };
 import { PRESENCE_EPHEMERAL_SNAPSHOT_DEADLINE_MS, PRESENCE_HEARTBEAT_INTERVAL_MS, PRESENCE_LIVE_VIEW_BEAT_INTERVAL_MS, presenceEphemeralSnapshotWithinBoundV1, presenceLiveViewBeatDelayMsV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 
 type Case = (typeof fixture.cases)[number];

@@ -68,7 +68,7 @@ fn document_backbone_binding_command_and_receipt_round_trip_exact_owner() {
 /// row's bytes, and those bytes decode to the command, or are read as the receipt they are.
 #[test]
 fn document_backbone_control_maps_are_the_golden_wire_bytes() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("the binding fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("the binding fixture parses");
     let rows = fixture["codec"]["control"].as_array().expect("control rows");
     assert!(rows.len() >= 5, "the control rows cover both commands and all three receipts");
     for row in rows {

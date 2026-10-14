@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "contractId": "artifact-empty-facet-authoring-registration-v1",
+  "command": "artifact-empty-facet-authoring",
+  "target": "test-artifact-empty-facet-authoring",
+  "cache": false,
+  "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪶️artifact-empty-facet-authoring/🟦️.ts",
+  "runner": "runTestBudgeted",
+  "budget": "default"
+}

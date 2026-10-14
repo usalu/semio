@@ -6,7 +6,7 @@ import { runInNewContext } from "node:vm";
 
 /** 🎮️ Checks one shared discovery snapshot per call against a language-neutral fixture and lodash. */
 export async function testPlaygroundInputView(workspace: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🎮️playground-input-view/🔣️.json"), "utf8")), ts = require("typescript");
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🎮️playground-input-view/🔣️.json"), "utf8")), ts = require("typescript");
   const registry = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry");
   const source = ts.createSourceFile("playgrounds.ts", readFileSync(join(registry, "🎮️playground/🔎️discovery/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
   const definition = source.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "generatePlaygroundRegistry");
@@ -36,7 +36,7 @@ export async function testPlaygroundInputView(workspace: string): Promise<void> 
   const { runtimeComponentClosure } = await import("../../../🕸️dependencies/🧩️runtime/🟨️.mjs");
   const rejectLiveRead = () => { throw new Error("Projected filtering must not rediscover the live repository"); };
   const filter = runInNewContext(`${resolverCode}; resolveRegistryPluginIdsForFilter;`, { runtimeComponentClosure, resolveRegistryPluginIdForFilter: rejectLiveRead, generatePluginRegistry: rejectLiveRead });
-  const closure = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/runtime-components/🔣️.json"), "utf8"));
+  const closure = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/runtime-components/🔣️.json"), "utf8"));
   for (const row of closure.cases.filter((row: { roots: string[] }) => row.roots.length === 1)) {
     assert.deepEqual(Array.from(filter(row.roots[0], closure.components, [])), row.expected);
     const playgrounds = [{ variant: "fixture-variant", aliases: ["fixture-alias"], pluginId: row.roots[0] }];

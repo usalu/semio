@@ -16,7 +16,7 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 fn natural_file_route_round_trips_svg_with_an_independent_xml_oracle_and_fresh_snapshot_event() {
     let codec = <SvgAnyEditor as ArtifactEditor>::natural_file_codec().expect("SVG natural codec");
     assert_eq!((codec.format_kind, codec.extension, codec.media_type, codec.binary), ("s.stdio.svg@1.1", ".svg", "image/svg+xml", false));
-    let source = include_bytes!("../../../🧫️fixtures/🎨️native-third-party-shape.svg");
+    let source = include_bytes!("../../../🧪️tests/🧫️fixtures/🎨️native-third-party-shape.svg");
     let current = <SvgAnyEditor as ArtifactEditor>::initial_snapshot();
     let imported = <SvgAnyEditor as ArtifactEditor>::decode_natural_file(source).expect("SVG natural import");
     let exported = <SvgAnyEditor as ArtifactEditor>::encode_natural_file(&imported).expect("SVG natural export");

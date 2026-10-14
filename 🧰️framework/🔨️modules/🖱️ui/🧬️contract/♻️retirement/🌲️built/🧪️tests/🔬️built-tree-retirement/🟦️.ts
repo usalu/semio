@@ -54,7 +54,7 @@ import { readFileSync } from "node:fs";
 
 export function testBuiltTreeRetirementFixture(): void {
   const read = (path: string) => readFileSync(new URL(path, new URL("../..", import.meta.url)), "utf8");
-  const fixture: BuiltTreeRetirementFixture = JSON.parse(read("./🧫️fixtures/🔣️.json"));
+  const fixture: BuiltTreeRetirementFixture = JSON.parse(read("./🧪️tests/🧫️fixtures/🔣️.json"));
   const valueBytes = (value: unknown): number => typeof value === "string" ? Buffer.byteLength(value) : Array.isArray(value) ? value.reduce((sum, item) => sum + valueBytes(item), 0) : value && typeof value === "object" ? Object.entries(value).reduce((sum, [key, item]) => sum + Buffer.byteLength(key) + valueBytes(item), 0) : 0;
   const binding = fixture.binding;
   const extras = Buffer.byteLength("K") + Buffer.byteLength(binding.action.scope + binding.action.name + binding.capability) + valueBytes(binding.args) + Buffer.byteLength(fixture.menu.id) + valueBytes(fixture.menu.args) + Buffer.byteLength("CchildRrejected");

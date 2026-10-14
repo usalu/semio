@@ -1,9 +1,9 @@
 /** 🧫️ Exact typed TIFF metadata and sample identities through an independent SQLite engine. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import f from "../🧫️fixtures/🔣️.json";
-import native from "../../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json";
-import semantic from "../🧫️fixtures/🎛️semantic.json";
+import f from "./🧫️fixtures/🔣️.json";
+import native from "../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json";
+import semantic from "./🧫️fixtures/🎛️semantic.json";
 import {independentSqliteExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
 import {parseTiffSnapshot,type TiffSnapshot,type TiffValues} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {TIFF_SQLITE_SCHEMA,tiffSnapshotToSqliteDatabase,tiffSnapshotFromSqliteDatabase,tiffSnapshotToSqliteFile,tiffSnapshotFromSqliteFile} from "../🟦️.ts";

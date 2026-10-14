@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "maximumElapsedMilliseconds": 10000,
+  "remainingMilliseconds": 8000.5,
+  "transport": { "maximumBytes": 1048576, "maximumLines": 65536 },
+  "program": "import {value} from \"./module.ts\";export const result=value;\n",
+  "module": "export const value=7;\n",
+  "cases": [
+    { "id": "Custody Program Capture Receives Original Bounded Child Port", "operation": "capture", "expectedCalls": ["capture-program"] },
+    { "id": "Custody Resolution Recheck Receives The Same Original Child Port", "operation": "resolve", "expectedCalls": ["capture-program", "resolve-program"] },
+    { "id": "Custody Program Capture Awaits Original Publisher Refusal", "operation": "refused", "expectedCalls": [] },
+    { "id": "Custody Program Capture Refuses Original Preabort Before Child", "operation": "cancelled", "expectedCalls": [] }
+  ]
+}

@@ -1,0 +1,984 @@
+{
+  "changed": [
+    {
+      "path": "🧫️fixtures/🧫️outcome-law-gate/🔣️.json",
+      "beforeSha256": "731cd58690e0214f0cc6fdef15f9aba934bfd43cc6f6e66e4bd74040f4d00c0f",
+      "afterSha256": "0ed7d672e9e6998e397d4010f36f673895d5bfcb30fc1b204e3aed4d3e6532b7",
+      "replacements": 1
+    },
+    {
+      "path": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "beforeSha256": "9062eb1fffc6bcb4af011ede808b0305573926faa549f08588186f15a6985f4c",
+      "afterSha256": "0ba09999eedfc1d8d75210320d8e3d85b333988bb5dd2d1d6739652e2f765f94",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/📋️project.json",
+      "beforeSha256": "6f8589f2627aae40677565de4faff58f7c68e38fb99205469ab24227f4818539",
+      "afterSha256": "29bf118b6636e1918a49eb9626f9c0755935d370a0dd2e0e8f20b714cbcc04af",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+      "beforeSha256": "baba603997e061232e7b7e5c2b7135b1e28bd3d9bd8a344ec82f6bda9cf62847",
+      "afterSha256": "43f82882f1d7fe3219403381fbc6e48fdafb8982cf7937427cab2c40c59a4186",
+      "replacements": 4
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json",
+      "beforeSha256": "c67f080cfce4f10481c5695f7e0004e46a09956ac766e38e24019d708757478b",
+      "afterSha256": "af367cb1a65535956562dc947b7fee7fd545db167c89f921633035f732039fbf",
+      "replacements": 6
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🟦️.ts",
+      "beforeSha256": "74549a0c0fc7a046a46d6cf68d1e389af4eb82b7847a66f8c7f928fd4fbdf9e3",
+      "afterSha256": "d64e753b502ac2dea0f1ad7cae76089c26996141371c1f60a07a00a24820b4c8",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🪪️id/🧪️tests/🟦️.ts",
+      "beforeSha256": "6d882668b849bfdb7301a7d75897e4b2094c0620c060ec7cb41cd0fbcf822649",
+      "afterSha256": "69bde584b72582891e03f58597cf53f61c9f7d226cbb97331750195f2fb93155",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/⏱️timestamp/🧪️tests/🟦️.ts",
+      "beforeSha256": "f380ac8475763a4d7f5b21e5fdd80b55c9ba0db5d0394886aa8346a5e2b4713c",
+      "afterSha256": "090055a7a3c1aac4ce0959a8d6d27a2d244ecc7c0e51c4b4757888671d3b793c",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/⏱️timestamp/🧪️tests/🦀️.rs",
+      "beforeSha256": "7e601340e7890a8444d07d8ee192183afda519cf72d8152327534afd8cb210c3",
+      "afterSha256": "d8b94cf592442869d13a5fa1b6dc069be176a8d0d1c87a2293262bf1bed2f40a",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🟦️.ts",
+      "beforeSha256": "83e5f65f4b4c9ff2b0ec295af6f8b6623feaa2c76d3116dba55de8b8402301ee",
+      "afterSha256": "bc4c8545f242338158393b9958629f9cf9062bebc26eaa1f0e49c07ca99094ff",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🦀️.rs",
+      "beforeSha256": "69390c52344cacd322a22f0524aa6b6e157ef0390f938df7e85f5c30ea817712",
+      "afterSha256": "e2b89617a7b40bd639a24aa661b31453013deda280c6a385f310ebd8c9a23000",
+      "replacements": 3
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🔣️json-string/🧪️tests/🟦️.ts",
+      "beforeSha256": "0b9c1323022a24707720dd24f2926a1457bf4db537e21b3d89ad5fcbdb7382c1",
+      "afterSha256": "79d29010bb5470a2f05572d631dfdb66ea7f0776a7a3e810afb9f0130c13e4d7",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🔣️json-string/🧪️tests/🦀️.rs",
+      "beforeSha256": "2749f65c18edcf01f222055edf1e551bbada83245d20f2f9e5e24582a5848e2b",
+      "afterSha256": "7ec1def963c7f61e9d95fa25a82390a83008c7665268cee6269f7f6e3080f9a0",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧾️source/🧪️tests/🟦️.ts",
+      "beforeSha256": "38bc0a962c7132926a15ca2f56dde00c5a79e68454ba563c380035fdfd48a1e9",
+      "afterSha256": "93dd60b9881b8daa2cd7d99a89eb6ac4ac873746d3cb6b4416187537b73c5c44",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧾️source/🧪️tests/🦀️.rs",
+      "beforeSha256": "654e139388e97a494500f6ad361a546ead134e65131b3447cc533fa73ce8aa91",
+      "afterSha256": "8b16f1ff2b40ca8f85e6c0a847cc21584160be2197a6a8c2d0f4d359b27e9146",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📐️format/🔎️verification/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "db0ad1f12c8cf33b38155f08ab3b3328621d10087f0907db8a40d800ed953c16",
+      "afterSha256": "efaf90b230ce33268662502cfa46c139547f015e2b740a061d777983df076061",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📐️format/🔎️verification/🧾️record/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "13b505fe8b744e3d0d2717090d4bc563dd6b5a82132026b6296dbe695f515f8c",
+      "afterSha256": "fc2911e86d4bd50abc3e7dc5d0b4ce5114e8d6f0b34d6167151db29c692f0551",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "396772fe6d9b5ea94535e13459f52b12cf4147072368e1d98fc6f8b1979f445a",
+      "afterSha256": "ed5c5a2b96069cab396f65ed9f6c31f5f82e49173567f21b39f63a4e459ca236",
+      "replacements": 6
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/📝️drafts/🧪️tests/🟦️.ts",
+      "beforeSha256": "8fb83e03c38bad01616244409f26ecfc3db2b070c02b1d7a7e3a5d50a82ba353",
+      "afterSha256": "6da347644b0c1e70f55495ede3c971333f60ad0353ec5b6f285bb838131369c3",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/📝️drafts/🧪️tests/🦀️.rs",
+      "beforeSha256": "8db81c8e3ad2ce40a2dd447b0b9b0f3cee69850c669eb60e488ea10199a6ff35",
+      "afterSha256": "10e246d7d5103e8e85e6a7b9a3afd493371762aeb1ec8d5587bb9f1ac4ed4941",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧪️tests/🟦️.ts",
+      "beforeSha256": "fe4af448c4a84cf9262667c4125a23ded92296c18a859a7bcd85ef3116312c75",
+      "afterSha256": "0c8a4a442966c4d18e8a8d2b96bc6ef22aa04385a95eb9798368fbc726434e3e",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧪️tests/🦀️.rs",
+      "beforeSha256": "fecd9fb21f831d4db86caebc81514eb1f63eee7fb8a51a324e75d9f59046ca8e",
+      "afterSha256": "c9565d19c467a47a98f774999433bf64dbc842f67efd2f8696e5d1b5724a8496",
+      "replacements": 6
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🎟️insertion/🟦️.ts",
+      "beforeSha256": "03e819cdf9c3739547e7821694c0aa3da586087dfb66176e54a5d18c73b47c8c",
+      "afterSha256": "500559be0af8240eb34feab3210f3d418988ae1f0df2ecb3a7dcfb99f4a38cfb",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🦀️.rs",
+      "beforeSha256": "a2d661812b933f6dfcf40cb8ed4f25c2e304378afbf575800dc061503becde35",
+      "afterSha256": "f1a4a89c40b27b94bc652ff02d9684cfb5136408c994dfb1c0f5580ea89b32e5",
+      "replacements": 7
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🌱️entry/🟦️.ts",
+      "beforeSha256": "308d1375383c2cc06c1a76f2828a2004e762d4b97e07b9674cbc8a080833d0dd",
+      "afterSha256": "2cea91772fffdc1622e3b0bf26f58ffff5364850175808a7616f505b2c187741",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🧺️set.ts",
+      "beforeSha256": "62f02b7e15c1715ec2f2adaf810cefa02a57bfb7cd90688463591d1dff11e8ad",
+      "afterSha256": "a938cafdd4de98a6bad327e8a0a5b59133aba1d3ee64b51e97b2f611199914cd",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/📦️slots/🧪️tests/🟦️.ts",
+      "beforeSha256": "8cca513ac40bd33384a8c4a07a5ca3ff545bf5c1d75211d027aa4486e9319b4d",
+      "afterSha256": "64688cc982f624995684006febddac7b408fb35eed6b64c70584fbc3d5e8d915",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "9b147db78399f1619691187d237727facd23c48e9d8849fc99f40e7d6dbaa485",
+      "afterSha256": "a782557ba63fe7a84a725fe6557ce8e131bcc0514d52f974e2a74a19af4bab21",
+      "replacements": 5
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧪️tests/🟦️.ts",
+      "beforeSha256": "8ab203bd38583bfd935b85508a95d579b4878a798c8cb1d79f4532b35a9d4ce3",
+      "afterSha256": "74eeaae16c28a8b4691fb0ab2c3004d20e5bb9615bf48d00ac71dc3764ae20d4",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧪️tests/🦀️.rs",
+      "beforeSha256": "7775cfb749a180a8946b43429ee7bd28eb381f4375f842a2b8e1e9bf7ccd3e91",
+      "afterSha256": "fd2729e28facd0850f649a5d1c96b1d81c839af7ca1485a7875efbfa2f868a23",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "05a935a8d845c6e32cebb0302bb888c3dd4747f0635348b338815e90390f59f3",
+      "afterSha256": "5b7113fe45ffac25b2f7ed74e3548fdebb9b4abb42782b1999dca93145691257",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🦀️.rs",
+      "beforeSha256": "0e93f9abe66fc1c7e9c6393e4a90a3163c5178897293672a267f30cd4cb3152f",
+      "afterSha256": "f07697fc1b618798a1bb1b406a7100aeb5d88642a6863cd9f408763df40171e0",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️artifact-bootstrap-protocol/🟦️.ts",
+      "beforeSha256": "590eb62c82c87a6647cf2f2d9baf6f4322a0edd8cd7ef9e317a4f864fb49b141",
+      "afterSha256": "7fac94a6cd9a0656721b36c1bf3a66a95abca2f9e80425be38d97629ab4d3344",
+      "replacements": 4
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️outcome-code/🟦️.ts",
+      "beforeSha256": "f981f2e7909a5092dc935f176e51f17a77a4e1f8ca5d2f11fb469c5c50cf1fd8",
+      "afterSha256": "b5313f009c3dde1b3c1c6a05a19fb9159e6b340dc5ae73bf8558ca162640703b",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️transaction-ref/🟦️.ts",
+      "beforeSha256": "b8ecd4e4fc39d4a113369bb4cf4441c429dd500310ef315b236457cceaa0a4e7",
+      "afterSha256": "d7ee8ac985ad6f552edade831547a643e49a784484d35ef7f1a56aaa72c292f7",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️document-backbone-envelope-batch/🟦️.ts",
+      "beforeSha256": "b8594c2b30c1ddad49a1f4aad4a70a3904d4a519a7beda3eeabf8fbd29cd9765",
+      "afterSha256": "20cbc97cafd5fea2f761bae399e63df77930b44ea6ecbf3ff2b8b996753599fe",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🗄️durable-collaborative-redo/🟦️.ts",
+      "beforeSha256": "fa41aa6725bb00d9ed53f51d0de450edf2005e4cd51f89b001413fc12b12881a",
+      "afterSha256": "6f5177a6afc572e1f1fd988102910d272a7b79a7f4c2b028ce69163243d6940a",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️supersede-fold/🟦️.ts",
+      "beforeSha256": "653015adca6b51465ddc9b73289bcc6df3dbed8f114ee78d70c49b520c5258a7",
+      "afterSha256": "8addb892c4ab5b10cc361df31e3ef22c263e366ce6ce56b4825b49de3c70ee73",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️history-transition/🟦️.ts",
+      "beforeSha256": "93b55dc1b121e26a7044fecbb10eaca0b1578999181acbcb2d25bef9ebe504d3",
+      "afterSha256": "29744713c2372a28e13fca7108fde936634540a2a91418efa75fcf88c8cfacac",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️replay-report/🟦️.ts",
+      "beforeSha256": "b3376e79949d8afb783cfd321559b01a62d2cdf0d363058ffa30cb3585a915ee",
+      "afterSha256": "e7cb6959d1571524b9e892822f53377704f57e09003e0e8bcfdb11f28ddf8ee1",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🧪️tests/🔬️unit/🟦️.ts",
+      "beforeSha256": "f3a95d281a5a60f39ec8255b17ca9e05137bda6284284ac283996c841cafaba5",
+      "afterSha256": "b4c948530e3f05bebdf0d3a13ad31ebb964ebc90d0f3ec1ab45a165dc6e6a535",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "9151b39f985b2a70f0e9d9420c893f324f593bf9861544ffb0fd9131a43f03b6",
+      "afterSha256": "93659ddedc3beb554d0fed6a1a9310fda208755aaccbcccfbc458bd413be8b88",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🧾️wire/♻️retirement/🧪️tests/🟦️.ts",
+      "beforeSha256": "35fab1269191e34f9b86ebb541c4d9449b5aba4601e58664cd91dcfae38e72db",
+      "afterSha256": "457305a67cbea7763e2d89d47b7cccb5a9d0c9d8ea257be4fb93d357df7fede2",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🧾️wire/♻️retirement/🧪️tests/🦀️.rs",
+      "beforeSha256": "0ae0628e7a4a89996645002a098cb5c69a33c918b7d4c39ef79fc0c2a5c419ea",
+      "afterSha256": "f4d63f86e8ca282b78ae6d2dda273921483aad28b0ff0fcdfce81bd6699aca0c",
+      "replacements": 3
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/♻️retirement/🧪️tests/🟦️.ts",
+      "beforeSha256": "ec2bc5f55527a9258477884e0c4cbfa46a22d81505a2ea710838b5123c21af7f",
+      "afterSha256": "ea8f1ea73c642e131715c3fcd39b4f9c414969dcdd59bc490124eb3f51184557",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "87c81a6a8d357507cb0d43f7d12694acdec4307023ba9ee224cafac5928cc8b9",
+      "afterSha256": "668b91af5c2ef21bafc33bbfb4ffac435dc8d240f622ffa2f1a8726f248a8fc4",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧪️shared-map-delta-source/🟦️.ts",
+      "beforeSha256": "fac05b880826279810a479b700dc2661d5f37496f69abcfa7dab4ca4ec93bccc",
+      "afterSha256": "ec8bc45818180535b9f2f611bc001919604439ba05816b0b941ed20f23d4a9cd",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧪️shared-map-delta-native/🦀️.rs",
+      "beforeSha256": "35b55af95d6527fd02cee770c847d610b1da90f53e603c7c6290165bc416cdf4",
+      "afterSha256": "28be7de5fb32e09eb456dd7f80a22db8cd822d327ad7d039e2786af754f9b6f7",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🪪️identity/🧪️tests/🟦️.ts",
+      "beforeSha256": "82f778fe8b9610ce60468d0cc4b9f13a0305f5ff1b591c46e9d4769e86e3c12a",
+      "afterSha256": "94be1291590d458c628dae69238fd154c63f98d74a47dff9935e339ff87593d1",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/🧪️tests/🟦️.ts",
+      "beforeSha256": "29aa8b4999dc15ce167be5452aeadaf994bab99c0b894149ee969fd4f9d146ca",
+      "afterSha256": "5d42d06b3f4b6336229835f5f7a5a53c3dc5cc7de0593f08ec4880a86f7c591d",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/🧪️tests/🦀️.rs",
+      "beforeSha256": "9753513ae7d8436fe383c1f8935a98f20a3217200a37371c793ff65e562b3859",
+      "afterSha256": "17fc452a64750af2ba61d3a6b4d8f8c85dd0fb6926f841ab2b6eb1fe6f1cd0bb",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧾️transaction/🎟️admission/🧪️tests/🟦️.ts",
+      "beforeSha256": "5498bd75e9d1e117b4774d522fbccedd0599f313b1398b40727ad8e76d8473b0",
+      "afterSha256": "ad8c5612c3c86f5625c2c20c76ca5b812cae30ae05ddcc17bd1bc986407311c6",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧾️transaction/🎟️admission/🧪️tests/🦀️.rs",
+      "beforeSha256": "fe8402de86d92969afae0ec67dbf01e1bef1c8aeb18d99cd21fd7882f461d594",
+      "afterSha256": "afadd2a4c9871dcd85f1042b74a600bde8d783df1bee572f5a8cc043da4cbecc",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🚫️error/♻️retirement/🧪️tests/🟦️.ts",
+      "beforeSha256": "75572903cadc9b4a110f080897cb6ef9526f2238c7bb90e8ee519bd5a99b5cf4",
+      "afterSha256": "891c06341a5ae7857cc0b59dedd07344c4f7fb05ffcc0174a00368409c883113",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🚫️error/♻️retirement/🧪️tests/🦀️.rs",
+      "beforeSha256": "f6533106ea7ab2b68b14f518f54eb49758d14f3535289f0d824df3a4195bc024",
+      "afterSha256": "ec300a63fcf2cd51473db7eed6d8ccf3c9ccf05b86e8296749c3cec4c2e1d9c1",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/✂️clamp/🧪️tests/🟦️.ts",
+      "beforeSha256": "99775297bde3aae6207f028f621f960327cd88a4ab55552da679eab54d52f37e",
+      "afterSha256": "9fa2bfd4b1d9247151dd32703d627d9ce0e8f7fb59418722bbf7128154016bb9",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/✂️clamp/🧪️tests/🦀️.rs",
+      "beforeSha256": "2e53d30dab948f06d4b6a485a3e266d080c2ed5ce3f965d4bdb4d08db0828f4c",
+      "afterSha256": "7575011cbb5b2d6cc62f345ee0815fead0e188db5d731824c21093307faf3210",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧪️tests/🟦️.ts",
+      "beforeSha256": "8e00bf923912be1d2ad45ed95ecdf8d4bb723a83f11e90e2563018900e727245",
+      "afterSha256": "761e0072995b539ce6f7d9acb1c4fcbc26855f83cdf22b73656ff3672ae0d6c4",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧪️tests/🦀️.rs",
+      "beforeSha256": "175a9030061d873d4861168d0fb46813f7369bf49a24b75e5c4014e8cc9c1e6d",
+      "afterSha256": "37ea56ca64e576c23863f525608dd5e925afe2ec493601efdabe8ae3c554cabb",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📦️accumulate/🧪️tests/🟦️.ts",
+      "beforeSha256": "052b3cbf198b2dbfed0c20b59235d943cc17a444d37d4ecd11a6ef3d17544597",
+      "afterSha256": "79ed6a6f453fc4057ae860f017b522faa8521046cb7a42793fa9b6cad5c0ba7e",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📦️accumulate/🧪️tests/🦀️.rs",
+      "beforeSha256": "5429bbf66cfa4279c3d8250a573f1f831ffc025a7e4d6090c0174e873299aed3",
+      "afterSha256": "0a94ece7f620176862aa06781e217e3023ee05915be4bbaaf878a0df9451b741",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📋️copy/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "8bfaf2e63a97eb82256b2ab2b6f1866e60395e2c3aca95507c1d708a3a4c0c46",
+      "afterSha256": "8c72b48820b247d78362f3173dce9f2248e626673bbbe5730a07878be53b0649",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧪️tests/🟦️.ts",
+      "beforeSha256": "4ccf757cc56d7eb94ebaba3a8a5c21c583f1a09344512783485ce0cc956cf7ae",
+      "afterSha256": "8fcd5474a0062ba3fe3bd1f247eaeebbc6205b9acc6c12c8e234e81547bbd8ef",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧪️tests/🦀️.rs",
+      "beforeSha256": "1730b37be5bf7de9c50050381c534a3b1ebde22c7215cce13718dff6df276359",
+      "afterSha256": "2bbf92b4a685c85c3d1c73e23dbe88b8a6d6ab5f60a130d60090ef32132c6c76",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs",
+      "beforeSha256": "a686d3157ea2cd7a2a0acc47eeb239e5dfd3b4c3c9daab767eacf16c72d0352b",
+      "afterSha256": "27a1d04cee0aae19f902ea436985b5936fc015d87e1e07a5f61c07f71101f51f",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧪️outcome-code/🦀️.rs",
+      "beforeSha256": "3280a13a5a94699f72765e6cf76d8f634e12cabc9e7fee3e0e91332e3161a57b",
+      "afterSha256": "95c65c394373518c0806874d5962db2025f143137f348ce73b4e12d6ded09659",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧪️transaction-ref/🦀️.rs",
+      "beforeSha256": "5b6abe0ffe9acbb72269cb972f1193297b2d7977937ae79e085127d9d3715206",
+      "afterSha256": "4da8d071f63b957edbedffe55113737a946c9fdc18357e33ea4dff0e9c85a1c3",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🔬️mutation-leaf-metadata/🦀️.rs",
+      "beforeSha256": "4668d6905ccf7402004e9362d679f844965c423b76ace090fc2e9475f4633d96",
+      "afterSha256": "b89324ae33f3d85f95f96faa5704db9345ac0000de846423b00f9bdec31856e9",
+      "replacements": 3
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧪️tests/🟦️.ts",
+      "beforeSha256": "1bbe1858657fa10e62eccf507ab9be982f9336bda0f9897d53dfa45d214e1ad4",
+      "afterSha256": "cedaeb499824ba76d5bf148fb5e5bbe7a04a4d9c158a506a77667da4c6c1aecc",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧪️tests/🦀️.rs",
+      "beforeSha256": "919a0546215798a53a9cac9652af7d0ab628c591e95798bd498b11a9ffa5686f",
+      "afterSha256": "b0dbfdfa359b685de19cc70d79455c094566b3187ffba7548bf13cf203021131",
+      "replacements": 4
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️prepared/♻️retirement/🧪️tests/🟦️.ts",
+      "beforeSha256": "e541a956f7e77f28a73fa299ae25ef42c46407782b0c6c5cc1d9e52b7fe85a8c",
+      "afterSha256": "a80c0c8ee72748471ce0ca62a78fdd03215e1cf2cd7aec2310a2932f9d2f5c44",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️prepared/♻️retirement/🧪️tests/🦀️.rs",
+      "beforeSha256": "3f2c0d4379c5e49b462d34a33673a6bca8c29f6a92b3325f5bca4a4ab1b26796",
+      "afterSha256": "47cb73aada7ab87a3ad4e896536413b00e2521e999522126bbc0066d2aae1186",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧪️tests/🟦️.ts",
+      "beforeSha256": "4f2961d26ad6c1096caf19eefd4ec25b520f81e2b4b34801f49994ae04cb0592",
+      "afterSha256": "c18293eea71d83485b4e8e601c5921c9461a738f742f2e2a99cb6b645d704b1e",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧪️tests/🦀️.rs",
+      "beforeSha256": "6dceb7968319610fca545946d54af18535a5e1dfd0349f0565829ac20e4cc1b5",
+      "afterSha256": "ed39e3d2121f7e499188ccc63e6547be670d3fee6aef1eacda9e7f08a21e1a79",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧾️source/🧪️tests/🟦️.ts",
+      "beforeSha256": "9a3fefef2f1fe694d1c838581981c5e314cabd5104abaa4e43e2579633bd3b99",
+      "afterSha256": "4d10bb7f8485ebfd467ed465751c10cd382260e8c66783731eb985e6dd862906",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧾️source/🧪️tests/🦀️.rs",
+      "beforeSha256": "01f972219610e9f693abaa08101e885f44a7628e3a5c9893de68376a7f263f3b",
+      "afterSha256": "fb990342a7d62ffbbb63f77105a3cb987e50969423161217e36c31a79a557360",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "474d4780ce42ca210db11f39d65e4f0092852a358eb3db77ef22cb4819e97317",
+      "afterSha256": "a2101b02ae520604b9f233b18b36fa539178aa88843a3205160a4a8f00dc4535",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🏛️ownership/🧪️tests/🟦️.ts",
+      "beforeSha256": "38565a46781a4c3f62800a53c5610966fd96da75db09d96b216f5b843d98b4c4",
+      "afterSha256": "124e7852b1052abff5e8ea146c823e0c7d2413c7c4d60838ba617c59c03b16c3",
+      "replacements": 4
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🧪️tests/🖱️typed-field-order/🦀️.rs",
+      "beforeSha256": "592f7dd48afcfd7a017394aead834fe5a21b10eaad723b8da7c7f6cae366888c",
+      "afterSha256": "f4211befbb5ebe14cce963ff7fede70e51e40b998b7624c4dc161b6f8aa11572",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🧪️tests/🔬️presence-codec/🦀️.rs",
+      "beforeSha256": "0d2d3e1abeb035e35c150f21aa1402391cb48a3b770a099cc7b61905884a5c33",
+      "afterSha256": "1dff976295ecb9e19268afdcce22784cb35c5ac629e072183ce42918155d590e",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "066456f0921183692b29f450c9a0a480dd95578119b0c0d993a6463eb83228b1",
+      "afterSha256": "4112cff9a40780f8ddabe876b12eaac8174445165700b10f1421df42704045dc",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🧪️tests/📡️transport/🦀️.rs",
+      "beforeSha256": "85c7a78f05d9a5547751f1007bda1fe4d68d00eb0d16c93c4e3c10dfed261b79",
+      "afterSha256": "78b9ca5f6855e3929d4234abf1d83d54c8d3859038c6bf4cc2675c5fc4ad5c57",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🏠️local-interaction/🦀️.rs",
+      "beforeSha256": "f23bed4860939abf5a5029f05dadb20ebe9da60054d20b74cc60fa101b941260",
+      "afterSha256": "05aeb9817e5f30f37314e4350f3e01877a438025bd1da377e21cb697934ca7ca",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧪️source-contract/🟦️.ts",
+      "beforeSha256": "55292faf99689b6e1d311679a0e6b5ea34467f5924d83d5ee4e4e07b0108e8cc",
+      "afterSha256": "226bfe4dc6bcb1b0b66c48ff6a6931a78379ab9ff304fe7bdd743c46a48f34ba",
+      "replacements": 13
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🩹️update/🧪️tests/🩹️update/🦀️.rs",
+      "beforeSha256": "74e55983108b74aefe65d0d17e4dacee87d05be26b7e27f78155df8e4a2518f0",
+      "afterSha256": "e5efbb3cd4ed4adb7d2933716f7b36544ba8d883f23ac203400529420f70d3db",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🧪️tests/🌳️root/🦀️.rs",
+      "beforeSha256": "71b2004ca138b499234924dc34c6500c3e941eb20f9aebe1a688e3e9bc2e24d6",
+      "afterSha256": "ab511abd240123318a70fa70627e852fef2df5f45f9f5558ba38c56e1c969411",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🧪️tests/🟦️.ts",
+      "beforeSha256": "fdd91d1fd4f531ba411a4b4d2b3aff563ac903230f51cb13bffc97c3e0bde402",
+      "afterSha256": "629c66bd679af7b7768dfbf94eef0ab60b26ad7ab2d0ba7b78bcd4b291811f22",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🧪️tests/🦀️.rs",
+      "beforeSha256": "60f85f6af0333c03fa640fac7a1ddd37b5aafaae5fb630c9d63a72b19a4115d7",
+      "afterSha256": "fb16731dfa94136277d39e94abd26f3c0afea1a3070f88962c162101ff295635",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal/🧪️tests/📄️paged-digest/🦀️.rs",
+      "beforeSha256": "25e9b7ddb73bbc552972f0cb8f035e37dc6dfe94e083247b88880a543ce0b6b9",
+      "afterSha256": "58017763783f6c7650fa8be938c549750ff18f1ce532cd28c35d0e6500dfb1ee",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal/🧪️tests/🟦️.ts",
+      "beforeSha256": "89fde3eece6892fa0a6667c070514667d6f8eaa3e2f6e9f41c184cc01c21f31c",
+      "afterSha256": "a4c0cefc026a957a7208ed4405519634aea2df5a45fa48abe596fd8b5afb6255",
+      "replacements": 4
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal/🧪️tests/🦀️.rs",
+      "beforeSha256": "5ee1d8f329f3bcfb18bed8cf41b2b386c4448b2dfe8ed3212441ea6aa00945c3",
+      "afterSha256": "7d3d947d1834c5416a9cf24778941a965784f45254ae651ebd39da229c91a715",
+      "replacements": 3
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/👥️presence/🔍️borrowed/🧬️schema/🔣️.json",
+      "beforeSha256": "f6affafa4abeef3b4b2cf24f852d09e4b80b57d560397b6f0ca0dbfb920602d2",
+      "afterSha256": "1455e5bd269a6db285346052c1bf85ec6bfe25b04fefbbac78fbca93839ed962",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/🧪️tests/🏛️ownership/🟦️.ts",
+      "beforeSha256": "d021ea44b793b1a85d111c3a7a45ad61acc12d1ae267b3cc9ee7128646586ee5",
+      "afterSha256": "ea091835261085610cdc714a944a53f750e4d64b96491ed41053abbbfdabc369",
+      "replacements": 6
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/📦️bytes/🧪️tests/🦀️.rs",
+      "beforeSha256": "70072f83771b34fc8346ea0a9a3fd338459e57edd75d28d0b60eb54bb288ec9d",
+      "afterSha256": "362551c3dc087ba385697f0d4f5f2f4f81892c2b79c9c07d0394a4d630b88980",
+      "replacements": 9
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🧪️tests/🟦️.ts",
+      "beforeSha256": "562ad265ede5dfc5517c8ff9de54f97a76ffaf56a34d5f4a7dfca63afa343953",
+      "afterSha256": "2238d1e22009700720c69106f1531a0a8d0512dbd258a7a300d7cf8404b16d64",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🧪️tests/🦀️.rs",
+      "beforeSha256": "84d5317cde613e898c8508a6b7aec488719b942d26092a581e4b3cf79bacd17f",
+      "afterSha256": "5b9aaa69f3b2e2747c224749ce58e7b1ae567a1de818f92830456bc6ca182e32",
+      "replacements": 3
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "65450b987e9334d743796fc49f1e7bbf9d150c91bd47e164091fe914447eb4a2",
+      "afterSha256": "4c3d464c86e0662cfa730af86326d80f273c32da62c600145585394c352683b5",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🟦️.ts",
+      "beforeSha256": "bf60182a04f9671c41033d67f3f0e619c29f60f4facea0e7cda134c04f7a21e1",
+      "afterSha256": "5e5378dbdf71a5e1c8097bffb01fb3b4ef9a9dfc1550026d340937ae02d9cf66",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🦀️.rs",
+      "beforeSha256": "3f5d68ef671deda387538a8ba2db83b83c33c41f78327e634c5e9c3262467ce3",
+      "afterSha256": "75af102ca64b2a447304675220cb2f81e8eaa8e0460e946f40396dbb2d2887b3",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔬️retained-pack-source-laws/🟦️.ts",
+      "beforeSha256": "0fef75d6fb3987681f04bbe624abe9e55a4ca476b715991c3a613738427cd647",
+      "afterSha256": "571d06fe4ddf5d4483072a36bb5045b5606bae0c201b86833289a7d167b6dd51",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔬️retained-pack-source-laws/🦀️.rs",
+      "beforeSha256": "16e54fce301c7bda5c806162e70edee7e17afd0a5c58e9988c28667f2a0843f4",
+      "afterSha256": "7499d57c228e44c94545f6fdfe01c833e75b1501cac9c3897d421be75a883667",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔣️absolute-varint/🟦️.ts",
+      "beforeSha256": "1db7fd58db0af2da61e56fe047b377e2ec25a9a77a7e173372ab664049e6849f",
+      "afterSha256": "e798987b7813a7c3c7648a09034427272f56b7d7adc349cc1bd3f8d36f34d44c",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔣️absolute-varint/🦀️.rs",
+      "beforeSha256": "f90d9b68ff20e4d25cf9161a2b96a497674a8eeed08217570229018d261ce023",
+      "afterSha256": "0785974028473ce06489c7528205cad5b7c8d1be97fafe829783cebac9cecbee",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🧭️producer/📥️source/🧪️tests/🦀️.rs",
+      "beforeSha256": "e45505145b103445f2a29f21264e0553c2c054af4641357a4ece5af1ca98a681",
+      "afterSha256": "24a857177f3f94e7ac59b99195ef94c651984c6657f2c1ba6d371254eeefbdcb",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🧭️producer/🗂️catalog/🧪️tests/🦀️.rs",
+      "beforeSha256": "282c3de68dbebe2d4777e2a2bbf22a0197a7d435b538a5382732be81b6fe3047",
+      "afterSha256": "11e0be86e4fada3e49f75414c019cf861f5dbec634b4eedc1c88002751c10222",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🧾️source/🧪️tests/🟦️.ts",
+      "beforeSha256": "9ac4a23ae01b2d4a6e8139283b20de99df20945eaa0945ff24898b59b3a8c833",
+      "afterSha256": "c63cb7c7ef765254377d98deda5f37c6dd0551879440e94d090373ec98e21052",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🟦️.ts",
+      "beforeSha256": "26b0cd937f0b036b7ca940bf1fc5a157bb5e25df8864595198211db44a551220",
+      "afterSha256": "670a07c65c23f9f6281630697ba83906c6fa6143b9141fbad9c7d21e83765d16",
+      "replacements": 4
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🦀️.rs",
+      "beforeSha256": "9a78b6ae407a84964162e2d39d844bfc8330993010249914079eddb4cc9a5919",
+      "afterSha256": "cbfa14b87ab13f8986dd2a1ec84bbfb39f8cf789b833560012b9d01e8eb51da7",
+      "replacements": 4
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🦀️.rs",
+      "beforeSha256": "c189f71765e5550145662162792beff3202b11693c8f51e47325d751b3af8efd",
+      "afterSha256": "7c589b5d61ea2ac7eef6375cf8a16ef4b3d4e36a2aa6a49e1ba5b1f3ec196ad4",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧱️ownership/🟦️.ts",
+      "beforeSha256": "81bb5174db4a108834d82361650396f639c32da2de985899eddbbc3ef195eaf7",
+      "afterSha256": "2c626cd5592ae401d9a4c62aa220c05b07f26554ac9bee6a840a7fcdea51d9f6",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔬️schema-hash/💰️storage/🟦️.ts",
+      "beforeSha256": "96f9b8b7ed8b815587720f3210328b79931b52180aaa8de2b640949b3f01f8e8",
+      "afterSha256": "c8bfaf9f58476f803c028ff5b35c9aec40618412fdfd70cefae54142f8a8f607",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🚦️refusals/🟦️.ts",
+      "beforeSha256": "f7edaa2942d3e4f992a2642ee29f1e3d674fcdf2e4eadc96c998f8822b61d469",
+      "afterSha256": "e0f9b327b40c4bb45b287f901081da205e1379ab104edddbd91df74c7a93a229",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🚦️refusals/🦀️.rs",
+      "beforeSha256": "e17f96f2d2c2fe2876f41f630a67a6599c45bdc93519acc596b12ee32fc60bea",
+      "afterSha256": "5db9501c815ad89cd3bb3398efc713b0c12daa3a22c47527b531b3d5cd3f57d4",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔃️ordering/🟦️.ts",
+      "beforeSha256": "dbd529088a9e16745ac88ed8ea61ac5032d439edb7c19d2da45024fde4df6672",
+      "afterSha256": "e12a783a511543b15b9ff204bbb527c8421231fecff82785f9d59b6ff0f1e9c2",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🎞️intrinsic-media/🟦️.ts",
+      "beforeSha256": "5b9fc15a7a9218e4a930de02c1f0f258d7247c9757875871e1d85283bdca2fa5",
+      "afterSha256": "af4972de0b428314524e7071c28db370eb4a81d5d8941396c3cbe663ea4289cf",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🎞️intrinsic-media/🦀️.rs",
+      "beforeSha256": "a17473e643d3530f7c43edfbbc07b91a88f59695c81b5a33aea360b23f512448",
+      "afterSha256": "199eb637f94bc532f25ca4e1986eadffeaf141c5a89b77ce0bc3f156805131c4",
+      "replacements": 6
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/📦️operation-pages/🦀️.rs",
+      "beforeSha256": "3a33765aa5be66a94cdc72823cff9cba2c36d2c28f2ff848667f9192211b0887",
+      "afterSha256": "3eba95fa01fdac97a23ecc00c5e35d1ae37f6e01d4c7a575de98c7a02e9001b3",
+      "replacements": 13
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🫳️preflight/🟦️.ts",
+      "beforeSha256": "1e5b063e585e4a202019f9d42d020f64812ce38b5720ecf7415a5c388ea3abc4",
+      "afterSha256": "e8300b86bbd85c44a386c80d1a9bffe3925d9f89f6080e50b93adc7794830d02",
+      "replacements": 4
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🫳️preflight/🦀️.rs",
+      "beforeSha256": "c0660a875cc607492fa5a35a2c2a2815a722c8fc6c74e892e9fecf4175615571",
+      "afterSha256": "12b5024308176f5bb2d2746a2de7cdc8c2258478791906f69f7e39f8e37e5d4c",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧭️tooling/🧪️tests/🟦️.ts",
+      "beforeSha256": "c09e41b05baa682bfa0442334b829fff54dfc7999c1a4758fd6cb3ca9f32c0d7",
+      "afterSha256": "3e5dab434e917c20b9c2f5679825cacdc9746165c294749a2228e45f475b6d4c",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/📜️script.ts",
+      "beforeSha256": "e3f582b590140e7d0a98ea997d0b2066f7868b56fdc5bdfc1a720142c72e2197",
+      "afterSha256": "859a0ec4a3cd25f55bff9a215ceb5c5891c1b241613ef9100c6bd318a802ee42",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🔎️scalar-witness/🧪️tests/🔎️scalar-witness/🦀️.rs",
+      "beforeSha256": "cd761b5b3d35a8f83bf2f4a6d4001fcb7706cbf16b7729f0c521fba6a8daf2a0",
+      "afterSha256": "21c68c47c1fecc6bdcfb5d2f381d6891d853fbad19b3ebab01d560db425dcb23",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🧪️tests/🦀️.rs",
+      "beforeSha256": "3a94ddf1f6baf0ed7e4dfe8eec63829b8010100ca01f1849664f27211d72f0b2",
+      "afterSha256": "e034270fbeacaa4b9e378408d25b38745623e8c3366853830648eb78c021ef8f",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🔢️occurrence-order/🧪️tests/🟦️.ts",
+      "beforeSha256": "759db418ee8282148a2a34f379d29c85bb7594018c49c15a0127da5d80d5486e",
+      "afterSha256": "a61baf1ec1d62b92508bfcfcaa0d60cd69f065ce7c6ac716df633009b96b14cd",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🎟️storage/🧪️tests/🟦️.ts",
+      "beforeSha256": "93b6a580b92f82bd5757c979df277380158082f618ec05ce725ce73bd526d9da",
+      "afterSha256": "6f6e92c9f6a427c50eb332fc60596b88696133a6a11f76accd98358c57a044ab",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🎟️storage/🧪️tests/🦀️.rs",
+      "beforeSha256": "7ab1e2c7eac9e1424cf3dc9c8ea1cd44ff4b579137ca2af2ed38b1cc6998734c",
+      "afterSha256": "c004b8c86132f164db2ab9650861cb90529b2fc59d075140271c2da2291bc361",
+      "replacements": 4
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🧪️tests/🧭️producer-authority/🦀️.rs",
+      "beforeSha256": "449a627d17076b5dc4799deee10b8647137710a3b7dcb19e86432275b4062c4b",
+      "afterSha256": "08a0380ba2f09b463adc9e7bc7d9302172d2323de5827d36aff08f67e6889e61",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🧪️tests/📡️codec-authority/🦀️.rs",
+      "beforeSha256": "edee37a874a2700a08cb996703a29abe5ebe7b9de293ba621340a993f36e37fe",
+      "afterSha256": "d55a48d4210e6bcb33792d72924c265275c5d5ef0a3e6e63885f5ca047fd9fd5",
+      "replacements": 4
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "beforeSha256": "d00d33d8ecfb6b49ac0c88b83fd9a39b2a68c3d15b4315b239a0d08ae68ab9dd",
+      "afterSha256": "c8a2f71ca847a18f915b5db02f9b27cc0bf62642607bd38cc4081ed77dd6a290",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🔤️text/🧪️tests/🟦️.ts",
+      "beforeSha256": "93039498a9ebc54fa0d0060a99568001b43e021e80e5f347d8a98879891f7de2",
+      "afterSha256": "f456eeb0b0ecfab8dd9c2520c408b98ccbce898bf640b25618df0e43dab27ac7",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🔤️text/🧪️tests/🦀️.rs",
+      "beforeSha256": "21ced03bd82aa7144c96079b6c42239208ab1a79c5d26fb51048a1c26cf6c553",
+      "afterSha256": "9ba55811a5cde51ea0c814b2a5caef79d27a9dcee578bb6cb834df842b92e2f6",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🟦️.ts",
+      "beforeSha256": "fc346fddd1efd1ddbf2c7adc399cd3694d0d98854a4f0b9b385925480ff32c5b",
+      "afterSha256": "559d0e1be26d210e2650350679cccdcc1ae550d01ba31a1079f59ce43fda373b",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🦀️.rs",
+      "beforeSha256": "374ede8f24e4b28273e453b3a262261932a63c98f305deac3548cea70f7c613d",
+      "afterSha256": "f4858721ef98fb3f57ddebfcdec7c91fdc5cfbd7b79daf4f18e12ba41f29fa03",
+      "replacements": 3
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🧱️ownership/🟦️.ts",
+      "beforeSha256": "48976e7c9189f1afa4e3d2f637d37bded71adbc50dd5e7f2bd10b6c43a9cc12c",
+      "afterSha256": "d2c49b05221275c0c570677f610c1506437da2ab2fd1f6d5f1b958494ba710d1",
+      "replacements": 7
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🧩️members/🦀️.rs",
+      "beforeSha256": "89f863af17954ff7bdad11049b6cdcd64cc0e6440eaaa4199e1ea0e3446a6f03",
+      "afterSha256": "260c0ca921490cde922398df311cd1b9039b46907d9ce665da2bcece84f34ee9",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "7dedffaaa577bd9e267efd871dee612c0b35c81bf262d0d98fcc9074bb82f88f",
+      "afterSha256": "b65cf0d56cfd04a7fdda797ac773aea3e1463008dfba9344f6fec202ddc650c2",
+      "replacements": 11
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🚮️absence/🟦️.ts",
+      "beforeSha256": "780ce1e3e4e153f6bf2dac88839108dd4027b836c25aa8937b42b79d1fe83f64",
+      "afterSha256": "e0a844d724799ad63887c853765c23a12a7de6fb3a3745787ed0a8454c9ad50b",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧵️operation/🧪️tests/🟦️.ts",
+      "beforeSha256": "1840a99695eef9da43c96dd9d90ae811d2de714ea1a6db74afe4677e0730a2fe",
+      "afterSha256": "6bcd29dfcbcd989846bf2c3d266c8e294c21ae861fe357e5034653215de2bea0",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧵️operation/🧪️tests/🦀️.rs",
+      "beforeSha256": "9be88320b39e4e7fdefbe47fd734dc39a21bf29f6280e5ef62292fff0a9ffac3",
+      "afterSha256": "d761f5d1cdc0934e7b8558ae52d465269bb50f913a3fd2ef17c0baa738ceb83d",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/🧪️tests/🟦️.ts",
+      "beforeSha256": "55337f4711e569feca7bd54d4607566a080668f453aa59757a37fc4e4af87189",
+      "afterSha256": "a61801dfb79577e7a12e300855aed22d88e6cdf92f578009e9c15f252e8ca285",
+      "replacements": 3
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/🧪️tests/🦀️.rs",
+      "beforeSha256": "51f56ef90c2340766122fde11f78aeb3f890f82d4961dd85d0ef35d6d4d1d382",
+      "afterSha256": "517b98a5be2dfbf1980265ea49502111b29de4fb7f02d472e55ec56719c9794f",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/📏️depth/🧪️tests/🟦️.ts",
+      "beforeSha256": "1a5b5ef7e101d99b4807ee164aadafe14a86d8d9874464209896a8fc4c4d08d5",
+      "afterSha256": "fa02681f5f95e8246f11ae66b83d2c55eed5914be03bc38c4c87adaee19b42f6",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/📏️depth/🧪️tests/🦀️.rs",
+      "beforeSha256": "0ab46b733c48580abad4e0658426432c81b36865b9c6f8e615edea3b37abb8c0",
+      "afterSha256": "151862d4ca779b337169827a775b31b99b0bb9c95c02e393dce69bdb77d277f7",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧪️tests/🟦️.ts",
+      "beforeSha256": "cac09d5c0bf6c696823be0cc40aa1bee396a908f8b988fe3556c43b27128d8d2",
+      "afterSha256": "6d25ea4512c7525e097cba47e1a827213467f351b140766461ab1895331920b4",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧪️tests/🦀️.rs",
+      "beforeSha256": "f1b34f5cd8d1f0b3b83deaf3908535635b62d8c98c0218e514a015a14abb3606",
+      "afterSha256": "440cd9ca2ff3600f2991f1e571e3cc841c828faf6aee71db37dd4dac8ba43209",
+      "replacements": 4
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧪️tests/🟦️.ts",
+      "beforeSha256": "b9e498c38db0a5074325acd4bab15164d45362d59a832785286b744ee74debf0",
+      "afterSha256": "62a9ab3436c2f8d06e3b33941bc9c472d74b5d818fac41e85ab432855cce85bf",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧪️testing/📥️invocation/🧪️tests/🟦️.ts",
+      "beforeSha256": "65f3962410389035c3c7c0c17613afb4a4b5e3f6263a29e93e7362932cc9a959",
+      "afterSha256": "ac2b3b99693fb2adcd7d65ced61fe45cbf8f7bcd38868a485292b707ddf80b3d",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🔣️string/📦️bytes/🧪️tests/🟦️.ts",
+      "beforeSha256": "9f8981cf7c6ec5d377d32ef097eefb6270b0b244b1f721445e2ad51df1be0720",
+      "afterSha256": "8bf2219661993618e863bca05be0aa27bb6e8153c952d5afd9aec8aa5cf3a389",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🔣️string/📦️bytes/🧪️tests/🦀️.rs",
+      "beforeSha256": "a6c608c2b5cdc8fad4eff69f62b8e2d98938d2ea84ccde34b494b05b4d3b7928",
+      "afterSha256": "ae0587a8bfc4e9449e3b09e636d7db85529a9fca108901aa079058a6fefea466",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🔌️capture/👥️context/🧪️tests/🦀️.rs",
+      "beforeSha256": "aec1f36eeb6fe5c609dcbcd9372e92bf60d2e8ea21bf145ce58da6b47a6e56c1",
+      "afterSha256": "b7316316ab86f55aefdb708a46f421ba052c7322956f0cf0c387620b8a96f741",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🔌️capture/🧪️tests/🦀️.rs",
+      "beforeSha256": "71517bc5a11cafbfcaaccca4d87640d59b179e98799e494f41823e4c1dc92fa1",
+      "afterSha256": "ebc77331e89c2d4d11b028625eeb05197134cdc2cba9022b32ae4e066d65e4ff",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧱️ownership/🟦️.ts",
+      "beforeSha256": "234d7cddf084676e3477e596ca165c403f64712f972198293c49cff6e4be884d",
+      "afterSha256": "ea700c1f74dea16ca85e06a3f4310beadd4e03647863407f49f95f3162e8aa4b",
+      "replacements": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧭️producer-authority/🟦️.ts",
+      "beforeSha256": "f393a0ab735283bd87e2a70cd9cfa9f70d3b2b9f8ed5e585a48f6d7e9b609904",
+      "afterSha256": "841fccedae7deb070893ec7beddb1cb11f252a403ca6944b01a434bfa2cb0992",
+      "replacements": 4
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/⚠️refusal/🦀️.rs",
+      "beforeSha256": "2a034f52b81094b3ae47da3adea96235cdc7d8f217d65fd1012dd20ef2a905dd",
+      "afterSha256": "af84c14a3a87090cc2ab9094597a57cea3375bdf58441d8be72bbf593fda5e05",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/📍️text-refusal/🦀️.rs",
+      "beforeSha256": "8414c3d4dcf3ddfd757d83edb0112cc1f64e612ad32415884a79aad39d24c230",
+      "afterSha256": "b895254c43157642e9d098c413acbd6d604ee21ef9f6c26081626d17979758dc",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🔁️value-projection/🦀️.rs",
+      "beforeSha256": "7e07d737b42f57ec27de2f8f702f2a453ded693828a7e119a82d464244cc5888",
+      "afterSha256": "ff9d2b005c3b9f70828c8e8d7042adfd9f4755512dad3707edaa0bc892f24f00",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📋️project.json",
+      "beforeSha256": "f72158f0b7427ab7772258121d6586938c30f0c811c8e9ed974121cd04114103",
+      "afterSha256": "3655495bcb90e7a25138a6bcab4eedfee574ab7965abc9baa075fc82cbbd7138",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️reactor-contract-oracles/🟦️.ts",
+      "beforeSha256": "df05ee806253c4bda3eb8797bc9f37af724610dfb23fcbfae44973032eec266f",
+      "afterSha256": "3bc9e9d90237904e357bb83b7f0f88f579d94463f7d625be91d69e08b70ad602",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📋️project.json",
+      "beforeSha256": "83d3600e2bb6eb05e36ccc9ccbf2e6dad5c2692e0df7963dea6444dae8ecb819",
+      "afterSha256": "cf4b63f9c7b60d22071b0a271f0a09a596e91e4a1ed06b73352dca69b9f1753e",
+      "replacements": 4
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "019fe6ed34ea648d7b932d1337e0503e3201e6a7765c54a03c5841953abff9e0",
+      "afterSha256": "b441dcae5da8bce78be17fa14cb1e945ea8a849b194393165ffc03262a362d47",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "beforeSha256": "87aca987f52caa92aafbb2b75087ee6b47600e5b5dc8235666bc253a5a555764",
+      "afterSha256": "c56311f54ea6d81af7246ef1b33d052bbd8d63a05c47a65ec9045c5fef17b5a7",
+      "replacements": 1
+    }
+  ],
+  "excluded": [
+    {
+      "path": "📜️script.ts",
+      "beforeSha256": "15cdf664850ddeeda33e07e6a49ca8006841b441e635eb92caca4a604dbd5407",
+      "afterSha256": "43c0251df5a83ea4e2a34d27b99ee1d812be5ced3cefc0409ca2bc567ab2ec62",
+      "replacements": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "beforeSha256": "21bb7f692992ef00d5063acbc76751b6044a4978eebbf83c36287179d1e462be",
+      "afterSha256": "ca94bc96571d92772512a6353ebfd77812a98f613cfbd036b180a791a1aca103",
+      "replacements": 1
+    }
+  ]
+}

@@ -12,8 +12,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getWorkspaceRoot, orchestratorBudgetOpts, runCmd } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { acquireQueuedResourceLease } from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { acquireQueuedResourceLease } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { developmentRuntimeRoot, pluginModulesRoot, readActivationReceipt } from "../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import { COMPONENT_RECEIPT_FILE, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, readComponentReceiptV1 } from "../../🖨️describe/🏷️component-receipt/🟦️.ts";
@@ -153,7 +153,7 @@ export function stagedConvergence(repoRoot: string, variant: string): Readonly<{
   const sha = (path: string): string => (existsSync(path) ? createHash("sha256").update(readFileSync(path)).digest("hex") : "-");
   const registry = readGeneratedCatalogProjection(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated")).entries;
   const inventory = registryModuleDirectories(registry);
-  const receipt = readActivationReceipt(join(developmentRuntimeRoot(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"), variant, "dev", "react"), "activation"));
+  const receipt = readActivationReceipt(join(developmentRuntimeRoot(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"), variant, "prototype", "react"), "activation"));
   const activated = new Set(receipt.plugins.map((row) => row.pluginId));
   const modules = pluginModulesRoot();
   const rows = registry.map((entry) => {

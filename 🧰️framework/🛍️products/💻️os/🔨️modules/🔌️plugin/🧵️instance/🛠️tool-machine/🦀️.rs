@@ -7,6 +7,7 @@ use semio_framework_tool_machine::{
 };
 use std::collections::BTreeMap;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_value::OriginalAliasBatch as ToolOriginalAliasBatch;
 use semio_framework_value::{RetirementDemand,ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use super::*;
 
@@ -183,7 +184,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     /// 🖋️ Settlement retains the original captured slot and rejected decision until funded maintenance.
-    fn settle_gesture_slot(&mut self,operation:u64,publishes:bool)->bool{
+    pub(crate) fn settle_gesture_slot(&mut self,operation:u64,publishes:bool)->bool{
         let Some(original)=self.tool_machines.gesture_operations.iter_mut().flatten().find(|original|original.operation==operation&&!original.settled)else{return false};
         original.settled=true;
         original.decision=original.slot.take();

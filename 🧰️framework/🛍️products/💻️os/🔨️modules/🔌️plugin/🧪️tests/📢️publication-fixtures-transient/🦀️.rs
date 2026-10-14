@@ -1,6 +1,7 @@
 //! 🫧️ Real local-ephemeral publication snapshot fixture.
 
-use crate::store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack, PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
+use pack::snapshot::{ArtifactDsl,ArtifactPack};
+use crate::store::{PackDecodeOptions,PackEncodeOptions,PackError,TextError,TextSpan};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
@@ -30,6 +31,9 @@ impl ArtifactPack for PublicationTransient {
     fn decode_pack_with(bytes: &[u8], _options: &PackDecodeOptions) -> Result<Self, PackError> {
         serde_json::from_slice(bytes).map_err(|error| match (u32::try_from(error.line()), u32::try_from(error.column())) { (Ok(line), Ok(column)) => store::PackError::from(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(line, column))), _ => store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, error.to_string())) })
     }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for PublicationTransient {
+
 }
 
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]

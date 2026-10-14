@@ -3,7 +3,7 @@
 
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::drag_transforms::DragTransforms;
-use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector,generation3d_transform_diff,generation3d_vector_literal,GENERATION3D_TRANSLATE_KINDS};
+use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector,generation3d_transform_diff,generation3d_vector_value,GENERATION3D_TRANSLATE_KINDS};
 
 use crate::Generation3dSnapshot;
 
@@ -16,6 +16,6 @@ pub fn diff(payload: &DragTransforms, base: &Generation3dSnapshot) -> protocol::
     generation3d_transform_diff(base, &payload.targets, &GENERATION3D_TRANSLATE_KINDS, delta == [0.0; 3], |params| {
         let current = generation3d_param_vector(params, "offset", [0.0; 3]);
         let next: [f64; 3] = std::array::from_fn(|axis| current[axis] + delta[axis]);
-        next.iter().all(|value| value.is_finite()).then(|| vec![("offset", generation3d_vector_literal("vector", next))])
+        next.iter().all(|value| value.is_finite()).then(|| vec![("offset", generation3d_vector_value("vector", next))])
     })
 }

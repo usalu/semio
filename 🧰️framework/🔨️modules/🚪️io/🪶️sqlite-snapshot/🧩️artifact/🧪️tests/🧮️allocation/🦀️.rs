@@ -4,7 +4,7 @@ use super::super::{SqliteDatabaseLimits,SqliteSnapshotControl as Control,SqliteS
 use std::cell::Cell as Local;
 use crate::test_allocation::observe;
 
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🧮️allocation/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🧮️allocation/🔣️.json")).unwrap()}
 fn n(f:&serde_json::Value,key:&str)->usize{f[key].as_u64().unwrap()as usize}
 fn limits(f:&serde_json::Value,allocation:usize)->SqliteDatabaseLimits{SqliteDatabaseLimits{max_allocation_bytes:allocation,max_value_bytes:n(f,"semanticBytes"),max_file_bytes:n(f,"fileBytes"),max_schema_bytes:n(f,"schemaBytes"),..Default::default()}}
 fn ownership<T>(result:Result<T,ValueError>)->ValueError{match result{Err(error)=>{assert_eq!(error.kind,ValueRefusalKind::OwnershipLimit);error},Ok(_)=>panic!("provider must refuse concrete backing before allocation")}}
@@ -73,7 +73,7 @@ fn shared_provider_allocation_ieee_cells_exact_refused_duplicate_and_canceled(){
 #[test]
 fn history_edit_sqlite_paged_text_cells_keep_borrowed_measurement_allocation_free_and_cancel_owned_copy(){
  use semio_framework_value::paged::PagedUtf8;
- let f:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧵️paged-text/🔣️.json")).unwrap();
+ let f:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧵️paged-text/🔣️.json")).unwrap();
  let mut accept=|_|true;let mut control=Control::new(&mut accept,SqliteDatabaseLimits::default());let mut projection=Projection::new(f["schemaSql"].as_str().unwrap(),&mut control).unwrap();
  for sample in f["samples"].as_array().unwrap(){let text=sample["text"].as_str().unwrap();let owner=PagedUtf8::<{usize::MAX}>::from(text);assert_eq!(owner.len(),n(sample,"bytes"));projection.insert(f["table"].as_str().unwrap(),&[Cell::PagedText(&owner)]).unwrap();}
  let database=projection.finish().unwrap();let rows=&database.table(f["table"].as_str().unwrap()).unwrap().rows;
@@ -87,7 +87,7 @@ fn history_edit_sqlite_paged_text_cells_keep_borrowed_measurement_allocation_fre
 
 #[test]
 fn history_edit_sqlite_native_paged_reconstruction_accounts_actual_pages_and_interior_cancellation(){
- let f:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧵️paged-text/🔣️.json")).unwrap();
+ let f:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧵️paged-text/🔣️.json")).unwrap();
  for sample in f["samples"].as_array().unwrap(){let text=sample["text"].as_str().unwrap();let mut accept=|_|true;let mut control=Control::new(&mut accept,SqliteDatabaseLimits::default());let before=control.allocation_remaining_bytes();let(result,requested)=observe(||super::Reconstruction::new(&mut control)?.paged_text(text));let owner=result.unwrap();assert!(owner.eq_str(text));assert_eq!(owner.len(),n(sample,"bytes"));assert_eq!(before-control.allocation_remaining_bytes(),requested);}
  let text=f["large"]["unit"].as_str().unwrap().repeat(n(&f["large"],"repeats"));let mut accept=|_|true;let mut control=Control::new(&mut accept,SqliteDatabaseLimits::default());let before=control.allocation_remaining_bytes();let(result,cost)=observe(||super::Reconstruction::new(&mut control)?.paged_text(&text));let owner=result.unwrap();assert!(owner.eq_str(&text));assert_eq!(before-control.allocation_remaining_bytes(),cost);assert!(cost>text.len());assert!(owner.chunks().all(|chunk|chunk.len()<=n(&f["reconstruction"],"chunkBytes")));drop(owner);
  let mut accept=|_|true;let mut control=Control::new(&mut accept,SqliteDatabaseLimits{max_allocation_bytes:cost*n(&f["reconstruction"],"aggregateCopies"),max_value_bytes:text.len()*n(&f["reconstruction"],"aggregateCopies"),..Default::default()});for _ in 0..n(&f["reconstruction"],"aggregateCopies"){let(result,requested)=observe(||super::Reconstruction::new(&mut control)?.paged_text(&text));assert!(result.unwrap().eq_str(&text));assert_eq!(requested,cost);}assert_eq!(control.allocation_remaining_bytes(),0);assert_eq!(super::Reconstruction::new(&mut control).unwrap().paged_text("x").unwrap_err().kind,ValueRefusalKind::OwnershipLimit);

@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { runOwnedCommand } from "../../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runOwnedCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { resolve } from "node:path";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { resolveTestLevel } from "../../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../🏃️process/⏱️budget/🟦️.ts";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** ⚙️ Runs the `semio-framework-ui-scene` test suite and the guest-target compile gates.
  *
  * This crate carries the pack-encoded `SurfaceDoc` payload every wasm32-wasip2 plugin component and
@@ -14,8 +14,8 @@ import { buildBudgetMs } from "../../../../🏃️process/⏱️budget/🟦️.t
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 

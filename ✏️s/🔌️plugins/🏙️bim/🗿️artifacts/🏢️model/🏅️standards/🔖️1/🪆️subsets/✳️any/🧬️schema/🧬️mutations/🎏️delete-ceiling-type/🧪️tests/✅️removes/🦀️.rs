@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🎏️delete-ceiling-type/✅️removes",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎏️delete-ceiling-type/✅️removes/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎏️delete-ceiling-type/✅️removes/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎏️delete-ceiling-type/✅️removes/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎏️delete-ceiling-type/✅️removes/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎏️delete-ceiling-type/✅️removes/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎏️delete-ceiling-type/✅️removes/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎏️delete-ceiling-type/✅️removes/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎏️delete-ceiling-type/✅️removes/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎏️delete-ceiling-type/✅️removes/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎏️delete-ceiling-type/✅️removes/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

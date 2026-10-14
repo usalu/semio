@@ -4,16 +4,16 @@ import { createElement } from "react";
 import { computeAccessibleName, computeAccessibleDescription } from "dom-accessibility-api";
 import { afterEach, expect, it } from "vitest";
 import Ajv2020 from "ajv/dist/2020";
-import fixture from "../../🧫️fixtures/♿️editable-controls/🔣️.json";
+import fixture from "../🧫️fixtures/♿️editable-controls/🔣️.json";
 import { createInputLedgerV1, inputActionWindowV1, inputActionWithWindowV1 } from "../../🧱️elements/🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
-import ownership from "../../🧫️fixtures/🪟️input-window/🔣️.json";
+import ownership from "../🧫️fixtures/🪟️input-window/🔣️.json";
 import ownershipSchema from "../../🧬️schema/🪟️input-window/🔣️.json";
 import { InterpretedUiNode, UiNodeView } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
 
 afterEach(cleanup);
 
-import crossInputs from "../../🧫️fixtures/↔️input-commits/🔣️.json";
+import crossInputs from "../🧫️fixtures/↔️input-commits/🔣️.json";
 import { inputCommitLaneV1 } from "../../🧱️elements/🗣️Interpreter/🎯️commit-lane/🟦️.ts";
 import { LocalDocumentOwnerRegistryV1 } from "../../🧱️elements/🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 
@@ -308,7 +308,7 @@ it("discards an uncommitted draft when the command target changes at the same pu
   expect(intents).toHaveLength(0);
 });
 
-import receiptLaw from "../../../../../🧫️fixtures/⌨️input-publication-receipt.json";
+import receiptLaw from "../../../../../🧪️tests/🧫️fixtures/⌨️input-publication-receipt.json";
 import type { InputOutcomeV1 } from "../../🧱️elements/🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 
 for (const locale of ["en", "de"] as const) for (const order of ["publication-first", "completion-first"] as const) for (const foreign of [false, true]) it(`binds queued input to its native receipt with ${order}, foreign=${foreign} and locale=${locale}`, async () => {
@@ -495,7 +495,7 @@ for (const disabled of [false, true]) it(`retained buttons read the current publ
   if (!disabled) expect(intents[0].args.revision).toBe(crossInputs.firstRevision);
 });
 
-import dispositionLaw from "../../🧫️fixtures/🚦️input-draft-disposition/🔣️.json";
+import dispositionLaw from "../🧫️fixtures/🚦️input-draft-disposition/🔣️.json";
 
 for (const law of dispositionLaw.cases) it(law.name, async () => {
   const store = new UiDocumentStore("history-refusal");
@@ -516,9 +516,9 @@ for (const law of dispositionLaw.cases) it(law.name, async () => {
   expect(intents).toHaveLength(1);
 });
 
-import inspectorControls from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures/🔣️.json";
-import widgetEdits from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧫️fixtures/🔣️.json";
-import inspectorTerminology from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗣️terminology.json";
+import inspectorControls from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️.json";
+import widgetEdits from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json";
+import inspectorTerminology from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🗣️terminology.json";
 import Ajv from "ajv";
 import widgetInputSchema from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧬️schema/🔣️.json";
 import { editInputValue, editCollectionValue, editWidgetFacet } from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🟦️.ts";

@@ -6,7 +6,7 @@
 // #endregion 🧲️Header
 
 import { expect, test, type Page } from "@playwright/test";
-import dockAxisGeometry from "../../🧫️fixtures/📐️dock-axis-geometry/🔣️.json" with { type: "json" };
+import dockAxisGeometry from "../🧫️fixtures/📐️dock-axis-geometry/🔣️.json" with { type: "json" };
 
 const NEW_UI_STORY_IDS: readonly string[] = [
   "🖱️ui⚛️react-mobilepanel--default",

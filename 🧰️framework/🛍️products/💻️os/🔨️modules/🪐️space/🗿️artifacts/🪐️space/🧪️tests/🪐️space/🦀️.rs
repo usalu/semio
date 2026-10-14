@@ -3,7 +3,7 @@
 use crate::*;
 use crate::io::text::package::{SPACE_PACKAGE_DECLARATION_JSON, decode_space_package_json, read_builtin_space_package};
 use protocol::Mutation as _;
-use store::os_store::serialization::ArtifactDsl as _;
+use pack::snapshot::ArtifactDsl as _;
 
 fn demo_user(id: &str, role: SpaceRole) -> SpaceUser {
     SpaceUser { id: id.into(), name: format!("User {id}"), avatar: None, role }

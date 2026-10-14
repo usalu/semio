@@ -1,12 +1,12 @@
-import {captureOwnedProcess} from "../../../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
-import {scriptInvocationEnvironment} from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { cargoProvenancePhysicalControlV1, writeCompletedCargoInvocationProvenanceV1 } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import {captureOwnedProcess} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {scriptInvocationEnvironment} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { cargoProvenancePhysicalControlV1, writeCompletedCargoInvocationProvenanceV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { createHash } from "node:crypto";
 import { tmpdir,homedir } from "node:os";
 import {CurrentPhysicalOwnerV1} from "../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts";
 import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, realpathSync, readdirSync, renameSync, rmSync, writeFileSync, writeSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { acquireCargoBuildLeaseV1 } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
+import { acquireCargoBuildLeaseV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import {selectedCargoArguments} from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🟦️.ts";
 import {cargoCommandPreparationV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🏃️command/🟦️.ts";
 import {CargoCliOperationOwner,CargoCommandFailure,runCargoCliCommand} from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🟦️.ts";
@@ -20,7 +20,7 @@ import { blake3Hex } from "../../../../../../🔨️modules/🔏️hash/🟦️.
 import { verifySemanticDescriptorPairBytesV1 } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
 import { findPluginCargoFiles, parseComponentSourceOwnerV1, DESCRIPTOR_JSON_REL_PATH } from "../../📇️registry/🔎️discovery/🟦️.ts";
 import { COMPONENT_RECEIPT_SCHEMA_ID, COMPONENT_TARGET, SHIPPED_COMPONENT_MAX_BYTES, componentProvenanceDigestsV1, componentReceiptValueV1, rustToolchainIdentityV1, type ComponentReceiptV1 } from "../🏷️component-receipt/🟦️.ts";
-import { decodeCargoProvenanceV1 } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+import { decodeCargoProvenanceV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 import { DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, FRESH_DESCRIPTOR_MAX_BYTES, FRESH_IO_CHUNK_BYTES, CRATE_NAME, freshWasmArtifactSize, pluginWasmArtifactPath } from "../🏗️component-build/🟦️.ts";
 import { FRESH_SOURCE_EPOCH_LIMITS, captureFreshSourceEpochV1, freshCheckpoint, freshPathIsWithin, freshSourceEpochBytesV1, freshSourceOrderedJson, parseFreshRustDepInfoV1, type FreshBuildControlV1, type FreshComponentLeaseV1, type FreshComponentProducedV1, type FreshComponentReceiptV1, type FreshComponentRequestV1 } from "../🧾️source-epoch/🟦️.ts";
 

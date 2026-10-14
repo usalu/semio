@@ -167,6 +167,8 @@ use semio_s_artifact_stdio_semio_text::schema::snapshot as text;
 
 // 🧬️ Eighteen composable subsets, each bound to its exact kind, standard, subset and schema.
 dsl::space_members! {
+    history_limits:semio_framework_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
+    maximum_history_allocation_bytes:8388608,
     pub enum SemioMembers, SemioMembersOpen {
         Animation("s.stdio.semio", "v1", "animation", "stdio.semio") => (semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot, semio_s_artifact_stdio_semio_animation::schema::mutations::SemioAnimationMutation),
         Audio("s.stdio.semio", "v1", "audio", "stdio.semio") => (semio_s_artifact_stdio_semio_audio::schema::snapshot::SemioAudioSnapshot, semio_s_artifact_stdio_semio_audio::schema::mutations::SemioAudioMutation),

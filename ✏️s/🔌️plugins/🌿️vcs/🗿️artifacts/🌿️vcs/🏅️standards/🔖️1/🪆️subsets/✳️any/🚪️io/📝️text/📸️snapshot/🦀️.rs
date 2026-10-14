@@ -1,8 +1,8 @@
 //! 📜️ VCS artifact — native `.vcs` DSL text codec (ticket
 //! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §1 CORRECTION: the native codec is
 //! one bidirectional thing and sits directly under `🚪️io/<facet>/<representation>/`, unsplit).
-//! Relocated here from `🚪️io/📝️text/📸️snapshot` — the real `store::os_store::serialization::ArtifactDsl for VcsSnapshot`
-//! impl moved with it; `🧬️schema` keeps only the `VcsSnapshot` type. `store::os_store::serialization::ArtifactPack`'s twin
+//! Relocated here from `🚪️io/📝️text/📸️snapshot` — the real `pack::snapshot::ArtifactDsl for VcsSnapshot`
+//! impl moved with it; `🧬️schema` keeps only the `VcsSnapshot` type. `pack::snapshot::ArtifactPack`'s twin
 //! impl sits in the sibling `💾️binary` facet.
 
 //#region 📖️SemioGrammar
@@ -14,7 +14,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::VcsSnapshot;
 
 //#region 🔖️ArtifactDslCodec
-impl store::os_store::serialization::ArtifactDsl for VcsSnapshot {
+impl pack::snapshot::ArtifactDsl for VcsSnapshot {
     const EXTENSION: &'static str = "vcs";
     fn envelope_id() -> &'static str {
         "vcs.vcs"
@@ -29,7 +29,7 @@ impl store::os_store::serialization::ArtifactDsl for VcsSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -42,12 +42,12 @@ pub const VCS_DEMO_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️as
 
 /// 📖️ Parses `.vcsdemo` DSL text into a `VcsSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<VcsSnapshot, semio_framework_diagnostic::TextError> {
-    <VcsSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <VcsSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `VcsSnapshot` back to `.vcsdemo` DSL text.
 pub fn print_dsl(projection: &VcsSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(projection)
+    pack::snapshot::ArtifactDsl::print_dsl(projection)
 }
 //#endregion 🔖️Example
 
@@ -84,19 +84,19 @@ pub fn decode_vcs_snapshot_json(text: &str) -> Result<VcsSnapshot, String> {
 }
 
 /// 📝️ Parses `.vcs.dsl.semio` text into a [`VcsSnapshot`] — a named, non-async pass-through of this
-/// type's own `store::os_store::serialization::ArtifactDsl` impl (`../../🚪️io/📝️text/📸️snapshot/🦀️.rs`), whose trait
+/// type's own `pack::snapshot::ArtifactDsl` impl (`../../🚪️io/📝️text/📸️snapshot/🦀️.rs`), whose trait
 /// and error type are both unnameable outside this crate, so `🌿️mutate-vcs-1`'s `identity-round-trip`
 /// scenario reaches the real committed artifact (`../../🖼️assets/🎬️demo/🗣️.dsl.semio`)
 /// through this instead.
 pub fn parse_vcs_dsl(text: &str) -> Result<VcsSnapshot, String> {
-    <VcsSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+    <VcsSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
 
 /// 📝️ Renders a [`VcsSnapshot`] back as `.vcs.dsl.semio` text — the inverse of [`parse_vcs_dsl`],
 /// preamble included, which is what makes a printed document comparable to the committed one
 /// byte for byte.
 pub fn print_vcs_dsl(snapshot: &VcsSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
+    pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

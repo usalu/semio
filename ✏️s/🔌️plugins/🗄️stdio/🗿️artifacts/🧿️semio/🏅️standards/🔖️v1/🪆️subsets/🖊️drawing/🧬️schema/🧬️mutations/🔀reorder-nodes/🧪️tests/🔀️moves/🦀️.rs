@@ -11,11 +11,11 @@ use crate::schema::mutations::SemioDrawingMutation;
 use crate::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves/🎯️outcome/🔣️.json");
 
 fn before() -> SemioDrawingSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reorder-nodes before snapshot decodes")

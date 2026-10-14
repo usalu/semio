@@ -8,7 +8,7 @@ import { pdfFunctionToSqliteDatabase, pdfFunctionFromSqliteDatabase, pdfColorSpa
 import { exportSqliteDatabase, importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 async function cases(): Promise<{ functions: PdfFunction[]; colors: PdfColorSpace[]; depth: number }> {
-  const input = await Bun.file(new URL("../../🌈️color/🧫️fixtures/🔣️.json", import.meta.url)).json();
+  const input = await Bun.file(new URL("../../🌈️color/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
   const values: Binary64[] = input.binary64.map((bits: string) => ({ bits: BigInt(`0x${bits}`) }));
   const white: [Binary64, Binary64, Binary64] = [values[0]!, values[1]!, values[2]!];
   const exponent: PdfFunction = { kind: "exponential", domain: values, range: [], c0: [], c1: values, n: values[5]! };
@@ -83,7 +83,7 @@ test("PDF function and color native JSON admission uses the same owned Binary64 
 });
 
 test("PDF sampled function rows preserve logical u32 words independently", async () => {
-  const fixture = await Bun.file(new URL("../../🌈️color/🧫️fixtures/🔣️.json", import.meta.url)).json();
+  const fixture = await Bun.file(new URL("../../🌈️color/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
   const value = (await cases()).functions[0]!;
   const encoded = await pdfFunctionToSqliteDatabase(value);
   const sql = Database.deserialize(await exportSqliteDatabase(encoded.database));

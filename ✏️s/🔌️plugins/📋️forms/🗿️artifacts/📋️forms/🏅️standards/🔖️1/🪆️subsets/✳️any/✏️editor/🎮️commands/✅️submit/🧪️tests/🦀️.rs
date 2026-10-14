@@ -3,7 +3,7 @@ use protocol::Mutation;
 
 #[test]
 fn submission_routes_errors_and_prevents_duplicate_responses() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧬️schema/📨️response/🧫️fixtures/🔣️submission.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📨️response/🔣️submission.json")).unwrap();
     let definition: crate::schema::definition::FormsDefinition = semio_framework_pack_json::from_json_str(&fixture["definition"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mut spec = crate::forms_snapshot_with_state(crate::FORMS_DOCUMENT_SCHEMA.into(), "submission".into(), "1".into(), None, &definition.steps);
@@ -25,8 +25,8 @@ fn submission_routes_errors_and_prevents_duplicate_responses() {
         assert_eq!(next.submitted_response_id.as_deref(), Some(spec.responses[0].id.as_str()));
         let answers: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&spec.responses[0].answers)).unwrap();
         assert_eq!(answers, case["expected"]["response"]["answers"]);
-        let packed = <FormsTryWindowConfig as store::os_store::serialization::ArtifactPack>::encode_pack(&next);
-        let restored = <FormsTryWindowConfig as store::os_store::serialization::ArtifactPack>::decode_pack(&packed).unwrap();
+        let packed = <FormsTryWindowConfig as pack::snapshot::ArtifactPack>::encode_pack(&next);
+        let restored = <FormsTryWindowConfig as pack::snapshot::ArtifactPack>::decode_pack(&packed).unwrap();
         assert_eq!(restored, next);
         assert!(handle_window(&spec, &restored, &transient, "revision-b".into()).unwrap().0.artifact_mutations.is_empty());
     }
@@ -41,7 +41,7 @@ async fn mounted_submission_persists_reopens_exports_and_discards() {
     use semio_framework::kernel::Effect;
     let mut app = forms_app().await;
     let outcome: Result<(), String> = async {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧬️schema/📨️response/🧫️fixtures/🔣️submission.json")).map_err(|error| error.to_string())?;
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📨️response/🔣️submission.json")).map_err(|error| error.to_string())?;
         let definition: crate::schema::definition::FormsDefinition = semio_framework_pack_json::from_json_str(&fixture["definition"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.into_message())?;
         let specification = crate::forms_snapshot_with_state(crate::FORMS_DOCUMENT_SCHEMA.into(), "submission-test".into(), "1".into(), Some("Response Test".into()), &definition.steps);
         app.dispatch_typed(FormsCommand::SetSpecJson(set_spec_json::SetSpecJson { json: semio_framework_pack_json::to_json_string(&specification) }), &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;

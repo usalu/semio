@@ -1,7 +1,7 @@
 /** ⏳️ Cancellation identity validation agrees with the neutral schema without losing integer precision. */
 import {expect,test} from "vitest";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import {decodeOperationCancellation,operationProgressText,cancellationResultLane,operationCancellationTargetAdmitted} from "../🟦️.ts";
 import targetSchema from "../🧬️schema/🎯️target.json";
 /** 🪪️ The cancellation identity `🧬️schema/🔣️.json` admits. */

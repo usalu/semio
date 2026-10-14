@@ -78,7 +78,7 @@ use crate::STDIO_DXF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use crate::standards::v_r12::subsets::any::io::text::snapshot as snapshot_text;
 
-impl store::os_store::serialization::ArtifactDsl for DxfSnapshot {
+impl pack::snapshot::ArtifactDsl for DxfSnapshot {
     const EXTENSION: &'static str = "dxf";
     fn envelope_id() -> &'static str {
         "stdio.dxf"
@@ -87,7 +87,7 @@ impl store::os_store::serialization::ArtifactDsl for DxfSnapshot {
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((envelope, rest)) => {
-                if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, "DXF snapshot text envelope mismatch", semio_framework_diagnostic::TextSpan::at(1, 1))); }
+                if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, "DXF snapshot text envelope mismatch", semio_framework_diagnostic::TextSpan::at(1, 1))); }
                 rest
             }
             Err(_) => text,
@@ -97,7 +97,7 @@ impl store::os_store::serialization::ArtifactDsl for DxfSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&to_record(self), &spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }

@@ -13,11 +13,11 @@ use super::*;
 use crate::standards::v1_4::subsets::base::io::binary::mutations as binary;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/♻️replace-page-text/🔄️round/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/♻️replace-page-text/🔄️round/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/♻️replace-page-text/🔄️round/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/♻️replace-page-text/🔄️round/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/♻️replace-page-text/🔄️round/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♻️replace-page-text/🔄️round/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♻️replace-page-text/🔄️round/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♻️replace-page-text/🔄️round/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♻️replace-page-text/🔄️round/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♻️replace-page-text/🔄️round/🎯️outcome/🔣️.json");
 
 fn before() -> PdfSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed before-snapshot decodes")

@@ -7,7 +7,7 @@ fn secondary_pointer_button_uses_context_menu_code() {
 
 #[test]
 fn native_system_theme_change_merges_theme_into_the_pending_redraw_reason() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌓️native-theme-invalidation/🔣️.json")).expect("native theme invalidation fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌓️native-theme-invalidation/🔣️.json")).expect("native theme invalidation fixture");
     let reason = |tag: Option<&str>| match tag {
         Some("inputState") => Some(InvalidationReason::INPUT_STATE),
         Some("paint") => Some(InvalidationReason::PAINT),
@@ -101,7 +101,7 @@ fn keyboard_interaction() -> crate::AppInteractionState {
 
 #[test]
 fn normalized_host_key_routes_the_platform_os_command_to_the_shell() {
-    let fixture: OsShortcutFixture = serde_json::from_str(include_str!("../../🧫️fixtures/⌨️os-command-shortcuts/🔣️.json")).expect("OS shortcut fixture");
+    let fixture: OsShortcutFixture = serde_json::from_str(include_str!("../🧫️fixtures/⌨️os-command-shortcuts/🔣️.json")).expect("OS shortcut fixture");
     assert_eq!(fixture.command_id, "os.toggleFullscreen");
     assert_eq!(fixture.retired_chord, "mod+shift+f");
     assert!(fixture.bindings.iter().any(|binding| binding.platform == "macOs" && binding.chord == "control+meta+f"));
@@ -154,7 +154,7 @@ fn normalized_pointer_and_wheel_snapshots_replace_stale_keyboard_modifiers() {
 
 #[test]
 fn component_close_handoff_keeps_unrelated_window_ingress_routable() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️component-close-frame-turn/🔣️.json")).expect("component-close frame-turn fixture");
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️component-close-frame-turn/🔣️.json")).expect("component-close frame-turn fixture");
     assert_ne!(law["closeHost"], law["liveHost"]);
     assert_eq!(law["maxCloseUnitsPerTurn"], 1);
     let mut events = ui_host::EventQueue::new();

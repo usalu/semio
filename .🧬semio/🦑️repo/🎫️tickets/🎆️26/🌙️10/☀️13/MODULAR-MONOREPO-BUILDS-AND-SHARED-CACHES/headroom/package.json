@@ -1,0 +1,5 @@
+{
+  "name": "private-cache-headroom",
+  "private": true,
+  "packageManager": "bun@1.3.14"
+}

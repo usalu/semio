@@ -12,7 +12,7 @@ use semio_framework_schema_registry::ScopeSchemaExports;
 use std::path::Path;
 
 const RUST_ENTRIES_GENERATOR: &str = "cargo test -p semio-framework-schema --test schema-export-entries";
-const COMMITTED_DUMP: &str = include_str!("../../🧫️fixtures/📤️schema-export-entries-dump.json");
+const COMMITTED_DUMP: &str = include_str!("../🧫️fixtures/📤️schema-export-entries-dump.json");
 
 #[test]
 fn schema_export_catalog_entries_dump_is_sorted_and_matches_the_declared_contract() {

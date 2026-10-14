@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "📝️set-text-note/➕️moves-and-turns",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/📝️set-text-note/➕️moves-and-turns/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/📝️set-text-note/➕️moves-and-turns/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/📝️set-text-note/➕️moves-and-turns/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/📝️set-text-note/➕️moves-and-turns/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/📝️set-text-note/➕️moves-and-turns/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️set-text-note/➕️moves-and-turns/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️set-text-note/➕️moves-and-turns/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️set-text-note/➕️moves-and-turns/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️set-text-note/➕️moves-and-turns/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️set-text-note/➕️moves-and-turns/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

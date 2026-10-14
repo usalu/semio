@@ -13,12 +13,12 @@ pub const DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬
 
 /// 📖️ Parses DIN 4108 DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Din4108Snapshot, semio_framework_diagnostic::TextError> {
-    <Din4108Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <Din4108Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.din4108` DSL text.
 pub fn print_dsl(document: &Din4108Snapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(document)
+    pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -52,12 +52,12 @@ pub fn decode_din4108_snapshot_json(text: &str) -> Result<Din4108Snapshot, Strin
 
 /// 📖️ Parses a committed `.dsl.semio` artifact into a [`Din4108Snapshot`].
 pub fn decode_din4108_dsl(text: &str) -> Result<Din4108Snapshot, String> {
-    <Din4108Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+    <Din4108Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
 
 /// 🖨️ Prints a [`Din4108Snapshot`] to its canonical `.dsl.semio` body.
 pub fn encode_din4108_dsl(snapshot: &Din4108Snapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
+    pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

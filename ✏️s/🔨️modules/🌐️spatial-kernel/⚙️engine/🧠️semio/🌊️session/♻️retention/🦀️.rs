@@ -3,7 +3,7 @@ use semio_framework_value::RetirementDemand;
 use semio_framework_3d_brep_engine::BrepRetentionJob;
 
 /// 🧹️ Owns the original incoming keys and removed session rows through independently funded retention.
-pub(super) struct SessionRetention {request:Option<ControlledRetirement<Vec<String>>>,body:BrepRetentionJob,cache:Option<ControlledRetirement<((String,u64),CachedMesh)>>,job:Option<ControlledRetirement<((String,u64),RetainedTessellation)>>,phase:usize,slot:usize,family:usize,claim:usize,found:bool,clock:u64,cancelled:bool,receipt:RetainedCloneProgress}
+pub(super) struct SessionRetention {request:Option<ControlledRetirement<Vec<String>>>,body:BrepRetentionJob,cache:Option<ControlledRetirement<((String,u64),CachedMesh)>>,job:Option<ControlledRetirement<(TessellationJobKey,RetainedTessellation)>>,phase:usize,slot:usize,family:usize,claim:usize,found:bool,clock:u64,cancelled:bool,receipt:RetainedCloneProgress}
 impl SessionRetention {
     pub(super) fn new(session:&Session,handles:Vec<String>)->Result<Self,(ValueError,Vec<String>)>{
         if session.is_closed(){return Err((ownership_busy(),handles));}
@@ -13,7 +13,7 @@ impl SessionRetention {
         Ok(Self {request:Some(ControlledRetirement::new(handles)?),body:BrepRetentionJob::new(&kernel),cache:None,job:None,phase:0,slot:0,family:0,claim:0,found:false,clock:session.state.next_authority.load(std::sync::atomic::Ordering::Acquire),cancelled:false,receipt:Default::default()})
     }
     pub(super) fn terminal_is_empty(&self)->bool{self.request.is_none()&&self.body.terminal_is_empty()&&self.cache.is_none()&&self.job.is_none()&&(self.cancelled||self.phase==6)}
-    fn owner_demand<T:semio_framework_value::retirement::RetireOwned>(owner:&ControlledRetirement<T>,copy:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand {copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})}
+    fn owner_demand<T:semio_framework_value::retirement::RetireOwned>(owner:&ControlledRetirement<T>,copy:usize)->Result<RetirementDemand,ValueError>{owner.selected_demand(copy)}
     pub(super) fn demand(&self,session:&Session,copy:usize)->Result<RetirementDemand,ValueError>{
         if self.terminal_is_empty(){return Ok(Default::default());}
         if let Some(owner)=&self.cache{return Self::owner_demand(owner,copy);}
@@ -97,8 +97,8 @@ impl SessionRetention {
 #[test]
 fn original_session_retention_transfers_incoming_keys_and_closes_removed_rows(){
     use super::physical_session_custody::observe;
-    let port:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧫️fixtures/🎟️work.json")).unwrap();
-    let topology:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🕸️topology/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
+    let port:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/🧫️fixtures/🎟️work.json")).unwrap();
+    let topology:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🕸️topology/🧪️tests/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
     let law=&topology["retention"];assert_eq!(law["keptBoxes"],1);assert_eq!(law["removedBoxes"],1);
     for cancel in [false,true]{
         let((source,kept,discard),heap)=observe(||{let source=Session::new();let(kept,discard)=source.with_kernel(|kernel|Ok((kernel.box_prim_sync(1.,1.,1.).unwrap(),kernel.box_prim_sync(2.,2.,2.).unwrap()))).unwrap();(source,kept,discard)});let(mut born,mut freed)=(heap.0,heap.1);

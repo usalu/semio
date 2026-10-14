@@ -1,7 +1,7 @@
 use super::*;
 
 fn contract() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/📤️prepared-readback/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/📤️prepared-readback/🔣️.json")).unwrap()
 }
 
 #[test]

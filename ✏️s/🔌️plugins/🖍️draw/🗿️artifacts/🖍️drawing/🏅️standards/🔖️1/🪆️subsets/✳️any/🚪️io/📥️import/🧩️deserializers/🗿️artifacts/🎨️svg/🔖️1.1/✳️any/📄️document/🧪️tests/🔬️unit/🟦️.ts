@@ -6,7 +6,7 @@ import sharp from "sharp";
 import Ajv from "ajv";
 import schema from "../../🧬️schema/🔣️.json";
 import {readFileSync} from "node:fs";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../🧫️fixtures/🔣️.json";
 import {SvgImportJob} from "../../🟦️.ts";
 import {drawingTransformToMatrix} from "../../../../../../../../../../🧬️schema/🧮️geometry/↗️affine/🟦️.ts";
 import {multiply,type Matrix} from "../../../../../../../../../../🧬️schema/🧮️geometry/🟦️.ts";
@@ -49,7 +49,7 @@ for(const name of ["non-square-object-gradient","forward-gradient-reference-and-
   let maximum=0;for(let i=0;i<actual.length;i++)maximum=Math.max(maximum,Math.abs(actual[i]!-expected[i]!));expect(maximum).toBeLessThanOrEqual(2);
 });
 
-import compositeCases from "../../../../../../../../../../🧬️schema/🎬️scene/🧩️compositing/🧫️fixtures/🔣️.json";
+import compositeCases from "../../../../../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🧩️compositing/🔣️.json";
 import {drawingSceneToSvg,type DrawingSvgNode} from "../../../../../../../../../📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🟦️.ts";
 for(const row of compositeCases)test(`SVG isolated blend roundtrip: ${row.name}`,async()=>{
   const source=drawingSceneToSvg(row.nodes as DrawingSvgNode[],[0,0,24,16],{});

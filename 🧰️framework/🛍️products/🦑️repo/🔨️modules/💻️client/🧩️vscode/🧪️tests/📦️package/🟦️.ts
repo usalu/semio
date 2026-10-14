@@ -8,7 +8,7 @@ import * as configuration from "../../🏗️builder/🟦️.ts";
 
 /** 📦️ Compares VSCE selection and repeated archive bytes with the fixture and independent ZIP metadata decoding. */
 export async function testExtensionPackage(generated: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/📦️package/🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/📦️package/🔣️.json"), "utf8"));
   const root = mkdtempSync(join(generated, "extension-package-")), packageRoot = resolve(import.meta.dir, "../../📦️packages/🟦️typescript"), vsce = require("@vscode/vsce");
   for (const [file, content] of Object.entries(fixture.files)) { const path = join(root, file); mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, content as string); }
   writeFileSync(join(root, ".vscodeignore"), readFileSync(join(packageRoot, ".vscodeignore")));

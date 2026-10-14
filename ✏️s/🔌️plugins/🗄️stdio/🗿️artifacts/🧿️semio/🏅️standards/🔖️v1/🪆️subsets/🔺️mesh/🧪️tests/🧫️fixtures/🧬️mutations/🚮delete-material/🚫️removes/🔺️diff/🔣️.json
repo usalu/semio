@@ -1,0 +1,7 @@
+{
+  "materials": {
+    "removed": [
+      "mat-a"
+    ]
+  }
+}

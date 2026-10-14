@@ -19,11 +19,11 @@ mod tests {
         snap.layouts.push(SlideLayout { id: "l1".into(), master_id: "m1".into(), shapes: Vec::new() });
         snap.slides.push(Slide { id: "s1".into(), layout_id: Some("l1".into()), shapes: Vec::new(), notes: Vec::new() });
 
-        let text = <SemioPresentationSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
+        let text = <SemioPresentationSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snap);
         let from_text = SemioPresentationBuilderConstruction::from_text(&text).unwrap().build().unwrap();
         assert_eq!(from_text, snap);
 
-        let bytes = <SemioPresentationSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
+        let bytes = <SemioPresentationSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
         let from_binary = SemioPresentationBuilderConstruction::from_binary(&bytes).unwrap().build().unwrap();
         assert_eq!(from_binary, snap);
     }

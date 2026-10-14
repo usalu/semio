@@ -4,7 +4,7 @@ use super::*;
 
 #[test]
 fn incremental_mux_matches_the_real_fixture_under_small_grants() {
-    let source = include_bytes!("../../../🧫️fixtures/🎬️.mp4");
+    let source = include_bytes!("../../../🧪️tests/🧫️fixtures/🎬️.mp4");
     let snapshot = decode_mp4(source).expect("real MP4 fixture decodes");
     let mut cursor = Mp4EncodeCursor::new(&snapshot);
     let mut output = Vec::new();
@@ -117,16 +117,16 @@ async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
     use protocol::{DiffBinary,DiffCodec,DiffText, Mutation, OpBinary, OpText};
     use semio_framework_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactComposition, io::ComposeSource};
 
-    let bytes = include_bytes!("../../../🧫️fixtures/🎬️.mp4").to_vec();
+    let bytes = include_bytes!("../../../🧪️tests/🧫️fixtures/🎬️.mp4").to_vec();
     let snapshot = decode_mp4(&bytes).expect("decode exact MP4 fixture");
     assert_eq!(encode_mp4(&snapshot), bytes);
 
-    let pack = <Mp4Snapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
-    let from_pack = <Mp4Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("decode MP4 pack");
+    let pack = <Mp4Snapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
+    let from_pack = <Mp4Snapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("decode MP4 pack");
     assert_eq!(encode_mp4(&from_pack), bytes);
 
-    let dsl = <Mp4Snapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot);
-    let from_dsl = <Mp4Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&dsl).expect("parse MP4 DSL");
+    let dsl = <Mp4Snapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snapshot);
+    let from_dsl = <Mp4Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&dsl).expect("parse MP4 DSL");
     assert_eq!(encode_mp4(&from_dsl), bytes);
 
     let analysis = Mp4AnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&pack)]);

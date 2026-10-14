@@ -2,7 +2,7 @@ import {expect,test} from "bun:test";
 import Ajv from "ajv/dist/2020";
 import {parse,ParseError} from "jsonc-parser";
 import contract from "../🧬️schema/🔣️.json";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "../🧪️tests/🧫️fixtures/🔣️.json";
 import {readIntrinsicBody} from "../../../🌱️value/🧪️tests/🫳️preflight/🔮️pack/🟦️.ts";
 
 test("retained intrinsic ingress has a variable production contract and finite work grants",()=>{

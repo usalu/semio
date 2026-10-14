@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { wasmBuildArguments } from "../../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { wasmBuildArguments } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
@@ -17,16 +17,18 @@ import { CacheVerifyScript } from "./🔁️verification/📋️orchestration/�
 import { CachePruneScript, CacheReportScript } from "./🧹️pruning/📋️orchestration/🟦️.ts";
 import { CargoProvenanceScript } from "./🦀️cargo/🧾️provenance/🟦️.ts";
 import { devToolingEnv, getWorkspaceRoot, orchestratorBudgetOpts, runCmd, wasmBindgenVersion, wasmBuildEnvironment } from "../📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter, checkScriptInvocation, scriptInvocationBudget, type ScriptInvocation } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { terminateOwnedChildTree } from "../../../../../🔨️modules/🏃️process/🪓️termination/🟦️.ts";
-import { runScriptMain } from "../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter, checkScriptInvocation, scriptInvocationBudget, type ScriptInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { captureOwnedCommandV1,terminateOwnedChildTree } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { runScriptMain } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import plugin, { cacheInternals } from "../🟨️.mjs";
 import { stageRepositoryArtifacts } from "./📦️artifacts/🟦️.ts";
-import { acquireQueuedResourceLease } from "../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import { acquireQueuedResourceLease } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { repoCacheDirectory } from "./🟦️.ts";
+import { runProcessTestOwner } from "./🧪️tests/🧭️ownership/🟦️.ts";
 
 const SCRIPT_ROOT = dirname(fileURLToPath(import.meta.url));
-export async function testCacheContracts(): Promise<void> {
+export async function testCacheContracts(invocation: ScriptInvocation): Promise<void> {
   const { createCachePolicyTests } = await import("./🧪️tests/⚡️cache-contracts/🟦️.ts");
   const tests = createCachePolicyTests(
   {
@@ -60,14 +62,15 @@ export async function testCacheContracts(): Promise<void> {
   },
   { directory: import.meta.dir, url: import.meta.url },
 );
-  await tests.testCacheContracts();
+  await tests.testCacheContracts(invocation);
 }
 
 /** 🧪️ Runs the native workspace laws inside the same original command cancellation and deadline. */
-async function testWorkspaceOwnership(invocation: ScriptInvocation, root: string, artifacts: string): Promise<void> {
+async function testWorkspaceOwnership(invocation: ScriptInvocation, root: string, artifacts: string, entrypoint = join(SCRIPT_ROOT, "../🗂️workspaces/🟦️bun/🧪️tests/🟦️.ts")): Promise<void> {
   checkScriptInvocation(invocation);
-  const options = orchestratorBudgetOpts({ SEMIO_TEST_ARTIFACT_DIR: artifacts }), budget = scriptInvocationBudget(invocation, options.budgetMs!), child = spawn(process.execPath, ["test", join(SCRIPT_ROOT, "../🗂️workspaces/🟦️bun/🧪️tests/🟦️.ts")], { cwd: root, env: options.env, stdio: "inherit", detached: process.platform !== "win32" });
-  let stopped: unknown;
+  const options = orchestratorBudgetOpts({ SEMIO_TEST_ARTIFACT_DIR: artifacts }), budget = scriptInvocationBudget(invocation, options.budgetMs!), child = spawn(process.execPath, ["test", entrypoint], { cwd: root, env: options.env, stdio: ["inherit","pipe","pipe"], detached: process.platform !== "win32" });
+  let stopped: unknown, transcript = "";
+  child.stdout!.on("data", chunk => {transcript += String(chunk);process.stdout.write(chunk);});child.stderr!.on("data", chunk => {transcript += String(chunk);process.stderr.write(chunk);});
   const stop = (reason: unknown): void => { stopped ??= reason; terminateOwnedChildTree(child); }, abort = (): void => stop(invocation.control.signal.reason);
   const closed = new Promise<number>((accept, reject) => { child.once("error", reject); child.once("close", (code, signal) => signal ? reject(Error("Original workspace tests stopped: " + signal)) : accept(code ?? 1)); });
   invocation.control.signal.addEventListener("abort", abort, { once: true });
@@ -75,9 +78,11 @@ async function testWorkspaceOwnership(invocation: ScriptInvocation, root: string
   try {
     if (invocation.control.signal.aborted) abort();
     const status = await closed;
+    mkdirSync(artifacts,{recursive:true});writeFileSync(join(artifacts,"bun-test-"+createHash("sha256").update(entrypoint).digest("hex").slice(0,16)+".log"),transcript);
     if (stopped) throw stopped;
     checkScriptInvocation(invocation);
     if (status !== 0) throw Error("Original workspace tests exited with status " + status);
+    if(!/\b[1-9][0-9]* pass\b/u.test(transcript))throw Error("Original Bun test owner did not report completed tests");
   } finally {
     if (timeout) clearTimeout(timeout);
     invocation.control.signal.removeEventListener("abort", abort);
@@ -88,17 +93,61 @@ async function testWorkspaceOwnership(invocation: ScriptInvocation, root: string
 /** 🧪️ Routes the full cache suite, the focused portable command-source contract or the build-dir provenance laws. */
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
+    if(args[0]==="pruning"){
+      if(args.length!==1)throw Error("Expected test pruning");
+      const owner=join(SCRIPT_ROOT,"🧹️pruning"),control=scriptCompilerAdmissionControlV1(this.invocation,"cache:pruning:typescript",120000),artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;
+      if(!artifacts)throw Error("Original ticket artifact directory required");
+      await testWorkspaceOwnership(this.invocation,this.repoRoot,artifacts,join(owner,"🔒️store/🧪️tests/🟦️.ts"));
+      await testWorkspaceOwnership(this.invocation,this.repoRoot,artifacts,join(owner,"🔒️incremental/🧪️tests/🟦️.ts"));
+      await captureOwnedCommandV1(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop",join(owner,"🟦️.ts"),join(owner,"📋️orchestration/🟦️.ts")],this.repoRoot,{control,env:process.env});
+      console.log("[DEBUG] Shared cache pruning strict TypeScript check passed");return;
+    }
+    if(args[0]==="sdk-snapshot"){
+      if(args.length!==1)throw Error("Expected test sdk-snapshot");
+      const owner=join(SCRIPT_ROOT,"🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot"),control=scriptCompilerAdmissionControlV1(this.invocation,"nx:sdk-snapshot:typescript",120000);
+      await testWorkspaceOwnership(this.invocation,this.repoRoot,process.env.SEMIO_TEST_ARTIFACT_DIR??repoCacheDirectory(this.repoRoot,"sdk-snapshot-probes"),join(owner,"🧪️tests/🟦️.ts"));
+      await captureOwnedCommandV1(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop",join(owner,"🟦️.ts")],this.repoRoot,{control,env:process.env});
+      console.log("[DEBUG] SDK snapshot strict TypeScript check passed");return;
+    }
+    if(args[0]==="journal-source"){
+      if(args.length!==1)throw Error("Expected test journal-source");
+      const owner=join(SCRIPT_ROOT,"🕸️graph/🔏️seal/📥️membership/📥️journal"),control=scriptCompilerAdmissionControlV1(this.invocation,"nx:journal-source:typescript",120000);
+      await testWorkspaceOwnership(this.invocation,this.repoRoot,process.env.SEMIO_TEST_ARTIFACT_DIR??repoCacheDirectory(this.repoRoot,"journal-source-probes"),join(owner,"🧪️tests/🟦️.ts"));
+      await captureOwnedCommandV1(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop",join(owner,"🟦️.ts")],this.repoRoot,{control,env:process.env});
+      console.log("[DEBUG] repository journal source strict TypeScript check passed");return;
+    }
+    if(args[0]==="authorizers"){
+      if(args.length!==1)throw Error("Expected test authorizers");
+      await testWorkspaceOwnership(this.invocation,this.repoRoot,process.env.SEMIO_TEST_ARTIFACT_DIR??repoCacheDirectory(this.repoRoot,"authorizer-probes"),join(SCRIPT_ROOT,"🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🟦️.ts"));
+      const source=join(SCRIPT_ROOT,"🚀️bootstrap/🛠️tools"),control=scriptCompilerAdmissionControlV1(this.invocation,"nx:authorizers:typescript",120000);
+      await captureOwnedCommandV1(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop",join(source,"🔏️authorizers/🟦️.ts"),join(source,"🔏️authorizers/📜️script.ts"),join(source,"🔏️authorizers/📤️receipt/🟦️.ts"),join(source,"📜️script.ts")],this.repoRoot,{control,env:process.env});
+      console.log("[DEBUG] immutable authorizer strict TypeScript check passed");return;
+    }
+    if (args[0] === "daemon-journal") {
+      if (args.length !== 1 && (args.length !== 2 || !["transport", "workspace"].includes(args[1]!))) throw Error("Expected test daemon-journal [transport|workspace]");
+      const output = process.env.SEMIO_TEST_ARTIFACT_DIR ?? repoCacheDirectory(this.repoRoot, "daemon-journal-probes");
+      await (await import("./🧪️tests/🕸️daemon/📥️journal/🟦️.ts")).proveDaemonJournal(this.repoRoot, output, this.invocation, args[1] === "transport", args[1] === "workspace");
+      return;
+    }
+    if(args[0]==="selected-graph"){if(args.length!==1)throw Error("Expected test selected-graph");await testWorkspaceOwnership(this.invocation,this.repoRoot,process.env.SEMIO_TEST_ARTIFACT_DIR??repoCacheDirectory(this.repoRoot,"selected-graph-probes"),join(SCRIPT_ROOT,"🕸️graph/🔏️seal/🎯️selection/🧪️tests/🟦️.ts"));return;}
+    if(args[0]==="graph-seal"){if(args.length!==1)throw Error("Expected test graph-seal");runCmd(process.execPath,["test",join(SCRIPT_ROOT,"🕸️graph/🔏️seal/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,...orchestratorBudgetOpts()});return;}
     if (args[0] === "build-mode") {
       if (args.length !== 1) throw Error("Expected test build-mode");
       const { testNxBuildModes } = await import("./🧪️tests/🎚️build-mode/🟦️.ts");
-      await testNxBuildModes(this.repoRoot);
+      await testNxBuildModes(this.repoRoot, process.env.SEMIO_TEST_ARTIFACT_DIR);
+      return;
+    }
+    if (args[0] === "next-runtime") {
+      if (args.length > 2 || (args.length === 2 && args[1] !== "dev")) throw Error("Expected test next-runtime [dev]");
+      const output = process.env.SEMIO_TEST_ARTIFACT_DIR ?? repoCacheDirectory(this.repoRoot, "next-runtime-probes");
+      const runtime = await import("./🧪️tests/🌐️next-runtime/🟦️.ts");
+      await (args[1] === "dev" ? runtime.proveNextDevRuntime : runtime.proveNextRuntime)(this.repoRoot, output, this.invocation);
       return;
     }
     if (args[0] === "web-build") {
       if (args.length !== 1) throw Error("Expected test web-build");
-      const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
-      if (!output) throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
-      await (await import("./🧪️tests/🏗️web-build/🟦️.ts")).proveWebBuild(this.repoRoot, output);
+      const output = process.env.SEMIO_TEST_ARTIFACT_DIR ?? repoCacheDirectory(this.repoRoot, "web-build-probes");
+      await (await import("./🧪️tests/🏗️web-build/🟦️.ts")).proveWebBuild(this.repoRoot, output, this.invocation);
       return;
     }
     if (args[0] === "cache-policy") {
@@ -111,7 +160,7 @@ class TestScript extends BundleScript {
       if (args.length !== 1) throw Error("Expected test cargo-build-lease");
       const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
       if (!output) throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
-      await (await import("../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🟦️.ts")).proveCargoBuildLeasesV1(output);
+      await runProcessTestOwner(this.invocation, this.repoRoot, output, "cargo-build-lease");
       return;
     }
     if (args[0] === "graph-revision") {
@@ -172,7 +221,7 @@ class TestScript extends BundleScript {
       runCmd(process.execPath, ["test", join(SCRIPT_ROOT, "🧪️tests", "🧾️cargo-provenance", "🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
       return;
     }
-    await testCacheContracts();
+    await testCacheContracts(this.invocation);
   }
 }
 

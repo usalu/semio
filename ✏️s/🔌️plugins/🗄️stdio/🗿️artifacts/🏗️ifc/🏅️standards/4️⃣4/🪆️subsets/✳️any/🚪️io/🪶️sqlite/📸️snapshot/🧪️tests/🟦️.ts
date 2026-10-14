@@ -1,7 +1,7 @@
 /** 🏗️ IFC4 header/entity values are domain-owned and preserve their IEEE words. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import f from "../🧫️fixtures/🔣️.json";
+import f from "./🧫️fixtures/🔣️.json";
 import type {IfcSnapshot,IfcValue} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import type {IfcArtifact,IfcDiff,IfcMutation} from "@semio-tech/stdio-ifc";
 import {IFC_SQLITE_SCHEMA,ifcSnapshotToSqliteDatabase,ifcSnapshotFromSqliteDatabase} from "../🟦️.ts";
@@ -14,7 +14,7 @@ test("IFC4 bounds and cancellation precede large scalar and deep forest traversa
 
 
 test("IFC4 native storage owns full value roots with distinct concrete backing",async()=>{
- const vector=await Bun.file(new URL("../🧫️fixtures/💰️backing/🔣️.json",import.meta.url)).json();
+ const vector=await Bun.file(new URL("🧫️fixtures/💰️backing/🔣️.json",import.meta.url)).json();
  const {default:Ajv2020}=await import("ajv/dist/2020");expect(vector["nativeConstruction"]["header"]).toEqual("threeOrderedValueRoots");expect(vector["nativeConstruction"]["values"]).toEqual("flatExclusiveForest");expect(vector["nativeConstruction"]["typedValue"]).toEqual("orderedItems");expect(vector["nativeConstruction"]["root"]).toEqual("inlineNoBacking");expect(vector["nativeConstruction"]["forecast"]).toEqual("paidFrontiersOnly");expect(vector["limits"]["semantic"]).toEqual("maxValueBytes");expect(vector["limits"]["backing"]).toEqual("maxAllocationBytes");expect(vector["limits"]["file"]).toEqual("maxFileBytes");expect(vector["nativeRoles"]["owned"]).toEqual("maxAllocationBytes");expect(vector["nativeRoles"]["semantic"]).toEqual("maxValueBytes");expect(vector["nativeRoles"]["preflight"]).toEqual("paidFrontiersOnly");expect(vector["nativeRoles"]["nonfinite"]).toEqual("retainedBinary64");
  expect(vector.nativeConstruction).toEqual({header:"threeOrderedValueRoots",values:"flatExclusiveForest",typedValue:"orderedItems",root:"inlineNoBacking",forecast:"paidFrontiersOnly"});
  expect(vector.limits).toEqual({semantic:"maxValueBytes",backing:"maxAllocationBytes",file:"maxFileBytes"});
@@ -23,12 +23,12 @@ test("IFC4 native storage owns full value roots with distinct concrete backing",
 
 
 test("IFC4 native admission roles distinguish full backing from semantic bytes",async()=>{
- const vector=await Bun.file(new URL("../🧫️fixtures/💰️backing/🔣️.json",import.meta.url)).json();expect(vector.nativeRoles).toEqual({owned:"maxAllocationBytes",semantic:"maxValueBytes",preflight:"paidFrontiersOnly",nonfinite:"retainedBinary64"});
+ const vector=await Bun.file(new URL("🧫️fixtures/💰️backing/🔣️.json",import.meta.url)).json();expect(vector.nativeRoles).toEqual({owned:"maxAllocationBytes",semantic:"maxValueBytes",preflight:"paidFrontiersOnly",nonfinite:"retainedBinary64"});
  const db=new Database(":memory:");try{db.exec("CREATE TABLE admission(stage TEXT PRIMARY KEY,kind TEXT NOT NULL);INSERT INTO admission VALUES('nativeFields','maxAllocationBytes'),('semanticCells','maxValueBytes');");expect(db.query("SELECT stage,kind FROM admission ORDER BY stage").all()).toEqual([{stage:"nativeFields",kind:"maxAllocationBytes"},{stage:"semanticCells",kind:"maxValueBytes"}]);}finally{db.close();}
 });
 
 test("IFC4 removal-result references preserve full owner through independently edited files",async()=>{
- const corpus=await Bun.file(new URL("../🧫️fixtures/🧩️intermediate/🔣️.json",import.meta.url)).json();
+ const corpus=await Bun.file(new URL("🧫️fixtures/🧩️intermediate/🔣️.json",import.meta.url)).json();
  
  const {default:Ajv}=await import("ajv");
  for(const case_ of corpus.cases){
@@ -48,7 +48,7 @@ test("IFC4 removal-result references preserve full owner through independently e
  }
 });
 test("IFC4 complete positive SQL surrogates preserve literal native identities",async()=>{
- const corpus=await Bun.file(new URL("../🧫️fixtures/🧩️intermediate/🔣️.json",import.meta.url)).json(),input=fixture(),physical=Database.deserialize(await exportSqliteDatabase(await ifcSnapshotToSqliteDatabase(input)));
+ const corpus=await Bun.file(new URL("🧫️fixtures/🧩️intermediate/🔣️.json",import.meta.url)).json(),input=fixture(),physical=Database.deserialize(await exportSqliteDatabase(await ifcSnapshotToSqliteDatabase(input)));
  try{
   physical.exec("PRAGMA foreign_keys=OFF");
   for(const{name}of physical.query("SELECT name FROM sqlite_schema WHERE type='table'").all()as{name:string}[]){
@@ -69,7 +69,7 @@ test("IFC4 resolved reference witnesses agree exactly with literal native words"
 });
 
 import NormSemanticAjv from "ajv/dist/2020.js";
-import normSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {ifcSnapshotToSqliteDatabase as normSemanticProject,ifcSnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
 import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

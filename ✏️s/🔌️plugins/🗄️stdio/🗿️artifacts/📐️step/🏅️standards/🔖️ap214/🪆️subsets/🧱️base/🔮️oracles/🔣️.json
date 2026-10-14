@@ -318,14 +318,14 @@
       "files": [
         {
           "role": "expected-before-step",
-          "path": "../🧫️fixtures/🧩️insert-entity-applied/⬅️before.stp",
+          "path": "../🧪️tests/🧫️fixtures/🧩️insert-entity-applied/⬅️before.stp",
           "mediaType": "model/step",
           "sha256": "sha256:3cf8d51d396eb6ca6a5f233dd37d126e2d729f884dc602a53075801df801c94a",
           "bytes": 77828
         },
         {
           "role": "expected-after-step",
-          "path": "../🧫️fixtures/🧩️insert-entity-applied/➡️after.stp",
+          "path": "../🧪️tests/🧫️fixtures/🧩️insert-entity-applied/➡️after.stp",
           "mediaType": "model/step",
           "sha256": "sha256:fdc8ba0cb51647a68f57fe20be450505b99162c2771fab1fa383ba5a2dcbde73",
           "bytes": 77895
@@ -368,14 +368,14 @@
       "files": [
         {
           "role": "expected-before-step",
-          "path": "../🧫️fixtures/➕️insert-entity-arg-applied/⬅️before.stp",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-entity-arg-applied/⬅️before.stp",
           "mediaType": "model/step",
           "sha256": "sha256:3cf8d51d396eb6ca6a5f233dd37d126e2d729f884dc602a53075801df801c94a",
           "bytes": 77828
         },
         {
           "role": "expected-after-step",
-          "path": "../🧫️fixtures/➕️insert-entity-arg-applied/➡️after.stp",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-entity-arg-applied/➡️after.stp",
           "mediaType": "model/step",
           "sha256": "sha256:115b9cce727816d7718c8958795e130f76e86c721266309e16b7a99b3b2efb3e",
           "bytes": 77843
@@ -418,14 +418,14 @@
       "files": [
         {
           "role": "expected-before-step",
-          "path": "../🧫️fixtures/🗑️remove-entity-applied/⬅️before.stp",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-entity-applied/⬅️before.stp",
           "mediaType": "model/step",
           "sha256": "sha256:3cf8d51d396eb6ca6a5f233dd37d126e2d729f884dc602a53075801df801c94a",
           "bytes": 77828
         },
         {
           "role": "expected-after-step",
-          "path": "../🧫️fixtures/🗑️remove-entity-applied/➡️after.stp",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-entity-applied/➡️after.stp",
           "mediaType": "model/step",
           "sha256": "sha256:aa6b439daf8da467b2bccc1a706747c0e7ca220dca27c8e778c7ab3d59755b68",
           "bytes": 77728
@@ -468,14 +468,14 @@
       "files": [
         {
           "role": "expected-before-step",
-          "path": "../🧫️fixtures/➖️remove-entity-arg-applied/⬅️before.stp",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-entity-arg-applied/⬅️before.stp",
           "mediaType": "model/step",
           "sha256": "sha256:3cf8d51d396eb6ca6a5f233dd37d126e2d729f884dc602a53075801df801c94a",
           "bytes": 77828
         },
         {
           "role": "expected-after-step",
-          "path": "../🧫️fixtures/➖️remove-entity-arg-applied/➡️after.stp",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-entity-arg-applied/➡️after.stp",
           "mediaType": "model/step",
           "sha256": "sha256:6a083afff5373af7b6afb81b049a40bd29779946ee59176e74dd275730f927f2",
           "bytes": 77825
@@ -518,14 +518,14 @@
       "files": [
         {
           "role": "expected-before-step",
-          "path": "../🧫️fixtures/🔧️set-entity-arg-applied/⬅️before.stp",
+          "path": "../🧪️tests/🧫️fixtures/🔧️set-entity-arg-applied/⬅️before.stp",
           "mediaType": "model/step",
           "sha256": "sha256:3cf8d51d396eb6ca6a5f233dd37d126e2d729f884dc602a53075801df801c94a",
           "bytes": 77828
         },
         {
           "role": "expected-after-step",
-          "path": "../🧫️fixtures/🔧️set-entity-arg-applied/➡️after.stp",
+          "path": "../🧪️tests/🧫️fixtures/🔧️set-entity-arg-applied/➡️after.stp",
           "mediaType": "model/step",
           "sha256": "sha256:f65bed91cf9b9b80f7ce6765a611e4df601c5b757e56ab9befbbb76655cbe2ef",
           "bytes": 77836
@@ -568,14 +568,14 @@
       "files": [
         {
           "role": "expected-before-step",
-          "path": "../🧫️fixtures/✏️set-entity-name-applied/⬅️before.stp",
+          "path": "../🧪️tests/🧫️fixtures/✏️set-entity-name-applied/⬅️before.stp",
           "mediaType": "model/step",
           "sha256": "sha256:3cf8d51d396eb6ca6a5f233dd37d126e2d729f884dc602a53075801df801c94a",
           "bytes": 77828
         },
         {
           "role": "expected-after-step",
-          "path": "../🧫️fixtures/✏️set-entity-name-applied/➡️after.stp",
+          "path": "../🧪️tests/🧫️fixtures/✏️set-entity-name-applied/➡️after.stp",
           "mediaType": "model/step",
           "sha256": "sha256:cb7268120ee2df8a364f1386d8122dd374c67f14b311831a56ba4b2e5ce8134c",
           "bytes": 77836
@@ -618,14 +618,14 @@
       "files": [
         {
           "role": "expected-before-step",
-          "path": "../🧫️fixtures/📋️set-file-description-applied/⬅️before.stp",
+          "path": "../🧪️tests/🧫️fixtures/📋️set-file-description-applied/⬅️before.stp",
           "mediaType": "model/step",
           "sha256": "sha256:3cf8d51d396eb6ca6a5f233dd37d126e2d729f884dc602a53075801df801c94a",
           "bytes": 77828
         },
         {
           "role": "expected-after-step",
-          "path": "../🧫️fixtures/📋️set-file-description-applied/➡️after.stp",
+          "path": "../🧪️tests/🧫️fixtures/📋️set-file-description-applied/➡️after.stp",
           "mediaType": "model/step",
           "sha256": "sha256:5e9ca68f273a6c61d345be7271575ec4bc103259334eea29118bcd1928d10772",
           "bytes": 77859
@@ -668,14 +668,14 @@
       "files": [
         {
           "role": "expected-before-step",
-          "path": "../🧫️fixtures/📛️set-file-name-applied/⬅️before.stp",
+          "path": "../🧪️tests/🧫️fixtures/📛️set-file-name-applied/⬅️before.stp",
           "mediaType": "model/step",
           "sha256": "sha256:3cf8d51d396eb6ca6a5f233dd37d126e2d729f884dc602a53075801df801c94a",
           "bytes": 77828
         },
         {
           "role": "expected-after-step",
-          "path": "../🧫️fixtures/📛️set-file-name-applied/➡️after.stp",
+          "path": "../🧪️tests/🧫️fixtures/📛️set-file-name-applied/➡️after.stp",
           "mediaType": "model/step",
           "sha256": "sha256:5dc55c1c0cb6a6dbbb3cdad2222a3b341093d13cccf0f941ea727e00fcd7cee9",
           "bytes": 77809
@@ -718,14 +718,14 @@
       "files": [
         {
           "role": "expected-before-step",
-          "path": "../🧫️fixtures/🏷️set-file-schema-applied/⬅️before.stp",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-file-schema-applied/⬅️before.stp",
           "mediaType": "model/step",
           "sha256": "sha256:3cf8d51d396eb6ca6a5f233dd37d126e2d729f884dc602a53075801df801c94a",
           "bytes": 77828
         },
         {
           "role": "expected-after-step",
-          "path": "../🧫️fixtures/🏷️set-file-schema-applied/➡️after.stp",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-file-schema-applied/➡️after.stp",
           "mediaType": "model/step",
           "sha256": "sha256:eecb3fa36142fe81c679d97dfc60d35e2f914b85c20ab4292946f00de647fb3a",
           "bytes": 77852

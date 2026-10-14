@@ -50,7 +50,7 @@ fn mask_mutations_reject_conflicts_and_invalid_assets() {
 #[test]
 fn committed_wire_witness_is_the_canonical_rust_wire() {
     let fixture=fixture();
-    let witnessed:RasterMutation=store::os_store::test_support::assert_wire_witness(include_str!("../../../../🧫️fixtures/🧬️mutations/🎭️change-layer-mask/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    let witnessed:RasterMutation=store::os_store::test_support::assert_wire_witness(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎭️change-layer-mask/🧾️wire-witness/🦠️mutation/🔣️.json"));
     let expected:RasterMutation=semio_framework_pack_json::from_json_str(&serde_json::json!({"mutation":"changeLayerMask","layerId":"paint","expected":null,"mask":fixture["reveal"]}).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(witnessed,expected);
 }

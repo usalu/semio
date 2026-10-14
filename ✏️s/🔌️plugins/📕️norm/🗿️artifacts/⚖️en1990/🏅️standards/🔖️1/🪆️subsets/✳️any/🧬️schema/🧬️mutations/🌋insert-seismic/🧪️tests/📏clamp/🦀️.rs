@@ -7,10 +7,10 @@
 fn insert_seismic_clamp() {
     super::assert_vector(super::Vector {
         kind: "insert-seismic",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌋insert-seismic/📏clamp/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌋insert-seismic/📏clamp/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌋insert-seismic/📏clamp/📸️snapshot/➡️after/🔣️.json"),
-        diff: Some(include_str!("../../../../../🧫️fixtures/🧬️mutations/🌋insert-seismic/📏clamp/🔺️diff/🔣️.json")),
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌋insert-seismic/📏clamp/🎯️outcome/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌋insert-seismic/📏clamp/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌋insert-seismic/📏clamp/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌋insert-seismic/📏clamp/📸️snapshot/➡️after/🔣️.json"),
+        diff: Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌋insert-seismic/📏clamp/🔺️diff/🔣️.json")),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌋insert-seismic/📏clamp/🎯️outcome/🔣️.json"),
     });
 }

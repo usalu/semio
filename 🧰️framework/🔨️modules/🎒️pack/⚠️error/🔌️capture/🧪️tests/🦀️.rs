@@ -50,7 +50,7 @@ fn pre_reserved_transport_shared_cell_keeps_concrete_identity_category_retry_and
 #[test]
 fn provider_admission_refusals_prevent_io_and_unused_reserves_roll_back(){
  let size=std::mem::size_of::<TransportCell<Sentinel>>();
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧭️cause/🔌️capture/🚦️provider/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🧭️cause/🔌️capture/🚦️provider/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let scale=|value:u64|usize::try_from(value).unwrap()*size/64;
   let before=scale(row["ownedBefore"].as_u64().unwrap());

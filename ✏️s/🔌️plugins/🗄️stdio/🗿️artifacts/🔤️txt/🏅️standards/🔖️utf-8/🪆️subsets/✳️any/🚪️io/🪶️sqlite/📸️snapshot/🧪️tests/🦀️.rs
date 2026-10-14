@@ -1,7 +1,7 @@
 
 /// 🎟️ Supplies the immutable caller policy independently of every observed frontier.
 fn original_caller_grant()->semio_framework_value::RetainedCloneGrant{
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🫴️receiving.json")).unwrap();serde_json::from_value(fixture["originalCallerGrant"].clone()).unwrap()
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🫴️receiving.json")).unwrap();serde_json::from_value(fixture["originalCallerGrant"].clone()).unwrap()
 }
 
 /// 🛬️ Preserves this test's original SQL controller and retained native recipient through decode.
@@ -24,11 +24,29 @@ fn decode_original(payload:&store::io_schema::IoPayload,sql:&mut SqliteSnapshotC
 /// 📸️ Invokes only the current supplied-owner typed encode definition.
 fn encode_original(snapshot:&TxtSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,sql:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{with_original_encode(sql,|sql,owner|snapshot.encode_sqlite_snapshot_native(encoding,sql,owner))}
 
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_utf_8::subsets::any::io::sqlite::snapshot::*;
-use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
+
+fn registered_full_fixture()->serde_json::Value{serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/📸️typed-snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
+
+fn txt_full_file_retire<T:semio_framework_value::retirement::RetireOwned>(output:T,backing:usize,policy:store::io::testing::SnapshotFileCaller){
+ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;let(mut owner,heap)=observe(||semio_framework_value::retirement::controlled::ControlledRetirement::new(output).ok().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(zero,heap)=observe(||owner.step(Default::default()).unwrap());assert_eq!(zero.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(mut born,mut released)=(0,0);
+ for _ in 0..policy.maximum_close_turns{if owner.terminal_is_empty(){break}let(step,heap)=observe(||owner.step(policy.close_grant).unwrap());assert!(step.progress().fits(policy.close_grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;}assert!(owner.terminal_is_empty());assert_eq!(backing+born,released);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn txt_original_receiving_registered_complete_store_and_destination(){
+ use store::{io::io_mechanism::{io_export_sqlite_snapshot_read,io_import_sqlite_snapshot_into},sqlite_snapshot::SnapshotEncoding};let f=registered_full_fixture();let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:f["dialect"]["artifactKind"].as_str().unwrap().into(),standard:f["dialect"]["standard"].as_str().unwrap().into(),subset:f["dialect"]["subset"].as_str().unwrap().into()};let policy=store::io::testing::SnapshotFileCaller{grant:original_caller_grant(),native_maximum_bytes:16777216,close_grant:original_caller_grant(),maximum_close_turns:4096};let limits=SqliteDatabaseLimits{max_allocation_bytes:policy.native_maximum_bytes,..Default::default()};semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("TXT SQLite Test").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
+ for row in f["cases"].as_array().unwrap(){let input=&row["snapshot"];let source=TxtSnapshot{schema:input["schema"].as_str().unwrap().into(),lines:input["lines"].as_array().unwrap().iter().map(|line|line.as_str().unwrap().into()).collect(),trailing_newline:input["trailingNewline"].as_bool().unwrap(),line_ending:if input["lineEnding"]=="crLf"{LineEnding::CrLf}else{LineEnding::Lf}};assert_eq!(source.to_body(),row["raw"].as_str().unwrap());assert_ne!(TxtSnapshot::from_body(row["raw"].as_str().unwrap()),source);let envelope=store::os_store::document_materialize::create_document_envelope::<TxtSnapshot,crate::TxtMutation>(crate::STDIO_TXT_DOCUMENT_SCHEMA,row["id"].as_str().unwrap(),source.clone(),None);let mut original_store=store::os_store::test_support::plain_test_store(envelope).await;let read=original_store.snapshot_read().unwrap().into_erased();let pointer=read.get::<TxtSnapshot>().unwrap()as*const _;assert_eq!(read.get::<TxtSnapshot>().unwrap(),&source);
+  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=store::io::testing::with_snapshot_file_decoding(policy,limits,&mut |_|true,async|sql,native|io_export_sqlite_snapshot_read(&dialect,&read,encoding,sql,native).await).await.unwrap().value;assert_eq!(read.get::<TxtSnapshot>().unwrap()as*const _,pointer);assert_eq!(read.get::<TxtSnapshot>().unwrap(),&source);let physical=import_sqlite_database(&bytes,limits,&mut |_|true).unwrap();assert_eq!(store::io::io_mechanism::sqlite_snapshot_metadata(&physical).unwrap(),(dialect.clone(),encoding));assert_eq!(physical.table("text_line").unwrap().rows.len(),source.lines.len());assert_eq!(physical.table("text_document").unwrap().rows[0].values[1],SqliteValue::Text(source.schema.clone()));let mut destination=None::<TxtSnapshot>;let result=store::io::testing::with_snapshot_file_encoding(policy,limits,&mut |_|true,async|sql,native|io_import_sqlite_snapshot_into(&dialect,&bytes,&mut destination,sql,native).await).await.unwrap();assert!(result.diagnostics.is_empty());assert_eq!(destination.as_ref(),Some(&source));let output=destination.take().unwrap();let backing=output.schema.capacity()+output.lines.capacity()*std::mem::size_of::<String>()+output.lines.iter().map(|line|line.capacity()).sum::<usize>();txt_full_file_retire(output,backing,policy);let backing=bytes.capacity();txt_full_file_retire(bytes,backing,policy);}
+  let typed=read.try_into_typed::<TxtSnapshot>().unwrap_or_else(|_|panic!("original TXT Store read retains its exact registered type"));let witness=typed.try_return_to_registry_witness().unwrap_or_else(|_|panic!("original TXT read returns to its real issuer"));drop(witness);store::os_store::test_support::close_plain_test_store(&mut original_store);
+ }
+ eprintln!("[DEBUG] Registered complete TXT file IO preserves all four fields across eight actual Store reads and both metadata encodings; raw collisions stay distinct, original captured pointers survive, accepted file and snapshot backing plus every paid close birth conserve exact System release");
+}
 
 fn native_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🛂️native.json")).unwrap()
+    serde_json::from_str(include_str!("🧫️fixtures/🛂️native.json")).unwrap()
 }
 
 fn native_case(value: &serde_json::Value) -> TxtSnapshot {
@@ -36,7 +54,7 @@ fn native_case(value: &serde_json::Value) -> TxtSnapshot {
 }
 
 fn native_payload(snapshot: &TxtSnapshot, encoding: store::sqlite_snapshot::SnapshotEncoding) -> store::io_schema::IoPayload {
-    match encoding { store::sqlite_snapshot::SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(<TxtSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(snapshot)), store::sqlite_snapshot::SnapshotEncoding::Text => store::io_schema::IoPayload::Text(<TxtSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(snapshot)) }
+    match encoding { store::sqlite_snapshot::SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(<TxtSnapshot as pack::snapshot::ArtifactPack>::encode_pack(snapshot)), store::sqlite_snapshot::SnapshotEncoding::Text => store::io_schema::IoPayload::Text(<TxtSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(snapshot)) }
 }
 
 #[test]
@@ -136,11 +154,11 @@ async fn sqlite_snapshot_txt_actual_typed_io_preserves_fields_without_native_pha
     let limits = SqliteDatabaseLimits { max_rows: fixture["controls"]["finalRows"].as_u64().unwrap() as usize, ..SqliteDatabaseLimits::default() };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let mut phases = Vec::new();
-        let bytes = io_export_sqlite_snapshot(&dialect, &source, encoding, limits, &mut |event| { phases.push(event.phase); true }).await.unwrap().value;
+        let bytes = async{let original_file_dialect=&dialect;let original_file_input=&source;let original_file_encoding=encoding;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |event| { phases.push(event.phase); true };store::io::testing::with_snapshot_file_decoding(store::io::testing::SnapshotFileCaller{grant:original_caller_grant(),native_maximum_bytes:16777216,close_grant:original_caller_grant(),maximum_close_turns:4096},original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
         assert!(!phases.iter().any(|phase| matches!(phase, SqliteSnapshotPhase::DecodeNative | SqliteSnapshotPhase::EncodeNative)));
         assert_eq!(import_sqlite_database(&bytes, limits, &mut |_| true).unwrap().tables.iter().map(|table| table.rows.len()).sum::<usize>(), limits.max_rows);
-        assert_eq!(io_import_sqlite_snapshot::<TxtSnapshot>(&dialect, &bytes, limits, &mut |_| true).await.unwrap().value, source);
-        assert!(io_export_sqlite_snapshot(&dialect, &source, encoding, SqliteDatabaseLimits { max_rows: limits.max_rows - 1, ..limits }, &mut |_| true).await.is_err());
+        assert_eq!(async{let original_file_dialect=&dialect;let original_file_input=&bytes;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;store::io::testing::with_snapshot_file_encoding(store::io::testing::SnapshotFileCaller{grant:original_caller_grant(),native_maximum_bytes:16777216,close_grant:original_caller_grant(),maximum_close_turns:4096},original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<TxtSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value, source);
+        assert!(async{let original_file_dialect=&dialect;let original_file_input=&source;let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits { max_rows: limits.max_rows - 1, ..limits };let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;store::io::testing::with_snapshot_file_decoding(store::io::testing::SnapshotFileCaller{grant:original_caller_grant(),native_maximum_bytes:16777216,close_grant:original_caller_grant(),maximum_close_turns:4096},original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.is_err());
     }
     println!("[DEBUG] TXT actual typed I/O preserves every persisted field independently of external carrier limitations");
 }
@@ -181,7 +199,7 @@ fn sqlite_snapshot_text_value_preflight_can_be_cancelled() {
 
 #[test]
 fn sqlite_snapshot_text_lines_preserve_order_and_line_endings() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let snapshot = TxtSnapshot { schema: fixture["schema"].as_str().unwrap().into(), lines: fixture["lines"].as_array().unwrap().iter().map(|line| line.as_str().unwrap().into()).collect(), trailing_newline: true, line_ending: LineEnding::CrLf };
     let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap();
     assert_eq!(database.table("text_line").unwrap().rows.len(), 3);
@@ -199,7 +217,7 @@ fn sqlite_snapshot_text_lines_preserve_order_and_line_endings() {
 
 
 /// 🛫️ Reads the closed language-neutral encoder policy independently of observed receipts.
-fn txt_original_encoding_fixture()->serde_json::Value{serde_json::from_str(include_str!("../🛫️encoding/🧫️fixtures/🔣️.json")).unwrap()}
+fn txt_original_encoding_fixture()->serde_json::Value{serde_json::from_str(include_str!("../🛫️encoding/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 
 /// 🎟️ Borrows one explicitly authored original grant without deriving authority from demand.
 fn txt_original_encoding_grant(law:&serde_json::Value,name:&str)->semio_framework_value::RetainedCloneGrant{serde_json::from_value(law[name].clone()).unwrap()}
@@ -281,9 +299,9 @@ fn sqlite_snapshot_txt_original_paid_receiving_keeps_every_cancelled_backing_and
  use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,retirement::controlled::ControlledRetirement};
  use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
  use std::cell::Cell;
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🫴️receiving.json")).unwrap();let policy:RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();let mut successes=0;
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🫴️receiving.json")).unwrap();let policy:RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();let mut successes=0;
  for row in fixture["cases"].as_array().unwrap(){
-  let expected=TxtSnapshot::from_body(row["body"].as_str().unwrap());let wire=<TxtSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&expected);let pointer=wire.as_ptr();
+  let expected=TxtSnapshot::from_body(row["body"].as_str().unwrap());let wire=<TxtSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&expected);let pointer=wire.as_ptr();
   for cut in (0..24).chain(std::iter::once(usize::MAX)){
    let events=Cell::new(0);let allowance=Cell::new(cut);let mut callback=|_|{events.set(events.get()+1);events.get()<=allowance.get()};let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(1048576,&mut callback);native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=store::NativeSnapshotDecodeOwner::new(&mut native,policy);
    let(result,heap)=observe(||<TxtSnapshot as store::ArtifactPackReceiving>::receive_pack(&wire,&mut owner));let accepted=owner.progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(accepted.retained_capacity_bytes,accepted.released_bytes));assert!(accepted.fits(policy));drop(owner);assert_eq!(wire.as_ptr(),pointer);allowance.set(usize::MAX);let mut born=0;let mut freed=0;
@@ -293,7 +311,7 @@ fn sqlite_snapshot_txt_original_paid_receiving_keeps_every_cancelled_backing_and
  }
 
  for axis in ["items","capacity","depth"]{
-  let expected=TxtSnapshot::from_body("a\nb");let wire=<TxtSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&expected);let pointer=wire.as_ptr();let mut denied=policy;match axis{"items"=>denied.maximum_items=0,"capacity"=>denied.maximum_capacity_bytes=0,_=>denied.maximum_depth=0};let mut accept=|_|true;let mut native=NativeDecodeControl::new(1048576,&mut accept);let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=store::NativeSnapshotDecodeOwner::new(&mut native,denied);let(result,heap)=observe(||<TxtSnapshot as store::ArtifactPackReceiving>::receive_pack(&wire,&mut owner));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes,owner.progress()),(0,0,RetainedCloneProgress::default()));drop(owner);assert!(!native.has_retirement_owner());assert_eq!(wire.as_ptr(),pointer);
+  let expected=TxtSnapshot::from_body("a\nb");let wire=<TxtSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&expected);let pointer=wire.as_ptr();let mut denied=policy;match axis{"items"=>denied.maximum_items=0,"capacity"=>denied.maximum_capacity_bytes=0,_=>denied.maximum_depth=0};let mut accept=|_|true;let mut native=NativeDecodeControl::new(1048576,&mut accept);let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=store::NativeSnapshotDecodeOwner::new(&mut native,denied);let(result,heap)=observe(||<TxtSnapshot as store::ArtifactPackReceiving>::receive_pack(&wire,&mut owner));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes,owner.progress()),(0,0,RetainedCloneProgress::default()));drop(owner);assert!(!native.has_retirement_owner());assert_eq!(wire.as_ptr(),pointer);
  }
  assert!(successes>=fixture["cases"].as_array().unwrap().len());
  eprintln!("[DEBUG] Original Txt receiving fixed plain grant conserves System allocation/release and caller wire through24 cancellation cuts and actual LF/CRLF/empty/Unicode lines");

@@ -86,7 +86,7 @@ pub(crate) fn parse_presentation_snapshot_body(body: &str) -> Result<SemioPresen
 /// per-variant field sets (and `SlideShape::TextBox`/`Table` transitively embed `DocBlock`, itself
 /// the same shape) — no `dsl::DslField`/`DslEnum` impl exists for either. Hand-rolled instead,
 /// matching `🔺️diff`'s already-hand-rolled convention.
-impl store::os_store::serialization::ArtifactDsl for SemioPresentationSnapshot {
+impl pack::snapshot::ArtifactDsl for SemioPresentationSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA
@@ -102,25 +102,25 @@ impl store::os_store::serialization::ArtifactDsl for SemioPresentationSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_presentation_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 🚪️ The four codec entry points above, reachable from OUTSIDE this crate. `store` is a private
 /// `extern crate semio_framework_os_kernel as store` alias in `🦀️.rs`, so an external caller —
-/// an owner-root test adapter is exactly that — can neither bring `store::os_store::serialization::ArtifactDsl`/
-/// `store::os_store::serialization::ArtifactPack` into scope nor name `store::TextError`/`store::PackError` in a signature.
+/// an owner-root test adapter is exactly that — can neither bring `pack::snapshot::ArtifactDsl`/
+/// `pack::snapshot::ArtifactPack` into scope nor name `store::TextError`/`store::PackError` in a signature.
 /// These four wrappers carry the error across as a plain `String` so the subset's own text and
 /// binary envelopes stay drivable end to end (`kit`'s precedent for the same structural gap).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_presentation_dsl(text: &str) -> Result<SemioPresentationSnapshot, String> {
-    <SemioPresentationSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())
+    <SemioPresentationSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_presentation_dsl(snapshot: &SemioPresentationSnapshot) -> String {
-    <SemioPresentationSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(snapshot)
+    <SemioPresentationSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

@@ -17,8 +17,8 @@ async fn playbook_config_dsl_round_trips_default_and_populated() {
 #[semio_framework_async_macros::async_test]
 async fn playbook_config_pack_round_trips() {
     let config = PlaybookConfig { contributions_json: "[]".into() };
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&config);
-    let decoded = <PlaybookConfig as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode playbook config pack");
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&config);
+    let decoded = <PlaybookConfig as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode playbook config pack");
     assert_eq!(decoded, config);
 }
 

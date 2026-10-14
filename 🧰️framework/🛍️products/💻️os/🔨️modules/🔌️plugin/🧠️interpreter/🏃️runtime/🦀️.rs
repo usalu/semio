@@ -429,6 +429,7 @@ struct OwnedCheckpointView<'a>{pending:&'a Option<OwnedPending>,original_receipt
 /// 🏃️ One instance of an owned compiled guest: its interpreter state, the operation it has in flight, the original receipt
 /// that operation keeps, and what the guest printed.
 pub struct OwnedGuestInstance {
+    original_job_clock:Option<fn()->Option<u64>>,
     artifact: Arc<OwnedSemioArtifact>,
     actor: OwnedSemioInstance,
     pending: Option<OwnedPending>,
@@ -660,7 +661,7 @@ impl OwnedRuntime {
             return Err(PluginHostError::Plugin("owned actor has an undriven start function".to_string()));
         }
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let mut state = OwnedGuestInstance { artifact: Arc::clone(artifact), actor: owned, pending: None, original_receipt: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
+        let mut state = OwnedGuestInstance { original_job_clock:None, artifact: Arc::clone(artifact), actor: owned, pending: None, original_receipt: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
         admit_owned_channel(&mut state).map_err(turn_fault_host)?;
         Ok(state)
     }
@@ -716,7 +717,7 @@ impl OwnedRuntime {
             return Err(TurnFault::Host(PluginHostError::Plugin("owned actor has an undriven start function".to_string())));
         }
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let mut state = OwnedGuestInstance { artifact: Arc::clone(&owned.artifact), actor, pending: None, original_receipt: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
+        let mut state = OwnedGuestInstance { original_job_clock:None, artifact: Arc::clone(&owned.artifact), actor, pending: None, original_receipt: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
         admit_owned_channel(&mut state)?;
         let encoded = serde_json::to_vec(&OwnedCodecInput { artifact_schema: OWNED_CODEC_ORIGIN_SCHEMA, document_id: "", pack: &[], spr: &[], ops: &[] }).map_err(|error| PluginHostError::Json(error.to_string()))?;
         begin_owned_operation(&mut state, OwnedOperation::PackSchemaHash, Some(encoded))?;
@@ -731,7 +732,7 @@ impl OwnedRuntime {
     /// 🧬️ A throwaway instance of `owned` in its codec origin's state.
     fn origin_instance(&self, owned: &OwnedCompiledGuest, origin: &OwnedCodecOrigin) -> OwnedGuestInstance {
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        OwnedGuestInstance { artifact: Arc::clone(&owned.artifact), actor: origin.actor.clone(), pending: None, original_receipt: None, poisoned: false, diagnostics: origin.diagnostics.clone(), context: origin.context, next_resource: origin.next_resource, instance_id }
+        OwnedGuestInstance { original_job_clock:None, artifact: Arc::clone(&owned.artifact), actor: origin.actor.clone(), pending: None, original_receipt: None, poisoned: false, diagnostics: origin.diagnostics.clone(), context: origin.context, next_resource: origin.next_resource, instance_id }
     }
 
     /// 🧬️ A throwaway instance of `compiled` in its codec origin's state, for a caller that drives its own codec operation on
@@ -1244,6 +1245,10 @@ fn reply_owned_host<'loan,'source>(state: &mut OwnedGuestInstance, call: &HostCa
                 }
             });
             vec![Value::I32(outcome.map_or_else(|error|operation_authority::refusal_code(error.kind) as i32,|()|0))]
+        }
+        ("semio:framework/pure@1.0.0", "operation-clock-us") => {
+            let mut result=[0u8;16];if let Some(now)=state.original_job_clock.and_then(|clock|clock()){result[..4].copy_from_slice(&1u32.to_le_bytes());result[8..].copy_from_slice(&now.to_le_bytes());}
+            write_owned_memory(&mut state.actor,owned_argument_i32(call,0)?,&result).map_err(turn_fault_host)?;Vec::new()
         }
         ("semio:framework/pure@1.0.0", "now-ms") => vec![Value::I64(std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as i64))],
         ("semio:framework/pure@1.0.0", "log") | ("semio:framework/pure@1.0.0", "trace-span") => Vec::new(),

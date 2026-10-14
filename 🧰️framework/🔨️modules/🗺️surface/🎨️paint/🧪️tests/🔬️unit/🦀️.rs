@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn retained_composite_matches_shared_mask_oracles(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🔲️pixels/🧩️compositing/🗂️layers/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🔲️pixels/🧩️compositing/🗂️layers/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap(){
         let mut host=RasterHost::new();
         host.sync_document_json(&serde_json::json!({"schema":"raster.document","layers":case["layers"]}).to_string()).unwrap();
@@ -51,7 +51,7 @@ fn retained_composite_cancellation_keeps_the_last_complete_image(){
 
 #[test]
 fn paint_image_transform_matches_pixel_gesture_coordinates() {
-    let fixtures:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/✏️editing/🔣️.json")).unwrap();
+    let fixtures:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/✏️editing/🔣️.json")).unwrap();
     for case in fixtures["cases"].as_array().unwrap() {
         let mut host=RasterHost::new();
         host.set_size(100,100,1.0);
@@ -84,7 +84,7 @@ fn parse_minimal_document() {
 #[test]
 fn parse_play_fixtures() {
     // 🩹️ Was `include_str!` of raster's example fixture; raster migrated that fixture to a
-    // handcrafted DSL (`store::os_store::serialization::ArtifactDsl`), which this JSON-only surface parser doesn't read.
+    // handcrafted DSL (`pack::snapshot::ArtifactDsl`), which this JSON-only surface parser doesn't read.
     // Inlined an equivalent layered document so this test still exercises multi-layer parsing.
     let json = r#"{"schema":"raster.document","id":"semio","camera":{"x":0,"y":0,"zoom":1},"layers":[
             {"kind":"adjustment","id":"a","name":"Bright","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":0.0,"y":0.0,"a":1.0,"b":0.0,"c":-0.0,"d":1.0},"adjustmentKind":"brightnessContrast"}
@@ -435,7 +435,7 @@ fn pointer_down_button1_pans_on_move() {
 
 #[test]
 fn paint_stroke_intent_uses_intrinsic_layer_coordinates_without_mutating_pixels() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/✏️editing/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/✏️editing/🔣️.json")).unwrap();
     for case in fixtures["cases"].as_array().unwrap() {
         let mut host = RasterHost::new();
         host.set_size(100, 100, 1.0);
@@ -460,7 +460,7 @@ fn paint_stroke_intent_uses_intrinsic_layer_coordinates_without_mutating_pixels(
 
 #[test]
 fn paint_stroke_refuses_locked_layers_and_locked_ancestors(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap().iter().filter(|case|matches!(case["id"].as_str().unwrap(),"locked-pixel"|"editable-pixel"|"inherited-pixel"|"outside")){
         let mut host=RasterHost::new();host.set_size(100,100,1.0);host.sync_document_json(&serde_json::json!({"schema":"raster.document","layers":fixture["layers"]}).to_string()).unwrap();
         host.sync_interaction(&[case["id"].as_str().unwrap().into()],None);host.set_active_utility("paintBrush");let (x,y)=host.world_to_screen_point(0.0,0.0);
@@ -471,7 +471,7 @@ fn paint_stroke_refuses_locked_layers_and_locked_ancestors(){
 
 #[test]
 fn paint_stroke_revision_changes_cancel_only_invalidated_gestures(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🖌️stroke-revision/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🖌️stroke-revision/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap(){
         let mut host=RasterHost::new();host.set_size(100,100,1.0);host.sync_document_json(&fixture["document"].to_string()).unwrap();host.sync_interaction(&["paint".into()],None);host.set_active_utility("paintBrush");
         let (x,y)=host.world_to_screen_point(0.0,0.0);host.pointer_down_screen(x,y,0);assert!(host.paint_gesture.is_some());
@@ -880,7 +880,7 @@ fn navigator_fit_camera_json_falls_back_when_document_is_empty() {
 
 #[test]
 fn empty_layer_is_transparent_and_does_not_allocate_or_paint_a_checkerboard_asset() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🫥️empty-layer/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🫥️empty-layer/🔣️.json")).unwrap();
     let mut host = RasterHost::new();
     let width = fixture["layerWidth"].as_u64().unwrap() as u32;
     let height = fixture["layerHeight"].as_u64().unwrap() as u32;
@@ -893,7 +893,7 @@ fn empty_layer_is_transparent_and_does_not_allocate_or_paint_a_checkerboard_asse
 
 #[test]
 fn paint_mask_stroke_captures_intrinsic_coordinates_on_the_mask_target(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎭️mask-stroke/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎭️mask-stroke/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap(){for erase in [false,true]{
         let mut host=RasterHost::new();host.set_size(100,100,1.0);host.sync_document_json(&case["document"].to_string()).unwrap();
         for (key,asset) in case["assets"].as_object().unwrap(){host.upload_raster_image_key(key,&png_bytes(asset["width"].as_u64().unwrap() as u32,asset["height"].as_u64().unwrap() as u32)).unwrap();}
@@ -906,7 +906,7 @@ fn paint_mask_stroke_captures_intrinsic_coordinates_on_the_mask_target(){
 
 #[test]
 fn paint_mask_stroke_cancels_on_mask_placement_or_target_change(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎭️mask-stroke/🔣️.json")).unwrap();let base=&fixture["cases"][0];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎭️mask-stroke/🔣️.json")).unwrap();let base=&fixture["cases"][0];
     for case in fixture["revisions"].as_array().unwrap(){
         let mut host=RasterHost::new();host.sync_document_json(&base["document"].to_string()).unwrap();host.upload_raster_image_key("m",&png_bytes(3,1)).unwrap();host.sync_interaction(&["p".into()],None);host.set_active_utility("paintBrush");host.set_paint_target(PaintTarget::Mask);host.pointer_down_screen(50.0,50.0,0);assert!(host.paint_gesture.is_some());
         let mut document=base["document"].clone();for patch in case["patch"].as_array().unwrap(){*document.pointer_mut(patch["path"].as_str().unwrap()).unwrap()=patch["value"].clone();}host.sync_document_json(&document.to_string()).unwrap();host.pointer_up_screen(50.0,50.0);assert_eq!(host.take_paint_edit().is_none(),case["cancel"].as_bool().unwrap(),"{}",case["name"]);host.pointer_down_screen(50.0,50.0,0);assert_eq!(host.paint_gesture.is_some(),case["admit"].as_bool().unwrap(),"{}",case["name"]);

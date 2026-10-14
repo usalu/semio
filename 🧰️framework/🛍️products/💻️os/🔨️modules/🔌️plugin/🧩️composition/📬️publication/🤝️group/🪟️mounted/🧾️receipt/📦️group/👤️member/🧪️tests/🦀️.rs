@@ -1,8 +1,8 @@
-struct MemberReceiptOperation(String);
+pub(crate) struct MemberReceiptOperation(pub(crate) String);
 impl store::ArtifactCanonicalJson for MemberReceiptOperation {
     fn canonical_json_node(&self, path: &[usize]) -> Result<store::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> { if path.is_empty() { Ok(store::ArtifactCanonicalJsonNode::String(&self.0)) } else { Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "neutral receipt operation has only its original string root")) } }
 }
-struct MemberReceiptPublication { edit: String, forward: Vec<MemberReceiptOperation>, inverse: Vec<MemberReceiptOperation>, metadata: Vec<protocol::MutationMeta>, schemas: Vec<(String,String)> }
+pub(crate) struct MemberReceiptPublication { pub(crate) edit: String, pub(crate) forward: Vec<MemberReceiptOperation>, inverse: Vec<MemberReceiptOperation>, metadata: Vec<protocol::MutationMeta>, schemas: Vec<(String,String)> }
 impl store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication for MemberReceiptPublication {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any { self }
     fn phase(&self) -> store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase { store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Publishing }
@@ -23,7 +23,7 @@ impl store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication 
     fn close_step(&mut self, _: RetainedCloneGrant) -> Result<store::RetainedCloneStep, ValueError> { Ok(store::RetainedCloneStep::Progress(Default::default())) }
     fn terminal_is_empty(&self) -> bool { false }
 }
-fn member_receipt_fixture(fixture: &serde_json::Value, count: usize, inverse_count: usize) -> MemberReceiptPublication {
+pub(crate) fn member_receipt_fixture(fixture: &serde_json::Value, count: usize, inverse_count: usize) -> MemberReceiptPublication {
     let operation = |text: &str| { let mut original = String::with_capacity(fixture["payloadCapacity"].as_u64().unwrap() as usize); original.push_str(text); MemberReceiptOperation(original) };
     MemberReceiptPublication {
         edit: fixture["editId"].as_str().unwrap().into(),
@@ -33,7 +33,7 @@ fn member_receipt_fixture(fixture: &serde_json::Value, count: usize, inverse_cou
         metadata: fixture["operations"].as_array().unwrap().iter().take(count).map(|row| protocol::MutationMeta { mutation_id: Some(MutationId(row["id"].as_str().unwrap().into())), dependencies: row["dependencies"].as_array().unwrap().iter().map(|id| MutationId(id.as_str().unwrap().into())).collect(), base_version: row["baseVersion"].as_u64().unwrap(), author_id: row["author"].as_str().map(|id| ActorId(id.into())), timestamp: HybridLogicalTimestamp { actor: row["clock"][0].as_u64().unwrap(), physical_ms: row["clock"][1].as_u64().unwrap(), logical: row["clock"][2].as_u64().unwrap() }, undo_policy: UndoPolicy::ExactBaseOnly, payload_hash: None, semantic_kind: None, label: None, group_id: Some(fixture["groupId"].as_str().unwrap().into()), origin: protocol::MutationOrigin::Owner, transaction: None }).collect(),
     }
 }
-fn member_receipt_source<'a>(fixture: &'a serde_json::Value, publication: &'a MemberReceiptPublication, _index: usize) -> MountedMemberReceiptSource<'a> {
+pub(crate) fn member_receipt_source<'a>(fixture: &'a serde_json::Value, publication: &'a MemberReceiptPublication, _index: usize) -> MountedMemberReceiptSource<'a> {
     MountedMemberReceiptSource { publication, document: ArtifactHandle(fixture["document"].as_u64().unwrap() as u128), invocation_id: fixture["invocationId"].as_str().unwrap(), group_id: fixture["groupId"].as_str().unwrap(), fallback_author: fixture["fallbackAuthor"].as_str().unwrap() }
 }
 fn member_receipt_close(owner: &mut MountedMemberReceipt) {
@@ -64,7 +64,7 @@ fn member_receipt_drive(owner: &mut MountedMemberReceipt, fixture: &serde_json::
 }
 #[test]
 fn mounted_member_receipt_preserves_ordered_multiple_operations_and_original_causal_owners() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture["maximumCopyBytes"],64);assert_eq!(fixture["maximumCapacityBytes"],MOUNTED_RECEIPT_MAXIMUM_BYTES);assert_eq!(fixture["operations"][0]["text"].as_str().unwrap().len(),8194);
     for (count,inverse_count) in [(0,0),(1,0),(2,2)] {
         let publication = member_receipt_fixture(&fixture,count,inverse_count); let original: Vec<_> = publication.forward.iter().map(|body| (body.0.as_ptr(),body.0.capacity())).collect();
@@ -87,7 +87,7 @@ fn mounted_member_receipt_preserves_ordered_multiple_operations_and_original_cau
 }
 #[test]
 fn mounted_member_receipt_cancellation_preserves_every_original_owner_and_partial_transfer() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for turns in fixture["cancelTurns"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize).chain([12000]) {
         let publication=member_receipt_fixture(&fixture,2,2);let source=member_receipt_source(&fixture,&publication,0);let mut owner=MountedMemberReceipt::new(&source).unwrap();member_receipt_drive(&mut owner,&fixture,&publication,turns);
         if owner.is_complete() { let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:64};let (triple,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.take_next_triple(grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(triple.0.id.0,"mutation:one");drop(triple);assert_eq!(owner.triples.len(),1); }
@@ -96,6 +96,6 @@ fn mounted_member_receipt_cancellation_preserves_every_original_owner_and_partia
 }
 #[test]
 fn mounted_member_receipt_refuses_missing_original_metadata_before_acknowledgment() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for refusal in 0..4 { let mut publication=member_receipt_fixture(&fixture,2,2);match refusal {0=>publication.metadata[0].mutation_id=None,1=>publication.metadata[0].group_id=Some("foreign-group".into()),2=>publication.metadata.clear(),_=>publication.metadata[0].group_id=Some("x".repeat(fixture["groupId"].as_str().unwrap().len()))};let source=member_receipt_source(&fixture,&publication,0);let mut owner=MountedMemberReceipt::new(&source).unwrap();if refusal == 3 { let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:64};assert_eq!(owner.next_capacity_byte_demand(&source).unwrap(),0);assert!(owner.advance(&source,grant).is_err()); } else { assert!(owner.next_capacity_byte_demand(&source).is_err()); } assert!(!owner.is_complete());assert_eq!(publication.forward.len(),2);member_receipt_close(&mut owner);println!("[DEBUG] member receipt refused original metadata case={refusal} before codec birth or acknowledgment; original publication owners unchanged"); }
 }

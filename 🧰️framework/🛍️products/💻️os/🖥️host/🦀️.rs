@@ -534,7 +534,7 @@ use semio_framework_value::ValueError;
     /// 🧺️ Retires a copied backbone envelope through its exact bounded owner catalogue.
     fn close_backbone_envelope<P, Op>(envelope: ArtifactEnvelope<P, Op>) -> Result<(), VcsError>
     where
-        P: Clone + ToValue + FromValue + store::os_store::serialization::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
         Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
         use store::ErasedSnapshotRetirement as _;
@@ -560,7 +560,7 @@ use semio_framework_value::ValueError;
     /// 🧺️ Lends a copied authoritative envelope, then retires every exact nested owner.
     fn with_backbone_envelope<P, Op, R>(document: &BackboneDocument<P, Op>, read: impl FnOnce(&ArtifactEnvelope<P, Op>) -> Result<R, VcsError>) -> Result<R, VcsError>
     where
-        P: Clone + ToValue + FromValue + store::os_store::serialization::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
         Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
         let envelope = backbone_envelope_of(document);
@@ -571,7 +571,7 @@ use semio_framework_value::ValueError;
 
     pub fn materialize_backbone_snapshot<P, Op>(document: &BackboneDocument<P, Op>, applied_edit_ids: &[String]) -> Result<P, VcsError>
     where
-        P: Clone + ToValue + FromValue + store::os_store::serialization::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
         Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
         with_backbone_envelope(document, |envelope| resolve_kernel_future(materialize_document_snapshot(envelope, applied_edit_ids)))
@@ -580,7 +580,7 @@ use semio_framework_value::ValueError;
     /// 📤️ Exports an already-loaded backbone document as pack bytes + ops text.
     pub fn export_backbone_pack<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::os_store::serialization::ArtifactPackFiles, VcsError>
     where
-        P: Clone + ToValue + FromValue + store::os_store::serialization::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
         Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
         with_backbone_envelope(document, |envelope| resolve_kernel_future(store::os_store::text_format::print_document_pack(envelope)))
@@ -589,7 +589,7 @@ use semio_framework_value::ValueError;
     /// 📤️ DSL-text counterpart of `export_backbone_pack`.
     pub fn export_backbone_dsl<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::os_store::text_format::ArtifactTextFiles, VcsError>
     where
-        P: Clone + ToValue + FromValue + store::os_store::serialization::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static + store::os_store::serialization::ArtifactDsl,
+        P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static + pack::snapshot::ArtifactDsl,
         Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
         with_backbone_envelope(document, |envelope| resolve_kernel_future(store::os_store::text_format::print_document_text(envelope)))
@@ -601,7 +601,7 @@ use semio_framework_value::ValueError;
     /// undo/redo/checkpoint position.
     pub fn encode_backbone_payload<P, Op>(document: &BackboneDocument<P, Op>) -> Result<Vec<u8>, VcsError>
     where
-        P: Clone + ToValue + FromValue + store::os_store::serialization::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
         Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
         let files = with_backbone_envelope(document, |envelope| resolve_kernel_future(store::os_store::text_format::print_document_pack(envelope)))?;
@@ -613,7 +613,7 @@ use semio_framework_value::ValueError;
     /// document kind's bytes as another.
     pub fn decode_backbone_payload<P, Op>(bytes: &[u8], expected_schema: &str) -> Result<BackboneDocument<P, Op>, VcsError>
     where
-        P: Clone + store::os_store::serialization::ArtifactPack + 'static,
+        P: Clone + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
         Op: Clone + protocol::OpText + protocol::OpBinary + Mutation<P> + 'static,
     {
         let (name_bytes, inner) = resolve_kernel_future(store::os_store::serialization::decode_document_pack_bytes(bytes))?;
@@ -1032,7 +1032,7 @@ use semio_framework_value::ValueError;
     /// shared by every catalog write path below (space manifests, collections).
     fn sync_backbone_document<P, Op>(document: &BackboneDocument<P, Op>, backbone_uri: &str, port: &Arc<OsBackbonePorts>) -> Result<(), VcsError>
     where
-        P: Clone + ToValue + FromValue + store::os_store::serialization::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
         Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
         let mut synced = document.clone();
@@ -1178,7 +1178,7 @@ use semio_framework_value::ValueError;
     /// backbone under the manifest's own name (the catalog lists a studio by its document name). Does not create a collection — a manifest imported this way is expected to already
     /// reference its own collections (a fresh, collection-less space only comes from `create_os_space`).
     pub fn import_os_space_from_dsl(dsl: &str, port: &Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
-        let snapshot = <space::SpaceSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(dsl).map_err(|error| VcsError::Deserialize(error.message))?;
+        let snapshot = <space::SpaceSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(dsl).map_err(|error| VcsError::Deserialize(error.message))?;
         let name = snapshot.name.trim().to_owned();
         admit_os_space_document(create_backbone_document(space::S_SPACE_SCHEMA, "", &name, snapshot), port)
     }
@@ -1446,7 +1446,7 @@ pub mod backbone {
                         } else {
                             match crate::host::resolve_kernel_future(storage.read(document_id, extension))? {
                                 Some(text_files) => {
-                                    let snapshot = <space::SpaceSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text_files.dsl).map_err(|error| VcsError::Deserialize(error.message))?;
+                                    let snapshot = <space::SpaceSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text_files.dsl).map_err(|error| VcsError::Deserialize(error.message))?;
                                     let document: crate::host::OsSpaceDocument = crate::host::create_backbone_document(space::S_SPACE_SCHEMA, document_id, "", snapshot);
                                     let pack_files = crate::host::export_backbone_pack(&document)?;
                                     (pack_files.pack, pack_files.spr)
@@ -1476,7 +1476,7 @@ pub mod backbone {
                     SpacePortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
                         let (pack, spr) = decode_os_space_pack_payload(payload)?;
                         let parsed: store::os_store::text_format::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = crate::host::resolve_kernel_future(store::os_store::text_format::parse_document_pack(&pack, &spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-                        let dsl_mirror = store::os_store::serialization::ArtifactDsl::print_dsl(&parsed.into_snapshot());
+                        let dsl_mirror = pack::snapshot::ArtifactDsl::print_dsl(&parsed.into_snapshot());
                         let pack_files = store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() };
                         return crate::host::resolve_kernel_future(storage.write_pack(document_id, extension, &pack_files, &dsl_mirror));
                     }

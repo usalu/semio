@@ -1,8 +1,8 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
-import corpus from "../🧫️fixtures/🔣️.json";
-import cellCorpus from "../🧫️fixtures/📏️cells/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
+import cellCorpus from "./🧫️fixtures/📏️cells/🔣️.json";
 
 const ddl=readFileSync(new URL("../🗄️.sql",import.meta.url),"utf8");
 test("Energy handcrafted SQL has exact relational IEEE and structural foreign-key domains",()=>{

@@ -1,0 +1,841 @@
+{
+  "schemaBytes": 56726,
+  "tableWidths": {
+    "semio_animation_channel": 7,
+    "semio_animation_document": 2,
+    "semio_animation_keyframe": 7,
+    "semio_animation_quaternion": 13,
+    "semio_animation_scalar": 4,
+    "semio_animation_timeline": 4,
+    "semio_animation_vector3": 10,
+    "semio_animation_weight": 6,
+    "semio_audio_channel": 3,
+    "semio_audio_document": 4,
+    "semio_audio_sample": 5,
+    "semio_audio_tag": 5,
+    "semio_base_document": 21,
+    "semio_brep_coedge": 16,
+    "semio_brep_curve2": 36,
+    "semio_brep_curve2_knot": 6,
+    "semio_brep_curve2_point": 9,
+    "semio_brep_curve2_weight": 6,
+    "semio_brep_curve3": 48,
+    "semio_brep_curve3_knot": 6,
+    "semio_brep_curve3_point": 12,
+    "semio_brep_curve3_weight": 6,
+    "semio_brep_document": 3,
+    "semio_brep_edge": 10,
+    "semio_brep_face": 10,
+    "semio_brep_inner_loop": 4,
+    "semio_brep_loop": 4,
+    "semio_brep_loop_edge": 5,
+    "semio_brep_shell": 4,
+    "semio_brep_shell_face": 5,
+    "semio_brep_solid": 4,
+    "semio_brep_solid_shell": 5,
+    "semio_brep_surface": 54,
+    "semio_brep_surface_knot_u": 6,
+    "semio_brep_surface_knot_v": 6,
+    "semio_brep_surface_point": 12,
+    "semio_brep_surface_weight": 6,
+    "semio_brep_vertex": 16,
+    "semio_cad_arc": 16,
+    "semio_cad_block": 10,
+    "semio_cad_circle": 10,
+    "semio_cad_dimension": 17,
+    "semio_cad_document": 2,
+    "semio_cad_ellipse": 22,
+    "semio_cad_entity": 7,
+    "semio_cad_insert": 17,
+    "semio_cad_layer": 7,
+    "semio_cad_line": 13,
+    "semio_cad_polyline": 2,
+    "semio_cad_polyline_vertex": 9,
+    "semio_cad_solid": 25,
+    "semio_cad_text": 14,
+    "semio_document_block": 2,
+    "semio_document_code": 3,
+    "semio_document_collection": 1,
+    "semio_document_document": 3,
+    "semio_document_heading": 3,
+    "semio_document_image": 6,
+    "semio_document_image_block": 9,
+    "semio_document_list": 2,
+    "semio_document_list_item": 4,
+    "semio_document_member": 4,
+    "semio_document_page_break": 1,
+    "semio_document_paragraph": 2,
+    "semio_document_quote": 2,
+    "semio_document_run": 13,
+    "semio_document_style": 6,
+    "semio_document_table": 1,
+    "semio_document_table_cell": 4,
+    "semio_document_table_row": 3,
+    "semio_drawing_arc": 18,
+    "semio_drawing_child": 4,
+    "semio_drawing_close": 1,
+    "semio_drawing_cubic": 19,
+    "semio_drawing_document": 20,
+    "semio_drawing_group": 31,
+    "semio_drawing_image": 15,
+    "semio_drawing_layer": 7,
+    "semio_drawing_line": 7,
+    "semio_drawing_move": 7,
+    "semio_drawing_node": 2,
+    "semio_drawing_path": 2,
+    "semio_drawing_quad": 13,
+    "semio_drawing_segment": 4,
+    "semio_drawing_style": 34,
+    "semio_drawing_text": 9,
+    "semio_flow_document": 2,
+    "semio_flow_edge": 9,
+    "semio_flow_node": 12,
+    "semio_flow_parameter": 5,
+    "semio_graph_document": 2,
+    "semio_graph_edge": 10,
+    "semio_graph_edge_property": 5,
+    "semio_graph_list_element": 4,
+    "semio_graph_map_entry": 5,
+    "semio_graph_node": 18,
+    "semio_graph_port": 6,
+    "semio_graph_port_property": 5,
+    "semio_graph_property": 5,
+    "semio_graph_value": 8,
+    "semio_image_document": 7,
+    "semio_image_frame": 4,
+    "semio_image_metadata": 5,
+    "semio_image_sample": 5,
+    "semio_kit_blob": 4,
+    "semio_kit_connection": 8,
+    "semio_kit_design": 5,
+    "semio_kit_document": 2,
+    "semio_kit_model_child": 5,
+    "semio_kit_object_child": 5,
+    "semio_kit_piece": 35,
+    "semio_kit_reference": 5,
+    "semio_kit_representation": 8,
+    "semio_kit_type": 6,
+    "semio_kit_value_child": 4,
+    "semio_mesh_color": 15,
+    "semio_mesh_document": 2,
+    "semio_mesh_index": 4,
+    "semio_mesh_material": 27,
+    "semio_mesh_mesh": 4,
+    "semio_mesh_normal": 12,
+    "semio_mesh_position": 12,
+    "semio_mesh_primitive": 6,
+    "semio_mesh_texture": 6,
+    "semio_mesh_uv": 9,
+    "semio_model_document": 2,
+    "semio_model_element": 4,
+    "semio_model_entity": 5,
+    "semio_model_geometry_reference": 3,
+    "semio_model_placement": 31,
+    "semio_model_property": 10,
+    "semio_model_property_set": 4,
+    "semio_model_relation": 8,
+    "semio_model_spatial": 4,
+    "semio_object_brep_child": 4,
+    "semio_object_document": 32,
+    "semio_object_mesh_child": 4,
+    "semio_object_reference": 5,
+    "semio_object_value_child": 4,
+    "semio_presentation_block": 2,
+    "semio_presentation_code": 3,
+    "semio_presentation_collection": 1,
+    "semio_presentation_document": 2,
+    "semio_presentation_heading": 3,
+    "semio_presentation_image_block": 9,
+    "semio_presentation_layout": 5,
+    "semio_presentation_list": 2,
+    "semio_presentation_list_item": 4,
+    "semio_presentation_master": 4,
+    "semio_presentation_member": 4,
+    "semio_presentation_page_break": 1,
+    "semio_presentation_paragraph": 2,
+    "semio_presentation_picture": 4,
+    "semio_presentation_placeholder": 3,
+    "semio_presentation_quote": 2,
+    "semio_presentation_run": 13,
+    "semio_presentation_shape": 18,
+    "semio_presentation_shape_table": 1,
+    "semio_presentation_shape_table_cell": 4,
+    "semio_presentation_shape_table_row": 3,
+    "semio_presentation_slide": 6,
+    "semio_presentation_table": 1,
+    "semio_presentation_table_cell": 4,
+    "semio_presentation_table_row": 3,
+    "semio_presentation_text_box": 2,
+    "semio_table_cell": 4,
+    "semio_table_column": 5,
+    "semio_table_document": 2,
+    "semio_table_list_element": 4,
+    "semio_table_map_entry": 5,
+    "semio_table_row": 3,
+    "semio_table_value": 8,
+    "semio_text_document": 2,
+    "semio_text_mark": 5,
+    "semio_text_run": 5,
+    "semio_value_document": 3,
+    "semio_value_list_element": 4,
+    "semio_value_map_entry": 5,
+    "semio_value_node": 5,
+    "semio_value_value": 8,
+    "semio_video_document": 2,
+    "semio_video_sample": 6,
+    "semio_video_stream": 9
+  },
+  "cases": [
+    {
+      "id": "brep",
+      "sourceSnapshot": {
+        "schema": "stdio.semio",
+        "subset": {
+          "subset": "brep",
+          "schema": "stdio.semio.brep",
+          "vertices": [],
+          "edges": [],
+          "loops": [],
+          "faces": [],
+          "shells": [],
+          "solids": [],
+          "coedges": [],
+          "nextLabel": "0"
+        }
+      },
+      "rows": 2,
+      "valueBytes": 56
+    },
+    {
+      "id": "mesh",
+      "sourceSnapshot": {
+        "schema": "stdio.semio",
+        "subset": {
+          "subset": "mesh",
+          "schema": "stdio.semio.mesh",
+          "meshes": [],
+          "materials": [],
+          "textures": []
+        }
+      },
+      "rows": 2,
+      "valueBytes": 55
+    },
+    {
+      "id": "model",
+      "sourceSnapshot": {
+        "schema": "stdio.semio",
+        "subset": {
+          "subset": "model",
+          "schema": "stdio.semio.model",
+          "spatial": [],
+          "elements": [],
+          "relations": []
+        }
+      },
+      "rows": 2,
+      "valueBytes": 57
+    },
+    {
+      "id": "value",
+      "sourceSnapshot": {
+        "schema": "stdio.semio",
+        "subset": {
+          "subset": "value",
+          "schema": "stdio.semio.value",
+          "root": {
+            "kind": "null"
+          },
+          "nodes": []
+        }
+      },
+      "rows": 3,
+      "valueBytes": 77
+    },
+    {
+      "id": "document",
+      "sourceSnapshot": {
+        "schema": "stdio.semio",
+        "subset": {
+          "subset": "document",
+          "schema": "s.stdio.semio.document",
+          "styles": [],
+          "images": [],
+          "blocks": []
+        }
+      },
+      "rows": 3,
+      "valueBytes": 81
+    },
+    {
+      "id": "cad",
+      "sourceSnapshot": {
+        "schema": "stdio.semio",
+        "subset": {
+          "subset": "cad",
+          "schema": "stdio.semio.cad",
+          "layers": [],
+          "blocks": [],
+          "entities": []
+        }
+      },
+      "rows": 2,
+      "valueBytes": 53
+    },
+    {
+      "id": "drawing",
+      "sourceSnapshot": {
+        "schema": "stdio.semio",
+        "subset": {
+          "subset": "drawing",
+          "schema": "stdio.semio.drawing",
+          "canvas": {
+            "width": {
+              "bits": "0000000000000000"
+            },
+            "height": {
+              "bits": "0000000000000000"
+            }
+          },
+          "styles": [],
+          "layers": []
+        }
+      },
+      "rows": 2,
+      "valueBytes": 105
+    },
+    {
+      "id": "image",
+      "sourceSnapshot": {
+        "schema": "stdio.semio",
+        "subset": {
+          "subset": "image",
+          "schema": "s.stdio.semio.image",
+          "width": 0,
+          "height": 0,
+          "colorspace": "rgb",
+          "bitDepth": 0,
+          "frames": [],
+          "icc": null,
+          "metadata": []
+        }
+      },
+      "rows": 2,
+      "valueBytes": 86
+    },
+    {
+      "id": "video",
+      "sourceSnapshot": {
+        "schema": "stdio.semio",
+        "subset": {
+          "subset": "video",
+          "schema": "stdio.semio.video",
+          "streams": []
+        }
+      },
+      "rows": 2,
+      "valueBytes": 57
+    },
+    {
+      "id": "audio",
+      "sourceSnapshot": {
+        "schema": "stdio.semio",
+        "subset": {
+          "subset": "audio",
+          "schema": "stdio.semio.audio",
+          "sampleRate": 0,
+          "format": "pcm16",
+          "channels": [],
+          "tags": []
+        }
+      },
+      "rows": 2,
+      "valueBytes": 70
+    },
+    {
+      "id": "animation",
+      "sourceSnapshot": {
+        "schema": "stdio.semio",
+        "subset": {
+          "subset": "animation",
+          "schema": "s.stdio.semio.animation",
+          "timelines": []
+        }
+      },
+      "rows": 2,
+      "valueBytes": 67
+    },
+    {
+      "id": "presentation",
+      "sourceSnapshot": {
+        "schema": "stdio.semio",
+        "subset": {
+          "subset": "presentation",
+          "schema": "s.stdio.semio.presentation",
+          "masters": [],
+          "layouts": [],
+          "slides": []
+        }
+      },
+      "rows": 2,
+      "valueBytes": 73
+    },
+    {
+      "id": "flow",
+      "sourceSnapshot": {
+        "schema": "stdio.semio",
+        "subset": {
+          "subset": "flow",
+          "schema": "stdio.semio.flow",
+          "nodes": [],
+          "edges": []
+        }
+      },
+      "rows": 2,
+      "valueBytes": 55
+    },
+    {
+      "id": "text",
+      "sourceSnapshot": {
+        "schema": "stdio.semio",
+        "subset": {
+          "subset": "text",
+          "schema": "s.stdio.semio.text",
+          "runs": []
+        }
+      },
+      "rows": 2,
+      "valueBytes": 57
+    },
+    {
+      "id": "table",
+      "sourceSnapshot": {
+        "schema": "stdio.semio",
+        "subset": {
+          "subset": "table",
+          "schema": "s.stdio.semio.table",
+          "columns": [],
+          "rows": []
+        }
+      },
+      "rows": 2,
+      "valueBytes": 59
+    },
+    {
+      "id": "graph",
+      "sourceSnapshot": {
+        "schema": "stdio.semio",
+        "subset": {
+          "subset": "graph",
+          "schema": "s.stdio.semio.graph",
+          "nodes": [],
+          "edges": []
+        }
+      },
+      "rows": 2,
+      "valueBytes": 59
+    },
+    {
+      "id": "object",
+      "sourceSnapshot": {
+        "schema": "stdio.semio",
+        "subset": {
+          "subset": "object",
+          "schema": "stdio.semio.object",
+          "transform": {
+            "translation": {
+              "x": {
+                "bits": "0000000000000000"
+              },
+              "y": {
+                "bits": "0000000000000000"
+              },
+              "z": {
+                "bits": "0000000000000000"
+              }
+            },
+            "rotation": {
+              "x": {
+                "bits": "0000000000000000"
+              },
+              "y": {
+                "bits": "0000000000000000"
+              },
+              "z": {
+                "bits": "0000000000000000"
+              },
+              "w": {
+                "bits": "3ff0000000000000"
+              }
+            },
+            "scale": {
+              "x": {
+                "bits": "3ff0000000000000"
+              },
+              "y": {
+                "bits": "3ff0000000000000"
+              },
+              "z": {
+                "bits": "3ff0000000000000"
+              }
+            }
+          }
+        }
+      },
+      "rows": 2,
+      "valueBytes": 279
+    },
+    {
+      "id": "kit",
+      "sourceSnapshot": {
+        "schema": "stdio.semio",
+        "subset": {
+          "subset": "kit",
+          "schema": "stdio.semio.kit",
+          "types": [],
+          "designs": [],
+          "objects": [],
+          "models": [],
+          "representations": []
+        }
+      },
+      "rows": 2,
+      "valueBytes": 53
+    }
+  ],
+  "publicIo": {
+    "schemaBytes": 57019,
+    "tableWidths": {
+      "semio_animation_channel": 7,
+      "semio_animation_document": 2,
+      "semio_animation_keyframe": 7,
+      "semio_animation_quaternion": 13,
+      "semio_animation_scalar": 4,
+      "semio_animation_timeline": 4,
+      "semio_animation_vector3": 10,
+      "semio_animation_weight": 6,
+      "semio_audio_channel": 3,
+      "semio_audio_document": 4,
+      "semio_audio_sample": 5,
+      "semio_audio_tag": 5,
+      "semio_base_document": 21,
+      "semio_brep_coedge": 16,
+      "semio_brep_curve2": 36,
+      "semio_brep_curve2_knot": 6,
+      "semio_brep_curve2_point": 9,
+      "semio_brep_curve2_weight": 6,
+      "semio_brep_curve3": 48,
+      "semio_brep_curve3_knot": 6,
+      "semio_brep_curve3_point": 12,
+      "semio_brep_curve3_weight": 6,
+      "semio_brep_document": 3,
+      "semio_brep_edge": 10,
+      "semio_brep_face": 10,
+      "semio_brep_inner_loop": 4,
+      "semio_brep_loop": 4,
+      "semio_brep_loop_edge": 5,
+      "semio_brep_shell": 4,
+      "semio_brep_shell_face": 5,
+      "semio_brep_solid": 4,
+      "semio_brep_solid_shell": 5,
+      "semio_brep_surface": 54,
+      "semio_brep_surface_knot_u": 6,
+      "semio_brep_surface_knot_v": 6,
+      "semio_brep_surface_point": 12,
+      "semio_brep_surface_weight": 6,
+      "semio_brep_vertex": 16,
+      "semio_cad_arc": 16,
+      "semio_cad_block": 10,
+      "semio_cad_circle": 10,
+      "semio_cad_dimension": 17,
+      "semio_cad_document": 2,
+      "semio_cad_ellipse": 22,
+      "semio_cad_entity": 7,
+      "semio_cad_insert": 17,
+      "semio_cad_layer": 7,
+      "semio_cad_line": 13,
+      "semio_cad_polyline": 2,
+      "semio_cad_polyline_vertex": 9,
+      "semio_cad_solid": 25,
+      "semio_cad_text": 14,
+      "semio_document_block": 2,
+      "semio_document_code": 3,
+      "semio_document_collection": 1,
+      "semio_document_document": 3,
+      "semio_document_heading": 3,
+      "semio_document_image": 6,
+      "semio_document_image_block": 9,
+      "semio_document_list": 2,
+      "semio_document_list_item": 4,
+      "semio_document_member": 4,
+      "semio_document_page_break": 1,
+      "semio_document_paragraph": 2,
+      "semio_document_quote": 2,
+      "semio_document_run": 13,
+      "semio_document_style": 6,
+      "semio_document_table": 1,
+      "semio_document_table_cell": 4,
+      "semio_document_table_row": 3,
+      "semio_drawing_arc": 18,
+      "semio_drawing_child": 4,
+      "semio_drawing_close": 1,
+      "semio_drawing_cubic": 19,
+      "semio_drawing_document": 20,
+      "semio_drawing_group": 31,
+      "semio_drawing_image": 15,
+      "semio_drawing_layer": 7,
+      "semio_drawing_line": 7,
+      "semio_drawing_move": 7,
+      "semio_drawing_node": 2,
+      "semio_drawing_path": 2,
+      "semio_drawing_quad": 13,
+      "semio_drawing_segment": 4,
+      "semio_drawing_style": 34,
+      "semio_drawing_text": 9,
+      "semio_flow_document": 2,
+      "semio_flow_edge": 9,
+      "semio_flow_node": 12,
+      "semio_flow_parameter": 5,
+      "semio_graph_document": 2,
+      "semio_graph_edge": 10,
+      "semio_graph_edge_property": 5,
+      "semio_graph_list_element": 4,
+      "semio_graph_map_entry": 5,
+      "semio_graph_node": 18,
+      "semio_graph_port": 6,
+      "semio_graph_port_property": 5,
+      "semio_graph_property": 5,
+      "semio_graph_value": 8,
+      "semio_image_document": 7,
+      "semio_image_frame": 4,
+      "semio_image_metadata": 5,
+      "semio_image_sample": 5,
+      "semio_kit_blob": 4,
+      "semio_kit_connection": 8,
+      "semio_kit_design": 5,
+      "semio_kit_document": 2,
+      "semio_kit_model_child": 5,
+      "semio_kit_object_child": 5,
+      "semio_kit_piece": 35,
+      "semio_kit_reference": 5,
+      "semio_kit_representation": 8,
+      "semio_kit_type": 6,
+      "semio_kit_value_child": 4,
+      "semio_mesh_color": 15,
+      "semio_mesh_document": 2,
+      "semio_mesh_index": 4,
+      "semio_mesh_material": 27,
+      "semio_mesh_mesh": 4,
+      "semio_mesh_normal": 12,
+      "semio_mesh_position": 12,
+      "semio_mesh_primitive": 6,
+      "semio_mesh_texture": 6,
+      "semio_mesh_uv": 9,
+      "semio_model_document": 2,
+      "semio_model_element": 4,
+      "semio_model_entity": 5,
+      "semio_model_geometry_reference": 3,
+      "semio_model_placement": 31,
+      "semio_model_property": 10,
+      "semio_model_property_set": 4,
+      "semio_model_relation": 8,
+      "semio_model_spatial": 4,
+      "semio_object_brep_child": 4,
+      "semio_object_document": 32,
+      "semio_object_mesh_child": 4,
+      "semio_object_reference": 5,
+      "semio_object_value_child": 4,
+      "semio_presentation_block": 2,
+      "semio_presentation_code": 3,
+      "semio_presentation_collection": 1,
+      "semio_presentation_document": 2,
+      "semio_presentation_heading": 3,
+      "semio_presentation_image_block": 9,
+      "semio_presentation_layout": 5,
+      "semio_presentation_list": 2,
+      "semio_presentation_list_item": 4,
+      "semio_presentation_master": 4,
+      "semio_presentation_member": 4,
+      "semio_presentation_page_break": 1,
+      "semio_presentation_paragraph": 2,
+      "semio_presentation_picture": 4,
+      "semio_presentation_placeholder": 3,
+      "semio_presentation_quote": 2,
+      "semio_presentation_run": 13,
+      "semio_presentation_shape": 18,
+      "semio_presentation_shape_table": 1,
+      "semio_presentation_shape_table_cell": 4,
+      "semio_presentation_shape_table_row": 3,
+      "semio_presentation_slide": 6,
+      "semio_presentation_table": 1,
+      "semio_presentation_table_cell": 4,
+      "semio_presentation_table_row": 3,
+      "semio_presentation_text_box": 2,
+      "semio_snapshot": 6,
+      "semio_table_cell": 4,
+      "semio_table_column": 5,
+      "semio_table_document": 2,
+      "semio_table_list_element": 4,
+      "semio_table_map_entry": 5,
+      "semio_table_row": 3,
+      "semio_table_value": 8,
+      "semio_text_document": 2,
+      "semio_text_mark": 5,
+      "semio_text_run": 5,
+      "semio_value_document": 3,
+      "semio_value_list_element": 4,
+      "semio_value_map_entry": 5,
+      "semio_value_node": 5,
+      "semio_value_value": 8,
+      "semio_video_document": 2,
+      "semio_video_sample": 6,
+      "semio_video_stream": 9
+    },
+    "cases": [
+      {
+        "id": "brep",
+        "rows": 3,
+        "valueBytes": {
+          "binary": 94,
+          "text": 92
+        }
+      },
+      {
+        "id": "mesh",
+        "rows": 3,
+        "valueBytes": {
+          "binary": 93,
+          "text": 91
+        }
+      },
+      {
+        "id": "model",
+        "rows": 3,
+        "valueBytes": {
+          "binary": 95,
+          "text": 93
+        }
+      },
+      {
+        "id": "value",
+        "rows": 4,
+        "valueBytes": {
+          "binary": 115,
+          "text": 113
+        }
+      },
+      {
+        "id": "document",
+        "rows": 4,
+        "valueBytes": {
+          "binary": 119,
+          "text": 117
+        }
+      },
+      {
+        "id": "cad",
+        "rows": 3,
+        "valueBytes": {
+          "binary": 91,
+          "text": 89
+        }
+      },
+      {
+        "id": "drawing",
+        "rows": 3,
+        "valueBytes": {
+          "binary": 143,
+          "text": 141
+        }
+      },
+      {
+        "id": "image",
+        "rows": 3,
+        "valueBytes": {
+          "binary": 124,
+          "text": 122
+        }
+      },
+      {
+        "id": "video",
+        "rows": 3,
+        "valueBytes": {
+          "binary": 95,
+          "text": 93
+        }
+      },
+      {
+        "id": "audio",
+        "rows": 3,
+        "valueBytes": {
+          "binary": 108,
+          "text": 106
+        }
+      },
+      {
+        "id": "animation",
+        "rows": 3,
+        "valueBytes": {
+          "binary": 105,
+          "text": 103
+        }
+      },
+      {
+        "id": "presentation",
+        "rows": 3,
+        "valueBytes": {
+          "binary": 111,
+          "text": 109
+        }
+      },
+      {
+        "id": "flow",
+        "rows": 3,
+        "valueBytes": {
+          "binary": 93,
+          "text": 91
+        }
+      },
+      {
+        "id": "text",
+        "rows": 3,
+        "valueBytes": {
+          "binary": 95,
+          "text": 93
+        }
+      },
+      {
+        "id": "table",
+        "rows": 3,
+        "valueBytes": {
+          "binary": 97,
+          "text": 95
+        }
+      },
+      {
+        "id": "graph",
+        "rows": 3,
+        "valueBytes": {
+          "binary": 97,
+          "text": 95
+        }
+      },
+      {
+        "id": "object",
+        "rows": 3,
+        "valueBytes": {
+          "binary": 317,
+          "text": 315
+        }
+      },
+      {
+        "id": "kit",
+        "rows": 3,
+        "valueBytes": {
+          "binary": 91,
+          "text": 89
+        }
+      }
+    ]
+  }
+}

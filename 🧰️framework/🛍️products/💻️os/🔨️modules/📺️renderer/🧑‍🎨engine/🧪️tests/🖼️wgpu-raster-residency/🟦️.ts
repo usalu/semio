@@ -6,12 +6,12 @@ import { describe, expect, it } from "vitest";
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const engineRoot = resolve(suiteRoot, "../..");
 const uiRoot = resolve(suiteRoot, "../../../../../../../🔨️modules/🖱️ui");
-const fixture = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/🖼️raster-residency/🔣️.json"), "utf8")) as {
+const fixture = JSON.parse(readFileSync(resolve(uiRoot, "🧪️tests/🧫️fixtures/🖼️raster-residency/🔣️.json"), "utf8")) as {
   readonly capacity: { readonly items: number; readonly bytes: number; readonly retirementUnitsPerStep: number };
   readonly sources: readonly string[];
   readonly scenarios: readonly { readonly name: string }[];
 };
-const capacityFixture = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/🖼️raster-capacity-followup/🔣️.json"), "utf8")) as {
+const capacityFixture = JSON.parse(readFileSync(resolve(uiRoot, "🧪️tests/🧫️fixtures/🖼️raster-capacity-followup/🔣️.json"), "utf8")) as {
   readonly identity: { readonly pageBytes: number; readonly digestLanes: number; readonly dimensionsIncluded: boolean };
   readonly capacity: { readonly items: number; readonly bytes: number; readonly changedFullPolicy: string };
   readonly scenarios: readonly { readonly name: string; readonly expected: { readonly presenterTargets?: number; readonly tableTargets?: number } }[];

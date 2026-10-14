@@ -184,7 +184,7 @@ fn writer_envelope_wire() -> Vec<u8> {
 
 #[test]
 fn interactive_job_fixture_matches_the_exact_factory_join() {
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎬️writer-migration/🔣️.json")).expect("language-neutral Writer migration fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🎬️writer-migration/🔣️.json")).expect("language-neutral Writer migration fixture");
     assert_eq!(fixture["payloadSchema"], WRITER_COMMAND_PAYLOAD_SCHEMA);
     assert_eq!(fixture["maxRawWireBytes"], MAX_WRITER_COMMAND_RAW_BYTES);
     assert_eq!(fixture["maxWorkUnitsPerStep"], 1);
@@ -718,7 +718,7 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     }
     assert!(!crate::writer_text(&snapshot).is_empty(), "the demo example must survive the archive door with its authored body, not an empty document");
     let derived = crate::genesis_writer_child_pack(&snapshot, "document", &snapshot.document.child_id).expect("the loaded snapshot still derives its own document member");
-    let document = <semio_s_artifact_stdio_semio_document::schema::snapshot::SemioDocumentSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&derived).expect("the derived document member decodes");
+    let document = <semio_s_artifact_stdio_semio_document::schema::snapshot::SemioDocumentSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&derived).expect("the derived document member decodes");
     let body: String = document
         .blocks
         .iter()

@@ -1,9 +1,9 @@
-import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { runRepositoryExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {parseFreshProcessPolicyV1} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🎛️control/🟦️.ts";
 import cargoCommandLimits from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🎛️policy/🔣️.json";
 import {repositoryCargoPreparationStorageV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
@@ -15,7 +15,7 @@ const GIS_SCHEMA_MODULE = "🌎️hub/🧩️compositions/🌍️gis/🧬️sche
 
 /** 🌉️ Proves the receipt-bound GIS cold-pair, tiled-map patch, and addressed mutation corpus. */
 export async function proveGisComponentColdMapPatch(repoRoot: string): Promise<void> {
-  const fixtureRoot = join(repoRoot, "🌎️hub/🧩️compositions/🌍️gis/🧫️fixtures/🌉️component-cold-map-patch");
+  const fixtureRoot = join(repoRoot, "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🧫️fixtures/🌉️component-cold-map-patch");
   const testRoot = join(repoRoot, "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🌉️component-cold-map-patch");
   const fixtureBytes = readFileSync(join(fixtureRoot, "🔣️.json"));
   const fixture = JSON.parse(fixtureBytes.toString("utf8"));
@@ -148,7 +148,7 @@ export class ComponentColdMapPatchNativeCheckScript extends BundleScript {
             const descriptor = readFileSync(join(stage, "descriptor.semio"));
             const descriptorSha256 = createHash("sha256").update(descriptor).digest("hex");
             if (createHash("sha256").update(stagedComponent).digest("hex") !== componentSha256) throw new Error("leased GIS component differs from staged component");
-            const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 86_400_000), listMilliseconds: 120_000, lawMilliseconds: 300_000 }, cwd: this.repoRoot, groups: [
+            const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 86_400_000), listMilliseconds: 120_000, lawMilliseconds: 300_000 }, cwd: this.repoRoot, groups: [
                 {
                   package: "semio-hub-gis",
                   target: { kind: "test", name: "component_cold_map_patch" },
@@ -163,7 +163,7 @@ export class ComponentColdMapPatchNativeCheckScript extends BundleScript {
                 SEMIO_GIS_COMPONENT_WASM: join(stage, "component.wasm"),
                 SEMIO_GIS_COMPONENT_SHA256: componentSha256,
                 SEMIO_GIS_DESCRIPTOR_SHA256: descriptorSha256,
-              }, nativeEnv: { RUST_MIN_STACK: process.env.SEMIO_TEST_NATIVE_RUST_MIN_STACK ?? "268435456" }, cancelled: control.cancelled, progress(event) {
+              }, nativeEnv: { RUST_MIN_STACK: process.env.SEMIO_TEST_NATIVE_RUST_MIN_STACK ?? "268435456" },  progress(event) {
                 console.log(`gis-component-cold-map-patch ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`);
               } });
             return { componentSha256, descriptorSha256, receipts };

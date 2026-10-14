@@ -122,7 +122,7 @@ pub fn edit_fill(source: Option<&FillStyle>, edit: &FillEdit) -> Result<Option<F
 mod tests {
     #[test]
     fn fill_edit_fixtures() {
-        let cases: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+        let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🎨️fill/🔣️.json")).unwrap();
         for case in cases.as_array().unwrap() {
             let source: Option<crate::FillStyle> = serde_json::from_value(case["before"].clone()).unwrap();
             let edit = serde_json::from_value(case["edit"].clone()).unwrap();

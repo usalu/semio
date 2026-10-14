@@ -12,11 +12,11 @@ mod tests {
     use crate::schema_metadata::examples::ConformanceCatalogExamples;
 
     //#region 🗂️Corpus
-    /// 📂️ `🧫️fixtures/🧪️conformance/`, resolved from this crate's own manifest dir so the harness
+    /// 📂️ `🧪️tests/🧫️fixtures/🧪️conformance`, resolved from this crate's own manifest dir so the harness
     /// works regardless of the caller's working directory.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn corpus_dir() -> PathBuf {
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧫️fixtures/🧪️conformance")
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../🧫️fixtures/🧪️conformance")
     }
 
     const GROUPS_WITHOUT_PATCH: &[&str] = &["🧩️component", "🖥️composite", "📐️layout", "♿️accessibility"];

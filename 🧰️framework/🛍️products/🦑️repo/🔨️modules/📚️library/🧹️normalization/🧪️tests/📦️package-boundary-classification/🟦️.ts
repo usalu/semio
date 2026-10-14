@@ -1,4 +1,4 @@
-import { testLevelAtLeast } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { testLevelAtLeast } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 //#region 🔌️Adapters
 import Ajv from "ajv/dist/2020";
 import { describe, expect, test } from "bun:test";
@@ -12,7 +12,7 @@ import { fixedContractScopeSpecificityRank, inventoryTaxonomy, inventoryTaxonomy
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
-const vectors = JSON.parse(readFileSync(new URL("../../🧫️fixtures/📦️package-boundary-classification/🔣️.json", import.meta.url), "utf8")) as {
+const vectors = JSON.parse(readFileSync(new URL("../🧫️fixtures/📦️package-boundary-classification/🔣️.json", import.meta.url), "utf8")) as {
   schemaVersion: 1;
   glueRoleCases: readonly { id: string; analyzer: PackageGlueGrammarSpec["analyzer"]; maxDelegationStatements: number; content: string; expectedRole: PackageSourceRole; expectedEvidence: string; oracle: "typescript-compiler" | "rust-syn" | "go-parser" | "python-parser" | "c-compiler"; dispositionValidator?: PackageSourceDisposition["validator"]; expectedDispositionRole?: PackageSourceRole; expectedSemanticDiagnostics?: readonly number[]; expectedExecuteBinding?: "import" | "local" }[];
   fixedScriptCases: readonly { id: string; placement: "root" | "domain" | "package"; manifest: "present" | "absent" | "not-applicable"; path: string; content: string; expectedDispositionRole: "tool-metadata" | "unresolved"; expectedFinding: "fixed-source-disposition-unresolved" | null; expectedSemanticDiagnostics?: readonly number[] }[];
@@ -800,7 +800,7 @@ describe("package boundary glue-content classification", () => {
 
   test("the remaining package-purity fixture stays registered as frozen history", () => {
     const contract = loadCatalogTaxonomy().frozenCoordinateEvidenceContracts["remaining-package-purity-history-v1"];
-    expect(contract?.path).toBe("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json");
+    expect(contract?.path).toBe("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json");
     const fixture = JSON.parse(readFileSync(join(repoRoot, contract!.path), "utf8"));
     expect(fixture.authority).toBe("remaining-package-purity-owner-projection");
     expect(fixture.decisionState).toBe("non-authoritative-concurrent-source-byte-drift");

@@ -1665,7 +1665,7 @@ pub enum RasterWitnessAdmission {
 /// unequal to the operation that owns it; re-reading the pair on every later step made a commit refuse
 /// its own progress with `raster commit candidate witness was stale`
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The law is
-/// `🖱️ui/🧫️fixtures/🖼️raster-witness-lifecycle/🔣️.json`.
+/// `🖱️ui/🧪️tests/🧫️fixtures/🖼️raster-witness-lifecycle/🔣️.json`.
 #[derive(Default)]
 pub struct RasterOperationWitnessLedger {
     candidate: RasterTextureWitnessSlot,

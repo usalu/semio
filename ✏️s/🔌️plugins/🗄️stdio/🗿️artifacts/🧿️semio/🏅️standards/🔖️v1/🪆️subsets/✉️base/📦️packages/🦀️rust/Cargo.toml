@@ -19,6 +19,7 @@ path = "../../🦀️.rs"
 testing = []
 
 [dependencies]
+semio-framework-pack = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }

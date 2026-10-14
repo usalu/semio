@@ -198,7 +198,7 @@ fn assert_bound_pointers_resolve(node: &BuiltNode, document: &serde_json::Value,
 
 #[test]
 fn details_render_a_shorter_window_when_the_arena_is_short_and_recover_when_it_is_not() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../✏️editing/🧫️fixtures/🎟️details-arena-headroom/🔣️.json")).expect("neutral arena-headroom fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../✏️editing/🧪️tests/🧫️fixtures/🎟️details-arena-headroom/🔣️.json")).expect("neutral arena-headroom fixture");
     let section = fixture["section"].as_str().expect("section key");
     let controller = fixture["controller"].as_str().expect("controller");
     let locales = [(Locale::En, "en"), (Locale::De, "de")];

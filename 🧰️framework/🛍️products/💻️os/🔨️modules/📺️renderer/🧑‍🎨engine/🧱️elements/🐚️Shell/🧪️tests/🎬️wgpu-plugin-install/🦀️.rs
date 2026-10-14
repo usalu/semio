@@ -1,7 +1,7 @@
 use super::*;
 
 fn activation_fixture() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🎬️artifact-activation/🔣️.json")).expect("neutral artifact activation corpus")
+    serde_json::from_str(include_str!("../🧫️fixtures/🎬️artifact-activation/🔣️.json")).expect("neutral artifact activation corpus")
 }
 
 fn activation_rows(corpus: &Value) -> Vec<(&str, &str)> {

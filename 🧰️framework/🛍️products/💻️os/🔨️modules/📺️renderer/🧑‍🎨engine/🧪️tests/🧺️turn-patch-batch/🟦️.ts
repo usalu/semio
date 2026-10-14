@@ -1,3 +1,4 @@
+import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
 /** 🧺️ The host decoder's half of the turn patch BATCH, as laws.
  *
  * A reactor turn result now carries EVERY surface that was ready and fits the turn's byte budget
@@ -35,7 +36,7 @@ const flush = async (times: number): Promise<void> => {
 async function fixture(actorId: string) {
   const sent: Sent[] = [];
   const worker: ShardWorkerLike = { onmessage: null, onerror: null, postMessage(message) { sent.push(message as Sent); }, terminate() {} };
-  const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1_048_576, slots: 4_096, owners: 4_096, control: { bytes: 65_536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
+  const client = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: new OwnedResidentLedger({ bytes: 1_048_576, slots: 4_096, owners: 4_096, control: { bytes: 65_536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
   const answer = async <T>(pending: Promise<T>, value: unknown): Promise<T> => {
     await flush(8);
     worker.onmessage!({ data: { kind: "result", requestId: sent.at(-1)!.requestId, ok: true, value } } as MessageEvent);

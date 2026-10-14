@@ -1,9 +1,9 @@
 import {parseFormsJsonQuestion,parseFormsJsonValue,formsValueJsonProjection} from "../../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
-import vectors from "../🧫️fixtures/🔣️.json";
+import vectors from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
-import contributionVectors from "../🧫️fixtures/🔣️contribution.json";
+import contributionVectors from "./🧫️fixtures/🔣️contribution.json";
 import contributionSchema from "../🧬️schema/🔣️contribution.json";
 import { questionKindLabel } from "../🟦️.ts";
 import { extensionRenderPayload } from "../🟦️.ts";

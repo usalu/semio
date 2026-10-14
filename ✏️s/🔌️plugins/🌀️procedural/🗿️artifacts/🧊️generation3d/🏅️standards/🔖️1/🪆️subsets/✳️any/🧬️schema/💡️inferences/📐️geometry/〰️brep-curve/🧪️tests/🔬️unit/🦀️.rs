@@ -4,7 +4,7 @@ use semio_framework_3d_brep_engine::Brep;
 #[path = "../../../🧪️tests/🧰️construction-support/🦀️.rs"]
 mod support;
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🔣️.json");
+const FIXTURE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/〰️brep-curve/🔣️.json");
 
 #[test]
 fn every_fixture_case_holds_at_fuel_one_and_at_unbounded_fuel() {

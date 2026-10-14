@@ -10,11 +10,11 @@ use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutat
 use crate::schema::{find_drawing_layer, layer_base};
 use crate::DrawingSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks/🎯️outcome/🔣️.json");
 
 fn before() -> DrawingSnapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")

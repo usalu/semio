@@ -3,7 +3,7 @@ import {expect, test} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync, existsSync} from "node:fs";
 import {resolve} from "node:path";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "../🧪️tests/🧫️fixtures/🔣️.json";
 
 test("original JSON operation declares every normal and retirement authority", () => {
   const validate = semioSchemaAjvV1({strict: true, allErrors: true}).compile(grantSchema);

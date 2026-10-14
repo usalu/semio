@@ -16,6 +16,8 @@ pub struct MemberOpenDeclaration {
     pub standard: &'static str,
     pub subset: &'static str,
     pub schema: &'static str,
+    pub history_limits:protocol::codec::HistoryReadLimits,
+    pub maximum_history_allocation_bytes:usize,
 }
 
 pub(crate) struct MemberFactorySelectionRejected {
@@ -93,6 +95,7 @@ impl<M: MemberFactory> MemberFactorySelection<M> {
         let declaration = &declarations[self.row];
         match self.phase {
             Phase::Validate => {
+                if declaration.maximum_history_allocation_bytes==0||declaration.history_limits.validate().is_err(){return Err(MemberOpenDiagnostic::Capacity)}
                 let text = |value: &str| !value.is_empty() && value.len() <= 256 && !value.chars().any(char::is_control);
                 if ![declaration.kind, declaration.standard, declaration.subset, declaration.schema].into_iter().all(text) || !semio_framework_artifact_reference::is_canonical_artifact_kind(declaration.kind) {
                     return Err(MemberOpenDiagnostic::Identity);
@@ -295,6 +298,14 @@ pub(crate) struct SelectedVerifiedMemberHistory<M: MemberFactory> {
 }
 
 impl<M: MemberFactory> SelectedVerifiedMemberHistory<M> {
+    pub(crate) fn original_history_close_source(&self,cx:&StepContext<'_>)->Result<super::super::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
+        self.input.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.original_history_close_source(cx)
+    }
+    pub(crate) fn original_history_source(&mut self,cx:&StepContext<'_>)->Result<super::super::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
+        self.input.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.original_history_source(cx)
+    }
+    pub(crate) fn history_limits(&self)->protocol::codec::HistoryReadLimits{self.declaration.history_limits}
+    pub(crate) fn maximum_history_allocation_bytes(&self)->usize{self.declaration.maximum_history_allocation_bytes}
     pub(crate) fn check_step_authority(&mut self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
         self.input.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.check_step_authority(cx)
     }

@@ -6,8 +6,8 @@ import {semioSchemaAjvV1} from "../../../../../../../../../../../../../../🧰�
 import {applyGroupIsolationEdit} from "../../🦠️mutation/🟦️.ts";
 import {inverse} from "../../↩️inverse/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
-import before from "../../../../../🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/⬅️before/🔣️.json";
-import after from "../../../../../🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/➡️after/🔣️.json";
+import before from "../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/⬅️before/🔣️.json";
+import after from "../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/➡️after/🔣️.json";
 test("isolation is an atomic group-only edit with a reversible authored default",()=>{
   const edit={layerId:"group-a",isolation:true};
   const validate=semioSchemaAjvV1({allErrors:true}).compile(schema);

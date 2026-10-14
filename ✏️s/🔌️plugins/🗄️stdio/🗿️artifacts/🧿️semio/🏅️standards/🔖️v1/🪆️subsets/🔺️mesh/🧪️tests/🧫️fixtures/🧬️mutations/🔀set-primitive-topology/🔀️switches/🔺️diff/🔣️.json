@@ -1,0 +1,21 @@
+{
+  "meshes": {
+    "modified": [
+      {
+        "key": "mesh-a",
+        "diff": {
+          "primitives": {
+            "modified": [
+              {
+                "key": "prim-a",
+                "diff": {
+                  "topology": "triangleStrip"
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

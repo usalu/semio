@@ -5,7 +5,7 @@ async fn block_list_gestures_reach_mounted_document_commands() {
     use crate::editor::forms::{unit_tests::context, FormsCommand, FormsPlayApp};
     use semio_framework_plugin::{artifact_app_laws, ArtifactEditor, PluginApp, ViewModel, ViewWindowInstance};
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️actions.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️actions.json")).unwrap();
     let steps: Vec<crate::FormStep> = serde_json::from_value(fixture["initial"]["steps"].clone()).unwrap();
     let initial = crate::forms_snapshot_with_state(crate::FORMS_DOCUMENT_SCHEMA.into(), "gestures".into(), "1".into(), None, &steps);
     let mut app = context::forms_app().await;

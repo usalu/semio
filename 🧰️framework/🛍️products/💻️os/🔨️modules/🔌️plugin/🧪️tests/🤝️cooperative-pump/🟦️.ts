@@ -9,7 +9,7 @@ import ts from "typescript";
 interface Case { readonly id: string; readonly before: string | null; readonly after: string | null; readonly accepted: boolean }
 interface Fixture { readonly schemaVersion: 1; readonly hostSource: string; readonly nativeOwner: string; readonly module: string; readonly nativeLaw: string; readonly neutralSources: readonly string[]; readonly neutralRouter: string; readonly neutralLaws: readonly string[]; readonly cases: readonly Case[] }
 const root = resolve(import.meta.dir, "../../../../../../../");
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🤝️cooperative-pump/🔣️.json", import.meta.url), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🤝️cooperative-pump/🔣️.json", import.meta.url), "utf8")) as Fixture;
 const source = (path: string): string => readFileSync(resolve(root, path), "utf8");
 
 test("closed cooperative host ownership corpus retains all five original hostile witnesses", () => {

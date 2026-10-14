@@ -17,8 +17,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "incremental": true,
-    "tsBuildInfoFile": "../../../../../../../../node_modules/.cache/tsconfig.repo-coordinator.tsbuildinfo",
+    "incremental": false,
     "plugins": [
       {
         "name": "next"
@@ -43,10 +42,10 @@
     }
   },
   "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts"
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "lib/**/*.ts",
+    "next-env.d.ts"
   ],
   "exclude": [
     "node_modules",

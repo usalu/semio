@@ -4,7 +4,7 @@ import { createSurfaceSchemaOracleV1 } from "../🔮️schema/🟦️.ts";
 import { Earcut } from "three/src/extras/Earcut.js";
 import { validateJsonSchemaSubset } from "../../../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../🧫️fixtures/🔣️.json";
 type Point=readonly[number,number,number];
 interface Surface {regionId:string;points:Point[];tetrahedra:[number,number,number,number][];triangles:[number,number,number][]}
 /** 🔮️ Independent Earcut output crosses a first-party numeric-only oracle interface. */

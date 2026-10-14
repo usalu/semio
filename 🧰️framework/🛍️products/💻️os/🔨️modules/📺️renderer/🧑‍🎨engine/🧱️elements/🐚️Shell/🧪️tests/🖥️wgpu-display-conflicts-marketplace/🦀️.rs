@@ -474,7 +474,7 @@ fn the_marketplace_streams_its_roster_as_one_windowed_section() {
 #[test]
 fn the_marketplace_projects_the_store_record_under_its_declared_host_with_enablement_and_uninstall() {
     let mut shell = display_shell();
-    let record: ShellExtensionStoreRecord = serde_json::from_str(include_str!("../../../../../../🔌️plugin/🏪️store/📥️installation/🧫️fixtures/🔣️.json")).expect("the neutral Store record fixture");
+    let record: ShellExtensionStoreRecord = serde_json::from_str(include_str!("../../../../../../🔌️plugin/🏪️store/📥️installation/🧪️tests/🧫️fixtures/🔣️.json")).expect("the neutral Store record fixture");
     let host = shell.plugins.first().expect("fixture host").plugin_id.clone();
     shell.project_extension_record(ShellExtensionStoreRecord { extends_host: host.clone(), ..record.clone() }).expect("record admits");
     marketplace_window_at(&mut shell, &host);
@@ -495,7 +495,7 @@ fn the_marketplace_projects_the_store_record_under_its_declared_host_with_enable
 #[test]
 fn the_marketplace_keeps_orphaned_and_failed_store_packages_visible_without_executable_controls() {
     let mut shell = display_shell();
-    let mut record: ShellExtensionStoreRecord = serde_json::from_str(include_str!("../../../../../../🔌️plugin/🏪️store/📥️installation/🧫️fixtures/🔣️.json")).expect("the neutral Store record fixture");
+    let mut record: ShellExtensionStoreRecord = serde_json::from_str(include_str!("../../../../../../🔌️plugin/🏪️store/📥️installation/🧪️tests/🧫️fixtures/🔣️.json")).expect("the neutral Store record fixture");
     record.extends_host = "missing.host".into();
     shell.project_extension_record(record.clone()).expect("record admits");
     shell.extensions[0].load_status = ShellExtensionLoadStatus::Failed("fixture load fault".into());
@@ -508,7 +508,7 @@ fn the_marketplace_keeps_orphaned_and_failed_store_packages_visible_without_exec
 
 #[test]
 fn conflict_resolution_buttons_are_inline_controls_before_row_selection() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).unwrap();
     let mut shell = display_shell();
     shell.locale_id = "en".into();
     let source = &fixture["conflict"];
@@ -549,7 +549,7 @@ fn conflict_resolution_buttons_are_inline_controls_before_row_selection() {
 
 #[test]
 fn selected_conflict_owns_a_real_diff_view_detail_in_the_accepted_frame() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🆚️diff-view-produced-surface/🔣️.json")).expect("DiffView producer fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🆚️diff-view-produced-surface/🔣️.json")).expect("DiffView producer fixture");
     let mut shell = display_shell();
     shell.locale_id = "en".into();
     shell.open_conflicts = fixture["conflicts"]
@@ -600,7 +600,7 @@ fn selected_conflict_owns_a_real_diff_view_detail_in_the_accepted_frame() {
 
 #[test]
 fn conflict_resolution_buttons_share_the_row_and_win_its_pointer_band() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).unwrap();
     let mut shell = display_shell();
     shell.locale_id = "en".into();
     let source = &fixture["conflict"];

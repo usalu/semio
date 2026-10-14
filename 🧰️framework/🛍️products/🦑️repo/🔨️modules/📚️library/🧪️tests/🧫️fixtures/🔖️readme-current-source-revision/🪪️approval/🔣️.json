@@ -1,0 +1,199 @@
+{
+  "cases": [
+    {
+      "id": "exact-current",
+      "accepted": true
+    },
+    {
+      "id": "missing-source",
+      "phase": "grammar",
+      "op": "remove",
+      "target": "declaration",
+      "pointer": "/sourcePath",
+      "accepted": false
+    },
+    {
+      "id": "ordinal-field",
+      "phase": "grammar",
+      "target": "declaration",
+      "pointer": "/catalogCaseIndex",
+      "value": 31,
+      "accepted": false
+    },
+    {
+      "id": "wrong-mode",
+      "phase": "grammar",
+      "target": "declaration",
+      "pointer": "/currentPreimage/mode",
+      "value": "0755",
+      "accepted": false
+    },
+    {
+      "id": "negative-size",
+      "phase": "grammar",
+      "target": "declaration",
+      "pointer": "/currentPreimage/size",
+      "value": -1,
+      "accepted": false
+    },
+    {
+      "id": "unsafe-source",
+      "phase": "grammar",
+      "target": "declaration",
+      "pointer": "/sourcePath",
+      "value": "../owner/README.md",
+      "accepted": false
+    },
+    {
+      "id": "extra-tuple-field",
+      "phase": "grammar",
+      "target": "declaration",
+      "pointer": "/baselinePreimage/observed",
+      "value": true,
+      "accepted": false
+    },
+    {
+      "id": "foreign-approval-field",
+      "phase": "grammar",
+      "target": "declaration",
+      "pointer": "/expectationsPath",
+      "value": "🖼️assets/foreign.json",
+      "accepted": false
+    },
+    {
+      "id": "missing-approval",
+      "special": "missing-approval",
+      "accepted": false
+    },
+    {
+      "id": "duplicate-approval",
+      "special": "duplicate-approval",
+      "accepted": false
+    },
+    {
+      "id": "symbolic-approval",
+      "target": "facts",
+      "pointer": "/expectations/0/nodeKind",
+      "value": "symlink",
+      "accepted": false
+    },
+    {
+      "id": "directory-approval",
+      "target": "facts",
+      "pointer": "/expectations/0/nodeKind",
+      "value": "directory",
+      "accepted": false
+    },
+    {
+      "id": "symbolic-parent",
+      "target": "facts",
+      "pointer": "/expectations/0/ancestorNodeKinds/0",
+      "value": "symlink",
+      "accepted": false
+    },
+    {
+      "id": "source-size-drift",
+      "target": "facts",
+      "pointer": "/size",
+      "value": 1,
+      "accepted": false
+    },
+    {
+      "id": "source-mode-drift",
+      "target": "facts",
+      "pointer": "/mode",
+      "value": 493,
+      "accepted": false
+    },
+    {
+      "id": "source-hash-drift",
+      "target": "facts",
+      "pointer": "/contentHash",
+      "value": "0000000000000000000000000000000000000000000000000000000000000000",
+      "accepted": false
+    },
+    {
+      "id": "source-symlink",
+      "target": "facts",
+      "pointer": "/nodeKind",
+      "value": "symlink",
+      "accepted": false
+    },
+    {
+      "id": "extra-document-field",
+      "target": "document",
+      "pointer": "/investigation",
+      "value": {},
+      "accepted": false
+    },
+    {
+      "id": "policy-digest-drift",
+      "target": "document",
+      "pointer": "/policy/sha256",
+      "value": "0000000000000000000000000000000000000000000000000000000000000000",
+      "accepted": false
+    },
+    {
+      "id": "policy-path-drift",
+      "target": "document",
+      "pointer": "/policy/path",
+      "value": "🖼️assets/foreign.json",
+      "accepted": false
+    },
+    {
+      "id": "baseline-commit-drift",
+      "target": "document",
+      "pointer": "/baseline/commit",
+      "value": "0000000000000000000000000000000000000000",
+      "accepted": false
+    },
+    {
+      "id": "baseline-blob-drift",
+      "target": "document",
+      "pointer": "/baseline/blob",
+      "value": "0000000000000000000000000000000000000000",
+      "accepted": false
+    },
+    {
+      "id": "baseline-tuple-drift",
+      "target": "document",
+      "pointer": "/baseline/preimage/size",
+      "value": 1,
+      "accepted": false
+    },
+    {
+      "id": "current-document-drift",
+      "target": "document",
+      "pointer": "/currentPreimage/size",
+      "value": 1,
+      "accepted": false
+    },
+    {
+      "id": "source-owner-drift",
+      "target": "document",
+      "pointer": "/sourcePath",
+      "value": "foreign/README.md",
+      "accepted": false
+    },
+    {
+      "id": "invalid-utf8",
+      "special": "invalid-utf8",
+      "accepted": false
+    },
+    {
+      "id": "invalid-json",
+      "special": "invalid-json",
+      "accepted": false
+    },
+    {
+      "id": "digest-drift",
+      "special": "digest-drift",
+      "accepted": false
+    },
+    {
+      "id": "dangling-owner",
+      "special": "dangling-owner",
+      "accepted": false
+    }
+  ]
+}

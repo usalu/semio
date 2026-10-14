@@ -3,7 +3,7 @@ use super::*;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 #[test]
 fn original_command_checkpoint_cursor_preserves_every_arc1_byte_and_zero_copy_metadata(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  let original=law["originalGrant"].as_array().unwrap();let grant=RetainedCloneGrant{maximum_items:original[0].as_u64().unwrap()as usize,maximum_copy_bytes:original[1].as_u64().unwrap()as usize,maximum_capacity_bytes:original[2].as_u64().unwrap()as usize,maximum_release_bytes:original[3].as_u64().unwrap()as usize,maximum_depth:original[4].as_u64().unwrap()as usize};
  for row in law["cases"].as_array().unwrap(){
   let work:Vec<u8>=row["work"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u8).collect();let foreign=work.clone();let values:[u64;5]=std::array::from_fn(|index|row["values"][index].as_u64().unwrap());let work_phase=row["workPhase"].as_bool().unwrap();let read=|work:&Vec<u8>,index:usize|work.get(index).copied();

@@ -4,7 +4,7 @@ import { strict as assert } from "node:assert";
 import stableStringify from "fast-json-stable-stringify";
 
 //#region 🧬️Contract
-const fixture = await Bun.file(new URL("../../🧫️fixtures/🔣️ordered-map.json", import.meta.url)).json();
+const fixture = await Bun.file(new URL("../🧫️fixtures/🔣️ordered-map.json", import.meta.url)).json();
 
 
 assert.equal(new Set(fixture.cases.map((row: any) => row.id)).size, fixture.cases.length);
@@ -44,7 +44,7 @@ for (const mutate of [
 }
 //#endregion 🧬️Contract
 //#region 📤️SharedOwnership
-const sharedFixture = await Bun.file(new URL("../../🧫️fixtures/👥️shared-owner/🔣️.json", import.meta.url)).json();
+const sharedFixture = await Bun.file(new URL("../🧫️fixtures/👥️shared-owner/🔣️.json", import.meta.url)).json();
 
 
 const sharedKey = sharedFixture.key.text.repeat(sharedFixture.key.repetitions);
@@ -66,7 +66,7 @@ type OrderedSetFixture = {
     readonly explicitRetirement: boolean;
   };
 };
-const setFixture: OrderedSetFixture = await Bun.file(new URL("../../🧺️set/🧫️fixtures/🔣️.json", import.meta.url)).json();
+const setFixture: OrderedSetFixture = await Bun.file(new URL("../../🧺️set/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
 const setSchema = await Bun.file(new URL("../../🧺️set/🧬️schema/🔣️.json", import.meta.url)).json();
 const validateSet = new Ajv({ strict: true, allErrors: true }).compile(setSchema);
 

@@ -12,7 +12,7 @@ fn mounted_group_original_triple(row:&serde_json::Value)->(KernelMutation,Mutati
 fn mounted_group_receipt_preserves_all_original_causal_vectors_and_exact_cancelled_allocations(){
     fn grant(capacity:usize,release:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:64}}
     fn observe(f:impl FnOnce()->RetainedCloneStep,g:RetainedCloneGrant)->RetainedCloneStep{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(f);assert!(step.progress().fits(g));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));step}
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for row in law["cases"].as_array().unwrap(){
         let children=serde_json::from_value::<Vec<String>>(row["childEditIds"].clone()).unwrap();let source=MountedGroupReceiptSource{invocation_id:row["invocationId"].as_str().unwrap(),parent_edit_id:row["parentEditId"].as_str(),child_edit_ids:MountedGroupChildEditSource::OriginalStrings(&children)};
         for stop in law["cancelStops"].as_array().unwrap().iter().map(|v|Some(v.as_u64().unwrap()as usize)).chain(std::iter::once(None)){
@@ -44,7 +44,7 @@ fn mounted_group_receipt_borrows_noncontiguous_original_child_edits_without_temp
         fn get(&self,index:usize)->Option<&str>{self.children.get(index).map(|id|id.as_str())}
     }
     fn grant(capacity:usize,release:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:64}}
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for fixture in law["cases"].as_array().unwrap(){
         let children=fixture["childEditIds"].as_array().unwrap().iter().map(|id|Box::new(id.as_str().unwrap().to_owned())).collect::<Vec<_>>();
         let rows=OriginalRows{children};let pointers=rows.children.iter().map(|id|id.as_ptr()).collect::<Vec<_>>();
@@ -76,7 +76,7 @@ fn mounted_group_receipt_borrows_noncontiguous_original_child_edits_without_temp
 
 #[test]
 fn mounted_group_receipt_triple_prevalidation_retains_original8194_ids_until_exact_prefix_grants(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🪪️triple/🧫️fixtures/🔣️.json")).unwrap();let mut corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let row=corpus["cases"].as_array_mut().unwrap().iter_mut().find(|row|!row["lanes"].as_array().unwrap().is_empty()).unwrap();row["lanes"][0]["mutationId"]=format!("{}{}",law["prefix"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap()as usize),law["suffix"].as_str().unwrap()).into();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🪪️triple/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let mut corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let row=corpus["cases"].as_array_mut().unwrap().iter_mut().find(|row|!row["lanes"].as_array().unwrap().is_empty()).unwrap();row["lanes"][0]["mutationId"]=format!("{}{}",law["prefix"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap()as usize),law["suffix"].as_str().unwrap()).into();
     let children=serde_json::from_value::<Vec<String>>(row["childEditIds"].clone()).unwrap();let source=MountedGroupReceiptSource{invocation_id:row["invocationId"].as_str().unwrap(),parent_edit_id:row["parentEditId"].as_str(),child_edit_ids:MountedGroupChildEditSource::OriginalStrings(&children)};let mut owner=MountedGroupReceipt::new(1,&source).unwrap();
     for _ in 0..100000{if owner.phase==8{break;}let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:owner.next_capacity_byte_demand(&source).unwrap(),maximum_release_bytes:owner.next_metadata_release_byte_demand(),maximum_depth:64};owner.advance_metadata(&source,grant).unwrap();}
     let mut original=Some(mounted_group_original_triple(&row["lanes"][0]));let pointer=original.as_ref().unwrap().0.id.0.as_ptr();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:64};let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.push_mutation_triple(&mut original,grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(step.progress(),Default::default());assert!(original.is_some(),"zero-copy prevalidation must retain every original triple owner");assert_eq!(original.as_ref().unwrap().0.id.0.as_ptr(),pointer);

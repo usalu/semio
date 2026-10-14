@@ -159,7 +159,7 @@ impl Default for Grid2dSnapshotDsl {
 //#endregion 🔖️DslMirror
 
 //#region 🔖️HandcraftedArtifactCodecs
-impl store::os_store::serialization::ArtifactDsl for Grid2dSnapshotDsl {
+impl pack::snapshot::ArtifactDsl for Grid2dSnapshotDsl {
     const EXTENSION: &'static str = "wfcgrid2d";
     fn envelope_id() -> &'static str {
         "wfc.grid2d"
@@ -177,7 +177,7 @@ impl store::os_store::serialization::ArtifactDsl for Grid2dSnapshotDsl {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -218,18 +218,18 @@ pub(crate) fn grid2d_document_from_dsl(parsed: Grid2dSnapshotDsl) -> Result<Grid
     })
 }
 
-impl store::os_store::serialization::ArtifactDsl for Grid2dSnapshot {
+impl pack::snapshot::ArtifactDsl for Grid2dSnapshot {
     const EXTENSION: &'static str = "wfcgrid2d";
     fn envelope_id() -> &'static str {
         "wfc.grid2d"
     }
 
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        grid2d_document_from_dsl(<Grid2dSnapshotDsl as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?)
+        grid2d_document_from_dsl(<Grid2dSnapshotDsl as pack::snapshot::ArtifactDsl>::parse_dsl(text)?)
     }
 
     fn print_dsl(&self) -> String {
-        <Grid2dSnapshotDsl as store::os_store::serialization::ArtifactDsl>::print_dsl(&grid2d_document_to_dsl(self))
+        <Grid2dSnapshotDsl as pack::snapshot::ArtifactDsl>::print_dsl(&grid2d_document_to_dsl(self))
     }
 }
 
@@ -238,12 +238,12 @@ impl store::os_store::serialization::ArtifactDsl for Grid2dSnapshot {
 
 /// 📖️ Parses `.wfcgrid2d` DSL text into a `Grid2dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Grid2dSnapshot, semio_framework_diagnostic::TextError> {
-    <Grid2dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <Grid2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Grid2dSnapshot` back to `.wfcgrid2d` DSL text.
 pub fn print_dsl(document: &Grid2dSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(document)
+    pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🚚️Carrier

@@ -1,6 +1,6 @@
 
 import { describe, expect, it } from "vitest";
-import fixture from "../../🧫️fixtures/🎬️surface-behavior/🔣️.json";
+import fixture from "../🧫️fixtures/🎬️surface-behavior/🔣️.json";
 
 describe("app-backed surface behavior", () => {
   it("validates exact Draw and Note cancellation policies", () => {

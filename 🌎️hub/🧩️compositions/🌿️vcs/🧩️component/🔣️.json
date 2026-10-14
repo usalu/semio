@@ -27869,10 +27869,5 @@
         "direction": "export"
       }
     ]
-  },
-  "hashes": {
-    "wasmSha256": "fa54f7a2f7c8fce59a1cc570f252c1d72580cd1327be037eba3e497976bfc4a0",
-    "coreWasmSha256": "d87136faeab0657045481ddf77ac03dd488bcb00736a35bdb048786c3b8bc132",
-    "descriptorSha256": "dc8fef9d58dc9597f73e52432b3a0269d5a3c967f0e6fc598abc3801e89a8e88"
   }
 }

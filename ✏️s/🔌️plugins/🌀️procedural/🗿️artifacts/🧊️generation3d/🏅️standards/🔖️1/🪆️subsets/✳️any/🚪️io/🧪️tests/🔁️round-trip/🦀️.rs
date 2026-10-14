@@ -30,7 +30,7 @@ use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMeshSnapshot, Sem
 
 //#region 🧊️Fixture
 /// 🧊️ The one committed geometry, as authored — see the fixture file's own `$comment`.
-pub const UNIT_CUBE_JSON: &str = include_str!("../../../🧫️fixtures/🚪️io/🧊️unit-cube/🔣️.json");
+pub const UNIT_CUBE_JSON: &str = include_str!("../../../🧪️tests/🧫️fixtures/🚪️io/🧊️unit-cube/🔣️.json");
 
 /// 🧊️ The neutral prepared geometry fixture consumed by the artifact IO bridge.
 pub fn unit_cube_mesh_data() -> semio_framework_plugin::MeshData {
@@ -260,21 +260,21 @@ fn assert_second_implementation_file(label: &str, recovered: SemioMeshSnapshot) 
 #[test]
 fn stl_written_by_the_python_second_implementation_reads_back_as_the_unit_cube() {
     use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts::stl::v_ascii::any as leaf;
-    let bytes = include_bytes!("../../../🧫️fixtures/🚪️io/🧊️unit-cube/🔺️second-implementation.stl");
+    let bytes = include_bytes!("../../../🧪️tests/🧫️fixtures/🚪️io/🧊️unit-cube/🔺️second-implementation.stl");
     assert_second_implementation_file("stl (second implementation)", leaf::mesh_from_bytes(bytes).expect("the second implementation's stl imports"));
 }
 
 #[test]
 fn obj_written_by_the_python_second_implementation_reads_back_as_the_unit_cube() {
     use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts::obj::v3_0::any as leaf;
-    let bytes = include_bytes!("../../../🧫️fixtures/🚪️io/🧊️unit-cube/🗿️second-implementation.obj");
+    let bytes = include_bytes!("../../../🧪️tests/🧫️fixtures/🚪️io/🧊️unit-cube/🗿️second-implementation.obj");
     assert_second_implementation_file("obj (second implementation)", leaf::mesh_from_bytes(bytes).expect("the second implementation's obj imports"));
 }
 
 #[test]
 fn ply_written_by_the_python_second_implementation_reads_back_as_the_unit_cube() {
     use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts::ply::v1_0::any as leaf;
-    let bytes = include_bytes!("../../../🧫️fixtures/🚪️io/🧊️unit-cube/🧱️second-implementation.ply");
+    let bytes = include_bytes!("../../../🧪️tests/🧫️fixtures/🚪️io/🧊️unit-cube/🧱️second-implementation.ply");
     assert_second_implementation_file("ply (second implementation)", leaf::mesh_from_bytes(bytes).expect("the second implementation's ply imports"));
 }
 

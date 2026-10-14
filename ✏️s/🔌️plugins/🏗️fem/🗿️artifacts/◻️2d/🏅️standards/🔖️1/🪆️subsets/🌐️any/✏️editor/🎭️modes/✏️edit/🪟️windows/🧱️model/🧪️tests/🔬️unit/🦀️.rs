@@ -51,7 +51,7 @@ async fn fem2d_model_extent_degenerate_model_returns_one() {
 
 #[semio_framework_async_macros::async_test]
 async fn live_visual_language_distinguishes_every_progress_state() {
-    use store::os_store::serialization::ArtifactDsl;
+    use pack::snapshot::ArtifactDsl;
     let doc = Fem2dSnapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse example");
     let region_id = doc.regions.first().expect("example region").id.clone();
     let element_id = element_id(doc.elements.first().expect("example element")).to_string();
@@ -80,7 +80,7 @@ async fn live_visual_language_distinguishes_every_progress_state() {
 
 #[semio_framework_async_macros::async_test]
 async fn model_visual_language_includes_load_and_support_glyphs() {
-    use store::os_store::serialization::ArtifactDsl;
+    use pack::snapshot::ArtifactDsl;
     let doc = Fem2dSnapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse example");
     let encoded = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(fem2d_structure_layers(&doc, "#38bdf8", "#94a3b8", "#f97316")));
     assert!(encoded.contains("support-"));
@@ -90,7 +90,7 @@ async fn model_visual_language_includes_load_and_support_glyphs() {
 #[semio_framework_async_macros::async_test]
 async fn live_visual_replay_is_deterministic_and_bounded() {
     use std::time::Instant;
-    use store::os_store::serialization::ArtifactDsl;
+    use pack::snapshot::ArtifactDsl;
 
     let doc = Fem2dSnapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse example");
     let node_id = doc.nodes.first().expect("example node").id.clone();

@@ -1,0 +1,36 @@
+{
+  "positions": [],
+  "routes": [
+    {
+      "id": "route-ferry",
+      "data": {
+        "kind": "ferry",
+        "label": "Lake Ferry",
+        "operator": "Lake Line"
+      }
+    }
+  ],
+  "regions": [],
+  "drawing": {
+    "childId": "gismap-drawing",
+    "target": {
+      "artifactId": "gismap-drawing",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "drawing"
+      }
+    }
+  },
+  "value": {
+    "childId": "gismap-value",
+    "target": {
+      "artifactId": "gismap-value",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "value"
+      }
+    }
+  }
+}

@@ -4,7 +4,7 @@ use semio_framework_dsl_record::{DslField,FieldValue,Shape};
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl};
 #[path="../../../../🗣️dsl/🧬️schema/🪆️binding/🏛️ownership/🧪️tests/🦀️.rs"]
 mod oracle;
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🪆️binding/🔣️.json")).unwrap()}
 fn float_json(value:&serde_json::Value)->serde_json::Value{match value{serde_json::Value::Number(_)=>serde_json::to_value(serde_json::from_value::<f64>(value.clone()).unwrap()).unwrap(),serde_json::Value::Array(values)=>values.iter().map(float_json).collect(),serde_json::Value::Object(values)=>values.iter().map(|(key,value)|(key.clone(),float_json(value))).collect(),_=>value.clone()}}
 fn expected_fields(value:&serde_json::Value)->serde_json::Value{value.as_array().unwrap().iter().map(|row|serde_json::json!([row[0],float_json(&row[1])])).collect()}
 fn check<T:DslField+serde::de::DeserializeOwned+serde::Serialize+std::fmt::Debug+PartialEq>(case:&serde_json::Value,fixture:&serde_json::Value){
@@ -49,7 +49,7 @@ fn viewport_native_canonical_tree_borrows_original_planar_schema_fields(){
   assert_eq!(serde_json::Value::Object(projected),serde_json::to_value(pose).unwrap());assert!(pose.canonical_tree_child(3).is_err());assert!(pose.canonical_tree_key(3).is_err());
   println!("[DEBUG] Viewport2d original native x/y/zoom borrowedFields=true independentSerde=true case={}",case["id"]);
  }
- let poses:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪟️poses/🔣️.json")).unwrap();
+ let poses:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪟️poses/🔣️.json")).unwrap();
  for case in poses["cases"].as_array().unwrap().iter().filter(|case|case["dimension"]=="2d"&&case["value"].as_object().is_some_and(|fields|fields.len()==3&&["x","y","zoom"].iter().all(|key|fields.get(*key).is_some_and(|value|value.as_f64().is_some())))){
   let value=&case["value"];let pose=Viewport2d{x:value["x"].as_f64().unwrap(),y:value["y"].as_f64().unwrap(),zoom:value["zoom"].as_f64().unwrap()};assert_eq!(pose.canonical_tree_node().is_ok(),serde_json::from_value::<Viewport2d>(value.clone()).is_ok());assert_eq!(pose.canonical_tree_node().is_ok(),case["valid"].as_bool().unwrap());
  }

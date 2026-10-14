@@ -5,7 +5,7 @@
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🧊️3d/**/*.rs",
       "{projectRoot}/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🧊️3d/**/🧫️fixtures/**/*"
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧊️3d/**/🧪️tests/**/🧫️fixtures/**/*"
     ]
   },
   "targets": {

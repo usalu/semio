@@ -30,7 +30,7 @@ function asset(relativePath: string): string {
 }
 
 const schema = JSON.parse(asset("../../🧬️schema/📣️typescript-declaration-facts/🔣️.json"));
-const vectors = JSON.parse(asset("../../🧫️fixtures/📣️typescript-declaration-facts/🔣️.json")) as { readonly schemaVersion: 1; readonly cases: readonly Vector[] };
+const vectors = JSON.parse(asset("../🧫️fixtures/📣️typescript-declaration-facts/🔣️.json")) as { readonly schemaVersion: 1; readonly cases: readonly Vector[] };
 const ajv = new Ajv({ strict: true, allErrors: true });
 
 const validateCompilerDiagnostic = ajv.compile(schema.$defs.compilerDiagnostic);
@@ -99,7 +99,7 @@ test("TypeScript declaration compiler oracle has strict source types", () => {
 //#endregion 🧪️Declarations
 
 //#region 🧪️MalformedDeclarations
-const malformed = JSON.parse(asset("../../🧫️fixtures/📣️typescript-declaration-facts/💥️malformed/🔣️.json")) as { readonly schemaVersion: 1; readonly cases: readonly { readonly id: string; readonly language: "ts"; readonly source: string; readonly compilerDiagnostics: readonly { readonly code: number; readonly start: number; readonly length: number }[]; readonly expected: { readonly completeness: "incomplete"; readonly providerInference: "forbidden" } }[] };
+const malformed = JSON.parse(asset("../🧫️fixtures/📣️typescript-declaration-facts/💥️malformed/🔣️.json")) as { readonly schemaVersion: 1; readonly cases: readonly { readonly id: string; readonly language: "ts"; readonly source: string; readonly compilerDiagnostics: readonly { readonly code: number; readonly start: number; readonly length: number }[]; readonly expected: { readonly completeness: "incomplete"; readonly providerInference: "forbidden" } }[] };
 
 
 test("TypeScript malformed declaration cases use the closed neutral schema", () => {
@@ -131,7 +131,7 @@ for (const row of malformed.cases) {
 
 //#region 🧪️UnsupportedDeclarations
 
-const unsupported = JSON.parse(asset("../../🧫️fixtures/📣️typescript-declaration-facts/🚫️unsupported/🔣️.json")) as { readonly schemaVersion: 1; readonly cases: readonly { readonly id: string; readonly language: "ts"; readonly source: string; readonly compilerDiagnostics: readonly never[]; readonly expected: { readonly completeness: "incomplete"; readonly forbiddenDiagnosticCodes: readonly string[] } }[] };
+const unsupported = JSON.parse(asset("../🧫️fixtures/📣️typescript-declaration-facts/🚫️unsupported/🔣️.json")) as { readonly schemaVersion: 1; readonly cases: readonly { readonly id: string; readonly language: "ts"; readonly source: string; readonly compilerDiagnostics: readonly never[]; readonly expected: { readonly completeness: "incomplete"; readonly forbiddenDiagnosticCodes: readonly string[] } }[] };
 
 
 test("TypeScript unsupported declaration cases use the closed neutral schema", () => {

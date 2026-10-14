@@ -29,25 +29,35 @@
       "executor": "nx:run-commands",
       "cache": false,
       "outputs": [
-        "{projectRoot}/dist/native-dev"
+        "{projectRoot}/dist/native-{options.env.SEMIO_BUILD_MODE}"
       ],
       "options": {
-        "command": "bun ./📜️script.ts build native dev",
+        "command": "bun ./📜️script.ts build native",
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
-        "forwardAllArgs": false
-      }
-    },
-    "native-build-release": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "outputs": [
-        "{projectRoot}/dist/native-release"
-      ],
-      "options": {
-        "command": "bun ./📜️script.ts build native release",
-        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
-        "forwardAllArgs": false
-      }
+        "forwardAllArgs": true,
+        "args": [
+          "prototype"
+        ]
+      },
+      "configurations": {
+        "prototype": {
+          "args": [
+            "prototype"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "args": [
+            "release"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      },
+      "defaultConfiguration": "prototype"
     },
     "check": {
       "executor": "nx:run-commands",
@@ -62,25 +72,35 @@
       "executor": "nx:run-commands",
       "cache": false,
       "outputs": [
-        "{projectRoot}/dist/mcp-dev"
+        "{projectRoot}/dist/mcp-{options.env.SEMIO_BUILD_MODE}"
       ],
       "options": {
-        "command": "bun ./📜️script.ts build mcp dev",
+        "command": "bun ./📜️script.ts build mcp",
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
-        "forwardAllArgs": false
-      }
-    },
-    "mcp-build-release": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "outputs": [
-        "{projectRoot}/dist/mcp-release"
-      ],
-      "options": {
-        "command": "bun ./📜️script.ts build mcp release",
-        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
-        "forwardAllArgs": false
-      }
+        "forwardAllArgs": true,
+        "args": [
+          "prototype"
+        ]
+      },
+      "configurations": {
+        "prototype": {
+          "args": [
+            "prototype"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "args": [
+            "release"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      },
+      "defaultConfiguration": "prototype"
     },
     "mcp-check": {
       "executor": "nx:run-commands",

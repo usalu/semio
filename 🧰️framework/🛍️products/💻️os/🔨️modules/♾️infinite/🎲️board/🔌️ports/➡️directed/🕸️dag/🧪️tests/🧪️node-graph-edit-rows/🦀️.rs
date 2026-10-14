@@ -9,7 +9,7 @@ use super::*;
 use serde_json::Value;
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../../../../../../../🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json")).expect("node-graph edit rows fixture")
+    serde_json::from_str(include_str!("../../../../../../../../../../🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json")).expect("node-graph edit rows fixture")
 }
 
 /// 🔢️ `value` with every number as `f64`, so an integral JSON number and its float spelling compare equal.

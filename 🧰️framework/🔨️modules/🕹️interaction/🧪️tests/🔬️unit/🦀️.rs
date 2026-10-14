@@ -53,7 +53,7 @@ async fn outline_projects_id_granularity_ids_and_selection_only() {
 /// 26/09/09/PROCEDURAL-3D-END-TO-END (`📓️selection-merge-vocabulary-2026-09-12.md`): a second
 /// `add`/`remove`/`toggle` vocabulary lived in the renderer host and the non-domain world path, so
 /// every modifier-click on a domain-bound world scene faulted `interactionSelect: unknown merge '…'`.
-const MERGE_MODES_FIXTURE: &str = include_str!("../../🧫️fixtures/🎯️merge-modes.json");
+const MERGE_MODES_FIXTURE: &str = include_str!("../🧫️fixtures/🎯️merge-modes.json");
 
 /// 🧬️ Schema-first: the five words are the `MergeMode` enum of this module's OWN schema, and the Rust
 /// codec is generated from nothing else. A word added to `MergeMode` without the schema — or to the

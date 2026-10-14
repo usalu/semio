@@ -11,11 +11,11 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use crate::Puzzle2dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔌replace-node-handle/🧱️negative-scale/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔌replace-node-handle/🧱️negative-scale/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔌replace-node-handle/🧱️negative-scale/🦠️mutation/🔣️.json");
-const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔌replace-node-handle/🧱️negative-scale/🔺️diff/🚫️.absent");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔌replace-node-handle/🧱️negative-scale/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌replace-node-handle/🧱️negative-scale/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌replace-node-handle/🧱️negative-scale/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌replace-node-handle/🧱️negative-scale/🦠️mutation/🔣️.json");
+const DIFF_ABSENT: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌replace-node-handle/🧱️negative-scale/🔺️diff/🚫️.absent");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌replace-node-handle/🧱️negative-scale/🎯️outcome/🔣️.json");
 
 fn before() -> Puzzle2dSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

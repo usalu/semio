@@ -2,7 +2,7 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
 /** 🧾️ Pins the TypeScript `mintTransactionRef` to the language-agnostic mint vectors the Rust mint and the third-party
- * `blake3` crate reproduce (`🎮️mutation/🧫️fixtures/🧫️transaction-ref`), validated by Ajv, and checks that a transaction
+ * `blake3` crate reproduce (`🎮️mutation/🧪️tests/🧫️fixtures/🧫️transaction-ref`), validated by Ajv, and checks that a transaction
  * rides the TypeScript envelope codec. */
 export async function registerTransactionRefTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "mintTransactionRef" | "writeVecEnvelope" | "readVecEnvelope">, source: TestSource): Promise<void> {
   const { mintTransactionRef, writeVecEnvelope, readVecEnvelope } = dependencies;
@@ -15,7 +15,7 @@ export async function registerTransactionRefTests(vitest: NonNullable<ImportMeta
     const { dirname, join } = await import("node:path");
     const { fileURLToPath } = await import("node:url");
     const root = dirname(fileURLToPath(source.url));
-    const fixture = await readFile(join(root, "🎮️mutation/🧫️fixtures/🧫️transaction-ref/🔣️.json"), "utf8");
+    const fixture = await readFile(join(root, "🎮️mutation/🧪️tests/🧫️fixtures/🧫️transaction-ref/🔣️.json"), "utf8");
     return { fixture: JSON.parse(fixture) as Json };
   }
 

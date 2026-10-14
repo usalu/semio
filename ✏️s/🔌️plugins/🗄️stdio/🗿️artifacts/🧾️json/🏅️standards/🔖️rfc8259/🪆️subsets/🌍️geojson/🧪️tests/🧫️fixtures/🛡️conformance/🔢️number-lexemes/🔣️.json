@@ -1,0 +1,18 @@
+{
+  "cases": [
+    { "lexeme": "0", "valid": true },
+    { "lexeme": "-0", "valid": true },
+    { "lexeme": "12", "valid": true },
+    { "lexeme": "-12.25e+3", "valid": true },
+    { "lexeme": "9007199254740993", "valid": true },
+    { "lexeme": "", "valid": false },
+    { "lexeme": "01", "valid": false },
+    { "lexeme": "+1", "valid": false },
+    { "lexeme": "1.", "valid": false },
+    { "lexeme": ".5", "valid": false },
+    { "lexeme": "--2", "valid": false },
+    { "lexeme": "1e", "valid": false },
+    { "lexeme": "1e+", "valid": false },
+    { "lexeme": "1x", "valid": false }
+  ]
+}

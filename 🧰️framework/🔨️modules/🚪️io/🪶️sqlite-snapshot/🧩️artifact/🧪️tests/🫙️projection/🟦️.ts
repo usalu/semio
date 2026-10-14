@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import Ajv2020 from "ajv/dist/2020";
 import schema from "../../🧬️schema/🫙️projection/🔣️.json";
-import fixture from "../../🧫️fixtures/🫙️projection/🔣️.json";
+import fixture from "../🧫️fixtures/🫙️projection/🔣️.json";
 
 test("original projection corpus is closed against independent Ajv", () => {
   const validate = new Ajv2020({ strict: true }).compile(schema);

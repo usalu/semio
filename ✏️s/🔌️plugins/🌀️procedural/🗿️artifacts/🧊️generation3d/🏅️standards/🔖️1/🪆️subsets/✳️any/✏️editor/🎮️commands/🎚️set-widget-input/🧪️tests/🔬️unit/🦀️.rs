@@ -1,9 +1,10 @@
 use super::*;
+use crate::standards::v1::subsets::any::io::text::value::widget_input_literal;
 use crate::central_apply::{apply_generation3d_mutation};
 
 #[test]
 fn widget_input_language_neutral_mesh_source_cases() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for group in ["meshSource", "meshAssets"] {
     let original = fixture[group]["mesh"].to_string();
     for entry in fixture[group]["cases"].as_array().unwrap() {
@@ -23,7 +24,7 @@ fn widget_input_language_neutral_mesh_source_cases() {
 fn widget_input_mesh_source_preserves_connected_owner_and_inverse() {
     use crate::standards::v1::subsets::any::schema::mutations::{inverse_generation3d_mutation};
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let mut base = crate::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
     base.host_snapshot.widgets.push(Widget::InputNote { id: "source".into(), text: fixture["meshSource"]["mesh"].to_string() });
     base.host_snapshot.widgets.push(semio_framework_pack_json::from_json_str(r#"{"kind":"neuron","id":"construct","neuronKind":"brep.mesh.construct"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
@@ -52,7 +53,7 @@ fn input_metadata() {
 #[test]
 fn widget_input_language_neutral_collection_cases() {
     use semio_framework_os_flow::neural::Cardinality;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for entry in fixture["collections"].as_array().unwrap() {
         let types: Vec<String> = serde_json::from_value(entry["types"].clone()).unwrap();
         let current = (!entry["current"].is_null()).then(|| semio_framework_value::DslValue::from(entry["current"].clone()));
@@ -71,7 +72,7 @@ fn widget_input_language_neutral_collection_cases() {
 
 #[test]
 fn widget_input_language_neutral_cases() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for entry in fixture["cases"].as_array().unwrap() {
         let types: Vec<String> = entry["types"].as_array().unwrap().iter().map(|value| value.as_str().unwrap().to_string()).collect();
         let current = if entry["current"].is_null() { None } else { Some(semio_framework_value::DslValue::from(entry["current"].clone())) };
@@ -94,7 +95,7 @@ fn widget_input_collections_publish_one_absolute_leaf_and_restore_the_base() {
         }
     }
     semio_framework_os_flow::install_flow_extension(FlowExtensionSpec { id: "collection-input-law".into(), name: "Collection Input Law".into(), version: "1".into(), install }).unwrap();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for entry in fixture["collections"].as_array().unwrap().iter().filter(|entry| entry.get("expected").is_some() && entry["cardinality"] == "*") {
         let mut host = FlowHost::default().with_operator_registry(semio_framework_os_flow::flow_operator_registry());
         let kind = entry["types"][0].as_str().unwrap();
@@ -118,7 +119,7 @@ fn widget_input_collections_publish_one_absolute_leaf_and_restore_the_base() {
         let widget = &applied.host_snapshot.widgets[0];
         let literal = widget.to_value().get("params").unwrap().get("items").unwrap().clone();
         let expected: WidgetInputValue = semio_framework_pack_json::from_json_str(&entry["expected"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        assert_eq!(literal, expected.literal(), "{}", entry["id"]);
+        assert_eq!(literal, widget_input_literal(&expected), "{}", entry["id"]);
         let mut restored = applied.clone();
         for inverse in inverse { apply_generation3d_mutation(&mut restored, &inverse).unwrap(); }
         assert_eq!(restored.host_snapshot, base.host_snapshot, "{}", entry["id"]);
@@ -133,7 +134,7 @@ fn widget_input_explicit_widget_facets_use_one_existing_widget_leaf() {
     use crate::standards::v1::subsets::any::schema::mutations::{inverse_generation3d_mutation};
 
     let _serial = crate::test_serial::lock();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for entry in fixture["facets"].as_array().unwrap() {
         let widget: Widget = semio_framework_pack_json::from_json_str(&entry["widget"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let mut base = crate::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
@@ -190,7 +191,7 @@ fn widget_input_is_one_typed_leaf_and_rejects_connected_ports() {
 
 #[test]
 fn widget_input_texture_import_preserves_canonical_assets_and_rejects_invalid_file() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap(); let source = fixture["meshAssets"]["mesh"].to_string();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap(); let source = fixture["meshAssets"]["mesh"].to_string();
     for key in ["textureImport", "textureJpegImport"] { let case = &fixture[key];
     let edited = import_mesh_texture(&source, case["target"]["textureId"].as_str().unwrap(), case["payload"].as_str().unwrap()).unwrap();
     let actual: serde_json::Value = serde_json::from_str(&edited).unwrap();

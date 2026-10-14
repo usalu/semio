@@ -1,6 +1,6 @@
-import schema from "./🧬️schema/🔣️.json";
-import policySchema from "../🧬️schema/🔣️.json";
-import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/🟦️.ts";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+import policySchema from "../🧬️schema/🔣️.json" with { type: "json" };
+import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { checkScriptInvocation, readScriptPolicy, type ScriptInvocation, type ScriptPolicy } from "../🟦️.ts";
 
 /** 📨️ Transfers the original process deadline without rebasing child authority. */
@@ -63,6 +63,6 @@ export function scriptProcessEnvironment(envelope: ScriptProcessEnvelope, enviro
 /** 📤️ Hands the caller's current original invocation, with its remaining deadline, to an owned child process environment. */
 export function scriptInvocationEnvironment(invocation: ScriptInvocation, environment: Readonly<Record<string, string | undefined>>): Record<string, string | undefined> {
   checkScriptInvocation(invocation);
-  const now = Date.now(), remaining = invocation.control.remainingMilliseconds();
+  const now = Date.now(), originalRemaining = invocation.control.remainingMilliseconds(), remaining = originalRemaining === null ? null : Math.floor(originalRemaining);
   return scriptProcessEnvironment(readScriptProcessEnvelope({ version: 1, policy: invocation.policy, deadlineEpochMilliseconds: remaining === null ? null : now + remaining, capabilities: invocation.capabilities }, now), environment);
 }

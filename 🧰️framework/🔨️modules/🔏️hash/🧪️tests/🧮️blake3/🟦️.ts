@@ -10,7 +10,7 @@ type Blake3VectorsV1 = Readonly<{ schema: "semio.hash.blake3-vectors/v1"; source
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🧮️blake3/🔣️.json", import.meta.url), "utf8")) as Blake3VectorsV1;
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🧮️blake3/🔣️.json", import.meta.url), "utf8")) as Blake3VectorsV1;
   const input = (length: number): Uint8Array => Uint8Array.from({ length }, (_, index) => index % 251);
   const hex = (bytes: Uint8Array): string => Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 

@@ -1,7 +1,7 @@
 /** 🔊️ Full owned binary32 sample words retain all native floating states. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import f from "../🧫️fixtures/🔣️.json";
+import f from "./🧫️fixtures/🔣️.json";
 import type {SemioAudioSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {SEMIO_AUDIO_SQLITE_SCHEMA,semioAudioSnapshotToSqliteDatabase,semioAudioSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
@@ -12,7 +12,7 @@ test("Semio audio IEEE mismatch, relation widths, limits, cancellation and all f
 test("Semio audio native cancellation frontier has independent exact signaling sample words",()=>{const {collectionItems,cancelAfter,sampleWord}=f.nativeAdmission;const bytes=new Uint8Array(collectionItems*4);const view=new DataView(bytes.buffer);const db=new Database(":memory:");try{db.run("CREATE TABLE samples(ordinal INTEGER PRIMARY KEY,bits INTEGER)");for(let ordinal=0;ordinal<collectionItems;ordinal++){view.setUint32(ordinal*4,sampleWord,true);db.query("INSERT INTO samples VALUES(?,?)").run(ordinal,view.getUint32(ordinal*4,true));}expect(db.query("SELECT count(*) count FROM samples").get()).toEqual({count:collectionItems});expect(db.query("SELECT bits FROM samples WHERE ordinal=?").get(cancelAfter)).toEqual({bits:sampleWord});expect(Buffer.from(bytes).readUInt32LE(cancelAfter*4)).toBe(sampleWord);}finally{db.close();}});
 
 
-import completeSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import completeSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import{independentSqliteExtent as completeIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
 test("Semio Audio complete independent cells preserve copied limits and required empty metadata",async()=>{

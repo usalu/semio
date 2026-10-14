@@ -27,11 +27,11 @@ async fn empty_snapshot_matches_schema() {
 #[semio_framework_async_macros::async_test]
 async fn codec_round_trip() {
     let snap = empty_ply_snapshot();
-    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snap);
-    let parsed = <PlySnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = pack::snapshot::ArtifactDsl::print_dsl(&snap);
+    let parsed = <PlySnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(parsed.schema, snap.schema);
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
-    let decoded = <PlySnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&snap);
+    let decoded = <PlySnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
 }
 
@@ -393,7 +393,7 @@ mod conformance_laws {
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         let mut intermediate=demo_ply_snapshot();intermediate.schema="independent PLY state".into();intermediate.elements[0].count=u64::MAX;intermediate.elements[0].rows[0].values=vec![PlyValue::List(vec![PlyValue::Double(f64::from_bits(0xfff0000000001234)),PlyValue::List(vec![])])];
         for snapshot in[demo_ply_snapshot(),PlySnapshot::default(),intermediate]{
-            let text=store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
+            let text=pack::snapshot::ArtifactDsl::print_dsl(&snapshot);
             assert!(recognizer.recognize(&text).expect("recognize"),"grammar did not recognize owned snapshot:\n{text}");
         }
     }
@@ -422,18 +422,18 @@ mod conformance_laws {
     async fn protocol_walk_law() {
         let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v1_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
         let demo = demo_ply_snapshot();
-        let packed = store::os_store::serialization::ArtifactPack::encode_pack(&demo);
+        let packed = pack::snapshot::ArtifactPack::encode_pack(&demo);
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
         let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack, ascii) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk (ascii) did not consume every byte");
 
         for format in [PlyFormat::BinaryLittleEndian, PlyFormat::BinaryBigEndian] {
             let mut variant=demo.clone();variant.format=format;
-            let packed=store::os_store::serialization::ArtifactPack::encode_pack(&variant);
+            let packed=pack::snapshot::ArtifactPack::encode_pack(&variant);
             let (_,inner)=store::semio_format::unwrap_binary(&packed).expect("unwrap typed snapshot pack");
             let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack, {format:?}) failed @{}: {}", e.offset, e.message));
             assert_eq!(trace.consumed, inner.len(), "pack walk ({format:?}) did not consume every byte");
-            let restored=<PlySnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&packed).expect("restore owned format metadata");
+            let restored=<PlySnapshot as pack::snapshot::ArtifactPack>::decode_pack(&packed).expect("restore owned format metadata");
             assert_eq!(restored,variant);
         }
 
@@ -459,13 +459,13 @@ mod conformance_laws {
 
         let demo = demo_ply_snapshot();
 
-        let parsed = <PlySnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        let parsed = <PlySnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_ply_snapshot()");
-        assert_eq!(store::os_store::serialization::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_ply_snapshot()) drifted from the shipped .dsl.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_ply_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-        let decoded = <PlySnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+        let decoded = <PlySnapshot as pack::snapshot::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_ply_snapshot()");
-        assert_eq!(store::os_store::serialization::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_ply_snapshot()) drifted from the shipped .pack.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_ply_snapshot()) drifted from the shipped .pack.semio fixture");
     }
 }
 //#endregion 🔖️ConformanceLaws

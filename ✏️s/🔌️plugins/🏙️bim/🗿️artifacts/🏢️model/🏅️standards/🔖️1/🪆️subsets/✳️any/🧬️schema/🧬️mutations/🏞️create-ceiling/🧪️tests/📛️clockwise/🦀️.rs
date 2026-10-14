@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🏞️create-ceiling/📛️clockwise",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏞️create-ceiling/📛️clockwise/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏞️create-ceiling/📛️clockwise/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏞️create-ceiling/📛️clockwise/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏞️create-ceiling/📛️clockwise/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏞️create-ceiling/📛️clockwise/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏞️create-ceiling/📛️clockwise/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏞️create-ceiling/📛️clockwise/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏞️create-ceiling/📛️clockwise/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏞️create-ceiling/📛️clockwise/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏞️create-ceiling/📛️clockwise/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

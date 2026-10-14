@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn typed_wire_neutral_component_defaults_match_serde() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧵️retained/📦️wire/🧫️fixtures/🧾️typed/🔣️.json")).expect("typed fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧵️retained/📦️wire/🧪️tests/🧫️fixtures/🧾️typed/🔣️.json")).expect("typed fixture");
     let rows = fixture["components"].as_array().expect("component vectors");
     assert_eq!(rows.len(), 28);
     for row in rows {
@@ -20,7 +20,7 @@ fn typed_wire_neutral_component_defaults_match_serde() {
 #[test]
 fn draft_target_typed_wire_matches_the_neutral_serde_oracle() {
     use protocol::value::{FromValue, ToValue};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧵️retained/📦️wire/🧫️fixtures/🧾️typed/🔣️.json")).expect("typed fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧵️retained/📦️wire/🧪️tests/🧫️fixtures/🧾️typed/🔣️.json")).expect("typed fixture");
     let row = &fixture["components"][5];
     let component: Component = serde_json::from_value(row["wire"].clone()).expect("draft-target component");
     let Component::Input(props) = &component else { panic!("input fixture") };
@@ -125,7 +125,7 @@ fn every_component_variant_round_trips() {
 
 #[test]
 fn row_target_fixture_dispatches_tree_and_table_rows_identically_and_refuses_disagreeing_rows() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️row-target/🔣️.json")).expect("row-target fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️row-target/🔣️.json")).expect("row-target fixture");
     for row in fixture["rows"].as_array().expect("fixture rows") {
         let node = serde_json::json!({
             "id": 1, "key": row["case"], "component": row["component"], "bindings": row["bindings"],
@@ -167,7 +167,7 @@ fn row_target_fixture_dispatches_tree_and_table_rows_identically_and_refuses_dis
 
 #[test]
 fn tree_detail_relation_validates_and_copies_a_direct_diff_view_surface() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🆚️diff-view-produced-surface/🔣️.json")).expect("DiffView fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🆚️diff-view-produced-surface/🔣️.json")).expect("DiffView fixture");
     let nodes = serde_json::json!([
         {
             "id": 1, "key": fixture["conflicts"][0]["id"],
@@ -193,7 +193,7 @@ fn tree_detail_relation_validates_and_copies_a_direct_diff_view_surface() {
 
 #[test]
 fn inline_tree_toolbar_relation_validates_and_copies_from_the_shared_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).expect("inline controls fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).expect("inline controls fixture");
     let controls = fixture["controls"].as_array().expect("fixture controls");
     let nodes = serde_json::json!([
         {
@@ -267,7 +267,7 @@ fn label_conversions_and_display() {
 
 //#region 📶️ProgressWireLaw
 
-const PROGRESS_FIXTURE: &str = include_str!("../../🧫️fixtures/📶️progress.json");
+const PROGRESS_FIXTURE: &str = include_str!("../🧫️fixtures/📶️progress.json");
 
 /// 📶️ The shared progress fixture's exact wire spelling, answered by serde_json (the third-party
 /// oracle) and by the first-party `ToValue`/`FromValue` codec, which must agree on every case.
@@ -337,7 +337,7 @@ fn fixture_snaps(value: &serde_json::Value) -> Vec<f64> {
 
 #[test]
 fn number_controls_fixture_pins_the_detent_pointer_key_and_precision_laws() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️number-controls/🔣️.json")).expect("number-controls fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️number-controls/🔣️.json")).expect("number-controls fixture");
     for row in fixture["validity"].as_array().expect("validity rows") {
         let verdict = crate::snaps_are_valid(fixture_snaps(&row["snaps"]), row["min"].as_f64().expect("min"), row["max"].as_f64().expect("max"));
         assert_eq!(verdict, row["valid"].as_bool().expect("valid"), "{}", row["case"]);
@@ -445,7 +445,7 @@ fn a_select_states_its_appearance_only_when_it_is_segmented() {
 
 #[test]
 fn text_controls_fixture_pins_the_draft_key_law() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️text-controls/🔣️.json")).expect("text-controls fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️text-controls/🔣️.json")).expect("text-controls fixture");
     let rows = fixture["keys"].as_array().expect("key rows");
     assert!(rows.len() >= 12);
     for row in rows {
@@ -467,7 +467,7 @@ fn text_controls_fixture_pins_the_draft_key_law() {
 
 #[test]
 fn color_input_fixture_pins_the_hex_format_and_parse_laws() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️color-input/🔣️.json")).expect("color-input fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️color-input/🔣️.json")).expect("color-input fixture");
     for row in fixture["hex"].as_array().expect("hex rows") {
         assert_eq!(crate::ui_color_hex(&fixture_snaps(&row["rgba"]), row["alpha"].as_bool().expect("alpha")), row["expected"].as_str().expect("expected"), "{}", row["case"]);
     }

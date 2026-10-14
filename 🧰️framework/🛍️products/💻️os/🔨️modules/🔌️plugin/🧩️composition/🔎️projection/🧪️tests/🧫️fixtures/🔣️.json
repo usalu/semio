@@ -1,0 +1,35 @@
+{
+  "contractId": "declared-child-projection-default",
+  "cases": [
+    {
+      "id": "empty",
+      "rows": []
+    },
+    {
+      "id": "distinct-literal",
+      "rows": [
+        {
+          "slot": "slot",
+          "childId": "logical !@/\u0000引用😀",
+          "artifactId": "addressed !@/\u0000引用😀",
+          "kind": "s.test.child",
+          "standard": "1",
+          "subset": "*"
+        },
+        {
+          "slot": "slot",
+          "childId": "logical-second",
+          "artifactId": "target-second",
+          "kind": "s.test.child",
+          "standard": "1",
+          "subset": "exact"
+        }
+      ]
+    }
+  ],
+  "overrideRefusal": {
+    "revision": -7,
+    "code": "test.parent-projection",
+    "message": "composed parent child projection failed: revision is not restorable"
+  }
+}

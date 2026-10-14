@@ -1,0 +1,8 @@
+{
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧊️fixture-payload/🟦️.ts",
+  "before": "9d5d7ddfb1047cd78711ab7d8abd834d49684b948e56e5eaf1a65cccd3797548",
+  "after": "0840e0c01eb8c6a0ba2bc6bac4c4c946db32f50750212965b9ed2de30fa849f1",
+  "realRootCaller": true,
+  "baselineProvider": "read-only git rev-parse HEAD",
+  "assertions": "Original planner emits no fixture edits/frozen authority errors/producer invocations and its real public codec roundtrips the produced plan"
+}

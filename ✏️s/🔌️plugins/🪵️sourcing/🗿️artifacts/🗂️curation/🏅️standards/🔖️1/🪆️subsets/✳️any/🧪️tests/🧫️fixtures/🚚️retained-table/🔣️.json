@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "surfaceSchema": "table@1",
+  "columns": [
+    {
+      "id": "name",
+      "label": "Name / Name",
+      "sortable": true
+    },
+    {
+      "id": "note",
+      "label": "Notiz / Note",
+      "sortable": false
+    }
+  ],
+  "rows": [
+    {
+      "id": "α",
+      "name": "Tür 🧱",
+      "note": "A retained table publishes its exact row cells in ordered text pages. Every page remains part of the same scene lane, including escaped quotes \"double\", backslashes \\, newlines\n, German umlauts äöüß, and a complete astral scalar 🧱. The receiver reads all packed attribute slices in order before validating the lane's UTF-8 byte count and digest. A retained table publishes its exact row cells in ordered text pages. Every page remains part of the same scene lane, including escaped quotes \"double\", backslashes \\, newlines\n, German umlauts äöüß, and a complete astral scalar 🧱. The receiver reads all packed attribute slices in order before validating the lane's UTF-8 byte count and digest. A retained table publishes its exact row cells in ordered text pages. Every page remains part of the same scene lane, including escaped quotes \"double\", backslashes \\, newlines\n, German umlauts äöüß, and a complete astral scalar 🧱. The receiver reads all packed attribute slices in order before validating the lane's UTF-8 byte count and digest."
+    },
+    {
+      "id": "β",
+      "name": "Fenster",
+      "note": ""
+    },
+    {
+      "id": "γ",
+      "name": "Stair",
+      "note": null
+    }
+  ],
+  "columnsJson": "[{\"id\":\"name\",\"label\":\"Name / Name\",\"sortable\":true},{\"id\":\"note\",\"label\":\"Notiz / Note\",\"sortable\":false}]",
+  "rowsJson": "[{\"id\":\"α\",\"name\":\"Tür 🧱\",\"note\":\"A retained table publishes its exact row cells in ordered text pages. Every page remains part of the same scene lane, including escaped quotes \\\"double\\\", backslashes \\\\, newlines\\n, German umlauts äöüß, and a complete astral scalar 🧱. The receiver reads all packed attribute slices in order before validating the lane's UTF-8 byte count and digest. A retained table publishes its exact row cells in ordered text pages. Every page remains part of the same scene lane, including escaped quotes \\\"double\\\", backslashes \\\\, newlines\\n, German umlauts äöüß, and a complete astral scalar 🧱. The receiver reads all packed attribute slices in order before validating the lane's UTF-8 byte count and digest. A retained table publishes its exact row cells in ordered text pages. Every page remains part of the same scene lane, including escaped quotes \\\"double\\\", backslashes \\\\, newlines\\n, German umlauts äöüß, and a complete astral scalar 🧱. The receiver reads all packed attribute slices in order before validating the lane's UTF-8 byte count and digest.\"},{\"id\":\"β\",\"name\":\"Fenster\",\"note\":\"\"},{\"id\":\"γ\",\"name\":\"Stair\",\"note\":null}]",
+  "lanes": [
+    {
+      "name": "columns",
+      "key": "framework.scene.table.columns",
+      "bytes": 107,
+      "hash": "21ee3abfeccd6dc9"
+    },
+    {
+      "name": "rows",
+      "key": "framework.scene.table.rows",
+      "bytes": 1190,
+      "hash": "cc36af5458aa2ca8"
+    }
+  ]
+}

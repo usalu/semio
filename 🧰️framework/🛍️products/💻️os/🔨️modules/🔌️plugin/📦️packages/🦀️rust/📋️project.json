@@ -9,13 +9,75 @@
     "family:os-plugin"
   ],
   "targets": {
+    "test-original-pending-worker-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-pending-worker-source"
+      },
+      "metadata": {
+        "description": "Original pending worker source and Store-issued command read donation"
+      }
+    },
+    "test-original-pending-worker-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-pending-worker-native"
+      },
+      "metadata": {
+        "description": "Original pending worker source and Store-issued command read donation"
+      }
+    },
+    "test-original-lifecycle-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-original-lifecycle-source",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test-original-lifecycle-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-original-lifecycle-native",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test-original-job-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️extension/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/💼️job/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-job-native"
+      }
+    },
     "test-extension-invoke-source": {
       "executor": "nx:run-commands",
       "cache": false,
       "dependsOn": [],
-      "inputs": ["{projectRoot}/📜️script.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️extension/**/*"],
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️extension/**/*"
+      ],
       "outputs": [],
-      "options": {"cwd": "{projectRoot}", "command": "bun ./📜️script.ts test-extension-invoke-source"}
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-extension-invoke-source"
+      }
     },
     "test-window-registry-source": {
       "executor": "nx:run-commands",
@@ -256,7 +318,7 @@
         "sharedGlobals",
         "{projectRoot}/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-declarations-fixture/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🏗️fixture-channel-interfaces/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🏗️fixture-channel-interfaces/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🏗️fixture-channel-interfaces/**/*"
       ],
       "outputs": []
@@ -338,6 +400,74 @@
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-mounted-receiving"
+      }
+    },
+    "test-original-failure-debit-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-failure-debit-source"
+      }
+    },
+    "test-original-failure-debit-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-failure-debit-native"
+      }
+    },
+    "test-original-paged-output-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-paged-output-source"
+      },
+      "metadata": {
+        "description": "Original output source identity, bounded body and paid exact acknowledgement source"
+      }
+    },
+    "test-original-paged-output-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-paged-output-native"
+      },
+      "metadata": {
+        "description": "Original output source identity, bounded body and paid exact acknowledgement native"
+      }
+    },
+    "test-original-inference-close-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-inference-close-source"
+      },
+      "metadata": {
+        "description": "Original output source identity, bounded body and paid exact acknowledgement native"
+      }
+    },
+    "test-original-inference-close-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-inference-close-native"
+      },
+      "metadata": {
+        "description": "Original output source identity, bounded body and paid exact acknowledgement native"
       }
     }
   }

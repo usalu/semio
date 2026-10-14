@@ -13,11 +13,11 @@ use crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutati
 use crate::standards::v1::subsets::any::schema::{find_layer, locate_layer};
 use crate::{RasterDiff, RasterSnapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱create-layer/🖋️creates-an-ink-8a1bf9/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱create-layer/🖋️creates-an-ink-8a1bf9/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱create-layer/🖋️creates-an-ink-8a1bf9/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱create-layer/🖋️creates-an-ink-8a1bf9/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱create-layer/🖋️creates-an-ink-8a1bf9/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-layer/🖋️creates-an-ink-8a1bf9/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-layer/🖋️creates-an-ink-8a1bf9/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-layer/🖋️creates-an-ink-8a1bf9/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-layer/🖋️creates-an-ink-8a1bf9/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-layer/🖋️creates-an-ink-8a1bf9/🎯️outcome/🔣️.json");
 
 fn before() -> RasterSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

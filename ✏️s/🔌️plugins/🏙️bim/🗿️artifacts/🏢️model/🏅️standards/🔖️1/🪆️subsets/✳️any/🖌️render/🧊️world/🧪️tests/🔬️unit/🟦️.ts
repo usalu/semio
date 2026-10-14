@@ -18,7 +18,7 @@
 // #region 🔌️Imports
 import { describe, expect, test } from "bun:test";
 import * as THREE from "three";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../🧫️fixtures/🔣️.json";
 // #endregion 🔌️Imports
 
 // #region 🧫️Types

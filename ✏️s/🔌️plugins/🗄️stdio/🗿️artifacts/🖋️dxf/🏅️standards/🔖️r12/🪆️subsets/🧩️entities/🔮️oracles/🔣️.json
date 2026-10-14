@@ -23,14 +23,14 @@
       "files": [
         {
           "role": "expected-before-dxf",
-          "path": "../🧫️fixtures/➕️insert-entity-applied/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-entity-applied/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
           "bytes": 9521
         },
         {
           "role": "expected-after-dxf",
-          "path": "../🧫️fixtures/➕️insert-entity-applied/➡️after.dxf",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-entity-applied/➡️after.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:c133243d957c3e811b2fee8be48fe108c216e616458547c4665e62a612b6be84",
           "bytes": 9597
@@ -73,7 +73,7 @@
       "files": [
         {
           "role": "expected-before-dxf",
-          "path": "../🧫️fixtures/🚧️insert-entity-rejected-out-of-bounds/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🚧️insert-entity-rejected-out-of-bounds/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
           "bytes": 9521
@@ -116,14 +116,14 @@
       "files": [
         {
           "role": "expected-before-dxf",
-          "path": "../🧫️fixtures/➖️remove-entity-applied/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-entity-applied/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
           "bytes": 9521
         },
         {
           "role": "expected-after-dxf",
-          "path": "../🧫️fixtures/➖️remove-entity-applied/➡️after.dxf",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-entity-applied/➡️after.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:4f186e97e0ba2c87df80e6dcbf9fd5566aee1a2784c5f6eef7272b75aed6d4b7",
           "bytes": 9391
@@ -166,7 +166,7 @@
       "files": [
         {
           "role": "expected-before-dxf",
-          "path": "../🧫️fixtures/🔍️remove-entity-rejected-missing/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🔍️remove-entity-rejected-missing/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
           "bytes": 9521
@@ -209,14 +209,14 @@
       "files": [
         {
           "role": "expected-before-dxf",
-          "path": "../🧫️fixtures/🧩️set-entity-applied/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🧩️set-entity-applied/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
           "bytes": 9521
         },
         {
           "role": "expected-after-dxf",
-          "path": "../🧫️fixtures/🧩️set-entity-applied/➡️after.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🧩️set-entity-applied/➡️after.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:d6de74ff42f99a20f827118405518ecb6ccd950bd5fe8e4708deafda8dd7d51d",
           "bytes": 9524
@@ -259,7 +259,7 @@
       "files": [
         {
           "role": "expected-before-dxf",
-          "path": "../🧫️fixtures/⛔️set-entity-rejected-out-of-bounds/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/⛔️set-entity-rejected-out-of-bounds/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
           "bytes": 9521

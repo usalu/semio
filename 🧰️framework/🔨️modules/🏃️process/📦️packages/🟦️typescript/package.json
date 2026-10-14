@@ -19,10 +19,25 @@
     "./wasm-build": "./📦️artifacts/🕸️wasm-build/🟦️.ts",
     "./leases": "./🔒️leases/🟦️.ts",
     "./context": "./📋️context/🟦️.ts",
-    "./command": "./🎛️command/🟦️.ts"
+    "./command": "./🎛️command/🟦️.ts",
+    "./build-mode": "./🏗️build/🎚️mode/🟦️.ts",
+    "./compiler-capacity": "./🏗️build/🎟️capacity/🟦️.ts",
+    "./native-receipt": "./📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts",
+    "./native-release": "./📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts",
+    "./native-cache": "./📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts",
+    "./go-build": "./📦️artifacts/🐹️go-build/🟦️.ts",
+    "./compiler-state": "./🏗️build/🗃️state/🟦️.ts",
+    "./typescript-check": "./🏗️build/🟦️typescript/🟦️.ts"
   },
   "license": "LGPL-3.0-or-later",
   "nx": {
     "includedScripts": []
+  },
+  "devDependencies": {
+    "@semio-tech/schema-validator-ts": "workspace:*"
+  },
+  "scripts": {
+    "test-cargo-build-lease": "nx run @semio-tech/framework-process:test-cargo-build-lease",
+    "test-native-artifact-publication": "nx run @semio-tech/framework-process:test-native-artifact-publication"
   }
 }

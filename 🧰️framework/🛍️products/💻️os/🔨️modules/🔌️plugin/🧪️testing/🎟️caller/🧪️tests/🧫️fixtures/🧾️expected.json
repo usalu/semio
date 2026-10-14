@@ -1,0 +1,8 @@
+{
+  "operation": 97146,
+  "generation": 17,
+  "deadlineUs": 1500,
+  "expired": false,
+  "oneShot": true,
+  "callerRetainsFailure": true
+}

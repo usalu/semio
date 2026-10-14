@@ -1,0 +1,191 @@
+{
+  "version": 1,
+  "scalar": "float32",
+  "byteOrder": "little",
+  "alignment": 4,
+  "stride": 128,
+  "lanes": [
+    {
+      "field": "model0",
+      "offset": 0,
+      "scalarCount": 4,
+      "shaderLocation": 3
+    },
+    {
+      "field": "model1",
+      "offset": 16,
+      "scalarCount": 4,
+      "shaderLocation": 4
+    },
+    {
+      "field": "model2",
+      "offset": 32,
+      "scalarCount": 4,
+      "shaderLocation": 5
+    },
+    {
+      "field": "model3",
+      "offset": 48,
+      "scalarCount": 4,
+      "shaderLocation": 6
+    },
+    {
+      "field": "color",
+      "offset": 64,
+      "scalarCount": 4,
+      "shaderLocation": 7
+    },
+    {
+      "field": "flags",
+      "offset": 80,
+      "scalarCount": 4,
+      "shaderLocation": 8
+    },
+    {
+      "field": "emissive_cutoff",
+      "offset": 96,
+      "scalarCount": 4,
+      "shaderLocation": 10
+    },
+    {
+      "field": "surface_parameters",
+      "offset": 112,
+      "scalarCount": 4,
+      "shaderLocation": 15
+    }
+  ],
+  "cases": [
+    {
+      "id": "original-policy",
+      "model": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "color": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "preserveVertexColor": true,
+      "emissiveIntensity": 0.2,
+      "metalness": 0.63,
+      "roughness": 0.27,
+      "receivesShadow": true,
+      "expected": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        3,
+        0.2,
+        0.63,
+        0.27,
+        0,
+        0,
+        0,
+        -1,
+        1,
+        1,
+        1,
+        0
+      ]
+    },
+    {
+      "id": "ordered-model-lanes",
+      "model": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "color": [
+        0.125,
+        0.25,
+        0.5,
+        1
+      ],
+      "preserveVertexColor": false,
+      "emissiveIntensity": 0.375,
+      "metalness": 0.625,
+      "roughness": 0.875,
+      "receivesShadow": true,
+      "expected": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        0.125,
+        0.25,
+        0.5,
+        1,
+        2,
+        0.375,
+        0.625,
+        0.875,
+        0,
+        0,
+        0,
+        -1,
+        1,
+        1,
+        1,
+        0
+      ]
+    }
+  ]
+}

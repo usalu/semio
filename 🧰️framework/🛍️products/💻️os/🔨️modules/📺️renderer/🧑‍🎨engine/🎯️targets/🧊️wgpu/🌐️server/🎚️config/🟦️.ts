@@ -5,16 +5,16 @@ import { createWgpuBrowserConfig } from "../🟦️.ts";
 import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, pluginModulesRoot } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import { semioAssetsVitePlugin, semioServeCloseVitePlugin } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { semioBackboneVitePlugin, semioSourceFreshnessVitePlugins } from "../../../../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
-import { readBuildMode } from "../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { readBuildMode } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const workspace = resolve(root, "../../../../../../../../..");
 /** 🎚️ Selects the server's actual completed build profile. */
-export function wgpuCompletedProfileV1(): "dev" | "release" {
-  return readBuildMode(process.env.SEMIO_BUILD_MODE) === "release" ? "release" : "dev";
+export function wgpuCompletedProfileV1(): "prototype" | "release" {
+  return readBuildMode(process.env.SEMIO_BUILD_MODE) === "release" ? "release" : "prototype";
 }
 /** 📂️ Owns the completed native/browser roots shared by server mounts and runtime graph verification. */
-export function wgpuCompletedFrameworkRootsV1(profile: "dev" | "release") {
+export function wgpuCompletedFrameworkRootsV1(profile: "prototype" | "release") {
   return {
     compilerRoot: resolve(root, "../📦️packages/🦀️rust/dist", "wasm-" + profile),
     bootRoot: resolve(root, "../🚀️browser-boot/🤖️generated"),

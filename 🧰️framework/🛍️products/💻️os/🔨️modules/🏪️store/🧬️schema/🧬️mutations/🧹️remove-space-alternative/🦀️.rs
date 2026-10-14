@@ -8,8 +8,7 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Payload
 /// 🧹️ serde stays TEST-ONLY: feeds `SpaceHistoryMutation`'s own `cfg_attr(test)` oracle
 /// derive (its sibling `serde_json` differential test). Production never serializes through serde.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]

@@ -3,7 +3,7 @@ import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
 import { PNG } from "pngjs";
 import { inflateSync } from "node:zlib";
-import corpus from "../../🧫️fixtures/🚦️audit/🔣️.json";
+import corpus from "../🧫️fixtures/🚦️audit/🔣️.json";
 import {decodePngSnapshot,encodePngSnapshot} from "../../../../💾️binary/📸️snapshot/🟦️.ts";
 import { pngSnapshotFromSqliteDatabase, pngSnapshotToSqliteDatabase } from "../../🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework";

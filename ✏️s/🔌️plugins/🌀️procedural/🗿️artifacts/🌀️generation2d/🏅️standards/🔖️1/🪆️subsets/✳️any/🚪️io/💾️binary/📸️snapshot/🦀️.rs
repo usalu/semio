@@ -12,14 +12,14 @@ use store::PackError;
 
 /// 📦️ Encodes a `Generation2dSnapshot` to its binary pack form.
 pub fn encode(document: &Generation2dSnapshot) -> Vec<u8> {
-    store::os_store::serialization::ArtifactPack::encode_pack(document)
+    pack::snapshot::ArtifactPack::encode_pack(document)
 }
 
 /// 🔬️ Batch decode exists only for constitutional equivalence tests; mounted UI code
 /// has no production symbol that can reach the whole-document decoder.
 #[cfg(test)]
 pub fn decode(bytes: &[u8]) -> Result<Generation2dSnapshot, PackError> {
-    <Generation2dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)
+    <Generation2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -1024,16 +1024,16 @@ use crate::Generation2dSnapshot;
 #[cfg(test)] use std::collections::BTreeMap;
 use crate::standards::v1::subsets::any::io::text::snapshot::{Generation2dSnapshotDsl,generation2d_document_to_dsl,generation2d_document_from_dsl};
 
-impl store::os_store::serialization::ArtifactPack for Generation2dSnapshotDsl {
+impl pack::snapshot::ArtifactPack for Generation2dSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+        if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)
@@ -1042,9 +1042,12 @@ impl store::os_store::serialization::ArtifactPack for Generation2dSnapshotDsl {
         Some(Self::__dsl_spec())
     }
 }
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Generation2dSnapshotDsl {
 
-impl store::os_store::serialization::ArtifactPack for Generation2dSnapshot {
-    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec()) }
+}
+
+impl pack::snapshot::ArtifactPack for Generation2dSnapshot {
+    
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let document = generation2d_document_to_dsl(self);
         let inner = store::pack_rt::encode_document(&Generation2dSnapshotDsl::__dsl_spec(), &document.__dsl_to_record(), options)?;
@@ -1064,7 +1067,10 @@ impl store::os_store::serialization::ArtifactPack for Generation2dSnapshot {
     }
 
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-        <Generation2dSnapshotDsl as store::os_store::serialization::ArtifactPack>::record_spec()
+        <Generation2dSnapshotDsl as pack::snapshot::ArtifactPack>::record_spec()
     }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Generation2dSnapshot {
+fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec()) }
 }
 }

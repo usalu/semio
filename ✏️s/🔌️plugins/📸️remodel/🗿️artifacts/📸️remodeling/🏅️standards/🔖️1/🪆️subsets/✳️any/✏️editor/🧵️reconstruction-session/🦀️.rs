@@ -336,7 +336,7 @@ impl ReconstructionRunReason {
 /// state, so no config or window-config publication reconfigures it. `reconfigure: resume` therefore only
 /// governs a rebuilt job, which replays deterministically to its last checkpoint without re-emitting anything.
 pub fn reconstruction_run_definition() -> ToolRunDefinition {
-    ToolRunDefinition {
+    ToolRunDefinition { receiving: semio_framework_tool_run::ToolRunReceivingLimits::REPORTS,
         mutating: true,
         rebase: ToolRunRebasePolicy::Revalidate,
         reconfigure: ToolRunReconfigurePolicy::Resume,

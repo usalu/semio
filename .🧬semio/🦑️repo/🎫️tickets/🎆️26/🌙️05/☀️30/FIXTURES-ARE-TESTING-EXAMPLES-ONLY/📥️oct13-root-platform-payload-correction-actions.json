@@ -1,0 +1,90 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/📐️test-layout/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "7d7a63a3547160b0be92fc105238327747b4d72744549e4f69f4932a63eb5d61",
+      "afterSha256": "e7f4687c865de7412b0ca9f2c3290ea401af0219cdb3bd328e2d917ec59353c1",
+      "exclusive": false,
+      "scope": "Reverse only owned invalid regex changes to incidental fixture payload strings from hash-proven originals; preserve prior own rule inputs and actual full-domain reference edits"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️fault-notices-gate/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "87daeac6d116233a8a09fefb2d9b32001e6fe6c0e9bec80b9074dc3195e48cf6",
+      "afterSha256": "08c441c0ece703b84d1c2778b45815ec267ae7a07a7e5c5615e13e606326f73a",
+      "exclusive": false,
+      "scope": "Reverse only owned invalid regex changes to incidental fixture payload strings from hash-proven originals; preserve prior own rule inputs and actual full-domain reference edits"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧬️mutation-fixtures/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "a93f09e32b6e8c225d640b0e74d097d609401e86c69cccc36006f85232af8197",
+      "afterSha256": "dc8a4b250e2bd3c700731763a7a60ceacfd0c1b7f5cc286d3be3e629daeffb24",
+      "exclusive": false,
+      "scope": "Reverse only owned invalid regex changes to incidental fixture payload strings from hash-proven originals; preserve prior own rule inputs and actual full-domain reference edits"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧬️schema-invariants/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "5f46ba71e2e52eee7db1df0445775baf5a0e6bce2254dfcf527056273f52e6b9",
+      "afterSha256": "f7a37ee086fa390dd5df2f3328b511e5368b9301ba816e355b363ddad3771619",
+      "exclusive": false,
+      "scope": "Reverse only owned invalid regex changes to incidental fixture payload strings from hash-proven originals; preserve prior own rule inputs and actual full-domain reference edits"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧭️fixture-resolution/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "f15b2746eae1383eafd8adfabc40e03c9053947015b84299a378739c8ead3692",
+      "afterSha256": "20de1831a6dfe2726306ca755653a14bb550ff45200c6380e0744979882ab4a8",
+      "exclusive": false,
+      "scope": "Reverse only owned invalid regex changes to incidental fixture payload strings from hash-proven originals; preserve prior own rule inputs and actual full-domain reference edits"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧱️command-composition-source/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "95d5b1741294c8f325a5d7ab707ffadc59671f38eee94adf03432515515dadee",
+      "afterSha256": "d12a92669952da668718b6e2bf1d84a26b2c3d90baf1266eb74e5e0c9b4a0cce",
+      "exclusive": false,
+      "scope": "Reverse only owned invalid regex changes to incidental fixture payload strings from hash-proven originals; preserve prior own rule inputs and actual full-domain reference edits"
+    }
+  ],
+  "proof": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/📐️test-layout/🔣️.json",
+      "originalHashVerified": true,
+      "originalSha256": "e7f4687c865de7412b0ca9f2c3290ea401af0219cdb3bd328e2d917ec59353c1",
+      "currentOwnAfterVerified": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️fault-notices-gate/🔣️.json",
+      "originalHashVerified": true,
+      "originalSha256": "08c441c0ece703b84d1c2778b45815ec267ae7a07a7e5c5615e13e606326f73a",
+      "currentOwnAfterVerified": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧬️mutation-fixtures/🔣️.json",
+      "originalHashVerified": true,
+      "originalSha256": "dc8a4b250e2bd3c700731763a7a60ceacfd0c1b7f5cc286d3be3e629daeffb24",
+      "currentOwnAfterVerified": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧬️schema-invariants/🔣️.json",
+      "originalHashVerified": true,
+      "originalSha256": "f7a37ee086fa390dd5df2f3328b511e5368b9301ba816e355b363ddad3771619",
+      "currentOwnAfterVerified": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧭️fixture-resolution/🔣️.json",
+      "originalHashVerified": true,
+      "originalSha256": "20de1831a6dfe2726306ca755653a14bb550ff45200c6380e0744979882ab4a8",
+      "currentOwnAfterVerified": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧱️command-composition-source/🔣️.json",
+      "originalHashVerified": true,
+      "originalSha256": "d12a92669952da668718b6e2bf1d84a26b2c3d90baf1266eb74e5e0c9b4a0cce",
+      "currentOwnAfterVerified": true
+    }
+  ]
+}

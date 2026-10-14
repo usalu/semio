@@ -1,8 +1,9 @@
 //! 🎥️ Handwritten scene, geometry, ordered collections and optional literal emblem ownership.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::ShootingSnapshot;
 use crate::{ShootingAsset,ShootingCamera,ShootingSavedCamera,ShootingSceneLighting,ShootingSun,ShootingAmbient,ShootingShadow,ShootingMaterial,ShootingShot,ShootingEmblemChild};
 use std::collections::BTreeSet;
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{RowWriter,Cell,NativeEncodingBound,FloatColumn,read_binary64,ieee754_is_null}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{RowWriter,Cell,NativeEncodingBound,FloatColumn,read_binary64,ieee754_is_null}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 
@@ -29,14 +30,14 @@ fn restore_scene(row:&SqliteRow,native:&mut semio_framework_value::NativeDecodeC
  material:ShootingMaterial{color:native.copy_text(row.text(13)?)?,metalness:read_binary64(row,14,SCENE)?,roughness:read_binary64(row,15,SCENE)?,emissive:native.copy_text(row.text(16)?)?,emissive_intensity:read_binary64(row,17,SCENE)?,stroke:native.copy_text(row.text(18)?)?}
 })}
 fn restore_emblem(row:&SqliteRow,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<ShootingEmblemChild,ValueError>{native.scoped_stage(|native|{native.begin_stage(5)?;let child_id=native.copy_text(row.text(2)?)?;native.step()?;let artifact_id=native.copy_text(row.text(3)?)?;native.step()?;let artifact_kind=native.copy_text(row.text(4)?)?;native.step()?;let standard=native.copy_text(row.text(5)?)?;native.step()?;let subset=native.copy_text(row.text(6)?)?;native.step()?;Ok(store::os_store::artifact_child::ArtifactChild::new(child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind,standard,subset}}))})}
-impl ArtifactSqliteSnapshot for ShootingSnapshot{
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+impl ArtifactSqliteSnapshotHost for ShootingSnapshot{
+ 
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
-  self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
+  self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
   control.check_rows(2)?;let maximum=control.limits().max_rows;
-  let value=store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
+  let value=store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
    let mut count=2usize;for index in[1,2,4]{let n=match record.get(index){Some(semio_framework_dsl_record::FieldValue::List(values))=>values.len(),None|Some(semio_framework_dsl_record::FieldValue::Absent)=>0,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,("Shooting collections require literal lists").to_string()))};count=count.checked_add(n).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,("Shooting row count overflow").to_string()))?;}
    if !matches!(record.get(7),None|Some(semio_framework_dsl_record::FieldValue::Absent)){count=count.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,("Shooting row count overflow").to_string()))?}
    if count>maximum{return Err(ValueError::new(ValueRefusalKind::InvalidValue,("Shooting native snapshot exceeds row limit").to_string()))}Self::__dsl_from_record_controlled(record,native)
@@ -50,8 +51,13 @@ impl ArtifactSqliteSnapshot for ShootingSnapshot{
   if let Some(child)=&self.emblem{let target=&child.target;for text in[&child.child_id,&target.artifact_id,&target.dialect.artifact_kind,&target.dialect.standard,&target.dialect.subset]{bound.repeated(text.len(),24)?}}
   bound.finish()
  }
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let mut out=RowWriter::new(Self::SQLITE_SCHEMA,control)?;self.write_sqlite_rows(&mut out)?;out.finish()}
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+ 
+ 
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for ShootingSnapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let mut out=RowWriter::new(Self::SQLITE_SCHEMA,control)?;self.write_sqlite_rows(&mut out)?;out.finish()}
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
   validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits()).map_err(|e|invalid(e.to_string()))?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
   let documents=&database.table("shooting_document")?.rows;let scenes=&database.table("shooting_scene")?.rows;let asset_rows=&database.table("shooting_asset")?.rows;let camera_rows=&database.table("shooting_saved_camera")?.rows;let shot_rows=&database.table("shooting_shot")?.rows;let children=&database.table("shooting_emblem")?.rows;
   if documents.len()!=1||documents[0].rowid!=1||documents[0].values.len()!=4||documents[0].integer(0)?!=1||scenes.len()!=1||scenes[0].rowid!=1||children.len()>1{return Err(invalid("Shooting requires one document and scene and at most one emblem"))}identity(&scenes[0],37)?;for child in children{identity(child,7)?;}

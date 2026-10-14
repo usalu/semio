@@ -58,11 +58,11 @@ fn preview_eval_oversized_reserved_capacity_rejects_returns_and_retires_the_exac
 
 #[test]
 fn preview_eval_transient_codec_matches_the_independent_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️unit/🔣️.json")).expect("neutral fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️unit/🔣️.json")).expect("neutral fixture");
     for expected in fixture["accepted"].as_array().expect("accepted cases") {
         let typed: Generation3dPreviewWindowTransient = serde_json::from_value(expected.clone()).expect("serde_json oracle accepts");
         assert_eq!(serde_json::to_value(&typed).expect("typed JSON"), *expected);
-        let packed = store::os_store::serialization::ArtifactPack::encode_pack_with(&typed, &Default::default()).expect("pack");
-        assert_eq!(<Generation3dPreviewWindowTransient as store::os_store::serialization::ArtifactPack>::decode_pack_with(&packed, &Default::default()).expect("unpack"), typed);
+        let packed = pack::snapshot::ArtifactPack::encode_pack_with(&typed, &Default::default()).expect("pack");
+        assert_eq!(<Generation3dPreviewWindowTransient as pack::snapshot::ArtifactPack>::decode_pack_with(&packed, &Default::default()).expect("unpack"), typed);
     }
 }

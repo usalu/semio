@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Repository Target Execution Preparation Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "maximumElapsedMilliseconds"],
+  "properties": {
+    "version": {"const": 1},
+    "maximumElapsedMilliseconds": {"type": "number", "exclusiveMinimum": 0, "maximum": 120000}
+  }
+}

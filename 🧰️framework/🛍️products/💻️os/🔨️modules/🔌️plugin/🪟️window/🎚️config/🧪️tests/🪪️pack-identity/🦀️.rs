@@ -29,7 +29,7 @@ impl WindowConfigOwner for IdentityWindowOwner {
 
 #[test]
 fn window_config_pack_identity_rejects_foreign_inner_window_without_changing_or_materializing_target() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️pack-identity/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️pack-identity/🔣️.json")).unwrap();
     let observed = semio_framework_async::block_on(async {
         let mut observed = Vec::new();
         for row in fixture["cases"].as_array().unwrap() {

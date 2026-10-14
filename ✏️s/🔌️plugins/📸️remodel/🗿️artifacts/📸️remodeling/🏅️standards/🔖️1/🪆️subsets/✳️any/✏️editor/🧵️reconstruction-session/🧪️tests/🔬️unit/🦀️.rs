@@ -7,7 +7,7 @@ use semio_framework_tool_run::{ToolRunId, ToolRunTick, ToolRunTraceOp};
 use std::time::{Duration, Instant};
 
 const RUN_SCHEMA: &str = include_str!("../../🔣️.json");
-const RUN_FIXTURE: &str = include_str!("../../🧫️fixtures/🔣️.json");
+const RUN_FIXTURE: &str = include_str!("../🧫️fixtures/🔣️.json");
 
 fn schema_table() -> serde_json::Value {
     serde_json::from_str::<serde_json::Value>(RUN_SCHEMA).expect("run schema parses")["x-semio-toolRun"].clone()
@@ -42,7 +42,7 @@ const ORBIT_SHORT_LONG_EDGE_PX: u32 = 160;
 /// that completes without cameras.
 async fn imported_document(example: &str) -> Arc<RemodelingSnapshot> {
     if example == "synthetic-orbit" || example == "orbit-short" {
-        let mut scene = <RemodelingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("synthetic-orbit document parses");
+        let mut scene = <RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("synthetic-orbit document parses");
         let kept = if example == "orbit-short" { ORBIT_SHORT_FRAMES } else { FRAMES.len() };
         for (asset_id, bytes) in FRAMES.iter().take(kept) {
             let image = crate::editor::remodeling::decode_still_image(FRAME_MIME, bytes).expect("frame decodes");

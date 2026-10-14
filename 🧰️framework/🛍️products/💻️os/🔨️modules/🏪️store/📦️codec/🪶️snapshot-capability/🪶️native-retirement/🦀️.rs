@@ -1,5 +1,6 @@
 //! 🫴️ Original codec intermediates stay under the caller's admitted receiving frame.
-use super::{ArtifactSqliteSnapshot,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner};
+use pack::snapshot::ArtifactSqliteSnapshot as _;
+use super::{ArtifactSqliteSnapshotHost,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner};
 use crate::{io_schema::{IoError,IoOutcome,IoPayload,IoResult},sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding}};
 use semio_framework_value::{ValueError,ValueRefusalKind,retirement::RetireOwned};
 use super::sqlite_snapshot_workspace::staged;
@@ -21,7 +22,7 @@ fn validation(slot:&mut Option<IoResult<()>>)->Result<(),IoError>{
  }
 }
 
-pub(super) fn export<P:ArtifactSqliteSnapshot+RetireOwned>(_schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,native:&mut NativeSnapshotDecodeOwner<'_,'_>)->IoResult<SqliteDatabase>{
+pub(super) fn export<P:ArtifactSqliteSnapshotHost+RetireOwned>(_schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,native:&mut NativeSnapshotDecodeOwner<'_,'_>)->IoResult<SqliteDatabase>{
  native.receive_nested::<CodecFrame<P>,IoResult<SqliteDatabase>>(|slot,native|{
   *slot=Some(CodecFrame::empty());let frame=slot.as_mut().unwrap();
   let result=(||{
@@ -38,7 +39,7 @@ pub(super) fn export<P:ArtifactSqliteSnapshot+RetireOwned>(_schema:&str,dialect:
  }).map_err(IoError::from_value_error)?
 }
 
-pub(super) fn import<P:ArtifactSqliteSnapshot+RetireOwned>(_schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,input:&mut Option<SqliteDatabase>,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native:&mut NativeSnapshotEncodeOwner<'_,'_>)->IoResult<IoPayload>{
+pub(super) fn import<P:ArtifactSqliteSnapshotHost+RetireOwned>(_schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,input:&mut Option<SqliteDatabase>,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native:&mut NativeSnapshotEncodeOwner<'_,'_>)->IoResult<IoPayload>{
  if input.is_none(){return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvariantViolated,"SQLite codec original input is absent")))}
  native.receive_nested::<CodecFrame<P>,IoResult<IoPayload>>(|slot,native|{
   *slot=Some(CodecFrame::empty());let frame=slot.as_mut().unwrap();

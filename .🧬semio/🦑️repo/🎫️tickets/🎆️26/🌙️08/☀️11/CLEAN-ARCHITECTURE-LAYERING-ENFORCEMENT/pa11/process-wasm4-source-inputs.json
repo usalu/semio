@@ -1,0 +1,2015 @@
+{
+  "version": 1,
+  "qualification": "Whole current Process and Schema production/test/source metadata plus root Bun/Nx installation; static source custody excludes thirdparty bodies and unrelated products, not a graph verdict",
+  "rows": [
+    {
+      "path": "bun.lock",
+      "bytes": 537260,
+      "sha256": "82793c9ad08bf63ed3f8a654f10761f637303755c6cad71f8577157a9e3d3dde",
+      "inode": 329622618,
+      "mtimeMs": 1791908602494.0483
+    },
+    {
+      "path": "nx.json",
+      "bytes": 3187,
+      "sha256": "c6355fa7262ec4550788a4e76d33b64d13f0de83d6cdaa09dc2a182c0691f6fb",
+      "inode": 306839411,
+      "mtimeMs": 1791907998557.8848
+    },
+    {
+      "path": "package.json",
+      "bytes": 13133,
+      "sha256": "5658405bba43d07a93f62e3bcde0e1e673eb02409eb38331f029fb519bd2851b",
+      "inode": 323505639,
+      "mtimeMs": 1791908527077.9558
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts",
+      "bytes": 1780,
+      "sha256": "01afaba090403b6de22715d69f82d303ef665f6ba2bd633e4eef5ffdb1fc2c37",
+      "inode": 301336861,
+      "mtimeMs": 1790860040599.0764
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/⏱️budget/🧪️tests/🟦️.ts",
+      "bytes": 3518,
+      "sha256": "c875989117346743ac42b1b791ad192e3d8716dde90fe4703c918cd4f10d7ffc",
+      "inode": 301335805,
+      "mtimeMs": 1791242174853.6545
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/⏱️budget/🧫️fixtures/🔣️.json",
+      "bytes": 1409,
+      "sha256": "fb4d1892eade847bcd0280613335778e5eaedc770bb468cb09ff5f04af823175",
+      "inode": 301335803,
+      "mtimeMs": 1790859644110.3992
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/⏱️budget/🧬️schema/🔣️.json",
+      "bytes": 788,
+      "sha256": "7abee010126a44056cbdee1717d6bc24ce14353d66ad61fc36092b3611e988d1",
+      "inode": 310520532,
+      "mtimeMs": 1791240414794.2825
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🛑️interruption/🧪️tests/🟦️.ts",
+      "bytes": 5492,
+      "sha256": "3ec1c347694fe7d3688fb7b7d1ee6c7f14f0de254490f8ba100f71c91210a78f",
+      "inode": 324561060,
+      "mtimeMs": 1791912185558.6184
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🛑️interruption/🧫️fixtures/🔣️.json",
+      "bytes": 686,
+      "sha256": "076540bfe1f05e11bf3f95574fd7f1beda489c697cab1e29ffc462502288fe1e",
+      "inode": 324560241,
+      "mtimeMs": 1791593031036.1018
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🧪️tests/🟦️.ts",
+      "bytes": 3069,
+      "sha256": "9bc9216850e64671dc4e0772cecdd2fb6dedb4f45d22609f75baff6ecec572e6",
+      "inode": 324412390,
+      "mtimeMs": 1791912185558.0425
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🧫️fixtures/🔣️.json",
+      "bytes": 508,
+      "sha256": "a9d0b9f97d0bcc9f83426eefd610841227797cfb23474f75089c4e77674df2e0",
+      "inode": 324412388,
+      "mtimeMs": 1791585990941.189
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🟦️.ts",
+      "bytes": 1785,
+      "sha256": "1b04c6fd409d3030d0a2194bfdd6d826f9a751420f425930000fd11c6f4b32fb",
+      "inode": 324509130,
+      "mtimeMs": 1791590035547.2908
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🧪️tests/🟦️.ts",
+      "bytes": 3370,
+      "sha256": "4ca2fb0adfcae62c37aaffa2c42ee616ee588f209b9029f4db487f3f81a0cf1e",
+      "inode": 324468110,
+      "mtimeMs": 1791907717468.513
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🧫️fixtures/🔣️.json",
+      "bytes": 1033,
+      "sha256": "1cd104b8d7d370b04215be7efb45f48a2f51a7dd5b95ec97cf53de2129ad92a3",
+      "inode": 324468108,
+      "mtimeMs": 1791588506169.276
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🧬️schema/🔣️.json",
+      "bytes": 619,
+      "sha256": "3570198a28e8f2f34c7fef6ed316ab3c7b8da04112298997bafcc4871c535d8c",
+      "inode": 324468106,
+      "mtimeMs": 1791588506168.4849
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "bytes": 9045,
+      "sha256": "0e85d70f2e6bea7824b2c3880ec13259c3d04051d2aaf480652c6de4706843e7",
+      "inode": 306866045,
+      "mtimeMs": 1791910227422.7979
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️progress/🟦️.ts",
+      "bytes": 2091,
+      "sha256": "d0213768124a279bab293b584acb0d0f615b01c9453385d65f3e38167c953097",
+      "inode": 306866047,
+      "mtimeMs": 1791241710579.3604
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️stdout/🟦️.ts",
+      "bytes": 2323,
+      "sha256": "efeae0e13b4ea284559d8c0209d532aeac8b06314e4287297d73f32bba061a87",
+      "inode": 324543365,
+      "mtimeMs": 1791592490918.0767
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📬️output/🟦️.ts",
+      "bytes": 3472,
+      "sha256": "90444ae1536fbc4917131937af1faf3fe1d084c25ff011c5c26e9352f1616794",
+      "inode": 324589884,
+      "mtimeMs": 1791594411538.1785
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts",
+      "bytes": 12204,
+      "sha256": "f6bf4b3a134f486460a0e43db929d54812f0cd2e0e9462a66f53787782aaef86",
+      "inode": 301310826,
+      "mtimeMs": 1791907717479.4705
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧫️fixtures/🌳️ownership/🔣️.json",
+      "bytes": 696,
+      "sha256": "ecc17a97f872f9e519943568fcd9239243d756ec75b44fdfd69f0fafd220fd01",
+      "inode": 318200325,
+      "mtimeMs": 1791373342707.7024
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧫️fixtures/📤️progress/🔣️.json",
+      "bytes": 200,
+      "sha256": "02400785172b7cdd909e8524e64eb133a818ed0da1ea89b6c9cc7de39fb22d31",
+      "inode": 306866049,
+      "mtimeMs": 1791131248989.2864
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧫️fixtures/📤️stdout/🔣️.json",
+      "bytes": 577,
+      "sha256": "4c349624b418d49aa34bcdd33c3e1af888fe6fa53bfebf7143d01fb774cc1890",
+      "inode": 324543362,
+      "mtimeMs": 1791591962889.7505
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧫️fixtures/📪️exit.json",
+      "bytes": 512,
+      "sha256": "853b9b3d771428f476cf059875178e784e53305b649ab8d13dd699625ba5caa2",
+      "inode": 324450975,
+      "mtimeMs": 1791587933550.6636
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧫️fixtures/📬️output/🔣️.json",
+      "bytes": 2543,
+      "sha256": "af87b46c50cfa7ab4134c9572fd8b286f24f6e21368664aa59082368d31a70ef",
+      "inode": 324589882,
+      "mtimeMs": 1791594411537.8953
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧫️fixtures/🔣️.json",
+      "bytes": 873,
+      "sha256": "6c6425d94ee5e5117f3861d20dff40ed197a0517597b3c3be05f0de3417bd77a",
+      "inode": 301310824,
+      "mtimeMs": 1791374510269.7693
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📤️stdout.json",
+      "bytes": 165,
+      "sha256": "98da81ef2a1bc61081ceb5a4e27c74959068c51531d1971bc22423db08b1fa8b",
+      "inode": 324543363,
+      "mtimeMs": 1791591962890.036
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📪️exit.json",
+      "bytes": 701,
+      "sha256": "ca243d09bb7d1160ca9d54bcd6fa8a8038b6ce52626b5f316cfe310f28b182cf",
+      "inode": 324469907,
+      "mtimeMs": 1791588601240.9324
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📬️output.json",
+      "bytes": 452,
+      "sha256": "826b1f70f7b7c6bf1b5fa99b24211b8fd0039537d8b8d4880dbe6d1f8b9b1828",
+      "inode": 324589880,
+      "mtimeMs": 1791594411537.5874
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts",
+      "bytes": 1294,
+      "sha256": "c8f0f798b06cfb69c736060f76735c42ad49d5c0f99473ad93738adfbd347ff2",
+      "inode": 329368404,
+      "mtimeMs": 1791903004774.0374
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "bytes": 2102,
+      "sha256": "1431d9cdf42244052c127042465ea12d0e3fc4db880cfe1b12888a43bdcee968",
+      "inode": 329368316,
+      "mtimeMs": 1791902904041.861
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧫️fixtures/🔣️.json",
+      "bytes": 745,
+      "sha256": "55ef2a9eb4f38fb41da28b1f53fbb0459b1ad7e4361a91c46e94809d9e9251d4",
+      "inode": 329368314,
+      "mtimeMs": 1791902904039.4893
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧬️schema/🔣️.json",
+      "bytes": 203,
+      "sha256": "80a098a1f51e60abf051c3caa03204bf9ff15576657c95587dc8b13b0806c450",
+      "inode": 329368312,
+      "mtimeMs": 1791902904031.8857
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts",
+      "bytes": 3679,
+      "sha256": "3ac18836475e1c7f5eca6691a18e1403da6c4bec7e92b5592ac5aa091c9cfd32",
+      "inode": 329471965,
+      "mtimeMs": 1791912196460.9685
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🟦️.ts",
+      "bytes": 6754,
+      "sha256": "a88bdcfcab34a91762adace20d7901e0cd234afcb98d6c3f96db20f40575a23f",
+      "inode": 329871149,
+      "mtimeMs": 1791911616920.7512
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧫️fixtures/🔣️.json",
+      "bytes": 767,
+      "sha256": "d5a51a013f4978e75c2b7c8518d06be9df3734c032e96e1348eb362338958e4e",
+      "inode": 329871147,
+      "mtimeMs": 1791911555958.2192
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧬️schema/🔣️.json",
+      "bytes": 958,
+      "sha256": "5d1d93e3acc6b52b5f4617f08356a1755f91eb7023b444ea0cedb2c77ff24826",
+      "inode": 329471964,
+      "mtimeMs": 1791911555957.688
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🗃️state/🟦️.ts",
+      "bytes": 3192,
+      "sha256": "10b0ddf03d51803370bc393e3e5666c7d5b3d535c0ec187086c74521bb3a4d80",
+      "inode": 329616439,
+      "mtimeMs": 1791908439419.697
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🗃️state/🧬️schema/🔣️.json",
+      "bytes": 873,
+      "sha256": "b130591cdca6f3dcd79aa2b6047d2a768c7e529834132c0f42fd0bb119d17d1e",
+      "inode": 329616441,
+      "mtimeMs": 1791908144314.8044
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🟦️.ts",
+      "bytes": 3262,
+      "sha256": "3792cee457eb0cbf52bb9fc5e226d00ff66f2becbd782d54279c5069a6c1921a",
+      "inode": 329559856,
+      "mtimeMs": 1791908777697.5413
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🧪️tests/🟦️.ts",
+      "bytes": 7417,
+      "sha256": "7b4fe4fbedafc31d8d6483366bb797377313247a62755dbd9730e9cca13b9cc1",
+      "inode": 329539342,
+      "mtimeMs": 1791910502991.5884
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🧫️fixtures/🔣️.json",
+      "bytes": 879,
+      "sha256": "268aff9d45fc74f779e6c6ee8070dc0514f50c1a270d6ef4c69fa0aa4f55995b",
+      "inode": 329539341,
+      "mtimeMs": 1791910502990.9722
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🧬️schema/🔣️.json",
+      "bytes": 817,
+      "sha256": "1f2b31a800158b191245950d5a78ec6f34c63d40ecd44bf897f0352851cc4325",
+      "inode": 329559855,
+      "mtimeMs": 1791908777695.211
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧪️tests/🏗️managed/🟦️.ts",
+      "bytes": 2595,
+      "sha256": "d4311ea739a65de270cbf9e84b25de026b2505e62fc1d4a055cacacb56fe2bb3",
+      "inode": 329467777,
+      "mtimeMs": 1791904784561.2034
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧪️tests/🏗️native/🟦️.ts",
+      "bytes": 15442,
+      "sha256": "19d30f6466c2c97cddf7345767c0e209b3e04173e18b5893da07010f9588a4f5",
+      "inode": 329368355,
+      "mtimeMs": 1791909013311.6558
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧫️fixtures/🏗️native/🔣️.json",
+      "bytes": 1945,
+      "sha256": "1b805e25f5de4fae9a46aa2f3db6979c4c7bdab48b30e2c4d35da2952dbfd981",
+      "inode": 329368352,
+      "mtimeMs": 1791908852525.1375
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️context/🟦️.ts",
+      "bytes": 1509,
+      "sha256": "36d34b44e71f78dfea3ccbce3541a8214ffd5800fd72533fbf417602fc447731",
+      "inode": 301454337,
+      "mtimeMs": 1791907717483.2764
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️context/🧪️tests/🚫️paths/🟦️.ts",
+      "bytes": 2887,
+      "sha256": "4ed1d3b2e94b32d96233425989de567692708d89e2f88b33155b5009be5a13f7",
+      "inode": 306866053,
+      "mtimeMs": 1791242176862.8147
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️context/🧪️tests/🟦️.ts",
+      "bytes": 1681,
+      "sha256": "ceb543ed84e5c75e6a9cd3bbd86dfd2b2775dfeb2e3a4309f41cc52faf93e141",
+      "inode": 306866054,
+      "mtimeMs": 1791242176845.5898
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️context/🧫️fixtures/🔣️.json",
+      "bytes": 94,
+      "sha256": "bf7c8556f14fe4d60aadbd36e35eeda0591c659bbe104c2e937308ce49fbda46",
+      "inode": 301451836,
+      "mtimeMs": 1790867867676.65
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️context/🧫️fixtures/🚫️paths/🔣️.json",
+      "bytes": 1501,
+      "sha256": "f74192a9b5d15b4572726fc472b67b137abf5973b42076d8e8e39e8c6b17a88e",
+      "inode": 306866056,
+      "mtimeMs": 1791131248990.6543
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️context/🧬️schema/🔣️.json",
+      "bytes": 574,
+      "sha256": "e86f36ed0f45528699d995d69b3d693441f42e50399a32f229f9ef8558db52eb",
+      "inode": 306866057,
+      "mtimeMs": 1791131248991.0195
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+      "bytes": 11952,
+      "sha256": "cfb88cbd596c0eab568f71b9b80e29c9cf98b19031d01c91012281978cd6081b",
+      "inode": 324724278,
+      "mtimeMs": 1791911555959.3381
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "bytes": 9013,
+      "sha256": "f5be336af797eb2717498f58a65c8948f793819fa36f03736c5cd087d5b0d5f6",
+      "inode": 324724279,
+      "mtimeMs": 1791911555958.8184
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/📋️policy/🧬️schema/🔣️.json",
+      "bytes": 349,
+      "sha256": "522246923cb5d7d684320efafe0813ed947a8bfe8903b5fe337d862403bb02ce",
+      "inode": 324673873,
+      "mtimeMs": 1791597569034.9797
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧪️tests/🟦️.ts",
+      "bytes": 7148,
+      "sha256": "af760a55be007a28b4ef581aa433a9ea287c7b527889cfd80ed26d9766bb8127",
+      "inode": 324616555,
+      "mtimeMs": 1791907801330.0544
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧫️fixtures/🔣️.json",
+      "bytes": 1510,
+      "sha256": "18e8f9c0c3fdc7b365e270a30f4082de4b4a30eac5c5925693c5a1a3ea37fa5c",
+      "inode": 324616551,
+      "mtimeMs": 1791597672103.213
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+      "bytes": 6555,
+      "sha256": "c0c3d346323fbf3d263bda1a16cfe83d43072fcfb0326998d8f2c205b918546d",
+      "inode": 301546322,
+      "mtimeMs": 1791907717489.2346
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/🧪️tests/🟦️.ts",
+      "bytes": 8351,
+      "sha256": "7fe55190c0eb4f5d043ad47c6681406d35f6a417917780d9766caab1a602fabb",
+      "inode": 306866060,
+      "mtimeMs": 1791596876727.5957
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/🧫️fixtures/🔣️.json",
+      "bytes": 1379,
+      "sha256": "dce3cb4913e173adf07d32098e3c9ecfbd78770cda25c0b10bd6c4dfdfc2dcec",
+      "inode": 301546134,
+      "mtimeMs": 1790874000977.8906
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🌊️relay/🟦️.ts",
+      "bytes": 6195,
+      "sha256": "065847e7b46149151faf23fa3865af748d07fe1f2b8ffd319e98832895d48686",
+      "inode": 320651452,
+      "mtimeMs": 1791905275050.887
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 596,
+      "sha256": "43c71e504fd317baab535361d65222aae873566ccd0d461697bf97fbb24589d1",
+      "inode": 327846078,
+      "mtimeMs": 1791858057220.5752
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts",
+      "bytes": 23396,
+      "sha256": "658186a9e18b46601ae73c6db086a3f8198ea13f0e42b0f15126378fa4297e4c",
+      "inode": 327854003,
+      "mtimeMs": 1791907717496.314
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🟦️.ts",
+      "bytes": 5880,
+      "sha256": "2f2cba53057b43335f48a5f41e72246efdea992a81b902228ec5ae35d1b24720",
+      "inode": 327865136,
+      "mtimeMs": 1791903894377.9758
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧫️fixtures/🔣️.json",
+      "bytes": 15778,
+      "sha256": "4d894de69395ecd1d3f5faefb3792e80eedd6dd14da9c8b5ec0bc18f37a223bd",
+      "inode": 328480056,
+      "mtimeMs": 1791903808557.5696
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧬️schema/🔣️.json",
+      "bytes": 4220,
+      "sha256": "bf8d77ace44cc73dbe62bda16fbae936fb1891f570d0424e13a14f0db088b16a",
+      "inode": 327849856,
+      "mtimeMs": 1791903036752.3215
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎰️jobserver/🟦️.ts",
+      "bytes": 9103,
+      "sha256": "01edc2c2b50f4a24e59d231e9e23948fca0f4ca10f72c623dab9c5b0b7534193",
+      "inode": 327848936,
+      "mtimeMs": 1791908515579.7861
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎰️jobserver/🧪️tests/🟦️.ts",
+      "bytes": 8720,
+      "sha256": "158be2e6831d37e057ff84b85e7a496e5c1c2af728db88930ba34bcd7296369c",
+      "inode": 327866006,
+      "mtimeMs": 1791907996934.7778
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎰️jobserver/🧫️fixtures/🔣️.json",
+      "bytes": 2135,
+      "sha256": "02121cc1a3df088d365860628590dd4548fee082f3567db8429cda1b284aba3c",
+      "inode": 327848546,
+      "mtimeMs": 1791907996934.1833
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎰️jobserver/🧬️schema/🔣️.json",
+      "bytes": 859,
+      "sha256": "6e70499ebf7eea47184f270b2f19717365ff6b186455b97234e2a403e5b7a693",
+      "inode": 327848544,
+      "mtimeMs": 1791903036756.6729
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📈️telemetry/🟦️.ts",
+      "bytes": 21240,
+      "sha256": "f07d6bb895050b895e115ec66fe6bb4a6efb3523f86a37da89b15c782f6de8e3",
+      "inode": 327856469,
+      "mtimeMs": 1791907717505.26
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📈️telemetry/🧪️tests/🟦️.ts",
+      "bytes": 6529,
+      "sha256": "e13ac000a7cfe560597c85b87a8cd1ac7c9860024c2b55f49339cd4104b01529",
+      "inode": 327869983,
+      "mtimeMs": 1791903808554.7554
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📈️telemetry/🧫️fixtures/🔣️.json",
+      "bytes": 10385,
+      "sha256": "ea91fb5718a5643080d7a4cf4327bfb2be073bf161f6f41255ca81f16f4d0782",
+      "inode": 327868013,
+      "mtimeMs": 1791903808555.3518
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📈️telemetry/🧬️schema/🔣️.json",
+      "bytes": 3357,
+      "sha256": "b26bb333d640c67b58d41cf317e1caad07313193ffd14ed3de3eb95d26203002",
+      "inode": 327855801,
+      "mtimeMs": 1791903036747.881
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧬️schema/🔣️.json",
+      "bytes": 1428,
+      "sha256": "83b42eb377e9bf502868910b4ae13d330791df8dd6505bba236883cd42a21df6",
+      "inode": 323539984,
+      "mtimeMs": 1791903036753.5247
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts",
+      "bytes": 3538,
+      "sha256": "ce90d0ebfc69b8dc4536b4b60f9070e42b0e68e969bdf3a3dab46572b3306294",
+      "inode": 298949029,
+      "mtimeMs": 1791905275048.5352
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🟦️.ts",
+      "bytes": 4851,
+      "sha256": "f5a25b3d6ea3d8a5dd483bdf2f93af63d6acb7c1b7fbc544838db8e802a332e3",
+      "inode": 298948443,
+      "mtimeMs": 1791903808555.8557
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧫️fixtures/🔣️.json",
+      "bytes": 1639,
+      "sha256": "6a23471eed5107303d8ec2fce9acc5583ae4f86634180dfeeedc52162f72a706",
+      "inode": 328480055,
+      "mtimeMs": 1791903808556.1262
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧬️schema/🔣️.json",
+      "bytes": 849,
+      "sha256": "4b34b34dbc6ca28c07aa5f51067b3d9f37e759b1daaa38212207115abcea0943",
+      "inode": 298941672,
+      "mtimeMs": 1791903036749.3984
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts",
+      "bytes": 8384,
+      "sha256": "11dc3e81da221af77f94e99230bf45171e2827b83c7f0dfd8899ea52d9e0a2aa",
+      "inode": 328394598,
+      "mtimeMs": 1791907717508.4556
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🗃️stage-cache/🧪️tests/🟦️.ts",
+      "bytes": 4993,
+      "sha256": "628f492bb8664e5367cf89c52d1cd443928c189a7d24fa84ca98ebea6539dcf0",
+      "inode": 328394737,
+      "mtimeMs": 1791903808556.534
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🗃️stage-cache/🧫️fixtures/🔣️.json",
+      "bytes": 4148,
+      "sha256": "9f1a7da55a7c620471e918d5a912b7ee2d8b1df6511674461fc6416dc85c0833",
+      "inode": 328393834,
+      "mtimeMs": 1791903808556.8203
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🗃️stage-cache/🧬️schema/🔣️.json",
+      "bytes": 2161,
+      "sha256": "acc6d4496425673c68f63ed57968f90721e8dcf67f918cbdc2e4e4cfa649b523",
+      "inode": 328393830,
+      "mtimeMs": 1791903036750.961
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "bytes": 57874,
+      "sha256": "59da960dfa6d886e74a45b1fe3b8adec6879b5f3c12b2948f8a7a48008f02d6b",
+      "inode": 327056639,
+      "mtimeMs": 1791909423459.6443
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts",
+      "bytes": 47945,
+      "sha256": "3f2e4a4c139794fc483f37351b6159b0827cdbd55aaf77c11a7d491348e4220b",
+      "inode": 328401158,
+      "mtimeMs": 1791911674811.4033
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts",
+      "bytes": 29457,
+      "sha256": "35f24ff2506ed05945a8712bf4dfe364d1fee17934e32e328f594f67306f0f45",
+      "inode": 328604395,
+      "mtimeMs": 1791911322448.4392
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧫️fixtures/🔣️.json",
+      "bytes": 18905,
+      "sha256": "bc58af6fe9cd3b3c6c7dd93587e8dfa1a6569ff38e8a3bf18c0677717b64398f",
+      "inode": 327870915,
+      "mtimeMs": 1791910397765.0303
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧬️schema/🔣️.json",
+      "bytes": 9110,
+      "sha256": "de52283471b934833eba88f67597073eaded267543f460072872cb2796293f11",
+      "inode": 327856764,
+      "mtimeMs": 1791908600655.024
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧪️tests/📦️publication/🟦️.ts",
+      "bytes": 2682,
+      "sha256": "d5a09851baacf03895215379a9d006ca273853dbf5fac378cb3f4034f563c98c",
+      "inode": 301509876,
+      "mtimeMs": 1791903808558.916
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧪️tests/🟦️.ts",
+      "bytes": 38697,
+      "sha256": "e79024f709333dfd635402e4575312903ffc9354f2e910f6e139b0d289054d1c",
+      "inode": 328480085,
+      "mtimeMs": 1791907421483.2898
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧪️tests/🦀️cargo/🟦️.ts",
+      "bytes": 4690,
+      "sha256": "9ffb8a58c408038d34c0981d070b0b14972d8dfad00fa8bd1aaa1213963fb6ec",
+      "inode": 328480057,
+      "mtimeMs": 1791903808558.689
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧫️fixtures/🔣️.json",
+      "bytes": 5395,
+      "sha256": "026d3692c4531dd8931c8993036c4e60305bd896bad38e634dd59b69ebc3e9c3",
+      "inode": 301484260,
+      "mtimeMs": 1791903808562.7947
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧬️schema/📌️source-owner/🔣️.json",
+      "bytes": 924,
+      "sha256": "fd38ee92a4036809fffddc3eca254815b1fb831bf39e3a2b8b3f9fa4736b29bc",
+      "inode": 324013007,
+      "mtimeMs": 1791903036755.0938
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧬️schema/🔣️.json",
+      "bytes": 1040,
+      "sha256": "2f4d5b6be16a37efd0cdd32d25e07f4c35833b0931a4d339fe233628f521e174",
+      "inode": 301484259,
+      "mtimeMs": 1791903036754.7812
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧬️schema/🧾️unit-evidence/🔣️.json",
+      "bytes": 1898,
+      "sha256": "d481abbedd780e70bcaf2248457745afb67968f150abd8a57984fe9c1ebf4b1b",
+      "inode": 324052476,
+      "mtimeMs": 1791903036755.5225
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts",
+      "bytes": 34171,
+      "sha256": "ea59ee7eab30058e3d2a332df8c7d329917f7ee50936099f3632a9a83890ae54",
+      "inode": 327056637,
+      "mtimeMs": 1791903036757.289
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🧪️tests/🟦️.ts",
+      "bytes": 23639,
+      "sha256": "2a964227471ef1876427e50c2eef6f81c9da7f1219367f5713cc2015114b6356",
+      "inode": 325628044,
+      "mtimeMs": 1791903808560.9277
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🧫️fixtures/🔣️.json",
+      "bytes": 108642,
+      "sha256": "a70590f4c0844f143ee21822df1a27c9e6041419219f5ba0781f1ed4115a6370",
+      "inode": 325627636,
+      "mtimeMs": 1791903808561.8113
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🧬️schema/🔣️.json",
+      "bytes": 14408,
+      "sha256": "f3e4f4f96cbe196e17fad62ca2f5149b0d5116906dab7dcd1d3f08ec883978f5",
+      "inode": 325627241,
+      "mtimeMs": 1791903036757.9492
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🐹️go-build/🟦️.ts",
+      "bytes": 4115,
+      "sha256": "71f2cf958dc5faac394234409044265250c069bd13e3a104ff05f08f445e7976",
+      "inode": 329472359,
+      "mtimeMs": 1791907717531.048
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🐹️go-build/🧪️tests/🟦️.ts",
+      "bytes": 2399,
+      "sha256": "0b020e86dd76fbcd4f4b0e7dd2ab5ae80d9a4e6958ac62c7d6b0253a5e3161fa",
+      "inode": 329472292,
+      "mtimeMs": 1791905602970.2756
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🐹️go-build/🧫️fixtures/🔣️.json",
+      "bytes": 351,
+      "sha256": "8983683e911a3a944d5984ef8e278413eaafd3b8a79bb2ba92b7466e42bf9f9b",
+      "inode": 329472290,
+      "mtimeMs": 1791905602970.1174
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🐹️go-build/🧬️schema/🔣️.json",
+      "bytes": 821,
+      "sha256": "0784c30bbc2b1990d6c3d365601543bd9150f8cc6c800f240ca7f4e88db4ac7d",
+      "inode": 329472288,
+      "mtimeMs": 1791905602969.9155
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+      "bytes": 8570,
+      "sha256": "92f4a6cc19c42df333cbc6d0fd9f94ee72b6fa9efa97688cdf554fc3abc65dc2",
+      "inode": 311200105,
+      "mtimeMs": 1791284792586.636
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧪️tests/🟦️.ts",
+      "bytes": 8839,
+      "sha256": "8ad7ba722863910dcb4d22a8da3e2af8658309d57176bf5603601e906eeb56be",
+      "inode": 306823949,
+      "mtimeMs": 1791242176967.4658
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧫️fixtures/🔣️.json",
+      "bytes": 1015,
+      "sha256": "a1770c888fcf20bf2f19f33a5d70fb6e9759b51d4df2c5566b23b2f3f6811263",
+      "inode": 306823950,
+      "mtimeMs": 1791131188503.8977
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts",
+      "bytes": 11713,
+      "sha256": "6e216ef8d582b4ab603cd0b0bd333c3a6fc53d5f0ce700e2d0f5fa05add8c68c",
+      "inode": 301498501,
+      "mtimeMs": 1791909413281.9468
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🧪️tests/🟦️.ts",
+      "bytes": 8812,
+      "sha256": "f3bfbf96d452cc936820e4c4cb02f8ea19d6b49588e2c8be1a9c034133f388e1",
+      "inode": 301497331,
+      "mtimeMs": 1791906951853.4324
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🧫️fixtures/🔣️.json",
+      "bytes": 1184,
+      "sha256": "520e064c76a0faaf6bfcb4b2a590dc339750d0b9da3533aba33c940c20951b3a",
+      "inode": 301497330,
+      "mtimeMs": 1791906424625.127
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🧬️schema/🔣️.json",
+      "bytes": 3608,
+      "sha256": "3da1805c99e825a851252c2f728c9d13dc62ad819c8454353ad5b1903cde2f62",
+      "inode": 310536793,
+      "mtimeMs": 1791906780143.0522
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
+      "bytes": 2218,
+      "sha256": "6364b9ef7ac45fed824f785f5b70b995f9fb739e52af30f597da267eaa8633d0",
+      "inode": 311200106,
+      "mtimeMs": 1791284792586.9106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🧪️tests/🟦️.ts",
+      "bytes": 5696,
+      "sha256": "bc28829607745b80fe31bfa7ae6c1eb1a6659f170b7cc9e225eaeb48b7ba47a8",
+      "inode": 311200107,
+      "mtimeMs": 1791284792587.2166
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🧫️fixtures/🔣️.json",
+      "bytes": 1238,
+      "sha256": "f69ded6931c422402df672a6501c0e3280e31c40a2aa4386e4298ae7922e9922",
+      "inode": 311200108,
+      "mtimeMs": 1791284792587.6348
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🧬️schema/🔣️.json",
+      "bytes": 1392,
+      "sha256": "50643bacd35597cc3c60d6ef50db1c756c24beae8eb34b00f0c32a651f1a91af",
+      "inode": 311200109,
+      "mtimeMs": 1791284792587.733
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json",
+      "bytes": 2128,
+      "sha256": "e26f26f0bd062e4d08fcb728ad50a5b69f72b57915c863ff4131efe558ce453d",
+      "inode": 324600457,
+      "mtimeMs": 1791909211836.8489
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts",
+      "bytes": 273,
+      "sha256": "9610713ed696f3ccfc968f21afa3f7df57932a65af9b7c53a12210a5a41189fa",
+      "inode": 324600402,
+      "mtimeMs": 1791594639032.555
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️command/🟦️.ts",
+      "bytes": 295,
+      "sha256": "afb09e3bfc1976476f892397c27eee559822ee7c4b39665f7f72a0d841885010",
+      "inode": 324600454,
+      "mtimeMs": 1791594639037.8713
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "bytes": 652,
+      "sha256": "25b5cb010e0b143b3d0c333ab7689b620fa7598254d42b3bfee4a1d8dd4d1ed5",
+      "inode": 324600398,
+      "mtimeMs": 1791907118423.5906
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts",
+      "bytes": 202,
+      "sha256": "158a6a5c6483b4fb6975aa2a749548da156a633f7d75f88d91e0db680dd43716",
+      "inode": 329519535,
+      "mtimeMs": 1791907118384.4717
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts",
+      "bytes": 233,
+      "sha256": "8784c9797b1fd724d3d477e14157f600b602794f7e40f2477e556cbb0c1a1057",
+      "inode": 329519540,
+      "mtimeMs": 1791907118390.0295
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗃️state/🟦️.ts",
+      "bytes": 197,
+      "sha256": "73c43336220b28664c4b90428663b8a32ddada48299468ae40e1a367bfb2f042",
+      "inode": 329616443,
+      "mtimeMs": 1791908193566.8735
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts",
+      "bytes": 187,
+      "sha256": "4d4e3ec44019e7c4bd390c435e34b091a667cb6e9cea1521ab06b9f6855f945b",
+      "inode": 329616445,
+      "mtimeMs": 1791908193567.1416
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/🟦️.ts",
+      "bytes": 186,
+      "sha256": "6131bf908dab6138907845b82a60cf7bef1f823a777dfe08d69ae8eeaec8aa45",
+      "inode": 324600450,
+      "mtimeMs": 1791594639037.428
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts",
+      "bytes": 343,
+      "sha256": "db4b5b30d79098d816089c981b7dabafe593cfb379a1c3ac848c7bcd67148ff4",
+      "inode": 329519552,
+      "mtimeMs": 1791907118398.8389
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts",
+      "bytes": 1014,
+      "sha256": "dac5a6e37d769ba95768dc54fad8671bdf902f845931a848e841054d576a71ea",
+      "inode": 324600438,
+      "mtimeMs": 1791909953105.1821
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts",
+      "bytes": 504,
+      "sha256": "8ef8c342f8abdb4b26d80a2df8a29d7c9b08f82090e06055dd81cd046ec5a100",
+      "inode": 329519548,
+      "mtimeMs": 1791907118397.8096
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts",
+      "bytes": 600,
+      "sha256": "b5647e77755569ad139ccb6c01d40e3d8c515029b2b13ac11c6fb36a03d21b39",
+      "inode": 329519544,
+      "mtimeMs": 1791907118390.4722
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🐹️go-build/🟦️.ts",
+      "bytes": 218,
+      "sha256": "812262de85b6e32435418a9e8cd418eb159dcbb856172dbf7f63c1c19b830f3e",
+      "inode": 329519556,
+      "mtimeMs": 1791907118399.2703
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts",
+      "bytes": 226,
+      "sha256": "ad2d14429a0d0102180bb6804e06d97aec53b70ac6b0355a1528c093f5d4961e",
+      "inode": 324600434,
+      "mtimeMs": 1791594639035.786
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts",
+      "bytes": 323,
+      "sha256": "f67cb53ee2daed971c9b76e1adb73ed7cb524f80def98ba4a7b961711952812c",
+      "inode": 324600442,
+      "mtimeMs": 1791594639036.5493
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts",
+      "bytes": 141,
+      "sha256": "745d81e573b4e57c9bf90cbc93c5a0405f32d34485992f9eae2c2e6d38bbff3f",
+      "inode": 324600429,
+      "mtimeMs": 1791594639035.3152
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+      "bytes": 255,
+      "sha256": "b3966d43ca290e0f1dbccf26ee62a7d2d3aef6eafee6b622dde75765f78e1c46",
+      "inode": 324600446,
+      "mtimeMs": 1791594639036.9287
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts",
+      "bytes": 328,
+      "sha256": "f6212656ac20f28597bf3426de92bf30cbe6b8d142d5dff46a1437c7f92198cb",
+      "inode": 324600407,
+      "mtimeMs": 1791594639033.0515
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts",
+      "bytes": 195,
+      "sha256": "b143bbadfabb3d6b51b40f65d6a48083769a1665f1212c901af6285184cbc92a",
+      "inode": 324600412,
+      "mtimeMs": 1791594639033.5837
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts",
+      "bytes": 380,
+      "sha256": "6883cceca53ec8f4cd2fb03a5751ba9c7a88a4ff5f81d6edbc5d07fa531c1440",
+      "inode": 324600420,
+      "mtimeMs": 1791594639034.4263
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts",
+      "bytes": 451,
+      "sha256": "9acfb6ed203be1406ba5f935430fede532f00b53bc4d4c537f8d2ae965f4479b",
+      "inode": 324600424,
+      "mtimeMs": 1791907118414.3174
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts",
+      "bytes": 235,
+      "sha256": "d5a2dac56db53a53109d4d4fb8fa34671ad6237f1ba7858e2a74838a178a3008",
+      "inode": 324600416,
+      "mtimeMs": 1791594639033.9902
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "bytes": 1108,
+      "sha256": "95b774cc4dd2f563aaf11f670bc4ac340ea0ff57f931459dc250e8bdef6e1ea3",
+      "inode": 324600393,
+      "mtimeMs": 1791668386429.3872
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+      "bytes": 14031,
+      "sha256": "71d3ef6a38a8ab735bc7fc02485aa5538c663e26e0f9907e7ba9718584f210b3",
+      "inode": 301415421,
+      "mtimeMs": 1791912196433.4272
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts",
+      "bytes": 18892,
+      "sha256": "8ee3601f4fd9efbceefc4e6e9b390fb74e06cd5b7f98623a47285dc2e6f760df",
+      "inode": 301415429,
+      "mtimeMs": 1791543201440.1392
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧫️fixtures/📜️queue.json",
+      "bytes": 351,
+      "sha256": "901e94a63963fb24c4421cb3a2d482cf8d3c092a7a91b7a6c354f1c89727ec33",
+      "inode": 323783033,
+      "mtimeMs": 1791542926865.112
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧫️fixtures/🔁️interrupted-read.json",
+      "bytes": 139,
+      "sha256": "d90fd6000a625ab70fca0728852f8ba7b9e20659e071282b1014873e19ce3c4f",
+      "inode": 313677574,
+      "mtimeMs": 1791324596977.3577
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧫️fixtures/🔣️.json",
+      "bytes": 2196,
+      "sha256": "d47c46d10928b6225a40e320f82352ee80f9f9aece7faeef0d5045896e7d5868",
+      "inode": 301415426,
+      "mtimeMs": 1790866212397.0085
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/📜️ticket.json",
+      "bytes": 816,
+      "sha256": "0650efa35efab42488bf55d156901c607574bc17829c9d6b85bcfac08c205737",
+      "inode": 323783032,
+      "mtimeMs": 1791912196429.06
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts",
+      "bytes": 3826,
+      "sha256": "5f7c306eca4755e6dfeaeab67155b3460f5414119abe16aa72151b7423669834",
+      "inode": 301273613,
+      "mtimeMs": 1790860617948.274
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🧪️tests/🟦️.ts",
+      "bytes": 2463,
+      "sha256": "9e56486c504b4ccc31942bc04863cb792b1cc27afebd44a61b108376150a88fb",
+      "inode": 306866061,
+      "mtimeMs": 1791241711124.4824
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🧫️fixtures/🔣️.json",
+      "bytes": 2239,
+      "sha256": "4861887be14bba77308ff9ec61af404f260a46888180711e34fb89e1a8cf509d",
+      "inode": 301272826,
+      "mtimeMs": 1790860530781.0042
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts",
+      "bytes": 3310,
+      "sha256": "4e911792e3bfc923e9e73821897b39cbfecb4d2b9c8d46010760b1d4f02b3eaa",
+      "inode": 301342991,
+      "mtimeMs": 1790863152253.497
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🧪️tests/🟦️.ts",
+      "bytes": 3032,
+      "sha256": "efa3116aaabc191998bea201373899ccacec53d4c7e79fc58640cd661dd7d361",
+      "inode": 301342840,
+      "mtimeMs": 1791240231077.6724
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🧫️fixtures/🔣️.json",
+      "bytes": 1151,
+      "sha256": "ef51a07a1c3212f0deb17cf54567cae39aa2dd7d77f5fde3241a6cdd38e6abbd",
+      "inode": 301342838,
+      "mtimeMs": 1790860804044.4155
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📋️policy/🔣️.json",
+      "bytes": 206,
+      "sha256": "5485e3c227a60a22c9e5afae50d88f6a484ed4b0ebe2ee6433c76ee17595c741",
+      "inode": 324653161,
+      "mtimeMs": 1791596421560.3154
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📋️policy/🧬️schema/🔣️.json",
+      "bytes": 889,
+      "sha256": "034ca683a0520220b1625305d8504b7e2cde6572da4fad521a9106cb7ef17493",
+      "inode": 324611377,
+      "mtimeMs": 1791594889868.5215
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts",
+      "bytes": 8331,
+      "sha256": "ed30c490b40325406664b1d1edbc6596b223efa53cb63717b2cc0276725e4abb",
+      "inode": 324615040,
+      "mtimeMs": 1791907717538.5955
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧫️fixtures/🔣️.json",
+      "bytes": 2011,
+      "sha256": "df746811f525e8d05e996f2c385d402dc8b748d8bd735713478fad4187305514",
+      "inode": 324611380,
+      "mtimeMs": 1791594889872.5942
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+      "bytes": 19962,
+      "sha256": "318d54cc17766e5e6aa11ac037877f45c68f0d6c985eebd17a4da60bf82eaea4",
+      "inode": 301480113,
+      "mtimeMs": 1791907717542.6226
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts",
+      "bytes": 12212,
+      "sha256": "1d4083a481eefcd6a8866de6b28ecf7f6dff57daa882d3b9ab08eac99716583b",
+      "inode": 301476365,
+      "mtimeMs": 1791596421559.8926
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧫️fixtures/📨️managed-output.json",
+      "bytes": 571,
+      "sha256": "14e7f5312a98367db2a0dd33e4e7f93e394bb55c08d6d43a1a1127ba0fb41fa4",
+      "inode": 313758618,
+      "mtimeMs": 1791329751077.0076
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧫️fixtures/🔣️.json",
+      "bytes": 4298,
+      "sha256": "eb78a375e94589b35387f59c3918c2bd6e2613e4aa1f6346acba08b6df58e987",
+      "inode": 301476363,
+      "mtimeMs": 1790869071689.4795
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🔒️lease/🧪️tests/🟦️.ts",
+      "bytes": 7010,
+      "sha256": "0c94944d2a2830bb1a9a6c98561277c84d34f6386945eec08110db009996191c",
+      "inode": 322716224,
+      "mtimeMs": 1791486671417.9736
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🔒️lease/🧫️fixtures/🔣️.json",
+      "bytes": 1127,
+      "sha256": "45a507caf7535b96f32003d4d44ee5c0fcc549f7a667729f6570b265621711ac",
+      "inode": 322716222,
+      "mtimeMs": 1791486492934.282
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+      "bytes": 15127,
+      "sha256": "bcee82db019a65f6d2faff5788c3d090e99548066574fc9e4e6b000342400628",
+      "inode": 324724280,
+      "mtimeMs": 1791907717547.5476
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🟦️.ts",
+      "bytes": 22384,
+      "sha256": "ac75aee472695d742f91553d3acd8cacd01fa882cfb8d1078ba0f7c5752c2da8",
+      "inode": 301366574,
+      "mtimeMs": 1791591577508.0374
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧫️fixtures/🎬️execution/🔣️.json",
+      "bytes": 1716,
+      "sha256": "18bd8930e3c85b548d971df37108d20fb8a94aa2e5f0c4124bcab19718092fb2",
+      "inode": 315112010,
+      "mtimeMs": 1791342861176.8962
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧫️fixtures/📣️reporting/🔣️.json",
+      "bytes": 1657,
+      "sha256": "6bf19c996ba12a994b2ba6a9cafb5bf83788b9685112d3d694e1ce2987332e54",
+      "inode": 309872385,
+      "mtimeMs": 1791221999762.721
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧫️fixtures/🔣️.json",
+      "bytes": 5177,
+      "sha256": "1c937d9231afe5d0ae9daf1a2160d8a7ba71a45c79a38fb74e1a2a4580a6192a",
+      "inode": 324724281,
+      "mtimeMs": 1791616042600.321
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧫️fixtures/🕳️selection/🔣️.json",
+      "bytes": 425,
+      "sha256": "413b76b668e4b9d1745438b592d540004b55093e6cee8c52affd02a5ec55482a",
+      "inode": 302073251,
+      "mtimeMs": 1790903161448.7905
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧫️fixtures/🚨️failed-build/🔣️.json",
+      "bytes": 516,
+      "sha256": "0fbc817c76d5cbe154f6cc5fa2d20ad578b9effc6d1837fb1444094b7fb3230c",
+      "inode": 316290841,
+      "mtimeMs": 1791352599881.7463
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧬️schema/🔣️.json",
+      "bytes": 2530,
+      "sha256": "dee7390ba15e6161f3c5dcd9b7f554708d565c0f00464b45dfdd4eb1256072a6",
+      "inode": 301366572,
+      "mtimeMs": 1791486492903.8623
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts",
+      "bytes": 3209,
+      "sha256": "4c11689f509c604d1ee74c24cd53a8715af59e8f5c765fd381d1f81d6b36ecfb",
+      "inode": 301434435,
+      "mtimeMs": 1791907717548.9094
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🧪️tests/🟦️.ts",
+      "bytes": 3467,
+      "sha256": "52303db142273250adcd737f35171cbf364a56314e8f88c4da3e931f4d365edd",
+      "inode": 301428624,
+      "mtimeMs": 1791242179485.2974
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🧫️fixtures/🔣️.json",
+      "bytes": 767,
+      "sha256": "881c943b1813946fdb355fabcc50b87f5358e650cfa56b5b574898964797d130",
+      "inode": 301428622,
+      "mtimeMs": 1790866853940.4504
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🧬️schema/🔣️.json",
+      "bytes": 968,
+      "sha256": "f4cdd5081b7fc27c1825c417c0028a78f61d953e4c868a6e0d14f3a851f62ae1",
+      "inode": 301428620,
+      "mtimeMs": 1790866853940.1772
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️tests/🧫️fixtures/🧭️fixture-placement/🔣️.json",
+      "bytes": 2553,
+      "sha256": "d84996d3a354e731d228c75781bb2a005d9d4ad3d7dbefd1feab41dd43c3932c",
+      "inode": 329953689,
+      "mtimeMs": 1791912336132.6516
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️tests/🧫️fixtures/🧭️trial-authority/🔣️.json",
+      "bytes": 1085,
+      "sha256": "c82266ec8504877002bd53677de9b601ee90777fb14d533c840f2e7c4c06aaa6",
+      "inode": 329951929,
+      "mtimeMs": 1791912130911.1648
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "bytes": 4470,
+      "sha256": "bceef0bd4dafde6e093347750d26975f6407c7165dae3dc0755409bcf90581e9",
+      "inode": 329953691,
+      "mtimeMs": 1791912486013.8665
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️tests/🧭️trial-authority/🟦️.ts",
+      "bytes": 654,
+      "sha256": "2fed83f0860e43b17252484b62f7ba8024bf87f70caef6802a2a797243e30b1a",
+      "inode": 329951931,
+      "mtimeMs": 1791912130939.493
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🟦️.ts",
+      "bytes": 7214,
+      "sha256": "3452d83de202e62db986844c9a25b1be43a0deb5019217b3a1017feee79574a0",
+      "inode": 320651215,
+      "mtimeMs": 1791907838414.6694
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🧬️schema/🔣️.json",
+      "bytes": 2743,
+      "sha256": "8c471617a97171a04ed37393c1bb4c1f883ede01d0daeeed6bcfdb365e678bd1",
+      "inode": 320648845,
+      "mtimeMs": 1791449242531.9324
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/📋️policy/🧬️schema/🔣️.json",
+      "bytes": 1087,
+      "sha256": "4e7fe2c2a53a7d8f327a50f095813bffc7e3114f87c5a2b39ce3bf51a6c4508b",
+      "inode": 320649155,
+      "mtimeMs": 1791448773639.8562
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/📥️request/🧬️schema/🔣️.json",
+      "bytes": 936,
+      "sha256": "b87876ef5b0600726e7af67ec7a8f93da1be418e6ffee7b1da16820642fa47ea",
+      "inode": 320648842,
+      "mtimeMs": 1791448588815.5432
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts",
+      "bytes": 6691,
+      "sha256": "f8949f6b3867a1e8c1f7d420c2b5b124c7e4b47c82786682c3d0c0b9417d1618",
+      "inode": 320651176,
+      "mtimeMs": 1791907717551.844
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧪️tests/❄️cold/🟦️.ts",
+      "bytes": 3687,
+      "sha256": "b1c0e7d5695d8a96de257263708e898f91f479f3bd5a77044dc00a103cdae36b",
+      "inode": 320651576,
+      "mtimeMs": 1791667983770.4946
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧪️tests/🚧️boundary/🟦️.ts",
+      "bytes": 6879,
+      "sha256": "2fda0e0fd2a66d1b406d8921a7eaeae15e132782e0451c286ed366bdc38256c1",
+      "inode": 320649006,
+      "mtimeMs": 1791451070525.3713
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧪️tests/🟦️.ts",
+      "bytes": 10450,
+      "sha256": "9daeecf28e4ba3e520fe11c50cff299799518b597fcad132afa98a5e4828d281",
+      "inode": 320649004,
+      "mtimeMs": 1791907838414.2832
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧫️fixtures/🔣️.json",
+      "bytes": 1595,
+      "sha256": "6ac97427b6e7bcf48c182e9702686b82f1cd7c9539423337ec212aeb61fec98e",
+      "inode": 320648847,
+      "mtimeMs": 1791907801330.5183
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "bytes": 5487,
+      "sha256": "1d6f9b53a41185a13eb14e47aac38b0db5eb23205b4bb4dc5a5449f5fb71e1f9",
+      "inode": 324302810,
+      "mtimeMs": 1791907717553.4382
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📤️fractional/🔣️.json",
+      "bytes": 333,
+      "sha256": "d2150b8482d8bcd8d3bfe5bd3fb5eabbd3dce64054a287960b0631349ffb4b68",
+      "inode": 329501364,
+      "mtimeMs": 1791906085952.9111
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📤️fractional/🟦️.ts",
+      "bytes": 2763,
+      "sha256": "8f7703861b3060bcb8805739c33a91c3b831543a2073b80dac0fbed12548b763",
+      "inode": 329501365,
+      "mtimeMs": 1791906085953.1375
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧫️fixtures/🌿️ordinary.json",
+      "bytes": 2387,
+      "sha256": "e7cc6cb6cdb911d33cb02fb55556eac5a34d1e07fce34a189825dbb93bdaf392",
+      "inode": 324312668,
+      "mtimeMs": 1791584724462.2544
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧫️fixtures/🔣️.json",
+      "bytes": 2670,
+      "sha256": "c0d3c6463293453966093b349ea5515454134bee29c60129c63df299e9c0c81d",
+      "inode": 324302809,
+      "mtimeMs": 1791564702575.6711
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json",
+      "bytes": 1247,
+      "sha256": "b4d0746aea2f3daff5a49bc7623b2c5d6c37f9341c13330b2ed8d0c9373fb2a2",
+      "inode": 324302808,
+      "mtimeMs": 1791584724461.811
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+      "bytes": 3997,
+      "sha256": "e3908e58ac6b5f04b0723ce91f97d41eb0ee2a9d60a3cf794a64501d61fd9ed3",
+      "inode": 324298041,
+      "mtimeMs": 1791907717554.563
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧪️tests/⏱️finite/🟦️.ts",
+      "bytes": 3754,
+      "sha256": "330cf8389e9da497248795563389c37c0ff7ee01158b5fe90b1bdb1aff160470",
+      "inode": 324407550,
+      "mtimeMs": 1791588185628.314
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧫️fixtures/⏱️finite.json",
+      "bytes": 543,
+      "sha256": "6bafa41c37903b74d77faa1f83a54a8887da37cfa76db4149fce7bb97a7a59cc",
+      "inode": 324407546,
+      "mtimeMs": 1791585481997.9065
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧫️fixtures/🔣️.json",
+      "bytes": 1743,
+      "sha256": "8005d48fd373fce74e217c8b7a71dc99f494d6e2b56480c8be48a4468012d8ca",
+      "inode": 324286804,
+      "mtimeMs": 1791584724462.5771
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+      "bytes": 550,
+      "sha256": "85c7b282907bd607fe78181c5c038eedc06be45950890b922b78e3aa185c5ac0",
+      "inode": 324286802,
+      "mtimeMs": 1791584724461.3083
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+      "bytes": 1339,
+      "sha256": "06200b3f26dcea04f4d16c00fd2a4a4d89366918e4c23c597cf90eaafef57446",
+      "inode": 301272911,
+      "mtimeMs": 1791563138440.9934
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "bytes": 5477,
+      "sha256": "283c76fdb8b0da19a0506b010a0fd44d33287a20cf7297abc3deebb2427c8eea",
+      "inode": 301272910,
+      "mtimeMs": 1791565613802.0652
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🧪️tests/🟦️.ts",
+      "bytes": 28992,
+      "sha256": "a0ce706942345e292ba4cb6b1434698b8356eb9de9a20818d36aff5f9618b597",
+      "inode": 306866062,
+      "mtimeMs": 1791912185559.4556
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🧫️fixtures/🔣️.json",
+      "bytes": 7915,
+      "sha256": "b73822a3fd0e7793ecc31421e5b0d43639830415d7059fda13f9ea018495c3e7",
+      "inode": 298912530,
+      "mtimeMs": 1790857100841.4324
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+      "bytes": 2971,
+      "sha256": "3df81b9a89a5c5e56bb37ecf579c0684dca29beacc50035fa6bfcfe75cb9c7ff",
+      "inode": 301314509,
+      "mtimeMs": 1790858359798.16
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🧪️tests/🟦️.ts",
+      "bytes": 5678,
+      "sha256": "aac3856ccc95fa41865e153aa3337b2d89e66571802fdff09a0f1cb422b755e9",
+      "inode": 301310823,
+      "mtimeMs": 1791241712274.6848
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🧫️fixtures/🔣️.json",
+      "bytes": 359,
+      "sha256": "e72f4d52cf33c985a42f061e0920fb2c64621b1ef9c80fe0a7142eba43446617",
+      "inode": 301310821,
+      "mtimeMs": 1790858182439.9663
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🔣️.json",
+      "bytes": 71,
+      "sha256": "adf8a93ef4885014eda2548bffd02c5dec0cba72d7677b6e4f0f0f94b789eba5",
+      "inode": 323938268,
+      "mtimeMs": 1791911035873.6348
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🧪️tests/🟦️.ts",
+      "bytes": 1287,
+      "sha256": "27a1c8b416df6f36a01d6d2280c727f747340b00d2c9d9c766b69b8346484910",
+      "inode": 323852949,
+      "mtimeMs": 1791910734057.8674
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 338,
+      "sha256": "e03843d958cac43ff97ac27a753c3218f54eff08602ab1135e675d3326c388b1",
+      "inode": 323852945,
+      "mtimeMs": 1791545562197.2842
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🏷️format-policy/🔣️.json",
+      "bytes": 230,
+      "sha256": "46aab03a4675036f3ba5b2e2182cf65337c0debef2b1f42a21e9d8693ef73656",
+      "inode": 310917152,
+      "mtimeMs": 1791249615354.669
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📏️ownership/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 727,
+      "sha256": "a9263fcfe872d9b0fa0bbb31f7c7e684b27a65939a44e7be4c96bcb2982b4395",
+      "inode": 301585215,
+      "mtimeMs": 1790876283360.4963
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/package.json",
+      "bytes": 331,
+      "sha256": "f3e1ca3ac5ab43dd1992a2dd8c05c612988e33177332c3dbe3edd2864405a45f",
+      "inode": 302129858,
+      "mtimeMs": 1791907843241.9453
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/📋️project.json",
+      "bytes": 570,
+      "sha256": "baa98e73f1dbc4218340e8997919d730e4a409857159c5e15c3a667f0caf9f65",
+      "inode": 302129857,
+      "mtimeMs": 1790906084551.706
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/📜️script.ts",
+      "bytes": 1188,
+      "sha256": "f3683c1bc8f25e8ca0ef253bb13cddef9be26f6ad12fcf475e06733c2547981e",
+      "inode": 302129856,
+      "mtimeMs": 1791905799957.813
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "bytes": 149,
+      "sha256": "22f68a1cdabdcdb7d2f6d1fad86341816ab5d0e9c79ea21fcfa0c1dd10da8aec",
+      "inode": 329519559,
+      "mtimeMs": 1791907118631.0168
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 676,
+      "sha256": "b1e4266f176c3e3693da8a112bf324c8c4497a4f39f50faac98ed9b1761dda6f",
+      "inode": 306867122,
+      "mtimeMs": 1791546246674.076
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust/package.json",
+      "bytes": 214,
+      "sha256": "aff9f62399ca198dbe434f32ceddfa69e23a3089e25e56415ac29c94b2c4c0f5",
+      "inode": 301585868,
+      "mtimeMs": 1791907843242.3855
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust/📋️project.json",
+      "bytes": 760,
+      "sha256": "563a0a7a506b472fc696476819e8299d6b89dffca5313903a28e9c84ecea1a9b",
+      "inode": 301585867,
+      "mtimeMs": 1791879470452.0999
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust/📜️script.ts",
+      "bytes": 2256,
+      "sha256": "e3610aadcf9f5dc691ea75644343ddc65328624f8bfce3b71fb96abd9e11818d",
+      "inode": 301585866,
+      "mtimeMs": 1791905799959.2043
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+      "bytes": 12503,
+      "sha256": "1521f2e9d07141acf1477a563693a05b44896ebdfa47d1b5b7ba24add6886ac0",
+      "inode": 301240099,
+      "mtimeMs": 1791900863033.6443
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🧪️tests/📏️ownership/🟦️.ts",
+      "bytes": 1470,
+      "sha256": "336cdc9c2c42d7656dd617cd939342010df6b83a749ea93df8afb899497a819d",
+      "inode": 310917154,
+      "mtimeMs": 1791910734062.5386
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🧪️tests/🟦️.ts",
+      "bytes": 2246,
+      "sha256": "b578def5227825ea80dbeb8260a0c2966956175f4a8661983be142c3c2a8e2f5",
+      "inode": 329329336,
+      "mtimeMs": 1791910734060.938
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🧪️tests/🧩️neutral-owner/🟦️.ts",
+      "bytes": 4705,
+      "sha256": "e1798a8d3e0c0bbede91a15c1bbd92600e89a3049da590004c8b192fb910766c",
+      "inode": 301588514,
+      "mtimeMs": 1791905799961.1458
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🧪️tests/🧩️shape/🟦️.ts",
+      "bytes": 8869,
+      "sha256": "204ac93b85febbcabf32bb48a083637c9cc93b5baed3048e16acd8127dff4595",
+      "inode": 306867124,
+      "mtimeMs": 1791910734061.298
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 23773,
+      "sha256": "b052a3f0da8bea603ea1ea29f421dc318abb69938320c829d9889d9f5a67ee44",
+      "inode": 301236625,
+      "mtimeMs": 1791900873475.7876
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🧪️tests/🧫️fixtures/🧩️shape/🔣️.json",
+      "bytes": 10489,
+      "sha256": "a2ffcaa3859587d4c1a7e4531659754394cec9737501ef941728413eac82caaf",
+      "inode": 302129852,
+      "mtimeMs": 1790906084551.04
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 957,
+      "sha256": "b720a371714924ffb42c02de82f2efd255523722d854cb82d74e502cf7b579a1",
+      "inode": 91988909,
+      "mtimeMs": 1791850656905.1125
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/📋️project.json",
+      "bytes": 571,
+      "sha256": "1af16358b6139332bf444935efcc1b01b89354f48c68c2d96734f547c9e33ab8",
+      "inode": 91988910,
+      "mtimeMs": 1791879470452.6467
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+      "bytes": 1390,
+      "sha256": "f63a1e0fbd39ab7ac071962c47e875c8c54c7e00754f7fab9cf28f9a02b42f79",
+      "inode": 91988911,
+      "mtimeMs": 1791905799996.7925
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/🏃️execution/🟦️.ts",
+      "bytes": 2933,
+      "sha256": "9514395c86728946a64ee8e29088a473be80e5e5f0999b15ba22edd17a927bf2",
+      "inode": 195454776,
+      "mtimeMs": 1791905799978.1938
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📋️plan/🟦️.ts",
+      "bytes": 813,
+      "sha256": "cf134a89e1b3f94eaab38f2febe0cff83045397ec7168243a8d930e21b73bc38",
+      "inode": 195454774,
+      "mtimeMs": 1790868368558.2957
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📥️source/🟦️.ts",
+      "bytes": 1287,
+      "sha256": "c01e40bb000a371d8dd7dddd2a02a01ee1d42b0d48333b058a06f6a009268208",
+      "inode": 195454770,
+      "mtimeMs": 1790867802857.708
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📽️projection/🟦️.ts",
+      "bytes": 3327,
+      "sha256": "d6721583337d55016fcb514fafe538912187a0af0265a231f48ee6353917f66a",
+      "inode": 195454772,
+      "mtimeMs": 1791547990677.4187
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/🔣️.json",
+      "bytes": 6365,
+      "sha256": "f237cdd640bd1ac2b4546726f78f33c90aaf0c2ed11e1f6115294c8e9c3be242",
+      "inode": 165382979,
+      "mtimeMs": 1788890300251.7114
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/📦️packages/🟦️typescript/package.json",
+      "bytes": 289,
+      "sha256": "217ccfdfff03cad0aee3f0705f70bb053704c74a318722f882119297f6ea2162",
+      "inode": 306867129,
+      "mtimeMs": 1791907843243.7644
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/📦️packages/🟦️typescript/📋️project.json",
+      "bytes": 1122,
+      "sha256": "18df73d054d4aad8a99de2c660b96614686ed5089f7580502eb2d6584bcc6b03",
+      "inode": 306867130,
+      "mtimeMs": 1791131249322.6995
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/📦️packages/🟦️typescript/📜️script.ts",
+      "bytes": 1623,
+      "sha256": "68ef6803fc47d88a4207d080b4dbb64a63f2d6c20cc8567c90070adef46eda61",
+      "inode": 306867131,
+      "mtimeMs": 1791905799991.5645
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/🔣️.json",
+      "bytes": 4052,
+      "sha256": "db8bf235c7e6d030bfd360c1379719487ab8d07c745286c5b00b07245b5754eb",
+      "inode": 306867132,
+      "mtimeMs": 1791131249333.7273
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/🟦️.ts",
+      "bytes": 26256,
+      "sha256": "b11edbd06f37eaf61a83450e6bdb306f61a7dbf79f96849b1311ff709d70f8d8",
+      "inode": 306867133,
+      "mtimeMs": 1791131249333.943
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/🧪️tests/🚮️absence/🟦️.ts",
+      "bytes": 1720,
+      "sha256": "910a486f12489ed776502414131a408d20f9c36a01fe5fe9a68ff05e532d87ee",
+      "inode": 306867136,
+      "mtimeMs": 1791910734074.4626
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/🧪️tests/🟦️.ts",
+      "bytes": 12512,
+      "sha256": "cfeed8310c6e34c2a626b0d56bab5723867e6a4b1bc10336daecaf837ed5faef",
+      "inode": 306867137,
+      "mtimeMs": 1791910734074.0745
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 30195,
+      "sha256": "83340fa0b33f05e4b81f7aa512d4b042ed7061c7b2540d804f71a2230302c218",
+      "inode": 306867139,
+      "mtimeMs": 1791131249346.124
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/🧪️tests/🧫️fixtures/🚮️absence/🔣️.json",
+      "bytes": 455,
+      "sha256": "1ffed847fc90d1d61c6200e2c3f75197f9b541ac3e79ea5797c1084b9218fb11",
+      "inode": 306867141,
+      "mtimeMs": 1791131249346.364
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 946,
+      "sha256": "706cf8ccfdf26a5e7c774a14bdd6f3ba22c97a5873d3f71e7a8f71638eab4046",
+      "inode": 165245084,
+      "mtimeMs": 1791441968121.1357
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/package.json",
+      "bytes": 560,
+      "sha256": "481eaa7a71b3651e700453d13cf3a72c0182e2a88150227a48410c8cec593669",
+      "inode": 302559156,
+      "mtimeMs": 1791907843243.219
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/📋️project.json",
+      "bytes": 1014,
+      "sha256": "7adbbda2592baff0285e9ddcc82b0b4d9fd79ad048a89e29f2ad607579b9b92c",
+      "inode": 165245541,
+      "mtimeMs": 1791910734064.3438
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/📜️script.ts",
+      "bytes": 1537,
+      "sha256": "07ec8ca3959f68a28b729e7f48aa965b499773cb615d29381f5ff6a5b54ef19f",
+      "inode": 165246192,
+      "mtimeMs": 1791905799963.7612
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📇️registry/🧪️tests/🧫️fixtures/🧷️assembly/🔣️.json",
+      "bytes": 508,
+      "sha256": "5786c3e751e510ce0e43d1d97b873b9f95c6a04f3e0af9402fe7fd816405837a",
+      "inode": 308003367,
+      "mtimeMs": 1791177850536.4087
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1599,
+      "sha256": "79672947cae81627c79d87d13fb153659286c952d99b3e6e41c111c5b0b6546d",
+      "inode": 306867146,
+      "mtimeMs": 1791547338100.012
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/package.json",
+      "bytes": 903,
+      "sha256": "f0f663af178b7034a12ce108601076462c9d2f07f8acbbb2106280acce352de4",
+      "inode": 89919383,
+      "mtimeMs": 1791907843241.7402
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+      "bytes": 4786,
+      "sha256": "03f794a153bc03caaea61e97d0fb27755736a11a52b49c36b90aebc92abc6690",
+      "inode": 89919514,
+      "mtimeMs": 1791910734055.6077
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
+      "bytes": 5095,
+      "sha256": "e9aeaf961778e96859cb330facef5bfa3d7b5a44bbc28628534bdbbac42f8ee1",
+      "inode": 324800149,
+      "mtimeMs": 1791905799956.209
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 588,
+      "sha256": "a4fa1f33b88e085ea25c9e21c6a6ebe7d7d7c4586264f4c79ca1aad8e313eab6",
+      "inode": 302533547,
+      "mtimeMs": 1791441968121.6907
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/package.json",
+      "bytes": 545,
+      "sha256": "df80777c0ee7b065d5a4ffa8181986972f456508aae5d0a71c31ecffd5a429f0",
+      "inode": 302533551,
+      "mtimeMs": 1791907843242.7556
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/📋️project.json",
+      "bytes": 712,
+      "sha256": "a5c3a70f4e40ec3dff58661624222686e63a9a4fddf99c2e04c0d30932b43b79",
+      "inode": 302533550,
+      "mtimeMs": 1791910734063.0813
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/📜️script.ts",
+      "bytes": 1389,
+      "sha256": "5163e09b7523ae0b33eaabd89012312c868e2f8a203c8b6769f7286a64aef803",
+      "inode": 302533549,
+      "mtimeMs": 1791905799962.841
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🔣️.json",
+      "bytes": 13152,
+      "sha256": "0885c1457f1b55cb61e59b643054d37599bce52c783b330f4c4bb6cebc3a7fba",
+      "inode": 165637761,
+      "mtimeMs": 1791547769482.0137
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts",
+      "bytes": 3374,
+      "sha256": "63829cf3abdd598ec58bf248a0d873c1a2a87f9c7cce92d1673315bb853a7d47",
+      "inode": 296738185,
+      "mtimeMs": 1791249615363.729
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🧪️tests/🟦️.ts",
+      "bytes": 3135,
+      "sha256": "832d1fa8de600d1fc3e01602b6a9d725df5ccc6c4548d35cc5d62aa54e36bf00",
+      "inode": 301549294,
+      "mtimeMs": 1791910734071.0874
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 676,
+      "sha256": "57aaca078412a68deca878f0a5b8e9143b5abc7c4ce3ed82b8ae8e4dd6aa0c9c",
+      "inode": 301549292,
+      "mtimeMs": 1790874076286.8218
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts",
+      "bytes": 3967,
+      "sha256": "e0f7d265b99784e7f146be2647b7ec83ec31f3342715e26653023917df63fc2b",
+      "inode": 169357276,
+      "mtimeMs": 1790826416831.5764
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json",
+      "bytes": 2376,
+      "sha256": "43b3bb2a74e7909982a571d4682423dde84b610f9fdb9e95e9d886a1bddc55d6",
+      "inode": 312238671,
+      "mtimeMs": 1791311141459.609
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts",
+      "bytes": 1909,
+      "sha256": "2a72d7f79442b41d57015bcf0bcf95a8663f6c988e66cf2595eefad9b430e2be",
+      "inode": 312238670,
+      "mtimeMs": 1791470682535.9941
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🧪️tests/🟦️.ts",
+      "bytes": 777,
+      "sha256": "ba0259941f936075b648740dc0655ebbee5bc22d2e141bde8618482d1a140c5f",
+      "inode": 312275777,
+      "mtimeMs": 1791910734072.7456
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🧪️tests/🧫️fixtures/🪪️identity/🔣️.json",
+      "bytes": 1015,
+      "sha256": "acd1ba7807ec14df0441a83fe5d8bac39fa78c385222905f75a53f7c379d3f13",
+      "inode": 312275775,
+      "mtimeMs": 1791311621204.4155
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
+      "bytes": 15120,
+      "sha256": "8e780f288aecae24599c4a624ebc018b03ea6d05069751338a3478587fab7e62",
+      "inode": 229044346,
+      "mtimeMs": 1791547769481.606
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🤖️generated/🏷️entity-kinds/🟦️.ts",
+      "bytes": 7150,
+      "sha256": "2cddc1968109a1912b03b8dc567eb91c372fdedd582df0c3b52ec45beb21a397",
+      "inode": 328687444,
+      "mtimeMs": 1789251354065.0474
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 515,
+      "sha256": "264021d8818eb359e5b42b99a24a761d48b8c8d7bf14facc43fc22979daaefb6",
+      "inode": 302533540,
+      "mtimeMs": 1791441968122.0437
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust/package.json",
+      "bytes": 575,
+      "sha256": "335f20bf231df8f5d3091e82f0683f91ecbe820a1bfa3abdd6f8c2e942dcef08",
+      "inode": 302533544,
+      "mtimeMs": 1791907843244.023
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust/📋️project.json",
+      "bytes": 724,
+      "sha256": "1cf37da4c3b0e1081a87d147ed79f64e06cc9147f2c6f22c68006e3931efb01a",
+      "inode": 302533543,
+      "mtimeMs": 1791910734074.8452
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust/📜️script.ts",
+      "bytes": 1401,
+      "sha256": "fe30e52ba417478fea1d7f7ce6975be7eee70e6d1552d8c8eb1ee51779f7c9a1",
+      "inode": 302533542,
+      "mtimeMs": 1791905799999.35
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/✅️draft07-oracle/🟦️.ts",
+      "bytes": 3126,
+      "sha256": "09c92b717e7b9aa0545a6065a951a27490fca5675651d139e2a06f3e0169d520",
+      "inode": 164363185,
+      "mtimeMs": 1791910734068.397
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🎚️config/🟦️.ts",
+      "bytes": 1206,
+      "sha256": "21299ae740b703f4fa68125fc3c0c368961b27e774277a32f4b12812e576035c",
+      "inode": 195887721,
+      "mtimeMs": 1791905799974.7056
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🏷️entity-kinds/📏️ownership/🟦️.ts",
+      "bytes": 4783,
+      "sha256": "9515cb8541ef615e2f00166f3d86f6f4912ef90d285291047b4e85ce88e10291",
+      "inode": 310841860,
+      "mtimeMs": 1791910734067.4685
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🏷️entity-kinds/🟦️.ts",
+      "bytes": 7866,
+      "sha256": "e6d11649013a5aa2ff23b2cf4230604606d83dcda7be48457a5060034b87c601",
+      "inode": 165665058,
+      "mtimeMs": 1791247922993.495
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/📤️schema-export-entries/🟦️.ts",
+      "bytes": 3499,
+      "sha256": "fdfaf4a24a6745b40ee22608a00a8829dfcfe8a5a60677a60ce6f8cc44c53e53",
+      "inode": 165665870,
+      "mtimeMs": 1791910734181.146
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧫️fixtures/✅️draft07-validation-vectors.json",
+      "bytes": 29042,
+      "sha256": "e5e130eaebd9e2657be17c90c8fad04dcefe9c450752ac225a7361b81d8cff3e",
+      "inode": 164342198,
+      "mtimeMs": 1791310017757.0903
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧫️fixtures/🏷️entity-ownership/🔣️.json",
+      "bytes": 487,
+      "sha256": "36cf1ea176959675042c9b6af708fc56ec56dfbb0777cbc03079f753bd926035",
+      "inode": 301437453,
+      "mtimeMs": 1790867264485.7546
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧫️fixtures/📤️schema-export-entries-dump.json",
+      "bytes": 3105,
+      "sha256": "12f1b5e0e2d32f472b96901d955c65ed2672072fca5832d7d1da2d42ae34cc02",
+      "inode": 165354670,
+      "mtimeMs": 1788893023620.3787
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧫️fixtures/🧭️fixture-placement/🔣️.json",
+      "bytes": 2149,
+      "sha256": "a89f2e7cc2ac4f2cbda096b4ba67251d8b1a9a450436e60a86f9beeca444352c",
+      "inode": 329801064,
+      "mtimeMs": 1791910481354.0896
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧫️fixtures/🧱️neutrality/🔣️.json",
+      "bytes": 89338,
+      "sha256": "da845f9047dca99809693e65bba4e6ee6e06447c4bc4065c8b87a6af0b855b0e",
+      "inode": 302478737,
+      "mtimeMs": 1790941922188.3533
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧫️fixtures/🩹️fragment-validation-vectors.json",
+      "bytes": 7314,
+      "sha256": "27ef4f937051428040325bab1cd6848b2064f630825be6da9dbe8f8820ed1f4e",
+      "inode": 258417725,
+      "mtimeMs": 1791310017758.6
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "bytes": 2796,
+      "sha256": "a4893732c6ba0d53b3926b643ec65a2088c1aeef2ea95bf1a105841e2418f86d",
+      "inode": 329801063,
+      "mtimeMs": 1791910481353.979
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧱️neutrality/🟦️.ts",
+      "bytes": 20924,
+      "sha256": "9cdc243a7b1ef23b4b1f96e55206dd3f5a580812166f2ebcfa2c7a4ec0f54f5e",
+      "inode": 306867150,
+      "mtimeMs": 1791910734067.753
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🩹️fragment-validation-oracle/🟦️.ts",
+      "bytes": 2688,
+      "sha256": "f0e9237f54348527d8d162470cab93ade11bb4d1a04c58645c21cc104f9f3eb1",
+      "inode": 258420217,
+      "mtimeMs": 1791910734068.78
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧬️vendor-annotation-vocabulary/🔣️.json",
+      "bytes": 2491,
+      "sha256": "62b86ab33e94fba5576e0302c7917bdcee45fb3fc1943bf310ad4f501f36010a",
+      "inode": 306867151,
+      "mtimeMs": 1791131249349.7188
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧾️record/🔣️.json",
+      "bytes": 242,
+      "sha256": "e244fa631a095c3283b96a40076da2af69669d77fcc5ac6d16443e322fdb8fb7",
+      "inode": 171423736,
+      "mtimeMs": 1789482109718.6692
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts",
+      "bytes": 867,
+      "sha256": "279be629043a19ae9ca3ca33d88a314757fcea53f11a9cfb6ac5e9496e14cd36",
+      "inode": 171033472,
+      "mtimeMs": 1788957839026.4673
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧾️record/🧪️tests/🔬️unit/🟦️.ts",
+      "bytes": 1847,
+      "sha256": "16b0f0342b1826c327e1bc493e570f68d99677459365c413aabd430dc96b8a58",
+      "inode": 171022652,
+      "mtimeMs": 1791910734071.9395
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧾️record/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 695,
+      "sha256": "bfaec18395bc6ec074b31bf6d9e5a87e1e4b15c260c32a471d808d750afb292b",
+      "inode": 171022649,
+      "mtimeMs": 1788964649744.1174
+    }
+  ]
+}

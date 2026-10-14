@@ -103,7 +103,7 @@ fn domain_bound_rows_carry_granularity_and_one_tree_binding() {
 
 #[test]
 fn flatten_control_uses_the_current_language_and_artifact_command() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🎮️commands/🥞️flatten-layers/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🎮️commands/🥞️flatten-layers/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
         let document=oversized_document(1,1);
         let view=ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
@@ -117,7 +117,7 @@ fn flatten_control_uses_the_current_language_and_artifact_command() {
 
 #[test]
 fn protected_tree_rows_remain_selectable_and_disable_structural_actions() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let view=ViewModel {tree_windows:vec![open(RASTER_TREE_PREFIX,0,20),open(&nested_key("container"),0,20),open(&nested_key("locked-group"),0,20)],..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)};
     for labels in [&RasterPlayLabels::NATIVE_EN,&RasterPlayLabels::NATIVE_DE] {
@@ -140,7 +140,7 @@ fn protected_tree_rows_remain_selectable_and_disable_structural_actions() {
 
 #[test]
 fn layer_creation_controls_include_nondestructive_adjustments_in_both_languages() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/➕️layer-creation/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/➕️layer-creation/🔣️.json")).unwrap();
     for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
         let document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();let view=ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         let tree=render(&document,&RasterConfig::default(),labels,&TreeWindows::for_body(&view,RASTER_PLAY_BODY_LAYERS)).unwrap();
@@ -161,7 +161,7 @@ fn layer_creation_controls_include_nondestructive_adjustments_in_both_languages(
 
 #[test]
 fn png_download_control_is_localized_and_not_disabled_by_layer_locks() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../📤️export/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../📤️export/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
         let mut document=oversized_document(1,1);if let RasterLayerNode::Group {locked,..}=&mut document.layers[0]{*locked=true;}
         let view=ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);let node=render(&document,&RasterConfig::default(),labels,&TreeWindows::for_body(&view,RASTER_PLAY_BODY_LAYERS)).unwrap();

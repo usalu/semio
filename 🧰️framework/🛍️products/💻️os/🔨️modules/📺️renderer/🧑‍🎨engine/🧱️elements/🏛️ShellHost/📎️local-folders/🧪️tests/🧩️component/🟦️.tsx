@@ -36,7 +36,7 @@ type Corpus = {
   readonly names: readonly (readonly [string, string])[];
   readonly texts: { readonly folder: string } & Readonly<Record<"en" | "de", { readonly label: string; readonly message: string; readonly attach: string; readonly forget: string }>>;
 };
-const corpus = readJson(join(engine, "🧫️fixtures", "📎️local-folder-bindings", "🔣️.json")) as Corpus;
+const corpus = readJson(join(engine, "🧪️tests/🧫️fixtures", "📎️local-folder-bindings", "🔣️.json")) as Corpus;
 // #endregion 🔌️Adapters
 
 //#region 🧪️Laws

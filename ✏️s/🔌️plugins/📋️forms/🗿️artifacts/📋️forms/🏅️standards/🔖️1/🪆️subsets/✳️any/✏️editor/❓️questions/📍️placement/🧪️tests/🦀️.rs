@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn question_drop_indices_match_shared_final_orders() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️drop.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️drop.json")).unwrap();
     let definition: crate::schema::definition::FormsDefinition = semio_framework_pack_json::from_json_str(&vectors["definition"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in vectors["cases"].as_array().unwrap() {
         let input = &case["input"];
@@ -24,7 +24,7 @@ fn move_commands_apply_the_requested_sibling_order() {
     use crate::editor::forms::config::FormsConfig;
     use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView};
     use protocol::Mutation;
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️drop.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️drop.json")).unwrap();
     let definition: crate::schema::definition::FormsDefinition = semio_framework_pack_json::from_json_str(&vectors["definition"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let history = HistoryView::empty();
     let config = FormsConfig::default();
@@ -46,7 +46,7 @@ fn move_commands_apply_the_requested_sibling_order() {
 #[test]
 fn question_placement_matches_shared_events() {
     use protocol::Mutation;
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for case in vectors["cases"].as_array().unwrap() {
         let input = &case["input"];
         let definition: crate::schema::definition::FormsDefinition = semio_framework_pack_json::from_json_str(&input["definition"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn exact_analytic_labels_require_current_source_membership() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for case in fixtures["analyticAdmission"].as_array().unwrap() {
         let ids: Vec<String> = serde_json::from_value(case["ids"].clone()).unwrap();
         let references = serde_json::from_value(case["references"].clone()).unwrap();
@@ -14,7 +14,7 @@ fn exact_analytic_labels_require_current_source_membership() {
 
 #[test]
 fn analytic_highlight_remaps_exact_labels_and_refuses_changed_source() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let id = fixtures["analyticGroups"][0]["ids"][0].as_str().unwrap();
     let target = ComponentTarget::parse(id).unwrap();
     let source = target.analytic.as_ref().unwrap();

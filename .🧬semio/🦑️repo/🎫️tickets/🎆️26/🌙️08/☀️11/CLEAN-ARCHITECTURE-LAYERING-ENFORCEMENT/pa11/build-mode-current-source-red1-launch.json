@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "🏃️Process Whole Build Mode Current Source Authority Red 1",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-process:test-build-mode --configuration=prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "9_gates",
+        "order": 900.05735
+      },
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/bmcr1",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/bmcr1",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "{\"version\":1,\"policy\":{\"version\":1,\"owner\":\"🏃️Process Whole Build Mode Current Source Authority Red 1\",\"maximumElapsedMilliseconds\":0},\"deadlineEpochMilliseconds\":null,\"capabilities\":{}}"
+      }
+    }
+  ],
+  "retireNames": []
+}

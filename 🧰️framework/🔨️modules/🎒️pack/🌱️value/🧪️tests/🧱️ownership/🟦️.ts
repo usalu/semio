@@ -3,7 +3,7 @@ import {test,expect} from "bun:test";
 import {existsSync,readFileSync} from "node:fs";
 import {resolve,dirname} from "node:path";
 import TOML from "@iarna/toml";
-import fixture from "../../🧫️fixtures/🧩️ownership/🔣️.json";
+import fixture from "../../🧪️tests/🧫️fixtures/🧩️ownership/🔣️.json";
 type Ownership={package:string;module:string;manifest:string;library:{name:string;path:string};mount:string;dependencies:string[];publicEntries:string[];forbiddenProviders:string[]};
 const contract=fixture as unknown as Ownership,owner=resolve(import.meta.dir,"../.."),read=(path:string)=>readFileSync(resolve(owner,path),"utf8");
 

@@ -69,7 +69,7 @@ const RECIPES: readonly Recipe[] = [
 const MEDIA_TYPE: Record<string, string> = { dxf: "image/vnd.dxf", svg: "image/svg+xml", pdf: "application/pdf" };
 const CRATE_DIR = join(import.meta.dir, "🔁️codec", "📦️packages", "🦀️rust");
 const SUBSETS_DIR = join(import.meta.dir, "..", "..");
-const COMMITTED_FIXTURES = join(import.meta.dir, "..", "🧫️fixtures");
+const COMMITTED_FIXTURES = join(import.meta.dir, "../🧪️tests/🧫️fixtures");
 const ORACLE_BY_CARRIER: Record<string, string> = { dxf: "dxf-crate-note-ink-reader", svg: "quick-xml-note-drawing-reader", pdf: "lopdf-note-text-reader" };
 const ENGINE_BY_CARRIER: Record<string, { family: string; version: string; packageVersion: string }> = {
   dxf: { family: "dxf-rs", version: "0.6", packageVersion: "0.6" },

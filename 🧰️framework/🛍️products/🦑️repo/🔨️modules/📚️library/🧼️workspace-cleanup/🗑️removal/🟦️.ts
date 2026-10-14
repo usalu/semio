@@ -1,4 +1,4 @@
-import { generatedOutputHasLiveLease } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { generatedOutputHasLiveLease } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { existsSync, rmSync } from "node:fs";
 import { relative, resolve } from "node:path";
 import { runProbe } from "../../🟦️.ts";

@@ -35,6 +35,17 @@
         },
         "pollMs": 1000
       }
+    },
+    "StoreProtocol": {
+      "const": {
+        "namespace": "semio.cargo.store-lease/v1",
+        "compilerAccess": "shared",
+        "maintenanceAccess": "exclusive",
+        "order": [
+          "store",
+          "profile"
+        ]
+      }
     }
   }
 }

@@ -1,6 +1,6 @@
 use super::*;
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../../../🧫️fixtures/⌨️keymap/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/⌨️keymap/🔣️.json")).unwrap() }
 
 fn overrides(value: &serde_json::Value) -> BTreeMap<String, Vec<String>> {
     value.as_object().unwrap().iter().map(|(id, keys)| (id.clone(), keys.as_array().unwrap().iter().map(|key| key.as_str().unwrap().to_string()).collect())).collect()

@@ -6,7 +6,7 @@ import { inspectRustCompileReferences } from "../../../../../../../../../../../.
 
 /** 🔎️ Checks closed source cases independently of the native syntax parser. */
 export function testGeneration3dIoAuthorityFixture(): number {
-  const fixture = JSON.parse(readFileSync(new URL("../../../🧫️fixtures/🛡️authority/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🛡️authority/🔣️.json", import.meta.url), "utf8"));
   const ids = new Set(fixture.cases.map((entry: { id: string }) => entry.id));
   assert.equal(ids.size, fixture.cases.length);
   for (const entry of fixture.cases) {

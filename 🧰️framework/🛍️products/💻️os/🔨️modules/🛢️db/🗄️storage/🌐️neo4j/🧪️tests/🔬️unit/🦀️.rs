@@ -194,7 +194,7 @@ async fn capabilities_report_durable_cas_and_fsync_backed_storage() {
 //#region 🔖️WriterFence
 #[test]
 fn writer_lease_constants_and_schema_match_the_neutral_contract() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔐️writer/🧫️fixtures/🌐️remote-guard/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔐️writer/🧪️tests/🧫️fixtures/🌐️remote-guard/🔣️.json")).unwrap();
     let neo4j = &fixture["neo4j"];
     assert_eq!(neo4j["leaseTtlMs"].as_i64().unwrap(), WAL_WRITER_LEASE_TTL_MS);
     assert_eq!(neo4j["renewEveryMs"].as_u64().unwrap(), WAL_WRITER_RENEW_EVERY_MS);

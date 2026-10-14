@@ -42,8 +42,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const shellHelpers = join(here, "..", "..", "..");
 const framework = join(here, "..", "..", "..", "..", "..", "..", "..", "..", "..", "..");
 const readJson = (path: string): any => JSON.parse(readFileSync(path, "utf8"));
-const corpus = readJson(join(shellHelpers, "🧫️fixtures", "🧫️time-travel-band", "🔣️.json"));
-const rowActionCorpus = readJson(join(framework, "🔨️modules", "🖱️ui", "🧫️fixtures", "♿️disabled-row-action", "🔣️.json")) as readonly { readonly id: string; readonly label: string; readonly focusable: boolean; readonly actionable: boolean }[];
+const corpus = readJson(join(shellHelpers, "🧪️tests/🧫️fixtures", "🧫️time-travel-band", "🔣️.json"));
+const rowActionCorpus = readJson(join(framework, "🔨️modules", "🖱️ui", "🧪️tests/🧫️fixtures", "♿️disabled-row-action", "🔣️.json")) as readonly { readonly id: string; readonly label: string; readonly focusable: boolean; readonly actionable: boolean }[];
 type Case = { readonly name: string; readonly session: HistoryTimeTravel; readonly text: Readonly<Record<"en" | "de", Record<string, string | null>>>; readonly controls: readonly { readonly control: string; readonly controlId: string; readonly action: string; readonly disabledBy: string | null; readonly args?: Readonly<Record<string, string>> }[]; readonly indicator: Readonly<Record<"en" | "de", string>> };
 /** 🏷️ The corpus's one copy of every band, indicator, peer and refusal text: label key → tier → locale, placeholders in single braces. */
 type LabelRow = Readonly<Record<"normal" | "beginner", Readonly<Record<"en" | "de", string>>>>;
@@ -53,7 +53,7 @@ const corpusLabel = (key: string, locale: "en" | "de", values: Readonly<Record<s
 const cases = corpus.cases as readonly Case[];
 /** 👥️ The peers' history-edit corpus (`🧫️time-travel-peers`) both shells assert: the rows a replica holds, the peers on
  * its roster, and per locale every editing peer's chip and every history-body node's note. */
-const peersCorpus = readJson(join(shellHelpers, "🧫️fixtures", "🧫️time-travel-peers", "🔣️.json"));
+const peersCorpus = readJson(join(shellHelpers, "🧪️tests/🧫️fixtures", "🧫️time-travel-peers", "🔣️.json"));
 type PeersCorpusRow = { readonly seq: number; readonly editId: string; readonly mutations: readonly { readonly mutationId: string; readonly label: { readonly en: string; readonly de: string } }[] };
 type PeersCorpusCase = {
   readonly name: string;
@@ -844,7 +844,7 @@ describe("♿️ the draft editor is named, operable by keyboard alone and says 
   });
 
   it("opens the finalize prompt with focus on its name field, a destructive Overwrite, Back, and no ARIA finding", () => {
-    const choices = readJson(join(framework, "🔨️modules", "🛂️manifest", "🧫️fixtures", "🧫️dialog-choices", "🔣️.json"));
+    const choices = readJson(join(framework, "🔨️modules", "🛂️manifest", "🧪️tests/🧫️fixtures/🧫️dialog-choices/🔣️.json", "🧫️dialog-choices", "🔣️.json"));
     const field = (def: { readonly id: string }, value: unknown, change: (value: unknown) => void, binding?: { readonly id: string; readonly labelledBy?: string; readonly required?: boolean }) => createElement("input", { id: binding?.id, "aria-labelledby": binding?.labelledBy, required: binding?.required, value: String(value ?? ""), onChange: (event: { readonly target: { readonly value: string } }) => change(event.target.value), "data-field": def.id });
     const view = render(createElement(UIDialog, { dialog: choices.dialog, seedArgs: choices.seed, renderField: field as never, onSubmit: () => undefined, onChoose: () => undefined, onCancel: () => undefined } as never));
     const prompt = document.querySelector<HTMLElement>('[role="dialog"]')!;
@@ -898,7 +898,7 @@ describe("🗃️ a restored document's history replaces the displaced rows and 
   afterAll(() => syncShellLabelLocale("en"));
 
   it("lists every row of the read-back snapshot, none of the displaced document's, and draws each label from its LocalizedLabel, never from op text", () => {
-    const reload = readJson(join(shellHelpers, "..", "..", "..", "..", "🔌️plugin", "🧫️fixtures", "🧫️history-label-reload", "🔣️.json")) as { readonly cases: readonly { readonly id: string; readonly expected: { readonly en: string; readonly de: string } }[] };
+    const reload = readJson(join(shellHelpers, "..", "..", "..", "..", "🔌️plugin", "🧪️tests/🧫️fixtures", "🧫️history-label-reload", "🔣️.json")) as { readonly cases: readonly { readonly id: string; readonly expected: { readonly en: string; readonly de: string } }[] };
     const localized = (text: { readonly en: string; readonly de: string }) => ({ native: text, reuse: text });
     const row = (seq: number, editId: string, label: { readonly en: string; readonly de: string }) => ({ seq, editId, actionId: "apply", label: localized(label), kind: "mutation", timestamp: "t", opLines: [`set ${editId}`], opCount: 1, applied: true, revertible: true, count: 1, mutations: [] }) as unknown as HistoryEntry;
     const displaced = shellHistoryProjectionAfterPatchV1(EMPTY_SHELL_HISTORY_PROJECTION_V1, { cursor: 1, upserts: [row(1, "fresh-instance", { en: "Set Active Example", de: "Aktives Beispiel festlegen" })], canUndo: true }, true);
@@ -926,7 +926,7 @@ type RevealProps = { readonly session: HistoryTimeTravel | null; readonly mobile
 
 /** 🛰️ The shell's real layout reducer driven by the reveal hook exactly as ShellHost mounts it. */
 function RevealProbe({ session, mobile, history, root, seen }: RevealProps) {
-  const [state, dispatchState] = useReducer(shellReducer, undefined, () => initialShellState({ plugins: [], storage: createMemoryStoragePort() }));
+  const [state, dispatchState] = useReducer(shellReducer, undefined, () => initialShellState({ locale: "en", plugins: [], storage: createMemoryStoragePort() }));
   const dispatch = useCallback((action: ShellAction) => {
     seen.actions.push(action.type);
     dispatchState(action);
@@ -1381,7 +1381,7 @@ describe("📢️ history-lane refusals reach the person in the kernel's own wor
   afterAll(() => syncShellLabelLocale("en"));
 
   it("tells every kernel notice in English and German — the fault's own code, a cause's, or a verb's silent rejection — `{n}` the structured edit count", () => {
-    const fixture = readJson(join(framework, "🔨️modules", "🎠️kernel", "🧫️fixtures", "🧫️history-notices", "🔣️.json")) as { readonly notices: readonly { readonly code: string; readonly en: string; readonly de: string }[] };
+    const fixture = readJson(join(framework, "🔨️modules", "🎠️kernel", "🧪️tests/🧫️fixtures/🧫️history-notices/🔣️.json", "🧫️history-notices", "🔣️.json")) as { readonly notices: readonly { readonly code: string; readonly en: string; readonly de: string }[] };
     expect(fixture.notices.map((row) => row.code)).toEqual(HISTORY_NOTICE_LABELS.map((row) => row.code));
     for (const locale of LOCALES) {
       syncShellLabelLocale(locale);
@@ -1482,7 +1482,7 @@ describe("⏹️ a whole-document load shows its progress in the history body an
 describe("📡️ a history change replaying before adoption is announced outside the History panel, in the kernel's own words", () => {
   afterEach(() => cleanup());
   type ReprojectionCase = { readonly name: string; readonly reprojection: NonNullable<HistoryPatch["reprojection"]>; readonly title: Readonly<Record<"en" | "de", string>>; readonly text: Readonly<Record<"en" | "de", string>>; readonly paused: boolean; readonly fault: string | null };
-  const reprojectionCases = (readJson(join(framework, "🔨️modules", "🎠️kernel", "🧫️fixtures", "🧫️history-reprojection", "🔣️.json")) as { readonly cases: readonly ReprojectionCase[] }).cases;
+  const reprojectionCases = (readJson(join(framework, "🔨️modules", "🎠️kernel", "🧪️tests/🧫️fixtures/🧫️history-reprojection/🔣️.json", "🧫️history-reprojection", "🔣️.json")) as { readonly cases: readonly ReprojectionCase[] }).cases;
   const mountStatus = (reprojection: NonNullable<HistoryPatch["reprojection"]>, locale: "en" | "de", sessionOpen = false) => {
     const dispatched: ActionDescriptor[] = [];
     const view = render(createElement(HistoryReprojectionStatus, { reprojection, locale, sessionOpen, controllerId: controller, onAction: (action: ActionDescriptor) => dispatched.push(action) }));

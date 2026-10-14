@@ -7,7 +7,7 @@ use semio_framework_value::list::{PagedListError,PagedListAllocationError,PagedL
 #[test]
 fn retained_catalog_factories_preserve_actual_source_kind_reason_and_allocated_witness(){
  const REASON:&str="same deliberately misleading canceled/work/allocation prose";
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let kind=match row["cause"]["kind"].as_str().unwrap(){"invalidValue"=>ValueRefusalKind::InvalidValue,"canceled"=>ValueRefusalKind::Canceled,"ownershipLimit"=>ValueRefusalKind::OwnershipLimit,"allocationFailed"=>ValueRefusalKind::AllocationFailed,"workLimit"=>ValueRefusalKind::WorkLimit,"depthLimit"=>ValueRefusalKind::DepthLimit,"unsupportedOwner"=>ValueRefusalKind::UnsupportedOwner,"invariantViolated"=>ValueRefusalKind::InvariantViolated,_=>panic!("unknown closed native catalog kind")};
   assert_eq!(row["cause"]["reason"].as_str().unwrap(),REASON);

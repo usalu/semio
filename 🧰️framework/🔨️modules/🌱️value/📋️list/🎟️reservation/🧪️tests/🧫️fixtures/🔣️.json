@@ -1,0 +1,29 @@
+{
+  "contract": "semio.value.list.original-reservation-custody.v1",
+  "grant": [
+    1,
+    17,
+    65536,
+    262144,
+    64
+  ],
+  "rows": 4096,
+  "rowBytes": 96,
+  "payloadPageBytes": 4096,
+  "payloadCopies": 0,
+  "partialFinalRows": 13,
+  "interruptAfter": [
+    0,
+    1,
+    2,
+    3,
+    16,
+    42,
+    43,
+    256,
+    672,
+    673,
+    1000,
+    4096
+  ]
+}

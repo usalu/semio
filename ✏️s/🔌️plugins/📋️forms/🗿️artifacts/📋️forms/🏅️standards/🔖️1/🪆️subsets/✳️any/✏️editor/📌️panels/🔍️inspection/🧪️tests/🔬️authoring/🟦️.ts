@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import schema from "../../🧬️schema/🔣️.json";
-import fixture from "../../🧫️fixtures/🔣️authoring.json";
+import fixture from "../🧫️fixtures/🔣️authoring.json";
 import { inspectionModel } from "../../🟦️.ts";
 
 /** 🧪️ Both implementations share selection and field-availability vectors checked by Ajv. */

@@ -3,7 +3,7 @@ import { chmodSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync,
 import { dirname, join } from "node:path";
 import { inflateRawSync } from "node:zlib";
 import {repositoryCargoPreparationStorageV1, runTool } from "../../📦️dependencies/📜️script.ts";
-import { withResourceLeases } from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import { withResourceLeases } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
 type BunDistribution = { platform: string; arch: string; musl: boolean; archive: string; bytes: number; sha256: string };
 const manifest = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8")) as { version: string; release: string; distributions: BunDistribution[] };

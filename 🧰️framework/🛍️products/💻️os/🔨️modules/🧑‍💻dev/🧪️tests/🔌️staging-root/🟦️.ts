@@ -17,13 +17,13 @@ import { healthyPreparedComponents, preparedComponentReportLines, preparedCompon
 
 const suiteDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteDir, "../../../../../../..");
-const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🔌️staging-root.json"), "utf8")) as {
+const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🔌️staging-root.json"), "utf8")) as {
   readonly root: {
     readonly packageRelativePath: string;
     readonly modulesDirectoryName: string;
-    readonly profiles: readonly ("dev" | "release")[];
+    readonly profiles: readonly ("prototype" | "release")[];
     readonly rejectedProfiles: readonly string[];
-    readonly consumers: readonly { readonly id: string; readonly renderer: "react" | "wgpu"; readonly profile: "dev" | "release" }[];
+    readonly consumers: readonly { readonly id: string; readonly renderer: "react" | "wgpu"; readonly profile: "prototype" | "release" }[];
     readonly retiredRoots: readonly string[];
     readonly retiredSymbols: readonly string[];
     readonly sourceFiles: readonly string[];
@@ -85,15 +85,15 @@ describe("one plugin staging root", () => {
   });
 
   it.each(fixture.root.rejectedProfiles)("refuses %j for an explicit workspace too", (profile) => {
-    expect(() => pluginModulesRootIn(repoRoot, profile as "dev" | "release")).toThrow(/staging profile/u);
+    expect(() => pluginModulesRootIn(repoRoot, profile as "prototype" | "release")).toThrow(/staging profile/u);
   });
 
   it("keeps the two profiles apart", () => {
-    expect(pluginModulesRoot("dev")).not.toBe(pluginModulesRoot("release"));
+    expect(pluginModulesRoot("prototype")).not.toBe(pluginModulesRoot("release"));
   });
 
   it.each(fixture.root.rejectedProfiles)("refuses %j rather than inventing a third root", (profile) => {
-    expect(() => pluginModulesRoot(profile as "dev" | "release")).toThrow(/staging profile/u);
+    expect(() => pluginModulesRoot(profile as "prototype" | "release")).toThrow(/staging profile/u);
   });
 
   it("leaves no retired root or symbol in any declared source file", () => {
@@ -107,7 +107,7 @@ describe("one plugin staging root", () => {
 
   it("tracks every declared source through the registered test inputs", () => {
     const project = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json"), "utf8"));
-    const expected = [...fixture.root.sourceFiles, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🔌️staging-root.json", relative(repoRoot, fileURLToPath(import.meta.url)).replaceAll("\\", "/")].map((path) => `{workspaceRoot}/${path}`).sort();
+    const expected = [...fixture.root.sourceFiles, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🔌️staging-root.json", relative(repoRoot, fileURLToPath(import.meta.url)).replaceAll("\\", "/")].map((path) => `{workspaceRoot}/${path}`).sort();
     expect([...project.namedInputs.stagingRootSources].sort()).toEqual(expected);
     const targets = Object.values(project.targets) as { options?: { command?: string }; inputs?: readonly string[] }[];
     for (const target of targets.filter((target) => target.options?.command?.startsWith("bun ./📜️script.ts test"))) expect(target.inputs).toContain("stagingRootSources");

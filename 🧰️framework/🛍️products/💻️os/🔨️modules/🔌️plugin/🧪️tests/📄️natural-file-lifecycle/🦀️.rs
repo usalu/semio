@@ -51,7 +51,7 @@ struct Expected {
 
 #[test]
 fn natural_file_actions_publish_exact_paired_codec_metadata() {
-    let fixture: Fixture = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧫️fixtures/📄️natural-file-lifecycle/🔣️.json"))).expect("natural-file lifecycle fixture parses");
+    let fixture: Fixture = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🧫️fixtures/📄️natural-file-lifecycle/🔣️.json"))).expect("natural-file lifecycle fixture parses");
     assert_eq!(fixture.formats.len(), 28);
     for row in fixture.formats {
         let codec = crate::NaturalFileCodec {

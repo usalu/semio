@@ -2,7 +2,7 @@ use super::{TypedOperationResultPage, TypedOperationResultToken};
 
 #[test]
 fn renderer_result_lane_vectors_decode_and_reject_unknown_tags() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🔌️plugin/🧫️fixtures/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json")).expect("neutral result lanes");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🔌️plugin/🧪️tests/🧫️fixtures/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json")).expect("neutral result lanes");
     let token = TypedOperationResultToken { receiver: 1, operation: 2, generation: 3, sequence: 4, attempt: 5 };
     let mut wire = Vec::from(TypedOperationResultPage::PAGE_MAGIC);
     wire.extend_from_slice(&token.receiver.to_le_bytes());
@@ -37,7 +37,7 @@ fn renderer_result_lane_vectors_decode_and_reject_unknown_tags() {
 /// the page magic's first byte is exactly the `AppFrame` tag a missing discrimination reports.
 #[test]
 fn one_shell_message_stream_splits_into_app_frames_and_typed_operation_pages() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🔌️plugin/🧫️fixtures/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json")).expect("neutral result lanes");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🔌️plugin/🧪️tests/🧫️fixtures/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json")).expect("neutral result lanes");
     let page_magic = fixture["page"]["pageMagic"].as_str().expect("page magic");
     let ack_magic = fixture["page"]["ackMagic"].as_str().expect("ack magic");
     assert_eq!(page_magic.as_bytes(), TypedOperationResultPage::PAGE_MAGIC, "the fixture declares the production page magic");

@@ -1,10 +1,12 @@
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { checkResourceLeaseControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import { compilerAdmissionBudgetV1, requestedCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { closeSync, lstatSync, mkdtempSync, openSync, readFileSync, readSync, realpathSync, rmSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { devToolingEnv, runCmdStatus } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { captureOwnedCommandV1 } from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { captureOwnedCommandV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { verifySemanticDescriptorPairBytesV1 } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
 import { ITERATE_COMPONENT_MAX_BYTES } from "../🏷️component-receipt/🟦️.ts";
 import { CRATE_NAME, DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, FRESH_IO_CHUNK_BYTES, publishedDescriptorEmitter } from "../🏗️component-build/🟦️.ts";
@@ -26,10 +28,11 @@ export type SemanticDescriptorEmissionV1 = Readonly<{
 }>;
 
 export type DescriptorEmissionControlV1 = Readonly<{
+  compiler: CompilerAdmissionControl;
+  environment?: Readonly<Record<string, string | undefined>>;
   cancelled?: () => boolean;
   deadlineMs?: number;
   checkpoint?: (stage: string) => void;
-  signal?: AbortSignal;
 }>;
 
 export class DescribeScript extends BundleScript {
@@ -45,6 +48,7 @@ export function remainingDescriptorEmissionBudgetMs(budgetMs: number, elapsedMs:
 }
 
 function emissionGuard(control: DescriptorEmissionControlV1, startedAt: number, budgetMs: number, stage: string): void {
+  checkResourceLeaseControl(control.compiler);
   if (control.cancelled?.()) throw new Error(`descriptor emission cancelled at ${stage}`);
   if (budgetMs !== 0 && Date.now() - startedAt > budgetMs) throw new Error(`descriptor emission deadline of ${budgetMs}ms exceeded at ${stage}`);
   control.checkpoint?.(stage);
@@ -89,10 +93,11 @@ function emissionArtifact(root: string, path: string, label: string, maximum: nu
  * `🔣️.json` pair in memory, strict-decoded, compared form against form and refused if it carries any byte identity or a
  * placeholder identity. Nothing is published here: the describe stage decides whether the pair is verified against the
  * committed one, written over it, or kept local (ticket 26/09/23 wave A2). Every stage is cancellable and deadline bounded. */
-export async function emitSemanticDescriptorV1(repoRoot: string, request: DescriptorEmissionRequestV1, control: DescriptorEmissionControlV1 = {}): Promise<SemanticDescriptorEmissionV1> {
+export async function emitSemanticDescriptorV1(repoRoot: string, request: DescriptorEmissionRequestV1, control: DescriptorEmissionControlV1): Promise<SemanticDescriptorEmissionV1> {
   const startedAt = Date.now();
   const budgetMs = control.deadlineMs ?? buildBudgetMs();
   emissionGuard(control, startedAt, budgetMs, "validate");
+  const phase = requestedCompilerAdmissionControlV1(control.compiler, budgetMs);
   const artifactRoot = emissionDirectory(repoRoot, request.artifactRoot, "artifact root");
   const component = emissionArtifact(artifactRoot, request.component, "component", ITERATE_COMPONENT_MAX_BYTES);
   emissionGuard(control, startedAt, budgetMs, "emit");
@@ -100,8 +105,8 @@ export async function emitSemanticDescriptorV1(repoRoot: string, request: Descri
   try {
     const emitter = publishedDescriptorEmitter(repoRoot);
     emissionGuard(control, startedAt, budgetMs, "describe");
-    const remaining = remainingDescriptorEmissionBudgetMs(budgetMs, Date.now() - startedAt), signals = [control.signal, remaining === 0 ? undefined : AbortSignal.timeout(remaining)].filter((value): value is AbortSignal => value !== undefined);
-    await captureOwnedCommandV1(emitter, ["describe", component.path, "--out", staging], repoRoot, { env: devToolingEnv(), ...(signals.length ? { signal: AbortSignal.any(signals) } : {}) }).catch((error: unknown) => { throw new Error(`descriptor emitter failed: ${error instanceof Error ? error.message : String(error)}`, { cause: error }); });
+    compilerAdmissionBudgetV1(phase);
+    await captureOwnedCommandV1(emitter, ["describe", component.path, "--out", staging], repoRoot, { env: control.environment ?? devToolingEnv(), control: phase }).catch((error: unknown) => { throw new Error(`descriptor emitter failed: ${error instanceof Error ? error.message : String(error)}`, { cause: error }); });
     emissionGuard(control, startedAt, budgetMs, "verify");
     const packBytes = readFileSync(join(staging, DESCRIPTOR_PACK_FILENAME));
     const jsonBytes = readFileSync(join(staging, DESCRIPTOR_JSON_FILENAME));

@@ -1,0 +1,25 @@
+{
+  "grant": {
+    "items": 1,
+    "copyBytes": 2,
+    "capacityBytes": 65536,
+    "releaseBytes": 262144,
+    "depth": 64
+  },
+  "limits": {
+    "fileBytes": 67108864,
+    "frameBodyBytes": 1048576,
+    "records": 8192,
+    "maximumFields": 128,
+    "maximumTextBytes": 1048576,
+    "maximumBinaryBytes": 1048576,
+    "maximumJsonBytes": 1048576,
+    "maximumJsonAllocationBytes": 8388608,
+    "maximumJsonItems": 65536,
+    "maximumJsonDepth": 64
+  },
+  "control": {
+    "maximumAllocationBytes": 8388608
+  },
+  "canonicalCaseCount": 25
+}

@@ -13,7 +13,7 @@ fn grant(value:&serde_json::Value)->RetainedCloneGrant{
 /// ⚖️ Every original success or refusal reaches the same external recipient exactly once.
 #[test]
 fn flow_contributions_records_original_registry_receipts_before_yield_or_refusal(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️contributions/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️contributions/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap(){
         let mut actual=progress(&row["initial"]);let mut sequence=0;
         let mut cx=StepContext::new(OperationId(107_901),Generation(9),StepBudget::new(1,u64::MAX,grant(&row["grant"])),CancelToken::root_now(),semio_framework_job::logical_now_us,&mut sequence,&mut actual);
@@ -32,7 +32,7 @@ fn flow_contributions_records_original_registry_receipts_before_yield_or_refusal
 /// 🪢️ A command retires its own original alias while the live shared instance remains usable.
 #[test]
 fn flow_contributions_retires_only_its_original_alias_before_terminal_work(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️contributions/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️contributions/🔣️.json")).unwrap();
     for policy in fixture["aliasPolicies"].as_array().unwrap(){
         let shared=semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::new(Box::new(FlowInstanceOperationOwner::new()));
         let source=shared.with_mut::<FlowInstanceOperationOwner,_>(|owner|Ok(owner as *mut _ as usize)).unwrap();

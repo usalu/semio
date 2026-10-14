@@ -6,11 +6,11 @@ use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutat
 use crate::DrawingSnapshot;
 use protocol::{Mutation, SemanticMutation};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/🎯️outcome/🔣️.json");
 
 fn before() -> DrawingSnapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")

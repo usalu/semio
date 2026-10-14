@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "purpose": "New initial ordinary source callers for the unchanged full neutral Graph manifest and Value decoder receivers after actual ownership cuts. Existing command/cwd/order retained; original source ordinary0/null with capabilities{}; owned artifacts, no native authority.",
+  "configurations": [
+    {
+      "name": "🕸️Graph 🛂️manifest 🧪️contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-graph:test-manifest-contract",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "9_gates",
+        "order": 900.05713
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "{\"version\":1,\"policy\":{\"version\":1,\"owner\":\"🕸️Graph 🛂️manifest 🧪️contract\",\"maximumElapsedMilliseconds\":0},\"deadlineEpochMilliseconds\":null,\"capabilities\":{}}"
+      }
+    },
+    {
+      "name": "🧪️test🌱️value🛬️decode🧩️ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/value-rs:test-decode-ownership --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "{\"version\":1,\"policy\":{\"version\":1,\"owner\":\"🧪️test🌱️value🛬️decode🧩️ownership\",\"maximumElapsedMilliseconds\":0},\"deadlineEpochMilliseconds\":null,\"capabilities\":{}}"
+      },
+      "presentation": {
+        "group": "9_gates",
+        "order": 900.05821
+      }
+    }
+  ]
+}

@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 
 /** 📦️ Compares dependency synchronization with Bun and runs its uncached target through native Nx. */
 export async function testDependencyBootstrap(workspace: string, output: string): Promise<void> {
-  const require = createRequire(join(workspace, "package.json")), vectors = resolve(import.meta.dirname, "../../🧫️fixtures/dependency-bootstrap");
+  const require = createRequire(join(workspace, "package.json")), vectors = resolve(import.meta.dirname, "../🧫️fixtures/dependency-bootstrap");
   const fixture = JSON.parse(readFileSync(join(vectors, "🔣️.json"), "utf8"));
   const target = JSON.parse(readFileSync(join(workspace, "📋️project.json"), "utf8")).targets[fixture.target];
   assert.equal(target.cache, false);
@@ -46,7 +46,7 @@ export async function testDependencyBootstrap(workspace: string, output: string)
 
 /** 🛠️ Acquires only pinned Nx tooling into an empty checkout and compares its CLI to native Nx. */
 export async function testNxTooling(workspace: string, output: string): Promise<void> {
-  const fixture = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../🧫️fixtures/dependency-bootstrap/🔣️.json"), "utf8")), require = createRequire(join(workspace, "package.json"));
+  const fixture = JSON.parse(readFileSync(resolve(import.meta.dirname, "../🧫️fixtures/dependency-bootstrap/🔣️.json"), "utf8")), require = createRequire(join(workspace, "package.json"));
   const source = join(workspace, fixture.tooling.path), manifest = JSON.parse(readFileSync(join(source, "package.json"), "utf8"));
   assert.deepEqual(Object.keys(manifest.dependencies).sort(), fixture.tooling.packages);
   for (const version of Object.values(manifest.dependencies)) assert.match(version as string, /^\d+\.\d+\.\d+$/);
@@ -73,7 +73,7 @@ export async function testNxTooling(workspace: string, output: string): Promise<
   assert.ok(actual.stdout.toString().includes(manifest.dependencies.nx));
   assert.ok(native.stdout.toString().includes(manifest.dependencies.nx));
   const bootstrap = fixture.tooling.path.replace(/\/🛠️tools$/, "/📜️script.ts"), library = fixture.tooling.path.split("/⚡️caching/")[0];
-  const eager = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../🧫️fixtures/nx-bootstrap/🔣️.json"), "utf8")).eagerSources;
+  const eager = JSON.parse(readFileSync(resolve(import.meta.dirname, "../🧫️fixtures/nx-bootstrap/🔣️.json"), "utf8")).eagerSources;
   for (const path of [...eager, fixture.entry, fixture.tooling.path + "/📜️script.ts", "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts"]) { mkdirSync(dirname(join(root, path)), { recursive: true }); copyFileSync(join(workspace, path), join(root, path)); }
   writeFileSync(join(root, "📜️script.ts"), "throw new Error('Application code must not run during Nx acquisition');");
   const publicRun = Bun.spawn([process.execPath, join(root, bootstrap), "nx", "--version"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
@@ -125,7 +125,7 @@ export async function testNxTooling(workspace: string, output: string): Promise<
 
 /** 🛑️ Cancels a real installer tree whose two processes deliberately ignore graceful termination. */
 export async function testDependencyCancellation(workspace: string, output: string): Promise<void> {
-  const fixture = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../🧫️fixtures/dependency-bootstrap/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(resolve(import.meta.dirname, "../🧫️fixtures/dependency-bootstrap/🔣️.json"), "utf8"));
   const { runBun } = await import(join(workspace, fixture.entry));
   const root = mkdtempSync(join(output, "dependency-cancellation-")), script = join(root, "📜️script.ts"), ready = join(root, "ready.json");
   writeFileSync(script, `import { existsSync, writeFileSync, renameSync } from "node:fs"; import { join } from "node:path";

@@ -17,7 +17,7 @@ interface ProgramFixture {
 }
 
 function loadFixture(): ProgramFixture {
-  return JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🎞️video-render-program/🔣️.json"), "utf8")) as ProgramFixture;
+  return JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/🎞️video-render-program/🔣️.json"), "utf8")) as ProgramFixture;
 }
 
 /** ⚖️ The whole law, callable without vitest so the nx lane runs it as a plain oracle. */

@@ -3,6 +3,8 @@
 //! Checkpoint publication and builtin semantic decoding still require migration to funded continuations.
 
 use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_job::OriginalTurnFailure;
+use semio_framework_value::{ValueError,ValueRefusalKind};
 use std::cell::{Cell,RefCell};
 use std::future::Future;
 use std::task::{Context, Poll};
@@ -44,23 +46,21 @@ pub const JOB_KIND_MIGRATE: &str = "semio.migrate";
 /// bounded state machine fails that law rather than shipping as a dead route.
 pub const BUILTIN_JOB_KINDS: [&str; 5] = [JOB_KIND_IO_RUN, JOB_KIND_IO_SNIFF, JOB_KIND_INFER, JOB_KIND_MUTATION_PLAN, JOB_KIND_MIGRATE];
 
-/// ⛽️ Plain-Rust mirror of `jobs.wit`'s `record job-budget` — this module is NOT gated to
-/// wasm32-wasip2 (it must compile and unit-test natively), so it cannot name the
-/// WIT-generated type directly; the WIT boundary conversion lives in the (leased) `JobsGuest` impl
-/// in `🔌️plugin/🦀️.rs`, field-for-field.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Deserialize, FromValue, serde::Serialize, ToValue)]
-pub struct JobBudget {
-    pub fuel: u64,
-    pub deadline_ms: u32,
-}
+/// 📬️ The OS registry uses the canonical original Actor result type.
+pub use semio_framework_actor::OriginalJobStep as JobStep;
 
-/// ▶️ Plain-Rust mirror of `jobs.wit`'s `variant job-step` — see `JobBudget`'s doc for why this
-/// isn't the WIT-generated type itself.
-#[derive(Debug,serde::Deserialize, FromValue, serde::Serialize, ToValue,semio_framework_value::RetireOwned)]
-pub enum JobStep {
-    Running(Option<Vec<u8>>),
-    Done(Vec<u8>),
-    Failed(Vec<u8>),
+/// 🔌️ Borrows the actual registered OS jobs for one immutable original actor identity.
+pub struct RegisteredOriginalActorJobs{operation:u64,generation:u64}
+impl RegisteredOriginalActorJobs{
+ pub fn borrow_original(operation:u64,generation:u64)->Self{Self{operation,generation}}
+ fn validate_job(&self,job:u64,cx:&semio_framework_job::StepContext<'_>)->Result<(),ValueError>{if (cx.operation().0,cx.generation().0)!=(self.operation,self.generation)||!JOBS.with(|jobs|jobs.borrow().iter().flatten().any(|slot|slot.job==job&&slot.identity==(self.operation,self.generation))){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original registered job differs from its caller context"))}Ok(())}
+}
+impl semio_framework_actor::OriginalActorJobProvider for RegisteredOriginalActorJobs{
+ fn identity(&self)->(u64,u64){(self.operation,self.generation)}
+ fn next_owned(&self)->Option<u64>{next_owned_job(self.operation,self.generation)}
+ fn is_cancelled(&self,job:u64)->Option<bool>{if !JOBS.with(|jobs|jobs.borrow().iter().flatten().any(|slot|slot.job==job&&slot.identity==(self.operation,self.generation))){return None}original_job_is_cancelled(job)}
+ fn cancel(&mut self,job:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.validate_job(job,cx)?;abi::cancel(job,cx).map_err(Into::into)}
+ fn step(&mut self,job:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<JobStep>,semio_framework_job::OriginalTurnFailure>{self.validate_job(job,cx)?;abi::step(job,cx)}
 }
 
 /// ⛽️ Price of one decode/validate state action: a bounded parse of `input` that allocates nothing
@@ -83,8 +83,8 @@ pub use semio_framework_os_kernel::io::io_mechanism::IoRunControl;
 pub use crate::store::sqlite_snapshot::SqliteSnapshotControl;
 
 pub trait BoundedJob {
-    fn step(&mut self, budget: JobBudget, original: &mut IoRunControl<'_, '_>, snapshot: &mut SqliteSnapshotControl<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<JobStep,semio_framework_value::ValueError>;
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_value::ValueError>;
+    fn step(&mut self, original: &mut IoRunControl<'_, '_>, snapshot: &mut SqliteSnapshotControl<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<JobStep,OriginalTurnFailure>;
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,OriginalTurnFailure>;
     fn retirement_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;
     fn cancel(&mut self);
     fn checkpoint(&self) -> Option<Vec<u8>>;
@@ -114,9 +114,9 @@ pub fn admit_original_job<T:BoundedJob+'static>(input:&mut Option<Vec<u8>>,resto
     use semio_framework_value::{RetainedCloneProgress};
     #[cfg(test)] use semio_framework_value::{ValueError, ValueRefusalKind};
     let demand=original_job_admission_demands::<T>(input,restored)?;let grant=cx.retained_grant();
-    if cx.is_cancelled()||grant.maximum_items<demand.maximum_items||grant.maximum_depth<demand.maximum_depth||grant.maximum_capacity_bytes<demand.maximum_capacity_bytes{return Ok(None)}
+    if cx.is_cancelled()||cx.should_yield()||grant.maximum_items<demand.maximum_items||grant.maximum_depth<demand.maximum_depth||grant.maximum_capacity_bytes<demand.maximum_capacity_bytes{return Ok(None)}
     cx.consume_retained(RetainedCloneProgress{copied_items:demand.maximum_items,retained_capacity_bytes:demand.maximum_capacity_bytes,..Default::default()})?;
-    let owner=Box::new(build(input.take().unwrap(),restored.take()));
+    cx.consume_fuel(1);let owner=Box::new(build(input.take().unwrap(),restored.take()));
     Ok(Some(owner))
 }
 
@@ -167,8 +167,8 @@ impl OriginalJobKindLookup{
     fn demand(&self,source:&str)->semio_framework_value::RetainedCloneGrant{let copy=usize::from(self.epoch==KIND_REGISTRY_EPOCH.with(Cell::get)&&self.candidate.is_some_and(|candidate|self.offset<source.len()&&self.offset<candidate.kind.len()));semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1}}
     fn advance(&mut self,source:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<OriginalJobKindLookupStep,semio_framework_value::ValueError>{
         use semio_framework_value::RetainedCloneProgress;
-        let demand=self.demand(source);let grant=cx.retained_grant();if cx.is_cancelled()||grant.maximum_items<demand.maximum_items||grant.maximum_copy_bytes<demand.maximum_copy_bytes||grant.maximum_depth<demand.maximum_depth{return Ok(OriginalJobKindLookupStep::Pending)}
-        let epoch=KIND_REGISTRY_EPOCH.with(Cell::get);
+        let demand=self.demand(source);let grant=cx.retained_grant();if cx.is_cancelled()||cx.should_yield()||grant.maximum_items<demand.maximum_items||grant.maximum_copy_bytes<demand.maximum_copy_bytes||grant.maximum_depth<demand.maximum_depth{return Ok(OriginalJobKindLookupStep::Pending)}
+        cx.consume_fuel(1);let epoch=KIND_REGISTRY_EPOCH.with(Cell::get);
         if self.epoch!=epoch{self.epoch=epoch;self.index=0;self.candidate=None;self.offset=0;self.left=None;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(OriginalJobKindLookupStep::Pending)}
         let Some(candidate)=self.candidate else{if self.index>=REGISTERED_KIND_COUNT.with(Cell::get)+6{cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(OriginalJobKindLookupStep::Missing)}self.candidate=kind_at(self.index);if self.candidate.is_none(){self.index+=1}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(OriginalJobKindLookupStep::Pending)};
         if self.offset==source.len()||self.offset==candidate.kind.len(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;if self.offset==source.len()&&self.offset==candidate.kind.len(){return Ok(OriginalJobKindLookupStep::Found(candidate))}self.index+=1;self.candidate=None;self.offset=0;self.left=None;return Ok(OriginalJobKindLookupStep::Pending)}
@@ -192,13 +192,7 @@ pub fn register_bounded_job_kind(kind:&'static str,factory:BoundedJobFactory)->b
 //#region 🔖️Slots
 
 /// 📥️ One original request and checkpoint stay owned until admitted and fully closed.
-#[derive(semio_framework_value::RetireOwned)]
-pub struct OriginalJobAdmission {
-    pub job:u64,
-    pub kind:String,
-    pub input:Option<Vec<u8>>,
-    pub checkpoint:Option<Vec<u8>>,
-}
+pub use semio_framework::kernel::OriginalJobSource as OriginalJobAdmission;
 
 enum JobBody {
     Resolving(OriginalJobKindLookup),
@@ -213,12 +207,14 @@ struct JobSlot {
     source:Option<OriginalJobAdmission>,
     source_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<OriginalJobAdmission>>,
     body:Option<JobBody>,
+    failed_owner:Option<Box<dyn BoundedJob>>,
     outcome:Option<JobStep>,
     outcome_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<JobStep>>,
     rejected_output:Option<Vec<u8>>,
     rejected_output_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Vec<u8>>>,
     cancelled:bool,
     cancellation_fault_started:bool,
+    cancellation_signalled:bool,
 }
 const JOB_SLOTS:usize=crate::host::requests::REQUEST_SLOTS;
 crate::component_persistent_local! {
@@ -232,12 +228,11 @@ crate::component_persistent_local! {
 /// 🧯️ A refused admission is answered by this boxed owner so the slot table stays small; its birth is charged to the same caller context as any other boxed job frame.
 struct AdmissionFailedJob {reply:crate::component::extension_invocation_failure::RetainedExtensionFaultReply}
 impl BoundedJob for AdmissionFailedJob {
-    fn step(&mut self,_budget:JobBudget,_original:&mut IoRunControl<'_,'_>,_snapshot:&mut SqliteSnapshotControl<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<JobStep,semio_framework_value::ValueError>{Ok(match self.reply.advance(cx)?{Some(bytes)=>JobStep::Failed(bytes),None=>JobStep::Running(None)})}
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_value::ValueError>{
-        use semio_framework_value::{ValueError,ValueRefusalKind};
-        if self.reply.terminal_is_empty(){return Ok(true)}
+    fn step(&mut self,_original:&mut IoRunControl<'_,'_>,_snapshot:&mut SqliteSnapshotControl<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<JobStep,OriginalTurnFailure>{Ok(match self.reply.advance(cx)?{Some(bytes)=>JobStep::Failed(bytes),None=>JobStep::Running(None)})}
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+                if self.reply.terminal_is_empty(){return Ok(true)}
         self.reply.begin_close();
-        if self.reply.advance(cx)?.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closing original diagnostic returned an owned output"))}
+        if self.reply.advance(cx)?.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closing original diagnostic returned an owned output").into())}
         Ok(self.reply.terminal_is_empty())
     }
     fn retirement_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.reply.demands(copy)}
@@ -246,10 +241,20 @@ impl BoundedJob for AdmissionFailedJob {
     fn terminal_drop_is_shallow(&self)->bool{self.reply.terminal_is_empty()}
 }
 
+/// 🪪️ The actual preborn slot identity is read before any cancellation flag is touched.
+pub fn original_job_identity(job:u64)->Option<(u64,u64)>{JOBS.with(|jobs|jobs.borrow().iter().flatten().find(|slot|slot.job==job).map(|slot|slot.identity))}
+
+/// 🧭️ Borrows one same-identity preborn job for original failed-entry cancellation and cleanup.
+pub fn next_owned_job(operation:u64,generation:u64)->Option<u64>{JOBS.with(|jobs|jobs.borrow().iter().flatten().find(|slot|slot.identity==(operation,generation)).map(|slot|slot.job))}
+/// 🛑️ Observes the actual preborn cancellation flag without touching its token or waiter ownership.
+pub fn original_job_is_cancelled(job:u64)->Option<bool>{JOBS.with(|jobs|jobs.borrow().iter().flatten().find(|slot|slot.job==job).map(|slot|slot.cancelled))}
+
+/// 🏛️ The original actor authorities remain leased until every matching job slot is removed.
+pub fn has_owned_jobs(operation:u64,generation:u64)->bool{JOBS.with(|jobs|jobs.borrow().iter().flatten().any(|slot|slot.identity==(operation,generation)))}
+
 /// 🔎️ Quotes the registered original producer with the same retained request and caller identity.
 pub fn job_admission_demands(job:u64,cx:&semio_framework_job::StepContext<'_>)->Result<semio_framework_value::RetainedCloneGrant,semio_framework_value::ValueError>{
-    use semio_framework_value::{ValueError,ValueRefusalKind};
-    JOBS.with(|jobs|{let jobs=jobs.borrow();let slot=jobs.iter().flatten().find(|slot|slot.job==job).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"job has no original admission owner"))?;
+        JOBS.with(|jobs|{let jobs=jobs.borrow();let slot=jobs.iter().flatten().find(|slot|slot.job==job).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"job has no original admission owner"))?;
         if slot.identity!=(cx.operation().0,cx.generation().0){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"job admission quote differs from original identity"))}
         let source=slot.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"job admission quote lost its original source"))?;
         match slot.body.as_ref(){Some(JobBody::Resolving(lookup))=>Ok(lookup.demand(&source.kind)),Some(JobBody::Preparing(factory))=>(factory.demands)(job,&source.input,&source.checkpoint,cx),_=>Err(ValueError::literal(ValueRefusalKind::InvalidValue,"job admission is no longer preparing"))}
@@ -260,75 +265,99 @@ pub fn job_admission_demands(job:u64,cx:&semio_framework_job::StepContext<'_>)->
 pub async fn start_job(admission:&mut Option<OriginalJobAdmission>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_value::ValueError>{
     use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
     let job=admission.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"job admission has no original request"))?.job;
-    let grant=cx.retained_grant();if cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+    let grant=cx.retained_grant();if cx.is_cancelled()||cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
     JOBS.with(|jobs|{
         let mut jobs=jobs.borrow_mut();
         if jobs.iter().flatten().any(|slot|slot.job==job){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"job id already has an original owner"))}
         let Some(destination)=jobs.iter_mut().find(|slot|slot.is_none())else{return Ok(false)};
         let body=JobBody::Resolving(OriginalJobKindLookup::new());
         cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;
-        *destination=Some(JobSlot{job,identity:(cx.operation().0,cx.generation().0),source:admission.take(),source_close:None,body:Some(body),outcome:None,outcome_close:None,rejected_output:None,rejected_output_close:None,cancelled:false,cancellation_fault_started:false});
+        cx.consume_fuel(1);*destination=Some(JobSlot{job,identity:(cx.operation().0,cx.generation().0),source:admission.take(),source_close:None,body:Some(body),failed_owner:None,outcome:None,outcome_close:None,rejected_output:None,rejected_output_close:None,cancelled:false,cancellation_fault_started:false,cancellation_signalled:false});
         Ok(true)
     })
 }
 
 /// 🛑️ Cancellation signals the same source and owner; only funded close turns remove its slot.
-pub async fn cancel_job(job:u64){JOBS.with(|jobs|{if let Some(slot)=jobs.borrow_mut().iter_mut().flatten().find(|slot|slot.job==job){slot.cancelled=true;if let Some(JobBody::Bounded(owner))=&mut slot.body{owner.cancel()}}});}
+pub async fn cancel_job(job:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_value::ValueError>{
+    use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
+    JOBS.with(|jobs|{let mut jobs=jobs.borrow_mut();let slot=jobs.iter_mut().flatten().find(|slot|slot.job==job).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"job cancellation has no original registered owner"))?;
+        if slot.identity!=(cx.operation().0,cx.generation().0){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"job cancellation belongs to another original caller"))}
+        let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+        cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);slot.cancelled=true;Ok(true)
+    })
+}
 
-fn close_original<T:semio_framework_value::retirement::RetireOwned>(source:&mut Option<T>,closing:&mut Option<semio_framework_value::retirement::controlled::ControlledRetirement<T>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_value::ValueError>{
+fn close_original<T:semio_framework_value::retirement::RetireOwned>(source:&mut Option<T>,closing:&mut Option<semio_framework_value::retirement::controlled::ControlledRetirement<T>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,OriginalTurnFailure>{
     use semio_framework_value::{RetainedCloneProgress,retirement::controlled::ControlledRetirement};
-    let grant=cx.retained_grant();if source.is_none()&&closing.is_none(){return Ok(true)}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+    let remaining=cx.retained_grant();if source.is_none()&&closing.is_none(){return Ok(true)}if cx.should_yield()||remaining.maximum_items==0||remaining.maximum_depth==0{return Ok(false)}let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1,..remaining};
     if let Some(original)=source.take(){
-        match ControlledRetirement::new(original){Ok(owner)=>*closing=Some(owner),Err((error,original))=>{*source=Some(original);return Err(error)}}
-        cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(false)
+        match ControlledRetirement::new(original){Ok(owner)=>*closing=Some(owner),Err((error,original))=>{*source=Some(original);return Err(error.into())}}
+        cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)
     }
     let owner=closing.as_mut().unwrap();
-    if owner.terminal_is_empty(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;*closing=None;return Ok(true)}
-    let step=owner.step(grant).map_err(|error|{match cx.consume_retained(error.retained_progress()){Ok(())=>error,Err(refusal)=>refusal}})?;
+    if owner.terminal_is_empty(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);*closing=None;return Ok(true)}
+    cx.consume_fuel(1);
+    let step=owner.step(grant).map_err(|error|{OriginalTurnFailure::debit_original(error,cx)})?;
     cx.consume_retained(step.progress())?;Ok(false)
 }
 
-fn close_body(slot:&mut JobSlot,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_value::ValueError>{
+fn close_failed_owner(slot:&mut JobSlot,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+    use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
+    let Some(owner)=slot.failed_owner.as_mut()else{return Ok(true)};
+    if cx.should_yield(){return Ok(false)}
+    if !slot.cancellation_signalled{let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);owner.cancel();slot.cancellation_signalled=true;return Ok(false)}
+    if !owner.close_step(cx)?{return Ok(false)}if !owner.terminal_drop_is_shallow(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"failed job reports closed while retaining original children").into())}
+    let release=size_of_val(owner.as_ref());let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<release{return Ok(false)}
+    cx.consume_retained(RetainedCloneProgress{copied_items:1,released_bytes:release,..Default::default()})?;cx.consume_fuel(1);drop(slot.failed_owner.take());Ok(false)
+}
+
+fn close_body(slot:&mut JobSlot,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,OriginalTurnFailure>{
     use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
     if !close_original(&mut slot.rejected_output,&mut slot.rejected_output_close,cx)?{return Ok(false)}
+    if !close_failed_owner(slot,cx)?{return Ok(false)}
     let Some(body)=slot.body.as_mut()else{return Ok(true)};
     match body{
-        JobBody::Bounded(owner)=>{if !owner.close_step(cx)?{return Ok(false)}if !owner.terminal_drop_is_shallow(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"job close reports terminal with an original deep owner"))}},
+        JobBody::Bounded(owner)=>{if !owner.close_step(cx)?{return Ok(false)}if !owner.terminal_drop_is_shallow(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"job close reports terminal with an original deep owner").into())}},
         JobBody::Refused(cause,closing)=>{if !close_original(cause,closing,cx)?{return Ok(false)}},
         JobBody::Resolving(_)|JobBody::Preparing(_)=>{},
     }
     let release=match body{JobBody::Bounded(owner)=>size_of_val(owner.as_ref()),_=>0};let grant=cx.retained_grant();
-    if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<release{return Ok(false)}
-    cx.consume_retained(RetainedCloneProgress{copied_items:1,released_bytes:release,..Default::default()})?;drop(slot.body.take());Ok(true)
+    if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<release{return Ok(false)}
+    cx.consume_retained(RetainedCloneProgress{copied_items:1,released_bytes:release,..Default::default()})?;cx.consume_fuel(1);drop(slot.body.take());Ok(true)
 }
 
 /// ▶️ Every admitted state, retained output, refusal and final release uses the same original context.
-pub async fn step_job(job:u64,budget:JobBudget,original:&mut IoRunControl<'_,'_>,snapshot:&mut SqliteSnapshotControl<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<JobStep,semio_framework_value::ValueError>{
+pub async fn step_job(job:u64,original:&mut IoRunControl<'_,'_>,snapshot:&mut SqliteSnapshotControl<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<JobStep,OriginalTurnFailure>{
     use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
     JOBS.with(|jobs|{
         let mut jobs=jobs.borrow_mut();let entry=jobs.iter_mut().find(|entry|entry.as_ref().is_some_and(|slot|slot.job==job)).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"job has no original registered owner"))?;let slot=entry.as_mut().unwrap();
-        if slot.identity!=(cx.operation().0,cx.generation().0){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"job turn belongs to another original caller"))}
+        if slot.identity!=(cx.operation().0,cx.generation().0){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"job turn belongs to another original caller").into())}
+        if cx.should_yield(){return Ok(JobStep::Running(None))}
         if !slot.cancellation_fault_started&&(slot.cancelled||cx.is_cancelled()){
-            if let Some(JobBody::Bounded(owner))=&mut slot.body{owner.cancel()}
+            if !slot.cancellation_signalled{let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(JobStep::Running(None))}if let Some(JobBody::Bounded(owner))=&mut slot.body{owner.cancel()}else if let Some(owner)=slot.failed_owner.as_mut(){owner.cancel()}slot.cancellation_signalled=true;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(JobStep::Running(None))}
             if !close_body(slot,cx)?||!close_original(&mut slot.outcome,&mut slot.outcome_close,cx)?||!close_original(&mut slot.source,&mut slot.source_close,cx)?{return Ok(JobStep::Running(None))}
+            let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(JobStep::Running(None))}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);
             slot.cancellation_fault_started=true;slot.body=Some(JobBody::Refused(Some(crate::component::extension_invocation_failure::ExtensionInvocationCause::Value(ValueError::literal(ValueRefusalKind::Canceled,"original job was canceled"))),None));return Ok(JobStep::Running(None))
         }
         if slot.outcome.is_some(){
             if !close_body(slot,cx)?||!close_original(&mut slot.source,&mut slot.source_close,cx)?{return Ok(JobStep::Running(None))}
-            let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(JobStep::Running(None))}
-            cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;let outcome=slot.outcome.take().unwrap();*entry=None;return Ok(outcome)
+            let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(JobStep::Running(None))}
+            cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);let outcome=slot.outcome.take().unwrap();*entry=None;return Ok(outcome)
         }
+        if matches!(slot.body,Some(JobBody::Refused(..)))&&(!close_failed_owner(slot,cx)?||!close_original(&mut slot.source,&mut slot.source_close,cx)?){return Ok(JobStep::Running(None))}
+        if cx.should_yield(){return Ok(JobStep::Running(None))}
         match slot.body.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original job lost its retained body"))?{
-            JobBody::Resolving(lookup)=>{if budget.fuel==0{return Ok(JobStep::Running(None))}let source=slot.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original job lookup lost its retained source"))?;match lookup.advance(&source.kind,cx)?{OriginalJobKindLookupStep::Pending=>{},OriginalJobKindLookupStep::Found(candidate)=>slot.body=Some(JobBody::Preparing(candidate.factory)),OriginalJobKindLookupStep::Missing=>slot.body=Some(JobBody::Refused(Some(crate::component::extension_invocation_failure::ExtensionInvocationCause::Value(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"job kind has no registered original owner"))),None))}Ok(JobStep::Running(None))},
-            JobBody::Preparing(factory)=>{let source=slot.source.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original job lost its admission source"))?;let demand=(factory.demands)(job,&source.input,&source.checkpoint,cx)?;let grant=cx.retained_grant();if grant.maximum_items<demand.maximum_items||grant.maximum_copy_bytes<demand.maximum_copy_bytes||grant.maximum_capacity_bytes<demand.maximum_capacity_bytes||grant.maximum_release_bytes<demand.maximum_release_bytes||grant.maximum_depth<demand.maximum_depth{return Ok(JobStep::Running(None))}let body=match (factory.admit)(job,&mut source.input,&mut source.checkpoint,cx){Ok(Some(owner))=>Some(JobBody::Bounded(owner)),Ok(None)=>None,Err(error)=>Some(JobBody::Refused(Some(crate::component::extension_invocation_failure::ExtensionInvocationCause::Value(error)),None))};if let Some(body)=body{slot.body=Some(body)}Ok(JobStep::Running(None))},
+            JobBody::Resolving(lookup)=>{if cx.should_yield(){return Ok(JobStep::Running(None))}let source=slot.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original job lookup lost its retained source"))?;match lookup.advance(&source.kind,cx)?{OriginalJobKindLookupStep::Pending=>{},OriginalJobKindLookupStep::Found(candidate)=>slot.body=Some(JobBody::Preparing(candidate.factory)),OriginalJobKindLookupStep::Missing=>slot.body=Some(JobBody::Refused(Some(crate::component::extension_invocation_failure::ExtensionInvocationCause::Value(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"job kind has no registered original owner"))),None))}Ok(JobStep::Running(None))},
+            JobBody::Preparing(factory)=>{let source=slot.source.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original job lost its admission source"))?;let demand=match (factory.demands)(job,&source.input,&source.checkpoint,cx){Ok(demand)=>demand,Err(error)=>{slot.body=Some(JobBody::Refused(Some(crate::component::extension_invocation_failure::ExtensionInvocationCause::Value(error)),None));return Ok(JobStep::Running(None))}};let grant=cx.retained_grant();if grant.maximum_items<demand.maximum_items||grant.maximum_copy_bytes<demand.maximum_copy_bytes||grant.maximum_capacity_bytes<demand.maximum_capacity_bytes||grant.maximum_release_bytes<demand.maximum_release_bytes||grant.maximum_depth<demand.maximum_depth{return Ok(JobStep::Running(None))}let body=match (factory.admit)(job,&mut source.input,&mut source.checkpoint,cx){Ok(Some(owner))=>Some(JobBody::Bounded(owner)),Ok(None)=>None,Err(error)=>Some(JobBody::Refused(Some(crate::component::extension_invocation_failure::ExtensionInvocationCause::Value(error)),None))};if let Some(body)=body{slot.body=Some(body)}Ok(JobStep::Running(None))},
             JobBody::Refused(cause,closing)=>{
                 let size=size_of::<AdmissionFailedJob>();let grant=cx.retained_grant();
                 if closing.is_some()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<size{return Ok(JobStep::Running(None))}
-                let Some(cause)=cause.take()else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original job refusal lost its typed cause"))};
+                let Some(cause)=cause.take()else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original job refusal lost its typed cause").into())};
                 cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:size,..Default::default()})?;
-                slot.body=Some(JobBody::Bounded(Box::new(AdmissionFailedJob{reply:crate::component::extension_invocation_failure::RetainedExtensionFaultReply::new(cause)})));Ok(JobStep::Running(None))
+                cx.consume_fuel(1);
+                let reply=if slot.cancellation_fault_started{crate::component::extension_invocation_failure::RetainedExtensionFaultReply::new_terminal_cancellation(cause)}else{crate::component::extension_invocation_failure::RetainedExtensionFaultReply::new(cause)};slot.body=Some(JobBody::Bounded(Box::new(AdmissionFailedJob{reply})));Ok(JobStep::Running(None))
             },
-            JobBody::Bounded(owner)=>match owner.step(budget, original, snapshot, cx)?{step@JobStep::Running(_)=>Ok(step),step=>{slot.outcome=Some(step);Ok(JobStep::Running(None))}},
+            JobBody::Bounded(owner)=>match owner.step(original, snapshot, cx){Ok(step@JobStep::Running(_))=>Ok(step),Ok(step)=>{slot.outcome=Some(step);Ok(JobStep::Running(None))},Err(error)=>{let Some(JobBody::Bounded(owner))=slot.body.take()else{unreachable!("original failed body remains boxed")};slot.failed_owner=Some(owner);slot.cancellation_signalled=false;slot.body=Some(JobBody::Refused(Some(crate::component::extension_invocation_failure::ExtensionInvocationCause::Turn(error)),None));Ok(JobStep::Running(None))}},
         }
     })
 }
@@ -337,56 +366,25 @@ pub async fn step_job(job:u64,budget:JobBudget,original:&mut IoRunControl<'_,'_>
 
 //#region 🔖️GuestAbi
 /// 🌉️ Guest-side `jobs` ABI: both component owners (`semio_owned_*_job_v1` and the WIT `jobs` interface) call these twins.
-/// The embedding's mounted policy funds every admission and step; the caller context is born here, so the guest
-/// drives the registry through the same original-context protocol a host turn uses.
+/// 🤝️ Both actual guest job exports borrow the same paid actor context and retain original admissions.
 pub mod abi {
     use super::*;
-    use semio_framework_job::{Generation, OperationId, StepBudget, StepContext};
-    use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
+    use semio_framework_job::StepContext;
+    use semio_framework_value::ValueError;
 
-    const GUEST_GENERATION: Generation = Generation(0);
+    /// 🚀️ Denial preserves the exact caller-owned request instead of destroying its input.
+    pub fn start(admission:&mut Option<OriginalJobAdmission>,cx: &mut StepContext<'_>)->Result<bool,ValueError>{crate::__async::poll::resolve_ready(start_job(admission,cx))}
 
-    fn widest(left: RetainedCloneGrant, right: RetainedCloneGrant) -> RetainedCloneGrant {
-        RetainedCloneGrant { maximum_items: left.maximum_items.max(right.maximum_items), maximum_copy_bytes: left.maximum_copy_bytes.max(right.maximum_copy_bytes), maximum_capacity_bytes: left.maximum_capacity_bytes.max(right.maximum_capacity_bytes), maximum_release_bytes: left.maximum_release_bytes.max(right.maximum_release_bytes), maximum_depth: left.maximum_depth.max(right.maximum_depth) }
-    }
+    /// 🛑️ Admission records cancellation on the original owner before its later bounded close.
+    pub fn cancel(job:u64,cx:&mut StepContext<'_>)->Result<bool,ValueError>{crate::__async::poll::resolve_ready(cancel_job(job,cx))}
 
-    /// 🚀️ Admits one registered job from its original request; a denied admission is a typed fault, never a silent drop.
-    pub fn start<PA: crate::plugin_app::PluginApp + 'static>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, job: u64, kind: String, input: Vec<u8>) -> Result<(), semio_framework::Fault> {
-        let grant = runtime.mounted_owner_policy().preparation;
-        let mut admission = Some(OriginalJobAdmission { job, kind, input: Some(input), checkpoint: None });
-        let mut sequence = 0;
-        let mut receipt = RetainedCloneProgress::default();
-        let mut cx = StepContext::new(OperationId(job), GUEST_GENERATION, StepBudget::new(1, u64::MAX, grant), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut receipt);
-        let admitted = crate::__async::poll::resolve_ready(start_job(&mut admission, &mut cx)).map_err(|error| fault("job.start", error.to_string()))?;
-        if admitted {
-            Ok(())
-        } else {
-            Err(fault("job.start", "job admission was denied by its registry slots or its mounted grant"))
-        }
-    }
-
-    /// ▶️ Runs one bounded state action of an admitted job under the funded caller context.
-    pub fn step<PA: crate::plugin_app::PluginApp + 'static>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, job: u64, budget: JobBudget) -> Result<JobStep, semio_framework::Fault> {
-        let policy = runtime.mounted_owner_policy().preparation;
-        let now_us = semio_framework_job::default_now_us().unwrap_or(0);
-        let deadline_us = now_us.saturating_add(u64::from(budget.deadline_ms).saturating_mul(1000));
-        let mut sequence = 0;
-        let mut receipt = RetainedCloneProgress::default();
-        let grant = {
-            let mut quote_sequence = 0;
-            let mut quote_receipt = RetainedCloneProgress::default();
-            let cx = StepContext::new(OperationId(job), GUEST_GENERATION, StepBudget::new(1, u64::MAX, policy), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut quote_sequence, &mut quote_receipt);
-            job_admission_demands(job, &cx).map_or(policy, |quote| widest(policy, quote))
-        };
-        let mut cx = StepContext::new(OperationId(job), GUEST_GENERATION, StepBudget::new(budget.fuel, deadline_us, grant), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut receipt);
-        let mut decode_callback = |_| true;
-        let mut encode_callback = |_| true;
-        let mut decode = semio_framework_value::NativeDecodeControl::new(grant.maximum_capacity_bytes, &mut decode_callback);
-        let mut encode = semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes, &mut encode_callback);
-        let mut original = IoRunControl::new(&mut decode, &mut encode, grant);
-        let mut snapshot_callback = |_| true;
-        let mut snapshot = SqliteSnapshotControl::new(&mut snapshot_callback, Default::default());
-        crate::__async::poll::resolve_ready(step_job(job, budget, &mut original, &mut snapshot, &mut cx)).map_err(|error| fault("job.step", error.to_string()))
+    /// ▶️ Controls borrow the same cancellation and independently remaining grant as the actual registered body.
+    pub fn step(job:u64,cx: &mut StepContext<'_>)->Result<Option<JobStep>,OriginalTurnFailure>{
+        let grant=cx.retained_grant();let cancel=cx.borrowed_original_cancel_token()?;
+        let mut decode_callback=|_|!cancel.is_cancelled_now();let mut encode_callback=|_|!cancel.is_cancelled_now();
+        let mut decode=semio_framework_value::NativeDecodeControl::new_retained(&mut decode_callback);let mut encode=semio_framework_value::NativeEncodeControl::new_retained(&mut encode_callback);let mut original=IoRunControl::new(&mut decode,&mut encode,grant);
+        let mut snapshot_callback=|_|!cancel.is_cancelled_now();let mut snapshot=SqliteSnapshotControl::new(&mut snapshot_callback,Default::default());
+        crate::__async::poll::resolve_ready(step_job(job,&mut original,&mut snapshot,cx)).map(|step|match step{JobStep::Running(None)=>None,step=>Some(step)})
     }
 }
 //#endregion
@@ -505,7 +503,7 @@ impl TwoPhaseBoundedJob {
 }
 
 impl BoundedJob for TwoPhaseBoundedJob {
-    fn step(&mut self,budget:JobBudget,original:&mut IoRunControl<'_,'_>,snapshot:&mut SqliteSnapshotControl<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<JobStep,semio_framework_value::ValueError>{
+    fn step(&mut self,original:&mut IoRunControl<'_,'_>,snapshot:&mut SqliteSnapshotControl<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<JobStep,OriginalTurnFailure>{
         use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
         if self.cancelled||cx.is_cancelled(){return Ok(JobStep::Running(None))}
         if let Some(reply)=&mut self.failure{return Ok(match reply.advance(cx)?{Some(bytes)=>JobStep::Failed(bytes),None=>JobStep::Running(None)})}
@@ -517,11 +515,12 @@ impl BoundedJob for TwoPhaseBoundedJob {
             if !matched{self.failure=Some(crate::component::extension_invocation_failure::RetainedExtensionFaultReply::new(crate::component::extension_invocation_failure::ExtensionInvocationCause::Value(ValueError::literal(ValueRefusalKind::InvalidValue,"original job checkpoint has an unknown phase"))))}else if self.checkpoint_scan==PHASE_DECODED.len(){self.checkpoint_complete=true;self.state=TwoPhaseState::Execute}
             return Ok(JobStep::Running(None))
         }
-        if budget.fuel<self.price(){return Ok(JobStep::Running(None))}
+        if cx.should_yield()||cx.fuel_remaining()<self.price(){return Ok(JobStep::Running(None))}
+        cx.consume_fuel(self.price());
         let result=match self.state{
             TwoPhaseState::Decode=>(self.decode)(&self.input),
             TwoPhaseState::Execute=>match self.execute{BuiltinExecuteFn::Pure(execute)=>execute(&self.input),BuiltinExecuteFn::OriginalIo(execute)=>execute(&self.input,original,snapshot)},
-            TwoPhaseState::Complete=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original job has no remaining state action")),
+            TwoPhaseState::Complete=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original job has no remaining state action").into()),
         };
         Ok(match result{
             Ok(bytes)=>{if self.state==TwoPhaseState::Decode{self.state=TwoPhaseState::Execute;JobStep::Running(Some(bytes))}else{self.state=TwoPhaseState::Complete;JobStep::Done(bytes)}},
@@ -529,11 +528,12 @@ impl BoundedJob for TwoPhaseBoundedJob {
         })
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_value::ValueError>{
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
+        if cx.should_yield(){return Ok(self.terminal_drop_is_shallow())}
         if let Some(reply)=&mut self.failure{
-            if !reply.terminal_is_empty(){reply.begin_close();if let Some(bytes)=reply.advance(cx)?{self.aborted_output=Some(bytes);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closing original job failure returned unpublished bytes"))}return Ok(false)}
-            let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.failure=None;return Ok(false)
+            if !reply.terminal_is_empty(){reply.begin_close();if let Some(bytes)=reply.advance(cx)?{self.aborted_output=Some(bytes);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closing original job failure returned unpublished bytes").into())}return Ok(false)}
+            let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.failure=None;return Ok(false)
         }
         if self.close_payload.is_none()&&self.source_close.is_none()&&(self.input.capacity()!=0||self.restored.is_some()||self.aborted_output.is_some()){
             let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}self.close_payload=Some((std::mem::take(&mut self.input),self.restored.take(),self.aborted_output.take()));
@@ -544,7 +544,7 @@ impl BoundedJob for TwoPhaseBoundedJob {
     fn retirement_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
         use semio_framework_value::RetirementDemand;
         if let Some(reply)=&self.failure{return reply.demands(copy)}
-        if let Some(owner)=&self.source_close{return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?,..Default::default()})}
+        if let Some(owner)=&self.source_close{return Ok(owner.selected_demand(copy)?)}
         Ok(RetirementDemand{depth:usize::from(self.close_payload.is_some()||self.input.capacity()!=0||self.restored.is_some()||self.aborted_output.is_some()),..Default::default()})
     }
 

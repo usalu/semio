@@ -4,14 +4,14 @@ import Ajv2020 from "ajv/dist/2020";
 import {Database} from "bun:sqlite";
 import {readFileSync,existsSync} from "node:fs";
 test("canonical native field derivation retains schema wire order without serialization callbacks",()=>{
- const root=new URL("../",import.meta.url);const read=(path:string)=>JSON.parse(readFileSync(new URL(path,root),"utf8"));const fixture=read("🧫️fixtures/🔣️.json");
+ const root=new URL("../",import.meta.url);const read=(path:string)=>JSON.parse(readFileSync(new URL(path,root),"utf8"));const fixture=read("🧪️tests/🧫️fixtures/🔣️.json");
  expect(new Ajv2020({strict:true}).compile(read("🧬️schema/🔣️.json"))(fixture)).toBe(true);expect(JSON.stringify({[fixture.tag]:fixture.variant,...fixture.values})).toBe(fixture.expected);
  const db=new Database(":memory:");db.exec("CREATE TABLE fields(ordinal INTEGER PRIMARY KEY,name TEXT,owner INTEGER)");Object.keys(fixture.values).forEach((key,index)=>db.query("INSERT INTO fields VALUES(?,?,1)").run(index,key));expect((db.query("SELECT name FROM fields ORDER BY ordinal").all() as {name:string}[]).map(row=>row.name)).toEqual(Object.keys(JSON.parse(fixture.expected)).slice(1));expect(db.query("SELECT SUM(owner) AS n FROM fields").get()).toEqual({n:3});db.close();
  console.log("[DEBUG] Ajv/JSON tagged record byte oracle and SQLite native schema field ownership/order agree; no whole payload copies");
  const path=new URL("🦀️.rs",root);expect(existsSync(path)).toBe(true);const source=readFileSync(path,"utf8");expect(source).toContain("canonical_tree_child");expect(source).toContain("ArtifactCanonicalJsonTree");expect(source).not.toContain("ToValue::to_value");expect(source).not.toContain("transmute");
 });
 test("canonical native field roles follow independent predicate, octet array and decimal string oracles",()=>{
- const root=new URL("../",import.meta.url);const read=(path:string)=>JSON.parse(readFileSync(new URL(path,root),"utf8"));const fixture=read("🧫️fixtures/🔣️.json");
+ const root=new URL("../",import.meta.url);const read=(path:string)=>JSON.parse(readFileSync(new URL(path,root),"utf8"));const fixture=read("🧪️tests/🧫️fixtures/🔣️.json");
  const validate=new Ajv2020({strict:true}).compile(read("🧬️schema/🔣️.json"));expect(validate(fixture)).toBe(true);
  const db=new Database(":memory:");db.exec("CREATE TABLE emitted(row INTEGER,ordinal INTEGER,name TEXT,PRIMARY KEY(row,ordinal))");
  fixture.roles.forEach((row:any,index:number)=>{
@@ -25,7 +25,7 @@ test("canonical native field roles follow independent predicate, octet array and
  const source=readFileSync(new URL("🦀️.rs",root),"utf8");expect(source).toContain("decimal_string");expect(source).toContain("octets_kind");expect(source).not.toContain("transmute");
 });
 test("canonical hex word roles follow an independent IEEE-754 binary32 bit oracle",()=>{
- const root=new URL("../",import.meta.url);const read=(path:string)=>JSON.parse(readFileSync(new URL(path,root),"utf8"));const fixture=read("🧫️fixtures/🔣️.json");
+ const root=new URL("../",import.meta.url);const read=(path:string)=>JSON.parse(readFileSync(new URL(path,root),"utf8"));const fixture=read("🧪️tests/🧫️fixtures/🔣️.json");
  expect(new Ajv2020({strict:true}).compile(read("🧬️schema/🔣️.json"))(fixture)).toBe(true);
  const word=(value:number)=>{const view=new DataView(new ArrayBuffer(4));view.setFloat32(0,value);return view.getUint32(0).toString(16).padStart(8,"0")};
  const db=new Database(":memory:");db.exec("CREATE TABLE words(value REAL,word TEXT)");
@@ -40,7 +40,7 @@ test("canonical hex word roles follow an independent IEEE-754 binary32 bit oracl
  const source=readFileSync(new URL("🦀️.rs",root),"utf8");expect(source).toContain("hex_word");expect(source).not.toContain("transmute");
 });
 test("canonical flatten splices the flattened record at its field position per an independent oracle",()=>{
- const root=new URL("../",import.meta.url);const read=(path:string)=>JSON.parse(readFileSync(new URL(path,root),"utf8"));const fixture=read("🧫️fixtures/🔣️.json");
+ const root=new URL("../",import.meta.url);const read=(path:string)=>JSON.parse(readFileSync(new URL(path,root),"utf8"));const fixture=read("🧪️tests/🧫️fixtures/🔣️.json");
  expect(new Ajv2020({strict:true}).compile(read("🧬️schema/🔣️.json"))(fixture)).toBe(true);
  const db=new Database(":memory:");db.exec("CREATE TABLE members(row INTEGER,owner TEXT,ordinal INTEGER,name TEXT)");
  fixture.flatten.forEach((row:any,index:number)=>{
@@ -56,7 +56,7 @@ test("canonical flatten splices the flattened record at its field position per a
  const source=readFileSync(new URL("🦀️.rs",root),"utf8");expect(source).toContain("canonical flattened field is not an object");
 });
 test("canonical externally tagged named variants nest their fields under the variant key per an independent oracle",()=>{
- const root=new URL("../",import.meta.url);const read=(path:string)=>JSON.parse(readFileSync(new URL(path,root),"utf8"));const fixture=read("🧫️fixtures/🔣️.json");
+ const root=new URL("../",import.meta.url);const read=(path:string)=>JSON.parse(readFileSync(new URL(path,root),"utf8"));const fixture=read("🧪️tests/🧫️fixtures/🔣️.json");
  expect(new Ajv2020({strict:true}).compile(read("🧬️schema/🔣️.json"))(fixture)).toBe(true);
  const db=new Database(":memory:");db.exec("CREATE TABLE shapes(variant TEXT,depth INTEGER,members INTEGER)");
  for(const row of fixture.externalVariants){

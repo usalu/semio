@@ -18,7 +18,7 @@
 use super::tests::{drive_scene_bridge, scene_bridge_fixture, scene_from_bridge_fixture, with_world_step_context,terrain_test_retire_then_dynamic};
 use super::*;
 
-const EMPTY_BUILD: &str = include_str!("../../🧫️fixtures/🌉️bridge-empty-build/🔣️.json");
+const EMPTY_BUILD: &str = include_str!("../🧫️fixtures/🌉️bridge-empty-build/🔣️.json");
 
 fn empty_build_fixture() -> serde_json::Value {
     serde_json::from_str(EMPTY_BUILD).expect("bridge empty-build fixture parses")

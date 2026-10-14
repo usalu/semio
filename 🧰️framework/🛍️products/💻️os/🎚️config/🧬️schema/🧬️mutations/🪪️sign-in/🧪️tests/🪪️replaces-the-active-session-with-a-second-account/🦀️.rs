@@ -18,11 +18,11 @@
 
 use super::{Identity, IdentityConfigMutation, IdentityDiff, IdentitySetting};
 
-const BEFORE: &str = include_str!("../../🧫️fixtures/🪪️replaces-the-active-session-with-a-second-account/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../🧫️fixtures/🪪️replaces-the-active-session-with-a-second-account/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../🧫️fixtures/🪪️replaces-the-active-session-with-a-second-account/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../🧫️fixtures/🪪️replaces-the-active-session-with-a-second-account/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../🧫️fixtures/🪪️replaces-the-active-session-with-a-second-account/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪪️sign-in/🪪️replaces-the-active-session-with-a-second-account/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪪️sign-in/🪪️replaces-the-active-session-with-a-second-account/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪪️sign-in/🪪️replaces-the-active-session-with-a-second-account/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪪️sign-in/🪪️replaces-the-active-session-with-a-second-account/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪪️sign-in/🪪️replaces-the-active-session-with-a-second-account/🎯️outcome/🔣️.json");
 
 fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")

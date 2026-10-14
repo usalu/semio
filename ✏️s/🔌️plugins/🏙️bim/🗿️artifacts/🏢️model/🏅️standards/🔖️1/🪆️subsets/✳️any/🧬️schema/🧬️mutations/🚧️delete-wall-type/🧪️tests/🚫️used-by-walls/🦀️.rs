@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🚧️delete-wall-type/🚫️used-by-walls",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚧️delete-wall-type/🚫️used-by-walls/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚧️delete-wall-type/🚫️used-by-walls/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚧️delete-wall-type/🚫️used-by-walls/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚧️delete-wall-type/🚫️used-by-walls/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚧️delete-wall-type/🚫️used-by-walls/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚧️delete-wall-type/🚫️used-by-walls/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚧️delete-wall-type/🚫️used-by-walls/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚧️delete-wall-type/🚫️used-by-walls/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚧️delete-wall-type/🚫️used-by-walls/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚧️delete-wall-type/🚫️used-by-walls/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

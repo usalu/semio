@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import Ajv2020 from "ajv/dist/2020.js";
-import fixture from "../../🧫️fixtures/📚️paged-csr/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/📚️paged-csr/🔣️.json" with { type: "json" };
 
 
 function sha256(values: readonly number[], kind: "u32" | "f64"): string {

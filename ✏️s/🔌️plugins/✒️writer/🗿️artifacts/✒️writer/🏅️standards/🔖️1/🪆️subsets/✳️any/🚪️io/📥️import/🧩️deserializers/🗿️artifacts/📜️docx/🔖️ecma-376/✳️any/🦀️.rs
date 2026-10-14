@@ -24,7 +24,7 @@ impl Deserializer<WriterSnapshot> for DocxIntoWriter {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "DocxIntoWriter: expected a binary payload".to_string())));
         };
-        let docx = <DocxSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DocxIntoWriter: {error}"))))?;
+        let docx = <DocxSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DocxIntoWriter: {error}"))))?;
         let document = docx.project_document().map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DocxIntoWriter: {error}"))))?;
         let text = document
             .body

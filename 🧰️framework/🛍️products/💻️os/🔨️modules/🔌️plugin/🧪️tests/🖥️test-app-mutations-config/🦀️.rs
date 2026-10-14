@@ -1,19 +1,19 @@
 use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 
 //#region 🧫️Snapshot
 #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, semio_framework_value_derive::ToValue, Deserialize, semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = store)]
 #[artifact(extension = "testkit-macro-cfg")]
-struct TestConfig {
-    selected: Option<String>,
+pub(crate) struct TestConfig {
+    pub(crate) selected: Option<String>,
 }
 semio_framework_value::artifact_retire_struct!(TestConfig { selected });
 #[path="🧬️preparation/🦀️.rs"]
-mod preparation;
+pub(crate) mod preparation;
 
-impl store::os_store::serialization::ArtifactDsl for TestConfig {
+impl pack::snapshot::ArtifactDsl for TestConfig {
     const EXTENSION: &'static str = "testkit-macro-cfg";
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if text.trim().is_empty() {
@@ -37,6 +37,9 @@ impl ArtifactPack for TestConfig {
         serde_json::from_slice(bytes).map_err(|error| match (u32::try_from(error.line()), u32::try_from(error.column())) { (Ok(line), Ok(column)) => store::PackError::from(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(line, column))), _ => store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, error.to_string())) })
     }
 }
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for TestConfig {
+
+}
 
 impl store::ConfigRecord for TestConfig {}
 //#endregion 🧫️Snapshot
@@ -44,14 +47,14 @@ impl store::ConfigRecord for TestConfig {}
 //#region 🧬️Mutations
 #[path = "../../🧪️testing/🖥️test-app-mutations/🎚️config/🧬️mutations/🦀️.rs"]
 pub mod mutations;
-use mutations::{ChangeTestConfigSelection, TestConfigMutation};
+pub(crate) use mutations::{ChangeTestConfigSelection, TestConfigMutation};
 //#endregion 🧬️Mutations
 
 //#region 🔺️Diff
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(tag = "state", content = "value", rename_all = "camelCase")]
 #[value(tag = "state", content = "value", rename_all = "camelCase")]
-enum TestConfigDiff {
+pub(crate) enum TestConfigDiff {
     Identity,
     Clear,
     Set(String),

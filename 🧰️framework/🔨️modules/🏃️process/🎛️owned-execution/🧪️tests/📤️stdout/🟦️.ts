@@ -4,7 +4,7 @@ import {spawnSync} from "node:child_process";
 import {join} from "node:path";
 import {fileURLToPath} from "node:url";
 import Ajv from "ajv";
-import fixture from "../../🧫️fixtures/📤️stdout/🔣️.json";
+import fixture from "../🧫️fixtures/📤️stdout/🔣️.json";
 import domain from "../../🧬️schema/📤️stdout.json";
 
 test("owned child stdout destination preserves machine output with independent Node stdio",()=>{

@@ -331,7 +331,7 @@ pub fn sequence_content_child_with_owner(steps: Vec<SequenceStep>, edges: Vec<Se
 /// empty and every `sequence_working_scene_from_children` call faults
 /// `sequence-content-child-dialect-required` before a single window publishes.
 pub fn genesis_sequence_child_pack(document: &SequenceSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     if slot != "content" || child_id != document.content.child_id {
         return None;
     }

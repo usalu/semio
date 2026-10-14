@@ -17,11 +17,11 @@ use crate::mutations::{inverse_form_mutation, FormMutation};
 use crate::{FormsDiff, FormsSnapshot};
 use crate::central_apply::{apply_form_edit_mutation};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-form-title/🧪️titles/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-form-title/🧪️titles/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-form-title/🧪️titles/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-form-title/🧪️titles/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-form-title/🧪️titles/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-form-title/🧪️titles/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-form-title/🧪️titles/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-form-title/🧪️titles/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-form-title/🧪️titles/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-form-title/🧪️titles/🎯️outcome/🔣️.json");
 
 fn before() -> FormsSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

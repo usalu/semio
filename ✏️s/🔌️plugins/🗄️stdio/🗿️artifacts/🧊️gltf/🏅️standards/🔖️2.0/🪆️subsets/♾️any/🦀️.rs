@@ -101,10 +101,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<GltfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<GltfSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<GltfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<GltfSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = protocol::Mutation::diff(&mutation, &self.snapshot);
@@ -380,7 +380,7 @@ pub mod derived_analysis {
                         // A genuine `.gltf` JSON document parses directly through the real codec; only
                         // fall back to the SemioEnvelope-wrapped `ArtifactDsl` preamble form (used by
                         // this crate's own internal store round-trips) when the text isn't bare JSON.
-                        let result = if looks_like_gltf_json(text) { semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::import::parse_gltf_document(text.trim().as_bytes()) } else { <GltfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string()) };
+                        let result = if looks_like_gltf_json(text) { semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::import::parse_gltf_document(text.trim().as_bytes()) } else { <GltfSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string()) };
                         match result {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),
                             Err(err) => {
@@ -393,7 +393,7 @@ pub mod derived_analysis {
                         // A genuine raw `.glb` container decodes directly through the real codec; only
                         // fall back to the SemioEnvelope-wrapped `ArtifactPack` form (this crate's own
                         // internal store round-trip encoding) when the bytes aren't a `.glb` container.
-                        let result = if looks_like_glb(bytes) { semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::import::decode_glb(bytes) } else { <GltfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|e| e.to_string()) };
+                        let result = if looks_like_glb(bytes) { semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::import::decode_glb(bytes) } else { <GltfSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|e| e.to_string()) };
                         match result {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),
                             Err(err) => {

@@ -1,4 +1,5 @@
 //! 🧫️ Individually authored Count relational provider under the same caller control.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::Snapshot;
 use semio_framework_os_kernel as store;
 use semio_framework_os_kernel::os_pack as pack;
@@ -30,23 +31,10 @@ fn bound(source: &Snapshot, encoding: SnapshotEncoding, control: &mut SqliteSnap
     control.check_value_bytes(8)?;
     control.checkpoint(SqliteSnapshotPhase::EncodeNative, 1, 1)
 }
-impl store::os_store::serialization::ArtifactSqliteSnapshot for Snapshot {
-    const SQLITE_SCHEMA: &'static str = SQL;
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> {
-        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1)?; control.check_rows(1)?; control.check_value_bytes(16)?;
-        let mut projection=Projection::new(SQL,control)?;
-        projection.insert_key("fixture_counter",1,&[Cell::Integer(i64::from(self.count))])?;
-        projection.checkpoint_total(1)?; projection.finish()
-    }
-    fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError> {
-        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,1)?;
-        control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
-        validate_sqlite_database_schema_controlled(database,SQL,SqliteSnapshotPhase::ReconstructSnapshot,control)?;
-        let row=database.table("fixture_counter")?.single_row()?;
-        if row.rowid!=1 || row.values.len()!=2 || row.integer(0)?!=1 { return Err(invalid("Count requires the literal singleton entity identity")); }
-        let count=i32::try_from(row.integer(1)?).map_err(|_|invalid("Count is outside the authored i32 domain"))?;
-        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?; Ok(Self{count})
-    }
+impl store::os_store::serialization::ArtifactSqliteSnapshotHost for Snapshot {
+    
+    
+    
     fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError> {
  let original=native_owner.native();
         control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,1)?; control.check_rows(1)?; control.check_value_bytes(8)?;
@@ -102,4 +90,22 @@ impl store::os_store::serialization::ArtifactSqliteSnapshot for Snapshot {
         })?
     }
     fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{bound(self,encoding,control)}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for Snapshot {
+const SQLITE_SCHEMA: &'static str = SQL;
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> {
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1)?; control.check_rows(1)?; control.check_value_bytes(16)?;
+        let mut projection=Projection::new(SQL,control)?;
+        projection.insert_key("fixture_counter",1,&[Cell::Integer(i64::from(self.count))])?;
+        projection.checkpoint_total(1)?; projection.finish()
+    }
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError> {
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,1)?;
+        control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
+        validate_sqlite_database_schema_controlled(database,SQL,SqliteSnapshotPhase::ReconstructSnapshot,control)?;
+        let row=database.table("fixture_counter")?.single_row()?;
+        if row.rowid!=1 || row.values.len()!=2 || row.integer(0)?!=1 { return Err(invalid("Count requires the literal singleton entity identity")); }
+        let count=i32::try_from(row.integer(1)?).map_err(|_|invalid("Count is outside the authored i32 domain"))?;
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?; Ok(Self{count})
+    }
 }

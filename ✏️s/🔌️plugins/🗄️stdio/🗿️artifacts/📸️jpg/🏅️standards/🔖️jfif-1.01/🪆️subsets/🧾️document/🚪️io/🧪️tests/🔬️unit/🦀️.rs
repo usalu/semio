@@ -1,11 +1,12 @@
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
 use crate::schema::demo_jpg_snapshot;
 
 /// 🧬️ Publishes the actual compiled JPG factory only after independent protocol and complete logical-carrier laws.
 #[test]
 fn owned_fixture_publication_reports_canonical_logical_carriers(){
- use store::{os_store::serialization::ArtifactDsl,os_store::serialization::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshot};use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding,export_sqlite_database};use std::{io::Write,process::{Command,Stdio}};
- let source=include_str!("../../🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json");let snapshot:JpgSnapshot=semio_framework_pack_json::from_json_str(source,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let demo=demo_jpg_snapshot();
+ use store::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshotHost};use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding,export_sqlite_database};use std::{io::Write,process::{Command,Stdio}};
+ let source=include_str!("../../🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json");let snapshot:JpgSnapshot=semio_framework_pack_json::from_json_str(source,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let demo=demo_jpg_snapshot();
  assert_eq!(demo.print_dsl(),include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio"));assert_eq!(demo.encode_pack_with(&Default::default()).unwrap(),include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio"));
  let factories=crate::native_codecs();assert_eq!(factories.len(),1);let factory=&factories[0];let codec=(factory.codec)();let kind=(factory.kind)();let bare=store::bare_artifact_codec::<JpgSnapshot,crate::JpgMutation>(crate::STDIO_JPG_DOCUMENT_SCHEMA);let provider=codec.snapshot_sqlite.expect("original JPG SQLite owner");assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<JpgSnapshot>()));assert_eq!(bare.snapshot_sqlite.unwrap().snapshot_type,provider.snapshot_type);assert_eq!(codec.pack_schema_hash,bare.pack_schema_hash);assert_eq!(factory.id,"stdio.native.jpg.v1");assert_eq!(kind.id,crate::JPG_ARTIFACT_SCHEMA_ID);assert_eq!(codec.schema,crate::STDIO_JPG_DOCUMENT_SCHEMA);assert_eq!(codec.extension,"jpg");let dialect:semio_framework_artifact_reference::ArtifactDialect=crate::JPG_ANY_DIALECT.into();
  for owned in [&snapshot,&demo]{let text=owned.print_dsl();let binary=owned.encode_pack_with(&Default::default()).unwrap();assert_eq!(JpgSnapshot::parse_dsl(&text).unwrap(),*owned);assert_eq!(JpgSnapshot::decode_pack_with(&binary,&Default::default()).unwrap(),*owned);let expected=owned.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();for(encoding,input)in[(SnapshotEncoding::Text,store::io_schema::IoPayload::Text(text)),(SnapshotEncoding::Binary,store::io_schema::IoPayload::Binary(binary))]{let database=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (provider.export)(&codec.schema,&dialect,&input,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(database,expected);let restored=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (provider.import)(&codec.schema,&dialect,&mut Some(database),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(restored,input);}}
@@ -18,12 +19,12 @@ fn owned_fixture_publication_reports_canonical_logical_carriers(){
 }
 
 #[test]fn neutral_diff_framing_refuses_noncanonical_domains_without_allocation_panics(){
- use protocol::DiffBinary;let fixture:serde_json::Value=serde_json::from_str(include_str!("../../💾️binary/🔺️diff/🧫️fixtures/🛡️framing/🔣️.json")).unwrap();for vector in fixture["reject"].as_array().unwrap(){let bytes:Vec<u8>=serde_json::from_value(vector["bytes"].clone()).unwrap();let refusal=std::panic::catch_unwind(||crate::JpgDiff::decode_diff(&bytes));assert!(refusal.is_ok(),"{} allocated from an unadmitted count",vector["name"]);assert!(refusal.unwrap().is_err(),"{}",vector["name"]);}eprintln!("[DEBUG] JPEG neutral sparse framing rejects seven unadmitted native/domain/extent forms");
+ use protocol::DiffBinary;let fixture:serde_json::Value=serde_json::from_str(include_str!("../../💾️binary/🔺️diff/🧪️tests/🧫️fixtures/🛡️framing/🔣️.json")).unwrap();for vector in fixture["reject"].as_array().unwrap(){let bytes:Vec<u8>=serde_json::from_value(vector["bytes"].clone()).unwrap();let refusal=std::panic::catch_unwind(||crate::JpgDiff::decode_diff(&bytes));assert!(refusal.is_ok(),"{} allocated from an unadmitted count",vector["name"]);assert!(refusal.unwrap().is_err(),"{}",vector["name"]);}eprintln!("[DEBUG] JPEG neutral sparse framing rejects seven unadmitted native/domain/extent forms");
 }
 
 #[test]
 fn independently_encoded_file_reopens_all_imported_semantic_metadata(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️schema/🧬️mutations/🖼️replace-image/🧫️fixtures/🔣️.json")).unwrap();let image:crate::JpgImage=semio_framework_pack_json::from_json_str(&fixture["importedImage"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🖼️replace-image/🔣️.json")).unwrap();let image:crate::JpgImage=semio_framework_pack_json::from_json_str(&fixture["importedImage"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
  let independent=semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::oracle_encode_rgba(image.width,image.height,&image.pixels,90).unwrap();assert_eq!(&independent[..4],&[255,216,255,224]);let old_end=4+usize::from(u16::from_be_bytes([independent[4],independent[5]]));
  let thumbnail=image.jfif_thumbnail.as_ref().unwrap();let mut payload=b"JFIF\0".to_vec();payload.extend_from_slice(&[image.jfif_version.0,image.jfif_version.1,2]);payload.extend_from_slice(&image.jfif_x_density.to_be_bytes());payload.extend_from_slice(&image.jfif_y_density.to_be_bytes());payload.extend_from_slice(&[thumbnail.width,thumbnail.height]);payload.extend_from_slice(&thumbnail.rgb_data);
  let mut native=vec![255,216,255,224];native.extend_from_slice(&u16::try_from(payload.len()+2).unwrap().to_be_bytes());native.extend(payload);for segment in &image.other_segments{native.extend_from_slice(&[255,segment.marker]);native.extend_from_slice(&u16::try_from(segment.data.len()+2).unwrap().to_be_bytes());native.extend_from_slice(&segment.data);}native.extend_from_slice(&independent[old_end..]);
@@ -34,7 +35,7 @@ fn independently_encoded_file_reopens_all_imported_semantic_metadata(){
 #[test]
 fn controlled_components_preserve_gray_and_ycbcr_samples_before_color_conversion() {
     use super::binary::snapshot::decoded_components::JpgComponentDecoder;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../💾️binary/📸️snapshot/🧮️decoded-components/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../💾️binary/📸️snapshot/🧮️decoded-components/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let (width,height,sample) = (fixture["width"].as_u64().unwrap() as u32,fixture["height"].as_u64().unwrap() as u32,fixture["sample"].as_u64().unwrap() as u8);
     for case in fixture["cases"].as_array().unwrap() {
         let ids = case["componentIds"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u8).collect::<Vec<_>>();
@@ -62,7 +63,7 @@ fn controlled_components_preserve_gray_and_ycbcr_samples_before_color_conversion
 #[test]
 fn controlled_components_accept_authored_native_bytes_with_independent_reader() {
     use super::binary::snapshot::decoded_components::JpgComponentDecoder;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../💾️binary/📸️snapshot/🧮️decoded-components/🧫️fixtures/🧮️owned-exact-components/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../💾️binary/📸️snapshot/🧮️decoded-components/🧪️tests/🧫️fixtures/🧮️owned-exact-components/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let hex=case["jpegHex"].as_str().unwrap();
         let bytes=(0..hex.len()).step_by(2).map(|index|u8::from_str_radix(&hex[index..index+2],16).unwrap()).collect::<Vec<_>>();
@@ -84,7 +85,7 @@ fn controlled_components_accept_authored_native_bytes_with_independent_reader() 
 #[test]
 fn export_quality_is_physical_policy_with_independent_quantization_witness() {
     use semio_framework_value::ToValue;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../💾️binary/📸️snapshot/🎛️encode-options/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../💾️binary/📸️snapshot/🎛️encode-options/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let snapshot=demo_jpg_snapshot();let owned=snapshot.to_value();
     assert!(!semio_framework_pack_json::to_json_string(&owned).contains("reEncodeQuality"));
     let mut encoded=Vec::new();
@@ -287,11 +288,11 @@ mod conformance_laws {
     fn demo_mutation_cases() -> Vec<JpgMutation> {
         let mut cases = vec![];
         for text in [
-            include_str!("../../../🧫️fixtures/🧬️mutations/🪪️change-jfif/🎯️direct/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧫️fixtures/🧬️mutations/📥️insert-other/🎯️direct/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧫️fixtures/🧬️mutations/🗑️remove-other/🎯️direct/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧫️fixtures/🧬️mutations/🔲️replace-pixels/🎯️direct/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧫️fixtures/🧬️mutations/🖼️replace-image/🎯️direct/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🪪️change-jfif/🎯️direct/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📥️insert-other/🎯️direct/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-other/🎯️direct/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲️replace-pixels/🎯️direct/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🖼️replace-image/🎯️direct/🦠️mutation/🔣️.json"),
         ] {
             cases.push(semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("admit committed mutation case"));
         }
@@ -325,7 +326,7 @@ mod conformance_laws {
     async fn grammar_conformance_law() {
         let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_jfif_1_01::subsets::document::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
-        let text = store::os_store::serialization::ArtifactDsl::print_dsl(&demo_jpg_snapshot());
+        let text = pack::snapshot::ArtifactDsl::print_dsl(&demo_jpg_snapshot());
         let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
         let reconstructed = format!("{}\n{body}", envelope.envelope_id());
         assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
@@ -363,7 +364,7 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
         let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v_jfif_1_01::subsets::document::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
-        let packed = store::os_store::serialization::ArtifactPack::encode_pack(&demo_jpg_snapshot());
+        let packed = pack::snapshot::ArtifactPack::encode_pack(&demo_jpg_snapshot());
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
         let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
@@ -391,12 +392,12 @@ mod conformance_laws {
 
         let demo = demo_jpg_snapshot();
 
-        assert_eq!(store::os_store::serialization::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_jpg_snapshot()) drifted from the shipped .dsl.semio fixture");
-        assert_eq!(store::os_store::serialization::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_jpg_snapshot()) drifted from the shipped .pack.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_jpg_snapshot()) drifted from the shipped .dsl.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_jpg_snapshot()) drifted from the shipped .pack.semio fixture");
 
-        let parsed = <JpgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        let parsed = <JpgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed,demo);
-        let decoded=<JpgSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode owned Pack fixture");
+        let decoded=<JpgSnapshot as pack::snapshot::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode owned Pack fixture");
         assert_eq!(decoded,demo);
     }
 }

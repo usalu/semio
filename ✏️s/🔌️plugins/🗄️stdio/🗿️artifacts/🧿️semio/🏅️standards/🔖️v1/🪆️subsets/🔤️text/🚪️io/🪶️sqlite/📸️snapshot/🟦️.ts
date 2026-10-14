@@ -8,7 +8,7 @@ CREATE TABLE semio_text_run (id INTEGER PRIMARY KEY, document_id INTEGER NOT NUL
 CREATE TABLE semio_text_mark (id INTEGER PRIMARY KEY, run_id INTEGER NOT NULL REFERENCES semio_text_run(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), kind TEXT NOT NULL CHECK(kind IN ('bold','italic','code','link')), href TEXT NOT NULL);
 `;
 function markKind(value:string):MarkKind{switch(value){case "bold":case "italic":case "code":case "link":return value;default:throw Error("unknown Semio text mark kind");}}
-function identity(row:SqliteRow,columns:number):void{if(row.rowid<=0n||row.values.length!==columns||artifactSqliteInteger(row,0)!==row.rowid)throw Error("invalid Semio text entity identity or column count");}
+function identity(row:SqliteRow,columns:number):void{if(row.values.length!==columns||artifactSqliteInteger(row,0)!==row.rowid)throw Error("invalid Semio text entity identity or column count");}
 
 /** 📤️ Preserve text, language and every ordered inline mark as queryable entities. */
 export async function semioTextSnapshotToSqliteDatabase(snapshot:SemioTextSnapshot,options:ArtifactSqliteOptions={}):Promise<SqliteDatabase>{

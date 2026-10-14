@@ -1,5 +1,0 @@
-{
-  "mutation": "changeSolarThermalSystemStorageVolume",
-  "id": 410,
-  "newStorageVolumeM3": -2.0
-}

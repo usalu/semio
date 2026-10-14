@@ -19,7 +19,7 @@ impl NativeSchemaControl for RefusingControl {
 
 #[test]
 fn schema_constructors_retain_every_owned_refusal_kind_through_path_wrapping(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/⚠️refusal/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/⚠️refusal/🔣️.json")).unwrap();
     let kinds=[ValueRefusalKind::InvalidValue,ValueRefusalKind::Canceled,ValueRefusalKind::OwnershipLimit,ValueRefusalKind::AllocationFailed,ValueRefusalKind::WorkLimit,ValueRefusalKind::DepthLimit,ValueRefusalKind::UnsupportedOwner,ValueRefusalKind::InvariantViolated];
     for row in fixture["cases"].as_array().unwrap(){
         let kind=*kinds.iter().find(|kind|kind.as_str()==row["kind"].as_str().unwrap()).unwrap();

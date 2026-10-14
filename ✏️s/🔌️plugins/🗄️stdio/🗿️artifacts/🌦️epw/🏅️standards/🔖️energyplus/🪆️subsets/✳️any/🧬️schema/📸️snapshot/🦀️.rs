@@ -106,6 +106,9 @@ pub struct EpwRecord {
 pub const EPW_RECORD_FIELD_COUNT: usize = 35;
 
 impl EpwRecord {
+    /// 🫴️ Borrows one canonical lexical destination while its original record remains retained.
+    pub fn field_at_mut(&mut self,index:usize)->Option<&mut String>{Some(match index{0=>&mut self.year,1=>&mut self.month,2=>&mut self.day,3=>&mut self.hour,4=>&mut self.minute,5=>&mut self.data_source_uncertainty,6=>&mut self.dry_bulb_temp,7=>&mut self.dew_point_temp,8=>&mut self.relative_humidity,9=>&mut self.atmospheric_pressure,10=>&mut self.extraterrestrial_horizontal_radiation,11=>&mut self.extraterrestrial_direct_normal_radiation,12=>&mut self.horizontal_infrared_radiation,13=>&mut self.global_horizontal_radiation,14=>&mut self.direct_normal_radiation,15=>&mut self.diffuse_horizontal_radiation,16=>&mut self.global_horizontal_illuminance,17=>&mut self.direct_normal_illuminance,18=>&mut self.diffuse_horizontal_illuminance,19=>&mut self.zenith_luminance,20=>&mut self.wind_direction,21=>&mut self.wind_speed,22=>&mut self.total_sky_cover,23=>&mut self.opaque_sky_cover,24=>&mut self.visibility,25=>&mut self.ceiling_height,26=>&mut self.present_weather_observation,27=>&mut self.present_weather_codes,28=>&mut self.precipitable_water,29=>&mut self.aerosol_optical_depth,30=>&mut self.snow_depth,31=>&mut self.days_since_last_snowfall,32=>&mut self.albedo,33=>&mut self.liquid_precip_depth,34=>&mut self.liquid_precip_quantity,_=>return None,})}
+
     /// 📤️ Reads one field by its canonical wire index (0-based, spec column order).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn field_at(&self, index: usize) -> Option<&str> {

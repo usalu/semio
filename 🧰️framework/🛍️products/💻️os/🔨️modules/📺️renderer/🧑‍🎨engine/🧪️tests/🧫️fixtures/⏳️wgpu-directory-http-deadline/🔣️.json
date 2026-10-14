@@ -1,0 +1,12 @@
+{
+  "timeoutMs": 5000,
+  "request": {
+    "op": "directory-http",
+    "method": "GET",
+    "url": "/_semio/hub/auth/sessions/me"
+  },
+  "expected": {
+    "aborted": true,
+    "errorIncludes": "deadline"
+  }
+}

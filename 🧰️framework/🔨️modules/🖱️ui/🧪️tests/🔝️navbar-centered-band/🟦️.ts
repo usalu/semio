@@ -8,10 +8,10 @@
  * `framework.panel.inspection`, so every click on the role switch reached the panel rail instead and the
  * shell never left the editor role (`📓️role-switch-regression-2026-09-14.md`).
  *
- * 🧫️ Read from `🖱️ui/🧫️fixtures/🔝️navbar-centered-band/🔣️.json`.
+ * 🧫️ Read from `🖱️ui/🧪️tests/🧫️fixtures/🔝️navbar-centered-band/🔣️.json`.
  */
 import { describe, expect, it } from "vitest";
-import fixture from "../../🧫️fixtures/🔝️navbar-centered-band/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/🔝️navbar-centered-band/🔣️.json" with { type: "json" };
 import { navbarCenteredLeftV1, navbarFlowChildOccupiesV1, navbarFreeBandV1 } from "../../🧱️elements/🔝️Navbar/🟦️.tsx";
 
 describe("🛟️ navbar centered band", () => {

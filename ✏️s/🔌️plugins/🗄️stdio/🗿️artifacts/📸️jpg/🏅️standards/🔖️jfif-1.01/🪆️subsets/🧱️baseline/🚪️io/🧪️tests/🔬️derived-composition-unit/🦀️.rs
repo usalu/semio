@@ -22,7 +22,7 @@ mod tests {
         let (w, h) = (32u32, 32u32);
         let snap = JpgSnapshot { schema: crate::STDIO_JPG_DOCUMENT_SCHEMA.into(), image: crate::schema::snapshot::JpgImage { width: w,height: h,pixels: gradient_image(w, h),..crate::schema::snapshot::JpgImage::default() } };
         let decoded=crate::standards::v_jfif_1_01::subsets::document::io::decode_jpg(&crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&snap, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).unwrap()).unwrap();
-        let bytes=<JpgSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&decoded);
+        let bytes=<JpgSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&decoded);
         let sources=vec![ComposeSource{dialect:DIALECT_ANY,payload:AnalyzeSource::Binary(&bytes)}];
         let composed = JpgBaselineComposerComposition::compose(&sources).expect("real baseline JPEG must compose and stamp baseline");
         assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
@@ -35,7 +35,7 @@ mod tests {
         let snap = JpgSnapshot { schema: crate::STDIO_JPG_DOCUMENT_SCHEMA.into(), image: crate::schema::snapshot::JpgImage { width: w,height: h,pixels: gradient_image(w, h),..crate::schema::snapshot::JpgImage::default() } };
         let bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&snap, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).expect("encode");
         let decoded = crate::standards::v_jfif_1_01::subsets::document::io::decode_jpg(&bytes).expect("decode");
-        let packed = <JpgSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&decoded);
+        let packed = <JpgSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&decoded);
         let diagnostics = JpgBaselineValidator::validate(&IoPayload::Binary(packed)).await;
         assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a real baseline encode: {diagnostics:?}");
     }

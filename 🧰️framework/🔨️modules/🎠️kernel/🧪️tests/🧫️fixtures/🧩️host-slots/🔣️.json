@@ -1,0 +1,9 @@
+{
+  "hostExtensionIds": ["framework.media.transport@1"],
+  "cases": [
+    { "id": "framework.media.transport@1", "props": { "schemaVersion": 1, "locale": "de", "revision": "document:7" }, "retained": true },
+    { "id": "framework.media.transport@1/foreign", "props": {}, "retained": false },
+    { "id": "framework.media.transport@2", "props": {}, "retained": false },
+    { "id": "other.plugin/editor", "props": { "bodyKey": "editor" }, "retained": false }
+  ]
+}

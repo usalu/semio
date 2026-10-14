@@ -412,7 +412,7 @@ pub fn knowledge_child_from_records(records: &[KnowledgeRecord]) -> ProgramKnowl
 /// `Incomplete` and the load is refused (`document-archive-replacement.closure-rejected`).
 pub fn genesis_program_child_pack(snapshot: &ProgramSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
     use semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot;
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     match slot {
         "knowledge" if child_id == snapshot.knowledge.child_id => Some(<SemioTableSnapshot as ArtifactPack>::encode_pack(&knowledge_table_from_records(&snapshot.knowledge_payload))),
         "benchmarks" if child_id == snapshot.benchmarks.child_id => Some(<SemioTableSnapshot as ArtifactPack>::encode_pack(&benchmark_table_from_records(&snapshot.benchmarks_payload))),

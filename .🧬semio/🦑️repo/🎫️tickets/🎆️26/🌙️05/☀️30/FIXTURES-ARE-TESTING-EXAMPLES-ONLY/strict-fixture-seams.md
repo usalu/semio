@@ -1,0 +1,19 @@
+# Strict Fixture Placement Seams
+
+Read-only current source audit; no Cargo or tests executed. Source hashes recorded in `🗑️generated/strict-seams-inputs.json`.
+
+The exact source seam is `📚️library/🔍️discovery/🟦️.ts::schemaScopeCollectionPath` (3106): authored self patterns, each ancestor, and moduleMemberDirName carve-out. Extend with a fixture-only root classifier rather than treating every recognized test collection as a fixture. A true test ancestor also requires the module carve-out: `🔨️modules/🧪️tests` is a module member, not a tests collection. The fixture placement validator should identify a fixture root and require an earlier true tests collection. Keep schema ownership exclusion independent of correct placement: a misplaced fixture remains unable to own schemas.
+
+`📚️library/🧹️normalization/🟦️.ts::canonicalDirectory` (1443) has early returns for mutation mirror owners, fixed contracts and subset overrides; inject placement diagnostics before these exits or they can evade the global guard. `ancestorKindIds` is already supplied, but genuine direct-child modules must be preserved even if names match collection spellings.
+
+Taxonomy `📚️library/🔣️taxonomy.json` declares testsDirName, testFixturesDirName, fixtureOwnerPathPatterns (fixtures and examples, both 🧫️ and 🧪️), moduleMemberDirName, and inertSchemaDataKeyword. Its `testing-support` owner (`🧪️testing`) is a semantic executable support owner, not equivalent to `🧪️tests`.
+
+Critical competing guard: `🧪️test/🟦️.ts::inspectTestLayoutDirectory` (1657), `fixtureLayoutFindings` (1672) currently reject fixtures with a tests ancestor (`fixture-in-test-case`). `inspectTestLayoutSource` (2061) only early returns from fixture parsing when fixtures precede tests. Flip this condition to keep inert source specimens out of executable test interpretation after moves. Executable implementations still use tests/<case>/<implementation> via assessTestImplementationPath (1617); shared tests/fixtures must not be discovered as a runnable case.
+
+`🧪️test/🟦️.ts::resolveTestInputs` (888) resolves shared:// to owner/fixtures at 913; canonical new coordinate should be owner/tests/fixtures. Missing-fixture advice (1531) repeats old coordinate. Mutation vector registry (1336) uses sourceOwner/fixtures/mutations, separately from implementation cases; update to sourceOwner/tests/fixtures/mutations and its projection grammar together. Tests: `🧭️fixture-resolution`, `📐️test-layout`, `🧪️test-platform`, `🧬️schema-invariants`.
+
+Genuine negative: schema-invariants 318 declares moduleMemberDirName renamed to 🧱️units and proves units/🧪️tests is a module while old modules/🧪️tests becomes a collection. Preserve this taxonomy-driven invariant. `📚️library/🔍️discovery/🟦️.ts` inertSchemaData helper (3602) forbids a contract facet from becoming inert and permits only case-file named parser specimens; strict ancestry must not ban ordinary named schema-shaped parser inputs beneath tests/fixtures.
+
+Runtime/cached compiler verification seams: `runtimeCargoObservationCurrentV1` (runtime verification 258) must reject moved-input receipts because retained input paths/digests/physical ownership changed. Its caller rechecks compiler/build producer files. `runtimeFixturePathV1` keeps fixture ownership invariant after relocation. `🌎️hub/🏗️bootstrap/🎭️actors/🟦️.ts::runtimeSelectedActorsV1` checks every compiled input realpath (43), factory source inputs (47), and actor/compiler output closure (51). Pure filename grep cannot certify cached binary embeddings; no retained compilation receipts or build output were executed/revalidated here.
+
+No function literally named testFolder was found in the bounded repo TypeScript scan. Relevant ownership primitives are schemaScopeCollectionPath, assessTestImplementationPath, fixtureLayoutFindings, resolveTestInputs, and taxonomy testSubjectBoundaryOwnerKinds/testDeliveryScopeDirectoryNames.

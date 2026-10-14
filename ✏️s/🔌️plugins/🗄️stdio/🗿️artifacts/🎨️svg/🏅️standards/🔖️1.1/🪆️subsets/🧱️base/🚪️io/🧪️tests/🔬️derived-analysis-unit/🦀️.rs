@@ -45,8 +45,8 @@ mod tests {
         assert_eq!(group_children.len(), 3);
 
         // Round trip through the real text codec confirms the built document is well-formed SVG.
-        let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
-        let reparsed = <SvgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("reparse");
+        let text = pack::snapshot::ArtifactDsl::print_dsl(&snapshot);
+        let reparsed = <SvgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("reparse");
         let retyped = svg_document_to_typed(&crate::standards::v1_1::subsets::base::io::text::snapshot::attributes::native_svg_document(&reparsed.doc)).expect("retyped");
         assert_eq!(retyped, typed);
         assert_eq!(parse_view_box("0 0 200 100").unwrap(), view_box.unwrap());

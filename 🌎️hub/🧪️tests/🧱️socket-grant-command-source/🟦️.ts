@@ -8,9 +8,11 @@ import { directorySocketGrantDecision, type DirectorySocketGrantVector } from ".
 import { assertSocketGrantNativeLawSources, socketGrantNativeLawPlan } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/📋️native-law-plan/🟦️.ts";
 import { runSocketGrantCheck } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🏃️execution/🟦️.ts";
 
+const originalController = new AbortController(), originalProgress: string[] = [];
+const originalInvocation = {policy:{version:1 as const,owner:"socket-grant-command-source",maximumElapsedMilliseconds:0},capabilities:{sourceFixture:true},control:{signal:originalController.signal,remainingMilliseconds:()=>null,publish:async(progress:{stage:string})=>{originalProgress.push(progress.stage);await new Promise<void>(done=>setImmediate(done));},yieldContinuation:async()=>{originalProgress.push("yield");await new Promise<void>(done=>setImmediate(done));}}};
 const repoRoot = resolve(import.meta.dir, "../../..");
 const hubRoot = join(repoRoot, "🌎️hub");
-const fixturePath = join(hubRoot, "🧫️fixtures/🧱️socket-grant-command-source/🔣️.json");
+const fixturePath = join(hubRoot, "🧪️tests/🧫️fixtures/🧱️socket-grant-command-source/🔣️.json");
 const fixtureSource = readFileSync(fixturePath, "utf8");
 const fixture = JSON.parse(fixtureSource) as {
   readonly schemaVersion: 1;
@@ -126,7 +128,7 @@ test("owner paths bind all seventeen taxonomy contexts", () => {
 });
 
 test("socket decisions and relay routes reject hostile scope substitutions", () => {
-  const decisionFixture = JSON.parse(readFileSync(join(hubRoot, "📇️directory/🧫️fixtures/🔌️scoped-socket-revocation-v1/🔣️.json"), "utf8"));
+  const decisionFixture = JSON.parse(readFileSync(join(hubRoot, "📇️directory/🧪️tests/🧫️fixtures/🔌️scoped-socket-revocation-v1/🔣️.json"), "utf8"));
   expect(decisionFixture.vectors).toHaveLength(19);
   for (const vector of decisionFixture.vectors) expect(directorySocketGrantDecision(vector as DirectorySocketGrantVector), vector.name).toEqual({ outcome: vector.expected, closeCode: vector.closeCode, cursorAdvance: vector.cursorAdvance, textFrames: vector.textFrames });
   const exact = "/directory/spaces/space%2Fa/documents/document%20b/socket-grants";
@@ -150,15 +152,15 @@ test("native law planning is source-bound, ordered, cancellable, and phase-exact
   expect(() => assertSocketGrantNativeLawSources(repoRoot)).not.toThrow();
   const packageRoot = join(hubRoot, "📦️packages/🦀️rust");
   const oracleCalls: string[] = [];
-  await runSocketGrantCheck(repoRoot, packageRoot, ["oracle"], async (stage) => void oracleCalls.push(stage.id));
+  await runSocketGrantCheck(originalInvocation,repoRoot, packageRoot, ["oracle"], async (stage) => void oracleCalls.push(stage.id));
   expect(oracleCalls).toEqual([]);
-  for (const segments of [["unknown"], ["oracle", "extra"]]) await expect(runSocketGrantCheck(repoRoot, packageRoot, segments, async () => undefined)).rejects.toThrow(/no arguments or oracle/u);
+  for (const segments of [["unknown"], ["oracle", "extra"]]) await expect(runSocketGrantCheck(originalInvocation,repoRoot, packageRoot, segments, async () => undefined)).rejects.toThrow(/no arguments or oracle/u);
   const calls: { id: string; stack: string | undefined }[] = [];
-  await runSocketGrantCheck(repoRoot, packageRoot, [], async (stage, _root, env) => void calls.push({ id: stage.id, stack: env.RUST_MIN_STACK }));
+  await runSocketGrantCheck(originalInvocation,repoRoot, packageRoot, [], async (stage, _root, env) => void calls.push({ id: stage.id, stack: env.RUST_MIN_STACK }));
   expect(calls.map((call) => call.id)).toEqual(plan.map((stage) => stage.id));
   expect(new Set(calls.map((call) => call.stack))).toEqual(new Set(["268435456"]));
   const interrupted: string[] = [];
-  await expect(runSocketGrantCheck(repoRoot, packageRoot, [], async (stage) => {
+  await expect(runSocketGrantCheck(originalInvocation,repoRoot, packageRoot, [], async (stage) => {
     interrupted.push(stage.id);
     if (interrupted.length === 3) throw new Error("injected cancellation");
   })).rejects.toThrow(/injected cancellation/u);

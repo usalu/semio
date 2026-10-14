@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.caching/FilesystemJournalWorkerV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "root",
+    "directory",
+    "socketPath",
+    "toolingIdentity",
+    "generation"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "filesystem-journal"
+    },
+    "root": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "directory": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 220
+    },
+    "socketPath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 95
+    },
+    "toolingIdentity": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "generation": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    }
+  },
+  "$defs": {
+    "Service": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "root",
+        "generation",
+        "socketPath",
+        "toolingIdentity",
+        "processId"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "generation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "socketPath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 95
+        },
+        "toolingIdentity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "processId": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

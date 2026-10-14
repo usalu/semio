@@ -1,0 +1,97 @@
+{
+  "why": "What a dev hot swap of the SESSION-OWNING plugin owes every open window. A hot swap destroys the live app instance and creates a successor, and the shell's windows are rebuilt from the session. Between those two points the shell used to keep a live canvas over a session that named the DESTROYED instance, so every retained surface remounted against it: on 26/09/15, :6023, the Flow window's node-graph host mounted 2.3 s after the swap and its first three dispatches — `interactionSelect`, `readLocalInteraction` and the opening-camera `viewport` — were all refused with `no channel for instance 1`, `attachSurface` rejected, and the board stayed blank for the rest of the page. Nothing re-attaches it afterwards: the React surface effect is keyed on `surfaceId` alone, and `window:procedural-main` is the same string on both instances, so the successor session never produces a second mount. The rule is therefore an ORDERING rule, not a retry: a window must never be presented over a retired instance.",
+  "liveDefect": "ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️hot-swap-board-remount-2026-09-15.md` §1. Earlier sightings of the same window with different symptoms: `📓️flow-surface-followup-2026-09-15.md` §7 (\"the Flow window has no node-graph host at all\"), `📓️host-refresh-latency-2026-09-15.md` §3 (the `no channel` ledger, which silenced the errors but did not restore the board).",
+  "provenance": {
+    "implementations": {
+      "typescript": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️hot-swap-session-handover/🟦️.ts"
+    },
+    "product": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx (`reloadPlugin`)",
+    "liveTwin": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️09/PROCEDURAL-3D-END-TO-END/🐍️hot-swap-remount-probe.mjs"
+  },
+  "rules": {
+    "sessionRetiredBeforeItsInstanceDies": "`retire-session` precedes `destroy-instance`: the shell stops naming an instance at the latest instant it is still alive.",
+    "canvasLiveOnlyOverALiveSession": "No step may leave the canvas presented while the session names a retired instance. This is the whole law; every other rule exists to make it hold.",
+    "canvasPresentedAfterTheSuccessor": "`present-canvas` follows `establish-session`, because presenting is what mounts the windows and a window mounts against whatever session is current.",
+    "oneBoardMountPerSwap": "A surface whose React effect is keyed on its `surfaceId` mounts once per presentation. A plan that presents twice pays two mounts and the first one is the wasted one.",
+    "reloadBeginsUnpresented": "A hot swap of the session-owning plugin first takes the canvas OFF screen (`SET_PLUGIN_STATUS \"reloading\"`), which is why the measured console shows `node-graph host unmount` before the `hot-swap` line. Every case below therefore starts unpresented; a plugin that owns no session starts presented and stays so."
+  },
+  "steps": [
+    "retire-session",
+    "destroy-instance",
+    "swap-module",
+    "establish-session",
+    "present-canvas"
+  ],
+  "cases": [
+    {
+      "name": "the ordered handover: one board mount, always over a live instance",
+      "ownsSession": true,
+      "plan": [
+        "retire-session",
+        "destroy-instance",
+        "swap-module",
+        "establish-session",
+        "present-canvas"
+      ],
+      "expected": {
+        "presentationsOverRetiredInstance": 0,
+        "boardMounts": 1,
+        "endsPresented": true,
+        "endsOnInstance": 2
+      }
+    },
+    {
+      "name": "the measured defect: presenting before the successor exists mounts the board over a corpse, and nothing remounts it",
+      "ownsSession": true,
+      "plan": [
+        "destroy-instance",
+        "swap-module",
+        "present-canvas",
+        "establish-session"
+      ],
+      "expected": {
+        "presentationsOverRetiredInstance": 1,
+        "boardMounts": 1,
+        "endsPresented": true,
+        "endsOnInstance": 2
+      }
+    },
+    {
+      "name": "retiring the session first saves the board even when the canvas is presented early",
+      "ownsSession": true,
+      "plan": [
+        "retire-session",
+        "destroy-instance",
+        "swap-module",
+        "present-canvas",
+        "establish-session"
+      ],
+      "expected": {
+        "presentationsOverRetiredInstance": 0,
+        "boardMounts": 1,
+        "endsPresented": true,
+        "endsOnInstance": 2
+      }
+    },
+    {
+      "name": "a hot swap of a plugin that owns no session never touches the canvas",
+      "ownsSession": false,
+      "plan": [
+        "swap-module"
+      ],
+      "expected": {
+        "presentationsOverRetiredInstance": 0,
+        "boardMounts": 0,
+        "endsPresented": true,
+        "endsOnInstance": 1
+      }
+    }
+  ],
+  "sourceScan": {
+    "shellHost": [
+      "dispatch({ type: \"SET_SESSION\", value: null });",
+      "if (ownsSession) await establishPrimarySession(newHandle);"
+    ],
+    "nodeGraphSurfaceEffectKey": "}, [surfaceId]);"
+  }
+}

@@ -34,5 +34,6 @@
     "bun",
     "test",
     "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/📬️outcome/🧪️tests/🟦️.ts"
-  ]
+  ],
+  "buildMode": "prototype"
 }

@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "⏱️frame-latency", "🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "⏱️frame-latency", "🔣️.json"), "utf8"));
 
 type Authority = { domain: "rendererFrame" | "browserInputBatch"; generation: number };
 type Observation = { authority: Authority; stage: string; startedUs: number; durationUs: number; workItems: number };

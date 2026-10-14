@@ -256,14 +256,14 @@
       "files": [
         {
           "role": "expected-before-xml",
-          "path": "../🧫️fixtures/📜️declare-doctype-applied/⬅️before.xml",
+          "path": "../🧪️tests/🧫️fixtures/📜️declare-doctype-applied/⬅️before.xml",
           "mediaType": "application/xml",
           "sha256": "sha256:61f6795d0f2fe9e13e14af1da74af73d21952c94639f13fc1c43ee805f0b3411",
           "bytes": 86
         },
         {
           "role": "expected-after-xml",
-          "path": "../🧫️fixtures/📜️declare-doctype-applied/➡️after.xml",
+          "path": "../🧪️tests/🧫️fixtures/📜️declare-doctype-applied/➡️after.xml",
           "mediaType": "application/xml",
           "sha256": "sha256:7d7dc16de507266b99c2442c5ac5f6ce1a0099b0f131fb26e426148131f058d6",
           "bytes": 120
@@ -306,14 +306,14 @@
       "files": [
         {
           "role": "expected-before-xml",
-          "path": "../🧫️fixtures/🔗️set-external-subset-applied/⬅️before.xml",
+          "path": "../🧪️tests/🧫️fixtures/🔗️set-external-subset-applied/⬅️before.xml",
           "mediaType": "application/xml",
           "sha256": "sha256:6d633ba19d7f900ae6178d8e0934684ad160d2a54aa29988e0ffac6b025c1f58",
           "bytes": 102
         },
         {
           "role": "expected-after-xml",
-          "path": "../🧫️fixtures/🔗️set-external-subset-applied/➡️after.xml",
+          "path": "../🧪️tests/🧫️fixtures/🔗️set-external-subset-applied/➡️after.xml",
           "mediaType": "application/xml",
           "sha256": "sha256:6332e62bfa6da45038c1c31cce8c0d00ea3ad16dd84b1e522a967cc787d37ef0",
           "bytes": 151
@@ -356,14 +356,14 @@
       "files": [
         {
           "role": "expected-before-xml",
-          "path": "../🧫️fixtures/🌳️rename-document-element-applied/⬅️before.xml",
+          "path": "../🧪️tests/🧫️fixtures/🌳️rename-document-element-applied/⬅️before.xml",
           "mediaType": "application/xml",
           "sha256": "sha256:6d633ba19d7f900ae6178d8e0934684ad160d2a54aa29988e0ffac6b025c1f58",
           "bytes": 102
         },
         {
           "role": "expected-after-xml",
-          "path": "../🧫️fixtures/🌳️rename-document-element-applied/➡️after.xml",
+          "path": "../🧪️tests/🧫️fixtures/🌳️rename-document-element-applied/➡️after.xml",
           "mediaType": "application/xml",
           "sha256": "sha256:d125c1bb894ade3efc0e32967eb5dd5be4edec726ba1e6aa48aa1bdc19c6f68f",
           "bytes": 114
@@ -406,14 +406,14 @@
       "files": [
         {
           "role": "expected-before-xml",
-          "path": "../🧫️fixtures/🏳️set-standalone-applied/⬅️before.xml",
+          "path": "../🧪️tests/🧫️fixtures/🏳️set-standalone-applied/⬅️before.xml",
           "mediaType": "application/xml",
           "sha256": "sha256:61f6795d0f2fe9e13e14af1da74af73d21952c94639f13fc1c43ee805f0b3411",
           "bytes": 86
         },
         {
           "role": "expected-after-xml",
-          "path": "../🧫️fixtures/🏳️set-standalone-applied/➡️after.xml",
+          "path": "../🧪️tests/🧫️fixtures/🏳️set-standalone-applied/➡️after.xml",
           "mediaType": "application/xml",
           "sha256": "sha256:9f9598105f6a507350b5f86b154ee3773991d16344a620e53db430babfea0509",
           "bytes": 87
@@ -456,14 +456,14 @@
       "files": [
         {
           "role": "expected-before-xml",
-          "path": "../🧫️fixtures/✍️set-text-applied/⬅️before.xml",
+          "path": "../🧪️tests/🧫️fixtures/✍️set-text-applied/⬅️before.xml",
           "mediaType": "application/xml",
           "sha256": "sha256:61f6795d0f2fe9e13e14af1da74af73d21952c94639f13fc1c43ee805f0b3411",
           "bytes": 86
         },
         {
           "role": "expected-after-xml",
-          "path": "../🧫️fixtures/✍️set-text-applied/➡️after.xml",
+          "path": "../🧪️tests/🧫️fixtures/✍️set-text-applied/➡️after.xml",
           "mediaType": "application/xml",
           "sha256": "sha256:24529f50a588707ea2a22c6b01b265708ecad5358f36c9ef9b97548eeb9d0a94",
           "bytes": 86
@@ -506,14 +506,14 @@
       "files": [
         {
           "role": "expected-before-xml",
-          "path": "../🧫️fixtures/🏷️declare-entity-applied/⬅️before.xml",
+          "path": "../🧪️tests/🧫️fixtures/🏷️declare-entity-applied/⬅️before.xml",
           "mediaType": "application/xml",
           "sha256": "sha256:20659c17014a7bad11c8a0b72defcf5d44163feb1bbeee2fa1f2dc3a3ca6f0b5",
           "bytes": 74
         },
         {
           "role": "expected-after-xml",
-          "path": "../🧫️fixtures/🏷️declare-entity-applied/➡️after.xml",
+          "path": "../🧪️tests/🧫️fixtures/🏷️declare-entity-applied/➡️after.xml",
           "mediaType": "application/xml",
           "sha256": "sha256:dd8d87ad59b08c74759f7b93f34c5714ef2a7752e98aca555d1486e61643a435",
           "bytes": 98
@@ -548,14 +548,14 @@
       "files": [
         {
           "role": "expected-before-xml",
-          "path": "../🧫️fixtures/📚️set-internal-subset-applied/⬅️before.xml",
+          "path": "../🧪️tests/🧫️fixtures/📚️set-internal-subset-applied/⬅️before.xml",
           "mediaType": "application/xml",
           "sha256": "sha256:a38ac0f1c588000a8605497d7f4c71ce9f8facf2e32d2e0983868e9060aea018",
           "bytes": 87
         },
         {
           "role": "expected-after-xml",
-          "path": "../🧫️fixtures/📚️set-internal-subset-applied/➡️after.xml",
+          "path": "../🧪️tests/🧫️fixtures/📚️set-internal-subset-applied/➡️after.xml",
           "mediaType": "application/xml",
           "sha256": "sha256:cdd64e42ab6005726915ed2ae9ab6b639120aaf85c519566403c668e567bac2c",
           "bytes": 140

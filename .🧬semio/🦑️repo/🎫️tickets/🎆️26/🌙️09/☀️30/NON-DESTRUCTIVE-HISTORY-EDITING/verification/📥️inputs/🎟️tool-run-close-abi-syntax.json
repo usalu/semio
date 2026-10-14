@@ -1,0 +1,67 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "exec",
+    "--projects=workspace",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "bun",
+    "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+    "rust-syntax",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/👷️job/🎟️receiving/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/⏯️tool-run/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🛠️tool-machine/🦀️.rs",
+    "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🏗️native/🦀️.rs",
+    "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🏗️native/🧪️tests/🦀️.rs",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧪️tests/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-run/🦀️.rs",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📌️mounted_layout/🦀️.rs",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📐️flex/🦀️.rs",
+    "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-flex-unit/🦀️.rs"
+  ],
+  "selection": [
+    "nx",
+    "exec",
+    "--projects=workspace",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "bun",
+    "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+    "rust-syntax",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/👷️job/🎟️receiving/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/⏯️tool-run/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🛠️tool-machine/🦀️.rs",
+    "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🏗️native/🦀️.rs",
+    "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🏗️native/🧪️tests/🦀️.rs",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧪️tests/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-run/🦀️.rs",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📌️mounted_layout/🦀️.rs",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📐️flex/🦀️.rs",
+    "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-flex-unit/🦀️.rs"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
+    "transport": {
+      "maximumBytes": 536870912,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": false
+    }
+  },
+  "buildMode": "prototype"
+}

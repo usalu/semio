@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔑️set-door-type/🧲️swaps-leaves-and-swing",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔑️set-door-type/🧲️swaps-leaves-and-swing/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔑️set-door-type/🧲️swaps-leaves-and-swing/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔑️set-door-type/🧲️swaps-leaves-and-swing/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔑️set-door-type/🧲️swaps-leaves-and-swing/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔑️set-door-type/🧲️swaps-leaves-and-swing/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔑️set-door-type/🧲️swaps-leaves-and-swing/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔑️set-door-type/🧲️swaps-leaves-and-swing/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔑️set-door-type/🧲️swaps-leaves-and-swing/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔑️set-door-type/🧲️swaps-leaves-and-swing/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔑️set-door-type/🧲️swaps-leaves-and-swing/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

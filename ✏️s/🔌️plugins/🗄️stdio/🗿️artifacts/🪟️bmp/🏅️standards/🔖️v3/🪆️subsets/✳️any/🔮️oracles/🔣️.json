@@ -534,14 +534,14 @@
       "files": [
         {
           "role": "expected-before-bmp",
-          "path": "../🧫️fixtures/📥️insert-palette-entry-applied/⬅️before.bmp",
+          "path": "../🧪️tests/🧫️fixtures/📥️insert-palette-entry-applied/⬅️before.bmp",
           "mediaType": "image/bmp",
           "sha256": "sha256:10a24ec854d0e254604baed8a19d8d013479f8403797fb4cd53c2b1c94a954f4",
           "bytes": 98
         },
         {
           "role": "expected-after-bmp",
-          "path": "../🧫️fixtures/📥️insert-palette-entry-applied/➡️after.bmp",
+          "path": "../🧪️tests/🧫️fixtures/📥️insert-palette-entry-applied/➡️after.bmp",
           "mediaType": "image/bmp",
           "sha256": "sha256:db523f01ce41b73accc7efc81cb8a07da0c222e09eb31727199cffa2d125fb43",
           "bytes": 102
@@ -582,14 +582,14 @@
       "files": [
         {
           "role": "expected-before-bmp",
-          "path": "../🧫️fixtures/📤️remove-palette-entry-applied/⬅️before.bmp",
+          "path": "../🧪️tests/🧫️fixtures/📤️remove-palette-entry-applied/⬅️before.bmp",
           "mediaType": "image/bmp",
           "sha256": "sha256:10a24ec854d0e254604baed8a19d8d013479f8403797fb4cd53c2b1c94a954f4",
           "bytes": 98
         },
         {
           "role": "expected-after-bmp",
-          "path": "../🧫️fixtures/📤️remove-palette-entry-applied/➡️after.bmp",
+          "path": "../🧪️tests/🧫️fixtures/📤️remove-palette-entry-applied/➡️after.bmp",
           "mediaType": "image/bmp",
           "sha256": "sha256:3bcffb29be1991084957ce7cc4c868b630a478e81003b587d114d162b627df69",
           "bytes": 94
@@ -630,14 +630,14 @@
       "files": [
         {
           "role": "expected-before-bmp",
-          "path": "../🧫️fixtures/🎨️replace-palette-entry-applied/⬅️before.bmp",
+          "path": "../🧪️tests/🧫️fixtures/🎨️replace-palette-entry-applied/⬅️before.bmp",
           "mediaType": "image/bmp",
           "sha256": "sha256:10a24ec854d0e254604baed8a19d8d013479f8403797fb4cd53c2b1c94a954f4",
           "bytes": 98
         },
         {
           "role": "expected-after-bmp",
-          "path": "../🧫️fixtures/🎨️replace-palette-entry-applied/➡️after.bmp",
+          "path": "../🧪️tests/🧫️fixtures/🎨️replace-palette-entry-applied/➡️after.bmp",
           "mediaType": "image/bmp",
           "sha256": "sha256:a0c32b8034f11348dbb93c8a337babb44f2d4cf947eb2054545456693787bb42",
           "bytes": 98
@@ -678,14 +678,14 @@
       "files": [
         {
           "role": "expected-before-bmp",
-          "path": "../🧫️fixtures/🔲️replace-pixel-data-applied/⬅️before.bmp",
+          "path": "../🧪️tests/🧫️fixtures/🔲️replace-pixel-data-applied/⬅️before.bmp",
           "mediaType": "image/bmp",
           "sha256": "sha256:481a43b47bf4c922b450653efcb4b5c488e6057f084ee37ebb2d1f74b51780eb",
           "bytes": 102
         },
         {
           "role": "expected-after-bmp",
-          "path": "../🧫️fixtures/🔲️replace-pixel-data-applied/➡️after.bmp",
+          "path": "../🧪️tests/🧫️fixtures/🔲️replace-pixel-data-applied/➡️after.bmp",
           "mediaType": "image/bmp",
           "sha256": "sha256:864966625f88b80305678d2598562c5598f19165da67e9ce2c2f7dbb27cafc8f",
           "bytes": 102
@@ -726,14 +726,14 @@
       "files": [
         {
           "role": "expected-before-bmp",
-          "path": "../🧫️fixtures/📐️change-header-fields/⬅️before.bmp",
+          "path": "../🧪️tests/🧫️fixtures/📐️change-header-fields/⬅️before.bmp",
           "mediaType": "image/bmp",
           "sha256": "sha256:beedd71ab62beef79f0f4920bdbea11d270d0618d63830d8d83e464638b5adc1",
           "bytes": 1142
         },
         {
           "role": "expected-after-bmp",
-          "path": "../🧫️fixtures/📐️change-header-fields/➡️after.bmp",
+          "path": "../🧪️tests/🧫️fixtures/📐️change-header-fields/➡️after.bmp",
           "mediaType": "image/bmp",
           "sha256": "sha256:77a220f137004b721a322f74d5b3f2928fa487a7f84b5f0dc8d092f0a8dda1d1",
           "bytes": 1142
@@ -774,28 +774,28 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🧬️history-edits/🎨️paint-indexed-region/🎯️direct/📸️snapshot/⬅️before/🗣️.dsl.semio",
+          "path": "../🧪️tests/🧫️fixtures/🧬️history-edits/🎨️paint-indexed-region/🎯️direct/📸️snapshot/⬅️before/🗣️.dsl.semio",
           "mediaType": "text/plain",
           "sha256": "sha256:dcca9a9cdd991869ad349ed2c9b75dac23821330afe8e60c07eb50420aed551f",
           "bytes": 141
         },
         {
           "role": "mutation-json",
-          "path": "../🧫️fixtures/🧬️history-edits/🎨️paint-indexed-region/🎯️direct/🦠️mutation/🔣️.json",
+          "path": "../🧪️tests/🧫️fixtures/🧬️history-edits/🎨️paint-indexed-region/🎯️direct/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:af701575229fc4f7c1619eedc6fb1acbfc203f4b86a82b7dbe3633e0f0703a21",
           "bytes": 176
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🧬️history-edits/🎨️paint-indexed-region/🎯️direct/📸️snapshot/➡️after/🗣️.dsl.semio",
+          "path": "../🧪️tests/🧫️fixtures/🧬️history-edits/🎨️paint-indexed-region/🎯️direct/📸️snapshot/➡️after/🗣️.dsl.semio",
           "mediaType": "text/plain",
           "sha256": "sha256:1307bb7498671fe4c47ca8ac70f5df8f90b411ff67f574140e1f6267331e7d7f",
           "bytes": 141
         },
         {
           "role": "outcome-json",
-          "path": "../🧫️fixtures/🧬️history-edits/🎨️paint-indexed-region/🎯️direct/🎯️outcome/🔣️.json",
+          "path": "../🧪️tests/🧫️fixtures/🧬️history-edits/🎨️paint-indexed-region/🎯️direct/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a",
           "bytes": 26
@@ -830,28 +830,28 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🧬️history-edits/🖌️paint-direct-region/🎯️direct/📸️snapshot/⬅️before/🗣️.dsl.semio",
+          "path": "../🧪️tests/🧫️fixtures/🧬️history-edits/🖌️paint-direct-region/🎯️direct/📸️snapshot/⬅️before/🗣️.dsl.semio",
           "mediaType": "text/plain",
           "sha256": "sha256:e16ad03ff6e23d36b268264046dcab3e6adbd421d1786bdf5a4a7273fc53f5d1",
           "bytes": 171
         },
         {
           "role": "mutation-json",
-          "path": "../🧫️fixtures/🧬️history-edits/🖌️paint-direct-region/🎯️direct/🦠️mutation/🔣️.json",
+          "path": "../🧪️tests/🧫️fixtures/🧬️history-edits/🖌️paint-direct-region/🎯️direct/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:0f99c6eff2f81367e7035279dba1671a76a0105661517684814d79193987f881",
           "bytes": 218
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🧬️history-edits/🖌️paint-direct-region/🎯️direct/📸️snapshot/➡️after/🗣️.dsl.semio",
+          "path": "../🧪️tests/🧫️fixtures/🧬️history-edits/🖌️paint-direct-region/🎯️direct/📸️snapshot/➡️after/🗣️.dsl.semio",
           "mediaType": "text/plain",
           "sha256": "sha256:11b56c14ec1b4b2f1b4ed0360039de1341db0d494b126e80f951ea1334b4d63e",
           "bytes": 171
         },
         {
           "role": "outcome-json",
-          "path": "../🧫️fixtures/🧬️history-edits/🖌️paint-direct-region/🎯️direct/🎯️outcome/🔣️.json",
+          "path": "../🧪️tests/🧫️fixtures/🧬️history-edits/🖌️paint-direct-region/🎯️direct/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a",
           "bytes": 26

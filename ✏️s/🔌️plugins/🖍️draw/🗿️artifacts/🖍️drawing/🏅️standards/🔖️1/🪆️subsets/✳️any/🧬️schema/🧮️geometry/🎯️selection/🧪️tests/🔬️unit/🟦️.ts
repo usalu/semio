@@ -3,7 +3,7 @@ import { expect,test } from "bun:test";
 import { ShapeUtils,Triangle,Vector2,Vector3 } from "three";
 import { polygonContainsPoint,polygonEnclosesBounds } from "../../🟦️.ts";
 import type { Point } from "../../../🟦️.ts";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️selection/🔣️.json";
 test("lasso containment follows the polygon, including concave boundaries",()=>{
   for(const item of fixture) {
     const polygon=item.polygon as Point[];

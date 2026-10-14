@@ -1,90 +1,53 @@
-/** 🔁️ The declared all-plugin rebuild chain is well formed, builds each component once through the build driver (describe, receipt and module), proves
- * its `s` staging before the catalog, and selects contiguous step ranges. */
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+/** 🧪️ Portable rebuild composition and schema validation against Ajv. */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { guestFrameworkCheckArgs, readGuestFrameworkChecks, readRebuildChain, REBUILD_STAGES, selectRebuildSteps } from "../../🔁️rebuild/🟦️.ts";
+import Ajv from "ajv";
+import { composeRebuildPlansV1, parseRebuildPlanV1, readRebuildPlanV1, selectRebuildSteps, REBUILD_STAGES, guestFrameworkCheckArgs } from "../../🔁️rebuild/🟦️.ts";
+import schema from "../../🔁️rebuild/🧬️schema/🔣️.json";
+import fixtures from "../🧫️fixtures/🔁️rebuild/🔣️.json";
+const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
 
-describe("rebuild-all chain", () => {
-  it("declares input gates, descriptors, registry, guests and catalog in dependency order", () => {
-    const chain = readRebuildChain();
-    expect(chain.map((step) => step.id)).toEqual(["provenance", "mutation-authority", "schema-index", "guest-framework", "describe", "generate", "check", "activate-s", "verify-s", "flow-core-bindings", "preflight-catalog", "publish-catalog"]);
-    expect([...new Set(chain.map((step) => step.stage))]).toEqual([...REBUILD_STAGES]);
-    expect(chain.find((step) => step.id === "describe")?.command).toEqual(["nx", "run", "workspace:components", "describe", "--all"]);
-    expect(chain.findIndex((step) => step.id === "preflight-catalog")).toBe(chain.findIndex((step) => step.id === "publish-catalog") - 1);
-    expect(chain.find((step) => step.id === "verify-s")?.command.slice(-2)).toEqual(["--variant", "s"]);
-    expect(chain.find((step) => step.id === "publish-catalog")?.command.slice(-2)).toEqual(["--packages", "all"]);
+describe("owner-authored rebuild composition", () => {
+  for (const vector of fixtures.cases) it(vector.id, () => {
+    for (const plan of vector.plans) expect(validate(plan), JSON.stringify(validate.errors)).toBe(true);
+    const plans = vector.plans.map(parseRebuildPlanV1);
+    const composed = composeRebuildPlansV1(plans);
+    const oracle = vector.plans.flatMap(plan => plan.steps).sort((a, b) => schema.$defs.RebuildStepV1.properties.stage.enum.indexOf(a.stage) - schema.$defs.RebuildStepV1.properties.stage.enum.indexOf(b.stage));
+    expect(composed.steps).toEqual(oracle);
+    expect(composed.steps.map(step => step.id)).toEqual(vector.expected);
+    expect(validate(composed), JSON.stringify(validate.errors)).toBe(true);
   });
 
-  it("selects the contiguous range --from/--to name and refuses unknown or inverted bounds", () => {
-    const chain = readRebuildChain();
-    expect(selectRebuildSteps(chain, []).map((step) => step.id)).toEqual(chain.map((step) => step.id));
-    expect(selectRebuildSteps(chain, ["--to", "verify-s"]).map((step) => step.id)).toEqual(["provenance", "mutation-authority", "schema-index", "guest-framework", "describe", "generate", "check", "activate-s", "verify-s"]);
-    expect(selectRebuildSteps(chain, ["--from", "generate", "--to", "check"]).map((step) => step.id)).toEqual(["generate", "check"]);
-    expect(() => selectRebuildSteps(chain, ["--from", "check", "--to", "generate"])).toThrow(/after --to/);
-    expect(() => selectRebuildSteps(chain, ["--to", "nowhere"])).toThrow(/names no step/);
-    expect(() => selectRebuildSteps(chain, ["--to", "check", "--to", "generate"])).toThrow(/usage/);
-    expect(() => selectRebuildSteps(chain, ["--from"])).toThrow(/usage/);
-  });
-
-  it("checks the guest-linked framework crates for both wasm targets before any component builds", () => {
-    const chain = readRebuildChain();
-    expect(chain.findIndex((step) => step.id === "guest-framework")).toBeLessThan(chain.findIndex((step) => step.id === "describe"));
-    const checks = readGuestFrameworkChecks();
-    expect([...new Set(checks.map((check) => check.target))].sort()).toEqual(["wasm32-unknown-unknown", "wasm32-wasip2"]);
-    expect(guestFrameworkCheckArgs(checks[0]!).slice(0, 6)).toEqual(["check", "--manifest-path", "Cargo.toml", "--lib", "--target", "wasm32-wasip2"]);
-    expect(checks.flatMap((check) => check.packages)).toContain("semio-framework-os-kernel");
-    expect(checks.at(-1)).toEqual({ target: "wasm32-wasip2", workspace: "✏️s/Cargo.toml", packages: ["semio-s-plugin-stdio"], features: [] });
-    expect(checks.every((check) => existsSync(join(getWorkspaceRoot(), check.workspace)))).toBe(true);
-    const root = mkdtempSync(join(tmpdir(), "rebuild-guest-checks-"));
-    const write = (checks: unknown): string => {
-      const path = join(root, `${Math.random()}.json`);
-      writeFileSync(path, JSON.stringify({ schema: "semio.plugin-registry.rebuild-chain/v1", steps: [], guestFrameworkChecks: checks }));
-      return path;
-    };
-    expect(() => readGuestFrameworkChecks(write([]))).toThrow(/no guestFrameworkChecks/);
-    expect(() => readGuestFrameworkChecks(write([{ target: "x86_64-apple-darwin", workspace: "Cargo.toml", packages: ["semio-framework"], features: [] }]))).toThrow(/known target/);
-    expect(() => readGuestFrameworkChecks(write([{ target: "wasm32-wasip2", workspace: "Cargo.toml", packages: ["semio-framework"], features: ["other-crate/sync"] }]))).toThrow(/crate-qualified/);
-    expect(() => readGuestFrameworkChecks(write([{ target: "wasm32-wasip2", packages: ["semio-framework"], features: [] }]))).toThrow(/workspace Cargo\.toml/);
-    expect(() => readGuestFrameworkChecks(write([{ target: "wasm32-wasip2", workspace: "../Cargo.toml", packages: ["semio-framework"], features: [] }]))).toThrow(/workspace Cargo\.toml/);
-    expect(() => readGuestFrameworkChecks(write([{ target: "wasm32-wasip2", workspace: "/tmp/Cargo.toml", packages: ["semio-framework"], features: [] }]))).toThrow(/workspace Cargo\.toml/);
-    expect(() => readGuestFrameworkChecks(write([{ target: "wasm32-wasip2", workspace: "Cargo.toml", packages: ["semio-framework"], features: [], extra: true }]))).toThrow(/unknown keys/);
-  });
-
-  it("validates the committed chain with an independent JSON Schema engine that agrees with the reader on portable workspaces", async () => {
-    const { default: Ajv } = await import("ajv");
-    const schema = JSON.parse(readFileSync(new URL("../../🔁️rebuild/🧬️schema/🔣️.json", import.meta.url), "utf8"));
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-    const committed = JSON.parse(readFileSync(new URL("../../🔁️rebuild/🔣️.json", import.meta.url), "utf8"));
-    expect(validate(committed), JSON.stringify(validate.errors)).toBe(true);
+  it("neutral defaults contain no concrete guest or Hub inputs", () => {
+    const plan = readRebuildPlanV1();
+    expect(plan.steps.map(step => step.id)).toEqual(["provenance", "mutation-authority", "schema-index", "guest-framework", "describe", "generate", "check"]);
+    expect(JSON.stringify(plan)).not.toMatch(/semio-s-|✏️s|os-hub|activate-s|verify-s/);
     expect(schema.$defs.RebuildStepV1.properties.stage.enum).toEqual([...REBUILD_STAGES]);
-    const root = mkdtempSync(join(tmpdir(), "rebuild-guest-schema-"));
-    const workspaces = ["Cargo.toml", "✏️s/Cargo.toml", "🌎️hub/Cargo.toml", "../Cargo.toml", "/tmp/Cargo.toml", "..\\x\\Cargo.toml", "x\\Cargo.toml", "C:x/Cargo.toml", "C:/Cargo.toml", "a//Cargo.toml", "./Cargo.toml", "a/../Cargo.toml", "Cargo.tomlx", "x/Cargo.toml/"];
-    for (const workspace of workspaces) {
-      const check = { target: "wasm32-wasip2", workspace, packages: ["semio-framework"], features: [] };
-      const path = join(root, `${Math.random()}.json`);
-      writeFileSync(path, JSON.stringify({ ...committed, guestFrameworkChecks: [check] }));
-      const independent = validate({ ...committed, guestFrameworkChecks: [check] });
-      let accepted = true;
-      try { readGuestFrameworkChecks(path); } catch { accepted = false; }
-      expect(accepted, workspace).toBe(independent);
-    }
-    expect(workspaces.filter((workspace) => validate({ ...committed, guestFrameworkChecks: [{ target: "wasm32-wasip2", workspace, packages: ["semio-framework"], features: [] }] }))).toEqual(["Cargo.toml", "✏️s/Cargo.toml", "🌎️hub/Cargo.toml"]);
+    expect(guestFrameworkCheckArgs(plan.guestFrameworkChecks[0]!).slice(0, 6)).toEqual(["check", "--manifest-path", "Cargo.toml", "--lib", "--target", "wasm32-wasip2"]);
   });
 
-  it("refuses a chain whose stages run backwards or repeat a step", () => {
-    const root = mkdtempSync(join(tmpdir(), "rebuild-chain-"));
-    const write = (steps: unknown[]): string => {
-      const path = join(root, `${steps.length}-${Math.random()}.json`);
-      writeFileSync(path, JSON.stringify({ schema: "semio.plugin-registry.rebuild-chain/v1", steps }));
-      return path;
-    };
-    const describeStep = { id: "describe", stage: "descriptors", command: ["nx", "run", "workspace:components", "describe", "--all"] };
-    const catalogStep = { id: "publish-catalog", stage: "catalog", command: ["nx", "run", "os-hub:trusted-catalog-bootstrap"] };
-    expect(() => readRebuildChain(write([catalogStep, describeStep]))).toThrow(/stage order/);
-    expect(() => readRebuildChain(write([describeStep, describeStep]))).toThrow(/duplicated/);
-    expect(() => readRebuildChain(write([{ ...describeStep, command: ["cargo", "build"] }]))).toThrow(/nx command/);
+  it("selects contiguous ranges and refuses unknown, repeated or inverted bounds", () => {
+    const steps = composeRebuildPlansV1(fixtures.cases[1]!.plans.map(parseRebuildPlanV1)).steps;
+    expect(selectRebuildSteps(steps, ["--from", "describe", "--to", "guest"]).map(step => step.id)).toEqual(["describe", "check", "guest"]);
+    for (const args of [["--from", "check", "--to", "describe"], ["--to", "missing"], ["--to", "check", "--to", "check"], ["--from"]]) expect(() => selectRebuildSteps(steps, args)).toThrow();
+    expect(() => composeRebuildPlansV1([parseRebuildPlanV1(fixtures.cases[0]!.plans[0]), parseRebuildPlanV1(fixtures.cases[0]!.plans[0])])).toThrow(/duplicated/);
+  });
+
+  it("matches an independent schema oracle on malformed plans and portable inputs", () => {
+    const plan = fixtures.cases[0]!.plans[0]!;
+    const valid = { target: "wasm32-wasip2", workspace: "Cargo.toml", packages: ["framework"], features: [] };
+    const cases = [plan, { ...plan, extra: true }, { ...plan, steps: [] }, { ...plan, steps: [{ ...plan.steps[0], id: "UPPER" }] }, { ...plan, steps: [{ ...plan.steps[0], command: ["cargo", "nx"] }] }, { ...plan, steps: [{ ...plan.steps[0], command: ["nx"] }] }, { ...plan, steps: [{ ...plan.steps[0], command: ["nx", ""] }] }, ...["Cargo.toml", "specific/Cargo.toml", "../Cargo.toml", "/tmp/Cargo.toml", "x\\Cargo.toml", "C:/Cargo.toml", "a//Cargo.toml", "a/../Cargo.toml"].map(workspace => ({ ...plan, guestFrameworkChecks: [{ ...valid, workspace }] }))];
+    for (const value of cases) {
+      let accepted = true;
+      try { parseRebuildPlanV1(value); } catch { accepted = false; }
+      expect(accepted, JSON.stringify(value)).toBe(validate(value));
+    }
+    expect(() => parseRebuildPlanV1({ ...plan, steps: [...plan.steps].reverse() })).toThrow(/stage order/);
+    expect(() => parseRebuildPlanV1({ ...plan, guestFrameworkChecks: [{ ...valid, features: ["other/sync"] }] })).toThrow(/crate-qualified/);
+  });
+
+  it("imports no downstream development or concrete owner from the neutral executor", () => {
+    const source = readFileSync(new URL("../../🔁️rebuild/🟦️.ts", import.meta.url), "utf8");
+    expect(source).not.toMatch(/🧑‍💻dev|✏️s|🌎️hub|stagedConvergence/);
   });
 });

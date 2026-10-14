@@ -104,7 +104,7 @@ pub fn definition() -> ToolDefinition {
 
 /// ▶️ Non-mutating collapse: pause/resume/step/abort are the framework panel's; each tick dirties the preview.
 pub fn run_definition() -> ToolRunDefinition {
-    ToolRunDefinition {
+    ToolRunDefinition { receiving: semio_framework_tool_run::ToolRunReceivingLimits::REPORTS,
         mutating: false,
         rebase: ToolRunRebasePolicy::Restart,
         reconfigure: ToolRunReconfigurePolicy::Restart,

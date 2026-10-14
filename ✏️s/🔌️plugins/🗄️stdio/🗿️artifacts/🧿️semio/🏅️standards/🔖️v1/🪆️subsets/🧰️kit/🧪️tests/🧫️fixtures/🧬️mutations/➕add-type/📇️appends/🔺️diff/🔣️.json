@@ -1,0 +1,14 @@
+{
+  "types": {
+    "added": [
+      {
+        "index": 2,
+        "item": {
+          "id": "t3",
+          "name": "Slab",
+          "category": "structure"
+        }
+      }
+    ]
+  }
+}

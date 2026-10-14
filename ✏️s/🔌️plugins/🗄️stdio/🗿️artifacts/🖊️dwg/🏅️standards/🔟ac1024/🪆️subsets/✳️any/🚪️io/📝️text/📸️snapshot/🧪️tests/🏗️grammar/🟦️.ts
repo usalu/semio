@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const root = resolve(import.meta.dir, "../..");
-const corpus = JSON.parse(readFileSync(resolve(root, "🧫️fixtures/🏗️grammar/🔣️.json"), "utf8"));
+const corpus = JSON.parse(readFileSync(resolve(root, "🧪️tests/🧫️fixtures/🏗️grammar/🔣️.json"), "utf8"));
 const nullable = /^field-value\s*=\s*"="\s+value\?\s*$/m.test(readFileSync(resolve(root, "📖️.grammar.semio"), "utf8"));
 const Space = createToken({ name: "Space", pattern: /\s+/, group: Lexer.SKIPPED });
 const Text = createToken({ name: "Text", pattern: /"(?:\\.|[^"\\])*"/ });

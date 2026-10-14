@@ -10,7 +10,7 @@ use semio_framework_tool_run::{ToolRunId, ToolRunStep, ToolRunTick, ToolRunTrace
 use semio_framework_pack_json::json;
 use std::collections::BTreeMap;
 
-const FILL_RUN_FIXTURE: &str = include_str!("../../🧫️fixtures/🎞️fill-run.json");
+const FILL_RUN_FIXTURE: &str = include_str!("../🧫️fixtures/🎞️fill-run.json");
 
 fn snapshot() -> Value {
     let snapshot: Value = semio_framework_pack_json::from_json_str(FILL_RUN_FIXTURE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fill run snapshot parses");

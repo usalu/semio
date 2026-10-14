@@ -10,7 +10,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   const { cleanup, render } = await import("@semio-tech/ui-react/test");
   const { createElement } = await import("react");
-  const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/📐️overlay-flow/🔣️.json");
+  const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/📐️overlay-flow/🔣️.json");
 
   const SURFACE = "panel:overlay-flow";
   const TEST_STYLE = { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" };

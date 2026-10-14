@@ -10,11 +10,11 @@
 use crate::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
 use crate::{RemodelingDiff, RemodelingSnapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗾replace-geo-products/🗺️adds/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗾replace-geo-products/🗺️adds/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗾replace-geo-products/🗺️adds/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗾replace-geo-products/🗺️adds/🎯️outcome/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗾replace-geo-products/🗺️adds/🔺️diff/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗾replace-geo-products/🗺️adds/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗾replace-geo-products/🗺️adds/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗾replace-geo-products/🗺️adds/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗾replace-geo-products/🗺️adds/🎯️outcome/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗾replace-geo-products/🗺️adds/🔺️diff/🔣️.json");
 
 fn before() -> RemodelingSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

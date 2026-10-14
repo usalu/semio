@@ -1,7 +1,7 @@
 /** 🏛️ Neutral spatial/element graphs independently inspected and edited by SQLite. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import f from "../🧫️fixtures/🔣️.json";
+import f from "./🧫️fixtures/🔣️.json";
 import type {SemioModelSnapshot,SpatialKind,ElementClass,RelationKind} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {SEMIO_MODEL_SQLITE_SCHEMA,semioModelSnapshotToSqliteDatabase,semioModelSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import {binary64,exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
@@ -12,7 +12,7 @@ test("quick::Semio Model IEEE states, hierarchy cycles and exact variant fields"
 
 test("Semio Model native construction frontier independently preserves duplicate property keys and empty text",async()=>{const count=f.nativeAdmission.collectionItems,s=structuredClone(input);s.spatial=[];s.elements=[{id:"element",class:{kind:"wall"},placement:placement(),geometry:{kind:"none"},spatialId:null,psets:[{name:"",properties:Array.from({length:count},()=>({key:"",value:{kind:"text",value:""}}))}]}];s.relations=[];const db=Database.deserialize(await exportSqliteDatabase(await semioModelSnapshotToSqliteDatabase(s)));try{expect(db.query("SELECT count(*) AS n FROM semio_model_property").get()).toEqual({n:count});expect(db.query("SELECT property_key,text_value FROM semio_model_property WHERE ordinal=?").get(f.nativeAdmission.cancelAfter)).toEqual({property_key:"",text_value:""});expect(await semioModelSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).toEqual(s);}finally{db.close();}});
 
-import completeSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import completeSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 import{independentSqliteExtent as completeIndependentExtent}from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
 test("Semio Model Native matched full and metadata empty independently preserve all complete cells",async()=>{
  for(const item of completeSemanticContract.cases){const source=structuredClone(item.sourceSnapshot)as unknown as SemioModelSnapshot;const hydrate=(value:unknown):unknown=>Array.isArray(value)?value.map(hydrate):value!==null&&typeof value==="object"?("bits"in value?{bits:String((value as {bits:string}).bits).length===8?Number.parseInt(String((value as {bits:string}).bits),16):BigInt("0x"+String((value as {bits:string}).bits))}:Object.fromEntries(Object.entries(value).map(([key,item])=>[key,hydrate(item)]))):value;Object.assign(source,hydrate(source));const database=await semioModelSnapshotToSqliteDatabase(source),bytes=await exportSqliteDatabase(database);expect(completeIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:completeSemanticContract.schemaBytes,tableWidths:completeSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:completeSemanticContract.schemaBytes,maxTables:9,maxColumns:31};expect(await semioModelSnapshotToSqliteDatabase(source,limits)).toEqual(database);expect(await semioModelSnapshotFromSqliteDatabase(await importSqliteDatabase(bytes),limits)).toEqual(source);

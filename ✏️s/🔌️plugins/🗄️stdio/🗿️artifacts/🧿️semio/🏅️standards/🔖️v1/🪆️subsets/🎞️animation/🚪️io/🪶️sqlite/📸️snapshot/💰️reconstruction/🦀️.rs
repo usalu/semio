@@ -1,6 +1,7 @@
 //! 🎛️ Original timelines and variant fields retain their complete ordered reconstruction workspace.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{SemioAnimationSnapshot,AnimTimeline,AnimChannel,AnimTarget,AnimTargetProperty,AnimInterpolation,AnimKeyframe,AnimValue,SemioPoint3,SemioQuaternion,identity,single_float_row,float_columns};
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[derive(semio_framework_value::RetireOwned)]
 struct Prefix{snapshot:Option<SemioAnimationSnapshot>,validation:SchemaValidationStorage,indexes:[RowIndexStorage;7],orders:[Vec<usize>;4]}

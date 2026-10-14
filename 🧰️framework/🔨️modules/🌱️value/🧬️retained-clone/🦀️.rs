@@ -68,7 +68,7 @@ impl<'a,T:?Sized> Clone for RetainedCloneRef<'a,T>{fn clone(&self)->Self{*self}}
 impl<'a,T:?Sized> RetainedCloneRef<'a,T>{
  pub fn get(self)->&'a T{self.value}
  pub fn project<U:?Sized,F>(self,discriminator:usize,project:F)->RetainedCloneRef<'a,U>where F:for<'source>FnOnce(&'source T)->&'source U{let value=project(self.value);RetainedCloneRef{value,lease:self.lease,projection:RetainedCloneProjection{parent:self.projection.address,address:value as*const U as*const()as usize,discriminator}}}
- pub fn binding_copy_bytes(self)->usize{size_of::<crate::retirement::shared::sealed::SealedShared<RetainedCloneLeaseOwner>>()}
+ pub fn binding_copy_bytes(self)->usize{0}
  pub fn bind(self,binding:&mut Option<RetainedCloneBinding>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,crate::ValueError>{
   if let Some(expected)=binding{if expected.lease.as_ref().ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"projected source binding already closing"))?.get().id!=self.lease.get().id||expected.projection!=self.projection{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"original clone source or projected path changed"));}return Ok(None);}
   if grant.maximum_items==0||grant.maximum_copy_bytes<self.binding_copy_bytes()||grant.maximum_depth==0{return Ok(Some(Default::default()));}
@@ -77,7 +77,7 @@ impl<'a,T:?Sized> RetainedCloneRef<'a,T>{
 }
 pub struct RetainedCloneBinding{lease:ManuallyDrop<Option<crate::retirement::shared::sealed::SealedShared<RetainedCloneLeaseOwner>>>,close:ManuallyDrop<Option<crate::retirement::controlled::ControlledRetirement<crate::retirement::shared::sealed::SealedShared<RetainedCloneLeaseOwner>>>>,projection:RetainedCloneProjection}
 impl RetainedCloneBinding{
- pub fn alias_copy_bytes()->usize{size_of::<crate::retirement::shared::sealed::SealedShared<RetainedCloneLeaseOwner>>()}
+ pub fn alias_copy_bytes()->usize{0}
  fn new(lease:crate::retirement::shared::sealed::SealedShared<RetainedCloneLeaseOwner>,projection:RetainedCloneProjection)->Self{Self{lease:ManuallyDrop::new(Some(lease)),close:ManuallyDrop::new(None),projection}}
  pub fn close_one(binding:&mut Option<Self>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{
   let Some(owner)=binding.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()));};if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
@@ -88,6 +88,7 @@ impl RetainedCloneBinding{
  pub fn capacity_demand(binding:&Option<Self>,body:usize)->Result<usize,crate::ValueError>{binding.as_ref().and_then(|owner|owner.close.as_ref()).map_or(Ok(0),|owner|owner.next_capacity_byte_demand(body))}
  pub fn release_demand(binding:&Option<Self>)->Result<usize,crate::ValueError>{binding.as_ref().and_then(|owner|owner.close.as_ref()).map_or(Ok(0),|owner|owner.next_release_byte_demand())}
  pub fn depth_demand(binding:&Option<Self>)->Result<usize,crate::ValueError>{binding.as_ref().map_or(Ok(0),|owner|owner.close.as_ref().map_or(Ok(1),|owner|owner.next_depth_demand()))}
+ pub fn close_demand(binding:&Option<Self>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{binding.as_ref().map_or(Ok(Default::default()),|owner|owner.close.as_ref().map_or(Ok(crate::RetirementDemand{depth:1,..Default::default()}),|owner|owner.selected_demand(body)))}
  fn terminal_is_empty(&self)->bool{self.lease.is_none()&&self.close.is_none()}
 }
 impl Drop for RetainedCloneBinding{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"projected original source requires genuine alias closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.lease);ManuallyDrop::drop(&mut self.close);}}}}

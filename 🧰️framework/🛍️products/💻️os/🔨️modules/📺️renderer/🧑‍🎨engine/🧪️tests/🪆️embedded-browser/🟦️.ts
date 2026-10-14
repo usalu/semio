@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import fixture from "../../🧫️fixtures/🪆️embedded-browser/🔣️.json";
+import fixture from "../🧫️fixtures/🪆️embedded-browser/🔣️.json";
 import { parseEmbeddedBrowserConfiguration } from "../../🎯️targets/🧊️wgpu/🧪️tests/🪆️embedded-browser/🟦️.ts";
 
 describe("embedded physical browser authority", () => {

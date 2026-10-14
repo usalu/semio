@@ -10,11 +10,11 @@ use crate::schema::mutations::SemioTextMutation;
 use crate::schema::snapshot::SemioTextSnapshot;
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/🎯️outcome/🔣️.json");
 
 fn before() -> SemioTextSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("remove-run before snapshot decodes")

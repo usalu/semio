@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::inferences::element_solids::{com
 use crate::ModelInference;
 use protocol::Inference;
 
-const CASE: &str = include_str!("../../../../../../🧫️fixtures/💡️inferences/🧊️element-solids/🏛️columns-profiles/🔣️.json");
+const CASE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🏛️columns-profiles/🔣️.json");
 
 #[semio_framework_async_macros::async_test]
 async fn columns_reproduce_the_third_party_oracle_table() {

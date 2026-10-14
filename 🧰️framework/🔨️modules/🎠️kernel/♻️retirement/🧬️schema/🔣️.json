@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "const": {
+    "version": 1,
+    "grant": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 65536,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 1048576,
+      "maximumDepth": 128
+    },
+    "appId": "app 🎟️ original",
+    "documentId": "document ursprünglicher owner",
+    "editId": "edit original",
+    "bytes": [
+      111,
+      114,
+      105,
+      103,
+      105,
+      110,
+      97,
+      108
+    ],
+    "expected": {
+      "pageBacking": 4096,
+      "unfundedHeap": 0,
+      "terminalDrop": 0,
+      "pageBase64": "b3JpZ2luYWw="
+    }
+  }
+}

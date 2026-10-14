@@ -5,7 +5,7 @@ import { parseZipDiff, applyZipDiff, zipInsertionDiff } from "../../🏅️stand
 import Ajv2020 from "ajv/dist/2020.js";
 import { applyPatch } from "fast-json-patch";
 import { describe, expect, it } from "bun:test";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🎮️commands/✏️set-node/🔣️schema.json";
 import checkpointSchema from "../🧵️retained/🔣️schema.json";
 import commentMutationSchema from "../../🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💬set-archive-comment/🧬️schema/🔣️.json";

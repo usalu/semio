@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import schema from "../🧬️schema/🔣️.json";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import { resolve } from "node:path";
 import * as channel from "../../🔍️census/🟦️.ts";
 import { admitChannelVersionContributionsV1 } from "../🟦️.ts";

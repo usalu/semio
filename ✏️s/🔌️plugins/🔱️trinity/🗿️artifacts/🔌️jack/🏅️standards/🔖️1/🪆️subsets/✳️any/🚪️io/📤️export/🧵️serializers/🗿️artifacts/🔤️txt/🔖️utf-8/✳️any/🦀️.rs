@@ -5,5 +5,5 @@ use crate::JackSnapshot;
 pub fn register() {}
 
 pub fn serialize_bytes(from: &JackSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
-    Ok(<JackSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(from).into_bytes())
+    Ok(<JackSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(from).into_bytes())
 }

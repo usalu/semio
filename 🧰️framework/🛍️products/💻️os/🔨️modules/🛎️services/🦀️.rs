@@ -684,17 +684,29 @@ impl<J:InteractiveJob+'static> ComputeJobCompletion<J>{
     pub fn session(&self)->&semio_framework_job::MountedWorkerJobSession<J>{&self.session}
     pub fn fault(&self)->Option<&semio_framework_value::ValueError>{self.fault.as_ref()}
     pub fn terminal_is_empty(&self)->bool{self.session.terminal_is_empty()&&self.permit.is_none()&&self.fault.is_none()}
-    /// 🪢️ Retires one original descriptor, alias or session frontier under this caller's full grant.
-    pub fn close_step(&mut self,witness:&CancelToken,grant:semio_framework_job::RetainedCloneGrant)->Result<semio_framework_job::WorkerJobCloseStep,semio_framework_value::ValueError>{
-        use semio_framework_job::{WorkerJobCloseStep,WorkerJobDemandError};
+    /// 🪢️ Retires the same mounted custody through the caller's original clock, root and receipt.
+    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::WorkerJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_job::{WorkerJobCloseStep,WorkerJobDemandError,InteractiveJobCloseStep,close_original_retained_step,OriginalTurnFailure};
+        use semio_framework_value::{RetirementDemand,RetainedCloneProgress,RetainedCloneStep};
         if self.terminal_is_empty(){return Ok(WorkerJobCloseStep::Complete{progress:Default::default()})}
-        if let Some(fault)=self.fault.as_ref(){let copied_bytes=size_of::<Option<semio_framework_value::ValueError>>();let released_bytes=match &fault.message{std::borrow::Cow::Owned(message)=>message.capacity(),std::borrow::Cow::Borrowed(_)=>0};if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_release_bytes<released_bytes{return Ok(WorkerJobCloseStep::Blocked)}drop(self.fault.take());return Ok(WorkerJobCloseStep::Pending{progress:semio_framework_job::RetainedCloneProgress{copied_items:1,copied_bytes,released_bytes,..Default::default()}})}
-        if self.session.terminal_is_empty(){let copied_bytes=size_of::<Option<OwnedPermit>>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copied_bytes{return Ok(WorkerJobCloseStep::Blocked)}drop(self.permit.take());return Ok(WorkerJobCloseStep::Complete{progress:semio_framework_job::RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}})}
-        if self.session.checked_out_outcome_descriptor().is_some(){let step=self.session.acknowledge_checked_out_outcome(grant);return Ok(WorkerJobCloseStep::Pending{progress:step.progress()})}
-        self.session.begin_close();
-        match self.session.return_original_cancel_alias_step(witness,grant){Ok(Some(step))=>return Ok(WorkerJobCloseStep::Pending{progress:step.progress()}),Err(WorkerJobDemandError::Refused(error))=>return Err(error),Err(WorkerJobDemandError::Contention(_))=>return Ok(WorkerJobCloseStep::Blocked),Ok(None)=>{}}
-        let step=self.session.close_step(grant);
-        Ok(step)
+        let map=|step:InteractiveJobCloseStep|match step{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>WorkerJobCloseStep::Pending{progress},InteractiveJobCloseStep::Blocked=>WorkerJobCloseStep::Blocked};
+        if let Some(fault)=self.fault.as_ref(){
+            let demand=RetirementDemand{copy_bytes:size_of::<Option<semio_framework_value::ValueError>>(),release_bytes:match &fault.message{std::borrow::Cow::Owned(message)=>message.capacity(),std::borrow::Cow::Borrowed(_)=>0},depth:1,..Default::default()};
+            return close_original_retained_step(cx,demand,|_|{drop(self.fault.take());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))}).map(map)
+        }
+        if self.session.terminal_is_empty(){
+            let demand=RetirementDemand{copy_bytes:size_of::<Option<OwnedPermit>>(),depth:1,..Default::default()};
+            let step=close_original_retained_step(cx,demand,|_|{drop(self.permit.take());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))})?;
+            return Ok(if self.terminal_is_empty(){WorkerJobCloseStep::Complete{progress:step.progress()}}else{map(step)})
+        }
+        if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
+        if self.session.checked_out_outcome_descriptor().is_none(){self.session.begin_close();}
+        let alias=self.session.has_original_cancel_alias_witness(cx.original_cancel_token());
+        match alias{Err(WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx)),Err(WorkerJobDemandError::Contention(_))=>return Ok(WorkerJobCloseStep::Blocked),Ok(true)=>{
+            let grant=cx.retained_grant();let step=match self.session.return_original_cancel_alias_step(cx.original_cancel_token(),grant){Ok(Some(step))=>step,Err(WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx)),Err(WorkerJobDemandError::Contention(_))=>return Ok(WorkerJobCloseStep::Blocked),Ok(None)=>return Ok(WorkerJobCloseStep::Blocked)};
+            cx.consume_fuel(1);cx.consume_retained(step.progress())?;return Ok(WorkerJobCloseStep::Pending{progress:step.progress()})
+        },Ok(false)=>{}}
+        self.session.close_step(cx)
     }
 }
 impl<J:InteractiveJob+'static> Drop for ComputeJobCompletion<J>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"compute completion abandoned original mounted custody");}}

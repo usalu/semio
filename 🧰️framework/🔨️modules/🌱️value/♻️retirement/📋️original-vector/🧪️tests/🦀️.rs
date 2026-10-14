@@ -2,7 +2,7 @@ use super::*;
 use crate::value::observe_retirement_allocations as observe;
 #[test]
 fn original_vector_native_ordered_handoffs_cancel_every_original_frontier_and_pay_final_backing(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for stop in law["cancelAfter"].as_array().unwrap(){
   let(source,birth)=observe(||{let mut values=Vec::with_capacity(37);for value in law["values"].as_array().unwrap(){values.push(value.as_str().unwrap().repeat(8192));}values});
   let pointers:Vec<_>=source.iter().map(|value|value.as_ptr()).collect();let backing=source.as_ptr();let backing_bytes=source.capacity()*size_of::<String>();

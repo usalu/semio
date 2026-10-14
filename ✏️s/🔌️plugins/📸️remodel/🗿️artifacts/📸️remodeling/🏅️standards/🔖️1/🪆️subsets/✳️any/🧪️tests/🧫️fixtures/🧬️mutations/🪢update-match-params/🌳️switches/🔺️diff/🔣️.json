@@ -1,0 +1,29 @@
+{
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": null,
+  "durableArtifacts": null,
+  "calibration": null,
+  "params": {
+    "ingest": null,
+    "feature": null,
+    "matching": {
+      "matcher": "kd-tree",
+      "ratioTest": {
+        "bits": "3f200000"
+      },
+      "crossCheck": false,
+      "sequentialWindow": 16,
+      "maxPairsPerFrame": 32,
+      "loopClosure": false
+    },
+    "sfm": null,
+    "dense": null,
+    "mesh": null,
+    "motion": null,
+    "geo": null
+  },
+  "gcps": null,
+  "results": null
+}

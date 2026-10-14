@@ -5,7 +5,7 @@ use crate::standards::v1_7::subsets::base::modules::lift::lift_document_with;
 use crate::standards::v1_7::subsets::base::schema::graph_source::GraphSource;
 
 fn role() -> PdfAdmittedStreamRole {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪪️stream-roles/🔣️.json")).unwrap();
     let owner = ObjRef { num: fixture["role"]["identity"]["owner"]["num"].as_u64().unwrap() as u32, gen: fixture["role"]["identity"]["owner"]["gen"].as_u64().unwrap() as u16 };
     let dependency = &fixture["role"]["dependencies"][1]["owner"];
     PdfAdmittedStreamRole { identity: PdfGraphIdentity { owner, path: vec![PdfGraphPath::Entry { key: "Contents".into() }] }, dependencies: vec![PdfGraphIdentity { owner, path: vec![PdfGraphPath::Entry { key: "Contents".into() }] }, PdfGraphIdentity { owner: ObjRef { num: dependency["num"].as_u64().unwrap() as u32, gen: dependency["gen"].as_u64().unwrap() as u16 }, path: Vec::new() }], value: PdfStreamRoleValue::Operators { content: vec![PdfOp::Save, PdfOp::Restore] } }
@@ -92,7 +92,7 @@ fn pdf_stream_roles_native_colour_admission_uses_components_and_foreign_referenc
     use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfColorSpace, PdfShadingKind};
     let reference=|num|ObjRef {num,gen:2};
     let palette=vec![0,127,255];
-    let profile=include_bytes!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🌈️x-vt-initial/🌈️sRGB2014.icc").to_vec();
+    let profile=include_bytes!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🌈️x-vt-initial/🌈️sRGB2014.icc").to_vec();
     let mesh=vec![0,128,255];
     let objects=vec![
         PdfIndirectObject {id:reference(5),value:PdfObject::Stream {dict:vec![PdfDictEntry::new("N",PdfObject::Int(3))],data:profile.clone(),filters:Vec::new()}},
@@ -134,7 +134,7 @@ fn pdf_stream_roles_role_only_projection_and_insert_remove_preserve_replay() {
     let mut changed=role.clone();changed.value=PdfStreamRoleValue::Operators {content:vec![PdfOp::Save,PdfOp::Restore]};
     let diff=PdfDiff {admitted_stream_roles:Some(PdfIndexedDiff {modified:vec![PdfIndexedItem {index,value:changed}],..Default::default()}),..Default::default()};
     let next=protocol::apply_diff(&diff,&base).unwrap();assert_eq!(next.pages[0].content,vec![PdfOp::Save,PdfOp::Restore]);
-    let replay:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪢️replay/🔣️.json")).unwrap();
+    let replay:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪪️stream-roles/🪢️replay/🔣️.json")).unwrap();
     let expected:Vec<String>=serde_json::from_value(replay["nativeOperatorNames"].clone()).unwrap();
     let native=encode_pdf(&next).unwrap();
     assert_eq!(semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_page_operator_names(&native).unwrap(),vec![expected]);
@@ -155,7 +155,7 @@ fn pdf_stream_roles_role_only_projection_and_insert_remove_preserve_replay() {
 fn pdf_stream_roles_sampled_words_match_independent_native_extents() {
     use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfFunction, PdfShading, PdfShadingKind, PdfColorSpace};
     use crate::standards::v1_7::subsets::base::schema::graph_projection::project_graph;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🌈️color/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🌈️color/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["sampleWidths"].as_array().unwrap().iter().filter(|case|[12,32].contains(&case["bitsPerSample"].as_u64().unwrap())) {
         let bits=case["bitsPerSample"].as_u64().unwrap() as u32;
         let words:Vec<u32>=serde_json::from_value(case["sampleWords"].clone()).unwrap();
@@ -178,7 +178,7 @@ fn pdf_stream_roles_native_known_payloads_persist_and_project_semantically() {
     use crate::standards::v1_7::subsets::base::schema::graph_projection::project_graph;
     use crate::standards::v1_7::subsets::base::io::foreign_artifacts::admit_pdf_artifact;
     use crate::standards::v1_7::subsets::base::modules::fonts::truetype::synthesize_truetype;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪪️stream-roles/🔣️.json")).unwrap();
     let payload=|kind:&str|fixture.as_object().unwrap().values().find_map(|value|(value["value"]["kind"]==kind).then(||value["value"].clone())).unwrap();
     let glyphs:Vec<u16>=serde_json::from_value(payload("glyphIds")["glyphs"].clone()).unwrap();
     let attachment:Vec<u8>=serde_json::from_value(payload("attachmentBytes")["bytes"].clone()).unwrap();

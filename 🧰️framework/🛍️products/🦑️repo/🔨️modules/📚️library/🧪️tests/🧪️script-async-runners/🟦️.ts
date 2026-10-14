@@ -5,7 +5,7 @@ import ts from "typescript";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const handledParent = (node: ts.Node): boolean => ts.isAwaitExpression(node) || ts.isReturnStatement(node) || ts.isVoidExpression(node) || ts.isVariableDeclaration(node) || ts.isPropertyAccessExpression(node) || ts.isCallExpression(node) || ts.isArrayLiteralExpression(node) || ts.isPropertyAssignment(node) || (ts.isArrowFunction(node) && !ts.isBlock(node.body));
 

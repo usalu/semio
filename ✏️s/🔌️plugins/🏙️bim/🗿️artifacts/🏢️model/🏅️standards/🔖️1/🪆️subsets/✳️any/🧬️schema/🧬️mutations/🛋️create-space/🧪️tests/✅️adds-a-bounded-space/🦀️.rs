@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🛋️create-space/✅️adds-a-bounded-space",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛋️create-space/✅️adds-a-bounded-space/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛋️create-space/✅️adds-a-bounded-space/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛋️create-space/✅️adds-a-bounded-space/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛋️create-space/✅️adds-a-bounded-space/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛋️create-space/✅️adds-a-bounded-space/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛋️create-space/✅️adds-a-bounded-space/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛋️create-space/✅️adds-a-bounded-space/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛋️create-space/✅️adds-a-bounded-space/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛋️create-space/✅️adds-a-bounded-space/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛋️create-space/✅️adds-a-bounded-space/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

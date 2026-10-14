@@ -11,11 +11,11 @@ use crate::mutations::LayoutMutation;
 use crate::LayoutSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-link/🔗️removes-link-2/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-link/🔗️removes-link-2/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-link/🔗️removes-link-2/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-link/🔗️removes-link-2/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-link/🔗️removes-link-2/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-link/🔗️removes-link-2/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-link/🔗️removes-link-2/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-link/🔗️removes-link-2/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-link/🔗️removes-link-2/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-link/🔗️removes-link-2/🎯️outcome/🔣️.json");
 
 fn before() -> LayoutSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-link/removes-link-2: before snapshot decodes")

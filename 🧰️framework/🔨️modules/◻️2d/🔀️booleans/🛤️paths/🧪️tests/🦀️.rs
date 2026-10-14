@@ -2,7 +2,7 @@
 use super::*;
 use serde_json::{Value,json};
 use std::collections::BTreeSet;
-fn rows()->Vec<Value>{serde_json::from_str::<Value>(include_str!("../🧫️fixtures/🔣️.json")).unwrap()["cases"].as_array().unwrap().clone()}
+fn rows()->Vec<Value>{serde_json::from_str::<Value>(include_str!("🧫️fixtures/🔣️.json")).unwrap()["cases"].as_array().unwrap().clone()}
 fn point(v:&Value)->Vec2{[v[0].as_f64().unwrap(),v[1].as_f64().unwrap()]}
 fn segment(v:&Value)->PathSegment{match v["kind"].as_str().unwrap(){
  "move"=>PathSegment::Move{to:point(&v["to"])},"line"=>PathSegment::Line{to:point(&v["to"])},"quad"=>PathSegment::Quad{ctrl:point(&v["ctrl"]),to:point(&v["to"])},
@@ -41,7 +41,7 @@ fn exact_caps_and_progress_fields_match_the_neutral_contract(){
 
 #[test]
 fn path_boolean_retirement_composes_child_owners_and_keeps_completed_output(){
- let fixtures:Value=serde_json::from_str(include_str!("../🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();let source_row=rows().into_iter().find(|r|r["id"]==fixtures["source"]).unwrap();
+ let fixtures:Value=serde_json::from_str(include_str!("🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();let source_row=rows().into_iter().find(|r|r["id"]==fixtures["source"]).unwrap();
  for row in fixtures["cases"].as_array().unwrap(){for grant in [1,7,4096]{let mut source=input(&source_row);if let Some(n)=row["maxWork"].as_u64(){source.max_work=n;}if let Some(n)=row["maxSegments"].as_u64(){source.max_segments=n as usize;}let mut job=PathBooleanJob::new(source).unwrap();let phase=row["phase"].as_str().unwrap();
   if phase=="failure"{assert!(job.advance(100000).is_err());if row["maxWork"].is_number(){assert!(job.current.is_some());}}else if phase!="fresh"{if phase!="cancelled"{let mut reached=false;for _ in 0..100000{let p=job.advance(1).unwrap();if match phase{"flattenClosing"=>job.flat_retirement.is_some(),"booleanClosing"=>job.boolean_retirement.is_some(),_=>p.phase.as_str()==phase}{reached=true;break;}}assert!(reached);}for _ in 0..row["offset"].as_u64().unwrap(){job.advance(1).unwrap();}}
   if phase=="cancelled"{job.cancel();}let ptr=if job.phase==PathBooleanPhase::Complete&&!job.cancelled&&job.failure.is_none(){Some(job.result().unwrap().as_ptr())}else{None};let(mut close,output)=job.into_retirement();if let Some(ptr)=ptr{assert_eq!(output.as_ref().unwrap().as_ptr(),ptr);assert_eq!(output.unwrap(),finish(input(&source_row),4096).0);}else{assert!(output.is_none());}

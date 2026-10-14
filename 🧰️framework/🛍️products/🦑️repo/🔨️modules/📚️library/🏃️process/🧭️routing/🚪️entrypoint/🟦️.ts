@@ -1,8 +1,8 @@
-import type { ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import type { ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
-import { readScriptPolicy } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
-import { SCRIPT_PROCESS_INVOCATION_ENV, createScriptProcessEnvelope, receiveScriptProcessInvocation, withScriptProcessEnvelope } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { runScriptMain, type RunScriptMainOptions } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import type { ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type { ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { readScriptPolicy } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { SCRIPT_PROCESS_INVOCATION_ENV, createScriptProcessEnvelope, receiveScriptProcessInvocation, withScriptProcessEnvelope } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain, type RunScriptMainOptions } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 export type RunRepoScriptMainOptions = Pick<RunScriptMainOptions, "defaultCommand">;
 

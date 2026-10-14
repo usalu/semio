@@ -7,7 +7,7 @@ import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/�
 interface Consumer { readonly source: string; readonly fixtureReference: string }
 interface Owner { readonly id: string; readonly fixture: string; readonly schema: string; readonly former: string; readonly sha256: string; readonly consumers: readonly Consumer[] }
 const root = resolve(import.meta.dir, "../../../../../../../..");
-const fixture = JSON.parse(readFileSync(new URL("../../../🧫️fixtures/🧱️rust-source-direction/🧫️fixture-ownership/🔣️.json", import.meta.url), "utf8")) as { readonly schemaVersion: 1; readonly cases: readonly Owner[] };
+const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🧱️rust-source-direction/🧫️fixture-ownership/🔣️.json", import.meta.url), "utf8")) as { readonly schemaVersion: 1; readonly cases: readonly Owner[] };
 
 test("closed source-owned shared fixture census has independent AJV schema parity", () => {
   

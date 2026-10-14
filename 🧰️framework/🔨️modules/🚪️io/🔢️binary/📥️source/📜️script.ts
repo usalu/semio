@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {resolve} from "node:path";
-import {BundleScript,ScriptRouter} from "../../../🏃️process/🧭️routing/🟦️.ts";
-import {runScriptMain} from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import {runOwnedCommand} from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
-import {cmdBudgetMs} from "../../../🏃️process/⏱️budget/🟦️.ts";
-import {runCargoTestsV1,readCargoTestPolicyV1} from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import {runExactCargoLaws} from "../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import {BundleScript,ScriptRouter} from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {runScriptMain} from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {runOwnedCommand} from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {cmdBudgetMs} from "../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import {runCargoTestsV1,readCargoTestPolicyV1} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import {runExactCargoLaws} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 /** 🧾️ Verifies portable encoded byte sources through the shared task runner. */
 class TestScript extends BundleScript{
  async run(segments:string[]):Promise<void>{

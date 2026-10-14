@@ -42,6 +42,6 @@
     "malformedResult": "allocation-free literal ValueError",
     "physicalBirthBytes": 0,
     "physicalReleaseBytes": 0,
-    "neutralCorpus": "📡️replication/🧫️fixtures/👥️presence-peer-codec-v1/🔣️.json"
+    "neutralCorpus": "📡️replication/🧪️tests/🧫️fixtures/👥️presence-peer-codec-v1/🔣️.json"
   }
 }

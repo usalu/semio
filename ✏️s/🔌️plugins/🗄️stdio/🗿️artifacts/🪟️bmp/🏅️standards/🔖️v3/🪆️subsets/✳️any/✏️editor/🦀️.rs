@@ -85,7 +85,7 @@ const STDIO_BMP_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 const STDIO_BMP_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] };
 fn bmp_editor_example_snapshot(example_id: &str) -> BmpSnapshot {
     if example_id == crate::examples::demo::ID {
-        <BmpSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+        <BmpSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         BmpSnapshot::default()
     }
@@ -312,6 +312,7 @@ impl ArtifactEditor for BmpEditor {
                 ArtifactRetainedCommandInputs {
                     command: *request.command,
                     snapshot: request.snapshot,
+                    snapshot_read: request.snapshot_read,
                     config: request.config,
                     history: request.history,
                     interaction_state: request.interaction_state,
@@ -346,6 +347,7 @@ impl ArtifactEditor for BmpEditor {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

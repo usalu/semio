@@ -10,5 +10,5 @@ pub fn serialize(from: &IfcSnapshot) -> Result<TxtSnapshot, store::PackError> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize_text(from: &IfcSnapshot) -> Result<String, store::PackError> {
-    Ok(store::os_store::serialization::ArtifactDsl::print_dsl(&serialize(from)?))
+    Ok(pack::snapshot::ArtifactDsl::print_dsl(&serialize(from)?))
 }

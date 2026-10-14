@@ -9,5 +9,8 @@
     "email": "ueli@semio-tech.com",
     "url": "https://github.com/usalu"
   },
-  "bundleKind": "schema"
+  "bundleKind": "schema",
+  "devDependencies": {
+    "@semio-tech/process": "workspace:*"
+  }
 }

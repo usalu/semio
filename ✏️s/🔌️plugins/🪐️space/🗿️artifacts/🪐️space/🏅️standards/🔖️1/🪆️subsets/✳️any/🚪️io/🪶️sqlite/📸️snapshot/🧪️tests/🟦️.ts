@@ -2,7 +2,7 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import{exportSqliteDatabase,importSqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
+import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {parseSSpaceArtifact} from "../../../../🧬️schema/🟦️.ts";
 import type{CreateArtifact}from"../../../../🧬️schema/🧬️mutations/🌱create-artifact/🟦️.ts";
 import type{TouchArtifact}from"../../../../🧬️schema/🧬️mutations/🕒touch-artifact/🟦️.ts";

@@ -82,7 +82,7 @@ function foldHistory(edits: readonly Edit[], transitions: readonly TransitionSte
 export async function registerTests(vitest: NonNullable<ImportMeta["vitest"]>, source: TestSource): Promise<void> {
   const { describe, expect, it } = vitest;
   const root = dirname(fileURLToPath(source.url));
-  const fixture = JSON.parse(await readFile(join(root, "🔗️causal/🧫️fixtures/🗄️durable-collaborative-redo-v1/🔣️.json"), "utf8")) as Fixture;
+  const fixture = JSON.parse(await readFile(join(root, "🔗️causal/🧪️tests/🧫️fixtures/🗄️durable-collaborative-redo-v1/🔣️.json"), "utf8")) as Fixture;
 
   describe("durable collaborative redo fixture", () => {
     it("covers the declared durable replay observations", () => {

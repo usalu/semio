@@ -3,7 +3,7 @@ use super::*;
 use pack::value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
 #[test]
 fn neutral_polygon_io_preserves_original_parser_on_short_grants(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let text=serde_json::to_string(&law["source"]).unwrap();let mut cursor=PolygonSourcePreparation::new();
  let empty=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0};
  let work=PolygonSourceGrant{maximum_units:4096,maximum_projection_bytes:4096,retirement:empty};

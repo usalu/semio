@@ -921,7 +921,7 @@ pub fn gis_map_envelope_decode_owner_bundle() -> store::os_store::owned_schema_d
 mod tests;
 
 fn decode_gis_map_snapshot_pack(bytes: &[u8]) -> Result<GisMapSnapshot, ()> {
-    <GisMapSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|_| ())
+    <GisMapSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|_| ())
 }
 
 fn decode_gis_map_mutation_pack(bytes: &[u8]) -> Result<GisMapMutation, ()> {

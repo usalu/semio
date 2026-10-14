@@ -17,7 +17,7 @@ fn walk(node:&dyn CanonicalTree)->serde_json::Value {
         _=>panic!("neural owners project no wide scalar or native text"),
     }
 }
-fn fixture()->serde_json::Value {serde_json::from_str(include_str!("../../🧫️fixtures/🌲️canonical.json")).unwrap()}
+fn fixture()->serde_json::Value {serde_json::from_str(include_str!("../🧫️fixtures/🌲️canonical.json")).unwrap()}
 fn decode<T:FromValue>(value:&serde_json::Value)->T {
     let text=serde_json::to_string(value).unwrap();
     T::from_value(semio_framework_pack_json::from_json_str::<DslValue>(&text,JsonMemberPolicy::Reject).unwrap()).unwrap()

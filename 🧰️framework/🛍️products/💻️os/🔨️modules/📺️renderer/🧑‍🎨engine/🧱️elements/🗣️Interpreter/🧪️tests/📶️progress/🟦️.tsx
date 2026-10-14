@@ -13,7 +13,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   const { cleanup, render, screen } = await import("@semio-tech/ui-react/test");
   const { createElement } = await import("react");
-  const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/📶️progress.json");
+  const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/📶️progress.json");
 
   const SURFACE = "panel:tool-run";
   const TEST_STYLE = { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" };

@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import Ajv from "ajv";
 
 test("production maintenance edit carries explicit schema branch provenance", () => {
-  const fixtures = new URL("../../🧫️fixtures/production-envelope-edit/", import.meta.url);
+  const fixtures = new URL("../🧫️fixtures/production-envelope-edit", import.meta.url);
   const fixture = JSON.parse(readFileSync(new URL("🔣️.json", fixtures), "utf8"));
   const ajv = new Ajv({ strict: true });
   const schema = JSON.parse(readFileSync(new URL("../../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🔣️.json", import.meta.url), "utf8"));

@@ -287,7 +287,7 @@ fn physical_allocation_refusal_preserves_the_page_producer_and_zero_ledger() {
 
 #[test]
 fn language_neutral_retained_law_ledger_is_complete() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔣️.json")).expect("fixture JSON");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔣️.json")).expect("fixture JSON");
     assert_eq!(fixture["admission"]["pageBytes"], RETAINED_PACK_PAGE_BYTES);
     assert!(std::mem::size_of::<RetainedPackPage>() >= fixture["physicalOwnership"]["pageItemMinimumBytes"].as_u64().unwrap() as usize);
     assert_eq!(fixture["physicalOwnership"]["zeroGrant"]["mutates"], false);
@@ -593,7 +593,7 @@ async fn retained_anchors_segments_catalog_and_deflate_are_wire_identical_and_re
 
 #[semio_framework_async_macros::async_test]
 async fn multi_byte_chunk_is_observed_once_at_begin_and_matches_pack_file() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔣️.json")).expect("fixture JSON");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔣️.json")).expect("fixture JSON");
     let chunk: Vec<u8> = fixture["multiByteChunk"]["bytes"].as_array().expect("chunk bytes").iter().map(|value| value.as_u64().expect("byte") as u8).collect();
     assert!(chunk.len() > 1);
     let bytes = canonical_chunk_pack(&chunk).await;

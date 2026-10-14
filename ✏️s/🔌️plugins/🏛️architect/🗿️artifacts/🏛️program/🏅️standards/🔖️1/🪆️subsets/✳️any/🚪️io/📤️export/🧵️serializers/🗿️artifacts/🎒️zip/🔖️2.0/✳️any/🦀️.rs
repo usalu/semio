@@ -19,7 +19,7 @@ pub fn serialize(snapshot: &ProgramSnapshot) -> Result<ZipSnapshot, semio_framew
 }
 
 pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
-    Ok(<ZipSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&serialize(snapshot)?))
+    Ok(<ZipSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&serialize(snapshot)?))
 }
 
 pub fn serialize_raw_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {

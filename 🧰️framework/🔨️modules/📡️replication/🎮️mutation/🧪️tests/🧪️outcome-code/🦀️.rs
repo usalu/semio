@@ -1,7 +1,7 @@
 use super::*;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🧫️outcome-code/🔣️.json")).expect("outcome code fixture parses")
+    serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🧫️outcome-code/🔣️.json")).expect("outcome code fixture parses")
 }
 
 fn level_of(name: &str) -> semio_framework_diagnostic::Severity {
@@ -82,7 +82,7 @@ fn replication_value_refusals_keep_kind_through_owned_paths_and_terminal_message
     #[derive(serde::Deserialize)]
     #[serde(tag = "kind", rename_all = "camelCase")]
     enum OriginOracle { Owner, Contributed { plugin_id: String }, Transaction { initiator: String } }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⚠️value-refusals/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/⚠️value-refusals/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let input = case["input"].clone();
         let oracle_refuses = match case["owner"].as_str().unwrap() {

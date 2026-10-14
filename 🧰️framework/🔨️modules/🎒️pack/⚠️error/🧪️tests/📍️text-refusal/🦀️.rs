@@ -19,7 +19,7 @@ fn kind(text: &str) -> ValueRefusalKind {
 
 #[test]
 fn canonical_pack_text_refusal_retains_kind_span_expected_and_original_cause() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📍️text-refusal/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/📍️text-refusal/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let expected_kind = kind(row["kind"].as_str().unwrap());
         let span = TextSpan {

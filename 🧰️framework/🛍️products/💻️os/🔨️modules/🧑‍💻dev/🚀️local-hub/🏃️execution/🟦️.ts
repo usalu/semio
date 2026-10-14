@@ -1,4 +1,4 @@
-import { terminateOwnedProcessTree } from "../../../../../../🔨️modules/🏃️process/🪓️termination/🟦️.ts";
+import { terminateOwnedProcessTree } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { DEV_LOCAL_HUB_DATA_ENV, DEV_LOCAL_HUB_PROFILE_ENV, DEV_LOCAL_HUB_PROVIDER_ENV, parseDevLocalHubProviderV1, type DevLocalHubProviderV1 } from "../🧬️schema/🟦️.ts";
 
 export const DEV_LOCAL_HUB_READINESS_STALL_BOUND_MS = 300_000;
@@ -554,7 +554,7 @@ export function devServeStatusTextV1(status: DevServeStatusV1, locale: DevHubLoc
 /** 🖥️ Which shell a serve hosts: the React shell (`🧑‍💻dev` `serve <variant> react <profile>`) or the wgpu browser shell
  * (`🧊️wgpu/🌐️server` `serve <variant> <profile> --port <port>`). */
 export type DevServeRendererV1 = "react" | "wgpu";
-export type DevServeProfileV1 = "dev" | "release";
+export type DevServeProfileV1 = "prototype" | "release";
 
 /** 🧾️ What the serve owner asks its world to start (`DevServeSpawnRequestV1`, `🧑‍💻dev/🧬️schema/🔣️.json`): one shell serve on
  * `port`, local-only unless `hubUrl` names the hub it joins, output in `logPath`. */
@@ -691,7 +691,7 @@ export async function ensureDevServe(options: DevServeOptionsV1): Promise<DevSer
   }
   options.signal?.throwIfAborted();
   const logPath = options.logPath ?? join(options.repoRoot, ".🧬semio", "🌐hub", "dev-serves", `serve-${options.port}.log`);
-  const child = world.spawnServe({ port: options.port, variant: options.variant ?? "", compositionConfigPath: options.compositionConfigPath, renderer: options.renderer ?? "react", profile: options.profile ?? "dev", hubUrl: options.hubUrl?.trim().replace(/\/+$/u, "") || null, logPath });
+  const child = world.spawnServe({ port: options.port, variant: options.variant ?? "", compositionConfigPath: options.compositionConfigPath, renderer: options.renderer ?? "react", profile: options.profile ?? "prototype", hubUrl: options.hubUrl?.trim().replace(/\/+$/u, "") || null, logPath });
   report({ kind: "spawning", url, pid: child.pid, logPath });
   let stopped: Promise<void> | null = null;
   const stop = (): Promise<void> =>

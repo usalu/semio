@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🚿️set-component-override/🛑️formula-does-not-parse",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚿️set-component-override/🛑️formula-does-not-parse/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚿️set-component-override/🛑️formula-does-not-parse/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚿️set-component-override/🛑️formula-does-not-parse/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚿️set-component-override/🛑️formula-does-not-parse/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚿️set-component-override/🛑️formula-does-not-parse/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚿️set-component-override/🛑️formula-does-not-parse/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚿️set-component-override/🛑️formula-does-not-parse/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚿️set-component-override/🛑️formula-does-not-parse/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚿️set-component-override/🛑️formula-does-not-parse/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚿️set-component-override/🛑️formula-does-not-parse/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

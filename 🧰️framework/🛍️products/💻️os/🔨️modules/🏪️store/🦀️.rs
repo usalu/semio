@@ -1,9 +1,8 @@
 //! 🗃️ Local-first, non-blocking, client-side, in-memory document store — hot-swappable
 //! backbones (`temp://`/`file://`/`folder://`/`remote://`) layered on `vcs`'s version-graph
-//! algebra. `ArtifactStore`/`Backbone`/`BlobStore`/`Space`/the serialization seam
-//! (`ArtifactDsl`/`ArtifactPack`/`pack_rt`/`ArtifactCodec`) all live here — apps depend on
-//! `store`, never on `vcs`/`pack`/`dsl_core` directly (moved from `vcs/rs/lib.rs` by ticket
-//! `26/07/28/EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY`).
+//! algebra. Store application capabilities and erased registration live in OS IO.
+//! Neutral snapshot representation contracts belong to framework IO, packaged by Pack;
+//! concrete Store snapshot and mutation codecs belong to their physical IO owners.
 //!
 //! Mutation of document state is sealed: public writes go through [`ArtifactStore::dispatch`]
 //! (`Apply`/`IngestRemote`/`PruneDrafts`/…) or [`ArtifactStore::reset`]. Envelope fields stay
@@ -17,6 +16,7 @@
 // R3) or by making a trait method sync (contradicts O1/R1).
 #![allow(async_fn_in_trait)]
 
+use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use genesis_pack_admission::ArtifactGenesisPackCapture;
 #[path="🚪️io/💾️binary/🌱️genesis/🦀️.rs"]
 mod genesis_pack_admission;
@@ -26,6 +26,7 @@ use crate::os_vcs::io::binary::genesis::{AdmittedArtifactGenesis, ArtifactGenesi
 mod retirement_integration;
 pub use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 pub use semio_framework_value::retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+pub use protocol::codec::HistoryReadLimits;
 
 #[path = "📦️codec/🎮️operation/🦀️.rs"]
 mod retained_codec_catalog;
@@ -98,7 +99,7 @@ pub use one_item_owners::OneItemOwners;
 mod paged_one_item;
 pub use paged_one_item::{mutation_apply_preparation_factory, paged_one_item_factory_birth_bytes, MutationApplyEdit, PagedOneItemEdit, PagedOneItemEditStep, PagedOneItemPreparationFactory};
 
-// The `crate::os_dsl::DslArtifact`/`crate::os_dsl::DslOps` derive macros emit `::crate::os_store::serialization::ArtifactDsl`/`::crate::os_store::OpText`
+// The `crate::os_dsl::DslArtifact`/`crate::os_dsl::DslOps` derive macros emit `::pack::snapshot::ArtifactDsl`/`::crate::os_store::OpText`
 // paths (see `dsl/derive/rs/lib.rs`), which only resolve for crates that depend on `store` as an
 // external crate — every real consumer, INCLUDING this crate's own `.ops` header grammar
 // (`OpsHeaderLine` in `🔖️TextFormat` below, derived on the engine directly) as well as its in-crate
@@ -183,7 +184,7 @@ where
 
 impl<P, Mutation> ArtifactStoreCloseView<'_, P, Mutation>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     /// 🎟️ Quotes the original transport retirement frame without detaching a queue or channel.
@@ -243,7 +244,7 @@ impl<P, Mutation> ArtifactStoreCursorDisposer<P, Mutation> {
 
 impl<P, Mutation> ArtifactStoreOwnedDisposer<P, Mutation> for ArtifactStoreCursorDisposer<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn close_step(&mut self, view: &mut ArtifactStoreCloseView<'_, P, Mutation>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
@@ -662,7 +663,7 @@ impl<D: MemberDirectory, B: BlobStore> LinkResolver for MemberLinkResolver<D, B>
 /// program drops): the registry's kind-keying now lives in the generated enum's own `match kind`.
 pub async fn create_member_store<P, Mutation>(schema: &str, id: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, initial_pack: &[u8], actor: ActorId) -> Result<ArtifactStore<P, Mutation>, VcsError>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<Mutation> + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + MemberStoreOwner<Mutation> + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     if initial_pack.is_empty() {
@@ -685,7 +686,7 @@ where
 /// without consulting the parent.
 pub async fn open_member_store<P, Mutation>(schema: &str, expected: &semio_framework_artifact_reference::ArtifactRef, owner: Option<&OwnerRef>, envelope_pack: &[u8], actor: ActorId) -> Result<ArtifactStore<P, Mutation>, VcsError>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<Mutation> + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + MemberStoreOwner<Mutation> + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     let (pack, spr) = decode_document_pack_bytes(envelope_pack).await?;
@@ -700,7 +701,7 @@ where
 /// 🔐️ Installs a completed catalog and retires it exactly when the store refuses its transfer.
 pub fn install_unscheduled_catalog<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, owners: Result<DocumentStoreOwners<P, Mutation>, ValueError>) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     let owners = owners.map_err(|error| VcsError::ValidationFailed(error.into_message()))?;
@@ -710,7 +711,7 @@ where
 /// 🔐️ Installs a self-funded member catalog and leaves the store retaining every original owner on refusal.
 pub fn install_funded_member_store_owners<P, Mutation>(store: &mut ArtifactStore<P, Mutation>) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<Mutation> + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + MemberStoreOwner<Mutation> + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     install_unscheduled_catalog(store, funded_member_store_owners::<P, Mutation>())
@@ -2115,7 +2116,7 @@ impl<S: Clone, Mutation: self::Mutation<S>> InteractionStore<S, Mutation> {
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod serialization;
-use serialization::{ArtifactCodec, ArtifactDsl, ArtifactNativeSnapshotIdentity, ArtifactPack, ArtifactPackFiles, ArtifactSqliteSnapshot, ArtifactSqliteSnapshotCodec, decode_document_pack_bytes, encode_document_pack_bytes, text_error_to_pack_error};
+use serialization::{ArtifactCodec, ArtifactNativeSnapshotIdentity, ArtifactPackFiles, ArtifactSqliteSnapshotHost, ArtifactSqliteSnapshotCodec, decode_document_pack_bytes, encode_document_pack_bytes, text_error_to_pack_error};
 #[cfg(not(target_arch = "wasm32"))]
 use serialization::{ArtifactCodecApplyFuture};
 #[cfg(target_arch = "wasm32")]
@@ -2172,26 +2173,9 @@ mod schema_diagnostic;
 //#endregion 🧬️OwnedSchemaDecode
 
 pub use semio_framework_dsl_record::{RecordSpecProducer,BorrowedRecordSpecProducer};
+pub use pack::snapshot::{ArtifactDsl,ArtifactPack};
+pub use serialization::ArtifactStoreSnapshot;
 
-/// 🧩️ Compose-only pack bridge (external technology).
-impl ArtifactPack for serde_json::Value {
-    fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        Ok(pack_rt::encode_json_value(self))
-    }
-    fn decode_pack_with(bytes: &[u8], _options: &PackDecodeOptions) -> Result<Self, PackError> {
-        pack_rt::decode_json_value(bytes)
-    }
-}
-
-/// 🌱️ Pack counterpart of the schema-less `DslValue` escape hatch: delegates to `pack_rt`'s value bridge.
-impl ArtifactPack for DslValue {
-    fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        Ok(pack_rt::encode_pack_value(self))
-    }
-    fn decode_pack_with(bytes: &[u8], _options: &PackDecodeOptions) -> Result<Self, PackError> {
-        pack_rt::decode_pack_value(bytes)
-    }
-}
 //#endregion 🔖️Pack
 //#region 🔖️OpRt
 //#endregion 🔖️OpRt
@@ -2212,7 +2196,8 @@ use document_store_owners::{BoundedArtifactRetirementFactory};
 #[path = "📦️codec/📸️native-snapshot/🦀️.rs"]
 mod native_snapshot;
 pub use crate::io::control::{NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner,NativeSnapshotBodyWallet};
-pub use native_snapshot::{ArtifactNativeSnapshot,ArtifactPackReceiving,NativeSnapshotEncoding,NativeSnapshotInput,decode_native_snapshot_record,encode_native_snapshot_record};
+pub use native_snapshot::{ArtifactPackReceiving,decode_native_snapshot_record,encode_native_snapshot_record};
+pub use pack::snapshot::{ArtifactNativeSnapshot,NativeSnapshotEncoding,NativeSnapshotInput};
 
 #[path = "📦️codec/🪶️snapshot-capability/🪶️native-retirement/🦀️.rs"]
 mod sqlite_snapshot_retirement;
@@ -2238,7 +2223,7 @@ mod bounded_value_retirement_tests;
 /// [`bare_artifact_codec`]. One call per document kind registers it (`register_document_codec_for_app`).
 pub fn artifact_codec<P, Mutation>(schema: impl Into<String>) -> ArtifactCodec
 where
-    P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
+    P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ArtifactSqliteSnapshotHost + semio_framework_value::retirement::RetireOwned + Sync,
     Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
 {
     let mut codec = bare_artifact_codec::<P, Mutation>(schema);
@@ -2255,7 +2240,7 @@ where
 /// `Option::map`'s closure is sync (R10 shape 1).
 pub fn bare_artifact_codec<P, Mutation>(schema: impl Into<String>) -> ArtifactCodec
 where
-    P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+    P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
     Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
 {
     /// 🕰️`'static`, not `'a`. These items are coerced to `for<'a> fn(..) -> ..` pointers, so a
@@ -2265,7 +2250,7 @@ where
     /// saying it here costs nothing and lets the coercion succeed.
     fn compile_dsl_impl<'a, P, Mutation>(dsl: &'a str, ops: &'a str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(ArtifactPackFiles, String), VcsError>> + Send + 'a>>
     where
-        P: Clone + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
+        P: Clone + ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
         Mutation: OpText + OpBinary + self::Mutation<P> + Send + Sync + 'static,
     {
         Box::pin(async move {
@@ -2285,7 +2270,7 @@ where
     /// saying it here costs nothing and lets the coercion succeed.
     fn print_mirror_impl<'a, P, Mutation>(pack: &'a [u8], spr: &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<ArtifactTextFiles, VcsError>> + Send + 'a>>
     where
-        P: Clone + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
+        P: Clone + ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
         Mutation: OpText + OpBinary + self::Mutation<P> + Send + Sync + 'static,
     {
         Box::pin(async move {
@@ -2317,7 +2302,7 @@ where
     /// store, THEN propagate — the guest twin does the same (ticket 26/09/18 TC3e/TC5).
     fn apply_ops_binary_impl<'a, 'b, P, Mutation>(pack: &'a [u8], spr: &'a [u8], ops_vec: &'a [u8], identity: &'a mut EntityIdentityAuthority<'b>) -> ArtifactCodecApplyFuture<'a>
     where
-        P: Clone + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+        P: Clone + ToValue + FromValue + ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
         Mutation: ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
         {
         Box::pin(async move {
@@ -2374,7 +2359,7 @@ where
 
     fn replay_envelopes_impl<'a, P, Mutation>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]) -> ArtifactCodecApplyFuture<'a>
     where
-        P: Clone + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+        P: Clone + ToValue + FromValue + ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
         Mutation: Clone + ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
         {
         Box::pin(async move {
@@ -2420,7 +2405,7 @@ pub const ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS: usize = 1 << 20;
 /// [`ArtifactCodec::apply_ops_binary`] and [`replay_envelopes_onto_pair`].
 fn close_codec_reduction_store<P, Mutation>(mut store: ArtifactStore<P, Mutation>) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     let mut closed = Err(VcsError::ValidationFailed("artifact codec store did not reach terminal emptiness within its bounded close budget".into()));
@@ -2479,7 +2464,7 @@ where
 /// See `🌎️hub/🗿️artifact-authority/📌️check-in` and `db::artifact_ledger_tail`.
 pub async fn replay_envelopes_onto_pair<P, Mutation>(pack: &[u8], spr: &[u8], envelopes: &[u8], owners: impl FnOnce() -> Result<DocumentStoreOwners<P, Mutation>, ValueError>) -> Result<ArtifactPackFiles, VcsError>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     if pack.is_empty() || spr.is_empty() {
@@ -2939,7 +2924,7 @@ macro_rules! sparse_whole_diff {
 /// There is deliberately no whole-record variant: a caller holding a whole next record dispatches `$set::setting(&base, &next)`, one set
 /// mutation per changed field. (The one exception is an ephemeral transient root, whose transfer moves a whole root — see
 /// `transient_root!` in the plugin crate.) The enum owns its leaf descriptors (`owner/kind`), its `{"kind": …, "value": …}` wire shape
-/// and its JSON op text and binary, so the invoking crate writes none of it.
+/// and semantic value lowering. Representation owners explicitly declare their text and binary codecs.
 #[macro_export]
 macro_rules! field_set_mutations {
     (
@@ -2952,11 +2937,9 @@ macro_rules! field_set_mutations {
         fields: { $($field:ident : $ty:ty => $variant:ident $kind:literal),+ $(,)? } $(,)?
     ) => {
         #[doc = concat!("🎚️ The set mutations of [`", stringify!($record), "`].")]
-        #[derive(Clone, Debug, PartialEq, $crate::__value::RetainedClone, $crate::__value::CanonicalJsonTree)]
-        #[canonical_json(owner = $crate::__pack_json)]
-        #[value(tag = "kind", content = "value")]
+        #[derive(Clone, Debug, PartialEq, $crate::__value::RetainedClone)]
         pub enum $set {
-            $(#[value(rename = $kind)] $variant($ty)),+
+            $($variant($ty)),+
         }
 
         impl $crate::snapshot_clone_preparation::ConfigApplyMutation<$record> for $set {
@@ -3066,26 +3049,6 @@ macro_rules! field_set_mutations {
             }
         }
 
-        impl $crate::OpText for $set {
-            fn parse_op(line: &str) -> Result<Self, $crate::__diagnostic::TextError> {
-                $crate::__pack_json::from_json_str(line, $crate::__pack_json::JsonMemberPolicy::Reject).map_err(|error| $crate::__diagnostic::TextError::from_value_error(error, $crate::__diagnostic::TextSpan::at(1, 1)))
-            }
-
-            fn print_op(&self) -> String {
-                $crate::__pack_json::to_json_string(self)
-            }
-        }
-
-        impl $crate::OpBinary for $set {
-            fn encode_op(&self) -> Result<Vec<u8>, $crate::ProtocolError> {
-                Ok($crate::__pack_json::to_json_string(self).into_bytes())
-            }
-
-            fn decode_op(bytes: &[u8]) -> Result<Self, $crate::ProtocolError> {
-                let text = std::str::from_utf8(bytes).map_err(|error| $crate::ProtocolError::from($crate::PackError::from($crate::__value::ValueError::from(error))))?;
-                $crate::__pack_json::from_json_str(text, $crate::__pack_json::JsonMemberPolicy::Reject).map_err(|error| $crate::ProtocolError::from($crate::PackError::from(error)))
-            }
-        }
     };
 }
 
@@ -3357,7 +3320,7 @@ const MIRROR_ORACLE_STRIDE: usize = 32;
 
 /// 🌱️ The identity digest of a document's genesis every load path names its content revision from — a whole load, a retained
 /// initializer of any app — so one history reloaded either way names one revision (design §3.7).
-pub fn artifact_initial_digest<P: ArtifactPack>(initial: &P) -> [u8; 32] {
+pub fn artifact_initial_digest<P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>(initial: &P) -> [u8; 32] {
     artifact_initial_digest_of_pack(&initial.encode_pack())
 }
 
@@ -4206,7 +4169,7 @@ async fn checkpoint_identity(checkpoint: &Checkpoint, changes: &ArtifactHistoryL
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn preflight_runtime_seed(identities: &[MutationId]) -> Result<(), VcsError> {
@@ -10296,7 +10259,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: Clone + PartialEq + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + PartialEq + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     /// 🟰️ Lets every Report replay of this store stop where its state meets the live projection's state after the same
@@ -10585,7 +10548,7 @@ use replay::{FoldProjection, IndexedAppliedReplayEdits, PREFIX_SNAPSHOT_RING_CAP
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     /// 🫸️ [`Self::merge_persisted_history`] over the pair's undecoded `.spr` bytes.
@@ -10919,7 +10882,7 @@ pub trait SpaceMember {
 
 impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn local_actor_id(&self) -> &ActorId {
@@ -11415,7 +11378,7 @@ pub trait MemberStoreVisitor {
     type Output;
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mu: Clone + ToValue + FromValue + Mutation<P> + crate::os_spr::SemanticMutation<P> + OpBinary + OpText + Send + 'static;
 }
 
@@ -11424,7 +11387,7 @@ pub trait MemberStoreVisitorMut {
     type Output;
     async fn visit_mut<P, Mu>(self, store: &mut ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mu: Clone + ToValue + FromValue + Mutation<P> + crate::os_spr::SemanticMutation<P> + OpBinary + OpText + Send + 'static;
 }
 
@@ -11688,6 +11651,8 @@ impl MemberVisit for NoMembers {
 /// silent bug. Usage:
 /// ```ignore
 /// space_members! {
+///     history_limits: HistoryReadLimits { file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64 },
+///     maximum_history_allocation_bytes:8388608,
 ///     pub enum NoteMembers, NoteMembersOpen {
 ///         Text("s.note.text", "1", "*", "note.text/v1") => (TextSnapshot, TextMutation),
 ///         Sketch("s.note.sketch", "1", "*", "note.sketch/v1") => (SketchSnapshot, SketchMutation),
@@ -11698,7 +11663,7 @@ impl MemberVisit for NoMembers {
 /// method), and `impl MemberFactory for NoteMembers` with an exact coordinate per typed store.
 #[macro_export]
 macro_rules! space_members {
-    (pub enum $enum_name:ident, $open_name:ident { $($variant:ident($kind:literal, $standard:literal, $subset:literal, $schema:literal) => ($snapshot:ty, $mutation:ty)),+ $(,)? }) => {
+    (history_limits:$history_limits:expr,maximum_history_allocation_bytes:$history_allocation_bytes:expr,pub enum $enum_name:ident, $open_name:ident { $($variant:ident($kind:literal, $standard:literal, $subset:literal, $schema:literal) => ($snapshot:ty, $mutation:ty)),+ $(,)? }) => {
         pub enum $enum_name {
             $($variant(Box<$crate::os_store::ArtifactStore<$snapshot, $mutation>>)),+
         }
@@ -11720,8 +11685,8 @@ macro_rules! space_members {
                 }
             }
 
-            fn close_step(&mut self, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::close_step(open.as_mut(), grant)),+ }
+            fn close_step(&mut self, cx: &mut ::semio_framework_job::StepContext<'_>) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_job::OriginalTurnFailure> {
+                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::close_step(open.as_mut(), cx)),+ }
             }
             fn next_copy_byte_demand(&self) -> Result<usize, ::semio_framework_value::ValueError> {
                 match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::next_copy_byte_demand(open.as_ref())),+ }
@@ -11923,7 +11888,7 @@ macro_rules! space_members {
 
         impl $crate::os_store::MemberFactory for $enum_name {
             const OPEN_DECLARATIONS: &'static [$crate::os_store::MemberOpenDeclaration] = &[
-                $($crate::os_store::MemberOpenDeclaration { kind: $kind, standard: $standard, subset: $subset, schema: $schema }),+
+                $($crate::os_store::MemberOpenDeclaration { kind: $kind, standard: $standard, subset: $subset, schema: $schema,history_limits:$history_limits,maximum_history_allocation_bytes:$history_allocation_bytes }),+
             ];
 
             type Open = $open_name;
@@ -11997,43 +11962,6 @@ pub mod space_history;
 mod space_history_mutations;
 pub use space_history_mutations::{CommitSpaceCheckpoint, CreateSpaceAlternative, RemoveSpaceAlternative, RemoveSpaceCheckpoint, SetActiveSpaceAlternative, SpaceHistoryMutation, SwitchSpaceAlternative};
 
-// 🎯️ B2: `ArtifactStore`'s shared impl block now requires `P: ArtifactPack` + `Mutation: OpText
-// + OpBinary` for every instantiation (the pack+spr binary snapshot pipeline, needed by
-// `SpaceHost::attach_backbone`'s real backbone-attach path — this dogfooded meta-document DOES
-// cross a real wire once a backbone is attached, see `studio_vcs_host_meta_document_is_backbone_
-// attachable_and_detachable`). `SpaceCheckpoint`/`SpaceAlternative` embed foreign types
-// (`crate::os_vcs::Author`, `crate::os_spr::HybridLogicalTimestamp`) that cannot derive `crate::os_dsl::DslRecord`
-// (orphan rule; `dsl`'s own dependency graph would cycle back through `protocol`), so a full
-// `#[derive(DslArtifact)]`/`#[derive(DslOps)]` grammar is out of reach here without a larger
-// dedicated field-mirroring effort (tracked as a B9 follow-up, same as the `serde_json::Value`-
-// projected apps' analogous DSL-quality gap — see `impl ArtifactPack for serde_json::Value`
-// above). BINARY face: real pack `Shape::Value` TLV bytes via `pack_rt::encode_json_value`
-// (compliant structured binary per this wave's scope ruling — NOT raw JSON text bytes, unlike
-// the deleted `serde_json::to_vec` hatch this replaces). TEXT face: JSON text, the same
-// documented, scoped exception the `Value`-projected apps already have.
-// 🎯️ `renormalize_whole_number_floats` moved into `pack_rt` (this file's :209) — general
-// property of `pack_rt::decode_json_value`'s output, not specific to this type; `semio_compose_rs`'s
-// `ComposeWireMutation` needs the exact same fix and calls the same `pack_rt::` function.
-use pack_rt::renormalize_whole_number_floats;
-
-impl OpText for SpaceHistoryMutation {
-    fn print_op(&self) -> String {
-        semio_framework_pack_json::to_json_string(self)
-    }
-    fn parse_op(line: &str) -> Result<Self, TextError> {
-        semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| TextError::new(error.kind, error.message, TextSpan::at(1, 1)))
-    }
-}
-impl OpBinary for SpaceHistoryMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
-        let value = ToValue::to_value(self);
-        Ok(pack_rt::encode_pack_value(&value))
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
-        let value = pack_rt::decode_pack_value(bytes).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error.to_string() })?;
-        FromValue::from_value(renormalize_whole_number_floats(value)).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error.to_string() })
-    }
-}
 //#endregion SpaceHistoryDocument
 
 //#region SpaceHost
@@ -12394,7 +12322,7 @@ pub mod test_support {
     /// 🧪️ Dispatches one command under a fixture caller-owned identity authority and returns its original cumulative receipt to the caller.
     pub async fn dispatch_test_command<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, command: ArtifactCommand<Mutation>) -> Result<CommandReceipt, VcsError>
     where
-        P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
         Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         const CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
@@ -12412,7 +12340,7 @@ pub mod test_support {
     /// post-apply snapshot, and replay-materialization agrees with the live store snapshot.
     pub async fn assert_store_roundtrip<P, Mutation>(initial: P, operation: Mutation)
     where
-        P: Clone + ToValue + FromValue + ArtifactPack + PartialEq + std::fmt::Debug + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + Send + Sync + 'static,
         Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + ArtifactCanonicalJsonTree + 'static,
     {
         let envelope = create_document_envelope("test/v1", "test", initial.clone(), None);
@@ -12675,7 +12603,7 @@ pub mod test_support {
     /// on any technology once it implements `ArtifactDsl` + `OpText`.
     pub async fn assert_document_text_round_trip<P, Mutation>(store: &ArtifactStore<P, Mutation>)
     where
-        P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + ToValue + FromValue + Send + Sync + 'static,
+        P: Clone + ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + ToValue + FromValue + Send + Sync + 'static,
         Mutation: Clone + OpText + self::Mutation<P> + PartialEq + ToValue + FromValue + OpBinary + Send + 'static,
     {
         let live = store.snapshot().expect("store snapshot");
@@ -12714,7 +12642,7 @@ pub mod test_support {
     /// disposer — so a test store records history and closes exactly like a production member.
     pub fn plain_document_store_owners<P, Mutation>() -> DocumentStoreOwners<P, Mutation>
     where
-        P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
         Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + ArtifactCanonicalJsonTree + 'static,
     {
         let preparation = RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<PlainAuthoringFactory<P, Mutation>>(), depth: 1 };
@@ -12773,7 +12701,7 @@ pub mod test_support {
     /// 🧪️ A store over `envelope` carrying [`plain_document_store_owners`].
     pub async fn plain_test_store<P, Mutation>(envelope: ArtifactEnvelope<P, Mutation>) -> ArtifactStore<P, Mutation>
     where
-        P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
         Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + ArtifactCanonicalJsonTree + 'static,
     {
         let mut store = ArtifactStore::new(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("test fixture history is valid");
@@ -12785,7 +12713,7 @@ pub mod test_support {
     /// witness its `Drop` requires.
     pub fn close_plain_test_store<P, Mutation>(store: &mut ArtifactStore<P, Mutation>)
     where
-        P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
         Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         drop(store.detach_backbone().expect("a closing test store releases its backbone"));
@@ -12852,7 +12780,7 @@ pub mod test_support {
     /// diverge on the same store.
     pub async fn assert_document_pack_round_trip<P, Mutation>(store: &ArtifactStore<P, Mutation>)
     where
-        P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + ToValue + FromValue + Send + Sync + 'static,
+        P: Clone + ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + ToValue + FromValue + Send + Sync + 'static,
         Mutation: Clone + OpText + OpBinary + self::Mutation<P> + PartialEq + ToValue + FromValue + Send + 'static,
     {
         let live = store.snapshot().expect("store snapshot");
@@ -12932,7 +12860,7 @@ pub mod test_support {
     /// the replay ground truth.
     pub async fn assert_live_equals_replay<P, Mutation>(store: &ArtifactStore<P, Mutation>)
     where
-        P: Clone + ArtifactPack + PartialEq + std::fmt::Debug + ToValue + FromValue + Send + Sync + 'static,
+        P: Clone + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + ToValue + FromValue + Send + Sync + 'static,
         Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         let live = store.snapshot().expect("store snapshot");
@@ -12958,7 +12886,7 @@ pub mod test_support {
 
     /// 🪆 Subset-facing surface the integrated harness needs. Implement on a thin adapter per subset.
     pub trait SubsetRoundtripSpec {
-        type Snapshot: Clone + PartialEq + std::fmt::Debug + ArtifactDsl + ArtifactPack + ToValue + FromValue;
+        type Snapshot: Clone + PartialEq + std::fmt::Debug + ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ToValue + FromValue;
         type Mutation: Clone + PartialEq + std::fmt::Debug + ToValue + FromValue + Mutation<Self::Snapshot> + OpText + OpBinary + Send + Sync + ArtifactCanonicalJsonTree + 'static;
         type Inference: Clone + PartialEq + std::fmt::Debug + Default;
         async fn dialect() -> semio_framework_artifact_reference::ArtifactDialect;
@@ -13080,27 +13008,6 @@ pub mod test_support {
 //#endregion 🧪️Tests
 
 //#region 🔖️InteractionStatePack
-/// 📦️ `ArtifactPack` for `InteractionState` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM
-/// W3b: lets `semio-framework-plugin`'s `VcsArtifactApp` own a real `store::ConfigStore<InteractionState,
-/// _>` (persisting selection + active mode/granularity per app instance through the `HistoryLane::Interaction`
-/// mechanism above) exactly like any other `ArtifactStore<P, _>`. `InteractionState` has no `RecordSpec`/
-/// `dsl_derive` record lowering of its own (a small, framework-internal `BTreeMap`-keyed value, not an app
-/// document), so this bridges through `InteractionState`'s first-party value traits and the schema-less
-/// `ArtifactPack for DslValue` codec rather than serde or a hand-rolled binary format. MUST live here, not
-/// in `semio-framework-plugin`: the orphan rule requires an impl of a foreign
-/// trait for a foreign type to sit in the crate owning one of the two, and both `ArtifactPack` (`os_store`)
-/// and `InteractionState` (this region) are this crate's own — `semio-framework-plugin` only sees both
-/// through its `store`/`protocol` aliases.
-impl ArtifactPack for protocol::InteractionState {
-    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        let value = <Self as ToValue>::to_value(self);
-        <DslValue as ArtifactPack>::encode_pack_with(&value, options)
-    }
-    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let value = <DslValue as ArtifactPack>::decode_pack_with(bytes, options)?;
-        <Self as FromValue>::from_value(value).map_err(PackError::from)
-    }
-}
 //#endregion 🔖️TestSupport
 
 //#region 🧪️Tests

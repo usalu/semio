@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { lstatSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
-import contract from "../../../🧫️fixtures/🧫️private-reader/🔣️.json";
+import contract from "../../🧫️fixtures/🧫️private-reader/🔣️.json";
 import { inspectRustCompileReferences } from "../../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../../..");

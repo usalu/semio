@@ -12,7 +12,7 @@ import {FontFaceAdmissionJob,type FontOutlineLimits} from "../../🟦️.ts";
 import {builtinFontLocations} from "../../📇️catalog/🟦️.ts";
 import {FontLookupPlanJob} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
-import rows from "../🧫️fixtures/🔣️.json";
+import rows from "./🧫️fixtures/🔣️.json";
 const limits:FontOutlineLimits={maxFontBytes:67108864,maxTables:128,maxGlyphs:262144,maxPoints:1048576,maxContours:65536,maxComponents:262144,maxDepth:32,maxSegments:1048576,maxWork:1e9};
 const features=["ccmp","rlig","liga","clig","calt","kern","mark","mkmk"];
 test("shared clusters and original layout plans match independent OpenType",async()=>{

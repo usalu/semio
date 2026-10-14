@@ -1,7 +1,7 @@
 import{expect,test}from"bun:test";
 import Decimal from"decimal.js";
 import{applyPatch}from"fast-json-patch";
-import fixture from"../🧫️fixtures/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
 test("original invocation context survives retry and genuine pending forwarding",()=>{
  const Exact=Decimal.clone({precision:100});for(const row of fixture.identities)expect(new Exact(row.operationId).toFixed(0)).toBe(row.cancellationId);
  for(const row of fixture.cases){

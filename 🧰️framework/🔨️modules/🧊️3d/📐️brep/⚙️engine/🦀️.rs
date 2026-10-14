@@ -74,6 +74,12 @@ pub enum GeometryKind {
 #[value(transparent)]
 pub struct GeometryHandle(pub String);
 
+impl semio_framework_value::retirement::RetireOwned for GeometryHandle {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.0)}
+    fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.0)}
+    fn controlled_retirement_supported()->bool{true}
+}
+
 impl GeometryHandle {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_str(&self) -> &str {
@@ -1553,6 +1559,19 @@ impl Brep {
             Entity::Vertex(id)=>TessellationJob::for_vertex(&self.body,*id,deflection).map_err(|error|map_err(&error)),
             Entity::Solid(_)|Entity::Face(_)|Entity::Shell(_)|Entity::Wire(_,_)|Entity::Compound(_,_)=>Ok(TessellationJob::new(deflection)),
             other=>Err(BrepError::InvalidInput(format!("cannot tessellate {}",entity_tag(other)))),
+        }
+    }
+    /// 🧊️ Quotes the original borrowed handle index before cold query admission.
+    pub fn tessellation_source_depth_demand(&self,source:&str)->Result<usize,semio_framework_value::ValueError>{self.live.next_contains_depth_demand(source)}
+    /// 🎟️ Admits the original cold query without allocating an owned error or reparsing its source.
+    pub fn admit_tessellation_job(&self,source:&str,deflection:f64)->Result<(TessellationJob,bool),semio_framework_value::ValueError>{
+        use semio_framework_value::{ValueError,ValueRefusalKind};
+        let entity=self.live.get(source).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original tessellation source handle is not live"))?;
+        match entity{
+            Entity::Vertex(id)=>{if self.body.vertices.get(*id).is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original tessellation source vertex is missing"));}TessellationJob::for_vertex(&self.body,*id,deflection).map(|job|(job,false)).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"original tessellation vertex admission failed"))},
+            Entity::Solid(_)|Entity::Shell(_)|Entity::Compound(_,_)=>Ok((TessellationJob::new(deflection),true)),
+            Entity::Face(_)|Entity::Wire(_,_)=>Ok((TessellationJob::new(deflection),false)),
+            _=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original tessellation source kind is unsupported")),
         }
     }
     fn tessellation_input<'a>(&'a self,shape:&GeometryHandle)->Result<semio_framework_3d_brep_queries::tessellation::TessellationInput<'a>,BrepError> {

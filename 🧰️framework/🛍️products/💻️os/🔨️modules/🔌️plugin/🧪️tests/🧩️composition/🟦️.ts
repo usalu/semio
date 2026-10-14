@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { testOwnedChildEmissionRefusalOracle } from "./📨️emission/🟦️.ts";
 import { testDeclaredChildProjectionOracle } from "./🔎️projection/🟦️.ts";
 import { createRequire } from "node:module";
-import vectors from "../../🧫️fixtures/🧩️composition/🔣️.json" with { type: "json" };
-import archiveVectors from "../../../../🧫️fixtures/📡️channel/🗃️document-archive/🔣️.json" with { type: "json" };
+import vectors from "../🧫️fixtures/🧩️composition/🔣️.json" with { type: "json" };
+import archiveVectors from "../../../../🧪️tests/🧫️fixtures/📡️channel/🗃️document-archive/🔣️.json" with { type: "json" };
 
 
 const graphlib = createRequire(import.meta.url)("graphlib");

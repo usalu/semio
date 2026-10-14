@@ -2,6 +2,7 @@
 use super::one_item_publication::ArtifactStoreOneItemPreparedParts;
 
 use super::CursorRevisionAccumulator;
+use pack::snapshot::{ArtifactDsl,ArtifactPack};
 use semio_framework_dsl_record::DslField;
 use semio_framework_value::DslValue;
 use semio_framework_dsl_record::FieldValue;
@@ -9,7 +10,7 @@ use semio_framework_value::FromValue as ValueFromValue;
 use semio_framework_dsl_record::Shape;
 use semio_framework_value::ToValue as ValueToValue;
 use crate::os_spr::{Edit, HybridLogicalTimestamp, Mutation as StoreMutation};
-use crate::os_store::{serialization::ArtifactDsl, serialization::ArtifactPack, ArtifactStore, one_item_publication::ArtifactStoreOneItemLiveAuthority, one_item_publication::ArtifactStoreOneItemPrepared, OwnerRef, PackDecodeOptions, PackEncodeOptions, PackError, PackVerificationLevel, TextError};
+use crate::os_store::{ArtifactStore, one_item_publication::ArtifactStoreOneItemLiveAuthority, one_item_publication::ArtifactStoreOneItemPrepared, OwnerRef, PackDecodeOptions, PackEncodeOptions, PackError, PackVerificationLevel, TextError};
 use crate::os_pack::pack_rt;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::Arc;
@@ -375,11 +376,11 @@ impl DurableOwnedGroupJournalRecordV1 {
     /// exposing immutable edit projections; no publication seal or binding authority escapes.
     pub fn verify_fixed_three_edits<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(&self) -> Result<DurableOwnedGroupVerifiedThreeEditsV1<ParentMutation, DrawingMutation, ValueMutation>, DurableOwnedGroupDecisionError>
     where
-        ParentP: ArtifactPack,
+        ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
         ParentMutation: ValueToValue + ValueFromValue,
-        DrawingP: ArtifactPack,
+        DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
         DrawingMutation: ValueToValue + ValueFromValue,
-        ValueP: ArtifactPack,
+        ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
         ValueMutation: ValueToValue + ValueFromValue,
     {
         let decision = DurableOwnedThreeMemberDecisionV1::decode_canonical_pack(&self.canonical_pack)?;
@@ -405,11 +406,11 @@ impl DurableOwnedGroupJournalRecordV1 {
         value: ArtifactStore<ValueP, ValueMutation>,
     ) -> Result<DurableOwnedMapRecoveryStartV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>, DurableOwnedMapRecoveryRejectedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>
     where
-        ParentP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+        ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
         ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-        DrawingP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+        DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
         DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-        ValueP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+        ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
         ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
     {
         let rejected = |error, parent, drawing, value| DurableOwnedMapRecoveryRejectedV1 { error, parent, drawing, value };
@@ -654,7 +655,7 @@ fn stage_store_member<P, Mutation>(
     grant: super::ArtifactStoreOneItemGrant,
 ) -> Result<(), (DurableOwnedGroupDecisionError, DurableStoreBoundOutcomeV1<P, Mutation>)>
 where
-    P: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     let reject = |reason, outcome| Err((reason, outcome));
@@ -782,7 +783,7 @@ where
 
 /// 🧱️ Transfers already copied catalogs and exact reserved owners without traversing history.
 pub(super) fn stage_prebuilt_batch_root<P, Mu>(store: &mut ArtifactStore<P, Mu>, publication: &mut super::ArtifactStoreBatchPublication<P, Mu>, grant: super::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::RetainedCloneProgress, String>
-where P: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+where P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
       Mu: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     if store.durable_group_root.is_some() || store.envelope.cursor.as_ref().is_none_or(|cursor| cursor.group_visibility().is_some()) { return Err("batch group final root transfer lost its exclusive cursor frontier".into()); }
@@ -828,7 +829,7 @@ fn retain_displaced_owner(store: &mut super::ArtifactStoreDisplacedRetirements, 
 
 pub(super) fn abort_staged_store_member<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), DurableOwnedGroupDecisionError>
 where
-    P: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     let Some(root) = store.durable_group_root.as_ref() else { return Ok(()) };
@@ -864,7 +865,7 @@ where
 /// exactly as the symmetric guards below and in `commit_document_roots_retained` do.
 pub(super) fn adopt_staged_store_member<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), DurableOwnedGroupDecisionError>
 where
-    P: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     let Some(root) = store.durable_group_root.as_ref() else { return Err(DurableOwnedGroupDecisionError::InvalidFrontier) };
@@ -950,7 +951,7 @@ where
 
 fn retire_unstaged_store_member<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, slot: &mut Option<DurableStoreBoundOutcomeV1<P, Mutation>>, grant: super::ArtifactStoreOneItemGrant) -> Result<(), DurableOwnedGroupDecisionError>
 where
-    P: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     if slot.is_none() || !grant.permits_one() || grant.maximum_capacity_bytes < size_of::<StagedRootRetirement<P, Mutation>>() { return Err(DurableOwnedGroupDecisionError::InvalidFrontier); }
@@ -1234,11 +1235,11 @@ pub enum DurableOwnedMapRecoveryAdvanceV1 {
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    DrawingP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    ValueP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     pub fn new(parent: ArtifactStore<ParentP, ParentMutation>, drawing: ArtifactStore<DrawingP, DrawingMutation>, value: ArtifactStore<ValueP, ValueMutation>) -> Self {
@@ -1406,11 +1407,11 @@ fn take_assembly_prepared<P, Mutation>(publication: &mut Option<super::ArtifactS
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStoreMapAssemblyV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ParentMutation: StoreMutation<ParentP> + crate::os_spr::OpBinary + crate::os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    DrawingP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     DrawingMutation: StoreMutation<DrawingP> + crate::os_spr::OpBinary + crate::os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    ValueP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ValueMutation: StoreMutation<ValueP> + crate::os_spr::OpBinary + crate::os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     #[allow(clippy::too_many_arguments)]
@@ -1814,11 +1815,11 @@ impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> 
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    DrawingP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    ValueP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     pub(super) fn phase(&self) -> DurableOwnedThreeStoreCommitPhaseV1 {
@@ -2164,11 +2165,11 @@ impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> 
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapCommitOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    DrawingP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    ValueP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     fn phase(&self) -> Option<DurableOwnedThreeStoreCommitPhaseV1> {
@@ -2235,11 +2236,11 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapCommitHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    DrawingP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    ValueP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     pub fn phase(&self) -> Option<DurableOwnedThreeStoreCommitPhaseV1> {
@@ -2275,11 +2276,11 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapRecoveryOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    DrawingP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    ValueP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     fn phase(&self) -> Option<DurableOwnedThreeStoreCommitPhaseV1> {
@@ -2341,11 +2342,11 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapRecoveryHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    DrawingP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    ValueP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     pub fn phase(&self) -> Option<DurableOwnedThreeStoreCommitPhaseV1> {
@@ -2462,7 +2463,7 @@ impl DurableUnboundOneItemOutcomeV1 {
 impl DurableStorePreparedOutcomeV1 {
     fn from_prepared<P, Mutation>(recovery_schema: &str, prepared: &ArtifactStoreOneItemPrepared<P, Mutation>) -> Result<Self, DurableOwnedGroupDecisionError>
     where
-        P: ArtifactPack,
+        P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
         Mutation: ValueToValue + ValueFromValue,
     {
         let authority = &prepared.authority();
@@ -2510,7 +2511,7 @@ impl DurableStorePreparedOutcomeV1 {
 
     pub(super) fn verify_inverse<P, Mutation>(&self) -> Result<DurableStoreVerifiedOutcomeV1<P, Mutation>, DurableOwnedGroupDecisionError>
     where
-        P: ArtifactPack,
+        P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
         Mutation: ValueToValue + ValueFromValue,
     {
         if self.sha256 != semio_framework_hash::sha256_hex(&self.pack) {
@@ -2561,7 +2562,7 @@ impl DurableStorePreparedOutcomeV1 {
 
 impl<P, Mutation> DurableStorePreparedOwnerV1<P, Mutation>
 where
-    P: ArtifactPack,
+    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
     Mutation: ValueToValue + ValueFromValue,
 {
     /// 🧷️ Seals one Store-prepared owner with its verified unbound outcome under the member's recovery schema.
@@ -2645,7 +2646,7 @@ fn valid_edit_identities<Mutation>(edit: &Edit<Mutation>) -> bool {
 
 fn verify_bound_member_edit<P, Mutation>(member: &DurableOwnedGroupMemberV1, decision_sha256: &str) -> Result<Edit<Mutation>, DurableOwnedGroupDecisionError>
 where
-    P: ArtifactPack,
+    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
     Mutation: ValueToValue + ValueFromValue,
 {
     let outcome = DurableBoundOneItemOutcomeV1::decode_canonical_pack(&member.recovery_pack)?;
@@ -2720,7 +2721,7 @@ where
 
 impl<P, Mutation> DurableStorePreparedOwnerV1<P, Mutation>
 where
-    P: ArtifactPack + Clone + ValueToValue + ValueFromValue,
+    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
     Mutation: StoreMutation<P> + ValueToValue + ValueFromValue,
 {
     fn bind(self, store: &ArtifactStore<P, Mutation>, group_id: &str) -> Result<DurableStoreBoundOutcomeV1<P, Mutation>, DurableOwnedGroupDecisionError> {
@@ -2859,7 +2860,7 @@ impl DurableBoundOneItemOutcomeV1 {
 
 impl<P, Mutation> DurableStoreBoundOutcomeV1<P, Mutation>
 where
-    P: ArtifactPack + Clone + ValueToValue + ValueFromValue,
+    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
     Mutation: StoreMutation<P> + ValueToValue + ValueFromValue,
 {
     fn recover(store: &ArtifactStore<P, Mutation>, member: &DurableOwnedGroupMemberV1, group_id: &str) -> Result<Self, DurableOwnedGroupDecisionError> {
@@ -2948,11 +2949,11 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack,
+    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
     ParentMutation: ValueToValue + ValueFromValue,
-    DrawingP: ArtifactPack,
+    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
     DrawingMutation: ValueToValue + ValueFromValue,
-    ValueP: ArtifactPack,
+    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
     ValueMutation: ValueToValue + ValueFromValue,
 {
     pub(super) fn from_store_prepared(
@@ -2972,7 +2973,7 @@ enum DurableMemberRecoveryFrontier {
 
 fn recovery_frontier<P, Mutation>(store: &ArtifactStore<P, Mutation>, member: &DurableOwnedGroupMemberV1, group_id: &str) -> Result<DurableMemberRecoveryFrontier, DurableOwnedGroupDecisionError>
 where
-    P: ArtifactPack + Clone + ValueToValue + ValueFromValue,
+    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
     Mutation: StoreMutation<P> + ValueToValue + ValueFromValue,
 {
     if (store.generation, store.content_revision) == (member.expected_generation, member.expected_revision) {
@@ -3006,11 +3007,11 @@ impl DurableOwnedThreeMemberDecisionV1 {
         value_store: &ArtifactStore<ValueP, ValueMutation>,
     ) -> Result<DurableOwnedThreeStoreRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>, DurableOwnedGroupDecisionError>
     where
-        ParentP: ArtifactPack + Clone + ValueToValue + ValueFromValue,
+        ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
         ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue,
-        DrawingP: ArtifactPack + Clone + ValueToValue + ValueFromValue,
+        DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
         DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue,
-        ValueP: ArtifactPack + Clone + ValueToValue + ValueFromValue,
+        ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
         ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue,
     {
         self.validate()?;
@@ -3093,11 +3094,11 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + Clone + ValueToValue + ValueFromValue,
+    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
     ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue,
-    DrawingP: ArtifactPack + Clone + ValueToValue + ValueFromValue,
+    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
     DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue,
-    ValueP: ArtifactPack + Clone + ValueToValue + ValueFromValue,
+    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
     ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue,
 {
     pub(super) fn bind_store_owned(
@@ -3181,6 +3182,9 @@ impl ArtifactPack for DurableUnboundOneItemOutcomeV1 {
         Some(Self::__dsl_spec())
     }
 }
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for DurableUnboundOneItemOutcomeV1 {
+
+}
 
 impl ArtifactDsl for DurableBoundOneItemOutcomeV1 {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
@@ -3221,6 +3225,9 @@ impl ArtifactPack for DurableBoundOneItemOutcomeV1 {
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for DurableBoundOneItemOutcomeV1 {
+
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -3502,6 +3509,9 @@ impl ArtifactPack for DurableOwnedThreeMemberDecisionV1 {
         Some(Self::__dsl_spec())
     }
 }
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for DurableOwnedThreeMemberDecisionV1 {
+
+}
 
 /// 🧪️ Builds the independently specified canonical journal record only for downstream
 /// package law suites; production callers must obtain records through Store-owned assembly.
@@ -3555,7 +3565,7 @@ fn durable_group_test_revision(bytes: &[u8]) -> [u8; 32] {
 #[cfg(feature = "durable-group-testing")]
 fn durable_group_test_outcome<P, Mutation>(recovery_schema: &str, ordinal: u64, edit: Edit<Mutation>, post_snapshot: P) -> Result<DurableStorePreparedOutcomeV1, DurableOwnedGroupDecisionError>
 where
-    P: ArtifactPack,
+    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
     Mutation: ValueToValue + ValueFromValue,
 {
     let actor = edit.actor.clone().ok_or(DurableOwnedGroupDecisionError::InvalidIdentity)?;
@@ -3646,11 +3656,11 @@ pub fn durable_owned_group_journal_test_record_from_edits<ParentP, ParentMutatio
     value_post_snapshot: ValueP,
 ) -> Result<DurableOwnedGroupJournalRecordV1, DurableOwnedGroupDecisionError>
 where
-    ParentP: ArtifactPack,
+    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
     ParentMutation: ValueToValue + ValueFromValue,
-    DrawingP: ArtifactPack,
+    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
     DrawingMutation: ValueToValue + ValueFromValue,
-    ValueP: ArtifactPack,
+    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
     ValueMutation: ValueToValue + ValueFromValue,
 {
     let parent_outcome = durable_group_test_outcome(PARENT_RECOVERY_SCHEMA, 1, parent_edit, parent_post_snapshot)?;

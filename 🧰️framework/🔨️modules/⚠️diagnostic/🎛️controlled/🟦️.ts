@@ -1,3 +1,4 @@
+import type {FaultSource} from "../🧾️retained/🟦️.ts";
 import {ValueError} from "../../🌱️value/⚠️refusal/🟦️.ts";
 import type {ValueRefusalCodecControl} from "../../🌱️value/⚠️refusal/🔁️codec/🟦️.ts";
 import type {IntrinsicValue,IntrinsicMember} from "../../🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
@@ -32,3 +33,16 @@ function severity(value:string):Diagnostic["severity"] {if(value!=="info"&&value
 export async function decodeDiagnosticControlled(value:IntrinsicValue,c:ValueRefusalCodecControl):Promise<Diagnostic>{return c.scopedStage(async()=>{const row=await fields(value,["code","severity","span","message","expected","scope"],c);await c.charge(192);const code=await text(row[0],c),level=severity(await text(row[1],c)),source=await span(required(row[2]),c),message=await text(row[3],c),wanted=present(row[4])?await expected(row[4],c):undefined;const result:Diagnostic={code,severity:level,span:source,message,scope:await scope(row[5],c)};if(wanted!==undefined)result.expected=wanted;await c.checkpoint();return result;});}
 /** 🛫️ Emits the canonical optional fields used by the actual Rust owner. */
 export async function encodeDiagnosticControlled(value:Diagnostic,c:ValueRefusalCodecControl):Promise<IntrinsicValue>{const entries:[string,()=>Promise<IntrinsicValue>][]=[["code",()=>encodedText(value.code,c)],["severity",()=>encodedText(severity(value.severity),c)],["span",()=>encodedSpan(value.span,c)],["message",()=>encodedText(value.message,c)]];if(value.expected!==undefined)entries.push(["expected",()=>encodedExpected(value.expected!,c)]);entries.push(["scope",()=>encodedScope(value.scope,c)]);return record(entries,c);}
+
+/** 🛬️ Retains exact original unsigned scalar positions through the caller's existing codec control. */
+export async function decodeFaultSourceControlled(value:IntrinsicValue,c:ValueRefusalCodecControl):Promise<FaultSource>{
+ const row=await fields(value,["offset","byte","depth"],c),result:FaultSource={};await c.charge(40);
+ for(let index=0;index<row.length;index++){const value=row[index];if(value===undefined)continue;if((value.kind!=="unsigned"&&value.kind!=="signed")||value.value<0n||value.value>18446744073709551615n)invalid("expected exact unsigned Fault.source scalar");if(index===1){if(value.value>255n)invalid("Fault.source byte exceeds u8");result.byte=Number(value.value);}else if(index===0)result.offset=value.value;else result.depth=value.value;await c.step();}
+ return result;
+}
+/** 🛫️ Emits only present canonical source fields without converting a u64 through binary64. */
+export async function encodeFaultSourceControlled(value:FaultSource,c:ValueRefusalCodecControl):Promise<IntrinsicValue>{
+ const entries:[string,()=>Promise<IntrinsicValue>][]=[];
+ for(const name of ["offset","byte","depth"]as const){const field=value[name];if(field===undefined)continue;const number=name==="byte"?(typeof field==="number"&&Number.isInteger(field)&&field>=0&&field<=255?BigInt(field):invalid("Fault.source byte exceeds u8")):typeof field==="bigint"?field:invalid("expected exact unsigned Fault.source scalar");if(number<0n||number>18446744073709551615n)invalid("expected exact unsigned Fault.source scalar");entries.push([name,async()=>{await c.charge(64);return{kind:"unsigned",value:number};}]);}
+ return record(entries,c);
+}

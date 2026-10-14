@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn semio_value_binary_paths_match_shared_frames_and_reject_truncated_children(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let original=row["path"].as_array().unwrap().iter().map(|item|match item["kind"].as_str().unwrap(){"key"=>SemioValuePathSegment::Key{key:item["key"].as_str().unwrap().into()},"index"=>SemioValuePathSegment::Index{index:usize::try_from(item["index"].as_u64().unwrap()).unwrap()},_=>panic!("shared path kind")}).collect::<Vec<_>>();
   let expected=row["bytes"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u8).collect::<Vec<_>>();

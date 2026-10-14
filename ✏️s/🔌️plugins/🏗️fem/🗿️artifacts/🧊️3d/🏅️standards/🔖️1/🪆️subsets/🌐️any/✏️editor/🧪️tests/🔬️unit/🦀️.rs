@@ -150,7 +150,7 @@ use super::*;
 //#region 🧪️RetainedCommandEnvelope
 #[test]
 fn fem3d_window_config_retained_command_fixture_matches_exact_routes_and_value_codec_boundaries() {
-    let fixture: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(include_str!("../../🧫️fixtures/🚧️retained-command-limits/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral retained fixture");
+    let fixture: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(include_str!("../🧫️fixtures/🚧️retained-command-limits/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral retained fixture");
     let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"].as_str() == Some("Migrated")).map(|row| row["id"].as_str().expect("route id")).collect();
     assert_eq!(migrated, FEM3D_RETAINED_TOOL_IDS);
     assert_eq!(FEM3D_RETAINED_PUBLICATION_CONTRACTS.len(), migrated.len());

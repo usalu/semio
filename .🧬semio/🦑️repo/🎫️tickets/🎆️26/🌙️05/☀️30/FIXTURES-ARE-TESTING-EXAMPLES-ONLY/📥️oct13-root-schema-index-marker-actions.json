@@ -1,0 +1,17 @@
+{
+  "exclusive": false,
+  "rows": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+      "beforeSha256": "a703b759b0e8761c13fba3dd259abb06f2bee02b921c403c7d370f70c5c739cf",
+      "afterSha256": "20490f95ff9a9d9c0e46bdf06380a6dc55d2cd2d63839243fdec18be2b62218c",
+      "reason": "Exact segment marker, never a multi-segment fixture locator"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🗂️schema-document-index/🟦️.ts",
+      "beforeSha256": "5d33f95a624d08b0cdeedcfa8dd8d999a81c27a9759099e3684d85e00f529abc",
+      "afterSha256": "47d18c140c18608c4565753303773a6fccde2e231ae21341a9406afbc5407b7d",
+      "reason": "Exact segment marker, never a multi-segment fixture locator"
+    }
+  ]
+}

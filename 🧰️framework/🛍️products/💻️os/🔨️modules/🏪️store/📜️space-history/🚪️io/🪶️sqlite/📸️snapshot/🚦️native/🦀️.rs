@@ -314,10 +314,10 @@ fn sqlite_snapshot_framework_space_history_native_temporary_retirement_requests_
             _ => panic!("closed intrinsic fixture kind"),
         }
     }
-    let contract: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧮️ownership/🔣️.json")).unwrap();
+    let contract: serde_json::Value = serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🧮️ownership/🔣️.json")).unwrap();
     let contract = &contract["output"]["retirement"];
     assert_eq!(contract["releasedBytes"], "completeBorrowedCapacityCensus");
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🎞️intrinsic-media/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🎞️intrinsic-media/🔣️.json")).unwrap();
     assert_eq!(corpus["contract"], contract["sourceCorpus"]);
     let long = contract["longBranch"]["unit"].as_str().unwrap().repeat(usize::try_from(contract["longBranch"]["repeat"].as_u64().unwrap()).unwrap());
     assert_eq!(long.len(), usize::try_from(contract["longBranch"]["utf8Bytes"].as_u64().unwrap()).unwrap());
@@ -372,13 +372,13 @@ fn sqlite_snapshot_framework_space_history_native_temporary_retirement_partial_g
             _ => panic!("closed intrinsic fixture kind"),
         }
     }
-    let contract: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧮️ownership/🔣️.json")).unwrap();
+    let contract: serde_json::Value = serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🧮️ownership/🔣️.json")).unwrap();
     let contract = &contract["output"]["retirement"];
     assert_eq!(contract["releasedBytes"], "completeBorrowedCapacityCensus");
     let partial = &contract["partial"];
     assert_eq!(partial["schema"], "history.native.partial-retirement/v1");
     assert_eq!(partial["drop"], "mandatoryCompleteReleaseAfterCancellation");
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🎞️intrinsic-media/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🎞️intrinsic-media/🔣️.json")).unwrap();
     assert_eq!(corpus["contract"], contract["sourceCorpus"]);
     let long = contract["longBranch"]["unit"].as_str().unwrap().repeat(usize::try_from(contract["longBranch"]["repeat"].as_u64().unwrap()).unwrap());
     assert_eq!(long.len(), usize::try_from(contract["longBranch"]["utf8Bytes"].as_u64().unwrap()).unwrap());
@@ -449,7 +449,7 @@ fn sqlite_snapshot_framework_space_history_native_temporary_retirement_partial_g
 
 #[test]
 fn sqlite_snapshot_framework_space_history_native_codec_body_has_explicit_io_owner() {
-    let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🚪️ownership/🔣️.json")).unwrap();
+    let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🚪️ownership/🔣️.json")).unwrap();
     assert!(module_path!().contains(corpus["owner"].as_str().unwrap()));
     assert_eq!(corpus["schemaCodecMounts"],0);
     println!("[DEBUG] Space-history native codec actual owner {}",module_path!());

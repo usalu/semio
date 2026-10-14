@@ -16,7 +16,7 @@ import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮�
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixture = JSON.parse(
-  readFileSync(join(here, "../../🔨️modules/🏪️store/🧫️fixtures/persistence-data-class-v1/🔣️.json"), "utf8"),
+  readFileSync(join(here, "../../🔨️modules/🏪️store/🧪️tests/🧫️fixtures/persistence-data-class-v1/🔣️.json"), "utf8"),
 );
 const schema = JSON.parse(
   readFileSync(join(here, "../../🔨️modules/🏪️store/🔄️sync/🧬️schema/persistence-data-class/🔣️.json"), "utf8"),

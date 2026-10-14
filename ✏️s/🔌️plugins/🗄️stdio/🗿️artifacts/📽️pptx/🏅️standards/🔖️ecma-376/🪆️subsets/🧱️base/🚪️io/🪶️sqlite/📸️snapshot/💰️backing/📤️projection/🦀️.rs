@@ -1,4 +1,5 @@
 //! 📽️ The three canonical PPTX fields compose into one paid relational owner.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_ecma_376::subsets::base::io::sqlite::snapshot::{add, add_bytes, PptxSnapshot, OPC, XML};
 use semio_framework_os_kernel::{
     sqlite_snapshot::{
@@ -6,7 +7,7 @@ use semio_framework_os_kernel::{
         transfer::reserve,
         SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase, ValueError, ValueRefusalKind,
     },
-    os_store::serialization::ArtifactSqliteSnapshot,
+    os_store::serialization::ArtifactSqliteSnapshotHost,
 };
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::{append_xml_document_views,measure_xml_document_views};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::schema::snapshot::ownership::{XmlDocumentView};

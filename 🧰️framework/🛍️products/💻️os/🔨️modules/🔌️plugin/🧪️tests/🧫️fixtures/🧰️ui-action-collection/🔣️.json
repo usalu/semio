@@ -1,0 +1,107 @@
+{
+  "schema": "semio.test.ui-action-collection/v1",
+  "cases": [
+    {
+      "kind": "projection",
+      "document": {
+        "node": {
+          "scope": "owner",
+          "version": 1,
+          "name": "activate"
+        },
+        "ignored": {
+          "name": "absent"
+        },
+        "nested": [
+          {
+            "scope": "owner",
+            "version": 2,
+            "name": "delete"
+          },
+          {
+            "scope": "owner",
+            "version": 1,
+            "name": "activate"
+          }
+        ]
+      },
+      "pointers": [
+        "/node/name",
+        "/nested/0/name",
+        "/nested/1/name"
+      ],
+      "expected": [
+        "activate",
+        "delete"
+      ]
+    },
+    {
+      "kind": "projection",
+      "document": [
+        {
+          "scope": "owner",
+          "version": 1,
+          "name": 4
+        },
+        {
+          "scope": "owner",
+          "name": "incomplete"
+        },
+        null
+      ],
+      "pointers": [],
+      "expected": []
+    },
+    {
+      "kind": "chrome",
+      "document": [
+        {
+          "nested": {
+            "action": "select"
+          }
+        },
+        {
+          "action": "camera"
+        },
+        {
+          "action": "select"
+        },
+        {
+          "action": false
+        }
+      ],
+      "pointers": [
+        "/0/nested/action",
+        "/1/action",
+        "/2/action"
+      ],
+      "expected": [
+        "camera",
+        "select"
+      ]
+    },
+    {
+      "kind": "measures",
+      "document": [
+        {
+          "kind": "select",
+          "id": "choose",
+          "label": null,
+          "value": "",
+          "items": [],
+          "onChange": {
+            "controllerId": "fixture",
+            "action": "choose",
+            "args": null
+          }
+        }
+      ],
+      "pointers": [
+        "/0/onChange/action"
+      ],
+      "expected": [
+        "choose"
+      ]
+    }
+  ]
+}

@@ -8,7 +8,7 @@ import { parseWavDiff } from "../../🔺️diff/🟦️.ts";
 type Equal<Left, Right> = (<Value>() => Value extends Left ? 1 : 2) extends <Value>() => Value extends Right ? 1 : 2 ? true : false;
 
 const facets: readonly [Equal<WavMutation, TextWavMutation>, Equal<WavMutation, BinaryWavMutation>] = [true, true];
-const boundaries = await Bun.file(new URL("../../../🧫️fixtures/🧭️serialization-boundaries/🔣️.json", import.meta.url)).json() as Readonly<{
+const boundaries = await Bun.file(new URL("../../../🧪️tests/🧫️fixtures/🧭️serialization-boundaries/🔣️.json", import.meta.url)).json() as Readonly<{
   maximumFmtExtensionBytes: number;
   overflowFmtExtensionBytes: number;
   validFourcc: string;

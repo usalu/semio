@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "id": "capture-trial",
+      "path": "📥️capture/📥️invocation/🧬️schema/🔣️.json",
+      "present": false
+    },
+    {
+      "id": "loading-trial",
+      "path": "🧭️routing/📥️invocation/📥️loading/🧬️schema/🔣️.json",
+      "present": false
+    },
+    {
+      "id": "progress-trial",
+      "path": "🎛️owned-execution/📣️progress/🧬️schema/🔣️.json",
+      "present": false
+    },
+    {
+      "id": "interruption-trial",
+      "path": "🎛️owned-execution/📣️progress/🛑️interruption/🧬️schema/🔣️.json",
+      "present": false
+    },
+    {
+      "id": "capture-policy",
+      "path": "📥️capture/📋️policy/🧬️schema/🔣️.json",
+      "present": true
+    },
+    {
+      "id": "invocation-policy",
+      "path": "🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+      "present": true
+    },
+    {
+      "id": "process-invocation",
+      "path": "🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json",
+      "present": true
+    }
+  ]
+}

@@ -8,8 +8,7 @@ use crate::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::CameraJson;
 //#region 🔖️UpdateCamera
 /// 🔁 Whole-artifact scope — the fixture has exactly one camera.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct UpdateCamera {
     pub camera: CameraJson,

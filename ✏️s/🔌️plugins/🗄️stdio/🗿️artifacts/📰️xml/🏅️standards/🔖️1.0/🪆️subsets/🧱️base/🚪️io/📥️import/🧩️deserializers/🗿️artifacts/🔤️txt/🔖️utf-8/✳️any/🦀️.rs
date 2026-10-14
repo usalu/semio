@@ -17,6 +17,6 @@ pub fn deserialize(from: &TxtSnapshot) -> Result<XmlSnapshot, semio_framework_di
 /// 📥 Parse DSL/text bytes via txt then xml.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize_text(text: &str) -> Result<XmlSnapshot, semio_framework_diagnostic::TextError> {
-    deserialize(&<TxtSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?)
+    deserialize(&<TxtSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?)
 }
 //#endregion 🔖️Codec

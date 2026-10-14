@@ -44,7 +44,7 @@ interface PlaygroundRow {
  * `postCreateCommand` installs into it. https://containers.dev/implementors/json_reference/#variables-in-devcontainerjson
  * https://code.visualstudio.com/remote/advancedcontainers/improve-performance#_use-a-targeted-named-volume */
 export function testContainerRuntimeBootstrap(workspace: string): void {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🚀️runtime-bootstrap/🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🚀️runtime-bootstrap/🔣️.json"), "utf8"));
   const dockerfile = readFileSync(join(workspace, ".devcontainer/Dockerfile"), "utf8"), configSource = readFileSync(join(workspace, ".devcontainer/devcontainer.json"), "utf8");
   const config = Bun.JSONC.parse(configSource) as DevcontainerConfig;
   assert.deepEqual(Bun.JSONC.parse(configSource), require("jsonc-parser").parse(configSource));

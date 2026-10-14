@@ -1,7 +1,7 @@
 /** 🧫️ HTML native tree corpus with raw text and boolean versus empty attributes. */
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import { parseHtmlSnapshot, type HtmlSnapshot, type HtmlNode } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { HTML_SQLITE_SCHEMA, htmlSnapshotToSqliteDatabase, htmlSnapshotFromSqliteDatabase } from "../🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework";

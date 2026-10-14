@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 
-import fixture from "../../🧫️fixtures/🚚️text-editor-lanes/🔣️.json";
+import fixture from "../🧫️fixtures/🚚️text-editor-lanes/🔣️.json";
 import { TEXT_EDITOR_SCENE_LANES, textEditorSceneFromLanes } from "../../🟦️.ts";
 
 test("text buffer carriers match their language-neutral schema", () => {

@@ -1,0 +1,29 @@
+{
+  "exclusive": false,
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+      "operation": "updated",
+      "beforeSha256": "44dd4ca043cb1b4dd903cc66d1b95e13d001db1dbcfc2a3b31647298374e1bf1",
+      "afterSha256": "5e0a27eb581eb8a353e3d3d2e44a0c3be3a1b411e7d08ef7f16923324314ba85",
+      "edits": [
+        {
+          "from": "{projectRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧫️fixtures/🗿️artifact-source/**/*",
+          "to": "{projectRoot}/🧪️tests/🧫️fixtures/🗿️artifact-source/**/*"
+        },
+        {
+          "from": "{projectRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧫️fixtures/🧾️cargo-provenance/**/*",
+          "to": "{projectRoot}/🧪️tests/🧫️fixtures/🧾️cargo-provenance/**/*"
+        },
+        {
+          "from": "{projectRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧫️fixtures/🧱️command-source/🔣️.json",
+          "to": "{projectRoot}/🧪️tests/🧫️fixtures/🧱️command-source/🔣️.json"
+        },
+        {
+          "from": "{projectRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧫️fixtures/command-boundaries/🧫️cases.json",
+          "to": "{projectRoot}/🧪️tests/🧫️fixtures/command-boundaries/🧫️cases.json"
+        }
+      ]
+    }
+  ]
+}

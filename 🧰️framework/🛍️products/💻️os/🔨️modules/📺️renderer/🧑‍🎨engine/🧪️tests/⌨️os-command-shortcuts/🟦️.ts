@@ -6,10 +6,10 @@ import { fileURLToPath } from "node:url";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test } from "vitest";
 import { buildOsCommands, keyboardEventMatchesChord, controlOwnsKeyboardEvent } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
-import controlCases from "../../🧫️fixtures/⌨️control-key-ownership/🔣️.json";
+import controlCases from "../🧫️fixtures/⌨️control-key-ownership/🔣️.json";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "⌨️os-command-shortcuts", "🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "⌨️os-command-shortcuts", "🔣️.json"), "utf8"));
 
 describe("focused control keyboard ownership", () => {
   test.each(controlCases)("$id", (row) => {

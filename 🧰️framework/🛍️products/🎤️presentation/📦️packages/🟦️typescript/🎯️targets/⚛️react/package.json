@@ -41,7 +41,8 @@
     "remark-rehype": "11.1.2",
     "typescript": "^5.9.3",
     "unified": "11.0.5",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.17",
+    "@semio-tech/process": "workspace:*"
   },
   "nx": {
     "includedScripts": []

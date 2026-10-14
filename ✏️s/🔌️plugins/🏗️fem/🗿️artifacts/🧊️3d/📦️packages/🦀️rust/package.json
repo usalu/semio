@@ -9,5 +9,8 @@
   },
   "scripts": {
     "verify-fem3d-numerical-child-native": "bun nx run @semio-tech/fem-3d-rs:verify-fem3d-numerical-child-native"
+  },
+  "devDependencies": {
+    "@semio-tech/framework": "workspace:*"
   }
 }

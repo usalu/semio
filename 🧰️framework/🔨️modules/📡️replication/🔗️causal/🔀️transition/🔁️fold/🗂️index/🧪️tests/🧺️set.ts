@@ -1,10 +1,7 @@
 /** 🧺️ Native membership custody shares its exact corpus with independent JavaScript Set and JSON. */
 import {strict as assert} from "node:assert";
-import Ajv2020 from "ajv/dist/2020";
 import stableStringify from "fast-json-stable-stringify";
-const fixture=await Bun.file(new URL("../🧫️fixtures/🧺️set.json",import.meta.url)).json();
-const schema=await Bun.file(new URL("../🧬️schema/🧺️set.json",import.meta.url)).json();
-assert.equal(new Ajv2020({strict:true,allErrors:true}).compile(schema)(fixture),true);
+const fixture=await Bun.file(new URL("../🧪️tests/🧫️fixtures/🧺️set.json",import.meta.url)).json();
 const set=new Set<string>(fixture.clearedKeys);
 set.clear();
 assert.equal(set.size,0);

@@ -42,7 +42,7 @@ const SHARD_TURN_GUEST_COST_MS = declared("SHARD_TURN_GUEST_COST_MS");
 const SHARD_TURN_DRIVE_STEP_CEILING = declared("SHARD_TURN_DRIVE_STEP_CEILING");
 
 /** 🧫️ The language-agnostic drive contract the Rust laws read — the one owner of every number below. */
-const CONTRACT = JSON.parse(readFileSync(resolve(HERE, "../../../../🔌️plugin/⚛️reactor/🧫️fixtures/🚚️more-work-drive.json"), "utf8")) as {
+const CONTRACT = JSON.parse(readFileSync(resolve(HERE, "../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🚚️more-work-drive.json"), "utf8")) as {
   readonly reactorExecutorHoldMs: number;
   readonly measuredGuestTurnCostMs: number;
   readonly hostGrantWallMs: number;

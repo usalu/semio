@@ -82,7 +82,7 @@ use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
 use std::collections::HashMap;
 use semio_framework_2d::compute::EngineHandles;
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 //#region 🔖️Constants
 pub(crate) const TRINITY_JACK_PLAY_CONTROLLER_ID: &str = "trinity-jack-play";
@@ -842,6 +842,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
                 semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                     command: *request.command,
                     snapshot: request.snapshot,
+                    snapshot_read: request.snapshot_read,
                     config: request.config,
                     history: request.history,
                     interaction_state: request.interaction_state,
@@ -890,6 +891,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

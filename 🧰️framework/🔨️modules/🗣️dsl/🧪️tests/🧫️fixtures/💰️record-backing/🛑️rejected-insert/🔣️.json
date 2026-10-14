@@ -1,0 +1,31 @@
+{
+  "slots": 1,
+  "existing": {
+    "id": 7,
+    "integer": -2048
+  },
+  "replacement": {
+    "integer": -4096
+  },
+  "rejected": {
+    "id": 8,
+    "depth": 2048,
+    "payloadBytes": 65536,
+    "byte": 120
+  },
+  "stackBytes": 131072,
+  "expected": {
+    "kind": "invariantViolated",
+    "length": 1,
+    "integer": -4096,
+    "reclaimedLeaves": 1,
+    "reclaimedBlocks": 2048
+  },
+  "policies": {
+    "recordBacking": "noGrowthOrReplacement",
+    "ledger": "noCumulativeRefund",
+    "retirementFrontier": "separateObservedRequests",
+    "payload": "ownedBeforeInsert",
+    "cleanup": "iterativeOnNarrowStack"
+  }
+}

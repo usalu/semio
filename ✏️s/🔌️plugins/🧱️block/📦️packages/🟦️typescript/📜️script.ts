@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import {runOwnedCommand} from "../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import {runOwnedCommand} from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 /** 🧱️ Block source, schema, and publication-authority laws. */
 import { resolve } from "node:path";
 
 import { runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 /** 🔤️ The Rust variant name of one kebab lane/disposition from `framework.ui`'s shared vocabulary. */
 const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");
 
@@ -78,7 +78,7 @@ class TestScript extends BundleScript {
     ];
     runCmd(process.execPath, ["test", ...cases.map(path => resolve(this.repoRoot, path))]);
     const plugin = resolve(this.root, "../..");
-    const authority = resolve(plugin, "🧫️fixtures/🧪️publication-authority");
+    const authority = resolve(plugin, "🧪️tests/🧫️fixtures/🧪️publication-authority");
     const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;
     const sources = new Map<string, string>();
     for (const app of fixture.apps) sources.set(app.owner, await Bun.file(resolve(plugin, app.source)).text());

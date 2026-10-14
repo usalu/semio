@@ -32,8 +32,8 @@ type PointBits = { readonly x: string; readonly y: string };
 
 type Matrix = [number, number, number, number, number, number];
 
-const RIG = JSON.parse(readFileSync(new URL("../../../../🧫️fixtures/🦴️rig-solving/🔣️.json", import.meta.url), "utf8")) as RigVectors;
-const GAZE = JSON.parse(readFileSync(new URL("../../../../🧫️fixtures/👀️gaze-tracking/🔣️.json", import.meta.url), "utf8")) as GazeVectors;
+const RIG = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/🦴️rig-solving/🔣️.json", import.meta.url), "utf8")) as RigVectors;
+const GAZE = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/👀️gaze-tracking/🔣️.json", import.meta.url), "utf8")) as GazeVectors;
 const SOURCE = readFileSync(new URL("../../🟦️.ts", import.meta.url), "utf8");
 const REST: BonePose = { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1 };
 const BOUND = 1e-12;

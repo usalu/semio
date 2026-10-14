@@ -14,11 +14,11 @@ use crate::central_apply::apply_fem3d_mutation;
 
 use crate::Fem3dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/⏸️same-name-56ab29/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/⏸️same-name-56ab29/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/⏸️same-name-56ab29/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/⏸️same-name-56ab29/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/⏸️same-name-56ab29/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/⏸️same-name-56ab29/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/⏸️same-name-56ab29/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/⏸️same-name-56ab29/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/⏸️same-name-56ab29/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/⏸️same-name-56ab29/🎯️outcome/🔣️.json");
 
 fn before() -> Fem3dSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

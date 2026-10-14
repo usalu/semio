@@ -1,0 +1,100 @@
+{
+  "cases": [
+    {
+      "scope": "owner/🧬️schema/🧬️mutations/🪄️change/🧪️tests/🔬️case",
+      "holds": [],
+      "expected": "owner"
+    },
+    {
+      "scope": "owner/🧪️tests/🧫️fixtures/🧬️mutations/🪄️change/🔬️case",
+      "holds": [],
+      "expected": "owner"
+    },
+    {
+      "scope": "owner/🧪️tests/🧫️fixtures",
+      "holds": [
+        "owner/🧪️tests/🧫️fixtures"
+      ],
+      "expected": "owner"
+    },
+    {
+      "scope": "owner/🧬️schema",
+      "holds": [
+        "owner/🧬️schema"
+      ],
+      "expected": "owner"
+    },
+    {
+      "scope": "owner/🧪️tests/🧫️fixtures",
+      "holds": [],
+      "expected": "owner/🧪️tests/🧫️fixtures"
+    },
+    {
+      "scope": "owner/🧪️tests/🔬️case",
+      "holds": [],
+      "expected": "owner/🧪️tests/🔬️case"
+    },
+    {
+      "scope": "owner/🔨️modules/🧫️fixtures/🧬️mutations/leaf",
+      "holds": [],
+      "expected": "owner/🔨️modules/🧫️fixtures/🧬️mutations/leaf"
+    },
+    {
+      "scope": "owner/🔨️modules/🧪️tests/🧫️fixtures/🧬️mutations/leaf",
+      "holds": [],
+      "expected": "owner/🔨️modules/🧪️tests/🧫️fixtures/🧬️mutations/leaf"
+    },
+    {
+      "scope": "owner/🔨️modules/🧬️schema/🧬️mutations/leaf",
+      "holds": [],
+      "expected": "owner/🔨️modules/🧬️schema/🧬️mutations/leaf"
+    },
+    {
+      "scope": "owner/🔨️modules/🧫️fixtures/🧪️tests/🧫️fixtures/🧬️mutations/leaf",
+      "holds": [],
+      "expected": "owner/🔨️modules/🧫️fixtures"
+    },
+    {
+      "scope": "owner/⚙️modules/🧪️tests/🧫️fixtures/🧬️mutations/leaf",
+      "holds": [],
+      "expected": "owner/⚙️modules/🧪️tests/🧫️fixtures/🧬️mutations/leaf",
+      "moduleDir": "⚙️modules"
+    },
+    {
+      "scope": "owner/⚙️modules/🧫️fixtures/🧪️tests/🧫️fixtures/🧬️mutations/leaf",
+      "holds": [],
+      "expected": "owner/⚙️modules/🧫️fixtures",
+      "moduleDir": "⚙️modules"
+    },
+    {
+      "scope": "owner/🧪️tests/🧫️fixtures/🧬️mutations/leaf/",
+      "holds": [],
+      "expected": "owner"
+    },
+    {
+      "scope": "owner/🧫️fixtures/🧬️mutations/leaf",
+      "holds": [],
+      "expected": "owner/🧫️fixtures/🧬️mutations/leaf"
+    },
+    {
+      "scope": "owner/🧬️schema/🧬️mutations",
+      "holds": [],
+      "expected": "owner"
+    },
+    {
+      "scope": "owner/🧬️schema/🧬️mutations/",
+      "holds": [],
+      "expected": "owner"
+    },
+    {
+      "scope": "owner/🧪️tests/🧫️fixtures/🧬️mutations",
+      "holds": [],
+      "expected": "owner"
+    },
+    {
+      "scope": "owner/🧪️tests/🧫️fixtures/🧬️mutations/",
+      "holds": [],
+      "expected": "owner"
+    }
+  ]
+}

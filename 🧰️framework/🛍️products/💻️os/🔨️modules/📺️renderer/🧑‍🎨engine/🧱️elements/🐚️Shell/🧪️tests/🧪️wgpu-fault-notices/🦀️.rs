@@ -6,7 +6,7 @@
 use super::*;
 
 fn corpus() -> Value {
-    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🧫️fault-notices/🔣️.json")).expect("the fault-notices corpus parses")
+    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🧫️fault-notices/🔣️.json")).expect("the fault-notices corpus parses")
 }
 
 fn app_notices(corpus: &Value) -> Vec<semio_framework::FaultNoticeDefinition> {
@@ -21,7 +21,7 @@ fn refused(row: &Value, notices: &[semio_framework::FaultNoticeDefinition], seve
     for (name, value) in declared["params"].as_object().into_iter().flatten() {
         fault = fault.with_param(name.clone(), value.as_str().expect("param"));
     }
-    fault.causes = declared["causes"].as_array().into_iter().flatten().map(|cause| semio_framework::FaultCause { message: String::new(), code: Some(semio_framework::FaultCode::new(cause["code"].as_str().expect("cause").to_string())) }).collect();
+    fault.causes = declared["causes"].as_array().into_iter().flatten().map(|cause| semio_framework::FaultCause { retained_progress:None, message: String::new(), code: Some(semio_framework::FaultCode::new(cause["code"].as_str().expect("cause").to_string())) }).collect();
     RefusedGuestFault { fault, notices: notices.to_vec() }
 }
 
@@ -76,7 +76,7 @@ fn the_funnel_tells_the_recorded_refusal_and_mirrors_it_as_a_status() {
 /// described by the code, and the open's own status keeps that text; never the raw code or the English message.
 #[test]
 fn a_refused_guest_channel_is_told_as_its_localized_notice() {
-    let corpus: Value = serde_json::from_str(include_str!("../../../../../../📡️spr/🧵️channel/🧫️fixtures/🧫️channel-handshake/🔣️.json")).expect("the channel-handshake corpus parses");
+    let corpus: Value = serde_json::from_str(include_str!("../../../../../../📡️spr/🧵️channel/🧪️tests/🧫️fixtures/🧫️channel-handshake/🔣️.json")).expect("the channel-handshake corpus parses");
     let code = corpus["code"].as_str().expect("code");
     let refused: Vec<(String, i64, i64)> = corpus["cases"].as_array().expect("cases").iter().filter(|case| case["admitted"] == false).map(|case| (case["name"].as_str().expect("name").to_string(), case["guestOffset"].as_i64().expect("offset"), case["hostOffset"].as_i64().unwrap_or(0))).collect();
     assert!(!refused.is_empty(), "the corpus names refused guests");
@@ -92,7 +92,7 @@ fn a_refused_guest_channel_is_told_as_its_localized_notice() {
         ] {
             let mut shell = ShellState::new(Vec::new(), String::new(), locale, semio_framework_ui_locale::Terminology::Native);
             shell.locale_id = locale_id.into();
-            let detail = shell.note_refused_open(crate::program_bridge::ProgramFault { fault: Some(fault.clone()), frame: None, text: format!("create_app promise failed: {}", fault.describe()) });
+            let detail = shell.note_refused_open(crate::program_bridge::ProgramFault { fault: Some(fault.clone()), frame: None,kernel:None,actor_call:None, text: format!("create_app promise failed: {}", fault.describe()) });
             assert_eq!(detail, expected, "{name} {locale_id}: the open's status keeps the localized notice");
             let told: Vec<(String, Option<String>, Option<String>)> = shell.chrome_accessibility_nodes(&[]).into_iter().filter(|node| node.key == TRANSIENT_NOTICE_STATUS_ID).map(|node| (node.role, node.label, node.description)).collect();
             assert_eq!(told, [("status".to_string(), Some(expected.clone()), Some(code.to_string()))], "{name} {locale_id}: told politely, described by its code");

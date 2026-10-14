@@ -2,7 +2,7 @@ use super::*;
 use semio_framework_value::{NativeEncodeControl, ValueRefusalKind};
 
 fn cohort() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🚦️sqlite-cohort/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🚦️sqlite-cohort/🔣️.json")).unwrap()
 }
 
 fn decimal(value: &serde_json::Value) -> Part21Decimal {

@@ -2,15 +2,15 @@
 use crate::standards::v_v3::subsets::any::io::sqlite::snapshot::tests::*;
 fn sources() -> [(&'static str, &'static [u8]); 9] {
  [
-  ("direct-rgb24-padding-gap-trailer",include_bytes!("../../../../../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp")),
-  ("indexed-rgb1-duplicate-palette",include_bytes!("../../../../../🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb1-duplicate-palette.bmp")),
-  ("indexed-rgb4-duplicate-palette",include_bytes!("../../../../../🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb4-duplicate-palette.bmp")),
-  ("indexed-rgb8-duplicate-palette",include_bytes!("../../../../../🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb8-duplicate-palette.bmp")),
-  ("direct-rgb16-555",include_bytes!("../../../../../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb16-555.bmp")),
-  ("direct-rgb32-reserved-sample",include_bytes!("../../../../../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb32-reserved-sample.bmp")),
-  ("direct-bitfields16-565",include_bytes!("../../../../../🧫️fixtures/🧬️canonical-byte-authority/direct-bitfields16-565.bmp")),
-  ("direct-bitfields32",include_bytes!("../../../../../🧫️fixtures/🧬️canonical-byte-authority/direct-bitfields32.bmp")),
-  ("direct-rgb24-top-down",include_bytes!("../../../../../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-top-down.bmp"))
+  ("direct-rgb24-padding-gap-trailer",include_bytes!("../../../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp")),
+  ("indexed-rgb1-duplicate-palette",include_bytes!("../../../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb1-duplicate-palette.bmp")),
+  ("indexed-rgb4-duplicate-palette",include_bytes!("../../../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb4-duplicate-palette.bmp")),
+  ("indexed-rgb8-duplicate-palette",include_bytes!("../../../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb8-duplicate-palette.bmp")),
+  ("direct-rgb16-555",include_bytes!("../../../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/direct-rgb16-555.bmp")),
+  ("direct-rgb32-reserved-sample",include_bytes!("../../../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/direct-rgb32-reserved-sample.bmp")),
+  ("direct-bitfields16-565",include_bytes!("../../../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/direct-bitfields16-565.bmp")),
+  ("direct-bitfields32",include_bytes!("../../../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/direct-bitfields32.bmp")),
+  ("direct-rgb24-top-down",include_bytes!("../../../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-top-down.bmp"))
  ]
 }
 fn project(snapshot: &BmpSnapshot) -> semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase {

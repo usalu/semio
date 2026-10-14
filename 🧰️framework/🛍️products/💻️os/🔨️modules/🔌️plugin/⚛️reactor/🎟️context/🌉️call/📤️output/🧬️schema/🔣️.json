@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "generation",
+    "job",
+    "originalCapacity",
+    "bytes",
+    "copyCeilings",
+    "initialFuel",
+    "deadlineUs",
+    "headerCopyBytes",
+    "heldUntilPaidAck",
+    "foreignIdentityTouchesClock",
+    "sourceClosedRequiresExactAck"
+  ],
+  "properties": {
+    "operation": {
+      "const": 71
+    },
+    "generation": {
+      "const": 3
+    },
+    "job": {
+      "const": 11
+    },
+    "originalCapacity": {
+      "const": 97
+    },
+    "bytes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "minItems": 83,
+      "maxItems": 83
+    },
+    "copyCeilings": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "initialFuel": {
+      "const": 10000
+    },
+    "deadlineUs": {
+      "type": "string",
+      "const": "18446744073709551615"
+    },
+    "headerCopyBytes": {
+      "const": 0
+    },
+    "heldUntilPaidAck": {
+      "const": true
+    },
+    "foreignIdentityTouchesClock": {
+      "const": false
+    },
+    "sourceClosedRequiresExactAck": {
+      "const": true
+    }
+  }
+}

@@ -37,7 +37,7 @@ async fn playback_export_route_is_registered_cancellable_and_fully_retired() {
 #[semio_framework_async_macros::async_test]
 async fn playback_export_route_streams_the_real_fixture_with_exact_mime_and_bytes() {
     use semio_framework_plugin::{app::ArtifactMediaExportPoll, PluginApp};
-    let source = include_bytes!("../../../🧫️fixtures/🎬️.mp4");
+    let source = include_bytes!("../../../🧪️tests/🧫️fixtures/🎬️.mp4");
     let snapshot = crate::standards::isobmff::subsets::any::io::decode_mp4(source).expect("real MP4 fixture decodes");
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<Mp4Editor>, _>(async { semio_framework_plugin::App { definition: create_mp4_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&snapshot, STDIO_MP4_DOCUMENT_SCHEMA) else {
@@ -114,7 +114,7 @@ fn large_payload_metadata_edit_uses_compact_native_event_and_exact_inverse_admis
 #[test]
 fn payload_detail_edits_publish_the_exact_requested_value() {
     register_mp4_snapshot_schema();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧫️fixtures/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json"))).unwrap();
     let mut snapshot = Mp4Snapshot::default();
     let mut track = Mp4Track::default();
     track.samples.push(Mp4Sample { data: vec![7, 9], duration: 1000, cts_offset: 0, sync: true });
@@ -145,7 +145,7 @@ semio_framework_plugin::history_edit_acceptance_law!("stdio", super::Mp4Editor, 
 async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history() {
     use semio_framework_plugin::plugin_app_close_prelude::{MediaArtifact, MediaArtifactDescriptor};
     use semio_framework_plugin::{artifact_app_laws, EditorApp, MediaWireFormat, PluginApp, NATURAL_FILE_PORT};
-    let source = include_bytes!("../../../🧫️fixtures/🎬️.mp4");
+    let source = include_bytes!("../../../🧪️tests/🧫️fixtures/🎬️.mp4");
     let codec = <Mp4Editor as ArtifactEditor>::natural_file_codec().expect("paired natural codec");
     assert_eq!((codec.format_kind, codec.extension, codec.media_type, codec.binary), ("s.stdio.mp4@isobmff", ".mp4", "video/mp4", true));
     let artifact = MediaArtifact {

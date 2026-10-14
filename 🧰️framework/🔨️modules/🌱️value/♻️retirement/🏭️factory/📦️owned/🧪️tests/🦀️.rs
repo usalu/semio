@@ -23,7 +23,7 @@ impl ArtifactOwnedValueRetirementFactory<String> for RefusingFactory{
 }
 #[test]
 fn factory_owned_retirement_preserves_original_provider_refusal_and_exact_terminal_allocations(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in law["cases"].as_array().unwrap(){for copy in law["copyGrants"].as_array().unwrap(){for cut in law["cancelCuts"].as_array().unwrap(){
   let text=row["text"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap()as usize);let mut payload=String::with_capacity(row["capacity"].as_u64().unwrap()as usize);payload.push_str(&text);let pointer=payload.as_ptr();let mut original=Some(payload);let factory:Arc<dyn ArtifactOwnedValueRetirementFactory<String>>=Arc::new(RefusingFactory{refuse:AtomicBool::new(true)});let strong=Arc::strong_count(&factory);let held=original.as_ref().unwrap().capacity()+arc_bytes::<RefusingFactory>();
   let bytes=FactoryOwnedRetirement::<String>::constructor_capacity_bytes();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:bytes,maximum_release_bytes:0,maximum_depth:1};

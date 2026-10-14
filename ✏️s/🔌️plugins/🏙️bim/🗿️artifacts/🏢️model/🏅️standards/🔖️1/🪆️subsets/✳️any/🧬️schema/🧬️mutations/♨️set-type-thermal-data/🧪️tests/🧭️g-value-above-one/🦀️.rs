@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "♨️set-type-thermal-data/🧭️g-value-above-one",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧭️g-value-above-one/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧭️g-value-above-one/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧭️g-value-above-one/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧭️g-value-above-one/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧭️g-value-above-one/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧭️g-value-above-one/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧭️g-value-above-one/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧭️g-value-above-one/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧭️g-value-above-one/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧭️g-value-above-one/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

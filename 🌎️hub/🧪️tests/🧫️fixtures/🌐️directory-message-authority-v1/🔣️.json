@@ -1,0 +1,75 @@
+{
+  "schema": "semio.hub.directory-message-authority/v1",
+  "vectors": [
+    {
+      "name": "membership-before-delivery",
+      "revocation": "membership",
+      "first": "revoke",
+      "a": false,
+      "b": true,
+      "close": 0
+    },
+    {
+      "name": "delivery-before-membership",
+      "revocation": "membership",
+      "first": "send",
+      "a": true,
+      "b": true,
+      "close": 0
+    },
+    {
+      "name": "session-before-delivery",
+      "revocation": "session",
+      "first": "revoke",
+      "a": false,
+      "b": false,
+      "close": 4401
+    },
+    {
+      "name": "delivery-before-session",
+      "revocation": "session",
+      "first": "send",
+      "a": true,
+      "b": false,
+      "close": 4401
+    }
+  ],
+  "messages": [
+    {
+      "name": "space-event",
+      "messageJson": "{\"kind\":\"event\",\"event\":{\"seq\":1,\"id\":\"directory-event\",\"hlc\":{\"physicalMs\":1,\"logical\":0},\"actor\":{\"kind\":\"system\",\"id\":\"system:directory-authority\"},\"spaceId\":\"space-a\",\"body\":{\"kind\":\"space.renamed\",\"spaceId\":\"space-a\",\"name\":\"A\"},\"recordedAtMs\":1}}",
+      "spaceId": "space-a",
+      "keys": 4
+    },
+    {
+      "name": "own-user-event",
+      "messageJson": "{\"kind\":\"event\",\"event\":{\"seq\":1,\"id\":\"directory-event\",\"hlc\":{\"physicalMs\":1,\"logical\":0},\"actor\":{\"kind\":\"system\",\"id\":\"system:directory-authority\"},\"userId\":\"recipient\",\"body\":{\"kind\":\"user.created\",\"userId\":\"recipient\",\"email\":\"recipient@example.test\",\"displayName\":\"Recipient\"},\"recordedAtMs\":1}}",
+      "spaceId": null,
+      "keys": 2
+    },
+    {
+      "name": "connection",
+      "messageJson": "{\"kind\":\"connection\",\"phase\":\"opened\",\"connection\":{\"syncSessionId\":\"sync\",\"spaceId\":\"space-a\",\"documentId\":\"doc\",\"surface\":\"map\",\"actor\":\"actor\",\"userId\":\"recipient\",\"email\":\"recipient@example.test\",\"role\":\"spectator\",\"connectedAtMs\":1,\"presenceKnown\":false}}",
+      "spaceId": "space-a",
+      "keys": 4
+    },
+    {
+      "name": "presence",
+      "messageJson": "{\"kind\":\"presence\",\"spaceId\":\"space-a\",\"documentId\":\"doc\",\"actors\":[]}",
+      "spaceId": "space-a",
+      "keys": 4
+    },
+    {
+      "name": "rebootstrap",
+      "messageJson": "{\"kind\":\"rebootstrap-required\",\"control\":{\"scope\":{\"spaceId\":\"space-a\",\"documentId\":\"doc\"},\"checkpointId\":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],\"descriptorDigestV1\":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],\"baselineFrontier\":{\"documentId\":\"doc\",\"headEditOrdinal\":1,\"headEditId\":\"edit\",\"lastCommitSeq\":1,\"chainHash\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]}}}",
+      "spaceId": "space-a",
+      "keys": 4
+    },
+    {
+      "name": "heartbeat",
+      "messageJson": "{\"kind\":\"heartbeat\",\"headSeq\":1}",
+      "spaceId": null,
+      "keys": 2
+    }
+  ]
+}

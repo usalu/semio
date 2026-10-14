@@ -8,11 +8,11 @@
 use crate::opening_config::mutations::UiPreferencesConfigMutation;
 use crate::opening_config::{UiPreferences, UiPreferencesDiff};
 
-const BEFORE: &str = include_str!("../../🧫️fixtures/✏️sets-keybinding/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../🧫️fixtures/✏️sets-keybinding/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../🧫️fixtures/✏️sets-keybinding/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../🧫️fixtures/✏️sets-keybinding/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../🧫️fixtures/✏️sets-keybinding/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/🎯️outcome/🔣️.json");
 
 fn before() -> UiPreferences {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before preferences decode")

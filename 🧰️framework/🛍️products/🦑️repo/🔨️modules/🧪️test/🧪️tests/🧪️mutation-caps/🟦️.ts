@@ -1,4 +1,4 @@
-/** 🐘️ The structural cap rule (audit F3) over `🧫️fixtures/🧫️mutation-caps/🔣️.json` every
+/** 🐘️ The structural cap rule (audit F3) over `🧪️tests/🧫️fixtures/🧫️mutation-caps/🔣️.json` every
  * planted case yields exactly the listed `capLawMissing` directories, and an independent oracle reaches the same — Ajv tells a
  * bounded leaf by the schema's `boundedLeaf` definition, and tree-sitter-rust reads every enum that derives `Mutations`, its
  * variants and whether it declares type parameters. */
@@ -13,7 +13,7 @@ type Case = { readonly id: string; readonly leaves: readonly { readonly director
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const read = (path: string): Record<string, unknown> => JSON.parse(readFileSync(resolve(import.meta.dir, path), "utf8")) as Record<string, unknown>;
-const fixture = read("../../🧫️fixtures/🧫️mutation-caps/🔣️.json") as unknown as { readonly cases: readonly Case[] };
+const fixture = read("../🧫️fixtures/🧫️mutation-caps/🔣️.json") as unknown as { readonly cases: readonly Case[] };
 
 const schema = read("../../🧬️schema/🔣️mutation-caps/🔣️.json") as Record<string, unknown> & { readonly $id: string };
 const ajv = new Ajv({ strict: false, allErrors: true });

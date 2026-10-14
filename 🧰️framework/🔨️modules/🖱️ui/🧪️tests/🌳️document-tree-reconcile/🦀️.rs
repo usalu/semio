@@ -8,7 +8,7 @@
 //! `cfg(test/testkit)`).
 //!
 //! This file pins the missing edge against the LIVE arena, with the neutral oracle
-//! `🖱️ui/🧫️fixtures/🌳️document-tree-reconcile/🔣️.json` as the shared fixture (its TypeScript twin is
+//! `🖱️ui/🧪️tests/🧫️fixtures/🌳️document-tree-reconcile/🔣️.json` as the shared fixture (its TypeScript twin is
 //! `📺️renderer/🧑‍🎨engine/🧪️tests/🌳️wgpu-document-reconcile/🟦️.ts`).
 
 use super::*;
@@ -18,7 +18,7 @@ use crate::wgpu::tree::UiTree;
 use ui_contract::{SurfaceId, UiDocumentAssembly, UiDocumentAssemblyIdentity, UiDocumentLease, UiDocumentLeaseHeader, UiRevision};
 
 fn law() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🌳️document-tree-reconcile/🔣️.json")).expect("document tree reconcile fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🌳️document-tree-reconcile/🔣️.json")).expect("document tree reconcile fixture")
 }
 
 fn record(value: &serde_json::Value) -> UiNodeRecord {
@@ -646,7 +646,7 @@ fn an_extension_slot_carries_its_publishers_plugin_id_instead_of_an_empty_string
 
 #[test]
 fn the_reserved_media_transport_projects_only_truthful_localized_host_status() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎬️media-transport-reservation/🔣️.json")).expect("media transport reservation fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎬️media-transport-reservation/🔣️.json")).expect("media transport reservation fixture");
     assert_eq!(fixture["reservedExtensionId"].as_str(), Some(crate::wgpu::reconcile::MEDIA_TRANSPORT_EXTENSION_ID));
     for (index, vector) in fixture["cases"].as_array().expect("fixture cases").iter().enumerate() {
         let mut tree = UiTree::new();

@@ -1,0 +1,2083 @@
+[
+  {
+    "tables": [
+      {
+        "name": "json_document",
+        "sql": "CREATE TABLE json_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "literal/schema 世界\u0000",
+              {
+                "integer": "1"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_value",
+        "sql": "CREATE TABLE json_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('null', 'boolean', 'number', 'string', 'array', 'object')), boolean_value INTEGER CHECK(boolean_value IN (0, 1)), number_lexeme TEXT, string_value TEXT, number_value REAL, CHECK((kind IN ('null', 'array', 'object') AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'boolean' AND number_value IS NULL AND boolean_value IS NOT NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'number' AND boolean_value IS NULL AND number_lexeme IS NOT NULL AND string_value IS NULL) OR (kind = 'string' AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NOT NULL)));",
+        "rows": [
+          {
+            "rowid": "17",
+            "values": [
+              {
+                "integer": "17"
+              },
+              "number",
+              null,
+              "01",
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "16",
+            "values": [
+              {
+                "integer": "16"
+              },
+              "string",
+              null,
+              null,
+              "nested\u0000value",
+              null
+            ]
+          },
+          {
+            "rowid": "15",
+            "values": [
+              {
+                "integer": "15"
+              },
+              "object",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "14",
+            "values": [
+              {
+                "integer": "14"
+              },
+              "number",
+              null,
+              "arbitrary intermediate lexeme",
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "13",
+            "values": [
+              {
+                "integer": "13"
+              },
+              "number",
+              null,
+              "1e9999",
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "12",
+            "values": [
+              {
+                "integer": "12"
+              },
+              "number",
+              null,
+              "0.12345678901234567890123456789",
+              null,
+              0.12345678901234568
+            ]
+          },
+          {
+            "rowid": "11",
+            "values": [
+              {
+                "integer": "11"
+              },
+              "number",
+              null,
+              "1e+000",
+              null,
+              1.0
+            ]
+          },
+          {
+            "rowid": "10",
+            "values": [
+              {
+                "integer": "10"
+              },
+              "number",
+              null,
+              "-0",
+              null,
+              0.0
+            ]
+          },
+          {
+            "rowid": "9",
+            "values": [
+              {
+                "integer": "9"
+              },
+              "object",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "8",
+            "values": [
+              {
+                "integer": "8"
+              },
+              "array",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "7",
+            "values": [
+              {
+                "integer": "7"
+              },
+              "string",
+              null,
+              null,
+              "Grüße 世界\u0000",
+              null
+            ]
+          },
+          {
+            "rowid": "6",
+            "values": [
+              {
+                "integer": "6"
+              },
+              "boolean",
+              {
+                "integer": "1"
+              },
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "5",
+            "values": [
+              {
+                "integer": "5"
+              },
+              "boolean",
+              {
+                "integer": "0"
+              },
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "4",
+            "values": [
+              {
+                "integer": "4"
+              },
+              "null",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "3",
+            "values": [
+              {
+                "integer": "3"
+              },
+              "array",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "2",
+            "values": [
+              {
+                "integer": "2"
+              },
+              "number",
+              null,
+              "900719925474099312345",
+              null,
+              9.007199254740993e+20
+            ]
+          },
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "object",
+              null,
+              null,
+              null,
+              null
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_object_member",
+        "sql": "CREATE TABLE json_object_member (id INTEGER PRIMARY KEY, object_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), key TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "10",
+            "values": [
+              {
+                "integer": "10"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "8"
+              },
+              "invalid",
+              {
+                "integer": "17"
+              }
+            ]
+          },
+          {
+            "rowid": "9",
+            "values": [
+              {
+                "integer": "9"
+              },
+              {
+                "integer": "15"
+              },
+              {
+                "integer": "0"
+              },
+              "leaf",
+              {
+                "integer": "16"
+              }
+            ]
+          },
+          {
+            "rowid": "8",
+            "values": [
+              {
+                "integer": "8"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "7"
+              },
+              "nested",
+              {
+                "integer": "15"
+              }
+            ]
+          },
+          {
+            "rowid": "7",
+            "values": [
+              {
+                "integer": "7"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "6"
+              },
+              "literal",
+              {
+                "integer": "14"
+              }
+            ]
+          },
+          {
+            "rowid": "6",
+            "values": [
+              {
+                "integer": "6"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "5"
+              },
+              "overflow",
+              {
+                "integer": "13"
+              }
+            ]
+          },
+          {
+            "rowid": "5",
+            "values": [
+              {
+                "integer": "5"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "4"
+              },
+              "precision",
+              {
+                "integer": "12"
+              }
+            ]
+          },
+          {
+            "rowid": "4",
+            "values": [
+              {
+                "integer": "4"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "3"
+              },
+              "exponent",
+              {
+                "integer": "11"
+              }
+            ]
+          },
+          {
+            "rowid": "3",
+            "values": [
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "2"
+              },
+              "duplicate\u0000世界",
+              {
+                "integer": "10"
+              }
+            ]
+          },
+          {
+            "rowid": "2",
+            "values": [
+              {
+                "integer": "2"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "1"
+              },
+              "items",
+              {
+                "integer": "3"
+              }
+            ]
+          },
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "0"
+              },
+              "duplicate\u0000世界",
+              {
+                "integer": "2"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_array_element",
+        "sql": "CREATE TABLE json_array_element (id INTEGER PRIMARY KEY, array_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "6",
+            "values": [
+              {
+                "integer": "6"
+              },
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "5"
+              },
+              {
+                "integer": "9"
+              }
+            ]
+          },
+          {
+            "rowid": "5",
+            "values": [
+              {
+                "integer": "5"
+              },
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "4"
+              },
+              {
+                "integer": "8"
+              }
+            ]
+          },
+          {
+            "rowid": "4",
+            "values": [
+              {
+                "integer": "4"
+              },
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "7"
+              }
+            ]
+          },
+          {
+            "rowid": "3",
+            "values": [
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "2"
+              },
+              {
+                "integer": "6"
+              }
+            ]
+          },
+          {
+            "rowid": "2",
+            "values": [
+              {
+                "integer": "2"
+              },
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "5"
+              }
+            ]
+          },
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "0"
+              },
+              {
+                "integer": "4"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "tables": [
+      {
+        "name": "json_document",
+        "sql": "CREATE TABLE json_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "root/null",
+              {
+                "integer": "41"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_value",
+        "sql": "CREATE TABLE json_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('null', 'boolean', 'number', 'string', 'array', 'object')), boolean_value INTEGER CHECK(boolean_value IN (0, 1)), number_lexeme TEXT, string_value TEXT, number_value REAL, CHECK((kind IN ('null', 'array', 'object') AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'boolean' AND number_value IS NULL AND boolean_value IS NOT NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'number' AND boolean_value IS NULL AND number_lexeme IS NOT NULL AND string_value IS NULL) OR (kind = 'string' AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NOT NULL)));",
+        "rows": [
+          {
+            "rowid": "41",
+            "values": [
+              {
+                "integer": "41"
+              },
+              "null",
+              null,
+              null,
+              null,
+              null
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_object_member",
+        "sql": "CREATE TABLE json_object_member (id INTEGER PRIMARY KEY, object_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), key TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": []
+      },
+      {
+        "name": "json_array_element",
+        "sql": "CREATE TABLE json_array_element (id INTEGER PRIMARY KEY, array_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": []
+      }
+    ]
+  },
+  {
+    "tables": [
+      {
+        "name": "json_document",
+        "sql": "CREATE TABLE json_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "root/boolean",
+              {
+                "integer": "41"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_value",
+        "sql": "CREATE TABLE json_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('null', 'boolean', 'number', 'string', 'array', 'object')), boolean_value INTEGER CHECK(boolean_value IN (0, 1)), number_lexeme TEXT, string_value TEXT, number_value REAL, CHECK((kind IN ('null', 'array', 'object') AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'boolean' AND number_value IS NULL AND boolean_value IS NOT NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'number' AND boolean_value IS NULL AND number_lexeme IS NOT NULL AND string_value IS NULL) OR (kind = 'string' AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NOT NULL)));",
+        "rows": [
+          {
+            "rowid": "41",
+            "values": [
+              {
+                "integer": "41"
+              },
+              "boolean",
+              {
+                "integer": "1"
+              },
+              null,
+              null,
+              null
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_object_member",
+        "sql": "CREATE TABLE json_object_member (id INTEGER PRIMARY KEY, object_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), key TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": []
+      },
+      {
+        "name": "json_array_element",
+        "sql": "CREATE TABLE json_array_element (id INTEGER PRIMARY KEY, array_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": []
+      }
+    ]
+  },
+  {
+    "tables": [
+      {
+        "name": "json_document",
+        "sql": "CREATE TABLE json_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "root/number",
+              {
+                "integer": "41"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_value",
+        "sql": "CREATE TABLE json_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('null', 'boolean', 'number', 'string', 'array', 'object')), boolean_value INTEGER CHECK(boolean_value IN (0, 1)), number_lexeme TEXT, string_value TEXT, number_value REAL, CHECK((kind IN ('null', 'array', 'object') AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'boolean' AND number_value IS NULL AND boolean_value IS NOT NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'number' AND boolean_value IS NULL AND number_lexeme IS NOT NULL AND string_value IS NULL) OR (kind = 'string' AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NOT NULL)));",
+        "rows": [
+          {
+            "rowid": "41",
+            "values": [
+              {
+                "integer": "41"
+              },
+              "number",
+              null,
+              "1e+000",
+              null,
+              1.0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_object_member",
+        "sql": "CREATE TABLE json_object_member (id INTEGER PRIMARY KEY, object_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), key TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": []
+      },
+      {
+        "name": "json_array_element",
+        "sql": "CREATE TABLE json_array_element (id INTEGER PRIMARY KEY, array_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": []
+      }
+    ]
+  },
+  {
+    "tables": [
+      {
+        "name": "json_document",
+        "sql": "CREATE TABLE json_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "root/string",
+              {
+                "integer": "41"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_value",
+        "sql": "CREATE TABLE json_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('null', 'boolean', 'number', 'string', 'array', 'object')), boolean_value INTEGER CHECK(boolean_value IN (0, 1)), number_lexeme TEXT, string_value TEXT, number_value REAL, CHECK((kind IN ('null', 'array', 'object') AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'boolean' AND number_value IS NULL AND boolean_value IS NOT NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'number' AND boolean_value IS NULL AND number_lexeme IS NOT NULL AND string_value IS NULL) OR (kind = 'string' AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NOT NULL)));",
+        "rows": [
+          {
+            "rowid": "41",
+            "values": [
+              {
+                "integer": "41"
+              },
+              "string",
+              null,
+              null,
+              "scalar\u0000世界",
+              null
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_object_member",
+        "sql": "CREATE TABLE json_object_member (id INTEGER PRIMARY KEY, object_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), key TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": []
+      },
+      {
+        "name": "json_array_element",
+        "sql": "CREATE TABLE json_array_element (id INTEGER PRIMARY KEY, array_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": []
+      }
+    ]
+  },
+  {
+    "tables": [
+      {
+        "name": "json_document",
+        "sql": "CREATE TABLE json_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "root/array",
+              {
+                "integer": "41"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_value",
+        "sql": "CREATE TABLE json_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('null', 'boolean', 'number', 'string', 'array', 'object')), boolean_value INTEGER CHECK(boolean_value IN (0, 1)), number_lexeme TEXT, string_value TEXT, number_value REAL, CHECK((kind IN ('null', 'array', 'object') AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'boolean' AND number_value IS NULL AND boolean_value IS NOT NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'number' AND boolean_value IS NULL AND number_lexeme IS NOT NULL AND string_value IS NULL) OR (kind = 'string' AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NOT NULL)));",
+        "rows": [
+          {
+            "rowid": "41",
+            "values": [
+              {
+                "integer": "41"
+              },
+              "array",
+              null,
+              null,
+              null,
+              null
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_object_member",
+        "sql": "CREATE TABLE json_object_member (id INTEGER PRIMARY KEY, object_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), key TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": []
+      },
+      {
+        "name": "json_array_element",
+        "sql": "CREATE TABLE json_array_element (id INTEGER PRIMARY KEY, array_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": []
+      }
+    ]
+  },
+  {
+    "tables": [
+      {
+        "name": "json_document",
+        "sql": "CREATE TABLE json_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "root/object",
+              {
+                "integer": "41"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_value",
+        "sql": "CREATE TABLE json_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('null', 'boolean', 'number', 'string', 'array', 'object')), boolean_value INTEGER CHECK(boolean_value IN (0, 1)), number_lexeme TEXT, string_value TEXT, number_value REAL, CHECK((kind IN ('null', 'array', 'object') AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'boolean' AND number_value IS NULL AND boolean_value IS NOT NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'number' AND boolean_value IS NULL AND number_lexeme IS NOT NULL AND string_value IS NULL) OR (kind = 'string' AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NOT NULL)));",
+        "rows": [
+          {
+            "rowid": "41",
+            "values": [
+              {
+                "integer": "41"
+              },
+              "object",
+              null,
+              null,
+              null,
+              null
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_object_member",
+        "sql": "CREATE TABLE json_object_member (id INTEGER PRIMARY KEY, object_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), key TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": []
+      },
+      {
+        "name": "json_array_element",
+        "sql": "CREATE TABLE json_array_element (id INTEGER PRIMARY KEY, array_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": []
+      }
+    ]
+  },
+  {
+    "tables": [
+      {
+        "name": "json_document",
+        "sql": "CREATE TABLE json_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "geo/point",
+              {
+                "integer": "1"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_value",
+        "sql": "CREATE TABLE json_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('null', 'boolean', 'number', 'string', 'array', 'object')), boolean_value INTEGER CHECK(boolean_value IN (0, 1)), number_lexeme TEXT, string_value TEXT, number_value REAL, CHECK((kind IN ('null', 'array', 'object') AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'boolean' AND number_value IS NULL AND boolean_value IS NOT NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'number' AND boolean_value IS NULL AND number_lexeme IS NOT NULL AND string_value IS NULL) OR (kind = 'string' AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NOT NULL)));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "object",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "2",
+            "values": [
+              {
+                "integer": "2"
+              },
+              "string",
+              null,
+              null,
+              "Point",
+              null
+            ]
+          },
+          {
+            "rowid": "3",
+            "values": [
+              {
+                "integer": "3"
+              },
+              "array",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "4",
+            "values": [
+              {
+                "integer": "4"
+              },
+              "number",
+              null,
+              "1",
+              null,
+              1.0
+            ]
+          },
+          {
+            "rowid": "5",
+            "values": [
+              {
+                "integer": "5"
+              },
+              "number",
+              null,
+              "2",
+              null,
+              2.0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_object_member",
+        "sql": "CREATE TABLE json_object_member (id INTEGER PRIMARY KEY, object_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), key TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "0"
+              },
+              "type",
+              {
+                "integer": "2"
+              }
+            ]
+          },
+          {
+            "rowid": "2",
+            "values": [
+              {
+                "integer": "2"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "1"
+              },
+              "coordinates",
+              {
+                "integer": "3"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_array_element",
+        "sql": "CREATE TABLE json_array_element (id INTEGER PRIMARY KEY, array_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "0"
+              },
+              {
+                "integer": "4"
+              }
+            ]
+          },
+          {
+            "rowid": "2",
+            "values": [
+              {
+                "integer": "2"
+              },
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "5"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "tables": [
+      {
+        "name": "json_document",
+        "sql": "CREATE TABLE json_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "geo/feature",
+              {
+                "integer": "1"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_value",
+        "sql": "CREATE TABLE json_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('null', 'boolean', 'number', 'string', 'array', 'object')), boolean_value INTEGER CHECK(boolean_value IN (0, 1)), number_lexeme TEXT, string_value TEXT, number_value REAL, CHECK((kind IN ('null', 'array', 'object') AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'boolean' AND number_value IS NULL AND boolean_value IS NOT NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'number' AND boolean_value IS NULL AND number_lexeme IS NOT NULL AND string_value IS NULL) OR (kind = 'string' AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NOT NULL)));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "object",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "2",
+            "values": [
+              {
+                "integer": "2"
+              },
+              "string",
+              null,
+              null,
+              "Feature",
+              null
+            ]
+          },
+          {
+            "rowid": "3",
+            "values": [
+              {
+                "integer": "3"
+              },
+              "null",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "4",
+            "values": [
+              {
+                "integer": "4"
+              },
+              "object",
+              null,
+              null,
+              null,
+              null
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_object_member",
+        "sql": "CREATE TABLE json_object_member (id INTEGER PRIMARY KEY, object_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), key TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "0"
+              },
+              "type",
+              {
+                "integer": "2"
+              }
+            ]
+          },
+          {
+            "rowid": "2",
+            "values": [
+              {
+                "integer": "2"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "1"
+              },
+              "geometry",
+              {
+                "integer": "3"
+              }
+            ]
+          },
+          {
+            "rowid": "3",
+            "values": [
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "2"
+              },
+              "properties",
+              {
+                "integer": "4"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_array_element",
+        "sql": "CREATE TABLE json_array_element (id INTEGER PRIMARY KEY, array_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": []
+      }
+    ]
+  },
+  {
+    "tables": [
+      {
+        "name": "json_document",
+        "sql": "CREATE TABLE json_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "geo/feature-collection",
+              {
+                "integer": "1"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_value",
+        "sql": "CREATE TABLE json_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('null', 'boolean', 'number', 'string', 'array', 'object')), boolean_value INTEGER CHECK(boolean_value IN (0, 1)), number_lexeme TEXT, string_value TEXT, number_value REAL, CHECK((kind IN ('null', 'array', 'object') AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'boolean' AND number_value IS NULL AND boolean_value IS NOT NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'number' AND boolean_value IS NULL AND number_lexeme IS NOT NULL AND string_value IS NULL) OR (kind = 'string' AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NOT NULL)));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "object",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "2",
+            "values": [
+              {
+                "integer": "2"
+              },
+              "string",
+              null,
+              null,
+              "FeatureCollection",
+              null
+            ]
+          },
+          {
+            "rowid": "3",
+            "values": [
+              {
+                "integer": "3"
+              },
+              "array",
+              null,
+              null,
+              null,
+              null
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_object_member",
+        "sql": "CREATE TABLE json_object_member (id INTEGER PRIMARY KEY, object_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), key TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "0"
+              },
+              "type",
+              {
+                "integer": "2"
+              }
+            ]
+          },
+          {
+            "rowid": "2",
+            "values": [
+              {
+                "integer": "2"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "1"
+              },
+              "features",
+              {
+                "integer": "3"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_array_element",
+        "sql": "CREATE TABLE json_array_element (id INTEGER PRIMARY KEY, array_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": []
+      }
+    ]
+  },
+  {
+    "tables": [
+      {
+        "name": "json_document",
+        "sql": "CREATE TABLE json_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "geo/geometry-collection",
+              {
+                "integer": "1"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_value",
+        "sql": "CREATE TABLE json_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('null', 'boolean', 'number', 'string', 'array', 'object')), boolean_value INTEGER CHECK(boolean_value IN (0, 1)), number_lexeme TEXT, string_value TEXT, number_value REAL, CHECK((kind IN ('null', 'array', 'object') AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'boolean' AND number_value IS NULL AND boolean_value IS NOT NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'number' AND boolean_value IS NULL AND number_lexeme IS NOT NULL AND string_value IS NULL) OR (kind = 'string' AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NOT NULL)));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "object",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "2",
+            "values": [
+              {
+                "integer": "2"
+              },
+              "string",
+              null,
+              null,
+              "GeometryCollection",
+              null
+            ]
+          },
+          {
+            "rowid": "3",
+            "values": [
+              {
+                "integer": "3"
+              },
+              "array",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "4",
+            "values": [
+              {
+                "integer": "4"
+              },
+              "object",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "5",
+            "values": [
+              {
+                "integer": "5"
+              },
+              "string",
+              null,
+              null,
+              "Point",
+              null
+            ]
+          },
+          {
+            "rowid": "6",
+            "values": [
+              {
+                "integer": "6"
+              },
+              "array",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "7",
+            "values": [
+              {
+                "integer": "7"
+              },
+              "number",
+              null,
+              "1",
+              null,
+              1.0
+            ]
+          },
+          {
+            "rowid": "8",
+            "values": [
+              {
+                "integer": "8"
+              },
+              "number",
+              null,
+              "2",
+              null,
+              2.0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_object_member",
+        "sql": "CREATE TABLE json_object_member (id INTEGER PRIMARY KEY, object_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), key TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "0"
+              },
+              "type",
+              {
+                "integer": "2"
+              }
+            ]
+          },
+          {
+            "rowid": "2",
+            "values": [
+              {
+                "integer": "2"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "1"
+              },
+              "geometries",
+              {
+                "integer": "3"
+              }
+            ]
+          },
+          {
+            "rowid": "3",
+            "values": [
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "4"
+              },
+              {
+                "integer": "0"
+              },
+              "type",
+              {
+                "integer": "5"
+              }
+            ]
+          },
+          {
+            "rowid": "4",
+            "values": [
+              {
+                "integer": "4"
+              },
+              {
+                "integer": "4"
+              },
+              {
+                "integer": "1"
+              },
+              "coordinates",
+              {
+                "integer": "6"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_array_element",
+        "sql": "CREATE TABLE json_array_element (id INTEGER PRIMARY KEY, array_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "0"
+              },
+              {
+                "integer": "4"
+              }
+            ]
+          },
+          {
+            "rowid": "2",
+            "values": [
+              {
+                "integer": "2"
+              },
+              {
+                "integer": "6"
+              },
+              {
+                "integer": "0"
+              },
+              {
+                "integer": "7"
+              }
+            ]
+          },
+          {
+            "rowid": "3",
+            "values": [
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "6"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "8"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "tables": [
+      {
+        "name": "json_document",
+        "sql": "CREATE TABLE json_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "geo/legacy-mercator",
+              {
+                "integer": "1"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_value",
+        "sql": "CREATE TABLE json_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('null', 'boolean', 'number', 'string', 'array', 'object')), boolean_value INTEGER CHECK(boolean_value IN (0, 1)), number_lexeme TEXT, string_value TEXT, number_value REAL, CHECK((kind IN ('null', 'array', 'object') AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'boolean' AND number_value IS NULL AND boolean_value IS NOT NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'number' AND boolean_value IS NULL AND number_lexeme IS NOT NULL AND string_value IS NULL) OR (kind = 'string' AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NOT NULL)));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "object",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "2",
+            "values": [
+              {
+                "integer": "2"
+              },
+              "string",
+              null,
+              null,
+              "Point",
+              null
+            ]
+          },
+          {
+            "rowid": "3",
+            "values": [
+              {
+                "integer": "3"
+              },
+              "array",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "4",
+            "values": [
+              {
+                "integer": "4"
+              },
+              "number",
+              null,
+              "0",
+              null,
+              0.0
+            ]
+          },
+          {
+            "rowid": "5",
+            "values": [
+              {
+                "integer": "5"
+              },
+              "number",
+              null,
+              "0",
+              null,
+              0.0
+            ]
+          },
+          {
+            "rowid": "6",
+            "values": [
+              {
+                "integer": "6"
+              },
+              "object",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "7",
+            "values": [
+              {
+                "integer": "7"
+              },
+              "string",
+              null,
+              null,
+              "name",
+              null
+            ]
+          },
+          {
+            "rowid": "8",
+            "values": [
+              {
+                "integer": "8"
+              },
+              "object",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "9",
+            "values": [
+              {
+                "integer": "9"
+              },
+              "string",
+              null,
+              null,
+              "urn:ogc:def:crs:EPSG::3857",
+              null
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_object_member",
+        "sql": "CREATE TABLE json_object_member (id INTEGER PRIMARY KEY, object_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), key TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "0"
+              },
+              "type",
+              {
+                "integer": "2"
+              }
+            ]
+          },
+          {
+            "rowid": "2",
+            "values": [
+              {
+                "integer": "2"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "1"
+              },
+              "coordinates",
+              {
+                "integer": "3"
+              }
+            ]
+          },
+          {
+            "rowid": "3",
+            "values": [
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "2"
+              },
+              "crs",
+              {
+                "integer": "6"
+              }
+            ]
+          },
+          {
+            "rowid": "4",
+            "values": [
+              {
+                "integer": "4"
+              },
+              {
+                "integer": "6"
+              },
+              {
+                "integer": "0"
+              },
+              "type",
+              {
+                "integer": "7"
+              }
+            ]
+          },
+          {
+            "rowid": "5",
+            "values": [
+              {
+                "integer": "5"
+              },
+              {
+                "integer": "6"
+              },
+              {
+                "integer": "1"
+              },
+              "properties",
+              {
+                "integer": "8"
+              }
+            ]
+          },
+          {
+            "rowid": "6",
+            "values": [
+              {
+                "integer": "6"
+              },
+              {
+                "integer": "8"
+              },
+              {
+                "integer": "0"
+              },
+              "name",
+              {
+                "integer": "9"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_array_element",
+        "sql": "CREATE TABLE json_array_element (id INTEGER PRIMARY KEY, array_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "0"
+              },
+              {
+                "integer": "4"
+              }
+            ]
+          },
+          {
+            "rowid": "2",
+            "values": [
+              {
+                "integer": "2"
+              },
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "5"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "tables": [
+      {
+        "name": "json_document",
+        "sql": "CREATE TABLE json_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "geo/bad-coordinate",
+              {
+                "integer": "1"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_value",
+        "sql": "CREATE TABLE json_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('null', 'boolean', 'number', 'string', 'array', 'object')), boolean_value INTEGER CHECK(boolean_value IN (0, 1)), number_lexeme TEXT, string_value TEXT, number_value REAL, CHECK((kind IN ('null', 'array', 'object') AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'boolean' AND number_value IS NULL AND boolean_value IS NOT NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'number' AND boolean_value IS NULL AND number_lexeme IS NOT NULL AND string_value IS NULL) OR (kind = 'string' AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NOT NULL)));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "object",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "2",
+            "values": [
+              {
+                "integer": "2"
+              },
+              "string",
+              null,
+              null,
+              "Point",
+              null
+            ]
+          },
+          {
+            "rowid": "3",
+            "values": [
+              {
+                "integer": "3"
+              },
+              "array",
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "rowid": "4",
+            "values": [
+              {
+                "integer": "4"
+              },
+              "number",
+              null,
+              "1",
+              null,
+              1.0
+            ]
+          },
+          {
+            "rowid": "5",
+            "values": [
+              {
+                "integer": "5"
+              },
+              "number",
+              null,
+              "99",
+              null,
+              99.0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_object_member",
+        "sql": "CREATE TABLE json_object_member (id INTEGER PRIMARY KEY, object_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), key TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "0"
+              },
+              "type",
+              {
+                "integer": "2"
+              }
+            ]
+          },
+          {
+            "rowid": "2",
+            "values": [
+              {
+                "integer": "2"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "1"
+              },
+              "coordinates",
+              {
+                "integer": "3"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_array_element",
+        "sql": "CREATE TABLE json_array_element (id INTEGER PRIMARY KEY, array_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "0"
+              },
+              {
+                "integer": "4"
+              }
+            ]
+          },
+          {
+            "rowid": "2",
+            "values": [
+              {
+                "integer": "2"
+              },
+              {
+                "integer": "3"
+              },
+              {
+                "integer": "1"
+              },
+              {
+                "integer": "5"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "tables": [
+      {
+        "name": "json_document",
+        "sql": "CREATE TABLE json_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "geo/noncharacter",
+              {
+                "integer": "1"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_value",
+        "sql": "CREATE TABLE json_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('null', 'boolean', 'number', 'string', 'array', 'object')), boolean_value INTEGER CHECK(boolean_value IN (0, 1)), number_lexeme TEXT, string_value TEXT, number_value REAL, CHECK((kind IN ('null', 'array', 'object') AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'boolean' AND number_value IS NULL AND boolean_value IS NOT NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'number' AND boolean_value IS NULL AND number_lexeme IS NOT NULL AND string_value IS NULL) OR (kind = 'string' AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NOT NULL)));",
+        "rows": [
+          {
+            "rowid": "1",
+            "values": [
+              {
+                "integer": "1"
+              },
+              "string",
+              null,
+              null,
+              "original﷐世界\u0000",
+              null
+            ]
+          }
+        ]
+      },
+      {
+        "name": "json_object_member",
+        "sql": "CREATE TABLE json_object_member (id INTEGER PRIMARY KEY, object_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), key TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": []
+      },
+      {
+        "name": "json_array_element",
+        "sql": "CREATE TABLE json_array_element (id INTEGER PRIMARY KEY, array_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), value_id INTEGER NOT NULL REFERENCES json_value(id));",
+        "rows": []
+      }
+    ]
+  }
+]

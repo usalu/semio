@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🌉️ `@semio-tech/framework-os-mcp-rs` task router: `bun ./📜️script.ts <build|check|test|dev>`. */
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -9,14 +10,14 @@ import { deepStrictEqual } from "node:assert";
 import { createHash } from "node:crypto";
 import Ajv from "ajv";
 import { daemonBudgetOpts, orchestratorBudgetOpts, runCargo, runRepositoryCargoTests, runCmd, runProbe } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { type McpBuildProfile, MCP_BINARY_NAME, MCP_BINARY_SOURCES_FILE, MCP_CARGO_PACKAGE, resolveBuiltMcpBinaryPath, resolveStagedReleaseMcpBinaryPath, requireMcpBinary } from "../../🟦️.ts";
 import { capabilityDescriptionCensus } from "../../🗂️catalog/🟦️.ts";
 
 import { buildRepositoryCargoArtifacts, workspaceCargoVersion } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
-import { packageNativeRelease, signExecutableForDistribution } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import { packageNativeRelease, signExecutableForDistribution } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 
 const binaryContract = JSON.parse(readFileSync(new URL("../../🎚️config/🧱️binary-gate.json", import.meta.url), "utf8")) as {
   cargoPackage: string;
@@ -83,7 +84,7 @@ function proveMcpEntrypointCredentialMarker(executable: string, root: string): v
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("MCP build has a fixed binary output contract");
-    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, { sourcesRecord: MCP_BINARY_SOURCES_FILE });
+    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, { control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  sourcesRecord: MCP_BINARY_SOURCES_FILE });
   }
 }
 
@@ -98,7 +99,7 @@ class BuildScript extends BundleScript {
 class BuildReleaseScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("MCP release build has a fixed binary output contract");
-    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, { output: "dist/build-release" });
+    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, { control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  output: "dist/build-release" });
     const staged = resolveStagedReleaseMcpBinaryPath(this.repoRoot);
     if (!statSync(staged).isFile()) throw new Error(`the release build staged no ${staged}`);
     signExecutableForDistribution(staged);
@@ -183,7 +184,7 @@ class CanonicalPairCheckScript extends BundleScript {
 /** 🔐 Independently validates the fail-closed Hub-selected discovery contract. */
 class HubLiveCatalogOracleScript extends BundleScript {
   run(): void {
-    const fixtureRoot = join(this.root, "..", "..", "🏠️workspace", "🧫️fixtures", "🔐️hub-live-catalog");
+    const fixtureRoot = join(this.root, "..", "..", "🏠️workspace", "🧪️tests/🧫️fixtures", "🔐️hub-live-catalog");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     const validate = workspaceContract(this.root, "HubLiveCatalogSelectionV1");
     const { expectedInferenceOwners, ...selection } = fixture.selection;
@@ -258,7 +259,7 @@ class HubLiveCatalogNativeCheckScript extends BundleScript {
 
 class CanonicalCheckpointResourceOracleScript extends BundleScript {
   run(): void {
-    const fixtureRoot = join(this.root, "..", "..", "🏠️workspace", "🧫️fixtures", "🔐️canonical-checkpoint-resource");
+    const fixtureRoot = join(this.root, "..", "..", "🏠️workspace", "🧪️tests/🧫️fixtures", "🔐️canonical-checkpoint-resource");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     const validate = workspaceContract(this.root, "CanonicalCheckpointResourceValueV1");
     if (!validate(fixture.resource.value)) throw new Error("invalid canonical checkpoint resource: " + JSON.stringify(validate.errors));

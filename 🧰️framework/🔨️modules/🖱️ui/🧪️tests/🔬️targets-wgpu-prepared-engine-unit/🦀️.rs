@@ -7,7 +7,7 @@ fn original_zero_index_geometry_submits_without_fabricated_surface_or_missing_me
     let _guard = prepared_process_guard();
     use crate::wgpu::kernel_3d_scene::*;
     use semio_framework_value::retained_clone::RetainedCloneGrant;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎬️scene/🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎬️scene/🧪️tests/🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
     let law = &fixture["zeroIndex"]["gpuSubmission"];
     let width = law["size"][0].as_u64().unwrap() as u32;
     let height = law["size"][1].as_u64().unwrap() as u32;
@@ -148,7 +148,7 @@ fn procedural_grid_uniforms_are_dpr_invariant_while_viewport_and_scissor_scale_p
 #[test]
 fn a_scene_pass_is_prepared_between_the_ui_scalars_authored_around_it() {
     let _guard = prepared_process_guard();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌌️prepared-scene-ui-stacking/🔣️.json")).expect("neutral scene/UI stacking fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌌️prepared-scene-ui-stacking/🔣️.json")).expect("neutral scene/UI stacking fixture");
     let steps = fixture["steps"].as_array().expect("authored stacking steps");
     let mut draw = DrawList::default();
     for step in steps {
@@ -207,7 +207,7 @@ fn a_scene_pass_is_prepared_between_the_ui_scalars_authored_around_it() {
 #[test]
 fn an_inline_overlay_follows_its_layer_scene_and_precedes_the_following_layer() {
     let _guard = prepared_process_guard();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️prepared-scene-overlay-stacking/🔣️.json")).expect("neutral scene/overlay stacking fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪜️prepared-scene-overlay-stacking/🔣️.json")).expect("neutral scene/overlay stacking fixture");
     let steps = fixture["steps"].as_array().expect("source stacking steps");
     let mut draw = DrawList::default();
     for step in steps {
@@ -284,7 +284,7 @@ fn an_inline_overlay_follows_its_layer_scene_and_precedes_the_following_layer() 
 #[test]
 fn prepared_glass_and_foreground_follow_authored_partial_and_nested_stacking() {
     let _guard = prepared_process_guard();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️prepared-glass-stacking/🔣️.json")).expect("neutral glass stacking fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️prepared-glass-stacking/🔣️.json")).expect("neutral glass stacking fixture");
     let steps = fixture["steps"].as_array().expect("authored steps");
     let mut draw = DrawList::default();
     let mut current_glass = None;

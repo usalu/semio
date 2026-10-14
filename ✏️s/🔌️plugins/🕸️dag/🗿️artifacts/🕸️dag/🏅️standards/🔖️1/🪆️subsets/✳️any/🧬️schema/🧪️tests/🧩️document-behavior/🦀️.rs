@@ -71,7 +71,7 @@ async fn node_field_leaves_are_empty_for_an_unknown_field_or_an_unchanged_value(
 /// point-invertible; undoing them in reverse restores the composed content byte for byte.
 #[semio_framework_async_macros::async_test]
 async fn remove_nodes_leaves_delete_incident_edges_first_and_undo_exactly() {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     let scene = demo();
     let node_id = scene.nodes.first().expect("fixture has a node").id.clone();
     let touching = scene.edges.iter().filter(|edge| split_endpoint(&edge.source).0 == node_id || split_endpoint(&edge.target).0 == node_id).count();

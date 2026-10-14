@@ -201,7 +201,7 @@ fn the_spotlight_catalogue_offers_every_registered_operator() {
 
 #[test]
 fn catalogue_entry_names_resolve_both_declared_languages() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧫️fixtures/🗣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🧫️fixtures/🗣️.json")).unwrap();
     for row in fixture.as_array().unwrap() {
         let id = row["id"].as_str().unwrap();
         for (language, labels) in [("en", &Generation3dLabels::NATIVE_EN), ("de", &Generation3dLabels::NATIVE_DE)] {

@@ -32,6 +32,7 @@ required-features = ["component-receipt-acceptance"]
 component-receipt-acceptance = []
 
 [dependencies]
+semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
 semio-framework-schema = { workspace = true }

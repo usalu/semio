@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "control": {
+    "maximumAllocationBytes": 1048576
+  },
+  "grant": {
+    "maximumItems": 16,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 65536,
+    "maximumDepth": 128
+  },
+  "text": "λ🙂λ🙂",
+  "textBytes": 12,
+  "hops": [
+    "local-pause-resume",
+    "local-recipient-detach-bind",
+    "forwarded-pause-resume",
+    "forwarded-detach-rebind",
+    "forwarded-recipient-move"
+  ],
+  "foreign": [
+    "fresh-ledger",
+    "fresh-recipient"
+  ],
+  "authority": "opaqueConsumingReceipt",
+  "callback": "originalSupplierRebind"
+}

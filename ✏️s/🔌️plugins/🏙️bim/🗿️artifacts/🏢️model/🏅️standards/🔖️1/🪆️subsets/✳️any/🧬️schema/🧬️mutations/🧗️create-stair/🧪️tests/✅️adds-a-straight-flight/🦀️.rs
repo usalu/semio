@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🧗️create-stair/✅️adds-a-straight-flight",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧗️create-stair/✅️adds-a-straight-flight/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧗️create-stair/✅️adds-a-straight-flight/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧗️create-stair/✅️adds-a-straight-flight/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧗️create-stair/✅️adds-a-straight-flight/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧗️create-stair/✅️adds-a-straight-flight/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧗️create-stair/✅️adds-a-straight-flight/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧗️create-stair/✅️adds-a-straight-flight/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧗️create-stair/✅️adds-a-straight-flight/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧗️create-stair/✅️adds-a-straight-flight/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧗️create-stair/✅️adds-a-straight-flight/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

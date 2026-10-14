@@ -5,7 +5,7 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 
 #[test]
 fn bounded_value_retirement_preserves_original_owner_and_physical_receipts_under_every_copy_grant() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️bounded-value-retirement/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/♻️bounded-value-retirement/🔣️.json")).unwrap();
     let body = fixture["body"].as_str().unwrap().repeat(fixture["repeat"].as_u64().unwrap() as usize);
     for case in fixture["cases"].as_array().unwrap() {
         let copy = case["maximumCopyBytes"].as_u64().unwrap() as usize;
@@ -67,7 +67,7 @@ fn bounded_value_retirement_preserves_original_owner_and_physical_receipts_under
 
 #[test]
 fn original_vcs_retirement_preserves_real_history_visibility_genesis_and_full_physical_receipts() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/📦️backing/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/📦️backing/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["vcsRetirement"];
     let forwards: Vec<u64> = law["forwards"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().parse::<u64>().unwrap()).collect();
     let inverse: Vec<u64> = law["inverse"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().parse::<u64>().unwrap()).collect();
@@ -129,7 +129,7 @@ fn original_vcs_retirement_preserves_real_history_visibility_genesis_and_full_ph
 
 #[test]
 fn original_displaced_queue_preserves_each_child_receipt_and_retains_maintenance_backing() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/📦️backing/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/📦️backing/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["displacedQueue"];
     let (mut queue, born, released) = crate::test_allocation::observe_backing(|| {
         let mut queue = ArtifactStoreDisplacedRetirements::new();
@@ -186,7 +186,7 @@ fn original_displaced_queue_preserves_each_child_receipt_and_retains_maintenance
 #[test]
 fn original_sparse_lane_authority_matches_sorted_oracle_and_retains_original_physical_backing() {
     use semio_framework_value::retirement::controlled::ControlledRetirement;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/📦️backing/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/📦️backing/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["sparseLaneAuthority"];
     let oracle: BTreeMap<&str, &str> = law["entries"].as_array().unwrap().iter().map(|row| (row[0].as_str().unwrap(), row[1].as_str().unwrap())).collect();
     let (mut lanes, allocated, released) = crate::test_allocation::observe_backing(|| {
@@ -245,7 +245,7 @@ fn original_sparse_lane_authority_matches_sorted_oracle_and_retains_original_phy
 
 #[test]
 fn original_repository_history_entry_close_conserves_raw_box_value_and_factory_custody() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/📦️backing/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/📦️backing/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["repositoryHistoryEntry"];
     let body = law["integer"].as_str().unwrap();
     let expected: u64 = serde_json::from_str(body).unwrap();
@@ -294,7 +294,7 @@ fn original_repository_history_entry_close_conserves_raw_box_value_and_factory_c
 
 #[test]
 fn original_schema_history_array_close_releases_same_decoder_ledger_and_factory_roots() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/📦️backing/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/📦️backing/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["repositoryHistoryEntry"];
     let (mut owner, allocated, released) = crate::test_allocation::observe_backing(|| {
         let factory: Arc<dyn ArtifactOwnedValueRetirementFactory<u64>> = Arc::new(BoundedArtifactRetirementFactory::<u64>::new());
@@ -340,7 +340,7 @@ fn original_schema_history_array_close_releases_same_decoder_ledger_and_factory_
 fn original_retained_member_open_close_conserves_supplied_birth_and_physical_release() {
     use super::tests::DemoSnapshot;
     use super::fixture_mutations::demo::DemoMutation;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/🚪️open/📏️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["retainedMemberClose"];
     let demand = bounded_artifact_store_owners_birth_demand::<DemoSnapshot, DemoMutation>().unwrap();
     let grant = physical_test_close_grant();
@@ -393,7 +393,7 @@ fn original_retained_member_open_close_conserves_supplied_birth_and_physical_rel
 
 #[test]
 fn original_operation_rows_close_conserves_last_factory_and_retired_string_owners() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/📦️backing/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/📦️backing/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["repositoryHistoryEntry"];
     let body = law["integer"].as_str().unwrap();
     let actual: u64 = semio_framework_pack_json::from_json_str(body, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

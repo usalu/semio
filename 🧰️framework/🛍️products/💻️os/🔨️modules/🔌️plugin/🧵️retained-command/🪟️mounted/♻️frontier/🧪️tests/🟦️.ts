@@ -1,14 +1,55 @@
 import {test,expect} from "bun:test";
+import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
 import Ajv from "ajv";
 import jsonPatch from "fast-json-patch";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {PublicationOutcomeCursor,type PublicationLane} from "../🟦️.ts";
-import faultCustodyCorpus from "../⚠️fault/🧫️fixtures/🔣️.json";
+import faultCustodyCorpus from "../⚠️fault/🧪️tests/🧫️fixtures/🔣️.json";
 import faultCustodySchema from "../⚠️fault/🧬️schema/🔣️.json";
 import {MountedFaultCustody} from "../⚠️fault/🟦️.ts";
+
+test("member replay and cancellation borrow the actual original context through both parent paths",()=>{
+ expect(new Ajv({strict:true}).compile(schema)(corpus)).toBe(true);expect(corpus.originalClose.memberPaths).toEqual(["storeReplacement","privateChildGroup"]);
+ const db=new Database(":memory:");try{expect(db.query("select ? as debit, ? as paths").get(1,corpus.originalClose.memberPaths.length)).toEqual({debit:1,paths:2});}finally{db.close();}
+ const root=join(import.meta.dir,"../../../.."),document=readFileSync(join(root,"🗃️document/🦀️.rs"),"utf8"),start=document.indexOf("fn drive_member_open("),member=document.slice(start,document.indexOf("fn ",start+40));
+ expect(member).toContain("cx:&mut semio_framework_job::StepContext<'_>");expect(member).not.toContain("StepContext::new");expect(member).not.toContain("StepBudget::new");
+ const closeStart=document.indexOf("fn drive_rejected_members("),close=document.slice(closeStart,document.indexOf("fn drive_initializer",closeStart));
+ expect(close).toContain("MemberOpenOperation::close_step(open,same)");expect(close).toContain("with_retained_loan(child");expect(close).not.toContain("plugin_sdk_fault(error.into_message())");
+ const group=readFileSync(join(root,"🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs"),"utf8"),retireStart=group.indexOf("fn retire_open("),retire=group.slice(retireStart,group.indexOf("fn make_lane",retireStart));
+ expect(retire).toContain("cx:&mut StepContext<'_>");expect(retire).toContain("open.close_step(same)");expect(retire).toContain("with_retained_loan(grant");expect(retire).not.toContain("into_message");
+ console.log("[DEBUG] Ajv/SQLite original Member store-replacement and private-group paths require one real live recipient debit and preserve full close failure without cold context or demand-derived fuel");
+});
+
+test("a paid ToolRun turn stops before any other publication family",()=>{
+ expect(new Ajv({strict:true}).compile(schema)(corpus)).toBe(true);expect(corpus.originalClose.singleFamilyPerLiveTurn).toBe(true);
+ const db=new Database(":memory:");try{const expected=db.query("select ?-? as paid, ? as families").get(7,0,1);expect(expected).toEqual({paid:7,families:1});}finally{db.close();}
+ const source=readFileSync(join(import.meta.dir,"../../../../🧵️instance/🦀️.rs"),"utf8"),start=source.indexOf("async fn advance_typed_operation_publication("),body=source.slice(start,source.indexOf("fn take_typed_operation_preparation_receipt",start)),tool=body.slice(body.indexOf("if self.tool_run_has_pending_work()"),body.indexOf("if self.time_travel_has_pending_work()"));
+ expect(start).toBeGreaterThanOrEqual(0);expect(tool).toContain("let tool_run_before=cx.retained_progress()");
+ expect(tool).toContain("cx.retained_progress()!=tool_run_before");
+ expect(tool).toContain("return Ok(())");
+ expect(body).toContain("let retained=cx.retained_grant()");
+ console.log("[DEBUG] SQLite one-family receiving reference requires actual posted ToolRun effects to stop before a stale raw time-travel/local-query loan");
+});
+
+test("mounted retirement requires original caller and preserves both complete failure owners",()=>{
+ expect(new Ajv({strict:true}).compile(schema)(corpus)).toBe(true);
+ const law=corpus.originalClose,db=new Database(":memory:");
+ try{db.exec("create table original_failure(role text primary key,owner text)");db.query("insert into original_failure values (?,?)").run("primary",JSON.stringify(law.primary));db.query("insert into original_failure values (?,?)").run("receiptRefusal",JSON.stringify(law.receiptRefusal));expect(db.query("select count(*) as owners from original_failure").get()).toEqual({owners:2});for(const role of ["primary","receiptRefusal"]as const){const row=db.query("select owner from original_failure where role=?").get(role)as{owner:string};expect(JSON.parse(row.owner)).toEqual(law[role]);}}
+ finally{db.close();}
+ const path=join(import.meta.dir,"../../../../🧵️instance/🔄️full-operation/🦀️.rs"),source=readFileSync(path,"utf8"),start=source.indexOf("fn granted_mounted_retirement_step(");
+ expect(start).toBeGreaterThanOrEqual(0);const body=source.slice(start);
+ expect(body).toContain("cx:&mut semio_framework_job::StepContext<'_>");
+ expect(body).toContain("Result<RetainedCloneStep,crate::PluginLifecycleFailure>");
+ expect(body).toContain("self.retire_typed_operation_unit(id,cx)");
+ expect(body).toContain("owner.close_step(cx)");
+ expect(body).toContain("owner.retirement_step(cx)");
+ expect(body).not.toContain("retained_close_fault=Some(original)");
+ expect(body).not.toContain("Err(ValueError::literal");
+ console.log("[DEBUG] SQLite preserves complete primary/source/physical receipt and independent receiving refusal; actual mounted retirement must borrow original context and forward both owners");
+});
 
 test("original mounted close faults remain owned across refused admission and physical frame closure",()=>{
  const source=readFileSync(join(import.meta.dir,"../🦀️.rs"),"utf8"),host=["🧵️instance/🦀️.rs","🧵️instance/🔄️full-operation/🦀️.rs","🧵️retained-command/🔄️full-operation/🦀️.rs"].map(file=>readFileSync(join(join(import.meta.dir,"../../../.."),file),"utf8")).join("\n");
@@ -26,7 +67,7 @@ test("original mounted close faults remain owned across refused admission and ph
 test("mounted publications keep original payload and allocation through a genuine caller grant",()=>{
  const root=join(import.meta.dir,"../../../..");
  const host=["🧵️instance/🦀️.rs","🧵️instance/🔄️full-operation/🦀️.rs","🧵️retained-command/🔄️full-operation/🦀️.rs"].map(file=>readFileSync(join(root,file),"utf8")).join("\n"),frontier=[join(import.meta.dir,"../🦀️.rs"),join(root,"🧵️instance/🔄️full-operation/🦀️.rs")].map(file=>readFileSync(file,"utf8")).join("\n");
- const start=host.indexOf("fn retirement_step(&mut self, grant: RetainedCloneGrant)",host.indexOf("impl<A: ArtifactApp> MountedTypedCommandFullOperation"));
+ const start=host.indexOf("fn retirement_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>)",host.indexOf("impl<A: ArtifactApp> MountedTypedCommandFullOperation"));
  expect(start).toBeGreaterThanOrEqual(0);const body=host.slice(start,host.indexOf("fn terminal_is_empty",start));
  expect(body).not.toContain("artifact_mutations.pop()");expect(body).not.toContain("drop(self.completion.take())");expect(body).not.toContain("drop(chunk)");
  expect(frontier).toContain("A::admit_completion_retirement(&mut self.publication,grant)");
@@ -34,7 +75,7 @@ test("mounted publications keep original payload and allocation through a genuin
  expect(frontier).toContain("release_bytes:owner.frame_release_bytes()");
  expect(frontier).toContain("if owner.terminal_is_empty(){let bytes=owner.frame_release_bytes()");
  for(const axis of ["copy_bytes","capacity_bytes","release_bytes","depth"]){expect(frontier).toContain("grant.maximum_"+axis+"<demand."+axis);}
- const ladder=readFileSync(join(root,"🪜️close-ladder/🦀️.rs"),"utf8");expect(ladder).toContain("CloseRung::DirectIngress => self.window_config_store.close_direct_ingress(grant)");expect(ladder).toContain("CloseRung::GrantedMounted => self.granted_mounted_retirement_step(grant)");
+ const ladder=readFileSync(join(root,"🪜️close-ladder/🦀️.rs"),"utf8");expect(ladder).toContain("CloseRung::DirectIngress=>self.window_config_store.close_direct_ingress(grant)");expect(ladder).toContain("CloseRung::GrantedMounted=>self.granted_mounted_retirement_step(cx)");
  const owner=readFileSync(join(root,"🧩️composition/📬️publication/🦀️.rs"),"utf8"),publicationStart=owner.indexOf("impl<A: ArtifactApp> PendingArtifactStorePublication<A>");
  const end=/\r?\n}\r?\n/.exec(owner.slice(publicationStart));expect(end).not.toBeNull();const publication=owner.slice(publicationStart,publicationStart+end!.index+end![0].length);
  expect(publication).toContain("fn close_step(&mut self, grant:RetainedCloneGrant)");

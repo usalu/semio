@@ -1,0 +1,36 @@
+{
+  "historyLimits": {
+    "fileBytes": 67108864,
+    "frameBodyBytes": 1048576,
+    "records": 8192,
+    "maximumFields": 128,
+    "maximumTextBytes": 1048576,
+    "maximumBinaryBytes": 1048576,
+    "maximumJsonBytes": 1048576,
+    "maximumJsonAllocationBytes": 8388608,
+    "maximumJsonItems": 65536,
+    "maximumJsonDepth": 64
+  },
+  "maximumHistoryAllocationBytes": 8388608,
+  "expected": {
+    "sameOriginalPages": true,
+    "sameSupplierIdentity": true,
+    "sameLedgerRecipient": true,
+    "requiredDeclaration": true,
+    "noGather": true,
+    "noDefaultLimits": true,
+    "paidPartial": true,
+    "borrowedClose": true,
+    "fullFailure": true,
+    "stableCloseSource": true,
+    "noDoubleDebit": true
+  },
+  "caller": {
+    "operation": 1,
+    "generation": 1,
+    "clockUs": 1,
+    "deadlineUs": 999,
+    "fuel": 8192,
+    "maximumTurns": 65536
+  }
+}

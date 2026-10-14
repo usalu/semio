@@ -1,0 +1,276 @@
+{
+  "version": 1,
+  "fields": [
+    "schema",
+    "image"
+  ],
+  "imageFields": [
+    "width",
+    "height",
+    "pixels",
+    "jfifVersion",
+    "jfifDensityUnits",
+    "jfifXDensity",
+    "jfifYDensity",
+    "jfifThumbnail",
+    "otherSegments"
+  ],
+  "tables": {
+    "jpg_document": 9,
+    "jpg_rgba_pixel": 7,
+    "jpg_thumbnail": 3,
+    "jpg_thumbnail_rgb_pixel": 6,
+    "jpg_segment": 4,
+    "jpg_segment_octet": 4
+  },
+  "originalGrant": {
+    "maximumItems": 1048576,
+    "maximumCopyBytes": 16777216,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 4096
+  },
+  "nativeMaximumBytes": 67108864,
+  "sqlMaximumBytes": 67108864,
+  "maximumCloseTurns": 65536,
+  "checkpointBytes": 256,
+  "literal": "JPEG \u0000語\r\n/|original",
+  "signedOffsets": [
+    0,
+    -1,
+    -1000
+  ],
+  "densityUnits": [
+    "aspect",
+    "pixelsPerInch",
+    "pixelsPerCm"
+  ],
+  "pixels": [
+    [],
+    [
+      0
+    ],
+    [
+      0,
+      255
+    ],
+    [
+      0,
+      255,
+      128
+    ],
+    [
+      0,
+      255,
+      128,
+      64
+    ],
+    [
+      0,
+      255,
+      128,
+      64,
+      17,
+      0,
+      255
+    ]
+  ],
+  "thumbnails": [
+    null,
+    {
+      "width": 0,
+      "height": 255,
+      "rgbData": []
+    },
+    {
+      "width": 255,
+      "height": 0,
+      "rgbData": [
+        0
+      ]
+    },
+    {
+      "width": 0,
+      "height": 0,
+      "rgbData": [
+        0,
+        255
+      ]
+    },
+    {
+      "width": 1,
+      "height": 1,
+      "rgbData": [
+        0,
+        255,
+        128,
+        17,
+        0
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "marker": 0,
+      "data": []
+    },
+    {
+      "marker": 255,
+      "data": [
+        0,
+        255,
+        128,
+        64
+      ]
+    },
+    {
+      "marker": 0,
+      "data": []
+    }
+  ],
+  "edits": [
+    {
+      "name": "schema",
+      "sql": "UPDATE jpg_document SET schema='changed'",
+      "reconstruct": "changed"
+    },
+    {
+      "name": "width",
+      "sql": "UPDATE jpg_document SET width=1",
+      "reconstruct": "changed"
+    },
+    {
+      "name": "height",
+      "sql": "UPDATE jpg_document SET height=1",
+      "reconstruct": "changed"
+    },
+    {
+      "name": "version-major",
+      "sql": "UPDATE jpg_document SET jfif_major=1",
+      "reconstruct": "changed"
+    },
+    {
+      "name": "version-minor",
+      "sql": "UPDATE jpg_document SET jfif_minor=1",
+      "reconstruct": "changed"
+    },
+    {
+      "name": "density",
+      "sql": "UPDATE jpg_document SET density_units='pixelsPerCm'",
+      "reconstruct": "changed"
+    },
+    {
+      "name": "x-density",
+      "sql": "UPDATE jpg_document SET x_density=1",
+      "reconstruct": "changed"
+    },
+    {
+      "name": "y-density",
+      "sql": "UPDATE jpg_document SET y_density=1",
+      "reconstruct": "changed"
+    },
+    {
+      "name": "pixel",
+      "sql": "UPDATE jpg_rgba_pixel SET red=255 WHERE ordinal=0",
+      "reconstruct": "changed"
+    },
+    {
+      "name": "thumbnail-width",
+      "sql": "UPDATE jpg_thumbnail SET width=255",
+      "reconstruct": "changed"
+    },
+    {
+      "name": "thumbnail-height",
+      "sql": "UPDATE jpg_thumbnail SET height=255",
+      "reconstruct": "changed"
+    },
+    {
+      "name": "thumbnail-pixel",
+      "sql": "UPDATE jpg_thumbnail_rgb_pixel SET red=255 WHERE ordinal=0",
+      "reconstruct": "changed"
+    },
+    {
+      "name": "segment-marker",
+      "sql": "UPDATE jpg_segment SET marker=1 WHERE ordinal=0",
+      "reconstruct": "changed"
+    },
+    {
+      "name": "segment-octet",
+      "sql": "UPDATE jpg_segment_octet SET octet=1 WHERE ordinal=0",
+      "reconstruct": "changed"
+    },
+    {
+      "name": "pixel-hole",
+      "sql": "UPDATE jpg_rgba_pixel SET green=NULL WHERE ordinal=0",
+      "reconstruct": "invalid"
+    },
+    {
+      "name": "rgb-hole",
+      "sql": "UPDATE jpg_thumbnail_rgb_pixel SET green=NULL WHERE ordinal=0",
+      "reconstruct": "invalid"
+    },
+    {
+      "name": "orphan-segment",
+      "sql": "UPDATE jpg_segment_octet SET segment_id=999 WHERE ordinal=0",
+      "reconstruct": "invalid"
+    },
+    {
+      "name": "duplicate-order",
+      "sql": "UPDATE jpg_segment SET ordinal=0 WHERE ordinal=1",
+      "reconstruct": "invalid"
+    },
+    {
+      "name": "gap-order",
+      "sql": "UPDATE jpg_segment_octet SET ordinal=999 WHERE ordinal=0",
+      "reconstruct": "invalid"
+    },
+    {
+      "name": "marker-width",
+      "sql": "UPDATE jpg_segment SET marker=256 WHERE ordinal=0",
+      "reconstruct": "invalid"
+    },
+    {
+      "name": "octet-width",
+      "sql": "UPDATE jpg_segment_octet SET octet=256 WHERE ordinal=0",
+      "reconstruct": "invalid"
+    },
+    {
+      "name": "document-id",
+      "sql": "UPDATE jpg_document SET id=0",
+      "reconstruct": "invalid"
+    },
+    {
+      "name": "dimension-width",
+      "sql": "UPDATE jpg_document SET width=4294967296",
+      "reconstruct": "invalid"
+    },
+    {
+      "name": "version-width",
+      "sql": "UPDATE jpg_document SET jfif_major=256",
+      "reconstruct": "invalid"
+    },
+    {
+      "name": "density-width",
+      "sql": "UPDATE jpg_document SET x_density=65536",
+      "reconstruct": "invalid"
+    },
+    {
+      "name": "density-tag",
+      "sql": "UPDATE jpg_document SET density_units='wrong'",
+      "reconstruct": "invalid"
+    }
+  ],
+  "emptyImage": {
+    "width": 0,
+    "height": 0,
+    "pixels": [],
+    "jfifVersion": [
+      1,
+      1
+    ],
+    "jfifDensityUnits": "aspect",
+    "jfifXDensity": 1,
+    "jfifYDensity": 1,
+    "otherSegments": []
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "annex": null,
+  "site": null,
+  "buildings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bridges": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "assessments": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "silos": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tanks": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "foundations": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "fd-2",
+          "supportedBuildingId": "bldg-office",
+          "areaM2": 120.0,
+          "pRdPa": 400000.0,
+          "hRdN": 500000.0,
+          "kFoundation": 800000.0,
+          "kSoil": 300000.0
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "retainingWalls": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "towers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

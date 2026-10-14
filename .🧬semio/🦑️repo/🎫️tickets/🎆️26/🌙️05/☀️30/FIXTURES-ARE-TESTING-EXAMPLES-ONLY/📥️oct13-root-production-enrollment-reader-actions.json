@@ -1,0 +1,7 @@
+{
+  "exclusive": false,
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧭️fixture-placement/🟦️.ts",
+  "beforeSha256": "d10a3b84b28f6a6a1e905d009d89a7cc46526923367a1cc59d0f15dfed435c9a",
+  "afterSha256": "2a1ca13f429936d77e1f541c380cd1d220441653d378dd6e703ac7cfd65143b7",
+  "reason": "Original enrollment records are consumed solely by regression test; generated compiler outputs outside Source scope excluded from filesystem guard"
+}

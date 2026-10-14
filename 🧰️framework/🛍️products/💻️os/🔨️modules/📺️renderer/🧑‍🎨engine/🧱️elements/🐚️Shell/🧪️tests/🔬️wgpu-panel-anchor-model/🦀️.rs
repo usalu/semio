@@ -14,7 +14,7 @@ fn fresh_state() -> ShellState {
 /// 🎯️ The same neutral owner vectors address each retained spawned document and action.
 #[test]
 fn spawned_documents_and_actions_keep_their_exact_owning_session() {
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️spawned-document-routing/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️spawned-document-routing/🔣️.json")).unwrap();
     let session = |owner: &Value| {
         let mut app = super::command_registry_tests::test_app(Vec::new(), Vec::new());
         app.id = owner["appId"].as_str().unwrap().into();
@@ -144,7 +144,7 @@ pub(super) fn host_test_shell() -> ShellState {
 
 #[test]
 fn host_panel_json_codec_matches_the_neutral_fixture_and_rejects_invalid_carriage() {
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/📌️panel-state/🔣️.json")).expect("panel fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/📌️panel-state/🔣️.json")).expect("panel fixture");
     let base: SpacePanelState = serde_json::from_value(fixture["base"].clone()).expect("fixture base");
     let encoded = ShellState::panel_json(&base).expect("strict panel JSON");
     assert!(encoded.starts_with('{'));
@@ -260,7 +260,7 @@ fn panel_default_width_is_uniform_and_wider_than_the_former_document_panel() {
 /// ↔️ The real panel walk publishes exactly React's resize edges and one compact-spacing hit rail.
 #[test]
 fn panel_resize_hits_match_reacts_edge_count_and_single_spacing_width() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/↔️panel-resize/🔣️.json")).expect("panel resize fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/↔️panel-resize/🔣️.json")).expect("panel resize fixture");
     let theme = Theme::default();
     assert_eq!(fixture["widthUiSpacing"], serde_json::json!(1));
     for case in fixture["cases"].as_array().expect("resize cases") {
@@ -305,7 +305,7 @@ fn panel_resize_hits_match_reacts_edge_count_and_single_spacing_width() {
 /// 🧭️ The shared default-dock fixture both renderers assert against — the id-only skeleton React's
 /// `defaultDock` (`🏛️ShellHost/🟦️.tsx`'s 🧭️DockAssembly) and this shell's `default_dock` must agree on.
 fn default_dock_fixture() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🧭️default-dock/🔣️.json")).expect("default dock fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🧭️default-dock/🔣️.json")).expect("default dock fixture")
 }
 
 fn fixture_group(group: &str) -> PanelGroup {
@@ -1095,7 +1095,7 @@ fn a_bridge_tool_call_frame_becomes_a_conversation_row_in_the_chat_panel() {
 /// cancel frame, retires itself while cancellation is pending, and trusts only the result to settle.
 #[test]
 fn the_chat_cancel_control_drives_the_shared_invocation_lifecycle_end_to_end() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../🔗️AgentBridge/🧫️fixtures/🛑️cancellation/🔣️.json")).expect("cancellation fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../🔗️AgentBridge/🧪️tests/🧫️fixtures/🛑️cancellation/🔣️.json")).expect("cancellation fixture");
     let invocation_id = fixture["invocation"]["id"].as_str().expect("invocation id");
     let tool_name = fixture["invocation"]["toolName"].as_str().expect("tool name");
     let arguments = fixture["invocation"]["arguments"].as_str().expect("arguments");

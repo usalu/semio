@@ -6,7 +6,7 @@ import ts from "typescript";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import schema from "../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "../🧪️tests/🧫️fixtures/🔣️.json";
 
 test("neutral Pack tooling follows the same explicit boundary for computed imports and process commands",()=>{
  const validate=new Ajv({strict:true,allErrors:true}).compile(schema),database=new Database(":memory:");

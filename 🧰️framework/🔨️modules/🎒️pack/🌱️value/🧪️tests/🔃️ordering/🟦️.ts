@@ -1,7 +1,7 @@
 /** 🔃️ SQLite independently separates schema map byte order and intrinsic occurrence order. */
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
-import fixture from"../../🧫️fixtures/🔃️ordering/🔣️.json";
+import fixture from"../../🧪️tests/🧫️fixtures/🔃️ordering/🔣️.json";
 
 test("closed schema maps sort byte keys while intrinsic occurrences retain duplicates",()=>{
  

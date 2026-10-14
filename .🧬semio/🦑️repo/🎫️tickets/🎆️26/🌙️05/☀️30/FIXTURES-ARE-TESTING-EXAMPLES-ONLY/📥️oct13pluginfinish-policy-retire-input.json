@@ -1,0 +1,50 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/📬️preparation/🧬️schema/🔣️.json",
+    "beforeSha256": "3aab72d21e095ceddcd43ce9e2da37d8ea1d54e127aa5325c13f4498cbc761b4"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🧬️schema/🔣️.json",
+    "beforeSha256": "ee662616ceb2d0556ac0c515e43310e74245ab321bbfe5d3ca503d9153947ca8"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🧬️schema/🎟️original.json",
+    "beforeSha256": "776280ec106a59499764393900c42bc6d3e387c9ebc8f036f47f455346f39582"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🧬️schema/🎟️original.json",
+    "beforeSha256": "35670eb2004ac6dc0a336db976b6869ff4f93f00889a25c019a0cee2cd1c16ab"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🫀️core/🧬️schema/🔣️.json",
+    "beforeSha256": "6a2dc3f316b079424892ccd286662be1a266f10c22051ba0da0ee17b756fcdf9"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏭️bridge/🧬️schema/🔣️.json",
+    "beforeSha256": "53ff09b3d01e1d1de7d711bf14fd25c4caea7d04364d18bcd85c871417e9a23d"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏭️bridge/🧬️schema/🔣️.json",
+    "beforeSha256": "528a8184d8d786dee114122b6e74b3fa116b1b6d1382ddc373c9acf371fa82ad"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏭️bridge/🧬️schema/🔣️.json",
+    "beforeSha256": "7c466c75325fa50643c756ce87cf11afd6a247eb951fae75b84b454eef8544d7"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏭️bridge/🧬️schema/🔣️.json",
+    "beforeSha256": "69d78c6a0bba6f92ed19b5d00ea07d57abdbe7f6c4ef5a20c6db408482e38338"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏭️bridge/🧬️schema/🔣️.json",
+    "beforeSha256": "20470d7bf03b98225f47dcadaa899e3803a5067971bb310d5cce79d499ecdcee"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏭️bridge/🧬️schema/🔣️.json",
+    "beforeSha256": "e9b073246fe3ac38598369ca604c8598a26af1619cbb35cf33d4dd1e96c8b1d5"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏭️bridge/🧬️schema/🔣️.json",
+    "beforeSha256": "7feab4254f05173a0e808df28156fc21ba3ab94e2cdbda6b40607873a4fe4f0c"
+  }
+]

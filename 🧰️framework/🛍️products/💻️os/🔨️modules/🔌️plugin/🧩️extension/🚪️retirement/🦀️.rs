@@ -9,15 +9,16 @@ use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, reta
 mod original_invocation_tests;
 
 /// 📬️ A pending invocation publishes no payload and preserves the actual original caller receipt.
-pub struct ExtensionInvokeStep{pub payload:Option<Vec<u8>>,pub retained_progress:RetainedCloneProgress,pub refusal:Option<ValueError>}
+#[derive(semio_framework_value::RetireOwned)]
+pub struct ExtensionInvokeStep{pub payload:Option<Vec<u8>>,pub retained_progress:RetainedCloneProgress,pub refusal:Option<semio_framework_job::OriginalTurnFailure>}
 
 impl ExtensionInvokeStep{
     /// 🧾️ Verifies the original context delta without spending its already debited receipt again.
     pub fn admit(mut self,grant:RetainedCloneGrant,before:RetainedCloneProgress,after:RetainedCloneProgress)->Self{
         if self.refusal.is_some(){return self}
-        let (Some(copied_items),Some(copied_bytes),Some(retained_capacity_bytes),Some(released_bytes))=(after.copied_items.checked_sub(before.copied_items),after.copied_bytes.checked_sub(before.copied_bytes),after.retained_capacity_bytes.checked_sub(before.retained_capacity_bytes),after.released_bytes.checked_sub(before.released_bytes))else{self.refusal=Some(ValueError::literal(ValueRefusalKind::InvariantViolated,"original extension invocation decreased its caller receipt"));return self};
+        let (Some(copied_items),Some(copied_bytes),Some(retained_capacity_bytes),Some(released_bytes))=(after.copied_items.checked_sub(before.copied_items),after.copied_bytes.checked_sub(before.copied_bytes),after.retained_capacity_bytes.checked_sub(before.retained_capacity_bytes),after.released_bytes.checked_sub(before.released_bytes))else{self.refusal=Some(ValueError::literal(ValueRefusalKind::InvariantViolated,"original extension invocation decreased its caller receipt").into());return self};
         let actual=RetainedCloneProgress{copied_items,copied_bytes,retained_capacity_bytes,released_bytes};
-        if actual!=self.retained_progress||!actual.fits(grant){self.refusal=Some(ValueError::literal(ValueRefusalKind::InvariantViolated,"original extension invocation requires its complete same caller receipt").with_retained_progress(actual))}
+        if actual!=self.retained_progress||!actual.fits(grant){self.refusal=Some(ValueError::literal(ValueRefusalKind::InvariantViolated,"original extension invocation requires its complete same caller receipt").with_retained_progress(actual).into())}
         self
     }
 }
@@ -134,10 +135,10 @@ impl ExtensionBundle {
     /// 💡️ Public named inference transport shares the registered service wire gateway and owner.
     pub fn artifact_infer(&self,request:&[u8],cx:&mut semio_framework_job::StepContext<'_>)->crate::ArtifactInferenceGatewayStep {
         let empty=|refusal|crate::ArtifactInferenceGatewayStep{payload:None,retained_progress:Default::default(),refusal};
-        if self.closing{return empty(Some(crate::ArtifactInferenceGatewayFailure::Literal("extension inference owner is closing")))}
+        if self.closing{return empty(Some(crate::ArtifactInferenceGatewayFailure::Literal("extension inference owner is closing").into()))}
         let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0||cx.should_yield(){return empty(None)}
         let context=self.resource_owner.as_ref().and_then(|owner|owner.inference_context());
-        let mut slot=match self.inference_gateway.lock(){Ok(slot)=>slot,Err(_)=>return empty(Some(crate::ArtifactInferenceGatewayFailure::Literal("original inference gateway owner is poisoned")))};
+        let mut slot=match self.inference_gateway.lock(){Ok(slot)=>slot,Err(_)=>return empty(Some(crate::ArtifactInferenceGatewayFailure::Literal("original inference gateway owner is poisoned").into()))};
         if slot.is_none(){*slot=Some(crate::ArtifactInferenceGateway::new(cx.operation().0,cx.generation().0,request));}
         let answer=slot.as_mut().unwrap().step(request,cx,context);
         if answer.payload.is_some(){assert!(slot.as_ref().unwrap().terminal_is_empty(),"original inference source remains owned before publication");*slot=None;}

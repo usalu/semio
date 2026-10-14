@@ -7,7 +7,7 @@
 use super::*;
 use semio_framework_tool_machine::{node_graph_edit_rows, NodeGraphEditRow};
 
-const NODE_GRAPH_EDIT_ROWS_FIXTURE_JSON: &str = include_str!("../../../../../../🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
+const NODE_GRAPH_EDIT_ROWS_FIXTURE_JSON: &str = include_str!("../../../../../../🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
 
 fn ids(values: &[&str]) -> Vec<String> {
     values.iter().map(|value| (*value).to_string()).collect()

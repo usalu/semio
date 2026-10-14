@@ -211,7 +211,7 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation3dView
     /// 🧹️ A LIVE session owns nothing retirable — `FlowEvalSession::close_step` answers `Blocked`
     /// until `begin_close`, and reporting that from the live maintenance ladder spends the
     /// runtime's zero-progress credit every idle turn.
-    fn maintenance_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
         use semio_framework_plugin::PluginLifecycleStep;
         use semio_framework_value::retained_clone::RetainedCloneProgress;
         if !self.closing {
@@ -224,11 +224,10 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation3dView
         let (progress, finished) = if session.terminal_is_empty() {
             (RetainedCloneProgress { copied_items: 1, ..Default::default() }, true)
         } else {
-            match session.close_step(grant) {
+            match session.close_step(grant)? {
                 semio_framework_job::InteractiveJobCloseStep::Pending { progress } => (progress, false),
                 semio_framework_job::InteractiveJobCloseStep::Complete { progress } => (progress, true),
                 semio_framework_job::InteractiveJobCloseStep::Blocked => return Ok(PluginLifecycleStep::Blocked { reason: "Generation3d viewer evaluation session awaits its exact close grant" }),
-                semio_framework_job::InteractiveJobCloseStep::Refused { .. } => return Err(Fault::from("generation3d-view-eval-session-close-refused")),
             }
         };
         if finished && session.terminal_is_empty() {
@@ -237,12 +236,12 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation3dView
         Ok(if self.terminal_is_empty() { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) })
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
         self.closing = true;
         if let Some(session) = self.eval_session.as_mut() {
             session.begin_close();
         }
-        self.maintenance_step(grant)
+        self.maintenance_step(cx,grant)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -456,7 +455,8 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.closing || self.complete {
             return Err(Fault::from("generation3d-view-work-is-terminal"));
         }
@@ -482,29 +482,38 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
         self.emit = Some(emit);
         let emit = self.emit.take().ok_or_else(|| Fault::from("generation3d-view-emit-owner-absent"))?;
         Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { presence, transient: Vec::new(), window_transient: Vec::new() } })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) {
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if cx.should_yield(){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked)}
+        if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
+        let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{(
+            ||->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         use semio_framework_job::InteractiveJobCloseStep;
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
-        let refused = |error: semio_framework_value::ValueError| InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() };
+        let refused = |error: semio_framework_value::ValueError| Err(error);
         let idle = RetainedCloneProgress::default();
         let one = RetainedCloneProgress { copied_items: 1, ..idle };
         if !self.closing {
-            return InteractiveJobCloseStep::Blocked;
+            return Ok(InteractiveJobCloseStep::Blocked);
         }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-            return InteractiveJobCloseStep::Pending { progress: idle };
+            return Ok(InteractiveJobCloseStep::Pending { progress: idle });
         }
         if let Some(emit) = self.emit.take() {
             return match semio_framework_value::retirement::controlled::ControlledRetirement::new(emit) {
                 Ok(owner) => {
                     self.emit_retirement = Some(owner);
-                    InteractiveJobCloseStep::Pending { progress: one }
+                    Ok(InteractiveJobCloseStep::Pending { progress: one })
                 }
                 Err((error, emit)) => {
                     self.emit = Some(emit);
@@ -518,7 +527,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
                 self.emit_retirement = None;
             }
             return match step {
-                Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
+                Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => Ok(InteractiveJobCloseStep::Pending { progress }),
                 Err(error) => refused(error),
             };
         }
@@ -526,7 +535,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
             return match semio_framework_value::retirement::controlled::ControlledRetirement::new(std::mem::take(&mut self.presence)) {
                 Ok(owner) => {
                     self.presence_retirement = Some(owner);
-                    InteractiveJobCloseStep::Pending { progress: one }
+                    Ok(InteractiveJobCloseStep::Pending { progress: one })
                 }
                 Err((error, presence)) => {
                     self.presence = presence;
@@ -540,12 +549,15 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
                 self.presence_retirement = None;
             }
             return match step {
-                Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
+                Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => Ok(InteractiveJobCloseStep::Pending { progress }),
                 Err(error) => refused(error),
             };
         }
-        InteractiveJobCloseStep::Complete { progress: idle }
+        Ok(InteractiveJobCloseStep::Complete { progress: idle })
+    })().map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()))})?;
+        Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
+
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
         Ok(self.close_demands(0)?.copy_bytes)
@@ -660,7 +672,8 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.complete || self.closing {
             return Err(Fault::from("generation3d-view-flow-eval-window-work-terminal"));
         }
@@ -708,19 +721,21 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
             emit: Emit { extension_invocations: outcome.extension_invocations, ui_scope: generation3d_view_chain_ui_scope(outcome.census_moved), ..Default::default() },
             ephemeral: EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient },
         })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) {
         self.closing = true;
     }
 
-    fn close_step(&mut self, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        if self.closing {
+    fn close_step(&mut self,_cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{Ok(if self.closing {
             semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }
         } else {
             semio_framework_job::InteractiveJobCloseStep::Blocked
-        }
-    }
+        })}
+
 
     fn terminal_is_empty(&self) -> bool {
         self.closing
@@ -760,7 +775,8 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("generation3d-view-flow-resolve-work-repeated"));
         }
@@ -775,6 +791,9 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
             })?
         })?;
         Ok(ArtifactCommandWorkStep::Complete(Emit { extension_invocations, ..Default::default() }))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 //#endregion ⏱️FlowEvalChain
@@ -899,7 +918,8 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewCont
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("generation3d-view-contributions-work-repeated"));
         }
@@ -921,6 +941,9 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewCont
             Ok(())
         })?;
         Ok(ArtifactCommandWorkStep::Complete(emit))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -1222,7 +1245,8 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewDocu
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("generation3d-view-document-io-work-repeated"));
         }
@@ -1247,6 +1271,9 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewDocu
         viewed.retire();
         let view_emit = emitted?;
         Ok(ArtifactCommandWorkStep::Complete(Emit { effects: view_emit.effects, ui_scope: view_emit.ui_dirty, ..Default::default() }))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -1493,6 +1520,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

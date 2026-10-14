@@ -1,0 +1,9 @@
+{
+  "mutation": "deleteNode",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "index": 1
+    }
+  }
+}

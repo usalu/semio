@@ -94,7 +94,7 @@
           "const": "s"
         },
         "profile": {
-          "const": "dev"
+          "const": "prototype"
         },
         "moduleSetSha256": {
           "$ref": "#/$defs/Sha256Digest"

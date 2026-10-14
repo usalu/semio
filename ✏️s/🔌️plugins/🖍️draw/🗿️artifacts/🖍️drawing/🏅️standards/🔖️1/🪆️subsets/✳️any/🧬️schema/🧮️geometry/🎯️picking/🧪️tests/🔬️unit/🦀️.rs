@@ -1,7 +1,7 @@
 use super::*;
 #[test]
 fn painted_geometry_fixture_is_incremental_and_bounded() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🔣️.json")).unwrap();
     for sample in cases.as_array().unwrap(){
         let segments:Vec<PathSegment>=serde_json::from_value(sample["segments"].clone()).unwrap();
         let mut cursor=PathHitCursor::new(serde_json::from_value(sample["point"].clone()).unwrap(),serde_json::from_value(sample["matrix"].clone()).unwrap(),sample["radius"].as_f64().unwrap(),0.001);

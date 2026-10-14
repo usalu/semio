@@ -1,0 +1,224 @@
+{
+  "plans": [
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/📃️flatness/🧪️contract/🟦️.ts",
+      "target": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📏️proportion/📃️flatness/🟦️.ts",
+      "sha256": "271b8342577d662ef87636271ad3b86e5673d71f2d6f40936063a3af93989a3a",
+      "spans": [
+        {
+          "before": "from '../../../../../🧪️tests/🧫️fixtures/💡️inferences/📏️proportion/📃️flatness/🔣️.json'",
+          "after": "from '../../../🧫️fixtures/💡️inferences/📏️proportion/📃️flatness/🔣️.json'"
+        },
+        {
+          "before": "from '../🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/📏️proportion/📃️flatness/🟦️.ts'"
+        },
+        {
+          "before": "from '../../../🔨️geometry-core/🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/🔨️geometry-core/🟦️.ts'"
+        }
+      ],
+      "afterSha256": "149b8a55f961c0969c0db12aa38f8f8beac2644f6533f5ece246835f22aa9cab"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/↔️elongation/🧪️contract/🟦️.ts",
+      "target": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📏️proportion/↔️elongation/🟦️.ts",
+      "sha256": "5ad7513ea4e2a0d79cb54a7290feed11cd19234adbc618af1eaabd1c09af2160",
+      "spans": [
+        {
+          "before": "from '../../../../../🧪️tests/🧫️fixtures/💡️inferences/📏️proportion/↔️elongation/🔣️.json'",
+          "after": "from '../../../🧫️fixtures/💡️inferences/📏️proportion/↔️elongation/🔣️.json'"
+        },
+        {
+          "before": "from '../🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/📏️proportion/↔️elongation/🟦️.ts'"
+        },
+        {
+          "before": "from '../../../🔨️geometry-core/🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/🔨️geometry-core/🟦️.ts'"
+        }
+      ],
+      "afterSha256": "464af1a22a42335ba2c7412c7d1d2b1a3b5f0c2451ff8c23d239bbc7c2e7b757"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/📏️slenderness/🧪️contract/🟦️.ts",
+      "target": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📏️proportion/📏️slenderness/🟦️.ts",
+      "sha256": "e3df8807a6cffa3c7a730d5b60f9cfd5e6ce975e6e11a99481e3e552addcb6cf",
+      "spans": [
+        {
+          "before": "from '../../../../../🧪️tests/🧫️fixtures/💡️inferences/📏️proportion/📏️slenderness/🔣️.json'",
+          "after": "from '../../../🧫️fixtures/💡️inferences/📏️proportion/📏️slenderness/🔣️.json'"
+        },
+        {
+          "before": "from '../🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/📏️proportion/📏️slenderness/🟦️.ts'"
+        },
+        {
+          "before": "from '../../../🔨️geometry-core/🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/🔨️geometry-core/🟦️.ts'"
+        }
+      ],
+      "afterSha256": "daad8eea0ba3fa8c23ade5e9b7653678a1648fd1fc1f89849e4d3daf08b263d6"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/🖼️aspect-ratios/🧪️contract/🟦️.ts",
+      "target": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📏️proportion/🖼️aspect-ratios/🟦️.ts",
+      "sha256": "d9222475b7095b156bd3ba78cb11b939c9d018c15f13b245380e55082a0e2790",
+      "spans": [
+        {
+          "before": "from '../../../../../🧪️tests/🧫️fixtures/💡️inferences/📏️proportion/🖼️aspect-ratios/🔣️.json'",
+          "after": "from '../../../🧫️fixtures/💡️inferences/📏️proportion/🖼️aspect-ratios/🔣️.json'"
+        },
+        {
+          "before": "from '../🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/📏️proportion/🖼️aspect-ratios/🟦️.ts'"
+        },
+        {
+          "before": "from '../../../🔨️geometry-core/🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/🔨️geometry-core/🟦️.ts'"
+        }
+      ],
+      "afterSha256": "67101b6f88038188c7dcd09482752213ab09c1377304d83e720146f1f81c3b61"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🥯️handles/🧪️contract/🟦️.ts",
+      "target": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/🥯️handles/🟦️.ts",
+      "sha256": "7e4b87bc7b1064fb69f89dbb1ebf97dfe621318222746c0902e620519d7f6719",
+      "spans": [
+        {
+          "before": "from '../../../../../🧪️tests/🧫️fixtures/💡️inferences/🕸️topology/🥯️handles/🔣️.json'",
+          "after": "from '../../../🧫️fixtures/💡️inferences/🕸️topology/🥯️handles/🔣️.json'"
+        },
+        {
+          "before": "from '../🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/🕸️topology/🥯️handles/🟦️.ts'"
+        },
+        {
+          "before": "from '../../../🔨️geometry-core/🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/🔨️geometry-core/🟦️.ts'"
+        }
+      ],
+      "afterSha256": "1fb4fc1ea6610e1cfb76cc4258b77cfa579fcf7b3f89ef1e7b3515d0f4e2e7a7"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🔢️genus/🧪️contract/🟦️.ts",
+      "target": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/🔢️genus/🟦️.ts",
+      "sha256": "92bc534e11532e63a1d3bcc15186d89c52f2e2f2d38eabb1ca3a64921917e2d3",
+      "spans": [
+        {
+          "before": "from '../../../../../🧪️tests/🧫️fixtures/💡️inferences/🕸️topology/🔢️genus/🔣️.json'",
+          "after": "from '../../../🧫️fixtures/💡️inferences/🕸️topology/🔢️genus/🔣️.json'"
+        },
+        {
+          "before": "from '../🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/🕸️topology/🔢️genus/🟦️.ts'"
+        },
+        {
+          "before": "from '../../../🔨️geometry-core/🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/🔨️geometry-core/🟦️.ts'"
+        }
+      ],
+      "afterSha256": "e4a8bbb23fda711b3e69019d677c7b933e308115ed88d5f41fafd2c17393ca10"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🕳️holes/🧪️contract/🟦️.ts",
+      "target": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/🕳️holes/🟦️.ts",
+      "sha256": "0ca188b65c983e5afa6b907ad54644ce38f8313cef105d170aaea82d5281bbd9",
+      "spans": [
+        {
+          "before": "from '../../../../../🧪️tests/🧫️fixtures/💡️inferences/🕸️topology/🕳️holes/🔣️.json'",
+          "after": "from '../../../🧫️fixtures/💡️inferences/🕸️topology/🕳️holes/🔣️.json'"
+        },
+        {
+          "before": "from '../🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/🕸️topology/🕳️holes/🟦️.ts'"
+        },
+        {
+          "before": "from '../../../🔨️geometry-core/🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/🔨️geometry-core/🟦️.ts'"
+        }
+      ],
+      "afterSha256": "88b5450dca494d0c1ba27ecf4d76ecce0438b7154331b7661ffc220d2bdec78f"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🧮️euler-characteristic/🧪️contract/🟦️.ts",
+      "target": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/🧮️euler-characteristic/🟦️.ts",
+      "sha256": "c501a7cc62b5877435a249a4565d629b8570edc7a626bff18c366e35c79ccca3",
+      "spans": [
+        {
+          "before": "from '../../../../../🧪️tests/🧫️fixtures/💡️inferences/🕸️topology/🧮️euler-characteristic/🔣️.json'",
+          "after": "from '../../../🧫️fixtures/💡️inferences/🕸️topology/🧮️euler-characteristic/🔣️.json'"
+        },
+        {
+          "before": "from '../🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/🕸️topology/🧮️euler-characteristic/🟦️.ts'"
+        },
+        {
+          "before": "from '../../../🔨️geometry-core/🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/🔨️geometry-core/🟦️.ts'"
+        }
+      ],
+      "afterSha256": "3be5f9afacec42a6d62fbb60a7a5da19160b6993c1b4d5a5fb2535401b71f1a0"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/➰️boundary-loops/🧪️contract/🟦️.ts",
+      "target": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/➰️boundary-loops/🟦️.ts",
+      "sha256": "78ebc88c2a6b68a6041e8f6977fda99b2014dc424efbff42b7a61a93e8af2c8c",
+      "spans": [
+        {
+          "before": "from '../../../../../🧪️tests/🧫️fixtures/💡️inferences/🕸️topology/➰️boundary-loops/🔣️.json'",
+          "after": "from '../../../🧫️fixtures/💡️inferences/🕸️topology/➰️boundary-loops/🔣️.json'"
+        },
+        {
+          "before": "from '../🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/🕸️topology/➰️boundary-loops/🟦️.ts'"
+        },
+        {
+          "before": "from '../../../🔨️geometry-core/🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/🔨️geometry-core/🟦️.ts'"
+        }
+      ],
+      "afterSha256": "d39947f7e6c035138c8a58ce4a7302de62b77f1de8bfebccd0f0164ce38a6495"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📦️size/↔️axis-aligned-bounds/🧪️contract/🟦️.ts",
+      "target": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📦️size/↔️axis-aligned-bounds/🟦️.ts",
+      "sha256": "3f0d89f42556260837c67b6f153d155dccaaf23d6c88e97d65f11fd4562d4bcb",
+      "spans": [
+        {
+          "before": "from '../../../../../🧪️tests/🧫️fixtures/💡️inferences/📦️size/↔️axis-aligned-bounds/🔣️.json'",
+          "after": "from '../../../🧫️fixtures/💡️inferences/📦️size/↔️axis-aligned-bounds/🔣️.json'"
+        },
+        {
+          "before": "from '../🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/📦️size/↔️axis-aligned-bounds/🟦️.ts'"
+        },
+        {
+          "before": "from '../../../🔨️geometry-core/🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/🔨️geometry-core/🟦️.ts'"
+        }
+      ],
+      "afterSha256": "b186626d6157e311692c5cf1954ee103d559542043be94a6716b12b22da0b972"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📦️size/📏️overall-size/🧪️contract/🟦️.ts",
+      "target": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📦️size/📏️overall-size/🟦️.ts",
+      "sha256": "6f464d58760df5bf9acf866ced935de121c47b6b43d5683db9bd29726fb60750",
+      "spans": [
+        {
+          "before": "from '../../../../../🧪️tests/🧫️fixtures/💡️inferences/📦️size/📏️overall-size/🔣️.json'",
+          "after": "from '../../../🧫️fixtures/💡️inferences/📦️size/📏️overall-size/🔣️.json'"
+        },
+        {
+          "before": "from '../🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/📦️size/📏️overall-size/🟦️.ts'"
+        },
+        {
+          "before": "from '../../../🔨️geometry-core/🟦️.ts'",
+          "after": "from '../../../../🧬️schema/💡️inferences/🔨️geometry-core/🟦️.ts'"
+        }
+      ],
+      "afterSha256": "f7651991c74e9a565b9e5b92105350ec5c509721f956fc72c65dce63d3b27b97"
+    }
+  ]
+}

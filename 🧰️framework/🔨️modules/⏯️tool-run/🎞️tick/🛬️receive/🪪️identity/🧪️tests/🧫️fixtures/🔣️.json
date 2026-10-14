@@ -1,0 +1,40 @@
+{
+  "contract": "semio.tool-run.original-identity-receiving.v1",
+  "grant": [
+    1,
+    17,
+    65536,
+    262144,
+    64
+  ],
+  "identity": {
+    "appInstanceId": 3,
+    "run": 42,
+    "generation": 1,
+    "baseRevision": "0008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8"
+  },
+  "bodyHex": "000401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f8",
+  "interruptAfter": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    7,
+    11,
+    17,
+    31,
+    47,
+    1000
+  ],
+  "sourceRanges": [
+    [
+      0,
+      46
+    ],
+    [
+      1,
+      46
+    ]
+  ]
+}

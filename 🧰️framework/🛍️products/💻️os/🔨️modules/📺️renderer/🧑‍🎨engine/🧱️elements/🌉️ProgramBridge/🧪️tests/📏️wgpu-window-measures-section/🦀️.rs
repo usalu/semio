@@ -8,7 +8,7 @@
 use super::*;
 
 pub(crate) fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/📏️window-measures/🔣️.json")).expect("window measures fixture parses")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📏️window-measures/🔣️.json")).expect("window measures fixture parses")
 }
 
 fn flatten(node: &ui_contract::BuiltNode, next: &mut u64, records: &mut Vec<ui_contract::UiNodeRecord>) -> ui_contract::UiNodeId {

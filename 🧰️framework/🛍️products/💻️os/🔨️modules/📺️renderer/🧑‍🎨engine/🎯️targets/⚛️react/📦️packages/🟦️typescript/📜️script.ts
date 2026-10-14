@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
-import { typecheckProject } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️typescript/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { resolve as compilerStatePath } from "node:path";
+import { typecheckProject } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🎨️ `@semio-tech/framework-renderer-react` task router. */
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
@@ -9,8 +10,8 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ValidateFunction } from "ajv";
 import { runBunx, runVitest } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import { SceneShadingPixelCheckScript } from "../../../../🔮️oracles/🎨️world3d-scene-shading/📜️script.ts";
 import { semioSchemaAjvV1 } from "../../../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
@@ -79,7 +80,7 @@ class AgentBridgeCheckScript extends BundleScript {
 
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await typecheckProject({ workspace: this.repoRoot, cwd: this.root, project: "tsconfig.json", owner: "renderer-react:typescript", args: segments, timeoutMs: 120_000, execution: { signal: this.invocation.control.signal } });
+    await typecheckProject({ workspace: this.repoRoot, stateRoot: compilerStatePath(this.repoRoot, ".cache", "framework"), invocation: this.invocation, cwd: this.root, project: "tsconfig.json", owner: "renderer-react:typescript", args: segments, timeoutMs: 120_000 });
   }
 }
 
@@ -142,7 +143,7 @@ class ArtifactCreationProgressCheckScript extends BundleScript {
 export function directoryHomeBootstrapOracle(repoRoot: string): number {
   const shellHostRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost");
   const contractRoot = join(shellHostRoot, "📇️directory-bootstrap");
-  const fixture = JSON.parse(readFileSync(join(shellHostRoot, "🧫️fixtures/📇️directory-bootstrap/🔣️.json"), "utf8")) as {
+  const fixture = JSON.parse(readFileSync(join(shellHostRoot, "🧪️tests/🧫️fixtures/📇️directory-bootstrap/🔣️.json"), "utf8")) as {
     receipt: Readonly<Record<string, unknown>>;
     identities: Readonly<Record<"a" | "b", Readonly<{ userId: string; displayName: string }>>>;
     hostile: readonly { readonly id: string; readonly patch: Readonly<Record<string, unknown>> }[];
@@ -237,7 +238,7 @@ class DirectoryHomeBootstrapCheckScript extends BundleScript {
  * `🌎️hub/🔐️auth/🦀️.rs`, so an AU1-side change to the route breaks this gate rather than the app. */
 export function hubAuthContractOracle(repoRoot: string): number {
   const hubSchema = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/🔐️auth/🧬️schema/🔣️.json"), "utf8")) as { $defs: Record<string, Record<string, unknown>> };
-  const osFixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔐️sign-in/🔣️.json"), "utf8")) as {
+  const osFixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔐️sign-in/🔣️.json"), "utf8")) as {
     signOutPath: string;
     requestSchema: string;
     errorSchema: string;
@@ -350,7 +351,7 @@ class DirectoryInviteCapabilityCheckScript extends BundleScript {
 export function scopedPresenceOracle(repoRoot: string): number {
   const shellHostRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost");
   const contractRoot = join(shellHostRoot, "👥️presence-scope");
-  const fixture = JSON.parse(readFileSync(join(shellHostRoot, "🧫️fixtures/👥️presence-scope/🔣️.json"), "utf8")) as {
+  const fixture = JSON.parse(readFileSync(join(shellHostRoot, "🧪️tests/🧫️fixtures/👥️presence-scope/🔣️.json"), "utf8")) as {
     documentId: string;
     cases: readonly { readonly scope: { readonly spaceId: string; readonly documentId: string }; readonly runtimeKey: string; readonly surface: string }[];
     close: { readonly clearsRuntimeKey: string; readonly preservesRuntimeKey: string };
@@ -437,7 +438,7 @@ export function world3dPointerGestureOracle(repoRoot: string): number {
     readonly path?: readonly { readonly x: number; readonly y: number }[];
     readonly expect: { readonly action: string; readonly domainId?: string; readonly channel?: string; readonly merge?: string; readonly method?: string; readonly targets?: readonly Target[]; readonly dispatches?: number; readonly camera?: Record<string, unknown> };
   };
-  const fixture = JSON.parse(readFileSync(join(hostRoot, "🧫️fixtures/🖱️pointer-gestures.json"), "utf8")) as {
+  const fixture = JSON.parse(readFileSync(join(hostRoot, "🧪️tests/🧫️fixtures/🖱️pointer-gestures.json"), "utf8")) as {
     scene: { surfaceId: string; controllerId: string; windowInstanceId: string; domainId: string; domainGranularityId: string; instances: readonly { id: string; interactionId: string; interactionGranularityId?: string }[] };
     viewport: { width: number; height: number };
     cameraDebounceMs: number;
@@ -574,7 +575,7 @@ export function world3dPointerGestureOracle(repoRoot: string): number {
 export function interactionSelectionSetOracle(repoRoot: string): number {
   const pluginRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin");
   type Case = { readonly id: string; readonly why: string; readonly seed: readonly string[]; readonly merge: string; readonly targets: readonly string[]; readonly selectedIds: readonly string[] };
-  const fixture = JSON.parse(readFileSync(join(pluginRoot, "🧫️fixtures/🕹️selection-set.json"), "utf8")) as {
+  const fixture = JSON.parse(readFileSync(join(pluginRoot, "🧪️tests/🧫️fixtures/🕹️selection-set.json"), "utf8")) as {
     domain: string;
     granularity: string;
     mirrorDomain: string;
@@ -622,7 +623,7 @@ export function interactionSelectionSetOracle(repoRoot: string): number {
 export function selectionMergeVocabularyOracle(repoRoot: string): number {
   type Row = { readonly id: string; readonly modifiers: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean }; readonly pick: string; readonly componentPick: string };
   type Case = { readonly id: string; readonly why: string; readonly orderedTopology?: readonly string[]; readonly seed: readonly string[]; readonly anchor: string | null; readonly merge: string; readonly targets: readonly string[]; readonly selectedIds: readonly string[]; readonly anchorId: string };
-  const fixturePath = "🧰️framework/🔨️modules/🕹️interaction/🧫️fixtures/🎯️merge-modes.json";
+  const fixturePath = "🧰️framework/🔨️modules/🕹️interaction/🧪️tests/🧫️fixtures/🎯️merge-modes.json";
   const fixture = JSON.parse(readFileSync(join(repoRoot, fixturePath), "utf8")) as {
     schema: { file: string; export: string; graphql: string };
     vocabulary: readonly string[];
@@ -798,7 +799,7 @@ type RetentionBody = { readonly key: string; readonly component: string; readonl
  * eval settle, the node-graph surface renumbered 30 → 34, and React rebuilt the flow host — a second
  * wasm session, a second canvas and a second wasm-side surface per boot. */
 export function surfaceHostRetentionOracle(repoRoot: string): number {
-  const fixturePath = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🪪️surface-host-retention.json";
+  const fixturePath = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🪪️surface-host-retention.json";
   const fixture = JSON.parse(readFileSync(join(repoRoot, fixturePath), "utf8")) as {
     surface: string;
     surfaceKey: string;

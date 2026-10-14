@@ -1,0 +1,11 @@
+{
+  "maximumBytes": 128,
+  "nativePaidBytes": 64,
+  "message": "SQLite backing requires the original receiving allocation port",
+  "cases": [
+    {"id":"local-unbound","receiving":false,"port":false,"bytes":2,"accepted":true},
+    {"id":"receiving-unbound","receiving":true,"port":false,"bytes":2,"accepted":false},
+    {"id":"receiving-zero","receiving":true,"port":false,"bytes":0,"accepted":true},
+    {"id":"receiving-forwarded","receiving":true,"port":true,"bytes":2,"accepted":true}
+  ]
+}

@@ -1,0 +1,140 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧬️schema/🔣️.json",
+    "exists": true,
+    "sha256": "b39256337ae2724ff54dc721d55e20ae83573d9a96d7bfea2717b71a1c6984ae",
+    "action": "remove-whole-trial-schema"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧫️fixtures/🔣️.json",
+    "exists": true,
+    "sha256": "30be2dfdc2e4a5e77565a8e9f8492eea1151efa90939535366b463c59ceaefa8",
+    "action": "retain-exact"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧫️fixtures/⚠️frontier.json",
+    "exists": true,
+    "sha256": "ff3f38d58599a82838f6e0183f1333411d9bc4d02283fce63271c8715f1059ee",
+    "action": "retain-exact"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧪️tests/🟦️.ts",
+    "exists": true,
+    "sha256": "247a3954fe7b7704cc25fccfeb6b551e62083d67b5e036465faa539eb9216b55",
+    "action": "update-original-reader"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🔢️occurrence-order/🧬️schema/🔣️.json",
+    "exists": true,
+    "sha256": "7850ce3ccc727cc1eb0fe0e37b11257c9e4ad8516d005227bfb65b047159fa34",
+    "action": "remove-whole-trial-schema"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🔢️occurrence-order/🧫️fixtures/🔣️.json",
+    "exists": true,
+    "sha256": "164b7eadbd3f7d8e5c23602a67c1526c79fd286f9d14fc411b7b8a9aef671dff",
+    "action": "retain-exact"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🔢️occurrence-order/🧪️tests/🟦️.ts",
+    "exists": true,
+    "sha256": "e10389c1a26702cf99cd86a9f4e85e4adc33832972c69050c68559bd56709f1e",
+    "action": "update-original-reader"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧬️schema/🧺️set.json",
+    "exists": true,
+    "sha256": "add4403863423fee51b13f9e2d9128ee1b66f9190df7ab52926da044f09eead9",
+    "action": "remove-whole-trial-schema"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧫️fixtures/🔣️.json",
+    "exists": true,
+    "sha256": "2d71c8de9a35d1f93ee4b3e72134d8e2cef202893e382421f835d545b8436b50",
+    "action": "retain-exact"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧫️fixtures/🧺️set.json",
+    "exists": true,
+    "sha256": "aa7262e9eb0cc588ec76d3c2c065c2eba9ed66e7ec1be1e36c24a1cc298c7e6a",
+    "action": "retain-exact"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🧺️set.ts",
+    "exists": true,
+    "sha256": "276f295c2e11963e812e545cc7a76d148434752df32456a8cd0a3290de22388b",
+    "action": "update-original-reader"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧬️schema/🔣️actor.json",
+    "exists": true,
+    "sha256": "cdad48030b1b2d466e10f4bc1996411cdee53bad28e296ef4b6fe505f289ddbe",
+    "action": "remove-whole-trial-schema"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧫️fixtures/🔣️actor.json",
+    "exists": true,
+    "sha256": "e88ed0ee82550b605ddf6db9419d25ad2f64364918b17de969129da638d28e33",
+    "action": "retain-exact"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧫️fixtures/🔣️.json",
+    "exists": true,
+    "sha256": "0863e4bcb14b069a1e18800217a3b3f8b30abf42ba4b897c567c92316957830d",
+    "action": "retain-exact"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧪️tests/🟦️.ts",
+    "exists": true,
+    "sha256": "cebf867ed70ab61bf43e36a140c6c95db48db3c1478fd804b542bb8ed8ecf09d",
+    "action": "update-original-reader"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧬️schema/⚠️frontier.json",
+    "exists": true,
+    "sha256": "d5963ea5afbe3e43f30d7ceca9dddef16662878b99c9a30a380d3de99da46ea0",
+    "action": "remove-whole-trial-schema"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs",
+    "exists": true,
+    "sha256": "cc12b69d5fe3d1bc84d555bfd110d28a9af8ddf4994b2892bf66de72d5123c2e",
+    "action": "retain-exact"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧪️tests/🦀️.rs",
+    "exists": true,
+    "sha256": "f1b34f5cd8d1f0b3b83deaf3908535635b62d8c98c0218e514a015a14abb3606",
+    "action": "retain-exact"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🦀️.rs",
+    "exists": true,
+    "sha256": "8ab4451332a78b5cc51a8681b781412dadd6fb4270c8813f538b923700cdb101",
+    "action": "retain-exact"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🦀️.rs",
+    "exists": true,
+    "sha256": "0c33cf4c34da74df67cd94fcdb715ef00b794a9e9208fcec388e50012aa1588c",
+    "action": "retain-exact"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🦀️.rs",
+    "exists": true,
+    "sha256": "a2d661812b933f6dfcf40cb8ed4f25c2e304378afbf575800dc061503becde35",
+    "action": "retain-exact"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧪️tests/🦀️.rs",
+    "exists": true,
+    "sha256": "fecd9fb21f831d4db86caebc81514eb1f63eee7fb8a51a324e75d9f59046ca8e",
+    "action": "retain-exact"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/🏃️work/🎟️grant/🧬️schema/🔣️.json",
+    "exists": true,
+    "sha256": "85b065550b64244fe778233d90dbb6d04ce9a52717411dd11369fc4c94cb9918",
+    "action": "retain-exact"
+  }
+]

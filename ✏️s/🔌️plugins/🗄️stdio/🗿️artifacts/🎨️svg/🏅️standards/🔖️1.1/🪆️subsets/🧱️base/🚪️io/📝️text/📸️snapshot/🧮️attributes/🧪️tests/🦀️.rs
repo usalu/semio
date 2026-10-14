@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn svg_typed_attribute_neutral_corpus_decodes_and_formats_owned_values() {
     use semio_framework_value::FromValue;
-    let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧩️typed-attributes/🔣️.json")).unwrap();
+    let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧩️typed-attributes/🔣️.json")).unwrap();
     for row in corpus["cases"].as_array().unwrap() {
         let value=semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&row["owned"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let expected=crate::schema::snapshot::SvgAttributeValue::from_value(value).unwrap();
@@ -32,6 +32,6 @@ fn credited_svg_projection_retires_deep_partial_native_tree_iteratively(){
 
 #[test]
 fn svg_owned_attribute_guard_rejects_native_spelling_in_known_positions(){
-    let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧩️typed-attributes/🔣️.json")).unwrap();
+    let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧩️typed-attributes/🔣️.json")).unwrap();
     for row in corpus["invalidOwned"].as_array().unwrap(){assert!(semio_framework_pack_json::from_json_str::<crate::schema::snapshot::SvgAttr>(&row.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(),"{row}");}
 }

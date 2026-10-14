@@ -1,7 +1,7 @@
 import { test, expect } from "bun:test";
 import { Database } from "bun:sqlite";
 import Ajv2020 from "ajv/dist/2020.js";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 
 test("window_config_paged_registry_neutral_original_order", () => {

@@ -7,7 +7,7 @@ use crate::Viewport2d;
 use model_window::{find_node_2d, screen_2d};
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::{HistoryView, ViewModel, ViewWindowInstance};
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
 
 const CANVAS_WIDTH: f64 = 800.0;
 const CANVAS_HEIGHT: f64 = 600.0;

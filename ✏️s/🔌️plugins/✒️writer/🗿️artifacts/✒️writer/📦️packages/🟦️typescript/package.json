@@ -32,5 +32,8 @@
   "bundleKind": "library",
   "nx": {
     "includedScripts": []
+  },
+  "devDependencies": {
+    "@semio-tech/framework": "workspace:*"
   }
 }

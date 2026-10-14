@@ -1,0 +1,97 @@
+{
+  "library": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+  "files": [
+    "🟨️.mjs",
+    "⚡️caching/🔣️policy.json",
+    "🔣️taxonomy.json",
+    "🕸️dependencies/🧩️runtime/🟨️.mjs",
+    "🕸️dependencies/🟦️typescript/🟨️.mjs",
+    "🎮️playground/🖥️native-host/🟨️.mjs",
+    "📇️catalog/🚚️deployment/🟨️.mjs",
+    "../../../../🔨️modules/🪪️identity/📁️installation/🟨️.mjs",
+    "../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json",
+    "../../../💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🧭️selection/🟨️.mjs",
+    "⚡️caching/📥️inference/🟨️.mjs",
+    "🔌️nx-plugin/👁️observation/🟨️.mjs","⚡️caching/🗃️records/🟦️.ts",
+    "🔌️nx-plugin/📤️arguments/🟨️.mjs",
+    "🔌️nx-plugin/📤️arguments/🧬️schema/🔣️.json",
+    "🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json",
+    "🔌️nx-plugin/📤️arguments/🧬️schema/🔣️executor.json",
+    "⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",
+    "../../../💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🔣️.json",
+    "../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧩️composition/🟨️.mjs"
+  ],
+  "runtimes": [
+    "bun",
+    "node"
+  ],
+  "helpers": [
+    "🕸️dependencies/🧩️runtime/🟨️.mjs",
+    "🕸️dependencies/🟦️typescript/🟨️.mjs",
+    "🎮️playground/🖥️native-host/🟨️.mjs",
+    "📇️catalog/🚚️deployment/🟨️.mjs",
+    "../../../../🔨️modules/🪪️identity/📁️installation/🟨️.mjs"
+  ],
+  "expected": [
+    {
+      "stage": "initial",
+      "cache": true,
+      "executor": "nx:run-commands"
+    },
+    {
+      "stage": "policy",
+      "cache": false,
+      "executor": "nx:run-commands"
+    },
+    {
+      "stage": "implementation",
+      "cache": false,
+      "executor": "nx:noop"
+    },
+    {
+      "stage": "helper-0",
+      "cache": false,
+      "executor": "nx:noop"
+    },
+    {
+      "stage": "helper-1",
+      "cache": false,
+      "executor": "nx:noop"
+    },
+    {
+      "stage": "helper-2",
+      "cache": false,
+      "executor": "nx:noop"
+    },
+    {
+      "stage": "helper-3",
+      "cache": false,
+      "executor": "nx:noop"
+    },
+    {
+      "stage": "helper-4",
+      "cache": false,
+      "executor": "nx:noop"
+    },
+    {
+      "stage": "identity-schema",
+      "cache": false,
+      "executor": "nx:noop"
+    },
+    {
+      "stage": "taxonomy",
+      "cache": false,
+      "executor": "nx:noop"
+    }
+  ],
+  "installationSchema": "../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json",
+  "component": {
+    "cargo": "[package]\nname=\"portable-owner\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"🦀️.rs\"\ncrate-type=[\"cdylib\"]\n[package.metadata.component]\npackage=\"semio:portable-owner\"\n[package.metadata.semio]\nrole=\"test\"\ncomponent-kind=\"plugin\"\n",
+    "directoryName": "🧪️portable-owner",
+    "targets": ["component"],
+    "absent": ["describe", "materialize"]
+  },
+  "commandSources": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts"
+  ]
+}

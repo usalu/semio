@@ -62,7 +62,8 @@ impl<const MERGE_DOWN:bool> ArtifactCommandWork<EditorApp<RasterPlayApp>> for La
         let stage=if self.encoding.is_some() {size_of::<PngEncodeJob>()+size_of::<Emit<RasterMutation,RasterConfigMutation>>()} else if self.compositing.is_some() {size_of::<RasterStackJob>()+size_of::<PngEncodeJob>()} else {size_of::<RasterStackPreparation>()+size_of::<RasterStackJob>()};
         Ok(semio_framework_value::RetirementDemand {copy_bytes:stage,depth:1,..Default::default()})
     }
-    fn step(&mut self,input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<EditorApp<RasterPlayApp>>,Fault> {
+    fn step(&mut self,input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<EditorApp<RasterPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.complete {return Err(Fault::from("raster.flatten-work-complete"));}
         if !matches!((MERGE_DOWN,input.command),(false,RasterCommand::FlattenLayers(_))|(true,RasterCommand::MergeDown(_))) {return Err(Fault::from("raster.bake-work-mismatch"));}
         if let Some(encoder)=self.encoding.as_mut() {
@@ -89,6 +90,9 @@ impl<const MERGE_DOWN:bool> ArtifactCommandWork<EditorApp<RasterPlayApp>> for La
         }?);}
         if self.preparing.as_mut().unwrap().advance(input.snapshot,32768).map_err(Fault::from)? {self.compositing=Some(self.preparing.take().unwrap().into_job().map_err(Fault::from)?);}
         Ok(ArtifactCommandWorkStep::Progress {stage:"flatten-prepare",preview:br#"{"en":"Preparing layers","de":"Ebenen werden vorbereitet"}"#})
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
     fn begin_close(&mut self) {if let Some(job)=self.preparing.as_mut(){job.cancel();}if let Some(job)=self.compositing.as_mut(){job.cancel();}if let Some(job)=self.encoding.as_mut(){job.cancel();}}
     fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep {

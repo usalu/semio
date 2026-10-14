@@ -2,14 +2,14 @@
 import{expect,test}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
-import fixture from"../🧫️fixtures/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
 import schema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import xmlSchema from"../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json";
 import{DOCX_SQLITE_SCHEMA,docxSnapshotToSqliteDatabase,docxSnapshotFromSqliteDatabase}from"../../../../../../../../🟦️.ts";
 import type{DocxSnapshot}from"../../../../../../../../🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase}from"@semio-tech/framework";
 import{materializeRetainedXmlDocument,parseRetainedXmlDocument,parseXmlDocument,retainXmlDocument}from"../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
-import profiles from"../../../../🧬️schema/📸️snapshot/🧫️fixtures/🛡️profile/🔣️.json";
+import profiles from"../../../../🧪️tests/🧫️fixtures/📸️snapshot/🛡️profile/🔣️.json";
 
 import Ajv2020 from"ajv/dist/2020";
 import{validateDocxSnapshotProfile}from"../../../../../../../../🟦️.ts";
@@ -41,11 +41,11 @@ test("DOCX aggregate domain rows include package and XML ownership exactly",asyn
 test("DOCX dangling references and shared OPC/XML owners are refused",async()=>{const database=await docxSnapshotToSqliteDatabase(input);for(const[name,row,column,value]of[["docx_document",0,2,2n],["docx_xml_part",1,4,1n],["docx_relationship",0,1,99n],["docx_default_content_type",0,2,99n],["docx_relationship_owner",1,2,""]]as const){const edited={tables:database.tables.map(table=>table.name!==name?table:{...table,rows:table.rows.map((entry,index)=>index!==row?entry:{...entry,values:entry.values.map((cell,at)=>at===column?value:cell)})})};await expect(docxSnapshotFromSqliteDatabase(edited),name).rejects.toThrow();}});
 test("DOCX intrinsic large-part copies have interior ownership cancellation",async()=>{const snapshot=structuredClone(input);snapshot.opc.parts[0]!.bytes=new Array(100000).fill(0x97);const database=await docxSnapshotToSqliteDatabase(snapshot);for(const phase of["projectSnapshot","reconstructSnapshot"]as const){const controller=new AbortController();let reached=false;const options={signal:controller.signal,onProgress:(event:{phase:string;completed:number;total:number})=>{if(event.phase===phase&&event.total===100000&&event.completed>=65536&&event.completed<event.total){reached=true;controller.abort();}}};await expect(phase==="projectSnapshot"?docxSnapshotToSqliteDatabase(snapshot,options):docxSnapshotFromSqliteDatabase(database,options)).rejects.toHaveProperty("kind","canceled");expect(reached).toBe(true);}});
 
-import paidOwner from"../🧫️fixtures/💰️backing/🔣️.json";
-import requestSettlement from"../🧫️fixtures/💰️backing/🔬️requests/🔣️.json";
+import paidOwner from"./🧫️fixtures/💰️backing/🔣️.json";
+import requestSettlement from"./🧫️fixtures/💰️backing/🔬️requests/🔣️.json";
 
 
-import retainedMetadata from"../🧫️fixtures/🗂️retained-metadata/🔣️.json";
+import retainedMetadata from"./🧫️fixtures/🗂️retained-metadata/🔣️.json";
 
 import artifactSchema from"../../../../🧬️schema/🔣️.json";
 test("DOCX retained metadata schema preserves named records and duplicate order",async()=>{

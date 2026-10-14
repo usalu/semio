@@ -4,7 +4,7 @@ import Ajv2020 from "ajv/dist/2020";
 import React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { scheduleShellTransientNoticeDismissV1, SHELL_TRANSIENT_NOTICE_AUTO_DISMISS_MS } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
-import fixture from "../../🧱️elements/🐚️Shell/🧪️fixtures/⏰️chrome-deadline/🔣️.json" with { type: "json" };
+import fixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/⏰️chrome-deadline/🔣️.json" with { type: "json" };
 
 afterEach(() => {
   cleanup();

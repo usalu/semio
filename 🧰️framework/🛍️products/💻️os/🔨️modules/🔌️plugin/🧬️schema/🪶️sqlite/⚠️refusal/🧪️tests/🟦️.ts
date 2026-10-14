@@ -4,9 +4,9 @@ import { Database } from "bun:sqlite";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import Parser from "web-tree-sitter";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "../../../../🧪️tests/🧫️fixtures/🪶️sqlite/⚠️refusal/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
-import request from "../../🧫️fixtures/🔣️.json";
+import request from "../../../../🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json";
 import requestSchema from "../../🧬️schema/🔣️.json";
 
 test("guest SQLite rejection carries all eight intrinsic causes independently of prose and VM cancellation", () => {
@@ -83,7 +83,7 @@ test("guest snapshot pending custody requires the same instance and original clo
 
 
 test("same snapshot receiving phase accounts additional host input separately from guest and return owners", () => {
-  const inputFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../../../🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🧫️fixtures/📥️input/🔣️.json"), "utf8"));
+  const inputFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../../../🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🧪️tests/🧫️fixtures/📥️input/🔣️.json"), "utf8"));
   expect(inputFixture.firstCapacityBytes + inputFixture.resumedCapacityBytes).toBe(inputFixture.receivedInput);
   expect(inputFixture.receivedInput).toBe(inputFixture.sourceOwned);
   const receipt = { maximum: 57, owned: 3, finished: false, reserved_return: 11, phase_start_owned: 7, phase_start_reserved_return: 0, received_output: 5, received_input: 4, received_retirement: 0 };
@@ -101,7 +101,7 @@ test("same snapshot receiving phase accounts additional host input separately fr
 
 test("host retirement capacity has a distinct conserved original receiving ledger",()=>{
  const base=resolve(import.meta.dir,"../../../../../🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control");
- const law=JSON.parse(readFileSync(resolve(base,"🧫️fixtures/♻️host/🔣️.json"),"utf8"));
+ const law=JSON.parse(readFileSync(resolve(base,"🧪️tests/🧫️fixtures/♻️host/🔣️.json"),"utf8"));
  const schema=JSON.parse(readFileSync(resolve(base,"🧬️schema/♻️host/🔣️.json"),"utf8"));
  expect(new Ajv({strict:true,allErrors:true}).compile(schema)(law)).toBe(true);
  const receipt=JSON.parse(JSON.stringify(law.scalarReceipt));const db=new Database(":memory:");
@@ -110,7 +110,7 @@ test("host retirement capacity has a distinct conserved original receiving ledge
 });
 
 test("actual original scalar metadata is closed and independently reproduces its funded receipt",()=>{
- const law=JSON.parse(readFileSync(resolve(import.meta.dir,"../../🧫️fixtures/📨️metadata/🔣️.json"),"utf8"));const schema=JSON.parse(readFileSync(resolve(import.meta.dir,"../../🧬️schema/📨️metadata/🔣️.json"),"utf8"));expect(new Ajv({strict:true,allErrors:true}).compile(schema)(law)).toBe(true);const restored=JSON.parse(JSON.stringify(law));expect(restored.query.Ok.ticket).toBe(9);expect(restored.close.Ok.retirement).toEqual(restored.query.Ok);expect(restored.close.Ok.progress).toEqual({copied_items:1,copied_bytes:32,retained_capacity_bytes:64,released_bytes:16});expect(restored.deniedCapacityBytes).toBe(0);expect(restored.deniedReleaseBytes).toBe(0);console.log("[DEBUG] independent Ajv/JSON authentic query and close preserve full scalar progress under zero heap metadata parsing");
+ const law=JSON.parse(readFileSync(resolve(import.meta.dir,"../../../../🧪️tests/🧫️fixtures/🪶️sqlite/📨️metadata/🔣️.json"),"utf8"));const schema=JSON.parse(readFileSync(resolve(import.meta.dir,"../../🧬️schema/📨️metadata/🔣️.json"),"utf8"));expect(new Ajv({strict:true,allErrors:true}).compile(schema)(law)).toBe(true);const restored=JSON.parse(JSON.stringify(law));expect(restored.query.Ok.ticket).toBe(9);expect(restored.close.Ok.retirement).toEqual(restored.query.Ok);expect(restored.close.Ok.progress).toEqual({copied_items:1,copied_bytes:32,retained_capacity_bytes:64,released_bytes:16});expect(restored.deniedCapacityBytes).toBe(0);expect(restored.deniedReleaseBytes).toBe(0);console.log("[DEBUG] independent Ajv/JSON authentic query and close preserve full scalar progress under zero heap metadata parsing");
 });
 
 
@@ -122,7 +122,7 @@ test("original retirement projection measures proposed charge without consuming 
 
 
 test("original snapshot input cancellation contract retains measured backing and canonical prefix",()=>{
- const law=JSON.parse(readFileSync(resolve(import.meta.dir,"../../🧫️fixtures/📥️input/🔣️.json"),"utf8"));const schema=JSON.parse(readFileSync(resolve(import.meta.dir,"../../🧬️schema/📥️input/🔣️.json"),"utf8"));expect(new Ajv({strict:true,allErrors:true}).compile(schema)(law)).toBe(true);const canonical=JSON.stringify(law.input);expect(canonical).toBe(law.canonical);expect(new TextEncoder().encode(canonical).length).toBe(law.capacityBytes);expect(canonical.startsWith(law.partialPrefix)).toBe(true);expect(law.cancelAfterCompleted).toBeLessThan(law.capacityBytes);expect(law.deniedReleaseBytes).toBe(0);const db=new Database(":memory:");try{db.exec("CREATE TABLE input(capacity INTEGER,prefix INTEGER,released INTEGER)");db.prepare("INSERT INTO input VALUES(?,?,?)").run(law.capacityBytes,new TextEncoder().encode(law.partialPrefix).length,law.deniedReleaseBytes);expect(db.query("SELECT capacity,prefix,released FROM input").get()).toEqual({capacity:law.capacityBytes,prefix:12,released:0});}finally{db.close();}console.log("[DEBUG] independent JSON and SQLite retain actual canonical input prefix12 denied release0");
+ const law=JSON.parse(readFileSync(resolve(import.meta.dir,"../../../../🧪️tests/🧫️fixtures/🪶️sqlite/📥️input/🔣️.json"),"utf8"));const schema=JSON.parse(readFileSync(resolve(import.meta.dir,"../../🧬️schema/📥️input/🔣️.json"),"utf8"));expect(new Ajv({strict:true,allErrors:true}).compile(schema)(law)).toBe(true);const canonical=JSON.stringify(law.input);expect(canonical).toBe(law.canonical);expect(new TextEncoder().encode(canonical).length).toBe(law.capacityBytes);expect(canonical.startsWith(law.partialPrefix)).toBe(true);expect(law.cancelAfterCompleted).toBeLessThan(law.capacityBytes);expect(law.deniedReleaseBytes).toBe(0);const db=new Database(":memory:");try{db.exec("CREATE TABLE input(capacity INTEGER,prefix INTEGER,released INTEGER)");db.prepare("INSERT INTO input VALUES(?,?,?)").run(law.capacityBytes,new TextEncoder().encode(law.partialPrefix).length,law.deniedReleaseBytes);expect(db.query("SELECT capacity,prefix,released FROM input").get()).toEqual({capacity:law.capacityBytes,prefix:12,released:0});}finally{db.close();}console.log("[DEBUG] independent JSON and SQLite retain actual canonical input prefix12 denied release0");
 });
 
 
@@ -131,15 +131,15 @@ test("authored snapshot owner and input transitions remain actual Rust syntax",a
 });
 
 
-test("actual pending snapshot fuel never refreshes its original ceiling",()=>{const law=JSON.parse(readFileSync(resolve(import.meta.dir,"../../🧫️fixtures/📥️input/🔣️.json"),"utf8")).fuel;const db=new Database(":memory:");try{db.exec("CREATE TABLE fuel(ceiling INTEGER,origin INTEGER,completed INTEGER,pending INTEGER,requested INTEGER)");db.prepare("INSERT INTO fuel VALUES(?,?,?,?,?)").run(law.originalCeiling,law.origin,law.completedOperations.reduce((a:number,b:number)=>a+b,0),law.pendingConsumed,law.requestedTurn);expect(db.query("SELECT ceiling-origin-completed-pending AS remaining,min(requested,ceiling-origin-completed-pending) AS admitted FROM fuel").get()).toEqual({remaining:law.remaining,admitted:law.admittedTurn});expect(JSON.parse(JSON.stringify(law)).originalCeiling).toBe(64);}finally{db.close();}console.log("[DEBUG] independent SQLite conserved original snapshot fuel64 origin7 completed16 pending13 remaining28 admitted20");});
+test("actual pending snapshot fuel never refreshes its original ceiling",()=>{const law=JSON.parse(readFileSync(resolve(import.meta.dir,"../../../../🧪️tests/🧫️fixtures/🪶️sqlite/📥️input/🔣️.json"),"utf8")).fuel;const db=new Database(":memory:");try{db.exec("CREATE TABLE fuel(ceiling INTEGER,origin INTEGER,completed INTEGER,pending INTEGER,requested INTEGER)");db.prepare("INSERT INTO fuel VALUES(?,?,?,?,?)").run(law.originalCeiling,law.origin,law.completedOperations.reduce((a:number,b:number)=>a+b,0),law.pendingConsumed,law.requestedTurn);expect(db.query("SELECT ceiling-origin-completed-pending AS remaining,min(requested,ceiling-origin-completed-pending) AS admitted FROM fuel").get()).toEqual({remaining:law.remaining,admitted:law.admittedTurn});expect(JSON.parse(JSON.stringify(law)).originalCeiling).toBe(64);}finally{db.close();}console.log("[DEBUG] independent SQLite conserved original snapshot fuel64 origin7 completed16 pending13 remaining28 admitted20");});
 
 
-test("real Host tests declare distinct finite Native ceiling and original retirement currencies",()=>{const root=resolve(import.meta.dir,"../../../../🖥️host");const law=JSON.parse(readFileSync(resolve(root,"🧫️fixtures/🛂️receiving/🔣️.json"),"utf8"));const schema=JSON.parse(readFileSync(resolve(root,"🧬️schema/🛂️receiving/🔣️.json"),"utf8"));expect(new Ajv({strict:true,allErrors:true}).compile(schema)(law)).toBe(true);expect(law.maximumNativeBytes).toBeGreaterThan(law.grant.maximumCapacityBytes);expect(law.grant.maximumCopyBytes).not.toBe(law.grant.maximumCapacityBytes);const db=new Database(":memory:");try{db.exec("CREATE TABLE policy(ceiling INTEGER,copy INTEGER,capacity INTEGER,release INTEGER)");db.prepare("INSERT INTO policy VALUES(?,?,?,?)").run(law.maximumNativeBytes,law.grant.maximumCopyBytes,law.grant.maximumCapacityBytes,law.grant.maximumReleaseBytes);expect(db.query("SELECT ceiling,copy,capacity,release FROM policy").get()).toEqual({ceiling:33554432,copy:65536,capacity:2097152,release:33554432});}finally{db.close();}expect(JSON.parse(JSON.stringify(law)).grant).toEqual(law.grant);console.log("[DEBUG] real Host fixture uses explicit32MiB original Native ceiling, distinct copy64KiB capacity2MiB, caller-owned same recipient and observer; native execution pending");});
+test("real Host tests declare distinct finite Native ceiling and original retirement currencies",()=>{const root=resolve(import.meta.dir,"../../../../🖥️host");const law=JSON.parse(readFileSync(resolve(root,"🧪️tests/🧫️fixtures/🛂️receiving/🔣️.json"),"utf8"));const schema=JSON.parse(readFileSync(resolve(root,"🧬️schema/🛂️receiving/🔣️.json"),"utf8"));expect(new Ajv({strict:true,allErrors:true}).compile(schema)(law)).toBe(true);expect(law.maximumNativeBytes).toBeGreaterThan(law.grant.maximumCapacityBytes);expect(law.grant.maximumCopyBytes).not.toBe(law.grant.maximumCapacityBytes);const db=new Database(":memory:");try{db.exec("CREATE TABLE policy(ceiling INTEGER,copy INTEGER,capacity INTEGER,release INTEGER)");db.prepare("INSERT INTO policy VALUES(?,?,?,?)").run(law.maximumNativeBytes,law.grant.maximumCopyBytes,law.grant.maximumCapacityBytes,law.grant.maximumReleaseBytes);expect(db.query("SELECT ceiling,copy,capacity,release FROM policy").get()).toEqual({ceiling:33554432,copy:65536,capacity:2097152,release:33554432});}finally{db.close();}expect(JSON.parse(JSON.stringify(law)).grant).toEqual(law.grant);console.log("[DEBUG] real Host fixture uses explicit32MiB original Native ceiling, distinct copy64KiB capacity2MiB, caller-owned same recipient and observer; native execution pending");});
 
 
 test("component original input and physical frame wallet agree with independent SQLite arithmetic",()=>{
  const root=resolve(import.meta.dir,"../../../../🚪️io/🛂️authority/🪶️snapshot");
- const law=JSON.parse(readFileSync(resolve(root,"🧫️fixtures/input-wallet.json"),"utf8"));
+ const law=JSON.parse(readFileSync(resolve(root,"🧪️tests/🧫️fixtures/input-wallet.json"),"utf8"));
  const contract=JSON.parse(readFileSync(resolve(root,"🧬️schema/input-wallet.json"),"utf8"));
  expect(new Ajv({strict:true}).compile(contract)(law)).toBe(true);
  const database=new Database(":memory:");try{

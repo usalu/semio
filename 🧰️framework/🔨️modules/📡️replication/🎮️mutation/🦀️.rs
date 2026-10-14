@@ -1061,7 +1061,7 @@ mod mutation_leaf_metadata_tests;
 //#region 🔖️Message
 /// 🪙️ One code of the frozen outcome vocabulary. The only code type [`MutationOutcome::refuse`] accepts, so a guard
 /// that picks its code at runtime can never name a code outside the table or at a level the table does not fix.
-/// Language-agnostic twin: `🧫️fixtures/🧫️outcome-code/🔣️.json` (schema `🧬️schema/🔣️outcome-code`).
+/// Language-agnostic twin: `🧪️tests/🧫️fixtures/🧫️outcome-code/🔣️.json` (schema `🧬️schema/🔣️outcome-code`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum OutcomeCode {
     TargetMissing,

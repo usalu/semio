@@ -5,7 +5,7 @@
 use super::*;
 
 /// 🧫️ The fixture this law and its language-neutral oracle (`🧪️tests/🚧️hostile-input/🟦️.ts`) read.
-const HOSTILE_FIXTURE: &str = include_str!("../../🧫️fixtures/🚧️hostile-input-v1/🔣️.json");
+const HOSTILE_FIXTURE: &str = include_str!("../🧫️fixtures/🚧️hostile-input-v1/🔣️.json");
 
 /// 🎲️ Deterministic draws: the k-th little-endian u64 of the blocks SHA-256(`semio.hub.hostile-draws/v1` ‖ le64(seed) ‖
 /// le64(block)).

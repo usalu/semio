@@ -16,7 +16,7 @@ fn close<T:RetireOwned+Sync>(source:&mut RetainedCloneSource<T>){for turn in 0..
 
 #[test]
 fn canonical_native_semantic_authority_preserves_paged_originals_under_byte_grants_and_alias_cancellation(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let authored=&fixture["authority"];
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let authored=&fixture["authority"];
  for repeat in fixture["actorRepeats"].as_array().unwrap(){let repeat=repeat.as_u64().unwrap()as usize;let actor=format!("{}{}",authored["actor"].as_str().unwrap(),fixture["actorSuffix"].as_str().unwrap().repeat(repeat));
   for row in fixture["cases"].as_array().unwrap(){let input=&row["edit"];let mut pauses:Vec<Option<usize>>=fixture["pauses"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize)).collect();pauses.push(None);
    for pause in pauses{

@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn creation_facts_follow_neutral_terminal_and_exact_pair_transitions() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📚️operation-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📚️operation-v1/🔣️.json")).unwrap();
     let intent: ArtifactCreationIntentV1 = semio_framework_pack_json::from_json_str(&fixture["intent"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let prepared: ArtifactCreationPreparedV1 = semio_framework_pack_json::from_json_str(&fixture["prepared"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let receipt: ArtifactCreationReceiptV1 = semio_framework_pack_json::from_json_str(&fixture["receipt"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -42,7 +42,7 @@ fn creation_facts_follow_neutral_terminal_and_exact_pair_transitions() {
             assert_eq!(decoded, facts);
         }
     }
-    let cancellations: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📚️operation-v1/🛑️cancel.json")).unwrap();
+    let cancellations: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📚️operation-v1/🛑️cancel.json")).unwrap();
     for row in cancellations["cases"].as_array().unwrap() {
         let mut facts = vec![fact("accepted", 1)];
         match row["state"].as_str().unwrap() {

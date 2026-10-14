@@ -1,5 +1,7 @@
+use pack::snapshot::ArtifactSqliteSnapshot as _;
+use pack::snapshot::{ArtifactDsl,ArtifactPack};
 use super::*;
-use crate::os_store::serialization::{ArtifactDsl, ArtifactPack, ArtifactSqliteSnapshot};
+use crate::os_store::serialization::{ ArtifactSqliteSnapshotHost};
 use semio_framework_value::native_decoding::NativeDecodeControl;
 use crate::os_store::NativeSnapshotDecodeOwner;
 use semio_framework_dsl_record::FieldSpec;
@@ -20,11 +22,11 @@ impl RetireOwned for DecodedBuffers {
     fn controlled_retirement_supported()->bool{<Vec<Vec<u8>> as RetireOwned>::controlled_retirement_supported()}
 }
 fn caller_grant()->RetainedCloneGrant{
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     serde_json::from_value(fixture["callerGrant"].clone()).unwrap()
 }
 fn close_original_recipient(native:&mut NativeDecodeControl<'_>){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for _ in 0..fixture["maximumCloseTurns"].as_u64().unwrap(){
         if !native.has_retirement_owner(){return}
         let step=native.close_retirement_recipient(caller_grant()).unwrap();
@@ -53,7 +55,7 @@ fn buffer_spec_producer() -> semio_framework_dsl_record::RecordSpecProducer {
 }
 #[test]
 fn sqlite_snapshot_erased_export_dispatches_only_the_declared_controlled_native_owner() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let case = &fixture["erasedDispatch"];
     let snapshot = DecodedBuffers { buffers: vec![vec![1; case["bufferBytes"].as_u64().unwrap() as usize]] };
     let bytes = snapshot.encode_pack();
@@ -135,6 +137,9 @@ impl ArtifactPack for DecodedBuffers {
         Ok(Self { buffers })
     }
 }
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for DecodedBuffers {
+
+}
 
 fn bind_original_buffers(record: &mut RecordValue, snapshot_output: &mut Option<DecodedBuffers>, native: &mut NativeDecodeControl<'_>, body: &mut crate::os_store::NativeSnapshotBodyWallet) -> Result<(), ValueError> {
     let Some(FieldValue::List(fields)) = record.fields.get_mut(&1) else {
@@ -159,8 +164,8 @@ fn bind_original_buffers(record: &mut RecordValue, snapshot_output: &mut Option<
     Ok(())
 }
 
-impl ArtifactSqliteSnapshot for DecodedBuffers {
-    const SQLITE_SCHEMA: &'static str = include_str!("../🧬️schema/🗄️.sql");
+impl ArtifactSqliteSnapshotHost for DecodedBuffers {
+    
     fn decode_sqlite_snapshot_native(payload: &crate::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>, native: &mut NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
         CONTROLLED_DECODER_CALLS.with(|count| count.set(count.get() + 1));
         decode_sqlite_snapshot_record_native(
@@ -172,7 +177,12 @@ impl ArtifactSqliteSnapshot for DecodedBuffers {
             native,
         )
     }
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
+    
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for DecodedBuffers {
+const SQLITE_SCHEMA: &'static str = include_str!("../🧬️schema/🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
         let count = self.buffers.iter().try_fold(0usize, |count, bytes| count.checked_add(bytes.len()).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "octet count overflow")))?;
         control.check_value_bytes(count)?;
         control.check_rows(self.buffers.len())?;
@@ -184,7 +194,7 @@ impl ArtifactSqliteSnapshot for DecodedBuffers {
         }
         Ok(database)
     }
-    fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
         control.check_database(database, SqliteSnapshotPhase::ReconstructSnapshot)?;
         Ok(Self { buffers: database.table("decoded_buffer")?.rows.iter().map(|row| row.blob(1).map(<[u8]>::to_vec)).collect::<Result<_, _>>()? })
     }
@@ -240,7 +250,7 @@ fn sqlite_snapshot_native_decoding_admits_compressed_aggregate_before_projection
         io::Write,
         process::{Command, Stdio},
     };
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "fixture.buffers".into(), standard: "1".into(), subset: "*".into() };
     for case in fixture["cases"].as_array().unwrap() {
@@ -286,7 +296,7 @@ fn sqlite_snapshot_native_decoding_admits_compressed_aggregate_before_projection
 
 #[test]
 fn sqlite_snapshot_native_decoding_admits_inline_empty_collection_storage() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["emptyBuffers"].as_u64().unwrap() > 0).unwrap();
     let mut record = semio_framework_dsl_record::RecordValue::default();
     record.fields.insert(1, semio_framework_dsl_record::FieldValue::List(std::iter::repeat_with(|| semio_framework_dsl_record::FieldValue::Bytes64(Vec::new())).take(case["emptyBuffers"].as_u64().unwrap() as usize).collect()));
@@ -303,7 +313,7 @@ fn sqlite_snapshot_metadata_admits_final_file_before_mutating_domain_database() 
         io::Write,
         process::{Command, Stdio},
     };
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     
     let rows = fixture["metadataAdmission"]["domainRows"].as_u64().unwrap() as usize;
     let file_rows = fixture["metadataAdmission"]["fileRows"].as_u64().unwrap() as usize;

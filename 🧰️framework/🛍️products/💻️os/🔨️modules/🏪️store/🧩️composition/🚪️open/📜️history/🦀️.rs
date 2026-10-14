@@ -150,6 +150,15 @@ pub(crate) struct VerifiedMemberHistoryInput {
 }
 
 impl VerifiedMemberHistoryInput {
+    pub(crate) fn original_history_close_source(&self,cx:&StepContext<'_>)->Result<super::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
+        let source=self.request.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.original_history_close_source(cx)?;let span=self.span.as_ref().ok_or(MemberOpenDiagnostic::Stale)?;
+        if span.end()>source.identity.extent as u64{return Err(MemberOpenDiagnostic::Malformed)}
+        Ok(source)
+    }
+    pub(crate) fn original_history_source(&self,cx:&StepContext<'_>)->Result<super::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
+        if let Some(diagnostic)=self.diagnostic{return Err(diagnostic)}let source=self.request.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.original_history_source(cx)?;let span=self.span.as_ref().ok_or(MemberOpenDiagnostic::Stale)?;
+        if span.end()>source.identity.extent as u64{return Err(MemberOpenDiagnostic::Malformed)}Ok(source)
+    }
     pub fn verified_end(&self) -> u64 {
         self.span.as_ref().map_or(0, VerifiedSprSpan::end)
     }

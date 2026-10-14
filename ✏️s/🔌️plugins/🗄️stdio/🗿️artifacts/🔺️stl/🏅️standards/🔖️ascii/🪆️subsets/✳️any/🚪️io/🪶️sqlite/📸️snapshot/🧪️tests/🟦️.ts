@@ -1,11 +1,11 @@
-import refusalCorpus from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
+import refusalCorpus from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
 const canceledKind=refusalCorpus.cases.find(c=>c.id==="canceled-projection")!.expectedKind;
 import {binary64,binary32,binary64Value,binary32Value,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🧫️ Shared STL triangle fixture and independent scalar SQL interoperability. */
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
-import fixture from "../🧫️fixtures/🔣️.json";
-import ieee from "../🧫️fixtures/🔢️ieee754/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+import ieee from "./🧫️fixtures/🔢️ieee754/🔣️.json";
 import {parseStlTriangle,parseStlArtifact}from"../../../../🧬️schema/🟦️.ts";
 import {parseStlTriangleDiff,parseStlTriangleAdded}from"../../../../🧬️schema/🔺️diff/🟦️.ts";
 import {stlSnapshotValidateSqliteSubset}from"../🟦️.ts";
@@ -104,7 +104,7 @@ test("STL same-schema changed semantic state refuses while surrogate renumbering
 });
 
 import NormSemanticAjv from "ajv/dist/2020.js";
-import normSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {stlSnapshotToSqliteDatabase as normSemanticProject,stlSnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
 import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

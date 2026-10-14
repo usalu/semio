@@ -346,14 +346,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🏷️set-version-info/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-version-info/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:2dec9304cb4af440889748bbf64da4f6fd3603202cb6df830276265aae789d92",
           "bytes": 11015
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🏷️set-version-info/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-version-info/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:42460262b4c0f55dd4bffa53f2dd8b1b40af8e89577a8abe1086f6fc442c871b",
           "bytes": 11017

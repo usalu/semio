@@ -41,7 +41,7 @@
       "inputs": [
         "production",
         "^production",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
       ]
     },
     "test-source": {

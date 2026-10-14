@@ -30,10 +30,13 @@ pub struct EditMeshSelection {
     pub radius: f64,
     pub grid: f64,
     pub center: [f64; 3],
+    pub angle:f64,
+    pub pull_direction:[f64;3],
+    pub neutral_point:[f64;3],
 }
 
 impl Default for EditMeshSelection {
-    fn default() -> Self { Self { operation: "extrude".into(), amount: 0.1, cuts: 1, dx: 0.0, dy: 0.0, dz: 0.0, width: 0.1, segments: 1, merge_mode: "center".into(), tolerance: 0.0001, radius: 1.0, grid: 1.0, center: [0.0; 3] } }
+    fn default() -> Self { Self { operation: "extrude".into(), amount: 0.1, cuts: 1, dx: 0.0, dy: 0.0, dz: 0.0, width: 0.1, segments: 1, merge_mode: "center".into(), tolerance: 0.0001, radius: 1.0, grid: 1.0, center: [0.0; 3],angle:0.1,pull_direction:[0.0,0.0,1.0],neutral_point:[0.0;3] } }
 }
 
 impl EditMeshSelection {
@@ -46,16 +49,19 @@ pub fn inputs(payload: &EditMeshSelection, ids: &[String]) -> Result<Vec<(&'stat
     let (target, components) = component_group(ids)?;
     if target.granularity != payload.granularity() || target.analytic.is_none() && target.index != 0 { return Err("Select matching components of a single mesh".into()); }
     let operation = payload.operation.as_str();
-    if !matches!(operation, "extrude" | "inset" | "subdivide" | "flip" | "deleteFaces" | "moveVertices" | "loopCut" | "bevel" | "dissolveEdges" | "dissolveVertices" | "mergeVertices" | "moveProportional" | "snapVertices" | "filletEdges" | "chamferEdges" | "shell") { return Err("Unknown mesh operation".into()); }
-    if [payload.amount, payload.dx, payload.dy, payload.dz, payload.width, payload.tolerance, payload.radius, payload.grid, payload.center[0], payload.center[1], payload.center[2]].iter().any(|value| !value.is_finite()) { return Err("Mesh edit values must be finite".into()); }
+    if !matches!(operation, "extrude" | "inset" | "subdivide" | "flip" | "deleteFaces" | "moveVertices" | "loopCut" | "bevel" | "dissolveEdges" | "dissolveVertices" | "mergeVertices" | "moveProportional" | "snapVertices" | "filletEdges" | "chamferEdges" | "shell" | "draft" | "defeature") { return Err("Unknown mesh operation".into()); }
+    if [payload.amount, payload.dx, payload.dy, payload.dz, payload.width, payload.tolerance, payload.radius, payload.grid, payload.center[0], payload.center[1], payload.center[2],payload.angle,payload.pull_direction[0],payload.pull_direction[1],payload.pull_direction[2],payload.neutral_point[0],payload.neutral_point[1],payload.neutral_point[2]].iter().any(|value| !value.is_finite()) { return Err("Mesh edit values must be finite".into()); }
+    if operation=="draft"&&payload.pull_direction.iter().all(|value|*value==0.0){return Err("Draft pull direction must be nonzero".into())}
     if matches!(operation, "inset" | "chamferEdges" | "shell") && payload.amount <= 0.0 { return Err("Inset amount must be positive".into()); }
     if !(1..=256).contains(&payload.cuts) { return Err("Cuts must be an integer from 1 to 256".into()); }
     if payload.width <= 0.0 || payload.radius <= 0.0 || payload.grid <= 0.0 { return Err("Width, radius, and grid must be positive".into()); }
     if !(1..=64).contains(&payload.segments) { return Err("Bevel segments must be an integer from 1 to 64".into()); }
     if payload.tolerance < 0.0 || !matches!(payload.merge_mode.as_str(), "first" | "center" | "distance") { return Err("Merge mode must be first, center, or distance with nonnegative tolerance".into()); }
-    if matches!(operation, "filletEdges" | "chamferEdges" | "shell") {
+    if matches!(operation, "filletEdges" | "chamferEdges" | "shell" | "draft" | "defeature") {
         let labels = selected_analytic_labels(ids)?;
         let selection = WidgetInputValue::Text(semio_framework_pack_json::to_string(&semio_framework_pack_json::array(labels.into_iter().map(semio_framework_pack_json::Value::String))));
+        if operation=="draft"{return Ok(vec![("faceLabels",selection),("angle",WidgetInputValue::Number(payload.angle)),("pullDirection",WidgetInputValue::Point(payload.pull_direction)),("neutralPoint",WidgetInputValue::Point(payload.neutral_point))])}
+        if operation=="defeature"{return Ok(vec![("faceLabels",selection)])}
         let (channel, parameter, value) = match operation { "filletEdges" => ("edgeLabels", "radius", payload.radius), "chamferEdges" => ("edgeLabels", "distance", payload.amount), _ => ("faceLabels", "thickness", payload.amount) };
         return Ok(vec![(channel, selection), (parameter, WidgetInputValue::Number(value))]);
     }
@@ -103,7 +109,7 @@ pub(crate) fn mesh_operation_rows(host_snapshot: &FlowHostSnapshot, operation: &
 
 /// 🧩️ Inserts a source-scoped topology selector and feature through the recorder's declared graph edits.
 fn insert_brep_operation(editor: &mut GraphEditor<'_>, operation: &str, granularity: &str, target: &crate::editor::generation3d::selection::ComponentTarget<'_>) -> Result<(String, String), String> {
-    if target.granularity != granularity || !matches!(operation, "filletEdges" | "chamferEdges" | "shell") { return Err("The B-Rep operation requires matching edge or face selection".into()); }
+    if target.granularity != granularity || !matches!(operation, "filletEdges" | "chamferEdges" | "shell" | "draft" | "defeature") { return Err("The B-Rep operation requires matching edge or face selection".into()); }
     let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
     let source_kind = editor.snapshot().widgets.iter().find_map(|widget| match widget { semio_framework_artifact_flow_flow::Widget::Neuron { id, neuron_kind, .. } if id == target.widget => Some(neuron_kind.clone()), _ => None }).ok_or("The selected geometry no longer exists")?;
     let source = infos.get(&source_kind).and_then(|info| info.outputs.iter().find(|port| port.name == target.channel)).ok_or("The selected geometry output is unavailable")?;
@@ -118,7 +124,7 @@ fn insert_brep_operation(editor: &mut GraphEditor<'_>, operation: &str, granular
     let feature = add_edit_widget(editor, &format!("{}__{operation}", target.widget), &feature_kind, x + 440.0, y)?;
     editor.connect_ports(target.widget, target.channel, &selector, "brep")?;
     editor.connect_ports(&selector, &source_output.name, &feature, "geometry")?;
-    let (selection, input) = if granularity == "edge" { ("selectedEdges", "edges") } else { ("selectedFaces", "openFaces") };
+    let (selection, input) = if granularity == "edge" { ("selectedEdges", "edges") } else { ("selectedFaces", if operation=="shell"{"openFaces"}else{"faces"}) };
     editor.connect_ports(&selector, selection, &feature, input)?;
     let replacement = if collection {
         let id = add_edit_widget(editor, &format!("{}__replace", target.widget), "list.set", x + 660.0, y)?;

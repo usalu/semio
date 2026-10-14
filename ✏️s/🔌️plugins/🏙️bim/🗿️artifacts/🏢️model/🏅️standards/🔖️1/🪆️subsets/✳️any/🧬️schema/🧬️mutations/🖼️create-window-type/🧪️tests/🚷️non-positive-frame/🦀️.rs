@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🖼️create-window-type/🚷️non-positive-frame",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️create-window-type/🚷️non-positive-frame/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️create-window-type/🚷️non-positive-frame/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️create-window-type/🚷️non-positive-frame/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️create-window-type/🚷️non-positive-frame/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️create-window-type/🚷️non-positive-frame/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖼️create-window-type/🚷️non-positive-frame/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖼️create-window-type/🚷️non-positive-frame/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖼️create-window-type/🚷️non-positive-frame/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖼️create-window-type/🚷️non-positive-frame/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖼️create-window-type/🚷️non-positive-frame/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

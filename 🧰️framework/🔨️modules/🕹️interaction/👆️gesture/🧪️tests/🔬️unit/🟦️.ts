@@ -68,7 +68,7 @@ export async function registerTests1(
   const { join } = await import("node:path");
   type FixtureEvent = { readonly type: "down" | "move" | "up"; readonly pointerId: number; readonly x?: number; readonly y?: number };
   type FixtureVerdict = { readonly kind: string } & Readonly<Record<string, number | string>>;
-  const fixture = JSON.parse(readFileSync(join(source.directory, "🧫️fixtures", "🤏️recognizer.json"), "utf8")) as {
+  const fixture = JSON.parse(readFileSync(join(source.directory, "🧪️tests/🧫️fixtures", "🤏️recognizer.json"), "utf8")) as {
     readonly recognizer: readonly { readonly name: string; readonly events: readonly FixtureEvent[]; readonly verdicts: readonly FixtureVerdict[] }[];
     readonly notches: readonly { readonly name: string; readonly pendingLogScale: number; readonly scale: number; readonly in: number; readonly out: number; readonly notches: number; readonly remainderScale: number }[];
   };

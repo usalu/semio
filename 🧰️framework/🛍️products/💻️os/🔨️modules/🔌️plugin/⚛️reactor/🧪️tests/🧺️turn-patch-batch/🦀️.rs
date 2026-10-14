@@ -13,7 +13,7 @@ fn tree(text: &str) -> ComponentTree {
 }
 
 fn budget() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🧺️turn-patch-batch.json")).expect("turn patch batch budget fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🧺️turn-patch-batch.json")).expect("turn patch batch budget fixture")
 }
 
 fn far_deadline() -> std::time::Instant {

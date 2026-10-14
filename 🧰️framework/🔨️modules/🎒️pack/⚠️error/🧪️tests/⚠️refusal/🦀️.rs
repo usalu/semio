@@ -14,7 +14,7 @@ fn kind(text:&str)->ValueRefusalKind {
 
 #[test]
 fn canonical_pack_refusal_preserves_kind_path_and_owned_error_identity(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/⚠️refusal/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/⚠️refusal/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let expected_kind=kind(row["kind"].as_str().unwrap());
   let mut error=ValueError::new(expected_kind,row["message"].as_str().unwrap());

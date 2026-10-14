@@ -1,0 +1,68 @@
+{
+  "owners": [
+    "🧰️framework/🔨️modules/🏃️process",
+    "🌎️hub",
+    "♻️mit-bestand/📋️bericht",
+    "🎓️teaching/🛂️proctor",
+    "✏️s/🧑‍💻dev/🧩️service-composition",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services",
+    "✏️s/🧑‍💻dev/🗄️stdio",
+    "✏️s/🧑‍💻dev/📐️cad",
+    "✏️s/🧑‍💻dev/🌊️flow",
+    "✏️s/🧑‍💻dev/🧩️catalog",
+    "✏️s/🧑‍💻dev/🧩️catalog/🎮️session",
+    "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+    "✏️s/🧑‍💻dev/🧩️composition",
+    "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse",
+    "✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d",
+    "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh",
+    "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses",
+    "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session",
+    "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry",
+    "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial",
+    "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📐️surface",
+    "🧰️framework/📏️script-boundary"
+  ],
+  "cases": [
+    {
+      "id": "neutral-owner",
+      "path": "🌱️value/🧪️tests/🧫️fixtures/example.json",
+      "accepted": true
+    },
+    {
+      "id": "test-subject",
+      "path": "🌱️value/🧪️tests/🧭️example/🧫️fixtures/example.json",
+      "accepted": true
+    },
+    {
+      "id": "outside-tests",
+      "path": "🌱️value/🧫️fixtures/example.json",
+      "accepted": false
+    },
+    {
+      "id": "tests-after-fixtures",
+      "path": "🌱️value/🧫️fixtures/🧪️tests/example.json",
+      "accepted": false
+    },
+    {
+      "id": "package-owned",
+      "path": "🌱️value/📦️packages/🟦️typescript/🧪️tests/🧫️fixtures/example.json",
+      "accepted": false
+    },
+    {
+      "id": "target-owned",
+      "path": "🌱️value/🎯️targets/⚛️react/🧪️tests/🧫️fixtures/example.json",
+      "accepted": false
+    },
+    {
+      "id": "implementation-owned",
+      "path": "🌱️value/🧩️implementations/native/🧪️tests/🧫️fixtures/example.json",
+      "accepted": false
+    },
+    {
+      "id": "production-schema-owned",
+      "path": "🌱️value/🧬️schema/🔗️graphql/🧪️tests/🧫️fixtures/example.json",
+      "accepted": false
+    }
+  ]
+}

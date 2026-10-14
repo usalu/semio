@@ -440,7 +440,9 @@ pub(crate) fn ui_document_close_pending_for(window_id: &str) -> bool {
 }
 
 /// 🧵️ Advances one exact retained-window retirement unit for the frame work lane.
-pub(crate) fn close_ui_document_one() -> bool {
+pub(crate) fn close_ui_document_one(cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    if cx.should_yield(){return Ok(false)}let mut failure=None;
+    let advanced=(||{
     if close_retiring_focus_clipboard_one() {
         return true;
     }
@@ -449,7 +451,7 @@ pub(crate) fn close_ui_document_one() -> bool {
     }
     let Some(owner) = UI_DOCUMENT_CLOSE_QUEUE.with(|cell| cell.borrow().owners.front().cloned()) else { return false };
     let window_id = owner.window_id.as_ref();
-    if UI_ENGINE.with(|cell| cell.borrow().layout_retirement_refusal(window_id).is_some()) { return false; }
+    if UI_ENGINE.with(|cell|{let engine=cell.borrow();engine.layout_retirement_refusal(window_id).is_some()&&!engine.layout_retirement_failure_pending(window_id)}){return false;}
     if close_window_focus_clipboard_one(window_id, owner.generation) {
         return true;
     }
@@ -479,7 +481,9 @@ pub(crate) fn close_ui_document_one() -> bool {
         if engine.surface_token(window_id) != Some(owner.token) || engine.surface_generation(window_id) != Some(owner.generation) {
             return (true, None);
         }
-        match engine.close_surface_one(owner.token) {
+        match engine.close_surface_one(owner.token,cx){
+            Err(error)=>{failure=Some(error);(false,None)},
+            Ok(step)=>match step{
             ui_wgpu::wgpu::engine::UiSurfaceCloseStep::Refused(refusal) => {
                 document_debug_log(&format!("[TRACE] ui-doc retained close refusal window={window_id} stage={} kind={}", refusal.stage, refusal.kind.as_str()));
                 (false, None)
@@ -487,6 +491,7 @@ pub(crate) fn close_ui_document_one() -> bool {
             ui_wgpu::wgpu::engine::UiSurfaceCloseStep::Pending => (false, None),
             ui_wgpu::wgpu::engine::UiSurfaceCloseStep::RetiredScene(retirement) => (false, Some(retirement)),
             ui_wgpu::wgpu::engine::UiSurfaceCloseStep::Complete => (true, None),
+        },
         }
     });
     if let Some(retired) = retirement {
@@ -502,6 +507,8 @@ pub(crate) fn close_ui_document_one() -> bool {
         });
     }
     true
+})();
+    match failure{Some(error)=>Err(error),None=>Ok(advanced)}
 }
 
 const SCENE_INTENT_CAPACITY: usize = 256;
@@ -3780,24 +3787,11 @@ fn layout_step_is_window_work(step: &ui_wgpu::wgpu::UiLayoutStep, window_id: &st
     }
 }
 
-fn drive_mounted_layout_text_one(engine: &mut ui_wgpu::wgpu::Ui, window_id: &str, atlas: &mut ui_wgpu::wgpu::FontAtlas) -> ui_wgpu::wgpu::UiLayoutStep {
-    let generation = engine.tree_revision(window_id).unwrap_or(1);
-    let now = semio_framework_job::default_now_us();
-    let mut preview_sequence = 0;
-    let mut context = semio_framework_job::StepContext::new(
-        semio_framework_job::OperationId(generation),
-        semio_framework_job::Generation(generation),
-        now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, 1000)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
-        semio_framework_job::CancelToken::root_now(),
-        semio_framework_job::default_now_us,
-        &mut preview_sequence,
-    );
-    let pool = crate::renderer_worker_pool();
-    let progress = engine.step_layouts(&pool, atlas, &mut context);
-    #[cfg(target_arch = "wasm32")]
-    if let Some(now) = now {
-        let _ = pool.pump(now / 1_000);
-    }
+fn drive_mounted_layout_text_one(engine:&mut ui_wgpu::wgpu::Ui,atlas:&mut ui_wgpu::wgpu::FontAtlas,cx:&mut semio_framework_job::StepContext<'_>)->ui_wgpu::wgpu::UiLayoutStep{
+    let pool=crate::renderer_worker_pool();
+    let progress=engine.step_layouts(&pool,atlas,cx);
+    #[cfg(target_arch="wasm32")]
+    if let Some(now)=cx.now_us(){let _=pool.pump(now/1_000);}
     progress
 }
 
@@ -3985,8 +3979,10 @@ pub(crate) fn render_ui_document_step(
     controller_id: &str,
     driver_drag: ui_wgpu::wgpu::UiDriverDrag,
     hosts: &mut crate::scenes::SceneEngineHosts<'_>,
+    step:&mut semio_framework_job::StepContext<'_>,
 ) -> bool {
     cursor.own_work = false;
+    if step.should_yield(){return false;}
     if close_retiring_focus_clipboard_one() {
         return false;
     }
@@ -4005,16 +4001,6 @@ pub(crate) fn render_ui_document_step(
         return false;
     };
     let generation = header.generation;
-    let mut preview_sequence = 0;
-    let now = semio_framework_job::default_now_us();
-    let mut step = semio_framework_job::StepContext::new(
-        semio_framework_job::OperationId(generation),
-        semio_framework_job::Generation(generation),
-        now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, 2000)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
-        semio_framework_job::CancelToken::root_now(),
-        semio_framework_job::default_now_us,
-        &mut preview_sequence,
-    );
     let viewport_w = bounds.w.max(1.0);
     let viewport_h = bounds.h.max(1.0);
     cursor.own_work = !matches!(cursor.phase, UiDocumentFramePhase::Layout);
@@ -4031,7 +4017,7 @@ pub(crate) fn render_ui_document_step(
                 status
             } {
                 ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Vacant => {
-                    if let Err((_fault, _header)) = engine.begin_document(window_id, header, &mut step) {
+                    if let Err((_fault, _header)) = engine.begin_document(window_id, header, step) {
                         document_debug_log(&format!("[TRACE] ui-doc begin refused window={window_id} generation={generation} nodes={} fault={_fault:?}", _header.node_count));
                         if !matches!(
                             _fault,
@@ -4046,7 +4032,7 @@ pub(crate) fn render_ui_document_step(
                 }
                 ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Pending { next_page, node_count } => {
                     if next_page == node_count {
-                        match engine.finish_document(window_id, generation, &mut step) {
+                        match engine.finish_document(window_id, generation, step) {
                             Ok(()) => cursor.phase = UiDocumentFramePhase::Reconcile,
                             Err(
                                 ui_wgpu::wgpu::engine::UiDocumentIngressFault::ValidationPending
@@ -4062,7 +4048,7 @@ pub(crate) fn render_ui_document_step(
                     } else {
                         match document.read_node_page(next_page) {
                             Ok(Some(page)) => {
-                                apply_retained_document_page(&mut engine, cursor, window_id, page, &mut step);
+                                apply_retained_document_page(&mut engine, cursor, window_id, page, step);
                             }
                             _ => {
                                 document_debug_log(&format!("[TRACE] ui-doc page read fault window={window_id} generation={generation} index={next_page}"));
@@ -4073,7 +4059,7 @@ pub(crate) fn render_ui_document_step(
                 }
                 ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Published => cursor.phase = UiDocumentFramePhase::Reconcile,
             },
-            UiDocumentFramePhase::Reconcile => match engine.step_document_reconcile(window_id, controller_id, &mut step) {
+            UiDocumentFramePhase::Reconcile => match engine.step_document_reconcile(window_id, controller_id, step) {
                 ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Complete => cursor.phase = UiDocumentFramePhase::Viewport,
                 ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Pending => {}
                 ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Fault(fault) => {
@@ -4087,9 +4073,9 @@ pub(crate) fn render_ui_document_step(
                 cursor.phase = UiDocumentFramePhase::Layout;
             }
             UiDocumentFramePhase::Layout => {
-                let step = drive_mounted_layout_text_one(&mut engine, window_id, ctx.atlas);
-                cursor.own_work = layout_step_is_window_work(&step, window_id);
-                if let ui_wgpu::wgpu::UiLayoutStep::Refused { refusal, .. } = step {
+                let layout = drive_mounted_layout_text_one(&mut engine,ctx.atlas,step);
+                cursor.own_work = layout_step_is_window_work(&layout, window_id);
+                if let ui_wgpu::wgpu::UiLayoutStep::Refused { refusal, .. } = layout {
                     document_debug_log(&format!("[TRACE] ui-doc retained layout refusal window={window_id} stage={} kind={}", refusal.stage, refusal.kind.as_str()));
                     cursor.phase = UiDocumentFramePhase::Fault;
                 } else if engine.layout_is_dirty(window_id) {

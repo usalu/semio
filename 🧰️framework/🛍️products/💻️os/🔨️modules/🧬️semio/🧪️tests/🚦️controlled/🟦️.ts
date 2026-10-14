@@ -2,7 +2,7 @@
 import {expect,test} from "bun:test";
 import {NativeDecodeControl} from "../../../../../../🔨️modules/🌱️value/🛬️decode/🟦️.ts";
 import {unwrapBinaryControlled,admitTextPreambleControlled} from "../../🟦️.ts";
-import envelopeFixture from "../../🧫️fixtures/🚦️controlled/🔣️.json";
+import envelopeFixture from "../🧫️fixtures/🚦️controlled/🔣️.json";
 
 test("neutral retained text ownership keeps payload work separate from complete backing release",()=>{
   const f=envelopeFixture;

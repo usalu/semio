@@ -1,0 +1,196 @@
+{
+  "schema": "semio.hub.admin-directory-authority/v1",
+  "vectors": [
+    {
+      "name": "session-before-create",
+      "command": "create",
+      "transition": "session",
+      "first": "transition",
+      "state": "cancelled",
+      "mutated": false
+    },
+    {
+      "name": "create-before-session",
+      "command": "create",
+      "transition": "session",
+      "first": "command",
+      "state": "succeeded",
+      "mutated": true
+    },
+    {
+      "name": "session-before-rename",
+      "command": "rename",
+      "transition": "session",
+      "first": "transition",
+      "state": "cancelled",
+      "mutated": false
+    },
+    {
+      "name": "rename-before-session",
+      "command": "rename",
+      "transition": "session",
+      "first": "command",
+      "state": "succeeded",
+      "mutated": true
+    },
+    {
+      "name": "configured-admin-after-space-demotion",
+      "command": "rename",
+      "transition": "demotion",
+      "first": "transition",
+      "state": "succeeded",
+      "mutated": true
+    }
+  ],
+  "shortActions": [
+    {
+      "name": "issue-share-transition-first",
+      "action": "issue-share",
+      "first": "transition",
+      "state": "cancelled",
+      "effect": false,
+      "secret": false,
+      "keys": 3
+    },
+    {
+      "name": "issue-share-action-first",
+      "action": "issue-share",
+      "first": "action",
+      "state": "succeeded",
+      "effect": true,
+      "secret": true,
+      "keys": 3
+    },
+    {
+      "name": "revoke-share-transition-first",
+      "action": "revoke-share",
+      "first": "transition",
+      "state": "cancelled",
+      "effect": false,
+      "secret": false,
+      "keys": 4
+    },
+    {
+      "name": "revoke-share-action-first",
+      "action": "revoke-share",
+      "first": "action",
+      "state": "succeeded",
+      "effect": true,
+      "secret": false,
+      "keys": 4
+    },
+    {
+      "name": "revoke-user-transition-first",
+      "action": "revoke-user",
+      "first": "transition",
+      "state": "cancelled",
+      "effect": false,
+      "secret": false,
+      "keys": 3
+    },
+    {
+      "name": "revoke-user-action-first",
+      "action": "revoke-user",
+      "first": "action",
+      "state": "succeeded",
+      "effect": true,
+      "secret": false,
+      "keys": 3
+    },
+    {
+      "name": "kick-transition-first",
+      "action": "kick",
+      "first": "transition",
+      "state": "cancelled",
+      "effect": false,
+      "secret": false,
+      "keys": 2
+    },
+    {
+      "name": "kick-action-first",
+      "action": "kick",
+      "first": "action",
+      "state": "succeeded",
+      "effect": true,
+      "secret": false,
+      "keys": 2
+    }
+  ],
+  "bindings": [
+    {
+      "name": "create",
+      "intentJson": "{\"kind\":\"create-space\",\"requestId\":\"request:binding\",\"name\":\"Created\",\"spaceKind\":\"studio\",\"visibility\":\"private\"}",
+      "keys": ["user:admin", "session:admin-session", "space:admin-space:6564e40f988cacadc675a9ab420a20d4173a2a8617b219c37f41c41c26ff0d12"]
+    },
+    {
+      "name": "rename",
+      "intentJson": "{\"kind\":\"rename-space\",\"requestId\":\"request:binding\",\"spaceId\":\"target-space\",\"name\":\"Renamed\"}",
+      "keys": ["user:admin", "session:admin-session", "space:target-space"]
+    },
+    {
+      "name": "visibility",
+      "intentJson": "{\"kind\":\"set-space-visibility\",\"requestId\":\"request:binding\",\"spaceId\":\"target-space\",\"visibility\":\"public\"}",
+      "keys": ["user:admin", "session:admin-session", "space:target-space"]
+    },
+    {
+      "name": "archive",
+      "intentJson": "{\"kind\":\"archive-space\",\"requestId\":\"request:binding\",\"spaceId\":\"target-space\"}",
+      "keys": ["user:admin", "session:admin-session", "space:target-space"]
+    },
+    {
+      "name": "delete",
+      "intentJson": "{\"kind\":\"delete-space\",\"requestId\":\"request:binding\",\"spaceId\":\"target-space\"}",
+      "keys": ["user:admin", "session:admin-session", "space:target-space"]
+    },
+    {
+      "name": "upsert",
+      "intentJson": "{\"kind\":\"upsert-space-member\",\"requestId\":\"request:binding\",\"spaceId\":\"target-space\",\"email\":\"member@example.test\",\"role\":\"author\"}",
+      "keys": ["user:admin", "session:admin-session", "space:target-space"]
+    },
+    {
+      "name": "remove",
+      "intentJson": "{\"kind\":\"remove-space-member\",\"requestId\":\"request:binding\",\"spaceId\":\"target-space\",\"userId\":\"target-user\"}",
+      "keys": ["user:admin", "session:admin-session", "space:target-space", "membership:target-user/target-space"]
+    },
+    {
+      "name": "create-invite",
+      "intentJson": "{\"kind\":\"create-space-invite\",\"requestId\":\"request:binding\",\"spaceId\":\"target-space\",\"role\":\"spectator\",\"ttlSecs\":600}",
+      "keys": ["user:admin", "session:admin-session", "space:target-space"]
+    },
+    {
+      "name": "revoke-invite",
+      "intentJson": "{\"kind\":\"revoke-space-invite\",\"requestId\":\"request:binding\",\"spaceId\":\"target-space\",\"inviteId\":\"target-invite\"}",
+      "keys": ["user:admin", "session:admin-session", "space:target-space"]
+    },
+    {
+      "name": "issue-share",
+      "intentJson": "{\"kind\":\"issue-document-share\",\"requestId\":\"request:binding\",\"scope\":{\"spaceId\":\"target-space\",\"documentId\":\"target-document\"},\"ttlSecs\":600}",
+      "keys": ["user:admin", "session:admin-session", "space:target-space"]
+    },
+    {
+      "name": "revoke-share",
+      "intentJson": "{\"kind\":\"revoke-document-share\",\"requestId\":\"request:binding\",\"scope\":{\"spaceId\":\"target-space\",\"documentId\":\"target-document\"},\"shareId\":\"target-share\",\"reasonCode\":\"test\"}",
+      "keys": ["user:admin", "session:admin-session", "space:target-space", "share:target-share"]
+    },
+    {
+      "name": "revoke-user",
+      "intentJson": "{\"kind\":\"revoke-user-sessions\",\"requestId\":\"request:binding\",\"userId\":\"target-user\",\"reasonCode\":\"test\"}",
+      "keys": ["user:admin", "user:target-user", "session:admin-session"]
+    },
+    {
+      "name": "self-revoke",
+      "intentJson": "{\"kind\":\"revoke-user-sessions\",\"requestId\":\"request:binding\",\"userId\":\"admin\",\"reasonCode\":\"test\"}",
+      "keys": ["user:admin", "session:admin-session"]
+    },
+    {
+      "name": "kick",
+      "intentJson": "{\"kind\":\"kick-connection\",\"requestId\":\"request:binding\",\"syncSessionId\":\"target-sync\",\"reasonCode\":\"test\"}",
+      "keys": ["user:admin", "session:admin-session"]
+    },
+    {
+      "name": "rebuild",
+      "intentJson": "{\"kind\":\"rebuild-directory-projections\",\"requestId\":\"request:binding\",\"expectedHeadSeq\":0}",
+      "keys": null
+    }
+  ]
+}

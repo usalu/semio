@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import schema from "../../🧬️schema/🔣️.json";
-import fixture from "../../🧫️fixtures/🔐️custody.json";
+import fixture from "../🧫️fixtures/🔐️custody.json";
 
 test("original clone-source corpus keeps issuer and aliases before terminal handback", async () => {
   const validate = new Ajv({ strict: true }).compile(schema);

@@ -1,8 +1,8 @@
 use super::*;
 use crate::value::{ordered::SharedOwner,retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
 
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()}
-fn cases()->serde_json::Value{serde_json::from_str(include_str!("../../../../🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
+fn cases()->serde_json::Value{serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap()}
 fn grant(cursor:&LocalInteractionRootUpdate,bytes:usize)->RetainedCloneGrant{RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:bytes,maximum_capacity_bytes:cursor.next_capacity_byte_demand(bytes).unwrap(),maximum_release_bytes:cursor.next_release_byte_demand().unwrap(),maximum_depth:cursor.next_depth_demand().unwrap()}}
 fn account(step:RetainedCloneStep,grant:RetainedCloneGrant,work:LocalInteractionWork)->usize{let progress=step.progress();assert!(progress.fits(grant));assert!(progress.copied_items<=1);assert!(progress.copied_bytes<=grant.maximum_copy_bytes);if work==LocalInteractionWork::Retirement{progress.copied_bytes}else{0}}
 fn advance(cursor:&mut LocalInteractionRootUpdate,bytes:usize)->(RetainedCloneStep,usize){

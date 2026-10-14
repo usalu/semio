@@ -194,7 +194,8 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for SheetsExportWork {
         (self.job.is_none() && command.command_id() == self.tool_id).then_some(1)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BimModelApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<BimModelApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BimModelApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<BimModelApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let BimCommand::ExportSheets(payload) = input.command else { return Err(Fault::from("bim-export-sheets-work-mismatch")) };
         let job = self.job.get_or_insert_with(|| SheetsJob::new(&payload.format, payload.sheet.as_deref(), payload.locale.as_deref(), Some(&self.owner)));
         if cx.is_cancelled() {
@@ -209,6 +210,9 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for SheetsExportWork {
             }
             Advance::Done(output) => ArtifactCommandWorkStep::Complete(download(output)),
         })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 //#endregion 🔖️Work

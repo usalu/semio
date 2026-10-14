@@ -4,11 +4,11 @@ use serde_json::Value;
 const BUDGET: usize = ui_contract::TREE_WINDOW_BODY_NODE_BUDGET;
 
 fn requests_fixture() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🪟️window-requests/🔣️.json")).expect("the neutral window-request vectors parse")
+    serde_json::from_str(include_str!("../🧫️fixtures/🪟️window-requests/🔣️.json")).expect("the neutral window-request vectors parse")
 }
 
 fn served_fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../🧬️contract/🧫️fixtures/🪟️tree-window-served.json")).expect("the neutral served-window vectors parse")
+    serde_json::from_str(include_str!("../../../../🧬️contract/🧪️tests/🧫️fixtures/🪟️tree-window-served.json")).expect("the neutral served-window vectors parse")
 }
 
 fn number(value: &Value) -> f64 {
@@ -42,7 +42,7 @@ fn requests(value: &Value) -> Vec<TreeWindowRequest> {
 }
 
 /// 🪟️ LAW (ticket 26/09/23 session 14d, WG11 P5): for every neutral viewport vector React's rule wrote
-/// (`🧫️fixtures/🪟️window-requests/🔣️.json`), the wgpu twin measures the same visible rows and asks the same per-container and
+/// (`🧪️tests/🧫️fixtures/🪟️window-requests/🔣️.json`), the wgpu twin measures the same visible rows and asks the same per-container and
 /// body-wide windows — React and wgpu request the same windows for the same viewport.
 #[test]
 fn the_wgpu_rule_asks_the_windows_react_asks_for_every_neutral_viewport() {
@@ -101,7 +101,7 @@ fn anchor(value: &Value) -> TreeWindowAnchor {
     }
 }
 
-/// 🧠️ LAW: the served rule answers the shared short-window vectors (`🧬️contract/🧫️fixtures/🪟️tree-window-served.json`, the same
+/// 🧠️ LAW: the served rule answers the shared short-window vectors (`🧬️contract/🧪️tests/🧫️fixtures/🪟️tree-window-served.json`, the same
 /// cases the React Interpreter law reads) — capacity learned, window placed, anchor kept, exactly as React's.
 #[test]
 fn the_served_rule_answers_the_shared_short_window_vectors() {

@@ -18,7 +18,7 @@ use semio_framework_plugin::app::{ui_history_panel, CommandView, HistoryMutation
 
 //#region 🧰️Harness
 fn corpus() -> Value {
-    serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🧫️time-travel-band/🔣️.json")).expect("the shared time-travel band corpus parses")
+    serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧫️time-travel-band/🔣️.json")).expect("the shared time-travel band corpus parses")
 }
 
 /// 🧾️ The kernel session of the corpus case whose name starts with `name`.
@@ -808,7 +808,7 @@ fn a_refused_completion_is_told_as_a_notice() {
 /// fault exactly when the row says it is told.
 #[test]
 fn every_operation_publication_owes_what_the_shared_corpus_says() {
-    let corpus: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🧫️operation-publication/🔣️.json")).expect("the shared operation-publication corpus parses");
+    let corpus: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧫️operation-publication/🔣️.json")).expect("the shared operation-publication corpus parses");
     assert_eq!(corpus["historyBodyKey"].as_str(), Some(ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY));
     let rows = corpus["rows"].as_array().expect("the corpus rows");
     assert!(rows.len() >= 7, "the corpus covers completion, progress, fault and resync");
@@ -881,7 +881,7 @@ fn history_refusals_are_localized_notices_carrying_their_code() {
 /// covered.
 #[test]
 fn every_command_rejection_is_told_from_its_codes_in_both_locales() {
-    let corpus: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🧫️command-rejection/🔣️.json")).expect("the shared command-rejection corpus parses");
+    let corpus: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧫️command-rejection/🔣️.json")).expect("the shared command-rejection corpus parses");
     let rows = corpus["rows"].as_array().expect("the corpus rows");
     let mut codes = std::collections::BTreeSet::new();
     for row in rows {
@@ -912,7 +912,7 @@ fn every_command_rejection_is_told_from_its_codes_in_both_locales() {
 /// describes it by the code. A dispatch-fault string without the structured refusal behind it is never read for a count.
 #[test]
 fn every_history_lane_refusal_is_a_notice_carrying_its_code() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🧫️history-notices/🔣️.json")).expect("the kernel's history-notices fixture parses");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧫️history-notices/🔣️.json")).expect("the kernel's history-notices fixture parses");
     let notices = fixture["notices"].as_array().expect("notices");
     assert_eq!(notices.iter().map(|notice| notice["code"].as_str().expect("code")).collect::<Vec<_>>(), semio_framework::kernel::HISTORY_NOTICE_LABELS.iter().map(|(code, _, _)| *code).collect::<Vec<_>>(), "the fixture is the kernel's table");
     for notice in notices {
@@ -941,7 +941,7 @@ fn every_history_lane_refusal_is_a_notice_carrying_its_code() {
 /// beside the chrome, and over an open modal too — and nothing once dismissed or past its deadline.
 #[test]
 fn every_transient_notice_is_a_polite_status_named_by_its_message_and_described_by_its_code() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧯️wgpu-transient-notice/🔣️.json")).expect("the transient notice fixture parses");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧯️wgpu-transient-notice/🔣️.json")).expect("the transient notice fixture parses");
     let expected = &fixture["node"];
     let notice_node = |shell: &ShellState| shell.chrome_accessibility_nodes(&[]).into_iter().filter(|node| node.key == expected["key"].as_str().expect("key")).collect::<Vec<_>>();
     for notice in fixture["notices"].as_array().expect("notices") {
@@ -972,7 +972,7 @@ fn every_transient_notice_is_a_polite_status_named_by_its_message_and_described_
 
 //#region 👥️PeerHistoryEdits
 fn peers_corpus() -> Value {
-    serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🧫️time-travel-peers/🔣️.json")).expect("the shared time-travel peers corpus parses")
+    serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧫️time-travel-peers/🔣️.json")).expect("the shared time-travel peers corpus parses")
 }
 
 /// 🧾️ The corpus's history rows as this replica's own folded history.
@@ -1087,7 +1087,7 @@ fn the_roster_badges_and_announces_an_editing_peer_and_notes_its_rows() {
 
 //#region 🗨️FinalizePrompt
 fn finalize_dialog() -> DialogDefinition {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🧫️dialog-choices/🔣️.json")).expect("dialog-choices fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🧫️dialog-choices/🔣️.json")).expect("dialog-choices fixture");
     serde_json::from_value(fixture["dialog"].clone()).expect("the finalize prompt")
 }
 
@@ -1270,7 +1270,7 @@ fn corpus_number_facets(value: &Value) -> Option<semio_framework::ActionArgNumbe
 /// staged, and an input that is no number carries no limits anywhere.
 #[test]
 fn every_staged_number_row_carries_the_shared_corpus_facets() {
-    let corpus: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🧫️number-facets/🔣️.json")).expect("the shared number-facets corpus parses");
+    let corpus: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🧫️number-facets/🔣️.json")).expect("the shared number-facets corpus parses");
     let cases = corpus["cases"].as_array().expect("cases");
     let mut kinds = std::collections::BTreeSet::new();
     for case in cases {
@@ -1584,7 +1584,7 @@ fn history_body(current: &mut Option<semio_framework_ui_runtime::SurfaceReconcil
         view.tree_windows = vec![semio_framework::TreeWindowRequest { body_key: ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY.into(), node_key: history_row_window_path(1), open: Some(true), offset, rows }];
     }
     let built = semio_framework_async::block_on(ui_history_panel(&history, panel.as_ref(), reprojection.as_ref(), &pages, "s.test.history", locale, false, false, &view)).expect("the guest's history body assembles");
-    let viewport: Value = serde_json::from_str(include_str!("../../../../../../🔌️plugin/🧫️fixtures/history-panel-command-window/🔣️.json")).expect("the neutral history viewport fixture");
+    let viewport: Value = serde_json::from_str(include_str!("../../../../../../🔌️plugin/🧪️tests/🧫️fixtures/history-panel-command-window/🔣️.json")).expect("the neutral history viewport fixture");
     assert_eq!(serde_json::to_value(&built.layout).expect("history viewport layout"), viewport["rootLayout"]);
     publish_history_body(current, built, generation)
 }
@@ -1828,7 +1828,7 @@ fn paint_reprojection_band(shell: &mut ShellState) -> (usize, Vec<HitTarget<Acti
 /// controls; without a reprojection nothing is announced or painted.
 #[test]
 fn every_history_reprojection_is_announced_outside_the_history_panel() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🧫️history-reprojection/🔣️.json")).expect("the shared history-reprojection fixture parses");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧫️history-reprojection/🔣️.json")).expect("the shared history-reprojection fixture parses");
     let theme = Theme::light();
     let mut shell = session_shell();
     assert!(shell.history_reprojection_accessibility_node(1).is_none() && paint_reprojection_band(&mut shell).0 == 0, "nothing replays, nothing is announced or painted");

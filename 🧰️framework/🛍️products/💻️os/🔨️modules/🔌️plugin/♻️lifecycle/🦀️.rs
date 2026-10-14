@@ -1,7 +1,8 @@
 //! ♻️ Store owners and disposers, store initialization and snapshot close retention, and the close, envelope and maintenance ladders.
 use protocol::{OpBinary, OpText};
 use semio_framework::{kernel::ActorId, Fault};
-use store::{os_store::store_schema::ArtifactEnvelope, os_store::serialization::ArtifactPack, ArtifactStore, ConfigStore, os_store::store_schema::HistoryLane, Mutation};
+use pack::snapshot::ArtifactPack;
+use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore, ConfigStore, os_store::store_schema::HistoryLane, Mutation};
 use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use store::ArtifactStoreInitializationAuthority;
 use std::mem::ManuallyDrop;
@@ -61,7 +62,7 @@ impl<T: semio_framework_value::retirement::RetireOwned + Sync> store::SnapshotRe
 #[test]
 fn original_bounded_config_factory_retains_source_until_exact_physical_retirement() {
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🏪️store/♻️retirement/📦️backing/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🏪️store/♻️retirement/📦️backing/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["boundedConfigFactory"];
     let mut source = law["body"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize);
     let pointer = source.as_ptr();
@@ -112,7 +113,7 @@ fn original_bounded_config_factory_retains_source_until_exact_physical_retiremen
 /// 🎛️ Exact one-page retirement catalog for explicitly bounded app configuration stores.
 pub fn bounded_config_store_owners<C, M>(grant: RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<C, M>, RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<C, M>>
 where
-    C: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+    C: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
     M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Mutation<C> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree,
 {
     store::os_store::document_store_owners::bounded_artifact_store_owners::<C, M>(grant)
@@ -313,7 +314,7 @@ where
 /// 🧹️ Explicit close adapter paired with [`bounded_config_store_owners`].
 pub fn bounded_config_store_disposer<C, M>() -> Box<dyn ArtifactOwnedDisposer<ConfigStore<C, M>>>
 where
-    C: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + Send + Sync + 'static,
+    C: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Mutation<C> + OpBinary + OpText + Send + 'static,
 {
     Box::new(ArtifactDocumentStoreDisposer::<C, M>::new())
@@ -322,7 +323,7 @@ where
 /// 🧮️ Prices the exact bounded document constructor without creating a catalog.
 pub fn bounded_document_store_owners_birth_bytes<P, M>() -> usize
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
     M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned,
 {
     store::os_store::document_store_owners::bounded_artifact_store_owners_birth_bytes::<P, M>()
@@ -331,7 +332,7 @@ where
 /// 🗃️ Exact one-page retirement catalog for an explicitly bounded document store.
 pub fn bounded_document_store_owners<P, M>(grant: RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<P, M>, RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<P, M>>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
     M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree,
 {
     bounded_config_store_owners::<P, M>(grant)
@@ -340,7 +341,7 @@ where
 /// 🧽️ Explicit close adapter paired with [`bounded_document_store_owners`].
 pub fn bounded_document_store_disposer<P, M>() -> Box<dyn ArtifactOwnedDisposer<ArtifactStore<P, M>>>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     Box::new(ArtifactDocumentStoreDisposer::<P, M>::new())
@@ -370,7 +371,7 @@ impl<P, Mutation> ArtifactDocumentStoreDisposer<P, Mutation> {
 
 impl<P, Mutation> ArtifactOwnedDisposer<ArtifactStore<P, Mutation>> for ArtifactDocumentStoreDisposer<P, Mutation>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn retirement_demands(&self, owner: &ArtifactStore<P, Mutation>, body: usize) -> Result<RetirementDemand, ValueError> {
@@ -470,16 +471,16 @@ where
     fn next_close_release_byte_demand(&self) -> Result<usize,ValueError> { Ok(self.retirement_demands(0)?.release_bytes) }
     fn next_close_depth_demand(&self) -> Result<usize,ValueError> { Ok(self.retirement_demands(0)?.depth) }
 
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, ValueError> {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         match self.authority.as_mut() {
             Some(authority) => {
                 if self.cancel_requested.load(std::sync::atomic::Ordering::Acquire) {
                     authority.request_cancel();
                 }
-                authority.step(cx)
+                authority.step(cx).map_err(semio_framework_job::OriginalTurnFailure::from)
             }
-            None if self.terminal_handoff => semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None),
-            None => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact-store.initializer-owner-missing")),
+            None if self.terminal_handoff => semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None).map_err(semio_framework_job::OriginalTurnFailure::from),
+            None => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact-store.initializer-owner-missing").into()),
         }
     }
 
@@ -498,22 +499,14 @@ where
         }
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        self.begin_close();
-        let empty=Default::default();
-        if self.terminal_is_empty(){return semio_framework_job::InteractiveJobCloseStep::Complete{progress:empty};}
-        let demand=match self.retirement_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return semio_framework_job::InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};
-        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return semio_framework_job::InteractiveJobCloseStep::Pending{progress:empty};}
-        if let Some(authority)=self.authority.as_mut(){
-            if authority.terminal_is_empty(){drop(self.authority.take());return semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..empty}};}
-            let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-            let step=authority.close_step(child).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,authority.terminal_is_empty(),"original initializer authority"));
-            return match step{Ok(step)=>semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>semio_framework_job::InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};
-        }
-        unsafe{ManuallyDrop::drop(&mut self.cancel_requested);}
-        self.cancel_arc_live=false;self.terminal_handoff=true;
-        let retained_progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..empty};
-        semio_framework_job::InteractiveJobCloseStep::Complete{progress:retained_progress}
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_job::InteractiveJobCloseStep as Step;
+        self.begin_close();if self.terminal_is_empty(){return Ok(Step::Complete{progress:Default::default()})}let demand=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{
+            if let Some(authority)=self.authority.as_mut(){if authority.terminal_is_empty(){drop(self.authority.take());return Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let step=authority.close_step(child)?;return semio_framework_value::retained_clone::admit_retained_clone_close(child,step,authority.terminal_is_empty(),"original initializer authority")}
+            unsafe{ManuallyDrop::drop(&mut self.cancel_requested)}self.cancel_arc_live=false;self.terminal_handoff=true;Ok(semio_framework_value::RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))
+        })?;
+        Ok(match step{Step::Pending{progress}|Step::Complete{progress}=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Step::Blocked=>Step::Blocked})
     }
 
     fn terminal_is_empty(&self) -> bool {

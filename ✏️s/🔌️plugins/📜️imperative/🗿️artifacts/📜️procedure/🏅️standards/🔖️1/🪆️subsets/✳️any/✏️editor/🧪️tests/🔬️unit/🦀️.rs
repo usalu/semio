@@ -33,7 +33,7 @@ pub(crate) mod context {
     pub async fn live_scene(app: &ImperativeApp) -> crate::ProcedureScene {
         use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
         use semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot;
-        use store::{os_store::serialization::ArtifactPack, SpaceMember};
+        use store::{pack::snapshot::ArtifactPack, SpaceMember};
         let snapshot = app.snapshot().expect("procedure parent projection");
         let flow = app.child_store("flow", &snapshot.flow.child_id).await.expect("procedure flow child").document_pack_bytes().await.expect("procedure flow child pack");
         let text = app.child_store("text", &snapshot.text.child_id).await.expect("procedure text child").document_pack_bytes().await.expect("procedure text child pack");
@@ -115,7 +115,7 @@ use semio_framework_plugin::{EditorApp, PluginApp};
 use std::collections::BTreeMap;
 use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
 
-const RETAINED_ROUTES: &str = include_str!("../../🧫️fixtures/🛣️retained-command-routes.json");
+const RETAINED_ROUTES: &str = include_str!("../🧫️fixtures/🛣️retained-command-routes.json");
 
 #[test]
 fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
@@ -149,7 +149,7 @@ fn set_active_example_is_host_only_and_both_composed_children_mint_genesis_packs
     let definition = create_imperative_app();
     let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample is declared on the app roster");
     assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
-    let demo = <crate::ProcedureSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo asset parses as a procedure snapshot");
+    let demo = <crate::ProcedureSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo asset parses as a procedure snapshot");
     // 🧬️ The two composed slots carry DIFFERENT snapshot types (`SemioFlowSnapshot`/`SemioTextSnapshot`),
     // so they are stated one by one rather than iterated over a heterogeneous array.
     for (slot, artifact_id, child_id) in [("flow", demo.flow.target.artifact_id.as_str(), demo.flow.child_id.as_str()), ("text", demo.text.target.artifact_id.as_str(), demo.text.child_id.as_str())] {

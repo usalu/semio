@@ -1,0 +1,32 @@
+{
+  "selector": "the_committed_components_file_is_the_current_export",
+  "project": "@semio-tech/bim-model-rs:test",
+  "roles": [
+    {
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧊️gltf/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "5cff93ea9cc5da5fa2b43e1bba981ac3a5aeb0ee5f38db7a0423a7b5b79df82a",
+      "byteLength": 8866
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧊️gltf/🧪️tests/🧰️testkit/🦀️.rs",
+      "sha256": "f4fb35963d00ef10c157647fd403c9b2cc2dc2532cef194e5d5ceadf6995994d",
+      "byteLength": 2713
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧊️export-bim-1-gltf/🟦️.ts",
+      "sha256": "c6efaa7f012fe9723ee7cac1f442218050b71c545d6d1088a311bfac03ab3ad5",
+      "byteLength": 8585
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🪑️components/📸️snapshot/🔣️.json",
+      "sha256": "20fb2df5613daa85adf62a04a87edfeb39ae1ab54fed3cd0938bd1f67a091e3d",
+      "byteLength": 29292
+    }
+  ],
+  "outputPaths": [
+    "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧊️gltf/🪑️components/🪑️components.glb",
+    "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧊️gltf/🪑️components/🔬️measure/🔣️.json"
+  ],
+  "registeredCommand": "bun nx run @semio-tech/bim-model-rs:test --skip-nx-cache -- quick --lib the_committed_components_file_is_the_current_export -- --nocapture",
+  "callerRoute": "actual root bun nx bootstrap -> discovered native owner-command -> package TestScript -> runArtifactRustTests -> runRepositoryCargoTests"
+}

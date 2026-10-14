@@ -78,7 +78,7 @@ async fn move_offsets_the_widget_a_node_drag_names_from_its_base() {
 //#region 🎚️SliderGesture
 /// 🎚️ The table a dragged inline slider must answer — the twin of the host lane's own
 /// (`📺️renderer/🧑‍🎨engine/🧪️tests/🎚️continuous-gesture-lane`), over the same numbers.
-const SLIDER_GESTURE_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🎚️slider-gesture.json");
+const SLIDER_GESTURE_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎚️slider-gesture.json");
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

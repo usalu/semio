@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "separatorToken": "--spacing-single",
+  "canvasInsetToken": "--spacing-single",
+  "viewport": {
+    "width": 800,
+    "height": 500
+  },
+  "layout": {
+    "kind": "row",
+    "children": [
+      {
+        "weight": 35,
+        "node": {
+          "kind": "stack",
+          "id": "left"
+        }
+      },
+      {
+        "weight": 65,
+        "node": {
+          "kind": "column",
+          "children": [
+            {
+              "weight": 70,
+              "node": {
+                "kind": "stack",
+                "id": "right-top"
+              }
+            },
+            {
+              "weight": 30,
+              "node": {
+                "kind": "stack",
+                "id": "right-bottom"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "oracleSample": {
+    "tokenPixels": 3.2,
+    "stacks": {
+      "left": {
+        "x": 3.2,
+        "y": 3.2,
+        "width": 276.64,
+        "height": 493.6
+      },
+      "right-top": {
+        "x": 283.04,
+        "y": 3.2,
+        "width": 513.76,
+        "height": 343.28
+      },
+      "right-bottom": {
+        "x": 283.04,
+        "y": 349.68,
+        "width": 513.76,
+        "height": 147.12
+      }
+    }
+  },
+  "resizeOracle": {
+    "axisExtentPixels": 1000,
+    "deltaPixels": 120,
+    "separatorIndex": 1,
+    "minimumPercent": 8,
+    "beforeWeights": [
+      50,
+      50
+    ],
+    "afterWeights": [
+      62,
+      38
+    ],
+    "expectedSeparatorDeltaPixels": 120
+  },
+  "windowBodyInlineInsetToken": "--spacing-single",
+  "windowBodyBlockInset": "silhouette-clearance",
+  "panelChrome": {
+    "leadingIconPixels": 16,
+    "dragHandlePixels": 12
+  }
+}

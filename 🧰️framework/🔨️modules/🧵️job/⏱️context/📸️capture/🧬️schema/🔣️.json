@@ -1,0 +1,23 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "title":"Captured Original Job Caller",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["contract","operation","generation","aliases","captureItems","captureCopyBytes","captureCapacityBytes","freshRoot","freshLedger","supplierIssuedFutureTurn","recipientBinding","alreadyDebitedReturn","partialCancellation","terminalDropBytes"],
+  "properties":{
+    "contract":{"const":"semio.job.captured-original-caller.v1"},
+    "operation":{"const":99191},
+    "generation":{"const":17},
+    "aliases":{"const":["same-original-ledger","same-original-cancel"]},
+    "captureItems":{"const":2},
+    "captureCopyBytes":{"const":0},
+    "captureCapacityBytes":{"const":0},
+    "freshRoot":{"const":false},
+    "freshLedger":{"const":false},
+    "supplierIssuedFutureTurn":{"const":true},
+    "recipientBinding":{"const":"actual-original-recipient"},
+    "alreadyDebitedReturn":{"const":"validate-delta-once"},
+    "partialCancellation":{"const":"paid-original-alias-return"},
+    "terminalDropBytes":{"const":0}
+  }
+}

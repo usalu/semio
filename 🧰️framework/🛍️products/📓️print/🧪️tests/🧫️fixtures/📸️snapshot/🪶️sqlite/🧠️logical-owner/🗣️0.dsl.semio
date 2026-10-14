@@ -1,0 +1,104 @@
+semio print.chart.dsl v1
+chart={
+  annotations=[ {
+    height=6 kind="text" options={
+      rotation=30 visible=false
+    }
+    radius=7 text={
+      de="Hinweis" en="Note"
+    }
+    width=5 x=1 x2=3 y=2 y2=4
+  }
+  ] coordinate={
+    kind="cartesian" options={
+      axes=[ "x" "y" ] normalized=false transpose=false
+    }
+  }
+  guides=[ {
+    grid=true kind="axis" minor=false offset=1.5 options={
+      dash="solid" lineWidth=0.2
+    }
+    orient="bottom" scale="x" tickFormat=".2f" tickSize=2 tickValues=[ -3 0 1.5 ] ticks=4 title={
+      de="Waagerecht" en="Horizontal"
+    }
+  }
+  ] height=80 language="de" layers=[ {
+    data="series" encodings={
+      fill={
+        value="#102030"
+      }
+      opacity={
+        value=0.75
+      }
+      x={
+        column="x" scale="x"
+      }
+      y={
+        value=2.5
+      }
+    }
+    layout={
+      algorithm="jitter" options={
+        amplitude=0.5 seed=7
+      }
+    }
+    mark="point" options={
+      label="points" visible=true
+    }
+    transform=[ {
+      kind="filter" options={
+        column="x" operation="gte" value=-3
+      }
+    }
+ {
+      kind="sort" options={
+        columns=[ "x" ] reverse=false
+      }
+    }
+    ]
+  }
+ {
+    data="unresolved-table" encodings={
+      x={
+        column="missing-column" scale="unresolved-scale"
+      }
+    }
+    mark="rule"
+  }
+  ] margin={
+    bottom=4 left=5 right=3 top=2
+  }
+  presets=[ {
+    data="unresolved-preset-table" kind="authored-preset" options={
+      enabled=true label="preset"
+    }
+  }
+  ] scales=[ {
+    domain=[ -3 1.5 ] kind="linear" name="x" options={
+      clamp=false nice=true tickFormat=".2f" tickValues=[ -3 0 1.5 ] unknown=null
+    }
+    range=[ 0 120 ]
+  }
+ {
+    domain=[ "A" "B" ] kind="ordinal" name="paint" options={
+      unknown="missing"
+    }
+    range=[ "#102030" "#abcdef" ]
+  }
+  ] tables=[ {
+    columns=[ "x" "x" "y" "note" "flag" "nil" ] name="series" rows=[ {
+      flag=true nil=null note="Grüße 😀\u{0}" unlisted="retained" x=1.5 y=2.25
+    }
+ {
+      flag=false nil=null note="" unlisted="second" x=-3 y=0
+    }
+    ]
+  }
+  ] theme={
+    appearance="dark" name="authored" palette=[ "#102030" "#abcdef" ]
+  }
+  title={
+    de="Erstelltes Diagramm" en="Authored Chart"
+  }
+  width=120
+}

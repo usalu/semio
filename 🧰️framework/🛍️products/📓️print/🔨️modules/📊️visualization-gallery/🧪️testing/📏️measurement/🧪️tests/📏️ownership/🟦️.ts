@@ -6,7 +6,7 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import Ajv from "ajv";
 import { pdfStableHash } from "../../🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
-import cases from "../../🧫️fixtures/📏️measurement/🔣️.json";
+import cases from "../🧫️fixtures/📏️measurement/🔣️.json";
 import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 
 test("PDF measurement uses the same canonical bytes across metadata and compression", () => {

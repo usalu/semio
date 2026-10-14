@@ -10,7 +10,7 @@ import { applyUiThemeToRoot, clearUiThemeFromRoot, resolveThemeAppearancePalette
 import { describe, expect, it } from "vitest";
 
 const engine = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const fixture = JSON.parse(readFileSync(resolve(engine, "🧫️fixtures/🎨️chrome-palette/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(engine, "🧪️tests/🧫️fixtures/🎨️chrome-palette/🔣️.json"), "utf8"));
 const cssPath = resolve(engine, "../../../../../🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css");
 const css = readFileSync(cssPath, "utf8");
 

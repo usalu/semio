@@ -12,7 +12,7 @@ fn semantic_artifact_reference_preserves_the_exact_four_owned_fields() {
 
 #[test]
 fn neutral_reference_admission_and_json_projection_match_the_independent_oracle() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧬️schema/🗿️artifact-reference/🧫️fixtures/🪪️identity/🔣️.json")).expect("neutral identities");
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧬️schema/🗿️artifact-reference/🧪️tests/🧫️fixtures/🪪️identity/🔣️.json")).expect("neutral identities");
     for expected in fixture["valid"].as_array().unwrap() {
         let input:semio_framework_value::DslValue=serde_json::from_value(expected.clone()).expect("independent JSON input");
         let reference=ArtifactRef::from_value(input).expect("owned semantic admission");

@@ -1229,7 +1229,7 @@ resourceQuartet("resource", "texture", "textures", "textures", remapTextureRefs,
 //#region 🌱️Real-input rows
 /** 🌱️ The committed real input of the artifact-root case (`../🧪️tests/🧊️mutate-gltf-2-0/🥒️.feature`): the 284 KB, 271-node
  *  metabolism export with node 1 nested under node 0, relative to this subset's `🔮️oracles` catalog. */
-const REAL_INPUT = "../🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb";
+const REAL_INPUT = "../🧪️tests/🧫️fixtures/🧊️mutate-gltf-2-0/🌳️base-with-nested-node/🧊️.glb";
 
 type RealRow = { id: string; mutationId: string; family: string; notes: string; edit: (doc: Doc) => void };
 
@@ -1333,8 +1333,8 @@ export function gltfFixtureOutputPaths(manifests: readonly { id: string; files: 
     const path = files[0]!.path;
     if (!path || path !== path.normalize("NFC") || isAbsolute(path) || /^[a-z]:/iu.test(path) || path.includes("\\") || /[\x00-\x1f]/u.test(path)) throw new Error(`Invalid fixture path: ${path}`);
     const target = resolve(catalogDir, path), owner = relative(subsetsRoot, target).split(/[\\/]/u);
-    if (relative(catalogDir, target).replaceAll("\\", "/") !== path || (owner.length !== 4 && owner.length !== 5) || owner.some((part) => !part || part === "." || part === "..") || owner[1] !== "🧫️fixtures" || !owner.at(-1)!.endsWith(".gltf")) throw new Error(`Fixture path escapes its declared collection: ${path}`);
-    if (owner.length === 4 && contextualOperations.includes(leadingEmojiIdentity(owner.at(-2)!).rest)) throw new Error(`Contextual mutation operation requires its physical domain: ${path}`);
+    if (relative(catalogDir, target).replaceAll("\\", "/") !== path || (owner.length !== 5 && owner.length !== 6) || owner.some((part) => !part || part === "." || part === "..") || owner[1] !== "🧪️tests" || owner[2] !== "🧫️fixtures" || !owner.at(-1)!.endsWith(".gltf")) throw new Error(`Fixture path escapes its declared collection: ${path}`);
+    if (owner.length === 5 && contextualOperations.includes(leadingEmojiIdentity(owner.at(-2)!).rest)) throw new Error(`Contextual mutation operation requires its physical domain: ${path}`);
     return target;
   };
   const before = select("expected-before-gltf"), after = select("expected-after-gltf");

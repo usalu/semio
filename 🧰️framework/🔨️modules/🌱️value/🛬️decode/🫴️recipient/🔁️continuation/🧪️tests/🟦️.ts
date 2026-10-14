@@ -4,7 +4,7 @@ import {resolve} from "node:path";
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import grantSchema from "../../../../🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
 test("Original local continuation keeps independent authority and exact semantic backing",()=>{
  expect(existsSync(resolve(import.meta.dir,"../🧬️schema/🔣️.json"))).toBe(false);

@@ -12,11 +12,11 @@ use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle5d_mut
 
 use crate::Puzzle5dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐scale-target-volume/🌲️widens-the-seed-bay/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐scale-target-volume/🌲️widens-the-seed-bay/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐scale-target-volume/🌲️widens-the-seed-bay/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐scale-target-volume/🌲️widens-the-seed-bay/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐scale-target-volume/🌲️widens-the-seed-bay/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐scale-target-volume/🌲️widens-the-seed-bay/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐scale-target-volume/🌲️widens-the-seed-bay/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐scale-target-volume/🌲️widens-the-seed-bay/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐scale-target-volume/🌲️widens-the-seed-bay/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐scale-target-volume/🌲️widens-the-seed-bay/🎯️outcome/🔣️.json");
 
 fn before() -> Puzzle5dSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

@@ -1,7 +1,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::geometry::registry::mesh_support::harness as h;
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🔣️.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/🔣️.json");
 
 #[test]
 fn the_compute_table_and_the_fixture_cover_exactly_the_catalogue_kinds() {

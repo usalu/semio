@@ -5,7 +5,7 @@ import { continuationCaseFaults, runContinuationCase, runContinuationCaseLive, c
 const { readFileSync } = await import("node:fs");
 const { fileURLToPath } = await import("node:url");
 const { dirname, join } = await import("node:path");
-const suite = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🔣️.json"), "utf8")) as ContinuationSuite;
+const suite = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/🔣️.json"), "utf8")) as ContinuationSuite;
 const { fairness } = suite;
 
 describe("🪃️ continuation scheduler", () => {

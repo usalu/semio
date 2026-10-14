@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "contract": "testing-readme-current-coordinates-v1",
+  "documents": {
+    "readme": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/README.md"
+  },
+  "frozenAuthority": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/⚖️readme-license-owner-authority/🔣️.json",
+    "sha256": "b60f16acbde34545d29abfeb50a55d5db6115b2d316b33011db07da34ca7afe9",
+    "row": 31,
+    "baselineCommit": "9f449b10659b95148c8bcb3f91ce583bf7446973",
+    "baselineBlob": "97c9cd961ac67eb875f714da1a17a8d2121446dc",
+    "preimage": {
+      "sha256": "f35bd37e2fb97b232b310eec053d0d93b23b9561eab17f583dd4e35c8756c804",
+      "size": 7205,
+      "mode": "0644"
+    }
+  }
+}

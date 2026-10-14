@@ -7,7 +7,7 @@ import { devHubWorldV1, ownDevHubV1 } from "../../🏃️execution/🟦️.ts";
 
 /** 🧪️ A neutral owner declaration drives a real process, with JSON Schema as the independent oracle. */
 export async function proveDevLocalHubProviderContract(repoRoot: string, artifactDirectory: string): Promise<number> {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const brokerSchema = JSON.parse(readFileSync(new URL("../../../../📇️directory/🎫️local-session/🗄️broker/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const ajv = new Ajv({ strict: true }).addKeyword("x-semio-formats").addSchema(brokerSchema);

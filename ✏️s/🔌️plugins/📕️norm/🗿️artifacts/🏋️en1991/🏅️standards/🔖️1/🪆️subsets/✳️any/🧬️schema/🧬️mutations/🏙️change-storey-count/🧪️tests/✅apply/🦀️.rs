@@ -5,11 +5,11 @@
 /// 🏢 The committed `change-storey-count` vector holds the specification-vector law.
 const VECTOR: super::Vector = super::Vector {
         kind: "change-storey-count",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏙️change-storey-count/✅apply/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏙️change-storey-count/✅apply/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏙️change-storey-count/✅apply/📸️snapshot/➡️after/🔣️.json"),
-        diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏙️change-storey-count/✅apply/🔺️diff/🔣️.json"),
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏙️change-storey-count/✅apply/🎯️outcome/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️change-storey-count/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️change-storey-count/✅apply/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️change-storey-count/✅apply/📸️snapshot/➡️after/🔣️.json"),
+        diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️change-storey-count/✅apply/🔺️diff/🔣️.json"),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️change-storey-count/✅apply/🎯️outcome/🔣️.json"),
 };
 
 #[test]

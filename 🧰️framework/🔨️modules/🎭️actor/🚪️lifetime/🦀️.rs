@@ -424,3 +424,5 @@ mod patch_receipt_tests;
 mod tests;
 //#endregion 🧪️SharedWireLaws
 //#endregion 🚪️InstanceLifecycleWire
+
+semio_framework_value::artifact_retire_leaf!(ActorInstanceLifetime,ActorInstanceOpenRequest,ActorInstanceCloseRequest,ActorInstanceLifecycleReceipt,ActorInstanceLifecycleAck,ActorInstanceLifecycleWire);

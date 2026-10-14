@@ -4,7 +4,7 @@ import { Matrix4, Quaternion, Vector3 } from "three";
 import Ajv from "ajv";
 import { composeRotation, composeScale, type AxisAngle } from "../../🟦️.ts";
 
-const fixtures = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+const fixtures = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/🧭️transforms/🔣️.json", import.meta.url), "utf8"));
 const validate = new Ajv().compile(JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8")));
 for (const fixture of fixtures.scales) test(`per-axis scale: ${fixture.current} then ${fixture.next}`, () => {
   const actual = composeScale(fixture.current, fixture.next);

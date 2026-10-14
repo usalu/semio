@@ -295,7 +295,7 @@ impl protocol::Mutation<Grid3dWindowConfig> for Grid3dWindowConfigMutation {
 //#region 🔖️HandcraftedCodecs
 /// 📜️ Record-backed text form — the derived `__dsl_spec` grammar inside this window kind's semio
 /// text envelope, the same shape every sibling window config prints.
-impl store::os_store::serialization::ArtifactDsl for Grid3dWindowConfig {
+impl pack::snapshot::ArtifactDsl for Grid3dWindowConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -307,7 +307,7 @@ impl store::os_store::serialization::ArtifactDsl for Grid3dWindowConfig {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid wfc grid3d window envelope");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid wfc grid3d window envelope");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -315,16 +315,16 @@ impl store::os_store::serialization::ArtifactDsl for Grid3dWindowConfig {
 /// 🎒️ Record-backed pack form. `record_spec` is what the retained window-config loader reads to
 /// decode a mounted pack field-by-field; returning `None` would fail every retained load of this
 /// window kind.
-impl store::os_store::serialization::ArtifactPack for Grid3dWindowConfig {
+impl pack::snapshot::ArtifactPack for Grid3dWindowConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let body = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &body))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+        if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _) = store::pack_rt::decode_document(&body, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)
@@ -332,6 +332,9 @@ impl store::os_store::serialization::ArtifactPack for Grid3dWindowConfig {
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Grid3dWindowConfig {
+
 }
 
 impl store::ConfigRecord for Grid3dWindowConfig {}

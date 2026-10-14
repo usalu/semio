@@ -5,7 +5,7 @@ use super::*;
 #[test]
 fn window_config_paged_registry_actual_window_partition_custody() {
     use super::super::{WindowConfigOwner, WindowConfigOwnerRegistry, PluginLifecycleStep, pack_identity_tests::IdentityWindowOwner};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let copies = fixture["owningCopies"].as_u64().unwrap() as usize;
     let repeat = fixture["addressRepeat"].as_u64().unwrap() as usize;
     let (mut registry, birth) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_async::block_on(async {
@@ -56,7 +56,7 @@ fn window_config_paged_registry_actual_window_partition_custody() {
 
 #[test]
 fn window_config_paged_registry_original_order_and_physical_backing() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let copies = fixture["copies"].as_u64().unwrap() as usize;
     let repeat = fixture["addressRepeat"].as_u64().unwrap() as usize;
     let mut registry = WindowRegistry::<String, usize>::new();

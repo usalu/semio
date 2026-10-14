@@ -3,8 +3,8 @@
 #[test]
 fn printed_text_parses_back_to_the_authored_document() {
     let document = crate::examples::hex_ring::document();
-    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&document);
-    let parsed: crate::Wfc2dSnapshot = <crate::Wfc2dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("the printed example parses");
+    let text = pack::snapshot::ArtifactDsl::print_dsl(&document);
+    let parsed: crate::Wfc2dSnapshot = <crate::Wfc2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("the printed example parses");
     assert_eq!(parsed, document, "the printed text is not the document it was printed from");
 }
 

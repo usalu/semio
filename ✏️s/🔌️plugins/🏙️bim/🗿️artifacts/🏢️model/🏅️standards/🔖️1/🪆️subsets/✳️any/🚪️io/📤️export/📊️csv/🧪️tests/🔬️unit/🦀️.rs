@@ -69,10 +69,10 @@ fn the_report_lists_every_schedule_then_the_diagnostics_and_is_deterministic() {
     assert_eq!(records[diagnostics + 1][0], "severity");
 }
 
-const DEFECTS: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json");
+const DEFECTS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json");
 
 /// 📁️ The directory of the committed exports of the findings of the defect house: the files the python `csv` and `json` modules read back in the export case.
-const EXPORT_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📤️export");
+const EXPORT_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📤️export");
 
 fn defects() -> ModelInference {
     let snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str(DEFECTS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the defect house decodes");

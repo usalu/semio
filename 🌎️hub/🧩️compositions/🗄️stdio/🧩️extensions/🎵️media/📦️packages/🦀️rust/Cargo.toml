@@ -18,6 +18,7 @@ role = "hub"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 # 🧩️ Composition Dependencies
 semio-s-artifact-stdio-mp4 = { workspace = true }
 semio-s-artifact-stdio-avi = { workspace = true }

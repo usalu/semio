@@ -138,7 +138,7 @@ pub(crate) mod context {
 use super::*;
 use crate::editor::fem2d::unit_tests::context::{fem2d_app, render};
 use semio_framework_plugin::{ArtifactEditor, EditorApp};
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
 
 //#region 🔖️CommandSurface
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
@@ -521,7 +521,7 @@ async fn export_media_document_out_round_trips_via_import_media_document_in() {
     let semio_framework::kernel::Effect::LoadDocument { pack, .. } = emit.effects.first().expect("document:in must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
-    let loaded = <Fem2dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("decode loaded document pack");
+    let loaded = <Fem2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("decode loaded document pack");
     assert_eq!(loaded, snapshot);
 }
 

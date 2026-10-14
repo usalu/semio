@@ -188,14 +188,14 @@
       "files": [
         {
           "role": "expected-before-docx",
-          "path": "../🧫️fixtures/✅️set-conformance-attribute-applied/⬅️before.docx",
+          "path": "../🧪️tests/🧫️fixtures/✅️set-conformance-attribute-applied/⬅️before.docx",
           "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
           "sha256": "sha256:b474c437e1a32791159ea86cdbab6eb49d07bb77d96e4acebcdec938e65ff1a1",
           "bytes": 36581
         },
         {
           "role": "expected-after-docx",
-          "path": "../🧫️fixtures/✅️set-conformance-attribute-applied/➡️after.docx",
+          "path": "../🧪️tests/🧫️fixtures/✅️set-conformance-attribute-applied/➡️after.docx",
           "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
           "sha256": "sha256:ff0d569155a9c2f6d1b639c0a39a40ed9d384abea52aad0ea01dd0cc8e034a3a",
           "bytes": 36597
@@ -230,14 +230,14 @@
       "files": [
         {
           "role": "expected-before-docx",
-          "path": "../🧫️fixtures/🗑️remove-conformance-attribute-applied/⬅️before.docx",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-conformance-attribute-applied/⬅️before.docx",
           "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
           "sha256": "sha256:ff0d569155a9c2f6d1b639c0a39a40ed9d384abea52aad0ea01dd0cc8e034a3a",
           "bytes": 36597
         },
         {
           "role": "expected-after-docx",
-          "path": "../🧫️fixtures/🗑️remove-conformance-attribute-applied/➡️after.docx",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-conformance-attribute-applied/➡️after.docx",
           "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
           "sha256": "sha256:b474c437e1a32791159ea86cdbab6eb49d07bb77d96e4acebcdec938e65ff1a1",
           "bytes": 36581
@@ -272,14 +272,14 @@
       "files": [
         {
           "role": "expected-before-docx",
-          "path": "../🧫️fixtures/🌐️set-main-namespace-applied/⬅️before.docx",
+          "path": "../🧪️tests/🧫️fixtures/🌐️set-main-namespace-applied/⬅️before.docx",
           "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
           "sha256": "sha256:b474c437e1a32791159ea86cdbab6eb49d07bb77d96e4acebcdec938e65ff1a1",
           "bytes": 36581
         },
         {
           "role": "expected-after-docx",
-          "path": "../🧫️fixtures/🌐️set-main-namespace-applied/➡️after.docx",
+          "path": "../🧪️tests/🧫️fixtures/🌐️set-main-namespace-applied/➡️after.docx",
           "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
           "sha256": "sha256:6f99031cda095895fc81e73d2c40f30f70ba87d908c6ddae5230ed1fa50cc908",
           "bytes": 36590
@@ -314,14 +314,14 @@
       "files": [
         {
           "role": "expected-before-docx",
-          "path": "../🧫️fixtures/🔗️set-relationship-base-applied/⬅️before.docx",
+          "path": "../🧪️tests/🧫️fixtures/🔗️set-relationship-base-applied/⬅️before.docx",
           "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
           "sha256": "sha256:b474c437e1a32791159ea86cdbab6eb49d07bb77d96e4acebcdec938e65ff1a1",
           "bytes": 36581
         },
         {
           "role": "expected-after-docx",
-          "path": "../🧫️fixtures/🔗️set-relationship-base-applied/➡️after.docx",
+          "path": "../🧪️tests/🧫️fixtures/🔗️set-relationship-base-applied/➡️after.docx",
           "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
           "sha256": "sha256:663ad254bc16397ab8f64566dc7a402a50e782d415f6610de9b8b1f188eff11f",
           "bytes": 36595

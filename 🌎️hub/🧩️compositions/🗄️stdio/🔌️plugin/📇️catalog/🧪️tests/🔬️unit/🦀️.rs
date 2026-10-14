@@ -10,7 +10,7 @@ fn selected_contribution_identities_are_unique_and_schema_owned() {
 #[cfg(feature = "full-artifact-catalog")]
 #[test]
 fn full_catalog_preserves_definition_codec_and_ledger_counts() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../📇️catalog/🧫️fixtures/📇️native-catalog-surface/🧪️full-roster.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../📇️catalog/🧪️tests/🧫️fixtures/📇️native-catalog-surface/🧪️full-roster.json")).unwrap();
     assert_eq!(artifact_assemblies().expect("artifact assemblies").len(), 36);
     let receipts = native_codec_factory_receipts().expect("native codec receipts");
     let expected: BTreeSet<_> = fixture["identities"].as_array().unwrap().iter().map(|identity| (identity[0].as_str().unwrap(), identity[1].as_str().unwrap(), identity[2].as_str().unwrap())).collect();

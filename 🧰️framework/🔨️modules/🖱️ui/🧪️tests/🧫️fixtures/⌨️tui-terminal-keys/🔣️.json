@@ -1,0 +1,1408 @@
+{
+ "provenance": {
+  "what": "Keys, the child modes in force, and the exact bytes the child reads, for the embedded terminal's key encoder.",
+  "why": "The embedded terminal used to forward a fixed table that dropped Delete, Insert, function keys, Alt and modified arrows; a child that asked for application cursor keys or modified keys got the wrong bytes.",
+  "oracle": "ncurses terminfo entry xterm-256color read with `infocmp -x -1 xterm-256color` (kcuu1 .. kf63, kUP5 .. kPRV7, keypad k*, kxIN/kxOUT): the strings every terminfo-driven program matches the terminal against.",
+  "regenerate": "python r2-tc-oracle.py generate"
+ },
+ "cases": [
+  {
+   "capability": "kcuu1",
+   "key": "Up",
+   "mods": [],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001bOA"
+  },
+  {
+   "capability": "kcud1",
+   "key": "Down",
+   "mods": [],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001bOB"
+  },
+  {
+   "capability": "kcuf1",
+   "key": "Right",
+   "mods": [],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001bOC"
+  },
+  {
+   "capability": "kcub1",
+   "key": "Left",
+   "mods": [],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001bOD"
+  },
+  {
+   "capability": "khome",
+   "key": "Home",
+   "mods": [],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001bOH"
+  },
+  {
+   "capability": "kend",
+   "key": "End",
+   "mods": [],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001bOF"
+  },
+  {
+   "capability": "kich1",
+   "key": "Insert",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[2~"
+  },
+  {
+   "capability": "kdch1",
+   "key": "Delete",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[3~"
+  },
+  {
+   "capability": "kpp",
+   "key": "PageUp",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[5~"
+  },
+  {
+   "capability": "knp",
+   "key": "PageDown",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[6~"
+  },
+  {
+   "capability": "kbs",
+   "key": "Backspace",
+   "mods": [],
+   "modes": [],
+   "bytes": ""
+  },
+  {
+   "capability": "kcbt",
+   "key": "BackTab",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[Z"
+  },
+  {
+   "capability": "kf1",
+   "key": "F1",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001bOP"
+  },
+  {
+   "capability": "kf2",
+   "key": "F2",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001bOQ"
+  },
+  {
+   "capability": "kf3",
+   "key": "F3",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001bOR"
+  },
+  {
+   "capability": "kf4",
+   "key": "F4",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001bOS"
+  },
+  {
+   "capability": "kf5",
+   "key": "F5",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[15~"
+  },
+  {
+   "capability": "kf6",
+   "key": "F6",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[17~"
+  },
+  {
+   "capability": "kf7",
+   "key": "F7",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[18~"
+  },
+  {
+   "capability": "kf8",
+   "key": "F8",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[19~"
+  },
+  {
+   "capability": "kf9",
+   "key": "F9",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[20~"
+  },
+  {
+   "capability": "kf10",
+   "key": "F10",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[21~"
+  },
+  {
+   "capability": "kf11",
+   "key": "F11",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[23~"
+  },
+  {
+   "capability": "kf12",
+   "key": "F12",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[24~"
+  },
+  {
+   "capability": "kf13",
+   "key": "F13",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[1;2P"
+  },
+  {
+   "capability": "kf14",
+   "key": "F14",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[1;2Q"
+  },
+  {
+   "capability": "kf15",
+   "key": "F15",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[1;2R"
+  },
+  {
+   "capability": "kf16",
+   "key": "F16",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[1;2S"
+  },
+  {
+   "capability": "kf17",
+   "key": "F17",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[15;2~"
+  },
+  {
+   "capability": "kf18",
+   "key": "F18",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[17;2~"
+  },
+  {
+   "capability": "kf19",
+   "key": "F19",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[18;2~"
+  },
+  {
+   "capability": "kf20",
+   "key": "F20",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[19;2~"
+  },
+  {
+   "capability": "kf21",
+   "key": "F21",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[20;2~"
+  },
+  {
+   "capability": "kf22",
+   "key": "F22",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[21;2~"
+  },
+  {
+   "capability": "kf23",
+   "key": "F23",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[23;2~"
+  },
+  {
+   "capability": "kf24",
+   "key": "F24",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[24;2~"
+  },
+  {
+   "capability": "kf25",
+   "key": "F25",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[1;5P"
+  },
+  {
+   "capability": "kf26",
+   "key": "F26",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[1;5Q"
+  },
+  {
+   "capability": "kf27",
+   "key": "F27",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[1;5R"
+  },
+  {
+   "capability": "kf28",
+   "key": "F28",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[1;5S"
+  },
+  {
+   "capability": "kf29",
+   "key": "F29",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[15;5~"
+  },
+  {
+   "capability": "kf30",
+   "key": "F30",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[17;5~"
+  },
+  {
+   "capability": "kf31",
+   "key": "F31",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[18;5~"
+  },
+  {
+   "capability": "kf32",
+   "key": "F32",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[19;5~"
+  },
+  {
+   "capability": "kf33",
+   "key": "F33",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[20;5~"
+  },
+  {
+   "capability": "kf34",
+   "key": "F34",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[21;5~"
+  },
+  {
+   "capability": "kf35",
+   "key": "F35",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[23;5~"
+  },
+  {
+   "capability": "kf36",
+   "key": "F36",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[24;5~"
+  },
+  {
+   "capability": "kf37",
+   "key": "F37",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[1;6P"
+  },
+  {
+   "capability": "kf38",
+   "key": "F38",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[1;6Q"
+  },
+  {
+   "capability": "kf39",
+   "key": "F39",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[1;6R"
+  },
+  {
+   "capability": "kf40",
+   "key": "F40",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[1;6S"
+  },
+  {
+   "capability": "kf41",
+   "key": "F41",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[15;6~"
+  },
+  {
+   "capability": "kf42",
+   "key": "F42",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[17;6~"
+  },
+  {
+   "capability": "kf43",
+   "key": "F43",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[18;6~"
+  },
+  {
+   "capability": "kf44",
+   "key": "F44",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[19;6~"
+  },
+  {
+   "capability": "kf45",
+   "key": "F45",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[20;6~"
+  },
+  {
+   "capability": "kf46",
+   "key": "F46",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[21;6~"
+  },
+  {
+   "capability": "kf47",
+   "key": "F47",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[23;6~"
+  },
+  {
+   "capability": "kf48",
+   "key": "F48",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[24;6~"
+  },
+  {
+   "capability": "kf49",
+   "key": "F49",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[1;3P"
+  },
+  {
+   "capability": "kf50",
+   "key": "F50",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[1;3Q"
+  },
+  {
+   "capability": "kf51",
+   "key": "F51",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[1;3R"
+  },
+  {
+   "capability": "kf52",
+   "key": "F52",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[1;3S"
+  },
+  {
+   "capability": "kf53",
+   "key": "F53",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[15;3~"
+  },
+  {
+   "capability": "kf54",
+   "key": "F54",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[17;3~"
+  },
+  {
+   "capability": "kf55",
+   "key": "F55",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[18;3~"
+  },
+  {
+   "capability": "kf56",
+   "key": "F56",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[19;3~"
+  },
+  {
+   "capability": "kf57",
+   "key": "F57",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[20;3~"
+  },
+  {
+   "capability": "kf58",
+   "key": "F58",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[21;3~"
+  },
+  {
+   "capability": "kf59",
+   "key": "F59",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[23;3~"
+  },
+  {
+   "capability": "kf60",
+   "key": "F60",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[24;3~"
+  },
+  {
+   "capability": "kf61",
+   "key": "F61",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[1;4P"
+  },
+  {
+   "capability": "kf62",
+   "key": "F62",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[1;4Q"
+  },
+  {
+   "capability": "kf63",
+   "key": "F63",
+   "mods": [],
+   "modes": [],
+   "bytes": "\u001b[1;4R"
+  },
+  {
+   "capability": "kUP",
+   "key": "Up",
+   "mods": [
+    "shift"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;2A"
+  },
+  {
+   "capability": "kUP3",
+   "key": "Up",
+   "mods": [
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;3A"
+  },
+  {
+   "capability": "kUP4",
+   "key": "Up",
+   "mods": [
+    "shift",
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;4A"
+  },
+  {
+   "capability": "kUP5",
+   "key": "Up",
+   "mods": [
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;5A"
+  },
+  {
+   "capability": "kUP6",
+   "key": "Up",
+   "mods": [
+    "shift",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;6A"
+  },
+  {
+   "capability": "kUP7",
+   "key": "Up",
+   "mods": [
+    "alt",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;7A"
+  },
+  {
+   "capability": "kDN",
+   "key": "Down",
+   "mods": [
+    "shift"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;2B"
+  },
+  {
+   "capability": "kDN3",
+   "key": "Down",
+   "mods": [
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;3B"
+  },
+  {
+   "capability": "kDN4",
+   "key": "Down",
+   "mods": [
+    "shift",
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;4B"
+  },
+  {
+   "capability": "kDN5",
+   "key": "Down",
+   "mods": [
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;5B"
+  },
+  {
+   "capability": "kDN6",
+   "key": "Down",
+   "mods": [
+    "shift",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;6B"
+  },
+  {
+   "capability": "kDN7",
+   "key": "Down",
+   "mods": [
+    "alt",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;7B"
+  },
+  {
+   "capability": "kLFT",
+   "key": "Left",
+   "mods": [
+    "shift"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;2D"
+  },
+  {
+   "capability": "kLFT3",
+   "key": "Left",
+   "mods": [
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;3D"
+  },
+  {
+   "capability": "kLFT4",
+   "key": "Left",
+   "mods": [
+    "shift",
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;4D"
+  },
+  {
+   "capability": "kLFT5",
+   "key": "Left",
+   "mods": [
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;5D"
+  },
+  {
+   "capability": "kLFT6",
+   "key": "Left",
+   "mods": [
+    "shift",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;6D"
+  },
+  {
+   "capability": "kLFT7",
+   "key": "Left",
+   "mods": [
+    "alt",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;7D"
+  },
+  {
+   "capability": "kRIT",
+   "key": "Right",
+   "mods": [
+    "shift"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;2C"
+  },
+  {
+   "capability": "kRIT3",
+   "key": "Right",
+   "mods": [
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;3C"
+  },
+  {
+   "capability": "kRIT4",
+   "key": "Right",
+   "mods": [
+    "shift",
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;4C"
+  },
+  {
+   "capability": "kRIT5",
+   "key": "Right",
+   "mods": [
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;5C"
+  },
+  {
+   "capability": "kRIT6",
+   "key": "Right",
+   "mods": [
+    "shift",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;6C"
+  },
+  {
+   "capability": "kRIT7",
+   "key": "Right",
+   "mods": [
+    "alt",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;7C"
+  },
+  {
+   "capability": "kHOM",
+   "key": "Home",
+   "mods": [
+    "shift"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;2H"
+  },
+  {
+   "capability": "kHOM3",
+   "key": "Home",
+   "mods": [
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;3H"
+  },
+  {
+   "capability": "kHOM4",
+   "key": "Home",
+   "mods": [
+    "shift",
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;4H"
+  },
+  {
+   "capability": "kHOM5",
+   "key": "Home",
+   "mods": [
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;5H"
+  },
+  {
+   "capability": "kHOM6",
+   "key": "Home",
+   "mods": [
+    "shift",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;6H"
+  },
+  {
+   "capability": "kHOM7",
+   "key": "Home",
+   "mods": [
+    "alt",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;7H"
+  },
+  {
+   "capability": "kEND",
+   "key": "End",
+   "mods": [
+    "shift"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;2F"
+  },
+  {
+   "capability": "kEND3",
+   "key": "End",
+   "mods": [
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;3F"
+  },
+  {
+   "capability": "kEND4",
+   "key": "End",
+   "mods": [
+    "shift",
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;4F"
+  },
+  {
+   "capability": "kEND5",
+   "key": "End",
+   "mods": [
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;5F"
+  },
+  {
+   "capability": "kEND6",
+   "key": "End",
+   "mods": [
+    "shift",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;6F"
+  },
+  {
+   "capability": "kEND7",
+   "key": "End",
+   "mods": [
+    "alt",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[1;7F"
+  },
+  {
+   "capability": "kIC",
+   "key": "Insert",
+   "mods": [
+    "shift"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[2;2~"
+  },
+  {
+   "capability": "kIC3",
+   "key": "Insert",
+   "mods": [
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[2;3~"
+  },
+  {
+   "capability": "kIC4",
+   "key": "Insert",
+   "mods": [
+    "shift",
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[2;4~"
+  },
+  {
+   "capability": "kIC5",
+   "key": "Insert",
+   "mods": [
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[2;5~"
+  },
+  {
+   "capability": "kIC6",
+   "key": "Insert",
+   "mods": [
+    "shift",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[2;6~"
+  },
+  {
+   "capability": "kIC7",
+   "key": "Insert",
+   "mods": [
+    "alt",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[2;7~"
+  },
+  {
+   "capability": "kDC",
+   "key": "Delete",
+   "mods": [
+    "shift"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[3;2~"
+  },
+  {
+   "capability": "kDC3",
+   "key": "Delete",
+   "mods": [
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[3;3~"
+  },
+  {
+   "capability": "kDC4",
+   "key": "Delete",
+   "mods": [
+    "shift",
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[3;4~"
+  },
+  {
+   "capability": "kDC5",
+   "key": "Delete",
+   "mods": [
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[3;5~"
+  },
+  {
+   "capability": "kDC6",
+   "key": "Delete",
+   "mods": [
+    "shift",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[3;6~"
+  },
+  {
+   "capability": "kDC7",
+   "key": "Delete",
+   "mods": [
+    "alt",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[3;7~"
+  },
+  {
+   "capability": "kNXT",
+   "key": "PageDown",
+   "mods": [
+    "shift"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[6;2~"
+  },
+  {
+   "capability": "kNXT3",
+   "key": "PageDown",
+   "mods": [
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[6;3~"
+  },
+  {
+   "capability": "kNXT4",
+   "key": "PageDown",
+   "mods": [
+    "shift",
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[6;4~"
+  },
+  {
+   "capability": "kNXT5",
+   "key": "PageDown",
+   "mods": [
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[6;5~"
+  },
+  {
+   "capability": "kNXT6",
+   "key": "PageDown",
+   "mods": [
+    "shift",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[6;6~"
+  },
+  {
+   "capability": "kNXT7",
+   "key": "PageDown",
+   "mods": [
+    "alt",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[6;7~"
+  },
+  {
+   "capability": "kPRV",
+   "key": "PageUp",
+   "mods": [
+    "shift"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[5;2~"
+  },
+  {
+   "capability": "kPRV3",
+   "key": "PageUp",
+   "mods": [
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[5;3~"
+  },
+  {
+   "capability": "kPRV4",
+   "key": "PageUp",
+   "mods": [
+    "shift",
+    "alt"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[5;4~"
+  },
+  {
+   "capability": "kPRV5",
+   "key": "PageUp",
+   "mods": [
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[5;5~"
+  },
+  {
+   "capability": "kPRV6",
+   "key": "PageUp",
+   "mods": [
+    "shift",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[5;6~"
+  },
+  {
+   "capability": "kPRV7",
+   "key": "PageUp",
+   "mods": [
+    "alt",
+    "ctrl"
+   ],
+   "modes": [
+    "app_cursor"
+   ],
+   "bytes": "\u001b[5;7~"
+  },
+  {
+   "capability": "kpZRO",
+   "key": "KeypadDigit0",
+   "mods": [],
+   "modes": [
+    "app_keypad"
+   ],
+   "bytes": "\u001bOp"
+  },
+  {
+   "capability": "kc1",
+   "key": "KeypadDigit1",
+   "mods": [],
+   "modes": [
+    "app_keypad"
+   ],
+   "bytes": "\u001bOq"
+  },
+  {
+   "capability": "kc2",
+   "key": "KeypadDigit2",
+   "mods": [],
+   "modes": [
+    "app_keypad"
+   ],
+   "bytes": "\u001bOr"
+  },
+  {
+   "capability": "kc3",
+   "key": "KeypadDigit3",
+   "mods": [],
+   "modes": [
+    "app_keypad"
+   ],
+   "bytes": "\u001bOs"
+  },
+  {
+   "capability": "kb1",
+   "key": "KeypadDigit4",
+   "mods": [],
+   "modes": [
+    "app_keypad"
+   ],
+   "bytes": "\u001bOt"
+  },
+  {
+   "capability": "kb2",
+   "key": "KeypadDigit5",
+   "mods": [],
+   "modes": [
+    "app_keypad"
+   ],
+   "bytes": "\u001bOu"
+  },
+  {
+   "capability": "kb3",
+   "key": "KeypadDigit6",
+   "mods": [],
+   "modes": [
+    "app_keypad"
+   ],
+   "bytes": "\u001bOv"
+  },
+  {
+   "capability": "ka1",
+   "key": "KeypadDigit7",
+   "mods": [],
+   "modes": [
+    "app_keypad"
+   ],
+   "bytes": "\u001bOw"
+  },
+  {
+   "capability": "ka2",
+   "key": "KeypadDigit8",
+   "mods": [],
+   "modes": [
+    "app_keypad"
+   ],
+   "bytes": "\u001bOx"
+  },
+  {
+   "capability": "ka3",
+   "key": "KeypadDigit9",
+   "mods": [],
+   "modes": [
+    "app_keypad"
+   ],
+   "bytes": "\u001bOy"
+  },
+  {
+   "capability": "kpADD",
+   "key": "KeypadPlus",
+   "mods": [],
+   "modes": [
+    "app_keypad"
+   ],
+   "bytes": "\u001bOk"
+  },
+  {
+   "capability": "kpSUB",
+   "key": "KeypadMinus",
+   "mods": [],
+   "modes": [
+    "app_keypad"
+   ],
+   "bytes": "\u001bOm"
+  },
+  {
+   "capability": "kpMUL",
+   "key": "KeypadMultiply",
+   "mods": [],
+   "modes": [
+    "app_keypad"
+   ],
+   "bytes": "\u001bOj"
+  },
+  {
+   "capability": "kpDIV",
+   "key": "KeypadDivide",
+   "mods": [],
+   "modes": [
+    "app_keypad"
+   ],
+   "bytes": "\u001bOo"
+  },
+  {
+   "capability": "kpDOT",
+   "key": "KeypadDecimal",
+   "mods": [],
+   "modes": [
+    "app_keypad"
+   ],
+   "bytes": "\u001bOn"
+  },
+  {
+   "capability": "kent",
+   "key": "KeypadEnter",
+   "mods": [],
+   "modes": [
+    "app_keypad"
+   ],
+   "bytes": "\u001bOM"
+  },
+  {
+   "capability": "kpCMA",
+   "key": "KeypadSeparator",
+   "mods": [],
+   "modes": [
+    "app_keypad"
+   ],
+   "bytes": "\u001bOl"
+  },
+  {
+   "capability": "kxIN",
+   "key": "FocusGained",
+   "mods": [],
+   "modes": [
+    "focus_reporting"
+   ],
+   "bytes": "\u001b[I"
+  },
+  {
+   "capability": "kxOUT",
+   "key": "FocusLost",
+   "mods": [],
+   "modes": [
+    "focus_reporting"
+   ],
+   "bytes": "\u001b[O"
+  }
+ ]
+}

@@ -469,7 +469,7 @@ impl ArtifactEditor for Block2dPlayApp {
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, snapshot_read:request.snapshot_read, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
             Block2dCommand::command_id,
             BLOCK2D_RETAINED_RAW_BYTES,
             BLOCK2D_RETAINED_WORK_ITEMS,
@@ -577,7 +577,7 @@ impl ArtifactEditor for Block2dPlayApp {
                 return Err(MediaError::NotImplemented);
             }
             let media_type = Self::io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.artifact_media_type);
-            let bytes = store::os_store::serialization::ArtifactPack::encode_pack(doc.snapshot);
+            let bytes = pack::snapshot::ArtifactPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
         let fragment = crate::standards::v1::subsets::any::io::puzzle_catalog::puzzle2d_manifest_fragment(doc.snapshot);

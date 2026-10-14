@@ -124,7 +124,7 @@ fn elsewhere() -> crate::os_spr::ForeignTarget {
 }
 
 fn corpus() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🧫️supersede-law/🔣️.json")).expect("the corpus parses")
+    serde_json::from_str(include_str!("../🧫️fixtures/🧫️supersede-law/🔣️.json")).expect("the corpus parses")
 }
 
 async fn law_store(id: &str) -> LawStore {

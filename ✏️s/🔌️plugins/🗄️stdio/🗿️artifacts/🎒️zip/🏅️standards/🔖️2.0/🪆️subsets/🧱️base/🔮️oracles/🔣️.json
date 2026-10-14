@@ -264,14 +264,14 @@
       "files": [
         {
           "role": "expected-before-zip",
-          "path": "../🧫️fixtures/➕️add-entry-applied/⬅️before.zip",
+          "path": "../🧪️tests/🧫️fixtures/➕️add-entry-applied/⬅️before.zip",
           "mediaType": "application/zip",
           "sha256": "sha256:315973b7855ec6e2b6d14e3242516301f07e4f8451f059ede2dc346555299a77",
           "bytes": 123
         },
         {
           "role": "expected-after-zip",
-          "path": "../🧫️fixtures/➕️add-entry-applied/➡️after.zip",
+          "path": "../🧪️tests/🧫️fixtures/➕️add-entry-applied/➡️after.zip",
           "mediaType": "application/zip",
           "sha256": "sha256:01f3a36e3ab681d2c15fcbd3c15d27f4b416ee107108d645ed871a9825aff720",
           "bytes": 222
@@ -314,14 +314,14 @@
       "files": [
         {
           "role": "expected-before-zip",
-          "path": "../🧫️fixtures/➖️remove-entry-applied/⬅️before.zip",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-entry-applied/⬅️before.zip",
           "mediaType": "application/zip",
           "sha256": "sha256:01f3a36e3ab681d2c15fcbd3c15d27f4b416ee107108d645ed871a9825aff720",
           "bytes": 222
         },
         {
           "role": "expected-after-zip",
-          "path": "../🧫️fixtures/➖️remove-entry-applied/➡️after.zip",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-entry-applied/➡️after.zip",
           "mediaType": "application/zip",
           "sha256": "sha256:315973b7855ec6e2b6d14e3242516301f07e4f8451f059ede2dc346555299a77",
           "bytes": 123
@@ -364,14 +364,14 @@
       "files": [
         {
           "role": "expected-before-zip",
-          "path": "../🧫️fixtures/🏷️rename-entry-applied/⬅️before.zip",
+          "path": "../🧪️tests/🧫️fixtures/🏷️rename-entry-applied/⬅️before.zip",
           "mediaType": "application/zip",
           "sha256": "sha256:805c9646deac20e102a4d474ddf7f4b78d9aa15aa65474a3ec00a046f454e786",
           "bytes": 119
         },
         {
           "role": "expected-after-zip",
-          "path": "../🧫️fixtures/🏷️rename-entry-applied/➡️after.zip",
+          "path": "../🧪️tests/🧫️fixtures/🏷️rename-entry-applied/➡️after.zip",
           "mediaType": "application/zip",
           "sha256": "sha256:72681ff0f9284b82e5d0559e8320009c64166d5c46d6adf0fe46da696fe0a271",
           "bytes": 119
@@ -414,14 +414,14 @@
       "files": [
         {
           "role": "expected-before-zip",
-          "path": "../🧫️fixtures/💬️set-archive-comment-applied/⬅️before.zip",
+          "path": "../🧪️tests/🧫️fixtures/💬️set-archive-comment-applied/⬅️before.zip",
           "mediaType": "application/zip",
           "sha256": "sha256:315973b7855ec6e2b6d14e3242516301f07e4f8451f059ede2dc346555299a77",
           "bytes": 123
         },
         {
           "role": "expected-after-zip",
-          "path": "../🧫️fixtures/💬️set-archive-comment-applied/➡️after.zip",
+          "path": "../🧪️tests/🧫️fixtures/💬️set-archive-comment-applied/➡️after.zip",
           "mediaType": "application/zip",
           "sha256": "sha256:da9433cac2ed045b0da8a431a9e193901c70b6534e91da088cb6b614ea756fcf",
           "bytes": 146
@@ -464,14 +464,14 @@
       "files": [
         {
           "role": "expected-before-zip",
-          "path": "../🧫️fixtures/✍️set-entry-data-applied/⬅️before.zip",
+          "path": "../🧪️tests/🧫️fixtures/✍️set-entry-data-applied/⬅️before.zip",
           "mediaType": "application/zip",
           "sha256": "sha256:315973b7855ec6e2b6d14e3242516301f07e4f8451f059ede2dc346555299a77",
           "bytes": 123
         },
         {
           "role": "expected-after-zip",
-          "path": "../🧫️fixtures/✍️set-entry-data-applied/➡️after.zip",
+          "path": "../🧪️tests/🧫️fixtures/✍️set-entry-data-applied/➡️after.zip",
           "mediaType": "application/zip",
           "sha256": "sha256:b0a71ad6b5eca84dc863a2181cb98bf8cc8e223cd72a12b04d067bc09e371b2c",
           "bytes": 123

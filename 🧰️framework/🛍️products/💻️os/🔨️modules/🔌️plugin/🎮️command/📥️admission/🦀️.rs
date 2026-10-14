@@ -8,7 +8,7 @@ use crate::bounded_ownership::plugin_grant_funds;
 use crate::app_contract::ArtifactApp;
 use crate::app_emission::ActionMeta;
 use crate::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use crate::bounded_ownership::PluginLifecycleStep;
+use crate::bounded_ownership::{PluginLifecycleStep,PluginLifecycleFailure};
 use crate::bounded_ownership::plugin_typed_owner_demand;
 use crate::bounded_ownership::plugin_typed_owner_step;
 use crate::reserved_jobs::QualifiedToolProof;
@@ -24,7 +24,7 @@ pub(crate) mod original_latest_key;
 
 use original_latest_key::ToolLatestWinsKeyCopy;
 
-struct ToolLatestWinsScope {
+pub(crate) struct ToolLatestWinsScope {
     key: semio_framework_value::ordered::SharedOwner<String>,
     operation: u64,
     token: semio_framework_job::CancelToken,
@@ -176,7 +176,7 @@ pub(crate) struct AdmittedToolCommand {
 
 pub(crate) struct PendingLatestWinsCommand<A: ArtifactApp> {
     pub(crate) command: ManuallyDrop<Option<Box<A::Command>>>,
-    disposer: Box<dyn ArtifactOwnedDisposer<A::Command>>,
+    pub(crate) disposer: Box<dyn ArtifactOwnedDisposer<A::Command>>,
     pub(crate) admission: Option<AdmittedToolCommand>,
     pub(crate) meta: ActionMeta,
     pub(crate) operation: semio_framework_job::Operation,
@@ -184,7 +184,7 @@ pub(crate) struct PendingLatestWinsCommand<A: ArtifactApp> {
     pub(crate) lease: Option<ToolCancellationLease>,
     pub(crate) key_copy: Option<ToolLatestWinsKeyCopy>,
     pub(crate) key: Option<semio_framework_value::ordered::SharedOwner<String>>,
-    retired_key: Option<String>,
+    pub(crate) retired_key: Option<String>,
     pub(crate) lookup_started: bool,
     pub(crate) accepted: bool,
     pub(crate) restarting: bool,
@@ -214,25 +214,25 @@ impl<A: ArtifactApp> PendingLatestWinsCommand<A> {
         Ok(Default::default())
     }
     fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
-    pub(crate) fn close_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{
-        let idle=RetainedCloneProgress::default();let demand=self.retirement_demands(grant.maximum_copy_bytes).map_err(|error|super::child_emit_preparation::retirement_refusal_fault(&error))?;
-        if !Self::permits(grant,demand){return Ok(PluginLifecycleStep::Progress(idle));}
+    pub(crate) fn close_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
+        let idle=RetainedCloneProgress::default();let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
+        if !Self::permits(grant,demand){return Ok(PluginLifecycleStep::Progress(idle))}
         if let Some(command)=self.command.as_mut(){
-            if self.disposer.terminal_is_empty(command){drop(self.command.take());return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..idle}));}
-            let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=self.disposer.close_step(command,child)?;
-            let progress=step.progress().unwrap_or_default();semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original latest command disposer").map_err(|error|super::child_emit_preparation::retirement_refusal_fault(&error))?;
-            if matches!(step,PluginLifecycleStep::Complete(_))&&!self.disposer.terminal_is_empty(command){return Err(plugin_sdk_fault("latest-wins command disposer reported a false terminal").with_retained_progress(progress));}
-            return Ok(match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step});
+            if self.disposer.terminal_is_empty(command){drop(self.command.take());return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..idle}))}
+            let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=self.disposer.close_step(command,child)?;let progress=step.progress().unwrap_or_default();
+            semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original latest command disposer")?;
+            if matches!(step,PluginLifecycleStep::Complete(_))&&!self.disposer.terminal_is_empty(command){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"latest-wins command disposer reported a false terminal").with_retained_progress(progress).into())}
+            return Ok(match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step})
         }
-        if self.key_copy.is_some()||self.key.is_some()||self.retired_key.is_some(){return self.close_key_step(grant);}
-        if let Some(admission)=self.admission.as_mut(){if !admission.raw_wire.terminal_is_empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=admission.raw_wire.close_step(child).admit(child,admission.raw_wire.terminal_is_empty());return Ok(match step{semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),semio_framework_job::InteractiveJobCloseStep::Blocked=>PluginLifecycleStep::AwaitingInput{reason:"latest-wins original raw input awaits handback"},semio_framework_job::InteractiveJobCloseStep::Refused{kind,progress}=>return Err(plugin_sdk_fault(format!("latest-wins original wire refused: {kind:?}")).with_retained_progress(progress))});}}
+        if self.key_copy.is_some()||self.key.is_some()||self.retired_key.is_some(){return self.close_key_step(grant)}
+        if let Some(admission)=self.admission.as_mut(){if !admission.raw_wire.terminal_is_empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=admission.raw_wire.close_step(child)?.admit(child,admission.raw_wire.terminal_is_empty())?;return Ok(match step{semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),semio_framework_job::InteractiveJobCloseStep::Blocked=>PluginLifecycleStep::AwaitingInput{reason:"latest-wins original raw input awaits handback"}})}}
         Ok(PluginLifecycleStep::AwaitingInput{reason:"latest-wins original metadata and cancellation await their native retirement issuer"})
     }
-    pub(crate) fn close_key_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{
-        let idle=RetainedCloneProgress::default();if !Self::permits(grant,self.key_demands().map_err(|error|super::child_emit_preparation::retirement_refusal_fault(&error))?){return Ok(PluginLifecycleStep::Progress(idle));}
-        if let Some(copy)=self.key_copy.as_mut(){if copy.key.is_none(){self.key_copy.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}return Ok(PluginLifecycleStep::Progress(copy.close_step(grant).progress()));}
-        if let Some(key)=self.key.as_mut(){if key.terminal_is_empty(){self.key.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}let step=key.release_step(grant).map_err(|error|super::child_emit_preparation::retirement_refusal_fault(&error))?;self.retired_key=step.value;return Ok(PluginLifecycleStep::Progress(step.progress));}
-        if let Some(key)=self.retired_key.as_ref(){let released_bytes=key.capacity();drop(self.retired_key.take());return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..idle}));}
+    pub(crate) fn close_key_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
+        let idle=RetainedCloneProgress::default();if !Self::permits(grant,self.key_demands()?){return Ok(PluginLifecycleStep::Progress(idle))}
+        if let Some(copy)=self.key_copy.as_mut(){if copy.key.is_none(){self.key_copy.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}))}return Ok(PluginLifecycleStep::Progress(copy.close_step(grant).progress()))}
+        if let Some(key)=self.key.as_mut(){if key.terminal_is_empty(){self.key.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}))}let step=key.release_step(grant)?;self.retired_key=step.value;return Ok(PluginLifecycleStep::Progress(step.progress))}
+        if let Some(key)=self.retired_key.as_ref(){let released_bytes=key.capacity();drop(self.retired_key.take());return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..idle}))}
         Ok(PluginLifecycleStep::Complete(idle))
     }
     pub(crate) fn command_owners_are_empty(&self)->bool{self.command.is_none()&&self.admission.is_none()&&self.key_copy.is_none()&&self.key.is_none()&&self.retired_key.is_none()&&self.fault.is_none()}
@@ -247,9 +247,9 @@ impl<A: ArtifactApp> Drop for PendingLatestWinsCommand<A> {
 }
 
 pub(crate) struct TypedCommandWireWriter {
-    input: semio_framework::action_bus::RetainedToolWireInput,
-    page: [u8; semio_framework::action_bus::TOOL_WIRE_PAGE_BYTES],
-    len: usize,
+    pub(crate) input: semio_framework::action_bus::RetainedToolWireInput,
+    pub(crate) page: [u8; semio_framework::action_bus::TOOL_WIRE_PAGE_BYTES],
+    pub(crate) len: usize,
 }
 
 impl TypedCommandWireWriter {

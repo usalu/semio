@@ -4,7 +4,7 @@ use crate::editor::flow::FlowCommand;
 use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
 use semio_framework_plugin::{app::TypedOperationResultLane, PluginApp};
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
-use store::{os_store::serialization::ArtifactPack, SpaceMember};
+use store::{pack::snapshot::ArtifactPack, SpaceMember};
 
 /// 🪟️ Reads the actual main window's public geometry after the owning app settles.
 async fn published_host_snapshot(app: &mut FlowApp) -> serde_json::Value {
@@ -325,7 +325,7 @@ async fn a_release_that_wires_and_drags_is_labelled_by_the_drag() {
     let rows = member_rows(&mut app).await;
     assert_eq!(rows.len(), 1, "one release is one row: {rows:?}");
     assert!(rows[0].op_lines.first().is_some_and(|line| line.starts_with("insert-edge")), "{:?}", rows[0].op_lines);
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧫️composed-child-history/🔣️.json")).expect("independent composed history JSON oracle");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🧫️composed-child-history/🔣️.json")).expect("independent composed history JSON oracle");
     let expected = &fixture["cases"].as_array().expect("history cases").iter().find(|case| case["id"] == "declared-child-intent-follows-structural-support").expect("mixed gesture contract")["expected"]["groups"][0]["label"];
     assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), expected["en"].as_str().expect("English intent label"));
     assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), expected["de"].as_str().expect("German intent label"));
@@ -547,7 +547,7 @@ async fn patching_a_widget_value_is_one_absolute_node_param_leaf() {
 //#endregion 🔖️ComposedChildHistory
 
 //#region 🔖️IntentRows
-const NODE_GRAPH_EDIT_ROWS_JSON: &str = include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
+const NODE_GRAPH_EDIT_ROWS_JSON: &str = include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
 
 /// ⚖️ LAW (design §13.3): the flow guest decodes every row of the shared node-graph edit vocabulary the fixture accepts
 /// and refuses every row it refuses — among them the whole-fixture `setHostSnapshot` and the ambient `deleteSelection`.

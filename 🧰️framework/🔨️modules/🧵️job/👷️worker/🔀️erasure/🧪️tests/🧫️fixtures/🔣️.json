@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "schema": "original-native-batch-session-erasure.v1",
+  "grant": [
+    1,
+    17,
+    8192,
+    65536,
+    64
+  ],
+  "metadataCopyBytes": 0,
+  "originalIdentity": [
+    919,
+    17
+  ],
+  "phases": [
+    "original",
+    "storage",
+    "bound",
+    "erased",
+    "original-close",
+    "header-release",
+    "empty"
+  ],
+  "cases": [
+    {
+      "id": "funded",
+      "items": true,
+      "capacity": true,
+      "depth": true,
+      "identity": true,
+      "idle": true,
+      "rawReceiptAccepted": true,
+      "phase": "storage",
+      "sourceRetained": true
+    },
+    {
+      "id": "no-items",
+      "items": false,
+      "capacity": true,
+      "depth": true,
+      "identity": true,
+      "idle": true,
+      "rawReceiptAccepted": true,
+      "phase": "original",
+      "sourceRetained": true
+    },
+    {
+      "id": "no-capacity",
+      "items": true,
+      "capacity": false,
+      "depth": true,
+      "identity": true,
+      "idle": true,
+      "rawReceiptAccepted": true,
+      "phase": "original",
+      "sourceRetained": true
+    },
+    {
+      "id": "no-depth",
+      "items": true,
+      "capacity": true,
+      "depth": false,
+      "identity": true,
+      "idle": true,
+      "rawReceiptAccepted": true,
+      "phase": "original",
+      "sourceRetained": true
+    },
+    {
+      "id": "foreign-identity",
+      "items": true,
+      "capacity": true,
+      "depth": true,
+      "identity": false,
+      "idle": true,
+      "rawReceiptAccepted": true,
+      "phase": "original",
+      "sourceRetained": true
+    },
+    {
+      "id": "held-outcome",
+      "items": true,
+      "capacity": true,
+      "depth": true,
+      "identity": true,
+      "idle": false,
+      "rawReceiptAccepted": true,
+      "phase": "original",
+      "sourceRetained": true
+    },
+    {
+      "id": "refused-raw-receipt",
+      "items": true,
+      "capacity": true,
+      "depth": true,
+      "identity": true,
+      "idle": true,
+      "rawReceiptAccepted": false,
+      "phase": "storage",
+      "sourceRetained": true
+    }
+  ],
+  "preparationGrant": [
+    1,
+    16384,
+    65536,
+    65536,
+    64
+  ],
+  "previewSession": {
+    "sealed": true,
+    "caseCount": 5,
+    "unchanged": [
+      "nativeJob",
+      "params",
+      "payloadLedger",
+      "cancel",
+      "receipt",
+      "outcomeLoan"
+    ],
+    "metadataCopyBytes": 0
+  },
+  "cancellation": {
+    "cases": [
+      {
+        "cancelled": false,
+        "deadlineOpen": true,
+        "admission": true,
+        "retirement": true
+      },
+      {
+        "cancelled": true,
+        "deadlineOpen": true,
+        "admission": false,
+        "retirement": true
+      },
+      {
+        "cancelled": false,
+        "deadlineOpen": false,
+        "admission": false,
+        "retirement": false
+      },
+      {
+        "cancelled": true,
+        "deadlineOpen": false,
+        "admission": false,
+        "retirement": false
+      }
+    ],
+    "previewCases": 5,
+    "expectedStatus": "cancelled",
+    "expectedOutcomes": 0
+  },
+  "closeContext": {
+    "caller": "original",
+    "receiptOwner": "producer",
+    "receiptDebits": 1,
+    "failureOwners": [
+      "primary",
+      "receiptRefusal"
+    ],
+    "deniedEffects": [
+      "fuel",
+      "deadline",
+      "items",
+      "release",
+      "depth"
+    ],
+    "stepFailure": "whole"
+  }
+}

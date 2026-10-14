@@ -1,4 +1,5 @@
 //! 🌳️ Original Drawing typed prefixes survive malformed input and cancellation until physically funded close.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_os_kernel as store;
 use semio_framework_value::{DslValue,FromValue,ToValue,ErasedSnapshotRetirement,RetirementDemand,ValueRefusalKind};
 use semio_framework_value::retirement::RetireOwned;
@@ -7,7 +8,7 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneStep
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, DrawStyle, DrawCanvas, DrawLayer, SemioDrawingSnapshot};
 #[global_allocator]
 static DRAW_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧩️component/🌳️nodes/🧾️original/🔣️.json")).unwrap()}
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:4096}}
 fn demand(owner:&dyn ErasedSnapshotRetirement)->RetirementDemand{let copy=owner.next_copy_byte_demand().unwrap();let release=owner.next_release_byte_demand().unwrap();owner.next_demand(if copy==0{release}else{copy}).unwrap()}
 fn close(owner:&mut dyn ErasedSnapshotRetirement,denials:&mut Vec<serde_json::Value>)->(usize,usize){
@@ -47,15 +48,15 @@ fn drawing_original_controlled_prefix_matches_neutral_nodes_and_five_denied_curr
 /// 🧬️ Cold and caller-controlled entry points enforce the same exact schema variants.
 #[test]
 fn drawing_original_exact_variants_reject_foreign_fields_and_missing_payload(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧬️shape.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧩️component/🌳️nodes/🧾️original/🧬️shape.json")).unwrap();
  for row in fixture["malformed"].as_array().unwrap(){assert!(DrawNode::from_value(DslValue::from(row)).is_err());}
  println!("[DEBUG] Drawing six original exact variant shape refusals match independent portable AJV");
 }
 /// 🪶️ Relational reconstruction keeps rows, ordering scratch and original typed layers in the caller return scope.
 #[test]
 fn drawing_original_sqlite_reconstruction_keeps_all_partial_original_storage(){
- use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SqliteSnapshotPhase}};
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🌱️defaults.json")).unwrap();let snapshot=SemioDrawingSnapshot::from_value(DslValue::from(&corpus["defaults"][2]["input"])).unwrap();
+ use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SqliteSnapshotPhase}};
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧩️component/🌳️nodes/🧾️original/🌱️defaults.json")).unwrap();let snapshot=SemioDrawingSnapshot::from_value(DslValue::from(&corpus["defaults"][2]["input"])).unwrap();
  let database=semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut |_|true, |control| snapshot.to_sqlite_database(control)).unwrap();let mut denials=Vec::new();let mut interrupted=0;
  for stop in [0,1,3,7,13,21,34,55,89,144,233,377,usize::MAX]{
   let mut calls=0;let mut callback=|event:store::sqlite_snapshot::SqliteSnapshotProgress|{if event.phase!=SqliteSnapshotPhase::ReconstructSnapshot{return true}let run=calls<stop;calls+=1;run};
@@ -69,7 +70,7 @@ fn drawing_original_sqlite_reconstruction_keeps_all_partial_original_storage(){
 /// 🗂️ Whole original document fields and nested layers retain physical custody across cancellation.
 #[test]
 fn drawing_original_document_controlled_prefix_preserves_layers_and_partial_fields(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🌱️defaults.json")).unwrap();let mut denials=Vec::new();let mut interrupted=0;
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧩️component/🌳️nodes/🧾️original/🌱️defaults.json")).unwrap();let mut denials=Vec::new();let mut interrupted=0;
  for row in corpus["defaults"].as_array().unwrap().iter().filter(|row|row["input"].get("kind").is_none()){
   let input=DslValue::from(&row["input"]);let expected=SemioDrawingSnapshot::from_value(input.clone()).unwrap();
   for stop in [0,1,3,7,13,21,34,55,usize::MAX]{
@@ -87,7 +88,7 @@ fn drawing_original_document_controlled_prefix_preserves_layers_and_partial_fiel
 /// 🌱️ Native defaults and exact record fields share the independent portable schema corpus.
 #[test]
 fn drawing_original_container_defaults_and_foreign_fields_match_shared_schema(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🌱️defaults.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧩️component/🌳️nodes/🧾️original/🌱️defaults.json")).unwrap();
  for row in corpus["defaults"].as_array().unwrap(){
   let input=DslValue::from(&row["input"]);
   let output=if row["input"].get("kind").is_some(){DrawNode::from_value(input).unwrap().to_value()}else{SemioDrawingSnapshot::from_value(input).unwrap().to_value()};

@@ -8,7 +8,7 @@ fn decode_schema(native:&mut semio_framework_value::NativeDecodeControl<'_>)->Re
 fn encode_schema(native:&mut NativeEncodeControl<'_>)->Result<RecordSpec,ValueError>{schema(native)}
 #[test]
 fn original_record_helper_preserves_grant_output_and_pending_retirement(){
- let neutral:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🚪️control/🔣️.json")).unwrap();let literal=neutral["literal"].as_str().unwrap();let source=literal.as_ptr();
+ let neutral:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🚪️control/🔣️.json")).unwrap();let literal=neutral["literal"].as_str().unwrap();let source=literal.as_ptr();
  for row in neutral["cases"].as_array().unwrap(){
   let mut grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(neutral["grant"].clone()).unwrap();grant.maximum_release_bytes=row["release"].as_u64().unwrap()as usize;
   let mut recipient=NativeEncodeRetirementRecipient::new();let ledger=std::sync::atomic::AtomicUsize::new(0);let mut allocation=|request:NativeEncodeAllocation|{assert_eq!(request.owned_bytes,ledger.load(std::sync::atomic::Ordering::Relaxed));ledger.store(request.next_owned_bytes,std::sync::atomic::Ordering::Relaxed);Ok(())};let mut progress=|_|true;let mut native=NativeEncodeControl::new_forwarded(neutral["nativeBytes"].as_u64().unwrap()as usize,&mut progress,&mut allocation);native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut native,grant);let mut callback=|_|true;let mut sql=SqliteSnapshotControl::new(&mut callback,crate::sqlite_snapshot::SqliteDatabaseLimits::default());

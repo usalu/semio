@@ -5,7 +5,7 @@ import { WORKSPACE_ROOT } from "../../../../../../📜️script.ts";
 /** 🧪️ Executes tool job telemetry contention policy assertions. */
 export function toolJobTelemetryContentionSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🔨️modules/⏱️trace/⏱️clock");
-  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🧪️contention/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🧪️contention/🔣️.json"), "utf8"));
   const ids = new Set<string>();
   for (const law of fixture.cases) {
     if (ids.has(law.id)) throw new Error(`duplicate telemetry contention law: ${law.id}`);

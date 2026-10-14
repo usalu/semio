@@ -1,0 +1,37 @@
+{
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": null,
+  "durableArtifacts": null,
+  "calibration": null,
+  "params": null,
+  "gcps": {
+    "rows": [
+      {
+        "row": "patch",
+        "key": "gcp-ridge",
+        "patch": {
+          "observations": {
+            "removed": [],
+            "added": [
+              {
+                "streamId": "stream-a",
+                "frameIndex": 1,
+                "pixel": [
+                  {
+                    "bits": "41f00000"
+                  },
+                  {
+                    "bits": "42200000"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "results": null
+}

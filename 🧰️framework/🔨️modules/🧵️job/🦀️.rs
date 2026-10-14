@@ -57,6 +57,15 @@ pub use worker_wake_retirement::{RetainedWorkerWake,OriginalWorkerWakeIssuer,adm
 #[cfg(not(target_arch="wasm32"))]
 pub use worker_wake_retirement::admit_original_thread_worker_wake;
 use semio_framework_value::{ValueError, ValueRefusalKind};
+#[path="⚠️failure/🦀️.rs"]
+mod original_turn_failure;
+pub use original_turn_failure::{OriginalTurnFailure,OriginalTurnPrimary};
+#[path="♻️retirement/🎟️context/🦀️.rs"]
+mod original_close_context;
+pub use original_close_context::close_original_retained_step;
+#[cfg(test)]
+#[path="🎟️context/🪙️loan/🧪️tests/🦀️.rs"]
+mod original_retained_loan_tests;
 #[cfg(test)]
 use std::time::Instant;
 
@@ -191,7 +200,7 @@ pub trait FixedOperationOwner {
     fn retained_bytes(&self) -> usize;
     fn cancel(&mut self);
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep;
+    fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -337,35 +346,18 @@ impl<T: FixedOperationOwner, const CAPACITY: usize> FixedOperationRegistry<T, CA
         true
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        let maximum_items=grant.maximum_items;let _maximum_bytes=grant.maximum_release_bytes;
-        if !self.allocation_admitted || maximum_items == 0 {
-            return InteractiveJobCloseStep::Blocked;
+    pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+        if self.is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
+        if !self.allocation_admitted{return Ok(InteractiveJobCloseStep::Blocked)}
+        let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        let index=self.close_cursor;let idle=self.slots[index].as_ref().is_none_or(|entry|!entry.closing);let terminal=self.slots[index].as_ref().is_some_and(|entry|entry.closing&&entry.owner.terminal_is_empty());
+        if idle||terminal{
+            let progress=RetainedCloneProgress{copied_items:1,..Default::default()};cx.consume_retained(progress)?;cx.consume_fuel(1);
+            if terminal{let entry=self.slots[index].take().expect("terminal fixed operation keeps its original slot");self.retained_bytes-=entry.admitted_bytes;self.occupied-=1;drop(entry)}
+            self.close_cursor=(index+1)%CAPACITY;return Ok(if self.is_empty(){InteractiveJobCloseStep::Complete{progress}}else{InteractiveJobCloseStep::Pending{progress}})
         }
-        let index = self.close_cursor;
-        self.close_cursor = (self.close_cursor + 1) % CAPACITY;
-        let Some(entry) = self.slots[index].as_mut() else {
-            return if self.is_empty() { InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() } } else { InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..RetainedCloneProgress::default() } } };
-        };
-        if !entry.closing {
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..RetainedCloneProgress::default() } };
-        }
-        let child_grant=RetainedCloneGrant{maximum_items:1,..grant};
-        let step = entry.owner.close_step(child_grant).admit(child_grant,entry.owner.terminal_is_empty());
-        if matches!(step,InteractiveJobCloseStep::Complete{..}) {
-            let entry = self.slots[index].take().expect("terminal fixed operation owner remains admitted");
-            self.retained_bytes -= entry.admitted_bytes;
-            self.occupied -= 1;
-            drop(entry);
-        }
-        if self.is_empty() {
-            InteractiveJobCloseStep::Complete { progress: step.progress() }
-        } else {
-            match step {
-                InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                step => step,
-            }
-        }
+        let entry=self.slots[index].as_mut().unwrap();let step=entry.owner.close_step(cx)?.admit(grant,entry.owner.terminal_is_empty())?;
+        Ok(match step{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})
     }
 
     pub fn is_empty(&self) -> bool {
@@ -391,6 +383,9 @@ mod fixed_operation_registry_tests;
 #[path="👷️worker/🚪️admission/🦀️.rs"]
 mod original_worker_admission;
 pub use original_worker_admission::{WorkerJobAdmissionControl,WorkerJobAdmissionContext,WorkerJobAdmission,WorkerJobInitializer,WorkerJobInitializationStep,WorkerJobSessionPreparation};
+#[path="👷️worker/🔀️erasure/🦀️.rs"]
+mod original_session_erasure;
+pub use original_session_erasure::{OriginalBatchSessionErasure,ErasedBatchJobSession,OriginalPreviewSession};
 #[path="🔭️preview/🎟️drive/🦀️.rs"]
 mod original_preview_driver;
 pub use original_preview_driver::{JobPreviewDriver,JobPreviewLimits,JobPreviewStatus,JobPreviewStep,JobPreviewVerdict};
@@ -926,6 +921,9 @@ enum JobPayloadLedgerReference<'a>{Owned(Arc<JobPayloadOperationLedger>),Borrowe
 impl std::ops::Deref for JobPayloadLedgerReference<'_>{type Target=Arc<JobPayloadOperationLedger>;fn deref(&self)->&Self::Target{match self{Self::Owned(original)=>original,Self::OriginalWorker(original)=>original,Self::Borrowed(authority)=>authority.original().expect("original context outlived its payload authority")}}}
 enum StepCancelReference<'a>{Owned(CancelToken),Borrowed(&'a CancelToken)}
 impl std::ops::Deref for StepCancelReference<'_>{type Target=CancelToken;fn deref(&self)->&Self::Target{match self{Self::Owned(original)=>original,Self::Borrowed(original)=>original}}}
+#[path="⏱️context/📸️capture/🦀️.rs"]
+mod original_caller_capture;
+pub use original_caller_capture::{OriginalCallerCapture,CapturedOriginalCaller,OriginalCallerIssuer,OriginalCallerTurn,OriginalCallerCloseReturn,OriginalCallerSourceParent,OriginalCallerSourceLoan};
 //#endregion 📄️RetainedPayload
 
 //#region 🧭️StepContext
@@ -951,6 +949,15 @@ pub struct StepContext<'a> {
     retained_work: retained_work::RetainedWorkBudget,
 }
 
+struct OriginalRetainedLoanIdentity{recipient:usize,cursor:usize,ledger:usize,operation:OperationId,generation:Generation,clock:fn()->Option<u64>,deadline:u64}
+impl OriginalRetainedLoanIdentity{
+ fn capture(cx:&StepContext<'_>)->Self{Self{recipient:cx.retained_progress as*const _ as usize,cursor:cx.preview_sequence as*const _ as usize,ledger:Arc::as_ptr(&cx.payload_ledger)as usize,operation:cx.operation,generation:cx.generation,clock:cx.now_us,deadline:cx.deadline_us}}
+ fn matches(&self,cx:&StepContext<'_>)->bool{self.recipient==cx.retained_progress as*const _ as usize&&self.cursor==cx.preview_sequence as*const _ as usize&&self.ledger==Arc::as_ptr(&cx.payload_ledger)as usize&&self.operation==cx.operation&&self.generation==cx.generation&&std::ptr::fn_addr_eq(self.clock,cx.now_us)&&self.deadline==cx.deadline_us}
+}
+struct OriginalRetainedLoan<'a>{target:*mut StepContext<'a>,original:RetainedCloneGrant,identity:OriginalRetainedLoanIdentity}
+impl OriginalRetainedLoan<'_>{fn matches_original(&self)->bool{unsafe{self.identity.matches(&*self.target)}}}
+impl Drop for OriginalRetainedLoan<'_>{fn drop(&mut self){if self.matches_original(){unsafe{(*self.target).retained=self.original}}}}
+
 impl<'a> StepContext<'a> {
     fn with_original_worker_authority(operation:OperationId,generation:Generation,budget:StepBudget,cancel:&'a CancelToken,now_us:fn()->Option<u64>,clock:ClockStride,preview_sequence:&'a mut u64,retained_progress:&'a mut RetainedCloneProgress,payload_ledger:&'a Arc<JobPayloadOperationLedger>)->Result<Self,ValueError>{if payload_ledger.operation!=operation||payload_ledger.generation!=generation||!retained_progress.fits(budget.retained){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"worker context requires its original admitted identity ledger and recipient"))}Ok(Self{retained:budget.retained,retained_progress,operation,generation,fuel_remaining:budget.fuel,deadline_us:budget.deadline_us,now_us,clock:std::cell::Cell::new(clock),cancel:StepCancelReference::Borrowed(cancel),stage:"initial",preview_sequence,payload_ledger:JobPayloadLedgerReference::OriginalWorker(payload_ledger),payload_page_granted:false,retained_work:retained_work::RetainedWorkBudget::new(retained_work::NO_RETAINED_WORK)})}
     pub fn new(operation: OperationId, generation: Generation, budget: StepBudget, cancel: CancelToken, now_us: fn() -> Option<u64>, preview_sequence: &'a mut u64,retained_progress:&'a mut RetainedCloneProgress) -> StepContext<'a> {
@@ -975,6 +982,17 @@ impl<'a> StepContext<'a> {
 
     /// 🎟️ Preserves the original caller depth and independently unspent physical credits.
     pub fn retained_grant(&self)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:self.retained.maximum_items.saturating_sub(self.retained_progress.copied_items),maximum_copy_bytes:self.retained.maximum_copy_bytes.saturating_sub(self.retained_progress.copied_bytes),maximum_capacity_bytes:self.retained.maximum_capacity_bytes.saturating_sub(self.retained_progress.retained_capacity_bytes),maximum_release_bytes:self.retained.maximum_release_bytes.saturating_sub(self.retained_progress.released_bytes),..self.retained}}
+    /// 🪙️ Narrows the same original recipient and restores ceilings only while its initiating context remains intact.
+    pub fn with_retained_loan<R:Copy>(&mut self,requested:RetainedCloneGrant,run:impl FnOnce(&mut Self)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{
+        let original=self.retained;let posted=self.retained_progress();
+        if !posted.fits(original){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original retained loan recipient already exceeds its ceiling").into())}
+        let remaining=self.retained_grant();let ceiling=|paid:usize,wanted:usize,available:usize|paid.checked_add(wanted.min(available)).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original retained loan ceiling overflow"));
+        let narrowed=RetainedCloneGrant{maximum_items:ceiling(posted.copied_items,requested.maximum_items,remaining.maximum_items)?,maximum_copy_bytes:ceiling(posted.copied_bytes,requested.maximum_copy_bytes,remaining.maximum_copy_bytes)?,maximum_capacity_bytes:ceiling(posted.retained_capacity_bytes,requested.maximum_capacity_bytes,remaining.maximum_capacity_bytes)?,maximum_release_bytes:ceiling(posted.released_bytes,requested.maximum_release_bytes,remaining.maximum_release_bytes)?,maximum_depth:requested.maximum_depth.min(remaining.maximum_depth)};
+        let restore=OriginalRetainedLoan{target:std::ptr::addr_of_mut!(*self),original,identity:OriginalRetainedLoanIdentity::capture(self)};self.retained=narrowed;let result=run(self);
+        if restore.matches_original(){return result}
+        let refusal=||ValueError::literal(ValueRefusalKind::InvariantViolated,"original retained loan callback replaced its initiating context");
+        Err(match result{Ok(_)=>{let mut failure=OriginalTurnFailure::from(refusal());failure.context_refusal=Some(refusal());failure},Err(mut failure)=>{if failure.context_refusal.is_none(){failure.context_refusal=Some(refusal())}failure}})
+    }
     /// 🧾️ Records actual child effects in the external recipient before refusing exceeded authority.
     pub fn consume_retained(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{
         let admitted=self.retained_progress.fits(self.retained)&&progress.fits(self.retained_grant());
@@ -983,6 +1001,9 @@ impl<'a> StepContext<'a> {
     }
     /// 📊️ Exposes actual effects recorded by this same original step context, including failed turns.
     pub fn retained_progress(&self)->RetainedCloneProgress{*self.retained_progress}
+
+    /// 🪪️ Identifies the actual external recipient without creating a replacement or alias.
+    pub fn original_recipient_identity(&self)->usize{self.retained_progress as*const RetainedCloneProgress as usize}
 
     /// 🕰️ Borrows the caller's original clock source for a retained child authority.
     pub fn clock_source(&self)->fn()->Option<u64>{self.now_us}
@@ -997,6 +1018,12 @@ impl<'a> StepContext<'a> {
 
     /// 🤝️ Borrows this caller's original cancellation witness without issuing another alias.
     pub fn original_cancel_token(&self)->&CancelToken{&self.cancel}
+
+    /// 🛑️ Borrows the admitted external cancellation for native controls without an alias or context replacement.
+    pub fn borrowed_original_cancel_token(&self)->Result<&'a CancelToken,ValueError>{match &self.cancel{StepCancelReference::Borrowed(original)=>Ok(*original),StepCancelReference::Owned(_)=>Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native job controls require an original borrowed cancellation witness"))}}
+
+    /// 📸️ Borrows the genuine external ledger and cancellation roots without creating authority.
+    fn borrowed_original_caller_source(&self)->Result<original_caller_capture::OriginalCallerSource<'a>,ValueError>{let ledger=match &self.payload_ledger{JobPayloadLedgerReference::OriginalWorker(original)=>*original,JobPayloadLedgerReference::Borrowed(authority)=>authority.original().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original caller ledger has already closed"))?,JobPayloadLedgerReference::Owned(_)=>return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"caller capture requires its admitted borrowed original ledger"))};Ok(original_caller_capture::OriginalCallerSource{ledger,cancel:self.borrowed_original_cancel_token()?,operation:self.operation,generation:self.generation,clock:self.now_us,deadline:self.deadline_us})}
 
     /// 🤝️ Issues one alias only after this original context admits its metadata item and depth.
     pub fn admit_original_cancel_alias(&mut self)->Result<Option<CancelToken>,ValueError>{
@@ -1253,20 +1280,19 @@ impl StepOutcome {
 //#endregion 🚦️StepOutcome
 
 //#region 🧩️InteractiveJob
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq,semio_framework_value::RetireOwned)]
 pub enum InteractiveJobCloseStep {
     Pending { progress: RetainedCloneProgress },
     Blocked,
     Complete { progress: RetainedCloneProgress },
-    Refused { kind:ValueRefusalKind, progress:RetainedCloneProgress }
 }
 
 impl InteractiveJobCloseStep {
     /// 📊️ Keeps every admitted turn's physical and logical receipt, including terminal release.
-    pub fn progress(self)->RetainedCloneProgress {match self{Self::Pending{progress}|Self::Complete{progress}|Self::Refused{progress,..}=>progress,Self::Blocked=>RetainedCloneProgress::default()}}
+    pub fn progress(self)->RetainedCloneProgress {match self{Self::Pending{progress}|Self::Complete{progress}=>progress,Self::Blocked=>RetainedCloneProgress::default()}}
     /// 🛡️ Checks independent authority and the original owner's terminal witness before publication.
-    pub fn admit(self,grant:RetainedCloneGrant,terminal_is_empty:bool)->Self{
-        if !self.progress().fits(grant)||matches!(self,Self::Complete{..})&&!terminal_is_empty{Self::Refused{kind:ValueRefusalKind::InvariantViolated,progress:self.progress()}}else{self}
+    pub fn admit(self,grant:RetainedCloneGrant,terminal_is_empty:bool)->Result<Self,ValueError>{
+        if !self.progress().fits(grant)||matches!(self,Self::Complete{..})&&!terminal_is_empty{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original job close receipt or terminal witness refused").with_retained_progress(self.progress()))}else{Ok(self)}
     }
 }
 
@@ -1292,10 +1318,11 @@ impl<T: ?Sized> JobThreadTransfer for T {}
 /// and returns before the hard ceiling), cancellable ([`StepContext::is_cancelled`]) and explicitly
 /// resumable (a fresh [`StepContext`] each call, job-owned state carries everything between calls).
 pub trait InteractiveJob: JobThreadTransfer {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,ValueError>;
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>;
     fn borrow_outcome<'a>(&'a self, descriptor:&'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>,ValueError>;
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep;
+    /// 🎟️ Consumes physical and work effects once under the same original caller; successful progress reports that debit.
+    fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>;
     /// 🧮️ Requests the next original payload work without granting it.
     fn next_close_copy_byte_demand(&self) -> Result<usize,ValueError> {self.close_demand_without_owner()}
     /// 📦️ Requests the actual natural frontier allocation for this bounded payload grant.
@@ -1356,7 +1383,7 @@ impl JobChildSlot {
 
 #[repr(C)]
 struct JobChildNodeHeader {
-    pump: unsafe fn(*mut JobChildNodeHeader, RetainedCloneGrant) -> InteractiveJobCloseStep,
+    pump: unsafe fn(*mut JobChildNodeHeader, &mut StepContext<'_>) -> Result<InteractiveJobCloseStep,OriginalTurnFailure>,
     demands:unsafe fn(*mut JobChildNodeHeader,usize)->Result<RetirementDemand,ValueError>,
     release_bytes:usize,
     destroy: unsafe fn(*mut JobChildNodeHeader),
@@ -1378,39 +1405,17 @@ struct JobChildNode<J> {
     close_stage: u8,
 }
 
-unsafe fn pump_job_child_node<J: InteractiveJob>(pointer: *mut JobChildNodeHeader, grant:RetainedCloneGrant) -> InteractiveJobCloseStep {
-    let maximum_items=grant.maximum_items;
-    let node = unsafe { &mut *pointer.cast::<JobChildNode<J>>() };
-    if node.close_stage == 0 {
-        if maximum_items == 0 {
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..RetainedCloneProgress::default() } };
-        }
-        node.child.as_mut().expect("live child node owns exact child").begin_close();
-        node.close_stage = 1;
-        return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..RetainedCloneProgress::default() } };
+unsafe fn pump_job_child_node<J: InteractiveJob>(pointer:*mut JobChildNodeHeader,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+    let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+    let node=unsafe{&mut *pointer.cast::<JobChildNode<J>>()};
+    if node.close_stage==0{node.child.as_mut().expect("live original child").begin_close();node.close_stage=1;let progress=RetainedCloneProgress{copied_items:1,..Default::default()};cx.consume_fuel(1);cx.consume_retained(progress)?;return Ok(InteractiveJobCloseStep::Pending{progress})}
+    if node.close_stage==1{
+        let child=node.child.as_mut().expect("closing original child");
+        if child.terminal_is_empty(){node.close_stage=2;let progress=RetainedCloneProgress{copied_items:1,..Default::default()};cx.consume_fuel(1);cx.consume_retained(progress)?;return Ok(InteractiveJobCloseStep::Pending{progress})}
+        let step=child.close_step(cx)?.admit(grant,child.terminal_is_empty())?;return Ok(match step{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})
     }
-    if node.close_stage == 1 {
-        let child = node.child.as_mut().expect("closing child node owns exact child");
-        match child.close_step(grant).admit(grant,child.terminal_is_empty()) {
-            InteractiveJobCloseStep::Pending { progress } => return InteractiveJobCloseStep::Pending { progress },
-            InteractiveJobCloseStep::Blocked => return InteractiveJobCloseStep::Blocked,
-            InteractiveJobCloseStep::Refused{kind,progress}=>return InteractiveJobCloseStep::Refused{kind,progress},
-            InteractiveJobCloseStep::Complete { progress: _ } if !child.terminal_is_empty() => return InteractiveJobCloseStep::Blocked,
-            InteractiveJobCloseStep::Complete { progress } => {
-                node.close_stage = 2;
-                return InteractiveJobCloseStep::Pending { progress };
-            }
-        }
-    }
-    if node.close_stage == 2 {
-        if maximum_items == 0 {
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..RetainedCloneProgress::default() } };
-        }
-        drop(node.child.take());
-        node.close_stage = 3;
-        return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes:0, released_bytes: 0, ..RetainedCloneProgress::default() } };
-    }
-    InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
+    if node.close_stage==2{drop(node.child.take());node.close_stage=3;let progress=RetainedCloneProgress{copied_items:1,..Default::default()};cx.consume_fuel(1);cx.consume_retained(progress)?;return Ok(InteractiveJobCloseStep::Pending{progress})}
+    Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})
 }
 
 unsafe fn destroy_job_child_node<J>(pointer: *mut JobChildNodeHeader) {
@@ -1460,31 +1465,14 @@ impl<J: InteractiveJob> JobChildAdmissionRejected<J> {
         }
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        let maximum_items=grant.maximum_items;let _maximum_bytes=grant.maximum_release_bytes;
-        self.begin_close();
-        if self.close_stage == 0 {
-            let Some(child) = self.child.as_mut() else {
-                self.close_stage = 2;
-                return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..RetainedCloneProgress::default() } };
-            };
-            match child.close_step(grant).admit(grant,child.terminal_is_empty()) {
-                InteractiveJobCloseStep::Pending { progress } => return InteractiveJobCloseStep::Pending { progress },
-                InteractiveJobCloseStep::Blocked => return InteractiveJobCloseStep::Blocked,
-                InteractiveJobCloseStep::Refused{kind,progress}=>return InteractiveJobCloseStep::Refused{kind,progress},
-                InteractiveJobCloseStep::Complete { progress: _ } if !child.terminal_is_empty() => return InteractiveJobCloseStep::Blocked,
-                InteractiveJobCloseStep::Complete { progress } => {self.close_stage = 1;return InteractiveJobCloseStep::Pending{progress}},
-            }
+    pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+        let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}self.begin_close();
+        if self.close_stage==0{
+            if let Some(child)=self.child.as_mut(){if !child.terminal_is_empty(){let step=child.close_step(cx)?.admit(grant,child.terminal_is_empty())?;return Ok(match step{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})}}
+            self.close_stage=1;let progress=RetainedCloneProgress{copied_items:1,..Default::default()};cx.consume_fuel(1);cx.consume_retained(progress)?;return Ok(InteractiveJobCloseStep::Pending{progress})
         }
-        if self.close_stage == 1 {
-            if maximum_items == 0 {
-                return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..RetainedCloneProgress::default() } };
-            }
-            drop(self.child.take());
-            self.close_stage = 2;
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes: 0, ..RetainedCloneProgress::default() } };
-        }
-        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
+        if self.close_stage==1{drop(self.child.take());self.close_stage=2;let progress=RetainedCloneProgress{copied_items:1,..Default::default()};cx.consume_fuel(1);cx.consume_retained(progress)?;return Ok(InteractiveJobCloseStep::Pending{progress})}
+        Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -1608,36 +1596,21 @@ impl JobScope {
         Ok(RetirementDemand::default())
     }
 
-    pub fn pump_child_close(&self, grant:RetainedCloneGrant) -> InteractiveJobCloseStep {
-        for slot in &self.slots {
-            if slot.state.compare_exchange(CHILD_CLOSE_INTENT,CHILD_CHECKED_OUT,Ordering::AcqRel,Ordering::Acquire).is_err() {
-                continue;
+    pub fn pump_child_close(&self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+        let grant=cx.retained_grant();if cx.should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        for slot in &self.slots{
+            if slot.state.compare_exchange(CHILD_CLOSE_INTENT,CHILD_CHECKED_OUT,Ordering::AcqRel,Ordering::Acquire).is_err(){continue}
+            let pointer=slot.node.load(Ordering::Acquire);if pointer.is_null(){slot.state.store(CHILD_CLOSE_INTENT,Ordering::Release);return Ok(InteractiveJobCloseStep::Blocked)}
+            let demand=match unsafe{((*pointer).demands)(pointer,grant.maximum_copy_bytes)}{Ok(demand)=>demand,Err(error)=>{slot.state.store(CHILD_CLOSE_INTENT,Ordering::Release);return Err(error.into())}};
+            if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{slot.state.store(CHILD_CLOSE_INTENT,Ordering::Release);return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+            let step=match unsafe{((*pointer).pump)(pointer,cx)}{Ok(step)=>step,Err(failure)=>{slot.state.store(CHILD_CLOSE_INTENT,Ordering::Release);return Err(failure)}};
+            if matches!(step,InteractiveJobCloseStep::Complete{..}){
+                let release=unsafe{(*pointer).release_bytes};let remaining=cx.retained_grant();if step.progress()!=RetainedCloneProgress::default()||remaining.maximum_items==0||remaining.maximum_release_bytes<release||remaining.maximum_depth==0||cx.should_yield(){slot.state.store(CHILD_CLOSE_INTENT,Ordering::Release);return Ok(InteractiveJobCloseStep::Pending{progress:step.progress()})}
+                let pointer=slot.node.swap(std::ptr::null_mut(),Ordering::AcqRel);unsafe{((*pointer).destroy)(pointer)};self.live_children.fetch_sub(1,Ordering::AcqRel);slot.state.store(if slot.generation.load(Ordering::Acquire)==u64::MAX{CHILD_EXHAUSTED}else{CHILD_VACANT},Ordering::Release);self.raise_wake();let progress=RetainedCloneProgress{copied_items:1,released_bytes:release,..Default::default()};cx.consume_fuel(1);cx.consume_retained(progress)?;return Ok(InteractiveJobCloseStep::Pending{progress})
             }
-            let pointer = slot.node.load(Ordering::Acquire);
-            if pointer.is_null() {
-                slot.state.store(CHILD_CLOSE_INTENT,Ordering::Release);
-                return InteractiveJobCloseStep::Blocked;
-            }
-            let demand=match unsafe{((*pointer).demands)(pointer,grant.maximum_copy_bytes)}{Ok(demand)=>demand,Err(error)=>{slot.state.store(CHILD_CLOSE_INTENT,Ordering::Release);return InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()};}};
-            if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{slot.state.store(CHILD_CLOSE_INTENT,Ordering::Release);return InteractiveJobCloseStep::Pending{progress:Default::default()};}
-            let step = unsafe { ((*pointer).pump)(pointer, grant) };
-            if matches!(step,InteractiveJobCloseStep::Complete{..}) {
-                let release_bytes=unsafe{(*pointer).release_bytes};
-                if step.progress()!=RetainedCloneProgress::default()||grant.maximum_items==0||grant.maximum_release_bytes<release_bytes||grant.maximum_depth==0 {
-                    slot.state.store(CHILD_CLOSE_INTENT, Ordering::Release);
-                    return InteractiveJobCloseStep::Pending { progress:step.progress() };
-                }
-                let pointer = slot.node.swap(std::ptr::null_mut(), Ordering::AcqRel);
-                unsafe { ((*pointer).destroy)(pointer) };
-                self.live_children.fetch_sub(1, Ordering::AcqRel);
-                slot.state.store(if slot.generation.load(Ordering::Acquire) == u64::MAX { CHILD_EXHAUSTED } else { CHILD_VACANT }, Ordering::Release);
-                self.raise_wake();
-                return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes:release_bytes, ..RetainedCloneProgress::default() } };
-            }
-            slot.state.store(CHILD_CLOSE_INTENT,Ordering::Release);
-            return step;
+            slot.state.store(CHILD_CLOSE_INTENT,Ordering::Release);return Ok(step)
         }
-        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
+        Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})
     }
 
     pub fn take_wake(&self) -> bool {
@@ -2000,7 +1973,7 @@ struct WorkerJobAuthority<J> {
     quarantined_outcome: JobOutcomeDescriptorSlot,
     worker_fault:bool,
     fault_pending:bool,
-    step_fault:ManuallyDrop<Option<ValueError>>,
+    step_fault:ManuallyDrop<Option<OriginalTurnFailure>>,
     step_fault_retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
     panic_fault:ManuallyDrop<Option<Box<dyn std::any::Any+Send>>>,
     clock: ClockStride,
@@ -2107,7 +2080,7 @@ impl<J> WorkerJobAuthorityOwner<J> {
     fn original_worker_failure_demands(&self,body:usize)->Result<Option<RetirementDemand>,ValueError>{
         if let Some(original)=self.panic_fault.as_ref(){if let Some(text)=original.downcast_ref::<String>(){return Ok(Some(RetirementDemand{release_bytes:if text.capacity()>0{text.capacity()}else{size_of_val(original.as_ref())},depth:1,..Default::default()}))}if original.is::<&'static str>(){return Ok(Some(RetirementDemand{release_bytes:size_of_val(original.as_ref()),depth:1,..Default::default()}))}return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original arbitrary panic payload awaits its native retirement issuer"))}
         if let Some(original)=self.step_fault_retirement.as_ref(){return Ok(Some(if original.terminal_is_empty(){RetirementDemand{release_bytes:size_of_val(original.as_ref()),depth:1,..Default::default()}}else{RetirementDemand{copy_bytes:original.next_copy_byte_demand()?,capacity_bytes:original.next_capacity_byte_demand(body)?,release_bytes:original.next_release_byte_demand()?,depth:original.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original worker error parent depth overflow"))?}}))}
-        Ok(self.step_fault.as_ref().map(|_|RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<ValueError>(),depth:2,..Default::default()}))
+        Ok(self.step_fault.as_ref().map(|_|RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<OriginalTurnFailure>(),depth:2,..Default::default()}))
     }
     fn close_original_worker_failure(&mut self,grant:RetainedCloneGrant)->Result<Option<WorkerJobCloseStep>,ValueError>{
         let Some(demand)=self.original_worker_failure_demands(grant.maximum_copy_bytes)?else{return Ok(None)};if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Some(WorkerJobCloseStep::Pending{progress:Default::default()}))}
@@ -2121,15 +2094,15 @@ impl<J> WorkerJobAuthorityOwner<J> {
         Ok(Default::default())
     }
     /// 🛑️ Transfers original params, closes their cancellation ancestors, then removes the empty cursor separately.
-    fn close_original_worker_params(&mut self,grant:RetainedCloneGrant)->WorkerJobCloseStep{
-        let demand=match self.original_params_demands(){Ok(demand)=>demand,Err(error)=>return WorkerJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};
-        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return WorkerJobCloseStep::Pending{progress:Default::default()};}
-        if let Some(params)=self.params.take(){self.cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(params.cancel));return WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}};}
+    fn close_original_worker_params(&mut self,grant:RetainedCloneGrant)->Result<WorkerJobCloseStep,ValueError>{
+        let demand=self.original_params_demands()?;
+        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
+        if let Some(params)=self.params.take(){self.cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(params.cancel));return Ok(WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}})}
         if let Some(cancel)=self.cancel_retirement.as_mut(){
-            if cancel.terminal_is_empty(){drop(self.cancel_retirement.take());return WorkerJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}};}
-            return match cancel.close_step(grant){Ok(step)=>WorkerJobCloseStep::Pending{progress:step.progress()},Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>WorkerJobCloseStep::Blocked,Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>WorkerJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};
+            if cancel.terminal_is_empty(){drop(self.cancel_retirement.take());return Ok(WorkerJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}})}
+            return match cancel.close_step(grant){Ok(step)=>Ok(WorkerJobCloseStep::Pending{progress:step.progress()}),Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(WorkerJobCloseStep::Blocked),Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error)}
         }
-        WorkerJobCloseStep::Complete{progress:Default::default()}
+        Ok(WorkerJobCloseStep::Complete{progress:Default::default()})
     }
     fn terminal_authority_demands(&self)->Result<RetirementDemand,ValueError>{
         if self.payload_ledger.is_some(){return Ok(RetirementDemand{copy_bytes:0,release_bytes:semio_framework_value::shared_retirement_allocation_bytes::<JobPayloadOperationLedger>(),depth:1,..Default::default()});}
@@ -2137,21 +2110,18 @@ impl<J> WorkerJobAuthorityOwner<J> {
         Ok(RetirementDemand{copy_bytes:0,release_bytes,depth:1,..Default::default()})
     }
     /// 🧺️ Releases the original ledger before dropping its terminal authority in place and its vector backing.
-    fn close_terminal_worker_authority(&mut self,grant:RetainedCloneGrant)->WorkerJobCloseStep{
-        let authority=self;
-        let demand=match authority.terminal_authority_demands(){Ok(demand)=>demand,Err(error)=>return WorkerJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};
-        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return WorkerJobCloseStep::Pending{progress:Default::default()};}
+    fn close_terminal_worker_authority(&mut self,grant:RetainedCloneGrant)->Result<WorkerJobCloseStep,ValueError>{
+        let authority=self;let demand=authority.terminal_authority_demands()?;
+        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
         if let Some(ledger)=authority.payload_ledger.as_ref(){
-            if !ledger.terminal_is_empty(){return WorkerJobCloseStep::Blocked;}
-            let payload_ledger=authority.payload_ledger.take().unwrap();
-            let (released_bytes,copied_bytes)=if let Some(ledger)=Arc::into_inner(payload_ledger){drop(ledger);(demand.release_bytes,demand.copy_bytes)}else{(0,0)};
-            return WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes,released_bytes,..Default::default()}};
+            if !ledger.terminal_is_empty(){return Ok(WorkerJobCloseStep::Blocked)}
+            let payload_ledger=authority.payload_ledger.take().unwrap();let(released_bytes,copied_bytes)=if let Some(ledger)=Arc::into_inner(payload_ledger){drop(ledger);(demand.release_bytes,demand.copy_bytes)}else{(0,0)};
+            return Ok(WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes,released_bytes,..Default::default()}})
         }
         assert!(authority.job.is_empty()&&authority.params.is_none()&&authority.cancel_retirement.is_none()&&authority.admission_fault_source.is_none()&&authority.preadmitted_fault.is_empty()&&authority.outcome.is_empty()&&authority.quarantined_outcome.is_empty()&&authority.step_fault.is_none()&&authority.step_fault_retirement.is_none()&&authority.panic_fault.is_none());
-        authority.0.clear();
-        drop(std::mem::take(&mut authority.0));
-        WorkerJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}}
+        authority.0.clear();drop(std::mem::take(&mut authority.0));Ok(WorkerJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}})
     }
+
 }
 
 fn preadmitted_static_payload(ledger: &Arc<JobPayloadOperationLedger>, stream: JobPayloadStream, bytes: &'static [u8], mut source: JobPayloadPageSource) -> Result<RetainedJobPayload, JobPayloadPageSource> {
@@ -2219,14 +2189,13 @@ pub enum WorkerJobCloseStep {
     Pending { progress: RetainedCloneProgress },
     Blocked,
     Complete { progress: RetainedCloneProgress },
-    Refused { kind:ValueRefusalKind, progress:RetainedCloneProgress }
 }
 
 impl WorkerJobCloseStep {
     /// 📊️ The actual currencies admitted by this close turn.
     pub fn progress(self) -> RetainedCloneProgress {
         match self {
-            Self::Pending { progress } | Self::Complete { progress } | Self::Refused { progress, .. } => progress,
+            Self::Pending { progress } | Self::Complete { progress } => progress,
             Self::Blocked => RetainedCloneProgress::default(),
         }
     }
@@ -2374,8 +2343,15 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
         self.session.last_step_end_us()
     }
 
-    /// 🏃️ Executes the original interactive callback directly under this caller's full turn authority.
-    pub fn pump_one_for_interactive_turn(&mut self,retained:RetainedCloneGrant)->Result<WorkerJobPoll,MountedWorkerJobPumpFault>{self.step_on_caller(retained)}
+    /// 🏃️ Executes the admitted business producer on the same original caller without renewing any budget.
+    pub fn pump_one_for_interactive_turn(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobPoll,OriginalTurnFailure>{
+        if self.checked_out.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original worker outcome must be returned before another callback").into())}
+        let Some((ticket,poll))=self.session.try_step_on_original_caller(cx)?else{return Ok(WorkerJobPoll::Idle)};
+        if poll==WorkerJobPoll::Idle{return Ok(poll)}
+        let owner=if poll==WorkerJobPoll::Terminal{self.session.take_terminal()}else{self.session.take_outcome(ticket)};
+        self.checked_out=Some(owner.map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"original callback lost its exact checked-out producer"))?);
+        Ok(poll)
+    }
 
     /// 📥️ Returns the original effective grant and actual physical receipt once before semantic custody advances.
     /// 🔎️ Borrows the original issued authority and pending physical receipt without handing it back.
@@ -2392,7 +2368,7 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
     pub fn checked_out_outcome_descriptor(&self)->Option<&JobOutcomeDescriptor>{self.checked_out.as_ref().and_then(WorkerJobOutcome::outcome_descriptor)}
 
     /// 🛑️ Keeps the worker's original refusal inside its checked-out authority.
-    pub fn checked_out_error(&self)->Option<&ValueError>{self.checked_out.as_ref().and_then(WorkerJobOutcome::retained_error)}
+    pub fn checked_out_failure(&self)->Option<&OriginalTurnFailure>{self.checked_out.as_ref().and_then(WorkerJobOutcome::retained_failure)}
 
     pub fn callback_verdict(&self) -> Option<&semio_framework_trace::CallbackVerdict> {
         self.checked_out.as_ref().and_then(WorkerJobOutcome::callback_verdict)
@@ -2433,18 +2409,15 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
         }
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> WorkerJobCloseStep {
-        let maximum_items=grant.maximum_items;let _maximum_bytes=grant.maximum_release_bytes;
-        if let Some(mut owner) = self.checked_out.take() {
-            if maximum_items == 0 {
-                self.checked_out = Some(owner);
-                return WorkerJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..RetainedCloneProgress::default() } };
+    pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
+        let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
+        if let Some(mut owner)=self.checked_out.take(){
+            if let Some(authority)=owner.authority.as_ref().filter(|authority|!authority.outcome.is_empty()){
+                let demand=authority.outcome.retirement_demands();let result=close_original_retained_step(cx,demand,|grant|Ok(owner.acknowledge_outcome(grant)));self.checked_out=Some(owner);return result.map(|step|match step{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>WorkerJobCloseStep::Pending{progress},InteractiveJobCloseStep::Blocked=>WorkerJobCloseStep::Blocked})
             }
-            if owner.authority.as_ref().is_some_and(|authority|!authority.outcome.is_empty()){let progress=owner.acknowledge_outcome(grant).progress();self.checked_out=Some(owner);return WorkerJobCloseStep::Pending{progress};}
-            owner.begin_close();
-            return WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..RetainedCloneProgress::default()}};
+            let progress=RetainedCloneProgress{copied_items:1,..Default::default()};if let Err(error)=cx.consume_retained(progress){self.checked_out=Some(owner);return Err(error.into())}cx.consume_fuel(1);owner.begin_close();return Ok(WorkerJobCloseStep::Pending{progress})
         }
-        self.session.close_step(grant)
+        self.session.close_step(cx)
     }
 
     /// 🪢️ Preserves checkout ownership while forwarding the caller's borrowed original cancellation root.
@@ -2485,6 +2458,35 @@ impl<J: InteractiveJob + 'static> BatchJobSession<J> {
 
     pub fn try_admit_owned(job:&mut Option<J>,params:&mut Option<BatchJobParams>,control:&mut impl WorkerJobAdmissionControl)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
         WorkerJobSession::try_admit_owned(job,params,control).map(|admitted|admitted.map(|(session,progress)|(Self{session,ticket:None,checked_out:None},progress)))
+    }
+
+    /// 🤝️ Hands the same prepared native authority to Batch on a separate paid metadata turn.
+    pub fn admit_prepared(original:&mut Option<WorkerJobSession<J>>,control:&mut impl WorkerJobAdmissionControl)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
+        let invalid=||ValueError::literal(ValueRefusalKind::InvariantViolated,"prepared Batch admission requires the same idle original authority");
+        let session=original.as_ref().ok_or_else(invalid)?;
+        if session.inner.0.is_none(){return Err(invalid())}
+        let grant=control.admission_grant()?;
+        if !control.admission_is_open()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
+        if session.inner.phase.compare_exchange(SESSION_IDLE,SESSION_TRANSITION,Ordering::AcqRel,Ordering::Acquire).is_err(){return Err(invalid())}
+        let authority=unsafe{session.inner.take_authority()};
+        let admitted=match authority.params.as_ref(){
+            Some(params)=>control.admission_identity()==(params.operation,params.generation)&&session.generation==params.generation&&control.admission_cancel().is_none_or(|token|token.is_same_node(&params.cancel))&&!params.cancel.is_cancelled_now(),
+            None=>false,
+        }&&authority.job.present&&!authority.retained_receipt_pending&&authority.outcome.is_empty()&&authority.quarantined_outcome.is_empty()&&!authority.fault_pending&&authority.step_fault.is_none()&&authority.panic_fault.is_none()&&!session.inner.close_requested.load(Ordering::Acquire);
+        let progress=RetainedCloneProgress{copied_items:1,..Default::default()};
+        let received=if admitted{control.receive_admission(progress)}else{Err(invalid())};
+        unsafe{session.inner.put_authority_quiet(authority,SESSION_IDLE)};
+        received?;
+        let session=original.take().ok_or_else(invalid)?;
+        Ok(Some((Self{session,ticket:None,checked_out:None},progress)))
+    }
+
+    /// 🎟️ Keeps the exact original callback ticket while the caller separately receives semantic custody.
+    pub fn step_on_original_caller(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobPoll,OriginalTurnFailure>{
+        if self.checked_out.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original batch outcome remains checked out").into())}
+        let Some((ticket,poll))=self.session.try_step_on_original_caller(cx)?else{return Ok(WorkerJobPoll::Idle)};
+        if poll!=WorkerJobPoll::Idle{self.ticket=Some(ticket)}
+        Ok(poll)
     }
 
     pub fn step(&mut self,retained:RetainedCloneGrant) -> Result<WorkerJobPoll, WorkerJobContention> {
@@ -2564,17 +2566,10 @@ impl<J: InteractiveJob + 'static> BatchJobSession<J> {
         }
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> WorkerJobCloseStep {
-        let maximum_items=grant.maximum_items;let _maximum_bytes=grant.maximum_release_bytes;
-        if let Some(owner) = self.checked_out.take() {
-            if maximum_items == 0 {
-                self.checked_out = Some(owner);
-                return WorkerJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..RetainedCloneProgress::default() } };
-            }
-            owner.begin_close();
-            return WorkerJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..RetainedCloneProgress::default() } };
-        }
-        self.session.close_step(grant)
+    pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
+        let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
+        if let Some(owner)=self.checked_out.take(){let progress=RetainedCloneProgress{copied_items:1,..Default::default()};if let Err(error)=cx.consume_retained(progress){self.checked_out=Some(owner);return Err(error.into())}cx.consume_fuel(1);owner.begin_close();return Ok(WorkerJobCloseStep::Pending{progress})}
+        self.session.close_step(cx)
     }
 
     /// 🪢️ Preserves checkout custody before inspecting the original borrowed cancellation witness.
@@ -2606,7 +2601,7 @@ pub const WORKER_JOB_SESSION_SLOTS: usize = 256;
 struct WorkerJobRetirementHeader {
     slot: usize,
     phase: unsafe fn(*mut WorkerJobRetirementHeader) -> WorkerJobClosePhase,
-    pump: unsafe fn(*mut WorkerJobRetirementHeader, RetainedCloneGrant) -> WorkerJobCloseStep,
+    pump: unsafe fn(*mut WorkerJobRetirementHeader, &mut StepContext<'_>) -> Result<WorkerJobCloseStep,OriginalTurnFailure>,
     destroy: unsafe fn(*mut WorkerJobRetirementHeader),
 }
 
@@ -2649,20 +2644,16 @@ pub fn worker_job_retirement_phase(maximum_sessions:usize)->Option<WorkerJobClos
     worker_job_retirements_are_parked().then_some(WorkerJobClosePhase::CheckedOut)
 }
 
-pub fn pump_worker_job_retirements(maximum_sessions:usize,grant:RetainedCloneGrant)->WorkerJobCloseStep{
-    let mut inspected=0;
+pub fn pump_worker_job_retirements(maximum_sessions:usize,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
+    if cx.should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}let before=cx.retained_progress();let mut inspected=0;
     for slot in &WORKER_JOB_RETIREMENT_SLOTS{
-        if inspected==maximum_sessions{break}
-        let pointer=slot.load(Ordering::Acquire);
-        if pointer.is_null()||pointer==WORKER_JOB_RETIREMENT_RESERVED{continue}
-        inspected+=1;
+        if inspected==maximum_sessions{break}let pointer=slot.load(Ordering::Acquire);if pointer.is_null()||pointer==WORKER_JOB_RETIREMENT_RESERVED{continue}inspected+=1;
         if slot.compare_exchange(pointer,WORKER_JOB_RETIREMENT_RESERVED,Ordering::AcqRel,Ordering::Acquire).is_err(){continue}
-        let step=unsafe{((*pointer).pump)(pointer,grant)};
+        let step=match unsafe{((*pointer).pump)(pointer,cx)}{Ok(step)=>step,Err(failure)=>{slot.store(pointer,Ordering::Release);WORKER_JOB_RETIREMENT_WAKE.store(true,Ordering::Release);return Err(failure)}};
         if matches!(step,WorkerJobCloseStep::Complete{..}){slot.store(std::ptr::null_mut(),Ordering::Release);unsafe{((*pointer).destroy)(pointer)}}else{slot.store(pointer,Ordering::Release)}
-        WORKER_JOB_RETIREMENT_WAKE.store(worker_job_retirements_are_parked(),Ordering::Release);
-        return match step{WorkerJobCloseStep::Complete{progress} if worker_job_retirements_are_parked()=>WorkerJobCloseStep::Pending{progress},step=>step}
+        WORKER_JOB_RETIREMENT_WAKE.store(worker_job_retirements_are_parked(),Ordering::Release);return worker_close_effects(cx,before,match step{WorkerJobCloseStep::Complete{progress}if worker_job_retirements_are_parked()=>WorkerJobCloseStep::Pending{progress},step=>step})
     }
-    if worker_job_retirements_are_parked(){WORKER_JOB_RETIREMENT_WAKE.store(true,Ordering::Release);WorkerJobCloseStep::Blocked}else{WorkerJobCloseStep::Complete{progress:RetainedCloneProgress::default()}}
+    Ok(if worker_job_retirements_are_parked(){WORKER_JOB_RETIREMENT_WAKE.store(true,Ordering::Release);WorkerJobCloseStep::Blocked}else{WorkerJobCloseStep::Complete{progress:Default::default()}})
 }
 
 pub(crate) struct WorkerJobSessionInner<J> {
@@ -2793,26 +2784,20 @@ unsafe fn worker_job_retirement_node_phase<J:InteractiveJob+'static>(pointer:*mu
     result
 }
 
-unsafe fn pump_worker_job_retirement_node<J:InteractiveJob+'static>(pointer:*mut WorkerJobRetirementHeader,grant:RetainedCloneGrant)->WorkerJobCloseStep{
-    let node=unsafe{&mut *pointer.cast::<WorkerJobRetirementNode<J>>()};
-    let Some(inner)=node.inner.as_ref()else{let released_bytes=size_of::<WorkerJobRetirementNode<J>>();return if grant.maximum_items>0&&grant.maximum_release_bytes>=released_bytes&&grant.maximum_depth>0{WorkerJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:0,released_bytes,..Default::default()}}}else{WorkerJobCloseStep::Pending{progress:Default::default()}}};
-    if matches!(worker_job_begin_close(inner),WorkerJobCloseStep::Blocked){return WorkerJobCloseStep::Blocked}
-    match worker_job_close_step(inner,grant){
-        WorkerJobCloseStep::Complete{progress} if progress!=RetainedCloneProgress::default()=>WorkerJobCloseStep::Pending{progress},
+unsafe fn pump_worker_job_retirement_node<J:InteractiveJob+'static>(pointer:*mut WorkerJobRetirementHeader,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
+    let before=cx.retained_progress();let grant=cx.retained_grant();let node=unsafe{&mut *pointer.cast::<WorkerJobRetirementNode<J>>()};
+    let Some(inner)=node.inner.as_ref()else{let released_bytes=size_of::<WorkerJobRetirementNode<J>>();return Ok(if grant.maximum_items>0&&grant.maximum_release_bytes>=released_bytes&&grant.maximum_depth>0{WorkerJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}}}else{WorkerJobCloseStep::Pending{progress:Default::default()}})};
+    if matches!(worker_job_begin_close(inner),WorkerJobCloseStep::Blocked){return Ok(WorkerJobCloseStep::Blocked)}
+    let step=match worker_job_close_step(inner,cx)?{
+        WorkerJobCloseStep::Complete{progress}if progress!=Default::default()=>WorkerJobCloseStep::Pending{progress},
         WorkerJobCloseStep::Complete{..}=>{
-            if !inner.is_unique()||unsafe{(&*inner.waker.get()).is_some()}{return WorkerJobCloseStep::Blocked}
-            if let Some(step)=worker_wake_retirement::close_session_retained_wake(inner,grant){return step}
-            let copy_bytes=0;
-            let arc_bytes=std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<WorkerJobSessionInner<J>>()).expect("worker original Arc layout").0.pad_to_align().size();
-            let released_bytes=arc_bytes;
-            if grant.maximum_items==0||grant.maximum_copy_bytes<copy_bytes||grant.maximum_release_bytes<released_bytes||grant.maximum_depth==0{return WorkerJobCloseStep::Pending{progress:RetainedCloneProgress::default()}}
-            match node.inner.take().unwrap().try_return(){
-                Ok(inner)=>{drop(inner);WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:copy_bytes,released_bytes,..RetainedCloneProgress::default()}}},
-                Err(inner)=>{node.inner=Some(inner);WorkerJobCloseStep::Blocked}
-            }
-        },
-        step=>step,
-    }
+            let grant=cx.retained_grant();if !inner.is_unique()||unsafe{(&*inner.waker.get()).is_some()}{return Ok(WorkerJobCloseStep::Blocked)}
+            match worker_wake_retirement::close_session_retained_wake(inner,grant){Ok(Some(step))=>return worker_close_effects(cx,before,step),Ok(None)=>{},Err(error)=>return worker_close_result(cx,before,Err(error))}
+            let released_bytes=std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<WorkerJobSessionInner<J>>()).expect("worker original Arc layout").0.pad_to_align().size();
+            if grant.maximum_items==0||grant.maximum_release_bytes<released_bytes||grant.maximum_depth==0{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
+            match node.inner.take().unwrap().try_return(){Ok(inner)=>{drop(inner);WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}}},Err(inner)=>{node.inner=Some(inner);WorkerJobCloseStep::Blocked}}
+        },step=>step
+    };worker_close_effects(cx,before,step)
 }
 
 unsafe fn destroy_worker_job_retirement_node<J>(pointer: *mut WorkerJobRetirementHeader) {
@@ -2840,10 +2825,10 @@ impl<J> WorkerJobSessionAdmissionRejected<J> {
 impl<J: InteractiveJob> WorkerJobSessionAdmissionRejected<J> {
     /// 🪙️ Publish the physical demand of the next retained rejection owner.
     pub fn retirement_demands(&self,maximum_copy_bytes:usize) -> Result<RetirementDemand,ValueError> {
-        if self.close_stage == 0 {
-            if let Some(job)=self.job.as_ref(){return Ok(RetirementDemand{copy_bytes:job.next_close_copy_byte_demand()?,capacity_bytes:job.next_close_capacity_byte_demand(maximum_copy_bytes)?,release_bytes:job.next_close_release_byte_demand()?,depth:job.next_close_depth_demand()?})}
+        if self.close_stage==0{
+            if let Some(job)=self.job.as_ref(){if !job.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:job.next_close_copy_byte_demand()?,capacity_bytes:job.next_close_capacity_byte_demand(maximum_copy_bytes)?,release_bytes:job.next_close_release_byte_demand()?,depth:job.next_close_depth_demand()?})}}
         }
-        Ok(RetirementDemand{release_bytes:self.fault_source.as_ref().map_or(0,JobPayloadPageSource::allocated_capacity_bytes),depth:1,..RetirementDemand::default()})
+        Ok(RetirementDemand{release_bytes:if self.close_stage>1&&self.params.is_none(){self.fault_source.as_ref().map_or(0,JobPayloadPageSource::allocated_capacity_bytes)}else{0},depth:1,..RetirementDemand::default()})
     }
 
     pub fn begin_close(&mut self) {
@@ -2856,48 +2841,11 @@ impl<J: InteractiveJob> WorkerJobSessionAdmissionRejected<J> {
         }
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        let maximum_items=grant.maximum_items;let maximum_bytes=grant.maximum_release_bytes;
-        self.begin_close();
-        if self.close_stage == 0 {
-            let Some(job) = self.job.as_mut() else {
-                self.close_stage = 2;
-                return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..RetainedCloneProgress::default() } };
-            };
-            match job.close_step(grant).admit(grant,job.terminal_is_empty()) {
-                InteractiveJobCloseStep::Pending { progress } => return InteractiveJobCloseStep::Pending { progress },
-                InteractiveJobCloseStep::Blocked => return InteractiveJobCloseStep::Blocked,
-                InteractiveJobCloseStep::Refused{kind,progress}=>return InteractiveJobCloseStep::Refused{kind,progress},
-                InteractiveJobCloseStep::Complete { progress } if !job.terminal_is_empty() => return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::InvariantViolated,progress},
-                InteractiveJobCloseStep::Complete { progress } => {self.close_stage=1;return InteractiveJobCloseStep::Pending{progress}},
-            }
-        }
-        if self.close_stage == 1 {
-            if maximum_items == 0 {
-                return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..RetainedCloneProgress::default() } };
-            }
-            drop(self.job.take());
-            self.close_stage = 2;
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes: 0, ..RetainedCloneProgress::default() } };
-        }
-        if self.params.is_some() {
-            if maximum_items == 0 {
-                return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..RetainedCloneProgress::default() } };
-            }
-            drop(self.params.take());
-            self.close_stage = 3;
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes: 0, ..RetainedCloneProgress::default() } };
-        }
-        if self.fault_source.is_some() {
-            let extent=self.fault_source.as_ref().unwrap().allocated_capacity_bytes();
-            if maximum_items == 0 || maximum_bytes < extent {
-                return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..RetainedCloneProgress::default() } };
-            }
-            drop(self.fault_source.take());
-            self.close_stage = 4;
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes: extent, ..RetainedCloneProgress::default() } };
-        }
-        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
+    pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+        if cx.should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}let grant=cx.retained_grant();self.begin_close();
+        if self.close_stage==0{if let Some(job)=self.job.as_mut(){let step=job.close_step(cx)?;let step=step.admit(grant,job.terminal_is_empty())?;return Ok(match step{InteractiveJobCloseStep::Complete{progress}=>{self.close_stage=1;InteractiveJobCloseStep::Pending{progress}},step=>step})}self.close_stage=2;return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        if grant.maximum_items==0||grant.maximum_depth==0{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        let progress=if self.close_stage==1{drop(self.job.take());self.close_stage=2;RetainedCloneProgress{copied_items:1,..Default::default()}}else if self.params.is_some(){drop(self.params.take());self.close_stage=3;RetainedCloneProgress{copied_items:1,..Default::default()}}else if let Some(source)=self.fault_source.as_ref(){let extent=source.allocated_capacity_bytes();if grant.maximum_release_bytes<extent{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}drop(self.fault_source.take());self.close_stage=4;RetainedCloneProgress{copied_items:1,released_bytes:extent,..Default::default()}}else{return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})};cx.consume_fuel(1);cx.consume_retained(progress)?;Ok(InteractiveJobCloseStep::Pending{progress})
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -2936,9 +2884,9 @@ fn drive_worker_job_authority<J:InteractiveJob>(authority:&mut WorkerJobAuthorit
  assert!(!authority.retained_receipt_pending,"original worker turn receipt must return before another callback");authority.retained_step_progress=Default::default();authority.retained_receipt_pending=true;if authority.fault_pending{return publish_original_worker_fault(authority)}
  let params=authority.params.as_ref().expect("submitted original job owns parameters");let config=params.config;let retained=authority.issued_retained;if retained.maximum_items==0||retained.maximum_depth==0{return false}let start_us=(params.now_us)();authority.last_step_end_us=start_us;let Some(budget)=start_us.and_then(|start_us|StepBudget::from_duration(config.fuel_per_step,start_us,config.step_budget_us,retained))else{authority.fault_pending=true;return publish_original_worker_fault(authority)};if authority.step_sequence==u64::MAX{authority.fault_pending=true}
  authority.clock.begin(start_us);let mut retained_step_progress=RetainedCloneProgress::default();let fault_pending=authority.fault_pending;
- let result=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||{
+ let result=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||->Result<Option<JobOutcomeDescriptor>,OriginalTurnFailure>{
   let mut cx=StepContext::with_original_worker_authority(params.operation,params.generation,budget,&params.cancel,params.now_us,authority.clock,&mut authority.preview_sequence,&mut retained_step_progress,authority.payload_ledger.as_ref().expect("original worker payload ledger"))?;
-  let result=if fault_pending{JobOutcomeBorrow::admit_fault(&mut cx,authority.preadmitted_fault.original().expect("original paid worker fault payload")).map(|outcome|outcome.map(JobOutcomeBorrow::into_descriptor))}else{drive_step(authority.job.original_mut().expect("submitted authority owns job"),&mut cx,config.site,config.stage,&mut authority.callback_verdict).map(|outcome|outcome.map(JobOutcomeBorrow::into_descriptor))};
+  let result=if fault_pending{JobOutcomeBorrow::admit_fault(&mut cx,authority.preadmitted_fault.original().expect("original paid worker fault payload")).map(|outcome|outcome.map(JobOutcomeBorrow::into_descriptor)).map_err(OriginalTurnFailure::from)}else{drive_step(authority.job.original_mut().expect("submitted authority owns job"),&mut cx,config.site,config.stage,&mut authority.callback_verdict).map(|outcome|outcome.map(JobOutcomeBorrow::into_descriptor))};
   authority.clock=cx.clock.get();authority.last_step_end_us=cx.latest_us();result
  }));
  authority.retained_step_progress=retained_step_progress;authority.retained_progress=authority.retained_progress.checked_add(retained_step_progress).expect("original worker retained receipt overflow");authority.step_sequence=authority.step_sequence.saturating_add(1);
@@ -3009,89 +2957,38 @@ fn worker_job_authority_close_demands<J:InteractiveJob>(authority:&WorkerJobAuth
     authority.terminal_authority_demands()
 }
 
-fn worker_payload_step(step:Result<RetainedCloneStep,ValueError>)->WorkerJobCloseStep{match step{Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>WorkerJobCloseStep::Pending{progress},Err(error)=>WorkerJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}}
+fn worker_payload_step(step:RetainedCloneStep)->WorkerJobCloseStep{WorkerJobCloseStep::Pending{progress:step.progress()}}
 
-fn worker_job_close_step<J: InteractiveJob>(inner: &WorkerJobSessionInner<J>, grant:RetainedCloneGrant) -> WorkerJobCloseStep {
-    let maximum_items=grant.maximum_items;let _maximum_bytes=grant.maximum_release_bytes;
-    if inner.phase.compare_exchange(SESSION_CLOSE, SESSION_TRANSITION, Ordering::AcqRel, Ordering::Acquire).is_err() {
-        return if inner.phase() == SESSION_EMPTY { WorkerJobCloseStep::Complete { progress: RetainedCloneProgress::default() } } else { WorkerJobCloseStep::Blocked };
+/// 🪙️ Posts only original wrapper effects not already charged by its nested original caller.
+fn worker_close_effects(cx:&mut StepContext<'_>,before:RetainedCloneProgress,step:WorkerJobCloseStep)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
+    let after=cx.retained_progress();let report=step.progress();let subtract=|reported:usize,initial:usize,current:usize|current.checked_sub(initial).and_then(|posted|reported.checked_sub(posted)).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original worker close reported fewer effects than its original recipient"));
+    let progress=RetainedCloneProgress{copied_items:subtract(report.copied_items,before.copied_items,after.copied_items)?,copied_bytes:subtract(report.copied_bytes,before.copied_bytes,after.copied_bytes)?,retained_capacity_bytes:subtract(report.retained_capacity_bytes,before.retained_capacity_bytes,after.retained_capacity_bytes)?,released_bytes:subtract(report.released_bytes,before.released_bytes,after.released_bytes)?};cx.consume_fuel(progress.copied_items as u64);cx.consume_retained(progress)?;Ok(step)
+}
+
+fn worker_close_result(cx:&mut StepContext<'_>,before:RetainedCloneProgress,result:Result<WorkerJobCloseStep,ValueError>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{match result{Ok(step)=>worker_close_effects(cx,before,step),Err(error)=>{cx.consume_fuel(1);Err(OriginalTurnFailure::debit_original(error,cx))}}}
+
+fn worker_job_close_step<J:InteractiveJob>(inner:&WorkerJobSessionInner<J>,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
+    if cx.should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}let before=cx.retained_progress();let grant=cx.retained_grant();
+    if inner.phase.compare_exchange(SESSION_CLOSE,SESSION_TRANSITION,Ordering::AcqRel,Ordering::Acquire).is_err(){return Ok(if inner.phase()==SESSION_EMPTY{WorkerJobCloseStep::Complete{progress:Default::default()}}else{WorkerJobCloseStep::Blocked})}
+    let mut authority=unsafe{inner.take_authority()};
+    if authority.retained_receipt_pending{unsafe{inner.put_authority(authority,SESSION_CLOSE)};return Ok(WorkerJobCloseStep::Blocked)}
+    let demand=match worker_job_authority_close_demands(&authority,grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>{unsafe{inner.put_authority(authority,SESSION_CLOSE)};return Err(error.into())}};
+    if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{unsafe{inner.put_authority(authority,SESSION_CLOSE)};return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
+    if !authority.quarantined_outcome.is_empty(){let step=worker_payload_step(authority.quarantined_outcome.close_step(grant));unsafe{inner.put_authority(authority,SESSION_CLOSE)};return worker_close_effects(cx,before,step)}
+    if !authority.outcome.is_empty(){let step=worker_payload_step(authority.outcome.close_step(grant));unsafe{inner.put_authority(authority,SESSION_CLOSE)};return worker_close_effects(cx,before,step)}
+    match authority.close_original_worker_failure(grant){Ok(Some(step))=>{unsafe{inner.put_authority(authority,SESSION_CLOSE)};return worker_close_effects(cx,before,step)},Ok(None)=>{},Err(error)=>{unsafe{inner.put_authority(authority,SESSION_CLOSE)};cx.consume_fuel(1);return Err(OriginalTurnFailure::debit_original(error,cx))}}
+    if authority.admission_fault_source.is_some(){let step=authority.close_original_admission_page(grant);unsafe{inner.put_authority(authority,SESSION_CLOSE)};return worker_close_effects(cx,before,step)}
+    if authority.close_stage==0{cx.consume_fuel(1);authority.job.original_mut().expect("closing worker authority owns job").begin_close();authority.close_stage=1;unsafe{inner.put_authority(authority,SESSION_CLOSE)};return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
+    if !authority.preadmitted_fault.is_empty(){let result=authority.preadmitted_fault.close_step(grant);unsafe{inner.put_authority(authority,SESSION_CLOSE)};return match result{Ok(step)=>worker_close_effects(cx,before,WorkerJobCloseStep::Pending{progress:step.progress()}),Err(error)=>{cx.consume_fuel(1);Err(OriginalTurnFailure::debit_original(error,cx))}}}
+    if authority.close_stage==1{
+        let step=match authority.job.original_mut().expect("closing worker authority owns job").close_step(cx){Ok(step)=>step,Err(failure)=>{unsafe{inner.put_authority(authority,SESSION_CLOSE)};return Err(failure)}};
+        let step=match step.admit(grant,authority.job.original().unwrap().terminal_is_empty()){Ok(step)=>step,Err(error)=>{unsafe{inner.put_authority(authority,SESSION_CLOSE)};return Err(error.into())}};
+        let result=match step{InteractiveJobCloseStep::Pending{progress}=>WorkerJobCloseStep::Pending{progress},InteractiveJobCloseStep::Blocked=>WorkerJobCloseStep::Blocked,InteractiveJobCloseStep::Complete{progress}=>{authority.close_stage=2;WorkerJobCloseStep::Pending{progress}}};unsafe{inner.put_authority(authority,SESSION_CLOSE)};return worker_close_effects(cx,before,result)
     }
-    let mut authority = unsafe { inner.take_authority() };
-    if authority.retained_receipt_pending{unsafe{inner.put_authority(authority,SESSION_CLOSE)};return WorkerJobCloseStep::Blocked}
-    let demand=match worker_job_authority_close_demands(&authority,grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>{unsafe{inner.put_authority(authority,SESSION_CLOSE)};return WorkerJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()};}};
-    if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{unsafe{inner.put_authority(authority,SESSION_CLOSE)};return WorkerJobCloseStep::Pending{progress:Default::default()};}
-    if !authority.quarantined_outcome.is_empty() {
-        let result=worker_payload_step(Ok(authority.quarantined_outcome.close_step(grant)));
-        unsafe { inner.put_authority(authority, SESSION_CLOSE) };
-        return result;
-    }
-    if !authority.outcome.is_empty() {
-        let result=worker_payload_step(Ok(authority.outcome.close_step(grant)));
-        unsafe { inner.put_authority(authority, SESSION_CLOSE) };
-        return result;
-    }
-    match authority.close_original_worker_failure(grant){Ok(Some(step))=>{unsafe{inner.put_authority(authority,SESSION_CLOSE)};return step},Ok(None)=>{},Err(error)=>{unsafe{inner.put_authority(authority,SESSION_CLOSE)};return WorkerJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}}
-    if authority.admission_fault_source.is_some(){let step=authority.close_original_admission_page(grant);unsafe{inner.put_authority(authority,SESSION_CLOSE)};return step}
-    if authority.close_stage == 0 {
-        if maximum_items == 0 {
-            unsafe { inner.put_authority(authority, SESSION_CLOSE) };
-            return WorkerJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..RetainedCloneProgress::default() } };
-        }
-        authority.job.original_mut().expect("closing worker authority owns job").begin_close();
-        authority.close_stage = 1;
-        unsafe { inner.put_authority(authority, SESSION_CLOSE) };
-        return WorkerJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..RetainedCloneProgress::default() } };
-    }
-    if !authority.preadmitted_fault.is_empty() {
-        let result=worker_payload_step(authority.preadmitted_fault.close_step(grant));
-        unsafe { inner.put_authority(authority, SESSION_CLOSE) };
-        return result;
-    }
-    if authority.close_stage == 1 {
-        let step = authority.job.original_mut().expect("closing worker authority owns job").close_step(grant);
-        match step.admit(grant,authority.job.original().unwrap().terminal_is_empty()) {
-            InteractiveJobCloseStep::Pending { progress } => {
-                unsafe { inner.put_authority(authority, SESSION_CLOSE) };
-                return WorkerJobCloseStep::Pending { progress };
-            }
-            InteractiveJobCloseStep::Blocked => {
-                unsafe { inner.put_authority(authority, SESSION_CLOSE) };
-                return WorkerJobCloseStep::Blocked;
-            }
-            InteractiveJobCloseStep::Refused{kind,progress}=>{unsafe{inner.put_authority(authority,SESSION_CLOSE)};return WorkerJobCloseStep::Refused{kind,progress}},
-            InteractiveJobCloseStep::Complete { progress } => {
-                if !authority.job.original().expect("closing worker authority owns job").terminal_is_empty() {
-                    unsafe { inner.put_authority(authority, SESSION_CLOSE) };
-                    return WorkerJobCloseStep::Blocked;
-                }
-                authority.close_stage = 2;
-                unsafe{inner.put_authority(authority,SESSION_CLOSE)};return WorkerJobCloseStep::Pending{progress};
-            }
-        }
-    }
-    if authority.close_stage == 2 {
-        if maximum_items == 0 {
-            unsafe { inner.put_authority(authority, SESSION_CLOSE) };
-            return WorkerJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..RetainedCloneProgress::default() } };
-        }
-        let progress=match authority.job.remove_terminal(grant){Ok(step)=>step.progress(),Err(error)=>{unsafe{inner.put_authority(authority,SESSION_CLOSE)};return WorkerJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}};
-        authority.close_stage = 3;
-        unsafe { inner.put_authority(authority, SESSION_CLOSE) };
-        return WorkerJobCloseStep::Pending { progress };
-    }
-    if authority.close_stage == 3 {
-        let step=authority.close_original_worker_params(grant);
-        if matches!(step,WorkerJobCloseStep::Complete{..}){authority.close_stage=4;}
-        unsafe{inner.put_authority(authority,SESSION_CLOSE)};
-        return match step{WorkerJobCloseStep::Complete{progress}=>WorkerJobCloseStep::Pending{progress},step=>step};
-    }
-    let step=authority.close_terminal_worker_authority(grant);
-    if matches!(step,WorkerJobCloseStep::Complete{..}){
-        drop(authority);
-        inner.phase.store(SESSION_EMPTY,Ordering::Release);
-        inner.raise_wake();
-    }else{unsafe{inner.put_authority(authority,SESSION_CLOSE)};}
-    step
+    if authority.close_stage==2{let progress=match authority.job.remove_terminal(grant){Ok(step)=>step.progress(),Err(error)=>{unsafe{inner.put_authority(authority,SESSION_CLOSE)};return Err(error.into())}};authority.close_stage=3;unsafe{inner.put_authority(authority,SESSION_CLOSE)};return worker_close_effects(cx,before,WorkerJobCloseStep::Pending{progress})}
+    if authority.close_stage==3{let result=authority.close_original_worker_params(grant);if matches!(result,Ok(WorkerJobCloseStep::Complete{..})){authority.close_stage=4}unsafe{inner.put_authority(authority,SESSION_CLOSE)};return worker_close_result(cx,before,result.map(|step|match step{WorkerJobCloseStep::Complete{progress}=>WorkerJobCloseStep::Pending{progress},step=>step}))}
+    let result=authority.close_terminal_worker_authority(grant);if matches!(result,Ok(WorkerJobCloseStep::Complete{..})){drop(authority);inner.phase.store(SESSION_EMPTY,Ordering::Release);inner.raise_wake()}else{unsafe{inner.put_authority(authority,SESSION_CLOSE)}}worker_close_result(cx,before,result)
+
 }
 
 impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
@@ -3188,6 +3085,33 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
         }
         unsafe { self.inner.put_authority(authority, if terminal { SESSION_TERMINAL } else { SESSION_OUTCOME }) };
         Ok((ticket, if terminal { WorkerJobPoll::Terminal } else { WorkerJobPoll::Outcome }))
+    }
+
+    /// 🎟️ Borrows the initiating context for one exact original callback and retains job custody on every failure.
+    pub fn try_step_on_original_caller(&self,cx:&mut StepContext<'_>)->Result<Option<(WorkerJobTicket,WorkerJobPoll)>,OriginalTurnFailure>{
+        if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(None)}
+        if self.inner.0.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original callback session is terminal empty").into())}
+        if self.inner.phase.compare_exchange(SESSION_IDLE,SESSION_TRANSITION,Ordering::AcqRel,Ordering::Acquire).is_err(){return Ok(None)}
+        let mut authority=unsafe{self.inner.take_authority()};
+        let original=authority.params.as_ref().expect("admitted worker retains original parameters");
+        if original.operation!=cx.operation()||original.generation!=cx.generation()||!original.cancel.is_same_node(cx.original_cancel_token())||!std::ptr::fn_addr_eq(original.now_us,cx.clock_source()){
+            unsafe{self.inner.put_authority_quiet(authority,SESSION_IDLE)};
+            return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original callback requires its admitted business identity, cancellation and issuer clock").into())
+        }
+        let config=original.config;
+        let ticket=WorkerJobTicket{generation:self.inner.generation,step_sequence:authority.step_sequence};
+        if authority.retained_receipt_pending{unsafe{self.inner.put_authority_quiet(authority,SESSION_IDLE)};return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original callback receipt still belongs to its prior recipient").into())}
+        authority.issued_retained=cx.retained_grant();let before=cx.retained_progress();
+        let result={let fields=&mut*authority;drive_step(fields.job.original_mut().expect("original callback owns exact producer"),cx,config.site,config.stage,&mut fields.callback_verdict).map(|outcome|outcome.map(JobOutcomeBorrow::into_descriptor))};
+        let after=cx.retained_progress();let progress=RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes};
+        authority.retained_step_progress=progress;let cumulative=authority.retained_progress.checked_add(progress);authority.step_sequence=authority.step_sequence.saturating_add(1);authority.last_step_end_us=cx.latest_us();authority.clock=cx.clock.get();
+        let outcome=match result{Ok(outcome)=>outcome,Err(failure)=>{match cumulative{Ok(total)=>authority.retained_progress=total,Err(error)=>{assert!(authority.step_fault.is_none(),"original callback arithmetic refusal retains its own custody");*authority.step_fault=Some(error.with_retained_progress(progress).into());}}authority.retained_receipt_pending=false;unsafe{self.inner.put_authority(authority,SESSION_CLOSE)};return Err(failure)}};
+        let terminal=outcome.as_ref().is_some_and(JobOutcomeDescriptor::is_terminal);
+        if let Some(outcome)=outcome{authority.outcome.retain(outcome).expect("exclusive original callback semantic descriptor")}
+        authority.retained_progress=match cumulative{Ok(total)=>total,Err(error)=>{authority.retained_receipt_pending=false;unsafe{self.inner.put_authority(authority,SESSION_CLOSE)};return Err(error.with_retained_progress(progress).into())}};
+        authority.retained_receipt_pending=true;self.inner.last_step_end_us.store(authority.last_step_end_us.unwrap_or(u64::MAX),Ordering::Release);
+        unsafe{self.inner.put_authority(authority,if terminal{SESSION_TERMINAL}else{SESSION_OUTCOME})};
+        Ok(Some((ticket,if terminal{WorkerJobPoll::Terminal}else{WorkerJobPoll::Outcome})))
     }
 
     pub fn try_step_on_caller(&self,retained:RetainedCloneGrant) -> Result<(WorkerJobTicket, WorkerJobPoll), WorkerJobContention> {
@@ -3367,13 +3291,9 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
         demand.map_err(WorkerJobDemandError::Refused)
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> WorkerJobCloseStep {
-        if self.inner.0.is_none(){return self.release_retirement_slot(grant)}
-        match worker_job_close_step(&self.inner,grant){
-            WorkerJobCloseStep::Complete{progress} if progress!=RetainedCloneProgress::default()=>WorkerJobCloseStep::Pending{progress},
-            WorkerJobCloseStep::Complete{..}=>match self.close_original_session_arc(grant){WorkerJobCloseStep::Complete{progress}=>WorkerJobCloseStep::Pending{progress},step=>step},
-            step=>step,
-        }
+    pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
+        if cx.should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}let before=cx.retained_progress();let grant=cx.retained_grant();if self.inner.0.is_none(){let step=self.release_retirement_slot(grant);return worker_close_effects(cx,before,step)}
+        let step=match worker_job_close_step(&self.inner,cx)?{WorkerJobCloseStep::Complete{progress}if progress!=Default::default()=>WorkerJobCloseStep::Pending{progress},WorkerJobCloseStep::Complete{..}=>{let grant=cx.retained_grant();let result=self.close_original_session_arc(grant).map(|step|match step{WorkerJobCloseStep::Complete{progress}=>WorkerJobCloseStep::Pending{progress},step=>step});return worker_close_result(cx,before,result)},step=>step};worker_close_effects(cx,before,step)
     }
 
     fn original_session_arc_demands(&self,maximum_copy_bytes:usize)->Result<RetirementDemand,ValueError>{
@@ -3382,17 +3302,13 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
         Ok(RetirementDemand{copy_bytes:0,release_bytes:semio_framework_value::shared_retirement_allocation_bytes::<WorkerJobSessionInner<J>>(),depth:1,..Default::default()})
     }
 
-    fn close_original_session_arc(&mut self,grant:RetainedCloneGrant)->WorkerJobCloseStep{
-        let demand=match self.original_session_arc_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return WorkerJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};
-        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return WorkerJobCloseStep::Pending{progress:Default::default()}}
+    fn close_original_session_arc(&mut self,grant:RetainedCloneGrant)->Result<WorkerJobCloseStep,ValueError>{
+        let demand=self.original_session_arc_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
         let original=self.inner.0.as_ref().expect("terminal session retains original Arc");
-        if !original.is_unique()||unsafe{(&*original.waker.get()).is_some()}{return WorkerJobCloseStep::Blocked}
-        if let Some(step)=worker_wake_retirement::close_session_retained_wake(original,grant){return step}
-        self.terminal_step_end_us=self.last_step_end_us();
-        match self.inner.0.take().unwrap().try_return(){
-            Ok(original)=>{drop(original);WorkerJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}}},
-            Err(original)=>{self.inner.0=Some(original);WorkerJobCloseStep::Blocked},
-        }
+        if !original.is_unique()||unsafe{(&*original.waker.get()).is_some()}{return Ok(WorkerJobCloseStep::Blocked)}
+        if let Some(step)=worker_wake_retirement::close_session_retained_wake(original,grant)?{return Ok(step)}
+        self.terminal_step_end_us=self.last_step_end_us();Ok(match self.inner.0.take().unwrap().try_return(){Ok(original)=>{drop(original);WorkerJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}}},Err(original)=>{self.inner.0=Some(original);WorkerJobCloseStep::Blocked}})
     }
 
     pub fn terminal_is_empty(&self) -> bool {self.inner.0.is_none()&&self.retirement_state.load(Ordering::Acquire)==3}
@@ -3517,7 +3433,7 @@ impl<J> WorkerJobOutcome<J> {
     }
 
     pub fn job_mut(&mut self)->Result<&mut J,ValueError>{let authority=self.authority.as_mut().expect("checked out original worker authority");if authority.retained_receipt_pending||!authority.outcome.is_empty()||!authority.quarantined_outcome.is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original semantic result requires acknowledgement before mutable job access"))}Ok(authority.job.original_mut().expect("original checked out job"))}
-    pub fn retained_error(&self)->Option<&ValueError>{self.authority.as_ref().and_then(|authority|authority.step_fault.as_ref())}
+    pub fn retained_failure(&self)->Option<&OriginalTurnFailure>{self.authority.as_ref().filter(|authority|!authority.retained_receipt_pending).and_then(|authority|authority.step_fault.as_ref())}
     /// 🪪️ Borrows original semantic metadata while its payload remains in this worker authority.
     pub fn outcome_descriptor(&self)->Option<&JobOutcomeDescriptor>{self.authority.as_ref().and_then(|authority|if authority.retained_receipt_pending{None}else{authority.outcome.original()})}
     pub fn outcome(&self)->Result<Option<JobOutcomeView<'_>>,ValueError>where J:InteractiveJob{let authority=self.authority.as_ref().expect("checked out original worker authority");if authority.retained_receipt_pending{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original worker turn receipt awaits its receiving caller"))}let Some(original)=authority.outcome.original()else{return Ok(None)};let view=if authority.worker_fault{original.fault(authority.preadmitted_fault.original().expect("original paid terminal fault page"))?}else{authority.job.original().expect("original checked out job").borrow_outcome(original)?};Ok(Some(view))}
@@ -3759,13 +3675,13 @@ impl InteractiveJob for TortureJob {
     fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.original_retirement_demands(body)?.capacity_bytes)}
     fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.original_retirement_demands(0)?.release_bytes)}
     fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.original_retirement_demands(0)?.depth)}
-    fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,ValueError>{
-        if cx.is_cancelled(){return JobOutcomeBorrow::admit_cancelled(cx)}
+    fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>{
+        if cx.is_cancelled(){return JobOutcomeBorrow::admit_cancelled(cx).map_err(OriginalTurnFailure::from)}
         if self.outcome_delivered{if !self.payload.terminal_is_empty(){self.payload.close_step(cx)?;return Ok(None)}let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}self.pending_kind=None;self.pending_length=0;self.pending_cursor=0;self.outcome_delivered=false;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(None)}
         if let Some(kind)=self.pending_kind{
-            if matches!(kind,JobOutcomeKind::Complete){match self.terminal_stage{1=>{if Self::original_scalar_step(&mut self.terminal_state,&self.pending_bytes[..self.pending_length],&mut self.pending_cursor,cx)?{let grant=cx.retained_grant();if grant.maximum_items>0&&grant.maximum_depth>0{self.terminal_stage=2;self.pending_cursor=0;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;}}return Ok(None)},2=>{let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_copy_bytes<16||grant.maximum_depth==0{return Ok(None)}let bytes=self.output_bytes();if self.prepare_original_scalar(cx,kind,&bytes)?{self.terminal_stage=3;}return Ok(None)},3=>{if Self::original_scalar_step(&mut self.terminal_output,&self.pending_bytes[..self.pending_length],&mut self.pending_cursor,cx)?{let grant=cx.retained_grant();if grant.maximum_items>0&&grant.maximum_depth>0{self.terminal_stage=4;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;}}return Ok(None)},_=>return JobOutcomeBorrow::admit_complete(cx,self.terminal_state.published(),self.terminal_output.published())}}
+            if matches!(kind,JobOutcomeKind::Complete){match self.terminal_stage{1=>{if Self::original_scalar_step(&mut self.terminal_state,&self.pending_bytes[..self.pending_length],&mut self.pending_cursor,cx)?{let grant=cx.retained_grant();if grant.maximum_items>0&&grant.maximum_depth>0{self.terminal_stage=2;self.pending_cursor=0;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;}}return Ok(None)},2=>{let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_copy_bytes<16||grant.maximum_depth==0{return Ok(None)}let bytes=self.output_bytes();if self.prepare_original_scalar(cx,kind,&bytes)?{self.terminal_stage=3;}return Ok(None)},3=>{if Self::original_scalar_step(&mut self.terminal_output,&self.pending_bytes[..self.pending_length],&mut self.pending_cursor,cx)?{let grant=cx.retained_grant();if grant.maximum_items>0&&grant.maximum_depth>0{self.terminal_stage=4;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;}}return Ok(None)},_=>return JobOutcomeBorrow::admit_complete(cx,self.terminal_state.published(),self.terminal_output.published()).map_err(OriginalTurnFailure::from)}}
             let stream=if matches!(kind,JobOutcomeKind::PreviewReady){JobPayloadStream::Preview}else{JobPayloadStream::CheckpointState};let selected=self.payload.select_stream(stream,cx.retained_grant())?;cx.consume_retained(selected.progress())?;if matches!(selected,RetainedCloneStep::Progress(_))||selected.progress()!=Default::default(){return Ok(None)}
-            if !Self::original_scalar_step(&mut self.payload,&self.pending_bytes[..self.pending_length],&mut self.pending_cursor,cx)?{return Ok(None)}let original=self.payload.published().expect("original sealed Torture payload");let result=match kind{JobOutcomeKind::PreviewReady=>JobOutcomeBorrow::admit_preview(cx,original),JobOutcomeKind::CheckpointReady{applied_progress}=>JobOutcomeBorrow::admit_checkpoint(cx,original,applied_progress),_=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original Torture semantic variant changed"))}?;if result.is_some(){self.outcome_delivered=true;}return Ok(result)
+            if !Self::original_scalar_step(&mut self.payload,&self.pending_bytes[..self.pending_length],&mut self.pending_cursor,cx)?{return Ok(None)}let original=self.payload.published().expect("original sealed Torture payload");let result=match kind{JobOutcomeKind::PreviewReady=>JobOutcomeBorrow::admit_preview(cx,original),JobOutcomeKind::CheckpointReady{applied_progress}=>JobOutcomeBorrow::admit_checkpoint(cx,original,applied_progress),_=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original Torture semantic variant changed").into())}?;if result.is_some(){self.outcome_delivered=true;}return Ok(result)
         }
         let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0||cx.should_yield(){return Ok(None)}
         if self.completed_units==self.total_units{if grant.maximum_copy_bytes<48{return Ok(None)}self.scope.assert_completable().map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"original Torture scope has a live structured child"))?;let bytes=self.checkpoint_bytes();if self.prepare_original_scalar(cx,JobOutcomeKind::Complete,&bytes)?{self.terminal_stage=1;}return Ok(None)}
@@ -3780,7 +3696,15 @@ impl InteractiveJob for TortureJob {
         self.scope.begin_close();
     }
 
-    fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep{let demand=match self.original_retirement_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};if self.terminal_is_empty(){return InteractiveJobCloseStep::Complete{progress:Default::default()}}if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return InteractiveJobCloseStep::Pending{progress:Default::default()}}if !self.scope.terminal_is_empty(){return match self.scope.pump_child_close(grant){InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step}}for original in[&mut self.payload,&mut self.terminal_state,&mut self.terminal_output]{if !original.terminal_is_empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};return match original.close_step_granted(child){Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}}}self.pending_kind=None;self.pending_length=0;self.pending_cursor=0;self.outcome_delivered=false;InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}}}
+    fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+        if cx.should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}let grant=cx.retained_grant();let demand=self.original_retirement_demands(grant.maximum_copy_bytes)?;
+        if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
+        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        if !self.scope.terminal_is_empty(){return Ok(match self.scope.pump_child_close(cx)?{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})}
+        for original in[&mut self.payload,&mut self.terminal_state,&mut self.terminal_output]{if !original.terminal_is_empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};cx.consume_fuel(1);let step=original.close_step_granted(child).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?;cx.consume_retained(step.progress())?;return Ok(InteractiveJobCloseStep::Pending{progress:step.progress()})}}
+        cx.consume_fuel(1);let progress=RetainedCloneProgress{copied_items:1,..Default::default()};cx.consume_retained(progress)?;self.pending_kind=None;self.pending_length=0;self.pending_cursor=0;self.outcome_delivered=false;Ok(InteractiveJobCloseStep::Pending{progress})
+    }
+
     fn terminal_is_empty(&self)->bool{self.closing&&self.scope.terminal_is_empty()&&self.payload.terminal_is_empty()&&self.terminal_state.terminal_is_empty()&&self.terminal_output.terminal_is_empty()&&self.pending_kind.is_none()&&self.pending_length==0&&self.pending_cursor==0&&!self.outcome_delivered}
 }
 //#endregion 🔥️TortureJob
@@ -3839,7 +3763,16 @@ mod retained_step_context_owner_tests;
 #[path = "⏱️context/📦️owner/🦀️.rs"]
 mod step_context_owner;
 pub use step_context_owner::StepContextOwner;
+#[cfg(any(test,feature="testkit"))]
+#[path="⏱️context/🧪️testing/🎟️caller/🦀️.rs"]
+mod original_fixture_caller;
+#[cfg(any(test,feature="testkit"))]
+pub use original_fixture_caller::{OriginalJobFixtureCaller,OriginalFixtureSession};
 
 #[cfg(test)]
 #[path="👷️worker/🎟️turn/🧪️tests/🦀️.rs"]
 mod original_worker_turn_tests;
+
+#[cfg(test)]
+#[path="👷️worker/⚠️failure/🧪️tests/🦀️.rs"]
+mod original_normal_worker_failure_tests;

@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 /** 📦️ pdf TypeScript artifact package router. */
 import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts";
-import {BundleScript} from "./../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import {BundleScript} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import {resolve} from "node:path";
-import {runOwnedCommand} from "./../../../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {runOwnedCommand} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 /** 🧪️ Runs the artifact-owned original physical transport corpus with cancellation and progress. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -15,7 +15,7 @@ class OwnedVerifyScript extends BundleScript {
   }
 }
 
-await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-pdf", { suites: [
+await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-pdf", { bundleRuntime: "bun", suites: [
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🪪️stream-roles/🧪️tests/🟦️.ts",
   "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧩️cos/🟦️.ts",

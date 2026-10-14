@@ -1,0 +1,14 @@
+{
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+  "before": "b4ab663e5b4f994ce4030ee0fddcc37dbdff5d8fd504dfe32ad9407a62caca29",
+  "after": "22d597117b6c65ca9f1894001ceccee028b26e2b304ddd0cc2d9b2f422a478e5",
+  "functions": [
+    "exactOwnedFileResolution"
+  ],
+  "names": {
+    "SemanticExactOwnedFileCase": "OwnerProjectionEntry",
+    "SemanticExactOwnedFileCatalog": "OwnerProjectionPolicy"
+  },
+  "identity": "stable sourcePath",
+  "role": "approval"
+}

@@ -5,7 +5,7 @@ import { join } from "node:path";
 
 /** 🧩️ Preserves package imports and stable task identities against native Nx inference. */
 export function testSelectedPackageIdentities(workspace: string): void {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🎯️selected-runtime/🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🎯️selected-runtime/🔣️.json"), "utf8"));
   const { buildProjectConfigurationFromPackageJson } = require("nx/src/plugins/package-json/create-nodes");
   const manager = require("nx/src/utils/package-manager").getPackageManagerCommand("bun", workspace);
   for (const row of fixture.packageProjects) {
@@ -23,13 +23,13 @@ export function testSelectedPackageIdentities(workspace: string): void {
 
 /** 🎯️ Checks selected app prerequisites against neutral cases and the installed Nx scheduler. */
 export function testSelectedRuntimeDependencies(targets: Record<string, any>, graph?: any): void {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🎯️selected-runtime/🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🎯️selected-runtime/🔣️.json"), "utf8"));
   const owner = "@semio-tech/framework-os-dev", rendererProject = "@semio-tech/framework-renderer-wgpu";
   for (const row of fixture.variants) for (const profile of fixture.profiles) for (const renderer of fixture.renderers) {
     const name = `prepare-${row.variant}-${renderer}-${profile}`, target = targets[name];
     assert.ok(target, name);
     const engines = target.dependsOn.filter((id: string) => /:wasm(?:-release)?$/.test(id));
-    const expected = renderer === "react" ? row.engines : [`${rendererProject}:${profile === "release" ? "wasm-release" : "wasm"}`];
+    const expected = renderer === "react" ? row.engines : [`${rendererProject}:wasm`];
     assert.deepEqual(require("lodash").sortBy(engines), require("lodash").sortBy(expected), name + ": only declared runtime engines");
     if (!graph) continue;
     const tasks = require("nx/src/tasks-runner/create-task-graph").createTaskGraph(graph, {}, [owner], [`dev-${row.variant}-${renderer}-${profile}`], undefined, {}, false);
@@ -44,7 +44,7 @@ export function testSelectedRuntimeDependencies(targets: Record<string, any>, gr
 
 /** 🔤️ Verifies the font producer's complete Cargo closure independently of the renderer graph. */
 export async function testSelectedFontDependencies(workspace: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🎯️selected-runtime/🔣️.json"), "utf8")).fontTool;
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🎯️selected-runtime/🔣️.json"), "utf8")).fontTool;
   const manifest = require("@iarna/toml").parse(readFileSync(join(workspace, fixture.root, "Cargo.toml"), "utf8"));
   assert.equal(manifest.package.name, fixture.project);
   const {repositoryCargoPreparationStorageV1, runTool } = await import("../../🚀️bootstrap/📦️dependencies/📜️script.ts");

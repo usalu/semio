@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "operation": 91,
+  "states": [
+    "pending",
+    "running"
+  ],
+  "observations": 8,
+  "maintenanceCalls": 0,
+  "eventCount": 0,
+  "wallAuthorityCreated": false,
+  "sourceChanged": false,
+  "receipt": {
+    "items": 0,
+    "copy": 0,
+    "capacity": 0,
+    "release": 0
+  }
+}

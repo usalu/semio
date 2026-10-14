@@ -23,7 +23,7 @@ struct FixturePresence { camera: Camera, show_mode: ShowMode, selected_generatio
 
 impl ArtifactPresenceSnapshot for FixturePresence {}
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
 fn grant(fixture: &serde_json::Value) -> semio_framework_value::RetainedCloneGrant {
     let axes = &fixture["grant"];
     semio_framework_value::RetainedCloneGrant { maximum_items: axes["items"].as_u64().unwrap() as usize, maximum_copy_bytes: axes["copyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: axes["capacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: axes["releaseBytes"].as_u64().unwrap() as usize, maximum_depth: axes["depth"].as_u64().unwrap() as usize }

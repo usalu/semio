@@ -3,7 +3,7 @@ use crate::{value::observe_retirement_allocations as observe,retirement::control
 
 #[test]
 fn shared_utf8_original_lease_close_preserves_actor_bytes_without_allocating_retirement_frames(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../♻️original-lease/🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../♻️original-lease/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for text in law["values"].as_array().unwrap(){for capacity in law["capacities"].as_array().unwrap(){for aliases in law["aliases"].as_array().unwrap(){
   let mut original=String::with_capacity(capacity.as_u64().unwrap()as usize);original.push_str(text.as_str().unwrap());let pointer=original.as_ptr();
   let owner=SharedUtf8::from(original);let mut leases=Vec::new();for _ in 0..aliases.as_u64().unwrap(){leases.push(owner.clone());}leases.push(owner);
@@ -23,7 +23,7 @@ fn shared_utf8_original_lease_close_preserves_actor_bytes_without_allocating_ret
 
 #[test]
 fn shared_utf8_original_giant_actor_admission_and_all_lease_frontiers_pay_physical_ownership(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for value in law["values"].as_array().unwrap(){for repeats in law["repeats"].as_array().unwrap(){for aliases in 0..3{
   let(mut original,birth)=observe(||value.as_str().unwrap().repeat(repeats.as_u64().unwrap()as usize));let pointer=original.as_ptr();let capacity=original.capacity();
   let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:4096,maximum_release_bytes:262144,maximum_depth:4096};

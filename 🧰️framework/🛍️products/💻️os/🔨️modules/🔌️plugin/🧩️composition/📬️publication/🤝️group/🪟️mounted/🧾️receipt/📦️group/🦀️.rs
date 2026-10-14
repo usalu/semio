@@ -33,7 +33,7 @@ pub(crate) struct MountedGroupReceiptOutput {
     pub(crate) command_child_edit_ids: Vec<String>,
 }
 
-struct MountedGroupReceipt {
+pub(crate) struct MountedGroupReceipt {
     mutations: ManuallyDrop<Vec<KernelMutation>>,
     undo_ids: ManuallyDrop<Vec<MutationId>>,
     inverses: ManuallyDrop<Vec<InverseMutation>>,
@@ -138,7 +138,7 @@ impl MountedGroupReceipt {
         Some(MountedGroupReceiptOutput{mutations:std::mem::take(&mut *self.mutations),inverse_group:UndoGroup{invocation_id:InvocationId(unsafe{String::from_utf8_unchecked(invocation)}),mutations:std::mem::take(&mut *self.undo_ids),inverse_mutations:std::mem::take(&mut *self.inverses),member_edits:std::mem::take(&mut *self.member_edits)},command_edit_id:parent,command_child_edit_ids:std::mem::take(&mut *self.command_children)})
     }
     /// ↩️ Retains original completed output for funded cancellation before common publication.
-    fn retain_output(&mut self,output:&mut Option<MountedGroupReceiptOutput>,grant:RetainedCloneGrant)->RetainedCloneStep{
+    pub(crate) fn retain_output(&mut self,output:&mut Option<MountedGroupReceiptOutput>,grant:RetainedCloneGrant)->RetainedCloneStep{
         if grant.maximum_items==0||!self.transferred||self.closing||output.is_none()||[self.mutations.capacity(),self.undo_ids.capacity(),self.inverses.capacity(),self.member_edits.capacity(),self.command_children.capacity()].iter().any(|capacity|*capacity!=0)||!self.invocation.terminal_is_empty()||!self.parent.terminal_is_empty()||!self.child.terminal_is_empty()||!self.edit.terminal_is_empty(){return RetainedCloneStep::Progress(Default::default());}
         let MountedGroupReceiptOutput{mutations,inverse_group,command_edit_id,command_child_edit_ids}=output.take().unwrap();let UndoGroup{invocation_id,mutations:undo_ids,inverse_mutations,member_edits}=inverse_group;
         *self.mutations=mutations;*self.undo_ids=undo_ids;*self.inverses=inverse_mutations;*self.member_edits=member_edits;*self.command_children=command_child_edit_ids;self.invocation=MountedReceiptBytes::from_original(invocation_id.0.into_bytes());self.parent=MountedReceiptBytes::from_original(command_edit_id.unwrap_or_default().into_bytes());self.transferred=false;self.closing=true;self.close_phase=0;self.close_field=0;self.triple_identity=None;self.triple_offset=0;Self::progress(0,0)
@@ -195,14 +195,14 @@ impl Drop for MountedGroupReceipt{fn drop(&mut self){assert!(std::thread::panick
 include!("🧪️tests/🦀️.rs");
 
 pub(crate) mod command {use super::*;include!("📚️command/🦀️.rs");}
-use command::{PagedCommandLog, CommandAppend, CommandAppendRefusal, CommandPrune, MountedCommandEntry, MountedCommandEntrySource};
-#[cfg(test)] use command::{MountedCommandEntryRefusal};
+pub(crate) use command::{PagedCommandLog, CommandAppend, CommandAppendRefusal, CommandPrune, MountedCommandEntry, MountedCommandEntrySource};
+#[cfg(test)] pub(crate) use command::{MountedCommandEntryRefusal};
 mod member { use super::*; include!("👤️member/🦀️.rs"); }
 use member::{MountedMemberReceipt, MountedMemberReceiptSource};
-#[cfg(test)] use member::{MountedMemberReceiptOutput};
+#[cfg(test)] pub(crate) use member::{MountedMemberReceiptOutput};
 
 #[cfg(test)]
-use member::{MemberReceiptOperation,MemberReceiptPublication,member_receipt_fixture,member_receipt_source};
+pub(crate) use member::{MemberReceiptOperation,MemberReceiptPublication,member_receipt_fixture,member_receipt_source};
 
 pub(crate) mod receipt_members { use super::*; include!("../../📚️members/🦀️.rs"); }
-use receipt_members::MountedGroupMemberReceipts;
+pub(crate) use receipt_members::MountedGroupMemberReceipts;

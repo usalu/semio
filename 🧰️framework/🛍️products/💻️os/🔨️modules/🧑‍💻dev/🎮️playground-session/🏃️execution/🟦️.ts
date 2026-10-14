@@ -3,7 +3,7 @@ import { readPhysicalFileV1 } from "../../../../../../🔨️modules/📁️file
 import { parseDeployedRegistryEntryV1 } from "../../../🔌️plugin/📇️registry/🔎️discovery/🧬️schema/🟦️.ts";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { BundleScript, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { renderPlaygroundSessionTypeScript } from "../../../🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts";
 import { registryModuleDirectories, type GeneratedCatalogProjection } from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import { PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, playgroundSessionOutputPath } from "../../♻️activation/🟦️.ts";

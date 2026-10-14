@@ -1,6 +1,6 @@
 //! 📸️ Canonical point buffers and owned parent SQLite capability baselines.
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::RemodelingSnapshot;
-fn laws()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn laws()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 #[test]
 fn sqlite_snapshot_remodeling_actual_factory_owns_parent_capability(){let codec=store::bare_artifact_codec::<RemodelingSnapshot,crate::RemodelingMutation>(crate::REMODELING_DOCUMENT_SCHEMA);assert!(codec.snapshot_sqlite.is_some(),"Remodeling parent has no authored relational capability");}
 #[semio_framework_async_macros::async_test]
@@ -25,7 +25,7 @@ fn sqlite_snapshot_remodeling_binary32_samples_agree_with_independent_words(){fo
 
 #[test]
 fn sqlite_snapshot_remodeling_native_text_binary32_words_match_source_neutral_spelling(){
-    use store::os_store::serialization::ArtifactDsl;
+    use pack::snapshot::ArtifactDsl;
     let fixture=laws();
     for row in fixture["nativeTextWordCases"].as_array().unwrap(){
         let bits=u32::from_str_radix(row["binary32Bits"].as_str().unwrap(),16).unwrap();let mut snapshot=crate::default_remodeling_scene();snapshot.params.ingest.min_sharpness=f32::from_bits(bits);

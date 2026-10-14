@@ -21,7 +21,7 @@ pub use schema::snapshot::GifSnapshot;
 pub use schema::snapshot::STDIO_GIF89A_DOCUMENT_SCHEMA;
 pub use schema::GifArtifact;
 /// 🧾️ The DSL contract `GifSnapshot` implements, re-exported for clients that print or parse it.
-pub use semio_framework_os_kernel::os_store::serialization::ArtifactDsl;
+pub use pack::snapshot::ArtifactDsl;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_GIF_DOCUMENT_SCHEMA: &str = "stdio.gif";

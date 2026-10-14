@@ -1,0 +1,32 @@
+[
+  {
+    "name": "selector-parent",
+    "sql": "UPDATE bim_clash_a SET clash_set_id=9223372036854775807",
+    "witness": "SELECT count(*) AS n FROM bim_clash_a a LEFT JOIN bim_clash_set s ON a.clash_set_id=s.id WHERE s.id IS NULL"
+  },
+  {
+    "name": "selector-ordinal",
+    "sql": "UPDATE bim_clash_a_class SET ordinal=99 WHERE ordinal=0",
+    "witness": "SELECT count(*) AS n FROM (SELECT clash_a_id FROM bim_clash_a_class GROUP BY clash_a_id HAVING min(ordinal)<>0 OR max(ordinal)<>count(*)-1)"
+  },
+  {
+    "name": "scope-parent",
+    "sql": "UPDATE bim_rule_scope SET rule_id=9223372036854775807",
+    "witness": "SELECT count(*) AS n FROM bim_rule_scope a LEFT JOIN bim_rule s ON a.rule_id=s.id WHERE s.id IS NULL"
+  },
+  {
+    "name": "viewpoint-parent",
+    "sql": "UPDATE bim_issue_viewpoint SET issue_id=9223372036854775807",
+    "witness": "SELECT count(*) AS n FROM bim_issue_viewpoint a LEFT JOIN bim_issue s ON a.issue_id=s.id WHERE s.id IS NULL"
+  },
+  {
+    "name": "path-ordinal",
+    "sql": "UPDATE bim_mep_path SET ordinal=99 WHERE ordinal=0 AND mep_element_id=(SELECT id FROM bim_mep_element WHERE map_key='mep/duct')",
+    "witness": "SELECT count(*) AS n FROM (SELECT mep_element_id FROM bim_mep_path GROUP BY mep_element_id HAVING min(ordinal)<>0 OR max(ordinal)<>count(*)-1)"
+  },
+  {
+    "name": "inactive-shape",
+    "sql": "UPDATE bim_mep_element SET diameter=1.0,diameter_bits=4607182418800017408,diameter_class='finite' WHERE shape_kind='Duct'",
+    "witness": "SELECT count(*) AS n FROM bim_mep_element WHERE shape_kind IN('Duct','Tray') AND diameter_bits IS NOT NULL"
+  }
+]

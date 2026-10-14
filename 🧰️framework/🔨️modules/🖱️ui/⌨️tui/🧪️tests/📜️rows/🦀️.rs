@@ -34,7 +34,7 @@ fn filter_matches_every_token_case_insensitively_and_unicode_aware() {
 
 #[test]
 fn shared_fixture_queries_select_the_listed_rows() {
-    let root = parse(include_str!("../../🧫️fixtures/📜️rows/🔣️.json"), JsonMemberPolicy::Reject).expect("row filter fixture");
+    let root = parse(include_str!("../🧫️fixtures/📜️rows/🔣️.json"), JsonMemberPolicy::Reject).expect("row filter fixture");
     let object = root.as_object().expect("fixture object");
     let labels: Vec<String> = object.get("labels").and_then(Value::as_array).expect("labels").iter().map(|label| label.as_str().expect("label").to_string()).collect();
     let mut index = FilterIndex::new(&labels);

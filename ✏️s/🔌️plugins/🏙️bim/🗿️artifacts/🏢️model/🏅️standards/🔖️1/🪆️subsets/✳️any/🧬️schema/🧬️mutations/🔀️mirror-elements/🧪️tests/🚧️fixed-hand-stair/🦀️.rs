@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔀️mirror-elements/🚧️fixed-hand-stair",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/🚧️fixed-hand-stair/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/🚧️fixed-hand-stair/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/🚧️fixed-hand-stair/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/🚧️fixed-hand-stair/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/🚧️fixed-hand-stair/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/🚧️fixed-hand-stair/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/🚧️fixed-hand-stair/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/🚧️fixed-hand-stair/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/🚧️fixed-hand-stair/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/🚧️fixed-hand-stair/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

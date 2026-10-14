@@ -140,7 +140,7 @@ fn editor_feed(transient: &HomeTransient, page_json: &str) -> Result<(Vec<semio_
 #[semio_framework_async_macros::async_test]
 async fn the_viewer_folds_every_sealed_page_exactly_as_the_editor_does() {
     use protocol::Mutation as _;
-    let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/📬️directory-feed/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral directory feed fixture");
+    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/📬️directory-feed/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral directory feed fixture");
     let mut viewer = HomeTransient::default();
     let mut editor = HomeTransient::default();
     for row in fixture["pages"].as_array().expect("pages") {
@@ -192,7 +192,7 @@ async fn a_viewer_page_publishes_only_its_transient_item() {
     use semio_framework_plugin::PluginApp;
     let mut app = semio_framework_plugin::VcsArtifactApp::<ViewerApp<HomeViewer>>::with_registry(Default::default(), semio_framework_plugin::AppActionRegistry::from_definition(&create_home_viewer().await), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     app.bind_instance_id(1).await;
-    let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/📬️directory-feed/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral directory feed fixture");
+    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/📬️directory-feed/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral directory feed fixture");
     let pages = fixture["pages"].as_array().expect("pages");
     let meta = semio_framework_plugin::ActionMeta { actor: "local".into(), instance_id: 1, view_state: Some(home_view()) };
     for page in pages {

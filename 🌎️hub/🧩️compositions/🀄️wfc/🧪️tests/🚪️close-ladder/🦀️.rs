@@ -228,7 +228,7 @@ wfc_viewer_close_ladder_law!(wfc3d_viewer_instance_close_reaches_retired, 4);
 
 /// ⚖️ The language-agnostic close-cost fixture — shared by this law and by the shell-side twin, so
 /// the ceiling a close must respect is authored once instead of hard-coded per implementation.
-const CLOSE_COST_FIXTURE: &str = include_str!("../../🧫️fixtures/🚪️close-ladder/🔣️.json");
+const CLOSE_COST_FIXTURE: &str = include_str!("../🧫️fixtures/🚪️close-ladder/🔣️.json");
 
 /// 🧵️ One session per OS thread; this twin also carries the session's measured turn count back out.
 fn session_close_cost(app: &str, loads: usize, turns_per_load: usize, label: &str, budget: usize) -> usize {

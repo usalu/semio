@@ -1,0 +1,9 @@
+{
+  "mutation": "connectTrace",
+  "trace": {
+    "id": "trace-a",
+    "fromId": "requirement-a",
+    "toId": "decision-a",
+    "kind": "requirementToDecision"
+  }
+}

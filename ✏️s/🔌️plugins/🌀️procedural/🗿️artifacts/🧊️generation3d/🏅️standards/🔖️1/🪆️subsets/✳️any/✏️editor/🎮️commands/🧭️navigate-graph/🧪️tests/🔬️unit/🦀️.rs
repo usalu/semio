@@ -3,7 +3,7 @@ use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRe
 use crate::standards::v1::subsets::any::schema::{PROCEDURAL_EXAMPLE_HEX_COLUMN};
 use crate::standards::v1::subsets::any::io::text::snapshot::{example_snapshot};
 
-const GRAPH_KEYBOARD_FIXTURE_JSON: &str = include_str!("../../../../../🧫️fixtures/🧭️graph-keyboard-navigation.json");
+const GRAPH_KEYBOARD_FIXTURE_JSON: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧭️graph-keyboard-navigation.json");
 
 
 fn fixture() -> serde_json::Value {

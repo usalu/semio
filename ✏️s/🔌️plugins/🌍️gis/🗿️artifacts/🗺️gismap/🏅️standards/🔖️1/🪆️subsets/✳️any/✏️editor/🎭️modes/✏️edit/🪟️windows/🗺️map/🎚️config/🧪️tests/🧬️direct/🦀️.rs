@@ -5,7 +5,7 @@ use protocol::{Mutation, MutationLeaf, OpBinary, OpText};
 
 //#region 🧪️DirectContracts
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🧬️mutations/🪟️map-window-config-direct/🔣️.json")).expect("configuration law fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🧬️mutations/🪟️map-window-config-direct/🔣️.json")).expect("configuration law fixture")
 }
 
 pub(crate) fn assert_leaf<T>(sample: usize, wrap: fn(T) -> MapWindowConfigMutation, descriptor: &str)

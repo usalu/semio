@@ -14,7 +14,7 @@ type Options = { progress?: (event: { phase: string; path?: string }) => void };
 type Node = { kind: string; mode: number; device: number; inode: number; bytes?: number; sha256?: string; target?: string };
 const library = resolve(import.meta.dir, "../.."),
   repoRoot = resolve(library, "../../../../..");
-const inputBytes = readFileSync(join(import.meta.dir, "../../🧫️fixtures/🪶️artifact-empty-facet-authoring/🔣️.json"), "utf8"),
+const inputBytes = readFileSync(join(import.meta.dir, "../🧫️fixtures/🪶️artifact-empty-facet-authoring/🔣️.json"), "utf8"),
   vector = JSON.parse(inputBytes) as Readonly<{
     schemaVersion: number;
     contractId: string;
@@ -46,9 +46,9 @@ const identityPaths = [
   ...["🏗️builder/🟦️.ts", "📦️packages/🟦️typescript/🟦️.ts", "🔍️discovery/🟦️.ts", "🧹️normalization/🟦️.ts", "🔣️taxonomy.json"].map((path) => join(library, path)),
   import.meta.filename,
   ...[
-    "../../🧫️fixtures/🪶️artifact-empty-facet-authoring/🔣️.json",
-    "../../🧫️fixtures/🪶️artifact-empty-facet-authoring/📨️request/🔣️.json",
-    "../../🧫️fixtures/🪶️artifact-empty-facet-authoring/📋️registration/🔣️.json",
+    "../🧫️fixtures/🪶️artifact-empty-facet-authoring/🔣️.json",
+    "../🧫️fixtures/🪶️artifact-empty-facet-authoring/📨️request/🔣️.json",
+    "../🧫️fixtures/🪶️artifact-empty-facet-authoring/📋️registration/🔣️.json",
   ].map((path) => join(import.meta.dir, path)),
 ];
 const identities = (): Record<string, string> => Object.fromEntries(identityPaths.map((path) => [relative(repoRoot, path).replaceAll("\\", "/"), hash(readFileSync(path))]));
@@ -307,7 +307,7 @@ for (const row of vector.cases)
     }
   });
 
-const requestInput = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🪶️artifact-empty-facet-authoring/📨️request/🔣️.json"), "utf8")) as {
+const requestInput = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🪶️artifact-empty-facet-authoring/📨️request/🔣️.json"), "utf8")) as {
   schemaVersion: number;
   contractId: string;
   readBytes: number;
@@ -321,7 +321,7 @@ test("public authoring requests have independent closed language-neutral authori
   
   
   const errors: ParseError[] = [];
-  expect(parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🪶️artifact-empty-facet-authoring/📨️request/🔣️.json"), "utf8"), errors)).toEqual(requestInput);
+  expect(parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🪶️artifact-empty-facet-authoring/📨️request/🔣️.json"), "utf8"), errors)).toEqual(requestInput);
   expect(errors).toEqual([]);
 });
 
@@ -387,7 +387,7 @@ for (const row of requestInput.cases)
   });
 
 test("registers empty-facet authoring through its closed canonical route", async () => {
-  const directory = join(import.meta.dir, "../../🧫️fixtures/🪶️artifact-empty-facet-authoring/📋️registration"),
+  const directory = join(import.meta.dir, "../🧫️fixtures/🪶️artifact-empty-facet-authoring/📋️registration"),
     bytes = readFileSync(join(directory, "🔣️.json"), "utf8"),
     registration = JSON.parse(bytes);
   expect(registration).toEqual({ schemaVersion: 1, contractId: "artifact-empty-facet-authoring-registration-v1", command: "artifact-empty-facet-authoring", target: "test-artifact-empty-facet-authoring", cache: false, source: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪶️artifact-empty-facet-authoring/🟦️.ts", runner: "runTestBudgeted", budget: "default" });

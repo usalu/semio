@@ -1,0 +1,46 @@
+{
+  "schemas": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/🧫️fixtures/🎟️reservation.schema.json",
+      "sha256": "d2d82279903bc6e3554c45a6e5104510a51b2f0b44f094e782750722dd27175b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🧪️tests/🧫️fixtures/🎟️funding.schema.json",
+      "sha256": "aef56b3486ed38301ff0db090e2d9566e2907c2605b65ba82c1035b165b8eba5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🧬️schema/🔣️.json",
+      "sha256": "b71596410498a55334576bd99ec3190482258c8d9a0ea73fe869b940ed95e5aa"
+    }
+  ],
+  "reader": {
+    "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🧪️tests/🟦️.ts",
+    "before": "2ab94a41f869a1eab96076b02eb9a801fc8d524d77f8a67615209a462f0733e0",
+    "after": "d538dc991dd01a71043b278a1baeba50c6ec6aae6e0fde3e9e66cdd1b9402644",
+    "removed": [
+      "import Ajv2020 from \"ajv/dist/2020\";",
+      "  expect(new Ajv2020({ strict: true }).compile(read(\"🧬️schema/🔣️.json\"))(fixture)).toBe(true);"
+    ]
+  },
+  "payloads": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/🧫️fixtures/🎟️reservation.json",
+      "sha256": "37c126c687b9b267adb887518baff86ff202fc137a56c868a5e3822420c78d0d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🧪️tests/🧫️fixtures/🎟️funding.json",
+      "sha256": "172bf7d8db63f4d32bb8467c91ca3a2b9a76a5a6e6669b407f1d03f2ce85d146"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "5786db60a0f16bacd3123f98196d7e8ec9319d08bce1ec1e57b7edb6fff38407"
+    }
+  ],
+  "listSourceCall": {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/📋️list/🟦️.ts",
+    "after": "dd946c3e0722c27be51113add27377e04a5a4db4f8ea0eaa8bc96768a80727ec",
+    "selector": "original paged list ownership preserves JSON Patch order and signed reservation custody",
+    "helper": "testPagedListOwnership",
+    "role": "actual helper call stays inside original Bun runner"
+  }
+}

@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { serveVite } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
 import { closeServiceSession, openServiceSession, publishServiceReady, readServiceSession } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session/🟦️.ts";
 import { PLAY_RUNTIME_PANES, playRuntimeModuleLayout } from "./🟦️.ts";
@@ -42,7 +42,7 @@ class ServeScript extends BundleScript {
     const interrupt = (): void => { process.exitCode = 130; controller.abort(); }, terminate = (): void => { process.exitCode = 143; controller.abort(); };
     process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
     try {
-      await serveVite({ root, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), host: process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1", port: Number(process.env.SEMIO_TECH_PLAY_PORT ?? 6033), signal: controller.signal, ready: url => console.log(`Play ready: ${url}`) });
+      await serveVite({ invocation: this.invocation, root, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), host: process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1", port: Number(process.env.SEMIO_TECH_PLAY_PORT ?? 6033), signal: this.invocation.control.signal, ready: url => console.log(`Play ready: ${url}`) });
     } finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }
   }
 }
@@ -68,7 +68,7 @@ class ServeTestScript extends BundleScript {
     try {
       readPlayActivation(this.repoRoot);
       process.env.SEMIO_TECH_PLAY_FROZEN = "true";
-      await serveVite({ root, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), host: "127.0.0.1", port: 0, signal: controller.signal, session, ready: async url => { await publishServiceReady(sessionRoot, session, url, controller.signal); console.log(`Play E2E ready: ${url}`); } });
+      await serveVite({ invocation: this.invocation, root, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), host: "127.0.0.1", port: 0, signal: this.invocation.control.signal, session, ready: async url => { await publishServiceReady(sessionRoot, session, url, controller.signal); console.log(`Play E2E ready: ${url}`); } });
     } finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); await closeServiceSession(sessionRoot, session); }
   }
 }

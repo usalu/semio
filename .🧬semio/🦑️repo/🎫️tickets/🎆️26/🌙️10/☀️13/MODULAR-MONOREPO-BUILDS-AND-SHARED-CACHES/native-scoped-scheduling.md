@@ -1,0 +1,15 @@
+# Scoped Production Scheduling and Complete Module Ownership
+
+The actual red gate (`scoped-dag-red.log`) proved the existing parser discarded typed imports before any complete module ownership could be captured. The final gate (`scoped-dag-green-3.log`) executed through Nx and Bun: two tests, 33 assertions, 1.73 seconds, exit 0. Esbuild independently validates the runtime subset; Ajv validates the owned metadata schema. The integration law validates actual plugin dependency and metadata methods with full and incremental SDK source rosters, command-cycle exclusion, immutable returned rows, and captured identities after a subsequent source edit.
+
+The canonical parser now distinguishes all module imports, production typed/runtime imports, and executable command runtime imports. Complete module facts include typed imports (including declaration import types), canonical script imports, and Vitest-only imports. Production scheduling excludes canonical script and test-owned files and skips a direct `if (import.meta.vitest)` branch while preserving an else branch. Package dev-dependencies no longer create production scheduling edges; current Cargo dev-dependency classification remains unchanged. Existing command runtime closure parsing remains its own exact scope.
+
+The plugin processes the original full `context.fileMap.projectFileMap` source roster, while only the original incremental files-to-process contribute scheduling edges. Each source record retains full imports, production imports, its actual captured SHA-256 source hash, and the original Nx tracked hash separately. Closed four-field import caches remain content/parser-keyed, with a separate production parser identity. Current physical source bytes are captured before cached facts are admitted; parsed facts are not relabeled with a later source hash.
+
+After the SDK dependency phase completes, `createMetadata` publishes per-project `metadata.semio.moduleGraph` from the original owned producer snapshot. It verifies parser and project ownership identity and clones the returned records. It preserves other authored semio metadata. Metadata publication does not walk the filesystem again or rewrite captured records when unrelated source files change later; current whole/selected source verification remains the graph seal's responsibility. Actual cached Nx 23.2 source confirms dependency plugins complete before metadata plugins run, and metadata context contains only workspaceRoot/nxJsonConfiguration.
+
+Files: library `🟨️.mjs`; caching inference `🟨️.mjs`; new caching graph scheduling schema, neutral JSON cases and Bun law; retained ticket `wgpu-mode/📜️script.ts`; both launch configuration files. No compatibility target or API alias was added.
+
+## Complete workspace command publication
+
+A final omission was fixed: workspace root script facts now enter the complete metadata roster while workspace command edges remain excluded from production scheduling. Actual DAG gate 4 passed two tests and 39 assertions (1.07s test runtime). Immutable original tracked-hash facts are preserved through incremental scheduling and returned snapshots remain isolated.

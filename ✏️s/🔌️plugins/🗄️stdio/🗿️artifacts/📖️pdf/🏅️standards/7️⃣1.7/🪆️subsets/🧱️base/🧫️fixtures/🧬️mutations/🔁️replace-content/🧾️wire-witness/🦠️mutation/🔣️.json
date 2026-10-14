@@ -1,8 +1,0 @@
-{
-  "mutation": "replaceContent",
-  "index": 0,
-  "at": 0,
-  "op": {
-    "op": "save"
-  }
-}

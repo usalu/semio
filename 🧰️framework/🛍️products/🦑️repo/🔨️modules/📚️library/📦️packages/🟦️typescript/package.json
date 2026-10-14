@@ -8,7 +8,9 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "test-tool-run-policy-source":"nx run @semio-tech/repo-lib:test-tool-run-policy-source",
+    "test-go-executable-acceptance": "nx run @semio-tech/repo-lib:test-go-executable-acceptance",
+    "test-go-executable-ownership": "nx run @semio-tech/repo-lib:test-go-executable-ownership",
+    "test-tool-run-policy-source": "nx run @semio-tech/repo-lib:test-tool-run-policy-source",
     "go-test": "nx run @semio-tech/repo-lib:go-test",
     "test-kind-only-basename": "nx run @semio-tech/repo-lib:test-kind-only-basename",
     "test-framework-source-topology": "nx run @semio-tech/repo-lib:test-framework-source-topology",
@@ -98,24 +100,29 @@
     "test-rust-family-ownership-native": "bun nx run @semio-tech/repo-lib:test-rust-family-ownership-native",
     "test-fixture-ownership": "nx run @semio-tech/repo-lib:test-fixture-ownership",
     "test-general-execution-ownership": "nx run @semio-tech/repo-lib:test-general-execution-ownership",
+    "test-fixture-placement": "nx run @semio-tech/repo-lib:test-fixture-placement",
+    "test-mutation-fixture-placement": "nx run @semio-tech/repo-lib:test-mutation-fixture-placement",
     "test-runtime-fixture-graph": "nx run @semio-tech/repo-lib:test-runtime-fixture-graph",
     "test-nx-owner-arguments": "nx run @semio-tech/repo-lib:test-nx-owner-arguments",
     "probe-nx-owner-arguments": "nx run @semio-tech/repo-lib:probe-nx-owner-arguments",
+    "test-original-command-control": "nx run @semio-tech/repo-lib:test-original-command-control",
     "test-native-prerequisites": "nx run @semio-tech/repo-lib:test-native-prerequisites",
-    "test-decoder-absence": "nx run @semio-tech/repo-lib:test-decoder-absence"
+    "test-decoder-absence": "nx run @semio-tech/repo-lib:test-decoder-absence",
+    "test-target-execution": "nx run @semio-tech/repo-lib:test-target-execution"
   },
   "nx": {
     "includedScripts": []
   },
   "devDependencies": {
-    "@semio-tech/framework":"workspace:*",
+    "@semio-tech/framework": "workspace:*",
     "@types/node": "^22.19.6",
     "ajv": "8.20.0",
     "lodash": "4.18.1",
     "markdown-it": "14.3.0",
     "minimatch": "9.0.3",
     "typescript": "^5.9.3",
-    "commander": "13.1.0"
+    "commander": "13.1.0",
+    "@semio-tech/process": "workspace:*"
   },
   "executors": "./📋️executors.json"
 }

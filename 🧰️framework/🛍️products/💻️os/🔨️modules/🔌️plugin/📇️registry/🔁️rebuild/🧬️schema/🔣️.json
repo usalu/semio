@@ -4,32 +4,106 @@
   "title": "Semio OS Plugin Registry Rebuild Chain",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "steps", "guestFrameworkChecks"],
+  "required": [
+    "schema",
+    "steps",
+    "guestFrameworkChecks"
+  ],
   "properties": {
-    "schema": { "const": "semio.plugin-registry.rebuild-chain/v1" },
-    "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/RebuildStepV1" } },
-    "guestFrameworkChecks": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/GuestFrameworkCheckV1" } }
+    "schema": {
+      "const": "semio.plugin-registry.rebuild-chain/v1"
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/RebuildStepV1"
+      }
+    },
+    "guestFrameworkChecks": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "$ref": "#/$defs/GuestFrameworkCheckV1"
+      }
+    }
   },
   "$defs": {
     "RebuildStepV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "stage", "command"],
+      "required": [
+        "id",
+        "stage",
+        "command"
+      ],
       "properties": {
-        "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
-        "stage": { "enum": ["inputs", "descriptors", "registry", "guests", "catalog"] },
-        "command": { "type": "array", "minItems": 2, "items": { "type": "string", "minLength": 1 }, "contains": { "const": "nx" } }
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "stage": {
+          "enum": [
+            "inputs",
+            "descriptors",
+            "registry",
+            "guests",
+            "catalog"
+          ]
+        },
+        "command": {
+          "type": "array",
+          "minItems": 2,
+          "items": [
+            {
+              "const": "nx"
+            }
+          ],
+          "additionalItems": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
       }
     },
     "GuestFrameworkCheckV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["target", "workspace", "packages", "features"],
+      "required": [
+        "target",
+        "workspace",
+        "packages",
+        "features"
+      ],
       "properties": {
-        "target": { "enum": ["wasm32-wasip2", "wasm32-unknown-unknown"] },
-        "workspace": { "type": "string", "maxLength": 1024, "pattern": "^(?:(?!\\.\\.?/)[^/\\\\:]+/)*Cargo\\.toml$" },
-        "packages": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" } },
-        "features": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]*/[a-z0-9_-]+$" } }
+        "target": {
+          "enum": [
+            "wasm32-wasip2",
+            "wasm32-unknown-unknown"
+          ]
+        },
+        "workspace": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^(?:(?!\\.\\.?/)[^/\\\\:]+/)*Cargo\\.toml$"
+        },
+        "packages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          }
+        },
+        "features": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*/[a-z0-9_-]+$"
+          }
+        }
       }
     }
   }

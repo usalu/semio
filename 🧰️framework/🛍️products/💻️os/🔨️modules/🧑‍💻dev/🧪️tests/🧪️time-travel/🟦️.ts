@@ -1,3 +1,4 @@
+import {checkScriptInvocation,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** ⏪️ `verify time-travel` — the end-to-end gate of non-destructive history editing, driven the way a person drives it in the
  * puzzle 2d dev serve (the reference app of the history-editing design, React `serve puzzle2d react dev` on :6012 or the wgpu
  * browser shell on :6112). One headless Chromium, one tab at a time, one fresh browser context per UI locale (`en`, then
@@ -369,7 +370,7 @@ type ConsoleRow = { t: number; locale: Locale; step: number; source: "page" | "w
 const consoleRows: ConsoleRow[] = [];
 const pageErrors: { locale: Locale; step: number; text: string }[] = [];
 const hardFaults: { locale: Locale; step: number; text: string }[] = [];
-const BENIGN_RE = /contributions document sources|staged plugin module|\[stale\]|activate-puzzle2d-react-dev|transform freshness|Download the React DevTools/i;
+const BENIGN_RE = /contributions document sources|staged plugin module|\[stale\]|activate-puzzle2d-react-prototype|transform freshness|Download the React DevTools/i;
 const HARD_FAULT_RE =
   /worker fault|\bunreachable\b|\[semio-plugin panic\]|panicked at|SemioFaultError|terminal-fault|admission failed|shard .* (lost|terminated)|native-owner-required|reactor-close-authority|native close terminal unavailable|actor-activation\.revoked/i;
 
@@ -6708,12 +6709,9 @@ const runProbe = async (): Promise<RunSummary> => {
  * after it), drives every locale, writes the report under `--out`, publishes the `time-travel` acceptance record (pass only
  * when every verdict passes with no uncaught page error and no hard guest fault) and exits non-zero otherwise. Ctrl-C stops
  * after the running step and still writes the report. */
-export async function runTimeTravelCli(repoRoot: string, defaultOutDir: string, segments: readonly string[]): Promise<void> {
-  const controller = new AbortController();
-  const cancel = (): void => controller.abort();
-  process.once("SIGINT", cancel);
-  process.once("SIGTERM", cancel);
-  configure(segments, defaultOutDir, controller.signal);
+export async function runTimeTravelCli(invocation:ScriptInvocation,repoRoot: string, defaultOutDir: string, segments: readonly string[]): Promise<void> {
+  checkScriptInvocation(invocation);
+  configure(segments, defaultOutDir, invocation.control.signal);
   const startedAt = new Date();
   const serveUrl = `${serveOrigin}/`;
   await withAcceptanceRecord(
@@ -6729,18 +6727,18 @@ export async function runTimeTravelCli(repoRoot: string, defaultOutDir: string, 
           route.searchParams.set("plugin", variant);
           universalRoute = route.href;
         }
-        return ensureDevServe({ repoRoot, port: devServePortV1(serveUrl), variant, renderer, signal: controller.signal, logPath: join(OUT, `${base}-serve.log`), beforeSpawn: async () => (await import("../../♻️activation/🏃️execution/🟦️.ts")).activatePlaygroundRuntime(selectedVariant, "dev", renderer, { signal: controller.signal }), onProgress: (_status, line) => console.log(line) });
+        return ensureDevServe({ repoRoot, port: devServePortV1(serveUrl), variant, renderer, signal: invocation.control.signal, logPath: join(OUT, `${base}-serve.log`), beforeSpawn: async () => (await import("../../♻️activation/🏃️execution/🟦️.ts")).activatePlaygroundRuntime(invocation,selectedVariant, "dev", renderer), onProgress: (_status, line) => console.log(line) });
       };
       const serve = await startServe().catch((error: unknown) => (error instanceof Error ? error : new Error(String(error))));
       if (serve instanceof Error) {
         const reason = serve.message.split("\n")[0]!.slice(0, 200);
-        publishAcceptanceCheckResult(repoRoot, acceptanceCheckResult({ check: CHECK_ID, status: "blocked", startedAt, measured: { serve: serveUrl, renderer, variant, cancelled: controller.signal.aborted }, summary: { en: `no ${renderer} ${variant ?? "declared playground"} serve at ${serveUrl}: ${reason}`, de: `kein ${renderer}-Server für ${variant ?? "den deklarierten Playground"} unter ${serveUrl}: ${reason}` } }));
+        publishAcceptanceCheckResult(repoRoot, acceptanceCheckResult({ check: CHECK_ID, status: "blocked", startedAt, measured: { serve: serveUrl, renderer, variant, cancelled: invocation.control.signal.aborted }, summary: { en: `no ${renderer} ${variant ?? "declared playground"} serve at ${serveUrl}: ${reason}`, de: `kein ${renderer}-Server für ${variant ?? "den deklarierten Playground"} unter ${serveUrl}: ${reason}` } }));
         process.exitCode = 1;
         return;
       }
       try {
         const run = await runProbe();
-        const status = run.verdicts > 0 && run.failed === 0 && run.uncaught === 0 && run.hard === 0 && !controller.signal.aborted ? "pass" : "fail";
+        const status = run.verdicts > 0 && run.failed === 0 && run.uncaught === 0 && run.hard === 0 && !invocation.control.signal.aborted ? "pass" : "fail";
         const failing = run.failing.slice(0, 8).join(", ");
         publishAcceptanceCheckResult(
           repoRoot,
@@ -6748,7 +6746,7 @@ export async function runTimeTravelCli(repoRoot: string, defaultOutDir: string, 
             check: CHECK_ID,
             status,
             startedAt,
-            measured: { renderer, variant, serve: routeUrl(), locales: locales.join(","), chords: [...chordLocales].join(","), verdicts: run.verdicts, passed: run.passed, failed: run.failed, uncaught: run.uncaught, hard: run.hard, cancelled: controller.signal.aborted },
+            measured: { renderer, variant, serve: routeUrl(), locales: locales.join(","), chords: [...chordLocales].join(","), verdicts: run.verdicts, passed: run.passed, failed: run.failed, uncaught: run.uncaught, hard: run.hard, cancelled: invocation.control.signal.aborted },
             summary: {
               en: `${run.passed}/${run.verdicts} time-travel verdicts pass on ${renderer} (${locales.join(", ")}); ${run.uncaught} uncaught page errors, ${run.hard} hard faults${failing ? `; failing: ${failing}` : ""}`.slice(0, 1900),
               de: `${run.passed}/${run.verdicts} Zeitreise-Prüfungen bestehen auf ${renderer} (${locales.join(", ")}); ${run.uncaught} unbehandelte Seitenfehler, ${run.hard} harte Fehler${failing ? `; fehlgeschlagen: ${failing}` : ""}`.slice(0, 1900),
@@ -6763,7 +6761,5 @@ export async function runTimeTravelCli(repoRoot: string, defaultOutDir: string, 
     },
     (error) => /ECONNREFUSED|ERR_CONNECTION_REFUSED/u.test(String(error)),
   );
-  process.removeListener("SIGINT", cancel);
-  process.removeListener("SIGTERM", cancel);
 }
 //#endregion 🔖️Main

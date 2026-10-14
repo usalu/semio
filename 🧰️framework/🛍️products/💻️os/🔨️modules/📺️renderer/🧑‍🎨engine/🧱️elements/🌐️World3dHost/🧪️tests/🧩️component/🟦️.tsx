@@ -11,7 +11,10 @@ import type { UnifiedGumballProps } from "@semio-tech/ui-react";
 import { createElement, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BufferGeometry, Float32BufferAttribute, Matrix4, Quaternion, Vector3, type InstancedMesh, type PerspectiveCamera } from "three";
-import fixture from "../../🧫️fixtures/⏯️tool-run-trace-mount.json" with { type: "json" };
+import fixture from "../🧫️fixtures/⏯️tool-run-trace-mount.json" with { type: "json" };
+import computeLocaleFixture from "../🧫️fixtures/⏳️compute-locale.json" with { type: "json" };
+import {createMemoryStoragePort} from "@semio-tech/framework";
+import {createShellScope, ShellScopeProvider, disposeShellI18nInstance} from "@semio-tech/ui-react";
 import { base64UrlEncode } from "../../../../../../../../../🔨️modules/🚪️io/🔤️base64/🟦️.ts";
 import { encodeToolRunTraceDelta, toolRunIdentityFromJson, toolRunTraceOpFromJson, ToolRunTraceStore, type ToolRunTraceCursor, type ToolRunTraceSubject } from "../../../../../../../../../🔨️modules/⏯️tool-run/🟦️.ts";
 
@@ -225,8 +228,8 @@ describe("exact analytic component interaction targets", () => {
     recorded.frames.length = 0;
   });
   it("pins live component gumball targets and waits for guest completion before the next stream", async () => {
-    const fixture = (await import("../../🧫️fixtures/🛠️gumball-component-events.json")).default;
-    const source = (await import("../../🧫️fixtures/🎯️analytic-component-target.json")).default;
+    const fixture = (await import("../🧫️fixtures/🛠️gumball-component-events.json")).default;
+    const source = (await import("../🧫️fixtures/🎯️analytic-component-target.json")).default;
     const three = await vi.importActual<typeof import("three")>("three");
     const pose = (position: number[]) => ({ position: position as [number, number, number], quaternion: [0, 0, 0, 1] as const, scale: [1, 1, 1] as const });
     for (const target of fixture.targets) {
@@ -277,7 +280,7 @@ describe("exact analytic component interaction targets", () => {
     }
   });
   it("pins live component gumball across a guest mesh and source refresh", async () => {
-    const fixture = (await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).default;
+    const fixture = (await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).default;
     const row = fixture.gumball;
     const refresh = row.liveRefresh;
     const object = fixture.objects[row.object]!;
@@ -332,7 +335,7 @@ describe("exact analytic component interaction targets", () => {
     } finally { view.unmount(); }
   });
   it("paints neutral pure points in default object mode without fabricating surfaces or edges", async () => {
-    const fixture = (await import("../../../../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/🎯️vertex-provenance/🔣️.json")).default;
+    const fixture = (await import("../../../../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️vertex-provenance/🔣️.json")).default;
     const point = fixture.cases.find(row => row.kind === "point")!;
     const three = await vi.importActual<typeof import("three")>("three");
     const oracle = new three.Points(new three.BufferGeometry().setAttribute("position", new three.Float32BufferAttribute(point.points.flat(), 3)), new three.PointsMaterial({ sizeAttenuation: false }));
@@ -353,8 +356,8 @@ describe("exact analytic component interaction targets", () => {
     }
   });
   it("paints primary point and wire objects with the existing selection and hover palette", async () => {
-    const fixture = (await import("../../../../../../♾️infinite/🌍️world/🧫️fixtures/🎨️primary-geometry-style/🔣️.json")).default;
-    const geometry = (await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-source/🔣️.json")).default;
+    const fixture = (await import("../../../../../../♾️infinite/🌍️world/🧪️tests/🧫️fixtures/🎨️primary-geometry-style/🔣️.json")).default;
+    const geometry = (await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-source/🔣️.json")).default;
     const styling = await import("@semio-tech/ui-styling");
     const three = await vi.importActual<typeof import("three")>("three");
     styling.clearColorResolveCache();
@@ -387,7 +390,7 @@ describe("exact analytic component interaction targets", () => {
     }
   });
   it("projects exact analytic component selections across instances", async () => {
-    const fixture = (await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).default;
+    const fixture = (await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).default;
     const three = await vi.importActual<typeof import("three")>("three");
     const indexed = new three.BufferGeometry().setAttribute("position", new three.Float32BufferAttribute(fixture.mesh.positions, 3)).setIndex(fixture.mesh.indices);
     const oracle = indexed.toNonIndexed();
@@ -414,7 +417,7 @@ describe("exact analytic component interaction targets", () => {
         expect(overlays, `${step.merge}: every selected instance paints its selected component`).toEqual(step.selected.map(index => fixture.objects[index]).sort());
         console.info(`[DEBUG] React component overlay ${step.merge}: ${JSON.stringify(overlays)}`);
       }
-      const refusalFixture = (await import("../../🧫️fixtures/🎯️analytic-component-target.json")).default;
+      const refusalFixture = (await import("../🧫️fixtures/🎯️analytic-component-target.json")).default;
       for (const row of refusalFixture.overlayRefusals) {
         const selection = { ids: [fixture.objects[0]], activeObjectId: fixture.objects[0], componentIds: [0], gumballSelectionIds: row.targets, granularity: "face", selectionMode: "face", targets: { mesh: false, vertex: false, edge: false, face: true } };
         const currentMeshes = [{ ...meshes[0], data: { ...meshes[0]!.data, componentReferences: { face: row.labels } } }];
@@ -431,7 +434,7 @@ describe("exact analytic component interaction targets", () => {
   });
 
   it("excludes native surface sample sentinels from vertex picking", async () => {
-    const fixture = (await import("../../🧫️fixtures/🎯️analytic-component-target.json")).default;
+    const fixture = (await import("../🧫️fixtures/🎯️analytic-component-target.json")).default;
     for (const row of fixture.vertexPickCases) {
       const visuals = buildMeshVisuals({ id: row.name, data: row.data });
       const oracle = new BufferGeometry().setAttribute("position", new Float32BufferAttribute(row.expectedPositions, 3));
@@ -450,7 +453,7 @@ describe("exact analytic component interaction targets", () => {
     }
   });
   it("retains zero-index analytic wire and point buffers and exact source admission", async () => {
-    const fixture = (await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-source/🔣️.json")).default;
+    const fixture = (await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-source/🔣️.json")).default;
     const three = await vi.importActual<typeof import("three")>("three");
     for (const row of fixture.zeroIndex.accepted) {
       const positions = row.positions.flat();
@@ -486,7 +489,7 @@ describe("exact analytic component interaction targets", () => {
   });
 
   it("reads an already mapped group exactly once and preserves uint64 labels", async () => {
-    const fixture = (await import("../../🧫️fixtures/🎯️analytic-component-target.json")).default;
+    const fixture = (await import("../🧫️fixtures/🎯️analytic-component-target.json")).default;
     const geometry = new BufferGeometry().setAttribute("position", new Float32BufferAttribute(fixture.meshes[0].data.positions, 3)).setIndex(fixture.meshes[0].data.indices);
     geometry.addGroup(0, 3, 0);
     expect(geometry.groups[0].count / 3).toBe(1);
@@ -500,7 +503,7 @@ describe("exact analytic component interaction targets", () => {
     geometry.dispose();
   });
   it("dispatches current analytic component hits and clears malformed or stale source targets through mounted handlers", async () => {
-    const fixture = (await import("../../🧫️fixtures/🎯️analytic-component-target.json")).default;
+    const fixture = (await import("../🧫️fixtures/🎯️analytic-component-target.json")).default;
     const law = fixture.mountedAdmissions;
     const actions: { action: string; args?: Record<string, unknown> }[] = [];
     const onAction = async (action: { action: string; args?: Record<string, unknown> }) => { actions.push(action); };
@@ -541,4 +544,52 @@ describe("exact analytic component interaction targets", () => {
     } finally { view.unmount(); }
   });
 
+});
+
+
+describe("world compute explicit locale", () => {
+  afterEach(cleanup);
+  it("mounts localized progress and dispatches the current cancellation button", async () => {
+    const validate = new Ajv2020().compile({type:"object", required:["status","locales","progress"], properties:{status:{type:"object",required:["phaseLabel","cancelAction","cancelArgs","progress"]},locales:{type:"array",minItems:2,items:{type:"object",required:["locale","phase","cancel"]}},progress:{type:"string"}}});
+    expect(validate(computeLocaleFixture)).toBe(true);
+    for (const row of computeLocaleFixture.locales) {
+      const cancel = vi.fn(() => Promise.resolve());
+      const scope = createShellScope({storage:createMemoryStoragePort(),initialLocale:new Intl.Locale(row.locale).language as "en" | "de"});
+      const mounted = render(createElement(ShellScopeProvider, {scope}, sceneNode(null, {statusJson:JSON.stringify(computeLocaleFixture.status)}, cancel)));
+      const status = mounted.container.querySelector('[data-slot="world-compute-status"]');
+      expect(status?.getAttribute("role")).toBe("status");
+      expect(status?.getAttribute("aria-busy")).toBe("true");
+      expect(mounted.getByText(row.phase)).toBeTruthy();
+      expect(mounted.getByText(computeLocaleFixture.progress)).toBeTruthy();
+      const button = mounted.getByRole("button", {name:row.cancel});
+      expect(button.getAttribute("data-cancel-action")).toBe(computeLocaleFixture.status.cancelAction);
+      expect(button.getAttribute("data-cancel-run-id")).toBe(computeLocaleFixture.cancelIdentity.runId);
+      expect(button.getAttribute("data-cancel-generation")).toBe(String(computeLocaleFixture.cancelIdentity.generation));
+      expect(status?.getAttribute("data-compute-units-done")).toBe(String(computeLocaleFixture.status.progress.unitsDone));
+      expect(status?.getAttribute("data-compute-units-total")).toBe(String(computeLocaleFixture.status.progress.unitsTotal));
+      await act(async () => {button.click();});
+      expect(cancel).toHaveBeenCalledTimes(1);
+      expect(cancel).toHaveBeenCalledWith({...computeLocaleFixture.dispatch,action:computeLocaleFixture.status.cancelAction,args:{...computeLocaleFixture.dispatch.args,...computeLocaleFixture.status.cancelArgs}});
+      console.debug(`[DEBUG] world compute locale=${row.locale} progress=${computeLocaleFixture.progress} actual DOM cancellation dispatched`);
+      mounted.unmount();
+      disposeShellI18nInstance(scope.i18n);
+    }
+  });
+  it("requires an explicit supported language without choosing a default", () => {
+    for (const locale of computeLocaleFixture.absentLocales) {
+      if (locale) {
+        expect(() => createShellScope({storage:createMemoryStoragePort(),initialLocale:locale as "en" | "de"})).toThrow("Shell locale requires an explicit supported language source");
+        console.debug(`[DEBUG] world compute unsupported locale=${locale} refused at original shell language admission`);
+        continue;
+      }
+      expect(() => createShellScope({storage:createMemoryStoragePort(),initialLocale:undefined as unknown as "en" | "de"})).toThrow("Shell locale requires an explicit supported language source");
+      const node = sceneNode(null, {statusJson:JSON.stringify(computeLocaleFixture.status)});
+      const mounted = render(node);
+      const status = mounted.container.querySelector('[data-slot="world-compute-status"]');
+      expect(mounted.container.querySelector('[data-slot="world-compute-cancel"]')).toBeNull();
+      expect(status?.hasAttribute("data-language-required")).toBe(true);
+      expect(status?.textContent).toBe("");
+      mounted.unmount();
+    }
+  });
 });

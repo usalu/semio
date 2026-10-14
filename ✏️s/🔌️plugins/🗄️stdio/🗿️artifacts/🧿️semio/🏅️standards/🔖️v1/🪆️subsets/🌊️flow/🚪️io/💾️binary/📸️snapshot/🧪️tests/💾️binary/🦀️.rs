@@ -7,7 +7,7 @@ use semio_framework_os_kernel as store;
 use semio_s_artifact_stdio_semio_flow::io::binary::snapshot::{SemioFlowSnapshotDecode, SemioFlowSnapshotDecodeStep};
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, SemioFlowSnapshot};
 use semio_s_artifact_stdio_semio::{create_semio_member, SemioMembers, SemioMembersOpen};
-use store::{os_store::serialization::ArtifactPack, os_store::owned_schema_decode::OwnedSchemaDecodeCredits, os_store::owned_schema_decode::OwnedSchemaDecodePage, os_store::owned_schema_decode::OwnedSchemaDecodePages};
+use store::{pack::snapshot::ArtifactPack, os_store::owned_schema_decode::OwnedSchemaDecodeCredits, os_store::owned_schema_decode::OwnedSchemaDecodePage, os_store::owned_schema_decode::OwnedSchemaDecodePages};
 use store::{ErasedSnapshotRetirement, MemberFactory, MemberOpenDiagnostic, MemberOpenOperation, MemberOpenRequest, MemberOpenStep, MemberSnapshotOpenOperation, OwnerRef, SpaceMember};
 
 fn request(bytes: &[u8], subset: &str) -> MemberOpenRequest {
@@ -38,7 +38,7 @@ fn bytes(hex: &str) -> Vec<u8> {
 }
 
 fn retirement_policy() -> semio_framework_value::retained_clone::RetainedCloneGrant {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧾️original/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧾️original/🔣️.json")).unwrap();
     let value = &fixture["policy"];
     semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: value["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: value["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: value["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: value["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: value["maximumDepth"].as_u64().unwrap() as usize }
 }
@@ -179,7 +179,7 @@ fn expected(value: &serde_json::Value) -> SemioFlowSnapshot {
 
 #[test]
 fn semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for (rows, valid) in [("valid", true), ("invalid", false)] {
         for row in fixture[rows].as_array().unwrap() {
             let wire = bytes(row["hex"].as_str().unwrap());
@@ -263,8 +263,8 @@ fn semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures() {
 
 #[test]
 fn semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
-    let lifecycle: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️lifecycle/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let lifecycle: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/♻️lifecycle/🔣️.json")).unwrap();
     let wire = bytes(fixture["valid"][1]["hex"].as_str().unwrap());
     for row in lifecycle["admission"].as_array().unwrap() {
         let state = row["state"].as_str().unwrap();

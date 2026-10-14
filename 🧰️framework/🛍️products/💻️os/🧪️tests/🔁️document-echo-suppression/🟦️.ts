@@ -10,7 +10,7 @@ export async function registerDocumentEchoSuppressionTests(
   },
 ): Promise<void> {
   const { describe, it, expect } = vitest;
-  const { default: fixture } = await import("../../🔨️modules/🏪️store/🧫️fixtures/document-echo-suppression-v1/🔣️.json");
+  const { default: fixture } = await import("../../🔨️modules/🏪️store/🧪️tests/🧫️fixtures/document-echo-suppression-v1/🔣️.json");
   type Envelope = { readonly mutationId: string; readonly actor: string };
 
   describe("DocumentEchoSuppression", () => {

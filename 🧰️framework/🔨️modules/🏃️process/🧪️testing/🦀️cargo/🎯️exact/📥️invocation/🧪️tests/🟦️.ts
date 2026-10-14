@@ -3,11 +3,11 @@ import Ajv from "ajv";
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setImmediate, setTimeout } from "node:timers/promises";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import policySchema from "../../📋️policy/🧬️schema/🔣️.json";
 import { runExactCargoLaws, type ExactCargoLawPort } from "../../🟦️.ts";
 import { type ScriptInvocation } from "../../../../../🧭️routing/📥️invocation/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../../../../🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
 if (!artifactRoot) throw Error("Original ticket artifact owner required");

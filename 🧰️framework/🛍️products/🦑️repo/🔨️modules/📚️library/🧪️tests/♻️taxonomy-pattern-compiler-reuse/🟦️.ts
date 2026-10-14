@@ -15,7 +15,7 @@ type Row = Readonly<{ id: string; path: string; pattern: string; expected: boole
 type Vector = Readonly<{ schemaVersion: number; contractId: string; factory: string; rounds: number; uniqueNormalizedPatterns: number; cases: Row[]; invalidPatterns: string[]; oracle: { library: string; options: Record<string, string | boolean> }; integration: { loadedField: string; normalizerOwners: Record<string, number>; loadOwners: string[]; fixedContractCallCount: number; changedInput: { pointer: string; suffix: string }; freshProbe: { path: string; pattern: string }; sessionContract: { equalBytes: Counts; changedBytes: Counts; invalid: Counts; lossy: Counts; syntax: Counts; callerMutationSuffix: string; restoredSuffix: string } } }>;
 type Counts = Readonly<{ reads: number; parses: number; validations: number }>;
 const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🔍️discovery/🟦️.ts");
-const bytes = readFileSync(join(import.meta.dir, "../../🧫️fixtures/♻️taxonomy-pattern-compiler-reuse/🔣️.json"), "utf8"), vector: Vector = JSON.parse(bytes);
+const bytes = readFileSync(join(import.meta.dir, "../🧫️fixtures/♻️taxonomy-pattern-compiler-reuse/🔣️.json"), "utf8"), vector: Vector = JSON.parse(bytes);
 const source = ts.createSourceFile(sourcePath, readFileSync(sourcePath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 const normalizerPath = join(library, "🧹️normalization/🟦️.ts"), normalizer = ts.createSourceFile(normalizerPath, normalizationSourceDeclarations(normalizerPath), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 const serializationPath = join(library, "🧾️serialization/🔣️json/🟦️.ts"), serialization = ts.createSourceFile(serializationPath, readFileSync(serializationPath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
@@ -292,7 +292,7 @@ for (const path of matcherTypeOwners) test("changed runtime matcher declarations
 });
 
 test("registers pattern compiler reuse through its closed canonical route", async () => {
-  const directory = join(import.meta.dir, "../../🧫️fixtures/♻️taxonomy-pattern-compiler-reuse/🧪️registration"), bytes = readFileSync(join(directory, "🔣️.json"), "utf8"), registration = JSON.parse(bytes);
+  const directory = join(import.meta.dir, "../🧫️fixtures/♻️taxonomy-pattern-compiler-reuse/🧪️registration"), bytes = readFileSync(join(directory, "🔣️.json"), "utf8"), registration = JSON.parse(bytes);
   const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/♻️taxonomy-pattern-compiler-reuse/🧪️registration/🔣️.json"), "utf8")));
   expect(validate(registration), JSON.stringify(validate.errors)).toBe(true);
   for (const changed of [{ ...registration, source: "./🟦️.ts" }, { ...registration, budget: 120000 }, { ...registration, budgetMs: 120000 }, { ...registration, runner: "other" }]) expect(validate(changed)).toBe(false);

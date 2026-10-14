@@ -1,9 +1,0 @@
-{
-  "mutation": "bindDefaultScene",
-  "payload": {
-    "phase": "apply",
-    "value": {
-      "scene": 1
-    }
-  }
-}

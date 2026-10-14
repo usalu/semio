@@ -67,7 +67,7 @@ interface FileOpenImportSnapshot {
 
 function loadFixture(): FileOpenImportSnapshot {
   const here = dirname(fileURLToPath(import.meta.url));
-  return JSON.parse(readFileSync(join(here, "../../🧫️fixtures/📤️file-open-import/🔣️.json"), "utf8")) as FileOpenImportSnapshot;
+  return JSON.parse(readFileSync(join(here, "../🧫️fixtures/📤️file-open-import/🔣️.json"), "utf8")) as FileOpenImportSnapshot;
 }
 
 function payloadOf(row: ChunkCase): string {

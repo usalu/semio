@@ -16,7 +16,7 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 fn natural_file_route_enforces_basic_and_publishes_the_decoded_snapshot() {
     let codec = <SvgBasicEditor as ArtifactEditor>::natural_file_codec().expect("SVG Basic natural codec");
     assert_eq!((codec.format_kind, codec.extension, codec.media_type, codec.binary), ("s.stdio.svg@1.1", ".svg", "image/svg+xml", false));
-    let source = include_bytes!("../../../🧫️fixtures/✍️set-text-applied/➡️after.svg");
+    let source = include_bytes!("../../../🧪️tests/🧫️fixtures/✍️set-text-applied/➡️after.svg");
     let imported = <SvgBasicEditor as ArtifactEditor>::decode_natural_file(source).expect("SVG Basic natural import");
     let exported = <SvgBasicEditor as ArtifactEditor>::encode_natural_file(&imported).expect("SVG Basic natural export");
     let independent = semio_s_artifact_stdio_svg_test_oracle::standards::v1_1::subsets::basic::oracle_round_trip(&exported).expect("quick-xml reopens SVG Basic export");

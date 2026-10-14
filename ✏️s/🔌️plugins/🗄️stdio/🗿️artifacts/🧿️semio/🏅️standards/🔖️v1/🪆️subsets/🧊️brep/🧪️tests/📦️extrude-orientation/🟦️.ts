@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 
 /** 🔁️ Independent closed-form area oracle for retained extrusion profiles. */
 export function retainedExtrusionOracle(): number {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔁️retained-extrusion/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔁️retained-extrusion/🔣️.json", import.meta.url), "utf8"));
   let assertions = 0;
   assert.deepEqual(fixture.cases.map((row: { profile: string }) => row.profile), ["rectangle-wire", "hexagon-wire", "rectangle-face"]);
   for (const row of fixture.cases) {

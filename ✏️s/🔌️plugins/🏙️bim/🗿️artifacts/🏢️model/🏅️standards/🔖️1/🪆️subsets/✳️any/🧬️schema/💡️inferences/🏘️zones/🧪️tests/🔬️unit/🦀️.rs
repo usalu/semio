@@ -5,8 +5,8 @@ use crate::{Assigned, AreaSchemePatch, Entry, ModelDiff, SpacePatch, ZonePatch};
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const ZONING: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🏘️zones/🏡️zoning/📸️snapshot/🔣️.json");
-const ZONING_TABLE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🏘️zones/🏡️zoning/💡️inference/🏘️zones/🔣️.json");
+const ZONING: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏘️zones/🏡️zoning/📸️snapshot/🔣️.json");
+const ZONING_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏘️zones/🏡️zoning/💡️inference/🏘️zones/🔣️.json");
 
 fn zoning() -> ModelSnapshot {
     from_json_str(ZONING, JsonMemberPolicy::Reject).expect("the fixture decodes")

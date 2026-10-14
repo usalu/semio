@@ -3,7 +3,7 @@ use super::*;
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 #[test]
 fn pack_original_value_stack_storage_keeps_denied_owners_and_exact_physical_receipts(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in corpus["cases"].as_array().unwrap(){
   let limits=PackLimits{max_file_len:64,max_segment_len:16,max_symbols:1,max_depth:8,max_items:8,max_total_alloc:1<<20};
   let mut cursor=RetainedValueCursor::try_new(limits,1<<20).unwrap();
@@ -26,7 +26,7 @@ fn pack_original_value_stack_storage_keeps_denied_owners_and_exact_physical_rece
 
 #[test]
 fn pack_original_value_stack_storage_record_body_composes_real_children_for_every_prefix(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for wire in corpus["recordBodies"].as_array().unwrap(){let wire=wire.as_str().unwrap();let bytes=(0..wire.len()).step_by(2).map(|index|u8::from_str_radix(&wire[index..index+2],16).unwrap()).collect::<Vec<_>>();let original=bytes.as_ptr();
   for stop in 0..=bytes.len(){let limits=PackLimits{max_file_len:64,max_segment_len:16,max_symbols:4,max_depth:8,max_items:16,max_total_alloc:1<<20};let mut cursor=RetainedRecordBodyCursor::try_new(limits,4,16,16,1<<20).unwrap();let mut born=0;
    for(index,byte)in bytes.iter().take(stop).enumerate(){
@@ -44,7 +44,7 @@ fn pack_original_value_stack_storage_record_body_composes_real_children_for_ever
 #[test]
 fn pack_original_value_stack_storage_symbols_keep_each_partial_original_under_four_axes(){
  use crate::format::{RetainedPackSymbolTable,RetainedPackSymbolSpan};
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let texts=corpus["symbols"].as_array().unwrap().iter().map(|value|value.as_str().unwrap()).collect::<Vec<_>>();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let texts=corpus["symbols"].as_array().unwrap().iter().map(|value|value.as_str().unwrap()).collect::<Vec<_>>();
  for stop in corpus["interruptions"].as_array().unwrap(){let stop=stop.as_u64().unwrap()as usize;let mut table=RetainedPackSymbolTable::try_new(4,16,8,1<<20).unwrap();let mut born=0;let mut consumed=0;
   while table.next_symbol_allocation_bytes(4,0).unwrap().is_some(){let demand=table.symbol_storage_admission_demands(4,0).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:0,maximum_depth:demand.depth};for axis in [0,1,2,4]{let mut denied=grant;match axis{0=>denied.maximum_items=0,1=>denied.maximum_copy_bytes-=1,2=>denied.maximum_capacity_bytes-=1,_=>denied.maximum_depth=0};let before=(table.len(),table.scalar_len(),table.allocated_bytes());let(receipt,allocated,released)=crate::test_allocation::observe_backing(||table.admit_symbol_storage(4,denied,0).unwrap());assert_eq!(receipt,Default::default());assert_eq!((allocated,released),(0,0));assert_eq!((table.len(),table.scalar_len(),table.allocated_bytes()),before);}let(receipt,allocated,released)=crate::test_allocation::observe_backing(||table.admit_symbol_storage(4,grant,0).unwrap());assert_eq!(allocated,demand.capacity_bytes);assert_eq!(allocated,receipt.retained_capacity_bytes);assert_eq!(released,0);born+=allocated;}
   'symbols:for text in &texts{let start=consumed;let mut utf8=0;for character in text.chars(){if consumed==stop{break 'symbols}while table.next_scalar_allocation_bytes(consumed+1,0).unwrap().is_some(){let demand=table.scalar_storage_admission_demands(consumed+1,0).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:0,maximum_depth:demand.depth};let(receipt,allocated,released)=crate::test_allocation::observe_backing(||table.admit_scalar_storage(consumed+1,grant,0).unwrap());assert_eq!(allocated,demand.capacity_bytes);assert_eq!(receipt.retained_capacity_bytes,allocated);assert_eq!(released,0);born+=allocated;}table.push_scalar_reserved(character,0).unwrap();utf8+=character.len_utf8();consumed+=1;}table.push_symbol_reserved(RetainedPackSymbolSpan{scalar_start:start as u64,scalar_len:(consumed-start)as u64,utf8_len:utf8 as u64},0).unwrap();}
@@ -57,7 +57,7 @@ fn pack_original_value_stack_storage_symbols_keep_each_partial_original_under_fo
 #[test]
 fn pack_original_value_stack_storage_eager_capacity_retains_reserved_original_slots(){
  use semio_framework_value::{list::PagedList,retirement::controlled::ControlledRetirement};
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let mut list=PagedList::<u64,16384>::empty();let mut born=0;let mut pointer=None;
  for target in corpus["capacityTargets"].as_array().unwrap(){let target=target.as_u64().unwrap()as usize;
   while let Some(capacity)=list.next_capacity_allocation_bytes(target).unwrap(){

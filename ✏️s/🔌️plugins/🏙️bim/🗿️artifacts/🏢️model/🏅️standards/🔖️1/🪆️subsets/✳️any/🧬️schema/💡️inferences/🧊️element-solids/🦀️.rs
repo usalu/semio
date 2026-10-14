@@ -303,14 +303,14 @@ pub(crate) mod fixtures {
     use crate::ModelSnapshot;
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-    const STRAIGHT_OPENINGS: &str = include_str!("../../../🧫️fixtures/💡️inferences/🧊️element-solids/🚪️straight-openings/🔣️.json");
-    const ARC_WINDOW: &str = include_str!("../../../🧫️fixtures/💡️inferences/🧊️element-solids/🌀️arc-window/🔣️.json");
-    const ROOM_JOINS: &str = include_str!("../../../🧫️fixtures/💡️inferences/🧊️element-solids/🧩️room-joins/🔣️.json");
-    const CURTAIN_GRID: &str = include_str!("../../../🧫️fixtures/💡️inferences/🧊️element-solids/🏬️curtain-grid/🔣️.json");
-    const CEILINGS_MESHES: &str = include_str!("../../../🧫️fixtures/💡️inferences/🧊️element-solids/🪵️ceilings-meshes/🔣️.json");
-    const FRAME_TILT_JOINS: &str = include_str!("../../../🧫️fixtures/💡️inferences/🧊️element-solids/📐️frame-tilt-joins/🔣️.json");
-    const CURTAIN_OVERRIDES: &str = include_str!("../../../🧫️fixtures/💡️inferences/🧊️element-solids/🪟️curtain-overrides/🔣️.json");
-    const COMPONENTS_MEP: &str = include_str!("../../../🧫️fixtures/💡️inferences/🧊️element-solids/🪑️components-mep/🔣️.json");
+    const STRAIGHT_OPENINGS: &str = include_str!("../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🚪️straight-openings/🔣️.json");
+    const ARC_WINDOW: &str = include_str!("../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🌀️arc-window/🔣️.json");
+    const ROOM_JOINS: &str = include_str!("../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🧩️room-joins/🔣️.json");
+    const CURTAIN_GRID: &str = include_str!("../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🏬️curtain-grid/🔣️.json");
+    const CEILINGS_MESHES: &str = include_str!("../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🪵️ceilings-meshes/🔣️.json");
+    const FRAME_TILT_JOINS: &str = include_str!("../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/📐️frame-tilt-joins/🔣️.json");
+    const CURTAIN_OVERRIDES: &str = include_str!("../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🪟️curtain-overrides/🔣️.json");
+    const COMPONENTS_MEP: &str = include_str!("../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🪑️components-mep/🔣️.json");
 
     /// 🧫️ Every case name with its committed text.
     pub const CASES: [(&str, &str); 8] = [("straight-openings", STRAIGHT_OPENINGS), ("arc-window", ARC_WINDOW), ("room-joins", ROOM_JOINS), ("curtain-grid", CURTAIN_GRID), ("ceilings-meshes", CEILINGS_MESHES), ("frame-tilt-joins", FRAME_TILT_JOINS), ("curtain-overrides", CURTAIN_OVERRIDES), ("components-mep", COMPONENTS_MEP)];

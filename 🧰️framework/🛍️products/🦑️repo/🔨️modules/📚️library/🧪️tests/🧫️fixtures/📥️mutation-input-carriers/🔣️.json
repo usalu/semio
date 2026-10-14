@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "mutationRoot": "✏️s/🧪️probe/🧬️mutations",
+  "aggregate": "#[mutations(snapshot = ProbeSnapshot, diff = ProbeDiff, schema = \"probe\")] pub enum ProbeMutation { InsertPage(InsertPage) }\n",
+  "compilerPrelude": "#![feature(auto_traits, negative_impls)]\n#![allow(dead_code)]\nauto trait SemanticInput {}\npub struct ProbeDiff; impl !SemanticInput for ProbeDiff {}\npub struct ProbeSnapshot; impl !SemanticInput for ProbeSnapshot {}\npub struct InsertPagePayload; pub struct PageDiff;\n",
+  "compilerAssertion": "fn assert_semantic_input<T: SemanticInput>() {} fn verify() { assert_semantic_input::<InsertPage>(); }\n",
+  "cases": [
+    { "name": "enum-restore", "source": "pub enum InsertPage { Apply(InsertPagePayload), Restore(ProbeDiff) }\n", "forbidden": true },
+    { "name": "nested-diff", "source": "pub enum InsertPage { Apply(InsertPagePayload), Replay { changes: Box<Option<crate::ProbeDiff>> } }\n", "forbidden": true },
+    { "name": "snapshot-vector", "source": "pub struct InsertPage { pub previous: Vec<ProbeSnapshot> }\n", "forbidden": true },
+    { "name": "type-alias", "source": "type Journal = Box<ProbeDiff>; pub struct InsertPage(pub Journal);\n", "forbidden": true },
+    { "name": "import-alias", "source": "use crate::ProbeDiff as Journal; pub struct InsertPage(pub Journal);\n", "forbidden": true },
+    { "name": "grouped-import-alias", "source": "use crate::{ProbeDiff as Journal}; pub struct InsertPage(pub Journal);\n", "forbidden": true },
+    { "name": "nested-payload", "source": "pub struct Previous { pub changes: ProbeDiff } pub struct InsertPage { pub previous: Previous }\n", "forbidden": true },
+    { "name": "typed-prior-value", "source": "pub struct InsertPage { pub previous: Option<String> } impl InsertPage { fn diff(&self) -> ProbeDiff { ProbeDiff } }\n", "forbidden": false },
+    { "name": "scoped-delta", "source": "pub struct InsertPage { pub previous: PageDiff }\n", "forbidden": false },
+    { "name": "unreachable-helper", "source": "pub enum Historical { Restore(ProbeDiff) } pub struct InsertPage { pub ordinal: usize }\n", "forbidden": false },
+    { "name": "comment-and-string-decoys", "source": "// pub enum InsertPage { Restore(ProbeDiff) }\npub struct InsertPage { pub text: String } const NOTE: &str = \"pub struct InsertPage(ProbeSnapshot);\";\n", "forbidden": false },
+    { "name": "qualified-aggregate-alias", "aggregate": "use crate::ProbeDiff as Changes; #[mutations(snapshot = crate::ProbeSnapshot, diff = Changes, schema = \"probe\")] pub enum ProbeMutation { InsertPage(crate::owner::InsertPage) }\n", "source": "pub struct InsertPage { pub state: ProbeDiff }\n", "forbidden": true }
+  ]
+}

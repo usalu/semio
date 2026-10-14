@@ -217,7 +217,7 @@ impl semio_framework_value::retirement::RetireOwned for MapBody {
     fn controlled_retirement_supported() -> bool { true }
 }
 pub(super) fn fixture_retirement_grant() -> RetainedCloneGrant {
-    let input: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📖️canonical-reader.json")).unwrap();let row=&input["retirementGrant"];
+    let input: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📖️canonical-reader.json")).unwrap();let row=&input["retirementGrant"];
     RetainedCloneGrant { maximum_items: row["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: row["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: row["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: row["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: row["maximumDepth"].as_u64().unwrap() as usize }
 }
 fn fixture_encoding_grant(items: usize, copy: usize) -> ArtifactStoreOneItemGrant {
@@ -241,7 +241,7 @@ fn retire_fixture_owned<T: semio_framework_value::retirement::RetireOwned>(origi
 
 //#region 📦️FixtureOwners
 pub(super) fn fixture() -> (Edit<MapMutation>, serde_json::Value, Arc<MapLifetime>) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🗺️canonical-borrowed-map.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🗺️canonical-borrowed-map.json")).unwrap();
     let mut edit = Edit::<MapMutation>::from_value(fixture["edit"].clone().into()).unwrap();
     let MapMutation::ReplaceMap(MapBody { lifetime, tracked, .. }) = &mut edit.forwards[0];
     *tracked = true;
@@ -280,7 +280,7 @@ fn map_payload_capacity(map: &MapFields) -> usize {
 #[test]
 fn member_canonical_reader_map_retirement_preserves_refused_original_and_paid_cancel_frontiers() {
     use semio_framework_trace::observe_heap_allocations_on_this_thread;
-    let plain: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🗺️canonical-borrowed-map.json")).unwrap();
+    let plain: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🗺️canonical-borrowed-map.json")).unwrap();
     let policy=fixture_retirement_grant();
     for cancel_cut in [0,1,3] {
         let mut original: MapMutation=serde_json::from_value(plain["edit"]["forwards"][0].clone()).unwrap();

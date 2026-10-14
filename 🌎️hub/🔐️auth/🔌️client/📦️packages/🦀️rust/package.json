@@ -5,5 +5,8 @@
     "check": "nx run @semio-tech/hub-auth-client-rs:check",
     "test": "nx run @semio-tech/hub-auth-client-rs:test",
     "test-source": "nx run @semio-tech/hub-auth-client-rs:test-source"
+  },
+  "devDependencies": {
+    "@semio-tech/process": "workspace:*"
   }
 }

@@ -11,7 +11,7 @@ use super::*;
 use crate::apply_puzzle5d_mutation;
 use protocol::OpBinary;
 
-const CORPUS: &str = include_str!("../../../../🧫️fixtures/🧫️selection-time-travel/🔣️.json");
+const CORPUS: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🧫️selection-time-travel/🔣️.json");
 
 /// 🗂️ One decoded corpus case.
 struct TimeTravelCase {

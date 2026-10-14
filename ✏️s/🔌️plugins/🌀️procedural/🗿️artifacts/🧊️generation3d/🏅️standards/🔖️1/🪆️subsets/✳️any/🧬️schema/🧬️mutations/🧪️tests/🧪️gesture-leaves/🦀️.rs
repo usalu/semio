@@ -12,17 +12,17 @@ use crate::standards::v1::subsets::any::schema::mutations::drag_transforms::drag
 use crate::standards::v1::subsets::any::schema::mutations::move_nodes::move_nodes;
 use crate::standards::v1::subsets::any::schema::mutations::rotate_transforms::rotate_transforms;
 use crate::standards::v1::subsets::any::schema::mutations::scale_transforms::scale_transforms;
-use semio_framework_artifact_flow_flow::neural::{Dictionary, Value};
+use semio_framework_artifact_flow_flow::neural::{ColdRetire, Dictionary, Value};
 use semio_framework_artifact_flow_flow::{Widget, WidgetLayout};
 
 const TRANSLATE: &str = "shape__gumball_translate";
 const ROTATE: &str = "shape__gumball_rotate";
 const SCALE: &str = "shape__gumball_scale";
 
-fn neuron(id: &str, kind: &str, params: Vec<(&'static str, semio_framework_value::DslValue)>) -> Widget {
+fn neuron(id: &str, kind: &str, params: Vec<(&'static str, Value)>) -> Widget {
     let mut dictionary = Dictionary::new();
     for (key, value) in params {
-        dictionary = dictionary.insert(key, <Value as semio_framework_value::FromValue>::from_value(value).expect("a typed literal is a neural value"));
+        dictionary = dictionary.insert(key, value);
     }
     Widget::Neuron { id: id.into(), neuron_kind: kind.into(), params: dictionary, input_ports: Vec::new(), output_ports: Vec::new(), preview: false }
 }
@@ -31,9 +31,9 @@ fn neuron(id: &str, kind: &str, params: Vec<(&'static str, semio_framework_value
 /// note and two placed nodes.
 fn base(offset: [f64; 3]) -> Generation3dSnapshot {
     let mut snapshot = empty_generation3d_snapshot();
-    snapshot.host_snapshot.widgets.push(neuron(TRANSLATE, "brep.mesh.translate", vec![("offset", generation3d_vector_literal("vector", offset)), ("label", WidgetInputValue::Text(String::new()).literal())]));
-    snapshot.host_snapshot.widgets.push(neuron(ROTATE, "brep.xform.rotate", vec![("axis", generation3d_vector_literal("vector", [0.0, 0.0, 1.0])), ("angle", generation3d_number_literal(std::f64::consts::FRAC_PI_2))]));
-    snapshot.host_snapshot.widgets.push(neuron(SCALE, "brep.mesh.scale", vec![("factor", generation3d_vector_literal("vector", [2.0, 2.0, 2.0])), ("center", generation3d_vector_literal("point", [0.0; 3])), ("uniform", WidgetInputValue::Boolean(false).literal())]));
+    snapshot.host_snapshot.widgets.push(neuron(TRANSLATE, "brep.mesh.translate", vec![("offset", generation3d_vector_value("vector", offset)), ("label", WidgetInputValue::Text(String::new()).neural_value())]));
+    snapshot.host_snapshot.widgets.push(neuron(ROTATE, "brep.xform.rotate", vec![("axis", generation3d_vector_value("vector", [0.0, 0.0, 1.0])), ("angle", generation3d_number_value(std::f64::consts::FRAC_PI_2))]));
+    snapshot.host_snapshot.widgets.push(neuron(SCALE, "brep.mesh.scale", vec![("factor", generation3d_vector_value("vector", [2.0, 2.0, 2.0])), ("center", generation3d_vector_value("point", [0.0; 3])), ("uniform", WidgetInputValue::Boolean(false).neural_value())]));
     snapshot.host_snapshot.widgets.push(Widget::InputSlider { id: "height".into(), label: "Height".into(), value: 6.0, min: 0.0, max: 10.0, step: 0.5 });
     snapshot.host_snapshot.widgets.push(Widget::InputNote { id: "note".into(), text: "Note".into() });
     for (id, x, y) in [("height", 10.0, 20.0), ("note", -5.0, 0.0)] {
@@ -42,9 +42,9 @@ fn base(offset: [f64; 3]) -> Generation3dSnapshot {
     snapshot
 }
 
-fn params_of(snapshot: &Generation3dSnapshot, id: &str) -> semio_framework_value::DslValue {
+fn params_of<'a>(snapshot: &'a Generation3dSnapshot, id: &str) -> &'a Dictionary {
     let widget = snapshot.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == id).expect("operator present");
-    semio_framework_value::ToValue::to_value(widget).get("params").cloned().unwrap_or(semio_framework_value::DslValue::Null)
+    match widget { Widget::Neuron { params, .. } => params, _ => panic!("operator params") }
 }
 
 fn outcome_codes(mutation: &Generation3dMutation, base: &Generation3dSnapshot) -> Vec<(semio_framework_diagnostic::Severity, String)> {
@@ -211,12 +211,12 @@ fn gesture_leaves_label_their_rows_in_english_and_german() {
 #[test]
 fn every_wire_witness_decodes_and_round_trips_the_binary_codec() {
     let witnesses = [
-        include_str!("../../../../🧫️fixtures/🧬️mutations/🎚️change-slider-value/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧫️fixtures/🧬️mutations/✋️drag-transforms/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧫️fixtures/🧬️mutations/🔃️rotate-transforms/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧫️fixtures/🧬️mutations/📏️scale-transforms/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧫️fixtures/🧬️mutations/🚚️move-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧫️fixtures/🧬️mutations/🎛️change-widget-input/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change-slider-value/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-transforms/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔃️rotate-transforms/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📏️scale-transforms/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-widget-input/🧾️wire-witness/🦠️mutation/🔣️.json"),
     ];
     for (witness, kind) in witnesses.iter().zip(["change-slider-value", "drag-transforms", "rotate-transforms", "scale-transforms", "move-nodes", "change-widget-input"]) {
         let mutation: Generation3dMutation = semio_framework_pack_json::from_json_str(witness, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{kind} witness decodes: {error}"));
@@ -242,7 +242,7 @@ fn a_widget_input_sets_its_typed_literal_and_inverts_to_the_whole_base_widget() 
         (TRANSLATE, "label", WidgetInputValue::Text("moved".into())),
     ] {
         let applied = applied_and_restored(&change_widget_input(id, channel, input.clone()), &base);
-        assert_eq!(params_of(&applied, id).get(channel).and_then(WidgetInputValue::of_literal), Some(input), "{id}.{channel}");
+        assert_eq!(params_of(&applied, id).get(channel).and_then(WidgetInputValue::of_neural_value), Some(input), "{id}.{channel}");
         applied.retire_cold();
     }
     let applied = applied_and_restored(&change_widget_input("note", "text", WidgetInputValue::Text("Edited".into())), &base);
@@ -284,9 +284,13 @@ fn a_widget_input_reports_its_vocabulary_codes() {
 #[test]
 fn every_widget_input_literal_round_trips() {
     for input in [WidgetInputValue::Number(-3.5), WidgetInputValue::Text("t".into()), WidgetInputValue::Boolean(false), WidgetInputValue::Point([1.0, 2.0, 3.0]), WidgetInputValue::Vector([0.0, 0.0, 1.0])] {
-        assert_eq!(WidgetInputValue::of_literal(&input.literal()), Some(input.clone()), "{input:?}");
+        let literal = input.neural_value();
+        assert_eq!(WidgetInputValue::of_neural_value(&literal), Some(input.clone()), "{input:?}");
+        literal.retire_cold();
     }
-    assert_eq!(WidgetInputValue::of_literal(&generation3d_vector_literal("mesh", [0.0; 3])), None);
+    let literal = generation3d_vector_value("mesh", [0.0; 3]);
+    assert_eq!(WidgetInputValue::of_neural_value(&literal), None);
+    literal.retire_cold();
 }
 //#endregion 🎛️WidgetInput
 
@@ -378,3 +382,26 @@ async fn a_gesture_edited_onto_a_missing_target_blocks_finalizing() {
     }
 }
 //#endregion ⏪️TimeTravel
+
+/// 🧪️ Native dictionary classification matches the shared neutral literal corpus and independent JSON outputs.
+#[test]
+fn semantic_wire_native_parameters_match_independent_json_oracle() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🚪️io/💾️binary/🧬️mutations/🧪️tests/🧫️fixtures/🧬️semantic-wire/🚪️parameters.json")).expect("independent neutral parameters");
+    for row in corpus["cases"].as_array().expect("parameter cases") {
+        let native = <Value as semio_framework_value::FromValue>::from_value(row["literal"].clone().into()).expect("IO admits neural fixture");
+        let input = WidgetInputValue::of_neural_value_as(&native, row["schema"].as_str().expect("declared schema"));
+        let portable: semio_framework_value::DslValue = row["literal"].clone().into();
+        assert_eq!(input, crate::standards::v1::subsets::any::io::text::value::widget_input_of_literal_as(&portable, row["schema"].as_str().expect("declared schema")), "{} portable/native classification", row["name"]);
+        let actual: serde_json::Value = match input {
+            Some(input) => {
+                let generated = input.neural_value();
+                assert_eq!(semio_framework_value::ToValue::to_value(&generated), crate::standards::v1::subsets::any::io::text::value::widget_input_literal(&input), "{} portable/native construction", row["name"]);
+                generated.retire_cold();
+                serde_json::from_str(&semio_framework_pack_json::to_json_string(&input)).expect("IO prints typed input")
+            },
+            None => serde_json::Value::Null,
+        };
+        assert_eq!(actual, row["output"], "{}", row["name"]);
+        native.retire_cold();
+    }
+}

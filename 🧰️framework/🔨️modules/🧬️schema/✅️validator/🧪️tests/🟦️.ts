@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import { jsonSchemaSubsetValueEquals, validateJsonSchemaSubset } from "../🟦️.ts";
 
 /** 🧬️ Proves the owned schema subset against its portable corpus and independent AJV. */

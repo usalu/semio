@@ -41,7 +41,7 @@ async fn parse_cell_value_detects_bool_and_number_before_falling_back_to_inline_
 
 #[semio_framework_async_macros::async_test]
 async fn stable_cell_action_fixture_roundtrips_exact_text_through_parser_and_binary_codec() {
-    const FIXTURE: &str = include_str!("../../🧫️fixtures/📊️stable-cell-edit/🔣️.json");
+    const FIXTURE: &str = include_str!("../🧫️fixtures/📊️stable-cell-edit/🔣️.json");
     let oracle: serde_json::Value = serde_json::from_str(FIXTURE).expect("third-party JSON oracle parses the action fixture");
     let args = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(FIXTURE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("DSL JSON parses the action fixture");
     let command = XlsxEditor::command_from_action("set-cell", Some(&args)).expect("stable cell action parses");
@@ -129,7 +129,7 @@ async fn sparse_row_insertion_preserves_formula_neighbors_and_stales_prior_vacan
 #[semio_framework_async_macros::async_test]
 async fn unchanged_cell_drafts_preserve_types_and_cached_values() {
     use crate::schema::snapshot::{XlsxCell, XlsxSheet, XlsxWorkbook};
-    const FIXTURE: &str = include_str!("../../../🧫️fixtures/✍️unchanged-cell-draft/🔣️.json");
+    const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/✍️unchanged-cell-draft/🔣️.json");
     let fixture: serde_json::Value = serde_json::from_str(FIXTURE).unwrap();
     let shared_strings: Vec<String> = serde_json::from_value(fixture["sharedStrings"].clone()).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
@@ -168,7 +168,7 @@ async fn unchanged_cell_draft_fixture_matches_independent_spreadsheet_values_and
     use crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
     use crate::schema::construction::build_minimal_xlsx;
     use calamine::{Data, Reader};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/✍️unchanged-cell-draft/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/✍️unchanged-cell-draft/🔣️.json")).unwrap();
     let cases = fixture["cases"].as_array().unwrap();
     let cells =
         cases.iter().enumerate().map(|(index, case)| XlsxCell { row: index as u32 + 1, col: 0, value: semio_framework_pack_json::from_json_str(&case["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap() }).collect();
@@ -192,7 +192,7 @@ async fn unchanged_cell_draft_fixture_matches_independent_spreadsheet_values_and
 }
 
 fn canonical_save_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️canonical-xml-save/🔣️.json")).expect("neutral canonical save fixture")
+    serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️canonical-xml-save/🔣️.json")).expect("neutral canonical save fixture")
 }
 
 fn canonical_fixture_zip(case: &serde_json::Value) -> Vec<u8> {

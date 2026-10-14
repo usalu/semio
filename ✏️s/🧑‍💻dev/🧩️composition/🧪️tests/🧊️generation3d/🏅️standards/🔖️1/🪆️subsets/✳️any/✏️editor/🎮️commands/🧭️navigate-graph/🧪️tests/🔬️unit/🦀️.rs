@@ -6,7 +6,7 @@ use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schem
 
 /// 🧫️ The ONE language-agnostic statement of graph keyboard traversal, answered here by the Rust
 /// implementation and independently by `🧪️tests/🔬️unit/🟦️.ts`.
-const GRAPH_KEYBOARD_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧭️graph-keyboard-navigation.json");
+const GRAPH_KEYBOARD_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧭️graph-keyboard-navigation.json");
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(GRAPH_KEYBOARD_FIXTURE_JSON).expect("graph keyboard fixture")

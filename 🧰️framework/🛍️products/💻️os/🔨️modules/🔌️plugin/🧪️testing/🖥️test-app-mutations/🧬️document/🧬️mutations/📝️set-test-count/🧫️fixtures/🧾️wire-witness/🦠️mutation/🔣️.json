@@ -1,6 +1,0 @@
-{
-  "operation": "setCount",
-  "payload": {
-    "value": 3
-  }
-}

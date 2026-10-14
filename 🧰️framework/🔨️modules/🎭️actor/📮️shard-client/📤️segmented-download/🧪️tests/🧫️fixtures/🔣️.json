@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "scope": "segmented-download-chunk-contract",
+  "contract": {
+    "chunkBytes": 4096,
+    "maximumOutstandingChunks": 8192,
+    "maximumTotalBytes": 33554432,
+    "maximumOperationId": "18446744073709551615"
+  },
+  "refusals": [
+    { "id": "chunk-type", "code": "segmented-download-chunk-type" },
+    { "id": "chunk-empty", "code": "segmented-download-chunk-empty" },
+    { "id": "chunk-over-cap", "code": "segmented-download-chunk-over-cap" },
+    { "id": "outstanding-over-cap", "code": "segmented-download-outstanding-over-cap" },
+    { "id": "total-over-cap", "code": "segmented-download-total-over-cap" },
+    { "id": "authority-invalid", "code": "segmented-download-authority-invalid" }
+  ]
+}

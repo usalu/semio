@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🕹️set-opening/📛️overlaps-a-neighbour",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/📛️overlaps-a-neighbour/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/📛️overlaps-a-neighbour/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/📛️overlaps-a-neighbour/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/📛️overlaps-a-neighbour/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/📛️overlaps-a-neighbour/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/📛️overlaps-a-neighbour/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/📛️overlaps-a-neighbour/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/📛️overlaps-a-neighbour/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/📛️overlaps-a-neighbour/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/📛️overlaps-a-neighbour/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

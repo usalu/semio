@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "maximumElapsedMilliseconds": 10000,
+  "transport": { "maximumBytes": 4096, "maximumLines": 3 },
+  "stdout": "{\"native\":\"🦀️\"}\n\n",
+  "stderr": "warning: independent native diagnostic\n",
+  "expected": [
+    { "stream": "stderr", "line": "warning: independent native diagnostic" },
+    { "stream": "stdout", "line": "{\"native\":\"🦀️\"}" },
+    { "stream": "stdout", "line": "" }
+  ]
+}

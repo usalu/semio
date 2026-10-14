@@ -8,7 +8,7 @@ import * as evaluation from "../../🧮️evaluation/🟦️.ts";
 import * as associative from "../../🔗️associativity/🟦️.ts";
 import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
 import { dwgBodyKind } from "../../✏️drawing/🟦️.ts";
-import fixture from "../../🧫️fixtures/📦️objects/🔣️.json";
+import fixture from "../🧫️fixtures/📦️objects/🔣️.json";
 import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 import { dwgObjectBodies as bodies } from "../🧰️support/📦️objects/🟦️.ts";

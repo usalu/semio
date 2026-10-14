@@ -1,0 +1,38 @@
+{
+  "mutation": "replaceQualityRecord",
+  "qualityRecord": {
+    "id": "quality-record-a",
+    "name": "Quality Record A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "qualityTopic": "Replaced Quality Record A",
+    "standard": null,
+    "targetLevel": null,
+    "inspectionPoints": [],
+    "acceptanceCriteria": [],
+    "testingRequirements": [],
+    "sampleRate": null,
+    "defectCategories": [],
+    "correctiveActionProcess": [],
+    "elementIds": [],
+    "requirementIds": [],
+    "supplierRequirements": [],
+    "documentationRequirements": [],
+    "trainingRequirements": [],
+    "auditSchedule": null,
+    "kpis": [],
+    "ownerId": null,
+    "certificationTargets": [],
+    "continuousImprovement": []
+  }
+}

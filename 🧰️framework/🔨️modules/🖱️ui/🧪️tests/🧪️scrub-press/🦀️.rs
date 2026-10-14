@@ -89,7 +89,7 @@ fn track() -> Rect {
 
 #[test]
 fn the_argument_names_are_the_tool_machine_scrub_fixtures() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🛠️tool-machine/🧫️fixtures/🧫️scrub-law/🔣️.json")).expect("scrub law");
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️scrub-law/🔣️.json")).expect("scrub law");
     assert_eq!((law["args"]["gesture"].as_str(), law["args"]["commit"].as_str(), law["args"]["abort"].as_str()), (Some(SCRUB_GESTURE_ARG), Some(SCRUB_COMMIT_ARG), Some(SCRUB_ABORT_ARG)));
 }
 

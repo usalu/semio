@@ -6,6 +6,7 @@ export interface BrowserHostPort {
   cancelEffect(requestId: string): "queued" | "closed";
   log(level: string, message: string): void;
   nowMs(): bigint;
+  operationClockUs(): bigint | undefined;
   traceSpan(name: string): void;
 }
 
@@ -13,6 +14,8 @@ export interface BrowserHostPort {
 export function createBrowserHostActivation(identity: BrowserHostIdentity, port: BrowserHostPort, signal?: AbortSignal) {
   if (typeof identity.actorId !== "string" || !identity.actorId.length || identity.actorId.length > 512 || /[\x00-\x1f\x7f]/.test(identity.actorId) || typeof identity.activationGeneration !== "bigint" || identity.activationGeneration < 1n || identity.activationGeneration > 0xffffffffffffffffn) throw new Error("browser host: invalid identity");
   const actorId = identity.actorId, activationGeneration = identity.activationGeneration;
+  if (typeof port.operationClockUs !== "function") throw new Error("browser host: original operation clock port required");
+  const originalClock = port.operationClockUs;
   const pending = new Map<string, { resolve(value: unknown): void; reject(error: unknown): void }>();
   const streams = new Set<(cancel: boolean) => Promise<void>>();
   const faultPayloads = new WeakMap<object, Uint8Array>();
@@ -152,7 +155,7 @@ export function createBrowserHostActivation(identity: BrowserHostIdentity, port:
   };
   const call = (effect: string) => (params: unknown) => request(effect, params);
   const fire = (kind: string, payload: unknown) => post(nextSequence(), kind, payload);
-  const pure = Object.freeze({ log(level: string, message: string) { check(); port.log(level, message); }, nowMs() { check(); return port.nowMs(); }, traceSpan(name: string) { check(); port.traceSpan(name); } });
+  const pure = Object.freeze({ log(level: string, message: string) { check(); port.log(level, message); }, nowMs() { check(); return port.nowMs(); }, operationClockUs() { check(); const original = originalClock.call(port); if (original !== undefined && (typeof original !== "bigint" || original < 0n || original > 0xffffffffffffffffn)) throw new Error("browser host: invalid original operation clock"); return original; }, traceSpan(name: string) { check(); port.traceSpan(name); } });
   const hostAsync = Object.freeze({
     storageRead: call("storage-read"), storageWrite: call("storage-write"), storageDelete: call("storage-delete"),
     blobLoad: call("blob-load"), blobWrite: call("blob-write"), blobRead: (hash: string) => request("blob-read", { hash }, stream, true),

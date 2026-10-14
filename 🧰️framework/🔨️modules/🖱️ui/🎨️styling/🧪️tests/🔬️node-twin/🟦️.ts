@@ -1,11 +1,11 @@
-/** 🪞️ Node twin for `🧫️fixtures/🔁️animation-scope/🔣️.json` — the SAME cases with no test framework, so
+/** 🪞️ Node twin for `🧪️tests/🧫️fixtures/🔁️animation-scope/🔣️.json` — the SAME cases with no test framework, so
  * `analyzeCssAnimationScope`/`cssAnimationScopeViolations` are checked by a second runner that shares
  * nothing with the bun suite but the fixture file. Run with `bun ./📜️script.ts twin`. */
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { analyzeCssAnimationScope, cssAnimationScopeUnclockedPaints, cssAnimationScopeViolations } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
-const fixturePath = resolve(import.meta.dir, "../../🧫️fixtures/🔁️animation-scope/🔣️.json");
+const fixturePath = resolve(import.meta.dir, "../🧫️fixtures/🔁️animation-scope/🔣️.json");
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as {
   cases: readonly { name: string; css: string; expect: Record<string, unknown> }[];
   stylesheet: { path: string; keyframesByProperty: Record<string, readonly string[]>; violations: readonly string[] };

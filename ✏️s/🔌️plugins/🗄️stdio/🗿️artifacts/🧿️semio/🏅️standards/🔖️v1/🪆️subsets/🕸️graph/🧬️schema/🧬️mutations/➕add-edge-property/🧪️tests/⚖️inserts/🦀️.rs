@@ -4,11 +4,11 @@ use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::SemioGraphSnapshot;
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-edge-property/⚖️inserts/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-edge-property/⚖️inserts/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-edge-property/⚖️inserts/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-edge-property/⚖️inserts/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-edge-property/⚖️inserts/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕add-edge-property/⚖️inserts/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕add-edge-property/⚖️inserts/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕add-edge-property/⚖️inserts/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕add-edge-property/⚖️inserts/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕add-edge-property/⚖️inserts/🎯️outcome/🔣️.json");
 
 fn decode<T: semio_framework_value::FromValue>(text: &str) -> T {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("add-edge-property fixture decodes")
@@ -32,7 +32,7 @@ async fn applies_to_the_committed_before_snapshot() {
 /// ↩️ The undo is one `remove-edge-property` row and restores the byte-identical before-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn the_undo_restores_the_before_snapshot_byte_for_byte() {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     let base = snapshot(BEFORE);
     let mutation: SemioGraphMutation = decode(MUTATION);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;

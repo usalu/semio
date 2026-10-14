@@ -1,10 +1,10 @@
 //! 🧪️ Committed vector `🗑️remove-anchor` / `❓gone`: re-applying the op to the after-snapshot it already produced is refused with `mutation.target-missing` (error) and leaves the document untouched.
 use crate::{En1992Diff, En1992Mutation, En1992Snapshot};
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-anchor/❓gone/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-anchor/❓gone/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-anchor/❓gone/🦠️mutation/🔣️.json");
-const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-anchor/❓gone/🔺️diff/🚫️.absent");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-anchor/❓gone/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-anchor/❓gone/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-anchor/❓gone/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-anchor/❓gone/🦠️mutation/🔣️.json");
+const DIFF_ABSENT: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-anchor/❓gone/🔺️diff/🚫️.absent");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-anchor/❓gone/🎯️outcome/🔣️.json");
 fn before() -> En1992Snapshot { semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before") }
 fn mutation() -> En1992Mutation { semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation") }
 #[test]

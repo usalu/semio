@@ -54,7 +54,7 @@ pub fn deserialize<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<
 #[test]
 fn neutral_value_type_wire_matches_the_independent_serde_reference() {
     use semio_framework_value::{DslValue, FromValue, ToValue};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🌱️value/🏷️type/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🌱️value/🏷️type/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["wire"].as_array().unwrap() {
         let subject = ValueType::from_value(DslValue::from(row.clone())).unwrap();
         let reference: ReferenceType = serde_json::from_value(row.clone()).unwrap();

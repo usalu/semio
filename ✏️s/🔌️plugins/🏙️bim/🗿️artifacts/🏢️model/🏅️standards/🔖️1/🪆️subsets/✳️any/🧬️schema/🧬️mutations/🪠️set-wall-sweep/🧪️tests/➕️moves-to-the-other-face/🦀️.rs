@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🪠️set-wall-sweep/➕️moves-to-the-other-face",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪠️set-wall-sweep/➕️moves-to-the-other-face/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪠️set-wall-sweep/➕️moves-to-the-other-face/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪠️set-wall-sweep/➕️moves-to-the-other-face/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪠️set-wall-sweep/➕️moves-to-the-other-face/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪠️set-wall-sweep/➕️moves-to-the-other-face/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪠️set-wall-sweep/➕️moves-to-the-other-face/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪠️set-wall-sweep/➕️moves-to-the-other-face/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪠️set-wall-sweep/➕️moves-to-the-other-face/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪠️set-wall-sweep/➕️moves-to-the-other-face/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪠️set-wall-sweep/➕️moves-to-the-other-face/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

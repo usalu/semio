@@ -47,9 +47,18 @@ impl<T:Send+Sync+'static> SealedShared<T>{
  }
  pub fn try_duplicate(&self,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError>{
   let source=self.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"sealed source has already transferred"))?;
-  if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<Self>()||grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"sealed alias handoff is not funded"));}
-  Ok((Self{source:ManuallyDrop::new(Some(Arc::clone(source))),issuer:self.issuer,issuance:self.issuance},RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Self>(),..Default::default()}))
+  if grant.maximum_items==0||grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"sealed alias handoff is not funded"));}
+  Ok((Self{source:ManuallyDrop::new(Some(Arc::clone(source))),issuer:self.issuer,issuance:self.issuance},RetainedCloneProgress{copied_items:1,..Default::default()}))
  }
+ /// 🪢️ Returns one paid alias while the matching original strong parent remains borrowed and live.
+ pub fn return_borrowed_alias(&mut self,witness:&Self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+  let Some(original)=self.source.as_ref()else{return Ok(Default::default())};
+  let Some(parent)=witness.source.as_ref()else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original sealed parent has already transferred"))};
+  if self.issuance!=witness.issuance||!Arc::ptr_eq(original,parent){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"borrowed strong parent does not witness the original sealed alias"))}
+  if grant.maximum_items==0||grant.maximum_depth==0{return Ok(Default::default())}
+  drop(self.source.take());Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
+ }
+ pub fn terminal_is_empty(&self)->bool{self.source.is_none()}
  pub fn return_slot(&self,grant:RetainedCloneGrant)->Result<(SharedAliasReturn<T>,RetainedCloneProgress),ValueError>{
   if self.source.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"transferred alias cannot issue a return slot"));}
   if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<SharedAliasReturn<T>>()||grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"fixed original return slot is not funded"));}
@@ -95,7 +104,9 @@ impl<T:Send+Sync+'static> RetireOwned for SealedShared<T>{fn retirement(self)->B
 impl<T:Send+Sync+'static> RetirementCursor for Cursor<T>{
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete;}match self.step(grant){Ok(progress)=>RetirementStep::Progress(progress),Err(error)=>RetirementStep::Failure(error)}}
  fn terminal_is_empty(&self)->bool{self.handle.source.is_none()&&self.pending.is_none()&&self.active.is_none()}
- fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
+ fn next_work_byte_demand(&self)->Result<usize,ValueError>{if self.handle.source.is_some(){Ok(0)}else if let Some(value)=self.pending.as_ref(){Ok((self.handle.issuer.demand)(value)?.copy_bytes)}else{self.active.as_ref().map_or(Ok(0),|owner|owner.next_copy_byte_demand())}}
+ fn next_selected_work_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.demands(body)?.copy_bytes)}
+ fn allows_admitted_narrow_work(&self)->bool{self.active.is_some()}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.demands(body).ok().map(|demand|demand.capacity_bytes)}
  fn next_close_byte_demand(&self)->Option<usize>{self.demands(0).ok().map(|demand|demand.release_bytes)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}

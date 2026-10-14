@@ -5,7 +5,7 @@ use tokio::sync::Mutex;
 
 #[test]
 fn portable_assembly_exclusion_release_and_poison_refusal() {
-    let corpus: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧷️assembly/🔣️.json")).unwrap();
+    let corpus: Value = serde_json::from_str(include_str!("../🧫️fixtures/🧷️assembly/🔣️.json")).unwrap();
     let rows = corpus["scenarios"].as_array().unwrap();
     assert_eq!(rows.len(), 2);
     for row in rows {

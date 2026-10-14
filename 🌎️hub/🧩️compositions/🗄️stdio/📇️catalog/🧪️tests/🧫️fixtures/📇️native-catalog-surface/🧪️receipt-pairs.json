@@ -1,0 +1,67 @@
+{
+  "schema": "semio.stdio.native-catalog-receipt-pairs/v1",
+  "identityCounts": {
+    "codecIdentities": 3,
+    "artifactKinds": 2
+  },
+  "pairs": [
+    [
+      "s.stdio.pdf",
+      "stdio.pdf"
+    ],
+    [
+      "s.stdio.pdf",
+      "stdio.pdf.1.7"
+    ],
+    [
+      "s.stdio.json",
+      "stdio.json"
+    ]
+  ],
+  "kinds": [
+    "s.stdio.pdf",
+    "s.stdio.json"
+  ],
+  "cases": [
+    {
+      "id": "exact-multiple-schemas",
+      "mutation": "none",
+      "accepted": true
+    },
+    {
+      "id": "order-independent",
+      "mutation": "reverse",
+      "accepted": true
+    },
+    {
+      "id": "missing-pdf17-schema",
+      "mutation": "missing-schema",
+      "accepted": false
+    },
+    {
+      "id": "missing-json-kind",
+      "mutation": "missing-kind",
+      "accepted": false
+    },
+    {
+      "id": "duplicate-pdf14-pair",
+      "mutation": "duplicate",
+      "accepted": false
+    },
+    {
+      "id": "foreign-pdf-schema",
+      "mutation": "foreign-schema",
+      "accepted": false
+    },
+    {
+      "id": "foreign-artifact-kind",
+      "mutation": "foreign-kind",
+      "accepted": false
+    },
+    {
+      "id": "extra-kind-schema-pair",
+      "mutation": "extra",
+      "accepted": false
+    }
+  ]
+}

@@ -2,11 +2,11 @@
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import sharp from "sharp";
-import rows from "../../🧫️fixtures/🔣️.json";
-import styles from "../../🧫️fixtures/🎨️styles/🔣️.json";
+import rows from "../🧫️fixtures/🔣️.json";
+import styles from "../🧫️fixtures/🎨️styles/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
-import documents from "../../../../../🧬️schema/🎬️scene/📋️prepare/🧫️fixtures/🔣️.json";
-import traces from "../../../../../🧬️schema/🎬️scene/🔍️trace/🧫️fixtures/🔣️.json";
+import documents from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🔣️.json";
+import traces from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🔍️trace/🔣️.json";
 import {DrawingPngExportJob,exportDrawingPng,DRAWING_PNG_LIMITS,drawingPngExtent} from "../../🟦️.ts";
 import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 const lift=(value:any):any=>typeof value==="number"?binary64(value):Array.isArray(value)?value.map(lift):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).map(([key,item])=>[key,lift(item)])):value;
@@ -52,7 +52,7 @@ test("PNG completed producer custody survives normal publication and cancellatio
  console.log("[DEBUG] PNG retained original completed raster and encoder owners through publication and cancellation until explicit final close");
 });
 test("neutral source admission refusals preserve unchanged document and no candidate",async()=>{
- const samples=(await import("../../../../../🧬️schema/🎬️scene/📋️prepare/🧫️fixtures/🛂️admission/🔣️.json")).default;
+ const samples=(await import("../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🛂️admission/🔣️.json")).default;
  const {DocumentVectorJob,DocumentRasterJob}=await import("../../../../../🧬️schema/🎬️scene/📋️prepare/🟦️.ts");
  for(const sample of samples){const {document,row}=source(sample.source),before=structuredClone(document),scene={...row.limits},resolution=structuredClone(algorithms),viewport={width:2,height:1,origin:[0,0] as[number,number],tolerance:.01,maxPixels:100,maxSourceBytes:10000};let job:InstanceType<typeof DocumentVectorJob>|InstanceType<typeof DocumentRasterJob>|undefined;
   switch(sample.limit){case"maxNodes":scene.maxNodes=0;break;case"maxWork":resolution.maxWork=0;break;case"maxEdges":resolution.booleans.maxEdges=0;break;case"width":viewport.width=0;break;case"maxPixels":viewport.maxPixels=0;break;}

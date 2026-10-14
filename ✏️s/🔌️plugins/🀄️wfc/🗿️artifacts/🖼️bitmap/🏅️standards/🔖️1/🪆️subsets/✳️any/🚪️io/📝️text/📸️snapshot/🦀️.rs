@@ -84,7 +84,7 @@ impl Default for BitmapSnapshotDsl {
 //#region 🔖️HandcraftedArtifactCodecs
 /// ✉️ Handcrafted `ArtifactDsl`/`ArtifactPack` — the derive stopped emitting these traits, so every
 /// artifact states its own envelope discipline.
-impl store::os_store::serialization::ArtifactDsl for BitmapSnapshotDsl {
+impl pack::snapshot::ArtifactDsl for BitmapSnapshotDsl {
     const EXTENSION: &'static str = "wfcbitmap";
     fn envelope_id() -> &'static str {
         "wfc.bitmap"
@@ -102,7 +102,7 @@ impl store::os_store::serialization::ArtifactDsl for BitmapSnapshotDsl {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -145,28 +145,28 @@ pub(crate) fn bitmap_document_from_dsl(parsed: BitmapSnapshotDsl) -> Result<Bitm
 /// 🛬️ Moves the authored bitmap grammar into persisted fields under one native ownership control.
 pub(crate) fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<BitmapSnapshot,semio_framework_value::ValueError>{
     let maximum_rows=control.limits().max_rows;
-    let snapshot=store::decode_sqlite_snapshot_record_native(payload,<BitmapSnapshot as store::os_store::serialization::ArtifactDsl>::envelope_id(),BitmapSnapshotDsl::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {construct_native_record(record,native,maximum_rows)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;snapshot.admit_sqlite_values(control,store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative)?;Ok(snapshot)
+    let snapshot=store::decode_sqlite_snapshot_record_native(payload,<BitmapSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),BitmapSnapshotDsl::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {construct_native_record(record,native,maximum_rows)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;snapshot.admit_sqlite_values(control,store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative)?;Ok(snapshot)
 }
 
 /// 🛫️ Admits every owned bitmap native field before its canonical record and physical output.
 pub(crate) fn encode_sqlite_snapshot_native(document:&BitmapSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{
     let rows=4usize.checked_add(document.input.palette.len()).and_then(|n|n.checked_add(document.pinned.len())).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"bitmap native entity count overflow"))?;
     control.check_rows(rows)?;document.admit_sqlite_values(control,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative)?;
-    store::encode_sqlite_snapshot_record_native(encoding,<BitmapSnapshot as store::os_store::serialization::ArtifactDsl>::envelope_id(),BitmapSnapshotDsl::__dsl_spec_producer(),|native|project_native_record(document,native),control,native_owner)
+    store::encode_sqlite_snapshot_record_native(encoding,<BitmapSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),BitmapSnapshotDsl::__dsl_spec_producer(),|native|project_native_record(document,native),control,native_owner)
 }
 
-impl store::os_store::serialization::ArtifactDsl for BitmapSnapshot {
+impl pack::snapshot::ArtifactDsl for BitmapSnapshot {
     const EXTENSION: &'static str = "wfcbitmap";
     fn envelope_id() -> &'static str {
         "wfc.bitmap"
     }
 
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        bitmap_document_from_dsl(<BitmapSnapshotDsl as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?).map_err(|e|semio_framework_diagnostic::TextError::new(e.kind,e.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
+        bitmap_document_from_dsl(<BitmapSnapshotDsl as pack::snapshot::ArtifactDsl>::parse_dsl(text)?).map_err(|e|semio_framework_diagnostic::TextError::new(e.kind,e.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
 
     fn print_dsl(&self) -> String {
-        <BitmapSnapshotDsl as store::os_store::serialization::ArtifactDsl>::print_dsl(&bitmap_document_to_dsl(self))
+        <BitmapSnapshotDsl as pack::snapshot::ArtifactDsl>::print_dsl(&bitmap_document_to_dsl(self))
     }
 }
 
@@ -175,12 +175,12 @@ impl store::os_store::serialization::ArtifactDsl for BitmapSnapshot {
 
 /// 📖️ Parses `.wfcbitmap` DSL text into a `BitmapSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<BitmapSnapshot, semio_framework_diagnostic::TextError> {
-    <BitmapSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <BitmapSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `BitmapSnapshot` back to `.wfcbitmap` DSL text.
 pub fn print_dsl(document: &BitmapSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(document)
+    pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

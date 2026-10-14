@@ -4,16 +4,17 @@
 //! declares, and that every `Migrated` id is backed by an owned bounded tool-job factory whose
 //! tool set, publication contract and execution contract are the exact ones the app's proof
 //! catalog is joined against at construction time.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
 use semio_framework::InteractiveJobClassification;
 use semio_framework_plugin::{ArtifactApp, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactToolPublicationLane, EditorApp};
 use std::collections::{BTreeMap, BTreeSet};
 
-const STUDIO_FIXTURE: &str = include_str!("../../⚙️engine/🪐️space/🧫️fixtures/🧫️retained-command-limits/🔣️.json");
-const HOME_FIXTURE: &str = include_str!("../../../../../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🧫️retained-command-limits/🔣️.json");
-const SPACE_INDEX_FIXTURE: &str = include_str!("../../../../../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🧫️retained-command-limits/🔣️.json");
+const STUDIO_FIXTURE: &str = include_str!("../../⚙️engine/🪐️space/🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json");
+const HOME_FIXTURE: &str = include_str!("../../../../../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json");
+const SPACE_INDEX_FIXTURE: &str = include_str!("../../../../../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json");
 const COMPONENT_MANIFEST: &str = include_str!("../../🧩️component/📦️packages/🦀️rust/Cargo.toml");
-const IDENTITY_FIXTURE: &str = include_str!("../../🧫️fixtures/🧫️plugin-identity/🔣️.json");
+const IDENTITY_FIXTURE: &str = include_str!("../🧫️fixtures/🧫️plugin-identity/🔣️.json");
 
 /// 🚦️ Every id the app declares on any surface an interactive dispatch can address, with the
 /// disposition `validate_ui_dispatch_classification` will read for it.
@@ -248,12 +249,12 @@ async fn every_app_instance_constructs_against_its_registered_proof_catalog() {
 /// 🪶️ Pins the two actual persisted Runtime owners independently of the five app surfaces.
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_composed_owner_census() {
-    use semio_framework_os_kernel::{os_store::serialization::ArtifactCodec, os_store::serialization::ArtifactSqliteSnapshot};
+    use semio_framework_os_kernel::{os_store::serialization::ArtifactCodec, os_store::serialization::ArtifactSqliteSnapshotHost};
     use directory::io::io_mechanism::{io_route, native_snapshot_sqlite_schema};
     use semio_framework::io_schema::{ArtifactDialect, IoFidelity, SQLITE_SNAPSHOT};
     use semio_s_artifact_space_home::{SHomeSnapshot,SHomeMutation};
     use semio_s_artifact_space_space::{SSpaceSnapshot,SSpaceMutation};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️snapshot-owner-census/🔣️.json")).expect("closed neutral composed owner census");
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪶️snapshot-owner-census/🔣️.json")).expect("closed neutral composed owner census");
     let owners=fixture["owners"].as_array().unwrap();
     assert_eq!(owners.len(),2);
     let metadata=fixture["metadataOnlyDefinitions"].as_array().unwrap();

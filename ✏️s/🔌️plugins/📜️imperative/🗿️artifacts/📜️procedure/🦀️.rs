@@ -174,7 +174,7 @@ pub fn seed_from_text_content_snapshot(snapshot: &SemioTextSnapshot) -> BTreeMap
 
 /// 🕸️ The content-addressed `flow` CHILD handle of a program.
 pub fn procedure_flow_child_handle(path: &Path) -> ProcedureFlowChild {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     let child_id = store::content_id("imperative-flow", &flow_content_snapshot_from_path(path).encode_pack());
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
     store::os_store::artifact_child::ArtifactChild::new(child_id.clone(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id, dialect })
@@ -182,7 +182,7 @@ pub fn procedure_flow_child_handle(path: &Path) -> ProcedureFlowChild {
 
 /// 🕸️ The content-addressed `text` CHILD handle of a seed.
 pub fn procedure_text_child_handle(seed: &BTreeMap<String, Value>) -> ProcedureTextChild {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     let child_id = store::content_id("imperative-text", &text_content_snapshot_from_seed(seed).encode_pack());
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "text".into() };
     store::os_store::artifact_child::ArtifactChild::new(child_id.clone(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id, dialect })
@@ -242,7 +242,7 @@ pub fn procedure_derivable_scene(snapshot: &ProcedureSnapshot) -> Option<Procedu
 
 /// 🌱️ Packs either derivable member (the react shell's `loadDocumentPair` sends `members: []`).
 pub fn genesis_procedure_child_pack(snapshot: &ProcedureSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     let scene = procedure_derivable_scene(snapshot)?;
     match slot {
         "flow" if child_id == snapshot.flow.child_id => Some(flow_content_snapshot_from_path(&scene.path).encode_pack()),

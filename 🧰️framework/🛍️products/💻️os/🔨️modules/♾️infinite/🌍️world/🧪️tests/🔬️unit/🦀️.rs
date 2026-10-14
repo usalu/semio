@@ -1376,7 +1376,7 @@ fn world_gumball_publish(state: &World3dState, gesture: WorldGumballGesture, pha
 /// exactly the motion React streamed.
 #[test]
 fn world_gumball_gesture_answers_the_shared_live_protocol() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧫️fixtures/🛠️gumball-live-protocol.json")).expect("the protocol fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🛠️gumball-live-protocol.json")).expect("the protocol fixture parses");
     let vector = |value: &serde_json::Value| Vec3::new(value[0].as_f64().expect("x") as f32, value[1].as_f64().expect("y") as f32, value[2].as_f64().expect("z") as f32);
     let handle = |name: &str| match name {
         "moveX" => GumballHandle::MoveX,
@@ -3318,7 +3318,7 @@ fn resolve_physical_mesh_id_picks_closest_lod_url() {
 //#region GlbAssetTests
 #[test]
 fn asset_request_cancellation_is_exact_and_cannot_cancel_a_reused_slot() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📤️asset-cancellation/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📤️asset-cancellation/🔣️.json")).unwrap();
     for stage in fixture["stages"].as_array().unwrap() {
         let mut lane = WorldAssetIoAuthority::default();
         let first = lane.reserve_request(1, 0, WorldAssetRequestKind::Glb, fixture["requests"][0].as_str().unwrap()).unwrap();
@@ -3525,7 +3525,7 @@ fn publish_retained_draw_fixture(state: &mut World3dState, vector: &serde_json::
 
 #[test]
 fn retained_draw_rebuild_keeps_url_backed_asset_authority() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️draws.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️draws.json")).unwrap();
     let vector = &fixture["draws"][1];
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     let token = reserve_world3d_asset_request(&mut state, WorldAssetRequestKind::Glb, vector["url"].as_str().unwrap()).unwrap();
@@ -3598,7 +3598,7 @@ fn the_scene_bridge_keeps_url_and_kind_declared_meshes_with_their_instances() {
 /// inline geometry remains `0/1`, while the adjacent GLB consumes the environment override.
 #[test]
 fn one_scene_resolves_distinct_inline_and_glb_standard_materials() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎨️scene-shading/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️scene-shading/🔣️.json")).unwrap();
     let mut scene = url_mesh_wire_scene();
     scene.world_3d.as_mut().unwrap().environment_json = Some(serde_json::json!({ "material": fixture["mixedMaterialScope"]["environment"] }).to_string());
     let mut state = World3dState::new("surface-material".into(), "controller-material".into());
@@ -3690,7 +3690,7 @@ fn a_ghost_never_stands_in_under_the_id_of_a_mesh_the_surface_is_still_fetching(
 //#region 🥽️BrushMeshAnnounceTests
 /// 🧫️ React's measured `registerBrushMesh` rows and the arg shapes it sends, from the 2026-09-18
 /// side-by-side run (`🗑️generated/w11a-parity-run-14/steps.json`).
-const BRUSH_MESH_REGISTRATION: &str = include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧫️fixtures/🥽️brush-mesh-registration.json");
+const BRUSH_MESH_REGISTRATION: &str = include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🥽️brush-mesh-registration.json");
 
 /// 🔒️ The announcement registry is process-wide by design (React's is a module singleton), so the
 /// laws below take it one at a time whatever `--test-threads` says.
@@ -3971,7 +3971,7 @@ fn environment_shadow_requires_the_configured_sun_and_ignores_react_dead_control
 
 #[test]
 fn neutral_shadow_fixture_maps_to_world_draw_roles_and_exact_profiles() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌑️scene-shadow-parity/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌑️scene-shadow-parity/🔣️.json")).unwrap();
     assert_eq!(World3dShadowProfile::World.map_size(), fixture["profiles"]["world"]["mapSize"].as_u64().unwrap() as u32);
     assert_eq!(World3dShadowProfile::IconPng.map_size(), fixture["profiles"]["iconPng"]["mapSize"].as_u64().unwrap() as u32);
     for row in fixture["roles"].as_array().unwrap() {
@@ -4000,7 +4000,7 @@ fn svg_icon_profile_is_flat_lit_while_world_and_png_remain_raster_pbr() {
 
 #[test]
 fn svg_icon_flat_lighting_matches_the_neutral_three_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎨️icon-svg-lighting/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎨️icon-svg-lighting/🔣️.json")).unwrap();
     let to_srgb = |value: f32| if value < 0.0031308 { value * 12.92 } else { 1.055 * value.powf(0.41666) - 0.055 };
     for row in fixture["cases"].as_array().unwrap() {
         let vector = |field: &str| Vec3::new(row[field][0].as_f64().unwrap() as f32, row[field][1].as_f64().unwrap() as f32, row[field][2].as_f64().unwrap() as f32).normalize();
@@ -4019,8 +4019,8 @@ fn svg_icon_flat_lighting_matches_the_neutral_three_fixture() {
 
 #[test]
 fn world_environment_reaches_the_actual_scene_pass() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌞️scene-lighting/🔣️.json")).unwrap();
-    let shadow_fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌑️scene-shadows/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌞️scene-lighting/🔣️.json")).unwrap();
+    let shadow_fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌑️scene-shadows/🔣️.json")).unwrap();
     let mut scene = scene_with_selection("{}");
     let world = scene.world_3d.as_mut().expect("world fixture");
     world.environment_json = Some(fixture["worldEnvironment"].to_string());
@@ -4088,7 +4088,7 @@ fn world_environment_reaches_the_actual_scene_pass() {
 
 #[test]
 fn offscreen_light_visible_glb_is_retained_only_in_the_actual_shadow_channel() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌑️scene-shadow-parity/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌑️scene-shadow-parity/🔣️.json")).unwrap();
     let mut scene = scene_with_selection("{}");
     let world = scene.world_3d.as_mut().expect("world fixture");
     world.camera_json = serde_json::json!({
@@ -4161,7 +4161,7 @@ fn offscreen_light_visible_glb_is_retained_only_in_the_actual_shadow_channel() {
 
 #[test]
 fn retained_draw_rebuild_preserves_prepared_material_colors_from_the_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️draws.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️draws.json")).unwrap();
     for vector in fixture["draws"].as_array().unwrap() {
         let mut state = World3dState::new("surface-1".into(), "controller-1".into());
         publish_retained_draw_fixture(&mut state, vector);
@@ -4559,7 +4559,7 @@ fn sync_world3d_state_captures_scene_bound_domain() {
 /// `preview_payload_from_eval`) in `s.procedural.generation3d`'s own example-geometry harness, whose
 /// `parry3d` oracle independently confirms the same solid's volume and extent — see the fixture's
 /// `provenance` block, and the twin assertion in that harness that keeps this file from rotting.
-const SCENE_BRIDGE_FIXTURE: &str = include_str!("../../🧫️fixtures/🌉️scene-bridge/🔣️.json");
+const SCENE_BRIDGE_FIXTURE: &str = include_str!("../🧫️fixtures/🌉️scene-bridge/🔣️.json");
 
 pub(super) fn scene_bridge_fixture() -> serde_json::Value {
     serde_json::from_str(SCENE_BRIDGE_FIXTURE).expect("scene bridge fixture parses")
@@ -4611,7 +4611,7 @@ pub(super) fn drive_scene_bridge(state: &mut World3dState, scene: &UiComponentSc
     apply_runtime_draw_flags(state);
 }
 
-const CAMERA_FRAMING_FIXTURE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎥️world3d-camera-framing/🔣️.json");
+const CAMERA_FRAMING_FIXTURE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎥️world3d-camera-framing/🔣️.json");
 
 fn camera_framing_fixture() -> serde_json::Value {
     serde_json::from_str(CAMERA_FRAMING_FIXTURE).expect("camera framing fixture parses")
@@ -4945,7 +4945,7 @@ fn scene_bridge_collects_the_provisional_instance_flag_the_producer_stamps() {
 /// 🧭️ Only a world surface bound to a window AND holding an applied trace lane owes that window a cursor echo.
 #[test]
 fn world_surfaces_echo_their_trace_cursor_under_their_window_instance() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/⏯️tool-run/🧫️fixtures/📼️trace-pages.json")).expect("trace pages fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/⏯️tool-run/🧪️tests/🧫️fixtures/📼️trace-pages.json")).expect("trace pages fixture");
     let bytes: Vec<u8> = fixture["deltas"][0]["hex"].as_str().expect("delta hex").as_bytes().chunks(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("hex"), 16).expect("hex")).collect();
     let delta = semio_framework_tool_run::ToolRunTraceDelta::decode(&bytes).expect("fixture delta decodes");
     let lane = base64_codec::base64_url_encode(&bytes);
@@ -5042,7 +5042,7 @@ fn scene_bridge_binds_the_apps_interaction_domain_for_world_picking() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn world_interaction_object_slot_table_is_heap_first_and_fits_a_bounded_thread_stack() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
     let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
         .as_array()
         .expect("🧱️ the budget lists its tables")
@@ -5137,7 +5137,7 @@ fn decoded_mesh_paint_publication_requires_rgba_and_matching_uvs() {
 /// projected depth and preserve producer insertion order for exact ties.
 #[test]
 fn transparent_standard_draws_match_the_recorded_three_projected_order() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎨️scene-shading/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️scene-shading/🔣️.json")).unwrap();
     let camera_json = &fixture["scene"]["camera"];
     let array3 = |value: &serde_json::Value| {
         let values = value.as_array().expect("three scalars");
@@ -5472,7 +5472,7 @@ fn delivered_projection_spec_frames_once_after_accepted_camera() {
 #[test]
 fn delivered_preserve_camera_policy_cancels_frame_debt_until_local_projection_selection() {
     let fixture = camera_framing_fixture();
-    let projection_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🪟️viewport/🧫️fixtures/📐️projection/🔣️.json")).unwrap();
+    let projection_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🧫️fixtures/📐️projection/🔣️.json")).unwrap();
     assert!(projection_fixture["framePolicies"].as_array().unwrap().iter().any(|row| row["value"] == "preserveCamera" && row["expectedFramesContent"] == false));
     let viewport = Rect::new(0.0, 0.0, fixture["viewport"][0].as_f64().unwrap() as f32, fixture["viewport"][1].as_f64().unwrap() as f32);
     let spec = semio_framework_ui_viewport::Viewport3dProjectionSpec {
@@ -5551,7 +5551,7 @@ fn the_grid_never_ends_on_a_hard_edge_however_far_the_camera_is() {
 /// 🖼️ LAW: reference identity, geometry, and visual state come from the shared Three fixture.
 #[test]
 fn reference_visual_identity_geometry_and_interaction_match_three() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖼️reference-visual/🔣️.json")).expect("reference visual fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🖼️reference-visual/🔣️.json")).expect("reference visual fixture");
     let identity = fixture["identityCases"].as_array().expect("identity cases");
     let shared_url = identity[0]["url"].as_str().expect("shared URL");
     assert_eq!(identity[1]["url"].as_str(), Some(shared_url));
@@ -5628,7 +5628,7 @@ fn reference_visual_identity_geometry_and_interaction_match_three() {
 
 #[test]
 fn reference_visual_geometry_reaches_the_actual_textured_scene_pass() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖼️reference-visual/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🖼️reference-visual/🔣️.json")).unwrap();
     let geometry = &fixture["geometry"];
     let url = fixture["identityCases"][0]["url"].as_str().unwrap();
     let mut scene = scene_with_selection("{}");
@@ -5763,7 +5763,7 @@ fn isolated_world_presentation_suppresses_chrome_and_input_but_retains_frame_wor
 /// 🎨️ LAW: the retained Basic-material appearance follows authored opacity and live theme tokens.
 #[test]
 fn reference_visual_state_uses_authored_opacity_and_live_theme() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖼️reference-visual/🔣️.json")).expect("reference visual fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🖼️reference-visual/🔣️.json")).expect("reference visual fixture");
     for row in fixture["stateCases"].as_array().unwrap() {
         if row["sourceProfileId"] != "world-image" || row["hidden"].as_bool().unwrap() {
             continue;
@@ -5838,7 +5838,7 @@ fn reference_decode_applies_exif_orientation_before_publication() {
 /// 🎨️ Native publication consumes the same indexed surface fixture as installed Three.js.
 #[test]
 fn authored_inline_surface_preserves_corner_face_channels_five_maps_and_cancellation() {
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
     let text=law["mesh"].to_string();
     let mesh=semio_framework_pack_json::from_json_str::<WorldMeshBuffers>(&text,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut cursor=WorldPlaceholderMeshCursor::inline("authored",mesh.clone(),817,1).unwrap();
@@ -5950,7 +5950,7 @@ fn world_inline_source_retirement_preserves_original_owner_and_full_receipts() {
 /// 🖼️ JPEG authored textures use the same image, role raster, publication and retirement owners.
 #[test]
 fn authored_inline_jpeg_surface_publishes_owned_role_rasters() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
     let row = &law["jpegPublication"];
     let mut mesh = semio_framework_pack_json::from_json_str::<WorldMeshBuffers>(&law["mesh"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let bytes: Vec<u8> = row["bytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
@@ -5989,7 +5989,7 @@ fn authored_inline_jpeg_surface_publishes_owned_role_rasters() {
 /// 🎯️ Native picks and marquee retain exact analytic labels through the original scene bridge.
 #[test]
 fn world_native_analytic_component_picks_and_marquee_preserve_original_source() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️analytic-component-picking/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️analytic-component-picking/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let expected = row["expected"].as_str().unwrap();
         let oracle = format!("{}.face.{}~{}~{}~{}", row["instance"].as_str().unwrap(), row["group"].as_u64().unwrap(), row["handle"].as_str().unwrap(), row["label"].as_str().unwrap(), row["revision"].as_str().unwrap());
@@ -6064,7 +6064,7 @@ fn world_native_analytic_component_picks_and_marquee_preserve_original_source() 
 /// 🎯️ Equal mesh groups on different original objects remain distinct selection targets.
 #[test]
 fn world_component_contract_preserves_original_marquee_objects() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-contract/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-contract/🔣️.json")).unwrap();
     let mut results = WorldMarqueeResultPages::default();
     let mut oracle = std::collections::BTreeSet::new();
     for row in fixture["marquee"].as_array().unwrap() {
@@ -6083,7 +6083,7 @@ fn world_component_contract_preserves_original_marquee_objects() {
 /// 🕹️ The shared domain admits the same component granularities and gesture vocabulary.
 #[test]
 fn world_component_contract_admits_shared_domain_methods() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-contract/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-contract/🔣️.json")).unwrap();
     let definition = world_interaction_definition();
     for value in fixture["granularities"].as_array().unwrap() { assert!(definition.granularities.iter().any(|granularity| granularity.id == value.as_str().unwrap()), "{value}"); }
     for value in fixture["methods"].as_array().unwrap() { assert!(definition.selection.methods.iter().any(|method| selection_method_wire_str(*method) == value.as_str().unwrap()), "{value}"); }
@@ -6094,7 +6094,7 @@ fn world_component_contract_admits_shared_domain_methods() {
 /// 🖱️ Optimistic preview reads the original encoded target text and exact analytic source.
 #[test]
 fn world_component_contract_preview_reads_exact_target_text() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️analytic-component-picking/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️analytic-component-picking/🔣️.json")).unwrap();
     let row = &fixture["cases"][0];
     let mut mesh = fixture["mesh"].clone(); mesh["componentReferences"] = serde_json::json!({"face":[row["label"]]});
     let mut scene = scene_with_selection_and_domain("{}", Some(("geometry", "object")));
@@ -6130,7 +6130,7 @@ fn world_native_analytic_vertex_pick_survives_authored_expansion() {
 }
 
 fn assert_native_original_vertex_selection(expanded: bool) {
-    let mut fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️analytic-vertex-picking/🔣️.json")).unwrap();
+    let mut fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️analytic-vertex-picking/🔣️.json")).unwrap();
     if expanded { fixture["mesh"]["attributes"] = fixture["expandedAttributes"].clone(); }
     let mut scene = scene_with_selection_and_domain("{}", Some(("geometry", "object")));
     let world = scene.world_3d.as_mut().unwrap();
@@ -6198,7 +6198,7 @@ fn assert_native_original_vertex_selection(expanded: bool) {
 #[test]
 fn world_component_target_capacity_covers_exact_maximum_width() {
     use std::fmt::Write;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-target-capacity/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-target-capacity/🔣️.json")).unwrap();
     let expected = format!("{}.{}.{}~{}~{}~{}",fixture["renderId"].as_str().unwrap(),fixture["kind"].as_str().unwrap(),fixture["group"].as_u64().unwrap(),fixture["handle"].as_str().unwrap(),fixture["label"].as_str().unwrap(),fixture["revision"].as_str().unwrap());
     assert_eq!(expected.len() as u64,fixture["expectedBytes"].as_u64().unwrap());
     let mut target = WorldComponentTarget { bytes: [0; WORLD_COMPONENT_TARGET_BYTE_CAPACITY], len: 0 };
@@ -6211,7 +6211,7 @@ fn world_component_target_capacity_covers_exact_maximum_width() {
 /// 🤝️ Equal component groups retain their original object ownership through every shared merge mode.
 #[test]
 fn world_component_selection_merge_preserves_remaining_object_projection() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let mut mesh = fixture["mesh"].clone();mesh["componentReferences"] = serde_json::json!({"face":[fixture["source"]["label"]]});
     let mut scene = scene_with_selection_and_domain("{}",Some(("geometry","object")));
     let world = scene.world_3d.as_mut().unwrap();
@@ -6247,7 +6247,7 @@ fn world_native_analytic_wire_preserves_edge_only_scene() {
 }
 
 fn assert_native_original_wire(edge_only: bool) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️analytic-wire-picking/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️analytic-wire-picking/🔣️.json")).unwrap();
     let mut scene = scene_with_selection_and_domain("{}",Some(("geometry","object")));
     let world = scene.world_3d.as_mut().unwrap();
     world.meshes_json = serde_json::json!([{"id":"wire","data":if edge_only {&fixture["edgeOnly"]["mesh"]}else{&fixture["mesh"]}}]).to_string();
@@ -6330,7 +6330,7 @@ fn assert_native_original_wire(edge_only: bool) {
 /// 🧷️ A pure point paints through the original native primitive owner in ordinary object mode.
 #[test]
 fn world_native_analytic_point_paints_without_component_targeting() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/🎯️vertex-provenance/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️vertex-provenance/🔣️.json")).unwrap();
     let row=fixture["cases"].as_array().unwrap().iter().find(|row|row["kind"]=="point").unwrap();
     let point=serde_json::from_value::<[f32;3]>(row["points"][0].clone()).unwrap();
     let mut scene=scene_with_selection("{}");let world=scene.world_3d.as_mut().unwrap();
@@ -6350,7 +6350,7 @@ fn world_native_analytic_point_paints_without_component_targeting() {
 /// 🪡️ A wire is primary geometry even when surface outlines and component targeting are disabled.
 #[test]
 fn world_native_analytic_wire_paints_without_surface_outlines() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️analytic-wire-picking/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️analytic-wire-picking/🔣️.json")).unwrap();
     for show_edges in [true,false] {
         let mut scene=scene_with_selection("{}");let world=scene.world_3d.as_mut().unwrap();
         world.meshes_json=serde_json::json!([{"id":"wire","data":fixture["mesh"]}]).to_string();world.instances_json=serde_json::json!([{"id":fixture["instance"],"meshId":"wire"}]).to_string();world.camera_json=fixture["camera"].to_string();
@@ -6366,7 +6366,7 @@ fn world_native_analytic_wire_paints_without_surface_outlines() {
 /// 🖌️ Equal local face groups retain their original object when the selected overlay is scanned.
 #[test]
 fn world_face_selection_overlay_is_scoped_to_original_object() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let mut mesh = fixture["mesh"].clone();mesh["componentReferences"] = serde_json::json!({"face":[fixture["source"]["label"]]});
     let mut scene = scene_with_selection_and_domain("{}",Some(("geometry","object")));
     let world = scene.world_3d.as_mut().unwrap();
@@ -6398,8 +6398,8 @@ fn world_face_selection_overlay_is_scoped_to_original_object() {
 /// 🔐️ The original analytic face scan consumes the fresh Guest source lane and refuses ambiguity.
 #[test]
 fn world_face_selection_overlay_validates_fresh_guest_source_targets() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
-    let refusals: serde_json::Value = serde_json::from_str(include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧫️fixtures/🎯️analytic-component-target.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let refusals: serde_json::Value = serde_json::from_str(include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🎯️analytic-component-target.json")).unwrap();
     let mut rows: Vec<serde_json::Value> = fixture["steps"].as_array().unwrap().iter().map(|step|serde_json::json!({"name":step["merge"],"targets":step["selected"].as_array().unwrap().iter().map(|index|fixture["targets"][index.as_u64().unwrap() as usize].clone()).collect::<Vec<_>>(),"labels":[fixture["source"]["label"]],"selected":step["selected"],"active":step["active"],"groups":step["groups"]})).collect();
     rows.extend(refusals["overlayRefusals"].as_array().unwrap().iter().map(|row|serde_json::json!({"name":row["name"],"targets":row["targets"],"labels":row["labels"],"selected":[],"active":0,"groups":["0"]})));
     for row in rows {
@@ -6428,7 +6428,7 @@ fn world_face_selection_overlay_validates_fresh_guest_source_targets() {
 /// 🔄️ Changing a nonactive exact face invalidates the original overlay without changing active projections.
 #[test]
 fn world_face_selection_overlay_invalidates_nonactive_source_changes() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let row=&fixture["overlayLifecycle"];
     let mut mesh=fixture["mesh"].clone();mesh["faceIds"]=serde_json::json!([0,1]);mesh["componentReferences"]=serde_json::json!({"face":row["labels"]});
     let mut scene=scene_with_selection_and_domain("{}",Some(("geometry","object")));let world=scene.world_3d.as_mut().unwrap();
@@ -6469,7 +6469,7 @@ fn world_face_selection_overlay_invalidates_nonactive_source_changes() {
 /// 🧽️ A fresh empty original selection snapshot clears each component and hover projection.
 #[test]
 fn world_scene_selection_snapshot_clears_empty_components_and_hover() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let mut state = World3dState::new("surface".into(),"controller".into());
     let original = serde_json::json!({"ids":[fixture["objects"][0]],"gumballSelectionIds":[fixture["targets"][0]],"granularity":"face","componentIds":[0],"activeObjectId":fixture["objects"][0],"hoveredComponent":{"id":0,"objectId":fixture["objects"][0],"mode":"face"}}).to_string();
     sync_world3d_scene_selection(&mut state,&original);
@@ -6490,7 +6490,7 @@ fn world_scene_selection_snapshot_clears_empty_components_and_hover() {
 /// 📍️ The published Scene pivot belongs to the existing gumball target owner and clears with it.
 #[test]
 fn world_native_component_gumball_retains_delivered_pivot() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let mut state=World3dState::new("surface".into(),"controller".into());
     for row in fixture["gumball"]["pivotCases"].as_array().unwrap() {
         sync_world3d_scene_selection(&mut state,&serde_json::json!({"ids":[fixture["objects"][0]],"gumballSelectionIds":[fixture["targets"][0]],"granularity":"face","gumballTarget":row["pivot"]}).to_string());
@@ -6504,7 +6504,7 @@ fn world_native_component_gumball_retains_delivered_pivot() {
 /// 🛠️ Original component gumball capture and publication retain the guest source target lane.
 #[test]
 fn world_native_component_gumball_retains_original_source_targets() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let row = &fixture["gumball"];let object = &fixture["objects"][row["object"].as_u64().unwrap() as usize];
     let expected = serde_json::Value::Array(row["ids"].as_array().unwrap().iter().map(|index|fixture["targets"][index.as_u64().unwrap() as usize].clone()).collect());
     for pivot_case in row["pivotCases"].as_array().unwrap() {
@@ -6562,7 +6562,7 @@ fn world_native_component_gumball_retains_original_source_targets() {
 /// 🕹️ Component gumballs use the original event authority through capture, motion, release and cancellation.
 #[test]
 fn world_native_component_gumball_uses_original_event_authority() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let row=&fixture["gumball"];let object=&fixture["objects"][row["object"].as_u64().unwrap() as usize];
     let targets:Vec<String>=row["ids"].as_array().unwrap().iter().map(|index|fixture["targets"][index.as_u64().unwrap() as usize].as_str().unwrap().to_string()).collect();
     for case in row["authorityCases"].as_array().unwrap() {
@@ -6606,7 +6606,7 @@ fn world_native_component_gumball_uses_original_event_authority() {
 /// 🧮️ One object's source components consume original action credits rather than an arbitrary sixty-four object limit.
 #[test]
 fn world_native_component_gumball_captures_wide_source_selection() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();let row=&fixture["gumball"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();let row=&fixture["gumball"];
     let count=row["wideSelection"]["count"].as_u64().unwrap() as usize;let first=row["wideSelection"]["labelStart"].as_str().unwrap().parse::<u64>().unwrap();let object=fixture["objects"][0].as_str().unwrap();
     let labels:Vec<String>=(0..count).map(|index|(first+index as u64).to_string()).collect();let targets:Vec<String>=labels.iter().enumerate().map(|(index,label)|format!("{object}.face.{index}~{}~{label}~{}",fixture["source"]["handle"].as_str().unwrap(),fixture["source"]["revision"].as_str().unwrap())).collect();
     let mut mesh=fixture["mesh"].clone();mesh["indices"]=serde_json::json!((0..count).flat_map(|_|[0,1,2]).collect::<Vec<_>>());mesh["faceIds"]=serde_json::json!((0..count as u32).collect::<Vec<_>>());mesh["componentReferences"]=serde_json::json!({"face":labels});
@@ -6623,7 +6623,7 @@ fn world_native_component_gumball_captures_wide_source_selection() {
 /// 🌊️ A live component gesture keeps its captured targets across a real guest mesh/source refresh.
 #[test]
 fn world_native_component_gumball_survives_live_guest_source_refresh() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let row = &fixture["gumball"];
     let refresh = &row["liveRefresh"];
     let object = &fixture["objects"][row["object"].as_u64().unwrap() as usize];
@@ -6707,8 +6707,8 @@ fn world_native_component_gumball_survives_live_guest_source_refresh() {
 /// 🖱️ Primary points and wires remain selectable and hoverable in the original object domain.
 #[test]
 fn world_native_primary_geometry_object_pick_uses_original_domain() {
-    let wire: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️analytic-wire-picking/🔣️.json")).unwrap();
-    let points: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/🎯️vertex-provenance/🔣️.json")).unwrap();
+    let wire: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️analytic-wire-picking/🔣️.json")).unwrap();
+    let points: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️vertex-provenance/🔣️.json")).unwrap();
     let point = &points["cases"].as_array().unwrap().iter().find(|row|row["kind"] == "point").unwrap()["points"][0];
     let point_mesh = serde_json::json!({"positions":point,"indices":[],"vertexIds":[0],"edgePositions":[],"edgeIds":[]});
     let point_camera = serde_json::json!({"position":[point[0],point[1],point[2].as_f64().unwrap()+4.0],"target":point,"up":[0,1,0],"fov":50});
@@ -6764,7 +6764,7 @@ fn world_native_primary_geometry_object_pick_uses_original_domain() {
 /// 🪡️ Original object picking orders overlapping sloping wires by their actual closest point.
 #[test]
 fn world_native_overlapping_wires_pick_original_closest_depth() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let law = &fixture["gumball"]["overlappingWirePick"];
     let cases = fixture["gumball"]["raySegmentClosestCases"].as_array().unwrap();
     let rows = law["caseNames"].as_array().unwrap().iter().map(|name| cases.iter().find(|row| row["name"] == *name).unwrap()).collect::<Vec<_>>();
@@ -6822,7 +6822,7 @@ fn world_native_overlapping_wires_pick_original_closest_depth() {
 /// 🪟️ Original object and component cursors pick the visible portion of an authored clipped edge.
 #[test]
 fn world_native_clipped_wire_pick_preserves_original_visible_depth() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let law = &fixture["gumball"]["clippedWirePick"];
     let mut scene = scene_with_selection_and_domain("{}", Some(("geometry", "object")));
     let world = scene.world_3d.as_mut().unwrap();
@@ -6893,8 +6893,8 @@ fn world_native_clipped_wire_pick_preserves_original_visible_depth() {
 /// 🎨️ Primary analytic geometry follows the original object-style and live-theme authority.
 #[test]
 fn world_native_primary_geometry_paint_uses_original_style_tokens() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎨️primary-geometry-style/🔣️.json")).unwrap();
-    let geometry: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️primary-geometry-style/🔣️.json")).unwrap();
+    let geometry: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
     let mut custom = ui_wgpu::wgpu::Theme::default();
     custom.border_normal = ui_wgpu::wgpu::Rgba::new(0.13,0.21,0.34,1.0);
     custom.border_emphasized = ui_wgpu::wgpu::Rgba::new(0.55,0.34,0.21,1.0);
@@ -6934,8 +6934,8 @@ fn world_native_primary_geometry_gpu_upload_preserves_original_zero_indices() {
         Err(error) if error.starts_with("offscreen adapter:") => { println!("[DEBUG] originalPrimaryGpuAdapterUnavailable {error}"); return; }
         Err(error) => panic!("original primary GPU initialization {error}"),
     };
-    let wire: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️analytic-wire-picking/🔣️.json")).unwrap();
-    let points: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/🎯️vertex-provenance/🔣️.json")).unwrap();
+    let wire: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️analytic-wire-picking/🔣️.json")).unwrap();
+    let points: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️vertex-provenance/🔣️.json")).unwrap();
     let point = &points["cases"].as_array().unwrap().iter().find(|row| row["kind"] == "point").unwrap()["points"][0];
     let point_mesh = serde_json::json!({"positions":point,"indices":[],"vertexIds":[0],"edgePositions":[],"edgeIds":[]});
     let mut results = Vec::new();
@@ -6974,7 +6974,7 @@ fn world_native_primary_geometry_gpu_upload_preserves_original_zero_indices() {
 }
 
 //#region 🔖️Modelling
-const MODELLING_FIXTURE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/📏️world3d-modelling/🔣️.json");
+const MODELLING_FIXTURE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/📏️world3d-modelling/🔣️.json");
 
 fn modelling_fixture() -> serde_json::Value {
     serde_json::from_str(MODELLING_FIXTURE).expect("world3d modelling fixture")

@@ -1,10 +1,15 @@
 //! 🚪️ OS artifact composition, codec registration and Store-backed IO dispatch.
 
+use pack::snapshot::ArtifactSqliteSnapshot as _;
+use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_diagnostic::Diagnostic;
 use std::collections::{BTreeMap, HashMap};
 use std::sync::RwLock;
+
+#[path="🧰️testing/🦀️.rs"]
+pub mod testing;
 
 use semio_framework_artifact_reference::{ArtifactDialect,Dialect,StandardId,SubsetId};
 use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
@@ -1161,7 +1166,7 @@ pub async fn io_compose_via(hub: &IoKey, target: &IoKey, sources: &[ErasedCompos
 /// module doesn't have), `SubsetValidator` can live directly HERE: its signature is already
 /// erased over `IoPayload` (mirroring `ComposerEntry.compose`'s own `fn(&[ErasedComposeSource])`
 /// erasure) -- a concrete artifact implements it by decoding its own typed `Snapshot` out of the
-/// payload internally (via `crate::os_store::serialization::ArtifactPack`/`ArtifactDsl`, exactly like `ComposerEntry`'s
+/// payload internally (via `pack::snapshot::ArtifactPack`/`ArtifactDsl`, exactly like `ComposerEntry`'s
 /// erasure already does one layer up), so this module never needs to know the concrete type.
 pub trait SubsetValidator {
     const DIALECT: Dialect;
@@ -1169,7 +1174,7 @@ pub trait SubsetValidator {
 }
 
 /// 🪶️ A subset's conformance policy over one owned typed snapshot and its exact relational
-/// projection. The owning artifact's `ArtifactSqliteSnapshot::validate_sqlite_snapshot_subset`
+/// projection. The owning artifact's `ArtifactSqliteSnapshotHost::validate_sqlite_snapshot_subset`
 /// resolves it by dialect through `validate_registered_snapshot_subset`, so a base model never
 /// names the subsets that extend it: the dependency points from each subset to its base only.
 pub trait SnapshotSubsetValidator: SubsetValidator {
@@ -1952,8 +1957,8 @@ pub fn register_native_snapshot_codec(dialect: Dialect, codec: crate::os_store::
 }
 
 /// 📣️ Publishes the exact native registration a snapshot owner declares through
-/// [`crate::os_store::serialization::ArtifactPack::native_snapshot_registration`]; an owner that declares none publishes nothing.
-pub fn publish_native_snapshot<P: crate::os_store::serialization::ArtifactPack>() -> Result<(), ArtifactAssemblyRegistryError> {
+/// [`pack::snapshot::ArtifactPack::native_snapshot_registration`]; an owner that declares none publishes nothing.
+pub fn publish_native_snapshot<P: crate::os_store::serialization::ArtifactStoreSnapshot>() -> Result<(), ArtifactAssemblyRegistryError> {
     match P::native_snapshot_registration() {
         Some((dialect, codec)) => register_native_snapshot_codec(dialect, codec),
         None => Ok(()),
@@ -2145,12 +2150,12 @@ pub mod io_mechanism {
 
     //#region 🔖️DslTxtCarrier
     /// 🗒️ Serialize any `ArtifactDsl` document as UTF-8 carrier text (stdio.txt body law).
-    pub fn serialize_dsl_txt<S: crate::os_store::serialization::ArtifactDsl>(from: &S) -> IoResult<IoPayload> {
-        Ok(IoOutcome::clean(IoPayload::Text(crate::os_store::serialization::ArtifactDsl::print_dsl(from))))
+    pub fn serialize_dsl_txt<S: pack::snapshot::ArtifactDsl>(from: &S) -> IoResult<IoPayload> {
+        Ok(IoOutcome::clean(IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(from))))
     }
 
     /// 📃️ Parse carrier text (or UTF-8 binary) back into an `ArtifactDsl` document.
-    pub fn deserialize_dsl_txt<S: crate::os_store::serialization::ArtifactDsl>(payload: &IoPayload) -> IoResult<S> {
+    pub fn deserialize_dsl_txt<S: pack::snapshot::ArtifactDsl>(payload: &IoPayload) -> IoResult<S> {
         let text = match payload {
             IoPayload::Text(text) => text.as_str(),
             IoPayload::Binary(bytes) => std::str::from_utf8(bytes).map_err(|error| IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, error.to_string())))?,
@@ -2592,47 +2597,150 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         resolve_route(&registry, from, into, max_hops).await
     }
 
-    fn typed_snapshot_codec<P: crate::os_store::serialization::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect) -> Result<crate::os_store::serialization::ArtifactCodec, IoError> {
-use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
-
-        let codec = native_snapshot_registry().read().map_err(|_| refusal(ValueRefusalKind::InvariantViolated, "native snapshot registry unavailable"))?.get(dialect).cloned().ok_or_else(|| IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner, format!("unregistered typed snapshot dialect {}", dialect.to_coordinate()))))?;
-        let provider = codec.snapshot_sqlite.as_ref().ok_or_else(|| refusal(ValueRefusalKind::UnsupportedOwner, "artifact has no semantic SQLite provider"))?;
-        if provider.snapshot_type != Some(std::any::TypeId::of::<P>()) || provider.schema != P::SQLITE_SCHEMA {
-            return Err(refusal(ValueRefusalKind::InvalidValue, "typed snapshot does not own the requested exact dialect"));
-        }
-        Ok(codec)
+    fn typed_snapshot_codec<P:crate::os_store::serialization::ArtifactSqliteSnapshotHost+'static>(dialect:&ArtifactDialect)->Result<(),IoError>{
+        let registry=native_snapshot_registry().read().map_err(|_|refusal(ValueRefusalKind::InvariantViolated,"native snapshot registry unavailable"))?;
+        let codec=registry.get(dialect).ok_or_else(||refusal(ValueRefusalKind::UnsupportedOwner,"unregistered typed snapshot dialect"))?;
+        let provider=codec.snapshot_sqlite.as_ref().ok_or_else(||refusal(ValueRefusalKind::UnsupportedOwner,"artifact has no semantic SQLite provider"))?;
+        if provider.snapshot_type!=Some(std::any::TypeId::of::<P>())||provider.schema!=P::SQLITE_SCHEMA{return Err(refusal(ValueRefusalKind::InvalidValue,"typed snapshot does not own the requested exact dialect"))}Ok(())
     }
 
-    fn validate_typed_snapshot_subset<P: crate::os_store::serialization::ArtifactSqliteSnapshot>(dialect: &ArtifactDialect, snapshot: &P, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Vec<Diagnostic>, IoError> {
-        crate::os_store::codec_registry::validate_owned_sqlite_snapshot_subset(snapshot, dialect, database, control).map(|outcome| outcome.diagnostics)
+    #[derive(semio_framework_value::RetireOwned)]
+    struct TypedSnapshotExportFrame{metadata:SnapshotMetadataFrame,physical:crate::sqlite_snapshot::PhysicalExportFrame,validation:Option<IoResult<()>>,result:Option<IoResult<Vec<u8>>>}
+    impl TypedSnapshotExportFrame{fn new()->Self{Self{metadata:SnapshotMetadataFrame::new(),physical:crate::sqlite_snapshot::PhysicalExportFrame::new(),validation:None,result:None}}}
+    #[derive(semio_framework_value::RetireOwned)]
+    struct TypedSnapshotImportFrame<P:semio_framework_value::retirement::RetireOwned>{metadata:SnapshotMetadataFrame,physical:crate::sqlite_snapshot::PhysicalImportFrame,snapshot:Option<P>,validation:Option<IoResult<()>>,result:Option<IoResult<P>>}
+    impl<P:semio_framework_value::retirement::RetireOwned> TypedSnapshotImportFrame<P>{fn new()->Self{Self{metadata:SnapshotMetadataFrame::new(),physical:crate::sqlite_snapshot::PhysicalImportFrame::new(),snapshot:None,validation:None,result:None}}}
+
+    pub(crate) struct TypedFileSettlement<'a,'b>{pub(crate) control:std::cell::RefCell<crate::sqlite_snapshot::SqliteSnapshotReceivingControl<'a,'b>>,before:usize,remaining:usize,phase:SqliteSnapshotPhase,post_body:std::cell::Cell<bool>,cause:std::cell::RefCell<Option<ValueError>>}
+    impl<'a,'b> TypedFileSettlement<'a,'b>{
+        pub(crate) fn new(control:&'a mut SqliteSnapshotControl<'b>,before:usize,phase:SqliteSnapshotPhase)->Self{let remaining=control.allocation_remaining_bytes();Self{control:std::cell::RefCell::new(control.receiving_scope()),before,remaining,phase,post_body:std::cell::Cell::new(false),cause:std::cell::RefCell::new(None)}}
+        fn settle(&self,owned:usize)->Result<(),ValueError>{crate::sqlite_snapshot::artifact::receiving::settle(&mut self.control.borrow_mut(),self.remaining,self.before,owned)}
+        pub(crate) fn finish_body(&self,owned:usize)->Result<(),ValueError>{self.settle(owned)?;self.post_body.set(true);Ok(())}
+        pub(crate) fn observe(&self,owned:usize,completed:usize,total:usize)->bool{if !self.post_body.get(){return true}let result=self.settle(owned).and_then(|_|self.control.borrow_mut().checkpoint(self.phase,completed,total));match result{Ok(())=>true,Err(error)=>{*self.cause.borrow_mut()=Some(error);false}}}
+        pub(crate) fn refused(&self,owned:usize,error:ValueError)->ValueError{match self.settle(owned){Err(cause)=>cause,Ok(())=>self.cause.borrow_mut().take().unwrap_or(error)}}
+    }
+    fn typed_file_validation(slot:&mut Option<IoResult<()>>)->Result<(),IoError>{
+        match slot.as_ref().unwrap(){Err(_)=>Err(slot.take().unwrap().unwrap_err()),Ok(outcome)if outcome.diagnostics.iter().any(|diagnostic|matches!(diagnostic.severity,semio_framework_diagnostic::Severity::Error|semio_framework_diagnostic::Severity::Fatal))=>Err(IoError{cause:ValueError::literal(ValueRefusalKind::InvalidValue,"owned snapshot violates its requested subset"),diagnostics:slot.take().unwrap().unwrap().diagnostics}),Ok(_)=>Ok(())}
+    }
+    macro_rules! typed_file_work{
+        ($native:ident,$control:ident,$direction:ident,$bytes:expr)=>{{
+            let mut body=store::NativeSnapshotBodyWallet::new($native.remaining_grant());
+            let result=crate::sqlite_snapshot::artifact::receiving::Port{control:$control,native:crate::sqlite_snapshot::artifact::receiving::Direction::$direction($native.native()),body:&mut body}.work(1,$bytes);
+            $native.record_progress(body.progress())?;result
+        }};
     }
 
-    /// 📤️ Exports the complete owned snapshot through its exact registered relational model, as the original caller that owns and closes the retirement recipient.
-    pub async fn io_export_sqlite_snapshot<P: crate::os_store::serialization::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect, snapshot: &P, encoding: SnapshotEncoding, limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<Vec<u8>> {
-        typed_snapshot_codec::<P>(dialect)?;
-        SqliteSnapshotControl::run_as_original_caller(progress, limits, |control| {
-            control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(IoError::from_value_error)?;
-            let mut database = snapshot.to_sqlite_database(control).map_err(IoError::from_value_error)?;
-            validate_snapshot_schema(&database, P::SQLITE_SCHEMA, SqliteSnapshotPhase::ProjectSnapshot, control).map_err(IoError::from_value_error)?;
-            let diagnostics = validate_typed_snapshot_subset(dialect, snapshot, &database, control)?;
-            attach_sqlite_snapshot_metadata(&mut database, dialect, encoding, control).map_err(IoError::from_value_error)?;
-            export_sqlite_database_controlled(&database, control).map(|value| IoOutcome { value, diagnostics }).map_err(IoError::from_value_error)
-        })
+    /// 📤️ Exports every complete snapshot field through the supplied original SQL and native receiving authorities.
+    pub async fn io_export_sqlite_snapshot<P:crate::os_store::serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned+'static>(dialect:&ArtifactDialect,snapshot:&P,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->IoResult<Vec<u8>>{
+        export_sqlite_snapshot_receiving(dialect,snapshot,encoding,control,native)
     }
 
-    /// 📥️ Reconstructs every typed snapshot field directly from its declared relational tables, as the original caller that owns and closes the retirement recipient.
-    pub async fn io_import_sqlite_snapshot<P: crate::os_store::serialization::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect, bytes: &[u8], limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<P> {
-        typed_snapshot_codec::<P>(dialect)?;
-        SqliteSnapshotControl::run_as_original_caller(progress, limits, |control| {
-            let mut database = import_sqlite_database_controlled(bytes, control).map_err(IoError::from_value_error)?;
-            let (actual, _) = take_sqlite_snapshot_metadata_controlled(&mut database, control).map_err(IoError::from_value_error)?;
-            if actual != *dialect { return Err(refusal(ValueRefusalKind::InvalidValue, "typed SQLite snapshot dialect does not match requested dialect")); }
-            validate_snapshot_schema(&database, P::SQLITE_SCHEMA, SqliteSnapshotPhase::ReconstructSnapshot, control).map_err(IoError::from_value_error)?;
-            control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0).map_err(IoError::from_value_error)?;
-            let value = P::from_sqlite_database(&database, control).map_err(IoError::from_value_error)?;
-            let diagnostics = validate_typed_snapshot_subset(dialect, &value, &database, control)?;
-            Ok(IoOutcome { value, diagnostics })
-        })
+    /// 🧱️ Shares the original complete file producer with synchronous registered snapshot callbacks.
+    pub(crate) fn export_sqlite_snapshot_receiving<P:crate::os_store::serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned+'static>(dialect:&ArtifactDialect,snapshot:&P,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->IoResult<Vec<u8>>{
+        let result=(||{
+            typed_snapshot_codec::<P>(dialect)?;native.native().checkpoint().map_err(IoError::from_value_error)?;
+            let before=native.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit,"typed snapshot original SQL ceiling overflow"))?;
+            let settlement=TypedFileSettlement::new(control,before,SqliteSnapshotPhase::WritePages);
+            let mut observer=|event:semio_framework_value::native_decoding::NativeDecodeProgress|settlement.observe(event.owned_bytes,event.completed,event.total);
+            let received=native.scoped_native(maximum,&mut observer,|native|native.receive_nested::<TypedSnapshotExportFrame,IoResult<Vec<u8>>>(|slot,native|{
+                let mut borrowed=settlement.control.borrow_mut();let control=&mut **borrowed;
+                typed_file_work!(native,control,Decode,size_of::<TypedSnapshotExportFrame>())?;*slot=Some(TypedSnapshotExportFrame::new());let frame=slot.as_mut().unwrap();
+                typed_file_work!(native,control,Decode,size_of::<IoResult<Vec<u8>>>())?;
+                frame.result=Some((||{
+                    control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(IoError::from_value_error)?;
+                    typed_file_work!(native,control,Decode,size_of::<Option<SqliteDatabase>>()).map_err(IoError::from_value_error)?;
+                    frame.metadata.database=Some(snapshot.to_sqlite_database_receiving(control,native).map_err(IoError::from_value_error)?);
+                    validate_snapshot_schema_decoding(frame.metadata.database.as_ref().unwrap(),P::SQLITE_SCHEMA,control,native).map_err(IoError::from_value_error)?;
+                    typed_file_work!(native,control,Decode,size_of::<IoResult<()>>()).map_err(IoError::from_value_error)?;
+                    frame.validation=Some(snapshot.validate_sqlite_snapshot_subset_decoding(dialect,frame.metadata.database.as_ref().unwrap(),control,native));
+                    typed_file_validation(&mut frame.validation)?;
+                    attach_metadata_decoding(&mut frame.metadata,dialect,encoding,control,native).map_err(IoError::from_value_error)?;
+                    let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());
+                    let physical=crate::sqlite_snapshot::export_sqlite_database_receiving_into(frame.metadata.database.as_ref().unwrap(),&mut frame.physical,&mut crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Decode(native.native()),body:&mut body});
+                    native.record_progress(body.progress()).map_err(IoError::from_value_error)?;physical.map_err(IoError::from_value_error)?;
+                    typed_file_work!(native,control,Decode,size_of::<Vec<u8>>()+size_of::<Vec<Diagnostic>>()).map_err(IoError::from_value_error)?;
+                    Ok(IoOutcome{value:std::mem::take(&mut frame.physical.output),diagnostics:frame.validation.take().unwrap().unwrap().diagnostics})
+                })());
+                let owned=native.native().owned_bytes();drop(borrowed);settlement.finish_body(owned)?;Ok(frame.result.take().unwrap())
+            }));
+            match received{Ok(output)=>output,Err(error)=>Err(IoError::from_value_error(settlement.refused(native.native().owned_bytes(),error)))}
+        })();result.map_err(|mut error|{error.cause=error.cause.with_retained_progress(native.progress());error})
+    }
+
+    /// 📥️ Imports every complete snapshot field while keeping parser, metadata and typed reconstruction under the original recipient.
+    pub async fn io_import_sqlite_snapshot<P:crate::os_store::serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned+'static>(dialect:&ArtifactDialect,bytes:&[u8],control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->IoResult<P>{
+        import_sqlite_snapshot_receiving(dialect,bytes,control,native)
+    }
+
+    /// 🧩️ Keeps the complete typed import and original publication boundary shared by every caller.
+    pub(crate) fn import_sqlite_snapshot_receiving<P:crate::os_store::serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned+'static>(dialect:&ArtifactDialect,bytes:&[u8],control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->IoResult<P>{
+        let result=(||{
+            typed_snapshot_codec::<P>(dialect)?;native.native().checkpoint().map_err(IoError::from_value_error)?;
+            let before=native.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit,"typed snapshot original SQL ceiling overflow"))?;
+            let settlement=TypedFileSettlement::new(control,before,SqliteSnapshotPhase::ReconstructSnapshot);
+            let mut observer=|event:semio_framework_value::native_encoding::NativeEncodeProgress|settlement.observe(event.owned_bytes,event.completed,event.total);
+            let received=native.scoped_native(maximum,&mut observer,|native|native.receive_nested::<TypedSnapshotImportFrame<P>,IoResult<P>>(|slot,native|{
+                let mut borrowed=settlement.control.borrow_mut();let control=&mut **borrowed;
+                typed_file_work!(native,control,Encode,size_of::<TypedSnapshotImportFrame<P>>())?;*slot=Some(TypedSnapshotImportFrame::new());let frame=slot.as_mut().unwrap();
+                typed_file_work!(native,control,Encode,size_of::<IoResult<P>>())?;
+                frame.result=Some((||{
+                    let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());
+                    let physical=crate::sqlite_snapshot::import_sqlite_database_receiving_into(bytes,&mut frame.physical,&mut crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Encode(native.native()),body:&mut body});
+                    native.record_progress(body.progress()).map_err(IoError::from_value_error)?;physical.map_err(IoError::from_value_error)?;
+                    typed_file_work!(native,control,Encode,size_of::<SqliteDatabase>()).map_err(IoError::from_value_error)?;
+                    frame.metadata.database=Some(std::mem::replace(&mut frame.physical.database,SqliteDatabase{tables:Vec::new()}));
+                    take_metadata_encoding(&mut frame.metadata,control,native).map_err(IoError::from_value_error)?;
+                    if frame.metadata.dialect.as_ref().unwrap()!=dialect{return Err(refusal(ValueRefusalKind::InvalidValue,"typed SQLite snapshot dialect does not match requested dialect"))}
+                    validate_snapshot_schema_encoding(frame.metadata.database.as_ref().unwrap(),P::SQLITE_SCHEMA,control,native).map_err(IoError::from_value_error)?;
+                    control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,0).map_err(IoError::from_value_error)?;
+                    typed_file_work!(native,control,Encode,size_of::<Option<P>>()).map_err(IoError::from_value_error)?;
+                    frame.snapshot=Some(P::from_sqlite_database_receiving(frame.metadata.database.as_ref().unwrap(),control,native).map_err(IoError::from_value_error)?);
+                    typed_file_work!(native,control,Encode,size_of::<IoResult<()>>()).map_err(IoError::from_value_error)?;
+                    frame.validation=Some(frame.snapshot.as_ref().unwrap().validate_sqlite_snapshot_subset_encoding(dialect,frame.metadata.database.as_ref().unwrap(),control,native));
+                    typed_file_validation(&mut frame.validation)?;
+                    typed_file_work!(native,control,Encode,size_of::<P>()+size_of::<Vec<Diagnostic>>()).map_err(IoError::from_value_error)?;
+                    Ok(IoOutcome{value:frame.snapshot.take().unwrap(),diagnostics:frame.validation.take().unwrap().unwrap().diagnostics})
+                })());
+                let owned=native.native().owned_bytes();drop(borrowed);settlement.finish_body(owned)?;Ok(frame.result.take().unwrap())
+            }));
+            match received{Ok(output)=>output,Err(error)=>Err(IoError::from_value_error(settlement.refused(native.native().owned_bytes(),error)))}
+        })();result.map_err(|mut error|{error.cause=error.cause.with_retained_progress(native.progress());error})
+    }
+
+    /// 🫳️ Exports the exact captured Store root through its registered complete snapshot type.
+    pub(crate) fn export_snapshot_file_read<P:crate::os_store::serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned+Sync>(dialect:&ArtifactDialect,read:&store::snapshot_read::ErasedSnapshotRead,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->IoResult<Vec<u8>>{
+        let result=read.get::<P>().ok_or_else(||refusal(ValueRefusalKind::InvalidValue,"captured snapshot has the wrong registered type")).and_then(|snapshot|export_sqlite_snapshot_receiving(dialect,snapshot,encoding,control,native));
+        result.map_err(|mut error|{error.cause=error.cause.with_retained_progress(native.progress());error})
+    }
+
+    /// 🪑️ Publishes a complete reconstructed snapshot into the caller's prevalidated empty typed slot.
+    pub(crate) fn import_snapshot_file_into<P:crate::os_store::serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned>(dialect:&ArtifactDialect,bytes:&[u8],destination:&mut(dyn std::any::Any+Send),control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->IoResult<()>{
+        let result=(||{
+            typed_snapshot_codec::<P>(dialect)?;
+            let destination=destination.downcast_mut::<Option<P>>().ok_or_else(||refusal(ValueRefusalKind::InvalidValue,"snapshot file destination has the wrong registered type"))?;
+            if destination.is_some(){return Err(refusal(ValueRefusalKind::InvalidValue,"snapshot file destination must be empty"))}
+            let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let payment=(||{let mut port=crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Encode(native.native()),body:&mut body};port.work(2,size_of::<Option<P>>())?;port.work(2,size_of::<Vec<Diagnostic>>())?;port.work(2,size_of::<IoOutcome<()>>())?;Ok::<(),ValueError>(())})();native.record_progress(body.progress()).map_err(IoError::from_value_error)?;payment.map_err(IoError::from_value_error)?;
+            let IoOutcome{value,diagnostics}=import_sqlite_snapshot_receiving::<P>(dialect,bytes,control,native)?;
+            *destination=Some(value);Ok(IoOutcome{value:(),diagnostics})
+        })();result.map_err(|mut error|{error.cause=error.cause.with_retained_progress(native.progress());error})
+    }
+
+    fn snapshot_file_callbacks(dialect:&ArtifactDialect)->Result<(Option<store::serialization::ArtifactSqliteSnapshotExportFile>,Option<store::serialization::ArtifactSqliteSnapshotImportFile>),IoError>{
+        let registry=native_snapshot_registry().read().map_err(|_|refusal(ValueRefusalKind::InvariantViolated,"native snapshot registry unavailable"))?;
+        let codec=registry.get(dialect).ok_or_else(||refusal(ValueRefusalKind::UnsupportedOwner,"unregistered typed snapshot dialect"))?;
+        let provider=codec.snapshot_sqlite.as_ref().ok_or_else(||refusal(ValueRefusalKind::UnsupportedOwner,"artifact has no complete snapshot file capability"))?;
+        if codec.native_identity.snapshot_type().is_none()||provider.snapshot_type.is_none(){return Err(refusal(ValueRefusalKind::UnsupportedOwner,"artifact has no complete snapshot file capability"))}
+        if codec.native_identity.snapshot_type()!=provider.snapshot_type{return Err(refusal(ValueRefusalKind::InvalidValue,"complete snapshot provider identity differs"))}Ok((provider.export_file,provider.import_file))
+    }
+
+    /// 🌐️ Exports every complete field from a caller-owned captured read using the global IO registry.
+    pub async fn io_export_sqlite_snapshot_read(dialect:&ArtifactDialect,read:&store::snapshot_read::ErasedSnapshotRead,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->IoResult<Vec<u8>>{
+        let result=(||{let callback=snapshot_file_callbacks(dialect)?.0.ok_or_else(||refusal(ValueRefusalKind::UnsupportedOwner,"artifact has no complete snapshot file capability"))?;callback(dialect,read,encoding,control,native)})();result.map_err(|mut error|{error.cause=error.cause.with_retained_progress(native.progress());error})
+    }
+
+    /// 📨️ Imports through the registered complete snapshot owner into its actual caller-owned destination.
+    pub async fn io_import_sqlite_snapshot_into(dialect:&ArtifactDialect,bytes:&[u8],destination:&mut(dyn std::any::Any+Send),control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->IoResult<()>{
+        let result=(||{let callback=snapshot_file_callbacks(dialect)?.1.ok_or_else(||refusal(ValueRefusalKind::UnsupportedOwner,"artifact has no complete snapshot file capability"))?;callback(dialect,bytes,destination,control,native)})();result.map_err(|mut error|{error.cause=error.cause.with_retained_progress(native.progress());error})
     }
 
     fn validate_snapshot_metadata_receiving(table:&SqliteTable,port:&mut crate::sqlite_snapshot::artifact::receiving::Port<'_,'_,'_,store::NativeSnapshotBodyWallet>)->Result<SnapshotEncoding,ValueError>{
@@ -2649,10 +2757,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     fn metadata_encoding(table:&SqliteTable,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->Result<SnapshotEncoding,ValueError>{let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let result=validate_snapshot_metadata_receiving(table,&mut crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Encode(native.native()),body:&mut body});native.record_progress(body.progress())?;result}
 
     #[derive(semio_framework_value::RetireOwned)]
-    struct SnapshotHopFrame{input:Option<IoPayload>,database:Option<SqliteDatabase>,projected:Option<IoResult<SqliteDatabase>>,reconstructed:Option<IoResult<IoPayload>>,metadata:Option<SqliteTable>,dialect:Option<ArtifactDialect>,tables:Vec<SqliteTable>}
-    impl SnapshotHopFrame{fn new(input:IoPayload)->Self{Self{input:Some(input),database:None,projected:None,reconstructed:None,metadata:None,dialect:None,tables:Vec::new()}}}
+    struct SnapshotMetadataFrame{database:Option<SqliteDatabase>,metadata:Option<SqliteTable>,dialect:Option<ArtifactDialect>,tables:Vec<SqliteTable>}
+    impl SnapshotMetadataFrame{fn new()->Self{Self{database:None,metadata:None,dialect:None,tables:Vec::new()}}}
 
-    fn attach_metadata_decoding(frame:&mut SnapshotHopFrame,dialect:&ArtifactDialect,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<(),ValueError>{
+    #[derive(semio_framework_value::RetireOwned)]
+    struct SnapshotHopFrame{input:Option<IoPayload>,snapshot:SnapshotMetadataFrame,projected:Option<IoResult<SqliteDatabase>>,reconstructed:Option<IoResult<IoPayload>>,physical_export:Option<crate::sqlite_snapshot::PhysicalExportFrame>,physical_import:Option<crate::sqlite_snapshot::PhysicalImportFrame>,result:Option<IoResult<IoPayload>>}
+    impl SnapshotHopFrame{fn new(input:IoPayload)->Self{Self{input:Some(input),snapshot:SnapshotMetadataFrame::new(),projected:None,reconstructed:None,physical_export:None,physical_import:None,result:None}}}
+
+    fn attach_metadata_decoding(frame:&mut SnapshotMetadataFrame,dialect:&ArtifactDialect,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<(),ValueError>{
         use crate::sqlite_snapshot::artifact::receiving::{Port,Direction,Projection,Scalar,row,cell,text_cell,push_row};
         let invalid=||ValueError::literal(ValueRefusalKind::InvalidValue,"snapshot SQLite metadata dialect is invalid");
         let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let preflight=(||{let mut port=Port{control,native:Direction::Decode(native.native()),body:&mut body};let database=frame.database.as_ref().unwrap();let limits=port.control.limits();let count=database.tables.len().checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"snapshot metadata table census overflow"))?;if count>limits.max_tables||limits.max_columns<6{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"snapshot metadata exceeds original table or column ceiling"))}
@@ -2665,52 +2777,78 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let result=(||{let mut port=Port{control,native:Direction::Decode(native.native()),body:&mut body};let database=frame.database.as_mut().unwrap();let count=database.tables.len().checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"snapshot metadata table census overflow"))?;crate::sqlite_snapshot::artifact::receiving::relocate_vector(&mut database.tables,&mut frame.tables,count,1,&mut port)?;port.work(1,size_of::<SqliteTable>())?;database.tables.push(frame.metadata.take().unwrap());Ok(())})();native.record_progress(body.progress())?;result
     }
 
+    fn take_metadata_encoding(frame:&mut SnapshotMetadataFrame,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->Result<SnapshotEncoding,ValueError>{
+        let database=frame.database.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot metadata original database is absent"))?;
+        let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let found=(||{let mut port=crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Encode(native.native()),body:&mut body};for(index,table)in database.tables.iter().enumerate(){port.work(1,0)?;if table.name=="semio_snapshot"{return Ok(index)}}Err(ValueError::literal(ValueRefusalKind::InvalidValue,"SQLite file has no semantic snapshot metadata"))})();native.record_progress(body.progress())?;let index=found?;
+        let encoding=metadata_encoding(&database.tables[index],control,native)?;let shifted=database.tables.len()-index;let copy=shifted.checked_mul(size_of::<SqliteTable>()).and_then(|copy|copy.checked_add(3*size_of::<SqliteValue>()+size_of::<ArtifactDialect>())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot metadata transfer extent overflow"))?;
+        let moved=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()};if !moved.fits(native.remaining_grant()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot metadata transfer exceeds original physical grant"))}native.native().checkpoint()?;
+        frame.metadata=Some(database.tables.remove(index));let row=&mut frame.metadata.as_mut().unwrap().rows[0];let take=|cell:&mut SqliteValue|match std::mem::replace(cell,SqliteValue::Null){SqliteValue::Text(text)=>text,_=>unreachable!()};frame.dialect=Some(ArtifactDialect{artifact_kind:take(&mut row.values[1]),standard:take(&mut row.values[2]),subset:take(&mut row.values[3])});native.record_progress(moved)?;Ok(encoding)
+    }
+
     fn run_snapshot_hop(snapshots:&NativeSnapshotMap,hop:&IoEntryDescriptor,input:&mut Option<IoPayload>,native:&mut IoRunControl<'_,'_>,control:&mut SqliteSnapshotControl<'_>)->IoResult<IoPayload>{
         let limits=control.limits();
         if input.is_none(){return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot hop original input is absent")))}
         if is_sqlite_snapshot(&hop.into){
-            return native.snapshot_decode().map_err(IoError::from_value_error)?.receive_nested::<SnapshotHopFrame,IoResult<IoPayload>>(|slot,native|{
+            let mut original=native.snapshot_decode().map_err(IoError::from_value_error)?;
+            let before=original.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit,"snapshot hop original SQL ceiling overflow"))?;
+            let settlement=TypedFileSettlement::new(control,before,SqliteSnapshotPhase::WritePages);let mut observer=|event:semio_framework_value::native_decoding::NativeDecodeProgress|settlement.observe(event.owned_bytes,event.completed,event.total);
+            let received=original.scoped_native(maximum,&mut observer,|native|native.receive_nested::<SnapshotHopFrame,IoResult<IoPayload>>(|slot,native|{
+                let mut borrowed=settlement.control.borrow_mut();let control=&mut **borrowed;
+                typed_file_work!(native,control,Decode,size_of::<SnapshotHopFrame>())?;
                 let moved=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<IoPayload>>(),..Default::default()};if !moved.fits(native.remaining_grant()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot input transfer exceeds original physical grant"))}native.native().checkpoint()?;*slot=Some(SnapshotHopFrame::new(input.take().unwrap()));native.record_progress(moved)?;let frame=slot.as_mut().unwrap();
-                let result=(||{
+                typed_file_work!(native,control,Decode,size_of::<IoResult<IoPayload>>())?;
+                frame.result=Some((||{
                     control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,1).map_err(IoError::from_value_error)?;
                     let payload=frame.input.as_ref().unwrap();let size=match payload{IoPayload::Binary(bytes)=>bytes.len(),IoPayload::Text(text)=>text.len()};
                     if size>limits.max_file_bytes{return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native snapshot exceeds SQLite snapshot limits")))}
                     let codec=snapshots.get(&hop.from).ok_or_else(||refusal(ValueRefusalKind::UnsupportedOwner,"unregistered native snapshot dialect"))?;
                     let provider=codec.snapshot_sqlite.as_ref().ok_or_else(||refusal(ValueRefusalKind::UnsupportedOwner,"artifact has no handwritten semantic SQLite provider"))?;
+                    typed_file_work!(native,control,Decode,size_of::<IoResult<SqliteDatabase>>()).map_err(IoError::from_value_error)?;
                     frame.projected=Some((provider.export)(&codec.schema,&hop.from,payload,control,native));
                     match frame.projected.as_ref().unwrap(){Err(_)=>return Err(frame.projected.take().unwrap().unwrap_err()),Ok(_)=>{}}
-                    let projected=frame.projected.as_mut().unwrap().as_mut().unwrap();frame.database=Some(std::mem::replace(&mut projected.value,SqliteDatabase{tables:Vec::new()}));
-                    let database=frame.database.as_mut().unwrap();validate_snapshot_schema_decoding(database,&provider.schema,control,native).map_err(IoError::from_value_error)?;
+                    typed_file_work!(native,control,Decode,size_of::<Option<SqliteDatabase>>()).map_err(IoError::from_value_error)?;
+                    let projected=frame.projected.as_mut().unwrap().as_mut().unwrap();frame.snapshot.database=Some(std::mem::replace(&mut projected.value,SqliteDatabase{tables:Vec::new()}));
+                    let database=frame.snapshot.database.as_mut().unwrap();validate_snapshot_schema_decoding(database,&provider.schema,control,native).map_err(IoError::from_value_error)?;
                     let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let extent=crate::sqlite_snapshot::artifact::receiving::check_database(database,&mut crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Decode(native.native()),body:&mut body});native.record_progress(body.progress()).map_err(IoError::from_value_error)?;extent.map_err(IoError::from_value_error)?;
                     let encoding=match frame.input.as_ref().unwrap(){IoPayload::Binary(_)=>SnapshotEncoding::Binary,IoPayload::Text(_)=>SnapshotEncoding::Text};
-                    attach_metadata_decoding(frame,&hop.from,encoding,control,native).map_err(IoError::from_value_error)?;
-                    frame.reconstructed=Some(export_sqlite_database_controlled(frame.database.as_ref().unwrap(),control).map(|bytes|IoOutcome::clean(IoPayload::Binary(bytes))).map_err(IoError::from_value_error));
-                    let mut output=frame.reconstructed.take().unwrap()?;output.diagnostics=frame.projected.take().unwrap().unwrap().diagnostics;Ok(output)
-                })();Ok(result)
-            }).map_err(IoError::from_value_error)?;
+                    attach_metadata_decoding(&mut frame.snapshot,&hop.from,encoding,control,native).map_err(IoError::from_value_error)?;
+                    typed_file_work!(native,control,Decode,size_of::<crate::sqlite_snapshot::PhysicalExportFrame>()).map_err(IoError::from_value_error)?;frame.physical_export=Some(crate::sqlite_snapshot::PhysicalExportFrame::new());
+                    let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let physical=crate::sqlite_snapshot::export_sqlite_database_receiving_into(frame.snapshot.database.as_ref().unwrap(),frame.physical_export.as_mut().unwrap(),&mut crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Decode(native.native()),body:&mut body});native.record_progress(body.progress()).map_err(IoError::from_value_error)?;physical.map_err(IoError::from_value_error)?;
+                    typed_file_work!(native,control,Decode,size_of::<Vec<u8>>()+size_of::<Vec<Diagnostic>>()).map_err(IoError::from_value_error)?;
+                    Ok(IoOutcome{value:IoPayload::Binary(std::mem::take(&mut frame.physical_export.as_mut().unwrap().output)),diagnostics:frame.projected.take().unwrap().unwrap().diagnostics})
+                })());
+                let owned=native.native().owned_bytes();drop(borrowed);settlement.finish_body(owned)?;Ok(frame.result.take().unwrap())
+            }));
+            return match received{Ok(output)=>output,Err(error)=>Err(IoError::from_value_error(settlement.refused(original.native().owned_bytes(),error)))};
         }
-        native.snapshot_encode().map_err(IoError::from_value_error)?.receive_nested::<SnapshotHopFrame,IoResult<IoPayload>>(|slot,native|{
+        let mut original=native.snapshot_encode().map_err(IoError::from_value_error)?;
+        let before=original.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit,"snapshot hop original SQL ceiling overflow"))?;
+        let settlement=TypedFileSettlement::new(control,before,SqliteSnapshotPhase::ReconstructSnapshot);let mut observer=|event:semio_framework_value::native_encoding::NativeEncodeProgress|settlement.observe(event.owned_bytes,event.completed,event.total);
+        let received=original.scoped_native(maximum,&mut observer,|native|native.receive_nested::<SnapshotHopFrame,IoResult<IoPayload>>(|slot,native|{
+            let mut borrowed=settlement.control.borrow_mut();let control=&mut **borrowed;
+            typed_file_work!(native,control,Encode,size_of::<SnapshotHopFrame>())?;
             let moved=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<IoPayload>>(),..Default::default()};if !moved.fits(native.remaining_grant()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot input transfer exceeds original physical grant"))}native.native().checkpoint()?;*slot=Some(SnapshotHopFrame::new(input.take().unwrap()));native.record_progress(moved)?;let frame=slot.as_mut().unwrap();
-            let result=(||{
+            typed_file_work!(native,control,Encode,size_of::<IoResult<IoPayload>>())?;
+            frame.result=Some((||{
                 control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,1).map_err(IoError::from_value_error)?;
                 let IoPayload::Binary(bytes)=frame.input.as_ref().unwrap()else{return Err(refusal(ValueRefusalKind::InvalidValue,"SQLite snapshot import requires a binary payload"))};
-                frame.database=Some(import_sqlite_database_controlled(bytes,control).map_err(IoError::from_value_error)?);
-                let database=frame.database.as_mut().unwrap();let index=database.tables.iter().position(|table|table.name=="semio_snapshot").ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"SQLite file has no semantic snapshot metadata")).map_err(IoError::from_value_error)?;
-                let encoding=metadata_encoding(&database.tables[index],control,native).map_err(IoError::from_value_error)?;
-                let shifted=database.tables.len()-index;let copy=shifted.checked_mul(size_of::<SqliteTable>()).and_then(|copy|copy.checked_add(3*size_of::<SqliteValue>()+size_of::<ArtifactDialect>())).ok_or_else(||IoError::from_value_error(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot metadata transfer extent overflow")))?;
-                let moved=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()};if !moved.fits(native.remaining_grant()){return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot metadata transfer exceeds original physical grant")))}native.native().checkpoint().map_err(IoError::from_value_error)?;
-                frame.metadata=Some(database.tables.remove(index));let row=&mut frame.metadata.as_mut().unwrap().rows[0];
-                let take=|cell:&mut SqliteValue|match std::mem::replace(cell,SqliteValue::Null){SqliteValue::Text(text)=>text,_=>unreachable!()};
-                frame.dialect=Some(ArtifactDialect{artifact_kind:take(&mut row.values[1]),standard:take(&mut row.values[2]),subset:take(&mut row.values[3])});native.record_progress(moved).map_err(IoError::from_value_error)?;
-                if frame.dialect.as_ref().unwrap()!=&hop.into{return Err(refusal(ValueRefusalKind::InvalidValue,"semantic SQLite snapshot dialect does not match requested dialect"))}
+                typed_file_work!(native,control,Encode,size_of::<crate::sqlite_snapshot::PhysicalImportFrame>()).map_err(IoError::from_value_error)?;frame.physical_import=Some(crate::sqlite_snapshot::PhysicalImportFrame::new());
+                let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let physical=crate::sqlite_snapshot::import_sqlite_database_receiving_into(bytes,frame.physical_import.as_mut().unwrap(),&mut crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Encode(native.native()),body:&mut body});native.record_progress(body.progress()).map_err(IoError::from_value_error)?;physical.map_err(IoError::from_value_error)?;
+                typed_file_work!(native,control,Encode,size_of::<Option<SqliteDatabase>>()).map_err(IoError::from_value_error)?;
+                frame.snapshot.database=Some(std::mem::replace(&mut frame.physical_import.as_mut().unwrap().database,SqliteDatabase{tables:Vec::new()}));
+                let encoding=take_metadata_encoding(&mut frame.snapshot,control,native).map_err(IoError::from_value_error)?;
+                if frame.snapshot.dialect.as_ref().unwrap()!=&hop.into{return Err(refusal(ValueRefusalKind::InvalidValue,"semantic SQLite snapshot dialect does not match requested dialect"))}
                 let codec=snapshots.get(&hop.into).ok_or_else(||refusal(ValueRefusalKind::UnsupportedOwner,"unregistered native snapshot dialect"))?;
                 let provider=codec.snapshot_sqlite.as_ref().ok_or_else(||refusal(ValueRefusalKind::UnsupportedOwner,"artifact has no handwritten semantic SQLite provider"))?;
-                validate_snapshot_schema_encoding(frame.database.as_ref().unwrap(),&provider.schema,control,native).map_err(IoError::from_value_error)?;
-                frame.reconstructed=Some((provider.import)(&codec.schema,&hop.into,&mut frame.database,encoding,control,native));
+                validate_snapshot_schema_encoding(frame.snapshot.database.as_ref().unwrap(),&provider.schema,control,native).map_err(IoError::from_value_error)?;
+                typed_file_work!(native,control,Encode,size_of::<IoResult<IoPayload>>()).map_err(IoError::from_value_error)?;
+                frame.reconstructed=Some((provider.import)(&codec.schema,&hop.into,&mut frame.snapshot.database,encoding,control,native));
                 match frame.reconstructed.as_ref().unwrap(){Err(_)=>return Err(frame.reconstructed.take().unwrap().unwrap_err()),Ok(output)=>{let size=match &output.value{IoPayload::Binary(bytes)=>bytes.len(),IoPayload::Text(text)=>text.len()};if size>limits.max_file_bytes{return Err(refusal(ValueRefusalKind::OwnershipLimit,"reconstructed native snapshot exceeds SQLite snapshot limits"))}}}
                 frame.reconstructed.take().unwrap()
-            })();Ok(result)
-        }).map_err(IoError::from_value_error)?
+            })());
+            let owned=native.native().owned_bytes();drop(borrowed);settlement.finish_body(owned)?;Ok(frame.result.take().unwrap())
+        }));
+        match received{Ok(output)=>output,Err(error)=>Err(IoError::from_value_error(settlement.refused(original.native().owned_bytes(),error)))}
     }
 
     fn resolve_run(registry: &EntryMap, route: &IoRoute, payload: IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
@@ -2840,7 +2978,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     //#region 🔖️Constructors
     /// 🎹️ Builds an `IoEntry` from a `Serializer<S>` impl for a binary-pack-native `S`. Bounds on
-    /// `crate::os_store::serialization::ArtifactPack` directly rather than inventing a parallel "native decode" trait —
+    /// `pack::snapshot::ArtifactPack` directly rather than inventing a parallel "native decode" trait —
     /// this file already depends on `store::` throughout (e.g. `ArtifactAssemblyRegistryPlan`
     /// a few regions up), so this introduces no new dependency. The plugin's own decode function is
     /// `S::decode_pack`, resolved by monomorphization of the inner `run` item — never a runtime
@@ -2848,27 +2986,27 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// field cannot capture anyway. This is the smallest constructor shape that keeps a plugin from
     /// ever hand-writing an `IoEntry` literal while never leaking pack/DSL encoding into its code. A composed head carrier
     /// ([`native_carrier`]) hands its owned children to the serializer.
-    pub fn serializer_entry<S: crate::os_store::serialization::ArtifactPack + store::ArtifactNativeSnapshot, T: Serializer<S>>(own: Dialect) -> IoEntry {
-        fn run<S: crate::os_store::serialization::ArtifactPack + store::ArtifactNativeSnapshot, T: Serializer<S>>(payload: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+    pub fn serializer_entry<S: pack::snapshot::ArtifactPack + pack::snapshot::ArtifactNativeSnapshot, T: Serializer<S>>(own: Dialect) -> IoEntry {
+        fn run<S: pack::snapshot::ArtifactPack + pack::snapshot::ArtifactNativeSnapshot, T: Serializer<S>>(payload: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
             let IoPayload::Binary(bytes) = payload else { return Err(refusal(ValueRefusalKind::InvalidValue, "serializer_entry: expected binary native payload")); };
             control.checkpoint().map_err(IoError::from_value_error)?;
             let (parent, children) = native_carrier(bytes,&mut control.snapshot_decode().map_err(IoError::from_value_error)?)?;
-            let value = S::decode_native_snapshot(store::NativeSnapshotInput::Binary(&parent), control.decode().map_err(IoError::from_value_error)?).map_err(IoError::from_value_error)?;
+            let value = S::decode_native_snapshot(pack::snapshot::NativeSnapshotInput::Binary(&parent), control.decode().map_err(IoError::from_value_error)?).map_err(IoError::from_value_error)?;
             ::semio_framework_async::poll::resolve_ready(T::serialize(&value, &children, control))
         }
         IoEntry { owned_serializer: T::OWNED_FACTORY, from: own, into: T::INTO, fidelity: T::FIDELITY, direction: IoEntryDirection::Export, sniff: None, run: run::<S, T> }
     }
 
     /// 📝️ Runs the exact text-native owner under the original native decoder.
-    pub fn serializer_entry_text<S: crate::os_store::serialization::ArtifactDsl + store::ArtifactNativeSnapshot, T: Serializer<S>>(own: Dialect) -> IoEntry {
-        fn run<S: crate::os_store::serialization::ArtifactDsl + store::ArtifactNativeSnapshot, T: Serializer<S>>(payload: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+    pub fn serializer_entry_text<S: pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactNativeSnapshot, T: Serializer<S>>(own: Dialect) -> IoEntry {
+        fn run<S: pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactNativeSnapshot, T: Serializer<S>>(payload: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
             control.checkpoint().map_err(IoError::from_value_error)?;
             let (value, children) = match payload {
-                IoPayload::Text(text) => (S::decode_native_snapshot(store::NativeSnapshotInput::Text(text), control.decode().map_err(IoError::from_value_error)?).map_err(IoError::from_value_error)?, ArchiveChildren::empty()),
+                IoPayload::Text(text) => (S::decode_native_snapshot(pack::snapshot::NativeSnapshotInput::Text(text), control.decode().map_err(IoError::from_value_error)?).map_err(IoError::from_value_error)?, ArchiveChildren::empty()),
                 IoPayload::Binary(bytes) if bytes.first() == Some(&store::channel::DOCUMENT_ARCHIVE_VERSION) => {
                     let (parent, children) = native_carrier(bytes,&mut control.snapshot_decode().map_err(IoError::from_value_error)?)?;
                     let text = std::str::from_utf8(&parent).map_err(|_| refusal(ValueRefusalKind::InvalidValue, "composed parent is not UTF8 DSL text"))?;
-                    (S::decode_native_snapshot(store::NativeSnapshotInput::Text(text), control.decode().map_err(IoError::from_value_error)?).map_err(IoError::from_value_error)?, children)
+                    (S::decode_native_snapshot(pack::snapshot::NativeSnapshotInput::Text(text), control.decode().map_err(IoError::from_value_error)?).map_err(IoError::from_value_error)?, children)
                 }
                 IoPayload::Binary(_) => return Err(refusal(ValueRefusalKind::InvalidValue, "serializer_entry_text: expected text native payload or composed carrier")),
             };
@@ -2888,31 +3026,31 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// `T::CONFORMANCE` (D5's `SubsetValidator` replacement) after a successful deserialize,
     /// folding its diagnostics into the returned `IoOutcome` — `conformance_runs_after_deserialize`
     /// below proves the diagnostics reach the caller.
-    pub fn deserializer_entry<S: crate::os_store::serialization::ArtifactPack + store::ArtifactNativeSnapshot, T: Deserializer<S>>(own: Dialect) -> IoEntry {
+    pub fn deserializer_entry<S: pack::snapshot::ArtifactPack + pack::snapshot::ArtifactNativeSnapshot, T: Deserializer<S>>(own: Dialect) -> IoEntry {
         // 🚫️async: E4 fn-pointer slot — see `serializer_entry`'s twin above; `T::CONFORMANCE` is
         // already a plain `fn(&S) -> Vec<Diagnostic>` (never async, see `Deserializer`'s own doc
         // comment) so it needs no `resolve_ready` wrapping, only `T::deserialize`.
-        fn run<S: crate::os_store::serialization::ArtifactPack + store::ArtifactNativeSnapshot, T: Deserializer<S>>(payload: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+        fn run<S: pack::snapshot::ArtifactPack + pack::snapshot::ArtifactNativeSnapshot, T: Deserializer<S>>(payload: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
             let outcome = ::semio_framework_async::poll::resolve_ready(T::deserialize(payload, control))?;
             let mut diagnostics = outcome.diagnostics;
             if let Some(conformance) = T::CONFORMANCE {
                 diagnostics.extend(conformance(&outcome.value));
             }
-            Ok(IoOutcome { value: outcome.value.encode_native_snapshot(store::NativeSnapshotEncoding::Binary, control.encode().map_err(IoError::from_value_error)?).map_err(IoError::from_value_error)?, diagnostics })
+            Ok(IoOutcome { value: outcome.value.encode_native_snapshot(pack::snapshot::NativeSnapshotEncoding::Binary, control.encode().map_err(IoError::from_value_error)?).map_err(IoError::from_value_error)?, diagnostics })
         }
         IoEntry { owned_serializer: None, from: T::FROM, into: own, fidelity: T::FIDELITY, direction: IoEntryDirection::Import, sniff: Some(deserializer_sniff::<S, T>), run: run::<S, T> }
     }
 
     /// 🎹️ `deserializer_entry`'s twin for a DSL-text-native `S`.
-    pub fn deserializer_entry_text<S: crate::os_store::serialization::ArtifactDsl + store::ArtifactNativeSnapshot, T: Deserializer<S>>(own: Dialect) -> IoEntry {
+    pub fn deserializer_entry_text<S: pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactNativeSnapshot, T: Deserializer<S>>(own: Dialect) -> IoEntry {
         // 🚫️async: E4 fn-pointer slot — see `deserializer_entry` above.
-        fn run<S: crate::os_store::serialization::ArtifactDsl + store::ArtifactNativeSnapshot, T: Deserializer<S>>(payload: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+        fn run<S: pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactNativeSnapshot, T: Deserializer<S>>(payload: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
             let outcome = ::semio_framework_async::poll::resolve_ready(T::deserialize(payload, control))?;
             let mut diagnostics = outcome.diagnostics;
             if let Some(conformance) = T::CONFORMANCE {
                 diagnostics.extend(conformance(&outcome.value));
             }
-            Ok(IoOutcome { value: outcome.value.encode_native_snapshot(store::NativeSnapshotEncoding::Text, control.encode().map_err(IoError::from_value_error)?).map_err(IoError::from_value_error)?, diagnostics })
+            Ok(IoOutcome { value: outcome.value.encode_native_snapshot(pack::snapshot::NativeSnapshotEncoding::Text, control.encode().map_err(IoError::from_value_error)?).map_err(IoError::from_value_error)?, diagnostics })
         }
         IoEntry { owned_serializer: None, from: T::FROM, into: own, fidelity: T::FIDELITY, direction: IoEntryDirection::Import, sniff: Some(deserializer_sniff::<S, T>), run: run::<S, T> }
     }

@@ -4,7 +4,7 @@ import jsonPatch,{type Operation} from "fast-json-patch";
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
 import schema from "../🧬️schema/🔣️.json";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import {LeaseDetachCursor,type LeaseScopeSource} from "../🟦️.ts";
 /** 📏️ A `field: size_of::<T>()` demand, whatever path prefix or spacing spells the intrinsic. */
 const sizeOfDemand=(field:string,type:string)=>new RegExp(`\\b${field}\\s*:\\s*(?:(?:std|core)::mem::)?size_of::<\\s*${type}\\s*>\\(\\)`);

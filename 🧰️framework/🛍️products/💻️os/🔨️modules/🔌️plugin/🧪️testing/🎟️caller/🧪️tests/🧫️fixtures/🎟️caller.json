@@ -1,0 +1,22 @@
+{
+  "operation": 97146,
+  "generation": 17,
+  "fuel": 32768,
+  "clockUs": 1000,
+  "deadlineUs": 1500,
+  "maximumTurns": 32768,
+  "grant": {
+    "maximumItems": 65536,
+    "maximumCopyBytes": 134217728,
+    "maximumCapacityBytes": 268435456,
+    "maximumReleaseBytes": 536870912,
+    "maximumDepth": 4096
+  },
+  "retirementLoan": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 32768,
+    "maximumCapacityBytes": 262144,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 4096
+  }
+}

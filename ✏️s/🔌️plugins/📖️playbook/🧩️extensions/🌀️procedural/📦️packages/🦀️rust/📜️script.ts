@@ -1,13 +1,14 @@
 #!/usr/bin/env bun
+import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { join } from "node:path";
-import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️laws/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/⏱️budget/🟦️.ts";
 /** 📦️ Extension package router: `bun ./📜️script.ts <test|package>`. */
-import { runRepositoryCargoTests, runRepositoryExactCargoLaws, runExtensionComponentPackage, runBun } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { runRepositoryCargoTests, runRepositoryExactCargoLaws, runExtensionComponentPackage, runBun, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -20,7 +21,7 @@ class GeometryContractScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("geometry-contract accepts no arguments");
     runBun(["test", "./✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧪️tests/🔬️geometry-lifetime/🟦️.ts"], this.repoRoot);
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" }, nativeEnv: { RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-s-plugin-playbook-procedural", target: { kind: "lib" }, laws: [
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" }, nativeEnv: { RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-s-plugin-playbook-procedural", target: { kind: "lib" }, laws: [
         "instance_geometry_admits_session_shell_before_terminal",
         "instance_geometry_replays_durable_sources_and_preserves_preview_authority",
         "preview_body_emits_world_scene",
@@ -36,7 +37,7 @@ class GeometryContractScript extends BundleScript {
 class PackageScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("package writes the Nx-owned deliverable and accepts no output override");
-    await runExtensionComponentPackage({ componentDir: join(import.meta.dir, "../../🧩️component/📦️packages/🦀️rust"), repoRoot: this.repoRoot });
+    await runExtensionComponentPackage({ control: scriptCompilerAdmissionControlV1(this.invocation, "component:package", 0), componentDir: join(import.meta.dir, "../../🧩️component/📦️packages/🦀️rust"), repoRoot: this.repoRoot });
   }
 }
 

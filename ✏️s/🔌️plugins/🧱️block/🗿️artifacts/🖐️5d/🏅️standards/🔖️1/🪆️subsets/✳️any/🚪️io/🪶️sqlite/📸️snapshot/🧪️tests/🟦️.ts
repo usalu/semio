@@ -3,7 +3,7 @@ import binary64Schema from "../../../../../../../../../../../../../🧰️framew
 /** 🧱️ Exact Block5d canonical parent laws share independent neutral primitive evidence. */
 import {expect,test} from 'bun:test';
 import Ajv from 'ajv';
-import laws from "../🧫️fixtures/🔣️.json";
+import laws from "./🧫️fixtures/🔣️.json";
 import * as artifact from "../../../../🧬️schema/🟦️.ts";
 import * as snapshot from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 function specimen(bits:bigint):snapshot.Block5dSnapshot{const word={bits};return{schema:'literal\0世界',partKind:{id:'',name:'',label:'',variant:null,description:'',icon:null,unit:null},part2d:{shape:null,radius:word,width:null,height:word,color:null,iconKind:null},part3d:{orientation:[word,word,word,word],scale:[word,word,word]},representations:[{id:'',name:'',meshUrl:null,tags:['',''],lod:null,description:'',attributes:[{key:'',value:'',definition:null}]}],gripKinds:[{id:'',name:'',label:'',color:'',defaultRopeKind:'unresolved'}],grips:[{id:'',gripKind:'unresolved',angle:word,radius2d:word,position:[word,word,word],direction:[word,word,word],radius3d:word}],compatibility:[{id:'',source:'unresolved',target:'',bidirectional:false}],attributes:[{key:'',value:'',definition:null}],authors:[{id:'',name:'',email:null}],camera2d:{x:word,y:word,zoom:word},camera3d:{position:[word,word,word],target:[word,word,word],zoom:word},meta:{description:'literal\0😀'}}}
@@ -98,7 +98,7 @@ test('SQLite Block5d authored schema and exact row refusal precede untouched dom
 import jsonSchema from "../../../../🧬️schema/🔣️.json";
 const jsonValidate=new Ajv({strict:false}).compile(jsonSchema);
 import {fileURLToPath} from "node:url";
-const committedFixtureRoot=fileURLToPath(new URL('../../../../🧫️fixtures/🧬️mutations',import.meta.url));
+const committedFixtureRoot=fileURLToPath(new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations",import.meta.url));
 const committedSnapshots=[...new Bun.Glob('**/📸️snapshot/**/🔣️.json').scanSync({cwd:committedFixtureRoot})].sort();
 test('SQLite Block5d committed neutral snapshot corpus remains complete',()=>{expect(committedSnapshots.length).toBe(82)});
 for(const relative of committedSnapshots)test('SQLite Block5d committed semantic snapshot '+relative,async()=>{
@@ -163,7 +163,7 @@ test('SQLite shared Block3d canonical child identities preserve native UTF-8 dom
 });
 
 
-import callerLedger from "../🧫️fixtures/💰️caller/🔣️.json";
+import callerLedger from "./🧫️fixtures/💰️caller/🔣️.json";
 
 import {sqliteOperation} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import {NativeDecodeControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
@@ -209,7 +209,7 @@ for(const direction of['projection','reconstruction']as const)test('Block5d supp
  expect(value).toEqual(unchanged);
 });
 
-import captureContract from "../🧫️fixtures/🧱️capture/🔣️.json";
+import captureContract from "./🧫️fixtures/🧱️capture/🔣️.json";
 
 test('Block5d exact literal owner capture precedes mutable callbacks',async()=>{
  expect(captureContract["authority"]).toEqual("literalTopologyBeforeCallback");expect(captureContract["ieeeWord"]).toEqual("7ff8000000000042");expect(captureContract["extraPaths"]).toEqual([[],["partKind"],["part2d"],["part2d","radius"],["part3d"],["part3d","orientation",0],["part3d","scale",0],["representations",0],["representations",0,"attributes",0],["gripKinds",0],["grips",0],["grips",0,"angle"],["grips",0,"radius2d"],["grips",0,"position",0],["grips",0,"direction",0],["grips",0,"radius3d"],["compatibility",0],["attributes",0],["authors",0],["camera2d"],["camera2d","x"],["camera3d"],["camera3d","position",0],["camera3d","target",0],["camera3d","zoom"],["meta"],["part3d","orientation"],["part3d","scale"],["representations"],["representations",0,"tags"],["representations",0,"attributes"],["gripKinds"],["grips"],["grips",0,"position"],["grips",0,"direction"],["compatibility"],["attributes"],["authors"],["camera3d","position"],["camera3d","target"]]);

@@ -55,8 +55,8 @@ type FixtureCase = {
   readonly expected: { readonly action: string; readonly args: Record<string, unknown>; readonly press?: "open" | "released" } | null;
 };
 
-const law = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/🎛️retained-control-commit/🔣️.json"), "utf8")) as { readonly cases: readonly FixtureCase[] };
-const sliderPresentation = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/🎚️slider-presentation/🔣️.json"), "utf8")) as { readonly tokens: { readonly readoutWidth: number } };
+const law = JSON.parse(readFileSync(resolve(uiRoot, "🧪️tests/🧫️fixtures/🎛️retained-control-commit/🔣️.json"), "utf8")) as { readonly cases: readonly FixtureCase[] };
+const sliderPresentation = JSON.parse(readFileSync(resolve(uiRoot, "🧪️tests/🧫️fixtures/🎚️slider-presentation/🔣️.json"), "utf8")) as { readonly tokens: { readonly readoutWidth: number } };
 
 /** 🏷️ `uiInputField`: a scalar payload is named by its trigger, never by the control that fired it. */
 const inputField = (trigger: string): string => (trigger === "delta" ? "delta" : "value");

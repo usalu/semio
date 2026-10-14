@@ -1,0 +1,180 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "originalGrant",
+    "nativeMaximumBytes",
+    "sqlMaximumBytes",
+    "maximumCloseTurns",
+    "literal",
+    "cases",
+    "signedOffsets",
+    "edits"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "originalGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "nativeMaximumBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sqlMaximumBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maximumCloseTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "literal": {
+      "type": "string"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "snapshot",
+          "rows"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "rows": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "snapshot": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema",
+              "runs"
+            ],
+            "properties": {
+              "schema": {
+                "type": "string"
+              },
+              "runs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "language",
+                    "content",
+                    "marks"
+                  ],
+                  "properties": {
+                    "language": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "marks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "kind",
+                          "href"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "enum": [
+                              "bold",
+                              "italic",
+                              "code",
+                              "link"
+                            ]
+                          },
+                          "href": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "signedOffsets": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "edits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "sql",
+          "reconstruct"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sql": {
+            "type": "string"
+          },
+          "reconstruct": {
+            "enum": [
+              "invalid",
+              "different"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+

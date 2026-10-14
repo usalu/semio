@@ -11,12 +11,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `Document` to its binary pack form.
 pub fn encode(document: &En1991Snapshot) -> Vec<u8> {
-    store::os_store::serialization::ArtifactPack::encode_pack(document)
+    pack::snapshot::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Document` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<En1991Snapshot, PackError> {
-    <En1991Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)
+    <En1991Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)
 }
 
 #[cfg(test)]
@@ -33,11 +33,11 @@ use framework_schema::ArtifactSchema;
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 /// 📦️ Decode `.pack.semio` envelope.
 pub fn decode_en1991_pack(bytes: &[u8]) -> Result<En1991Snapshot, String> {
-    <En1991Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
+    <En1991Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
 }
 /// 📦️ Encode `.pack.semio` envelope.
 pub fn encode_en1991_pack(snapshot: &En1991Snapshot) -> Vec<u8> {
-    store::os_store::serialization::ArtifactPack::encode_pack(snapshot)
+    pack::snapshot::ArtifactPack::encode_pack(snapshot)
 }
 }
 pub use native_snapshot_codec::*;

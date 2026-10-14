@@ -21,7 +21,8 @@ impl ArtifactCommandWork<App> for Work {
         let DrawingLayerNode::Path(path)=crate::schema::find_drawing_layer(snapshot,&payload.layer_id)? else {return None};
         (!self.complete&&path.segments.len()<=65536&&snapshot.layers.len()+snapshot.assets.len()<=4096&&interaction.selection.values().all(|value|value.ids.len()<=4096)).then_some(1)
     }
-    fn step(&mut self,input:&ArtifactCommandInputs<'_,App>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<App>,Fault> {
+    fn step(&mut self,input:&ArtifactCommandInputs<'_,App>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<App>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.complete||self.closing {return Err(Fault::from("drawing-path-work-terminal"));}
         if cx.is_cancelled() {return Err(Fault::from("Path simplification cancelled"));}
         let DrawingCommand::EditPath(payload)=input.command else {return Err(Fault::from("drawing-path-command-required"));};
@@ -63,6 +64,9 @@ impl ArtifactCommandWork<App> for Work {
             return Ok(ArtifactCommandWorkStep::Complete(emit));
         }
         Ok(ArtifactCommandWorkStep::Progress {stage:"path-simplify",preview:b""})
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
     fn begin_close(&mut self) {self.closing=true;}
     fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep {
@@ -102,7 +106,7 @@ pub(super) fn build(request:semio_framework_plugin::ArtifactOwnedToolJobRequest<
     let work=Work::new();
     if request.tool_id!="editPath"||work.extent(&request.command,&request.snapshot,&request.interaction_state,Some(&request.context))!=Some(1) {return Err(Fault::from("Path editing exceeds its registered source capacity"));}
     let operation=semio_framework_plugin::AppOperationContext {app_instance_id:request.app_instance_id,parent_document_id:request.parent_document_id.clone(),operation_id:request.operation.operation.0,generation:request.operation.generation.0,canonical_base_revision:request.canonical_base_revision,retained: request.retained,authoring_seed:request.authoring_seed.clone()};
-    let payload=semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {command:*request.command,snapshot:request.snapshot,config:request.config,history:request.history,interaction_state:request.interaction_state,interaction_hover:request.interaction_hover,context:Some(request.context),operation,completion:request.completion},DrawingCommand::command_id,65536,4096,Box::new(work));
+    let payload=semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {command:*request.command,snapshot:request.snapshot, snapshot_read:request.snapshot_read,config:request.config,history:request.history,interaction_state:request.interaction_state,interaction_hover:request.interaction_hover,context:Some(request.context),operation,completion:request.completion},DrawingCommand::command_id,65536,4096,Box::new(work));
     Ok(semio_framework::ToolOperationSpec::new(request.controller_id,request.tool_id,request.payload_schema_id,payload,request.operation))
 }
 #[cfg(test)]

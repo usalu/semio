@@ -113,7 +113,7 @@ pub mod derived_construction {
             Self { snapshot }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<TsvSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<TsvSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(crate::standards::iana::subsets::any::io::binary::snapshot::read_tsv_source_binary(bytes)?))
@@ -178,7 +178,7 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <TsvSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <TsvSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

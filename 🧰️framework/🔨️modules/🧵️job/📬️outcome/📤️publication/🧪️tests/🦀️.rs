@@ -1,7 +1,7 @@
 //! 🧪️ Real original publication preserves source identity, bounded copies, physical receipts and terminal custody.
 use super::*;
 fn observed<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(value,(heap.requested_bytes,heap.released_bytes))}
-fn original_grant()->RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let p=law["originalGrant"].as_array().unwrap();RetainedCloneGrant{maximum_items:p[0].as_u64().unwrap()as usize,maximum_copy_bytes:p[1].as_u64().unwrap()as usize,maximum_capacity_bytes:p[2].as_u64().unwrap()as usize,maximum_release_bytes:p[3].as_u64().unwrap()as usize,maximum_depth:p[4].as_u64().unwrap()as usize}}
+fn original_grant()->RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let p=law["originalGrant"].as_array().unwrap();RetainedCloneGrant{maximum_items:p[0].as_u64().unwrap()as usize,maximum_copy_bytes:p[1].as_u64().unwrap()as usize,maximum_capacity_bytes:p[2].as_u64().unwrap()as usize,maximum_release_bytes:p[3].as_u64().unwrap()as usize,maximum_depth:p[4].as_u64().unwrap()as usize}}
 fn assert_physical(progress:RetainedCloneProgress,heap:(usize,usize),grant:RetainedCloneGrant){assert!(progress.fits(grant));assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),heap)}
 #[test]
 fn original_source_publication_preserves_native_identity_paid_stages_and_every_cancellation_frontier(){

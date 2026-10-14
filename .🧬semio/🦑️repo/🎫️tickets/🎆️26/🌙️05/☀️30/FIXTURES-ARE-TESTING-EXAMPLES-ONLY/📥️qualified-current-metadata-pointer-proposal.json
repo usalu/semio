@@ -1,0 +1,102 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🏺️historical-package-owner-identity/🔣️.json",
+    "pointer": "/historicalDocument/libraryRelativePath",
+    "currentSha256": "3b423104b00eab3012cef32cab6bfadcb283dfc3db51e4dd9ebb99b3e551fa3c",
+    "before": "🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+    "after": "🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+    "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+    "targetSha256": "c3e39ed5122709c5f963f14a0bc7f53b93ec7caad414a9c6db39bc5c19ce5be9",
+    "role": "qualified original serialized physical locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🎚️tool-configuration-ownership/🔣️.json",
+    "pointer": "/postcss/historicalFixturePath",
+    "currentSha256": "40bafe80a00e620691fe19364b8a003d36c46ace540e67e57c5f94aa111c089c",
+    "before": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+    "after": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+    "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+    "targetSha256": "c3e39ed5122709c5f963f14a0bc7f53b93ec7caad414a9c6db39bc5c19ce5be9",
+    "role": "qualified original serialized physical locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️root-surface-abstraction-law-source/🔣️.json",
+    "pointer": "/sourceData/1",
+    "currentSha256": "882df3dc87bec9f0d988533507dc7aba016a8d16182a0d8ae9c17bc27a89d940",
+    "before": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧫️fixtures/🧪️abstraction-ownership/🔣️.json",
+    "after": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🧫️fixtures/🧪️abstraction-ownership/🔣️.json",
+    "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🧫️fixtures/🧪️abstraction-ownership/🔣️.json",
+    "targetSha256": "0c8a8e5b210b54604ec6d3a06724f1e1b88c2dd27c2b13833f38787fdd362462",
+    "role": "qualified original serialized physical locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/❄️frozen-coordinate-evidence/🔣️.json",
+    "pointer": "/registration/path",
+    "currentSha256": "ea9ead84685775e884a525a6746e147da43d8e958d2c4987ec5e2db9e85206a9",
+    "before": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
+    "after": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
+    "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
+    "targetSha256": "eca5acc066ccf1ec2f686a1a4cc98fccc3089a87dd354e3c5aa72f687a8b6080",
+    "role": "qualified original serialized physical locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️cargo-transaction-command-source/🔣️.json",
+    "pointer": "/transaction/ledgerBoundaries",
+    "currentSha256": "dccecaac8da58b60daf10fd344d27bc4576c27ff06a637ba92c0591b3d74774b",
+    "before": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json",
+    "after": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json",
+    "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json",
+    "targetSha256": "c6e22c8658e818790da1922383e0256e6bc93447ea1590c95a22d25820b7378f",
+    "role": "qualified original serialized physical locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️cargo-transaction-command-source/🔣️.json",
+    "pointer": "/transaction/harness",
+    "currentSha256": "dccecaac8da58b60daf10fd344d27bc4576c27ff06a637ba92c0591b3d74774b",
+    "before": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🪢️transaction-harness-retention/🔣️.json",
+    "after": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🪢️transaction-harness-retention/🔣️.json",
+    "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🪢️transaction-harness-retention/🔣️.json",
+    "targetSha256": "e7befe1c8c8b02c1ab21d2a2b4bd9aa6bdac17942b8345c91e5ecbd782119de2",
+    "role": "qualified original serialized physical locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🔎️json-reference-owner-lookup/🔣️.json",
+    "pointer": "/corpus/2",
+    "currentSha256": "d9ffbeaf1f0a8cbe0ddb7f733bc0ff81e0e824b591aafb543659b86c40003e4c",
+    "before": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
+    "after": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
+    "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
+    "targetSha256": "eca5acc066ccf1ec2f686a1a4cc98fccc3089a87dd354e3c5aa72f687a8b6080",
+    "role": "qualified original serialized physical locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🛤️typescript-path-collection/🔣️.json",
+    "pointer": "/exampleInput",
+    "currentSha256": "4fadbca0bc58e9f063c7dbb4fd7884c67f7fa47967daf0c7d429a3df50864d05",
+    "before": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🛤️typescript-path-collection/🔬️mixed-template/🟦️.ts",
+    "after": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🛤️typescript-path-collection/🔬️mixed-template/🟦️.ts",
+    "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🛤️typescript-path-collection/🔬️mixed-template/🟦️.ts",
+    "targetSha256": "48042a15d7d4fad6c03870461dbc4f952343866373919544c24fbbfab1555c6a",
+    "role": "qualified original serialized physical locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+    "pointer": "/exclusions/censusExcludedEvidencePaths/0",
+    "currentSha256": "c3e39ed5122709c5f963f14a0bc7f53b93ec7caad414a9c6db39bc5c19ce5be9",
+    "before": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+    "after": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+    "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+    "targetSha256": "c3e39ed5122709c5f963f14a0bc7f53b93ec7caad414a9c6db39bc5c19ce5be9",
+    "role": "qualified original serialized physical locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+    "pointer": "/exclusions/cadDrawGoldenPath",
+    "currentSha256": "c3e39ed5122709c5f963f14a0bc7f53b93ec7caad414a9c6db39bc5c19ce5be9",
+    "before": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
+    "after": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
+    "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
+    "targetSha256": "eca5acc066ccf1ec2f686a1a4cc98fccc3089a87dd354e3c5aa72f687a8b6080",
+    "role": "qualified original serialized physical locator"
+  }
+]

@@ -13,12 +13,12 @@ pub const REUSE_TERRAIN_EXAMPLE_TEXT: &str = include_str!("../../../🖼️asset
 
 /// 📖️ Parses `.gisterrain` DSL text into a `GisTerrainSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<GisTerrainSnapshot, semio_framework_diagnostic::TextError> {
-    <GisTerrainSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <GisTerrainSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `GisTerrainSnapshot` back to `.gisterrain` DSL text.
 pub fn print_dsl(document: &GisTerrainSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(document)
+    pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -36,7 +36,7 @@ pub type GisTerrainSnapshotText = String;
 mod pack_codec {
 use crate::standards::v1::subsets::any::schema::snapshot::GisTerrainSnapshot;
 use crate::standards::v1::subsets::any::io::binary::snapshot::owned_pack::*;
-impl store::os_store::serialization::ArtifactDsl for GisTerrainSnapshot{
+impl pack::snapshot::ArtifactDsl for GisTerrainSnapshot{
  const EXTENSION:&'static str="gisterrain";
  fn envelope_id()->&'static str{"gis.gisterrain"}
  fn print_dsl(&self)->String{let body=semio_framework_dsl_record::print(&Terrain::from_snapshot(self).__dsl_to_record(),&Terrain::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document);let envelope=store::semio_format::SemioEnvelope::from_envelope_id(Self::envelope_id(),store::semio_format::Component::Dsl,1).expect("terrain envelope");store::semio_format::wrap_text(&envelope,&body)}
@@ -136,22 +136,22 @@ pub(crate) fn dec_child_opt<S>(s: &str) -> Result<Option<store::os_store::artifa
 
 /// 🔁️ One JSON report of carrying `dsl_text` through this subset's own codecs, for a
 /// language-neutral test adapter. Same reachability wall as `gis_terrain_mutation_report_json`:
-/// `store::os_store::serialization::ArtifactDsl`/`store::os_store::serialization::ArtifactPack` and their error types are unnameable outside this
+/// `pack::snapshot::ArtifactDsl`/`pack::snapshot::ArtifactPack` and their error types are unnameable outside this
 /// crate, so the identity law's evidence has to be produced here and handed over as text.
 ///
 /// `canonicalText` is `print_dsl` of the parsed document and `canonicalTextAgain` is `print_dsl` of
-/// re-parsing that — [`store::os_store::serialization::ArtifactDsl`]'s own documented LAW is that canonical output is a
+/// re-parsing that — [`pack::snapshot::ArtifactDsl`]'s own documented LAW is that canonical output is a
 /// `parse_dsl` fixpoint (hand-written text may normalize on the way in), so the two must be
 /// byte-identical while neither is required to equal the committed file. `packDecoded` comes back
 /// through a SEPARATE binary codec, so agreeing on one snapshot cannot be achieved by carrying text
 /// bytes across.
 pub fn gis_terrain_identity_report_json(dsl_text: &str) -> Result<String, String> {
-    let parsed = <GisTerrainSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(dsl_text).map_err(|error| error.to_string())?;
-    let canonical = <GisTerrainSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&parsed);
-    let reparsed = <GisTerrainSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&canonical).map_err(|error| error.to_string())?;
-    let canonical_again = <GisTerrainSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&reparsed);
-    let packed = <GisTerrainSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&reparsed);
-    let unpacked = <GisTerrainSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
+    let parsed = <GisTerrainSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(dsl_text).map_err(|error| error.to_string())?;
+    let canonical = <GisTerrainSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&parsed);
+    let reparsed = <GisTerrainSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&canonical).map_err(|error| error.to_string())?;
+    let canonical_again = <GisTerrainSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&reparsed);
+    let packed = <GisTerrainSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&reparsed);
+    let unpacked = <GisTerrainSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
     let report = semio_framework_pack_json::object([
         ("parsed".to_string(), semio_framework_pack_json::from_dsl_value(&parsed.to_value())),
         ("reparsed".to_string(), semio_framework_pack_json::from_dsl_value(&reparsed.to_value())),
@@ -190,7 +190,7 @@ pub fn empty_gis_terrain_snapshot() -> GisTerrainSnapshot {
 /// exaggeration=...` header (see `crate::GisTerrainSnapshot`'s
 /// derive-generated `.gisterrain` DSL).
 pub fn default_terrain_document() -> GisTerrainSnapshot {
-    <GisTerrainSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(REUSE_TERRAIN_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_terrain_snapshot())
+    <GisTerrainSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(REUSE_TERRAIN_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_terrain_snapshot())
 }
 
 #[derive(ToValue)]

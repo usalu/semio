@@ -2,7 +2,7 @@ import { selectCases } from "../../🔍️discovery/🎛️selection/🟦️.ts"
 import { runPhases } from "../../⚖️parity/📋️orchestration/🟦️.ts";
 import { discoverTestCases, testLayoutBreaches, validateAllContracts } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { type BreachRecord, formatBreachReport, getRepoMetaDir } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { Script } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 

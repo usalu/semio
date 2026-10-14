@@ -1,0 +1,244 @@
+{
+  "cases": [
+    {
+      "id": "field-invalidValue",
+      "kind": "invalidValue",
+      "boundary": "field",
+      "message": "native refusal",
+      "expected": {
+        "kind": "invalidValue",
+        "message": "field.native refusal"
+      }
+    },
+    {
+      "id": "field-canceled",
+      "kind": "canceled",
+      "boundary": "field",
+      "message": "native refusal",
+      "expected": {
+        "kind": "canceled",
+        "message": "field.native refusal"
+      }
+    },
+    {
+      "id": "field-ownershipLimit",
+      "kind": "ownershipLimit",
+      "boundary": "field",
+      "message": "native refusal",
+      "expected": {
+        "kind": "ownershipLimit",
+        "message": "field.native refusal"
+      }
+    },
+    {
+      "id": "field-allocationFailed",
+      "kind": "allocationFailed",
+      "boundary": "field",
+      "message": "native refusal",
+      "expected": {
+        "kind": "allocationFailed",
+        "message": "field.native refusal"
+      }
+    },
+    {
+      "id": "field-workLimit",
+      "kind": "workLimit",
+      "boundary": "field",
+      "message": "native refusal",
+      "expected": {
+        "kind": "workLimit",
+        "message": "field.native refusal"
+      }
+    },
+    {
+      "id": "field-depthLimit",
+      "kind": "depthLimit",
+      "boundary": "field",
+      "message": "native refusal",
+      "expected": {
+        "kind": "depthLimit",
+        "message": "field.native refusal"
+      }
+    },
+    {
+      "id": "field-unsupportedOwner",
+      "kind": "unsupportedOwner",
+      "boundary": "field",
+      "message": "native refusal",
+      "expected": {
+        "kind": "unsupportedOwner",
+        "message": "field.native refusal"
+      }
+    },
+    {
+      "id": "field-invariantViolated",
+      "kind": "invariantViolated",
+      "boundary": "field",
+      "message": "native refusal",
+      "expected": {
+        "kind": "invariantViolated",
+        "message": "field.native refusal"
+      }
+    },
+    {
+      "id": "record-invalidValue",
+      "kind": "invalidValue",
+      "boundary": "record",
+      "message": "native refusal",
+      "expected": {
+        "kind": "invalidValue",
+        "message": "record.native refusal"
+      }
+    },
+    {
+      "id": "record-canceled",
+      "kind": "canceled",
+      "boundary": "record",
+      "message": "native refusal",
+      "expected": {
+        "kind": "canceled",
+        "message": "record.native refusal"
+      }
+    },
+    {
+      "id": "record-ownershipLimit",
+      "kind": "ownershipLimit",
+      "boundary": "record",
+      "message": "native refusal",
+      "expected": {
+        "kind": "ownershipLimit",
+        "message": "record.native refusal"
+      }
+    },
+    {
+      "id": "record-allocationFailed",
+      "kind": "allocationFailed",
+      "boundary": "record",
+      "message": "native refusal",
+      "expected": {
+        "kind": "allocationFailed",
+        "message": "record.native refusal"
+      }
+    },
+    {
+      "id": "record-workLimit",
+      "kind": "workLimit",
+      "boundary": "record",
+      "message": "native refusal",
+      "expected": {
+        "kind": "workLimit",
+        "message": "record.native refusal"
+      }
+    },
+    {
+      "id": "record-depthLimit",
+      "kind": "depthLimit",
+      "boundary": "record",
+      "message": "native refusal",
+      "expected": {
+        "kind": "depthLimit",
+        "message": "record.native refusal"
+      }
+    },
+    {
+      "id": "record-unsupportedOwner",
+      "kind": "unsupportedOwner",
+      "boundary": "record",
+      "message": "native refusal",
+      "expected": {
+        "kind": "unsupportedOwner",
+        "message": "record.native refusal"
+      }
+    },
+    {
+      "id": "record-invariantViolated",
+      "kind": "invariantViolated",
+      "boundary": "record",
+      "message": "native refusal",
+      "expected": {
+        "kind": "invariantViolated",
+        "message": "record.native refusal"
+      }
+    },
+    {
+      "id": "boxed-invalidValue",
+      "kind": "invalidValue",
+      "boundary": "boxed",
+      "message": "native refusal",
+      "expected": {
+        "kind": "invalidValue",
+        "message": "boxed.native refusal"
+      }
+    },
+    {
+      "id": "boxed-canceled",
+      "kind": "canceled",
+      "boundary": "boxed",
+      "message": "native refusal",
+      "expected": {
+        "kind": "canceled",
+        "message": "boxed.native refusal"
+      }
+    },
+    {
+      "id": "boxed-ownershipLimit",
+      "kind": "ownershipLimit",
+      "boundary": "boxed",
+      "message": "native refusal",
+      "expected": {
+        "kind": "ownershipLimit",
+        "message": "boxed.native refusal"
+      }
+    },
+    {
+      "id": "boxed-allocationFailed",
+      "kind": "allocationFailed",
+      "boundary": "boxed",
+      "message": "native refusal",
+      "expected": {
+        "kind": "allocationFailed",
+        "message": "boxed.native refusal"
+      }
+    },
+    {
+      "id": "boxed-workLimit",
+      "kind": "workLimit",
+      "boundary": "boxed",
+      "message": "native refusal",
+      "expected": {
+        "kind": "workLimit",
+        "message": "boxed.native refusal"
+      }
+    },
+    {
+      "id": "boxed-depthLimit",
+      "kind": "depthLimit",
+      "boundary": "boxed",
+      "message": "native refusal",
+      "expected": {
+        "kind": "depthLimit",
+        "message": "boxed.native refusal"
+      }
+    },
+    {
+      "id": "boxed-unsupportedOwner",
+      "kind": "unsupportedOwner",
+      "boundary": "boxed",
+      "message": "native refusal",
+      "expected": {
+        "kind": "unsupportedOwner",
+        "message": "boxed.native refusal"
+      }
+    },
+    {
+      "id": "boxed-invariantViolated",
+      "kind": "invariantViolated",
+      "boundary": "boxed",
+      "message": "native refusal",
+      "expected": {
+        "kind": "invariantViolated",
+        "message": "boxed.native refusal"
+      }
+    }
+  ]
+}

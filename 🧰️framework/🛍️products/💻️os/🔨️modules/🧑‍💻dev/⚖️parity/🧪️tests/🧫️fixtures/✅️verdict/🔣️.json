@@ -1,0 +1,468 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "complete evidence",
+      "report": {
+        "variant": "puzzle3d",
+        "boot": {
+          "react": "PASS",
+          "wgpu": "PASS"
+        },
+        "structural": {
+          "status": "PASS",
+          "nodeCount": 2,
+          "mismatches": []
+        },
+        "pixel": {
+          "status": "PASS",
+          "comparedRegions": 1,
+          "regions": []
+        },
+        "behavioral": {
+          "status": "PASS",
+          "steps": [
+            {
+              "index": 0,
+              "step": {
+                "kind": "stateTransition"
+              },
+              "status": "PASS"
+            }
+          ]
+        },
+        "durationMs": 1
+      },
+      "expected": "PASS"
+    },
+    {
+      "name": "boot alone",
+      "report": {
+        "variant": "puzzle3d",
+        "boot": {
+          "react": "PASS",
+          "wgpu": "PASS"
+        },
+        "durationMs": 1
+      },
+      "expected": "INCOMPLETE"
+    },
+    {
+      "name": "structure failure",
+      "report": {
+        "variant": "puzzle3d",
+        "boot": {
+          "react": "PASS",
+          "wgpu": "PASS"
+        },
+        "structural": {
+          "status": "FAIL",
+          "nodeCount": 2,
+          "mismatches": []
+        },
+        "pixel": {
+          "status": "PASS",
+          "comparedRegions": 1,
+          "regions": []
+        },
+        "behavioral": {
+          "status": "PASS",
+          "steps": [
+            {
+              "index": 0,
+              "step": {
+                "kind": "stateTransition"
+              },
+              "status": "PASS"
+            }
+          ]
+        },
+        "durationMs": 1
+      },
+      "expected": "FAIL"
+    },
+    {
+      "name": "pixel failure",
+      "report": {
+        "variant": "puzzle3d",
+        "boot": {
+          "react": "PASS",
+          "wgpu": "PASS"
+        },
+        "structural": {
+          "status": "PASS",
+          "nodeCount": 2,
+          "mismatches": []
+        },
+        "pixel": {
+          "status": "FAIL",
+          "comparedRegions": 1,
+          "regions": []
+        },
+        "behavioral": {
+          "status": "PASS",
+          "steps": [
+            {
+              "index": 0,
+              "step": {
+                "kind": "stateTransition"
+              },
+              "status": "PASS"
+            }
+          ]
+        },
+        "durationMs": 1
+      },
+      "expected": "FAIL"
+    },
+    {
+      "name": "behavior failure",
+      "report": {
+        "variant": "puzzle3d",
+        "boot": {
+          "react": "PASS",
+          "wgpu": "PASS"
+        },
+        "structural": {
+          "status": "PASS",
+          "nodeCount": 2,
+          "mismatches": []
+        },
+        "pixel": {
+          "status": "PASS",
+          "comparedRegions": 1,
+          "regions": []
+        },
+        "behavioral": {
+          "status": "FAIL",
+          "steps": [
+            {
+              "index": 0,
+              "step": {
+                "kind": "stateTransition"
+              },
+              "status": "PASS"
+            }
+          ]
+        },
+        "durationMs": 1
+      },
+      "expected": "FAIL"
+    },
+    {
+      "name": "skipped behavior",
+      "report": {
+        "variant": "puzzle3d",
+        "boot": {
+          "react": "PASS",
+          "wgpu": "PASS"
+        },
+        "structural": {
+          "status": "PASS",
+          "nodeCount": 2,
+          "mismatches": []
+        },
+        "pixel": {
+          "status": "PASS",
+          "comparedRegions": 1,
+          "regions": []
+        },
+        "behavioral": {
+          "status": "SKIP",
+          "steps": [
+            {
+              "index": 0,
+              "step": {
+                "kind": "stateTransition"
+              },
+              "status": "PASS"
+            }
+          ]
+        },
+        "durationMs": 1
+      },
+      "expected": "INCOMPLETE"
+    },
+    {
+      "name": "no structural nodes",
+      "report": {
+        "variant": "puzzle3d",
+        "boot": {
+          "react": "PASS",
+          "wgpu": "PASS"
+        },
+        "structural": {
+          "status": "PASS",
+          "nodeCount": 0,
+          "mismatches": []
+        },
+        "pixel": {
+          "status": "PASS",
+          "comparedRegions": 1,
+          "regions": []
+        },
+        "behavioral": {
+          "status": "PASS",
+          "steps": [
+            {
+              "index": 0,
+              "step": {
+                "kind": "stateTransition"
+              },
+              "status": "PASS"
+            }
+          ]
+        },
+        "durationMs": 1
+      },
+      "expected": "INCOMPLETE"
+    },
+    {
+      "name": "no compared regions",
+      "report": {
+        "variant": "puzzle3d",
+        "boot": {
+          "react": "PASS",
+          "wgpu": "PASS"
+        },
+        "structural": {
+          "status": "PASS",
+          "nodeCount": 2,
+          "mismatches": []
+        },
+        "pixel": {
+          "status": "PASS",
+          "comparedRegions": 0,
+          "regions": []
+        },
+        "behavioral": {
+          "status": "PASS",
+          "steps": [
+            {
+              "index": 0,
+              "step": {
+                "kind": "stateTransition"
+              },
+              "status": "PASS"
+            }
+          ]
+        },
+        "durationMs": 1
+      },
+      "expected": "INCOMPLETE"
+    },
+    {
+      "name": "no executed interactions",
+      "report": {
+        "variant": "puzzle3d",
+        "boot": {
+          "react": "PASS",
+          "wgpu": "PASS"
+        },
+        "structural": {
+          "status": "PASS",
+          "nodeCount": 2,
+          "mismatches": []
+        },
+        "pixel": {
+          "status": "PASS",
+          "comparedRegions": 1,
+          "regions": []
+        },
+        "behavioral": {
+          "status": "PASS",
+          "steps": []
+        },
+        "durationMs": 1
+      },
+      "expected": "INCOMPLETE"
+    },
+    {
+      "name": "skipped interaction",
+      "report": {
+        "variant": "puzzle3d",
+        "boot": {
+          "react": "PASS",
+          "wgpu": "PASS"
+        },
+        "structural": {
+          "status": "PASS",
+          "nodeCount": 2,
+          "mismatches": []
+        },
+        "pixel": {
+          "status": "PASS",
+          "comparedRegions": 1,
+          "regions": []
+        },
+        "behavioral": {
+          "status": "PASS",
+          "steps": [
+            {
+              "index": 0,
+              "step": {
+                "kind": "stateTransition"
+              },
+              "status": "SKIP"
+            }
+          ]
+        },
+        "durationMs": 1
+      },
+      "expected": "INCOMPLETE"
+    },
+    {
+      "name": "failed interaction in pass envelope",
+      "report": {
+        "variant": "puzzle3d",
+        "boot": {
+          "react": "PASS",
+          "wgpu": "PASS"
+        },
+        "structural": {
+          "status": "PASS",
+          "nodeCount": 2,
+          "mismatches": []
+        },
+        "pixel": {
+          "status": "PASS",
+          "comparedRegions": 1,
+          "regions": []
+        },
+        "behavioral": {
+          "status": "PASS",
+          "steps": [
+            {
+              "index": 0,
+              "step": {
+                "kind": "stateTransition"
+              },
+              "status": "FAIL"
+            }
+          ]
+        },
+        "durationMs": 1
+      },
+      "expected": "FAIL"
+    },
+    {
+      "name": "missing pixels",
+      "report": {
+        "variant": "puzzle3d",
+        "boot": {
+          "react": "PASS",
+          "wgpu": "PASS"
+        },
+        "structural": {
+          "status": "PASS",
+          "nodeCount": 2,
+          "mismatches": []
+        },
+        "behavioral": {
+          "status": "PASS",
+          "steps": [
+            {
+              "index": 0,
+              "step": {
+                "kind": "stateTransition"
+              },
+              "status": "PASS"
+            }
+          ]
+        },
+        "durationMs": 1
+      },
+      "expected": "INCOMPLETE"
+    },
+    {
+      "name": "missing behavior",
+      "report": {
+        "variant": "puzzle3d",
+        "boot": {
+          "react": "PASS",
+          "wgpu": "PASS"
+        },
+        "structural": {
+          "status": "PASS",
+          "nodeCount": 2,
+          "mismatches": []
+        },
+        "pixel": {
+          "status": "PASS",
+          "comparedRegions": 1,
+          "regions": []
+        },
+        "durationMs": 1
+      },
+      "expected": "INCOMPLETE"
+    },
+    {
+      "name": "boot failed",
+      "report": {
+        "variant": "puzzle3d",
+        "boot": {
+          "react": "PASS",
+          "wgpu": "ENV-FAIL"
+        },
+        "structural": {
+          "status": "PASS",
+          "nodeCount": 2,
+          "mismatches": []
+        },
+        "pixel": {
+          "status": "PASS",
+          "comparedRegions": 1,
+          "regions": []
+        },
+        "behavioral": {
+          "status": "PASS",
+          "steps": [
+            {
+              "index": 0,
+              "step": {
+                "kind": "stateTransition"
+              },
+              "status": "PASS"
+            }
+          ]
+        },
+        "durationMs": 1
+      },
+      "expected": "FAIL"
+    },
+    {
+      "name": "stale bridge",
+      "report": {
+        "variant": "puzzle3d",
+        "boot": {
+          "react": "PASS",
+          "wgpu": "STALE-BRIDGE"
+        },
+        "structural": {
+          "status": "PASS",
+          "nodeCount": 2,
+          "mismatches": []
+        },
+        "pixel": {
+          "status": "PASS",
+          "comparedRegions": 1,
+          "regions": []
+        },
+        "behavioral": {
+          "status": "PASS",
+          "steps": [
+            {
+              "index": 0,
+              "step": {
+                "kind": "stateTransition"
+              },
+              "status": "PASS"
+            }
+          ]
+        },
+        "durationMs": 1
+      },
+      "expected": "STALE-BRIDGE"
+    }
+  ]
+}

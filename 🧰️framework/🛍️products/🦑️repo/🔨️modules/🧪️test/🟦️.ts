@@ -1,4 +1,4 @@
-import { testLevelBudgetMs } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { testLevelBudgetMs } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { parseFeature, type ParsedFeature } from "../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts";
 import { type AdapterContext, type TestCasePlan, type SubsetTarget, type ComparisonProfile, type SubjectRawInputs, type Implementation, type FeatureStep, type FeatureScenario, type TestMode, type ResolvedTestInput, type TestEvidence, type EvidenceClass, type MutationOutcomeClass, type EvidenceUnits, type EvidenceFile, type EvidenceGenerator, type PlatformId, type EngineFamily, type EvidenceProvenance, type ToleranceOverride, type EvidenceInvariants, type TestRole, type AdapterOutcome, type TestAdapter, IMPLEMENTATIONS, TEST_MODES, EVIDENCE_CLASSES, MUTATION_OUTCOME_CLASSES, TEST_ROLES, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#region 🧲️Header
@@ -17,9 +17,9 @@ import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } fr
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { repoCacheDirectory } from "../📚️library/⚡️caching/🟦️.ts";
-import { TEST_LEVELS, type TestLevel } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { TEST_LEVELS, type TestLevel } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { type BreachRecord, getRepoMetaDir, getSemioRoot, runProbe } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { findWorkspaceRoot } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { type Taxonomy, loadCatalogTaxonomy, mutationCatalogSourceOwner, mutationOwnerRelativePath } from "../📚️library/🔍️discovery/🟦️.ts";
 import { pathEmojiStatuteFindings } from "../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
 import { leadingEmojiIdentity } from "../../../../🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts";
@@ -93,7 +93,7 @@ type TestPathExclusion = Readonly<{ path: string; mode: "opaque"; reason: string
 type TestLocation = Readonly<{ directoryPath: string; fileKindId: string }>;
 /** 🐹️ A toolchain convention that compiles a test only beside the package it tests, e.g. Go's `_test.go`. */
 export type TestInPackageImplementation = Readonly<{ id: string; implementation: string; fileKindId: string; filenameSuffix: string; rationale: string }>;
-type MutationCatalogAuthority = Pick<Taxonomy, "mutationDomainOwners" | "mutationCatalogSourceOwners" | "pathEmojiPolicy">;
+type MutationCatalogAuthority = Pick<Taxonomy, "mutationDomainOwners" | "mutationCatalogSourceOwners" | "pathEmojiPolicy" | "schemaScopeOwnerLevels">;
 
 /** 🗂️ Canonical v7 test taxonomy, mirrored from `🔣️taxonomy.json` so drift fails closed. */
 export type TestTaxonomy = MutationCatalogAuthority & Readonly<{
@@ -148,7 +148,9 @@ export function testTaxonomy(repoRoot: string): TestTaxonomy {
   if (taxonomyCache && taxonomyCache.root === repoRoot) return taxonomyCache.value;
   const parsed = JSON.parse(readFileSync(join(repoRoot, TAXONOMY_REL_PATH), "utf8")) as Record<string, unknown>;
   const required = ["fileKinds", "pathExclusions", "testsDirName", "testFixturesDirName", "testExamplesDirName", "testOraclesDirName", "testObsoleteCategoryStems", "testObsoleteTestEmojiCategoryStems", "testFixtureLegacyDirectoryNames", "exampleAssetsDirName", "testFeatureFileKindId", "testCaseSlugPattern", "testAdapterFileKinds", "testImplementationIds", "testImplementationFileKindIds", "testLegacyDirectoryNames", "testLegacyFilenamePatterns", "testInPackageImplementations", "testRunnerConfigurationCaseName", "testSubjectBoundaryOwnerKinds", "testDeliveryScopeDirectoryNames", "testJavaScriptFrameworkModules", "testAssertionModules", "testSelfTestDeclarationPattern", "testOutputCacheDirName", "testOutputMarkerFileKindId", "testOutputMarkerKind", "testOutputChildDirs", "testOracleRegistryLocation", "testSchemaLocation", "testContributionFileKindId", "testProbeDirName", "testGeneratorDirName", "testBridgeDirName", "testDomainPath", "testPhases", "testLevellessPhases", "testMutationVocabularyDirName"];
-  required.push("mutationDomainOwners", "mutationCatalogSourceOwners", "pathEmojiPolicy");
+  required.push("mutationDomainOwners", "mutationCatalogSourceOwners", "pathEmojiPolicy", "schemaScopeOwnerLevels");
+  const moduleDirectory = (parsed.schemaScopeOwnerLevels as { moduleMemberDirName?: unknown } | undefined)?.moduleMemberDirName;
+  if (typeof moduleDirectory !== "string" || !moduleDirectory || moduleDirectory.includes("/") || moduleDirectory.includes("\\")) throw Error("Declared module collection vocabulary required");
   const missing = required.filter((key) => parsed[key] === undefined);
   if (missing.length > 0) throw new Error(`🔣️taxonomy.json is missing the test contract keys: ${missing.join(", ")}`);
   const value = Object.fromEntries(required.map((key) => [key, parsed[key]])) as unknown as TestTaxonomy;
@@ -291,11 +293,12 @@ export function discoverTestCases(repoRoot: string): DiscoveredCase[] {
   const adapterFilenames = testAdapterFilenames(taxonomy);
   const found: DiscoveredCase[] = [];
   walkDirectories(repoRoot, (abs, rel) => {
-    if (isExcludedTestPath(repoRoot, rel)) return "skip";
-    if (basename(abs) !== taxonomy.testsDirName) return "enter";
+    if (isExcludedTestPath(repoRoot, rel) || testFixtureCollectionIndex(rel, taxonomy) >= 0) return "skip";
+    if (testCollectionIndexes(rel, taxonomy.testsDirName, taxonomy).at(-1) !== rel.split("/").length - 1) return "enter";
     const ownerAbs = dirname(abs);
     const ownerRel = relative(repoRoot, ownerAbs).split(sep).join("/") || ".";
     for (const entry of readdirSync(abs)) {
+      if (entry === taxonomy.testFixturesDirName) continue;
       const caseDir = join(abs, entry);
       let st;
       try {
@@ -313,7 +316,7 @@ export function discoverTestCases(repoRoot: string): DiscoveredCase[] {
         const adapterPath = join(caseDir, filename);
         if (existsSync(adapterPath)) adapters[impl] = relative(repoRoot, adapterPath).split(sep).join("/");
       }
-      const sharedFixtureDir = join(ownerAbs, taxonomy.testFixturesDirName);
+      const sharedFixtureDir = join(ownerAbs, taxonomy.testsDirName, taxonomy.testFixturesDirName);
       found.push({
         owner: ownerRel,
         ownerName: basename(ownerAbs),
@@ -906,7 +909,7 @@ export function resolveTestInputs(repoRoot: string, discovered: DiscoveredCase, 
       missing.push(uri);
       continue;
     }
-    const baseRel = posix.join(discovered.owner, scheme === "shared" ? taxonomy.testFixturesDirName : taxonomy.exampleAssetsDirName);
+    const baseRel = posix.join(discovered.owner, ...(scheme === "shared" ? [taxonomy.testsDirName, taxonomy.testFixturesDirName] : [taxonomy.exampleAssetsDirName]));
     const abs = join(repoRoot, baseRel, name), guard = resolve(repoRoot, baseRel);
     if (!resolve(abs).startsWith(guard + sep) || !existsSync(abs) || !lstatSync(abs).isFile() || realpathSync(abs) !== resolve(abs) || realpathSync(guard) !== guard) {
       missing.push(uri);
@@ -1333,7 +1336,7 @@ export function mutationVectorRegistryBreaches(repoRoot: string, registry: Oracl
     for (const problem of problems) breaches.push(breach("testing/contract", "mutation-vector-catalog-invalid", contribution.manifestPath, problem, "Every mutation example and test has one exact semantic owner.", "Correct the catalog's current identities and paths."));
     if (problems.length) continue;
     const sourceOwner = mutationCatalogSourceOwner(contribution.owner, taxonomy)!;
-    const relativeRoot = `${sourceOwner}/🧬️schema/🧬️mutations`, sourceRoot = join(repoRoot, relativeRoot), fixtureRoot = join(repoRoot, sourceOwner, "🧫️fixtures", "🧬️mutations");
+    const relativeRoot = `${sourceOwner}/🧬️schema/🧬️mutations`, sourceRoot = join(repoRoot, relativeRoot), fixtureRoot = join(repoRoot, sourceOwner, taxonomy.testsDirName, taxonomy.testFixturesDirName, "🧬️mutations");
     const grouped = Object.hasOwn(taxonomy.mutationDomainOwners, relativeRoot);
     sweeps.set(sourceRoot, { sourceRoot, fixtureRoot, grouped });
     for (const vector of catalog.vectors) {
@@ -1528,12 +1531,13 @@ export function validateCaseContract(repoRoot: string, discovered: DiscoveredCas
 
   const uris = testInputUrisIn(feature);
   for (const uri of resolveTestInputs(repoRoot, discovered, uris).missing) {
-    breaches.push(breach("testing/fixture", "missing-fixture", discovered.featurePath, `Fixture ${uri} does not resolve`, "Fixture lookup is explicit, so an unresolved URI is a contract error rather than a runtime surprise.", `Add the file under ${uri.startsWith("shared://") ? `${discovered.owner}/${taxonomy.testFixturesDirName}` : uri.startsWith("asset://") ? `${discovered.owner}/${taxonomy.exampleAssetsDirName}` : `${discovered.owner}/${taxonomy.testFixturesDirName}`}.`));
+    breaches.push(breach("testing/fixture", "missing-fixture", discovered.featurePath, `Fixture ${uri} does not resolve`, "Fixture lookup is explicit, so an unresolved URI is a contract error rather than a runtime surprise.", `Add the file under ${uri.startsWith("shared://") ? `${discovered.owner}/${taxonomy.testsDirName}/${taxonomy.testFixturesDirName}` : uri.startsWith("asset://") ? `${discovered.owner}/${taxonomy.exampleAssetsDirName}` : `${discovered.owner}/${taxonomy.testsDirName}/${taxonomy.testFixturesDirName}`}.`));
   }
 
   for (const entry of readdirSync(join(repoRoot, discovered.caseDir), { withFileTypes: true })) {
     if (entry.isDirectory()) {
-      breaches.push(breach("testing/taxonomy", "unknown-case-child", `${discovered.caseDir}/${entry.name}`, `Unexpected directory ${entry.name} inside a test case`, `A case holds exactly one ${testFeatureFilename(taxonomy)} and its adapters. Fixture examples belong under the owner’s ${taxonomy.testFixturesDirName}.`, "Move the directory to its owner, or delete it."));
+      if (entry.name === taxonomy.testFixturesDirName) continue;
+      breaches.push(breach("testing/taxonomy", "unknown-case-child", `${discovered.caseDir}/${entry.name}`, `Unexpected directory ${entry.name} inside a test case`, `A case holds one ${testFeatureFilename(taxonomy)}, its adapters, and optional ${taxonomy.testFixturesDirName} example data.`, "Move the directory to its owner, or delete it."));
       continue;
     }
     if (entry.name === testFeatureFilename(taxonomy)) continue;
@@ -1545,7 +1549,7 @@ export function validateCaseContract(repoRoot: string, discovered: DiscoveredCas
 }
 
 
-export const TEST_LAYOUT_FINDING_CODES = ["legacy-test-directory", "legacy-test-filename", "test-implementation-depth", "test-implementation-filename", "test-case-name", "test-owner-delivery-scope", "inline-test-body", "inline-self-test-declaration", "invalid-test-module-wiring", "fixture-in-test-case", "fixture-owner-delivery-scope", "test-data-in-case", "production-fixture-dependency", "legacy-fixture-directory", "obsolete-testing-category"] as const;
+export const TEST_LAYOUT_FINDING_CODES = ["legacy-test-directory", "legacy-test-filename", "test-implementation-depth", "test-implementation-filename", "test-case-name", "test-owner-delivery-scope", "inline-test-body", "inline-self-test-declaration", "invalid-test-module-wiring", "fixture-outside-tests", "fixture-owner-delivery-scope", "test-data-in-case", "production-fixture-dependency", "legacy-fixture-directory", "obsolete-testing-category"] as const;
 export type TestLayoutFindingCode = (typeof TEST_LAYOUT_FINDING_CODES)[number];
 export type TestLayoutFinding = Readonly<{ code: TestLayoutFindingCode; path: string; line: number | null; detail: string }>;
 export type TestLayoutSource = Readonly<{ path: string; source: string }>;
@@ -1616,7 +1620,7 @@ function siblingNamesOf(path: string, availablePaths: ReadonlySet<string>): read
 /** 📐️ Measures one source path against `<semantic owner>/🧪️tests/<case>/<implementation>`. */
 export function assessTestImplementationPath(path: string, taxonomy: TestTaxonomy): TestPathAssessment {
   const segments = path.split("/");
-  const tests = segments.flatMap((segment, index) => segment === taxonomy.testsDirName ? [index] : []);
+  const tests = testCollectionIndexes(path, taxonomy.testsDirName, taxonomy);
   if (tests.length === 0) return { canonical: false, finding: null };
   const index = tests.at(-1)!;
   if (tests.length !== 1 || index !== segments.length - 3) return { canonical: false, finding: { code: "test-implementation-depth", path, line: null, detail: `Executable test sources must be direct children of ${taxonomy.testsDirName}/<test-name>.` } };
@@ -1646,15 +1650,26 @@ function obsoleteTestingCategoryFinding(path: string, taxonomy: TestTaxonomy, no
   return null;
 }
 
+/** 🧱️ Names only actual collections below the declared module boundary. */
+function testCollectionIndexes(path: string, name: string, taxonomy: TestTaxonomy): number[] {
+  const segments = path.replaceAll("\\", "/").split("/");
+  return segments.flatMap((segment, index) => segment === name && segments[index - 1] !== taxonomy.schemaScopeOwnerLevels.moduleMemberDirName ? [index] : []);
+}
+
+/** 🧭️ Keeps source-shaped samples within their actual fixture collection. */
+function testFixtureCollectionIndex(path: string, taxonomy: TestTaxonomy): number {
+  return testCollectionIndexes(path, taxonomy.testFixturesDirName, taxonomy)[0] ?? -1;
+}
+
 /** 🗂️ Applies category rules to a physical directory so empty legacy buckets cannot evade the file scan. */
 function inspectTestLayoutDirectory(taxonomy: TestTaxonomy, input: string): TestLayoutFinding[] {
   const path = input.split("\\").join("/"), segments = path.split("/"), findings: TestLayoutFinding[] = [];
   const obsoleteCategory = obsoleteTestingCategoryFinding(path, taxonomy, "directory");
   if (obsoleteCategory) findings.push(obsoleteCategory);
   if (segments.includes(taxonomy.exampleAssetsDirName)) return findings;
-  const fixtures = segments.indexOf(taxonomy.testFixturesDirName), tests = segments.indexOf(taxonomy.testsDirName);
+  const fixtures = testFixtureCollectionIndex(path, taxonomy), tests = testCollectionIndexes(path, taxonomy.testsDirName, taxonomy)[0] ?? -1;
   if (fixtures >= 0) {
-    if (tests >= 0 && tests < fixtures) findings.push({ code: "fixture-in-test-case", path, line: null, detail: "Fixture examples belong under their semantic owner, outside every test case." });
+    if (tests < 0 || tests > fixtures) findings.push({ code: "fixture-outside-tests", path, line: null, detail: "Fixture examples require a testing collection under their language-neutral semantic owner." });
     if (segments.slice(0, fixtures).some((segment) => taxonomy.testDeliveryScopeDirectoryNames.includes(segment))) findings.push({ code: "fixture-owner-delivery-scope", path, line: null, detail: "Fixtures require a language-neutral semantic owner outside package, target, and implementation delivery folders." });
     return findings;
   }
@@ -1667,11 +1682,11 @@ function inspectTestLayoutDirectory(taxonomy: TestTaxonomy, input: string): Test
 
 /** 🧫️ Checks physical fixture ownership and excludes example trees from executable-test interpretation. */
 function fixtureLayoutFindings(path: string, taxonomy: TestTaxonomy): TestLayoutFinding[] {
-  const segments = path.split("/"), fixtures = segments.indexOf(taxonomy.testFixturesDirName), tests = segments.indexOf(taxonomy.testsDirName), findings: TestLayoutFinding[] = [];
+  const segments = path.split("/"), fixtures = testFixtureCollectionIndex(path, taxonomy), tests = testCollectionIndexes(path, taxonomy.testsDirName, taxonomy)[0] ?? -1, findings: TestLayoutFinding[] = [];
   if (fixtures >= 0) {
-    if (tests >= 0 && tests < fixtures) findings.push({ code: "fixture-in-test-case", path, line: null, detail: "Fixture examples belong under their semantic owner, outside every test case." });
+    if (tests < 0 || tests > fixtures) findings.push({ code: "fixture-outside-tests", path, line: null, detail: "Fixture examples require a testing collection under their language-neutral semantic owner." });
     if (segments.slice(0, fixtures).some(segment => taxonomy.testDeliveryScopeDirectoryNames.includes(segment))) findings.push({ code: "fixture-owner-delivery-scope", path, line: null, detail: "Fixtures require a language-neutral semantic owner outside package, target, and implementation delivery folders." });
-    if (tests < 0 || fixtures < tests) return findings;
+    return findings;
   }
   if (segments.slice(0, -1).some((segment, index) => taxonomy.testFixtureLegacyDirectoryNames.includes(segment) && !(tests >= 0 && index === tests + 1))) findings.push({ code: "legacy-fixture-directory", path, line: null, detail: `Fixture examples must use the canonical ${taxonomy.testFixturesDirName} directory. Test implementations and executable support must use their own semantic scopes.` });
   if (tests >= 0 && !testSourceExtension(segments.at(-1)!, taxonomy) && segments.at(-1) !== testFeatureFilename(taxonomy)) findings.push({ code: "test-data-in-case", path, line: null, detail: "Test folders contain executable implementations and feature contracts; example inputs and expected outputs belong in owner fixtures." });
@@ -1824,13 +1839,13 @@ function rustOffsetRequiresTest(masked: string, offset: number): boolean {
 
 /** 🚧️ Resolves actual language import/include edges before treating fixture source files as opaque examples. */
 function fixtureSourceDependencies(path: string, source: string, taxonomy: TestTaxonomy, availablePaths: ReadonlySet<string>): TestLayoutFinding[] {
-  if (assessTestImplementationPath(path, taxonomy).canonical || path.split("/").includes(taxonomy.testFixturesDirName)) return [];
+  if (assessTestImplementationPath(path, taxonomy).canonical || testFixtureCollectionIndex(path, taxonomy) >= 0) return [];
   const findings: TestLayoutFinding[] = [];
   const add = (declared: string, offset: number, ancestors: readonly string[] = []): void => {
     const absolute = posix.resolve("/repo", posix.dirname(path), ...ancestors, declared);
     if (!absolute.startsWith("/repo/")) return;
     const target = posix.relative("/repo", absolute);
-    if (!target.split("/").includes(taxonomy.testFixturesDirName)) return;
+    if (testFixtureCollectionIndex(target, taxonomy) < 0) return;
     const resolved = [target, ...[".ts", ".tsx", ".js", ".mjs", ".rs", ".json"].map(extension => target + extension)].find(candidate => availablePaths.has(candidate));
     if (resolved) findings.push({ code: "production-fixture-dependency", path, line: source.slice(0, offset).split("\n").length, detail: `Non-test source resolves a dependency on fixture ${resolved}. Move executable support out of fixtures or place this read in a canonical test implementation.` });
   };
@@ -1880,7 +1895,7 @@ function fixtureSourceDependencies(path: string, source: string, taxonomy: TestT
 /** 📦️ Resolves package entry points, Cargo build nodes, and declared static asset roots. */
 function fixtureManifestDependencies(path: string, source: string, taxonomy: TestTaxonomy, availablePaths: ReadonlySet<string>): TestLayoutFinding[] {
   const name = posix.basename(path);
-  if (!["Cargo.toml", "package.json"].includes(name) || path.split("/").includes(taxonomy.testFixturesDirName)) return [];
+  if (!["Cargo.toml", "package.json"].includes(name) || testFixtureCollectionIndex(path, taxonomy) >= 0) return [];
   const record = (value: unknown): Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
   let manifest: Record<string, unknown>;
   try { manifest = record(name === "Cargo.toml" ? Bun.TOML.parse(source) : JSON.parse(source)); } catch { return []; }
@@ -1888,7 +1903,7 @@ function fixtureManifestDependencies(path: string, source: string, taxonomy: Tes
   const add = (value: unknown, repoRelative = false): void => {
     if (typeof value !== "string") return;
     const target = posix.relative("/repo", posix.resolve("/repo", repoRelative ? "." : posix.dirname(path), value));
-    if (target.startsWith("..") || !target.split("/").includes(taxonomy.testFixturesDirName)) return;
+    if (target.startsWith("..") || testFixtureCollectionIndex(target, taxonomy) < 0) return;
     if (availablePaths.has(target) || [...availablePaths].some(candidate => candidate.startsWith(target + "/"))) targets.add(target);
   };
   const leaves = (value: unknown): unknown[] => typeof value === "string" ? [value] : Array.isArray(value) ? value.flatMap(leaves) : Object.values(record(value)).flatMap(leaves);
@@ -2057,8 +2072,7 @@ function inspectTestLayoutSource(taxonomy: TestTaxonomy, entry: TestLayoutSource
   if (obsoleteCategory) findings.push(obsoleteCategory);
   if (segments.includes(taxonomy.exampleAssetsDirName)) return findings;
   findings.push(...fixtureLayoutFindings(path, taxonomy));
-  const fixtureIndex = segments.indexOf(taxonomy.testFixturesDirName), testIndex = segments.indexOf(taxonomy.testsDirName);
-  if (fixtureIndex >= 0 && (testIndex < 0 || fixtureIndex < testIndex)) return findings;
+  if (testFixtureCollectionIndex(path, taxonomy) >= 0) return findings;
   findings.push(...fixtureManifestDependencies(path, entry.source, taxonomy, availablePaths));
   if (!extension) return findings;
   findings.push(...fixtureSourceDependencies(path, entry.source, taxonomy, availablePaths));
@@ -2066,7 +2080,7 @@ function inspectTestLayoutSource(taxonomy: TestTaxonomy, entry: TestLayoutSource
   if (legacyDirectory) findings.push({ code: "legacy-test-directory", path, line: null, detail: `Legacy test directory ${legacyDirectory} is forbidden; use ${taxonomy.testsDirName}/<test-name>/<implementation>.` });
   const legacyFilename = registeredFileKindFilenames(taxonomy).has(name) ? undefined : legacyPatterns.find((entry) => entry.pattern.test(name));
   if (legacyFilename) findings.push({ code: "legacy-test-filename", path, line: null, detail: `Legacy test filename pattern ${legacyFilename.id} is forbidden.` });
-  const assessment = assessTestImplementationPath(path, taxonomy), inFixture = segments.includes(taxonomy.testFixturesDirName);
+  const assessment = assessTestImplementationPath(path, taxonomy), inFixture = testFixtureCollectionIndex(path, taxonomy) >= 0;
   if (assessment.finding && !inFixture) findings.push(assessment.finding);
   if (assessment.canonical) {
     if (extension === ".rs") for (const signal of rustTestSignals(path, entry.source, taxonomy, availablePaths)) if (signal.code === "invalid-test-module-wiring") findings.push({ ...signal, path });
@@ -2130,7 +2144,7 @@ export async function scanTestLayout(repoRoot: string, options: TestLayoutScanOp
       const path = files[index]!;
       try {
         let source: string;
-        try { source = (testSourceExtension(basename(path), taxonomy) || ["Cargo.toml", "package.json"].includes(basename(path))) && !path.split("/").includes(taxonomy.testFixturesDirName) ? await readFileAsync(join(repoRoot, path), "utf8") : ""; }
+        try { source = (testSourceExtension(basename(path), taxonomy) || ["Cargo.toml", "package.json"].includes(basename(path))) && testFixtureCollectionIndex(path, taxonomy) < 0 ? await readFileAsync(join(repoRoot, path), "utf8") : ""; }
         catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; source = await readFileAsync(join(repoRoot, path), "utf8"); }
         options.signal?.throwIfAborted();
         findings[index] = inspectTestLayoutSource(taxonomy, { path, source }, availablePaths, legacyPatterns);
@@ -4562,7 +4576,7 @@ export function isFixtureOwnedPath(repoRoot: string, rel: string): boolean {
  *
  * This decides COLLECTION membership only — "does this path lie inside a test or fixture collection" —
  * never ownership, which `schemaScopeEligibility` reads from the taxonomy. A module member is a module
- * whatever emoji its name starts with; `🧪️tests/` and `🧫️fixtures/` under it are collections. The
+ * whatever emoji its name starts with; `🧪️tests/` and `./🧪️tests/🧫️fixtures` under it are collections. The
  * directory name is `schemaScopeOwnerLevels.moduleMemberDirName`; a taxonomy that declares none carves
  * nothing out, because a carve-out nobody declared is a rule nobody can read.
  */
@@ -6849,7 +6863,7 @@ export function stubDeserializerBreaches(repoRoot: string): BreachRecord[] {
       if (!/fn\s+deserialize(_bytes|_text)?\s*[(<]/.test(text)) continue;
       const format = rel.match(/🗿️artifacts\/[^/]*?([a-z0-9]+)\/🔖️/)?.[1] ?? "";
       const formatType = format.replace(/^./, (c) => c.toUpperCase());
-      const parsesDsl = parsesItsInputAsDsl(text.split("\n").filter((line) => !(formatType && new RegExp(`<\\s*${formatType}Snapshot\\s+as\\s+store::os_store::serialization::ArtifactDsl\\s*>::parse_dsl`).test(line))).join("\n"));
+      const parsesDsl = parsesItsInputAsDsl(text.split("\n").filter((line) => !(formatType && new RegExp(`<\\s*${formatType}Snapshot\\s+as\\s+pack::snapshot::ArtifactDsl\\s*>::parse_dsl`).test(line))).join("\n"));
       const coerces = (/to_value\s*\(\s*&?[A-Za-z_][A-Za-z0-9_]*\s*\)/.test(text) || /\b[a-z_][a-z0-9_]*\s*\.\s*to_value\s*\(\s*\)/.test(text)) && /from_value\s*[:(<]/.test(text);
       const inert = ignoresItsInput(text, "deserialize");
       if (!parsesDsl && !coerces && !inert) continue;

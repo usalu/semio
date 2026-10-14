@@ -26,7 +26,7 @@ fn roundtrip<T: FromValue + ToValue>(wire: &serde_json::Value) {
 
 #[test]
 fn pdf_recursive_retirement_owned_wire_corpus_roundtrips_with_serde_json() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️retirement/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/♻️retirement/🔣️.json")).unwrap();
     assert_eq!(fixture["cases"].as_array().unwrap().len(), 10);
     for row in fixture["cases"].as_array().unwrap() {
         match row["owner"].as_str().unwrap() {

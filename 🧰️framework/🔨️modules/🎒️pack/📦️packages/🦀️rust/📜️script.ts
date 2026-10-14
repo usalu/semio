@@ -1,14 +1,16 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
+import { scriptCompilerAdmissionControlV1 } from '../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts';
+import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🖥️ `semio-framework-pack` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
 import { resolve } from "node:path";
-import { runBudgetedTestCommand } from "../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-import { buildCargoArtifacts , readCargoArtifactBuildPolicyV1 } from "../../../🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import { buildCargoArtifacts , readCargoArtifactBuildPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -73,7 +75,7 @@ class SchemaStorageNativeScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await buildCargoArtifacts(`${this.root}/Cargo.toml`, segments, readCargoArtifactBuildPolicyV1(process.env,this.root));
+    await buildCargoArtifacts(`${this.root}/Cargo.toml`, segments, readCargoArtifactBuildPolicyV1(process.env,this.root),{control:scriptCompilerAdmissionControlV1(this.invocation,"cargo:build",buildBudgetMs())});
   }
 }
 
@@ -137,4 +139,4 @@ router.register("test-intrinsic-schema-native",IntrinsicSchemaNativeScript);
 router.register("test-retained-intrinsic-source",RetainedIntrinsicSourceScript);
 router.register("test-occurrence-order-source",OccurrenceOrderSourceScript);
 router.register("test-original-storage",OriginalStorageScript);
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

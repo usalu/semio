@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
-import { readBuildMode } from "../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { readBuildMode } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { loadDevContribution, resolveDevContributionFile } from "../🧩️contribution/📥️loading/🟦️.ts";
 import { frameworkOsLockedPrefsEnv } from "../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🔒️preferences/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { Script, ScriptRouter } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { checkScriptInvocation, Script, ScriptRouter } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { buildViteArtifact } from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
 import { playgroundReactOutputPath } from "./📍️output/🟦️.ts";
@@ -17,6 +18,16 @@ class InputsScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Production browser input hashing accepts no arguments");
     console.log(await productionBrowserInputHash(resolve(import.meta.dir, "..")));
+  }
+}
+
+/** 🏁️ Completes the selected mode after Nx satisfies its browser build prerequisites. */
+class CompleteScript extends Script {
+  run(args: string[]): void {
+    if (args.length) throw new Error("Distribution completion accepts no arguments");
+    const mode = readBuildMode(process.env.SEMIO_BUILD_MODE);
+    checkScriptInvocation(this.invocation);
+    console.log(`Nx browser distribution complete: ${mode}`);
   }
 }
 
@@ -37,11 +48,11 @@ class BuildScript extends Script {
     const interrupt = (): void => stop("SIGINT"), terminate = (): void => stop("SIGTERM");
     process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
     try {
-      await buildComponentClosureV1(workspace, playgroundComponentClosureV1(variant, "full"), { signal: AbortSignal.any([controller.signal, this.invocation.control.signal]) });
-      await buildViteArtifact({ root, workspace, config: contribution ? resolveDevContributionFile(workspace, contribution.viteConfig, contribution.ownerRoot) : join(root, "🏗️builder/🌐️vite/🟦️.ts"), output, owner: `os-dev:${variant}:react:${mode}`, signal: controller.signal, environment: { ...frameworkOsLockedPrefsEnv({ ...process.env, SEMIO_BRAND: undefined }), SEMIO_PLUGIN: variant, SEMIO_RENDERER: "react", SEMIO_BUILD_MODE: mode, SEMIO_BRAND: undefined, PLAYGROUND_APP_KIND: undefined } });
+      await buildComponentClosureV1(workspace, playgroundComponentClosureV1(variant, "full"), { control: scriptCompilerAdmissionControlV1(this.invocation, "native:driver", 0) });
+      await buildViteArtifact({ invocation: this.invocation, root, workspace, config: contribution ? resolveDevContributionFile(workspace, contribution.viteConfig, contribution.ownerRoot) : join(root, "🏗️builder/🌐️vite/🟦️.ts"), output, owner: `os-dev:${variant}:react:${mode}`, signal: this.invocation.control.signal, environment: { ...frameworkOsLockedPrefsEnv({ ...process.env, SEMIO_BRAND: undefined }), SEMIO_PLUGIN: variant, SEMIO_RENDERER: "react", SEMIO_BUILD_MODE: mode, SEMIO_BRAND: undefined, PLAYGROUND_APP_KIND: undefined } });
     } catch (error) { if (!cancelled) throw error; process.exitCode = cancelled === "SIGINT" ? 130 : 143; }
     finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }
   }
 }
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(import.meta.dir).register("build", BuildScript).register("inputs", InputsScript)).run(process.argv.slice(2), original));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(import.meta.dir).register("build", BuildScript).register("inputs", InputsScript).register("complete", CompleteScript)).run(process.argv.slice(2), original));

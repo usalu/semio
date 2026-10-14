@@ -20,9 +20,9 @@ fn cad_imported_geometry_batches_preserve_exact_typed_owners_and_controlled_clos
         }
         assert!(batch.terminal_is_empty());
     }
-    let text = include_str!("../../../../../../../../../../🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧫️fixtures/📦️set-object-applied/⬅️before.obj");
+    let text = include_str!("../../../../../../../../../../🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧪️tests/🧫️fixtures/📦️set-object-applied/⬅️before.obj");
     let imported = crate::standards::v1::subsets::any::io::import_obj_object(text).unwrap();
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mesh = crate::standards::v1::subsets::any::schema::geometry::mesh_from_owned_brep(&imported.geometry).unwrap();
     assert_eq!(mesh.indices.len() / 3, corpus["intrinsicGeometry"]["triangleCount"].as_u64().unwrap() as usize);
     assert_eq!(imported.geometry.vertices.len(), corpus["intrinsicGeometry"]["analyticVertexCount"].as_u64().unwrap() as usize);
@@ -38,7 +38,7 @@ fn cad_imported_geometry_model_operation_wire_preserves_original_forward_inverse
     use semio_framework_os_kernel::{ArtifactPreparedOperationCursor, ArtifactPreparedOperationProgress};
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     use {semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelElement, semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation, semio_s_artifact_stdio_semio_model::schema::mutations::insert_element::InsertElement, semio_s_artifact_stdio_semio_model::schema::mutations::remove_element::RemoveElement, semio_s_artifact_stdio_semio_model::io::binary::mutations::prepared_operation_wire_source};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/💾️binary/🧬️mutations/🫳️borrowed/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/💾️binary/🧬️mutations/🫳️borrowed/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["elements"].as_array().unwrap() {
         let element: SemioModelElement = semio_framework_pack_json::from_json_str(&serde_json::to_string(row).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let inverse = SemioModelMutation::RemoveElement(RemoveElement { id: element.id.clone() });
@@ -276,7 +276,7 @@ pub(crate) mod context {
 
     /// 🏛️ `pane`'s model as the mounted app's child store holds it now.
     pub async fn pane_model(app: &CadFixtureApp, pane: CadPaneId) -> semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot {
-        use store::{os_store::serialization::ArtifactPack, SpaceMember};
+        use store::{pack::snapshot::ArtifactPack, SpaceMember};
         let parent = app.snapshot().expect("CAD parent snapshot");
         let child = crate::cad_pane_model(&parent, pane).unwrap_or_else(|| panic!("{pane:?} pane composes a model child"));
         let member = app.child_store(crate::cad_pane_model_slot(pane), &child.child_id).await.unwrap_or_else(|| panic!("{pane:?} pane model member is live"));
@@ -465,7 +465,7 @@ async fn every_example_load_is_admitted_and_settles_through_the_host_document_ar
         }
         assert!(terminal, "{example_id:?}: the retained operation reaches its terminal page");
         let (parent_pack, parent_spr) = loaded.expect("an example publishes one whole-document load");
-        let expected = <CadSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&parent_pack).expect("the load carries a CAD document");
+        let expected = <CadSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&parent_pack).expect("the load carries a CAD document");
         PluginApp::begin_document_archive_load(&mut app, archive_id, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
         let mut status = None;
         for _ in 0..1_000_000 {
@@ -520,7 +520,7 @@ fn host_contributions_resolve_to_the_event_sourced_config_lane() {
 
 #[semio_framework_async_macros::async_test]
 async fn retained_cad_presence_close_empty_lanes_have_exact_owners() {
-    let fixture: Value = semio_framework_pack_json::parse(include_str!("../../👥️presence/🧫️fixtures/♻️retirement/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture: Value = semio_framework_pack_json::parse(include_str!("../../👥️presence/🧪️tests/🧫️fixtures/♻️retirement/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let maximum_items = fixture["grant"]["maximumItems"].as_u64().unwrap() as usize;
     let maximum_bytes = fixture["grant"]["maximumBytes"].as_u64().unwrap() as usize;
     let envelope = store::os_store::document_materialize::create_document_envelope::<NoDraft, NoDraftMutation>("draft.empty", "cad-draft-close", NoDraft::default(), None);
@@ -546,7 +546,7 @@ async fn retained_cad_presence_close_empty_lanes_have_exact_owners() {
 
 #[semio_framework_async_macros::async_test]
 async fn retained_factory_proofs_activate_the_real_cad_manifest_and_close_under_the_production_grant() {
-    let fixture: Value = semio_framework_pack_json::parse(include_str!("../../../🧫️fixtures/🗄️retained-jobs/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("CAD activation fixture");
+    let fixture: Value = semio_framework_pack_json::parse(include_str!("../../../🧪️tests/🧫️fixtures/🗄️retained-jobs/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("CAD activation fixture");
     let activation = &fixture["activation"];
     let controller = activation["controller"].as_str().expect("controller");
     let bus = semio_framework::ActionBus::new();
@@ -646,7 +646,7 @@ fn retained_artifact_store_preparation_is_bounded_exact_and_reversible() {
 
 #[test]
 fn retained_route_fixture_matches_the_exact_owner_manifest_and_laws() {
-    let fixture: Value = semio_framework_pack_json::parse(include_str!("../../../🧫️fixtures/🗄️retained-jobs/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("CAD retained route fixture");
+    let fixture: Value = semio_framework_pack_json::parse(include_str!("../../../🧪️tests/🧫️fixtures/🗄️retained-jobs/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("CAD retained route fixture");
     let routes = fixture.get("routes").and_then(Value::as_array).expect("route array");
     let route_ids = routes.iter().map(|route| route.get("id").and_then(Value::as_str).expect("route id")).collect::<std::collections::BTreeSet<_>>();
     let command_ids = every_command().iter().map(CadCommand::command_id).collect::<std::collections::BTreeSet<_>>();
@@ -1465,7 +1465,7 @@ async fn a_new_document_composes_four_empty_panes_and_add_object_needs_a_compose
         let child = crate::cad_pane_model(&scene, pane).unwrap_or_else(|| panic!("{pane:?} pane composes its empty model child"));
         assert_eq!(child.child_id, crate::cad_empty_pane_child(pane).child_id);
         let pack = crate::cad_genesis_child_pack(&scene, crate::cad_pane_model_slot(pane), &child.child_id).unwrap_or_else(|| panic!("{pane:?} pane derives its genesis pack"));
-        let model = <semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("genesis pack decodes");
+        let model = <semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("genesis pack decodes");
         assert!(model.elements.is_empty(), "{pane:?} pane is born empty");
     }
     let fault = drive_result(&CadPlayApp::default(), &empty_cad_snapshot(), "addObject", Some(json!({ "typology": "building.building.column" })), &CadConfig::default()).err().expect("a pane without a model child refuses addObject");
@@ -1757,7 +1757,7 @@ async fn import_cad_file_action_accepts_spatial_json_text_string_payload() {
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("importCadFile must emit a LoadDocument effect for a spatial JSON string payload") else {
         panic!("expected a LoadDocument effect");
     };
-    let next = <CadSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+    let next = <CadSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
     assert!(next.shape_model.is_some(), "a real imported object must mint a shape-model child");
 }
 
@@ -2388,10 +2388,10 @@ async fn current_pane_exports_its_real_solids() {
 async fn cad_intrinsic_geometry_media_preserves_actual_file_owner() {
     use semio_framework_plugin::app::ArtifactEditor;
     use semio_framework_value::DslValue;
-    let corpus: Value = semio_framework_pack_json::from_json_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let corpus: Value = semio_framework_pack_json::from_json_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(corpus["intrinsicGeometry"]["childPublication"], "insertElement");
     assert_eq!(corpus["intrinsicGeometry"]["geometryOwner"], "persistedArtifact");
-    let text = include_str!("../../../../../../../../../../🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧫️fixtures/📦️set-object-applied/⬅️before.obj");
+    let text = include_str!("../../../../../../../../../../🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧪️tests/🧫️fixtures/📦️set-object-applied/⬅️before.obj");
     let mut mounted = new_app().await;
     let scene = mounted.snapshot().expect("mounted snapshot");
     let children = mounted.test_child_content_view();
@@ -2443,7 +2443,7 @@ async fn cad_intrinsic_geometry_media_preserves_actual_file_owner() {
         assert_eq!(geometry_child.child_id, created.child_id);
         assert!(geometry_child.ops.is_empty(), "the imported topology is the child's genesis, not an operation");
         let genesis = geometry_child.genesis.as_ref().expect("actual retained topology genesis");
-        let geometry = <semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&genesis.initial_pack).expect("genesis carries the imported topology");
+        let geometry = <semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&genesis.initial_pack).expect("genesis carries the imported topology");
         let child = &emit.child_emits[1];
         assert_eq!(child.slot, corpus["intrinsicGeometry"]["childSlot"].as_str().unwrap());
         assert_eq!(child.child_id, crate::cad_pane_model(&scene, CadPaneId::Shape).unwrap().child_id);
@@ -2481,12 +2481,12 @@ async fn cad_intrinsic_geometry_media_preserves_actual_file_owner() {
 #[semio_framework_async_macros::async_test]
 async fn cad_owned_geometry_media_settles_renders_and_undo_redoes_atomically() {
     use semio_framework_plugin::PluginApp;
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut app = new_app().await;
     let before = app.snapshot().unwrap();
     let before_model = pane_model(&app, CadPaneId::Shape).await;
-    let text = include_str!("../../../../../../../../../../🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧫️fixtures/📦️set-object-applied/⬅️before.obj");
-    let pricing: serde_json::Value = serde_json::from_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🎞️media-pricing.json")).unwrap();
+    let text = include_str!("../../../../../../../../../../🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧪️tests/🧫️fixtures/📦️set-object-applied/⬅️before.obj");
+    let pricing: serde_json::Value = serde_json::from_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🎞️media-pricing.json")).unwrap();
     let large_source = format!("{}{}", pricing["prefix"].as_str().unwrap().repeat(pricing["repeat"].as_u64().unwrap() as usize), text);
     assert!(large_source.len() > pricing["closeMaximumBytes"].as_u64().unwrap() as usize);
     let media = Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "obj.3.0.geometry".into(), json: large_source } };
@@ -2559,7 +2559,7 @@ async fn cad_owned_geometry_media_settles_renders_and_undo_redoes_atomically() {
 
 #[test]
 fn cad_media_pricing_retains_exact_source_through_progress_cancel_and_refusal() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🎞️media-pricing.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🎞️media-pricing.json")).unwrap();
     let source = format!("{}{}", fixture["prefix"].as_str().unwrap().repeat(fixture["repeat"].as_u64().unwrap() as usize), fixture["suffix"].as_str().unwrap());
     let unit = fixture["maximumUnitBytes"].as_u64().unwrap() as usize;
     let maximum = fixture["closeMaximumBytes"].as_u64().unwrap() as usize;
@@ -2652,27 +2652,27 @@ fn cad_imported_geometry_parent_operation_pack_keeps_exact_forward_inverse_owner
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     let factory=<CadPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().unwrap();
     let input=[
-        (include_str!("../../../🧫️fixtures/🧬️mutations/⚡create-energy-model/⚡️rehandles/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/⚡create-energy-model/⚡️rehandles/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/➕create-node/🌱️appends-node-3/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/➕create-node/🌱️appends-node-3/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/🏛️create-structure-classic/🏛️rehandles/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🏛️create-structure-classic/🏛️rehandles/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/🏢create-building-model/🏢️rehandles/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🏢create-building-model/🏢️rehandles/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/🏷️rename-node/🔤️relabels-the-root-node/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🏷️rename-node/🔤️relabels-the-root-node/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/👁️change-reference-hidden/🙈️hides/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/👁️change-reference-hidden/🙈️hides/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/💥delete-building-model/🏚️vacates/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/💥delete-building-model/🏚️vacates/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/📍move-reference/📍️moves/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/📍move-reference/📍️moves/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/📎replace-references/🔄️swaps/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/📎replace-references/🔄️swaps/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/📏change-reference-width/↔️widens/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/📏change-reference-width/↔️widens/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/📐️create-drawing/📐️appends-drawing-2/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/📐️create-drawing/📐️appends-drawing-2/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/🔌delete-energy-model/🔌️vacates/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🔌delete-energy-model/🔌️vacates/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/🔒change-reference-locked/🔓️unlocks/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🔒change-reference-locked/🔓️unlocks/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/🗑️delete-node/🚫️removes-node-2/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🗑️delete-node/🚫️removes-node-2/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/🧨delete-shape-model/🕳️vacates-the-shape-slot/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🧨delete-shape-model/🕳️vacates-the-shape-slot/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/🧱create-shape-model/🧱️rehandles/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🧱create-shape-model/🧱️rehandles/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json")),
-        (include_str!("../../../🧫️fixtures/🧬️mutations/🧹delete-drawing/🚫️removes-drawing-1/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🧹delete-drawing/🚫️removes-drawing-1/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/⚡create-energy-model/⚡️rehandles/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/⚡create-energy-model/⚡️rehandles/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕create-node/🌱️appends-node-3/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕create-node/🌱️appends-node-3/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-structure-classic/🏛️rehandles/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-structure-classic/🏛️rehandles/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🏢create-building-model/🏢️rehandles/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🏢create-building-model/🏢️rehandles/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-node/🔤️relabels-the-root-node/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-node/🔤️relabels-the-root-node/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/👁️change-reference-hidden/🙈️hides/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/👁️change-reference-hidden/🙈️hides/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/💥delete-building-model/🏚️vacates/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/💥delete-building-model/🏚️vacates/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-reference/📍️moves/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-reference/📍️moves/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📎replace-references/🔄️swaps/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📎replace-references/🔄️swaps/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📏change-reference-width/↔️widens/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📏change-reference-width/↔️widens/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️create-drawing/📐️appends-drawing-2/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️create-drawing/📐️appends-drawing-2/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌delete-energy-model/🔌️vacates/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌delete-energy-model/🔌️vacates/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🔒change-reference-locked/🔓️unlocks/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🔒change-reference-locked/🔓️unlocks/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🚫️removes-node-2/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🚫️removes-node-2/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧨delete-shape-model/🕳️vacates-the-shape-slot/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧨delete-shape-model/🕳️vacates-the-shape-slot/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧱create-shape-model/🧱️rehandles/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧱create-shape-model/🧱️rehandles/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-drawing/🚫️removes-drawing-1/🦠️mutation/🔣️.json"),include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-drawing/🚫️removes-drawing-1/📸️snapshot/⬅️before/🔣️.json")),
     ];
     assert_eq!(input.len(),21);
     for (input,before) in input {

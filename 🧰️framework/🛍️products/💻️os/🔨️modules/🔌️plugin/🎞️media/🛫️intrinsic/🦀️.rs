@@ -62,7 +62,7 @@ impl semio_framework_dsl_record::native_encoding::FieldProjectionSource for Intr
 pub(crate) fn media_projection_error() -> MediaValueError { MediaValueError::literal(MediaRefusal::InvariantViolated, "intrinsic media original source path changed") }
 fn media_frontier_error() -> MediaValueError { MediaValueError::literal(MediaRefusal::OwnershipLimit, "intrinsic media frontier exceeds original receiving grant") }
 
-fn close_intrinsic_cursor(cursor: &mut MediaPackCursor, native: &mut semio_framework_value::NativeEncodeControl<'_>, wallet: &mut store::NativeSnapshotBodyWallet) -> Result<(), MediaValueError> {
+fn close_intrinsic_cursor(cursor: &mut MediaPackCursor, native: &mut semio_framework_value::NativeEncodeControl<'_>, wallet: &mut crate::io::control::NativeSnapshotBodyWallet) -> Result<(), MediaValueError> {
     while !cursor.terminal_is_empty() {
         let grant = wallet.remaining_grant(); let demand = cursor.retirement_demands()?;
         if grant.maximum_items == 0 || demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes || demand.depth > grant.maximum_depth { return Err(media_frontier_error()); }
@@ -74,7 +74,7 @@ fn close_intrinsic_cursor(cursor: &mut MediaPackCursor, native: &mut semio_frame
     Ok(())
 }
 
-fn encode_intrinsic_parts(port: &str, schema: &str, value: &DslValue, owner: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> Result<IntrinsicMediaParts, MediaValueError> {
+fn encode_intrinsic_parts(port: &str, schema: &str, value: &DslValue, owner: &mut crate::io::control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<IntrinsicMediaParts, MediaValueError> {
     let grant = owner.remaining_grant();
     if grant.maximum_items == 0 || grant.maximum_copy_bytes == 0 || grant.maximum_capacity_bytes == 0 || grant.maximum_release_bytes == 0 || grant.maximum_depth < 4 { return Err(media_frontier_error()); }
     owner.receive::<IntrinsicMediaEncoding, IntrinsicMediaParts>(|slot, native, wallet| {
@@ -127,7 +127,7 @@ fn encode_intrinsic_parts(port: &str, schema: &str, value: &DslValue, owner: &mu
     })
 }
 
-pub(crate) fn copy_media_text_parts(port: &str, schema: &str, text: &str, owner: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> Result<(String, String, String), MediaValueError> {
+pub(crate) fn copy_media_text_parts(port: &str, schema: &str, text: &str, owner: &mut crate::io::control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<(String, String, String), MediaValueError> {
     owner.receive::<(String, String, String), (String, String, String)>(|slot, native, wallet| {
         *slot = Some((String::new(), String::new(), String::new())); let parts = slot.as_mut().unwrap();
         wallet.copy_encode_text_into(native, port, &mut parts.0, 2)?; wallet.copy_encode_text_into(native, schema, &mut parts.1, 2)?; wallet.copy_encode_text_into(native, text, &mut parts.2, 2)?;

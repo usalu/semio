@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🦚️set-wall-location/🕳️missing",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🦚️set-wall-location/🕳️missing/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🦚️set-wall-location/🕳️missing/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🦚️set-wall-location/🕳️missing/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🦚️set-wall-location/🕳️missing/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🦚️set-wall-location/🕳️missing/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦚️set-wall-location/🕳️missing/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦚️set-wall-location/🕳️missing/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦚️set-wall-location/🕳️missing/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦚️set-wall-location/🕳️missing/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦚️set-wall-location/🕳️missing/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

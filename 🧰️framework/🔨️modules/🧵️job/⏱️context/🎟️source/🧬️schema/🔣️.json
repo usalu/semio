@@ -1,0 +1,11 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#","title":"Original Parent-Owned Caller Source","type":"object","additionalProperties":false,
+ "required":["contract","operation","generation","moveRootsBeforeBorrow","roots","parentAllocationQuote","loanBirth","loanReturn","parentWaitsForLoans","actualTurnBudget","clockIsAuthority","deadlineFrozen","weak","coldRoot","terminalDropBytes","originalGrant","incoming","loans"],
+ "properties":{
+  "contract":{"const":"semio.job.original-parent-caller-source.v1"},"operation":{"const":99241},"generation":{"const":7},"moveRootsBeforeBorrow":{"const":true},"roots":{"const":["already-paid-cancel","already-paid-payload-authority"]},"parentAllocationQuote":{"const":"first-party-sealed-shared-birth-bytes"},
+  "loanBirth":{"const":{"items":1,"copy":0,"capacity":0}},"loanReturn":{"const":"paid-nonlast-strong-return-to-live-parent"},"parentWaitsForLoans":{"const":true},"actualTurnBudget":{"const":"required-real-supplier-input"},"clockIsAuthority":{"const":false},"deadlineFrozen":{"const":false},"weak":{"const":false},"coldRoot":{"const":false},"terminalDropBytes":{"const":0},
+  "originalGrant":{"const":[9,64,65536,262144,64]},
+  "incoming":{"type":"array","minItems":3,"items":{"type":"object","additionalProperties":false,"required":["fuel","deadline","clock"],"properties":{"fuel":{"type":"integer","minimum":0},"deadline":{"type":"integer","minimum":1},"clock":{"enum":["actual-first-supplier-clock","actual-next-supplier-clock"]}}}},
+  "loans":{"const":[{"parentStrong":1,"childStrong":0,"phase":"parent-rooted"},{"parentStrong":1,"childStrong":1,"phase":"child-received"},{"parentStrong":1,"childStrong":1,"phase":"cancelled-return-denied"},{"parentStrong":1,"childStrong":0,"phase":"child-paid-return"},{"parentStrong":0,"childStrong":0,"phase":"parent-paid-root-close"}]}
+ }
+}

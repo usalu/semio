@@ -5,7 +5,7 @@ use crate::schema_metadata::examples::{PresenceExamples, PresenceExamplesFlags};
 /// 👥️ Plain presence examples preserve their exact serialized updates and separate own flags.
 #[test]
 fn presence_overlay_fixture_preserves_separate_own_flags() {
-    const FIXTURE: &str = include_str!("../../🧫️fixtures/👥️presence-overlay.json");
+    const FIXTURE: &str = include_str!("../🧫️fixtures/👥️presence-overlay.json");
     let fixture: PresenceExamples = serde_json::from_str(FIXTURE).unwrap();
     let wire: serde_json::Value = serde_json::from_str(FIXTURE).unwrap();
     assert_eq!(fixture.cases.len(), 4);

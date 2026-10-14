@@ -5,7 +5,7 @@ use super::window_measures_section_tests::section_document;
 use super::*;
 
 pub(crate) fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/🎬️window-engagements/🔣️.json")).expect("window engagements fixture parses")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🎬️window-engagements/🔣️.json")).expect("window engagements fixture parses")
 }
 
 pub(crate) fn engagements_section_document(section: &serde_json::Value, generation: u64) -> UiDocumentLease {

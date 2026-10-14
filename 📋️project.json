@@ -616,7 +616,10 @@
       "executor": "nx:run-commands",
       "cache": true,
       "dependsOn": [],
-      "inputs": ["{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*", "{workspaceRoot}/📋️project.json"],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*",
+        "{workspaceRoot}/📋️project.json"
+      ],
       "outputs": [],
       "options": {
         "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test"
@@ -2437,8 +2440,18 @@
         "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts build",
         "forwardAllArgs": true
       },
-      "cache": true,
-      "outputs": []
+      "cache": false,
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "orchestrator": true
+        }
+      },
+      "inputs": [
+        {
+          "env": "SEMIO_BUILD_MODE"
+        }
+      ]
     },
     "release": {
       "executor": "nx:run-commands",
@@ -2470,6 +2483,7 @@
                 "after": [],
                 "profile": "host-tool",
                 "target": "host",
+                "workerProtocol": "jobserver",
                 "policies": [
                   "process",
                   "cargo"
@@ -2486,6 +2500,7 @@
                 "after": [],
                 "profile": "release",
                 "target": "host",
+                "workerProtocol": "jobserver",
                 "policies": [
                   "process",
                   "cargo"
@@ -2504,6 +2519,7 @@
                 ],
                 "profile": "release",
                 "target": "host",
+                "workerProtocol": "jobserver",
                 "policies": [
                   "process",
                   "cargo"
@@ -2522,6 +2538,7 @@
                 ],
                 "profile": "release",
                 "target": "host",
+                "workerProtocol": "reserved",
                 "policies": [
                   "process"
                 ]
@@ -2679,7 +2696,15 @@
       "dependsOn": [
         "@semio-tech/ui-styling-py:deps",
         "@semio-tech/energy-oracle-py:deps"
-      ]
+      ],
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          }
+        }
+      }
     },
     "deps-cargo": {
       "executor": "nx:run-commands",
@@ -2687,6 +2712,14 @@
       "outputs": [],
       "options": {
         "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync cargo"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          }
+        }
       }
     },
     "deps-go": {
@@ -2695,6 +2728,14 @@
       "outputs": [],
       "options": {
         "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync go"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          }
+        }
       }
     },
     "deps-dotnet": {
@@ -2706,7 +2747,15 @@
       },
       "dependsOn": [
         "@semio-tech/repo-test-dotnet:deps"
-      ]
+      ],
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          }
+        }
+      }
     },
     "deps-cpp": {
       "executor": "nx:run-commands",
@@ -2717,7 +2766,15 @@
       },
       "dependsOn": [
         "cpp-setup"
-      ]
+      ],
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          }
+        }
+      }
     },
     "deps-browsers": {
       "executor": "nx:run-commands",
@@ -2726,7 +2783,15 @@
       "options": {
         "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync browsers"
       },
-      "dependsOn": []
+      "dependsOn": [],
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          }
+        }
+      }
     },
     "deps-wasm": {
       "executor": "nx:run-commands",
@@ -2738,7 +2803,15 @@
       "dependsOn": [
         "deps-wasm-opt",
         "deps-trunk"
-      ]
+      ],
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          }
+        }
+      }
     },
     "deps-trunk": {
       "executor": "nx:run-commands",
@@ -2747,6 +2820,14 @@
       "parallelism": false,
       "options": {
         "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync trunk"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          }
+        }
       }
     },
     "deps-wasm-opt": {
@@ -2763,6 +2844,14 @@
       "outputs": [],
       "options": {
         "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync tools"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          }
+        }
       }
     },
     "prepare": {
@@ -3342,6 +3431,14 @@
       "outputs": [],
       "options": {
         "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync cargo-lock"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          }
+        }
       }
     },
     "deps-js-lock": {

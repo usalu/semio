@@ -2,7 +2,7 @@ import {openSync,writeSync,closeSync,readFileSync} from "node:fs";
 import {spawn} from "node:child_process";
 import {terminateOwnedProcessTree} from "../🪓️termination/🟦️.ts";
 import { advanceScriptInvocation, checkScriptInvocation, type ScriptInvocation, type ScriptProgress } from "../🧭️routing/📥️invocation/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import policySchema from "./📋️policy/🧬️schema/🔣️.json";
 
 export type OwnedProcessCaptureResult = { status: number | null; signal: string | null; stdout: string; stderr: string } & { reason?: "exit" | "timeout" | "cancelled" | "output-limit" | "spawn-error" };

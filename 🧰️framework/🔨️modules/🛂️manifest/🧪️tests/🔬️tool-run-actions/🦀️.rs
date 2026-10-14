@@ -55,7 +55,7 @@ struct Case {
 }
 
 fn fixture() -> Fixture {
-    serde_json::from_str(include_str!("../../🧫️fixtures/⏯️tool-run-actions.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/⏯️tool-run-actions.json")).unwrap()
 }
 
 fn arg_schema_name(schema: &ArgSchema) -> &'static str {
@@ -170,6 +170,6 @@ async fn tool_and_utility_run_round_trips_through_serde_and_the_value_codec() {
 }
 
 fn sample_run() -> ToolRunDefinition {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⏯️tool-run-actions.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⏯️tool-run-actions.json")).unwrap();
     serde_json::from_value(fixture["cases"][2]["tools"][1]["run"].clone()).unwrap()
 }

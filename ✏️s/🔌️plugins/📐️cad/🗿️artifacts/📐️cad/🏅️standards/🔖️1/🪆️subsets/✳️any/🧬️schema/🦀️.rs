@@ -17,7 +17,7 @@ mod document_contract_tests;
 /// 🛡️ `deny_unknown_fields`: a cad document is exactly these keys. The retired inline pane state
 /// (`objects`, `shapeGeometry`, `activeModelDefinitionId` — replaced by the composed child slots and
 /// by window config) must FAIL to decode instead of being silently dropped, which is the law
-/// `🧫️fixtures/🪪️document`'s `invalidDocuments` rows state.
+/// `../🧪️tests/🧫️fixtures/🔬️contract/🪪️document`'s `invalidDocuments` rows state.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.cad.cad")]

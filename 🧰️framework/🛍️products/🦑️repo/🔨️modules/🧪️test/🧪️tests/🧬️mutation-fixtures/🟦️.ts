@@ -4,8 +4,8 @@ import { lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, w
 import { dirname, join, posix } from "node:path";
 import { tmpdir } from "node:os";
 import { mutationVectorRegistryBreaches, repoRootFromHere, testTaxonomy, type OracleRegistry } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import vectors from "../../🧫️fixtures/🧬️mutation-fixtures/🔣️.json";
-import htmlPairs from "../../🧫️fixtures/🌐️html-source-pair/🔣️.json";
+import vectors from "../🧫️fixtures/🧬️mutation-fixtures/🔣️.json";
+import htmlPairs from "../🧫️fixtures/🌐️html-source-pair/🔣️.json";
 
 import { parse, serialize } from "parse5";
 import { loadCatalogTaxonomy, semanticDescendantNodeRelativePath, semanticDirectoryKindId } from "../../../📚️library/🔍️discovery/🟦️.ts";

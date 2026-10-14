@@ -18,7 +18,7 @@ fn note_actions_declare_zero_manifest_args_per_d2() {
 
 #[test]
 fn eval_cases_has_at_least_sixty_entries_in_both_locales() {
-    let cases = eval_cases(include_str!("../../🧫️fixtures/🧠️conformance/🔣️.json"));
+    let cases = eval_cases(include_str!("../🧫️fixtures/🧠️conformance/🔣️.json"));
     assert!(cases.len() >= 60, "expected >= 60 eval cases, got {}", cases.len());
     assert!(cases.iter().any(|case| case.locale == "en"));
     assert!(cases.iter().any(|case| case.locale == "de"));

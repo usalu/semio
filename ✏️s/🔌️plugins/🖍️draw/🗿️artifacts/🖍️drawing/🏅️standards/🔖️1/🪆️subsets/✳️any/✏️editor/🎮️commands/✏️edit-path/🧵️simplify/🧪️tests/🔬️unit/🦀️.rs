@@ -14,7 +14,7 @@ fn close(work:&mut Work) {
 }
 #[test]
 fn retained_path_simplification_shared_cases() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧬️schema/🧮️geometry/✏️editing/🧫️fixtures/🎛️algorithms/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🎛️algorithms/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap().iter().filter(|case|case["operation"]["kind"]=="simplify"&&case["error"]!=true) {
         let source:Vec<crate::PathSegment>=serde_json::from_value(case["before"].clone()).unwrap();
         let layer=crate::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Simplify")).to_string().into()).expect("nonempty authored identity"), "Simplify",source.into());let id=crate::schema::layer_base(&layer).id.clone();

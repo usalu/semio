@@ -35,7 +35,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn validator_decodes_and_runs_the_referential_checks_end_to_end() {
         let snapshot = SemioMeshSnapshot { meshes: vec![SemioMesh { id: "m1".into(), primitives: vec![SemioPrimitive { id: "p1".into(), material_id: Some("missing".into()), ..Default::default() }] }], ..Default::default() };
-        let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snapshot);
+        let bytes = pack::snapshot::ArtifactPack::encode_pack(&snapshot);
         let diagnostics = SemioMeshValidator::validate(&IoPayload::Binary(bytes)).await;
         assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_mesh.dangling-material-ref"), "got {diagnostics:?}");
     }
@@ -141,13 +141,13 @@ mod tests {
 
             let demo = snapshot::demo_mesh_snapshot();
 
-            let parsed = <snapshot::SemioMeshSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+            let parsed = <snapshot::SemioMeshSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
             assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_mesh_snapshot()");
-            assert_eq!(store::os_store::serialization::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_mesh_snapshot()) drifted from the shipped .dsl.semio fixture");
+            assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_mesh_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-            let decoded = <snapshot::SemioMeshSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+            let decoded = <snapshot::SemioMeshSnapshot as pack::snapshot::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
             assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_mesh_snapshot()");
-            assert_eq!(store::os_store::serialization::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_mesh_snapshot()) drifted from the shipped .pack.semio fixture");
+            assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_mesh_snapshot()) drifted from the shipped .pack.semio fixture");
         }
     }
     //#endregion 🔖️ConformanceLaws
@@ -200,7 +200,7 @@ mod tests {
 
         async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
             let text = std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()])?;
-            let snapshot = <SemioMeshSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|e| vec![e.to_string()])?;
+            let snapshot = <SemioMeshSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|e| vec![e.to_string()])?;
             let hard: Vec<String> = check_mesh_referential_invariants(&snapshot).into_iter().filter(|d| matches!(d.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)).map(|d| d.code.0).collect();
             if hard.is_empty() { Ok(()) } else { Err(hard) }
         }

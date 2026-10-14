@@ -10,7 +10,7 @@ type Layer = { id: string; locked: boolean; children?: Layer[] };
 type Protection = { locked: boolean; inherited: boolean; descendant: boolean; editable: boolean; structural: boolean; canChangeLock: boolean };
 
 test("shared pixel lock vectors match the independent hierarchy oracle", () => {
-  const vectors = fixture<{ layers: Layer[]; cases: { id: string; expected: Protection }[] }>("🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json");
+  const vectors = fixture<{ layers: Layer[]; cases: { id: string; expected: Protection }[] }>("🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json");
   const tree = hierarchy<Layer>({ id: "root", locked: false, children: vectors.layers }, node => node.children);
   for (const row of vectors.cases) {
     const node = tree.descendants().find(node => node.data.id === row.id)!;

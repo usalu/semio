@@ -4,8 +4,8 @@
 use crate::io::text::mutations::decode_semio_mutation_json;
 use crate::io::text::snapshot::decode_semio_snapshot_json;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🖼️apply-image-applied/⬅️before.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🖼️apply-image-applied/🦠️mutation.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🖼️apply-image-applied/⬅️before.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🖼️apply-image-applied/🦠️mutation.json");
 
 #[semio_framework_async_macros::async_test]
 async fn the_wrapped_image_mutation_inverts_and_sums_to_the_negative_diff() {

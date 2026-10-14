@@ -5,11 +5,11 @@
 fn vector() -> super::Vector {
     super::Vector {
         kind: "change-permanents",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/⚓️change-permanents/✅apply/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/⚓️change-permanents/✅apply/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/⚓️change-permanents/✅apply/📸️snapshot/➡️after/🔣️.json"),
-        diff: Some(include_str!("../../../../../🧫️fixtures/🧬️mutations/⚓️change-permanents/✅apply/🔺️diff/🔣️.json")),
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/⚓️change-permanents/✅apply/🎯️outcome/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚓️change-permanents/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚓️change-permanents/✅apply/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚓️change-permanents/✅apply/📸️snapshot/➡️after/🔣️.json"),
+        diff: Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚓️change-permanents/✅apply/🔺️diff/🔣️.json")),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚓️change-permanents/✅apply/🎯️outcome/🔣️.json"),
     }
 }
 

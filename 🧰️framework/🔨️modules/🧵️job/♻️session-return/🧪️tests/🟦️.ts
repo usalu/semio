@@ -4,7 +4,7 @@ import jsonPatch from "fast-json-patch";
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
 import schema from "../🧬️schema/🔣️.json";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 test("original session frame neutral custody agrees with independent owner removal",()=>{
  expect(new Ajv({strict:true}).compile(schema)(corpus)).toBe(true);
  for(const row of corpus.cases){

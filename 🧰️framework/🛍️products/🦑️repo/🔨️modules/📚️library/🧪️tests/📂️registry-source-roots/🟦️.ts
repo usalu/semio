@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseRegistrySourceRoots, registryArtifactSourceRoots, type RegistryCatalogInputView } from "../../🔍️discovery/🟦️.ts";
 import schema from "../../🧬️schema/📂️registry-source-roots/🔣️.json";
-import fixture from "../../🧫️fixtures/📂️registry-source-roots/🔣️.json";
+import fixture from "../🧫️fixtures/📂️registry-source-roots/🔣️.json";
 
 test("portable explicit source roots agree with independent TOML and JSON schema oracles", () => {
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);

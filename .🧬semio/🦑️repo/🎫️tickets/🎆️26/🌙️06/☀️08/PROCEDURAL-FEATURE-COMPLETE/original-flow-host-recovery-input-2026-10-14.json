@@ -1,0 +1,70 @@
+{
+  "baseRevision": "b4bf1a54b3792d4428565a7e87bd15790e97cef0",
+  "baseSha256": "ad4ec72d60fcef62de6096ad3678e12ff80560ed4e191c6d05d2ccc18989af61",
+  "rollout": "/Users/ueli/.codex/sessions/2026/10/13/rollout-2026-10-13T17-23-41-01a135dc-bd73-7bf1-bf7b-b2cb6c273af8.jsonl",
+  "hostEdits": [
+    {
+      "line": 2100,
+      "timestamp": "2026-10-13T16:55:24.116Z",
+      "kind": "host-only patch"
+    },
+    {
+      "line": 2889,
+      "timestamp": "2026-10-13T17:54:54.596Z",
+      "kind": "host-only Python block"
+    },
+    {
+      "line": 3655,
+      "timestamp": "2026-10-13T18:41:35.177Z",
+      "kind": "host-only path-composed Python block"
+    },
+    {
+      "line": 3929,
+      "timestamp": "2026-10-13T18:56:59.402Z",
+      "kind": "host-only path-composed Python block"
+    },
+    {
+      "line": 4531,
+      "timestamp": "2026-10-13T19:22:35.277Z",
+      "kind": "host-only path-composed Python block"
+    },
+    {
+      "line": 4597,
+      "timestamp": "2026-10-13T19:28:01.618Z",
+      "kind": "host-only path-composed Python block"
+    },
+    {
+      "line": 4761,
+      "timestamp": "2026-10-13T19:43:13.479Z",
+      "kind": "host-only path-composed Python block"
+    },
+    {
+      "line": 5405,
+      "timestamp": "2026-10-13T20:16:39.995Z",
+      "kind": "host-only Python block"
+    },
+    {
+      "line": 7347,
+      "timestamp": "2026-10-13T22:22:39.790Z",
+      "kind": "host-only Python block"
+    },
+    {
+      "line": 7398,
+      "timestamp": "2026-10-13T22:25:55.538Z",
+      "kind": "host-only Python block"
+    },
+    {
+      "line": 8392,
+      "timestamp": "2026-10-13T23:23:01.198Z",
+      "kind": "host-only Python block"
+    },
+    {
+      "line": 8540,
+      "timestamp": "2026-10-13T23:32:09.763Z",
+      "kind": "host-only Python block"
+    }
+  ],
+  "restoredSha256": "bc53af7825e53560b9d5dcd00324250a5b99992c4581131c1da282f07e3924b1",
+  "bytes": 354075,
+  "lines": 5499
+}

@@ -39,7 +39,7 @@ import { currentPlatform } from "../../../../../../../../../../🧰️framework/
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
-const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
+const FIXTURES_DIR = join(HERE, "..", "🧪️tests/🧫️fixtures");
 const ORACLE_ID = "gif-87a-any-mutate-reader";
 const COMPARISON_PROFILE = "semantic-gif-87a-reader-v1";
 /** 🧾️ The eleven kinds Pillow can express. Only `set-pixel-aspect-ratio` stays `-uncarried`: no
@@ -254,7 +254,7 @@ async function manifests(): Promise<void> {
 //#endregion 🚪️Commands
 
 async function aspectMode(command: string): Promise<number> {
-  const ASPECT_OUT = process.env.SEMIO_FIXTURE_OUT ?? join(import.meta.dir, "..", "🧫️fixtures");
+  const ASPECT_OUT = process.env.SEMIO_FIXTURE_OUT ?? join(import.meta.dir, "..", "🧪️tests/🧫️fixtures");
   // 🖥️ASPECT MODE — the artifact's last kind, closed by a third-party CLI.
   //
   // `gif` 0.13.3 (`encoder.rs:345`) and 0.14.2 (`encoder.rs:401`) each write a hardcoded `0u8` for the
@@ -267,7 +267,7 @@ async function aspectMode(command: string): Promise<number> {
   // reports `Aspect = N`. The only authored step is one line of that text description — fixture
   // authoring, which the goal statement admits, with giflib doing every byte of the encoding.
   if (command === "aspect" || command === "aspect-manifests") {
-    const seedDir = join(import.meta.dir, "..", "🧫️fixtures");
+    const seedDir = join(import.meta.dir, "..", "🧪️tests/🧫️fixtures");
     const seedKind = readdirSync(seedDir).find((name) => existsSync(join(seedDir, name, BEFORE_FILE)));
     if (!seedKind) throw new Error(`no committed ${BEFORE_FILE} to seed the aspect pair from`);
     const seed = join(seedDir, seedKind, BEFORE_FILE);

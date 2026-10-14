@@ -16,7 +16,7 @@ impl BudgetRegistry {fn new(session:&Session)->Self {Self(flow_extension_sdk::Ex
 impl std::ops::Deref for BudgetRegistry {type Target=neural_engine::SharedRegistry;fn deref(&self)->&Self::Target {self.0.registry()}}
 impl Drop for BudgetRegistry {fn drop(&mut self){use semio_framework_plugin::ExtensionResourceOwner;self.0.begin_close();while !self.0.terminal_is_empty(){self.0.close_step(4096,65536).unwrap();}}}
 
-const EVALUATE_BUDGET_FIXTURE_JSON: &str = include_str!("../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/⏱️evaluate-budget.json");
+const EVALUATE_BUDGET_FIXTURE_JSON: &str = include_str!("../../../../../🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏱️evaluate-budget.json");
 
 /// 📇️ The half of the shared fixture this side of the contract reads. Parsed through `pack::json`
 /// rather than a `serde` derive because this crate carries no `serde` dependency at all — the

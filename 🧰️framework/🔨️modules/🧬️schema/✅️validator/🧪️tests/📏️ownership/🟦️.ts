@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import law from "../../📏️ownership/🧫️fixtures/🔣️.json";
+import law from "../../📏️ownership/🧪️tests/🧫️fixtures/🔣️.json";
 
 /** 🧭️ Proves the validator and document transport have separate physical owners. */
 export function proveSchemaValidatorOwnershipV1(repoRoot: string): void {

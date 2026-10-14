@@ -44,6 +44,8 @@ impl<T: ?Sized + Sync> RetainedOwnedProjection<T> {
     pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{RetainedCloneBinding::capacity_demand(&self.binding,body)}
     pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{RetainedCloneBinding::release_demand(&self.binding)}
     pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{RetainedCloneBinding::depth_demand(&self.binding)}
+    /// 🎯️ Lends the same selected original alias or child event under actual remaining copy authority.
+    pub fn next_close_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{RetainedCloneBinding::close_demand(&self.binding,body)}
 
     /// ✅️ Reports that the projection owns neither a native alias nor a root lease.
     pub fn terminal_is_empty(&self) -> bool { self.binding.is_none() }

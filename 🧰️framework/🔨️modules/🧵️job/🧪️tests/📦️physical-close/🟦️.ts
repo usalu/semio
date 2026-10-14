@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { applyPatch } from "fast-json-patch";
-import fixture from "../../🧫️fixtures/📦️physical-close/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/📦️physical-close/🔣️.json" with { type: "json" };
 
 /** 📦️ Distinguishes initialized payload length from the physical page released under a grant. */
 export function testJobPayloadPhysicalClose(): void {

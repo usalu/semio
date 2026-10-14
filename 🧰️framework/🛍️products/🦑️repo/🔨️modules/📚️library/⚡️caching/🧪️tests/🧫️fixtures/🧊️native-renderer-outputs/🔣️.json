@@ -1,0 +1,24 @@
+{
+  "project": "@semio-tech/framework-renderer-wgpu",
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu",
+  "crate": "semio-framework-os-renderer-wgpu",
+  "binary": "semio-wgpu-native",
+  "stdout": "native renderer artifact\n",
+  "changedStdout": "changed native renderer artifact\n",
+  "profiles": [
+    {
+      "profile": "prototype",
+      "target": "native-build",
+      "output": "dist/native-prototype"
+    },
+    {
+      "profile": "release",
+      "target": "native-build",
+      "output": "dist/native-release"
+    }
+  ],
+  "heldRun": {
+    "profile": "prototype",
+    "readyTimeoutMs": 5000
+  }
+}

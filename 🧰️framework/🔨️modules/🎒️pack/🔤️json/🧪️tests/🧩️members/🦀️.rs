@@ -1,7 +1,7 @@
 use super::*;
 use semio_framework_value::{DslValue,NativeDecodeControl};
 
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🧩️members/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🧩️members/🔣️.json")).unwrap()}
 
 #[test]
 fn explicit_member_policy_binds_decoded_names_and_preserves_normalization(){

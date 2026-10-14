@@ -22,7 +22,7 @@ use super::*;
 use semio_framework::kernel::UiDirtyScope;
 use serde_json::Value;
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🫀️settle-pump/🔣️.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/🫀️settle-pump/🔣️.json");
 const SHELL_SOURCE: &str = include_str!("../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
 const RENDERER_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
 

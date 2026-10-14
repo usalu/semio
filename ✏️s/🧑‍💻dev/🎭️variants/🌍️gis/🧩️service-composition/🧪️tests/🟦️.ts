@@ -1172,7 +1172,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         state.currentPack = new Uint8Array([9]);
         state.currentSpr = new Uint8Array([8]);
         if (row.name.startsWith("lease-")) {
-          const leaseFixture = JSON.parse(await readFile(new URL("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8")),
+          const leaseFixture = JSON.parse(await readFile(new URL("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8")),
             fields = structuredClone(leaseFixture.manifest),
             frontier = bootstrap.baseline_frontier;
           fields.scope = { spaceId: binding.spaceId, documentId: config.documentId };
@@ -1539,7 +1539,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         sourceHostiles: readonly string[];
         nonclaims: readonly string[];
       }>;
-      const parsed: unknown = JSON.parse(await readFile(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/🗺️gis-map-peer-rebootstrap-v1/🔣️.json", import.meta.url), "utf8"));
+      const parsed: unknown = JSON.parse(await readFile(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/🗺️gis-map-peer-rebootstrap-v1/🔣️.json", import.meta.url), "utf8"));
       const schema = JSON.parse(await readFile(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🔣️.json", import.meta.url), "utf8")) as { $id: string };
       
       
@@ -2837,7 +2837,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("accepts the exact current Hub inference receipt and events wire", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const wire = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).wire;
+      const wire = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).wire;
       const schema = JSON.parse(readFileSync(new URL("../../../🌎️hub/💡️inference/🧬️schema/🔣️.json", source.url), "utf8"));
       const production = await import("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts");
       for (const [name, definition, parse] of [
@@ -2854,7 +2854,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("requires verified session authority and never adopts a successor proof for retained inference", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🔣️.json", import.meta.url), "utf8"));
       
       
@@ -2950,7 +2950,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("retains cancellation requested while inference submission is pending", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).cancelBeforeReceipt;
+      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).cancelBeforeReceipt;
       for (const kind of fixture.intents) {
       const harness = await inferenceHarness({ lease: "editor" });
       const projection = () => { const { phase, jobId, cancelRequested } = harness.ports().at(-1)!; return { phase, jobId, cancelRequested }; };
@@ -2973,7 +2973,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("retains the sealed inference owner through uncertain submit and document retirement", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
+      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
       for (const scenario of fixture.cases) {
       const harness = await inferenceHarness({ lease: "editor" });
         const sessionEpoch = testSeams.directorySessionEpoch;
@@ -3042,7 +3042,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("never restores an inference Undo owner after the document closes", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
+      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
       for (const scenario of fixture.approvalClose) {
       const harness = await inferenceHarness({ lease: "editor" });
         try {
@@ -3088,7 +3088,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("preserves the successor broker proof when an old inference owner responds", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
+      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
       const harness = await inferenceHarness({ lease: "editor" });
       const epoch = testSeams.directorySessionEpoch;
       try {
@@ -3133,7 +3133,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
       const authorities = fixture.rows.filter((row: { accepted: boolean }) => row.accepted).map((row: { value: unknown }) => row.value);
-      const retained = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
+      const retained = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
       const harness = await inferenceHarness({ lease: "editor" });
       const channel = new MessageChannel();
       testSeams.attachHubSessionPort(channel.port1);
@@ -3178,7 +3178,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: equal } = await import("fast-deep-equal");
       const authorityFixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
       const authorities = authorityFixture.rows.filter((row: { accepted: boolean }) => row.accepted).map((row: { value: unknown }) => row.value);
-      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🔣️.json", import.meta.url), "utf8"));
       
       
@@ -3217,7 +3217,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
       const authority = fixture.rows.find((row: { accepted: boolean }) => row.accepted).value;
-      const retained = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
+      const retained = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
       for (const scenario of retained.directoryPageBinding) {
       const harness = await inferenceHarness({ lease: "editor" });
         const channel = new MessageChannel();
@@ -3258,7 +3258,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
       const value = fixture.rows.find((row: { accepted: boolean }) => row.accepted).value;
-      const retained = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
+      const retained = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
       for (const scenario of retained.authorityRetirement) {
       const harness = await inferenceHarness({ lease: "editor" });
         const channel = new MessageChannel();
@@ -3326,7 +3326,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
       const authority = fixture.rows.find((row: { accepted: boolean }) => row.accepted).value;
-      const retained = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
+      const retained = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
       const harness = await inferenceHarness({ lease: "editor" });
       const prior = new MessageChannel(), successor = new MessageChannel();
       const body = JSON.stringify(authority);
@@ -3355,7 +3355,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("never dispatches an old queued request under a replacement broker admission", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
+      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
       const harness = await inferenceHarness({ lease: "editor" });
       let release: () => void = () => undefined;
       try {
@@ -3384,7 +3384,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("does not spend the active broker proof on queued retired inference work", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
+      const fixture = JSON.parse(readFileSync(new URL("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).retainedClosing;
       for (const scenario of fixture.queuedRetirement) {
       const harness = await inferenceHarness({ lease: "editor" });
         const epoch = testSeams.directorySessionEpoch;
@@ -4065,7 +4065,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     async function executionTargetLeaseFixture(): Promise<ExecutionTargetLeaseFixture> {
       const { readFile } = await import("node:fs/promises");
-      return JSON.parse(await readFile(new URL("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8")) as ExecutionTargetLeaseFixture;
+      return JSON.parse(await readFile(new URL("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8")) as ExecutionTargetLeaseFixture;
     }
 
     function executionTargetBytes(hexText: string): Uint8Array {
@@ -7189,7 +7189,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   describe("browser actor catch-up tail", () => {
     it("keeps a remote batch that arrives before an actor-bound document's child exists for that child, never the Shell", async () => {
-      const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8"));
       const hexBytes = (hex: string): Uint8Array => Uint8Array.from({ length: hex.length / 2 }, (_unused, index) => Number.parseInt(hex.slice(index * 2, index * 2 + 2), 16));
       const { encodeDocumentBackboneEnvelopeBatchExact: encodeBatch } = await import("../../../../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts");
       const posted: BackboneWorkerResponse[] = [];
@@ -7233,7 +7233,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   describe("remote operations folded over pending local ones", () => {
     it("rebuilds an actor-bound document from the hub once its own operations are accepted after another human's were folded over them", async () => {
-      const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8"));
       const hexBytes = (hex: string): Uint8Array => Uint8Array.from({ length: hex.length / 2 }, (_unused, index) => Number.parseInt(hex.slice(index * 2, index * 2 + 2), 16));
       const { encodeDocumentBackboneEnvelopeBatchExact: encodeBatch } = await import("../../../../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts");
       const posted: BackboneWorkerResponse[] = [];
@@ -7281,7 +7281,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const corpus = JSON.parse(await readFile(new URL("./🔨️modules/🏪️store/🧫️fixtures/🔁️document-rebuild-welcome-v1/🔣️.json", source.url), "utf8")) as {
         readonly rows: readonly Readonly<{ name: string; lane: "browser-actor" | "local"; welcome: "None" | "Tail"; accepted: boolean }>[];
       };
-      const fixture = JSON.parse(await readFile(new URL("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(await readFile(new URL("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8"));
       const hexBytes = (hex: string): Uint8Array => Uint8Array.from({ length: hex.length / 2 }, (_unused, index) => Number.parseInt(hex.slice(index * 2, index * 2 + 2), 16));
       const posted: BackboneWorkerResponse[] = [];
       testSeams.workerPostTestSink = (message) => posted.push(message);

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🛁️set-component/🧯️override-needs-its-parameter",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛁️set-component/🧯️override-needs-its-parameter/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛁️set-component/🧯️override-needs-its-parameter/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛁️set-component/🧯️override-needs-its-parameter/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛁️set-component/🧯️override-needs-its-parameter/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛁️set-component/🧯️override-needs-its-parameter/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛁️set-component/🧯️override-needs-its-parameter/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛁️set-component/🧯️override-needs-its-parameter/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛁️set-component/🧯️override-needs-its-parameter/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛁️set-component/🧯️override-needs-its-parameter/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛁️set-component/🧯️override-needs-its-parameter/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

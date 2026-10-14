@@ -3,7 +3,7 @@ pub(crate) mod context {
     use semio_framework_plugin::artifact_app_laws::meta;
     use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     use semio_s_artifact_stdio_semio::{create_semio_member, SemioMembers};
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
 
     /// 🧪️ The registered, MOUNTED fixture app every editor test drives. It is a guard, not a bare
     /// alias: a registered app's `ArtifactStore` refuses `Drop` without its exact terminal-empty
@@ -355,7 +355,7 @@ async fn import_media_steps_in_wraps_a_bare_scalar_payload() {
 #[semio_framework_async_macros::async_test]
 async fn import_media_steps_in_consumes_original_intrinsic_unicode_and_signed_scalar(){
     use semio_framework_value::{DslValue,Number};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();
     let text=fixture["textUnit"].as_str().unwrap().repeat(fixture["projection"]["textRepeats"].as_u64().unwrap()as usize);
     assert_eq!(serde_json::from_str::<String>(&serde_json::to_string(&text).unwrap()).unwrap(),text);
     let mut app=new_app_with_registry_wired().await;

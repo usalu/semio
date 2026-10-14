@@ -7,7 +7,7 @@
 // #region 🔌️Adapters
 
 import { describe, expect, it } from "vitest";
-import corpus from "../../🧫️fixtures/🧫️float32-decimal/🔣️.json" with { type: "json" };
+import corpus from "../🧫️fixtures/🧫️float32-decimal/🔣️.json" with { type: "json" };
 import { board2dFloat32Decimal } from "../../🟦️.tsx";
 // #endregion 🔌️Adapters
 

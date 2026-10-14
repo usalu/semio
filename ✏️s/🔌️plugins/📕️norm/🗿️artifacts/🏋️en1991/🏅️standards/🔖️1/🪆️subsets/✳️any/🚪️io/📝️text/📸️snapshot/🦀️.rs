@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::En1991Snapshot;
 
 /// 🏬️ The de-office-compliant example fixture, handcrafted in `en1991`'s DSL
-/// (`store::os_store::serialization::ArtifactDsl`): a DE office (design-load assumptions) evaluated under the EN annex with a
+/// (`pack::snapshot::ArtifactDsl`): a DE office (design-load assumptions) evaluated under the EN annex with a
 /// DE annex snow/wind/imposed and a full set of the other action sub-scenarios (snow, wind, thermal,
 /// construction, accidental impact, bridge, crane, silo) at plausible non-zero values — distinct
 /// from `En1991Snapshot::default()`'s category-B/DE-annex/standard-fire-curve values so the grammar's
@@ -18,12 +18,12 @@ pub const EN1991_DE_OFFICE_COMPLIANT_EXAMPLE_TEXT: &str = include_str!("../../..
 
 /// 📖️ Parses `.en1991` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<En1991Snapshot, semio_framework_diagnostic::TextError> {
-    <En1991Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <En1991Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.en1991` DSL text.
 pub fn print_dsl(document: &En1991Snapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(document)
+    pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
 #[cfg(test)]
@@ -54,12 +54,12 @@ pub fn decode_en1991_snapshot_json(text: &str) -> Result<En1991Snapshot, String>
 
 /// 📖️ Parse committed `.dsl.semio` into [`En1991Snapshot`].
 pub fn decode_en1991_dsl(text: &str) -> Result<En1991Snapshot, String> {
-    <En1991Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+    <En1991Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
 
 /// 🖨️ Print [`En1991Snapshot`] to canonical `.dsl.semio`.
 pub fn encode_en1991_dsl(snapshot: &En1991Snapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
+    pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

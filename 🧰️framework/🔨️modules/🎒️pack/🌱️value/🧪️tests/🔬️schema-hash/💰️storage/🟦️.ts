@@ -22,13 +22,13 @@ function canonical(tags:Record<string,number>,graph:any[]):Buffer{
  return Buffer.from(bytes);
 }
 test("independent BLAKE3 reproduces every authored canonical schema graph",()=>{
- const fixture=read("🧫️fixtures/🔑️schema-hash/🔣️.json");
+ const fixture=read("🧪️tests/🧫️fixtures/🔑️schema-hash/🔣️.json");
  expect(Object.keys(fixture.shapeTags).length).toBe(27);
  for(const sample of fixture.cases){const bytes=canonical(fixture.shapeTags,sample.graph);expect(bytes.toString("hex")).toBe(sample.canonicalHex);expect(Buffer.from(blake3(bytes)).toString("hex")).toBe(sample.schemaHash);}
  expect(fixture.cases.map((sample:any)=>sample.name)).toEqual(["flat","nested","nested-inner-field-changed","recursive","every-shape"]);
 });
 test("failed schema storage accounts for its actual returned diagnostic owner",()=>{
- const fixture=read("🧫️fixtures/🔑️schema-hash/💰️storage/🔣️.json");
+ const fixture=read("🧪️tests/🧫️fixtures/🔑️schema-hash/💰️storage/🔣️.json");
  expect(fixture.failureChannel,"closed diagnostic ownership facet").toBeDefined();
  const failure=fixture.failureChannel;
  expect(failure.scratch).toBe("callerDataAllowanceMonotonic");

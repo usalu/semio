@@ -287,7 +287,7 @@ pub fn cad_import_object_emit(doc: &ArtifactView<'_, CadSnapshot>, pane: CadPane
         return Err(refused("geometry import requires an available composed model"));
     }
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } };
-    let genesis=semio_framework_plugin::app::ChildEmitGenesis{reference:target.clone(),initial_pack:<SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&imported.geometry)};
+    let genesis=semio_framework_plugin::app::ChildEmitGenesis{reference:target.clone(),initial_pack:<SemioBrepSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&imported.geometry)};
     emit.artifact_mutations.push(CadMutation::CreateBrep(crate::mutations::create_brep::CreateBrep { child_id: child_id.clone(), target, index }));
     emit.child_preparations.push_front(ChildEmitPreparation::with_genesis::<SemioBrepSnapshot, SemioBrepMutation>("breps", child_id, genesis, Vec::new()));
     Ok(emit)

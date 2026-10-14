@@ -1,6 +1,7 @@
 //! 🪜️ The retained-field rung of one hosted app's close ladder: every owned field the app retains
 //! beyond its stores is released through exact per-axis quotes and an unchanged caller grant.
 use super::*;
+use crate::bounded_ownership::PluginLifecycleFailure;
 use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 
 fn handoff() -> RetainedCloneProgress {
@@ -30,7 +31,7 @@ fn child_grant(grant: RetainedCloneGrant) -> RetainedCloneGrant {
 
 impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     /// 📏️ Quotes the next retained-field turn on every independent axis; nothing is owed once every field is empty.
-    fn retained_fields_close_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub(crate) fn retained_fields_close_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.history_view.is_some() || self.cache.is_some() {
             return Ok(handoff_demand());
         }
@@ -94,7 +95,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     /// ♻️ Releases exactly one retained field owner under the caller's unchanged grant; a grant below the quote yields.
-    fn retained_fields_close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+    pub(crate) fn retained_fields_close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
         let value_fault = |error: ValueError| plugin_sdk_fault(error.into_message());
         let idle = RetainedCloneProgress::default();
         if self.retained_fields_own_terminal_is_empty() {
@@ -432,7 +433,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         if !self.latest_wins_keys.terminal_is_empty() { return CloseRung::LatestWinsKeys; }
         if self.latest_wins_order.items.front().is_some() { return CloseRung::LatestWinsCommands; }
         if !self.tool_operations.is_empty() { return CloseRung::TypedOperations; }
-        if !self.close_instance_operation_owner_drained { return CloseRung::InstanceOwner; }
+        if !self.close_instance_operation_owner_drained||!self.instance_operation_owner.inference_is_empty(){return CloseRung::InstanceOwner;}
         if !self.media_exports.is_empty() { return CloseRung::MediaExports; }
         if !self.media_closures.is_empty() { return CloseRung::MediaClosures; }
         if !self.segmented_downloads.is_empty() { return CloseRung::Segments; }
@@ -525,7 +526,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         Ok(if pending.meta.actor.has_owner() { release_demand(pending.meta.actor.original_allocation_bytes()) } else { handoff_demand() })
     }
 
-    fn close_latest_wins_command_step(&mut self, operation_id: u64, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+    fn close_latest_wins_command_step(&mut self, operation_id: u64, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, PluginLifecycleFailure> {
         let idle = RetainedCloneProgress::default();
         let Some(pending) = self.latest_wins_commands.get_mut(operation_id) else {
             self.typed_operation_reservations[operation_id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = None;
@@ -543,7 +544,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
                 }
                 Err((error, actor)) => {
                     pending.meta.actor = actor;
-                    Err(plugin_retirement_fault(error))
+                    Err(error.into())
                 }
             };
         }
@@ -562,13 +563,18 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         operation.close_demands(body).map_err(plugin_retirement_fault)
     }
 
-    fn close_typed_operation_unit(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn close_typed_operation_unit(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
+        let grant=cx.retained_grant();let demand=self.close_typed_operation_demands(grant.maximum_copy_bytes)?;
+        crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|self.close_typed_operation_granted(same,actual).map(|step|(step,false)))
+    }
+
+    fn close_typed_operation_granted(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
         let Some((_, operation_id)) = self.tool_operations.next_id_from(0) else { return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress::default())) };
         let operation = self.tool_operations.get_mut(operation_id).ok_or_else(|| plugin_sdk_fault("typed operation owner changed during bounded close"))?;
-        if operation.stage == MountedTypedCommandFullOperationStage::Retiring { return self.retire_typed_operation_unit(operation_id, grant); }
-        let step = operation.close_step(grant)?;
+        if operation.stage == MountedTypedCommandFullOperationStage::Retiring { return self.retire_typed_operation_unit(operation_id,cx); }
+        let step = operation.close_step(cx)?;
         let PluginLifecycleStep::Complete(progress) = step else { return Ok(step) };
-        if !operation.terminal_is_empty() { return Err(plugin_sdk_fault("typed operation close reported Complete without exact terminal emptiness")); }
+        if !operation.terminal_is_empty() { return Err(plugin_sdk_fault("typed operation close reported Complete without exact terminal emptiness").into()); }
         let operation = self.tool_operations.remove(operation_id).ok_or_else(|| plugin_sdk_fault("terminal typed operation changed before exact removal"))?;
         self.operation_progress_retired |= operation.progress.is_some();
         drop(operation);
@@ -633,7 +639,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             CloseRung::LatestWinsKeys => self.latest_wins_keys.advance_demands(),
             CloseRung::LatestWinsCommands => self.latest_wins_order.items.front().copied().map_or(Ok(Default::default()), |operation_id| self.close_latest_wins_command_demands(operation_id, body)),
             CloseRung::TypedOperations => self.close_typed_operation_demands(body).map_err(fault),
-            CloseRung::InstanceOwner => self.instance_operation_owner.retirement_demands(body),
+            CloseRung::InstanceOwner=>if self.close_instance_operation_owner_drained{self.instance_operation_owner.inference_retirement_demands(body)}else{self.instance_operation_owner.retirement_demands(body).map(|demand|if demand==Default::default(){handoff_demand()}else{demand})},
             CloseRung::MediaExports => Self::close_media_demands(&self.media_exports, body),
             CloseRung::MediaClosures => Self::close_media_demands(&self.media_closures, body),
             CloseRung::Segments => Ok(Self::close_segment_demands(&self.segmented_downloads)),
@@ -660,154 +666,60 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
     }
 
     /// 🎟️ Advances exactly one frontier under the caller's unchanged grant; a closed app answers `Complete`.
-    pub(crate) fn close_ladder_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
-        let value_fault = |error: ValueError| plugin_sdk_fault(error.into_message());
-        let idle = RetainedCloneProgress::default();
-        let child = child_grant(grant);
-        match self.close_rung() {
-            CloseRung::Begin => {
-                self.tool_cancellations.cancel_scope_generation();
-                self.peer_roster_scope.cancel_now();
-                self.local_interaction_authority.close();
-                if let Some(query) = self.local_interaction_query.as_mut() { query.begin_close(); }
-                self.tool_runs.begin_close();
-                self.latest_wins_keys.begin_close();
-                self.close_started = true;
-                self.begin_gesture_retirement();
-                Ok(RetainedCloneStep::Progress(handoff()))
-            }
-            CloseRung::DirectIngress => self.window_config_store.close_direct_ingress(grant).map_err(value_fault),
-            CloseRung::CommandPrune => self.advance_command_prune_step(grant, true).map(Self::lifecycle_retained),
-            CloseRung::GrantedMounted => self.granted_mounted_retirement_step(grant).map_err(value_fault),
-            CloseRung::PrivateChildGroups => Ok(match self.close_private_child_group_step(grant)? {
-                semio_framework_job::InteractiveJobCloseStep::Pending { progress } | semio_framework_job::InteractiveJobCloseStep::Complete { progress } => RetainedCloneStep::Progress(progress),
-                semio_framework_job::InteractiveJobCloseStep::Blocked => RetainedCloneStep::Progress(idle),
-                semio_framework_job::InteractiveJobCloseStep::Refused { kind, .. } => return Err(plugin_sdk_fault(format!("private child group close was refused: {kind:?}"))),
-            }),
-            CloseRung::PendingReserved => {
-                if let Some((_, id)) = self.pending_reserved.next_id_from(0) {
-                    if let Some(pending) = self.pending_reserved.remove(id) { pending.permit.finish(); }
-                }
-                Ok(RetainedCloneStep::Progress(handoff()))
-            }
-            CloseRung::ReservedCommit => {
-                if let Some(commit) = self.reserved_commits.pop_front() { commit.permit.finish(); }
-                Ok(RetainedCloneStep::Progress(handoff()))
-            }
-            CloseRung::ReservedOutcome => {
-                drop(self.reserved_commit_outcome.take());
-                Ok(RetainedCloneStep::Progress(handoff()))
-            }
-            CloseRung::ToolRuns => self.tool_run_close_step(grant),
-            CloseRung::TimeTravel => self.time_travel_close_step(grant),
-            CloseRung::ToolOverlay => self.tool_overlay_retirement_step(grant).map_err(value_fault),
-            CloseRung::LocalQuery => {
-                let Some(query) = self.local_interaction_query.as_mut() else { return Ok(RetainedCloneStep::Progress(idle)) };
-                if !query.is_closing() {
-                    query.begin_close();
-                    return Ok(RetainedCloneStep::Progress(handoff()));
-                }
-                let step = query.close_step(child).map_err(value_fault)?;
-                if query.terminal_is_empty() {
-                    drop(self.take_local_interaction_query_reply());
-                    self.local_interaction_query = None;
-                }
-                Ok(RetainedCloneStep::Progress(step.progress()))
-            }
-            CloseRung::SnapshotReturns => {
-                if let Some(stage) = self.next_snapshot_read_return_stage() { self.snapshot_read_return_stage = stage; }
-                self.advance_snapshot_read_returns_one(grant).map(|step| RetainedCloneStep::Progress(step.progress()))
-            }
-            CloseRung::PresenceLocalReads => self.presence_store.maintenance_local_reads_step(grant).map_err(value_fault),
-            CloseRung::MountedJobs => {
-                let Some(instance_id) = self.live_runtime_instance_id else { return Ok(RetainedCloneStep::Progress(idle)) };
-                A::mounted_job_close_step(instance_id, grant).map(Self::lifecycle_retained)
-            }
-            CloseRung::CancellationSlots => {
-                let ceiling = self.close_cancellation_cursor.saturating_add(grant.maximum_items).min(CANCELLATION_SLOT_SPAN);
-                let mut slots = 0;
-                while self.close_cancellation_cursor < ceiling {
-                    let _ = self.tool_cancellations.cleanup_slot(self.close_cancellation_cursor)?;
-                    self.close_cancellation_cursor += 1;
-                    slots += 1;
-                }
-                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: slots, ..idle }))
-            }
-            CloseRung::LatestWinsKeys => Ok(RetainedCloneStep::Progress(self.latest_wins_keys.advance(grant)?.progress())),
-            CloseRung::LatestWinsCommands => {
-                let Some(operation_id) = self.latest_wins_order.items.front().copied() else { return Ok(RetainedCloneStep::Progress(idle)) };
-                self.close_latest_wins_command_step(operation_id, grant).map(|step| RetainedCloneStep::Progress(step.progress()))
-            }
-            CloseRung::TypedOperations => self.close_typed_operation_unit(grant).map(Self::lifecycle_retained),
-            CloseRung::InstanceOwner => {
-                let step = self.instance_operation_owner.close_step(grant)?;
-                if matches!(step, PluginLifecycleStep::Complete(_)) {
-                    self.instance_operation_owner.close_inference();
-                    if !self.instance_operation_owner.close_terminal_is_empty()? { return Err(plugin_sdk_fault("app-instance operation owner reported Complete without an exact terminal-empty witness")); }
-                    self.close_instance_operation_owner_drained = true;
-                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..step.progress().unwrap_or_default() }));
-                }
-                Ok(Self::lifecycle_retained(step))
-            }
-            CloseRung::MediaExports => self.close_media_step(false, grant),
-            CloseRung::MediaClosures => self.close_media_step(true, grant),
-            CloseRung::Segments => Self::close_segment_step(&mut self.segmented_downloads, grant),
-            CloseRung::SegmentClosures => Self::close_segment_step(&mut self.segmented_closures, grant),
-            CloseRung::SnapshotRetentions => registry_step(&mut self.snapshot_retirements, &mut self.close_snapshot_cursor, grant).map(|(step, _)| Self::lifecycle_retained(step)),
-            CloseRung::ChildMemberRetirements => {
-                let progress = self.child_member_retirement_step(grant)?;
-                if progress == idle && !self.child_content_retirements.is_empty() {
-                    return Ok(RetainedCloneStep::Progress(self.child_root_retirement_step(grant)?));
-                }
+    pub(crate) fn close_ladder_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, PluginLifecycleFailure> {
+        let idle=RetainedCloneProgress::default();let child=child_grant(grant);
+        match self.close_rung(){
+            CloseRung::Begin=>{self.tool_cancellations.cancel_scope_generation();self.peer_roster_scope.cancel_now();self.local_interaction_authority.close();if let Some(query)=self.local_interaction_query.as_mut(){query.begin_close()}self.tool_runs.begin_close();self.latest_wins_keys.begin_close();self.close_started=true;self.begin_gesture_retirement();Ok(RetainedCloneStep::Progress(handoff()))}
+            CloseRung::DirectIngress=>self.window_config_store.close_direct_ingress(grant).map_err(PluginLifecycleFailure::from),
+            CloseRung::CommandPrune=>self.advance_command_prune_step(grant,true).map(Self::lifecycle_retained).map_err(PluginLifecycleFailure::from),
+            CloseRung::GrantedMounted=>self.granted_mounted_retirement_step(cx),
+            CloseRung::PrivateChildGroups=>Ok(match self.close_private_child_group_step(grant)?{semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>RetainedCloneStep::Progress(progress),semio_framework_job::InteractiveJobCloseStep::Blocked=>RetainedCloneStep::Progress(idle)}),
+            CloseRung::PendingReserved=>{if let Some((_,id))=self.pending_reserved.next_id_from(0){if let Some(pending)=self.pending_reserved.remove(id){pending.permit.finish()}}Ok(RetainedCloneStep::Progress(handoff()))}
+            CloseRung::ReservedCommit=>{if let Some(commit)=self.reserved_commits.pop_front(){commit.permit.finish()}Ok(RetainedCloneStep::Progress(handoff()))}
+            CloseRung::ReservedOutcome=>{drop(self.reserved_commit_outcome.take());Ok(RetainedCloneStep::Progress(handoff()))}
+            CloseRung::ToolRuns=>self.tool_run_close_step(cx).map_err(PluginLifecycleFailure::from),
+            CloseRung::TimeTravel=>self.time_travel_close_step(grant).map_err(PluginLifecycleFailure::from),
+            CloseRung::ToolOverlay=>self.tool_overlay_retirement_step(grant).map_err(PluginLifecycleFailure::from),
+            CloseRung::LocalQuery=>{let Some(query)=self.local_interaction_query.as_mut()else{return Ok(RetainedCloneStep::Progress(idle))};if !query.is_closing(){query.begin_close();return Ok(RetainedCloneStep::Progress(handoff()))}let step=query.close_step(child)?;if query.terminal_is_empty(){drop(self.take_local_interaction_query_reply());self.local_interaction_query=None}Ok(RetainedCloneStep::Progress(step.progress()))}
+            CloseRung::SnapshotReturns=>{if let Some(stage)=self.next_snapshot_read_return_stage(){self.snapshot_read_return_stage=stage}self.advance_snapshot_read_returns_one(grant).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(PluginLifecycleFailure::from)}
+            CloseRung::PresenceLocalReads=>self.presence_store.maintenance_local_reads_step(grant).map_err(PluginLifecycleFailure::from),
+            CloseRung::MountedJobs=>{let Some(instance_id)=self.live_runtime_instance_id else{return Ok(RetainedCloneStep::Progress(idle))};A::mounted_job_close_step(instance_id, cx, grant).map(Self::lifecycle_retained)}
+            CloseRung::CancellationSlots=>{let ceiling=self.close_cancellation_cursor.saturating_add(grant.maximum_items).min(CANCELLATION_SLOT_SPAN);let mut slots=0;while self.close_cancellation_cursor<ceiling{let _=self.tool_cancellations.cleanup_slot(self.close_cancellation_cursor)?;self.close_cancellation_cursor+=1;slots+=1}Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:slots,..idle}))}
+            CloseRung::LatestWinsKeys=>Ok(RetainedCloneStep::Progress(self.latest_wins_keys.advance(grant)?.progress())),
+            CloseRung::LatestWinsCommands=>{let Some(operation_id)=self.latest_wins_order.items.front().copied()else{return Ok(RetainedCloneStep::Progress(idle))};self.close_latest_wins_command_step(operation_id,grant).map(|step|RetainedCloneStep::Progress(step.progress()))}
+            CloseRung::TypedOperations=>self.close_typed_operation_unit(cx).map(Self::lifecycle_retained),
+            CloseRung::InstanceOwner=>{
+                if self.close_instance_operation_owner_drained{return self.instance_operation_owner.close_inference_step(cx,grant).map(Self::lifecycle_retained)}
+                let step=self.instance_operation_owner.close_step(cx,grant)?;let mut progress=step.progress().unwrap_or_default();
+                if matches!(step,PluginLifecycleStep::Complete(_)){if !self.instance_operation_owner.close_terminal_is_empty()?{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original dynamic owner completed with retained inferred payload").with_retained_progress(progress).into())}self.close_instance_operation_owner_drained=true;if progress==Default::default(){progress.copied_items=1}}
                 Ok(RetainedCloneStep::Progress(progress))
             }
-            CloseRung::ChildRootRetirements => Ok(RetainedCloneStep::Progress(self.child_root_retirement_step(grant)?)),
-            CloseRung::DetachChildRoot => self.detach_child_root_step(),
-            CloseRung::ClosingChildMember => {
-                let Some(retirement) = self.close_child_member.as_mut() else { return Ok(RetainedCloneStep::Progress(idle)) };
-                let step = retirement.close_step(grant)?;
-                if let RetainedCloneStep::Complete(progress) = step {
-                    if !retirement.terminal_is_empty() { return Err(plugin_sdk_fault("child member retirement reported Complete without its exact terminal-empty witness")); }
-                    drop(self.close_child_member.take());
-                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress }));
-                }
-                Ok(step)
-            }
-            CloseRung::DetachChildren => {
-                if self.close_child_member_cursor >= CHILD_CONTENT_SLOTS { return Err(plugin_sdk_fault("fixed child-member close cursor exhausted before every exact owner was detached")); }
-                let index = self.close_child_member_cursor;
-                self.close_child_member_cursor += 1;
-                if let Some(entry) = self.children.take_at(index) { *self.close_child_member = Some(ChildMemberRetirement::new(entry)); }
-                Ok(RetainedCloneStep::Progress(handoff()))
-            }
-            CloseRung::PeerRoster => {
-                let (step, removed) = registry_step(&mut self.peer_roster_publications, &mut self.close_peer_roster_cursor, grant)?;
-                if let Some(generation) = removed {
-                    let slot = Self::peer_roster_slot(generation);
-                    if self.peer_roster_reservations[slot].is_some_and(|(reserved, _)| reserved == generation) { self.peer_roster_reservations[slot] = None; }
-                }
-                Ok(Self::lifecycle_retained(step))
-            }
-            CloseRung::PeerRosterOutcomes => {
-                if let Some((index, generation)) = self.peer_roster_outcomes.next_id_from(self.close_peer_roster_cursor) {
-                    drop(self.peer_roster_outcomes.remove(generation).ok_or_else(|| plugin_sdk_fault("peer roster outcome changed before exact removal"))?);
-                    self.close_peer_roster_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-                }
-                Ok(RetainedCloneStep::Progress(handoff()))
-            }
-            CloseRung::PeerPresenceRetirements => registry_step(&mut self.peer_presence_retirements, &mut self.close_peer_presence_cursor, grant).map(|(step, _)| Self::lifecycle_retained(step)),
-            CloseRung::PresencePeerRetirements => registry_step(&mut self.presence_peer_retirements, &mut self.close_presence_peer_cursor, grant).map(|(step, _)| Self::lifecycle_retained(step)),
-            CloseRung::DetachPeerPresence => self.detach_peer_presence_step(),
-            CloseRung::EnvelopeIngress => self.drive_envelope_ingress(grant, true).map(Self::lifecycle_retained),
-            CloseRung::EnvelopeDecode => self.envelope_decode_close_step(grant).map(Self::lifecycle_retained),
-            CloseRung::StoreReplacement => self.drive_store_replacement_jobs(grant, true).map(Self::lifecycle_retained),
-            CloseRung::DocumentArchive => self.drive_document_archive_load_retirements(grant, true).map(Self::lifecycle_retained),
-            CloseRung::WindowRetirements => self.retire_document_windows_step(grant, true).map(Self::lifecycle_retained),
-            CloseRung::OwnedStores => self.close_owned_stores_step(grant).map(Self::lifecycle_retained),
-            CloseRung::RetainedFields => self.retained_fields_close_step(grant),
-            CloseRung::Uncovered => if self.close_terminal_is_empty() { Ok(RetainedCloneStep::Complete(idle)) } else { Err(value_fault(Self::uncovered_close_frontier())) },
+            CloseRung::MediaExports=>self.close_media_step(false,grant).map_err(PluginLifecycleFailure::from),
+            CloseRung::MediaClosures=>self.close_media_step(true,grant).map_err(PluginLifecycleFailure::from),
+            CloseRung::Segments=>Self::close_segment_step(&mut self.segmented_downloads,grant).map_err(PluginLifecycleFailure::from),
+            CloseRung::SegmentClosures=>Self::close_segment_step(&mut self.segmented_closures,grant).map_err(PluginLifecycleFailure::from),
+            CloseRung::SnapshotRetentions=>registry_step(&mut self.snapshot_retirements,&mut self.close_snapshot_cursor,grant).map(|(step,_)|Self::lifecycle_retained(step)).map_err(PluginLifecycleFailure::from),
+            CloseRung::ChildMemberRetirements=>{let progress=self.child_member_retirement_step(grant)?;if progress==idle&&!self.child_content_retirements.is_empty(){return Ok(RetainedCloneStep::Progress(self.child_root_retirement_step(grant)?))}Ok(RetainedCloneStep::Progress(progress))}
+            CloseRung::ChildRootRetirements=>Ok(RetainedCloneStep::Progress(self.child_root_retirement_step(grant)?)),
+            CloseRung::DetachChildRoot=>self.detach_child_root_step().map_err(PluginLifecycleFailure::from),
+            CloseRung::ClosingChildMember=>{let Some(retirement)=self.close_child_member.as_mut()else{return Ok(RetainedCloneStep::Progress(idle))};let step=retirement.close_step(grant)?;if let RetainedCloneStep::Complete(progress)=step{if !retirement.terminal_is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"child member retirement reported Complete without its exact terminal-empty witness").with_retained_progress(progress).into())}drop(self.close_child_member.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:progress.copied_items.max(1),..progress}))}Ok(step)}
+            CloseRung::DetachChildren=>{if self.close_child_member_cursor>=CHILD_CONTENT_SLOTS{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"fixed child-member close cursor exhausted before every exact owner was detached").into())}let index=self.close_child_member_cursor;self.close_child_member_cursor+=1;if let Some(entry)=self.children.take_at(index){*self.close_child_member=Some(ChildMemberRetirement::new(entry))}Ok(RetainedCloneStep::Progress(handoff()))}
+            CloseRung::PeerRoster=>{let(step,removed)=registry_step(&mut self.peer_roster_publications,&mut self.close_peer_roster_cursor,grant)?;if let Some(generation)=removed{let slot=Self::peer_roster_slot(generation);if self.peer_roster_reservations[slot].is_some_and(|(reserved,_)|reserved==generation){self.peer_roster_reservations[slot]=None}}Ok(Self::lifecycle_retained(step))}
+            CloseRung::PeerRosterOutcomes=>{if let Some((index,generation))=self.peer_roster_outcomes.next_id_from(self.close_peer_roster_cursor){drop(self.peer_roster_outcomes.remove(generation).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"peer roster outcome changed before exact removal"))?);self.close_peer_roster_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS}Ok(RetainedCloneStep::Progress(handoff()))}
+            CloseRung::PeerPresenceRetirements=>registry_step(&mut self.peer_presence_retirements,&mut self.close_peer_presence_cursor,grant).map(|(step,_)|Self::lifecycle_retained(step)).map_err(PluginLifecycleFailure::from),
+            CloseRung::PresencePeerRetirements=>registry_step(&mut self.presence_peer_retirements,&mut self.close_presence_peer_cursor,grant).map(|(step,_)|Self::lifecycle_retained(step)).map_err(PluginLifecycleFailure::from),
+            CloseRung::DetachPeerPresence=>self.detach_peer_presence_step().map_err(PluginLifecycleFailure::from),
+            CloseRung::EnvelopeIngress=>self.drive_envelope_ingress(grant,true).map(Self::lifecycle_retained).map_err(PluginLifecycleFailure::from),
+            CloseRung::EnvelopeDecode=>self.envelope_decode_close_step(grant).map(Self::lifecycle_retained).map_err(PluginLifecycleFailure::from),
+            CloseRung::StoreReplacement=>self.drive_store_replacement_jobs(cx,grant,true).map(Self::lifecycle_retained).map_err(PluginLifecycleFailure::from),
+            CloseRung::DocumentArchive=>self.drive_document_archive_load_retirements(grant,true).map(Self::lifecycle_retained).map_err(PluginLifecycleFailure::from),
+            CloseRung::WindowRetirements=>self.retire_document_windows_step(grant,true).map(Self::lifecycle_retained).map_err(PluginLifecycleFailure::from),
+            CloseRung::OwnedStores=>self.close_owned_stores_step(grant).map(Self::lifecycle_retained).map_err(PluginLifecycleFailure::from),
+            CloseRung::RetainedFields=>self.retained_fields_close_step(grant).map_err(PluginLifecycleFailure::from),
+            CloseRung::Uncovered=>if self.close_terminal_is_empty(){Ok(RetainedCloneStep::Complete(idle))}else{Err(Self::uncovered_close_frontier().into())},
         }
     }
+
 }
 
 fn widest_demand(left: RetirementDemand, right: RetirementDemand) -> RetirementDemand {

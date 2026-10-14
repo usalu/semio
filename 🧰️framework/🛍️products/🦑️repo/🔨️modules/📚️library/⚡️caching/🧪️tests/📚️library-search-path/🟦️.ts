@@ -7,7 +7,7 @@ import { getWorkspaceRoot } from "../../../🟦️.ts";
 test("pinned Cargo launches a large static graph and its procedural macro without a compiler wrapper", async () => {
   const workspace=getWorkspaceRoot(), artifact=process.env.SEMIO_TEST_ARTIFACT_DIR;
   if(!artifact)throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
-  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"../../🧫️fixtures/📚️library-search-path/🔣️.json"),"utf8"));
+  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧫️fixtures/📚️library-search-path/🔣️.json"),"utf8"));
   expect(fixture.libraries*fixture.libraryValue+fixture.macroValue).toBe(fixture.expected);
   const root=mkdtempSync(join(artifact,"cargo-library-path-")), build=join(root,fixture.buildDirectory), members:string[]=[], dependencies:Record<string,{path:string}>={};
   const write=(path:string,content:string):void => {mkdirSync(resolve(path,".."),{recursive:true});writeFileSync(path,content);};

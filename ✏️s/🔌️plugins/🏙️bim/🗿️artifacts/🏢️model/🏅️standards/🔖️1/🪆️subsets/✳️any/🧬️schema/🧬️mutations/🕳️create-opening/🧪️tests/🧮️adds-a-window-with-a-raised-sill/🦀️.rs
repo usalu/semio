@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🕳️create-opening/🧮️adds-a-window-with-a-raised-sill",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕳️create-opening/🧮️adds-a-window-with-a-raised-sill/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕳️create-opening/🧮️adds-a-window-with-a-raised-sill/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕳️create-opening/🧮️adds-a-window-with-a-raised-sill/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕳️create-opening/🧮️adds-a-window-with-a-raised-sill/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕳️create-opening/🧮️adds-a-window-with-a-raised-sill/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕳️create-opening/🧮️adds-a-window-with-a-raised-sill/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕳️create-opening/🧮️adds-a-window-with-a-raised-sill/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕳️create-opening/🧮️adds-a-window-with-a-raised-sill/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕳️create-opening/🧮️adds-a-window-with-a-raised-sill/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕳️create-opening/🧮️adds-a-window-with-a-raised-sill/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

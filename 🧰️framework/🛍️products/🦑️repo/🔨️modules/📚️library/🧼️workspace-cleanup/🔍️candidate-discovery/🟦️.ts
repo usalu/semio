@@ -1,4 +1,4 @@
-import { generatedOutputHasLiveLease } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { generatedOutputHasLiveLease } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { existsSync, lstatSync, readdirSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { HUB_DATA_DIR_NAME, MAP_CACHE_DIR_NAME, runProbe, SPACE_DATA_DIR_NAME } from "../../🟦️.ts";

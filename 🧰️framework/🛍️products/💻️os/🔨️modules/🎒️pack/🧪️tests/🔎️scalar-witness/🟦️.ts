@@ -32,7 +32,7 @@ export function encodeScalarRecordFixture(test:Case,oracle:boolean):{bytes:Buffe
 
 //#region 🧪️Oracle
 export function testScalarRecordWireFixture():void {
-  const fixture:Fixture=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",testSourceUrl.href),"utf8"));
+  const fixture:Fixture=JSON.parse(readFileSync(new URL("./🧪️tests/🧫️fixtures/🔣️.json",testSourceUrl.href),"utf8"));
   
   assert.equal(new Set(fixture.cases.map(test=>test.id)).size,fixture.cases.length);
   assert.equal(fixture.version,1);assert.deepEqual(fixture.grants,[1,64,4096]);assert.deepEqual(fixture.cancelAfterSteps,[0,1,17,4097]);

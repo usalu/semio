@@ -414,7 +414,7 @@ async fn initial_document_starts_with_a_blank_editable_form() {
     let app = forms_app().await;
     let spec = app.snapshot().expect("projection");
     assert_eq!(spec.definition.steps.len(), 1);
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️schema/🧫️fixtures/🌱️blank/🔣️.json")).unwrap();
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔬️contract/🌱️blank/🔣️.json")).unwrap();
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&spec.definition)).unwrap(), expected);
     assert!(crate::schema::flatten_questions(&spec).is_empty());
     assert!(spec.responses.is_empty());
@@ -537,7 +537,7 @@ async fn export_media_document_out_round_trips_through_pack() {
     let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
     assert_eq!(schema, FORMS_DOCUMENT_SCHEMA);
     let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64 pack");
-    let decoded = <FormsSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode pack");
+    let decoded = <FormsSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode pack");
     assert_eq!(decoded, document);
 }
 
@@ -567,7 +567,7 @@ async fn forms_io_declares_dictionary_out_port() {
 /// 🌐️ Contributed field labels resolve from the same explicit axes as built-in fields.
 #[semio_framework_async_macros::async_test]
 async fn contributed_question_labels_follow_selected_axes() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../❓️questions/🧩️extensions/🧫️fixtures/🔣️contribution.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../❓️questions/🧩️extensions/🧪️tests/🧫️fixtures/🔣️contribution.json")).unwrap();
     let payload = semio_framework_pack_json::from_json_str(&vectors["payload"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let contributions = vec![ProgramContributionEntry { plugin_id: "playbook-module-procedural".into(), topic_contribution: Some(semio_framework_plugin::TopicContribution::new("forms.questionKind", payload)) }];
     for case in vectors["cases"].as_array().unwrap() {

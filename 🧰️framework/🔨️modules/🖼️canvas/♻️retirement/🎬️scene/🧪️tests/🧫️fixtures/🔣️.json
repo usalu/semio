@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 128
+  },
+  "pages": {
+    "pageSlots": 16,
+    "pageCount": 16,
+    "slots": 256
+  },
+  "path": [
+    [
+      0,
+      0
+    ],
+    [
+      2,
+      3
+    ],
+    [
+      5,
+      7
+    ]
+  ],
+  "dash": [
+    2,
+    4,
+    8
+  ],
+  "rgba": [
+    255,
+    0,
+    0,
+    255
+  ],
+  "expected": {
+    "unfundedBirth": 0,
+    "unfundedRelease": 0,
+    "terminalDrop": 0,
+    "firstPartySceneCommands": 3
+  }
+}

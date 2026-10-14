@@ -1,0 +1,4 @@
+{
+  "mutation": "changeEraserRadius",
+  "newRadius": 24.0
+}

@@ -1,7 +1,7 @@
 /** 🔤️ Semio text's ordered native mark/run corpus. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import f from "../🧫️fixtures/🔣️.json";
+import f from "./🧫️fixtures/🔣️.json";
 import type {SemioTextSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {SEMIO_TEXT_SQLITE_SCHEMA,semioTextSnapshotToSqliteDatabase,semioTextSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
@@ -12,7 +12,7 @@ test("Semio text malformed ownership/order, preallocation budgets and cancellati
 test("Semio text native admission corpus retains independent collection cardinality",()=>{const db=new Database(":memory:");try{db.run("CREATE TABLE native_runs(ordinal INTEGER PRIMARY KEY,content TEXT,href TEXT)");for(let ordinal=0;ordinal<f.nativeAdmission.collectionItems;ordinal++)db.query("INSERT INTO native_runs VALUES(?,?,?)").run(ordinal,"actual owned field","🌠");expect(db.query("SELECT count(*) count,max(ordinal) last FROM native_runs").get()).toEqual({count:f.nativeAdmission.collectionItems,last:f.nativeAdmission.collectionItems-1});expect(db.query("SELECT content,href FROM native_runs WHERE ordinal=?").get(f.nativeAdmission.cancelAfter)).toEqual({content:"actual owned field",href:"🌠"});}finally{db.close();}});
 
 
-import completeSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import completeSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import{independentSqliteExtent as completeIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
 test("Semio Text complete independent cells preserve copied limits and required empty metadata",async()=>{

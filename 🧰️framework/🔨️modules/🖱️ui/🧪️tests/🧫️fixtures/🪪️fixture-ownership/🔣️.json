@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "fixture": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/↔️panel-resize/🔣️.json",
+      "removed": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/↔️panel-resize/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/↔️panel-resize/📐️schema/🔣️.json",
+        "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🛰️Panel/🧬️schema/↔️resize/🔣️.json"
+      ]
+    },
+    {
+      "fixture": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🪪️window-surface-owner/🔣️.json",
+      "removed": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/🪪️window-surface-owner/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/🪪️window-surface-owner/🧬️schema/🔣️.json",
+        "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🧬️schema/🪪️window-surface-owner/🔣️.json"
+      ]
+    },
+    {
+      "fixture": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🛟️panel-window-reservation/🔣️.json",
+      "removed": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/🛟️panel-window-reservation/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/🛟️panel-window-reservation/🧬️schema/🔣️.json",
+        "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🧬️schema/🛟️panel-window-reservation/🔣️.json"
+      ]
+    }
+  ]
+}

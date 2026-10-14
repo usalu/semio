@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🗜️delete-property-template/🚫️removes-the-last-template",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗜️delete-property-template/🚫️removes-the-last-template/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗜️delete-property-template/🚫️removes-the-last-template/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗜️delete-property-template/🚫️removes-the-last-template/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗜️delete-property-template/🚫️removes-the-last-template/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗜️delete-property-template/🚫️removes-the-last-template/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️delete-property-template/🚫️removes-the-last-template/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️delete-property-template/🚫️removes-the-last-template/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️delete-property-template/🚫️removes-the-last-template/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️delete-property-template/🚫️removes-the-last-template/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️delete-property-template/🚫️removes-the-last-template/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

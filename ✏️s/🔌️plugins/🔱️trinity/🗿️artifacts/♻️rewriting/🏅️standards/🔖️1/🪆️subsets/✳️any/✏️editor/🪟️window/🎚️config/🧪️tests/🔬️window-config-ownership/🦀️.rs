@@ -6,8 +6,8 @@ use semio_framework_plugin::WindowConfigOwner;
 
 /// 🧾️ The committed wire witnesses a fixture case names by its leaf folder (`"witness"`).
 const WITNESSES: [(&str, &str); 2] = [
-    ("🎥️set-camera", include_str!("../../🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json")),
-    ("🔍️set-lod-mode", include_str!("../../🧫️fixtures/🧬️mutations/🔍️set-lod-mode/🧾️wire-witness/🦠️mutation/🔣️.json")),
+    ("🎥️set-camera", include_str!("../🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json")),
+    ("🔍️set-lod-mode", include_str!("../🧫️fixtures/🧬️mutations/🔍️set-lod-mode/🧾️wire-witness/🦠️mutation/🔣️.json")),
 ];
 
 /// 🧾️ The committed wire witness of one fixture case, decoded as the canonical Rust wire of its mutation.
@@ -39,7 +39,7 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
         let scene = artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(&text).map_err(str::to_string)?;
         serde_json::to_value(scene).map_err(|error| error.to_string())
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
     let view = ViewModel {
         window_instances: ["leftWindowId", "rightWindowId"].into_iter().map(|key| ViewWindowInstance { id: fixture[key].as_str().unwrap().into(), window_kind_id: BeforeWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(),
         ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
@@ -156,7 +156,7 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
 
 #[test]
 fn rewriting_window_config_mutations_match_the_independent_patch_trace() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
     let base: RewritingWindowConfig = semio_framework_pack_json::from_json_str(&fixture["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut windows = std::collections::BTreeMap::from([(fixture["leftWindowId"].as_str().unwrap().to_string(), base.clone()), (fixture["rightWindowId"].as_str().unwrap().to_string(), base)]);
     for row in fixture["cases"].as_array().unwrap() {
@@ -189,7 +189,7 @@ fn rewriting_window_config_commands_use_the_trusted_concrete_window() {
     use semio_framework_ui_locale::Terminology;
     use semio_framework_plugin::ViewModel;
     use semio_framework_plugin::ViewWindowInstance;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
     let left = fixture["leftWindowId"].as_str().unwrap();
     let right = fixture["rightWindowId"].as_str().unwrap();
     let view = ViewModel {
@@ -212,7 +212,7 @@ fn rewriting_window_config_commands_use_the_trusted_concrete_window() {
 /// ➕️ Every committed window-config mutation's concrete inverse rows sum to the negative of its diff (law L3).
 #[semio_framework_async_macros::async_test]
 async fn rewriting_window_config_inverses_sum_to_the_negative_diff() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
     let base: RewritingWindowConfig = semio_framework_pack_json::from_json_str(&fixture["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut windows = std::collections::BTreeMap::from([(fixture["leftWindowId"].as_str().unwrap().to_string(), base.clone()), (fixture["rightWindowId"].as_str().unwrap().to_string(), base)]);
     for row in fixture["cases"].as_array().unwrap() {

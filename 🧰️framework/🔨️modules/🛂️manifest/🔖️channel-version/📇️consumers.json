@@ -2,7 +2,7 @@
   "schema": "semio.os.channel-version-consumers/v1",
   "consumers": [
     {
-      "path": "🔨️modules/🛂️manifest/🧫️fixtures/📦️catalog-package/🔣️.json",
+      "path": "🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/📦️catalog-package/🔣️.json",
       "occurrences": 1
     },
     {

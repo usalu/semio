@@ -1,22 +1,33 @@
 #!/usr/bin/env bun
-import { configuredExactCargoLawPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { runExactCargoLaws } from "../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import { runRepositoryExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { scriptInvocationBudget } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runExactCargoLaws } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { resolve } from "node:path";
-import { runCargoTestsV1, runCargoLintV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../🏃️process/⏱️budget/🟦️.ts";
+import { runCargoTestsV1, runCargoLintV1, readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🦀️ `semio-framework-3d` router: `bun ./📜️script.ts test`. */
 
 /** 🧊️ The base crate and its four boundary-representation crates (wave E4 crate cut), tested and linted together. */
 const SEMIO_FRAMEWORK_3D_PACKAGES = ["semio-framework-3d", "semio-framework-3d-brep-representation", "semio-framework-3d-brep-queries", "semio-framework-3d-brep-operations", "semio-framework-3d-brep-engine"];
 
-import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if(segments[0]==="validation-planning-source"){
+      if(segments.length!==1)throw Error("validation-planning-source accepts no arguments");
+      const file=resolve(this.root,"../../📐️brep/💡️queries/✅validation/🧪️tests/🔬️unit/🟦️.ts");
+      for(const args of [[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",file],["test",file]])await runBudgetedTestCommand(process.execPath,args,{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal,throwOnFailure:true});return;
+    }
+    if(segments[0]==="validation-planning"||segments[0]==="validation-frontier"){
+      await runRepositoryExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,buildBudgetMs()),lawMilliseconds:600000},cwd:this.repoRoot,cargoArgs:segments.slice(1),groups:[{package:"semio-framework-3d-brep-queries",target:{kind:"lib"},laws:segments[0]==="validation-frontier"?["original_validation_planning_quotes_actual_backing_before_entity_copy","original_validation_loop_frontier_quotes_source_and_diagnostic_events"]:["original_validation_planning_quotes_actual_backing_before_entity_copy"]}]});return;
+    }
     const { rest } = resolveTestLevel(segments);
     await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: SEMIO_FRAMEWORK_3D_PACKAGES, cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
   }

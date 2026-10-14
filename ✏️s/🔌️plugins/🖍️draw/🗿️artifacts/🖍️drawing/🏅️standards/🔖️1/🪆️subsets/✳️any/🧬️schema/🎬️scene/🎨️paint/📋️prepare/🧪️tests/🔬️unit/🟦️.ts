@@ -5,11 +5,11 @@ import Ajv from "ajv/dist/2020.js";
 import draft7 from "ajv/dist/refs/json-schema-draft-07.json" with {type:"json"};
 import {readFileSync} from "node:fs";
 import {builtinFontLocations} from "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts";
-import rows from "../../🧫️fixtures/🔣️.json";
+import rows from "../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/📋️prepare/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
-import textRows from "../../🧫️fixtures/📝️text/🔣️.json";
-import phases from "../../🧫️fixtures/🧹️retirement/🔣️.json";
-import vectorRows from "../../../../📋️prepare/🧫️fixtures/🎬️vector/🔣️.json";
+import textRows from "../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/📋️prepare/📝️text/🔣️.json";
+import phases from "../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/📋️prepare/🧹️retirement/🔣️.json";
+import vectorRows from "../../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🎬️vector/🔣️.json";
 import {DocumentVectorJob,type DocumentScenePlan} from "../../../../📋️prepare/🟦️.ts";
 import type {DrawingArtifact} from "../../../../../🟦️.ts";
 import {PreparedRegionQueryJob} from "../../../🟦️.ts";
@@ -30,7 +30,7 @@ test("painted scene cancels every real preparation phase without publishing part
 test("painted scene owns refused input and admits exact cached counts and work",()=>{const source=plan("complete referenced difference"),{output,work}=finish(source,1),cap={maxNodes:output.counts.nodes,maxSegments:output.counts.segments,maxPoints:output.counts.points,maxContours:output.counts.contours,maxWork:work};close(output,1);const exact=finish(plan("complete referenced difference"),7,cap);close(exact.output,7);for(const key of ["maxNodes","maxSegments","maxPoints","maxContours","maxWork"]as const){const source=plan("complete referenced difference"),job=new ScenePaintJob(source,.001,{...cap,[key]:cap[key]-1});expect(()=>{while(!job.advance(4096).done){}}).toThrow(/limit|contract/);expect(()=>job.result()).toThrow(/limit|contract/);const moved=job.intoRetirement();expect(moved.output).toBeNull();while(!moved.job.advance(1).done){}expect(source.nodes).toHaveLength(0);expect(moved.job.terminalIsEmpty()).toBe(true);}const sourceAgain=plan("rectangle"),job=new ScenePaintJob(sourceAgain,NaN,limits);for(const grant of [0,-1,.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1])expect(()=>job.advance(grant)).toThrow(/grant/);expect(sourceAgain.nodes).toHaveLength(1);expect(()=>job.advance(1)).toThrow(/contract/);const moved=job.intoRetirement();while(!moved.job.advance(1).done){}expect(sourceAgain.nodes).toHaveLength(0);process.stderr.write("[DEBUG] Whole scene constructor refusal retains actual input; exact counts/work pass and one-short budgets genuinely retire owned plan/cache\n");});
 
 import sharp from "sharp";
-import resolvedRows from "../../../../../🧮️geometry/🎯️picking/🎨️paint/🧫️fixtures/🎬️resolved/🔣️.json";
+import resolvedRows from "../../../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🎨️paint/🎬️resolved/🔣️.json";
 import {PaintedPathPrepareJob,PaintedRegionsCloseJob} from "../../../🟦️.ts";
 import {ScenePlanCloseJob} from "../../../../🧹️retire/🟦️.ts";
 test("whole prepared scene queries reuse actual Boolean and PNG trace caches against independent SVG",async()=>{let comparisons=0;for(const row of resolvedRows)for(const grant of [1,7,4096]){const {output}=finish(plan(row.source),grant),index=output.plan.nodes.findIndex(n=>n.id==="result"),paint=output.geometry[index]!.paint;if(paint.kind!=="path")throw Error("actual cached resolved path required");const before=structuredClone(paint.regions);for(const queryGrant of [1,7,4096]){const stamp={source:{instance:710033,base:"9007199254740993",generation:"18446744073709551615",revision:Array(32).fill(3)},build:"9007199254740993",entry:index,flatness:output.flatness},query=new PreparedRegionQueryJob(stamp,row.point as[number,number],0,output.flatness);while(!query.advance(paint.regions,stamp,queryGrant).done){}expect(query.result(stamp)).toBe(row.expected);}expect(paint.regions).toEqual(before);const fixture=vectorRows.find(r=>r.name===row.source)!,oracle=fixture.oracle as any,paths=oracle.paths??[{d:oracle.d,matrix:oracle.matrix}],svg=`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">${paths.map((p:any)=>`<path d="${p.d}" transform="matrix(${p.matrix.join(" ")})" fill="black"/>`).join("")}</svg>`,pixels=await sharp(Buffer.from(svg)).ensureAlpha().raw().toBuffer();expect(pixels[(Math.floor(row.point[1]!)*16+Math.floor(row.point[0]!))*4+3]!>127).toBe(row.expected);comparisons++;close(output,grant);}process.stderr.write(`[DEBUG] Whole prepared scenes matched ${comparisons} independent SVG samples from real Boolean/PNG trace caches across 54 immutable cached queries\n`);});

@@ -1,7 +1,8 @@
 //! 🗂️ Individually authored literal catalog and sourcing recipe relational ownership.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::CurationSnapshot;
 use crate::{ObjectKindExtra,GeometryRecipe,CuratedItem};
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{Projection,Cell,NativeEncodingBound,FloatColumn,insert_ieee754,read_binary64,read_binary32}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{Projection,Cell,NativeEncodingBound,FloatColumn,insert_ieee754,read_binary64,read_binary32}}};
 use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
 
@@ -24,20 +25,25 @@ fn uint(row:&SqliteRow,index:usize)->Result<u32,ValueError>{u32::try_from(row.in
 fn literal_catalog(row:&SqliteRow,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot>,ValueError>{
  if row.integer(1)?!=1{return Err(invalid("Curation catalog has the wrong document owner"))}let child_id=native.copy_text(row.text(2)?)?;let artifact_id=native.copy_text(row.text(3)?)?;let artifact_kind=native.copy_text(row.text(4)?)?;let standard=native.copy_text(row.text(5)?)?;let subset=native.copy_text(row.text(6)?)?;Ok(store::os_store::artifact_child::ArtifactChild::new(child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind,standard,subset}}))
 }
-impl ArtifactSqliteSnapshot for CurationSnapshot{
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+impl ArtifactSqliteSnapshotHost for CurationSnapshot{
+ 
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
-  self.validate().map_err(invalid)?;row_count(self,control,SqliteSnapshotPhase::EncodeNative)?;cells::typed(self,control,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
+  self.validate().map_err(invalid)?;row_count(self,control,SqliteSnapshotPhase::EncodeNative)?;cells::typed(self,control,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
-  control.check_rows(2)?;control.check_value_bytes(24)?;let maximum=control.limits().max_rows;let value_maximum=control.limits().max_value_bytes;store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {native_rows(record,native,maximum)?;cells::borrowed(record,native,value_maximum)?;let result=Self::__dsl_from_record_controlled(record,native)?;result.validate().map_err(invalid)?;Ok(result)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
+  control.check_rows(2)?;control.check_value_bytes(24)?;let maximum=control.limits().max_rows;let value_maximum=control.limits().max_value_bytes;store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {native_rows(record,native,maximum)?;cells::borrowed(record,native,value_maximum)?;let result=Self::__dsl_from_record_controlled(record,native)?;result.validate().map_err(invalid)?;Ok(result)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
  }
  fn preflight_sqlite_snapshot_encoding(&self,_:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
   self.validate().map_err(invalid)?;row_count(self,control,SqliteSnapshotPhase::EncodeNative)?;cells::typed(self,control,SqliteSnapshotPhase::EncodeNative)?;let mut bound=NativeEncodingBound::new(control)?;bound.add(8192)?;let target=&self.catalog.target;for text in[&self.catalog.child_id,&target.artifact_id,&target.dialect.artifact_kind,&target.dialect.standard,&target.dialect.subset]{bound.repeated(text.len(),24)?}
   for extra in &self.stock_extra{bound.add(2048)?;for text in[&extra.id,&extra.name,&extra.module_id]{bound.repeated(text.len(),24)?}for segment in &extra.typology_path{bound.add(64)?;bound.repeated(segment.len(),24)?}match extra.geometry.as_ref(){GeometryRecipe::Mesh{positions,normals,indices}=>{bound.repeated(positions.len(),128)?;bound.repeated(normals.len(),128)?;bound.repeated(indices.len(),64)?},GeometryRecipe::Glb{url,..}=>bound.repeated(url.len(),24)?,_=>{}}}
   for item in &self.curated{bound.add(128)?;bound.repeated(item.object_id.len(),24)?}bound.finish()
  }
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
+ 
+ 
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for CurationSnapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
   control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;self.validate().map_err(invalid)?;row_count(self,control,SqliteSnapshotPhase::ProjectSnapshot)?;let mut out=Projection::new(Self::SQLITE_SCHEMA,control)?;out.insert_key("curation_document",1,&[])?;let t=&self.catalog.target;out.insert("curation_catalog",&[Cell::Integer(1),Cell::Text(&self.catalog.child_id),Cell::Text(&t.artifact_id),Cell::Text(&t.dialect.artifact_kind),Cell::Text(&t.dialect.standard),Cell::Text(&t.dialect.subset)])?;
   for(ordinal,extra)in self.stock_extra.iter().enumerate(){let id=out.insert("curation_stock_extra",&[Cell::Integer(1),Cell::Integer(i64::try_from(ordinal).map_err(|e|invalid(e.to_string()))?),Cell::Text(&extra.id),Cell::Text(&extra.name),Cell::Text(&extra.module_id),Cell::Integer(i64::from(extra.availability))])?;for(ordinal,segment)in extra.typology_path.iter().enumerate(){out.insert("curation_typology_segment",&[Cell::Integer(id),Cell::Integer(i64::try_from(ordinal).map_err(|e|invalid(e.to_string()))?),Cell::Text(segment)])?;}
    let kind=match extra.geometry.as_ref(){GeometryRecipe::Box{..}=>"box",GeometryRecipe::Frame{..}=>"frame",GeometryRecipe::Slab{..}=>"slab",GeometryRecipe::Mesh{..}=>"mesh",GeometryRecipe::Glb{..}=>"glb"};let key=out.insert("curation_geometry",&[Cell::Integer(id),Cell::Text(kind)])?;
@@ -51,7 +57,7 @@ impl ArtifactSqliteSnapshot for CurationSnapshot{
   }
   for(ordinal,item)in self.curated.iter().enumerate(){out.insert("curation_curated",&[Cell::Integer(1),Cell::Integer(i64::try_from(ordinal).map_err(|e|invalid(e.to_string()))?),Cell::Text(&item.object_id),Cell::Integer(i64::from(item.count))])?;}out.finish()
  }
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{backing::reconstruct(database,control)}
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{backing::reconstruct(database,control)}
 }
 
 #[cfg(test)]

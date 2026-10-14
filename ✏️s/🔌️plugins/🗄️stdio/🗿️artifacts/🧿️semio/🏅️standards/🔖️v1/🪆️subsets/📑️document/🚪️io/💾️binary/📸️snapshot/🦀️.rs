@@ -342,25 +342,28 @@ pub(crate) fn decode_document_snapshot_binary(bytes: &[u8]) -> Result<SemioDocum
     Ok(SemioDocumentSnapshot { schema, styles, images, blocks })
 }
 
-impl store::os_store::serialization::ArtifactPack for SemioDocumentSnapshot {
+impl pack::snapshot::ArtifactPack for SemioDocumentSnapshot {
     /// 🪶️ Publishes the owned typed relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec()) }
+    
 
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_document_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+        if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let _ = options;
         decode_document_snapshot_binary(&inner).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
     }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SemioDocumentSnapshot {
+fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec()) }
 }
 }
 
@@ -386,12 +389,12 @@ use crate::io::text::snapshot::*;
 /// each other on the two real committed artifacts instead of against itself.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_document_pack(bytes: &[u8]) -> Result<SemioDocumentSnapshot, String> {
-    <SemioDocumentSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
+    <SemioDocumentSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
 }
-/// 📤️ The `store::os_store::serialization::ArtifactPack::encode_pack` inverse of [`decode_semio_document_pack`].
+/// 📤️ The `pack::snapshot::ArtifactPack::encode_pack` inverse of [`decode_semio_document_pack`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_semio_document_pack(snapshot: &SemioDocumentSnapshot) -> Vec<u8> {
-    <SemioDocumentSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(snapshot)
+    <SemioDocumentSnapshot as pack::snapshot::ArtifactPack>::encode_pack(snapshot)
 }
 }
 pub use native_snapshot_codec::*;

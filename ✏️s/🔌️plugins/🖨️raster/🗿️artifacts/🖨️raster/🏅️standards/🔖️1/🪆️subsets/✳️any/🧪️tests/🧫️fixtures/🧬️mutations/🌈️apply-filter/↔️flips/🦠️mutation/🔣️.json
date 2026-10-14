@@ -1,0 +1,7 @@
+{
+  "amount": 0.0,
+  "filter": "flipHorizontal",
+  "layerId": "paint",
+  "mutation": "applyFilter",
+  "selection": null
+}

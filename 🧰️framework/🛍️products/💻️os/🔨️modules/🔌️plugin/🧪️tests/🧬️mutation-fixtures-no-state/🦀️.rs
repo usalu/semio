@@ -5,23 +5,23 @@ use crate::app_views::{NoPresence, NoPresenceMutation};
 use crate::store;
 
 //#region 🧹️NoStateFixtureOwners
-fn presence_store_disposer() -> Box<dyn ArtifactOwnedDisposer<store::PresenceStore<NoPresence, NoPresenceMutation>>> {
+pub(crate) fn presence_store_disposer() -> Box<dyn ArtifactOwnedDisposer<store::PresenceStore<NoPresence, NoPresenceMutation>>> {
     crate::no_presence_store_disposer()
 }
 
-fn transient_store_disposer() -> Box<dyn ArtifactOwnedDisposer<store::TransientStore<crate::app_views::NoTransient, crate::app_views::NoTransientMutation>>> {
+pub(crate) fn transient_store_disposer() -> Box<dyn ArtifactOwnedDisposer<store::TransientStore<crate::app_views::NoTransient, crate::app_views::NoTransientMutation>>> {
     crate::no_transient_store_disposer()
 }
 
-fn presence_peer_retirement_factory() -> std::sync::Arc<dyn store::SnapshotRetirementFactory<NoPresence>> {
+pub(crate) fn presence_peer_retirement_factory() -> std::sync::Arc<dyn store::SnapshotRetirementFactory<NoPresence>> {
     crate::no_presence_peer_retirement_factory()
 }
 
-fn presence_local_root_retirement_factory() -> std::sync::Arc<dyn store::SnapshotRetirementFactory<NoPresence>> {
+pub(crate) fn presence_local_root_retirement_factory() -> std::sync::Arc<dyn store::SnapshotRetirementFactory<NoPresence>> {
     crate::no_presence_local_root_retirement_factory()
 }
 
-fn transient_local_root_retirement_factory() -> std::sync::Arc<dyn store::SnapshotRetirementFactory<crate::app_views::NoTransient>> {
+pub(crate) fn transient_local_root_retirement_factory() -> std::sync::Arc<dyn store::SnapshotRetirementFactory<crate::app_views::NoTransient>> {
     crate::no_transient_local_root_retirement_factory()
 }
 //#endregion 🧹️NoStateFixtureOwners

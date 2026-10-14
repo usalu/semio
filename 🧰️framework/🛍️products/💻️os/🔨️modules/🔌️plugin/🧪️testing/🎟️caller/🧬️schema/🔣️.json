@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "generation",
+    "fuel",
+    "clockUs",
+    "deadlineUs",
+    "maximumTurns",
+    "grant",
+    "retirementLoan"
+  ],
+  "properties": {
+    "operation": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
+    },
+    "fuel": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
+    },
+    "clockUs": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
+    },
+    "deadlineUs": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
+    },
+    "grant": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json#/$defs/Grant"
+    },
+    "retirementLoan": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json#/$defs/Grant"
+    }
+  }
+}

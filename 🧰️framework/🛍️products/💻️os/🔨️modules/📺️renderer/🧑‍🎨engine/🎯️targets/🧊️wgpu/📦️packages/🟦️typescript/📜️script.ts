@@ -1,15 +1,15 @@
 #!/usr/bin/env bun
-import { configuredExactCargoLawPolicyV1 } from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🧊️ `@semio-tech/framework-renderer-wgpu` task router. */
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
-import { getWorkspaceRoot, packageTestBudgetMs, runCargo, runRepositoryCargoTests, runRepositoryExactCargoLaws, runRepositoryTestCommand, runVitest } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { getWorkspaceRoot, packageTestBudgetMs, runCargo, runRepositoryCargoTests, runRepositoryExactCargoLaws, runRepositoryTestCommand, runVitest, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import { checkBrowserBoot, renderBrowserEntry } from "../../⚙️browser-build/🟦️.ts";
 import { checkFrameWorker, generateFrameWorker, renderFrameWorker } from "../../🎞️frame-worker/🏗️builder/🟦️.ts";
@@ -32,10 +32,10 @@ const crateName = "semio-framework-os-renderer-wgpu";
 
 function assertRendererOutputOwnership(): number {
   const project = JSON.parse(readFileSync(join(import.meta.dir, "📋️project.json"), "utf8"));
-  for (const profile of ["dev", "release"]) {
-    const target = project.targets[profile === "dev" ? "wasm" : "wasm-release"];
+  for (const profile of ["prototype", "release"]) {
+    const target = { ...project.targets.wasm, ...project.targets.wasm.configurations[profile] };
     assert.equal(target.cache, true);
-    assert.deepEqual(target.outputs, ["{workspaceRoot}/" + relative(repoRoot, join(rustPackageRoot, "dist", "wasm-" + profile)).replaceAll(sep, "/")]);
+    assert.deepEqual(target.outputs.map((path:string)=>path.replaceAll("{options.env.SEMIO_BUILD_MODE}",profile)), ["{workspaceRoot}/" + relative(repoRoot, join(rustPackageRoot, "dist", "wasm-" + profile)).replaceAll(sep, "/")]);
   }
   return 2;
 }
@@ -107,7 +107,7 @@ class OriginalFrameSourceScript extends BundleScript {
   }
   async run(args: string[]): Promise<void> {
     if (args.length) throw Error("Expected test-original-frame-source");
-    const { runOwnedCommand } = await import("../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts");
+    const { runOwnedCommand } = await import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
     const file = resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🟦️.ts");
     await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", file], this.repoRoot, "wgpu:original-frame:types", this.childBudget(), { signal: this.invocation.control.signal });
     await runOwnedCommand(process.execPath, ["test", file], this.repoRoot, "wgpu:original-frame:source", this.childBudget(), { signal: this.invocation.control.signal });
@@ -157,7 +157,7 @@ class MediaSlotContractTestScript extends BundleScript {
       "media_slot_identity_registry_requeries_none_and_rejects_retired_or_foreign_replies",
       "media_slot_tokens_survive_ui_generation_but_change_with_document_and_resource_authority",
     ].map((law) => `media_slots::tests::${law}`);
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: "33554432" }, nativeEnv: { RUST_MIN_STACK: "134217728" }, groups: [{ package: crateName, target: { kind: "lib" }, laws }], progress(event) { console.log(`media-slot-contract ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: "33554432" }, nativeEnv: { RUST_MIN_STACK: "134217728" }, groups: [{ package: crateName, target: { kind: "lib" }, laws }], progress(event) { console.log(`media-slot-contract ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
     console.log(`media-slot-contract: ${receipts.reduce((count, receipt) => count + receipt.laws.length, 0)} exact native laws passed`);
   }
 }
@@ -171,7 +171,7 @@ class WasmCheckScript extends BundleScript {
 
 /** 🏠️ Independently executes the neutral retained-Home bootstrap trace and audits the native mount. */
 function directoryRetainedHomeBootstrapOracle(): number {
-  const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🚀️event-page-bootstrap-v1.json");
+  const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/🚀️event-page-bootstrap-v1.json");
   const fixture = JSON.parse(readFileSync(fixturePath, "utf8"));
   let checks = 0;
   const check = (condition: unknown, message: string): void => {
@@ -289,7 +289,7 @@ class DirectoryRetainedHomeBootstrapNativeCheckScript extends BundleScript {
       throw new Error("SEMIO_TEST_ARTIFACT_DIR must be an absolute ticket-local directory");
     }
     const checks = directoryRetainedHomeBootstrapOracle();
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: repoRoot, artifactDir: resolve(artifactDir), env: { ...process.env, CARGO_BUILD_JOBS: "1" }, groups: [{
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: repoRoot, artifactDir: resolve(artifactDir), env: { ...process.env, CARGO_BUILD_JOBS: "1" }, groups: [{
         package: crateName,
         target: { kind: "lib" },
         laws: [
@@ -333,7 +333,7 @@ class NormalizedPresenceRowsNativeCheckScript extends BundleScript {
     const ticketRoot = resolve(repoRoot, ".🧬semio/🦑️repo/🎫️tickets");
     if (!artifactDir || !isAbsolute(artifactDir) || !resolve(artifactDir).startsWith(`${ticketRoot}${sep}`)) throw new Error("SEMIO_TEST_ARTIFACT_DIR must be an absolute ticket-local directory");
     const checks = normalizedPresenceRowsOracle();
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: repoRoot, artifactDir: resolve(artifactDir), env: { ...process.env, CARGO_BUILD_JOBS: "1" }, groups: [{ package: crateName, target: { kind: "lib" }, laws: ["shell::command_registry_tests::presence_rows_require_each_normalized_surface_and_preserve_hub_color"] }] });
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: repoRoot, artifactDir: resolve(artifactDir), env: { ...process.env, CARGO_BUILD_JOBS: "1" }, groups: [{ package: crateName, target: { kind: "lib" }, laws: ["shell::command_registry_tests::presence_rows_require_each_normalized_surface_and_preserve_hub_color"] }] });
     assert.equal(receipts[0]!.assertions, 1);
     console.log(`normalized-presence-rows-native-check: sourceChecks=${checks} nativeLaws=1 clean`);
   }

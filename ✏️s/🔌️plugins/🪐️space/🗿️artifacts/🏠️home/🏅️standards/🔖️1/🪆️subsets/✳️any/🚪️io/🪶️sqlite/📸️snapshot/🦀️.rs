@@ -1,6 +1,7 @@
 //! 🏠️ Literal Home schema and full unsigned64 generation with separately editable words.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::SHomeSnapshot;
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Cell,Reconstruction,RowWriter}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Cell,Reconstruction,RowWriter}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_dsl_record::{FieldValue,RecordValue};
 fn schema(control:&SqliteSnapshotControl<'_>)->Result<(),ValueError>{if SHomeSnapshot::SQLITE_SCHEMA.len()>control.limits().max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Home authored schema byte limit exceeded"))}Ok(())}
@@ -10,14 +11,19 @@ fn admit_record(record:&RecordValue,native:&mut semio_framework_value::NativeDec
 
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 
-impl ArtifactSqliteSnapshot for SHomeSnapshot{
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+impl ArtifactSqliteSnapshotHost for SHomeSnapshot{
+ 
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{semantic(self,SqliteSnapshotPhase::EncodeNative,control)?;store::encode_sqlite_snapshot_record_native(encoding,"s.home",Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)}
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;schema(control)?;control.check_rows(1)?;let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,"s.home",Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admit_record(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic(self,SqliteSnapshotPhase::EncodeNative,control)}
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1)?;control.check_rows(1)?;control.check_value_bytes(self.schema.len().checked_add(24).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Home value byte count overflow"))?)?;let mut p=RowWriter::new(Self::SQLITE_SCHEMA,control)?;write_row(&self.schema,self.catalog_generation,&mut p)?;p.finish()}
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits())?;if database.tables.len()!=1{return Err(invalid("Home requires its one literal table"))}let row=database.table("home_document")?.single_row()?;if row.values.len()!=4||row.integer(0)?!=row.rowid{return Err(invalid("Home document identity differs"))}let(high,low)=(row.integer(2)?,row.integer(3)?);if !(0..=u32::MAX as i64).contains(&high)||!(0..=u32::MAX as i64).contains(&low){return Err(invalid("Home generation word exceeds unsigned32"))}let mut owned=Reconstruction::new(control)?;owned.scalar()?;let schema=owned.text(row.text(1)?)?;owned.checkpoint()?;Ok(Self{schema,catalog_generation:((high as u64)<<32)|(low as u64)})}
+ 
+ 
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.space.home"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(invalid("Home does not own this semantic subset")))}if Self::from_sqlite_database(database,control).map_err(store::io_schema::IoError::from_value_error)?!=*self{return Err(store::io_schema::IoError::from_value_error(invalid("Home owned state differs")))}Ok(store::io_schema::IoOutcome::clean(()))}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for SHomeSnapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1)?;control.check_rows(1)?;control.check_value_bytes(self.schema.len().checked_add(24).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Home value byte count overflow"))?)?;let mut p=RowWriter::new(Self::SQLITE_SCHEMA,control)?;write_row(&self.schema,self.catalog_generation,&mut p)?;p.finish()}
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits())?;if database.tables.len()!=1{return Err(invalid("Home requires its one literal table"))}let row=database.table("home_document")?.single_row()?;if row.values.len()!=4||row.integer(0)?!=row.rowid{return Err(invalid("Home document identity differs"))}let(high,low)=(row.integer(2)?,row.integer(3)?);if !(0..=u32::MAX as i64).contains(&high)||!(0..=u32::MAX as i64).contains(&low){return Err(invalid("Home generation word exceeds unsigned32"))}let mut owned=Reconstruction::new(control)?;owned.scalar()?;let schema=owned.text(row.text(1)?)?;owned.checkpoint()?;Ok(Self{schema,catalog_generation:((high as u64)<<32)|(low as u64)})}
 }
 
 #[cfg(test)]

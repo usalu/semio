@@ -2,7 +2,7 @@
 use super::*;
 use store::sqlite_snapshot::SnapshotEncoding;
 use std::{io::Write,process::{Command,Stdio}};
-fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🚦️audit/🔣️.json")).unwrap()}
+fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🚦️audit/🔣️.json")).unwrap()}
 fn hex(text:&str)->Vec<u8>{text.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect()}
 fn crc(bytes:&[u8])->u32{let mut crc=u32::MAX;for byte in bytes{crc^=u32::from(*byte);for _ in 0..8{crc=(crc>>1)^if crc&1!=0{0xedb88320}else{0};}}!crc}
 fn png(input:&serde_json::Value)->Vec<u8>{let mut output=vec![137,80,78,71,13,10,26,10];for(index,chunk)in input["chunks"].as_array().unwrap().iter().enumerate(){let data=hex(chunk["dataHex"].as_str().unwrap());let tag=chunk["tag"].as_str().unwrap().as_bytes();output.extend_from_slice(&u32::try_from(data.len()).unwrap().to_be_bytes());let start=output.len();output.extend_from_slice(tag);output.extend_from_slice(&data);let checksum=crc(&output[start..])^u32::from(input["corruptCrc"].as_u64()==Some(index as u64));output.extend_from_slice(&checksum.to_be_bytes());}output}

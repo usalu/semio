@@ -1,7 +1,7 @@
 //! 🎡️ Admitted wheels retain their samples through the production host and runtime cursor.
 use serde_json::Value;
 use ui_render::{DispatchEvent, EventModifiers, PointerId, PointerInfo, PointerKind};
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🖱️wheel-application-point/🔣️.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/🖱️wheel-application-point/🔣️.json");
 fn number(value: &Value) -> f32 {
     value.as_f64().expect("fixture number") as f32
 }

@@ -15,7 +15,7 @@ use crate::standards::v3_0::subsets::any::schema::snapshot::ObjSnapshot;
 use semio_framework_diagnostic::{TextError,TextSpan};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v3_0::subsets::any::io::binary::snapshot::native_pack::*;
-impl store::os_store::serialization::ArtifactDsl for ObjSnapshot{
+impl pack::snapshot::ArtifactDsl for ObjSnapshot{
  const EXTENSION:&'static str="obj";
  fn envelope_id()->&'static str{"stdio.obj"}
  fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|error|semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(error.to_string()).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?;if !envelope.matches_identity("stdio.obj",store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("owned snapshot Text identity differs").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));}let record=semio_framework_dsl_record::parse_exact(body,&ObjSnapshot::__dsl_spec(),&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits::default(),mode:semio_framework_dsl_record::SourceMode::Document})?;ObjSnapshot::__dsl_from_record(&record)}

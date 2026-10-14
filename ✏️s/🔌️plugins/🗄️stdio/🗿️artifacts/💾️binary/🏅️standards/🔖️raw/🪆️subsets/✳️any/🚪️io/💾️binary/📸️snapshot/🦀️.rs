@@ -18,11 +18,9 @@ use framework_schema::ArtifactSchema;
 /// `registry_export_media` class of bug the ticket exists to remove. Fixed here (the codec, not
 /// the test): `encode_pack_with`/`decode_pack_with` are now the identity function on `bytes`.
 /// Proven by `carrier_native_is_raw` in `🚪️io/🦀️.rs`.
-impl store::os_store::serialization::ArtifactPack for BinarySnapshot {
+impl pack::snapshot::ArtifactPack for BinarySnapshot {
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())
-    }
+    
 
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
@@ -31,6 +29,11 @@ impl store::os_store::serialization::ArtifactPack for BinarySnapshot {
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let _ = options;
         Ok(Self { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: bytes.to_vec() })
+    }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for BinarySnapshot {
+fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())
     }
 }
 impl store::ArtifactPackReceiving for BinarySnapshot {

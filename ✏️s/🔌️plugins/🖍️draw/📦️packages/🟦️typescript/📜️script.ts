@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 /** 🖍️ Draw example twins plus the publication-authority law: every dispatchable route is declared once, in every place the framework joins. */
 import { join, resolve } from "node:path";
-import { runOwnedCommand } from "../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import { runOwnedCommand } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import { createRequire } from "node:module";
 import Ajv from "ajv";
 import { runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 /** 🔤️ The Rust variant name of one kebab lane/disposition from `framework.ui`'s shared vocabulary. */
 const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");
 
@@ -249,15 +249,15 @@ class TestScript extends BundleScript {
 /** 🔏️ Proves the current Drawing source authority and canonical field-patch outcomes. */
 async function proveDrawPublicationAuthority(packageRoot: string, subset: string): Promise<void> {
     const plugin = resolve(packageRoot, "../..");
-    const authority = resolve(plugin, "🧫️fixtures/🧪️publication-authority");
+    const authority = resolve(plugin, "🧪️tests/🧫️fixtures/🧪️publication-authority");
     const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;
     const ajv = new Ajv({ allErrors: true, strict: true });
-    const patchRoot = resolve(subset, "🧬️schema/🧬️mutations/🧫️fixtures/🎛️field-patch");
+    const patchRoot = resolve(subset, "🧪️tests/🧫️fixtures/🧬️mutations/🎛️field-patch");
     const validatePatch = ajv.compile(await Bun.file(resolve(subset, "🧬️schema/🧬️mutations/🎛️field-patch/🧬️schema/🔣️.json")).json());
     const patchCases = await Bun.file(resolve(patchRoot, "🔣️.json")).json() as { patch: unknown; accepted: boolean }[];
     for (const test of patchCases) if (validatePatch(test.patch) !== test.accepted) throw new Error(`Draw field-patch oracle disagrees: ${JSON.stringify(test)}`);
     console.error(`Draw independent Ajv field-patch oracle: ${patchCases.length} cases`);
-    const admission = resolve(subset, "../../../../🔨️modules/🏠️host/🧰️owned/🧫️fixtures/🧮️mutation-admission");
+    const admission = resolve(subset, "../../../../🔨️modules/🏠️host/🧰️owned/🧪️tests/🧫️fixtures/🧮️mutation-admission");
     const admissionFixture = await Bun.file(resolve(admission, "🔣️.json")).json() as { cases: unknown[]; bootstrapYield: BootstrapYield };
     bootstrapYieldOracle(admissionFixture.bootstrapYield);
     const sources = new Map<string, string>();

@@ -16,7 +16,7 @@ fn all_built_in_stencils_validate() {
 
 #[test]
 fn node_at_and_coords_roundtrip() {
-    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔀️topology-contracts/🔣️.json")).unwrap();
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔀️topology-contracts/🔣️.json")).unwrap();
     let [width, height, depth]: [usize; 3] = serde_json::from_value(oracle["dimensions3d"].clone()).unwrap();
     let mut b = ModelBuilder::new();
     b.add_pattern(1.0);
@@ -113,7 +113,7 @@ fn in_arc_matches_out_arc_on_open_boundary() {
 
 #[test]
 fn custom_stencil_validation_matches_neutral_vectors() {
-    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔀️topology-contracts/🔣️.json")).unwrap();
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔀️topology-contracts/🔣️.json")).unwrap();
     for row in oracle["customStencils3d"].as_array().unwrap() {
         let offsets: Vec<(i32, i32, i32)> = serde_json::from_value(row["offsets"].clone()).unwrap();
         let stencil = Stencil3d::Custom(offsets);

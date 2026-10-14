@@ -6,7 +6,7 @@ import Ajv from "ajv";
 import { parse, type ParseError } from "jsonc-parser";
 import * as ts from "typescript";
 import { loadCatalogTaxonomy, semanticArtifactEmptyFacetProjectionAuthority, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
-import optionsFixture from "../../🧫️fixtures/🫙️artifact-empty-facet-authority/☑️options.json";
+import optionsFixture from "../🧫️fixtures/🫙️artifact-empty-facet-authority/☑️options.json";
 import optionsOracle from "../../🧬️schema/🫙️artifact-empty-facet-authority/☑️options.json";
 
 const libraryRoot = resolve(import.meta.dir, "../..");
@@ -56,7 +56,7 @@ test("retains the original nineteen-case empty-facet input with independent JSON
 test("current-options facets require their registered identity and complete owner chain", () => {
   const validate = new Ajv({ strict: true, allErrors: true }).compile(optionsOracle);
   const errors: ParseError[] = [];
-  expect(parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🫙️artifact-empty-facet-authority/☑️options.json"), "utf8"), errors, { disallowComments: true, allowTrailingComma: false })).toEqual(optionsFixture);
+  expect(parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🫙️artifact-empty-facet-authority/☑️options.json"), "utf8"), errors, { disallowComments: true, allowTrailingComma: false })).toEqual(optionsFixture);
   expect(errors).toEqual([]);
   expect(new Set(optionsFixture.cases.map((row) => row.id)).size).toBe(8);
   const implementations = [semanticArtifactEmptyFacetProjectionAuthority, ...independentlyCompiledAuthorities()];
@@ -96,7 +96,7 @@ test("keeps exact structural ownership distinct from a basename-only match", () 
 });
 
 test("registers the empty-facet authority through its closed canonical route", async () => {
-  const directory = join(import.meta.dir, "../../🧫️fixtures/🫙️artifact-empty-facet-authority/🧪️registration"), bytes = readFileSync(join(directory, "🔣️.json"), "utf8"), vector = JSON.parse(bytes);
+  const directory = join(import.meta.dir, "../🧫️fixtures/🫙️artifact-empty-facet-authority/🧪️registration"), bytes = readFileSync(join(directory, "🔣️.json"), "utf8"), vector = JSON.parse(bytes);
   const errors: ParseError[] = [];
   expect(parse(bytes, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(vector);
   expect(errors).toEqual([]);

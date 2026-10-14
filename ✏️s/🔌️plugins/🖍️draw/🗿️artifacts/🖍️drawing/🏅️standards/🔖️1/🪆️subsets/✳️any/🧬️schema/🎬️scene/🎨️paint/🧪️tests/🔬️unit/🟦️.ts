@@ -4,13 +4,13 @@ import {test,expect,spyOn} from "bun:test";
 import Ajv from "ajv";
 import sharp from "sharp";
 import polygonClipping from "polygon-clipping";
-import strokePhases from "../../🧫️fixtures/🧹️retirement/🖊️stroke/🔣️.json";
-import rows from "../../🧫️fixtures/🔣️.json";
+import strokePhases from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/🧹️retirement/🖊️stroke/🔣️.json";
+import rows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
-import sources from "../../../../🧮️geometry/🎯️picking/🎨️paint/🧫️fixtures/🔣️.json";
-import phases from "../../🧫️fixtures/🧹️retirement/🔣️.json";
-import topologyRows from "../../🧫️fixtures/🧵️topology/🔣️.json";
-import ellipseRows from "../../🧫️fixtures/🥚️ellipse/🔣️.json";
+import sources from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🎨️paint/🔣️.json";
+import phases from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/🧹️retirement/🔣️.json";
+import topologyRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/🧵️topology/🔣️.json";
+import ellipseRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/🥚️ellipse/🔣️.json";
 for(const row of ellipseRows)test("created round ellipse "+row.name+" preserves paint stroke holes and independent SVG coverage",async()=>{
  expect(ajv.compile({$ref:schema.$id+"#/$defs/input"})(row.input)).toBe(true);
  const [rx,ry]=row.radii as[number,number],segments:PathGeometrySegment[]=[{kind:"move",to:[0,-ry]},...[[rx,0],[0,ry],[-rx,0],[0,-ry]].map(to=>({kind:"arc",rx,ry,rotation:0,largeArc:false,sweep:true,to:to as[number,number]}as PathGeometrySegment)),{kind:"close"}],source={segments,query:row.input}as unknown as typeof sources[number];let previous:PaintedPathRegions|undefined;
@@ -44,15 +44,15 @@ import {StrokeOutlineJob} from "../../../../../../../../../../../../../../🧰�
 import {DocumentVectorJob} from "../../../📋️prepare/🟦️.ts";
 import {ScenePlanCloseJob} from "../../../🧹️retire/🟦️.ts";
 import type {DrawingArtifact} from "../../../../🟦️.ts";
-import vectorRows from "../../../📋️prepare/🧫️fixtures/🎬️vector/🔣️.json";
-import resolvedRows from "../../../../🧮️geometry/🎯️picking/🎨️paint/🧫️fixtures/🎬️resolved/🔣️.json";
+import vectorRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🎬️vector/🔣️.json";
+import resolvedRows from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🎨️paint/🎬️resolved/🔣️.json";
 import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 test("prepared regions cache actual resolved Boolean and PNG trace paths and queries never invoke geometry kernels",async()=>{let comparisons=0;const lift=(v:any):any=>typeof v==="number"?binary64(v):Array.isArray(v)?v.map(lift):v&&typeof v==="object"?Object.fromEntries(Object.entries(v).map(([k,v])=>[k,lift(v)])):v;for(const row of resolvedRows)for(const grant of [1,7,4096]){const fixture=vectorRows.find(source=>source.name===row.source)!,document={...fixture.document,layers:lift(fixture.document.layers)}as DrawingArtifact,producer=new DocumentVectorJob(document,fixture.limits,fixture.algorithms);while(!producer.advance(grant).done){}const moved=producer.intoRetirement();while(!moved.job.advance(grant).done){}const plan=moved.output!,node=plan.nodes.find(n=>n.id==="result")!;if(node.content.kind!=="path")throw Error("actual resolved path required");const segments=node.content.segments,before=structuredClone(segments),job=PaintedPathPrepareJob.fromPrepared(node,.001,limits);while(!job.advance(grant,index=>segments[index]).done){}const finished=job.intoRetirement();while(!finished.job.advance(grant).done){}const regions=finished.output!,fill=regions.fill,stroke=regions.stroke,points=structuredClone(regions);const spies=[spyOn(PathFlattenJob.prototype,"advance"),spyOn(StrokeOutlineJob.prototype,"advance")];try{for(const queryGrant of [1,7,4096])expect(query(regions,row.point as[number,number],0,queryGrant)).toBe(row.expected);for(const spy of spies)expect(spy).not.toHaveBeenCalled();expect(regions.fill).toBe(fill);expect(regions.stroke).toBe(stroke);expect(regions).toEqual(points);expect(node.content.segments).toBe(segments);expect(segments).toEqual(before);}finally{spies.forEach(s=>s.mockRestore());}const oracle=fixture.oracle as any,paths=oracle.paths??[{d:oracle.d,matrix:oracle.matrix}],svg=`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">${paths.map((p:any)=>`<path d="${p.d}" transform="matrix(${p.matrix.join(" ")})" fill="black"/>`).join("")}</svg>`,pixels=await sharp(Buffer.from(svg)).ensureAlpha().raw().toBuffer();expect(pixels[(Math.floor(row.point[1]!)*16+Math.floor(row.point[0]!))*4+3]!>127).toBe(row.expected);comparisons++;const close=new PaintedRegionsCloseJob(regions);while(!close.advance(grant).done){}const planClose=new ScenePlanCloseJob(plan);while(!planClose.advance(grant).done){}expect(close.terminalIsEmpty()).toBe(true);expect(planClose.terminalIsEmpty()).toBe(true);}process.stderr.write(`[DEBUG] Cached actual Boolean/PNG trace regions matched ${comparisons} authored SVG samples, 54 unchanged-buffer queries and zero query-time flatten/stroke calls\n`);});
 test("prepared region interruption advances actual child retirement and preserves invalid-grant admission",()=>{const source=sources[6]!;for(const phase of ["flattening","stroke"]){const job=new PaintedPathPrepareJob(input(source)),state=job as any;while(state.phase!==phase)job.advance(1,index=>source.segments[index]as PathGeometrySegment|undefined);const active=phase==="flattening"?state.flatten:state.outline;expect(active).not.toBeNull();const original=active.intoRetirement.bind(active);let child:any=null,work=0;const spy=spyOn(active,"intoRetirement").mockImplementation(()=>{const moved=original();child=moved.job;const advance=child.advance.bind(child);child.advance=(unit:number)=>{expect(unit).toBe(1);const p=advance(unit);expect(p.work-work).toBe(1);work=p.work;return p;};return moved;});try{job.cancel();expect(phase==="flattening"?state.flatten:state.outline).toBe(active);const moved=job.intoRetirement();expect(moved.output).toBeNull();while(!moved.job.advance(7).done){}expect(child.terminalIsEmpty()).toBe(true);expect(work).toBeGreaterThan(0);expect(moved.job.terminalIsEmpty()).toBe(true);}finally{spy.mockRestore();}}const job=new PaintedPathPrepareJob(input(source));let reads=0;for(const grant of [0,-1,.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1])expect(()=>job.advance(grant,()=>{reads++;return undefined;})).toThrow(/grant/);expect(reads).toBe(0);const moved=job.intoRetirement();for(const grant of [0,-1,.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1])expect(()=>moved.job.advance(grant)).toThrow(/grant/);while(!moved.job.advance(1).done){}expect(moved.job.terminalIsEmpty()).toBe(true);process.stderr.write("[DEBUG] Prepared regions interrupted actual flatten/stroke children; unsafe grants refused before source reads or owner mutation\n");});
 
 import "../../📋️prepare/🧪️tests/🔬️unit/🟦️.ts";
 
-import authorityRows from "../../🧫️fixtures/🪪️identity/🔣️.json";
+import authorityRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/🪪️identity/🔣️.json";
 test("metadata-only queries refuse every changed source/cache lane before reading an edge",()=>{
  const validateStamp=ajv.compile(schema.$defs.queryStamp);
  for(const row of authorityRows){expect(validateStamp(row.captured)).toBe(true);expect(validateStamp(row.live)).toBe(true);}
@@ -80,7 +80,7 @@ test("metadata-only queries refuse every changed source/cache lane before readin
 
 test("painted stroke cancellation drains actual union sources frontiers and partial output in every phase",()=>{const source=sources[6]!;for(const phase of strokePhases)for(const grant of [1,7,4096]){const job=new PaintedPathPrepareJob(input(source)),state=job as any;let reached=false;for(let at=0;at<2000000;at++){if(state.strokeCanonical?.phase===phase){reached=true;break;}job.advance(1,index=>source.segments[index]as PathGeometrySegment|undefined);}expect(reached,phase).toBe(true);const child=state.strokeCanonical,owned=[child.source,child.current,child.next,child.active,child.combined,child.region.contours,child.segments],groups=[...child.current,...child.next,...child.active].filter(Boolean);job.cancel();expect(state.strokeCanonical).toBe(child);expect([child.source,child.current,child.next,child.active,child.combined,child.region.contours,child.segments]).toEqual(owned);const moved=job.intoRetirement();expect(moved.output).toBeNull();let work=0;while(!moved.job.terminalIsEmpty()){const p=moved.job.advance(grant);expect(p.work-work).toBeGreaterThan(0);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;}for(const owner of owned)expect(owner,phase).toHaveLength(0);for(const group of groups)expect(group.contours,phase).toHaveLength(0);expect(child.child).toBeNull();expect(child.childRetirement).toBeNull();expect(state.strokeCanonicalRetirement).toBeNull();process.stderr.write(`[DEBUG] Painted stroke cancelled phase=${phase} grant=${grant} actual_retirement_work=${work} terminal_empty=true\n`);}});
 
-import lifecycle from "../../🧫️fixtures/🔐️lifecycle/🔣️.json";
+import lifecycle from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/🔐️lifecycle/🔣️.json";
 test("paint publication retains actual completed children for explicit close",()=>{
  const source=sources.find(source=>source.name===lifecycle.source)!;
  for(const grant of lifecycle.grants){const job=new PaintedPathPrepareJob(input(source)),state=job as any,children=new Set<any>(),spies:ReturnType<typeof spyOn>[]=[],work={closeCalls:0};

@@ -3,7 +3,7 @@
 
 use super::*;
 
-const FIXTURE: &str = include_str!("../../../../../../🦑️repo/🔨️modules/📚️library/🧫️fixtures/🔐️owner-only/🔣️.json");
+const FIXTURE: &str = include_str!("../../../../../../🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🔐️owner-only/🔣️.json");
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(FIXTURE).expect("owner-only fixture parses")

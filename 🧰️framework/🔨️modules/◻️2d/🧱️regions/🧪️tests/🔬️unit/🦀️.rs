@@ -2,7 +2,7 @@ use super::*;
 use serde_json::Value;
 
 fn fixtures() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
 
 fn ring(v: &Value) -> Vec<Vec2> {

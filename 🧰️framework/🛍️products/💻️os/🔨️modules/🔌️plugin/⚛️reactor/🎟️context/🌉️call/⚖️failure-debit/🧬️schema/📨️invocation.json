@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Retained Extension Invocation Outcome Custody",
+  "type": "array",
+  "minItems": 3,
+  "maxItems": 3,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "outcome",
+      "ownerRetained",
+      "failureReturned"
+    ],
+    "properties": {
+      "outcome": {
+        "enum": [
+          "pending",
+          "failed",
+          "completed"
+        ]
+      },
+      "ownerRetained": {
+        "type": "boolean"
+      },
+      "failureReturned": {
+        "type": "boolean"
+      }
+    }
+  }
+}

@@ -13,7 +13,7 @@
     "default": [
       "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/**/*.rs",
       "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧬️schema/🔣️.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧫️fixtures/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧪️tests/🧫️fixtures/**/*",
       "{projectRoot}/**/*"
     ]
   },

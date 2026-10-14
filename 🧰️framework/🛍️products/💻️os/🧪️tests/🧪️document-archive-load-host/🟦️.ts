@@ -17,7 +17,7 @@ type Case = { readonly name: string; readonly merging?: boolean; readonly admitt
 type Law = { readonly firstSequence: number; readonly cases: readonly Case[] };
 
 const channel = new URL("../../🔨️modules/📡️spr/🧵️channel/", import.meta.url);
-const law = JSON.parse(readFileSync(new URL("🧫️fixtures/🧫️document-archive-load-host/🔣️.json", channel), "utf8")) as Law;
+const law = JSON.parse(readFileSync(new URL("🧪️tests/🧫️fixtures/🧫️document-archive-load-host/🔣️.json", channel), "utf8")) as Law;
 const archive: DocumentArchivePack = { parent_pack: [7], parent_spr: [9], members: [] };
 const bytes = (text: string | undefined): number[] => Array.from(new TextEncoder().encode(text ?? ""));
 const text = (fault: readonly number[]): string => new TextDecoder().decode(new Uint8Array(fault));

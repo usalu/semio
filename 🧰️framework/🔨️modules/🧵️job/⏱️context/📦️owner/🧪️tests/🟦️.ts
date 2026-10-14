@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import {consumeRetainedProgress,remainingRetainedGrant} from "../../../⏱️budget/🟨️.js";
 import { readFileSync, existsSync } from "node:fs";
-import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 
 test("retained step context neutral ledger alias and whole-frame authority", () => {
   for (const row of fixture.cases) {
@@ -32,7 +32,7 @@ test("retained context owns one ledger and uses atomic unique teardown", () => {
 
 
 test("original job budget consumes only actual independent retained receipts", () => {
-  const law = JSON.parse(readFileSync(new URL("../../../⏱️budget/🧫️fixtures/🔣️.json", import.meta.url), "utf8")).retained;
+  const law = JSON.parse(readFileSync(new URL("../../../⏱️budget/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url), "utf8")).retained;
   let original = {...law.grant};let actual={copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0};
   for (const receipt of law.receipts) {
     const next = applyPatch({...original}, [
@@ -63,7 +63,7 @@ test("original refused Job close retains all actual failed currencies",()=>{
 });
 
 test("original failed Job ingress preserves same actual external receipt before refusal",()=>{
- const law=JSON.parse(readFileSync(new URL("../⚠️failure/🧫️fixtures/🔣️.json",import.meta.url),"utf8")),schema=JSON.parse(readFileSync(new URL("../⚠️failure/🧬️schema/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
+ const law=JSON.parse(readFileSync(new URL("../⚠️failure/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8")),schema=JSON.parse(readFileSync(new URL("../⚠️failure/🧬️schema/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
  const original=Buffer.alloc(law.producerBytes),pointer=original.buffer,grant={maximumItems:1,maximumCopyBytes:0,maximumCapacityBytes:law.incomingCapacityBytes,maximumReleaseBytes:64,maximumDepth:3},recipient={copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0},actual={copiedItems:1,copiedBytes:0,retainedCapacityBytes:original.byteLength,releasedBytes:0};let error:unknown;
  try{consumeRetainedProgress(grant,recipient,actual);}catch(value){error=value;}expect(error).toBeInstanceOf(RangeError);expect((error as {retainedProgress:typeof actual}).retainedProgress).toBe(actual);expect(recipient).toEqual(actual);expect(remainingRetainedGrant(grant,recipient).maximumCapacityBytes).toBe(law.remainingCapacityBytes);expect(original.buffer).toBe(pointer);
  expect(applyPatch({receipt:recipient,original:true},[{op:"replace",path:"/original",value:false}],true,false).newDocument.receipt).toEqual(actual);

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🏟️create-curtain-wall-type/❌️spacing-non-positive",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/❌️spacing-non-positive/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/❌️spacing-non-positive/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/❌️spacing-non-positive/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/❌️spacing-non-positive/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/❌️spacing-non-positive/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/❌️spacing-non-positive/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/❌️spacing-non-positive/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/❌️spacing-non-positive/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/❌️spacing-non-positive/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/❌️spacing-non-positive/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

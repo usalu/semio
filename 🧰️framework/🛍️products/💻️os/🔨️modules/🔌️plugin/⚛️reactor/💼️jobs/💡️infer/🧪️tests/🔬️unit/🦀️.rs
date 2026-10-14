@@ -2,10 +2,6 @@ use super::super::*;
 use super::*;
 use crate::artifact_inference::{ArtifactInferenceExecution, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode, WireArtifactInferenceRequest};
 
-/// ⛽️ A grant that covers any state action a builtin declares — `WORK_UNITS_EXECUTE` is the price
-/// the execute state of every two-phase builtin charges for its unchunked native dispatch.
-const FULL_GRANT: JobBudget = JobBudget { fuel: WORK_UNITS_EXECUTE, deadline_ms: 1 };
-
 const TEST_METADATA: ArtifactInferenceServiceMetadata = ArtifactInferenceServiceMetadata {
     owner: "s.jobtest",
     artifact_kind: "s.jobtest.widget",
@@ -18,7 +14,7 @@ const TEST_METADATA: ArtifactInferenceServiceMetadata = ArtifactInferenceService
     payload: None,
 };
 
-fn echo_infer(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<crate::artifact_inference::ArtifactInferenceExecutionStep, crate::artifact_inference::ArtifactInferenceExecutionError> {
+fn echo_infer(request: &ArtifactInferenceExecutionRequest<'_>, cx:&mut crate::ArtifactInferenceStepContext<'_>) -> Result<crate::artifact_inference::ArtifactInferenceExecutionStep, crate::artifact_inference::ArtifactInferenceExecutionError> {
     Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload: Some(request.canonical_payload.to_vec()), diagnostics: Vec::new(), validity: "valid".into(), quality: "exact".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() }.into_step(true))
 }
 

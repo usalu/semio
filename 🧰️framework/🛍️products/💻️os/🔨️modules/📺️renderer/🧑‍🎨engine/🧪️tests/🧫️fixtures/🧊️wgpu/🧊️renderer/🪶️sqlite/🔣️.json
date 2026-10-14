@@ -1,0 +1,84 @@
+{
+  "schema": "semio.native-socket-probe.sqlite.v1",
+  "artifactSchema": "native.socket-grant.probe/v1",
+  "dialect": "native.socket-grant.probe@1/*",
+  "extension": "native-socket-probe",
+  "sql": "CREATE TABLE socket_probe (id INTEGER PRIMARY KEY CHECK (id = 1), text TEXT NOT NULL);\n",
+  "cases": [
+    {
+      "id": "empty",
+      "text": "",
+      "utf8Bytes": 0,
+      "valueBytes": 8
+    },
+    {
+      "id": "ascii",
+      "text": "probe",
+      "utf8Bytes": 5,
+      "valueBytes": 13
+    },
+    {
+      "id": "unicode",
+      "text": "λ🙂",
+      "utf8Bytes": 6,
+      "valueBytes": 14
+    },
+    {
+      "id": "nul",
+      "text": "A\u0000B",
+      "utf8Bytes": 3,
+      "valueBytes": 11
+    },
+    {
+      "id": "raw",
+      "text": "{ not JSON }\n",
+      "utf8Bytes": 13,
+      "valueBytes": 21
+    },
+    {
+      "id": "planes",
+      "text": "𐀀",
+      "utf8Bytes": 7,
+      "valueBytes": 15
+    }
+  ],
+  "large": {
+    "unit": "λ🙂",
+    "repetitions": 24576,
+    "utf8Bytes": 147456,
+    "valueBytes": 147464,
+    "cancelThreshold": 32768
+  },
+  "edit": "independent λ🙂\u0000 edit",
+  "invalidUtf8": [
+    [
+      255
+    ],
+    [
+      240,
+      128,
+      128,
+      128
+    ],
+    [
+      237,
+      160,
+      128
+    ]
+  ],
+  "malformed": [
+    "missingRow",
+    "multipleRows",
+    "wrongRowid",
+    "wrongIdentity",
+    "nullText",
+    "extraCell"
+  ],
+  "callerGrant": {
+    "maximumItems": 64,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 64
+  }
+}

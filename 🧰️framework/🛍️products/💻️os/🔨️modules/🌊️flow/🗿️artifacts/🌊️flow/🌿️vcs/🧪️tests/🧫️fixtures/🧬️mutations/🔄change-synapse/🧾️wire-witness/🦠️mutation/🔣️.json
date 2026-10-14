@@ -1,0 +1,11 @@
+{
+  "operation": "changeSynapse",
+  "id": "s1",
+  "synapse": {
+    "id": "s1-new",
+    "from": "c",
+    "to": "a",
+    "fromPort": "out",
+    "toPort": "in"
+  }
+}

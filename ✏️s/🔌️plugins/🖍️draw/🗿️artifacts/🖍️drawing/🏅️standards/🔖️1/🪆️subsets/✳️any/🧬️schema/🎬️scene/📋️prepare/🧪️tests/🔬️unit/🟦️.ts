@@ -4,14 +4,14 @@ import {test,expect} from "bun:test";
 import {Matrix3,Group} from "three";
 import {readFileSync} from "node:fs";
 import {builtinFontLocations} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts";
-import ancestryRows from "../../🧫️fixtures/🧭️ancestry/🔣️.json";
-import addressRows from "../../🧫️fixtures/🧭️ancestry/🛂️addresses/🔣️.json";
+import ancestryRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🧭️ancestry/🔣️.json";
+import addressRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🧭️ancestry/🛂️addresses/🔣️.json";
 import {validateSceneSourceAddress} from "../../🟦️.ts";
 import Ajv from "ajv/dist/2020.js";
 import draft7 from "ajv/dist/refs/json-schema-draft-07.json" with {type:"json"};
 import sharp from "sharp";
-import cases from "../../🧫️fixtures/🔣️.json";
-import invalids from "../../🧫️fixtures/⚠️invalid/🔣️.json";
+import cases from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🔣️.json";
+import invalids from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/⚠️invalid/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import rasterSchema from "../../../📷️raster/🧬️schema/🔣️.json";
 import pathSchema from "../../../../🧮️geometry/📷️raster/🧬️schema/🔣️.json";
@@ -25,7 +25,7 @@ import regionSchema from "../../../../../../../../../../../../../../🧰️frame
 import curveSchema from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🔀️booleans/🛤️paths/🧬️schema/🔣️.json";
 import documentTraceSchema from "../../../🔍️trace/🧬️schema/🔣️.json";
 import bitmapTraceSchema from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🔍️trace/🧬️schema/🔣️.json";
-import traceRows from "../../../🔍️trace/🧫️fixtures/🔣️.json";
+import traceRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🔍️trace/🔣️.json";
 const ajv=new Ajv({strict:true}).addMetaSchema(draft7);ajv.addSchema(pathSchema);ajv.addSchema(imageSchema);ajv.addSchema(rasterSchema);for(const s of [flatSchema,regionSchema,curveSchema,booleanSchema,bitmapTraceSchema,documentTraceSchema])ajv.addSchema(s);const validate=ajv.compile(schema),validateProgress=ajv.compile({$ref:schema.$id+"#/definitions/progress"}),validateRasterProgress=ajv.compile({$ref:schema.$id+"#/definitions/rasterProgress"});
 const resolutionLimits={maxWork:10000000,trace:traceRows[0]!.limits,booleans:{tolerance:.005,epsilon:1e-8,maxDepth:32,maxReferences:256,maxEdges:65536,maxParameters:262144,maxAtomicEdges:65536,maxSegments:65536,maxRetainedSegments:262144,maxWork:10000000}};
 const viewport={width:2,height:1,origin:[0,0] as [number,number],tolerance:.01,maxPixels:100,maxSourceBytes:10000};
@@ -52,7 +52,7 @@ test("document preparation independently composes complete ancestor matrices",()
 test("document preparation hands real authored geometry to scene raster",async()=>{const row=cases[0]!,plan=finish(new DocumentSceneJob(input(row),row.limits),7),value=resolvedSceneInput(plan,{width:2,height:1,origin:[0,0],tolerance:.01,maxPixels:4,maxSourceBytes:10000}),job=new RasterSceneJob(value);while(!job.advance(4096).done){}const expected=await sharp(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"><rect width="2" height="1" fill="red"/></svg>')).ensureAlpha().raw().toBuffer();expect([...job.result().pixels]).toEqual([...expected]);console.log("[DEBUG] Actual document geometry prepares into scene pixels matching Sharp SVG");});
 test("document preparation refuses unresolved work rather than publishing omitted layers",()=>{for(const name of ["text stays explicit","boolean preserves operands","trace stays explicit"]){const row=cases.find(r=>r.name===name)!,plan=finish(new DocumentSceneJob(input(row),row.limits),1);expect(()=>resolvedSceneInput(plan,{width:1,height:1,origin:[0,0],tolerance:.01,maxPixels:100,maxSourceBytes:10000})).toThrow(/unresolved/i);}});
 test("document preparation cancellation and asynchronous observer abort",async()=>{const row=cases[1]!;for(const steps of [0,1,5,15]){const job=new DocumentSceneJob(input(row),row.limits);for(let at=0;at<steps;at++)job.advance(1);job.cancel();expect(()=>job.result()).toThrow(/cancel/i);expect(()=>job.advance(1)).toThrow(/cancel/i);}const controller=new AbortController();await expect(prepareDocumentScene(input(row),row.limits,{signal:controller.signal,workBudget:1,onProgress:()=>controller.abort()})).rejects.toThrow(/cancel/i);});
-import vectorRows from "../../🧫️fixtures/🎬️vector/🔣️.json";
+import vectorRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🎬️vector/🔣️.json";
 import {DocumentVectorJob,prepareDocumentVector,type DocumentVectorProgress} from "../../🟦️.ts";
 const validateVector=ajv.compile({$ref:schema.$id+"#/definitions/vectorPlan"}),validateVectorProgress=ajv.compile({$ref:schema.$id+"#/definitions/vectorProgress"});
 test("prepared vector ancestry retains ordinary groups and exact locks through resolved algorithms",()=>{
@@ -80,7 +80,7 @@ test("published vector geometry independently matches authored SVG Boolean and t
 test("vector contract refuses unresolved algorithms and preserves typed stage failures privately",()=>{const row=vectorRows.at(-1)!,authored=finish(new DocumentSceneJob(input(row),row.limits),7);expect(validateVector(authored)).toBe(false);for(const stage of ["prepare","trace","boolean"]){const source=input(row),algorithms=structuredClone(row.algorithms);if(stage==="prepare")source.layers.at(-1)!.children=["absent"];if(stage==="trace")algorithms.trace.maxWork=1;if(stage==="boolean")algorithms.booleans.maxWork=1;const job=new DocumentVectorJob(source,row.limits,algorithms);let failure;try{while(!job.advance(4096).done){}}catch(error){failure=error;}expect(failure).toBeDefined();try{job.result();throw Error("Published refused vector plan");}catch(error){expect(error).toBe(failure);}try{job.advance(1);throw Error("Resumed failed vector job");}catch(error){expect(error).toBe(failure);}}});
 
 /** 🧹️ Neutral interruption cases keep private owners and borrowed source documents independent. */
-import retirementRows from "../../🧫️fixtures/🧹️retirement/🔣️.json";
+import retirementRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🧹️retirement/🔣️.json";
 import {ScenePlanCloseJob} from "../../../🧹️retire/🟦️.ts";
 const retirementValid=ajv.compile({$ref:schema.$id+"#/definitions/retirementProgress"});
 function retire(job:{advance:(n:number)=>{phase:string;work:number;done:boolean};terminalIsEmpty:()=>boolean},grant:number){for(const n of [0,-1,.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1])expect(()=>job.advance(n)).toThrow(/grant/i);let work=0,done=false;for(let at=0;at<100000;at++){const p=job.advance(grant);expect(retirementValid(p)).toBe(true);expect(p.work-work).toBeGreaterThan(0);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done){done=true;break;}}expect(done).toBe(true);expect(job.terminalIsEmpty()).toBe(true);expect(job.advance(1)).toEqual({phase:"complete",work,done:true});return work;}
@@ -96,7 +96,7 @@ test("vector retirement composes real preparation, trace, Boolean and intermedia
 });
 
 /** 🎯️ Selected ordinary groups retain their locked descendants without unlocking leaf picking. */
-import relationRows from "../../🧭️selection/🧫️fixtures/🔣️.json";
+import relationRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🧭️selection/🔣️.json";
 import relationSchema from "../../🧭️selection/🧬️schema/🔣️.json";
 import {sceneSelectionRelation} from "../../🟦️.ts";
 test("prepared scene selection ancestry preserves unlocked outer groups and unsigned locks",()=>{
@@ -111,7 +111,7 @@ test("prepared scene selection ancestry preserves unlocked outer groups and unsi
  console.log("[DEBUG] Fourteen prepared scene selection relations match independent Three parent chains, including ordinary selected groups and unsigned deepest locks");
 });
 
-import relationInvalids from "../../🧭️selection/🧫️fixtures/⚠️invalid/🔣️.json";
+import relationInvalids from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🧭️selection/⚠️invalid/🔣️.json";
 test("prepared scene selection refuses invalid unused addresses and bounded capacity",()=>{
  const validate=new Ajv({strict:true}).compile(relationSchema);
  for(const row of relationInvalids){const{name,schemaAccepted,...input}=row;expect(validate(input),name).toBe(schemaAccepted);expect(()=>sceneSelectionRelation(input.sourcePath,input.lockedAncestors,input.selectedPaths),name).toThrow();}

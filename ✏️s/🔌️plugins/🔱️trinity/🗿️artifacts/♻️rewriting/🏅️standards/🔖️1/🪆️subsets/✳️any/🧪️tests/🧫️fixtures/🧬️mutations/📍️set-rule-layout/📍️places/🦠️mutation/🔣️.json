@@ -1,0 +1,13 @@
+{
+  "mutation": "setRuleLayoutPoints",
+  "points": [
+    {
+      "key": "rhs-parameter-0",
+      "x": {"bits": "4044000000000000"},
+      "y": {"bits": "4072c00000000000"}
+    }
+  ],
+  "cleared": [
+    "lhs-match"
+  ]
+}

@@ -45,6 +45,7 @@ pub const FLOW_DEADLINE_MILLISECONDS: u64 = 8;
 pub enum FlowFailureCause {
     Message(String),
     Value(semio_framework_value::ValueError),
+    Geometry(crate::geometry::GeometryWorkFailure),
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -60,16 +61,20 @@ impl FlowFailure {
     }
     /// 📥️ Moves the complete original refusal across the Flow boundary without copying its prose.
     pub fn from_value(code:AbiErrorCode,error:semio_framework_value::ValueError)->Self{let retained_progress=error.retained_progress();Self{code,cause:FlowFailureCause::Value(error),retained_progress}}
+    /// 🪢️ Keeps the same original geometry cause, physical effects and consumed work together.
+    pub fn from_geometry(code:AbiErrorCode,original:crate::geometry::GeometryWorkFailure)->Self{Self{code,retained_progress:original.work.retained,cause:FlowFailureCause::Geometry(original)}}
+    /// ⛽️ Reads actual original work without replacing or formatting the producer cause.
+    pub fn consumed_work_units(&self)->usize{match &self.cause{FlowFailureCause::Geometry(original)=>original.work.consumed_units,_=>0}}
     /// 🔤️ Borrows the original cause when preparing its external reply.
-    pub fn message(&self)->&str{match &self.cause{FlowFailureCause::Message(message)=>message,FlowFailureCause::Value(error)=>&error.message}}
+    pub fn message(&self)->&str{match &self.cause{FlowFailureCause::Message(message)=>message,FlowFailureCause::Value(error)=>&error.message,FlowFailureCause::Geometry(original)=>&original.primary.message}}
     /// 🧾️ Preserves actual retained effects when a native refusal crosses the original Flow boundary.
     pub fn with_retained_progress(mut self,progress:RetainedCloneProgress)->Self{self.retained_progress=progress;self}
 
 }
 
 impl semio_framework_value::retirement::RetireOwned for FlowFailure {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;match self.cause{FlowFailureCause::Message(message)=>message.retirement(),FlowFailureCause::Value(error)=>error.retirement()}}
-    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::RetireOwned;match &self.cause{FlowFailureCause::Message(message)=>message.retirement_birth_bytes(),FlowFailureCause::Value(error)=>error.retirement_birth_bytes()}}
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;match self.cause{FlowFailureCause::Message(message)=>message.retirement(),FlowFailureCause::Value(error)=>error.retirement(),FlowFailureCause::Geometry(original)=>original.retirement()}}
+    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::RetireOwned;match &self.cause{FlowFailureCause::Message(message)=>message.retirement_birth_bytes(),FlowFailureCause::Value(error)=>error.retirement_birth_bytes(),FlowFailureCause::Geometry(original)=>original.retirement_birth_bytes()}}
     fn controlled_retirement_supported()->bool{true}
 }
 
@@ -93,6 +98,8 @@ pub struct FlowFeatureAdmission {
 
 pub trait FlowFeature {
     fn step(&mut self, budget: AbiWorkBudget) -> FlowFeatureStep;
+    /// 🎟️ Original producers require the initiating native context and retain refusal custody.
+    fn step_on_original_caller(&mut self,_:&mut semio_framework_job::StepContext<'_>)->FlowFeatureStep{FlowFeatureStep::Failed(FlowFailure::from_value(AbiErrorCode::NoCredit,semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"Flow feature has no original caller producer")))}
     fn cancel(&mut self, budget: AbiWorkBudget) -> Result<(), FlowFailure>;
 
     fn preflight_acknowledge(&self, _: u32) -> Result<(), FlowFailure> {
@@ -287,6 +294,17 @@ pub struct FlowBridge<D: FlowDomain> {
 }
 
 impl<D: FlowDomain> FlowBridge<D> {
+    /// 🫴️ Transfers one actual feature result before protocol encoding under the initiating context.
+    pub fn poll_on_original_caller(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<(AbiHandle,FlowFeatureStep)>,FlowFailure>{
+        self.retained_progress=Default::default();if cx.should_yield(){return Ok(None)}
+        let Some(handle)=self.work.front().copied()else{return Ok(None)};
+        let resource=self.resources.get_mut(handle).map_err(|code|FlowFailure::from_value(code,semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original Flow operation handle is absent")))?;
+        let FlowResource::Operation(operation)=resource else{return Err(FlowFailure::from_value(AbiErrorCode::NoCredit,semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original Flow session closure requires its defining producer")))};
+        if operation.cancelled||operation.reader.is_some()||operation.retained_page.is_some(){return Err(FlowFailure::from_value(AbiErrorCode::Busy,semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original Flow operation retains another receiver or close phase")))}
+        let before=cx.retained_progress();let step=operation.feature.step_on_original_caller(cx);let after=cx.retained_progress();
+        self.retained_progress=RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes};
+        Ok(Some((handle,step)))
+    }
     /// 🧾️ Actual retained effects survive the original success and refusal protocol paths.
     pub fn step_progress(&self)->RetainedCloneProgress{self.retained_progress}
 

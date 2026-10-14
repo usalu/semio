@@ -10,7 +10,7 @@ use semio_framework_job::{Generation, OperationId, StepBudget, root_cancel_token
 use serde_json::Value;
 
 const fn declaration(subset: &'static str) -> MemberOpenDeclaration {
-    MemberOpenDeclaration { kind: "s.stdio.semio", standard: "v1", subset, schema: "stdio.semio" }
+    MemberOpenDeclaration { kind: "s.stdio.semio", standard: "v1", subset, schema: "stdio.semio",history_limits:semio_framework_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},maximum_history_allocation_bytes:8388608 }
 }
 const DECLARATIONS: [MemberOpenDeclaration; 18] = [
     declaration("animation"),
@@ -146,13 +146,13 @@ factory!(Missing, missing());
 factory!(TooMany, [DECLARATIONS[0]; 65]);
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
 fn hex(value: &str) -> Vec<u8> {
     value.as_bytes().as_chunks::<2>().0.iter().map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()
 }
 fn selection_history() -> Vec<u8> {
-    let fixture: Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     hex(fixture["historyHex"].as_str().unwrap())
 }
 fn expected_error(row: &Value) -> Option<MemberOpenDiagnostic> {

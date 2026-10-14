@@ -112,7 +112,7 @@ describe("app verification source ownership", () => {
   });
 
   test("preserves mathematical, GIS, and VCS source authority", async () => {
-    const mathematical = JSON.parse(readFileSync(resolve(repoRoot, "✏️s/🔌️plugins/➗️mathematical/🧫️fixtures/📣️publication-authority/🔣️.json"), "utf8"));
+    const mathematical = JSON.parse(readFileSync(resolve(repoRoot, "✏️s/🔌️plugins/➗️mathematical/🧪️tests/🧫️fixtures/📣️publication-authority/🔣️.json"), "utf8"));
     expect(mathematical.routes).toHaveLength(6);
     expect(mathematical.routes.find(({ id }: any) => id === "nodeGraphViewport")?.lane).toBe("WindowConfig");
     const gisSchemaOwner = readFileSync(resolve(repoRoot, "✏️s/🔌️plugins/🌍️gis/🧬️schema/🟦️.ts"), "utf8");

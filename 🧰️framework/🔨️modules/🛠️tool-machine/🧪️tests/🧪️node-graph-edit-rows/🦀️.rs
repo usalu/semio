@@ -5,7 +5,7 @@
 use super::*;
 use serde_json::Value;
 
-const ROWS: &str = include_str!("../../🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
+const ROWS: &str = include_str!("../🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
 
 fn dsl(value: &Value) -> protocol::DslValue {
     match value {

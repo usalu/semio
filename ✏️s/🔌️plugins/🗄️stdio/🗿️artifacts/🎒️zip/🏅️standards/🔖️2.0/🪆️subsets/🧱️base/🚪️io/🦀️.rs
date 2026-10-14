@@ -1059,7 +1059,7 @@ fn encode_zip_ordered(snapshot: &ZipSnapshot, ordered: Vec<&ZipEntry>) -> Result
 
 /// 🎒️ The member a document archive carries its authoritative DSL text in.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn document_archive_member<S: store::os_store::serialization::ArtifactDsl>() -> String {
+pub fn document_archive_member<S: pack::snapshot::ArtifactDsl>() -> String {
     format!("snapshot.{}.semio", S::EXTENSION)
 }
 
@@ -1069,7 +1069,7 @@ pub fn document_archive_member<S: store::os_store::serialization::ArtifactDsl>()
 /// the hop is `IoFidelity::Exact` — the shared zip carrier every artifact whose own shape is its
 /// archive content uses, instead of each owner restating it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_document_archive<S: store::os_store::serialization::ArtifactDsl + semio_framework_value::ToValue>(document: &S) -> Result<Vec<u8>, ZipError> {
+pub fn encode_document_archive<S: pack::snapshot::ArtifactDsl + semio_framework_value::ToValue>(document: &S) -> Result<Vec<u8>, ZipError> {
     let entries = vec![
         ZipEntry { name: document_archive_member::<S>(), data: document.print_dsl().into_bytes(), ..Default::default() },
         ZipEntry { name: "snapshot.json".into(), data: semio_framework_pack_json::to_json_string(document).into_bytes(), ..Default::default() },
@@ -1079,7 +1079,7 @@ pub fn encode_document_archive<S: store::os_store::serialization::ArtifactDsl + 
 
 /// 🎒️ The document inside an archive written by [`encode_document_archive`]: its DSL member parsed.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_document_archive<S: store::os_store::serialization::ArtifactDsl>(bytes: &[u8]) -> Result<S, String> {
+pub fn decode_document_archive<S: pack::snapshot::ArtifactDsl>(bytes: &[u8]) -> Result<S, String> {
     let archive = decode_zip(bytes).map_err(|error| error.to_string())?;
     let member = document_archive_member::<S>();
     let entry = archive.entries.iter().find(|entry| entry.name == member).ok_or_else(|| format!("the archive has no {member} member"))?;
@@ -1179,10 +1179,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<ZipSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<ZipSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<ZipSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<ZipSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::apply_mutation(&mut self.snapshot, &mutation);
@@ -1282,7 +1282,7 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <ZipSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <ZipSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
@@ -1293,7 +1293,7 @@ pub mod derived_analysis {
                         let result = if matches!(crate::standards::v2_0::subsets::base::io::sniff_zip_bytes(bytes), crate::standards::v2_0::subsets::base::io::SniffConfidence::High) {
                             crate::standards::v2_0::subsets::base::io::decode_zip(bytes).map_err(|err| err.to_string())
                         } else {
-                            <ZipSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|err| err.to_string())
+                            <ZipSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|err| err.to_string())
                         };
                         match result {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),

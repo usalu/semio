@@ -199,14 +199,14 @@ async fn sourcing_contribution_envelope_rejects_depth_string_and_cardinality_plu
 
 #[test]
 fn admitted_module_queries_match_the_neutral_typed_roster() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧩️admitted-modules/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔬️contract/🧩️admitted-modules/🔣️.json")).unwrap();
     let expected: Vec<&str> = fixture["authoredModuleIds"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect();
     let modules = available_modules(authored_modules());
     assert_eq!(modules.iter().map(|module| module.module_id.as_str()).collect::<Vec<_>>(), expected);
     let selected = fixture["selectedModuleId"].as_str().unwrap();
     assert_eq!(module_for(authored_modules(), selected).unwrap().module_id(), selected);
     assert_eq!(module_for(Vec::new(), selected).is_some(), fixture["emptyAdmittedRosterFindsModule"].as_bool().unwrap());
-    let native_stock: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📦️expected-stock.json")).unwrap();
+    let native_stock: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📦️expected-stock.json")).unwrap();
     let expected_ids: Vec<&str> = native_stock.as_array().unwrap().iter().map(|row| row["id"].as_str().unwrap()).collect();
     assert_eq!(demo_stock().iter().map(|row| row.id.as_str()).collect::<Vec<_>>(), expected_ids);
     eprintln!("[DEBUG] Admitted sourcing module queries preserve authored order and isolation; independent serde_json stock witness agrees");

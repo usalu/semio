@@ -5,7 +5,7 @@ import Ajv2020 from "ajv/dist/2020";
 import {readFileSync,existsSync} from "node:fs";
 test("protocol cause retirement preserves refused original storage and separately admits copy and release",()=>{
  const read=(path:string)=>JSON.parse(readFileSync(new URL(path,import.meta.url),"utf8"));
- const fixture=read("../🧫️fixtures/🔣️.json"),schema=read("../🧬️schema/🔣️.json"),strict=new Ajv2020({strict:true}).compile(schema),validate=new Ajv2020({strict:true}).compile(schema.$defs.Grant);expect(strict(fixture)).toBe(true);expect(strict({...fixture,unknown:true})).toBe(false);
+ const fixture=read("../🧪️tests/🧫️fixtures/🔣️.json"),schema=read("../🧬️schema/🔣️.json"),strict=new Ajv2020({strict:true}).compile(schema),validate=new Ajv2020({strict:true}).compile(schema.$defs.Grant);expect(strict(fixture)).toBe(true);expect(strict({...fixture,unknown:true})).toBe(false);
  const db=new Database(":memory:");db.exec("CREATE TABLE slots(ordinal INTEGER PRIMARY KEY, text TEXT, capacity INTEGER, live INTEGER)");
  for(const row of fixture.cases){
   expect(row.texts.length).toBe(row.capacities.length);expect(JSON.parse(JSON.stringify(row)).texts).toEqual(row.texts);

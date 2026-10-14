@@ -4,8 +4,8 @@ import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { FlowProvider } from "@semio-tech/ui-react";
 import { WorldProjectionKindSwitch, worldProjectionDefaults, worldProjectionTemplateSelectionId } from "@semio-tech/infinite-world-r3f";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import fixture from "../../🧫️fixtures/🔀️projection-pane/🔣️.json" with { type: "json" };
-import readingFlow from "../../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧫️fixtures/🔤️text-flow/🔣️.json";
+import fixture from "../🧫️fixtures/🔀️projection-pane/🔣️.json" with { type: "json" };
+import readingFlow from "../../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧪️tests/🧫️fixtures/🔤️text-flow/🔣️.json";
 
 afterEach(cleanup);
 

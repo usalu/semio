@@ -3,8 +3,8 @@ use super::*;
 use semio_framework::sqlite_snapshot::{SqliteDatabaseLimits,SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SnapshotEncoding};
 use {semio_framework_artifact_reference::ArtifactDialect};
 use semio_framework_value::ValueRefusalKind;
-const CORPUS:&str=include_str!("../../../🧫️fixtures/🪶️workspace-lease/🔣️.json");
-fn snapshot_request()->sqlite_wire::SnapshotInput{serde_json::from_str(include_str!("../../../../🧬️schema/🪶️sqlite/🧫️fixtures/🔣️.json")).expect("original neutral caller native and SQL policy")}
+const CORPUS:&str=include_str!("../../🧫️fixtures/🪶️workspace-lease/🔣️.json");
+fn snapshot_request()->sqlite_wire::SnapshotInput{serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json")).expect("original neutral caller native and SQL policy")}
 fn corpus()->serde_json::Value{serde_json::from_str(CORPUS).expect("closed neutral component lease corpus")}
 fn output_root()->PathBuf{let root=PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("owning component test requires an explicit task artifact root")).join("count-component");std::fs::create_dir_all(&root).expect("component output root");root}
 fn independent_file(bytes:&[u8],count:i32,encoding:&str){

@@ -11,7 +11,7 @@ type InteractionStore = ArtifactStore<InteractionState, InteractionConfigMutatio
 
 #[semio_framework_async_macros::async_test]
 async fn original_query_output_width_does_not_price_or_renew_its_caller_receiving_grant(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📨️authority.json")).unwrap();let original:RetainedCloneGrant=serde_json::from_value(law["wholeOperationGrant"].clone()).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📨️authority.json")).unwrap();let original:RetainedCloneGrant=serde_json::from_value(law["wholeOperationGrant"].clone()).unwrap();
  for width in law["outputWidths"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){
   let(mut store,mut query,expected,mut recipient)=fixture(law["sourceCase"].as_str().unwrap()).await;let mut output=Vec::new();let mut zero=false;let mut terminal=false;
   for _ in 0..law["maximumTurns"].as_u64().unwrap(){
@@ -21,7 +21,7 @@ async fn original_query_output_width_does_not_price_or_renew_its_caller_receivin
   assert!(terminal);assert_eq!(output,expected);assert_eq!(serde_json::to_value(zero).unwrap(),law["zeroByteProgressRetained"]);close_original_query(&mut store,&mut query,&mut recipient,law["maximumTurns"].as_u64().unwrap());assert!(recipient.progress().fits(original));eprintln!("[DEBUG] Original query outputWidth={width} distinctCallerGrant=true cumulativeRecipient=true zeroByteOwnership=true originalReadReturned=true physicalReceipts=true independentSerde=true");
  }
 }
-fn close_original_query(store:&mut InteractionStore,query:&mut LocalInteractionQuery,recipient:&mut store::NativeSnapshotBodyWallet,turns:u64){
+fn close_original_query(store:&mut InteractionStore,query:&mut LocalInteractionQuery,recipient:&mut crate::io::control::NativeSnapshotBodyWallet,turns:u64){
  let mut owner:Option<Box<dyn ErasedSnapshotRetirement>>=None;
  for _ in 0..turns{
   let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||query.close_step(recipient.remaining_grant()).unwrap());let progress=step.progress();recipient.record_progress(progress).unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
@@ -34,12 +34,12 @@ fn close_original_query(store:&mut InteractionStore,query:&mut LocalInteractionQ
  panic!("original query caller grant did not close its Store");
 }
 
-fn original_receiving_recipient() -> store::NativeSnapshotBodyWallet {
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📨️authority.json")).unwrap();
-    store::NativeSnapshotBodyWallet::new(serde_json::from_value(law["wholeOperationGrant"].clone()).unwrap())
+pub(crate) fn original_receiving_recipient() -> crate::io::control::NativeSnapshotBodyWallet {
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📨️authority.json")).unwrap();
+    crate::io::control::NativeSnapshotBodyWallet::new(serde_json::from_value(law["wholeOperationGrant"].clone()).unwrap())
 }
 
-fn install_original_interaction_owners(store:&mut InteractionStore,recipient:&mut store::NativeSnapshotBodyWallet){
+pub(crate) fn install_original_interaction_owners(store:&mut InteractionStore,recipient:&mut crate::io::control::NativeSnapshotBodyWallet){
     let(result,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||interaction_store_owners(recipient.remaining_grant()));
     let(mut owners,progress)=match result{Ok(received)=>received,Err(error)=>panic!("original interaction catalog refused: {}",error.error)};
     recipient.record_progress(progress).unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
@@ -51,7 +51,7 @@ fn install_original_interaction_owners(store:&mut InteractionStore,recipient:&mu
 
 #[semio_framework_async_macros::async_test]
 async fn original_local_interaction_copy_one_refuses_metadata_close_and_preserves_owner(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📨️authority.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📨️authority.json")).unwrap();
     let original:RetainedCloneGrant=serde_json::from_value(law["originalGrants"][0].clone()).unwrap();
     assert_eq!(original.maximum_copy_bytes,1);
     let(mut store,mut query,_,mut recipient)=fixture(law["sourceCase"].as_str().unwrap()).await;
@@ -62,8 +62,8 @@ async fn original_local_interaction_copy_one_refuses_metadata_close_and_preserve
     eprintln!("[DEBUG] Original query copy1 metadata close genuinely refused heap0 same captured owner/token/demand/read; separate caller whole-operation authority closes actual physical owner");
 }
 
-async fn fixture(source_case: &str) -> (InteractionStore, LocalInteractionQuery, Vec<u8>, store::NativeSnapshotBodyWallet) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
+async fn fixture(source_case: &str) -> (InteractionStore, LocalInteractionQuery, Vec<u8>, crate::io::control::NativeSnapshotBodyWallet) {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == source_case).unwrap();
     let mut state = row["expected"].clone();
     state["hover"] = serde_json::json!({"private": {"channel": "pointer", "ids": ["not-captured"]}});
@@ -102,7 +102,7 @@ fn wrong_token(mut token: LocalInteractionPageToken, field: &str) -> LocalIntera
 
 #[semio_framework_async_macros::async_test]
 async fn local_interaction_query_exact_pages_ack_backpressure_and_terminal_return() {
-    let laws: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🔣️.json")).unwrap();
+    let laws: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/📃️query/🔣️.json")).unwrap();
     for source in laws["sourceCases"].as_array().unwrap() {
         for bytes in [1, 64, 4096] {
             let (mut store, mut query, expected,mut recipient) = fixture(source.as_str().unwrap()).await;
@@ -141,7 +141,7 @@ async fn local_interaction_query_exact_pages_ack_backpressure_and_terminal_retur
 
 #[semio_framework_async_macros::async_test]
 async fn local_interaction_query_zero_grants_cancel_and_worker_transfer() {
-    let laws: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🔣️.json")).unwrap();
+    let laws: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/📃️query/🔣️.json")).unwrap();
     for prefix in laws["cancelAfterBytes"].as_array().unwrap() {
         let (mut store, mut query, _,mut recipient) = fixture("semantic-unicode-over-page").await;let original=recipient.remaining_grant();
         for denied in [RetainedCloneGrant { maximum_items:0,..original }, RetainedCloneGrant { maximum_copy_bytes:0,..original }] {
@@ -179,7 +179,7 @@ struct EmptyCapture {
     returned: bool,
 }
 
-fn empty_capture_for_live_law() -> impl LocalInteractionQueryCapture {
+pub(crate) fn empty_capture_for_live_law() -> impl LocalInteractionQueryCapture {
     EmptyCapture { identity: LocalInteractionIdentity { app_instance_id: 5, generation: 2, revision: [4; 32], document_revision: [5; 32], topology_revision: [6; 32] }, returned: false }
 }
 
@@ -340,7 +340,7 @@ struct HostileCapture {
     identity: LocalInteractionIdentity,
 }
 
-fn hostile_capture_for_live_law() -> impl LocalInteractionQueryCapture {
+pub(crate) fn hostile_capture_for_live_law() -> impl LocalInteractionQueryCapture {
     HostileCapture {
         reader: store::ArtifactCanonicalJsonReader::new(std::sync::Arc::new(HostileRoot { first: "retained✓".into(), second: HostileValue }), std::sync::Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<HostileRoot>::default())),
         identity: LocalInteractionIdentity { app_instance_id: 1, generation: 1, revision: [1; 32], document_revision: [2; 32], topology_revision: [3; 32] },
@@ -378,7 +378,7 @@ impl LocalInteractionQueryCapture for HostileCapture {
 
 #[test]
 fn local_interaction_query_partial_encoder_failure_keeps_exact_byte_ownership() {
-    let laws: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🔣️.json")).unwrap();
+    let laws: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/📃️query/🔣️.json")).unwrap();
     for bytes in [1, 64, 4096] {
         let root = std::sync::Arc::new(HostileRoot { first: laws["partialError"]["first"].as_str().unwrap().into(), second: HostileValue });
         let identity = LocalInteractionIdentity { app_instance_id: 1, generation: 1, revision: [1; 32], document_revision: [2; 32], topology_revision: [3; 32] };

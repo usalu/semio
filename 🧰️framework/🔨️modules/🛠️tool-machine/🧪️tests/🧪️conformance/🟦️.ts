@@ -5,7 +5,7 @@ import fc from "fast-check";
 import { assign, initialTransition, setup, transition, type AnyMachineSnapshot } from "xstate";
 import { ActionId, EventId, InvokeId, NodeId, ROOT, TestHost, TimerId, type ActionFn, type Machine, type MachineSpec, type NodeDef, type StatechartEvent, type TransitionDef } from "@semio-tech/machine";
 import { mintTransactionRef, type TransactionRef } from "@semio-tech/framework-replication";
-import fixture from "../../🧫️fixtures/🧫️transaction-law/🔣️.json";
+import fixture from "../🧫️fixtures/🧫️transaction-law/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import * as T from "../../🟦️.ts";
 
@@ -486,7 +486,7 @@ describe("tool machine runner", () => {
 });
 
 //#region 🔖️Scrub
-import scrubFixture from "../../🧫️fixtures/🧫️scrub-law/🔣️.json";
+import scrubFixture from "../🧫️fixtures/🧫️scrub-law/🔣️.json";
 
 const scrubLaw = scrubFixture as any;
 type Leaf = { readonly set: string; readonly target: string; readonly value: number };
@@ -679,7 +679,7 @@ describe("scrub machine", () => {
 //#endregion 🔖️Scrub
 
 //#region 🔖️Typing
-import typingFixture from "../../🧫️fixtures/🧫️typing-law/🔣️.json";
+import typingFixture from "../🧫️fixtures/🧫️typing-law/🔣️.json";
 
 const typingLaw = typingFixture as any;
 type Run = { readonly at: number; readonly text: string } | { readonly text: string };
@@ -888,7 +888,7 @@ describe("typing machine", () => {
 //#endregion 🔖️Typing
 
 //#region 🔖️NodeDrag
-import nodeDragFixture from "../../🧫️fixtures/🧫️node-drag-law/🔣️.json";
+import nodeDragFixture from "../🧫️fixtures/🧫️node-drag-law/🔣️.json";
 
 describe("node drag record (design §13.3)", () => {
   const ajv = new Ajv({ strict: false, allErrors: true });

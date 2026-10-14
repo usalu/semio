@@ -95,7 +95,7 @@ fn open_artifact_relay_target_parses_document_and_space_ids() {
 
 #[test]
 fn open_artifact_relay_vectors_match_the_typescript_contract() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🚪️open-artifact/🔣️.json")).expect("opening relay fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧪️tests/🧫️fixtures/🚪️open-artifact/🔣️.json")).expect("opening relay fixture");
     for vector in fixture["valid"].as_array().expect("valid vectors") {
         let target = open_artifact_relay_target(vector["actionId"].as_str().unwrap(), Some(&vector["args"])).unwrap_or_else(|error| panic!("{}: {error}", vector["id"]));
         let expected = &vector["expected"];

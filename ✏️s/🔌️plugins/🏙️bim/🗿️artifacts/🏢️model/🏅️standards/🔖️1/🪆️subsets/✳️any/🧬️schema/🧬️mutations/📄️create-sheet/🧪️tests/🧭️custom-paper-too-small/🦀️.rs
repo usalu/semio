@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "📄️create-sheet/🧭️custom-paper-too-small",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/📄️create-sheet/🧭️custom-paper-too-small/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/📄️create-sheet/🧭️custom-paper-too-small/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/📄️create-sheet/🧭️custom-paper-too-small/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/📄️create-sheet/🧭️custom-paper-too-small/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/📄️create-sheet/🧭️custom-paper-too-small/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📄️create-sheet/🧭️custom-paper-too-small/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📄️create-sheet/🧭️custom-paper-too-small/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📄️create-sheet/🧭️custom-paper-too-small/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📄️create-sheet/🧭️custom-paper-too-small/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📄️create-sheet/🧭️custom-paper-too-small/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

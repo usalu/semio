@@ -1,5 +1,6 @@
 //! 🌱️ Store native ArtifactPack genesis admission capability.
-use crate::os_store::{serialization::ArtifactPack,PackEncodeOptions};
+use pack::snapshot::ArtifactPack;
+use pack::record::EncodeOptions as PackEncodeOptions;
 use crate::os_vcs::io::binary::genesis::ArtifactGenesisCodec;
 use semio_framework_value::ValueError;
 impl<P: ArtifactPack> ArtifactGenesisCodec for P {

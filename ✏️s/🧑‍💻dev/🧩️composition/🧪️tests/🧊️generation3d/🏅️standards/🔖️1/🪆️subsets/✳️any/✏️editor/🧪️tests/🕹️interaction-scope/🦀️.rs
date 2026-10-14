@@ -20,7 +20,7 @@ use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::InteractionVerb;
 
 //#region 🕹️Fixture
-const INTERACTION_SCOPE_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🕹️interaction-scope.json");
+const INTERACTION_SCOPE_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🕹️interaction-scope.json");
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

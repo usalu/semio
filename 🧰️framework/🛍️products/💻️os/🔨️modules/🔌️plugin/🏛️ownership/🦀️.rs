@@ -4,6 +4,11 @@ use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{Retai
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use crate::sdk_fault::plugin_sdk_fault;
 
+#[path="⚠️failure/🦀️.rs"]
+mod original_failure;
+pub use original_failure::{PluginLifecycleFailure,PluginLifecyclePrimary};
+pub(crate) use original_failure::{original_lifecycle_grant,original_lifecycle_step};
+
 
 
 /// 💰️ The close caller admits the exact physical release against the declared store allocation ceiling.
@@ -241,7 +246,7 @@ pub(crate) const DOCUMENT_ARCHIVE_LOAD_SLOTS: usize = 2;
 
 pub(crate) struct ArtifactFixedRegistry<T> {
     pub(crate) slots: Box<[std::mem::MaybeUninit<(u64, T)>]>,
-    occupied: u64,
+    pub(crate) occupied: u64,
     pub(crate) allocation_admitted: bool,
     capacity: usize,
 }
@@ -288,7 +293,7 @@ impl<T> ArtifactFixedRegistry<T> {
     }
 
     #[cfg(test)]
-    fn insert(&mut self, id: u64, value: T) -> Result<(), T> {
+    pub(crate) fn insert(&mut self, id: u64, value: T) -> Result<(), T> {
         if !self.allocation_admitted {
             return Err(value);
         }

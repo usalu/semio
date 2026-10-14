@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import schema from "../../🧬️schema/🔣️.json";
 import extensionSchema from "../../../../../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json";
-import corpus from "../../🧫️fixtures/📇️inventory/🔣️.json";
+import corpus from "../🧫️fixtures/📇️inventory/🔣️.json";
 import { moduleDirectoryName, moduleIdForDirectoryName, parseModuleDirectories } from "../../🟦️.ts";
 import { emitTypeScript } from "../../../📽️projection/🟦️.ts";
 import { parseDeployedRegistryEntryV1 } from "../../../🔎️discovery/🧬️schema/🟦️.ts";

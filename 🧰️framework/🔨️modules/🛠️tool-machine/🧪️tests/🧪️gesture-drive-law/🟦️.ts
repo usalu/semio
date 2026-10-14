@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import fc from "fast-check";
 import { assign, initialTransition, setup, transition, type SnapshotFrom } from "xstate";
 import * as T from "../../🟦️.ts";
-import fixture from "../../🧫️fixtures/🧫️gesture-drive-law/🔣️.json";
+import fixture from "../🧫️fixtures/🧫️gesture-drive-law/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import models from "../../🧪️testing/🔢️counting-gesture/🧬️schema/🔣️.json";
 

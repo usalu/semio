@@ -7,10 +7,10 @@
 fn insert_member_dupe() {
     super::assert_vector(super::Vector {
         kind: "insert-member",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔩insert-member/⛔dupe/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔩insert-member/⛔dupe/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔩insert-member/⛔dupe/📸️snapshot/➡️after/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔩insert-member/⛔dupe/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔩insert-member/⛔dupe/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔩insert-member/⛔dupe/📸️snapshot/➡️after/🔣️.json"),
         diff: None,
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔩insert-member/⛔dupe/🎯️outcome/🔣️.json"),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔩insert-member/⛔dupe/🎯️outcome/🔣️.json"),
     });
 }

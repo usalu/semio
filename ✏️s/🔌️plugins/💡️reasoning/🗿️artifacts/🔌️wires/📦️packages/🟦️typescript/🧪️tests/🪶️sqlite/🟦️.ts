@@ -2,7 +2,7 @@
 import{wiresSnapshotToSqliteDatabase,wiresSnapshotFromSqliteDatabase,validateWiresSnapshotSqliteDialect,decodeWiresJsonValue,type WiresSnapshot}from"@semio-tech/reasoning-wires";
 import{exportSqliteDatabase,importSqliteDatabase}from"@semio-tech/framework";
 import{Database}from"bun:sqlite";import{expect,test}from"bun:test";
-import fixture from"../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json";
+import fixture from"../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json";
 test("Wires public package retains intrinsic octets and exact negative IEEE word",async()=>{
  const snapshot:WiresSnapshot={content:fixture.content,wiresSnapshot:{kind:"bytes",value:Uint8Array.from(fixture.byteValues)},meta:{kind:"float",value:{bits:BigInt("0x"+fixture.floatWords[6]!)}}},database=await wiresSnapshotToSqliteDatabase(snapshot),oracle=Database.deserialize(await exportSqliteDatabase(database));try{
   expect(oracle.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(oracle.query("SELECT value FROM wires_octet ORDER BY ordinal").all()).toEqual(fixture.byteValues.map(value=>({value})));

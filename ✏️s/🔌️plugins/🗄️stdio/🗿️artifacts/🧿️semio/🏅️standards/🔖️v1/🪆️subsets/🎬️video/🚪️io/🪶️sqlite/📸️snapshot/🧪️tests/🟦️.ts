@@ -1,7 +1,7 @@
 /** 🎬️ Full native signed rational and unsigned64 sample timestamp laws. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import f from "../🧫️fixtures/🔣️.json";
+import f from "./🧫️fixtures/🔣️.json";
 import type {SemioVideoSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {SEMIO_VIDEO_SQLITE_SCHEMA,semioVideoSnapshotToSqliteDatabase,semioVideoSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
@@ -13,14 +13,14 @@ test("Semio video native admission frontier retains independent unsigned timesta
 
 
 test("Semio Video code-admitted intermediate owner survives independently queried physical SQLite",async()=>{
- const neutral=await Bun.file(new URL("../🧫️fixtures/🧩️intermediate/🔣️.json",import.meta.url)).json();
+ const neutral=await Bun.file(new URL("🧫️fixtures/🧩️intermediate/🔣️.json",import.meta.url)).json();
  const {default:Ajv}=await import("ajv");expect(neutral["role"]).toEqual("codeAdmittedIntermediateOwner");expect(neutral["snapshot"]).toEqual({"schema":"video\u0000世界","streams":[{"kind":"video","codec":"literal\u0000Ä","width":0,"height":0,"rate":{"num":"1","den":"0"},"samples":[]}]});expect(neutral["query"]).toEqual("SELECT rate_numerator,rate_denominator FROM semio_video_stream ORDER BY ordinal");expect(neutral["expectedRows"]).toEqual([{"rate_numerator":1,"rate_denominator":0}]);
  const input=structuredClone(neutral.snapshot);for(const stream of input.streams){stream.rate.num=BigInt(stream.rate.num);stream.rate.den=BigInt(stream.rate.den);}
  const db=Database.deserialize(await exportSqliteDatabase(await semioVideoSnapshotToSqliteDatabase(input)));
  try{expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(db.query(neutral.query).all()).toEqual(neutral.expectedRows);expect(await semioVideoSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).toEqual(input);}finally{db.close();}
 });
 
-import completeSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import completeSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 import{independentSqliteExtent as completeIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
 test("Semio Video original Native matched complete cells preserve copied limits and retained metadata",async()=>{
  expect(completeSemanticContract.schemaBytes).toBe(865);expect(completeSemanticContract.tableWidths).toEqual({semio_video_document:2,semio_video_sample:6,semio_video_stream:9});expect(completeSemanticContract.cases.map(item=>item.id)).toEqual(["full","metadataRetainingEmpty","existingZeroDenominatorIntermediate"]);

@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn icon_render_scene_chrome_uses_the_selected_locale() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🖼️IconRenderHost/🧫️fixtures/🏷️status/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🖼️IconRenderHost/🧪️tests/🧫️fixtures/🏷️status/🔣️.json")).unwrap();
     for pack in fixture["locales"].as_array().unwrap() {
         let labels = scene_chrome_labels(pack["locale"] == "de").icon_render;
         assert_eq!(labels.empty_scene, pack["labels"]["empty"]);
@@ -33,7 +33,7 @@ use crate::dock::{DockControlName, DockNode, DockStackTab};
 #[test]
 fn accepted_dock_tabs_publish_one_tab_stop_per_stack_and_activate_only_an_exact_address() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    let fixture: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/⌨️dock-tab-keyboard/🔣️.json")).expect("Dock tab keyboard fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/⌨️dock-tab-keyboard/🔣️.json")).expect("Dock tab keyboard fixture");
     let stacks = fixture["stacks"].as_array().expect("Dock stacks");
     let mut shell = super::panel_anchor_model_tests::host_test_shell();
     shell.dock.root = DockNode::Row(
@@ -97,7 +97,7 @@ fn accepted_dock_tabs_publish_one_tab_stop_per_stack_and_activate_only_an_exact_
 #[test]
 fn a_published_immediate_select_owns_wheel_without_parsing_its_option_id() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).unwrap();
     let law = &fixture["select"]["wheel"];
     let id = "owner.item.embedded";
     let mut shell = super::panel_anchor_model_tests::host_test_shell();
@@ -171,7 +171,7 @@ fn a_scene_refresh_preserves_the_exact_captured_owner_until_outside_release() {
 #[test]
 fn an_accepted_sibling_insertion_rebases_the_exact_renderer_scene_capture() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    let fixture: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
     let law = &fixture["siblingInsertion"];
     let window = "renderer-capture-arena-rebase";
     let body = Rect::new(0.0, 0.0, 600.0, 300.0);
@@ -292,7 +292,7 @@ fn renderer_canvas_multiple_accepted_removals_invalidate_every_checked_out_camer
 #[test]
 fn renderer_canvas_same_host_sibling_rebase_preserves_checked_out_camera() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    let fixture: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
     let law = &fixture["siblingInsertion"];
     let receiver = law["receiver"].as_u64().unwrap();
     let window = "renderer-camera-sibling-rebase";
@@ -381,7 +381,7 @@ fn another_pointers_cancellation_preserves_the_captured_scene_drag() {
 #[test]
 fn replaced_scene_pointer_slots_release_the_fixed_capture_grant() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    let fixture: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
     let capacity = fixture["captureCapacity"].as_u64().unwrap();
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
@@ -442,7 +442,7 @@ pub(super) fn pointer_interaction(shell: ShellState, input: InputState<ActionDes
 }
 
 pub(super) fn retained_world_sequence_probe(scenario: &str) {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
     shell.dock_tabs = ShellDock::default();
@@ -750,7 +750,7 @@ fn retained_pane_focus_follows_the_last_focus_event_and_ignores_an_old_surface_b
 }
 
 fn pane_owner_fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🪪️window-surface-owner/🔣️.json")).expect("window surface ownership fixture")
+    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🪪️window-surface-owner/🔣️.json")).expect("window surface ownership fixture")
 }
 
 #[test]
@@ -1161,7 +1161,7 @@ fn canvas_action_args(action: &ActionDescriptor) -> Value {
 #[test]
 fn standalone_multi_app_variants_resolve_their_declared_app() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    let corpus: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🔬️wgpu-shell-boot-selection/🔣️.json")).unwrap();
+    let corpus: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔬️wgpu-shell-boot-selection/🔣️.json")).unwrap();
     for row in corpus["catalog"]["playgrounds"].as_array().unwrap() {
         let plugin = row["pluginId"].as_str().unwrap();
         let app = row["app"].as_str().unwrap();
@@ -1782,7 +1782,7 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
     let world_host = shell.world3d_host_id_for_window("main-2").expect("the accepted body registers its World3d host").to_string();
     assert!(shell.world3d_states.contains_key(&world_host), "the published body registers a live World3d owner before any example switch");
     assert!(body_input.hits().iter().any(|hit| hit.kind == HitKind::World3d), "the new instance publishes a physical World3d hit target");
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🛟️panel-window-reservation/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🛟️panel-window-reservation/🔣️.json")).unwrap();
     let world_hit = body_input.hits().iter().find(|hit| hit.kind == HitKind::World3d).unwrap();
     assert!(shell.retained_hit_window(world_hit).is_some(), "the actual retained publication registers this scene's body ownership");
     let point = (world_hit.rect.x + world_hit.rect.w * 0.5, world_hit.rect.y + world_hit.rect.h * 0.5);
@@ -2065,7 +2065,7 @@ fn renderer_canvas_pointer_sequence(foreign_cancel: bool) {
 fn renderer_canvas_secondary_drag_reaches_the_document_gesture_before_opening_its_context_menu() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
     crate::scenes::cancel_canvas_pointer_gesture(&mut InputState::default());
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let row = fixture["panCases"].as_array().unwrap().iter().find(|row| row["id"] == "right-button-gesture").unwrap();
     let surface = fixture["surface"]["id"].as_str().unwrap();
     let controller = fixture["surface"]["controllerId"].as_str().unwrap();
@@ -2155,7 +2155,7 @@ fn renderer_canvas_opposite_wheel_events_preserve_the_react_camera() {
 }
 
 fn renderer_canvas_wheel_burst(case_id: &str) {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let case = if case_id == "authored-camera" {
         serde_json::json!({ "deltas": [fixture["wheel"]["zoomInDeltaY"]], "expectedFactors": [fixture["wheel"]["zoomInFactor"]], "expectedActionCount": 1 })
     } else {
@@ -2355,7 +2355,7 @@ fn escape_closes_the_palette_rather_than_committing_its_query_field() {
 #[test]
 fn renderer_canvas_closed_window_retires_its_pending_camera_owner() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let surface = "renderer-canvas-closed-window";
     let controller = fixture["surface"]["controllerId"].as_str().unwrap();
     let body = Rect::new(17.0, 31.0, 400.0, 300.0);
@@ -2406,7 +2406,7 @@ fn renderer_canvas_closed_window_retires_its_pending_camera_owner() {
 #[test]
 fn renderer_canvas_reopen_waits_for_the_exact_old_window_close() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let surface = "renderer-canvas-reopened-window";
     let controller = fixture["surface"]["controllerId"].as_str().unwrap();
     let body = Rect::new(17.0, 31.0, 400.0, 300.0);
@@ -2465,7 +2465,7 @@ fn renderer_canvas_reopen_waits_for_the_exact_old_window_close() {
 #[test]
 fn sibling_canvas_components_mount_under_one_document_without_sharing_their_camera() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let law = &fixture["siblingWindowLifetime"];
     let surface = "sibling-canvas-document";
     let controller = "sibling-canvas-controller";
@@ -2540,7 +2540,7 @@ fn sibling_canvas_components_mount_under_one_document_without_sharing_their_came
 #[test]
 fn renderer_canvas_sequential_window_close_reuses_retained_surface_capacity() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let law = &fixture["sequentialWindowLifetime"];
     let mount_count = law["mountCount"].as_u64().unwrap() as usize;
     assert!(mount_count > ui_wgpu::wgpu::engine::UI_LAYOUT_SURFACE_SLOTS);
@@ -2583,7 +2583,7 @@ fn renderer_canvas_sequential_window_close_reuses_retained_surface_capacity() {
 #[test]
 fn renderer_canvas_camera_obeys_the_mounted_component_identity() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let surface = "renderer-canvas-mount-lifetime";
     let controller = fixture["surface"]["controllerId"].as_str().unwrap();
     let body = Rect::new(17.0, 31.0, 400.0, 300.0);
@@ -2639,7 +2639,7 @@ fn renderer_canvas_same_key_remount_retires_checked_out_camera() {
 }
 
 fn renderer_canvas_retirement_probe(replace: bool, close: bool, remount: bool) {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let lifetime = &fixture["sameKeySceneRemount"];
     let key = if remount { lifetime["key"].as_str().unwrap() } else { "original" };
     let surface_id = format!("renderer-canvas-retirement-{replace}-{close}-{remount}");

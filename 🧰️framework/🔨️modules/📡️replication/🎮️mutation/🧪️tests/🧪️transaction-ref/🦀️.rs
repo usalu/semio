@@ -1,7 +1,7 @@
 use super::*;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🧫️transaction-ref/🔣️.json")).expect("transaction ref fixture parses")
+    serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🧫️transaction-ref/🔣️.json")).expect("transaction ref fixture parses")
 }
 
 fn fixture_clock(case: &serde_json::Value) -> crate::ids::HybridLogicalTimestamp {

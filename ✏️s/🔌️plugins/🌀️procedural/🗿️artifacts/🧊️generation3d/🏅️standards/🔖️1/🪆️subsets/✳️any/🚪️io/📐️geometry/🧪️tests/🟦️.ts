@@ -2,7 +2,7 @@
 import {test,expect} from "bun:test";
 const geometry=new URL("../../../🧬️schema/💡️inferences/📐️geometry/",import.meta.url);
 const native=new URL("../",import.meta.url);
-const fixture=await Bun.file(new URL("../🧫️fixtures/🔣️.json",import.meta.url)).json() as {cases:{id:string,owner:"semantic"|"native"}[]};
+const fixture=await Bun.file(new URL("./🧫️fixtures/🔣️.json",import.meta.url)).json() as {cases:{id:string,owner:"semantic"|"native"}[]};
 const source=await Bun.file(new URL("🗃️registry/🦀️.rs",geometry)).text();
 test("geometry compute capabilities have independent neutral ownership witnesses",async()=>{
   const primitive=await Bun.file(new URL("🥽️mesh-primitive/🦀️.rs",geometry)).text();

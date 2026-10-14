@@ -521,7 +521,7 @@ fn artifact_runner_closing_poll_waits_for_retained_wake_before_next_turn() {
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_open_ignores_neutral_aborted_command_snapshot_and_cas() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧪️tests/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == "aborted-commands-snapshot-cas-have-no-effects").unwrap();
     let document = ArtifactId::from("committed-artifact");
     let memory = db_wal::tests::committed_fixture_storage(row, &document).await;
@@ -570,7 +570,7 @@ async fn artifact_history_replay_uses_neutral_committed_inventory_and_retires_ev
         return;
     }
     let _history_capacity = history_construction_test_lock();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧪️tests/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     for (name, compacted, hole) in [
         ("high-water-across-segments", false, false),
         ("high-water-across-segments", true, false),
@@ -614,7 +614,7 @@ async fn artifact_history_replay_projects_real_committed_batch_and_cancels_owned
         return;
     }
     let _history_capacity = history_construction_test_lock();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧪️tests/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     let projection = &fixture["historyProjection"];
     let mut engine = ArtifactEngine::create_retained(document_id().await, storage().await, ArtifactEngineConfig::default(), 0).await.unwrap();
     let mut commands = Vec::new();
@@ -683,7 +683,7 @@ async fn artifact_history_and_opener_reject_neutral_inner_documents_and_frontier
         return;
     }
     let _history_capacity = history_construction_test_lock();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧪️tests/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     for row in fixture["historyProjection"]["rejections"].as_array().unwrap() {
         let backing = storage().await;
         let mut engine = ArtifactEngine::create_retained(document_id().await, backing.clone(), ArtifactEngineConfig::default(), 0).await.unwrap();
@@ -1157,7 +1157,7 @@ async fn resubmitting_the_same_batch_returns_the_cached_receipt_without_advancin
 /// content matches the committed envelope; a colliding id is refused instead of silently dropped.
 #[semio_framework_async_macros::async_test]
 async fn a_committed_mutation_id_replays_idempotently_but_refuses_colliding_content() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️mutation-id-collision/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️mutation-id-collision/🔣️.json")).unwrap();
     let row_envelope = |row: &serde_json::Value| db_actor::block_on(envelope(row["id"].as_str().unwrap(), &[], row["actor"].as_str().unwrap(), &[(row["path"].as_str().unwrap(), row["value"].clone())]));
     let mut engine = ArtifactEngine::create(document_id().await, storage().await, ArtifactEngineConfig::default(), 0).unwrap();
     engine.submit(CommandBatch::new(vec![row_envelope(&fixture["committed"])]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
@@ -1547,7 +1547,7 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for HashProje
     }
 }
 
-impl store::os_store::serialization::ArtifactDsl for HashProjection {
+impl pack::snapshot::ArtifactDsl for HashProjection {
     const EXTENSION: &'static str = "dbhash";
 
     fn parse_dsl(text: &str) -> Result<HashProjection, semio_framework_diagnostic::TextError> {
@@ -1572,7 +1572,7 @@ impl store::os_store::serialization::ArtifactDsl for HashProjection {
     }
 }
 
-impl store::os_store::serialization::ArtifactPack for HashProjection {
+impl pack::snapshot::ArtifactPack for HashProjection {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         Ok(self.latest_hash.to_vec())
     }
@@ -1580,6 +1580,9 @@ impl store::os_store::serialization::ArtifactPack for HashProjection {
         let latest_hash: [u8; 32] = bytes.try_into().map_err(|_| store::PackError::Schema("HashProjection pack must be exactly 32 bytes".to_string()))?;
         Ok(HashProjection { latest_hash })
     }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for HashProjection {
+
 }
 
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
@@ -1915,7 +1918,7 @@ async fn durable_group_witness_batch(kinds: &[serde_json::Value], canonical_pack
 #[semio_framework_async_macros::async_test]
 async fn document_authority_durable_group_journal_commits_one_exact_fsync_event() {
     let (authority, storage, pool) = journal_authority().await;
-    let record = store::durable_group::durable_owned_group_journal_test_record(include_str!("../../../../🏪️store/🧩️composition/🗄️durable-group/🧫️fixtures/🔣️.json"));
+    let record = store::durable_group::durable_owned_group_journal_test_record(include_str!("../../../../🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🧫️fixtures/🔣️.json"));
     let canonical_pack = record.canonical_pack().to_vec();
     let decision_sha256 = record.decision_sha256().to_string();
     let anchor_sha256 = record.anchor_sha256().to_string();
@@ -1998,9 +2001,9 @@ async fn document_authority_durable_group_journal_commits_one_exact_fsync_event(
 
 #[semio_framework_async_macros::async_test]
 async fn committed_durable_group_decision_accepts_only_one_exact_event_transaction() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📓️durable-group-journal/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📓️durable-group-journal/🔣️.json")).unwrap();
     let document = ArtifactId::from(fixture["record"]["document"].as_str().unwrap());
-    let record = store::durable_group::durable_owned_group_journal_test_record(include_str!("../../../../🏪️store/🧩️composition/🗄️durable-group/🧫️fixtures/🔣️.json"));
+    let record = store::durable_group::durable_owned_group_journal_test_record(include_str!("../../../../🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🧫️fixtures/🔣️.json"));
     let canonical_pack = record.canonical_pack().to_vec();
     let backing = storage().await;
     let wal_storage = backing.wal().await;
@@ -2065,7 +2068,7 @@ async fn committed_durable_group_decision_accepts_only_one_exact_event_transacti
 #[semio_framework_async_macros::async_test]
 async fn committed_durable_group_recovery_consumes_wal_witness_and_returns_exact_three_stores_on_pre_mutation_rejection() {
     let document = ArtifactId::from("map-a");
-    let record = store::durable_group::durable_owned_group_journal_test_record(include_str!("../../../../🏪️store/🧩️composition/🗄️durable-group/🧫️fixtures/🔣️.json"));
+    let record = store::durable_group::durable_owned_group_journal_test_record(include_str!("../../../../🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🧫️fixtures/🔣️.json"));
     let anchor_sha256 = record.anchor_sha256().to_string();
     let decision_sha256 = record.decision_sha256().to_string();
     let canonical_pack = record.into_canonical_pack();
@@ -2127,7 +2130,7 @@ async fn committed_durable_group_recovery_consumes_wal_witness_and_returns_exact
 #[semio_framework_async_macros::async_test]
 async fn document_authority_durable_group_journal_cancellation_before_handoff_is_absent() {
     let (authority, _storage, pool) = journal_authority().await;
-    let record = store::durable_group::durable_owned_group_journal_test_record(include_str!("../../../../🏪️store/🧩️composition/🗄️durable-group/🧫️fixtures/🔣️.json"));
+    let record = store::durable_group::durable_owned_group_journal_test_record(include_str!("../../../../🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🧫️fixtures/🔣️.json"));
     let mut sink = authority.durable_group_journal_sink(9);
     let mut commit = sink.begin_commit(record.canonical_pack().to_vec(), record.decision_sha256().to_string());
     commit.cancel();
@@ -2141,7 +2144,7 @@ async fn document_authority_durable_group_journal_cancellation_before_handoff_is
 #[semio_framework_async_macros::async_test]
 async fn document_authority_durable_group_journal_rejects_hash_before_mailbox() {
     let (authority, _storage, pool) = journal_authority().await;
-    let record = store::durable_group::durable_owned_group_journal_test_record(include_str!("../../../../🏪️store/🧩️composition/🗄️durable-group/🧫️fixtures/🔣️.json"));
+    let record = store::durable_group::durable_owned_group_journal_test_record(include_str!("../../../../🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🧫️fixtures/🔣️.json"));
     let mut sink = authority.durable_group_journal_sink(11);
     let mut commit = sink.begin_commit(record.canonical_pack().to_vec(), "0".repeat(64));
     assert!(matches!(commit.advance(journal_grant()).unwrap(), store::durable_group::DurableOwnedGroupJournalAdvanceV1::Rejected(_)));

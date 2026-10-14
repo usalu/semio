@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔠️remove-family-parameter/⛔️used-by-a-solid",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔠️remove-family-parameter/⛔️used-by-a-solid/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔠️remove-family-parameter/⛔️used-by-a-solid/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔠️remove-family-parameter/⛔️used-by-a-solid/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔠️remove-family-parameter/⛔️used-by-a-solid/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔠️remove-family-parameter/⛔️used-by-a-solid/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔠️remove-family-parameter/⛔️used-by-a-solid/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔠️remove-family-parameter/⛔️used-by-a-solid/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔠️remove-family-parameter/⛔️used-by-a-solid/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔠️remove-family-parameter/⛔️used-by-a-solid/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔠️remove-family-parameter/⛔️used-by-a-solid/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

@@ -36,7 +36,8 @@
     "vitest": "^4.0.17",
     "ajv": "8.20.0",
     "aria-query": "5.3.0",
-    "dom-accessibility-api": "0.5.16"
+    "dom-accessibility-api": "0.5.16",
+    "@semio-tech/process": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
   "exports": {

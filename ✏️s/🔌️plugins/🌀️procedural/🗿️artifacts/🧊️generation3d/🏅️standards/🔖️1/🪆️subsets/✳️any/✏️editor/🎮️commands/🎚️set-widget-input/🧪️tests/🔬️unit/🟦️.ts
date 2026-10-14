@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import Ajv2020 from "ajv/dist/2020.js";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import mutationSchema from "../../../../../🧬️schema/🧬️mutations/🎛️change-widget-input/🧬️schema/🔣️.json";
 import { editCollectionValue, editInputValue, editWidgetFacet, editMeshSource, editMeshTexture } from "../../🟦️.ts";
@@ -11,7 +11,7 @@ import {BoxGeometry,EdgesGeometry,Vector3} from "three";
 import {JSDOM} from "jsdom";
 import {createRequire} from "node:module";
 import {getByRole} from "@testing-library/dom";
-import inspectorFixture from "../../../../📌️panels/🔍️inspection/🧫️fixtures/🔣️.json";
+import inspectorFixture from "../../../../📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️.json";
 import type { Widget } from "../../../../../🧬️schema/🟦️.ts";
 import {diff as widgetDiff} from "../../../../../🧬️schema/🧬️mutations/🩹update-widget/🔺️diff/🟦️.ts";
 

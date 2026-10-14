@@ -6,7 +6,7 @@ import { selectCargoCapabilityTargetsV1 } from "../🟦️.ts";
 /** 🧪️ Proves present-target selection against an independent schema implementation. */
 export function runCargoCapabilityContributionChecks(): number {
   const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
-  const corpus = read("../🧫️fixtures/🔣️.json"), schema = read("../🧬️schema/🔣️.json");
+  const corpus = read("./🧫️fixtures/🔣️.json"), schema = read("../🧬️schema/🔣️.json");
   const valid = new Ajv({ strict: true }).compile(schema);
   assert(valid(corpus.links));
   for (const vector of corpus.cases) {
@@ -31,7 +31,7 @@ export function runCargoCapabilityPhysicalChecks(): number {
   mkdirSync(artifacts, { recursive: true });
   const root = mkdtempSync(join(artifacts, "cargo-capability-")), owner = join(root, "owner");
   mkdirSync(owner);
-  const corpus = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const corpus = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   writeFileSync(join(owner, "links.json"), JSON.stringify(corpus.links));
   const source = '[package]\nname = "neutral-parent"\nversion = "0.0.0"\n[features]\n# 🧩️ Capability Features\n# /🧩️ Capability Features\n[dependencies]\n# 🧩️ Capability Dependencies\n# /🧩️ Capability Dependencies\n';
   writeFileSync(join(owner, "Cargo.toml"), source);

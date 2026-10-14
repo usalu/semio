@@ -3,7 +3,7 @@ import {parseFormsJsonQuestion,parseFormsJsonValue} from "../../../🚪️io/�
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
-import fixture from "../🧫️fixtures/🔣️answers.json";
+import fixture from "../../../🧪️tests/🧫️fixtures/✅️validation/🔣️answers.json";
 import { answerError } from "../🟦️.ts";
 import type { FormQuestion, DslValue } from "../../🧬️mutations/🟦️.ts";
 export function testFormsValidation(): void {

@@ -1,21 +1,23 @@
 #!/usr/bin/env bun
-import { configuredExactCargoLawPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { runExactCargoLaws } from "../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
+import { scriptCompilerAdmissionControlV1 } from '../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts';
+import { configuredExactCargoLawPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runExactCargoLaws } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🖥️ `semio-framework-replication` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
-import { runBudgetedTestCommand } from "../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
-import { testLevelBudgetMs } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { cmdBudgetMs } from "../../../🏃️process/⏱️budget/🟦️.ts";
+import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import { testLevelBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { cmdBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 
-import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-import { buildCargoArtifacts , readCargoArtifactBuildPolicyV1 } from "../../../🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import { buildCargoArtifacts , readCargoArtifactBuildPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { blake3Hex } from "../../../🔏️hash/🟦️.ts";
 
 class TestScript extends BundleScript {
@@ -27,7 +29,7 @@ class TestScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await buildCargoArtifacts(`${this.root}/Cargo.toml`, segments, readCargoArtifactBuildPolicyV1(process.env,this.root));
+    await buildCargoArtifacts(`${this.root}/Cargo.toml`, segments, readCargoArtifactBuildPolicyV1(process.env,this.root),{control:scriptCompilerAdmissionControlV1(this.invocation,"cargo:build",buildBudgetMs())});
   }
 }
 
@@ -200,7 +202,7 @@ export class RetainedVerificationScript extends BundleScript {
     const { inflateRawSync } = await import("node:zlib");
     const leb = await import("@webassemblyjs/leb128");
     const owner = join(this.root, "../../📐️format/🔎️verification");
-    const fixture: RetainedVerificationFixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
+    const fixture: RetainedVerificationFixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     const checksum = (bytes: Uint8Array): number => crc.buf(bytes) >>> 0;
     const hash = (bytes: Uint8Array): Buffer => Buffer.from(blake3Hex(bytes), "hex");
     assert.equal(checksum(Buffer.from("123456789")), 0xe3069283);
@@ -302,7 +304,7 @@ class RetainedRecordObservationScript extends BundleScript {
     const { default: crc } = await import("crc-32/crc32c.js");
     const leb = await import("@webassemblyjs/leb128");
     const owner = join(this.root, "../../📐️format/🔎️verification/🧾️record");
-    const fixture: RetainedRecordFixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
+    const fixture: RetainedRecordFixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     const ids = new Set<string>(); let observed = 0;
     const checksum = (bytes: Uint8Array): number => crc.buf(bytes) >>> 0;
     for (const row of fixture.cases) {
@@ -331,7 +333,7 @@ class RetainedRecordObservationScript extends BundleScript {
     console.log(`[TRACE] retained SPR observation oracle: ${fixture.cases.length} exact rows, ${observed} scalar observations; compressed raw-length/empty payload/clear/error/cancel; zero commit or input authority`);
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
     const law = "retained_record_observation_uses_the_existing_framing_state_without_authority";
-    assert(source.includes('include_str!("🧫️fixtures/🔣️.json")') && source.includes(`fn ${law}(`));
+    assert(source.includes('include_str!("🧪️tests/🧫️fixtures/🔣️.json")') && source.includes(`fn ${law}(`));
     assert(source.includes("impl RetainedSprVerification") && !source.includes("fn push("), "metadata must observe the existing scanner, not parse a second framing grammar");
     if (segments.includes("--oracle-only")) return;
     assert(readFileSync(join(owner, "../🦀️.rs"), "utf8").includes("pub mod record;"), "retained record observation remains unmounted");
@@ -345,7 +347,7 @@ class PresencePeerCodecScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("presence-peer-codec-check accepts only --oracle-only");
     const { default: Ajv } = await import("ajv");
-    const owner = join(this.root, "../../🧫️fixtures/👥️presence-peer-codec-v1");
+    const owner = join(this.root, "../../🧪️tests/🧫️fixtures/👥️presence-peer-codec-v1");
     const fixture = JSON.parse(readFileSync(join(owner, "🔣️.json"), "utf8"));
     
     

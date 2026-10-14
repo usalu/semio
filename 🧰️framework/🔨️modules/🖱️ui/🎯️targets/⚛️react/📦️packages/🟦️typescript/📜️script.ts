@@ -1,15 +1,16 @@
 #!/usr/bin/env bun
-import { typecheckProject } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️typescript/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { resolve as compilerStatePath } from "node:path";
+import { typecheckProject } from "../../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 🧭️ Owns generic React lint, test, typecheck and canonical architecture routes. */
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { cmdBudgetMs } from "../../../../../🏃️process/⏱️budget/🟦️.ts";
-import { runOwnedCommand } from "../../../../../🏃️process/🎛️owned-execution/🟦️.ts";
-import { resolveTestLevel } from "../../../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { runVitestV1, readVitestPolicyV1 } from "../../../../../🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { cmdBudgetMs } from "../../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { runOwnedCommand } from "../../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { resolveTestLevel } from "../../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { runVitestV1, readVitestPolicyV1 } from "../../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 class LintScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -34,7 +35,7 @@ class CanonicalArchitectureScript extends BundleScript {
 
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await typecheckProject({ workspace: this.repoRoot, cwd: this.root, project: "tsconfig.json", owner: "ui-react:typescript", args: segments, timeoutMs: 120_000, execution: { signal: this.invocation.control.signal } });
+    await typecheckProject({ workspace: this.repoRoot, stateRoot: compilerStatePath(this.repoRoot, ".cache", "framework"), leaseDirectory: compilerStatePath(this.repoRoot, ".cache", "framework", "leases"), invocation: this.invocation, cwd: this.root, project: "tsconfig.json", owner: "ui-react:typescript", args: segments, timeoutMs: 120_000 });
   }
 }
 

@@ -269,7 +269,7 @@ pub(crate) struct Generation3dSnapshotDsl {
 pub(crate) fn generation3d_document_spec_controlled(control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordSpec,ValueError>{Generation3dSnapshotDsl::__dsl_spec_controlled(control)}
 //#region 🔖️HandcraftedArtifactCodecs
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
-impl store::os_store::serialization::ArtifactDsl for Generation3dSnapshotDsl {
+impl pack::snapshot::ArtifactDsl for Generation3dSnapshotDsl {
     const EXTENSION: &'static str = "generation3d";
     fn envelope_id() -> &'static str {
         "procedural.generation3d"
@@ -284,7 +284,7 @@ impl store::os_store::serialization::ArtifactDsl for Generation3dSnapshotDsl {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -415,16 +415,16 @@ pub(crate) fn generation3d_document_from_dsl(parsed: Generation3dSnapshotDsl) ->
     })
 }
 
-impl store::os_store::serialization::ArtifactDsl for Generation3dSnapshot {
+impl pack::snapshot::ArtifactDsl for Generation3dSnapshot {
     const EXTENSION: &'static str = "generation3d";
 
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let parsed = <Generation3dSnapshotDsl as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?;
+        let parsed = <Generation3dSnapshotDsl as pack::snapshot::ArtifactDsl>::parse_dsl(text)?;
         generation3d_document_from_dsl(parsed)
     }
 
     fn print_dsl(&self) -> String {
-        <Generation3dSnapshotDsl as store::os_store::serialization::ArtifactDsl>::print_dsl(&generation3d_document_to_dsl(self))
+        <Generation3dSnapshotDsl as pack::snapshot::ArtifactDsl>::print_dsl(&generation3d_document_to_dsl(self))
     }
 }
 
@@ -433,12 +433,12 @@ impl store::os_store::serialization::ArtifactDsl for Generation3dSnapshot {
 
 /// 📖️ Parses `.generation3d` DSL text into a `Generation3dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Generation3dSnapshot, semio_framework_diagnostic::TextError> {
-    <Generation3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <Generation3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Generation3dSnapshot` back to `.generation3d` DSL text.
 pub fn print_dsl(document: &Generation3dSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(document)
+    pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -463,7 +463,7 @@ mod source_examples {
 use super::*;
 use crate::standards::v1::subsets::any::schema::*;
 use crate::Generation3dSnapshot;
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
 /// 📄️ The `procedural3d-play` "default" document — parsed from the bundled "hexagonal mushroom
 /// column" example host_snapshot.
 pub fn default_snapshot() -> Generation3dSnapshot {

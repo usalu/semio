@@ -193,8 +193,8 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     let node_id = main::encode_path_id(&[main::member_segment(name_index)]);
     let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());
     dispatch_settled(&mut app, "set-node", &[("nodeId", &node_id), ("revision", &revision), ("value", "\"semio-edited\"")]).await.expect("set-node settles");
-    let printed = <JsonSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&app.snapshot().expect("json snapshot"));
-    let restored=<JsonSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&printed).expect("owned logical edit payload");assert_eq!(restored,app.snapshot().expect("json snapshot"));let JsonValue::Object{members}=&restored.value else{panic!("edited object")};assert_eq!(members[name_index].value,JsonValue::String{value:"semio-edited".into()});
+    let printed = <JsonSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&app.snapshot().expect("json snapshot"));
+    let restored=<JsonSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).expect("owned logical edit payload");assert_eq!(restored,app.snapshot().expect("json snapshot"));let JsonValue::Object{members}=&restored.value else{panic!("edited object")};assert_eq!(members[name_index].value,JsonValue::String{value:"semio-edited".into()});
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 

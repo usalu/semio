@@ -5,7 +5,7 @@ use semio_framework_value::{DslValue, NativeDecodeControl, ToValue};
 use pack::intrinsic::IntrinsicFormat;
 use semio_framework_dsl_record::{FieldSpec, FieldValue, RecordLayout, RecordSpec, RecordValue, Shape};
 use serde_json::Value;
-fn corpus()->Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn corpus()->Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn encoded(value:DslValue,format:IntrinsicFormat)->Vec<u8>{
  let spec=RecordSpec::new(None,RecordLayout::Lines,vec![FieldSpec::new(1,"value",Shape::Value)]);
  let record=RecordValue{fields:[(1,FieldValue::Value(value))].into_iter().collect()};
@@ -58,14 +58,14 @@ fn canonical_scene_commit_applies_all_original_adornments_and_explicit_hover_cle
 struct SettingsOracle {font_px:f64,line_height:f64,show_line_numbers:bool,tab_size:usize}
 impl Default for SettingsOracle {
  fn default()->Self {
-  let corpus:Value=serde_json::from_str(include_str!("../🧫️fixtures/⚙️settings/🔣️.json")).unwrap();let defaults=&corpus["defaults"];
+  let corpus:Value=serde_json::from_str(include_str!("🧫️fixtures/⚙️settings/🔣️.json")).unwrap();let defaults=&corpus["defaults"];
   Self {font_px:defaults["fontPx"].as_f64().unwrap(),line_height:defaults["lineHeight"].as_f64().unwrap(),show_line_numbers:defaults["showLineNumbers"].as_bool().unwrap(),tab_size:defaults["tabSize"].as_u64().unwrap() as usize}
  }
 }
 
 #[test]
 fn canonical_scene_settings_defaults_match_the_independent_serde_oracle_and_each_cancellation_boundary() {
- let corpus:Value=serde_json::from_str(include_str!("../🧫️fixtures/⚙️settings/🔣️.json")).unwrap();
+ let corpus:Value=serde_json::from_str(include_str!("🧫️fixtures/⚙️settings/🔣️.json")).unwrap();
  for row in corpus["cases"].as_array().unwrap() {
   let oracle=serde_json::from_value::<SettingsOracle>(row["input"].clone());assert_eq!(oracle.is_ok(),row["accepted"].as_bool().unwrap(),"{} serde",row["id"]);
   if let Ok(oracle)=oracle {assert_eq!(serde_json::to_value(oracle).unwrap(),row["expected"],"{} fixture oracle",row["id"]);}

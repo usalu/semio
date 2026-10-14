@@ -8,7 +8,7 @@ import { resolve } from "node:path";
 import { minimatch } from "minimatch";
 
 const owner = resolve(import.meta.dir, "../../..");
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🏛️ownership/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧪️tests/🧫️fixtures/🏛️ownership/🔣️.json"), "utf8"));
 assert.equal(new Set(fixture.traits.map((row: {name: string}) => row.name)).size, 5);
 const semantic = readFileSync(resolve(owner, fixture.semanticOwner), "utf8");
 for (const row of fixture.traits as {name: string; owner: string}[]) {
@@ -46,7 +46,7 @@ for(const key of ["typescriptBootstrap","typescriptWire"]as const)test(`Original
 });
 
 test("Original Bootstrap Corpus Has a Closed Schema and Independent SHA-256",async()=>{
- const corpus=JSON.parse(readFileSync(resolve(owner,"🧫️fixtures/🚀️artifact-bootstrap/🔣️.json"),"utf8"));
+ const corpus=JSON.parse(readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/🚀️artifact-bootstrap/🔣️.json"),"utf8"));
  const schema=JSON.parse(readFileSync(resolve(owner,"🚪️io/📥️bootstrap/🧬️schema/🔣️.json"),"utf8")),oracle=new Ajv2020({strict:true}).compile(schema);
  const foreign=structuredClone(corpus);foreign.artifact.sourceAuthority=1;
  for(const [value,accepted]of [[corpus,true],[foreign,false]]as const){expect(validateJsonSchemaSubset(schema,value).length===0).toBe(accepted);expect(Boolean(oracle(value))).toBe(accepted);}
@@ -64,7 +64,7 @@ test("Original Client and Server Frame Bytes Agree With Independent Protobuf Bod
  const codec=await import("../../💾️binary/📡️wire/🟦️.ts"),protobuf=await import("protobufjs");
  const rows=[["🎟️client-credit-grant","client",5],["📣️client-preview-publish","client",3],["🙋️client-presence","client",4],["🎫️server-credit-grant","server",7],["🚨️server-error","server",8],["🪪️server-session","server",9]]as const;
  for(const [name,side,tag]of rows){
-  const bytes=readFileSync(resolve(owner,`🧫️fixtures/📡️wire/${name}/💾️.bin`)),reader=protobuf.Reader.create(bytes),writer=protobuf.Writer.create().uint32(bytes[0]).uint32(tag);
+  const bytes=readFileSync(resolve(owner,`🧪️tests/🧫️fixtures/📡️wire/${name}/💾️.bin`)),reader=protobuf.Reader.create(bytes),writer=protobuf.Writer.create().uint32(bytes[0]).uint32(tag);
   expect(bytes[1]).toBe(tag);reader.pos=2;let frame:any;
   if(tag===5||tag===7){const n=reader.uint64().toNumber();frame={CreditGrant:{n}};writer.uint64(n);}
   else if(tag===3){const key=reader.string(),seq=reader.uint64().toNumber(),payload=Array.from(reader.bytes());frame={PreviewPublish:{key,seq,payload}};writer.string(key).uint64(seq).bytes(payload);}
@@ -150,7 +150,7 @@ test("Presence Binary IO Implements Original Semantic Types Outside the Componen
 test("Original Binary Primitive Bytes Match the Neutral Corpus and Protobufjs", async () => {
  const binary = await import("../../💾️binary/🟦️.ts");
  const protobuf = await import("protobufjs");
- const corpus = JSON.parse(readFileSync(resolve(owner, "🚪️io/💾️binary/🧫️fixtures/🔣️.json"), "utf8"));
+ const corpus = JSON.parse(readFileSync(resolve(owner, "🚪️io/💾️binary/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
  const schema = JSON.parse(readFileSync(resolve(owner, "🚪️io/💾️binary/🧬️schema/🔣️.json"), "utf8"));
  expect(validateJsonSchemaSubset(schema, corpus)).toHaveLength(0);
  expect(new Ajv2020({ strict: true }).compile(schema)(corpus)).toBe(true);
@@ -211,7 +211,7 @@ test("Strict Document Backbone Bytes Are Owned by IO and Retention Stays Semanti
 
 test("Strict Backbone IO Preserves Original Thirty-Case Corpus and Independent Protobuf Bytes", async () => {
  const codec=await import("../../💾️binary/🔗️causal/🧮️backbone/🟦️.ts"),protobuf=await import("protobufjs");
- const corpus=JSON.parse(readFileSync(resolve(owner,"🔗️causal/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json"),"utf8"));
+ const corpus=JSON.parse(readFileSync(resolve(owner,"🔗️causal/🧪️tests/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json"),"utf8"));
  const hex=(bytes:Uint8Array)=>Buffer.from(bytes).toString("hex");
  const project=(envelopes:readonly any[])=>envelopes.map(envelope=>({mutationId:envelope.mutation_id,documentId:envelope.document_id,actor:envelope.actor,dependencies:envelope.dependencies,observed:envelope.observed,target:envelope.target,diff:{schema:envelope.diff.schema,payloadHex:hex(envelope.diff.payload)},inverse:{schema:envelope.inverse.schema,payloadHex:hex(envelope.inverse.payload)},timestamp:{actor:envelope.timestamp.actor.toString(),physicalMs:envelope.timestamp.physical_ms.toString(),logical:envelope.timestamp.logical.toString()},transaction:envelope.transaction,verb:envelope.verb}));
  let acceptedCases=0,deniedCases=0;
@@ -241,7 +241,7 @@ test("Strict Backbone IO Preserves Original Thirty-Case Corpus and Independent P
 
 test("Extracted Presence IO Preserves the Complete Original Strict Corpus and Protobuf Bytes", async () => {
  const codec=await import("../../💾️binary/👥️presence/🟦️.ts"), protobuf=await import("protobufjs");
- const corpus=JSON.parse(readFileSync(resolve(owner,"🧫️fixtures/👥️presence-peer-codec-v1/🔣️.json"),"utf8"));
+ const corpus=JSON.parse(readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/👥️presence-peer-codec-v1/🔣️.json"),"utf8"));
  expect(codec.PRESENCE_PEER_WIRE_LIMITS_V1).toEqual(corpus.limits);
  let independentCases=0;
  for(const row of corpus.cases){

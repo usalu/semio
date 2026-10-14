@@ -13,7 +13,7 @@ import { Tree } from "../../../../../../../🔨️modules/🖱️ui/🧱️eleme
 import { parseUiTheme } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/🌓️theme/🟦️.ts";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "🎨️settings-theme-publication", "🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "🎨️settings-theme-publication", "🔣️.json"), "utf8"));
 
 const customThemeId = (label: string) => `custom.${label.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`;
 

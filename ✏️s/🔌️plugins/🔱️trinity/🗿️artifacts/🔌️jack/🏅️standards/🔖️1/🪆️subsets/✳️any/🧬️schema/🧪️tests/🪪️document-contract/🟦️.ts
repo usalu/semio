@@ -16,7 +16,7 @@ const schema = (url: URL): AnySchema => JSON.parse(readFileSync(url, "utf8"));
 
 /** 🪪️ Proves Jack's production parsers and Ajv share the native child-handle document boundary. */
 export function testJackDocumentContract(): void {
-  const cases = json(new URL("../../🧫️fixtures/🪪️document/🔣️.json", import.meta.url)) as {
+  const cases = json(new URL("../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json", import.meta.url)) as {
     snapshotFixture: string;
     diffFixture: string;
     expectedChildKind: string;
@@ -49,7 +49,7 @@ export function testJackDocumentContract(): void {
   for (const schema of [artifactSchema, snapshotSchema, diffSchema] as Array<{ properties: { content: Record<string, unknown> } }>) {
     assert.equal(schema.properties.content["x-semio-child-kind"], cases.expectedChildKind);
   }
-  const fixtureRoot = join(import.meta.dir, "../../../🧫️fixtures/🧬️mutations");
+  const fixtureRoot = join(import.meta.dir, "../../../🧪️tests/🧫️fixtures/🧬️mutations");
   const snapshotFixtures = readdirSync(fixtureRoot, { recursive: true })
     .map((path) => String(path).replaceAll("\\", "/"))
     .filter((path) => path.includes("/📸️snapshot/") && path.endsWith("/🔣️.json"));

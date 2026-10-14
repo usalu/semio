@@ -1,6 +1,7 @@
 //! 🧊️ Explicit GLTF semantic entities retain independently owned document and buffer state.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v2_0::subsets::any::schema::snapshot::*;
-use {semio_framework_os_kernel::os_store::serialization::ArtifactSqliteSnapshot,semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io_schema::IoError,semio_framework_os_kernel::io_schema::IoOutcome,semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase,semio_framework_os_kernel::sqlite_snapshot::SqliteRow,semio_framework_os_kernel::sqlite_snapshot::SqliteValue,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase,semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema,semio_framework_os_kernel::sqlite_snapshot::artifact::Cell,semio_framework_os_kernel::sqlite_snapshot::artifact::Projection,semio_framework_os_kernel::sqlite_snapshot::artifact::Reconstruction,semio_framework_os_kernel::sqlite_snapshot::artifact::FloatColumn,semio_framework_os_kernel::sqlite_snapshot::artifact::FloatRow,semio_framework_os_kernel::sqlite_snapshot::artifact::insert_ieee754,semio_framework_os_kernel::sqlite_snapshot::artifact::insert_key_ieee754};
+use {semio_framework_os_kernel::os_store::serialization::ArtifactSqliteSnapshotHost,semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io_schema::IoError,semio_framework_os_kernel::io_schema::IoOutcome,semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase,semio_framework_os_kernel::sqlite_snapshot::SqliteRow,semio_framework_os_kernel::sqlite_snapshot::SqliteValue,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase,semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema,semio_framework_os_kernel::sqlite_snapshot::artifact::Cell,semio_framework_os_kernel::sqlite_snapshot::artifact::Projection,semio_framework_os_kernel::sqlite_snapshot::artifact::Reconstruction,semio_framework_os_kernel::sqlite_snapshot::artifact::FloatColumn,semio_framework_os_kernel::sqlite_snapshot::artifact::FloatRow,semio_framework_os_kernel::sqlite_snapshot::artifact::insert_ieee754,semio_framework_os_kernel::sqlite_snapshot::artifact::insert_key_ieee754};
 
 #[path="📄️document/💰️backing/🦀️.rs"]mod document;
 #[path="🌳️node/💰️backing/🦀️.rs"]mod node;
@@ -54,20 +55,14 @@ use backing::Read;
 #[path="🚦️native/🦀️.rs"]mod native;
 
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
-impl ArtifactSqliteSnapshot for GltfSnapshot{
+impl ArtifactSqliteSnapshotHost for GltfSnapshot{
  fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native::decode(payload,crate::standards::v2_0::subsets::any::io::binary::snapshot::owned_pack::controlled_spec_producer(),crate::standards::v2_0::subsets::any::io::binary::snapshot::owned_pack::reconstruct_record_controlled,control,native_control.native())}
  fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{encoding::native_footprint(self,control)?;crate::standards::v2_0::subsets::any::io::binary::snapshot::owned_pack::encode_native(self,encoding,control,native_owner)}
  fn retire_sqlite_snapshot(self){<GltfDocument as semio_framework_dsl_record::DslField>::retire_decoded(self.document);}
- const SQLITE_SCHEMA:&'static str=SQLITE_SCHEMA;
+ 
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{encoding::native_footprint(self,control)}
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
-        let mut write=Write::new(control)?;document::project(&mut write,self)?;node::project(&mut write,&self.document.nodes)?;mesh::project(&mut write,&self.document.meshes)?;buffer::project(&mut write,&self.document)?;material::project(&mut write,&self.document.materials)?;texture::project(&mut write,&self.document)?;skin::project(&mut write,&self.document.skins)?;animation::project(&mut write,&self.document.animations)?;camera::project(&mut write,&self.document.cameras)?;write.finish()
-        
-    }
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
-        let mut read=Read::new(database,control)?;let mut owner=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(document::reconstruct(&mut read)?,GltfSnapshot::retire_sqlite_snapshot);let snapshot=owner.as_mut();snapshot.document.nodes=node::reconstruct(&mut read)?;snapshot.document.meshes=mesh::reconstruct(&mut read)?;buffer::reconstruct(&mut read,&mut snapshot.document)?;snapshot.document.materials=material::reconstruct(&mut read)?;texture::reconstruct(&mut read,&mut snapshot.document)?;snapshot.document.skins=skin::reconstruct(&mut read)?;snapshot.document.animations=animation::reconstruct(&mut read)?;snapshot.document.cameras=camera::reconstruct(&mut read)?;read.finish()?;Ok(owner.take())
-        
-    }
+ 
+ 
  fn validate_sqlite_snapshot_subset(&self,dialect:&ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<IoOutcome<()>,IoError>{
   (|| -> Result<IoOutcome<()>,ValueError>{
   control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;
@@ -85,6 +80,17 @@ impl ArtifactSqliteSnapshot for GltfSnapshot{
   control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,total,total)?;Ok(IoOutcome::clean(()))
   })().map_err(IoError::from_value_error)
  }
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for GltfSnapshot {
+const SQLITE_SCHEMA:&'static str=SQLITE_SCHEMA;
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
+        let mut write=Write::new(control)?;document::project(&mut write,self)?;node::project(&mut write,&self.document.nodes)?;mesh::project(&mut write,&self.document.meshes)?;buffer::project(&mut write,&self.document)?;material::project(&mut write,&self.document.materials)?;texture::project(&mut write,&self.document)?;skin::project(&mut write,&self.document.skins)?;animation::project(&mut write,&self.document.animations)?;camera::project(&mut write,&self.document.cameras)?;write.finish()
+        
+    }
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+        let mut read=Read::new(database,control)?;let mut owner=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(document::reconstruct(&mut read)?,GltfSnapshot::retire_sqlite_snapshot);let snapshot=owner.as_mut();snapshot.document.nodes=node::reconstruct(&mut read)?;snapshot.document.meshes=mesh::reconstruct(&mut read)?;buffer::reconstruct(&mut read,&mut snapshot.document)?;snapshot.document.materials=material::reconstruct(&mut read)?;texture::reconstruct(&mut read,&mut snapshot.document)?;snapshot.document.skins=skin::reconstruct(&mut read)?;snapshot.document.animations=animation::reconstruct(&mut read)?;snapshot.document.cameras=camera::reconstruct(&mut read)?;read.finish()?;Ok(owner.take())
+        
+    }
 }
 
 #[cfg(test)]

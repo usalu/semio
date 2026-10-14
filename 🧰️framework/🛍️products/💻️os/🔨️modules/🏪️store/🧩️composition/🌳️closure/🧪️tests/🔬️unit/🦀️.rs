@@ -121,7 +121,7 @@ fn validates(source: &FixtureSource, fuel: u64) -> bool {
 
 #[test]
 fn owned_document_closure_matches_neutral_graphs_and_independent_limits() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["continuationCases"].as_array().unwrap() {
         let mut source = chain(row["beforeMembers"].as_u64().unwrap() as usize);
         let mut cursor = OwnedDocumentClosure::new(OperationId(11), Generation(13), 7, 100);

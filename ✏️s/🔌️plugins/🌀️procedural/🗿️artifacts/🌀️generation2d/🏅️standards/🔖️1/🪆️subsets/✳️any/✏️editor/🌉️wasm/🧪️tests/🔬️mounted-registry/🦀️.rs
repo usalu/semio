@@ -440,8 +440,8 @@ mod mounted_laws {
     fn domain_local_static_verifier_rejects_raw_routes_and_proves_two_dimensional_coverage() {
         let owner_source = include_str!("../../../../🚪️io/💾️binary/🧬️mutations/🦀️.rs");
         let snapshot_source = include_str!("../../../../🚪️io/💾️binary/📸️snapshot/🦀️.rs");
-        let lifecycle_fixture = include_str!("../../../../🧫️fixtures/🧷️p8yz-a-retained-mounted-laws.json");
-        let owner_fixture = include_str!("../../../../🧫️fixtures/👑️p8yz-a-owner-catalog-laws.json");
+        let lifecycle_fixture = include_str!("../../../../🧪️tests/🧫️fixtures/🧷️p8yz-a-retained-mounted-laws.json");
+        let owner_fixture = include_str!("../../../../🧪️tests/🧫️fixtures/👑️p8yz-a-owner-catalog-laws.json");
 
         assert!(owner_source.contains("mutations.clear-widget-layout.2d-only"));
         assert!(owner_source.contains("GENERATION2D_RETAINED_SCHEMA_DISCRIMINATOR"));

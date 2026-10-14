@@ -1,0 +1,23 @@
+# Typed File Frame and Error Custody Audit
+
+Read-only current source inspection, no builds. Actual io_mechanism typed_snapshot_codec currently clones whole registered ArtifactCodec and formats an unregistered coordinate error. Replace it with borrowed registry validation returning unit: hold read guard only long enough to locate exact dialect/provider and compare Some(TypeId::of<P>()) plus provider.schema==P::SQLITE_SCHEMA, then drop guard. Literal unsupported/invariant/type-mismatch causes avoid unadmitted codec/coordinate allocations; do not carry lock across callbacks or await.
+
+## Receiving result semantics
+
+NativeSnapshotOwner::receive_nested returns Result<O,ValueError>. With O=IoResult<FileBytes/P>, an inner IoError is a genuine owned output: owner.receive installs it in frame.output, retires intermediate scratch, checks publication demand/callback, and only then publishes the inner Err. IoError RetireOwned preserves both ValueError and diagnostic Vec; IoOutcome preserves value and diagnostic Vec. Thus a successfully published IoError need not leave original native recipient nonempty: its diagnostics now belong to the caller and require caller-funded retirement. If original retirement/publication fails, that entire IoError/IoOutcome remains under the original receiving recipient.
+
+Do not flatten `Ok(Err(io_error))` into an outer ValueError before placing diagnostic owners in a retained field, or discard diagnostics through map_err. Conversely, do not fabricate a terminal recipient requirement for every inner published error. Transport/native error and semantic IoError are different boundaries with exact custody evidence.
+
+## Frame recommendation
+
+TypedSnapshotFileFrame<P> should own `database:Option<SqliteDatabase>`, `snapshot:Option<P>` (import only), `validation:Option<IoResult<()>>`, `metadata:Option<SqliteTable>`, `dialect:Option<ArtifactDialect>`, `tables:Vec<SqliteTable>` replacement backing, physical parser/writer staged owners, and retained final `result:Option<IoResult<...>>` if result requires a transfer seam. Export source P remains borrowed; retain no cloned source. Metadata/frame constructors must be paid before owned backing; P and result types require genuine RetireOwned support. Either direction-specific export/import frame types or a clear typed output parameter avoids unused forced SnapshotEncoding/native payload fields.
+
+Run actual receiving P/R and directional validator; install returned validation including diagnostics before inspecting Error/Fatal severity. On fatal semantic diagnostic, move diagnostics into retained IoError result with a literal cause. Keep database/snapshot/physical owners alive while that result moves into native output, then retire them under original remaining grant. Explicitly account header transfers/Vec shifts and source/body span work; retain physical-stage scratch from High's actual receiving_into APIs rather than cold helper locals.
+
+## Cold paths to remove
+
+Old typed export/import call cold snapshot.to_sqlite_database/P::from_sqlite_database, cold validate_snapshot_schema and validate_typed_snapshot_subset. The latter calls codec_registry::validate_owned_sqlite_snapshot_subset, whose implementation invokes cold subset validation and formats `owned snapshot violates subset <coordinate>`. This helper has no original directional owner and must not be used by the new supplied-owner file path. Call P::validate_sqlite_snapshot_subset_decoding/encoding directly, retain its actual IoOutcome/IoError and separately enforce fatal severity using the same literal semantic cause policy as native-retirement::validation.
+
+Metadata receiving/schema validators already provide paid borrowed Port paths but their helper-local bodies must settle full owner receipt on error. All initial registry/type/schema checks before frame birth must still promote the original owner's prior receipt at outer boundary. TXT Settlement wrappers demonstrate this outer `result.map_err(...owner.progress())` rule for ValueError; IoResult wrapper must similarly update io_error.cause without replacing its diagnostic Vec or allocating a formatted message. Inner IoError cause published by receive may need final owner progress promotion after returned publication because its original validator receipt predates intermediate retirement/publication; mutate cause receipt in place after success of outer receiving, without any fallible owned allocation.
+
+Source/Native laws should independently cover warning diagnostics, fatal diagnostics, literal native/SQL cancellation, error output publication refusal, nonzero prior receipts, original cleanup and no codec clone on wrong typed registry lookup. No runtime qualification follows from source inspection.

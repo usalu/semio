@@ -1,0 +1,624 @@
+{
+  "schema": "remodeling.scene",
+  "id": "remodeling-fixture",
+  "streams": [
+    {
+      "id": "stream-a",
+      "name": "Front",
+      "kind": "video",
+      "cameraId": "cam-a",
+      "syncOffsetMs": {
+        "bits": "4029000000000000"
+      },
+      "fpsHint": {
+        "bits": "403e000000000000"
+      },
+      "frames": [
+        {
+          "index": 0,
+          "timestampMs": {
+            "bits": "0000000000000000"
+          },
+          "assetId": "asset-a"
+        },
+        {
+          "index": 1,
+          "timestampMs": {
+            "bits": "4044000000000000"
+          },
+          "assetId": "asset-a"
+        }
+      ],
+      "source": {
+        "name": "front.mp4",
+        "container": "mp4",
+        "codec": "avc",
+        "durationMs": {
+          "bits": "40b9000000000000"
+        },
+        "frameCount": 160,
+        "width": 1024,
+        "height": 768
+      }
+    },
+    {
+      "id": "stream-b",
+      "name": "Side",
+      "kind": "image-sequence",
+      "cameraId": null,
+      "syncOffsetMs": {
+        "bits": "0000000000000000"
+      },
+      "fpsHint": {
+        "bits": "4038000000000000"
+      },
+      "frames": [
+        {
+          "index": 0,
+          "timestampMs": {
+            "bits": "0000000000000000"
+          },
+          "assetId": "asset-a"
+        }
+      ],
+      "source": null
+    }
+  ],
+  "assets": {
+    "asset-a": {
+      "childId": "remodeling-asset-45070beb0101de64",
+      "target": {
+        "artifactId": "asset-a-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "asset-dsm": {
+      "childId": "remodeling-asset-a462ec9257d3fccf",
+      "target": {
+        "artifactId": "asset-dsm-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "asset-spare": {
+      "childId": "remodeling-asset-a6becb587255f206",
+      "target": {
+        "artifactId": "asset-spare-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    }
+  },
+  "durableArtifacts": {
+    "remodeling-asset-45070beb0101de64": {
+      "kind": "image",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 480,
+      "chunks": [
+        [
+          102,
+          114,
+          97,
+          109,
+          101,
+          45,
+          97
+        ]
+      ]
+    },
+    "remodeling-asset-a462ec9257d3fccf": {
+      "kind": "image",
+      "mime": "image/tiff",
+      "width": 128,
+      "height": 128,
+      "chunks": [
+        [
+          116,
+          111,
+          121,
+          45,
+          100,
+          115,
+          109,
+          45,
+          116,
+          105,
+          108,
+          101
+        ]
+      ]
+    },
+    "remodeling-asset-a6becb587255f206": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 64,
+      "height": 64,
+      "chunks": [
+        [
+          115,
+          112,
+          97,
+          114,
+          101,
+          45,
+          114,
+          97,
+          115,
+          116,
+          101,
+          114
+        ]
+      ]
+    }
+  },
+  "calibration": {
+    "cameras": [
+      {
+        "id": "cam-a",
+        "label": "Front",
+        "model": "brownConrady",
+        "fx": {
+          "bits": "408f400000000000"
+        },
+        "fy": {
+          "bits": "408f400000000000"
+        },
+        "cx": {
+          "bits": "4080000000000000"
+        },
+        "cy": {
+          "bits": "4078000000000000"
+        },
+        "skew": {
+          "bits": "0000000000000000"
+        },
+        "distortion": [
+          {
+            "bits": "3d800000"
+          },
+          {
+            "bits": "bd000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          }
+        ],
+        "rmsReprojectionPx": {
+          "bits": "3f000000"
+        },
+        "locked": false
+      },
+      {
+        "id": "cam-b",
+        "label": "Side",
+        "model": "pinhole",
+        "fx": {
+          "bits": "4089000000000000"
+        },
+        "fy": {
+          "bits": "4089000000000000"
+        },
+        "cx": {
+          "bits": "4074000000000000"
+        },
+        "cy": {
+          "bits": "406e000000000000"
+        },
+        "skew": {
+          "bits": "0000000000000000"
+        },
+        "distortion": [
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          }
+        ],
+        "rmsReprojectionPx": null,
+        "locked": true
+      }
+    ],
+    "rig": [
+      {
+        "cameraId": "cam-a",
+        "rotationWxyz": [
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          }
+        ],
+        "translationM": [
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          }
+        ]
+      }
+    ]
+  },
+  "params": {
+    "ingest": {
+      "frameSampleStride": 5,
+      "maxFrames": 200,
+      "downscaleLongEdgePx": 1600,
+      "minSharpness": {
+        "bits": "3e800000"
+      }
+    },
+    "feature": {
+      "detector": "orb",
+      "targetCount": 4000,
+      "octaves": 4,
+      "edgeThreshold": {
+        "bits": "41200000"
+      }
+    },
+    "matching": {
+      "matcher": "brute-force",
+      "ratioTest": {
+        "bits": "3f400000"
+      },
+      "crossCheck": true,
+      "sequentialWindow": 8,
+      "maxPairsPerFrame": 16,
+      "loopClosure": true
+    },
+    "sfm": {
+      "ransacIterations": 1000,
+      "ransacThresholdPx": {
+        "bits": "40000000"
+      },
+      "minTrackLength": 3,
+      "baMaxIterations": 50,
+      "robustLoss": "huber",
+      "huberDeltaPx": {
+        "bits": "3fc00000"
+      }
+    },
+    "dense": {
+      "resolution": "medium",
+      "windowRadiusPx": 3,
+      "minViewConsistency": 3,
+      "confidenceThreshold": {
+        "bits": "3f000000"
+      },
+      "maxPoints": 500000
+    },
+    "mesh": {
+      "tsdfVoxelSizeMm": {
+        "bits": "40a00000"
+      },
+      "tsdfTruncationMm": {
+        "bits": "41a00000"
+      },
+      "decimateTargetTriangles": 200000,
+      "smoothingIterations": 2,
+      "textureEnabled": true,
+      "textureSize": 2048,
+      "guaranteeWatertight": true,
+      "holeFillMaxBoundaryVerts": 512,
+      "selfIntersectionCheck": false
+    },
+    "motion": {
+      "enabled": false,
+      "maxTracks": 64,
+      "trackWindowPx": 21,
+      "minTrackQuality": {
+        "bits": "3e800000"
+      },
+      "minTrackLengthFrames": 5
+    },
+    "geo": {
+      "enabled": false,
+      "originLon": null,
+      "originLat": null,
+      "originAlt": null,
+      "gsdM": {
+        "bits": "3d800000"
+      },
+      "dsmCellM": {
+        "bits": "3e000000"
+      },
+      "dtmFilterRadiusM": {
+        "bits": "40000000"
+      },
+      "orthoMaxPx": 4096
+    }
+  },
+  "gcps": [
+    {
+      "id": "gcp-corner",
+      "name": "Corner",
+      "worldPosition": [
+        {
+          "bits": "3ff0000000000000"
+        },
+        {
+          "bits": "4000000000000000"
+        },
+        {
+          "bits": "4008000000000000"
+        }
+      ],
+      "observations": [
+        {
+          "streamId": "stream-b",
+          "frameIndex": 0,
+          "pixel": [
+            {
+              "bits": "41200000"
+            },
+            {
+              "bits": "41a00000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gcp-ridge",
+      "name": "Ridge",
+      "worldPosition": [
+        {
+          "bits": "4010000000000000"
+        },
+        {
+          "bits": "4014000000000000"
+        },
+        {
+          "bits": "4018000000000000"
+        }
+      ],
+      "observations": []
+    }
+  ],
+  "results": {
+    "sparse": {
+      "points": {
+        "kind": "inline",
+        "values": [
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "40000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "40000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "40000000"
+          }
+        ]
+      },
+      "colors": null
+    },
+    "dense": {
+      "positions": {
+        "kind": "inline",
+        "values": [
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          }
+        ]
+      },
+      "colors": [
+        0,
+        0,
+        255
+      ],
+      "confidence": {
+        "kind": "inline",
+        "values": [
+          {
+            "bits": "3f000000"
+          }
+        ]
+      },
+      "classification": [
+        2
+      ]
+    },
+    "mesh": {
+      "mesh": {
+        "childId": "remodeling-mesh-901ccade3f60f8f1",
+        "target": {
+          "artifactId": "remodeling-mesh",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "mesh"
+          }
+        }
+      },
+      "source": "reconstructed",
+      "textureAssetId": "asset-a",
+      "watertight": {
+        "vertexCount": 512,
+        "triangleCount": 1020,
+        "boundaryEdgeCount": 0,
+        "boundaryLoopCount": 0,
+        "nonManifoldEdgeCount": 0,
+        "nonManifoldVertexCount": 0,
+        "connectedComponents": 1,
+        "consistentlyOriented": true,
+        "eulerCharacteristic": "2",
+        "genus": "0",
+        "signedVolume": {
+          "bits": "4029000000000000"
+        },
+        "selfIntersectionPairs": 0,
+        "closedFallbackUsed": false,
+        "isClosed": true,
+        "isTwoManifold": true,
+        "isWatertight": true
+      }
+    },
+    "trajectory": {
+      "poses": [
+        {
+          "cameraId": "cam-a",
+          "rotationWxyz": [
+            {
+              "bits": "3f800000"
+            },
+            {
+              "bits": "00000000"
+            },
+            {
+              "bits": "00000000"
+            },
+            {
+              "bits": "00000000"
+            }
+          ],
+          "translation": [
+            {
+              "bits": "00000000"
+            },
+            {
+              "bits": "00000000"
+            },
+            {
+              "bits": "00000000"
+            }
+          ]
+        },
+        {
+          "cameraId": "cam-a",
+          "rotationWxyz": [
+            {
+              "bits": "3f400000"
+            },
+            {
+              "bits": "3e800000"
+            },
+            {
+              "bits": "00000000"
+            },
+            {
+              "bits": "00000000"
+            }
+          ],
+          "translation": [
+            {
+              "bits": "3f000000"
+            },
+            {
+              "bits": "00000000"
+            },
+            {
+              "bits": "00000000"
+            }
+          ]
+        }
+      ]
+    },
+    "tracks": [
+      {
+        "id": "track-a",
+        "length": 42,
+        "class": "moving",
+        "meanSpeedMS": {
+          "bits": "3fc00000"
+        }
+      }
+    ],
+    "geo": {
+      "dsmAssetId": "asset-dsm",
+      "dtmAssetId": null,
+      "orthoAssetId": null
+    },
+    "qc": {
+      "reprojectionRmsPx": {
+        "bits": "3fe0000000000000"
+      },
+      "gcpCheckpointRmse": {
+        "bits": "3fd0000000000000"
+      },
+      "watertight": null,
+      "meanTrackLength": {
+        "bits": "40c00000"
+      },
+      "registeredFrameRatio": {
+        "bits": "3f800000"
+      },
+      "denseCoverageRatio": {
+        "bits": "3f400000"
+      },
+      "warnings": [
+        "low overlap on frame 12"
+      ]
+    }
+  }
+}

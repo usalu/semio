@@ -1,8 +1,0 @@
-{
-  "extensions": {
-    "state": "present",
-    "value": {
-      "KHR_lights_punctual": {}
-    }
-  }
-}

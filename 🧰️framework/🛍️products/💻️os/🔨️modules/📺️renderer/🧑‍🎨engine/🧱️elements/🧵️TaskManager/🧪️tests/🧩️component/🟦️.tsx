@@ -1,3 +1,4 @@
+import { fixtureOriginalWorkStock } from "../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🧵️TaskManager/component.test.tsx
 /** 🧪️ `🧵️TaskManager` tests: the pure scene-JSON builders (`taskManagerColumns`/
@@ -15,7 +16,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildTaskManagerTableScene, createTaskManagerDispatcher, installTasksV1, runtimeMetricsRowsV1, spawnedJobTasksV1, taskManagerColumns, taskManagerElapsedSecondsV1, taskManagerMetricCell, taskManagerRowAction, taskManagerRows, TaskManagerPanel, TaskManagerTasksPanel, TaskManagerWindow, toolCallTasksV1, toolRunTasksV1, TASK_MANAGER_UNOBSERVED_METRIC, type TaskManagerLabels, type TaskManagerRow, type TaskManagerSourcesV1, type TaskManagerTableCell, type TaskManagerTaskV1 } from "../../🟦️.tsx";
 import { type SpawnedJobRowV1 } from "../../../🔌️PluginRuntime/💼️job-ledger/🟦️.ts";
 import { type AgentConversationEntry } from "../../../🔗️AgentBridge/🟦️.tsx";
-import runningTasks from "../../🧫️fixtures/🏃️running-tasks.json";
+import runningTasks from "../🧫️fixtures/🏃️running-tasks.json";
 import { ActivationRegistry } from "../../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 import { ShardClient, type ShardBudget, type ShardWorkerLike } from "../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { OwnedResidentLedger } from "../../../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts";
@@ -130,7 +131,7 @@ describe("TaskManagerPanel", () => {
 const BUDGET: ShardBudget = { fuel: 1000, wallMs: 4, memoryBytes: 1 << 20, uiNodes: 100, mailboxLen: 16, maxEffects: 8, maxPatchBytes: 1 << 16 };
 
 function autoReplyingShardClient(): ShardClient {
-  return new ShardClient({
+  return new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(),
     residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }),
     shardCount: 1,
     createWorker: () => {

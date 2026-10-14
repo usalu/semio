@@ -144,14 +144,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🎼️set-frames/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🎼️set-frames/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:2d14c3f1dfaea2bf2a02ade2c76a3cb4bbd65705138a5ed21ca64abb0fa88dce",
           "bytes": 1928
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🎼️set-frames/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🎼️set-frames/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:09a807e81e750bbc40f0d05e992a3bbd66031993a93fd2060fc2ea816e9b333d",
           "bytes": 2359
@@ -186,14 +186,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🔖️set-id3v1/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🔖️set-id3v1/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:2d14c3f1dfaea2bf2a02ade2c76a3cb4bbd65705138a5ed21ca64abb0fa88dce",
           "bytes": 1928
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🔖️set-id3v1/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🔖️set-id3v1/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:677be29391827a6ec809344c40c24f58af47a85393149221676ed8bd294d2c14",
           "bytes": 754
@@ -228,14 +228,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🏷️set-id3v2/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-id3v2/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:2d14c3f1dfaea2bf2a02ade2c76a3cb4bbd65705138a5ed21ca64abb0fa88dce",
           "bytes": 1928
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🏷️set-id3v2/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-id3v2/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:3ea1eafa1255c19b0f3de964256c178a3bc8fa95071c9560b00162f25ae658a0",
           "bytes": 1972

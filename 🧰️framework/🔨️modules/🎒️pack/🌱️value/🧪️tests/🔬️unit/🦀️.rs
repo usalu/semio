@@ -942,7 +942,7 @@ fn retained_record_body_fault_is_inline_sticky_and_closes_exactly() {
 /// 🔃️ Schema maps sort key bytes while intrinsic Objects preserve exact ordered occurrences.
 #[test]
 fn schema_map_keys_are_canonical_and_intrinsic_objects_preserve_occurrences() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../🌱️value/🧫️fixtures/🔃️ordering/🔣️.json"))).expect("neutral ordering contract");
+    let fixture:serde_json::Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../🌱️value/🧪️tests/🧫️fixtures/🔃️ordering/🔣️.json"))).expect("neutral ordering contract");
     let map=|name:&str|FieldValue::Map(fixture["fieldMap"][name].as_array().unwrap().iter().map(|row|(row["key"].as_str().unwrap().to_owned(),FieldValue::Map(row["entries"].as_array().unwrap().iter().map(|entry|(entry["key"].as_str().unwrap().to_owned(),FieldValue::UInt(entry["value"].as_u64().unwrap()))).collect()))).collect());
     let unsorted=map("unsorted");let canonical=map("canonical");
     let spec=RecordSpec::new(None,RecordLayout::Inline,vec![FieldSpec::new(1,"maps",Shape::Map(Box::new(Shape::Map(Box::new(Shape::UInt)))))]);

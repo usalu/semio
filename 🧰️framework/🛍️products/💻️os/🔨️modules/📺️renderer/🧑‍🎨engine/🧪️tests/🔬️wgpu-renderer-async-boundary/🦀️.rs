@@ -513,7 +513,7 @@ fn renderer_asset_probe_keeps_pages_owned_across_chunk_boundaries_and_rejects_ma
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn glb_sub_element_id_attributes_survive_into_the_resident_mesh_table() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/📏️world3d-modelling/🔣️.json")).expect("modelling fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/📏️world3d-modelling/🔣️.json")).expect("modelling fixture");
     let row = &fixture["glbSubElementIds"];
     let attribute_names = (row["faceAttribute"].as_str().unwrap().to_string(), row["vertexAttribute"].as_str().unwrap().to_string());
     let face_ids: Vec<u32> = row["faceIds"].as_array().unwrap().iter().map(|id| id.as_u64().unwrap() as u32).collect();
@@ -667,8 +667,8 @@ fn close_owned_decoder_fixture(mut authority: WorldAssetIoAuthority, mut probe: 
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn embedded_glb_materials_publish_with_their_primitive_ranges_texture_and_vertex_colors() {
-    let bytes = include_bytes!("../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎨️world3d-glb-material/🧊️two-primitive.glb");
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎨️world3d-glb-material/🔣️.json")).expect("neutral GLB material fixture");
+    let bytes = include_bytes!("../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎨️world3d-glb-material/🧊️two-primitive.glb");
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎨️world3d-glb-material/🔣️.json")).expect("neutral GLB material fixture");
     let mut authority = WorldAssetIoAuthority::default();
     authority.reserve(1, 1, WorldAssetRequestKind::Glb, "two-primitive.glb", bytes.len()).unwrap();
     let mut owner = authority.take_next().unwrap();
@@ -770,7 +770,7 @@ fn embedded_glb_materials_publish_with_their_primitive_ranges_texture_and_vertex
 #[test]
 fn decoder_denied_original_invocation_preserves_exact_owner_and_receipt() {
     use semio_framework_job::InteractiveJob;
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖌️wgpu-document-owner-move/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🖌️wgpu-document-owner-move/🔣️.json")).unwrap();
     let (authority, probe) = owned_decoder_fixture();
     let token = probe.owner().owner().token();
     let mut job = RendererAssetDecodeJob::new(probe, Arc::new(AtomicBool::new(false)));
@@ -801,7 +801,7 @@ fn an_independent_decoder_job_preserves_its_exact_response_through_cancellation(
     use semio_framework_job::{InteractiveJob, StepOutcome};
     fn assert_send<T: Send>() {}
     assert_send::<RendererAssetDecodeJob>();
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();
     let (authority, probe) = owned_decoder_fixture();
     let token = probe.owner().owner().token();
     let cancelled = Arc::new(AtomicBool::new(false));
@@ -912,7 +912,7 @@ fn an_independent_decoder_job_recovers_its_response_from_an_exact_rejected_sessi
 #[cfg(not(target_arch = "wasm32"))]
 fn decoder_worker_boundary(cancel_after_ready: bool) {
     use std::time::{Duration, Instant};
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();
     let bytes = b"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1\" height=\"1\"></svg>";
     let mut authority = WorldAssetIoAuthority::default();
     authority.reserve(1, 1, WorldAssetRequestKind::ReferenceImage, "ready-cancel.svg", bytes.len()).unwrap();
@@ -973,7 +973,7 @@ fn an_independent_decoder_job_returns_a_ready_response_after_session_retirement(
 #[test]
 fn native_asset_response_transfers_each_credited_page_without_losing_its_bytes() {
     use semio_framework_job::{JobPayloadStream, RetainedJobPayloadWriter};
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️native-asset-response/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📄️native-asset-response/🔣️.json")).unwrap();
     assert_eq!(law["pageBytes"].as_u64().unwrap() as usize, WORLD_ASSET_RESPONSE_PAGE_BYTES);
     for case in law["cases"].as_array().unwrap() {
         let length = case["bytes"].as_u64().unwrap() as usize;
@@ -1030,7 +1030,7 @@ fn native_asset_response_transfers_each_credited_page_without_losing_its_bytes()
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn a_frame_candidate_never_advances_the_independently_owned_asset_decoder() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();
     let bytes = include_bytes!("../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
     let mut authority = WorldAssetIoAuthority::default();
     authority.reserve(1, 1, WorldAssetRequestKind::Glb, "catalogue-frame-isolation.glb", bytes.len()).unwrap();
@@ -1283,7 +1283,7 @@ fn native_reference_runtime() -> RuntimeMailbox {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn native_reference_decode_cancellation_keeps_encoded_and_decoded_owners_until_bounded_close() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️native-asset-response/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📄️native-asset-response/🔣️.json")).unwrap();
     let retirement = &law["referenceDecodeRetirement"];
     let mut io = WorldAssetIoAuthority::default();
     let token = io.reserve(1, 1, WorldAssetRequestKind::ReferenceImage, "reference.png", 4).expect("reference token");
@@ -1327,7 +1327,7 @@ fn native_reference_decode_cancellation_keeps_encoded_and_decoded_owners_until_b
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn native_reference_decode_phase_two_waiting_output_stays_in_the_mailbox_after_one_close_turn() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️native-asset-response/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📄️native-asset-response/🔣️.json")).unwrap();
     let retirement = &law["referenceDecodeRetirement"]["phaseTwoWaiting"];
     let mut io = WorldAssetIoAuthority::default();
     let token = io.reserve(1, 1, WorldAssetRequestKind::ReferenceImage, "waiting-reference.png", 4).expect("reference token");
@@ -1357,7 +1357,7 @@ fn native_reference_decode_phase_two_waiting_output_stays_in_the_mailbox_after_o
 fn native_reference_decode_running_worker_returns_its_encoded_and_decoded_owners_before_bounded_close() {
     use std::time::{Duration, Instant};
 
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️native-asset-response/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📄️native-asset-response/🔣️.json")).unwrap();
     let retirement = &law["referenceDecodeRetirement"]["phaseZero"];
     let input_bytes = retirement["encodedBytes"].as_u64().unwrap() as usize;
     let pixel_bytes = retirement["decodedPixelBytes"].as_u64().unwrap() as usize;
@@ -1561,7 +1561,7 @@ fn frame_deferred_cursor_advances_one_owned_operation_in_order() {
 fn renderer_input_retirement_drains_ready_handback_resident_cursor_and_staged_actions() {
     let runtime = native_reference_runtime();
     let mut interaction = frame_maintenance_test_owner(141, 0).interaction.take().unwrap();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧾️correlated-action-receipts/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧾️correlated-action-receipts/🔣️.json")).unwrap();
     let rows = fixture["receipts"].as_array().unwrap();
     let mut groups = Vec::new();
     for pair in rows.chunks(2) {
@@ -1882,7 +1882,7 @@ fn interrupted_frame_maintenance_execution_restores_before_incremental_recovery(
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn dropped_ordinary_frame_deferred_jobs_recover_the_exact_pair_and_close_remaining_actions_one_per_step() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📮️wgpu-frame-deferred-ownership/🔣️.json")).expect("frame deferred ownership fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📮️wgpu-frame-deferred-ownership/🔣️.json")).expect("frame deferred ownership fixture");
     for law in fixture["cases"].as_array().expect("ownership cases") {
         let generation = if law["dropAt"] == "queued" { 101 } else { 102 };
         let mut maintenance = frame_maintenance_test_owner(generation, 3);
@@ -2460,7 +2460,7 @@ fn presented_ink_intent_barrier_progresses_before_gpu_submit_and_holds_runtime_i
 
 #[test]
 fn component_close_retires_its_creating_frame_before_external_progress_and_readmits_after_terminal() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️component-close-frame-turn/🔣️.json")).expect("component-close frame-turn fixture");
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️component-close-frame-turn/🔣️.json")).expect("component-close frame-turn fixture");
     assert_ne!(law["closeHost"], law["liveHost"]);
     assert_eq!(law["maxCloseUnitsPerTurn"], 1);
     assert_eq!(law["expected"]["closeTerminal"], true);
@@ -2516,7 +2516,7 @@ fn the_present_watchdog_signature_carries_within_item_upload_progress() {
 #[test]
 fn original_decoder_close_hands_back_same_response_under_exact_independent_grant() {
     use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, RetainedCloneGrant, RetainedCloneProgress};
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();
     let row = &law["decoderClose"];
     let (authority, probe) = owned_decoder_fixture();
     let token = probe.owner().owner().token();
@@ -2550,38 +2550,60 @@ fn original_decoder_close_hands_back_same_response_under_exact_independent_grant
 }
 
 #[test]
-fn original_engine_packet_empty_backing_requires_its_actual_array_release_grant() {
+fn original_engine_packet_pages_require_actual_birth_and_release_grants() {
     use semio_framework_job::{InteractiveJobCloseStep, RetainedCloneGrant};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️frame-close/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/♻️frame-close/🔣️.json")).unwrap();
     assert_eq!(fixture["enginePacketBacking"]["slots"], FRAME_ENGINE_PACKET_CAPACITY);
     let caller = &fixture["caller"];
     let grant = RetainedCloneGrant { maximum_items: caller["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: caller["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: caller["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: caller["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: caller["maximumDepth"].as_u64().unwrap() as usize };
-    let mut owner = FrameEnginePackets::default();
+    let (mut owner, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(FrameEnginePackets::default);
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+    assert!(owner.terminal_is_empty());
+    assert_eq!(fixture["enginePacketBacking"]["pageSlots"], FRAME_ENGINE_PACKET_PAGE_SLOTS);
+    let layout = std::alloc::Layout::array::<Option<engine_canvas::EngineCanvasPacket>>(FRAME_ENGINE_PACKET_PAGE_SLOTS).unwrap();
+    assert!(layout.size() <= grant.maximum_capacity_bytes);
+    let mut caller = crate::fixture_original_turn::FixtureTurnV1::new(grant);
+    for refused in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_capacity_bytes: layout.size() - 1, ..grant }, RetainedCloneGrant { maximum_copy_bytes: layout.size() - 1, ..grant }] {
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.turn(|cx|cx.with_retained_loan(refused, |cx|owner.prepare_step(cx))));
+        assert_eq!(step.unwrap(), false);
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        assert!(owner.terminal_is_empty());
+    }
+    for index in 0..FRAME_ENGINE_PACKET_PAGES {
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.turn(|cx|owner.prepare_step(cx)));
+        assert_eq!(step.unwrap(), index + 1 == FRAME_ENGINE_PACKET_PAGES);
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (layout.size(), 0));
+    }
     assert!(owner.is_empty());
     assert!(!owner.terminal_is_empty());
-    let pointer = owner.slots.as_ref().unwrap().as_ptr();
+    let pointer = owner.slots[FRAME_ENGINE_PACKET_PAGES - 1].as_ref().unwrap().as_ptr();
     let demand = owner.backing_retirement_demands();
-    let layout = std::alloc::Layout::array::<Option<engine_canvas::EngineCanvasPacket>>(FRAME_ENGINE_PACKET_CAPACITY).unwrap();
     assert_eq!(demand.release_bytes, layout.size());
     for refused in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_copy_bytes: 0, ..grant }] {
         let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_backing_step(refused));
-        assert!(matches!(step, InteractiveJobCloseStep::Pending { progress } if progress == Default::default()));
-        assert_eq!(heap, (0, 0));
-        assert_eq!(owner.slots.as_ref().unwrap().as_ptr(), pointer);
+        assert!(matches!(step, Ok(InteractiveJobCloseStep::Pending { progress }) if progress == Default::default()));
+        assert_eq!((heap.requested_bytes,heap.released_bytes), (0, 0));
+        assert_eq!(owner.slots[FRAME_ENGINE_PACKET_PAGES - 1].as_ref().unwrap().as_ptr(), pointer);
     }
     let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_backing_step(RetainedCloneGrant { maximum_depth: 0, ..grant }));
-    assert!(matches!(step, InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::DepthLimit)));
-    assert_eq!(heap, (0, 0));
-    assert_eq!(owner.slots.as_ref().unwrap().as_ptr(), pointer);
+    let error=step.unwrap_err();assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::DepthLimit);assert_eq!(error.retained_progress(),Default::default());
+    assert_eq!((heap.requested_bytes,heap.released_bytes), (0, 0));
+    assert_eq!(owner.slots[FRAME_ENGINE_PACKET_PAGES - 1].as_ref().unwrap().as_ptr(), pointer);
     let tiny = RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant };
     let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_backing_step(tiny));
-    assert!(matches!(step, InteractiveJobCloseStep::Pending { progress } if progress == Default::default()));
-    assert_eq!(heap, (0, 0));
-    assert_eq!(owner.slots.as_ref().unwrap().as_ptr(), pointer);
+    assert!(matches!(step, Ok(InteractiveJobCloseStep::Pending { progress }) if progress == Default::default()));
+    assert_eq!((heap.requested_bytes,heap.released_bytes), (0, 0));
+    assert_eq!(owner.slots[FRAME_ENGINE_PACKET_PAGES - 1].as_ref().unwrap().as_ptr(), pointer);
     let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_backing_step(grant));
-    assert!(matches!(step, InteractiveJobCloseStep::Complete { progress } if progress.fits(grant) && progress.released_bytes == layout.size() && progress.copied_bytes == demand.copy_bytes && progress.retained_capacity_bytes == 0));
-    assert_eq!(heap, (0, layout.size()));
+    assert!(matches!(step, Ok(InteractiveJobCloseStep::Pending { progress }) if progress.fits(grant) && progress.released_bytes == layout.size() && progress.copied_bytes == demand.copy_bytes && progress.retained_capacity_bytes == 0));
+    assert_eq!((heap.requested_bytes,heap.released_bytes), (0, layout.size()));
+    for _ in 1..FRAME_ENGINE_PACKET_PAGES {
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_backing_step(grant));
+        assert!(step.unwrap().progress().fits(grant));
+        assert_eq!((heap.requested_bytes,heap.released_bytes), (0, layout.size()));
+    }
     assert!(owner.terminal_is_empty());
-    assert!(matches!(owner.close_backing_step(RetainedCloneGrant::default()), InteractiveJobCloseStep::Complete { progress } if progress == Default::default()));
+    caller.finish();
+    assert!(matches!(owner.close_backing_step(RetainedCloneGrant::default()).unwrap(), InteractiveJobCloseStep::Complete { progress } if progress == Default::default()));
     println!("[DEBUG] original engine packet array backing released={} terminal=true", layout.size());
 }

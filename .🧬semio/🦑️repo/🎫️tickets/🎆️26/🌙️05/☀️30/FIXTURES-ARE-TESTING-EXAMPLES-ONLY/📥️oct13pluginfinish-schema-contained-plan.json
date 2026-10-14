@@ -1,0 +1,37 @@
+[
+  {
+    "source": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🧫️fixtures/🔣️semantic-memo.json",
+    "destination": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/🔬️unit/🔣️semantic-memo.json",
+    "sha256": "35c9e339d6f6234b4dca2ba218f99370daa111ad88ed4ef66fd27fc47b2cbec4",
+    "sourceRoot": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🧫️fixtures",
+    "destinationRoot": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/🔬️unit"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🧫️fixtures/🪵️timber-replay/🔣️.json",
+    "destination": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/🪵️timber-replay/🔣️.json",
+    "sha256": "6d0d749a8fbc82b2f759a70a897761d4cf2dacb20478857c84dc18c19ccb5f28",
+    "sourceRoot": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🧫️fixtures",
+    "destinationRoot": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🧫️fixtures/🪆️mesh-child/🔣️.json",
+    "destination": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📸️snapshot/🪆️mesh-child/🔣️.json",
+    "sha256": "5aec29e7230fc8e457afcc93b0079f9de8d99f8bec356409fb96c1cbf16024f6",
+    "sourceRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🧫️fixtures",
+    "destinationRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📸️snapshot"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🔗️native-roles/🧫️fixtures/🔣️.json",
+    "destination": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔺️diff/🔗️native-roles/🔣️.json",
+    "sha256": "d18a967302e19de22d6b166b9394ad323cf5ff8fa53f49a7f269cb3ff234b7d4",
+    "sourceRoot": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🔗️native-roles/🧫️fixtures",
+    "destinationRoot": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔺️diff/🔗️native-roles"
+  },
+  {
+    "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🧫️fixtures/🔄️transform.json",
+    "destination": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/🔬️unit/🔄️transform.json",
+    "sha256": "cff047850c97a61e4a5b8b5fa01a802a588672e8ae7282a6fbf995d14b248a51",
+    "sourceRoot": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🧫️fixtures",
+    "destinationRoot": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/🔬️unit"
+  }
+]

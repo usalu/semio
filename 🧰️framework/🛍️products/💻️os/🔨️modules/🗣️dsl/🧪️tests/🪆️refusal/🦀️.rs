@@ -19,7 +19,7 @@ fn refusal_kind(name:&str)->ValueRefusalKind{
 
 #[test]
 fn os_controlled_field_derive_retains_all_refusal_categories_and_position(){
-    let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🔨️modules/🗣️dsl/🧬️schema/🧫️fixtures/🪆️refusal/🔣️.json")).unwrap();
+    let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🔨️modules/🗣️dsl/🧪️tests/🧫️fixtures/🪆️refusal/🔣️.json")).unwrap();
     for name in corpus["kinds"].as_array().unwrap(){
         let kind=refusal_kind(name.as_str().unwrap());let mut record=RecordValue::default();record.fields.insert(0,FieldValue::Text(serde_json::to_string(&serde_json::json!({"kind":name,"message":"refused field"})).unwrap()));
         let error=ControlledRefusalRecord::__dsl_from_record_controlled(&record,&mut NativeDecodeControl::new(4096,&mut |_|true)).unwrap_err();assert_eq!(error.kind,kind);assert_eq!(error.message,corpus["derivedPaths"][1]["expectedMessage"].as_str().unwrap());

@@ -521,7 +521,7 @@ use crate::editor::puzzle3d::Puzzle3dInstanceOperationOwner;
 use semio_framework_job::{root_cancel_token, Generation, OperationId, StepBudget};
 use semio_framework_tool_run::{ToolRunId, ToolRunStep, ToolRunTick, ToolRunTraceOp, ToolRunTraceStore};
 
-const BRUSH_SUGGESTIONS_RUN_FIXTURE: &str = include_str!("../../🧫️fixtures/🎞️brush-suggestions-run.json");
+const BRUSH_SUGGESTIONS_RUN_FIXTURE: &str = include_str!("../🧫️fixtures/🎞️brush-suggestions-run.json");
 const BRUSH_SEARCH_TARGET: &str = "host:v0";
 
 fn brush_search_cube() -> (Vec<f32>, Vec<u32>) {

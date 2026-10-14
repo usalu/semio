@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { findWorkspaceRoot } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { policyIndexedGeneratedOutputViolations } from "../../🟦️.ts";
 
 describe("indexed generated output law", () => {

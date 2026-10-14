@@ -1,0 +1,34 @@
+% 🧪 Probe fixture of case facet-layout, scenarios wrap-grid and shared-axes.
+% Four wrapped panels on a 120x60 block with a 4mm gap, each drawing the axes sharedX/sharedY allow.
+\documentclass{article}
+\usepackage{semio-viz-facet}
+\ExplSyntaxOn
+\NewDocumentEnvironment { ProbeFrame } { }
+  {
+    \bool_set_true:N \l_semio_viz_in_figure_bool
+    \fp_set:Nn \l_semio_viz_width_fp { 120 }
+    \fp_set:Nn \l_semio_viz_height_fp { 60 }
+    \fp_set:Nn \l_semio_viz_pad_fp { 8 }
+    \begin{tikzpicture}[ x=1mm , y=1mm ]
+  }
+  { \end{tikzpicture} \bool_set_false:N \l_semio_viz_in_figure_bool }
+\ExplSyntaxOff
+\begin{document}
+\SemioVizProbeBegin{facet-layout}{wrap-grid}
+\SemioVizProbeOn
+\SemioVizScale{x}{linear}{0,10}{8,118}
+\SemioVizScale{y}{linear}{0,100}{8,58}
+\begin{ProbeFrame}
+\SemioVizFacet[wrap={A,B,C,D},columns=2,gap=4,sharedX=true,sharedY=true,header=false]{%
+  \SemioVizFacetAxes[ticks=3,labels=false]%
+}
+\end{ProbeFrame}
+\SemioVizProbeBegin{facet-layout}{shared-axes}
+\SemioVizScale{x}{linear}{0,10}{8,118}
+\SemioVizScale{y}{linear}{0,100}{8,58}
+\begin{ProbeFrame}
+\SemioVizFacet[wrap={A,B,C,D},columns=2,gap=4,sharedX=true,sharedY=true,header=false]{%
+  \SemioVizFacetAxes[ticks=3,labels=false]%
+}
+\end{ProbeFrame}
+\end{document}

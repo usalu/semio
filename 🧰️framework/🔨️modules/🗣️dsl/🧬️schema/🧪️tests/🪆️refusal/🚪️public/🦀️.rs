@@ -31,7 +31,7 @@ impl DslField for RefusingField {
 struct DerivedField {field:RefusingField}
 #[test]
 fn external_derived_fields_retain_every_refusal_kind_and_authored_path() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🪆️refusal/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪆️refusal/🔣️.json")).unwrap();
     for kind in fixture["kinds"].as_array().unwrap() {
         for row in fixture["derivedPaths"].as_array().unwrap() {
             let mut record=RecordValue::default();
@@ -72,7 +72,7 @@ struct ProjectionIntrinsicDocument{payload:semio_framework_value::DslValue}
 fn retained_derived_projection_reads_original_intrinsic_payload_without_whole_clone(){
     use semio_framework_dsl_record::native_encoding::RetainedFieldProjection;
     use semio_framework_value::{DslValue,Number};
-        let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();assert_eq!(fixture["projection"]["intrinsic"],true);
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();assert_eq!(fixture["projection"]["intrinsic"],true);
     let prefix=fixture["intrinsic"]["keyPrefix"].as_str().unwrap().repeat(fixture["intrinsic"]["keyRepeats"].as_u64().unwrap()as usize);
     let text=fixture["textUnit"].as_str().unwrap().repeat(fixture["intrinsic"]["textRepeats"].as_u64().unwrap()as usize);
     let source=ProjectionIntrinsicDocument{payload:DslValue::Object(vec![(format!("{prefix}z"),DslValue::Array(vec![DslValue::Bool(false),DslValue::Null,DslValue::Number(Number::UInt(3))])),(format!("{prefix}a"),DslValue::Object(vec![("bytes".into(),DslValue::Bytes(fixture["intrinsic"]["bytes"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect())),("text".into(),DslValue::String(text.clone()))])),("signed".into(),DslValue::Number(Number::Int(1)))])};
@@ -87,7 +87,7 @@ fn retained_derived_projection_reads_original_intrinsic_payload_without_whole_cl
 fn retained_derived_projection_yields_resumes_refuses_stale_source_and_retires(){
     use semio_framework_dsl_record::native_encoding::RetainedFieldProjection;
     use semio_framework_value::{ValueRefusalKind};
-        let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();
     let text=fixture["textUnit"].as_str().unwrap().repeat(fixture["projection"]["textRepeats"].as_u64().unwrap()as usize);
     let source=ProjectionDocument{label:text.clone(),rows:(0..fixture["projection"]["rows"].as_u64().unwrap()).map(|index|ProjectionRow{label:format!("{index}{text}"),cost:index as f64,optional:if index%2==0{Some(text.clone())}else{None}}).collect(),child:Some(ProjectionBlock{value:text.clone()})};
     let expected=source.to_value();let spec=ProjectionDocument::__dsl_spec();let FieldValue::Record(record)=&expected else{panic!("record")};let ordinary=print(record,&spec,JoinMode::Inline);assert!(ordinary.contains(&serde_json::to_string(&text).unwrap()));
@@ -107,7 +107,7 @@ impl semio_framework_dsl_record::native_encoding::FieldProjectionSource for Rank
 #[test]
 fn retained_projection_reads_ranked_primary_map_and_copies_keys_per_scalar(){
     use semio_framework_dsl_record::native_encoding::RetainedFieldProjection;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();let prefix=fixture["intrinsic"]["keyPrefix"].as_str().unwrap().repeat(fixture["intrinsic"]["keyRepeats"].as_u64().unwrap()as usize);let mut values=semio_framework_value::ordered::OrderedMap::new();for(index,key)in fixture["containers"]["keys"].as_array().unwrap().iter().enumerate(){values.insert(format!("{prefix}{}",key.as_str().unwrap()),ProjectionRow{label:format!("{index}Mesh 😀"),cost:index as f64,optional:None});}let source=RankedProjectionSource{values};let expected=FieldValue::Record(RecordValue{fields:[(0,FieldValue::Map(source.values.iter().map(|(key,value)|(key.clone(),value.to_value())).collect()))].into_iter().collect()});
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();let prefix=fixture["intrinsic"]["keyPrefix"].as_str().unwrap().repeat(fixture["intrinsic"]["keyRepeats"].as_u64().unwrap()as usize);let mut values=semio_framework_value::ordered::OrderedMap::new();for(index,key)in fixture["containers"]["keys"].as_array().unwrap().iter().enumerate(){values.insert(format!("{prefix}{}",key.as_str().unwrap()),ProjectionRow{label:format!("{index}Mesh 😀"),cost:index as f64,optional:None});}let source=RankedProjectionSource{values};let expected=FieldValue::Record(RecordValue{fields:[(0,FieldValue::Map(source.values.iter().map(|(key,value)|(key.clone(),value.to_value())).collect()))].into_iter().collect()});
     let retire=|cursor:RetainedFieldProjection<RankedProjectionSource>|{let mut close=retirement_controls::retain(cursor);while !close.terminal_is_empty(){if let semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress{copied_bytes,..})=retirement_controls::advance(&mut close,3).unwrap(){assert!(copied_bytes<=3)}}};
     for budget in fixture["budgets"].as_array().unwrap(){let mut cursor=RetainedFieldProjection::new(&source);let mut accepted=|_|true;let mut control=NativeEncodeControl::new(1000000,&mut accepted);let mut turns=0;let actual=loop{let before=cursor.position();assert!(cursor.step(&source,0,&mut control).unwrap().is_none());assert_eq!(cursor.position(),before);turns+=1;assert!(turns<100000);if let Some(value)=cursor.step(&source,budget.as_u64().unwrap()as usize,&mut control).unwrap(){break value}};assert_eq!(actual,expected);let FieldValue::Record(record)=&actual else{panic!("record")};let spec=semio_framework_dsl_record::RecordSpec::new(None,semio_framework_dsl_record::RecordLayout::Inline,vec![semio_framework_dsl_record::FieldSpec::new(0,"values",Shape::Map(Box::new(Shape::Record(ProjectionRow::__dsl_spec_producer()))))]);let text=print(record,&spec,JoinMode::Inline);assert!(text.contains(&serde_json::to_string(&format!("{prefix}Mesh 😀")).unwrap()));retire(cursor);}
     for stop in [1,8,64,256,1024]{let mut cursor=RetainedFieldProjection::new(&source);let live=std::cell::Cell::new(true);let mut callback=|_|live.get();let mut control=NativeEncodeControl::new(1000000,&mut callback);for _ in 0..stop{assert!(cursor.step(&source,1,&mut control).unwrap().is_none())}live.set(false);let before=cursor.position();assert_eq!(cursor.step(&source,1,&mut control).unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(cursor.position(),before);retire(cursor);}
@@ -122,7 +122,7 @@ impl semio_framework_dsl_record::native_encoding::FieldProjectionSource for Proj
 #[test]
 fn retained_projection_reads_original_tagged_rows_and_wire_payload(){
     use semio_framework_dsl_record::{native_encoding::RetainedFieldProjection,Wire,WireValue,WireNode,WireEdgeLabel};
-    use semio_framework_value::{DslValue};    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();assert_eq!(fixture["projection"]["taggedAndWire"],true);
+    use semio_framework_value::{DslValue};    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();assert_eq!(fixture["projection"]["taggedAndWire"],true);
     let text=fixture["textUnit"].as_str().unwrap().repeat(fixture["projection"]["textRepeats"].as_u64().unwrap()as usize);
     let source=ProjectionTaggedWireSource{rows:vec![ProjectionRow{label:text.clone(),cost:1.5,optional:None},ProjectionRow{label:"second".into(),cost:2.,optional:Some(text.clone())}],wire:Wire(WireValue{from:WireNode{id:text.clone(),kind:Some("input".into()),port:Some(text.clone())},edge:Some((true,WireNode{id:"target".into(),kind:None,port:Some("value".into())})),edge_label:WireEdgeLabel{id:Some(text.clone()),kind:Some("link".into())},properties:DslValue::Object(vec![("payload".into(),DslValue::String(text.clone()))])})};
     let expected=FieldValue::Record(RecordValue{fields:[(0,FieldValue::Statements(source.rows.iter().map(|row|{let FieldValue::Record(record)=row.to_value()else{panic!("record")};("row".into(),record)}).collect())),(1,source.wire.to_value())].into_iter().collect()});
@@ -137,7 +137,7 @@ fn retained_projection_reads_original_tagged_rows_and_wire_payload(){
 fn retained_projection_measures_original_source_before_candidate_allocation(){
     use semio_framework_dsl_record::native_encoding::RetainedFieldProjection;
     use semio_framework_value::{DslValue};
-        let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();assert_eq!(fixture["projection"]["sourceCapacity"]["measureBeforeAllocation"],true);
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();assert_eq!(fixture["projection"]["sourceCapacity"]["measureBeforeAllocation"],true);
     let text=fixture["textUnit"].as_str().unwrap().repeat(fixture["projection"]["textRepeats"].as_u64().unwrap()as usize);let pointer=text.as_ptr();let bytes=vec![0,255,42];
     let source=ProjectionIntrinsicDocument{payload:DslValue::Object(vec![("text".into(),DslValue::String(text)),("bytes".into(),DslValue::Bytes(bytes))])};
     let text=source.payload.as_object().unwrap()[0].1.as_str().unwrap();assert_eq!(text.as_ptr(),pointer);let quoted=serde_json::to_string(text).unwrap();

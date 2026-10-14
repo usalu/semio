@@ -1,0 +1,19 @@
+{
+  "mutation": "createReference",
+  "reference": {
+    "id": "reference-2",
+    "source": {
+      "url": "asset://elevation.png",
+      "mediaKind": "image"
+    },
+    "origin": [
+      0.0,
+      0.0,
+      3.0
+    ],
+    "widthWorld": 6.0,
+    "locked": false,
+    "hidden": false
+  },
+  "index": null
+}

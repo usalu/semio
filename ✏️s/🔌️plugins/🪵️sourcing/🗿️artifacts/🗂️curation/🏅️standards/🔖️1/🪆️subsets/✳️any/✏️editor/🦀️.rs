@@ -62,7 +62,7 @@ use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Io
@@ -904,7 +904,7 @@ impl ArtifactEditor for SourcingCurationApp {
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, snapshot_read:request.snapshot_read, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             SourcingCurationCommand::command_id,
             sourcing_curation_retained_raw_bytes(tool_id),
             SOURCING_CURATION_RETAINED_WORK_ITEMS,

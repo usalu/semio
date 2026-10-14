@@ -77,7 +77,7 @@ impl GenesisFixture {
             })
             .await
             .unwrap();
-        let source: serde_json::Value = serde_json::from_str(include_str!("../../../../../🗿️artifact-authority/🌱️creation/🧫️fixtures/📚️operation-v1/🔣️.json")).unwrap();
+        let source: serde_json::Value = serde_json::from_str(include_str!("../../../../../🗿️artifact-authority/🌱️creation/🧪️tests/🧫️fixtures/📚️operation-v1/🔣️.json")).unwrap();
         let mut intent: ArtifactCreationIntentV1 = semio_framework_pack_json::from_json_str(&source["intent"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let mut prepared: ArtifactCreationPreparedV1 = semio_framework_pack_json::from_json_str(&source["prepared"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         intent.actor = ArtifactCreationActorV1 { user_id: "seed".into(), session_id: issued.record.id, authorization_generation: issued.record.authorization_generation };

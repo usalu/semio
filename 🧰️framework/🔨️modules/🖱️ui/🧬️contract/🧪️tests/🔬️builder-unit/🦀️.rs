@@ -343,9 +343,9 @@ fn the_recipes_build_exactly_the_conformance_corpus_shapes() {
         .unwrap_or_else(|_| panic!("y axis"))
         .try_build()
         .unwrap_or_else(|_| panic!("vector build"));
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧪️conformance/🖥️composite/🧭️vector-input/🎯️expect.json")).expect("vector expectation");
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧪️conformance/🖥️composite/🧭️vector-input/🎯️expect.json")).expect("vector expectation");
     assert_eq!(serde_json::Value::from(flat_shape(&vector)), expected["tree"]["shape"]);
-    let snapshot: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧪️conformance/🖥️composite/🧭️vector-input/📸️snapshot.json")).expect("vector snapshot");
+    let snapshot: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧪️conformance/🖥️composite/🧭️vector-input/📸️snapshot.json")).expect("vector snapshot");
     assert_eq!(flat_components(&vector), components_of(&snapshot), "each axis carries the shared step, precision and detents");
     let app = |name: &str| crate::ActionId::new(ui_text("app"), ui_text(name), 1);
     let references = reference_list(label("Targets"), ReferenceListLabels { use_selection: label("Use selection"), empty: label("Nothing selected") })
@@ -359,16 +359,16 @@ fn the_recipes_build_exactly_the_conformance_corpus_shapes() {
         .unwrap_or_else(|_| panic!("candidates"))
         .try_build()
         .unwrap_or_else(|_| panic!("references build"));
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧪️conformance/🖥️composite/🧷️reference-list/🎯️expect.json")).expect("reference expectation");
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧪️conformance/🖥️composite/🧷️reference-list/🎯️expect.json")).expect("reference expectation");
     assert_eq!(serde_json::Value::from(flat_shape(&references)), expected["tree"]["shape"]);
     let color = color_input(label("Tint"), ColorInputLabels { hex: label("Hex"), alpha: label("Alpha") })
         .try_color(&[1.0, 0.5, 0.0, 0.5], true, |field| field.try_on(crate::Trigger::Change, app("setTint")).map_err(|(field, _)| field), |alpha| alpha.try_on(crate::Trigger::Change, app("setTintAlpha")).map_err(|(alpha, _)| alpha))
         .unwrap_or_else(|_| panic!("colour"))
         .try_build()
         .unwrap_or_else(|_| panic!("colour build"));
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧪️conformance/🖥️composite/🎨️color-input/🎯️expect.json")).expect("colour expectation");
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧪️conformance/🖥️composite/🎨️color-input/🎯️expect.json")).expect("colour expectation");
     assert_eq!(serde_json::Value::from(flat_shape(&color)), expected["tree"]["shape"]);
-    let snapshot: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧪️conformance/🖥️composite/🎨️color-input/📸️snapshot.json")).expect("colour snapshot");
+    let snapshot: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧪️conformance/🖥️composite/🎨️color-input/📸️snapshot.json")).expect("colour snapshot");
     assert_eq!(flat_components(&color), components_of(&snapshot), "the swatch, hex field and alpha slider read the colour");
     let opaque = color_input(label("Tint"), ColorInputLabels { hex: label("Hex"), alpha: label("Alpha") }).try_color(&[0.2, 0.4, 0.6], false, Ok, Ok).unwrap_or_else(|_| panic!("opaque colour")).try_build().unwrap_or_else(|_| panic!("opaque build"));
     assert_eq!(opaque.children.len(), 2, "a colour without alpha has no alpha slider");

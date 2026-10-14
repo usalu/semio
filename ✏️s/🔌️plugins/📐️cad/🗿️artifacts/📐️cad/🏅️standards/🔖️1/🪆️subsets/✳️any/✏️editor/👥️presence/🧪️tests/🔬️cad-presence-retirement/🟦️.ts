@@ -65,7 +65,7 @@ interface PresencePeerCommitFixture {
 /** 🧹️ Cross-checks CAD domain retirement byte counts independently of its Rust ownership cursor. */
 export function cadPresenceRetirementSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence");
-  const fixture: CadPresenceRetirementFixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/♻️retirement/🔣️.json"), "utf8"));
+  const fixture: CadPresenceRetirementFixture = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/♻️retirement/🔣️.json"), "utf8"));
   
   
   const counts = new Map<string, number>();
@@ -255,7 +255,7 @@ export function cadPresenceRetirementSelfTests(): number {
   const channelSource = readFileSync(join(storeBase, "../../📡️spr/🧵️channel/🦀️.rs"), "utf8");
   const pluginLawSource = readFileSync(join(storeBase, "../../🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs"), "utf8");
   if (!pluginLawSource.includes("peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root") || !pluginLawSource.includes("peer_roster_saturation_cancel_stale_and_interrupted_close_preserve_exact_authority")) throw new Error("peer capture native laws are missing");
-  const contextFixture = JSON.parse(readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧫️fixtures/🧬️request-context.json"), "utf8"));
+  const contextFixture = JSON.parse(readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧫️fixtures/🧬️request-context.json"), "utf8"));
   const captureProof = (plugin: string, store: string, channel: string, retirement: string): boolean => toolJobPeerInteractionRootsExact(plugin, store, channel, retirement);
   if (!captureProof(pluginSource, storeSource, channelSource, retirementSource)) throw new Error("peer capture census rejected its real exact helper/base/factory authority");
   const captureHostiles = [

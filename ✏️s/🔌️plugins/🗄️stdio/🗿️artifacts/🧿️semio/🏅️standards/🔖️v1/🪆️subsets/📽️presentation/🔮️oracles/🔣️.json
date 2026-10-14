@@ -376,14 +376,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🧩️insert-layout-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🧩️insert-layout-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:5e56b8c2d495a975cdb869f3aeeabcc244cb63c7143532b458777fd746018cab",
           "bytes": 1556525
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🧩️insert-layout-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🧩️insert-layout-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:92c8850c6773f66e2d307075dc8696844db3bd0bf128ba951c4dafdfc189978e",
           "bytes": 1559687
@@ -426,14 +426,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🎓️insert-master-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🎓️insert-master-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:5e56b8c2d495a975cdb869f3aeeabcc244cb63c7143532b458777fd746018cab",
           "bytes": 1556525
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🎓️insert-master-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🎓️insert-master-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:4b4be572db19bff884e2dec8f9f27b8064302ceb793c780ee1deec65f181c95b",
           "bytes": 2666213
@@ -476,14 +476,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🔷️insert-shape-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🔷️insert-shape-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:5e56b8c2d495a975cdb869f3aeeabcc244cb63c7143532b458777fd746018cab",
           "bytes": 1556525
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🔷️insert-shape-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🔷️insert-shape-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:1cba77619646009c7c1aa9c9d62a3594e695b3cb6bc7e1679ead283f7756bf8b",
           "bytes": 1557313
@@ -526,14 +526,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🎬️insert-slide-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🎬️insert-slide-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:5e56b8c2d495a975cdb869f3aeeabcc244cb63c7143532b458777fd746018cab",
           "bytes": 1556525
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🎬️insert-slide-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🎬️insert-slide-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:5efb327f740a00f10fa4c50389f45aac680cae3ae1943e1f6b1266e825b8f129",
           "bytes": 1558280
@@ -576,14 +576,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🧹️remove-layout-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🧹️remove-layout-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:5e56b8c2d495a975cdb869f3aeeabcc244cb63c7143532b458777fd746018cab",
           "bytes": 1556525
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🧹️remove-layout-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🧹️remove-layout-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:ec009b2eb16cb32a67cb11f65e675da61dac953dc043f1ee01055ee307bf9a81",
           "bytes": 1551333
@@ -626,14 +626,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🚫️remove-master-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🚫️remove-master-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:5e56b8c2d495a975cdb869f3aeeabcc244cb63c7143532b458777fd746018cab",
           "bytes": 1556525
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🚫️remove-master-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🚫️remove-master-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:b2308be18b1634d9386e2770a204b50062d69a12d43687b8ae545fde1cf2e9f3",
           "bytes": 446841
@@ -676,14 +676,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🔶️remove-shape-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🔶️remove-shape-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:5e56b8c2d495a975cdb869f3aeeabcc244cb63c7143532b458777fd746018cab",
           "bytes": 1556525
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🔶️remove-shape-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🔶️remove-shape-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:63a9447f29cfc6bba0e4e9386b7f01d71eb8b12a80e607bfc5f8e3be89069fb2",
           "bytes": 1555682
@@ -726,14 +726,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/📤️remove-slide-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/📤️remove-slide-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:5e56b8c2d495a975cdb869f3aeeabcc244cb63c7143532b458777fd746018cab",
           "bytes": 1556525
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/📤️remove-slide-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/📤️remove-slide-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:321a409e8a9101631184258cac270db7a99b1261d0956018757740f876cadf39",
           "bytes": 1203818
@@ -776,14 +776,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🔧️set-layout-master-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🔧️set-layout-master-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:5e56b8c2d495a975cdb869f3aeeabcc244cb63c7143532b458777fd746018cab",
           "bytes": 1556525
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🔧️set-layout-master-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🔧️set-layout-master-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:25723205afb4833c6eff0a96fe45a4cdd2314b8b2aaf4632e62aa366668dcd0e",
           "bytes": 1556536
@@ -826,14 +826,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🪟️set-shape-frame-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🪟️set-shape-frame-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:5e56b8c2d495a975cdb869f3aeeabcc244cb63c7143532b458777fd746018cab",
           "bytes": 1556525
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🪟️set-shape-frame-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🪟️set-shape-frame-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:b6cb05c3651a5fe5f94109c0c4f1ba64cd9af7740dc75c4c2fbd49035dffa191",
           "bytes": 1556525
@@ -876,14 +876,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🧭️set-slide-layout-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🧭️set-slide-layout-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:5e56b8c2d495a975cdb869f3aeeabcc244cb63c7143532b458777fd746018cab",
           "bytes": 1556525
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🧭️set-slide-layout-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🧭️set-slide-layout-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:c2d918ef710a469d69b2070b437d3c098605a7daedc22ed9f60c96f3dd0e1585",
           "bytes": 1556525
@@ -926,14 +926,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🧾️set-slide-notes-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🧾️set-slide-notes-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:5e56b8c2d495a975cdb869f3aeeabcc244cb63c7143532b458777fd746018cab",
           "bytes": 1556525
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🧾️set-slide-notes-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🧾️set-slide-notes-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:656e20ffec3dbe42c41e6a0a3d61cbbd36b06d2a2ff90fd9d4faf9ade5b300b1",
           "bytes": 1556974
@@ -976,14 +976,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/📝️set-text-box-blocks-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/📝️set-text-box-blocks-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:5e56b8c2d495a975cdb869f3aeeabcc244cb63c7143532b458777fd746018cab",
           "bytes": 1556525
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/📝️set-text-box-blocks-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/📝️set-text-box-blocks-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:1ec06277e6d90248c7079bfe274b11a952a78d93c9bcc0106a4363154ae6a6a8",
           "bytes": 1556536

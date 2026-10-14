@@ -1,15 +1,16 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🧭️ `repo-mcp` router: `bun ./📜️script.ts build|test`. The Go sources of this module are
  * taxonomy-named (`🖥️server/🐹️.go`, `🗄️repository/🐹️.go`, …), so both verbs go through the canonical
  * Go projection rather than calling `go` on the tree directly. */
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { goCoverageArgs, goLevelTestArgs, resolveMcpBin, runCanonicalGoBuild, runCanonicalGoTests } from "../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const MODULE_DIR = import.meta.dir;
 
@@ -18,10 +19,10 @@ function goEnvironment(repoRoot: string): NodeJS.ProcessEnv {
 }
 
 class BuildScript extends BundleScript {
-  run(): void {
+  async run(): Promise<void> {
     const binary = resolveMcpBin(this.repoRoot);
     mkdirSync(dirname(binary), { recursive: true });
-    runCanonicalGoBuild(MODULE_DIR, ["-o", binary, "."], { env: goEnvironment(this.repoRoot), budgetMs: buildBudgetMs() });
+    await runCanonicalGoBuild(MODULE_DIR, ["-o", binary, "."], { control: scriptCompilerAdmissionControlV1(this.invocation, "go:build", 0),  env: goEnvironment(this.repoRoot), budgetMs: buildBudgetMs(),  });
   }
 }
 

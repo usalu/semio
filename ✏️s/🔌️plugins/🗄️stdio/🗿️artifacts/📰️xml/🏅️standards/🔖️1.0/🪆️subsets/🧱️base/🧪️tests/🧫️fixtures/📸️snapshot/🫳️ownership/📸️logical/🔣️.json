@@ -1,0 +1,47 @@
+{
+  "schema": "owned intermediate XML",
+  "doc": {
+    "root": {
+      "kind": "comment",
+      "text": "root pending"
+    },
+    "prolog": [
+      {
+        "kind": "text",
+        "text": "before owned"
+      },
+      {
+        "kind": "element",
+        "name": "pending",
+        "attrs": [
+          {
+            "name": "duplicate",
+            "value": "first"
+          },
+          {
+            "name": "duplicate",
+            "value": "second"
+          }
+        ],
+        "children": []
+      }
+    ],
+    "epilog": [
+      {
+        "kind": "cData",
+        "text": "after owned"
+      }
+    ],
+    "doctype": {
+      "prologPosition": "9",
+      "name": "unfinished",
+      "declarations": []
+    },
+    "declaration": {
+      "version": "owned version",
+      "encoding": "UTF-16",
+      "standalone": false,
+      "quote": "single"
+    }
+  }
+}

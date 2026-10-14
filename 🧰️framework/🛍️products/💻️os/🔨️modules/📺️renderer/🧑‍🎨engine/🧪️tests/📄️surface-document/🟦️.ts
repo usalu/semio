@@ -1,7 +1,7 @@
 /** 📄️ Full archive handoff traces preserve the predecessor until its successor is ready. */
 import { expect,it } from "vitest";
 import { applyPatch } from "fast-json-patch";
-import fixture from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/📄️document/🧫️fixtures/🔣️.json";
+import fixture from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/📄️document/🧪️tests/🧫️fixtures/🔣️.json";
 import { runSessionAppSwitchV1 } from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/🟦️.ts";
 import { prepareDocumentSurfaceV1 } from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/📄️document/🟦️.ts";
 for (const law of fixture.cases) it(law.name,async () => {

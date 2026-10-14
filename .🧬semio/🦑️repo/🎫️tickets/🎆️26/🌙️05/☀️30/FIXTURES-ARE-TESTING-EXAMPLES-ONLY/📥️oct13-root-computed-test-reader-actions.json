@@ -1,0 +1,31 @@
+{
+  "exclusive": false,
+  "rows": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🏺️historical-package-owner-identity/🟦️.ts",
+      "beforeSha256": "448d3fb828bf1387c1fe1810cc8e3953317b38a33aa0298e35263966995f9a95",
+      "afterSha256": "797207e2719f0fa79b3fde1522d4ff1c70bc9ee80a1e7f27c80b261c23c24c0f",
+      "spans": [
+        {
+          "before": "join(libraryRoot, \"🧫️fixtures/🖍️draw-source-scenario/🔣️.json\")",
+          "after": "join(libraryRoot, \"🧪️tests/🧫️fixtures/🖍️draw-source-scenario/🔣️.json\")"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🧾️provenance/🟦️.ts",
+      "beforeSha256": "011f85f6c2f7c0454739c8d234c507b549484b551e388c64b6cb2e39b3687201",
+      "afterSha256": "24e802b929a29b719fe945b9672bb6ac737ae5bf4d60b50d10a9579cab9e7007",
+      "spans": [
+        {
+          "before": "join(repoRoot, library, \"🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json\")",
+          "after": "join(repoRoot, library, \"🧪️tests/🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json\")"
+        },
+        {
+          "before": "join(repoRoot, library, \"🧫️fixtures/🪢️transaction-harness-retention/🔣️.json\")",
+          "after": "join(repoRoot, library, \"🧪️tests/🧫️fixtures/🪢️transaction-harness-retention/🔣️.json\")"
+        }
+      ]
+    }
+  ]
+}

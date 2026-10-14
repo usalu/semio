@@ -18,7 +18,7 @@ interface NodeNativeTypeScriptFixture {
 }
 
 const root = getWorkspaceRoot();
-const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/✂️node-native-typescript/🔣️.json"), "utf8")) as NodeNativeTypeScriptFixture;
+const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/✂️node-native-typescript/🔣️.json"), "utf8")) as NodeNativeTypeScriptFixture;
 
 const MODULE_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".js", ".mjs"]);
 const STRIP_ONLY_CODES = new Set([1294, 1484, 1485]);

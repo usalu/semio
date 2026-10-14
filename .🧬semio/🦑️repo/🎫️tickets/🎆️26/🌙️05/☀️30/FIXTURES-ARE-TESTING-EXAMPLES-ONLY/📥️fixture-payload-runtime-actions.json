@@ -1,0 +1,53 @@
+{
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+  "before": "86db4bbb127d82b1deef4948f5410c3f498678d66ae69672f9af918033eb7a93",
+  "after": "b018fcc208a08e59c6c07e88d00bf4e6d5c2d633a331a62ac28ca00b08e9877a",
+  "spans": [
+    {
+      "name": "lexicalTargetIncomingReferences",
+      "start": 504181,
+      "end": 508480
+    },
+    {
+      "name": "frozenEvidenceContractIndex",
+      "start": 484577,
+      "end": 485089
+    },
+    {
+      "name": "planSymlinkTargetEdits",
+      "start": 466579,
+      "end": 470166
+    },
+    {
+      "name": "buildReferenceEdits",
+      "start": 323017,
+      "end": 343420
+    },
+    {
+      "name": "referenceGraph",
+      "start": 282008,
+      "end": 285519
+    },
+    {
+      "name": "taxonomyFixturePayloadPath",
+      "start": 282008,
+      "end": 282008
+    },
+    {
+      "name": "incomingReferenceSnapshot",
+      "start": 143912,
+      "end": 148455
+    },
+    {
+      "name": "incomingReferenceObservation",
+      "start": 140099,
+      "end": 140664
+    },
+    {
+      "name": "referenceCoordinateRoots",
+      "start": 135774,
+      "end": 138803
+    }
+  ],
+  "classification": "General existing testsDirName/testFixturesDirName policy; physical bytes remain inventory/move inputs; fixture contents cannot authorize runtime graph/reference/frozen/preflight/symlink rules"
+}

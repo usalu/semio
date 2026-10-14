@@ -3,8 +3,8 @@ use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{comput
 use crate::ModelSnapshot;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const DEFECTS: &str = include_str!("../../../../../../🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json");
-const CLEAN: &str = include_str!("../../../../../../🧫️fixtures/💡️inferences/⚠️diagnostics/🏡️clean/📸️snapshot/🔣️.json");
+const DEFECTS: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json");
+const CLEAN: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/🏡️clean/📸️snapshot/🔣️.json");
 const SOURCE: &str = include_str!("../../../🦀️.rs");
 
 fn snapshot(text: &str) -> ModelSnapshot {

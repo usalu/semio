@@ -1,7 +1,7 @@
 import { readFileSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { join, isAbsolute } from "node:path";
 import { StringDecoder } from "node:string_decoder";
-import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { TEST_LEVELS, isTestLevel, type TestLevel } from "../🎚️budget/🟦️.ts";
 import { runBudgetedTestCommand } from "../🎛️execution/🟦️.ts";
 import { startNativeProgress } from "../../🎛️owned-execution/🟦️.ts";

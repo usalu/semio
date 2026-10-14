@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "grant",
+    "identity",
+    "bodyHex",
+    "interruptAfter",
+    "sourceRanges"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.tool-run.original-identity-receiving.v1"
+    },
+    "grant": {
+      "const": [
+        1,
+        17,
+        65536,
+        262144,
+        64
+      ]
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "appInstanceId",
+        "run",
+        "generation",
+        "baseRevision"
+      ],
+      "properties": {
+        "appInstanceId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "run": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "baseRevision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "bodyHex": {
+      "type": "string",
+      "pattern": "^[a-f0-9]+$"
+    },
+    "interruptAfter": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "uniqueItems": true
+    },
+    "sourceRanges": {
+      "const": [
+        [
+          0,
+          46
+        ],
+        [
+          1,
+          46
+        ]
+      ]
+    }
+  }
+}

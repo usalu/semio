@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** ✨️ `@semio-tech/dsl-derive-rs` router: `bun ./📜️script.ts test`. */
 import Ajv from "ajv";
 import { readFileSync, readdirSync, writeFileSync, type Dirent } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { runCargo, runRepositoryCargoTests } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** 🧭️ The committed projection the mutation derive macros read (`MUTATION_AUTHORITY_LOCATOR` in `✨️derive/🦀️.rs`). */
 const MUTATION_AUTHORITY_PATH = join(import.meta.dir, "../../🔣️mutation-authority.json");
@@ -47,7 +47,7 @@ function mutationAuthorityProjection(repoRoot: string): string {
 const SCHEMA_INDEX_SCHEMA = "semio.dsl.mutation-schema-document-index/v1";
 const SCHEMA_INDEX_PATH = join(import.meta.dir, "../../🗂️schema-document-index.json");
 const SCHEMA_INDEX_EXCLUDED = new Set(["target", "node_modules", "dist", "🗑️generated", "📦️packages"]);
-const SCHEMA_INDEX_COLLECTIONS = new Set(["🧫️fixtures", "🧪️fixtures", "🧪️tests"]);
+const SCHEMA_INDEX_COLLECTIONS = new Set(["🧫️fixtures", "🧪️fixtures", "🧫️examples", "🧪️examples", "🧪️tests"]);
 
 /** 🧫️ An example collection keeps its name when that directory is itself a module. */
 function schemaIndexExampleCollection(segments: readonly string[]): boolean {

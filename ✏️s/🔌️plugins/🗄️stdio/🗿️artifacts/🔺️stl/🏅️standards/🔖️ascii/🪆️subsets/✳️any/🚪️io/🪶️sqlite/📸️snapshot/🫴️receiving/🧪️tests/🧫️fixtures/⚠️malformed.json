@@ -1,0 +1,90 @@
+[
+  {
+    "id": "unknown-solid",
+    "table": "stl_facet",
+    "row": 0,
+    "column": 1,
+    "value": {
+      "integer": "999"
+    }
+  },
+  {
+    "id": "unknown-facet",
+    "table": "stl_vertex",
+    "row": 0,
+    "column": 1,
+    "value": {
+      "integer": "999"
+    }
+  },
+  {
+    "id": "facet-gap",
+    "table": "stl_facet",
+    "row": 0,
+    "column": 2,
+    "value": {
+      "integer": "3"
+    }
+  },
+  {
+    "id": "vertex-duplicate-ordinal",
+    "table": "stl_vertex",
+    "row": 0,
+    "column": 2,
+    "value": {
+      "integer": "0"
+    }
+  },
+  {
+    "id": "vertex-invalid-ordinal",
+    "table": "stl_vertex",
+    "row": 0,
+    "column": 2,
+    "value": {
+      "integer": "3"
+    }
+  },
+  {
+    "id": "facet-id-differs",
+    "table": "stl_facet",
+    "row": 0,
+    "column": 0,
+    "value": {
+      "integer": "999"
+    }
+  },
+  {
+    "id": "vertex-id-differs",
+    "table": "stl_vertex",
+    "row": 0,
+    "column": 0,
+    "value": {
+      "integer": "999"
+    }
+  },
+  {
+    "id": "nan-class-differs",
+    "table": "stl_facet",
+    "row": 1,
+    "column": 9,
+    "value": "finite"
+  },
+  {
+    "id": "fewer-three",
+    "table": "stl_vertex",
+    "row": 0,
+    "remove": true
+  },
+  {
+    "id": "duplicate-facet",
+    "table": "stl_facet",
+    "row": 0,
+    "duplicate": true
+  },
+  {
+    "id": "duplicate-vertex",
+    "table": "stl_vertex",
+    "row": 0,
+    "duplicate": true
+  }
+]

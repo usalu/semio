@@ -1,6 +1,6 @@
 import { PNG } from "pngjs";
 import { describe, expect, it } from "bun:test";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import { applyPngPixelRegionRgba8 } from "../🟦️.ts";
 
 describe("PNG pixel region fixture", () => {

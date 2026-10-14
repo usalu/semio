@@ -2,7 +2,7 @@
 import {expect,test} from "bun:test";
 import {hierarchy} from "d3-hierarchy";
 import {duplicateLayerPlan} from "../🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 for(const row of fixture.cases)test("Duplicate placement for "+row.id,()=>{
   const before=JSON.stringify(fixture.layers);
   expect(duplicateLayerPlan(fixture.layers,row.id)).toEqual({parentId:row.parentId,index:row.index});

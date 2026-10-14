@@ -1,7 +1,7 @@
 /** 🧪️ Three.js independently reproduces the same affine products and curve bounds. */
 import { expect, test } from "bun:test";
 import { Box2, CubicBezierCurve, Matrix3, Vector2 } from "three";
-import fixture from "../../🧫️fixtures/📐️bounds/🔣️.json";
+import fixture from "../../../../🧪️tests/🧫️fixtures/🧮️geometry/📐️bounds/🔣️.json";
 import { cubicBounds, multiply, type Matrix, type Point } from "../../🟦️.ts";
 
 test("Drawing extrema match shared fixtures and Three.js curves", () => {
@@ -28,7 +28,7 @@ test("Drawing parent composition matches shared fixtures and Three.js matrices",
 
 test("path splitting and inverse transforms match shared fixtures and Three.js", async () => {
   const { inverse, splitCubic } = await import("../../🟦️.ts");
-  const fixture = await Bun.file(new URL("../../🧫️fixtures/✏️editing/🔣️.json", import.meta.url)).json();
+  const fixture = await Bun.file(new URL("../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🔣️.json", import.meta.url)).json();
   for (const item of fixture.splits) {
     const split = splitCubic(item.points, item.t);
     expect(split).toEqual(item.expected);

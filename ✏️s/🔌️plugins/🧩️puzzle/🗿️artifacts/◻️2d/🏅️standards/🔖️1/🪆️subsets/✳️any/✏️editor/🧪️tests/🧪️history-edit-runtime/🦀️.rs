@@ -25,7 +25,7 @@ use semio_framework::kernel::{HistoryEntry, HistoryTimeTravel, HistoryTimeTravel
 use semio_framework_plugin::{ActionMeta, PluginApp, ViewModel, FRAMEWORK_HISTORY_BODY_KEY};
 use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
 
-const HISTORY_EDIT_RUNTIME_CORPUS: &str = include_str!("../../🧫️fixtures/🧫️history-edit-runtime/🔣️.json");
+const HISTORY_EDIT_RUNTIME_CORPUS: &str = include_str!("../🧫️fixtures/🧫️history-edit-runtime/🔣️.json");
 
 /// 🧫️ The corpus, its schema tag checked.
 fn corpus() -> Value {

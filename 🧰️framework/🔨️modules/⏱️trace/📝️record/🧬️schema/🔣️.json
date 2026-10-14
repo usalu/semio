@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/trace-record/schema.json",
   "title": "TraceRecordLine",
-  "description": "One structured observation as `semio-framework-trace`'s `TraceRecord::to_json_line` writes it: one JSON object per line on the configured sink (`SEMIO_TRACE_SINK` = `stderr` | `stdout` | `none` | `file:<path>`), admitted by `SEMIO_TRACE_LEVEL`. `requestId` is the span id: the admission record of a long-lived span (a socket) and the record that ends it carry the same id. Absent identity fields are omitted, never written as null. The event vocabulary an operator may alert on is `⏱️trace/🧫️fixtures/🛰️span-vocabulary/🔣️.json`.",
+  "description": "One structured observation as `semio-framework-trace`'s `TraceRecord::to_json_line` writes it: one JSON object per line on the configured sink (`SEMIO_TRACE_SINK` = `stderr` | `stdout` | `none` | `file:<path>`), admitted by `SEMIO_TRACE_LEVEL`. `requestId` is the span id: the admission record of a long-lived span (a socket) and the record that ends it carry the same id. Absent identity fields are omitted, never written as null. The event vocabulary an operator may alert on is `⏱️trace/🧪️tests/🧫️fixtures/🛰️span-vocabulary/🔣️.json`.",
   "type": "object",
   "additionalProperties": false,
   "required": ["level", "event", "outcome"],

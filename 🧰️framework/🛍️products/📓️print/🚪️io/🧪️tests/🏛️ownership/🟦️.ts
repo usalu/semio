@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import { minimatch } from "minimatch";
 
 const owner = resolve(import.meta.dir, "../../..");
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🏛️ownership/🔣️.json"), "utf8")) as {semanticOwners: string[]; ioOwners: string[]};
+const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🏛️ownership/🔣️.json"), "utf8")) as {semanticOwners: string[]; ioOwners: string[]};
 for (const path of fixture.semanticOwners) {
   assert.doesNotMatch(readFileSync(resolve(owner, path), "utf8"), /(?:mod (?:codec|sqlite|sqlite_native)|export .*Sqlite|impl .*Artifact(?:Dsl|Pack))/);
 }

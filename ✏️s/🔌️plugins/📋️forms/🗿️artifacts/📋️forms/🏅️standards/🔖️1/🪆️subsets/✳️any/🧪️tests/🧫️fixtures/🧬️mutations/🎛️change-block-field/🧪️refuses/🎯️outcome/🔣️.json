@@ -1,0 +1,8 @@
+{
+  "status": "rejected",
+  "code": "mutation.invariant",
+  "invariant": "bounds-ordered",
+  "path": [
+    "q-area"
+  ]
+}

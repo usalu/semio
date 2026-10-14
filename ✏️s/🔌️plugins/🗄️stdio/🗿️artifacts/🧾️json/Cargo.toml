@@ -2,14 +2,16 @@ cargo-features = [ "trim-paths" ]
 
 [workspace]
 resolver = "2"
-members = [ "📦️packages/🦀️rust" ]
+members = [
+    "📦️packages/🦀️rust",
+]
 exclude = [
-  "**/🏅️standards/**",
-  "**/👽️guest/**",
-  "**/🔮️oracles/**",
-  "**/🏭️bridge/**",
-  "🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/🧩️json/📦️packages/🦀️rust",
-  "🔮️oracles/📦️packages/🦀️rust"
+    "**/🏅️standards/**",
+    "**/🏭️bridge/**",
+    "**/👽️guest/**",
+    "**/🔮️oracles/**",
+    "🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/🧩️json/📦️packages/🦀️rust",
+    "🔮️oracles/📦️packages/🦀️rust",
 ]
 
 [workspace.metadata.semio.repository]

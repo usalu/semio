@@ -8,35 +8,39 @@ struct RetainedExtensionInvocation{
     result:Option<semio_framework::kernel::RequestOutcome>,
     failure:Option<RetainedExtensionFaultReply>,
     refused_output:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Vec<u8>>>,
-    close_refusal:Option<semio_framework_value::ValueError>,
     closing:Option<semio_framework_value::retirement::controlled::ControlledRetirement<(String,Vec<u8>,String)>>,
 }
 
 impl RetainedExtensionInvocation{
     fn new(req:semio_framework::kernel::RequestId,from:MessageEndpoint,capability:String,payload:Vec<u8>)->Self{
         let(origin_kind,origin)=match from{MessageEndpoint::Shell{instance}=>(0,instance.0),MessageEndpoint::Backbone{uri}=>(1,uri),MessageEndpoint::PluginInstance{id}=>(2,id.0),MessageEndpoint::Extension{id}=>(3,id),MessageEndpoint::Topic{name}=>(4,name)};
-        Self{req,source:Some((capability,payload,origin)),origin_kind,result:None,failure:None,refused_output:None,close_refusal:None,closing:None}
+        Self{req,source:Some((capability,payload,origin)),origin_kind,result:None,failure:None,refused_output:None,closing:None}
     }
 
-    async fn step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework::kernel::RequestOutcome>,semio_framework::Fault>{
-        if self.close_refusal.is_some(){return Ok(None)}
+    async fn step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework::kernel::RequestOutcome>,semio_framework_job::OriginalTurnFailure>{
+        if cx.should_yield(){return Ok(None)}
+        let grant=semio_framework_value::RetainedCloneGrant{maximum_items:cx.retained_grant().maximum_items.min(1),..cx.retained_grant()};
+        if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
         if let Some(closing)=self.refused_output.as_mut(){
-            let grant=cx.retained_grant();if closing.terminal_is_empty(){if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}self.refused_output=None;if let Err(error)=cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}){self.close_refusal=Some(error)}return Ok(None)}
-            match closing.step(grant){Ok(step)=>if let Err(error)=cx.consume_retained(step.progress()){self.close_refusal=Some(error)},Err(error)=>{let progress=error.retained_progress();if let Err(error)=cx.consume_retained(progress){self.close_refusal=Some(error)}else{self.close_refusal=Some(error)}}}return Ok(None)
+            if closing.terminal_is_empty(){cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.refused_output=None;return Ok(None)}
+            semio_framework_job::close_original_retained_step(cx,closing.selected_demand(grant.maximum_copy_bytes)?,|loan|closing.step(loan))?;
+            return Ok(None)
         }
         if let Some(failure)=self.failure.as_mut(){
-            match failure.advance(cx){Ok(Some(payload))=>{self.result=Some(semio_framework::kernel::RequestOutcome::Err(payload));self.failure=None;self.begin_source_close();},Ok(None)=>{},Err(error)=>self.close_refusal=Some(error)}return Ok(None)
+            if let Some(payload)=failure.advance(cx)?{self.result=Some(semio_framework::kernel::RequestOutcome::Err(payload));self.failure=None;}
+            return Ok(None)
         }
         if let Some(closing)=self.closing.as_mut(){
-            if !closing.terminal_is_empty(){let grant=cx.retained_grant();match closing.step(grant){Ok(step)=>if let Err(error)=cx.consume_retained(step.progress()){self.close_refusal=Some(error)},Err(error)=>{let progress=error.retained_progress();if let Err(error)=cx.consume_retained(progress){self.close_refusal=Some(error)}else{self.close_refusal=Some(error)}}}return Ok(None)}
-            let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}self.closing=None;if let Err(error)=cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}){self.close_refusal=Some(error);return Ok(None)}return Ok(self.result.take());
+            if !closing.terminal_is_empty(){semio_framework_job::close_original_retained_step(cx,closing.selected_demand(grant.maximum_copy_bytes)?,|loan|closing.step(loan))?;return Ok(None)}
+            cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.closing=None;return Ok(self.result.take())
         }
+        if self.result.is_some(){cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.begin_source_close();return Ok(None)}
         let Some((capability,payload,_))=self.source.as_ref()else{return Ok(None)};
-        let answer=match crate::plugin_runtime::extension_invoke(&capability, &payload, cx).await{Ok(answer)=>answer,Err(cause)=>{self.failure=Some(RetainedExtensionFaultReply::new(ExtensionInvocationCause::Fault(cause)));return Ok(None)}};
-        if let Some(cause)=answer.refusal{self.failure=Some(RetainedExtensionFaultReply::new(ExtensionInvocationCause::Value(cause)));if let Some(payload)=answer.payload{self.refused_output=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(payload).unwrap_or_else(|_|unreachable!("original refused bytes declare typed retirement")))}return Ok(None)}
+        let answer=match crate::plugin_runtime::extension_invoke(capability,payload,cx).await{Ok(answer)=>answer,Err(cause)=>{self.failure=Some(RetainedExtensionFaultReply::new(ExtensionInvocationCause::Fault(cause)));return Ok(None)}};
+        if let Some(cause)=answer.refusal{self.failure=Some(RetainedExtensionFaultReply::new(ExtensionInvocationCause::Turn(cause)));if let Some(payload)=answer.payload{self.refused_output=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(payload).unwrap_or_else(|_|unreachable!("original refused bytes declare typed retirement")))}return Ok(None)}
         let Some(payload)=answer.payload else{return Ok(None)};
         self.result=Some(semio_framework::kernel::RequestOutcome::Ok(payload));
-        self.begin_source_close();Ok(None)
+        Ok(None)
     }
     fn begin_source_close(&mut self){let original=self.source.take().expect("original invocation retains caller fields until actual output");self.closing=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(original).unwrap_or_else(|_|unreachable!("original request fields declare complete typed retirement")));}
 }
@@ -51,10 +55,14 @@ thread_local!{
     static RETAINED_EXTENSION_CURSOR:Cell<usize>=const{Cell::new(0)};
 }
 
-async fn advance_retained_extension_invocation(cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Effect>,semio_framework::Fault>{
+async fn advance_retained_extension_invocation(cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Effect>,semio_framework_job::OriginalTurnFailure>{
     let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
     let start=RETAINED_EXTENSION_CURSOR.get();let selected=RETAINED_EXTENSION_INVOCATIONS.with(|owners|{let mut owners=owners.borrow_mut();(0..requests::REQUEST_SLOTS).map(|offset|(start+offset)%requests::REQUEST_SLOTS).find_map(|index|owners[index].take().map(|owner|(index,owner)))});
     let Some((index,mut owner))=selected else{return Ok(None)};let result=owner.step(cx).await;RETAINED_EXTENSION_CURSOR.set((index+1)%requests::REQUEST_SLOTS);
+    receive_retained_extension_invocation(index,owner,result)
+}
+
+fn receive_retained_extension_invocation(index:usize,owner:RetainedExtensionInvocation,result:Result<Option<semio_framework::kernel::RequestOutcome>,semio_framework_job::OriginalTurnFailure>)->Result<Option<Effect>,semio_framework_job::OriginalTurnFailure>{
     match result{Ok(Some(result))=>Ok(Some(Effect::Respond{req:owner.req,result})),result=>{RETAINED_EXTENSION_INVOCATIONS.with(|owners|owners.borrow_mut()[index]=Some(owner));result.map(|_|None)}}
 }
 
@@ -282,7 +290,7 @@ impl TurnMoreWorkSources {
 }
 
 /// 🧹️ Retires late-built children and documents before their released arguments and keeps queued ownership runnable.
-fn close_late_ui_retirement() -> Result<bool, semio_framework::Fault> {
+pub(super) fn close_late_ui_retirement() -> Result<bool, semio_framework::Fault> {
     let built_complete = ui_contract::close_built_node_page_one();
     let documents = ui_contract::close_ui_document_page_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).map_err(reactor_close_fault)?;
     let values = ui_contract::close_ui_value_page_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).map_err(reactor_close_fault)?;
@@ -578,7 +586,7 @@ async fn with_turn_execution<T>(mut future: std::pin::Pin<&mut (impl std::future
 /// ⏱️ Charges the turn in flight with executing microseconds it never really spent, so a law can
 /// reach the strict ceiling deterministically instead of sleeping through it.
 #[cfg(test)]
-fn charge_turn_execution_us(spent_us: u64) {
+pub(super) fn charge_turn_execution_us(spent_us: u64) {
     TURN_EXECUTION.with(|execution| {
         let mut current = execution.get();
         current.accumulated_us = current.accumulated_us.saturating_add(spent_us);
@@ -606,7 +614,7 @@ pub async fn poll_kernel<PA: crate::plugin_app::PluginApp + 'static>(
     budget: semio_framework::kernel::Budget,
     identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
     cx:&mut semio_framework_job::StepContext<'_>,
-) -> Result<semio_framework::kernel::TurnResult, semio_framework::Fault> {
+) -> Result<semio_framework::kernel::TurnResult, semio_framework_job::OriginalTurnFailure> {
     poll_kernel_output(runtime, events, command_page, cold_pair_page, budget, |_| Ok(()), |result, ()| result, identity,cx).await
 }
 
@@ -622,7 +630,7 @@ pub(super) async fn poll_kernel_output<PA: crate::plugin_app::PluginApp, T, Prep
     publish: impl FnOnce(semio_framework::kernel::TurnResult, Prepared) -> T,
     identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
     cx:&mut semio_framework_job::StepContext<'_>,
-) -> Result<T, semio_framework::Fault> {
+) -> Result<T, semio_framework_job::OriginalTurnFailure> {
     with_turn_execution(std::pin::pin!(poll_kernel_turn(runtime, events, command_page, cold_pair_page, budget, prepare, publish, identity,cx))).await
 }
 
@@ -637,7 +645,7 @@ fn plugin_exchange_boxed<'a, 'b, 'context, PA: crate::plugin_app::PluginApp>(
     command: Option<(u64, crate::plugin_runtime::PluginCommandIngress)>,
     identity: &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>,
     cx:&'a mut semio_framework_job::StepContext<'context>,
-) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<crate::plugin_runtime::PluginExchangeOutput, semio_framework::Fault>> + 'a>> {
+) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<crate::plugin_runtime::PluginExchangeOutput, semio_framework_job::OriginalTurnFailure>> + 'a>> {
     Box::pin(async move{
         let mut output=crate::plugin_runtime::plugin_exchange(runtime,instance_id,command,identity,cx).await?;
         if let Err(refusal)=collect_original_publication_receipts(&mut output,cx){return Err(retain_refused_publication(instance_id,output,refusal,cx));}
@@ -825,11 +833,11 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
     publish: impl FnOnce(semio_framework::kernel::TurnResult, Prepared) -> T,
     identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
     cx:&mut semio_framework_job::StepContext<'_>,
-) -> Result<T, semio_framework::Fault> {
-    budget.retained.validate().map_err(|error|semio_framework_diagnostic::FaultFrom::to_fault(&error))?;
-    if budget.retained.operation!=cx.operation().0||budget.retained.generation!=cx.generation().0||budget.retained.grant!=cx.retained_grant(){return Err(reactor_close_fault("original reactor retained input does not match its borrowed context"));}
+) -> Result<T, semio_framework_job::OriginalTurnFailure> {
+    budget.retained.validate()?;
+    if budget.retained.operation!=cx.operation().0||budget.retained.generation!=cx.generation().0||budget.retained.grant!=cx.retained_grant(){return Err(reactor_close_fault("original reactor retained input does not match its borrowed context").into());}
     let original_progress=cx.retained_progress();
-    if REFUSED_PUBLICATION.with(|owner|owner.borrow().is_some()){return Err(reactor_close_fault("original refused publication still owns its output and receipts"));}
+    if REFUSED_PUBLICATION.with(|owner|owner.borrow().is_some()){return Err(reactor_close_fault("original refused publication still owns its output and receipts").into());}
     trace_turn_phase_retention("enter");
     let retryable_lifecycle = command_page.is_none() && cold_pair_page.is_none() && events.iter().all(|event| matches!(event, Event::InstanceOpen { .. } | Event::InstanceClose(_) | Event::InstanceLifecycleAck(_)));
     let mut dirty = DirtyPollOwners::new();
@@ -845,7 +853,7 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
         };
         if let Some(instance) = instance {
             if focus.replace(instance).is_some() {
-                return Err(reactor_close_fault("one lifecycle command is admitted per turn"));
+                return Err(reactor_close_fault("one lifecycle command is admitted per turn").into());
             }
         }
     }
@@ -879,38 +887,40 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
     let mut document_backbone_effects = Vec::new();
     let mut inbound_request_effects: Vec<Effect> = Vec::new();
     trace_turn_phase_retention("lifecycle");
-    let retirement_deadline = std::time::Instant::now() + std::time::Duration::from_millis(u64::from(budget.deadline_ms));
-    retire_while_progress_fallible(retirement_deadline, REACTOR_CLOSE_UNITS_PER_TURN, step_reactor_close)?;
-    retire_while_progress_bounded(retirement_deadline, REACTOR_CLOSE_UNITS_PER_TURN, || COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().advance_close_one()));
+    retire_while_progress_fallible(cx, REACTOR_CLOSE_UNITS_PER_TURN, step_reactor_close)?;
+    retire_while_progress_bounded(cx, REACTOR_CLOSE_UNITS_PER_TURN, || COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().advance_close_one()));
     PATCHES.with(|patches| {
-        for unit in 0..PATCH_CLOSE_UNITS_PER_TURN {
-            if unit > 0 && unit % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= retirement_deadline {
+        for _ in 0..PATCH_CLOSE_UNITS_PER_TURN {
+            if cx.should_yield() {
                 break;
             }
+            cx.consume_fuel(1);
             if patches.close_step(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT) {
                 break;
             }
         }
     });
-    for unit in 0..PATCH_CLOSE_UNITS_PER_TURN {
+    for _ in 0..PATCH_CLOSE_UNITS_PER_TURN {
+        if cx.should_yield(){break}
+        cx.consume_fuel(1);
         if semio_framework_ui_runtime::close_surface_reconcile_handback_one().map_err(reactor_close_fault)? {
             break;
         }
-        if unit % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= retirement_deadline {
+        if cx.should_yield() {
             break;
         }
     }
-    retire_until_complete(retirement_deadline, || ui_contract::close_ui_document_page_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).expect("queued document retirement remains valid").complete);
-    retire_until_complete(retirement_deadline, ui_contract::close_ui_patch_owner_one);
-    retire_until_complete(retirement_deadline, || ui_contract::close_ui_value_page_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).expect("exact UI value retirement queue remains valid").complete);
-    retire_until_complete(retirement_deadline, ui_contract::close_built_node_page_one);
-    retire_while_progress(retirement_deadline, || semio_framework::kernel::close_ui_turn_patch_owner_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT));
-    retire_while_progress(retirement_deadline, || {
+    retire_until_complete(cx, || ui_contract::close_ui_document_page_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).expect("queued document retirement remains valid").complete);
+    retire_until_complete(cx, ui_contract::close_ui_patch_owner_one);
+    retire_until_complete(cx, || ui_contract::close_ui_value_page_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).expect("exact UI value retirement queue remains valid").complete);
+    retire_until_complete(cx, ui_contract::close_built_node_page_one);
+    retire_while_progress(cx, || semio_framework::kernel::close_ui_turn_patch_owner_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT));
+    retire_while_progress(cx, || {
         matches!(semio_framework::kernel::close_ui_turn_patch_transport_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT), Ok(semio_framework::kernel::UiTurnPatchTransportProgress::Pending { .. }))
     });
     with_pending_patches(|pending| pending.borrow_mut().advance_rejection(|surface, generation| PATCHES.with(|patches| patches.mark_rejected(surface, generation))));
-    for unit in 0..PATCH_CLOSE_UNITS_PER_TURN {
-        if unit > 0 && unit % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= retirement_deadline {
+    for _ in 0..PATCH_CLOSE_UNITS_PER_TURN {
+        if cx.should_yield() {
             break;
         }
         if with_pending_patches(|pending| pending.borrow_mut().close_step(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT)).map_err(reactor_close_fault)? {
@@ -923,11 +933,13 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
             trace_guest_line(&format!("[TRACE] close cleanup fault contained to its own retired lifetime: {} {}", fault.code.0.as_str(), fault.message));
             true
         }
-        Err(fault) => return Err(fault),
+        Err(fault) => return Err(fault.into()),
     };
-    for step in 0..crate::plugin_runtime::LIVE_CLEANUP_PRESSURE_STEPS_PER_TURN {
+    for _ in 0..crate::plugin_runtime::LIVE_CLEANUP_PRESSURE_STEPS_PER_TURN {
+        if cx.should_yield(){break}
+        cx.consume_fuel(1);
         let _ = crate::plugin_runtime::plugin_step_live_cleanup(runtime)?;
-        if !crate::plugin_runtime::plugin_live_cleanup_under_pressure(runtime) || (step % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= retirement_deadline) {
+        if !crate::plugin_runtime::plugin_live_cleanup_under_pressure(runtime) || cx.should_yield() {
             break;
         }
     }
@@ -941,21 +953,21 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
                 if fresh {
                     if let Err(error) = INSTANCE_METADATA.with(|metadata| metadata.borrow_mut().insert(instance, app_id.0.clone(), quotas)) {
                         runtime.guest_lifetimes.borrow_mut().remove_uncreated(instance).map_err(reactor_close_fault)?;
-                        return Err(error);
+                        return Err(error.into());
                     }
                     if let Err(error) = crate::plugin_runtime::plugin_open_actor_instance(runtime, request, &app_id.0, &actor, identity).await {
                         INSTANCE_METADATA.with(|metadata| drop(metadata.borrow_mut().remove(instance)));
                         runtime.guest_lifetimes.borrow_mut().remove_uncreated(instance).map_err(reactor_close_fault)?;
-                        return Err(error);
+                        return Err(error.into());
                     }
                 }
             }
             Event::InstanceClose(_) | Event::InstanceLifecycleAck(_) => {}
             Event::CommandIngressPage { .. } => {
-                return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-page-event-bypass"), "command page must use poll_kernel's dedicated owner argument"));
+                return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-page-event-bypass"), "command page must use poll_kernel's dedicated owner argument").into());
             }
             Event::ColdDocumentPairPage(_) => {
-                return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.cold-pair-page-event-bypass"), "cold document pair page must use poll_kernel's dedicated owner argument"));
+                return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.cold-pair-page-event-bypass"), "cold document pair page must use poll_kernel's dedicated owner argument").into());
             }
             Event::UiIntent { instance, intent } => {
                 let numeric_instance = instance.0.parse::<u32>().map_err(|_| reactor_close_fault("invalid intent instance"))?;
@@ -963,7 +975,7 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
                 if let Ok(intent_value) = store::pack_rt::decode_wire_value(&intent) {
                     if let Ok(intent) = serde_json::from_value::<ui_contract::UiIntent>(intent_value.into()) {
                         if parse_surface_instance(intent.surface.as_ref()) != Some(numeric_instance) {
-                            return Err(reactor_close_fault("intent surface names another lifetime"));
+                            return Err(reactor_close_fault("intent surface names another lifetime").into());
                         }
                         let current_revision = PATCHES.with(|patches| patches.revision(&intent.surface.0));
                         if !is_stale_intent(intent.revision, current_revision, DEFAULT_REVISION_TOLERANCE) {
@@ -1053,7 +1065,7 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
                             Ok(bytes) => Ok(bytes.clone()),
                             Err(fault) => Err(fault.clone()),
                         };
-                        let output = crate::plugin_runtime::plugin_complete_reserved_spawned_job(runtime, instance, job, reserved_output, identity,cx).await;
+                        let output = crate::plugin_runtime::plugin_complete_reserved_spawned_job(runtime, instance, job, reserved_output, identity,cx).await?;
                         route_exchange_output(instance, output, &mut document_backbone_effects,cx)?;
                     }
                 }
@@ -1247,10 +1259,7 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
                         }
                         route_exchange_output(instance, output, &mut effects,cx)?;
                     }
-                    Err(fault) => {
-                        command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) };
-                        retained = None;
-                    }
+                    Err(failure) => return Err(failure),
                 }
             }
         }
@@ -1274,7 +1283,7 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
                     }
                     route_exchange_output(cursor.instance, output, &mut effects,cx)?;
                 }
-                Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
+                Err(failure) => return Err(failure),
             },
             owner => retained = Some(owner),
         }
@@ -1373,7 +1382,7 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
                                 }
                                 route_exchange_output(cursor.instance, output, &mut effects,cx)?;
                             }
-                            Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
+                            Err(failure) => return Err(failure),
                         },
                         Err((fault, _pages)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
                     },
@@ -1409,7 +1418,7 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
                                 }
                                 route_exchange_output(cursor.instance, output, &mut effects,cx)?;
                             }
-                            Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
+                            Err(failure) => return Err(failure),
                         },
                         Err((fault, _pages)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
                     },
@@ -1470,8 +1479,8 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
         }
     }
 
-    for unit in 0..PATCH_CLOSE_UNITS_PER_TURN {
-        if unit > 0 && unit % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= retirement_deadline {
+    for _ in 0..PATCH_CLOSE_UNITS_PER_TURN {
+        if cx.should_yield() {
             break;
         }
         if with_pending_patches(|pending| pending.borrow_mut().close_step(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT)).map_err(reactor_close_fault)? {
@@ -1480,7 +1489,7 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
     }
 
     trace_turn_phase_retention("ingress");
-    let (continuation, typed_operation_scan) = crate::plugin_runtime::plugin_continue_typed_operations(runtime, crate::plugin_runtime::TypedOperationGrant::turn(budget), identity,cx).await?;
+    let (continuation, typed_operation_scan) = crate::plugin_runtime::plugin_continue_typed_operations(runtime, crate::plugin_runtime::TypedOperationGrant::turn(budget,cx), identity,cx).await?;
     let typed_operation_contended = typed_operation_scan.contended;
     if let Some((instance, output)) = continuation {
         route_exchange_output(instance, output, &mut effects,cx)?;
@@ -1554,7 +1563,7 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
     }
     let reconcile_work = PATCHES
         .with(|patches| -> Result<bool, &'static str> {
-            drive_reconcile_within(patches, reconcile_step_opportunities(budget.fuel), std::time::Instant::now() + std::time::Duration::from_millis(u64::from(budget.deadline_ms)))?;
+            drive_reconcile_within(patches, reconcile_step_opportunities(cx.fuel_remaining()), cx)?;
             Ok(reconcile_arms_turn(patches))
         })
         .map_err(|reason| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.patch-reconcile-authority"), reason))?;
@@ -1625,7 +1634,7 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
     });
     let status = if more_work { TurnStatus::MoreWork } else { TurnStatus::Idle };
 
-    let retained_receipt=budget.retained.return_original(original_turn_progress(original_progress,cx.retained_progress())?).map_err(|error|semio_framework_diagnostic::FaultFrom::to_fault(&error))?;
+    let retained_receipt=budget.retained.return_original(original_turn_progress(original_progress,cx.retained_progress())?)?;
     let mut result = semio_framework::kernel::TurnResult { retained_receipt, ui_patches, effects, presence, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first()), status, fuel_used: 0, command_ingress, cold_pair_ingress, lifecycle_receipt, ui_patch_receipt };
     with_pending_patches(|pending| {
         let mut pending = pending.borrow_mut();
@@ -1674,7 +1683,7 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
 /// leaves open: never below one contiguous request ceiling (a lane that declared less could not carry
 /// one document-scaled publication at all) and never above
 /// [`semio_framework::kernel::UI_TURN_PATCH_BUDGET_BYTES`].
-fn turn_patch_budget_bytes(budget: semio_framework::kernel::Budget) -> usize {
+pub(super) fn turn_patch_budget_bytes(budget: semio_framework::kernel::Budget) -> usize {
     usize::try_from(budget.max_patch_bytes).unwrap_or(semio_framework::kernel::UI_TURN_PATCH_BUDGET_BYTES).clamp(semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, semio_framework::kernel::UI_TURN_PATCH_BUDGET_BYTES)
 }
 
@@ -1694,7 +1703,7 @@ fn turn_patch_budget_bytes(budget: semio_framework::kernel::Budget) -> usize {
 /// 3. the page's fixed capacity stops the loop at [`semio_framework::kernel::UI_TURN_PATCHES_MAXIMUM`],
 ///    which is itself derived so the page never becomes a contiguous request past the guest's ceiling.
 #[expect(clippy::result_large_err, reason = "A refused publication returns its exact patch owner to the reserved pending slot without allocating an error wrapper.")]
-fn take_turn_patch_page(budget_bytes: usize) -> Result<semio_framework::kernel::UiTurnPatches, semio_framework::Fault> {
+pub(super) fn take_turn_patch_page(budget_bytes: usize) -> Result<semio_framework::kernel::UiTurnPatches, semio_framework::Fault> {
     let mut page = semio_framework::kernel::UiTurnPatches::default();
     let mut spent = 0usize;
     while page.len() < semio_framework::kernel::UI_TURN_PATCHES_MAXIMUM {
@@ -1870,12 +1879,11 @@ crate::component_persistent_local! {
 /// worker messages and 24.3 s for the 180-object Nakagin switch, of which only 5.4 s was main-thread
 /// work. Retirement is bounded work per TURN, not per item.
 // 🚫️async: E1 pure bounded retirement driver called from the turn's own close ladder — see R9.
-fn retire_until_complete(deadline: std::time::Instant, mut unit: impl FnMut() -> bool) {
-    for index in 0..PATCH_CLOSE_UNITS_PER_TURN {
+fn retire_until_complete(cx:&mut semio_framework_job::StepContext<'_>, mut unit: impl FnMut() -> bool) {
+    for _ in 0..PATCH_CLOSE_UNITS_PER_TURN {
+        if cx.should_yield(){return}
+        cx.consume_fuel(1);
         if unit() {
-            return;
-        }
-        if index % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= deadline {
             return;
         }
     }
@@ -1883,12 +1891,11 @@ fn retire_until_complete(deadline: std::time::Instant, mut unit: impl FnMut() ->
 
 /// 🧹️ [`retire_until_complete`] for a ladder entry that reports PROGRESS rather than completion.
 // 🚫️async: E1 pure bounded retirement driver called from the turn's own close ladder — see R9.
-fn retire_while_progress(deadline: std::time::Instant, mut unit: impl FnMut() -> bool) {
-    for index in 0..PATCH_CLOSE_UNITS_PER_TURN {
+fn retire_while_progress(cx:&mut semio_framework_job::StepContext<'_>, mut unit: impl FnMut() -> bool) {
+    for _ in 0..PATCH_CLOSE_UNITS_PER_TURN {
+        if cx.should_yield(){return}
+        cx.consume_fuel(1);
         if !unit() {
-            return;
-        }
-        if index % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= deadline {
             return;
         }
     }
@@ -1897,12 +1904,11 @@ fn retire_while_progress(deadline: std::time::Instant, mut unit: impl FnMut() ->
 /// 🧹️ [`retire_while_progress`] with its own unit ceiling — for a ladder whose fixed slot geometry is
 /// wider than the patch ladder's 256 units.
 // 🚫️async: E1 pure bounded retirement driver called from the turn's own close ladder — see R9.
-fn retire_while_progress_bounded(deadline: std::time::Instant, units: usize, mut unit: impl FnMut() -> bool) {
-    for index in 0..units {
+fn retire_while_progress_bounded(cx:&mut semio_framework_job::StepContext<'_>, units: usize, mut unit: impl FnMut() -> bool) {
+    for _ in 0..units {
+        if cx.should_yield(){return ;}
+        cx.consume_fuel(1);
         if !unit() {
-            return;
-        }
-        if index % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= deadline {
             return;
         }
     }
@@ -1911,12 +1917,11 @@ fn retire_while_progress_bounded(deadline: std::time::Instant, units: usize, mut
 /// 🧹️ [`retire_while_progress_bounded`] for a ladder unit that may fault — the fault propagates out
 /// of the turn instead of being swallowed by the driver.
 // 🚫️async: E1 pure bounded retirement driver called from the turn's own close ladder — see R9.
-fn retire_while_progress_fallible(deadline: std::time::Instant, units: usize, mut unit: impl FnMut() -> Result<bool, semio_framework::Fault>) -> Result<(), semio_framework::Fault> {
-    for index in 0..units {
+fn retire_while_progress_fallible(cx:&mut semio_framework_job::StepContext<'_>, units: usize, mut unit: impl FnMut() -> Result<bool, semio_framework::Fault>) -> Result<(), semio_framework::Fault> {
+    for _ in 0..units {
+        if cx.should_yield(){return Ok(())}
+        cx.consume_fuel(1);
         if !unit()? {
-            return Ok(());
-        }
-        if index % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= deadline {
             return Ok(());
         }
     }
@@ -1948,19 +1953,19 @@ const REACTOR_CLOSE_UNITS_PER_TURN: usize = 4_096;
 /// W-S2). At 256 it is 5. The turn stays interactive because [`PATCH_CLOSE_DEADLINE_STRIDE`] re-reads
 /// the clock every 8 units against the turn's own budget — the unit count is the ceiling, the
 /// deadline is the bound.
-const PATCH_CLOSE_UNITS_PER_TURN: usize = 256;
+pub(super) const PATCH_CLOSE_UNITS_PER_TURN: usize = 256;
 /// ⏱️ How often the retirement run re-reads the clock — the same 64-opportunity stride the reconcile
 /// loop uses, scaled to this shorter run.
 const PATCH_CLOSE_DEADLINE_STRIDE: usize = 8;
 /// 🧹️ Items one retirement unit may retire. Priced per PAGE like every other stage of the turn
 /// (`SURFACE_RECONCILE_PAGE_BYTES` for bytes, this for items) instead of per item, so a
 /// document-scaled patch retires in a bounded handful of turns instead of one turn per item.
-const PATCH_RETIREMENT_ITEMS_PER_UNIT: usize = 1_024;
+pub(super) const PATCH_RETIREMENT_ITEMS_PER_UNIT: usize = 1_024;
 /// 🧹️ Bytes one retirement unit may retire — the publication's own page budget.
-const PATCH_RETIREMENT_BYTES_PER_UNIT: usize = semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES;
+pub(super) const PATCH_RETIREMENT_BYTES_PER_UNIT: usize = semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES;
 /// ⏱️ The reactor's OWN slice of one turn: the wall the executor may spend running ready tasks before
 /// it hands control back to whoever polled it. It is the reactor's slice, not the turn's — the turn's
-/// own wall is [`semio_framework::kernel::Budget::deadline_ms`], which the reconcile drive and the
+/// own wall is [`semio_framework::kernel::Budget::deadline_us`], which the reconcile drive and the
 /// retirement passes read.
 ///
 /// 🐛️ It was a literal `8` at its only call site, and the browser worker's silent-turn hold copied
@@ -1980,7 +1985,7 @@ pub const MEASURED_GUEST_TURN_COST_MS: u64 = 13;
 /// 🚚️ How many consecutive guest turns ONE worker-owned `MoreWork` drive may run before it crosses
 /// back anyway — the host's own granted wall for this crossing, divided by what a turn measures.
 ///
-/// The grant is the authority: `Budget::deadline_ms` is the wall the host declared when it posted
+/// The grant is the authority: `Budget::deadline_us` is the wall the host declared when it posted
 /// this turn, so a drive that spends it is spending what it was given, and the host's watchdog ladder
 /// (`SHARD_LIVENESS_POLICY`) is already written against it. At least one step is always admitted —
 /// a grant smaller than one turn still has to make progress, exactly as the turn-patch page always
@@ -2036,17 +2041,16 @@ pub const fn more_work_drive_budget_ms(grant_wall_ms: u64, guest_turn_cost_ms: u
 /// 🩹️ `take_ready_patch_into` already committed this output to its closing
 /// lifecycle; there is no `return_ready_patch` any more, so losing this
 /// capacity race simply drops the extracted page instead of re-queueing it.
-fn drive_reconcile_within(patches: &patches::PatchTracker, opportunities: usize, deadline: std::time::Instant) -> Result<usize, &'static str> {
+pub(super) fn drive_reconcile_within(patches: &patches::PatchTracker, opportunities: usize, cx:&mut semio_framework_job::StepContext<'_>) -> Result<usize, &'static str> {
     let mut spent = 0usize;
-    for opportunity in 0..opportunities {
+    for _ in 0..opportunities {
+        if cx.should_yield(){break}
         let drivable = patches.has_drivable_work();
         let can_publish = with_pending_patches(|pending| pending.borrow().has_capacity());
         if !drivable && !(can_publish && patches.has_publishable_work()) {
             break;
         }
-        if opportunity > 0 && opportunity % 64 == 0 && std::time::Instant::now() >= deadline {
-            break;
-        }
+        cx.consume_fuel(1);
         spent += 1;
         if drivable {
             patches.drive_one();
@@ -2087,7 +2091,7 @@ fn drive_reconcile_within(patches: &patches::PatchTracker, opportunities: usize,
 /// arrives as its own event-carrying turn, and arming for it bought exactly one round trip per turn
 /// that carried nothing (`📓️reactor-reconcile-spin-2026-09-14.md` §1). Same family as
 /// `📓️host-reconcile-silence-2026-09-12.md`, one layer out.
-fn reconcile_arms_turn(patches: &patches::PatchTracker) -> bool {
+pub(super) fn reconcile_arms_turn(patches: &patches::PatchTracker) -> bool {
     if patches.has_drivable_work() {
         return true;
     }
@@ -2105,34 +2109,39 @@ fn original_turn_progress(before:semio_framework_value::RetainedCloneProgress,af
 
 /// 🧾️ Keeps exact producer grants and original deltas together when their receiver refuses authority.
 struct OriginalPublicationReceipts{
+ receiving:Option<crate::plugin_runtime::OriginalPublicationReceiving>,
  constructor:Option<(crate::document_ingress::ArtifactStoreConstructorKind,crate::document_ingress::ArtifactStoreConstructorPhase,semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
  preparation:Option<(semio_framework_job::OperationId,semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
  history:Option<(semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
  tool:Option<(semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
  retirement:Option<(semio_framework_job::OperationId,semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
 }
-struct OriginalPublicationReceiptRefusal{receipts:OriginalPublicationReceipts,error:semio_framework_value::ValueError}
-struct RefusedPublicationOwner{instance:u32,operation:semio_framework_job::OperationId,generation:semio_framework_job::Generation,output:std::mem::ManuallyDrop<crate::plugin_runtime::PluginExchangeOutput>,refusal:std::mem::ManuallyDrop<OriginalPublicationReceiptRefusal>}
+struct OriginalPublicationReceiptRefusal{receipts:OriginalPublicationReceipts,error:semio_framework_job::OriginalTurnFailure}
+struct RefusedPublicationOwner{instance:u32,operation:semio_framework_job::OperationId,generation:semio_framework_job::Generation,output:std::mem::ManuallyDrop<crate::plugin_runtime::PluginExchangeOutput>,receipts:std::mem::ManuallyDrop<OriginalPublicationReceipts>}
 impl Drop for RefusedPublicationOwner{fn drop(&mut self){assert!(std::thread::panicking(),"original refused publication reached Drop before explicit funded retirement");}}
 crate::component_persistent_local!{static REFUSED_PUBLICATION:RefCell<Option<RefusedPublicationOwner>>=RefCell::new(None);}
 
 /// 📥️ Collects each actual producer delta once into the same original recipient before semantic publication.
 fn collect_original_publication_receipts(output:&mut crate::plugin_runtime::PluginExchangeOutput,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),OriginalPublicationReceiptRefusal>{
- let receipts=OriginalPublicationReceipts{constructor:output.constructor_receipt.take(),preparation:output.preparation_receipt.take(),history:output.history_command_receipt.take(),tool:output.tool_run_receipt.take(),retirement:output.retirement_receipt.take()};let mut refusal=None;
- for receipt in [receipts.constructor.map(|(_,_,grant,progress)|(grant,progress)),receipts.preparation.map(|(_,grant,progress)|(grant,progress)),receipts.history,receipts.tool,receipts.retirement.map(|(_,grant,progress)|(grant,progress))].into_iter().flatten(){
-  let(grant,progress)=receipt;let remaining=cx.retained_grant();
+ use crate::plugin_runtime::OriginalPublicationFamily as Family;
+ let receipts=OriginalPublicationReceipts{receiving:output.original_receiving.take(),constructor:output.constructor_receipt.take(),preparation:output.preparation_receipt.take(),history:output.history_command_receipt.take(),tool:output.tool_run_receipt.take(),retirement:output.retirement_receipt.take()};let mut refusal=None;let mut receipt_refusal=None;
+ let actual=[receipts.constructor.map(|(_,_,grant,progress)|(Family::Constructor,grant,progress)),receipts.preparation.map(|(_,grant,progress)|(Family::Preparation,grant,progress)),receipts.history.map(|(grant,progress)|(Family::History,grant,progress)),receipts.tool.map(|(grant,progress)|(Family::Tool,grant,progress)),receipts.retirement.map(|(_,grant,progress)|(Family::Retirement,grant,progress))];
+ if let Some(receiving)=receipts.receiving{let unique=actual.iter().flatten().count()==1&&actual.iter().flatten().any(|(family,_,_)|Some(*family)==receiving.family);let posted=receiving.before.checked_add(receiving.posted);if !unique||receiving.recipient!=cx.original_recipient_identity()||posted.as_ref().ok()!=Some(&cx.retained_progress()){return Err(OriginalPublicationReceiptRefusal{receipts,error:semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original posted publication receipt lacks its unique family or actual recipient binding").into()})}}
+ for (family,grant,progress) in actual.into_iter().flatten(){
+  let remaining=receipts.receiving.map_or_else(||cx.retained_grant(),|receiving|receiving.grant);
   if (grant.maximum_items>remaining.maximum_items||grant.maximum_copy_bytes>remaining.maximum_copy_bytes||grant.maximum_capacity_bytes>remaining.maximum_capacity_bytes||grant.maximum_release_bytes>remaining.maximum_release_bytes||grant.maximum_depth>remaining.maximum_depth||!progress.fits(grant))&&refusal.is_none(){refusal=Some(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original publication receipt exceeds its producer or remaining caller authority").with_retained_progress(progress));}
-  if let Err(error)=cx.consume_retained(progress){if refusal.is_none(){refusal=Some(error);}}
+  let unposted=if let Some(receiving)=receipts.receiving.filter(|receiving|receiving.family==Some(family)){let subtract=|whole:usize,posted:usize|whole.checked_sub(posted).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original publication full receipt is smaller than its already received effects").with_retained_progress(progress));match (||Ok::<_,semio_framework_value::ValueError>(semio_framework_value::RetainedCloneProgress{copied_items:subtract(progress.copied_items,receiving.posted.copied_items)?,copied_bytes:subtract(progress.copied_bytes,receiving.posted.copied_bytes)?,retained_capacity_bytes:subtract(progress.retained_capacity_bytes,receiving.posted.retained_capacity_bytes)?,released_bytes:subtract(progress.released_bytes,receiving.posted.released_bytes)?}))(){Ok(progress)=>progress,Err(error)=>return Err(OriginalPublicationReceiptRefusal{receipts,error:error.into()})}}else{progress};
+  if let Err(error)=cx.consume_retained(unposted){if refusal.is_none(){refusal=Some(error)}else if receipt_refusal.is_none(){receipt_refusal=Some(error)}}
  }
- match refusal{Some(error)=>Err(OriginalPublicationReceiptRefusal{receipts,error}),None=>Ok(())}
+ match refusal{Some(error)=>Err(OriginalPublicationReceiptRefusal{receipts,error:semio_framework_job::OriginalTurnFailure{primary:error.into(),receipt_refusal}}),None=>Ok(())}
 }
 
-fn retain_refused_publication(instance:u32,output:crate::plugin_runtime::PluginExchangeOutput,refusal:OriginalPublicationReceiptRefusal,cx:&semio_framework_job::StepContext<'_>)->semio_framework::Fault{
- REFUSED_PUBLICATION.with(|owner|{let mut owner=owner.borrow_mut();assert!(owner.is_none(),"original Reactor refusal slot cannot replace an earlier original output");*owner=Some(RefusedPublicationOwner{instance,operation:cx.operation(),generation:cx.generation(),output:std::mem::ManuallyDrop::new(output),refusal:std::mem::ManuallyDrop::new(refusal)});});
- reactor_close_fault("original publication receipt refused; output and original receipts retained")
+fn retain_refused_publication(instance:u32,output:crate::plugin_runtime::PluginExchangeOutput,refusal:OriginalPublicationReceiptRefusal,cx:&semio_framework_job::StepContext<'_>)->semio_framework_job::OriginalTurnFailure{
+ let OriginalPublicationReceiptRefusal{receipts,error}=refusal;
+ REFUSED_PUBLICATION.with(|owner|{let mut owner=owner.borrow_mut();assert!(owner.is_none(),"original Reactor refusal slot cannot replace an earlier original output");*owner=Some(RefusedPublicationOwner{instance,operation:cx.operation(),generation:cx.generation(),output:std::mem::ManuallyDrop::new(output),receipts:std::mem::ManuallyDrop::new(receipts)});});error
 }
 
-fn route_exchange_output(instance:u32,mut output:crate::plugin_runtime::PluginExchangeOutput,effects:&mut Vec<Effect>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework::Fault>{
+fn route_exchange_output(instance:u32,mut output:crate::plugin_runtime::PluginExchangeOutput,effects:&mut Vec<Effect>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
  if let Err(refusal)=collect_original_publication_receipts(&mut output,cx){
   return Err(retain_refused_publication(instance,output,refusal,cx));
  }
@@ -2335,3 +2344,7 @@ mod wire_effect_laws;
 #[cfg(test)]
 #[path = "🧪️tests/🕹️deferred-render-drain/🦀️.rs"]
 mod deferred_render_drain_laws;
+
+#[cfg(test)]
+#[path = "🧪️tests/⚖️invocation-failure/🦀️.rs"]
+mod invocation_failure_laws;

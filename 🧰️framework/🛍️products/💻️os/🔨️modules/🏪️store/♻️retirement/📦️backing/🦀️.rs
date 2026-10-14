@@ -129,6 +129,55 @@ impl<T: semio_framework_value::retirement::RetireOwned> Drop for SourceIterator<
     }
 }
 
+/// 📋️ Keeps original paged source backing through paid ordered publication and controlled close.
+pub(super) struct PagedSourceIterator<T:semio_framework_value::retirement::RetireOwned,const N:usize={usize::MAX}>{
+    source:std::mem::ManuallyDrop<Option<semio_framework_value::list::PagedList<T,N>>>,
+    position:usize,
+    vacant:fn()->T,
+    active:Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::list::PagedList<T,N>>>,
+    terminal:bool,
+}
+impl<T:semio_framework_value::retirement::RetireOwned,const N:usize> PagedSourceIterator<T,N>{
+    pub(super) fn new(source:semio_framework_value::list::PagedList<T,N>,vacant:fn()->T)->Self{Self{source:std::mem::ManuallyDrop::new(Some(source)),position:0,vacant,active:None,terminal:false}}
+    pub(super) fn peek(&self)->Option<&T>{self.source.as_ref().and_then(|source|source.get(self.position))}
+    pub(super) fn publication_complete(&self)->bool{self.source.as_ref().is_none_or(|source|self.position==source.len())}
+    pub(super) fn backing_bytes(&self)->usize{self.source.as_ref().map_or(0,semio_framework_value::list::PagedList::allocated_bytes)}
+    pub(super) fn take_next_into(&mut self,receiving:&mut Option<T>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
+        if receiving.is_some()||self.active.is_some()||self.terminal{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original paged source has an occupied or closing receiver"))}
+        let source=self.source.as_mut().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original paged source lost its retained backing"))?;
+        if self.position==source.len(){return Ok(None)}
+        let depth=source.next_get_depth_demand(self.position).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original paged source path exceeds its extent"))?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original paged source depth overflow"))?;
+        let copy=size_of::<Option<T>>().checked_add(size_of::<usize>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original paged source header extent overflow"))?;
+        if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_depth<depth{return Ok(Some(Default::default()))}
+        *receiving=Some(std::mem::replace(source.get_mut(self.position).unwrap(),(self.vacant)()));self.position+=1;
+        Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))
+    }
+    pub(super) fn demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
+        if self.terminal{return Ok(Default::default())}
+        if let Some(active)=self.active.as_ref(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:active.next_copy_byte_demand()?,capacity_bytes:active.next_capacity_byte_demand(copy)?,release_bytes:active.next_release_byte_demand()?,depth:active.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original paged source child depth overflow"))?})}
+        Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_value::list::PagedList<T,N>>>(),depth:1,..Default::default()})
+    }
+}
+impl<T:semio_framework_value::retirement::RetireOwned,const N:usize> ErasedSnapshotRetirement for PagedSourceIterator<T,N>{
+    fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.demands(0).map(|demand|demand.copy_bytes)}
+    fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.demands(copy).map(|demand|demand.capacity_bytes)}
+    fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.demands(0).map(|demand|demand.release_bytes)}
+    fn next_depth_demand(&self)->Result<usize,ValueError>{self.demands(0).map(|demand|demand.depth)}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        if self.terminal{return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0{return Ok(denied())}
+        let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original paged source close depth refused"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(denied())}
+        if let Some(active)=self.active.as_mut(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=active.step(child)?;let terminal=active.terminal_is_empty();semio_framework_value::retained_clone::admit_retained_clone_close(child,step,terminal,"original paged source child")?;if terminal{drop(self.active.take());self.terminal=true;}return Ok(if self.terminal{RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
+        let source=self.source.take().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original paged source retirement lost its backing"))?;match semio_framework_value::retirement::controlled::ControlledRetirement::new(source){Ok(active)=>{self.active=Some(active);Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))},Err((error,source))=>{*self.source=Some(source);Err(error)}}
+    }
+    fn terminal_is_empty(&self)->bool{self.terminal&&self.source.is_none()&&self.active.is_none()}
+}
+impl<T:semio_framework_value::retirement::RetireOwned,const N:usize> Drop for PagedSourceIterator<T,N>{
+    fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original paged source dropped before controlled page retirement");if self.terminal_is_empty(){unsafe{std::mem::ManuallyDrop::drop(&mut self.source)}}}
+}
+
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[path="📦️paged/🧪️tests/🦀️.rs"]
+mod original_paged_source_tests;

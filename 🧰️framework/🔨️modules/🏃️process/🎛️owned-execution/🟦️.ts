@@ -1,20 +1,24 @@
 import { terminateOwnedChildTree } from "../🪓️termination/🟦️.ts";
+import { checkResourceLeaseControl, type ResourceLeaseControl } from "../🔒️leases/🟦️.ts";
 import { StringDecoder } from "node:string_decoder";
 import { spawn } from "node:child_process";
 import { OwnedCommandFailure } from "./📪️outcome/🟦️.ts";
-import stdoutDestination from "./🧬️schema/📤️stdout.json";
-import outputSchema from "./🧬️schema/📬️output.json";
+import stdoutDestination from "./🧬️schema/📤️stdout.json" with { type: "json" };
+import outputSchema from "./🧬️schema/📬️output.json" with { type: "json" };
 import {Transform} from "node:stream";
-import {validateJsonSchemaSubset} from "../../🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 export { OwnedCommandFailure, readOwnedCommandOutcome, type OwnedCommandOutcome } from "./📪️outcome/🟦️.ts";
+/** 🌓️ Names the closed stdout and stderr roles declared by the owned output stream schema. */
+export type OwnedCommandStreamV1="stdout"|"stderr";
 
 /** 🎛️ Receives actual output, cancellation and awaited publication ports. */
 export interface OwnedCommandOptions {
   readonly stdout?: "inherit" | "ignore" | "stderr";
+  readonly input?: string | Uint8Array;
   readonly output?: Readonly<{maximumBytes:number;maximumLines:number}>;
   readonly env?: Readonly<Record<string, string | undefined>>;
   readonly signal?: AbortSignal;
-  readonly onLine?: (line: string) => void;
+  readonly onLine?: (line: string,stream:OwnedCommandStreamV1) => void;
   readonly onProgress?: (line: string) => void | Promise<void>;
 }
 
@@ -22,20 +26,31 @@ export interface OwnedCommandOptions {
 /** 🧺️ Runs one tool without blocking the event loop and without forwarding its output: several tools run at once (jco, wasm-opt, a descriptor emitter, a
  * module probe), so their output is kept as a 64 KiB tail and surfaced only in the failure. Cancellation terminates the tool's process tree, forcefully after 2 s.
  * Resolves with the output tail. */
-export function captureOwnedCommandV1(command: string, args: readonly string[], cwd: string, options: Readonly<{ env?: Readonly<Record<string, string | undefined>>; signal?: AbortSignal }> = {}): Promise<string> {
-  options.signal?.throwIfAborted();
+export function captureOwnedCommandV1(command: string, args: readonly string[], cwd: string, options: Readonly<{ env?: Readonly<Record<string, string | undefined>>; signal?: AbortSignal; control?: ResourceLeaseControl }> = {}): Promise<string> {
+  const signal = options.control?.signal ?? options.signal;
+  if (options.control) {
+    const remaining = checkResourceLeaseControl(options.control);
+    if (options.signal && options.signal !== signal) throw Error("Owned capture requires its original signal");
+    if (remaining !== null && Math.floor(remaining) < 1) throw Error("Original compiler admission deadline exhausted");
+  }
+  signal?.throwIfAborted();
   return new Promise((accept, reject) => {
-    const child = spawn(command, [...args], { cwd, env: options.env ?? process.env, shell: false, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
-    let output = "", forced: ReturnType<typeof setTimeout> | undefined;
+    const child = spawn(command, [...args], { cwd, env: (options.env ?? process.env) as NodeJS.ProcessEnv, shell: false, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
+    let output = "", forced: ReturnType<typeof setTimeout> | undefined, deadline: ReturnType<typeof setTimeout> | undefined, stopped: unknown;
     const cancel = (): void => { terminateOwnedChildTree(child); forced ??= setTimeout(() => { if (child.pid && process.platform !== "win32") try { process.kill(-child.pid, "SIGKILL"); } catch {} }, 2_000); };
-    options.signal?.addEventListener("abort", cancel, { once: true });
+    const check = (): void => { if (!options.control) return; try { const remaining = checkResourceLeaseControl(options.control); deadline = setTimeout(check, Math.min(remaining ?? 1000, 1000)); } catch (error) { stopped = error; cancel(); } };
+    signal?.addEventListener("abort", cancel, { once: true });
+    check();
     const capture = (chunk: Buffer): void => { output = (output + chunk.toString("utf8")).slice(-64 * 1024); };
     child.stdout?.on("data", capture); child.stderr?.on("data", capture);
     child.once("error", reject);
     child.once("close", (code) => {
       if (forced) clearTimeout(forced);
-      options.signal?.removeEventListener("abort", cancel);
-      if (options.signal?.aborted) reject(options.signal.reason);
+      if (deadline) clearTimeout(deadline);
+      signal?.removeEventListener("abort", cancel);
+      if (options.control) try { checkResourceLeaseControl(options.control); } catch (error) { reject(error); return; }
+      if (stopped !== undefined) reject(stopped);
+      else if (signal?.aborted) reject(signal.reason);
       else if (code === 0) accept(output);
       else reject(new Error(`${command} ${args.join(" ")} exited with status ${code}\n${output}`));
     });
@@ -56,7 +71,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
   if (options.stdout !== undefined && !stdoutDestination.enum.includes(options.stdout)) throw new Error(`${label} has an invalid stdout destination`);
   if(options.output!==undefined&&validateJsonSchemaSubset(outputSchema,options.output).length)throw new Error(`${label} has invalid output limits`);
   if (options.signal?.aborted) throw new Error(`${label} stopped: cancelled`);
-  const child = spawn(command, args, { cwd, env: options.env ?? process.env, detached: process.platform !== "win32", stdio: ["inherit", options.stdout === "ignore" && options.output === undefined ? "ignore" : "pipe", "pipe"], windowsHide: true });
+  const child = spawn(command, args, { cwd, env: (options.env ?? process.env) as NodeJS.ProcessEnv, detached: process.platform !== "win32", stdio: [options.input === undefined ? "inherit" : "pipe", options.stdout === "ignore" && options.output === undefined ? "ignore" : "pipe", "pipe"], windowsHide: true });
   let stopped = "", closed = false, publicationRefused = false, publicationFailure: unknown, interruptPublication!: () => void;
   const pending = new Set<Promise<void>>(), interrupted = new Promise<void>(accept => { interruptPublication = accept; });
   const terminate = (reason: string): void => {
@@ -65,21 +80,21 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     if (!closed) terminateOwnedChildTree(child);
   };
   const abort = (): void => terminate("cancelled");
-  const observe = (stream: NodeJS.ReadableStream): void => {
+  const observe = (stream: NodeJS.ReadableStream,source:OwnedCommandStreamV1): void => {
     const decoder = new StringDecoder("utf8");
     let pending = "";
     stream.on("data", (bytes: Buffer) => {
       pending += decoder.write(bytes);
       let boundary: number;
       while ((boundary = pending.indexOf("\n")) >= 0) {
-        options.onLine!(pending.slice(0, boundary).replace(/\r$/u, ""));
+        options.onLine!(pending.slice(0, boundary).replace(/\r$/u, ""),source);
         pending = pending.slice(boundary + 1);
       }
     });
-    stream.once("end", () => { pending += decoder.end(); if (pending) options.onLine!(pending); });
+    stream.once("end", () => { pending += decoder.end(); if (pending) options.onLine!(pending,source); });
   };
   let outputBytes=0,outputLines=0,outputRefused=false;
-  const forward=(stream:NodeJS.ReadableStream,destination:NodeJS.WritableStream|undefined,observed:boolean):void=>{
+  const forward=(stream:NodeJS.ReadableStream,destination:NodeJS.WritableStream|undefined,observed:boolean,source:OwnedCommandStreamV1):void=>{
     const limits=options.output;
     let tail=false;
     const admitted=limits?new Transform({transform(bytes:Buffer,_encoding,done){
@@ -89,12 +104,12 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
       for(const byte of bytes){if(!open)lines++;open=byte!==10;if(lines>limits.maximumLines){outputRefused=true;terminate("output line limit");done();return;}}
       outputBytes+=bytes.length;outputLines=lines;tail=open;done(null,bytes);
     }}):stream;
-    if(options.onLine&&observed)observe(admitted);
+    if(options.onLine&&observed)observe(admitted,source);
     if(destination)admitted.pipe(destination,{end:false});else (admitted as Transform).resume();
     if(limits)stream.pipe(admitted as Transform);
   };
-  if(child.stdout)forward(child.stdout,options.stdout==="ignore"?undefined:options.stdout==="stderr"?process.stderr:process.stdout,options.stdout!=="ignore");
-  forward(child.stderr!,process.stderr,true);
+  if(child.stdout)forward(child.stdout,options.stdout==="ignore"?undefined:options.stdout==="stderr"?process.stderr:process.stdout,options.stdout!=="ignore","stdout");
+  forward(child.stderr!,process.stderr,true,"stderr");
   options.signal?.addEventListener("abort", abort, { once: true });
   if (options.signal?.aborted) abort();
   const interrupt = (): void => terminate("SIGINT");
@@ -114,10 +129,16 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
   const stopProgress = startNativeProgress(label, 10_000, publish);
   const timeout = timeoutMs > 0 ? setTimeout(() => terminate(`timeout ${timeoutMs}ms`), timeoutMs) : undefined;
   try {
+    const inputPublication = options.input === undefined || !child.stdin ? Promise.resolve() : new Promise<void>(accept => {
+      child.stdin!.once("finish", accept); child.stdin!.once("close", accept);
+      child.stdin!.once("error", () => { if (!closed && !stopped) terminate("input publication refused"); accept(); });
+      child.stdin!.end(options.input);
+    });
     const status = await new Promise<{code:number|null;signal:string|null}>((accept) => {
       child.once("error", error => console.error(error.message));
       child.once("close", (code, signal) => { closed = true; accept({code,signal}); });
     });
+    await inputPublication;
     stopProgress();
     await Promise.race([Promise.all([...pending]), interrupted]);
     await Promise.all([process.stdout,process.stderr].map(output=>new Promise<void>((accept,reject)=>output.write("",error=>error?reject(error):accept()))));

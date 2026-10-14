@@ -1,10 +1,11 @@
 //! 🖊️ Drawing node ownership, explicit path geometries, colors, layers and styles.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow};
 use crate::schema::snapshot::{SemioDrawingSnapshot, DrawCanvas, DrawStyle, DrawLayer, DrawNode, PathSegment};
 use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 #[path="🔍️rows/🦀️.rs"]mod indexed;
 #[path="💰️reconstruction/🦀️.rs"]mod reconstruction;
 #[path="🧮️semantic/🦀️.rs"]
@@ -38,7 +39,7 @@ DrawNode::Path{segments,style}=>{let style=style_cell(style.as_deref(),styles,p)
 DrawNode::Text{value,at,style}=>{let style=style_cell(style.as_deref(),styles,p)?;p.insert_key_float("semio_drawing_text",id,&[Cell::Text(value),Cell::Real(at.x),Cell::Real(at.y),style],float_columns("semio_drawing_text"))?},
 DrawNode::Group{transform:t,children}=>{p.insert_key_float("semio_drawing_group",id,&[Cell::Real(t.translation.x),Cell::Real(t.translation.y),Cell::Real(t.translation.z),Cell::Real(t.rotation.x),Cell::Real(t.rotation.y),Cell::Real(t.rotation.z),Cell::Real(t.rotation.w),Cell::Real(t.scale.x),Cell::Real(t.scale.y),Cell::Real(t.scale.z)],float_columns("semio_drawing_group"))?;p.check_rows(stack.len().checked_add(children.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"drawing traversal count overflow"))?)?;for(ordinal,child)in children.iter().enumerate(){let kind=match child{DrawNode::Path{..}=>"path",DrawNode::Text{..}=>"text",DrawNode::Group{..}=>"group",DrawNode::Image{..}=>"image"};let cid=p.insert_float("semio_drawing_node",&[Cell::Text(kind)],float_columns("semio_drawing_node"))?;p.insert_float("semio_drawing_child",&[Cell::Integer(id),Cell::Integer(number(ordinal)?),Cell::Integer(cid)],float_columns("semio_drawing_child"))?;p.push_frontier(&mut stack,(cid,child))?;}},
 DrawNode::Image{at,width,height,mime,bytes}=>p.insert_key_float("semio_drawing_image",id,&[Cell::Real(at.x),Cell::Real(at.y),Cell::Real(*width),Cell::Real(*height),Cell::Text(mime),Cell::Blob(bytes)],float_columns("semio_drawing_image"))?}p.checkpoint()?;}Ok(root)}
-impl ArtifactSqliteSnapshot for SemioDrawingSnapshot{
+impl ArtifactSqliteSnapshotHost for SemioDrawingSnapshot{
 fn retire_sqlite_snapshot(self){drop(semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 
 fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
@@ -52,6 +53,11 @@ let row=database.table("semio_drawing_document")?.single_row()?;
 if row.rowid!=1||row.integer(0)?!=1||row.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned document identity differs from projected semantic fields"));}
 control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))})();result.map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
 
+
+
+
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for SemioDrawingSnapshot {
 const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
 fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.project_sqlite_database(control)}
 fn from_sqlite_database(db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError> {let result=(||->Result<Self,ValueError>{ semantic::layout(control.limits())?;Self::reconstruct_sqlite_database(db, control, Self::SQLITE_SCHEMA) })();result}

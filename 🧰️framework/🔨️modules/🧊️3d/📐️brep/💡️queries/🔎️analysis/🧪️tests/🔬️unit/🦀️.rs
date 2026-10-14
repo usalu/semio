@@ -9,7 +9,7 @@ use semio_framework_3d_brep_representation::vector::matrix::Frame3;
 use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
 use serde_json::Value;
 
-const FIXTURE: &str = include_str!("../../../../🧫️fixtures/🔎️analysis/🔣️.json");
+const FIXTURE: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🔎️analysis/🔣️.json");
 const MASS_TOLERANCE: f64 = 1e-6;
 
 fn fixture() -> Value {

@@ -1,0 +1,48 @@
+\documentclass{article}
+\usepackage{semio-viz-spatial}
+\ExplSyntaxOn
+% 📤 Emits every bin as centre x, centre y and point count, the bins sorted by centre so the insertion order does not matter.
+\cs_new_protected:Npn \semio_probe_bin:nnn #1#2#3
+  {
+    \seq_put_right:Nx \l_tmpa_seq
+      {
+        \fp_eval:n { round ( #2 , 6 ) } ,
+        \fp_eval:n { round ( #3 , 6 ) } ,
+        \semio_viz_spatial_bin_count:n {#1}
+      }
+  }
+\cs_new_protected:Npn \semio_probe_bins:
+  {
+    \seq_clear:N \l_tmpa_seq
+    \seq_map_inline:Nn \g_semio_viz_spatial_bins_seq { \semio_probe_bin:nnn ##1 }
+    \seq_sort:Nn \l_tmpa_seq
+      {
+        \fp_compare:nNnTF { \clist_item:nn {##1} { 1 } } < { \clist_item:nn {##2} { 1 } }
+          { \sort_return_same: }
+          {
+            \bool_lazy_and:nnTF
+              { \fp_compare_p:nNn { \clist_item:nn {##1} { 1 } } = { \clist_item:nn {##2} { 1 } } }
+              { \fp_compare_p:nNn { \clist_item:nn {##1} { 2 } } < { \clist_item:nn {##2} { 2 } } }
+              { \sort_return_same: }
+              { \sort_return_swapped: }
+          }
+      }
+    \use:x
+      {
+        \exp_not:N \SemioVizProbeEval { spatial/hexbin }
+          { \seq_use:Nn \l_tmpa_seq { , } }
+      }
+  }
+\ExplSyntaxOff
+\begin{document}
+\SemioVizProbeBegin{spatial-hexbin}{hexagonal-binning}
+\SemioVizProbePage
+\SemioVizProbePrecision{6}
+\ExplSyntaxOn
+\clist_map_inline:nn { 6, 10 }
+  {
+    \SemioVizHexbin { demo-points-dense } { #1 }
+    \semio_probe_bins:
+  }
+\ExplSyntaxOff
+\end{document}

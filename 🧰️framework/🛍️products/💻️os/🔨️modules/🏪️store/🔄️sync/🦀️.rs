@@ -1591,7 +1591,7 @@ async fn next_timestamp(seed: u64, counter: &mut u64) -> crate::os_spr::HybridLo
 /// channel and event stream, drains status on {@link SyncSession::tick}, and delegates store IO.
 pub struct SyncSession<P, Mutation>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + crate::os_store::serialization::ArtifactPack + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mutation: Clone + crate::os_spr::Mutation<P> + OpBinary + crate::os_spr::OpText + Send + 'static,
 {
     pub store: ArtifactStore<P, Mutation>,
@@ -1602,7 +1602,7 @@ where
 
 impl<P, Mutation> SyncSession<P, Mutation>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + crate::os_store::serialization::ArtifactPack + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mutation: Clone + crate::os_spr::Mutation<P> + OpBinary + crate::os_spr::OpText + Send + 'static,
 {
     pub async fn new(store: ArtifactStore<P, Mutation>) -> Self {

@@ -23,7 +23,7 @@ async fn load_document_json_replaces_document() {
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("loadDocumentJson must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
-    let loaded = <NoteSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("decode loaded document pack");
+    let loaded = <NoteSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("decode loaded document pack");
     assert_eq!(loaded.blocks.len(), 1);
 }
 
@@ -39,7 +39,7 @@ async fn set_active_example_loads_the_registered_demo_and_refuses_unknown_ids() 
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
-    let loaded = <NoteSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+    let loaded = <NoteSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
     assert_eq!(loaded.blocks.len(), 1);
 
     assert!(handle(&SetActiveExample { example_id: "semio".into() }, &doc, &cfg, &mut ctx).is_err(), "an unregistered example id must fault, not load an empty document");

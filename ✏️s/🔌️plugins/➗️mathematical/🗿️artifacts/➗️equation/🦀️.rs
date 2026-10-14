@@ -241,7 +241,7 @@ fn equation_derived_child<S>(prefix: &str, subset: &str, pack: &[u8]) -> store::
 /// 📦️ The derived pack of composed slot `slot` from `(graph, geometry)`, with the address prefix and subset it is minted
 /// under; `None` for a slot this artifact does not derive.
 fn equation_derived_pack(slot: &str, graph: &EquationGraph, geometry: &EquationGeometry) -> Option<(&'static str, &'static str, Vec<u8>)> {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     match slot {
         "notation" => Some(("equation-notation", "text", <SemioTextSnapshot as ArtifactPack>::encode_pack(&equation_notation_from_graph(graph)))),
         "results" => Some(("equation-results", "table", <SemioTableSnapshot as ArtifactPack>::encode_pack(&equation_results_from_graph(graph)))),

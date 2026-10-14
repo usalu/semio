@@ -1,0 +1,26 @@
+[
+  {
+    "id": "long-source-success",
+    "unit": "雪λ😃",
+    "repeat": 20000,
+    "maximumBytes": 1048576,
+    "cancelAfterCompleted": 0,
+    "expectedKind": "success"
+  },
+  {
+    "id": "long-source-interior-cancel",
+    "unit": "雪λ😃",
+    "repeat": 20000,
+    "maximumBytes": 1048576,
+    "cancelAfterCompleted": 256,
+    "expectedKind": "canceled"
+  },
+  {
+    "id": "long-source-admission",
+    "unit": "雪λ😃",
+    "repeat": 20000,
+    "maximumBytes": 0,
+    "cancelAfterCompleted": 0,
+    "expectedKind": "ownershipLimit"
+  }
+]

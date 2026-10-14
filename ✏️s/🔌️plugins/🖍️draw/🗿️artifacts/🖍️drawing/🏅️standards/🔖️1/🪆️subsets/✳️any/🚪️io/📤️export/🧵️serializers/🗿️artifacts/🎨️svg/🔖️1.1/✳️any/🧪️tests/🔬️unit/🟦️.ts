@@ -11,7 +11,7 @@ test("Draw SVG export uses the typed SVG serializer directly", async () => {
 
 import { DOMParser } from "@xmldom/xmldom";
 import { drawingSceneToSvg, type DrawingSvgNode } from "../../🟦️.ts";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../🧫️fixtures/🔣️.json";
 
 test("SVG fixture preserves gradients, affine matrices, text, image opacity and disabled paint", () => {
   const output = drawingSceneToSvg(fixture.nodes as DrawingSvgNode[], fixture.viewBox as [number,number,number,number],fixture.assets);
@@ -75,7 +75,7 @@ test("SVG refuses nonfinite geometry and paint instead of downloading corrupt ar
   }
 });
 
-import compositeCases from "../../../../../../../../../🧬️schema/🎬️scene/🧩️compositing/🧫️fixtures/🔣️.json";
+import compositeCases from "../../../../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🧩️compositing/🔣️.json";
 import compositeSchema from "../../../../../../../../../🧬️schema/🎬️scene/🧩️compositing/🧬️schema/🔣️.json";
 import Ajv from "ajv";
 import sharp from "sharp";
@@ -129,7 +129,7 @@ test("compositing surfaces preserve the camera and clear reused pixels between f
   }finally {globalThis.Path2D=original;}
 });
 
-import paintCases from "../../../../../../../../../🧬️schema/🎨️fill/🎨️sampling/🧫️fixtures/🔣️.json";
+import paintCases from "../../../../../../../../../🧪️tests/🧫️fixtures/🎨️fill/🎨️sampling/🔣️.json";
 
 test("SVG emits constant gradients as solid paint and rejects invalid authored paint",async()=>{
   for(const entry of paintCases) {

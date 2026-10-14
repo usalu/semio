@@ -12,11 +12,11 @@
 use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧲️adjacency/🧲️connect/🧲️reception/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧲️adjacency/🧲️connect/🧲️reception/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧲️adjacency/🧲️connect/🧲️reception/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧲️adjacency/🧲️connect/🧲️reception/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧲️adjacency/🧲️connect/🧲️reception/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧲️adjacency/🧲️connect/🧲️reception/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧲️adjacency/🧲️connect/🧲️reception/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧲️adjacency/🧲️connect/🧲️reception/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧲️adjacency/🧲️connect/🧲️reception/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧲️adjacency/🧲️connect/🧲️reception/🎯️outcome/🔣️.json");
 
 fn before() -> ProgramSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("connect-adjacency/connects-reception-to-waiting: before snapshot decodes")

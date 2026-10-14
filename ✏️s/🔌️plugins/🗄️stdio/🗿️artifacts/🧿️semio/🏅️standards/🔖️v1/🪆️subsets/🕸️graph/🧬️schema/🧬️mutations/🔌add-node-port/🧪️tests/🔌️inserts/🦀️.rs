@@ -10,11 +10,11 @@ use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::SemioGraphSnapshot;
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔌add-node-port/🔌️inserts/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔌add-node-port/🔌️inserts/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔌add-node-port/🔌️inserts/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔌add-node-port/🔌️inserts/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔌add-node-port/🔌️inserts/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌add-node-port/🔌️inserts/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌add-node-port/🔌️inserts/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌add-node-port/🔌️inserts/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌add-node-port/🔌️inserts/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌add-node-port/🔌️inserts/🎯️outcome/🔣️.json");
 
 fn before() -> SemioGraphSnapshot {
     crate::io::text::snapshot::decode_semio_graph_snapshot_json(BEFORE).expect("add-node-port before snapshot decodes")

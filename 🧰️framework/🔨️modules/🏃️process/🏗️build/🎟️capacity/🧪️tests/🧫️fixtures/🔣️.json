@@ -1,0 +1,55 @@
+{
+  "requests": [
+    {
+      "value": {},
+      "accepted": true
+    },
+    {
+      "value": {
+        "requestedParallelism": 1
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "requestedParallelism": 0
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "requestedParallelism": 2
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "requestedParallelism": "1"
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "requestedParallelism": null
+      },
+      "accepted": false
+    }
+  ],
+  "shared": {
+    "mode": "shared",
+    "parallelism": 1,
+    "overlapChildren": 2,
+    "bodyMs": 300,
+    "pollMs": 10
+  },
+  "fairOrder": [
+    "writer",
+    "reader"
+  ],
+  "cancel": "AbortError",
+  "additionalCancellation": {
+    "holdMilliseconds": 30000,
+    "originalAborted": false,
+    "childAlive": false
+  }
+}

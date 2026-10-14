@@ -10,11 +10,11 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/⏱️binding-cancellation-law.json")).expect("binding-cancellation law fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/⏱️binding-cancellation-law.json")).expect("binding-cancellation law fixture")
 }
 
 fn create_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🗿️artifact/🧫️fixtures/⏱️create-cancellation-law.json")).expect("create-cancellation law fixture")
+    serde_json::from_str(include_str!("../../../🗿️artifact/🧪️tests/🧫️fixtures/⏱️create-cancellation-law.json")).expect("create-cancellation law fixture")
 }
 
 fn phase(id: &str) -> ActivationPhase {

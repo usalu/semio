@@ -2,7 +2,7 @@ use super::*;
 use serde_json::{json, Value};
 
 fn corpus() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🧫️fault-notices/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🧫️fault-notices/🔣️.json")).unwrap()
 }
 
 fn notices(table: &Value) -> Vec<FaultNoticeDefinition> {

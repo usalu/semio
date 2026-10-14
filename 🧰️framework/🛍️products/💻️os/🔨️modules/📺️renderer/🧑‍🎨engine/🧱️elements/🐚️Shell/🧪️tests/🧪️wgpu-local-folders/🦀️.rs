@@ -10,7 +10,7 @@ use semio_framework::kernel::{HistoryEntry, HistoryPatch};
 
 //#region 🧰️Harness
 fn corpus() -> Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/📎️local-folder-bindings/🔣️.json")).expect("the shared local-folder corpus parses")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📎️local-folder-bindings/🔣️.json")).expect("the shared local-folder corpus parses")
 }
 
 fn binding_of(value: &Value) -> LocalFolderBinding {
@@ -125,8 +125,8 @@ fn the_shared_local_folder_corpus_holds_on_wgpu() {
 #[test]
 fn the_config_payload_fixtures_read_as_their_mutations() {
     for fixture in [
-        include_str!("../../../../../../../🎚️config/🧬️schema/🧬️mutations/📎️attach-local-folder/🧫️fixtures/📎️remembers-the-folder-beside-another-document/🦠️mutation/🔣️.json"),
-        include_str!("../../../../../../../🎚️config/🧬️schema/🧬️mutations/✂️detach-local-folder/🧫️fixtures/✂️forgets-the-folder-and-keeps-its-sibling/🦠️mutation/🔣️.json"),
+        include_str!("../../../../../../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/🦠️mutation/🔣️.json"),
+        include_str!("../../../../../../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/✂️detach-local-folder/✂️forgets-the-folder-and-keeps-its-sibling/🦠️mutation/🔣️.json"),
     ] {
         let value: Value = serde_json::from_str(fixture).expect("JSON");
         let decoded = semio_framework_os_config::io::text::mutations::decode_local_folders_config_mutation_json(fixture).expect("the config crate decodes it");
@@ -265,7 +265,7 @@ fn the_reconnect_band_is_one_row_on_a_desktop_and_wraps_compact_on_a_phone() {
 
 //#region 🗃️HostRouteFolder
 fn door_corpus() -> Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/🧫️wgpu-backbone-folder-door/🔣️.json")).expect("the shared folder door corpus parses")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧫️wgpu-backbone-folder-door/🔣️.json")).expect("the shared folder door corpus parses")
 }
 
 /// ⚖️ LAW (shared with the page's `backboneFolderHop`): every request of the corpus is exactly the JSON the shell sends,

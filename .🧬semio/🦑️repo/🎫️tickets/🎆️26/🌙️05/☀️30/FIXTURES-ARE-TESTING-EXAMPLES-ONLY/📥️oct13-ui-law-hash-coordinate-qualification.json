@@ -1,0 +1,26 @@
+[
+  {
+    "source": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-input-unit/🦀️.rs",
+    "name": "closing_input_reports_each_admitted_action_receipt_once",
+    "beforeSha256": "f853e0e61303c7847e557317d1153cec2dd3860fa2c015a8fb30290299c3fca0",
+    "afterSha256": "4ebaa9cd10782549fb86723042dbc86e2152dac1ead7f5b70c938d8973cbbf75"
+  },
+  {
+    "source": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-input-unit/🦀️.rs",
+    "name": "a_reopened_text_owner_drains_the_prior_projection_before_projecting_its_current_value",
+    "beforeSha256": "95b014c8bef7449d2d14cf2d71faf69d3f98a4430227fcc29dc53cb896e901fd",
+    "afterSha256": "9d85a850da66292addd6758b63054c973586d02d4ac6230184e1443094ca197a"
+  },
+  {
+    "source": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-input-engine-unit/🦀️.rs",
+    "name": "shared_tree_drag_fixture_projects_driver_specific_row_and_handle_targets",
+    "beforeSha256": "9f54abbd1b3e37bcdc533878c4370a9d74827f4b7fc1d88bd8c8e3c93214ac36",
+    "afterSha256": "98856c566e338a9e80ec1623414cbfbe113326ed6f05f0ee2b17b526f30d0a4c"
+  },
+  {
+    "source": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs",
+    "name": "prepared_measurement_retains_scene_and_overlay_raster_cursors",
+    "beforeSha256": "4125481c518ba6a7f1d42fe5492e66cfda0319f7d02e14d789ff252f33900c6f",
+    "afterSha256": "3b3503718ce323dbf3ab24571adbef6490a42bfe7bfb8f0063db865cd2d0c30c"
+  }
+]

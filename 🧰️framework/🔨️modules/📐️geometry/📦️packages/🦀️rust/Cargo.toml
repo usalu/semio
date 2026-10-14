@@ -34,6 +34,6 @@ path = "../../🧪️tests/💥️collision-oracles/🦀️.rs"
 
 [dev-dependencies]
 kurbo = "0.13.1"
-# 🧪️ Language-agnostic fixtures (`🧫️fixtures/*/🔣️.json`) are parsed by tests only; parry3d is the mesh volume/area/section oracle only.
+# 🧪️ Language-agnostic fixtures (`🧪️tests/🧫️fixtures/*/🔣️.json`) are parsed by tests only; parry3d is the mesh volume/area/section oracle only.
 serde_json = { workspace = true }
 parry3d = "0.17"

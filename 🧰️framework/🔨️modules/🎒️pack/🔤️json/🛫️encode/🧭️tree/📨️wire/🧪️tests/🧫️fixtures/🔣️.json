@@ -1,0 +1,30 @@
+{
+  "original": {
+    "id": 17,
+    "name": "source 源 é",
+    "values": [
+      1,
+      2,
+      3
+    ]
+  },
+  "phases": [
+    "measure",
+    "allocate",
+    "initialize",
+    "encode",
+    "sourceClose",
+    "handoff"
+  ],
+  "copyCeilings": [
+    0,
+    1,
+    3,
+    64
+  ],
+  "scalarInspectBytes": 64,
+  "sourceHeaderCopyBytes": 0,
+  "sameOriginalSource": true,
+  "terminalDropBytes": 0,
+  "output": "{\"id\":17,\"name\":\"source 源 é\",\"values\":[1,2,3]}"
+}

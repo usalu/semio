@@ -19,7 +19,7 @@ impl SceneHost for EmptySceneHost {
 }
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔽️retained-select-origin/🔣️.json")).expect("retained Select origin fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🔽️retained-select-origin/🔣️.json")).expect("retained Select origin fixture")
 }
 
 fn rect(value: &serde_json::Value) -> Rect {

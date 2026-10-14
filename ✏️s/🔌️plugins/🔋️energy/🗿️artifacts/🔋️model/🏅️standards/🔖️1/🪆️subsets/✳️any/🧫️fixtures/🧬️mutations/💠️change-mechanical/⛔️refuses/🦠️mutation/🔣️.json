@@ -1,5 +1,0 @@
-{
-  "mutation": "changeMechanicalVentilationFanTotalEfficiency",
-  "id": 60,
-  "newFanTotalEfficiency": 0.0
-}

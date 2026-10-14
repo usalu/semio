@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import { applyPatch, type Operation } from "fast-json-patch";
-import fixture from "../../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "../../🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../../🧬️schema/🔣️.json" with { type: "json" };
 import valueSchema from "../../../../../🌱️value/🧬️schema/🔣️.json" with { type: "json" };
 import { applyMapDelta, composeMapDelta, parseMapDelta, MapDeltaApplyError, type MapEntryDelta } from "../../🧬️schema/🟦️.ts";
@@ -11,7 +11,7 @@ import type { DslValue } from "../../../../../🌱️value/🧬️schema/🟦️
 function patch(entry: MapEntryDelta<DslValue>, base: Record<string, DslValue>): Record<string, DslValue> {
   const present = Object.hasOwn(base, entry.key);
   if (entry.precondition === "never" || entry.precondition === "present" && !present || entry.precondition === "absent" && present) throw new Error("independent presence precondition refused");
-  const path = "../../../../../../../../../../.." + entry.key.replaceAll("~", "~0").replaceAll("../../../../../../../../../../..", "~1");
+  const path = "/" + entry.key.replaceAll("~", "~0").replaceAll("/", "~1");
   const operation = entry.operation;
   if (operation.kind === "reject") throw new Error("explicit rejected transformation");
   if (operation.kind === "remove" && !present) return base;

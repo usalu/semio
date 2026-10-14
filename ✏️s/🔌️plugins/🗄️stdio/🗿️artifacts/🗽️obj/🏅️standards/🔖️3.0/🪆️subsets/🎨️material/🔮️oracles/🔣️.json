@@ -23,14 +23,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🎨️set-mtllib/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🎨️set-mtllib/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
           "bytes": 114
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/🎨️set-mtllib/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/🎨️set-mtllib/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:870cf7527e8e08a57f3bd4ca9b8793eb3d1de52190d05bf224a7dfede6fe41e4",
           "bytes": 115
@@ -71,14 +71,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🖌️set-usemtl/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🖌️set-usemtl/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
           "bytes": 114
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/🖌️set-usemtl/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/🖌️set-usemtl/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:c117997a37de889ac48996e460ddb0424480e8b9a7db4215e410bd504f07f554",
           "bytes": 115

@@ -7,7 +7,7 @@ import { WORKSPACE_ROOT, toolJobMicrosecondWorkerExact } from "../../../../../..
 /** 🧪️ Executes tool job microsecond budget policy assertions. */
 export function toolJobMicrosecondBudgetSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🔨️modules/🧵️job/⏱️budget");
-  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const maximum = (1n << 64n) - 1n;
   for (const law of fixture.cases) {

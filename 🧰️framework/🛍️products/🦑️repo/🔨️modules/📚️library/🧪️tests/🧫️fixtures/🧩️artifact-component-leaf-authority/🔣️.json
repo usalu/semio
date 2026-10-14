@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "contract": "physicalLeafRendering",
+  "cases": [
+    { "source": "🦀️.rs", "kindId": "rust-source", "canonical": "🦀️.rs", "primary": "🦀️.rs" },
+    { "source": "🟦️.ts", "kindId": "typescript-source", "canonical": "🟦️.ts", "primary": "🟦️.ts" },
+    { "source": "🟦️.tsx", "kindId": "typescript-source", "canonical": "🟦️.tsx", "primary": "🟦️.ts" },
+    { "source": "🟦️component.d.ts", "kindId": "typescript-source", "canonical": "🟦️.d.ts", "primary": "🟦️.ts" },
+    { "source": "🔣️.json", "kindId": "json", "canonical": "🔣️.json", "primary": "🔣️.json" },
+    { "source": "🔗️.graphql", "kindId": "graphql", "canonical": "🔗️.graphql", "primary": "🔗️.graphql" },
+    { "source": "🛰️.proto", "kindId": "protobuf", "canonical": "🛰️.proto", "primary": "🛰️.proto" },
+    { "source": "📖️.grammar.semio", "kindId": "grammar-semio", "canonical": "📖️.grammar.semio", "primary": "📖️.grammar.semio" },
+    { "source": "📡️.protocol.semio", "kindId": "protocol-semio", "canonical": "📡️.protocol.semio", "primary": "📡️.protocol.semio" },
+    { "source": "🅰️.g4", "kindId": "antlr", "canonical": "🅰️.g4", "primary": "🅰️.g4" },
+    { "source": "🌶️.spicy", "kindId": "spicy", "canonical": "🌶️.spicy", "primary": "🌶️.spicy" },
+    { "source": "🔠️.abnf", "kindId": "abnf", "canonical": "🔠️.abnf", "primary": "🔠️.abnf" },
+    { "source": "🔤️.ebnf", "kindId": "ebnf", "canonical": "🔤️.ebnf", "primary": "🔤️.ebnf" },
+    { "source": "🥋️.ksy", "kindId": "kaitai", "canonical": "🥋️.ksy", "primary": "🥋️.ksy" },
+    { "source": "component.feature", "kindId": "gherkin-feature", "canonical": "🥒️.feature", "primary": "🥒️.feature" },
+    { "source": "🚫️.absent", "kindId": "absence-marker", "canonical": "🚫️.absent", "primary": "🚫️.absent" },
+    { "source": "🐍️component.py", "kindId": "python-source", "canonical": "🐍️.py", "primary": "🐍️.py" }
+  ],
+  "mutationPilot": {
+    "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model",
+    "standard": "🔖️1",
+    "subset": "✳️any",
+    "mutation": "♻️replace-model",
+    "scenario": "degrades-an-empty-model-payload-to-a-no-op",
+    "canonicalScenario": "🧪️degrades-an-empty-model-payload-to-a-no-op",
+    "profile": "🪆️1-any",
+    "bundle": [
+      { "source": "🦀️.rs", "canonical": "🦀️.rs", "kindId": "rust-source" },
+      { "source": "🦠️mutation/🔣️.json", "canonical": "🦠️mutation/🔣️.json", "kindId": "json" },
+      { "source": "📸️snapshot/⬅️before/🔣️.json", "canonical": "📸️snapshot/⬅️before/🔣️.json", "kindId": "json" },
+      { "source": "📸️snapshot/➡️after/🔣️.json", "canonical": "📸️snapshot/➡️after/🔣️.json", "kindId": "json" },
+      { "source": "🔺️diff/🔣️.json", "canonical": "🔺️diff/🔣️.json", "kindId": "json" },
+      { "source": "🎯️outcome/🔣️.json", "canonical": "🎯️outcome/🔣️.json", "kindId": "json" }
+    ]
+  }
+}

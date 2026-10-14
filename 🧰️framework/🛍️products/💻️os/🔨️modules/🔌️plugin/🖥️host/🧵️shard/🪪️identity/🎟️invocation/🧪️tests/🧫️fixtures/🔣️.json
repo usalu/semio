@@ -1,0 +1,40 @@
+{
+  "contract": "host.original-guest-invocation/v1",
+  "inputSource": "original.issued-batch-recipient",
+  "schedulingSource": "caller.resource-budget",
+  "retirementRecipient": "original.shard-native-encode",
+  "sameOriginalIdentity": true,
+  "sameOriginalRecipient": true,
+  "closedRecipientRefused": true,
+  "refusedHeap": [
+    0,
+    0
+  ],
+  "spent": {
+    "copiedItems": 0,
+    "copiedBytes": 0,
+    "retainedCapacityBytes": 0,
+    "releasedBytes": 0
+  },
+  "request": {
+    "input": {
+      "operation": 71,
+      "generation": 3,
+      "epoch": 19,
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 262144,
+        "maximumDepth": 64
+      }
+    },
+    "budget": {
+      "fuel": 2000000,
+      "deadline_ms": 4,
+      "max_effects": 64,
+      "max_patch_bytes": 262144,
+      "max_frames": 8
+    }
+  }
+}

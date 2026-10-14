@@ -258,7 +258,7 @@ fn tsv_retained_contract() -> ToolExecutionContract {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn tsv_example_snapshot(example_id: &str) -> TsvSnapshot {
     if example_id == crate::examples::demo::ID {
-        <TsvSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+        <TsvSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         TsvSnapshot::default()
     }
@@ -543,6 +543,7 @@ impl ArtifactEditor for TsvEditor {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

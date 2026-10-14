@@ -11,11 +11,11 @@ use crate::mutations::CadMutation;
 use crate::CadSnapshot;
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨delete-shape-model/🕳️vacates-the-shape-slot/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨delete-shape-model/🕳️vacates-the-shape-slot/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨delete-shape-model/🕳️vacates-the-shape-slot/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨delete-shape-model/🕳️vacates-the-shape-slot/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨delete-shape-model/🕳️vacates-the-shape-slot/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧨delete-shape-model/🕳️vacates-the-shape-slot/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧨delete-shape-model/🕳️vacates-the-shape-slot/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧨delete-shape-model/🕳️vacates-the-shape-slot/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧨delete-shape-model/🕳️vacates-the-shape-slot/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧨delete-shape-model/🕳️vacates-the-shape-slot/🎯️outcome/🔣️.json");
 
 fn before() -> CadSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-shape-model/vacates-the-shape-slot: before snapshot decodes")

@@ -150,23 +150,10 @@ opt-level = 3
 opt-level = 3
 
 # 🎚️ Answers `capability: evaluate`/`tessellate` for the BREP operators the example drives.
-[profile.prototype]
-inherits = "dev"
-opt-level = 0
-lto = false
-codegen-units = 256
-incremental = true
-
+# 🎚️ Shared native optimizer policy lives in .cargo/config.toml; this owner opts into path trimming.
 [profile.release]
-opt-level = 3
-lto = "thin"
-codegen-units = 1
-strip = "debuginfo"
-incremental = false
 trim-paths = "object"
 
-# 🪶️ The ONE shipped component profile (ticket 26/09/23 wave A2); its rationale and measurements live beside the same
-# definition in the repository root `Cargo.toml`.
 [profile.wasm-release]
 inherits = "release"
 opt-level = "s"

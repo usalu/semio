@@ -1,10 +1,11 @@
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
-use store::{os_store::serialization::ArtifactDsl as _,os_store::serialization::ArtifactSqliteSnapshot as _};
+use store::{pack::snapshot::ArtifactDsl as _,os_store::serialization::ArtifactSqliteSnapshotHost as _};
 use semio_framework_value::{FromValue as _,ToValue as _,retirement::RetireOwned as _};
 
 #[test]
 fn probe_sqlite_original_first_party_tree_matches_neutral_node_entities(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  assert!(super::super::ProbeSnapshot::controlled_retirement_supported());
  for sample in fixture["cases"].as_array().unwrap(){
   let wire=sample["wire"].as_str().unwrap();

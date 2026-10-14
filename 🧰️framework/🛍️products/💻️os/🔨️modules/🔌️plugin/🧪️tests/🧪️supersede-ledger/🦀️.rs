@@ -6,7 +6,7 @@
 use super::*;
 use serde_json::{json, Value};
 
-const SUPERSEDE_LEDGER_FIXTURE_JSON: &str = include_str!("../../🧫️fixtures/🧫️supersede-ledger/🔣️.json");
+const SUPERSEDE_LEDGER_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/🧫️supersede-ledger/🔣️.json");
 
 fn replacement(value: &Value) -> protocol::InputReplacement {
     match value.as_str() {

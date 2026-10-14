@@ -203,7 +203,7 @@ fn the_committed_vectors_hold_through_the_production_bridge() {
 /// document and indexed document of the language-neutral fixture, and corruption is explicit rather than defaulted.
 #[test]
 fn the_projection_wire_round_trips_documents_and_rejects_corruption() {
-    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/📇️projection-wire-v1/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral projection fixture");
+    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/📇️projection-wire-v1/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral projection fixture");
     let wire = semio_framework_pack_json::json!({ "sessionBindingSha256": "", "authorizationGeneration": 0, "receiptSha256": "", "directory": fixture["wire"].clone() });
     let transient: HomeTransient = semio_framework_pack_json::from_json_str(&wire.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture projection");
     let document_ids: Vec<&str> = transient.directory().spaces().flat_map(|space| space.documents.iter().map(|document| document.document_id.as_str())).collect();
@@ -216,8 +216,8 @@ fn the_projection_wire_round_trips_documents_and_rejects_corruption() {
     let half_bound = semio_framework_pack_json::json!({ "sessionBindingSha256": BINDING, "authorizationGeneration": 0, "receiptSha256": "", "directory": fixture["wire"].clone() });
     assert!(semio_framework_pack_json::from_json_str::<HomeTransient>(&half_bound.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "a partial resume authority is refused");
     store::os_store::test_support::assert_dsl_round_trip(&transient);
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&transient);
-    assert_eq!(<HomeTransient as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("pack round trip"), transient);
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&transient);
+    assert_eq!(<HomeTransient as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("pack round trip"), transient);
 }
 
 /// 🔤️ The one verb round-trips its text line and its binary op.

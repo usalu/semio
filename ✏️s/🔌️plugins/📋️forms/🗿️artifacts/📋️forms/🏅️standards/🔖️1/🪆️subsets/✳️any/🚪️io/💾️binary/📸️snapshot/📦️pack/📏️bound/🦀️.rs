@@ -8,7 +8,7 @@ const RECORD_BYTES:usize=16;
 pub(crate) fn preflight(snapshot:&FormsSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
  let counts=crate::standards::v1::subsets::any::io::sqlite::snapshot::admission::forecast(snapshot,control,SqliteSnapshotPhase::EncodeNative)?;
  let component=match encoding{SnapshotEncoding::Binary=>store::semio_format::Component::Pack,SnapshotEncoding::Text=>store::semio_format::Component::Dsl};
- let prefix=store::semio_format::declared_envelope_prefix_len(<FormsSnapshot as store::os_store::serialization::ArtifactDsl>::envelope_id(),component,1)?;
+ let prefix=store::semio_format::declared_envelope_prefix_len(<FormsSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),component,1)?;
  let mut bound=NativeEncodingBound::new(control)?;
  bound.add(prefix.checked_add(24*FIELD_BYTES+7*RECORD_BYTES).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Forms native fixed syntax bound overflow"))?)?;
  bound.repeated(counts.bytes,6)?;

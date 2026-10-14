@@ -9,8 +9,7 @@ use crate::Generation3dSnapshot;
 
 //#region 🔖️DragTransforms
 /// ✋️ Adds `(dx, dy, dz)` to the offset of every addressed translate operator.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct DragTransforms {
     pub targets: Vec<String>,

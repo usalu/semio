@@ -87,7 +87,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       },
-      "architecture": "x64"
+      "architecture": "$env{SEMIO_CMAKE_ARCHITECTURE}"
     },
     {
       "name": "windows-release",
@@ -102,7 +102,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       },
-      "architecture": "x64"
+      "architecture": "$env{SEMIO_CMAKE_ARCHITECTURE}"
     }
   ],
   "buildPresets": [

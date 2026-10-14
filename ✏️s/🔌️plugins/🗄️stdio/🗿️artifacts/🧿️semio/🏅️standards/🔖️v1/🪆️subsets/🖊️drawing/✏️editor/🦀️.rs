@@ -86,7 +86,7 @@ const SEMIO_DRAWING_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
 fn semio_drawing_editor_example_snapshot(example_id: &str) -> SemioDrawingSnapshot {
     if example_id == semio_s_artifact_stdio_semio_base::examples::demo::ID {
-        <SemioDrawingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(semio_s_artifact_stdio_semio_base::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+        <SemioDrawingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_stdio_semio_base::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         SemioDrawingSnapshot::default()
     }
@@ -229,6 +229,7 @@ impl ArtifactEditor for SemioDrawingEditor {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

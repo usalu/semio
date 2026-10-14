@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
 import { Buffer } from "node:buffer";
-import history from "../../🧫️fixtures/🔣️.json" with { type: "json" };
-import factory from "../../🏭️factory/🧫️fixtures/🔣️.json" with { type: "json" };
-import dictionary from "../../🗂️dictionary/🧫️fixtures/🔣️.json" with { type: "json" };
+import history from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import factory from "../../🏭️factory/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
+import dictionary from "../../🗂️dictionary/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 
 test("retained member logical ownership census includes the explicit opened actor once", () => {
   const utf8 = (value: string) => new TextEncoder().encode(value).length;

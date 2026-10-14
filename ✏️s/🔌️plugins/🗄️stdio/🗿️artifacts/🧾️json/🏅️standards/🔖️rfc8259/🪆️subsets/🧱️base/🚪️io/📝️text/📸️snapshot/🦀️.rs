@@ -36,7 +36,7 @@ pub use snapshot_codec::*;
 mod pack_codec {
 use crate::standards::v_rfc8259::subsets::base::schema::snapshot::*;
 use crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::*;
-impl store::os_store::serialization::ArtifactDsl for JsonSnapshot{
+impl pack::snapshot::ArtifactDsl for JsonSnapshot{
  const EXTENSION:&'static str="json";
  fn envelope_id()->&'static str{"stdio.json"}
  fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{

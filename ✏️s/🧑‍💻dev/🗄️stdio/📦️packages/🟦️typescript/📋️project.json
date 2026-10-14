@@ -96,12 +96,13 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "cache": true,
+      "cache": false,
       "inputs": [
         "stdioCompositionBuild",
         "^production"
       ],
       "outputs": [
+        "{projectRoot}/📤️dist/{options.env.SEMIO_BUILD_MODE}",
         "{projectRoot}/dist"
       ],
       "dependsOn": [

@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn artifact_reference_schema_refusals_retain_categories_and_literal_identity(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🚦️refusals/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🚦️refusals/🔣️.json")).unwrap();
     let mut deny=|_|false;let mut control=NativeDecodeControl::new(usize::MAX,&mut deny);
     let canceled=<ArtifactRef as DslField>::shape_controlled(&mut control).unwrap_err();
     let mut allow=|_|true;let mut control=NativeDecodeControl::new(0,&mut allow);let ownership=spec_controlled(&mut control).unwrap_err();

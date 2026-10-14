@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import * as api from "../../../🟦️.ts";
 import * as transport from "../🚪️io/🔣️json/🟦️.ts";
 import {binary64Value} from "../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "../../../🧪️tests/🧫️fixtures/🧱️shared/🔣️.json";
 
 import schema from "../🔣️.json";
 const plain=(value:unknown):unknown=>{if(value&&typeof value==="object"&&!Array.isArray(value)&&typeof (value as {bits?:unknown}).bits==="bigint")return binary64Value(value as {bits:bigint});if(Array.isArray(value))return value.map(plain);if(value&&typeof value==="object")return Object.fromEntries(Object.entries(value).map(([key,value])=>[key,plain(value)]));return value;};

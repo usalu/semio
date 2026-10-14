@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🛝️create-ramp/📉️non-positive-slope-limit",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛝️create-ramp/📉️non-positive-slope-limit/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛝️create-ramp/📉️non-positive-slope-limit/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛝️create-ramp/📉️non-positive-slope-limit/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛝️create-ramp/📉️non-positive-slope-limit/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛝️create-ramp/📉️non-positive-slope-limit/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛝️create-ramp/📉️non-positive-slope-limit/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛝️create-ramp/📉️non-positive-slope-limit/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛝️create-ramp/📉️non-positive-slope-limit/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛝️create-ramp/📉️non-positive-slope-limit/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛝️create-ramp/📉️non-positive-slope-limit/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

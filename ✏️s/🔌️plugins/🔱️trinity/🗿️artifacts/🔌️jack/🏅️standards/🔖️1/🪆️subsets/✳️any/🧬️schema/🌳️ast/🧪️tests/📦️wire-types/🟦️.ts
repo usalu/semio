@@ -8,7 +8,7 @@ import{fileURLToPath}from"node:url";
 import ts from"typescript";
 
 type WireCase=Readonly<{id:string;name:string;value:unknown;accept:boolean}>;
-const fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/📦️wire-types/🔣️.json",import.meta.url),"utf8")) as {schemaVersion:number;cases:WireCase[]};
+const fixture=JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/🌳️ast/📦️wire-types/🔣️.json",import.meta.url),"utf8")) as {schemaVersion:number;cases:WireCase[]};
 test("Jack portable wire cases preserve the closed three-case contract",()=>{
  
  expect(fixture["schemaVersion"]).toEqual(1);

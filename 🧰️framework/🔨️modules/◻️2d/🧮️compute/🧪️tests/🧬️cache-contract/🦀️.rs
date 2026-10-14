@@ -75,7 +75,7 @@ fn input_bytes(text: &str) -> Vec<u8> {
 #[test]
 fn portable_cache_turns_match_independent_weighted_lru_reference() {
     use serde_json::{json, Value};
-    let corpus: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let keys = corpus["keys"].as_array().unwrap();
     let scenarios = corpus["scenarios"].as_array().unwrap();
     assert_eq!(scenarios.len(), 11);

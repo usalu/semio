@@ -1,7 +1,7 @@
 import{expect,test}from"bun:test";
 import Ajv from"ajv";
 import{applyPatch}from"fast-json-patch";
-import fixture from"../🧫️fixtures/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
 import domain from"../../../../🗿️artifacts/🌊️flow/🧵️retained/🧬️schema/🔣️.json";
 import grant from"../../../../../../../../🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json";
 import schema from"../🧬️schema/🔣️.json";

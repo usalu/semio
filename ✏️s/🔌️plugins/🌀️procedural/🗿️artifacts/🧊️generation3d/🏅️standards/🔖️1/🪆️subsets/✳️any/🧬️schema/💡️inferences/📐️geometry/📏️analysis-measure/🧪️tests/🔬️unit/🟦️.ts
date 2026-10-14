@@ -6,7 +6,7 @@ import { area, bodyOf, boundsOf, classify, closestOnSurface, distance, eigenvalu
 
 type Case = FixtureCase & { oracleTolerance?: number; unchecked?: string[] };
 type Fixture = { tolerance: number; oracleTolerance: number; cases: Case[] };
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(new URL("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/📏️analysis-measure/🔣️.json", import.meta.url), "utf8")) as Fixture;
 const prefix = "generation3d.geometry.";
 
 const fault = (code: string, port: string): OracleResult => ({ fault: { code: prefix + code, port } });

@@ -1,0 +1,20 @@
+{
+  "profiles": [
+    "dev",
+    "release"
+  ],
+  "routes": {
+    "plugin": "/🔌️plugin-modules",
+    "extension": "/🧩️extension-modules"
+  },
+  "mounts": {
+    "/renderer-modules/wgpu": "compilerRoot",
+    "/🚀️boot.js": "bootRoot",
+    "/🎞️frame-worker.js": "workerRoot",
+    "/🔌️plugin-modules": "moduleRoot",
+    "/🧩️extension-modules": "extensionRoot",
+    "/🎬️renderer-boot.js": "libraryRoot"
+  },
+  "descriptorFile": "🔣️.json",
+  "descriptorProbeDirectory": "🧊️flow-extension-brep"
+}

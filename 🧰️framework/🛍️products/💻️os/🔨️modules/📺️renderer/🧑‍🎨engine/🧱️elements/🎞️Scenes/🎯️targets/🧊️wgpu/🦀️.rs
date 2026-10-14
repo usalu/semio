@@ -2016,13 +2016,13 @@ impl SceneCameraDispatchCursor {
         Ok((SceneCameraDispatchStep::Pending, self.entries.mark_processed(grant)?))
     }
 
-    pub fn close_step(&mut self, grant: semio_framework_job::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+    pub fn close_step(&mut self, grant: semio_framework_job::RetainedCloneGrant) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_value::ValueError> {
         use semio_framework_job::{InteractiveJobCloseStep, RetainedCloneProgress};
         use semio_framework_value::RetainedCloneStep;
         if self.fault.is_some() {
-            if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < std::mem::size_of::<Option<&'static str>>() { return InteractiveJobCloseStep::Pending { progress: Default::default() }; }
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < std::mem::size_of::<Option<&'static str>>() { return Ok(InteractiveJobCloseStep::Pending { progress: Default::default() }); }
             self.fault = None;
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<Option<&'static str>>(), ..Default::default() } };
+            return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<Option<&'static str>>(), ..Default::default() } });
         }
         let result = (|| {
             if self.entries.has_retiring() { return self.entries.close_retiring(grant); }
@@ -2037,9 +2037,9 @@ impl SceneCameraDispatchCursor {
             self.entries.close_current(grant)
         })();
         match result {
-            Ok(step) if self.terminal_is_empty() => InteractiveJobCloseStep::Complete { progress: step.progress() },
-            Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-            Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+            Ok(step) if self.terminal_is_empty() => Ok(InteractiveJobCloseStep::Complete { progress: step.progress() }),
+            Ok(step) => Ok(InteractiveJobCloseStep::Pending { progress: step.progress() }),
+            Err(error) => Err(error),
         }
     }
 

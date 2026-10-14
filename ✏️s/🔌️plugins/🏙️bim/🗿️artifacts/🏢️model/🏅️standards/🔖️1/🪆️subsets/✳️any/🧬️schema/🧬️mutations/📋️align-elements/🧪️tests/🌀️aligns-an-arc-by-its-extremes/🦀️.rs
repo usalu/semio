@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "📋️align-elements/🌀️aligns-an-arc-by-its-extremes",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️align-elements/🌀️aligns-an-arc-by-its-extremes/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️align-elements/🌀️aligns-an-arc-by-its-extremes/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️align-elements/🌀️aligns-an-arc-by-its-extremes/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️align-elements/🌀️aligns-an-arc-by-its-extremes/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️align-elements/🌀️aligns-an-arc-by-its-extremes/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️align-elements/🌀️aligns-an-arc-by-its-extremes/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️align-elements/🌀️aligns-an-arc-by-its-extremes/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️align-elements/🌀️aligns-an-arc-by-its-extremes/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️align-elements/🌀️aligns-an-arc-by-its-extremes/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️align-elements/🌀️aligns-an-arc-by-its-extremes/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

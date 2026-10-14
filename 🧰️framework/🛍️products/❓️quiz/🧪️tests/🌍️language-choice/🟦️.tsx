@@ -14,7 +14,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { decodeQueryEnvelope, encodeQueryResult, type HttpResponse, type HttpTransport } from "@semio-tech/framework-server";
 import type { CatalogView, Query } from "@semio-tech/quiz";
 import { QUIZ_LOCALES, QuizApp, documentTitle, initialQuizState, localStore, memoryStorageOrigin, mountQuiz, preferredLocale, quizInstance, readPreferences, type PresenceConnect, type QuizState, type StorageArea } from "@semio-tech/quiz-react";
-import choice from "../../🧫️fixtures/🌍️language-choice/🔣️.json";
+import choice from "../🧫️fixtures/🌍️language-choice/🔣️.json";
 
 type Locale = (typeof QUIZ_LOCALES)[number];
 

@@ -1,7 +1,7 @@
 use super::*;
 
 fn index_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/♻️shell-document-retirement-index/🔣️.json")).expect("shell document retirement index fixture")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/♻️shell-document-retirement-index/🔣️.json")).expect("shell document retirement index fixture")
 }
 
 fn document(generation: u64, surface: &str) -> UiDocumentLease {

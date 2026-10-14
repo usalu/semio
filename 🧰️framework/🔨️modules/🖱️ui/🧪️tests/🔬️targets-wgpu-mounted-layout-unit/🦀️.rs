@@ -109,9 +109,9 @@ fn mounted_layout_actual_glyph_max_plus_one_retains_the_exact_rejected_scalar() 
     assert_eq!(job.rejected_glyph().map(|owner| owner.scalar), Some('x'));
     job.begin_close();
     let before = job.glyphs.as_deref().expect("original layout owner").len();
-    assert!(!job.close_one());
+    assert!(!job.close_one(ui_contract::UI_WORKER_RETIREMENT_POLICY).unwrap());
     assert_eq!(job.glyphs.as_deref().expect("original layout owner").len(), before);
-    while !job.close_one() {}
+    while !job.close_one(ui_contract::UI_WORKER_RETIREMENT_POLICY).unwrap() {}
     assert!(job.terminal_is_empty());
 }
 
@@ -125,7 +125,7 @@ fn mounted_layout_actual_node_max_plus_one_retains_the_exact_rejected_tree_owner
     assert!(tree.contains(rejected.id));
     assert!(!job.nodes.as_deref().expect("original layout owner").iter().any(|retained| retained.id == rejected.id));
     job.begin_close();
-    while !job.close_one() {}
+    while !job.close_one(ui_contract::UI_WORKER_RETIREMENT_POLICY).unwrap() {}
     assert!(job.terminal_is_empty());
 }
 
@@ -138,10 +138,10 @@ fn mounted_layout_deep_tree_depth_refusal_retains_walk_authority_for_close() {
     assert!(job.rejected_walk.is_some());
     job.begin_close();
     let retained = job.nodes.as_deref().expect("original layout owner").len() + job.walk.as_deref().expect("original layout owner").len() + usize::from(job.rejected_walk.is_some());
-    assert!(!job.close_one());
+    assert!(!job.close_one(ui_contract::UI_WORKER_RETIREMENT_POLICY).unwrap());
     let after = job.nodes.as_deref().expect("original layout owner").len() + job.walk.as_deref().expect("original layout owner").len() + usize::from(job.rejected_walk.is_some());
     assert_eq!(retained - after, 1);
-    while !job.close_one() {}
+    while !job.close_one(ui_contract::UI_WORKER_RETIREMENT_POLICY).unwrap() {}
     assert!(job.terminal_is_empty());
 }
 
@@ -166,7 +166,7 @@ fn mounted_layout_multi_page_unicode_uses_one_glyph_or_atlas_boundary_per_turn()
     assert!(turns > LAYOUT_GLYPH_CREDITS);
     assert!(job.glyph_previews.as_deref().expect("original layout owner").iter().all(|preview| preview.generation == 11 && preview.revision == 13));
     job.begin_close();
-    while !job.close_one() {}
+    while !job.close_one(ui_contract::UI_WORKER_RETIREMENT_POLICY).unwrap() {}
     assert!(job.terminal_is_empty());
 }
 
@@ -174,27 +174,23 @@ fn mounted_layout_multi_page_unicode_uses_one_glyph_or_atlas_boundary_per_turn()
 fn mounted_layout_worker_runs_on_shared_user_visible_lane_and_pool_thread() {
     let (tree, root) = text_tree("worker".to_string());
     let mut job = text_job(&tree, root);
-    let cancel = semio_framework_job::CancelToken::root_now();
-    assert!(matches!(admit(&mut job, &tree, &cancel), LayoutJobStep::Yield { .. }));
+    let source=ui_contract::UI_WORKER_RETIREMENT_POLICY;let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(29),semio_framework_job::Generation(11),source,clock_zero,1000,1);
+    assert!(matches!(admit(&mut job, &tree, caller.cancel()), LayoutJobStep::Yield { .. }));
     let params = semio_framework_job::BatchJobParams {
         operation: semio_framework_job::OperationId(29),
         generation: semio_framework_job::Generation(11),
-        cancel: cancel.clone(),
+        cancel: caller.admit_alias(source),
         config: semio_framework_job::BatchDriveConfig { retained:ui_contract::UI_WORKER_RETIREMENT_POLICY, site: "ui.layout-text.worker.law", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
         now_us: clock_zero,
     };
     let mut original_job = Some(job);
     let mut original_params = Some(params);
-    let mut original_receipt = semio_framework_job::RetainedCloneProgress::default();
-    let mut original_preview = 0;
-    let mut original_context = semio_framework_job::StepContext::new(semio_framework_job::OperationId(29), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, 1000, ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), clock_zero, &mut original_preview, &mut original_receipt);
-    let (admitted, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::MountedWorkerJobSession::try_admit_owned(&mut original_job, &mut original_params, &mut original_context));
+    let (admitted, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(source,|cx|semio_framework_job::MountedWorkerJobSession::try_admit_owned(&mut original_job,&mut original_params,cx).map_err(semio_framework_job::OriginalTurnFailure::from)));
     let (mut session, birth) = admitted.expect("original mounted worker authority").expect("mounted worker session credit");
     assert_eq!((birth.retained_capacity_bytes, birth.released_bytes), (heap.requested_bytes, heap.released_bytes));
-    assert_eq!(original_context.retained_progress(), birth);
+    assert_eq!(caller.receipt(), birth);
     assert!(birth.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
     assert!(original_job.is_none() && original_params.is_none());
-    drop(original_context);
     eprintln!("[DEBUG] actual Mounted admission original operation29/generation11 cancellation witness and clock; receipt before exposure={birth:?} physical={heap:?}");
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     let lane = semio_framework_async::Lane::UserVisible;
@@ -223,18 +219,11 @@ fn mounted_layout_worker_runs_on_shared_user_visible_lane_and_pool_thread() {
         }
         assert!(ui_contract::ui_worker_retirement_permits(demand));
         let phase=session.close_phase();
-        if session.has_original_cancel_alias_witness(&cancel).expect("original mounted cancellation witness") {
-            let (returned, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(||session.return_original_cancel_alias_step(&cancel, grant).expect("original mounted alias return").expect("pending original mounted alias"));
-            assert!(returned.progress().fits(grant));
-            assert_eq!((returned.progress().retained_capacity_bytes, returned.progress().released_bytes), (heap.requested_bytes, heap.released_bytes));
-            continue;
-        }
-        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||session.close_step(grant));
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.close_owner(grant,&mut session).unwrap());
         let progress=step.progress();
         if (progress.retained_capacity_bytes,progress.released_bytes)!=(heap.requested_bytes,heap.released_bytes){eprintln!("[DEBUG] actual mounted worker physical receipt phase={phase:?} demand={demand:?} progress={progress:?} originalHeap={heap:?}");}
         assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(heap.requested_bytes,heap.released_bytes));
         assert!(progress.fits(grant));
-        assert!(!matches!(step, semio_framework_job::WorkerJobCloseStep::Refused { .. }));
         if session.terminal_is_empty() {
             break;
         }
@@ -242,35 +231,45 @@ fn mounted_layout_worker_runs_on_shared_user_visible_lane_and_pool_thread() {
     assert!(session.terminal_is_empty());
     let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(session));
     eprintln!("[DEBUG] actual mounted worker terminal Drop physical={} birth={}",heap.released_bytes,heap.requested_bytes);
-    assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+    assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));caller.retire(source);
 }
 
 #[test]
 fn mounted_layout_cancel_before_and_after_owned_text_call_is_typed_and_retained() {
     let (tree, root) = text_tree("cancel".to_string());
-    let cancel = semio_framework_job::CancelToken::root_now();
-    let mut before = text_job(&tree, root);
-    assert!(matches!(admit(&mut before, &tree, &cancel), LayoutJobStep::Yield { .. }));
-    cancel.cancel_now();
-    let mut preview = 0;
-    let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
-    let mut before_cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(31), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel, clock_zero, &mut preview,&mut actual_retained_progress);
-    assert!(matches!(observe_layout_step(&mut before, &mut before_cx), Some(semio_framework_job::JobOutcomeKind::Cancelled)));
+    let source=ui_contract::UI_WORKER_RETIREMENT_POLICY;
+    let mut before_caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(31),semio_framework_job::Generation(11),source,clock_zero,u64::MAX,1);
+    let(mut before,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||text_job(&tree,root));let(mut born,mut released)=(birth.requested_bytes,birth.released_bytes);
+    loop{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||before_caller.turn(source,|cx|Ok(before.admit_one(&tree,cx))).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(before_caller.receipt().retained_capacity_bytes,before_caller.receipt().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;if before.is_admitted(){assert!(matches!(step,LayoutJobStep::Yield{..}));break}}
+    before_caller.cancel().cancel_now();
+    let(outcome,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||before_caller.turn(source,|cx|Ok(observe_layout_step(&mut before,cx))).unwrap());assert!(matches!(outcome,Some(semio_framework_job::JobOutcomeKind::Cancelled)));assert_eq!((heap.requested_bytes,heap.released_bytes),(before_caller.receipt().retained_capacity_bytes,before_caller.receipt().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;
     assert_eq!(before.glyph_cursor, 0);
+    before.begin_close();let mut turns=0;while !before.terminal_is_empty(){
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||before_caller.turn(source,|cx|semio_framework_job::InteractiveJob::close_step(&mut before,cx)).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert_eq!(step.progress(),before_caller.receipt());born+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<1024);
+    }
+    let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(before));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(born,released);println!("[DEBUG] original text pre-cancel sourceBornUncredited={born} nativeRelease={released} terminalDrop0");before_caller.retire(source);
 
-    let after_cancel = semio_framework_job::CancelToken::root_now();
-    let mut after = text_job(&tree, root);
-    assert!(matches!(admit(&mut after, &tree, &after_cancel), LayoutJobStep::Yield { .. }));
-    after.cancel_after_shape(after_cancel.clone());
-    let mut after_preview = 0;
-    let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
-    let mut after_cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(37), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), after_cancel, clock_zero, &mut after_preview,&mut actual_retained_progress);
-    assert!(matches!(observe_layout_step(&mut after, &mut after_cx), Some(semio_framework_job::JobOutcomeKind::Cancelled)));
-    assert_eq!(after.glyph_cursor, 1);
+    let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(37),semio_framework_job::Generation(11),source,clock_zero,u64::MAX,1);
+    let(mut after,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||text_job(&tree,root));let(mut born,mut released)=(birth.requested_bytes,birth.released_bytes);
+    loop{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(source,|cx|Ok(after.admit_one(&tree,cx))).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(caller.receipt().retained_capacity_bytes,caller.receipt().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;if after.is_admitted(){assert!(matches!(step,LayoutJobStep::Yield{..}));break}}
+    after.cancel_after_shape(caller.admit_alias(source));
+    let(outcome,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(source,|cx|Ok(observe_layout_step(&mut after,cx))).unwrap());
+    assert!(matches!(outcome,Some(semio_framework_job::JobOutcomeKind::Cancelled)));
+    assert_eq!((heap.requested_bytes,heap.released_bytes),(caller.receipt().retained_capacity_bytes,caller.receipt().released_bytes));
+    born+=heap.requested_bytes;released+=heap.released_bytes;assert_eq!(after.glyph_cursor, 1);
     assert_eq!(after.latest_glyph_preview().map(|preview| preview.generation), Some(11));
+    assert!(after.text_worker.cancel_after_shape.as_ref().is_some_and(|alias|alias.is_same_node(caller.cancel())));
     after.begin_close();
-    while !after.close_one() {}
-    assert!(after.terminal_is_empty());
+    let mut turns=0;while !after.terminal_is_empty(){
+        for denied in[semio_framework_job::RetainedCloneGrant{maximum_items:0,..source},semio_framework_job::RetainedCloneGrant{maximum_depth:0,..source}]{
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(denied,|cx|semio_framework_job::InteractiveJob::close_step(&mut after,cx)).unwrap());
+            assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+        }
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(source,|cx|semio_framework_job::InteractiveJob::close_step(&mut after,cx)).unwrap());
+        assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert_eq!(step.progress(),caller.receipt());born+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<1024);
+    }
+    let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(after));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(born,released);println!("[DEBUG] original text post-cancel sourceBornUncredited={born} nativeRelease={released} originalAliasReturn terminalDrop0");
+    caller.retire(source);
 }
 
 #[test]
@@ -286,10 +285,10 @@ fn mounted_layout_deadline_and_partial_close_each_advance_at_most_one_owner() {
     assert_eq!(job.glyph_cursor, 0);
     let retained = job.glyphs.as_deref().expect("original layout owner").len() + job.nodes.as_deref().expect("original layout owner").len() + job.runs.as_deref().expect("original layout owner").len() + LAYOUT_ATLAS_PAGE_CREDITS;
     job.begin_close();
-    assert!(!job.close_one());
+    assert!(!job.close_one(ui_contract::UI_WORKER_RETIREMENT_POLICY).unwrap());
     let after_one = job.glyphs.as_deref().expect("original layout owner").len() + job.nodes.as_deref().expect("original layout owner").len() + job.runs.as_deref().expect("original layout owner").len() + job.atlas_candidate.pages.iter().filter(|page| page.is_some()).count();
     assert_eq!(retained - after_one, 1);
-    while !job.close_one() {}
+    while !job.close_one(ui_contract::UI_WORKER_RETIREMENT_POLICY).unwrap() {}
     assert!(job.terminal_is_empty());
 }
 
@@ -321,7 +320,7 @@ fn mounted_layout_publication_rechecks_full_identity_and_repeat_ready_swaps_once
     assert!(matches!(job.publish_one(&mut tree, identity), LayoutJobStep::Complete));
     assert_eq!(tree.accepted_layout_generation(), 11);
     job.begin_close();
-    while !job.close_one() {}
+    while !job.close_one(ui_contract::UI_WORKER_RETIREMENT_POLICY).unwrap() {}
     assert!(job.terminal_is_empty());
 }
 
@@ -401,7 +400,7 @@ fn mounted_layout_publishes_a_two_column_grid_as_two_columns() {
 
 #[test]
 fn mounted_layout_publishes_the_shared_overlay_flow_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📐️overlay-flow/🔣️.json")).expect("overlay flow fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📐️overlay-flow/🔣️.json")).expect("overlay flow fixture");
     let layout = |node: &str| serde_json::from_value(fixture[node]["layout"].clone()).unwrap_or_else(|error| panic!("{node} layout: {error}"));
     let expected = |node: &str| {
         let rect = &fixture[node]["expectedRect"];
@@ -509,7 +508,7 @@ fn composite_intrinsic_and_layout(tree: &mut UiTree, root: NodeId, width: f32) -
     let identity = job.identity();
     while !matches!(job.publish_one(tree, identity), LayoutJobStep::Complete) {}
     job.begin_close();
-    while !job.close_one() {}
+    while !job.close_one(ui_contract::UI_WORKER_RETIREMENT_POLICY).unwrap() {}
     intrinsic
 }
 
@@ -527,7 +526,7 @@ fn geometry_button() -> UiNode {
 
 #[test]
 fn section_and_field_measure_the_shared_wrapped_chrome_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📐️section-field-presentation/🔣️.json")).expect("section field fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📐️section-field-presentation/🔣️.json")).expect("section field fixture");
     let number = |path: &[&str]| path.iter().fold(&fixture, |value, key| &value[*key]).as_f64().expect("fixture number") as f32;
     let text = |path: &[&str]| path.iter().fold(&fixture, |value, key| &value[*key]).as_str().expect("fixture text");
 

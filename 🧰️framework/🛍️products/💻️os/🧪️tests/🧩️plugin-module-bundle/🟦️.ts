@@ -9,7 +9,7 @@ import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮�
 
 const root = "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment";
 const read = (path: string) => JSON.parse(readFileSync(fileURLToPath(new URL(`${root}/${path}`, import.meta.url)), "utf8"));
-const fixture = read("🧫️fixtures/🧩️plugin-module/🔣️.json");
+const fixture = read("🧪️tests/🧫️fixtures/🧩️plugin-module/🔣️.json");
 const schema = read("🧬️schema/🔣️.json");
 const ajv = semioSchemaAjvV1({ strict: false, allErrors: true });
 ajv.addSchema({ ...schema, $ref: undefined, $id: "https://json.schemas.assets.semio-tech.com/os/plugin/registry/deployment/component.json" }, "trusted-catalog");

@@ -8,7 +8,7 @@ describe("paged scene-lane intake ceiling", () => {
     expect(retainedUiIntakeStepCeiling({ maxNodes: 1 })).toBe(RETAINED_UI_INTAKE_STEPS_PER_NODE);
   });
   it("carries the numbers the language-agnostic fixture declares, so the Rust twin cannot drift", async () => {
-    const { default: fixture } = await import("../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧫️fixtures/📥️intake/🔣️.json");
+    const { default: fixture } = await import("../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/📥️intake/🔣️.json");
     expect(RETAINED_UI_INTAKE_STEPS_PER_NODE).toBe(fixture.budget.stepsPerNode);
     expect(RETAINED_UI_INTAKE_SLICE_STEPS).toBe(fixture.budget.sliceSteps);
     for (const ceiling of fixture.budget.ceilings) expect(retainedUiIntakeStepCeiling({ maxNodes: ceiling.maxNodes })).toBe(ceiling.steps);

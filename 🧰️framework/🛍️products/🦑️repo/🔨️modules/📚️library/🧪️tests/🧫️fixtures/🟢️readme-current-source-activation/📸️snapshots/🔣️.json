@@ -1,0 +1,53 @@
+{
+  "cases": [
+    {
+      "id": "current-regular",
+      "state": "file",
+      "accepted": true
+    },
+    {
+      "id": "missing-source",
+      "state": "absent",
+      "accepted": false
+    },
+    {
+      "id": "symbolic-source",
+      "state": "symlink",
+      "accepted": false
+    },
+    {
+      "id": "symbolic-parent",
+      "state": "symlink-parent",
+      "accepted": false
+    },
+    {
+      "id": "directory-source",
+      "state": "directory",
+      "accepted": false
+    },
+    {
+      "id": "source-byte-drift",
+      "state": "file",
+      "append": " ",
+      "accepted": false
+    },
+    {
+      "id": "source-mode-drift",
+      "state": "file",
+      "mode": 493,
+      "accepted": false
+    },
+    {
+      "id": "approval-byte-drift",
+      "state": "file",
+      "approvalAppend": " ",
+      "accepted": false
+    },
+    {
+      "id": "missing-approval",
+      "state": "file",
+      "approvalAbsent": true,
+      "accepted": false
+    }
+  ]
+}

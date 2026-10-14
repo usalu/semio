@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::flow::unit_tests::context::{dispatch, flow_app, flow_main_window_meta};
 use crate::editor::flow::FlowCommand;
-use store::{os_store::serialization::ArtifactPack, SpaceMember};
+use store::{pack::snapshot::ArtifactPack, SpaceMember};
 
 #[test]
 fn child_add_widget_uses_the_smallest_available_identity_and_the_descriptor_default_payload() {

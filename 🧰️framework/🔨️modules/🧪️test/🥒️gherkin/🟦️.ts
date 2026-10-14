@@ -1,6 +1,6 @@
 /** 🥒️ Parses the neutral restricted scenario contract shared by native test hosts. */
 import { IMPLEMENTATIONS, TEST_MODES, type ComparisonProfile, type FeatureStep, type FeatureScenario, type TestMode, type Implementation } from "../🔌️adapter/🟦️.ts";
-import { TEST_LEVELS, type TestLevel } from "../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { TEST_LEVELS, type TestLevel } from "../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 //#region 🥒️Gherkin
 /** 🥒️ One `Given`/`When`/`Then` step. `And`/`But` inherit the previous step's canonical keyword. */
 

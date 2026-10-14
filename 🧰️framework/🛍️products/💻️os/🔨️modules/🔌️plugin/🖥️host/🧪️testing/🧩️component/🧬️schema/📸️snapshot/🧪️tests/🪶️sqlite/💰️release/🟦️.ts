@@ -5,7 +5,7 @@ import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 const snapshot=resolve(import.meta.dir,"../../..");
 test("Count complete erased backing has a closed scratch diagnostic and incoming release contract",()=>{
- const path=resolve(snapshot,"🧫️fixtures/🪶️sqlite/💰️release/🔣️.json");
+ const path=resolve(snapshot,"../../🧪️tests/🧫️fixtures/📸️snapshot/🪶️sqlite/💰️release/🔣️.json");
  expect(existsSync(path),"actual Count failed/canceled retained backing contract").toBe(true);
  const fixture=JSON.parse(readFileSync(path,"utf8"));
  expect(fixture.counts).toEqual([-2147483648,-1,0,1,2147483647]);

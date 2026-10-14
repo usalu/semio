@@ -194,7 +194,7 @@ impl EnergySimulationRunReason {
 /// ⏯️ The simulation run declaration: read-only, restarted on any base or settings change, no trace subjects,
 /// reading the three run settings of the editor config.
 pub fn energy_simulation_run_definition() -> ToolRunDefinition {
-    ToolRunDefinition {
+    ToolRunDefinition { receiving: semio_framework_tool_run::ToolRunReceivingLimits::REPORTS,
         mutating: false,
         rebase: ToolRunRebasePolicy::Restart,
         reconfigure: ToolRunReconfigurePolicy::Restart,

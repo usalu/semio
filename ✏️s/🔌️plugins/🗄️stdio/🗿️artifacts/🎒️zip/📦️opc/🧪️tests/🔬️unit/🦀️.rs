@@ -27,7 +27,7 @@ fn sample_package() -> OpcPackage {
 }
 
 fn publication_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🛡️publication/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🛡️publication/🔣️.json")).unwrap()
 }
 
 #[semio_framework_async_macros::async_test]
@@ -198,7 +198,7 @@ async fn sniff_recognizes_content_types_entry() {
 #[semio_framework_async_macros::async_test]
 async fn metadata_namespaces_and_identity_constraints_survive_independent_zip_reopen() {
     use std::io::Read;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏷️metadata-namespaces/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🏷️metadata-namespaces/🔣️.json")).unwrap();
     let mut zip = crate::standards::v2_0::subsets::base::io::decode_zip(&encode_opc(&sample_package()).unwrap()).unwrap();
     zip.entries.iter_mut().find(|entry| entry.name == CONTENT_TYPES_PART).unwrap().data = fixture["contentTypes"].as_str().unwrap().as_bytes().to_vec();
     zip.entries.iter_mut().find(|entry| entry.name == "_rels/.rels").unwrap().data = fixture["relationships"].as_str().unwrap().as_bytes().to_vec();
@@ -225,7 +225,7 @@ async fn metadata_namespaces_and_identity_constraints_survive_independent_zip_re
 
 #[test]
 fn relationship_ids_are_reserved_uniquely_within_each_owner() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🆔️relationship-identity/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🆔️relationship-identity/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mut taken: Vec<String> = serde_json::from_value(case["taken"].clone()).unwrap();
         let mut oracle: std::collections::BTreeSet<String> = taken.iter().cloned().collect();

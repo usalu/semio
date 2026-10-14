@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
-import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧭️ `repo-cli-go` router: `bun ./📜️script.ts test`. */
 import type { FileLinter } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { defineLint, goCoverageArgs, goLevelTestArgs, runRepositoryTestCommand } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepoScriptMain } from "../../../📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 export const policyFile = "🐹️.go";

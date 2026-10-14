@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
 import { validateJsonSchemaSubset } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/♻️retirement/🔣️.json", import.meta.url), "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/📸️snapshot/♻️retirement/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/♻️retirement/🔣️.json", import.meta.url), "utf8"));
 const valueSchema = JSON.parse(readFileSync(new URL("../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json", import.meta.url), "utf8"));
 const source = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");

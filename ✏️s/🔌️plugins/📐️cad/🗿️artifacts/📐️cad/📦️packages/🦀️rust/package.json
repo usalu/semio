@@ -9,5 +9,8 @@
   },
   "scripts": {
     "verify-cad-document-contract": "bun nx run @semio-tech/cad-cad-rs:verify-cad-document-contract"
+  },
+  "devDependencies": {
+    "@semio-tech/framework": "workspace:*"
   }
 }

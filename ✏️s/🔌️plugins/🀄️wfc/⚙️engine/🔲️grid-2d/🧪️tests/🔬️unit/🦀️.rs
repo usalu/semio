@@ -21,7 +21,7 @@ fn custom_stencil_rejects_duplicate_and_self_offset() {
 
 #[test]
 fn node_at_and_coords_roundtrip() {
-    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔀️topology-contracts/🔣️.json")).unwrap();
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔀️topology-contracts/🔣️.json")).unwrap();
     let [width, height]: [usize; 2] = serde_json::from_value(oracle["dimensions2d"].clone()).unwrap();
     let mut b = ModelBuilder::new();
     b.add_pattern(1.0);

@@ -22,7 +22,7 @@ fn close(owner: &mut MemberGenesisEnvelopeEncoder) {
 
 #[semio_framework_async_macros::async_test]
 async fn member_genesis_envelope_streams_exact_canonical_bytes_with_bounded_work_and_physical_uri_retirement() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let maximum = fixture["maximumCopyBytes"].as_u64().unwrap() as usize;
     for row in fixture["cases"].as_array().unwrap() {
         let expected = reference(&row["expected"]);

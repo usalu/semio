@@ -3,7 +3,7 @@ import {test,expect} from "bun:test";
 import Ajv2020 from "ajv/dist/2020.js";
 import {Database} from "bun:sqlite";
 import {OriginalReadRetirement} from "../../🟦️.ts";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 test("original read closure retains refused capabilities and original issuer through interruption",()=>{
  expect(new Ajv2020({strict:true}).compile(schema)(fixture)).toBe(true);

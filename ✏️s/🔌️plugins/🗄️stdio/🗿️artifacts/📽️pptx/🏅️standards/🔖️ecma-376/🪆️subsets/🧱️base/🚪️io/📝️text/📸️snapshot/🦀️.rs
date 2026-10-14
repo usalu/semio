@@ -19,7 +19,7 @@ use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
-impl store::os_store::serialization::ArtifactDsl for PptxSnapshot {
+impl pack::snapshot::ArtifactDsl for PptxSnapshot {
     const EXTENSION: &'static str = "pptx";
     fn envelope_id() -> &'static str {
         "stdio.pptx"

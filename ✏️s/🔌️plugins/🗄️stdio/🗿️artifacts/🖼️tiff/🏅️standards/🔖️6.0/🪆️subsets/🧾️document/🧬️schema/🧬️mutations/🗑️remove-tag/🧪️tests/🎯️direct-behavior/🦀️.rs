@@ -18,11 +18,11 @@ use super::*;
 use crate::standards::v6_0::subsets::document::io::binary::mutations::remove_tag::BINARY_TAG;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🎯️direct-behavior/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🎯️direct-behavior/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🎯️direct-behavior/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🎯️direct-behavior/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🎯️direct-behavior/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-tag/🎯️direct-behavior/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-tag/🎯️direct-behavior/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-tag/🎯️direct-behavior/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-tag/🎯️direct-behavior/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-tag/🎯️direct-behavior/🎯️outcome/🔣️.json");
 
 fn before() -> TiffSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed before-snapshot decodes")

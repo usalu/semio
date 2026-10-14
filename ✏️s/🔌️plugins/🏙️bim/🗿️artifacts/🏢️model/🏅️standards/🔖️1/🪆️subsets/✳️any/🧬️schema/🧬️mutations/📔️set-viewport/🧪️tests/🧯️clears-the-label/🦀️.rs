@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "📔️set-viewport/🧯️clears-the-label",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/📔️set-viewport/🧯️clears-the-label/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/📔️set-viewport/🧯️clears-the-label/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/📔️set-viewport/🧯️clears-the-label/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/📔️set-viewport/🧯️clears-the-label/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/📔️set-viewport/🧯️clears-the-label/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📔️set-viewport/🧯️clears-the-label/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📔️set-viewport/🧯️clears-the-label/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📔️set-viewport/🧯️clears-the-label/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📔️set-viewport/🧯️clears-the-label/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📔️set-viewport/🧯️clears-the-label/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

@@ -1,0 +1,86 @@
+{
+  "records": {
+    "readme-current-source-revision-input": {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🔖️readme-current-source-revision/🔣️.json",
+      "sha256": "2db36a012d6e79f970ea103bb156f7a789ac6fa5d2aa34bcc2252a09dfe9d6e3",
+      "schemaVersion": 1,
+      "coordinates": [
+        {
+          "pointer": "/revisions/testing-readme-protocol-v2-reviewed/sourcePath",
+          "kind": "source"
+        },
+        {
+          "pointer": "/cases/8/changes/0/value/sourcePath",
+          "kind": "source"
+        }
+      ]
+    },
+    "readme-reviewed-expectation-input": {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/👀️readme-reviewed-fixture-inputs/🎯️reviewed-expectations/🔣️.json",
+      "sha256": "e821d6835b7bc0054ae7d0d3c4e7907692263b7ad947c3d7230a4c848c730320",
+      "schemaVersion": 1,
+      "coordinates": [
+        {
+          "pointer": "/documents/readme",
+          "kind": "source"
+        }
+      ]
+    },
+    "remaining-package-purity-history-v1": {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+      "sha256": "c3e39ed5122709c5f963f14a0bc7f53b93ec7caad414a9c6db39bc5c19ce5be9",
+      "schemaVersion": 1,
+      "coordinates": [
+        {
+          "pointer": "/mappings/*/0",
+          "kind": "source"
+        },
+        {
+          "pointer": "/mappings/29/3",
+          "kind": "source",
+          "representation": "recorded-package-owner-identity",
+          "identityPrefix": "unmarked:"
+        },
+        {
+          "pointer": "/mappings/29/4",
+          "kind": "source"
+        },
+        {
+          "pointer": "/mappings/29/5",
+          "kind": "source"
+        },
+        {
+          "pointer": "/mappings/29/6",
+          "kind": "destination"
+        },
+        {
+          "pointer": "/mappings/69/10",
+          "kind": "destination"
+        }
+      ]
+    },
+    "cad-draw-projection-vectors-v1": {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
+      "sha256": "eca5acc066ccf1ec2f686a1a4cc98fccc3089a87dd354e3c5aa72f687a8b6080",
+      "schemaVersion": 1,
+      "coordinates": [
+        {
+          "pointer": "/projections/*/sourceRoot",
+          "kind": "source"
+        },
+        {
+          "pointer": "/projections/*/destinationRoot",
+          "kind": "destination"
+        },
+        {
+          "pointer": "/projections/*/mappings/*/sourcePath",
+          "kind": "source"
+        },
+        {
+          "pointer": "/projections/*/mappings/*/destinationPath",
+          "kind": "destination"
+        }
+      ]
+    }
+  }
+}

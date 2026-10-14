@@ -1,5 +1,5 @@
-import {captureOwnedProcess} from "../../../../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
-import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import {captureOwnedProcess} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 🌊️ Qualifies actor-isolated canonical async result and stream imports through JCO/Wasm. */
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -10,7 +10,7 @@ import { buildClosedBrowserActorArtifactV1 } from "../../📜️script.ts";
 
 import { cargoTargetDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 
-const testSourceDirectory = fileURLToPath(new URL("../../🧫️fixtures/🌊️actor-import", import.meta.url));
+const testSourceDirectory = fileURLToPath(new URL("../🧫️fixtures/🌊️actor-import", import.meta.url));
 
 export type ActorImportCore = Readonly<{ name: string; bytes: Uint8Array }>;
 export type ActorImportFactoryPort = (source: string, cores: readonly ActorImportCore[], control: Readonly<{ importInterfaces: readonly string[] }>) => Promise<string>;
@@ -264,7 +264,7 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, invocation
             });
           },
           cancelEffect(requestId) { cancellations.push(requestId); return cancellation; },
-          log() {}, traceSpan() {}, nowMs: () => 1n,
+          log() {}, traceSpan() {}, nowMs: () => 1n, operationClockUs: () => undefined,
           wasi: { nowNs: () => process.hrtime.bigint(), wallNs: () => BigInt(Date.now()) * 1000000n, write(channel, bytes) { writes.push({ channel, bytes: [...bytes] }); } },
         };
         return { port, frames, writes, cancellations, bind(value) { runtime = value; } };

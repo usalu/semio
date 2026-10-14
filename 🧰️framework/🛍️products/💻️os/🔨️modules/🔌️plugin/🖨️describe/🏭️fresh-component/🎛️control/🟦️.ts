@@ -1,6 +1,6 @@
 import {parseCargoCommandEntryPolicyV1,type CargoCommandEntryPolicyV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🟦️.ts";
 import {parseCargoPreparationStorageV1,type CargoPreparationStorageV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
-import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type {FreshBuildControlV1} from "../../🧾️source-epoch/🟦️.ts";
 
 export type FreshProcessPolicyV1=Readonly<{version:1;storage:CargoPreparationStorageV1;command:CargoCommandEntryPolicyV1}>;

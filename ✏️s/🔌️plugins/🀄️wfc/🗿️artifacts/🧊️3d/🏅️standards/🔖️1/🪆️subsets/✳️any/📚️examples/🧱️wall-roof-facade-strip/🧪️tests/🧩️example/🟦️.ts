@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import outcome from "../../🧫️fixtures/🧩️example/🔣️.json";
+import outcome from "../🧫️fixtures/🧩️example/🔣️.json";
 
 describe("wall-roof-facade-strip", () => {
   it("is this example's own committed outcome", () => {

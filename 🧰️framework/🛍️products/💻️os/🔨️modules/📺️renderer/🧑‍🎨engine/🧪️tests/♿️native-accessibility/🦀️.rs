@@ -6,7 +6,7 @@
 use super::*;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/♿️native-accessibility-tree/🔣️.json")).expect("native accessibility fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/♿️native-accessibility-tree/🔣️.json")).expect("native accessibility fixture")
 }
 
 fn publication(fixture: &serde_json::Value) -> NativeAccessibilityPublication {

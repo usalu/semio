@@ -1,0 +1,37 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧫️fixtures/🔣️.json",
+    "plannedSha256": "6c15ad0128265a2f999ad39a4d574cde2c726c7230a0fb61e1e05be2021c022d",
+    "freshSha256": "06a69b0afc989ed127a836e460706fa9516d3ce7cf58c01180c67a60bdeef60c"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧫️fixtures/🔣️.json",
+    "plannedSha256": "7d95f8c1e1bb186aee076a8075b51ee0f776fdc8928e074569bbd87a68cc8794",
+    "freshSha256": "2fe6daebf81226c2f6d09c05dd3963d5ac7b79e7fe8cd75ed3c005c9067ff399"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗣️terminology.json",
+    "plannedSha256": "fbfa7a408aa0b74ef4472b2bc4d54a556743fe7a41a3ea2b799d25d67a3ae02a",
+    "freshSha256": "8ca9f6293f37113b86157d916595865979055cc52e188372a9f7bb44162a97e0"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json",
+    "plannedSha256": "7f26297fba22a2bba77ee0f92bf9fb6ae24f908cd594d0642ec1f0ff31b551f5",
+    "freshSha256": "49fe777e9a5e110b5fc7a9d135e9072a1779eb80946fc7a746b9c278e1c491b0"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/📏️counts/🔣️.json",
+    "plannedSha256": "4f89ae9728a717bbc0e4ca1e16a5740c18870a96da483e42380e501fd67628ba",
+    "freshSha256": "94da72b9b42f4ef4ce2f4a98126aa488f92ecbff52bb7d8b9cff880775260efe"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧩️complete/🔣️.json",
+    "plannedSha256": "3913e9bb4c0f30c27bd98bbc03296806c8bcd7569c03464a3ba251ad14b9474c",
+    "freshSha256": "0a53c9e1fd20f43841f8484d3cf6949e7c57a48cb716a7bafcdaa1e79b7ac29a"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/📏️counts/🔣️.json",
+    "plannedSha256": "94da72b9b42f4ef4ce2f4a98126aa488f92ecbff52bb7d8b9cff880775260efe",
+    "freshSha256": "901d841230c2579f165476784acc661d876b52b8e979f6b3c496c122781ac56e"
+  }
+]

@@ -50,7 +50,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("preserves pure analytic wire points and edges with independent Three geometry", () => {
-      const fixtureUrl = new URL("../🖱️ui/🎬️scene/🧫️fixtures/🎯️analytic-wire-picking/🔣️.json",source.url);
+      const fixtureUrl = new URL("../🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️analytic-wire-picking/🔣️.json",source.url);
       const fixture = JSON.parse(readFileSync(fixtureUrl,"utf8"));
       const transfer = meshTransferFromPreviewPayload(fixture.transfer)!;
       expect(isRenderableMeshTransfer(transfer)).toBe(true);
@@ -84,16 +84,16 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const pointer = fixture.picks[1].pointer;
       const direction = new Vector3(pointer[0]/200-1,1-pointer[1]/200,0.5).unproject(camera).sub(camera.position).normalize();
       expect(new Ray(camera.position,direction).distanceSqToSegment(new Vector3(...fixture.mesh.edgePositions.slice(0,3)),new Vector3(...fixture.mesh.edgePositions.slice(3,6)))).toBeCloseTo(0,12);
-      const pointFixture = JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧫️fixtures/🎯️vertex-provenance/🔣️.json",source.url),"utf8"));
+      const pointFixture = JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️vertex-provenance/🔣️.json",source.url),"utf8"));
       const point = new Vector3(...pointFixture.cases.find((row:{kind:string})=>row.kind === "point").points[0]);
       expect(new Ray(point.clone().add(new Vector3(0,0,4)),new Vector3(0,0,-1)).distanceSqToPoint(point)).toBe(0);
       geometry.dispose();
-      const domains=JSON.parse(readFileSync(new URL("../🖱️ui/🎬️scene/🧫️fixtures/🎯️component-source/🔣️.json",source.url),"utf8")).zeroIndex;
+      const domains=JSON.parse(readFileSync(new URL("../🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-source/🔣️.json",source.url),"utf8")).zeroIndex;
       for(const row of domains.accepted){const render=new BufferGeometry().setAttribute("position",new Float32BufferAttribute(row.positions.concat(row.edges.flat()).flat(),3));render.computeBoundingBox();expect(render.boundingBox!.min.toArray()).toEqual(row.bounds[0]);expect(render.boundingBox!.max.toArray()).toEqual(row.bounds[1]);if(row.kind==="zeroVertexWire"){expect(row.positions.length).toBe(0);expect(row.vertexIds.length).toBe(0);expect(row.edges.length).toBeGreaterThan(0);}render.dispose();}
       console.log("[DEBUG] originalAnalyticWire independentThree=true topologyVertices=4 edges=4 triangles=0");
     });
     it("preserves exact multi-object component selection with independent Lodash merges", () => {
-      const fixture = JSON.parse(readFileSync(new URL("../🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json",source.url),"utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("../🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json",source.url),"utf8"));
       const camera = new PerspectiveCamera(50,1,0.1,10);camera.position.set(0,0,4);camera.up.set(0,1,0);camera.lookAt(0,0,0);camera.updateMatrixWorld();
       for(const row of fixture.gumball.raySegmentCases){
         const ray = new Ray(new Vector3(...row.origin),new Vector3(...row.direction).normalize());
@@ -158,7 +158,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       console.log("[DEBUG] componentSelectionMerge modes=4 independentLodash=true exactSourceLabels=true nonactiveFaceChanges=2 wideTargets=80");
     });
     it("merges complete original face edge and vertex provenance", () => {
-      const fixture = JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧫️fixtures/🔗️mesh-transfer-merge/🔣️.json", source.url),"utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🔗️mesh-transfer-merge/🔣️.json", source.url),"utf8"));
       const transfers = fixture.transfers.map((wire:unknown) => meshTransferFromPreviewPayload(wire)!);
       const merged = mergeMeshTransfers(transfers);
       const output = meshTransferToGeometryData(merged);
@@ -184,7 +184,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       console.log(`[DEBUG] originalTransferMerge domains=3 independentThreeArea=${area} edgeLength=${length}`);
     });
     it("validates original vertex selection with independent Three geometry", () => {
-      const fixture = JSON.parse(readFileSync(new URL("../🖱️ui/🎬️scene/🧫️fixtures/🎯️vertex-selection/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("../🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️vertex-selection/🔣️.json", source.url), "utf8"));
       const geometry = new BufferGeometry().setAttribute("position", new Float32BufferAttribute(fixture.positions.flat(),3));
       const camera = new OrthographicCamera(-1,1,1,-1,0.1,10);
       camera.position.set(0,0,4);camera.lookAt(0,0,0);camera.updateMatrixWorld();
@@ -198,7 +198,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       console.log("[DEBUG] originalVertexSelection independentThree=true surfaceSamplesExcluded=true");
     });
     it("rejects malformed original vertex ranges before rendering", () => {
-      const fixture = JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧫️fixtures/🎯️vertex-provenance/🔣️.json",source.url),"utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️vertex-provenance/🔣️.json",source.url),"utf8"));
       const points = fixture.cases[0].points;
       const raw = {position:[0,0,0,1,0,0,0,1,0],normal:[0,0,1,0,0,1,0,0,1],index:[0,1,2],edges:[],points:points.flat(),face_groups:[],edge_groups:[],vertex_groups:points.map((_:unknown,index:number)=>({start:index,count:1,entity_id:String(index+1)}))};
       const validate = new Ajv({strict:true}).compile({type:"array",minItems:points.length,maxItems:points.length,prefixItems:points.map((_:unknown,index:number)=>({type:"object",required:["start","count","entity_id"],additionalProperties:false,properties:{start:{const:index},count:{const:1},entity_id:{type:"string",minLength:1,maxLength:128}}}))});
@@ -212,7 +212,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
     });
     it("preserves only original topology vertex provenance", () => {
-      const fixture = JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧫️fixtures/🎯️vertex-provenance/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️vertex-provenance/🔣️.json", source.url), "utf8"));
       for (const row of fixture.cases) {
         const labels = row.points.map((_: unknown, index: number) => (18446744073709551615n - BigInt(index)).toString());
         const raw = { position: row.kind === "point" ? [] : [0,0,0,1,0,0,0,1,0], normal: row.kind === "point" ? [] : [0,0,1,0,0,1,0,0,1], index: row.kind === "point" ? [] : [0,1,2], edges: [], points: row.points.flat(), face_groups: [], edge_groups: [], vertex_groups: labels.map((label: string, index: number) => ({start:index,count:1,entity_id:label})) };
@@ -229,7 +229,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
     });
     it("preserves analytic face and edge picking references without narrowing labels", () => {
-      const fixture = JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧫️fixtures/🎯️component-picking/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️component-picking/🔣️.json", source.url), "utf8"));
       const mesh = meshTransferFromPreviewPayload(fixture.transfer);
       expect(mesh).not.toBeNull();
       const output = meshTransferToGeometryData(mesh!) as unknown as { readonly faceIds: readonly number[]; readonly edgeIds: readonly number[]; readonly componentReferences: unknown };
@@ -252,7 +252,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       console.log(`[DEBUG] BRep analytic preview references domains=2 independentThreeArea=${area}`);
     });
     it("rejects incomplete, overlapping and malformed analytic picking ranges", () => {
-      const fixture=JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧫️fixtures/🎯️component-picking/🔣️.json",source.url),"utf8"));
+      const fixture=JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️component-picking/🔣️.json",source.url),"utf8"));
       for(const row of fixture.refusals){
         const transfer=structuredClone(fixture.transfer);
         transfer[`${row.domain}_groups`][row.row][row.field]=row.value;
@@ -262,7 +262,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
     });
     it("measures shape-value fixture tessellations with independent Three volume, area and manifold checks", () => {
-      const fixture = JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧫️fixtures/🪬️shape-values/🔣️.json",source.url),"utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🪬️shape-values/🔣️.json",source.url),"utf8"));
       expect(fixture.tessellations.length).toBeGreaterThanOrEqual(5);
       for (const entry of fixture.tessellations) {
         const expected = fixture.cases.find((row: { name: string }) => row.name === entry.case);

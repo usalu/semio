@@ -14,11 +14,11 @@ use semio_repo_test_host::law::vector::Vector;
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-preview-eval" => Vector {
-            before: include_str!("../../👁️viewer/🫧️transient/🧫️fixtures/👁️set/✅️set/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../👁️viewer/🫧️transient/🧫️fixtures/👁️set/✅️set/🦠️mutation/🔣️.json"),
-            after: include_str!("../../👁️viewer/🫧️transient/🧫️fixtures/👁️set/✅️set/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../👁️viewer/🫧️transient/🧫️fixtures/👁️set/✅️set/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../👁️viewer/🫧️transient/🧫️fixtures/👁️set/✅️set/🎯️outcome/🔣️.json"),
+            before: include_str!("../../👁️viewer/🫧️transient/🧪️tests/🧫️fixtures/👁️set/✅️set/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../👁️viewer/🫧️transient/🧪️tests/🧫️fixtures/👁️set/✅️set/🦠️mutation/🔣️.json"),
+            after: include_str!("../../👁️viewer/🫧️transient/🧪️tests/🧫️fixtures/👁️set/✅️set/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../👁️viewer/🫧️transient/🧪️tests/🧫️fixtures/👁️set/✅️set/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../👁️viewer/🫧️transient/🧪️tests/🧫️fixtures/👁️set/✅️set/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),

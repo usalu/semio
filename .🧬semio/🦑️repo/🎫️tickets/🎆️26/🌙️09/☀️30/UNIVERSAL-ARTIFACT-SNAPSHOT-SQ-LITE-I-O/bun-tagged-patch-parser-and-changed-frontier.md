@@ -1,0 +1,9 @@
+# Bun Tagged Patch Parser And Changed Frontier
+
+Read-only primary source inspection, 2026-10-14. No installer loop, patch mutation or feature dispatch. Downloaded primary parser source only into ticket generated diagnostics; no version-controlled source copy.
+
+Actual tagged parser is [Bun1.3.14 src/patch/patch.zig](https://github.com/oven-sh/bun/blob/bun-v1.3.14/src/patch/patch.zig). Same file at exact binary commit0d9b296a is byte-identical. verifyIntegrity441–459 compares declared counts against parsed context/insertion/deletion totals. Error891 is this mismatch; parsePatchFile560 retries legacy diff parsing first. Header parser915–1012 accepts ordinary one-line counts without requiring context. Hunk parser783–884 commits on next file header; repeated same-file sections are not explicitly prohibited. Thus tagged grammar provides no evidence to blame zero-context875 or duplicate file sections alone, and no minimal context rewrite is justified from those suspicions.
+
+Old28bc bytes had correct counted hunks and applied to pristine pinned local23.2 baseline through Git unidiff-zero, as previous report records. Exact Bun parse failure is genuine but its failing parsed hunk has not been isolated. Internal testing binding source exposes pure parse function, but installed release Bun did not resolve bun:internal-for-testing; no feature flag or installer workaround was introduced.
+
+Concurrent owner changed actual patch to564aadfcbd130b460eabca40f1ffabce536181b7d5eba21cd19a9cce378fb91c. Fresh current counts all match again. Root original accepted Source4464 is live on changed source; historical28bc floor should not be retried unchanged or represented as current blocked state. Root made no semantic/count rewrite per reported frontier. Await its actual changed-byte receipt before any remaining parser investigation. No Native result inferred.

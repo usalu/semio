@@ -2,7 +2,7 @@ use super::*;
 
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("creation fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("creation fixture")
 }
 
 #[test]
@@ -22,6 +22,10 @@ fn payload(value: &serde_json::Value) -> AddWidget {
         action: value["action"].as_str().map(String::from),
         x: value["x"].as_f64(),
         y: value["y"].as_f64(),
+        source_widget:value["sourceWidget"].as_str().map(String::from),
+        source_port:value["sourcePort"].as_str().map(String::from),
+        target_port:value["targetPort"].as_str().map(String::from),
+        source_revision:value["sourceRevision"].as_str().map(String::from),
     }
 }
 
@@ -39,6 +43,7 @@ fn descriptor_contract_matches_the_language_neutral_fixture() {
         let descriptor: serde_json::Value = serde_json::from_str(&payload(&row["payload"]).descriptor_json().unwrap()).unwrap();
         assert_eq!(descriptor, row["descriptor"]);
     }
+    for row in fixture()["connected"].as_array().unwrap(){let command=payload(&row["payload"]);let descriptor:serde_json::Value=serde_json::from_str(&command.descriptor_json().unwrap()).unwrap();assert_eq!(descriptor,row["descriptor"]);let request=command.source_request().unwrap().unwrap();assert_eq!(request.source_widget,"shape");assert_eq!(request.source_port,row["sourcePort"].as_str().unwrap());assert_eq!(request.target_port(),row["targetPort"].as_str());assert_eq!(command.source_revision_bytes().unwrap(),[1;32]);}
 }
 #[test]
 fn non_finite_coordinates_are_rejected_before_host_mutation() {
@@ -47,4 +52,10 @@ fn non_finite_coordinates_are_rejected_before_host_mutation() {
         command.x = Some(number);
         assert!(command.descriptor_json().is_err());
     }
+}
+
+#[test]
+fn connected_source_refusal_uses_the_actual_bilingual_fault_notice(){
+ let law=fixture();let notices=semio_framework::fault_notice_definitions(source_fault_notices());assert!(semio_framework::validate_fault_notices(&notices).is_empty());
+ for reason in [semio_framework_os_flow::FlowSourceReadFailure::Revision,semio_framework_os_flow::FlowSourceReadFailure::ChangedSource,semio_framework_os_flow::FlowSourceReadFailure::MissingOutput,semio_framework_os_flow::FlowSourceReadFailure::FailedOutput]{let fault=source_fault(reason);assert_eq!(fault.code.0,law["sourceNotice"]["code"]);for(locale,name)in[(semio_framework_ui_locale::Locale::En,"en"),(semio_framework_ui_locale::Locale::De,"de")]{assert_eq!(semio_framework::fault_notice_text(&notices,&fault.code.0,fault.params.as_deref(),semio_framework_ui_locale::Terminology::Native,locale).as_deref(),law["sourceNotice"][name].as_str());}}
 }

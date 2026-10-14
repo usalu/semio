@@ -2,7 +2,7 @@ use super::*;
 use crate::bridge::{BridgeFlags, BridgeInstanceRef, ShellToGateway};
 
 fn fixtures() -> Vec<serde_json::Value> {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🗿️app-payloads.json")).expect("the shared shell-channel payload fixture parses")
+    serde_json::from_str(include_str!("../🧫️fixtures/🗿️app-payloads.json")).expect("the shared shell-channel payload fixture parses")
 }
 
 fn fixture(kind: &str) -> serde_json::Value {

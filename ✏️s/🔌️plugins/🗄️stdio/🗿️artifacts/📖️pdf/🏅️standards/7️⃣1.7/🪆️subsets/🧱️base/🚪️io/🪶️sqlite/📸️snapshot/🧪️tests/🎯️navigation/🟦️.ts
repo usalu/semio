@@ -11,12 +11,12 @@ import { writePdfOutline,readPdfOutline,writePdfNamedDestination,readPdfNamedDes
 import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 test("Native JSON navigation enters the canonical owned floating point domain",async()=>{
-  const fixture=JSON.parse(await Bun.file(new URL("../../../../📝️text/📸️snapshot/🪪️native-json/🎯️navigation/🧫️fixtures/🔣️.json",import.meta.url)).text());const destination=parsePdfDestination(pdfDestinationFromNativeJson(fixture.destination));if(destination.kind!=="page"||destination.fit.kind!=="xyz")throw new Error("Fixture destination");expect(destination.fit.left).toEqual({bits:0x3ff0000000000000n});
+  const fixture=JSON.parse(await Bun.file(new URL("../../../../📝️text/📸️snapshot/🪪️native-json/🎯️navigation/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).text());const destination=parsePdfDestination(pdfDestinationFromNativeJson(fixture.destination));if(destination.kind!=="page"||destination.fit.kind!=="xyz")throw new Error("Fixture destination");expect(destination.fit.left).toEqual({bits:0x3ff0000000000000n});
   const action=parsePdfAction(pdfActionFromNativeJson(fixture.action));if(action.kind.kind!=="sound")throw new Error("Fixture action");expect(action.kind.volume).toEqual({bits:0x3ff0000000000000n});expect(action.next!.length).toBe(1);expect(parsePdfOutlineItem(pdfOutlineFromNativeJson(fixture.outline)).color).toEqual([{bits:0n},{bits:0x3ff0000000000000n},{bits:0n}]);
 });
 
 test("All PDF destinations and action variants roundtrip as explicit semantic SQL",async()=>{
-  const fixture=JSON.parse(await Bun.file(new URL("../../🎯️navigation/🧫️fixtures/🔣️.json",import.meta.url)).text(),(key,value)=>key==="bits"?BigInt(value):value);
+  const fixture=JSON.parse(await Bun.file(new URL("../../🎯️navigation/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).text(),(key,value)=>key==="bits"?BigInt(value):value);
   const out=await PdfProjection.create(PDF17_SQLITE_SCHEMA,{},pdfNavigationNumberColumns);const destinations:bigint[]=[];const actions:bigint[]=[];
   for(const value of fixture.destinations)destinations.push(await writePdfDestination(out,value));for(const value of fixture.actions)actions.push(await writePdfAction(out,value));
   const bytes=await exportSqliteDatabase(await out.finish());const sql=Database.deserialize(bytes);
@@ -27,7 +27,7 @@ test("All PDF destinations and action variants roundtrip as explicit semantic SQ
 },{timeout:30_000});
 
 test("Deep PDF action containment remains iterable and cancellable with enforced row budgets",async()=>{
-  const plan=JSON.parse(await Bun.file(new URL("../../🧫️fixtures/🌲️deep.json",import.meta.url)).text());let action:PdfAction={kind:{kind:"named",name:plan.leafName},next:[]};for(let index=0;index<plan.depth;index++)action={kind:{kind:"named",name:`Level-${index}`},next:[action]};
+  const plan=JSON.parse(await Bun.file(new URL("../🧫️fixtures/🌲️deep.json",import.meta.url)).text());let action:PdfAction={kind:{kind:"named",name:plan.leafName},next:[]};for(let index=0;index<plan.depth;index++)action={kind:{kind:"named",name:`Level-${index}`},next:[action]};
   const out=await PdfProjection.create(PDF17_SQLITE_SCHEMA,{},pdfNavigationNumberColumns);const key=await writePdfAction(out,action);const bytes=await exportSqliteDatabase(await out.finish());const sql=Database.deserialize(bytes);expect(sql.query("SELECT COUNT(*) AS actions FROM pdf_action").get()).toEqual({actions:plan.expectedValues});
   const reader=await PdfReader.create(await importSqliteDatabase(bytes),PDF17_SQLITE_SCHEMA,{},pdfNavigationNumberColumns);let value=await readPdfAction(reader,key);let depth=0;while(value.next!.length){value=value.next![0]!;depth++;}expect(depth).toBe(plan.depth);expect(value.kind).toEqual({kind:"named",name:plan.leafName});await reader.finish();sql.close();
   const abort=new AbortController();let progress=false;const canceled=await PdfProjection.create(PDF17_SQLITE_SCHEMA,{signal:abort.signal,onProgress:event=>{if(event.phase==="projectSnapshot"&&event.completed>0){progress=true;abort.abort();}}},pdfNavigationNumberColumns);await expect(writePdfAction(canceled,action)).rejects.toThrow(/cancel/i);expect(progress).toBe(true);
@@ -35,7 +35,7 @@ test("Deep PDF action containment remains iterable and cancellable with enforced
 },{timeout:30_000});
 
 test("PDF bookmarks preserve containment, repeated titles and full label and open action fields",async()=>{
-  const fixture=JSON.parse(await Bun.file(new URL("../../🎯️navigation/🔖️bookmark/🧫️fixtures/🔣️.json",import.meta.url)).text(),(key,value)=>key==="bits"?BigInt(value):value);
+  const fixture=JSON.parse(await Bun.file(new URL("../../🎯️navigation/🔖️bookmark/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).text(),(key,value)=>key==="bits"?BigInt(value):value);
   const out=await PdfProjection.create(PDF17_SQLITE_SCHEMA,{},pdfNavigationNumberColumns);const outline=await writePdfOutline(out,fixture.outline);const named=await writePdfNamedDestination(out,fixture.named);const labels:bigint[]=[];const open:bigint[]=[];
   for(const value of fixture.labels)labels.push(await writePdfLabel(out,value));for(const value of fixture.openActions)open.push(await writePdfOpenAction(out,value));
   const bytes=await exportSqliteDatabase(await out.finish());const sql=Database.deserialize(bytes);expect(sql.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(sql.query("SELECT ordinal,title FROM pdf_outline_child c JOIN pdf_outline o ON o.id=c.child_id ORDER BY ordinal").all()).toEqual([{ordinal:0,title:"Child"},{ordinal:1,title:"Child"}]);

@@ -104,6 +104,10 @@ if (command === "genesis-oracle") {
   console.log(`[DEBUG] history acceptance runtime scope=${scope}`);
   await runRepositoryCargoTests(selected.map(owner=>owner.crate),repository,control,["--lib",...(featureSelection==="assembly"?["--features","component-app-assembly"]:[]),...filter,"--no-fail-fast","--status-level","pass","--final-status-level","all","--","--nocapture"],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/tools-execution")});
 } else if (command === "run") {
+  const {validateJsonSchemaSubset}=await import(join(repository,"🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts"));
+  const callerSchema=JSON.parse(readFileSync(join(repository,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json"),"utf8"));
+  if(validateJsonSchemaSubset(callerSchema,original.capabilities).length)throw Error("Strict editor matrix requires the original native caller capability");
+  const native=(original.capabilities as {native:{child:{maximumElapsedMilliseconds:number};transport:{maximumBytes:number;maximumLines:number}}}).native;
   let failed=false;
   for(const assembly of [false,true]){
     const group=selected.filter(owner=>owner.assembly===assembly);
@@ -114,7 +118,7 @@ if (command === "genesis-oracle") {
     const receipt=join(import.meta.dir,`../🗑️generated/tools-execution/assertions-${crateSelection.length>1?`selected-${Bun.hash(selection).toString(16)}`:selection}-${assembly?"assembly":"ungated"}-${Date.now()}.json`);
     console.log(`[DEBUG] history acceptance expected named assertions=${expected.reduce((sum,row)=>sum+row.direct*3+row.child,0)} crates=${group.length}`);
     try{
-      await runRepositoryCommand(process.execPath,[import.meta.filename,"execute-group",selection,assembly?"assembly":"ungated","named"],repository,"history-native-named-assertions",Math.min(1800000,control.remainingMilliseconds()??1800000),{signal:control.signal,onLine:line=>{
+      await runRepositoryCommand(original,process.execPath,[import.meta.filename,"execute-group",selection,assembly?"assembly":"ungated","named"],repository,"history-native-named-assertions",{version:1,maximumElapsedMilliseconds:Math.min(native.child.maximumElapsedMilliseconds,control.remainingMilliseconds()??native.child.maximumElapsedMilliseconds),output:native.transport},{onLine:line=>{
         const plain=line.replace(/\x1b\[[0-9;]*m/gu,""),match=plain.match(/\b(PASS|FAIL|SKIP)\s+\[[^\]]+\]\s+(?:\([^)]*\)\s+)?(\S+)\s+(\S+)\s*$/u);
         if(!match||!suffixes.has(match[3]!.split("::").at(-1)!))return;
         const [,status,crate,name]=match;if(status!=="PASS"){refused.add(`${crate}::${name}`);return;}

@@ -1,6 +1,7 @@
 go 1.25
 
 use (
+	./🧰️framework/🔨️modules/📁️filesystem/🛡️durability/📦️packages/🐹️go
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧾️yaml/📦️packages/🐹️go
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🐹️go
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🪪️identity/📦️packages/🐹️go
@@ -28,5 +29,6 @@ use (
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go/📦️main
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🐹️go/📦️main
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library
 )

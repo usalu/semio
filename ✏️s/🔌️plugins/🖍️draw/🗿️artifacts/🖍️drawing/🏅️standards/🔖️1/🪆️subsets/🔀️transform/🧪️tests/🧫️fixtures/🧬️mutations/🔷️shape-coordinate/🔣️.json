@@ -1,0 +1,30 @@
+{
+  "edits": [
+    {
+      "field": "rectX",
+      "value": 12
+    },
+    {
+      "field": "rectY",
+      "value": -4
+    },
+    {
+      "field": "rectWidth",
+      "value": 64
+    },
+    {
+      "field": "rectHeight",
+      "value": 32
+    }
+  ],
+  "invalid": [
+    {
+      "field": "rectWidth",
+      "value": -1
+    },
+    {
+      "field": "ellipseRx",
+      "value": 32
+    }
+  ]
+}

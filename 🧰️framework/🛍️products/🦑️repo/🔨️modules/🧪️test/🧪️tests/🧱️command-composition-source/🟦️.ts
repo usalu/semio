@@ -6,10 +6,10 @@ import { loadTaxonomy, semanticDirectoryKindId } from "../../../📚️library/�
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const domainRoot = resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test");
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️command-composition-source/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🧱️command-composition-source/🔣️.json"), "utf8"));
 
 test("phase commands drain every compiler stream before returning their exit status", async () => {
-  const row = JSON.parse(readFileSync(resolve(import.meta.dir,"../../🧫️fixtures/⚖️phase-output-drain/🔣️.json"),"utf8")) as {commands:string[];stdoutChunk:string;stderrChunk:string;repetitions:number;backpressureMs:number;stderrTerminal:string;exitCode:number};
+  const row = JSON.parse(readFileSync(resolve(import.meta.dir,"../🧫️fixtures/⚖️phase-output-drain/🔣️.json"),"utf8")) as {commands:string[];stdoutChunk:string;stderrChunk:string;repetitions:number;backpressureMs:number;stderrTerminal:string;exitCode:number};
   const path = resolve(domainRoot,"⚖️parity/📋️orchestration/🟦️.ts"), source = ts.createSourceFile(path,readFileSync(path,"utf8"),ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);
   const classes = source.statements.filter(ts.isClassDeclaration).filter(node => row.commands.includes(node.name?.text ?? ""));
   expect(classes.map(node => node.name!.text)).toEqual(row.commands);

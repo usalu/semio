@@ -1109,7 +1109,7 @@ impl RetainedGisMapApprovalCommitterV1 {
         use semio_s_artifact_gis_gismap::mutations::GisMapMutation;
         use semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
         use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
-        let snapshot = <GisMapParentSnapshotV1 as directory::os_store::serialization::ArtifactPack>::decode_pack(request.base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
+        let snapshot = <GisMapParentSnapshotV1 as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::decode_pack(request.base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
         let actor = request.actor.strip_prefix("user:").and_then(|value| value.split_once("#session:"));
         let target = request.target;
         let expected_frontier = Self::publication_wire_frontier(&request.base.frontier);
@@ -1243,7 +1243,7 @@ impl RetainedGisMapApprovalCommitterV1 {
     /// 📍 Installs one exact document actor and an actor-owned committed-Event recovery before any
     /// approval can enter.
     async fn mount_document(&self, scope: DocumentScope, handle: db::ArtifactHandle, base: &InferenceMapBaseV1, document_write: GisMapDocumentWriteLeaseV1, actor: &str) -> Result<bool, GisMapApprovalCommitErrorV1> {
-        let snapshot = <GisMapParentSnapshotV1 as directory::os_store::serialization::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
+        let snapshot = <GisMapParentSnapshotV1 as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::decode_pack(base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
         let observed = handle.checkpoint_publication_snapshot().await.map_err(|error| gis_map_storage_refusal(&error))?;
         if !Self::checkpoint_matches(&observed, observed.authority_generation, base, &scope) {
             return Err(GisMapApprovalCommitErrorV1::Conflict);
@@ -1451,7 +1451,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                         }
                     }
                     Some(RetainedGisMapDocumentStateV1::Ready { owners, document_write, .. }) => {
-                        let snapshot = <GisMapParentSnapshotV1 as directory::os_store::serialization::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
+                        let snapshot = <GisMapParentSnapshotV1 as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::decode_pack(base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
                         if owners.scope != *scope {
                             record_prepare_conflict("Ready/scope");
                             return Err(GisMapApprovalCommitErrorV1::Conflict);
@@ -1482,7 +1482,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                         if identity.base_frontier != base.frontier || identity.base_digest != base.digest() {
                             let advanced = Self::publication_result_base(identity, &base.frontier, &base.digest(), &base.descriptor_digest) && Self::stores_consistent(owners);
                             if !advanced {
-                                let snapshot = <GisMapParentSnapshotV1 as directory::os_store::serialization::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
+                                let snapshot = <GisMapParentSnapshotV1 as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::decode_pack(base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
                                 if !Self::stores_match(owners, &snapshot) {
                                     record_prepare_conflict(&format!(
                                         "Published/stores_match base_frontier={} base_digest={} published_result={} stores_consistent={}",
@@ -2457,7 +2457,7 @@ impl RetainedGisMapApprovalCommitterV1 {
 
     fn close_store<P, M>(slot: &'static str, store: &mut Option<directory::os_store::ArtifactStore<P, M>>) -> Result<bool, GisMapApprovalCommitErrorV1>
     where
-        P: directory::os_store::serialization::ArtifactPack + Clone + directory::ToValue + directory::FromValue + Send + Sync + 'static,
+        P: pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + directory::ToValue + directory::FromValue + Send + Sync + 'static,
         M: directory::Mutation<P> + directory::os_spr::OpBinary + directory::os_spr::OpText + Clone + directory::ToValue + directory::FromValue + Send + 'static,
     {
         use directory::os_store::{SnapshotRetirementStep, SpaceMember};
@@ -2792,7 +2792,7 @@ impl InferenceMapBaseV1 {
 
     /// 🕸️ Returns the composed child members this Map owns, in stable-member order.
     pub fn composed_children(&self) -> Result<Vec<String>, InferenceRouteErrorV1> {
-        let snapshot = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::os_store::serialization::ArtifactPack>::decode_pack(self.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
+        let snapshot = <semio_s_artifact_gis_gismap::GisMapSnapshot as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::decode_pack(self.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
         let mut members = Vec::with_capacity(3);
         if !snapshot.drawing.child_id.is_empty() {
             members.push(snapshot.drawing.child_id.clone());
@@ -3221,7 +3221,7 @@ impl HubInferenceRuntimeV1 {
             Ok(execution) => execution,
             Err(_) => return Err(failure.unwrap_or(InferenceRouteErrorV1::Invalid)),
         };
-        let snapshot = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::os_store::serialization::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
+        let snapshot = <semio_s_artifact_gis_gismap::GisMapSnapshot as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::decode_pack(base.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
         let inference = GisMapInference::from_value(directory::pack_rt::decode_wire_value(&execution.canonical_payload).map_err(|_| InferenceRouteErrorV1::Invalid)?).map_err(|_| InferenceRouteErrorV1::Invalid)?;
         let mutation = inference.bounds_proposal(&snapshot, job_id).map_err(|_| InferenceRouteErrorV1::Conflict)?;
         let proposal_bytes = semio_framework_pack_json::to_json_string(&mutation).into_bytes();
@@ -3272,7 +3272,7 @@ impl HubInferenceRuntimeV1 {
         if inverses.len() != 1 {
             return Err(InferenceRouteErrorV1::Conflict);
         }
-        let current = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::os_store::serialization::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
+        let current = <semio_s_artifact_gis_gismap::GisMapSnapshot as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::decode_pack(base.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
         let mut before = current.clone();
         apply_gis_map_mutation(&mut before, &inverses[0]).map_err(|_| InferenceRouteErrorV1::Conflict)?;
         let work = GisMapInference::infer(&before).create_region_group_work(&before, &target.original_job_id).map_err(|_| InferenceRouteErrorV1::Conflict)?;
@@ -3379,7 +3379,7 @@ fn deterministic_map_inference(base: &InferenceMapBaseV1, job_id: &str) -> Resul
         &mut |_| Ok(()),
     )
     .map_err(|_| InferenceRouteErrorV1::Invalid)?;
-    let snapshot = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::os_store::serialization::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
+    let snapshot = <semio_s_artifact_gis_gismap::GisMapSnapshot as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::decode_pack(base.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
     let inference = GisMapInference::from_value(directory::pack_rt::decode_wire_value(&execution.canonical_payload).map_err(|_| InferenceRouteErrorV1::Invalid)?).map_err(|_| InferenceRouteErrorV1::Invalid)?;
     Ok((snapshot, inference))
 }

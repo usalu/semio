@@ -1,0 +1,15 @@
+{
+  "exclusive": false,
+  "rows": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🧫️fixtures/🧬️schema-search/🔣️.json",
+      "beforeSha256": "f9c0d8600f1ed46388319d78736e8e359642468225920574dc81c0f389b3c9b4",
+      "afterSha256": "e380ca79bf6998676a59482e4c7d9f5286d1926f40be2af1ab121c9f841358ab"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🗂️schema-document-index/🟦️.ts",
+      "beforeSha256": "47d18c140c18608c4565753303773a6fccde2e231ae21341a9406afbc5407b7d",
+      "afterSha256": "5f5ef0ccb4543d97060d374d951c858327bf924ec01244e3c2157fdeeb6a40b6"
+    }
+  ]
+}

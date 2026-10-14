@@ -6,7 +6,7 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧫️fixtures/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/**/*",
       "{projectRoot}/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🎚️config/🟦️.ts"
     ]
@@ -117,7 +117,7 @@
       "inputs": [
         "default",
         "^default",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎬️media-transport-reservation/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎬️media-transport-reservation/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🎬️media/**/*"
       ],
       "outputs": [],
@@ -138,11 +138,11 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️deferred-reprojection/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️viewer-head/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-law/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️supersede-replay/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️tool-transaction/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️deferred-reprojection/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️viewer-head/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️supersede-law/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧫️fixtures/🧫️supersede-replay/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧫️fixtures/🧫️tool-transaction/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧫️fixtures/🧫️deferred-reprojection/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧫️fixtures/🧫️viewer-head/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧫️fixtures/🧫️supersede-law/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️supersede-replay/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️tool-transaction/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️deferred-reprojection/**/*",
@@ -168,8 +168,8 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️folder-archive-persistence/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️folder-read-back/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🧫️fixtures/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧫️fixtures/🧫️document-archive-load-host/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🧪️tests/🧫️fixtures/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧪️tests/🧫️fixtures/🧫️document-archive-load-host/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧬️schema/🔣️document-archive-load-host/**/*"
       ],
       "outputs": [],
@@ -200,7 +200,7 @@
       "dependsOn": [],
       "inputs": [
         "default",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🧮️wire-materialization/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🧮️wire-materialization/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🎒️pack-wire-materialization/**/*"
       ],
       "options": {

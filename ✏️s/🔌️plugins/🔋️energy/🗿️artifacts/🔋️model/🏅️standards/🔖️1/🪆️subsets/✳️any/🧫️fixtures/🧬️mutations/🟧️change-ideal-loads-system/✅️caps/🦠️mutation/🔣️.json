@@ -1,6 +1,0 @@
-{
-  "mutation": "changeIdealLoadsSystemMaxCoolingCapacity",
-  "id": 12,
-  "newCapacityPresent": true,
-  "newMaxCoolingCapacityW": 5000.0
-}

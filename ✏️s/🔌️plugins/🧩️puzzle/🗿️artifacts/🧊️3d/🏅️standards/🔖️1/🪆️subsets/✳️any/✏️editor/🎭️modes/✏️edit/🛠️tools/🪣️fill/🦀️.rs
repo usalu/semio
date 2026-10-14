@@ -48,7 +48,7 @@ pub fn definition(label: LocalizedLabel) -> ToolDefinition {
 /// ⏯️ A mutating `instance3d` run: provisional placements rebase by revalidation at finalize, and a count
 /// change retargets the resident run in place (a raise continues its sequence, a lower retracts its tail).
 pub fn run_definition() -> ToolRunDefinition {
-    ToolRunDefinition {
+    ToolRunDefinition { receiving: semio_framework_tool_run::ToolRunReceivingLimits::REPORTS,
         mutating: true,
         rebase: ToolRunRebasePolicy::Revalidate,
         reconfigure: ToolRunReconfigurePolicy::Resume,

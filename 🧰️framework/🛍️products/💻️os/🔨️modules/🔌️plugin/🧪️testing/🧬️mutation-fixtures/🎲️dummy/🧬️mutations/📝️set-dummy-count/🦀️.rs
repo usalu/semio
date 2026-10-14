@@ -7,7 +7,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
-struct SetDummyCount {
+pub(crate) struct SetDummyCount {
     pub value: i32,
 }
 impl SetDummyCount {

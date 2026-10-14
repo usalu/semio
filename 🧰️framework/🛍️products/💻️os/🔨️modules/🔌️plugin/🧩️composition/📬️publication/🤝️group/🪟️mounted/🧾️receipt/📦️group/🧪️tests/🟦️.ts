@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { applyPatch } from "fast-json-patch";
 
 test("mounted group receipt preserves every causal lane before an allocation-free decision",()=>{
- const root=resolve(import.meta.dir,".."),law=JSON.parse(readFileSync(resolve(root,"🧫️fixtures/🔣️.json"),"utf8"));
+ const root=resolve(import.meta.dir,".."),law=JSON.parse(readFileSync(resolve(root,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
  
  for(const row of law.cases){
   const expected={mutations:row.lanes.map((lane:any)=>JSON.parse(JSON.stringify(lane))),undoIds:row.lanes.map((lane:any)=>lane.mutationId),inverses:row.lanes.map((lane:any)=>({target:lane.mutationId,schema:lane.schema+".inverse",payload:lane.inverse,dependencies:lane.dependencies,baseVersion:lane.baseVersion})),memberEdits:row.members,invocationId:row.invocationId,parentEditId:row.parentEditId,childEditIds:row.childEditIds};
@@ -20,7 +20,7 @@ test("mounted group receipt preserves every causal lane before an allocation-fre
 });
 
 test("mounted group child metadata borrows original completed rows across independent backing",()=>{
- const root=resolve(import.meta.dir,".."),law=JSON.parse(readFileSync(resolve(root,"🧫️fixtures/🔣️.json"),"utf8"));
+ const root=resolve(import.meta.dir,".."),law=JSON.parse(readFileSync(resolve(root,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
  
  for(const row of law.cases){
   const rows=[row.parentEditId,...row.childEditIds].map((editId,index)=>({index,editId}));

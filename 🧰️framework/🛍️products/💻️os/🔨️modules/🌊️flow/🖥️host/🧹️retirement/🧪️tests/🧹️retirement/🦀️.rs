@@ -10,7 +10,7 @@ use semio_framework_artifact_infinite_dag::{DagCamera, IoPortSpec};
 #[test]
 fn original_preview_retention_preserves_roster_and_closes_one_original_row_per_turn(){
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️session-source/🔣️.json")).unwrap();let law=&fixture["retention"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️session-source/🔣️.json")).unwrap();let law=&fixture["retention"];
     for copy in [1,3,64]{
         let ((mut session,roster),heap)=observe(||{let mut session=FlowEvalSession::new();for handle in law["handles"].as_array().unwrap(){let handle=handle.as_str().unwrap().to_owned();session.preview_mesh_pack_by_handle.insert(handle.clone(),handle.repeat(257));session.preview_diagnostics_by_handle.insert(handle.clone(),handle.repeat(129));}let roster=law["roster"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().to_owned()).collect::<Vec<_>>();(session,roster)});
         let original=heap.requested_bytes-heap.released_bytes;let roster_pointer=roster.as_ptr();let mesh=session.preview_mesh_pack_by_handle.get("live-高").unwrap().as_ptr();
@@ -26,7 +26,7 @@ fn original_preview_retention_preserves_roster_and_closes_one_original_row_per_t
 
 #[test]
 fn session_begin_close_preserves_original_text_fault_and_latch_backing() {
-    let fixture: serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️session-source/🔣️.json")).unwrap();
+    let fixture: serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️session-source/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let text=row["text"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap() as usize);
         assert_eq!(text.len(),row["utf8Bytes"].as_u64().unwrap() as usize);
@@ -91,7 +91,7 @@ fn session_reset_preserves_original_lease_and_restores_every_owner_on_refusal() 
 #[test]
 fn original_registry_invalidation_preserves_source_on_refusal_and_admits_all_owners(){
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️session-source/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️session-source/🔣️.json")).unwrap();
     let generation=fixture["invalidation"]["generation"].as_u64().unwrap();
     for copy in [1,3,64]{
         let (mut session,source)=observe(||{
@@ -281,15 +281,15 @@ fn close(mut session: FlowEvalSession, copy_budget: usize, original_bytes: usize
         let copy=copy_budget;
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:session.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:session.next_close_release_byte_demand().unwrap(),maximum_depth:session.next_close_depth_demand().unwrap()};
         let (step,heap)=observe(||session.close_step(RetainedCloneGrant{maximum_items:0,..grant}));
-        assert!(matches!(step,Step::Pending{progress} if progress==RetainedCloneProgress::default()));
+        assert!(matches!(step,Ok(Step::Pending{progress}) if progress==RetainedCloneProgress::default()));
         assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         for denied in (grant.maximum_capacity_bytes>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes.saturating_sub(1),..grant}).into_iter().chain((grant.maximum_release_bytes>0).then_some(RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes.saturating_sub(1),..grant})){
             let (step,heap)=observe(||session.close_step(denied));
             assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-            assert!(matches!(step,Step::Pending{progress} if progress==RetainedCloneProgress::default())||matches!(step,Step::Refused{..}));
+            assert!(matches!(step,Ok(Step::Pending{progress}) if progress==RetainedCloneProgress::default())||step.is_err());
         }
         let (step,heap)=observe(||session.close_step(grant));
-        let receipt=match step{Step::Pending{progress}|Step::Complete{progress}=>progress,step=>panic!("funded original session close refused: {step:?}")};
+        let receipt=match step.unwrap(){Step::Pending{progress}|Step::Complete{progress}=>progress,step=>panic!("funded original session close refused: {step:?}")};
         assert!(receipt.fits(grant));assert!(!heap.overflowed);
         assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
         born+=heap.requested_bytes;released+=heap.released_bytes;
@@ -304,7 +304,7 @@ fn close(mut session: FlowEvalSession, copy_budget: usize, original_bytes: usize
 #[test]
 fn session_semantic_bytes_larger_than_production_grant_retire_exactly_across_workers() {
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧹️session-retirement/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧹️session-retirement/🔣️.json")).unwrap();
     for copy in [1,64,4096] {
         let text=fixture["text"]["text"].as_str().unwrap().repeat(fixture["text"]["repeat"].as_u64().unwrap() as usize);
         let preview=fixture["preview"]["text"].as_str().unwrap().repeat(fixture["preview"]["repeat"].as_u64().unwrap() as usize);
@@ -346,7 +346,7 @@ fn live_session_drop_is_rejected_without_recursive_payload_destruction() {
 #[test]
 fn original_host_retirement_preserves_whole_source_and_full_close_receipts(){
  use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
- let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️host-source/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️host-source/🔣️.json")).unwrap();
  flow_extension_registry_generation();
  for copy in law["copyGrants"].as_array().unwrap(){
   let (host,source_heap)=observe(||{
@@ -375,7 +375,7 @@ fn original_host_retirement_preserves_whole_source_and_full_close_receipts(){
 }
 
 fn dag_retirement_fixture() -> (DagHostRetirement, usize) {
-    let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧹️session-retirement/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🧹️session-retirement/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let dag_fixture = fixture.get("dag").unwrap();
     let repeat = dag_fixture.get("repeat").and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize;
     let text = dag_fixture.get("text").and_then(semio_framework_pack_json::Value::as_str).unwrap().repeat(repeat);
@@ -427,7 +427,7 @@ fn session_close_dag_host_nonterminal_drop_refuses_recursive_release() {
 fn session_close_vector_scene_retirement_retains_and_reuses_exact_slot() {
     use semio_framework_canvas::{advance_opaque_scene_retirement, append_svg_document, publish_opaque_scene_retirement, reserve_opaque_scene_retirement, Affine, BezPath, Color, FillRule, OpaqueSceneRetirementStep, Scene, SvgDocument};
 
-    let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧹️session-retirement/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🧹️session-retirement/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let capacity = fixture.get("scene").and_then(|value| value.get("retirementCapacity")).and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize;
     let retained_commands = fixture.get("scene").and_then(|value| value.get("retainedCommands")).and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize;
     let retained_path_elements = fixture.get("scene").and_then(|value| value.get("retainedPathElements")).and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize;

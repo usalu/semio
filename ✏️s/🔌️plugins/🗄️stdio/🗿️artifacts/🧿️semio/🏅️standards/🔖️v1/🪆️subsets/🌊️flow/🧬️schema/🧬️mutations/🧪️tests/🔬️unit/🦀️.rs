@@ -176,7 +176,7 @@ fn drag_nodes_labels_its_row_from_its_inputs() {
 fn paged_flow_original_source_keeps_all_fourteen_frames_and_exact_owner_policy(){
     use semio_framework_os_kernel::os_spr::operation_bytes::{OwnedOperationBytes,OperationByteMeasurement,OperationBytePreparation,OperationByteCloseStep};
     use semio_framework_value::{NativeEncodeControl,ValueRefusalKind};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📦️operation-source.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📦️operation-source.json")).unwrap();
     let mut operations=Vec::new();
     for case in fixture["cases"].as_array().unwrap(){let operation=SemioFlowMutation::parse_op(case["text"].as_str().unwrap()).unwrap();let mut literal=vec![1,case["tag"].as_u64().unwrap()as u8];literal.extend_from_slice(case["body"].as_str().unwrap().as_bytes());assert_eq!(operation.encode_op().unwrap(),literal);operations.push(operation);}
     operations.push(SemioFlowMutation::SetNodePosition(set_node_position::SetNodePosition{id:"n".into(),position:SemioPoint2{x:f64::MAX,y:f64::from_bits(1)}}));

@@ -53,7 +53,7 @@ use semio_framework_plugin::SelectionMethod;
 use semio_framework_plugin::SelectionMode;
 use semio_framework_plugin::SelectionSpec;
 use serde_json::Value;
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
@@ -498,6 +498,7 @@ impl ArtifactEditor for Gis3dPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

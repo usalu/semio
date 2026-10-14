@@ -54,9 +54,9 @@ fn assert_signed(source: &str, infer_leaf: for<'a> fn(&GltfGeometryContext<'a>) 
 
 #[test]
 fn every_topology_leaf_executes_its_shared_vectors() {
-    assert_unsigned(include_str!("../../➰️boundary-loops/🧫️fixtures/🔣️.json"), boundary_loops::infer, boundary_loops::unavailable_measure);
-    assert_signed(include_str!("../../🧮️euler-characteristic/🧫️fixtures/🔣️.json"), euler_characteristic::infer, euler_characteristic::unavailable_measure);
-    assert_unsigned(include_str!("../../🔢️genus/🧫️fixtures/🔣️.json"), genus::infer, genus::unavailable_measure);
-    assert_unsigned(include_str!("../../🥯️handles/🧫️fixtures/🔣️.json"), handles::infer, handles::unavailable_measure);
-    assert_unsigned(include_str!("../../🕳️holes/🧫️fixtures/🔣️.json"), holes::infer, holes::unavailable_measure);
+    assert_unsigned(include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🕸️topology/➰️boundary-loops/🔣️.json"), boundary_loops::infer, boundary_loops::unavailable_measure);
+    assert_signed(include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🕸️topology/🧮️euler-characteristic/🔣️.json"), euler_characteristic::infer, euler_characteristic::unavailable_measure);
+    assert_unsigned(include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🕸️topology/🔢️genus/🔣️.json"), genus::infer, genus::unavailable_measure);
+    assert_unsigned(include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🕸️topology/🥯️handles/🔣️.json"), handles::infer, handles::unavailable_measure);
+    assert_unsigned(include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🕸️topology/🕳️holes/🔣️.json"), holes::infer, holes::unavailable_measure);
 }

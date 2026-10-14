@@ -7,5 +7,11 @@
   },
   "nx": {
     "includedScripts": []
+  },
+  "exports": {
+    ".": "./🟦️.ts"
+  },
+  "devDependencies": {
+    "@semio-tech/process": "workspace:*"
   }
 }

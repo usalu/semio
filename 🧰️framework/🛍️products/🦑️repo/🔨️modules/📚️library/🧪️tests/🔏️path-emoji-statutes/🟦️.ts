@@ -37,7 +37,7 @@ function exactDescendantContract(taxonomy: ReturnType<typeof loadCatalogTaxonomy
   if (!contract || "contractKind" in contract) throw new Error(`${id} is not an exact semantic descendant contract`);
   return contract;
 }
-const fixture = JSON.parse(readFileSync(join(root, "../../🧫️fixtures/🔏️path-emoji-statutes/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(root, "../🧫️fixtures/🔏️path-emoji-statutes/🔣️.json"), "utf8"));
 
 
 test("mutation catalogs resolve only explicitly registered same-artifact and same-standard source owners", () => {
@@ -80,7 +80,7 @@ test("mutation vector discovery audits exact grouped owners and declared scenari
   const other = { ...catalog, id: "node", subsetDirectoryName: "✳️any", kinds: ["create-node"], vectors: [node] };
   const registry = { contributions: [{ owner: contract.catalog, manifestPath: `${contract.catalog}/🔮️oracles/🔣️.json`, mutationCatalogs: [catalog] }, { owner: contract.source, manifestPath: `${contract.source}/🔮️oracles/🔣️.json`, mutationCatalogs: [other] }] };
   const sourceCases = [`${sourceRoot}/🎥️camera/🌱️create/🧪️tests/✅️applied`, `${sourceRoot}/🌳️node/🌱️create/🧪️tests/🌱️applied`];
-  const fixtureCases = [`${contract.source}/🧫️fixtures/🧬️mutations/🎥️camera/🌱️create/✅️applied`, `${contract.source}/🧫️fixtures/🧬️mutations/🌳️node/🌱️create/🌱️applied`];
+  const fixtureCases = [`${contract.source}/🧪️tests/🧫️fixtures/🧬️mutations/🎥️camera/🌱️create/✅️applied`, `${contract.source}/🧪️tests/🧫️fixtures/🧬️mutations/🌳️node/🌱️create/🌱️applied`];
   for (const compile of [(code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code), (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
     const nodes = new Set([...sourceCases, ...fixtureCases].flatMap((path) => path.split("/").map((_part, index, parts) => parts.slice(0, index + 1).join("/"))));
     for (const path of sourceCases) nodes.add(`${path}/🦀️.rs`);
@@ -89,7 +89,7 @@ test("mutation vector discovery audits exact grouped owners and declared scenari
     const audit = new Function(...Object.keys(support), `${compile(definition.getText(syntax).replace(/^export /u, ""))}\nreturn mutationVectorRegistryBreaches;`)(...Object.values(support));
     expect(audit(".", registry, taxonomy)).toEqual([]);
     expect(checked.sort()).toEqual(fixtureCases.sort());
-    const unregisteredFixture = `${contract.source}/🧫️fixtures/🧬️mutations/🎥️camera/🛸️unregistered/🛸️applied`;
+    const unregisteredFixture = `${contract.source}/🧪️tests/🧫️fixtures/🧬️mutations/🎥️camera/🛸️unregistered/🛸️applied`;
     for (const path of unregisteredFixture.split("/").map((_part, index, parts) => parts.slice(0, index + 1).join("/"))) nodes.add(path);
     expect(audit(".", registry, taxonomy).some((row: { id: string }) => row.id === "mutation-vector-unregistered")).toBe(true);
     nodes.delete(sourceCases[0]);
@@ -113,7 +113,7 @@ test("normalization reads explicit catalogs and canonicalizes both mutation pair
   const scenarioSources = [
     { mutationId: "create-camera", owner: "🎥️camera/🌱️create" },
     { mutationId: "create-node", owner: "🌳️node/🌱️create" },
-  ].map((row) => ({ artifactRoot: "🗿️sample", artifactId: "sample", standardVersion: "1", standardDirectoryName: "🔖️1", subsetId: "any", subsetDirectoryName: "✳️any", mutationId: row.mutationId, mutationDirectoryName: "🌱️create", sourceScenarioId: "sample", sourceScenarioDirectoryName: "📨️sample", subsetRoot: contract.source, mutationRoot: `${sourceRoot}/${row.owner}`, scenarioRoot: `${sourceRoot}/${row.owner}/🧪️tests/📨️sample`, fixtureSourceRoot: `${contract.source}/🧫️fixtures/🧬️mutations/${row.owner}/📨️sample`, expectedImplementationRoot: `${sourceRoot}/${row.owner}/🧪️tests/✅️applied`, expectedFixtureRoot: `${contract.source}/🧫️fixtures/🧬️mutations/${row.owner}/✅️applied` }));
+  ].map((row) => ({ artifactRoot: "🗿️sample", artifactId: "sample", standardVersion: "1", standardDirectoryName: "🔖️1", subsetId: "any", subsetDirectoryName: "✳️any", mutationId: row.mutationId, mutationDirectoryName: "🌱️create", sourceScenarioId: "sample", sourceScenarioDirectoryName: "📨️sample", subsetRoot: contract.source, mutationRoot: `${sourceRoot}/${row.owner}`, scenarioRoot: `${sourceRoot}/${row.owner}/🧪️tests/📨️sample`, fixtureSourceRoot: `${contract.source}/🧪️tests/🧫️fixtures/🧬️mutations/${row.owner}/📨️sample`, expectedImplementationRoot: `${sourceRoot}/${row.owner}/🧪️tests/✅️applied`, expectedFixtureRoot: `${contract.source}/🧪️tests/🧫️fixtures/🧬️mutations/${row.owner}/✅️applied` }));
   for (const row of scenarioSources) for (const [path, nodeKind, fileKind] of [[row.mutationRoot, "directory", null], [row.scenarioRoot, "directory", null], [`${row.scenarioRoot}/🦀️.rs`, "file", "rust-source"], [row.fixtureSourceRoot, "directory", null], [`${row.fixtureSourceRoot}/🔣️.json`, "file", "json"]] as const) entries.set(path, { sourcePath: path, normalizedPath: path, nodeKind, fileKind, violations: [] });
   const inspectedRoots: string[] = [];
   const support = { basename, dirname, Buffer, existsSync: (path: string) => documents.has(path), splitLeadingEmoji: leadingEmojiIdentity, mutationOwnerRelativePath, mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems, absolutePath: (_root: string, path: string) => path, readFileSync: (path: string) => documents.get(path), requireRecord, requireString, requireStringArray, canonicalProjectedMemberName: (name: string) => name, projectionSourceAt: (path: string) => scenarioSources.find((row) => row.scenarioRoot === path) ?? null, mutationDescendantContract: () => ({ pathBudgetReserve: { bytes: 0 } }), projectionBundleProblem: (row: { scenarioRoot: string }) => { inspectedRoots.push(row.scenarioRoot); return null; }, setProjectedPath: (entry: any, path: string) => { entry.normalizedPath = path; }, violation: (code: string, path: string, detail: string) => ({ code, path, detail }) };
@@ -209,7 +209,7 @@ test("generated asset documentation keeps README literal without rewriting froze
   const repoRoot = resolve(root, "../../../../../../..");
   const before = readFileSync(join(repoRoot, evidence.authorityCatalogPath));
   const catalog = semanticExactOwnedFileCatalog(repoRoot, taxonomy);
-  expect(catalog?.cases.some((row) => row.sourcePath === contract.outputPath)).toBe(true);
+  expect(catalog?.entries.some((row) => row.sourcePath === contract.outputPath)).toBe(true);
   expect(readFileSync(join(repoRoot, evidence.authorityCatalogPath))).toEqual(before);
   expect(parseTree(before.toString("utf8"))?.type).toBe("object");
   const source = readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🏗️builder/📽️projection/🟦️.ts"), "utf8");
@@ -307,7 +307,7 @@ test("TSV mutation payload schemas resolve with camel-case language-neutral cont
     const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
     
     
-    expect(row.positive["schemaVersion"]).toEqual(1);expect(row.positive["gltfFixtureCoordinates"]["pathShapes"]).toEqual(["*/🧫️fixtures/*/*.gltf","*/🧫️fixtures/*/*/*.gltf"]);expect(row.positive["assetDocumentation"]["generatorId"]).toEqual("assets-build");expect(row.positive["assetDocumentation"]["outputPath"]).toEqual("🧰️framework/🔨️modules/🖼️assets/README.md");
+    const validate=ajv.compile(schema);expect(validate(row.positive),row.directory).toBe(true);expect(validate(row.negative),row.directory).toBe(false);
     
     expect(readFileSync(join(owner, "🦀️.rs"), "utf8"), row.directory).toContain('#[value(rename_all = "camelCase")]');
   }
@@ -430,7 +430,7 @@ test("mutation catalogs declare one canonical implementation and fixture bundle 
   expect(pair.coverage).toBe("every-catalog-vector-has-one-implementation-and-one-fixture-bundle");
   expect(taxonomy.semanticPathProjectionContracts[pair.contractId]).toBeUndefined();
   expect(pair.implementationSegments.map((segment) => "literal" in segment ? segment.literal : segment.capture)).toEqual(["🏅️standards", "standardVersion", "🪆️subsets", "subsetId", "🧬️schema", "🧬️mutations", "mutationId", "🧪️tests", "scenarioId"]);
-  expect(pair.fixtureSegments.map((segment) => "literal" in segment ? segment.literal : segment.capture)).toEqual(["🏅️standards", "standardVersion", "🪆️subsets", "subsetId", "🧫️fixtures", "🧬️mutations", "mutationId", "scenarioId"]);
+  expect(pair.fixtureSegments.map((segment) => "literal" in segment ? segment.literal : segment.capture)).toEqual(["🏅️standards", "standardVersion", "🪆️subsets", "subsetId", "🧪️tests", "🧫️fixtures", "🧬️mutations", "mutationId", "scenarioId"]);
   const implementation = exactDescendantContract(taxonomy, pair.implementationDescendantContractId), fixtureBundle = exactDescendantContract(taxonomy, pair.fixtureDescendantContractId);
   expect(implementation.realizedNodeCount).toBe(2);
   expect(implementation.requiredNodes.map((node) => node.nodeType)).toEqual(["directory", "file"]);

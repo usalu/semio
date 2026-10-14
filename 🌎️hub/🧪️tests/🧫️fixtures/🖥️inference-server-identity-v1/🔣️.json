@@ -1,0 +1,18 @@
+{
+  "schema": "semio.hub.inference-server-identity-fixture/v1",
+  "maximumBytes": 96,
+  "fields": ["userId", "sessionId", "spaceId", "documentId", "headEditId"],
+  "cases": [
+    { "name": "directory-uuid", "value": "019ec21a-cb40-7000-8000-0123456789ab", "accepted": true },
+    { "name": "opaque-server-id", "value": "tenant:document.v1_owner-2", "accepted": true },
+    { "name": "exact-maximum", "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "accepted": true },
+    { "name": "maximum-plus-one", "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "accepted": false },
+    { "name": "empty", "value": "", "accepted": false },
+    { "name": "actor-separator", "value": "user#session:other", "accepted": false },
+    { "name": "whitespace", "value": "space document", "accepted": false },
+    { "name": "control", "value": "space\u0001document", "accepted": false },
+    { "name": "trailing-newline", "value": "document\n", "accepted": false },
+    { "name": "path", "value": "space/document", "accepted": false },
+    { "name": "non-ascii", "value": "döcument", "accepted": false }
+  ]
+}

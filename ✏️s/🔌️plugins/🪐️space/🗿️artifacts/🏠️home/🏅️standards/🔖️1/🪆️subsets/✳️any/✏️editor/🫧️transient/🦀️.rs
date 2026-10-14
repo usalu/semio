@@ -365,7 +365,7 @@ impl HomeTransientRecord {
     }
 }
 
-impl store::os_store::serialization::ArtifactDsl for HomeTransient {
+impl pack::snapshot::ArtifactDsl for HomeTransient {
     const EXTENSION: &'static str = HomeTransientRecord::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         "home.transient"
@@ -380,21 +380,21 @@ impl store::os_store::serialization::ArtifactDsl for HomeTransient {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&HomeTransientRecord::of(self).__dsl_to_record(), &HomeTransientRecord::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid Home transient envelope");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid Home transient envelope");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
-impl store::os_store::serialization::ArtifactPack for HomeTransient {
+impl pack::snapshot::ArtifactPack for HomeTransient {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&HomeTransientRecord::__dsl_spec(), &HomeTransientRecord::of(self).__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+        if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &HomeTransientRecord::__dsl_spec(), options)?;
         HomeTransientRecord::__dsl_from_record(&record).and_then(|record| record.transient()).map_err(store::os_store::serialization::text_error_to_pack_error)
@@ -402,6 +402,9 @@ impl store::os_store::serialization::ArtifactPack for HomeTransient {
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(HomeTransientRecord::__dsl_spec())
     }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for HomeTransient {
+
 }
 //#endregion 🔖️ArtifactCodec
 

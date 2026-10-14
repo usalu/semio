@@ -4,7 +4,7 @@ import { Database } from "bun:sqlite";
 
 /** 🧪️ Checks the neutral retained window input identity contract independently. */
 export function testRetainedWindowInputOracle(): void {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🪟️retained-window-input/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🪟️retained-window-input/🔣️.json", import.meta.url), "utf8"));
   const identities = new Set(fixture.cases.map((row: { windowId: string; windowKindId: string; generation: number; documentGeneration: number }) => JSON.stringify([row.windowId, row.windowKindId, row.generation, row.documentGeneration])));
   assert.equal(identities.size, fixture.expectedUniqueOwners);
   const replacement = fixture.documentReplacement;

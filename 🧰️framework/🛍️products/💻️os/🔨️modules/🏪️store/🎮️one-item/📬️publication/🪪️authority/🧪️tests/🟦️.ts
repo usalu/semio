@@ -8,7 +8,7 @@ test("Store publication authority exposes original native semantic fields", () =
   const root = new URL("../", import.meta.url);
   const shared = new URL("../../../../../../../🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/", root);
   const read = (path: string) => JSON.parse(readFileSync(new URL(path, shared), "utf8"));
-  const fixture = read("🧫️fixtures/🔣️.json");
+  const fixture = read("🧪️tests/🧫️fixtures/🔣️.json");
   expect(new Ajv2020({ strict: true }).compile(read("🧬️schema/🔣️.json"))(fixture)).toBe(true);
   const db = new Database(":memory:");
   db.exec("CREATE TABLE publication(original TEXT)");

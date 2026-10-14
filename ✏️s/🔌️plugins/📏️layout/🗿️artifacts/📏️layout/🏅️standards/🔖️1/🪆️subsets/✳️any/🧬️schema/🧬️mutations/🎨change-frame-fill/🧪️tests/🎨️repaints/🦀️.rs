@@ -11,11 +11,11 @@ use crate::mutations::LayoutMutation;
 use crate::LayoutSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨change-frame-fill/🎨️repaints/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨change-frame-fill/🎨️repaints/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨change-frame-fill/🎨️repaints/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨change-frame-fill/🎨️repaints/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨change-frame-fill/🎨️repaints/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨change-frame-fill/🎨️repaints/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨change-frame-fill/🎨️repaints/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨change-frame-fill/🎨️repaints/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨change-frame-fill/🎨️repaints/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨change-frame-fill/🎨️repaints/🎯️outcome/🔣️.json");
 
 fn before() -> LayoutSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-frame-fill/repaints-the-rect-frame-fill: before snapshot decodes")

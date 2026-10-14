@@ -74,7 +74,7 @@ use semio_framework_diagnostic::TextSpan;
         const DIALECT: Dialect = DIALECT_ISO21320;
 
         async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
-            let typed=match payload{IoPayload::Binary(bytes)=><ZipSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).ok(),IoPayload::Text(text)=><ZipSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).ok()};
+            let typed=match payload{IoPayload::Binary(bytes)=><ZipSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).ok(),IoPayload::Text(text)=><ZipSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).ok()};
             if let Some(snapshot)=typed{return check_iso21320_conformance(&snapshot);}
             match payload{
                 IoPayload::Binary(bytes) if matches!(crate::standards::v2_0::subsets::base::io::sniff_zip_bytes(bytes),crate::standards::v2_0::subsets::base::io::SniffConfidence::High|crate::standards::v2_0::subsets::base::io::SniffConfidence::Medium)=>check_iso21320_wire_conformance(bytes),
@@ -175,11 +175,11 @@ use semio_framework_diagnostic::Severity;
         }
 
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<ZipSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<ZipSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?))
         }
 
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<ZipSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<ZipSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {

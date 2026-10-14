@@ -1,7 +1,7 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 
 import nativeSchema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import type {VcsSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
@@ -53,7 +53,7 @@ test("VCS complete semantic cells agree with independent SQLite at exact and one
 });
 
 import NormSemanticAjv from "ajv/dist/2020.js";
-import normSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {vcsSnapshotToSqliteDatabase as normSemanticProject,vcsSnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
 import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

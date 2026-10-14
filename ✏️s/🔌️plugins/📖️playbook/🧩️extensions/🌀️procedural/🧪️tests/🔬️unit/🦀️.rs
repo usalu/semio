@@ -4,7 +4,7 @@ use semio_framework_ui_locale::{AppLabels, Locale, Terminology};
 
 #[semio_framework_async_macros::async_test]
 async fn embedded_parameters_use_the_parent_input_and_exact_window_without_mutating_the_document() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧩️embedded.json")).expect("independent embedded input fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧩️embedded.json")).expect("independent embedded input fixture");
     let mut app = new_app().await;
     let before = to_json_string(&app.snapshot().expect("initial payload"));
     for input in fixture["cases"].as_array().expect("embedded inputs") {
@@ -28,12 +28,12 @@ async fn embedded_parameters_use_the_parent_input_and_exact_window_without_mutat
 #[test]
 fn procedural_payload_vectors_match_the_json_oracle() {
     use protocol::{Mutation, OpBinary, OpText};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️payload-mutations.json")).expect("independent JSON parser");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔁️payload-mutations.json")).expect("independent JSON parser");
     let base: ModuleRenderPayload = semio_framework_pack_json::from_json_str(&fixture["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned base");
     assert_eq!(ModulePayloadMutation::DESCRIPTORS.len(), 1);
     const WITNESSES: [(&str, &str); 2] = [
-        ("🎚️sets-params", include_str!("../../🧫️fixtures/🧬️mutations/📦️set-payload/🎚️sets-params/🦠️mutation/🔣️.json")),
-        ("🫙️clears-params", include_str!("../../🧫️fixtures/🧬️mutations/📦️set-payload/🫙️clears-params/🦠️mutation/🔣️.json")),
+        ("🎚️sets-params", include_str!("../🧫️fixtures/🧬️mutations/📦️set-payload/🎚️sets-params/🦠️mutation/🔣️.json")),
+        ("🫙️clears-params", include_str!("../🧫️fixtures/🧬️mutations/📦️set-payload/🫙️clears-params/🦠️mutation/🔣️.json")),
     ];
     for row in fixture["cases"].as_array().expect("mutation vectors") {
         let witness = WITNESSES.iter().find(|(case, _)| row["witness"] == *case).map(|(_, text)| *text).expect("case names a committed wire witness");
@@ -49,7 +49,7 @@ fn procedural_payload_vectors_match_the_json_oracle() {
 
 #[semio_framework_async_macros::async_test]
 async fn procedural_actor_descriptor_matches_the_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛂️actor.json")).expect("independent actor fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛂️actor.json")).expect("independent actor fixture");
     __semio_install_plugin_bundle();
     let manifest = __SEMIO_PLUGIN_RUNTIME.with(|runtime| ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::plugin_runtime::plugin_manifest(runtime)));
     assert_eq!(manifest.plugin_id, MODULE_PLUGIN_ID, "bundle assembly: {}", manifest.label);
@@ -76,7 +76,7 @@ async fn procedural_actor_descriptor_matches_the_json_oracle() {
 
 #[test]
 fn procedural_parameter_controls_match_the_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎚️controls.json")).expect("independent control vectors");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎚️controls.json")).expect("independent control vectors");
     for row in fixture["cases"].as_array().expect("controls") {
         let question: PlaybookBlock = semio_framework_pack_json::from_json_str(&row["question"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned block decoder");
         let independent: PlaybookBlock = serde_json::from_value(row["question"].clone()).expect("independent block decoder");
@@ -334,7 +334,7 @@ fn quoted_close_grant(owner: &ModuleGeometryOwner, copy_bytes: usize) -> semio_f
 
 #[test]
 fn instance_geometry_admits_session_shell_before_terminal() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌐️geometry-lifetime/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌐️geometry-lifetime/🔣️.json")).unwrap();
     let admission = &fixture["shellAdmission"];
     let complete_bytes = admission["completionByteGrant"].as_u64().unwrap() as usize;
     let mut owner = ModuleGeometryOwner::new();
@@ -360,8 +360,8 @@ fn instance_geometry_admits_session_shell_before_terminal() {
 
 #[semio_framework_async_macros::async_test]
 async fn instance_geometry_replays_durable_sources_and_preserves_preview_authority() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌐️geometry-lifetime/🔣️.json")).expect("independent lifetime fixture");
-    let own_fixture = parse_json(include_str!("../../🧫️fixtures/🌐️geometry-lifetime/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("first-party lifetime fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌐️geometry-lifetime/🔣️.json")).expect("independent lifetime fixture");
+    let own_fixture = parse_json(include_str!("../🧫️fixtures/🌐️geometry-lifetime/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("first-party lifetime fixture");
     assert_eq!(serde_json::from_str::<serde_json::Value>(&json_to_string(&own_fixture)).expect("independent fixture output"), fixture);
     for row in fixture["handles"].as_array().expect("canonical handle vectors") {
         assert_eq!(is_brep_geometry_handle(row["value"].as_str().unwrap()), row["valid"].as_bool().unwrap());

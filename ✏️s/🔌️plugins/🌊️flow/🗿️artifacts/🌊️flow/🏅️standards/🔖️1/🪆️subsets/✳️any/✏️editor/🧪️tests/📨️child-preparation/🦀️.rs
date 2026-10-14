@@ -11,7 +11,7 @@ fn rejected_child_preparation_remains_owned_until_bounded_flow_work_close(){
     use semio_framework_plugin::app::ChildEmitPreparation;
     use semio_framework_job::InteractiveJobCloseStep;
     use {semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation, semio_s_artifact_stdio_semio_flow::schema::mutations::drag_nodes::DragNodes};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎮️commands/✏️node-graph-edit/🧫️fixtures/child-preparation/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎮️commands/✏️node-graph-edit/🧪️tests/🧫️fixtures/child-preparation/🔣️.json")).unwrap();
     let child_id=fixture["childId"].as_str().unwrap();
     let mut work=FlowChildGroupWork{tool_id:"nodeGraphEdit",instance_owner:None,output:None,completed:false,closing:false};
     for (slot,accepted) in [(fixture["foreignSlot"].as_str().unwrap(),false),(fixture["slot"].as_str().unwrap(),true)]{

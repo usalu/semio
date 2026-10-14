@@ -394,7 +394,7 @@ export const PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT = `(function(){var last="";fun
  *
  * 🔁️ Deliberately a hand-replayed literal and not an import: this is an inline `<script>` in a head
  * that runs before any module is fetched, so it can share no code with the engine. What keeps it
- * honest is `🧫️fixtures/🌓️appearance-boot.json`, answered by this script in a DOM-less sandbox and
+ * honest is `🧪️tests/🧫️fixtures/🌓️appearance-boot.json`, answered by this script in a DOM-less sandbox and
  * independently by the engine's own projection.
  *
  * @see ../../../../../🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🎨️ui-preferences/🟦️.ts
@@ -1465,7 +1465,7 @@ export function staticDirVitePlugin(repoRoot: string, spec: StaticDirectoryAsset
  * unreachable — and a parent route registered before a nested one swallows the nested one's requests.
  * The table therefore refuses a route claimed twice and orders the halves by nesting: serving
  * most-specific route first, build copies parent first (a parent copy replaces its destination).
- * Fixture law: `🧫️fixtures/🗂️static-dir-mounts/🔣️.json`. */
+ * Fixture law: `🧪️tests/🧫️fixtures/🗂️static-dir-mounts/🔣️.json`. */
 export function staticDirMountVitePlugins(repoRoot: string, specs: readonly StaticDirectoryAssetSpecV1[]): OwnedBuildPlugin[] {
   const routes = specs.map((spec) => spec.route.replace(/\/+$/, ""));
   const claimed = routes.find((route, index) => routes.indexOf(route) !== index);

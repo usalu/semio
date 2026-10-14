@@ -20,7 +20,7 @@ fn intrinsic_bytes_survive_action_publication_and_refuse_exhausted_credits() {
 
 #[test]
 fn retained_string_action_pages_a_large_utf8_value_and_publishes_once() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️retained-string-action/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️retained-string-action/🔣️.json")).unwrap();
     let bytes = fixture["largeDraftBytes"].as_u64().unwrap() as usize;
     let source = format!("{}🚀", "a".repeat(bytes - "🚀".len()));
     let descriptor =
@@ -56,7 +56,7 @@ fn retained_string_action_refusal_and_cancel_keep_the_source_owner() {
 
 #[test]
 fn correlated_receipts_survive_identical_payloads_without_entering_the_domain_descriptor() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧾️correlated-action-receipts/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧾️correlated-action-receipts/🔣️.json")).unwrap();
     let rows = fixture["receipts"].as_array().unwrap();
     let mut queue = BoundedActionQueue::default();
     let mut batch = queue.reserve_batch(rows.len(), rows.len() * 256).unwrap();

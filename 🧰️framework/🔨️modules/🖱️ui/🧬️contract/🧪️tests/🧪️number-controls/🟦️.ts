@@ -1,5 +1,5 @@
 /** 🎚️ Canonical numberControlsSelfTests: the TypeScript half of the shared number-control laws, answering the
- * very same `🧫️fixtures/🧫️number-controls/🔣️.json` rows the Rust `🔬️component-unit` law answers through
+ * very same `🧪️tests/🧫️fixtures/🧫️number-controls/🔣️.json` rows the Rust `🔬️component-unit` law answers through
  * `snaps_are_valid` (limits)/`slider_axis_position`/`slider_axis_value`/`dial_angle`/`dial_position`/`slider_pointer_value`/
  * `slider_adjacent_snap`/`slider_key_value`/`ui_number_display_text`/`ui_number_typed_value`/`ui_number_crossed_bound`/
  * `format_ui_number_fixed`/`number_range_is_valid`. Ajv validates the fixture against its schema; decimal.js is the independent
@@ -92,7 +92,7 @@ export function numberControlsSelfTests(): number {
   const require = createRequire(import.meta.url);
   
   const Decimal = require("decimal.js");
-  const fixture = read("../../🧫️fixtures/🧫️number-controls/🔣️.json") as Fixture;
+  const fixture = read("../🧫️fixtures/🧫️number-controls/🔣️.json") as Fixture;
   
   
   let checks = 1;

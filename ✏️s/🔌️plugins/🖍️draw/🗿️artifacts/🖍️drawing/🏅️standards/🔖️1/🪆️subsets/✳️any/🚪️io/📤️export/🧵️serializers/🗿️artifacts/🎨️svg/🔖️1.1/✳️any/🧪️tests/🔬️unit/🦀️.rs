@@ -4,7 +4,7 @@ use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapsh
 
 #[test]
 fn svg_scene_fixture_preserves_paint_geometry_and_text() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let nodes: Vec<DrawingSceneNode> = semio_framework_pack_json::from_json_str(&fixture["nodes"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let view_box: [f64;4] = serde_json::from_value(fixture["viewBox"].clone()).unwrap();
     let output = drawing_scene_to_svg(&nodes,view_box,&serde_json::from_value(fixture["assets"].clone()).unwrap()).unwrap();
@@ -36,7 +36,7 @@ fn svg_refuses_invalid_view_box_and_transform() {
 
 #[test]
 fn svg_refuses_nonfinite_geometry_and_paint() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for sample in fixture["invalidNumbers"].as_array().unwrap() {
         let mut nodes: Vec<DrawingSceneNode> = semio_framework_pack_json::from_json_str(&fixture["nodes"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let value = sample["value"].as_str().unwrap().parse::<f64>().unwrap();
@@ -69,7 +69,7 @@ fn svg_preserves_shared_isolated_compositing_hierarchies() {
             _=>{},
         }
     }
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../🧬️schema/🎬️scene/🧩️compositing/🧫️fixtures/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🧩️compositing/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let nodes:Vec<DrawingSceneNode>=semio_framework_pack_json::from_json_str(&case["nodes"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let output=drawing_scene_to_svg(&nodes,[0.0,0.0,24.0,16.0],&Default::default()).unwrap();
@@ -115,10 +115,10 @@ fn explicit_isolation_survives_unit_opacity_scene_projection() {
 
 #[test]
 fn svg_emits_constant_gradients_as_solid_paint_and_rejects_invalid_paint() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let mut nodes:Vec<DrawingSceneNode>=semio_framework_pack_json::from_json_str(&fixture["nodes"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     nodes.truncate(1);
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../🧬️schema/🎨️fill/🎨️sampling/🧫️fixtures/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️fixtures/🎨️fill/🎨️sampling/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let fill:FillStyle=serde_json::from_value(case["fill"].clone()).unwrap();
         nodes[0].fill=Some(fill.clone());

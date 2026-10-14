@@ -1,0 +1,16 @@
+{
+  "exclusive": false,
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+  "beforeSha256": "5c1a7855f5d9acbc57003c7923c23a85bef4c57d9c78cbc650c1e6de505d36cc",
+  "afterSha256": "1a9bb2232bda038bfb8f1d1baccce95fcf284c34a21a39a052b3785b64a674c7",
+  "removedKeys": [
+    "readme-current-source-revision-input",
+    "readme-reviewed-expectation-input",
+    "remaining-package-purity-history-v1",
+    "cad-draw-projection-vectors-v1"
+  ],
+  "retainedContracts": 37,
+  "archive": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧭️fixture-placement/📜️enrollment.json",
+  "archiveSha256": "1033c869cdcf29ddcb647f0d31b25804e918b43e1587b85834e45ad2f19121e9",
+  "reason": "Fixture payloads cannot authorize production semantic rewrites; historical declaration records retained as plain test examples, no fixture identity/seal refresh"
+}

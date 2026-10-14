@@ -31,7 +31,7 @@ fn canonical_fixture_clears_only_the_main_xml_declaration() {
     use semio_s_artifact_stdio_xml::schema::snapshot::{XmlQuote,retained::{RetainedXmlDeclaration,RetainedXmlText}};
     use std::io::Read;
 
-    let fixture_text = include_str!("../../🧫️fixtures/🧹️clear-main-declaration/🔣️.json");
+    let fixture_text = include_str!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🧹️clear-main-declaration/🔣️.json");
     let fixture: serde_json::Value = serde_json::from_str(fixture_text).expect("third-party JSON parser accepts the neutral fixture");
     let fixture_diff = serde_json::to_string(&fixture["diff"]).expect("fixture diff serializes");
     let diff: DocxDiff = semio_framework_pack_json::from_json_str(&fixture_diff, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("canonical DOCX diff decodes");
@@ -67,7 +67,7 @@ fn archive_comment_only_diff_replay_preserves_exact_text_and_set_part_codecs_kee
     use crate::schema::mutations::{set_part, DocxMutation};
     use protocol::{MutationDiff, OpBinary, OpText};
 use semio_framework_value::ToValue;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🎒️zip/📦️opc/🧫️fixtures/💬️archive-comment/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🎒️zip/📦️opc/🧪️tests/🧫️fixtures/💬️archive-comment/🔣️.json")).unwrap();
     let mut before = DocxSnapshot::default();
     before.opc.comment = semio_s_artifact_stdio_zip::opc::retained::RetainedOpcText::try_from_str(fixture["before"].as_str().unwrap()).unwrap();
     let mut after = before.clone();

@@ -198,7 +198,7 @@ pub struct DagPlayApp;
 /// minted `create_document_envelope`) is what keeps the guest off the `terminal shell reached Drop
 /// before its app-owned bounded retirement authority detached` trap on this path.
 pub fn reset_dag_document_effect(document: &DagSnapshot) -> Effect {
-    let pack = <DagSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let pack = <DagSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("dag", crate::DAG_DOCUMENT_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
@@ -702,6 +702,7 @@ impl ArtifactEditor for DagPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

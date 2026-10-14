@@ -64,7 +64,7 @@ fn author_fixture() -> serde_json::Value {
 }
 
 fn layout_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🌳️GraphTimelineHost/🧫️fixtures/🎨️layout/🔣️.json")).expect("shared GraphTimeline layout fixture")
+    serde_json::from_str(include_str!("../../../🌳️GraphTimelineHost/🧪️tests/🧫️fixtures/🎨️layout/🔣️.json")).expect("shared GraphTimeline layout fixture")
 }
 
 fn drain_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
@@ -313,7 +313,7 @@ fn row_press_dispatches_checkout_checkpoint_for_the_row_under_the_pointer() {
 
 #[test]
 fn checkpoint_regions_match_react_without_activating_descriptions() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🌳️GraphTimelineHost/🧫️fixtures/🎯️checkpoint-hit/🔣️.json")).expect("checkpoint hit fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🌳️GraphTimelineHost/🧪️tests/🧫️fixtures/🎯️checkpoint-hit/🔣️.json")).expect("checkpoint hit fixture");
     let mut scene = author_scene(json!([]));
     scene.host_id = "timeline-checkpoint-regions".into();
     scene.surface_id = fixture["surfaceId"].as_str().unwrap().into();
@@ -348,7 +348,7 @@ fn checkpoint_regions_match_react_without_activating_descriptions() {
 
 #[test]
 fn accepted_checkpoint_accessibility_uses_selectable_geometry_and_exact_action() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🌳️GraphTimelineHost/🧫️fixtures/🎯️checkpoint-hit/🔣️.json")).expect("checkpoint hit fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🌳️GraphTimelineHost/🧪️tests/🧫️fixtures/🎯️checkpoint-hit/🔣️.json")).expect("checkpoint hit fixture");
     let expected = &fixture["accessibility"];
     let mut scene = author_scene(json!([]));
     scene.host_id = fixture["hostId"].as_str().unwrap().into();

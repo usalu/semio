@@ -20,7 +20,7 @@ const LEAVES: readonly GestureLeaf[] = [
  * refused by both. */
 export function generation2dGestureLeafTwinSelfTests(): number {
   const mutations = resolve(import.meta.dir, "../..");
-  const fixtures = resolve(mutations, "../../🧫️fixtures/🧬️mutations");
+  const fixtures = resolve(mutations, "../../🧪️tests/🧫️fixtures/🧬️mutations");
   const ajv = new Ajv({ strict: true, allErrors: true }).addKeyword({ keyword: "x-semio-ui", metaSchema: { type: "object" } }).addKeyword({ keyword: "x-semio-invariant", metaSchema: { type: "array", items: { type: "object" } } });
   ajv.addKeyword({ keyword: "x-semio-inverse-rows", metaSchema: { type: "object", properties: { perTarget: { type: "object", additionalProperties: { type: "integer", minimum: 0 } } }, required: ["perTarget"], additionalProperties: false } });
   let checks = 0;

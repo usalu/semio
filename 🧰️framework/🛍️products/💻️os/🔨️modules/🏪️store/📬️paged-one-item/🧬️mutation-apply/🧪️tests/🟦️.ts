@@ -1,6 +1,6 @@
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 type Node={id:string;text:string};
 type Row=Record<string,any>;

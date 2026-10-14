@@ -10,6 +10,7 @@
 // another area exempt or relocating the domain is a vocabulary edit, never a code edit here.
 
 import { observeDependencies, observedFs, observeInference } from "../📚️library/🔌️nx-plugin/👁️observation/🟨️.mjs";
+import { targetBuildModes } from "../📚️library/🔌️nx-plugin/🎚️mode/🟨️.mjs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -17,16 +18,19 @@ import { fileURLToPath } from "node:url";
 const { existsSync, lstatSync, readFileSync, readdirSync } = observedFs;
 const nxPath = (p) => p.split("\\").join("/");
 const dependencyModule = new URL("./🕸️dependencies/🟨️.mjs", import.meta.url);
+const inputModule = new URL("../📚️library/🔌️nx-plugin/📥️inputs/🟨️.mjs", import.meta.url);
 const dependencyRevision = createHash("sha256").update(readAuthoritySource(dependencyModule)).digest("hex");
-let cargoPackage, localPackagePath, rustSubjectPackage, ownerContributions, packagesForOwner;
-const testBootstrap = import(`${dependencyModule.href}?revision=${dependencyRevision}`).then((deps) => {
+const inputRevision = createHash("sha256").update(readAuthoritySource(inputModule)).digest("hex");
+let cargoPackage, localPackagePath, rustSubjectPackage, ownerContributions, packagesForOwner, compactSourceInputs;
+const testBootstrap = Promise.all([import(`${dependencyModule.href}?revision=${dependencyRevision}`), import(`${inputModule.href}?revision=${inputRevision}`)]).then(([deps, inputs]) => {
   cargoPackage = deps.cargoPackage;
   localPackagePath = deps.localPackagePath;
   rustSubjectPackage = deps.rustSubjectPackage;
   ownerContributions = deps.ownerContributions;
   packagesForOwner = deps.packagesForOwner;
+  compactSourceInputs = inputs.compactSourceInputs;
 });
-const implementationRevision = () => createHash("sha256").update(readAuthoritySource(new URL(import.meta.url))).update(readAuthoritySource(dependencyModule)).digest("hex");
+const implementationRevision = () => createHash("sha256").update(readAuthoritySource(new URL(import.meta.url))).update(readAuthoritySource(dependencyModule)).update(readAuthoritySource(inputModule)).digest("hex");
 const loadedRevision = implementationRevision();
 
 const TAXONOMY_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
@@ -40,7 +44,8 @@ function canonicalCase(vocabulary, owner, name) {
     && (/\p{Emoji_Presentation}/u.test([...first][0] ?? "") || first.includes("\uFE0F"))
     && !vocabulary.pathEmojiPolicy.genericEmojiIdentities.some(emoji => fold(emoji) === fold(first))
     && new RegExp(vocabulary.testCaseSlugPattern, "u").test(name.slice(first.length))
-    && !owner.split("/").some(segment => segment === vocabulary.testsDirName || vocabulary.testDeliveryScopeDirectoryNames.includes(segment));
+    && name !== vocabulary.testFixturesDirName
+    && !owner.split("/").some((segment, index, parts) => (segment === vocabulary.testsDirName || segment === vocabulary.testFixturesDirName) && parts[index - 1] !== vocabulary.schemaScopeOwnerLevels.moduleMemberDirName || vocabulary.testDeliveryScopeDirectoryNames.includes(segment));
 }
 
 /** 🔣️ Reads the frozen test vocabulary; the plugin never re-declares taxonomy strings. */
@@ -85,7 +90,7 @@ function candidateFiles(configFiles, vocabulary, authority) {
   return [...new Set(configFiles.filter(value => typeof value === "string").map(nxPath))].filter(path => {
     if (path.includes("\uFFFD") || isExcluded(vocabulary, path) || !authority.file(path)) return false;
     const casePath = dirname(path), testsPath = dirname(casePath);
-    return basename(path) === filename && basename(testsPath) === vocabulary.testsDirName && canonicalCase(vocabulary, dirname(testsPath), basename(casePath));
+    return basename(path) === filename && basename(testsPath) === vocabulary.testsDirName && basename(dirname(testsPath)) !== vocabulary.schemaScopeOwnerLevels.moduleMemberDirName && canonicalCase(vocabulary, dirname(testsPath), basename(casePath));
   }).sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right)));
 }
 
@@ -207,15 +212,16 @@ function inputsFor(workspaceRoot, vocabulary, ownerRel, caseRel, adapters) {
 
 /** 🎚️ One generated target routed through the testing domain's own router. */
 function target(domain, command, inputs, cacheable = true, scope, forwardAllArgs = false) {
-  return {
+  return targetBuildModes(scope.split("/").at(-1), {
     executor: "nx:run-commands",
     options: { cwd: domain, command: `bun ./📜️script.ts ${command}`, forwardAllArgs, env: { SEMIO_TEST_OUTPUT_SCOPE: scope } },
     inputs,
+    configurations: Object.fromEntries(["prototype", "release"].map(mode => [mode, { env: { SEMIO_TEST_OUTPUT_SCOPE: `${scope}/${mode}` } }])),
     // 📤️Only the durable products of a run are cache outputs. The work directory holds each case's
     // mutable fixture copies, which are large, regenerated on every run and meaningless to restore.
-    outputs: ["results", "reports", "diffs"].map((child) => `{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/tests/tasks/${scope}/${child}`),
+    outputs: ["results", "reports", "diffs"].map((child) => `{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/tests/tasks/${scope}/{options.env.SEMIO_BUILD_MODE}/${child}`),
     cache: cacheable,
-  };
+  });
 }
 
 /**
@@ -234,7 +240,8 @@ async function testCaseProjects(configFiles, _options, context) {
   if (featureCandidates.length === 0) return results;
   const libraryModule = new URL("../📚️library/🟨️.mjs", import.meta.url);
   const libraryRevision = createHash("sha256").update(readAuthoritySource(libraryModule)).digest("hex");
-  const { cacheInternals: native } = await import(`${libraryModule.href}?revision=${libraryRevision}`);
+  const { cacheInternals: native, libraryBootstrap } = await import(`${libraryModule.href}?revision=${libraryRevision}`);
+  await libraryBootstrap;
   const state = { manifests: new Map(), closures: new Map(), names: new Map(), plans: new Map() };
   const javascript = policy.toolchains.javascript;
   const owners = new Map();
@@ -262,14 +269,14 @@ async function testCaseProjects(configFiles, _options, context) {
   }
 
   for (const [ownerRel, owner] of [...owners].sort(([left], [right]) => Buffer.compare(Buffer.from(left), Buffer.from(right)))) {
-    commandInputs ??= [...native.relativeScriptInputs([join(workspaceRoot, vocabulary.testDomainPath, "📜️script.ts")], workspaceRoot), ...javascript.files.map((path) => `{workspaceRoot}/${path}`), ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime }))];
+    commandInputs ??= compactSourceInputs([...native.relativeScriptInputs([join(workspaceRoot, vocabulary.testDomainPath, "📜️script.ts")], workspaceRoot), ...javascript.files.map((path) => `{workspaceRoot}/${path}`), ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime }))], workspaceRoot);
     const name = projectNameFor(ownerRel, await ownerHash(ownerRel));
     const adapters = [...new Set(owner.cases.flatMap((row) => row.adapters))].sort();
     const inputs = [...new Map(owner.cases.flatMap((row) => inputsFor(workspaceRoot, vocabulary, ownerRel, row.caseRel, row.adapters)).map((input) => [JSON.stringify(input), input])).values()];
     const domain = vocabulary.testDomainPath;
     const scoped = (phase, command, forwardAllArgs) => {
       const nativeInputs = nativeInputsFor(workspaceRoot, vocabulary, ownerRel, adapters, phase, native, policy, state);
-      return { ...target(domain, command, [...inputs, "testCommandSources", ...nativeInputs.inputs, { env: "SEMIO_TEST_LEVEL" }, { env: "SEMIO_TEST_BUDGET_MS" }], true, `${name}/${phase}`, forwardAllArgs), dependsOn: nativeInputs.dependsOn };
+      return { ...target(domain, command, compactSourceInputs([...inputs, "testCommandSources", ...nativeInputs.inputs, { env: "SEMIO_TEST_LEVEL" }, { env: "SEMIO_TEST_BUDGET_MS" }], workspaceRoot), true, `${name}/${phase}`, forwardAllArgs), dependsOn: nativeInputs.dependsOn };
     };
     results.push([
       owner.configFile,
@@ -355,7 +362,7 @@ const plugin = {
 export default plugin;
 
 /** 🧪️ Exposed for the domain's own self-tests: the pure parts of the generation above. */
-export const internals = { isExcluded, projectNameFor, inputsFor, taxonomy, rustSutCratePath, oracleContributionPaths };
+export const internals = { isExcluded, projectNameFor, inputsFor, taxonomy, rustSutCratePath, oracleContributionPaths, target };
 
 /** 📁️ Convenience for tools that need the case directories without loading Nx. */
 export function discoverCaseDirs(workspaceRoot) {
@@ -368,7 +375,8 @@ export function discoverCaseDirs(workspaceRoot) {
       const abs = join(dir, entry.name);
       const rel = nxPath(relative(workspaceRoot, abs));
       if (isExcluded(vocabulary, rel)) continue;
-      if (entry.name === vocabulary.testsDirName) {
+      if (entry.name === vocabulary.testFixturesDirName && basename(dir) !== vocabulary.schemaScopeOwnerLevels.moduleMemberDirName) continue;
+      if (entry.name === vocabulary.testsDirName && basename(dir) !== vocabulary.schemaScopeOwnerLevels.moduleMemberDirName) {
         for (const child of readdirSync(abs, { withFileTypes: true })) {
           if (!child.isDirectory() || child.isSymbolicLink() || !canonicalCase(vocabulary, nxPath(relative(workspaceRoot, dir)), child.name)) continue;
           if (readdirSync(join(abs, child.name), { withFileTypes: true }).some((file) => file.name === featureFilename && file.isFile() && !file.isSymbolicLink())) found.push(nxPath(relative(workspaceRoot, join(abs, child.name))));

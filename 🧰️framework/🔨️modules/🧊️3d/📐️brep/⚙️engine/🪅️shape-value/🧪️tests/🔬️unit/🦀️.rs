@@ -3,7 +3,7 @@ use semio_framework_3d_brep_representation::arena::{ArenaId, Curve3Id, SolidId};
 use semio_framework_pack_json::{from_json_str, to_json_string, JsonMemberPolicy};
 use serde_json::Value;
 
-const FIXTURE: &str = include_str!("../../../🧫️fixtures/🪬️shape-values/🔣️.json");
+const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/🪬️shape-values/🔣️.json");
 
 const KINDS: [(&str, GeometryKind); 9] = [
     ("vertex", GeometryKind::Vertex),

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import fixture from "../../🧫️fixtures/📥️retained-pack-load/🔣️.json";
+import fixture from "../🧫️fixtures/📥️retained-pack-load/🔣️.json";
 
 /** 📥️ The retained-load native gate consumes one closed, schema-first lifecycle fixture. */
 export function testWindowConfigRetainedPackLoadFixture(): void {

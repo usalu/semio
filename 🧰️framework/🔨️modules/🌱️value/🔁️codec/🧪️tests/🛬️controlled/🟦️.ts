@@ -1,10 +1,10 @@
-import intrinsicCorpus from "../../../../🎒️pack/🌱️value/🧫️fixtures/🎞️intrinsic-media/🔣️.json";
+import intrinsicCorpus from "../../../../🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🎞️intrinsic-media/🔣️.json";
 import { test, expect } from "bun:test";
 import { Database } from "bun:sqlite";
 import Ajv from "ajv/dist/2020";
-import fixture from "../../🧫️fixtures/🛬️controlled/🔣️.json";
+import fixture from "../🧫️fixtures/🛬️controlled/🔣️.json";
 import Ajv7 from "ajv";
-import borrowedKeys from "../../🧫️fixtures/🛬️controlled/🔗️borrowed-keys.json";
+import borrowedKeys from "../🧫️fixtures/🛬️controlled/🔗️borrowed-keys.json";
 import { ValueError } from "../../../⚠️refusal/🟦️.ts";
 
 test("controlled native constructor neutral corpus independently validates and preserves ordered values",()=>{
@@ -78,7 +78,7 @@ test("NaN Binary32 bridge corpus preserves independent IEEE sign and payload pos
 
 
 test("controlled native output neutral corpus preserves independent JSON and SQLite values",async()=>{
- const fixture=(await import("../../🧫️fixtures/🛫️controlled/🔣️.json")).default;
+ const fixture=(await import("../🧫️fixtures/🛫️controlled/🔣️.json")).default;
  expect(Object.keys(fixture.entries[0]!)).toEqual(fixture.fieldOrder);const db=new Database(":memory:");db.exec("CREATE TABLE encoded_entry(id INTEGER PRIMARY KEY,label TEXT NOT NULL,optional INTEGER);CREATE TABLE encoded_sample(parent INTEGER NOT NULL,ordinal INTEGER NOT NULL,value INTEGER NOT NULL);CREATE TABLE word(value INTEGER NOT NULL)");
  for(const [index,row]of fixture.entries.entries()){db.query("INSERT INTO encoded_entry VALUES(?,?,?)").run(index,row.label,row.optional===null?null:row.optional?1:0);for(const[ordinal,value]of row.samples.entries())db.query("INSERT INTO encoded_sample VALUES(?,?,?)").run(index,ordinal,value);expect(JSON.parse(JSON.stringify(row))).toEqual(row);expect(db.query("SELECT label AS label,optional AS optional FROM encoded_entry WHERE id=?").get(index)).toEqual({label:row.label,optional:row.optional===null?null:row.optional?1:0});expect((db.query("SELECT value FROM encoded_sample WHERE parent=? ORDER BY ordinal").all(index) as {value:number}[]).map(row=>row.value)).toEqual(row.samples);}
  for(const word of fixture.integerWords)db.query("INSERT INTO word VALUES(?)").run(BigInt(word));expect((db.query("SELECT CAST(value AS TEXT) AS word FROM word ORDER BY rowid").all() as {word:string}[]).map(row=>row.word)).toEqual(fixture.integerWords);
@@ -86,7 +86,7 @@ test("controlled native output neutral corpus preserves independent JSON and SQL
 });
 
 test("controlled enum field identities survive generated-binding names in independent SQLite JSON",async()=>{
- const fixture=(await import("../../🧫️fixtures/🛫️controlled/🔣️.json")).default;expect(new Set(fixture.bindingHygiene.map(row=>row.id)).size).toBe(fixture.bindingHygiene.length);
+ const fixture=(await import("../🧫️fixtures/🛫️controlled/🔣️.json")).default;expect(new Set(fixture.bindingHygiene.map(row=>row.id)).size).toBe(fixture.bindingHygiene.length);
  const uninhabited=new Ajv({strict:true}).compile(false);expect(new Set(fixture.emptyEnums.map(row=>row.id)).size).toBe(fixture.emptyEnums.length);for(const row of fixture.emptyEnums){expect(row.inhabited).toBe(false);for(const input of row.inputs)expect(uninhabited(input)).toBe(false);}
  const database=new Database(":memory:");
  for(const row of fixture.bindingHygiene){const output=row.id==="external"?{Named:row.fields}:row.id==="internal"?{kind:"Named",...row.fields}:{kind:"Named",payload:row.fields};expect(output).toEqual(row.output);const result=database.query("SELECT json(?) AS value").get(JSON.stringify(output)) as {value:string};expect(JSON.parse(result.value)).toEqual(row.output);const pointer=row.id==="external"?'$.Named':row.id==="internal"?'$':'$.payload';expect(database.query("SELECT count(*) AS count FROM json_each(?,?)").get(JSON.stringify(row.output),pointer)).toEqual({count:Object.keys(row.fields).length+(row.id==="internal"?1:0)});}

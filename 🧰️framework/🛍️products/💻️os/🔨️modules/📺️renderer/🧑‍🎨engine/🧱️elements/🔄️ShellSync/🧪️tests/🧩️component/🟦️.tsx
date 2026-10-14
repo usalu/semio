@@ -16,9 +16,9 @@ import { afterEach, describe, expect, it } from "vitest";
 import { type ArtifactSyncStatus } from "@semio-tech/framework-os";
 import { posix } from "node:path";
 import { HubConnectionIndicator, SyncAttachCard, hubConnectionSummaryV1, syncAttachTargetV1, syncStatusLabelV1, type HubLinkV1, type HubSessionPresenceV1, type SyncStatusTextsV1 } from "../../🟦️.tsx";
-import hubSummary from "../../🧫️fixtures/📶️hub-connection-summary.json";
-import attachTargets from "../../🧫️fixtures/🎯️sync-attach-target.json";
-import hubProjection from "../../../../🧫️fixtures/🔗️hub-projection/🔣️.json";
+import hubSummary from "../🧫️fixtures/📶️hub-connection-summary.json";
+import attachTargets from "../🧫️fixtures/🎯️sync-attach-target.json";
+import hubProjection from "../../../../🧪️tests/🧫️fixtures/🔗️hub-projection/🔣️.json";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Fixtures

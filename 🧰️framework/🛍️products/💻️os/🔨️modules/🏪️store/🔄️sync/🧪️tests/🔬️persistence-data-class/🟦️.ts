@@ -29,7 +29,7 @@ type Fixture = {
 };
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../../..");
-const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/persistence-data-class-v1/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(join(root, "🧪️tests/🧫️fixtures/persistence-data-class-v1/🔣️.json"), "utf8")) as Fixture;
 const schema = JSON.parse(readFileSync(join(root, "🔄️sync/🧬️schema/persistence-data-class/🔣️.json"), "utf8"));
 
 function classOf(binding: FixtureCase["binding"]): PersistenceDataClass {

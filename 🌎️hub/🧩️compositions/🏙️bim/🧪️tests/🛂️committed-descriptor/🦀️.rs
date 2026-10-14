@@ -20,7 +20,7 @@ fn test_repo_root() -> PathBuf {
 #[semio_framework_async_macros::async_test]
 async fn bim_plugin_manifest_loads_from_its_committed_descriptor() {
     let repo_root = test_repo_root();
-    let contract: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛂️committed-descriptor/🔣️.json")).expect("bim smoke contract");
+    let contract: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛂️committed-descriptor/🔣️.json")).expect("bim smoke contract");
     let descriptor_path = repo_root.join(contract["descriptorPath"].as_str().expect("descriptor path"));
     assert!(descriptor_path.is_file(), "committed bim descriptor missing at {}", descriptor_path.display());
 

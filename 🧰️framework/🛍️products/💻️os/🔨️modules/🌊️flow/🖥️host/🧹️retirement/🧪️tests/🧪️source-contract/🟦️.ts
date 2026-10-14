@@ -3,7 +3,7 @@ import { strict as assert } from "node:assert";
 import stableStringify from "fast-json-stable-stringify";
 
 //#region 🔣️SessionOwnership
-const fixture = await Bun.file(new URL("../../🧫️fixtures/🧹️session-retirement/🔣️.json", import.meta.url)).json();
+const fixture = await Bun.file(new URL("../🧫️fixtures/🧹️session-retirement/🔣️.json", import.meta.url)).json();
 
 
 const text = fixture.text.text.repeat(fixture.text.repeat); const preview = fixture.preview.text.repeat(fixture.preview.repeat);
@@ -40,7 +40,7 @@ for (const grant of fixture.grants) {
 //#endregion 🔣️SessionOwnership
 
 //#region 🧹️BridgeSessionClose
-const sessionClose = await Bun.file(new URL("../../../../🕸️wasm/🧫️fixtures/🧹️session-close/🔣️.json", import.meta.url)).json();
+const sessionClose = await Bun.file(new URL("../../../../🕸️wasm/🧪️tests/🧫️fixtures/🧹️session-close/🔣️.json", import.meta.url)).json();
 
 
 assert.deepEqual(JSON.parse(stableStringify(sessionClose)), sessionClose);
@@ -48,7 +48,7 @@ assert.deepEqual(JSON.parse(stableStringify(sessionClose)), sessionClose);
 //#endregion 🧹️BridgeSessionClose
 
 //#region 🧑‍🤝‍🧑️BrowserRuntimeLifetime
-const runtimeLifetime = await Bun.file(new URL("../../../../🕸️wasm/🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json", import.meta.url)).json();
+const runtimeLifetime = await Bun.file(new URL("../../../../🕸️wasm/🧪️tests/🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json", import.meta.url)).json();
 
 
 assert.deepEqual(JSON.parse(stableStringify(runtimeLifetime)), runtimeLifetime);

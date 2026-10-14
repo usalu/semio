@@ -6,7 +6,7 @@ use crate::standards::v_rfc8259::subsets::geojson::io::{JsonGeoJsonComposerCompo
 use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeSource,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator};
 use std::str::FromStr;
 
-const VECTORS: &str = include_str!("../../../🧫️fixtures/🌍️read-write/🔣️.json");
+const VECTORS: &str = include_str!("../../../🧪️tests/🧫️fixtures/🌍️read-write/🔣️.json");
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn vectors() -> (Vec<Value>, f64) {
@@ -152,13 +152,13 @@ const ANY: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: Standard
 #[semio_framework_async_macros::async_test]
 async fn composer_stamps_only_conforming_documents_and_carries_soft_findings() {
     let mercator = r#"{"type":"Feature","crs":{"type":"name","properties":{"name":"EPSG:3857"}},"geometry":{"type":"Point","coordinates":[0,0]},"properties":null}"#;
-    let composed = JsonGeoJsonComposerComposition::compose(&[ComposeSource { dialect: ANY, payload: AnalyzeSource::Text(&store::os_store::serialization::ArtifactDsl::print_dsl(&JsonSnapshot{schema:crate::STDIO_JSON_DOCUMENT_SCHEMA.into(),value:crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(mercator).unwrap()})) }]).expect("a GJ2008 Web Mercator document stamps geojson");
+    let composed = JsonGeoJsonComposerComposition::compose(&[ComposeSource { dialect: ANY, payload: AnalyzeSource::Text(&pack::snapshot::ArtifactDsl::print_dsl(&JsonSnapshot{schema:crate::STDIO_JSON_DOCUMENT_SCHEMA.into(),value:crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(mercator).unwrap()})) }]).expect("a GJ2008 Web Mercator document stamps geojson");
     assert!(composed.diagnostics.iter().any(|d| d.code.0 == CODE_LEGACY_CRS && d.severity == semio_framework_diagnostic::Severity::Warning), "{:?}", composed.diagnostics);
     let projected = r#"{"type":"Point","coordinates":[621000,5600000]}"#;
-    let refused = JsonGeoJsonComposerComposition::compose(&[ComposeSource { dialect: ANY, payload: AnalyzeSource::Text(&store::os_store::serialization::ArtifactDsl::print_dsl(&JsonSnapshot{schema:crate::STDIO_JSON_DOCUMENT_SCHEMA.into(),value:crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(projected).unwrap()})) }]).expect_err("projected metres are not RFC 7946");
+    let refused = JsonGeoJsonComposerComposition::compose(&[ComposeSource { dialect: ANY, payload: AnalyzeSource::Text(&pack::snapshot::ArtifactDsl::print_dsl(&JsonSnapshot{schema:crate::STDIO_JSON_DOCUMENT_SCHEMA.into(),value:crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(projected).unwrap()})) }]).expect_err("projected metres are not RFC 7946");
     assert!(refused.diagnostics.iter().any(|d| d.code.0 == CODE_NOT_GEOJSON && d.severity == semio_framework_diagnostic::Severity::Error), "{:?}", refused.diagnostics);
     let snapshot = JsonSnapshot::from_value(serde_json::json!({ "type": "FeatureCollection", "features": [] }));
-    assert!(JsonGeoJsonValidator::validate(&IoPayload::Binary(<JsonSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot))).await.is_empty());
+    assert!(JsonGeoJsonValidator::validate(&IoPayload::Binary(<JsonSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot))).await.is_empty());
     let not_geojson = JsonSnapshot::from_value(serde_json::json!({ "type": "Topology" }));
-    assert!(JsonGeoJsonValidator::validate(&IoPayload::Binary(<JsonSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&not_geojson))).await.iter().any(|d| d.code.0 == CODE_NOT_GEOJSON));
+    assert!(JsonGeoJsonValidator::validate(&IoPayload::Binary(<JsonSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&not_geojson))).await.iter().any(|d| d.code.0 == CODE_NOT_GEOJSON));
 }

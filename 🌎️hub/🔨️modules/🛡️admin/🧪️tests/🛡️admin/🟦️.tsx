@@ -11,7 +11,7 @@ import { SpacesPage } from "../../🧱️elements/🏛️SpacesPage/🟦️.tsx"
 import { ConnectionsPage } from "../../🧱️elements/🔗️ConnectionsPage/🟦️.tsx";
 import { AdminApp } from "../../🧱️elements/🛡️AdminApp/🟦️.tsx";
 import { ObservabilityPage } from "../../🧱️elements/📊️ObservabilityPage/🟦️.tsx";
-import observabilityFixture from "../../../../🧫️fixtures/📊️observability-v1/🔣️.json";
+import observabilityFixture from "../../../../🧪️tests/🧫️fixtures/📊️observability-v1/🔣️.json";
 // #endregion 🔌️Adapters
 
 afterEach(() => {

@@ -255,7 +255,7 @@ pub fn presentation_snapshot_with_tiles(source: &FigureTileSource, tiles: &[Figu
 pub fn genesis_presentation_child_pack(snapshot: &PresentationSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
     use semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot;
     use semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot;
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     match slot {
         "presentation" if child_id == snapshot.presentation.child_id => {
             let (source, tiles) = presentation_working_scene(snapshot);

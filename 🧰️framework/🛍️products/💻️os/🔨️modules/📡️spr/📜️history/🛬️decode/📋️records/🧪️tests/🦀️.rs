@@ -9,7 +9,7 @@ fn close_record(record:&mut Record,grant:RetainedCloneGrant){
 
 #[test]
 fn original_history_record_native_vector_growth_preserves_payloads_and_paid_receiving_custody(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let p=&law["grant"];let axis=|key:&str|p[key].as_u64().unwrap()as usize;let grant=RetainedCloneGrant{maximum_items:axis("items"),maximum_copy_bytes:axis("copy"),maximum_capacity_bytes:axis("capacity"),maximum_release_bytes:axis("release"),maximum_depth:axis("depth")};
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let p=&law["grant"];let axis=|key:&str|p[key].as_u64().unwrap()as usize;let grant=RetainedCloneGrant{maximum_items:axis("items"),maximum_copy_bytes:axis("copy"),maximum_capacity_bytes:axis("capacity"),maximum_release_bytes:axis("release"),maximum_depth:axis("depth")};
  for cancellation in [0,1,2,3,16]{
   let mut original:Vec<Option<Record>>=law["records"].as_array().unwrap().iter().map(|record|Some(Record{id:Some(record["id"].as_str().unwrap().to_owned()),payload:Some(record["payload"].as_str().unwrap().as_bytes().to_vec())})).collect();let pointers:Vec<_>=original.iter().map(|record|{let record=record.as_ref().unwrap();(record.id.as_ref().unwrap().as_ptr(),record.payload.as_ref().unwrap().as_ptr())}).collect();
   for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(result,born,released)=observe(||RetainedHistoryRecords::<Record>::admit(denied).unwrap());assert!(result.is_none());assert_eq!((born,released),(0,0));}

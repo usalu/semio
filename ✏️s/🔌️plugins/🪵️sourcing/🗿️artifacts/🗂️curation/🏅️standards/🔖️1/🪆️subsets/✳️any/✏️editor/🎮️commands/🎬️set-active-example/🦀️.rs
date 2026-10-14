@@ -23,7 +23,7 @@ pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, CurationSnapsh
         EMPTY_EXAMPLE_ID => crate::standards::v1::subsets::any::io::text::snapshot::EMPTY_CURATION_TEXT.to_string(),
         id => crate::standards::v1::subsets::any::examples().iter().find(|example| example.id() == id).map(semio_framework_plugin::ExampleSource::document).ok_or_else(|| Fault::from("sourcing.example.unknown"))?,
     };
-    let next = <CurationSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).map_err(|error| Fault::from(error.to_string()))?;
+    let next = <CurationSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).map_err(|error| Fault::from(error.to_string()))?;
     Ok(Emit { effects: vec![reset_document_effect(&next)], ..Default::default() })
 }
 //#endregion 📚️BoundedExample

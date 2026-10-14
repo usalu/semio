@@ -1,5 +1,5 @@
-import { buildBudgetMs, cmdBudgetMs, orchestratorBudgetMs, daemonBudgetMs } from "../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
-import { terminateOwnedProcessTree } from "../../../../../🔨️modules/🏃️process/🪓️termination/🟦️.ts";
+import { buildBudgetMs, cmdBudgetMs, orchestratorBudgetMs, daemonBudgetMs } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { terminateOwnedProcessTree } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
 /** 🏃️ Process execution with opt-in wall-clock budgets for repository commands and builds,
  * the `spawnSync` runners built on them, workspace-aware `.bin`
@@ -15,11 +15,12 @@ import {CurrentPhysicalOwnerV1} from "../../../../../🔨️modules/📁️files
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
-import {repositoryCargoPreparationStorageV1, cargoInvocationManifestV1, prepareCargoWorkspaceInvocation } from "../🗂️workspaces/🦀️cargo/🟦️.ts";
+import { cargoInvocationManifestV1, prepareCargoWorkspaceInvocation } from "../🗂️workspaces/🦀️cargo/🟦️.ts";
+import {repositoryCargoPreparationStorageV1} from "../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
 import { cargoDirectories } from "../⚡️caching/🦀️cargo/🟦️.ts";
 import { devToolingEnv } from "./🌿️environment/🟦️.ts";
-import { readBuildMode, buildModeEnvironment, type BuildMode } from "../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { readBuildMode, buildModeEnvironment, type BuildMode } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 
 /** 🧭️Selects the opt-in build budget for Cargo and command budget for other executables; both default to unlimited. */
 export function defaultBudgetMs(cmd: string): number {
@@ -99,7 +100,7 @@ export async function cargoStreamingStatus(args: readonly string[], cwd: string,
     try {
       await observation;
       if (provenanceRoot) {
-        const { writeCompletedCargoInvocationProvenanceV1, cargoProvenancePhysicalControlV1, cargoProvenanceProgressSinkV1 } = await import("../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts");
+        const { writeCompletedCargoInvocationProvenanceV1, cargoProvenancePhysicalControlV1, cargoProvenanceProgressSinkV1 } = await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts");
         const manifest = cargoInvocationManifestV1(args, cwd);
         const physical=new CurrentPhysicalOwnerV1(cwd,cargoProvenancePhysicalControlV1({cancelled:()=>Boolean(stopped),onProgress:cargoProvenanceProgressSinkV1(row=>console.log("[cargo-provenance] "+JSON.stringify(row)))}));
         await writeCompletedCargoInvocationProvenanceV1(join(provenanceRoot, `cargo-unit-provenance-cargo-relay-${randomUUID()}.json`), { manifest, cwd, command: "cargo", args: [...args], buildDirectory: buildDirectory!, builtAtMs, status, cancelled: Boolean(stopped), units, buildScripts },new Map(),resolve(env.CARGO_HOME??join(homedir(),".cargo")),physical);

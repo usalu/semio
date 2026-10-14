@@ -14,7 +14,7 @@ fn close(work:&mut Work) {
 }
 #[test]
 fn retained_image_import_shared_cases() {
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap() {
   let snapshot=DrawingSnapshot::default();let saved=snapshot.clone();let command=DrawingCommand::ImportImage(import_image::ImportImage {payload:row["input"]["payload"].as_str().unwrap().into(),name:Some("Artwork.png".into()),parent_id:None,index:None});
   let config=NoConfig {};let history=semio_framework_plugin::HistoryView::empty();let interaction=protocol::InteractionState::default();let hover=semio_framework_plugin::app::InteractionHoverState::new();

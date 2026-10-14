@@ -12,7 +12,7 @@ fn third_party_json<T: semio_framework_value::ToValue>(value: &T) -> serde_json:
 fn contributed_registry_replacement_preserves_readers_and_drains_old_versions() {
     let _serialized = lock_flow_extension_registry_for_test();
     let queued_before = drain_flow_extension_registry_retirements();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../📔️registry/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../📔️registry/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let plugin = fixture["pluginId"].as_str().unwrap();
     let manifest = serde_json::to_string(&fixture["manifest"]).unwrap();
     install_flow_extension_manifest(plugin, &manifest).unwrap();
@@ -78,7 +78,7 @@ impl neural::Operator for FaultingOperator {
 fn registry_maintenance_retains_cursor_after_original_typed_refusal() {
     let _serialized = lock_flow_extension_registry_for_test();
     let queued_before = drain_flow_extension_registry_retirements();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../📔️registry/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../📔️registry/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut registry = neural::Registry::new();
     registry.register_operator(neural::OperatorInfo::default(), vec![OperatorImpl { schemas: vec![], operator: Box::new(FaultingOperator { text: fixture["pluginId"].as_str().unwrap().into() }) }], &[]);
     {
@@ -103,7 +103,7 @@ fn registry_maintenance_retains_cursor_after_original_typed_refusal() {
 fn registry_replacement_admission_preserves_roots_on_capacity_and_generation_exhaustion() {
     let _serialized = lock_flow_extension_registry_for_test();
     let queued_before = drain_flow_extension_registry_retirements();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../📔️registry/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../📔️registry/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let plugin = fixture["pluginId"].as_str().unwrap();
     let manifest = fixture["manifest"].to_string();
     install_flow_extension_manifest(plugin, &manifest).unwrap();
@@ -162,7 +162,7 @@ fn registry_replacement_admission_preserves_roots_on_capacity_and_generation_exh
 fn a_full_retirement_queue_requires_funded_maintenance_and_preserves_live_reader() {
     let _serialized = lock_flow_extension_registry_for_test();
     drain_flow_extension_registry_retirements();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../📔️registry/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../📔️registry/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let plugin = fixture["pluginId"].as_str().unwrap();
     let manifest = fixture["manifest"].to_string();
     for _ in 0..RETIRED_REGISTRY_CAPACITY * 4 {
@@ -199,7 +199,7 @@ fn a_full_retirement_queue_requires_funded_maintenance_and_preserves_live_reader
 fn contributed_operators_are_addressed_by_their_contributing_plugin_id() {
     let _serialized = lock_flow_extension_registry_for_test();
     let queued_before = drain_flow_extension_registry_retirements();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../📔️registry/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../📔️registry/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let plugin_id = fixture["pluginId"].as_str().unwrap();
     let flow_extension_id = fixture["manifest"]["id"].as_str().unwrap();
     let operator_id = fixture["manifest"]["contributes"]["operators"][0]["id"].as_str().unwrap();
@@ -232,7 +232,7 @@ fn contributed_operators_are_addressed_by_their_contributing_plugin_id() {
 //#region 🪪️ManifestAdmission
 /// 🧬️ The one language-agnostic fixture the Rust law and its TypeScript twin
 /// (`🧪️tests/🪪️manifest-admission/🟦️.ts`) both read.
-const MANIFEST_ADMISSION_FIXTURE: &str = include_str!("../../../../../📔️registry/🧫️fixtures/🔣️manifest-admission.json");
+const MANIFEST_ADMISSION_FIXTURE: &str = include_str!("../../../../../📔️registry/🧪️tests/🧫️fixtures/🔣️manifest-admission.json");
 
 /// 🔍️ Third-party oracle for one fixture row: `serde_json` parses the manifest text and the
 /// declared key lists — never [`FlowExtensionManifest`] — decide admission independently of the

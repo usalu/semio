@@ -1,0 +1,233 @@
+{
+  "fixes": [],
+  "missing": [
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧪️tests/📜️chart-specification/🟦️.ts",
+      "from": "./🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🟦️.ts",
+      "from": "../../🧫️fixtures/🧩️composition/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧪️tests/🟦️.ts",
+      "from": "../🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts",
+      "from": "../../🧫️fixtures/📢️member-publication.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/♻️retirement/🧪️tests/🟦️.ts",
+      "from": "../🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🟦️.ts",
+      "from": "./🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/🟦️.ts",
+      "from": "./🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🏪️stores/🧪️tests/🟦️.ts",
+      "from": "../🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧩️composition/🟦️.ts",
+      "from": "../../🧫️fixtures/🧩️composition/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🧪️tests/🟦️.ts",
+      "from": "../🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🧪️tests/🟦️.ts",
+      "from": "../🧫️fixtures/guest-input-slot.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🧪️tests/🟦️.ts",
+      "from": "../🧫️fixtures/coordinate.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/👥️scoped-presence/🟦️.tsx",
+      "from": "../../../../../../../🔨️modules/📡️replication/🧫️fixtures/💓️presence-liveness-v1/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎥️tutorial-bridge/🟦️.ts",
+      "from": "../../🧫️fixtures/🎥️tutorial-bridge/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧭️current-contracts/🟦️.ts",
+      "from": "./🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️action-argument-gate/🟦️.ts",
+      "from": "./🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-mount/🟦️.ts",
+      "from": "../../🧫️fixtures/⏳️boot-lifecycle/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-mount/🟦️.ts",
+      "from": "../../🧫️fixtures/🎓️host-introduction/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-mount/🟦️.ts",
+      "from": "../../🧫️fixtures/🧩️plugin-modules/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-mount/🟦️.ts",
+      "from": "../../🧫️fixtures/🪆️embedded-mount/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-mount/🟦️.ts",
+      "from": "../../🧫️fixtures/🎬️boot-execution/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-mount/🟦️.ts",
+      "from": "../../🧫️fixtures/⏳️owned-service-status/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️editable-controls/🟦️.tsx",
+      "from": "../../🧫️fixtures/♿️editable-controls/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️editable-controls/🟦️.tsx",
+      "from": "../../🧫️fixtures/🪟️input-window/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️editable-controls/🟦️.tsx",
+      "from": "../../🧫️fixtures/↔️input-commits/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️editable-controls/🟦️.tsx",
+      "from": "../../🧫️fixtures/🚦️input-draft-disposition/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧩️package-integration/🟦️.ts",
+      "from": "../../🧫️fixtures/🧊️wgpu-browser-entry-authority/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧩️package-integration/🟦️.ts",
+      "from": "../../🧫️fixtures/🔬️wgpu-shell-boot-selection/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖼️wgpu-raster-witness/🟦️.ts",
+      "from": "../../🧫️fixtures/🖼️wgpu-raster-witness/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⌨️os-command-shortcuts/🟦️.ts",
+      "from": "../../🧫️fixtures/⌨️control-key-ownership/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/🧱️binary/🔐️descriptor-digest/🧪️tests/🟦️.ts",
+      "from": "../🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/🪪️metadata/🧪️tests/🔬️unit/🟦️.ts",
+      "from": "../../🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📨️emission/🌱️genesis/🧪️tests/🟦️.ts",
+      "from": "../🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🪟️mounted/♻️frontier/🧪️tests/🟦️.ts",
+      "from": "../🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🪪️admission/🟦️.ts",
+      "from": "./🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/🧪️tests/🔎️array-controls/🟦️.ts",
+      "from": "./🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts",
+      "from": "../🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts",
+      "from": "../../🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🧪️tests/💰️allocation/🟦️.ts",
+      "from": "./🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🧪️tests/💰️allocation/🟦️.ts",
+      "from": "../../../../../../../../🔨️modules/🎒️pack/⚠️error/🧫️fixtures/🧭️cause/📡️codec/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎚️UiPreferences/🧪️tests/🌐️preference-lane/🟦️.ts",
+      "from": "../../🧫️fixtures/🌐️preference-lane/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️origin/🔣️json/🧪️tests/🟦️.ts",
+      "from": "../🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🟦️.ts",
+      "from": "../../🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "from": "../🧫️fixtures/🫴️grant/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧪️tests/🟦️.ts",
+      "from": "../🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧭️TiledMapHost/🧪️tests/🧩️component/🟦️.ts",
+      "from": "../../🧫️fixtures/🔁️repaint/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🧪️tests/🖱️input-contract/🟦️.tsx",
+      "from": "../../🧫️fixtures/🖱️input-contract/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧩️component/🟦️.tsx",
+      "from": "../../🧫️fixtures/⏯️tool-run-trace-mount.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧩️component/🟦️.tsx",
+      "from": "../../🧫️fixtures/⏳️compute-locale.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔄️ShellSync/🧪️tests/🧩️component/🟦️.tsx",
+      "from": "../../🧫️fixtures/📶️hub-connection-summary.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔄️ShellSync/🧪️tests/🧩️component/🟦️.tsx",
+      "from": "../../🧫️fixtures/🎯️sync-attach-target.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧪️tests/🧪️command-rejection/🟦️.ts",
+      "from": "../../🧫️fixtures/🧫️command-rejection/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧪️tests/🧪️command-rejection/🟦️.ts",
+      "from": "../../🧫️fixtures/🧫️time-travel-band/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🚪️public/🧩️ownership/🟦️.ts",
+      "from": "./🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🧭️ownership/🟦️.ts",
+      "from": "./🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🪶️sqlite/🧪️tests/🟦️.ts",
+      "from": "../🧫️fixtures/🔣️.json"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🪶️sqlite/🧪️tests/🟦️.ts",
+      "from": "../🧫️fixtures/🪪️identity/🔣️.json"
+    }
+  ]
+}

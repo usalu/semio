@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "callerCeilingMilliseconds": 10000,
+  "policy": { "version": 1, "maximumOutputLines": 2 },
+  "exactPolicy": { "version": 1, "buildMilliseconds": 7000, "listMilliseconds": 6000, "lawMilliseconds": 6000, "transport": { "maximumBuildOutputBytes": 4096, "maximumNativeOutputBytes": 4096 } },
+  "cases": [
+    { "id": "Repository Preparation Preserves Original Fractional Remaining", "mutation": "fractional", "expectedPrepare": 1, "expectedExecute": 1, "expectedCapture": 1 },
+    { "id": "Repository Preparation Retains Positive Submillisecond Authority", "mutation": "submillisecond", "expectedPrepare": 1, "expectedExecute": 1, "expectedCapture": 1 },
+    { "id": "Repository Preparation Refuses Missing Independent Line Policy", "mutation": "missing-policy", "expectedPrepare": 0, "expectedExecute": 0, "expectedCapture": 0 },
+    { "id": "Repository Preparation Awaits Original Publication Before Acquisition", "mutation": "publisher-refused", "expectedPrepare": 0, "expectedExecute": 0, "expectedCapture": 0 },
+    { "id": "Repository Preparation Enforces Independent Original Line Ceiling", "mutation": "line-limit", "expectedPrepare": 1, "expectedExecute": 1, "expectedCapture": 0 }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "stock": {
+    "grant": {
+      "maximumItems": 40,
+      "maximumCopyBytes": 128,
+      "maximumCapacityBytes": 256,
+      "maximumReleaseBytes": 256,
+      "maximumDepth": 8
+    },
+    "fuel": 14,
+    "maximumElapsedUs": "345"
+  },
+  "operation": {
+    "grant": {
+      "maximumItems": 20,
+      "maximumCopyBytes": 64,
+      "maximumCapacityBytes": 128,
+      "maximumReleaseBytes": 128,
+      "maximumDepth": 8
+    },
+    "fuel": 7,
+    "maximumElapsedUs": "345"
+  }
+}

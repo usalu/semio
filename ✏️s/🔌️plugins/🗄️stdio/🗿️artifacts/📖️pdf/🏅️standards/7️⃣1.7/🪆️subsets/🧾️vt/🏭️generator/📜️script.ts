@@ -43,7 +43,7 @@ import { currentPlatform } from "../../../../../../../../../../🧰️framework/
 const HERE = import.meta.dir;
 const ENGINE_DIR = join(HERE, "🔁️codec", "📦️packages", "🦀️rust");
 const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate");
-const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
+const FIXTURES_DIR = join(HERE, "..", "🧪️tests/🧫️fixtures");
 const SUBSET = "vt";
 const ORACLE_ID = "lopdf-pdf-1-7-vt-mutate-reader";
 const COMPARISON_PROFILE = "semantic-pdf-conformance-vt-v1";
@@ -203,7 +203,7 @@ async function encryptionMode(emitManifests: boolean, root: string): Promise<num
   const probes = j(here, "..", "..", "🧾️vt", "🔬️probes", "📜️script.ts");
   // 🌱️The seed is this subset's own committed base — the same document every other kind starts from,
   // so the pair differs by encryption and nothing else.
-  const seedDir = j(here, "..", "🧫️fixtures");
+  const seedDir = j(here, "..", "🧪️tests/🧫️fixtures");
   const seedKind = ["set-output-intent", "insert-javascript-action", "embed-font-file"].find((kind) => exists(j(seedDir, FIXTURE_DIRECTORY_BY_KIND[kind]!, BEFORE_FILENAME)));
   if (!seedKind) throw new Error(`no committed ${BEFORE_FILENAME} to seed the encryption pair from`);
   const seed = j(seedDir, FIXTURE_DIRECTORY_BY_KIND[seedKind]!, BEFORE_FILENAME);

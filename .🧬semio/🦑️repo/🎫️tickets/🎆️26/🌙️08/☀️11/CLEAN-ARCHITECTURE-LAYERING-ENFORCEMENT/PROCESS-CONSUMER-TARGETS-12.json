@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "qualification": "Handcrafted current actual public target choices; no compatibility or private-test target. Runtime acceptance remains whole original owner suites/graph.",
+  "targets": [
+    {
+      "privateTarget": "⏱️budget/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/⏱️budget/🟦️.ts"
+    },
+    {
+      "privateTarget": "🎛️owned-execution/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts"
+    },
+    {
+      "privateTarget": "📥️capture/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts"
+    },
+    {
+      "privateTarget": "🪓️termination/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts"
+    },
+    {
+      "privateTarget": "📋️context/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📋️context/🟦️.ts"
+    },
+    {
+      "privateTarget": "📦️artifacts/🏗️native-build/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts"
+    },
+    {
+      "privateTarget": "📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts"
+    },
+    {
+      "privateTarget": "📦️artifacts/📤️publication/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/📤️publication/🟦️.ts"
+    },
+    {
+      "privateTarget": "📦️artifacts/🕸️wasm-build/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts"
+    },
+    {
+      "privateTarget": "📦️artifacts/🗂️files/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🗂️files/🟦️.ts"
+    },
+    {
+      "privateTarget": "🔒️leases/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🔒️leases/🟦️.ts"
+    },
+    {
+      "privateTarget": "🧪️testing/🎚️budget/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts"
+    },
+    {
+      "privateTarget": "🧪️testing/🎛️execution/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎛️execution/🟦️.ts"
+    },
+    {
+      "privateTarget": "🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️laws/🟦️.ts"
+    },
+    {
+      "privateTarget": "🧪️testing/🦀️cargo/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts"
+    },
+    {
+      "privateTarget": "🧪️testing/🧪️vitest/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🧪️vitest/🟦️.ts"
+    },
+    {
+      "privateTarget": "🧭️routing/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts"
+    },
+    {
+      "privateTarget": "🧭️routing/📥️invocation/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts"
+    },
+    {
+      "privateTarget": "🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts"
+    },
+    {
+      "privateTarget": "🧭️routing/🚪️entrypoint/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts"
+    },
+    {
+      "privateTarget": "🧭️routing/🎛️command/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️command/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️command/🟦️.ts"
+    },
+    {
+      "privateTarget": "🏗️build/🎚️mode/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🎚️mode/🟦️.ts"
+    },
+    {
+      "privateTarget": "🏗️build/🎟️capacity/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🎟️capacity/🟦️.ts"
+    },
+    {
+      "privateTarget": "📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts"
+    },
+    {
+      "privateTarget": "📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts"
+    },
+    {
+      "privateTarget": "📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts"
+    },
+    {
+      "privateTarget": "📦️artifacts/🐹️go-build/🟦️.ts",
+      "processTarget": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🐹️go-build/🟦️.ts",
+      "sdkTarget": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🐹️go-build/🟦️.ts"
+    }
+  ]
+}

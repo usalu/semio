@@ -30,7 +30,7 @@ type ToolProgram = Readonly<{ pluginId: string; appId: string; toolId: string; m
 
 /** 📌️ `semio.os-dev.tool-run-matrix/v1` — every program that declares a tool. */
 function readToolPrograms(): readonly ToolProgram[] {
-  const doc = JSON.parse(readFileSync(join(import.meta.dir, "..", "..", "🧫️fixtures", "⏯️tool-run-matrix.json"), "utf8")) as { schema?: string; programs?: ToolProgram[] };
+  const doc = JSON.parse(readFileSync(join(import.meta.dir, "..", "..", "🧪️tests/🧫️fixtures", "⏯️tool-run-matrix.json"), "utf8")) as { schema?: string; programs?: ToolProgram[] };
   if (doc.schema !== "semio.os-dev.tool-run-matrix/v1" || !Array.isArray(doc.programs)) throw new Error("tool-run matrix fixture: unexpected schema");
   return doc.programs;
 }

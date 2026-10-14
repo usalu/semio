@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🦖️delete-curtain-wall/🧭️cascades-the-opening",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🦖️delete-curtain-wall/🧭️cascades-the-opening/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🦖️delete-curtain-wall/🧭️cascades-the-opening/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🦖️delete-curtain-wall/🧭️cascades-the-opening/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🦖️delete-curtain-wall/🧭️cascades-the-opening/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🦖️delete-curtain-wall/🧭️cascades-the-opening/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦖️delete-curtain-wall/🧭️cascades-the-opening/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦖️delete-curtain-wall/🧭️cascades-the-opening/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦖️delete-curtain-wall/🧭️cascades-the-opening/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦖️delete-curtain-wall/🧭️cascades-the-opening/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦖️delete-curtain-wall/🧭️cascades-the-opening/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

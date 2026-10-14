@@ -65,9 +65,9 @@ async fn derived_children_are_content_addressed_from_the_parent_state() {
 async fn genesis_answers_only_the_derived_coordinate() {
     let snapshot = EquationSnapshot::default();
     let notation = genesis_equation_child_pack(&snapshot, "notation", &snapshot.notation.child_id).expect("the named notation child derives");
-    assert_eq!(<SemioTextSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&notation).expect("text pack"), equation_notation_from_graph(&snapshot.graph));
+    assert_eq!(<SemioTextSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&notation).expect("text pack"), equation_notation_from_graph(&snapshot.graph));
     let computed = genesis_equation_child_pack(&snapshot, "computed", &snapshot.computed.child_id).expect("the named computed child derives");
-    assert_eq!(<SemioValueSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&computed).expect("value pack"), equation_computed_from_state(&snapshot.graph, &snapshot.geometry));
+    assert_eq!(<SemioValueSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&computed).expect("value pack"), equation_computed_from_state(&snapshot.graph, &snapshot.geometry));
     let stale = equation_children(&snapshot.graph, &moved_geometry()).2.child_id;
     assert!(genesis_equation_child_pack(&snapshot, "computed", &stale).is_none(), "a coordinate the document does not name derives nothing");
     assert!(genesis_equation_child_pack(&snapshot, "absent", &snapshot.notation.child_id).is_none(), "an unknown slot derives nothing");
@@ -131,7 +131,7 @@ fn committed_fixtures_carry_their_derived_handles() {
         }
     }
     let demo = root.join("✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio");
-    let printed = <EquationSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&EquationSnapshot::default());
+    let printed = <EquationSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&EquationSnapshot::default());
     if std::fs::read_to_string(&demo).expect("demo asset reads") != printed {
         if write {
             std::fs::write(&demo, &printed).expect("demo asset writes");

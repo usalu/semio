@@ -153,6 +153,26 @@ impl MeshModelingJob {
                 if grant.maximum_depth<demand.depth {return Err(MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::DepthLimit,"original orientation initialization exceeds admitted depth")));}
                 if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes {return Ok(MeshModelingStep::Working(self.progress));}
             }
+            let retained_incidence=self.orientation_incidence_demands(grant.maximum_copy_bytes).map_err(MeshKernelError::Retained)?;
+            if let Some(demand)=retained_incidence {
+                if grant.maximum_depth<demand.depth {return Err(MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::DepthLimit,"original orientation incidence exceeds admitted depth")));}
+                if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes {return Ok(MeshModelingStep::Working(self.progress));}
+            }
+            let retained_adjacency=self.orientation_adjacency_demands().map_err(MeshKernelError::Retained)?;
+            if let Some(demand)=retained_adjacency {
+                if grant.maximum_depth<demand.depth {return Err(MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::DepthLimit,"original orientation adjacency exceeds admitted depth")));}
+                if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes {return Ok(MeshModelingStep::Working(self.progress));}
+            }
+            let retained_components=self.orientation_components_demands().map_err(MeshKernelError::Retained)?;
+            if let Some(demand)=retained_components {
+                if grant.maximum_depth<demand.depth {return Err(MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::DepthLimit,"original orientation components exceed admitted depth")));}
+                if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes {return Ok(MeshModelingStep::Working(self.progress));}
+            }
+            let retained_corners=self.orientation_corners_demands();
+            if let Some(demand)=retained_corners {
+                if grant.maximum_depth<demand.depth {return Err(MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::DepthLimit,"original orientation corners exceed admitted depth")));}
+                if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes {return Ok(MeshModelingStep::Working(self.progress));}
+            }
             let retained_translation=self.translation_demands();
             if let Some(demand)=retained_translation {
                 if grant.maximum_depth<demand.depth {return Err(MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::DepthLimit,"original translation exceeds admitted depth")));}
@@ -203,7 +223,7 @@ impl MeshModelingJob {
                 return Ok(MeshModelingStep::Done(mesh));
             }
             self.progress.units_total = self.progress.units_total.max(self.progress.units_done.saturating_add(1));
-            if retained_tessellation||retained_translation.is_some()||retained_initialization.is_some(){return Ok(MeshModelingStep::Working(self.progress));}
+            if retained_tessellation||retained_translation.is_some()||retained_initialization.is_some()||retained_incidence.is_some()||retained_adjacency.is_some()||retained_components.is_some()||retained_corners.is_some(){return Ok(MeshModelingStep::Working(self.progress));}
         }
         Ok(MeshModelingStep::Working(self.progress))
     }
@@ -230,6 +250,22 @@ impl MeshModelingJob {
     /// 🧭️ Quotes the same original orientation initialization backing or face row without touching its source.
     pub fn orientation_initialization_demands(&self)->Result<Option<protocol::value::RetirementDemand>,protocol::value::ValueError> {
         match &self.work {Work::Orient(work)if work.phase==1=>work.initialization_demands().map(Some),_=>Ok(None)}
+    }
+    /// 🗝️ Quotes the same original incidence page, encounter key or edge owner without collecting a directory.
+    pub fn orientation_incidence_demands(&self,copy:usize)->Result<Option<protocol::value::RetirementDemand>,protocol::value::ValueError> {
+        match &self.work {Work::Orient(work)if work.phase==2=>work.incidence_demands(copy).map(Some),_=>Ok(None)}
+    }
+    /// 🕸️ Quotes one original reciprocal neighbor backing or tuple through its actual index depth.
+    pub fn orientation_adjacency_demands(&self)->Result<Option<protocol::value::RetirementDemand>,protocol::value::ValueError> {
+        match &self.work {Work::Orient(work)if work.phase==3=>work.adjacency_demands().map(Some),_=>Ok(None)}
+    }
+    /// 🔁️ Quotes the original two-corner swap or free source-header/cursor move.
+    pub fn orientation_corners_demands(&self)->Option<protocol::value::RetirementDemand> {
+        match &self.work {Work::Orient(work)if work.phase==5=>Some(work.corners_demands()),_=>None}
+    }
+    /// 🌐️ Quotes the original stack birth, visit writes or free component cursor move.
+    pub fn orientation_components_demands(&self)->Result<Option<protocol::value::RetirementDemand>,protocol::value::ValueError> {
+        match &self.work {Work::Orient(work)if work.phase==4=>work.components_demands().map(Some),_=>Ok(None)}
     }
 }
 
@@ -383,7 +419,7 @@ impl HalfedgeMesh {
     pub fn orient_faces_job(&self)->MeshResult<MeshModelingJob> {self.clone().orient_faces_job_owned()}
     /// 📦 Moves the caller-owned source into the same retained modeling work.
     pub fn orient_faces_job_owned(self)->MeshResult<MeshModelingJob> {let source_corners=self.halfedge_count();
-        Ok(MeshModelingJob { work:Work::Orient(Box::new(Orient {input:None,flip_count:0,attributes:None,snapshot:Snapshot::new(self),edges:HistoryFoldIndex::new(),keys:Vec::new(),adjacency:Vec::new(),oriented:Vec::new(),flipped:Vec::new(),stack:Vec::new(),active:None,face:0,corner:0,cursor:0,neighbor:0,reversing:0,build:None,phase:0 })),progress:MeshModelingProgress { units_done:0,units_total:source_corners.saturating_mul(16).saturating_add(1),phase:"snapshot" },cancelled:false,retired:false })
+        Ok(MeshModelingJob { work:Work::Orient(Box::new(Orient {input:None,flip_count:0,attributes:None,snapshot:Snapshot::new(self),edges:HistoryFoldIndex::new(),keys:Vec::new(),adjacency:Vec::new(),oriented:Vec::new(),flipped:Vec::new(),stack:Vec::new(),active:None,face:0,corner:0,cursor:0,neighbor:0,reversing:0,incidence:0,build:None,phase:0 })),progress:MeshModelingProgress { units_done:0,units_total:source_corners.saturating_mul(16).saturating_add(1),phase:"snapshot" },cancelled:false,retired:false })
     }
     /// 🔄 Retains selected winding changes through existing orientation reconstruction.
     pub fn flip_faces_job(&self,faces:&[FaceId])->MeshResult<MeshModelingJob> {self.clone().flip_faces_job_owned(faces)}
@@ -847,6 +883,7 @@ struct Orient {
     cursor:usize,
     neighbor:usize,
     reversing:usize,
+    incidence:u8,
     build:Option<Build>,
     phase:u8,
 }
@@ -858,6 +895,42 @@ impl Orient {
         let capacity=slots.checked_mul(bytes).ok_or_else(||protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::OwnershipLimit,"original orientation initialization backing extent overflow"))?;
         let copy=if slots!=0||self.cursor==count {0}else {size_of::<Vec<(usize,bool)>>()+2*size_of::<bool>()};
         Ok(protocol::value::RetirementDemand {copy_bytes:copy,capacity_bytes:capacity,depth:3,..Default::default()})
+    }
+    fn incidence_demands(&self,copy:usize)->Result<protocol::value::RetirementDemand,protocol::value::ValueError> {
+        use protocol::value::{RetirementDemand,ValueError,ValueRefusalKind};
+        if self.face==self.snapshot.soup.faces.len() {return Ok(RetirementDemand {depth:3,..Default::default()});}
+        let face=&self.snapshot.soup.faces[self.face];let(a,b)=(face[self.corner],face[(self.corner+1)%face.len()]);let key=(a.min(b),a.max(b));
+        let(copy_bytes,capacity_bytes,child_depth)=match self.incidence {
+            0=>{let membership=self.edges.next_contains_depth_demand(&key)?;if self.edges.contains_key(&key) {(0,0,membership.max(1))}else {(0,self.edges.next_insert_capacity_byte_demand(&key,copy)?,membership.max(self.edges.next_insert_depth_demand(&key)?))}},
+            1=>{if self.keys.capacity()==0 {(0,self.snapshot.source.halfedges.len().checked_mul(size_of::<(u32,u32)>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original incidence key backing extent overflow"))?,1)}else {(size_of::<(u32,u32)>(),0,1)}},
+            2=>{let owners=self.edges.get(&key).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original incidence key lost its admitted row"))?;if owners.len()>=2 {return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original incidence edge has more than two manifold owners"));}let capacity=if owners.capacity()==0 {2*size_of::<(usize,bool)>()}else {0};(if capacity!=0 {0}else {size_of::<(usize,bool)>()},capacity,self.edges.next_contains_depth_demand(&key)?.max(1))},
+            _=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original incidence substage is invalid")),
+        };
+        let depth=child_depth.checked_add(2).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original incidence parent depth overflow"))?;
+        Ok(RetirementDemand {copy_bytes,capacity_bytes,depth,..Default::default()})
+    }
+    fn adjacency_demands(&self)->Result<protocol::value::RetirementDemand,protocol::value::ValueError> {
+        use protocol::value::{RetirementDemand,ValueError,ValueRefusalKind};
+        if self.cursor==self.keys.len() {return Ok(RetirementDemand {depth:3,..Default::default()});}
+        let key=self.keys[self.cursor];let owners=self.edges.get(&key).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original adjacency lost its edge owner row"))?;
+        let depth=self.edges.next_contains_depth_demand(&key)?.max(1).checked_add(2).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original adjacency parent depth overflow"))?;
+        if owners.len()!=2 {return Ok(RetirementDemand {depth,..Default::default()});}
+        let face=owners.get(self.incidence as usize).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original adjacency reciprocal substage is invalid"))?.0;
+        let row=&self.adjacency[face];
+        let capacity_bytes=if row.capacity()==0 {self.snapshot.soup.faces[face].len().checked_mul(size_of::<(usize,bool)>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original adjacency backing extent overflow"))?}else {0};
+        if capacity_bytes==0&&row.len()==row.capacity() {return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original adjacency exceeds its face corner backing"));}
+        Ok(RetirementDemand {copy_bytes:if capacity_bytes==0 {size_of::<(usize,bool)>()}else {0},capacity_bytes,depth,..Default::default()})
+    }
+    fn components_demands(&self)->Result<protocol::value::RetirementDemand,protocol::value::ValueError> {
+        use protocol::value::{RetirementDemand,ValueError,ValueRefusalKind};
+        let copy_bytes=if let Some(face)=self.active {self.adjacency[face].get(self.neighbor).filter(|(neighbor,_)|!self.oriented[*neighbor]).map_or(0,|_|size_of::<usize>()+2*size_of::<bool>())}else if self.stack.is_empty()&&self.cursor<self.oriented.len()&&!self.oriented[self.cursor] {size_of::<usize>()+size_of::<bool>()}else {0};
+        let capacity_bytes=if copy_bytes!=0&&self.stack.capacity()==0 {self.oriented.len().checked_mul(size_of::<usize>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original component stack backing extent overflow"))?}else {0};
+        if copy_bytes!=0&&capacity_bytes==0&&self.stack.len()==self.stack.capacity() {return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original component stack exceeds its face backing"));}
+        Ok(RetirementDemand {copy_bytes:if capacity_bytes!=0 {0}else {copy_bytes},capacity_bytes,depth:3,..Default::default()})
+    }
+    fn corners_demands(&self)->protocol::value::RetirementDemand {
+        let swapping=self.snapshot.soup.faces.get(self.face).is_some_and(|face|self.flipped[self.face]&&self.reversing<face.len()/2);
+        protocol::value::RetirementDemand {copy_bytes:if swapping {2*size_of::<u32>()}else {0},depth:3,..Default::default()}
     }
     fn advance(&mut self,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
@@ -876,24 +949,66 @@ impl Orient {
                 }
             }
             2=>{
-                if self.face==self.snapshot.soup.faces.len() {self.phase=3;self.face=0;}
-                else {let face=&self.snapshot.soup.faces[self.face];let (a,b)=(face[self.corner],face[(self.corner+1)%face.len()]);let key=(a.min(b),a.max(b));let edge=self.edges.entry(key).or_default();if edge.is_empty() {self.keys.push(key);}edge.push((self.face,a<b));self.corner+=1;if self.corner==face.len() {self.face+=1;self.corner=0;}}
+                let demand=self.incidence_demands(grant.maximum_copy_bytes).map_err(MeshKernelError::Retained)?;
+                if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth {return Ok(None);}
+                if self.face==self.snapshot.soup.faces.len() {self.phase=3;self.face=0;*receipt=RetainedCloneProgress {copied_items:1,..Default::default()};}
+                else {
+                    let face=&self.snapshot.soup.faces[self.face];let(a,b,count)=(face[self.corner],face[(self.corner+1)%face.len()],face.len());let key=(a.min(b),a.max(b));
+                    match self.incidence {
+                        0=>{
+                            let child=RetainedCloneGrant {maximum_depth:grant.maximum_depth-2,..grant};
+                            if self.edges.contains_key(&key) {self.incidence=2;*receipt=RetainedCloneProgress {copied_items:1,..Default::default()};}
+                            else if demand.capacity_bytes!=0 {match self.edges.reserve_insert_step(&key,child) {Ok(progress)=>*receipt=progress,Err((error,progress))=>{*receipt=progress;return Err(MeshKernelError::Retained(error.with_retained_progress(progress)));}}}
+                            else {let(previous,progress)=self.edges.insert_reserved(key,Vec::new(),child).map_err(|(error,_,_)|MeshKernelError::Retained(error))?;assert!(previous.is_none(),"original incidence vacancy changed during its admitted turn");*receipt=progress;self.incidence=1;}
+                        }
+                        1=>{
+                            if demand.capacity_bytes!=0 {self.keys.try_reserve_exact(self.snapshot.source.halfedges.len()).map_err(|_|MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::AllocationFailed,"original incidence key backing reservation failed")))?;*receipt=RetainedCloneProgress {copied_items:1,retained_capacity_bytes:self.keys.capacity()*size_of::<(u32,u32)>(),..Default::default()};}
+                            else {if self.keys.len()==self.keys.capacity() {return Err(MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::InvariantViolated,"original incidence encounter key exceeds admitted backing")));}self.keys.push(key);self.incidence=2;*receipt=RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};}
+                        }
+                        2=>{
+                            let owners=self.edges.get_mut(&key).unwrap();
+                            if demand.capacity_bytes!=0 {owners.try_reserve_exact(2).map_err(|_|MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::AllocationFailed,"original incidence edge owner backing reservation failed")))?;*receipt=RetainedCloneProgress {copied_items:1,retained_capacity_bytes:owners.capacity()*size_of::<(usize,bool)>(),..Default::default()};}
+                            else {if owners.len()==owners.capacity() {return Err(MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::InvariantViolated,"original incidence owner row exceeds admitted backing")));}owners.push((self.face,a<b));self.incidence=0;self.corner+=1;if self.corner==count {self.face+=1;self.corner=0;}*receipt=RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};}
+                        }
+                        _=>unreachable!(),
+                    }
+                    if !receipt.fits(grant) {return Err(MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::OwnershipLimit,"original incidence allocator exceeded its admitted backing").with_retained_progress(*receipt)));}
+                }
             }
             3=>{
-                if self.cursor==self.keys.len() {self.phase=4;self.cursor=0;}
-                else {let owners=&self.edges[&self.keys[self.cursor]];if owners.len()==2 {let (a,af)=owners[0];let (b,bf)=owners[1];self.adjacency[a].push((b,af==bf));self.adjacency[b].push((a,af==bf));}self.cursor+=1;}
+                let demand=self.adjacency_demands().map_err(MeshKernelError::Retained)?;
+                if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth {return Ok(None);}
+                if self.cursor==self.keys.len() {self.phase=4;self.cursor=0;*receipt=RetainedCloneProgress {copied_items:1,..Default::default()};}
+                else {
+                    let owners=&self.edges[&self.keys[self.cursor]];
+                    if owners.len()!=2 {self.cursor+=1;*receipt=RetainedCloneProgress {copied_items:1,..Default::default()};}
+                    else {
+                        let(face,_)=owners[self.incidence as usize];let(neighbor,_)=owners[1-self.incidence as usize];let relative=owners[0].1==owners[1].1;
+                        let row=&mut self.adjacency[face];
+                        if demand.capacity_bytes!=0 {row.try_reserve_exact(self.snapshot.soup.faces[face].len()).map_err(|_|MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::AllocationFailed,"original adjacency backing reservation failed")))?;*receipt=RetainedCloneProgress {copied_items:1,retained_capacity_bytes:row.capacity()*size_of::<(usize,bool)>(),..Default::default()};}
+                        else {row.push((neighbor,relative));if self.incidence==0 {self.incidence=1;}else {self.incidence=0;self.cursor+=1;}*receipt=RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};}
+                        if !receipt.fits(grant) {return Err(MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::OwnershipLimit,"original adjacency allocator exceeded its admitted backing").with_retained_progress(*receipt)));}
+                    }
+                }
             }
             4=>{
+                let demand=self.components_demands().map_err(MeshKernelError::Retained)?;
+                if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth {return Ok(None);}
+                if demand.capacity_bytes!=0 {self.stack.try_reserve_exact(self.oriented.len()).map_err(|_|MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::AllocationFailed,"original component stack backing reservation failed")))?;*receipt=RetainedCloneProgress {copied_items:1,retained_capacity_bytes:self.stack.capacity()*size_of::<usize>(),..Default::default()};if !receipt.fits(grant) {return Err(MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::OwnershipLimit,"original component allocator exceeded its admitted backing").with_retained_progress(*receipt)));}return Ok(None);}
                 if let Some(face)=self.active {
                     if self.neighbor==self.adjacency[face].len() {self.active=None;}
                     else {let (neighbor,relative)=self.adjacency[face][self.neighbor];if !self.oriented[neighbor] {self.oriented[neighbor]=true;self.flipped[neighbor]=self.flipped[face]^relative;self.flip_count+=usize::from(self.flipped[neighbor]);self.stack.push(neighbor);}self.neighbor+=1;}
                 }else if let Some(face)=self.stack.pop() {self.active=Some(face);self.neighbor=0;}
                 else if self.cursor==self.oriented.len() {self.phase=5;self.face=0;}
                 else {if !self.oriented[self.cursor] {self.oriented[self.cursor]=true;self.stack.push(self.cursor);}self.cursor+=1;}
+                *receipt=RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
             }
             5=>{
+                let demand=self.corners_demands();
+                if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth {return Ok(None);}
                 if self.face==self.snapshot.soup.faces.len() {self.build=Some(Build::unreferenced(std::mem::take(&mut self.snapshot.soup)));self.phase=6;}
                 else {let face=&mut self.snapshot.soup.faces[self.face];if self.flipped[self.face] && self.reversing<face.len()/2 {let opposite=face.len()-1-self.reversing;face.swap(self.reversing,opposite);self.reversing+=1;}else {self.face+=1;self.reversing=0;}}
+                *receipt=RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
             }
             6=>{if let Some(mesh)=self.build.as_mut().unwrap().advance()? {self.attributes=Some(SourceAttributeRemap::new(mesh,None,None,None,None));self.phase=7;}},
             7=>return self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source),

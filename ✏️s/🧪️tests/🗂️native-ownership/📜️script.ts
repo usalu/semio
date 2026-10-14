@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🗂️ Runs the complete native ownership law through the General command owner. */
 import { join, resolve } from "node:path";
-import { executeCommandV1 } from "../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts";
+import { executeCommandV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️command/🟦️.ts";
 
 if (process.argv.length !== 3 || process.argv[2] !== "test") throw Error("Expected native ownership test");
 const cwd = import.meta.dir, artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(cwd, "🤖️generated"));

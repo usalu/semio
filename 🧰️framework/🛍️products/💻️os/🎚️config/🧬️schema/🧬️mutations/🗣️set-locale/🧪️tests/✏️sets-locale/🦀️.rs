@@ -8,11 +8,11 @@
 use crate::opening_config::mutations::UiPreferencesConfigMutation;
 use crate::opening_config::{UiPreferences, UiPreferencesDiff};
 
-const BEFORE: &str = include_str!("../../🧫️fixtures/✏️sets-locale/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../🧫️fixtures/✏️sets-locale/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../🧫️fixtures/✏️sets-locale/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../🧫️fixtures/✏️sets-locale/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../🧫️fixtures/✏️sets-locale/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗣️set-locale/✏️sets-locale/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗣️set-locale/✏️sets-locale/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗣️set-locale/✏️sets-locale/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗣️set-locale/✏️sets-locale/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗣️set-locale/✏️sets-locale/🎯️outcome/🔣️.json");
 
 fn before() -> UiPreferences {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before preferences decode")

@@ -4,7 +4,7 @@
 use crate::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
 
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
 pub const BODY_KEY: &str = TextWindowKit::KIND_ID;

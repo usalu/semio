@@ -31,27 +31,27 @@ async fn minimal_schema_valid_json_defaults_collection_slots() {
 #[semio_framework_async_macros::async_test]
 async fn json_pack_round_trips() {
     let snap = SemioKitSnapshot::default();
-    let bytes = <SemioKitSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioKitSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioKitSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioKitSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_text_round_trips() {
     let snap = SemioKitSnapshot::default();
-    let text = <SemioKitSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
-    let back = <SemioKitSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioKitSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snap);
+    let back = <SemioKitSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
     let snap = demo_kit_snapshot();
-    let bytes = <SemioKitSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioKitSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioKitSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioKitSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
-    let text = <SemioKitSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
-    let back_text = <SemioKitSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioKitSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snap);
+    let back_text = <SemioKitSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back_text);
 }
 
@@ -60,7 +60,7 @@ async fn codec_retention_law() {
 #[semio_framework_async_macros::async_test]
 async fn parent_snapshot_stores_only_handles_never_child_content() {
     let snap = demo_kit_snapshot();
-    let text = <SemioKitSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
+    let text = <SemioKitSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snap);
     assert!(text.contains(&enc_str("obj-01")));
     assert!(!text.to_lowercase().contains("primitives") && !text.to_lowercase().contains("elements"), "must never embed object/model field names — only the handle");
 }

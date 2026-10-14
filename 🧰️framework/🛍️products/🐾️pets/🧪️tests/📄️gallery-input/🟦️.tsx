@@ -22,7 +22,7 @@ describe("gallery document input", () => {
     expect(rows[1]?.init?.type).toBe("StringLiteral");
   });
   it("imports only the explicit caller document", async () => {
-    const path = "🧰️framework/🛍️products/🐾️pets/🧫️fixtures/🧬️schema-conformance/🔣️.json";
+    const path = "🧰️framework/🛍️products/🐾️pets/🧪️tests/🧫️fixtures/🧬️schema-conformance/🔣️.json";
     const source = await documentOf(path);
     const module = parse(source, { sourceType: "module" });
     expect(module.program.body[0].type).toBe("ExportNamedDeclaration");

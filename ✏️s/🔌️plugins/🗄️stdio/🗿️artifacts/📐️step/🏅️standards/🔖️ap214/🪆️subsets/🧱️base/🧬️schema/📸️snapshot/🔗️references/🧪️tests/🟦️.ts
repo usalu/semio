@@ -2,7 +2,7 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync,existsSync} from "node:fs";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "../../../../🧪️tests/🧫️fixtures/📸️snapshot/🔗️references/🔣️.json";
 
 test("STEP closed internal references preserve forward and cyclic edges while refusing missing or duplicated identities",async()=>{
  for(const row of corpus.cases){

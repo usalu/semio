@@ -1,4 +1,4 @@
-/** 🪡️ Planner blocker laws over `../../🧫️fixtures/🪡️planner-blockers/🔣️.json` (schema `../../🧬️schema/🪡️planner-blockers/🔣️.json`):
+/** 🪡️ Planner blocker laws over `../🧫️fixtures/🪡️planner-blockers/🔣️.json` (schema `../../🧬️schema/🪡️planner-blockers/🔣️.json`):
  * embedded argv candidates never span a JSON escape nor partially overlap each other, a file's conflicting edits are named instead of
  * thrown, and an invalid frozen evidence document becomes a reportable problem while the preflight form still aborts. Oracles: Ajv for
  * the fixture, string-argv (third-party shell word splitting) for candidate containment, sequential splicing for edit application. */

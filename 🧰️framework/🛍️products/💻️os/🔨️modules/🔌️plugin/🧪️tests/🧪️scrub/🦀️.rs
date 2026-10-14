@@ -128,7 +128,7 @@ fn operation_tags_are_taken_once_and_bounded() {
 /// text fields bound to document verbs; never blur-committed fields, number fields, file fields or view verbs.
 #[test]
 fn the_input_commit_lint_answers_the_fixture() {
-    let law: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️input-commit-lint/🔣️.json")).expect("lint fixture");
+    let law: Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️input-commit-lint/🔣️.json")).expect("lint fixture");
     let verbs: Vec<&str> = law["documentVerbs"].as_array().expect("verbs").iter().filter_map(Value::as_str).collect();
     for case in law["cases"].as_array().expect("cases") {
         let findings = artifact_app_laws::document_input_commit_findings(&case["tree"], &|verb| verbs.contains(&verb));

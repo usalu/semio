@@ -17,7 +17,7 @@ async fn inference_default_law() {
 /// 🔮️ Neutral vectors independently checked with Three XYZ Euler/quaternion mathematics.
 #[semio_framework_async_macros::async_test]
 async fn semantic_transform_neutral_three_oracle_law() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔄️transform.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🔬️unit/🔄️transform.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let triple = |value: &serde_json::Value| -> [f32; 3] { std::array::from_fn(|i| value[i].as_f64().unwrap() as f32) };
         let transform = LowpolyTransform { position: triple(&case["transform"]["position"]), rotation: triple(&case["transform"]["rotation"]), scale: triple(&case["transform"]["scale"]) };

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔀️mirror-elements/✅️mirrors-walls-and-their-openings",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/✅️mirrors-walls-and-their-openings/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/✅️mirrors-walls-and-their-openings/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/✅️mirrors-walls-and-their-openings/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/✅️mirrors-walls-and-their-openings/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/✅️mirrors-walls-and-their-openings/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/✅️mirrors-walls-and-their-openings/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/✅️mirrors-walls-and-their-openings/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/✅️mirrors-walls-and-their-openings/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/✅️mirrors-walls-and-their-openings/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/✅️mirrors-walls-and-their-openings/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

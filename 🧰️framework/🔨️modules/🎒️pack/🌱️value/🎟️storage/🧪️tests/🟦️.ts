@@ -2,7 +2,7 @@
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "../🧪️tests/🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {PackStackStorage,PackEagerCapacity,PackSymbolStorage} from "../🟦️.ts";
 test("original Pack value stack storage closes the declared roots without merging grants",()=>{

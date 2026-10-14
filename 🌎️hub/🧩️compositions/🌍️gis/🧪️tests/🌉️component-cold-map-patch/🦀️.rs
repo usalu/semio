@@ -24,7 +24,7 @@ const COMMAND_SEQUENCE: u64 = 11;
 const SURFACE: &str = "1:gis2d-main";
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🌉️component-cold-map-patch/🔣️.json")).expect("schema-owned GIS component fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🌉️component-cold-map-patch/🔣️.json")).expect("schema-owned GIS component fixture")
 }
 
 fn budget() -> Budget {
@@ -77,7 +77,7 @@ async fn open_live(bytes: &[u8]) -> (WasmtimeRuntime, GuestInstance, ActorInstan
 }
 
 async fn canonical_pair(value: &serde_json::Value) -> (Vec<u8>, Vec<u8>) {
-    use semio_framework_os_kernel::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
 
     let snapshot = gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![MapFeature { id: value["id"].as_str().expect("position id").into(), data: semio_framework_os_kernel::DslValue::from(value) }], ..Default::default() });
     let envelope = semio_framework_os_kernel::os_store::document_materialize::create_document_envelope::<GisMapSnapshot, GisMapMutation>(GIS_MAP_SCHEMA, "shared-map", snapshot, None);

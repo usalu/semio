@@ -93,7 +93,7 @@ struct InputAuthorityFixture {
 }
 
 fn fixture() -> InputAuthorityFixture {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/🎯️presented-input-authority/🔣️.json")).expect("presented input authority fixture")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🎯️presented-input-authority/🔣️.json")).expect("presented input authority fixture")
 }
 
 fn hit(control: &ControlFixture) -> HitTarget<ActionDescriptor> {

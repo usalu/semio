@@ -11,7 +11,7 @@
     "26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING"
   ],
   "native": {
-    "artifactDirectory": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\u26a1\ufe0fcache/cargo/target",
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
     "transport": {
       "maximumBytes": 536870912,
       "maximumLines": 65536
@@ -32,5 +32,6 @@
     "--",
     "generate",
     "26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING"
-  ]
+  ],
+  "buildMode": "prototype"
 }

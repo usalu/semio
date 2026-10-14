@@ -5,7 +5,7 @@ import {join} from "node:path";
 export async function proveWireValueMaterializationFixture(repoRoot:string):Promise<void>{
     const assert=(await import("node:assert/strict")).default,equal=(await import("fast-deep-equal")).default;
     const {Database}=await import("bun:sqlite"),root=join(repoRoot,"🧰️framework/🔨️modules/🎒️pack/🌱️value");
-    const fixture=JSON.parse(readFileSync(join(root,"🧫️fixtures/🧮️wire-materialization/🔣️.json"),"utf8"));
+    const fixture=JSON.parse(readFileSync(join(root,"🧪️tests/🧫️fixtures/🧮️wire-materialization/🔣️.json"),"utf8"));
     assert.deepEqual(fixture.bridge,{fieldId:1,rootTag:"11",exact:true});
     const database=new Database(":memory:");
     try{

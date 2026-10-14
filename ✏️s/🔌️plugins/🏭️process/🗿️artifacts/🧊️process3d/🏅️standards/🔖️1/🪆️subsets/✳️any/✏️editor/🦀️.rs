@@ -75,7 +75,7 @@ use semio_framework_plugin::UtilityCategory;
 use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
@@ -528,7 +528,8 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
         Some(self.extent)
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Process3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Process3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Process3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Process3dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot: _snapshot, config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
         if self.complete {
             return Err(Fault::from("process3d-retained-work-repeated"));
@@ -543,6 +544,9 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
         }
         self.complete = true;
         self.complete_emit(command, config).map(ArtifactCommandWorkStep::Complete)
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn checkpoint_byte(&self,index:usize)->Option<u8>{match index{0..=3=>Some(b"P3C1"[index]),4=>Some(u8::from(self.complete)),5..=7=>Some(0),8..=15=>Some(((self.cursor as u64)>>((index-8)*8))as u8),16..=23=>Some((self.digest>>((index-16)*8))as u8),24..=31=>Some((process3d_tool_identity(self.tool_id)>>((index-24)*8))as u8),32..=39=>Some(((self.extent as u64)>>((index-32)*8))as u8),_=>None}}
@@ -1464,6 +1468,7 @@ impl ArtifactEditor for Process3dPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

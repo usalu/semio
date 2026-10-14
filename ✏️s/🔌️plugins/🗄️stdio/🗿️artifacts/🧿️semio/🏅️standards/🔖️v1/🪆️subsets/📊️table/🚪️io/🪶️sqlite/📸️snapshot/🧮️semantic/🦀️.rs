@@ -1,9 +1,10 @@
 //! 📊️ Borrowed native table declarations and every cell admit exact semantic rows before ownership.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{SemioTableSnapshot,SqliteDatabaseLimits,ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 use semio_s_artifact_stdio_semio_value::io::sqlite::snapshot::semantic::{Census, add, hex_text, value_text, value_binary};
 use semio_framework_value::native_decoding::NativeDecodeControl;
-use store::os_store::serialization::ArtifactSqliteSnapshot;
+use store::os_store::serialization::ArtifactSqliteSnapshotHost;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Semio table native primitive differs from its authored shape")}
 /// 🏛️ Admits the own seven-table layout including all eight value columns.

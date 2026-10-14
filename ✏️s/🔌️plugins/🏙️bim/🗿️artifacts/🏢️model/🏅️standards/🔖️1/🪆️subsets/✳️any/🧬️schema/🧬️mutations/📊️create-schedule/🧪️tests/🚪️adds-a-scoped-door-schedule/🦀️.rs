@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "📊️create-schedule/🚪️adds-a-scoped-door-schedule",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/📊️create-schedule/🚪️adds-a-scoped-door-schedule/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/📊️create-schedule/🚪️adds-a-scoped-door-schedule/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/📊️create-schedule/🚪️adds-a-scoped-door-schedule/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/📊️create-schedule/🚪️adds-a-scoped-door-schedule/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/📊️create-schedule/🚪️adds-a-scoped-door-schedule/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📊️create-schedule/🚪️adds-a-scoped-door-schedule/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📊️create-schedule/🚪️adds-a-scoped-door-schedule/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📊️create-schedule/🚪️adds-a-scoped-door-schedule/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📊️create-schedule/🚪️adds-a-scoped-door-schedule/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📊️create-schedule/🚪️adds-a-scoped-door-schedule/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

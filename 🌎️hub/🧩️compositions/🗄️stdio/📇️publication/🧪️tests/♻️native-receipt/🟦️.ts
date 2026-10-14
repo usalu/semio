@@ -5,7 +5,7 @@ import Ajv2020 from "ajv/dist/2020.js";
 import factorySelectorSchema from "../../🧬️schema/🎯️factory-selector/🔣️.json";
 import { describe, expect, it } from "vitest";
 import { projectNativeCodecReceiptPublicationV1, selectNativeCodecPublicationFactoryV1 } from "../../♻️native-receipt/🟦️.ts";
-const fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/♻️native-receipt/🔣️.json",import.meta.url),"utf8"));
+const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/♻️native-receipt/🔣️.json",import.meta.url),"utf8"));
 const schema=JSON.parse(readFileSync(new URL("../../🧬️schema/♻️native-receipt/🔣️.json",import.meta.url),"utf8"));
 describe("native codec receipt publication",()=>{
  it("validates the neutral receipt against Ajv and independent Node SHA256",()=>{

@@ -1,6 +1,6 @@
 use super::{shell_sync_owner_matches, ShellSyncOwner};
 
-const BINDING_FIXTURE: &str = include_str!("../../../../../../🔌️plugin/📡️backbone/🔗️binding/🧫️fixtures/🔣️.json");
+const BINDING_FIXTURE: &str = include_str!("../../../../../../🔌️plugin/📡️backbone/🔗️binding/🧪️tests/🧫️fixtures/🔣️.json");
 const SHELL_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
 const BRIDGE_SOURCE: &str = include_str!("../../../🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs");
 const KERNEL_SOURCE: &str = include_str!("../../../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");

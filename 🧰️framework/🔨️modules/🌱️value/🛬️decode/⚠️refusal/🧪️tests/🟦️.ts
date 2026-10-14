@@ -1,6 +1,6 @@
 /** 🧱️ Closed literal refusal cases have independent schema, SQLite and UTF8 witnesses. */
 import{test,expect}from"bun:test";import Ajv from"ajv";import{Database}from"bun:sqlite";import{readFileSync}from"node:fs";
-import fixture from"../🧫️fixtures/🔣️.json";import schema from"../🧬️schema/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";import schema from"../🧬️schema/🔣️.json";
 test("original native refusal contract is closed and independently classified",()=>{
  const validate=new Ajv({strict:true}).compile(schema);expect(validate(fixture)).toBe(true);expect(validate({...fixture,renewedAuthority:1})).toBe(false);const database=new Database(":memory:");
  try{for(const sample of fixture.cases){const result=database.query("SELECT CASE ? WHEN 'depth' THEN 'depthLimit' WHEN 'invalidUtf8' THEN 'invalidValue' WHEN 'checkpoint' THEN 'canceled' ELSE 'ownershipLimit' END AS kind").get(sample.operation);expect(result).toEqual({kind:sample.kind});expect(sample.message.length).toBeGreaterThan(0);}}finally{database.close();}

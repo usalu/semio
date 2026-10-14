@@ -74,7 +74,7 @@ fn initialize_signals_infeasible_min_via_empty_domain() {
 
 #[test]
 fn tagged_and_explicit_selectors_respect_neutral_scoped_cardinality() {
-    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🎲️solver-contracts/🔣️.json")).unwrap();
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🎲️solver-contracts/🔣️.json")).unwrap();
     let mut builder = ModelBuilder::new();
     let selected = builder.add_pattern(1.0);
     builder.add_pattern(1.0);

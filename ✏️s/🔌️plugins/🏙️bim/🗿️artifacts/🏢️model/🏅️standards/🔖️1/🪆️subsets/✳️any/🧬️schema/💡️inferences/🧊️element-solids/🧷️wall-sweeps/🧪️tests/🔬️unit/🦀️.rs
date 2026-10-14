@@ -115,9 +115,9 @@ fn the_section_is_counter_clockwise_and_starts_at_the_origin() {
 }
 
 //#region 🔖️Attic
-const ATTIC: &str = include_str!("../../../../../../🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/📸️snapshot/🔣️.json");
-const ATTIC_TABLE: &str = include_str!("../../../../../../🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/💡️inference/🧗️wall-depth/🔣️.json");
-const ATTIC_MESHES: &str = include_str!("../../../../../../🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/🧊️meshes/🔣️.json");
+const ATTIC: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/📸️snapshot/🔣️.json");
+const ATTIC_TABLE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/💡️inference/🧗️wall-depth/🔣️.json");
+const ATTIC_MESHES: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/🧊️meshes/🔣️.json");
 
 fn attic() -> ModelSnapshot {
     from_json_str(ATTIC, JsonMemberPolicy::Reject).expect("the attic decodes")

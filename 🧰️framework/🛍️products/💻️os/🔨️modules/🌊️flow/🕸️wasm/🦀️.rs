@@ -244,9 +244,11 @@ fn flow_operation_fields(operation: u16) -> &'static [(&'static str, FlowArgumen
 
 trait FlowActionState {
     fn retained_receipt(&self)->Option<RetainedCloneProgress>{None}
+    fn work_receipt(&self)->Option<usize>{None}
     #[cfg(test)]
     fn operation(&self) -> u16;
     fn advance(&mut self, domain: &mut FlowDomainAdapter, arguments: &FlowArguments, budget: AbiWorkBudget) -> FlowFeatureStep;
+    fn advance_on_original_caller(&mut self,_:&mut FlowDomainAdapter,_:&FlowArguments,_:&mut semio_framework_job::StepContext<'_>)->FlowFeatureStep{FlowFeatureStep::Failed(FlowFailure::from_value(AbiErrorCode::NoCredit,semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"Flow action has no original caller producer")))}
     fn bind_observer(&mut self,_:Rc<FlowOperationObserver>){}
     fn bind_admission(&mut self,_:FlowFeatureAdmission)->Result<(),FlowFailure>{Ok(())}
     fn close_step(&mut self,_:&mut FlowArguments,_:AbiWorkBudget)->Result<bool,FlowFailure>{Ok(true)}
@@ -701,6 +703,11 @@ impl FlowProgramFeature {
 }
 
 impl FlowFeature for FlowProgramFeature {
+    fn step_on_original_caller(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->FlowFeatureStep{
+        if cx.should_yield(){return FlowFeatureStep::Yield}
+        let mut domain=match self.domain.try_borrow_mut(){Ok(domain)=>domain,Err(_)=>return FlowFeatureStep::Yield};
+        self.action.advance_on_original_caller(&mut domain,&self.arguments,cx)
+    }
     /// ⚡️ Spends the whole granted byte credit on ONE poll instead of one byte.
     ///
     /// Every incremental phase — argument decode, the retained-DAG cursors, output encode — advances
@@ -737,6 +744,8 @@ impl FlowFeature for FlowProgramFeature {
         let mut remaining=budget;
         loop {
             if !self.observer.observe(){let code=self.observer.failure.get().unwrap_or(AbiErrorCode::DeadlineExceeded);drop(domain);return self.failed(abi_failure(code))}
+            remaining.byte_credit=budget.byte_credit-spent;
+            let before_work=self.action.work_receipt();
             let before=self.action.retained_receipt();
             let step = self.action.advance(&mut domain, &self.arguments, remaining);
             if let(Some(before),Some(after))=(before,self.action.retained_receipt()){
@@ -750,7 +759,8 @@ impl FlowFeature for FlowProgramFeature {
                 if matches!(step,FlowFeatureStep::Complete(_)){if let Some(lease)=self.dag_read_lease.take(){lease.active.set(false);}}
                 return step;
             };
-            spent += 1;
+            let price=match(before_work,self.action.work_receipt()){(Some(before),Some(after))=>match after.checked_sub(before){Some(work)=>work.max(1),None=>{drop(domain);return self.failed(abi_failure(AbiErrorCode::LimitExceeded))}},_=>1};
+            spent=match spent.checked_add(price){Some(value)if value<=budget.byte_credit=>value,_=>{drop(domain);return self.failed(abi_failure(AbiErrorCode::NoCredit))}};
             if spent >= budget.byte_credit {
                 return FlowFeatureStep::Progress { completed, total };
             }
@@ -4726,9 +4736,59 @@ impl FlowActionState for FlowAction2598 {
 
 struct FlowAction2599 {
     program: FlowProgramState,
+    receipt:RetainedCloneProgress,
+    work_units:usize,
+    identity:Option<crate::geometry::GeometryWorkIdentity>,
+    encoding:Option<semio_framework_pack_json::ArtifactCanonicalJsonTreeWireCursor<semio_framework::MeshData>>,
+    output:Option<ControlledRetirement<Vec<u8>>>,
+    complete:bool,
+}
+
+impl FlowAction2599 {
+    fn receive_original_work(&mut self,work:crate::geometry::GeometryWorkProgress,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_value::ValueError>{
+        let fuel=cx.fuel_remaining();cx.consume_fuel(work.consumed_units as u64);
+        self.work_units=self.work_units.checked_add(work.consumed_units).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original Flow geometry cumulative CPU overflow"))?;
+        self.receipt=self.receipt.checked_add(work.retained)?;
+        cx.consume_retained(work.retained)?;
+        if work.consumed_units as u64>fuel{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original Flow geometry work exceeds initiating fuel"))}Ok(())
+    }
+    fn advance_original(&mut self,domain:&mut FlowDomainAdapter,args:&FlowArguments,cx:&mut semio_framework_job::StepContext<'_>)->Result<FlowFeatureStep,FlowFailure>{
+        if cx.should_yield(){return Ok(FlowFeatureStep::Yield)}
+        let identity=crate::geometry::GeometryWorkIdentity{operation:cx.operation().0,generation:cx.generation().0};
+        if let Some(original)=self.identity{if original!=identity{return Err(FlowFailure::from_value(AbiErrorCode::StaleGeneration,semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original Flow tessellation caller changed its business identity")))}}else{
+            let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(FlowFeatureStep::Yield)}
+            let receipt=RetainedCloneProgress{copied_items:1,..Default::default()};cx.consume_retained(receipt).map_err(|error|FlowFailure::from_value(AbiErrorCode::NoCredit,error))?;cx.consume_fuel(1);self.receipt=self.receipt.checked_add(receipt).map_err(|error|FlowFailure::from_value(AbiErrorCode::LimitExceeded,error))?;self.work_units+=1;self.identity=Some(identity);return Ok(FlowFeatureStep::Yield)
+        }
+        if self.complete{return Ok(FlowFeatureStep::Yield)}
+        let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(FlowFeatureStep::Yield)}
+        if let Some(encoding)=self.encoding.as_mut(){
+            let original=encoding.advance(grant);cx.consume_fuel(1);self.work_units=self.work_units.checked_add(1).ok_or_else(||abi_failure(AbiErrorCode::LimitExceeded))?;
+            let step=match original{Ok(step)=>step,Err(error)=>{let work=crate::geometry::GeometryWorkProgress{retained:error.retained_progress(),consumed_units:0};let mut failure=crate::geometry::GeometryWorkFailure::new(error,1);failure.receipt_refusal=self.receive_original_work(work,cx).err();return Err(FlowFailure::from_geometry(AbiErrorCode::Busy,failure))}};
+            if let Some(output)=step.output{self.output=Some(ControlledRetirement::new(output).unwrap_or_else(|_|unreachable!("original Vec declares controlled retirement")))}
+            let receipt=step.progress;self.receipt=self.receipt.checked_add(receipt).map_err(|error|FlowFailure::from_value(AbiErrorCode::LimitExceeded,error))?;cx.consume_retained(receipt).map_err(|error|FlowFailure::from_value(AbiErrorCode::NoCredit,error))?;
+            if let Some(output)=self.output.as_mut().and_then(ControlledRetirement::take_original){self.output=None;self.complete=true;return Ok(FlowFeatureStep::Complete(output))}
+            return Ok(FlowFeatureStep::Progress{completed:encoding.output_bytes_written()as u64,total:encoding.measured_byte_length()as u64})
+        }
+        let port=domain.host.geometry_port().map_err(domain_error)?;let(handle,tolerance)=(text(args,"handle")?,number(args,"tolerance")?);
+        let demand=port.tessellation_demands(identity,handle,tolerance,grant.maximum_copy_bytes).map_err(|error|FlowFailure::from_value(AbiErrorCode::NoCredit,error))?;
+        if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(FlowFeatureStep::Yield)}
+        let units=usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX);
+        let(step,work)=match port.tessellate_step(identity,handle,tolerance,units,grant){Ok(original)=>original,Err(mut original)=>{original.receipt_refusal=self.receive_original_work(original.work,cx).err();return Err(FlowFailure::from_geometry(AbiErrorCode::Busy,original))}};
+        let step=match step{crate::geometry::GeometryStep::Ready(mesh)=>{self.encoding=Some(semio_framework_pack_json::ArtifactCanonicalJsonTreeWireCursor::new(mesh));None},step=>Some(step)};
+        if let Err(error)=self.receive_original_work(work,cx){return Err(FlowFailure::from_geometry(AbiErrorCode::NoCredit,crate::geometry::GeometryWorkFailure{primary:error,work,receipt_refusal:None}))}
+        Ok(match step{
+            None=>FlowFeatureStep::Yield,
+            Some(crate::geometry::GeometryStep::Working{units_done,units_total,..})=>FlowFeatureStep::Progress{completed:units_done as u64,total:units_total as u64},
+            Some(crate::geometry::GeometryStep::Cancelled)=>FlowFeatureStep::Failed(abi_failure(AbiErrorCode::Cancelled)),
+            Some(crate::geometry::GeometryStep::Failed(error))=>FlowFeatureStep::Failed(FlowFailure::new(AbiErrorCode::Busy,error)),
+            Some(crate::geometry::GeometryStep::Ready(_))=>unreachable!("original Ready ownership entered paid encoding"),
+        })
+    }
 }
 
 impl FlowActionState for FlowAction2599 {
+    fn retained_receipt(&self)->Option<RetainedCloneProgress>{Some(self.receipt)}
+    fn work_receipt(&self)->Option<usize>{Some(self.work_units)}
     #[cfg(test)]
     fn operation(&self) -> u16 {
         2_599
@@ -4746,41 +4806,12 @@ impl FlowActionState for FlowAction2599 {
                 AbiErrorCode::NoCredit
             }));
         }
-        match self.program.phase {
-            FlowProgramPhase::Decode => self.program.decode_step(args),
-            FlowProgramPhase::Validate => self.program.validate_step(args),
-            FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_599),
-            FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
-            FlowProgramPhase::Domain => {
-                let result: Result<Vec<u8>, FlowFailure> = flow_result! {
-                    {
-                        let port = domain.host.geometry_port().map_err(domain_error)?;
-                        let (handle, tolerance) = (text(args, "handle")?, number(args, "tolerance")?);
-                        let copy = port.next_tessellate_copy_byte_demand(handle, tolerance).map_err(domain_error)?;
-                        let grant = RetainedCloneGrant {
-                            maximum_items: 1,
-                            maximum_copy_bytes: copy,
-                            maximum_capacity_bytes: port.next_tessellate_capacity_byte_demand(handle, tolerance, copy).map_err(domain_error)?,
-                            maximum_release_bytes: port.next_tessellate_release_byte_demand(handle, tolerance).map_err(domain_error)?,
-                            maximum_depth: port.next_tessellate_depth_demand(handle, tolerance).map_err(domain_error)?,
-                        };
-                        let (step, _) = port.tessellate_step(handle, tolerance, 24, grant).map_err(domain_error)?;
-                        let value = match step {
-                            crate::geometry::GeometryStep::Ready(mesh) => semio_framework_pack_json::to_json_string(&mesh),
-                            crate::geometry::GeometryStep::Working { units_done, units_total, phase } => json!({ "done": false, "unitsDone": units_done, "unitsTotal": units_total, "phase": phase }).to_string(),
-                            crate::geometry::GeometryStep::Cancelled => json!({ "error": "cancelled" }).to_string(),
-                            crate::geometry::GeometryStep::Failed(error) => json!({ "error": error }).to_string(),
-                        };
-                        Ok(value.into_bytes())
-                    }
-                };
-                self.program.finish_domain(result)
-            }
-            FlowProgramPhase::Encode => self.program.encode_step(),
-            FlowProgramPhase::Publish => self.program.publish_step(domain, 2_599),
-            FlowProgramPhase::Complete => self.program.complete_step(),
-            FlowProgramPhase::Sealed => FlowFeatureStep::Yield,
-        }
+        let _=(domain,args,&self.program);FlowFeatureStep::Failed(FlowFailure::from_value(AbiErrorCode::NoCredit,semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"Flow tessellation requires its original native caller context")))
+    }
+    fn advance_on_original_caller(&mut self,domain:&mut FlowDomainAdapter,args:&FlowArguments,cx:&mut semio_framework_job::StepContext<'_>)->FlowFeatureStep{match self.advance_original(domain,args,cx){Ok(step)=>step,Err(failure)=>FlowFeatureStep::Failed(failure)}}
+    fn close_step(&mut self,_:&mut FlowArguments,budget:AbiWorkBudget)->Result<bool,FlowFailure>{
+        if let Some(output)=self.output.as_mut(){let step=output.step(budget.retained).map_err(|error|FlowFailure::from_value(AbiErrorCode::NoCredit,error))?;self.receipt=self.receipt.checked_add(step.progress()).map_err(|error|FlowFailure::from_value(AbiErrorCode::NoCredit,error))?;if output.terminal_is_empty(){self.output=None}return Ok(false)}
+        if let Some(encoding)=self.encoding.as_mut(){let receipt=encoding.close_step(budget.retained).map_err(|error|FlowFailure::from_value(AbiErrorCode::NoCredit,error))?;self.receipt=self.receipt.checked_add(receipt).map_err(|error|FlowFailure::from_value(AbiErrorCode::NoCredit,error))?;if encoding.terminal_is_empty(){self.encoding=None}return Ok(false)}Ok(true)
     }
 }
 
@@ -5254,7 +5285,7 @@ fn flow_action(operation: u16, arguments: &FlowArguments) -> Option<Box<dyn Flow
         2_596 => Some(Box::new(FlowAction2596 { program: FlowProgramState::new(arguments) })),
         2_597 => Some(Box::new(FlowAction2597 { program: FlowProgramState::new(arguments) })),
         2_598 => Some(Box::new(FlowAction2598 { program: FlowProgramState::new(arguments) })),
-        2_599 => Some(Box::new(FlowAction2599 { program: FlowProgramState::new(arguments) })),
+        2_599 => Some(Box::new(FlowAction2599 { program: FlowProgramState::new(arguments),receipt:Default::default(),work_units:0,identity:None,encoding:None,output:None,complete:false })),
         2_600 => Some(Box::new(FlowAction2600 { program: FlowProgramState::new(arguments) })),
         2_601 => Some(Box::new(FlowAction2601 { program: FlowProgramState::new(arguments) })),
         2_602 => Some(Box::new(FlowAction2602 { program: FlowProgramState::new(arguments) })),
@@ -5637,6 +5668,9 @@ thread_local! {
     static BRIDGE: RefCell<FlowBridge<FlowDomainAdapter>> = RefCell::new(FlowBridge::new(FlowDomainAdapter::default));
     static RETAINED: RefCell<Option<RetainedMessage>> = const { RefCell::new(None) };
 }
+
+/// 🌉️ The native host receives one original feature body before any linear-memory envelope copy.
+pub fn flow_bridge_poll_on_original_caller(cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<(semio_framework::abi::AbiHandle,FlowFeatureStep)>,FlowFailure>{BRIDGE.with(|bridge|match bridge.try_borrow_mut(){Ok(mut bridge)=>bridge.poll_on_original_caller(cx),Err(_)=>Ok(None)})}
 
 #[unsafe(no_mangle)]
 pub extern "C" fn flow_bridge_allocate(length: usize) -> *mut u8 {

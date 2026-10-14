@@ -21,7 +21,7 @@
         "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/**/*",
         "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/**/📚️examples/**/*",
         "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧫️fixtures/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧬️schema/**/*",
         "{workspaceRoot}/bun.lock"
       ]

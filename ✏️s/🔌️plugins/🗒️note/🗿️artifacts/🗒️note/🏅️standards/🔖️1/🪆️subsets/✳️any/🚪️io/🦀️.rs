@@ -205,7 +205,7 @@ pub fn note_document_to_svg(document: &NoteSnapshot) -> Result<(String, u32, u32
     ensure_semio_drawing_bridge_registered();
     let (width, height) = note_document_bounds(document);
     let drawing = note_document_to_drawing_snapshot(document);
-    let drawing_bytes = <SemioDrawingSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&drawing);
+    let drawing_bytes = <SemioDrawingSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&drawing);
     let key = IoKey {
         artifact_kind: NOTE_DRAWING_DIALECT.artifact_kind.to_string(),
         standard: NOTE_DRAWING_DIALECT.standard.0.to_string(),
@@ -221,7 +221,7 @@ pub fn note_document_to_svg(document: &NoteSnapshot) -> Result<(String, u32, u32
         IoPayload::Binary(bytes) => bytes,
         IoPayload::Text(_) => return Err("note→svg via semio/drawing bridge: expected a Binary (ArtifactPack) svg payload".into()),
     };
-    let svg_snapshot = <semio_s_artifact_stdio_svg::schema::snapshot::SvgSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&svg_bytes).map_err(|error| format!("note→svg via semio/drawing bridge: decode svg snapshot: {error:?}"))?;
+    let svg_snapshot = <semio_s_artifact_stdio_svg::schema::snapshot::SvgSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&svg_bytes).map_err(|error| format!("note→svg via semio/drawing bridge: decode svg snapshot: {error:?}"))?;
     Ok((write_svg_xml(&svg_snapshot.doc).map_err(|error| format!("note→svg via semio/drawing bridge: write svg: {error}"))?, width, height))
 }
 

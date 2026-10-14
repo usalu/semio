@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn neutral_reconcile_envelopes_match_language_agnostic_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let value = &row["value"];
         let accepted = (|| {

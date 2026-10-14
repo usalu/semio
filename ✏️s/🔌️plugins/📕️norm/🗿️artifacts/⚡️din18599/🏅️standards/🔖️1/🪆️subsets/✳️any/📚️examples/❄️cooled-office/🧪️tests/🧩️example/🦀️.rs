@@ -1,7 +1,7 @@
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_decodes_and_evaluates_claimed_verdict() {
     use crate::standards::v1::subsets::any::schema::evaluate_document;
-    use store::os_store::serialization::ArtifactDsl;
+    use pack::snapshot::ArtifactDsl;
     let text = crate::examples::cooled_office::PRIMARY_TEXT;
     let doc = <crate::Din18599Snapshot as ArtifactDsl>::parse_dsl(text).expect("parse cooled-office");
     let report = evaluate_document(&doc);

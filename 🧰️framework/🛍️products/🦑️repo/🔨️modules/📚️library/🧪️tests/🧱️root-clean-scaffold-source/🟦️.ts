@@ -4,7 +4,7 @@ import { dirname, relative, resolve } from "node:path";
 import Ajv, { type AnySchema } from "ajv";
 import ts from "typescript";
 import { loadTaxonomy, semanticDirectoryKindId } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** 🧱️ One extracted owner module: where it lives, the semantic context that names it, and the declarations it owns. */
 interface CleanScaffoldOwner {
@@ -64,7 +64,7 @@ interface NpmPackageManifest {
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const libraryRoot = resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
-const fixture: CleanScaffoldSourceFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️root-clean-scaffold-source/🔣️.json"), "utf8"));
+const fixture: CleanScaffoldSourceFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🧱️root-clean-scaffold-source/🔣️.json"), "utf8"));
 
 
 function namedDeclarations(path: string): string[] {

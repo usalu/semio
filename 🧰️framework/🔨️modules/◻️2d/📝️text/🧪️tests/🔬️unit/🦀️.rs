@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn paged_text_extent_preserves_neutral_line_and_unicode_semantics() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for row in corpus["cases"].as_array().unwrap() {
         let text = row["content"].as_str().unwrap();
         let size = row["size"].as_f64().unwrap();

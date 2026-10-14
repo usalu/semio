@@ -4,8 +4,8 @@ use protocol::Inference;
 use crate::{Entry, FamilyParameterPatch, ModelDiff, Profile, ProjectPatch};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const FRAME: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🧬️families/🏛️frame/📸️snapshot/🔣️.json");
-const TABLE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json");
+const FRAME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🏛️frame/📸️snapshot/🔣️.json");
+const TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json");
 
 fn frame() -> ModelSnapshot {
     from_json_str(FRAME, JsonMemberPolicy::Reject).expect("the frame decodes")

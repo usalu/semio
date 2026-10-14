@@ -13,9 +13,9 @@ const validateDescriptorIndex = (() => {
   ajv.addSchema(schema);
   return ajv.getSchema(`${schema.$id}#/$defs/AuthenticatedHubDescriptorIndexV1`)!;
 })();
-const fixture = JSON.parse(readFileSync(resolve(remoteRoot, "🧫️fixtures/🔣️authenticated-hub-descriptor-index.json"), "utf8"));
-const refusalCorpus = JSON.parse(readFileSync(resolve(remoteRoot, "🧫️fixtures/🔣️hub-unavailable-refusal.json"), "utf8"));
-const componentCorpus = JSON.parse(readFileSync(resolve(remoteRoot, "🧫️fixtures/🔣️hub-component-asset.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(remoteRoot, "🧪️tests/🧫️fixtures/🔣️authenticated-hub-descriptor-index.json"), "utf8"));
+const refusalCorpus = JSON.parse(readFileSync(resolve(remoteRoot, "🧪️tests/🧫️fixtures/🔣️hub-unavailable-refusal.json"), "utf8"));
+const componentCorpus = JSON.parse(readFileSync(resolve(remoteRoot, "🧪️tests/🧫️fixtures/🔣️hub-component-asset.json"), "utf8"));
 
 describe("authenticated hub workspace fixture oracle", () => {
   test("AJV independently validates the neutral P4-A contract and fixed bounds", () => {

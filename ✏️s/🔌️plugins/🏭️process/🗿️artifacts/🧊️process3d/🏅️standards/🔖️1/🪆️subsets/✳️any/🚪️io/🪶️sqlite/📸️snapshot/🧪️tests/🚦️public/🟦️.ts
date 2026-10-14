@@ -2,9 +2,9 @@
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import Ajv from "ajv";
-import fixture from "../../🧫️fixtures/🚦️public/🔣️.json";
+import fixture from "../🧫️fixtures/🚦️public/🔣️.json";
 
-import corpus from "../../🧫️fixtures/🔣️.json";
+import corpus from "../🧫️fixtures/🔣️.json";
 import { independentProcess3dSqliteFile, process3dSqliteFixture } from "../🧰️support/🟦️.ts";
 import { process3dSnapshotFromSqliteDatabase } from "../../🟦️.ts";
 import { importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

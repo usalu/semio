@@ -48,7 +48,7 @@ import {
   warmthAfter,
 } from "../../🟦️.ts";
 
-const VECTORS = JSON.parse(readFileSync(new URL("../../../../🧫️fixtures/👆️gesture-recognition/🔣️.json", import.meta.url), "utf8")) as Vectors;
+const VECTORS = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/👆️gesture-recognition/🔣️.json", import.meta.url), "utf8")) as Vectors;
 const SOURCE = readFileSync(new URL("../../🟦️.ts", import.meta.url), "utf8");
 const BODY: Rect = { x: 380, y: 276, width: 40, height: 48 };
 const CENTRE: Point = { x: 400, y: 300 };

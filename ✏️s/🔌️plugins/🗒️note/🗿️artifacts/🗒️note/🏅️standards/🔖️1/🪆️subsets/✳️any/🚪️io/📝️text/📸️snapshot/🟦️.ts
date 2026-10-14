@@ -2,7 +2,7 @@ import type { NoteSnapshot } from "../../../🧬️schema/📸️snapshot/🟦�
 
 /** 🗣️ note.note snapshot text facade. Real codec: `parse_note_dsl`/`print_note_dsl` (the
  * outside-crate bridge) and `parse_dsl`/`print_dsl` in the sibling `🦀️.rs`, wrapping
- * `store::os_store::serialization::ArtifactDsl for NoteSnapshot` (callable natively from Rust today). Not wired here:
+ * `pack::snapshot::ArtifactDsl for NoteSnapshot` (callable natively from Rust today). Not wired here:
  * `world actor`'s WIT surface
  * (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit`) exports only
  * `poll`/`jobs`/`checkpoint`/`describe` — the

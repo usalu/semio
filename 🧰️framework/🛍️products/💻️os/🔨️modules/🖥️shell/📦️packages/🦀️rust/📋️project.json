@@ -3,7 +3,7 @@
   "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/**/*.rs", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧬️schema/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧫️fixtures/**/*", "{projectRoot}/**/*"],
+    "default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/**/*.rs", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧬️schema/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🧫️fixtures/**/*", "{projectRoot}/**/*"],
     "schemaModule": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧬️schema/**/*", "{projectRoot}/Cargo.toml", "{projectRoot}/🦀️.rs", "{projectRoot}/📜️script.ts"],
     "renderedMirror": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🤖️generated/**/*"]
   },

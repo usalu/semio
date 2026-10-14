@@ -1,6 +1,6 @@
 use super::*;
 use semio_framework_trace::HeapAllocationObservation;
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
 fn grant(fixture: &serde_json::Value) -> RetainedCloneGrant {
     let root = &fixture["rootGrant"];
     RetainedCloneGrant { maximum_items: root["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: root["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: root["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: root["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: root["maximumDepth"].as_u64().unwrap() as usize }
@@ -250,7 +250,7 @@ fn camera_identifier_maximum_plus_one_is_inert_on_a_vacant_original_owner() {
 
 #[test]
 fn borrowed_node_key_keeps_original_text_and_matches_the_independent_corpus_without_heap_effects() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🔑️node-key/🧫️fixtures/🔣️.json" )).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🔑️node-key/🧪️tests/🧫️fixtures/🔣️.json" )).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let value = &row["owned"];
         let owned = match value["explicit"].as_str() {

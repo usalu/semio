@@ -3,7 +3,7 @@ use crate::retained_clone::RetainedCloneGrant;
 
 #[test]
 fn original_retained_grant_wire_preserves_independent_axes_and_refuses_malformed_authority(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["rows"].as_array().unwrap(){
         let oracle:RetainedCloneGrant=serde_json::from_value(row.clone()).unwrap();
         let encoded=oracle.to_value();
@@ -27,7 +27,7 @@ fn original_retained_grant_wire_preserves_independent_axes_and_refuses_malformed
 #[test]
 fn original_retained_progress_wire_preserves_actual_physical_axes() {
     use crate::retained_clone::RetainedCloneProgress;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["receipts"].as_array().unwrap(){
         let oracle:RetainedCloneProgress=serde_json::from_value(row.clone()).unwrap();
         let encoded=oracle.to_value();let mut accepted=|_|true;let mut control=crate::NativeDecodeControl::new(0,&mut accepted);
@@ -44,8 +44,8 @@ fn original_retained_progress_wire_preserves_actual_physical_axes() {
 #[test]
 fn original_retained_wire_restores_parent_workload_after_nested_axes(){
     use crate::retained_clone::RetainedCloneProgress;
-    let policy:serde_json::Value=serde_json::from_str(include_str!("../../🪆️stage/🧫️fixtures/🔣️.json")).unwrap();
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let policy:serde_json::Value=serde_json::from_str(include_str!("../../🪆️stage/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let grant:RetainedCloneGrant=serde_json::from_value(fixture["rows"][1].clone()).unwrap();
     let progress:RetainedCloneProgress=serde_json::from_value(fixture["receipts"][1].clone()).unwrap();
     let mut accept=|_|true;let mut encode=crate::NativeEncodeControl::new(4096,&mut accept);encode.begin_stage(policy["parentUnits"].as_u64().unwrap() as usize).unwrap();

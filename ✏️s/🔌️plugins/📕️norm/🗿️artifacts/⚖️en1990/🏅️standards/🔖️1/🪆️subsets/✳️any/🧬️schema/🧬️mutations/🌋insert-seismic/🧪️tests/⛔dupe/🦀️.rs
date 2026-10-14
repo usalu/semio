@@ -7,10 +7,10 @@
 fn insert_seismic_dupe() {
     super::assert_vector(super::Vector {
         kind: "insert-seismic",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌋insert-seismic/⛔dupe/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌋insert-seismic/⛔dupe/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌋insert-seismic/⛔dupe/📸️snapshot/➡️after/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌋insert-seismic/⛔dupe/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌋insert-seismic/⛔dupe/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌋insert-seismic/⛔dupe/📸️snapshot/➡️after/🔣️.json"),
         diff: None,
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌋insert-seismic/⛔dupe/🎯️outcome/🔣️.json"),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌋insert-seismic/⛔dupe/🎯️outcome/🔣️.json"),
     });
 }

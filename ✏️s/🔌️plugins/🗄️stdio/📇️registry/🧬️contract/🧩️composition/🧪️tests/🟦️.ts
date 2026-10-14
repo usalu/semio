@@ -6,7 +6,7 @@ import { selectCompositionContributionsV1, admitCompositionContributionV1, resol
 /** 🧪️ Compares neutral contribution admission and selection with an independent schema oracle. */
 export function runCompositionContributionChecks(): number {
   const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
-  const corpus = read("../🧫️fixtures/🔣️.json");
+  const corpus = read("🧫️fixtures/🔣️.json");
   const ajv = new Ajv({ strict: true });
   const validRow = ajv.compile(read("../🧬️schema/🔣️.json"));
   const unique = ajv.compile({ type: "array", uniqueItems: true });

@@ -1,0 +1,322 @@
+{
+  "schema": "noncanonical-dxf-schema",
+  "headerVars": [
+    {
+      "name": "$INSBASE",
+      "groupCode": 10,
+      "value": {
+        "kind": "point",
+        "value": [
+          1,
+          2,
+          3
+        ]
+      },
+      "extraGroupCodes": [
+        [
+          70,
+          {
+            "kind": "int",
+            "value": -7
+          }
+        ]
+      ]
+    },
+    {
+      "name": "$CUSTOM",
+      "groupCode": 1,
+      "value": {
+        "kind": "str",
+        "value": "héllo"
+      },
+      "extraGroupCodes": [
+        [
+          40,
+          {
+            "kind": "double",
+            "value": 2.5
+          }
+        ]
+      ]
+    }
+  ],
+  "tables": {
+    "layers": [
+      {
+        "name": "drawing",
+        "color": -2,
+        "linetype": "DASH",
+        "flags": 4,
+        "unknownGroupCodes": [
+          [
+            100,
+            {
+              "kind": "str",
+              "value": "LayerExtension"
+            }
+          ]
+        ]
+      }
+    ],
+    "styles": [
+      {
+        "name": "text",
+        "flags": 1,
+        "fontName": "font.shx",
+        "unknownGroupCodes": [
+          [
+            72,
+            {
+              "kind": "int",
+              "value": 3
+            }
+          ]
+        ]
+      }
+    ],
+    "linetypes": [
+      {
+        "name": "DASH",
+        "flags": 2,
+        "description": "Custom pattern",
+        "unknownGroupCodes": [
+          [
+            40,
+            {
+              "kind": "double",
+              "value": 0.5
+            }
+          ]
+        ]
+      }
+    ]
+  },
+  "otherTables": [
+    {
+      "name": "VPORT",
+      "tags": [
+        {
+          "code": 2,
+          "value": "main"
+        },
+        {
+          "code": 40,
+          "value": "0.250000"
+        }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "name": "BLOCK",
+      "basePoint": [
+        0,
+        1,
+        2
+      ],
+      "entities": [
+        {
+          "other": {
+            "kind": "POINT",
+            "groupCodes": [
+              [
+                10,
+                {
+                  "kind": "point",
+                  "value": [
+                    4,
+                    5,
+                    6
+                  ]
+                }
+              ]
+            ]
+          }
+        }
+      ],
+      "unknownGroupCodes": [
+        [
+          1,
+          {
+            "kind": "str",
+            "value": "block extension"
+          }
+        ]
+      ]
+    }
+  ],
+  "entities": [
+    {
+      "line": {
+        "start": [
+          1,
+          2,
+          3
+        ],
+        "end": [
+          4,
+          5,
+          6
+        ],
+        "layer": "drawing",
+        "unknownGroupCodes": [
+          [
+            62,
+            {
+              "kind": "int",
+              "value": -3
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "circle": {
+        "center": [
+          2,
+          3,
+          4
+        ],
+        "radius": 5,
+        "layer": "drawing"
+      }
+    },
+    {
+      "arc": {
+        "center": [
+          3,
+          4,
+          5
+        ],
+        "radius": 6,
+        "startAngle": 10,
+        "endAngle": 270,
+        "layer": "drawing"
+      }
+    },
+    {
+      "polyline": {
+        "vertices": [
+          {
+            "x": 1,
+            "y": 2,
+            "z": 3,
+            "bulge": 0.25,
+            "unknownGroupCodes": [
+              [
+                1,
+                {
+                  "kind": "str",
+                  "value": "vertex"
+                }
+              ]
+            ]
+          },
+          {
+            "x": 4,
+            "y": 5,
+            "z": 6,
+            "bulge": -0.5
+          }
+        ],
+        "closed": true,
+        "layer": "drawing"
+      }
+    },
+    {
+      "text": {
+        "position": [
+          4,
+          5,
+          6
+        ],
+        "height": 12,
+        "value": "Unicode Ω\nsecond line",
+        "layer": "drawing"
+      }
+    },
+    {
+      "solid": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "layer": "drawing"
+      }
+    },
+    {
+      "insert": {
+        "blockName": "BLOCK",
+        "position": [
+          7,
+          8,
+          9
+        ],
+        "scale": [
+          2,
+          3,
+          4
+        ],
+        "rotation": 45,
+        "layer": "drawing"
+      }
+    },
+    {
+      "other": {
+        "kind": "DIMENSION",
+        "groupCodes": [
+          [
+            1,
+            {
+              "kind": "str",
+              "value": "extension"
+            }
+          ],
+          [
+            70,
+            {
+              "kind": "int",
+              "value": 2147483648
+            }
+          ],
+          [
+            40,
+            {
+              "kind": "double",
+              "value": 0.125
+            }
+          ],
+          [
+            10,
+            {
+              "kind": "point",
+              "value": [
+                1.5,
+                2.5,
+                3.5
+              ]
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

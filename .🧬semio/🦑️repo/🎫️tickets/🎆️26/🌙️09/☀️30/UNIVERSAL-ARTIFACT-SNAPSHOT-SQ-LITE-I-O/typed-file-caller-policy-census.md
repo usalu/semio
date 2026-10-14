@@ -1,0 +1,23 @@
+# Typed File Caller Policy Census
+
+Read-only source census using120 paths from typed-snapshot-file-api-oct13.md; no builds/caller edits. Exact408 call-expression name matches reproduced:184 short io_export_sqlite_snapshot,187 short io_import_sqlite_snapshot,17 store::io::io_mechanism::export and20 same-prefix import. No additional callee prefixes/aliases found in this120-file source scan. Short names may be imported from store or kernel; preserve those actual imports and generic P.
+
+Correction: old export has5 arguments(dialect,snapshot,encoding,limits,progress), and new export also5(control,native replacing last2). Old/new import both4. This is authority/type replacement, not argument-count change. Prior first-party loan report's6→5/5→4 wording was incorrect.
+
+## Concrete Policy Exceptions to General Migration
+
+No old direct typed call currently supplies a NativeSnapshotOwner because old API did not accept one. Therefore a same-file existing native policy is not automatically the call's previous owner. Nevertheless the following files already author immutable original owner fixtures and should explicitly map those into SnapshotFileCaller rather than blanket general1GiB authority if the migrated law claims continuity with domain ownership:
+
+- TXT snapshot/🧪️tests/🦀️.rs:139–143 calls live within the same root as original_caller_grant reading `🧫️fixtures/🫴️receiving.json::originalCallerGrant`; preserve that general original caller policy, rather than stricter65536copy receiving-specific grant intended to force prefix refusal. Native encoding fixture bodyGrant/closeGrant/nativeMaximumBytes is a different law's authority. Do not select based solely on keyname.
+- Binary raw snapshot/🧪️tests/🦀️.rs:97 typed file calls; binary_original_grant:136 reads `🫴️receiving/🧫️fixtures/🔣️.json::original.grant` and native maximum. Explicit domain choice required: typed complete file may require separately authored file grant beyond binder-only budget; do not enlarge the existing binder grant to fit measured pages.
+- CSV rfc4180 snapshot/🧪️tests/🦀️.rs:112 and TSV iana corresponding typed file calls: original_native_caller macro binds independently authored bodyGrant/closeGrant/nativeMaximumBytes from neutral original law. These helpers include actual original observer continuation and exact receipt assertions. Migration must not silently replace those native laws or cast them into accepting generic file helper; ordinary file test can author its own finite file policy while retaining SQL/no-native-phases checks.
+- SpaceHistory snapshot/🧪️tests/🦀️.rs:99/102/108/114/117/148 direct calls; caller_grant:170 reads `🧫️fixtures/🫴️grant/🔣️.json`, existing with_original_decode/encode uses fixed1GiB native allowance. Use explicit history caller grant/close funding for laws claiming original history ownership; retain checkpoint/live snapshot and every current SQLlimit/progress.
+- Infinite DAG snapshot/🧪️tests/🦀️.rs:243 direct calls; same file mounts Space native_caller module at line2 and uses native_caller_policy for genuine capability export/import:183/190. Shared policy is actual mounted first-party fixture; preserve its original close/native dimensions for matching typed full-file laws instead of inventing scalar authority.
+
+These are concrete independent policy candidates, not a claim all respective callsites already ran under that grant. Fifteen of120 files contain policy/forwarded/RetainedCloneGrant markers; remaining candidates include HTML cohort, Semio graph, Flow, Renderer probe, Workflow/Run and framework projection laws. Their raw marker presence is insufficient to substitute a fixture for every direct caller; inspect actual law scope before assigning.
+
+## Prior Receipt and Migration Boundaries
+
+Old typed file calls created their own internal SQL caller each time; none of these408 expressions can preserve an already supplied Native owner it never accepted. New explicit same-owner/prior-receipt laws must remain distinct and deliberately reuse helper loans. A generic helper call per old expression cannot prove cumulative prior native receipts; it preserves original SQL limit/callback only. Preserve existing capability-native owner tests in those same files unchanged unless their actual typed call occurs inside that owner scope.
+
+Preserve requested no DecodeNative/EncodeNative phases in existing direct typed tests. New typed APIs must project/reconstruct directly; encoding metadata is an authored file label, not permission to invoke raw native parse/print. Original callback captures phaseVecs/canceled Cells, limits and datatype remain exact after lexical rewrite. No new runtime passes follow from the408 census.

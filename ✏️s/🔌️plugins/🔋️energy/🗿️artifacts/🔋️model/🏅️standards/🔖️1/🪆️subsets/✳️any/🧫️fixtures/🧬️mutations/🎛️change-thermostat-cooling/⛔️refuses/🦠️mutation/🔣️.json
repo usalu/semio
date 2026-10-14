@@ -1,5 +1,0 @@
-{
-  "mutation": "changeThermostatCoolingThrottleRange",
-  "id": 10,
-  "newCoolingThrottleRangeK": -1.0
-}

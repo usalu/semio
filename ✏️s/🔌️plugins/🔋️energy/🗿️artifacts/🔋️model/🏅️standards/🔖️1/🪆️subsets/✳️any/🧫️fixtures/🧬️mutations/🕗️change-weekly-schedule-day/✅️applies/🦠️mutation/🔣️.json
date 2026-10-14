@@ -1,6 +1,0 @@
-{
-  "mutation": "changeWeeklyScheduleDay",
-  "id": 20,
-  "dayIndex": 2,
-  "newDailyScheduleId": 11
-}

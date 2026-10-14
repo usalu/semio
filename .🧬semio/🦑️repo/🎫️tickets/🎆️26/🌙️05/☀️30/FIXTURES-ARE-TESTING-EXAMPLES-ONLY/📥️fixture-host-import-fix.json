@@ -1,0 +1,6 @@
+{
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧊️fixture-payload/🟦️.ts",
+  "before": "03a03fe37e73ca3d12df096c07e49daa80a9c4313afd54203fa31f04ee27d3bd",
+  "after": "9d5d7ddfb1047cd78711ab7d8abd834d49684b948e56e5eaf1a65cccd3797548",
+  "reason": "Fresh AST import span insertion; earlier raw literal import locator had been compiler-escaped, so string-only patch did not match"
+}

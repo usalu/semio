@@ -1,26 +1,28 @@
-import utilityActionPolicy from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🧰️utility-action-policy/🔣️.json";
-import utilityAssignmentCases from "../../🧱️elements/🐚️Shell/🧰️utility-assignment/🧫️fixtures/🔣️.json";
-import initialWindowUtilityCases from "../../../../../../../🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🧫️fixtures/🔣️.json";
+import {readUiPreferences} from "../../🎚️UiPreferences/🟦️.ts";
+import explicitLocaleFixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/⏳️compute-locale.json";
+import utilityActionPolicy from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧰️utility-action-policy/🔣️.json";
+import utilityAssignmentCases from "../../🧱️elements/🐚️Shell/🧰️utility-assignment/🧪️tests/🧫️fixtures/🔣️.json";
+import initialWindowUtilityCases from "../../../../../../../🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🧪️tests/🧫️fixtures/🔣️.json";
 
-import drawingActionCases from "../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧫️fixtures/🔣️.json";
+import drawingActionCases from "../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧪️tests/🧫️fixtures/🔣️.json";
 import drawingActionSchema from "../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧬️schema/🔣️.json";
-import drawingInterruptionCases from "../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧫️fixtures/🛑️interruption/🔣️.json";
+import drawingInterruptionCases from "../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧪️tests/🧫️fixtures/🛑️interruption/🔣️.json";
 import drawingInterruptionSchema from "../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📍️point/🧬️schema/🔣️.json";
 import { resolveUtilityActivationV1 as resolveAssignmentPress } from "../../🧱️elements/🏛️ShellHost/🎯️input-ledger/🟦️.ts";
-import chromePanelSafeAreaFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🛟️chrome-panel-safe-area/🔣️.json";
+import chromePanelSafeAreaFixture from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🛟️chrome-panel-safe-area/🔣️.json";
 import { shouldStartIntroduction } from "../../../../../../../🔨️modules/🖱️ui/🎓️introduction/🟦️.ts";
 import { ChromeAwareWindowScrollSurface } from "@semio-tech/ui-react";
-import canvasClearance from "../../🧱️elements/🗣️Interpreter/🧫️fixtures/🪟️canvas-clearance/🔣️.json";
+import canvasClearance from "../../🧱️elements/🗣️Interpreter/🧪️tests/🧫️fixtures/🪟️canvas-clearance/🔣️.json";
 import { boardTestSession } from "../../🧱️elements/🪪️WasmSessionLoader/🔮️oracles/🪪️session-double/🟦️.ts";
-import vfsDescriptorFixture from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🧫️fixtures/🧾️descriptors/🔣️.json";
-import gumballTargetsFixture from "../../🧱️elements/🌐️World3dHost/🧫️fixtures/🧭️gesture-targets.json";
+import vfsDescriptorFixture from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🧪️tests/🧫️fixtures/🧾️descriptors/🔣️.json";
+import gumballTargetsFixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🧭️gesture-targets.json";
 import gumballTargetsSchema from "../../🧱️elements/🌐️World3dHost/🧬️schema/🧭️gesture-targets/🔣️.json";
-import gumballLiveProtocolFixture from "../../🧱️elements/🌐️World3dHost/🧫️fixtures/🛠️gumball-live-protocol.json";
+import gumballLiveProtocolFixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🛠️gumball-live-protocol.json";
 import { worldGumballStep, WORLD_GUMBALL_IDLE, type WorldGumballEvent, type WorldGumballTargets } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { renderVirtualFileSystemDescriptorCell, type DescriptorKind, type FileNodeDescriptorValue } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🟦️.tsx";
-import gizmoTipBoundsFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️gizmo-tip-bounds/🔣️.json";
-import textInputFixture from "../../../../../../../🔨️modules/✍️editor/🧫️fixtures/⌨️text-input/🔣️.json";
-import editorDeliveryFixture from "../../🧱️elements/✏️TextEditor/🧫️fixtures/📮️delivery/🔣️.json";
+import gizmoTipBoundsFixture from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️gizmo-tip-bounds/🔣️.json";
+import textInputFixture from "../../../../../../../🔨️modules/✍️editor/🧪️tests/🧫️fixtures/⌨️text-input/🔣️.json";
+import editorDeliveryFixture from "../../🧱️elements/✏️TextEditor/🧪️tests/🧫️fixtures/📮️delivery/🔣️.json";
 import { act as reactAct, createElement, useLayoutEffect, useState, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { flushSync } from "react-dom";
@@ -50,8 +52,8 @@ import {
 } from "@semio-tech/ui-react";
 import { createWorldProjectionTemplates, worldCameraReportTargetV1, worldProjectionSwitchTreeItems } from "@semio-tech/infinite-world-r3f";
 import { createLocalInteractionStoreV1, resolvePluginCanvasStatus, type PluginSupervisorState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
-import bootCanvasFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🔣️.json";
-import windowIconOverrideFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🪟️window-icon-overrides/🔣️.json" with { type: "json" };
+import bootCanvasFixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🔣️.json";
+import windowIconOverrideFixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🪟️window-icon-overrides/🔣️.json" with { type: "json" };
 
 import {
   dispatchInvokeExtensionEffect,
@@ -109,9 +111,9 @@ import {
 import { FRAMEWORK_HISTORY_BODY_KEY, OPEN_ARTIFACT_FILE_ACTION_ID, SAVE_ARTIFACT_FILE_ACTION_ID, resolveUiDirtyScope, type UiDirtyScope } from "@semio-tech/framework";
 import { hostArmedViewContext, panelViewContext, parseResolvedPluginViewState, windowViewContext } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { world3dComputeStatusV1 } from "../../../../../../../🔨️modules/🖱️ui/🎬️scene/🟦️.ts";
-import surfaceControlsFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🛑️surface-controls/🔣️.json";
-import bootExampleFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/📚️boot-example/🔣️.json";
-import exampleOfferFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/📚️example-offer/🔣️.json";
+import surfaceControlsFixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🛑️surface-controls/🔣️.json";
+import bootExampleFixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/📚️boot-example/🔣️.json";
+import exampleOfferFixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/📚️example-offer/🔣️.json";
 import exampleOfferSchema from "../../🧱️elements/🐚️Shell/📚️example-offer/🔣️.json";
 import { BOOT_QUERY_CAPACITY, BOOT_QUERY_EXAMPLE_PARAM, resolveBootQueryExampleId } from "../../../../🧑‍💻dev/🔗️boot-query/🟦️.ts";
 import { createContinuationScheduler } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
@@ -122,30 +124,30 @@ const resolvedViewStateFixture = (session: { readonly viewState?: unknown }) => 
 import { openSurfaceContextMenu, uiNodeDomId, VirtualFileSystemHost, virtualFileSystemNavigation } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
 import { contextMenuItemClassName } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🟦️.tsx";
 import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
-import extensionInvocationFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json";
-import extensionInvocationWireFixture from "../../../../🌊️flow/🧩️extensions/🕸️wasm/🧫️fixtures/🔁️extension-invocation-wire/🔣️.json";
+import extensionInvocationFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json";
+import extensionInvocationWireFixture from "../../../../🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🧫️fixtures/🔁️extension-invocation-wire/🔣️.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import { type ValidateFunction } from "ajv";
 import Ajv2020 from "ajv/dist/2020";
-import automaticCheckinCorpus from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🧫️automatic-checkin/🔣️.json";
+import automaticCheckinCorpus from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧫️automatic-checkin/🔣️.json";
 import deepEqual from "fast-deep-equal";
 import viewport2dSchema from "../../../../../../../🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json";
-import viewportPoseFixture from "../../../../../../../🔨️modules/🖱️ui/🪟️viewport/🧫️fixtures/🪟️poses/🔣️.json";
-import treeDragHandleFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🌳️tree-drag-handles/🔣️.json";
-import sceneListTransferFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🔀️scene-list-transfer/🔣️.json" with { type: "json" };
-import tableStepperKeyboardFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/⌨️table-stepper-keyboard/🔣️.json" with { type: "json" };
-import sliderPresentationFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎚️slider-presentation/🔣️.json" with { type: "json" };
-import graphTimelineAuthorsFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/👥️graph-timeline-authors/🔣️.json" with { type: "json" };
-import virtualFileSystemInteractionFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/📁️virtual-file-system-interaction/🔣️.json" with { type: "json" };
+import viewportPoseFixture from "../../../../../../../🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🧫️fixtures/🪟️poses/🔣️.json";
+import treeDragHandleFixture from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🌳️tree-drag-handles/🔣️.json";
+import sceneListTransferFixture from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🔀️scene-list-transfer/🔣️.json" with { type: "json" };
+import tableStepperKeyboardFixture from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/⌨️table-stepper-keyboard/🔣️.json" with { type: "json" };
+import sliderPresentationFixture from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎚️slider-presentation/🔣️.json" with { type: "json" };
+import graphTimelineAuthorsFixture from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/👥️graph-timeline-authors/🔣️.json" with { type: "json" };
+import virtualFileSystemInteractionFixture from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/📁️virtual-file-system-interaction/🔣️.json" with { type: "json" };
 import { BlockListHost } from "../../🧱️elements/🧩️BlockListHost/🟦️.tsx";
-import dialogOriginFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🔣️.json";
+import dialogOriginFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🗨️dialog-origin/🔣️.json";
 import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellEffectOwnerIsCurrentV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
-import admittedInstanceFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🛂️admission/🔣️.json";
-import artifactCreationProgressFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🔣️.json";
+import admittedInstanceFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🗨️dialog-origin/🛂️admission/🔣️.json";
+import artifactCreationProgressFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🌱️artifact-creation/🔣️.json";
 import replayRefusalVocabulary from "../../🧱️elements/🏛️ShellHost/📣️replay-refusal/🔣️.json";
 import { REPLAY_REFUSAL_LABELS_V1, replayRefusalCodeV1, replayRefusalNoticeTextV1, type ReplayRefusalReasonV1 } from "../../🧱️elements/🏛️ShellHost/📣️replay-refusal/🟦️.ts";
-import artifactCreationCatalogAuthorityFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🪪️catalog-authority/🔣️.json";
-import artifactCreationReadyOpeningFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🚪️ready-opening/🔣️.json";
+import artifactCreationCatalogAuthorityFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🌱️artifact-creation/🪪️catalog-authority/🔣️.json";
+import artifactCreationReadyOpeningFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🌱️artifact-creation/🚪️ready-opening/🔣️.json";
 import { runArtifactCreationReadyOpeningV1 } from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
 import { runDocumentOpeningAttemptV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import {
@@ -160,40 +162,40 @@ import {
   type ArtifactCreationProgressOwnerV1,
 } from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🟦️.tsx";
 import { OwnedShellDialog, type OwnedShellDialogProps } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🌐️browser/🟦️.tsx";
-import tutorialRunFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🎥️tutorial/🔣️.json";
+import tutorialRunFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🗨️dialog-origin/🎥️tutorial/🔣️.json";
 import { OwnedTutorialRunV1, TutorialDriveV1, runPausedTutorialSeekV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🎥️tutorial/🟦️.ts";
-import tutorialSeekFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🎥️tutorial/⏩️seek/🔣️.json";
-import tutorialSerialFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🎥️tutorial/🧵️serial/🔣️.json";
-import descriptorLoadFixture from "../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/📇️descriptor-load/🔣️.json";
+import tutorialSeekFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🗨️dialog-origin/🎥️tutorial/⏩️seek/🔣️.json";
+import tutorialSerialFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🗨️dialog-origin/🎥️tutorial/🧵️serial/🔣️.json";
+import descriptorLoadFixture from "../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/📇️descriptor-load/🔣️.json";
 
 import { createInstance as createTranslationOracle } from "i18next";
-import chordKeyTokensFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/⌨️chord-key-tokens.json";
-import labelResolutionFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🔣️label-resolution.json";
-import tutorialInteractionFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🎥️tutorial-interaction/🔣️.json";
-import pluginAvailabilityRouteFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🔁️plugin-availability-route/🔣️.json";
-import naturalFileLifecycleFixture from "../../../../🔌️plugin/🧫️fixtures/📄️natural-file-lifecycle/🔣️.json" with { type: "json" };
+import chordKeyTokensFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/⌨️chord-key-tokens.json";
+import labelResolutionFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🔣️label-resolution.json";
+import tutorialInteractionFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🎥️tutorial-interaction/🔣️.json";
+import pluginAvailabilityRouteFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🔁️plugin-availability-route/🔣️.json";
+import naturalFileLifecycleFixture from "../../../../🔌️plugin/🧪️tests/🧫️fixtures/📄️natural-file-lifecycle/🔣️.json" with { type: "json" };
 import interactionSchema from "../../../../../../../🔨️modules/🕹️interaction/🧬️schema/🔣️.json";
 import type { InteractionState } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
 import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
 
-import actionSemanticsFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/⚖️action-semantics.json";
-import examplePickerFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/📚️example-picker.json";
-import tutorialDocumentFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🎞️tutorial-document-track.json";
+import actionSemanticsFixture from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/⚖️action-semantics.json";
+import examplePickerFixture from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/📚️example-picker.json";
+import tutorialDocumentFixture from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🎞️tutorial-document-track.json";
 import { tutorialSlice, validateTutorial } from "@semio-tech/ui-react";
 import type { DialogDefinition, TutorialDefinition, TutorialUiChange, TutorialUiSnapshot } from "@semio-tech/framework";
-import presenceOverlayFixture from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/👥️presence-overlay.json";
+import presenceOverlayFixture from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/👥️presence-overlay.json";
 
 import { createRequire } from "node:module";
 import * as THREE from "three";
 
-import world3dLightingFixture from "../../../../♾️infinite/🌍️world/🧫️fixtures/🌞️scene-lighting/🔣️.json" with { type: "json" };
-import world3dShadowFixture from "../../../../♾️infinite/🌍️world/🧫️fixtures/🌑️scene-shadows/🔣️.json" with { type: "json" };
-import world3dShadowParityFixture from "../../../../♾️infinite/🌍️world/🧫️fixtures/🌑️scene-shadow-parity/🔣️.json" with { type: "json" };
+import world3dLightingFixture from "../../../../♾️infinite/🌍️world/🧪️tests/🧫️fixtures/🌞️scene-lighting/🔣️.json" with { type: "json" };
+import world3dShadowFixture from "../../../../♾️infinite/🌍️world/🧪️tests/🧫️fixtures/🌑️scene-shadows/🔣️.json" with { type: "json" };
+import world3dShadowParityFixture from "../../../../♾️infinite/🌍️world/🧪️tests/🧫️fixtures/🌑️scene-shadow-parity/🔣️.json" with { type: "json" };
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
 import { decodeLocalInteractionCaptureJson, LOCAL_INTERACTION_CAPTURE_MAX_BYTES } from "@semio-tech/framework-replication";
 import { unresolvedActionArgs } from "@semio-tech/framework";
 import { examplesForApp, examplesForDialect, surfaceAppId, type AppRole } from "@semio-tech/framework";
-import choiceFixture from "../../../../../../../🔨️modules/🧩️action-argument-resolution/🧫️fixtures/🔽️choices/🔣️.json";
+import choiceFixture from "../../../../../../../🔨️modules/🧩️action-argument-resolution/🧪️tests/🧫️fixtures/🔽️choices/🔣️.json";
 
 import { semioSchemaAjvV1 } from "../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
@@ -1887,17 +1889,17 @@ describe("tutorial document wire contract", () => {
 //#endregion 🎞️TutorialDocumentTrack
 
 
-import graphSliderFixture from "../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧫️fixtures/🎚️slider-overlay.json";
+import graphSliderFixture from "../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧪️tests/🧫️fixtures/🎚️slider-overlay.json";
 import dagVcsSchema from "../../../../♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🔣️.json" with { type: "json" };
-import graphParameterFixture from "../../../../🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/🧫️fixtures/🔣️.json";
-import graphPickFixture from "../../🧱️elements/🕸️NodeGraph/🧫️fixtures/🔣️pick-target.json";
+import graphParameterFixture from "../../../../🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/🧪️tests/🧫️fixtures/🔣️.json";
+import graphPickFixture from "../../🧱️elements/🕸️NodeGraph/🧪️tests/🧫️fixtures/🔣️pick-target.json";
 import flowParameterSchema from "../../../../🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/🧬️schema/🔣️.json" with { type: "json" };
 import * as flowSessionLoader from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 import * as infiniteCanvasRenderer from "@semio-tech/canvas-react-renderer";
 import { createFlowBrowserRuntime } from "@semio-tech/flow-core/🌐️flow-browser.js";
 import { MockFlowBridge } from "../../../../🌊️flow/🕸️wasm/🧪️tests/🎭️mock-flow-bridge/🟦️.ts";
 import flowAbi from "../../../../🌊️flow/🕸️wasm/🧬️schema/📡️abi/🔣️.json" with { type: "json" };
-import flowBrowserRuntimeFixture from "../../../../🌊️flow/🕸️wasm/🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json";
+import flowBrowserRuntimeFixture from "../../../../🌊️flow/🕸️wasm/🧪️tests/🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json";
 import flowWasmSchema from "../../../../🌊️flow/🕸️wasm/🧬️schema/🔣️.json" with { type: "json" };
 import { cleanup, fireEvent, render, waitFor } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, test, vi } from "vitest";
@@ -2248,7 +2250,7 @@ describe("framework sync utilities", () => {
   });
 
   it("matches the sync backbone path picker fixture", async () => {
-    const fixture = (await import("../../../../../🧫️fixtures/🔗️sync-backbone-path-picker/🔣️.json")).default as {
+    const fixture = (await import("../../../../../🧪️tests/🧫️fixtures/🔗️sync-backbone-path-picker/🔣️.json")).default as {
       react: { helpers: string[]; hostIoOps?: string[] };
       wgpu: { hostIoOps: string[] };
     };
@@ -2640,7 +2642,7 @@ describe("ui refresh coalescing lane", () => {
 });
 
 describe("shell store reducer", () => {
-  const baseState = () => initialShellState({ plugins: [], storage: createMemoryStoragePort() });
+  const baseState = () => initialShellState({ locale: "en", plugins: [], storage: createMemoryStoragePort() });
   const fixtureInteractionState = (value: {
     readonly selection: Readonly<Record<string, { readonly granularity: string; readonly ids: readonly string[]; readonly anchorId?: string }>>;
     readonly hover: Readonly<Record<string, { readonly channel: string; readonly ids: readonly string[] }>>;
@@ -4069,7 +4071,7 @@ describe("framework plugin runtime", () => {
     // ⚖️ The other half of the gap: ShellHost's `applyRemoteMerge` (fed by `applyRemoteMergeRef` from
     // the `remoteMutations` worker-event branch) just dispatches `SET_CONFLICTS` with this roster —
     // reproduced here at the reducer level so the assertion doesn't need a mounted `ShellHost`.
-    const state = shellReducer(initialShellState({ plugins: [], storage: createMemoryStoragePort() }), { type: "SET_CONFLICTS", value: result.conflicts ?? [] });
+    const state = shellReducer(initialShellState({ locale: "en", plugins: [], storage: createMemoryStoragePort() }), { type: "SET_CONFLICTS", value: result.conflicts ?? [] });
     expect(selectOpenConflicts(state)).toEqual([remoteConflict]);
     expect(selectQuarantinedConflicts(state)).toEqual([remoteConflict]);
   });
@@ -4250,7 +4252,7 @@ describe("owned declarative controls", () => {
 describe("framework external slots", () => {
   it("preserves explicitly owned host extensions before contributor resolution at any depth", async () => {
     const { resolveExternalSlots } = await import("@semio-tech/framework");
-    const { default: fixture } = await import("../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🧩️host-slots/🔣️.json");
+    const { default: fixture } = await import("../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧩️host-slots/🔣️.json");
     
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv();
@@ -4277,7 +4279,7 @@ describe("framework external slots", () => {
   });
 
   it("admits isolated extension render inputs against the neutral schema", async () => {
-    const { default: fixture } = await import("../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧫️fixtures/🧩️extension-input/🔣️.json");
+    const { default: fixture } = await import("../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧪️tests/🧫️fixtures/🧩️extension-input/🔣️.json");
     const { default: schema } = await import("../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
     const validate = new Ajv({ strict: true }).compile(schema);
@@ -4295,7 +4297,7 @@ describe("framework external slots", () => {
 
   it("renders canonical contributor bodies with isolated instances and current inputs", async () => {
     const { resolveExternalSlots } = await import("@semio-tech/framework");
-    const { default: law } = await import("../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🧩️external-slots/🔣️.json");
+    const { default: law } = await import("../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧩️external-slots/🔣️.json");
     const created: string[] = [];
     const destroyed: number[] = [];
     const requests: { instanceId: number; request: any }[] = [];
@@ -4344,7 +4346,7 @@ describe("framework external slots", () => {
 
   it("shares pending creations and retires the exact detached contributor", async () => {
     const { ensureContributorInstance, retireContributorInstances } = await import("@semio-tech/framework");
-    const { default: law } = await import("../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🧩️external-slots/🔣️.json");
+    const { default: law } = await import("../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧩️external-slots/🔣️.json");
     let release!: (id: number) => void;
     const destroyed: number[] = [];
     let created = 0;
@@ -4369,7 +4371,7 @@ describe("framework external slots", () => {
 
   it("does not render or recreate an extension after its parent retires during creation", async () => {
     const { resolveExternalSlots, retireContributorInstances } = await import("@semio-tech/framework");
-    const { default: law } = await import("../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🧩️external-slots/🔣️.json");
+    const { default: law } = await import("../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧩️external-slots/🔣️.json");
     let release!: (id: number) => void;
     let refreshes = 0;
     const destroyed: number[] = [];
@@ -4393,7 +4395,7 @@ describe("framework external slots", () => {
 
   it("discards effects from a refresh that finishes after retirement", async () => {
     const { resolveExternalSlots, retireContributorInstances } = await import("@semio-tech/framework");
-    const { default: law } = await import("../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🧩️external-slots/🔣️.json");
+    const { default: law } = await import("../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧩️external-slots/🔣️.json");
     let release!: (response: any) => void;
     let started!: () => void;
     const refreshing = new Promise<void>((resolve) => { started = resolve; });
@@ -7793,7 +7795,7 @@ it("keeps hover out of the board-events batch — it travels on the framework in
 
   it.each(["complete", "cancel"])("raster compositor %s settles frame demand and keeps canvas theme", async (mode) => {
     await uiI18n.changeLanguage("en");
-    const fixture=(await import("../../🧱️elements/🖌️Paint2dHost/🧫️fixtures/🔁️session/🔣️.json")).default;
+    const fixture=(await import("../../🧱️elements/🖌️Paint2dHost/🧪️tests/🧫️fixtures/🔁️session/🔣️.json")).default;
     const uploadRasterImageKey=vi.fn(),syncDocumentJson=vi.fn(),attachCanvas=vi.fn(async()=>{}),setCamera=vi.fn();
     const canvasContext = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
     let frames = 0,
@@ -9799,7 +9801,7 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
     const invalid = structuredClone(utilityAssignmentCases);
     Object.assign(invalid.cases[0]!.steps[0]!, { kind: "unknown" });
     for (const row of utilityAssignmentCases.cases) {
-      let state = initialShellState({ plugins: [], locks: { locale, terminology: "native" }, storage: createMemoryStoragePort() });
+      let state = initialShellState({ locale: "en", plugins: [], locks: { locale, terminology: "native" }, storage: createMemoryStoragePort() });
       for (const step of row.steps) {
         const utilityId = step.kind === "press" ? resolveAssignmentPress(state.actionPane.activeUtilityByWindowId[step.windowId], step.utilityId) : step.utilityId || null;
         state = shellReducer(state, { type: "SET_ACTIVE_UTILITY", windowId: step.windowId, utilityId });
@@ -9889,7 +9891,7 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
 
   it.each(["en", "de"] as const)("initial utility registers preserve an explicit clear in the store and guest projection (%s)", (locale) => {
     const row = initialWindowUtilityCases.cases.find((row) => row.id === "fresh-window-without-initial")!;
-    const state = initialShellState({ plugins: [], locks: { locale, terminology: "native" }, storage: createMemoryStoragePort() });
+    const state = initialShellState({ locale: "en", plugins: [], locks: { locale, terminology: "native" }, storage: createMemoryStoragePort() });
     const action = { type: "SET_ACTIVE_UTILITY" as const, windowId: row.windowId, utilityId: null };
     const cleared = shellReducer(state, action);
     expect(Object.hasOwn(cleared.actionPane.activeUtilityByWindowId, row.windowId)).toBe(true);
@@ -10792,7 +10794,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
   });
 
   it("initialShellState applies locked values over stored/default prefs", () => {
-    const state = initialShellState({ plugins: [], locks: { exampleId: "concrete-forest", locale: "de", terminology: "reuse", themeId: "semio", appearance: "dark" }, storage: createMemoryStoragePort() });
+    const state = initialShellState({ locale: "en", plugins: [], locks: { exampleId: "concrete-forest", locale: "de", terminology: "reuse", themeId: "semio", appearance: "dark" }, storage: createMemoryStoragePort() });
     expect(state.layout.activeExampleId).toBe("concrete-forest");
     expect(state.uiPrefs.uiLocale).toBe("de");
     expect(state.uiPrefs.uiTerminology).toBe("reuse");
@@ -10812,9 +10814,9 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(resolveShellDefaults(brand, { exampleId: "nakagin-capsule-tower" })).toEqual({ exampleId: "nakagin-capsule-tower" });
     expect(resolveShellDefaults(brand, undefined)).toEqual({ exampleId: "concrete-forest" });
     expect(resolveShellDefaults(undefined, undefined)).toEqual({ exampleId: undefined });
-    const state = initialShellState({ plugins: [], defaults: { exampleId: "concrete-forest" }, storage: createMemoryStoragePort() });
+    const state = initialShellState({ locale: "en", plugins: [], defaults: { exampleId: "concrete-forest" }, storage: createMemoryStoragePort() });
     expect(state.layout.activeExampleId).toBe("concrete-forest");
-    const locked = initialShellState({ plugins: [], locks: { exampleId: "nakagin-capsule-tower" }, defaults: { exampleId: "concrete-forest" }, storage: createMemoryStoragePort() });
+    const locked = initialShellState({ locale: "en", plugins: [], locks: { exampleId: "nakagin-capsule-tower" }, defaults: { exampleId: "concrete-forest" }, storage: createMemoryStoragePort() });
     expect(locked.layout.activeExampleId).toBe("nakagin-capsule-tower");
   });
 
@@ -10985,7 +10987,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
   });
 
   it("every pane of one document names its OWN window surface, and publishes the selection it paints", async () => {
-    const { default: identity } = await import("../../🧱️elements/🌐️World3dHost/🧫️fixtures/🪪️world-surface-identity.json");
+    const { default: identity } = await import("../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🪪️world-surface-identity.json");
     const { surfaceHostIdentityV1 } = await import("../../🧱️elements/🗣️Interpreter/🟦️.tsx");
     const { worldSurfaceSelectionDomV1, worldSurfaceGuestSelectionDomV1 } = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx");
 
@@ -11018,7 +11020,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
   });
 
   it("the leftover world overlay is per window INSTANCE: arming one pane leaves its sibling's record untouched", async () => {
-    const { default: identity } = await import("../../🧱️elements/🌐️World3dHost/🧫️fixtures/🪪️world-surface-identity.json");
+    const { default: identity } = await import("../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🪪️world-surface-identity.json");
     const { surfaceHostIdentityV1 } = await import("../../🧱️elements/🗣️Interpreter/🟦️.tsx");
     const world = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx");
     const [perspective, top] = identity.panes.map((pane) => pane.window);
@@ -11474,6 +11476,7 @@ it("isEphemeralShellBrand skips durable shell state so a refresh boots from bran
     expect(isEphemeralShellBrand({ id: "plain", windowTitle: "Plain" })).toBe(false);
     expect(isEphemeralShellBrand({ id: "plain", windowTitle: "Plain", ephemeral: true })).toBe(true);
     const ephemeralState = initialShellState({
+      locale: "en",
       plugins: [],
       locks: { locale: "de", terminology: "reuse", themeId: "semio" },
       defaults: { exampleId: "concrete-forest" },
@@ -12605,7 +12608,7 @@ describe("TutorialRecorder LocalizedLabel synthesis", () => {
 
 //#region 🥽️SceneMeshKindReferences
 import { meshDataFromKind } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
-import sceneMeshKindFixture from "../../../../../../../🔨️modules/🏗️mesh-engine/🧫️fixtures/🥽️scene-mesh-kinds/🔣️.json";
+import sceneMeshKindFixture from "../../../../../../../🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🥽️scene-mesh-kinds/🔣️.json";
 
 /** 🥽️ The local-space bounding box a resolved kind occupies — the ONE property the fixture pins across
  * the two generators (Rust `mesh_from_kind`, this host's `meshDataFromKind`). */
@@ -12884,7 +12887,7 @@ describe("node-graph surface attachment in a hidden tab", () => {
    * two mounts, two sessions and `flow surface created surface=2`, costing 5.7 s of attach and a
    * graph that stayed blank for 39 s (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
   it("retained surface host — patches the session it already owns across consecutive refreshes, one session and one attach", async () => {
-    const retention = (await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🪪️surface-host-retention.json")).default;
+    const retention = (await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🪪️surface-host-retention.json")).default;
     const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 966, 836));
     const context = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(() => recordingCanvasContext([]) as never);
     const bridge = new MockFlowBridge(new WebAssembly.Memory({ initial: 400 }));
@@ -13467,9 +13470,9 @@ describe("example switch — the completion's scope is what re-takes the flow wi
 //#endregion 🎨️ExampleSwitchHostCaching
 
 //#region 📷️CameraAndLabelFitTwins
-import cameraFitFixture from "../../../../../../../🔨️modules/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json" with { type: "json" };
-import portTypesFixture from "../../../../🌊️flow/🧫️fixtures/🔌️port-types/🔣️.json" with { type: "json" };
-import labelFitFixture from "../../../../../../../🔨️modules/🖼️canvas/🧫️fixtures/🏷️label-fit/🔣️.json" with { type: "json" };
+import cameraFitFixture from "../../../../../../../🔨️modules/🖼️canvas/🧪️tests/🧫️fixtures/📷️camera-fit/🔣️.json" with { type: "json" };
+import portTypesFixture from "../../../../🌊️flow/🧪️tests/🧫️fixtures/🔌️port-types/🔣️.json" with { type: "json" };
+import labelFitFixture from "../../../../../../../🔨️modules/🖼️canvas/🧪️tests/🧫️fixtures/🏷️label-fit/🔣️.json" with { type: "json" };
 
 /** 📏️ The fixture's own synthetic advance — the ONE measure both implementations are driven with, so
  * a row pins the clipping algorithm rather than a font file. Mirror of `synthetic_measure` in
@@ -14448,6 +14451,20 @@ describe("📣️ replay refusal vocabulary", () => {
     for (const vector of replayRefusalVocabulary.vectors) {
       const reason = vector.reason as ReplayRefusalReasonV1;
       expect([replayRefusalNoticeTextV1(reason, vector.locale), replayRefusalCodeV1(reason)]).toEqual([vector.text, vector.code]);
+    }
+  });
+});
+
+
+describe("shell explicit locale source", () => {
+  it("initializes each unlocked pane from its own explicit user language", () => {
+    for (const row of explicitLocaleFixture.locales) {
+      const locale = new Intl.Locale(row.locale).language as "en" | "de";
+      const storage = createMemoryStoragePort();
+      const state = initialShellState({locale, plugins:[], storage});
+      expect(state.uiPrefs.uiLocale).toBe(locale);
+      expect(readUiPreferences(storage).locale).toBeNull();
+      console.debug(`[DEBUG] unlocked shell actual initial state user locale=${locale}`);
     }
   });
 });

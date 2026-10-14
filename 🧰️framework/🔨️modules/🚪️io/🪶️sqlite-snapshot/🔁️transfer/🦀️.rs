@@ -239,3 +239,7 @@ pub(super) fn schema_controlled(sql:&str,phase:SqliteSnapshotPhase,control:&mut 
 #[path="🏛️validation/🦀️.rs"]
 mod validation;
 pub use validation::{SchemaValidationStorage,construct_database_into,validate_component_into,validate_database_into,validate_table_into};
+
+#[path="🫴️receiving/🦀️.rs"]
+mod receiving;
+pub use receiving::{PhysicalExportFrame,PhysicalImportFrame,export_sqlite_database_receiving_into,import_sqlite_database_receiving_into};

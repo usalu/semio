@@ -2607,6 +2607,23 @@ impl RetainedPackSymbolTable {
         self.maximum_scalars
     }
 
+    /// 🪟️ Pure original source authority quotes the next native reserve without installing a refusal.
+    pub fn source_reserve_demands(&self,symbol:bool,target:usize,offset:u64)->Result<RetirementDemand,RetainedPackCatalogFault>{
+        if let Some(fault)=self.fault{return Err(fault)}
+        if self.closed||self.closing{return Err(RetainedPackCatalogFault::refusal(ValueRefusalKind::InvariantViolated,"retained-pack.source-reserve",offset))}
+        if target>if symbol{self.maximum_symbols}else{self.maximum_scalars}{return Err(RetainedPackCatalogFault::refusal(ValueRefusalKind::WorkLimit,"retained-pack.source-reserve",offset))}
+        let error=|error|RetainedPackCatalogFault::from_paged_refusal(error,"retained-pack.source-reserve",offset);
+        let capacity=if symbol{self.symbols.next_capacity_allocation_bytes(target)}else{self.scalars.next_capacity_allocation_bytes(target)}.map_err(error)?.unwrap_or(0);
+        if self.allocated_bytes_checked().and_then(|owned|owned.checked_add(capacity)).is_none_or(|next|next>self.maximum_allocation_bytes){return Err(RetainedPackCatalogFault::refusal(ValueRefusalKind::OwnershipLimit,"retained-pack.source-reserve",offset))}
+        let depth=if symbol{self.symbols.next_reserve_depth_demand()}else{self.scalars.next_reserve_depth_demand()}.map_err(error)?;
+        Ok(RetirementDemand{capacity_bytes:capacity,depth,..Default::default()})
+    }
+    /// ✍️ Native original char writes consume payload copy while symbol spans move semantic metadata.
+    pub fn source_write_demands(&self,symbol:bool)->Result<RetirementDemand,ValueError>{
+        let depth=if symbol{self.symbols.next_push_depth_demand()}else{self.scalars.next_push_depth_demand()}.map_err(|error|ValueError::literal(ValueRefusalKind::OwnershipLimit,error.reason))?;
+        Ok(RetirementDemand{copy_bytes:if symbol{0}else{size_of::<char>()},depth,..Default::default()})
+    }
+
     pub fn next_symbol_allocation_bytes(&mut self, target: usize, offset: u64) -> Result<Option<usize>, RetainedPackCatalogFault> {
         if let Some(fault) = self.fault {
             return Err(fault);

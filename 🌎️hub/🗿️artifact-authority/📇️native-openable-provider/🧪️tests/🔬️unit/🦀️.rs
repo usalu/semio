@@ -39,7 +39,7 @@ fn hexadecimal(bytes: &[u8; 32]) -> String {
 
 #[test]
 fn vcs_native_provider_selection_binds_literal_owner_version_and_cancellation_without_publication() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌿️vcs-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌿️vcs-v1/🔣️.json")).unwrap();
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../🌎️hub/🧩️compositions/🌿️vcs/📇️native-codecs/🔣️.json")).unwrap();
     assert_eq!(fixture["packageVersion"], expected["packageVersion"]);
     assert_eq!(fixture["codecCount"].as_u64().unwrap() as usize, expected["receipts"].as_array().unwrap().len());
@@ -82,8 +82,8 @@ mod quick {
     #[tokio::test]
     async fn linked_consumer_descriptors_bind_their_actual_compiled_stdio_dependency_and_catalog() {
         let _registry = crate::artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔏️trusted-catalog/🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
-        let kind_json: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🔨️modules/🛂️manifest/🧫️fixtures/🗄️artifact-kind-formats.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔏️trusted-catalog/🧪️tests/🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
+        let kind_json: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🗄️artifact-kind-formats.json")).unwrap();
         let kind: semio_framework::ArtifactKindSpec = semio_framework_value::FromValue::from_value(kind_json.clone().into()).unwrap();
         assert_eq!(serde_json::to_value(&kind).unwrap(), kind_json);
         let independent: semio_framework::ArtifactKindSpec = serde_json::from_value(kind_json.clone()).unwrap();
@@ -205,7 +205,7 @@ mod quick {
         duplicate[1].factory_id = duplicate[0].factory_id.clone();
         assert!(NativeOpenableCatalogProviderV1::from_receipts(env!("CARGO_PKG_VERSION"), duplicate).is_err());
 
-        let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../🌎️hub/🧩️compositions/🗄️stdio/📇️catalog/🧫️fixtures/📇️native-catalog-surface/🧪️receipt-pairs.json")).unwrap();
+        let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧩️compositions/🗄️stdio/📇️catalog/🧪️tests/🧫️fixtures/📇️native-catalog-surface/🧪️receipt-pairs.json")).unwrap();
         for row in corpus["cases"].as_array().unwrap() {
             let mut candidate = receipts();
             let pdf14 = candidate.iter().position(|receipt| receipt.artifact_kind == "s.stdio.pdf" && receipt.schema == "stdio.pdf").expect("PDF1.4 owner");
@@ -235,7 +235,7 @@ mod quick {
     /// editor receipt from an import/export one.
     #[test]
     fn linked_provider_set_previews_only_the_selected_packages_of_a_stdio_gis_or_stdio_gis_vcs_profile() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌿️vcs-v1/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌿️vcs-v1/🔣️.json")).unwrap();
         let providers = NativeCodecProviderSetV1::linked();
         let control = SelectionControl { cancelled: false, now_ms: 0 };
         let context = OperationContext::new(u64::MAX, crate::artifact_authority::AuthorityLimits::maximum(), &control);

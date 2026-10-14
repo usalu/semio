@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { isAbsolute, join, resolve } from "node:path";
-import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { isTestLevel, TEST_LEVEL_BUDGET_MS } from "../🎚️budget/🟦️.ts";
 import { runBudgetedTestCommand } from "../🎛️execution/🟦️.ts";
 

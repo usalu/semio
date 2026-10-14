@@ -1,0 +1,7 @@
+{
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+  "before": "5ff576d5235ef3470e14a2c5b6046372154fe6e99b019f5f27bf15272c9a8b88",
+  "after": "5a9278f8d97817708f17978388a309dc2185809282dbdc21c95cc6316b569b38",
+  "red": "34 pass, 1 fail, Windows drive coordinate accepted by actual codec but rejected by schema/Ajv",
+  "change": "Owner policy path fields enforce existing schema portable lexical characters and lossless UTF-8; general existing shared exactOwnerPath behavior preserved"
+}

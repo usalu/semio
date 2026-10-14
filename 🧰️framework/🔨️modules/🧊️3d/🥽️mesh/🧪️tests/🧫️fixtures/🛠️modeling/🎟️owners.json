@@ -1,0 +1,1358 @@
+{
+  "version": 1,
+  "copyGrants": [
+    1,
+    3,
+    64
+  ],
+  "maximumDeniedReleaseBytes": 8,
+  "sameSourceArrays": true,
+  "handoffReleaseBytes": 0,
+  "terminalDropBytes": 0,
+  "physical": "sourcePlusAdmittedFrames",
+  "oneItemPerGrant": true,
+  "snapshotPreparation": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 84,
+    "underGrantedCopyBytes": [
+      0,
+      1,
+      3
+    ],
+    "cancelTurns": [
+      0,
+      1,
+      3,
+      8,
+      17
+    ],
+    "positions": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        2,
+        0,
+        0
+      ],
+      [
+        2,
+        1,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2,
+        3
+      ]
+    ],
+    "normal": [
+      0,
+      0,
+      1
+    ],
+    "flippedNormal": [
+      0,
+      0,
+      -1
+    ],
+    "reservationBuffers": [
+      "positions",
+      "faces",
+      "normals",
+      "corners"
+    ],
+    "sourceBytesCopiedPerPosition": 12,
+    "sourceBytesCopiedPerBoundary": 4,
+    "copiedBytesPerSwap": 8,
+    "sameOriginalSource": true,
+    "normalFirstCopyBytes": 36,
+    "normalMiddleCopyBytes": 24,
+    "normalLastCopyBytes": 72,
+    "forwardCopyBytes": 220,
+    "flippedCopyBytes": 236,
+    "forwardAtoms": [
+      0,
+      0,
+      0,
+      12,
+      12,
+      12,
+      12,
+      0,
+      4,
+      4,
+      4,
+      4,
+      36,
+      24,
+      24,
+      72
+    ]
+  },
+  "snapshotCallers": {
+    "operations": [
+      "mirror",
+      "mergeCoplanar",
+      "weld",
+      "subdivide",
+      "orient",
+      "fillHoles",
+      "knife",
+      "inset",
+      "extrude",
+      "loopCut",
+      "bevel",
+      "decimate"
+    ],
+    "maximumItems": 1,
+    "maximumCopyBytes": 84,
+    "parentDepthFrames": 2,
+    "cancelTurns": [
+      0,
+      1,
+      3,
+      8,
+      17
+    ],
+    "maximumSetupSteps": 256,
+    "originalPointers": [
+      "vertices",
+      "halfedges",
+      "faces"
+    ],
+    "setupGrant": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 84,
+      "maximumCapacityBytes": 1048576,
+      "maximumReleaseBytes": 1048576,
+      "maximumDepth": 64
+    },
+    "cancelAtCompletedFrontier": true,
+    "closedSourceOperations": [
+      "bevel",
+      "decimate"
+    ]
+  },
+  "translation": {
+    "offset": [
+      1,
+      2,
+      3
+    ],
+    "positions": [
+      [
+        1,
+        2,
+        3
+      ],
+      [
+        3,
+        2,
+        3
+      ],
+      [
+        3,
+        3,
+        3
+      ],
+      [
+        1,
+        3,
+        3
+      ]
+    ],
+    "maximumItems": 1,
+    "maximumCopyBytes": 12,
+    "depth": 3,
+    "deniedCopyBytes": [
+      0,
+      1,
+      3,
+      11
+    ],
+    "cancelTurns": [
+      0,
+      1,
+      3,
+      4,
+      5
+    ],
+    "positionCopyBytes": 12,
+    "transitionCopyBytes": 0,
+    "handoffCopyBytes": 0,
+    "retainedOriginalSource": true
+  },
+  "translationStart": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 0,
+    "maximumReleaseBytes": 0,
+    "depth": 2,
+    "frame": "originalTransform",
+    "sourcePointers": [
+      "vertices",
+      "halfedges",
+      "faces"
+    ],
+    "deniedCapacityBytes": 0,
+    "rootTransferCopyBytes": 0,
+    "cancelStages": [
+      "cold",
+      "started"
+    ],
+    "retainInputOnFault": true
+  },
+  "snapshotClosedPreparation": {
+    "positions": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        0,
+        1,
+        1
+      ]
+    ],
+    "faces": [
+      [
+        3,
+        2,
+        1,
+        0
+      ],
+      [
+        4,
+        5,
+        6,
+        7
+      ],
+      [
+        0,
+        1,
+        5,
+        4
+      ],
+      [
+        1,
+        2,
+        6,
+        5
+      ],
+      [
+        2,
+        3,
+        7,
+        6
+      ],
+      [
+        3,
+        0,
+        4,
+        7
+      ]
+    ],
+    "normals": [
+      [
+        0,
+        0,
+        -1
+      ],
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        -1,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        -1,
+        0,
+        0
+      ]
+    ],
+    "forwardCopyBytes": 1128,
+    "forwardAtoms": [
+      0,
+      0,
+      0,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      0,
+      4,
+      4,
+      4,
+      4,
+      36,
+      24,
+      24,
+      72,
+      0,
+      4,
+      4,
+      4,
+      4,
+      36,
+      24,
+      24,
+      72,
+      0,
+      4,
+      4,
+      4,
+      4,
+      36,
+      24,
+      24,
+      72,
+      0,
+      4,
+      4,
+      4,
+      4,
+      36,
+      24,
+      24,
+      72,
+      0,
+      4,
+      4,
+      4,
+      4,
+      36,
+      24,
+      24,
+      72,
+      0,
+      4,
+      4,
+      4,
+      4,
+      36,
+      24,
+      24,
+      72
+    ],
+    "closed": true,
+    "volume": 1
+  },
+  "orientationInitialization": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 64,
+    "parentDepth": 3,
+    "reservationBuffers": [
+      "adjacency",
+      "oriented",
+      "flipped"
+    ],
+    "reservationCopyBytes": 0,
+    "flagBytes": 1,
+    "adjacencySlotPointers": 3,
+    "cancelTurns": [
+      0,
+      1,
+      3,
+      8,
+      17
+    ],
+    "sources": [
+      "snapshotPreparation",
+      "snapshotClosedPreparation"
+    ],
+    "sourcePointers": [
+      "vertices",
+      "halfedges",
+      "faces"
+    ],
+    "terminalDropBytes": 0,
+    "physical": "sourcePlusAdmittedFrames",
+    "normalDemandFields": [
+      "copyBytes",
+      "capacityBytes",
+      "releaseBytes",
+      "depth"
+    ]
+  },
+  "orientationIncidence": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 64,
+    "parentFrames": 2,
+    "keyCopyBytes": 8,
+    "ownerCopyBytes": 16,
+    "reservationCopyBytes": 0,
+    "cancelTurns": [
+      0,
+      1,
+      3,
+      8,
+      17,
+      37
+    ],
+    "sources": [
+      "snapshotPreparation",
+      "snapshotClosedPreparation"
+    ],
+    "sourcePointers": [
+      "vertices",
+      "halfedges",
+      "faces"
+    ],
+    "terminalDropBytes": 0,
+    "physical": "sourcePlusAdmittedFrames",
+    "normalDemandFields": [
+      "copyBytes",
+      "capacityBytes",
+      "releaseBytes",
+      "depth"
+    ],
+    "outputs": {
+      "snapshotPreparation": {
+        "keys": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            0,
+            3
+          ]
+        ],
+        "owners": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              [
+                0,
+                true
+              ]
+            ]
+          ],
+          [
+            [
+              0,
+              3
+            ],
+            [
+              [
+                0,
+                false
+              ]
+            ]
+          ],
+          [
+            [
+              1,
+              2
+            ],
+            [
+              [
+                0,
+                true
+              ]
+            ]
+          ],
+          [
+            [
+              2,
+              3
+            ],
+            [
+              [
+                0,
+                true
+              ]
+            ]
+          ]
+        ]
+      },
+      "snapshotClosedPreparation": {
+        "keys": [
+          [
+            2,
+            3
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            3
+          ],
+          [
+            4,
+            5
+          ],
+          [
+            5,
+            6
+          ],
+          [
+            6,
+            7
+          ],
+          [
+            4,
+            7
+          ],
+          [
+            1,
+            5
+          ],
+          [
+            0,
+            4
+          ],
+          [
+            2,
+            6
+          ],
+          [
+            3,
+            7
+          ]
+        ],
+        "owners": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              [
+                0,
+                false
+              ],
+              [
+                2,
+                true
+              ]
+            ]
+          ],
+          [
+            [
+              0,
+              3
+            ],
+            [
+              [
+                0,
+                true
+              ],
+              [
+                5,
+                false
+              ]
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ],
+            [
+              [
+                2,
+                false
+              ],
+              [
+                5,
+                true
+              ]
+            ]
+          ],
+          [
+            [
+              1,
+              2
+            ],
+            [
+              [
+                0,
+                false
+              ],
+              [
+                3,
+                true
+              ]
+            ]
+          ],
+          [
+            [
+              1,
+              5
+            ],
+            [
+              [
+                2,
+                true
+              ],
+              [
+                3,
+                false
+              ]
+            ]
+          ],
+          [
+            [
+              2,
+              3
+            ],
+            [
+              [
+                0,
+                false
+              ],
+              [
+                4,
+                true
+              ]
+            ]
+          ],
+          [
+            [
+              2,
+              6
+            ],
+            [
+              [
+                3,
+                true
+              ],
+              [
+                4,
+                false
+              ]
+            ]
+          ],
+          [
+            [
+              3,
+              7
+            ],
+            [
+              [
+                4,
+                true
+              ],
+              [
+                5,
+                false
+              ]
+            ]
+          ],
+          [
+            [
+              4,
+              5
+            ],
+            [
+              [
+                1,
+                true
+              ],
+              [
+                2,
+                false
+              ]
+            ]
+          ],
+          [
+            [
+              4,
+              7
+            ],
+            [
+              [
+                1,
+                false
+              ],
+              [
+                5,
+                true
+              ]
+            ]
+          ],
+          [
+            [
+              5,
+              6
+            ],
+            [
+              [
+                1,
+                true
+              ],
+              [
+                3,
+                false
+              ]
+            ]
+          ],
+          [
+            [
+              6,
+              7
+            ],
+            [
+              [
+                1,
+                true
+              ],
+              [
+                4,
+                false
+              ]
+            ]
+          ]
+        ]
+      }
+    }
+  },
+  "orientationAdjacency": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 64,
+    "parentFrames": 2,
+    "neighborCopyBytes": 16,
+    "reservationCopyBytes": 0,
+    "cancelTurns": [
+      0,
+      1,
+      3,
+      8,
+      17,
+      37
+    ],
+    "sources": [
+      "snapshotPreparation",
+      "snapshotClosedPreparation"
+    ],
+    "deniedSource": "snapshotClosedPreparation",
+    "sourcePointers": [
+      "vertices",
+      "halfedges",
+      "faces"
+    ],
+    "terminalDropBytes": 0,
+    "physical": "sourcePlusAdmittedFrames",
+    "normalDemandFields": [
+      "copyBytes",
+      "capacityBytes",
+      "releaseBytes",
+      "depth"
+    ],
+    "outputs": {
+      "snapshotPreparation": [
+        []
+      ],
+      "snapshotClosedPreparation": [
+        [
+          [
+            4,
+            false
+          ],
+          [
+            3,
+            false
+          ],
+          [
+            2,
+            false
+          ],
+          [
+            5,
+            false
+          ]
+        ],
+        [
+          [
+            2,
+            false
+          ],
+          [
+            3,
+            false
+          ],
+          [
+            4,
+            false
+          ],
+          [
+            5,
+            false
+          ]
+        ],
+        [
+          [
+            0,
+            false
+          ],
+          [
+            1,
+            false
+          ],
+          [
+            3,
+            false
+          ],
+          [
+            5,
+            false
+          ]
+        ],
+        [
+          [
+            0,
+            false
+          ],
+          [
+            1,
+            false
+          ],
+          [
+            2,
+            false
+          ],
+          [
+            4,
+            false
+          ]
+        ],
+        [
+          [
+            0,
+            false
+          ],
+          [
+            1,
+            false
+          ],
+          [
+            3,
+            false
+          ],
+          [
+            5,
+            false
+          ]
+        ],
+        [
+          [
+            0,
+            false
+          ],
+          [
+            1,
+            false
+          ],
+          [
+            2,
+            false
+          ],
+          [
+            4,
+            false
+          ]
+        ]
+      ]
+    }
+  },
+  "snapshotMisorientedPreparation": {
+    "positions": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        2,
+        0,
+        0
+      ],
+      [
+        2,
+        1,
+        0
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2,
+        3
+      ],
+      [
+        1,
+        2,
+        5,
+        4
+      ]
+    ]
+  },
+  "orientationComponents": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 64,
+    "parentDepth": 3,
+    "flagCopyBytes": 1,
+    "stackElementBytes": 8,
+    "rootCopyBytes": 9,
+    "neighborCopyBytes": 10,
+    "reservationCopyBytes": 0,
+    "cancelTurns": [
+      0,
+      1,
+      3,
+      8,
+      17,
+      37
+    ],
+    "sources": [
+      "snapshotPreparation",
+      "snapshotClosedPreparation",
+      "snapshotMisorientedPreparation"
+    ],
+    "deniedSource": "snapshotClosedPreparation",
+    "sourcePointers": [
+      "vertices",
+      "halfedges",
+      "faces"
+    ],
+    "terminalDropBytes": 0,
+    "physical": "sourcePlusAdmittedFrames",
+    "normalDemandFields": [
+      "copyBytes",
+      "capacityBytes",
+      "releaseBytes",
+      "depth"
+    ],
+    "adjacency": {
+      "snapshotPreparation": [
+        []
+      ],
+      "snapshotClosedPreparation": [
+        [
+          [
+            4,
+            false
+          ],
+          [
+            3,
+            false
+          ],
+          [
+            2,
+            false
+          ],
+          [
+            5,
+            false
+          ]
+        ],
+        [
+          [
+            2,
+            false
+          ],
+          [
+            3,
+            false
+          ],
+          [
+            4,
+            false
+          ],
+          [
+            5,
+            false
+          ]
+        ],
+        [
+          [
+            0,
+            false
+          ],
+          [
+            1,
+            false
+          ],
+          [
+            3,
+            false
+          ],
+          [
+            5,
+            false
+          ]
+        ],
+        [
+          [
+            0,
+            false
+          ],
+          [
+            1,
+            false
+          ],
+          [
+            2,
+            false
+          ],
+          [
+            4,
+            false
+          ]
+        ],
+        [
+          [
+            0,
+            false
+          ],
+          [
+            1,
+            false
+          ],
+          [
+            3,
+            false
+          ],
+          [
+            5,
+            false
+          ]
+        ],
+        [
+          [
+            0,
+            false
+          ],
+          [
+            1,
+            false
+          ],
+          [
+            2,
+            false
+          ],
+          [
+            4,
+            false
+          ]
+        ]
+      ],
+      "snapshotMisorientedPreparation": [
+        [
+          [
+            1,
+            true
+          ]
+        ],
+        [
+          [
+            0,
+            true
+          ]
+        ]
+      ]
+    },
+    "outputs": {
+      "snapshotPreparation": {
+        "oriented": [
+          true
+        ],
+        "flipped": [
+          false
+        ],
+        "flipCount": 0,
+        "copyBytes": 9
+      },
+      "snapshotClosedPreparation": {
+        "oriented": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "flipped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "flipCount": 0,
+        "copyBytes": 59
+      },
+      "snapshotMisorientedPreparation": {
+        "oriented": [
+          true,
+          true
+        ],
+        "flipped": [
+          false,
+          true
+        ],
+        "flipCount": 1,
+        "copyBytes": 19
+      }
+    },
+    "correctedNormal": [
+      0,
+      0,
+      1
+    ]
+  },
+  "orientationCorners": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 64,
+    "swapCopyBytes": 8,
+    "parentDepth": 3,
+    "deniedSource": "snapshotMisorientedPreparation",
+    "sources": [
+      "snapshotPreparation",
+      "snapshotClosedPreparation",
+      "snapshotMisorientedPreparation"
+    ],
+    "outputs": {
+      "snapshotPreparation": {
+        "faces": [
+          [
+            0,
+            1,
+            2,
+            3
+          ]
+        ],
+        "copyBytes": 0
+      },
+      "snapshotClosedPreparation": {
+        "faces": [
+          [
+            3,
+            2,
+            1,
+            0
+          ],
+          [
+            4,
+            5,
+            6,
+            7
+          ],
+          [
+            0,
+            1,
+            5,
+            4
+          ],
+          [
+            1,
+            2,
+            6,
+            5
+          ],
+          [
+            2,
+            3,
+            7,
+            6
+          ],
+          [
+            3,
+            0,
+            4,
+            7
+          ]
+        ],
+        "copyBytes": 0
+      },
+      "snapshotMisorientedPreparation": {
+        "faces": [
+          [
+            0,
+            1,
+            2,
+            3
+          ],
+          [
+            4,
+            5,
+            2,
+            1
+          ]
+        ],
+        "copyBytes": 16
+      }
+    },
+    "sourcePointers": [
+      "vertices",
+      "halfedges",
+      "faces"
+    ],
+    "terminalDropBytes": 0,
+    "physical": "sourcePlusAdmittedFrames",
+    "cancelTurns": [
+      0,
+      1,
+      3,
+      8,
+      17
+    ],
+    "normalDemandFields": [
+      "copyBytes",
+      "capacityBytes",
+      "releaseBytes",
+      "depth"
+    ]
+  },
+  "reconstructionMembership": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 64,
+    "parentFrames": 2,
+    "deniedSource": "snapshotClosedPreparation",
+    "sources": [
+      "snapshotPreparation",
+      "snapshotClosedPreparation",
+      "snapshotMisorientedPreparation"
+    ],
+    "members": {
+      "snapshotPreparation": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "snapshotClosedPreparation": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "snapshotMisorientedPreparation": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "sourcePointers": [
+      "vertices",
+      "halfedges",
+      "faces"
+    ],
+    "terminalDropBytes": 0,
+    "physical": "sourcePlusAdmittedFrames",
+    "cancelTurns": [
+      0,
+      1,
+      3,
+      8,
+      17
+    ],
+    "normalDemandFields": [
+      "copyBytes",
+      "capacityBytes",
+      "releaseBytes",
+      "depth"
+    ]
+  }
+}

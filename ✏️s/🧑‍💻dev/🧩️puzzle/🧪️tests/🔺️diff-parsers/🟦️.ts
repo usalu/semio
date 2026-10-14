@@ -121,7 +121,7 @@ describe("puzzle diff patch-entry parsers", () => {
 
 /** 🔢️ Shared exact scalar words cross the test's JSON IO boundary and retain native identity. */
 it("puzzle3d: typed sparse field words match the neutral corpus and Ajv transport oracle", () => {
-  const fixture = JSON.parse(readFileSync(new URL("../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧫️fixtures/🔢️native-fields/🔣️.json", import.meta.url), "utf8")) as {cases: {name:string;words:string[]}[]};
+  const fixture = JSON.parse(readFileSync(new URL("../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔺️diff/🔢️native-fields/🔣️.json", import.meta.url), "utf8")) as {cases: {name:string;words:string[]}[]};
   const schemaUrl=cases.find((row)=>row.dimension==="puzzle3d")!.schemaUrl;
   for (const row of fixture.cases) {
     const origin=row.words.map((bits)=>({bits:BigInt(bits)}));

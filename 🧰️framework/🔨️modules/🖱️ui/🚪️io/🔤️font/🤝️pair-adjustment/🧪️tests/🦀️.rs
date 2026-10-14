@@ -1,7 +1,7 @@
 use super::*;
 #[test]
 fn font_pair_rejects_malformed_borrowed_sources_without_effects() {
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for value in law["queries"]["accepted"].as_array().unwrap(){assert_eq!(serde_json::to_value(serde_json::from_value::<FontPairQuery>(value.clone()).unwrap()).unwrap(),*value);}
     for value in law["queries"]["refused"].as_array().unwrap(){assert!(serde_json::from_value::<FontPairQuery>(value.clone()).is_err());}
     for value in law["adjustments"]["accepted"].as_array().unwrap(){assert_eq!(serde_json::to_value(serde_json::from_value::<FontPairAdjustment>(value.clone()).unwrap()).unwrap(),*value);}

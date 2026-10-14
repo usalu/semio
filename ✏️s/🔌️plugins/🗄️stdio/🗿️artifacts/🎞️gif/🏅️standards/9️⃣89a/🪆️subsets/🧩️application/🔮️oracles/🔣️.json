@@ -23,14 +23,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/🧩️add-app-extension/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/🧩️add-app-extension/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:6df429ba4ab20b107f8fa16df9a6aaaf0bd809ea8618ec611c644091072769f9",
           "bytes": 96
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/🧩️add-app-extension/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/🧩️add-app-extension/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:2e9219c08264ecdb49075a841c42f2aa94f1224f0f4deb45c7c913c6b77ae6a8",
           "bytes": 115
@@ -71,14 +71,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/🧹️remove-app-extension/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/🧹️remove-app-extension/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:2e9219c08264ecdb49075a841c42f2aa94f1224f0f4deb45c7c913c6b77ae6a8",
           "bytes": 115
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/🧹️remove-app-extension/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/🧹️remove-app-extension/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:6df429ba4ab20b107f8fa16df9a6aaaf0bd809ea8618ec611c644091072769f9",
           "bytes": 96
@@ -119,14 +119,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/🔁️set-loop-count-applied/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/🔁️set-loop-count-applied/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
           "bytes": 149
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/🔁️set-loop-count-applied/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/🔁️set-loop-count-applied/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:a6d4c0aaf8a43e1dc5a7df7c0657c3830b1823975f56df0e05b5503b9b13d389",
           "bytes": 149

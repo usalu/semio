@@ -7,5 +7,8 @@
   },
   "nx": {
     "includedScripts": []
+  },
+  "devDependencies": {
+    "@semio-tech/process": "workspace:*"
   }
 }

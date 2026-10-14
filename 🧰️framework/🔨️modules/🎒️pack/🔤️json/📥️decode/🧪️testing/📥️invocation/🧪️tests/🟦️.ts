@@ -2,9 +2,9 @@ import {expect, test} from "bun:test";
 import {createRequire} from "node:module";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
-import {type ScriptInvocation} from "../../../../../../🏃️process/🧭️routing/🟦️.ts";
+import {type ScriptInvocation} from "../../../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "../🧪️tests/🧫️fixtures/🔣️.json";
 
 test("JSON source owner requires its original finite child capability before effects", async () => {
   const require=createRequire(import.meta.url);

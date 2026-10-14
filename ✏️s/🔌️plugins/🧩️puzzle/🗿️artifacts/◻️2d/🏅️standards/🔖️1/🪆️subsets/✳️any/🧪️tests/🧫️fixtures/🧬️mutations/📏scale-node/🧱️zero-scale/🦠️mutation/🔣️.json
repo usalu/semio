@@ -1,0 +1,5 @@
+{
+  "id": "node-a",
+  "mutation": "scaleNode",
+  "newScale": 0.0
+}

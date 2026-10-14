@@ -9,7 +9,7 @@ import { PDF_COS_SQLITE_SCHEMA, pdfObjectToSqliteDatabase, pdfObjectFromSqliteDa
 import { exportSqliteDatabase, importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 async function fixture(): Promise<{ root: PdfObject; depth: number }> {
-  const value = await Bun.file(new URL("../../🧩️cos/🧫️fixtures/🔣️.json", import.meta.url)).json();
+  const value = await Bun.file(new URL("../../🧩️cos/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
   const filters: PdfStreamFilter[] = value.filters;
   const items: PdfObject[] = [{ kind: "null" }, { kind: "bool", value: false }, ...value.integers.map((integer: string) => ({ kind: "int" as const, value: BigInt(integer) })), { kind: "real", ...value.decimal }, { kind: "str", value: value.bytes }, { kind: "name", value: value.name }, { kind: "ref", ...value.reference }, { kind: "array", value: [] }, { kind: "dict", value: [{ key: "duplicate", value: { kind: "null" } }, { key: "duplicate", value: { kind: "bool", value: true } }] }, { kind: "stream", data: value.bytes, filters, dict: [{ key: "Size", value: { kind: "int", value: 4n } }] }];
   return { root: { kind: "array", value: items }, depth: value.depth };
@@ -69,7 +69,7 @@ test("PDF COS native JSON admission constructs the canonical owned bigint model"
 });
 
 test("PDF retained text and date own typed SQL values against neutral admission cases",async()=>{
-  const cases=await Bun.file(new URL("../../../../🧫️fixtures/🪪️retained-text/🔣️.json",import.meta.url)).json();
+  const cases=await Bun.file(new URL("../../../../🧪️tests/🧫️fixtures/🪪️retained-text/🔣️.json",import.meta.url)).json();
   for(const vector of cases.cases){
     const root:PdfObject={kind:"array",value:[{kind:"text",value:vector.text},{kind:"date",value:vector.ownedDate}]};
     expect(parsePdfObject(root)).toEqual(root);

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "➖️create-beam/✅️adds-below-the-storey-top",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️create-beam/✅️adds-below-the-storey-top/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️create-beam/✅️adds-below-the-storey-top/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️create-beam/✅️adds-below-the-storey-top/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️create-beam/✅️adds-below-the-storey-top/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️create-beam/✅️adds-below-the-storey-top/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️create-beam/✅️adds-below-the-storey-top/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️create-beam/✅️adds-below-the-storey-top/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️create-beam/✅️adds-below-the-storey-top/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️create-beam/✅️adds-below-the-storey-top/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️create-beam/✅️adds-below-the-storey-top/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

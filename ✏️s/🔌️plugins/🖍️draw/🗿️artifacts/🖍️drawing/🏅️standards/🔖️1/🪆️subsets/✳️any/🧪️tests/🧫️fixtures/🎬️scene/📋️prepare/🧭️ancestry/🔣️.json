@@ -1,0 +1,9 @@
+[
+ {"name":"Ordinary Group Addresses","source":"group full affine","locks":[],"expected":[{"id":"group","sourcePath":[0],"lockedAncestors":0},{"id":"child","sourcePath":[0,0],"lockedAncestors":0}]},
+ {"name":"Locked Group Ancestor","source":"group full affine","locks":["group"],"expected":[{"id":"group","sourcePath":[0],"lockedAncestors":1},{"id":"child","sourcePath":[0,0],"lockedAncestors":1}]},
+ {"name":"Locked Child","source":"group full affine","locks":["child"],"expected":[{"id":"group","sourcePath":[0],"lockedAncestors":0},{"id":"child","sourcePath":[0,0],"lockedAncestors":2}]},
+ {"name":"Both Lock Levels","source":"group full affine","locks":["group","child"],"expected":[{"id":"group","sourcePath":[0],"lockedAncestors":1},{"id":"child","sourcePath":[0,0],"lockedAncestors":3}]},
+ {"name":"Hidden Source Address","source":"hidden ancestor retains child","locks":["child"],"expected":[{"id":"group","sourcePath":[0],"lockedAncestors":0},{"id":"child","sourcePath":[0,0],"lockedAncestors":2}]},
+ {"name":"Resolved Difference Address","source":"complete referenced difference","locks":["b"],"expected":[{"id":"a","sourcePath":[0],"lockedAncestors":0},{"id":"b","sourcePath":[1],"lockedAncestors":1},{"id":"result","sourcePath":[2],"lockedAncestors":0}]},
+ {"name":"Resolved Trace and Boolean Addresses","source":"actual traced geometry is a Boolean operand","locks":["traced","result"],"expected":[{"id":"traced","sourcePath":[0],"lockedAncestors":1},{"id":"cut","sourcePath":[1],"lockedAncestors":0},{"id":"result","sourcePath":[2],"lockedAncestors":1}]}
+]

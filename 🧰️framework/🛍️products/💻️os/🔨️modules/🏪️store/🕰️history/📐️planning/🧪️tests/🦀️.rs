@@ -26,7 +26,7 @@ fn make(law:&serde_json::Value,frontier:usize)->HistoryReadPlan {
 }
 #[test]
 fn history_plan_retirement_owns_original_positions_inputs_and_empty_page_scaffolds() {
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let(empty,heap)=observe_heap_allocations_on_this_thread(||HistoryReadPlan::new(None,protocol::HistoryInputDrafts::new(),17,true));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(_,heap)=observe_heap_allocations_on_this_thread(||drop(empty));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     for copy in law["copyGrants"].as_array().unwrap(){for frontier in law["cancelAt"].as_array().unwrap(){
         let(plan,heap)=observe_heap_allocations_on_this_thread(||make(&law,frontier.as_u64().unwrap()as usize));let held=heap.requested_bytes-heap.released_bytes;
@@ -48,7 +48,7 @@ fn history_preview_retirement_preserves_original_plan_draft_snapshot_registry_an
     use super::super::{ArtifactDerivedHistoryPreview,ArtifactHistoryReadRetirement,SnapshotReadLeaseRegistry,fixture_mutations::demo::DemoMutation,tests::DemoSnapshot,ErasedSnapshotRetirement};
     use semio_framework_value::{ArtifactOwnedValueRetirementFactory,retirement::OwnedValueRetirementFactory};
     use std::{mem::ManuallyDrop,sync::Arc,marker::PhantomData};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for copy in law["copyGrants"].as_array().unwrap(){for frontier in law["cancelAt"].as_array().unwrap(){
         let(owner,heap)=observe_heap_allocations_on_this_thread(||{
             let plan=make(&law,frontier.as_u64().unwrap()as usize);let drafts=law["drafts"].as_array().unwrap().iter().map(|row|(MutationId(text(row["id"].as_str().unwrap(),337)),input(row,&law))).collect();
@@ -71,7 +71,7 @@ fn history_preview_retirement_preserves_original_plan_draft_snapshot_registry_an
 fn history_completed_plan_retains_original_residue_and_transferred_results() {
     use super::super::{ArtifactDerivedHistoryPreview,ArtifactDerivedReplay,SnapshotReadLeaseRegistry,fixture_mutations::demo::DemoMutation,tests::DemoSnapshot};
     use std::{sync::Arc,marker::PhantomData};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for route in law["completionRoutes"].as_array().unwrap(){for copy in law["copyGrants"].as_array().unwrap(){for frontier in law["cancelAt"].as_array().unwrap(){
         let(plan,heap)=observe_heap_allocations_on_this_thread(||make(&law,frontier.as_u64().unwrap()as usize));let held=heap.requested_bytes-heap.released_bytes;let first_input=plan.first_input;let position_pointer=plan.positions.get(&MutationId("🐚".into())).unwrap()as*const _;let count_pointer=plan.counts.get(0).map(|value|value as*const _);
         let registry=crate::os_store::SnapshotReadRegistryHandle::new();let registry_alias=registry.clone();
@@ -103,7 +103,7 @@ fn history_raw_replay_retirement_preserves_original_loaded_derived_and_finished_
     use super::super::{ArtifactDerivedReplay,ArtifactHistoryReadRetirement,SnapshotReadLeaseRegistry,EditReplay,ReplayOwnedState,ErasedSnapshotRetirement,fixture_mutations::demo::DemoMutation,tests::DemoSnapshot};
     use semio_framework_value::{ArtifactOwnedValueRetirementFactory,retirement::OwnedValueRetirementFactory};
     use std::{mem::ManuallyDrop,sync::Arc};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for route in law["replayRetirementRoutes"].as_array().unwrap(){for copy in law["copyGrants"].as_array().unwrap(){for cut in law["cancelAt"].as_array().unwrap(){
         let ((mut owner,pointer),heap)=observe_heap_allocations_on_this_thread(||{
             let mut raw=EditReplay::<DemoSnapshot,DemoMutation>::retain(ReplayOwnedState::terminal());raw.schema=text("original/ä🐚",65536);raw.committed=Vec::with_capacity(8192);raw.drafts.insert(MutationId(text("",337)),protocol::InputReplacement::Input{schema:text("",8192),payload:Vec::with_capacity(8192)});raw.state=Some(Arc::new(DemoSnapshot{n:Some(23)}));let pointer=raw.schema.as_ptr();
@@ -125,7 +125,7 @@ fn history_preview_output_retains_original_inputs_until_granted_parent_and_proje
     use super::super::{ArtifactDerivedHistoryPreview,ArtifactHistoryReadRetirement,SnapshotReadLeaseRegistry,ErasedSnapshotRetirement,fixture_mutations::demo::DemoMutation,tests::DemoSnapshot,VcsError};
     use semio_framework_value::{ArtifactOwnedValueRetirementFactory,retirement::{OwnedValueRetirementFactory,shared::factory::FactorySharedRetirement}};
     use std::{mem::ManuallyDrop,sync::Arc,marker::PhantomData};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for copy in law["copyGrants"].as_array().unwrap(){for cut in law["cancelAt"].as_array().unwrap(){
         let (mut owner,heap)=observe_heap_allocations_on_this_thread(||{
             let drafts=law["drafts"].as_array().unwrap().iter().map(|row|(MutationId(text(row["id"].as_str().unwrap(),337)),input(row,&law))).collect();

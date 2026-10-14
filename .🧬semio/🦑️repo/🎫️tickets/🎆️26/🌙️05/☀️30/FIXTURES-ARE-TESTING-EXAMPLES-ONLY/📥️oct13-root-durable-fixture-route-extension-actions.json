@@ -1,0 +1,49 @@
+{
+  "exclusive": false,
+  "rows": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "beforeSha256": "7f94af301b89f62e23df4c17be85bc3478e0299935421eeed465adc8deba44e0",
+      "afterSha256": "77cb5ec2b2bca9f2a495c8cc7d0915bc74935072e0f529b4f90869e2a4b62e88",
+      "reason": "Independent fixture census does not assert stable unrelated Source file inventory during concurrent authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "beforeSha256": "d99c19b226000a878c1e3404c9fb6078241907b8d38846725c5dd658412226a0",
+      "afterSha256": "c16975254e5a4e70fbd6346adab1ab1c80142dae2f9f58ef37abae46a19d79f8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "beforeSha256": "3d0dcf715d86d94bebff8f45fca18d358a74a4f06ca5bb99d7e70f3854f3d98c",
+      "afterSha256": "14b189a224856282de7de6eb57288c3c4eb5ce234e2ea24cca1abe54f6b3f498"
+    }
+  ],
+  "sources": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧭️fixture-placement/🟦️.ts",
+    "🧰️framework/🛍️products/🧪️tests/🧭️fixture-placement/🟦️.ts",
+    "✏️s/🔌️plugins/🧪️tests/📁fixture-placement/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📁fixture-placement/🟦️.ts",
+    "🧰️framework/🔨️modules/🎒️pack/🧪️tests/🧭️fixture-placement/🟦️.ts",
+    "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧭️fixture-placement/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧭️fixture-placement/🟦️.ts",
+    "🧰️framework/🔨️modules/🌱️value/🧪️tests/🧭️fixture-placement/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧪️tests/🧭️fixture-placement/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️case-fixtures/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/📐️test-layout/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧭️fixture-resolution/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🚷️discovery-boundaries/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🗂️schema-document-index/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📏️proportion/📃️flatness/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📏️proportion/↔️elongation/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📏️proportion/📏️slenderness/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📏️proportion/🖼️aspect-ratios/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/🥯️handles/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/🔢️genus/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/🕳️holes/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/🧮️euler-characteristic/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/➰️boundary-loops/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📦️size/↔️axis-aligned-bounds/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📦️size/📏️overall-size/🟦️.ts"
+  ]
+}

@@ -300,14 +300,14 @@
       "files": [
         {
           "role": "expected-before-svg",
-          "path": "../🧫️fixtures/➕️insert-tiny-element-applied/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-tiny-element-applied/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:c08c609e2add221f09c248dbc0bfdf0fb56773d5c210bdd09e2f60e4f4872c6a",
           "bytes": 212
         },
         {
           "role": "expected-after-svg",
-          "path": "../🧫️fixtures/➕️insert-tiny-element-applied/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-tiny-element-applied/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:d0af760840916f4378240c5a12952f1775dce8922c9b465906bc4070d637331e",
           "bytes": 260
@@ -350,14 +350,14 @@
       "files": [
         {
           "role": "expected-before-svg",
-          "path": "../🧫️fixtures/➖️remove-element-applied/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-element-applied/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:d0af760840916f4378240c5a12952f1775dce8922c9b465906bc4070d637331e",
           "bytes": 260
         },
         {
           "role": "expected-after-svg",
-          "path": "../🧫️fixtures/➖️remove-element-applied/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-element-applied/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:c08c609e2add221f09c248dbc0bfdf0fb56773d5c210bdd09e2f60e4f4872c6a",
           "bytes": 212
@@ -400,14 +400,14 @@
       "files": [
         {
           "role": "expected-before-svg",
-          "path": "../🧫️fixtures/✍️set-text-applied/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/✍️set-text-applied/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:2e1fd68a5cf50e5dc63755adc64bec66a755a69e2bb475ad677faf01d236bfc7",
           "bytes": 186
         },
         {
           "role": "expected-after-svg",
-          "path": "../🧫️fixtures/✍️set-text-applied/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/✍️set-text-applied/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:9766d3419c3626890fdfbf887e16b6b197b1951af9c80ca798e2cd493bbc2e01",
           "bytes": 186
@@ -450,14 +450,14 @@
       "files": [
         {
           "role": "expected-before-svg",
-          "path": "../🧫️fixtures/🏷️set-tiny-attribute-applied/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-tiny-attribute-applied/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:c08c609e2add221f09c248dbc0bfdf0fb56773d5c210bdd09e2f60e4f4872c6a",
           "bytes": 212
         },
         {
           "role": "expected-after-svg",
-          "path": "../🧫️fixtures/🏷️set-tiny-attribute-applied/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-tiny-attribute-applied/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:0adaf58fa094eee97b07bf51e2c065ce5558c40b75c1e5e8dbab866d9e145313",
           "bytes": 212
@@ -500,14 +500,14 @@
       "files": [
         {
           "role": "expected-before-svg",
-          "path": "../🧫️fixtures/🔄️set-transform-applied/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🔄️set-transform-applied/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:c08c609e2add221f09c248dbc0bfdf0fb56773d5c210bdd09e2f60e4f4872c6a",
           "bytes": 212
         },
         {
           "role": "expected-after-svg",
-          "path": "../🧫️fixtures/🔄️set-transform-applied/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🔄️set-transform-applied/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:5dcb949cdb50a3e5a6207e3b8184753ea377c1b827653824b2e947df2afd339c",
           "bytes": 241
@@ -550,14 +550,14 @@
       "files": [
         {
           "role": "expected-before-svg",
-          "path": "../🧫️fixtures/🖼️set-view-box-applied/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🖼️set-view-box-applied/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:c08c609e2add221f09c248dbc0bfdf0fb56773d5c210bdd09e2f60e4f4872c6a",
           "bytes": 212
         },
         {
           "role": "expected-after-svg",
-          "path": "../🧫️fixtures/🖼️set-view-box-applied/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🖼️set-view-box-applied/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:d88a5f97bb3e3bd2898e49c60581b7105d8c892612345a0f19d21ed16be9406b",
           "bytes": 212
@@ -600,14 +600,14 @@
       "files": [
         {
           "role": "expected-before-svg",
-          "path": "../🧫️fixtures/🪪️stamp-base-profile-applied/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🪪️stamp-base-profile-applied/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:4b4b7270235de14015b052e566cf2f0c35777e254622b5fc11211180a56fe2bf",
           "bytes": 193
         },
         {
           "role": "expected-after-svg",
-          "path": "../🧫️fixtures/🪪️stamp-base-profile-applied/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🪪️stamp-base-profile-applied/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:c08c609e2add221f09c248dbc0bfdf0fb56773d5c210bdd09e2f60e4f4872c6a",
           "bytes": 212
@@ -650,14 +650,14 @@
       "files": [
         {
           "role": "expected-before-svg",
-          "path": "../🧫️fixtures/🧹️strip-non-tiny-applied/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🧹️strip-non-tiny-applied/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:d1b87a4b5f0b1ecf4fbe5326e30041c8e2e98e4424087ffa47a71107b19f2c23",
           "bytes": 287
         },
         {
           "role": "expected-after-svg",
-          "path": "../🧫️fixtures/🧹️strip-non-tiny-applied/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🧹️strip-non-tiny-applied/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:c08c609e2add221f09c248dbc0bfdf0fb56773d5c210bdd09e2f60e4f4872c6a",
           "bytes": 212

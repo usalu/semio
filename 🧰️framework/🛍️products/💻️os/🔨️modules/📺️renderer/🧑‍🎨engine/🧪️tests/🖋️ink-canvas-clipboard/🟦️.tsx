@@ -18,8 +18,8 @@ import {
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖋️ink-clipboard/🔣️.json"), "utf8")) as any;
-const surfaceBehavior = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🎬️surface-behavior/🔣️.json"), "utf8")) as any;
+const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖋️ink-clipboard/🔣️.json"), "utf8")) as any;
+const surfaceBehavior = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🎬️surface-behavior/🔣️.json"), "utf8")) as any;
 
 type ClipboardDataStub = {
   readonly items: readonly unknown[];

@@ -26,7 +26,7 @@ pub(crate) fn observe_ownership<T>(operation:impl FnOnce()->T)->(T,usize,usize) 
 }
 #[test]
 fn nested_original_system_observations_preserve_child_and_aggregate_receipts() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧵️retirement/🧫️fixtures/🎮️typed-owners/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧵️retirement/🧪️tests/🧫️fixtures/🎮️typed-owners/🔣️.json")).unwrap();
     let bytes=fixture["cases"][0]["reservedCapacity"].as_u64().unwrap()as usize;
     let ((text,child_birth,child_free),birth,freed)=observe_ownership(||observe_ownership(||String::with_capacity(bytes)));
     assert_eq!((birth,freed),(child_birth,child_free));assert_eq!((birth,freed),(text.capacity(),0));
@@ -66,7 +66,7 @@ fn drain_registry(owner:&mut RegistryRetirement,copy:usize,maximum_turns:usize)-
 }
 #[test]
 fn registry_physical_shells_retire_only_under_exact_allocator_byte_grants() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["physicalShell"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["physicalShell"];
     SHELL_OBSERVATION.with(|state|state.set(ShellObservation {recording:true,..Default::default()}));let (reader,mut retirement)=SharedRegistry::new(Registry::new());let original=SHELL_OBSERVATION.with(|state|{let mut observed=state.get();observed.recording=false;state.set(observed);observed});
     let alias=reader.clone();assert_eq!(reader.owner_identity(),alias.owner_identity());assert_eq!(serde_json::to_value(&reader.schemas).unwrap(),serde_json::json!({}));
     let grant=registry_grant(&retirement,1).unwrap();let (waiting,born,freed)=observe_ownership(||retirement.close_step(grant).unwrap());assert_eq!(waiting.progress(),Default::default());assert_eq!((born,freed),(0,0));
@@ -84,7 +84,7 @@ fn registry_physical_shells_retire_only_under_exact_allocator_byte_grants() {
 }
 #[test]
 fn registry_execution_owner_identity_survives_the_original_source_reader() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["executionOwner"];let copy=law["retirementGrantBytes"].as_u64().unwrap()as usize;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["executionOwner"];let copy=law["retirementGrantBytes"].as_u64().unwrap()as usize;
     let mut a=Registry::new();a.register_schema(serde_json::from_value::<Schema>(fixture["schema"].clone()).unwrap());let mut b=Registry::new();b.register_schema(serde_json::from_value::<Schema>(fixture["schema"].clone()).unwrap());let (a,mut a_retirement)=SharedRegistry::new(a);let (b,mut b_retirement)=SharedRegistry::new(b);let a_source=a.clone();let b_source=b.clone();
     assert_eq!(a.owner_identity()==a_source.owner_identity(),law["sameReaderSameIdentity"].as_bool().unwrap());assert_eq!(a.owner_identity()!=b.owner_identity(),law["distinctOwnerDifferentIdentity"].as_bool().unwrap());let identity=a.owner_identity();
     let mut a_lease=a.into_retirement();let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};let (step,born,freed)=observe_ownership(||a_lease.close_step(grant).unwrap());assert!(matches!(step,RetainedCloneStep::Complete(_)));assert_eq!((born,freed),(0,0));assert_eq!(a_source.owner_identity(),identity);assert_eq!(serde_json::to_value(a_source.schema("sample").unwrap()).unwrap(),fixture["schema"]);
@@ -113,7 +113,7 @@ impl Operator for OwnedOperator {
 impl Drop for OwnedOperator{fn drop(&mut self){assert_eq!(self.text.capacity(),0);self.drops.fetch_add(1,Ordering::SeqCst);}}
 #[test]
 fn registry_fixture_preserves_readers_and_retires_every_exact_owner() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let mut expected_bytes=None;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let mut expected_bytes=None;
     for copy in fixture["grants"].as_array().unwrap(){
         let copy=copy.as_u64().unwrap()as usize;let drops=Arc::new(AtomicUsize::new(0));let mut registry=Registry::new();registry.register_schema(serde_json::from_value::<Schema>(fixture["schema"].clone()).unwrap());registry.register_operator(serde_json::from_value::<OperatorInfo>(fixture["operator"].clone()).unwrap(),vec![OperatorImpl {schemas:serde_json::from_value(fixture["implementationSchemas"].clone()).unwrap(),operator:Box::new(OwnedOperator {text:fixture["payload"].as_str().unwrap().into(),drops:Arc::clone(&drops)})}],&["sample"]);registry.finalize();
         let (root,mut retirement)=SharedRegistry::new(registry);let readers=[root.clone(),root.clone()];assert_eq!(serde_json::to_value(root.schema("sample").unwrap()).unwrap(),fixture["schema"]);assert_eq!(serde_json::to_value(root.operator_info("fixture.echo").unwrap()).unwrap(),fixture["operator"]);
@@ -162,7 +162,7 @@ impl Operator for FaultingOperator {
 impl Drop for FaultingOperator{fn drop(&mut self){assert_eq!(self.text.capacity(),0);self.drops.fetch_add(1,Ordering::SeqCst);}}
 #[test]
 fn supervising_cursor_recovers_operator_fault_after_exact_payload_handoff() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let drops=Arc::new(AtomicUsize::new(0));let mut registry=Registry::new();registry.register_operator(OperatorInfo::default(),vec![OperatorImpl {schemas:vec![],operator:Box::new(FaultingOperator {text:fixture["payload"].as_str().unwrap().into(),drops:Arc::clone(&drops)})}],&[]);let (reader,mut supervisor)=SharedRegistry::new(registry);drop(reader);
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let drops=Arc::new(AtomicUsize::new(0));let mut registry=Registry::new();registry.register_operator(OperatorInfo::default(),vec![OperatorImpl {schemas:vec![],operator:Box::new(FaultingOperator {text:fixture["payload"].as_str().unwrap().into(),drops:Arc::clone(&drops)})}],&[]);let (reader,mut supervisor)=SharedRegistry::new(registry);drop(reader);
     let fault=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||{for _ in 0..100000{let grant=registry_grant(&supervisor,1).unwrap();supervisor.close_step(grant).unwrap();}}));assert!(fault.is_err()&&!supervisor.terminal_is_empty());assert_eq!(drops.load(Ordering::SeqCst),0);let bytes=drain_registry(&mut supervisor,1,100000);assert!(bytes>=fixture["payload"].as_str().unwrap().len());assert_eq!(drops.load(Ordering::SeqCst),1);
 }
 //#endregion 🧪️SharedRegistry

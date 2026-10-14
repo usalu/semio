@@ -13,7 +13,7 @@
 
 use super::*;
 
-const FOLDER_RELOAD_ROUTE_FIXTURE_JSON: &str = include_str!("../../🧫️fixtures/🧫️folder-reload-route/🔣️.json");
+const FOLDER_RELOAD_ROUTE_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/🧫️folder-reload-route/🔣️.json");
 
 async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> bool) {
     super::pump_until(app, what, done, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await

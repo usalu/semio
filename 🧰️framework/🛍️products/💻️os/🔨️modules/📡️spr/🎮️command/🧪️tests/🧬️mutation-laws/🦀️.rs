@@ -75,11 +75,11 @@ mod tests {
     }
 
     const WITNESSES: [&str; 5] = [
-        include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/➕️add-counter/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/✌️add-counter-twice/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/4️⃣add-counter-four-times/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/🌐️add-counter-then-notify/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/🔢️add-counter-sequence/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/➕️add-counter/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/✌️add-counter-twice/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/4️⃣add-counter-four-times/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/🌐️add-counter-then-notify/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/🔢️add-counter-sequence/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
     ];
 
     #[test]

@@ -11,11 +11,11 @@ use crate::LowpolyDiff;
 use crate::LowpolyMutation;
 use crate::LowpolySnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️scale-object/📐️halves/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️scale-object/📐️halves/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️scale-object/📐️halves/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️scale-object/📐️halves/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️scale-object/📐️halves/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️scale-object/📐️halves/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️scale-object/📐️halves/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️scale-object/📐️halves/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️scale-object/📐️halves/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️scale-object/📐️halves/🎯️outcome/🔣️.json");
 
 /// 🔓️ Decodes committed fixture JSON through the artifact's own value codec — these types carry
 /// `ToValue`/`FromValue`, never `serde`, because `LowpolyObject.mesh` is an `ArtifactChild` handle.

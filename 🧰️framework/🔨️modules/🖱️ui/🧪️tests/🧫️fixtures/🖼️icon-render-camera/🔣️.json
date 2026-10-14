@@ -1,0 +1,510 @@
+{
+  "schema": "icon-render-camera-v1",
+  "tolerance": 1e-05,
+  "cases": [
+    {
+      "id": "ortho-unfitted",
+      "request": {
+        "assetUrl": "mesh://translated-box",
+        "format": "png",
+        "width": 256,
+        "height": 128,
+        "camera": {
+          "position": [
+            0,
+            -10,
+            0
+          ],
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "zoom": 42,
+          "fov": 50,
+          "projection": "orthographic"
+        },
+        "fit": {
+          "enabled": false,
+          "padding": 1.25
+        }
+      },
+      "model": {
+        "minimum": [
+          3,
+          -6,
+          1
+        ],
+        "maximum": [
+          7,
+          -2,
+          5
+        ]
+      },
+      "preview": {
+        "width": 256,
+        "height": 128
+      },
+      "expected": {
+        "position": [
+          0,
+          -10,
+          0
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "zoom": 42,
+        "effectiveFov": 50,
+        "previewZoom": 42.0,
+        "targetNdc": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "ortho-preview-half",
+      "request": {
+        "assetUrl": "mesh://translated-box",
+        "format": "png",
+        "width": 256,
+        "height": 128,
+        "camera": {
+          "position": [
+            0,
+            -10,
+            0
+          ],
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "zoom": 42,
+          "fov": 50,
+          "projection": "orthographic"
+        },
+        "fit": {
+          "enabled": false,
+          "padding": 1.25
+        }
+      },
+      "model": {
+        "minimum": [
+          3,
+          -6,
+          1
+        ],
+        "maximum": [
+          7,
+          -2,
+          5
+        ]
+      },
+      "preview": {
+        "width": 128,
+        "height": 64
+      },
+      "expected": {
+        "position": [
+          0,
+          -10,
+          0
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "zoom": 42,
+        "effectiveFov": 50,
+        "previewZoom": 21.0,
+        "targetNdc": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "ortho-preview-double",
+      "request": {
+        "assetUrl": "mesh://translated-box",
+        "format": "png",
+        "width": 256,
+        "height": 128,
+        "camera": {
+          "position": [
+            0,
+            -10,
+            0
+          ],
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "zoom": 42,
+          "fov": 50,
+          "projection": "orthographic"
+        },
+        "fit": {
+          "enabled": false,
+          "padding": 1.25
+        }
+      },
+      "model": {
+        "minimum": [
+          3,
+          -6,
+          1
+        ],
+        "maximum": [
+          7,
+          -2,
+          5
+        ]
+      },
+      "preview": {
+        "width": 512,
+        "height": 256
+      },
+      "expected": {
+        "position": [
+          0,
+          -10,
+          0
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "zoom": 42,
+        "effectiveFov": 50,
+        "previewZoom": 84.0,
+        "targetNdc": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "ortho-fit-landscape",
+      "request": {
+        "assetUrl": "mesh://translated-box",
+        "format": "png",
+        "width": 256,
+        "height": 128,
+        "camera": {
+          "position": [
+            0,
+            -10,
+            0
+          ],
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "zoom": 200,
+          "fov": 50,
+          "projection": "orthographic"
+        },
+        "fit": {
+          "enabled": true,
+          "padding": 1.25
+        }
+      },
+      "model": {
+        "minimum": [
+          3,
+          -6,
+          1
+        ],
+        "maximum": [
+          7,
+          -2,
+          5
+        ]
+      },
+      "preview": {
+        "width": 384,
+        "height": 192
+      },
+      "expected": {
+        "position": [
+          5,
+          -14,
+          3
+        ],
+        "target": [
+          5,
+          -4,
+          3
+        ],
+        "zoom": 14.78016689125442,
+        "effectiveFov": 50,
+        "previewZoom": 22.17025033688163,
+        "targetNdc": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "ortho-fit-portrait",
+      "request": {
+        "assetUrl": "mesh://translated-box",
+        "format": "png",
+        "width": 128,
+        "height": 256,
+        "camera": {
+          "position": [
+            0,
+            -10,
+            0
+          ],
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "zoom": 200,
+          "fov": 50,
+          "projection": "orthographic"
+        },
+        "fit": {
+          "enabled": true,
+          "padding": 1.25
+        }
+      },
+      "model": {
+        "minimum": [
+          3,
+          -6,
+          1
+        ],
+        "maximum": [
+          7,
+          -2,
+          5
+        ]
+      },
+      "preview": {
+        "width": 64,
+        "height": 128
+      },
+      "expected": {
+        "position": [
+          5,
+          -14,
+          3
+        ],
+        "target": [
+          5,
+          -4,
+          3
+        ],
+        "zoom": 14.78016689125442,
+        "effectiveFov": 50,
+        "previewZoom": 7.39008344562721,
+        "targetNdc": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "perspective-unfitted-zoom",
+      "request": {
+        "assetUrl": "mesh://translated-box",
+        "format": "png",
+        "width": 256,
+        "height": 128,
+        "camera": {
+          "position": [
+            0,
+            -10,
+            0
+          ],
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "zoom": 2,
+          "fov": 50,
+          "projection": "perspective"
+        },
+        "fit": {
+          "enabled": false,
+          "padding": 1.25
+        }
+      },
+      "model": {
+        "minimum": [
+          3,
+          -6,
+          1
+        ],
+        "maximum": [
+          7,
+          -2,
+          5
+        ]
+      },
+      "preview": {
+        "width": 512,
+        "height": 256
+      },
+      "expected": {
+        "position": [
+          0,
+          -10,
+          0
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "zoom": 2,
+        "effectiveFov": 26.24853624558342,
+        "previewZoom": 1,
+        "targetNdc": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "perspective-fit-zoom",
+      "request": {
+        "assetUrl": "mesh://translated-box",
+        "format": "png",
+        "width": 256,
+        "height": 128,
+        "camera": {
+          "position": [
+            0,
+            -10,
+            0
+          ],
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "zoom": 2,
+          "fov": 50,
+          "projection": "perspective"
+        },
+        "fit": {
+          "enabled": true,
+          "padding": 1.25
+        }
+      },
+      "model": {
+        "minimum": [
+          3,
+          -6,
+          1
+        ],
+        "maximum": [
+          7,
+          -2,
+          5
+        ]
+      },
+      "preview": {
+        "width": 384,
+        "height": 192
+      },
+      "expected": {
+        "position": [
+          5,
+          -14.245953407425102,
+          3
+        ],
+        "target": [
+          5,
+          -4,
+          3
+        ],
+        "zoom": 2,
+        "effectiveFov": 26.24853624558342,
+        "previewZoom": 1,
+        "targetNdc": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "perspective-fit-portrait",
+      "request": {
+        "assetUrl": "mesh://translated-box",
+        "format": "png",
+        "width": 128,
+        "height": 256,
+        "camera": {
+          "position": [
+            0,
+            -10,
+            0
+          ],
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "zoom": 1,
+          "fov": 50,
+          "projection": "perspective"
+        },
+        "fit": {
+          "enabled": true,
+          "padding": 1.25
+        }
+      },
+      "model": {
+        "minimum": [
+          3,
+          -6,
+          1
+        ],
+        "maximum": [
+          7,
+          -2,
+          5
+        ]
+      },
+      "preview": {
+        "width": 64,
+        "height": 128
+      },
+      "expected": {
+        "position": [
+          5,
+          -23.070087700598133,
+          3
+        ],
+        "target": [
+          5,
+          -4,
+          3
+        ],
+        "zoom": 1,
+        "effectiveFov": 50.00000000000001,
+        "previewZoom": 1,
+        "targetNdc": [
+          0,
+          0
+        ]
+      }
+    }
+  ]
+}

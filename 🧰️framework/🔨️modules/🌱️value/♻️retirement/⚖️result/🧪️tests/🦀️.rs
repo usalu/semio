@@ -1,7 +1,7 @@
 use super::*;
 #[test]
 fn original_result_variants_preserve_native_payload_and_all_axis_receipts(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  let g=&law["grant"];let grant=RetainedCloneGrant{maximum_items:g["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:g["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:g["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:g["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:g["maximumDepth"].as_u64().unwrap()as usize};
  for variant in law["variants"].as_array().unwrap(){for repeat in law["repeats"].as_array().unwrap(){
   let n=repeat.as_u64().unwrap()as usize;let ok=variant.as_str().unwrap()=="Ok";

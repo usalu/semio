@@ -126,6 +126,7 @@ pub(crate) fn build_job(request: ArtifactOwnedToolJobRequest<Owner>) -> Result<s
         ArtifactRetainedCommandInputs {
             command: *request.command,
             snapshot: request.snapshot,
+            snapshot_read: request.snapshot_read,
             config: request.config,
             history: request.history,
             interaction_state: request.interaction_state,
@@ -231,7 +232,8 @@ impl ArtifactCommandWork<Owner> for JackQueryWork {
         let scene = crate::jack_content_from_children(snapshot, &context?.children).ok()?;
         (bytes <= QUERY_BYTES && scene.nodes.len() <= 16_384 && scene.edges.len() <= 16_384 && snapshot.manifest.node_kinds.len() <= 16_384 && snapshot.manifest.edge_kinds.len() <= 16_384 && snapshot.manifest.port_kinds.len() <= 16_384).then_some(1)
     }
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, Owner>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<Owner>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, Owner>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<Owner>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.finished || self.closing {
             return Err(Fault::from("query operation is terminal"));
         }
@@ -265,6 +267,9 @@ impl ArtifactCommandWork<Owner> for JackQueryWork {
             Ok(None) => Ok(self.progress("query-evaluate", br#"{"en":"Evaluating query","de":"Abfrage wird ausgewertet"}"#)),
             Err(error) => Ok(self.complete(input, None, Some(error.into_message()), Vec::new())),
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
     fn checkpoint_byte(&self, index: usize) -> Option<u8> {
         match index {

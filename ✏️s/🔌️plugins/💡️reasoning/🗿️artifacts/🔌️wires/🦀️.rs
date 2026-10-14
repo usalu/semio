@@ -181,7 +181,7 @@ pub fn wires_content_snapshot(nodes: &[DslValue], edges: &[DslValue]) -> SemioGr
 /// 🕸️ The content-addressed handle of the child minted from `content`: equal content, equal `(child_id, target)`. Once
 /// minted the id names that child's store for good; its content then moves only through child leaves.
 pub fn wires_content_handle(content: &SemioGraphSnapshot) -> WiresContentChild {
-    let child_id = store::content_id("wires-content", &<SemioGraphSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(content));
+    let child_id = store::content_id("wires-content", &<SemioGraphSnapshot as pack::snapshot::ArtifactPack>::encode_pack(content));
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "graph".into() };
     store::os_store::artifact_child::ArtifactChild::new(child_id.clone(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id, dialect })
 }
@@ -196,7 +196,7 @@ pub fn wires_bundled_contents() -> &'static [(String, SemioGraphSnapshot)] {
     static CONTENTS: std::sync::OnceLock<Vec<(String, SemioGraphSnapshot)>> = std::sync::OnceLock::new();
     CONTENTS
         .get_or_init(|| {
-            let demo = <SemioGraphSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(examples::demo::CONTENT_TEXT).expect("the demo's committed wires board parses");
+            let demo = <SemioGraphSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(examples::demo::CONTENT_TEXT).expect("the demo's committed wires board parses");
             vec![(wires_content_handle(&empty_wires_content()).child_id, empty_wires_content()), (WIRES_DEMO_CONTENT_ID.to_string(), demo)]
         })
         .as_slice()
@@ -209,7 +209,7 @@ pub fn genesis_wires_child_pack(snapshot: &WiresSnapshot, slot: &str, child_id: 
     if slot != WIRES_CONTENT_SLOT || child_id != snapshot.content.child_id {
         return None;
     }
-    wires_bundled_contents().iter().find(|(id, _)| id == child_id).map(|(_, content)| <SemioGraphSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(content))
+    wires_bundled_contents().iter().find(|(id, _)| id == child_id).map(|(_, content)| <SemioGraphSnapshot as pack::snapshot::ArtifactPack>::encode_pack(content))
 }
 //#endregion 🔖️ContentBridge
 

@@ -1,15 +1,15 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { resolve } from "node:path";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { resolveTestLevel, testLevelBudgetMs } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { runBudgetedTestCommand } from "../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
-import { buildBudgetMs, cmdBudgetMs } from "../../../🏃️process/⏱️budget/🟦️.ts";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel, testLevelBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import { buildBudgetMs, cmdBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** ⚙️ Registers the native UI package and its semantic UI-axis generator commands. */
 
-import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { CheckAxesScript, GenerateAxesScript, PreviewGeneratedScript } from "../../🎚️axes/🏃️execution/🟦️.ts";
 
 class TestScript extends BundleScript {
@@ -17,7 +17,7 @@ class TestScript extends BundleScript {
     if (segments[0] === "mounted-admission-native") {
       if (segments.length !== 1) throw Error("Expected test mounted-admission-native");
       if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
-      await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--features", "wgpu-engine", "--lib", "--offline", "-E", "test(original_layout_admission_params_cancel_and_full_error_close_with_system_receipts)", "--success-output", "immediate"] }, readCargoTestPolicyV1(process.env));
+      await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--features", "wgpu-engine", "--lib", "--offline", "-E", "test(original_layout_admission_params_cancel_and_full_error_close_with_system_receipts) | test(original_ui_worker_close_)", "--success-output", "immediate"] }, readCargoTestPolicyV1(process.env));
       return;
     }
     if (segments[0] === "mounted-admission") {

@@ -1195,6 +1195,42 @@
             "key:u64",
             "shape:u32"
           ]
+        },
+        "receiving": {
+          "tick": {
+            "maximumFileBytes": 262144,
+            "maximumSegmentBytes": 262144,
+            "maximumSymbols": 4096,
+            "maximumDepth": 64,
+            "maximumItems": 262144,
+            "maximumTotalAllocationBytes": 16777216,
+            "maximumSymbolUtf8Bytes": 262144,
+            "maximumSymbolScalars": 262144,
+            "maximumCursorAllocationBytes": 4194304
+          },
+          "recordBody": {
+            "maximumFileBytes": 1048576,
+            "maximumSegmentBytes": 1048576,
+            "maximumSymbols": 16384,
+            "maximumDepth": 64,
+            "maximumItems": 1048576,
+            "maximumTotalAllocationBytes": 67108864,
+            "maximumSymbolUtf8Bytes": 1048576,
+            "maximumSymbolScalars": 1048576,
+            "maximumCursorAllocationBytes": 16777216
+          },
+          "history": {
+            "fileBytes": 67108864,
+            "frameBodyBytes": 1048576,
+            "records": 8192,
+            "maximumFields": 128,
+            "maximumTextBytes": 1048576,
+            "maximumBinaryBytes": 1048576,
+            "maximumJsonBytes": 1048576,
+            "maximumJsonAllocationBytes": 8388608,
+            "maximumJsonItems": 65536,
+            "maximumJsonDepth": 64
+          }
         }
       },
       "x-semio-formats": [

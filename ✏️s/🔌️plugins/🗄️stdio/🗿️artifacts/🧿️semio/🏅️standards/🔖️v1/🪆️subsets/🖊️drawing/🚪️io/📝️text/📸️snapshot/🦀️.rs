@@ -1,5 +1,5 @@
 //! 📝️ Text representation codec surface for `stdio.semio.drawing` (snapshot). The real parse/
-//! print lives on `SemioDrawingSnapshot`'s `store::os_store::serialization::ArtifactDsl` impl (📸️snapshot/🦀️.rs)
+//! print lives on `SemioDrawingSnapshot`'s `pack::snapshot::ArtifactDsl` impl (📸️snapshot/🦀️.rs)
 //! -- this module exposes the grammar source for tooling/introspection, matching svg's own
 //! `📝️text/🦀️.rs` convention.
 
@@ -186,7 +186,7 @@ pub(crate) fn parse_drawing_snapshot_body(body: &str) -> Result<SemioDrawingSnap
 /// 🎁 Real structured text/binary codecs (drawing wave — off the old hex-dump-of-`serde_json`
 /// shortcut, following the flow/brep waves' proven template). Wrapped in the repo-wide
 /// `store::semio_format` envelope, unchanged.
-impl store::os_store::serialization::ArtifactDsl for SemioDrawingSnapshot {
+impl pack::snapshot::ArtifactDsl for SemioDrawingSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIODRAWING_DOCUMENT_SCHEMA
@@ -202,7 +202,7 @@ impl store::os_store::serialization::ArtifactDsl for SemioDrawingSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_drawing_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -232,19 +232,19 @@ pub fn decode_semio_drawing_snapshot_json(text: &str) -> Result<SemioDrawingSnap
 }
 
 /// 📝️ Parses `s.stdio.semio.drawing` DSL text into a [`SemioDrawingSnapshot`] — a named
-/// pass-through of this snapshot's own `store::os_store::serialization::ArtifactDsl` impl above, whose trait and error type
+/// pass-through of this snapshot's own `pack::snapshot::ArtifactDsl` impl above, whose trait and error type
 /// are both unnameable outside this crate, so `🖊️mutate-semio-drawing`'s `identity-round-trip`
 /// scenario reaches the real committed sketch artifact through this instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_drawing_dsl(text: &str) -> Result<SemioDrawingSnapshot, String> {
-    <SemioDrawingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <SemioDrawingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
 /// 📝️ Renders a [`SemioDrawingSnapshot`] back as DSL text — the inverse of
 /// [`parse_semio_drawing_dsl`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_drawing_dsl(snapshot: &SemioDrawingSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
+    pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

@@ -1,10 +1,11 @@
+import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { chromium, type Browser, type Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import fixture from "../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/👆️cursor/🧫️fixtures/🔣️.json";
+import fixture from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧊️wgpu/👆️cursor/🔣️.json";
 import { BrowserFrameTransport, type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort } from "../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
 import { resolveWgpuBootDescriptor } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
 
@@ -37,7 +38,7 @@ describe("👆️ browser cursor presentation", () => {
   it("retains every canonical CSS cursor through the production frame transport and page hook", () => {
     const worker = new FakeWorker();
     const received: string[] = [];
-    const transport = new BrowserFrameTransport({
+    const transport = new BrowserFrameTransport({ originalWorkStock: fixtureOriginalWorkStock(),
       worker,
       boot: {
         bindingsModuleUrl: "renderer.js",

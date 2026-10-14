@@ -14,7 +14,7 @@ import { applyPatch } from "fast-json-patch";
 
 test("fixed operation logical removals retain original capacity until an independent physical grant", () => {
   const root=resolve(import.meta.dir,"../../..");
-  const fixture=JSON.parse(readFileSync(resolve(root,"🧫️fixtures/📇️fixed-operation-registry-law.json"),"utf8"));
+  const fixture=JSON.parse(readFileSync(resolve(root,"🧪️tests/🧫️fixtures/📇️fixed-operation-registry-law.json"),"utf8"));
   expect(fixture.cases.map((row:any)=>row.id).sort()).toEqual(["aba","byte-maximum-plus-one","cancel-stale","collision","empty","interrupted-repeated-close","maximum-plus-one","single"]);
   for(const row of fixture.cases){
     for(const step of row.steps.filter((step:any)=>step.action==="close")){

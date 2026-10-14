@@ -18,7 +18,7 @@ impl Serializer<WriterSnapshot> for WriterIntoJson {
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn serialize(from: &WriterSnapshot, _: &ArchiveChildren, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let json = JsonSnapshot::from_value(semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(from)));
-        Ok(IoOutcome { value: IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(&json)), diagnostics: Vec::new() })
+        Ok(IoOutcome { value: IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&json)), diagnostics: Vec::new() })
     }
 }
 //#endregion 🔖️Serializer

@@ -44,7 +44,7 @@ fn offer_for(pid: u32) -> BridgeOffer {
 /// record of another version, with an extra field or a scope missing its space is refused.
 #[test]
 fn the_scoped_offer_records_are_this_gateways_offer_files() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🧫️fixtures/🛰️offer-answers/🔣️.json")).expect("offer fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🧪️tests/🧫️fixtures/🛰️offer-answers/🔣️.json")).expect("offer fixture parses");
     let records = fixture["select"]["records"].as_array().expect("select records");
     assert!(records.len() >= 6);
     for record in records {

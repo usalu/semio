@@ -5,7 +5,7 @@ import { Database } from "bun:sqlite";
 import { createToken, EmbeddedActionsParser, Lexer } from "chevrotain";
 const owner=resolve(import.meta.dir,"../.."), read=(path:string)=>JSON.parse(readFileSync(resolve(owner,path),"utf8"));
 test("original retained text decoding corpus preserves independent JSON and SQLite Unicode bytes",()=>{
- const fixture=read("🧫️fixtures/🧵️continuation/🔣️.json");
+ const fixture=read("../🧪️tests/🧫️fixtures/🧵️continuation/🔣️.json");
  const decoding=fixture.decoding.textUnescape;
  expect(decoding.unit).toBe("one-unicode-scalar");expect(decoding.sourceCopies).toBe(0);expect(decoding.outputTransfer).toBe("after-exact-end");
  const database=new Database(":memory:");try{
@@ -22,8 +22,8 @@ test("original retained text decoding corpus preserves independent JSON and SQLi
 });
 test("controlled decoder intrinsic corpus has closed independent literal and arithmetic identities",()=>{
  const mirror=resolve(owner,"../../../..","🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema");
- for(const path of ["🧫️fixtures/🛬️decoding/🔣️.json","🧫️fixtures/🛬️decoding/🔑️keys.json","🧪️tests/🧾️record-list/🧫️fixtures/🔣️.json"])expect(JSON.parse(readFileSync(resolve(mirror,path),"utf8"))).toEqual(read(path));
- const fixture = read("🧫️fixtures/🛬️decoding/🔣️.json");
+ for(const path of ["../🧪️tests/🧫️fixtures/🛬️decoding/🔣️.json","../🧪️tests/🧫️fixtures/🛬️decoding/🔑️keys.json","../🧪️tests/🧫️fixtures/🧾️record-list/🔣️.json"])expect(JSON.parse(readFileSync(resolve(mirror,path),"utf8"))).toEqual(read(path));
+ const fixture = read("../🧪️tests/🧫️fixtures/🛬️decoding/🔣️.json");
  const word=Buffer.alloc(8);word.writeBigUInt64LE(BigInt("0x"+fixture.floatWord));expect(new DataView(word.buffer,word.byteOffset,8).getBigUint64(0,true).toString(16)).toBe(fixture.floatWord);
  const database=new Database(":memory:");try{
  database.run("CREATE TABLE literal(text TEXT,octets BLOB,word BLOB,signed TEXT,unsigned TEXT)");database.run("INSERT INTO literal VALUES(?,?,?,?,?)",fixture.text,new Uint8Array(fixture.octets),word,fixture.signed,fixture.unsigned);
@@ -34,7 +34,7 @@ test("controlled decoder intrinsic corpus has closed independent literal and ari
  }finally{database.close();}
 });
 test("controlled decoder literal keys have exact closed identities and independent SQLite ordering",()=>{
- const keys=read("🧫️fixtures/🛬️decoding/🔑️keys.json") as string[];
+ const keys=read("../🧪️tests/🧫️fixtures/🛬️decoding/🔑️keys.json") as string[];
  const database=new Database(":memory:");try{database.run("CREATE TABLE identity(id INTEGER PRIMARY KEY,key TEXT)");keys.forEach((key,index)=>database.query("INSERT INTO identity VALUES(?,?)").run(index+1,key));expect(database.query("SELECT key FROM identity ORDER BY id").all().map((row:any)=>row.key)).toEqual(keys);for(const key of keys)expect(JSON.parse(JSON.stringify(key))).toBe(key);}finally{database.close();}
 });
 const Space=createToken({name:"Space",pattern:/\s+/,group:Lexer.SKIPPED}),Item=createToken({name:"Item",pattern:/items\b/}),Key=createToken({name:"Key",pattern:/[a-zA-Z_][a-zA-Z_0-9]*/}),Text=createToken({name:"Text",pattern:/"(?:[^"\\]|\\.)*"/}),NumberToken=createToken({name:"NumberToken",pattern:/-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/}),Equals=createToken({name:"Equals",pattern:/=/}),LeftList=createToken({name:"LeftList",pattern:/\[/}),RightList=createToken({name:"RightList",pattern:/\]/}),LeftRecord=createToken({name:"LeftRecord",pattern:/\{/}),RightRecord=createToken({name:"RightRecord",pattern:/\}/});
@@ -47,6 +47,6 @@ class BoundaryOracle extends EmbeddedActionsParser{
  parse(source:string){const result=lexer.tokenize(source);if(result.errors.length)throw Error("lexical boundary");this.input=result.tokens;const rows=this.document();if(this.errors.length||this.LA(1).image)throw Error("record boundary");return rows;}
 }
 test("controlled record list fixtures retain braced empty and optional owners through an independent parser",()=>{
- const fixture=read("🧪️tests/🧾️record-list/🧫️fixtures/🔣️.json"), oracle=new BoundaryOracle();
+ const fixture=read("../🧪️tests/🧫️fixtures/🧾️record-list/🔣️.json"), oracle=new BoundaryOracle();
  for(const row of fixture.cases)expect(oracle.parse(row.source)).toEqual(row.rows);for(const source of fixture.invalid)expect(()=>oracle.parse(source)).toThrow();
 });

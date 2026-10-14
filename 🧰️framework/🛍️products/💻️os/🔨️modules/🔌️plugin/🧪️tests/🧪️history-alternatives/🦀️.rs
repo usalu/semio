@@ -5,7 +5,7 @@
 use super::*;
 use serde_json::{json, Value};
 
-const HISTORY_ALTERNATIVES_FIXTURE_JSON: &str = include_str!("../../🧫️fixtures/🧫️history-alternatives/🔣️.json");
+const HISTORY_ALTERNATIVES_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/🧫️history-alternatives/🔣️.json");
 
 fn fact(value: &Value) -> AlternativeFact<'_> {
     match value["kind"].as_str() {

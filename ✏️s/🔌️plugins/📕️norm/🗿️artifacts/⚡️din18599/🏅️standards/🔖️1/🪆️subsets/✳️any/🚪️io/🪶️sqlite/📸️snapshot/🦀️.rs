@@ -1,8 +1,9 @@
 //! ⚡️ Complete handwritten building, system, monthly climate and derived climate-table identity entities.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::Din18599Snapshot;
 use crate::{Adjacency,Attachment,AutomationClass,BuildingCategory,CalculationMethod,CoolingPlant,CoolingSystem,DhwSystem,Din18599ClimateChild,ElementKind,EnvelopeElement,HeatingSystem,LightingSystem,MonthlyClimate,Renewables,ThermalZone,UsageProfile,UseClass,VentilationSystem};
 use std::collections::BTreeMap;
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,NativeEncodingBound,RowWriter,reconstruct_text}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,NativeEncodingBound,RowWriter,reconstruct_text}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 
@@ -49,13 +50,13 @@ impl Din18599Snapshot {
     }
     fn admit_sqlite_values(&self, control: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase) -> Result<(), ValueError> {semio_s_artifact_norm_contract::sqlite_native::schema(Din18599Snapshot::SQLITE_SCHEMA,12,27,control)?; let mut out = RowWriter::borrowed(control, phase)?; self.write_sqlite_rows(&mut out)?; out.finish_borrowed() }
 }
-impl ArtifactSqliteSnapshot for Din18599Snapshot{
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admission::admit(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
-    const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+impl ArtifactSqliteSnapshotHost for Din18599Snapshot{
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admission::admit(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
+    
     fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload, ValueError>{
   control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;let add=|count:usize,size:usize|count.checked_add(size).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "Native semantic row count overflow"));let rows=add(add(add(20,self.zones.len())?,self.elements.len())?,usize::from(self.cooling.plant.is_some()))?;control.check_rows(rows)?;
   self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;
-  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
 
  fn preflight_sqlite_snapshot_encoding(&self,_:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(), ValueError>{self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;
@@ -65,8 +66,13 @@ impl ArtifactSqliteSnapshot for Din18599Snapshot{
         if let Some(plant)=&self.cooling.plant{bound.add(16384)?;bound.repeated(plant.energy_carrier.len(),24)?;}bound.finish()
     }
 
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> { let mut out = RowWriter::new(Self::SQLITE_SCHEMA, control)?; self.write_sqlite_rows(&mut out)?; out.finish() }
-    fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{
+    
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for Din18599Snapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> { let mut out = RowWriter::new(Self::SQLITE_SCHEMA, control)?; self.write_sqlite_rows(&mut out)?; out.finish() }
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{
         validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
         let d=one(database,"din18599_document",10,DOCUMENT_FLOATS,false,control)?;let c=one(database,"din18599_climate_child",7,&[],true,control)?;let months=entities(database,"din18599_climate_month",4,CLIMATE_FLOATS,control)?;if months.len()!=12||(1..=12).any(|month|!months.contains_key(&month)){return Err(invalid("DIN18599 climate requires exactly the twelve calendar months"));}let mut climate=MonthlyClimate{theta_e_c:[0.0;12],g_h_w_m2:[0.0;12]};for(month,row)in&months{if row.integer(1)?!=1{return Err(invalid("DIN18599 climate month has a foreign document"));}let index=usize::try_from(month-1).map_err(|error| invalid(error.to_string()))?;climate.theta_e_c[index]=row.real(2)?;climate.g_h_w_m2[index]=row.real(3)?;}let h=one(database,"din18599_heating",7,HEATING_FLOATS,true,control)?;let w=one(database,"din18599_dhw",6,DHW_FLOATS,true,control)?;let v=one(database,"din18599_ventilation",5,VENTILATION_FLOATS,true,control)?;one(database,"din18599_cooling",2,&[],true,control)?;let plants=entities(database,"din18599_cooling_plant",4,PLANT_FLOATS,control)?;if plants.len()>1||!plants.is_empty()&&!plants.contains_key(&1){return Err(invalid("DIN18599 optional plant must have identity one"));}let plant=plants.get(&1).copied();if let Some(p)=plant{if p.integer(1)?!=1{return Err(invalid("DIN18599 plant has a foreign cooling system"));}}let l=one(database,"din18599_lighting",3,LIGHTING_FLOATS,true,control)?;let r=one(database,"din18599_renewables",5,RENEWABLES_FLOATS,true,control)?;
         let mut zones=Vec::new();for z in ordered(entities(database,"din18599_zone",14,ZONE_FLOATS,control)?.into_values(),control)?{checkpoint(control,zones.len(),0)?;zones.push(ThermalZone{id:reconstruct_text(control,z.text(3)?)?,label_en:reconstruct_text(control,z.text(4)?)?,label_de:reconstruct_text(control,z.text(5)?)?,usage_profile:read_profile(z.text(6)?)?,area_m2:z.real(7)?,volume_m3:z.real(8)?,theta_i_heat_c:z.real(9)?,theta_i_cool_c:z.real(10)?,occupants:u32::try_from(z.integer(11)?).map_err(|error| invalid(error.to_string()))?,internal_gains_w_m2:z.real(12)?,lighting_power_w_m2:z.real(13)?});}
@@ -75,7 +81,7 @@ impl ArtifactSqliteSnapshot for Din18599Snapshot{
     }
 }
 
-pub fn sqlite_codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<Din18599Snapshot as ArtifactSqliteSnapshot>::sqlite_codec()}
+pub fn sqlite_codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<Din18599Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec()}
 
 #[path="🛂️admission/🦀️.rs"]
 pub(in crate::standards::v1::subsets::any)mod admission;

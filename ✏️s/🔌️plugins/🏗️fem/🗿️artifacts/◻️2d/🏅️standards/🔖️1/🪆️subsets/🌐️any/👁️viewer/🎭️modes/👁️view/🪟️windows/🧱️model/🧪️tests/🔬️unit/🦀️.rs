@@ -9,7 +9,7 @@ fn renders_a_canvas_2d_scene_for_the_default_document() {
 
 #[test]
 fn renders_mesh_edge_preview_for_the_default_example() {
-    use store::os_store::serialization::ArtifactDsl;
+    use pack::snapshot::ArtifactDsl;
     let document = Fem2dSnapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse default example");
     let node = render(&document).expect("fixture surface admission");
     let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };

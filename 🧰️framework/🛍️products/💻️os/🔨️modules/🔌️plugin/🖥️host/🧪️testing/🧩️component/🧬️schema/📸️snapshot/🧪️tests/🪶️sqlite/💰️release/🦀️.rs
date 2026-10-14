@@ -37,7 +37,7 @@ fn released(sample:Sample,requested:usize,actual_released:usize,incoming:usize,d
 }
 #[test]
 fn sqlite_retained_host_count_erased_requests_diagnostics_and_full_release(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🪶️sqlite/💰️release/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🪶️sqlite/💰️release/🔣️.json")).unwrap();
  assert_eq!(fixture["requests"],"fullSystemAllocatorRequests");assert_eq!(fixture["incoming"],"validatedCompleteBorrowedCapacityCensus");
  assert_eq!(fixture["diagnostic"],"actualCompleteReturnedIoErrorBacking");
  let codec=codec();let coordinate=dialect();let defaults=SqliteDatabaseLimits::default();

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🚿️set-component-override/❌️parameter-missing",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚿️set-component-override/❌️parameter-missing/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚿️set-component-override/❌️parameter-missing/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚿️set-component-override/❌️parameter-missing/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚿️set-component-override/❌️parameter-missing/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚿️set-component-override/❌️parameter-missing/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚿️set-component-override/❌️parameter-missing/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚿️set-component-override/❌️parameter-missing/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚿️set-component-override/❌️parameter-missing/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚿️set-component-override/❌️parameter-missing/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚿️set-component-override/❌️parameter-missing/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

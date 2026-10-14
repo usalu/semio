@@ -1,7 +1,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, testkit::house};
 
-const HOUSE_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🏠️house");
+const HOUSE_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🏠️house");
 
 fn read(name: &str) -> Vec<u8> {
     std::fs::read(format!("{HOUSE_DIR}/{name}")).unwrap_or_else(|error| panic!("{name}: {error}. Run the test with BIM_BLESS=1 to write the file, then `python 🐍️.py write` of the export case."))
@@ -70,7 +70,7 @@ fn the_subject_report_equals_the_table_the_ifcopenshell_oracle_measured_from_the
     }
 }
 
-const NOTATED_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🪧️notated");
+const NOTATED_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🪧️notated");
 
 fn read_notated(name: &str) -> Vec<u8> {
     std::fs::read(format!("{NOTATED_DIR}/{name}")).unwrap_or_else(|error| panic!("{name}: {error}. Run the test with BIM_BLESS=1 to write the file, then `python 🐍️.py write` of the export case."))
@@ -125,7 +125,7 @@ fn the_notated_subject_report_equals_the_table_the_ifcopenshell_oracle_measured_
     }
 }
 
-const CEILINGS_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🔲️ceilings");
+const CEILINGS_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🔲️ceilings");
 
 fn read_ceilings(name: &str) -> Vec<u8> {
     std::fs::read(format!("{CEILINGS_DIR}/{name}")).unwrap_or_else(|error| panic!("{name}: {error}. Run the test with BIM_BLESS=1 to write the file, then `python 🐍️.py write` of the export case."))
@@ -167,7 +167,7 @@ fn the_ceilings_subject_report_equals_the_table_the_ifcopenshell_oracle_measured
     }
 }
 
-const PSETS_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🏷️psets");
+const PSETS_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🏷️psets");
 
 fn read_psets(name: &str) -> Vec<u8> {
     std::fs::read(format!("{PSETS_DIR}/{name}")).unwrap_or_else(|error| panic!("{name}: {error}. Run the test with BIM_BLESS=1 to write the file, then `python 🐍️.py write` of the export case."))

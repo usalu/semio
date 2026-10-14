@@ -4,15 +4,15 @@ import TOML from "@iarna/toml";
 import glob from "fast-glob";
 import {mkdtempSync,mkdirSync,readFileSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
-import {captureOwnedProcess} from "../../../../../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
+import {captureOwnedProcess} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
-import vectors from "../🧫️fixtures/🔣️.json";
+import vectors from "./🧫️fixtures/🔣️.json";
 import {parseCargoCommandScope,selectedCargoArguments} from "../🟦️.ts";
 import {CargoCliOperationOwner,parseCargoCliPolicy,runCargoCliCommand} from "../../🎛️control/🚪️cli/🟦️.ts";
 import policy from "../../🎛️control/🚪️cli/🧩️entrypoint/🎛️policy/🔣️.json";
 import cliSchema from "../../🎛️control/🚪️cli/🧬️schema/🔣️.json";
-import cliVectors from "../../🎛️control/🚪️cli/🧫️fixtures/🔣️.json";
-const original=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json",import.meta.url),"utf8")),artifact=process.env.SEMIO_TEST_ARTIFACT_DIR;
+import cliVectors from "../../🎛️control/🚪️cli/🧪️tests/🧫️fixtures/🔣️.json";
+const original=JSON.parse(readFileSync(new URL("../../🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8")),artifact=process.env.SEMIO_TEST_ARTIFACT_DIR;
 if(!artifact)throw Error("Explicit controlled Cargo test artifact root required");
 const put=(root:string,path:string,source:string)=>{mkdirSync(join(root,path,".."),{recursive:true});writeFileSync(join(root,path),source);};
 const workspace=(members:string[])=>`[workspace]\nresolver="2"\nmembers=${JSON.stringify(members)}\n[workspace.metadata.semio.repository]\nschema-version=1\nexclude-patterns=[]\nowner-manifests=["*/Cargo.toml"]\nmember-manifests=${JSON.stringify(members.map(member=>member+"/Cargo.toml"))}\n[workspace.package]\nedition="2021"\n`;
@@ -29,7 +29,7 @@ test("explicit child workspace admission survives parent package exclusions",asy
 },60000);
 
 test("actual asynchronous native argv discovery never reads testing collections while preserving named modules",async()=>{
- const law=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🧭️native-discovery/🔣️.json",import.meta.url),"utf8")).testingCollections,root=mkdtempSync(join(artifact,"ct-"));
+ const law=JSON.parse(readFileSync(new URL("../../🧪️tests/🧫️fixtures/🧭️native-discovery/🔣️.json",import.meta.url),"utf8")).testingCollections,root=mkdtempSync(join(artifact,"ct-"));
  put(root,"Cargo.toml",workspace(["framework/**"]).replace('owner-manifests=["*/Cargo.toml"]','owner-manifests=["ordinary/**/Cargo.toml"]'));
  const selections:{name:string;manifest:string}[]=[];
  for(const [index,row]of law.members.entries()){const name="physical-member-"+index;put(root,row.manifest,row.admitted?pkg(name):"[forbidden invalid TOML []");if(row.admitted){selections.push({name,manifest:row.manifest});expect(TOML.parse(readFileSync(join(root,row.manifest),"utf8")).package.name).toBe(name);}}

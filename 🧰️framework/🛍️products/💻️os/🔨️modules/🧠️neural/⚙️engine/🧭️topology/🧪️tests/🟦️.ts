@@ -1,7 +1,7 @@
 import {existsSync as testingSchemaExists} from "node:fs";
 import {expect,test} from "bun:test";
 import {Graph,alg} from "graphlib";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 
 test("original budgeted topology agrees with independent Graphlib levels",()=>{
 expect(testingSchemaExists(new URL("../🧬️schema/🔣️.json",import.meta.url))).toBe(false);

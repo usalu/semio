@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.history.original-transition-payload-validation.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "grant",
+    "limits",
+    "control",
+    "canonicalCaseCount"
+  ],
+  "properties": {
+    "grant": {
+      "const": {
+        "items": 1,
+        "copyBytes": 2,
+        "capacityBytes": 65536,
+        "releaseBytes": 262144,
+        "depth": 64
+      }
+    },
+    "limits": {
+      "const": {
+        "fileBytes": 67108864,
+        "frameBodyBytes": 1048576,
+        "records": 8192,
+        "maximumFields": 128,
+        "maximumTextBytes": 1048576,
+        "maximumBinaryBytes": 1048576,
+        "maximumJsonBytes": 1048576,
+        "maximumJsonAllocationBytes": 8388608,
+        "maximumJsonItems": 65536,
+        "maximumJsonDepth": 64
+      }
+    },
+    "control": {
+      "const": {
+        "maximumAllocationBytes": 8388608
+      }
+    },
+    "canonicalCaseCount": {
+      "const": 25
+    }
+  }
+}

@@ -321,7 +321,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.block.block3d.grammar.4", "grammar", "3d.pack", &[("grammar", "3d.pack")], None),
         ("s.block.block3d.grammar.5", "grammar", "3d.spr", &[("grammar", "3d.spr")], None),
         // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Block3dPlayApp>>()` derives
-        // its extension claim from `<Block3dSnapshot as store::os_store::serialization::ArtifactDsl>::EXTENSION`
+        // its extension claim from `<Block3dSnapshot as pack::snapshot::ArtifactDsl>::EXTENSION`
         // (`…/🧬️schema/📸️snapshot/🦀️.rs`), which is `"block3d"`, not `"block"`.
         ("s.block.block3d.codec.document-1", "codec", "block.3d:block3d", &[("codec", "block.3d"), ("codec-extension", "8:block.3d:block3d")], None),
         ("s.block.block3d.localization.en", "localization", "3D Block", &[], Some(("en", "3D Block"))),

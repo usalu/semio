@@ -1,0 +1,5 @@
+{
+  "mutation": "removeStreamFrame",
+  "id": "stream-a",
+  "frameIndex": 1
+}

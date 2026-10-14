@@ -1,0 +1,5 @@
+{
+  "instance": 20,
+  "refusal": { "before": [], "afterFailure": [], "afterRetry": [0] },
+  "replacement": { "whileClosing": [], "afterOldClose": [0], "afterReplacementClose": [0, 1] }
+}

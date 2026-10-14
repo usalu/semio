@@ -1,0 +1,55 @@
+{
+  "schema": "semio.hub.trusted-publication-cas/v1",
+  "cases": [
+    {
+      "id": "initial",
+      "currentRevision": null,
+      "nextRevision": "1",
+      "accepted": true
+    },
+    {
+      "id": "next",
+      "currentRevision": "1",
+      "nextRevision": "2",
+      "accepted": true
+    },
+    {
+      "id": "stale",
+      "currentRevision": "2",
+      "expectedRevision": "1",
+      "accepted": false
+    },
+    {
+      "id": "aba",
+      "currentRevision": "3",
+      "expectedRevision": "1",
+      "sameGeneration": true,
+      "accepted": false
+    },
+    {
+      "id": "maximum",
+      "currentRevision": "18446744073709551615",
+      "accepted": false
+    },
+    {
+      "id": "zero",
+      "currentRevision": "0",
+      "accepted": false
+    },
+    {
+      "id": "leading-zero",
+      "currentRevision": "01",
+      "accepted": false
+    },
+    {
+      "id": "overflow",
+      "currentRevision": "18446744073709551616",
+      "accepted": false
+    }
+  ],
+  "publicationOutcomes": [
+    "durable",
+    "replaced-unconfirmed"
+  ]
+}
+

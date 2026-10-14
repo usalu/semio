@@ -1,9 +1,0 @@
-{
-  "mutation": "deleteAccessor",
-  "payload": {
-    "phase": "apply",
-    "value": {
-      "index": 0
-    }
-  }
-}

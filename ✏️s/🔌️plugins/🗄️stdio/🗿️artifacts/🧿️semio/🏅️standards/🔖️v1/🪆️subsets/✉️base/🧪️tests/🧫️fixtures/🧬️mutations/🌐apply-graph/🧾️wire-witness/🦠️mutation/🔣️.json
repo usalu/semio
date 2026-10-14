@@ -1,0 +1,12 @@
+{
+  "mutation": "applyGraph",
+  "payload": {
+    "mutation": {
+      "DeleteNode": {
+        "id": {
+          "value": "b"
+        }
+      }
+    }
+  }
+}

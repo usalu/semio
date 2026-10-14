@@ -1,7 +1,7 @@
 /** 📤️ Exact no-follow graph artifact publication and stale removal. */
 import { existsSync, lstatSync, mkdirSync, readdirSync, rmdirSync, unlinkSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import { writeGeneratedFileIfChanged } from "../../../🏃️process/📦️artifacts/🗂️files/🟦️.ts";
+import { writeGeneratedFileIfChanged } from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 import type { GraphArtifact } from "../📽️projection/🟦️.ts";
 
 export type GraphOutputNode = Readonly<{ path: string; nodeKind: "file" | "directory" }>;

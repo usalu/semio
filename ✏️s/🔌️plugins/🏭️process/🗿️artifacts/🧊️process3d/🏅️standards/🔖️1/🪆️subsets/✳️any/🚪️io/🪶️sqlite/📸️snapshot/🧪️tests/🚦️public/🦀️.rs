@@ -6,7 +6,7 @@ use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism
 use store::io_schema::{IoPayload,IoFidelity,SQLITE_SNAPSHOT};
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits,SqliteSnapshotPhase};
 use std::{io::Write,process::{Command,Stdio}};
-fn cohort()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🚦️public/🔣️.json")).unwrap()}
+fn cohort()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🚦️public/🔣️.json")).unwrap()}
 fn dialect()->ArtifactDialect{let f=cohort();ArtifactDialect{artifact_kind:f["dialect"]["artifactKind"].as_str().unwrap().into(),standard:f["dialect"]["standard"].as_str().unwrap().into(),subset:f["dialect"]["subset"].as_str().unwrap().into()}}
 fn publish(){semio_framework_plugin::Plugin::<SqliteProcessApps>::builder("process").label("Process3d actual public SQLite parent").version("0.0.1").package_id("semio:process").artifact(crate::declaration().unwrap()).try_build().unwrap();}
 fn payload(value:&Process3dSnapshot,encoding:SnapshotEncoding)->IoPayload{match encoding{SnapshotEncoding::Binary=>IoPayload::Binary(value.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()),SnapshotEncoding::Text=>IoPayload::Text(value.print_dsl())}}
@@ -14,7 +14,7 @@ pub(super) struct Owned(Option<Process3dSnapshot>);
 impl Owned{pub(super) fn new(value:Process3dSnapshot)->Self{Self(Some(value))}}
 impl std::ops::Deref for Owned{type Target=Process3dSnapshot;fn deref(&self)->&Self::Target{self.0.as_ref().unwrap()}}
 impl std::ops::DerefMut for Owned{fn deref_mut(&mut self)->&mut Self::Target{self.0.as_mut().unwrap()}}
-impl Drop for Owned{fn drop(&mut self){if let Some(value)=self.0.take(){store::os_store::serialization::ArtifactSqliteSnapshot::retire_sqlite_snapshot(value);}}}
+impl Drop for Owned{fn drop(&mut self){if let Some(value)=self.0.take(){store::os_store::serialization::ArtifactSqliteSnapshotHost::retire_sqlite_snapshot(value);}}}
 pub(super) fn edit(bytes:&[u8])->Vec<u8>{
  let script=r#"import{Database}from'bun:sqlite';const c=JSON.parse(process.argv[1]),d=Database.deserialize(await Bun.stdin.bytes(),{safeIntegers:true});d.query('UPDATE process3_stock_payload SET label=? WHERE id=1').run(c.independentEdit.value);if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('editedIntegrity');await Bun.write(Bun.stdout,d.serialize());d.close();"#;
  let mut child=Command::new("bun").args(["--eval",script,&cohort().to_string()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(bytes).unwrap();let result=child.wait_with_output().unwrap();assert!(result.status.success(),"{}",String::from_utf8_lossy(&result.stderr));result.stdout

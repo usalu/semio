@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔖️create-tag/➕️tags-a-window-size",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔖️create-tag/➕️tags-a-window-size/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔖️create-tag/➕️tags-a-window-size/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔖️create-tag/➕️tags-a-window-size/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔖️create-tag/➕️tags-a-window-size/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔖️create-tag/➕️tags-a-window-size/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔖️create-tag/➕️tags-a-window-size/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔖️create-tag/➕️tags-a-window-size/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔖️create-tag/➕️tags-a-window-size/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔖️create-tag/➕️tags-a-window-size/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔖️create-tag/➕️tags-a-window-size/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "maximumItems": 1,
+  "maximumCopyBytes": 3,
+  "maximumDepth": 64,
+  "maximumTurns": 100000,
+  "fieldKinds": ["Bool", "Int", "UInt", "Float", "Text", "Bytes64", "Enum", "Tuple", "List", "Record", "Block", "Statements", "Map", "Value", "Wire", "Expr", "Absent"],
+  "shapeKinds": ["Bool", "Int", "UInt", "Float", "Text", "Bytes64", "Enum", "Tuple", "List", "Record", "Block", "Statements", "Map", "Value", "Table", "Wire", "Quantity", "Angle", "Ref", "Coord", "Dir", "Dim", "Range", "Count", "Expr", "Embed", "EmbedFrom"],
+  "expressionKinds": ["Num", "Var", "Neg", "Binary", "Call"],
+  "wireNodeOptions": [0, 1, 2, 3],
+  "wireEdgeChoices": [null, [false, 0], [false, 1], [false, 2], [false, 3], [true, 0], [true, 1], [true, 2], [true, 3]],
+  "wireLabelOptions": [0, 1, 2, 3],
+  "emptyFieldCapacity": 5,
+  "recursiveDepth": 16,
+  "writerPrefixes": [0, 1, 64, 512, 4096],
+  "text": "groß🧬",
+  "intrinsic": {"a": [false, "🧬"], "ö": -7}
+}

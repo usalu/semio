@@ -1,6 +1,7 @@
 //! ♻️ typed thirty-table Rewriting capability awaiting its owning assertion gate.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::RewritingSnapshot;
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SnapshotEncoding}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SnapshotEncoding}};
 use semio_framework_value::ValueError;
 #[path="💰️backing/🦀️.rs"]
 mod backing;
@@ -8,10 +9,10 @@ mod backing;
 mod encoding;
 #[path="🚦️native/🦀️.rs"]
 mod native;
-impl ArtifactSqliteSnapshot for RewritingSnapshot {
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{backing::project(self,control)}
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{backing::reconstruct(database,control)}
+impl ArtifactSqliteSnapshotHost for RewritingSnapshot {
+ 
+ 
+ 
  fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
   native::decode(payload,control,native_control)
  }
@@ -21,6 +22,11 @@ impl ArtifactSqliteSnapshot for RewritingSnapshot {
  }
  fn preflight_sqlite_snapshot_encoding(&self,_format:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{encoding::preflight(self,control)}
  fn retire_sqlite_snapshot(self){<Self as semio_framework_dsl_record::DslField>::retire_decoded(self)}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for RewritingSnapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{backing::project(self,control)}
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{backing::reconstruct(database,control)}
 }
 
 #[cfg(test)]

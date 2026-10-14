@@ -7,15 +7,15 @@ import { testFemPcgPublicationGrantOracle } from "../../../../../../../../../../
 import { testFemScalarOwnerOracle } from "../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🔢️scalar-owners/🟦️.ts";
 import Ajv from "ajv";
 import { applyPatch, type Operation } from "fast-json-patch";
-import commandLimits from "../../🧫️fixtures/🚧️retained-command-limits/🔣️.json" with { type: "json" };
+import commandLimits from "../🧫️fixtures/🚧️retained-command-limits/🔣️.json" with { type: "json" };
 
-import documentAdmission from "../../../🧫️fixtures/🧬️document-admission/🔣️.json" with { type: "json" };
+import documentAdmission from "../../../🧪️tests/🧫️fixtures/🧬️document-admission/🔣️.json" with { type: "json" };
 import fem3dDocumentSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import { parseFem3dArtifact } from "../../../🧬️schema/🟦️.ts";
-import mountedClose from "../../../../../../../../../🧫️fixtures/🧹️mounted-close/🔣️.json" with { type: "json" };
+import mountedClose from "../../../../../../../../../🧪️tests/🧫️fixtures/🧹️mounted-close/🔣️.json" with { type: "json" };
 
-import closeGrants from "../../../../../../../../../🧫️fixtures/💳️visual-close-grants/🔣️.json" with { type: "json" };
-import childOutcomes from "../../../../../../../../../🧫️fixtures/🧒️child-outcomes/🔣️.json" with { type: "json" };
+import closeGrants from "../../../../../../../../../🧪️tests/🧫️fixtures/💳️visual-close-grants/🔣️.json" with { type: "json" };
+import childOutcomes from "../../../../../../../../../🧪️tests/🧫️fixtures/🧒️child-outcomes/🔣️.json" with { type: "json" };
 
 
 import { testFem3dModelWindowConfigContract } from "../../🎭️modes/✏️edit/🪟️windows/🧱️model/🎚️config/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts";

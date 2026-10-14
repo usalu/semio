@@ -1,6 +1,6 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import fixture from "../../🧫️fixtures/♻️cold-properties/🔣️.json";
+import fixture from "../🧫️fixtures/♻️cold-properties/🔣️.json";
 import schema from "../../🛂️manifest/🌱️value/🧬️schema/🔣️.json";
 import {parsePropertyValueJson,propertyValueToJson} from "../../🛂️manifest/🌱️value/🟦️.ts";
 

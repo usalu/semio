@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { existsSync, realpathSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
-import { acquireQueuedResourceLease, type LeaseWait, type ResourceLease } from "../../../🔒️leases/🟦️.ts";
+import { acquireQueuedResourceLease, type LeaseWait, type ResourceLeaseControl, type ResourceLease } from "../../../🔒️leases/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🪪️ One canonical compiler directory and profile protected before any Cargo unit lock. */
@@ -38,14 +38,20 @@ export function cargoBuildLeaseIdentityV1(buildDirectory: string, args: readonly
 }
 
 /** 🔒️ Queues one compiler process while keeping different profile caches independent. */
-export async function acquireCargoBuildLeaseV1(options: { readonly directory: string; readonly buildDirectory: string; readonly args: readonly string[]; readonly signal: AbortSignal; readonly onWait?: (progress: LeaseWait) => void }): Promise<ResourceLease> {
+export async function acquireCargoBuildLeaseV1(options: { readonly directory: string; readonly buildDirectory: string; readonly args: readonly string[]; readonly signal: AbortSignal; readonly control?: ResourceLeaseControl; readonly onWait?: (progress: LeaseWait) => void | Promise<void> }): Promise<ResourceLease> {
   const identity = cargoBuildLeaseIdentityV1(options.buildDirectory, options.args);
   const resource = JSON.stringify([schema.definitions.Protocol.const.namespace, identity.buildDirectory, identity.profile]);
-  return acquireQueuedResourceLease({ directory: options.directory, resource, mode: identity.mode, owner: randomBytes(16).toString("base64url"), signal: options.signal, onWait: options.onWait });
+  const store=await acquireCargoStoreLeaseV1({...options,mode:"shared"});
+  try{
+    const profile=await acquireQueuedResourceLease({ directory: options.directory, resource, mode: identity.mode, owner: randomBytes(16).toString("base64url"), signal: options.signal, control:options.control, onWait: options.onWait });
+    return {...profile,release(){try{profile.release();}finally{store.release();}}};
+  }catch(error){store.release();options.signal.throwIfAborted();throw error;}
 }
 
-/** 🧮️ Gives one all-core native invocation host capacity while its children share the inherited allocation. */
-export async function acquireNativeCapacityLeaseV1(options: { readonly directory: string; readonly signal: AbortSignal; readonly environment?: Readonly<Record<string,string|undefined>>; readonly onWait?: (progress: LeaseWait) => void }): Promise<ResourceLease> {
- if ((options.environment ?? process.env).SEMIO_NATIVE_CAPACITY_HELD === "true") return { resource:"semio.native.host-capacity/v1", mode:"exclusive", release() {} };
- return acquireQueuedResourceLease({directory:options.directory,resource:"semio.native.host-capacity/v1",mode:"exclusive",owner:randomBytes(16).toString("base64url"),signal:options.signal,onWait:options.onWait});
+/** 🏪️ Maintains one actual compiler store without serializing independent build profiles. */
+export async function acquireCargoStoreLeaseV1(options:Readonly<{directory:string;buildDirectory:string;mode:"shared"|"exclusive";signal:AbortSignal;control?:ResourceLeaseControl;onWait?:(progress:LeaseWait)=>void|Promise<void>}>):Promise<ResourceLease>{
+  const identity=cargoBuildLeaseIdentityV1(options.buildDirectory,[]),resource=JSON.stringify([schema.definitions.StoreProtocol.const.namespace,identity.buildDirectory]);
+  try{return await acquireQueuedResourceLease({directory:options.directory,resource,mode:options.mode,owner:randomBytes(16).toString("base64url"),signal:options.signal,control:options.control,onWait:options.onWait,...(options.mode==="shared"?{sharedCohort:true}:{})});}
+  catch(error){options.signal.throwIfAborted();throw error;}
 }
+

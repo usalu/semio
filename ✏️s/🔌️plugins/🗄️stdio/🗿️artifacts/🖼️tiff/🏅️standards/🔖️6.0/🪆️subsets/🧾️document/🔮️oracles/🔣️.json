@@ -449,14 +449,14 @@
       "files": [
         {
           "role": "expected-before-tiff",
-          "path": "../🧫️fixtures/📥️insert-ifd-applied/⬅️before.tiff",
+          "path": "../🧪️tests/🧫️fixtures/📥️insert-ifd-applied/⬅️before.tiff",
           "mediaType": "image/tiff",
           "sha256": "sha256:ab26cbb1ba244956a2bdb8e68fe08ee9419526824d095cc2a7f05b10d2964870",
           "bytes": 246
         },
         {
           "role": "expected-after-tiff",
-          "path": "../🧫️fixtures/📥️insert-ifd-applied/➡️after.tiff",
+          "path": "../🧪️tests/🧫️fixtures/📥️insert-ifd-applied/➡️after.tiff",
           "mediaType": "image/tiff",
           "sha256": "sha256:4e85e22e84dccedcaaa7868d1d0b52cdd5429d8364a57a578a8fda732f8fd37d",
           "bytes": 462
@@ -498,14 +498,14 @@
       "files": [
         {
           "role": "expected-before-tiff",
-          "path": "../🧫️fixtures/📤️remove-ifd-applied/⬅️before.tiff",
+          "path": "../🧪️tests/🧫️fixtures/📤️remove-ifd-applied/⬅️before.tiff",
           "mediaType": "image/tiff",
           "sha256": "sha256:4e85e22e84dccedcaaa7868d1d0b52cdd5429d8364a57a578a8fda732f8fd37d",
           "bytes": 462
         },
         {
           "role": "expected-after-tiff",
-          "path": "../🧫️fixtures/📤️remove-ifd-applied/➡️after.tiff",
+          "path": "../🧪️tests/🧫️fixtures/📤️remove-ifd-applied/➡️after.tiff",
           "mediaType": "image/tiff",
           "sha256": "sha256:ab26cbb1ba244956a2bdb8e68fe08ee9419526824d095cc2a7f05b10d2964870",
           "bytes": 246
@@ -547,14 +547,14 @@
       "files": [
         {
           "role": "expected-before-tiff",
-          "path": "../🧫️fixtures/🏷️replace-tag-applied/⬅️before.tiff",
+          "path": "../🧪️tests/🧫️fixtures/🏷️replace-tag-applied/⬅️before.tiff",
           "mediaType": "image/tiff",
           "sha256": "sha256:eb67bd19c350308d536ac2dceb10174f810f8ff57e3abb97fad8a04ef226c0e3",
           "bytes": 254
         },
         {
           "role": "expected-after-tiff",
-          "path": "../🧫️fixtures/🏷️replace-tag-applied/➡️after.tiff",
+          "path": "../🧪️tests/🧫️fixtures/🏷️replace-tag-applied/➡️after.tiff",
           "mediaType": "image/tiff",
           "sha256": "sha256:56df3c7c335366b59f5a8580c6716ae36dded5adcc3b19c38cc703ae7386abc5",
           "bytes": 255
@@ -596,14 +596,14 @@
       "files": [
         {
           "role": "expected-before-tiff",
-          "path": "../🧫️fixtures/🗑️remove-tag-applied/⬅️before.tiff",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-tag-applied/⬅️before.tiff",
           "mediaType": "image/tiff",
           "sha256": "sha256:3d839064ff25b0b3e57590309af763beea43fc764dc397cb839f208e5e91846d",
           "bytes": 251
         },
         {
           "role": "expected-after-tiff",
-          "path": "../🧫️fixtures/🗑️remove-tag-applied/➡️after.tiff",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-tag-applied/➡️after.tiff",
           "mediaType": "image/tiff",
           "sha256": "sha256:3676474fc37d37d78448dc72ddeec39c2a36ad96fd5565012bef0beda6e23ba5",
           "bytes": 228
@@ -645,14 +645,14 @@
       "files": [
         {
           "role": "expected-before-tiff",
-          "path": "../🧫️fixtures/🎨️paint-region-applied/⬅️before.tiff",
+          "path": "../🧪️tests/🧫️fixtures/🎨️paint-region-applied/⬅️before.tiff",
           "mediaType": "image/tiff",
           "sha256": "sha256:6813847fe31b9887006a1d8de00108e14e53095e3ef75d9e7eda03421061af27",
           "bytes": 258
         },
         {
           "role": "expected-after-tiff",
-          "path": "../🧫️fixtures/🎨️paint-region-applied/➡️after.tiff",
+          "path": "../🧪️tests/🧫️fixtures/🎨️paint-region-applied/➡️after.tiff",
           "mediaType": "image/tiff",
           "sha256": "sha256:94b2cde185be1da3e99b96c61c84b4b7815e715c7d3c1742054eb4cc63f1e1a1",
           "bytes": 258
@@ -694,14 +694,14 @@
       "files": [
         {
           "role": "expected-before-tiff",
-          "path": "../🧫️fixtures/🧮️replace-samples-applied/⬅️before.tiff",
+          "path": "../🧪️tests/🧫️fixtures/🧮️replace-samples-applied/⬅️before.tiff",
           "mediaType": "image/tiff",
           "sha256": "sha256:6813847fe31b9887006a1d8de00108e14e53095e3ef75d9e7eda03421061af27",
           "bytes": 258
         },
         {
           "role": "expected-after-tiff",
-          "path": "../🧫️fixtures/🧮️replace-samples-applied/➡️after.tiff",
+          "path": "../🧪️tests/🧫️fixtures/🧮️replace-samples-applied/➡️after.tiff",
           "mediaType": "image/tiff",
           "sha256": "sha256:4f1507783a38aaf8233d8a440f4c6f3e0fb5e56a5cdf2f5aef870cd9aa6305fc",
           "bytes": 258

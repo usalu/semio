@@ -5,7 +5,7 @@ import {semioSchemaAjvV1} from "../../../../../../../../../../../../🧰️frame
 
 import sharp from "sharp";
 import schema from "../../🔣️.json";
-import fixture from "../../🧫️fixtures/🎭️mask/🔣️.json";
+import fixture from "../../../🧪️tests/🧫️fixtures/🔬️contract/🎭️mask/🔣️.json";
 import diffSchema from "../../🔺️diff/🔣️.json";
 import mutationSchema from "../../🧬️mutations/🎭️change-layer-mask/🧬️schema/🔣️.json";
 import mutations from "../../🧬️mutations/🎭️change-layer-mask/🧪️tests/🔣️.json";
@@ -15,7 +15,7 @@ import {rasterTransformNumbers} from "../../🟦️.ts";
 import {rasterLayerMaskFromJson as parseRasterLayerMask} from "./../../../🚪️io/📝️text/📸️snapshot/🟦️.ts";
 import {rasterTransformFromJson as parseRasterTransform} from "./../../../🚪️io/📝️text/📸️snapshot/🟦️.ts";
 import {printRasterLayerMask} from "./../../../🚪️io/📝️text/📸️snapshot/🟦️.ts";
-import transforms from "../../🧫️fixtures/📐️transform/🔣️.json";
+import transforms from "../../../🧪️tests/🧫️fixtures/🔬️contract/📐️transform/🔣️.json";
 
 const validate=semioSchemaAjvV1({allErrors:true}).compile({$ref:"#/$defs/RasterLayerMask",$defs:schema.$defs});
 const validateTransform=semioSchemaAjvV1({allErrors:true}).compile(schema.$defs.RasterTransform);

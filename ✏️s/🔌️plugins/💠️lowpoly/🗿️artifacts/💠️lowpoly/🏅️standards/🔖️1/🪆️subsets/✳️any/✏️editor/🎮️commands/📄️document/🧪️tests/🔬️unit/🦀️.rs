@@ -25,7 +25,7 @@ async fn import_snapshot_json_replaces_the_whole_document() {
     let semio_framework_plugin::Effect::LoadDocument { pack, .. } = emit.effects.first().expect("importSnapshotJson must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
-    let loaded = <LowpolySnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+    let loaded = <LowpolySnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
     assert_eq!(loaded.objects[0].id, "obj-x");
 }
 

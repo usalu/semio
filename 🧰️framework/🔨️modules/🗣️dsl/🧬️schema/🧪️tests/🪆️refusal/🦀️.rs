@@ -37,7 +37,7 @@ impl DslField for RefusingField {
 
 #[test]
 fn controlled_field_projection_and_construction_retain_kind_through_boxed_paths() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪆️refusal/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪆️refusal/🔣️.json")).unwrap();
     for name in corpus["kinds"].as_array().unwrap() {
         for row in corpus["paths"].as_array().unwrap() {
             let expected_kind = kind(name.as_str().unwrap());

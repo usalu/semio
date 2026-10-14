@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 🧪️ `@semio-tech/framework-os-scale-fixture` test task router — F1-scale-fixture
  * (26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME). `check` is the native `--all-targets` proof
  * (unit tests included); `check-wasm` is the real wasm32-wasip2 component build this ticket's
@@ -7,8 +8,8 @@ import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { runCargo } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import { buildRepositoryCargoArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 
@@ -27,7 +28,7 @@ class CheckWasmScript extends BundleScript {
 class BuildWasmScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Scale component build has a fixed output contract");
-    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["-p", "semio-framework-os-scale-fixture", "--lib", "--target", "wasm32-wasip2", "--profile", "wasm-release"], this.repoRoot, {
+    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["-p", "semio-framework-os-scale-fixture", "--lib", "--target", "wasm32-wasip2", "--profile", "wasm-release"], this.repoRoot, { control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0), 
       command: "rustc",
       output: "dist/component",
       validate(files) {

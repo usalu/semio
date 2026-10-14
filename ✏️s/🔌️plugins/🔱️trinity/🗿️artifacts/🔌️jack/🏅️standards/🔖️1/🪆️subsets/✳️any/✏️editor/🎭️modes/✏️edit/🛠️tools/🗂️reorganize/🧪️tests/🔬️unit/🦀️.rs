@@ -14,7 +14,7 @@ use std::collections::BTreeMap;
 /// `NoMembers` roster refuses at genesis (`derived child dialect ... is not declared by this app's member roster`).
 type JackApp = VcsArtifactApp<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🎞️layout-run.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/🎞️layout-run.json");
 
 fn fixture() -> Value {
     serde_json::from_str(FIXTURE).expect("reorganize fixture parses")
@@ -44,7 +44,7 @@ fn nakagin() -> SemioGraphSnapshot {
 
 /// 🧸️ The live node positions of the app's `content` member store (design §20.15: the parent holds no content).
 fn node_positions(app: &JackApp) -> BTreeMap<String, (f64, f64)> {
-    use store::{os_store::serialization::ArtifactPack, SpaceMember};
+    use store::{pack::snapshot::ArtifactPack, SpaceMember};
     let snapshot = app.snapshot().expect("Jack parent projection");
     let member = ::semio_framework_async::poll::resolve_ready(app.child_store("content", &snapshot.content.child_id)).expect("Jack content child");
     let bytes = ::semio_framework_async::poll::resolve_ready(member.document_pack_bytes()).expect("Jack content child pack");

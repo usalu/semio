@@ -329,6 +329,10 @@ impl<T, const N: usize> UiFixedList<T, N> {
         self.storage.place_reserved(source, bytes)
     }
     pub fn next_release_allocation_bytes(&self)->Result<usize,PagedListError>{self.storage.next_release_allocation_bytes()}
+    /// 🪜️ Borrows the original native page path depth before logical removal.
+    pub fn next_pop_depth_demand(&self)->Result<usize,PagedListError>{self.storage.next_pop_depth_demand()}
+    /// 🪜️ Borrows the original native page path depth before physical release.
+    pub fn next_release_depth_demand(&self)->Result<usize,PagedListError>{self.storage.next_release_depth_demand()}
     pub fn release_empty_page(&mut self, maximum_bytes: usize) -> Result<PagedListProgress, PagedListError> {
         self.storage.release_empty_page(maximum_bytes)
     }

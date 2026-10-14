@@ -1,4 +1,4 @@
-/** 🧲️ Reference reach laws over `../../🧫️fixtures/🧲️reference-reach/🔣️.json`: the planner's skip predicate `referenceTokenMayResolveInto`
+/** 🧲️ Reference reach laws over `../🧫️fixtures/🧲️reference-reach/🔣️.json`: the planner's skip predicate `referenceTokenMayResolveInto`
  * is never false for a token that the production resolver resolves into the target set (oracle: the resolver itself, run exhaustively over
  * every fixture and random token, path and target combination), and a token's digest query (`referenceTokenQuery` → `referenceQueryToken`)
  * resolves exactly like the token itself, so the planner's exact digest test `referenceDigestResolvesInto` sees what token resolution sees. */

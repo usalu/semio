@@ -1,0 +1,4 @@
+{
+  "mutation": "changeSiteElevation",
+  "newElevationM": 9000.0
+}

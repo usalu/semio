@@ -26,7 +26,7 @@ pub fn definition(label: LocalizedLabel) -> UtilityDefinition {
 /// ⏯️ A read-only run with `instance3d` subjects and `placement2d` board twins. It authors no provisional edit, so a
 /// document change or a change of the settings the search reads restarts it against what is now there.
 pub fn run_definition() -> ToolRunDefinition {
-    ToolRunDefinition {
+    ToolRunDefinition { receiving: semio_framework_tool_run::ToolRunReceivingLimits::REPORTS,
         mutating: false,
         rebase: ToolRunRebasePolicy::Restart,
         reconfigure: ToolRunReconfigurePolicy::Restart,

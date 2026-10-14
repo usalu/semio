@@ -63,7 +63,7 @@ fn measure(scope: &serde_json::Value, backend: Backend) -> usize {
 
 #[test]
 fn shared_requested_layout_scopes_preserve_totals_nesting_and_unwind() {
-    let source = include_str!("../🧫️fixtures/🔣️.json");
+    let source = include_str!("🧫️fixtures/🔣️.json");
     let fixture: serde_json::Value = serde_json::from_str(source).unwrap();
     for scope in fixture["cases"].as_array().unwrap() { for backend in [Backend::System, Backend::Heap, Backend::Requested] { measure(scope, backend); } }
     let interrupted = std::panic::catch_unwind(|| observe(|| { let _ = observe(|| panic!("authored observer unwind")); }));
@@ -83,7 +83,7 @@ fn shared_requested_layout_scopes_preserve_totals_nesting_and_unwind() {
 
 #[test]
 fn shared_requested_overflow_delegates_bounded_allocation_then_restores_before_refusal() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let probe = fixture["overflowProbeBytes"].as_u64().unwrap() as usize;
     let overflow = std::panic::catch_unwind(|| observe(|| {
         observe(|| {

@@ -22,7 +22,7 @@ export function nativeHostFilesystemViewV1(repoRoot:string):NativeHostSourceView
 }
 
 /** 🚀 Selects the declared producer artifact from its actual Nx publication contract. */
-export function playgroundNativeHostArtifactV1(repoRoot:string,value:unknown,profile:"dev"|"release",platform:NodeJS.Platform=process.platform):string|undefined {
+export function playgroundNativeHostArtifactV1(repoRoot:string,value:unknown,profile:"prototype"|"release",platform:NodeJS.Platform=process.platform):string|undefined {
   const view=nativeHostFilesystemViewV1(repoRoot),host=admitPlaygroundNativeHostV1(value,view);
   return host?resolve(repoRoot,artifact(host,profile,facts(host.cratePath,view),platform)):undefined;
 }

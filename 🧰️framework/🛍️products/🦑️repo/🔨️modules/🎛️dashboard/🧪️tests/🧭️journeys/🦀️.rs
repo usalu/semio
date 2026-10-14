@@ -19,7 +19,7 @@ fn the_terminal_driver_preserves_committed_unicode_text() {
     let mut term = terminal::Terminal::spawn(&workspace::which("bun"), &["-e", "process.stdin.setRawMode(true);process.stdin.on('data',data=>process.stdout.write(data));console.log('ready');"], &ws.root, &ws.env(), 20, 120);
     term.wait_for("ready", Duration::from_secs(3)).unwrap();
     let repository = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find(|folder| folder.join("nx.json").is_file()).unwrap();
-    let vectors: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(repository.join("🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧫️fixtures/⌨️input-decoding/🔣️.json")).unwrap()).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(repository.join("🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🧫️fixtures/⌨️input-decoding/🔣️.json")).unwrap()).unwrap();
     for vector in vectors["consoleCommits"].as_array().unwrap() {
         let text = vector["text"].as_str().unwrap();
         term.type_text(text);

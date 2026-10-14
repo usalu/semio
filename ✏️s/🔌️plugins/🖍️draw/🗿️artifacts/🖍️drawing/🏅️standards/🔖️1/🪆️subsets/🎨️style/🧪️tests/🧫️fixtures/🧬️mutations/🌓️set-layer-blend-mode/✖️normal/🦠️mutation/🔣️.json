@@ -1,0 +1,5 @@
+{
+  "mutation": "setLayerBlendMode",
+  "layerId": "shape-a",
+  "blendMode": "multiply"
+}

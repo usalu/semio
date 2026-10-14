@@ -166,7 +166,7 @@ use framework_schema::ArtifactSchema;
 use std::fmt;
 use crate::standards::v1_7::subsets::base::io::text::snapshot as snapshot_text;
 
-impl store::os_store::serialization::ArtifactDsl for PdfSnapshot {
+impl pack::snapshot::ArtifactDsl for PdfSnapshot {
     const EXTENSION: &'static str = "pdf";
     fn envelope_id() -> &'static str {
         STDIO_PDF17_DOCUMENT_SCHEMA
@@ -174,7 +174,7 @@ impl store::os_store::serialization::ArtifactDsl for PdfSnapshot {
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((envelope, rest)) => {
-                if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, "PDF snapshot text envelope mismatch", semio_framework_diagnostic::TextSpan::at(1, 1))); }
+                if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, "PDF snapshot text envelope mismatch", semio_framework_diagnostic::TextSpan::at(1, 1))); }
                 rest
             }
             Err(_) => text,
@@ -184,7 +184,7 @@ impl store::os_store::serialization::ArtifactDsl for PdfSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body=semio_framework_dsl_record::print(&to_record(self),&spec(),semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }

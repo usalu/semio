@@ -216,7 +216,8 @@ impl ArtifactCommandWork<EditorApp<BmpEditor>> for PaintRegionWork {
         Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<BmpMutation>(), depth: 1, ..Default::default() })
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BmpEditor>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<BmpEditor>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BmpEditor>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<BmpEditor>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.closing || self.complete {return Err(fault("stdio.bmp.paint-region.work-closed", "Paint work is already closed"));}
         let BmpEditCommand::Native(command)=input.command else {return Err(fault("stdio.bmp.paint-region.route-mismatch", "Paint work received another command"));};
         let reader=input.snapshot_owner.ok_or_else(||fault("stdio.bmp.paint-region.reader", "Paint work requires an immutable snapshot reader"))?;
@@ -241,6 +242,9 @@ impl ArtifactCommandWork<EditorApp<BmpEditor>> for PaintRegionWork {
             _=>return Err(fault("stdio.bmp.paint-region.route-mismatch","Paint intent changed")),
         };
         self.complete=true;Ok(ArtifactCommandWorkStep::Complete(Emit::mutations(vec![mutation])))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
     fn begin_close(&mut self){self.closing=true;self.reader=None;self.intent=None;}
     fn close_step(&mut self,_grant:semio_framework_value::retained_clone::RetainedCloneGrant)->InteractiveJobCloseStep{if self.closing{InteractiveJobCloseStep::Complete{progress:Default::default()}}else{InteractiveJobCloseStep::Blocked}}

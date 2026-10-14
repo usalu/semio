@@ -141,7 +141,7 @@ async fn dispatch_registers_semantic_descriptors() {
 
 #[test]
 fn field_patch_validation_fixtures() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎛️field-patch/🔣️.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️field-patch/🔣️.json")).unwrap();
     let document = base_document();
     let id = crate::schema::layer_id(&document.layers[0]);
     for case in cases.as_array().unwrap() {
@@ -206,7 +206,7 @@ fn text_field_edits_preserve_numeric_strings_and_other_facets() {
 
 #[test]
 fn all_inspector_blend_modes_preserve_other_fields_and_undo() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎛️field-patch/🔣️.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️field-patch/🔣️.json")).unwrap();
     let original = base_document();
     let id = crate::schema::layer_id(&original.layers[0]);
     for case in cases.as_array().unwrap().iter().filter(|case| case["patch"]["field"] == "blendMode" && case["accepted"] == true) {

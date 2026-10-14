@@ -11,12 +11,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `Document` to its binary pack form.
 pub fn encode(document: &Din4108Snapshot) -> Vec<u8> {
-    store::os_store::serialization::ArtifactPack::encode_pack(document)
+    pack::snapshot::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Document` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<Din4108Snapshot, PackError> {
-    <Din4108Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)
+    <Din4108Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -36,11 +36,11 @@ use framework_schema::ArtifactSchema;
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 /// 📦️ Decodes a [`Din4108Snapshot`] from the binary `.pack.semio` envelope.
 pub fn decode_din4108_pack(bytes: &[u8]) -> Result<Din4108Snapshot, String> {
-    <Din4108Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
+    <Din4108Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
 }
 /// 📦️ Encodes a [`Din4108Snapshot`] to its binary `.pack.semio` envelope.
 pub fn encode_din4108_pack(snapshot: &Din4108Snapshot) -> Vec<u8> {
-    store::os_store::serialization::ArtifactPack::encode_pack(snapshot)
+    pack::snapshot::ArtifactPack::encode_pack(snapshot)
 }
 }
 pub use native_snapshot_codec::*;

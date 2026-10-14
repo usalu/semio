@@ -1,6 +1,6 @@
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
-import fixture from"../🧫️fixtures/🔣️.json"with{type:"json"};
+import fixture from"./🧫️fixtures/🔣️.json"with{type:"json"};
 import{en1999SnapshotToSqliteDatabase,en1999SnapshotFromSqliteDatabase,type En1999SqliteMember,type En1999SqliteSnapshot}from"../🟦️.ts";
 import {binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
@@ -18,7 +18,7 @@ test("EN1999 empty owned collections and both annex variants need one domain row
 test("EN1999 exact bit wrappers and query/class coherence reject weakened scalar state",async()=>{const s=owned();s.sections[0]!.height={bits:0n,unownedScalar:true}as typeof s.sections[number]["height"];await expect(en1999SnapshotToSqliteDatabase(s)).rejects.toThrow();s.sections[0]!.height={bits:18446744073709551616n};await expect(en1999SnapshotToSqliteDatabase(s)).rejects.toThrow();const d=await en1999SnapshotToSqliteDatabase(owned());for(const[index,value]of[[6,99],[11,null],[12,"unownedClass"]]as const){const bad={tables:d.tables.map(t=>t.name==="en1999_fatigue_detail"?{...t,rows:t.rows.map(r=>({...r,values:r.values.map((v,i)=>i===index?value:v)}))}:t)};await expect(en1999SnapshotFromSqliteDatabase(bad)).rejects.toThrow()}});
 
 import NormSemanticAjv from "ajv/dist/2020.js";
-import normSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {en1999SnapshotToSqliteDatabase as normSemanticProject,en1999SnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
 import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

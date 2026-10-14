@@ -4,7 +4,7 @@ use protocol::{Mutation, MutationDiff};
 use semio_framework_plugin::ArtifactEditor;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
 
 #[test]
@@ -286,8 +286,8 @@ async fn retained_archive_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Mutation
     assert_eq!(app.snapshot().unwrap(), original);
     semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     assert_eq!(app.snapshot().unwrap(), expected);
-    let saved = <ZipSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&expected);
-    assert_eq!(<ZipSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&saved).unwrap(), expected);
+    let saved = <ZipSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&expected);
+    assert_eq!(<ZipSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&saved).unwrap(), expected);
     artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 

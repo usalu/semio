@@ -18,7 +18,7 @@ export async function registerDocumentLinkShortageTests(
   },
 ): Promise<void> {
   const { describe, it, expect } = vitest;
-  const { default: fixture } = await import("../../🔨️modules/🏪️store/🧫️fixtures/document-link-shortage-v1/🔣️.json");
+  const { default: fixture } = await import("../../🔨️modules/🏪️store/🧪️tests/🧫️fixtures/document-link-shortage-v1/🔣️.json");
   const { default: schema } = await import("../../🔨️modules/🏪️store/🔄️sync/🧬️schema/document-link-shortage/🔣️.json");
   const { DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1 } = await import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts");
 

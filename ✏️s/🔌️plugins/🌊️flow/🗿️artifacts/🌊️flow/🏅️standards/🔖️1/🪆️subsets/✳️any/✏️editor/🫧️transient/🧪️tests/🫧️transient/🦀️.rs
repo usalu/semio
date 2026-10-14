@@ -14,7 +14,7 @@ fn quoted_grant(disposer: &dyn ArtifactOwnedDisposer<Store>, owner: &Store, item
 #[semio_framework_async_macros::async_test]
 async fn flow_empty_transient_close_matches_neutral_trace_and_exact_owner() {
     type App = EditorApp<crate::editor::flow::FlowPlayApp>;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🫧️transient-owners/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🫧️transient-owners/🔣️.json")).unwrap();
     let mut owner = Store::default();
     let original_root = Arc::downgrade(&owner.current_root());
     let mut disposer = App::build_transient_store_disposer().unwrap();

@@ -1,3 +1,4 @@
+import type { ScriptInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import assert from "node:assert/strict";
 import { rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -8,12 +9,12 @@ import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️product
 import { buildStdioComposition, runStdioTypeScriptCompiler } from "../../🏘️composition/🏗️build/🟦️.ts";
 
 /** 🧪️ Builds and consumes the exact 36-export Stdio composition from the selected output root. */
-export async function testStdioComposition(packageRoot: string, outputRoot = join(resolve(getWorkspaceRoot(), process.env.SEMIO_TEST_ARTIFACT_DIR ?? packageRoot), "stdio-composition-test")): Promise<void> {
-  await buildStdioComposition(packageRoot, outputRoot);
+export async function testStdioComposition(packageRoot: string, invocation: ScriptInvocation, outputRoot = join(resolve(getWorkspaceRoot(), process.env.SEMIO_TEST_ARTIFACT_DIR ?? packageRoot), "stdio-composition-test")): Promise<void> {
+  await buildStdioComposition(packageRoot, outputRoot, invocation);
   const probe = join(outputRoot, "🧪️consumer.ts");
   writeFileSync(probe, 'import { binary as definition } from "./🟦️.js";\nvoid definition;\n');
   try {
-    runStdioTypeScriptCompiler(probe, ["--noEmit"]);
+    await runStdioTypeScriptCompiler(probe, ["--noEmit"], invocation);
   } finally {
     rmSync(probe, { force: true });
   }

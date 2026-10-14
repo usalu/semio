@@ -43,7 +43,7 @@ pub fn definition(label: LocalizedLabel) -> ToolDefinition {
 /// deterministic sequence (a raise continues it, a lower retracts its tail). Only the configuration the planner
 /// reads reconfigures it, never a camera or window option.
 pub fn run_definition() -> ToolRunDefinition {
-    ToolRunDefinition {
+    ToolRunDefinition { receiving: semio_framework_tool_run::ToolRunReceivingLimits::REPORTS,
         mutating: true,
         rebase: ToolRunRebasePolicy::Revalidate,
         reconfigure: ToolRunReconfigurePolicy::Resume,

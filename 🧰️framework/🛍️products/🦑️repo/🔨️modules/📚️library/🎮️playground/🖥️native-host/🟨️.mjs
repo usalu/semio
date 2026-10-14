@@ -12,7 +12,7 @@ export function admitPlaygroundNativeHostV1(value,resolveOwner) {
   if([...cratePath].length>1024 || !cratePath || cratePath.startsWith("/") || /[\\:\u0000]/u.test(cratePath) || cratePath.split("/").some(part=>!part || part==="." || part==="..")) throw new Error("Native host must name a canonical workspace owner");
   if(!identifier.test(packageName) || !identifier.test(binary) || !identifier.test(target) || !projectIdentifier.test(project) || project.length>128) throw new Error("Invalid native host identity");
   const facts=resolveOwner(cratePath);
-  if(facts.package!==packageName || facts.project!==project || !facts.binaries.includes(binary) || ![target,`${target}-release`].every(name=>facts.targets.includes(name))) throw new Error("Native host does not match its authored producer");
+  if(facts.package!==packageName || facts.project!==project || !facts.binaries.includes(binary) || !facts.targets.includes(target) || !["prototype","release"].every(mode=>facts.modes[target]?.includes(mode))) throw new Error("Native host does not match its authored producer");
   return Object.freeze({cratePath,project,package:packageName,binary,target});
 }
 
@@ -63,15 +63,15 @@ export function nativeHostSourceFactsV1(cratePath,view) {
   read(`${cratePath}/📜️script.ts`);
   const targets=Object.keys(project.targets??{}).filter(name=>{
     const target=project.targets[name];
-    return target.executor==="nx:run-commands" && target.options?.cwd===cratePath && /^bun (?:\.\/)?📜️script\.ts [a-z0-9-]+(?: |$)/u.test(target.options?.command??"");
+    return ["prototype","release"].every(mode=>target.configurations?.[mode]?.env?.SEMIO_BUILD_MODE===mode) && target.executor==="nx:run-commands" && target.options?.cwd===cratePath && /^bun (?:\.\/)?📜️script\.ts [a-z0-9-]+(?: |$)/u.test(target.options?.command??"");
   });
-  return {package:packageName,project:project.name,binaries,targets,outputs:Object.fromEntries(targets.map(target=>[target,project.targets[target].outputs]))};
+  return {package:packageName,project:project.name,binaries,targets,modes:Object.fromEntries(targets.map(target=>[target,["prototype","release"]])),outputs:Object.fromEntries(targets.map(name=>[name,Object.fromEntries(["prototype","release"].map(mode=>[mode,(project.targets[name].configurations[mode].outputs??project.targets[name].outputs)?.map(output=>typeof output==="string"?output.replaceAll("{options.env.SEMIO_BUILD_MODE}",mode):output)]))]))};
 }
 
 /** 📦 Resolves one exact published artifact directory from the selected producer target. */
 export function nativeHostArtifactPathV1(host,profile,facts,platform) {
-  if(!["dev","release"].includes(profile)) throw new Error("Native host profile must be exact");
-  const target=host.target+(profile==="release"?"-release":""), outputs=facts.outputs[target];
+  if(!["prototype","release"].includes(profile)) throw new Error("Native host profile must be exact");
+  const outputs=facts.outputs[host.target]?.[profile];
   if(!Array.isArray(outputs) || outputs.length!==1 || typeof outputs[0]!=="string" || !outputs[0].startsWith("{projectRoot}/")) throw new Error("Native host must publish exactly one owned directory");
   const output=outputs[0].slice("{projectRoot}/".length);
   if(!output || /[{}\\:\u0000]/u.test(output) || output.split("/").some(part=>!part || part==="." || part==="..")) throw new Error("Native host output is outside its producer");

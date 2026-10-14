@@ -1,13 +1,17 @@
 #!/usr/bin/env bun
+import {receiveScriptProcessInvocation} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 /** 🌀️ Public Generation2d owned schema and relational law router. */
 import{runArtifactTypeScriptPackageMain}from"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts";
 import{readdirSync}from"node:fs";
 import{join,resolve}from"node:path";
 import{runRepositoryCommand}from"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 if(process.argv[2]==="verify"&&process.argv[3]==="snapshot-sqlite-source"){
+ await receiveScriptProcessInvocation(process.env,async original=>{
  const workspace=resolve(import.meta.dir,"../../../../../../.."),roots=[resolve(import.meta.dir,"../../🏅️standards"),resolve(import.meta.dir,"../../../🧊️generation3d/🏅️standards")],files:string[]=[],pending=[...roots];
  while(pending.length){const directory=pending.pop()!;for(const entry of readdirSync(directory,{withFileTypes:true})){const path=join(directory,entry.name);if(entry.isDirectory()&&entry.name!=="🧪️tests")pending.push(path);else if(entry.isFile()&&entry.name.endsWith(".ts"))files.push(path);}}
- await runRepositoryCommand(process.execPath,["x","tsc",...files,"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--skipLibCheck"],workspace,"generation-source:all-published-consumers",120000);
+ await runRepositoryCommand(original,process.execPath,["x","tsc",...files,"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--skipLibCheck"],workspace,"generation-source:all-published-consumers",{version:1,maximumElapsedMilliseconds:120000,output:{maximumBytes:134217728,maximumLines:65536}});
  console.log(`[generation-source] checked published consumers=${files.length}`);
+
+ });
 }else
 await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/procedural-generation2d",{suites:["🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});

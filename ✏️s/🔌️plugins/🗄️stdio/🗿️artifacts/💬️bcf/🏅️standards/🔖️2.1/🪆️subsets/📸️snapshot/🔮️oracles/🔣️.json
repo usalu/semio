@@ -23,14 +23,14 @@
       "files": [
         {
           "role": "expected-before-bcf",
-          "path": "../🧫️fixtures/📸️set-viewpoint-snapshot/⬅️before.bcf",
+          "path": "../🧪️tests/🧫️fixtures/📸️set-viewpoint-snapshot/⬅️before.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:5856aad67464af8cb15f39b1fc55015a5dcdb980e9fbf65d75dc3b732d922f77",
           "bytes": 248124
         },
         {
           "role": "expected-after-bcf",
-          "path": "../🧫️fixtures/📸️set-viewpoint-snapshot/➡️after.bcf",
+          "path": "../🧪️tests/🧫️fixtures/📸️set-viewpoint-snapshot/➡️after.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:421a51c554896183c0bbe42a0b167bfd2869dce0064a28b253ddde7b8b0a17dd",
           "bytes": 248569

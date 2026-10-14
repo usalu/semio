@@ -11,7 +11,7 @@ export async function testContinuousServices(workspace: string, generated: strin
 
 /** 🧪️ Runs one schema-defined service lifetime against the installed native Nx task runner. */
 async function testContinuousServiceScenario(workspace: string, generated: string, mode: string, candidate?: string): Promise<void> {
-  const contractRoot = join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/continuous-services");
+  const contractRoot = join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/continuous-services");
   const contract = JSON.parse(readFileSync(join(contractRoot, "🔣️.json"), "utf8"));
   assert.ok(contract.timeouts.gate >= 2 * contract.timeouts.wait && contract.timeouts.service >= contract.timeouts.gate + contract.timeouts.wait, "Service fixture owners must outlive their parent orchestration deadlines");
   const scenario = contract.cases.find((row: { name: string }) => row.name === mode);

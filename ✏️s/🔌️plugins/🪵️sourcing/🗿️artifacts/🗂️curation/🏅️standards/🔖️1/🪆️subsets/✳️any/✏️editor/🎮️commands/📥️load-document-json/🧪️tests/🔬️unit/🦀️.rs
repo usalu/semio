@@ -43,7 +43,7 @@ fn load_document_pack(emit: &Emit<SourcingMutation, SourcingCurationConfigMutati
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("expected a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
-    <CurationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack")
+    <CurationSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack")
 }
 
 /// 🧬️ Whole-document replace is not an in-history mutation, so `setActiveExample` publishes an
@@ -55,7 +55,7 @@ async fn curation_and_example_actions_survive_registry_enforcement() {
     app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("set example");
     let effects = crate::editor::sourcing::unit_tests::context::settle(&mut app).await;
     let Some(Effect::LoadDocument { pack, .. }) = effects.first() else { panic!("setActiveExample must publish a LoadDocument effect") };
-    let loaded = <CurationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+    let loaded = <CurationSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
     assert!(!loaded.stock_extra.is_empty(), "demo-stock default materialized from the registry");
     let object_id = app.snapshot().expect("snapshot").stock_extra[2].id.clone();
     crate::editor::sourcing::unit_tests::context::dispatch(&mut app, SourcingCurationCommand::CurationAdd(crate::editor::sourcing::commands::curation_add::CurationAdd { object_id: object_id.clone() })).await;

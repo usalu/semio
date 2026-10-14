@@ -9,7 +9,7 @@ test("Select All resolves document topology without a prior pick", async () => {
 
 import { Object3D } from "three";
 import { drawingInteractionTopology, drawingPointTopology, type DrawingInteractionLayer } from "../../🟦️.ts";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../🧫️fixtures/🔣️.json";
 
 for (const item of fixture) test(`document topology: ${item.name}`, () => {
   const actual = drawingInteractionTopology(item.layers);
@@ -32,7 +32,7 @@ for (const item of fixture) test(`document topology: ${item.name}`, () => {
 
 import Ajv from "ajv";
 import { geometryId, pointId, parsePointId, pointSlots } from "../../🎯️points/🟦️.ts";
-import pointFixture from "../../🎯️points/🧫️fixtures/🔣️.json";
+import pointFixture from "../../🎯️points/🧪️tests/🧫️fixtures/🔣️.json";
 import pointSchema from "../../🎯️points/🧬️schema/🔣️.json";
 import { blake3Hex } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔏️hash/🟦️.ts";
 import type { PathGeometrySegment } from "../../../../🧬️schema/🟦️.ts";
@@ -65,7 +65,7 @@ test("point reference parser rejects ambiguous or noncanonical addresses",()=>{
   for(const invalid of [{layerId:"",geometry,index:0,point:"anchor"},{layerId:"x",geometry:"short",index:0,point:"anchor"},{layerId:"x",geometry:`prefix:${geometry}`,index:0,point:"anchor"},{layerId:"x",geometry,index:0.5,point:"anchor"},{layerId:"x",geometry,index:0,point:"control3"}]) {expect(validate(invalid)).toBe(false);expect(pointId(invalid as Parameters<typeof pointId>[0])).toBeNull();}
 });
 
-import pointTopologyFixture from "../../🎯️points/🧫️fixtures/🌳️topology/🔣️.json";
+import pointTopologyFixture from "../../🎯️points/🧪️tests/🧫️fixtures/🌳️topology/🔣️.json";
 for(const row of pointTopologyFixture)test(`point topology: ${row.name}`,()=>{
   const topology=drawingPointTopology(row.layers as DrawingInteractionLayer[]);
   const actual=topology.ordered.map(node=>{const point=parsePointId(node.id)!;expect(node.granularity).toBe("point");expect(node.parent).toBeUndefined();return [point.layerId,point.index,point.point];});
@@ -82,7 +82,7 @@ for(const row of pointTopologyFixture)test(`point topology: ${row.name}`,()=>{
   expect(actual).toEqual(oracle);
 });
 
-import pointPicks from "../../🎯️points/🧫️fixtures/🖱️picking/🔣️.json";
+import pointPicks from "../../🎯️points/🧪️tests/🧫️fixtures/🖱️picking/🔣️.json";
 import pickSchema from "../../🎯️points/🧬️schema/🖱️picking/🔣️.json";
 import { pickPointSelection } from "../../🎯️points/🟦️.ts";
 import { produce } from "immer";
@@ -102,7 +102,7 @@ test("node picks preserve drag groups and support modified membership",()=>{
 
 import {Box2,Matrix3,Vector2} from "three";
 import Ajv from "ajv";
-import areaFixture from "../../🎯️points/🧫️fixtures/▧️marquee/🔣️.json";
+import areaFixture from "../../🎯️points/🧪️tests/🧫️fixtures/▧️marquee/🔣️.json";
 
 import documentSchema from "../../../../🧬️schema/🔣️.json";
 import {anchorInMarquee,mergePointSelection} from "../../🎯️points/🟦️.ts";

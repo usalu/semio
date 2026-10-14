@@ -4,7 +4,7 @@
 //! there is no multi-user shareable live surface on the launcher.
 
 use protocol::Mutation;
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ No shareable live launcher state — chrome stays in `HomeConfig`.
@@ -33,7 +33,7 @@ impl protocol::DiffAlgebra<HomePresence> for HomePresenceDiff {
     }
 }
 
-impl store::os_store::serialization::ArtifactDsl for HomePresence {
+impl pack::snapshot::ArtifactDsl for HomePresence {
     const EXTENSION: &'static str = "home.presence";
     fn envelope_id() -> &'static str {
         "home.presence"
@@ -58,14 +58,17 @@ impl ArtifactPack for HomePresence {
             return Ok(Self::default());
         }
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+        if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         if !inner.is_empty() {
             return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "home presence pack must be empty")));
         }
         Ok(Self::default())
     }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for HomePresence {
+
 }
 //#endregion 🔖️Presence
 

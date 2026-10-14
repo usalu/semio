@@ -19,7 +19,7 @@ type OwnershipFixture = {
 
 export async function proveEntityCatalogOwnership(repoRoot: string): Promise<void> {
   const moduleRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
-  const fixture: OwnershipFixture = JSON.parse(readFileSync(join(moduleRoot, "🧫️fixtures/🏷️entity-ownership/🔣️.json"), "utf8"));
+  const fixture: OwnershipFixture = JSON.parse(readFileSync(join(moduleRoot, "🧪️tests/🧫️fixtures/🏷️entity-ownership/🔣️.json"), "utf8"));
   const failures: string[] = [];
   try {
     assert.deepEqual(generatedTargets(readEntityCatalog(repoRoot)).map(target => relative(repoRoot, target.path).replaceAll("\\", "/")), fixture.generalOutputs);

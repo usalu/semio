@@ -9,11 +9,14 @@ use super::*;
 use crate::standards::iana::subsets::any::schema::snapshot::*;
 use framework_schema::ArtifactSchema;
 
-impl store::os_store::serialization::ArtifactPack for TsvSnapshot{
+impl pack::snapshot::ArtifactPack for TsvSnapshot{
  fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Self::__dsl_spec())}
- fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())}
- fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{let body=store::pack_rt::encode_document(&Self::__dsl_spec(),&self.__dsl_to_record(),options)?;let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|error|store::PackError::from(error.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&body))}
- fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,body)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::from(error.into_value_error()))?;if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"TSV logical Pack envelope mismatch")))}Self::__dsl_from_record(&store::pack_rt::decode_document(&body,&Self::__dsl_spec(),options)?.0).map_err(store::PackError::from)}
+ 
+ fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{let body=store::pack_rt::encode_document(&Self::__dsl_spec(),&self.__dsl_to_record(),options)?;let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|error|store::PackError::from(error.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&body))}
+ fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,body)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::from(error.into_value_error()))?;if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"TSV logical Pack envelope mismatch")))}Self::__dsl_from_record(&store::pack_rt::decode_document(&body,&Self::__dsl_spec(),options)?.0).map_err(store::PackError::from)}
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for TsvSnapshot {
+fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())}
 }
 }
 
@@ -23,6 +26,6 @@ use super::*;
 use crate::standards::iana::subsets::any::schema::snapshot::*;
 use framework_schema::ArtifactSchema;
 /// 📥️ Reads the logical Pack document or authored UTF-8 TSV bytes.
-pub fn read_tsv_source_binary(bytes:&[u8])->Result<TsvSnapshot,store::PackError>{if bytes.starts_with(&[137,83,69,77,13,10,26,10]){<TsvSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)}else{let text=std::str::from_utf8(bytes).map_err(|error|store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string())))?;<TsvSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(store::PackError::from)}}
+pub fn read_tsv_source_binary(bytes:&[u8])->Result<TsvSnapshot,store::PackError>{if bytes.starts_with(&[137,83,69,77,13,10,26,10]){<TsvSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)}else{let text=std::str::from_utf8(bytes).map_err(|error|store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string())))?;<TsvSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(store::PackError::from)}}
 }
 pub use snapshot_wire_codec::*;

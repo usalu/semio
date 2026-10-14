@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Shared Source Header Handoff",
+  "const": {
+    "version": 1,
+    "sourceKinds": [
+      "owned",
+      "borrowed"
+    ],
+    "headerAdmission": {
+      "items": 1,
+      "copyBytes": 0,
+      "releaseBytes": 0,
+      "depth": 1
+    },
+    "capacity": "actualSharedHeadersAndLeaseBacking",
+    "projection": "sameOriginalPointerAndControl",
+    "deniedAxes": [
+      "items",
+      "capacity",
+      "depth"
+    ],
+    "projectionDeniedAxes": [
+      "items",
+      "depth"
+    ],
+    "cancelBodies": [
+      0,
+      1,
+      3,
+      64
+    ],
+    "terminalDropBytes": 0,
+    "owner": "original source",
+    "authority": "original authority",
+    "typedPayload": {
+      "values": [
+        [
+          0.5,
+          -2.25,
+          4.0
+        ],
+        [
+          -1.0,
+          0.0,
+          2.0
+        ]
+      ],
+      "rawArrayBytes": 12,
+      "rawElementBytes": 4,
+      "selectedSpillCopyBytes": 0,
+      "closeBodies": [
+        0,
+        1,
+        3,
+        64
+      ]
+    }
+  }
+}

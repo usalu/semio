@@ -23,14 +23,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/💬️insert-comment/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/💬️insert-comment/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:bdd47b88c3d972b13a95547f059eb7ae5844de6b9b4be4a8fefc71691269591b",
           "bytes": 51
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/💬️insert-comment/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/💬️insert-comment/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:58e64d4fd0599ac36ca9ca337b6b84e054cb15867f6013ae69022ba59ffe0635",
           "bytes": 80
@@ -71,14 +71,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/🗑️remove-comment/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-comment/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:58e64d4fd0599ac36ca9ca337b6b84e054cb15867f6013ae69022ba59ffe0635",
           "bytes": 80
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/🗑️remove-comment/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-comment/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:bdd47b88c3d972b13a95547f059eb7ae5844de6b9b4be4a8fefc71691269591b",
           "bytes": 51

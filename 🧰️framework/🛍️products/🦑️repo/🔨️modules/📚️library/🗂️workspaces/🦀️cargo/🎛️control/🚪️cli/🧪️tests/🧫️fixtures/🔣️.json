@@ -1,0 +1,18 @@
+{
+  "schemaVersion":1,
+  "accepted":[
+    {"schemaVersion":1,"discovery":{"maximumUnits":100000000,"maximumOwnedBytes":2147483648,"maximumDepth":128},"retirement":{"maximumUnits":1000000,"maximumOwnedBytes":1048576,"maximumDepth":128},"progressIntervalMilliseconds":250},
+    {"schemaVersion":1,"discovery":{"maximumUnits":0,"maximumOwnedBytes":0,"maximumDepth":0},"retirement":{"maximumUnits":0,"maximumOwnedBytes":0,"maximumDepth":0},"progressIntervalMilliseconds":0}
+  ],
+  "rejected":[
+    {},
+    {"schemaVersion":1,"discovery":{"maximumUnits":1,"maximumOwnedBytes":1,"maximumDepth":1},"progressIntervalMilliseconds":0},
+    {"schemaVersion":1,"discovery":{"maximumUnits":-1,"maximumOwnedBytes":1,"maximumDepth":1},"retirement":{"maximumUnits":1,"maximumOwnedBytes":1,"maximumDepth":1},"progressIntervalMilliseconds":0},
+    {"schemaVersion":1,"discovery":{"maximumUnits":1,"maximumOwnedBytes":1,"maximumDepth":1.5},"retirement":{"maximumUnits":1,"maximumOwnedBytes":1,"maximumDepth":1},"progressIntervalMilliseconds":0},
+    {"schemaVersion":1,"discovery":{"maximumUnits":1,"maximumOwnedBytes":1,"maximumDepth":4097},"retirement":{"maximumUnits":1,"maximumOwnedBytes":1,"maximumDepth":1},"progressIntervalMilliseconds":0},
+    {"schemaVersion":1,"discovery":{"maximumUnits":1,"maximumOwnedBytes":1,"maximumDepth":1,"fallback":true},"retirement":{"maximumUnits":1,"maximumOwnedBytes":1,"maximumDepth":1},"progressIntervalMilliseconds":0},
+    {"schemaVersion":1,"discovery":{"maximumUnits":1,"maximumOwnedBytes":1,"maximumDepth":1},"retirement":{"maximumUnits":1,"maximumOwnedBytes":1,"maximumDepth":1},"progressIntervalMilliseconds":60001},
+    {"schemaVersion":2,"discovery":{"maximumUnits":1,"maximumOwnedBytes":1,"maximumDepth":1},"retirement":{"maximumUnits":1,"maximumOwnedBytes":1,"maximumDepth":1},"progressIntervalMilliseconds":0}
+  ],
+  "cancellation":{"discoveryAborted":true,"retirementInitiallyAborted":false,"retainedManifestOwners":0}
+}

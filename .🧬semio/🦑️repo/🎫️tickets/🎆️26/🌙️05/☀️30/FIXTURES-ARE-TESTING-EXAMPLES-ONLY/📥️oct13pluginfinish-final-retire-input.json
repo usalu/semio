@@ -1,0 +1,18 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️retirement/🧬️schema/🔣️.json",
+    "beforeSha256": "9d4e830004a77369a7254a43663cabd5607bc877e793fd1a4260858dcfe1be12"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/♻️retirement/📸️snapshot/🧬️schema/🔣️.json",
+    "beforeSha256": "3dc3dcf4a0cd8bad8bfa8e06af50fd1fbf7b76d95cbe61f4b3fa87ade7303cec"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/💾️binary/📸️snapshot/🧬️schema/🧾️original/🔣️.json",
+    "beforeSha256": "9857402d2168e18f5dea02584b8c547853f472c1b632df16d18779c06849917f"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧵️publication/🧬️schema/🔣️.json",
+    "beforeSha256": "80c997fdfb981078949c19d097f508337dd9c608a948de1b6c0d00a1af2f1367"
+  }
+]

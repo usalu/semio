@@ -1,0 +1,8 @@
+{
+  "RemoveNodeProperty": {
+    "node_id": {
+      "value": "a"
+    },
+    "key": "weight"
+  }
+}

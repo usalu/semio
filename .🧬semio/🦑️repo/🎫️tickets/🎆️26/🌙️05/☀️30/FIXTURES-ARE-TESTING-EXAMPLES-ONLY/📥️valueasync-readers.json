@@ -1,0 +1,3505 @@
+{
+  "changes": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🚫️error/♻️retirement/🧪️tests/🦀️.rs",
+      "beforeSha256": "ec300a63fcf2cd51473db7eed6d8ccf3c9ccf05b86e8296749c3cec4c2e1d9c1",
+      "afterSha256": "5c58733fa8afc4107f5e053bb473766162c5885c8b05d28ec0da03bd3fad9c06",
+      "edits": [
+        {
+          "start": 3010,
+          "end": 3077,
+          "from": "../../../../../🌱️value/⚠️refusal/♻️retirement/🧫️fixtures/🔣️.json",
+          "to": "../../../../../🌱️value/⚠️refusal/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🔬️action-unit/🦀️.rs",
+      "beforeSha256": "7ac96ed7163fd30132a81ec646c9aaba0bf75499c00eed9cce079755fea88cd6",
+      "afterSha256": "e7d481270389e101032ccd025753b245c90c3ab3c3e1997fbf3ace7a3d19557b",
+      "edits": [
+        {
+          "start": 9302,
+          "end": 9362,
+          "from": "../../../../🌱️value/🧫️fixtures/🔣️json-projection/🔣️.json",
+          "to": "../../../../🌱️value/🧪️tests/🧫️fixtures/🔣️json-projection/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🦀️.rs",
+      "beforeSha256": "f4858721ef98fb3f57ddebfcdec7c91fdc5cfbd7b79daf4f18e12ba41f29fa03",
+      "afterSha256": "2eacc1e400337ce1f7ccb6d6ea52ea988a891276f619f408c6635c0dd4357252",
+      "edits": [
+        {
+          "start": 46510,
+          "end": 46576,
+          "from": "../../../../../🌱️value/✨️derive/🧵️canonical/🧫️fixtures/🔣️.json",
+          "to": "../../../../../🌱️value/✨️derive/🧵️canonical/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 42281,
+          "end": 42347,
+          "from": "../../../../../🌱️value/✨️derive/🧵️canonical/🧫️fixtures/🔣️.json",
+          "to": "../../../../../🌱️value/✨️derive/🧵️canonical/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 34507,
+          "end": 34573,
+          "from": "../../../../../🌱️value/✨️derive/🧵️canonical/🧫️fixtures/🔣️.json",
+          "to": "../../../../../🌱️value/✨️derive/🧵️canonical/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 29449,
+          "end": 29515,
+          "from": "../../../../../🌱️value/✨️derive/🧵️canonical/🧫️fixtures/🔣️.json",
+          "to": "../../../../../🌱️value/✨️derive/🧵️canonical/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 8928,
+          "end": 8994,
+          "from": "../../../../../🌱️value/✨️derive/🧵️canonical/🧫️fixtures/🔣️.json",
+          "to": "../../../../../🌱️value/✨️derive/🧵️canonical/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/⚠️refusal/🦀️.rs",
+      "beforeSha256": "de343accc6ca23865f9f6f0598d4c1f69244fe36ca6689c20bebc621299bdcfc",
+      "afterSha256": "2091ede4a954151e085537fe0ff7e37a6ee343ef603c3a20d61995bf0d178326",
+      "edits": [
+        {
+          "start": 174,
+          "end": 225,
+          "from": "../../../../🌱️value/⚠️refusal/🧫️fixtures/🔣️.json",
+          "to": "../../../../🌱️value/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "0cbad96030d2d89aec5e05ee20b55d3bea1d23b8e643adc6e32f10eef5e1dfd9",
+      "afterSha256": "9338c1d113ba1ccb6a3d98affac8147b5a20ca3e9775e09feb903b714bcdc3ca",
+      "edits": [
+        {
+          "start": 922,
+          "end": 982,
+          "from": "../../../../🌱️value/⚠️refusal/🔁️codec/🧫️fixtures/🔣️.json",
+          "to": "../../../../🌱️value/⚠️refusal/🔁️codec/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🛑️cancel/♻️retirement/🧪️tests/🟦️.ts",
+      "beforeSha256": "c8c95f8d126ba1c66bf86f2ee63d68414e62538dc862e6d505f4234e1c409e46",
+      "afterSha256": "59c5a3088e91c1a5660a8432c8109950c96decd63b9b2c22e289b64ea28bdaa7",
+      "edits": [
+        {
+          "start": 2625,
+          "end": 2664,
+          "from": "../🧫️fixtures/🪢️alias-return/🔣️.json",
+          "to": "🧫️fixtures/🪢️alias-return/🔣️.json"
+        },
+        {
+          "start": 397,
+          "end": 420,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🛑️cancel/♻️retirement/🧪️tests/🦀️.rs",
+      "beforeSha256": "1c5bfb4d4ef6c5a3be660e758af5d6a77f0e0e8789ecd660fca14386ec9c8d77",
+      "afterSha256": "09763335ec134cfcf78f94dcda292d650a5e614a57c7e0a75e6740853ab4e0fe",
+      "edits": [
+        {
+          "start": 4373,
+          "end": 4412,
+          "from": "../🧫️fixtures/🪢️alias-return/🔣️.json",
+          "to": "🧫️fixtures/🪢️alias-return/🔣️.json"
+        },
+        {
+          "start": 2478,
+          "end": 2501,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 391,
+          "end": 414,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🛑️cancel/🎟️admission/🧪️tests/🟦️.ts",
+      "beforeSha256": "ec8db5fd64ad5a940812ee231349d818a77a0fa178886fef6ea22a2247de58a3",
+      "afterSha256": "0e4216f77a29e90ff4ee8907d8bd8fcac9c96c1281d4cf288e5bd8b9c9752911",
+      "edits": [
+        {
+          "start": 544,
+          "end": 567,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🛑️cancel/🎟️admission/🧪️tests/🦀️.rs",
+      "beforeSha256": "87eb78377c5f96015c1184a39e2621bcb37e9369b6a9ce7e1ffd8c3099773cf1",
+      "afterSha256": "b312ff7b44f30dc1c8c3f01c93035824a652b547ee1cf9f59a4ba9137b934610",
+      "edits": [
+        {
+          "start": 506,
+          "end": 529,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/📜️script.ts",
+      "beforeSha256": "00b6471f614c2342609cc90312b7532492e9b3ec826faa809ebc9f5f06fc01b1",
+      "afterSha256": "db8e3de293a4c3e18a67b37b7f079787730841b2d3cc53a4c44fe5f1d756ed2d",
+      "edits": [
+        {
+          "start": 14783,
+          "end": 14803,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 11371,
+          "end": 11391,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 7096,
+          "end": 7116,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 2151,
+          "end": 2171,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/♻️cancel-return/📬️claim/🧪️tests/🟦️.ts",
+      "beforeSha256": "b7ebf7d5ebc5b2588cfebe85bb83dfc88791fd985747fdbb7407c6e361c416e1",
+      "afterSha256": "39843e89032e35d70c2a88199a6beac48e83493c9f61b673b0fc190af40a9a2e",
+      "edits": [
+        {
+          "start": 193,
+          "end": 216,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/♻️cancel-return/📬️claim/🧪️tests/🦀️.rs",
+      "beforeSha256": "e30ab5640e649d5c3995b52c5751472f83d83d7e1f32106c30abb21b3be032d0",
+      "afterSha256": "c9dc156de7395459f2f23bbc2fc001a36bade8a0ffff0f42711899f9bc738187",
+      "edits": [
+        {
+          "start": 1186,
+          "end": 1209,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/📏️api/🧪️tests/🟦️.ts",
+      "beforeSha256": "5d01e9d1c85237f9655f1ed6d7135bf0a6c5dad5bd04752ed4fb0547acafe7d2",
+      "afterSha256": "31d818a881605acc89f97044b71cc2d581097f76ccb811b57d02e81e0b90352b",
+      "edits": [
+        {
+          "start": 334,
+          "end": 357,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🤝️cooperative/🧪️tests/🔬️tool-job-cooperative-maintenance/🟦️.ts",
+      "beforeSha256": "a162fd9b97888c02ebbdedce9a5e256ad999f43a340813740cd048f6e6434a27",
+      "afterSha256": "61c12fac2b1fab53289ef31cb08403581aa455088665bb603a409f76061a4166",
+      "edits": [
+        {
+          "start": 421,
+          "end": 441,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🤝️cooperative/🧪️tests/🔬️standalone/🦀️.rs",
+      "beforeSha256": "d9ac0c546b9abdfcfcec3d479b7d525dec023b13b01104f8976b121bb72c4524",
+      "afterSha256": "efa5923a23e1b61d342b231233e814db22ad3419202b797e86ff0ee586efa68e",
+      "edits": [
+        {
+          "start": 139,
+          "end": 165,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🔔️wake/🧵️thread/🧪️tests/🟦️.ts",
+      "beforeSha256": "2d68c16f3cbd6410ef860716388a190d8c3e86b228f71744ff3cdf8786233d08",
+      "afterSha256": "ccd769650569db8ade6eace0b8610cd01956d4b2f4c8291d03686d325805d087",
+      "edits": [
+        {
+          "start": 349,
+          "end": 372,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🔔️wake/🧵️thread/🧪️tests/🦀️.rs",
+      "beforeSha256": "f885047b6f000bd356fea6fde1fb923f35d9d5d2a612995b1184fd41f39b4006",
+      "afterSha256": "077b38c5905c3b3cec36f85bb7bfaa98a86cbcb4083abacb9ea61109f76ff545",
+      "edits": [
+        {
+          "start": 677,
+          "end": 700,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🔂️poll/🧪️tests/🟦️.ts",
+      "beforeSha256": "9e5bb934a45661f0b9df998acf3b2e7615cfff6b952c7713e12ce9532d8452ab",
+      "afterSha256": "f68dfafd010ba8c00b23f8f18508490169162defd975ecdc4fcebfc07fca6fc5",
+      "edits": [
+        {
+          "start": 624,
+          "end": 644,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🔂️poll/🧪️tests/🦀️.rs",
+      "beforeSha256": "83ea4c6058113295604e94828efb1c41b6e3d1f2335bb1b75a8b6f0326342e0d",
+      "afterSha256": "2be8443c86a5429d30a2863cf1a6c749b9006afe95304d1d7ea7c4be07c5dc02",
+      "edits": [
+        {
+          "start": 253,
+          "end": 276,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🪃️continuation/🧪️tests/🔬️node-twin/🟦️.ts",
+      "beforeSha256": "1529e2f2ff0abc70311361d490b1565fb6d9b6dd51b434b29528f58f1d0be0a9",
+      "afterSha256": "ec4493c297f872d6c01e82e86080eab4a5766537197463890c25c077bd447330",
+      "edits": [
+        {
+          "start": 1859,
+          "end": 1885,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🪃️continuation/🧪️tests/🪃️scheduler/🟦️.ts",
+      "beforeSha256": "484e43674785b84f7f8f6871880a9816bf530ce667a758adf5d4d4182a3e98aa",
+      "afterSha256": "a8701c05812e0372ac699f1976c7070605bd82c2e6798631ed70d1b431cd7e53",
+      "edits": [
+        {
+          "start": 535,
+          "end": 561,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🧪️tests/🔬️native-pool-unit/🦀️.rs",
+      "beforeSha256": "56d8b78fc56ed357f8cb2fedee37247fc4a50d93c50611011035c108c41baa2f",
+      "afterSha256": "3348b2bfc80efbfaa92cba0d3e5c8352af50e867b036f700741885419c18b5a0",
+      "edits": [
+        {
+          "start": 19438,
+          "end": 19482,
+          "from": "../../🔔️worker-parking/🧫️fixtures/🔣️.json",
+          "to": "../../🔔️worker-parking/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 14723,
+          "end": 14764,
+          "from": "../../🤝️cooperative/🧫️fixtures/🔣️.json",
+          "to": "../../🤝️cooperative/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 12767,
+          "end": 12808,
+          "from": "../../🔔️maintenance/🧫️fixtures/🔣️.json",
+          "to": "../../🔔️maintenance/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 10228,
+          "end": 10269,
+          "from": "../../🔔️maintenance/🧫️fixtures/🔣️.json",
+          "to": "../../🔔️maintenance/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 8042,
+          "end": 8083,
+          "from": "../../🔔️maintenance/🧫️fixtures/🔣️.json",
+          "to": "../../🔔️maintenance/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 6354,
+          "end": 6395,
+          "from": "../../🔔️maintenance/🧫️fixtures/🔣️.json",
+          "to": "../../🔔️maintenance/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🧪️tests/🔬️wasm-pool-cooperative/🦀️.rs",
+      "beforeSha256": "b812488d651fa33a180fd8a524209756cf6a79e884640a643c5995323c9a00fd",
+      "afterSha256": "6985f2ab5189dc3049cc86c03db8990a9592fadb27999f765c8ce817faad6eb1",
+      "edits": [
+        {
+          "start": 4137,
+          "end": 4178,
+          "from": "../../🔔️maintenance/🧫️fixtures/🔣️.json",
+          "to": "../../🔔️maintenance/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 2330,
+          "end": 2371,
+          "from": "../../🔔️maintenance/🧫️fixtures/🔣️.json",
+          "to": "../../🔔️maintenance/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🧪️tests/🧱️boxed-fixed-slots/🟦️.ts",
+      "beforeSha256": "e5df72f3a0d6fcd5188c4a4e4f530ef32625fb67932c844e329b97c81b22535e",
+      "afterSha256": "c1f2127a839d6f1d2295be7b2490a3ac6c606f89dca89a6041b34dfc48113274",
+      "edits": [
+        {
+          "start": 398,
+          "end": 445,
+          "from": "../../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json",
+          "to": "../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🔔️maintenance/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "aa49902813d3cdf1fd24ca01ea0eef17eb30a027bedad5ea602bba6bde793628",
+      "afterSha256": "7d160759e8e4fb6eb6e068e5100bfdff39207c3029b5f580e7c81012465f877a",
+      "edits": [
+        {
+          "start": 91,
+          "end": 117,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🔔️worker-parking/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "341869d540b4f1c998e9300cdcbcb87a30a4c1989fe70ddeed76fe4c27e0902b",
+      "afterSha256": "da77db385b20a1241236260710e942aadb9dd10ee428ac12a9d4c6869e2ac72e",
+      "edits": [
+        {
+          "start": 134,
+          "end": 160,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🔐️publication/🛂️checkpoint/🧪️tests/🟦️.ts",
+      "beforeSha256": "68a2f5f7878d99e50111a0cfe535693d5d3b916bee3fa01cdbfb22c1bb67e626",
+      "afterSha256": "a3eeb8dd9afd9a3fa1d7eeaecf5006681aa691272eda669937a5b17c3913cb2f",
+      "edits": [
+        {
+          "start": 528,
+          "end": 551,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🔐️publication/🧪️tests/🟦️.ts",
+      "beforeSha256": "776512c21573dd38c37ff0cf3a2a4f662f0bd0f87426957e46715124f9bdf4c3",
+      "afterSha256": "86f3751d920c1f5258d35d1245ac14cb28bb03bd1a412bf6379f91d20fb612aa",
+      "edits": [
+        {
+          "start": 739,
+          "end": 762,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🔐️publication/🧪️tests/🦀️.rs",
+      "beforeSha256": "ce84767f503afa80aad5b9d951e0a5f74c9490620f94d0e81ce8fb8e23df8d88",
+      "afterSha256": "cdf7d2d7544d2a8fc0f75accf0eb4ec113bb9dcf5920b609a8b88d59aa127b31",
+      "edits": [
+        {
+          "start": 11522,
+          "end": 11559,
+          "from": "../🛂️checkpoint/🧫️fixtures/🔣️.json",
+          "to": "../🛂️checkpoint/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 1267,
+          "end": 1290,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "db074494febe43ca575d983310653207af12f2d59b201a636f757a69971181ac",
+      "afterSha256": "5dc383c55a768147bbb9b75f88294aa7b084fbbca117bc1ba7a6bd2591643bb7",
+      "edits": [
+        {
+          "start": 403,
+          "end": 429,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "beforeSha256": "87ebabd19c3f6444d5d010b97c2b2f8c6c29b1450da4dc99fb399e80a4ba56f5",
+      "afterSha256": "a82ee2988709737fcdbcef2d7d9784ad214b622eddfeb395de2ef33c9a9b58b6",
+      "edits": [
+        {
+          "start": 145677,
+          "end": 145758,
+          "from": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧫️fixtures/📦️owners",
+          "to": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧪️tests/🧫️fixtures/📦️owners"
+        },
+        {
+          "start": 144514,
+          "end": 144598,
+          "from": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🧫️fixtures/📦️copy",
+          "to": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🧪️tests/🧫️fixtures/📦️copy"
+        },
+        {
+          "start": 137906,
+          "end": 137993,
+          "from": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🧫️fixtures/📦️paging",
+          "to": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🧪️tests/🧫️fixtures/📦️paging"
+        },
+        {
+          "start": 137022,
+          "end": 137094,
+          "from": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧫️fixtures/📦️nested",
+          "to": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🧫️fixtures/📦️nested"
+        },
+        {
+          "start": 28173,
+          "end": 28242,
+          "from": "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧫️fixtures/🔣️.json",
+          "to": "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧪️tests/🏷️type/🟦️.ts",
+      "beforeSha256": "1041651a3278d42f39f762def0d09ed09050ec2680021bb9ee8e4230afb96c5f",
+      "afterSha256": "68b54305635c1558c46ee3cdbb38f2cc1335348c6496e4566e2854ee0bd3e6f4",
+      "edits": [
+        {
+          "start": 590,
+          "end": 651,
+          "from": "🧰️framework/🔨️modules/🌱️value/🏷️type/🧫️fixtures/🔣️.json",
+          "to": "🧰️framework/🔨️modules/🌱️value/🏷️type/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📝️text/🧪️tests/📏️utf8/🟦️.ts",
+      "beforeSha256": "c2877ab3fd00d876ed38e510780dc696b047b38b4733f0335f072ac994c7e314",
+      "afterSha256": "765faa0c0ecb8457475a7a642e6c07352c7b4cb5b49d854a68f96d186ab4f0eb",
+      "edits": [
+        {
+          "start": 145,
+          "end": 179,
+          "from": "../../🧫️fixtures/📏️utf8/🔣️.json",
+          "to": "../🧫️fixtures/📏️utf8/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+      "beforeSha256": "dac27f207b11b647911407585a1f7fa26fd670f974ece9663e9c1b045b568d63",
+      "afterSha256": "3c25acfec629da90c3f1b80ebda03c84839ffdf14dfff02937eab925763caec3",
+      "edits": [
+        {
+          "start": 10829,
+          "end": 10849,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🧪️tests/🟦️.ts",
+      "beforeSha256": "763f269ce2b6f7b63a26d7a164a900740b3ad904e02dac625c3d21fbd1df9170",
+      "afterSha256": "42c1d0bdb5eb4a6a8a1f97e6370f463de3ea3e3ac5b913505ba4bfcb5a82fd3d",
+      "edits": [
+        {
+          "start": 290,
+          "end": 313,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🧪️tests/🦀️.rs",
+      "beforeSha256": "ae999804d304714d3cd25b1390d9602fa297e45e40d9407e2fb621d530e7d238",
+      "afterSha256": "78d60633501efb9149ae824fbc68260fd3af92459b88663ae5c5294a1cbae11e",
+      "edits": [
+        {
+          "start": 388,
+          "end": 411,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧩️ownership/🟦️.ts",
+      "beforeSha256": "72ee5cf8c7eefe519ca73e0186cf41d9da95509231a4000676f55834fb66de1d",
+      "afterSha256": "c8b70862855dcceaff28f75b697dfd8f0106e15778ddd093542c0ccc8e82f911",
+      "edits": [
+        {
+          "start": 305,
+          "end": 344,
+          "from": "../../🧫️fixtures/🧩️ownership/🔣️.json",
+          "to": "../🧫️fixtures/🧩️ownership/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🟦️.ts",
+      "beforeSha256": "62a88cfa238dc69746d479cbd27848613e6b59779c4ba35ac2059cac03761bd0",
+      "afterSha256": "a4dabb53cefbb7965584285ae39c51499e8e54feae36207459325a3d072eee4d",
+      "edits": [
+        {
+          "start": 16138,
+          "end": 16173,
+          "from": "../🧫️fixtures/🔌️detached/🔣️.json",
+          "to": "./🧫️fixtures/🔌️detached/🔣️.json"
+        },
+        {
+          "start": 13974,
+          "end": 14009,
+          "from": "../🧫️fixtures/🔭️observer/🔣️.json",
+          "to": "./🧫️fixtures/🔭️observer/🔣️.json"
+        },
+        {
+          "start": 5070,
+          "end": 5104,
+          "from": "../📏️maximum/🧫️fixtures/🔣️.json",
+          "to": "../📏️maximum/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 3309,
+          "end": 3367,
+          "from": "../../📝️shared-utf8/♻️original-lease/🧫️fixtures/🔣️.json",
+          "to": "../../📝️shared-utf8/♻️original-lease/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 474,
+          "end": 506,
+          "from": "../🧬️child/🧫️fixtures/🔣️.json",
+          "to": "../🧬️child/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 228,
+          "end": 260,
+          "from": "../🧫️fixtures/🪆️stage/🔣️.json",
+          "to": "./🧫️fixtures/🪆️stage/🔣️.json"
+        },
+        {
+          "start": 176,
+          "end": 199,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🪆️binding/🦀️.rs",
+      "beforeSha256": "1067cd894bf366eec576e2b83d085816d0e121a530a4482c6d1846416d5cef69",
+      "afterSha256": "108a0eb8265c656bc9b4dabf6bce18a1a11912d2b49e1a78513ec19ae2a12220",
+      "edits": [
+        {
+          "start": 23688,
+          "end": 23725,
+          "from": "../../🧫️fixtures/🪆️binding/🔣️.json",
+          "to": "../🧫️fixtures/🪆️binding/🔣️.json"
+        },
+        {
+          "start": 20787,
+          "end": 20824,
+          "from": "../../🧫️fixtures/🪆️binding/🔣️.json",
+          "to": "../🧫️fixtures/🪆️binding/🔣️.json"
+        },
+        {
+          "start": 17228,
+          "end": 17263,
+          "from": "../../🧫️fixtures/🔗️child/🔣️.json",
+          "to": "../🧫️fixtures/🔗️child/🔣️.json"
+        },
+        {
+          "start": 14320,
+          "end": 14357,
+          "from": "../../🧫️fixtures/🪆️binding/🔣️.json",
+          "to": "../🧫️fixtures/🪆️binding/🔣️.json"
+        },
+        {
+          "start": 12149,
+          "end": 12186,
+          "from": "../../🧫️fixtures/🪆️binding/🔣️.json",
+          "to": "../🧫️fixtures/🪆️binding/🔣️.json"
+        },
+        {
+          "start": 10892,
+          "end": 10929,
+          "from": "../../🧫️fixtures/🪆️binding/🔣️.json",
+          "to": "../🧫️fixtures/🪆️binding/🔣️.json"
+        },
+        {
+          "start": 7224,
+          "end": 7261,
+          "from": "../../🧫️fixtures/🪆️binding/🔣️.json",
+          "to": "../🧫️fixtures/🪆️binding/🔣️.json"
+        },
+        {
+          "start": 534,
+          "end": 571,
+          "from": "../../🧫️fixtures/🪆️binding/🔣️.json",
+          "to": "../🧫️fixtures/🪆️binding/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🦀️.rs",
+      "beforeSha256": "13d52cf0bed807e8ca769ea444cb75f1f6d7c81086ce69f49853df34f71da2c2",
+      "afterSha256": "fb833a79bbfbc6e0c480595603897f79ce1818cc0ffc414a98d12ae84435fbd7",
+      "edits": [
+        {
+          "start": 46887,
+          "end": 46910,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 44577,
+          "end": 44600,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 41260,
+          "end": 41295,
+          "from": "../🧫️fixtures/🔭️observer/🔣️.json",
+          "to": "🧫️fixtures/🔭️observer/🔣️.json"
+        },
+        {
+          "start": 36081,
+          "end": 36126,
+          "from": "../🧫️fixtures/🤏️inline-text-stream/🔣️.json",
+          "to": "🧫️fixtures/🤏️inline-text-stream/🔣️.json"
+        },
+        {
+          "start": 32673,
+          "end": 32711,
+          "from": "../🧫️fixtures/🌊️text-stream/🔣️.json",
+          "to": "🧫️fixtures/🌊️text-stream/🔣️.json"
+        },
+        {
+          "start": 30444,
+          "end": 30482,
+          "from": "../🧫️fixtures/📦️text-parent/🔣️.json",
+          "to": "🧫️fixtures/📦️text-parent/🔣️.json"
+        },
+        {
+          "start": 27523,
+          "end": 27574,
+          "from": "../🧫️fixtures/🧾️semantic-text-retirement/🔣️.json",
+          "to": "🧫️fixtures/🧾️semantic-text-retirement/🔣️.json"
+        },
+        {
+          "start": 21516,
+          "end": 21549,
+          "from": "../🧫️fixtures/📝️paged-text.json",
+          "to": "🧫️fixtures/📝️paged-text.json"
+        },
+        {
+          "start": 15963,
+          "end": 15995,
+          "from": "../🧫️fixtures/🫴️recipient.json",
+          "to": "🧫️fixtures/🫴️recipient.json"
+        },
+        {
+          "start": 8203,
+          "end": 8226,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 6313,
+          "end": 6345,
+          "from": "../🧫️fixtures/🪆️stage/🔣️.json",
+          "to": "🧫️fixtures/🪆️stage/🔣️.json"
+        },
+        {
+          "start": 567,
+          "end": 599,
+          "from": "../🧬️child/🧫️fixtures/🔣️.json",
+          "to": "../🧬️child/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/⚠️refusal/🧪️tests/🟦️.ts",
+      "beforeSha256": "3d92b45e4ed0d47971c23e3e8e870bfb59c138591aba6ac1169753d4c885c517",
+      "afterSha256": "657486d57ccb92de0ac77e3a5137b6617b0fd3d3eecde05babb5f41b6014d721",
+      "edits": [
+        {
+          "start": 235,
+          "end": 258,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/⚠️refusal/🧪️tests/🦀️.rs",
+      "beforeSha256": "7b4fd6ca9c5f120f88929a7a112f766051103e6890d9a0b1bf7a1ab775b9c964",
+      "afterSha256": "16f87e6c3e7f5c5eaa8f4a3b25a791de8f1cdf252669a4a2b6ebedd083ea1203",
+      "edits": [
+        {
+          "start": 2077,
+          "end": 2100,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 347,
+          "end": 370,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/📏️maximum/🧪️tests/🦀️.rs",
+      "beforeSha256": "93ce4ea0c7078db9fe8b950daaa695dfa2f67af7b2942a02cb3d318125a287bd",
+      "afterSha256": "0ae1fa72f42dabc94d390942407f869415c98a8d515d6fb21b969f433c66b511",
+      "edits": [
+        {
+          "start": 3015,
+          "end": 3053,
+          "from": "../../🧫️fixtures/🔌️detached/🔣️.json",
+          "to": "../../🧪️tests/🧫️fixtures/🔌️detached/🔣️.json"
+        },
+        {
+          "start": 366,
+          "end": 389,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🧪️tests/🦀️.rs",
+      "beforeSha256": "96a5fbf99edc435ede0d97149a0600b7f95e1f3ad3f63eb7773d257f9b2bab89",
+      "afterSha256": "0453210f1b0b74c81194b39890c4c7262504b6b53af4dfe9bc5ff244d69edff9",
+      "edits": [
+        {
+          "start": 10614,
+          "end": 10650,
+          "from": "../🧫️fixtures/🔤️receiving/🔣️.json",
+          "to": "🧫️fixtures/🔤️receiving/🔣️.json"
+        },
+        {
+          "start": 402,
+          "end": 425,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧪️tests/🟦️.ts",
+      "beforeSha256": "11e13bb1627b8021901646349bdfd43af755faec1602dacad6f68113db69f86a",
+      "afterSha256": "ba18d994b782d078608edd8bd261b080c309ef7f7687f45e67aabe94d08ad8ab",
+      "edits": [
+        {
+          "start": 351,
+          "end": 374,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧪️tests/🦀️.rs",
+      "beforeSha256": "04a69244b74d71737477477b289937b5894aea49314cd96aa97c730047375d41",
+      "afterSha256": "ade6e1d6c935e84b5ada5f70cca5c6b6003692c8e4e295520f2a579aa481a9f8",
+      "edits": [
+        {
+          "start": 226,
+          "end": 249,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🧪️tests/🦀️.rs",
+      "beforeSha256": "2ccd608e180db27487081e183eef82eaaea3ae54f95bc73af6c04e0757b515ef",
+      "afterSha256": "b516c087dad267b3cc16ff10588d5640352ad4f4e9a00eb35e971e907fec78d3",
+      "edits": [
+        {
+          "start": 6074,
+          "end": 6103,
+          "from": "../🧫️fixtures/📦️return.json",
+          "to": "🧫️fixtures/📦️return.json"
+        },
+        {
+          "start": 549,
+          "end": 578,
+          "from": "../🧫️fixtures/📦️return.json",
+          "to": "🧫️fixtures/📦️return.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🍃️leaf/🧪️tests/🟦️.ts",
+      "beforeSha256": "3c67ffa2a699df7bfbe8153e87f5f5c234468c01b4b5fe13d0a1c1c58826c9e8",
+      "afterSha256": "ed08b1f4dda8735ba37b37a10bde9ffe892fbe2a6db3a5d7c5325691729439ac",
+      "edits": [
+        {
+          "start": 297,
+          "end": 320,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🍃️leaf/🧪️tests/🦀️.rs",
+      "beforeSha256": "972182ddbefb97f5c15b6824048b676548d70aaefc924c03139a200b17de49e9",
+      "afterSha256": "a5736fe9074c22bef1bc36b6b4aae0eceb6bd39b5857a26c6c4b687c14f6da34",
+      "edits": [
+        {
+          "start": 179,
+          "end": 202,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🏭️factory/🧪️tests/🟦️.ts",
+      "beforeSha256": "c41775aec3fcd7c7605f61fc0cb2f77ea3788b5d33bfe0b633fce04ea54f33a2",
+      "afterSha256": "f65dbb1951e918e2cec32690be8a3147414df78dfd142206ca3a6de9b3d36462",
+      "edits": [
+        {
+          "start": 295,
+          "end": 318,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🏭️factory/🧪️tests/🦀️.rs",
+      "beforeSha256": "9177c5ba9dbbf4f4d345c7ae30e99573954cb92f32aa245fa11700fe5d4d20a3",
+      "afterSha256": "3e81efa02074427c7e77fff97560f128efc2ab7c1753c430f9eed063ff85adea",
+      "edits": [
+        {
+          "start": 1980,
+          "end": 2003,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🧪️tests/🟦️.ts",
+      "beforeSha256": "696c0b33ea9e907f48d9ad9fe442af8de3d5372f0ca3efa281824bcb88ddd43b",
+      "afterSha256": "d89eb327dc85f3516b4290aaa40f9392635ae1fe4162740ab7ba09b3b793bca0",
+      "edits": [
+        {
+          "start": 1722,
+          "end": 1745,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 345,
+          "end": 368,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🧪️tests/🦀️.rs",
+      "beforeSha256": "f8b8b6ac3138f92b4e410b3675788de03766d12c67d1bf4a8c68dbe1d9859a49",
+      "afterSha256": "d754d3b530eec9ce0023603f364e0625d7bf4af84afb565b70f738dd5ceed256",
+      "edits": [
+        {
+          "start": 6831,
+          "end": 6854,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 4080,
+          "end": 4103,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 285,
+          "end": 308,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔐️unique/🧪️tests/🟦️.ts",
+      "beforeSha256": "c0d159c2927bcd67156c7270fa2853164d79f72b23cc55a8382b6154c611835a",
+      "afterSha256": "9f93e67e96433640a35c26c1af0a060efc3bb33a2d390ea24e8ad5e408993998",
+      "edits": [
+        {
+          "start": 465,
+          "end": 488,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔐️unique/🧪️tests/🦀️.rs",
+      "beforeSha256": "9c5b58fad7e1bb8b7df93ea22175b6ded551b4730763f1ea875b46b49b84cc56",
+      "afterSha256": "8047d9fc9bca944a6da1395c49595f44ec3c2f925951b1711e7c72928f06ecd9",
+      "edits": [
+        {
+          "start": 236,
+          "end": 259,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "497963faf4d755098e27ee582bc368f64da1dc77670faaaa1728839d37b94a35",
+      "afterSha256": "df3b649c7b9e4d49b784a410112dc61f96766e0fb473411cf399d3ae5549b35c",
+      "edits": [
+        {
+          "start": 87124,
+          "end": 87165,
+          "from": "../../🧫️fixtures/🪆️five-fields/🔣️.json",
+          "to": "../🧫️fixtures/🪆️five-fields/🔣️.json"
+        },
+        {
+          "start": 83837,
+          "end": 83867,
+          "from": "../../🧫️fixtures/🧺️heap.json",
+          "to": "../🧫️fixtures/🧺️heap.json"
+        },
+        {
+          "start": 79436,
+          "end": 79481,
+          "from": "../../🧫️fixtures/📏️shared-physical/🔣️.json",
+          "to": "../🧫️fixtures/📏️shared-physical/🔣️.json"
+        },
+        {
+          "start": 76455,
+          "end": 76500,
+          "from": "../../🧫️fixtures/📏️shared-physical/🔣️.json",
+          "to": "../🧫️fixtures/📏️shared-physical/🔣️.json"
+        },
+        {
+          "start": 74157,
+          "end": 74199,
+          "from": "../../🧫️fixtures/⚖️physical-work/🔣️.json",
+          "to": "../🧫️fixtures/⚖️physical-work/🔣️.json"
+        },
+        {
+          "start": 73310,
+          "end": 73352,
+          "from": "../../🧫️fixtures/⚖️physical-work/🔣️.json",
+          "to": "../🧫️fixtures/⚖️physical-work/🔣️.json"
+        },
+        {
+          "start": 67790,
+          "end": 67843,
+          "from": "../../📦️allocation-return/🧫️fixtures/📦️return.json",
+          "to": "../../📦️allocation-return/🧪️tests/🧫️fixtures/📦️return.json"
+        },
+        {
+          "start": 65360,
+          "end": 65386,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 61861,
+          "end": 61887,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 59514,
+          "end": 59540,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 57399,
+          "end": 57425,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 50420,
+          "end": 50446,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 42082,
+          "end": 42136,
+          "from": "../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json",
+          "to": "../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"
+        },
+        {
+          "start": 35615,
+          "end": 35669,
+          "from": "../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json",
+          "to": "../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"
+        },
+        {
+          "start": 32402,
+          "end": 32456,
+          "from": "../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json",
+          "to": "../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"
+        },
+        {
+          "start": 28842,
+          "end": 28885,
+          "from": "../../🧫️fixtures/📥️forward-deque/🔣️.json",
+          "to": "../🧫️fixtures/📥️forward-deque/🔣️.json"
+        },
+        {
+          "start": 26456,
+          "end": 26510,
+          "from": "../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json",
+          "to": "../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"
+        },
+        {
+          "start": 24446,
+          "end": 24514,
+          "from": "../../../🧬️retained-clone/🧫️fixtures/📏️release-authority/🔣️.json",
+          "to": "../../../🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority/🔣️.json"
+        },
+        {
+          "start": 19867,
+          "end": 19908,
+          "from": "../../🧫️fixtures/📏️copy-demand/🔣️.json",
+          "to": "../🧫️fixtures/📏️copy-demand/🔣️.json"
+        },
+        {
+          "start": 14236,
+          "end": 14274,
+          "from": "../../🧫️fixtures/🎮️frontier/🔣️.json",
+          "to": "../🧫️fixtures/🎮️frontier/🔣️.json"
+        },
+        {
+          "start": 14106,
+          "end": 14145,
+          "from": "../../🧫️fixtures/🌳️intrinsic/🔣️.json",
+          "to": "../🧫️fixtures/🌳️intrinsic/🔣️.json"
+        },
+        {
+          "start": 4512,
+          "end": 4559,
+          "from": "../../🧫️fixtures/🎮️erased-controlled/🔣️.json",
+          "to": "../🧫️fixtures/🎮️erased-controlled/🔣️.json"
+        },
+        {
+          "start": 269,
+          "end": 314,
+          "from": "../../🧫️fixtures/📏️shared-physical/🔣️.json",
+          "to": "../🧫️fixtures/📏️shared-physical/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧺️heap.ts",
+      "beforeSha256": "3226c0ff0793d13e54c2a035d7915092ba00e9bd6ed9a6e27fea57d6545e3e2c",
+      "afterSha256": "88e9704c166eada71a45ce6400a9c662fd0c427fc45cb8739375c4c801e82d8b",
+      "edits": [
+        {
+          "start": 345,
+          "end": 372,
+          "from": "../🧫️fixtures/🧺️heap.json",
+          "to": "🧫️fixtures/🧺️heap.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/⚖️result/🧪️tests/🟦️.ts",
+      "beforeSha256": "5318fedf823c5149dff4c9181a02fe64c4b06b02b9a510898845a75c09d61aad",
+      "afterSha256": "3c410da9612da93bb312caee7ab760c1e0fcc91b11e8bcfc6427782159023909",
+      "edits": [
+        {
+          "start": 435,
+          "end": 455,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/⚖️result/🧪️tests/🦀️.rs",
+      "beforeSha256": "26ee737dd02dc21f61257a5d45283d48144a94f01f96d5069bda7c9dcea0097c",
+      "afterSha256": "45c80470861e5549c6b621883e8306456e0f1db38ee05c187516e302fec76f62",
+      "edits": [
+        {
+          "start": 161,
+          "end": 184,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️original-vector/🧪️tests/🟦️.ts",
+      "beforeSha256": "ef6ba25bb55481852a1c7071f955fea931191f60b3b4ea9c46f41cf483753a2b",
+      "afterSha256": "31f60bd70cf4384d5c45dfdfd49b16dcc7a71249c29ac3a70a47c5881b551330",
+      "edits": [
+        {
+          "start": 478,
+          "end": 498,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️original-vector/🧪️tests/🦀️.rs",
+      "beforeSha256": "fdc491d203f59464be78ed2b54b5c1ac6e0bd4826e30a23ccd23f099090ac620",
+      "afterSha256": "4a10222685b21ab0db012a54c035012776c5d82c8f46975c2412d22a6d733fca",
+      "edits": [
+        {
+          "start": 244,
+          "end": 267,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔓️uncontrolled-owners/🧪️tests/🟦️.ts",
+      "beforeSha256": "18629b835c8c616f0e50a1675c7301891085cc7d1d83011e4b18df1b1eaf5090",
+      "afterSha256": "2aab8b843743f96ec72e5b297e44c273911117a8d549dd260115eaa4608ee393",
+      "edits": [
+        {
+          "start": 160,
+          "end": 183,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️aliases/🧪️tests/🟦️.ts",
+      "beforeSha256": "d26e5ea11cd9eaa4d99d2ae1ebe695ed0c0ab976800f33e3c2f351f845aa7e61",
+      "afterSha256": "21f70212194652a55ad0a0c9e3bb09ad8a758a534f77f76ccb6f26448895c530",
+      "edits": [
+        {
+          "start": 378,
+          "end": 401,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️aliases/🧪️tests/🦀️.rs",
+      "beforeSha256": "2fbd07511c53c8d978834922afbae9be3912bdc2aeb6a4be60afe282ac3c79a6",
+      "afterSha256": "2e3866f4c047505b5d6de43a9d89900438040b5c1be30545f750f16a2c553fdf",
+      "edits": [
+        {
+          "start": 678,
+          "end": 701,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🧪️tests/🦀️.rs",
+      "beforeSha256": "c53a885b266fba49d2e2d037425b53bf4be7a116d3ebe27f00422f4ffab717b8",
+      "afterSha256": "0acc6d544cde994a3325edf98d4469a2cd178315583adc9b442627f074a1afdb",
+      "edits": [
+        {
+          "start": 18970,
+          "end": 19000,
+          "from": "../🧫️fixtures/📬️closing.json",
+          "to": "🧫️fixtures/📬️closing.json"
+        },
+        {
+          "start": 12864,
+          "end": 12887,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 11634,
+          "end": 11657,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 8926,
+          "end": 8949,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 355,
+          "end": 391,
+          "from": "../🔗️authority/🧫️fixtures/🔣️.json",
+          "to": "../🔗️authority/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧪️tests/🟦️.ts",
+      "beforeSha256": "3e1efe129e1ed413e90b6c89c1901023079c723856c23c04bacc20027f70780a",
+      "afterSha256": "d9219071071db4b86300663f923abe9ecb2883be762e02626e084367dbb699e8",
+      "edits": [
+        {
+          "start": 292,
+          "end": 315,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧪️tests/🦀️.rs",
+      "beforeSha256": "2f4b8de50d9c6ead8de43c5f2d47e98ce470b47421bc16e3575fcfbcc158d5f1",
+      "afterSha256": "ee0a451cc934012e544e16f7721761e5642e1ed0be8d73576507fdc4839d0d56",
+      "edits": [
+        {
+          "start": 2183,
+          "end": 2206,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️boxed/🧪️tests/🟦️.ts",
+      "beforeSha256": "4cba02d6b2f7afb6dec33eec2cc8a0d751ffc852f8a80cb3276677f8274f2599",
+      "afterSha256": "8652766f394f6a927f487590bad7004c8391f65f8affc8a6865377d211a762c0",
+      "edits": [
+        {
+          "start": 277,
+          "end": 300,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️boxed/🧪️tests/🦀️.rs",
+      "beforeSha256": "de7c8657e2e7424a27ad3bcbdf2786da7f4183d0fd77b4113b611b83c48194ea",
+      "afterSha256": "caa4a069fe8e92ac6f0486a1a31b099b43c4da50126601ebe32681ca2e06c4a6",
+      "edits": [
+        {
+          "start": 6333,
+          "end": 6356,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 3742,
+          "end": 3765,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 1667,
+          "end": 1690,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🚼️construction/🧪️tests/🟦️.ts",
+      "beforeSha256": "9fb5cfd3675ead6bad57999db0d5124931ee7dd229eec06c51f5807268501937",
+      "afterSha256": "d04914bd10ae6d0e259173ce773e16dcbdb2224e36750d5ea6a1affc5d002c0c",
+      "edits": [
+        {
+          "start": 442,
+          "end": 462,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🚼️construction/🧪️tests/🦀️.rs",
+      "beforeSha256": "68f331f4ddcd1d47f91ad81ec49543c1ab24dd2f583702b57533a5bb15d27edb",
+      "afterSha256": "ab46cf736c7ac86a6dce6c20b344aa194f617d4abde78f39256ff6dd9ac32c7b",
+      "edits": [
+        {
+          "start": 3020,
+          "end": 3053,
+          "from": "../../🧫️fixtures/📬️closing.json",
+          "to": "../../🧪️tests/🧫️fixtures/📬️closing.json"
+        },
+        {
+          "start": 2837,
+          "end": 2860,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/🧪️tests/🎮️ownership/🦀️.rs",
+      "beforeSha256": "5d8fd6ae7ca4bc6eda3cf6b9287c76758b8dcc17babfff09163deaff821ca37e",
+      "afterSha256": "ea8e02e279f37154ca9b3bd3d4fa22bdb2f7b7b976064af00ba0426b73904a4b",
+      "edits": [
+        {
+          "start": 9827,
+          "end": 9853,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 6181,
+          "end": 6207,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 810,
+          "end": 836,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/🧪️tests/🟦️.ts",
+      "beforeSha256": "a5d0a273238b4b9837ddf6a06e1e34f174449d1b755a6e77612151fca21bd301",
+      "afterSha256": "e0310d5824a07ca47bbeef1c99a2f1bba721632b91961eeffd53931bce1e63d9",
+      "edits": [
+        {
+          "start": 5133,
+          "end": 5156,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 3447,
+          "end": 3470,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 755,
+          "end": 800,
+          "from": "../../🧫️fixtures/📏️shared-physical/🔣️.json",
+          "to": "../../🧪️tests/🧫️fixtures/📏️shared-physical/🔣️.json"
+        },
+        {
+          "start": 351,
+          "end": 374,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🟦️.ts",
+      "beforeSha256": "2be9e1f4c1f669243cf2b5707820bd2768cae5bc27cc047806843b0892d6663f",
+      "afterSha256": "072d9d07c85ee08f01d67ecf3dc050afb5c0e81400083dfa07f4340c64377d94",
+      "edits": [
+        {
+          "start": 21037,
+          "end": 21069,
+          "from": "../🧫️fixtures/🎯️array/🔣️.json",
+          "to": "🧫️fixtures/🎯️array/🔣️.json"
+        },
+        {
+          "start": 19890,
+          "end": 19925,
+          "from": "../🧫️fixtures/🎯️selected/🔣️.json",
+          "to": "🧫️fixtures/🎯️selected/🔣️.json"
+        },
+        {
+          "start": 18443,
+          "end": 18474,
+          "from": "../🧫️fixtures/📥️root/🔣️.json",
+          "to": "🧫️fixtures/📥️root/🔣️.json"
+        },
+        {
+          "start": 17011,
+          "end": 17045,
+          "from": "../🧫️fixtures/🔣️reservation.json",
+          "to": "🧫️fixtures/🔣️reservation.json"
+        },
+        {
+          "start": 15619,
+          "end": 15662,
+          "from": "♻️retirement/🧫️fixtures/📏️shared-physical",
+          "to": "♻️retirement/🧪️tests/🧫️fixtures/📏️shared-physical"
+        },
+        {
+          "start": 13980,
+          "end": 14019,
+          "from": "♻️retirement/🧫️fixtures/📏️copy-demand",
+          "to": "♻️retirement/🧪️tests/🧫️fixtures/📏️copy-demand"
+        },
+        {
+          "start": 12405,
+          "end": 12444,
+          "from": "♻️retirement/🧫️fixtures/📏️copy-demand",
+          "to": "♻️retirement/🧪️tests/🧫️fixtures/📏️copy-demand"
+        },
+        {
+          "start": 11447,
+          "end": 11487,
+          "from": "♻️retirement/🧫️fixtures/⚖️physical-work",
+          "to": "♻️retirement/🧪️tests/🧫️fixtures/⚖️physical-work"
+        },
+        {
+          "start": 9779,
+          "end": 9829,
+          "from": "🧬️retained-clone/🧫️fixtures/📏️release-authority",
+          "to": "🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority"
+        },
+        {
+          "start": 7495,
+          "end": 7545,
+          "from": "🧬️retained-clone/🧫️fixtures/📏️release-authority",
+          "to": "🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority"
+        },
+        {
+          "start": 5670,
+          "end": 5720,
+          "from": "🧬️retained-clone/🧫️fixtures/📏️release-authority",
+          "to": "🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority"
+        },
+        {
+          "start": 4330,
+          "end": 4375,
+          "from": "📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json",
+          "to": "📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"
+        },
+        {
+          "start": 3248,
+          "end": 3293,
+          "from": "📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json",
+          "to": "📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"
+        },
+        {
+          "start": 2323,
+          "end": 2368,
+          "from": "📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json",
+          "to": "📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"
+        },
+        {
+          "start": 2199,
+          "end": 2244,
+          "from": "📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json",
+          "to": "📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"
+        },
+        {
+          "start": 1532,
+          "end": 1577,
+          "from": "📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json",
+          "to": "📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"
+        },
+        {
+          "start": 431,
+          "end": 485,
+          "from": "♻️retirement/🧫️fixtures/🎮️erased-controlled/🔣️.json",
+          "to": "♻️retirement/🧪️tests/🧫️fixtures/🎮️erased-controlled/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🦀️.rs",
+      "beforeSha256": "fe91e1a3eee0ee75d4611ab1898fe314a3bb42a7d2b848ffa201214213f2cafe",
+      "afterSha256": "192541986229857fbe7a4095daf7aa92d541a9a3eae38087d3cd3fa56219bc49",
+      "edits": [
+        {
+          "start": 14487,
+          "end": 14519,
+          "from": "../🧫️fixtures/🎯️array/🔣️.json",
+          "to": "🧫️fixtures/🎯️array/🔣️.json"
+        },
+        {
+          "start": 10576,
+          "end": 10611,
+          "from": "../🧫️fixtures/🎯️selected/🔣️.json",
+          "to": "🧫️fixtures/🎯️selected/🔣️.json"
+        },
+        {
+          "start": 6567,
+          "end": 6598,
+          "from": "../🧫️fixtures/📥️root/🔣️.json",
+          "to": "🧫️fixtures/📥️root/🔣️.json"
+        },
+        {
+          "start": 4278,
+          "end": 4312,
+          "from": "../🧫️fixtures/🔣️reservation.json",
+          "to": "🧫️fixtures/🔣️reservation.json"
+        },
+        {
+          "start": 382,
+          "end": 416,
+          "from": "../🧫️fixtures/🔣️reservation.json",
+          "to": "🧫️fixtures/🔣️reservation.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️bytes/🧪️tests/🟦️.ts",
+      "beforeSha256": "d73c0694b3d831f554ba99b3824788eaab9f43f9235f4a084fca93dad95d5ea1",
+      "afterSha256": "7bf9fd84fc7b582aa80f8aaca90728e12ab9f4dee5ba298c7ce62b41bc451497",
+      "edits": [
+        {
+          "start": 180,
+          "end": 203,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️bytes/🧪️tests/🦀️.rs",
+      "beforeSha256": "ab470c525dd7f47dd02b2a0a91da014bc38447bb120cc0dff574b413dd0ff62f",
+      "afterSha256": "a288b8e3fcaf90bd6165f67868fc7b5e85df9c30dc5c4cf9f4e6457ba38b2116",
+      "edits": [
+        {
+          "start": 172,
+          "end": 195,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️turn/🧪️tests/🟦️.ts",
+      "beforeSha256": "04a591a077f441ed9b8a76bce7446c4a309c8ddd1927bed4274fed6f56291e84",
+      "afterSha256": "a0f8572e1766288807d7dc336bbd3cdf571522b09e9f0d4b47bfd964f28a71c3",
+      "edits": [
+        {
+          "start": 361,
+          "end": 384,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️turn/🧪️tests/🦀️.rs",
+      "beforeSha256": "0391e9fdd6f50cec2f35c583e72587f5c3539b790d682880d03088293689bbde",
+      "afterSha256": "6ea7b8c34d1a370ed8682e8f930f8970feb921233d6129875590455aec7761d0",
+      "edits": [
+        {
+          "start": 822,
+          "end": 845,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛫️encode/🫴️recipient/🔁️continuation/🧪️tests/🦀️.rs",
+      "beforeSha256": "5c0891f57c80bd80b5cf8b8b4f48a1a7d5c59b541f3921932a014ce743b23f02",
+      "afterSha256": "c79080471b4512e08fe2308300eba59fe6acedb98b0523addf3ed6fdba2e46dd",
+      "edits": [
+        {
+          "start": 219,
+          "end": 290,
+          "from": "../../../../🛬️decode/🫴️recipient/🔁️continuation/🧫️fixtures/🔣️.json",
+          "to": "../../../../🛬️decode/🫴️recipient/🔁️continuation/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛫️encode/🛂️allocation/🧪️tests/🦀️.rs",
+      "beforeSha256": "aa71d710d1f5b60b56b733ec50cc06fc86e33df8205495d91a915fec2d8183b6",
+      "afterSha256": "ea5298a516875e6f20b9a95d54ef5e2a26c887e1d67ab28476e46d9804df940d",
+      "edits": [
+        {
+          "start": 342,
+          "end": 365,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛫️encode/🛂️allocation/🧪️tests/🔒️receipt/🦀️.rs",
+      "beforeSha256": "fff548f09d6b7b728a53ec6fee2b4f44105d32e3d60be1e469b9929cccdd0bf3",
+      "afterSha256": "402527c3250e0f6d1c2edf9f61a75dc3c5238831665ce90a905179ba76626d53",
+      "edits": [
+        {
+          "start": 332,
+          "end": 358,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️tests/♻️retirement/🦀️.rs",
+      "beforeSha256": "d1d2ae5d41f7ae7d62b09a4ef7a1e05431d238d45af1910288f37c96f5284d37",
+      "afterSha256": "e8837b4aeaac60e7aeda8a232179200c4d24462036e11885894c3f7f9ae04615",
+      "edits": [
+        {
+          "start": 1464,
+          "end": 1517,
+          "from": "../../🧫️fixtures/🛬️controlled/🔗️borrowed-keys.json",
+          "to": "../🧫️fixtures/🛬️controlled/🔗️borrowed-keys.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️tests/♻️retirement/🔗️keys/🦀️.rs",
+      "beforeSha256": "4969d1352541960e77790059ea68ec03affc09ebed036110fe8b1110cee4a268",
+      "afterSha256": "a5cf129ea071dff58d532b9477ceb2a9bf3fd380f66510f0d91f4bd6edc89aa7",
+      "edits": [
+        {
+          "start": 383,
+          "end": 439,
+          "from": "../../../🧫️fixtures/🛬️controlled/🔗️borrowed-keys.json",
+          "to": "../../🧫️fixtures/🛬️controlled/🔗️borrowed-keys.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️tests/🛬️controlled/🟦️.ts",
+      "beforeSha256": "aa5430a66a7eeec2ead4b6b2c9b4a063a9122433edb405d4ac0320387132961f",
+      "afterSha256": "c5c65de8810a5a2eb70f9e21c4deb9c1aff9c5cd763f471efd2cff56fd28fa21",
+      "edits": [
+        {
+          "start": 8023,
+          "end": 8063,
+          "from": "../../🧫️fixtures/🛫️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛫️controlled/🔣️.json"
+        },
+        {
+          "start": 5525,
+          "end": 5565,
+          "from": "../../🧫️fixtures/🛫️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛫️controlled/🔣️.json"
+        },
+        {
+          "start": 327,
+          "end": 380,
+          "from": "../../🧫️fixtures/🛬️controlled/🔗️borrowed-keys.json",
+          "to": "../🧫️fixtures/🛬️controlled/🔗️borrowed-keys.json"
+        },
+        {
+          "start": 234,
+          "end": 274,
+          "from": "../../🧫️fixtures/🛬️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛬️controlled/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️tests/🛬️controlled/🦀️.rs",
+      "beforeSha256": "82262d5961dde73803409143a2828c5f140a34167edc87c5193024b5a6d24738",
+      "afterSha256": "6039e7713960bb31beb63df975ae94d7df92b835daf33ec920089ac85a51edab",
+      "edits": [
+        {
+          "start": 31856,
+          "end": 31909,
+          "from": "../../🧫️fixtures/🛬️controlled/🔗️borrowed-keys.json",
+          "to": "../🧫️fixtures/🛬️controlled/🔗️borrowed-keys.json"
+        },
+        {
+          "start": 31393,
+          "end": 31433,
+          "from": "../../🧫️fixtures/🛬️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛬️controlled/🔣️.json"
+        },
+        {
+          "start": 30432,
+          "end": 30472,
+          "from": "../../🧫️fixtures/🛬️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛬️controlled/🔣️.json"
+        },
+        {
+          "start": 29395,
+          "end": 29435,
+          "from": "../../🧫️fixtures/🛬️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛬️controlled/🔣️.json"
+        },
+        {
+          "start": 28955,
+          "end": 28995,
+          "from": "../../🧫️fixtures/🛬️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛬️controlled/🔣️.json"
+        },
+        {
+          "start": 28388,
+          "end": 28428,
+          "from": "../../🧫️fixtures/🛬️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛬️controlled/🔣️.json"
+        },
+        {
+          "start": 18840,
+          "end": 18880,
+          "from": "../../🧫️fixtures/🛬️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛬️controlled/🔣️.json"
+        },
+        {
+          "start": 14664,
+          "end": 14704,
+          "from": "../../🧫️fixtures/🛬️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛬️controlled/🔣️.json"
+        },
+        {
+          "start": 13013,
+          "end": 13053,
+          "from": "../../🧫️fixtures/🛬️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛬️controlled/🔣️.json"
+        },
+        {
+          "start": 11435,
+          "end": 11475,
+          "from": "../../🧫️fixtures/🛬️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛬️controlled/🔣️.json"
+        },
+        {
+          "start": 10571,
+          "end": 10611,
+          "from": "../../🧫️fixtures/🛬️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛬️controlled/🔣️.json"
+        },
+        {
+          "start": 6825,
+          "end": 6865,
+          "from": "../../🧫️fixtures/🛬️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛬️controlled/🔣️.json"
+        },
+        {
+          "start": 4993,
+          "end": 5033,
+          "from": "../../🧫️fixtures/🛬️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛬️controlled/🔣️.json"
+        },
+        {
+          "start": 514,
+          "end": 554,
+          "from": "../../🧫️fixtures/🛬️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛬️controlled/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "f7251efd4c889bd6cdb7281187e4c2dbb547cd4b72e1174a68283375c684dfda",
+      "afterSha256": "22b42614793ee6a9399bf2f08ed922a9176223f68b2d64eb49f987dfad73f3ff",
+      "edits": [
+        {
+          "start": 8314,
+          "end": 8352,
+          "from": "../../🧫️fixtures/🔢️f32-decimals.json",
+          "to": "../🧫️fixtures/🔢️f32-decimals.json"
+        },
+        {
+          "start": 743,
+          "end": 769,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 135,
+          "end": 167,
+          "from": "../../🧫️fixtures/🔪️slices.json",
+          "to": "../🧫️fixtures/🔪️slices.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️tests/🛫️controlled/🦀️.rs",
+      "beforeSha256": "97a04f7929d54ef5e92a12e59eaa705a0a31849ed467a1ecbaf0efdf0053d6cc",
+      "afterSha256": "5639f96d18007dae18aeaa3b3983a05865a948cb00398ad2b73e8867fe0d481d",
+      "edits": [
+        {
+          "start": 17131,
+          "end": 17171,
+          "from": "../../🧫️fixtures/🛫️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛫️controlled/🔣️.json"
+        },
+        {
+          "start": 14622,
+          "end": 14662,
+          "from": "../../🧫️fixtures/🛫️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛫️controlled/🔣️.json"
+        },
+        {
+          "start": 12052,
+          "end": 12092,
+          "from": "../../🧫️fixtures/🛫️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛫️controlled/🔣️.json"
+        },
+        {
+          "start": 10901,
+          "end": 10941,
+          "from": "../../🧫️fixtures/🛫️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛫️controlled/🔣️.json"
+        },
+        {
+          "start": 9793,
+          "end": 9833,
+          "from": "../../🧫️fixtures/🛬️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛬️controlled/🔣️.json"
+        },
+        {
+          "start": 8815,
+          "end": 8855,
+          "from": "../../🧫️fixtures/🛫️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛫️controlled/🔣️.json"
+        },
+        {
+          "start": 5845,
+          "end": 5885,
+          "from": "../../🧫️fixtures/🛫️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛫️controlled/🔣️.json"
+        },
+        {
+          "start": 4383,
+          "end": 4423,
+          "from": "../../🧫️fixtures/🛫️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛫️controlled/🔣️.json"
+        },
+        {
+          "start": 1820,
+          "end": 1860,
+          "from": "../../🧫️fixtures/🛫️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛫️controlled/🔣️.json"
+        },
+        {
+          "start": 450,
+          "end": 490,
+          "from": "../../🧫️fixtures/🛫️controlled/🔣️.json",
+          "to": "../🧫️fixtures/🛫️controlled/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️graphql/🔢️int64/🧪️tests/🟦️.ts",
+      "beforeSha256": "8c0293486c48a11808d5d39c6b031b656fbbe00065fd841f791a9bfc148ff1ab",
+      "afterSha256": "4d068b0e74a520496b491abf62b1563884519ed4ee4d2dbcbef2cbcd65ada475",
+      "edits": [
+        {
+          "start": 261,
+          "end": 284,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "../../../../🧪️tests/🧫️fixtures/🔗️graphql/🔢️int64/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️graphql/🔢️int64/🧪️tests/🦀️.rs",
+      "beforeSha256": "494ba0713a0b342052242b3f93a6e0b6caa8136bdb7c065ed3821e60aea4be28",
+      "afterSha256": "a1819f86a0042eefdc9822302dee848524be4de09b9577cf5ab29d7ca5e8e79c",
+      "edits": [
+        {
+          "start": 267,
+          "end": 290,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "../../../../🧪️tests/🧫️fixtures/🔗️graphql/🔢️int64/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🧩️neutral-owner/🟦️.ts",
+      "beforeSha256": "661676c6a329a9bedac10db906543037c2f5a1617ef42c1ec9f551982c9129b4",
+      "afterSha256": "0a5ba03b0296c0180f78382c8303ddf8b07c7fb33a9323b05c6ba29bee13a307",
+      "edits": [
+        {
+          "start": 23426,
+          "end": 23454,
+          "from": "🔗️read/🧫️fixtures/🔣️.json",
+          "to": "🔗️read/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 22111,
+          "end": 22160,
+          "from": "🧬️retained-clone/🧫️fixtures/🌳️structural-depth",
+          "to": "🧬️retained-clone/🧪️tests/🧫️fixtures/🌳️structural-depth"
+        },
+        {
+          "start": 20710,
+          "end": 20769,
+          "from": "🧬️retained-clone/🧫️fixtures/📏️release-authority/🔣️.json",
+          "to": "🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority/🔣️.json"
+        },
+        {
+          "start": 20343,
+          "end": 20398,
+          "from": "🧬️retained-clone/🧫️fixtures/🪜️close-demands/🔣️.json",
+          "to": "🧬️retained-clone/🧪️tests/🧫️fixtures/🪜️close-demands/🔣️.json"
+        },
+        {
+          "start": 18909,
+          "end": 18937,
+          "from": "🔗️read/🧫️fixtures/🔣️.json",
+          "to": "🔗️read/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 16331,
+          "end": 16366,
+          "from": "🧫️fixtures/🎟️owned-birth/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🎟️owned-birth/🔣️.json"
+        },
+        {
+          "start": 15063,
+          "end": 15108,
+          "from": "📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json",
+          "to": "📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"
+        },
+        {
+          "start": 13511,
+          "end": 13531,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 6191,
+          "end": 6227,
+          "from": "🧫️fixtures/🎮️native-owner/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"
+        },
+        {
+          "start": 4575,
+          "end": 4595,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 3381,
+          "end": 3401,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 2292,
+          "end": 2312,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 1065,
+          "end": 1094,
+          "from": "🧫️fixtures/🎟️clone/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🎟️clone/🔣️.json"
+        },
+        {
+          "start": 669,
+          "end": 706,
+          "from": "🧫️fixtures/🧩️neutral-owner/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🧩️neutral-owner/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🧩️neutral-owner/🦀️.rs",
+      "beforeSha256": "1aabe39195c85c67899cd43c68019780b4bb861bd6796ca4de2fd449e9cc1db0",
+      "afterSha256": "21115f68c68652300f483779ee8ca08687d0247c7e4cfaf7afaef100bc609802",
+      "edits": [
+        {
+          "start": 11579,
+          "end": 11622,
+          "from": "../../🧫️fixtures/🧩️neutral-owner/🔣️.json",
+          "to": "../🧫️fixtures/🧩️neutral-owner/🔣️.json"
+        },
+        {
+          "start": 9370,
+          "end": 9413,
+          "from": "../../🧫️fixtures/🧩️neutral-owner/🔣️.json",
+          "to": "../🧫️fixtures/🧩️neutral-owner/🔣️.json"
+        },
+        {
+          "start": 7286,
+          "end": 7337,
+          "from": "../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json",
+          "to": "../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"
+        },
+        {
+          "start": 5568,
+          "end": 5619,
+          "from": "../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json",
+          "to": "../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "36bfa5dfb20103b0e9180c9d42f833d990497fea1bd65373b97571187d856699",
+      "afterSha256": "98c375d66877143c84bb14e898b16b2b952e8dad572935b0332a866c901fbdd5",
+      "edits": [
+        {
+          "start": 5546,
+          "end": 5591,
+          "from": "../../🧫️fixtures/🔣️json-projection/🔣️.json",
+          "to": "../🧫️fixtures/🔣️json-projection/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🔣️json-projection/🟦️.ts",
+      "beforeSha256": "23f096a12bacffd37681519f7e36f4480015d168789bab82d9e74a5213bb6cf7",
+      "afterSha256": "6c76484d0e2afeb6415585e841b72e4edfb9e9d11b22e35c56981221db38dff1",
+      "edits": [
+        {
+          "start": 154,
+          "end": 199,
+          "from": "../../🧫️fixtures/🔣️json-projection/🔣️.json",
+          "to": "../🧫️fixtures/🔣️json-projection/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/⚠️refusal/♻️retirement/🧪️tests/🟦️.ts",
+      "beforeSha256": "104944caaa32efaa16b572c4667b3a0d2be10dd949ec5e8b665995393e25d564",
+      "afterSha256": "3dd715c86c0fe3d59da7735f3903fce942e0ebbfc785332ff4d4a0356a42f3ea",
+      "edits": [
+        {
+          "start": 261,
+          "end": 284,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔤️utf8/🧪️tests/🦀️.rs",
+      "beforeSha256": "9f5c992ce731ecb91910ded7380f25ac213f78b37fcab60687a5b7ba721772b9",
+      "afterSha256": "697192b5bedbabbf273d4849d39e402dfd3df828e8dbc27b189818a556d97f6c",
+      "edits": [
+        {
+          "start": 208,
+          "end": 231,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔁️codec/🧪️tests/🟦️.ts",
+      "beforeSha256": "5ff90cbdba8bd48555ab7779242fdc6396a927452036a6b4864cb8216fbca46b",
+      "afterSha256": "a30fb464a981278758aa12a9d01aed60e01535562ca5654671d71b786f9b284f",
+      "edits": [
+        {
+          "start": 412,
+          "end": 435,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔁️codec/🧪️tests/🦀️.rs",
+      "beforeSha256": "755b7a1c85691325cc00fd4c457190912986f007782922fe2837a7d81253b17d",
+      "afterSha256": "dfb29711378cf41dcbfbb7127595a144ed6fa05e10392fc99b50343c99f32c23",
+      "edits": [
+        {
+          "start": 167,
+          "end": 190,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🧪️tests/🟦️.ts",
+      "beforeSha256": "a2607e80822e268c25949cc010bbf14c8b8fb43071d27e070592393349113bc4",
+      "afterSha256": "407cd2d1ab558ef9c332bfceae558c206682ed10d2da1f0d318eeb9f53de027b",
+      "edits": [
+        {
+          "start": 295,
+          "end": 318,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🧪️tests/🦀️.rs",
+      "beforeSha256": "fc8d5a6a1d53c6d6efe906c0a6881b7ccae0ae13ecbad1dc268c021647c3b62d",
+      "afterSha256": "74d3f45e3a6c845ac56561dea9ec80e903def5d7e26d8949436591afbc4074a9",
+      "edits": [
+        {
+          "start": 348,
+          "end": 371,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust/📋️project.json",
+      "beforeSha256": "24f026800d0e2c0a99ecb3f93b41489f671da0ca3211a83783089ad56fd5ea57",
+      "afterSha256": "3c90c53fca274002651dedb81dcf741c4e864725597de25b7726d09242a83ef9",
+      "edits": [
+        {
+          "start": 481,
+          "end": 562,
+          "from": "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧫️fixtures/🔣️.json",
+          "to": "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️tests/💾️resident/🦀️.rs",
+      "beforeSha256": "93dbed4b9f6d547f3ad999fe5146e09be3fe1a71c9594db00333d425ddf69cfd",
+      "afterSha256": "6d0834adf1132aa04457019dfe9bee9d357048a95142d1b735efbe63e9b1d758",
+      "edits": [
+        {
+          "start": 8175,
+          "end": 8214,
+          "from": "../../📨️admission/🧫️fixtures/🔣️.json",
+          "to": "../../📨️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 3288,
+          "end": 3314,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️tests/🧪️resident-oracle/🟦️.ts",
+      "beforeSha256": "080671a3c91857ef6f9c3ec2678b30e0174c2fc19065b6e61e1364172a3f3196",
+      "afterSha256": "57cb0bd742b22be8831dd0d5f79f94c7af1a1dd4b7d73b9bcbf4f87d9b32aae5",
+      "edits": [
+        {
+          "start": 697,
+          "end": 736,
+          "from": "../../📨️admission/🧫️fixtures/🔣️.json",
+          "to": "../../📨️admission/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 438,
+          "end": 464,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️clone/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "a94b61fb11e8cb97a426676f4968d05fd907fb4f0a94c257b15faf6333dd2934",
+      "afterSha256": "b0d16652c4257d8d8d649ad05f042eec09345682a108013e4b2316f1372a2021",
+      "edits": [
+        {
+          "start": 1286,
+          "end": 1312,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 162,
+          "end": 220,
+          "from": "../../../🧬️retained-clone/🌱️dynamic/🧫️fixtures/🔣️.json",
+          "to": "../../../🧬️retained-clone/🌱️dynamic/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "12e83e3a75a0bcbf47ca62fcc68b00ee7e235014ad5b7aca56f75899fc10b084",
+      "afterSha256": "d7a64a6271ccaec4acb5d0a8e01de6c88cc6fcb65d1adf106baeefdba6df51c0",
+      "edits": [
+        {
+          "start": 1516,
+          "end": 1542,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 242,
+          "end": 268,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/🔬️counter/🦀️.rs",
+      "beforeSha256": "376ef66ee271390ed9a9cef3efd480bb5d4d62df473f626911a45c135328dfbf",
+      "afterSha256": "5382eeca9d93fc9aca85f2e53cdf76e1ed7b71fc6043acce458de0af22ec709f",
+      "edits": [
+        {
+          "start": 7020,
+          "end": 7057,
+          "from": "../../🧫️fixtures/🎟️reservation.json",
+          "to": "../🧫️fixtures/🎟️reservation.json"
+        },
+        {
+          "start": 4970,
+          "end": 4996,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 3121,
+          "end": 3147,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 1021,
+          "end": 1047,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/⚠️refusal/🦀️.rs",
+      "beforeSha256": "25f0cd6c4ac7cd3918fef301b239fa666447b268d87a36e6b509da70c673ee17",
+      "afterSha256": "c956f181bcdd8d41ba612357e911a769ed967fbc4209aa446cdb53ae2863d9e3",
+      "edits": [
+        {
+          "start": 585,
+          "end": 621,
+          "from": "../../🧫️fixtures/⚠️refusal/🔣️.json",
+          "to": "../🧫️fixtures/⚠️refusal/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/📋️list/🟦️.ts",
+      "beforeSha256": "aa9a0666ecb0abad497da99e47965f7eb6e31ac64bea5e8ca4d57d43cc69a95a",
+      "afterSha256": "6ed0ef13591026320c50151927a18aac1c43bd5c0f0bf8babf1ce247358e21b9",
+      "edits": [
+        {
+          "start": 298,
+          "end": 366,
+          "from": "../../../🧬️retained-clone/🧫️fixtures/📏️release-authority/🔣️.json",
+          "to": "../../../🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority/🔣️.json"
+        },
+        {
+          "start": 199,
+          "end": 243,
+          "from": "../../🧫️fixtures/📏️owner-page-ceiling.json",
+          "to": "../🧫️fixtures/📏️owner-page-ceiling.json"
+        },
+        {
+          "start": 123,
+          "end": 149,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🧪️tests/🟦️.ts",
+      "beforeSha256": "3c67d01ad64e459dcb636975781f33f9cfaeaa5d417914dcda75b07e20172ef2",
+      "afterSha256": "2ab94a41f869a1eab96076b02eb9a801fc8d524d77f8a67615209a462f0733e0",
+      "edits": [
+        {
+          "start": 500,
+          "end": 520,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/📋️list/🦀️.rs",
+      "beforeSha256": "cac998e4bf6f92813127a7c0803d4988d7a1e6a2660ac16cb052cb3ffd89629a",
+      "afterSha256": "44d8c9fde3c7f73e98a7c52b23fecddb4bfe69341db01671dc87bba2c2d55e37",
+      "edits": [
+        {
+          "start": 24901,
+          "end": 24945,
+          "from": "../../🧫️fixtures/📏️exact-final-extent.json",
+          "to": "../🧫️fixtures/📏️exact-final-extent.json"
+        },
+        {
+          "start": 19188,
+          "end": 19235,
+          "from": "../../🧫️fixtures/❌️formatted-exact-extent.json",
+          "to": "../🧫️fixtures/❌️formatted-exact-extent.json"
+        },
+        {
+          "start": 15259,
+          "end": 15307,
+          "from": "../../🧫️fixtures/🏷️formatted-exact-extent.json",
+          "to": "../🧫️fixtures/🏷️formatted-exact-extent.json"
+        },
+        {
+          "start": 11050,
+          "end": 11089,
+          "from": "../../🧫️fixtures/🌳️actual-height.json",
+          "to": "../🧫️fixtures/🌳️actual-height.json"
+        },
+        {
+          "start": 7083,
+          "end": 7122,
+          "from": "../../🧫️fixtures/🏠️parent-return.json",
+          "to": "../🧫️fixtures/🏠️parent-return.json"
+        },
+        {
+          "start": 3202,
+          "end": 3228,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 178,
+          "end": 222,
+          "from": "../../🧫️fixtures/📏️owner-page-ceiling.json",
+          "to": "../🧫️fixtures/📏️owner-page-ceiling.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🧪️tests/🦀️.rs",
+      "beforeSha256": "b19169c7beb18894f98ccdfd3495ed0cf6c7edc2a6a5e7823d6d7106442d2b06",
+      "afterSha256": "3307d24b9101182c9dbf08bee037e8b3ee4ba7ba0e7aca86064929726e1fb446",
+      "edits": [
+        {
+          "start": 906,
+          "end": 929,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🏷️type/🧪️tests/🟦️.ts",
+      "beforeSha256": "4a168834d739157f292680bfe0b34e93b925cb7fb0109e18394569d7d6be6124",
+      "afterSha256": "0b8dd0a55961590e89ec7f8040b52dfca38ff0186c071f43b1f566c05a99f06c",
+      "edits": [
+        {
+          "start": 316,
+          "end": 336,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🏷️type/🧪️tests/🦀️.rs",
+      "beforeSha256": "df5f84b0d6869ac03d04bee816fa3f3831809b26ce93929059e4222fba849ca3",
+      "afterSha256": "1c198fe54da0b9adc576839b979aeb873504e8e74096d4fdde27a27784a670ee",
+      "edits": [
+        {
+          "start": 225,
+          "end": 248,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🏷️type/🧪️tests/🚮️absence/🟦️.ts",
+      "beforeSha256": "53310283ea8845acd14c43a9d8b481d91c337b9a7f77d53e587db6df8c0385d0",
+      "afterSha256": "f66a5bc1141ff1f29eb01394f30fa8815ffea561ae4cbff79c9e6fcf0be0d375",
+      "edits": [
+        {
+          "start": 301,
+          "end": 338,
+          "from": "../../🧫️fixtures/🚮️absence/🔣️.json",
+          "to": "../🧫️fixtures/🚮️absence/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📝️shared-utf8/🧪️tests/🟦️.ts",
+      "beforeSha256": "ea95ca075a29f19e9086b55ffb3b4546ec8a950f1eebe6b02e672b839a6e6e51",
+      "afterSha256": "ac7368f1078fa29d83a5e62c4a726a9a48ee2b064ec3298eed4a285121f13550",
+      "edits": [
+        {
+          "start": 446,
+          "end": 466,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📝️shared-utf8/🧪️tests/🦀️.rs",
+      "beforeSha256": "32e65abc9a96f810ada481f1501352e0af8f885e6c573814a69ecf933de33e1b",
+      "afterSha256": "1e5abb59b361fc04edc5e65c1df2aba4b34d720773ed7a869ad9262ffeb709c7",
+      "edits": [
+        {
+          "start": 2208,
+          "end": 2231,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 291,
+          "end": 331,
+          "from": "../♻️original-lease/🧫️fixtures/🔣️.json",
+          "to": "../♻️original-lease/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧪️tests/🟦️.ts",
+      "beforeSha256": "757de4df04f4e98af60adb050e97b721768927b6b692aca32856356170171242",
+      "afterSha256": "7b6121812cdb45ca5ee576edf1f837ad6774bea941b3154461e65b2a3e3024ee",
+      "edits": [
+        {
+          "start": 3728,
+          "end": 3764,
+          "from": "../../🩹️update/🧫️fixtures/🔣️.json",
+          "to": "../../🩹️update/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 1680,
+          "end": 1703,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 320,
+          "end": 359,
+          "from": "../🧫️fixtures/📦️full-receipt/🔣️.json",
+          "to": "🧫️fixtures/📦️full-receipt/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧺️set/🧪️tests/🧺️set/🦀️.rs",
+      "beforeSha256": "b9afbda6b8c95fc3cdb7de08f2703e6e97774453fa82ceee4c291c922a7506f3",
+      "afterSha256": "6815993b71168d2b98750cccc16081bbb16a102bdebcdb3bf434379fffc70a44",
+      "edits": [
+        {
+          "start": 306,
+          "end": 332,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧪️tests/🧪️source-contract/🟦️.ts",
+      "beforeSha256": "03f464dec5bf4d592de54827ea9fa4288374a18413dc720f3195892bc13c8a32",
+      "afterSha256": "e157e4771643a2aa1f7a3b15420b12b7b514e20f88e9e72c40934fe4c18155d2",
+      "edits": [
+        {
+          "start": 3519,
+          "end": 3552,
+          "from": "../../🧺️set/🧫️fixtures/🔣️.json",
+          "to": "../../🧺️set/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 2606,
+          "end": 2648,
+          "from": "../../🧫️fixtures/👥️shared-owner/🔣️.json",
+          "to": "../🧫️fixtures/👥️shared-owner/🔣️.json"
+        },
+        {
+          "start": 299,
+          "end": 336,
+          "from": "../../🧫️fixtures/🔣️ordered-map.json",
+          "to": "../🧫️fixtures/🔣️ordered-map.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧪️tests/🗂️ordered/🦀️.rs",
+      "beforeSha256": "77810e4f543b44ea20ea4fb30e53455e89157f0df40c76dadf1d9f5fc851c0dc",
+      "afterSha256": "33287f4f305700a0d672a1c17be57d3d768f5632e23d842f83eb3c9241cb7f16",
+      "edits": [
+        {
+          "start": 48393,
+          "end": 48435,
+          "from": "../../🧫️fixtures/👥️shared-owner/🔣️.json",
+          "to": "../🧫️fixtures/👥️shared-owner/🔣️.json"
+        },
+        {
+          "start": 43037,
+          "end": 43074,
+          "from": "../../🧫️fixtures/🔣️ordered-map.json",
+          "to": "../🧫️fixtures/🔣️ordered-map.json"
+        },
+        {
+          "start": 39761,
+          "end": 39798,
+          "from": "../../🧫️fixtures/🔣️ordered-map.json",
+          "to": "../🧫️fixtures/🔣️ordered-map.json"
+        },
+        {
+          "start": 37705,
+          "end": 37742,
+          "from": "../../🧫️fixtures/🔣️ordered-map.json",
+          "to": "../🧫️fixtures/🔣️ordered-map.json"
+        },
+        {
+          "start": 33950,
+          "end": 33987,
+          "from": "../../🧫️fixtures/🔣️ordered-map.json",
+          "to": "../🧫️fixtures/🔣️ordered-map.json"
+        },
+        {
+          "start": 25414,
+          "end": 25453,
+          "from": "../../♻️retirement/🧫️fixtures/🔣️.json",
+          "to": "../../♻️retirement/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 19891,
+          "end": 19930,
+          "from": "../../♻️retirement/🧫️fixtures/🔣️.json",
+          "to": "../../♻️retirement/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 16031,
+          "end": 16067,
+          "from": "../../🩹️update/🧫️fixtures/🔣️.json",
+          "to": "../../🩹️update/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 12956,
+          "end": 12992,
+          "from": "../../🩹️update/🧫️fixtures/🔣️.json",
+          "to": "../../🩹️update/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 9946,
+          "end": 10001,
+          "from": "../../♻️retirement/🧫️fixtures/📦️full-receipt/🔣️.json",
+          "to": "../../♻️retirement/🧪️tests/🧫️fixtures/📦️full-receipt/🔣️.json"
+        },
+        {
+          "start": 6964,
+          "end": 7019,
+          "from": "../../♻️retirement/🧫️fixtures/📦️full-receipt/🔣️.json",
+          "to": "../../♻️retirement/🧪️tests/🧫️fixtures/📦️full-receipt/🔣️.json"
+        },
+        {
+          "start": 3243,
+          "end": 3298,
+          "from": "../../♻️retirement/🧫️fixtures/📦️full-receipt/🔣️.json",
+          "to": "../../♻️retirement/🧪️tests/🧫️fixtures/📦️full-receipt/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧪️tests/🧪️numeric-index-oracle/🟦️.ts",
+      "beforeSha256": "027a904eeddda111db7b8b8e3e6a3f169923d8abdb329c9b6d8af79035d34b2c",
+      "afterSha256": "0c46833fa28a8299f459343de3ee55ccbb3a7c1f61082a61d55eb2f95bf42539",
+      "edits": [
+        {
+          "start": 7931,
+          "end": 7970,
+          "from": "../../🧫️fixtures/🔢️numeric-index.json",
+          "to": "../🧫️fixtures/🔢️numeric-index.json"
+        },
+        {
+          "start": 627,
+          "end": 663,
+          "from": "../../🧫️fixtures/🔗️references.json",
+          "to": "../🧫️fixtures/🔗️references.json"
+        },
+        {
+          "start": 508,
+          "end": 547,
+          "from": "../../🧫️fixtures/🔢️numeric-index.json",
+          "to": "../🧫️fixtures/🔢️numeric-index.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🫴️receiving/🧪️tests/🦀️.rs",
+      "beforeSha256": "3866f1e193af47c34bef21ace48b35322101cac91063382a898f5c2f9ba06cfc",
+      "afterSha256": "ab09a6a9437490c00baf5e03d2f76acdb8ed92d3360be982d71dd501e3987147",
+      "edits": [
+        {
+          "start": 542,
+          "end": 565,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🫴️receiving/🎟️turn/🧪️tests/🦀️.rs",
+      "beforeSha256": "ea3b522c105eb452d621d6234059a59fd289077a0dca71f2bbb01b94f9caee7d",
+      "afterSha256": "649e077f941759361e4a5338a2ea6dca538b589aabc981ed7fba50e08efb3f4a",
+      "edits": [
+        {
+          "start": 573,
+          "end": 596,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🔗️read/🧪️tests/🦀️.rs",
+      "beforeSha256": "4fec85203997dfadd1cf8daebdd6bcf0bf1761b54283962ca281817b2875b9cd",
+      "afterSha256": "1297b750af38948c884ea6853cc6f8fe088c2a9fd436d8d46aab422d7504d8bb",
+      "edits": [
+        {
+          "start": 16975,
+          "end": 16998,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 14884,
+          "end": 14907,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 12128,
+          "end": 12151,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 9583,
+          "end": 9606,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 5271,
+          "end": 5294,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 3530,
+          "end": 3553,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🧵️canonical/🧪️tests/🟦️.ts",
+      "beforeSha256": "d2c720efb1bd662d84d01879411a78ad5eeb8b2dc7a2639cf7656f58280bac73",
+      "afterSha256": "f75f2cde99cf277116c3bddbba3860638094ec7e97f7b5d3d71ecb677b60c176",
+      "edits": [
+        {
+          "start": 6701,
+          "end": 6721,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 5136,
+          "end": 5156,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 3629,
+          "end": 3649,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 1896,
+          "end": 1916,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 498,
+          "end": 518,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🧪️tests/🛡️deny-unknown-fields-enums/🦀️.rs",
+      "beforeSha256": "af2a760bfc0af32c57548cbf579f1ecbdbf38c99832d6aaafc13fc1e8f0d1d87",
+      "afterSha256": "219806f97cbd840286fc3710f03f9a9a50b3b9cbb54efba49bae56d6a0d7d2ce",
+      "edits": [
+        {
+          "start": 1813,
+          "end": 1849,
+          "from": "../../🧫️fixtures/🔣️empty-enum.json",
+          "to": "../🧫️fixtures/🔣️empty-enum.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🧪️tests/📚️owned-json/🦀️.rs",
+      "beforeSha256": "b72afe0706318f4018acd50ac89b0a73d0e783785497c368e1cdab4e914cc976",
+      "afterSha256": "05eab6ca0d83c71b9710191ea973d610b2737c5c5fb09d69bdec6c1c761aac10",
+      "edits": [
+        {
+          "start": 336,
+          "end": 376,
+          "from": "../../🧫️fixtures/📚️owned-json/🔣️.json",
+          "to": "../🧫️fixtures/📚️owned-json/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🧪️tests/🧭️typed-path/🦀️.rs",
+      "beforeSha256": "a3630745141ad976d6536cb5e9292b2ee11086c750bf8f7c297c7108e44d41d3",
+      "afterSha256": "4ea398ec369298c3dcb5ef20dfe2ae8dfdc363168f074798192d4cf206468ecd",
+      "edits": [
+        {
+          "start": 12218,
+          "end": 12270,
+          "from": "../../../🔁️codec/🧫️fixtures/🛫️controlled/🔣️.json",
+          "to": "../../../🔁️codec/🧪️tests/🧫️fixtures/🛫️controlled/🔣️.json"
+        },
+        {
+          "start": 5949,
+          "end": 5995,
+          "from": "../../../🔁️codec/🧭️path/🧫️fixtures/🔣️.json",
+          "to": "../../../🔁️codec/🧭️path/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 2171,
+          "end": 2221,
+          "from": "../../🧫️fixtures/♻️empty-enum-retirement/🔣️.json",
+          "to": "../🧫️fixtures/♻️empty-enum-retirement/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🧪️tests/🐫️variant-field-casing/🦀️.rs",
+      "beforeSha256": "558066cf8ed674afd479401314ce63079e1ad31d49e683d24aaba13f53561999",
+      "afterSha256": "13d162bf59be2a745488faf5bc5e2192558fa77ac3cf6f581965cbd29217e856",
+      "edits": [
+        {
+          "start": 3772,
+          "end": 3822,
+          "from": "../../🧫️fixtures/🐫️variant-field-casing/🔣️.json",
+          "to": "../🧫️fixtures/🐫️variant-field-casing/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🟦️.ts",
+      "beforeSha256": "a9f10777d095d9cc99bb763234bb92a59670f036eb9e2d647edfc5d5f5468f3f",
+      "afterSha256": "fc9749c627d3874bb02914532a432f6cdf5967751bd910eac8a3138eca582c12",
+      "edits": [
+        {
+          "start": 122,
+          "end": 145,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🦀️.rs",
+      "beforeSha256": "9abbcf1ab8a141717b496877e6050a427eeb61ebef31af2e777a9ba113e6deaf",
+      "afterSha256": "02793cb6469897337ee4830319de9fe73d58529a3d3c51b09ee5cc8bc9a8b3e3",
+      "edits": [
+        {
+          "start": 1343,
+          "end": 1366,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/🟦️.ts",
+      "beforeSha256": "0eb570a9bd2eb17d8baf61c7f25f0f83c22267193f96c668434353069fb1edd8",
+      "afterSha256": "3206aea1c1b157bfc8308dddc25d97044520975e6ec357323eba46455151954c",
+      "edits": [
+        {
+          "start": 78,
+          "end": 101,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/🦀️.rs",
+      "beforeSha256": "91b83f3d49b32e175fb13ec58492d817420dd01fb95a0ac1a22d06707aca9f50",
+      "afterSha256": "3380a2d64c405c46d1968f3d01617f92a67412426622a20ad0cc92d907b1f0ff",
+      "edits": [
+        {
+          "start": 1841,
+          "end": 1864,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🧪️tests/📋️wire/🟦️.ts",
+      "beforeSha256": "da412e8da4c33865ef75decad36f238105d0a4c41f6c6716532b481d259a2bce",
+      "afterSha256": "ea5acc1c82b10a461aabf5d96e00019acedbd9ff75067b7e60102f7c99b71219",
+      "edits": [
+        {
+          "start": 97,
+          "end": 131,
+          "from": "../../🧫️fixtures/📋️wire/🔣️.json",
+          "to": "../🧫️fixtures/📋️wire/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🧪️tests/📏️close/🟦️.ts",
+      "beforeSha256": "4fb0a31835f0b8dd447cea47e94f483414a6c9d9c5501c340accc505d7ced40e",
+      "afterSha256": "8f08c6ea0d881391f81b156949672312878786b59dd5eef964d4602e4638bd3c",
+      "edits": [
+        {
+          "start": 186,
+          "end": 221,
+          "from": "../../🧫️fixtures/📏️close/🔣️.json",
+          "to": "../🧫️fixtures/📏️close/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "509853ade9338d722b4909cabab5f1283f5a19a2368d8ff45c8666b48733f6aa",
+      "afterSha256": "47f683da76d2e93a53789d72cf68f3af235bc886332964509b44ed3d9e2bb336",
+      "edits": [
+        {
+          "start": 35336,
+          "end": 35370,
+          "from": "../../🧫️fixtures/📋️wire/🔣️.json",
+          "to": "../🧫️fixtures/📋️wire/🔣️.json"
+        },
+        {
+          "start": 31511,
+          "end": 31546,
+          "from": "../../🧫️fixtures/📏️close/🔣️.json",
+          "to": "../🧫️fixtures/📏️close/🔣️.json"
+        },
+        {
+          "start": 13336,
+          "end": 13372,
+          "from": "../../🧫️fixtures/📦️paging/🔣️.json",
+          "to": "../🧫️fixtures/📦️paging/🔣️.json"
+        },
+        {
+          "start": 9039,
+          "end": 9075,
+          "from": "../../♻️custody/🧫️fixtures/🔣️.json",
+          "to": "../../♻️custody/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 538,
+          "end": 573,
+          "from": "../../🧫️fixtures/🎟️clone/🔣️.json",
+          "to": "../🧫️fixtures/🎟️clone/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/➖️remove/🧪️tests/🟦️.ts",
+      "beforeSha256": "6372a91b778d761fb0362d11b3e8c01a9b1b4ad6008bc03090dba342dcd1c830",
+      "afterSha256": "936d5229c8793aaedee83e1cc5891bf0bed02880f83dd828973e4808c41541a2",
+      "edits": [
+        {
+          "start": 95,
+          "end": 118,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/➖️remove/🧪️tests/🦀️.rs",
+      "beforeSha256": "aa29f5120aaecf7d1170b21bd48dc0f9b66439963eeccf4933c0cb68600a8c76",
+      "afterSha256": "51a79ce43799d33c97af6b27fbe50f78bdc13698ad82415edb7fee5e07cce22d",
+      "edits": [
+        {
+          "start": 6157,
+          "end": 6180,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 2443,
+          "end": 2466,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️projection/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "42f289505d159f5a003512377042fc374931cb0834c668e96cafda4cb42c0a30",
+      "afterSha256": "39a5a42c237e240b9dfbc2c1d8b5ea242d88fbfea6c318132982899aeca4f893",
+      "edits": [
+        {
+          "start": 687,
+          "end": 744,
+          "from": "../../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json",
+          "to": "../../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "8b34e97a1117cacc534a250630dc387916195059e449394214436e750c79d42a",
+      "afterSha256": "873d8818be474839d8dc06715b345826acf17281a29c86e968e401c074f0abf2",
+      "edits": [
+        {
+          "start": 27116,
+          "end": 27162,
+          "from": "../../../🧫️fixtures/🪜️close-demands/🔣️.json",
+          "to": "../../../🧪️tests/🧫️fixtures/🪜️close-demands/🔣️.json"
+        },
+        {
+          "start": 22496,
+          "end": 22522,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 19855,
+          "end": 19901,
+          "from": "../../../🧫️fixtures/🪜️close-demands/🔣️.json",
+          "to": "../../../🧪️tests/🧫️fixtures/🪜️close-demands/🔣️.json"
+        },
+        {
+          "start": 17918,
+          "end": 17964,
+          "from": "../../../🧫️fixtures/🪜️close-demands/🔣️.json",
+          "to": "../../../🧪️tests/🧫️fixtures/🪜️close-demands/🔣️.json"
+        },
+        {
+          "start": 13232,
+          "end": 13273,
+          "from": "../../🧫️fixtures/🎟️owned-birth/🔣️.json",
+          "to": "../🧫️fixtures/🎟️owned-birth/🔣️.json"
+        },
+        {
+          "start": 9891,
+          "end": 9932,
+          "from": "../../🧫️fixtures/🎟️owned-birth/🔣️.json",
+          "to": "../🧫️fixtures/🎟️owned-birth/🔣️.json"
+        },
+        {
+          "start": 5086,
+          "end": 5125,
+          "from": "../../../🔗️shared/🧫️fixtures/🔣️.json",
+          "to": "../../../🔗️shared/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 349,
+          "end": 390,
+          "from": "../../🧫️fixtures/🎟️owned-birth/🔣️.json",
+          "to": "../🧫️fixtures/🎟️owned-birth/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️custody/🟦️.ts",
+      "beforeSha256": "5d4931105685070fed3209584f8fef52bd9cdea6994764c26aaa97c5002b3696",
+      "afterSha256": "6c411fd64f2def30eab90483e967b71fe857cf715ee16241c3e5cc8c84ca8685",
+      "edits": [
+        {
+          "start": 282,
+          "end": 315,
+          "from": "../../🧫️fixtures/🔐️custody.json",
+          "to": "../🧫️fixtures/🔐️custody.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️custody/🦀️.rs",
+      "beforeSha256": "2a89363e4f3b9afeac2c2cbdaec16b5e0d0d59e69ac5fcd5c501b18cbc9a4d7e",
+      "afterSha256": "f9adea4b40163940fa0cca6575a205a776cf8ac880a7f44eda09a3519fa5f2b5",
+      "edits": [
+        {
+          "start": 6080,
+          "end": 6113,
+          "from": "../../🧫️fixtures/🔐️custody.json",
+          "to": "../🧫️fixtures/🔐️custody.json"
+        },
+        {
+          "start": 467,
+          "end": 500,
+          "from": "../../🧫️fixtures/🔐️custody.json",
+          "to": "../🧫️fixtures/🔐️custody.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "06da5e80a763d25ca9bcc8efb9a8304090b72c8bae729fc9200d6a437a624fb1",
+      "afterSha256": "6fc607c28ff02b1f342ad4095264e9c51b09318ff3766639058a4ef9aee3340d",
+      "edits": [
+        {
+          "start": 22631,
+          "end": 22688,
+          "from": "../../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json",
+          "to": "../../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"
+        },
+        {
+          "start": 16275,
+          "end": 16311,
+          "from": "../../🧫️fixtures/📦️owners/🔣️.json",
+          "to": "../🧫️fixtures/📦️owners/🔣️.json"
+        },
+        {
+          "start": 12066,
+          "end": 12102,
+          "from": "../../🧫️fixtures/📦️owners/🔣️.json",
+          "to": "../🧫️fixtures/📦️owners/🔣️.json"
+        },
+        {
+          "start": 7251,
+          "end": 7308,
+          "from": "../../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json",
+          "to": "../../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"
+        },
+        {
+          "start": 2679,
+          "end": 2736,
+          "from": "../../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json",
+          "to": "../../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"
+        },
+        {
+          "start": 342,
+          "end": 399,
+          "from": "../../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json",
+          "to": "../../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🟦️.ts",
+      "beforeSha256": "028e9653df45c9205ba06d4de7d8da345fca372f688af514cf0335d004a1d467",
+      "afterSha256": "17b37a5064e3964808cf2d1b8ef776c2d0c598b54fd881772070d9ed93bfa108",
+      "edits": [
+        {
+          "start": 269,
+          "end": 289,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🦀️.rs",
+      "beforeSha256": "abf008c4a31945c35dae797cf152efa99c37cc8b7403b228724c0b957e652087",
+      "afterSha256": "81519104473cc971e28b8498c30ebd810891bb03db1daf27aa98c494061a4447",
+      "edits": [
+        {
+          "start": 8178,
+          "end": 8201,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "40d8ff68c0147571a7baa873fd248232f22b89c7527d443181c83fc7b8bf7491",
+      "afterSha256": "05f4045a57602b49228f73757bf0f934686eff4667e7bc43bda2b1cf45842b97",
+      "edits": [
+        {
+          "start": 21588,
+          "end": 21622,
+          "from": "../../🧫️fixtures/📦️copy/🔣️.json",
+          "to": "../🧫️fixtures/📦️copy/🔣️.json"
+        },
+        {
+          "start": 16050,
+          "end": 16100,
+          "from": "../../../🧫️fixtures/📏️release-authority/🔣️.json",
+          "to": "../../../🧪️tests/🧫️fixtures/📏️release-authority/🔣️.json"
+        },
+        {
+          "start": 12791,
+          "end": 12841,
+          "from": "../../../🧫️fixtures/📏️release-authority/🔣️.json",
+          "to": "../../../🧪️tests/🧫️fixtures/📏️release-authority/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🧪️tests/🦀️.rs",
+      "beforeSha256": "6eaae01f8be02fef43b0a285ddd0398b93103be43f1cebe1060a8d7d305b5a90",
+      "afterSha256": "0fc328938f966fde68cce0587c9d7ce2cb8e266e14d70a1b528f82e2c8a816f7",
+      "edits": [
+        {
+          "start": 5336,
+          "end": 5359,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🪆️stage/🧪️tests/🟦️.ts",
+      "beforeSha256": "ec8d15e6e988b7b25edbb6478740d2b04b9f50be0bd4519c9182e1bf057e1430",
+      "afterSha256": "bbf7a6bde4a133d3bface158425cd942f64307f001aedbb51e8a785ff243a22a",
+      "edits": [
+        {
+          "start": 323,
+          "end": 349,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../../🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 164,
+          "end": 187,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "c6727ce65cea45ebffce54186c1389c18e1a958adfde68abcc863f64e33f8eaf",
+      "afterSha256": "ab40bb3d182d0db14a9a4c1ce9fce3e4ff256e40bbaeb92041fe42fae1e5e194",
+      "edits": [
+        {
+          "start": 3808,
+          "end": 3834,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 3690,
+          "end": 3725,
+          "from": "../../🪆️stage/🧫️fixtures/🔣️.json",
+          "to": "../../🪆️stage/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 2269,
+          "end": 2295,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 267,
+          "end": 293,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🧪️typedwire/🟦️.tsx",
+      "beforeSha256": "13c333f7ba5f3aa34dd55de095dd5e86569109f6a2d1184c98d750faa40dd632",
+      "afterSha256": "1d83a6b4023d3f43122eb49621efe3c9f110d5f933ffa0273087826ce5d7de13",
+      "edits": [
+        {
+          "start": 93637,
+          "end": 93716,
+          "from": "../../../../../../../../../🔨️modules/🌱️value/💾️resident/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../../🔨️modules/🌱️value/💾️resident/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧪️tests/🔬️unit/🟦️.test.ts",
+      "beforeSha256": "23b3e49d124a3e47b84dca1239eac91ae47c4768c0b9d65b87168208e898369c",
+      "afterSha256": "b45ad28cf2e1a74ca823f821fccd8fc17553cf7f557ef5be984703a20d6e223d",
+      "edits": [
+        {
+          "start": 10615,
+          "end": 10709,
+          "from": "../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔁️codec/🧭️path/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔁️codec/🧭️path/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧪️tests/🏷️type/🦀️.rs",
+      "beforeSha256": "03cf3310e340357e84dca4f392db842c3f299127447c8b5996a65061fc6d0522",
+      "afterSha256": "291d49804ec539338fccf55563b4f37e8e516a9ee5701f8950cd0f1e71c768fa",
+      "edits": [
+        {
+          "start": 1935,
+          "end": 2004,
+          "from": "../../../../../../../🔨️modules/🌱️value/🏷️type/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../🔨️modules/🌱️value/🏷️type/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🌱️value/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "21561b4551e2528fb5e20995a568bec5013921bfc3d0c3c5a3ec68a04b4fd535",
+      "afterSha256": "41594d0ba3e68e7e5cd46c87edf802f6af4813b6c93aab4d3ebc59bebe8c2b19",
+      "edits": [
+        {
+          "start": 10085,
+          "end": 10158,
+          "from": "../../../../../../../../🔨️modules/🌱️value/🧬️clone/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../🔨️modules/🌱️value/🧬️clone/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts",
+      "beforeSha256": "210a072880e9ab2814a292fd7f8cb9f9aeb668f8e24244db335a461f9ffe6908",
+      "afterSha256": "0ecbcad67f2c104bf6d4957456679af9e0154effa421446c6e66c37b3f78853d",
+      "edits": [
+        {
+          "start": 5895,
+          "end": 5981,
+          "from": "../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧫️fixtures/📦️nested/🔣️.json",
+          "to": "../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🧫️fixtures/📦️nested/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧬️retained-clone/🦀️.rs",
+      "beforeSha256": "624ce3da36dd92af4b3b4b02e1fe92b601a9b669588e60550214024c469c9a6f",
+      "afterSha256": "daee6c9f1cf5f889d61740a3d2b8f75ed8502932813280e2aebec13e969faaf7",
+      "edits": [
+        {
+          "start": 23835,
+          "end": 23931,
+          "from": "../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧫️fixtures/🌳️structural-depth/🔣️.json",
+          "to": "../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🧫️fixtures/🌳️structural-depth/🔣️.json"
+        },
+        {
+          "start": 3385,
+          "end": 3471,
+          "from": "../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧫️fixtures/📦️nested/🔣️.json",
+          "to": "../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🧫️fixtures/📦️nested/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "9f1716c19580f99f8e051073cb93ebc9b91bd8a658b500e7825d4d02edc38703",
+      "afterSha256": "8c52feed9ac96fceacbc059bab148028778b1f6534aeb802e717096722291b43",
+      "edits": [
+        {
+          "start": 16245,
+          "end": 16315,
+          "from": "../../../../../../../🔨️modules/🌱️value/🔁️codec/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../🔨️modules/🌱️value/🔁️codec/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🧪️tests/💰️allocation/🟦️.ts",
+      "beforeSha256": "a128c414b201025a204d22524a48d8d01cc7a93c54c914c9cf18c9e7f262f16d",
+      "afterSha256": "09c00a1d73f5a6db91b83101a999ca855a0c832497021b89713c0cbc75a80e0f",
+      "edits": [
+        {
+          "start": 6981,
+          "end": 7055,
+          "from": "../../../../../../../../🔨️modules/🌱️value/⚠️refusal/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../🔨️modules/🌱️value/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🧪️tests/💰️allocation/🦀️.rs",
+      "beforeSha256": "5589d2106051432454c695b0c82bb61a6fece435645abd147a968b1f59833788",
+      "afterSha256": "1c9ea7e2b4a089a00d4c2f5f10dbbb86785faa67efd779b9cfea7721b76e0af5",
+      "edits": [
+        {
+          "start": 16773,
+          "end": 16847,
+          "from": "../../../../../../../../🔨️modules/🌱️value/⚠️refusal/🧫️fixtures/🔣️.json",
+          "to": "../../../../../../../../🔨️modules/🌱️value/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "beforeSha256": "f693ad7faa2c4bc9eb15994570065700d420d51dd28f0ff2046ff4e8ea7c13be",
+      "afterSha256": "3ed7ec6a1bd682960a4dde815d56b1da496e30f6ee46b0cd32bbe764b71f53ee",
+      "edits": [
+        {
+          "start": 78690,
+          "end": 78710,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "start": 71509,
+          "end": 71529,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "beforeSha256": "e9db64196eb46a886bec11f763227b3438d785590ae795e03e5379660d009210",
+      "afterSha256": "cc89d535bec6fb53e9ee12b60e230f8069b4c5dd7cfc70e08ee66e233fc7448f",
+      "edits": [
+        {
+          "start": 35792,
+          "end": 35869,
+          "from": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🧫️fixtures/🔣️.json",
+          "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/🦀️.rs",
+      "beforeSha256": "85e6e52997434eb7b355178cf3a118a0a3b8a6e99a256d4d659f27175c6e668a",
+      "afterSha256": "139db41e601463b3a06b7ea036a76683a62b1eda734115b9e615ea8d7ea9b362",
+      "edits": [
+        {
+          "start": 10764,
+          "end": 10875,
+          "from": "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/♻️retirement/🧫️fixtures/📏️copy-demand/🔣️.json",
+          "to": "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧫️fixtures/📏️copy-demand/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/📋️native-owner/🟦️.ts",
+      "beforeSha256": "8ad0899e8d1a82325c8f6ce1783bbb3192cc792e0c547e589ff59c2084f2ec9d",
+      "afterSha256": "056b78a49844fb933ba118f096b4af94b46bcb0d92c3482db8113e68a539bd06",
+      "edits": [
+        {
+          "start": 38410,
+          "end": 38526,
+          "from": "../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧫️fixtures/📏️release-authority/🔣️.json",
+          "to": "../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority/🔣️.json"
+        },
+        {
+          "start": 7302,
+          "end": 7404,
+          "from": "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/♻️retirement/🧫️fixtures/📏️copy-demand",
+          "to": "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧫️fixtures/📏️copy-demand"
+        }
+      ]
+    }
+  ],
+  "held": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🔔️deferred-wake-ownership/🟦️.ts",
+      "beforeSha256": "404779032055fea278fb7e35c8a81728a801be779e27d68c73b64051cfc70831",
+      "afterSha256": "779942d8f8db6bee34a80b699ed02786cf8ad1b4b6fcb0ddb6ab32100f94f10e",
+      "edits": [
+        {
+          "start": 2870,
+          "end": 2939,
+          "from": "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧫️fixtures/🔣️.json",
+          "to": "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🔐️pool-use-ownership/🟦️.ts",
+      "beforeSha256": "289fee039582a5f70304ebeb69d2f625c5717aea9007c5ea50d38fc2d269fea5",
+      "afterSha256": "9d851ca9bff625bad996b78904ec47ed692f93cc256bccf1f1cb69755a219c53",
+      "edits": [
+        {
+          "start": 1699,
+          "end": 1758,
+          "from": "🧰️framework/🔨️modules/⏳️async/🔐️use/🧫️fixtures/🔣️.json",
+          "to": "🧰️framework/🔨️modules/⏳️async/🔐️use/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    }
+  ],
+  "unresolved": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🏭️factory/🧪️tests/🔐️custody/🟦️.ts",
+      "from": "./🧫️fixtures/🔣️.json",
+      "reason": "no moved static target"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️bytes/🧪️tests/🧬️base64/🟦️.ts",
+      "from": "./🧫️fixtures/🔣️.json",
+      "reason": "no moved static target"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️tests/🛬️controlled/🟦️.ts",
+      "from": "../../../../🎒️pack/🌱️value/🧫️fixtures/🎞️intrinsic-media/🔣️.json",
+      "reason": "no moved static target"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "from": "../🧫️fixtures/🧭️fixture-placement/🔣️.json",
+      "reason": "no moved static target"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "from": "🧫️fixtures",
+      "reason": "no moved static target"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "from": "🧫️fixtures",
+      "reason": "no moved static target"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "from": "/**/🧫️fixtures/**/*",
+      "reason": "no moved static target"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "from": "**/🧪️tests/**/🧫️fixtures/**",
+      "reason": "no moved static target"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "from": "/**/🧫️fixtures/**",
+      "reason": "no moved static target"
+    }
+  ]
+}

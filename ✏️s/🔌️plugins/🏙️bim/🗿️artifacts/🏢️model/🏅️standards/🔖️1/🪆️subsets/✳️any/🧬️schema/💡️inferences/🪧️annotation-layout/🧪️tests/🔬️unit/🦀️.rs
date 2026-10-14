@@ -6,7 +6,7 @@ use crate::{AnnotationStylePatch, Axis, ColumnPatch, Entry, ModelDiff, ModelInfe
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const ROOM: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🪧️annotation-layout/🏠️room/📸️snapshot/🔣️.json");
+const ROOM: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪧️annotation-layout/🏠️room/📸️snapshot/🔣️.json");
 
 fn room() -> ModelSnapshot {
     from_json_str(ROOM, JsonMemberPolicy::Reject).expect("the room decodes")

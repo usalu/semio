@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "♻️shell-document-retirement-index", "🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "♻️shell-document-retirement-index", "🔣️.json"), "utf8"));
 
 const firstAtOrAfter = (occupied: Set<number>, cursor: number, capacity: number): number | undefined => {
   for (let offset = 0; offset < capacity; offset += 1) {

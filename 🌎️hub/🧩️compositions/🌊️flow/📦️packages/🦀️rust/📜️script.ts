@@ -1,36 +1,36 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { GenerateScript as GraphGenerateScript, PreviewGeneratedScript, OwnerGraphWireCheckScript } from "../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts";
 /** 🌊️ `@semio-tech/flow-plugin` router: `bun ./📜️script.ts test`. */
 
 
 
 import { runCargo, runRepositoryCargoTests, runRepositoryExactCargoLaws, dispatchOwnedScriptRoute } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 class SourceTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (!await dispatchOwnedScriptRoute(this.repoRoot, ["flow", "test-source", ...segments])) throw new Error("Missing Flow owner command: test-source");
+    if (!await dispatchOwnedScriptRoute(this.invocation,this.repoRoot, ["flow", "test-source", ...segments])) throw new Error("Missing Flow owner command: test-source");
   }
 }
 
 class ChildIdentityCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (!await dispatchOwnedScriptRoute(this.repoRoot, ["flow", "child-identity-check", ...segments])) throw new Error("Missing Flow owner command: child-identity-check");
+    if (!await dispatchOwnedScriptRoute(this.invocation,this.repoRoot, ["flow", "child-identity-check", ...segments])) throw new Error("Missing Flow owner command: child-identity-check");
   }
 }
 
 class ChildEditCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (!await dispatchOwnedScriptRoute(this.repoRoot, ["flow", "child-edit-check", ...segments])) throw new Error("Missing Flow owner command: child-edit-check");
+    if (!await dispatchOwnedScriptRoute(this.invocation,this.repoRoot, ["flow", "child-edit-check", ...segments])) throw new Error("Missing Flow owner command: child-edit-check");
   }
 }
 
 class AddWidgetRetainedCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (!await dispatchOwnedScriptRoute(this.repoRoot, ["flow", "add-widget-retained-check", ...segments])) throw new Error("Missing Flow owner command: add-widget-retained-check");
+    if (!await dispatchOwnedScriptRoute(this.invocation,this.repoRoot, ["flow", "add-widget-retained-check", ...segments])) throw new Error("Missing Flow owner command: add-widget-retained-check");
   }
 }
 

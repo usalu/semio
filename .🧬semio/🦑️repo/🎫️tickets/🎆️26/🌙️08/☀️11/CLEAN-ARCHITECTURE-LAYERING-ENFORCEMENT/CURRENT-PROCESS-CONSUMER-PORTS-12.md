@@ -40,3 +40,35 @@ Observed foreign deep reference total: 2239; distinct target facets: 30. Private
 Dynamic imports record literal targets, while named/destructured consumers of those promises need manual source review. Named contracts in the table do not claim complete dynamic-member attribution.
 
 Domain prefix source observations (overlap Framework includes Repo): ✏️s/🔌️plugins/ 369, 🧰️framework/🛍️products/🦑️repo/ 419, 🧰️framework/ 1482, 🌎️hub/ 258, 🎓️teaching/ 13, ♻️mit-bestand/ 18, 🏢️semio-tech/ 11. Five private-test literals are confined to four actual Library consumer files.
+
+## Actual Authored Consumer Ports
+
+After all3 original bounded fresh8 attempts physicallyclosed, authored2,197 focused import changes across675 actual consumer files in5,404.530ms over79,301,335 source bytes. Each choice uses handcrafted actual Process/public SDK target metadata, closest present authored source owner, exact manifest export target and explicit current named exports, validated with existing TypeScript AST. Plugin consumers use actual SDK facades; other foreign consumers use actual Process entries. Every file was reread before targeted write to preserve concurrent work; original parse diagnostic counts retained. No source bodies were stored, private test published, alias added or owner rule relaxed. Removed only unused nonexistent root exactCargoGeneratedOutputHasLiveLease import after actual source/AST confirmed no calls; no legacy name introduced.
+
+This is authored receiving state, not runtime acceptance or finished whole graph.118 literal edges require explicit new named/semantic owner contracts, dynamic member attribution or actual private test commands. No remaining edge is exempted; all original suites and whole graph still required. Initial endpoint-check helper refused before any writes because its physical owner lookup was one directory short; that input mistake was corrected before the successful observation/mutation.
+
+- `🗑️generated/pa12-inventory/public-consumer-ports-current.json` FILE SHA256 `636570eff7c2c7b86721669e9ece3b33d03f96c02fe91a8a8013cd042c0a4e77`.
+
+| Required Actual Remaining Facet | Literal References |
+| --- | ---: |
+| `🏗️build/🎚️mode/🟦️.ts` | 43 |
+| `🧪️testing/🦀️cargo/🎯️exact/🟦️.ts` | 34 |
+| `📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts` | 11 |
+| `📦️artifacts/🏗️native-build/🟦️.ts` | 7 |
+| `📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts` | 5 |
+| `🏗️build/🎟️capacity/🟦️.ts` | 5 |
+| `🎛️owned-execution/🟦️.ts` | 3 |
+| `📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts` | 2 |
+| `📦️artifacts/🐹️go-build/🟦️.ts` | 1 |
+| `🧭️routing/🟦️.ts` | 1 |
+| `🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts` | 1 |
+| `📦️artifacts/🗂️files/🟦️.ts` | 1 |
+| `📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🟦️.ts` | 1 |
+| `🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts` | 1 |
+| `📦️artifacts/🏗️native-build/🧪️tests/📦️publication/🟦️.ts` | 1 |
+| `📦️artifacts/📤️publication/🧪️tests/🟦️.ts` | 1 |
+
+After genuine red/publication, remaining named imports were ported to new explicit actual APIs. Initial incremental attempt stopped at an unrelated removed Next config after partial valid writes; its early partial writes lack complete original perfile receipt, so no exactcustody claim. Current reread preserved absence and completed35 morefiles/44 literal edits with SHA-only write journal. Five Promise.all destructures were then manually reviewed for actual consumed functions and ported individually to actual public targets. Original private-test5 and a native-metadata3-name frontier remain visible. Full fresh census/runtime/wholegraph still required.
+
+
+Current39 remaining four private capacity helper clients already declare actual SDK workspace dependency in their closest packages. Explicit public helper/type publication and literal ports remain pending defining red; no additional dependency alias or manual node_modules linkage required for these four observed consumers. New whole source census/graph remains required.

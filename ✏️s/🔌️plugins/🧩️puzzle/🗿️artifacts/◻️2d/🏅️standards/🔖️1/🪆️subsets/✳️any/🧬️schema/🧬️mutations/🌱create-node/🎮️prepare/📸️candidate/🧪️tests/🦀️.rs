@@ -38,8 +38,8 @@ fn retire(snapshot: Puzzle2dSnapshot) {
 #[test]
 fn history_edit_puzzle2d_native_create_candidate_preserves_ordered_placement_and_controlled_cancellation() {
     assert!(size_of::<Puzzle2dCreateNodeCandidateCursor>() <= 4096);
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
-    let full: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-node/🎮️prepare/🔣️.json")).unwrap();
+    let full: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap();match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let mut count = 0;
     for case in corpus["cases"].as_array().unwrap() {

@@ -5,7 +5,7 @@ import { join, resolve } from "node:path";
 import { build } from "esbuild";
 
 const owner = resolve(import.meta.dir, "../..");
-const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")) as { imports: { id: string; path: string; source: string; imports: string[] }[] };
+const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")) as { imports: { id: string; path: string; source: string; imports: string[] }[] };
 type Provider = { commandSourceImports(path: string, source: string): readonly string[]; commandSourceParseStats(): { hits: number; misses: number; bytes: number; limit: number } };
 
 test("closed import facts retain unique language-neutral vectors", () => {
@@ -16,7 +16,7 @@ test("command import facts equal independent esbuild while cache never grants st
   const oracles: string[][] = [];
   for (const row of fixture.imports) {
     const paths = new Set<string>();
-    await build({ stdin: { contents: row.source, sourcefile: row.path, loader: row.path.endsWith(".d.ts") ? "empty" : "ts" }, bundle: true, write: false, format: "esm", logLevel: "silent", tsconfigRaw: { compilerOptions: { verbatimModuleSyntax: true } }, plugins: [{ name: "owned-import-oracle", setup(builder) { builder.onResolve({ filter: /^\./ }, args => { paths.add(args.path); return { path: args.path, external: true }; }); } }] });
+    await build({ stdin: { contents: row.source, sourcefile: row.path, loader: row.path.endsWith(".d.ts") ? "empty" : "ts" }, bundle: true, write: false, format: "esm", define: { "import.meta.vitest": "false" }, logLevel: "silent", tsconfigRaw: { compilerOptions: { verbatimModuleSyntax: true } }, plugins: [{ name: "owned-import-oracle", setup(builder) { builder.onResolve({ filter: /^\./ }, args => { paths.add(args.path); return { path: args.path, external: true }; }); } }] });
     oracles.push([...paths].sort());
     expect(oracles.at(-1), row.id).toEqual(row.imports);
   }

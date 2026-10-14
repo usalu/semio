@@ -4,7 +4,7 @@ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 const REGISTRY_CLOSE_STEPS: usize = 4 + super::super::snapshot_read::SNAPSHOT_READ_LEASE_CAPACITY / super::super::snapshot_read::SNAPSHOT_READ_SLOT_PAGE + super::super::snapshot_read::SNAPSHOT_READ_LEASE_CAPACITY / super::super::snapshot_read::SNAPSHOT_READ_GENERATION_PAGE;
 #[test]
 fn original_erased_read_return_retains_source_on_every_refusal_and_returns_the_same_registry(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["erasedReturn"];let g=&law["grant"];let grant=RetainedCloneGrant{maximum_items:g["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:g["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:g["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:g["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:g["maximumDepth"].as_u64().unwrap()as usize};
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["erasedReturn"];let g=&law["grant"];let grant=RetainedCloneGrant{maximum_items:g["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:g["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:g["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:g["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:g["maximumDepth"].as_u64().unwrap()as usize};
  let registry=crate::os_store::SnapshotReadRegistryHandle::new();let identity=registry.identity();let source=Arc::new(law["source"].as_str().unwrap().to_owned());let pointer=Arc::as_ptr(&source);let lease=registry.try_issue(source.clone()).unwrap_or_else(|_|panic!("original erased read admission"));let index=lease.index;let generation=lease.generation;let mut read=super::super::ErasedSnapshotRead::new(source.clone(),lease);drop(source);
  for axis in law["refusals"].as_array().unwrap(){let denied=match axis.as_str().unwrap(){"items"=>RetainedCloneGrant{maximum_items:0,..grant},"copy"=>RetainedCloneGrant{maximum_copy_bytes:0,..grant},"depth"=>RetainedCloneGrant{maximum_depth:0,..grant},"busy"=>grant,_=>unreachable!()};let locked=(axis=="busy").then(||registry.state.try_lock().unwrap());let(result,heap)=observe(||read.try_return_to_registry_witness(denied));let(error,same)=result.err().expect("original erased source must survive refusal");assert!(matches!(error.kind,ValueRefusalKind::WorkLimit|ValueRefusalKind::DepthLimit|ValueRefusalKind::OwnershipLimit));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(same.get::<String>().unwrap()as*const _,pointer);assert_eq!(same.lease.as_ref().unwrap().registry.identity(),identity);assert_eq!((same.lease.as_ref().unwrap().index,same.lease.as_ref().unwrap().generation),(index,generation));read=same;drop(locked);}
  let(result,heap)=observe(||read.try_return_to_registry_witness(grant));let(witness,progress)=result.ok().unwrap();assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(law["expectedRequestedBytes"].as_u64().unwrap()as usize,law["expectedReleasedBytes"].as_u64().unwrap()as usize));assert_eq!(witness.registry.identity(),identity);assert_eq!((witness.index,witness.generation),(index,generation));assert!(!witness.terminal_is_empty());
@@ -13,7 +13,7 @@ fn original_erased_read_return_retains_source_on_every_refusal_and_returns_the_s
 }
 #[test]
 fn original_returned_read_registry_alias_has_exact_physical_custody(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let source=Arc::new(17u32);
   let((witness,mut other,backing),allocation)=observe(||{
@@ -53,7 +53,7 @@ fn original_returned_read_registry_alias_has_exact_physical_custody(){
 
 #[test]
 fn original_returned_read_registry_parallel_aliases_credit_exactly_one_frame(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let shares=fixture["parallelShares"].as_u64().unwrap()as usize;assert_eq!(shares,2);
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let shares=fixture["parallelShares"].as_u64().unwrap()as usize;assert_eq!(shares,2);
  let source=Arc::new(31u32);
  let((left,right,identity),allocation)=observe(||{
   let registry=crate::os_store::SnapshotReadRegistryHandle::new();let identity=registry.identity();
@@ -77,7 +77,7 @@ fn original_returned_read_registry_parallel_aliases_credit_exactly_one_frame(){
 
 #[test]
 fn original_read_return_refusals_preserve_payload_and_lease(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🔌️plugin/♻️lifecycle/🏪️stores/🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🔌️plugin/♻️lifecycle/🏪️stores/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let source=Arc::new(41u32);let registry=crate::os_store::SnapshotReadRegistryHandle::new();let identity=registry.identity();let lease=registry.try_issue(source.clone()).unwrap_or_else(|_|panic!("actual original read slot"));let index=lease.index;let generation=lease.generation;let mut read=super::super::SnapshotRead::new(source.clone(),lease);
  for refusal in fixture["readReturn"]["refusals"].as_array().unwrap(){
   let refusal=refusal.as_str().unwrap();let mut saved_owner=None;let mut busy=None;
@@ -105,7 +105,7 @@ fn registered_owned_serializer_rejections_preserve_exact_read_and_options(){
  fn demand(_: &OwnedSerializerRequest)->Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand,ValueError>{Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand{capacity_bytes:128,depth:1})}
  fn refuse(request:OwnedSerializerRequest,_:RetainedCloneGrant)->Result<OwnedSerializerAdmission,OwnedSerializerRefusal>{CALLS.fetch_add(1,std::sync::atomic::Ordering::Relaxed);Err(OwnedSerializerRefusal{error:ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"fixture refuses original request after valid generic admission"),request,progress:Default::default()})}
  fn transport(_: &IoPayload,_: &mut crate::io::io_mechanism::IoRunControl<'_,'_>)->IoResult<IoPayload>{Ok(IoOutcome::clean(IoPayload::Binary(Vec::new())))}
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../🚪️io/📤️serialization/📦️owned/🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../🚪️io/📤️serialization/📦️owned/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let source=Arc::new(73u32);let registry=crate::os_store::SnapshotReadRegistryHandle::new();let revision=[7u8;32];assert!(registry.publish_authority(9,revision));
  for row in corpus["cases"].as_array().unwrap(){
   let foreign=Dialect{artifact_kind:match row["format"].as_str().unwrap(){"png"=>"png","svg"=>"svg",_=>"pdf"},standard:StandardId("1"),subset:SubsetId::ANY};
@@ -130,7 +130,7 @@ fn registered_owned_serializer_rejections_preserve_exact_read_and_options(){
 #[test]
 fn original_registry_alias_close_requires_funded_atomic_last_custody(){
  use crate::os_store::SnapshotReadRegistryAliasRetirement as Alias;
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🔒️registry/♻️retirement/🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🔒️registry/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let mut others=Vec::with_capacity(row["otherAliases"].as_u64().unwrap()as usize);
   let(registry,birth)=observe(crate::os_store::SnapshotReadRegistryHandle::new);assert!(!birth.overflowed);assert_eq!(birth.released_bytes,0);let identity=registry.identity();
@@ -149,7 +149,7 @@ fn original_registry_alias_close_requires_funded_atomic_last_custody(){
 #[test]
 fn original_registry_parallel_aliases_match_independent_arc_custody(){
  use crate::os_store::{SnapshotReadRegistryAliasRetirement as Alias,SnapshotReadRegistryHandle as Handle};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🔒️registry/♻️retirement/🧫️fixtures/🔣️.json")).unwrap();let shares=fixture["parallelShares"].as_u64().unwrap()as usize;assert_eq!(shares,2);let maximum=fixture["maximumSteps"].as_u64().unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🔒️registry/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let shares=fixture["parallelShares"].as_u64().unwrap()as usize;assert_eq!(shares,2);let maximum=fixture["maximumSteps"].as_u64().unwrap();
  let((left,right),birth)=observe(||{let registry=Handle::new();let right=Alias::new(registry.clone());(Alias::new(registry),right)});assert!(!birth.overflowed);assert_eq!(birth.released_bytes,0);
  let barrier=std::sync::Barrier::new(shares);let drain=|owner:Alias|{let mut slot=Some(owner);barrier.wait();let(mut released,mut winners)=(0,0);for _ in 0..maximum{let Some(owner)=slot.as_ref()else{break;};let frame=owner.frame_byte_demand().unwrap();let demand=crate::os_store::snapshot_registry_alias_demands(&slot).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth,..Default::default()};let(step,heap)=observe(||crate::os_store::snapshot_registry_alias_close_step(&mut slot,grant).unwrap());assert!(!heap.overflowed);assert_eq!(heap.requested_bytes,0);assert_eq!(heap.released_bytes,step.progress().released_bytes);assert!(step.progress().fits(grant));released+=heap.released_bytes;winners+=usize::from(frame!=0&&heap.released_bytes==frame);}assert!(slot.is_none());let(_,heap)=observe(||drop(slot));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));(released,winners)};
  let actual=std::thread::scope(|scope|{let left=scope.spawn(||drain(left));let right=scope.spawn(||drain(right));[left.join().unwrap(),right.join().unwrap()]});let actual=(actual.iter().map(|row|row.0).sum::<usize>(),actual.iter().map(|row|row.1).sum::<usize>());assert_eq!(actual,(birth.requested_bytes,1));
@@ -160,7 +160,7 @@ fn original_registry_parallel_aliases_match_independent_arc_custody(){
 #[test]
 fn original_registry_last_custody_preserves_unretired_slot_on_refusal(){
  use crate::os_store::{SnapshotReadRegistryAliasRetirement as Alias,SnapshotReadRegistryHandle as Handle};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🔒️registry/♻️retirement/🧫️fixtures/🔣️.json")).unwrap();let source=Arc::new(fixture["occupiedSlotValue"].as_u64().unwrap()as u32);let pointer=Arc::as_ptr(&source);
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🔒️registry/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let source=Arc::new(fixture["occupiedSlotValue"].as_u64().unwrap()as u32);let pointer=Arc::as_ptr(&source);
  let(registry,birth)=observe(Handle::new);assert!(!birth.overflowed);assert_eq!(birth.released_bytes,0);let identity=registry.identity();let lease=registry.try_issue(source.clone()).unwrap_or_else(|_|panic!("original occupied-slot admission"));let index=lease.index;let generation=lease.generation;drop(lease);let mut slot=Some(Alias::new(registry));
  let demand=crate::os_store::snapshot_registry_alias_demands(&slot).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth,..Default::default()};let(step,heap)=observe(||crate::os_store::snapshot_registry_alias_close_step(&mut slot,grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,demand.release_bytes));assert_eq!(heap.released_bytes,step.progress().released_bytes);let mut released=heap.released_bytes;let registry=slot.as_ref().unwrap();assert_eq!(registry.identity(),identity);assert_eq!(registry.frame_byte_demand().unwrap(),0);assert!(registry.contains(index,generation));
  let demand=crate::os_store::snapshot_registry_alias_demands(&slot).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth,..Default::default()};let(result,heap)=observe(||crate::os_store::snapshot_registry_alias_close_step(&mut slot,grant));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let registry=slot.as_ref().unwrap();assert_eq!(registry.identity(),identity);assert!(registry.contains(index,generation));

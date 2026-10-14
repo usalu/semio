@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧩️ Puzzle artifact test infrastructure router: `bun ./📜️script.ts test`. */
 import { resolve } from "node:path";
 import Ajv from "ajv";
 import { runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -320,7 +320,7 @@ class PublicationAuthorityAuditScript extends BundleScript {
     const onlyOwner = segments[0];
     const puzzleRoot = resolve(this.root, "../..");
     const windowOwnershipCases = await validateWindowOwnershipSchemas(puzzleRoot);
-    const fixture = await Bun.file(resolve(puzzleRoot, "🧫️fixtures/🔏️publication-authority/🔣️.json")).json() as PublicationFixture;
+    const fixture = await Bun.file(resolve(puzzleRoot, "🧪️tests/🧫️fixtures/🔏️publication-authority/🔣️.json")).json() as PublicationFixture;
     if (!fixtureOracle(fixture)) throw new Error("Puzzle publication fixture failed the independent semantic oracle");
     const auditedOwners = onlyOwner ? fixture.owners.filter((owner) => owner.owner === onlyOwner) : fixture.owners;
     if (onlyOwner && auditedOwners.length === 0) {

@@ -1,8 +1,0 @@
-{
-  "mutation": "createWaterSystem",
-  "index": 1,
-  "id": 430,
-  "fixtureCount": 4,
-  "peakFlowLS": 0.15,
-  "scheduleId": 2
-}

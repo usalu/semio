@@ -1,4 +1,5 @@
 //! 🔋️ Handcrafted Energy model entities and ordered structural ownership.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::EnergyModelSnapshot;
 use crate::model::*;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,RowWriter,reconstruct_text}};
@@ -10,14 +11,19 @@ fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framewor
 #[path="🗓️schedules/🦀️.rs"]mod schedules;
 #[path="📏️cells/🦀️.rs"]pub(super)mod semantic_cells;
 pub const SCHEMA:&str=include_str!("🗄️.sql");
-impl store::os_store::serialization::ArtifactSqliteSnapshot for EnergyModelSnapshot{
- const SQLITE_SCHEMA:&'static str=SCHEMA;
+impl store::os_store::serialization::ArtifactSqliteSnapshotHost for EnergyModelSnapshot{
+ 
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:store::sqlite_snapshot::SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{admit(self,c)}
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native::decode(payload,c,native_control)}
  fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{native::encode(self,encoding,c,native_owner)}
- fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{project(self,c)}
- fn from_sqlite_database(database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{reconstruct(database,c)}
+ 
+ 
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.energy.model"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(invalid("Energy snapshot dialect differs")))}c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(store::io_schema::IoError::from_value_error)?;Ok(store::io_schema::IoOutcome::clean(()))}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for EnergyModelSnapshot {
+const SQLITE_SCHEMA:&'static str=SCHEMA;
+fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{project(self,c)}
+fn from_sqlite_database(database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{reconstruct(database,c)}
 }
 const DOCUMENT:&[FloatColumn]=&[FloatColumn::Binary64(4),FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9)];
 const MONTH:&[FloatColumn]=&[FloatColumn::Binary64(3),FloatColumn::Binary64(4)];

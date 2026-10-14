@@ -788,7 +788,7 @@ fn brep_child_handle_for_text(slug: &str, content: &str) -> store::os_store::art
 /// `genesis_gis_map_child_pack`; without it the archive closure reports `Incomplete` and every example
 /// switch fails.
 pub fn genesis_process3d_child_pack(snapshot: &Process3dSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     match slot {
         "stockSolid" if child_id == snapshot.stock_solid.child_id => Some(<SemioBrepSnapshot as ArtifactPack>::encode_pack(&brep_snapshot_for_working_solid(&snapshot.stock_payload.solid))),
         "steps" if child_id == snapshot.steps.child_id => {

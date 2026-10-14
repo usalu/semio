@@ -5,6 +5,8 @@ pub trait WorkerJobAdmissionControl {
     fn admission_identity(&self)->(OperationId,Generation);
     fn admission_grant(&self)->Result<RetainedCloneGrant,ValueError>;
     fn admission_is_open(&self)->bool;
+    /// ♻️ Cancellation keeps paid cleanup available within the original fuel and deadline.
+    fn retirement_is_open(&self)->bool;
     /// 🪪️ The original cancellation token of the admitting context, when it carries one.
     fn admission_cancel(&self)->Option<&CancelToken>{None}
     fn receive_admission(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>;
@@ -18,12 +20,14 @@ impl WorkerJobAdmissionControl for WorkerJobAdmissionContext<'_>{
     fn admission_identity(&self)->(OperationId,Generation){(self.operation,self.generation)}
     fn admission_grant(&self)->Result<RetainedCloneGrant,ValueError>{if !self.recipient.fits(self.budget.retained){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"session admission recipient exceeds its original normal authority"))}Ok(RetainedCloneGrant{maximum_items:self.budget.retained.maximum_items-self.recipient.copied_items,maximum_copy_bytes:self.budget.retained.maximum_copy_bytes-self.recipient.copied_bytes,maximum_capacity_bytes:self.budget.retained.maximum_capacity_bytes-self.recipient.retained_capacity_bytes,maximum_release_bytes:self.budget.retained.maximum_release_bytes-self.recipient.released_bytes,maximum_depth:self.budget.retained.maximum_depth})}
     fn admission_is_open(&self)->bool{self.budget.fuel>0&&(self.now_us)().is_some_and(|now|now<self.budget.deadline_us)}
+    fn retirement_is_open(&self)->bool{self.admission_is_open()}
     fn receive_admission(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{if !progress.fits(self.admission_grant()?){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"session birth receipt exceeds remaining original normal authority"))}self.recipient.copied_items+=progress.copied_items;self.recipient.copied_bytes+=progress.copied_bytes;self.recipient.retained_capacity_bytes+=progress.retained_capacity_bytes;self.recipient.released_bytes+=progress.released_bytes;Ok(())}
 }
 impl WorkerJobAdmissionControl for StepContext<'_>{
     fn admission_identity(&self)->(OperationId,Generation){(self.operation,self.generation)}
     fn admission_grant(&self)->Result<RetainedCloneGrant,ValueError>{if !self.retained_progress().fits(self.retained){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"session context recipient exceeds original normal authority"))}Ok(self.retained_grant())}
     fn admission_is_open(&self)->bool{!self.is_cancelled()&&!self.should_yield()}
+    fn retirement_is_open(&self)->bool{!self.should_yield()}
     fn admission_cancel(&self)->Option<&CancelToken>{Some(self.original_cancel_token())}
     fn receive_admission(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{self.consume_retained(progress)}
 }

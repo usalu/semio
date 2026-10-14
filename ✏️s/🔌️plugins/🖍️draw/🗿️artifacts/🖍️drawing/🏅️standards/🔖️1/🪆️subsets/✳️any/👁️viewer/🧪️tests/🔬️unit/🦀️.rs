@@ -22,7 +22,7 @@ async fn drawing_viewer_restores_edited_archive_and_preserves_history() {
     let mut editor = Box::new(laws::new_app_with_registry::<EditorApp<DrawingPlayApp>>(|| App { definition: create_drawing_app(), examples: Vec::new() }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
     let mut viewer = Box::new(laws::new_app_with_registry::<ViewerApp<DrawingViewer>>(|| App { definition: create_drawing_viewer(), examples: Vec::new() }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
     let mut reopened = Box::new(laws::new_app_with_registry::<EditorApp<DrawingPlayApp>>(|| App { definition: create_drawing_app(), examples: Vec::new() }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🕰️history/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🕰️history/🔣️.json")).unwrap();
     let meta = laws::meta(fixture["author"].as_str().unwrap());
     editor.bind_instance_id(meta.instance_id).await;
     viewer.bind_instance_id(meta.instance_id + 1).await;

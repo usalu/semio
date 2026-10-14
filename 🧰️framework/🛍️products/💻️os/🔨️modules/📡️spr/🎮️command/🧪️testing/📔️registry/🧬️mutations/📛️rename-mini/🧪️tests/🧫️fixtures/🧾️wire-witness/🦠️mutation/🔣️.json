@@ -1,0 +1,6 @@
+{
+  "operation": "renameMini",
+  "payload": {
+    "newName": "b"
+  }
+}

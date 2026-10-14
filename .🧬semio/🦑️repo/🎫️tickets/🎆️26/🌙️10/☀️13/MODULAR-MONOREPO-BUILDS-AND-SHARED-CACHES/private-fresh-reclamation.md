@@ -1,0 +1,13 @@
+# Private Fresh Generation Reclamation
+
+Reclaimed only `.🧬semio/🦑️repo/⚡️cache/fChPzBn/t`: 24,850 compiler-output files, 23,576,654,165 bytes. Disk availability increased from less than 238 MiB to 24 GiB. No shared/default Cargo store or active working directory was removed.
+
+The generation belongs to fresh Play build 10 from the closed BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT ticket. Its retained `p.json` declares one Hub workspace ownership plan. Coordinator `fresh-10.log` names this exact generation; `fresh-10.status` records start at local 2026-10-12 23:40:25 and failed exit 1 at 2026-10-13 02:01:08. The log ends with original process termination. A numeric endedMs execution report was absent; the independent coordinator exit receipt supplied final completion evidence. Root mtime was 2026-10-12T21:42:08Z; audit UTC time was 2026-10-13T19:11:57Z.
+
+The historical fresh launcher invokes a new fresh build each time, without accepting this directory or a resume argument. The current neutral fresh generation constructor creates a new random f-prefix directory with mkdtemp, while warm runs use separate shared stores and run directories. Existing ticket history describes this cache as a cold generation. No authored source/configuration points at this specific path as a default or reusable compiler store.
+
+A sanitized full process-and-environment scan found zero generation-path references. `lsof -nP +D` found zero open descriptors under its compiler store. The temporary canonical ticket script rechecked process/environment and open-file absence immediately before removal, rejected links or recent stores, and held current cache-prune and compiler-profile leases in `.cache/framework/leases`. It received the incoming original process invocation, used its cancellation, remaining deadline, progress and continuation ports, and checked control during every async file removal.
+
+The existing provenance ledger was moved from t/semio-cargo-provenance to fChPzBn/provenance before deleting compiler outputs. Original plan p.json, output o.log, Nx data d, Nx task cache n, and provenance remain. The dedicated input script is fresh-reclaim/📜️script.ts in this ticket. Actual execution used Bun through Nx exec and exited successfully. Raw evidence remains under this ticket’s generated folder until ticket cleanup.
+
+The narrow incremental gate passed 1 test with 19 assertions and the independent fast-glob oracle. Real previews could reclaim only 719,291 bytes from three prototype sessions and 109,173 bytes from one debug session. Those previews alone could not provide build headroom; the private-store ownership and completed exit proof justified the targeted reclamation.

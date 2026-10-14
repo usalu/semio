@@ -111,7 +111,7 @@ pub(crate) fn parse_table_snapshot_body(body: &str) -> Result<SemioTableSnapshot
 }
 
 /// 🎁 Real structured text/binary codecs, wrapped in the repo-wide `store::semio_format` envelope.
-impl store::os_store::serialization::ArtifactDsl for SemioTableSnapshot {
+impl pack::snapshot::ArtifactDsl for SemioTableSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIOTABLE_DOCUMENT_SCHEMA
@@ -127,7 +127,7 @@ impl store::os_store::serialization::ArtifactDsl for SemioTableSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_table_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -154,19 +154,19 @@ pub fn decode_semio_table_snapshot_json(text: &str) -> Result<SemioTableSnapshot
 }
 
 /// 📝️ Parses `s.stdio.semio.table` DSL text into a [`SemioTableSnapshot`] — a named pass-through of this snapshot's own
-/// `store::os_store::serialization::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
+/// `pack::snapshot::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
 /// crate, so `📊️mutate-semio-table`'s `identity-round-trip` scenario reaches the real committed
 /// artifact (`../../🖼️assets/📃️sheet/🗣️.dsl.semio`) through this instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_table_dsl(text: &str) -> Result<SemioTableSnapshot, String> {
-    <SemioTableSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <SemioTableSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
 /// 📝️ Renders a [`SemioTableSnapshot`] back as `s.stdio.semio.table` DSL text — the inverse of
 /// [`parse_semio_table_dsl`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_table_dsl(snapshot: &SemioTableSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
+    pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

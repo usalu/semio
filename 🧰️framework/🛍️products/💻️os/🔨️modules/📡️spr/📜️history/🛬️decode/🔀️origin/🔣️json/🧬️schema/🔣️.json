@@ -2,7 +2,9 @@
   "type": "object",
   "required": [
     "limits",
-    "grant"
+    "grant",
+    "source",
+    "control"
   ],
   "additionalProperties": false,
   "properties": {
@@ -60,6 +62,52 @@
           "minimum": 1
         },
         "depth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "operation",
+        "generation",
+        "pageBytes",
+        "prefix",
+        "suffix"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "pageBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "prefix": {
+          "type": "string",
+          "minLength": 1
+        },
+        "suffix": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumAllocationBytes"
+      ],
+      "properties": {
+        "maximumAllocationBytes": {
           "type": "integer",
           "minimum": 1
         }

@@ -25,5 +25,8 @@
   "nx": {
     "includedScripts": []
   },
-  "license": "LGPL-3.0-or-later"
+  "license": "LGPL-3.0-or-later",
+  "devDependencies": {
+    "@semio-tech/framework": "workspace:*"
+  }
 }

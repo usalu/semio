@@ -257,7 +257,7 @@ mod long {
 
     #[test]
     fn artifact_chunk_cas_neutral_fixture_matches_repository_sha256() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("fixture JSON");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("fixture JSON");
         let space_id = fixture["spaceId"].as_str().expect("space id");
         let assert_vector = |vector: &serde_json::Value| {
             let length = usize::try_from(vector["length"].as_u64().expect("length")).expect("bounded length");

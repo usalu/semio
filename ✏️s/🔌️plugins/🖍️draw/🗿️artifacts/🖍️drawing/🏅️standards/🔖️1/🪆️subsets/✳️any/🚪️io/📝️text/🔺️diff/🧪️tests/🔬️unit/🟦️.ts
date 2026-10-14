@@ -1,7 +1,7 @@
 /** 🧪️ Typed sparse patch slots preserve clear independently of transport. */
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import fixture from "../../../../../🧫️fixtures/🔺️diff/🩹️typed-clear/🔣️.json";
+import fixture from "../../../../../🧪️tests/🧫️fixtures/🔺️diff/🩹️typed-clear/🔣️.json";
 import {parseDrawingLayerPatch} from "../../../../../🧬️schema/🔺️diff/🟦️.ts";
 import {decodeDrawingDiffJson} from "../../🟦️.ts";
 import documentSchema from "../../../../../🧬️schema/🔣️.json";

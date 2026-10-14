@@ -1,0 +1,7 @@
+{
+  "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔬️unit/🟦️.ts",
+  "from": "new URL(\"🧫️fixtures/🔣️.json\", base)",
+  "to": "new URL(\"../../🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json\", base)",
+  "before": "933d3fafcda0ac50a8897a1c4bd9a6006768d131ca623cc68d2eea0927a2bfe3",
+  "after": "0b551e654840db33763b4b1722e1bdaa0864ec32a8b2e0f36808f5a3152f90f5"
+}

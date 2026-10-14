@@ -2,12 +2,12 @@ import { expect, test } from "bun:test";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { SchemaScript } from "../../../../../../../../📜️script.ts";
-import { createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import Ajv from "ajv";
 import { loadProductionSchemaEntriesV1 } from "../🟦️.ts";
 
 const schema=JSON.parse(readFileSync(new URL("../../../../../../../🔨️modules/🧬️schema/🔣️.json",import.meta.url),"utf8"));
-const examples=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+const examples=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
 const oracle=new Ajv({strict:false}).compile(schema);
 
 test("production schema registry consumes fresh producer output with independent JSON and Ajv",async()=>{

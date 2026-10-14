@@ -1,0 +1,5 @@
+{
+  "operation": "addCounterThenNotifyForeign",
+  "delta": 3,
+  "foreignCount": 2
+}

@@ -1,14 +1,14 @@
 import * as sqliteOwner from "../🟦️.ts";
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
-import choices from "../🧫️fixtures/🛂️choices.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+import choices from "./🧫️fixtures/🛂️choices.json";
 import schema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import * as snapshot from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {Database} from "bun:sqlite";
 import {Buffer} from "node:buffer";
-import controls from "../🧫️fixtures/🎛️control.json";
-import words from "../🧫️fixtures/🔢️binary64.json";
+import controls from "./🧫️fixtures/🎛️control.json";
+import words from "./🧫️fixtures/🔢️binary64.json";
 import { DIN18599_SQLITE_SCHEMA, din18599SnapshotToSqliteDatabase, din18599SnapshotFromSqliteDatabase, type Din18599SqliteSnapshot } from "../🟦️.ts";
 import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
@@ -38,7 +38,7 @@ test("DIN18599 expensive nested operations support initial cancellation and boun
 });
 
 import NormSemanticAjv from "ajv/dist/2020.js";
-import normSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {din18599SnapshotToSqliteDatabase as normSemanticProject,din18599SnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
 import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

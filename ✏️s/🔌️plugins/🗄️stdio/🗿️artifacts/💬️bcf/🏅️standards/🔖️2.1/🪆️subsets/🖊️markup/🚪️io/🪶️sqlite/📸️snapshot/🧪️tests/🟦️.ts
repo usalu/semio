@@ -1,4 +1,4 @@
-import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
+import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
 const canceledKind=refusalFixture.cases.find(item=>item.id==="canceled-projection")!.expectedKind;
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
@@ -6,9 +6,9 @@ import Ajv from "ajv";
 import {buildSchema,graphqlSync} from "graphql";
 import schema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import artifactSchema from "../../../../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
-import corpus from "../🧫️fixtures/🔢️binary64.json";
-import controls from "../🧫️fixtures/🎛️control.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔢️binary64.json";
+import controls from "./🧫️fixtures/🎛️control.json";
 import {parseBcfSnapshot,type BcfSnapshot,type BcfPoint3} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {parseBcfSnapshotJson} from "../../../📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import {BCF_SQLITE_SCHEMA,bcfSnapshotToSqliteDatabase,bcfSnapshotFromSqliteDatabase} from "../🟦️.ts";
@@ -33,7 +33,7 @@ test("BCF every binary64 word survives both camera choices",async()=>{for(const 
 test("BCF rejects invalid owners ordinals choices and bounded cancellation",async()=>{const snapshot=ownedFixture();const database=await bcfSnapshotToSqliteDatabase(snapshot);for(const sql of ["UPDATE bcf_topic SET document_id=99 WHERE id=1","UPDATE bcf_topic_label SET ordinal=99 WHERE id=1","UPDATE bcf_components SET default_visibility=2 WHERE id=1","UPDATE bcf_camera SET kind='unknown' WHERE id=1","DELETE FROM bcf_perspective_camera","DELETE FROM bcf_camera","DELETE FROM bcf_components","UPDATE bcf_raw_part SET ordinal=99 WHERE id=1"]){const db=Database.deserialize(await exportSqliteDatabase(database));try{db.run("PRAGMA ignore_check_constraints=ON");db.run(sql);await expect(bcfSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).rejects.toThrow();}finally{db.close();}}await expect(bcfSnapshotToSqliteDatabase(snapshot,{maxRows:1})).rejects.toThrow();await expect(bcfSnapshotFromSqliteDatabase(database,{maxValueBytes:0})).rejects.toThrow();const large:BcfSnapshot={...snapshot,topics:[{...snapshot.topics[0]!,labels:Array(2000).fill("label")}]};const cancel=new AbortController();let reached=false;await expect(bcfSnapshotToSqliteDatabase(large,{signal:cancel.signal,onProgress:event=>{if(event.completed>=256){reached=true;cancel.abort()}}})).rejects.toHaveProperty("kind",canceledKind);expect(reached).toBe(true);});
 
 
-import completeSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import completeSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import{independentSqliteExtent as completeIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
 test("BCF complete independent cells preserve copied limits and required empty metadata",async()=>{

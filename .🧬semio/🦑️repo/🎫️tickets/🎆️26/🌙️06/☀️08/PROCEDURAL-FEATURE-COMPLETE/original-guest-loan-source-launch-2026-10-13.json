@@ -1,0 +1,18 @@
+{
+  "name": "🧪️test🔌️plugin🎟️original-guest-loan📦️source",
+  "type": "node-terminal",
+  "request": "launch",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "NX_TUI": "false",
+    "NX_DAEMON": "false",
+    "NX_CACHE_PROJECT_GRAPH": "false",
+    "NX_ISOLATE_PLUGINS": "false",
+    "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"procedural:Host:original-guest-source\",\"maximumElapsedMilliseconds\":3600000}"
+  },
+  "presentation": {
+    "group": "9_gates",
+    "order": 900.058154794
+  },
+  "command": "bun nx run @semio-tech/framework-plugin-web:test-original-guest-loan --excludeTaskDependencies --skip-nx-cache --skip-remote-cache --output-style=stream"
+}

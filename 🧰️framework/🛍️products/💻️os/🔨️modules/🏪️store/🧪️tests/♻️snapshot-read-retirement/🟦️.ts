@@ -5,7 +5,7 @@ import { applyPatch } from "fast-json-patch";
 type Case = { name: string; issued: number; cursor: number; returned: number[]; visits: (number | null)[] };
 
 export function testSnapshotReadRetirement(): void {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/♻️snapshot-read-retirement/🔣️.json", import.meta.url), "utf8")) as { cases: Case[] };
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/♻️snapshot-read-retirement/🔣️.json", import.meta.url), "utf8")) as { cases: Case[] };
   for (const row of fixture.cases) {
     let occupied: Record<string, boolean> = Object.fromEntries(Array.from({ length: row.issued }, (_, index) => [String(index), row.returned.includes(index)]));
     let cursor = row.cursor;

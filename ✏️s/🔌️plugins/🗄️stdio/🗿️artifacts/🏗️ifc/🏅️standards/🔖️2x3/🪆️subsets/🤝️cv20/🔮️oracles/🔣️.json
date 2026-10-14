@@ -188,14 +188,14 @@
       "files": [
         {
           "role": "expected-before-ifc",
-          "path": "../🧫️fixtures/🏗️set-structural-entity-applied/⬅️before.ifc",
+          "path": "../🧪️tests/🧫️fixtures/🏗️set-structural-entity-applied/⬅️before.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:320f5915d2ce0c3384c779c8ff9eb7e471aaca3bba64ce909760559b452d969c",
           "bytes": 188288
         },
         {
           "role": "expected-after-ifc",
-          "path": "../🧫️fixtures/🏗️set-structural-entity-applied/➡️after.ifc",
+          "path": "../🧪️tests/🧫️fixtures/🏗️set-structural-entity-applied/➡️after.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:14584638b88eee1234e09dc835805d57546518898a0abf5f4546d78370d3d8f4",
           "bytes": 188266
@@ -238,14 +238,14 @@
       "files": [
         {
           "role": "expected-before-ifc",
-          "path": "../🧫️fixtures/📐️set-project-units-applied/⬅️before.ifc",
+          "path": "../🧪️tests/🧫️fixtures/📐️set-project-units-applied/⬅️before.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:320f5915d2ce0c3384c779c8ff9eb7e471aaca3bba64ce909760559b452d969c",
           "bytes": 188288
         },
         {
           "role": "expected-after-ifc",
-          "path": "../🧫️fixtures/📐️set-project-units-applied/➡️after.ifc",
+          "path": "../🧪️tests/🧫️fixtures/📐️set-project-units-applied/➡️after.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:e6dffd11d8e8176969235491b09c7940cd7e21dfd498b65171bab9d2eb3689cf",
           "bytes": 188294
@@ -288,14 +288,14 @@
       "files": [
         {
           "role": "expected-before-ifc",
-          "path": "../🧫️fixtures/📍️set-product-placement-applied/⬅️before.ifc",
+          "path": "../🧪️tests/🧫️fixtures/📍️set-product-placement-applied/⬅️before.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:320f5915d2ce0c3384c779c8ff9eb7e471aaca3bba64ce909760559b452d969c",
           "bytes": 188288
         },
         {
           "role": "expected-after-ifc",
-          "path": "../🧫️fixtures/📍️set-product-placement-applied/➡️after.ifc",
+          "path": "../🧪️tests/🧫️fixtures/📍️set-product-placement-applied/➡️after.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:7a8e088c93cee7ab9da9cda70eda14db481d1ed88e8a4706e8a88355b2cb2e14",
           "bytes": 188268
@@ -338,14 +338,14 @@
       "files": [
         {
           "role": "expected-before-ifc",
-          "path": "../🧫️fixtures/👁️set-view-definition-applied/⬅️before.ifc",
+          "path": "../🧪️tests/🧫️fixtures/👁️set-view-definition-applied/⬅️before.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:320f5915d2ce0c3384c779c8ff9eb7e471aaca3bba64ce909760559b452d969c",
           "bytes": 188288
         },
         {
           "role": "expected-after-ifc",
-          "path": "../🧫️fixtures/👁️set-view-definition-applied/➡️after.ifc",
+          "path": "../🧪️tests/🧫️fixtures/👁️set-view-definition-applied/➡️after.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:ddb8dbbeb83624a79c3471f7b80a1f7e4c75d028cef2f522f0a0b5dc8e7b87cd",
           "bytes": 188289

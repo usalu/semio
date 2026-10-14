@@ -1,8 +1,9 @@
 //! 🧱️ Handwritten complete envelope, window, layer, material-segment and bridge entities.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::Din4108Snapshot;
 use crate::{EnvelopeElement,LayerDocument,LayerSegment,ThermalBridge,ThermalZone,ZoneWindow,document::ClimateZoneDe};
 use std::collections::BTreeMap;
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,NativeEncodingBound,RowWriter,reconstruct_text}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,NativeEncodingBound,RowWriter,reconstruct_text}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 
@@ -37,13 +38,13 @@ impl Din4108Snapshot {
     }
     fn admit_sqlite_values(&self, control: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase) -> Result<(), ValueError> {semio_s_artifact_norm_contract::sqlite_native::schema(Din4108Snapshot::SQLITE_SCHEMA,7,25,control)?; let mut out = RowWriter::borrowed(control, phase)?; self.write_sqlite_rows(&mut out)?; out.finish_borrowed() }
 }
-impl ArtifactSqliteSnapshot for Din4108Snapshot{
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admission::admit(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
-    const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+impl ArtifactSqliteSnapshotHost for Din4108Snapshot{
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admission::admit(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
+    
     fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload, ValueError>{
   control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;let add=|count:usize,size:usize|count.checked_add(size).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "Native semantic row count overflow"));let mut rows=1usize;for size in[self.zones.len(),self.elements.len(),self.thermal_bridges.len()]{rows=add(rows,size)?}control.check_rows(rows)?;for(index,zone)in self.zones.iter().enumerate(){rows=add(rows,zone.windows.len())?;control.check_rows(rows)?;if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,self.zones.len())?}}for(index,element)in self.elements.iter().enumerate(){rows=add(rows,element.layers.len())?;control.check_rows(rows)?;for(index,layer)in element.layers.iter().enumerate(){rows=add(rows,layer.segments.len())?;control.check_rows(rows)?;if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,element.layers.len())?}}if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,self.elements.len())?}}
   self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;
-  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
 
  fn preflight_sqlite_snapshot_encoding(&self,_:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(), ValueError>{self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;
@@ -53,8 +54,13 @@ impl ArtifactSqliteSnapshot for Din4108Snapshot{
         for bridge in &self.thermal_bridges{bound.add(16384)?;for text in [&bridge.id,&bridge.bb2_type]{bound.repeated(text.len(),24)?;}}bound.finish()
     }
 
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> { let mut out = RowWriter::new(Self::SQLITE_SCHEMA, control)?; self.write_sqlite_rows(&mut out)?; out.finish() }
-    fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{
+    
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for Din4108Snapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> { let mut out = RowWriter::new(Self::SQLITE_SCHEMA, control)?; self.write_sqlite_rows(&mut out)?; out.finish() }
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{
         validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
         let documents=entities(database,"din4108_document",8,DOCUMENT_FLOATS,control)?;if documents.len()!=1||!documents.contains_key(&1){return Err(invalid("DIN4108 requires exactly document identity one"));}let d=documents[&1];
         let zone_rows=entities(database,"din4108_zone",7,ZONE_FLOATS,control)?;let window_rows=entities(database,"din4108_window",9,WINDOW_FLOATS,control)?;let element_rows=entities(database,"din4108_element",13,ELEMENT_FLOATS,control)?;let layer_rows=entities(database,"din4108_layer",14,LAYER_FLOATS,control)?;let segment_rows=entities(database,"din4108_segment",9,SEGMENT_FLOATS,control)?;let bridge_rows=entities(database,"din4108_thermal_bridge",7,BRIDGE_FLOATS,control)?;
@@ -66,7 +72,7 @@ impl ArtifactSqliteSnapshot for Din4108Snapshot{
     }
 }
 
-pub fn sqlite_codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<Din4108Snapshot as ArtifactSqliteSnapshot>::sqlite_codec()}
+pub fn sqlite_codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<Din4108Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec()}
 
 #[path="🛂️admission/🦀️.rs"]
 pub(in crate::standards::v1::subsets::any)mod admission;

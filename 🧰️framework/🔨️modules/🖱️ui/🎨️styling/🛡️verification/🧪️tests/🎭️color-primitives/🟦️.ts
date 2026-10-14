@@ -6,7 +6,7 @@ import { chromium } from "playwright";
 import { createElement, Fragment } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { DataTable, SwatchGrid, galleryCardStyle } from "../../../📖️stories/🧭️coordination/🟦️.tsx";
-import corpus from "../../🧫️fixtures/🎭️color-primitives/🔣️.json";
+import corpus from "../🧫️fixtures/🎭️color-primitives/🔣️.json";
 
 /** 🎭️Proves native primitive equivalence and customization of actual edge/gallery styles. */
 export async function proveStylingColorPrimitivesV1(): Promise<number> {

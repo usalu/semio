@@ -32,7 +32,7 @@ struct GumballAction {
 /// 🖐️ `framework_fixed_audience` and its violation predicate answer every fixture row exactly.
 #[test]
 fn gumball_verb_audience_matches_the_language_agnostic_fixture() {
-    let fixture: GumballFixture = serde_json::from_str(include_str!("../../🧫️fixtures/🖐️gumball-verb-audience.json")).expect("gumball fixture parses");
+    let fixture: GumballFixture = serde_json::from_str(include_str!("../🧫️fixtures/🖐️gumball-verb-audience.json")).expect("gumball fixture parses");
     assert!(fixture.cases.len() >= 8, "the fixture keeps the toggle and the untouched pose, paint and pointer ids");
     for case in fixture.cases {
         let mut action = ActionDefinition::new(case.action.id.clone(), LocalizedLabel::data(case.action.id.clone()), case.action.kind, "move").with_in_palette(case.action.in_palette);

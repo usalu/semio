@@ -33,7 +33,7 @@ export type TestBrowserGisMaterializationReceiptV1 = Readonly<{
 export type TestBrowserHostStagingReceiptV1 = Readonly<{
   schema: "semio.os.test-browser-host-staging/v1";
   variant: "s";
-  profile: "dev";
+  profile: "prototype";
   moduleSetSha256: string;
   activationReceiptSha256: string;
   host: Readonly<{ pluginId: "space"; componentByteLength: number; componentSha256: string; coreSha256: string; descriptorSha256: string }>;
@@ -110,7 +110,7 @@ export function parseTestBrowserHostStagingReceiptV1(value: unknown): TestBrowse
   if (
     row.schema !== "semio.os.test-browser-host-staging/v1" ||
     row.variant !== "s" ||
-    row.profile !== "dev" ||
+    row.profile !== "prototype" ||
     !digest(row.moduleSetSha256) ||
     !digest(row.activationReceiptSha256) ||
     !host || !exactKeys(host, ["pluginId", "componentByteLength", "componentSha256", "coreSha256", "descriptorSha256"]) ||
@@ -125,7 +125,7 @@ export function parseTestBrowserHostStagingReceiptV1(value: unknown): TestBrowse
   return Object.freeze({
     schema: "semio.os.test-browser-host-staging/v1",
     variant: "s",
-    profile: "dev",
+    profile: "prototype",
     moduleSetSha256: row.moduleSetSha256,
     activationReceiptSha256: row.activationReceiptSha256,
     host: Object.freeze({ pluginId: "space", componentByteLength: host.componentByteLength, componentSha256: host.componentSha256, coreSha256: host.coreSha256, descriptorSha256: host.descriptorSha256 }),
@@ -298,13 +298,13 @@ export function closeTestBrowserHostStagingV1(
     return Object.freeze({ pluginId, artifactSha256: createHash("sha256").update(supportSha256 + moduleSha256).digest("hex") });
   });
   const previous = existsSync(join(activationRoot, ACTIVATION_RECEIPT_FILE)) ? readActivationReceipt(activationRoot) : undefined;
-  publishActivationReceipt(activationRoot, nextActivationReceipt("s", "dev", plugins, previous));
+  publishActivationReceipt(activationRoot, nextActivationReceipt("s", "prototype", plugins, previous));
   const activationPath = regularFile(join(activationRoot, ACTIVATION_RECEIPT_FILE), "Test browser activation receipt");
   const activationReceiptSha256 = sha256File(activationPath);
   const receipt = parseTestBrowserHostStagingReceiptV1({
     schema: "semio.os.test-browser-host-staging/v1",
     variant: "s",
-    profile: "dev",
+    profile: "prototype",
     moduleSetSha256: entriesDigest(entries),
     activationReceiptSha256,
     host: { pluginId: "space", componentByteLength: hostComponent.byteLength, componentSha256: hostComponent.sha256, coreSha256: component.sha256, descriptorSha256: descriptor.sha256 },
@@ -354,7 +354,7 @@ export function resolveTestBrowserHostRootsV1(environment: Environment): TestBro
   const activationPath = regularFile(join(activationRoot, ACTIVATION_RECEIPT_FILE), "Test browser activation receipt");
   if (sha256File(activationPath) !== receipt.activationReceiptSha256) throw new Error("Test browser-host activation changed after closure");
   const activation = parseActivationReceipt(readActivationReceipt(activationRoot));
-  if (activation.variant !== "s" || activation.profile !== "dev" || JSON.stringify(activation.plugins.map((row) => row.pluginId)) !== JSON.stringify(["gis", "space"])) throw new Error("Test browser-host activation is not the exact session");
+  if (activation.variant !== "s" || activation.profile !== "prototype" || JSON.stringify(activation.plugins.map((row) => row.pluginId)) !== JSON.stringify(["gis", "space"])) throw new Error("Test browser-host activation is not the exact session");
   const hostEntries = moduleSubset(entries, "🪐️space");
   const hostReceipt = hostModuleReceipt(hostEntries);
   if (hostReceipt.wasmSha256 !== receipt.host.componentSha256 || hostReceipt.semanticDescriptorSha256 !== receipt.host.descriptorSha256 || onlyCoreComponent(hostEntries).sha256 !== receipt.host.coreSha256 || hostEntries.find((entry) => entry.relativePath === "🛂️.descriptor.semio")?.sha256 !== receipt.host.descriptorSha256) throw new Error("Test browser host identity changed after closure");

@@ -10,6 +10,8 @@ use super::*;
 use crate::test_app_mutation_fixture::SetSlotChildren;
 
 store::space_members! {
+    history_limits:semio_framework_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
+    maximum_history_allocation_bytes:8388608,
     pub enum ToolRunMembers, ToolRunMembersOpen {
         Child("s.test.child", "native", "*", "semio.test/v1") => (TestSnapshot, TestMutation),
     }
@@ -123,7 +125,7 @@ async fn member_store() -> ToolRunMembers {
 }
 
 /// 🏗️ The toy app over the member roster with the parent declaring and owning its one member, run target `target`.
-async fn member_app(target: u64, caller:&mut ToyFixtureCaller<'_>) -> MemberApp {
+async fn member_app(target: u64, caller:&mut ToyFixtureCaller<'_,'_,'_>) -> MemberApp {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     let mut app = artifact_app_laws::new_registered_app_with_members::<ToyRunApp, ToolRunMembers, _>(toy_manifest(), protocol::ActorId(text(&fixture()["actor"]).into()), caller.policy, &mut caller.identity).await;
@@ -163,22 +165,22 @@ fn fresh_fold(base: &TestSnapshot, ops: &[Vec<u8>]) -> TestSnapshot {
     state
 }
 
-async fn member_action(app: &mut MemberApp, action: &str, arguments: Vec<(String, DslValue)>, caller:&mut ToyFixtureCaller<'_>) -> DslValue {
+async fn member_action(app: &mut MemberApp, action: &str, arguments: Vec<(String, DslValue)>, caller:&mut ToyFixtureCaller<'_,'_,'_>) -> DslValue {
     app.handle_action(action, Some(&DslValue::Object(arguments)), &toy_meta(), &mut caller.identity).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}")).output
 }
 
-async fn member_run_action(app: &mut MemberApp, action: &str, caller:&mut ToyFixtureCaller<'_>) -> DslValue {
+async fn member_run_action(app: &mut MemberApp, action: &str, caller:&mut ToyFixtureCaller<'_,'_,'_>) -> DslValue {
     let slot = app.tool_runs.slot().expect("a member run slot exists");
     member_action(app, action, vec![("runId".into(), DslValue::String(slot.run.to_string())), ("generation".into(), DslValue::String(slot.generation.to_string()))], caller).await
 }
 
-async fn member_start(app: &mut MemberApp, caller:&mut ToyFixtureCaller<'_>) {
+async fn member_start(app: &mut MemberApp, caller:&mut ToyFixtureCaller<'_,'_,'_>) {
     let output = member_action(app, "toolRunStart", vec![("toolId".into(), DslValue::String(text(&member_fixture()["toolId"]).into()))], caller).await;
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"), "start spawns the member run job");
     assert_eq!(app.tool_runs.member(), Some((member_key().0.as_str(), member_key().1.as_str())), "the run targets the declared member");
 }
 
-async fn member_pump_until(app: &mut MemberApp, what: &str, done: impl Fn(&MemberApp) -> bool, caller:&mut ToyFixtureCaller<'_>) {
+async fn member_pump_until(app: &mut MemberApp, what: &str, done: impl Fn(&MemberApp) -> bool, caller:&mut ToyFixtureCaller<'_,'_,'_>) {
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
     while std::time::Instant::now() < deadline {
         if done(app) {
@@ -198,9 +200,9 @@ async fn member_transaction_rows(app: &mut MemberApp) -> Vec<semio_framework::ke
     history.upserts.into_iter().filter(|row| row.applied && row.transaction.as_ref().is_some_and(|transaction| transaction.tool == tool)).collect()
 }
 
-fn member_close(app: &mut MemberApp, caller:&mut ToyFixtureCaller<'_>) {
+fn member_close(app: &mut MemberApp, caller:&mut ToyFixtureCaller<'_,'_,'_>) {
     caller.retain_original_receipts(app);
-    artifact_app_laws::close_registered_fixture_app(app,caller.policy);
+    artifact_app_laws::close_registered_fixture_app(app,caller.policy,caller.context).expect("original tool fixture paid terminal close");
     assert!(app.tool_runs.terminal_is_empty(), "the tool run ledger retires every member-owned alias and read on close");
 }
 //#endregion 🧰️MemberHarness
@@ -209,10 +211,12 @@ fn member_close(app: &mut MemberApp, caller:&mut ToyFixtureCaller<'_>) {
 /// composed read the render seams take shows exactly their fresh fold on the member base.
 #[semio_framework_async_macros::async_test]
 async fn member_run_ticks_compose_the_member_on_read_while_both_stores_stay_untouched() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let member = member_fixture();
     let units = number(&member["units"]);
@@ -233,15 +237,19 @@ async fn member_run_ticks_compose_the_member_on_read_while_both_stores_stay_unto
     member_pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
     assert_eq!(composed_member(&app), base, "an aborted member run composes the live member again");
     member_close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: a paused member run schedules nothing and every single step adds exactly one unit of member ops.
 #[semio_framework_async_macros::async_test]
 async fn member_run_pause_then_step_drives_exactly_one_unit_per_step() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let expected = &member_fixture()["pauseStep"];
     let mut app = member_app(number(&expected["target"]), &mut caller).await;
@@ -266,16 +274,20 @@ async fn member_run_pause_then_step_drives_exactly_one_unit_per_step() {
     member_run_action(&mut app, "toolRunAbort", &mut caller).await;
     member_pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
     member_close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: an aborted member run leaves zero trace — both store generations and edit logs, the command log, the history and
 /// the member state are exactly what they were before the run, and the run holds no op.
 #[semio_framework_async_macros::async_test]
 async fn member_run_abort_leaves_both_stores_the_command_log_and_the_history_untouched() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let expected = &member_fixture()["abort"];
     let mut app = member_app(number(&expected["target"]), &mut caller).await;
@@ -294,6 +306,8 @@ async fn member_run_abort_leaves_both_stores_the_command_log_and_the_history_unt
     assert_eq!(member_transaction_rows(&mut app).await.len(), rows, "abort: no history row");
     assert!(app.tool_runs.member_ops().is_empty(), "abort retires every member op");
     member_close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: a member run's finalize publishes ONE member edit — every op stamped with the run's `TransactionRef` (tool
@@ -302,10 +316,12 @@ async fn member_run_abort_leaves_both_stores_the_command_log_and_the_history_unt
 /// removes the whole run.
 #[semio_framework_async_macros::async_test]
 async fn member_run_finalize_is_one_member_edit_carrying_the_run_transaction_and_one_undo_removes_it() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let member = member_fixture();
     let mut app = member_app(number(&member["units"]), &mut caller).await;
@@ -340,16 +356,20 @@ async fn member_run_finalize_is_one_member_edit_carrying_the_run_transaction_and
     let undone = member_child(&app).snapshot_ref().clone();
     assert_eq!((undone.count as u64, undone.label.as_str()), (number(&member["countAfterUndo"]), text(&member["labelAfterUndo"])), "one member undo removes the whole run");
     member_close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW (§20.14): a member run holds at most `TOOL_RUN_MEMBER_OPS_MAX` member ops — the ceiling that bounds its one-turn
 /// finalize — and reports the cap as the localized provisional-cap step carrying that ceiling.
 #[semio_framework_async_macros::async_test]
 async fn member_run_holds_at_most_the_member_ceiling_and_reports_the_cap() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let expected = &member_fixture()["capped"];
     assert_eq!(u64::from(semio_framework_tool_run::TOOL_RUN_MEMBER_OPS_MAX), number(&expected["memberOpsMax"]));
@@ -362,4 +382,6 @@ async fn member_run_holds_at_most_the_member_ceiling_and_reports_the_cap() {
     member_run_action(&mut app, "toolRunAbort", &mut caller).await;
     member_pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
     member_close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }

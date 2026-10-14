@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "📚️Library Whole17 Actual WASM Public Package Owner Receiving Red 50",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/📜️script.ts\" receive pa11-red18 0b897ecc11c0e7109e675ea322f04fe51574fd4a97e331d906fa55d95a913d6a 1743df29ef92ccdb02b616b564ba6e4a6015f54856757314bfceb5c511140492 1743df29ef92ccdb02b616b564ba6e4a6015f54856757314bfceb5c511140492",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-red18/cache",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-red18/data",
+        "SEMIO_TEST_LEVEL": "quick",
+        "SEMIO_TEST_BUDGET_MS": "45000",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-red18/a"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 902.11
+      }
+    }
+  ],
+  "retireNames": []
+}

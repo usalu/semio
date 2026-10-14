@@ -4,7 +4,7 @@ use ui_wgpu::wgpu::{DrawList, PreparedRenderInput, PreparedRenderJob};
 use ui_wgpu::wgpu::{draw_types::UiInstance, theme::Rgba};
 
 fn contract() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/📤️gpu-export/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/📤️gpu-export/🔣️.json")).unwrap()
 }
 
 fn packet(fixture: &serde_json::Value) -> PreparedRenderPacket {

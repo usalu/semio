@@ -5,7 +5,7 @@ import ts from "typescript";
 import { build } from "esbuild";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 
 const framework = resolve(import.meta.dir, "../..");
 const entry = join(framework, fixture.entry);

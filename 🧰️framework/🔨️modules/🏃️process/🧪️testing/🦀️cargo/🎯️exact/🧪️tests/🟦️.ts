@@ -15,10 +15,10 @@ function originalInvocation(): ScriptInvocation {
  return { policy: { version: 1, owner: "exact-original-caller", maximumElapsedMilliseconds: 0 }, capabilities: {}, control: { signal: controller.signal, remainingMilliseconds: () => null, publish: () => {}, yieldContinuation: async () => {} } };
 }
 
-const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 
 test("generated cleanup preserves fresh live managed owners and admits terminal, dead or stale output", () => {
-  const law = JSON.parse(readFileSync(new URL("../🧫️fixtures/📨️managed-output.json", import.meta.url), "utf8"));
+  const law = JSON.parse(readFileSync(new URL("🧫️fixtures/📨️managed-output.json", import.meta.url), "utf8"));
   const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "managed-output-protection-"));
   const oracle = spawnSync("node", ["-e", "process.kill(Number(process.argv[1]),0)", String(process.pid)]);
   expect(oracle.status).toBe(0);

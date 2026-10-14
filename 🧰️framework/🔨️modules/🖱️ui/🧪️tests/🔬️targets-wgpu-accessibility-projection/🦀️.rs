@@ -6,7 +6,7 @@
 //! it — a GPU canvas carries no elements, so every label, description, live region and shortcut the
 //! producer authored was read off the wire and then dropped on the floor
 //! (`📓️audit-wgpu-parity-2026-09-13.md` gap #3). These laws pin the projection that closes it, over
-//! the SHARED `🧬️contract/🧫️fixtures/♿️accessibility-projection.json` corpus the contract's own Rust
+//! the SHARED `🧬️contract/🧪️tests/🧫️fixtures/♿️accessibility-projection.json` corpus the contract's own Rust
 //! laws and the TypeScript `uiAccessibilityProjectionNodeV1` twin both answer.
 //!
 //! Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
@@ -16,7 +16,7 @@ use crate::wgpu::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileStep}
 use crate::wgpu::tree::UiDocumentTree;
 use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiNodeRecord, UiRevision};
 
-const PROJECTION_FIXTURE: &str = include_str!("../../🧬️contract/🧫️fixtures/♿️accessibility-projection.json");
+const PROJECTION_FIXTURE: &str = include_str!("../../🧬️contract/🧪️tests/🧫️fixtures/♿️accessibility-projection.json");
 const FIXTURE_GENERATION: u64 = 1;
 
 fn law() -> serde_json::Value {
@@ -62,7 +62,7 @@ fn mounted_tree(law: &serde_json::Value) -> UiTree {
 /// control it mirrors: pressed for the button Toggle and checked for TreeCheckbox.
 #[test]
 fn mounted_toggle_appearances_stamp_only_their_native_live_state_channel() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧫️fixtures/♿️retained-toggle-semantics/🔣️.json")).expect("🔀️ the retained-toggle fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧪️tests/🧫️fixtures/♿️retained-toggle-semantics/🔣️.json")).expect("🔀️ the retained-toggle fixture parses");
     for (index, case) in fixture["cases"].as_array().expect("toggle cases").iter().enumerate() {
         let source_state = case["component"]["on"].as_bool().expect("authored toggle state");
         let record: UiNodeRecord = serde_json::from_value(serde_json::json!({
@@ -349,7 +349,7 @@ fn a_mounted_progress_bar_announces_its_value_or_busy_and_mounts_as_a_retained_p
 
 #[test]
 fn real_settings_fields_inherit_labels_and_explicit_control_names_win() {
-    let mut law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⚙️puzzle3d-settings-document/🔣️.json")).unwrap();
+    let mut law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⚙️puzzle3d-settings-document/🔣️.json")).unwrap();
     let tree = mounted_tree(&law);
     let projection = accessibility_projection(&tree);
     assert_eq!(projection[0].label.as_deref(), law["document"]["nodes"][0]["component"]["label"].as_str());

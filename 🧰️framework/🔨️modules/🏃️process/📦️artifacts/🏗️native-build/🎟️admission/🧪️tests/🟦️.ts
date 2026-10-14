@@ -1,9 +1,10 @@
+import { phaseCompilerAdmissionControlV1 } from "../../../../🏗️build/🎟️capacity/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { quantile } from "d3-array";
 import { appendFileSync, mkdtempSync } from "node:fs";
 import { join, resolve } from "node:path";
-import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import { buildThroughBrokerV1, tinyCargoWorkspaceV1 } from "../../🧪️tests/🦀️cargo/🟦️.ts";
 import { admissionFrozenV1, admissionOrderV1, admitWaitersV1, expectedWallMsV1, externArtifactsV1, predictPeakBytesV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, unitArtifactV1, unitKeyV1, type UnitObservationV1, type UnitRecordV1 } from "../🟦️.ts";
@@ -44,11 +45,11 @@ test("admission decisions follow the language-neutral vectors (progress, freeze,
 
 test("the store keeps the newest window per key, survives a torn trailing line and rewrites atomically under its lease", async () => {
   const directory = mkdtempSync(join(artifacts, "h-")), path = join(directory, "units.jsonl");
-  await recordUnitHistoryV1(path, fixture.store.rows as UnitObservationV1[], { leaseDirectory: artifacts, signal: AbortSignal.timeout(10_000) });
+  await recordUnitHistoryV1(path, fixture.store.rows as UnitObservationV1[], { leaseDirectory: artifacts, control: phaseCompilerAdmissionControlV1(AbortSignal.timeout(10_000),10_000,()=>undefined,()=>new Promise(done=>setImmediate(done))) });
   appendFileSync(path, "{\"v\":1,\"key\":\"torn");
   const history = await readUnitHistoryV1(path);
   expect(Object.fromEntries([...history].map(([key, rows]) => [key, rows.map((row) => row.atMs)]))).toEqual(fixture.store.kept);
-  await recordUnitHistoryV1(path, [], { leaseDirectory: artifacts, signal: AbortSignal.timeout(10_000) });
+  await recordUnitHistoryV1(path, [], { leaseDirectory: artifacts, control: phaseCompilerAdmissionControlV1(AbortSignal.timeout(10_000),10_000,()=>undefined,()=>new Promise(done=>setImmediate(done))) });
   expect([...(await readUnitHistoryV1(path)).keys()].sort()).toEqual(Object.keys(fixture.store.kept).sort());
 });
 

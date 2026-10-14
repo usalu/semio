@@ -1,10 +1,15 @@
+import {readDescriptorText,reportDescriptorProgress,PLUGIN_DESCRIPTOR_TEXT_POLICY,DescriptorTextLimitError,type DescriptorProgress} from "./📇️descriptor/📥️text/🟦️.ts";
+import {readPackageReceiptIdentity,type PackageReceiptIdentity,type PackageReceiptSource} from "./📇️descriptor/📦️package/🟦️.ts";
+export {readDescriptorText,reportDescriptorProgress,DescriptorTextLimitError} from "./📇️descriptor/📥️text/🟦️.ts";
+export type {DescriptorTextPolicy,DescriptorProgress} from "./📇️descriptor/📥️text/🟦️.ts";
+export {readPackageReceiptIdentity} from "./📇️descriptor/📦️package/🟦️.ts";
+export type {PackageReceiptIdentity,PackageReceiptRequest,PackageReceiptSource} from "./📇️descriptor/📦️package/🟦️.ts";
 import { type ArtifactDialect } from "../🧬️schema/🗿️artifact-reference/🟦️.ts";
 export {CLIPBOARD_TEXT_MAX_BYTES,CLIPBOARD_METADATA_MAX_WIRE_BYTES,CLIPBOARD_FRAGMENT_MAX_WIRE_BYTES,CLIPBOARD_PASTE_MAX_WIRE_BYTES,clipboardJsonStringBytes} from "./📋️clipboard/🟦️.ts";
 import { dialectCoordinate, parseDialectCoordinate, type IoFidelity, type IoEntryDescriptor, type IoRoute } from "../🚪️io/🧬️schema/🟦️.ts";
 import { base64StandardDecode } from "../🚪️io/🔤️base64/🟦️.ts";
 import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "../⏱️trace/🧮️memory/🟦️.ts";
 import { surfaceAppId, parseSurfaceAppId, type AppRole, type AppRef } from "../🛂️manifest/🧬️schema/🟦️.ts";
-import { COMPONENT_RECEIPT_FILE, parseComponentReceiptV1, type ComponentReceiptV1 } from "../../🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
 // #region 🎠️Kernel
 /// <reference types="vitest/importMeta" />
 /** 🎠️ `@semio-tech/framework` — plugin runtime, leases, invocation responses, and playground boot. */
@@ -34,77 +39,37 @@ export { TransientStore, defaultTransientStore, ephemeralBox, ephemeralMap, ephe
 /** 📏️ Admission ceiling for one plugin's `🔣️.json`, measured on the response text the parse
  * already needs — so the bound costs nothing, where re-serializing the parsed manifest to measure it cost a
  * full 5.4 MB `JSON.stringify` per plugin per boot and blew the frame budget on `puzzle` alone. */
-export const PLUGIN_DESCRIPTOR_CODE_UNIT_CAPACITY = 16 * 1024 * 1024;
+export const PLUGIN_DESCRIPTOR_CODE_UNIT_CAPACITY = PLUGIN_DESCRIPTOR_TEXT_POLICY.maximumCodeUnits;
 
-/** 📡️ Reads a descriptor response as text, reporting every arriving chunk as PROGRESS.
- *
- * 🐛️ `response.text()` is ONE opaque await: a descriptor that streams for a minute and a descriptor
- * whose connection is dead look identical from outside it, so the caller's idle deadline had nothing
- * to push forward and killed a load that was moving the whole time (six-pane demonstrator boot,
- * ticket 26/08/28 — five shells' small descriptor requests queued behind the shard workers' own
- * multi-hundred-MB module fetches and each died on a 30 s idle window it was never idle in). A body
- * with no reader (a test double, a `fetch` polyfill) degrades to the one-shot read, which is exactly
- * what it was before. */
-async function readDescriptorText(response: Response, onProgress: () => void): Promise<string> {
-  const reader = response.body?.getReader?.();
-  if (!reader) return response.text();
-  const decoder = new TextDecoder();
-  let text = "";
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    onProgress();
-    if (value) text += decoder.decode(value, { stream: true });
-  }
-  return text + decoder.decode();
+/** 🧭️ Attributes package admission failures to their General owner. */
+function descriptorFault(pluginId: string, code: string, detail: string): SemioFaultError {
+  return new SemioFaultError({ origin: "framework", code, severity: "error", message: `${code}: ${detail}`, scope: { pluginId }, retryable: true });
 }
 
-/** 🪪️ The package a served module was admitted as: its semantic descriptor's own package id and the component digest the
- * module's `ComponentReceiptV1` names, beside the manifest {@link fetchDescriptorManifest} answers. */
+/** 🪪️ The served module's descriptor identity and the digest its explicit receipt source admits. */
 export interface PluginPackageDescriptor {
   readonly manifest: PluginManifest;
   readonly packageId: string;
   readonly componentSha256: string;
 }
 
-/** 🧾️ The component receipt a served plugin module carries beside its entry. */
-export function pluginReceiptUrl(moduleUrl: string): string {
-  const path = moduleUrl.split(/[?#]/u)[0]!;
-  return path.slice(0, path.lastIndexOf("/") + 1) + COMPONENT_RECEIPT_FILE;
-}
-
-/** 🪪️ {@link fetchDescriptorManifest} plus the package identity a host binds hub documents by: the descriptor's package id and
- * the component digest of the module's own receipt, which must name exactly this plugin and package — a semantic descriptor names
- * no bytes, and a missing, foreign or malformed receipt is refused, never guessed. */
-export async function fetchPackageDescriptor(pluginId: string, moduleUrl: string, signal?: AbortSignal, onProgress: () => void = () => {}): Promise<PluginPackageDescriptor> {
-  const [{ descriptor, manifest }, receipt] = await Promise.all([fetchDescriptorDocument(pluginId, moduleUrl, signal, onProgress), fetchModuleReceipt(pluginId, moduleUrl, signal, onProgress)]);
+/** 🪪️ Binds {@link fetchDescriptorManifest} to a required receipt source naming the same plugin and package. */
+export async function fetchPackageDescriptor(pluginId: string, moduleUrl: string, receiptSource: PackageReceiptSource, signal?: AbortSignal, onProgress: DescriptorProgress = () => {}): Promise<PluginPackageDescriptor> {
+  signal?.throwIfAborted();
+  if (!receiptSource || typeof receiptSource.read !== "function") throw Error("Explicit package receipt source required");
+  const [{ descriptor, manifest }, identity] = await Promise.all([fetchDescriptorDocument(pluginId, moduleUrl, signal, onProgress), receiptSource.read({ pluginId, moduleUrl, signal, onProgress })]);
+  signal?.throwIfAborted();
+  let receipt: PackageReceiptIdentity;
+  try { receipt = readPackageReceiptIdentity(identity); }
+  catch { signal?.throwIfAborted(); throw descriptorFault(pluginId, "plugin.descriptor-invalid", "invalid package receipt identity"); }
   const packageId = "packageId" in descriptor && typeof descriptor.packageId === "string" ? descriptor.packageId : "";
-  if (packageId.length === 0 || "hashes" in descriptor || receipt.pluginId !== pluginId || receipt.packageId !== packageId) {
-    throw new SemioFaultError({ origin: "os", code: "plugin.descriptor-invalid", severity: "error", message: "plugin.descriptor-invalid: missing package identity", scope: { pluginId }, retryable: true });
-  }
-  return { manifest, packageId, componentSha256: receipt.wasmSha256 };
-}
-
-/** 🧾️ Reads and strict-decodes the canonical receipt a served module carries beside its entry. */
-async function fetchModuleReceipt(pluginId: string, moduleUrl: string, signal: AbortSignal | undefined, onProgress: () => void): Promise<ComponentReceiptV1> {
-  signal?.throwIfAborted();
-  const receiptUrl = pluginReceiptUrl(moduleUrl);
-  const response = await fetch(receiptUrl, signal ? { signal } : undefined);
-  onProgress();
-  signal?.throwIfAborted();
-  const refused = (detail: string) => new SemioFaultError({ origin: "os", code: "plugin.descriptor-invalid", severity: "error", message: `plugin.descriptor-invalid: ${receiptUrl} ${detail}`, scope: { pluginId }, retryable: true });
-  if (!response.ok) throw refused(`(HTTP ${response.status})`);
-  try {
-    return parseComponentReceiptV1(await readDescriptorText(response, onProgress));
-  } catch (error) {
-    signal?.throwIfAborted();
-    throw refused((error as Error).message);
-  }
+  if (packageId.length === 0 || "hashes" in descriptor || receipt.pluginId !== pluginId || receipt.packageId !== packageId) throw descriptorFault(pluginId, "plugin.descriptor-invalid", "missing package identity");
+  return { manifest, packageId, componentSha256: receipt.componentSha256 };
 }
 
 /** `onProgress` is called on the response headers and on every streamed chunk — see
  * {@link readDescriptorText} for why this fetch owes its caller a heartbeat at all. */
-export async function fetchDescriptorManifest(pluginId: string, moduleUrl: string, signal?: AbortSignal, onProgress: () => void = () => {}): Promise<PluginManifest> {
+export async function fetchDescriptorManifest(pluginId: string, moduleUrl: string, signal?: AbortSignal, onProgress: DescriptorProgress = () => {}): Promise<PluginManifest> {
   return (await fetchDescriptorDocument(pluginId, moduleUrl, signal, onProgress)).manifest;
 }
 
@@ -115,33 +80,41 @@ export function pluginDescriptorUrl(moduleUrl: string): string {
 }
 
 /** 📇️ Reads and admits one served package descriptor: owner, app roster, bounded size. */
-async function fetchDescriptorDocument(pluginId: string, moduleUrl: string, signal: AbortSignal | undefined, onProgress: () => void): Promise<{ readonly descriptor: object; readonly manifest: PluginManifest }> {
+async function fetchDescriptorDocument(pluginId: string, moduleUrl: string, signal: AbortSignal | undefined, onProgress: DescriptorProgress): Promise<{ readonly descriptor: object; readonly manifest: PluginManifest }> {
   signal?.throwIfAborted();
   const descriptorUrl = pluginDescriptorUrl(moduleUrl);
-  const fault = (code: string, detail: string) => new SemioFaultError({
-    origin: "os", code, severity: "error", message: `${code}: ${detail}`,
-    scope: { pluginId }, retryable: true,
-  });
+  const fault = (code: string, detail: string) => descriptorFault(pluginId, code, detail);
   const response = await fetch(descriptorUrl, signal ? { signal } : undefined);
-  onProgress();
-  signal?.throwIfAborted();
-  if (!response.ok) throw fault("plugin.descriptor-unavailable", `${descriptorUrl} (HTTP ${response.status})`);
-  if (response.headers?.get?.("content-type")?.toLowerCase().includes("text/html")) throw fault("plugin.descriptor-invalid", `${descriptorUrl} returned HTML`);
-  const descriptorText = await readDescriptorText(response, onProgress);
-  signal?.throwIfAborted();
-  if (descriptorText.length > PLUGIN_DESCRIPTOR_CODE_UNIT_CAPACITY) throw fault("plugin.descriptor-oversized", `${descriptorUrl} is ${descriptorText.length} code units against a ${PLUGIN_DESCRIPTOR_CODE_UNIT_CAPACITY} ceiling`);
-  let descriptor: unknown;
-  try { descriptor = JSON.parse(descriptorText); }
-  catch {
+  try {
+    await reportDescriptorProgress(onProgress, signal);
     signal?.throwIfAborted();
-    throw fault("plugin.descriptor-invalid", `${descriptorUrl} is not JSON`);
+    if (!response.ok) throw fault("plugin.descriptor-unavailable", `${descriptorUrl} (HTTP ${response.status})`);
+    if (response.headers?.get?.("content-type")?.toLowerCase().includes("text/html")) throw fault("plugin.descriptor-invalid", `${descriptorUrl} returned HTML`);
+    let descriptorText: string;
+    try { descriptorText = await readDescriptorText(response, onProgress, PLUGIN_DESCRIPTOR_TEXT_POLICY, signal); }
+    catch (error) {
+      signal?.throwIfAborted();
+      if (error instanceof DescriptorTextLimitError) throw fault("plugin.descriptor-oversized", `${descriptorUrl} exceeds its response limit`);
+      throw error;
+    }
+    signal?.throwIfAborted();
+    let descriptor: unknown;
+    try { descriptor = JSON.parse(descriptorText); }
+    catch {
+      signal?.throwIfAborted();
+      throw fault("plugin.descriptor-invalid", `${descriptorUrl} is not JSON`);
+    }
+    signal?.throwIfAborted();
+    const manifest = descriptor && typeof descriptor === "object" && "manifest" in descriptor ? descriptor.manifest : undefined;
+    if (!manifest || typeof manifest !== "object" || !("pluginId" in manifest) || typeof manifest.pluginId !== "string") throw fault("plugin.descriptor-invalid", "missing manifest owner");
+    if (manifest.pluginId !== pluginId) throw fault("plugin.descriptor-identity-mismatch", `expected ${pluginId}, received ${manifest.pluginId}`);
+    if (!("apps" in manifest) || !Array.isArray(manifest.apps)) throw fault("plugin.descriptor-invalid", "missing app roster");
+    return { descriptor: descriptor as object, manifest: normalizeManifestExamples(manifest as PluginManifest) as PluginManifest };
+  } catch (error) {
+    await response.body?.cancel(error).catch(() => {});
+    signal?.throwIfAborted();
+    throw error;
   }
-  signal?.throwIfAborted();
-  const manifest = descriptor && typeof descriptor === "object" && "manifest" in descriptor ? descriptor.manifest : undefined;
-  if (!manifest || typeof manifest !== "object" || !("pluginId" in manifest) || typeof manifest.pluginId !== "string") throw fault("plugin.descriptor-invalid", "missing manifest owner");
-  if (manifest.pluginId !== pluginId) throw fault("plugin.descriptor-identity-mismatch", `expected ${pluginId}, received ${manifest.pluginId}`);
-  if (!("apps" in manifest) || !Array.isArray(manifest.apps)) throw fault("plugin.descriptor-invalid", "missing app roster");
-  return { descriptor: descriptor as object, manifest: normalizeManifestExamples(manifest as PluginManifest) as PluginManifest };
 }
 //#endregion 📇️DescriptorAdmission
 
@@ -1175,6 +1148,7 @@ export type Fault = {
   readonly message: string;
   readonly scope: FaultScope;
   readonly span?: TextSpan;
+  readonly source?: {readonly offset?:bigint;readonly byte?:number;readonly depth?:bigint};
   readonly causes?: readonly FaultCause[];
   /** 🔣️ The named values a localized notice fills its `{name}` placeholders from (Rust `FaultParams`) — never read from `message`. */
   readonly params?: Readonly<Record<string, string>>;

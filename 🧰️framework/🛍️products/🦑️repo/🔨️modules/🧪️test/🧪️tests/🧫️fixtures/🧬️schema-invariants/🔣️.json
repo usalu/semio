@@ -1,0 +1,1895 @@
+{
+  "checkOnlyDiagnosticCodes": [
+    "schema-export-id-duplicate",
+    "schema-export-id-invalid",
+    "schema-document-id-duplicate",
+    "schema-document-id-unaddressable",
+    "schema-module-id-inconsistent",
+    "schema-document-unparseable",
+    "schema-document-not-object",
+    "schema-enum-empty",
+    "schema-cross-scope-dependency-uncataloged",
+    "schema-mutation-leaf-id",
+    "schema-mutation-leaf-schema-absent",
+    "schema-mutation-aggregate-id",
+    "schema-mutation-aggregate-kinds-redundant"
+  ],
+  "eligibilityCases": [
+    {
+      "id": "plugin-root",
+      "path": "✏️s/🔌️plugins/✒️writer",
+      "eligible": true,
+      "level": "plugin-root"
+    },
+    {
+      "id": "artifact-subset",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any",
+      "eligible": true,
+      "level": "artifact-standard-subset"
+    },
+    {
+      "id": "surface-config",
+      "path": "✏️s/🔌️plugins/✒️writer/✏️editor/🎚️config",
+      "eligible": true,
+      "level": "surface-state-lane"
+    },
+    {
+      "id": "surface-presence",
+      "path": "✏️s/🔌️plugins/✒️writer/✏️editor/👥️presence",
+      "eligible": true,
+      "level": "surface-state-lane"
+    },
+    {
+      "id": "framework-module",
+      "path": "🧰️framework/🔨️modules/🧬️schema",
+      "eligible": true,
+      "level": "framework-module"
+    },
+    {
+      "id": "framework-nested-module",
+      "path": "🧰️framework/🔨️modules/🎭️actor/↩️return",
+      "eligible": true,
+      "level": "framework-module"
+    },
+    {
+      "id": "product-module",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📁️directory",
+      "eligible": true,
+      "level": "product-module"
+    },
+    {
+      "id": "product-module-named-with-a-test-emoji",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+      "eligible": true,
+      "level": "product-module"
+    },
+    {
+      "id": "hub-area",
+      "path": "🌎️hub/💡️inference",
+      "eligible": true,
+      "level": "hub-area-module"
+    },
+    {
+      "id": "mutation-leaf",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️set-title",
+      "eligible": true,
+      "level": "mutation-leaf"
+    },
+    {
+      "id": "ui-element",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost",
+      "eligible": false,
+      "level": null
+    },
+    {
+      "id": "build-target",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "eligible": false,
+      "level": null
+    },
+    {
+      "id": "package",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
+      "eligible": false,
+      "level": null
+    },
+    {
+      "id": "fixture-collection",
+      "path": "🌎️hub/🧪️fixtures/✅️inference-approval-v1",
+      "eligible": true,
+      "level": "hub-area-module"
+    },
+    {
+      "id": "test-collection-inside-a-module",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧬️schema-invariants",
+      "eligible": true,
+      "level": "product-module"
+    },
+    {
+      "id": "per-contract-directory",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🎟️invite-capability",
+      "eligible": false,
+      "level": null
+    },
+    {
+      "id": "unclassified-directory",
+      "path": "♻️mit-bestand/🧺️demonstrator/🧩️runtime",
+      "eligible": false,
+      "level": null
+    },
+    {
+      "id": "mit-bestand-product-module",
+      "path": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime",
+      "eligible": true,
+      "level": "product-module"
+    }
+  ],
+  "exportPresenceCases": [
+    {
+      "id": "rust-definition-struct",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub struct Approval {\n    pub artifact_id: String,\n}\n",
+      "present": true
+    },
+    {
+      "id": "rust-definition-enum",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub enum Approval {\n    Granted,\n}\n",
+      "present": true
+    },
+    {
+      "id": "rust-definition-alias",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub type Approval = super::Approval;\n",
+      "present": true
+    },
+    {
+      "id": "rust-re-export-per-name",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "mod inner;\npub use inner::Approval;\n",
+      "present": true
+    },
+    {
+      "id": "rust-re-export-per-name-qualified",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub use crate::inference::approval::Approval;\n",
+      "present": true
+    },
+    {
+      "id": "rust-re-export-renamed-to-the-export",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub use crate::inference::ApprovalV1 as Approval;\n",
+      "present": true
+    },
+    {
+      "id": "rust-re-export-grouped-declares-nothing",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub use crate::inference::{Approval, Receipt};\n",
+      "present": false
+    },
+    {
+      "id": "rust-re-export-glob-declares-nothing",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub use crate::inference::*;\n",
+      "present": false
+    },
+    {
+      "id": "rust-re-export-private-declares-nothing",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "use crate::inference::Approval;\n",
+      "present": false
+    },
+    {
+      "id": "rust-re-export-crate-visible-declares-nothing",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub(crate) use crate::inference::Approval;\n",
+      "present": false
+    },
+    {
+      "id": "rust-re-export-of-another-name-declares-nothing",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub use crate::inference::Receipt;\n",
+      "present": false
+    },
+    {
+      "id": "rust-absent",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub struct Receipt {\n    pub artifact_id: String,\n}\n",
+      "present": false
+    },
+    {
+      "id": "graphql-input-keyword",
+      "format": "🔗️graphql",
+      "export": "Approval",
+      "source": "input Approval {\n  artifactId: String!\n}\n",
+      "present": true
+    },
+    {
+      "id": "graphql-unknown-keyword",
+      "format": "🔗️graphql",
+      "export": "Approval",
+      "source": "directive Approval on FIELD\n",
+      "present": false
+    },
+    {
+      "id": "protobuf-message",
+      "format": "🛰️protobuf",
+      "export": "Approval",
+      "source": "message Approval {\n  string artifact_id = 1;\n}\n",
+      "present": true
+    },
+    {
+      "id": "typescript-type-without-parser",
+      "format": "🟦️typescript",
+      "export": "Approval",
+      "source": "export type Approval = { artifactId: string };\n",
+      "present": true,
+      "parser": false
+    },
+    {
+      "id": "typescript-type-with-parser",
+      "format": "🟦️typescript",
+      "export": "Approval",
+      "source": "export type Approval = { artifactId: string };\nexport function parseApproval(value: unknown): Approval {\n  return value as Approval;\n}\n",
+      "present": true,
+      "parser": true
+    }
+  ],
+  "treeCases": [
+    {
+      "id": "seed-hub-inference-approval-fixture-wrapper",
+      "title": "The hub inference-approval fixture wrapper defines the contract it is an example of",
+      "invariant": "fixture-isolation",
+      "files": [
+        {
+          "path": "🌎️hub/🧪️fixtures/✅️inference-approval-v1/🧬️.schema.json",
+          "json": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "semio.hub.inference-approval-fixture/v1",
+            "type": "object",
+            "properties": {
+              "maximumBytes": {
+                "type": "integer"
+              },
+              "hostile": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              }
+            },
+            "$defs": {
+              "request": {
+                "type": "object",
+                "required": [
+                  "artifactId"
+                ],
+                "properties": {
+                  "artifactId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": [
+        {
+          "code": "schema-placement-forbidden-filename",
+          "path": "🌎️hub/🧪️fixtures/✅️inference-approval-v1/🧬️.schema.json"
+        },
+        {
+          "code": "schema-fixture-defines-schema",
+          "path": "🌎️hub/🧪️fixtures/✅️inference-approval-v1/🧬️.schema.json"
+        }
+      ]
+    },
+    {
+      "id": "seed-shellhost-invite-capability-contract-directory",
+      "title": "The ShellHost invite-capability contract lives in a per-contract directory under a UI element",
+      "invariant": "placement",
+      "files": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🎟️invite-capability/🧬️.schema.json",
+          "json": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/os/directory/invite-capability-transfer.v1",
+            "type": "object",
+            "properties": {
+              "state": {
+                "const": "offered"
+              }
+            }
+          }
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🎟️invite-capability/🔣️.json",
+          "json": {
+            "state": "offered"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "code": "schema-contracts-directory-forbidden",
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts"
+        },
+        {
+          "code": "schema-placement-forbidden-filename",
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🎟️invite-capability/🧬️.schema.json"
+        }
+      ]
+    },
+    {
+      "id": "valid-canonical-artifact-subset-module",
+      "title": "The canonical subset schema module is the shape everything else is measured against",
+      "invariant": "placement",
+      "files": [
+        {
+          "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+          "json": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/s/writer/writer/artifact.json",
+            "$defs": {
+              "Artifact": {
+                "type": "object",
+                "required": [
+                  "title"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "$ref": "#/$defs/Artifact"
+          }
+        }
+      ],
+      "expect": []
+    },
+    {
+      "id": "valid-mutation-leaf-payload-schema",
+      "title": "A mutation leaf is the declared authority for its own payload contract",
+      "invariant": "placement",
+      "files": [
+        {
+          "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️set-title/🔣️.json",
+          "json": {
+            "schemaVersion": 1,
+            "owner": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️set-title",
+            "semanticKind": "set-title",
+            "displayName": "Set Title",
+            "emoji": "✍️",
+            "aggregateVariant": "SetTitle",
+            "payloadSchema": "🧬️schema/🔣️.json",
+            "textOpcode": "set-title",
+            "binaryTag": null,
+            "invertibility": "self",
+            "diffParticipation": "detect",
+            "outcomeClasses": [
+              "applied"
+            ],
+            "composition": "atomic",
+            "requiredLanguageSurfaces": [
+              "rust",
+              "json-schema"
+            ]
+          }
+        },
+        {
+          "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️set-title/🧬️schema/🔣️.json",
+          "json": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutations/set-title.json",
+            "title": "SetTitle",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "title"
+            ],
+            "properties": {
+              "title": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "expect": []
+    },
+    {
+      "id": "valid-config-instance-carrying-a-schema-reference",
+      "title": "A configuration instance names the schema that validates it and defines nothing",
+      "invariant": "placement",
+      "files": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📁️directory/🎚️config/🔣️.json",
+          "json": {
+            "$schema": "../🧬️schema/🔣️.json",
+            "retainedCommandLimit": 64,
+            "presenceScope": "workspace"
+          }
+        }
+      ],
+      "expect": []
+    },
+    {
+      "id": "valid-inert-parser-corpus-declared-as-test-data",
+      "title": "A parser corpus may hold schema-shaped documents when the case declares them inert",
+      "invariant": "fixture-isolation",
+      "files": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/📥️parser-corpus/🔣️.json",
+          "json": {
+            "inertSchemaData": [
+              "🧾️draft-07-subject.json"
+            ],
+            "cases": [
+              {
+                "id": "draft-07-subject",
+                "expectDialect": "draft-07"
+              }
+            ]
+          }
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/📥️parser-corpus/🧾️draft-07-subject.json",
+          "json": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {
+              "anything": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "expect": []
+    },
+    {
+      "id": "invalid-undeclared-schema-shaped-document-in-a-test-collection",
+      "title": "The same corpus file without the inert declaration is an undeclared authority",
+      "invariant": "fixture-isolation",
+      "files": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/📥️parser-corpus/🔣️.json",
+          "json": {
+            "cases": [
+              {
+                "id": "draft-07-subject",
+                "expectDialect": "draft-07"
+              }
+            ]
+          }
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/📥️parser-corpus/🧾️draft-07-subject.json",
+          "json": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {
+              "anything": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "expect": [
+        {
+          "code": "schema-fixture-defines-schema",
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/📥️parser-corpus/🧾️draft-07-subject.json"
+        }
+      ]
+    },
+    {
+      "id": "valid-repo-test-module-owns-its-protocol-schema",
+      "title": "The test platform is a 🔨️modules member and owns its own protocol schema",
+      "invariant": "owner-eligibility",
+      "files": [
+        {
+          "path": "🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+          "json": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/repo/test/protocol.json",
+            "$defs": {
+              "TestResult": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      ],
+      "expect": []
+    },
+    {
+      "id": "invalid-ui-element-owner",
+      "title": "A 🧱️elements member consumes contracts and never owns one",
+      "invariant": "owner-eligibility",
+      "files": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️schema/🔣️.json",
+          "json": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/os/shell-host.json",
+            "$defs": {
+              "DialogOrigin": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      ],
+      "expect": [
+        {
+          "code": "schema-owner-ineligible",
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost"
+        }
+      ]
+    },
+    {
+      "id": "invalid-package-owner",
+      "title": "A 📦️packages member publishes a contract and never authors one",
+      "invariant": "owner-eligibility",
+      "files": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧬️schema/🔣️.json",
+          "json": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/repo/test/package.json",
+            "$defs": {
+              "Row": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      ],
+      "expect": [
+        {
+          "code": "schema-owner-ineligible",
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript"
+        }
+      ]
+    },
+    {
+      "id": "invalid-relocated-fixture-schema-module",
+      "title": "Relocating a fixture wrapper into a 🧬️schema module under 🧪️fixtures fixes nothing",
+      "invariant": "owner-eligibility",
+      "files": [
+        {
+          "path": "🌎️hub/🧪️fixtures/✅️inference-approval-v1/🧬️schema/🔣️.json",
+          "json": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/hub/inference-approval-fixture.json",
+            "$defs": {
+              "Request": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      ],
+      "expect": [
+        {
+          "code": "schema-fixture-defines-schema",
+          "path": "🌎️hub/🧪️fixtures/✅️inference-approval-v1/🧬️schema/🔣️.json"
+        }
+      ]
+    },
+    {
+      "id": "invalid-2020-12-dialect-inside-a-schema-module",
+      "title": "One dialect repository-wide; a 2020-12 module is a migration that did not happen",
+      "invariant": "placement",
+      "files": [
+        {
+          "path": "🌎️hub/💡️inference/🧬️schema/🔣️.json",
+          "json": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": "https://json.schemas.assets.semio-tech.com/hub/inference.json",
+            "$defs": {
+              "Approval": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      ],
+      "expect": [
+        {
+          "code": "schema-dialect-not-draft-07",
+          "path": "🌎️hub/💡️inference/🧬️schema/🔣️.json"
+        }
+      ]
+    },
+    {
+      "id": "invalid-inert-document-json-schema-facet",
+      "title": "Inert parser input never authorizes a schema contract facet",
+      "invariant": "fixture-isolation",
+      "files": [
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json",
+          "json": {
+            "inertSchemaData": [
+              "🧬️schema/🔣️.json"
+            ]
+          }
+        },
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🔣️.json",
+          "json": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "code": "schema-fixture-defines-schema",
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🔣️.json"
+        }
+      ]
+    },
+    {
+      "id": "invalid-inert-fixture-sql-schema-facet",
+      "title": "Inert parser input never authorizes a schema contract facet",
+      "invariant": "fixture-isolation",
+      "files": [
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json",
+          "json": {
+            "inertSchemaData": [
+              "🧬️schema/🪶️.sql"
+            ]
+          }
+        },
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🪶️.sql",
+          "json": {
+            "source": "CREATE TABLE example (id TEXT);\n"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "code": "schema-fixture-defines-schema",
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🪶️.sql"
+        }
+      ]
+    },
+    {
+      "id": "invalid-inert-fixture-graphql-schema-facet",
+      "title": "Inert parser input never authorizes a schema contract facet",
+      "invariant": "fixture-isolation",
+      "files": [
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json",
+          "json": {
+            "inertSchemaData": [
+              "🧬️schema/🔗️.graphql"
+            ]
+          }
+        },
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🔗️.graphql",
+          "json": {
+            "source": "type Example { id: ID! }\n"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "code": "schema-fixture-defines-schema",
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🔗️.graphql"
+        }
+      ]
+    },
+    {
+      "id": "invalid-inert-fixture-protobuf-schema-facet",
+      "title": "Inert parser input never authorizes a schema contract facet",
+      "invariant": "fixture-isolation",
+      "files": [
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json",
+          "json": {
+            "inertSchemaData": [
+              "🧬️schema/🛰️.proto"
+            ]
+          }
+        },
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🛰️.proto",
+          "json": {
+            "source": "syntax = \"proto3\"; message Example { string id = 1; }\n"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "code": "schema-fixture-defines-schema",
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🛰️.proto"
+        }
+      ]
+    },
+    {
+      "id": "invalid-inert-fixture-interface-schema-facet",
+      "title": "Inert parser input never authorizes a schema contract facet",
+      "invariant": "fixture-isolation",
+      "files": [
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json",
+          "json": {
+            "inertSchemaData": [
+              "🧬️schema/🟦️.ts"
+            ]
+          }
+        },
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🟦️.ts",
+          "json": {
+            "source": "export interface Example { id: string }\n"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "code": "schema-fixture-defines-schema",
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🟦️.ts"
+        }
+      ]
+    }
+  ],
+  "resolutionCases": [
+    {
+      "id": "resolves-the-normative-json-schema-implementation",
+      "declareResolution": true,
+      "uri": "schema://s.writer.writer/Artifact",
+      "expect": {
+        "resolved": true,
+        "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+        "codes": []
+      }
+    },
+    {
+      "id": "resolves-a-named-format-the-consumer-asks-for",
+      "declareResolution": true,
+      "uri": "schema://s.writer.writer/Artifact",
+      "format": "🦀️rust",
+      "expect": {
+        "resolved": true,
+        "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+        "codes": []
+      }
+    },
+    {
+      "id": "malformed-uri",
+      "declareResolution": true,
+      "uri": "schema://s.writer.writer/artifact",
+      "expect": {
+        "resolved": false,
+        "codes": [
+          "schema-uri-malformed"
+        ]
+      }
+    },
+    {
+      "id": "unknown-scope",
+      "declareResolution": true,
+      "uri": "schema://s.writer.absent/Artifact",
+      "expect": {
+        "resolved": false,
+        "codes": [
+          "schema-scope-unknown"
+        ]
+      }
+    },
+    {
+      "id": "invalid-export",
+      "declareResolution": true,
+      "uri": "schema://s.writer.writer/NoSuchExport",
+      "expect": {
+        "resolved": false,
+        "codes": [
+          "schema-export-unknown"
+        ]
+      }
+    },
+    {
+      "id": "format-the-scope-does-not-implement",
+      "declareResolution": true,
+      "uri": "schema://s.writer.writer/Artifact",
+      "format": "🛰️protobuf",
+      "expect": {
+        "resolved": false,
+        "codes": [
+          "schema-format-unavailable"
+        ]
+      }
+    },
+    {
+      "id": "catalog-missing",
+      "declareResolution": true,
+      "omitCatalog": true,
+      "uri": "schema://s.writer.writer/Artifact",
+      "expect": {
+        "resolved": false,
+        "codes": [
+          "schema-catalog-missing"
+        ]
+      }
+    },
+    {
+      "id": "resolution-undeclared-by-the-taxonomy",
+      "declareResolution": false,
+      "uri": "schema://s.writer.writer/Artifact",
+      "expect": {
+        "resolved": false,
+        "codes": [
+          "schema-export-resolution-undeclared"
+        ]
+      }
+    },
+    {
+      "id": "duplicate-scope-id-in-the-catalog",
+      "declareResolution": true,
+      "duplicateScopeId": "s.writer.writer",
+      "uri": "schema://s.writer.writer/Artifact",
+      "expect": {
+        "resolved": true,
+        "codes": [
+          "schema-scope-ambiguous"
+        ]
+      }
+    },
+    {
+      "id": "two-scope-ids-claiming-one-directory",
+      "declareResolution": true,
+      "aliasScopeId": "s.writer.duplicate",
+      "uri": "schema://s.writer.writer/Artifact",
+      "expect": {
+        "resolved": true,
+        "codes": [
+          "schema-scope-ambiguous"
+        ]
+      }
+    },
+    {
+      "id": "catalog-answering-out-of-a-fixture-directory",
+      "declareResolution": true,
+      "fixtureOwnedScope": true,
+      "uri": "schema://hub.inference/Approval",
+      "expect": {
+        "resolved": false,
+        "codes": [
+          "schema-fixture-local-schema-fallback"
+        ]
+      }
+    }
+  ],
+  "catalogCases": [
+    {
+      "id": "complete-scope-across-every-declared-format",
+      "expect": []
+    },
+    {
+      "id": "single-export-module-declares-it-with-the-root-keyword",
+      "rootExport": true,
+      "expect": []
+    },
+    {
+      "id": "recursive-ref-inside-one-module",
+      "recursiveRef": true,
+      "expect": []
+    },
+    {
+      "id": "unresolved-local-ref",
+      "unresolvedLocalRef": true,
+      "expect": [
+        {
+          "code": "schema-ref-broken-internal"
+        }
+      ]
+    },
+    {
+      "id": "cross-scope-ref-declared-in-depends-on",
+      "crossScopeRef": true,
+      "declareDependency": true,
+      "expect": []
+    },
+    {
+      "id": "cross-scope-ref-not-declared-in-depends-on",
+      "crossScopeRef": true,
+      "declareDependency": false,
+      "expect": [
+        {
+          "code": "schema-cross-scope-dependency-forbidden"
+        }
+      ]
+    },
+    {
+      "id": "ref-by-relative-file-path",
+      "filePathRef": true,
+      "expect": [
+        {
+          "code": "schema-ref-unresolved"
+        }
+      ]
+    },
+    {
+      "id": "export-missing-from-the-rust-implementation",
+      "dropRustExport": true,
+      "expect": [
+        {
+          "code": "schema-export-incomplete",
+          "format": "🦀️rust"
+        }
+      ]
+    },
+    {
+      "id": "export-missing-from-the-typescript-implementation",
+      "dropTypescriptExport": true,
+      "expect": [
+        {
+          "code": "schema-export-incomplete",
+          "format": "🟦️typescript"
+        }
+      ]
+    },
+    {
+      "id": "export-missing-from-the-proto-implementation",
+      "dropProtoExport": true,
+      "expect": [
+        {
+          "code": "schema-export-incomplete",
+          "format": "🛰️protobuf"
+        }
+      ]
+    },
+    {
+      "id": "export-missing-from-the-graphql-implementation",
+      "dropGraphqlExport": true,
+      "expect": [
+        {
+          "code": "schema-export-incomplete",
+          "format": "🔗️graphql"
+        }
+      ]
+    },
+    {
+      "id": "module-internal-helper-ref-is-never-a-finding",
+      "internalDefinitionsRef": true,
+      "expect": []
+    },
+    {
+      "id": "module-internal-helper-ref-that-lands-on-nothing",
+      "unresolvedInternalRef": true,
+      "expect": [
+        {
+          "code": "schema-ref-broken-internal"
+        }
+      ]
+    },
+    {
+      "id": "cross-document-ref-into-another-modules-definitions",
+      "crossScopeDefinitionsRef": true,
+      "declareDependency": true,
+      "expect": [
+        {
+          "code": "schema-ref-unresolved"
+        }
+      ]
+    },
+    {
+      "id": "mutation-aggregate-branches-reference-leaves-by-absolute-id",
+      "mutationAggregate": true,
+      "declareDependency": true,
+      "expect": []
+    },
+    {
+      "id": "mutation-aggregate-branch-whose-leaf-scope-is-not-declared-as-a-dependency",
+      "mutationAggregate": true,
+      "declareDependency": false,
+      "expect": [
+        {
+          "code": "schema-cross-scope-dependency-forbidden"
+        }
+      ]
+    },
+    {
+      "id": "export-restricted-to-json-schema-needs-no-other-format",
+      "restrictedFormats": [
+        "🔣️jsonschema"
+      ],
+      "dropRustExport": true,
+      "dropTypescriptExport": true,
+      "dropProtoExport": true,
+      "dropGraphqlExport": true,
+      "expect": []
+    },
+    {
+      "id": "export-restricted-to-json-schema-that-a-format-implements-anyway",
+      "restrictedFormats": [
+        "🔣️jsonschema"
+      ],
+      "expect": [
+        {
+          "code": "schema-export-format-undeclared",
+          "format": "🦀️rust"
+        },
+        {
+          "code": "schema-export-format-undeclared",
+          "format": "🟦️typescript"
+        },
+        {
+          "code": "schema-export-format-undeclared",
+          "format": "🔗️graphql"
+        },
+        {
+          "code": "schema-export-format-undeclared",
+          "format": "🛰️protobuf"
+        }
+      ]
+    },
+    {
+      "id": "export-missing-from-a-format-it-declared-itself",
+      "restrictedFormats": [
+        "🔣️jsonschema",
+        "🦀️rust"
+      ],
+      "implementRestrictedFormats": [
+        "🔣️jsonschema"
+      ],
+      "expect": [
+        {
+          "code": "schema-export-incomplete",
+          "format": "🦀️rust"
+        }
+      ]
+    },
+    {
+      "id": "export-annotation-naming-a-format-the-taxonomy-does-not-declare",
+      "invalidRestrictedFormats": [
+        "rust"
+      ],
+      "expect": [
+        {
+          "code": "schema-export-formats-annotation-invalid"
+        }
+      ]
+    },
+    {
+      "id": "export-annotation-that-is-not-a-list-of-formats",
+      "invalidRestrictedFormats": "🔣️jsonschema",
+      "expect": [
+        {
+          "code": "schema-export-formats-annotation-invalid"
+        }
+      ]
+    },
+    {
+      "id": "graphql-export-declared-as-an-input",
+      "graphqlKeyword": "input",
+      "expect": []
+    },
+    {
+      "id": "graphql-export-declared-as-an-enum",
+      "graphqlKeyword": "enum",
+      "expect": []
+    },
+    {
+      "id": "graphql-export-declared-as-an-interface",
+      "graphqlKeyword": "interface",
+      "expect": []
+    },
+    {
+      "id": "graphql-export-declared-as-a-union",
+      "graphqlKeyword": "union",
+      "expect": []
+    },
+    {
+      "id": "graphql-export-declared-as-a-scalar",
+      "graphqlKeyword": "scalar",
+      "expect": []
+    },
+    {
+      "id": "typescript-export-without-its-parse-function",
+      "dropTypescriptParser": true,
+      "expect": [
+        {
+          "code": "schema-export-parser-missing",
+          "format": "🟦️typescript"
+        }
+      ]
+    },
+    {
+      "id": "typescript-parse-function-written-as-an-exported-const",
+      "typescriptParserAsConst": true,
+      "expect": []
+    },
+    {
+      "id": "export-annotation-that-omits-the-normative-format",
+      "restrictedFormats": [
+        "🦀️rust"
+      ],
+      "implementRestrictedFormats": [
+        "🦀️rust"
+      ],
+      "expect": [
+        {
+          "code": "schema-export-format-undeclared",
+          "format": "🔣️jsonschema"
+        }
+      ]
+    },
+    {
+      "id": "a-format-the-annotation-restricted-away-is-never-asked-for-a-parser",
+      "restrictedFormats": [
+        "🔣️jsonschema",
+        "🦀️rust"
+      ],
+      "dropTypescriptParser": true,
+      "expect": [
+        {
+          "code": "schema-export-format-undeclared",
+          "format": "🟦️typescript"
+        },
+        {
+          "code": "schema-export-format-undeclared",
+          "format": "🔗️graphql"
+        },
+        {
+          "code": "schema-export-format-undeclared",
+          "format": "🛰️protobuf"
+        }
+      ]
+    }
+  ],
+  "mutationLeafIdCases": [
+    {
+      "id": "single-segment-leaf",
+      "rootModuleId": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/artifact.json",
+      "semanticKind": "create-sampler",
+      "leafDirectory": "🎛️sampler/🌱️create",
+      "expected": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-sampler/schema.json"
+    },
+    {
+      "id": "two-segment-leaf-directory-is-keyed-by-its-semantic-kind",
+      "rootModuleId": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/artifact.json",
+      "semanticKind": "bind-node-skin",
+      "leafDirectory": "🩻️node-skin/🔗️bind",
+      "expected": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-node-skin/schema.json"
+    },
+    {
+      "id": "a-facet-filename-other-than-artifact-does-not-deepen-the-scope",
+      "rootModuleId": "https://json.schemas.assets.semio-tech.com/framework/os/config/schema.json",
+      "semanticKind": "set-default-app",
+      "leafDirectory": "🎛️default-app/🖊️set",
+      "expected": "https://json.schemas.assets.semio-tech.com/framework/os/config/mutation/set-default-app/schema.json"
+    }
+  ],
+  "validationCases": [
+    {
+      "id": "object-accepts-a-complete-instance",
+      "instance": {
+        "title": "a",
+        "words": [
+          "x",
+          "y"
+        ]
+      },
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title",
+            "words"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "words": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "object-refuses-a-missing-required-property",
+      "instance": {},
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "required": [
+            "title"
+          ],
+          "properties": {
+            "title": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "object-refuses-an-undeclared-property",
+      "instance": {
+        "title": "a",
+        "extra": 1
+      },
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "title": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "integer-is-not-a-fractional-number",
+      "instance": 1.5,
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "integer"
+        }
+      }
+    },
+    {
+      "id": "integer-accepts-a-whole-number",
+      "instance": 3,
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    {
+      "id": "minimum-is-inclusive",
+      "instance": 0,
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    {
+      "id": "exclusive-minimum-is-not",
+      "instance": 0,
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    {
+      "id": "pattern-refuses-a-non-matching-string",
+      "instance": "Abc",
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "string",
+          "pattern": "^[a-z]+$"
+        }
+      }
+    },
+    {
+      "id": "enum-accepts-a-listed-value",
+      "instance": "applied",
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "enum": [
+            "applied",
+            "rejected"
+          ]
+        }
+      }
+    },
+    {
+      "id": "enum-refuses-an-unlisted-value",
+      "instance": "no-op",
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "enum": [
+            "applied",
+            "rejected"
+          ]
+        }
+      }
+    },
+    {
+      "id": "const-compares-structurally",
+      "instance": {
+        "state": "offered"
+      },
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "const": {
+            "state": "offered"
+          }
+        }
+      }
+    },
+    {
+      "id": "one-of-refuses-two-matching-branches",
+      "instance": 1,
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "any-of-accepts-one-matching-branch",
+      "instance": 4,
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "all-of-requires-every-branch",
+      "instance": {
+        "a": 1
+      },
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "allOf": [
+            {
+              "type": "object",
+              "required": [
+                "a"
+              ]
+            },
+            {
+              "type": "object",
+              "required": [
+                "b"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "not-refuses-a-forbidden-shape",
+      "instance": "x",
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "not": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "id": "tuple-items-are-positional",
+      "instance": [
+        "a",
+        1
+      ],
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "array",
+          "items": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "additionalItems": false
+        }
+      }
+    },
+    {
+      "id": "tuple-refuses-an-extra-position",
+      "instance": [
+        "a",
+        "b"
+      ],
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "array",
+          "items": [
+            {
+              "type": "string"
+            }
+          ],
+          "additionalItems": false
+        }
+      }
+    },
+    {
+      "id": "unique-items-refuses-a-repeat",
+      "instance": [
+        1,
+        1
+      ],
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "array",
+          "uniqueItems": true
+        }
+      }
+    },
+    {
+      "id": "min-items-refuses-an-empty-array",
+      "instance": [],
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "array",
+          "minItems": 1
+        }
+      }
+    },
+    {
+      "id": "additional-properties-schema-applies-to-the-rest",
+      "instance": {
+        "id": "a",
+        "count": "two"
+      },
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "id": "pattern-properties-match-by-key",
+      "instance": {
+        "x-owner": "a"
+      },
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "patternProperties": {
+            "^x-": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "id": "local-ref-resolves-inside-the-document",
+      "instance": {
+        "title": ""
+      },
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$defs": {
+            "Title": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "type": "object",
+          "required": [
+            "title"
+          ],
+          "properties": {
+            "title": {
+              "$ref": "#/$defs/Title"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "recursive-ref-terminates",
+      "instance": {
+        "name": "a",
+        "children": [
+          {
+            "name": "b",
+            "children": []
+          }
+        ]
+      },
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$defs": {
+            "Node": {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "children": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/Node"
+                  }
+                }
+              }
+            }
+          },
+          "$ref": "#/$defs/Node"
+        }
+      }
+    },
+    {
+      "id": "recursive-ref-reports-a-deep-violation",
+      "instance": {
+        "name": "a",
+        "children": [
+          {
+            "children": []
+          }
+        ]
+      },
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$defs": {
+            "Node": {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "children": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/Node"
+                  }
+                }
+              }
+            }
+          },
+          "$ref": "#/$defs/Node"
+        }
+      }
+    },
+    {
+      "id": "null-is-its-own-type",
+      "instance": null,
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    {
+      "id": "boolean-is-not-a-number",
+      "instance": true,
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "number"
+        }
+      }
+    },
+    {
+      "id": "min-length-counts-code-points",
+      "instance": "🧬️",
+      "valid": true,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "string",
+          "minLength": 2
+        }
+      }
+    },
+    {
+      "id": "multiple-of-refuses-a-remainder",
+      "instance": 0.75,
+      "valid": false,
+      "input": {
+        "schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "number",
+          "multipleOf": 0.5
+        }
+      }
+    }
+  ],
+  "pipelineCases": [
+    {
+      "id": "positive-fixture-passes-every-stage",
+      "fixture": {
+        "id": "writer-artifact-minimal",
+        "uri": "schema://s.writer.writer/Artifact",
+        "target": {
+          "scope": "s.writer.writer",
+          "export": "Artifact",
+          "format": "🔣️jsonschema"
+        },
+        "inline": {
+          "title": "a"
+        },
+        "expect": {
+          "stage": "assertions",
+          "result": "passed",
+          "code": null
+        }
+      },
+      "expect": {
+        "outcome": "passed",
+        "failedStage": null,
+        "code": null
+      }
+    },
+    {
+      "id": "negative-fixture-fails-at-structural-validation-as-declared",
+      "fixture": {
+        "id": "writer-artifact-missing-title",
+        "uri": "schema://s.writer.writer/Artifact",
+        "target": {
+          "scope": "s.writer.writer",
+          "export": "Artifact",
+          "format": "🔣️jsonschema"
+        },
+        "inline": {},
+        "expect": {
+          "stage": "structural-validation",
+          "result": "failed",
+          "code": "schema-instance-invalid"
+        }
+      },
+      "expect": {
+        "outcome": "passed",
+        "failedStage": "structural-validation",
+        "code": "schema-instance-invalid"
+      }
+    },
+    {
+      "id": "negative-fixture-that-fails-earlier-than-declared-is-not-the-proof-it-claims",
+      "fixture": {
+        "id": "writer-artifact-wrong-scope",
+        "uri": "schema://s.writer.absent/Artifact",
+        "target": {
+          "scope": "s.writer.absent",
+          "export": "Artifact",
+          "format": "🔣️jsonschema"
+        },
+        "inline": {},
+        "expect": {
+          "stage": "structural-validation",
+          "result": "failed",
+          "code": "schema-instance-invalid"
+        }
+      },
+      "expect": {
+        "outcome": "failed",
+        "failedStage": "contract-resolution",
+        "code": "schema-scope-unknown"
+      }
+    },
+    {
+      "id": "fixture-whose-target-disagrees-with-its-uri-fails-at-metadata",
+      "fixture": {
+        "id": "writer-artifact-mismatched-target",
+        "uri": "schema://s.writer.writer/Artifact",
+        "target": {
+          "scope": "s.writer.writer",
+          "export": "Snapshot",
+          "format": "🔣️jsonschema"
+        },
+        "inline": {
+          "title": "a"
+        },
+        "expect": {
+          "stage": "metadata",
+          "result": "failed",
+          "code": "schema-fixture-metadata-invalid"
+        }
+      },
+      "expect": {
+        "outcome": "passed",
+        "failedStage": "metadata",
+        "code": "schema-fixture-metadata-invalid"
+      }
+    },
+    {
+      "id": "fixture-declaring-neither-data-nor-inline-fails-at-metadata",
+      "fixture": {
+        "id": "writer-artifact-no-subject",
+        "uri": "schema://s.writer.writer/Artifact",
+        "target": {
+          "scope": "s.writer.writer",
+          "export": "Artifact",
+          "format": "🔣️jsonschema"
+        },
+        "expect": {
+          "stage": "metadata",
+          "result": "failed",
+          "code": "schema-fixture-metadata-invalid"
+        }
+      },
+      "expect": {
+        "outcome": "passed",
+        "failedStage": "metadata",
+        "code": "schema-fixture-metadata-invalid"
+      }
+    },
+    {
+      "id": "fixture-whose-data-file-is-absent-fails-at-parse",
+      "fixture": {
+        "id": "writer-artifact-absent-data",
+        "uri": "schema://s.writer.writer/Artifact",
+        "target": {
+          "scope": "s.writer.writer",
+          "export": "Artifact",
+          "format": "🔣️jsonschema"
+        },
+        "data": "🔣️absent.json",
+        "expect": {
+          "stage": "parse",
+          "result": "failed",
+          "code": "schema-fixture-parse-failed"
+        }
+      },
+      "expect": {
+        "outcome": "passed",
+        "failedStage": "parse",
+        "code": "schema-fixture-parse-failed"
+      }
+    },
+    {
+      "id": "fixture-bound-to-a-scope-whose-rust-implementation-is-incomplete-fails-at-domain",
+      "dropRustExport": true,
+      "fixture": {
+        "id": "writer-artifact-incomplete-scope",
+        "uri": "schema://s.writer.writer/Artifact",
+        "target": {
+          "scope": "s.writer.writer",
+          "export": "Artifact",
+          "format": "🔣️jsonschema"
+        },
+        "inline": {
+          "title": "a"
+        },
+        "expect": {
+          "stage": "domain",
+          "result": "failed",
+          "code": "schema-export-incomplete"
+        }
+      },
+      "expect": {
+        "outcome": "passed",
+        "failedStage": "domain",
+        "code": "schema-export-incomplete"
+      }
+    },
+    {
+      "id": "positive-fixture-against-a-root-export-module",
+      "rootExport": true,
+      "fixture": {
+        "id": "writer-artifact-root-export",
+        "uri": "schema://s.writer.writer/Artifact",
+        "target": {
+          "scope": "s.writer.writer",
+          "export": "Artifact",
+          "format": "🔣️jsonschema"
+        },
+        "inline": {
+          "title": "a"
+        },
+        "expect": {
+          "stage": "assertions",
+          "result": "passed",
+          "code": null
+        }
+      },
+      "expect": {
+        "outcome": "passed",
+        "failedStage": null,
+        "code": null
+      }
+    }
+  ]
+}

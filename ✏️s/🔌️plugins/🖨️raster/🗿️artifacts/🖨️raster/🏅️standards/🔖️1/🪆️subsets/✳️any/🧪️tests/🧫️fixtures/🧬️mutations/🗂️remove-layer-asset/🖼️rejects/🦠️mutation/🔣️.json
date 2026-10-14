@@ -1,0 +1,4 @@
+{
+  "mutation": "removeLayerAsset",
+  "assetId": "logo"
+}

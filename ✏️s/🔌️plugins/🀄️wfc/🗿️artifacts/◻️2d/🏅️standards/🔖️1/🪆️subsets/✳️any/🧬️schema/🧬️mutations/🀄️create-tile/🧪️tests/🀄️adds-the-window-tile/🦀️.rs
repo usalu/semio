@@ -7,11 +7,11 @@ use crate::diff::Wfc2dDiff;
 use crate::mutations::{inverse_wfc2d_mutation, Wfc2dMutation};
 use crate::schema::snapshot::Wfc2dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🀄️create-tile/🀄️adds-the-window-tile/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🀄️create-tile/🀄️adds-the-window-tile/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🀄️create-tile/🀄️adds-the-window-tile/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🀄️create-tile/🀄️adds-the-window-tile/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🀄️create-tile/🀄️adds-the-window-tile/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🀄️create-tile/🀄️adds-the-window-tile/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🀄️create-tile/🀄️adds-the-window-tile/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🀄️create-tile/🀄️adds-the-window-tile/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🀄️create-tile/🀄️adds-the-window-tile/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🀄️create-tile/🀄️adds-the-window-tile/🎯️outcome/🔣️.json");
 
 fn before() -> Wfc2dSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

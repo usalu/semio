@@ -6,7 +6,7 @@ import Ajv from "ajv";
 export function runWeatherChecks(): number {
   const load = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
   const weatherSchema = load("../../../../🔨️modules/⚡️simulation/⚙️engine/📍️site/🧬️schema/🔣️.json");
-  const fixture = load("../../🧫️fixtures/🌦️weather/🔣️.json");
+  const fixture = load("../🧫️fixtures/🌦️weather/🔣️.json");
   const ajv = new Ajv({ strict: true });
   ajv.addSchema(weatherSchema);
   const validate = ajv.compile(weatherSchema);

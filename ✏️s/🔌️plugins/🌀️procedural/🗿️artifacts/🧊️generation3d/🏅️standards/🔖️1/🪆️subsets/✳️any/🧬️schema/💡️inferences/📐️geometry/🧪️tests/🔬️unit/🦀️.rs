@@ -434,7 +434,7 @@ fn the_inference_record_summarises_every_widget_and_matches_the_engine() {
 
 #[test]
 fn inference_reads_the_explicit_admitted_catalogue() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🗂️catalogue/🧫️fixtures/🧩️admitted-context/🔣️.json")).expect("admitted-context fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🗂️catalogue/🧩️admitted-context/🔣️.json")).expect("admitted-context fixture");
     let kind_id = fixture["kind"].as_str().expect("kind identity");
     let mut definitions = catalogue().categories().iter().map(|file| (file.category.id.clone(), file.clone())).collect::<Vec<_>>();
     let kind = definitions.iter_mut().flat_map(|(_, file)| file.kinds.iter_mut()).find(|kind| kind.id == kind_id).expect("fixture kind");
@@ -467,4 +467,23 @@ fn geometry_compute_context_injection_controls_actual_inference() {
     loop {if engine.step(1).unwrap().done{break;}}
     assert_eq!(engine.evaluations()["n"].outputs["value"],GeometryValue::Number(41.0));
     println!("[DEBUG] Procedural geometry inference and engine used the explicit injected compute capability");
+}
+
+/// 🧪️ Native dependency scalars and shared parameters keep the independently authored IO hash literal shape.
+#[test]
+fn semantic_wire_dependency_literals_match_independent_json_oracle() {
+    use semio_framework_artifact_flow_flow::neural::ColdRetire;
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../🚪️io/💾️binary/🧬️mutations/🧪️tests/🧫️fixtures/🧬️semantic-wire/🚪️parameters.json")).expect("neutral dependency literals");
+    for row in corpus["dependencies"].as_array().expect("dependency cases") {
+        let literal = match row["type"].as_str().expect("semantic type") {
+            "parameters" => GeometryDependencyLiteral::Parameters(<Dictionary as semio_framework_value::FromValue>::from_value(row["value"].clone().into()).expect("IO admits parameter fixture")),
+            "number" => GeometryDependencyLiteral::Number { value: row["value"].as_f64().expect("number") },
+            "text" => GeometryDependencyLiteral::Text { value: row["value"].as_str().expect("text").into() },
+            "absent" => GeometryDependencyLiteral::Absent,
+            _ => unreachable!(),
+        };
+        let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&literal)).expect("IO hash literal");
+        assert_eq!(actual, row["literal"], "{}", row["type"]);
+        if let GeometryDependencyLiteral::Parameters(params) = literal { params.retire_cold(); }
+    }
 }

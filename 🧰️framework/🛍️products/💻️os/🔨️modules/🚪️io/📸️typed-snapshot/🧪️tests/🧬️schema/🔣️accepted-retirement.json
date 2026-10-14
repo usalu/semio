@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "owners": {
+      "const": [
+        "sqliteFile",
+        "sqliteDatabase",
+        "snapshot"
+      ]
+    },
+    "constructionAllocatedBytes": {
+      "const": 0
+    },
+    "constructionReleasedBytes": {
+      "const": 0
+    },
+    "deniedAllocatedBytes": {
+      "const": 0
+    },
+    "deniedReleasedBytes": {
+      "const": 0
+    },
+    "terminalAllocatedBytes": {
+      "const": 0
+    },
+    "terminalReleasedBytes": {
+      "const": 0
+    },
+    "conservation": {
+      "const": "acceptedBacking+closeBorn=closeReleased"
+    }
+  },
+  "required": [
+    "owners",
+    "constructionAllocatedBytes",
+    "constructionReleasedBytes",
+    "deniedAllocatedBytes",
+    "deniedReleasedBytes",
+    "terminalAllocatedBytes",
+    "terminalReleasedBytes",
+    "conservation"
+  ],
+  "additionalProperties": false
+}

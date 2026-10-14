@@ -5,7 +5,7 @@ import { DwgProjection } from "../../🔢️number/🟦️.ts";
 import { DwgReader } from "../../🫳️reader/🟦️.ts";
 import { dwgProjectRecord,dwgReconstructRecord } from "../../🗃️tables/📇️records/🟦️.ts";
 import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
-import fixture from "../../🧫️fixtures/📇️records/🔣️.json";
+import fixture from "../🧫️fixtures/📇️records/🔣️.json";
 import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import { dwgRecordFixtures as records } from "../🧰️support/📇️records/🟦️.ts";
 test("DWG all seven symbol-table record variants retain every typed scalar, tuple and optional reference",async()=>{

@@ -43,7 +43,7 @@ import { currentPlatform } from "../../../../../../../../../../🧰️framework/
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
-const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
+const FIXTURES_DIR = join(HERE, "..", "🧪️tests/🧫️fixtures");
 
 const REFERENCE_ENGINE_DIR = join(HERE, "🧪️tests", "🧰️support", "📦️packages", "🦀️rust");
 const LEGACY_ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate");
@@ -269,7 +269,7 @@ async function main(argv: readonly string[]): Promise<number> {
       const failures: string[] = [];
       for (const [kind, after] of Object.entries(PAIRS)) {
         const [subset, name] = DOCUMENT_COORDINATES[kind]!;
-        const dir = join(outFlagDir ?? process.env.SEMIO_FIXTURE_OUT ?? join(HERE, "..", "..", subset, "🧫️fixtures"), name);
+        const dir = join(outFlagDir ?? process.env.SEMIO_FIXTURE_OUT ?? join(HERE, "..", "..", subset, "🧪️tests/🧫️fixtures"), name);
         mkdirSync(dir, { recursive: true });
         writeFileSync(join(dir, "⬅️before.obj"), BASE);
         writeFileSync(join(dir, "➡️after.obj"), after);
@@ -283,7 +283,7 @@ async function main(argv: readonly string[]): Promise<number> {
     const entries = [];
     for (const kind of Object.keys(PAIRS)) {
       const [subset, directoryName] = DOCUMENT_COORDINATES[kind]!;
-      const dir = join(HERE, "..", "..", subset, "🧫️fixtures", directoryName);
+      const dir = join(HERE, "..", "..", subset, "🧪️tests/🧫️fixtures", directoryName);
       if (!existsSync(dir)) throw new Error(`missing fixture directory for ${kind} — run document first`);
       const files = [];
       for (const [role, name] of [["expected-before-obj", "⬅️before.obj"], ["expected-after-obj", "➡️after.obj"]] as const) {

@@ -1,23 +1,23 @@
 //! 📝️ Retains the original selection, streams each borrowed replacement and admits one inverse row.
 use super::{TestConfig as State,TestConfigMutation as Mutation,ChangeTestConfigSelection};
 use crate::store;
-use crate::component::window_config::preparation_custody::WindowEditCustody;
+use crate::store::snapshot_clone_preparation::RetainedEditCustody;
 use store::snapshot_clone_preparation::{RetainedCloneEdit,RetainedCloneEditCursor,RetainedCloneEditStep};
 use semio_framework_value::{ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneRef,RetainedCloneProgress,RetainedCloneStep,RetainedCloneBirthDemand}};
 use std::mem::size_of;
 fn selection_json_bytes(original:Option<&str>)->Option<usize>{match original{None=>Some(4),Some(text)=>text.chars().try_fold(2usize,|bytes,ch|bytes.checked_add(match ch{'"'|'\\'|'\u{8}'|'\t'|'\n'|'\u{c}'|'\r'=>2,ch if ch<='\u{1f}'=>6,ch=>ch.len_utf8()}))}}
 fn selection_binary_bytes(original:Option<&str>)->Option<usize>{original.map_or(Some(2),|text|text.len().checked_add(6))}
-fn selection_prepared_bytes(base:Option<&str>,next:Option<&str>)->Option<usize>{13usize.checked_add(selection_json_bytes(next)?).and_then(|bytes|bytes.checked_add(selection_binary_bytes(next)?)).and_then(|bytes|bytes.checked_add(selection_binary_bytes(base)?))}
+pub(crate) fn selection_prepared_bytes(base:Option<&str>,next:Option<&str>)->Option<usize>{13usize.checked_add(selection_json_bytes(next)?).and_then(|bytes|bytes.checked_add(selection_binary_bytes(next)?)).and_then(|bytes|bytes.checked_add(selection_binary_bytes(base)?))}
 type Fields=(Option<ControlledRetirement<Option<String>>>,Option<Option<String>>,Option<Vec<Mutation>>);
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct SelectionRetainedEdit;
-struct SelectionRetainedEditCursor{phase:u8,offset:usize,allocated:bool,cancelled:bool,custody:WindowEditCustody<Fields>}
+pub(crate) struct SelectionRetainedEdit;
+pub(crate) struct SelectionRetainedEditCursor{phase:u8,offset:usize,allocated:bool,cancelled:bool,custody:RetainedEditCustody<Fields>}
 impl RetainedCloneEdit<State,Mutation> for SelectionRetainedEdit{
  type Cursor=SelectionRetainedEditCursor;
  fn preflight(&self,mutation:&Mutation,lane:store::os_store::store_schema::HistoryLane)->Result<store::os_store::one_item::ArtifactStoreOneItemFootprint,String>{let Mutation::ChangeTestConfigSelection(value)=mutation;let bytes=value.selected.as_ref().map_or(0,String::len);let retained_bytes=bytes.checked_mul(4).and_then(|bytes|bytes.checked_add(65536)).ok_or("original selection preparation footprint overflow")?;if lane!=store::os_store::store_schema::HistoryLane::Document||retained_bytes>store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES||selection_prepared_bytes(None,value.selected.as_deref()).is_none_or(|bytes|bytes>1024){return Err("original selection preparation exceeds lane or physical bound".into());}Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint{work_items:2,retained_bytes})}
  fn begin_demand(&self)->RetainedCloneBirthDemand{RetainedCloneBirthDemand{capacity_bytes:0,depth:1}}
  fn snapshot_cursor_birth_demand(&self)->RetainedCloneBirthDemand{RetainedCloneBirthDemand{capacity_bytes:0,depth:1}}
- fn begin(&self,grant:RetainedCloneGrant)->Result<(Self::Cursor,RetainedCloneProgress),ValueError>{let mut receipt=self.begin_demand().admit(grant)?;receipt.copied_bytes=size_of::<Self::Cursor>();if !receipt.fits(grant){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original selection cursor transfer exceeds copy grant"));}Ok((SelectionRetainedEditCursor{phase:0,offset:0,allocated:false,cancelled:false,custody:WindowEditCustody::new((None,None,None))},receipt))}
+ fn begin(&self,grant:RetainedCloneGrant)->Result<(Self::Cursor,RetainedCloneProgress),ValueError>{let mut receipt=self.begin_demand().admit(grant)?;receipt.copied_bytes=size_of::<Self::Cursor>();if !receipt.fits(grant){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original selection cursor transfer exceeds copy grant"));}Ok((SelectionRetainedEditCursor{phase:0,offset:0,allocated:false,cancelled:false,custody:RetainedEditCustody::new((None,None,None))},receipt))}
 }
 impl SelectionRetainedEditCursor{
  fn normal_demand(&self,base:&State,mutation:&Mutation,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{use semio_framework_value::RetirementDemand;Ok(match self.phase{

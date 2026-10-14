@@ -563,14 +563,14 @@
       "files": [
         {
           "role": "expected-before-png",
-          "path": "../🧫️fixtures/📐️change-header-applied/⬅️before.png",
+          "path": "../🧪️tests/🧫️fixtures/📐️change-header-applied/⬅️before.png",
           "mediaType": "image/png",
           "sha256": "sha256:93ff8de4d7f99a1c0c54aa795bc9a4eda1abcc7ea38932d0d471677ccea70775",
           "bytes": 82
         },
         {
           "role": "expected-after-png",
-          "path": "../🧫️fixtures/📐️change-header-applied/➡️after.png",
+          "path": "../🧪️tests/🧫️fixtures/📐️change-header-applied/➡️after.png",
           "mediaType": "image/png",
           "sha256": "sha256:8c3ab645a32c2b60513aa38414053527a0f48167d9e7130f84c9132b01f1f431",
           "bytes": 79
@@ -611,14 +611,14 @@
       "files": [
         {
           "role": "expected-before-png",
-          "path": "../🧫️fixtures/🎨️replace-palette-applied/⬅️before.png",
+          "path": "../🧪️tests/🧫️fixtures/🎨️replace-palette-applied/⬅️before.png",
           "mediaType": "image/png",
           "sha256": "sha256:7cfe9e4891460b1192c4d53ee057d1a22688497feed05614c383079f4d82d9cb",
           "bytes": 97
         },
         {
           "role": "expected-after-png",
-          "path": "../🧫️fixtures/🎨️replace-palette-applied/➡️after.png",
+          "path": "../🧪️tests/🧫️fixtures/🎨️replace-palette-applied/➡️after.png",
           "mediaType": "image/png",
           "sha256": "sha256:48d1a1377a0e8759946421d8f31ad29b1db0917e9c5510e11ba04535f7abf7e9",
           "bytes": 97
@@ -659,14 +659,14 @@
       "files": [
         {
           "role": "expected-before-png",
-          "path": "../🧫️fixtures/👁️change-transparency-applied/⬅️before.png",
+          "path": "../🧪️tests/🧫️fixtures/👁️change-transparency-applied/⬅️before.png",
           "mediaType": "image/png",
           "sha256": "sha256:93ff8de4d7f99a1c0c54aa795bc9a4eda1abcc7ea38932d0d471677ccea70775",
           "bytes": 82
         },
         {
           "role": "expected-after-png",
-          "path": "../🧫️fixtures/👁️change-transparency-applied/➡️after.png",
+          "path": "../🧪️tests/🧫️fixtures/👁️change-transparency-applied/➡️after.png",
           "mediaType": "image/png",
           "sha256": "sha256:5fd4f0f6d74f2405ae5db8cdd32fd478dd7be1d3327b9b4cd7c904b66243e6db",
           "bytes": 100
@@ -709,14 +709,14 @@
       "files": [
         {
           "role": "expected-before-png",
-          "path": "../🧫️fixtures/🌗️change-gamma-applied/⬅️before.png",
+          "path": "../🧪️tests/🧫️fixtures/🌗️change-gamma-applied/⬅️before.png",
           "mediaType": "image/png",
           "sha256": "sha256:8787406a3ec6cbc56eb25bce5110bff29848628ed9fe4abe008333eb839339fb",
           "bytes": 98
         },
         {
           "role": "expected-after-png",
-          "path": "../🧫️fixtures/🌗️change-gamma-applied/➡️after.png",
+          "path": "../🧪️tests/🧫️fixtures/🌗️change-gamma-applied/➡️after.png",
           "mediaType": "image/png",
           "sha256": "sha256:650d770c1d3dbd4e098b4d38a995c82402553093e55812dd677f2d9113cb5109",
           "bytes": 98
@@ -757,14 +757,14 @@
       "files": [
         {
           "role": "expected-before-png",
-          "path": "../🧫️fixtures/🌈️change-chromaticities-applied/⬅️before.png",
+          "path": "../🧪️tests/🧫️fixtures/🌈️change-chromaticities-applied/⬅️before.png",
           "mediaType": "image/png",
           "sha256": "sha256:d63b98db422d925eb1503a4e2aa0cd9e57e043b31674284403d773a6be3740d5",
           "bytes": 126
         },
         {
           "role": "expected-after-png",
-          "path": "../🧫️fixtures/🌈️change-chromaticities-applied/➡️after.png",
+          "path": "../🧪️tests/🧫️fixtures/🌈️change-chromaticities-applied/➡️after.png",
           "mediaType": "image/png",
           "sha256": "sha256:0a847c8e13aec557837291f5c5812c5ab69448198b39163ef50c2339478bc033",
           "bytes": 126
@@ -805,14 +805,14 @@
       "files": [
         {
           "role": "expected-before-png",
-          "path": "../🧫️fixtures/🖌️change-srgb-intent-applied/⬅️before.png",
+          "path": "../🧪️tests/🧫️fixtures/🖌️change-srgb-intent-applied/⬅️before.png",
           "mediaType": "image/png",
           "sha256": "sha256:72da4d275c2499873017b9efd13a163b7f48aeb62ff7577bd6ecfe393ccab1a3",
           "bytes": 95
         },
         {
           "role": "expected-after-png",
-          "path": "../🧫️fixtures/🖌️change-srgb-intent-applied/➡️after.png",
+          "path": "../🧪️tests/🧫️fixtures/🖌️change-srgb-intent-applied/➡️after.png",
           "mediaType": "image/png",
           "sha256": "sha256:1be2ea3379ef4263d5feebf03f26fe9e2a3a5604a84e5e37e2ab1d2172db0448",
           "bytes": 95
@@ -853,14 +853,14 @@
       "files": [
         {
           "role": "expected-before-png",
-          "path": "../🧫️fixtures/📏️change-physical-dims-applied/⬅️before.png",
+          "path": "../🧪️tests/🧫️fixtures/📏️change-physical-dims-applied/⬅️before.png",
           "mediaType": "image/png",
           "sha256": "sha256:5ce68c930e29936836280c8c74caf2a38b968ac6eaa42e7052bc87b6440f7ff8",
           "bytes": 103
         },
         {
           "role": "expected-after-png",
-          "path": "../🧫️fixtures/📏️change-physical-dims-applied/➡️after.png",
+          "path": "../🧪️tests/🧫️fixtures/📏️change-physical-dims-applied/➡️after.png",
           "mediaType": "image/png",
           "sha256": "sha256:6f8b5054adc115dd2a956576acc0cf8ac9183eb19ed8c5ddf7d909e68631ce0e",
           "bytes": 103
@@ -901,14 +901,14 @@
       "files": [
         {
           "role": "expected-before-png",
-          "path": "../🧫️fixtures/🕰️change-timestamp-applied/⬅️before.png",
+          "path": "../🧪️tests/🧫️fixtures/🕰️change-timestamp-applied/⬅️before.png",
           "mediaType": "image/png",
           "sha256": "sha256:f44e076d7b58e27b10dae57930ed72244b81b820231c6fcaad0e2fc6c4856e23",
           "bytes": 101
         },
         {
           "role": "expected-after-png",
-          "path": "../🧫️fixtures/🕰️change-timestamp-applied/➡️after.png",
+          "path": "../🧪️tests/🧫️fixtures/🕰️change-timestamp-applied/➡️after.png",
           "mediaType": "image/png",
           "sha256": "sha256:63de5a220527b5cdbd3f5447fc577170aa1ffd5d01c8d6ab1ca1ad35f1ec5b78",
           "bytes": 101
@@ -949,14 +949,14 @@
       "files": [
         {
           "role": "expected-before-png",
-          "path": "../🧫️fixtures/🖼️change-background-applied/⬅️before.png",
+          "path": "../🧪️tests/🧫️fixtures/🖼️change-background-applied/⬅️before.png",
           "mediaType": "image/png",
           "sha256": "sha256:8669431652e85c25558e5ad2956e0a256989e32846bcb2a2fa1391b7127162e2",
           "bytes": 100
         },
         {
           "role": "expected-after-png",
-          "path": "../🧫️fixtures/🖼️change-background-applied/➡️after.png",
+          "path": "../🧪️tests/🧫️fixtures/🖼️change-background-applied/➡️after.png",
           "mediaType": "image/png",
           "sha256": "sha256:e8d9b09c69ca9b5380c80996349692fc4e8ca15bd08bb6b92f6d2afd7d101c8f",
           "bytes": 100
@@ -997,14 +997,14 @@
       "files": [
         {
           "role": "expected-before-png",
-          "path": "../🧫️fixtures/📥️insert-text-chunk-applied/⬅️before.png",
+          "path": "../🧪️tests/🧫️fixtures/📥️insert-text-chunk-applied/⬅️before.png",
           "mediaType": "image/png",
           "sha256": "sha256:93ff8de4d7f99a1c0c54aa795bc9a4eda1abcc7ea38932d0d471677ccea70775",
           "bytes": 82
         },
         {
           "role": "expected-after-png",
-          "path": "../🧫️fixtures/📥️insert-text-chunk-applied/➡️after.png",
+          "path": "../🧪️tests/🧫️fixtures/📥️insert-text-chunk-applied/➡️after.png",
           "mediaType": "image/png",
           "sha256": "sha256:dfc065b824ecbea564557ea495a17af0eabfce8243b5a9d4289c3aa7aaa36533",
           "bytes": 122
@@ -1045,14 +1045,14 @@
       "files": [
         {
           "role": "expected-before-png",
-          "path": "../🧫️fixtures/🗑️remove-text-chunk-applied/⬅️before.png",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-text-chunk-applied/⬅️before.png",
           "mediaType": "image/png",
           "sha256": "sha256:dfc065b824ecbea564557ea495a17af0eabfce8243b5a9d4289c3aa7aaa36533",
           "bytes": 122
         },
         {
           "role": "expected-after-png",
-          "path": "../🧫️fixtures/🗑️remove-text-chunk-applied/➡️after.png",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-text-chunk-applied/➡️after.png",
           "mediaType": "image/png",
           "sha256": "sha256:93ff8de4d7f99a1c0c54aa795bc9a4eda1abcc7ea38932d0d471677ccea70775",
           "bytes": 82
@@ -1093,14 +1093,14 @@
       "files": [
         {
           "role": "expected-before-png",
-          "path": "../🧫️fixtures/✏️replace-text-chunk-applied/⬅️before.png",
+          "path": "../🧪️tests/🧫️fixtures/✏️replace-text-chunk-applied/⬅️before.png",
           "mediaType": "image/png",
           "sha256": "sha256:5f08a3abfc2e2e79ad0a13abe67336c3eecff9a5f9dfaaf663085f9157677bca",
           "bytes": 114
         },
         {
           "role": "expected-after-png",
-          "path": "../🧫️fixtures/✏️replace-text-chunk-applied/➡️after.png",
+          "path": "../🧪️tests/🧫️fixtures/✏️replace-text-chunk-applied/➡️after.png",
           "mediaType": "image/png",
           "sha256": "sha256:89be28e98ea5817e31d5084a1dbebd7b358be5374f6a78a4fbf915dbef2ffd73",
           "bytes": 113
@@ -1141,14 +1141,14 @@
       "files": [
         {
           "role": "expected-before-png",
-          "path": "../🧫️fixtures/🔲️replace-pixels-applied/⬅️before.png",
+          "path": "../🧪️tests/🧫️fixtures/🔲️replace-pixels-applied/⬅️before.png",
           "mediaType": "image/png",
           "sha256": "sha256:93ff8de4d7f99a1c0c54aa795bc9a4eda1abcc7ea38932d0d471677ccea70775",
           "bytes": 82
         },
         {
           "role": "expected-after-png",
-          "path": "../🧫️fixtures/🔲️replace-pixels-applied/➡️after.png",
+          "path": "../🧪️tests/🧫️fixtures/🔲️replace-pixels-applied/➡️after.png",
           "mediaType": "image/png",
           "sha256": "sha256:0593f730ccc7ea6c715af48ce45a3354f280fa3e52247a6a96b34f4a196b0491",
           "bytes": 82
@@ -1189,14 +1189,14 @@
       "files": [
         {
           "role": "expected-before-png",
-          "path": "../🧫️fixtures/📦️insert-unknown-chunk-applied/⬅️before.png",
+          "path": "../🧪️tests/🧫️fixtures/📦️insert-unknown-chunk-applied/⬅️before.png",
           "mediaType": "image/png",
           "sha256": "sha256:93ff8de4d7f99a1c0c54aa795bc9a4eda1abcc7ea38932d0d471677ccea70775",
           "bytes": 82
         },
         {
           "role": "expected-after-png",
-          "path": "../🧫️fixtures/📦️insert-unknown-chunk-applied/➡️after.png",
+          "path": "../🧪️tests/🧫️fixtures/📦️insert-unknown-chunk-applied/➡️after.png",
           "mediaType": "image/png",
           "sha256": "sha256:7841719f610d4e56467a2c14ad0643bb9b16973531845dd024fd9fc95b4ea86d",
           "bytes": 97
@@ -1237,14 +1237,14 @@
       "files": [
         {
           "role": "expected-before-png",
-          "path": "../🧫️fixtures/📤️remove-unknown-chunk-applied/⬅️before.png",
+          "path": "../🧪️tests/🧫️fixtures/📤️remove-unknown-chunk-applied/⬅️before.png",
           "mediaType": "image/png",
           "sha256": "sha256:7841719f610d4e56467a2c14ad0643bb9b16973531845dd024fd9fc95b4ea86d",
           "bytes": 97
         },
         {
           "role": "expected-after-png",
-          "path": "../🧫️fixtures/📤️remove-unknown-chunk-applied/➡️after.png",
+          "path": "../🧪️tests/🧫️fixtures/📤️remove-unknown-chunk-applied/➡️after.png",
           "mediaType": "image/png",
           "sha256": "sha256:93ff8de4d7f99a1c0c54aa795bc9a4eda1abcc7ea38932d0d471677ccea70775",
           "bytes": 82
@@ -1285,14 +1285,14 @@
       "files": [
         {
           "role": "expected-before-png",
-          "path": "../🧫️fixtures/📅️change-timestamp/⬅️before.png",
+          "path": "../🧪️tests/🧫️fixtures/📅️change-timestamp/⬅️before.png",
           "mediaType": "image/png",
           "sha256": "sha256:b7b8ca69615237a448ce9a63dc814e915168fa82d6d522a1b6856ecc6ecc2e5e",
           "bytes": 103
         },
         {
           "role": "expected-after-png",
-          "path": "../🧫️fixtures/📅️change-timestamp/➡️after.png",
+          "path": "../🧪️tests/🧫️fixtures/📅️change-timestamp/➡️after.png",
           "mediaType": "image/png",
           "sha256": "sha256:f342af57e54ad6d9cb22b8301634a8c1ca709d99637ff6a75c939c8d4a914f77",
           "bytes": 103
@@ -1331,14 +1331,14 @@
       "files": [
         {
           "role": "expected-before-png",
-          "path": "../🧫️fixtures/➕️insert-unknown-chunk/⬅️before.png",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-unknown-chunk/⬅️before.png",
           "mediaType": "image/png",
           "sha256": "sha256:b7b8ca69615237a448ce9a63dc814e915168fa82d6d522a1b6856ecc6ecc2e5e",
           "bytes": 103
         },
         {
           "role": "expected-after-png",
-          "path": "../🧫️fixtures/➕️insert-unknown-chunk/➡️after.png",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-unknown-chunk/➡️after.png",
           "mediaType": "image/png",
           "sha256": "sha256:4a3778c55cb6d91a88ca2968ac8363669b0de58920f2be06e730970dc7992c5a",
           "bytes": 136
@@ -1377,14 +1377,14 @@
       "files": [
         {
           "role": "expected-before-png",
-          "path": "../🧫️fixtures/➖️remove-unknown-chunk/⬅️before.png",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-unknown-chunk/⬅️before.png",
           "mediaType": "image/png",
           "sha256": "sha256:4a3778c55cb6d91a88ca2968ac8363669b0de58920f2be06e730970dc7992c5a",
           "bytes": 136
         },
         {
           "role": "expected-after-png",
-          "path": "../🧫️fixtures/➖️remove-unknown-chunk/➡️after.png",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-unknown-chunk/➡️after.png",
           "mediaType": "image/png",
           "sha256": "sha256:b7b8ca69615237a448ce9a63dc814e915168fa82d6d522a1b6856ecc6ecc2e5e",
           "bytes": 103
@@ -1425,14 +1425,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🩹️patch-pixels-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🩹️patch-pixels-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:e2041bee5abc5dc4044f9d57eefc2064dd19fa817812db7ae90aca3575a60864",
           "bytes": 657
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🩹️patch-pixels-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🩹️patch-pixels-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:03843828b489aa64d8f678927b8a1dc6a7e4a2c0fd45344855031969016a4502",
           "bytes": 657

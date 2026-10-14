@@ -1,0 +1,33 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/framework-plugin:test-original-lifecycle-source",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--parallel=1",
+    "--configuration=prototype"
+  ],
+  "selection": [
+    "nx",
+    "run",
+    "@semio-tech/framework-plugin:test-original-lifecycle-source",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--parallel=1",
+    "--configuration=prototype"
+  ],
+  "launches": [
+    [
+      "nx",
+      "run",
+      "@semio-tech/framework-plugin:test-original-lifecycle-source",
+      "--skip-nx-cache",
+      "--excludeTaskDependencies",
+      "--parallel=1",
+      "--configuration=prototype"
+    ]
+  ],
+  "buildMode": "prototype"
+}

@@ -923,7 +923,7 @@ fn retire_snapshot_source(source: &mut FlowVcsSource<FlowHostSnapshot>) {
 //#region 📍️OrderedLayoutLaws
 #[test]
 fn retained_vcs_shared_snapshot_readers_retire_without_waiting_on_each_other() {
-    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let snapshot = Arc::new(<FlowHostSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&fixture["initial"].clone())).unwrap());
     let admission=semio_framework_value::retained_clone::RetainedCloneGrant::one_capacity_turn(FlowSnapshotRetirementFactory.retirement_birth_bytes(&snapshot),1);
     let admit=|snapshot|FlowSnapshotRetirementFactory.retire(snapshot,admission).unwrap_or_else(|(error,_)|panic!("Flow shared reader admission refused: {error}")).0;
@@ -963,7 +963,7 @@ fn close_layout_session(session: &mut FlowRetainedVcs) {
 
 #[test]
 fn retained_vcs_ordered_layout_edits_undo_redo_match_json_oracle() {
-    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut expected = fixture["initial"]["layout"].clone();
     let mut session = FlowRetainedVcs::new(semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&fixture["initial"].clone())).unwrap(), 1, 0, 0);
     for edit in fixture["edits"].as_array().unwrap() {
@@ -991,7 +991,7 @@ fn retained_vcs_ordered_layout_edits_undo_redo_match_json_oracle() {
 
 #[test]
 fn retained_vcs_ordered_layout_cancel_at_each_unpublished_boundary_retires_exactly() {
-    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for edit in fixture["edits"].as_array().unwrap() {
         for boundary in 0..64 {
             let mut session = FlowRetainedVcs::new(semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&fixture["initial"].clone())).unwrap(), 1, 0, 0);
@@ -1067,7 +1067,7 @@ fn retained_vcs_stale_aba_cancel_ack_and_incremental_close_are_fail_closed() {
 
 #[test]
 fn retained_vcs_all_thirteen_fixture_operations_match_independent_third_party_oracle_after_ack_close() {
-    let source = include_str!("../../🧫️fixtures/🧾️semantic-history/🔣️.json");
+    let source = include_str!("../🧫️fixtures/🧾️semantic-history/🔣️.json");
     let expected = SerdeJsonFlowOracle.expected_operations(source);
     let independently_evaluated = SerdeJsonFlowOracle.evaluate_operations(source);
     assert_eq!(independently_evaluated, expected);
@@ -1091,9 +1091,9 @@ fn retained_vcs_all_thirteen_fixture_operations_match_independent_third_party_or
 
 #[test]
 fn retained_vcs_language_neutral_vector_signatures_detect_every_field_and_value_mutation() {
-    let oracle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧾️semantic-history/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("oracle fixture");
-    let lifecycle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔄️lifecycle/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("lifecycle fixture");
-    let owners: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🫴️owners/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owner fixture");
+    let oracle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🧾️semantic-history/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("oracle fixture");
+    let lifecycle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔄️lifecycle/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("lifecycle fixture");
+    let owners: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🫴️owners/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owner fixture");
     let operations = oracle.get("operations").and_then(semio_framework_pack_json::Value::as_array).expect("operation ledger");
     assert_eq!(operations.len(), FLOW_VCS_FEATURES.len());
     for (operation, feature) in operations.iter().zip(FLOW_VCS_FEATURES) {
@@ -1155,8 +1155,8 @@ fn retained_vcs_language_neutral_vector_signatures_detect_every_field_and_value_
 
 #[test]
 fn retained_vcs_fixture_byte_vectors_execute_exact_multibyte_max_and_max_plus_one_results() {
-    let oracle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧾️semantic-history/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("oracle fixture");
-    let lifecycle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔄️lifecycle/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("lifecycle fixture");
+    let oracle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🧾️semantic-history/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("oracle fixture");
+    let lifecycle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔄️lifecycle/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("lifecycle fixture");
     for vector in lifecycle.get("byteVectors").and_then(semio_framework_pack_json::Value::as_array).expect("byte vectors") {
         let protocol = vector.get("protocol").expect("byte protocol");
         let input = protocol.get("operation").expect("byte operation");
@@ -1200,8 +1200,8 @@ fn retained_vcs_fixture_byte_vectors_execute_exact_multibyte_max_and_max_plus_on
 
 #[test]
 fn retained_vcs_fixture_authority_malformed_and_grant_vectors_execute_exact_results() {
-    let oracle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧾️semantic-history/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("oracle fixture");
-    let lifecycle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔄️lifecycle/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("lifecycle fixture");
+    let oracle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🧾️semantic-history/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("oracle fixture");
+    let lifecycle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔄️lifecycle/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("lifecycle fixture");
     let valid_grant = flow_hostile_named_grant(&lifecycle, "valid");
 
     for vector in lifecycle.get("authorityVectors").and_then(semio_framework_pack_json::Value::as_array).expect("authority vectors") {
@@ -1305,8 +1305,8 @@ fn retained_vcs_fixture_authority_malformed_and_grant_vectors_execute_exact_resu
 
 #[test]
 fn retained_vcs_fixture_cancel_and_fault_execute_all_twenty_four_exact_transfer_states() {
-    let oracle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧾️semantic-history/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("oracle fixture");
-    let lifecycle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔄️lifecycle/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("lifecycle fixture");
+    let oracle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🧾️semantic-history/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("oracle fixture");
+    let lifecycle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔄️lifecycle/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("lifecycle fixture");
     for boundary in lifecycle.get("transferControlLedger").and_then(semio_framework_pack_json::Value::as_array).expect("transfer control ledger") {
         let protocol = boundary.get("protocol").expect("transfer protocol");
         let target = protocol.get("target").expect("transfer target");
@@ -1925,9 +1925,9 @@ fn flow_fixture_satisfies_vcs_test_support_store_roundtrip() {
 #[test]
 fn flow_fixture_default_pack_uses_canonical_envelope_and_round_trips() {
     let host_snapshot = FlowHostSnapshot::default();
-    assert_eq!(<FlowHostSnapshot as crate::os_store::serialization::ArtifactDsl>::envelope_id(), "flow.flow");
-    let encoded = <FlowHostSnapshot as crate::os_store::serialization::ArtifactPack>::encode_pack_with(&host_snapshot, &crate::os_store::PackEncodeOptions::default()).expect("default flow fixture pack");
-    let decoded = <FlowHostSnapshot as crate::os_store::serialization::ArtifactPack>::decode_pack_with(&encoded, &crate::os_store::PackDecodeOptions::default()).expect("default flow fixture unpack");
+    assert_eq!(<FlowHostSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(), "flow.flow");
+    let encoded = <FlowHostSnapshot as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::encode_pack_with(&host_snapshot, &crate::os_store::PackEncodeOptions::default()).expect("default flow fixture pack");
+    let decoded = <FlowHostSnapshot as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::decode_pack_with(&encoded, &crate::os_store::PackDecodeOptions::default()).expect("default flow fixture unpack");
     assert_eq!(decoded, host_snapshot);
 }
 
@@ -1952,7 +1952,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 #[test]
 fn default_flow_example_dsl_round_trips() {
     let text = include_str!("../../../📚️examples/🗣️.dsl.semio");
-    let host_snapshot = <FlowHostSnapshot as crate::os_store::serialization::ArtifactDsl>::parse_dsl(text).expect("🌊️default.flow must parse");
+    let host_snapshot = <FlowHostSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("🌊️default.flow must parse");
     crate::os_store::test_support::assert_dsl_round_trip(&host_snapshot);
     crate::os_store::test_support::assert_dsl_pack_equivalence(&host_snapshot);
     host_snapshot.retire_cold();
@@ -1962,7 +1962,7 @@ fn default_flow_example_dsl_round_trips() {
 #[test]
 fn original_vcs_close_preserves_source_and_full_physical_receipt(){
  use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
- let law:serde_json::Value=serde_json::from_str(include_str!("../../♻️retirement/🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for copy in law["copyGrants"].as_array().unwrap(){
   let (mut vcs,source)=observe(||{
    let mut snapshot=retained_fixture();snapshot.schema=law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap()as usize);
@@ -1991,7 +1991,7 @@ fn original_vcs_close_preserves_source_and_full_physical_receipt(){
 #[test]
 fn original_vcs_close_admission_and_receipts_match_neutral_wallet(){
  use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
- let law:serde_json::Value=serde_json::from_str(include_str!("../../♻️retirement/🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let grant=|row:&serde_json::Value|RetainedCloneGrant{maximum_items:row["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:row["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:row["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:row["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:row["maximumDepth"].as_u64().unwrap()as usize};
  for row in law["closeAdmissionCases"].as_array().unwrap(){
   let d=&row["demands"];let demands=FlowVcsCloseDemands{copy_bytes:d["copyBytes"].as_u64().unwrap()as usize,capacity_bytes:d["capacityBytes"].as_u64().unwrap()as usize,release_bytes:d["releaseBytes"].as_u64().unwrap()as usize,depth:d["depth"].as_u64().unwrap()as usize};

@@ -1,0 +1,140 @@
+{
+  "type": "object",
+  "required": [
+    "source",
+    "expected",
+    "limits",
+    "grant",
+    "allocationQuote"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "source": {
+      "type": "object",
+      "required": [
+        "operation",
+        "generation",
+        "pageBytes",
+        "prefixHex",
+        "suffixHex",
+        "bodyHex"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": 43
+        },
+        "generation": {
+          "const": 7
+        },
+        "pageBytes": {
+          "const": 3
+        },
+        "prefixHex": {
+          "const": "aa"
+        },
+        "suffixHex": {
+          "const": "bb"
+        },
+        "bodyHex": {
+          "const": "0103e6bca20101047f"
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "required": [
+        "symbol",
+        "unsigned"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "symbol": {
+          "const": "漢"
+        },
+        "unsigned": {
+          "const": 127
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "required": [
+        "bytes",
+        "segmentBytes",
+        "symbols",
+        "depth",
+        "items",
+        "totalAllocationBytes",
+        "symbolUtf8Bytes",
+        "symbolScalars",
+        "allocationBytes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "const": 262144
+        },
+        "segmentBytes": {
+          "const": 262144
+        },
+        "symbols": {
+          "const": 1
+        },
+        "depth": {
+          "const": 8
+        },
+        "items": {
+          "const": 64
+        },
+        "totalAllocationBytes": {
+          "const": 1048576
+        },
+        "symbolUtf8Bytes": {
+          "const": 3
+        },
+        "symbolScalars": {
+          "const": 1
+        },
+        "allocationBytes": {
+          "const": 1048576
+        }
+      }
+    },
+    "grant": {
+      "type": "object",
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "const": 1
+        },
+        "copyBytes": {
+          "const": 17
+        },
+        "capacityBytes": {
+          "const": 65536
+        },
+        "releaseBytes": {
+          "const": 262144
+        },
+        "depth": {
+          "const": 64
+        }
+      }
+    },
+    "allocationQuote": {
+      "const": {
+        "pure": true,
+        "capturedCursor": true,
+        "terminalZero": true
+      }
+    }
+  }
+}

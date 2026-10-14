@@ -50,7 +50,7 @@ mod tests {
     }
     #[test]
     fn portable_tile_coordinates_and_ranges_match_json_and_geo_oracles() {
-        let corpus: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("portable corpus");
+        let corpus: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔣️.json")).expect("portable corpus");
         for row in corpus["coordinates"].as_array().unwrap() {
             let tile = map_tile_coordinate(row["longitude"].as_f64().unwrap(), row["latitude"].as_f64().unwrap(), row["zoom"].as_u64().unwrap() as u32).unwrap();
             assert_eq!((tile.x, tile.y), (row["expected"]["x"].as_u64().unwrap() as u32, row["expected"]["y"].as_u64().unwrap() as u32));

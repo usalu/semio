@@ -5,7 +5,7 @@ use semio_framework_diagnostic::{TextError,TextSpan};
 #[test]
 fn io_owned_cause_retains_kind_and_text_diagnostics() {
     let kinds=[ValueRefusalKind::InvalidValue,ValueRefusalKind::Canceled,ValueRefusalKind::OwnershipLimit,ValueRefusalKind::AllocationFailed,ValueRefusalKind::WorkLimit,ValueRefusalKind::DepthLimit,ValueRefusalKind::UnsupportedOwner,ValueRefusalKind::InvariantViolated];
-    let rows:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let rows:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/⚠️refusal/🔣️.json")).unwrap();
     for row in rows.as_array().unwrap() {
         let kind=*kinds.iter().find(|kind|kind.as_str()==row["kind"].as_str().unwrap()).unwrap();
         let message=row["message"].as_str().unwrap().to_owned();
@@ -30,7 +30,7 @@ fn io_owned_cause_retains_kind_and_text_diagnostics() {
             assert_eq!(error.diagnostics[0].expected.as_ref().unwrap().describe(),"required");
         } else {assert!(error.diagnostics.is_empty());}
     }
-    let copy_cases:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧵️stress/🔣️.json")).unwrap();
+    let copy_cases:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/⚠️refusal/🧵️stress/🔣️.json")).unwrap();
     for row in copy_cases.as_array().unwrap() {
         let message=row["unit"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap() as usize);
         let threshold=row["cancelAfterCompleted"].as_u64().unwrap() as usize;
@@ -69,7 +69,7 @@ fn io_cause_controlled_wire_retains_all_authorities_and_source_data() {
     assert_eq!(canonical["properties"]["diagnostics"]["items"]["$ref"],"https://semio.tech/schema/diagnostic/controlled#/$defs/Diagnostic");
     assert!(canonical["properties"].get("message").is_none());
     eprintln!("[DEBUG] Actual IO schema registry publishes the closed canonical owned cause and diagnostic contract");
-    let rows:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let rows:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/⚠️refusal/🔣️.json")).unwrap();
     for row in rows.as_array().unwrap() {
         let Some(expected)=row.get("expectedWire")else{continue};
         let expected=fixture_value(expected);
@@ -88,7 +88,7 @@ fn io_cause_controlled_wire_retains_all_authorities_and_source_data() {
 #[test]
 fn io_cause_wire_refuses_closed_members_and_hostile_controls() {
     use semio_framework_value::{DslValue,NativeDecodeControl};
-    let rows:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔁️wire/🔣️.json")).unwrap();
+    let rows:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/⚠️refusal/🔁️wire/🔣️.json")).unwrap();
     for row in rows.as_array().unwrap() {
         let input=DslValue::Object(row["members"].as_array().unwrap().iter().map(|member|(member[0].as_str().unwrap().to_owned(),fixture_value(&member[1]))).collect());
         let accept=row["accept"].as_bool().unwrap();

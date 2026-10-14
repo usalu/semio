@@ -1,11 +1,11 @@
 import {parseFormsJsonArtifact,formsArtifactJson} from "../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
-import fixture from "../../🧫️fixtures/💾️persistence/🔣️.json";
+import fixture from "../../../🧪️tests/🧫️fixtures/🔬️contract/💾️persistence/🔣️.json";
 import definition from "../../📝️definition/🔣️.json";
 import response from "../../📨️response/🔣️.json";
 import { parseFormsArtifact } from "../../🟦️.ts";
-import blank from "../../🧫️fixtures/🌱️blank/🔣️.json";
+import blank from "../../../🧪️tests/🧫️fixtures/🔬️contract/🌱️blank/🔣️.json";
 import { blankFormsDefinition } from "../../📝️definition/🟦️.ts";
 
 /** 💾️ Durable definition and answer rows survive a fresh JSON decode and schema oracle. */

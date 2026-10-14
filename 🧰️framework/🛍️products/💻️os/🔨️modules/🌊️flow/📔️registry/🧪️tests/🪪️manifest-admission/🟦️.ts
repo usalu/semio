@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-const FIXTURE_URL = new URL("../../🧫️fixtures/🔣️manifest-admission.json", import.meta.url);
+const FIXTURE_URL = new URL("../🧫️fixtures/🔣️manifest-admission.json", import.meta.url);
 const REGISTRY_SOURCE_URL = new URL("../../🦀️.rs", import.meta.url);
 
 type Row = { id: string; why: string; accepted: boolean; operators: string[]; schemas: string[]; manifestJson: string };

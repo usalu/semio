@@ -1,8 +1,8 @@
-import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { TEST_LEVELS } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { TEST_LEVELS } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 
 import { verifyVizChartInferences } from "../../🧬️schema/💡️inferences/📦️packages/🟦️typescript/📜️script.ts";
-import { BundleScript } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { verifyVisualizationCoverage } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
 import { writePrintGalleryEvidence } from "../../🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🟦️.ts";
 import { verifyPrintKindPaintFixtures, verifyPrintGalleryCarrier, verifyPrintApiTitleRendering, verifyPrintApiPublication, verifyPrintCommandBoundaries, verifyPrintMacroStagingNative, verifyPrintPipelineLong, verifyPrintPipelineQuick, verifyPrintVisualizationBuild } from "./🧪️tests/🖨️pipeline/🟦️.ts";

@@ -31,7 +31,7 @@ mod subject {
 
     /// 🔁️ The real committed document through this subset's own two codecs. The semantic half is
     /// `law::round_trip_preserves`: parsing, printing back and parsing again must not move the
-    /// projection. The byte half is `law::carrier_is_exact` — `store::os_store::serialization::ArtifactDsl`'s own documented
+    /// projection. The byte half is `law::carrier_is_exact` — `pack::snapshot::ArtifactDsl`'s own documented
     /// LAW is that canonical `print_dsl` output is a `parse_dsl` fixpoint, so the correct answer for
     /// a second printing IS byte identity. The pack decoding is a separate binary codec, so agreeing
     /// on one snapshot cannot be reached by carrying text bytes across.

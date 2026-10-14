@@ -1,5 +1,6 @@
-import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import type { CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { COMPONENT_MODULE_DIRECTORIES } from "../../📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 /** 🧩️ Semantic plugin build materialization owner. */
 
@@ -11,8 +12,8 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import type { PluginBuildTargetV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
 
@@ -114,17 +115,17 @@ async function readPackageName(cratePath: string): Promise<string> {
 /** 🎯️ One plugin's iterate stage: the `wasm-prototype` build of exactly this crate into its `dist/components-iterate`,
  * described locally (never committed) and bound by a `wasm-prototype` receipt. Every other plugin keeps its shipped module.
  * Fine-grain locking (`.cargo/config.toml`) lets concurrent agents and devs share every already-built unit. */
-async function buildPluginCargo(target: PluginBuildTargetV1): Promise<{ readonly target: PluginBuildTargetV1; readonly artifact: string; readonly deliverable: ComponentDeliverableV1 }> {
+async function buildPluginCargo(target: PluginBuildTargetV1, control: CompilerAdmissionControl): Promise<{ readonly target: PluginBuildTargetV1; readonly artifact: string; readonly deliverable: ComponentDeliverableV1 }> {
   publishedDescriptorEmitter(repoRoot);
-  const staged = await stageComponentV1(repoRoot, componentStageTargetV1(repoRoot, join(target.cratePath, "Cargo.toml")), ITERATE_COMPONENT_PROFILE, "local");
+  const staged = await stageComponentV1(repoRoot, componentStageTargetV1(repoRoot, join(target.cratePath, "Cargo.toml")), ITERATE_COMPONENT_PROFILE, "local", control);
   return { target, artifact: staged.deliverable.wasm, deliverable: staged.deliverable };
 }
 
 /** 🎯️ One target's MATERIALIZE stage: the shared module materializer over the iterate deliverable (no `wasm-opt`), then
  * the extension publish and the hot-swap marker. Safe to run beside sibling targets: it touches neither the shared cargo
  * build directory nor the global package cache. */
-async function materializePlugin(target: PluginBuildTargetV1, built: Readonly<{ deliverable: ComponentDeliverableV1 }>): Promise<void> {
-  const { output } = await materializeComponentModuleV1(repoRoot, target, built.deliverable);
+async function materializePlugin(target: PluginBuildTargetV1, built: Readonly<{ deliverable: ComponentDeliverableV1 }>, control: CompilerAdmissionControl): Promise<void> {
+  const { output } = await materializeComponentModuleV1(repoRoot, target, built.deliverable, control);
   publishBuiltExtension(target, output);
   const hotSwapMarker = join(pluginOutRoot, MODULE_HOT_SWAP_FILE);
   writeFileSync(hotSwapMarker, `${JSON.stringify({ pluginId: target.pluginId, rebuiltAt: Date.now() })}\n`);
@@ -132,13 +133,13 @@ async function materializePlugin(target: PluginBuildTargetV1, built: Readonly<{ 
 }
 
 /** 🔁️ `components iterate <plugin-id>`: the single-plugin browser loop — iterate build, local describe, unoptimized module. */
-export async function iterateComponentV1(pluginId: string): Promise<void> {
+export async function iterateComponentV1(pluginId: string, control: CompilerAdmissionControl): Promise<void> {
   const target = discoverPluginBuildTargets(repoRoot).find((entry) => entry.pluginId === pluginId);
   if (!target) throw new Error(`components iterate: ${pluginId} names no discovered plugin crate with a deployment directory`);
   ensurePreview2ShimVendor();
   ensureGuestSlimTypstFontsAsset();
   publishShardWorker();
-  await materializePlugin(target, await buildPluginCargo(target));
+  await materializePlugin(target, await buildPluginCargo(target, control), control);
 }
 
 export { buildPluginCargo, ensureGuestSlimTypstFontsAsset, ensurePreview2ShimVendor, materializePlugin, pluginWebMaterializeContext, preview2ShimVendorDir, publishShardWorker, readPackageName, rewriteExistingPluginShimImports };

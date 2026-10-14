@@ -1,0 +1,246 @@
+[
+  {
+    "source": "✏️s/🔌️plugins/🌊️flow/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌊️flow/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔺️diff"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/📤️effect/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/📤️effect/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔗️connect-media-ports/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔗️connect-media-ports/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️retirement/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️retirement/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/♻️retirement/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/♻️retirement/📸️snapshot/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌊️flow/🗑️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌊️flow/🗑️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/💡️inferences/📐️geometry/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/💡️inferences/📐️geometry/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔋️energy/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔋️energy/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🗓️schedule/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🗓️schedule/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️simulation-session/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️simulation-session/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🔋️energy/🧩️extensions/🌦️epw/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🔋️energy/🧩️extensions/🌦️epw/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌍️gis/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌍️gis/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🔌️client/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🔌️client/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/👷️worker/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/👷️worker/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🗺️map/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📎️references"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎚️config/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎚️config/🧪️tests/🧫️fixtures/🔬️contract"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🫧️transient/🧬️schema/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🫧️transient/🧪️tests/🧫️fixtures/🔬️contract"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📐️cad/⚙️engine/🏗️construction/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📐️cad/⚙️engine/🏗️construction/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📐️cad/⚙️engine/📔️registry/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📐️cad/⚙️engine/📔️registry/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🧪️tests/🧫️fixtures"
+  },
+  {
+    "source": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🧬️schema/🧬️mutations/🏢️create-building-storey/🧫️fixtures",
+    "destination": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🧪️tests/🧫️fixtures/🧬️mutations/🏢️create-building-storey"
+  }
+]

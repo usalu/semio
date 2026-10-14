@@ -6,7 +6,7 @@ use semio_framework_value::ValueRefusalKind;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase};
 #[test]
 fn sqlite_snapshot_layout_borrowed_preflight_keeps_actual_dictionary_fields_borrowed(){
- let plan:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧾️dictionary/🔣️.json")).unwrap();let plan=&plan["nativePreflight"];assert_eq!(plan["scratchOwnership"],"paidFrontiersOnly");
+ let plan:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧾️dictionary/🔣️.json")).unwrap();let plan=&plan["nativePreflight"];assert_eq!(plan["scratchOwnership"],"paidFrontiersOnly");
  let mut owner=complete_fixture(0.0,0.0);let mut baseline=complete_fixture(0.0,0.0);
  let literal=plan["literal"].as_str().unwrap().repeat(usize::try_from(plan["repeat"].as_u64().unwrap()).unwrap());let bytes=literal.len();assert_eq!(bytes,usize::try_from(plan["utf8Bytes"].as_u64().unwrap()).unwrap());owner.data_fields.as_mut().unwrap().entries[0].value=semio_framework_value::DslValue::String(literal);baseline.data_fields.as_mut().unwrap().entries[0].value=semio_framework_value::DslValue::String(String::new());
  let limits=SqliteDatabaseLimits::default();let threshold=usize::try_from(plan["cancelAfterBytes"].as_u64().unwrap()).unwrap();

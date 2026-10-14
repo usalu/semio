@@ -77,8 +77,8 @@ pub mod derived_composition {
         const DIALECT: Dialect = DIALECT;
         async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <SemioFlowSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <SemioFlowSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <SemioFlowSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).ok(),
+                IoPayload::Text(text) => <SemioFlowSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => check_flow_referential_invariants(&snapshot),
@@ -169,10 +169,10 @@ pub mod derived_construction {
             Self { snapshot }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<SemioFlowSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<SemioFlowSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SemioFlowSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<SemioFlowSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::diff(&mutation, &self.snapshot);
@@ -233,14 +233,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <SemioFlowSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <SemioFlowSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <SemioFlowSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <SemioFlowSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

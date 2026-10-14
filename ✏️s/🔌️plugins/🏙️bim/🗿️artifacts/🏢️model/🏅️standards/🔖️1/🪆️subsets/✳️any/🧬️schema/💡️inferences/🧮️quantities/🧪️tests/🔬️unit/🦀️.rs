@@ -218,8 +218,8 @@ async fn group_volumes_split_a_solid_by_material() {
     assert!(upward_area(solid, 0) > 0.0);
 }
 
-const BUILDING: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🧮️quantities/🏗️building/📸️snapshot/🔣️.json");
-const BUILDING_TABLE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🧮️quantities/🏗️building/💡️inference/🧮️quantities/🔣️.json");
+const BUILDING: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧮️quantities/🏗️building/📸️snapshot/🔣️.json");
+const BUILDING_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧮️quantities/🏗️building/💡️inference/🧮️quantities/🔣️.json");
 
 #[semio_framework_async_macros::async_test]
 async fn the_subject_reproduces_the_third_party_oracle_table() {

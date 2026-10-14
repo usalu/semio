@@ -98,6 +98,6 @@ fn serde_binary_and_composite_plan_match_the_leaf() {
 /// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.
 #[test]
 fn committed_wire_witnesses_are_the_canonical_wire() {
-    ::store::os_store::test_support::assert_wire_witness::<WireTestMutation>(include_str!("../../🧪️testing/📡️contributed-mutation-wire/🧬️mutations/➕️add-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::store::os_store::test_support::assert_wire_witness::<WireTestMutation>(include_str!("../../🧪️testing/📡️contributed-mutation-wire/🧬️mutations/➕️add-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }
 //#endregion 🧪️ContributedMutationWireLaws

@@ -35,7 +35,7 @@ fn document_with_solid_layer(red: u8, green: u8, blue: u8, alpha: u8, width: u32
 
 #[semio_framework_async_macros::async_test]
 async fn composite_applies_persisted_mask_assets_and_linked_transforms() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️schema/🧫️fixtures/🎭️mask/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔬️contract/🎭️mask/🔣️.json")).unwrap();
     let pixels:Vec<u8>=fixture["maskImage"]["pixels"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap() as u8).collect();
     let image=SemioImageSnapshot {schema:STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),width:3,height:1,colorspace:SemioColorspace::Rgba,bit_depth:8,frames:vec![SemioImageFrame {delay_ms:0,rgba8:pixels}],icc:None,metadata:Vec::new()};
     let bytes=png_bytes_from_semio_image(&image).unwrap();
@@ -180,7 +180,7 @@ async fn png_export_writes_a_real_png_signature() {
 /// codec, so a drift between this plugin's Rust path (composite → stdio `SemioImageToBmp` →
 /// stdio `encode_bmp`) and an independent second implementation fails in BOTH languages instead
 /// of going unnoticed.
-const BMP_PARITY_FIXTURES: &[&str] = &[include_str!("../../🧫️fixtures/🪟️solid-3x2.json"), include_str!("../../🧫️fixtures/🌈️gradient-5x3.json")];
+const BMP_PARITY_FIXTURES: &[&str] = &[include_str!("../🧫️fixtures/🪟️solid-3x2.json"), include_str!("../🧫️fixtures/🌈️gradient-5x3.json")];
 
 fn parity_fixture(text: &str) -> (u32, u32, Vec<u8>, String) {
     use semio_s_artifact_stdio_json::schema::snapshot::{JsonValue};
@@ -258,7 +258,7 @@ async fn advertised_stdio_kinds_exclude_every_declined_hop() {
 
 #[semio_framework_async_macros::async_test]
 async fn composite_source_preparation_copies_unique_images_in_bounded_grants() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧱️preparation/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧱️preparation/🔣️.json")).unwrap();
     let pixel:Vec<u8>=fixture["pixel"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap() as u8).collect();
     let width=fixture["width"].as_u64().unwrap() as u32;let height=fixture["height"].as_u64().unwrap() as u32;
     let mut document=document_with_solid_layer(pixel[0],pixel[1],pixel[2],pixel[3],width,height);

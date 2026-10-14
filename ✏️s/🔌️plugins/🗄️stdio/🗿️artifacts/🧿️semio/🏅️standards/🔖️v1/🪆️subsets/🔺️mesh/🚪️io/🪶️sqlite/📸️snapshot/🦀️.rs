@@ -1,10 +1,11 @@
 //! 🔺️ Mesh primitives and indexed, ordered numeric buffers with explicit material relationships.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow};
 use crate::schema::snapshot::{SemioMeshSnapshot, SemioMesh, SemioPrimitive, SemioTopology, SemioMaterial, SemioTexture};
 use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioUv, SemioRgba};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 fn reference(id:Option<&str>)->Cell<'_>{match id{None=>Cell::Null,Some(id)=>Cell::Text(id)}}
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
@@ -35,7 +36,7 @@ fn number(value:usize)->Result<i64,ValueError>{i64::try_from(value).map_err(|err
 fn identity<'a>(row:impl std::borrow::Borrow<SqliteRow<'a>>,columns:usize)->Result<(),ValueError>{let row=*row.borrow();if row.rowid<=0||row.integer(0)?!=row.rowid||row.values.len()!=columns{Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio mesh row identity or columns"))}else{Ok(())}}
 fn tick(control:&mut SqliteSnapshotControl<'_>,completed:&mut usize)->Result<(),ValueError>{*completed+=1;if *completed%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,*completed,0)?;}Ok(())}
 fn topology(value:SemioTopology)->&'static str{match value{SemioTopology::Points=>"points",SemioTopology::Lines=>"lines",SemioTopology::LineStrip=>"line_strip",SemioTopology::Triangles=>"triangles",SemioTopology::TriangleStrip=>"triangle_strip",SemioTopology::TriangleFan=>"triangle_fan"}}
-impl ArtifactSqliteSnapshot for SemioMeshSnapshot{
+impl ArtifactSqliteSnapshotHost for SemioMeshSnapshot{
 fn retire_sqlite_snapshot(self){drop(semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
 
@@ -49,6 +50,11 @@ let row=database.table("semio_mesh_document")?.single_row()?;
 if row.rowid!=1||row.integer(0)?!=1||row.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned document identity differs from projected semantic fields"));}
 control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))})();result.map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
 
+
+
+
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for SemioMeshSnapshot {
 const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
 fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.project_sqlite_database(control)}
 fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError> {let result=(||->Result<Self,ValueError>{ semantic::layout(control.limits())?;Self::reconstruct_sqlite_database(database, control, Self::SQLITE_SCHEMA) })();result}

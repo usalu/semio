@@ -49,7 +49,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn payload_roundtrip_obeys_neutral_page_boundaries_and_arbitrary_bytes() {
-        let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
+        let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
         let storage = SqliteStorage::open_in_memory(crate::db_storage::db_io_test_pool()).await.unwrap();
 
         assert_payload_roundtrip(&storage, Vec::new()).await;
@@ -96,7 +96,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn sqlite_wal_writer_real_database_alias_and_crash_are_exclusive() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔐️writer/🧫️fixtures/🌐️remote-guard/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔐️writer/🧪️tests/🧫️fixtures/🌐️remote-guard/🔣️.json")).unwrap();
         let child_mode = std::env::var("SEMIO_SQLITE_WRITER_CHILD_MODE").ok();
         let child_path = std::env::var_os("SEMIO_SQLITE_WRITER_CHILD_PATH").map(std::path::PathBuf::from);
         if let (Some(mode), Some(path)) = (child_mode, child_path) {
@@ -172,7 +172,7 @@ mod tests {
     /// replace wrote `db_io_stage` rows and blocked behind that lock.
     #[semio_framework_async_macros::async_test]
     async fn file_reads_run_on_wal_readers_beside_a_held_write_lock_and_never_write() {
-        let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
+        let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
         let base = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
         let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
         let root = base.join(format!("sqlite-readers-{}-{nonce}", std::process::id()));

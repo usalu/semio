@@ -397,6 +397,7 @@ impl ModelNode {
 //#region 🔖️Values
 /// 📦️ What a node holds. Everything bigger than a `Copy` struct is an `Arc`, so the engine's per-parent clone and a cache hit are pointer copies.
 #[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum Data {
     Structure(Arc<super::super::analytical_members::StructuralAnalysis>),
     OptionScope(Arc<super::super::option_scope::OptionScope>),
@@ -438,6 +439,7 @@ pub enum Data {
 
 /// 📦️ A node value: the key it was computed for and its data. The key travels with the value so a parent is found by key, never by position.
 #[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct ModelValue {
     pub node: ModelNode,
     pub data: Data,

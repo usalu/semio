@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Lifecycle Failure Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "original",
+    "primaryTypes",
+    "denials",
+    "wholePrimary",
+    "separateReceiptRefusal",
+    "sameSourcePointers",
+    "noClone",
+    "noFormat",
+    "rawEffectsRecordedOnce",
+    "workForAdmittedZeroPhysicalProgress",
+    "terminalDrop",
+    "copy",
+    "overdrawCopy",
+    "fault",
+    "value",
+    "normalContextRequired"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "original": {
+      "const": {
+        "operation": 17,
+        "generation": 9
+      }
+    },
+    "primaryTypes": {
+      "const": [
+        "fault",
+        "value"
+      ]
+    },
+    "denials": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth",
+        "work",
+        "deadline"
+      ]
+    },
+    "wholePrimary": {
+      "const": true
+    },
+    "separateReceiptRefusal": {
+      "const": true
+    },
+    "sameSourcePointers": {
+      "const": true
+    },
+    "noClone": {
+      "const": true
+    },
+    "noFormat": {
+      "const": true
+    },
+    "rawEffectsRecordedOnce": {
+      "const": true
+    },
+    "workForAdmittedZeroPhysicalProgress": {
+      "const": 1
+    },
+    "terminalDrop": {
+      "const": 0
+    },
+    "copy": {
+      "const": 3
+    },
+    "overdrawCopy": {
+      "const": 4
+    },
+    "fault": {
+      "const": {
+        "code": "original.lifecycle.source",
+        "message": "original whole Fault 源",
+        "cause": "original nested cause"
+      }
+    },
+    "value": {
+      "const": {
+        "message": "original whole ValueError 源"
+      }
+    },
+    "normalContextRequired": {
+      "const": true
+    }
+  }
+}

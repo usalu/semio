@@ -51,7 +51,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("matches the language-neutral installed-record schema", async () => {
       const { default: Ajv2020 } = await import("ajv/dist/2020.js");
       const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
-      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🧫️fixtures/🔣️.json", source.url), "utf8"));
       expect(new Ajv2020({ strict: true }).compile(schema)(fixture)).toBe(true);
     });
 

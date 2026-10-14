@@ -30,7 +30,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   it("KernelReturnContentFraming matches the shared stream and independent frame encoding at every split", async () => {
     const { default: wire } = await import("../../🔌️wire/🔣️.json");
     const { default: schema } = await import("../../🧬️schema/🔣️.json");
-    const { default: fixture } = await import("../../🧫️fixtures/🔣️.json");
+    const { default: fixture } = await import("../🧫️fixtures/🔣️.json");
     const { default: pageSchema } = await import("../../../../../🎭️actor/📃️page/🧬️schema/🔣️.json");
     const { default: lifetimeSchema } = await import("../../../../../🎭️actor/🚪️lifetime/🧬️schema/🔣️.json");
     const { default: patchSchema } = await import("../../../../../🎭️actor/🚪️lifetime/🩹️patch/🧬️schema/🔣️.json");
@@ -58,7 +58,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("KernelReturnContentFraming rejects every shared section-order violation and exact counted bodies", async () => {
-    const { default: fixture } = await import("../../🧫️fixtures/🔣️.json");
+    const { default: fixture } = await import("../🧫️fixtures/🔣️.json");
     const { frame, uint } = await oracle();
     const magic = Buffer.from(fixture.magicHex, "hex");
     const frames = new Map(fixture.recordVectors.map(row => [row.tag, Buffer.from(row.frameHex, "hex")]));
@@ -86,7 +86,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("KernelReturnContentFraming never allocates a body from an announced u64 length", async () => {
-    const { default: fixture } = await import("../../🧫️fixtures/🔣️.json");
+    const { default: fixture } = await import("../🧫️fixtures/🔣️.json");
     const { frame, uint } = await oracle();
     const prefix = Buffer.concat([Buffer.from(fixture.magicHex, "hex"), frame(0, Buffer.of(0, 0, 0, 1, 0)), Buffer.of(5), uint(0xffffffffffffffffn)]);
     const cursor = await factory();
@@ -105,7 +105,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("KernelReturnContentFraming preserves large Unicode and opaque operation bytes across raw pages", async () => {
-    const { default: fixture } = await import("../../🧫️fixtures/🔣️.json");
+    const { default: fixture } = await import("../🧫️fixtures/🔣️.json");
     const { frame, uint } = await oracle();
     const surface = Buffer.concat([Buffer.from(fixture.uiBegin.surface), Buffer.alloc(fixture.crossPage.largeSurfaceBytes, 97)]);
     const beginBody = Buffer.concat([Buffer.of(1, 7, 2, 3), uint(surface.length), surface, Buffer.of(0, 1, 1)]);
@@ -125,7 +125,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("KernelReturnContentFraming rejects truncation, noncanonical lengths, invalid counts and sticky faults", async () => {
-    const { default: fixture } = await import("../../🧫️fixtures/🔣️.json");
+    const { default: fixture } = await import("../🧫️fixtures/🔣️.json");
     const { frame, uint } = await oracle();
     const magic = Buffer.from(fixture.magicHex, "hex");
     const valid = Buffer.concat([magic, ...fixture.recordVectors.map(row => Buffer.from(row.frameHex, "hex"))]);
@@ -159,7 +159,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     return (value: bigint | number): Buffer => { const bytes = Buffer.alloc(8); bytes.writeBigUInt64LE(BigInt(value)); return Buffer.from(encode(bytes)); };
   };
   it("KernelReturnUiOperationHeader selects all eleven grammar fields without reading payload", async () => {
-    const { default: fixture } = await import("../../📥️input/🧫️fixtures/🔣️.json");
+    const { default: fixture } = await import("../../📥️input/🧪️tests/🧫️fixtures/🔣️.json");
     const { default: wire } = await import("../../🔌️wire/🔣️.json");
     const { default: Ajv } = await import("ajv");
     const uint = await oracle();
@@ -182,7 +182,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
   });
   it("KernelReturnUiOperationHeader rejects malformed authority-free prefixes with sticky faults", async () => {
-    const { default: fixture } = await import("../../📥️input/🧫️fixtures/🔣️.json");
+    const { default: fixture } = await import("../../📥️input/🧪️tests/🧫️fixtures/🔣️.json");
     for (const row of fixture.invalid) {
       const cursor = await factory(BigInt(row.length));
       expect(() => { for (const byte of Buffer.from(row.headerHex, "hex")) cursor.push(byte); cursor.finish(); }).toThrow();
@@ -204,8 +204,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
   });
   it("KernelReturnUiOperationHeader retains children count and refuses allocation from u64 length", async () => {
-    const { default: fixture } = await import("../../📥️input/🧫️fixtures/🔣️.json");
-    const { default: shared } = await import("../../🧫️fixtures/🔣️.json");
+    const { default: fixture } = await import("../../📥️input/🧪️tests/🧫️fixtures/🔣️.json");
+    const { default: shared } = await import("../🧫️fixtures/🔣️.json");
     const uint = await oracle();
     const children = shared.scalarOperationVectors.find(row => row.name === "setChildren")!;
     const encoded = Buffer.concat([Buffer.of(children.opcode), uint(BigInt(children.node)), uint(children.children!.length), ...children.children!.map(node => uint(BigInt(node)))]);

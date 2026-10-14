@@ -4,13 +4,13 @@ use crate::schema::snapshot::{PngRegion,PngNativePaint};
 use protocol::{Mutation, MutationDiff};
 use std::{io::Write, process::{Command, Stdio}};
 
-const PRECISION_16: &[u8] = include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png");
-const INDEXED_2: &[u8] = include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/indexed-2bit-duplicate-palette.png");
-const MULTI_IDAT: &[u8] = include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/rgba8-multi-idat-private.png");
-const ADAM7_RGBA8: &[u8] = include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/rgba8-adam7.png");
-const GRAYSCALE_1: &[u8] = include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/grayscale-1bit.png");
-const CONTROLLED_PAINT: &str = include_str!("../../../../../../../🧫️fixtures/🧬️native-paint-controlled/🔣️.json");
-const STRUCTURE_CORPUS: &str = include_str!("../../🪶️sqlite/📸️snapshot/🧫️fixtures/🚦️audit/🔣️.json");
+const PRECISION_16: &[u8] = include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png");
+const INDEXED_2: &[u8] = include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/indexed-2bit-duplicate-palette.png");
+const MULTI_IDAT: &[u8] = include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/rgba8-multi-idat-private.png");
+const ADAM7_RGBA8: &[u8] = include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/rgba8-adam7.png");
+const GRAYSCALE_1: &[u8] = include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/grayscale-1bit.png");
+const CONTROLLED_PAINT: &str = include_str!("../../../../../../../🧪️tests/🧫️fixtures/🧬️native-paint-controlled/🔣️.json");
+const STRUCTURE_CORPUS: &str = include_str!("../../🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🚦️audit/🔣️.json");
 
 fn hex(text: &str) -> Vec<u8> {
     text.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()
@@ -213,7 +213,7 @@ fn region_paint_is_exactly_profile_scoped_and_revision_guarded() {
 
 #[test]
 fn native_paint_preserves_index_identity_packing_and_non_idat_bytes() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../✏️editor/🎭️modes/✏️edit/🎮️commands/🎨️paint-native-region/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../✏️editor/🎭️modes/✏️edit/🎮️commands/🎨️paint-native-region/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture["cases"][0]["id"], "indexed-duplicate-identity");
     let snapshot = decode_png(INDEXED_2).unwrap();
     let before_non_idat = non_idat_chunks(&encode_png(&snapshot).unwrap());

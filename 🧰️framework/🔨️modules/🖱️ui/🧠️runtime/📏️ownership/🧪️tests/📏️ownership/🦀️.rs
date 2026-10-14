@@ -2,7 +2,7 @@ use super::*;
 
 //#region 📐️Fixtures
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
 
 fn census(node: &crate::TreeNode) -> SurfaceSemanticUsage {
@@ -572,7 +572,7 @@ fn surface_ownership_native_backing_inventory_preserves_capacity() {
 #[test]
 fn surface_ownership_resident_reservation_uses_one_shared_aggregate_ledger() {
     let _guard = crate::surface_reconcile_registry_test_guard();
-    let data: serde_json::Value = serde_json::from_str(include_str!("../../../../🧬️contract/🎟️resident/🧫️fixtures/🔣️.json")).unwrap();
+    let data: serde_json::Value = serde_json::from_str(include_str!("../../../../🧬️contract/🎟️resident/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     assert!(register_surface_reconcile_backing(32768).unwrap());
     let before = ui_contract::UiResidentPermit::snapshot().unwrap();
     let bytes = data["smallBytes"].as_u64().unwrap() as usize;

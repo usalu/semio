@@ -8,9 +8,9 @@ const command = process.argv[2] ?? "test";
 if (command === "test" && process.argv.slice(3).some((argument) => argument !== "--")) {
   throw new Error("This artifact test target runs its complete registered suite and accepts no test selectors.");
 }
-await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-png", { suites: ["🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🧬️owned-native-contract/🟦️.test.ts"] });
+await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-png", { bundleRuntime: "bun", suites: ["🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🧬️owned-native-contract/🟦️.test.ts"] ,afterTest:async original=>{
+  await runRepositoryCommand(original,process.execPath,["x", "--no-install", "tsc", "--noEmit", "--strict", "--skipLibCheck", "--target", "ES2022", "--module", "ESNext", "--moduleResolution", "Bundler", "--allowImportingTsExtensions", "--resolveJsonModule", resolve(import.meta.dir, "../../🏅️standards/🔖️1.2/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🎮️commands/🩹️patch-pixel-region/🟦️.ts")],getWorkspaceRoot(),"artifact-primary-editor-types",{version:1,maximumElapsedMilliseconds:120_000,output:{maximumBytes:134217728,maximumLines:65536}});
+  await runRepositoryCommand(original,process.execPath,["test", resolve(import.meta.dir, "../../🏅️standards/🔖️1.2/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🎮️commands/🩹️patch-pixel-region/🧪️tests/🟦️.test.ts")],getWorkspaceRoot(),"png-pixel-region-fixture",{version:1,maximumElapsedMilliseconds:120_000,output:{maximumBytes:134217728,maximumLines:65536}});
+}});
 
-if (command === "test") {
-  await runRepositoryCommand(process.execPath, ["x", "--no-install", "tsc", "--noEmit", "--strict", "--skipLibCheck", "--target", "ES2022", "--module", "ESNext", "--moduleResolution", "Bundler", "--allowImportingTsExtensions", "--resolveJsonModule", resolve(import.meta.dir, "../../🏅️standards/🔖️1.2/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🎮️commands/🩹️patch-pixel-region/🟦️.ts")], getWorkspaceRoot(), "artifact-primary-editor-types", 120_000);
-  await runRepositoryCommand(process.execPath, ["test", resolve(import.meta.dir, "../../🏅️standards/🔖️1.2/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🎮️commands/🩹️patch-pixel-region/🧪️tests/🟦️.test.ts")], getWorkspaceRoot(), "png-pixel-region-fixture", 120_000);
-}
+

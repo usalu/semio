@@ -1,5 +1,0 @@
-{
-  "mutation": "changeRoomAirModel",
-  "zoneId": 1,
-  "newModel": "TwoNodeBuoyancy"
-}

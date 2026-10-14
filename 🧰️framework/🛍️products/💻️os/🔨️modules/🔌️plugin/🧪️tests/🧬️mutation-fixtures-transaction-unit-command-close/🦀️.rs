@@ -1,5 +1,5 @@
 use super::*;
-use crate::app_testing::mutation_fixture::job_close::{job_grant as grant, job_quote, retire_completion};
+use crate::app_testing::mutation_fixture::job_close::{job_quote, retire_completion};
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 
@@ -9,6 +9,7 @@ use semio_framework_value::retained_clone::RetainedCloneGrant;
 struct Cases {
     schema_version: u32,
     layout_policy: String,
+    caller_grant: [usize; 5],
     cases: Vec<Case>,
 }
 
@@ -97,27 +98,28 @@ fn label(step: InteractiveJobCloseStep) -> &'static str {
     }
 }
 
-fn drain(job: &mut TxnFixtureJob) {
+fn drain(job: &mut TxnFixtureJob, original: RetainedCloneGrant) {
     job.begin_close();
     for _ in 0..256 {
         if job.terminal_is_empty() {
             return;
         }
         let mut released = 0;
-        let demand = job_quote(job);
-        turn(job, grant(1, demand), &mut released);
+        turn(job, original, &mut released);
     }
     panic!("the fixture job did not reach its terminal empty shell");
 }
 
 fn check(id: &str) {
-    let document: Cases = serde_json::from_str(include_str!("../../🧫️fixtures/🧾️transaction-command-close/🔣️.json")).expect("command-close neutral vectors");
+    let document: Cases = serde_json::from_str(include_str!("../🧫️fixtures/🧾️transaction-command-close/🔣️.json")).expect("command-close neutral vectors");
     assert_eq!(document.schema_version, 2);
     assert_eq!(document.layout_policy, "command-value-layout-excludes-allocator-overhead");
     assert_eq!(document.cases.len(), 6);
     let expected_ids = ["before-begin-close", "zero-items", "short-depth", "short-release", "exact-external-completion", "exact-pending-completion"].into_iter().collect::<std::collections::BTreeSet<_>>();
     assert_eq!(document.cases.iter().map(|case| case.id.as_str()).collect::<std::collections::BTreeSet<_>>(), expected_ids);
     assert_eq!(document.cases.iter().filter(|case| case.id == id).count(), 1);
+    let [maximum_items, maximum_copy_bytes, maximum_capacity_bytes, maximum_release_bytes, maximum_depth] = document.caller_grant;
+    let original = RetainedCloneGrant { maximum_items, maximum_copy_bytes, maximum_capacity_bytes, maximum_release_bytes, maximum_depth };
     let case = document.cases.into_iter().find(|case| case.id == id).expect("exact named command-close case");
     let command = Box::new(match case.command {
         Command::Increment => TxnCommand::Increment,
@@ -147,18 +149,18 @@ fn check(id: &str) {
         if !advanced {
             break;
         }
-        let demand = job_quote(&job);
-        step = Some(turn(&mut job, grant(1, demand), &mut released));
+        step = Some(turn(&mut job, original, &mut released));
     }
     if let Some(probe) = case.probe {
-        let mut demand = job_quote(&job);
+        let demand = job_quote(&job);
+        let mut denied = RetainedCloneGrant { maximum_items: probe.items, ..original };
         match probe.axis {
             Axis::ExactQuote => {}
-            Axis::DepthMinusOne => demand.depth -= 1,
-            Axis::ReleaseMinusOne => demand.release_bytes -= 1,
+            Axis::DepthMinusOne => denied.maximum_depth = demand.depth - 1,
+            Axis::ReleaseMinusOne => denied.maximum_release_bytes = demand.release_bytes - 1,
         }
         let before = job_quote(&job);
-        let probed = turn(&mut job, grant(probe.items, demand), &mut released);
+        let probed = turn(&mut job, denied, &mut released);
         assert_eq!(probed.progress(), Default::default(), "{id}: an unfunded, refused or blocked probe moves nothing");
         step = Some(probed);
         assert_eq!(job_quote(&job), before, "{id}: an unfunded probe leaves the exact quote unchanged");
@@ -198,9 +200,9 @@ fn check(id: &str) {
     if external.is_some() {
         assert_eq!(external_still_shared, Some(true), "{id}: external completion clone retains its exact shared cell");
     }
-    drain(&mut job);
+    drain(&mut job, original);
     if let Some(external) = external {
-        retire_completion(external);
+        retire_completion(external, original);
     }
 }
 

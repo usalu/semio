@@ -1,4 +1,4 @@
-"""Third-party (`shapely`) reproduction of the language-agnostic fixtures in `🧫️fixtures/*` and of `semio-framework-2d` regions.
+"""Third-party (`shapely`) reproduction of the language-agnostic fixtures in `🧪️tests/🧫️fixtures/*` and of `semio-framework-2d` regions.
 
 Run from the repo root: `.venv/Scripts/python.exe -m pytest -p no:cacheprovider "<this file>"`.
 """

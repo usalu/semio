@@ -8,6 +8,7 @@ pub(crate) trait OperationHostStore:Send+'static{
  fn operation_slot(&mut self)->&mut OperationSlot;
  fn operation_log(&mut self,level:String,message:String);
  fn operation_now_ms(&mut self)->i64;
+ fn operation_clock_us(&mut self)->Option<u64>;
  fn operation_trace_span(&mut self,name:String);
 }
 /// 🚨️ Preserves the original refusal domain without formatting native diagnostic storage.
@@ -41,6 +42,7 @@ pub(crate) fn register<T:OperationHostStore>(linker:&mut Linker<T>)->wasmtime::R
  let result=(||{
   let mut interface=linker.instance("semio:framework/pure@1.0.0")?;
   interface.func_wrap("log",|mut store:wasmtime::StoreContextMut<'_,T>,(level,message):(String,String)|{store.data_mut().operation_log(level,message);Ok(())})?;
+  interface.func_wrap("operation-clock-us",|mut store:wasmtime::StoreContextMut<'_,T>,():()|Ok((store.data_mut().operation_clock_us(),)))?;
   interface.func_wrap("now-ms",|mut store:wasmtime::StoreContextMut<'_,T>,():()|Ok((store.data_mut().operation_now_ms(),)))?;
   interface.func_wrap("trace-span",|mut store:wasmtime::StoreContextMut<'_,T>,(name,):(String,)|{store.data_mut().operation_trace_span(name);Ok(())})?;
   interface.func_wrap_concurrent("operation-begin",|accessor,():()|Box::pin(async move{Ok((match request(accessor,OperationRequest::Begin).await{OperationReply::Begin(value)=>value,_=>Err(4)},))}))?;

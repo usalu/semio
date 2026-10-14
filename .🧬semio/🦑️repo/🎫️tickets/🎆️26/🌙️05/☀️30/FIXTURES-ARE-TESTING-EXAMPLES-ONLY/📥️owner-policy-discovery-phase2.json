@@ -1,0 +1,11 @@
+{
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+  "before": "4ba9ce4c7389cb338231dae3efa0c653948434311e8241bffb45c45e1d689699",
+  "after": "eb20f5577c2020d462582a0533f2f61ed70accb41de951179427f506a6da0485",
+  "functions": [
+    "parseOwnerProjectionPolicy",
+    "ownerProjectionPolicyCensus",
+    "semanticExactOwnedFileCatalog"
+  ],
+  "fields": "entries/sourcePath"
+}

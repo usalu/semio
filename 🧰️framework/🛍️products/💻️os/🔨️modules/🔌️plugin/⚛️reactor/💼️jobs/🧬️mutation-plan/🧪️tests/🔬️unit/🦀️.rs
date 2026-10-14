@@ -1,7 +1,8 @@
 use super::super::*;
-use super::super::tests::{slice_fixture,start_fixture,terminal_fixture};
+use super::super::tests::{slice_fixture,start_fixture,terminal_fixture,cancel_fixture};
 use super::job_test_mutation_fixture::{AddValue, JobTestOp, JobTestSnapshot};
-use store::{os_store::serialization::ArtifactPack, OpBinary};
+use pack::snapshot::ArtifactPack;
+use store::OpBinary;
 
 
 /// 🪪️ Commits one contributed mutation kind into the SAME process-global registry
@@ -84,7 +85,7 @@ async fn mutation_plan_job_checkpoint_restore_matches_an_uninterrupted_run() {
     let entry = entries.iter().find(|entry| entry.job == 302).expect("job 302 must appear in checkpoint_jobs()");
     assert_eq!(entry.checkpoint.as_deref(), Some(PHASE_DECODED));
     let checkpoint = entry.checkpoint.clone();
-    cancel_job(302).await;
+    cancel_fixture(302);
     terminal_fixture(302);
     start_fixture(302, JOB_KIND_MUTATION_PLAN, input.clone(), checkpoint);
     let restored_final = match slice_fixture(302) {

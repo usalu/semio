@@ -8,7 +8,7 @@ fn decode_hex(text: &str) -> Vec<u8> {
 
 #[test]
 fn canonical_key_vectors_match_independent_blake3_and_distinguish_nul_tuples() {
-    let corpus: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let keys = corpus["keys"].as_array().unwrap();
     assert_eq!(keys.len(), 24);
     let reference: Vec<Value> = keys.iter().map(|row| {

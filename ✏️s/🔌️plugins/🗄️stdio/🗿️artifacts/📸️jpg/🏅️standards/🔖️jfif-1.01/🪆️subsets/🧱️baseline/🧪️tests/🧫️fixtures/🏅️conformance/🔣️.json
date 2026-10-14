@@ -1,0 +1,211 @@
+{
+  "cases": [
+    {
+      "id": "baseline",
+      "facts": {
+        "hasFrame": true,
+        "baselineSequential": true,
+        "samplePrecision": 8,
+        "arithmeticConditioning": false,
+        "dcTableCount": 2,
+        "acTableCount": 2,
+        "components": [
+          {
+            "id": 1,
+            "horizontal": 2,
+            "vertical": 2
+          },
+          {
+            "id": 2,
+            "horizontal": 1,
+            "vertical": 1
+          },
+          {
+            "id": 3,
+            "horizontal": 1,
+            "vertical": 1
+          }
+        ]
+      },
+      "codes": []
+    },
+    {
+      "id": "absent-frame",
+      "facts": {
+        "hasFrame": false,
+        "baselineSequential": true,
+        "samplePrecision": 8,
+        "arithmeticConditioning": false,
+        "dcTableCount": 2,
+        "acTableCount": 2,
+        "components": [
+          {
+            "id": 1,
+            "horizontal": 2,
+            "vertical": 2
+          },
+          {
+            "id": 2,
+            "horizontal": 1,
+            "vertical": 1
+          },
+          {
+            "id": 3,
+            "horizontal": 1,
+            "vertical": 1
+          }
+        ]
+      },
+      "codes": [
+        "stdio.jpg.baseline.no-frame"
+      ]
+    },
+    {
+      "id": "progressive",
+      "facts": {
+        "hasFrame": true,
+        "baselineSequential": false,
+        "samplePrecision": 8,
+        "arithmeticConditioning": false,
+        "dcTableCount": 2,
+        "acTableCount": 2,
+        "components": [
+          {
+            "id": 1,
+            "horizontal": 2,
+            "vertical": 2
+          },
+          {
+            "id": 2,
+            "horizontal": 1,
+            "vertical": 1
+          },
+          {
+            "id": 3,
+            "horizontal": 1,
+            "vertical": 1
+          }
+        ]
+      },
+      "codes": [
+        "stdio.jpg.baseline.sof-marker"
+      ]
+    },
+    {
+      "id": "twelve-bit",
+      "facts": {
+        "hasFrame": true,
+        "baselineSequential": true,
+        "samplePrecision": 12,
+        "arithmeticConditioning": false,
+        "dcTableCount": 2,
+        "acTableCount": 2,
+        "components": [
+          {
+            "id": 1,
+            "horizontal": 2,
+            "vertical": 2
+          },
+          {
+            "id": 2,
+            "horizontal": 1,
+            "vertical": 1
+          },
+          {
+            "id": 3,
+            "horizontal": 1,
+            "vertical": 1
+          }
+        ]
+      },
+      "codes": [
+        "stdio.jpg.baseline.precision"
+      ]
+    },
+    {
+      "id": "arithmetic",
+      "facts": {
+        "hasFrame": true,
+        "baselineSequential": true,
+        "samplePrecision": 8,
+        "arithmeticConditioning": true,
+        "dcTableCount": 2,
+        "acTableCount": 2,
+        "components": [
+          {
+            "id": 1,
+            "horizontal": 2,
+            "vertical": 2
+          },
+          {
+            "id": 2,
+            "horizontal": 1,
+            "vertical": 1
+          },
+          {
+            "id": 3,
+            "horizontal": 1,
+            "vertical": 1
+          }
+        ]
+      },
+      "codes": [
+        "stdio.jpg.baseline.arithmetic-conditioning-present"
+      ]
+    },
+    {
+      "id": "third-dc-table",
+      "facts": {
+        "hasFrame": true,
+        "baselineSequential": true,
+        "samplePrecision": 8,
+        "arithmeticConditioning": false,
+        "dcTableCount": 3,
+        "acTableCount": 2,
+        "components": [
+          {
+            "id": 1,
+            "horizontal": 2,
+            "vertical": 2
+          },
+          {
+            "id": 2,
+            "horizontal": 1,
+            "vertical": 1
+          },
+          {
+            "id": 3,
+            "horizontal": 1,
+            "vertical": 1
+          }
+        ]
+      },
+      "codes": [
+        "stdio.jpg.baseline.huffman-table-count"
+      ]
+    },
+    {
+      "id": "sampling-eight",
+      "facts": {
+        "hasFrame": true,
+        "baselineSequential": true,
+        "samplePrecision": 8,
+        "arithmeticConditioning": false,
+        "dcTableCount": 2,
+        "acTableCount": 2,
+        "components": [
+          {
+            "id": 1,
+            "horizontal": 8,
+            "vertical": 1
+          }
+        ]
+      },
+      "codes": [
+        "stdio.jpg.baseline.component-sampling"
+      ]
+    }
+  ],
+  "cancelComponents": 2000,
+  "cancelAfter": 256
+}

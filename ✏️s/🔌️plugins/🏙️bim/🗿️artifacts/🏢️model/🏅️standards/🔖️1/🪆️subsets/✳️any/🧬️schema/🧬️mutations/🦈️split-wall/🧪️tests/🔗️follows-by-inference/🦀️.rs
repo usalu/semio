@@ -7,8 +7,8 @@ use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout};
 use crate::{ModelMutation, ModelSnapshot};
 
-const WITH_OPENINGS: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🦈️split-wall/🪝️hands-openings-over/📸️snapshot/⬅️before/🔣️.json");
-const WITH_ARC: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🦈️split-wall/🌀️splits-an-arc/📸️snapshot/⬅️before/🔣️.json");
+const WITH_OPENINGS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦈️split-wall/🪝️hands-openings-over/📸️snapshot/⬅️before/🔣️.json");
+const WITH_ARC: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦈️split-wall/🌀️splits-an-arc/📸️snapshot/⬅️before/🔣️.json");
 
 fn split(base: &ModelSnapshot, id: &str, t: f64) -> ModelSnapshot {
     apply_model_mutation(base, &ModelMutation::SplitWall(SplitWall { id: id.into(), t, new_id: format!("{id}-2") })).expect("the split applies")

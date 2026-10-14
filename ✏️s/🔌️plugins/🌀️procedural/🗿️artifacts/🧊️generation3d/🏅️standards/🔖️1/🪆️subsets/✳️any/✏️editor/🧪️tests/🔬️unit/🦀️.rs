@@ -8,7 +8,7 @@ const GENERATION3D_MEASURED_CONTRIBUTIONS_PACK_CHARS: usize = 272_089;
 #[semio_framework_async_macros::async_test]
 async fn document_io_outer_export_yields_before_physical_publication() {
     let _serial = crate::test_serial::lock();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🚪️io/🧫️fixtures/🎨️surface/🔣️.json")).expect("neutral document continuation fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).expect("neutral document continuation fixture");
     let snapshot = <Generation3dPlayApp as ArtifactEditor>::initial_snapshot();
     let config = Generation3dConfig::default();
     let command = Generation3dCommand::ExportDocument(export_document::ExportDocument { format: "txt".into(), widget_id: None });
@@ -37,7 +37,7 @@ async fn document_io_outer_export_yields_before_physical_publication() {
 #[semio_framework_async_macros::async_test]
 async fn document_io_outer_text_resumes_parity_cancel_and_stale_source_without_publication(){
     let _serial=crate::test_serial::lock();
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     let capacity=&fixture["documentContinuation"]["capacity"];assert_eq!(GENERATION3D_DOCUMENT_SOURCE_ALLOCATION_BYTES,capacity["sourceAllocationBytes"].as_u64().unwrap()as usize);assert_eq!(GENERATION3D_DOCUMENT_OWNERSHIP_SOURCE_MULTIPLES,capacity["ownershipSourceMultiples"].as_u64().unwrap()as usize);assert_eq!(GENERATION3D_DOCUMENT_SCAFFOLD_BYTES,capacity["scaffoldBytes"].as_u64().unwrap()as usize);assert_eq!(generation3d_document_io_contract().max_output_bytes,capacity["downloadBytes"].as_u64().unwrap()as usize);
     let mut snapshot=<Generation3dPlayApp as ArtifactEditor>::initial_snapshot();
     let demand=&fixture["documentContinuation"]["capacity"]["sourceDemand"];let recipe=demand["cases"].as_array().unwrap().iter().find(|row|row["id"]=="combined").unwrap();let text=demand["text"].as_str().unwrap();let prior_widgets=snapshot.host_snapshot.widgets.len();
@@ -80,7 +80,7 @@ async fn document_io_import_extent_accounts_the_actual_incoming_graph_groups(){
     use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
     use crate::standards::v1::subsets::any::schema::inferences::geometry::{infer_geometry, value::GeometryValue};
     use semio_framework_artifact_playbook_playbook::FormGeneration;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     let law=&fixture["documentContinuation"]["importContinuation"]["restoration"];
     assert_eq!(law["publication"],"canonical-load-genesis");assert_eq!(law["sourceBytes"],"exact-original-pack");assert_eq!(law["history"],"empty-genesis");assert_eq!(law["inference"],"original-imported-shapes");
     let mut incoming=Generation3dSnapshotRead::new(<Generation3dPlayApp as ArtifactEditor>::initial_snapshot());
@@ -98,7 +98,7 @@ async fn document_io_import_extent_accounts_the_actual_incoming_graph_groups(){
     let mut receipt=semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app,meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
     assert_eq!(receipt.completions,1);assert_eq!(receipt.effects.len(),1);
     let Effect::LoadDocument{pack,spr}=receipt.effects.pop().unwrap()else{panic!("canonical natural-file import publishes its original whole-document load")};
-    let candidate=Generation3dSnapshotRead::new(<Generation3dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).unwrap());assert_eq!(*candidate,*incoming);
+    let candidate=Generation3dSnapshotRead::new(<Generation3dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).unwrap());assert_eq!(*candidate,*incoming);
     let config_files=app.config_pack().await.unwrap();let config=store::os_store::text_format::parse_document_pack::<Generation3dConfig,Generation3dConfigMutation>(&config_files.pack,&config_files.spr).await.unwrap().into_snapshot();assert_eq!(config.camera,incoming.host_snapshot.camera);assert_eq!(config.selected_generation_id,incoming.generation.selected_generation_id);
     let files=store::os_store::serialization::ArtifactPackFiles{pack,spr,ops:String::new()};semio_framework_plugin::artifact_app_laws::load_document(&mut *app,&files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();app.bind_actor(actor).await;
     let loaded=context::snapshot(&app);assert_eq!(*loaded,*incoming);assert_eq!(loaded.host_snapshot.widgets.len(),before_groups+fixture["documentContinuation"]["importAdditionalGroups"].as_u64().unwrap()as usize+1);
@@ -111,7 +111,7 @@ async fn document_io_import_extent_accounts_the_actual_incoming_graph_groups(){
 #[test]
 fn document_io_eval_source_lease_preserves_owner_identity_and_stale_refusal() {
     use std::sync::Arc;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();let law=&fixture["documentContinuation"];assert_eq!(law["sourceReleases"],1);
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();let law=&fixture["documentContinuation"];assert_eq!(law["sourceReleases"],1);
     let mut session=FlowEvalSession::new();let text="Mesh 😀 source ".repeat(512);let pointer=text.as_ptr();session.set_eval_json(text);let source=session.lease_eval_json().unwrap();assert_eq!(source.as_ptr(),pointer);assert!(session.owns_eval_json(&source));let same=session.lease_eval_json().unwrap();assert!(Arc::ptr_eq(&source,&same));
     let mut alias=crate::retirement_driver::retire_shared_for_test(same,"eval source alias");crate::retirement_driver::drive_erased_released(alias.as_mut(),"eval source alias");
     session.set_eval_json("replacement".into());assert!(!session.owns_eval_json(&source));let mut retirement=crate::retirement_driver::retire_shared_for_test(source,"eval source");assert!(matches!(retirement.close_step(Default::default()).unwrap(),semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress==Default::default()));crate::retirement_driver::drive_erased_released(retirement.as_mut(),"eval source");session.retire_cold();eprintln!("[DEBUG] primary session eval source moved unchanged; immutable lease identity; stale refusal; bounded source disposal");
@@ -207,7 +207,7 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }),
         Generation3dCommand::DeleteSelection(delete_selection::DeleteSelection {}),
         Generation3dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: "extrude".into() }),
-        Generation3dCommand::AddWidget(add_widget::AddWidget { neuron_kind: None, format: None, action: None, kind: "inputSlider".into(), x: Some(10.0), y: None }),
+        Generation3dCommand::AddWidget(add_widget::AddWidget { neuron_kind: None, format: None, action: None, kind: "inputSlider".into(), x: Some(10.0), y: None,source_widget:None,source_port:None,target_port:None,source_revision:None }),
         Generation3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["height".into()], field: "value".into(), value: Some(9.5) }),
         Generation3dCommand::Reorganize(reorganize::Reorganize {}),
         Generation3dCommand::TranslateSelection(translate_selection::TranslateSelection { node_ids: vec!["extrude".into()], dx: 1.0, dy: 2.0, dz: 3.0, phase: None, reason: None, window_id: None }),
@@ -280,7 +280,7 @@ fn mesh_component_action_is_scoped_and_publishes_history_and_selection() {
         if let Some(action) = kind.actions.iter().find(|action| action.id == "editMeshSelection") {
             let cuts = action.args.iter().find(|arg| arg.id == "cuts").unwrap();
             assert!(matches!(cuts.schema, semio_framework::ArgSchema::Number { min: Some(1.0), max: Some(256.0), step: Some(1.0), integer: true, .. }));
-            let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎮️commands/🥽️edit-mesh-selection/🧫️fixtures/🔣️.json")).unwrap();
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎮️commands/🥽️edit-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
             let operation = action.args.iter().find(|arg| arg.id == "operation").unwrap();
             let semio_framework::ArgSchema::String { options, .. } = &operation.schema else { panic!("operation choices"); };
             let expected = fixture["valid"].as_array().unwrap().iter().map(|case| case["name"].as_str().unwrap()).collect::<Vec<_>>();
@@ -553,7 +553,7 @@ semio_framework_plugin::history_edit_acceptance_law!("procedural", super::Genera
 
 #[test]
 fn document_io_import_state_values_agree_with_serde_json(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     let source=serde_json::to_string(&fixture["documentContinuation"]["importContinuation"]["restoration"]["value"]).unwrap();
     let bytes=crate::standards::v1::subsets::any::io::document_io::import_payload_bytes(&source).unwrap();assert!(matches!(bytes,std::borrow::Cow::Borrowed(_)));assert_eq!(bytes.as_ptr(),source.as_ptr());let data_url=format!("data:text/plain,{source}");let body=crate::standards::v1::subsets::any::io::document_io::import_payload_bytes(&data_url).unwrap();assert!(matches!(body,std::borrow::Cow::Borrowed(_)));assert_eq!(body.as_ptr(),data_url.as_bytes()[16..].as_ptr());assert_eq!(body.as_ref(),source.as_bytes());
     let oracle:serde_json::Value=serde_json::from_str(&source).unwrap();
@@ -572,7 +572,7 @@ async fn document_io_import_continuation_restores_original_generation_selection_
     let _serial=crate::test_serial::lock();
     use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
     use semio_framework_artifact_playbook_playbook::FormGeneration;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();let law=&fixture["documentContinuation"]["importContinuation"];let state=&law["restoration"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();let law=&fixture["documentContinuation"]["importContinuation"];let state=&law["restoration"];
     assert_eq!(law["snapshotParity"],"all-semantic-fields");assert_eq!(law["rawSourceCopies"],0);assert_eq!(state["cameraLane"],"config");assert_eq!(state["publication"],"canonical-load-genesis");
     let mut snapshot=Generation3dSnapshotRead::new(<Generation3dPlayApp as ArtifactEditor>::initial_snapshot());
     let prior_id=state["priorGenerationId"].as_str().unwrap().to_string();let prior=snapshot.generation.cold_builder_mut().unwrap();prior.generations.push(FormGeneration{id:prior_id.clone(),name:"Prior generation".into(),values:Default::default()});prior.selected_generation_id=Some(prior_id.clone());prior.preview_text=Some("Prior preview".into());

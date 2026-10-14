@@ -11,7 +11,7 @@
 import { Matrix3, Vector2 } from "three";
 import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import corpus from "../../🧫️fixtures/🧫️path-paint/🔣️.json" with { type: "json" };
+import corpus from "../🧫️fixtures/🧫️path-paint/🔣️.json" with { type: "json" };
 import { drawSceneNode, type CanvasSceneNode } from "../../🎨️paint/🟦️.ts";
 // #endregion 🔌️Adapters
 

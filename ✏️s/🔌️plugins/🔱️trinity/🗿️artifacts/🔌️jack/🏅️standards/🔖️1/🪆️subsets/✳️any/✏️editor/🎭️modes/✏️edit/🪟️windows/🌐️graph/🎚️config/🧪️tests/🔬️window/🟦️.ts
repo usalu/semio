@@ -6,7 +6,7 @@ import { applyPatch } from "fast-json-patch";
 
 /** 🧪️ Independent JSON Patch reference for exact-window configuration ownership. */
 export function testJackGraphWindowConfigOracle(): void {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔬️window/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔬️window/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const ajv = semioSchemaAjvV1({ allErrors: true }).addSchema(artifactReferenceSchema);
   addSemioMutationLeafSchemasV1(ajv, new URL("../../🧬️schema/🧬️mutations", import.meta.url));

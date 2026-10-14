@@ -18,7 +18,7 @@ use semio_framework::Fault;
 /// too, since this module already used every one of the old wgpu-target types unqualified.
 use semio_framework_ui_contract::*;
 use std::collections::BTreeMap;
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_value::{ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
 use crate::sdk_fault::PluginAssemblyError;
@@ -269,7 +269,7 @@ pub struct DraftView<'a, D> {
 /// 👥️ Read-only view of the PRESENCE lane: this actor's own live shared state plus every
 /// peer's, as last broadcast. Ephemeral and shared — never persisted, never undoable.
 pub struct PresencePeersView<'a, P> {
-    root: &'a store::os_store::presence::PresencePeersRoot<P>,
+    pub(crate) root: &'a store::os_store::presence::PresencePeersRoot<P>,
 }
 
 impl<'a, P> PresencePeersView<'a, P> {
@@ -303,15 +303,15 @@ pub struct PresenceView<'a, P> {
 /// never persisted — see that field's own doc comment). Both are combined once per dispatch by
 /// `VcsArtifactApp::interaction_view`, never mutated through this read-only handle.
 pub struct InteractionView<'a> {
-    state: &'a protocol::InteractionState,
-    hover: &'a InteractionHoverState,
+    pub(crate) state: &'a protocol::InteractionState,
+    pub(crate) hover: &'a InteractionHoverState,
     /// 👥️ Every OTHER peer's last-adopted presence, keyed by actor — see
     /// `VcsArtifactApp::peer_presence`'s own doc comment. Sourced from `BTreeMap` iteration
     /// order, which is already sorted by actor.
-    peers: &'a PeerPresenceRoot,
+    pub(crate) peers: &'a PeerPresenceRoot,
     /// ⏪️ What the open time-travel draft references, per selection domain
     /// ([`crate::time_travel::TimeTravelLedger::draft_references`]) — empty while no draft editor is open.
-    draft_references: &'a BTreeMap<String, Vec<String>>,
+    pub(crate) draft_references: &'a BTreeMap<String, Vec<String>>,
 }
 
 impl<'a> InteractionView<'a> {
@@ -409,7 +409,7 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for NoConfig 
     }
 }
 
-impl store::os_store::serialization::ArtifactDsl for NoConfig {
+impl pack::snapshot::ArtifactDsl for NoConfig {
     const EXTENSION: &'static str = "nocfg";
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if text.trim().is_empty() {
@@ -461,6 +461,9 @@ impl ArtifactPack for NoConfig {
             Err(store::PackError::from(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "empty state must not contain bytes")))
         }
     }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NoConfig {
+
 }
 
 impl store::ConfigRecord for NoConfig {}
@@ -548,7 +551,7 @@ pub type NoDraftMutation = NoConfigMutation;
 pub struct NoPresence {}
 
 impl store::ArtifactPresenceSnapshot for NoPresence {
-    fn decode_presence_native(bytes: &[u8], owner: &mut store::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
+    fn decode_presence_native(bytes: &[u8], owner: &mut crate::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
         let grant = owner.remaining_grant();
         if grant.maximum_items == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "empty presence needs original work admission")); }
         if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "empty presence needs original depth admission")); }
@@ -558,7 +561,7 @@ impl store::ArtifactPresenceSnapshot for NoPresence {
         Ok(Self {})
     }
 
-    fn encode_presence_native(&self, owner: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> Result<Vec<u8>, ValueError> {
+    fn encode_presence_native(&self, owner: &mut crate::io::control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<Vec<u8>, ValueError> {
         let grant = owner.remaining_grant();
         if grant.maximum_items == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "empty presence needs original work admission")); }
         if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "empty presence needs original depth admission")); }
@@ -568,7 +571,7 @@ impl store::ArtifactPresenceSnapshot for NoPresence {
     }
 }
 
-impl store::os_store::serialization::ArtifactDsl for NoPresence {
+impl pack::snapshot::ArtifactDsl for NoPresence {
     const EXTENSION: &'static str = "nopres";
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if text.trim().is_empty() {
@@ -592,6 +595,9 @@ impl ArtifactPack for NoPresence {
             Err(store::PackError::from(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "empty state must not contain bytes")))
         }
     }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NoPresence {
+
 }
 
 impl ::protocol::DiffAlgebra<NoPresence> for NoStateDiff {
@@ -666,7 +672,7 @@ impl ::protocol::OpBinary for NoPresenceMutation {
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct NoTransient {}
 
-impl store::os_store::serialization::ArtifactDsl for NoTransient {
+impl pack::snapshot::ArtifactDsl for NoTransient {
     const EXTENSION: &'static str = "notrans";
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if text.trim().is_empty() {
@@ -690,6 +696,9 @@ impl ArtifactPack for NoTransient {
             Err(store::PackError::from(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "empty state must not contain bytes")))
         }
     }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NoTransient {
+
 }
 
 impl ::protocol::DiffAlgebra<NoTransient> for NoStateDiff {
@@ -823,7 +832,7 @@ impl PeerPresenceRoot {
         Ok(())
     }
 
-    fn iter(&self) -> impl Iterator<Item = (&str, &PeerPresence)> {
+    pub(crate) fn iter(&self) -> impl Iterator<Item = (&str, &PeerPresence)> {
         self.entries[..self.len].iter().filter_map(|entry| entry.as_deref().map(|entry| (entry.actor.as_str(), &entry.presence)))
     }
 

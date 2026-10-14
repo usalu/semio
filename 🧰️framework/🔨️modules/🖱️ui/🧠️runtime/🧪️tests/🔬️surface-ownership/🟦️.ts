@@ -191,7 +191,7 @@ type SurfaceTransactionFixture = {
 
 /** 📐️ Measures physical backing independently with Node's fixed byte-buffer allocation. */
 export function surfaceOwnershipSelfTests(): number {
-  const fixture: SurfaceOwnershipFixture = JSON.parse(readFileSync(new URL("../../📏️ownership/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture: SurfaceOwnershipFixture = JSON.parse(readFileSync(new URL("../../📏️ownership/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   for (const entry of fixture.backingCases) {
     const owner = Buffer.alloc(entry.capacity * entry.elementBytes);
     assert.equal(owner.byteLength, entry.ownedBytes);
@@ -225,11 +225,11 @@ export function surfaceOwnershipSelfTests(): number {
   different[different.length - 1] = 1;
   assert.equal(existing.equals(different), false);
   assert.equal(existing.byteLength / fixture.existingComponent.workGrant, fixture.existingComponent.minimumTurns);
-  const patch: SurfacePatchFixture = JSON.parse(readFileSync(new URL("../../🩹️patch/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const patch: SurfacePatchFixture = JSON.parse(readFileSync(new URL("../../🩹️patch/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   assert.equal(Buffer.from(patch.surface).byteLength, patch.surfaceBytes);
-  const handback: SurfaceHandbackFixture = JSON.parse(readFileSync(new URL("../../🚪️handback/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const handback: SurfaceHandbackFixture = JSON.parse(readFileSync(new URL("../../🚪️handback/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   assert.equal(Buffer.from(handback.surface).toString("hex"), handback.surfaceUtf8);
-  const document: SurfaceDocumentFixture = JSON.parse(readFileSync(new URL("../../📃️document/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const document: SurfaceDocumentFixture = JSON.parse(readFileSync(new URL("../../📃️document/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   // ⚖️ The aggregate funds every resident SLOT at one full DOCUMENT each, so the byte ledger and the
   // slot ledger refuse together. Read as a multiple of the per-surface CEILING it funded four holders
   // against sixty-four slots, and a twenty-six-surface React session was refused at 99.8 % with
@@ -242,7 +242,7 @@ export function surfaceOwnershipSelfTests(): number {
   const alias = canonical.subarray();
   assert.equal(alias.buffer, canonical.buffer);
   assert.equal(alias.byteOffset, canonical.byteOffset);
-  const outputs: SurfaceOutputFixture = JSON.parse(readFileSync(new URL("../../📤️output/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const outputs: SurfaceOutputFixture = JSON.parse(readFileSync(new URL("../../📤️output/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   assert.deepEqual(outputs.surfaces.map((surface: string) => Buffer.from(surface).toString("hex")), outputs.surfaceUtf8);
   const slots = new Uint8Array(outputs.entrySlots);
   slots.fill(1);
@@ -308,7 +308,7 @@ export function surfaceOwnershipSelfTests(): number {
     const outcome = row.cancelled || !row.sameGeneration ? "fault" : row.fuel === 0 || BigInt(row.now) >= deadline.readBigUInt64LE() ? "pending" : "ready";
     assert.equal(outcome, row.outcome);
   }
-  const transaction: SurfaceTransactionFixture = JSON.parse(readFileSync(new URL("../../🔄️transaction/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const transaction: SurfaceTransactionFixture = JSON.parse(readFileSync(new URL("../../🔄️transaction/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const requiredNodes = Buffer.alloc(8); requiredNodes.writeBigUInt64LE(BigInt(transaction.requiredNodes));
   for (const row of transaction.cases) {
     const fault = requiredNodes.readBigUInt64LE() > BigInt(row.maximumNodes);

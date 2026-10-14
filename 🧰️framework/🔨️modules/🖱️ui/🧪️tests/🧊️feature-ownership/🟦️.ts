@@ -8,7 +8,7 @@ import TOML from "@iarna/toml";
 type Law = { name: string; sha256: string; owner: "portable" | "engine" };
 type Group = { id: string; portableSource: string; engineSource: string; productionSource: string; sharedDeclarations: string[]; helpers: { name: string; source: string; sha256: string }[]; laws: Law[] };
 const ui = resolve(import.meta.dir, "../.."), native = join(ui, "📦️packages/🦀️rust");
-const corpus = JSON.parse(readFileSync(join(ui, "🧫️fixtures/🧊️feature-ownership/🔣️.json"), "utf8")) as { groups: Group[]; targets: { name: string; features: string[] }[] };
+const corpus = JSON.parse(readFileSync(join(ui, "🧪️tests/🧫️fixtures/🧊️feature-ownership/🔣️.json"), "utf8")) as { groups: Group[]; targets: { name: string; features: string[] }[] };
 function body(source: string, name: string): string {
   const start = source.search(new RegExp("fn " + name + "[<(]"));
   if (start < 0) throw Error("Missing retained law " + name);
@@ -68,7 +68,7 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const rows=JSON.parse(fs.readFileSync(process.argv[1],'utf8')).groups,ui=process.argv[2];
 const hash=(source,name)=>{const lines=fs.readFileSync(path.join(ui,source),'utf8').split('\n');const start=lines.findIndex(line=>new RegExp('^fn '+name+'[<(]').test(line));if(start<0)throw Error(name);let end=start;if(!lines[start].endsWith('{}')){end=lines.findIndex((line,index)=>index>start&&line==='}');if(end<0)throw Error(name);}return crypto.createHash('sha256').update(lines.slice(start,end+1).join('\n')).digest('hex');};
 console.log(JSON.stringify({laws:rows.flatMap(row=>row.laws.map(law=>({name:law.name,sha256:hash(law.owner==='engine'?row.engineSource:row.portableSource,law.name)}))),helpers:rows.flatMap(row=>row.helpers.map(helper=>({name:helper.name,source:helper.source,sha256:hash(helper.source,helper.name)})))}));`;
-  const child = spawnSync("node", ["--eval", program, join(ui, "🧫️fixtures/🧊️feature-ownership/🔣️.json"), ui], { encoding: "utf8" });
+  const child = spawnSync("node", ["--eval", program, join(ui, "🧪️tests/🧫️fixtures/🧊️feature-ownership/🔣️.json"), ui], { encoding: "utf8" });
   expect(child.status, child.stderr).toBe(0);
   expect(JSON.parse(child.stdout)).toEqual({ laws: corpus.groups.flatMap(row => row.laws.map(({ name, sha256 }) => ({ name, sha256 }))), helpers: corpus.groups.flatMap(row => row.helpers) });
   mkdirSync(artifacts, { recursive: true });

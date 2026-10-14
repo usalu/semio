@@ -1,0 +1,62 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🏃️process/⏱️budget/🧪️tests/🟦️.ts",
+    "line": 9,
+    "sha256": "c875989117346743ac42b1b791ad192e3d8716dde90fe4703c918cd4f10d7ffc",
+    "before": "  const corpus = JSON.parse(readFileSync(join(owner, \"🧫️fixtures/🔣️.json\"), \"utf8\"));",
+    "after": "  const corpus = JSON.parse(readFileSync(join(owner, \"🧪️tests/🧫️fixtures/🔣️.json\"), \"utf8\"));",
+    "role": "physical original fixture read",
+    "applied": true,
+    "originalRemains": false
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🧪️tests/🟦️.ts",
+    "line": 23,
+    "sha256": "aac3856ccc95fa41865e153aa3337b2d89e66571802fdff09a0f1cb422b755e9",
+    "before": "const fixture = JSON.parse(readFileSync(join(ownerRoot, \"🧫️fixtures/🔣️.json\"), \"utf8\")) as Fixture;",
+    "after": "const fixture = JSON.parse(readFileSync(join(ownerRoot, \"🧪️tests/🧫️fixtures/🔣️.json\"), \"utf8\")) as Fixture;",
+    "role": "physical original fixture read",
+    "applied": true,
+    "originalRemains": false
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️progress/🟦️.ts",
+    "line": 8,
+    "sha256": "d0213768124a279bab293b584acb0d0f615b01c9453385d65f3e38167c953097",
+    "before": "const owner = resolve(import.meta.dir, \"../..\"), fixture = JSON.parse(readFileSync(join(owner, \"🧫️fixtures/📤️progress/🔣️.json\"), \"utf8\"));",
+    "after": "const owner = resolve(import.meta.dir, \"../..\"), fixture = JSON.parse(readFileSync(join(owner, \"🧪️tests/🧫️fixtures/📤️progress/🔣️.json\"), \"utf8\"));",
+    "role": "physical original fixture read",
+    "applied": true,
+    "originalRemains": false
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🟦️.ts",
+    "line": 9,
+    "sha256": "ac75aee472695d742f91553d3acd8cacd01fa882cfb8d1078ba0f7c5752c2da8",
+    "before": " const owner=resolve(import.meta.dir,\"..\"),require=createRequire(import.meta.url),fixture=JSON.parse(readFileSync(join(owner,\"🧫️fixtures/🔣️.json\"),\"utf8\")),law=fixture.coveragePhases;",
+    "after": " const owner=resolve(import.meta.dir,\"..\"),require=createRequire(import.meta.url),fixture=JSON.parse(readFileSync(join(owner,\"🧪️tests/🧫️fixtures/🔣️.json\"),\"utf8\")),law=fixture.coveragePhases;",
+    "role": "physical original fixture read",
+    "applied": true,
+    "originalRemains": false
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🟦️.ts",
+    "line": 19,
+    "sha256": "ac75aee472695d742f91553d3acd8cacd01fa882cfb8d1078ba0f7c5752c2da8",
+    "before": "  const owner = resolve(import.meta.dir, \"..\"), fixture = JSON.parse(readFileSync(join(owner, \"🧫️fixtures/🚨️failed-build/🔣️.json\"), \"utf8\"));",
+    "after": "  const owner = resolve(import.meta.dir, \"..\"), fixture = JSON.parse(readFileSync(join(owner, \"🧪️tests/🧫️fixtures/🚨️failed-build/🔣️.json\"), \"utf8\"));",
+    "role": "physical original fixture read",
+    "applied": true,
+    "originalRemains": false
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🟦️.ts",
+    "line": 20,
+    "sha256": "ac75aee472695d742f91553d3acd8cacd01fa882cfb8d1078ba0f7c5752c2da8",
+    "before": "  const api = await import(\"../🟦️.ts\"), base = JSON.parse(readFileSync(join(owner, \"🧫️fixtures/🔣️.json\"), \"utf8\")).policies[0];",
+    "after": "  const api = await import(\"../🟦️.ts\"), base = JSON.parse(readFileSync(join(owner, \"🧪️tests/🧫️fixtures/🔣️.json\"), \"utf8\")).policies[0];",
+    "role": "physical original fixture read",
+    "applied": true,
+    "originalRemains": false
+  }
+]

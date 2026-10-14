@@ -11,12 +11,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `Document` to its binary pack form.
 pub fn encode(document: &Vdi3805Snapshot) -> Vec<u8> {
-    store::os_store::serialization::ArtifactPack::encode_pack(document)
+    pack::snapshot::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Document` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<Vdi3805Snapshot, PackError> {
-    <Vdi3805Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)
+    <Vdi3805Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)
 }
 
 #[cfg(test)]
@@ -32,8 +32,8 @@ use crate::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, 
 use framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
-pub fn decode_vdi3805_pack(bytes: &[u8]) -> Result<Vdi3805Snapshot, String> { <Vdi3805Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|e| format!("{e:?}")) }
-pub fn encode_vdi3805_pack(snapshot: &Vdi3805Snapshot) -> Vec<u8> { store::os_store::serialization::ArtifactPack::encode_pack(snapshot) }
+pub fn decode_vdi3805_pack(bytes: &[u8]) -> Result<Vdi3805Snapshot, String> { <Vdi3805Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|e| format!("{e:?}")) }
+pub fn encode_vdi3805_pack(snapshot: &Vdi3805Snapshot) -> Vec<u8> { pack::snapshot::ArtifactPack::encode_pack(snapshot) }
 }
 pub use native_snapshot_codec::*;
 

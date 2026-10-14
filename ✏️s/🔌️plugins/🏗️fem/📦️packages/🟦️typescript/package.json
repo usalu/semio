@@ -15,7 +15,8 @@
     "three": "^0.182.0",
     "three-mesh-bvh": "^0.9.14",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "@semio-tech/framework": "workspace:*"
   },
   "author": {
     "name": "Ueli Saluz",

@@ -57,7 +57,7 @@ impl DocumentSurfacePreparation for Ports {
 #[test]
 fn document_surface_preparation_preserves_complete_archive_and_refuses_stale_owners() {
     semio_framework_async::block_on(async {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
         for law in fixture["cases"].as_array().unwrap() {
             let mut ports = Ports { law: law.clone(), source: fixture["archive"].clone(), target: None, current: law["initiallyCurrent"].as_bool().unwrap_or(true), attached: false, events: Vec::new() };
             let ready = law["ready"].as_bool().unwrap();

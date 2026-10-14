@@ -1,0 +1,239 @@
+{
+  "version": 1,
+  "scope": {
+    "version": 1,
+    "tasks": [
+      "leaf:build:prototype"
+    ],
+    "roots": [
+      "leaf"
+    ],
+    "files": [
+      "compiler/script.ts"
+    ]
+  },
+  "files": {
+    "package.json": "{\"name\":\"root\"}\n",
+    "leaf/Cargo.toml": "[package]\nname=\"leaf\"\nversion=\"1.0.0\"\n",
+    "leaf/source.rs": "pub const VALUE:u8=1;\n",
+    "other/Cargo.toml": "[package]\nname=\"other\"\nversion=\"1.0.0\"\n",
+    "other/source.rs": "pub const VALUE:u8=2;\n",
+    "compiler/script.ts": "export const compiler=1;\n"
+  },
+  "cases": [
+    {
+      "id": "unchanged",
+      "mutation": null,
+      "accepts": true
+    },
+    {
+      "id": "unselected-source-edit",
+      "mutation": {
+        "path": "other/source.rs",
+        "content": "pub const VALUE:u8=3;\n"
+      },
+      "accepts": true
+    },
+    {
+      "id": "selected-source-edit",
+      "mutation": {
+        "path": "leaf/source.rs",
+        "content": "pub const VALUE:u8=4;\n"
+      },
+      "accepts": false
+    },
+    {
+      "id": "selected-import-new-file",
+      "mutation": {
+        "path": "leaf/new.rs",
+        "content": "pub const VALUE:u8=5;\n"
+      },
+      "accepts": false
+    },
+    {
+      "id": "compiler-source-edit",
+      "mutation": {
+        "path": "compiler/script.ts",
+        "content": "export const compiler=2;\n"
+      },
+      "accepts": false
+    },
+    {
+      "id": "unselected-manifest-edit",
+      "mutation": {
+        "path": "other/Cargo.toml",
+        "content": "[package]\nname=\"changed\"\nversion=\"1.0.0\"\n"
+      },
+      "accepts": false
+    },
+    {
+      "id": "fresh-project-owner",
+      "mutation": {
+        "path": "fresh/Cargo.toml",
+        "content": "[package]\nname=\"fresh\"\nversion=\"1.0.0\"\n"
+      },
+      "accepts": false
+    },
+    {
+      "id": "ignored-structural-owner",
+      "mutation": {
+        "path": "other/🔨️modules/🧪️examples/member/Cargo.toml",
+        "content": "[package]\nname=\"ignored\"\nversion=\"1.0.0\"\n"
+      },
+      "accepts": false
+    },
+    {
+      "id": "journal-epoch-changed",
+      "mutation": null,
+      "epoch": "new-session",
+      "accepts": false
+    },
+    {
+      "id": "journal-overflow",
+      "mutation": null,
+      "overflow": true,
+      "accepts": false
+    }
+  ],
+  "publicationCases": [
+    {
+      "id": "fresh-source-is-original-without-whole-cache",
+      "changeDuringComputation": false
+    },
+    {
+      "id": "source-change-preserves-original-read-without-whole-cache",
+      "changeDuringComputation": true
+    }
+  ],
+  "omittedSourceCases": [
+    {
+      "file": "compiler/script.ts",
+      "refusal": "Explicit selected source missing from original observer"
+    },
+    {
+      "file": "leaf/source.rs",
+      "refusal": "Original selected source membership disagrees with live observer"
+    }
+  ],
+  "environmentCases": [
+    {
+      "key": "PATH",
+      "next": "different-resolver",
+      "accepts": false
+    },
+    {
+      "key": "JAVA_HOME",
+      "next": "different-java",
+      "accepts": false
+    },
+    {
+      "key": "SEMIO_UNKNOWN_RESOLUTION_FIXTURE",
+      "next": "different-unknown",
+      "accepts": false
+    },
+    {
+      "key": "SEMIO_SCRIPT_PROCESS_INVOCATION",
+      "next": "different-caller",
+      "accepts": true
+    },
+    {
+      "key": "SEMIO_NX_GRAPH_STARTED_AT",
+      "next": "different-proof-start",
+      "accepts": true
+    }
+  ],
+  "demandCases": [
+    {
+      "id": "idle",
+      "state": {
+        "version": 1,
+        "requests": 0,
+        "computing": false,
+        "callbacks": 0,
+        "sockets": false
+      },
+      "eager": false
+    },
+    {
+      "id": "request",
+      "state": {
+        "version": 1,
+        "requests": 1,
+        "computing": false,
+        "callbacks": 0,
+        "sockets": false
+      },
+      "eager": true
+    },
+    {
+      "id": "inflight",
+      "state": {
+        "version": 1,
+        "requests": 0,
+        "computing": true,
+        "callbacks": 0,
+        "sockets": false
+      },
+      "eager": true
+    },
+    {
+      "id": "callback",
+      "state": {
+        "version": 1,
+        "requests": 0,
+        "computing": false,
+        "callbacks": 1,
+        "sockets": false
+      },
+      "eager": true
+    },
+    {
+      "id": "socket",
+      "state": {
+        "version": 1,
+        "requests": 0,
+        "computing": false,
+        "callbacks": 0,
+        "sockets": true
+      },
+      "eager": true
+    },
+    {
+      "id": "multiple",
+      "state": {
+        "version": 1,
+        "requests": 3,
+        "computing": true,
+        "callbacks": 2,
+        "sockets": true
+      },
+      "eager": true
+    }
+  ],
+  "placement": {
+    "productionGlobs": {
+      "repo": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/**/*.ts",
+      "cargo": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/**/*.ts"
+    },
+    "exclude": ["**/🧪️tests/**", "**/dist/**", "**/target/**"],
+    "projects": {
+      "repo": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+      "cargo": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo"
+    },
+    "files": {
+      "repo": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts"
+      ],
+      "cargo": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts"
+      ]
+    },
+    "edges": [
+      [
+        "repo",
+        "cargo"
+      ]
+    ]
+  }
+}

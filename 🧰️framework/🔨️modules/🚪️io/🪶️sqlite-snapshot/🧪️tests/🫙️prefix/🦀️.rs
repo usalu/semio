@@ -25,7 +25,7 @@ fn sqlite_original_recipient_denies_missing_occupied_nested_before_progress_or_h
 
 #[test]
 fn sqlite_original_recipient_returns_cancelled_prefix_and_restores_same_reference(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🫙️prefix/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🫙️prefix/🔣️.json")).unwrap();
  for stop in fixture["cancellations"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize).chain([usize::MAX]){
   let source=fixture["samples"][2]["text"].as_str().unwrap().repeat(8193);let pointer=source.as_ptr();let mut recipient=NativeDecodeRetirementRecipient::new();let original_ref=&recipient as *const _ as usize;let events=Cell::new(0);let mut callback=|_|{let event=events.get();events.set(event+1);event!=stop};let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());control.install_native_retirement_recipient(&mut recipient).unwrap();
   let (result,requested,released)=observe_backing(||control.with_retirement_owner(SqliteSnapshotPhase::ReconstructSnapshot,size_of::<ControlledRetirement<Vec<u8>>>(),|control|{
@@ -49,7 +49,7 @@ fn sqlite_original_recipient_nested_field_preserves_original_typed_child(){
 #[test]
 fn sqlite_original_recipient_field_copies_retain_completed_and_partial_originals(){
  use super::artifact::{reconstruct_text_into,reconstruct_blob_into};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🫙️prefix/🔣️.json")).unwrap();let text=fixture["samples"][2]["text"].as_str().unwrap().repeat(32769);let blob=text.as_bytes().repeat(2);
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🫙️prefix/🔣️.json")).unwrap();let text=fixture["samples"][2]["text"].as_str().unwrap().repeat(32769);let blob=text.as_bytes().repeat(2);
  for mode in 0..3{
   let reached=Cell::new(false);let mut callback=|event:SqliteSnapshotProgress|{let total=if mode==1{text.len()}else{blob.len()};let cancel=mode!=0&&event.total==total&&event.completed>=65536&&event.completed<total;if cancel{reached.set(true);}!cancel};let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());let mut recipient=NativeDecodeRetirementRecipient::new();control.install_native_retirement_recipient(&mut recipient).unwrap();let text_pointer=text.as_ptr();let blob_pointer=blob.as_ptr();let text_capacity=Cell::new(0);let blob_capacity=Cell::new(0);
   let(result,requested,released)=observe_backing(||control.with_retirement_owner(SqliteSnapshotPhase::ReconstructSnapshot,size_of::<ControlledRetirement<Fields>>(),|control|{
@@ -65,7 +65,7 @@ struct IndexPrefix{rows:super::artifact::RowIndexStorage,order:Vec<usize>,unique
 #[test]
 fn sqlite_original_recipient_schema_validation_preserves_semantics_and_cancelled_scratch(){
  use super::transfer::{SchemaValidationStorage,validate_database_into,validate_table_into,validate_component_into};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🏛️validation/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🏛️validation/🔣️.json")).unwrap();
  for case in fixture["cases"].as_array().unwrap(){let declared=case["declared"].as_str().unwrap();let mut database=SqliteDatabase::from_schema(declared).unwrap();database.tables[0].sql=case["actual"].as_str().unwrap().into();let table_pointer=database.tables.as_ptr();let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());let mut recipient=NativeDecodeRetirementRecipient::new();control.install_native_retirement_recipient(&mut recipient).unwrap();
   let(result,requested,released)=observe_backing(||control.with_retirement_owner(SqliteSnapshotPhase::ReconstructSnapshot,size_of::<ControlledRetirement<SchemaValidationStorage>>(),|control|{let mut owner=Box::new(ControlledRetirement::new(SchemaValidationStorage::empty()).unwrap());let result=validate_database_into(owner.original_mut().unwrap(),&database,declared,SqliteSnapshotPhase::ReconstructSnapshot,control);(result,Some(owner as Box<dyn ErasedSnapshotRetirement>))}));assert_eq!(result.is_ok(),case["accepted"].as_bool().unwrap(),"{}: {result:?}",case["name"]);assert_eq!(released,0);assert_eq!(requested,control.ledger.allocation_bytes);assert_eq!(database.tables.as_ptr(),table_pointer);drop(control);drain(&mut recipient);
  }
@@ -77,7 +77,7 @@ fn sqlite_original_recipient_schema_validation_preserves_semantics_and_cancelled
 #[test]
 fn sqlite_original_recipient_scalar_indexes_preserve_original_cancellation_workspaces(){
  use super::artifact::{RowIndex,RowIndexStorage};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧩️artifact/🧫️fixtures/🗂️paid-row-index/🔣️.json")).unwrap();let database=SqliteDatabase{tables:vec![SqliteTable{name:fixture["table"].as_str().unwrap().into(),sql:fixture["schema"].as_str().unwrap().into(),rows:fixture["rows"].as_array().unwrap().iter().map(|row|SqliteRow{rowid:row["id"].as_i64().unwrap(),values:vec![SqliteValue::Integer(row["id"].as_i64().unwrap()),SqliteValue::Integer(row["owner"].as_i64().unwrap()),SqliteValue::Integer(row["ordinal"].as_i64().unwrap()),SqliteValue::Text(row["literal"].as_str().unwrap().into()),row["parent"].as_i64().map(SqliteValue::Integer).unwrap_or(SqliteValue::Null)]}).collect()}]};let source=database.tables[0].rows.as_ptr();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧩️artifact/🧪️tests/🧫️fixtures/🗂️paid-row-index/🔣️.json")).unwrap();let database=SqliteDatabase{tables:vec![SqliteTable{name:fixture["table"].as_str().unwrap().into(),sql:fixture["schema"].as_str().unwrap().into(),rows:fixture["rows"].as_array().unwrap().iter().map(|row|SqliteRow{rowid:row["id"].as_i64().unwrap(),values:vec![SqliteValue::Integer(row["id"].as_i64().unwrap()),SqliteValue::Integer(row["owner"].as_i64().unwrap()),SqliteValue::Integer(row["ordinal"].as_i64().unwrap()),SqliteValue::Text(row["literal"].as_str().unwrap().into()),row["parent"].as_i64().map(SqliteValue::Integer).unwrap_or(SqliteValue::Null)]}).collect()}]};let source=database.tables[0].rows.as_ptr();
  for cancelled in 0..5{
   let stage=Cell::new(usize::MAX);let reached=Cell::new(false);let mut callback=|event:SqliteSnapshotProgress|{let cancel=stage.get()==cancelled&&event.completed>=1;if cancel{reached.set(true);}!cancel};let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());let mut recipient=NativeDecodeRetirementRecipient::new();control.install_native_retirement_recipient(&mut recipient).unwrap();
   let(result,requested,released)=observe_backing(||control.with_retirement_owner(SqliteSnapshotPhase::ReconstructSnapshot,size_of::<ControlledRetirement<IndexPrefix>>(),|control|{
@@ -89,7 +89,7 @@ fn sqlite_original_recipient_scalar_indexes_preserve_original_cancellation_works
 
 #[test]
 fn sqlite_original_recipient_database_keeps_all_original_cells_until_funded_close(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🫙️prefix/🪶️database.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🫙️prefix/🪶️database.json")).unwrap();
  let mut database=SqliteDatabase::from_schema(fixture["schemaSql"].as_str().unwrap()).unwrap();
  for row in fixture["rows"].as_array().unwrap(){database.tables[0].rows.push(SqliteRow{rowid:row["id"].as_i64().unwrap(),values:vec![SqliteValue::Integer(row["id"].as_i64().unwrap()),SqliteValue::Text(row["text"].as_str().unwrap().into()),SqliteValue::Blob(row["octets"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u8).collect()),row["optional"].as_f64().map(SqliteValue::Real).unwrap_or(SqliteValue::Null),SqliteValue::Real(row["value"].as_f64().unwrap())]});}
  let source_rows=database.tables[0].rows.as_ptr();let source_text=match &database.tables[0].rows[2].values[1]{SqliteValue::Text(value)=>value.as_ptr(),_=>unreachable!()};
@@ -106,7 +106,7 @@ fn sqlite_original_recipient_database_keeps_all_original_cells_until_funded_clos
 #[test]
 fn sqlite_original_recipient_child_loans_borrow_original_ledgers_callbacks_and_custody(){
  use super::artifact::{reconstruct_text_into,reconstruct_blob_into};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🫙️prefix/🔣️.json")).unwrap();let text=fixture["samples"][2]["text"].as_str().unwrap().repeat(32769);let blob=text.as_bytes().repeat(2);
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🫙️prefix/🔣️.json")).unwrap();let text=fixture["samples"][2]["text"].as_str().unwrap().repeat(32769);let blob=text.as_bytes().repeat(2);
  let events=Cell::new(0);let mut callback=|_|{events.set(events.get()+1);true};let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());let mut child=NativeDecodeRetirementRecipient::new();
  let(result,requested,released)=observe_backing(||control.with_retirement_child(&mut child,|_|Ok::<_,ValueError>(())));
  assert_eq!(result.unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert_eq!((events.get(),control.ledger.allocation_bytes,requested,released),(0,0,0,0));assert!(child.terminal_is_empty());drop(control);
@@ -132,7 +132,7 @@ fn sqlite_original_recipient_child_loans_borrow_original_ledgers_callbacks_and_c
 #[test]
 fn sqlite_original_projection_retains_schema_census_rows_and_interior_fields(){
  use crate::artifact::{Cell as SqlCell,RowWriter,ProjectionStorage,project_owned};
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../🧩️artifact/🧫️fixtures/🫙️projection/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../../🧩️artifact/🧪️tests/🧫️fixtures/🫙️projection/🔣️.json")).unwrap();
  let sql=corpus["schemaSql"].as_str().unwrap();
  let text=corpus["textUnit"].as_str().unwrap().repeat(corpus["textRepeats"].as_u64().unwrap()as usize);
  let blob=vec![0,255,17];let text_pointer=text.as_ptr();let blob_pointer=blob.as_ptr();let mut retained=0;let mut interior_seen=false;

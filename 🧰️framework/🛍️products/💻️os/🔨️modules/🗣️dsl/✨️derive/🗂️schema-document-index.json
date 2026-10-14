@@ -2448,7 +2448,6 @@
       "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/mutations.json": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/snapshot.json": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/s/drawing/text/font-family.json": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️text/🔤️family/🔣️.json",
-      "https://schemas.semio.tech/draw/owned-export": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️owned/🧬️schema/🔣️.json",
       "https://semio.tech/s/draw/edit-fill": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️edit-fill/🧬️schema/🔣️.json",
       "https://semio.tech/s/draw/edit-path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️edit-path/🧬️schema/🔣️.json",
       "https://semio.tech/s/draw/edit-selection": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧬️schema/🔣️.json",
@@ -2456,7 +2455,6 @@
       "https://semio.tech/s/draw/geometry/arrangement": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📏️arrangement/🧬️schema/🔣️.json",
       "https://semio.tech/s/draw/geometry/path-raster": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧬️schema/🔣️.json",
       "https://semio.tech/s/draw/import-image": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧬️schema/🔣️.json",
-      "https://semio.tech/s/draw/import-image-publication": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧵️publication/🧬️schema/🔣️.json",
       "https://semio.tech/s/draw/path-edit": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/✏️editing/🧬️schema/🔣️.json",
       "https://semio.tech/s/draw/pdf/write": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧬️schema/🔣️.json",
       "https://semio.tech/s/draw/point-selection-ref": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🎯️points/🧬️schema/🔣️.json",
@@ -2466,7 +2464,6 @@
       "https://semio.tech/s/draw/scene/raster": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🔣️.json",
       "https://semio.tech/s/draw/scene/retire": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🧬️schema/🔣️.json",
       "https://semio.tech/s/draw/scene/selection/ancestry": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧭️selection/🧬️schema/🔣️.json",
-      "https://semio.tech/s/draw/scene/text-fixtures": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧬️schema/🔣️.json",
       "https://semio.tech/s/draw/scene/trace": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🧬️schema/🔣️.json",
       "https://semio.tech/s/draw/svg/write": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧬️schema/🔣️.json",
       "schema://s.draw.drawing.1.any.geometry.picking.paint": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🧬️schema/🔣️.json",
@@ -2475,7 +2472,6 @@
       "schema://s.draw.scene.paint.prepare": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🧬️schema/🔣️.json",
       "semio.draw.scene.admission": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🪪️identity/🚦️admission/🧬️schema/🔣️.json",
       "semio.draw.scene.identity": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🪪️identity/🧬️schema/🔣️.json",
-      "semio.draw.scene.physical-retirement.v1": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/📏️physical/🧬️schema/🔣️.json",
       "semio.draw.scene.view": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧬️schema/🔣️.json",
       "semio/drawing/scene/placement": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📍️placement/🧬️schema/🔣️.json",
       "urn:semio:draw:completion-custody:v1": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📬️completion/🧬️schema/🔣️.json",
@@ -2626,7 +2622,6 @@
       "https://json.schemas.assets.semio-tech.com/s/stdio/bcf/2.1/markup/snapshot.json": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/s/stdio/binary/raw/any/artifact.json": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/s/stdio/binary/raw/any/diff.json": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json",
-      "https://json.schemas.assets.semio-tech.com/s/stdio/binary/raw/any/hex-splices-corpus/schema.json": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🔣️hex-splices/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/s/stdio/binary/raw/any/inference.json": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/s/stdio/binary/raw/any/mutation/append-bytes/schema.json": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️append-bytes/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/s/stdio/binary/raw/any/mutation/replace-byte-range/schema.json": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️replace-byte-range/🧬️schema/🔣️.json",
@@ -3922,9 +3917,7 @@
       "schema://s.stdio.pdf.1.7.base.cos-output": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🌱️value/🧬️octets/🧬️schema/🛫️cos-output.json",
       "schema://s.stdio.pdf.1.7.base.recursive-value": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧬️schema/♻️retirement/🔣️.json",
       "semio.stdio.snapshot-edit-event.v1": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧬️schema/🔣️snapshot-edit-event.json",
-      "semio:stdio.semio.image:controlled-native-admission": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🧬️schema/🔣️.json",
-      "stdio.original-copy-close.v1": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/♻️close/🧬️schema/🔣️.json",
-      "stdio.part21.original-decode.v1": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🚦️controlled/🧬️schema/🔣️.json"
+      "semio:stdio.semio.image:controlled-native-admission": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🧬️schema/🔣️.json"
     },
     "✏️s/🔌️plugins/🗒️note": {
       "https://json.schemas.assets.semio-tech.com/app/note/note/config/schema.json": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🔣️.json",
@@ -4392,9 +4385,6 @@
       "https://json.schemas.assets.semio-tech.com/framework/pack/value/schema.json": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🔣️.json",
       "https://schemas.semio.tech/json/member-policy/v1": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧬️schema/🧩️members/🔣️.json",
       "https://semio.dev/framework/pack/error/cause/kind": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/🪪️kind/🔣️.json",
-      "semio.pack.intrinsic.occurrence-order.v1": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🔢️occurrence-order/🧬️schema/🔣️.json",
-      "semio.pack.json.failed-frontier-receipts.v1": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧬️schema/⚠️frontier.json",
-      "semio.pack.json.normal-refusal-receipt.v1": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧬️schema/🔣️.json",
       "semio.pack.original-value-stack-storage": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🎟️storage/🧬️schema/🔣️.json",
       "semio.pack.value.tooling-boundary.v1": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧭️tooling/🧬️schema/🔣️.json",
       "semio:framework:pack:json:read-source-capabilities:v1": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧪️testing/📥️invocation/🧬️schema/🔣️.json"
@@ -4406,7 +4396,9 @@
       "https://json.schemas.assets.semio-tech.com/framework/kernel/poll/composition/schema.json": "🧰️framework/🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/framework/kernel/return/content/schema.json": "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/framework/kernel/schema.json": "🧰️framework/🔨️modules/🎠️kernel/🧬️schema/🔣️.json",
-      "https://semio.tech/framework/kernel/clipboard/envelope": "🧰️framework/🔨️modules/🎠️kernel/📋️clipboard/🧬️schema/🔣️.json"
+      "https://semio.tech/framework/kernel/clipboard/envelope": "🧰️framework/🔨️modules/🎠️kernel/📋️clipboard/🧬️schema/🔣️.json",
+      "https://semio.tech/framework/kernel/descriptor-text-policy/v1": "🧰️framework/🔨️modules/🎠️kernel/📇️descriptor/📥️text/🧬️schema/🔣️.json",
+      "https://semio.tech/framework/kernel/package-receipt/v1": "🧰️framework/🔨️modules/🎠️kernel/📇️descriptor/📦️package/🧬️schema/🔣️.json"
     },
     "🧰️framework/🔨️modules/🎭️actor": {
       "https://json.schemas.assets.semio-tech.com/framework/actor/activation/instance/output/schema.json": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧬️schema/🔣️.json",
@@ -4426,15 +4418,20 @@
     },
     "🧰️framework/🔨️modules/🏃️process": {
       "https://json.schemas.assets.semio-tech.com/framework/process/testing/vitest/policy.json": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🧬️schema/🔣️.json",
+      "https://semio.tech/framework/process/build-mode/v1": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧬️schema/🔣️.json",
+      "https://semio.tech/framework/process/compiler-capacity/v1": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧬️schema/🔣️.json",
+      "https://semio.tech/framework/process/compiler-state/v1": "🧰️framework/🔨️modules/🏃️process/🏗️build/🗃️state/🧬️schema/🔣️.json",
+      "https://semio.tech/framework/process/go-build/v1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🐹️go-build/🧬️schema/🔣️.json",
       "https://semio.tech/framework/process/native-build/policy/v1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧬️schema/🔣️.json",
       "https://semio.tech/framework/process/native-build/provenance-receipt/v1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🧬️schema/🔣️.json",
       "https://semio.tech/framework/process/native-build/resource-read/v1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧬️schema/🔣️.json",
       "https://semio.tech/framework/process/native-build/source-owner-fixture/v1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧬️schema/📌️source-owner/🔣️.json",
+      "https://semio.tech/framework/process/typescript-check/v1": "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🧬️schema/🔣️.json",
       "https://semio.tech/framework/process/wasm-build/policy/v1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🧬️schema/🔣️.json",
+      "schema://framework.process.native-build/NativeBuildPlanV1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧬️schema/🔣️.json",
       "schema://framework.process/ResourceQueueTicketV1": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/📜️ticket.json",
       "schema://repo.build/AdmissionV1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧬️schema/🔣️.json",
       "schema://repo.build/JobserverV1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎰️jobserver/🧬️schema/🔣️.json",
-      "schema://repo.build/ReleasePlanV1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧬️schema/🔣️.json",
       "schema://repo.build/StageCacheV1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🗃️stage-cache/🧬️schema/🔣️.json",
       "schema://repo.build/TelemetryV1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📈️telemetry/🧬️schema/🔣️.json",
       "schema://repo.cargo-build/CargoBuildLeaseV1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧬️schema/🔣️.json",
@@ -4448,7 +4445,8 @@
       "semio:mesh:polygon": "🧰️framework/🔨️modules/🏗️mesh-engine/🧬️schema/🥽️polygon/🔣️.json"
     },
     "🧰️framework/🔨️modules/📁️filesystem": {
-      "https://semio.tech/framework/filesystem/observation": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧬️schema/🔣️.json"
+      "https://semio.tech/framework/filesystem/observation": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧬️schema/🔣️.json",
+      "schema://framework.filesystem.observation/LiveFilesystemJournalV1": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📥️journal/🧬️schema/🔣️.json"
     },
     "🧰️framework/🔨️modules/📚️compiler": {
       "https://json.schemas.assets.semio-tech.com/framework/compiler/syntax/ecma": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧬️schema/🔣️.json"
@@ -4462,7 +4460,8 @@
       "https://json.schemas.assets.semio-tech.com/framework/replication/wire/local-interaction/transport/schema.json": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/replication/mutation/schema.json": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/replication/outcome-code.json": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🔣️outcome-code/🔣️.json",
-      "https://json.schemas.assets.semio-tech.com/replication/replay-report.json": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/🧬️schema/🔣️replay-report/🔣️.json"
+      "https://json.schemas.assets.semio-tech.com/replication/replay-report.json": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/🧬️schema/🔣️replay-report/🔣️.json",
+      "semio.protocol.original-history-read-limits.v1": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🎟️history-limits/🧬️schema/🔣️.json"
     },
     "🧰️framework/🔨️modules/🔲️pixels": {
       "https://json.schemas.assets.semio-tech.com/framework/pixels/compositing.json": "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🧬️schema/🔣️.json",
@@ -4480,7 +4479,8 @@
     "🧰️framework/🔨️modules/🕸️graph": {
       "https://json.schemas.assets.semio-tech.com/framework/graph/layout-run/schema.json": "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/framework/graph/manifest/property-value.json": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🧬️schema/🔣️.json",
-      "https://json.schemas.assets.semio-tech.com/framework/graph/manifest/schema.json": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json"
+      "https://json.schemas.assets.semio-tech.com/framework/graph/manifest/schema.json": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+      "urn:semio:graph:manifest:admission:v1": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📥️admission/🧬️schema/🔣️.json"
     },
     "🧰️framework/🔨️modules/🕹️interaction": {
       "https://json.schemas.assets.semio-tech.com/framework/interaction/schema.json": "🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🔣️.json"
@@ -4499,7 +4499,6 @@
       "https://json.schemas.assets.semio-tech.com/framework/ui/contract/retained/resident/page/schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/framework/ui/contract/retained/resident/payload/schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/framework/ui/contract/retained/resident/reader/schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/🧬️schema/🔣️.json",
-      "https://json.schemas.assets.semio-tech.com/framework/ui/contract/retained/resident/scalar/schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🔢️scalar/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/framework/ui/contract/retained/resident/schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/framework/ui/contract/retained/resident/slot/schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/framework/ui/contract/retained/scene/typed/schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🧬️schema/🔣️.json",
@@ -4575,6 +4574,8 @@
       "framework/job/session-return/schema.json": "🧰️framework/🔨️modules/🧵️job/♻️session-return/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/framework/job/reconcile/schema.json": "🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧬️schema/🔣️.json",
       "https://semio.tech/framework/job/retained-work-grant": "🧰️framework/🔨️modules/🧵️job/🏃️work/🎟️grant/🧬️schema/🔣️.json",
+      "semio.job.original-close-context": "🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/🧬️schema/🔣️.json",
+      "semio.job.original-turn-failure": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🧬️schema/🔣️.json",
       "semio:job:owned-session-admission": "🧰️framework/🔨️modules/🧵️job/🚪️admission/📦️owned/🧬️schema/🔣️.json"
     },
     "🧰️framework/🔨️modules/🪪️identity": {
@@ -4747,6 +4748,10 @@
       "https://json.schemas.assets.semio-tech.com/framework/os/spr/fixtures/mutation-laws/mutation/add-unchecked-counter/schema.json": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testing/🧬️mutation-laws/🧬️mutations/🐛️add-unchecked-counter/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/os/spr/command/component.json": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/os/spr/history/identity/component.json": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity/🧬️schema/🔣️.json",
+      "semio.history.original-conflict-receiving.v1": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/⚔️conflict/🧬️schema/🔣️.json",
+      "semio.history.original-file-receiving.v1": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🗂️file/🧬️schema/🔣️.json",
+      "semio.history.original-identity-record-receiving.v1": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/📇️identity-records/🧬️schema/🔣️.json",
+      "semio.history.original-transition-payload-validation.v1": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️transition/🛂️payload/🧬️schema/🔣️.json",
       "semio://framework/app-document-identity/v1": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧬️schema/🪪️document-identity/🔣️.json"
     },
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer": {
@@ -4987,13 +4992,16 @@
       "https://json.schemas.assets.semio-tech.com/repo/library/generator/preview/progress/component.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/library/generator/preview/progress/event.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🧬️schema/🔣️event.json",
       "https://json.schemas.assets.semio-tech.com/repo/library/normalization/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️schema/🔣️.json",
+      "https://json.schemas.assets.semio-tech.com/repo/library/owner-projection-policy/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🏠️owner-projection-policy/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/library/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/library/workspaces/cargo/preparation/custody/component.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧬️schema/🔣️.json",
+      "https://json.schemas.assets.semio-tech.com/repo/library/workspaces/cargo/preparation/synchronization/component.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️synchronization/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/library/workspaces/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/registry-source-roots.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/📂️registry-source-roots/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/rust/physical-reference/source-participation": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧲️rust-physical-reference-context/🧬️source-participation/🔣️.json",
       "semio.cargo.command-scope.v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🧬️schema/🔣️.json",
       "semio.cargo.owned-toml.v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📖️toml/🧬️schema/🔣️.json",
+      "semio.nx.selected-graph-custody/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/🧬️schema/🔣️.json",
       "semio.playground.native-host/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🧬️schema/🔣️.json",
       "semio.repo.artifact-kind/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧩️child-kind-metadata/🔣️.json",
       "semio.repo.authoring-command/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🎮️command/🧬️schema/🔣️.json",
@@ -5007,7 +5015,7 @@
       "semio.repo.source-roster/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/📋️mutation-inventory/🎭️source-roster-roles/🔣️.json",
       "semio.repo.typescript-declaration-facts/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/📣️typescript-declaration-facts/🔣️.json",
       "semio://os/catalog-publication/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📇️catalog/📣️publication/🧬️schema/🔣️.json",
-      "semio://repo/caching/nx-graph-seal/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🧬️schema/🔣️.json",
+      "semio://repo/caching/nx-graph-seal/v2": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🧬️schema/🔣️.json",
       "semio://repo/caching/record-store-index/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧬️schema/🔣️.json",
       "semio://repo/discovery/policy/tool-run": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📋️policy/⏯️tool-run/🧬️schema/🔣️.json",
       "semio://repo/nx-plugin/inference-observation/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/👁️observation/🧬️schema/🔣️.json",
@@ -5041,7 +5049,8 @@
     },
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server": {
       "https://json.schemas.assets.semio-tech.com/repo/server/coordinator/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧬️schema/🔣️.json",
-      "https://json.schemas.assets.semio-tech.com/repo/server/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🧬️schema/🔣️.json"
+      "https://json.schemas.assets.semio-tech.com/repo/server/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🧬️schema/🔣️.json",
+      "schema://repo.coordinator.builder/DevelopmentRebuildAdmissionV1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🎟️admission/🧬️schema/🔣️.json"
     },
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗂️codebase": {
       "https://json.schemas.assets.semio-tech.com/repo/codebase/1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗂️codebase/🧬️schema/🔣️.json"

@@ -1,8 +1,8 @@
 import {parseFormsJsonQuestion,formsQuestionJson,parseFormsJsonValue,parseFormsJsonCondition} from "../../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import assert from "node:assert/strict";
 import { applyPatch, compare } from "fast-json-patch";
-import fixture from "../../🧫️fixtures/🔣️patches.json";
-import choices from "../../🧫️fixtures/🔣️choices.json";
+import fixture from "../🧫️fixtures/🔣️patches.json";
+import choices from "../🧫️fixtures/🔣️choices.json";
 import choiceSchema from "../../🧬️schema/🔣️choice-edit.json";
 import Ajv from "ajv";
 import { patchChoice, patchQuestion } from "../../🟦️.ts";

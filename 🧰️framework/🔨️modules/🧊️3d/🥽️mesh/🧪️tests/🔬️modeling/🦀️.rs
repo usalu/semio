@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn knife_cut_fixtures_preserve_surfaces_and_shared_boundaries() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/✂️knife-cut/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/✂️knife-cut/🔣️.json")).unwrap();
     for case in fixtures["cases"].as_array().unwrap() {
         let positions: Vec<[f32; 3]> = serde_json::from_value(case["mesh"]["vertices"].clone()).unwrap();
         let faces: Vec<Vec<u32>> = serde_json::from_value(case["mesh"]["faces"].clone()).unwrap();
@@ -70,7 +70,7 @@ fn knife_cut_fixtures_preserve_surfaces_and_shared_boundaries() {
 
 #[test]
 fn knife_cut_rejects_invalid_requests_atomically() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/✂️knife-cut/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/✂️knife-cut/🔣️.json")).unwrap();
     let positions: Vec<[f32; 3]> = serde_json::from_value(fixtures["cases"][0]["mesh"]["vertices"].clone()).unwrap();
     let faces: Vec<Vec<u32>> = serde_json::from_value(fixtures["cases"][0]["mesh"]["faces"].clone()).unwrap();
     let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).unwrap();
@@ -114,7 +114,7 @@ fn component_transforms_apply_duplicate_vertices_once_and_reject_partial_mutatio
 
 #[test]
 fn loop_cut_fixtures_preserve_connected_surfaces() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
     for case in fixtures["loopCuts"].as_array().unwrap() {
         let positions: Vec<[f32; 3]> = serde_json::from_value(case["mesh"]["vertices"].clone()).unwrap();
         let faces: Vec<Vec<u32>> = serde_json::from_value(case["mesh"]["faces"].clone()).unwrap();
@@ -173,7 +173,7 @@ fn loop_cut_fixtures_preserve_connected_surfaces() {
 
 #[test]
 fn loop_cut_rejects_invalid_requests_atomically() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
     for case in fixtures["invalidLoopCuts"].as_array().unwrap() {
         let positions: Vec<[f32; 3]> = serde_json::from_value(case["mesh"]["vertices"].clone()).unwrap();
         let faces: Vec<Vec<u32>> = serde_json::from_value(case["mesh"]["faces"].clone()).unwrap();
@@ -197,7 +197,7 @@ fn loop_cut_rejects_invalid_requests_atomically() {
 
 #[test]
 fn vector_normalization_preserves_direction_across_scales() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
     for direction in fixtures["directions"].as_array().unwrap() {
         for scale in fixtures["scales"].as_array().unwrap() {
             let scale = scale.as_f64().unwrap();
@@ -211,7 +211,7 @@ fn vector_normalization_preserves_direction_across_scales() {
 
 #[test]
 fn sphere_refinement_has_no_missing_center_faces() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
     for case in fixtures["spheres"].as_array().unwrap() {
         let radius = case["radius"].as_f64().unwrap();
         let level = case["subdivisions"].as_u64().unwrap() as u32;
@@ -241,7 +241,7 @@ fn sphere_refinement_has_no_missing_center_faces() {
 
 #[test]
 fn polygon_tessellation_preserves_shape_at_all_fixture_scales() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
     for case in fixtures["polygons"].as_array().unwrap() {
         for scale in fixtures["scales"].as_array().unwrap() {
             let scale = scale.as_f64().unwrap();
@@ -266,7 +266,7 @@ fn polygon_tessellation_preserves_shape_at_all_fixture_scales() {
 
 #[test]
 fn modeling_fixtures_preserve_closed_oriented_surfaces() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
     for case in fixtures["cases"].as_array().unwrap() {
         let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
         let selected: Vec<FaceId> = case["selection"].as_array().unwrap().iter().map(|id| FaceId(id.as_u64().unwrap() as u32)).collect();
@@ -319,7 +319,7 @@ fn modeling_rejects_invalid_selection_without_mutation() {
 
 #[test]
 fn subdivision_preserves_concave_polygon_area() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
     for case in fixtures["polygons"].as_array().unwrap() {
         let positions: Vec<[f32; 3]> = serde_json::from_value(case["vertices"].clone()).unwrap();
         let faces: Vec<Vec<u32>> = serde_json::from_value(case["faces"].clone()).unwrap();
@@ -376,7 +376,7 @@ fn assert_edit_surface(mesh: &HalfedgeMesh, expected_area: Option<f64>, expected
 
 #[test]
 fn bevel_fixtures_have_segments_and_closed_geometry() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
     for case in fixtures["bevels"].as_array().unwrap() {
         let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
         let pairs: Vec<[u32; 2]> = serde_json::from_value(case["edges"].clone()).unwrap();
@@ -390,7 +390,7 @@ fn bevel_fixtures_have_segments_and_closed_geometry() {
 
 #[test]
 fn dissolve_and_merge_fixtures_preserve_surface() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
     for group in ["dissolutions", "merges"] {
         for case in fixtures[group].as_array().unwrap() {
             let positions: Vec<[f32;3]> = serde_json::from_value(case["mesh"]["vertices"].clone()).unwrap();
@@ -409,7 +409,7 @@ fn dissolve_and_merge_fixtures_preserve_surface() {
 
 #[test]
 fn proportional_and_snap_fixtures_are_atomic_and_update_normals() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
     for group in ["proportional", "snapping"] {
         let case = &fixtures[group];
         let positions: Vec<[f32;3]> = serde_json::from_value(case["mesh"]["vertices"].clone()).unwrap();
@@ -469,7 +469,7 @@ fn bevel_and_decimate_cancel_and_reject_invalid_input_atomically() {
 
 #[test]
 fn mirror_and_decimate_fixtures_are_compact_and_oriented() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
     for case in fixtures["mirrors"].as_array().unwrap() {
         let mut mesh = HalfedgeMesh::box_prim(1.0,1.0,1.0).unwrap();
         mesh.translate(Vec3(serde_json::from_value(case["translation"].clone()).unwrap())).unwrap();
@@ -495,7 +495,7 @@ fn mirror_and_decimate_fixtures_are_compact_and_oriented() {
 
 #[test]
 fn smooth_normal_fixture_excludes_flat_faces_and_face_order() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
     let case = &fixtures["normals"];
     let positions: Vec<[f32;3]> = serde_json::from_value(case["mesh"]["vertices"].clone()).unwrap();
     let faces: Vec<Vec<u32>> = serde_json::from_value(case["mesh"]["faces"].clone()).unwrap();
@@ -519,7 +519,7 @@ fn smooth_normal_fixture_excludes_flat_faces_and_face_order() {
 
 #[test]
 fn retained_modeling_jobs_slice_work_and_match_synchronous_geometry() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
     for case in fixtures["jobs"].as_array().unwrap() {
         let source = HalfedgeMesh::box_prim(1.0,1.0,1.0).unwrap();
         let before = source.to_obj().unwrap();

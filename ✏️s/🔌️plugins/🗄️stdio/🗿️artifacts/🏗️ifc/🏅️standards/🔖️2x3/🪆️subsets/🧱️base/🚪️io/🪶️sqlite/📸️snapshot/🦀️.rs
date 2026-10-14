@@ -1,7 +1,8 @@
 //! 🏭️ IFC2x3 exact decimal syntax, instance types and EDM production fields.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3Snapshot,Ifc2x3EdmPreamble};
 use semio_s_artifact_stdio_contract::part21::{Part21Document,Part21Header,Part21Instance,Part21Value,Part21Decimal};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},*}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},*}};
 
 #[path="🔎️mvd/💰️diagnostics/🦀️.rs"]
 mod mvd_diagnostics;
@@ -68,7 +69,7 @@ fn visit_rows(snapshot:&Ifc2x3Snapshot,p:&mut RowWriter<'_,'_>)->Result<(),Value
         for(index,instance)in snapshot.document.instances.iter().enumerate(){let id=identities[identities.binary_search_by_key(&instance.id,|entry|entry.0).map_err(|_|ValueError::new(ValueRefusalKind::InvariantViolated,"missing IFC2x3 identity"))?].1;let word=UnsignedWord::new(instance.id);p.insert_key("ifc2x3_instance",id,&[Cell::Integer(1),Cell::Integer(ordinal(index)?),Cell::Text(word.text())])?;p.check_rows(instance.entities.len())?;for(index,(name,args))in instance.entities.iter().enumerate(){let entity=p.insert("ifc2x3_entity_type",&[Cell::Integer(id),Cell::Integer(ordinal(index)?),Cell::Text(name)])?;p.check_rows(args.len())?;for(index,value)in args.iter().enumerate(){project_value(value,Owner::Argument(entity,index),&identities,p)?;}}}Ok(())
     }
 impl Ifc2x3Snapshot{pub(crate)fn admit_sqlite_values(&self,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<(),ValueError>{semantic::extent(control.limits())?;let mut writer=RowWriter::borrowed(control,phase)?;visit_rows(self,&mut writer)?;writer.finish_borrowed()}pub(crate)fn admit_sqlite_record(value:&semio_framework_dsl_record::RecordValue,limits:SqliteDatabaseLimits,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),ValueError>{semantic::admit_record(value,limits,native)}}
-impl ArtifactSqliteSnapshot for Ifc2x3Snapshot{
+impl ArtifactSqliteSnapshotHost for Ifc2x3Snapshot{
     fn retire_sqlite_snapshot(self){native::close(self)}
     fn decode_sqlite_snapshot_native(payload:&semio_framework_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native::decode(payload,control,native_control)}
     fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError>{native::encode(self,encoding,control,native_owner)}
@@ -77,9 +78,14 @@ impl ArtifactSqliteSnapshot for Ifc2x3Snapshot{
         let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),"cv20"=>crate::standards::v2x3::subsets::cv20::io::check_cv20_conformance_controlled(self,control)?,"sav"=>crate::standards::v2x3::subsets::sav::io::check_sav_conformance_controlled(self,control)?,"cobie"=>crate::standards::v2x3::subsets::cobie::io::check_cobie_conformance_controlled(self,control)?,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown owned IFC2x3 snapshot subset"))};Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
     })().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
     fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{native_backing::preflight(self,control)}
-    const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
-    fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic::extent(control.limits())?;let mut p=RowWriter::new(Self::SQLITE_SCHEMA,control)?;visit_rows(self,&mut p)?;p.finish()}
-    fn from_sqlite_database(db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{validate_sqlite_database_schema(db,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(db,SqliteSnapshotPhase::ReconstructSnapshot)?;reconstruction::read(db,control)}
+    
+    
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for Ifc2x3Snapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic::extent(control.limits())?;let mut p=RowWriter::new(Self::SQLITE_SCHEMA,control)?;visit_rows(self,&mut p)?;p.finish()}
+fn from_sqlite_database(db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{validate_sqlite_database_schema(db,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(db,SqliteSnapshotPhase::ReconstructSnapshot)?;reconstruction::read(db,control)}
 }
 
 #[cfg(test)]

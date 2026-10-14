@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn paged_native_serde_and_sequence_ownership_match_neutral_shapes() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for row in corpus["vectors"].as_array().unwrap() {
         let input = row["input"].clone();
         match row["kind"].as_str().unwrap() {
@@ -29,7 +29,7 @@ fn paged_native_serde_and_sequence_ownership_match_neutral_shapes() {
 
 #[test]
 fn portable_paged_carriers_match_independent_serde() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for row in corpus["vectors"].as_array().unwrap() {
         let input = row["input"].clone();
         let (actual, oracle) = match row["kind"].as_str().unwrap() {

@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 /** 🏭️ Process TypeScript package source verifier. */
 import { resolve } from "node:path";
 import { runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 
 //#region 🔖️RetainedRouteAudit
 //#region 🔖️Model
@@ -132,7 +132,7 @@ class TestScript extends BundleScript {
     runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts","✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
 
     const pluginRoot = resolve(this.root, "../..");
-    const fixture = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🧊️process3d/🧫️fixtures/⚖️retained-route-laws/🔣️.json")).json() as Fixture;
+    const fixture = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🧊️process3d/🧪️tests/🧫️fixtures/⚖️retained-route-laws/🔣️.json")).json() as Fixture;
     if (!fixtureOracle(fixture)) throw new Error("Process3d retained route fixture failed its independent extent/partition oracle");
     const source = await Bun.file(resolve(pluginRoot, fixture.source)).text();
     if (!sourceOracle(fixture, source)) throw new Error("Process3d retained route source diverged from the strict fixture");

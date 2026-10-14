@@ -14,7 +14,7 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🔨️modules/**/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧪️tests/*/🟦️.tsx",
-      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧫️fixtures/*/🔣️.json"
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧪️tests/🧫️fixtures/*/🔣️.json"
     ]
   },
   "targets": {

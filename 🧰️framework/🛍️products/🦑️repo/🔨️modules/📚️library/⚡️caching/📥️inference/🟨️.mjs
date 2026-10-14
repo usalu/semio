@@ -13,22 +13,23 @@ let bytes = 0, hits = 0, misses = 0;
  * @param {string} source
  * @returns {string[]}
  */
-export function moduleSourceImports(path, source) {
-  const key = createHash("sha256").update(JSON.stringify([path, source])).digest("hex"), previous = facts.get(key);
+function sourceImports(path, source, scope = "all") {
+  const key = createHash("sha256").update(JSON.stringify([path, source, scope])).digest("hex"), previous = facts.get(key);
   if (previous) { hits++; facts.delete(key); facts.set(key, previous); return [...previous.imports]; }
   misses++;
   const imports = new Set();
-  if (!/\.(?:json|d\.[cm]?ts)$/.test(path)) {
+  if (!/\.json$/.test(path) && !(scope === "command" && /\.d\.[cm]?ts$/.test(path))) {
     const compiler = require("typescript"), add = node => { if (node && compiler.isStringLiteralLike(node)) imports.add(node.text); };
     const visit = node => {
-      if (compiler.isImportTypeNode(node)) return;
+      if (scope !== "all" && compiler.isIfStatement(node) && compiler.isPropertyAccessExpression(node.expression) && node.expression.name.text === "vitest" && compiler.isMetaProperty(node.expression.expression) && node.expression.expression.keywordToken === compiler.SyntaxKind.ImportKeyword) { if (node.elseStatement) visit(node.elseStatement); return; }
+      if (compiler.isImportTypeNode(node)) { if(scope !== "command" && compiler.isLiteralTypeNode(node.argument))add(node.argument.literal); return; }
       if (compiler.isImportDeclaration(node)) {
         const clause = node.importClause, bindings = clause?.namedBindings;
-        if (!clause?.isTypeOnly && !(bindings && compiler.isNamedImports(bindings) && !clause.name && bindings.elements.length && bindings.elements.every(element => element.isTypeOnly))) add(node.moduleSpecifier);
+        if (scope !== "command" || !clause?.isTypeOnly && !(bindings && compiler.isNamedImports(bindings) && !clause.name && bindings.elements.length && bindings.elements.every(element => element.isTypeOnly))) add(node.moduleSpecifier);
         return;
       }
-      if (compiler.isExportDeclaration(node)) { const clause = node.exportClause; if (!node.isTypeOnly && !(clause && compiler.isNamedExports(clause) && clause.elements.length && clause.elements.every(element => element.isTypeOnly))) add(node.moduleSpecifier); return; }
-      if (compiler.isImportEqualsDeclaration(node)) { if (!node.isTypeOnly && compiler.isExternalModuleReference(node.moduleReference)) add(node.moduleReference.expression); return; }
+      if (compiler.isExportDeclaration(node)) { const clause = node.exportClause; if (scope !== "command" || !node.isTypeOnly && !(clause && compiler.isNamedExports(clause) && clause.elements.length && clause.elements.every(element => element.isTypeOnly))) add(node.moduleSpecifier); return; }
+      if (compiler.isImportEqualsDeclaration(node)) { if ((scope !== "command" || !node.isTypeOnly) && compiler.isExternalModuleReference(node.moduleReference)) add(node.moduleReference.expression); return; }
       if (compiler.isCallExpression(node)) {
         const expression = node.expression;
         if (expression.kind === compiler.SyntaxKind.ImportKeyword || compiler.isIdentifier(expression) && expression.text === "require" || compiler.isCallExpression(expression) && compiler.isIdentifier(expression.expression) && expression.expression.text === "createRequire") add(node.arguments[0]);
@@ -47,7 +48,16 @@ export function moduleSourceImports(path, source) {
 
 
 /** 🧭️ Projects canonical runtime module facts onto relative command source imports. */
-export function commandSourceImports(path, source) { return moduleSourceImports(path, source).filter(specifier => specifier.startsWith(".")); }
+export function commandSourceImports(path, source) { return sourceImports(path, source, "command").filter(specifier => specifier.startsWith(".")); }
+
+/** 🔗️ Projects runtime and optional test module facts for project dependency ownership. */
+export function moduleSourceImports(path, source) { return sourceImports(path, source); }
+
+/** 🏗️ Keeps typed and runtime production imports outside command and test ownership. */
+export function productionModuleSourceImports(path, source) {
+  if(path.replaceAll("\\", "/").split("/").some(segment=>segment === "📜️script.ts" || segment === "🧪️tests") || /(?:^|\/)vitest\.config\.[cm]?[jt]s$/.test(path))return [];
+  return sourceImports(path,source,"production");
+}
 
 /** 📊️ Reports bounded immutable parser fact storage without source authority. */
 export function commandSourceParseStats() { return { hits, misses, bytes, limit }; }

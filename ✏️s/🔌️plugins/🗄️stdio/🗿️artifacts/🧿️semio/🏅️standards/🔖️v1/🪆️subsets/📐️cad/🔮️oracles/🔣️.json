@@ -1108,14 +1108,14 @@
       "files": [
         {
           "role": "before-dxf",
-          "path": "../🧫️fixtures/🫥️add-layer-hidden-services/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🫥️add-layer-hidden-services/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:e3598b454dec313f8ad18c1147da42a242ea69f60c4eef011787ffac7f04d989",
           "bytes": 9407
         },
         {
           "role": "expected-dxf",
-          "path": "../🧫️fixtures/🫥️add-layer-hidden-services/➡️after.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🫥️add-layer-hidden-services/➡️after.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:d81991283201dd374b7e046c42180af817e280206cc3a260810f6470576cddf8",
           "bytes": 9685
@@ -1162,14 +1162,14 @@
       "files": [
         {
           "role": "before-dxf",
-          "path": "../🧫️fixtures/🧹️remove-layer-scratch/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🧹️remove-layer-scratch/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:e3598b454dec313f8ad18c1147da42a242ea69f60c4eef011787ffac7f04d989",
           "bytes": 9407
         },
         {
           "role": "expected-dxf",
-          "path": "../🧫️fixtures/🧹️remove-layer-scratch/➡️after.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🧹️remove-layer-scratch/➡️after.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:ffa0313c8659154a9f71086f0fd1b537fd0f6dd5a14d4e878d85f5187d9973ca",
           "bytes": 9534
@@ -1216,14 +1216,14 @@
       "files": [
         {
           "role": "before-dxf",
-          "path": "../🧫️fixtures/🎨️set-layer-walls-color/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🎨️set-layer-walls-color/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:e3598b454dec313f8ad18c1147da42a242ea69f60c4eef011787ffac7f04d989",
           "bytes": 9407
         },
         {
           "role": "expected-dxf",
-          "path": "../🧫️fixtures/🎨️set-layer-walls-color/➡️after.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🎨️set-layer-walls-color/➡️after.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:fe1d99a6cfd6b4f49ac680f05d8c0cbf4072bc05dfdf4241d731dbe1e6147b85",
           "bytes": 9407
@@ -1270,14 +1270,14 @@
       "files": [
         {
           "role": "before-dxf",
-          "path": "../🧫️fixtures/🚪️add-block-door/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🚪️add-block-door/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:e3598b454dec313f8ad18c1147da42a242ea69f60c4eef011787ffac7f04d989",
           "bytes": 9407
         },
         {
           "role": "expected-dxf",
-          "path": "../🧫️fixtures/🚪️add-block-door/➡️after.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🚪️add-block-door/➡️after.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:283eea34b929e633c68b6f3de18257743bfdca2c167c33f3a97964963f13b623",
           "bytes": 9603
@@ -1324,14 +1324,14 @@
       "files": [
         {
           "role": "before-dxf",
-          "path": "../🧫️fixtures/🏚️remove-block-window/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🏚️remove-block-window/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:e3598b454dec313f8ad18c1147da42a242ea69f60c4eef011787ffac7f04d989",
           "bytes": 9407
         },
         {
           "role": "expected-dxf",
-          "path": "../🧫️fixtures/🏚️remove-block-window/➡️after.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🏚️remove-block-window/➡️after.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:9108c6a83d020b021c7c3da657b74a7c0fc7220f61e525d095ecf9990b68a164",
           "bytes": 9228
@@ -1378,14 +1378,14 @@
       "files": [
         {
           "role": "before-dxf",
-          "path": "../🧫️fixtures/📍️set-block-base-point-door/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/📍️set-block-base-point-door/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:e3598b454dec313f8ad18c1147da42a242ea69f60c4eef011787ffac7f04d989",
           "bytes": 9407
         },
         {
           "role": "expected-dxf",
-          "path": "../🧫️fixtures/📍️set-block-base-point-door/➡️after.dxf",
+          "path": "../🧪️tests/🧫️fixtures/📍️set-block-base-point-door/➡️after.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:ab2631cfd8b8e188d2d90aaea4623bf734f67683d08fb32fc37ba98491266e21",
           "bytes": 9408
@@ -1432,14 +1432,14 @@
       "files": [
         {
           "role": "before-dxf",
-          "path": "../🧫️fixtures/🌙️add-entity-arc-fillet/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🌙️add-entity-arc-fillet/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:e3598b454dec313f8ad18c1147da42a242ea69f60c4eef011787ffac7f04d989",
           "bytes": 9407
         },
         {
           "role": "expected-dxf",
-          "path": "../🧫️fixtures/🌙️add-entity-arc-fillet/➡️after.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🌙️add-entity-arc-fillet/➡️after.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:dc68421e58a46823270db8c99a1cb9dcc417e87a234f45a80eeb37a06eb02a36",
           "bytes": 9534
@@ -1486,14 +1486,14 @@
       "files": [
         {
           "role": "before-dxf",
-          "path": "../🧫️fixtures/〰️remove-entity-middle-polyline/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/〰️remove-entity-middle-polyline/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:e3598b454dec313f8ad18c1147da42a242ea69f60c4eef011787ffac7f04d989",
           "bytes": 9407
         },
         {
           "role": "expected-dxf",
-          "path": "../🧫️fixtures/〰️remove-entity-middle-polyline/➡️after.dxf",
+          "path": "../🧪️tests/🧫️fixtures/〰️remove-entity-middle-polyline/➡️after.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:ef2005b066c1ec05afc55e4b812187ded626f64671a6c3857c6aea51389cee4e",
           "bytes": 9092
@@ -1540,14 +1540,14 @@
       "files": [
         {
           "role": "before-dxf",
-          "path": "../🧫️fixtures/🏷️set-entity-layer-text-to-annotations/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-entity-layer-text-to-annotations/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:e3598b454dec313f8ad18c1147da42a242ea69f60c4eef011787ffac7f04d989",
           "bytes": 9407
         },
         {
           "role": "expected-dxf",
-          "path": "../🧫️fixtures/🏷️set-entity-layer-text-to-annotations/➡️after.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-entity-layer-text-to-annotations/➡️after.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:3f6c935940c2568330b3eaa57869799dc4ee2f3c84cbd5ec64351fa48c0b519a",
           "bytes": 9681
@@ -1594,21 +1594,21 @@
       "files": [
         {
           "role": "before-dxf",
-          "path": "../🧫️fixtures/⭕️set-entity-geometry-circle-radius/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/⭕️set-entity-geometry-circle-radius/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:e3598b454dec313f8ad18c1147da42a242ea69f60c4eef011787ffac7f04d989",
           "bytes": 9407
         },
         {
           "role": "expected-dxf",
-          "path": "../🧫️fixtures/⭕️set-entity-geometry-circle-radius/➡️after.dxf",
+          "path": "../🧪️tests/🧫️fixtures/⭕️set-entity-geometry-circle-radius/➡️after.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:599d79c6b4e0748cf928404608975f3ef1988b0a1e3157d70956b3569bbd4d57",
           "bytes": 9535
         },
         {
           "role": "counterexample-dxf",
-          "path": "../🧫️fixtures/⭕️set-entity-geometry-circle-radius/⚠️counterexample-after.dxf",
+          "path": "../🧪️tests/🧫️fixtures/⭕️set-entity-geometry-circle-radius/⚠️counterexample-after.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:1d937f3297a56f781b9c7336307a50245bea5eeaac8fc7a64a1b22d9c3fd4647",
           "bytes": 9534
@@ -1655,14 +1655,14 @@
       "files": [
         {
           "role": "before-dxf",
-          "path": "../🧫️fixtures/🌀️add-block-entity-door-swing/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🌀️add-block-entity-door-swing/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:e3598b454dec313f8ad18c1147da42a242ea69f60c4eef011787ffac7f04d989",
           "bytes": 9407
         },
         {
           "role": "expected-dxf",
-          "path": "../🧫️fixtures/🌀️add-block-entity-door-swing/➡️after.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🌀️add-block-entity-door-swing/➡️after.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:068f339bd682b1d490cad0e3b948044bf69089fe05c0b8002c5c08a812e4eb9b",
           "bytes": 9495
@@ -1709,14 +1709,14 @@
       "files": [
         {
           "role": "before-dxf",
-          "path": "../🧫️fixtures/🪟️remove-block-entity-window-mullion/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🪟️remove-block-entity-window-mullion/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:e3598b454dec313f8ad18c1147da42a242ea69f60c4eef011787ffac7f04d989",
           "bytes": 9407
         },
         {
           "role": "expected-dxf",
-          "path": "../🧫️fixtures/🪟️remove-block-entity-window-mullion/➡️after.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🪟️remove-block-entity-window-mullion/➡️after.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:ffb79dba9d00070f4497dc98c7bbecff297638478e7d560e954cb35b5476f7c7",
           "bytes": 9315
@@ -1763,14 +1763,14 @@
       "files": [
         {
           "role": "before-dxf",
-          "path": "../🧫️fixtures/🍃️set-block-entity-layer-door-leaf/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🍃️set-block-entity-layer-door-leaf/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:e3598b454dec313f8ad18c1147da42a242ea69f60c4eef011787ffac7f04d989",
           "bytes": 9407
         },
         {
           "role": "expected-dxf",
-          "path": "../🧫️fixtures/🍃️set-block-entity-layer-door-leaf/➡️after.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🍃️set-block-entity-layer-door-leaf/➡️after.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:83be47356d2d0fa0d8e3752000db5a941378383b54d8c1a2758c9823c44b0f6d",
           "bytes": 9540
@@ -1817,14 +1817,14 @@
       "files": [
         {
           "role": "before-dxf",
-          "path": "../🧫️fixtures/🔲️set-block-entity-geometry-window-pane/⬅️before.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🔲️set-block-entity-geometry-window-pane/⬅️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:e3598b454dec313f8ad18c1147da42a242ea69f60c4eef011787ffac7f04d989",
           "bytes": 9407
         },
         {
           "role": "expected-dxf",
-          "path": "../🧫️fixtures/🔲️set-block-entity-geometry-window-pane/➡️after.dxf",
+          "path": "../🧪️tests/🧫️fixtures/🔲️set-block-entity-geometry-window-pane/➡️after.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:f92e1cd31e7c30fec9848f7fed6aa6fb09b9be2dfa1ab52b808488eabf9aa2a8",
           "bytes": 9407
@@ -1871,14 +1871,14 @@
       "files": [
         {
           "role": "before-step",
-          "path": "../🧫️fixtures/➕️step-add-entity-circle/⬅️before.step",
+          "path": "../🧪️tests/🧫️fixtures/➕️step-add-entity-circle/⬅️before.step",
           "mediaType": "model/step",
           "sha256": "sha256:b5aff0522213acd3aadea485f26b89abcfa7c44ce201949bc5c43938ba974e56",
           "bytes": 386
         },
         {
           "role": "expected-step",
-          "path": "../🧫️fixtures/➕️step-add-entity-circle/➡️after.step",
+          "path": "../🧪️tests/🧫️fixtures/➕️step-add-entity-circle/➡️after.step",
           "mediaType": "model/step",
           "sha256": "sha256:061063570505b9f3eb9a8e7e5be67e50cd286ae0fa87adb6655101490cfc69ef",
           "bytes": 482
@@ -1925,14 +1925,14 @@
       "files": [
         {
           "role": "before-step",
-          "path": "../🧫️fixtures/➖️step-remove-entity-line/⬅️before.step",
+          "path": "../🧪️tests/🧫️fixtures/➖️step-remove-entity-line/⬅️before.step",
           "mediaType": "model/step",
           "sha256": "sha256:b5aff0522213acd3aadea485f26b89abcfa7c44ce201949bc5c43938ba974e56",
           "bytes": 386
         },
         {
           "role": "expected-step",
-          "path": "../🧫️fixtures/➖️step-remove-entity-line/➡️after.step",
+          "path": "../🧪️tests/🧫️fixtures/➖️step-remove-entity-line/➡️after.step",
           "mediaType": "model/step",
           "sha256": "sha256:a6baf22a0c0deee450948012dd9c8c403cf49ff9220533cc9aab1e1640a7869e",
           "bytes": 275
@@ -1979,21 +1979,21 @@
       "files": [
         {
           "role": "before-step",
-          "path": "../🧫️fixtures/📏️step-set-entity-geometry-circle-radius/⬅️before.step",
+          "path": "../🧪️tests/🧫️fixtures/📏️step-set-entity-geometry-circle-radius/⬅️before.step",
           "mediaType": "model/step",
           "sha256": "sha256:b5aff0522213acd3aadea485f26b89abcfa7c44ce201949bc5c43938ba974e56",
           "bytes": 386
         },
         {
           "role": "expected-step",
-          "path": "../🧫️fixtures/📏️step-set-entity-geometry-circle-radius/➡️after.step",
+          "path": "../🧪️tests/🧫️fixtures/📏️step-set-entity-geometry-circle-radius/➡️after.step",
           "mediaType": "model/step",
           "sha256": "sha256:48b98ef0cb258c0ae0c0bda6ce9c0f2d2917bbfbbdcbf4ff3b5f79c8aadcb6f1",
           "bytes": 387
         },
         {
           "role": "counterexample-step",
-          "path": "../🧫️fixtures/📏️step-set-entity-geometry-circle-radius/⚠️counterexample-after.step",
+          "path": "../🧪️tests/🧫️fixtures/📏️step-set-entity-geometry-circle-radius/⚠️counterexample-after.step",
           "mediaType": "model/step",
           "sha256": "sha256:b73f4232ae7d53942e21600a80319bb10ecea8227c5e68400cccd42ee021cf52",
           "bytes": 386

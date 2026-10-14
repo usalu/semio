@@ -8,10 +8,10 @@ use semio_s_artifact_stdio_semio_graph::io::text::snapshot::encode_semio_graph_s
 type RichFrameMembers=semio_s_artifact_stdio_semio::SemioMembers;
 type RichFrameApp=VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>,RichFrameMembers>;
 fn full_frame_contract()->serde_json::Value{
- serde_json::from_str(include_str!("../../../🧬️schema/📸️snapshot/🧫️fixtures/🪆️child/🧵️lifetime/🔣️.json")).expect("closed frame input")
+ serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📸️snapshot/🪆️child/🧵️lifetime/🔣️.json")).expect("closed frame input")
 }
 fn full_frame_child(contract:&serde_json::Value,next:bool)->SemioGraphSnapshot{
- let mut vector:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🌳️typed/🔣️.json")).expect("rich owner input");
+ let mut vector:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🌳️typed/🔣️.json")).expect("rich owner input");
  let child=&mut vector["childSnapshot"];
  child["nodes"][0]["properties"].as_array_mut().expect("actual ordered properties").extend(contract["intrinsicValues"].as_array().expect("nine intrinsic inputs").iter().cloned());
  if next{child["nodes"][0]["label"]=serde_json::Value::String(format!("{}{}",contract["nextLiteral"].as_str().expect("next literal"),"x".repeat(contract["retainedTailBytes"].as_u64().expect("tail")as usize)));}

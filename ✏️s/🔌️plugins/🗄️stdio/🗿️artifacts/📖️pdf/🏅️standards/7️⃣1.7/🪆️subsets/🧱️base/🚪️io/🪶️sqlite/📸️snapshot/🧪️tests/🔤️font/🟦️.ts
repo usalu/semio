@@ -11,7 +11,7 @@ import { exportSqliteDatabase, importSqliteDatabase } from "../../../../../../..
 import { parsePdfFont } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 
 async function source(): Promise<{ descriptor: PdfFontDescriptor; programs: PdfFontProgram[]; encodings: PdfSimpleEncoding[]; unicode: PdfToUnicode; cmaps: PdfCMap[] }> {
-  const input = await Bun.file(new URL("../../🔤️font/🧫️fixtures/🔣️.json", import.meta.url)).json();
+  const input = await Bun.file(new URL("../../🔤️font/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
   const values: Binary64[] = input.binary64.map((bits: string) => ({ bits: BigInt(`0x${bits}`) }));
   const descriptor: PdfFontDescriptor = { fontName: input.fontName, flags: 4294967295, fontBbox: [values[0]!, values[1]!, values[2]!, values[3]!], italicAngle: values[4]!, ascent: values[5]!, descent: values[6]!, capHeight: values[0]!, stemV: values[1]!, stemH: null, xHeight: values[2]!, leading: values[3]!, avgWidth: values[4]!, maxWidth: values[5]!, missingWidth: values[6]!, fontFamily: "Ω Family", fontStretch: null, fontWeight: values[5]!, charSet: "A/B Ω", extra: [{ key: "Max", value: { kind: "int", value: 9223372036854775807n } }] };
   return { descriptor, programs: input.programs, encodings: input.encodings.map((base: PdfSimpleEncoding["base"]) => ({ base, differences: input.differences })), unicode: input.unicode, cmaps: input.cmaps };
@@ -55,7 +55,7 @@ test("PDF every font variant preserves typed ownership and Type3 content without
 }, { timeout:30_000 });
 
 test("PDF native font JSON admission constructs the same owned Binary64 and content model", async () => {
-  const value=parsePdfFont(pdfFontFromNativeJson(await Bun.file(new URL("../../../../📝️text/📸️snapshot/🪪️native-json/🔤️font/🧫️fixtures/🔣️.json",import.meta.url)).json()));
+  const value=parsePdfFont(pdfFontFromNativeJson(await Bun.file(new URL("../../../../📝️text/📸️snapshot/🪪️native-json/🔤️font/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).json()));
   expect(value.kind.kind).toBe("type3");if(value.kind.kind!=="type3")throw new Error("Incorrect owned font");
   expect(value.kind.fontMatrix[0]).toEqual({bits:0x3ff0000000000000n});expect(value.kind.widths[0]).toEqual({bits:0x3ff0000000000000n});expect(value.kind.charProcs[0]!.content).toEqual([{op:"setLineWidth",width:{bits:0x3ff0000000000000n}}]);
 });

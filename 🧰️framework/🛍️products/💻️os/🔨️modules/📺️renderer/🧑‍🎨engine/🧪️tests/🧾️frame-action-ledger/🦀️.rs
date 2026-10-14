@@ -15,13 +15,13 @@
 use super::*;
 use serde_json::Value;
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🧾️frame-action-ledger/🔣️.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/🧾️frame-action-ledger/🔣️.json");
 const RENDERER_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
 const FRAME_JOB_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
 
 #[test]
 fn frame_action_refusal_cancels_only_the_correlated_successor_with_identical_payloads() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧾️correlated-action-receipts/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧾️correlated-action-receipts/🔣️.json")).unwrap();
     let rows = fixture["receipts"].as_array().unwrap();
     let mut input = InputState::<ActionDescriptor>::default();
     let mut batch = input.reserve_actions(rows.len(), rows.len() * 256).unwrap();

@@ -1,7 +1,7 @@
 import { expect,test } from "bun:test";
 import stableStringify from "fast-json-stable-stringify";
 import { applyPatch } from "fast-json-patch";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 test("terrain plain finite grants preserve Busy versus Closing",()=>{
  expect(fixture.control.demand).toBe("observeOnly");
  expect(stableStringify(fixture.grant)).toBe(JSON.stringify(Object.fromEntries(Object.entries(fixture.grant).sort(([a],[b])=>a.localeCompare(b)))));

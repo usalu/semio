@@ -1,4 +1,4 @@
-import { resolveTestLevel, testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { resolveTestLevel, testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { selectCases, selectImplementations } from "../../🔍️discovery/🎛️selection/🟦️.ts";
 import { ownerShipsImplementation } from "../../🖥️host/🏗️materialization/🟦️.ts";
 import { executeOne } from "../../🏃️execution/🎬️scenario/🟦️.ts";
@@ -6,9 +6,9 @@ import { readImplementationCoverage, reportsDir } from "../../📊️reporting/�
 import { loadClassifiedBaseline } from "../../🕸️dependencies/📋️orchestration/🟦️.ts";
 import { type ComparisonProfile, type Implementation } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { adapterRegistersSubject, type DiscoveredCase, type TestResult, buildCasePlan, computeCoverageMetrics, evaluateCrossSubjectParity, evaluateParity, executePipeline, formatMetrics, loadOracleRegistry, markRunComplete, oracleImplementation, pipelineRoleArtifacts, pipelineTable, probeTable, profileTable, renderDiff, renderJUnit, subjectRawInputsByScenario, summarizeRun, testCacheDir } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { type TestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { type TestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 
-import { Script } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 

@@ -1,0 +1,25 @@
+{
+  "schema": "s.stdio.semio.text/v1/*",
+  "language": "de",
+  "unit": "a✍\u0000",
+  "repeat": 32769,
+  "preamble": "semio s.stdio.semio.text.dsl v1\n",
+  "encodings": [
+    "text",
+    "binary"
+  ],
+  "stops": [
+    0,
+    1,
+    7,
+    31,
+    89
+  ],
+  "policy": {
+    "maximumItems": 256,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 64
+  }
+}

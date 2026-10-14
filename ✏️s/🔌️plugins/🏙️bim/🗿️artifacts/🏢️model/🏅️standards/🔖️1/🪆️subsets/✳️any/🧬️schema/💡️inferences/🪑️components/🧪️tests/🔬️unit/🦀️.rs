@@ -3,7 +3,7 @@ use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const ROOM: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🪑️components/🏠️room/📸️snapshot/🔣️.json");
+const ROOM: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪑️components/🏠️room/📸️snapshot/🔣️.json");
 
 fn room() -> ModelSnapshot {
     from_json_str(ROOM, JsonMemberPolicy::Reject).expect("the room decodes")

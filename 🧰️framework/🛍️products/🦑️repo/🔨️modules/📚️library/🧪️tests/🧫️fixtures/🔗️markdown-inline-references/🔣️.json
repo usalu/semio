@@ -1,0 +1,799 @@
+{
+  "schemaVersion": 1,
+  "contractId": "markdown-inline-reference-spans-v1",
+  "grammar": {
+    "label": "optional ! then [ then zero-or-more non-] code units then ]",
+    "destination": "( then one-or-more non-whitespace non-) code units",
+    "title": "optional whitespace plus double-quoted zero-or-more non-quote code units",
+    "close": "immediate )",
+    "coordinates": "UTF-16 destination-only half-open offsets; line/column count raw LF boundaries",
+    "ordering": "inline then definitions then HTML; duplicates preserved",
+    "escapes": "no new destination or title escape grammar",
+    "scope": "source-only text scanner, not CommonMark document parsing"
+  },
+  "extraction": {
+    "required": [
+      "referenceTokens",
+      "regexTokens",
+      "htmlTokens",
+      "lineLocation",
+      "markdownCommentPathReferenceAuthority",
+      "markdownSourceCoordinateSpans"
+    ],
+    "optional": [
+      "markdownInlineTokens"
+    ],
+    "globals": [
+      "indexedLineContent",
+      "indexedLineStarts"
+    ],
+    "missingDependencies": "fail, never stub"
+  },
+  "oracle": {
+    "package": "markdown-it",
+    "version": "14.3.0",
+    "dependencyKind": "devDependencies",
+    "entry": "inline.parse raw content",
+    "proof": "emitted normalized values plus distinct raw parseLinkDestination spans; speculative helper calls are not links"
+  },
+  "limits": {
+    "childMilliseconds": 2000,
+    "childOutputBytes": 65536,
+    "caseMilliseconds": 5000,
+    "childDescendants": 0
+  },
+  "cases": [
+    {
+      "id": "plain-link",
+      "path": "📝️.md",
+      "source": "[x](a.md)",
+      "oracleScope": "common-subset",
+      "reason": "Installed markdown-it agrees on emitted values and raw destination spans.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:5@4",
+          "start": 4,
+          "end": 8,
+          "value": "a.md"
+        }
+      ]
+    },
+    {
+      "id": "image",
+      "path": "📝️.md",
+      "source": "![x](a.png)",
+      "oracleScope": "common-subset",
+      "reason": "Installed markdown-it agrees on emitted values and raw destination spans.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:6@5",
+          "start": 5,
+          "end": 10,
+          "value": "a.png"
+        }
+      ]
+    },
+    {
+      "id": "double-quoted-title",
+      "path": "📝️.md",
+      "source": "[x](a.md \"title\")",
+      "oracleScope": "common-subset",
+      "reason": "Installed markdown-it agrees on emitted values and raw destination spans.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:5@4",
+          "start": 4,
+          "end": 8,
+          "value": "a.md"
+        }
+      ]
+    },
+    {
+      "id": "parent-relative",
+      "path": "📝️.md",
+      "source": "[x](../a.md)",
+      "oracleScope": "common-subset",
+      "reason": "Installed markdown-it agrees on emitted values and raw destination spans.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:5@4",
+          "start": 4,
+          "end": 11,
+          "value": "../a.md"
+        }
+      ]
+    },
+    {
+      "id": "two-links",
+      "path": "📝️.md",
+      "source": "[x](a.md)[y](b.md)",
+      "oracleScope": "common-subset",
+      "reason": "Installed markdown-it agrees on emitted values and raw destination spans.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:5@4",
+          "start": 4,
+          "end": 8,
+          "value": "a.md"
+        },
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:14@13",
+          "start": 13,
+          "end": 17,
+          "value": "b.md"
+        }
+      ]
+    },
+    {
+      "id": "utf16-prefix",
+      "path": "📝️.md",
+      "source": "🌱 [x](a.md)",
+      "oracleScope": "common-subset",
+      "reason": "Installed markdown-it agrees on emitted values and raw destination spans.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:8@7",
+          "start": 7,
+          "end": 11,
+          "value": "a.md"
+        }
+      ]
+    },
+    {
+      "id": "crlf-prefix",
+      "path": "📝️.md",
+      "source": "a\r\n[x](a.md)",
+      "oracleScope": "common-subset",
+      "reason": "Installed markdown-it agrees on emitted values and raw destination spans.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:2:5@7",
+          "start": 7,
+          "end": 11,
+          "value": "a.md"
+        }
+      ]
+    },
+    {
+      "id": "multiline-label",
+      "path": "📝️.md",
+      "source": "[x\nz](a.md)",
+      "oracleScope": "common-subset",
+      "reason": "Installed markdown-it agrees on emitted values and raw destination spans.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:2:4@6",
+          "start": 6,
+          "end": 10,
+          "value": "a.md"
+        }
+      ]
+    },
+    {
+      "id": "short-ansi-prefix",
+      "path": "📝️.md",
+      "source": "\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m\u001b[0m]\n[kept](./source.ts)",
+      "oracleScope": "common-subset",
+      "reason": "Installed markdown-it agrees on emitted values and raw destination spans.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:2:8@137",
+          "start": 137,
+          "end": 148,
+          "value": "./source.ts"
+        }
+      ]
+    },
+    {
+      "id": "missing-close-bracket",
+      "path": "📝️.md",
+      "source": "[x(a.md)",
+      "oracleScope": "common-subset",
+      "reason": "Installed markdown-it agrees on emitted values and raw destination spans.",
+      "expected": []
+    },
+    {
+      "id": "missing-parenthesis",
+      "path": "📝️.md",
+      "source": "[x](a.md",
+      "oracleScope": "common-subset",
+      "reason": "Installed markdown-it agrees on emitted values and raw destination spans.",
+      "expected": []
+    },
+    {
+      "id": "separator-between-label-and-target",
+      "path": "📝️.md",
+      "source": "[x] (a.md)",
+      "oracleScope": "common-subset",
+      "reason": "Installed markdown-it agrees on emitted values and raw destination spans.",
+      "expected": []
+    },
+    {
+      "id": "unterminated-title",
+      "path": "📝️.md",
+      "source": "[x](a.md \"title)",
+      "oracleScope": "common-subset",
+      "reason": "Installed markdown-it agrees on emitted values and raw destination spans.",
+      "expected": []
+    },
+    {
+      "id": "empty-destination",
+      "path": "📝️.md",
+      "source": "[x]()",
+      "oracleScope": "scanner-only",
+      "reason": "Current scanner grammar is intentionally narrower or text-based; no full CommonMark claim.",
+      "expected": []
+    },
+    {
+      "id": "leading-destination-space",
+      "path": "📝️.md",
+      "source": "[x]( a.md)",
+      "oracleScope": "scanner-only",
+      "reason": "Current scanner grammar is intentionally narrower or text-based; no full CommonMark claim.",
+      "expected": []
+    },
+    {
+      "id": "trailing-space",
+      "path": "📝️.md",
+      "source": "[x](a.md )",
+      "oracleScope": "scanner-only",
+      "reason": "Current scanner grammar is intentionally narrower or text-based; no full CommonMark claim.",
+      "expected": []
+    },
+    {
+      "id": "single-quoted-title",
+      "path": "📝️.md",
+      "source": "[x](a.md 'title')",
+      "oracleScope": "scanner-only",
+      "reason": "Current scanner grammar is intentionally narrower or text-based; no full CommonMark claim.",
+      "expected": []
+    },
+    {
+      "id": "angle-destination",
+      "path": "📝️.md",
+      "source": "[x](<a.md>)",
+      "oracleScope": "scanner-only",
+      "reason": "Current scanner grammar is intentionally narrower or text-based; no full CommonMark claim.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:5@4",
+          "start": 4,
+          "end": 10,
+          "value": "<a.md>"
+        }
+      ]
+    },
+    {
+      "id": "balanced-parentheses",
+      "path": "📝️.md",
+      "source": "[x](a(b)c.md)",
+      "oracleScope": "scanner-only",
+      "reason": "Current scanner grammar is intentionally narrower or text-based; no full CommonMark claim.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:5@4",
+          "start": 4,
+          "end": 7,
+          "value": "a(b"
+        }
+      ]
+    },
+    {
+      "id": "escaped-opening",
+      "path": "📝️.md",
+      "source": "\\[x](a.md)",
+      "oracleScope": "scanner-only",
+      "reason": "Current scanner grammar is intentionally narrower or text-based; no full CommonMark claim.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:6@5",
+          "start": 5,
+          "end": 9,
+          "value": "a.md"
+        }
+      ]
+    },
+    {
+      "id": "inline-code",
+      "path": "📝️.md",
+      "source": "`[x](a.md)`",
+      "oracleScope": "scanner-only",
+      "reason": "Current scanner grammar is intentionally narrower or text-based; no full CommonMark claim.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:6@5",
+          "start": 5,
+          "end": 9,
+          "value": "a.md"
+        }
+      ]
+    },
+    {
+      "id": "repeated-value-in-label",
+      "path": "📝️.md",
+      "source": "[a.md](a.md)",
+      "oracleScope": "common-subset",
+      "reason": "Destination span, never the equal label; intentional correction.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:8@7",
+          "start": 7,
+          "end": 11,
+          "value": "a.md"
+        }
+      ]
+    },
+    {
+      "id": "overlapping-successful-destination",
+      "path": "📝️.md",
+      "source": "[a]([b](./ok.md)",
+      "oracleScope": "scanner-only",
+      "reason": "Current scanner grammar is intentionally narrower or text-based; no full CommonMark claim.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:5@4",
+          "start": 4,
+          "end": 15,
+          "value": "[b](./ok.md"
+        }
+      ]
+    },
+    {
+      "id": "nested-open-label",
+      "path": "📝️.md",
+      "source": "[[nested](./nested.md)",
+      "oracleScope": "scanner-only",
+      "reason": "Opening brackets are label data; no balanced-label grammar.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:11@10",
+          "start": 10,
+          "end": 21,
+          "value": "./nested.md"
+        }
+      ]
+    },
+    {
+      "id": "nested-close-label",
+      "path": "📝️.md",
+      "source": "[outer[nested]](./no.md)",
+      "oracleScope": "scanner-only",
+      "reason": "The first closing bracket ends the label; no balanced-label grammar.",
+      "expected": []
+    },
+    {
+      "id": "failed-destination-contains-next-link",
+      "path": "📝️.md",
+      "source": "[bad](word [kept](./ok.md)",
+      "oracleScope": "common-subset",
+      "reason": "A failed outer suffix cannot hide the later valid link.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:19@18",
+          "start": 18,
+          "end": 25,
+          "value": "./ok.md"
+        }
+      ]
+    },
+    {
+      "id": "two-failed-destinations-next-link",
+      "path": "📝️.md",
+      "source": "[a](word [b](word [kept](./ok.md)",
+      "oracleScope": "common-subset",
+      "reason": "Native inline destination grammar overlaps this exact case.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:26@25",
+          "start": 25,
+          "end": 32,
+          "value": "./ok.md"
+        }
+      ]
+    },
+    {
+      "id": "title-quote-not-followed-by-close",
+      "path": "📝️.md",
+      "source": "[bad](word \"title\"x)[kept](./ok.md)",
+      "oracleScope": "common-subset",
+      "reason": "Native inline destination grammar overlaps this exact case.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:28@27",
+          "start": 27,
+          "end": 34,
+          "value": "./ok.md"
+        }
+      ]
+    },
+    {
+      "id": "repeated-unmatched-titles",
+      "path": "📝️.md",
+      "source": "[a](word \"unfinished [b](word \"unfinished [kept](./ok.md)",
+      "oracleScope": "scanner-only",
+      "reason": "Failed title candidates retain later valid link; no title escape expansion.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:50@49",
+          "start": 49,
+          "end": 56,
+          "value": "./ok.md"
+        }
+      ]
+    },
+    {
+      "id": "empty-double-title",
+      "path": "📝️.md",
+      "source": "[x](./doc.md \"\")",
+      "oracleScope": "common-subset",
+      "reason": "Native inline destination grammar overlaps this exact case.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:5@4",
+          "start": 4,
+          "end": 12,
+          "value": "./doc.md"
+        }
+      ]
+    },
+    {
+      "id": "title-trailing-space-rejected",
+      "path": "📝️.md",
+      "source": "[x](./doc.md \"title\" )",
+      "oracleScope": "scanner-only",
+      "reason": "Closing quote must be immediately followed by right parenthesis.",
+      "expected": []
+    },
+    {
+      "id": "title-tab-separator",
+      "path": "📝️.md",
+      "source": "[x](./doc.md\t\"title\")",
+      "oracleScope": "common-subset",
+      "reason": "Native inline destination grammar overlaps this exact case.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:5@4",
+          "start": 4,
+          "end": 12,
+          "value": "./doc.md"
+        }
+      ]
+    },
+    {
+      "id": "title-newline",
+      "path": "📝️.md",
+      "source": "[x](./doc.md \"line\nnext\")",
+      "oracleScope": "common-subset",
+      "reason": "Native inline destination grammar overlaps this exact case.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:5@4",
+          "start": 4,
+          "end": 12,
+          "value": "./doc.md"
+        }
+      ]
+    },
+    {
+      "id": "unicode-destination",
+      "path": "📝️.md",
+      "source": "🌍️ [文](./🦀️源.rs)",
+      "oracleScope": "common-subset",
+      "reason": "Native inline destination grammar overlaps this exact case.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:9@8",
+          "start": 8,
+          "end": 17,
+          "value": "./🦀️源.rs"
+        }
+      ]
+    },
+    {
+      "id": "image-repeated-destination",
+      "path": "📝️.md",
+      "source": "![a.png](a.png)",
+      "oracleScope": "common-subset",
+      "reason": "Native inline destination grammar overlaps this exact case.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:10@9",
+          "start": 9,
+          "end": 14,
+          "value": "a.png"
+        }
+      ]
+    },
+    {
+      "id": "label-title-destination-repetition",
+      "path": "📝️.md",
+      "source": "[same](same \"same\")",
+      "oracleScope": "common-subset",
+      "reason": "Native inline destination grammar overlaps this exact case.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:8@7",
+          "start": 7,
+          "end": 11,
+          "value": "same"
+        }
+      ]
+    },
+    {
+      "id": "destination-escaped-close",
+      "path": "📝️.md",
+      "source": "[x](a\\)b)",
+      "oracleScope": "scanner-only",
+      "reason": "Backslash does not escape the destination delimiter.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:5@4",
+          "start": 4,
+          "end": 6,
+          "value": "a\\"
+        }
+      ]
+    },
+    {
+      "id": "empty-label",
+      "path": "📝️.md",
+      "source": "[](./doc.md)",
+      "oracleScope": "common-subset",
+      "reason": "Native inline destination grammar overlaps this exact case.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:4@3",
+          "start": 3,
+          "end": 11,
+          "value": "./doc.md"
+        }
+      ]
+    },
+    {
+      "id": "empty-destination-next-link",
+      "path": "📝️.md",
+      "source": "[bad]()[kept](./ok.md)",
+      "oracleScope": "scanner-only",
+      "reason": "Empty destination is rejected, unlike CommonMark; later link remains.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:15@14",
+          "start": 14,
+          "end": 21,
+          "value": "./ok.md"
+        }
+      ]
+    },
+    {
+      "id": "destination-newline-rejected",
+      "path": "📝️.md",
+      "source": "[x](line\nbreak)[kept](./ok.md)",
+      "oracleScope": "scanner-only",
+      "reason": "Whitespace starts only a double-quoted title, never continuation of the destination.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:2:14@22",
+          "start": 22,
+          "end": 29,
+          "value": "./ok.md"
+        }
+      ]
+    },
+    {
+      "id": "mdx-path",
+      "path": "📝️.mdx",
+      "source": "[x](./doc.mdx)",
+      "oracleScope": "common-subset",
+      "reason": "MDX uses the same text scanner.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:5@4",
+          "start": 4,
+          "end": 13,
+          "value": "./doc.mdx"
+        }
+      ]
+    },
+    {
+      "id": "uppercase-path",
+      "path": "NOTES.MD",
+      "source": "[x](./doc.md)",
+      "oracleScope": "common-subset",
+      "reason": "Extension matching is case insensitive.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:5@4",
+          "start": 4,
+          "end": 12,
+          "value": "./doc.md"
+        }
+      ]
+    },
+    {
+      "id": "unselected-path",
+      "path": "source.txt",
+      "source": "[x](./ignored.md)",
+      "oracleScope": "scanner-only",
+      "reason": "Unselected extension must not invoke the Markdown adapter.",
+      "expected": []
+    },
+    {
+      "id": "cache-content-newline",
+      "path": "📝️.md",
+      "source": "prefix\n[x](a.md)",
+      "oracleScope": "common-subset",
+      "reason": "Native inline destination grammar overlaps this exact case.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:2:5@11",
+          "start": 11,
+          "end": 15,
+          "value": "a.md"
+        }
+      ]
+    },
+    {
+      "id": "cache-content-two-newlines",
+      "path": "📝️.md",
+      "source": "\n\n[x](a.md)",
+      "oracleScope": "common-subset",
+      "reason": "Native inline destination grammar overlaps this exact case.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:3:5@6",
+          "start": 6,
+          "end": 10,
+          "value": "a.md"
+        }
+      ]
+    },
+    {
+      "id": "repeated-destinations",
+      "path": "📝️.md",
+      "source": "[a](same.md)[b](same.md)",
+      "oracleScope": "common-subset",
+      "reason": "Equal values at distinct destination spans retain both emitted tokens in order.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:5@4",
+          "start": 4,
+          "end": 11,
+          "value": "same.md"
+        },
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:17@16",
+          "start": 16,
+          "end": 23,
+          "value": "same.md"
+        }
+      ]
+    },
+    {
+      "id": "speculative-equal-destination",
+      "path": "📝️.md",
+      "source": "[bad](a.md \"title\"x)[ok](a.md)",
+      "oracleScope": "scanner-only",
+      "reason": "An equal speculative destination is not an accepted token; ambiguous native span joins must reject rather than choose an occurrence.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:26@25",
+          "start": 25,
+          "end": 29,
+          "value": "a.md"
+        }
+      ]
+    },
+    {
+      "id": "branch-order-separate-definition-html",
+      "path": "📝️.md",
+      "source": "[ref]: ./definition.md\n[x](./inline.md)\n<img src=\"./image.png\">",
+      "oracleScope": "scanner-only",
+      "reason": "Inline, definition, then HTML adapter order is preserved, not global offset order.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:2:5@27",
+          "start": 27,
+          "end": 38,
+          "value": "./inline.md"
+        },
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:8@7",
+          "start": 7,
+          "end": 22,
+          "value": "./definition.md"
+        },
+        {
+          "adapter": "markdown",
+          "structuredLocation": "html-attribute:3:11@50",
+          "start": 50,
+          "end": 61,
+          "value": "./image.png"
+        }
+      ]
+    }
+  ],
+  "cacheSequence": [
+    "plain-link",
+    "cache-content-newline",
+    "cache-content-two-newlines",
+    "plain-link",
+    "crlf-prefix",
+    "utf16-prefix"
+  ],
+  "stress": [
+    {
+      "id": "ansi-open-labels",
+      "unit": "\u001b[0m",
+      "repeat": 16384,
+      "suffix": "]\n[kept](./source.ts)",
+      "codeUnits": 65557,
+      "bytes": 65557,
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:2:8@65545",
+          "start": 65545,
+          "end": 65556,
+          "value": "./source.ts"
+        }
+      ]
+    },
+    {
+      "id": "repeated-title-candidates",
+      "unit": "[x](word \"",
+      "repeat": 8192,
+      "suffix": "]\n[kept](./source.ts)",
+      "codeUnits": 81941,
+      "bytes": 81941,
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:2:8@81929",
+          "start": 81929,
+          "end": 81940,
+          "value": "./source.ts"
+        }
+      ]
+    }
+  ]
+}

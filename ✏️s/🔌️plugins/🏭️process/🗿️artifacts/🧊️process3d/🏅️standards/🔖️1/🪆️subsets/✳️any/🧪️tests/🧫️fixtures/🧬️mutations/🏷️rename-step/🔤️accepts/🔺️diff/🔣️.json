@@ -1,0 +1,24 @@
+{
+  "workshop": null,
+  "stockId": null,
+  "stockLabel": null,
+  "stockPose": null,
+  "stockPayload": null,
+  "stockSolid": null,
+  "stepPayloads": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "step-1",
+        "patch": {
+          "label": "Final Rip Cut",
+          "enabled": null,
+          "measure": null,
+          "origin": null
+        }
+      }
+    ]
+  }
+}

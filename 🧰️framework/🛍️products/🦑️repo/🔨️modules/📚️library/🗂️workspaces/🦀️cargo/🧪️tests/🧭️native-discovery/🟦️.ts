@@ -4,7 +4,7 @@ import {dirname,join} from "node:path";
 import glob from "fast-glob";
 import TOML from "@iarna/toml";
 import {cargoWorkspaceForManifest,discoverCargoWorkspaces,prepareCargoOwners} from "../../🟦️.ts";
-import fixture from "../../🧫️fixtures/🧭️native-discovery/🔣️.json";
+import fixture from "../🧫️fixtures/🧭️native-discovery/🔣️.json";
 
 test("current root patterns discover every authored native owner before preparation",()=>{
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("SEMIO_TEST_ARTIFACT_DIR is required");mkdirSync(output,{recursive:true});

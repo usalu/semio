@@ -4,7 +4,7 @@ import physicalGrantSchema from "../../../../../../🔨️modules/🌱️value/�
 import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import { test } from "bun:test";
-import corpus from "../../🧫️fixtures/📢️member-publication.json" with { type: "json" };
+import corpus from "../🧫️fixtures/📢️member-publication.json" with { type: "json" };
 
 test("retained member publication funds independent decoding and release passes", () => {
   const encoder = new TextEncoder();
@@ -31,8 +31,8 @@ test("current original Store unit source is accepted by the independent Rust gra
 });
 
 test("original Presence examples separate Unicode body from funded physical backing", async () => {
-  const law = await Bun.file(new URL("../../👥️presence/🧫️fixtures/🛂️peer-admission.json", import.meta.url)).json();
-  const retirement = await Bun.file(new URL("../../👥️presence/🧫️fixtures/🧹️retirement.json", import.meta.url)).json();
+  const law = await Bun.file(new URL("../../👥️presence/🧪️tests/🧫️fixtures/🛂️peer-admission.json", import.meta.url)).json();
+  const retirement = await Bun.file(new URL("../../👥️presence/🧪️tests/🧫️fixtures/🧹️retirement.json", import.meta.url)).json();
   assert.deepEqual(law.physicalCloseGrant, retirement.physicalCloseGrant);
   assert.equal(law.physicalCloseGrant.maximumCopyBytes, law.maximumBytes);
   for (const row of law.cases) {
@@ -77,7 +77,7 @@ test("current transfer, clone and schema consumers retain five original currenci
     assert.ifError(result.error);
     assert.equal(result.status, 0, result.stderr.toString());
   }
-  const transfer = await Bun.file(new URL("../../🫧️ephemeral/📢️publication/🔁️transfer/🧫️fixtures/🔣️.json", import.meta.url)).json();
+  const transfer = await Bun.file(new URL("../../🫧️ephemeral/📢️publication/🔁️transfer/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
   const text = transfer.payload.text.repeat(transfer.payload.repeat);
   assert.equal(Buffer.byteLength(text), transfer.payload.utf8Bytes);
   assert.equal(new TextEncoder().encode(JSON.parse(JSON.stringify(text))).byteLength, transfer.payload.utf8Bytes);
@@ -85,8 +85,8 @@ test("current transfer, clone and schema consumers retain five original currenci
   for (const name of ["maximumItems", "maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes", "maximumDepth"]) assert(Number.isSafeInteger(transfer.retirementGrant[name]));
   assert(transfer.retirementGrant.maximumReleaseBytes >= Buffer.byteLength(text));
   const admit = new Ajv({ strict: true }).compile(physicalGrantSchema);
-  const clone = await Bun.file(new URL("../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧫️fixtures/📦️nested/🔣️.json", import.meta.url)).json();
-  const schema = await Bun.file(new URL("../../🧫️fixtures/🧬️owned-schema-record/🔣️.json", import.meta.url)).json();
+  const clone = await Bun.file(new URL("../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🧫️fixtures/📦️nested/🔣️.json", import.meta.url)).json();
+  const schema = await Bun.file(new URL("../🧫️fixtures/🧬️owned-schema-record/🔣️.json", import.meta.url)).json();
   for (const policy of [transfer.retirementGrant, clone.retirementGrant, schema.retirementGrant]) {
     assert.equal(admit(policy), true, JSON.stringify(admit.errors));
     for (const axis of physicalGrantSchema.required) {
@@ -105,11 +105,11 @@ test("current transfer, clone and schema consumers retain five original currenci
 });
 
 test("current native cleanup callers retain independent plain authority instead of pricing it from demands", async () => {
-  const fixture = await Bun.file(new URL("../../🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json", import.meta.url)).json();
+  const fixture = await Bun.file(new URL("../../🧩️composition/📨️emission/📦️owned/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
   const policy = fixture.physicalCloseGrant;
   const admit = new Ajv({ strict: true }).compile(physicalGrantSchema);
   assert.equal(admit(policy), true, JSON.stringify(admit.errors));
-  const text = await Bun.file(new URL("../../🧫️fixtures/♻️bounded-value-retirement/🔣️.json", import.meta.url)).json();
+  const text = await Bun.file(new URL("../🧫️fixtures/♻️bounded-value-retirement/🔣️.json", import.meta.url)).json();
   const body = text.body.repeat(text.repeat);
   assert.equal(Buffer.byteLength(body), new TextEncoder().encode(JSON.parse(JSON.stringify(body))).byteLength);
   assert(Buffer.byteLength(body) < policy.maximumReleaseBytes);
@@ -133,6 +133,6 @@ test("current native cleanup callers retain independent plain authority instead 
 });
 
 import{existsSync,readFileSync}from"node:fs";
-test("original returned read examples have no independent whole-trial schema",()=>{assert.equal(existsSync(new URL("../../🔗️read/🧾️return/🧬️schema/🔣️.json",import.meta.url)),false);const examples=JSON.parse(readFileSync(new URL("../../🔗️read/🧾️return/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));for(const row of examples.cases)assert.equal(row.expectLastCustody,row.otherAliases===0||row.dropOtherBeforeRelease,row.id);console.log("[DEBUG] Original returned read plain aliases preserve last-custody expectations without a trial contract; native2laws unqualified");});
+test("original returned read examples have no independent whole-trial schema",()=>{assert.equal(existsSync(new URL("../../🔗️read/🧾️return/🧬️schema/🔣️.json",import.meta.url)),false);const examples=JSON.parse(readFileSync(new URL("../../🔗️read/🧾️return/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));for(const row of examples.cases)assert.equal(row.expectLastCustody,row.otherAliases===0||row.dropOtherBeforeRelease,row.id);console.log("[DEBUG] Original returned read plain aliases preserve last-custody expectations without a trial contract; native2laws unqualified");});
 
 test("original codec custody examples do not own a whole-trial schema",()=>{assert.equal(existsSync(new URL("../../📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧬️schema/🔣️.json",import.meta.url)),false);});

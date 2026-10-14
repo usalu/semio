@@ -1,0 +1,57 @@
+{
+  "annex": null,
+  "site": {
+    "seismicZone": "zone3",
+    "aGr": 0.8,
+    "deGroundCombo": "C-S",
+    "importanceClass": "II"
+  },
+  "buildings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bridges": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "assessments": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "silos": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tanks": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "foundations": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "retainingWalls": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "towers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

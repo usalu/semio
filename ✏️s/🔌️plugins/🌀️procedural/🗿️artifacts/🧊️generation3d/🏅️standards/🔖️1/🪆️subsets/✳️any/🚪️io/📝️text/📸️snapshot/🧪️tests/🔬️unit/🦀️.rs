@@ -1,7 +1,7 @@
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 use crate::GENERATION_3D_SCHEMA;
 use semio_framework_os_kernel::os_store::test_support;
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
 
 #[test]
 fn dsl_round_trip_empty_projection() {
@@ -44,7 +44,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 #[test]
 fn retained_snapshot_text_projection_borrows_original_graph_and_ranked_generation_values(){
     use semio_framework_dsl_record::native_encoding::RetainedFieldProjection;use semio_framework_value::{NativeEncodeControl,ValueRefusalKind,DslValue};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();
     let text=fixture["textUnit"].as_str().unwrap().repeat(fixture["projection"]["textRepeats"].as_u64().unwrap()as usize);
     for source_text in [GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT,GENERATION3D_EXAMPLE_RECT_EXTRUDE_TEXT,GENERATION3D_EXAMPLE_MESH_WORKBENCH_TEXT]{
         let mut source=crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(parse_dsl(source_text).unwrap());

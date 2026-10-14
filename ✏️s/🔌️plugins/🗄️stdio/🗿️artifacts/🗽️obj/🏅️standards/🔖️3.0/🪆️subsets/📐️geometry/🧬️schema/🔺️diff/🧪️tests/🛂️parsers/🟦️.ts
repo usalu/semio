@@ -1,7 +1,7 @@
 import {binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🛂️ Owned sparse-diff vectors retain native defaults, clearing and exact u64 ordinals. */
 import { expect, test } from "bun:test";
-import fixture from "../../🧫️fixtures/🛂️parsers/🔣️.json";
+import fixture from "../../../../🧪️tests/🧫️fixtures/🔺️diff/🛂️parsers/🔣️.json";
 import { parseObjDiff, parseObjVerticesDiff, parseObjTexCoordsDiff, parseObjNormalsDiff, parseObjFacesDiff, parseObjGroupsDiff, parseObjObjectsDiff, parseObjVertexAdded, parseObjVertexModified, parseObjTexCoordAdded, parseObjNormalAdded, parseObjFaceAdded, parseObjGroupAdded, parseObjObjectAdded } from "../../🟦️.ts";
 import {parseObjFaceVertex,parseObjSmoothingRange}from"../../🟦️.ts";
 

@@ -1,0 +1,57 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+    "before": "a08e06f20a61714f6bd9c10cf1b75b37eaf6589db4ca4a7312d107fdecb20e8e",
+    "after": "86db4bbb127d82b1deef4948f5410c3f498678d66ae69672f9af918033eb7a93",
+    "astSpans": [
+      {
+        "start": 834496,
+        "end": 835486
+      },
+      {
+        "start": 689058,
+        "end": 689951
+      },
+      {
+        "start": 645118,
+        "end": 645236
+      },
+      {
+        "start": 567244,
+        "end": 567411
+      },
+      {
+        "start": 533996,
+        "end": 536436
+      },
+      {
+        "start": 531551,
+        "end": 533994
+      },
+      {
+        "start": 531291,
+        "end": 531549
+      },
+      {
+        "start": 34579,
+        "end": 35763
+      }
+    ]
+  },
+  {
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🚨️transaction-sentinel-cases/🔣️.json",
+    "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🚨️transaction-sentinel-cases/🔣️.json",
+    "sha256": "c67b436abca4b9005efce6023f74bd900de5e88187ee9eb3c4328c2397bd081b",
+    "size": 3664
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🗝️transaction-fixture-key-exactness/🟦️.ts",
+    "before": "c037e213a43b6c92f0bafdd14043eef06740298d17c6b2dd342ad620ab4b4526",
+    "after": "c7a68f9ea2c13a6198105d96e21757c157361a8fcd2ff14fff321ebd0028721f"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+    "before": "eba87dc17a08f9ee3765da36c4cf08c9477e9b2be0b499d4908bb1b0a7dbbd39",
+    "after": "a6e313b06e019922533fc9bae4666b38b7a6737a45b87bb6b89b61c3c96c12cf"
+  }
+]

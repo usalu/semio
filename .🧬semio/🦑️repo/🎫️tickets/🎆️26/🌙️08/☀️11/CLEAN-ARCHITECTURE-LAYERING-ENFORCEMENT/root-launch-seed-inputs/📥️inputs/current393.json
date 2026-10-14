@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "📚️Library Whole Native Caller Public Envelope Receiving 1",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-nx-native-child-issuance",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05213
+      },
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/nc1",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/nc1",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "{\"version\":1,\"policy\":{\"version\":1,\"owner\":\"\\ud83d\\udcda\\ufe0fLibrary Whole Native Caller Public Envelope Receiving 1\",\"maximumElapsedMilliseconds\":0},\"deadlineEpochMilliseconds\":null,\"capabilities\":{}}"
+      }
+    },
+    {
+      "name": "📚️Library Whole17 Actual Build Mode Public Enumeration Receiving Red 60",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/📜️script.ts\" receive pa11-red28 a45121b7369895a98578b5b42e0d31d9d04d15946a32c5089435f3ef9c564ebf a727865e3b7f4db31db513e7d3d3b302c8d91d6607f9d0044263b24f7ff0906d a727865e3b7f4db31db513e7d3d3b302c8d91d6607f9d0044263b24f7ff0906d",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-red28/cache",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-red28/data",
+        "SEMIO_TEST_LEVEL": "quick",
+        "SEMIO_TEST_BUDGET_MS": "45000",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-red28/a"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 902.11
+      }
+    }
+  ],
+  "retireNames": []
+}

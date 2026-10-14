@@ -12,10 +12,10 @@ use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutat
 use crate::schema::find_drawing_layer;
 use crate::{DrawingDiff, DrawingSnapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/🎯️outcome/🔣️.json");
 
 fn before() -> DrawingSnapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")

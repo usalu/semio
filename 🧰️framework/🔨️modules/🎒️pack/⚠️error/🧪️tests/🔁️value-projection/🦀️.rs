@@ -4,7 +4,7 @@ fn canonical_value_projection_moves_semantic_causes_and_returns_original_transpo
     use semio_framework_diagnostic::{TextError,TextSpan};
     use semio_framework_value::{ValueError,ValueRefusalKind};
     use std::sync::{Arc,atomic::{AtomicUsize,Ordering}};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔁️value-projection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔁️value-projection/🔣️.json")).unwrap();
     let kinds=[ValueRefusalKind::InvalidValue,ValueRefusalKind::Canceled,ValueRefusalKind::OwnershipLimit,ValueRefusalKind::AllocationFailed,ValueRefusalKind::WorkLimit,ValueRefusalKind::DepthLimit,ValueRefusalKind::UnsupportedOwner,ValueRefusalKind::InvariantViolated];
     let message=fixture["ownedMessage"].as_str().unwrap();
     for(kind,token)in kinds.into_iter().zip(fixture["semanticKinds"].as_array().unwrap()){

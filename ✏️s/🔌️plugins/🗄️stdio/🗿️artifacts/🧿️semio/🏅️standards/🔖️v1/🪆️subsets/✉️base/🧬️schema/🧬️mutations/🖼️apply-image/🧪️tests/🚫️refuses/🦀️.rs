@@ -9,10 +9,10 @@ use crate::io::text::mutations::decode_semio_mutation_json;
 use crate::schema::snapshot::SemioSnapshot;
 use crate::io::text::snapshot::decode_semio_snapshot_json;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses/🎯️outcome/🔣️.json");
 
 fn before() -> SemioSnapshot {
     decode_semio_snapshot_json(BEFORE).expect("before envelope decodes")

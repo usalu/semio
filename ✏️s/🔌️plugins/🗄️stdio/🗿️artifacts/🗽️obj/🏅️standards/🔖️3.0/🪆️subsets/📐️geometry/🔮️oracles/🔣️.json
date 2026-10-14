@@ -825,7 +825,7 @@
       "files": [
         {
           "role": "primary-obj",
-          "path": "../🧫️fixtures/🐚️pattern-shell/🐚️pattern-shell.obj",
+          "path": "../🧪️tests/🧫️fixtures/🐚️pattern-shell/🐚️pattern-shell.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:1871d6af2e4dae48e66fb028e8767eab71c24804ef096a71bbdabebdad4b2810",
           "bytes": 487
@@ -863,14 +863,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/⏸️no-mutation-no-op/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/⏸️no-mutation-no-op/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
           "bytes": 109
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/⏸️no-mutation-no-op/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/⏸️no-mutation-no-op/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
           "bytes": 109
@@ -910,14 +910,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/📍️set-vertex-applied/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/📍️set-vertex-applied/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
           "bytes": 109
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/📍️set-vertex-applied/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/📍️set-vertex-applied/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:410205277a1a23a6f3a70b688eb3689d92c6f836b504be04b9c6b11e3d6ee329",
           "bytes": 109
@@ -957,7 +957,7 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/⛔️set-vertex-rejected-out-of-bounds/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/⛔️set-vertex-rejected-out-of-bounds/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
           "bytes": 109
@@ -997,14 +997,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🧭️set-texcoord-applied/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🧭️set-texcoord-applied/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
           "bytes": 109
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/🧭️set-texcoord-applied/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/🧭️set-texcoord-applied/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:ac271378834ce5cee8396064a10b5c58619c4227e2668a0bfa8ea11005fba112",
           "bytes": 113
@@ -1044,7 +1044,7 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🗺️set-texcoord-rejected-out-of-bounds/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🗺️set-texcoord-rejected-out-of-bounds/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
           "bytes": 109
@@ -1084,14 +1084,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🧲️set-normal-applied/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🧲️set-normal-applied/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
           "bytes": 109
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/🧲️set-normal-applied/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/🧲️set-normal-applied/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:5aa947df8804885045dceddf8f4c64876cde1f90a157e9898ec8e687b99634d4",
           "bytes": 110
@@ -1131,7 +1131,7 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🚧️set-normal-rejected-out-of-bounds/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🚧️set-normal-rejected-out-of-bounds/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
           "bytes": 109
@@ -1171,14 +1171,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🔷️insert-face-applied/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🔷️insert-face-applied/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
           "bytes": 109
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/🔷️insert-face-applied/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/🔷️insert-face-applied/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:284687dc5003121d3570e29af1277a1c5b6075202433c6ba9a5196f2ac9d4396",
           "bytes": 129
@@ -1218,7 +1218,7 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🚷️insert-face-rejected-out-of-bounds/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🚷️insert-face-rejected-out-of-bounds/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
           "bytes": 109
@@ -1258,14 +1258,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🗑️remove-face-applied/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-face-applied/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
           "bytes": 109
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/🗑️remove-face-applied/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-face-applied/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:05a9f2628671b7952437b89273a29324af43d84afbdba2594551fa463ec51551",
           "bytes": 89
@@ -1305,7 +1305,7 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🕵️remove-face-rejected-missing/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🕵️remove-face-rejected-missing/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
           "bytes": 109
@@ -1345,14 +1345,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🔶️set-face-applied/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🔶️set-face-applied/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
           "bytes": 109
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/🔶️set-face-applied/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/🔶️set-face-applied/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:c1de8b0f93c158cbe1bfd44562be6dd8c45b162de403a46229a2b910d9134f19",
           "bytes": 109
@@ -1392,7 +1392,7 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🛑️set-face-rejected-out-of-bounds/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🛑️set-face-rejected-out-of-bounds/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
           "bytes": 109
@@ -1432,14 +1432,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🏷️set-group-applied/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-group-applied/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:f342d88522c1afb2b7f4f46c19a691bf9538e2075f40b971c37db81a1ea91277",
           "bytes": 74
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/🏷️set-group-applied/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-group-applied/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:b283463bf79eadf81e1fd8092621f89d6ecf9e53a32a2c0b746ff9a3965ea314",
           "bytes": 72
@@ -1479,14 +1479,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🪓️remove-group-applied/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🪓️remove-group-applied/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:876b124d9e7315366c9df9bbf74feb64d1bc7f3ef7b05c65dc1932dcd54beec8",
           "bytes": 79
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/🪓️remove-group-applied/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/🪓️remove-group-applied/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:f342d88522c1afb2b7f4f46c19a691bf9538e2075f40b971c37db81a1ea91277",
           "bytes": 74
@@ -1526,7 +1526,7 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/📭️remove-group-rejected-missing/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/📭️remove-group-rejected-missing/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:876b124d9e7315366c9df9bbf74feb64d1bc7f3ef7b05c65dc1932dcd54beec8",
           "bytes": 79
@@ -1566,14 +1566,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/📦️set-object-applied/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/📦️set-object-applied/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:66fb04bcdcbede442dee473eba8ccf65dfa9e72d019ad00317233011e049993d",
           "bytes": 72
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/📦️set-object-applied/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/📦️set-object-applied/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:1cf08bfbcc83d05218f1eb9bf62e394a544b19b3b3b3cbb26ef806084d1fdf18",
           "bytes": 79
@@ -1613,14 +1613,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🗃️remove-object-applied/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🗃️remove-object-applied/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:1cf08bfbcc83d05218f1eb9bf62e394a544b19b3b3b3cbb26ef806084d1fdf18",
           "bytes": 79
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/🗃️remove-object-applied/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/🗃️remove-object-applied/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:7c887feb8b6ab0f42cecc51ffc927b39065bcad7a01cad51804a642265b785d6",
           "bytes": 74
@@ -1660,7 +1660,7 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/👻️remove-object-rejected-missing/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/👻️remove-object-rejected-missing/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:1cf08bfbcc83d05218f1eb9bf62e394a544b19b3b3b3cbb26ef806084d1fdf18",
           "bytes": 79
@@ -1700,14 +1700,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🧵️set-smoothing-groups/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🧵️set-smoothing-groups/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
           "bytes": 114
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/🧵️set-smoothing-groups/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/🧵️set-smoothing-groups/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:b73e3faa256144b0af412c58cc97fb220652a6145021eb497d6879f901f5feb0",
           "bytes": 116
@@ -1748,14 +1748,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/➕️insert-vertex/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-vertex/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
           "bytes": 114
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/➕️insert-vertex/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-vertex/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:493c0270ee4e915656f6f75051e211507c6c5d1a2236b5257545f17a4efd4063",
           "bytes": 122
@@ -1796,14 +1796,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/➖️remove-vertex/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-vertex/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
           "bytes": 114
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/➖️remove-vertex/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-vertex/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:e8408d167da18fe1d70bff8e0f688a59e7fb479ed84d778622cbf713f985ed7b",
           "bytes": 106
@@ -1844,14 +1844,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🧷️insert-texcoord/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🧷️insert-texcoord/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
           "bytes": 114
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/🧷️insert-texcoord/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/🧷️insert-texcoord/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:afee2bbae7c94d3715f4350b45a919625b350e236aa83cc86b4dabd67d1943aa",
           "bytes": 125
@@ -1892,14 +1892,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🚮️remove-texcoord/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🚮️remove-texcoord/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
           "bytes": 114
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/🚮️remove-texcoord/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/🚮️remove-texcoord/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:880c3089a94fe9d9b7d0a5423d223bc935746ce03e9cd496484f1f7c9111c210",
           "bytes": 107
@@ -1940,14 +1940,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/📐️insert-normal/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/📐️insert-normal/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
           "bytes": 114
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/📐️insert-normal/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/📐️insert-normal/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:fb5365bbfe2becda88a4a8696d38818bf0929b1c354559d5043273fcc3951b2a",
           "bytes": 123
@@ -1988,14 +1988,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🚫️remove-normal/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🚫️remove-normal/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
           "bytes": 114
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/🚫️remove-normal/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/🚫️remove-normal/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:0464d1fb765122f179ca8dcc4479c1ceb4f420fb0fe1360a49df73db8c0c4866",
           "bytes": 105
@@ -2036,14 +2036,14 @@
       "files": [
         {
           "role": "expected-before-obj",
-          "path": "../🧫️fixtures/🕳️set-unknown-statements/⬅️before.obj",
+          "path": "../🧪️tests/🧫️fixtures/🕳️set-unknown-statements/⬅️before.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:06a9207e60bf3a3b1f96d0d94584a6d3c74cbb1cd7592b58601f8c869ef728b0",
           "bytes": 114
         },
         {
           "role": "expected-after-obj",
-          "path": "../🧫️fixtures/🕳️set-unknown-statements/➡️after.obj",
+          "path": "../🧪️tests/🧫️fixtures/🕳️set-unknown-statements/➡️after.obj",
           "mediaType": "model/obj",
           "sha256": "sha256:830c9ab83b5ff47aec6327861e6ace49c4714a660a23e8ae0cb55b19bc1746d0",
           "bytes": 122

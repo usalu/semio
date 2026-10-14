@@ -247,7 +247,7 @@ fn tool_result_json(result: &CallToolResult) -> serde_json::Value {
 
 #[test]
 fn document_authored_content_reaches_an_agent_only_inside_the_untrusted_envelope() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧷️untrusted-content-law.json")).expect("law fixture parses");
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧷️untrusted-content-law.json")).expect("law fixture parses");
     let canary = law["canary"].as_str().expect("canary");
     let needles = canary_needles(canary);
     let dir = store::test_support::tempdir().expect("tempdir");

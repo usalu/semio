@@ -1,0 +1,5626 @@
+{
+  "schema": "stdio.semio",
+  "subset": {
+    "schema": "stdio.semio.flow",
+    "nodes": [
+      {
+        "id": "0POPlhUSnC1REPvcqnensi",
+        "kind": "IfcBuildingElementProxy",
+        "label": "b",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "b"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1"
+          },
+          {
+            "key": "ComposeConnectionParams.rotation",
+            "value": "90.0"
+          }
+        ],
+        "position": {
+          "x": 0.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "3GOXMcqS9E287ioto$RIXo",
+        "kind": "IfcBuildingElementProxy",
+        "label": "ci_t_f8_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "ci_t_f8_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "6947a41b-8c6d-4291-bdd8-96cd535c78fc"
+          }
+        ],
+        "position": {
+          "x": -7500.0,
+          "y": 34083.33
+        }
+      },
+      {
+        "id": "1OS4$rPqz9cOn2s4ojb1k3",
+        "kind": "IfcBuildingElementProxy",
+        "label": "ci_t_f10_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "ci_t_f10_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "9fde3a12-8b39-42d9-850f-f0e8343caddd"
+          }
+        ],
+        "position": {
+          "x": -18600.0,
+          "y": 39583.33
+        }
+      },
+      {
+        "id": "0IEifuk9T5eR2vbWao4vJp",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f0_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f0_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952"
+          }
+        ],
+        "position": {
+          "x": -7500.0,
+          "y": 7500.0
+        }
+      },
+      {
+        "id": "10oJDBNhD5uvT1yRtDdA2k",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f1_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f1_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "596f3f60-b634-467b-8acc-7d5b649ae0d1"
+          }
+        ],
+        "position": {
+          "x": -7500.0,
+          "y": 10250.0
+        }
+      },
+      {
+        "id": "1v5reG1czD3ADqOI3X_4bk",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f2_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f2_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "8ade0ad2-14e3-469d-822b-6ba08b4f2f2b"
+          },
+          {
+            "key": "ComposeConnectionParams.shift",
+            "value": "-0.8"
+          }
+        ],
+        "position": {
+          "x": -7500.0,
+          "y": 13000.0
+        }
+      },
+      {
+        "id": "2hsAuy53T3heFKm9cwlTdI",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f3_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f3_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "64f3e610-3dd8-4a9b-8f14-734e9af77777"
+          }
+        ],
+        "position": {
+          "x": -7500.0,
+          "y": 15750.0
+        }
+      },
+      {
+        "id": "2GM8M2uIDCIgBmG4G8uK0G",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f4_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f4_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "91fea4d1-82c6-4f12-82b2-069d72610e69"
+          }
+        ],
+        "position": {
+          "x": -7500.0,
+          "y": 18500.0
+        }
+      },
+      {
+        "id": "0xMfkOSbzCeOb2B2pBfk1j",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f5_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f5_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9"
+          },
+          {
+            "key": "ComposeConnectionParams.shift",
+            "value": "-0.8"
+          }
+        ],
+        "position": {
+          "x": -7500.0,
+          "y": 21250.0
+        }
+      },
+      {
+        "id": "0gUD1ke0v2celQp0c3LnxY",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f6_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f6_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "657162df-f57d-455b-b55c-d7b85126840b"
+          }
+        ],
+        "position": {
+          "x": -7500.0,
+          "y": 24000.0
+        }
+      },
+      {
+        "id": "35NKdHkwDDIukcdqd$YxMB",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f7_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f7_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "1fd754e8-2973-40ac-91c2-2b1fcae0247b"
+          }
+        ],
+        "position": {
+          "x": -7500.0,
+          "y": 26750.0
+        }
+      },
+      {
+        "id": "2E$cgFrwTE1x33ewcrgtPw",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f8_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f8_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "f2edea5c-960e-46bd-932d-aae5ecad72d8"
+          },
+          {
+            "key": "ComposeConnectionParams.rotation",
+            "value": "90.0"
+          },
+          {
+            "key": "ComposeConnectionParams.shift",
+            "value": "-0.8"
+          }
+        ],
+        "position": {
+          "x": -7500.0,
+          "y": 29500.0
+        }
+      },
+      {
+        "id": "1P_$QRTML81BbcGk8plp1_",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f0_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f0_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "25b0dba0-8f81-423a-94a1-b911a6031010"
+          }
+        ],
+        "position": {
+          "x": -8850.0,
+          "y": 7700.0
+        }
+      },
+      {
+        "id": "2WiIbyB3nBFBPYy_0Y2388",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f1_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f1_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "64cd3320-6801-46ed-8683-20a81acc673c"
+          }
+        ],
+        "position": {
+          "x": -8850.0,
+          "y": 10450.0
+        }
+      },
+      {
+        "id": "3hBvnd3iH2Y8m7fnK5SncH",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f2_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f2_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "0a23d9c7-b75b-4166-8730-351367df9f8a"
+          }
+        ],
+        "position": {
+          "x": -8850.0,
+          "y": 13200.0
+        }
+      },
+      {
+        "id": "213RjE$_17wBdM6TMnZS$P",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f3_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f3_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "93d989bb-4066-4c09-87ee-1dab2e27c8d8"
+          }
+        ],
+        "position": {
+          "x": -8850.0,
+          "y": 15950.0
+        }
+      },
+      {
+        "id": "1grMJriofB6A3C0oHj28Kd",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f4_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f4_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "fd6dfe66-2051-441a-ab36-d551b99f575a"
+          }
+        ],
+        "position": {
+          "x": -8850.0,
+          "y": 18700.0
+        }
+      },
+      {
+        "id": "0P9ou1MXL0AessxDrljJ9H",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f5_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f5_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "d7a393ed-e204-411c-a372-d38b0f0decff"
+          }
+        ],
+        "position": {
+          "x": -8850.0,
+          "y": 21450.0
+        }
+      },
+      {
+        "id": "1IhyWag9b38QA7lfL_BO0d",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f6_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f6_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "6f318d54-948f-40b7-be92-d18ccd482d17"
+          }
+        ],
+        "position": {
+          "x": -8850.0,
+          "y": 24200.0
+        }
+      },
+      {
+        "id": "1kQc60DXn1mQ5oWEIlmKWG",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f7_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f7_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "31c92922-b2f1-40e0-a186-bee2d209e466"
+          }
+        ],
+        "position": {
+          "x": -8850.0,
+          "y": 26950.0
+        }
+      },
+      {
+        "id": "3SdvT1p5r7weuO6qWPcRQa",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f8_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f8_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "4b5c5bfe-7129-4bf8-bce6-3430ddb47d1f"
+          }
+        ],
+        "position": {
+          "x": -8850.0,
+          "y": 29700.0
+        }
+      },
+      {
+        "id": "1fhuzudwbDGx6sE_0Vu78x",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d1_t_f0_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d1_t_f0_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "c8749a39-f9d1-48b2-b331-6d00d2615302"
+          }
+        ],
+        "position": {
+          "x": -11550.0,
+          "y": 7700.0
+        }
+      },
+      {
+        "id": "0PH3qtHCz5r8ekKuVSX6ly",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d1_t_f1_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d1_t_f1_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "64239b67-f7c9-4c25-9d22-4225f6668cd7"
+          }
+        ],
+        "position": {
+          "x": -11550.0,
+          "y": 10450.0
+        }
+      },
+      {
+        "id": "22poIkGI5D6hYyyF0C2BUG",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d1_t_f2_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d1_t_f2_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "6bd6036e-dd1d-4ef6-9e34-090ff050dba4"
+          }
+        ],
+        "position": {
+          "x": -11550.0,
+          "y": 13200.0
+        }
+      },
+      {
+        "id": "1By7Z4SNf4VvH00Ht19zww",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d1_t_f3_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d1_t_f3_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "6c2cce5c-e3ea-42e4-aa65-498c0c47c453"
+          }
+        ],
+        "position": {
+          "x": -11550.0,
+          "y": 15950.0
+        }
+      },
+      {
+        "id": "0Fu$0Ib2b55RV3qyFt1frQ",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d1_t_f4_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d1_t_f4_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "60f7c606-1326-44c9-9fd7-4a3a17d15e0c"
+          }
+        ],
+        "position": {
+          "x": -11550.0,
+          "y": 18700.0
+        }
+      },
+      {
+        "id": "1R03FkPkrArfgdvh4MiV$L",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d1_t_f5_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d1_t_f5_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "976cd37f-4099-46c1-b9fe-f693ac20490c"
+          }
+        ],
+        "position": {
+          "x": -11550.0,
+          "y": 21450.0
+        }
+      },
+      {
+        "id": "2E5cKFSKf1UfmqxAqlOZfv",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d1_t_f6_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d1_t_f6_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "88bc30e1-0cd9-4a34-bd4d-2463f2660c78"
+          }
+        ],
+        "position": {
+          "x": -11550.0,
+          "y": 24200.0
+        }
+      },
+      {
+        "id": "06112piNb8aPK4ZwZgl8Jl",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d1_t_f7_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d1_t_f7_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "ad940e2b-12e4-49ba-8cfa-98854e5b2f7a"
+          }
+        ],
+        "position": {
+          "x": -11550.0,
+          "y": 26950.0
+        }
+      },
+      {
+        "id": "2XbbKf6fPBPh_hg594UUQV",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d1_t_f8_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d1_t_f8_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "fc693ca3-6a41-49b5-b5f6-258a7a06ed2e"
+          }
+        ],
+        "position": {
+          "x": -11550.0,
+          "y": 29700.0
+        }
+      },
+      {
+        "id": "2_hp6KNAnDy8U6idXQRqIw",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d2_t_f0_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d2_t_f0_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "4e0b6527-5198-4138-a0f3-ce7cb8c0cd30"
+          }
+        ],
+        "position": {
+          "x": -11550.0,
+          "y": 7700.0
+        }
+      },
+      {
+        "id": "3L0aKCtZX60ufXYvgBxwp8",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d2_t_f1_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d2_t_f1_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "0fda6c60-3b37-46df-9212-2e1ce2d9baa8"
+          }
+        ],
+        "position": {
+          "x": -11550.0,
+          "y": 10450.0
+        }
+      },
+      {
+        "id": "13aQYM9gf8yhyZvUZIEL_4",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d2_t_f3_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d2_t_f3_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "3f53491f-eba2-4e53-8b0e-c80f030a519f"
+          }
+        ],
+        "position": {
+          "x": -11550.0,
+          "y": 15950.0
+        }
+      },
+      {
+        "id": "3Uh2_e2RvErQMhOKBON8cF",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d2_t_f4_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d2_t_f4_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "a2ad1224-5915-4ba4-be15-6850d23720ce"
+          }
+        ],
+        "position": {
+          "x": -11550.0,
+          "y": 18700.0
+        }
+      },
+      {
+        "id": "3$sneP7sXFS8W9x0Uenv$t",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d2_t_f6_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d2_t_f6_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "bfc3de9f-d1f7-496d-8657-8a3334d086a2"
+          }
+        ],
+        "position": {
+          "x": -11550.0,
+          "y": 24200.0
+        }
+      },
+      {
+        "id": "1nPBqqo6r3DRk8HUDutbSW",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d2_t_f7_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d2_t_f7_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "adeee513-f8d6-422b-bab5-05514510cd76"
+          }
+        ],
+        "position": {
+          "x": -11550.0,
+          "y": 26950.0
+        }
+      },
+      {
+        "id": "00AIJqhJ967BM65azzBB4v",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f0_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f0_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "c69ffa1e-add7-430d-a478-5ce92d2d7654"
+          }
+        ],
+        "position": {
+          "x": -8850.0,
+          "y": 7700.0
+        }
+      },
+      {
+        "id": "3hMqTHvB98su92wCpNVG27",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f1_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f1_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "cfe5a195-9439-48b2-8e15-58087f5f0e6f"
+          }
+        ],
+        "position": {
+          "x": -8850.0,
+          "y": 10450.0
+        }
+      },
+      {
+        "id": "3D3Vr0A5jDg8S2prA6eN7n",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f2_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f2_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "8ed7926a-3736-4812-941c-2471de6efb8b"
+          }
+        ],
+        "position": {
+          "x": -8850.0,
+          "y": 13200.0
+        }
+      },
+      {
+        "id": "20aw4BsYzBme3YNMFGk9kX",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f3_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f3_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "6f257b95-74a0-441e-8c10-c7973b00b294"
+          }
+        ],
+        "position": {
+          "x": -8850.0,
+          "y": 15950.0
+        }
+      },
+      {
+        "id": "0sK3GmOQ55QBeqVtTIqCTJ",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f4_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f4_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "f16efdbd-88ff-453b-a6b3-781952c6b6e6"
+          }
+        ],
+        "position": {
+          "x": -8850.0,
+          "y": 18700.0
+        }
+      },
+      {
+        "id": "1j0KswkVr7KwfnI7Cn4kUB",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f5_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f5_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "28638ae5-5591-427a-8859-2a1d80633edc"
+          }
+        ],
+        "position": {
+          "x": -8850.0,
+          "y": 21450.0
+        }
+      },
+      {
+        "id": "335XXOmIj6oOhZUCveqAIJ",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f6_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f6_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "d6d8d74b-68c7-434f-83ab-1eebfe388f34"
+          }
+        ],
+        "position": {
+          "x": -8850.0,
+          "y": 24200.0
+        }
+      },
+      {
+        "id": "3YfXDDFyX8XBQzCiG27sct",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f7_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f7_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "e80dc9d0-a547-42f8-943d-b3df6a4165c3"
+          }
+        ],
+        "position": {
+          "x": -8850.0,
+          "y": 26950.0
+        }
+      },
+      {
+        "id": "2g74E$CgT5t95Jzb41djaZ",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f8_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f8_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "072ae026-2a96-4599-b809-885ef08bf3f4"
+          }
+        ],
+        "position": {
+          "x": -8850.0,
+          "y": 29700.0
+        }
+      },
+      {
+        "id": "3b9XPbUt1AChg_DTd5FH30",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f0_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f0_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "72c81fc7-6b0e-421e-ae27-9d4e70f662c4"
+          }
+        ],
+        "position": {
+          "x": -5350.0,
+          "y": 8616.67
+        }
+      },
+      {
+        "id": "3Zc4E19Lz5ARpZVcKxxkLs",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f1_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f1_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "9a121d65-7b7b-417f-aa84-cff5b1370683"
+          }
+        ],
+        "position": {
+          "x": -5350.0,
+          "y": 11366.67
+        }
+      },
+      {
+        "id": "3dmXkW4xHE3OPJOsM6wlfa",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f2_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f2_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "1972af01-10c0-4da2-8267-d6672c8778c7"
+          }
+        ],
+        "position": {
+          "x": -5350.0,
+          "y": 14116.67
+        }
+      },
+      {
+        "id": "3JEcWNzyHCp9VtlsSWiiSE",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f3_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f3_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "87dd15bb-a74d-4f06-b3b5-a362767d7363"
+          }
+        ],
+        "position": {
+          "x": -5350.0,
+          "y": 16866.67
+        }
+      },
+      {
+        "id": "07zDXswj12NPVXQyk98AHB",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f4_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f4_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "ac8569fc-2dc4-4e7e-bd07-83e841624802"
+          }
+        ],
+        "position": {
+          "x": -5350.0,
+          "y": 19616.67
+        }
+      },
+      {
+        "id": "3cKsByH5P5G9L9IRonssGU",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f5_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f5_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "530abb65-c3fb-4271-8adf-9a94faa3d0a7"
+          }
+        ],
+        "position": {
+          "x": -5350.0,
+          "y": 22366.67
+        }
+      },
+      {
+        "id": "2rSJNUbEn0PfH3mQsO34IA",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f6_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f6_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "dc1c5b79-335b-49a7-aa1d-bcd0ed26cd9e"
+          }
+        ],
+        "position": {
+          "x": -5350.0,
+          "y": 25116.67
+        }
+      },
+      {
+        "id": "06Jo7qu29FX8H0sMRLWBTE",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f7_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f7_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "11028f3e-9b83-427e-ad8a-36f13e94c9c9"
+          }
+        ],
+        "position": {
+          "x": -5350.0,
+          "y": 27866.67
+        }
+      },
+      {
+        "id": "3kK22Rpsv26P1B2c1bcgoe",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f8_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f8_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "e69ffcb1-0d2f-4a77-bd24-df67ed998192"
+          }
+        ],
+        "position": {
+          "x": -5350.0,
+          "y": 30616.67
+        }
+      },
+      {
+        "id": "0UNhJknw50TwYZZ8H6GZPH",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f0_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f0_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "f5828fcc-c966-431b-8d19-276123c68003"
+          }
+        ],
+        "position": {
+          "x": -2650.0,
+          "y": 8616.67
+        }
+      },
+      {
+        "id": "24sEj3lgnBuuGUN_0eYlj4",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f1_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f1_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "0a5ebf89-46ea-4aee-ae72-5a9424ab88f1"
+          }
+        ],
+        "position": {
+          "x": -2650.0,
+          "y": 11366.67
+        }
+      },
+      {
+        "id": "2PC0_yPuf4qhk3Wyv89fHI",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f2_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f2_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "5bdc7584-ecc5-4a6b-85db-af82e511154e"
+          }
+        ],
+        "position": {
+          "x": -2650.0,
+          "y": 14116.67
+        }
+      },
+      {
+        "id": "385uY5yivF78eSXnxCNMt4",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f3_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f3_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "4c1a395f-a2b9-4482-99bf-61fc8afc18da"
+          }
+        ],
+        "position": {
+          "x": -2650.0,
+          "y": 16866.67
+        }
+      },
+      {
+        "id": "1XDtRsB8L70A_Oq$hQc5VQ",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f4_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f4_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "1493671a-6c3b-42c7-98f9-67903212a99e"
+          }
+        ],
+        "position": {
+          "x": -2650.0,
+          "y": 19616.67
+        }
+      },
+      {
+        "id": "0y3pEj4PP5dw4L3qp3uhPS",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f5_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f5_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "4d2ede45-9474-4371-8b49-5b92fb7d904b"
+          }
+        ],
+        "position": {
+          "x": -2650.0,
+          "y": 22366.67
+        }
+      },
+      {
+        "id": "0adoewy298JxSRrZvWMHXX",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f6_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f6_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "45d4a26d-fd7d-4445-b075-3e52b24de667"
+          }
+        ],
+        "position": {
+          "x": -2650.0,
+          "y": 25116.67
+        }
+      },
+      {
+        "id": "2xMPmQpUfEHu8$fviV5bys",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f7_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f7_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "9dda6a6c-8e71-4506-9226-77af581628d4"
+          }
+        ],
+        "position": {
+          "x": -2650.0,
+          "y": 27866.67
+        }
+      },
+      {
+        "id": "31njErQQn0JgAOb3GkAqw9",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f8_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f8_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "748b60c0-6730-4f46-be70-62b435c4bb45"
+          }
+        ],
+        "position": {
+          "x": -2650.0,
+          "y": 30616.67
+        }
+      },
+      {
+        "id": "1KvoONIAj5Lu8YwMwub6ba",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f0_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f0_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "b3712e24-369c-4549-b55a-ede7f3d29fbb"
+          }
+        ],
+        "position": {
+          "x": -3450.0,
+          "y": 9533.33
+        }
+      },
+      {
+        "id": "0YHDgGC1f46AT56oeHq5UZ",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f1_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f1_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "1193fcf7-e96f-48cc-8cea-cdad0b75bbd0"
+          }
+        ],
+        "position": {
+          "x": -2650.0,
+          "y": 12283.33
+        }
+      },
+      {
+        "id": "29MyCpMFv0NOr$yWrplCov",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f2_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f2_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "859638d9-270f-413a-bfb0-b9400a3e21b7"
+          }
+        ],
+        "position": {
+          "x": -2650.0,
+          "y": 15033.33
+        }
+      },
+      {
+        "id": "1qAKGWm1D42gdRPOVUMpwd",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f3_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f3_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "4a46b7f2-2046-4f75-8366-ea8b1ada5c93"
+          }
+        ],
+        "position": {
+          "x": -3450.0,
+          "y": 17783.33
+        }
+      },
+      {
+        "id": "0YLde2JRf1Ufl0zBh3Gxv5",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f4_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f4_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "8ea801da-b5ad-4fc2-94bb-d6f2142a1400"
+          }
+        ],
+        "position": {
+          "x": -2650.0,
+          "y": 20533.33
+        }
+      },
+      {
+        "id": "1N66yEFjLERPIQ0ccfg6C4",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f5_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f5_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "9e140565-2f54-4204-b5c6-23a8f982761a"
+          }
+        ],
+        "position": {
+          "x": -2650.0,
+          "y": 23283.33
+        }
+      },
+      {
+        "id": "3ZMlBEKEL4aB9E20nEZCOf",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f6_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f6_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "710f1c95-8a66-4135-99ea-245dd4b81507"
+          }
+        ],
+        "position": {
+          "x": -3450.0,
+          "y": 26033.33
+        }
+      },
+      {
+        "id": "0YN8TMKu51kRkdh9P2Fd53",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f7_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f7_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "fda1c2b5-1900-49ea-834b-8d2e00d50982"
+          }
+        ],
+        "position": {
+          "x": -3450.0,
+          "y": 28783.33
+        }
+      },
+      {
+        "id": "2XVFtQFxL82xj7dWuPPs3W",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f8_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f8_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "9b4f2cfe-7177-4b77-becc-fdf1f0c3bb04"
+          }
+        ],
+        "position": {
+          "x": -2650.0,
+          "y": 31533.33
+        }
+      },
+      {
+        "id": "23eqCzHDPDCQS2wUy0OVDk",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f0_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f0_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "9071b6f8-7aa8-4c79-b9e1-c747518dce41"
+          }
+        ],
+        "position": {
+          "x": -6150.0,
+          "y": 9533.33
+        }
+      },
+      {
+        "id": "0UwGgLSnz1bRl2qtxdTSo8",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f1_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f1_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "ee2a19ee-04c2-4023-b048-4695dd8971f7"
+          }
+        ],
+        "position": {
+          "x": -5350.0,
+          "y": 12283.33
+        }
+      },
+      {
+        "id": "237iCVJGb4seGRqEar$uVL",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f2_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f2_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "dc6e7ac6-1515-46ca-9e94-248988badc0f"
+          }
+        ],
+        "position": {
+          "x": -5350.0,
+          "y": 15033.33
+        }
+      },
+      {
+        "id": "1ka37OW39CnurIIP3Iuqoh",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f3_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f3_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "83630a6c-b717-4fd7-8636-376d863ef176"
+          }
+        ],
+        "position": {
+          "x": -6150.0,
+          "y": 17783.33
+        }
+      },
+      {
+        "id": "2xKP3R1V9FzfytLRLRhCsy",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f4_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f4_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "9bfa1f48-46f3-4fd7-a416-8280e06b3461"
+          }
+        ],
+        "position": {
+          "x": -5350.0,
+          "y": 20533.33
+        }
+      },
+      {
+        "id": "2hPdUxHxT2vOIObXMNQLnw",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f5_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f5_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "a3ea30e7-5602-4d0c-9541-13bc1a5c6ef6"
+          }
+        ],
+        "position": {
+          "x": -6150.0,
+          "y": 23283.33
+        }
+      },
+      {
+        "id": "3y1hZhcq97GA3KrpHeV5zc",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f6_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f6_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "537fa738-c6a1-4015-b9ea-d751d0580dd8"
+          }
+        ],
+        "position": {
+          "x": -6150.0,
+          "y": 26033.33
+        }
+      },
+      {
+        "id": "2Lfz6tQIPF0xeIeu$4pI3k",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f7_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f7_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "54fd9af2-2038-4567-895c-e20c3b47e76c"
+          }
+        ],
+        "position": {
+          "x": -6150.0,
+          "y": 28783.33
+        }
+      },
+      {
+        "id": "21tOGMFbT3bBEcfIbFMFak",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f8_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f8_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "ec9ecf17-4f23-4bfb-a37d-f890951b105e"
+          }
+        ],
+        "position": {
+          "x": -5350.0,
+          "y": 31533.33
+        }
+      },
+      {
+        "id": "0oleUjGMj96BktDYGBWxOc",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f0_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f0_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd"
+          }
+        ],
+        "position": {
+          "x": -18600.0,
+          "y": 7500.0
+        }
+      },
+      {
+        "id": "0$QBavoL9CTfu0iNINWk4c",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f1_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f1_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "31be08e1-e75c-4024-86b4-c3c6d3939fbb"
+          }
+        ],
+        "position": {
+          "x": -18600.0,
+          "y": 10250.0
+        }
+      },
+      {
+        "id": "0y$u6dhs192wqSG36ZVTVh",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f2_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f2_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "9d18882e-d90b-40de-a171-47cb4564ffa6"
+          }
+        ],
+        "position": {
+          "x": -18600.0,
+          "y": 13000.0
+        }
+      },
+      {
+        "id": "0zlarfHTf6JgqTiuat05ry",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f3_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f3_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "ae42dea4-47c9-44cb-bc0c-7875a127ff24"
+          }
+        ],
+        "position": {
+          "x": -18600.0,
+          "y": 15750.0
+        }
+      },
+      {
+        "id": "1Do6919bf60gEJnDZO6WOq",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f4_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f4_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "f28b4ee5-b037-4998-bb9c-a995233161de"
+          }
+        ],
+        "position": {
+          "x": -18600.0,
+          "y": 18500.0
+        }
+      },
+      {
+        "id": "3OZR8vhh59URj9bh0qj0qI",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f5_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f5_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "2f0a569c-f942-4c10-8d75-f26817f693e0"
+          }
+        ],
+        "position": {
+          "x": -18600.0,
+          "y": 21250.0
+        }
+      },
+      {
+        "id": "2z$2H$l$b73u8Kgilhwn0G",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f6_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f6_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "9202aa18-e3b2-4f6e-a27d-b177f46f50f7"
+          }
+        ],
+        "position": {
+          "x": -18600.0,
+          "y": 24000.0
+        }
+      },
+      {
+        "id": "3uEjUXKYr7MPGrEccIwTPK",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f7_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f7_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "7db06be4-2de5-45c7-b17b-8feb2bd3c448"
+          }
+        ],
+        "position": {
+          "x": -18600.0,
+          "y": 26750.0
+        }
+      },
+      {
+        "id": "3GypX53YT2GQcH05bpaCOu",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f8_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f8_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "7bca27d8-db80-4552-b4a4-5fdea79f4e70"
+          }
+        ],
+        "position": {
+          "x": -18600.0,
+          "y": 29500.0
+        }
+      },
+      {
+        "id": "0z5dWkGd1D_w6QNBksR4yP",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f9_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f9_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "357c1d20-f0ce-4da7-b6d7-feb4a0e42eb9"
+          }
+        ],
+        "position": {
+          "x": -18600.0,
+          "y": 32250.0
+        }
+      },
+      {
+        "id": "13UoATKi15KOmLWbVPhHMp",
+        "kind": "IfcBuildingElementProxy",
+        "label": "t_f10_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "t_f10_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "71e18c51-7752-46bb-917e-31874504b259"
+          },
+          {
+            "key": "ComposeConnectionParams.rotation",
+            "value": "270.0"
+          }
+        ],
+        "position": {
+          "x": -18600.0,
+          "y": 35000.0
+        }
+      },
+      {
+        "id": "047Z48$JT2PepIzwFm1Iui",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f0_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f0_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "14507529-de04-4eaa-bf7d-beddca7d46e9"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 7700.0
+        }
+      },
+      {
+        "id": "0JCL_S_7PFuuL7MySbcqCw",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f1_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f1_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "f537171c-bacd-4422-abed-09e1ab19c572"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 10450.0
+        }
+      },
+      {
+        "id": "3YKQ7WYyfD$wjtZpFQfh_M",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f2_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f2_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "536f3512-ca21-45ab-a6a8-08f48a939c8f"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 13200.0
+        }
+      },
+      {
+        "id": "37ViOrnYHFqBJNimPhEbvo",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f3_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f3_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "8821d699-009b-4001-984b-a5c20490848a"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 15950.0
+        }
+      },
+      {
+        "id": "0XSGUzK3j59O65VrkKSKOq",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f4_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f4_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "bd2a1977-cedb-41bb-bf40-543c798fd2fd"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 18700.0
+        }
+      },
+      {
+        "id": "3ePWRURz1FlPPHoX2etfO9",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f5_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f5_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "27d9be65-dfdf-420e-a3f1-1b584af62b83"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 21450.0
+        }
+      },
+      {
+        "id": "2EYrFoVA5AiPFqjZ_HTKz0",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f6_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f6_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "049888c1-42a1-4ee9-913d-2d16cbf90341"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 24200.0
+        }
+      },
+      {
+        "id": "0oy_nkKZv9287waswEVQh4",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f7_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f7_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "dfb776f3-e722-4c07-86ee-471dcb89d918"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 26950.0
+        }
+      },
+      {
+        "id": "3fUGmLsLbAGAdEpgn10Wbf",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f8_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f8_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "5f911ea2-42a3-4354-b58d-786ec2539d4b"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 29700.0
+        }
+      },
+      {
+        "id": "382UUlt$D9xvGQngydVIel",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f9_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f9_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "24dc6dca-c4a8-4754-adaa-61011e2d9b7b"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 32450.0
+        }
+      },
+      {
+        "id": "3jMQRmXdn3Kxbe9tqPNyoc",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d0_t_f10_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d0_t_f10_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "cb832a2c-e9db-469c-a27a-03f2de76501d"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 35200.0
+        }
+      },
+      {
+        "id": "3W5mSW6fH0ORPRkOrXo$od",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d1_t_f0_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d1_t_f0_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "794499b1-500b-41b1-a271-29e67f4629c5"
+          }
+        ],
+        "position": {
+          "x": -14550.0,
+          "y": 7700.0
+        }
+      },
+      {
+        "id": "2z91sMb3r1sfNwOvCqwuFD",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d1_t_f1_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d1_t_f1_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "ba35dd11-3022-4408-913f-0f6d25b40a83"
+          }
+        ],
+        "position": {
+          "x": -14550.0,
+          "y": 10450.0
+        }
+      },
+      {
+        "id": "2iVZR80ZX4BBEBJAFvh5BJ",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d1_t_f3_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d1_t_f3_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "087e2e86-96d9-4034-aa11-45e360a73761"
+          }
+        ],
+        "position": {
+          "x": -14550.0,
+          "y": 15950.0
+        }
+      },
+      {
+        "id": "0WJq2i5uPDMf7IVnUwV5AO",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d1_t_f4_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d1_t_f4_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "d04d9e84-6f8c-45d1-93c7-068498c7d962"
+          }
+        ],
+        "position": {
+          "x": -14550.0,
+          "y": 18700.0
+        }
+      },
+      {
+        "id": "3qi_rsGSnCWxJIqEcsWh8k",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d1_t_f6_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d1_t_f6_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "d45a533d-4975-4a93-a6c4-74ea4b2fdac9"
+          }
+        ],
+        "position": {
+          "x": -14550.0,
+          "y": 24200.0
+        }
+      },
+      {
+        "id": "0kpcwJND58of7yE4e2x9$g",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d1_t_f7_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d1_t_f7_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "5de35caa-0f02-43d7-ae74-aa730efd3386"
+          }
+        ],
+        "position": {
+          "x": -14550.0,
+          "y": 26950.0
+        }
+      },
+      {
+        "id": "0VY10ZAJD9GwWSmBlsxgVJ",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d1_t_f9_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d1_t_f9_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "03b08a1d-bd01-4d7f-829e-e9008af5f8c1"
+          }
+        ],
+        "position": {
+          "x": -14550.0,
+          "y": 32450.0
+        }
+      },
+      {
+        "id": "0zgbFyRQX4Mv7_7DBJhVXX",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d1_t_f10_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d1_t_f10_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "9a209b1a-86b5-4852-9a90-c238c35b1038"
+          }
+        ],
+        "position": {
+          "x": -14550.0,
+          "y": 35200.0
+        }
+      },
+      {
+        "id": "3Aua7mZt9Ck8fWkzcwBdZx",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d2_t_f0_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d2_t_f0_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "53ca4530-f017-4079-bbae-16bf1a76c2df"
+          }
+        ],
+        "position": {
+          "x": -14550.0,
+          "y": 7700.0
+        }
+      },
+      {
+        "id": "31eeXHW_D15O30ZYt9avX$",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d2_t_f1_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d2_t_f1_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "9901f61f-d0da-4a2a-a0f4-3028be4f54d8"
+          }
+        ],
+        "position": {
+          "x": -14550.0,
+          "y": 10450.0
+        }
+      },
+      {
+        "id": "1C9RJAr2rEJASPNSFngUOQ",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d2_t_f2_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d2_t_f2_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "3b0444ad-2307-442e-972a-7f1c2cc7dcb9"
+          }
+        ],
+        "position": {
+          "x": -14550.0,
+          "y": 13200.0
+        }
+      },
+      {
+        "id": "1gtMuvMDHBuBvrQYU64nBL",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d2_t_f3_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d2_t_f3_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "8cadc9d3-8329-461a-b849-8e2f0df53c8d"
+          }
+        ],
+        "position": {
+          "x": -14550.0,
+          "y": 15950.0
+        }
+      },
+      {
+        "id": "2aqYYRCzH7CxJANRUtohG_",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d2_t_f4_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d2_t_f4_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "fea0125a-04d0-4b51-89b7-335c951e169c"
+          }
+        ],
+        "position": {
+          "x": -14550.0,
+          "y": 18700.0
+        }
+      },
+      {
+        "id": "0Vndsslkj0rQk4lK8dUmtU",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d2_t_f5_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d2_t_f5_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "8b8ef6bd-e8d7-4bda-bf89-cbf3f373de09"
+          }
+        ],
+        "position": {
+          "x": -14550.0,
+          "y": 21450.0
+        }
+      },
+      {
+        "id": "3uZHBQ0Dr9Vu6EgIrM$unu",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d2_t_f6_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d2_t_f6_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "db29f29d-7f80-41e9-bab2-51100d97fd01"
+          }
+        ],
+        "position": {
+          "x": -14550.0,
+          "y": 24200.0
+        }
+      },
+      {
+        "id": "3DYQhxuUz9ZOaMkBdnLfBF",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d2_t_f7_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d2_t_f7_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "2c4fd9c3-fecf-4fa1-b1cd-69ed957b94e6"
+          }
+        ],
+        "position": {
+          "x": -14550.0,
+          "y": 26950.0
+        }
+      },
+      {
+        "id": "0KpCuLgpb2XhTGsPxmEQWO",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d2_t_f8_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d2_t_f8_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "cc03c72c-5cc8-40ce-8c49-dc45daa89170"
+          }
+        ],
+        "position": {
+          "x": -14550.0,
+          "y": 29700.0
+        }
+      },
+      {
+        "id": "2086RtQKf1AQWMV5JdAZs_",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d2_t_f9_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d2_t_f9_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "f9e9746c-e5c1-4570-8d5f-4b050c5aff33"
+          }
+        ],
+        "position": {
+          "x": -14550.0,
+          "y": 32450.0
+        }
+      },
+      {
+        "id": "1Z3sf8u5TFeBFBK$9J9T23",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d2_t_f10_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d2_t_f10_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "0ab890b8-783e-44fb-8e36-d7d92c54474d"
+          }
+        ],
+        "position": {
+          "x": -14550.0,
+          "y": 35200.0
+        }
+      },
+      {
+        "id": "2u7qbdTxr30xhgRqCnvXwS",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f0_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f0_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "f1b5e882-0d34-40af-aa83-cca07919adab"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 7700.0
+        }
+      },
+      {
+        "id": "1DXAdPUiHFs8oGCVMJDUO8",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f1_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f1_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "fe8bb27a-9ac4-4731-8760-5ab24e35ed7f"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 10450.0
+        }
+      },
+      {
+        "id": "0r0QeLpdv8Zu$PtqujSAh$",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f2_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f2_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "7ef59b73-e757-47a6-a5dd-a8d1dbd59c8e"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 13200.0
+        }
+      },
+      {
+        "id": "1L74suGcX4L9n0NuaCMPAw",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f3_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f3_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "156383bf-3817-4c04-818a-e64892ed57fa"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 15950.0
+        }
+      },
+      {
+        "id": "1t_7IfwUj7SgrkYqineD3O",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f4_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f4_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "f26701fa-20d2-4eac-a466-33478434470a"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 18700.0
+        }
+      },
+      {
+        "id": "0oGdkMsKL0KulO1mPGARHo",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f5_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f5_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "4215ae1f-2636-443e-9499-f272b12f0d17"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 21450.0
+        }
+      },
+      {
+        "id": "3EeNXjkkf4UuS8lGBQQFlQ",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f6_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f6_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "0cc16d2b-ec2e-45c1-aa33-b835a6c9d83a"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 24200.0
+        }
+      },
+      {
+        "id": "0D8zNBSu964PPae9XRd8EA",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f7_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f7_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "f540bf88-1f95-4a3a-99ff-b7c4154a7c05"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 26950.0
+        }
+      },
+      {
+        "id": "05t1Eg4Ez5ue8DvUtnrIm0",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f8_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f8_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "69e4f5f8-1d4b-4960-be4b-a9ca323fbef8"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 29700.0
+        }
+      },
+      {
+        "id": "0CRBcxZ8H73xBox0FjOJ0z",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f9_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f9_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "549de7e4-6d98-4f86-b068-6461b88de67d"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 32450.0
+        }
+      },
+      {
+        "id": "2fKbuNCZr7$vNduHbcyJHu",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl0_d3_t_f10_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl0_d3_t_f10_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "c343b2f3-f528-42e3-9ba1-fe27e00a6c8c"
+          }
+        ],
+        "position": {
+          "x": -17250.0,
+          "y": 35200.0
+        }
+      },
+      {
+        "id": "38V_vw52fDTQbTJg_wnKKI",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f0_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f0_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "4ab8da16-00a7-4c2d-b9ae-cd694119a4da"
+          }
+        ],
+        "position": {
+          "x": -20750.0,
+          "y": 8616.67
+        }
+      },
+      {
+        "id": "3WUom3en5CI8WNhC_bkoZa",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f1_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f1_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "0bb2a1dd-c9e3-4cb8-9590-faf1bc8d32ad"
+          }
+        ],
+        "position": {
+          "x": -19950.0,
+          "y": 11366.67
+        }
+      },
+      {
+        "id": "1eUcmUiQT1gefcxX24v2yG",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f2_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f2_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "d064105d-9a9d-442b-a53f-ed010b155b89"
+          }
+        ],
+        "position": {
+          "x": -19950.0,
+          "y": 14116.67
+        }
+      },
+      {
+        "id": "14sULZgh5FPf9WfSoLaed7",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f3_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f3_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "02526a37-d870-40de-8f83-ad74773deb73"
+          }
+        ],
+        "position": {
+          "x": -19950.0,
+          "y": 16866.67
+        }
+      },
+      {
+        "id": "1lwEjh5N5C3gyN60_opgMC",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f4_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f4_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "01890804-66f2-4544-98f0-b6f0c0615492"
+          }
+        ],
+        "position": {
+          "x": -20750.0,
+          "y": 19616.67
+        }
+      },
+      {
+        "id": "2$CYjIv8r6RAodnafLCgpg",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f5_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f5_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "f44e6d7b-1386-439b-8705-1a7d9b23e83d"
+          }
+        ],
+        "position": {
+          "x": -20750.0,
+          "y": 22366.67
+        }
+      },
+      {
+        "id": "1uNY7Kl5P7pxg3rPs3sPTC",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f6_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f6_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "f3621bd3-c6bb-40ee-8c34-cb18831c1f10"
+          }
+        ],
+        "position": {
+          "x": -19950.0,
+          "y": 25116.67
+        }
+      },
+      {
+        "id": "1CKq37SDXDIQBmzttas2uU",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f7_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f7_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "561f418a-311e-4a28-bc04-95f35bce9011"
+          }
+        ],
+        "position": {
+          "x": -20750.0,
+          "y": 27866.67
+        }
+      },
+      {
+        "id": "2Zn1irLtbE2vcmhTxMdXC2",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f8_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f8_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "e1a31a11-ebee-4934-bdfa-cc43ca63c6ff"
+          }
+        ],
+        "position": {
+          "x": -19950.0,
+          "y": 30616.67
+        }
+      },
+      {
+        "id": "0A3Cpk81L4_OO1uoLgzSfp",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f9_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f9_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "2473699e-f806-491e-8c80-a2bc03f60cc7"
+          }
+        ],
+        "position": {
+          "x": -20750.0,
+          "y": 33366.67
+        }
+      },
+      {
+        "id": "0jR9KrkU5DEeD$BlOqGGLd",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d0_t_f10_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d0_t_f10_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "a16ba50b-f236-4d8d-91be-3459b28bc059"
+          }
+        ],
+        "position": {
+          "x": -19950.0,
+          "y": 36116.67
+        }
+      },
+      {
+        "id": "220uqFjPPFWQFiKDpqrFYs",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f0_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f0_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "b3de3e2e-f93f-4de6-8bcc-e47d1ce9ce36"
+          }
+        ],
+        "position": {
+          "x": -23450.0,
+          "y": 8616.67
+        }
+      },
+      {
+        "id": "0GtLcCxGT9Q9SUG3xEoBC5",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f1_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f1_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "d88f2d4c-4e31-454f-aee5-446636931c37"
+          }
+        ],
+        "position": {
+          "x": -22650.0,
+          "y": 11366.67
+        }
+      },
+      {
+        "id": "2aoC8$er15wuToC$vNe$1a",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f2_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f2_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "dcf9ff79-1f52-412d-9eb4-7329f77b237c"
+          }
+        ],
+        "position": {
+          "x": -22650.0,
+          "y": 14116.67
+        }
+      },
+      {
+        "id": "1NWUsrgcD31uzERuhw6s6u",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f3_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f3_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "10bbba6a-100d-4b4e-b5fa-6aa851caaa52"
+          }
+        ],
+        "position": {
+          "x": -22650.0,
+          "y": 16866.67
+        }
+      },
+      {
+        "id": "04qC5dmMD2HeoyZt$0Tmi9",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f4_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f4_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "1ac5ad13-63e4-41cc-af35-cea46d5a047e"
+          }
+        ],
+        "position": {
+          "x": -23450.0,
+          "y": 19616.67
+        }
+      },
+      {
+        "id": "20DajSBBv5OOwhlj12tbOg",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f5_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f5_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "68329fc1-37b6-4b3e-9b34-28fc47e96898"
+          }
+        ],
+        "position": {
+          "x": -23450.0,
+          "y": 22366.67
+        }
+      },
+      {
+        "id": "2W2gNQtEfEAfimPq32DX$x",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f6_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f6_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "3beea11e-35a1-414a-a21d-a188157591a8"
+          }
+        ],
+        "position": {
+          "x": -22650.0,
+          "y": 25116.67
+        }
+      },
+      {
+        "id": "1MWJvppQD14O1qlt3kqGzH",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f7_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f7_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "42cac031-0a1c-435c-aa8f-09c8598523ae"
+          }
+        ],
+        "position": {
+          "x": -23450.0,
+          "y": 27866.67
+        }
+      },
+      {
+        "id": "0lAX9Xw6bDMACwo21amKTX",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f8_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f8_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "aee66807-ac00-4b12-8251-abafefdae05b"
+          }
+        ],
+        "position": {
+          "x": -22650.0,
+          "y": 30616.67
+        }
+      },
+      {
+        "id": "0asZCqJQTDLwxMqRX3$$$m",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f9_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f9_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "8efaff31-ae6e-4f14-9753-d9fde9a37b90"
+          }
+        ],
+        "position": {
+          "x": -23450.0,
+          "y": 33366.67
+        }
+      },
+      {
+        "id": "3rHFgb_MT81vU82annzRNW",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl1_d1_t_f10_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl1_d1_t_f10_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "19d94471-b440-4be4-ad4a-f6755d24a0e8"
+          }
+        ],
+        "position": {
+          "x": -23450.0,
+          "y": 36116.67
+        }
+      },
+      {
+        "id": "0PGWxX$d9Af8_WaBY1eJK_",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f0_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f0_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "81fe9985-4791-4e70-8b81-012e13eab8e2"
+          }
+        ],
+        "position": {
+          "x": -22650.0,
+          "y": 9533.33
+        }
+      },
+      {
+        "id": "25ld8suFHCQwV6xM95csgK",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f1_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f1_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "288f5a34-305a-4b76-87c2-3ed34b5675a9"
+          }
+        ],
+        "position": {
+          "x": -22650.0,
+          "y": 12283.33
+        }
+      },
+      {
+        "id": "3gdDlIPpLFxgrpXEWxa30A",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f2_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f2_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "5c18fab0-05cb-4639-8d97-a8e1f7cf23fc"
+          }
+        ],
+        "position": {
+          "x": -22650.0,
+          "y": 15033.33
+        }
+      },
+      {
+        "id": "1$ou7emiP5$OKE6Lq0AJWv",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f3_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f3_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "82d258be-3368-485f-ba34-c75847d4405f"
+          }
+        ],
+        "position": {
+          "x": -22650.0,
+          "y": 17783.33
+        }
+      },
+      {
+        "id": "1Mw2LM1Br5zh5XgYa0EhBx",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f4_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f4_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "a251d19c-5826-4599-967c-fc976947267f"
+          }
+        ],
+        "position": {
+          "x": -22650.0,
+          "y": 20533.33
+        }
+      },
+      {
+        "id": "1$X6seDwfD0wy$SD9n7QGQ",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f5_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f5_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "b00a847f-6585-48a3-b9ee-4903c3e6a5b3"
+          }
+        ],
+        "position": {
+          "x": -22650.0,
+          "y": 23283.33
+        }
+      },
+      {
+        "id": "3xSjytWbP0_R0rRPsfew$b",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f6_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f6_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "d03e6df1-6332-47d0-8e2f-ba364a1cc1b3"
+          }
+        ],
+        "position": {
+          "x": -22650.0,
+          "y": 26033.33
+        }
+      },
+      {
+        "id": "3o9gIs87v53QqzjLNp0iPs",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f7_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f7_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "a4450dcd-57ce-4dcc-a235-96b3b75cc82b"
+          }
+        ],
+        "position": {
+          "x": -22650.0,
+          "y": 28783.33
+        }
+      },
+      {
+        "id": "1FCSVNT0vERe8G0rcx1mR$",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f8_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f8_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "e59f5903-f9e5-45ad-b153-c9f5f6268799"
+          }
+        ],
+        "position": {
+          "x": -22650.0,
+          "y": 31533.33
+        }
+      },
+      {
+        "id": "3fp16YA2H8Gg_i5VhP$_4n",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f9_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f9_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "328b32f3-28b2-4809-a43f-9431ec4143a0"
+          }
+        ],
+        "position": {
+          "x": -22650.0,
+          "y": 34283.33
+        }
+      },
+      {
+        "id": "0zkndVXij0BuKBarM3bpPH",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d0_t_f10_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d0_t_f10_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "bacfa200-04fe-4f3d-b281-e203893124d8"
+          }
+        ],
+        "position": {
+          "x": -22650.0,
+          "y": 37033.33
+        }
+      },
+      {
+        "id": "2oL$TvaFrF0h6p$CTkC$s3",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f0_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f0_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "085a9625-3c6d-4e2d-921a-70ac66cbc56a"
+          }
+        ],
+        "position": {
+          "x": -19950.0,
+          "y": 9533.33
+        }
+      },
+      {
+        "id": "1ln2AS3Uj8chJ5AFuVdRUr",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f1_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f1_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "323375ad-496b-4b23-8454-3e02a76fced3"
+          }
+        ],
+        "position": {
+          "x": -19950.0,
+          "y": 12283.33
+        }
+      },
+      {
+        "id": "2gUvRqM8zFPwI5VOdBgD8s",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f2_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f2_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "8cf31906-5b4c-48d7-929f-cbe0e469d423"
+          }
+        ],
+        "position": {
+          "x": -19950.0,
+          "y": 15033.33
+        }
+      },
+      {
+        "id": "1p461KElf9APUqkYH_pfRI",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f3_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f3_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "5def8f68-d629-4c24-8e76-5e12ea88a861"
+          }
+        ],
+        "position": {
+          "x": -19950.0,
+          "y": 17783.33
+        }
+      },
+      {
+        "id": "1SsWeKyDb2f8f6Ac_trTUs",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f4_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f4_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "2c171390-ce9b-4399-94aa-71a21c482093"
+          }
+        ],
+        "position": {
+          "x": -19950.0,
+          "y": 20533.33
+        }
+      },
+      {
+        "id": "1PIKtcD3PARf46S9HCTruu",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f5_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f5_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "66b5cd84-bb09-4e47-8dc9-18d5a1113b4f"
+          }
+        ],
+        "position": {
+          "x": -19950.0,
+          "y": 23283.33
+        }
+      },
+      {
+        "id": "1TMpqcNgTCQgAvw2Kyfld8",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f6_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f6_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "cd57b80c-d734-4a34-9d8d-437b12727dbd"
+          }
+        ],
+        "position": {
+          "x": -19950.0,
+          "y": 26033.33
+        }
+      },
+      {
+        "id": "0vL$N9EK9Aqh$IC$RRulb3",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f7_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f7_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "7fdfbaa6-bb6f-410c-a79b-e8ff0136a236"
+          }
+        ],
+        "position": {
+          "x": -19950.0,
+          "y": 28783.33
+        }
+      },
+      {
+        "id": "3_NsLi1ljEDQe6$ucTuT3G",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f8_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f8_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "775b73e2-effe-46f5-a538-1768534b86b2"
+          }
+        ],
+        "position": {
+          "x": -19950.0,
+          "y": 31533.33
+        }
+      },
+      {
+        "id": "2VvR1XfJrDlxPpsOBGvzXU",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f9_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f9_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "a6155a06-37a9-48d2-86cb-93d0d2be53c4"
+          }
+        ],
+        "position": {
+          "x": -19950.0,
+          "y": 34283.33
+        }
+      },
+      {
+        "id": "1H7BH0SQLCBAiwUSTZa$T6",
+        "kind": "IfcBuildingElementProxy",
+        "label": "cs_sl2_d1_t_f10_b_c1",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "cs_sl2_d1_t_f10_b_c1"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "10f6459b-06db-4100-b2d4-0296077c465d"
+          }
+        ],
+        "position": {
+          "x": -19950.0,
+          "y": 37033.33
+        }
+      },
+      {
+        "id": "0HlkkmFT95r8pJ9uDUn88n",
+        "kind": "IfcBuildingElementProxy",
+        "label": "br_sl0_d2_t_f2_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "br_sl0_d2_t_f2_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "30f83909-7eb7-4452-8f67-9eef2175895e"
+          }
+        ],
+        "position": {
+          "x": -15850.0,
+          "y": 13200.0
+        }
+      },
+      {
+        "id": "1sOT_enZLFPBJFdV$98DhF",
+        "kind": "IfcBuildingElementProxy",
+        "label": "br_sl0_d2_t_f5_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "br_sl0_d2_t_f5_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "5feebbf8-33d9-41ad-a13a-24c271a1860b"
+          }
+        ],
+        "position": {
+          "x": -15850.0,
+          "y": 21450.0
+        }
+      },
+      {
+        "id": "1tZkmTaMP4R8yLkBdfebfl",
+        "kind": "IfcBuildingElementProxy",
+        "label": "br_sl0_d2_t_f8_b_c0",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "br_sl0_d2_t_f8_b_c0"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "7d7dd65e-40aa-4f27-b580-868315237a1d"
+          }
+        ],
+        "position": {
+          "x": -15850.0,
+          "y": 29700.0
+        }
+      },
+      {
+        "id": "f1-inserted-node",
+        "kind": "IfcBuildingElementProxy",
+        "label": "b",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "b"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1"
+          },
+          {
+            "key": "ComposeConnectionParams.rotation",
+            "value": "90.0"
+          }
+        ],
+        "position": {
+          "x": 0.0,
+          "y": 0.0
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "2jGlFQA9H2mvmjiNpnYG5Q",
+        "from": {
+          "node": "0POPlhUSnC1REPvcqnensi",
+          "port": "28MKF16un8NBtKsWfORP5Y"
+        },
+        "to": {
+          "node": "0IEifuk9T5eR2vbWao4vJp",
+          "port": "0DFWl3CFjFrhgWeoJyVitG"
+        },
+        "kind": "The center of the east rectangular core (an elevator and a staircase around it)."
+      },
+      {
+        "id": "2aA4mq3Qj0XRbikPznzENT",
+        "from": {
+          "node": "0POPlhUSnC1REPvcqnensi",
+          "port": "3ecCROTvnB7gqxXaLC3f16"
+        },
+        "to": {
+          "node": "0oleUjGMj96BktDYGBWxOc",
+          "port": "2MIJWTEX59GPSzy3qB5Vs8"
+        },
+        "kind": "The center of the west rectangular core (an elevator and a staircase around it)."
+      },
+      {
+        "id": "1IafSl4Uf7pvH1Q0uxsu5X",
+        "from": {
+          "node": "2E$cgFrwTE1x33ewcrgtPw",
+          "port": "1xBFYcZGvENB6boVzV2AK7"
+        },
+        "to": {
+          "node": "3GOXMcqS9E287ioto$RIXo",
+          "port": "0q__KTYYzAR9W$6tKLm0WA"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "2WQfvksKf5e9Do_XSUneDY",
+        "from": {
+          "node": "13UoATKi15KOmLWbVPhHMp",
+          "port": "0vMBcmBoL8Jgag79ym5WNB"
+        },
+        "to": {
+          "node": "1OS4$rPqz9cOn2s4ojb1k3",
+          "port": "11lKUReMjAlAyGt22V7$ql"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "0e0cjEVFT7SPa_H7fswrew",
+        "from": {
+          "node": "0IEifuk9T5eR2vbWao4vJp",
+          "port": "0yeVWE$WT2gefqtnRePktu"
+        },
+        "to": {
+          "node": "10oJDBNhD5uvT1yRtDdA2k",
+          "port": "2w6kF$E3X2Rg2J5$R49DUt"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "1Wh6mDPpf5DuRHdB3M$wJA",
+        "from": {
+          "node": "10oJDBNhD5uvT1yRtDdA2k",
+          "port": "3AYO4wWCjDjuQ8PpXrECLL"
+        },
+        "to": {
+          "node": "1v5reG1czD3ADqOI3X_4bk",
+          "port": "227l6p6nX7Xhd0Wsdjcg7m"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "2HV5AurXnFperx$qjCNHXW",
+        "from": {
+          "node": "1v5reG1czD3ADqOI3X_4bk",
+          "port": "1a42gvGWzDzxG3lT2iuiK6"
+        },
+        "to": {
+          "node": "2hsAuy53T3heFKm9cwlTdI",
+          "port": "0uI3jaQbr4afqJi$HWiPKs"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "0aRvmmmTX4jQ1HjSSef4Im",
+        "from": {
+          "node": "2hsAuy53T3heFKm9cwlTdI",
+          "port": "3Hddtlgvr3jgs64BDAesrh"
+        },
+        "to": {
+          "node": "2GM8M2uIDCIgBmG4G8uK0G",
+          "port": "0_Q8p98hj8zvjR7ysOnjnV"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "1$oYmGnH9Dtx8bxdcpeQ$N",
+        "from": {
+          "node": "2GM8M2uIDCIgBmG4G8uK0G",
+          "port": "3FKrkOQqvBsQRlUAxZefA7"
+        },
+        "to": {
+          "node": "0xMfkOSbzCeOb2B2pBfk1j",
+          "port": "23RXSxRFbFleXXvJ4GrH72"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "1c17LcxqL0f9t$TOqjFD0x",
+        "from": {
+          "node": "0xMfkOSbzCeOb2B2pBfk1j",
+          "port": "087ANJ$6T24QAzK88muVar"
+        },
+        "to": {
+          "node": "0gUD1ke0v2celQp0c3LnxY",
+          "port": "3rYbZ0mmbEBuh566bOiLmI"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "2Tcjf_N$LCT8krqUYlBUCb",
+        "from": {
+          "node": "0gUD1ke0v2celQp0c3LnxY",
+          "port": "3N5OLPwy10eQq$lYLjVuuT"
+        },
+        "to": {
+          "node": "35NKdHkwDDIukcdqd$YxMB",
+          "port": "33vT$JyhT8vuNWcpc8mqiW"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "0SGmu0taLBO9Xmyu$pJyw_",
+        "from": {
+          "node": "35NKdHkwDDIukcdqd$YxMB",
+          "port": "1_B0eW79H0yhv$CVoDfmtk"
+        },
+        "to": {
+          "node": "2E$cgFrwTE1x33ewcrgtPw",
+          "port": "2L7p4vTPv9XQYm$sHsPVyL"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "1aBu3AKR974eOkqL6G3tTq",
+        "from": {
+          "node": "0IEifuk9T5eR2vbWao4vJp",
+          "port": "3vPf1ONjXFbRRx2v4lx4$p"
+        },
+        "to": {
+          "node": "1P_$QRTML81BbcGk8plp1_",
+          "port": "1EAooDBcD2CQK7oDHC6A$4"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "3lQ7jn4Cr4uhW_cGzKSCQm",
+        "from": {
+          "node": "10oJDBNhD5uvT1yRtDdA2k",
+          "port": "0cAGDqiDTA6RmDPHj0EWLX"
+        },
+        "to": {
+          "node": "2WiIbyB3nBFBPYy_0Y2388",
+          "port": "1YljfAa$58kwJJD6$aKkd6"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "1CnBGS8gD269_nLzcjK65j",
+        "from": {
+          "node": "1v5reG1czD3ADqOI3X_4bk",
+          "port": "1uV86jqCfEYubXg66k6FCV"
+        },
+        "to": {
+          "node": "3hBvnd3iH2Y8m7fnK5SncH",
+          "port": "3l$kSoCA54sQbh872Kzqgs"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "18SZuO_1rEdfPs$PzCK6vD",
+        "from": {
+          "node": "2hsAuy53T3heFKm9cwlTdI",
+          "port": "0ALB24L0XE9eFVwlBFxDmr"
+        },
+        "to": {
+          "node": "213RjE$_17wBdM6TMnZS$P",
+          "port": "1m2GBMIKr8buId5ubVDnQM"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "2Wrxnsr_b9DABgudRGG_rL",
+        "from": {
+          "node": "2GM8M2uIDCIgBmG4G8uK0G",
+          "port": "0onuIt0zLCaReZihXCv0pr"
+        },
+        "to": {
+          "node": "1grMJriofB6A3C0oHj28Kd",
+          "port": "0Evg8$j81FXRbF9uQVEaHs"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "2CA5ymeq53g8MJKMHsuUY2",
+        "from": {
+          "node": "0xMfkOSbzCeOb2B2pBfk1j",
+          "port": "1jwhS21rTEmAVq4haOEltG"
+        },
+        "to": {
+          "node": "0P9ou1MXL0AessxDrljJ9H",
+          "port": "3R1p_0QyPBdP5eoKEUdGU$"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "0e4VLqdXzECQe83BMyimIY",
+        "from": {
+          "node": "0gUD1ke0v2celQp0c3LnxY",
+          "port": "2J8CubiG93PxbZmLun3Mkm"
+        },
+        "to": {
+          "node": "1IhyWag9b38QA7lfL_BO0d",
+          "port": "0QtwyBHZb0IR9ZNTJRnWgE"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "1MUaCnvRr6E99kDBdjeCI2",
+        "from": {
+          "node": "35NKdHkwDDIukcdqd$YxMB",
+          "port": "3tceHdPY58sRSGyR05Pd3O"
+        },
+        "to": {
+          "node": "1kQc60DXn1mQ5oWEIlmKWG",
+          "port": "3K4ldbdM96IQM9p_$c9cx4"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "37RoxysuT6CPtWBVhAtJqs",
+        "from": {
+          "node": "2E$cgFrwTE1x33ewcrgtPw",
+          "port": "20FcTvf2r7jggVOUUqo3HN"
+        },
+        "to": {
+          "node": "3SdvT1p5r7weuO6qWPcRQa",
+          "port": "1KuKgGdv54kh2WzxKP5hBw"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "2jxN3RGHj89vG0TXmL30Ig",
+        "from": {
+          "node": "0IEifuk9T5eR2vbWao4vJp",
+          "port": "1pa9CY06fEIOfq$bOftMHi"
+        },
+        "to": {
+          "node": "1fhuzudwbDGx6sE_0Vu78x",
+          "port": "2Vo_54jSLEdhJOjhAr30Na"
+        },
+        "kind": "The second door of the side plattform in the north facade."
+      },
+      {
+        "id": "3CSCwQODbEThosQPEGAjUH",
+        "from": {
+          "node": "10oJDBNhD5uvT1yRtDdA2k",
+          "port": "0ltQRHg653FQ3XpkYosPaA"
+        },
+        "to": {
+          "node": "0PH3qtHCz5r8ekKuVSX6ly",
+          "port": "3DBhv$Pfv3CPDWeCFn7mDX"
+        },
+        "kind": "The second door of the side plattform in the north facade."
+      },
+      {
+        "id": "0G5wLymdTDTB0WcBxzDgyh",
+        "from": {
+          "node": "1v5reG1czD3ADqOI3X_4bk",
+          "port": "3lTB1YgHD2_x0QNGA5TlU9"
+        },
+        "to": {
+          "node": "22poIkGI5D6hYyyF0C2BUG",
+          "port": "3OIs4714X62PI6WVswn_Tv"
+        },
+        "kind": "The second door of the side plattform in the north facade."
+      },
+      {
+        "id": "1yh4qRS1DBvQ3LlF_Pe0O8",
+        "from": {
+          "node": "2hsAuy53T3heFKm9cwlTdI",
+          "port": "16_opcmFn59u2jwJ7FFVLw"
+        },
+        "to": {
+          "node": "1By7Z4SNf4VvH00Ht19zww",
+          "port": "0ibigle1X2ExXOG8LjM$sl"
+        },
+        "kind": "The second door of the side plattform in the north facade."
+      },
+      {
+        "id": "1uTXCwvJj4RBf73LFeM8Hi",
+        "from": {
+          "node": "2GM8M2uIDCIgBmG4G8uK0G",
+          "port": "1zW_yYZtrA0xb8cvgiStxU"
+        },
+        "to": {
+          "node": "0Fu$0Ib2b55RV3qyFt1frQ",
+          "port": "3oXHhCHYPCuAJAyGa4qJP0"
+        },
+        "kind": "The second door of the side plattform in the north facade."
+      },
+      {
+        "id": "1v7cSBG85EuOX$DpLwHpWC",
+        "from": {
+          "node": "0xMfkOSbzCeOb2B2pBfk1j",
+          "port": "2c66mFMSX2SxHDei_Cr$2W"
+        },
+        "to": {
+          "node": "1R03FkPkrArfgdvh4MiV$L",
+          "port": "1gnTYGI391nAOwjkirnZZS"
+        },
+        "kind": "The second door of the side plattform in the north facade."
+      },
+      {
+        "id": "3d2qYbZ$LCDvIy5LuHKEgc",
+        "from": {
+          "node": "0gUD1ke0v2celQp0c3LnxY",
+          "port": "1aqUVCDpvD2OEkSntlAbPW"
+        },
+        "to": {
+          "node": "2E5cKFSKf1UfmqxAqlOZfv",
+          "port": "3PUQ5Jqd9FIw62I9gvX$5G"
+        },
+        "kind": "The second door of the side plattform in the north facade."
+      },
+      {
+        "id": "2fN_vHI65AjRHE2ZpnuHq1",
+        "from": {
+          "node": "35NKdHkwDDIukcdqd$YxMB",
+          "port": "0axNtulnDASx43npCHnFXa"
+        },
+        "to": {
+          "node": "06112piNb8aPK4ZwZgl8Jl",
+          "port": "1m3Mt0O19Dge3jafax0h_O"
+        },
+        "kind": "The second door of the side plattform in the north facade."
+      },
+      {
+        "id": "1jTSjB4m5FIOm7drqnnjZ$",
+        "from": {
+          "node": "2E$cgFrwTE1x33ewcrgtPw",
+          "port": "1FNdVhi7n2cw3Urtt9jx85"
+        },
+        "to": {
+          "node": "2XbbKf6fPBPh_hg594UUQV",
+          "port": "2ZW1149iL658ydi8kbEGjc"
+        },
+        "kind": "The second door of the side plattform in the north facade."
+      },
+      {
+        "id": "0cjkKu8cnEavsOdzb0FDG$",
+        "from": {
+          "node": "0IEifuk9T5eR2vbWao4vJp",
+          "port": "1HGFd9Xsn6aQNYJkvEbtZe"
+        },
+        "to": {
+          "node": "2_hp6KNAnDy8U6idXQRqIw",
+          "port": "1Hv74xxbzEmuaf$aSeei4j"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      },
+      {
+        "id": "1nQrpZotzB1xEpydNFmfFJ",
+        "from": {
+          "node": "10oJDBNhD5uvT1yRtDdA2k",
+          "port": "2H2HsTBdf2IOT_gXpl$V8p"
+        },
+        "to": {
+          "node": "3L0aKCtZX60ufXYvgBxwp8",
+          "port": "0VzNXIgJL9RQ$wcK2nsBwt"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      },
+      {
+        "id": "2oV5nqyF539vsQbFgALRvh",
+        "from": {
+          "node": "2hsAuy53T3heFKm9cwlTdI",
+          "port": "31TEvmTQ5Buh4PbrQyfGtx"
+        },
+        "to": {
+          "node": "13aQYM9gf8yhyZvUZIEL_4",
+          "port": "2YxUmk_916_xFOzPq3$hMc"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      },
+      {
+        "id": "2UGpqIJdfFq9fzOMkKC2LW",
+        "from": {
+          "node": "2GM8M2uIDCIgBmG4G8uK0G",
+          "port": "1P5rOa2qf9UAvq85_n1KmS"
+        },
+        "to": {
+          "node": "3Uh2_e2RvErQMhOKBON8cF",
+          "port": "2f1Ot2lSDFrReemWvdvKRt"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      },
+      {
+        "id": "231bXTW_PEchtVmuZ53A$1",
+        "from": {
+          "node": "0gUD1ke0v2celQp0c3LnxY",
+          "port": "0uoa2v5L53ZxLwl2i_OWhp"
+        },
+        "to": {
+          "node": "3$sneP7sXFS8W9x0Uenv$t",
+          "port": "0dZCSCdQH69wkXtj5p6Dfu"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      },
+      {
+        "id": "0KvY2iYHzB48QXx$5pwN1o",
+        "from": {
+          "node": "35NKdHkwDDIukcdqd$YxMB",
+          "port": "1gh9LmZwXA6warGnhv8t6R"
+        },
+        "to": {
+          "node": "1nPBqqo6r3DRk8HUDutbSW",
+          "port": "0_eguoMa141g37JV$L6OjA"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      },
+      {
+        "id": "0NQaI8n6j8zRo62yyQWJyx",
+        "from": {
+          "node": "0IEifuk9T5eR2vbWao4vJp",
+          "port": "3wzL7K$TvDYvaypGt_TEF6"
+        },
+        "to": {
+          "node": "00AIJqhJ967BM65azzBB4v",
+          "port": "2h2CQ1p3f4DA1DqUCTTYL1"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "1CGvBH1UL9sQS1rxfKE767",
+        "from": {
+          "node": "10oJDBNhD5uvT1yRtDdA2k",
+          "port": "24HFamkm18aPT_Faggk71t"
+        },
+        "to": {
+          "node": "3hMqTHvB98su92wCpNVG27",
+          "port": "0wCDrH8sv9yuBCzUROtpzi"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "0A$AR3dUPDEPTZNZnzZ7Ra",
+        "from": {
+          "node": "1v5reG1czD3ADqOI3X_4bk",
+          "port": "0EcMjYFnH4tAuqDkpUKjHR"
+        },
+        "to": {
+          "node": "3D3Vr0A5jDg8S2prA6eN7n",
+          "port": "3C4Ykgs8b9gQ4rAXobqqUQ"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "0mjWPhxFbCVP0RDUEzMc8v",
+        "from": {
+          "node": "2hsAuy53T3heFKm9cwlTdI",
+          "port": "3vfFFKem50_wlwZG$WLqmc"
+        },
+        "to": {
+          "node": "20aw4BsYzBme3YNMFGk9kX",
+          "port": "2uOj0NBVj4deBHhjs4yZmc"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "3yPBFMax5FzOIAF__4V8RC",
+        "from": {
+          "node": "2GM8M2uIDCIgBmG4G8uK0G",
+          "port": "3_6Sc6$7rENwbI0BavYFc9"
+        },
+        "to": {
+          "node": "0sK3GmOQ55QBeqVtTIqCTJ",
+          "port": "0y7zPcAID0$wkg3QPbHH75"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "0WE6ypiJ9BBev3ykP5ra2l",
+        "from": {
+          "node": "0xMfkOSbzCeOb2B2pBfk1j",
+          "port": "3_wKWiSavFBPDFmkViolu0"
+        },
+        "to": {
+          "node": "1j0KswkVr7KwfnI7Cn4kUB",
+          "port": "2wqKWXwov4pBAM3a6n$loh"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "3q3WXcGUjB0xivEh2M_$8J",
+        "from": {
+          "node": "0gUD1ke0v2celQp0c3LnxY",
+          "port": "1ApqRxV4TExBHXCEImwunY"
+        },
+        "to": {
+          "node": "335XXOmIj6oOhZUCveqAIJ",
+          "port": "0VsA6kh6HA2BbmK80BQ7DD"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "0dMxRmAbfDoe1Yw0C9Jb$s",
+        "from": {
+          "node": "35NKdHkwDDIukcdqd$YxMB",
+          "port": "1M2F$WN5b0I8GBKxR57Jmw"
+        },
+        "to": {
+          "node": "3YfXDDFyX8XBQzCiG27sct",
+          "port": "139d24BHj6GeenYs_FCcd8"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "3AnFAPi6z8qf1JcLgg1Jfq",
+        "from": {
+          "node": "2E$cgFrwTE1x33ewcrgtPw",
+          "port": "2N7kJ6aQb1ig43GzTa2D7O"
+        },
+        "to": {
+          "node": "2g74E$CgT5t95Jzb41djaZ",
+          "port": "0FIlAVQZ53huf5MV_vlEE8"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "0MYalh4wn4OgqHWPomyMT4",
+        "from": {
+          "node": "0IEifuk9T5eR2vbWao4vJp",
+          "port": "1bBvLdMkrClxhQOr_42cWl"
+        },
+        "to": {
+          "node": "3b9XPbUt1AChg_DTd5FH30",
+          "port": "22Tu6I55L9sfWLnK1KgZj6"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "1FZ0Nn9bbB_e7kqq8vlAMw",
+        "from": {
+          "node": "10oJDBNhD5uvT1yRtDdA2k",
+          "port": "2RUqeDM396QxGvWqTGGsMm"
+        },
+        "to": {
+          "node": "3Zc4E19Lz5ARpZVcKxxkLs",
+          "port": "0FY9D3B$nBnPn4niKzcOyo"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "30UaYXKAT2FvT$kiyqzjx7",
+        "from": {
+          "node": "1v5reG1czD3ADqOI3X_4bk",
+          "port": "1G32_Mw8bD$hccQKb0Wxmo"
+        },
+        "to": {
+          "node": "3dmXkW4xHE3OPJOsM6wlfa",
+          "port": "2S26JHJjv3j8eC5yI5ww3o"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "2NEwz2s$zARP2b7DGYgS6a",
+        "from": {
+          "node": "2hsAuy53T3heFKm9cwlTdI",
+          "port": "2WQ0aRbP99mgn6qM782K_f"
+        },
+        "to": {
+          "node": "3JEcWNzyHCp9VtlsSWiiSE",
+          "port": "3H8Q35qLrEExct4IQcrV1V"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "1cR$a_42bCMQkBKHIfAiui",
+        "from": {
+          "node": "2GM8M2uIDCIgBmG4G8uK0G",
+          "port": "1S7tqu8lrF5wnPrFOBohL_"
+        },
+        "to": {
+          "node": "07zDXswj12NPVXQyk98AHB",
+          "port": "2x30OEU1LCRwVtp_yhd7kN"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "2KV77dF7fEIP5W$Xge2kbI",
+        "from": {
+          "node": "0xMfkOSbzCeOb2B2pBfk1j",
+          "port": "1R$eCxaPfEJOxLabzknBgi"
+        },
+        "to": {
+          "node": "3cKsByH5P5G9L9IRonssGU",
+          "port": "0CfErgtLXEBPe$$yaymom$"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "14l_mUZbXByw2XuTz2TmYM",
+        "from": {
+          "node": "0gUD1ke0v2celQp0c3LnxY",
+          "port": "055DOH6$59tg_xzP4Vbyzd"
+        },
+        "to": {
+          "node": "2rSJNUbEn0PfH3mQsO34IA",
+          "port": "0PjciiBEj0NfsaKman_DAk"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "1X0SyMw0rBwO$vAJbXAdHs",
+        "from": {
+          "node": "35NKdHkwDDIukcdqd$YxMB",
+          "port": "3SffcwaB1FcvvvcLzN9LuQ"
+        },
+        "to": {
+          "node": "06Jo7qu29FX8H0sMRLWBTE",
+          "port": "2PZXF6s191cQIqqdnkIJMY"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "3hATtWxT94auvQ84RlXAv4",
+        "from": {
+          "node": "2E$cgFrwTE1x33ewcrgtPw",
+          "port": "047yVzlRn45OMXJfL$Y32w"
+        },
+        "to": {
+          "node": "3kK22Rpsv26P1B2c1bcgoe",
+          "port": "1HJNVwT758qvDeblcmXiwz"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "0SfYTNq6n9WOLgBgGPanM6",
+        "from": {
+          "node": "0IEifuk9T5eR2vbWao4vJp",
+          "port": "28euVm8qL7WvFqJKKrLacz"
+        },
+        "to": {
+          "node": "0UNhJknw50TwYZZ8H6GZPH",
+          "port": "3gw0Cnrnz2WRF_to1Gz4UF"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "0BP0LjFU5EFvXHhhD4WBot",
+        "from": {
+          "node": "10oJDBNhD5uvT1yRtDdA2k",
+          "port": "0qrpzuQ5PEVQKP1qjSX5n3"
+        },
+        "to": {
+          "node": "24sEj3lgnBuuGUN_0eYlj4",
+          "port": "270LgMIzf94g1crOVxRYS7"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "01ija5KXr1EBCxgfU5OR1e",
+        "from": {
+          "node": "1v5reG1czD3ADqOI3X_4bk",
+          "port": "1PwyhwgQrFbwmOhXOUb1t4"
+        },
+        "to": {
+          "node": "2PC0_yPuf4qhk3Wyv89fHI",
+          "port": "13DeoZHv97sRrQ_tIjk96V"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "2DqkDvsYLA$Q1hqdSRKPYg",
+        "from": {
+          "node": "2hsAuy53T3heFKm9cwlTdI",
+          "port": "3vIUzl7AD7_9UWjTkglucb"
+        },
+        "to": {
+          "node": "385uY5yivF78eSXnxCNMt4",
+          "port": "0pfX03J8P8pwbyTGroe_k7"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "1PMVDmvC9A39BHb2MnEPgh",
+        "from": {
+          "node": "2GM8M2uIDCIgBmG4G8uK0G",
+          "port": "06rlf2dgL6A8WVeebwSkan"
+        },
+        "to": {
+          "node": "1XDtRsB8L70A_Oq$hQc5VQ",
+          "port": "1qoRKAN6vE8B58r0qHM1yL"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "0SvzxRYFDEQv5Z6jJ9KNjH",
+        "from": {
+          "node": "0xMfkOSbzCeOb2B2pBfk1j",
+          "port": "1I977iyJr58h0AnzkQ1$_3"
+        },
+        "to": {
+          "node": "0y3pEj4PP5dw4L3qp3uhPS",
+          "port": "097j4cFuLFUwx5syEjtnRH"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "2J3G8d1nX1SxcwfnsgiWx1",
+        "from": {
+          "node": "0gUD1ke0v2celQp0c3LnxY",
+          "port": "0xp2cwlND2PRbBUGv8SCkD"
+        },
+        "to": {
+          "node": "0adoewy298JxSRrZvWMHXX",
+          "port": "03TZ8EhuP2UOG1I35A$n5C"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "2cu8vMolD2cgdzGI7$VQDo",
+        "from": {
+          "node": "35NKdHkwDDIukcdqd$YxMB",
+          "port": "2syK2uapn1ERKvRciyjk3r"
+        },
+        "to": {
+          "node": "2xMPmQpUfEHu8$fviV5bys",
+          "port": "3qtxKwejPBWf$8KpZBs42i"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "0kd2JGgvv1DgdtwHu3MLqp",
+        "from": {
+          "node": "2E$cgFrwTE1x33ewcrgtPw",
+          "port": "1KU_xDY3bAIfVCoD7lygnN"
+        },
+        "to": {
+          "node": "31njErQQn0JgAOb3GkAqw9",
+          "port": "1kZW_22THEouIEZ_RdOmTs"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "3C6K$0WR9Eq9vQGdE_dy9W",
+        "from": {
+          "node": "0IEifuk9T5eR2vbWao4vJp",
+          "port": "11m7DbgBn1uwk7in4YKRty"
+        },
+        "to": {
+          "node": "1KvoONIAj5Lu8YwMwub6ba",
+          "port": "3UjK$9Hef9B8d9ejQVEWs7"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "2rTKscxLnA4QKsjsAfev4v",
+        "from": {
+          "node": "10oJDBNhD5uvT1yRtDdA2k",
+          "port": "1KYwh0cMH4lhFJ9RvYQOS1"
+        },
+        "to": {
+          "node": "0YHDgGC1f46AT56oeHq5UZ",
+          "port": "324pfjfBH7EfY2ymYzEsvn"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "1LBJamCIT7SxMbggQWgt$2",
+        "from": {
+          "node": "1v5reG1czD3ADqOI3X_4bk",
+          "port": "15Oy2gEY93FBMam9mROcT7"
+        },
+        "to": {
+          "node": "29MyCpMFv0NOr$yWrplCov",
+          "port": "3BwFPJcHb2OfWnNg9xz_F2"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "2M$u3AKMLCQPhUm6M6_34F",
+        "from": {
+          "node": "2hsAuy53T3heFKm9cwlTdI",
+          "port": "34OeLVZYz5sh3lNcl$dc7v"
+        },
+        "to": {
+          "node": "1qAKGWm1D42gdRPOVUMpwd",
+          "port": "2EyYhZ4Wr1JARrJyFShI9T"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "17ydMSzj1DZRaJBwxBJB9Q",
+        "from": {
+          "node": "2GM8M2uIDCIgBmG4G8uK0G",
+          "port": "325U4LpEXFju8a5ZG$UiaJ"
+        },
+        "to": {
+          "node": "0YLde2JRf1Ufl0zBh3Gxv5",
+          "port": "3wflzTdxDBOA5pkBwJTzkm"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "3U8xZ90lj2WfzbIocZJyJt",
+        "from": {
+          "node": "0xMfkOSbzCeOb2B2pBfk1j",
+          "port": "3LJNShhMr1Dw7G1cZRywFv"
+        },
+        "to": {
+          "node": "1N66yEFjLERPIQ0ccfg6C4",
+          "port": "3vt7z0Xuj2ThAup6Ol1_GW"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "2b4CReJTbEAPc96FWZm4ii",
+        "from": {
+          "node": "0gUD1ke0v2celQp0c3LnxY",
+          "port": "2qUr65cwPCeAuhuJhYSDGH"
+        },
+        "to": {
+          "node": "3ZMlBEKEL4aB9E20nEZCOf",
+          "port": "1Xy925h916rerhenCwbRfx"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "12UNXv5CH9oBRcEqNcElcO",
+        "from": {
+          "node": "35NKdHkwDDIukcdqd$YxMB",
+          "port": "0Ki96kXvv17v7Y9I9AGmuo"
+        },
+        "to": {
+          "node": "0YN8TMKu51kRkdh9P2Fd53",
+          "port": "1qAcILwjn0P82JzlCCj6SN"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "2IYJYuCYPBHBPSrQXNWNI5",
+        "from": {
+          "node": "2E$cgFrwTE1x33ewcrgtPw",
+          "port": "2Nmlst84zE6PS3w7FnUonL"
+        },
+        "to": {
+          "node": "2XVFtQFxL82xj7dWuPPs3W",
+          "port": "0UixhZf8f2khUUd5Mk34DX"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "2TdgkXhBr2YwZxVD1_qQbA",
+        "from": {
+          "node": "0IEifuk9T5eR2vbWao4vJp",
+          "port": "2ootmmuCnA5PgLhDLherlZ"
+        },
+        "to": {
+          "node": "23eqCzHDPDCQS2wUy0OVDk",
+          "port": "3mLSCbm0f2x8VLW076TANT"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "32DcGanQf1dBIEBURxVCM0",
+        "from": {
+          "node": "10oJDBNhD5uvT1yRtDdA2k",
+          "port": "3YrSxlao51nx9HxS17HeCl"
+        },
+        "to": {
+          "node": "0UwGgLSnz1bRl2qtxdTSo8",
+          "port": "1fLkucWVf668NZjxOUqc4_"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "2j_74A13L0WRwmEINFldfD",
+        "from": {
+          "node": "1v5reG1czD3ADqOI3X_4bk",
+          "port": "0oXbonD$j6EuY$7dbePU1Y"
+        },
+        "to": {
+          "node": "237iCVJGb4seGRqEar$uVL",
+          "port": "1__xxHIEr0yBU_Skrw4CaP"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "3AbapDibTCPP2KgMZJdC7R",
+        "from": {
+          "node": "2hsAuy53T3heFKm9cwlTdI",
+          "port": "1JNkNonIfFhxujC_3uExdE"
+        },
+        "to": {
+          "node": "1ka37OW39CnurIIP3Iuqoh",
+          "port": "15YW3Oz1rAN9Z49Rmds2dW"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "0zBxHZuf5AVwD6dfrnqcyN",
+        "from": {
+          "node": "2GM8M2uIDCIgBmG4G8uK0G",
+          "port": "3HSPGycwfDk8Yutxn07M3F"
+        },
+        "to": {
+          "node": "2xKP3R1V9FzfytLRLRhCsy",
+          "port": "1pbUhv6cz5df4zFjpKth5q"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "0ung447SHBlxUZ61BbnKDF",
+        "from": {
+          "node": "0xMfkOSbzCeOb2B2pBfk1j",
+          "port": "3Fpa7_DvT27f2AdxueRv$U"
+        },
+        "to": {
+          "node": "2hPdUxHxT2vOIObXMNQLnw",
+          "port": "2ZW2jduBz3Ouifh2_aBADJ"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "2NYORz5ZT33uH6NYKRLlQd",
+        "from": {
+          "node": "0gUD1ke0v2celQp0c3LnxY",
+          "port": "1ShERfJVr5YOgLdvaxzLhX"
+        },
+        "to": {
+          "node": "3y1hZhcq97GA3KrpHeV5zc",
+          "port": "1FuYXxX$nFU8hc1Zuq0$WN"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "1pSRdjXJfApu3a3hS$o6M3",
+        "from": {
+          "node": "35NKdHkwDDIukcdqd$YxMB",
+          "port": "1kyv_7$Qb5YRZ3$3nvaB7p"
+        },
+        "to": {
+          "node": "2Lfz6tQIPF0xeIeu$4pI3k",
+          "port": "0hldZV8qD4gAUTtc0NW1N2"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "0Ot_vGdkH1pvLurFkHEoVw",
+        "from": {
+          "node": "2E$cgFrwTE1x33ewcrgtPw",
+          "port": "1S8QDheJz8ygI2uCazqrc7"
+        },
+        "to": {
+          "node": "21tOGMFbT3bBEcfIbFMFak",
+          "port": "0wLGbItlv7EQIGruV1YSlV"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "1LcOFbq1PAXfVDZBI9OhXh",
+        "from": {
+          "node": "0oleUjGMj96BktDYGBWxOc",
+          "port": "01FNGAWPj4b84chp4JUbY7"
+        },
+        "to": {
+          "node": "0$QBavoL9CTfu0iNINWk4c",
+          "port": "0bKXsVVvH58wUN_S8wl9ES"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "2ZSm0IlcP9dv3JkOw9dpj3",
+        "from": {
+          "node": "0$QBavoL9CTfu0iNINWk4c",
+          "port": "12kzZErBnAQRjnL6OW7RRS"
+        },
+        "to": {
+          "node": "0y$u6dhs192wqSG36ZVTVh",
+          "port": "2Wi5a90QP6cOnlVCPgdP07"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "2CwHdFjzX1NBbEwrq0RT8z",
+        "from": {
+          "node": "0y$u6dhs192wqSG36ZVTVh",
+          "port": "3iDROXJNr2CvfwzbpPx9Bq"
+        },
+        "to": {
+          "node": "0zlarfHTf6JgqTiuat05ry",
+          "port": "0KCBqVnXfDc8$lim13s2tD"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "2G3NydqJn8QuHP8JrtrnG2",
+        "from": {
+          "node": "0zlarfHTf6JgqTiuat05ry",
+          "port": "1Me7MFktPC5hawci0FJx__"
+        },
+        "to": {
+          "node": "1Do6919bf60gEJnDZO6WOq",
+          "port": "0zgMjbiP9AuPggIeomG5PD"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "1PM6vt8az03uXaeXxugzFT",
+        "from": {
+          "node": "1Do6919bf60gEJnDZO6WOq",
+          "port": "2yOufkkI979PaOiwlv3tUd"
+        },
+        "to": {
+          "node": "3OZR8vhh59URj9bh0qj0qI",
+          "port": "1vr7nyyl9Dmu$pmDfvv_zM"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "2n6w3J3TzAWB7lZJg4GIrC",
+        "from": {
+          "node": "3OZR8vhh59URj9bh0qj0qI",
+          "port": "1L5MfNrlP0YQh9e1RZzean"
+        },
+        "to": {
+          "node": "2z$2H$l$b73u8Kgilhwn0G",
+          "port": "15W2NmyS90dQ2$S_$5edzD"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "0amNaG2vfCJOjb8egXeYF4",
+        "from": {
+          "node": "2z$2H$l$b73u8Kgilhwn0G",
+          "port": "0ukilvP$LFJug8ZsnV4Vh2"
+        },
+        "to": {
+          "node": "3uEjUXKYr7MPGrEccIwTPK",
+          "port": "3qwS50hYj1Mw9$jn7NZPHf"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "3J3oT0KTT4D8SJ1qGfhLIc",
+        "from": {
+          "node": "3uEjUXKYr7MPGrEccIwTPK",
+          "port": "0dQ7yR8hj7cxw6VsKz$rmF"
+        },
+        "to": {
+          "node": "3GypX53YT2GQcH05bpaCOu",
+          "port": "2ihCfDyif1BRhwCLms7fN0"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "3Hnhw3pbn21u2ltjQdMb5n",
+        "from": {
+          "node": "3GypX53YT2GQcH05bpaCOu",
+          "port": "0QjbS2KHX7J9iK$YKDj$bi"
+        },
+        "to": {
+          "node": "0z5dWkGd1D_w6QNBksR4yP",
+          "port": "0FXPIwCq91CR70MP89owBV"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "0S0mc60$jDEfI5ocu9SZXr",
+        "from": {
+          "node": "0z5dWkGd1D_w6QNBksR4yP",
+          "port": "2AUVztOx5FPfxtSL9tVzN6"
+        },
+        "to": {
+          "node": "13UoATKi15KOmLWbVPhHMp",
+          "port": "02bdXhVwvAi9rO70Jf9mif"
+        },
+        "kind": "The top system center of the elevator."
+      },
+      {
+        "id": "0cwPERhrr3YPWAYbli4IsT",
+        "from": {
+          "node": "0oleUjGMj96BktDYGBWxOc",
+          "port": "0JTsoz6RvCrB6C$ON3fjyk"
+        },
+        "to": {
+          "node": "047Z48$JT2PepIzwFm1Iui",
+          "port": "3KCKAbNc16CQHh0Yr7y5vu"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "07IXKo0OzFWhG1INxjllmL",
+        "from": {
+          "node": "0$QBavoL9CTfu0iNINWk4c",
+          "port": "0$JdefeAHA0wgG5jnuQEJr"
+        },
+        "to": {
+          "node": "0JCL_S_7PFuuL7MySbcqCw",
+          "port": "3q0xWDLqj4OvsrJv7JocWA"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "1DvfTY_59FkQYhIJCgHWjJ",
+        "from": {
+          "node": "0y$u6dhs192wqSG36ZVTVh",
+          "port": "1j2Jq3TD17iwMT11J7kq6R"
+        },
+        "to": {
+          "node": "3YKQ7WYyfD$wjtZpFQfh_M",
+          "port": "336KIb2j9EbPuXpKR80Fin"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "2Xr3KLuUH0TBiClUdebc6B",
+        "from": {
+          "node": "0zlarfHTf6JgqTiuat05ry",
+          "port": "0SIR$olo1C1Pur7vh5jN6o"
+        },
+        "to": {
+          "node": "37ViOrnYHFqBJNimPhEbvo",
+          "port": "0vUaKqRg93we_5rC6SMUJS"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "2g4ZqlxV54uAdsGcBFWw4f",
+        "from": {
+          "node": "1Do6919bf60gEJnDZO6WOq",
+          "port": "2adX8ZQwLDKvOV0QbQIHYS"
+        },
+        "to": {
+          "node": "0XSGUzK3j59O65VrkKSKOq",
+          "port": "05CjM9wy59HPbZSdwZUpPx"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "0SNddUrcv7zw1x5Bwk1Ov9",
+        "from": {
+          "node": "3OZR8vhh59URj9bh0qj0qI",
+          "port": "2$yxaYIaT9P8NZxXLnXYGT"
+        },
+        "to": {
+          "node": "3ePWRURz1FlPPHoX2etfO9",
+          "port": "18cwoim1r9Bg2JGqBvSgR4"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "1I6U3ZSEDA3R3sbv_K8cOC",
+        "from": {
+          "node": "2z$2H$l$b73u8Kgilhwn0G",
+          "port": "3tZWo_9Sb5u8C7oXXIvgLI"
+        },
+        "to": {
+          "node": "2EYrFoVA5AiPFqjZ_HTKz0",
+          "port": "1v1kjOw8P0c8RKRkq7enPC"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "1O0u515kTAs8DjWkYdD3Ci",
+        "from": {
+          "node": "3uEjUXKYr7MPGrEccIwTPK",
+          "port": "0OhJawwOHC5uBeonUN8rYX"
+        },
+        "to": {
+          "node": "0oy_nkKZv9287waswEVQh4",
+          "port": "2ty56bkk15ghsZ5IgqQyL1"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "1i2wMdDcX8A8wSqxjTb9fJ",
+        "from": {
+          "node": "3GypX53YT2GQcH05bpaCOu",
+          "port": "1YUUlN3Cr7JQL0FJcMRlcd"
+        },
+        "to": {
+          "node": "3fUGmLsLbAGAdEpgn10Wbf",
+          "port": "2CXgGfMgTCUegJ8r5v7DGn"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "324ZHYlL16uP$qGtsSUmS_",
+        "from": {
+          "node": "0z5dWkGd1D_w6QNBksR4yP",
+          "port": "1m9n9PyoLDGRMedpgdMJKH"
+        },
+        "to": {
+          "node": "382UUlt$D9xvGQngydVIel",
+          "port": "3G_WWI6x11IOwyBHLBiUX9"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "2OBBC9ehv1VwoH0ORH5Roe",
+        "from": {
+          "node": "13UoATKi15KOmLWbVPhHMp",
+          "port": "2MhJuRLhfDUgBRuir9s605"
+        },
+        "to": {
+          "node": "3jMQRmXdn3Kxbe9tqPNyoc",
+          "port": "0N7lcWWtz2AeL4H$GHItfs"
+        },
+        "kind": "The first door of the side plattform in the east facade."
+      },
+      {
+        "id": "3wnLD$XpTCmQHYwHcPKrOm",
+        "from": {
+          "node": "0oleUjGMj96BktDYGBWxOc",
+          "port": "0BSc1l2xr4heg1bG6c5olY"
+        },
+        "to": {
+          "node": "3W5mSW6fH0ORPRkOrXo$od",
+          "port": "0xcnePf5H6s9Sz5JZjIm3d"
+        },
+        "kind": "The second door of the side plattform in the north facade."
+      },
+      {
+        "id": "2LMI9_bz99PRn84421g1cF",
+        "from": {
+          "node": "0$QBavoL9CTfu0iNINWk4c",
+          "port": "0jO_GdWV1EehE4Q3SSv0EX"
+        },
+        "to": {
+          "node": "2z91sMb3r1sfNwOvCqwuFD",
+          "port": "3NrZ2wap1AAQndHWCKaBjX"
+        },
+        "kind": "The second door of the side plattform in the north facade."
+      },
+      {
+        "id": "0m7zsIr1f9YAS0zmit_$cg",
+        "from": {
+          "node": "0zlarfHTf6JgqTiuat05ry",
+          "port": "0GfBJr02XEQ9jzP3YWfOV_"
+        },
+        "to": {
+          "node": "2iVZR80ZX4BBEBJAFvh5BJ",
+          "port": "2XlHw6ltnAkRMSdsIBsCbW"
+        },
+        "kind": "The second door of the side plattform in the north facade."
+      },
+      {
+        "id": "042Su1kiHAfuHQd0VZmg3f",
+        "from": {
+          "node": "1Do6919bf60gEJnDZO6WOq",
+          "port": "1907Xp4ofDOh7P_JH7yQ$L"
+        },
+        "to": {
+          "node": "0WJq2i5uPDMf7IVnUwV5AO",
+          "port": "08ZrPT$_jEB9p5KHcZlSxm"
+        },
+        "kind": "The second door of the side plattform in the north facade."
+      },
+      {
+        "id": "0XYzqtJKfAPvDLkkC4vSbg",
+        "from": {
+          "node": "2z$2H$l$b73u8Kgilhwn0G",
+          "port": "3yMVZbwdvBfQLQQdWb9fr5"
+        },
+        "to": {
+          "node": "3qi_rsGSnCWxJIqEcsWh8k",
+          "port": "2cM1uxxwPB4eYtPSMTRUUM"
+        },
+        "kind": "The second door of the side plattform in the north facade."
+      },
+      {
+        "id": "2wSPwbwQb70uipuV4NYuJr",
+        "from": {
+          "node": "3uEjUXKYr7MPGrEccIwTPK",
+          "port": "0xlhcbnnLFnQ4yGVD5pR9n"
+        },
+        "to": {
+          "node": "0kpcwJND58of7yE4e2x9$g",
+          "port": "2wk$ua5eb0kvLh_QHMB__B"
+        },
+        "kind": "The second door of the side plattform in the north facade."
+      },
+      {
+        "id": "0bE9Ge3cz0lRMT0giD_G26",
+        "from": {
+          "node": "0z5dWkGd1D_w6QNBksR4yP",
+          "port": "2E$I5IG3z7yBGaNFTRO3Sg"
+        },
+        "to": {
+          "node": "0VY10ZAJD9GwWSmBlsxgVJ",
+          "port": "1q4K$7K4X2iu6iURHGjFvL"
+        },
+        "kind": "The second door of the side plattform in the north facade."
+      },
+      {
+        "id": "3YQFzNQOHDFueYBGj9JGGC",
+        "from": {
+          "node": "13UoATKi15KOmLWbVPhHMp",
+          "port": "0FB8_fvfP6lO3cV8T0JQBa"
+        },
+        "to": {
+          "node": "0zgbFyRQX4Mv7_7DBJhVXX",
+          "port": "07jtwaVpj5iBbOL7UQ3O53"
+        },
+        "kind": "The second door of the side plattform in the north facade."
+      },
+      {
+        "id": "2RKv6jYMT0vR8Fl7mHptWu",
+        "from": {
+          "node": "0oleUjGMj96BktDYGBWxOc",
+          "port": "3PIsuGOK5CNQ5xd5mtqvC7"
+        },
+        "to": {
+          "node": "3Aua7mZt9Ck8fWkzcwBdZx",
+          "port": "2V_YLU19n72h1LYCx_tFeN"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      },
+      {
+        "id": "0t8Czi$lbFDgNnuRys$PzC",
+        "from": {
+          "node": "0$QBavoL9CTfu0iNINWk4c",
+          "port": "0Jg0vvwff38vzqvdCx8z9S"
+        },
+        "to": {
+          "node": "31eeXHW_D15O30ZYt9avX$",
+          "port": "3SWEsBvQ59cR84kcEwf$ik"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      },
+      {
+        "id": "11ogQuGNb7YwUxs2kG0vKh",
+        "from": {
+          "node": "0y$u6dhs192wqSG36ZVTVh",
+          "port": "2YHJG4fBDARAErJRDqEGVM"
+        },
+        "to": {
+          "node": "1C9RJAr2rEJASPNSFngUOQ",
+          "port": "3eloYFhLnB1BoKrKYcPjK5"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      },
+      {
+        "id": "1k9CTOeG921wv91kobsCcd",
+        "from": {
+          "node": "0zlarfHTf6JgqTiuat05ry",
+          "port": "0nA4xBBvDFIx$9V3dgQixz"
+        },
+        "to": {
+          "node": "1gtMuvMDHBuBvrQYU64nBL",
+          "port": "30sHzdUTz1tO6JYyCQsQVg"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      },
+      {
+        "id": "3hASejoKPDIvLz1zJPSd4G",
+        "from": {
+          "node": "1Do6919bf60gEJnDZO6WOq",
+          "port": "2BtjBoibP4g9agXuaPSJyx"
+        },
+        "to": {
+          "node": "2aqYYRCzH7CxJANRUtohG_",
+          "port": "364fvvJ75EXhh0FL3HGHCf"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      },
+      {
+        "id": "1ccNuEWVz3S9ixd0Vw6CKp",
+        "from": {
+          "node": "3OZR8vhh59URj9bh0qj0qI",
+          "port": "0yc87Aiaf54OkWudVMkyPg"
+        },
+        "to": {
+          "node": "0Vndsslkj0rQk4lK8dUmtU",
+          "port": "1RNgDAoybC0wWHqbEFA3iI"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      },
+      {
+        "id": "0jQbktMMf3PRnfhkigZjdQ",
+        "from": {
+          "node": "2z$2H$l$b73u8Kgilhwn0G",
+          "port": "35HOP2l8f9QxJdpled$0M4"
+        },
+        "to": {
+          "node": "3uZHBQ0Dr9Vu6EgIrM$unu",
+          "port": "0dcCsH9jr5H9TfxCNOf2DS"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      },
+      {
+        "id": "3Sw7w8HBjBEvbqkRt34MBp",
+        "from": {
+          "node": "3uEjUXKYr7MPGrEccIwTPK",
+          "port": "2qi2Ma5nP6COXlMm9uuiWl"
+        },
+        "to": {
+          "node": "3DYQhxuUz9ZOaMkBdnLfBF",
+          "port": "135T1uLov9FRbZbjkc4VIH"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      },
+      {
+        "id": "0ROKw4lYfDYgPhKaQ4hFNi",
+        "from": {
+          "node": "3GypX53YT2GQcH05bpaCOu",
+          "port": "3GbAOyajvFUBFDcYdfANk8"
+        },
+        "to": {
+          "node": "0KpCuLgpb2XhTGsPxmEQWO",
+          "port": "3jolZfL556Bu0oQloekxka"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      },
+      {
+        "id": "3z83ofrzH9UAyzQNuxtHgp",
+        "from": {
+          "node": "0z5dWkGd1D_w6QNBksR4yP",
+          "port": "0veq$0BaPAagfMMNeBPtJy"
+        },
+        "to": {
+          "node": "2086RtQKf1AQWMV5JdAZs_",
+          "port": "1voHlC2A594AOZb7LPQUcy"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      },
+      {
+        "id": "0TnUB4jZr1LfxZd3dw1ti8",
+        "from": {
+          "node": "13UoATKi15KOmLWbVPhHMp",
+          "port": "3WlAHhiRv6XvVJNymZPfRj"
+        },
+        "to": {
+          "node": "1Z3sf8u5TFeBFBK$9J9T23",
+          "port": "1NlFa8AHXBWvpRNIYvmWAR"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      },
+      {
+        "id": "2Z94axeBb49QD43sCuSsB3",
+        "from": {
+          "node": "0oleUjGMj96BktDYGBWxOc",
+          "port": "1fS4_$AdH4A82w4cTpASK1"
+        },
+        "to": {
+          "node": "2u7qbdTxr30xhgRqCnvXwS",
+          "port": "3oKoP3vSfFpe6dfkb8kpnF"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "1gCDDZxdr2S8$vEG_hW9ZM",
+        "from": {
+          "node": "0$QBavoL9CTfu0iNINWk4c",
+          "port": "1yHPTKE3v2HgUn0sNnAdsd"
+        },
+        "to": {
+          "node": "1DXAdPUiHFs8oGCVMJDUO8",
+          "port": "0r4iyJLc1Bwgw7lWx_y6HB"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "0XL4aDErv80Qbg4p0WCKRV",
+        "from": {
+          "node": "0y$u6dhs192wqSG36ZVTVh",
+          "port": "0hkC$xM3jF4wMM14knh_bK"
+        },
+        "to": {
+          "node": "0r0QeLpdv8Zu$PtqujSAh$",
+          "port": "3xMKJenun1iPBGEeQ_Wejg"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "0kifwRL_5ACQrEg7XS6Fxa",
+        "from": {
+          "node": "0zlarfHTf6JgqTiuat05ry",
+          "port": "1XcQqe4$D4DfAp5QWS_TdZ"
+        },
+        "to": {
+          "node": "1L74suGcX4L9n0NuaCMPAw",
+          "port": "2uMP1sWQv54gaI7jf3vLBo"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "3nqYEmhWP6Zg_wb9qN1iLS",
+        "from": {
+          "node": "1Do6919bf60gEJnDZO6WOq",
+          "port": "0hRIZ6kW54n9xlC2coxyHE"
+        },
+        "to": {
+          "node": "1t_7IfwUj7SgrkYqineD3O",
+          "port": "2Pkv7MS4LAThRKBRiR5EDS"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "3Jfl8zwxXD2hlwHFb9XVN4",
+        "from": {
+          "node": "3OZR8vhh59URj9bh0qj0qI",
+          "port": "3WCih$KNL3XPCkcWzpzVei"
+        },
+        "to": {
+          "node": "0oGdkMsKL0KulO1mPGARHo",
+          "port": "3e_QY2G9P7gAbs5Ki5sqKX"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "0SyfGqsAr8CPrZ6dhvYoXD",
+        "from": {
+          "node": "2z$2H$l$b73u8Kgilhwn0G",
+          "port": "0ere4aNtrBuweyxn248CQI"
+        },
+        "to": {
+          "node": "3EeNXjkkf4UuS8lGBQQFlQ",
+          "port": "2cBTpo1591mAISuVTLYZLz"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "1t9wZEWLj3_ugT8BkLEjNU",
+        "from": {
+          "node": "3uEjUXKYr7MPGrEccIwTPK",
+          "port": "03pMtJVNf1Nw9uzquhrnca"
+        },
+        "to": {
+          "node": "0D8zNBSu964PPae9XRd8EA",
+          "port": "1w$j6d7nP3Y8mCcII1Fbck"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "39EQcT4IHF$PBD0rcMvFtc",
+        "from": {
+          "node": "3GypX53YT2GQcH05bpaCOu",
+          "port": "3OPAAKfrnBrfCKmGqja3WW"
+        },
+        "to": {
+          "node": "05t1Eg4Ez5ue8DvUtnrIm0",
+          "port": "3kTynkq0r9sAwVxR5J8kNG"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "1qnefRwdX9YvJP3kG_mrQc",
+        "from": {
+          "node": "0z5dWkGd1D_w6QNBksR4yP",
+          "port": "1_wlAuKt59ZQVAhVNjiVFm"
+        },
+        "to": {
+          "node": "0CRBcxZ8H73xBox0FjOJ0z",
+          "port": "0bb21WVmn5$gfP_9ORZs7B"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "0LaNSaL_1DCxAoKA$Ieb3H",
+        "from": {
+          "node": "13UoATKi15KOmLWbVPhHMp",
+          "port": "328THSLUj75BfbLZtg5_Fb"
+        },
+        "to": {
+          "node": "2fKbuNCZr7$vNduHbcyJHu",
+          "port": "0egeE9RhT5QOnsjVpY6hR5"
+        },
+        "kind": "The fourth door of the side plattform in the west facade."
+      },
+      {
+        "id": "1xpA16D7D6J8cIvlwkgtda",
+        "from": {
+          "node": "0oleUjGMj96BktDYGBWxOc",
+          "port": "38zblunY9149QCkaNzYSq_"
+        },
+        "to": {
+          "node": "38V_vw52fDTQbTJg_wnKKI",
+          "port": "04QFEUpcb2MetsYzVr641p"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "2k6Mq$BxP6IQ4$HHPJyWiH",
+        "from": {
+          "node": "0$QBavoL9CTfu0iNINWk4c",
+          "port": "0q41VWYs90wfyGzJTKQByj"
+        },
+        "to": {
+          "node": "3WUom3en5CI8WNhC_bkoZa",
+          "port": "3aLMEY0ur9YOj6KKbFlgJn"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "3xkdaMilX6OgVpucyREcrJ",
+        "from": {
+          "node": "0y$u6dhs192wqSG36ZVTVh",
+          "port": "2ylRKrOhbB8ALvI7_MsGro"
+        },
+        "to": {
+          "node": "1eUcmUiQT1gefcxX24v2yG",
+          "port": "1JzNGASAD0TO5I5pIRlZlS"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "3NDmVeQ9bAnAB8xqWtRBgq",
+        "from": {
+          "node": "0zlarfHTf6JgqTiuat05ry",
+          "port": "2WZd_gIH52nemSKhbvvW66"
+        },
+        "to": {
+          "node": "14sULZgh5FPf9WfSoLaed7",
+          "port": "2OAD0h7yP4L8phk5b2pBtZ"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "0bEfj0_FnAsfcUQktA8zpK",
+        "from": {
+          "node": "1Do6919bf60gEJnDZO6WOq",
+          "port": "3Z2I$ap$zA2vGOQ4lafhBH"
+        },
+        "to": {
+          "node": "1lwEjh5N5C3gyN60_opgMC",
+          "port": "2QeAcPvpH7CenhNU9s2thz"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "3jjzHGttn1qxfNuWOWmz$5",
+        "from": {
+          "node": "3OZR8vhh59URj9bh0qj0qI",
+          "port": "1VF$gYxZjBGxyp_xesZuEX"
+        },
+        "to": {
+          "node": "2$CYjIv8r6RAodnafLCgpg",
+          "port": "1znD$alnz9NwkCpbIyT_s9"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "0V5jOER5r7UxojwaKoTtYw",
+        "from": {
+          "node": "2z$2H$l$b73u8Kgilhwn0G",
+          "port": "2L0RiRbjz36ukITh9NVguT"
+        },
+        "to": {
+          "node": "1uNY7Kl5P7pxg3rPs3sPTC",
+          "port": "04bSSSdU92PfRsDWSyjNuC"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "3PWqeJrfL2FBwG7an6LqT7",
+        "from": {
+          "node": "3uEjUXKYr7MPGrEccIwTPK",
+          "port": "2WgAxgo0P4_8lNFPX3eGiW"
+        },
+        "to": {
+          "node": "1CKq37SDXDIQBmzttas2uU",
+          "port": "36XjpPPR11OhVjEq7Wxe5c"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "06p2StsGP8wOjYyWzhT9aO",
+        "from": {
+          "node": "3GypX53YT2GQcH05bpaCOu",
+          "port": "0ANU799hr7ZO49MHDZyz82"
+        },
+        "to": {
+          "node": "2Zn1irLtbE2vcmhTxMdXC2",
+          "port": "04nA_tUFP9FRuRV3ZxfKl_"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "1tb3ntOwnE3wCpmppFHhw2",
+        "from": {
+          "node": "0z5dWkGd1D_w6QNBksR4yP",
+          "port": "2fo1e1qX97YuQ0bplNOvQN"
+        },
+        "to": {
+          "node": "0A3Cpk81L4_OO1uoLgzSfp",
+          "port": "12fQJ$RcHCNhP0gAFnAv9u"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "2bWbDmvsHFqAiSyyDJ8Aok",
+        "from": {
+          "node": "13UoATKi15KOmLWbVPhHMp",
+          "port": "0B8Fmq1m19D83jd1IAo_Hb"
+        },
+        "to": {
+          "node": "0jR9KrkU5DEeD$BlOqGGLd",
+          "port": "1DQaXdufLAvAv$X3K2VJBf"
+        },
+        "kind": "The first door of the main plattform in the west facade."
+      },
+      {
+        "id": "3AfluHVa14jw5pyjiU5WhI",
+        "from": {
+          "node": "0oleUjGMj96BktDYGBWxOc",
+          "port": "09ZZxSNqDABA6hLkFoDt$N"
+        },
+        "to": {
+          "node": "220uqFjPPFWQFiKDpqrFYs",
+          "port": "0drbM3h6T8aRy6R6ioGBHd"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "0fmUlVcVb5K9pr_FnnWemy",
+        "from": {
+          "node": "0$QBavoL9CTfu0iNINWk4c",
+          "port": "1b7OtSzlHAG9Fk9m8a7TDH"
+        },
+        "to": {
+          "node": "0GtLcCxGT9Q9SUG3xEoBC5",
+          "port": "2ssWFbO2rBd8knq33pj5FG"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "1t9ComBRb0zQ1_sNVJoOy2",
+        "from": {
+          "node": "0y$u6dhs192wqSG36ZVTVh",
+          "port": "3tihfRMo94bQZx57968x3C"
+        },
+        "to": {
+          "node": "2aoC8$er15wuToC$vNe$1a",
+          "port": "1xcZzuJH996wkZ706S9pfT"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "0tpl4WDOXAtuj1fhzQgszI",
+        "from": {
+          "node": "0zlarfHTf6JgqTiuat05ry",
+          "port": "2F5s53hYr738N8soMQCfiX"
+        },
+        "to": {
+          "node": "1NWUsrgcD31uzERuhw6s6u",
+          "port": "2wzsiX$kfBFg9zSjjJmFv2"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "3vxVnvmNz5wRL5iJJiPKbw",
+        "from": {
+          "node": "1Do6919bf60gEJnDZO6WOq",
+          "port": "0imAVYnlz2F9os$asiBh9c"
+        },
+        "to": {
+          "node": "04qC5dmMD2HeoyZt$0Tmi9",
+          "port": "2CIyk5rHP49R7n9LKp$2un"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "2jPEOlFYf1A8$FtVnoFAsD",
+        "from": {
+          "node": "3OZR8vhh59URj9bh0qj0qI",
+          "port": "0Xt5J7_qf0OQKG5kGN0fMH"
+        },
+        "to": {
+          "node": "20DajSBBv5OOwhlj12tbOg",
+          "port": "0bPd57uR5CwOeUv9H5twZL"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "2TT23SG$nFe9VSYfE0VBZS",
+        "from": {
+          "node": "2z$2H$l$b73u8Kgilhwn0G",
+          "port": "1uXoWRezXA2g6nhw4SbrLO"
+        },
+        "to": {
+          "node": "2W2gNQtEfEAfimPq32DX$x",
+          "port": "1s9SLpmavFgeiKdL3Ude0H"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "29TcT2IXv7BRRUfRaDLmIM",
+        "from": {
+          "node": "3uEjUXKYr7MPGrEccIwTPK",
+          "port": "37tF7HHQHACRBuLetUZoRi"
+        },
+        "to": {
+          "node": "1MWJvppQD14O1qlt3kqGzH",
+          "port": "0ko4Na3evCXuDkI9ZGkfL1"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "0YivvAi$P3$PdRIB8KUvIb",
+        "from": {
+          "node": "3GypX53YT2GQcH05bpaCOu",
+          "port": "0rag19et15KfRQ7MV$47TP"
+        },
+        "to": {
+          "node": "0lAX9Xw6bDMACwo21amKTX",
+          "port": "0HbmihLxH0t9N4u5CGI1rq"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "0TwMwv1Oz87ew0NORPkYqh",
+        "from": {
+          "node": "0z5dWkGd1D_w6QNBksR4yP",
+          "port": "14ggOL1sn5bvc00MRYU6jV"
+        },
+        "to": {
+          "node": "0asZCqJQTDLwxMqRX3$$$m",
+          "port": "05SPrJ3FTEeB$jZWUAjBpy"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "1DCDkyY3nF2OtHX8RknWcN",
+        "from": {
+          "node": "13UoATKi15KOmLWbVPhHMp",
+          "port": "3p6zkbE01CLB9r$mpKd$bW"
+        },
+        "to": {
+          "node": "3rHFgb_MT81vU82annzRNW",
+          "port": "3syMFoe9LDdupM8_YC3Cuq"
+        },
+        "kind": "The second door of the main plattform in the south facade."
+      },
+      {
+        "id": "2knHFSHQj95wwL9laKn9Ak",
+        "from": {
+          "node": "0oleUjGMj96BktDYGBWxOc",
+          "port": "1dKyvAqsn5LQXY_MW_fmIR"
+        },
+        "to": {
+          "node": "0PGWxX$d9Af8_WaBY1eJK_",
+          "port": "2T9sUhhTH8RQfgccOBAxeW"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "0y3BMqkIf1E961ADOLH9Ja",
+        "from": {
+          "node": "0$QBavoL9CTfu0iNINWk4c",
+          "port": "3ronxTd59FGOVjPkRknJ1e"
+        },
+        "to": {
+          "node": "25ld8suFHCQwV6xM95csgK",
+          "port": "0dv3DBvez4k8fxuKKBwjGQ"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "29091wOLb6i9aryy63LlP2",
+        "from": {
+          "node": "0y$u6dhs192wqSG36ZVTVh",
+          "port": "3aWnfdknn0SO1q5NnN3kRn"
+        },
+        "to": {
+          "node": "3gdDlIPpLFxgrpXEWxa30A",
+          "port": "37HnusQcb1rBQ0dEPkD_pD"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "2lyDkmOfP2WudOkFoXKVGW",
+        "from": {
+          "node": "0zlarfHTf6JgqTiuat05ry",
+          "port": "3ZhufNeOz3Fg3luETIJIWv"
+        },
+        "to": {
+          "node": "1$ou7emiP5$OKE6Lq0AJWv",
+          "port": "2OgKyDuQPDCgvQD7tsN3xC"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "2XgVJB7VXAtBIRvLx4cyOW",
+        "from": {
+          "node": "1Do6919bf60gEJnDZO6WOq",
+          "port": "2gFpq56zr7yeFp$$9T$QB0"
+        },
+        "to": {
+          "node": "1Mw2LM1Br5zh5XgYa0EhBx",
+          "port": "35QTU4YPn2EAskRte63dW0"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "3bdxeD2ar10vXSW1c$nXmp",
+        "from": {
+          "node": "3OZR8vhh59URj9bh0qj0qI",
+          "port": "0ks$WzYxr7AR8$VxdlI3L_"
+        },
+        "to": {
+          "node": "1$X6seDwfD0wy$SD9n7QGQ",
+          "port": "19_tz_5Cv5KOgOCmi7aUcX"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "3IKoBRJ$93IQk2mKn2pM5R",
+        "from": {
+          "node": "2z$2H$l$b73u8Kgilhwn0G",
+          "port": "1n8RAwspL3Nx99_MbBBLDL"
+        },
+        "to": {
+          "node": "3xSjytWbP0_R0rRPsfew$b",
+          "port": "11hPrXRrvCJw5Yp$$vRGwK"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "1G4BBCVm94g8OuPw3IQ$R5",
+        "from": {
+          "node": "3uEjUXKYr7MPGrEccIwTPK",
+          "port": "2YUiURO8v1r8$LLcqrVlsA"
+        },
+        "to": {
+          "node": "3o9gIs87v53QqzjLNp0iPs",
+          "port": "35beGzDfT0F8jOCjHC1BHI"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "3HM76xOnz03hXSWtmK7cGp",
+        "from": {
+          "node": "3GypX53YT2GQcH05bpaCOu",
+          "port": "38Vl1vLPj688zjemhnPA7s"
+        },
+        "to": {
+          "node": "1FCSVNT0vERe8G0rcx1mR$",
+          "port": "0sFp8Jc096HOhC23_hGtO9"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "1RtJAWgTvB6gETLGNyF$vV",
+        "from": {
+          "node": "0z5dWkGd1D_w6QNBksR4yP",
+          "port": "0rIFTkbU91DxWTS$EZJUVx"
+        },
+        "to": {
+          "node": "3fp16YA2H8Gg_i5VhP$_4n",
+          "port": "3MuJpPDB52NvxaKmZNWlif"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "06Aperd8z69901gZce29tg",
+        "from": {
+          "node": "13UoATKi15KOmLWbVPhHMp",
+          "port": "3PHVnix8zBKuVI8IyFnqv2"
+        },
+        "to": {
+          "node": "0zkndVXij0BuKBarM3bpPH",
+          "port": "0S2xNrqcP0gheEBYiUZmzK"
+        },
+        "kind": "The first door of the main plattform in the south facade."
+      },
+      {
+        "id": "1s73UvRAv8wwbc90xBUUAP",
+        "from": {
+          "node": "0oleUjGMj96BktDYGBWxOc",
+          "port": "0zrU18KY5ALxb7D$5iTDnZ"
+        },
+        "to": {
+          "node": "2oL$TvaFrF0h6p$CTkC$s3",
+          "port": "0d5kpNoF14AAS2Ua2OaW2b"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "1bTIf1jZ9CmAwAQp7fYYlj",
+        "from": {
+          "node": "0$QBavoL9CTfu0iNINWk4c",
+          "port": "3nXk68E3v14ha1J3l84OKN"
+        },
+        "to": {
+          "node": "1ln2AS3Uj8chJ5AFuVdRUr",
+          "port": "1_4jU7f1L0CRxtKa8Yt_tP"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "380jyww7L9UQRzhJKtM780",
+        "from": {
+          "node": "0y$u6dhs192wqSG36ZVTVh",
+          "port": "3vJ7tmMGb1LwIytpVwBsgB"
+        },
+        "to": {
+          "node": "2gUvRqM8zFPwI5VOdBgD8s",
+          "port": "0lImv4RbX0e8XBpR1c56Z_"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "02dDWyT$n0iRsNyUFMrb3v",
+        "from": {
+          "node": "0zlarfHTf6JgqTiuat05ry",
+          "port": "1Wg0bZlN9EjhC87p1FUNaE"
+        },
+        "to": {
+          "node": "1p461KElf9APUqkYH_pfRI",
+          "port": "2vNQ36r410yAzZFZh9qd3c"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "2O3$C7EMzD0Rg$zHW1tVrS",
+        "from": {
+          "node": "1Do6919bf60gEJnDZO6WOq",
+          "port": "01Jx_a3C5DWRnezq7K$p0s"
+        },
+        "to": {
+          "node": "1SsWeKyDb2f8f6Ac_trTUs",
+          "port": "0ybZJKTsXC6uigSmxwjD$i"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "1fbJmzDljFU81Ux4AtN4id",
+        "from": {
+          "node": "3OZR8vhh59URj9bh0qj0qI",
+          "port": "3zTJus9x9AnhnPgz_q$xDQ"
+        },
+        "to": {
+          "node": "1PIKtcD3PARf46S9HCTruu",
+          "port": "1o72MiNbP0RhwM1K502_II"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "1xLCneSffEcvVRMsgHqfCs",
+        "from": {
+          "node": "2z$2H$l$b73u8Kgilhwn0G",
+          "port": "2fJL3aJLzE3ejKFHjJtMdo"
+        },
+        "to": {
+          "node": "1TMpqcNgTCQgAvw2Kyfld8",
+          "port": "2ecStkAhbAwgmADqD4_yD9"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "3_x$oSSTf9Gh7mGqU2jaTN",
+        "from": {
+          "node": "3uEjUXKYr7MPGrEccIwTPK",
+          "port": "3HwpUFCa1C0eHIVaryFkWv"
+        },
+        "to": {
+          "node": "0vL$N9EK9Aqh$IC$RRulb3",
+          "port": "2i00cq2sXAluNq9Eq9nHaz"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "1U4tprpzfEKg8kyEY6x31E",
+        "from": {
+          "node": "3GypX53YT2GQcH05bpaCOu",
+          "port": "0AJgFSjPP1bfu5Otcp2DNT"
+        },
+        "to": {
+          "node": "3_NsLi1ljEDQe6$ucTuT3G",
+          "port": "3C1Nl77JfEYPZiOD0R8rLx"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "2GD1uBm$j8gxhoQMhH_9Mw",
+        "from": {
+          "node": "0z5dWkGd1D_w6QNBksR4yP",
+          "port": "1v3GIywur1pfcQ3N0A3d_X"
+        },
+        "to": {
+          "node": "2VvR1XfJrDlxPpsOBGvzXU",
+          "port": "0MWaQU7LD6NPFF6nquJDlr"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "0JBinJHZL20vKwFnOaFXtg",
+        "from": {
+          "node": "13UoATKi15KOmLWbVPhHMp",
+          "port": "1x1OZw$iHCXPVR50o1$6$u"
+        },
+        "to": {
+          "node": "1H7BH0SQLCBAiwUSTZa$T6",
+          "port": "2sUMWsigf2iw_$njyEmNZ3"
+        },
+        "kind": "The second door of the main plattform in the east facade."
+      },
+      {
+        "id": "0xFDdltR9EQAlaovBtha8A",
+        "from": {
+          "node": "1v5reG1czD3ADqOI3X_4bk",
+          "port": "3wXjVm$HPBSf9qKozaW$V1"
+        },
+        "to": {
+          "node": "0HlkkmFT95r8pJ9uDUn88n",
+          "port": "2Ic8gNCsT8l9_E$zdd$74l"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      },
+      {
+        "id": "2SMeKpt0X8f9$NG44n7HcZ",
+        "from": {
+          "node": "0xMfkOSbzCeOb2B2pBfk1j",
+          "port": "0wBK5fr4T0VuGySg_kKAWc"
+        },
+        "to": {
+          "node": "1sOT_enZLFPBJFdV$98DhF",
+          "port": "2RWjBHJxPCoRMBRpwDjlPX"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      },
+      {
+        "id": "3NLh69tTrEpfV9iDbwoXYL",
+        "from": {
+          "node": "2E$cgFrwTE1x33ewcrgtPw",
+          "port": "0jaGaTbK9E2hZKA9OdsRuP"
+        },
+        "to": {
+          "node": "1tZkmTaMP4R8yLkBdfebfl",
+          "port": "2r0obXvqjDmQpZoWs86xTs"
+        },
+        "kind": "The third door of the side plattform in the north facade."
+      }
+    ],
+    "subset": "flow"
+  }
+}

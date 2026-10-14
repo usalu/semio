@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn artifact_hash_text_matches_the_neutral_vector_and_independent_formatting() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️descriptor-digest/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️descriptor-digest/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for vector in fixture["hashVectors"].as_array().unwrap() {
         let bytes: Vec<u8> = vector["bytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
         let hash = ArtifactHash(bytes.as_slice().try_into().unwrap());

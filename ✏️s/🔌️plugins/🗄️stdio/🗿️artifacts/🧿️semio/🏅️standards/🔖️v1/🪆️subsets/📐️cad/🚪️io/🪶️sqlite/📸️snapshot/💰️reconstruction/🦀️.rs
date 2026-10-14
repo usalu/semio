@@ -1,6 +1,7 @@
 //! 📐️ Original CAD variant fields remain in one snapshot and scalar row workspace.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{SemioCadSnapshot,CadLayer,CadBlock,CadEntityRecord,CadEntity,SemioPoint2,identity,boolean,optional_integer,float_columns,point};
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[derive(semio_framework_value::RetireOwned)]
 struct Prefix{snapshot:Option<SemioCadSnapshot>,validation:SchemaValidationStorage,indices:[RowIndexStorage;13],orders:[Vec<usize>;4],unique:[Vec<usize>;2],record_unique:Vec<Vec<usize>>}

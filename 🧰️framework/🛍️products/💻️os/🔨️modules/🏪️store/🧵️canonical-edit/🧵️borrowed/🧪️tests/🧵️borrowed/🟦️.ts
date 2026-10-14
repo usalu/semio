@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 test("canonical paged map fixture preserves accepted JSON bytes and exact lifetime conservation", () => {
   const base = new URL("../../../", import.meta.url);
   const read = (path: string) => JSON.parse(readFileSync(new URL(path, base), "utf8"));
-  const fixture = read("🧫️fixtures/🗺️canonical-borrowed-map.json");
+  const fixture = read("🧪️tests/🧫️fixtures/🗺️canonical-borrowed-map.json");
   const schema = read("🧪️testing/🧬️schema/🔣️.json");
   const contract = read("🧬️schema/🔣️.json");
   const validate = new Ajv({ strict: true }).addSchema(contract).compile({ ...schema, $ref: "#/$defs/CanonicalBorrowedMapEdit" });

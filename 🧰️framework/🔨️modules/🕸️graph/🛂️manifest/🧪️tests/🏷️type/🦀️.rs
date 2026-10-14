@@ -5,7 +5,7 @@ use semio_framework_value::{FromValue, ValueType};
 
 #[test]
 fn graph_properties_preserve_all_original_type_classifications() {
-    let fixture = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🏷️type/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
+    let fixture = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🏷️type/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     let cases = fixture.get("graphCases").and_then(semio_framework_value::DslValue::as_array).unwrap();
     let types = fixture.get("types").and_then(semio_framework_value::DslValue::as_array).unwrap();
     let values = fixture.get("graphValues").and_then(semio_framework_value::DslValue::as_array).unwrap();
@@ -23,7 +23,7 @@ fn graph_properties_preserve_all_original_type_classifications() {
 fn graph_property_controlled_constructor_preserves_canonical_type_and_optional_expression() {
     use super::{PropertyDef, PropertyKind};
     use semio_framework_value::{DslValue, FromValue, NativeDecodeControl, ToValue};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏷️type/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🏷️type/🔣️.json")).unwrap();
     for row in fixture["types"].as_array().unwrap() {
         let type_value = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&row["type"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
         let ty = semio_framework_value::ValueType::from_value(type_value.clone()).unwrap();
@@ -43,7 +43,7 @@ fn graph_property_controlled_constructor_preserves_canonical_type_and_optional_e
 fn graph_property_controlled_constructor_preserves_declared_type_spellings_and_expression_presence() {
     use super::PropertyDef;
     use semio_framework_value::{DslValue, NativeDecodeControl, ToValue};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏷️type/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🏷️type/🔣️.json")).unwrap();
     for case in fixture["controlledProperties"].as_array().unwrap() {
         for expression in [None, Some("")] {
             let ty = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&case["input"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
@@ -65,7 +65,7 @@ fn graph_property_controlled_constructor_preserves_declared_type_spellings_and_e
 fn graph_property_controlled_constructor_bounds_deep_types_and_partial_expression_copies() {
     use super::PropertyDef;
     use semio_framework_value::{DslValue, NativeDecodeControl, ToValue};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏷️type/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🏷️type/🔣️.json")).unwrap();
     let work = &fixture["controlledWork"];
     let schema = work["schemaUnit"].as_str().unwrap().repeat(work["repeat"].as_u64().unwrap() as usize);
     let expression = work["expressionUnit"].as_str().unwrap().repeat(work["repeat"].as_u64().unwrap() as usize);

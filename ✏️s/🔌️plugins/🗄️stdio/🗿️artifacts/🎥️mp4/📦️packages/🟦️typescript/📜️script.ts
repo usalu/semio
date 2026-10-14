@@ -8,11 +8,11 @@ const command = process.argv[2] ?? "test";
 if (command === "test" && process.argv.slice(3).some((argument) => argument !== "--")) {
   throw new Error("This artifact test target runs its complete registered suite and accepts no test selectors.");
 }
-await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/stdio-mp4",{suites:["🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});
-
-if (command === "test") {
+await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/stdio-mp4",{ bundleRuntime: "bun",suites:["🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"],afterTest:async original=>{
   const mutations = resolve(import.meta.dir, "../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
   const test = resolve(mutations, "🧪️tests/🟦️.test.ts");
-  await runRepositoryCommand(process.execPath, ["x", "--no-install", "tsc", "--noEmit", "--strict", "--skipLibCheck", "--target", "ES2022", "--module", "ESNext", "--moduleResolution", "Bundler", "--allowImportingTsExtensions", resolve(mutations, "🟦️.ts"), resolve(mutations, "📝️text/🟦️.ts"), resolve(mutations, "💾️binary/🟦️.ts"), test], getWorkspaceRoot(), "mp4-mutation-facet-types", 120_000);
-  await runRepositoryCommand(process.execPath, ["test", test], getWorkspaceRoot(), "mp4-mutation-facet-contract", 120_000);
-}
+  await runRepositoryCommand(original,process.execPath,["x", "--no-install", "tsc", "--noEmit", "--strict", "--skipLibCheck", "--target", "ES2022", "--module", "ESNext", "--moduleResolution", "Bundler", "--allowImportingTsExtensions", resolve(mutations, "🟦️.ts"), resolve(mutations, "📝️text/🟦️.ts"), resolve(mutations, "💾️binary/🟦️.ts"), test],getWorkspaceRoot(),"mp4-mutation-facet-types",{version:1,maximumElapsedMilliseconds:120_000,output:{maximumBytes:134217728,maximumLines:65536}});
+  await runRepositoryCommand(original,process.execPath,["test", test],getWorkspaceRoot(),"mp4-mutation-facet-contract",{version:1,maximumElapsedMilliseconds:120_000,output:{maximumBytes:134217728,maximumLines:65536}});
+}});
+
+

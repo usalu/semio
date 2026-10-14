@@ -13,5 +13,8 @@
   },
   "scripts": {
     "test-owned-error": "nx run @semio-tech/framework-editor-rs:test-owned-error"
+  },
+  "devDependencies": {
+    "@semio-tech/process": "workspace:*"
   }
 }

@@ -5,7 +5,7 @@ use super::*;
 fn original_brep_retention_borrows_live_rows_and_restarts_changed_source(){
     use crate::test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../📸️representation/🕸️topology/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../../📸️representation/🕸️topology/🧪️tests/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
     for copy_grant in [1,3,64]{for changing in [false,true]{
         let((mut kernel,kept,discard),source)=observe(||{let mut kernel=Brep::new();let kept=kernel.box_prim_sync(1.,1.,1.).unwrap();let discard=kernel.box_prim_sync(2.,2.,2.).unwrap();(kernel,kept,discard)});
         let (mut job,heap)=observe(||BrepRetentionJob::new(&kernel));assert_eq!(heap,(0,0));let(mut born,mut freed,mut turns,mut changed)=(source.0,source.1,0,false);let mut new=None;

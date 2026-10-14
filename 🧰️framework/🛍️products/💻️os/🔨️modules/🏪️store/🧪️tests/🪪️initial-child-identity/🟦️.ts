@@ -11,7 +11,7 @@ type Coordinate = { values: string[]; ordinal: number };
 /** 🪪️ Validate canonical coordinate frames with independent Buffer/DataView and AJV encoders. */
 export function testInitialChildIdentityFixture(): void {
   const read = (path: string) => JSON.parse(readFileSync(new URL(path, testSourceUrl.href), "utf8"));
-  const fixture = read("./🧫️fixtures/🔣️.json");
+  const fixture = read("./🧪️tests/🧫️fixtures/🔣️.json");
   const contract = read("./🧬️schema/🔣️.json");
   const ajv = new Ajv({ strict: true, allErrors: true });
   ajv.addSchema(contract);
@@ -90,5 +90,5 @@ export function testInitialChildIdentityFixture(): void {
   assert(native.includes('b"semio.initial-child.v1\\0"') && native.includes("INITIAL_CHILD_FIELD_BYTES: usize = 256") && native.includes("INITIAL_CHILD_ORDINAL_LIMIT: u32 = 64"));
   assert(native.includes('#[path = "🧪️tests/🔬️unit/🦀️.rs"]') && native.includes("mod tests;"), "native identity must mount its actual owning tests");
   const nativeTests = readFileSync(new URL("./🧪️tests/🔬️unit/🦀️.rs", testSourceUrl.href), "utf8");
-  assert(nativeTests.includes('include_str!("../../🧫️fixtures/🔣️.json")') && nativeTests.includes("blake3::hash(&wire)"), "native identity must consume the neutral corpus and independent hash oracle");
+  assert(nativeTests.includes('🧪️tests/🧫️fixtures/🔣️.json")') && nativeTests.includes("blake3::hash(&wire)"), "native identity must consume the neutral corpus and independent hash oracle");
 }

@@ -631,6 +631,36 @@
           }
         }
       ]
+    },
+    "CopyAdmission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "originalContextRequired",
+        "currencies",
+        "reservationCopiesBytes",
+        "sourceHeldOnDenial"
+      ],
+      "properties": {
+        "originalContextRequired": {
+          "const": true
+        },
+        "currencies": {
+          "const": [
+            "items",
+            "copyBytes",
+            "capacityBytes",
+            "releaseBytes",
+            "depth"
+          ]
+        },
+        "reservationCopiesBytes": {
+          "const": 0
+        },
+        "sourceHeldOnDenial": {
+          "const": true
+        }
+      }
     }
   },
   "$ref": "#/$defs/FlowCamera"

@@ -301,14 +301,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/📥insert-record/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/📥insert-record/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
           "bytes": 3217
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/📥insert-record/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/📥insert-record/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:8d745e19082bdc0412b1bf98f7febd385908cac4ad1f74b8ef66ce9263cae286",
           "bytes": 4443
@@ -343,14 +343,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/📤remove-record/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/📤remove-record/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
           "bytes": 3217
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/📤remove-record/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/📤remove-record/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:b10516278f6fb70e57533242e4491c71907706135b42e249a99d2c46ba3d946c",
           "bytes": 1991
@@ -385,14 +385,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/💬set-comments1/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/💬set-comments1/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
           "bytes": 3217
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/💬set-comments1/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/💬set-comments1/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:86e19d47da17a7ef247be6b5b1b29a26e34e19b3ab8bd4515263b5895127f018",
           "bytes": 3222
@@ -427,14 +427,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🗨️set-comments2/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🗨️set-comments2/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
           "bytes": 3217
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🗨️set-comments2/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🗨️set-comments2/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:c36a954705a070c5f13ea8aa1a81f31af7d38f4d3651228833db702390db792f",
           "bytes": 3230
@@ -469,14 +469,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/📅set-data-periods/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/📅set-data-periods/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
           "bytes": 3217
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/📅set-data-periods/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/📅set-data-periods/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:c2a92cf9d6e3f3b1f3af215f8e6baa6add0e615b565e01596c34c8bf28fb2830",
           "bytes": 3214
@@ -511,14 +511,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🌡️set-design-conditions/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🌡️set-design-conditions/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
           "bytes": 3217
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🌡️set-design-conditions/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🌡️set-design-conditions/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:dd4ed211474b94c491b1510ac46a8c9b29cfc34fb6f8d3397f6207566c352fea",
           "bytes": 3253
@@ -553,14 +553,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🌍set-ground-temperatures/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🌍set-ground-temperatures/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
           "bytes": 3217
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🌍set-ground-temperatures/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🌍set-ground-temperatures/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:3f783b139efe82a473a180241c26e7268fa1e8bcee0aac5f94a8a9ead769eb72",
           "bytes": 3290
@@ -595,14 +595,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🎉set-holidays-dst/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🎉set-holidays-dst/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
           "bytes": 3217
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🎉set-holidays-dst/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🎉set-holidays-dst/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:58b35c28d127fa17ef5f55ef43681496073af26567ee75d00d0c3640fc491b78",
           "bytes": 3218
@@ -637,14 +637,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/📍set-location/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/📍set-location/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
           "bytes": 3217
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/📍set-location/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/📍set-location/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:5859cb8dcad5b450eec45b5c0e5b51c985b201c415eb699bb4b5fbba4027a879",
           "bytes": 3216
@@ -679,14 +679,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🎚️set-record-field/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🎚️set-record-field/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
           "bytes": 3217
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🎚️set-record-field/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🎚️set-record-field/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:919aaf3a4eff4d972679e32949e68be6f73eb791de31d542412c0d64d18855ca",
           "bytes": 3217
@@ -721,14 +721,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/📆set-typical-extreme-periods/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/📆set-typical-extreme-periods/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:06189193ee62f0e3f3017bc8140b37bc776423678d25ad3dfa43d74ae138df48",
           "bytes": 3217
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/📆set-typical-extreme-periods/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/📆set-typical-extreme-periods/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:c66923adfe6c6ce4737d8744d156bb9ccb796ea8be74714c2241bf2d27109818",
           "bytes": 3284

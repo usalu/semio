@@ -28,8 +28,8 @@ fn expected_output(value: &Value) -> RustGeneratedTokenOutput {
 
 #[test]
 fn generated_inputs_retain_every_shared_macro_expression_and_utf16_position() {
-    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
-    let outputs = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🎯️outputs/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("🧫️fixtures/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
+    let outputs = semio_framework_pack_json::parse(include_str!("🧫️fixtures/🎯️outputs/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let id = case["id"].as_str().unwrap();
         let expected = outputs["cases"].as_array().unwrap().iter().find(|row| row["id"].as_str() == Some(id)).unwrap();
@@ -47,7 +47,7 @@ fn generated_inputs_retain_every_shared_macro_expression_and_utf16_position() {
 
 #[test]
 fn unresolved_quote_origins_refuse_and_local_authored_macro_is_never_a_generator() {
-    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("🧫️fixtures/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
     for case in fixture["unsupported"].as_array().unwrap() {
         let error = inspect_rust_generated_token_outputs(case["source"].as_str().unwrap()).unwrap_err();
         assert_eq!(error.kind, RustGeneratorErrorKind::UnresolvedOrigin);

@@ -1,0 +1,58 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "repo:cache-prune",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--parallel=1",
+    "--configuration=prototype",
+    "--",
+    "--stale-incremental-only",
+    "--profile",
+    "debug"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+    "transport": {
+      "maximumBytes": 134217728,
+      "maximumLines": 1000000
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 120000
+    },
+    "network": {
+      "offline": true
+    }
+  },
+  "selection": [
+    "nx",
+    "run",
+    "repo:cache-prune",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--parallel=1",
+    "--configuration=prototype",
+    "--",
+    "--stale-incremental-only",
+    "--profile",
+    "debug"
+  ],
+  "launches": [
+    [
+      "nx",
+      "run",
+      "repo:cache-prune",
+      "--skip-nx-cache",
+      "--excludeTaskDependencies",
+      "--parallel=1",
+      "--configuration=prototype",
+      "--",
+      "--stale-incremental-only",
+      "--profile",
+      "debug"
+    ]
+  ],
+  "buildMode": "prototype"
+}

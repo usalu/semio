@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "platform",
+    "mode",
+    "path",
+    "sources"
+  ],
+  "properties": {
+    "version": {
+      "const": 2
+    },
+    "platform": {
+      "enum": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    "mode": {
+      "enum": [
+        "prototype",
+        "release"
+      ]
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "roots",
+        "digest"
+      ],
+      "properties": {
+        "roots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[0-9]+:[a-f0-9]{40}$"
+        }
+      }
+    }
+  }
+}

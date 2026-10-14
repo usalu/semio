@@ -12,11 +12,11 @@
 use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📚️knowledge-record/♻️replace/🚫️absent-a/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📚️knowledge-record/♻️replace/🚫️absent-a/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📚️knowledge-record/♻️replace/🚫️absent-a/🦠️mutation/🔣️.json");
-const ABSENT: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📚️knowledge-record/♻️replace/🚫️absent-a/🔺️diff/🚫️.absent");
-const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📚️knowledge-record/♻️replace/🚫️absent-a/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📚️knowledge-record/♻️replace/🚫️absent-a/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📚️knowledge-record/♻️replace/🚫️absent-a/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📚️knowledge-record/♻️replace/🚫️absent-a/🦠️mutation/🔣️.json");
+const ABSENT: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📚️knowledge-record/♻️replace/🚫️absent-a/🔺️diff/🚫️.absent");
+const OUTCOME: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📚️knowledge-record/♻️replace/🚫️absent-a/🎯️outcome/🔣️.json");
 
 fn before() -> ProgramSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-knowledge-record/rejects-replacing-absent-knowledge-record-a: before snapshot decodes")

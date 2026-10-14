@@ -14,7 +14,7 @@ interface JobFixture {
 }
 
 function loadFixture(): JobFixture {
-  return JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🧵️video-render-job/🔣️.json"), "utf8")) as JobFixture;
+  return JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/🧵️video-render-job/🔣️.json"), "utf8")) as JobFixture;
 }
 
 /** ⚖️ The whole law, callable without vitest so the nx lane runs it as a plain oracle. */

@@ -14,13 +14,13 @@ use crate::RewritingSnapshot;
 use crate::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
 use semio_framework_graph::manifest::PropertyValue;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️remove-parameter-binding/✂️drops/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️remove-parameter-binding/✂️drops/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️remove-parameter-binding/✂️drops/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️remove-parameter-binding/✂️drops/🔺️diff/🔣️.json");
-const BEFORE_CHILD:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️remove-parameter-binding/✂️drops/📸️snapshot/⬅️before/🪆️child/🔣️.json");
-const AFTER_CHILD:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️remove-parameter-binding/✂️drops/📸️snapshot/➡️after/🪆️child/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️remove-parameter-binding/✂️drops/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️remove-parameter-binding/✂️drops/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️remove-parameter-binding/✂️drops/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️remove-parameter-binding/✂️drops/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️remove-parameter-binding/✂️drops/🔺️diff/🔣️.json");
+const BEFORE_CHILD:&str=include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️remove-parameter-binding/✂️drops/📸️snapshot/⬅️before/🪆️child/🔣️.json");
+const AFTER_CHILD:&str=include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️remove-parameter-binding/✂️drops/📸️snapshot/➡️after/🪆️child/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️remove-parameter-binding/✂️drops/🎯️outcome/🔣️.json");
 
 fn before() -> RewritingSnapshot {
     {let mut value=crate::standards::v1::subsets::any::io::text::snapshot::decode_rewriting_snapshot_json(BEFORE).expect("before snapshot decodes");let child=semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json(BEFORE_CHILD).expect("declared complete Semio child decodes");semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut value.working_graph.content,child);value}

@@ -497,14 +497,14 @@
       "files": [
         {
           "role": "base-pdf",
-          "path": "../🧫️fixtures/✅️set-mark-info/⬅️before.pdf",
+          "path": "../🧪️tests/🧫️fixtures/✅️set-mark-info/⬅️before.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:a7dd738c5d085d722a31c5b2cbc8d26219d2da4d50adf40bc7db22d9a805af38",
           "bytes": 864
         },
         {
           "role": "mutated-pdf",
-          "path": "../🧫️fixtures/✅️set-mark-info/➡️after.pdf",
+          "path": "../🧪️tests/🧫️fixtures/✅️set-mark-info/➡️after.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:45986d94f6f21e778353a6ba664c478a727a2fa97d1d5210f39149c15dc50459",
           "bytes": 889
@@ -545,14 +545,14 @@
       "files": [
         {
           "role": "base-pdf",
-          "path": "../🧫️fixtures/🗑️remove-mark-info/⬅️before.pdf",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-mark-info/⬅️before.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:edbae70bf8ec876cf8a5a4256b566dada869b291eaf043927e21a592120384f5",
           "bytes": 889
         },
         {
           "role": "mutated-pdf",
-          "path": "../🧫️fixtures/🗑️remove-mark-info/➡️after.pdf",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-mark-info/➡️after.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:5474355fc4e5de4ee49a3dbc9356a288ef27eaa0c35e67c503b7d9c2d41406d2",
           "bytes": 864
@@ -593,14 +593,14 @@
       "files": [
         {
           "role": "base-pdf",
-          "path": "../🧫️fixtures/🌲️set-struct-tree-root/⬅️before.pdf",
+          "path": "../🧪️tests/🧫️fixtures/🌲️set-struct-tree-root/⬅️before.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:a7dd738c5d085d722a31c5b2cbc8d26219d2da4d50adf40bc7db22d9a805af38",
           "bytes": 864
         },
         {
           "role": "mutated-pdf",
-          "path": "../🧫️fixtures/🌲️set-struct-tree-root/➡️after.pdf",
+          "path": "../🧪️tests/🧫️fixtures/🌲️set-struct-tree-root/➡️after.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:4cebf457e5b4abb73d9ab05c1bc7171e76a10a0f8cd0e7f706d0649d4e9c34a9",
           "bytes": 934
@@ -641,14 +641,14 @@
       "files": [
         {
           "role": "base-pdf",
-          "path": "../🧫️fixtures/🪓️remove-struct-tree-root/⬅️before.pdf",
+          "path": "../🧪️tests/🧫️fixtures/🪓️remove-struct-tree-root/⬅️before.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:8d61f5e15cc61d7f0ed51dda28e8a4a1cbb01c2e052037a005c4ed83c3410ea7",
           "bytes": 934
         },
         {
           "role": "mutated-pdf",
-          "path": "../🧫️fixtures/🪓️remove-struct-tree-root/➡️after.pdf",
+          "path": "../🧪️tests/🧫️fixtures/🪓️remove-struct-tree-root/➡️after.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:16bae7eaf250705a9a64d77929bd3ee8fb3fe2a7749c7376c622acc4dd184c74",
           "bytes": 917
@@ -689,14 +689,14 @@
       "files": [
         {
           "role": "base-pdf",
-          "path": "../🧫️fixtures/🗣️set-lang/⬅️before.pdf",
+          "path": "../🧪️tests/🧫️fixtures/🗣️set-lang/⬅️before.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:a7dd738c5d085d722a31c5b2cbc8d26219d2da4d50adf40bc7db22d9a805af38",
           "bytes": 864
         },
         {
           "role": "mutated-pdf",
-          "path": "../🧫️fixtures/🗣️set-lang/➡️after.pdf",
+          "path": "../🧪️tests/🧫️fixtures/🗣️set-lang/➡️after.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:a2eedc401ebf7c3bcf6b0c49d0f1d46345af6cd2c8a148740268cea614409626",
           "bytes": 876
@@ -737,14 +737,14 @@
       "files": [
         {
           "role": "base-pdf",
-          "path": "../🧫️fixtures/🤐️remove-lang/⬅️before.pdf",
+          "path": "../🧪️tests/🧫️fixtures/🤐️remove-lang/⬅️before.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:4db983676ec3b099f0d5e9927f9b71ae9e3a93dd727945b566076648b6870ea3",
           "bytes": 876
         },
         {
           "role": "mutated-pdf",
-          "path": "../🧫️fixtures/🤐️remove-lang/➡️after.pdf",
+          "path": "../🧪️tests/🧫️fixtures/🤐️remove-lang/➡️after.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:5474355fc4e5de4ee49a3dbc9356a288ef27eaa0c35e67c503b7d9c2d41406d2",
           "bytes": 864
@@ -785,14 +785,14 @@
       "files": [
         {
           "role": "base-pdf",
-          "path": "../🧫️fixtures/🪧️set-display-doc-title/⬅️before.pdf",
+          "path": "../🧪️tests/🧫️fixtures/🪧️set-display-doc-title/⬅️before.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:a7dd738c5d085d722a31c5b2cbc8d26219d2da4d50adf40bc7db22d9a805af38",
           "bytes": 864
         },
         {
           "role": "mutated-pdf",
-          "path": "../🧫️fixtures/🪧️set-display-doc-title/➡️after.pdf",
+          "path": "../🧪️tests/🧫️fixtures/🪧️set-display-doc-title/➡️after.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:5303fbfe21441b635ba9261cfabbbcfb7f49bb9048d6effdea4e9da227d74c62",
           "bytes": 907
@@ -833,14 +833,14 @@
       "files": [
         {
           "role": "base-pdf",
-          "path": "../🧫️fixtures/🚫️remove-display-doc-title/⬅️before.pdf",
+          "path": "../🧪️tests/🧫️fixtures/🚫️remove-display-doc-title/⬅️before.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:8d58312271afa2650a1378c5066a29f38a0566a164d395769d5060cf14756cc7",
           "bytes": 907
         },
         {
           "role": "mutated-pdf",
-          "path": "../🧫️fixtures/🚫️remove-display-doc-title/➡️after.pdf",
+          "path": "../🧪️tests/🧫️fixtures/🚫️remove-display-doc-title/➡️after.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:b929949db2651a24e0018c73513f80de228c2f969f820e7418296faa69493dc6",
           "bytes": 886
@@ -881,14 +881,14 @@
       "files": [
         {
           "role": "base-pdf",
-          "path": "../🧫️fixtures/📰️set-info-title/⬅️before.pdf",
+          "path": "../🧪️tests/🧫️fixtures/📰️set-info-title/⬅️before.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:a7dd738c5d085d722a31c5b2cbc8d26219d2da4d50adf40bc7db22d9a805af38",
           "bytes": 864
         },
         {
           "role": "mutated-pdf",
-          "path": "../🧫️fixtures/📰️set-info-title/➡️after.pdf",
+          "path": "../🧪️tests/🧫️fixtures/📰️set-info-title/➡️after.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:a3807e335eb6fbc52fa392d525eab918fb3886cf979038af3c24239573493087",
           "bytes": 860
@@ -929,14 +929,14 @@
       "files": [
         {
           "role": "base-pdf",
-          "path": "../🧫️fixtures/🔤️embed-font-file/⬅️before.pdf",
+          "path": "../🧪️tests/🧫️fixtures/🔤️embed-font-file/⬅️before.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:9641ee671d9abcbe984375dac966b57a513ca6fd94f897b2353f4bbecd78d123",
           "bytes": 848
         },
         {
           "role": "mutated-pdf",
-          "path": "../🧫️fixtures/🔤️embed-font-file/➡️after.pdf",
+          "path": "../🧪️tests/🧫️fixtures/🔤️embed-font-file/➡️after.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:b1851ded015280ea334f3e830c250e25bd4050238c5aa4ee09d931a2c1fff124",
           "bytes": 864
@@ -977,14 +977,14 @@
       "files": [
         {
           "role": "base-pdf",
-          "path": "../🧫️fixtures/🧺️remove-font-file/⬅️before.pdf",
+          "path": "../🧪️tests/🧫️fixtures/🧺️remove-font-file/⬅️before.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:a7dd738c5d085d722a31c5b2cbc8d26219d2da4d50adf40bc7db22d9a805af38",
           "bytes": 864
         },
         {
           "role": "mutated-pdf",
-          "path": "../🧫️fixtures/🧺️remove-font-file/➡️after.pdf",
+          "path": "../🧪️tests/🧫️fixtures/🧺️remove-font-file/➡️after.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:9d9b20d09f30db950b5c6a478807e1af2c375593238d91148e03fdaf85c4a2d8",
           "bytes": 848

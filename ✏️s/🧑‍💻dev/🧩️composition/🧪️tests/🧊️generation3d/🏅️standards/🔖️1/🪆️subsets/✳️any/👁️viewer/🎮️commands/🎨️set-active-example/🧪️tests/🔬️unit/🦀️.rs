@@ -11,7 +11,7 @@ use semio_framework_plugin::app::TypedOperationResultLane;
 use semio_framework_plugin::ArtifactViewer;
 
 /// 📜️ The language-agnostic picker table both surfaces answer — the viewer's own half is `viewer`.
-const EXAMPLE_SWITCH_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🎨️example-switch.json");
+const EXAMPLE_SWITCH_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️example-switch.json");
 
 /// 📚️ Every example the dialect publishes, in the order the manifest registers them.
 const EVERY_BUNDLED_EXAMPLE: &[&str] = &[

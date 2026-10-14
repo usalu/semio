@@ -10,7 +10,7 @@ use super::*;
 use crate::test_app_mutation_fixture::{SetCount, SetLabel, TestConfig, TestConfigMutation, TestMutation, TestSnapshot};
 use serde_json::Value;
 
-const HISTORY_LABEL_RELOAD_FIXTURE_JSON: &str = include_str!("../../🧫️fixtures/🧫️history-label-reload/🔣️.json");
+const HISTORY_LABEL_RELOAD_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/🧫️history-label-reload/🔣️.json");
 
 fn fixture() -> Value {
     serde_json::from_str(HISTORY_LABEL_RELOAD_FIXTURE_JSON).expect("history-label-reload fixture parses")
@@ -199,6 +199,7 @@ async fn open(fixture: &Value, actor: &str) -> LabelReloadInstance {
 /// and the reloaded edits keep their verbs, declared by this app or not.
 #[semio_framework_async_macros::async_test]
 async fn history_labels_survive_a_text_and_a_pack_reload_in_every_locale() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let fixture = fixture();
     let cases = fixture["cases"].as_array().expect("cases");
     let mut live = open(&fixture, "author").await;
@@ -219,6 +220,7 @@ async fn history_labels_survive_a_text_and_a_pack_reload_in_every_locale() {
         assert_eq!(app.store.envelope().vcs.edits.iter().map(|edit| edit.verb.clone()).collect::<Vec<_>>(), verbs, "{who}: every edit carries the verb that authored it");
     }
     for app in [&mut live, &mut reloaded, &mut repacked] {
-        artifact_app_laws::close_registered_fixture_app(app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
+        artifact_app_laws::close_registered_fixture_app(app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
     }
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }

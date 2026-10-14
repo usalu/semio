@@ -5,8 +5,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
 /// 📌️ Commits one canonical space checkpoint and its exact member pins.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CommitSpaceCheckpoint {

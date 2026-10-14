@@ -52,7 +52,7 @@ import { currentPlatform } from "../../../../../../../../../../🧰️framework/
 const HERE = import.meta.dir;
 const ENGINE_DIR = join(HERE, "🧪️tests", "🧰️support", "📦️packages", "🦀️rust");
 const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate");
-const FIXTURE_PATH_PREFIX = "../🧫️fixtures";
+const FIXTURE_PATH_PREFIX = "../🧪️tests/🧫️fixtures";
 const READER_ORACLE_ID = "dxf-crate-r12-mutate-reader";
 const CROSS_SEMIO_ORACLE_ID = "dxf-crate-r12-mutate";
 const ENGINE_VERSION = "0.6.1";
@@ -262,7 +262,7 @@ async function main(argv: readonly string[]): Promise<number> {
     try {
       const coordinate = FIXTURE_COORDINATES[recipe.id];
       if (!coordinate) throw new Error(`Missing authored fixture coordinate: ${recipe.id}`);
-      const destination = outDir ?? join(HERE, "..", "..", coordinate[0], "🧫️fixtures");
+      const destination = outDir ?? join(HERE, "..", "..", coordinate[0], "🧪️tests/🧫️fixtures");
       const manifest = recipe.kind === "single" ? await manifestForSingle(recipe, destination) : await manifestForPair(recipe, destination);
       manifests.push(manifest);
       console.error(`[dxf generator] ${recipe.id}${recipe.mutation ? ` (${recipe.mutation}/${recipe.outcome})` : ""}`);

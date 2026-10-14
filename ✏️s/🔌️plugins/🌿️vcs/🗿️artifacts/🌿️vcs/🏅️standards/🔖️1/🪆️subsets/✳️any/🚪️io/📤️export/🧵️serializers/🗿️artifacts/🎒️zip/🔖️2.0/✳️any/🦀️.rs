@@ -16,6 +16,6 @@ impl Serializer<VcsSnapshot> for VcsIntoZip {
     async fn serialize(from: &VcsSnapshot, _: &ArchiveChildren, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let error = |message: String| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("VcsIntoZip: {message}")));
         let archive = decode_zip(&encode_document_archive(from).map_err(|e| error(e.to_string()))?).map_err(|e| error(e.to_string()))?;
-        Ok(IoOutcome::clean(IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(&archive))))
+        Ok(IoOutcome::clean(IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&archive))))
     }
 }

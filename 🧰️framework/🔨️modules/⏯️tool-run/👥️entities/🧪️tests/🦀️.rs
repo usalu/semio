@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn original_tool_run_entity_edit_provenance_preserves_earlier_introductions_and_original_custody(){
  use super::provenance::{ToolRunEntityProvenance,ToolRunEntityProvenanceEdit,ProvenanceMap};
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧾️provenance/🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧾️provenance/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in corpus["cases"].as_array().unwrap(){let keys:Vec<u128>=row["original"].as_array().unwrap().iter().map(|mark|((mark["end"].as_u64().unwrap()as u128)<<64)|mark["entity"].as_str().unwrap().parse::<u64>().unwrap()as u128).collect();let expected:Vec<u128>=row["expectedMarks"].as_array().unwrap().iter().map(|mark|((mark["end"].as_u64().unwrap()as u128)<<64)|mark["entity"].as_str().unwrap().parse::<u64>().unwrap()as u128).collect();let expected_entities:Vec<u64>=row["expectedEntities"].as_array().unwrap().iter().map(|entity|entity.as_str().unwrap().parse().unwrap()).collect();let append:Vec<u64>=row["append"].as_array().unwrap().iter().map(|entity|entity.as_str().unwrap().parse().unwrap()).collect();let retract=row["retractTo"].as_u64().map(|v|v as u32);let end=row["end"].as_u64().unwrap()as u32;
   for order in [0,1]{for stop in std::iter::once(None).chain(corpus["interruptAfter"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize))){
    let((marks,entities,append),original)=measured(||(keys.iter().map(|key|(*key,())).collect::<ProvenanceMap>(),keys.iter().map(|key|(*key as u64,())).collect::<EntityMap>(),append.clone()));
@@ -22,7 +22,7 @@ fn retire<T:RetireOwned>(original:T)->(usize,usize){let mut owner=ControlledReti
 
 #[test]
 fn original_tool_run_entity_edit_preserves_every_workspace_until_funded_completion_or_cancel(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  assert_eq!(corpus["deniedAxes"],serde_json::json!(["items","copy","capacity","release","depth"]));for row in corpus["cases"].as_array().unwrap(){
   let input:Vec<u64>=row["initial"].as_array().unwrap().iter().map(|id|id.as_str().unwrap().parse().unwrap()).collect();let targets:Vec<u64>=row["targets"].as_array().unwrap().iter().map(|id|id.as_str().unwrap().parse().unwrap()).collect();let kind=if row["kind"]=="append"{ToolRunEntityEditKind::Append}else{ToolRunEntityEditKind::Retract};let expected:Vec<u64>=row["expected"].as_array().unwrap().iter().map(|id|id.as_str().unwrap().parse().unwrap()).collect();
   for stop in std::iter::once(None).chain(corpus["interruptAfter"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize))){
@@ -38,7 +38,7 @@ fn version_publication_grant(job:&super::version::ToolRunEntityVersionEdit)->Ret
 #[test]
 fn original_tool_run_entity_edit_versions_preserve_original_aliases_and_publish_once(){
  use super::version::{ToolRunEntityVersion,ToolRunEntityVersionEdit};
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let law:serde_json::Value=serde_json::from_str(include_str!("../📸️version/🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let law:serde_json::Value=serde_json::from_str(include_str!("../📸️version/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in corpus["cases"].as_array().unwrap(){
   let input:Vec<u64>=row["initial"].as_array().unwrap().iter().map(|x|x.as_str().unwrap().parse().unwrap()).collect();let targets:Vec<u64>=row["targets"].as_array().unwrap().iter().map(|x|x.as_str().unwrap().parse().unwrap()).collect();let expected:Vec<u64>=row["expected"].as_array().unwrap().iter().map(|x|x.as_str().unwrap().parse().unwrap()).collect();let kind=if row["kind"]=="append"{ToolRunEntityEditKind::Append}else{ToolRunEntityEditKind::Retract};
   for order in law["captureCloseOrders"].as_array().unwrap(){for stop in std::iter::once(None).chain(corpus["interruptAfter"].as_array().unwrap().iter().map(|x|Some(x.as_u64().unwrap()as usize))){

@@ -197,7 +197,7 @@ pub(crate) fn parse_graph_snapshot_body(body: &str) -> Result<SemioGraphSnapshot
 }
 
 /// 🎁 Real structured text/binary codecs, wrapped in the repo-wide `store::semio_format` envelope.
-impl store::os_store::serialization::ArtifactDsl for SemioGraphSnapshot {
+impl pack::snapshot::ArtifactDsl for SemioGraphSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA
@@ -213,7 +213,7 @@ impl store::os_store::serialization::ArtifactDsl for SemioGraphSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_graph_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -233,19 +233,19 @@ pub fn decode_semio_graph_snapshot_json(text: &str) -> Result<SemioGraphSnapshot
 }
 
 /// 📝️ Parses `s.stdio.semio.graph` DSL text into a [`SemioGraphSnapshot`] — a named pass-through of this snapshot's own
-/// `store::os_store::serialization::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
+/// `pack::snapshot::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
 /// crate, so `🌳️mutate-semio-graph`'s `identity-round-trip` scenario reaches the real committed
 /// artifact (`../../🖼️assets/🕸️wires/🗣️.dsl.semio`) through this instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_graph_dsl(text: &str) -> Result<SemioGraphSnapshot, String> {
-    <SemioGraphSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <SemioGraphSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
 /// 📝️ Renders a [`SemioGraphSnapshot`] back as `s.stdio.semio.graph` DSL text — the inverse of
 /// [`parse_semio_graph_dsl`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_graph_dsl(snapshot: &SemioGraphSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
+    pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

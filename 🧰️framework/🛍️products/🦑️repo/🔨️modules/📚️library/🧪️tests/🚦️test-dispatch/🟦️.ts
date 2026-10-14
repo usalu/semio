@@ -4,7 +4,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { runCanonicalGoTests, runRepositoryTestCommand } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const cli = join(import.meta.dir, "../../../💻️client/⌨️cli");
 const repo = findWorkspaceRoot(import.meta.dir);

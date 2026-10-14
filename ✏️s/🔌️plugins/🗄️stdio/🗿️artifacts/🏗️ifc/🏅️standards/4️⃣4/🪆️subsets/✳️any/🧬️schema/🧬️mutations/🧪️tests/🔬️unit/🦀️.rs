@@ -166,8 +166,8 @@ fn absorb_law_associativity() {
 fn codec_retention_law() {
     let document = semio_s_artifact_stdio_contract::part21::parse_part21(crate::examples::ifc4_demo::EXCHANGE_TEXT).expect("parse external IFC4 fixture");
     let decoded = crate::schema::snapshot::from_part21_document(crate::STDIO_IFC_DOCUMENT_SCHEMA, &document);
-    let reencoded = store::os_store::serialization::ArtifactDsl::print_dsl(&decoded);
-    let redecoded = <IfcSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&reencoded).expect("re-decode fixture");
+    let reencoded = pack::snapshot::ArtifactDsl::print_dsl(&decoded);
+    let redecoded = <IfcSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&reencoded).expect("re-decode fixture");
     assert_eq!(decoded.header, redecoded.header);
     assert_eq!(decoded.entities, redecoded.entities);
 }

@@ -1,0 +1,9 @@
+{
+  "mutation": "dragRuleNodes",
+  "targets": [
+    "lhs-match",
+    "rhs-set-0"
+  ],
+  "dx": {"bits": "4034000000000000"},
+  "dy": {"bits": "4044000000000000"}
+}

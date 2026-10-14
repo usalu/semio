@@ -5,9 +5,9 @@ import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import { drawSceneNode } from "../../🎨️paint/🟦️.ts";
 import Ajv2020 from "ajv/dist/2020.js";
 import {JSDOM} from "jsdom";
-import catalogFixture from "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📝️text/🧫️fixtures/🎨️catalog/🔣️.json";
+import catalogFixture from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧊️wgpu/📝️text/🎨️catalog/🔣️.json";
 import catalogSchema from "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📝️text/🧬️schema/🎨️catalog/🔣️.json";
-import fixture from "../../🧫️fixtures/🎨️paint/🔣️.json";
+import fixture from "../🧫️fixtures/🎨️paint/🔣️.json";
 import { paintDrawingScene, type PathSegment, type StrokeStyle } from "../../../../../../../../../🔨️modules/◻️2d/🟦️.ts";
 
 function context() {
@@ -59,7 +59,7 @@ for (const example of fixture.unpainted) it(`leaves ${example.id} invisible`, ()
   expect(raster.stroke).not.toHaveBeenCalled();
 });
 
-import textFixture from "../../🧫️fixtures/📝️text/🔣️.json";
+import textFixture from "../🧫️fixtures/📝️text/🔣️.json";
 
 it("paints authored line breaks at separate baselines", () => {
   const ctx = {...context(), fillText: vi.fn()};

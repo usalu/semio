@@ -5,7 +5,7 @@ import Ajv from "ajv";
 
 const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
 const contract = () => read("../../🧪️testing/🧬️schema/🔣️.json");
-const examples = read("../../🧪️testing/🧫️fixtures/🔢️payload-contracts/🔣️.json");
+const examples = read("../../🧪️testing/🧪️tests/🧫️fixtures/🔢️payload-contracts/🔣️.json");
 
 test("native testing scalar contracts admit only actual signed, nullable and unsigned values", () => {
   const schema = contract(), ajv = new Ajv({ strict: true }).addSchema(schema);

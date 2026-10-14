@@ -10,7 +10,7 @@
     ]
   },
   "targets": {
-    "prepare-dev": {
+    "prepare-prototype": {
       "executor": "nx:run-commands",
       "cache": true,
       "outputs": [],
@@ -21,21 +21,25 @@
         }
       ],
       "dependsOn": [
-        "@semio-tech/framework-os-dev:prepare-aggregator-react-dev",
-        "@semio-tech/framework-os-dev:prepare-aussuchen-react-dev",
-        "@semio-tech/framework-os-dev:prepare-bearbeiten-react-dev",
-        "@semio-tech/framework-os-dev:prepare-energy-react-dev",
-        "@semio-tech/framework-os-dev:prepare-fem3d-react-dev",
-        "@semio-tech/framework-os-dev:prepare-generation3d-react-dev",
-        "@semio-tech/framework-os-dev:prepare-generator-react-dev",
-        "@semio-tech/framework-os-dev:prepare-koordinator-react-dev",
-        "@semio-tech/framework-os-dev:prepare-verfolgen-react-dev"
+        "@semio-tech/framework-os-dev:prepare-aggregator-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-aussuchen-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-bearbeiten-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-energy-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-fem3d-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-generation3d-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-generator-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-koordinator-react-prototype",
+        "@semio-tech/framework-os-dev:prepare-verfolgen-react-prototype"
       ],
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
-        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare dev",
-        "forwardAllArgs": false
-      }
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare",
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_BUILD_MODE": "prototype"
+        }
+      },
+      "defaultConfiguration": "prototype"
     },
     "prepare-release": {
       "executor": "nx:run-commands",
@@ -60,9 +64,13 @@
       ],
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
-        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare release",
-        "forwardAllArgs": false
-      }
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare",
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_BUILD_MODE": "release"
+        }
+      },
+      "defaultConfiguration": "release"
     },
     "dev": {
       "metadata": {
@@ -77,7 +85,7 @@
       },
       "executor": "nx:run-commands",
       "dependsOn": [
-        "activate-dev"
+        "activate-prototype"
       ],
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
@@ -120,11 +128,11 @@
         "forwardAllArgs": true
       }
     },
-    "activate-dev": {
+    "activate-prototype": {
       "executor": "nx:run-commands",
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist/♻️activation/dev"
+        "{projectRoot}/dist/♻️activation/prototype"
       ],
       "inputs": [
         {
@@ -133,18 +141,22 @@
         }
       ],
       "dependsOn": [
-        "prepare-dev",
-        "@semio-tech/mit-bestand-demonstrator:activate-lanes-dev"
+        "prepare-prototype",
+        "@semio-tech/mit-bestand-demonstrator:activate-lanes-prototype"
       ],
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts activate",
-        "forwardAllArgs": false
-      }
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_BUILD_MODE": "prototype"
+        }
+      },
+      "defaultConfiguration": "prototype"
     },
-    "activate-lanes-dev": {
-      "executor": "nx:noop",
-      "cache": true,
+    "activate-lanes-prototype": {
+      "executor": "nx:run-commands",
+      "cache": false,
       "outputs": [],
       "inputs": [
         {
@@ -153,10 +165,19 @@
         }
       ],
       "dependsOn": [
-        "@semio-tech/framework-os-dev:activate-energy-react-dev",
-        "@semio-tech/framework-os-dev:activate-fem3d-react-dev",
-        "@semio-tech/framework-os-dev:activate-generator-react-dev"
-      ]
+        "@semio-tech/framework-os-dev:activate-energy-react-prototype",
+        "@semio-tech/framework-os-dev:activate-fem3d-react-prototype",
+        "@semio-tech/framework-os-dev:activate-generator-react-prototype"
+      ],
+      "options": {
+        "cwd": "♻️mit-bestand/🧺️demonstrator",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts complete",
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_BUILD_MODE": "prototype"
+        }
+      },
+      "defaultConfiguration": "prototype"
     },
     "serve": {
       "metadata": {
@@ -179,7 +200,7 @@
       "continuous": true,
       "outputs": [],
       "dependsOn": [
-        "activate-dev"
+        "activate-prototype"
       ]
     },
     "prepare-e2e": {
@@ -187,7 +208,7 @@
       "cache": false,
       "outputs": [],
       "dependsOn": [
-        "activate-dev",
+        "activate-prototype",
         "workspace:deps-browsers"
       ],
       "options": {

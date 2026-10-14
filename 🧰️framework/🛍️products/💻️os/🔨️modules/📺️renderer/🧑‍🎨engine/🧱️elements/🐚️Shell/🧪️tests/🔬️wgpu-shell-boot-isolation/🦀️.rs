@@ -82,7 +82,7 @@ pub(super) fn boot_manifest(plugin_id: &str, app_ids: &[&str]) -> PluginManifest
 /// shell's own boot failure (`📓️runtime-verification-2026-09-09.md`, wgpu boot #1).
 #[test]
 fn boot_selection_opens_the_requested_variant_across_the_fixture_table() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🔬️wgpu-shell-boot-selection/🔣️.json")).expect("boot selection fixture parses");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔬️wgpu-shell-boot-selection/🔣️.json")).expect("boot selection fixture parses");
     for case in fixture["cases"].as_array().expect("fixture cases") {
         let variant = case["variant"].as_str().expect("case variant");
         let manifests: Vec<(String, PluginManifest)> = case["programs"]

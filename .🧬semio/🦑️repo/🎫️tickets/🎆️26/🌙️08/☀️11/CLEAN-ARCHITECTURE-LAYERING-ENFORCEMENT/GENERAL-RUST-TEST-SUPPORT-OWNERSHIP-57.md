@@ -1,0 +1,9 @@
+# General Rust Test Support Ownership
+
+The fresh read-only alias search found three actual OS-bound Rust support bodies physically placed under General `🧰️framework/🔨️modules/🧪️test`: typed-input retirement, transient preparation, and original snapshot owners. Their executable Rust imports name `semio_framework_os_kernel`; these are real imports rather than comments or schema examples. They are included by path in Specific artifact integration tests.
+
+The current reference search found 83 Rust/TypeScript/manifest files mentioning those three mounted support paths. No General test-support Cargo package exists at the inspected `🧪️test/📦️packages` location. The inspected General aggregate package does not name those OS aliases directly. Consequently this evidence establishes misplaced Specific testing implementation, not a proven compiled General production dependency or a whole deletion failure.
+
+Most other alias matches in the scoped General source search were documentation, obsolete comments about derive paths, or test ownership guards. The actual Value derive default inspected now names the neutral Value crate. Graph layout-run's manifest requires General dependencies; its OS-derived-path comment alone does not establish an OS dependency. Those distinctions must survive a resolved dependency audit.
+
+A complete ownership cut should move the actual three support bodies to their closest Specific OS testing owner, hand-port all real mounts and metadata, and preserve every existing assertion, allocator observation, original snapshot owner, and retirement grant. A dedicated test-support package may be appropriate if its public API is authored as testing infrastructure; private corpus or test-only hooks must not be added to the production OS API. The retained General and actual Specific native scopes need separate real receiving verification. No source bodies or cases were copied, no support body moved, and no tests were run for this audit.

@@ -1,5 +1,5 @@
 fn command_entry_grant(copy: usize, capacity: usize, release: usize) -> RetainedCloneGrant { RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: 64 } }
-fn command_entry_fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
+fn command_entry_fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
 fn command_entry_label(row: &serde_json::Value) -> Option<LocalizedLabel> { row["label"].is_object().then(|| LocalizedLabel::from_fn(|term, locale| row["label"][term.as_str()][locale.as_str()].as_str().unwrap().into())) }
 fn command_entry_source<'a>(row: &'a serde_json::Value, label: Option<&'a LocalizedLabel>, millis: i64) -> MountedCommandEntrySource<'a> { MountedCommandEntrySource { action_id: row["actionId"].as_str().unwrap(), label, captured_millis: millis, kind: ActionKind::Mutation, count: 1, parent_touched: row["parentTouched"].as_bool().unwrap(), child_edit_count: row["childEditIds"].as_array().unwrap().len() } }
 fn command_entry_close(owner: &mut MountedCommandEntry) {

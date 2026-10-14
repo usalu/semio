@@ -6,7 +6,7 @@ import {resolve,join} from "node:path";
 import {spawnSync} from "node:child_process";
 const root=resolve(import.meta.dir,"../../../../../..");
 const owner=resolve(import.meta.dir,"../..");
-const corpus=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📍️ownership/🔣️.json"),"utf8")) as {source:string;unit:string;retainedUnitSha256:string;family:string[];laws:string[];cacheBehavior:Record<string,string>};
+const corpus=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/📍️ownership/🔣️.json"),"utf8")) as {source:string;unit:string;retainedUnitSha256:string;family:string[];laws:string[];cacheBehavior:Record<string,string>};
 const read=(path:string):string=>readFileSync(join(root,path),"utf8");
 test("closed compute ownership corpus retains six actual law names",()=>{
  expect(new Set(corpus.family).size).toBe(7);

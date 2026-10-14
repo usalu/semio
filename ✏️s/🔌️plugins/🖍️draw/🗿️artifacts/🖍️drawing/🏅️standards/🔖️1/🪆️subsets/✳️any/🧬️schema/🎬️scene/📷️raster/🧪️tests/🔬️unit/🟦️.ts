@@ -2,14 +2,14 @@
 import {test,expect,spyOn} from "bun:test";
 import Ajv from "ajv";
 import sharp from "sharp";
-import cases from "../../🧫️fixtures/🔣️.json";
+import cases from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📷️raster/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
-import pathHandoffCases from "../../🧫️fixtures/🧹️path/🔣️.json";
-import imageHandoffCases from "../../🧫️fixtures/🧹️image/🔣️.json";
-import imageSources from "../../🧫️fixtures/🖼️images/🔣️.json";
+import pathHandoffCases from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📷️raster/🧹️path/🔣️.json";
+import imageHandoffCases from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📷️raster/🧹️image/🔣️.json";
+import imageSources from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📷️raster/🖼️images/🔣️.json";
 import {AffineImageJob} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts";
 import pathSchema from "../../../../🧮️geometry/📷️raster/🧬️schema/🔣️.json";
-import compositingCases from "../../../🧩️compositing/🧫️fixtures/🔣️.json";
+import compositingCases from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🧩️compositing/🔣️.json";
 import {RasterSceneJob,rasterizeScene,type RasterSceneInput,type RasterSceneNode} from "../../🟦️.ts";
 import {PathRasterJob,type PathRasterInput} from "../../../../🧮️geometry/📷️raster/🟦️.ts";
 const ajv=new Ajv({strict:true});ajv.addSchema(pathSchema);const validate=ajv.compile(schema);
@@ -103,7 +103,7 @@ test("conservative ellipse bounds do not reject a visible short arc with large r
 
 
 test("scene retains actual compositor through output publication until explicit close",async()=>{
- const rows=(await import("../../🧫️fixtures/🧹️compositing/🔣️.json")).default;
+ const rows=(await import("../../../../../🧪️tests/🧫️fixtures/🎬️scene/📷️raster/🧹️compositing/🔣️.json")).default;
  
  const {CompositeJob}=await import("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🟦️.ts"),original=CompositeJob.prototype.intoRetirement;
  for(const handoff of rows)for(const grant of [1,7,4096]){

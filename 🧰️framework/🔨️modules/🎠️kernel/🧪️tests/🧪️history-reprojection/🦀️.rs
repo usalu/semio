@@ -5,7 +5,7 @@
 use super::*;
 use semio_framework_ui_locale::{Locale, Terminology};
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🧫️history-reprojection/🔣️.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/🧫️history-reprojection/🔣️.json");
 
 #[test]
 fn the_labels_mirror_the_fixture_in_both_locales() {

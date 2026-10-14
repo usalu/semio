@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { countStrayDevToolZombies, dashboardDaemonPid, isDevLeftoverRow, listDevLeftoverRows, planStrayProcessRemovals, strayProcessExecutableName } from "../../🔨️modules/📚️library/🧼️workspace-cleanup/🧟️stray-processes/🟦️.ts";
 
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧼️workspace-cleanup-stray-processes/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧼️workspace-cleanup-stray-processes/🔣️.json"), "utf8"));
 
 test("dev leftover command markers catch cursor-agent workers", () => {
   expect(isDevLeftoverRow({

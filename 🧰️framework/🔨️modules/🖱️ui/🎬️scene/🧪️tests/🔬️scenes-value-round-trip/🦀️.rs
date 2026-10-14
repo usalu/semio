@@ -119,7 +119,7 @@ fn board2d_scene_and_block_list_scene_round_trip() {
 /// 🔬️ The shared typed scene stays structural through the native Pack and value boundaries.
 #[test]
 fn typed_block_list_shared_fixture_round_trips_without_nested_text() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧩️block-list/🔣️.json")).expect("authored block-list fixture");
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧩️block-list/🔣️.json")).expect("authored block-list fixture");
     let scene:BlockListScene=serde_json::from_value(fixture["scene"].clone()).expect("independent typed Serde admission");
     let value=scene.to_value();
     assert!(value.get("steps").is_some_and(|steps| steps.as_array().is_some()));

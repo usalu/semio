@@ -15,11 +15,11 @@
 use super::super::super::{OpeningDiff, OpeningPreferences};
 use super::super::OpeningConfigMutation;
 
-const BEFORE: &str = include_str!("../../🧫️fixtures/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../🧫️fixtures/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../🧫️fixtures/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../🧫️fixtures/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../🧫️fixtures/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹clear-default-app/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹clear-default-app/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹clear-default-app/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹clear-default-app/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹clear-default-app/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🎯️outcome/🔣️.json");
 
 fn before() -> OpeningPreferences {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before opening preferences decode")

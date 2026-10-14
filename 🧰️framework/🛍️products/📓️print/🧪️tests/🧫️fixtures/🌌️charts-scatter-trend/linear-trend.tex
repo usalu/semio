@@ -1,0 +1,9 @@
+\documentclass{article}
+\usepackage{semio-viz-charts-scatter}
+\begin{document}
+\SemioVizProbeOn
+\SemioVizProbeBegin{charts-scatter-trend}{linear-trend}
+\begin{VizProbeCanvas}[80][40]
+\SemioVizRunFamily{scatter}[data=demo-scatter,x=x,y=y,trend=linear,axes=false]
+\end{VizProbeCanvas}
+\end{document}

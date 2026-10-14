@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔏️set-classification-system/✅️renames-and-reeditions",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏️set-classification-system/✅️renames-and-reeditions/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏️set-classification-system/✅️renames-and-reeditions/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏️set-classification-system/✅️renames-and-reeditions/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏️set-classification-system/✅️renames-and-reeditions/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏️set-classification-system/✅️renames-and-reeditions/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔏️set-classification-system/✅️renames-and-reeditions/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔏️set-classification-system/✅️renames-and-reeditions/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔏️set-classification-system/✅️renames-and-reeditions/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔏️set-classification-system/✅️renames-and-reeditions/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔏️set-classification-system/✅️renames-and-reeditions/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

@@ -1,6 +1,6 @@
 /** 🧪️ Shared DAG facts and hostile inputs agree with an independent schema compiler. */
 import {expect,test} from "bun:test";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../../../../🧬️schema/🎯️dag-input/🔣️.json";
 import {decodeDagSelectionJson,decodeDagChannelsJson,decodeDagNodeStatusesJson,decodeDagHoverJson,type DagTextDecodeControl} from "../🟦️.ts";
 import {NativeDecodeControl} from "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🟦️.ts";
@@ -39,7 +39,7 @@ test("DAG physical strings preserve literal map identities and refuse non-Unicod
  console.log("[DEBUG] DAG native-compatible Unicode refusal and prototype-neutral identities executed");
 });
 
-import selectionFixture from "../../../../🔌️ports/➡️directed/🕸️dag/🧫️fixtures/🎯️selected-json.json";
+import selectionFixture from "../../../../🔌️ports/➡️directed/🕸️dag/🧪️tests/🧫️fixtures/🎯️selected-json.json";
 import {DagSelectionJsonCursor,DagSelectionTextError,type DagSelectionTextGrant} from "../📤️selection/🟦️.ts";
 
 test("retained selection physical cursor preserves original neutral bytes and every guard frontier",()=>{

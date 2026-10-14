@@ -1,0 +1,110 @@
+{
+  "cases": [
+    {
+      "id": "original-deadline",
+      "value": {
+        "version": 1,
+        "policy": {
+          "version": 1,
+          "owner": "neutral-original-process",
+          "maximumElapsedMilliseconds": 1000
+        },
+        "deadlineEpochMilliseconds": 2000,
+        "capabilities": {
+          "owner": "original-portable-caller",
+          "command": "original-handoff"
+        }
+      },
+      "now": 1250,
+      "accepted": true,
+      "remaining": 750
+    },
+    {
+      "id": "expired-original",
+      "value": {
+        "version": 1,
+        "policy": {
+          "version": 1,
+          "owner": "neutral-original-process",
+          "maximumElapsedMilliseconds": 1000
+        },
+        "deadlineEpochMilliseconds": 2000,
+        "capabilities": {
+          "owner": "original-portable-caller",
+          "command": "original-handoff"
+        }
+      },
+      "now": 2000,
+      "accepted": false
+    },
+    {
+      "id": "widened-child",
+      "value": {
+        "version": 1,
+        "policy": {
+          "version": 1,
+          "owner": "neutral-original-process",
+          "maximumElapsedMilliseconds": 1000
+        },
+        "deadlineEpochMilliseconds": 2000,
+        "capabilities": {
+          "owner": "original-portable-caller",
+          "command": "original-handoff"
+        }
+      },
+      "now": 500,
+      "accepted": false
+    },
+    {
+      "id": "missing-deadline",
+      "value": {
+        "version": 1,
+        "policy": {
+          "version": 1,
+          "owner": "neutral-original-process",
+          "maximumElapsedMilliseconds": 1000
+        },
+        "capabilities": {
+          "owner": "original-portable-caller",
+          "command": "original-handoff"
+        }
+      },
+      "now": 1250,
+      "accepted": false
+    },
+    {
+      "id": "foreign-extension",
+      "value": {
+        "version": 1,
+        "policy": {
+          "version": 1,
+          "owner": "neutral-original-process",
+          "maximumElapsedMilliseconds": 1000
+        },
+        "deadlineEpochMilliseconds": 2000,
+        "reset": true,
+        "capabilities": {
+          "owner": "original-portable-caller",
+          "command": "original-handoff"
+        }
+      },
+      "now": 1250,
+      "accepted": false
+    },
+    {
+      "id": "missing-original-capabilities",
+      "value": {
+        "version": 1,
+        "policy": {
+          "version": 1,
+          "owner": "neutral-original-process",
+          "maximumElapsedMilliseconds": 1000
+        },
+        "deadlineEpochMilliseconds": 2000
+      },
+      "now": 1250,
+      "accepted": false
+    }
+  ],
+  "policyReference": "urn:semio:framework:process:script-policy"
+}

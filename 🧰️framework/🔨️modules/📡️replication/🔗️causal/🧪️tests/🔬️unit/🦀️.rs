@@ -55,7 +55,7 @@ impl crate::value::FromValue for CausalAddOp {
 }
 const CAUSAL_ADD_DESCRIPTOR: crate::mutation::MutationLeafDescriptor = crate::mutation::MutationLeafDescriptor {
     schema_version: 1,
-    owner: "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧫️fixtures/🧬️mutations/➕️causal-add",
+    owner: "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🧫️fixtures/🧬️mutations/➕️causal-add",
     semantic_kind: "causal-add",
     display_name: "Causal Add",
     emoji: "➕️",
@@ -149,7 +149,7 @@ fn retire_dag_shell(dag: &mut MutationDag) {
 #[test]
 fn causal_add_fixture_has_exact_required_descriptor() {
     use crate::mutation::Mutation;
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️mutations/➕️causal-add/🧪️descriptor/🔣️.json")).unwrap();
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🧬️mutations/➕️causal-add/🧪️descriptor/🔣️.json")).unwrap();
     assert_eq!(CAUSAL_ADD_DESCRIPTOR.validate(), Ok(()));
     assert_eq!(CausalAddOp::DESCRIPTORS.len(), 1);
     assert_eq!(serde_json::Value::from(crate::value::ToValue::to_value(CausalAddOp { delta: -7 }.descriptor())), expected);
@@ -623,7 +623,7 @@ fn envelopes_batch_binary_round_trips_including_empty() {
 
 #[test]
 fn document_backbone_batch_fixture_is_exact_bounded_and_u64_safe() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json")).expect("document backbone fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json")).expect("document backbone fixture parses");
     assert_eq!(fixture["retention"]["maximumBytes"].as_u64(), Some(DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES as u64));
     assert_eq!(fixture["retention"]["maximumMessages"].as_u64(), Some(DOCUMENT_BACKBONE_PENDING_MAXIMUM_MESSAGES as u64));
     for row in fixture["cases"].as_array().expect("fixture cases") {
@@ -688,7 +688,7 @@ fn ops_vec_binary_round_trips_including_empty() {
 
 #[test]
 fn causal_empty_fixed_slots_keep_each_allocation_under_declared_admission(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../📦️slots/🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../📦️slots/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let (dag,requested)=crate::test_allocation::observe(MutationDag::new);
     assert!(dag.terminal_is_empty());assert!(requested>0);
     let original=std::mem::size_of_val(&*dag.envelopes.slots);
@@ -700,7 +700,7 @@ fn causal_empty_fixed_slots_keep_each_allocation_under_declared_admission(){
 
 #[test]
 fn causal_backing_retirement_preserves_exact_slots_and_funds_one_indivisible_allocation(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../📦️slots/🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../📦️slots/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in law["cases"].as_array().unwrap(){
         let count=case["occupied"].as_u64().unwrap() as usize;
         let(mut dag,birth)=crate::test_allocation::observe(MutationDag::new);

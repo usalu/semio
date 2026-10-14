@@ -3,7 +3,7 @@ use super::*;
 use crate::editor::bim::terminology::BimLabels;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const ZONING: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🏘️zones/🏡️zoning/📸️snapshot/🔣️.json");
+const ZONING: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏘️zones/🏡️zoning/📸️snapshot/🔣️.json");
 
 fn zoning() -> ModelSnapshot {
     from_json_str(ZONING, JsonMemberPolicy::Reject).expect("the fixture decodes")

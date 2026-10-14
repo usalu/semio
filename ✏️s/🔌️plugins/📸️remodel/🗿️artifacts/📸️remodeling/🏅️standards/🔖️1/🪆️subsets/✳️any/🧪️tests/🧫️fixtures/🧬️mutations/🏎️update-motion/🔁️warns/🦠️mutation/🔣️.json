@@ -1,0 +1,10 @@
+{
+  "mutation": "updateMotionParams",
+  "params": {
+    "enabled": true,
+    "maxTracks": 64,
+    "trackWindowPx": 21,
+    "minTrackQuality": 0.30078125,
+    "minTrackLengthFrames": 5
+  }
+}

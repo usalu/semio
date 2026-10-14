@@ -27,6 +27,7 @@ crate-type = ["rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-canvas = { path = "../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
@@ -90,3 +91,7 @@ web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window", "Requ
 semio-framework-trace = { path = "../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+
+[[test]]
+name="original_world_resources"
+path="../../🌍️world/♻️resources/🧪️tests/🦀️.rs"

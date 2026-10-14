@@ -161,7 +161,7 @@ pub const ARCHITECT_INTERACTION_GRANULARITY_ENTITY: &str = "entity";
 /// `📐️cad` all take this route; the log is edit-free by construction, which is exactly what a
 /// whole-document replace carries.
 pub fn reset_document_effect(document: &ProgramSnapshot) -> semio_framework_plugin::Effect {
-    let pack = <ProgramSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let pack = <ProgramSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(ARCHITECT_APP_ID, ARCHITECT_PROGRAM_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
@@ -1211,6 +1211,7 @@ impl ArtifactEditor for ArchitectPlayApp {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

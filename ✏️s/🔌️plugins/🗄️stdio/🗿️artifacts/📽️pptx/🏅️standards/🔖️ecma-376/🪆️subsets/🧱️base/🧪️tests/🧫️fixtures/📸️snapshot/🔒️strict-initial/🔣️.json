@@ -1,0 +1,108 @@
+{
+  "projection": {
+    "format": "pptx",
+    "mainPart": "ppt/presentation.xml",
+    "mainRootName": "p:presentation",
+    "mainRootAttributes": [
+      {
+        "name": "conformance",
+        "value": "strict"
+      },
+      {
+        "name": "xmlns:a",
+        "value": "http://purl.oclc.org/ooxml/drawingml/main"
+      },
+      {
+        "name": "xmlns:p",
+        "value": "http://purl.oclc.org/ooxml/presentationml/main"
+      },
+      {
+        "name": "xmlns:r",
+        "value": "http://purl.oclc.org/ooxml/officeDocument/relationships"
+      }
+    ],
+    "parts": [
+      {
+        "path": "[Content_Types].xml",
+        "contentType": "application/xml"
+      },
+      {
+        "path": "_rels/.rels",
+        "contentType": "application/vnd.openxmlformats-package.relationships+xml"
+      },
+      {
+        "path": "ppt/_rels/presentation.xml.rels",
+        "contentType": "application/vnd.openxmlformats-package.relationships+xml"
+      },
+      {
+        "path": "ppt/presentation.xml",
+        "contentType": "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"
+      },
+      {
+        "path": "ppt/slideLayouts/_rels/slideLayout1.xml.rels",
+        "contentType": "application/vnd.openxmlformats-package.relationships+xml"
+      },
+      {
+        "path": "ppt/slideLayouts/slideLayout1.xml",
+        "contentType": "application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"
+      },
+      {
+        "path": "ppt/slideMasters/_rels/slideMaster1.xml.rels",
+        "contentType": "application/vnd.openxmlformats-package.relationships+xml"
+      },
+      {
+        "path": "ppt/slideMasters/slideMaster1.xml",
+        "contentType": "application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"
+      },
+      {
+        "path": "ppt/theme/theme1.xml",
+        "contentType": "application/vnd.openxmlformats-officedocument.theme+xml"
+      }
+    ],
+    "namespaces": [
+      "http://purl.oclc.org/ooxml/drawingml/main",
+      "http://purl.oclc.org/ooxml/officeDocument/relationships",
+      "http://purl.oclc.org/ooxml/presentationml/main"
+    ],
+    "relationshipTypes": [
+      "http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument",
+      "http://purl.oclc.org/ooxml/officeDocument/relationships/slideLayout",
+      "http://purl.oclc.org/ooxml/officeDocument/relationships/slideMaster",
+      "http://purl.oclc.org/ooxml/officeDocument/relationships/theme"
+    ],
+    "alternateContentParts": []
+  },
+  "relationships": [
+    {
+      "source": "package",
+      "type": "http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument",
+      "target": "ppt/presentation.xml",
+      "id": "rId1"
+    },
+    {
+      "source": "ppt/presentation.xml",
+      "type": "http://purl.oclc.org/ooxml/officeDocument/relationships/slideMaster",
+      "target": "ppt/slideMasters/slideMaster1.xml",
+      "id": "rId1"
+    },
+    {
+      "source": "ppt/slideMasters/slideMaster1.xml",
+      "type": "http://purl.oclc.org/ooxml/officeDocument/relationships/slideLayout",
+      "target": "ppt/slideLayouts/slideLayout1.xml",
+      "id": "rId1"
+    },
+    {
+      "source": "ppt/slideMasters/slideMaster1.xml",
+      "type": "http://purl.oclc.org/ooxml/officeDocument/relationships/theme",
+      "target": "ppt/theme/theme1.xml",
+      "id": "rId2"
+    },
+    {
+      "source": "ppt/slideLayouts/slideLayout1.xml",
+      "type": "http://purl.oclc.org/ooxml/officeDocument/relationships/slideMaster",
+      "target": "ppt/slideMasters/slideMaster1.xml",
+      "id": "rId1"
+    }
+  ],
+  "qualification": "Independently authored exact eight-key projection and five relationship rows checked against mounted literals; no firstparty encoder expected generation."
+}

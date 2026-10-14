@@ -34,7 +34,7 @@ fn direct_command() -> BmpEditCommand {
 }
 
 fn direct_snapshot() -> BmpSnapshot {
-    crate::standards::v_v3::subsets::any::io::decode_bmp(include_bytes!("../../../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp")).unwrap()
+    crate::standards::v_v3::subsets::any::io::decode_bmp(include_bytes!("../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp")).unwrap()
 }
 
 fn drive(command: &BmpEditCommand, snapshot: &BmpSnapshot, tool_id: &'static str) -> Vec<BmpMutation> {
@@ -73,7 +73,7 @@ fn initial_bitmap_is_immediately_paintable_and_reopens() {
 fn natural_file_route_preserves_bmp_v3_bytes_and_opens_a_fresh_snapshot_event() {
     let codec = <BmpEditor as ArtifactEditor>::natural_file_codec().expect("BMP natural codec");
     assert_eq!((codec.format_kind, codec.extension, codec.media_type, codec.binary), ("s.stdio.bmp@v3", ".bmp", "image/bmp", true));
-    let source = include_bytes!("../../../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp");
+    let source = include_bytes!("../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp");
     let current = <BmpEditor as ArtifactEditor>::initial_snapshot();
     let imported = <BmpEditor as ArtifactEditor>::decode_natural_file(source).expect("BMP natural import");
     let exported = <BmpEditor as ArtifactEditor>::encode_natural_file(&imported).expect("BMP natural export");
@@ -121,7 +121,7 @@ fn retained_direct_paint_captures_revision_and_preserves_unaddressed_bytes() {
 #[test]
 fn retained_indexed_paint_keeps_duplicate_color_indices_distinct() {
     use protocol::{Mutation, MutationDiff};
-    let before = crate::standards::v_v3::subsets::any::io::decode_bmp(include_bytes!("../../../🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb1-duplicate-palette.bmp")).unwrap();
+    let before = crate::standards::v_v3::subsets::any::io::decode_bmp(include_bytes!("../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb1-duplicate-palette.bmp")).unwrap();
     let command =
         bmp_editor_command_from_action(paint_region::INDEXED_ACTION_ID, Some(&semio_framework_value::DslValue::object([("x".into(), number(0)), ("y".into(), number(0)), ("width".into(), number(1)), ("height".into(), number(1)), ("paletteIndex".into(), number(1))])))
             .unwrap();

@@ -1,7 +1,7 @@
 /** 🧮️ Explicit-locale status transitions agree with an independent i18next projection. */
 import {expect,test} from "bun:test";
 import {createInstance} from "i18next";
-import rows from "../../🧫️fixtures/🔣️.json";
+import rows from "../🧫️fixtures/🔣️.json";
 import {drawingSelectionStatus} from "../../🟦️.ts";
 
 test("drawing selection status projects bilingual live counts with an independent localization oracle",async()=>{

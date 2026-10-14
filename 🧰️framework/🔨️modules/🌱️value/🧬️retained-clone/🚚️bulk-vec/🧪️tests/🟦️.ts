@@ -1,6 +1,6 @@
 import Ajv from "ajv";
 import {expect,test} from "bun:test";
-import law from "../🧫️fixtures/🔣️.json";
+import law from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 
 const sample=(index:number)=>(index*law.sample.multiplier+law.sample.offset)%law.sample.modulo;

@@ -6,7 +6,7 @@ import {join,isAbsolute} from "node:path";
 import {setImmediate} from "node:timers/promises";
 import {runMutationInventoryCargoProducer,runMutationInventoryCargoProducerCommand} from "../🟦️.ts";
 import {MutationInventoryProcessWorkspace,readMutationInventoryCapture,mutationInventoryPolicyArguments,readMutationInventoryExecutionPolicy} from "../../🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
+import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 const require=createRequire(import.meta.url),Ajv=require("ajv"),execa=require("execa"),output=process.env.SEMIO_TEST_ARTIFACT_DIR;
 if(!output||!isAbsolute(output))throw Error("Authored absolute command test storage required");

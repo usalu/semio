@@ -8,7 +8,7 @@ use semio_framework_tool_run::{ToolRunId, ToolRunStep, ToolRunTick, ToolRunTrace
 use serde_json::Value;
 use std::collections::BTreeSet;
 
-pub(crate) const FIXTURE: &str = include_str!("../../🧫️fixtures/🎞️layout-run.json");
+pub(crate) const FIXTURE: &str = include_str!("../🧫️fixtures/🎞️layout-run.json");
 const SCHEMA: &str = include_str!("../../🧬️schema/🔣️.json");
 
 pub(crate) type TestEncoder = fn(u32, u64, LayoutRunPoint) -> Result<Vec<u8>, LayoutRunEncodeError>;

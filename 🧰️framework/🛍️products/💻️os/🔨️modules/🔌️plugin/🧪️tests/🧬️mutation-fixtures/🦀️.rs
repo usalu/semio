@@ -16,9 +16,9 @@ pub mod wire;
 /// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.
 #[test]
 fn committed_wire_witnesses_are_the_canonical_wire() {
-    ::store::os_store::test_support::assert_wire_witness::<dummy::DummyMutation>(include_str!("../../🧪️testing/🧬️mutation-fixtures/🎲️dummy/🧬️mutations/📝️set-dummy-count/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    ::store::os_store::test_support::assert_wire_witness::<transaction::TxnMutation>(include_str!("../../🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/📝️set-transaction/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    ::store::os_store::test_support::assert_wire_witness::<transaction::TxnMutation>(include_str!("../../🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/⏩️set-transaction/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    ::store::os_store::test_support::assert_wire_witness::<transaction::TxnMutation>(include_str!("../../🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/📣️set-transaction/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    ::store::os_store::test_support::assert_wire_witness::<surface::SurfaceMutation>(include_str!("../../🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/📝️set-surface-count/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::store::os_store::test_support::assert_wire_witness::<dummy::DummyMutation>(include_str!("../../🧪️testing/🧬️mutation-fixtures/🎲️dummy/🧬️mutations/📝️set-dummy-count/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::store::os_store::test_support::assert_wire_witness::<transaction::TxnMutation>(include_str!("../../🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/📝️set-transaction/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::store::os_store::test_support::assert_wire_witness::<transaction::TxnMutation>(include_str!("../../🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/⏩️set-transaction/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::store::os_store::test_support::assert_wire_witness::<transaction::TxnMutation>(include_str!("../../🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/📣️set-transaction/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::store::os_store::test_support::assert_wire_witness::<surface::SurfaceMutation>(include_str!("../../🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/📝️set-surface-count/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }

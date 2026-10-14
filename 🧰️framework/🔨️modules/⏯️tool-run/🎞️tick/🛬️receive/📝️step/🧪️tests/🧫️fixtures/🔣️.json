@@ -1,0 +1,1 @@
+{"contract":"semio.tool-run.original-step-receiving.v1","grant":[1,17,65536,262144,64],"bodyHex":"000701040402040003040104040705040906040107081201000000000000e03f000300000000000000","sequence":4,"kind":"info","stage":1,"reason":7,"subject":9,"repeat":1,"arguments":[{"kind":"float","value":0.5},{"kind":"unsigned","value":3}],"interruptAfter":[0,1,4,10,19,20,21,27,36,38,1000]}

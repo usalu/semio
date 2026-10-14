@@ -5,7 +5,7 @@ use super::*;
 //#region 🧪️ParameterSemantics
 #[test]
 fn graph_parameter_preserves_labels_and_existing_range_expansion() {
-    let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in fixture.get("cases").and_then(semio_framework_pack_json::Value::as_array).unwrap() {
         let before = case.get("before").unwrap();
         let mut widget = Widget::InputSlider {

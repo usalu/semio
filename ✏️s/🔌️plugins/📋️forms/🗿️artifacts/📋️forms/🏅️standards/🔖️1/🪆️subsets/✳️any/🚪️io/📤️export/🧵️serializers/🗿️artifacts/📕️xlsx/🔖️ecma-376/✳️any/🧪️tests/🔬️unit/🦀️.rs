@@ -8,7 +8,7 @@ async fn xlsx_is_a_real_workbook_of_the_question_grid_a_third_party_reader_agree
     use calamine::Reader;
     let spec = onboarding_example_spec();
     let IoOutcome { value: IoPayload::Binary(pack), .. } = FormsIntoXlsx::serialize(&spec, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("xlsx") else { panic!("binary") };
-    let snapshot = <semio_s_artifact_stdio_xlsx::XlsxSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("xlsx pack");
+    let snapshot = <semio_s_artifact_stdio_xlsx::XlsxSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("xlsx pack");
     let bytes = semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx(&snapshot).expect("xlsx bytes");
     let mut reference: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(bytes)).expect("calamine opens the workbook");
     assert_eq!(reference.sheet_names(), ["Questions"]);

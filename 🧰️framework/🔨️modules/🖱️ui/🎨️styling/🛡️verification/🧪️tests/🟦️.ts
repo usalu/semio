@@ -4,7 +4,7 @@ import ts from "typescript";
 import { colorOracle as colorString } from "./⚖️color-oracle/🟦️.ts";
 import { resolve } from "node:path";
 import schema from "../🧬️schema/🔣️.json";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import * as verification from "../🟦️.ts";
 
 /** 🛡️Proves explicit owner scopes and source rules against AJV and TypeScript syntax. */

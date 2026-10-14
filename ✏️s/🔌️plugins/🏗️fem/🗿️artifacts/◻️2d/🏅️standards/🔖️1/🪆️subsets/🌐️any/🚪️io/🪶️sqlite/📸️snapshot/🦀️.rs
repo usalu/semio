@@ -1,10 +1,11 @@
 //! 🏗️ Literal finite-element entities, ordered ownership and exact binary64 words.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use crate::{FemAnalysisSettings,FemCombination,FemCombinationTerm,FemDof,FemElement,FemLoad,FemLoadCase,FemMaterial,FemNode,FemRegion,FemSection,FemSupport};
 #[path="../../../../../../../../../🧩️sqlite/🦀️.rs"]
 mod rows;
 use rows::*;
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{Cell,FloatColumn}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{Cell,FloatColumn}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 
@@ -30,14 +31,20 @@ fn forecast(source:&Fem2dSnapshot,control:&mut SqliteSnapshotControl<'_>,phase:S
  for(n,case)in source.load_cases.iter().enumerate(){add_rows(&mut total,case.loads.len().checked_mul(2).ok_or_else(||invalid("FEM2d load count overflow"))?,control)?;if n%256==0{control.checkpoint(phase,n,source.load_cases.len())?;}}
  for(n,combination)in source.combinations.iter().enumerate(){add_rows(&mut total,combination.terms.len(),control)?;if n%256==0{control.checkpoint(phase,n,source.combinations.len())?;}}Ok(total)
 }
-impl ArtifactSqliteSnapshot for Fem2dSnapshot{
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let value=store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)?;let total=forecast(&value,c,SqliteSnapshotPhase::DecodeNative)?;let mut out=RowWriter::forecast(c,SqliteSnapshotPhase::DecodeNative)?;value.write_sqlite_rows(&mut out,total)?;out.finish_forecast(total)?;Ok(value)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{let total=forecast(self,c,SqliteSnapshotPhase::EncodeNative)?;let mut out=RowWriter::forecast(c,SqliteSnapshotPhase::EncodeNative)?;self.write_sqlite_rows(&mut out,total)?;out.finish_forecast(total)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)}
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
+impl ArtifactSqliteSnapshotHost for Fem2dSnapshot{
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let value=store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)?;let total=forecast(&value,c,SqliteSnapshotPhase::DecodeNative)?;let mut out=RowWriter::forecast(c,SqliteSnapshotPhase::DecodeNative)?;value.write_sqlite_rows(&mut out,total)?;out.finish_forecast(total)?;Ok(value)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{let total=forecast(self,c,SqliteSnapshotPhase::EncodeNative)?;let mut out=RowWriter::forecast(c,SqliteSnapshotPhase::EncodeNative)?;self.write_sqlite_rows(&mut out,total)?;out.finish_forecast(total)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)}
+ 
+ 
+ 
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.fem.fem2d"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(invalid("FEM2d owned dialect differs")));}c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(store::io_schema::IoError::from_value_error)?;Ok(store::io_schema::IoOutcome::clean(()))}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for Fem2dSnapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
   let total=forecast(self,c,SqliteSnapshotPhase::ProjectSnapshot)?;let mut out=RowWriter::new(Self::SQLITE_SCHEMA,c)?;self.write_sqlite_rows(&mut out,total)?;out.checkpoint_total(total)?;out.finish()
  }
- fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
   store::sqlite_snapshot::validate_sqlite_database_schema(d,Self::SQLITE_SCHEMA,c.limits()).map_err(|e|invalid(e.to_string()))?;c.check_database(d,SqliteSnapshotPhase::ReconstructSnapshot)?;
   let documents=entities(d,"fem2d_document",4,DOCUMENT,c)?;if documents.len()!=1{return Err(invalid("FEM2d needs exactly one document"));}let document=*documents.get(&1).ok_or_else(||invalid("FEM2d document identity differs"))?;
   let region_rows=entities(d,"fem2d_region",8,REGION,c)?;let support_rows=entities(d,"fem2d_support",5,&[],c)?;let case_rows=entities(d,"fem2d_load_case",6,&[],c)?;let combination_rows=entities(d,"fem2d_combination",5,&[],c)?;
@@ -56,7 +63,6 @@ impl ArtifactSqliteSnapshot for Fem2dSnapshot{
   for row in ordered(combination_rows.into_values(),1,c)?{let mut combination_terms=Vec::new();for term in ordered(terms.remove(&row.rowid).unwrap_or_default(),row.rowid,c)?{combination_terms.push(FemCombinationTerm{case_id:text(term,3,c)?,factor:real(term,4,c)?});}combinations.push(FemCombination{id:text(row,3,c)?,name:text(row,4,c)?,terms:combination_terms});}
   let analysis=FemAnalysisSettings{modal_count:count(document,1,c)?,buckling_count:count(document,2,c)?,deformation_scale:real(document,3,c)?};c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(Self{nodes,elements,regions,materials,sections,supports,load_cases,combinations,analysis})
  }
- fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.fem.fem2d"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(invalid("FEM2d owned dialect differs")));}c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(store::io_schema::IoError::from_value_error)?;Ok(store::io_schema::IoOutcome::clean(()))}
 }
 
 impl Fem2dSnapshot{

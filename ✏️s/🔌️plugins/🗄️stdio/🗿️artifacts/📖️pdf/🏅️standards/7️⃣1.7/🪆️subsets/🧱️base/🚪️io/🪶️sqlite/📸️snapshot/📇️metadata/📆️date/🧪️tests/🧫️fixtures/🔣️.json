@@ -1,0 +1,8 @@
+{
+ "contract":"PDF native date widths and full document info fields remain semantic SQL scalars",
+ "dates":[
+  {"year":-2147483648,"month":4294967295,"day":4294967295,"hour":4294967295,"minute":4294967295,"second":4294967295,"offsetMinutes":-2147483648},
+  {"year":2147483647,"month":1,"day":1,"hour":0,"minute":0,"second":0,"offsetMinutes":null}
+ ],
+ "info":{"title":"Title","author":"Author","subject":"Subject","keywords":"Keywords","creator":"Creator","producer":"Producer","creationDate":{"year":2026,"month":10,"day":1,"hour":0,"minute":0,"second":0,"offsetMinutes":60},"modificationDate":null,"trapped":"Custom","extra":[{"key":"K","value":{"kind":"null"}}]}
+}

@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧭️transform/🔣️.json";
 
 const base = resolve(import.meta.dir, "../../../..");
 const read = (path: string) => readFileSync(resolve(base, path), "utf8");

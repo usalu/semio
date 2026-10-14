@@ -5,9 +5,9 @@
 import { describe, expect, test } from "bun:test";
 
 import { diffChars } from "diff";
-import fixture from "../../🧫️fixtures/✂️text-splice/🔣️.json";
+import fixture from "../🧫️fixtures/✂️text-splice/🔣️.json";
 import fc from "fast-check";
-import typingLaw from "../../../../🛠️tool-machine/🧫️fixtures/🧫️typing-law/🔣️.json";
+import typingLaw from "../../../../🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️typing-law/🔣️.json";
 import { applyTextSpliceV1, composeTextSplicesV1, createTextEditorTypingRunV1, locateTextSpliceV1, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_HOST_SIGNALS, TEXT_EDITOR_TYPING_IDLE_MS, rebaseTextEditsV1, receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_SPLICE_CONTEXT_SCALARS, TEXT_SPLICE_MIN_TWO_SIDED_SCALARS, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, textSpliceFromEditV1, utf8OffsetOfScalarV1, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1, type TextSpliceV1 } from "../../✂️text-splice/🟦️.ts";
 
 describe("text splice", () => {

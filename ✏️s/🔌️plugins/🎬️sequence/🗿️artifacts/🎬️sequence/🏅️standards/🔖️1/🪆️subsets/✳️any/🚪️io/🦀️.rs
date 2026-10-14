@@ -56,7 +56,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 
 /// 📦️ Encodes the subset's native snapshot for host document loading.
 pub fn snapshot_pack(snapshot: &crate::SequenceSnapshot) -> Vec<u8> {
-    <crate::SequenceSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(snapshot)
+    <crate::SequenceSnapshot as pack::snapshot::ArtifactPack>::encode_pack(snapshot)
 }
 
 #[cfg(test)]

@@ -7,8 +7,8 @@ async fn primary_asset_is_nonempty() {
 /// 🌍️ Preserves the entire foreign JSON demo through typed text and independent binary projection.
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_preserves_neutral_document_and_child_identities() {
-    use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document/🔣️.json")).unwrap();
+    use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️document/🔣️.json")).unwrap();
     let snapshot = crate::GisMapSnapshot::parse_dsl(super::PRIMARY_TEXT).expect("typed demo parses");
     let decoded = crate::GisMapSnapshot::decode_pack(&snapshot.encode_pack()).expect("typed demo binary decodes");
     assert_eq!(decoded, snapshot);
@@ -51,7 +51,7 @@ async fn default_example_document_carries_addressable_features() {
 async fn inference_determinism_law() {
     use protocol::Inference;
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
-    let snapshot = <crate::GisMapSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
+    let snapshot = <crate::GisMapSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
     let inference = crate::standards::v1::subsets::any::schema::inferences::GisMapInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::GisMapInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }

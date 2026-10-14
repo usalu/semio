@@ -7,7 +7,7 @@ import { getWorkspaceRoot, loadTaxonomy, semanticDirectoryKindId } from "../../.
 
 const repoRoot = getWorkspaceRoot();
 const domainRoot = resolve(import.meta.dir, "../..");
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️command-source/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🧱️command-source/🔣️.json"), "utf8"));
 
 
 function namedDeclarations(path: string): string[] {

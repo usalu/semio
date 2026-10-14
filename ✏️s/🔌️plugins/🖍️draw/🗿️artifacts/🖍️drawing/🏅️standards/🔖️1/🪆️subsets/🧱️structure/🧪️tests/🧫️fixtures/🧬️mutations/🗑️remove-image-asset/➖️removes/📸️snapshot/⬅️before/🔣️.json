@@ -1,0 +1,20 @@
+{
+  "schema": "drawing.document",
+  "id": "asset-fixture",
+  "title": "Image Asset Fixture",
+  "layers": [],
+  "assets": {
+    "bitmap": {
+      "width": 1,
+      "height": 1,
+      "samples": [
+        [
+          13,
+          27,
+          89,
+          255
+        ]
+      ]
+    }
+  }
+}

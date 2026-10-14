@@ -6,7 +6,7 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 
 /// 📜️ The language-agnostic run law the editor answers.
-const PREVIEW_EVAL_RUN_FIXTURE_JSON: &str = include_str!("../../../🧫️fixtures/⏯️preview-eval-run.json");
+const PREVIEW_EVAL_RUN_FIXTURE_JSON: &str = include_str!("../../../🧪️tests/🧫️fixtures/⏯️preview-eval-run.json");
 
 fn fixture() -> serde_json::Value {
     let fixture: serde_json::Value = serde_json::from_str(PREVIEW_EVAL_RUN_FIXTURE_JSON).expect("the preview evaluation run fixture parses");

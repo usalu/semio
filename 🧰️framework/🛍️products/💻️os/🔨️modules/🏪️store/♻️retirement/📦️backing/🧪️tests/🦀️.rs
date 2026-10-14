@@ -1,8 +1,19 @@
 use super::*;
 
 #[test]
+fn artifact_store_resident_paged_source_preserves_original_pages_order_and_funded_cleanup(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["pagedSource"];let grant:RetainedCloneGrant=serde_json::from_value(law["grant"].clone()).unwrap();let values:Vec<String>=law["values"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().to_owned()).collect();
+    for prefix in law["prefixes"].as_array().unwrap(){let prefix=prefix.as_u64().unwrap()as usize;let mut pages=semio_framework_value::list::PagedList::<String,{usize::MAX}>::with_payload_page_bytes(law["pageItems"].as_u64().unwrap()as usize*size_of::<String>()).unwrap();for value in &values{pages.push(value.clone());}let pointers:Vec<_>=pages.iter().map(|value|value.as_ptr()).collect();let backing=pages.allocated_bytes();let initial=backing+pages.iter().map(String::capacity).sum::<usize>();let mut published=Vec::with_capacity(prefix);let initial=initial+published.capacity()*size_of::<String>();let(mut owner,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||PagedSourceIterator::new(pages,String::new));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+        for index in 0..prefix{let mut receiving=None;for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.take_next_into(&mut receiving,denied));assert_eq!(result.unwrap(),Some(Default::default()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(receiving.is_none());assert_eq!(owner.peek().unwrap().as_ptr(),pointers[index]);assert_eq!(owner.backing_bytes(),backing);}let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.take_next_into(&mut receiving,grant));let progress=result.unwrap().unwrap();assert_eq!(progress.copied_items,1);assert!(progress.copied_bytes>=size_of::<String>());assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(receiving.as_ref().unwrap(),&values[index]);assert_eq!(receiving.as_ref().unwrap().as_ptr(),pointers[index]);assert_eq!(owner.backing_bytes(),backing);published.push(receiving.take().unwrap());}
+        assert_eq!(published,values[..prefix]);let(complete,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.publication_complete());assert_eq!(complete,prefix==values.len());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(Default::default()).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.backing_bytes(),backing);let(mut born,mut released)=(0,0);
+        for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break}let demand=owner.demands(grant.maximum_copy_bytes).unwrap();for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..grant}]{if denied.maximum_items!=0&&(demand.copy_bytes==0&&denied.maximum_copy_bytes!=grant.maximum_copy_bytes||demand.capacity_bytes==0&&denied.maximum_capacity_bytes!=grant.maximum_capacity_bytes||demand.release_bytes==0&&denied.maximum_release_bytes!=grant.maximum_release_bytes){continue}let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(denied));if denied.maximum_depth<demand.depth&&denied.maximum_items>0{assert_eq!(result.unwrap_err().kind,semio_framework_value::ValueRefusalKind::DepthLimit)}else{assert_eq!(result.unwrap().progress(),Default::default())}assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.demands(grant.maximum_copy_bytes).unwrap(),demand);}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;assert!(owner.publication_complete());}
+        assert!(owner.terminal_is_empty());let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(mut retirement,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_value::retirement::controlled::ControlledRetirement::new(published).ok().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){if retirement.terminal_is_empty(){break}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||retirement.step(grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;}assert!(retirement.terminal_is_empty());assert_eq!(born+initial,released);eprintln!("[DEBUG] original paged source prefix={prefix} backing={backing} initial={initial} born={born} released={released}; constructor/transfer/denial/terminalDrop0 and complete typed page custody");
+    }
+}
+
+#[test]
 fn artifact_store_resident_empty_backings_retain_undergrant_and_report_actual_free() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for bytes in fixture["emptyVectorExtents"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize) {
         let mut vector = Vec::<u8>::with_capacity(bytes);
         let mut deque = VecDeque::<u8>::with_capacity(bytes);
@@ -59,7 +70,7 @@ fn artifact_store_resident_empty_backings_retain_undergrant_and_report_actual_fr
 #[test]
 fn artifact_store_resident_detached_dag_forwards_exact_backing_then_cursor_terminal() {
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let maximum = fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize;
     let law = &fixture["dagRetirement"];
     for seed in [false, true] {
@@ -100,7 +111,7 @@ fn artifact_store_resident_detached_dag_forwards_exact_backing_then_cursor_termi
 }
 #[test]
 fn artifact_store_resident_registry_terminal_drop_has_no_unreported_native_lock_backing() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let mut registry = Some(SnapshotReadLeaseRegistry::new());
     loop {
         let demand = registry.as_ref().unwrap().owned_backing_demands().unwrap();
@@ -116,7 +127,7 @@ fn artifact_store_resident_registry_terminal_drop_has_no_unreported_native_lock_
 
 #[test]
 fn artifact_store_resident_registry_lock_matches_standard_contention_and_poison_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let oracle = std::sync::Mutex::new(());
     let registry = SnapshotReadLeaseRegistry::new();
     let standard = oracle.try_lock().unwrap();
@@ -142,7 +153,7 @@ fn artifact_store_resident_registry_lock_matches_standard_contention_and_poison_
 
 #[test]
 fn artifact_store_resident_registry_arc_frame_retains_original_alias_until_whole_funding() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let mut owner = SnapshotReadLeaseRegistryOwner::new();
     let original = owner.0.as_ref().unwrap().identity();
     let alias = owner.0.as_ref().unwrap().alias_handle().clone();
@@ -196,7 +207,7 @@ fn undergrants(demand: semio_framework_value::RetirementDemand) -> Vec<RetainedC
 
 #[test]
 fn artifact_store_resident_uninstalled_catalog_terminal_drop_has_no_unreported_factory_owners() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let maximum = fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize;
     let mut owners = super::super::tests::demo_closable_store_owners();
     while !owners.store_disposer.uninstalled_terminal_is_empty() {
@@ -232,7 +243,7 @@ fn artifact_store_resident_uninstalled_catalog_terminal_drop_has_no_unreported_f
 
 #[test]
 fn artifact_store_resident_consumed_envelope_keeps_catalog_until_exact_terminal_release() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let owners = super::super::tests::demo_closable_store_owners();
     let envelope = create_document_envelope::<super::super::tests::DemoSnapshot, super::super::fixture_mutations::demo::DemoMutation>("demo/v1", "catalog-cancel", super::super::tests::DemoSnapshot::default(), None);
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: owners.uninstalled_envelope_retirement_demands(&envelope).copy_bytes, maximum_capacity_bytes: usize::MAX / 2, maximum_release_bytes: 0, maximum_depth: 64 };
@@ -258,7 +269,7 @@ fn artifact_store_resident_consumed_envelope_keeps_catalog_until_exact_terminal_
 
 #[test]
 fn artifact_store_resident_metadata_string_reports_whole_physical_allocation_only() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for extent in fixture["emptyVectorExtents"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize) {
         let mut owner = ArtifactStoreStringRetirement::new(String::from_utf8(vec![b'a'; extent]).unwrap());
         let mut born = 0;
@@ -295,7 +306,7 @@ fn artifact_store_resident_metadata_string_reports_whole_physical_allocation_onl
 #[test]
 fn artifact_store_resident_metadata_wrappers_forward_exact_original_string_extent() {
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let extent = fixture["emptyVectorExtents"][0].as_u64().unwrap() as usize;
     let body = || String::from_utf8(vec![b'a'; extent]).unwrap();
     let mut revision = CursorRevisionAccumulator { identity_digest: [0; 32], applied: crate::os_vcs::HistoryPageStack::empty(), redo: crate::os_vcs::HistoryPageStack::empty(), applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() };
@@ -347,7 +358,7 @@ fn artifact_store_resident_metadata_wrappers_forward_exact_original_string_exten
 #[test]
 fn artifact_store_string_history_full_grant_reports_original_physical_heap() {
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["stringHistory"];
     let count = law["itemCount"].as_u64().unwrap() as usize;
     let bytes = law["bodyBytes"].as_u64().unwrap() as usize;
@@ -390,7 +401,7 @@ fn artifact_store_string_history_full_grant_reports_original_physical_heap() {
 
 #[test]
 fn artifact_store_original_source_iterator_reports_original_whole_backing_after_prefix_handoff() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["sourceIterator"];
     let expected: Vec<u64> = law["values"].as_array().unwrap().iter().map(|value| value.as_str().unwrap().parse().unwrap()).collect();
     let reference: Vec<u64> = serde_json::from_str("[0,18446744073709551615,7]").unwrap();

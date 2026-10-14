@@ -24,7 +24,7 @@ type Case = {
   readonly findings: readonly string[];
 };
 
-const corpus = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧫️mutation-payload-parity/🔣️.json"), "utf8")) as { readonly cases: readonly Case[]; readonly features: readonly { readonly id: string; readonly source: string; readonly rows: readonly MutationFeatureRow[] }[] };
+const corpus = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🧫️mutation-payload-parity/🔣️.json"), "utf8")) as { readonly cases: readonly Case[]; readonly features: readonly { readonly id: string; readonly source: string; readonly rows: readonly MutationFeatureRow[] }[] };
 const isObject = (value: unknown): value is Record<string, Json> => value !== null && typeof value === "object" && !Array.isArray(value);
 
 /** 🔒️ The leaf schema with `unevaluatedProperties: false` on every object node that declares no `additionalProperties` — the Ajv 2019 reading of "every payload member is described". */

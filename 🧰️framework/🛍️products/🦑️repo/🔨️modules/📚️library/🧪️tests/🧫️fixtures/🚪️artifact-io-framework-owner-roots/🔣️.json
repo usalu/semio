@@ -1,0 +1,14 @@
+{
+  "owners": [
+    {"path":"🧰️framework/🛍️products/document","schema":true,"io":true,"snapshot":true,"checked":true},
+    {"path":"🧰️framework/🛍️products/group/nested","schema":true,"io":true,"snapshot":true,"checked":true},
+    {"path":"🧰️framework/🛍️products/group/🗿️artifacts/native","schema":true,"io":true,"snapshot":true,"checked":true},
+    {"path":"🧰️framework/🛍️products/schema-only","schema":true,"io":false,"snapshot":true,"checked":false},
+    {"path":"🧰️framework/🛍️products/io-only","schema":false,"io":true,"snapshot":false,"checked":false},
+    {"path":"🧰️framework/🛍️products/unpaired","schema":true,"io":true,"snapshot":false,"checked":false},
+    {"path":"🧰️framework/🛍️products/🧫️fixtures/ignored","schema":true,"io":true,"snapshot":true,"checked":false},
+    {"path":"🧰️framework/🛍️products/🧪️tests/ignored","schema":true,"io":true,"snapshot":true,"checked":false}
+  ],
+  "semanticSource":"pub struct Snapshot; impl ArtifactPack for Snapshot {}",
+  "physicalSource":"impl ArtifactDsl for Snapshot {}"
+}

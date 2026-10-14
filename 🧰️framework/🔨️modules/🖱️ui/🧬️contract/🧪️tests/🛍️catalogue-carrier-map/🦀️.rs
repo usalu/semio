@@ -13,7 +13,7 @@
 
 use semio_framework_ui_contract::{Component, Label, TextProps, UiFixedMap, UiMap, UiText, UiValue, UI_FIXED_LIST_ITEMS, UI_VALUE_MAX_ITEMS};
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🛍️catalogue-carrier-map.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/🛍️catalogue-carrier-map.json");
 
 /// 🧫️ The pinned carrier leaf: the label slice, the `data_attributes` object exactly as a JavaScript
 /// engine emits it, the key order it emits, and the payload the readers must recover.

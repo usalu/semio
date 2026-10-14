@@ -1,7 +1,7 @@
 
 use super::*;
 
-const FLOW_VCS_PRODUCTION_LEDGER: &str = include_str!("../../🧫️fixtures/📊️.tsv");
+const FLOW_VCS_PRODUCTION_LEDGER: &str = include_str!("../🧫️fixtures/📊️.tsv");
 
 fn bridge_budget() -> AbiWorkBudget {
     AbiWorkBudget { byte_credit: 4_096, retained:semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:u32::MAX as usize,maximum_release_bytes:u32::MAX as usize,maximum_depth:4096}, now_ms: 0, deadline_ms: Some(8), cancelled: false, interrupted: false }
@@ -32,7 +32,7 @@ fn acknowledge_bridge_event(bridge: &mut FlowBridge<FlowDomainAdapter>, event: &
 }
 
 fn close_bridge(bridge: &mut FlowBridge<FlowDomainAdapter>) {
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧹️session-close/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🧹️session-close/🔣️.json")).unwrap();
     bridge.begin_close();
     for _ in 0..fixture["close"]["maximumTurns"].as_u64().unwrap() {
         match bridge.poll(bridge_budget()).unwrap() {
@@ -50,7 +50,7 @@ fn close_bridge(bridge: &mut FlowBridge<FlowDomainAdapter>) {
 /// 🧹️ Ends a domain law the way a session ends: the adapter's vcs, surface and host retire to terminal-empty within
 /// the declared close bound — every Flow owner refuses a bare drop.
 fn close_domain(domain: &mut FlowDomainAdapter) {
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧹️session-close/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🧹️session-close/🔣️.json")).unwrap();
     domain.begin_close();
     for _ in 0..fixture["close"]["maximumTurns"].as_u64().unwrap() {
         if matches!(domain.close_step(bridge_budget()).unwrap(),RetainedCloneStep::Complete(_)) {
@@ -63,7 +63,7 @@ fn close_domain(domain: &mut FlowDomainAdapter) {
 
 #[test]
 fn compiled_session_close_retires_the_real_vcs_and_host_before_terminal_empty() {
-    let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧹️session-close/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🧹️session-close/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut bridge = FlowBridge::new(FlowDomainAdapter::default);
     bridge.try_send(bridge_request(protocol::FLOW_OPERATION_OPEN, 1, 1, Vec::new()), bridge_budget()).unwrap();
     let AbiMessage::Reply(reply) = bridge_poll(&mut bridge) else { panic!("session reply") };
@@ -76,7 +76,7 @@ fn compiled_session_close_retires_the_real_vcs_and_host_before_terminal_empty() 
 
 #[test]
 fn compiled_session_close_receipt_preserves_a_real_sibling_until_global_close() {
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json")).unwrap();
     let mut bridge = FlowBridge::new(FlowDomainAdapter::default);
     let mut sessions = Vec::new();
     for request in 1..=2 {
@@ -183,7 +183,7 @@ fn run(domain: &mut FlowDomainAdapter, operation: u16, payload: Vec<u8>) -> Resu
     let mut arguments = FlowArguments::preflight(operation, payload)?;
     let mut action = flow_action(operation, &arguments).ok_or_else(|| abi_failure(AbiErrorCode::UnknownOperation))?;
     action.bind_admission(FlowFeatureAdmission{session:semio_framework::abi::AbiHandle::try_new(1,1).unwrap(),request_generation:1})?;
-    let budget=if matches!(operation,2514|2515|2518|2519|2525|2528|2520|2522|2523){let fixture:Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧵️dag-retained/🔣️.json")).unwrap();dag_budget(&fixture,1)}else{AbiWorkBudget::credits(1)};
+    let budget=if matches!(operation,2514|2515|2518|2519|2525|2528|2520|2522|2523){let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🧵️dag-retained/🔣️.json")).unwrap();dag_budget(&fixture,1)}else{AbiWorkBudget::credits(1)};
     let result=loop {
         match action.advance(domain, &arguments, budget) {
             FlowFeatureStep::Complete(output) => break Ok(output),
@@ -771,7 +771,7 @@ fn a_retained_document_retires_in_turns_that_do_not_count_its_bytes() {
         let turns = close_ladder_turns(&json);
         census.push((json.len(), turns));
     }
-    let bound = serde_json::from_str::<Value>(include_str!("../../🧫️fixtures/🧹️session-close/🔣️.json")).unwrap()["close"]["maximumTurns"].as_u64().unwrap() as usize;
+    let bound = serde_json::from_str::<Value>(include_str!("../🧫️fixtures/🧹️session-close/🔣️.json")).unwrap()["close"]["maximumTurns"].as_u64().unwrap() as usize;
     let smallest = census.first().expect("a measured document").1;
     let largest = census.last().expect("a measured document").1;
     assert!(census.last().unwrap().0 > census.first().unwrap().0 * 64, "the payloads must differ by two orders of magnitude to measure a per-byte ladder: {census:?}");
@@ -822,7 +822,7 @@ fn the_retirement_ladder_names_every_turn_it_spends() {
 /// 🎟️ Preserves every supplied ownership axis through the original ABI to VCS boundary.
 #[test]
 fn original_flow_boundary_preserves_independent_retained_wallet(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🌉️abi/🧫️fixtures/🎟️retained-grant/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🌉️abi/🧪️tests/🧫️fixtures/🎟️retained-grant/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let value=&row["retained"];
   let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:value["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:value["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:value["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:value["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:value["maximumDepth"].as_u64().unwrap()as usize};
@@ -839,7 +839,7 @@ fn dag_budget(fixture:&Value,byte_credit:usize)->AbiWorkBudget{let mut budget=Ab
 
 #[test]
 fn original_dag_poll_spends_each_independent_retained_grant_once(){
-    let fixture:Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧵️dag-retained/🔣️.json")).unwrap();let mut polls=0;
+    let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🧵️dag-retained/🔣️.json")).unwrap();let mut polls=0;
     for credit in fixture["workGrants"].as_array().unwrap().iter().filter_map(Value::as_u64).filter(|credit|*credit!=0){for operation in fixture["pollOperations"].as_array().unwrap().iter().filter_map(Value::as_u64){let operation=operation as u16;
         let domain=Rc::new(RefCell::new(FlowDomainAdapter::default()));domain.borrow_mut().host.set_selection_domains(&crate::infinite::board::schema::dag_input::DagSelectionDomains{nodes:vec!["slider".into()],edges:vec![],handles:vec![]});
         let input=operation==2525;let expected=if input{fixture["replacement"].clone()}else{let domain=domain.borrow();match operation{2518=>serde_json::to_value(domain.host.selected_widget_ids()).unwrap(),2519=>serde_json::to_value(domain.host.dag.selected_edge_ids()).unwrap(),2520=>serde_json::to_value(domain.host.dag.selection_domains()).unwrap(),2522=>serde_json::to_value(domain.host.dag.hover_facts()).unwrap(),2523=>serde_json::to_value(domain.host.dag.selected_channels()).unwrap(),_=>unreachable!()}};let payload=if input{text_payload(&serde_json::to_string(&expected).unwrap())}else{Vec::new()};let arguments=FlowArguments::preflight(operation,payload).unwrap();let observer=Rc::new(FlowOperationObserver::new());observer.bound.set(true);let admission=FlowFeatureAdmission{session:semio_framework::abi::AbiHandle::try_new(1,1).unwrap(),request_generation:1};let mut action=flow_action(operation,&arguments).unwrap();action.bind_admission(admission).unwrap();action.bind_observer(observer.clone());let mut feature=FlowProgramFeature{domain:domain.clone(),arguments,action,observer,admission,operation,dag_read_lease:None,terminal_failure:None};let budget=dag_budget(&fixture,credit as usize);let mut complete=false;
@@ -854,7 +854,7 @@ fn original_dag_poll_spends_each_independent_retained_grant_once(){
 
 #[test]
 fn admitted_dag_output_pins_the_original_source_and_control_releases_every_lease(){
-    let fixture:Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧵️dag-retained/🔣️.json")).unwrap();
+    let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🧵️dag-retained/🔣️.json")).unwrap();
     let session=semio_framework::abi::AbiHandle::try_new(1,1).unwrap();
     for operation in fixture["outputOperations"].as_array().unwrap(){
         for refusal in fixture["terminalRefusals"].as_array().unwrap(){
@@ -894,7 +894,7 @@ fn admitted_dag_output_pins_the_original_source_and_control_releases_every_lease
 
 #[test]
 fn admitted_dag_original_outputs_match_independent_serde_under_pinned_single_unit_grants(){
-    let fixture:Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧵️dag-retained/🔣️.json")).unwrap();let session=semio_framework::abi::AbiHandle::try_new(1,1).unwrap();let mut grants=0;
+    let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🧵️dag-retained/🔣️.json")).unwrap();let session=semio_framework::abi::AbiHandle::try_new(1,1).unwrap();let mut grants=0;
     for operation in fixture["outputOperations"].as_array().unwrap(){let operation=operation.as_u64().unwrap()as u16;let domain=Rc::new(RefCell::new(FlowDomainAdapter::default()));domain.borrow_mut().host.set_selection_domains(&crate::infinite::board::schema::dag_input::DagSelectionDomains{nodes:vec!["slider".into()],edges:vec![],handles:vec![]});
         let expected={let domain=domain.borrow();match operation{2518=>serde_json::to_vec(&domain.host.selected_widget_ids()).unwrap(),2519=>serde_json::to_vec(&domain.host.dag.selected_edge_ids()).unwrap(),2520=>serde_json::to_vec(&domain.host.dag.selection_domains()).unwrap(),2522=>serde_json::to_vec(&domain.host.dag.hover_facts()).unwrap(),2523=>serde_json::to_vec(&domain.host.dag.selected_channels()).unwrap(),_=>unreachable!()}};
         let mut feature=FlowDomainAdapter::start_feature(Rc::clone(&domain),FlowFeatureAdmission{session,request_generation:1},operation,Vec::new()).unwrap();let mut completed=false;

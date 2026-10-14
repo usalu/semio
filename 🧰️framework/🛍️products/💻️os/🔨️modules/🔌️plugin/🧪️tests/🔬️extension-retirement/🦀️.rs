@@ -61,7 +61,7 @@ mod extension_retirement_tests {
     }
 
     fn extension_fixture() -> serde_json::Value {
-        let text = include_str!("../../🧫️fixtures/🧩️extension-retirement/🔣️.json");
+        let text = include_str!("../🧫️fixtures/🧩️extension-retirement/🔣️.json");
         let oracle: serde_json::Value = serde_json::from_str(text).unwrap();
         let first_party = semio_framework_value::DslValue::from(&oracle);
         assert_eq!(serde_json::Value::from(first_party), oracle);

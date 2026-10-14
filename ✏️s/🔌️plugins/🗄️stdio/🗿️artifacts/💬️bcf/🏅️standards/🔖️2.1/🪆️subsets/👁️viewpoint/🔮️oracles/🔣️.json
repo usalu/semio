@@ -23,14 +23,14 @@
       "files": [
         {
           "role": "expected-before-bcf",
-          "path": "../🧫️fixtures/👁️insert-viewpoint-applied/⬅️before.bcf",
+          "path": "../🧪️tests/🧫️fixtures/👁️insert-viewpoint-applied/⬅️before.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:a5f1855a32e3d2623066c938cef6a9839747984420c601cbd3148156c6442b0c",
           "bytes": 1559
         },
         {
           "role": "expected-after-bcf",
-          "path": "../🧫️fixtures/👁️insert-viewpoint-applied/➡️after.bcf",
+          "path": "../🧪️tests/🧫️fixtures/👁️insert-viewpoint-applied/➡️after.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:2f5d877f65257d8b9c93e02ba5de5ca569ba185b152ba8493d0738e9692639c1",
           "bytes": 1882
@@ -73,14 +73,14 @@
       "files": [
         {
           "role": "expected-before-bcf",
-          "path": "../🧫️fixtures/🙈️remove-viewpoint-applied/⬅️before.bcf",
+          "path": "../🧪️tests/🧫️fixtures/🙈️remove-viewpoint-applied/⬅️before.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:a5f1855a32e3d2623066c938cef6a9839747984420c601cbd3148156c6442b0c",
           "bytes": 1559
         },
         {
           "role": "expected-after-bcf",
-          "path": "../🧫️fixtures/🙈️remove-viewpoint-applied/➡️after.bcf",
+          "path": "../🧪️tests/🧫️fixtures/🙈️remove-viewpoint-applied/➡️after.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:c7adf630e26c3f2ea58ed23de12a70670293479bb856513e9063aff3411a1524",
           "bytes": 1164
@@ -123,7 +123,7 @@
       "files": [
         {
           "role": "expected-before-bcf",
-          "path": "../🧫️fixtures/🕳️remove-viewpoint-rejected-missing/⬅️before.bcf",
+          "path": "../🧪️tests/🧫️fixtures/🕳️remove-viewpoint-rejected-missing/⬅️before.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:a5f1855a32e3d2623066c938cef6a9839747984420c601cbd3148156c6442b0c",
           "bytes": 1559
@@ -166,14 +166,14 @@
       "files": [
         {
           "role": "expected-before-bcf",
-          "path": "../🧫️fixtures/📷️set-viewpoint-camera-applied/⬅️before.bcf",
+          "path": "../🧪️tests/🧫️fixtures/📷️set-viewpoint-camera-applied/⬅️before.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:a5f1855a32e3d2623066c938cef6a9839747984420c601cbd3148156c6442b0c",
           "bytes": 1559
         },
         {
           "role": "expected-after-bcf",
-          "path": "../🧫️fixtures/📷️set-viewpoint-camera-applied/➡️after.bcf",
+          "path": "../🧪️tests/🧫️fixtures/📷️set-viewpoint-camera-applied/➡️after.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:b8d83e072402e529695b4f0ca1b73c522d7d60fdc2b3a099f9f27438fc43cc2e",
           "bytes": 1555
@@ -216,14 +216,14 @@
       "files": [
         {
           "role": "expected-before-bcf",
-          "path": "../🧫️fixtures/🧱️set-viewpoint-components-applied/⬅️before.bcf",
+          "path": "../🧪️tests/🧫️fixtures/🧱️set-viewpoint-components-applied/⬅️before.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:a5f1855a32e3d2623066c938cef6a9839747984420c601cbd3148156c6442b0c",
           "bytes": 1559
         },
         {
           "role": "expected-after-bcf",
-          "path": "../🧫️fixtures/🧱️set-viewpoint-components-applied/➡️after.bcf",
+          "path": "../🧪️tests/🧫️fixtures/🧱️set-viewpoint-components-applied/➡️after.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:d98972e7983d324225f04bc59f1f749765a9dd57e23d924796e8138108588ae0",
           "bytes": 1553

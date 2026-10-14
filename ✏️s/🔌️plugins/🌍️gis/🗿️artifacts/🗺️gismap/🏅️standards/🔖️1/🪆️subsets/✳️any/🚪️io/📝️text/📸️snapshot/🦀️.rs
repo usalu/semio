@@ -13,12 +13,12 @@ pub const REUSE_MAP_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/�
 
 /// 📖️ Parses `.gismap` DSL text into a `GisMapSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<GisMapSnapshot, semio_framework_diagnostic::TextError> {
-    <GisMapSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <GisMapSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `GisMapSnapshot` back to `.gismap` DSL text.
 pub fn print_dsl(document: &GisMapSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(document)
+    pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -39,7 +39,7 @@ use semio_framework_dsl_record::DslField;
 use semio_framework_value::Number;
 use semio_framework_value::ValueError;
 use crate::standards::v1::subsets::any::io::binary::snapshot::owned_pack::*;
-impl store::os_store::serialization::ArtifactDsl for GisMapSnapshot{
+impl pack::snapshot::ArtifactDsl for GisMapSnapshot{
  const EXTENSION:&'static str="gismap";fn envelope_id()->&'static str{"gis.gismap"}
  fn print_dsl(&self)->String{let body=semio_framework_dsl_record::print(&Map::from_snapshot(self).__dsl_to_record(),&Map::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document);let envelope=store::semio_format::SemioEnvelope::from_envelope_id(Self::envelope_id(),store::semio_format::Component::Dsl,1).expect("GIS map identity");store::semio_format::wrap_text(&envelope,&body)}
  fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|e|semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(e.to_string()).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?;if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("GIS map native Text identity differs").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))}let record=semio_framework_dsl_record::parse_exact(body,&Map::__dsl_spec(),&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits::default(),mode:semio_framework_dsl_record::SourceMode::Document})?;ordinary(Map::__dsl_from_record(&record)?).map_err(positioned)}
@@ -146,22 +146,22 @@ pub(crate) fn dec_json<T: FromValue>(s: &str) -> Result<T, String> {
 
 /// 🔁️ One JSON report of carrying `dsl_text` through this subset's own codecs, for a
 /// language-neutral test adapter. Same reachability wall as `gis_map_mutation_report_json`:
-/// `store::os_store::serialization::ArtifactDsl`/`store::os_store::serialization::ArtifactPack` and their error types are unnameable outside this
+/// `pack::snapshot::ArtifactDsl`/`pack::snapshot::ArtifactPack` and their error types are unnameable outside this
 /// crate, so the identity law's evidence has to be produced here and handed over as text.
 ///
 /// `canonicalText` is `print_dsl` of the parsed document and `canonicalTextAgain` is `print_dsl` of
-/// re-parsing that — [`store::os_store::serialization::ArtifactDsl`]'s own documented LAW is that canonical output is a
+/// re-parsing that — [`pack::snapshot::ArtifactDsl`]'s own documented LAW is that canonical output is a
 /// `parse_dsl` fixpoint (hand-written text may normalize on the way in), so the two must be
 /// byte-identical while neither is required to equal the committed file. `packDecoded` comes back
 /// through a SEPARATE binary codec, so agreeing on one snapshot cannot be achieved by carrying text
 /// bytes across.
 pub fn gis_map_identity_report_json(dsl_text: &str) -> Result<String, String> {
-    let parsed = <GisMapSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(dsl_text).map_err(|error| error.to_string())?;
-    let canonical = <GisMapSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&parsed);
-    let reparsed = <GisMapSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&canonical).map_err(|error| error.to_string())?;
-    let canonical_again = <GisMapSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&reparsed);
-    let packed = <GisMapSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&reparsed);
-    let unpacked = <GisMapSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
+    let parsed = <GisMapSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(dsl_text).map_err(|error| error.to_string())?;
+    let canonical = <GisMapSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&parsed);
+    let reparsed = <GisMapSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&canonical).map_err(|error| error.to_string())?;
+    let canonical_again = <GisMapSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&reparsed);
+    let packed = <GisMapSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&reparsed);
+    let unpacked = <GisMapSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
     let report = semio_framework_pack_json::object([
         ("parsed".to_string(), semio_framework_pack_json::from_dsl_value(&parsed.to_value())),
         ("reparsed".to_string(), semio_framework_pack_json::from_dsl_value(&reparsed.to_value())),
@@ -201,7 +201,7 @@ pub fn empty_gis_map_snapshot() -> GisMapSnapshot {
 /// 🗺️ The default map document, seeded from the bundled reuse example (see
 /// `crate::GisMapSnapshot`'s derive-generated `.gismap` DSL).
 pub fn default_document() -> GisMapSnapshot {
-    let parsed = <GisMapSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(REUSE_MAP_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_map_snapshot());
+    let parsed = <GisMapSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(REUSE_MAP_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_map_snapshot());
     gis_map_snapshot_with_derived_children(parsed)
 }
 
@@ -228,14 +228,14 @@ pub(crate) fn drawing_to_svg_io_key() -> IoKey {
 pub(crate) fn render_drawing_to_svg(drawing: &SemioDrawingSnapshot) -> Result<(String, u32, u32), String> {
     let width = drawing.canvas.width.round().max(1.0) as u32;
     let height = drawing.canvas.height.round().max(1.0) as u32;
-    let pack_bytes = <SemioDrawingSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(drawing);
+    let pack_bytes = <SemioDrawingSnapshot as pack::snapshot::ArtifactPack>::encode_pack(drawing);
     let source = ErasedComposeSource { dialect: SemioDrawingToSvg::FROM, payload: IoPayload::Binary(pack_bytes) };
     let composed = ::semio_framework_async::poll::resolve_ready(io_dispatch(&drawing_to_svg_io_key(), std::slice::from_ref(&source))).map_err(|error| error.message)?;
     let svg_bytes = match composed.payload {
         IoPayload::Binary(bytes) => bytes,
         IoPayload::Text(_) => return Err("drawing->svg bridge returned Text, expected an ArtifactPack-encoded SvgSnapshot".into()),
     };
-    let svg_snapshot = <SvgSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&svg_bytes).map_err(|error| error.to_string())?;
+    let svg_snapshot = <SvgSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&svg_bytes).map_err(|error| error.to_string())?;
     let svg_text = String::from_utf8(svg_snapshot.export_utf8()?).map_err(|error| error.to_string())?;
     Ok((svg_text, width, height))
 }

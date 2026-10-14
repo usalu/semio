@@ -1,0 +1,7 @@
+{
+  "fixture": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧊️fixture-payload/🧫️fixtures/🔣️.json",
+  "test": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧊️fixture-payload/🟦️.ts",
+  "before": "9a43adc0b2148c3551a0e3777e45fdff9747e3cbe3aae128c0907f786d4e106a",
+  "after": "03a03fe37e73ca3d12df096c07e49daa80a9c4313afd54203fa31f04ee27d3bd",
+  "reason": "Original Source import to a private fixture stays a real edge; modeled path inside that fixture cannot become a runtime self-edge"
+}

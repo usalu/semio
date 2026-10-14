@@ -5,7 +5,7 @@ use crate::value::{DslValue, FromValue, ToValue};
 /// 🧬️ Compares complete typed producer occurrences to serde's canonical map oracle for every neutral case.
 #[test]
 fn interaction_typed_field_order_matches_shared_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖱️typed-field-order/🔣️.json")).expect("closed typed field-order fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🖱️typed-field-order/🔣️.json")).expect("closed typed field-order fixture");
     for case in fixture["cases"].as_array().expect("typed field-order cases") {
         let input: serde_json::Value = serde_json::from_str(case["source"].as_str().expect("typed source")).expect("typed semantic oracle");
         let state: InteractionState = serde_json::from_value(input.clone()).expect("declared interaction state");

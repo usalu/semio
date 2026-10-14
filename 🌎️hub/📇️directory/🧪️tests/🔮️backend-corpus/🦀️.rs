@@ -36,7 +36,7 @@ struct ShareScopeCorpusV1 {
 }
 
 fn corpus() -> ShareScopeCorpusV1 {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔑️share-token-vectors/🔣️.json")).expect("share-token vectors")
+    serde_json::from_str(include_str!("../🧫️fixtures/🔑️share-token-vectors/🔣️.json")).expect("share-token vectors")
 }
 
 fn share_descriptor(scope: &DocumentScope) -> DocumentDescriptor {

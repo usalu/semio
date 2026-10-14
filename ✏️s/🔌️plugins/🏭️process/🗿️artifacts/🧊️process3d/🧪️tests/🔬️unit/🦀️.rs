@@ -170,8 +170,8 @@ async fn sphere_working_solid_mints_a_real_one_face_untrimmed_brep() {
 async fn brep_snapshot_for_working_solid_round_trips_pack_and_dsl() {
     for solid in [WorkingSolid::Box { width: 1.0, depth: 2.0, height: 3.0 }, WorkingSolid::Cylinder { radius: 1.0, height: 2.0 }, WorkingSolid::Sphere { radius: 1.0 }] {
         let content = brep_snapshot_for_working_solid(&solid);
-        let packed = <SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&content);
-        assert_eq!(<SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&packed).expect("decode"), content);
+        let packed = <SemioBrepSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&content);
+        assert_eq!(<SemioBrepSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&packed).expect("decode"), content);
     }
 }
 

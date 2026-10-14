@@ -1,0 +1,219 @@
+{
+  "note": "The folder reload route (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, e2e R2-2 and R2-4, goal gap 3): a program bound to a folder publishes every edit under its own document identity, the host saves the program's whole archive on every published batch, and a fresh program that reads the folder back holds the same document. The author edits the document, edits the history and finalizes once as an overwrite and once as a new alternative; a reader on the main line receives the same events and edits on its own. Each program detaches, a fresh one loads the folder's archive through the host's stepped archive load, and the head, every history row, the alternatives, the warning the first history edit introduced and each program's own viewed alternative are back. The Rust law runs the route over the real runtime; the TypeScript twin derives every expectation with its own fold of the same steps. `twoPeers` is live fault F4 (two programs on ONE folder, design §22.22): the author binds an empty folder, which takes its document, and edits; the peer attaches and loads the folder's archive; the author opens a history edit and drafts; the peer edits and the folder takes its archive; the author's read-back MERGES — its history edit stays open on an unchanged preview, the peer's edit is listed downstream and not applied, nothing is written because the author holds nothing the folder lacks; the author accepts, the replay takes the peer's edit too, and its overwrite is published and written; the peer's read-back merges it, and both programs show the same document.",
+  "actor": "author",
+  "reader": "reader",
+  "example": {
+    "kind": "setCount",
+    "value": 42
+  },
+  "steps": [
+    {
+      "edit": {
+        "kind": "setLabel",
+        "value": "a"
+      }
+    },
+    {
+      "edit": {
+        "kind": "setLabel",
+        "value": "b"
+      }
+    },
+    {
+      "edit": {
+        "kind": "setCount",
+        "value": 1
+      }
+    },
+    {
+      "begin": 0
+    },
+    {
+      "input": {
+        "path": "/value",
+        "value": "b"
+      }
+    },
+    {
+      "accept": null
+    },
+    {
+      "replay": "warning"
+    },
+    {
+      "finalize": null
+    },
+    {
+      "commit": {
+        "choice": "overwrite"
+      }
+    },
+    {
+      "edit": {
+        "kind": "setCount",
+        "value": 2
+      }
+    },
+    {
+      "begin": 3
+    },
+    {
+      "input": {
+        "path": "/value",
+        "value": 7
+      }
+    },
+    {
+      "accept": null
+    },
+    {
+      "replay": "clean"
+    },
+    {
+      "finalize": null
+    },
+    {
+      "commit": {
+        "name": "Edited history"
+      }
+    }
+  ],
+  "readerEdit": {
+    "kind": "setCount",
+    "value": 9
+  },
+  "afterReload": {
+    "kind": "setLabel",
+    "value": "c"
+  },
+  "expected": {
+    "author": {
+      "head": {
+        "count": 7,
+        "label": "b"
+      },
+      "line": "Edited history",
+      "alternatives": [
+        "",
+        "Edited history"
+      ],
+      "superseded": [
+        0,
+        3
+      ],
+      "warnings": [
+        {
+          "mutation": 1,
+          "code": "mutation.no-op"
+        }
+      ],
+      "historyRows": [
+        {
+          "en": "History edited — alternative Edited history: 1 mutation",
+          "de": "Verlauf bearbeitet — Alternative Edited history: 1 Mutation"
+        },
+        {
+          "en": "History edited — overwrite: 1 mutation",
+          "de": "Verlauf bearbeitet — überschrieben: 1 Mutation"
+        }
+      ],
+      "editRows": 4,
+      "afterReload": {
+        "count": 7,
+        "label": "c"
+      }
+    },
+    "reader": {
+      "head": {
+        "count": 9,
+        "label": "b"
+      },
+      "line": "",
+      "alternatives": [
+        "",
+        "Edited history"
+      ],
+      "superseded": [
+        0
+      ]
+    }
+  },
+  "twoPeers": {
+    "author": [
+      {
+        "edit": {
+          "kind": "setCount",
+          "value": 100
+        }
+      },
+      {
+        "edit": {
+          "kind": "setLabel",
+          "value": "a"
+        }
+      }
+    ],
+    "session": [
+      {
+        "begin": 0
+      },
+      {
+        "input": {
+          "path": "/value",
+          "value": 180
+        }
+      }
+    ],
+    "peerEdit": {
+      "kind": "setLabel",
+      "value": "peer"
+    },
+    "finish": [
+      {
+        "accept": null
+      },
+      {
+        "replay": "clean"
+      },
+      {
+        "finalize": null
+      },
+      {
+        "commit": {
+          "choice": "overwrite"
+        }
+      }
+    ],
+    "expected": {
+      "previewBody": "count=180 label=",
+      "pendingWhileEditing": [
+        1,
+        2
+      ],
+      "authorMerge": {
+        "merged": 1,
+        "ahead": 0
+      },
+      "peerMerge": {
+        "merged": 1,
+        "ahead": 0
+      },
+      "settled": {
+        "head": {
+          "count": 180,
+          "label": "peer"
+        },
+        "superseded": [
+          0
+        ],
+        "historyRows": [
+          {
+            "en": "History edited — overwrite: 1 mutation",
+            "de": "Verlauf bearbeitet — überschrieben: 1 Mutation"
+          }
+        ],
+        "editRows": 3
+      }
+    }
+  }
+}

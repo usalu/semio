@@ -1,0 +1,3103 @@
+{
+  "cases": [
+    {
+      "id": "empty",
+      "input": {
+        "version": 1,
+        "targets": [],
+        "hosts": [],
+        "playgrounds": []
+      },
+      "valid": true
+    },
+    {
+      "id": "synthetic",
+      "input": {
+        "version": 1,
+        "targets": [
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          }
+        ],
+        "hosts": [
+          {
+            "pluginId": "custom.host",
+            "landingAppId": "home",
+            "hostAppId": "studio"
+          }
+        ],
+        "playgrounds": [
+          {
+            "variant": "custom.studio",
+            "pluginId": "custom.host",
+            "aliases": [
+              "studio"
+            ]
+          },
+          {
+            "variant": "custom.canvas",
+            "pluginId": "custom.host",
+            "app": "canvas",
+            "aliases": [
+              "canvas"
+            ]
+          }
+        ]
+      },
+      "valid": true,
+      "expectedPlugins": [
+        "custom.core",
+        "custom.host",
+        "custom.extension"
+      ]
+    },
+    {
+      "id": "extra-root",
+      "input": {
+        "version": 1,
+        "targets": [
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          }
+        ],
+        "hosts": [
+          {
+            "pluginId": "custom.host",
+            "landingAppId": "home",
+            "hostAppId": "studio"
+          }
+        ],
+        "playgrounds": [
+          {
+            "variant": "custom.studio",
+            "pluginId": "custom.host",
+            "aliases": [
+              "studio"
+            ]
+          },
+          {
+            "variant": "custom.canvas",
+            "pluginId": "custom.host",
+            "app": "canvas",
+            "aliases": [
+              "canvas"
+            ]
+          }
+        ],
+        "extra": true
+      },
+      "valid": false
+    },
+    {
+      "id": "wrong-version",
+      "input": {
+        "version": 2,
+        "targets": [
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          }
+        ],
+        "hosts": [
+          {
+            "pluginId": "custom.host",
+            "landingAppId": "home",
+            "hostAppId": "studio"
+          }
+        ],
+        "playgrounds": [
+          {
+            "variant": "custom.studio",
+            "pluginId": "custom.host",
+            "aliases": [
+              "studio"
+            ]
+          },
+          {
+            "variant": "custom.canvas",
+            "pluginId": "custom.host",
+            "app": "canvas",
+            "aliases": [
+              "canvas"
+            ]
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "missing-role",
+      "input": {
+        "version": 1,
+        "targets": [
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          }
+        ],
+        "hosts": [
+          {
+            "pluginId": "custom.host",
+            "landingAppId": "home",
+            "hostAppId": "studio"
+          }
+        ],
+        "playgrounds": [
+          {
+            "variant": "custom.studio",
+            "pluginId": "custom.host",
+            "aliases": [
+              "studio"
+            ]
+          },
+          {
+            "variant": "custom.canvas",
+            "pluginId": "custom.host",
+            "app": "canvas",
+            "aliases": [
+              "canvas"
+            ]
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "oversize-rows",
+      "input": {
+        "version": 1,
+        "targets": [
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          },
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          }
+        ],
+        "hosts": [
+          {
+            "pluginId": "custom.host",
+            "landingAppId": "home",
+            "hostAppId": "studio"
+          }
+        ],
+        "playgrounds": [
+          {
+            "variant": "custom.studio",
+            "pluginId": "custom.host",
+            "aliases": [
+              "studio"
+            ]
+          },
+          {
+            "variant": "custom.canvas",
+            "pluginId": "custom.host",
+            "app": "canvas",
+            "aliases": [
+              "canvas"
+            ]
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "relative-module",
+      "input": {
+        "version": 1,
+        "targets": [
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "/core.js",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          }
+        ],
+        "hosts": [
+          {
+            "pluginId": "custom.host",
+            "landingAppId": "home",
+            "hostAppId": "studio"
+          }
+        ],
+        "playgrounds": [
+          {
+            "variant": "custom.studio",
+            "pluginId": "custom.host",
+            "aliases": [
+              "studio"
+            ]
+          },
+          {
+            "variant": "custom.canvas",
+            "pluginId": "custom.host",
+            "app": "canvas",
+            "aliases": [
+              "canvas"
+            ]
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "empty-identity",
+      "input": {
+        "version": 1,
+        "targets": [
+          {
+            "pluginId": "",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          }
+        ],
+        "hosts": [
+          {
+            "pluginId": "custom.host",
+            "landingAppId": "home",
+            "hostAppId": "studio"
+          }
+        ],
+        "playgrounds": [
+          {
+            "variant": "custom.studio",
+            "pluginId": "custom.host",
+            "aliases": [
+              "studio"
+            ]
+          },
+          {
+            "variant": "custom.canvas",
+            "pluginId": "custom.host",
+            "app": "canvas",
+            "aliases": [
+              "canvas"
+            ]
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "duplicate-topic",
+      "input": {
+        "version": 1,
+        "targets": [
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools",
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          }
+        ],
+        "hosts": [
+          {
+            "pluginId": "custom.host",
+            "landingAppId": "home",
+            "hostAppId": "studio"
+          }
+        ],
+        "playgrounds": [
+          {
+            "variant": "custom.studio",
+            "pluginId": "custom.host",
+            "aliases": [
+              "studio"
+            ]
+          },
+          {
+            "variant": "custom.canvas",
+            "pluginId": "custom.host",
+            "app": "canvas",
+            "aliases": [
+              "canvas"
+            ]
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "qualified-app-reference",
+      "input": {
+        "version": 1,
+        "targets": [
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          }
+        ],
+        "hosts": [
+          {
+            "pluginId": "custom.host",
+            "landingAppId": "home",
+            "hostAppId": "studio"
+          }
+        ],
+        "playgrounds": [
+          {
+            "variant": "custom.studio",
+            "pluginId": "custom.host",
+            "aliases": [
+              "studio"
+            ]
+          },
+          {
+            "variant": "custom.canvas",
+            "pluginId": "custom.host",
+            "app": "custom.canvas@1/*#editor",
+            "aliases": [
+              "canvas"
+            ]
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "id": "spaced-playground-alias",
+      "input": {
+        "version": 1,
+        "targets": [
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ],
+            "capabilities": [
+              "media.render"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          }
+        ],
+        "hosts": [
+          {
+            "pluginId": "custom.host",
+            "landingAppId": "home",
+            "hostAppId": "studio"
+          }
+        ],
+        "playgrounds": [
+          {
+            "variant": "custom.studio",
+            "pluginId": "custom.host",
+            "aliases": [
+              "studio"
+            ]
+          },
+          {
+            "variant": "custom.canvas",
+            "pluginId": "custom.host",
+            "app": "canvas",
+            "aliases": [
+              "canvas",
+              "custom canvas"
+            ]
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "id": "missing-capabilities",
+      "input": {
+        "version": 1,
+        "targets": [
+          {
+            "pluginId": "custom.core",
+            "wasmOut": "core.wasm",
+            "moduleUrl": "https://example.test/core.js?version=1",
+            "role": "plugin",
+            "dependsOn": [],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [
+              "on-artifact-kind:custom.core"
+            ]
+          },
+          {
+            "pluginId": "custom.host",
+            "wasmOut": "host.wasm",
+            "moduleUrl": "https://example.test/host.js",
+            "role": "plugin",
+            "dependsOn": [
+              "custom.core"
+            ],
+            "contributes": [],
+            "consumes": [
+              "tools"
+            ],
+            "activationEvents": [
+              "on-command:custom.open"
+            ],
+            "capabilities": []
+          },
+          {
+            "pluginId": "custom.extension",
+            "wasmOut": "extension.wasm",
+            "moduleUrl": "https://example.test/extension.js",
+            "role": "extension",
+            "dependsOn": [
+              "custom.host"
+            ],
+            "contributes": [
+              "tools"
+            ],
+            "consumes": [],
+            "activationEvents": [],
+            "capabilities": [],
+            "extends": "custom.host"
+          }
+        ],
+        "hosts": [
+          {
+            "pluginId": "custom.host",
+            "landingAppId": "home",
+            "hostAppId": "studio"
+          }
+        ],
+        "playgrounds": [
+          {
+            "variant": "custom.studio",
+            "pluginId": "custom.host",
+            "aliases": [
+              "studio"
+            ]
+          },
+          {
+            "variant": "custom.canvas",
+            "pluginId": "custom.host",
+            "app": "canvas",
+            "aliases": [
+              "canvas"
+            ]
+          }
+        ]
+      },
+      "valid": false,
+      "expectedPlugins": [
+        "custom.core",
+        "custom.host",
+        "custom.extension"
+      ]
+    }
+  ],
+  "emptyPlans": [
+    {
+      "selection": "all",
+      "variant": "",
+      "valid": true
+    },
+    {
+      "selection": "variant",
+      "variant": "absent",
+      "valid": false
+    }
+  ],
+  "devBoot": {
+    "case": "empty",
+    "variant": "",
+    "rootId": "root",
+    "expectedWorkers": 1,
+    "missingVariant": "absent"
+  }
+}

@@ -8144,10 +8144,5 @@
         "direction": "import"
       }
     ]
-  },
-  "hashes": {
-    "wasmSha256": "6b2aed854e30e7bba4385513c99febae53cbdbdecd9260fd4ff4854be17db1c1",
-    "coreWasmSha256": "391355ca2b96be949c1c9b61bbfa1849f4d89901cb6d0080d79afcaf8abf359d",
-    "descriptorSha256": "272f9cf8665590a2d303dabe1882a2f59f79b433d7869683b04b93c67f81b7ea"
   }
 }

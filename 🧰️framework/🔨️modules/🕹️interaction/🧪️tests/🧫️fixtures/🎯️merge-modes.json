@@ -1,0 +1,167 @@
+{
+  "why": "The ONE selection merge vocabulary of the framework interaction contract, written once and read by every implementation: the Rust reducer (`next_selection`, 🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs), the Rust domain path (the reserved `interactionSelect` job's `parse_merge_mode`, 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs), the non-domain world path (`merge_world_selection_ids`/`merge_string_ids`), the TypeScript reducer (`nextSelection`, 🕹️interaction/🟦️.ts), and every renderer host that builds an `interactionSelect` wire arg. The words are NOT a host convention: they are the `MergeMode` enum of this module's own schema, and `schema.$defs` below is the authority both twins validate against.",
+  "liveDefect": "Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, 2026-09-12 (`📓️selection-dedupe-2026-09-12.md` §6, `📓️selection-merge-vocabulary-2026-09-12.md`): TWO vocabularies were in the tree. `World3dHost`'s `instanceMergeArg`/`componentMergeArg` translated the resolved `MergeMode` into `add`/`remove`/`toggle`/`replace`, while the framework's `parse_merge_mode` accepts only the five schema words and faults `interactionSelect: unknown merge '…'` on anything else. So every shift-click / ctrl-click on a DOMAIN-BOUND world scene (the generation3d preview) faulted, and only the unmodified `replace` pick worked. The `add`/`remove`/`toggle` words were the non-domain `worldPick`/`worldVortexSelect` path's own private spelling of the same three set operations. They are DELETED, not adapted — greenfield, no compatibility layer.",
+  "schema": {
+    "why": "Schema-first: the vocabulary is generated from, and re-validated against, this module's owned schema export — not re-typed per implementation.",
+    "file": "🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🔣️.json",
+    "export": "MergeMode",
+    "graphql": "🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🔗️.graphql"
+  },
+  "vocabulary": ["replace", "additive", "subtractive", "invertive", "range"],
+  "deletedWords": ["add", "remove", "toggle"],
+  "unknownMergeFault": "interactionSelect: unknown merge '{word}'",
+  "modifierPolicy": {
+    "why": "The ONE modifier→merge map of a world viewport, unchanged from `marqueeModeFromModifiers` (🖱️ui react target) — this fixture only renames what the host then puts on the wire, never which mode a chord resolves to. `pick` is a whole-instance pick or a marquee drag; `componentPick` is the vertex/edge/face pick, whose bare click TOGGLES (a component pick is a paint-like accumulate gesture, not a replace). Neither ever produces `range`: a world viewport has no ordered topology for a shift-drag to span, which is why shift is additive here and `range` belongs to ordered surfaces (`interactionMergeFromModifiers`, Tree rows).",
+    "rows": [
+      { "id": "no-modifier", "modifiers": { "shiftKey": false, "ctrlKey": false, "metaKey": false }, "pick": "replace", "componentPick": "invertive" },
+      { "id": "shift", "modifiers": { "shiftKey": true, "ctrlKey": false, "metaKey": false }, "pick": "additive", "componentPick": "additive" },
+      { "id": "control", "modifiers": { "shiftKey": false, "ctrlKey": true, "metaKey": false }, "pick": "subtractive", "componentPick": "subtractive" },
+      { "id": "command", "modifiers": { "shiftKey": false, "ctrlKey": false, "metaKey": true }, "pick": "subtractive", "componentPick": "subtractive" },
+      { "id": "shift-control", "modifiers": { "shiftKey": true, "ctrlKey": true, "metaKey": false }, "pick": "invertive", "componentPick": "invertive" }
+    ],
+    "neverEmitted": ["range"]
+  },
+  "topology": {
+    "why": "The ordered node list a `range` merge spans — `DomainTopology.ordered`'s sequence IS the range order (pre-order), and it is the only thing that gives `range` a meaning.",
+    "domain": "items",
+    "granularity": "item",
+    "ordered": ["item-a", "item-b", "item-c", "item-d"]
+  },
+  "range": {
+    "decision": "ACCEPTED, not rejected — `range` stays in the vocabulary and is defined for every domain that declares an ordered topology.",
+    "law": "The anchor is `current.anchorId`, falling back to the last id of the current selection, falling back to the batch's last target. The result is the INCLUSIVE slice of `DomainTopology.ordered` between the anchor's index and the last target's index, in topology order whichever way the pair runs; the published `anchorId` stays the anchor, so a second shift-click from the same anchor re-spans rather than walking.",
+    "unorderedDomains": "When the topology orders NEITHER endpoint (an empty `ordered`, a target the app's `interaction_topology` does not report), `range` degrades to a single-target pick of the batch's last target, which becomes the new anchor. This is a defined outcome, not a fault: `range` is a legal word on every domain, and a domain that publishes no order simply has no span to take. A world3d viewport is exactly that case — which is why its modifier map never emits `range` in the first place (see `modifierPolicy.neverEmitted`), so the degradation is a safety net for a programmatic dispatch, not a gesture anyone can perform."
+  },
+  "cases": [
+    {
+      "id": "replace-drops-the-previous-set",
+      "why": "A plain pick replaces: the previous selection is gone, and the picked id is the new anchor.",
+      "seed": ["item-a", "item-b"],
+      "anchor": "item-b",
+      "merge": "replace",
+      "targets": ["item-c"],
+      "selectedIds": ["item-c"],
+      "anchorId": "item-c"
+    },
+    {
+      "id": "replace-collapses-a-repeated-target",
+      "why": "A selection is a SET: several rendered instances of one topology id picked in one batch select it once.",
+      "seed": [],
+      "anchor": null,
+      "merge": "replace",
+      "targets": ["item-b", "item-b"],
+      "selectedIds": ["item-b"],
+      "anchorId": "item-b"
+    },
+    {
+      "id": "additive-extends-the-set",
+      "why": "Shift-click on a world scene: the picked id joins the set, in first-seen order, and becomes the anchor.",
+      "seed": ["item-a"],
+      "anchor": "item-a",
+      "merge": "additive",
+      "targets": ["item-c"],
+      "selectedIds": ["item-a", "item-c"],
+      "anchorId": "item-c"
+    },
+    {
+      "id": "additive-is-idempotent",
+      "why": "`Select` is event-sourced: re-adding an already selected id is a no-op, never a second entry.",
+      "seed": ["item-a"],
+      "anchor": "item-a",
+      "merge": "additive",
+      "targets": ["item-a"],
+      "selectedIds": ["item-a"],
+      "anchorId": "item-a"
+    },
+    {
+      "id": "subtractive-removes-only-the-named-ids",
+      "why": "Ctrl/cmd-click on a world scene: the picked id leaves the set and the rest keeps its order.",
+      "seed": ["item-a", "item-b", "item-c"],
+      "anchor": "item-c",
+      "merge": "subtractive",
+      "targets": ["item-b"],
+      "selectedIds": ["item-a", "item-c"],
+      "anchorId": "item-b"
+    },
+    {
+      "id": "subtractive-of-an-unselected-id-is-a-no-op",
+      "why": "Removing what was never selected changes nothing — the anchor still moves to the picked id.",
+      "seed": ["item-a"],
+      "anchor": "item-a",
+      "merge": "subtractive",
+      "targets": ["item-d"],
+      "selectedIds": ["item-a"],
+      "anchorId": "item-d"
+    },
+    {
+      "id": "invertive-toggles-each-named-id",
+      "why": "Shift+ctrl-click on a world scene: a selected id leaves, an unselected id joins, in ONE batch.",
+      "seed": ["item-a", "item-b"],
+      "anchor": "item-b",
+      "merge": "invertive",
+      "targets": ["item-b", "item-c"],
+      "selectedIds": ["item-a", "item-c"],
+      "anchorId": "item-c"
+    },
+    {
+      "id": "range-spans-forwards-from-the-anchor",
+      "why": "The inclusive topology-order slice from the anchor to the target, and the anchor is KEPT so a second range pick re-spans from the same origin.",
+      "seed": ["item-b"],
+      "anchor": "item-b",
+      "merge": "range",
+      "targets": ["item-d"],
+      "selectedIds": ["item-b", "item-c", "item-d"],
+      "anchorId": "item-b"
+    },
+    {
+      "id": "range-spans-backwards-from-the-anchor",
+      "why": "A target BEFORE the anchor spans the same slice — always in topology order, never in gesture order.",
+      "seed": ["item-c"],
+      "anchor": "item-c",
+      "merge": "range",
+      "targets": ["item-a"],
+      "selectedIds": ["item-a", "item-b", "item-c"],
+      "anchorId": "item-c"
+    },
+    {
+      "id": "range-without-an-anchor-uses-the-last-selected-id",
+      "why": "A selection that carries no explicit anchor (a programmatic seed, a restored session) still ranges — from the last id it holds.",
+      "seed": ["item-a", "item-b"],
+      "anchor": null,
+      "merge": "range",
+      "targets": ["item-d"],
+      "selectedIds": ["item-b", "item-c", "item-d"],
+      "anchorId": "item-b"
+    },
+    {
+      "id": "range-degrades-to-a-single-pick-on-an-unordered-domain",
+      "why": "The decision in `range.unorderedDomains`: a domain whose topology orders neither endpoint has no span to take, so `range` picks the last target alone and re-anchors there — a defined outcome, never a fault.",
+      "orderedTopology": [],
+      "seed": ["item-a"],
+      "anchor": "item-a",
+      "merge": "range",
+      "targets": ["item-c"],
+      "selectedIds": ["item-c"],
+      "anchorId": "item-c"
+    }
+  ],
+  "wiring": {
+    "why": "Source-level anchors both twins re-check, so no implementation can reintroduce a private spelling of these five words — which is exactly how the live defect was introduced.",
+    "codec": {
+      "file": "🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs",
+      "toWire": "pub fn wire_label(self) -> &'static str {",
+      "fromWire": "pub fn from_wire_label(raw: &str) -> Option<Self> {"
+    },
+    "domainPath": {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "decoder": "protocol::MergeMode::from_wire_label(raw).ok_or_else(|| plugin_sdk_fault(format!(\"interactionSelect: unknown merge '{raw}'\")))",
+      "worldPath": "pub async fn merge_world_selection_ids(existing: &SelectionSet, incoming: &[String], merge: protocol::MergeMode) -> SelectionSet {"
+    },
+    "host": {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx",
+      "selectionArgs": "export function world3dSelectionActionArgs(domainId: string, granularity: string, ids: readonly string[], merge: MergeMode) {",
+      "componentPick": "export function componentPickMergeMode(mode: MergeMode): MergeMode {",
+      "deletedBuilders": ["instanceMergeArg", "componentMergeArg"]
+    }
+  }
+}

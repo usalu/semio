@@ -151,7 +151,7 @@ async fn the_echoed_correlation_drops_a_request_body_the_shell_could_not_have_se
 /// `code` and `message` from that pack, or a readable error is mojibake.
 #[semio_framework_async_macros::async_test]
 async fn a_packed_host_fault_round_trips_through_outcome_to_result() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/extension-result-fault-pack.json")).expect("fault-pack fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/extension-result-fault-pack.json")).expect("fault-pack fixture");
     let fault_json = serde_json::to_string(&fixture["fault"]).expect("fault object");
     let fault_value = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&fault_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture fault is a DSL value");
     let fault: semio_framework::Fault = semio_framework_value::FromValue::from_value(fault_value).expect("fixture fault is a Fault");

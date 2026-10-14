@@ -1,7 +1,7 @@
 import {test,expect} from "bun:test";
 import Ajv2020 from "ajv/dist/2020";
 import {toByteArray} from "base64-js";
-import fixture from "../../🧫️fixtures/🎟️funding.json";
+import fixture from "../🧫️fixtures/🎟️funding.json";
 import schema from "../../../../../🌱️value/🧬️retained-clone/🧬️contract/🧬️schema/🔣️.json";
 import {BinarySourceJob} from "../../🟦️.ts";
 const validate=new Ajv2020({strict:true}).compile(schema);

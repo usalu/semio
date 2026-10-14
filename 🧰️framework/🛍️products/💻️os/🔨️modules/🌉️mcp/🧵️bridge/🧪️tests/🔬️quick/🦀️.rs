@@ -458,7 +458,7 @@ fn terminal_broadcast_close_returns_one_exact_original_and_cancels_recipient_cre
 /// codec. The TS twin runs the mirror-image check against the SAME file.
 #[test]
 fn every_fixture_round_trips_through_the_rust_codec() {
-    let raw = include_str!("../../🧫️fixtures/📨️frames.json");
+    let raw = include_str!("../🧫️fixtures/📨️frames.json");
     let rows: Vec<serde_json::Value> = serde_json::from_str(raw).expect("🧫️fixtures/📨️frames.json must parse");
     assert!(!rows.is_empty(), "fixture file must not be empty");
     let mut shell_to_gateway_count = 0;

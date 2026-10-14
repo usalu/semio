@@ -3,7 +3,7 @@
 use crate::En1992Snapshot;
 
 /// 💧️ The liquid-retaining-fem-anchor example fixture, handcrafted in `en1992`'s DSL
-/// (`store::os_store::serialization::ArtifactDsl`): a liquid-retaining structure (EN 1992-3 tightness class TC2) section
+/// (`pack::snapshot::ArtifactDsl`): a liquid-retaining structure (EN 1992-3 tightness class TC2) section
 /// checked with a FEM-based analysis, an R90 fire rating, and a post-installed anchor in cracked
 /// concrete, under the EN annex — distinct from `En1992Snapshot::default()`'s DE-annex/TC1/R60/uncracked
 /// values so the grammar's non-default branches (annex, fire rating, tightness class, `use_fem`,
@@ -18,12 +18,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 /// 📖️ Parses `.en1992` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<En1992Snapshot, semio_framework_diagnostic::TextError> {
-    <En1992Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <En1992Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.en1992` DSL text.
 pub fn print_dsl(document: &En1992Snapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(document)
+    pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
 #[cfg(test)]
@@ -62,12 +62,12 @@ pub fn decode_en1992_snapshot_json(text: &str) -> Result<En1992Snapshot, String>
 
 /// 📖️ Parses committed `.dsl.semio` into [`En1992Snapshot`].
 pub fn decode_en1992_dsl(text: &str) -> Result<En1992Snapshot, String> {
-    <En1992Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+    <En1992Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
 
 /// 🖨️ Prints [`En1992Snapshot`] to canonical `.dsl.semio`.
 pub fn encode_en1992_dsl(snapshot: &En1992Snapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
+    pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

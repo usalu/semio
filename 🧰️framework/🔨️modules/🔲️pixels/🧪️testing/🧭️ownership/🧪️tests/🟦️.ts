@@ -4,9 +4,9 @@ import { expect, test } from "bun:test";
 import ts from "typescript";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { findWorkspaceRoot } from "../../../../🏃️process/🧭️routing/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import descriptor from "../🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import { readPixelsTaskDescriptorV1 } from "../🟦️.ts";
 
 const repoRoot = findWorkspaceRoot(import.meta.dir);

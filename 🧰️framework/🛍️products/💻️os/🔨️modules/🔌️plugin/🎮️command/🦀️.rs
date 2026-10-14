@@ -90,7 +90,7 @@ pub(crate) struct HistoryBackfillMark {
 #[cfg(test)]
 thread_local! {
     /// 🧮️ History rows built on this test thread — what the O(change) laws of the history view count (design §20.14).
-    static HISTORY_ROWS_BUILT: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    pub(crate) static HISTORY_ROWS_BUILT: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 
 /// 📚️ What the history rows of one build or patch read beyond their command-log entries: the applied position of the
@@ -118,13 +118,13 @@ pub(crate) fn backfilled_edit_label<Mu>(edit: &protocol::Edit<Mu>, verb_label: O
 
 /// 🧾️ Inputs for one appended session command before its sequence and timestamp are assigned.
 pub(crate) struct CommandLogAppend<'a> {
-    action_id: &'a str,
-    label: LocalizedLabel,
-    kind: ActionKind,
-    edit_id: Option<String>,
-    transition_id: Option<String>,
-    timestamp: Option<String>,
-    inverse: Option<InverseAction>,
+    pub(crate) action_id: &'a str,
+    pub(crate) label: LocalizedLabel,
+    pub(crate) kind: ActionKind,
+    pub(crate) edit_id: Option<String>,
+    pub(crate) transition_id: Option<String>,
+    pub(crate) timestamp: Option<String>,
+    pub(crate) inverse: Option<InverseAction>,
 }
 
 /// 📜️ Operations a history row previews: its edit's newest ones (see `CommandView::op_lines`).
@@ -544,7 +544,7 @@ fn history_panel_unavailable_row(seq: u64, index: usize, locale: Locale) -> UiAs
 /// without editable inputs (design §22.20), the store's supersede law, the session or the instance refuses is disabled
 /// because of that refusal (`RowAction::disabled_because`, announced as its description; `refusals`), and a refused
 /// Edit activates nothing (gap N15).
-fn history_panel_mutation_row(mutation: &semio_framework::kernel::HistoryMutationEntry, controller_id: &str, locale: Locale, read_only: bool, refusals: time_travel::MutationRowRefusals) -> UiAssemblyResult<BuiltNode> {
+pub(crate) fn history_panel_mutation_row(mutation: &semio_framework::kernel::HistoryMutationEntry, controller_id: &str, locale: Locale, read_only: bool, refusals: time_travel::MutationRowRefusals) -> UiAssemblyResult<BuiltNode> {
     let (tone, icon) = time_travel::history_severity_tone(mutation.worst);
     let icon = if mutation.pending {
         "clock"

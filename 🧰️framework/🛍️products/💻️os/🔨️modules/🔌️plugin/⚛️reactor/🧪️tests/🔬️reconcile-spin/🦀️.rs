@@ -14,7 +14,7 @@ fn tree(text: &str) -> ComponentTree {
 }
 
 fn budget() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔁️reconcile-spin.json")).expect("reconcile spin budget fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🔁️reconcile-spin.json")).expect("reconcile spin budget fixture")
 }
 
 fn far_deadline() -> std::time::Instant {

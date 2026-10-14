@@ -1,0 +1,83 @@
+{
+  "exclusive": false,
+  "rows": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct10-root-canonical-nx",
+      "bytes": 363137545,
+      "files": 1785,
+      "reason": "inactive historical generated Nx workspace metadata, ticket output only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/nro-data",
+      "bytes": 362859834,
+      "files": 1678,
+      "reason": "inactive historical generated Nx workspace metadata, ticket output only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct10-camera-canonical-nx",
+      "bytes": 362809162,
+      "files": 1630,
+      "reason": "inactive historical generated Nx workspace metadata, ticket output only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/pub-codec-data",
+      "bytes": 362778258,
+      "files": 1630,
+      "reason": "inactive historical generated Nx workspace metadata, ticket output only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/pub-k4-data",
+      "bytes": 362619296,
+      "files": 1630,
+      "reason": "inactive historical generated Nx workspace metadata, ticket output only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/pub-mount-data",
+      "bytes": 361838474,
+      "files": 1629,
+      "reason": "inactive historical generated Nx workspace metadata, ticket output only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/pub-k3-data",
+      "bytes": 361836486,
+      "files": 1629,
+      "reason": "inactive historical generated Nx workspace metadata, ticket output only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/pub-k2-data",
+      "bytes": 359982308,
+      "files": 1588,
+      "reason": "inactive historical generated Nx workspace metadata, ticket output only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct10-root-boundary23-nx",
+      "bytes": 354905378,
+      "files": 1583,
+      "reason": "inactive historical generated Nx workspace metadata, ticket output only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/nh-data",
+      "bytes": 353570555,
+      "files": 1586,
+      "reason": "inactive historical generated Nx workspace metadata, ticket output only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/pub-kernel-data",
+      "bytes": 353413762,
+      "files": 1580,
+      "reason": "inactive historical generated Nx workspace metadata, ticket output only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/cp-data",
+      "bytes": 353319072,
+      "files": 1601,
+      "reason": "inactive historical generated Nx workspace metadata, ticket output only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/pub-b20-nx-data",
+      "bytes": 353260738,
+      "files": 1586,
+      "reason": "inactive historical generated Nx workspace metadata, ticket output only"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 //! 🧪️ Original cancellation Arc and waiter backing survive every denied or blocked turn.
 use super::*;
 fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(value,(heap.requested_bytes,heap.released_bytes))}
-fn policy()->RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let p=&law["policy"];RetainedCloneGrant{maximum_items:p["items"].as_u64().unwrap()as usize,maximum_copy_bytes:p["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:p["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:p["release"].as_u64().unwrap()as usize,maximum_depth:p["depth"].as_u64().unwrap()as usize}}
+fn policy()->RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let p=&law["policy"];RetainedCloneGrant{maximum_items:p["items"].as_u64().unwrap()as usize,maximum_copy_bytes:p["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:p["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:p["release"].as_u64().unwrap()as usize,maximum_depth:p["depth"].as_u64().unwrap()as usize}}
 fn identity(owner:&CancelTokenRetirement)->Option<(u8,usize)>{if let Some(current)=owner.current.as_ref(){Some((0,Arc::as_ptr(&current.0)as usize))}else{owner.node.as_ref().map(|node|(1,node as*const CancelNode as usize))}}
 fn close(mut owner:CancelTokenRetirement,physical:usize)->usize{
  let grant=policy();let mut released=0;let mut turns=0;
@@ -13,7 +13,7 @@ fn close(mut owner:CancelTokenRetirement,physical:usize)->usize{
 }
 #[test]
 fn cancel_token_retirement_original_ancestor_nodes_release_without_recursive_drop(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();for nodes in law["nodes"].as_array().unwrap(){let nodes=nodes.as_u64().unwrap()as usize;let(owner,heap)=observe(||{let mut token=CancelToken::root_now();for _ in 1..nodes{token=token.child_now();}CancelTokenRetirement::from_token(token)});assert_eq!(heap.0,nodes*shared_retirement_allocation_bytes::<CancelNode>());assert_eq!(close(owner,heap.0-heap.1),nodes*2);}
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();for nodes in law["nodes"].as_array().unwrap(){let nodes=nodes.as_u64().unwrap()as usize;let(owner,heap)=observe(||{let mut token=CancelToken::root_now();for _ in 1..nodes{token=token.child_now();}CancelTokenRetirement::from_token(token)});assert_eq!(heap.0,nodes*shared_retirement_allocation_bytes::<CancelNode>());assert_eq!(close(owner,heap.0-heap.1),nodes*2);}
 }
 #[test]
 fn cancel_token_retirement_shared_weak_and_registered_waiter_keep_exact_original(){
@@ -24,7 +24,7 @@ fn cancel_token_retirement_shared_weak_and_registered_waiter_keep_exact_original
 
 #[test]
 fn cancel_token_borrowed_original_alias_return_keeps_root_waiters_and_exact_pointer(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪢️alias-return/🔣️.json")).unwrap();let grant:RetainedCloneGrant=serde_json::from_value(law["policy"].clone()).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🪢️alias-return/🔣️.json")).unwrap();let grant:RetainedCloneGrant=serde_json::from_value(law["policy"].clone()).unwrap();
  for count in law["aliases"].as_array().unwrap(){let count=count.as_u64().unwrap()as usize;let root=CancelToken::root_now();let pointer=Arc::as_ptr(&root.0);let waiter_capacity=law["waiterCapacity"].as_u64().unwrap()as usize;root.0.waiters.lock().try_reserve_exact(waiter_capacity).unwrap();assert_eq!(root.0.waiters.lock().capacity(),waiter_capacity);root.0.waiters.lock().push((1,Waker::noop().clone()));let mut owners:Vec<_>=(0..count).map(|_|CancelTokenRetirement::from_token(root.clone())).collect();assert_eq!(Arc::strong_count(&root.0),count+1);
   for (index,owner) in owners.iter_mut().enumerate(){let original=identity(owner);for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(step,heap)=observe(||owner.return_alias_step(&root,denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(identity(owner),original);}
    let(step,heap)=observe(||owner.return_alias_step(&root,grant).unwrap());assert_eq!(heap,(0,0));assert_eq!(step.progress(),serde_json::from_value::<RetainedCloneProgress>(law["receipt"].clone()).unwrap());assert!(owner.terminal_is_empty());assert_eq!(Arc::as_ptr(&root.0),pointer);assert_eq!(Arc::strong_count(&root.0),count-index);assert_eq!(root.0.waiters.lock().len(),1);

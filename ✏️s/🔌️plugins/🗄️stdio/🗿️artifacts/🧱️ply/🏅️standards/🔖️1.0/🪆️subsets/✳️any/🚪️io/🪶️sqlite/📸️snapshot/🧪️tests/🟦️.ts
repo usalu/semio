@@ -1,11 +1,11 @@
-import refusalCorpus from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
+import refusalCorpus from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
 const canceledKind=refusalCorpus.cases.find(c=>c.id==="canceled-projection")!.expectedKind;
 import {binary64,binary32,binary64Value,binary32Value,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🧫️ Shared PLY generic typed-property corpus with independent scalar and list SQL edits. */
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
-import fixture from "../🧫️fixtures/🔣️.json";
-import ieee from "../🧫️fixtures/🔢️ieee754/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+import ieee from "./🧫️fixtures/🔢️ieee754/🔣️.json";
 import {plySnapshotValidateSqliteSubset}from"../🟦️.ts";
 import { parsePlySnapshot, type PlySnapshot, type PlyProperty } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { plySnapshotToSqliteDatabase, plySnapshotFromSqliteDatabase, PLY_SQLITE_SCHEMA } from "../🟦️.ts";
@@ -110,7 +110,7 @@ test("PLY exact owned dialect, document identity and cancellation laws", async()
   await expect(plySnapshotValidateSqliteSubset(input,ieee.sqliteDialect,database,{signal:controller.signal})).rejects.toMatchObject({kind:canceledKind});
 });
 
-import declarations from "../🧫️fixtures/📋️declaration-state.json";
+import declarations from "./🧫️fixtures/📋️declaration-state.json";
 test("PLY declaration counts and count scalar kinds remain independent from occurrence rows",async()=>{
  for(const count of declarations.declaredCounts)for(const countKind of declarations.countKinds){
   const snapshot={schema:"owned state",format:"ascii",comments:[],elements:[{name:"face",count:BigInt(count),properties:[{form:"list",name:"indices",countKind,valueKind:"int"}],rows:[{values:[{kind:"list",value:Array.from({length:declarations.listLength},()=>({kind:"int",value:1}))}]}]}]} as PlySnapshot;
@@ -120,7 +120,7 @@ test("PLY declaration counts and count scalar kinds remain independent from occu
 
 test("PLY independent SQLite declaration edits preserve unsigned64 counts and floating count metadata",async()=>{const db=Database.deserialize(await exportSqliteDatabase(await plySnapshotToSqliteDatabase(input)));try{db.run("UPDATE ply_element SET declared_count_high=4294967295,declared_count_low=4294967295 WHERE id=2");db.run("UPDATE ply_property SET count_kind='double' WHERE form='list'");expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});const restored=await plySnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()));expect(restored.elements[1]!.count).toBe(0xffffffffffffffffn);expect(restored.elements[1]!.properties[0]).toEqual({form:"list",name:"vertex_indices",countKind:"double",valueKind:"int"});expect(restored.elements[1]!.rows).toEqual(input.elements[1]!.rows);}finally{db.close();}});
 
-import independent from "../🧫️fixtures/🧩️independent-values.json";
+import independent from "./🧫️fixtures/🧩️independent-values.json";
 test("PLY independent occurrence vectors and recursive heterogeneous values remain exact",async()=>{
  const snapshot:PlySnapshot={...independent,format:"ascii",elements:independent.elements.map(element=>({...element,count:BigInt(element.count),properties:element.properties as PlyProperty[],rows:element.rows as PlySnapshot["elements"][number]["rows"]}))};
  expect(parsePlySnapshot(snapshot)).toEqual(snapshot);
@@ -128,7 +128,7 @@ test("PLY independent occurrence vectors and recursive heterogeneous values rema
  try{expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(await plySnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).toEqual(snapshot);}finally{db.close();}
 });
 
-import topology from "../🧫️fixtures/🧱️topology-laws.json";
+import topology from "./🧫️fixtures/🧱️topology-laws.json";
 test("PLY deep typed lists use exact bounded reconstruction and independent structural identities",async()=>{
  let value:import("../../../../🧬️schema/📸️snapshot/🟦️.ts").PlyValue={kind:"double",value:{bits:BigInt("0x"+topology.binary64Bits)}};for(let i=0;i<topology.depth;i++)value={kind:"list",value:[value]};
  const snapshot:PlySnapshot={schema:"recursive exact state",format:"ascii",comments:[],elements:[{name:"independent",count:0n,properties:[],rows:[{values:[value]}]}]};

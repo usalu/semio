@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
-import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 
 //#region 🔖️StorybookDiscoveryGuard
 const UI_STORYBOOK_DISCOVERY_BASELINE = { entries: 231, stories: 170, docs: 61, inputs: 61 } as const;

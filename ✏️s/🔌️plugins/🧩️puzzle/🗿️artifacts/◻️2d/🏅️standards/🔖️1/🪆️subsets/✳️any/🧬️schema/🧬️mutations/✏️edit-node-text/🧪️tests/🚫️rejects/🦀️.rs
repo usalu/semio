@@ -12,11 +12,11 @@ use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mut
 
 use crate::Puzzle2dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️edit-node-text/🚫️rejects/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️edit-node-text/🚫️rejects/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️edit-node-text/🚫️rejects/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️edit-node-text/🚫️rejects/🎯️outcome/🔣️.json");
-const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️edit-node-text/🚫️rejects/🔺️diff/🚫️.absent");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-node-text/🚫️rejects/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-node-text/🚫️rejects/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-node-text/🚫️rejects/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-node-text/🚫️rejects/🎯️outcome/🔣️.json");
+const DIFF_ABSENT: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-node-text/🚫️rejects/🔺️diff/🚫️.absent");
 
 fn before() -> Puzzle2dSnapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")

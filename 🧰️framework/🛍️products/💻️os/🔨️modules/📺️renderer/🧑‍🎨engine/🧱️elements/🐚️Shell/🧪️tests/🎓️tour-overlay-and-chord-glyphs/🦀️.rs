@@ -282,7 +282,7 @@ struct GlyphRow {
 /// (`📓️audit-visual-parity-puzzle3d.md` §7 item 7).
 #[test]
 fn the_chord_formatter_answers_the_shared_platform_fixture() {
-    let fixture: GlyphFixture = serde_json::from_str(include_str!("../../🧫️fixtures/⌨️keybinding-glyphs/🔣️.json")).expect("the shared glyph fixture");
+    let fixture: GlyphFixture = serde_json::from_str(include_str!("../🧫️fixtures/⌨️keybinding-glyphs/🔣️.json")).expect("the shared glyph fixture");
     for platform in &fixture.platforms.apple {
         assert!(crate::keybinding_platform_uses_meta(platform), "⌨️ {platform} is an Apple platform");
     }
@@ -389,7 +389,7 @@ fn the_veil_carries_reacts_own_blur_and_tint() {
 /// a new row in the fixture that names a glyph the face lacks fails HERE, not in a screenshot.
 #[test]
 fn every_chord_glyph_the_formatter_emits_rasterises() {
-    let fixture: GlyphFixture = serde_json::from_str(include_str!("../../🧫️fixtures/⌨️keybinding-glyphs/🔣️.json")).expect("the shared glyph fixture");
+    let fixture: GlyphFixture = serde_json::from_str(include_str!("../🧫️fixtures/⌨️keybinding-glyphs/🔣️.json")).expect("the shared glyph fixture");
     let mut atlas = FontAtlas::shaped_default();
     let mut ignorable = 0usize;
     for row in &fixture.rows {

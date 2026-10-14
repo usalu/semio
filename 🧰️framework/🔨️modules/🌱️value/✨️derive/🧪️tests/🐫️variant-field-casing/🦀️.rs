@@ -53,7 +53,7 @@ fn variant_level_field_casing_overrides_container_and_matches_neutral_serde_orac
         assert_eq!(T::from_value(expected.clone().into()).expect("native decoding"), value);
         assert_eq!(serde_json::from_value::<T>(expected.clone()).expect("serde decoding"), value);
     }
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🐫️variant-field-casing/🔣️.json")).expect("neutral field casing corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🐫️variant-field-casing/🔣️.json")).expect("neutral field casing corpus");
     verify(VariantOverrideInternal::Bar { material_id: "m1".into(), section_id: "s1".into() }, &corpus["internal"]);
     verify(VariantOverrideExternal::Bar { material_id: "m1".into(), section_id: "s1".into() }, &corpus["external"]);
     verify(VariantOverrideAdjacent::Bar { material_id: "m1".into(), section_id: "s1".into() }, &corpus["adjacent"]);

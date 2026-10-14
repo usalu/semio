@@ -2,10 +2,10 @@ import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import Ajv from "ajv";
 import schema from "../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import grantSchema from "../../🧬️schema/🔣️.json";
 import progressSchema from "../../🧬️schema/🧾️progress.json";
-import axes from "../../🧫️fixtures/🔣️.json";
+import axes from "../../🧪️tests/🧫️fixtures/🔣️.json";
 test("original retained codecs isolate nested child workloads and preserve all axes",()=>{
  const ajv=new Ajv({strict:true});expect(ajv.compile(schema)(fixture)).toBe(true);
  const grant=JSON.parse(JSON.stringify(axes.rows[1])),receipt=JSON.parse(JSON.stringify(axes.receipts[1]));expect(ajv.compile(grantSchema)(grant)).toBe(true);expect(ajv.compile(progressSchema)(receipt)).toBe(true);expect(Object.keys(grant).length).toBe(fixture.grantUnits);expect(Object.keys(receipt).length).toBe(fixture.receiptUnits);

@@ -1,8 +1,8 @@
 import Ajv2020 from "ajv/dist/2020";
 import { describe, expect, test } from "vitest";
-import fixture from "../../🧫️fixtures/📝️explicit-draft/🔣️.json";
-import lifecycle from "../../🧫️fixtures/📝️explicit-draft/⚖️lifecycle.json";
-import retention from "../../🧫️fixtures/📝️explicit-draft/🧭️retention.json";
+import fixture from "../🧫️fixtures/📝️explicit-draft/🔣️.json";
+import lifecycle from "../🧫️fixtures/📝️explicit-draft/⚖️lifecycle.json";
+import retention from "../🧫️fixtures/📝️explicit-draft/🧭️retention.json";
 import schema from "../../🧬️schema/📝️explicit-draft/🔣️.json";
 import { localDocumentOwnerIdentityForSessionV1, LocalDocumentOwnerRegistryV1 } from "../../../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 import { startedTypedOperationV1, typedOperationCancellationActionV1, typedOperationCancellationOwnerIsCurrentV1 } from "../../../🏛️ShellHost/🟦️.tsx";

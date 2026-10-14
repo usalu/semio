@@ -3,8 +3,20 @@ use crate::value::observe_retirement_allocations as observe;
 use crate::retirement::controlled::ControlledRetirement;
 
 #[test]
+fn sealed_shared_borrowed_original_parent_receives_paid_nonlast_alias_without_heap(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["borrowedReturn"];
+ let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};
+ for count in law["aliases"].as_array().unwrap(){let count=count.as_u64().unwrap();let text="parent source witness".to_owned();let bytes=text.capacity();let pointer=text.as_ptr();let((parent,birth),heap)=observe(||SealedShared::admit(text,SharedIssuer::owned(),grant).ok().unwrap());assert_eq!(heap,(birth.retained_capacity_bytes,0));let foreign=SealedShared::admit("foreign".to_owned(),SharedIssuer::owned(),grant).ok().unwrap().0;let mut loans=Vec::new();
+  for _ in 0..count{let((loan,receipt),heap)=observe(||parent.try_duplicate(grant).unwrap());assert_eq!(heap,(0,0));assert_eq!(receipt,serde_json::from_value(law["receipt"].clone()).unwrap());loans.push(loan)}
+  for loan in &mut loans{for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(receipt,heap)=observe(||loan.return_borrowed_alias(&parent,denied).unwrap());assert_eq!(heap,(0,0));assert_eq!(receipt,Default::default());assert_eq!(loan.get().as_ptr(),pointer)}let(result,heap)=observe(||loan.return_borrowed_alias(&foreign,grant));assert_eq!(heap,(0,0));assert!(result.is_err());assert_eq!(loan.get().as_ptr(),pointer);let(receipt,heap)=observe(||loan.return_borrowed_alias(&parent,grant).unwrap());assert_eq!(heap,(0,0));assert_eq!(receipt,serde_json::from_value(law["receipt"].clone()).unwrap());assert!(loan.terminal_is_empty());assert_eq!(parent.get().as_ptr(),pointer)}
+  for loan in loans{assert_eq!(observe(||drop(loan)).1,(0,0));}let((original,receipt),heap)=observe(||parent.try_unwrap(grant).ok().unwrap());assert_eq!(heap,(0,birth.retained_capacity_bytes));assert_eq!(receipt.released_bytes,birth.retained_capacity_bytes);assert_eq!(original.as_ptr(),pointer);let mut original=ControlledRetirement::new(original).ok().unwrap();let mut released=0;let mut born=0;for _ in 0..64{if original.terminal_is_empty(){break}let(step,heap)=observe(||original.step(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;released+=heap.1;}assert!(original.terminal_is_empty());assert_eq!(released,bytes+born);assert_eq!(observe(||drop(original)).1,(0,0));let mut foreign=ControlledRetirement::new(foreign).ok().unwrap();for _ in 0..64{if foreign.terminal_is_empty(){break}let(step,heap)=observe(||foreign.step(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}assert!(foreign.terminal_is_empty());assert_eq!(observe(||drop(foreign)).1,(0,0));
+ }
+ eprintln!("[DEBUG] original borrowed parent witnesses12 separately paid nonlast aliases, identity/issuance preserved, denial/foreignheap0, copy0/capacity0/release0, original header separate paid unwrap");
+}
+
+#[test]
 fn sealed_shared_original_aliases_preserve_exact_payload_and_funded_header(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let original=row["text"].as_str().unwrap().to_owned();let original_pointer=original.as_ptr();let original_bytes=original.capacity();
   let birth=SealedShared::<String>::birth_bytes();
@@ -32,7 +44,7 @@ fn sealed_shared_original_aliases_preserve_exact_payload_and_funded_header(){
 
 #[test]
 fn sealed_shared_original_alias_return_slots_transfer_parallel_custody_without_heap(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let original=row["text"].as_str().unwrap().to_owned();let pointer=original.as_ptr();let bytes=original.capacity();
   let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:SealedShared::<String>::birth_bytes(),maximum_depth:1,..Default::default()};
@@ -54,7 +66,7 @@ fn sealed_shared_original_alias_return_slots_transfer_parallel_custody_without_h
 }
 #[test]
 fn sealed_shared_stale_slot_refuses_a_distinct_original_issuance_at_same_address(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:SealedShared::<String>::birth_bytes(),maximum_depth:1,..Default::default()};
  let (first,_)=SealedShared::admit("original".to_owned(),SharedIssuer::owned(),grant).unwrap_or_else(|_|panic!("first original admission refused"));
  let (second,_)=SealedShared::admit("later".to_owned(),SharedIssuer::owned(),grant).unwrap_or_else(|_|panic!("later original admission refused"));

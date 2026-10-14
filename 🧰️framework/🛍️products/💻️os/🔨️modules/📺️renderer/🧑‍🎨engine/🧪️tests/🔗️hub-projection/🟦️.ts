@@ -8,7 +8,7 @@ import { hubConnectionOperationOwnerCurrentV1 } from "../../🧱️elements/🔗
 import { SHELL_HUB_ROUTE } from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/🟦️.ts";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "🔗️hub-projection", "🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "🔗️hub-projection", "🔣️.json"), "utf8"));
 
 type Remote = { kind: "detached" | "connecting" } | { kind: "live"; peerCount: number } | { kind: "backoff"; retryInMs: number };
 type Projection = { session: "none" | "signedOut" | "signedIn"; link: "verifying" | "reachable" | "unreachable"; documents: Array<{ documentKey: string; remote: Remote }> };

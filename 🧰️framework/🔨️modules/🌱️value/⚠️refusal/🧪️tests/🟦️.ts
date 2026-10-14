@@ -4,7 +4,7 @@ import { Database } from "bun:sqlite";
 import { test } from "bun:test";
 import { ValueError, type ValueRefusalKind } from "../🟦️.ts";
 import { NativeDecodeControl } from "../../🛬️decode/🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 const decorate = (error: ValueError, path: readonly (string | number)[]): ValueError => path.reduceRight((error, segment) => error.under(segment), error);
 test("owned typed refusal construction preserves all kinds and paths against Ajv and SQLite", () => {

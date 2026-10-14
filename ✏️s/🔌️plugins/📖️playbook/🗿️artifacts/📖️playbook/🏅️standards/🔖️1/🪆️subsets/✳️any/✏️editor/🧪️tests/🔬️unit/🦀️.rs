@@ -53,7 +53,7 @@ pub(crate) mod context {
     /// publishes on (the parent only carries the child's coordinate, design §20.15).
     pub async fn live_spec(app: &MountedPlaybookApp) -> crate::PlaybookSpec {
         use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
-        use store::{os_store::serialization::ArtifactPack, SpaceMember};
+        use store::{pack::snapshot::ArtifactPack, SpaceMember};
         let snapshot = app.snapshot().expect("playbook parent projection");
         let bytes = app.child_store("flow", &snapshot.flow.child_id).await.expect("playbook flow child").document_pack_bytes().await.expect("playbook flow child pack");
         let content = SemioFlowSnapshot::decode_pack(&bytes).expect("playbook flow child snapshot");
@@ -134,7 +134,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 /// names exactly the retained tool roster.
 #[semio_framework_async_macros::async_test]
 async fn interactive_job_catalog_matches_owned_and_json_oracle_projections() {
-    let source = include_str!("../../🧫️fixtures/🧫️interactive-jobs/🔣️.json");
+    let source = include_str!("../🧫️fixtures/🧫️interactive-jobs/🔣️.json");
     let owned = source.lines().filter_map(|line| line.trim().strip_prefix("{\"id\":\"").and_then(|tail| tail.split_once('"')).map(|(id, _)| id.to_string())).collect::<Vec<_>>();
     let oracle = serde_json::from_str::<serde_json::Value>(source)
         .expect("language-neutral interactive job fixture")
@@ -184,7 +184,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 #[semio_framework_async_macros::async_test]
 async fn playbook_play_app_declares_the_authored_scene_showcase() {
     let definition = create_playbook_play_app();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎭️modes/🏗️builder/🧫️fixtures/🎬️scene-showcase/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎭️modes/🏗️builder/🧪️tests/🧫️fixtures/🎬️scene-showcase/🔣️.json")).unwrap();
     let actual: Vec<_> = definition.window_kinds.iter().map(|window| serde_json::json!({ "windowId": window.id, "bodyKey": window.body_key, "surfaceKind": window.surface_kind })).collect();
     assert_eq!(serde_json::json!(actual), fixture["windows"]);
 }
@@ -417,13 +417,13 @@ fn set_active_example_is_host_only_and_the_flow_child_mints_its_genesis_pack() {
     let definition = create_playbook_play_app();
     let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample is declared on the app roster");
     assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
-    let demo = <PlaybookSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo asset parses as a playbook snapshot");
+    let demo = <PlaybookSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo asset parses as a playbook snapshot");
     assert_eq!(demo.flow.child_id, crate::examples::demo::FLOW_ID);
     assert_eq!(demo.flow.target.artifact_id, demo.flow.child_id, "the target must name its own child_id or ChildRestoreProjection refuses the whole load");
     let projection = PlaybookPlayApp::child_restore_projection(&demo).expect("the demo's loaded-parent child projection");
     assert!(projection.admits_member("flow", &demo.flow.target));
     let pack = PlaybookPlayApp::genesis_child_pack(&demo, "flow", &demo.flow.child_id).expect("valid genesis owner").expect("the demo flow child mints its genesis pack");
-    let content = <semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("the genesis pack decodes");
+    let content = <semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("the genesis pack decodes");
     assert_eq!(crate::steps_from_flow_content(&content).expect("decodable demo steps").len(), 3);
     assert!(PlaybookPlayApp::genesis_child_pack(&demo, "flow", "not-this-documents-child").expect("valid genesis owner").is_none(), "a foreign child id must not be answered");
     assert!(PlaybookPlayApp::genesis_child_pack(&demo, "document", &demo.flow.child_id).expect("valid genesis owner").is_none(), "the deleted document slot is never answered");

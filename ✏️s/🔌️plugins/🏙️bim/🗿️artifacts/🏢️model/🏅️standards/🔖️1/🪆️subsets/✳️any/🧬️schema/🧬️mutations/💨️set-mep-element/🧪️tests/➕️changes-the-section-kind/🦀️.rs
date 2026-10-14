@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "💨️set-mep-element/➕️changes-the-section-kind",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/💨️set-mep-element/➕️changes-the-section-kind/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/💨️set-mep-element/➕️changes-the-section-kind/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/💨️set-mep-element/➕️changes-the-section-kind/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/💨️set-mep-element/➕️changes-the-section-kind/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/💨️set-mep-element/➕️changes-the-section-kind/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💨️set-mep-element/➕️changes-the-section-kind/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💨️set-mep-element/➕️changes-the-section-kind/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💨️set-mep-element/➕️changes-the-section-kind/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💨️set-mep-element/➕️changes-the-section-kind/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💨️set-mep-element/➕️changes-the-section-kind/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

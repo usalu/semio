@@ -2,7 +2,7 @@
 /** 🏃️ Workflow run artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import {runArtifactRustTests} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
-import {BundleScript} from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import {BundleScript} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runRepositoryTestCommand} from "../../../../../../../🦑️repo/🔨️modules/📚️library/🟦️.ts";
 import {runRepositoryCommand} from "../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import {resolve} from "node:path";

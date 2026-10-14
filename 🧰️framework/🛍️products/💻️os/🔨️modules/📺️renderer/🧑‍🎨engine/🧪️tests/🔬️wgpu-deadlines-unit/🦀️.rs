@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn presenter_checkouts_park_accepted_animation_and_expired_control_clocks_until_handback() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();
     let mut animation = AcceptedAnimationClock::default();
     let mut scheduler = ui_render::FrameScheduler::new();
     animation.accept(true);
@@ -23,7 +23,7 @@ fn presenter_checkouts_park_accepted_animation_and_expired_control_clocks_until_
 
 #[test]
 fn accepted_animation_clock_survives_discard_and_stops_after_static_presentation() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/⏱️schedule/🧫️fixtures/🎞️animation/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/⏱️schedule/🧪️tests/🧫️fixtures/🎞️animation/🔣️.json")).unwrap();
     let mut clock = AcceptedAnimationClock::default();
     let mut scheduler = ui_render::FrameScheduler::new();
     for step in fixture["activity"].as_array().unwrap() {
@@ -52,7 +52,7 @@ fn accepted_animation_clock_survives_discard_and_stops_after_static_presentation
 
 #[test]
 fn gpu_animation_clock_preserves_frame_precision_and_shader_periods_after_long_uptime() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/⏱️schedule/🧫️fixtures/🎞️animation/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/⏱️schedule/🧪️tests/🧫️fixtures/🎞️animation/🔣️.json")).unwrap();
     for row in fixture["samples"].as_array().unwrap() {
         let expected = row["phaseUs"].as_u64().unwrap() as f32 / 1_000_000.0;
         assert_eq!(ui_animation_seconds(row["nowUs"].as_u64()), expected, "{}", row["id"]);
@@ -64,7 +64,7 @@ fn gpu_animation_clock_preserves_frame_precision_and_shader_periods_after_long_u
 
 #[test]
 fn retained_control_deadlines_translate_monotonic_origins_without_epoch_loss() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/🧫️fixtures/⏱️deadline/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/⏱️deadline/🔣️.json")).unwrap();
     for row in fixture["bridges"].as_array().unwrap() {
         let deadline = retained_control_deadline(row["dueUs"].as_u64(), row["nowUs"].as_u64(), row["hostSeconds"].as_f64().unwrap());
         assert_eq!(deadline.map(|deadline| deadline.reason), row["expectedSeconds"].as_f64().map(|_| InvalidationReason::INPUT_STATE));

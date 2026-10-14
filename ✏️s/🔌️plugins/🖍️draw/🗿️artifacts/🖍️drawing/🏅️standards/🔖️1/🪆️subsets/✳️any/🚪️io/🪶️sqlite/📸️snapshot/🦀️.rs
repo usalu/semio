@@ -1,4 +1,5 @@
 //! 🖍️ Authored Draw forest entities, paint relationships and exact scalar words.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::*;
 use semio_framework_value::ValueError;
 use semio_framework_value::ValueRefusalKind;
@@ -82,14 +83,19 @@ fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)-
  while let Some(task)=pending.pop(){r.control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,0)?;match task{Task::Node(row)=>{let node=r.leaf(row)?;forest.0.insert(row.rowid,node);if row.text(4)?=="group"{let children=r.list("draw_layer",row.rowid,2,3)?;r.control.check_rows(pending.len().checked_add(children.len()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Draw frontier overflow"))?)?;let ids=children.iter().map(|v|v.rowid).collect();pending.push(Task::Group(row.rowid,ids));for row in children.into_iter().rev(){pending.push(Task::Node(row));}}},Task::Group(id,children)=>{let mut node=forest.0.remove(&id).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Draw group owner"))?;let DrawingLayerNode::Group(ref mut group)=node else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Draw group discriminant"))};for child in children{group.children.push(forest.0.remove(&child).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Draw child owner"))?);}forest.0.insert(id,node);}}}
  if r.rows.values().any(|v|!v.is_empty()){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"orphan Draw entities"));}r.control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;for id in root_ids{s.layers.push(forest.0.remove(&id).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Draw root owner"))?);}if !forest.0.is_empty(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unowned Draw layer"));}Ok(s)
 }
-impl store::os_store::serialization::ArtifactSqliteSnapshot for DrawingSnapshot{
- const SQLITE_SCHEMA:&'static str=SCHEMA;
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{project(self,control)}
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{reconstruct(database,control)}
+impl store::os_store::serialization::ArtifactSqliteSnapshotHost for DrawingSnapshot{
+ 
+ 
+ 
  fn retire_sqlite_snapshot(self){retire_decoded_drawing_snapshot(self)}
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{store::decode_sqlite_snapshot_record_native(payload,<Self as ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
  fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{store::encode_sqlite_snapshot_record_native(encoding,<Self as ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)}
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{if dialect.artifact_kind!="s.draw.drawing"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"Draw does not own the declared semantic subset")))}validate_sqlite_database_schema(database,SCHEMA,control.limits()).map_err(store::io_schema::IoError::from_value_error)?;Ok(store::io_schema::IoOutcome::clean(()))}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for DrawingSnapshot {
+const SQLITE_SCHEMA:&'static str=SCHEMA;
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{project(self,control)}
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{reconstruct(database,control)}
 }
 
 #[cfg(test)]

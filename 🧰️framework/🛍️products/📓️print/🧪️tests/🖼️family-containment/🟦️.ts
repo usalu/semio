@@ -10,7 +10,7 @@ import { geoStereographic } from "d3-geo";
 const SunCalc = createRequire(import.meta.url)("suncalc") as { getPosition(date: Date, latitude: number, longitude: number): { altitude: number; azimuth: number } };
 import { compileVizProbeDocument } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 import fixture from "./🔣️.json";
-import optionFixture from "../../🧫️fixtures/🧬️chart-mutations/🔣️.json";
+import optionFixture from "../🧫️fixtures/🧬️chart-mutations/🔣️.json";
 import schemaDocument from "../../🧬️schema/🔣️.json";
 import Ajv2020 from "ajv/dist/2020.js";
 import { validateJsonSchemaSubset } from "../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";

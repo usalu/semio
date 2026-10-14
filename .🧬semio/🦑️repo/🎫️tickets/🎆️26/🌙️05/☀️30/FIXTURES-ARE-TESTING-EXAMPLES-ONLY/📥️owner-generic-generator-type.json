@@ -1,0 +1,6 @@
+{
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+  "before": "3096acc13a3510058c568f00619e00c5f230418ca43bdac2debd0c609c711516",
+  "after": "5ff576d5235ef3470e14a2c5b6046372154fe6e99b019f5f27bf15272c9a8b88",
+  "reason": "Stable registered generator identity is generic in schema and runtime; public domain type now matches"
+}

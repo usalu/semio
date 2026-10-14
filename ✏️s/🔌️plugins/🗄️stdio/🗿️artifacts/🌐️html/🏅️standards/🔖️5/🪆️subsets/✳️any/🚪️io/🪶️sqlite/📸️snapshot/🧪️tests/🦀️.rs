@@ -1,15 +1,17 @@
+use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v5::subsets::any::io::text::snapshot::{parse_html_document,write_html_document};
 use crate::standards::v5::subsets::any::io::sqlite::snapshot::*;
 use crate::standards::v5::subsets::any::schema::snapshot::*;
-use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
 
-fn fixture() -> HtmlSnapshot { let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap(); parse_html_document(fixture["htmlText"].as_str().unwrap()).unwrap() }
+fn fixture() -> HtmlSnapshot { let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap(); parse_html_document(fixture["htmlText"].as_str().unwrap()).unwrap() }
 fn project(snapshot: &HtmlSnapshot) -> SqliteDatabase { snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap() }
 fn restore(database: &SqliteDatabase) -> Result<HtmlSnapshot, ValueError> { HtmlSnapshot::from_sqlite_database(database,&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())) }
 
 #[test]
 fn sqlite_snapshot_html_owned_dialect_guard_requires_its_declared_coordinate() {
-    let source: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let source: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let snapshot = fixture(); let database = project(&snapshot);
     let dialect = |value: &serde_json::Value| semio_framework_artifact_reference::ArtifactDialect { artifact_kind: value["artifactKind"].as_str().unwrap().into(), standard: value["standard"].as_str().unwrap().into(), subset: value["subset"].as_str().unwrap().into() };
     let mut callback = |_| true; let mut control = SqliteSnapshotControl::new(&mut callback, SqliteDatabaseLimits::default());
@@ -29,8 +31,8 @@ fn sqlite_snapshot_html_preserves_boolean_empty_attributes_and_raw_text() {
     assert_eq!(attrs.iter().find(|row| row.text(3).unwrap() == "value").unwrap().optional_text(4).unwrap(), Some(""));
     assert_eq!(database.table("html_raw_text").unwrap().rows.iter().map(|row| row.text(1).unwrap()).collect::<Vec<_>>(), ["style", "script"]);
     let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap(); let restored = restore(&import_sqlite_database(&bytes, SqliteDatabaseLimits::default(), &mut |_| true).unwrap()).unwrap(); assert_eq!(restored, snapshot);
-    assert_eq!(<HtmlSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&restored), <HtmlSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot));
-    assert_eq!(<HtmlSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&restored), <HtmlSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot));
+    assert_eq!(<HtmlSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&restored), <HtmlSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot));
+    assert_eq!(<HtmlSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&restored), <HtmlSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snapshot));
 }
 
 #[test]
@@ -77,11 +79,11 @@ fn sqlite_snapshot_html_independent_queries_edits_and_html_parser_oracle() {
 fn sqlite_snapshot_html_erased_native_preflight_admission_and_limits() {
     let snapshot = fixture();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.html".into(), standard: "5".into(), subset: "*".into() };
-    let codec = <HtmlSnapshot as store::os_store::serialization::ArtifactPack>::sqlite_snapshot_codec().unwrap();
+    let codec = <HtmlSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().unwrap();
     for encoding in [SnapshotEncoding::Text, SnapshotEncoding::Binary] {
         snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
         let actual = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)("html preflight", &dialect, &mut Some(project(&snapshot)), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
-        let expected = match encoding { SnapshotEncoding::Text => semio_framework_os_kernel::io_schema::IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot)), SnapshotEncoding::Binary => semio_framework_os_kernel::io_schema::IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(&snapshot)) };
+        let expected = match encoding { SnapshotEncoding::Text => semio_framework_os_kernel::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&snapshot)), SnapshotEncoding::Binary => semio_framework_os_kernel::io_schema::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&snapshot)) };
         assert_eq!(actual, expected);
     }
     let large = HtmlSnapshot { schema: "stdio.html".into(), doctype: None, root: HtmlNode::Element { name: "html".into(), attributes: Vec::new(), children: vec![HtmlNode::Text { text: "x".repeat(100000) }] } };

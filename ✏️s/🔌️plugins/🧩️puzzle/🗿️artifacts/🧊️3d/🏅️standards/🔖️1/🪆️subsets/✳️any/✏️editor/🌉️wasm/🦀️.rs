@@ -152,7 +152,7 @@ impl Puzzle3dArtifactVcs {
 /// non-Rust consumers load the real example fixtures without duplicating the DSL grammar.
 #[wasm_bindgen(js_name = puzzle3dParseDslJson)]
 pub fn puzzle3d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
-    use store::os_store::serialization::ArtifactDsl;
+    use pack::snapshot::ArtifactDsl;
     let projection = Puzzle3dSnapshot::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
     Ok(semio_framework_pack_json::to_json_string(&projection))
 }

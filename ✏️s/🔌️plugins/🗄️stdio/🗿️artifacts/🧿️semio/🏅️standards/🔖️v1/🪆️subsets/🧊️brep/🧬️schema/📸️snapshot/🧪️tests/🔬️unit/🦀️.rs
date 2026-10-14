@@ -37,16 +37,16 @@ fn populated_snapshot() -> SemioBrepSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn json_pack_round_trips() {
     let snap = SemioBrepSnapshot::default();
-    let bytes = <SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioBrepSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioBrepSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_text_round_trips() {
     let snap = SemioBrepSnapshot::default();
-    let text = <SemioBrepSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
-    let back = <SemioBrepSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioBrepSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snap);
+    let back = <SemioBrepSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back);
 }
 
@@ -57,10 +57,10 @@ async fn dsl_text_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law_populated_snapshot_round_trips_pack_and_dsl() {
     let snap = populated_snapshot();
-    let packed = <SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
-    assert_eq!(<SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&packed).expect("decode"), snap);
-    let text = <SemioBrepSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
-    assert_eq!(<SemioBrepSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse"), snap);
+    let packed = <SemioBrepSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
+    assert_eq!(<SemioBrepSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&packed).expect("decode"), snap);
+    let text = <SemioBrepSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snap);
+    assert_eq!(<SemioBrepSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse"), snap);
 }
 
 /// 🧪️ Every `BrepCurve`/`BrepSurface` variant (incl. both `Nurbs` shapes) round-trips through
@@ -69,8 +69,8 @@ async fn codec_retention_law_populated_snapshot_round_trips_pack_and_dsl() {
 #[semio_framework_async_macros::async_test]
 async fn demo_snapshot_round_trips_pack_and_dsl() {
     let demo = demo_brep_snapshot();
-    let packed = <SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&demo);
-    assert_eq!(<SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&packed).expect("decode"), demo);
-    let text = <SemioBrepSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&demo);
-    assert_eq!(<SemioBrepSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse"), demo);
+    let packed = <SemioBrepSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&demo);
+    assert_eq!(<SemioBrepSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&packed).expect("decode"), demo);
+    let text = <SemioBrepSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&demo);
+    assert_eq!(<SemioBrepSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse"), demo);
 }

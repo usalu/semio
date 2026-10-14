@@ -610,14 +610,14 @@
       "files": [
         {
           "role": "expected-before-bcf",
-          "path": "../🧫️fixtures/🔢️set-version-applied/⬅️before.bcf",
+          "path": "../🧪️tests/🧫️fixtures/🔢️set-version-applied/⬅️before.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:a5f1855a32e3d2623066c938cef6a9839747984420c601cbd3148156c6442b0c",
           "bytes": 1559
         },
         {
           "role": "expected-after-bcf",
-          "path": "../🧫️fixtures/🔢️set-version-applied/➡️after.bcf",
+          "path": "../🧪️tests/🧫️fixtures/🔢️set-version-applied/➡️after.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:ae27f665a37614084e4fe15215b397458fda2da79a85f10bd4361d5b46f407ca",
           "bytes": 1559
@@ -660,14 +660,14 @@
       "files": [
         {
           "role": "expected-before-bcf",
-          "path": "../🧫️fixtures/📌️insert-topic-applied/⬅️before.bcf",
+          "path": "../🧪️tests/🧫️fixtures/📌️insert-topic-applied/⬅️before.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:a5f1855a32e3d2623066c938cef6a9839747984420c601cbd3148156c6442b0c",
           "bytes": 1559
         },
         {
           "role": "expected-after-bcf",
-          "path": "../🧫️fixtures/📌️insert-topic-applied/➡️after.bcf",
+          "path": "../🧪️tests/🧫️fixtures/📌️insert-topic-applied/➡️after.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:319f5d8d331a954883e53f67cff903ed5ffa7b142fb50c2814386a7208bc9c4d",
           "bytes": 1952
@@ -710,7 +710,7 @@
       "files": [
         {
           "role": "expected-before-bcf",
-          "path": "../🧫️fixtures/👯️insert-topic-rejected-duplicate/⬅️before.bcf",
+          "path": "../🧪️tests/🧫️fixtures/👯️insert-topic-rejected-duplicate/⬅️before.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:a5f1855a32e3d2623066c938cef6a9839747984420c601cbd3148156c6442b0c",
           "bytes": 1559
@@ -753,14 +753,14 @@
       "files": [
         {
           "role": "expected-before-bcf",
-          "path": "../🧫️fixtures/🗑️remove-topic-applied/⬅️before.bcf",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-topic-applied/⬅️before.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:a5f1855a32e3d2623066c938cef6a9839747984420c601cbd3148156c6442b0c",
           "bytes": 1559
         },
         {
           "role": "expected-after-bcf",
-          "path": "../🧫️fixtures/🗑️remove-topic-applied/➡️after.bcf",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-topic-applied/➡️after.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:c5ef640c20d659aeca40668987dae4f6ec642d60f1296b65ed898bc874904b03",
           "bytes": 1128
@@ -803,7 +803,7 @@
       "files": [
         {
           "role": "expected-before-bcf",
-          "path": "../🧫️fixtures/🕳️remove-topic-rejected-missing/⬅️before.bcf",
+          "path": "../🧪️tests/🧫️fixtures/🕳️remove-topic-rejected-missing/⬅️before.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:a5f1855a32e3d2623066c938cef6a9839747984420c601cbd3148156c6442b0c",
           "bytes": 1559
@@ -846,14 +846,14 @@
       "files": [
         {
           "role": "expected-before-bcf",
-          "path": "../🧫️fixtures/🖊️set-topic-markup-applied/⬅️before.bcf",
+          "path": "../🧪️tests/🧫️fixtures/🖊️set-topic-markup-applied/⬅️before.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:a5f1855a32e3d2623066c938cef6a9839747984420c601cbd3148156c6442b0c",
           "bytes": 1559
         },
         {
           "role": "expected-after-bcf",
-          "path": "../🧫️fixtures/🖊️set-topic-markup-applied/➡️after.bcf",
+          "path": "../🧪️tests/🧫️fixtures/🖊️set-topic-markup-applied/➡️after.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:b27468be1a66157f8282e8f4ecc61e00cfeda6d77b0b02cbb0884a28d5cedb30",
           "bytes": 1560
@@ -896,14 +896,14 @@
       "files": [
         {
           "role": "expected-before-bcf",
-          "path": "../🧫️fixtures/🗨️insert-comment-applied/⬅️before.bcf",
+          "path": "../🧪️tests/🧫️fixtures/🗨️insert-comment-applied/⬅️before.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:a5f1855a32e3d2623066c938cef6a9839747984420c601cbd3148156c6442b0c",
           "bytes": 1559
         },
         {
           "role": "expected-after-bcf",
-          "path": "../🧫️fixtures/🗨️insert-comment-applied/➡️after.bcf",
+          "path": "../🧪️tests/🧫️fixtures/🗨️insert-comment-applied/➡️after.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:dbb135b7c59ff896ea634a855c0fd08b800ac98edae12bba22ff35bd12558e01",
           "bytes": 1596
@@ -946,14 +946,14 @@
       "files": [
         {
           "role": "expected-before-bcf",
-          "path": "../🧫️fixtures/🧹️remove-comment-applied/⬅️before.bcf",
+          "path": "../🧪️tests/🧫️fixtures/🧹️remove-comment-applied/⬅️before.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:a5f1855a32e3d2623066c938cef6a9839747984420c601cbd3148156c6442b0c",
           "bytes": 1559
         },
         {
           "role": "expected-after-bcf",
-          "path": "../🧫️fixtures/🧹️remove-comment-applied/➡️after.bcf",
+          "path": "../🧪️tests/🧫️fixtures/🧹️remove-comment-applied/➡️after.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:4b5f16985feb7165f760da0d8f13609367029de596e8c627ef8849b09d11b861",
           "bytes": 1514
@@ -996,14 +996,14 @@
       "files": [
         {
           "role": "expected-before-bcf",
-          "path": "../🧫️fixtures/✏️set-comment-applied/⬅️before.bcf",
+          "path": "../🧪️tests/🧫️fixtures/✏️set-comment-applied/⬅️before.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:a5f1855a32e3d2623066c938cef6a9839747984420c601cbd3148156c6442b0c",
           "bytes": 1559
         },
         {
           "role": "expected-after-bcf",
-          "path": "../🧫️fixtures/✏️set-comment-applied/➡️after.bcf",
+          "path": "../🧪️tests/🧫️fixtures/✏️set-comment-applied/➡️after.bcf",
           "mediaType": "application/octet-stream",
           "sha256": "sha256:593f079480a32f041032be8de52b9c9aee84fdcb08fd27cfa8a2a702a4fe1c29",
           "bytes": 1574

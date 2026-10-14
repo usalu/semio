@@ -7,7 +7,7 @@ use crate::standards::v1::subsets::any::schema::inferences::storey_levels::compu
 use crate::ModelInference;
 use protocol::Inference;
 
-const CASE: &str = include_str!("../../../../../../🧫️fixtures/💡️inferences/🧊️element-solids/🏔️roofs-shapes/🔣️.json");
+const CASE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🏔️roofs-shapes/🔣️.json");
 
 fn geometry(snapshot: &ModelSnapshot, id: &str) -> RoofGeometry {
     let roof = &snapshot.roofs[id];

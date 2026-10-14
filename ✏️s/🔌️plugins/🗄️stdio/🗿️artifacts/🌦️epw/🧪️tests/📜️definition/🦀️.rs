@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn owned_mime_constraint_matches_independent_serde_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📜️definition/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📜️definition/🔣️.json")).unwrap();
     for row in vectors["cases"].as_array().unwrap() {
         let mut source: serde_json::Value = serde_json::from_str(ARTIFACT_DEFINITION_SCHEMA).unwrap();
         source["representations"][0]["mimes"] = row["mimes"].clone();
@@ -18,7 +18,7 @@ fn owned_mime_constraint_matches_independent_serde_oracle() {
 #[test]
 fn owned_snapshot_declares_structural_pack_and_relational_capabilities() {
     let codec = store::bare_artifact_codec::<EpwSnapshot, EpwMutation>(STDIO_EPW_DOCUMENT_SCHEMA);
-    let spec = <EpwSnapshot as store::os_store::serialization::ArtifactPack>::record_spec().unwrap();
+    let spec = <EpwSnapshot as pack::snapshot::ArtifactPack>::record_spec().unwrap();
     assert_eq!(codec.pack_schema_hash, store::os_pack::schema_hash(&spec));
     assert!(codec.snapshot_sqlite.is_some());
     declaration(definition().unwrap()).unwrap();

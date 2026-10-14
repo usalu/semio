@@ -20,7 +20,7 @@ const quoted = (chunks: string[]) => {
 };
 
 test("canonical native UTF8 scalar and key roles preserve exact JSON across chunk and grant boundaries", () => {
-  const law = read("../🧫️fixtures/🔣️.json");
+  const law = read("../🧪️tests/🧫️fixtures/🔣️.json");
   for (const row of law.cases) {
     const bytes = [123, ...quoted(row.keyChunks), 58, ...quoted(row.valueChunks), 125];
     const oracle = new TextEncoder().encode(JSON.stringify({ [row.keyChunks.join("")]: row.valueChunks.join("") }));

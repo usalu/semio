@@ -26,7 +26,8 @@ impl ArtifactCommandWork<App> for Work {
   let job=workspace.job.as_ref().unwrap();if job.progress().done{return Ok(RetirementDemand{copy_bytes:size_of::<DrawingImageAsset>()+size_of::<DrawingImagePublicationJob>(),depth:1,..Default::default()});}
   Ok(RetirementDemand{copy_bytes:job.next_copy_byte_demand().map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"drawing image copy quote refused"))?,capacity_bytes:job.next_capacity_byte_demand().map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"drawing image capacity quote refused"))?,depth:1,..Default::default()})
  }
- fn step(&mut self,input:&ArtifactCommandInputs<'_,App>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<App>,Fault> {
+ fn step(&mut self,input:&ArtifactCommandInputs<'_,App>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<App>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
   if self.complete||self.closing{return Err(Fault::from("drawing-image-import-terminal"));}
   if cx.is_cancelled(){return Err(Fault::from("Image import cancelled"));}
   let DrawingCommand::ImportImage(payload)=input.command else{return Err(Fault::from("drawing-image-command-required"));};import_image::validate(payload)?;
@@ -52,7 +53,10 @@ impl ArtifactCommandWork<App> for Work {
    if receipt.copied_items==0{break;}
   }
   Ok(ArtifactCommandWorkStep::Progress{stage:"image-import",preview:b""})
- }
+ 
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
+    }
  fn begin_close(&mut self){self.closing=true;}
  fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep {use semio_framework_job::InteractiveJobCloseStep;if !self.closing{return InteractiveJobCloseStep::Blocked;}let Some(workspace)=self.workspace.as_mut() else{return InteractiveJobCloseStep::Complete {progress:Default::default()};};match workspace.step(grant){Ok(RetainedCloneStep::Complete(progress))=>InteractiveJobCloseStep::Complete {progress},Ok(RetainedCloneStep::Progress(progress))=>InteractiveJobCloseStep::Pending {progress},Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}}
  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{self.workspace.as_ref().map_or(Ok(0),ControlledRetirement::next_copy_byte_demand)}
@@ -87,7 +91,7 @@ pub(super) fn build(request:semio_framework_plugin::ArtifactOwnedToolJobRequest<
     let work=Work::new();
     if request.tool_id!="importImage"||work.extent(&request.command,&request.snapshot,&request.interaction_state,Some(&request.context))!=Some(1) {return Err(Fault::from("Image import exceeds its registered source capacity"));}
     let operation=semio_framework_plugin::AppOperationContext {app_instance_id:request.app_instance_id,parent_document_id:request.parent_document_id.clone(),operation_id:request.operation.operation.0,generation:request.operation.generation.0,canonical_base_revision:request.canonical_base_revision,retained: request.retained,authoring_seed:request.authoring_seed.clone()};
-    let payload=semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {command:*request.command,snapshot:request.snapshot,config:request.config,history:request.history,interaction_state:request.interaction_state,interaction_hover:request.interaction_hover,context:Some(request.context),operation,completion:request.completion},DrawingCommand::command_id,DRAWING_IMAGE_RAW_BYTES,4096,Box::new(work));
+    let payload=semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {command:*request.command,snapshot:request.snapshot, snapshot_read:request.snapshot_read,config:request.config,history:request.history,interaction_state:request.interaction_state,interaction_hover:request.interaction_hover,context:Some(request.context),operation,completion:request.completion},DrawingCommand::command_id,DRAWING_IMAGE_RAW_BYTES,4096,Box::new(work));
     Ok(semio_framework::ToolOperationSpec::new(request.controller_id,request.tool_id,request.payload_schema_id,payload,request.operation))
 }
 #[cfg(test)]

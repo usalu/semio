@@ -29,7 +29,7 @@ function toolCall(id: string, state: "running" | "cancelling" | "ok" | "failed")
 
 const IDLE_PRESENCE = { active: false, label: "", invocationId: null } as const;
 const here = dirname(fileURLToPath(import.meta.url));
-const chatInputFixture = JSON.parse(readFileSync(join(here, "../../../../🧫️fixtures/💬️chat-input-accessibility/🔣️.json"), "utf8")) as {
+const chatInputFixture = JSON.parse(readFileSync(join(here, "../../../../🧪️tests/🧫️fixtures/💬️chat-input-accessibility/🔣️.json"), "utf8")) as {
   readonly contractVersion: 1;
   readonly cases: readonly {
     readonly locale: "en" | "de";
@@ -40,7 +40,7 @@ const chatInputFixture = JSON.parse(readFileSync(join(here, "../../../../🧫️
     readonly enterAction: "sendChatDraft" | null;
   }[];
 };
-const cancellationFixture = JSON.parse(readFileSync(join(here, "../../../🔗️AgentBridge/🧫️fixtures/🛑️cancellation/🔣️.json"), "utf8")) as {
+const cancellationFixture = JSON.parse(readFileSync(join(here, "../../../🔗️AgentBridge/🧪️tests/🧫️fixtures/🛑️cancellation/🔣️.json"), "utf8")) as {
   readonly invocation: { readonly id: string; readonly toolName: string; readonly arguments: string };
   readonly openCancellation: { readonly state: "cancelling"; readonly cancelControl: false };
   readonly terminalResult: { readonly summary: string; readonly state: "failed"; readonly cancelControl: false };

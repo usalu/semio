@@ -1,6 +1,6 @@
 use super::*;
 
-const PREVIEW_CANCEL_FIXTURE_JSON: &str = include_str!("../../../🧫️fixtures/🛑️preview-cancel.json");
+const PREVIEW_CANCEL_FIXTURE_JSON: &str = include_str!("../../../🧪️tests/🧫️fixtures/🛑️preview-cancel.json");
 const VIEWER_SURFACE_ID: &str = "viewer";
 
 #[derive(serde::Deserialize)]

@@ -1,5 +1,6 @@
-import { resolveTestLevel, atTestLevel } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { type CompilerAdmissionControl } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { resolveTestLevel, atTestLevel } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { COMPONENT_MODULE_DIRECTORIES } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 /** 🧩️ Semantic browser host staging owner. */
 
@@ -16,8 +17,8 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import { decodeDocumentPackBytes, decodePackValue, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, encodeDocumentArchiveBytes, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
 
@@ -60,6 +61,7 @@ import { ensureAppleDeveloperDir } from "../../../⚙️engine/📤️publicatio
 
 export type TestBrowserHostStageInputV1 = Readonly<{
   artifactRoot: string;
+  control: CompilerAdmissionControl;
   selectedGis: Readonly<{
     generationId: string;
     currentSha256: string;
@@ -144,7 +146,7 @@ export async function stageTestBrowserHostV1(input: TestBrowserHostStageInputV1)
   if (!space || !gis || PLUGIN_BUILD_TARGETS.filter((entry) => ["space", "gis"].includes(entry.pluginId)).length !== 2) throw new Error("Test browser host registry selection is not exact");
   ensureAppleDeveloperDir();
   ensureWasmTarget();
-  const builtSpace = await buildPluginCargo(space);
+  const builtSpace = await buildPluginCargo(space, input.control);
   // 🔒️ `buildPluginCargo` stages the iterate component under the crate's own `dist/components-iterate`; this
   // ticket-owned copy is what makes the artifact eligible for `ownedTestBrowserHostInput`'s
   // bounded-regular-file-inside-`artifactRoot` check below.

@@ -1,0 +1,26 @@
+{
+  "exclusive": false,
+  "rows": [
+    {
+      "path": ".vscode/launch.json",
+      "beforeSha256": "a9781783d29dcb617d90781e0a5c48f2698c469297bb53f1f9c1bde31a54d163",
+      "afterSha256": "e18c6c5c49c84199c940200c6a493489b82c7a8f055de8bf9616a1f8dce63099",
+      "spans": [
+        {
+          "before": "\"bun nx run @semio-tech/bim-model-rs:test --args=\\\"quick --lib the_committed_components_file_is_the_current_export -- --nocapture\\\" --skip-nx-cache\"",
+          "after": "\"bun nx run @semio-tech/bim-model-rs:test --skip-nx-cache -- quick --lib the_committed_components_file_is_the_current_export -- --nocapture\""
+        }
+      ],
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/README.md",
+      "beforeSha256": "ae1f57ebc83a3ebe6d9ca02b57055ac7706db1b13b84d1294bb473cf48eb8d5d",
+      "afterSha256": "eee6c989f9adf1e317d3389a07a18b7ce85367a5cd19dbe3b69ed0ebd2516f86",
+      "size": 15146,
+      "mode": "0o644",
+      "reason": "Explicit user fixture canonicalization: true Tests ancestry, exact directory markers, case-private examples, no fixture authority schema",
+      "exclusive": false
+    }
+  ]
+}

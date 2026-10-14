@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "workspace",
+    "source",
+    "output",
+    "mode",
+    "platform"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "workspace": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "output": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mode": {
+      "enum": [
+        "prototype",
+        "release"
+      ]
+    },
+    "platform": {
+      "enum": [
+        "node",
+        "browser"
+      ]
+    },
+    "external": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "runtime": {
+      "enum": [
+        "javascript",
+        "bun"
+      ]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "objects": {
+    "removed": [],
+    "inserted": [],
+    "moved": [
+      {
+        "id": "obj-fin",
+        "from": 1,
+        "to": 0
+      }
+    ],
+    "modified": []
+  },
+  "schema": null
+}

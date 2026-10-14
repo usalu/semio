@@ -6,7 +6,7 @@
 use super::{document_admission_refuses_access, document_link_terminal_message, DocumentLink, DocumentLinkEvent, DocumentLinkShortagePolicy, DocumentLinkStatus, DOCUMENT_LINK_ACCESS_REFUSED_STATUSES, DOCUMENT_LINK_SHORTAGE_POLICY};
 use crate::os_directory::client::{DirectoryClientError, TransportError};
 
-const FIXTURE: &str = include_str!("../../../🧫️fixtures/document-link-shortage-v1/🔣️.json");
+const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/document-link-shortage-v1/🔣️.json");
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(FIXTURE).expect("document-link-shortage fixture json")

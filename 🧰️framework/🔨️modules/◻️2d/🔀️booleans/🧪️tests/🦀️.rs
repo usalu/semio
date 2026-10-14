@@ -4,10 +4,10 @@ use std::collections::BTreeSet;
 use serde_json::{Value,json};
 #[test]
 fn boolean_translated_stroke_junctions_preserve_endpoint_incidence(){
- let rows:Vec<Value>=serde_json::from_str(include_str!("../🧫️fixtures/🔗️endpoints/🔣️.json")).unwrap();
+ let rows:Vec<Value>=serde_json::from_str(include_str!("🧫️fixtures/🔗️endpoints/🔣️.json")).unwrap();
  for row in rows {let source=input(&row);let mut previous=None;for grant in [1,7,4096]{let (segments,_)=finish(source.clone(),grant);let rings=contours(&segments);assert_eq!(rings.len(),1,"{}",row["name"]);assert!(area(&rings[0])>0.0);for ring in &rings{for at in 0..ring.len(){assert!(length(ring[at],ring[(at+1)%ring.len()])>source.epsilon);}}if let Some(before)=&previous{assert_eq!(&segments,before);}previous=Some(segments);println!("[DEBUG] Native endpoint-preserving translated stroke junction {} grant={grant} contours=1",row["name"]);}}
 }
-fn rows()->Vec<Value> {serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn rows()->Vec<Value> {serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn input(row:&Value)->BooleanInput {
  let v=&row["input"];BooleanInput {operation:BooleanOperation::parse(v["operation"].as_str().unwrap()).unwrap(),operands:v["operands"].as_array().unwrap().iter().map(|operand|BooleanOperand {fill_rule:match operand["fillRule"].as_str().unwrap() {"nonzero"=>BooleanFillRule::Nonzero,"evenodd"=>BooleanFillRule::Evenodd,_=>panic!("Invalid fixture rule")},contours:operand["contours"].as_array().unwrap().iter().map(|ring|ring.as_array().unwrap().iter().map(|p|[p[0].as_f64().unwrap(),p[1].as_f64().unwrap()]).collect()).collect()}).collect(),epsilon:v["epsilon"].as_f64().unwrap(),max_edges:v["maxEdges"].as_u64().unwrap() as usize,max_parameters:v["maxParameters"].as_u64().unwrap() as usize,max_atomic_edges:v["maxAtomicEdges"].as_u64().unwrap() as usize,max_segments:v["maxSegments"].as_u64().unwrap() as usize,max_work:v["maxWork"].as_u64().unwrap()}
 }
@@ -56,7 +56,7 @@ fn boolean_exact_resource_caps_and_progress_taxonomy() {
 
 #[test]
 fn boolean_retirement_hands_off_owned_sources_and_drains_private_arrangements(){
- let cases:Value=serde_json::from_str(include_str!("../🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
+ let cases:Value=serde_json::from_str(include_str!("🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
  for row in cases["cases"].as_array().unwrap(){for grant in [1,7,4096]{
   let fixture=rows().into_iter().find(|r|r["name"]==row["source"]).unwrap();let mut source=input(&fixture);if let Some(n)=row["maxParameters"].as_u64(){source.max_parameters=n as usize;}let source_ptr=source.operands.as_ptr();let source_points=source.operands.iter().map(|o|o.contours.clone()).collect::<Vec<_>>();let mut job=BooleanJob::new(source).unwrap();let phase=row["phase"].as_str().unwrap();
   if phase=="failure"{assert!(job.advance(4096).is_err());}else if phase!="fresh"{if phase!="cancelled"{let mut reached=false;for _ in 0..100000{if job.advance(1).unwrap().phase.as_str()==phase{reached=true;break;}}assert!(reached);}for _ in 0..row["offset"].as_u64().unwrap(){job.advance(1).unwrap();}}
@@ -69,4 +69,4 @@ fn boolean_retirement_hands_off_owned_sources_and_drains_private_arrangements(){
 }
 
 #[test]
-fn retained_admission_keeps_refused_boolean_source(){let fixture:Value=serde_json::from_str(include_str!("../../🧹️retire/🧫️fixtures/📥️admission/🔣️.json")).unwrap();for row in fixture["cases"].as_array().unwrap(){if row["kind"]!="boolean"{continue;}let mut source=input(&rows()[0]);source.max_edges=row["maxEdges"].as_u64().unwrap()as usize;let operands=source.operands.as_ptr();let points=source.operands[0].contours[0].as_ptr();let mut job=BooleanJob::admit(source);assert_eq!(job.input.operands.as_ptr(),operands);assert_eq!(job.input.operands[0].contours[0].as_ptr(),points);assert!(job.advance_work(1).is_err());assert!(job.result().is_err());let mut close=BooleanRetirement::new(job);assert_eq!(close.owner.original().unwrap().input.operands.as_ptr(),operands);while !close.advance(1).unwrap().done{}assert!(close.terminal_is_empty());println!("[DEBUG] Refused native Boolean input kept original operand and point pointers until physical close");}}
+fn retained_admission_keeps_refused_boolean_source(){let fixture:Value=serde_json::from_str(include_str!("../../🧹️retire/🧪️tests/🧫️fixtures/📥️admission/🔣️.json")).unwrap();for row in fixture["cases"].as_array().unwrap(){if row["kind"]!="boolean"{continue;}let mut source=input(&rows()[0]);source.max_edges=row["maxEdges"].as_u64().unwrap()as usize;let operands=source.operands.as_ptr();let points=source.operands[0].contours[0].as_ptr();let mut job=BooleanJob::admit(source);assert_eq!(job.input.operands.as_ptr(),operands);assert_eq!(job.input.operands[0].contours[0].as_ptr(),points);assert!(job.advance_work(1).is_err());assert!(job.result().is_err());let mut close=BooleanRetirement::new(job);assert_eq!(close.owner.original().unwrap().input.operands.as_ptr(),operands);while !close.advance(1).unwrap().done{}assert!(close.terminal_is_empty());println!("[DEBUG] Refused native Boolean input kept original operand and point pointers until physical close");}}

@@ -18,9 +18,9 @@ use infinite_world::world::{
 };
 use ui_wgpu::wgpu::{Board2dScene, DrawList, FontAtlas, IconAtlas, InputState, SurfaceKind, TiledMapScene, UiPresence, World3dScene};
 
-const ENGINE_SURFACES_FIXTURE: &str = include_str!("../../🧫️fixtures/🧩️wgpu-engine-surfaces/🔣️.json");
-const MAP_GESTURE_LIFECYCLE_FIXTURE: &str = include_str!("../../../../🧫️fixtures/♻️tiled-map-gesture-lifecycle/🔣️.json");
-const SURFACE_PINCH_FIXTURE: &str = include_str!("../../../../🧫️fixtures/🤏️surface-pinch/🔣️.json");
+const ENGINE_SURFACES_FIXTURE: &str = include_str!("../🧫️fixtures/🧩️wgpu-engine-surfaces/🔣️.json");
+const MAP_GESTURE_LIFECYCLE_FIXTURE: &str = include_str!("../../../../🧪️tests/🧫️fixtures/♻️tiled-map-gesture-lifecycle/🔣️.json");
+const SURFACE_PINCH_FIXTURE: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🤏️surface-pinch/🔣️.json");
 
 fn fixture() -> Value {
     serde_json::from_str(ENGINE_SURFACES_FIXTURE).expect("committed engine-surface fixture parses")
@@ -690,7 +690,7 @@ fn tiled_map_and_board_windows_attach_their_engines_on_the_same_production_seam(
 }
 
 /// 🎲️ The board-2d lane contract whose `traceShapes.placementLane` every board host paints.
-const BOARD2D_SCENE_LANES: &str = include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json");
+const BOARD2D_SCENE_LANES: &str = include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json");
 
 /// ⚖️ LAW: a board window's `toolRunTrace` lane reaches its engine surface on the production paint seam — the resident
 /// layer holds the lane's records, every placement draws against a footprint of its kind catalogs — and the surface
@@ -729,7 +729,7 @@ fn a_board_window_paints_its_tool_run_trace_lane_and_echoes_the_cursor() {
 /// `RUST_MIN_STACK`, so the repo runner's 128 MiB floor cannot hide a re-inflated frame here.
 #[test]
 fn engine_canvas_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
     let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
         .as_array()
         .expect("🧱️ the budget lists its tables")
@@ -804,7 +804,7 @@ fn tiled_map_paint_reserves_the_visible_tiles_react_fetches() {
 #[test]
 fn tiled_map_cancel_separates_pan_camera_settle_from_marquee_selection() {
     let _guard = engine_surface_law_guard();
-    let contract: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🛑️scene-pointer-cancellation/🔣️.json")).expect("scene cancellation contract");
+    let contract: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🛑️scene-pointer-cancellation/🔣️.json")).expect("scene cancellation contract");
     let fixture = fixture();
     let surface_id = contract["tiledMap"]["owner"]["surfaceId"].as_str().expect("map surface id");
     let window_id = contract["tiledMap"]["owner"]["windowId"].as_str().expect("map window id");
@@ -928,7 +928,7 @@ fn close_camera(actual: [f64; 3], expected: [f64; 3]) {
 #[test]
 fn tiled_map_hover_leave_publishes_one_empty_owner_transition() {
     let _guard = engine_surface_law_guard();
-    let contract: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🛑️scene-pointer-cancellation/🔣️.json")).expect("scene cancellation contract");
+    let contract: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🛑️scene-pointer-cancellation/🔣️.json")).expect("scene cancellation contract");
     let fixture = fixture();
     let surface_id = contract["tiledMap"]["owner"]["surfaceId"].as_str().expect("map surface id");
     let window_id = contract["tiledMap"]["owner"]["windowId"].as_str().expect("map window id");
@@ -1036,7 +1036,7 @@ fn retained_map_key_replacement_and_removal_retire_the_old_gesture_without_input
 #[test]
 fn retained_map_same_host_sibling_rebase_retires_engine_interaction_owner() {
     let _guard = engine_surface_law_guard();
-    let contract: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).expect("scene pointer owner contract");
+    let contract: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).expect("scene pointer owner contract");
     let fixture = fixture();
     let law = &contract["siblingInsertion"];
     let receiver = law["receiver"].as_u64().expect("receiver protocol id");

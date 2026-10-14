@@ -258,7 +258,7 @@ fn tags_survive_in_both_schemas() {
 }
 
 //#region 🔖️Fixtures
-const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures");
+const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures");
 
 const ASSETS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets");
 

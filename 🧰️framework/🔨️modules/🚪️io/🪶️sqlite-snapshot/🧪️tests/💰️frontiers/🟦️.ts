@@ -2,7 +2,7 @@
 import {expect,test} from "bun:test";
 
 import {Database} from "bun:sqlite";
-import fixture from "../../🧫️fixtures/💰️frontiers/🔣️.json";
+import fixture from "../🧫️fixtures/💰️frontiers/🔣️.json";
 
 import {artifactSqliteDatabase,artifactSqliteTables} from "../../🧩️artifact/🟦️.ts";
 import { exportSqliteDatabase, parseSqliteDatabaseSchema, validateSqliteDatabaseSchemaControlled } from "../../🟦️.ts";
@@ -13,7 +13,7 @@ test("actual shared authored-row builder cancels inside its schema corpus valida
  const abort=new AbortController();let reached=false;await expect(Promise.resolve().then(()=>artifactSqliteDatabase(fixture.builderSql,[rows],{signal:abort.signal,onProgress:p=>{if(p.phase===fixture.phases[1]&&p.total===fixture.builderRows&&p.completed>=fixture.rowFrontier&&p.completed<p.total){reached=true;abort.abort();}}}))).rejects.toHaveProperty("kind",fixture.refusal);expect(reached).toBe(true);
 });
 
-import finalFixture from "../../🧫️fixtures/🔎️frontiers/🔣️.json";
+import finalFixture from "../🧫️fixtures/🔎️frontiers/🔣️.json";
 function referenceSql(type:string){const columns=Array.from({length:finalFixture.referenceEntries},(_,i)=>`c${i}`),names=columns.join(",");return `CREATE TABLE entity (${columns.map((name,i)=>`${name} ${i===0?type:"integer"}`).join(",")}, FOREIGN KEY (${names}) REFERENCES entity (${names}))`;}
 function indexedCorpus(){const names=Array.from({length:finalFixture.tableCount},(_,i)=>i<2?finalFixture.nameUnit.repeat(finalFixture.nameLength)+finalFixture.nameSuffixes[i]:`table_${i}`),sql=names.map(name=>`CREATE TABLE "${name}" (id INTEGER PRIMARY KEY, payload TEXT)`).join(";");const parsed=parseSqliteDatabaseSchema(sql);return {sql,names,value:{tables:parsed.tables.map((table,i)=>({...table,name:table.name.replace(/[A-Z]/g,c=>c.toLowerCase()),rows:[{rowid:1n,values:[1n,`value_${i}`]}]})).reverse()}};}
 test("final frontier corpus is closed and independently distinguishes literal table names",()=>{
@@ -34,7 +34,7 @@ test("actual artifact name index cancels within reversed table census",async()=>
  const input=indexedCorpus(),abort=new AbortController();let reached=false;await expect(artifactSqliteTables(input.value,input.sql,{signal:abort.signal,onProgress:p=>{if(p.phase===finalFixture.indexPhase&&p.total===finalFixture.tableCount&&p.completed===finalFixture.tableFrontier){reached=true;abort.abort();}}})).rejects.toHaveProperty("kind",finalFixture.refusal);expect(reached).toBe(true);
 });
 
-import literalCases from "../../🧫️fixtures/🔎️frontiers/📏️schema/🔣️.json";
+import literalCases from "../🧫️fixtures/🔎️frontiers/📏️schema/🔣️.json";
 function literalSql(tail:string){return "CREATE TABLE entity (id INTEGER PRIMARY KEY,payload TEXT DEFAULT '"+literalCases.literalUnit.repeat(literalCases.literalLength)+tail+"')";}
 function receivedLiteralSql(kind:string){const sql=literalSql(kind==="lateLiteralMismatch"?literalCases.mismatchTail:literalCases.literalTail);return kind==="formatted"?sql.slice(0,-1)+literalCases.formatSpacing+")":sql;}
 

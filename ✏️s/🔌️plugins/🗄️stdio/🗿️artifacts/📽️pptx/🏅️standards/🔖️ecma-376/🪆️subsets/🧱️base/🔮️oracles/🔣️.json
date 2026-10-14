@@ -405,14 +405,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/➕️insert-slide-applied/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-slide-applied/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:d6b289a810f200b2e209dc9497364ba82c34cc03119f3e0ac932a7c4735b3ba1",
           "bytes": 28104
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/➕️insert-slide-applied/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-slide-applied/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:4ff6c6789a32cded905ea6410dad0294981bce47cbe820ded6e19e8d27a91882",
           "bytes": 28811
@@ -455,14 +455,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/➖️remove-slide-applied/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-slide-applied/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:4ff6c6789a32cded905ea6410dad0294981bce47cbe820ded6e19e8d27a91882",
           "bytes": 28811
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/➖️remove-slide-applied/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-slide-applied/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:dbaef28a71bc9554b40ab1418bcb13cb50cfe78550db50835ff4f1fb46dcf7a4",
           "bytes": 28805
@@ -505,14 +505,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/🔀️move-slide-applied/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🔀️move-slide-applied/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:618350aece66a7a0d14d6def3f332c38dcf51c5ac8c19d851f3b5b8404c4f5a9",
           "bytes": 29131
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/🔀️move-slide-applied/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🔀️move-slide-applied/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:d3008f6c701c42dea6e6558acd1c99c10424c3aa84f4896ff8238153fd81e2ad",
           "bytes": 29131
@@ -555,14 +555,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/🔷️insert-shape-applied/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🔷️insert-shape-applied/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:cfa44d14ef9cf517ef9b6606291a1b938059add2213d474633b0d4bcabe45df6",
           "bytes": 28260
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/🔷️insert-shape-applied/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🔷️insert-shape-applied/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:2f8ffb19396839ddbf407f383711efd8eb3cd31aa49004dc6bad03e2f54442c9",
           "bytes": 28291
@@ -605,14 +605,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/🔶️remove-shape-applied/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🔶️remove-shape-applied/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:2f8ffb19396839ddbf407f383711efd8eb3cd31aa49004dc6bad03e2f54442c9",
           "bytes": 28291
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/🔶️remove-shape-applied/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🔶️remove-shape-applied/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:cfa44d14ef9cf517ef9b6606291a1b938059add2213d474633b0d4bcabe45df6",
           "bytes": 28260
@@ -655,14 +655,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/📐️set-shape-position-applied/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/📐️set-shape-position-applied/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:cfa44d14ef9cf517ef9b6606291a1b938059add2213d474633b0d4bcabe45df6",
           "bytes": 28260
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/📐️set-shape-position-applied/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/📐️set-shape-position-applied/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:1e0752744e1717288a15ea4751533865a457e6b072132254b1e133cfa129a80c",
           "bytes": 28260
@@ -705,14 +705,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/✍️set-shape-text-applied/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/✍️set-shape-text-applied/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:992f85e8e99adcb3efe5264be4be3d993fc5b273b71dd0c4f8117ed661614b53",
           "bytes": 28262
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/✍️set-shape-text-applied/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/✍️set-shape-text-applied/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:7a6c6ebd7ede5db80621266d7096729af1479ebf62d4d61a9ad04a6dcd34147c",
           "bytes": 28263
@@ -755,14 +755,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/📎️set-relationship-inserts-an-external-hyperlink-first/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/📎️set-relationship-inserts-an-external-hyperlink-first/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
           "bytes": 112526
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/📎️set-relationship-inserts-an-external-hyperlink-first/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/📎️set-relationship-inserts-an-external-hyperlink-first/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:ae2ffe731c3ac8079c3d6864fd5a3b4968e21b0fed0ccc6cf7f768efad8dfcd9",
           "bytes": 112570
@@ -805,14 +805,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/📎️set-relationship-appends-an-external-hyperlink/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/📎️set-relationship-appends-an-external-hyperlink/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
           "bytes": 112526
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/📎️set-relationship-appends-an-external-hyperlink/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/📎️set-relationship-appends-an-external-hyperlink/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:32b881bce14f7ebbd001a4b47034ebe80d5a91015ed47d276b90ec09e692698c",
           "bytes": 112569
@@ -855,14 +855,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/📎️set-relationship-retypes-the-last-root-relationship/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/📎️set-relationship-retypes-the-last-root-relationship/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
           "bytes": 112526
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/📎️set-relationship-retypes-the-last-root-relationship/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/📎️set-relationship-retypes-the-last-root-relationship/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:bd7849ee304ff34b9fff04563d380c0fb40588a57dca2f5efcbf36723ba0e01f",
           "bytes": 112536
@@ -905,14 +905,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/📎️set-relationship-no-op-identical-relationship/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/📎️set-relationship-no-op-identical-relationship/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
           "bytes": 112526
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/📎️set-relationship-no-op-identical-relationship/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/📎️set-relationship-no-op-identical-relationship/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:f5fab0f257c9860da5cac613f6109c950d351de98b37be1d063d7d171a34a3bd",
           "bytes": 112521
@@ -955,14 +955,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/🧷️remove-relationship-drops-the-last-root-relationship/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🧷️remove-relationship-drops-the-last-root-relationship/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
           "bytes": 112526
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/🧷️remove-relationship-drops-the-last-root-relationship/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🧷️remove-relationship-drops-the-last-root-relationship/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:a3ebc1a7f8c997f0fac4d710171219995868e30eebb7ae07ad90d13d0b797d54",
           "bytes": 112506
@@ -1005,14 +1005,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/🧷️remove-relationship-drops-an-added-hyperlink/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🧷️remove-relationship-drops-an-added-hyperlink/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:ae2ffe731c3ac8079c3d6864fd5a3b4968e21b0fed0ccc6cf7f768efad8dfcd9",
           "bytes": 112570
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/🧷️remove-relationship-drops-an-added-hyperlink/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🧷️remove-relationship-drops-an-added-hyperlink/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:f5fab0f257c9860da5cac613f6109c950d351de98b37be1d063d7d171a34a3bd",
           "bytes": 112521
@@ -1055,7 +1055,7 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/🧷️remove-relationship-rejected-missing-id/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🧷️remove-relationship-rejected-missing-id/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
           "bytes": 112526
@@ -1098,14 +1098,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/📇️set-content-type-inserts-a-default-first/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/📇️set-content-type-inserts-a-default-first/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
           "bytes": 112526
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/📇️set-content-type-inserts-a-default-first/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/📇️set-content-type-inserts-a-default-first/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:894ef80440227538c578191b29f0f02e65c489654af35e9942c0ca509f0765ea",
           "bytes": 112537
@@ -1148,14 +1148,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/📇️set-content-type-retypes-an-existing-default/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/📇️set-content-type-retypes-an-existing-default/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
           "bytes": 112526
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/📇️set-content-type-retypes-an-existing-default/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/📇️set-content-type-retypes-an-existing-default/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:766256fa3d0203c82649753b8a502fe6c1fb27a1a28488895373201c6793d2ef",
           "bytes": 112535
@@ -1198,14 +1198,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/📇️set-content-type-no-op-identical-entry/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/📇️set-content-type-no-op-identical-entry/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
           "bytes": 112526
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/📇️set-content-type-no-op-identical-entry/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/📇️set-content-type-no-op-identical-entry/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:a7b6ed6e2db3826762bd2bb8008697958883a2b020433ba0c2b4cdb70e5ee6a3",
           "bytes": 112524
@@ -1248,7 +1248,7 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/📇️set-content-type-rejected-default-in-another-case/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/📇️set-content-type-rejected-default-in-another-case/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:894ef80440227538c578191b29f0f02e65c489654af35e9942c0ca509f0765ea",
           "bytes": 112537
@@ -1291,14 +1291,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/🧺️remove-content-type-drops-an-added-default/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🧺️remove-content-type-drops-an-added-default/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:894ef80440227538c578191b29f0f02e65c489654af35e9942c0ca509f0765ea",
           "bytes": 112537
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/🧺️remove-content-type-drops-an-added-default/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🧺️remove-content-type-drops-an-added-default/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:a7b6ed6e2db3826762bd2bb8008697958883a2b020433ba0c2b4cdb70e5ee6a3",
           "bytes": 112524
@@ -1341,7 +1341,7 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/🧺️remove-content-type-rejected-missing-entry/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🧺️remove-content-type-rejected-missing-entry/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:d55b046a248b72a9b04497ac6a26d406f4588d7b8fcd199bce65d4ee2fb7b804",
           "bytes": 112526

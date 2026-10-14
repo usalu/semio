@@ -1,0 +1,47 @@
+{
+  "columns": {
+    "added": [
+      {
+        "index": 1,
+        "item": {
+          "name": "area",
+          "kind": "float"
+        }
+      }
+    ]
+  },
+  "rows": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "cells": {
+            "added": [
+              {
+                "index": 1,
+                "item": {
+                  "kind": "null"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "index": 1,
+        "diff": {
+          "cells": {
+            "added": [
+              {
+                "index": 1,
+                "item": {
+                  "kind": "null"
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

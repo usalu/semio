@@ -298,7 +298,7 @@ mod tests {
     //#endregion 🔖️Compact
     #[semio_framework_async_macros::async_test]
     async fn retained_history_and_tail_follow_caller_cancellation_after_original_context_drops(){
-        let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🎒️pack/🚦️control/🧫️fixtures/🔣️.json")).unwrap();
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🎒️pack/🚦️control/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
         let token=semio_framework_async::CancelToken::root_now();let maximum=fixture["maximumTransportBytes"].as_u64().unwrap();
         let observed=std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));let events=observed.clone();
         let transport=crate::os_pack::control::admit_command_transport(maximum,token.clone(),move|_|{events.fetch_add(1,Ordering::Relaxed);}).unwrap();

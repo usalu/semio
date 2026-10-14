@@ -21,7 +21,7 @@ import {
 import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 const here = (path: string) => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8"));
-const fixture = here("../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧫️fixtures/🔍️resolution/🔣️.json");
+const fixture = here("../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧪️tests/🧫️fixtures/🔍️resolution/🔣️.json");
 const storeSchema = here("../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🔣️.json");
 const hubSchema = here("../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json");
 const hexBytes = (value: string) => Uint8Array.from(value.match(/../gu) ?? [], (pair) => Number.parseInt(pair, 16));

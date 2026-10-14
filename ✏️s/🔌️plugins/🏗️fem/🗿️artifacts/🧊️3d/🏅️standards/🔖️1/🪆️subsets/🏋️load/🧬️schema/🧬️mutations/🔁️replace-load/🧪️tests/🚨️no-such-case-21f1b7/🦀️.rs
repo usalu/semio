@@ -13,10 +13,10 @@ use crate::central_apply::apply_fem3d_mutation;
 
 use crate::Fem3dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁️replace-load/🚨️no-such-case-21f1b7/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁️replace-load/🚨️no-such-case-21f1b7/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁️replace-load/🚨️no-such-case-21f1b7/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁️replace-load/🚨️no-such-case-21f1b7/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔁️replace-load/🚨️no-such-case-21f1b7/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔁️replace-load/🚨️no-such-case-21f1b7/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔁️replace-load/🚨️no-such-case-21f1b7/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔁️replace-load/🚨️no-such-case-21f1b7/🎯️outcome/🔣️.json");
 
 fn before() -> Fem3dSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

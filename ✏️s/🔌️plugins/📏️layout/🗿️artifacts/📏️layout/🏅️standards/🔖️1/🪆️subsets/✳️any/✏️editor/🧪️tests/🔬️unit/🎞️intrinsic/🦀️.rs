@@ -31,7 +31,7 @@ fn live_question(id:String,value:DslValue)->FormQuestion{
 }
 #[semio_framework_async_macros::async_test]
 async fn live_vcs_forms_dictionary_out_to_layout_fields_in_retains_complete_intrinsic_owner(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧾️dictionary/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧾️dictionary/🔣️.json")).unwrap();
  let contract=&fixture["liveVcs"];
  let mut values:Vec<DslValue>=fixture["dictionary"]["entries"].as_array().unwrap().iter().map(|entry|live_intrinsic_value(&entry["value"])).collect();
  values.extend(fixture["floatWords"].as_array().unwrap().iter().map(|word|DslValue::Number(Number::Float(f64::from_bits(u64::from_str_radix(word.as_str().unwrap(),16).unwrap())))));

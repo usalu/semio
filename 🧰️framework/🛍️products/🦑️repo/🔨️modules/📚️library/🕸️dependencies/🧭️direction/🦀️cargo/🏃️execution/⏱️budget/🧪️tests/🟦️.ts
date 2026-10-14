@@ -1,7 +1,7 @@
 import { test, expect } from "bun:test";
 import { Database } from "bun:sqlite";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 
 import { CargoMetadataCaptureBudget } from "../🟦️.ts";
 test("queued preparation leaves the complete aggregate native capture budget intact", () => {

@@ -7,7 +7,7 @@
 //! row action as a `row-action-<i>` child button and Home's 32-row window ran out of its item budget after 27 rows (ticket
 //! 26/09/23/END-TO-END-OS-HUB-COLLABORATION-MCP session 14, the WG11 × LB2 TableRow agreement).
 //!
-//! Oracle: `🖱️ui/🧫️fixtures/📊️table-row-grid/🔣️.json`; the editable row's cell rects are also solved by taffy.
+//! Oracle: `🖱️ui/🧪️tests/🧫️fixtures/📊️table-row-grid/🔣️.json`; the editable row's cell rects are also solved by taffy.
 
 use crate::wgpu::accessibility::{accessibility_projection, row_accessibility_action};
 use crate::wgpu::arena::NodeId;
@@ -27,7 +27,7 @@ use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiNodeId, UiNodeRecord, UiRe
 const GENERATION: u64 = 1;
 
 fn law() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/📊️table-row-grid/🔣️.json")).expect("📊️ the table-row-grid fixture parses")
+    serde_json::from_str(include_str!("../🧫️fixtures/📊️table-row-grid/🔣️.json")).expect("📊️ the table-row-grid fixture parses")
 }
 
 fn number(value: &Value, key: &str) -> f32 {
@@ -271,7 +271,7 @@ fn every_row_action_is_an_announced_button_that_fires_its_own_binding() {
 /// carries them. Oracle: the contract's `🎯️row-target` fixture, shared with the React host's law.
 #[test]
 fn a_tree_row_and_a_table_row_with_one_target_dispatch_identically() {
-    let fixture: Value = serde_json::from_str(include_str!("../../🧬️contract/🧫️fixtures/🎯️row-target/🔣️.json")).expect("🎯️ the row-target fixture parses");
+    let fixture: Value = serde_json::from_str(include_str!("../../🧬️contract/🧪️tests/🧫️fixtures/🎯️row-target/🔣️.json")).expect("🎯️ the row-target fixture parses");
     let row = |case: &str| fixture["rows"].as_array().expect("fixture rows").iter().find(|row| row["case"] == case).unwrap_or_else(|| panic!("fixture row {case}"))["component"].clone();
     let stack = serde_json::json!({ "kind": "stack", "axis": "vertical", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "wrap": false, "grow": false });
     let record = |id: u64, key: &str, component: Value, children: Vec<u64>| serde_json::json!({ "id": id, "key": key, "component": component, "children": children, "layout": stack, "style": {}, "activity": "idle", "accessibility": {} });
@@ -330,7 +330,7 @@ fn a_tree_row_and_a_table_row_with_one_target_dispatch_identically() {
 /// ♿️ The closed language-neutral focus corpus preserves explained disabled actions and refuses unexplained ones.
 #[test]
 fn disabled_row_action_focus_matches_its_explanation_corpus() {
-    let cases: Value = serde_json::from_str(include_str!("../../🧫️fixtures/♿️disabled-row-action/🔣️.json")).expect("focus corpus");
+    let cases: Value = serde_json::from_str(include_str!("../🧫️fixtures/♿️disabled-row-action/🔣️.json")).expect("focus corpus");
     for case in cases.as_array().expect("cases") {
         let mut action = serde_json::json!({ "icon": "package-x", "label": case["label"], "verb": "edit", "disabled": case["disabled"] });
         if let Some(reason) = case["reason"].as_str() {

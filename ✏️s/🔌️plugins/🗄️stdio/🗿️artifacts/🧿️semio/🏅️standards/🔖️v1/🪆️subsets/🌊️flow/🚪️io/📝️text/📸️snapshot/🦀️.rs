@@ -150,7 +150,7 @@ pub(crate) fn parse_flow_snapshot_body(body: &str) -> Result<SemioFlowSnapshot, 
 /// 🎁 Real structured text/binary codecs (P2 pilot — first semio subset upgraded off the old
 /// hex-dump-of-`serde_json` shortcut). Wrapped in the repo-wide `store::semio_format` envelope,
 /// unchanged.
-impl store::os_store::serialization::ArtifactDsl for SemioFlowSnapshot {
+impl pack::snapshot::ArtifactDsl for SemioFlowSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIOFLOW_DOCUMENT_SCHEMA
@@ -166,25 +166,25 @@ impl store::os_store::serialization::ArtifactDsl for SemioFlowSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_flow_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📥️ Parses this subset's own committed `.dsl.semio` text into a real [`SemioFlowSnapshot`] — a thin
-/// wrapper over `store::os_store::serialization::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
+/// wrapper over `pack::snapshot::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
 /// crate's private `store` extern-crate item (the `🌊️mutate-semio-flow` test adapter, which reads the
 /// REAL committed example artifact rather than a hand-transcribed Rust literal of it) can still
 /// drive the same codec production does. Same rationale as `🧰️kit`'s `decode_kit_snapshot_json`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_flow_dsl(text: &str) -> Result<SemioFlowSnapshot, String> {
-    <SemioFlowSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <SemioFlowSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
-/// 📤️ The `store::os_store::serialization::ArtifactDsl::print_dsl` inverse of [`parse_semio_flow_dsl`] — same rationale.
+/// 📤️ The `pack::snapshot::ArtifactDsl::print_dsl` inverse of [`parse_semio_flow_dsl`] — same rationale.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_flow_dsl(snapshot: &SemioFlowSnapshot) -> String {
-    <SemioFlowSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(snapshot)
+    <SemioFlowSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(snapshot)
 }
 
 /// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of

@@ -44,7 +44,8 @@ struct SeedRetirement(FlowEvaluationSeeds);
 impl RetirementCursor for SeedRetirement{
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.0.close_step(grant){Ok(step)if step.progress()!=RetainedCloneProgress::default()=>RetirementStep::Progress(step.progress()),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete,Ok(_)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error)}}
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
- fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.copy_bytes)}
+ fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.0.retirement.as_ref().map_or(Ok(0),|owner|owner.next_copy_byte_demand())}
+ fn next_selected_work_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.0.next_close_demands(copy)?.copy_bytes)}
  fn allows_admitted_narrow_work(&self)->bool{true}
  fn next_birth_bytes(&self,copy:usize)->Option<usize>{self.0.next_close_demands(copy).ok().map(|d|d.capacity_bytes)}
  fn next_close_byte_demand(&self)->Option<usize>{self.0.next_close_demands(0).ok().map(|d|d.release_bytes)}

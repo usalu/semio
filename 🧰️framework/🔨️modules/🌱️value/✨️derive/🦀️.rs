@@ -60,14 +60,17 @@ pub fn value_codec(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let mut projection = true;
     let mut admission = true;
+    let mut canonical = false;
     for attribute in &input.attrs {
         if attribute.path().is_ident("derive") {
             projection = false;
             admission = false;
+            canonical = false;
             if let Err(error) = attribute.parse_nested_meta(|meta| {
                 if meta.path.is_ident("ToValue") { projection = true; }
                 else if meta.path.is_ident("FromValue") { admission = true; }
-                else { return Err(meta.error("value_codec supports ToValue and FromValue")); }
+                else if meta.path.is_ident("CanonicalJsonTree") { canonical = true; }
+                else { return Err(meta.error("value_codec supports ToValue, FromValue and CanonicalJsonTree")); }
                 Ok(())
             }) { return error.to_compile_error().into(); }
         }
@@ -76,6 +79,7 @@ pub fn value_codec(input: TokenStream) -> TokenStream {
         let mut output = proc_macro2::TokenStream::new();
         if projection { output.extend(component::expand_to_value(&input)?); }
         if admission { output.extend(component::expand_from_value(&input)?); }
+        if canonical { output.extend(component::expand_canonical_tree(&input)?); }
         Ok(output)
     })();
     expanded.unwrap_or_else(|error| error.to_compile_error()).into()

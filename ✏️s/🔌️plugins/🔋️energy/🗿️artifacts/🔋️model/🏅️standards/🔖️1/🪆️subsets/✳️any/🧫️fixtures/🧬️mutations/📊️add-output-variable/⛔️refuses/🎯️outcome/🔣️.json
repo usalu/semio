@@ -1,8 +1,0 @@
-{
-  "status": "rejected",
-  "code": "mutation.duplicate-id",
-  "path": [
-    "Zone Mean Air Temperature",
-    "ZONE ONE"
-  ]
-}

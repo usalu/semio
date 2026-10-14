@@ -1,0 +1,727 @@
+[
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+    "literal": "../🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+    "literal": "../🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+    "literal": "../../../../🧭️routing/📥️invocation/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🧫️fixtures/🔣️.json",
+    "literal": "🧫️fixtures/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🧫️fixtures/📨️managed-output.json",
+    "literal": "🧫️fixtures/📨️managed-output.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📥️capture/🧪️tests/🧫️fixtures/🔣️.json",
+    "literal": "./🧫️fixtures/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📥️capture/📋️policy/🧬️schema/🔣️.json",
+    "literal": "../📋️policy/🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+    "literal": "../🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+    "literal": "../../🧭️routing/📥️invocation/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🧫️fixtures/🔣️.json",
+    "literal": "./🧫️fixtures/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📋️policy/🧬️schema/🔣️.json",
+    "literal": "../../📋️policy/🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+    "literal": "../../🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+    "literal": "../../../../../🧭️routing/📥️invocation/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+    "literal": "../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📋️policy/🧬️schema/🔣️.json",
+    "literal": "../../📋️policy/🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧪️tests/🧫️fixtures/🔣️.json",
+    "literal": "./🧫️fixtures/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📥️capture/📋️policy/🧬️schema/🔣️.json",
+    "literal": "../../📋️policy/🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+    "literal": "../../🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+    "literal": "../../../🧭️routing/📥️invocation/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+    "literal": "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+    "literal": "../🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+    "literal": "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/🔣️.json",
+    "literal": "./🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/📥️invocation/🧬️schema/🔣️.json",
+    "literal": "../📥️invocation/🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/📥️original-control/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+    "literal": "../../🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/📥️original-control/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+    "literal": "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/📥️original-control/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/📥️original-control/🔣️.json",
+    "literal": "./🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/📥️original-control/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/📥️invocation/🧬️schema/🔣️.json",
+    "literal": "../../📥️invocation/🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📤️fractional/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+    "literal": "../../🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📤️fractional/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+    "literal": "../../../🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📤️fractional/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json",
+    "literal": "../../🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📤️fractional/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+    "literal": "../../../🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📤️fractional/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📤️fractional/🔣️.json",
+    "literal": "./🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🛠️preparation/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🛠️preparation/🧪️tests/🔣️.json",
+    "literal": "./🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🛠️preparation/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🛠️preparation/🧬️schema/🔣️.json",
+    "literal": "../🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🛠️preparation/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+    "literal": "../../🎯️exact/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🛠️preparation/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+    "literal": "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🛠️preparation/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+    "literal": "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🛠️preparation/🧪️tests/🟦️.ts",
+    "to": "🧰️framework/📦️packages/🟦️typescript/🧬️schema/🟦️.ts",
+    "literal": "../../../../../../../../📦️packages/🟦️typescript/🧬️schema/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+    "literal": "../../../📥️capture/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📋️policy/🧬️schema/🔣️.json",
+    "literal": "./📋️policy/🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📋️policy/🔣️.json",
+    "literal": "./📋️policy/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+    "literal": "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+    "literal": "../../../🧭️routing/📥️invocation/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+    "literal": "../🪓️termination/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+    "literal": "../🧭️routing/📥️invocation/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+    "literal": "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📥️capture/📋️policy/🧬️schema/🔣️.json",
+    "literal": "./📋️policy/🧬️schema/🔣️.json"
+  },
+  {
+    "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cr49/📜️script.ts",
+    "to": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cr49/input.json",
+    "literal": "input.json"
+  },
+  {
+    "from": "🧰️framework/📦️packages/🟦️typescript/🧬️schema/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+    "literal": "../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/📦️packages/🟦️typescript/🧬️schema/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+    "literal": "../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🧬️schema/🔣️.json",
+    "literal": "./🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+    "literal": "../🪓️termination/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🟦️.ts",
+    "literal": "./📪️outcome/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📤️stdout.json",
+    "literal": "./🧬️schema/📤️stdout.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📬️output.json",
+    "literal": "./🧬️schema/📬️output.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+    "literal": "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🟦️.ts",
+    "literal": "./📪️outcome/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+    "literal": "../../../🎛️owned-execution/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+    "literal": "../../../🎛️owned-execution/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+    "literal": "../../../📥️capture/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+    "literal": "../../../📥️capture/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+    "literal": "../../../🪓️termination/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+    "literal": "../../../🪓️termination/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+    "literal": "../../../../🧪️testing/🦀️cargo/🎯️exact/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+    "literal": "../../../../🧪️testing/🦀️cargo/🎯️exact/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+    "literal": "../../../🧭️routing/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+    "literal": "../../../🧭️routing/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+    "literal": "../../../🧭️routing/📥️invocation/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+    "literal": "../../../🧭️routing/📥️invocation/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+    "literal": "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+    "literal": "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+    "literal": "../../../🧭️routing/🚪️entrypoint/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+    "literal": "../../../🧭️routing/🚪️entrypoint/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json",
+    "literal": "./🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+    "literal": "../🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+    "literal": "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+    "literal": "../🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+    "literal": "./🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+    "literal": "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+    "literal": "../🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+    "literal": "../📥️invocation/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+    "literal": "./📥️invocation/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+    "literal": "./📥️invocation/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+    "literal": "../../🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+    "literal": "../../🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+    "literal": "./🔣️policy.json"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+    "literal": "../../🗂️workspaces/🦀️cargo/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+    "literal": "../../🗂️workspaces/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+    "literal": "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+    "literal": "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+    "literal": "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+    "to": "🧰️framework/📦️packages/🟦️typescript/🧬️schema/🟦️.ts",
+    "literal": "../../../../../../📦️packages/🟦️typescript/🧬️schema/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/📥️invocation/🧬️schema/🔣️.json",
+    "literal": "./📥️invocation/🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+    "literal": "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts",
+    "literal": "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+    "literal": "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+    "literal": "../../../🗂️workspaces/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+    "literal": "../../../🗂️workspaces/🦀️cargo/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts",
+    "literal": "../../../⚡️caching/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗂️directories/🟦️.ts",
+    "literal": "../../../⚡️caching/🦀️cargo/🗂️directories/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📦️payload/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📦️payload/🟨️.cjs",
+    "literal": "./🟨️.cjs"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📦️payload/🟦️.ts",
+    "literal": "./📦️payload/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟦️.ts",
+    "literal": "./🟦️bun/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+    "literal": "./🟨️.cjs"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📦️payload/🟨️.cjs",
+    "literal": "../📦️payload/🟨️.cjs"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🔣️policy.json",
+    "literal": "../🔣️policy.json"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.cjs",
+    "literal": "../🟨️.cjs"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.cjs",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🔣️policy.json",
+    "literal": "./🔣️policy.json"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🧬️schema/🔣️.json",
+    "literal": "./🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧬️schema/🔣️.json",
+    "literal": "./🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+    "literal": "../📜️script.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+    "literal": "../📜️script.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts",
+    "literal": "./🛠️preparation/📦️storage/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts",
+    "literal": "./🛠️preparation/📦️storage/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+    "literal": "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts",
+    "literal": "./🛠️preparation/🧾️custody/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧬️schema/🔣️.json",
+    "literal": "./🛠️preparation/🧾️custody/🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🏃️invocation/🔣️.json",
+    "literal": "./🧬️schema/🏃️invocation/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.cjs",
+    "literal": "../🟨️.cjs"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+    "literal": "./🛠️preparation/📜️script.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts",
+    "literal": "./📦️storage/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+    "literal": "./🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+    "literal": "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts",
+    "literal": "./🧾️custody/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+    "literal": "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+    "literal": "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+    "literal": "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+    "literal": "../../🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+    "literal": "../🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts",
+    "literal": "./📦️storage/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️synchronization/🧬️schema/🔣️.json",
+    "literal": "./🧾️synchronization/🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+    "literal": "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+    "literal": "../🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts",
+    "literal": "./🧾️custody/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+    "literal": "../🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+    "literal": "./📜️script.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts",
+    "literal": "./🧾️custody/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧬️schema/🔣️.json",
+    "literal": "./🧾️custody/🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️synchronization/🧬️schema/🔣️.json",
+    "literal": "./🧾️synchronization/🧬️schema/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🏃️invocation/🔣️.json",
+    "literal": "../🧬️schema/🏃️invocation/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+    "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🛠️preparation/🔣️.json",
+    "literal": "../🧬️schema/🛠️preparation/🔣️.json"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+    "literal": "../../../🔒️leases/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+    "literal": "../../../🔒️leases/🟦️.ts"
+  },
+  {
+    "from": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+    "to": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/📜️ticket.json",
+    "literal": "./🧬️schema/📜️ticket.json"
+  }
+]

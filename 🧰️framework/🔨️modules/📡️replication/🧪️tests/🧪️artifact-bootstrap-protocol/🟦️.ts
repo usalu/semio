@@ -36,7 +36,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFile } = await import("node:fs/promises");
       const { dirname, join } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
-      return JSON.parse(await readFile(join(dirname(fileURLToPath(source.url)), "🧫️fixtures/🚀️artifact-bootstrap/🔣️.json"), "utf8")) as Fixture;
+      return JSON.parse(await readFile(join(dirname(fileURLToPath(source.url)), "🧪️tests/🧫️fixtures/🚀️artifact-bootstrap/🔣️.json"), "utf8")) as Fixture;
     }
 
     function bootstrapFromFixture(fixture: Fixture, inline: boolean): WireArtifactBootstrap {
@@ -97,7 +97,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { fileURLToPath } = await import("node:url");
       const { createHash } = await import("node:crypto");
       const { default: Ajv } = await import("ajv");
-      const root = join(dirname(fileURLToPath(source.url)), "🧫️fixtures/🚀️artifact-bootstrap");
+      const root = join(dirname(fileURLToPath(source.url)), "🧪️tests/🧫️fixtures/🚀️artifact-bootstrap");
       
       
       const pack = new Uint8Array(fromHex(fixture.payload.packHex));
@@ -219,11 +219,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const { fileURLToPath } = await import("node:url");
         const { dirname, join } = await import("node:path");
         // 📦️ Written by `wire_fixtures_stay_byte_identical_across_rust_and_ts` in
-        // `📡️wire/🦀️.rs`, which resolves them as `CARGO_MANIFEST_DIR/../../🧫️fixtures/wire`
+        // `📡️wire/🦀️.rs`, which resolves them as `CARGO_MANIFEST_DIR/../../🧪️tests/🧫️fixtures/wire`
         // — i.e. beside the os-kernel crate, not under the sync module. The old path here pointed at a
         // pre-restructure location that no longer exists, so this cross-language byte-identity check had
         // been silently ENOENT-ing instead of comparing anything.
-        const fixturesDir = join(dirname(fileURLToPath(source.url)), "🧫️fixtures/📡️wire");
+        const fixturesDir = join(dirname(fileURLToPath(source.url)), "🧪️tests/🧫️fixtures/📡️wire");
   
         function loadClient(name: string) {
           const bytes = new Uint8Array(readFileSync(join(fixturesDir, name)));

@@ -7,9 +7,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ShellScopeProvider, createShellScope } from "../../../🐚️ShellScope/🟦️.tsx";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectSeparator, SelectTrigger, SelectValue, resolveSelectFrame, resolveSelectPlacement } from "../../🟦️.tsx";
 import { Dialog, DialogContent, DialogPortal, DialogTitle } from "../../../💬️Dialog/🟦️.tsx";
-import selectPopupGeometryFixture from "../../../../🧫️fixtures/🔽️select-popup-geometry/🔣️.json";
-import retainedSelectOriginFixture from "../../../../🧫️fixtures/🔽️retained-select-origin/🔣️.json";
-import retainedSelectAccessibilityFixture from "../../../../🧫️fixtures/♿️retained-select-accessibility/🔣️.json";
+import selectPopupGeometryFixture from "../../../../🧪️tests/🧫️fixtures/🔽️select-popup-geometry/🔣️.json";
+import retainedSelectOriginFixture from "../../../../🧪️tests/🧫️fixtures/🔽️retained-select-origin/🔣️.json";
+import retainedSelectAccessibilityFixture from "../../../../🧪️tests/🧫️fixtures/♿️retained-select-accessibility/🔣️.json";
 // #endregion 🔌️Adapters
 
 // #region ☑️SelectMatrix
@@ -135,7 +135,7 @@ describe("Select", () => {
     expect(frame).toEqual({ position: "absolute", originLeft: 0, originTop: 0, viewportWidth: 1920, viewportHeight: 1080 });
     expect(resolveSelectFrame({ isolation: null, host: { left: 0, top: 0, width: 1920, height: 1080, positioned: true, transformed: false }, viewport: { width: 800, height: 600 } }).position).toBe("fixed");
 
-    const scope = createShellScope({ storage: createMemoryStoragePort() });
+    const scope = createShellScope({ storage: createMemoryStoragePort(), initialLocale: "en" });
     const grid = document.createElement("div");
     const layer = document.createElement("div");
     layer.style.position = "absolute";

@@ -1,4 +1,5 @@
 //! 🛑️ Selected compiled refusal ownership with real native and individually authored relational routes.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::super::super::Snapshot;
 use semio_framework_os_kernel as store;
 use semio_framework_os_kernel::os_pack as pack;
@@ -38,20 +39,10 @@ fn binary_bound()->usize{
  let manifest=1+32+20+10+20+20+20+10+10+10+10;
  pack::format::HEADER_SIZE+compressed_bound(1)+compressed_bound(10)+compressed_bound(manifest)+2+10+4+pack::format::FOOTER_SIZE
 }
-impl store::os_store::serialization::ArtifactSqliteSnapshot for Snapshot{
- const SQLITE_SCHEMA:&'static str=SQL;
- fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
-  c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1)?;c.check_rows(1)?;c.check_value_bytes(16)?;
-  let mut out=Projection::new(SQL,c)?;out.insert_key("fixture_refusal",1,&[Cell::Integer(i64::from(self.value))])?;out.checkpoint_total(1)?;out.finish()
- }
- fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
-  c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,1)?;c.check_database(d,SqliteSnapshotPhase::ReconstructSnapshot)?;
-  validate_sqlite_database_schema_controlled(d,SQL,SqliteSnapshotPhase::ReconstructSnapshot,c)?;
-  let row=d.table("fixture_refusal")?.single_row()?;
-  if row.rowid!=1||row.values.len()!=2||row.integer(0)?!=1{return Err(invalid("refusal snapshot requires exact singleton identity"))}
-  let value=i32::try_from(row.integer(1)?).map_err(|_|invalid("refusal snapshot value exceeds signed i32"))?;
-  c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(Self{value})
- }
+impl store::os_store::serialization::ArtifactSqliteSnapshotHost for Snapshot{
+ 
+ 
+ 
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError>{
  let original=native_owner.native();
   c.checkpoint(SqliteSnapshotPhase::DecodeNative,0,1)?;c.check_rows(1)?;c.check_value_bytes(8)?;
@@ -111,5 +102,20 @@ impl store::os_store::serialization::ArtifactSqliteSnapshot for Snapshot{
   let kind=selected(&dialect.subset).map_err(IoError::from_value_error)?;
   c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(IoError::from_value_error)?;
   Err(refusal(kind))
+ }
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for Snapshot {
+const SQLITE_SCHEMA:&'static str=SQL;
+fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
+  c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1)?;c.check_rows(1)?;c.check_value_bytes(16)?;
+  let mut out=Projection::new(SQL,c)?;out.insert_key("fixture_refusal",1,&[Cell::Integer(i64::from(self.value))])?;out.checkpoint_total(1)?;out.finish()
+ }
+fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+  c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,1)?;c.check_database(d,SqliteSnapshotPhase::ReconstructSnapshot)?;
+  validate_sqlite_database_schema_controlled(d,SQL,SqliteSnapshotPhase::ReconstructSnapshot,c)?;
+  let row=d.table("fixture_refusal")?.single_row()?;
+  if row.rowid!=1||row.values.len()!=2||row.integer(0)?!=1{return Err(invalid("refusal snapshot requires exact singleton identity"))}
+  let value=i32::try_from(row.integer(1)?).map_err(|_|invalid("refusal snapshot value exceeds signed i32"))?;
+  c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(Self{value})
  }
 }

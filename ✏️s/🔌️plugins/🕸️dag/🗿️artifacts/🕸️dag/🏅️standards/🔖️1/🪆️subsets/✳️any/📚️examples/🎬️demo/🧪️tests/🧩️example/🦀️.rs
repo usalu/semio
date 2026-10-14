@@ -22,7 +22,7 @@ async fn every_bundled_example_parses_and_prints_canonically() {
 async fn inference_determinism_law() {
     use protocol::Inference;
     let text = crate::examples::demo::PRIMARY_TEXT;
-    let snapshot = <crate::DagSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
+    let snapshot = <crate::DagSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
     let inference = crate::standards::v1::subsets::any::schema::inferences::DagInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::DagInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }

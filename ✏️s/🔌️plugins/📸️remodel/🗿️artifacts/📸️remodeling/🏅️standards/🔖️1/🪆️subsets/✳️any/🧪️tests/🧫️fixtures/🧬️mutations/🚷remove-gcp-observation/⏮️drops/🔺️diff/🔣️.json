@@ -1,0 +1,37 @@
+{
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": null,
+  "durableArtifacts": null,
+  "calibration": null,
+  "params": null,
+  "gcps": {
+    "rows": [
+      {
+        "row": "patch",
+        "key": "gcp-roof-vent",
+        "patch": {
+          "observations": {
+            "removed": [
+              {
+                "streamId": "orbit-primary",
+                "frameIndex": 6,
+                "pixel": [
+                  {
+                    "bits": "432b8000"
+                  },
+                  {
+                    "bits": "42680000"
+                  }
+                ]
+              }
+            ],
+            "added": []
+          }
+        }
+      }
+    ]
+  },
+  "results": null
+}

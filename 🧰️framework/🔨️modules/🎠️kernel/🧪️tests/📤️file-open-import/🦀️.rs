@@ -79,7 +79,7 @@ struct FileOpenImportSnapshot {
 }
 
 fn fixture() -> FileOpenImportSnapshot {
-    serde_json::from_str(include_str!("../../🧫️fixtures/📤️file-open-import/🔣️.json")).expect("file-open-import fixture JSON")
+    serde_json::from_str(include_str!("../🧫️fixtures/📤️file-open-import/🔣️.json")).expect("file-open-import fixture JSON")
 }
 
 /// 📏️ The chunk extent is derived from the guest's own contiguous-request ceiling, and the fixture
@@ -219,7 +219,7 @@ fn every_fixture_friendly_effect_parses_back_into_the_kernel_effect() {
         #[serde(rename = "wireCases")]
         wire_cases: Vec<WireCase>,
     }
-    let fixture: WireFixture = serde_json::from_str(include_str!("../../🧫️fixtures/📤️file-open-import/🔣️.json")).expect("fixture JSON");
+    let fixture: WireFixture = serde_json::from_str(include_str!("../🧫️fixtures/📤️file-open-import/🔣️.json")).expect("fixture JSON");
     assert!(fixture.wire_cases.len() >= 4, "fixture rows: {}", fixture.wire_cases.len());
     for case in fixture.wire_cases {
         let effect: Effect = serde_json::from_value(case.friendly.clone()).unwrap_or_else(|error| panic!("{} must parse: {error}", case.id));
@@ -287,7 +287,7 @@ struct StagingFixture {
 /// staging keeps no run it should not (memory bound: at most [`IMPORT_STAGING_RUNS`] open runs).
 #[test]
 fn every_staging_case_reassembles_or_refuses_exactly_as_the_fixture_states() {
-    let fixture: StagingFixture = serde_json::from_str(include_str!("../../🧫️fixtures/📤️file-open-import/🔣️.json")).expect("file-open-import fixture JSON");
+    let fixture: StagingFixture = serde_json::from_str(include_str!("../🧫️fixtures/📤️file-open-import/🔣️.json")).expect("file-open-import fixture JSON");
     assert!(fixture.staging_cases.len() >= 9, "fixture rows: {}", fixture.staging_cases.len());
     for case in &fixture.staging_cases {
         assert_eq!(case.sends.len(), case.outcomes.len(), "{} states one outcome per send", case.id);

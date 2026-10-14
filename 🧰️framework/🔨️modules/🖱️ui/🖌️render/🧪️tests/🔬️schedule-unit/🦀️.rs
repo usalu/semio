@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn replaceable_deadlines_match_the_shared_timer_contract() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⏱️deadline/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⏱️deadline/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let mut scheduler = FrameScheduler::new();
         for step in row["steps"].as_array().unwrap() {

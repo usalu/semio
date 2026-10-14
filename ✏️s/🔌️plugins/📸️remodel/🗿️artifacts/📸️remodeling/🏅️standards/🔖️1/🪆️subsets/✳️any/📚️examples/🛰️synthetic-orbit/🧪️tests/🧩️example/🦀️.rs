@@ -603,7 +603,7 @@ async fn primary_asset_is_nonempty() {
 #[semio_framework_async_macros::async_test]
 async fn dsl_declares_the_ground_truth_camera_and_the_full_frame_table() {
     let truth = ground_truth();
-    let scene = <RemodelingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("synthetic-orbit document parses");
+    let scene = <RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("synthetic-orbit document parses");
     let camera = scene.calibration.cameras.iter().find(|camera| camera.id == CAMERA_ID).expect("calibrated camera");
     assert_eq!(camera.model, "brownConrady");
     assert!((camera.fx - truth.fx).abs() < 1e-9 && (camera.fy - truth.fy).abs() < 1e-9, "document focal must equal the rendering camera's");
@@ -885,7 +885,7 @@ fn regenerates_the_synthetic_orbit_example() {
         "pointsWorldM": points,
     });
     std::fs::write(assets.join("🔮️ground-truth.json"), format!("{}\n", serde_json::to_string_pretty(&truth).expect("ground truth json"))).expect("write ground truth");
-    std::fs::write(assets.join("🗣️.dsl.semio"), <RemodelingSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&fixture_document())).expect("write fixture document");
+    std::fs::write(assets.join("🗣️.dsl.semio"), <RemodelingSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&fixture_document())).expect("write fixture document");
 }
 
 /// 🗣️ The committed document: the engine-tuning params this fixture reconstructs under, the rendering

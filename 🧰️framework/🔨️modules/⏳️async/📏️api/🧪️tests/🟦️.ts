@@ -5,7 +5,7 @@ import ts from "typescript";
 import { existsSync, readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join, resolve } from "node:path";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import config from "../../🧪️tests/🎚️config/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../..");

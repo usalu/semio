@@ -1,0 +1,851 @@
+{
+  "version": 1,
+  "plans": {
+    "valid": [
+      {
+        "version": 1,
+        "passes": [
+          {
+            "id": "wasm-release-00",
+            "manifest": "/w/Cargo.toml",
+            "packages": [
+              {
+                "name": "comp-a",
+                "manifest": "/w/comp-a/Cargo.toml"
+              },
+              {
+                "name": "comp-b",
+                "manifest": "/w/comp-b/Cargo.toml"
+              }
+            ],
+            "target": "wasm32-wasip2",
+            "profile": "wasm-release",
+            "output": "dist/components/release"
+          }
+        ]
+      },
+      {
+        "version": 1,
+        "passes": [
+          {
+            "id": "wasm-release-00",
+            "manifest": "/w/Cargo.toml",
+            "packages": [
+              {
+                "name": "comp-a",
+                "manifest": "/w/comp-a/Cargo.toml"
+              },
+              {
+                "name": "comp-b",
+                "manifest": "/w/comp-b/Cargo.toml"
+              }
+            ],
+            "target": "wasm32-wasip2",
+            "profile": "wasm-release",
+            "output": "dist/components/release"
+          }
+        ],
+        "jobs": [
+          {
+            "id": "describe-tool",
+            "cwd": "/w/tools",
+            "command": [
+              "bun",
+              "./📜️script.ts",
+              "build"
+            ],
+            "after": [],
+            "profile": "release",
+            "target": "host",
+            "workerProtocol": "jobserver"
+          },
+          {
+            "id": "pages",
+            "cwd": "/w/site",
+            "command": [
+              "bun",
+              "./📜️script.ts",
+              "pages"
+            ],
+            "after": [
+              "job:describe-tool",
+              "components:publish",
+              "comp-a:describe"
+            ],
+            "profile": "release",
+            "target": "host",
+            "workerProtocol": "jobserver"
+          }
+        ]
+      }
+    ],
+    "invalid": [
+      {
+        "version": 1,
+        "passes": []
+      },
+      {
+        "version": 1,
+        "passes": [
+          {
+            "id": "has space",
+            "manifest": "/w/Cargo.toml",
+            "packages": [
+              {
+                "name": "comp-a",
+                "manifest": "/w/comp-a/Cargo.toml"
+              },
+              {
+                "name": "comp-b",
+                "manifest": "/w/comp-b/Cargo.toml"
+              }
+            ],
+            "target": "wasm32-wasip2",
+            "profile": "wasm-release",
+            "output": "dist/components/release"
+          }
+        ]
+      },
+      {
+        "version": 1,
+        "passes": [
+          {
+            "id": "wasm-release-00",
+            "manifest": "relative/Cargo.toml",
+            "packages": [
+              {
+                "name": "comp-a",
+                "manifest": "/w/comp-a/Cargo.toml"
+              },
+              {
+                "name": "comp-b",
+                "manifest": "/w/comp-b/Cargo.toml"
+              }
+            ],
+            "target": "wasm32-wasip2",
+            "profile": "wasm-release",
+            "output": "dist/components/release"
+          }
+        ]
+      },
+      {
+        "version": 1,
+        "passes": [
+          {
+            "id": "wasm-release-00",
+            "manifest": "/w/Cargo.toml",
+            "packages": [
+              {
+                "name": "comp-a",
+                "manifest": "/w/comp-a/Cargo.toml"
+              },
+              {
+                "name": "comp-b",
+                "manifest": "/w/comp-b/Cargo.toml"
+              }
+            ],
+            "target": "wasm32-wasip2",
+            "profile": "wasm-release",
+            "output": "../escape"
+          }
+        ]
+      },
+      {
+        "version": 1,
+        "passes": [
+          {
+            "id": "wasm-release-00",
+            "manifest": "/w/Cargo.toml",
+            "packages": [
+              {
+                "name": "comp-a",
+                "manifest": "/w/comp-a/Cargo.toml"
+              },
+              {
+                "name": "comp-a",
+                "manifest": "/w/comp-a/Cargo.toml"
+              }
+            ],
+            "target": "wasm32-wasip2",
+            "profile": "wasm-release",
+            "output": "dist/components/release"
+          }
+        ]
+      },
+      {
+        "version": 2,
+        "passes": [
+          {
+            "id": "wasm-release-00",
+            "manifest": "/w/Cargo.toml",
+            "packages": [
+              {
+                "name": "comp-a",
+                "manifest": "/w/comp-a/Cargo.toml"
+              },
+              {
+                "name": "comp-b",
+                "manifest": "/w/comp-b/Cargo.toml"
+              }
+            ],
+            "target": "wasm32-wasip2",
+            "profile": "wasm-release",
+            "output": "dist/components/release"
+          }
+        ]
+      },
+      {
+        "version": 1,
+        "passes": [
+          {
+            "id": "wasm-release-00",
+            "manifest": "/w/Cargo.toml",
+            "packages": [
+              {
+                "name": "comp-a",
+                "manifest": "/w/comp-a/Cargo.toml"
+              },
+              {
+                "name": "comp-b",
+                "manifest": "/w/comp-b/Cargo.toml"
+              }
+            ],
+            "target": "wasm32-wasip2",
+            "profile": "wasm-release",
+            "output": "dist/components/release"
+          }
+        ],
+        "jobs": [
+          {
+            "id": "describe-tool",
+            "cwd": "relative",
+            "command": [
+              "bun",
+              "./📜️script.ts",
+              "build"
+            ],
+            "after": [],
+            "profile": "release",
+            "target": "host",
+            "workerProtocol": "jobserver"
+          }
+        ]
+      },
+      {
+        "version": 1,
+        "passes": [
+          {
+            "id": "wasm-release-00",
+            "manifest": "/w/Cargo.toml",
+            "packages": [
+              {
+                "name": "comp-a",
+                "manifest": "/w/comp-a/Cargo.toml"
+              },
+              {
+                "name": "comp-b",
+                "manifest": "/w/comp-b/Cargo.toml"
+              }
+            ],
+            "target": "wasm32-wasip2",
+            "profile": "wasm-release",
+            "output": "dist/components/release"
+          }
+        ],
+        "jobs": [
+          {
+            "id": "describe-tool",
+            "cwd": "/w/tools",
+            "command": [
+              "bun",
+              "./📜️script.ts",
+              "build"
+            ],
+            "after": [
+              "not a name"
+            ],
+            "profile": "release",
+            "target": "host",
+            "workerProtocol": "jobserver"
+          }
+        ]
+      },
+      {
+        "version": 1,
+        "passes": [
+          {
+            "id": "wasm-release-00",
+            "manifest": "/w/Cargo.toml",
+            "packages": [
+              {
+                "name": "comp-a",
+                "manifest": "/w/comp-a/Cargo.toml"
+              },
+              {
+                "name": "comp-b",
+                "manifest": "/w/comp-b/Cargo.toml"
+              }
+            ],
+            "target": "wasm32-wasip2",
+            "profile": "debug",
+            "output": "dist/components/release"
+          }
+        ]
+      }
+    ],
+    "refused": [
+      {
+        "version": 1,
+        "passes": [
+          {
+            "id": "wasm-release-00",
+            "manifest": "/w/Cargo.toml",
+            "packages": [
+              {
+                "name": "comp-a",
+                "manifest": "/w/comp-a/Cargo.toml"
+              },
+              {
+                "name": "comp-b",
+                "manifest": "/w/comp-b/Cargo.toml"
+              }
+            ],
+            "target": "wasm32-wasip2",
+            "profile": "wasm-release",
+            "output": "dist/components/release"
+          },
+          {
+            "id": "wasm-release-00",
+            "manifest": "/w/Cargo.toml",
+            "packages": [
+              {
+                "name": "comp-a",
+                "manifest": "/w/comp-a/Cargo.toml"
+              },
+              {
+                "name": "comp-b",
+                "manifest": "/w/comp-b/Cargo.toml"
+              }
+            ],
+            "target": "wasm32-wasip2",
+            "profile": "wasm-release",
+            "output": "dist/components/release"
+          }
+        ]
+      },
+      {
+        "version": 1,
+        "passes": [
+          {
+            "id": "wasm-release-00",
+            "manifest": "/w/Cargo.toml",
+            "packages": [
+              {
+                "name": "comp-a",
+                "manifest": "/w/comp-a/Cargo.toml"
+              },
+              {
+                "name": "comp-a",
+                "manifest": "/w/other/Cargo.toml"
+              }
+            ],
+            "target": "wasm32-wasip2",
+            "profile": "wasm-release",
+            "output": "dist/components/release"
+          }
+        ]
+      },
+      {
+        "version": 1,
+        "passes": [
+          {
+            "id": "wasm-release-00",
+            "manifest": "/w/Cargo.toml",
+            "packages": [
+              {
+                "name": "comp-a",
+                "manifest": "/w/comp-a/Cargo.toml"
+              },
+              {
+                "name": "comp-b",
+                "manifest": "/w/comp-b/Cargo.toml"
+              }
+            ],
+            "target": "wasm32-wasip2",
+            "profile": "wasm-release",
+            "output": "dist/components/release"
+          }
+        ],
+        "jobs": [
+          {
+            "id": "describe-tool",
+            "cwd": "/w/tools",
+            "command": [
+              "bun",
+              "./📜️script.ts",
+              "build"
+            ],
+            "after": [],
+            "profile": "release",
+            "target": "host",
+            "workerProtocol": "jobserver"
+          },
+          {
+            "id": "describe-tool",
+            "cwd": "/w/tools",
+            "command": [
+              "bun",
+              "./📜️script.ts",
+              "build"
+            ],
+            "after": [],
+            "profile": "release",
+            "target": "host",
+            "workerProtocol": "jobserver"
+          }
+        ]
+      }
+    ]
+  },
+  "generations": {
+    "environments": [
+      {
+        "environment": {},
+        "kind": "warm"
+      },
+      {
+        "environment": {
+          "SEMIO_NATIVE_BUILD_GENERATION": "fresh"
+        },
+        "kind": "fresh"
+      },
+      {
+        "environment": {
+          "SEMIO_NATIVE_BUILD_GENERATION": "warm"
+        },
+        "kind": "warm"
+      }
+    ],
+    "invalid": [
+      "cold",
+      ""
+    ]
+  },
+  "args": {
+    "pass": {
+      "id": "wasm-release-00",
+      "manifest": "/w/Cargo.toml",
+      "packages": [
+        {
+          "name": "comp-a",
+          "manifest": "/w/comp-a/Cargo.toml"
+        },
+        {
+          "name": "comp-b",
+          "manifest": "/w/comp-b/Cargo.toml"
+        }
+      ],
+      "target": "wasm32-wasip2",
+      "profile": "wasm-release",
+      "output": "dist/components/release"
+    },
+    "args": [
+      "build",
+      "--locked",
+      "--manifest-path",
+      "/w/Cargo.toml",
+      "-p",
+      "comp-a",
+      "-p",
+      "comp-b",
+      "--lib",
+      "--target",
+      "wasm32-wasip2",
+      "--profile",
+      "wasm-release",
+      "--keep-going",
+      "--message-format=json-render-diagnostics"
+    ]
+  },
+  "artifacts": [
+    {
+      "message": {
+        "reason": "compiler-artifact",
+        "package_id": "path+file:///w/comp-a#comp-a@0.1.0",
+        "manifest_path": "/w/comp-a/Cargo.toml",
+        "target": {
+          "kind": [
+            "cdylib"
+          ]
+        },
+        "filenames": [
+          "/b/wasm32-wasip2/wasm-release/deps/comp_a-1f.wasm",
+          "/t/wasm32-wasip2/wasm-release/comp_a.wasm"
+        ]
+      },
+      "targetDirectory": "/t",
+      "expected": {
+        "package": {
+          "name": "comp-a",
+          "manifest": "/w/comp-a/Cargo.toml"
+        },
+        "wasm": "/t/wasm32-wasip2/wasm-release/comp_a.wasm"
+      }
+    },
+    {
+      "message": {
+        "reason": "compiler-artifact",
+        "package_id": "path+file:///w/base#base@0.1.0",
+        "manifest_path": "/w/base/Cargo.toml",
+        "target": {
+          "kind": [
+            "lib"
+          ]
+        },
+        "filenames": [
+          "/b/deps/libbase-1.rlib"
+        ]
+      },
+      "targetDirectory": "/t",
+      "expected": null
+    },
+    {
+      "message": {
+        "reason": "compiler-artifact",
+        "package_id": "path+file:///w/other#other@0.1.0",
+        "manifest_path": "/w/other/Cargo.toml",
+        "target": {
+          "kind": [
+            "cdylib"
+          ]
+        },
+        "filenames": [
+          "/t/wasm32-wasip2/wasm-release/other.wasm"
+        ]
+      },
+      "targetDirectory": "/t",
+      "expected": null
+    },
+    {
+      "message": {
+        "reason": "build-script-executed",
+        "package_id": "path+file:///w/comp-a#comp-a@0.1.0"
+      },
+      "targetDirectory": "/t",
+      "expected": null
+    }
+  ],
+  "stub": {
+    "delayMs": 400,
+    "tokens": 4,
+    "physicalGiB": 32,
+    "stallMs": 400,
+    "cancelAfterMs": 300
+  },
+  "real": {
+    "tokens": 4,
+    "profiles": [
+      "wasm-release",
+      "wasm-prototype"
+    ],
+    "components": [
+      "comp-a",
+      "comp-b"
+    ]
+  },
+  "unitGraph": {
+    "pass": {
+      "id": "wasm-release-00",
+      "manifest": "/w/Cargo.toml",
+      "packages": [
+        {
+          "name": "comp-a",
+          "manifest": "/w/comp-a/Cargo.toml"
+        },
+        {
+          "name": "comp-b",
+          "manifest": "/w/comp-b/Cargo.toml"
+        }
+      ],
+      "target": "wasm32-wasip2",
+      "profile": "wasm-release",
+      "output": "dist/components/release"
+    },
+    "graph": {
+      "version": 1,
+      "roots": [
+        0,
+        1
+      ],
+      "units": [
+        {
+          "pkg_id": "path+file:///w/comp-a#comp-a@0.1.0",
+          "target": {
+            "name": "comp_a",
+            "kind": [
+              "cdylib"
+            ],
+            "src_path": "/w/comp-a/src/lib.rs"
+          },
+          "platform": "wasm32-wasip2",
+          "mode": "build",
+          "features": [],
+          "dependencies": [
+            {
+              "index": 2
+            }
+          ]
+        },
+        {
+          "pkg_id": "path+file:///w/comp-b#comp-b@0.1.0",
+          "target": {
+            "name": "comp_b",
+            "kind": [
+              "cdylib"
+            ],
+            "src_path": "/w/comp-b/../owner-b/🦀️.rs"
+          },
+          "platform": "wasm32-wasip2",
+          "mode": "build",
+          "features": [
+            "x"
+          ],
+          "dependencies": [
+            {
+              "index": 2
+            },
+            {
+              "index": 3
+            }
+          ]
+        },
+        {
+          "pkg_id": "path+file:///w/base#base@0.1.0",
+          "target": {
+            "name": "base",
+            "kind": [
+              "lib"
+            ],
+            "src_path": "/w/base/src/lib.rs"
+          },
+          "platform": "wasm32-wasip2",
+          "mode": "build",
+          "features": [
+            "std"
+          ],
+          "dependencies": [
+            {
+              "index": 4
+            }
+          ]
+        },
+        {
+          "pkg_id": "registry+https://github.com/rust-lang/crates.io-index#extra@1.0.0",
+          "target": {
+            "name": "extra",
+            "kind": [
+              "lib"
+            ],
+            "src_path": "/r/extra/src/lib.rs"
+          },
+          "platform": "wasm32-wasip2",
+          "mode": "build",
+          "features": [],
+          "dependencies": []
+        },
+        {
+          "pkg_id": "path+file:///w/base#base@0.1.0",
+          "target": {
+            "name": "build-script-build",
+            "kind": [
+              "custom-build"
+            ],
+            "src_path": "/w/base/build.rs"
+          },
+          "platform": null,
+          "mode": "run-custom-build",
+          "features": [
+            "std"
+          ],
+          "dependencies": []
+        }
+      ]
+    },
+    "identities": [
+      "[\"path+file:///w/comp-a#comp-a@0.1.0\",\"comp_a\",[\"cdylib\"],\"wasm32-wasip2\",[]]",
+      "[\"path+file:///w/comp-b#comp-b@0.1.0\",\"comp_b\",[\"cdylib\"],\"wasm32-wasip2\",[\"x\"]]",
+      "[\"path+file:///w/base#base@0.1.0\",\"base\",[\"lib\"],\"wasm32-wasip2\",[\"std\"]]",
+      "[\"registry+https://github.com/rust-lang/crates.io-index#extra@1.0.0\",\"extra\",[\"lib\"],\"wasm32-wasip2\",[]]",
+      "[\"path+file:///w/base#base@0.1.0\",\"run-custom-build\",null]"
+    ],
+    "closures": {
+      "comp-a": [
+        "[\"path+file:///w/base#base@0.1.0\",\"base\",[\"lib\"],\"wasm32-wasip2\",[\"std\"]]",
+        "[\"path+file:///w/base#base@0.1.0\",\"run-custom-build\",null]",
+        "[\"path+file:///w/comp-a#comp-a@0.1.0\",\"comp_a\",[\"cdylib\"],\"wasm32-wasip2\",[]]"
+      ],
+      "comp-b": [
+        "[\"path+file:///w/base#base@0.1.0\",\"base\",[\"lib\"],\"wasm32-wasip2\",[\"std\"]]",
+        "[\"path+file:///w/base#base@0.1.0\",\"run-custom-build\",null]",
+        "[\"path+file:///w/comp-b#comp-b@0.1.0\",\"comp_b\",[\"cdylib\"],\"wasm32-wasip2\",[\"x\"]]",
+        "[\"registry+https://github.com/rust-lang/crates.io-index#extra@1.0.0\",\"extra\",[\"lib\"],\"wasm32-wasip2\",[]]"
+      ]
+    },
+    "announced": [
+      {
+        "message": {
+          "package_id": "path+file:///w/base#base@0.1.0",
+          "target": {
+            "name": "base",
+            "kind": [
+              "lib"
+            ]
+          },
+          "features": [
+            "std"
+          ],
+          "filenames": [
+            "/b/wasm32-wasip2/wasm-release/deps/libbase-1.rlib"
+          ]
+        },
+        "target": "wasm32-wasip2",
+        "identity": "[\"path+file:///w/base#base@0.1.0\",\"base\",[\"lib\"],\"wasm32-wasip2\",[\"std\"]]"
+      },
+      {
+        "message": {
+          "package_id": "path+file:///w/base#base@0.1.0",
+          "target": {
+            "name": "base",
+            "kind": [
+              "lib"
+            ]
+          },
+          "features": [
+            "std"
+          ],
+          "filenames": [
+            "/b/wasm-release/deps/libbase-1.rlib"
+          ]
+        },
+        "target": "wasm32-wasip2",
+        "identity": "[\"path+file:///w/base#base@0.1.0\",\"base\",[\"lib\"],null,[\"std\"]]"
+      }
+    ],
+    "runs": [
+      {
+        "packageId": "path+file:///w/base#base@0.1.0",
+        "outDir": "/b/wasm-release/build/base/1/out",
+        "target": "wasm32-wasip2",
+        "identity": "[\"path+file:///w/base#base@0.1.0\",\"run-custom-build\",null]"
+      }
+    ]
+  },
+  "workerBudgets": [
+    {
+      "protocol": "jobserver",
+      "tokens": 4,
+      "available": 2,
+      "expected": 4
+    },
+    {
+      "protocol": "reserved",
+      "tokens": 4,
+      "available": 2,
+      "expected": 2
+    },
+    {
+      "protocol": "reserved",
+      "tokens": 8,
+      "available": 1,
+      "expected": 1
+    },
+    {
+      "protocol": "exclusive",
+      "tokens": 4,
+      "available": 4,
+      "expected": 4
+    }
+  ],
+  "queuedExclusiveCancellation": {
+    "holdMs": 30000,
+    "pollMs": 10,
+    "settleMs": 50,
+    "expectedChildren": [
+      "holder"
+    ],
+    "expectedUnhandled": 0,
+    "resumed": true
+  },
+  "profileModes": [
+    {
+      "profile": "prototype",
+      "mode": "prototype"
+    },
+    {
+      "profile": "release",
+      "mode": "release"
+    },
+    {
+      "profile": "wasm-prototype",
+      "mode": "prototype"
+    },
+    {
+      "profile": "wasm-release",
+      "mode": "release"
+    }
+  ],
+  "invalidProfiles": [
+    "debug",
+    "dev",
+    "test",
+    "ship",
+    "wasm-iterate",
+    ""
+  ],
+  "finiteCallerBudget": {
+    "milliseconds": 750,
+    "safetyMilliseconds": 4000,
+    "expectedError": "Original native build deadline exhausted"
+  },
+  "unlanedStateOrder": {
+    "tokens": 1,
+    "profile": "wasm-prototype",
+    "deadlineMs": 5000,
+    "oracle": "held",
+    "expectedParticipants": [
+      "job",
+      "pass"
+    ]
+  },
+  "originalStageAuthority": {
+    "milliseconds": 1500,
+    "safetyMilliseconds": 3500,
+    "expectedError": "deadline",
+    "stages": [
+      "pending",
+      "finalizer",
+      "owned-child"
+    ],
+    "fractionalRemaining": 0.75,
+    "expectedSignalAborted": false,
+    "expectedPublished": 1,
+    "expectedContinuations": 1,
+    "ownedChildSettleMilliseconds": 100
+  },
+  "generationPathAdmission": {
+    "maximum": 256,
+    "randomSuffixUnits": 6,
+    "cases": [
+      "cache",
+      "shared-target",
+      "shared-build",
+      "stage-cache",
+      "relative-cache"
+    ],
+    "kinds": [
+      "warm",
+      "fresh"
+    ],
+    "expectedEffects": false
+  }
+}

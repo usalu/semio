@@ -9,7 +9,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { expect, it } = vitest;
   it("browser actor child admits WIT numeric lists as exclusive buffers and refuses other views by name", async () => {
     const { readFileSync } = await import("node:fs");
-    const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", source.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("../🧪️tests/🧫️fixtures/🔣️.json", source.url), "utf8"));
     const lifts = { Uint8Array, Int8Array, Uint16Array, Int16Array, Uint32Array, Int32Array, BigUint64Array, BigInt64Array, Float32Array, Float64Array, DataView, Uint8ClampedArray } as unknown as Record<string, new (buffer: ArrayBuffer, offset?: number, count?: number) => ArrayBufferView>;
     for (const row of fixture.valueAdmission as readonly Row[]) {
       const Lift = lifts[row.lift]!;

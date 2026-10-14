@@ -8,10 +8,10 @@ import { drawingPathFromGeometry, parseDrawingArtifact, type DrawingArtifact, ty
 import artifactSchema from "../../../../../../✳️any/🧬️schema/🔣️.json";
 import { parseDrawingLayerPatch } from "../../../../../../✳️any/🧬️schema/🔺️diff/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
-import fixture from "../../🧫️fixtures/🔣️.json";
-import scenarioBefore from "../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/⬅️before/🔣️.json";
-import scenarioAfter from "../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/➡️after/🔣️.json";
-import scenarioMutation from "../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🦠️mutation/🔣️.json";
+import fixture from "../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/🔣️.json";
+import scenarioBefore from "../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/⬅️before/🔣️.json";
+import scenarioAfter from "../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/➡️after/🔣️.json";
+import scenarioMutation from "../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🦠️mutation/🔣️.json";
 
 function ownedScenario(value:typeof scenarioBefore):DrawingArtifact {
  const layer=value.layers[0]!,t=layer.transform,c=layer.attributes.fill.color;

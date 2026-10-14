@@ -1,0 +1,63 @@
+{
+  "outputObservations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/wasm-dev",
+      "exists": false,
+      "directFiles": []
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/wasm-release",
+      "exists": false,
+      "directFiles": []
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🤖️generated",
+      "exists": true,
+      "directFiles": [
+        "🟨️.js"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️renderer-boot/🤖️generated",
+      "exists": true,
+      "directFiles": [
+        "🟨️.js"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🤖️generated",
+      "exists": true,
+      "directFiles": [
+        "🟨️.js"
+      ]
+    }
+  ],
+  "project": "@semio-tech/framework-renderer-wgpu",
+  "mountTargets": {
+    "preview-generated": "bun ./📜️script.ts preview-generated",
+    "check-frame-worker": "bun ./📜️script.ts check-frame-worker",
+    "check-wasm": "bun ./📜️script.ts check-wasm"
+  },
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔣️.json",
+      "sha256": "a5fa2fd2e181ef6ffa2f778381abdb51ffea4b1ad97c8c25bee47321aea41703"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🟦️.ts",
+      "sha256": "924884b0be7c28fb879e3de4310930a5bb293158e4dfc1f224fecd60053cc094"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🎚️config/🟦️.ts",
+      "sha256": "1110a2f90d2c228987518a610c70e060cb3d80a9f4af05754a1a9f583b676ae3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+      "sha256": "68d037664d848f684b031335b48ebbe19962c1287b6af00ca051319eff74698f"
+    },
+    {
+      "path": "📜️script.ts",
+      "sha256": "7ea49cbb8dec002c953f2a9ade51114fae159667685fa1202e0d385890d52790"
+    }
+  ]
+}

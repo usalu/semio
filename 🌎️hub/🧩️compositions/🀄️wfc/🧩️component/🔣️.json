@@ -43131,10 +43131,5 @@
         "direction": "export"
       }
     ]
-  },
-  "hashes": {
-    "wasmSha256": "371dbba2d9fee236dbefc3fe5c5ff186ef911f8f246a7e2d9e2c60a35c633229",
-    "coreWasmSha256": "57788dbbc9df6e8eeec792ba079898296a8966cd65bc45daa78ee05a8ac00c1e",
-    "descriptorSha256": "cc48f67d68efddc920b1b092ea4b28ec097b0910041d79e6be5ae9a2ac79817e"
   }
 }

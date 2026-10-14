@@ -1,4 +1,4 @@
-//! 🏷️ The Rust half of the shared `LocalizedLabel` contract. Same `🧫️fixtures/🏷️localized-label/🔣️.json`
+//! 🏷️ The Rust half of the shared `LocalizedLabel` contract. Same `🧪️tests/🧫️fixtures/🏷️localized-label/🔣️.json`
 //! the AJV oracle and `historyEntryLabelText` read in `🎠️kernel/🧪️tests/🏷️localized-label-fixture`.
 //! Nothing below names a language: the axes come out of the generated enums and the expectations out
 //! of the fixture's `<terminology>.<locale>` keys, so a new axis fails here until it is translated.
@@ -6,7 +6,7 @@ use super::LocalizedLabel;
 use crate::{DslValue, FromValue, Locale, Terminology, ToValue};
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🏷️localized-label/🔣️.json")).expect("localized-label fixture parses")
+    serde_json::from_str(include_str!("../🧫️fixtures/🏷️localized-label/🔣️.json")).expect("localized-label fixture parses")
 }
 
 fn schema() -> serde_json::Value {

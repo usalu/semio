@@ -87,7 +87,7 @@ const GLTF_ANY_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
 fn gltf_any_editor_example_snapshot(example_id: &str) -> GltfSnapshot {
     if example_id == crate::examples::demo::ID {
-        <GltfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+        <GltfSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         GltfSnapshot::default()
     }
@@ -227,6 +227,7 @@ impl ArtifactEditor for GltfAnyEditor {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

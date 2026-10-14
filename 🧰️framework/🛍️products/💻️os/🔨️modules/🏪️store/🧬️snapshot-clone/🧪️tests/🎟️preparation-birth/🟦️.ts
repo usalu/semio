@@ -3,7 +3,7 @@ import {readFileSync} from "node:fs";
 import {applyPatch} from "fast-json-patch";
 
 test("funded preparation birth preserves original request on independent currency refusal",()=>{
-  const law=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🎟️preparation-birth/🔣️.json",import.meta.url),"utf8"));
+  const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🎟️preparation-birth/🔣️.json",import.meta.url),"utf8"));
   for(const currency of law.refusals){expect(["items","capacity","depth"]).toContain(currency);expect(applyPatch(law.request,[],true,false).newDocument).toEqual(law.request);}
   expect(law.afterRefusal).toEqual({requestReturned:true,allocatedBytes:0,releasedBytes:0});
   expect(law.deferred).toEqual(["snapshot source","mutation source","clone cursor","edit cursor"]);

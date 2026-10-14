@@ -9,7 +9,7 @@ use crate::{Entry, ModelDiff, ModelInference, ModelSnapshot, StairPatch};
 use protocol::Inference;
 use std::collections::BTreeMap;
 
-const CASE: &str = include_str!("../../../../../../🧫️fixtures/💡️inferences/🧊️element-solids/🪜️stairs-flights/🔣️.json");
+const CASE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🪜️stairs-flights/🔣️.json");
 
 fn geometry(snapshot: &ModelSnapshot, id: &str) -> StairGeometry {
     let levels = compute_storey_levels(snapshot);

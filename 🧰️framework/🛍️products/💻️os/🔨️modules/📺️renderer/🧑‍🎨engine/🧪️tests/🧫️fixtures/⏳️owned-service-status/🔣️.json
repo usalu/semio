@@ -1,0 +1,5 @@
+{
+  "runtimeKey": "owner/service",
+  "operationEpoch": 73,
+  "status": { "owner": "owner", "serviceId": "service", "payload": { "received": 5 } }
+}

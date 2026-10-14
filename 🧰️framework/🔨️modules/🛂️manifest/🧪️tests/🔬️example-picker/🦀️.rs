@@ -35,7 +35,7 @@ struct FixtureApp {
 }
 
 fn fixture() -> ExamplePickerFixture {
-    serde_json::from_str(include_str!("../../🧫️fixtures/📚️example-picker.json")).expect("the example-picker fixture must parse")
+    serde_json::from_str(include_str!("../🧫️fixtures/📚️example-picker.json")).expect("the example-picker fixture must parse")
 }
 
 /// 👁️✏️ An example belongs to a DIALECT, so an editor and its viewer resolve exactly the same

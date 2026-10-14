@@ -3,8 +3,8 @@ import { expect, test } from "bun:test";
 import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import contract from "../../🧫️fixtures/🚮️absence/🔣️.json";
-import { runBudgetedTestCommand } from "../../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
+import contract from "../../🧪️tests/🧫️fixtures/🚮️absence/🔣️.json";
+import { runBudgetedTestCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../..");
 

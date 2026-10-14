@@ -43,7 +43,7 @@ struct InboundRequestFixture {
 }
 
 fn inbound_request_fixture() -> InboundRequestFixture {
-    serde_json::from_str(include_str!("../../../🧫️fixtures/📥️inbound-request/🔣️.json")).expect("the inbound-request fixture must parse")
+    serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📥️inbound-request/🔣️.json")).expect("the inbound-request fixture must parse")
 }
 
 fn inbound_request_budget() -> semio_framework::kernel::Budget {

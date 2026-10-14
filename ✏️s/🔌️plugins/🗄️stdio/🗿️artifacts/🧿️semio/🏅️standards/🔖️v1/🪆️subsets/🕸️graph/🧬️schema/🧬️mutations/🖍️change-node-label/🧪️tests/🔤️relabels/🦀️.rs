@@ -9,11 +9,11 @@ use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::SemioGraphSnapshot;
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖍️change-node-label/🔤️relabels/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖍️change-node-label/🔤️relabels/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖍️change-node-label/🔤️relabels/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖍️change-node-label/🔤️relabels/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖍️change-node-label/🔤️relabels/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖍️change-node-label/🔤️relabels/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖍️change-node-label/🔤️relabels/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖍️change-node-label/🔤️relabels/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖍️change-node-label/🔤️relabels/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖍️change-node-label/🔤️relabels/🎯️outcome/🔣️.json");
 
 fn before() -> SemioGraphSnapshot {
     crate::io::text::snapshot::decode_semio_graph_snapshot_json(BEFORE).expect("change-node-label before snapshot decodes")

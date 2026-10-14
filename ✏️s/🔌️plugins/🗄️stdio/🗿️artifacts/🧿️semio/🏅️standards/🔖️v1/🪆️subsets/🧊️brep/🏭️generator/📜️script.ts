@@ -627,7 +627,7 @@ function structLiteralBodies(source: string, type: string): string[] {
 
 /** 📏️ Validates the shared tolerance cases with the independent JSON Schema implementation. */
 function validateToleranceContract(): number {
-  const fixturePath = join(import.meta.dir, "..", "🧫️fixtures", "📏️tolerance", "🔣️.json");
+  const fixturePath = join(import.meta.dir, "..", "🧪️tests/🧫️fixtures", "📏️tolerance", "🔣️.json");
   const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as ToleranceFixture;
   const cases = fixture.cases;
   const validator = new Validator();
@@ -785,7 +785,7 @@ function validateToleranceContract(): number {
 function carrier(): number {
   const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
   if (build.status !== 0) return build.status ?? 1;
-  return spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
+  return spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧪️tests/🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
 }
 //#endregion 🧩️Carrier
 
@@ -814,7 +814,7 @@ async function main(argv: readonly string[]): Promise<number> {
     console.error(`[generator] reviewed fixture directory authority must contain exactly one unique entry per recipe`);
     return 1;
   }
-  const canonicalOutDir = join(import.meta.dir, "..", "🧫️fixtures");
+  const canonicalOutDir = join(import.meta.dir, "..", "🧪️tests/🧫️fixtures");
   const outDir = process.env.SEMIO_FIXTURE_OUT ?? value("--out") ?? canonicalOutDir;
 
   if (command === "manifests" || command === "generate") {

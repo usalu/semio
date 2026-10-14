@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Failure Receipt Debit Input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "grant",
+    "recipient",
+    "originalReceipt",
+    "fuel"
+  ],
+  "properties": {
+    "grant": {
+      "$ref": "../../../../../../../../../%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8C%B1%EF%B8%8Fvalue/%F0%9F%A7%AC%EF%B8%8Fretained-clone/%F0%9F%8C%90%EF%B8%8Fwire/%F0%9F%A7%AC%EF%B8%8Fschema/%F0%9F%94%A3%EF%B8%8F.json"
+    },
+    "recipient": {
+      "$ref": "#/$defs/progress"
+    },
+    "originalReceipt": {
+      "$ref": "#/$defs/progress"
+    },
+    "fuel": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "$defs": {
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copiedItems",
+        "copiedBytes",
+        "retainedCapacityBytes",
+        "releasedBytes"
+      ],
+      "properties": {
+        "copiedItems": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "copiedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "retainedCapacityBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "releasedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    }
+  }
+}

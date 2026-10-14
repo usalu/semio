@@ -141,7 +141,7 @@ describe("shared asset delivery", () => {
 
 describe("favicon delivery", () => {
   it("serves only the exact handpicked browser-icon routes with unchanged payloads", async () => {
-    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🌐️favicon-delivery.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🌐️favicon-delivery.json"), "utf8"));
     const authority = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🌐️favicon/🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8"));
     const { default: Ajv } = await import("ajv");
@@ -188,7 +188,7 @@ describe("favicon delivery", () => {
 describe("declared HTML entry", () => {
   it("builds and serves the declared HTML entry and static-host aliases", async () => {
     const { build, preview } = await import("vite"), { parse } = await import("parse5");
-    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🏠️html-entry.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🏠️html-entry.json"), "utf8"));
     const sandbox = realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "html-entry-"))), output = join(sandbox, "📤️output");
     writeFileSync(join(sandbox, fixture.entry), fixture.html);
     const plugin = semioEmojiIndexHtmlVitePlugin(sandbox, fixture.entry);
@@ -221,7 +221,7 @@ describe("declared HTML entry", () => {
 
 describe("build output write authority", () => {
   it("preserves every retained byte in all seven adapters and writes only declared outputs", async () => {
-    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🛡️build-writes.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🛡️build-writes.json"), "utf8"));
     const { default: glob } = await import("fast-glob"), failures: string[] = [];
     const sandbox = mkdtempSync(join(tmpdir(), "semio-build-write-"));
     const put = (path: string, content: string) => { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, content); };
@@ -263,7 +263,7 @@ describe("build output write authority", () => {
 
 describe("conditional delivery of dev-served files", () => {
   it("answers validators, 304 for a current tag or date, the file otherwise — as the `fresh` freshness judge decides", async () => {
-    const root = resolve(import.meta.dir, "../../🧫️fixtures/🏷️conditional-delivery");
+    const root = resolve(import.meta.dir, "../🧫️fixtures/🏷️conditional-delivery");
     const fixture = JSON.parse(readFileSync(resolve(root, "🔣️.json"), "utf8"));
     const { default: Ajv2020 } = await import("ajv/dist/2020.js"), { default: fresh } = await import("fresh");
     const sandbox = realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "conditional-delivery-")));
@@ -314,7 +314,7 @@ describe("conditional delivery of dev-served files", () => {
 
 describe("static-dir mount table", () => {
   it("serves nested and overlaid roots with native Vite publicDir parity and refuses a route claimed twice", async () => {
-    const root = resolve(import.meta.dir, "../../🧫️fixtures/🗂️static-dir-mounts");
+    const root = resolve(import.meta.dir, "../🧫️fixtures/🗂️static-dir-mounts");
     const fixture = JSON.parse(readFileSync(resolve(root, "🔣️.json"), "utf8"));
     const { default: Ajv } = await import("ajv"), { createServer: createViteServer } = await import("vite"), { default: glob } = await import("fast-glob");
     const sandbox = realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "static-dir-mounts-")));
@@ -582,7 +582,7 @@ describe("styling resolve", () => {
 
 describe("nested mesh source identity", () => {
   it("preserves explicit neutral source ownership and nested output paths in HTTP and static output", async () => {
-    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧊️mesh-collection.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🧊️mesh-collection.json"), "utf8"));
     const sandbox = mkdtempSync(join(tmpdir(), "semio-mesh-collection-"));
     let server: ReturnType<typeof createServer> | undefined;
     try {
@@ -858,7 +858,7 @@ describe("presence palette", () => {
 //#endregion 👥️Presence
 
 describe("🔁️ border effect animation scope", () => {
-  const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🔁️animation-scope/🔣️.json"), "utf8")) as {
+  const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🔁️animation-scope/🔣️.json"), "utf8")) as {
     laws: readonly string[];
     cases: readonly {
       name: string;
@@ -990,10 +990,10 @@ describe("🔁️ border effect animation scope", () => {
  * exists, so the only way to test what it actually does is to run that exact string. `node:vm` gives
  * it the smallest DOM it touches — `document.documentElement`, `document.body`, `localStorage` and
  * `matchMedia` — and the resolved class/dataset/background are read straight back off that DOM.
- * `🧫️fixtures/🌓️appearance-boot.json` is the statement; `🎚️config/🧬️schema/🧪️tests/🔬️unit/🦀️.rs`
+ * `🧪️tests/🧫️fixtures/🌓️appearance-boot.json` is the statement; `🎚️config/🧬️schema/🧪️tests/🔬️unit/🦀️.rs`
  * answers the same `events` logs through the OS config projection.
  */
-const appearanceBootFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🌓️appearance-boot.json"), "utf8")) as {
+const appearanceBootFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🌓️appearance-boot.json"), "utf8")) as {
   readonly storageKey: string;
   readonly preferenceKey: string;
   readonly deadKeys: readonly string[];
@@ -1116,10 +1116,10 @@ describe("custom theme contrast verdict", () => {
   });
 });
 
-/** ♿️ The text-on-surface pair law, replayed from `🧫️fixtures/♿️chrome-contrast-pairs.json` — whose ratios
+/** ♿️ The text-on-surface pair law, replayed from `🧪️tests/🧫️fixtures/♿️chrome-contrast-pairs.json` — whose ratios
  * were computed by an independent Python WCAG implementation, so this is a cross-language oracle too. */
 describe("chrome text-on-surface contrast pairs", () => {
-  const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/♿️chrome-contrast-pairs.json"), "utf8")) as {
+  const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/♿️chrome-contrast-pairs.json"), "utf8")) as {
     readonly palette: Record<string, Rgba8>;
     readonly cases: Record<string, { readonly text: string; readonly surface: string; readonly counterpart: string; readonly ratio: number; readonly grade: WcagContrastGrade } | null>;
   };
@@ -1182,7 +1182,7 @@ describe("shared theme geometry", () => {
     const { calc } = await import("@csstools/css-calc");
     const { tokenize, isTokenDimension, stringify } = await import("@csstools/css-tokenizer");
     const { default: Ajv } = await import("ajv/dist/2020");
-    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/📐️theme-geometry/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/📐️theme-geometry/🔣️.json"), "utf8"));
     const bindings = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🌓️theme/📐️geometry/🔣️.json"), "utf8")).bindings;
     const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🌓️theme/📐️geometry/🧬️contract/🔣️.json"), "utf8"));
     const oracleSpacing = (compact: string, rootRemPx: number): number | null => {
@@ -1222,7 +1222,7 @@ describe("shared theme geometry", () => {
   });
 
   it("refuses invalid metric edits without changing the retained theme", async () => {
-    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/📐️theme-geometry/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/📐️theme-geometry/🔣️.json"), "utf8"));
     const { default: Ajv } = await import("ajv/dist/2020");
     const geometrySchema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🌓️theme/📐️geometry/🧬️contract/🔣️.json"), "utf8"));
     const themeSchema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🌓️theme/🧬️contract/🔣️.json"), "utf8"));

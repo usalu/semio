@@ -8,7 +8,7 @@ type EmptyStateFixture = Record<"json" | "text" | "pack", readonly { value: unkn
 
 export function testFrameworkEmptyStateContract(): void {
   const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🫙️empty-state/🔣️.json", import.meta.url), "utf8"));
-  const fixture: EmptyStateFixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🚫️empty-state/🔣️.json", import.meta.url), "utf8"));
+  const fixture: EmptyStateFixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🚫️empty-state/🔣️.json", import.meta.url), "utf8"));
   const ajv = new Ajv({ strict: true });
   for (const lane of ["json", "text", "pack"] as const) {
     const validate = ajv.compile(schema.$defs[lane === "json" ? "EmptyStateRecordV1" : lane === "text" ? "EmptyStateTextV1" : "EmptyStatePackV1"]);

@@ -42,10 +42,11 @@
       ],
       "properties": {
         "kind": {
-          "const": "exact-owner-current-source-revision-v1"
+          "const": "exact-owner-current-source-approval-v1"
         },
         "revisionId": {
-          "const": "testing-readme-protocol-v2-reviewed"
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
         },
         "revisionDigest": {
           "type": "string",
@@ -69,7 +70,7 @@
                 "enum": [
                   "schema",
                   "catalog",
-                  "expectation"
+                  "approval"
                 ]
               },
               "path": {
@@ -116,7 +117,7 @@
                 ],
                 "properties": {
                   "role": {
-                    "const": "expectation"
+                    "const": "approval"
                   }
                 }
               }

@@ -2,18 +2,18 @@ type TestSource = { readonly url: string };
 
 /** 🚚️ The React half of the world-3d paged scene carrier's laws, read from the SAME language-neutral
  * declaration the Rust producer is pinned against
- * (`🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json`). */
+ * (`🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json`). */
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
   const { nodeGraphSurfaceLaneTexts, nodeGraphSceneFromLanes, UiDocumentStore, surfaceSceneLaneCache, utf8ByteLength, world3dSurfaceLaneTexts, canvas2dSurfaceLaneTexts, board2dSurfaceLaneTexts, paint2dSurfaceLaneTexts, world3dSceneFromLanes, canvas2dSceneFromLanes, board2dSceneFromLanes, paint2dSceneFromLanes, WORLD3D_SCENE_LANES, NODE_GRAPH_SCENE_LANES, CANVAS2D_SCENE_LANES, BOARD2D_SCENE_LANES, PAINT2D_SCENE_LANES, WORLD3D_SCENE_LANE_KEY_PREFIX, world3dSceneLaneForBodyKey, surfaceKindSceneLanes } = dependencies;
   const { describe, expect, it } = vitest;
   void source;
 
-  const { default: contract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json");
-  const { default: canvas2dContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json");
-  const { default: board2dContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json");
-  const { default: paint2dContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json");
-  const { default: tableContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️table-lanes/🔣️.json");
-  const { default: textEditorContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️text-editor-lanes/🔣️.json");
+  const { default: contract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json");
+  const { default: canvas2dContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json");
+  const { default: board2dContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json");
+  const { default: paint2dContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json");
+  const { default: tableContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️table-lanes/🔣️.json");
+  const { default: textEditorContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️text-editor-lanes/🔣️.json");
 
   type AnyRecord = Record<string, any>;
 
@@ -359,7 +359,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   describe("node graph retained carriers", () => {
     it("restores oversized typed nodes and a Unicode host snapshot before host projection", async () => {
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️node-graph-scene-lanes/🔣️.json");
+      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️node-graph-scene-lanes/🔣️.json");
       const nodes = Array.from({ length: fixture.nodeCount }, (_, index) => ({ ...fixture.node, id: String(index) }));
       const snapshot = JSON.stringify({ label: fixture.hostSnapshotLabel.repeat(fixture.repeatCount) });
       const laneTexts = { "framework.scene.nodeGraph.nodes": JSON.stringify(nodes), "framework.scene.nodeGraph.hostSnapshot": snapshot };

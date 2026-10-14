@@ -9,7 +9,7 @@ import {runBudgetedTestCommand} from "../../../🧪️testing/🎛️execution/�
 import {testLevelBudgetMs} from "../../../🧪️testing/🎚️budget/🟦️.ts";
 type Case=Readonly<{id:string;field:"cwd"|"cacheRoot"|"leaseDirectory";kind:"normal"|"nul-prefix"|"nul-suffix"|"relative";valid:boolean}>;
 test("Explicit process paths refuse NUL before filesystem access and retain owner binding",async()=>{
- const corpus = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🚫️paths/🔣️.json", import.meta.url), "utf8")) as {
+ const corpus = JSON.parse(readFileSync(new URL("../🧫️fixtures/🚫️paths/🔣️.json", import.meta.url), "utf8")) as {
     version: 1;
     cases: Case[];
 };

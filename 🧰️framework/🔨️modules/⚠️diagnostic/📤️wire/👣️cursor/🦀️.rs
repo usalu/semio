@@ -15,7 +15,7 @@ pub struct FaultWireCursor{binding:Option<Binding>,phase:u8,index:usize,part:u8,
 impl FaultWireCursor{
  pub fn new()->Self{Self{binding:None,phase:0,index:0,part:0,token:Default::default(),written:0,drained:0}}
  pub fn written(&self)->usize{self.written}
- pub fn is_complete(&self)->bool{self.phase==25}
+ pub fn is_complete(&self)->bool{self.phase==28}
  pub fn terminal_is_empty(&self)->bool{self.binding.is_none()}
  fn refused()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"canonical Fault wire requires its same original source and target extent")}
  fn original(fault:&Fault,target:&[MaybeUninit<u8>])->Binding{Binding{source:fault as*const Fault as usize,target:target.as_ptr()as usize,extent:target.len()}}
@@ -35,7 +35,9 @@ impl FaultWireCursor{
    17=>{let Some(cause)=fault.causes.get(self.index)else{return Part::Skip};match self.part{0=>Part::Raw(if self.index==0{b"{\"message\":"}else{b",{\"message\":"}),1=>Part::Text(&cause.message),2=>if cause.code.is_some(){Part::Raw(b",\"code\":")}else{Part::Skip},3=>cause.code.as_ref().map_or(Part::Skip,|code|Part::Text(&code.0)),_=>Part::Raw(b"}")}},
    18=>if fault.causes.is_empty(){Part::Skip}else{Part::Raw(b"]")},19=>if Self::params(fault).is_some(){Part::Raw(b",\"params\":{")}else{Part::Skip},
    20=>{let Some((name,value))=Self::params(fault).and_then(|params|params.get(self.index))else{return Part::Skip};match self.part{0=>Part::Raw(if self.index==0{b""}else{b","}),1=>Part::Text(name),2=>Part::Raw(b":"),_=>Part::Text(value)}},
-   21=>if Self::params(fault).is_some(){Part::Raw(b"}")}else{Part::Skip},22=>Part::Raw(b",\"retryable\":"),23=>Part::Raw(if fault.retryable{b"true"}else{b"false"}),24=>Part::Raw(b"}"),_=>Part::Skip
+   21=>if Self::params(fault).is_some(){Part::Raw(b"}")}else{Part::Skip},22=>Part::Raw(b",\"retryable\":"),23=>Part::Raw(if fault.retryable{b"true"}else{b"false"}),24=>if fault.source.is_some(){Part::Raw(b",\"source\":{")}else{Part::Skip},
+   25=>{let Some(source)=fault.source else{return Part::Skip};let values=[(b"\"offset\":" as &[u8],source.offset),(b"\"byte\":" as &[u8],source.byte.map(u64::from)),(b"\"depth\":" as &[u8],source.depth)];let Some((key,Some(value)))=values.get(self.index)else{return Part::Skip};match self.part{0=>Part::Raw(if values[..self.index].iter().any(|(_,value)|value.is_some()){b","}else{b""}),1=>Part::Raw(key),_=>Part::Number(*value)}},
+   26=>if fault.source.is_some(){Part::Raw(b"}")}else{Part::Skip},27=>Part::Raw(b"}"),_=>Part::Skip
   }
  }
  fn escape(byte:u8,index:usize)->(u8,usize){
@@ -60,6 +62,7 @@ impl FaultWireCursor{
    14 if fault.span.is_some()&&self.index<6=>self.index+=1,
    17 if self.index<fault.causes.len()=>{if self.part==4{self.index+=1;self.part=0}else{self.part+=1}},
    20 if Self::params(fault).is_some_and(|params|self.index<params.len())=>{if self.part==3{self.index+=1;self.part=0}else{self.part+=1}},
+   25 if self.index<3=>{let values=fault.source.map(|source|[source.offset,source.byte.map(u64::from),source.depth]).unwrap_or([None;3]);if values[self.index].is_none()||self.part==2{self.index+=1;self.part=0}else{self.part+=1}},
    _=>{self.phase+=1;self.index=0;self.part=0}
   }self.token=Default::default();
  }

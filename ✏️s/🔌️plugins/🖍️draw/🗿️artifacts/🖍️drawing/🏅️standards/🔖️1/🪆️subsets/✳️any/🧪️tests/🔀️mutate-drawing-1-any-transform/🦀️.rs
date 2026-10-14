@@ -35,19 +35,19 @@ const UNOBSERVABLE: &[&str] = &[];
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
     match kind {
         "set-layer-boolean-operation" => (
-            include_str!("../../../🔀️transform/🧫️fixtures/🧬️mutations/🔀set-layer-boolean/➖️union/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🔀️transform/🧫️fixtures/🧬️mutations/🔀set-layer-boolean/➖️union/🦠️mutation/🔣️.json"),
-            include_str!("../../../🔀️transform/🧫️fixtures/🧬️mutations/🔀set-layer-boolean/➖️union/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/🔀set-layer-boolean/➖️union/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/🔀set-layer-boolean/➖️union/🦠️mutation/🔣️.json"),
+            include_str!("../../../🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/🔀set-layer-boolean/➖️union/📸️snapshot/➡️after/🔣️.json"),
         ),
         "update-layer-trace-params" => (
-            include_str!("../../../🔀️transform/🧫️fixtures/🧬️mutations/🔍️update-layer/🔍️sharpens/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🔀️transform/🧫️fixtures/🧬️mutations/🔍️update-layer/🔍️sharpens/🦠️mutation/🔣️.json"),
-            include_str!("../../../🔀️transform/🧫️fixtures/🧬️mutations/🔍️update-layer/🔍️sharpens/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/🔍️update-layer/🔍️sharpens/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/🔍️update-layer/🔍️sharpens/🦠️mutation/🔣️.json"),
+            include_str!("../../../🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/🔍️update-layer/🔍️sharpens/📸️snapshot/➡️after/🔣️.json"),
         ),
         "update-layer-transform" => (
-            include_str!("../../../🔀️transform/🧫️fixtures/🧬️mutations/🔄️update-layer/📐️translates/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🔀️transform/🧫️fixtures/🧬️mutations/🔄️update-layer/📐️translates/🦠️mutation/🔣️.json"),
-            include_str!("../../../🔀️transform/🧫️fixtures/🧬️mutations/🔄️update-layer/📐️translates/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/🔄️update-layer/📐️translates/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/🔄️update-layer/📐️translates/🦠️mutation/🔣️.json"),
+            include_str!("../../../🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/🔄️update-layer/📐️translates/📸️snapshot/➡️after/🔣️.json"),
         ),
         other => panic!("mutate-drawing-1-transform: {other:?} is not a declared kind of this subset"),
     }

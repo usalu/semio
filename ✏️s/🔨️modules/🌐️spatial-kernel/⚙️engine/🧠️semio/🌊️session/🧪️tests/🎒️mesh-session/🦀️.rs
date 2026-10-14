@@ -4,7 +4,7 @@ use semio_s_spatial_kernel_semio_session::{Session, TessellationStepOutcome};
 
 #[test]
 fn original_session_cold_validation_remains_inside_each_granted_turn() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧊️validation/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧊️validation/🔣️.json")).unwrap();
     let session = Session::new();
     let created: serde_json::Value = serde_json::from_str(&session.brep_invoke_json("box", &fixture["box"].to_string())).unwrap();
     let handle = created["handle"].as_str().unwrap();
@@ -97,7 +97,7 @@ fn a_real_tessellated_sphere_halves_the_wire_at_every_lod() {
 #[test]
 fn a_finer_cached_mesh_answers_a_coarser_lod_request() {
     let session = Session::new();
-    let fixture:serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
+    let fixture:serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
     let created:serde_json::Value = serde_json::from_str(&session.brep_invoke_json("box", &fixture["box"].to_string())).unwrap();
     let handle = created["handle"].as_str().unwrap();
     let mesh = session.tessellate_geometry(handle,0.02).unwrap();

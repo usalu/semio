@@ -4,7 +4,7 @@ import {test,expect} from "bun:test";
 import Ajv from "ajv/dist/2020.js";
 import draft7 from "ajv/dist/refs/json-schema-draft-07.json" with {type:"json"};
 import sharp from "sharp";
-import rows from "../../🧫️fixtures/🔣️.json";
+import rows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🔍️trace/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import prepSchema from "../../../📋️prepare/🧬️schema/🔣️.json";
 import rasterSchema from "../../../📷️raster/🧬️schema/🔣️.json";
@@ -75,7 +75,7 @@ test("complete document work admission bounds every stage and permits the exact 
 });
 
 /** 🧹️ Transfer private trace owners without sharing mutable completed scene metadata. */
-import retirementRows from "../../🧫️fixtures/🧹️retirement/🔣️.json";
+import retirementRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🔍️trace/🧹️retirement/🔣️.json";
 import {ScenePlanCloseJob} from "../../../🧹️retire/🟦️.ts";
 const retirementValid=ajv.compile({$ref:schema.$id+"#/definitions/retirementProgress"});
 test("document trace retirement composes active kernels and independently owned scene plans",()=>{

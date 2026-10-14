@@ -8,7 +8,7 @@ use std::io::{Cursor, Read};
 
 fn fixture_cases() -> Vec<semio_framework_pack_json::Value> {
     let fixture: semio_framework_pack_json::Value =
-        semio_framework_pack_json::parse(include_str!("../../../../🧫️fixtures/🧬️canonical-addressed-edit/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("canonical addressed-edit fixture");
+        semio_framework_pack_json::parse(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️canonical-addressed-edit/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("canonical addressed-edit fixture");
     fixture["cases"].as_array().expect("fixture cases").clone()
 }
 

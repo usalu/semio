@@ -39,7 +39,7 @@ import {
   type SortingAnswer,
 } from "@semio-tech/quiz";
 import { ClassificationTaskView, MatchingTaskView, ResultsScreen, RunScreen, SortingTaskView, TaskView, classificationHintText, clockStage, formatCountdown, formatDuration, formatQuantity, formatScore, hintTerm, initialQuizState, quizText, type OthersChoice, type QuizLocale, type QuizSession, type QuizText } from "@semio-tech/quiz-react";
-import sheets from "../../🧫️fixtures/🃏️sheet-assembly/🔣️.json";
+import sheets from "../🧫️fixtures/🃏️sheet-assembly/🔣️.json";
 
 const text = (en: string, de: string) => ({ en, de });
 const en = quizText("en");

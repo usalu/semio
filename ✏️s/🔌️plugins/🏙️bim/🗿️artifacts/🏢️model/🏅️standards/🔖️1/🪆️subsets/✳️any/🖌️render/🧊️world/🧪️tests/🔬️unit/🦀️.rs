@@ -159,7 +159,7 @@ fn case_projection(name: &str) -> serde_json::Value {
 
 #[test]
 fn the_committed_fixture_is_the_scene_vector_the_three_oracle_measures() {
-    let fixture = json(include_str!("../../🧫️fixtures/🔣️.json"));
+    let fixture = json(include_str!("../🧫️fixtures/🔣️.json"));
     let committed = fixture["cases"].as_array().expect("cases");
     assert_eq!(committed.len(), CASES.len(), "run the bless test (BIM_BLESS=1) after changing the scene");
     for (row, name) in committed.iter().zip(CASES) {

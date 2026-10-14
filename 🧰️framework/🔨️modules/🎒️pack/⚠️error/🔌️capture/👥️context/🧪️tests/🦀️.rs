@@ -67,7 +67,7 @@ impl Drop for DropSentinel{fn drop(&mut self){self.drops.fetch_add(1,Ordering::S
 
 #[test]
 fn original_lifecycle_panics_drop_owned_context_and_source_once(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧭️cause/🔌️capture/👥️context/💥️lifecycle/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧭️cause/🔌️capture/👥️context/💥️lifecycle/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let phase=match row["phase"].as_str().unwrap(){"contextAfter"=>PackTransportPhase::ContextAfter,"contextReady"=>PackTransportPhase::ContextReady,"published"=>PackTransportPhase::SourcePublished,"closed"=>PackTransportPhase::ContextClosed,_=>panic!("unknown closed lifecycle phase")};
   let drops=Arc::new(AtomicUsize::new(0));let source_drops=Arc::new(AtomicUsize::new(0));let armed=Arc::new(std::sync::atomic::AtomicBool::new(true));
@@ -185,7 +185,7 @@ impl PackTransportPolicy for RefusingPolicy{
 
 #[test]
 fn all_original_typed_policy_kinds_and_message_allocations_survive_context_refusal(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧭️cause/🔌️capture/👥️context/🎛️policy/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧭️cause/🔌️capture/👥️context/🎛️policy/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let kind=match row["kind"].as_str().unwrap(){"invalidValue"=>ValueRefusalKind::InvalidValue,"canceled"=>ValueRefusalKind::Canceled,"ownershipLimit"=>ValueRefusalKind::OwnershipLimit,"allocationFailed"=>ValueRefusalKind::AllocationFailed,"workLimit"=>ValueRefusalKind::WorkLimit,"depthLimit"=>ValueRefusalKind::DepthLimit,"unsupportedOwner"=>ValueRefusalKind::UnsupportedOwner,"invariantViolated"=>ValueRefusalKind::InvariantViolated,_=>panic!("unknown closed policy kind")};
   let phase=match row["phase"].as_str().unwrap(){"contextBefore"=>PackTransportPhase::ContextBefore,"contextAfter"=>PackTransportPhase::ContextAfter,"before"=>PackTransportPhase::BeforeReserve,"after"=>PackTransportPhase::AfterReserve,_=>panic!("unknown closed policy phase")};

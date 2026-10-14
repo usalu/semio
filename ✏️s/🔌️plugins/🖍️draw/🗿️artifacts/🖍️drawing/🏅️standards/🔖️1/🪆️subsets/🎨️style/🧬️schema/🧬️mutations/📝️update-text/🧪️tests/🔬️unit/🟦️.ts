@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { applyPatch } from "fast-json-patch";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import { applyTextEdit, textEditPatch } from "../../🦠️mutation/🟦️.ts";
 
@@ -38,9 +38,9 @@ describe("semantic text editing", () => {
 
 });
 
-import before from "../../../../../🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/📸️snapshot/⬅️before/🔣️.json";
-import after from "../../../../../🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/📸️snapshot/➡️after/🔣️.json";
-import mutation from "../../../../../🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/🦠️mutation/🔣️.json";
+import before from "../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/📸️snapshot/⬅️before/🔣️.json";
+import after from "../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/📸️snapshot/➡️after/🔣️.json";
+import mutation from "../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/🦠️mutation/🔣️.json";
 it("matches the canonical caption fixture and independent JSON Patch result", () => {
   expect(applyTextEdit(before, mutation)).toEqual(after);
   expect(applyPatch(structuredClone(before), [

@@ -65,7 +65,7 @@ fn close_cursor(cursor: &mut <RetainedOpcPackage as RetainedClone>::Cursor, gran
 
 #[test]
 fn retained_opc_copy_and_materialization_preserve_package_authority() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("retained OPC fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("retained OPC fixture");
     let expected = package(&fixture);
     let retained = RetainedOpcPackage::try_from_package(expected.clone()).expect("retained OPC owner");
     let mut progress = Vec::new();

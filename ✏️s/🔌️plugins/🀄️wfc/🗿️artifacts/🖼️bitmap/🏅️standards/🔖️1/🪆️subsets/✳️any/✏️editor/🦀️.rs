@@ -417,7 +417,8 @@ impl ArtifactCommandWork<EditorApp<BitmapEditor>> for BitmapCommandWork {
         BITMAP_TOOL_IDS.contains(&bitmap_command_id(command)).then_some(1)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BitmapEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<BitmapEditor>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BitmapEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<BitmapEditor>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("wfc-bitmap-retained-work-repeated"));
         }
@@ -460,6 +461,9 @@ impl ArtifactCommandWork<EditorApp<BitmapEditor>> for BitmapCommandWork {
             }),
             _ => Ok(ArtifactCommandWorkStep::Complete(emit)),
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -837,6 +841,7 @@ impl ArtifactEditor for BitmapEditor {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

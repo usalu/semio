@@ -1,7 +1,7 @@
 use super::*;
 use semio_framework_os_flow::neural::ColdRetire;
 use semio_framework_tool_run::ToolRunId;
-const PREVIEW_EVAL_RUN_FIXTURE_JSON: &str = include_str!("../../../🧫️fixtures/⏯️preview-eval-run.json");
+const PREVIEW_EVAL_RUN_FIXTURE_JSON: &str = include_str!("../../../🧪️tests/🧫️fixtures/⏯️preview-eval-run.json");
 fn fixture() -> serde_json::Value {
     let fixture: serde_json::Value = serde_json::from_str(PREVIEW_EVAL_RUN_FIXTURE_JSON).expect("the preview evaluation run fixture parses");
     assert_eq!(fixture["format"], "semio.generation3d.preview-eval-run");
@@ -308,7 +308,7 @@ fn every_job_supersession_row_lets_only_the_owning_job_quiesce_the_session() {
 
 #[test]
 fn geometry_inference_dependencies_include_sources_and_wiring_without_presentation() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📐️geometry-dependencies.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📐️geometry-dependencies.json")).unwrap();
     let mut snapshot = semio_framework_artifact_flow_flow::FlowHostSnapshot::default();
     let original = geometry_dependency_json(&snapshot, fixture["neuronId"].as_str().unwrap());
     assert_eq!(serde_json::from_str::<serde_json::Value>(&original).unwrap(), fixture["expected"]);
@@ -323,7 +323,7 @@ fn geometry_inference_dependencies_include_sources_and_wiring_without_presentati
 
 #[test]
 fn bounded_cancel_replies_poll_the_same_capability_without_rearming_evaluation() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🛑️preview-cancel.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🛑️preview-cancel.json")).unwrap();
     let mut session = FlowEvalSession::new();
     for row in fixture["boundedCancelReplies"].as_array().unwrap() {
         let payload = FlowTessellateCancelResolve { window_id: "preview".into(), window_kind_id: "world3d".into(), output_json: row["reply"].to_string(), ok: row["ok"].as_bool().unwrap() };
@@ -332,4 +332,15 @@ fn bounded_cancel_replies_poll_the_same_capability_without_rearming_evaluation()
         for invocation in invocations { assert_eq!(invocation.capability, "evaluateCancel"); assert_eq!(invocation.response_action, "flowTessellateCancelResolve"); let request: serde_json::Value = serde_json::from_str(&invocation.request_json).unwrap(); assert_eq!(request["windowId"], "preview"); }
     }
     session.retire_cold();
+}
+
+#[test]
+fn inspector_evaluation_wire_uses_actual_neuron_identity_and_context_authority(){
+ let law=fixture();let row=&law["evaluationWire"];for resume in [false,true]{let pending=semio_framework_artifact_flow_flow::neural::PendingExtensionEval{neuron_id:text(&row["neuronId"]).into(),extension_id:text(&row["extensionId"]).into(),operator_id:text(&row["operatorId"]).into(),input_json:text(&row["inputJson"]).into(),node_hash:row["nodeHash"].as_u64().unwrap()};let invocation=evaluate_invocation(pending,resume,text(&row["dependencyJson"]).into(),text(&row["windowId"]),text(&row["windowKindId"]));let actual:serde_json::Value=serde_json::from_str(&invocation.request_json).unwrap();let expected=serde_json::json!({"neuronId":row["neuronId"],"operatorId":row["operatorId"],"inputJson":if resume{""}else{text(&row["inputJson"])},"dependencyJson":row["dependencyJson"],"operatorVersion":format!("registry:{};geometry:1;policy:1",semio_framework_os_flow::flow_extension_registry_generation()),"nodeHash":row["nodeHash"],"resume":resume,"windowId":row["windowId"],"windowKindId":row["windowKindId"],"extensionId":row["extensionId"]});assert_eq!(actual,expected);assert_eq!(actual.as_object().unwrap().len(),row["requiredKeys"].as_array().unwrap().len());for field in row["authorityFieldsAbsent"].as_array().unwrap(){assert!(actual.get(field.as_str().unwrap()).is_none());}assert_eq!(invocation.extension_id,row["extensionId"]);assert_eq!(invocation.capability,"evaluate");assert_eq!(invocation.response_action,"flowEvalResolve");invocation.retire_cold();}println!("[DEBUG] Original evaluation issuer preserves real neuron/input/address with independent Serde and no reusable retained/budget/wall authority; caller-context execution remains separate qualification");
+}
+
+#[test]
+fn inspector_close_original_context_reports_one_debit_and_whole_paired_failure(){
+ use semio_framework_job::{OperationId,Generation,StepBudget,StepContextOwner,root_cancel_token};use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
+ let law=fixture();let row=&law["originalCloseReceipt"];let(mut owner,_)=StepContextOwner::new(OperationId(row["operation"].as_u64().unwrap()),Generation(row["generation"].as_u64().unwrap()),RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:StepContextOwner::birth_bytes(),maximum_depth:1,..Default::default()}).unwrap();let mut sequence=0;for failed in [false,true]{let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:row["copy"].as_u64().unwrap()as usize,maximum_depth:1,..Default::default()};let progress=RetainedCloneProgress{copied_items:row["progressItems"].as_u64().unwrap()as usize,copied_bytes:row[if failed{"overdrawCopy"}else{"copy"}].as_u64().unwrap()as usize,..Default::default()};let mut physical=Default::default();let mut cx=owner.context(StepBudget::new(row["fuel"].as_u64().unwrap(),u64::MAX,grant),root_cancel_token(),||Some(1),&mut sequence,&mut physical).unwrap();let step=if failed{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original preview close semantic cause").with_retained_progress(progress))}else{Ok(semio_framework_value::RetainedCloneStep::Progress(progress))};let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::close_original_retained_step(&mut cx,semio_framework_value::RetirementDemand{copy_bytes:grant.maximum_copy_bytes,depth:grant.maximum_depth,..Default::default()},|_|step));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),progress);assert_eq!(cx.fuel_remaining(),row["fuel"].as_u64().unwrap()-row["spent"].as_u64().unwrap());if failed{let failure=result.unwrap_err();assert_eq!(failure.primary.kind,ValueRefusalKind::InvariantViolated);assert!(failure.receipt_refusal.is_some());assert_eq!(failure.primary.retained_progress(),progress);failure.retire_cold();}else{assert_eq!(result.unwrap().progress(),progress);}drop(cx);}assert!(matches!(owner.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:StepContextOwner::birth_bytes(),maximum_depth:1,..Default::default()}),InteractiveJobCloseStep::Complete{..}));assert!(owner.terminal_is_empty());drop(owner);println!("[DEBUG] Actual preview close boundary records retained/CPU exactly once and preserves complete semantic+receipt causes under original context; no native/browser pass inferred before execution");
 }

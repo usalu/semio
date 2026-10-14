@@ -20,6 +20,7 @@ default = []
 component-app-assembly = ["dep:semio-framework", "dep:semio-framework-artifact-space-space", "dep:semio-framework-os", "dep:semio-framework-os-kernel", "dep:semio-framework-plugin"]
 
 [dependencies]
+semio-framework-pack = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }

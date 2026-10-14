@@ -64,7 +64,8 @@ use std::future::Future;
 /// the `io` mount), so it is named through the `store::io::` path everywhere in this file,
 /// exactly like the sibling `🎞️gif` migration leaf (`semio_framework_artifact_reference::ArtifactDialect`) already does.
 use semio_framework_artifact_reference::ArtifactRef;
-use store::{build_history_columns, create_config_envelope, os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, os_store::store_schema::ArtifactEnvelope, os_store::serialization::ArtifactPack, ArtifactStore, os_store::composition_coordinator::ChildDispatch, os_store::composition_coordinator::CompositionCoordinator, ConfigStore, os_store::composition_coordinator::GroupMeta, os_store::store_schema::HistoryLane, MemberFactory, Mutation, NoMembers, SpaceMember};
+use pack::snapshot::ArtifactPack;
+use store::{build_history_columns, create_config_envelope, os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, os_store::store_schema::ArtifactEnvelope, ArtifactStore, os_store::composition_coordinator::ChildDispatch, os_store::composition_coordinator::CompositionCoordinator, ConfigStore, os_store::composition_coordinator::GroupMeta, os_store::store_schema::HistoryLane, MemberFactory, Mutation, NoMembers, SpaceMember};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_ui_locale::Terminology;
 use ui_wgpu::wgpu::ContextMenuItemSpec;
@@ -369,8 +370,8 @@ use crate::window_surface::ui_assembly_error;
 use crate::reactor::jobs::reserved::drive_framework_reserved_registry_job_counted;
 
 pub struct VcsArtifactApp<A: ArtifactApp, M: SpaceMember + MemberFactory = NoMembers> {
-    app: A,
-    mounted_policy: crate::MountedOwnerPolicyV1,
+    pub(crate) app: A,
+    pub(crate) mounted_policy: crate::MountedOwnerPolicyV1,
     constructor_receipts: std::mem::MaybeUninit<[Option<(ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase, RetainedCloneGrant, RetainedCloneProgress)>; 24]>,
     constructor_recipient_admitted: bool,
     constructor_recipient_retired: bool,
@@ -380,50 +381,50 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: SpaceMember + MemberFactory = NoMem
     constructor_draft: OriginalCatalogConstructor<A::Draft, A::DraftMutation>,
     constructor_interaction: OriginalCatalogConstructor<protocol::InteractionState, InteractionConfigMutation>,
     constructor_lane: usize,
-    store: ArtifactStore<A::Snapshot, A::Mutation>,
-    config_store: ConfigStore<A::Config, A::ConfigMutation>,
+    pub(crate) store: ArtifactStore<A::Snapshot, A::Mutation>,
+    pub(crate) config_store: ConfigStore<A::Config, A::ConfigMutation>,
     /// 📝️ Volatile draft lane — never checkpoints; prune via `ArtifactCommand::PruneDrafts`.
     /// Moves to host `ArtifactSession` when CHANNEL_VERSION 5 exchange lands.
-    draft_store: store::DraftStore<A::Draft, A::DraftMutation>,
+    pub(crate) draft_store: store::DraftStore<A::Draft, A::DraftMutation>,
     /// 👥️ Ephemeral SHARED lane — a last-writer-wins peer roster, not an event log. Holds
     /// this actor's own presence plus whatever peers last broadcast; never persisted, never
     /// checkpointed, never undoable.
-    presence_store: store::PresenceStore<A::Presence, A::PresenceMutation>,
+    pub(crate) presence_store: store::PresenceStore<A::Presence, A::PresenceMutation>,
     /// 🎨️ This actor's hub-assigned palette index, adopted from the last
     /// `AppCommand::Presence` (contract-freeze §C7.6) — `None` for a folder-only session with no
     /// hub, or before the first presence push.
-    own_color: Option<u8>,
+    pub(crate) own_color: Option<u8>,
     /// 👥️ Every OTHER peer's last-adopted color/surface/interaction, keyed by actor —
     /// the ARTIFACT+APP-scope roster `InteractionView::peers_selecting`/`peers_hovering` and the
     /// UI-tree stamping pass read from; upserted/pruned atomically with `presence_store`'s own
     /// peer map by `adopt_presence`.
-    peer_presence: ManuallyDrop<std::sync::Arc<PeerPresenceRoot>>,
+    pub(crate) peer_presence: ManuallyDrop<std::sync::Arc<PeerPresenceRoot>>,
     peer_presence_generation: u64,
     peer_roster_admission_generation: u64,
-    peer_roster_processed_generation: u64,
+    pub(crate) peer_roster_processed_generation: u64,
     peer_roster_outcome_generation: u64,
     peer_roster_reservations: [Option<(u64, u64)>; ARTIFACT_LIVE_OUTPUT_SLOTS],
     peer_roster_scope: semio_framework_job::CancelToken,
-    peer_roster_publications: ArtifactFixedRegistry<PeerRosterPublication<A>>,
+    pub(crate) peer_roster_publications: ArtifactFixedRegistry<PeerRosterPublication<A>>,
     peer_roster_outcomes: ArtifactFixedRegistry<PresenceRosterOutcome>,
-    peer_presence_retirements: ArtifactFixedRegistry<PeerPresenceRootRetirement>,
-    presence_peer_retirements: ArtifactFixedRegistry<store::os_store::presence::PresencePeersRetirement<A::Presence>>,
+    pub(crate) peer_presence_retirements: ArtifactFixedRegistry<PeerPresenceRootRetirement>,
+    pub(crate) presence_peer_retirements: ArtifactFixedRegistry<store::os_store::presence::PresencePeersRetirement<A::Presence>>,
     /// 🫧️ Ephemeral LOCAL-ONLY lane — typed UI state that never leaves this client and
     /// never becomes document content. The typed home for what used to live in plugin
     /// `thread_local!`s.
-    transient_store: store::TransientStore<A::Transient, A::TransientMutation>,
-    window_config_store: WindowConfigOwnerRegistry,
-    window_transient_store: WindowTransientOwnerRegistry,
+    pub(crate) transient_store: store::TransientStore<A::Transient, A::TransientMutation>,
+    pub(crate) window_config_store: WindowConfigOwnerRegistry,
+    pub(crate) window_transient_store: WindowTransientOwnerRegistry,
     retired_window_transient_stores: ArtifactFixedRegistry<WindowTransientOwnerRegistry>,
     maintenance_window_retirement_cursor: usize,
     close_window_retirement_cursor: usize,
-    artifact_one_item_factory: Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>>>,
-    config_one_item_factory: Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<A::Config, A::ConfigMutation>>>,
-    draft_one_item_factory: Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<A::Draft, A::DraftMutation>>>,
-    presence_one_item_factory: Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<A::Presence, A::PresenceMutation>>>,
-    transient_one_item_factory: Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<A::Transient, A::TransientMutation>>>,
-    presence_local_root_retirement_factory: Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<A::Presence>>>,
-    transient_local_root_retirement_factory: Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<A::Transient>>>,
+    pub(crate) artifact_one_item_factory: Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>>>,
+    pub(crate) config_one_item_factory: Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<A::Config, A::ConfigMutation>>>,
+    pub(crate) draft_one_item_factory: Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<A::Draft, A::DraftMutation>>>,
+    pub(crate) presence_one_item_factory: Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<A::Presence, A::PresenceMutation>>>,
+    pub(crate) transient_one_item_factory: Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<A::Transient, A::TransientMutation>>>,
+    pub(crate) presence_local_root_retirement_factory: Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<A::Presence>>>,
+    pub(crate) transient_local_root_retirement_factory: Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<A::Transient>>>,
     unsupported_publication_contracts: BTreeMap<String, &'static str>,
     /// 🧾 Last Emit op packs produced by `dispatch_emit` — consumed by `AppCommand::PureCommand`.
     last_emit_wire: Option<EmitWire>,
@@ -451,31 +452,31 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: SpaceMember + MemberFactory = NoMem
     typed_inline_interaction_leftover: Option<TypedOperationLeftover>,
     typed_completion_outbox: ArtifactFixedQueue<TypedOperationCompletionWitness>,
     /// 🧩️ See [`ComposedGestureResult`] — one entry per composed gesture this actor published.
-    typed_composed_outbox: ArtifactFixedQueue<ComposedGestureResult>,
+    pub(crate) typed_composed_outbox: ArtifactFixedQueue<ComposedGestureResult>,
     /// 📨️ The authoritative outcome of the current app command, reset before dispatch and then
     /// filled from the store receipt or policy rejection before the runtime frames it.
     dispatch_report: protocol::DispatchReport,
     /// 🗂️ Keyed on `(store.generation(), log_generation, history_filter)` — any of the three
     /// changing invalidates the cached snapshot/`HistoryView` pair.
-    cache: Option<AppProjectionCache<A>>,
-    registry: AppActionRegistry,
+    pub(crate) cache: Option<AppProjectionCache<A>>,
+    pub(crate) registry: AppActionRegistry,
     tool_job_controller_id: String,
     tool_jobs: semio_framework::ActionBus,
     bounded_tool_proofs: BTreeMap<String, QualifiedBoundedFirstStepProof>,
     bounded_tool_contracts: Vec<ArtifactToolPublicContract>,
     framework_tool_registrations: BTreeMap<String, ArtifactToolRegistration>,
     app_tool_registrations: BTreeMap<String, ArtifactToolRegistration>,
-    instance_operation_owner: ArtifactInstanceOperationOwnerHandle,
-    tool_cancellations: ToolCancellationHandle,
+    pub(crate) instance_operation_owner: ArtifactInstanceOperationOwnerHandle,
+    pub(crate) tool_cancellations: ToolCancellationHandle,
     live_runtime_instance_id: Option<u32>,
-    tool_operations: ArtifactFixedRegistry<MountedTypedCommandFullOperation<A>>,
+    pub(crate) tool_operations: ArtifactFixedRegistry<MountedTypedCommandFullOperation<A>>,
     #[cfg(test)]
-    test_tool_clock: Option<fn() -> Option<u64>>,
-    typed_operation_reservations: [Option<u64>; ARTIFACT_LIVE_OUTPUT_SLOTS],
+    pub(crate) test_tool_clock: Option<fn() -> Option<u64>>,
+    pub(crate) typed_operation_reservations: [Option<u64>; ARTIFACT_LIVE_OUTPUT_SLOTS],
     typed_publication_cursor: usize,
     typed_result_cursor: usize,
-    latest_wins_commands: ArtifactFixedRegistry<PendingLatestWinsCommand<A>>,
-    latest_wins_order: ArtifactFixedQueue<u64>,
+    pub(crate) latest_wins_commands: ArtifactFixedRegistry<PendingLatestWinsCommand<A>>,
+    pub(crate) latest_wins_order: ArtifactFixedQueue<u64>,
     latest_wins_keys: ToolLatestWinsRegistry,
     latest_wins_turn: bool,
     media_exports: ArtifactFixedRegistry<ActiveMediaExport>,
@@ -485,13 +486,13 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: SpaceMember + MemberFactory = NoMem
     media_closures: ArtifactFixedRegistry<ActiveMediaExport>,
     snapshot_retirements: ArtifactFixedRegistry<ArtifactSnapshotCloseRetention>,
     current_media_export: Option<u64>,
-    segmented_downloads: ArtifactFixedRegistry<ArtifactDownloadOutput>,
-    segmented_closures: ArtifactFixedRegistry<ArtifactDownloadOutput>,
-    close_started: bool,
-    close_cancellation_cursor: usize,
+    pub(crate) segmented_downloads: ArtifactFixedRegistry<ArtifactDownloadOutput>,
+    pub(crate) segmented_closures: ArtifactFixedRegistry<ArtifactDownloadOutput>,
+    pub(crate) close_started: bool,
+    pub(crate) close_cancellation_cursor: usize,
     close_typed_operation_cursor: usize,
-    close_media_cursor: usize,
-    close_media_cleanup_cursor: usize,
+    pub(crate) close_media_cursor: usize,
+    pub(crate) close_media_cleanup_cursor: usize,
     close_segment_cursor: usize,
     close_segment_cleanup_cursor: usize,
     close_snapshot_cursor: usize,
@@ -504,8 +505,8 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: SpaceMember + MemberFactory = NoMem
     close_peer_presence_detached: bool,
     close_presence_peer_cursor: usize,
     close_peer_roster_cursor: usize,
-    maintenance_stage: u8,
-    maintenance_cancellation_cursor: usize,
+    pub(crate) maintenance_stage: u8,
+    pub(crate) maintenance_cancellation_cursor: usize,
     maintenance_tool_cursor: usize,
     maintenance_media_cursor: usize,
     maintenance_segment_cursor: usize,
@@ -523,30 +524,30 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: SpaceMember + MemberFactory = NoMem
     close_envelope_decode_cursor: usize,
     close_envelope_decode_stage: u8,
     close_envelope_decode_jobs_drained: bool,
-    store_replacement_jobs: ArtifactFixedRegistry<ActiveArtifactStoreReplacement<A::Snapshot, A::Mutation, M>>,
+    pub(crate) store_replacement_jobs: ArtifactFixedRegistry<ActiveArtifactStoreReplacement<A::Snapshot, A::Mutation, M>>,
     maintenance_store_replacement_cursor: usize,
     close_store_replacement_cursor: usize,
     close_store_replacement_jobs_drained: bool,
     /// 📥️ This instance's open file-import runs: every chunked pick is reassembled here, so an app's import
     /// action only ever decodes a whole file (`semio_framework::kernel::ImportStaging`).
     import_staging: semio_framework::kernel::ImportStaging,
-    document_archive_loads: ArtifactFixedRegistry<ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>>,
+    pub(crate) document_archive_loads: ArtifactFixedRegistry<ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>>,
     maintenance_document_archive_cursor: usize,
     close_document_archive_cursor: usize,
     close_document_archive_loads_drained: bool,
-    envelope_field_decoders: std::sync::Arc<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoderRegistry<A::Snapshot, A::Mutation>>,
-    envelope_field_decoder_retirements: ArtifactFixedRegistry<store::os_store::owned_schema_decode::ArtifactEnvelopeReturnedFieldDecoder<A::Snapshot, A::Mutation>>,
+    pub(crate) envelope_field_decoders: std::sync::Arc<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoderRegistry<A::Snapshot, A::Mutation>>,
+    pub(crate) envelope_field_decoder_retirements: ArtifactFixedRegistry<store::os_store::owned_schema_decode::ArtifactEnvelopeReturnedFieldDecoder<A::Snapshot, A::Mutation>>,
     maintenance_envelope_field_decoder_cursor: usize,
     close_envelope_field_decoder_cursor: usize,
     close_envelope_field_decoders_drained: bool,
-    envelope_completed_records: std::sync::Arc<store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordRegistry<A::Snapshot, A::Mutation>>,
-    envelope_completed_record_retirements: ArtifactFixedRegistry<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecord<A::Snapshot, A::Mutation>>>,
+    pub(crate) envelope_completed_records: std::sync::Arc<store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordRegistry<A::Snapshot, A::Mutation>>,
+    pub(crate) envelope_completed_record_retirements: ArtifactFixedRegistry<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecord<A::Snapshot, A::Mutation>>>,
     maintenance_envelope_completed_record_cursor: usize,
     close_envelope_completed_record_cursor: usize,
     close_envelope_completed_records_drained: bool,
     document_snapshot_read_returns: SnapshotReadReturnPump,
     close_snapshot_reads_drained: bool,
-    close_owned_stage: u8,
+    pub(crate) close_owned_stage: u8,
     close_owned_advance_ready: bool,
     close_document_disposer: ManuallyDrop<ArtifactDisposal<ArtifactStore<A::Snapshot, A::Mutation>>>,
     close_config_disposer: ManuallyDrop<ArtifactDisposal<ConfigStore<A::Config, A::ConfigMutation>>>,
@@ -565,19 +566,19 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: SpaceMember + MemberFactory = NoMem
     delivering_host_event: bool,
     /// 🧾️ Append-only session command log — see `🔖️CommandLog`. Never persisted, never
     /// truncated: undo/redo/revert push entries, they never remove any.
-    command_log: PagedCommandLog,
-    command_prune_generation: u64,
+    pub(crate) command_log: PagedCommandLog,
+    pub(crate) command_prune_generation: u64,
     command_prune_processed: u64,
-    pending_command_prune: Option<MountedCommandPrune>,
+    pub(crate) pending_command_prune: Option<MountedCommandPrune>,
     next_command_seq: u64,
     /// 🗂️ Bumped by `push_log_entry`/`record_command` on every log mutation (a push OR a fold)
     /// — part of the cache key so a folded ×count bump alone (no store-generation change) still
     /// invalidates a stale render.
-    log_generation: u64,
+    pub(crate) log_generation: u64,
     /// 🧾️ Sequence ids whose host-projected rows changed since the last invocation response.
-    history_dirty_sequences: HashSet<u64>,
+    pub(crate) history_dirty_sequences: HashSet<u64>,
     /// 🗂️ The history view the next refresh patches (design §20.14); it outlives a dropped projection cache.
-    history_view: Option<HistoryViewCache>,
+    pub(crate) history_view: Option<HistoryViewCache>,
     /// 🧾️ How far the command log is proven to reference every edit ([`HistoryBackfillMark`]).
     history_backfill: Option<HistoryBackfillMark>,
     /// 🐚️ Shell rows (`noteShellCommand`) already undone — they stay in the append-only log.
@@ -591,11 +592,11 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: SpaceMember + MemberFactory = NoMem
     /// entry also carries the dialect captured at open/genesis time (`SpaceMember` itself has no
     /// object-safe dialect getter — see `dispatch_emit_group`'s own doc comment), so a
     /// `store::os_store::composition_coordinator::ChildDispatch`/`store::ArtifactRef` can be rebuilt for it without re-deriving one.
-    children: ChildMemberRegistry<M>,
-    private_child_groups: ArtifactFixedRegistry<Box<MountedPrivateChildGroup<M>>>,
-    child_content_root: ManuallyDrop<ChildContentView>,
-    child_content_generation: u64,
-    child_content_retirements: ArtifactFixedRegistry<ChildContentRetirement>,
+    pub(crate) children: ChildMemberRegistry<M>,
+    pub(crate) private_child_groups: ArtifactFixedRegistry<Box<MountedPrivateChildGroup<M>>>,
+    pub(crate) child_content_root: ManuallyDrop<ChildContentView>,
+    pub(crate) child_content_generation: u64,
+    pub(crate) child_content_retirements: ArtifactFixedRegistry<ChildContentRetirement>,
     child_member_retirements: ArtifactFixedRegistry<ChildMemberRetirement<M>>,
     child_member_retirement_generation: u64,
     child_member_retirement_cursor: usize,
@@ -608,12 +609,12 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: SpaceMember + MemberFactory = NoMem
     /// while the rest of the composition sits at a pinned checkpoint — the alternative (dropping
     /// the pin) would make a checked-out composition quietly inconsistent, which is exactly the
     /// class of bug the cascade exists to prevent.
-    pending_child_pins: Vec<vcs::CompositionPin>,
+    pub(crate) pending_child_pins: Vec<vcs::CompositionPin>,
     /// 🧩️ STATEFUL by design (owns the incrementally-maintained `store::os_store::composition_coordinator::CompositionGraph`) — see
     /// `store::os_store::composition_coordinator::CompositionCoordinator`'s own doc comment. One coordinator per `VcsArtifactApp`
     /// instance (i.e. per document), exactly like `store`/`config_store`/`draft_store` are
     /// per-instance rather than global.
-    composition: CompositionCoordinator,
+    pub(crate) composition: CompositionCoordinator,
     /// 🕹️ The framework-owned, PERSISTED-LOCAL half of the interaction mechanism: one domain's
     /// current selection + active mode/granularity, written ONLY by the six intercepted interaction
     /// verbs (`dispatch_interaction_action`) through `ApplyInLane{lane: HistoryLane::Interaction}` —
@@ -627,7 +628,7 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: SpaceMember + MemberFactory = NoMem
     /// every app's own `Config`/`ConfigMutation` types, since ~17 crates never need to know this
     /// exists — see `InteractionConfigMutation`'s own doc comment for the orphan-rule reason its
     /// `Mutation` impl couldn't target `A::Config` directly either way.
-    interaction_store: ConfigStore<protocol::InteractionState, InteractionConfigMutation>,
+    pub(crate) interaction_store: ConfigStore<protocol::InteractionState, InteractionConfigMutation>,
     local_interaction_query: Option<crate::local_interaction::live::LocalInteractionLiveQuery<A::Snapshot, A::Config>>,
     local_interaction_query_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
     local_interaction_authority: crate::local_interaction::authority::LocalInteractionTopologyAuthority,
@@ -652,7 +653,7 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: SpaceMember + MemberFactory = NoMem
     /// pass) — `resolve_domain_topology`'s cache for domains the app itself never supplies a
     /// topology for. Empty (safely degrading to Flat-like single-target behavior) until the first
     /// render of that domain's tree.
-    interaction_ui_topology: HashMap<String, protocol::DomainTopology>,
+    pub(crate) interaction_ui_topology: HashMap<String, protocol::DomainTopology>,
     /// 🗺️ `A::interaction_topology`'s whole answer for one document generation.
     ///
     /// The app builds EVERY declared domain in one pass off a fresh decode of the document, and one
@@ -680,7 +681,7 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: SpaceMember + MemberFactory = NoMem
     /// render; `plugin_runtime::plugin_render_surface` drains it within the same surface render. NEVER a document
     /// revision — this lane has no op log, no undo group, no command-log row, mirroring
     /// `presence_store`/`transient_store`'s own ephemeral treatment above.
-    pending_presence: Vec<PresenceUpdate>,
+    pub(crate) pending_presence: Vec<PresenceUpdate>,
     /// 🧹️ Node keys this body's LAST render marked, per body key. `derive_node_presence` skips an
     /// idle node entirely, and `PresenceHub::record_own` keeps own presence until it is explicitly
     /// overwritten — so without this ledger a node that loses the selection is never written back to
@@ -690,14 +691,14 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: SpaceMember + MemberFactory = NoMem
     presence_marked_keys: BTreeMap<String, BTreeSet<String>>,
     /// ⏯️ The ephemeral local-only tool run ledger (contract §3.3): provisional document ops folded
     /// into an overlay the renderer reads, never touching `store` until the one-edit finalize.
-    tool_runs: ToolRunLedger<A>,
+    pub(crate) tool_runs: ToolRunLedger<A>,
     /// ⏪️ The ephemeral local-only history-edit session (design §7 of ticket
     /// 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): drafts previewed and replayed beside the store, never touching it
     /// until the one finalize commit.
-    time_travel: TimeTravelLedger<A>,
+    pub(crate) time_travel: TimeTravelLedger<A>,
     /// 🎚️ Every window's open continuous-control press (design §13.1): provisional leaves overlaid on every render,
     /// published as ONE transaction on the release, zero trace on any host abort.
-    tool_machines: ToolMachineRuntime<A::Snapshot, A::Mutation, A::Config, A::ConfigMutation>,
+    pub(crate) tool_machines: ToolMachineRuntime<A::Snapshot, A::Mutation, A::Config, A::ConfigMutation>,
     /// ✏️ Every `Supersede` transition of the store's event log, classified per author (history edit, its undo, its
     /// redo) — derived from the transitions, so the history rows and undo of history edits survive reload.
     supersedes: SupersedeLedger,
@@ -811,7 +812,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 /// (128-bit, two interleaved 64-bit lanes) rather than `std::collections::hash_map::DefaultHasher`
 /// — the latter's hash is only guaranteed stable for one process/compiler invocation, not the
 /// byte-identical value the SAME child id must always map to.
-async fn artifact_handle_of(artifact_id: &str) -> ArtifactHandle {
+pub(crate) async fn artifact_handle_of(artifact_id: &str) -> ArtifactHandle {
     const OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
     const PRIME: u64 = 0x0000_0100_0000_01b3;
     let mut lane0 = OFFSET;
@@ -823,18 +824,10 @@ async fn artifact_handle_of(artifact_id: &str) -> ArtifactHandle {
     ArtifactHandle(((lane0 as u128) << 64) | lane1 as u128)
 }
 
-/// ⏱️ Wall budget one `PollDocumentArchiveLoad` may spend driving the maintenance rotation before it
-/// reports — the background lane's slice, so a load polled back-to-back completes in seconds while a
-/// single poll never holds the actor longer than the pump's own worst step.
-const DOCUMENT_ARCHIVE_POLL_WALL_US: u64 = semio_framework_job::BACKGROUND_LANE_WALL_US;
-
-/// 📄️ Copy bytes one `PollDocumentArchiveLoad` maintenance step may spend — the shipped interactive copy page: the replacement's last retirement units move whole inline registries (the 25 000-byte candidate member registry), which one envelope decode page of 4 096 bytes could never fund.
-const DOCUMENT_ARCHIVE_POLL_STEP_BYTES: usize = 32_768;
-
 /// 🪪️ The persisted schema a derivable child of `dialect` is minted under — read from the member
 /// roster's own open declarations, so an app deriving a child of a dialect its `M` never declares
 /// is a fault rather than a member nothing could ever open.
-fn genesis_member_schema<M: MemberFactory>(dialect: &ArtifactDialect) -> Result<&'static str, Fault> {
+pub(crate) fn genesis_member_schema<M: MemberFactory>(dialect: &ArtifactDialect) -> Result<&'static str, Fault> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
     M::OPEN_DECLARATIONS
@@ -848,12 +841,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 /// producer emits; anything else is the subset's own DSL.
 fn catalogue_snapshot_from_document<S>(body: &str) -> Result<S, Fault>
 where
-    S: store::os_store::serialization::ArtifactDsl + semio_framework_value::FromValue,
+    S: pack::snapshot::ArtifactDsl + semio_framework_value::FromValue,
 {
     if body.trim_start().starts_with('{') {
         semio_framework_pack_json::from_json_str(body, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.example.unreadable"), error.to_string()))
     } else {
-        <S as store::os_store::serialization::ArtifactDsl>::parse_dsl(body).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.example.unreadable"), error.to_string()))
+        <S as pack::snapshot::ArtifactDsl>::parse_dsl(body).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.example.unreadable"), error.to_string()))
     }
 }
 
@@ -969,7 +962,7 @@ fn store_publication_fault(error: vcs::VcsError) -> Fault {
     }
 }
 
-fn typed_operation_document_is_fresh(operation: &semio_framework_job::Operation, canonical_revision: [u8; 32], live_revision: [u8; 32], live_generation: u64) -> bool {
+pub(crate) fn typed_operation_document_is_fresh(operation: &semio_framework_job::Operation, canonical_revision: [u8; 32], live_revision: [u8; 32], live_generation: u64) -> bool {
     let live_short = semio_framework_job::RevisionId(u64::from_be_bytes(live_revision[..8].try_into().expect("revision lane width")));
     canonical_revision == live_revision && matches!(semio_framework_job::validate_commit(operation, live_short, semio_framework_job::Generation(live_generation)), semio_framework_job::CommitValidation::Accepted)
 }
@@ -978,12 +971,12 @@ include!("../🪟️window/🫧️transient/🔁️document-replacement/🦀️.
 
 impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     #[cfg(test)]
-    fn test_registered_tool_keys(&self) -> BTreeSet<(String, String)> {
+    pub(crate) fn test_registered_tool_keys(&self) -> BTreeSet<(String, String)> {
         self.tool_jobs.keys().into_iter().map(|key| (key.controller_id, key.tool_id)).collect()
     }
 
     #[cfg(test)]
-    fn test_framework_tool_registrations(&self) -> BTreeMap<String, (semio_framework::ToolFactoryKey, String, std::any::TypeId, &'static str, semio_framework::ToolExecutionContract)> {
+    pub(crate) fn test_framework_tool_registrations(&self) -> BTreeMap<String, (semio_framework::ToolFactoryKey, String, std::any::TypeId, &'static str, semio_framework::ToolExecutionContract)> {
         self.framework_tool_registrations
             .iter()
             .map(|(tool_id, registration)| (tool_id.clone(), (registration.key.clone(), registration.schema_id.clone(), registration.factory_type_id, registration.factory_type_name, registration.contract)))
@@ -1022,7 +1015,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 
     /// 🔬️ Exercises real reserved slot admission without exporting private producer authority.
     #[cfg(test)]
-    fn test_reserved_emit_admission_case(&mut self, occupied: usize, meta: &ActionMeta) -> bool {
+    pub(crate) fn test_reserved_emit_admission_case(&mut self, occupied: usize, meta: &ActionMeta) -> bool {
         let before = self.typed_operation_reservations;
         for slot in 0..occupied { self.typed_operation_reservations[slot] = Some((slot + 128) as u64); }
         let original = self.typed_operation_reservations;
@@ -1049,7 +1042,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 
     /// 🧪️ Keeps cancelled worker completion tied to the actual original permit through handoff.
     #[cfg(test)]
-    async fn test_reserved_emit_cancelled_worker_handoff(&mut self, meta: &ActionMeta) -> bool {
+    pub(crate) async fn test_reserved_emit_cancelled_worker_handoff(&mut self, meta: &ActionMeta) -> bool {
         let permit = self.admit_reserved_emit_producer("cut", meta).expect("original cut producer admission");
         let id = permit.operation.operation;
         permit.lease.cancel();
@@ -1062,7 +1055,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 
     /// 🧫️ Observes busy original completion retention without exposing producer authority.
     #[cfg(test)]
-    async fn test_reserved_emit_busy_completion_owner(&mut self, meta: &ActionMeta) -> bool {
+    pub(crate) async fn test_reserved_emit_busy_completion_owner(&mut self, meta: &ActionMeta) -> bool {
         let permit=self.admit_reserved_emit_producer("cut",meta).expect("fixture cut admission");
         let id=permit.operation.operation.0;
         let completion=ArtifactToolCompletion::<A>::new();
@@ -1392,7 +1385,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         Ok(AdmittedToolCommand { verb: verb.to_string(), proof, wire_admission: admission, decoded_items, raw_wire })
     }
 
-    async fn admit_command_wire(&self, verb: &str, payload: &[u8], decoded_items: usize) -> Result<AdmittedToolCommand, Fault> {
+    pub(crate) async fn admit_command_wire(&self, verb: &str, payload: &[u8], decoded_items: usize) -> Result<AdmittedToolCommand, Fault> {
         self.require_ui_safe_declaration(verb)?;
         let proof = self.qualified_tool_proof(verb)?;
         self.admit_command_wire_with_proof(proof, verb, payload, decoded_items).await
@@ -1751,7 +1744,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     fn constructor_receipt(&self)->Option<&(ArtifactStoreConstructorKind,ArtifactStoreConstructorPhase,RetainedCloneGrant,RetainedCloneProgress)> { if let Some(receipt)=self.constructor_terminal_receipt.as_ref(){return Some(receipt)} if !self.constructor_recipient_admitted{return None} unsafe {self.constructor_receipts.assume_init_ref()}.iter().find_map(Option::as_ref) }
     fn take_constructor_receipt(&mut self)->Option<(ArtifactStoreConstructorKind,ArtifactStoreConstructorPhase,RetainedCloneGrant,RetainedCloneProgress)> { if self.constructor_terminal_receipt.is_some(){return self.constructor_terminal_receipt.take()} if !self.constructor_recipient_admitted{return None} unsafe {self.constructor_receipts.assume_init_mut()}.iter_mut().find_map(Option::take) }
     fn store_constructor_is_pending(&self)->bool { (!self.constructor_recipient_admitted&&!self.constructor_recipient_retired) || self.has_constructor_receipt() || self.constructor_lane<4 }
-    fn drive_store_constructor_unit(&mut self,grant:RetainedCloneGrant)->Result<bool,ValueError> {self.drive_store_constructor_unit_in_phase(grant,ArtifactStoreConstructorPhase::Preparation)}
+    pub(crate) fn drive_store_constructor_unit(&mut self,grant:RetainedCloneGrant)->Result<bool,ValueError> {self.drive_store_constructor_unit_in_phase(grant,ArtifactStoreConstructorPhase::Preparation)}
     fn drive_store_constructor_unit_in_phase(&mut self,grant:RetainedCloneGrant,phase:ArtifactStoreConstructorPhase)->Result<bool,ValueError> {
         if self.has_constructor_receipt(){return Ok(true)}
         if !self.constructor_recipient_admitted {
@@ -1777,8 +1770,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         unsafe{self.constructor_receipts.assume_init_mut()[0]=Some((kind,phase,grant,receipt));}Ok(true)
     }
 
-    fn constructor_terminal_is_empty(&self)->bool{self.constructor_recipient_retired&&!self.has_constructor_receipt()&&self.constructor_document.terminal_is_empty()&&self.constructor_config.terminal_is_empty()&&self.constructor_draft.terminal_is_empty()&&self.constructor_interaction.terminal_is_empty()}
-    fn constructor_close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+    pub(crate) fn constructor_terminal_is_empty(&self)->bool{self.constructor_recipient_retired&&!self.has_constructor_receipt()&&self.constructor_document.terminal_is_empty()&&self.constructor_config.terminal_is_empty()&&self.constructor_draft.terminal_is_empty()&&self.constructor_interaction.terminal_is_empty()}
+    pub(crate) fn constructor_close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if self.has_constructor_receipt(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original constructor receipt awaits its recipient"))}
         if self.constructor_recipient_retired{return Ok(Default::default())}
         if !self.constructor_recipient_admitted{return Ok(RetirementDemand{copy_bytes:0,depth:1,..Default::default()})}
@@ -1787,7 +1780,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let mut demand=match self.constructor_lane{0=>self.constructor_document.demands(body.saturating_sub(parent),self.store.owned_disposer_installed(),A::document_store_owners_source_demands)?,1=>self.constructor_config.demands(body.saturating_sub(parent),self.config_store.owned_disposer_installed(),A::config_store_owners_source_demands)?,2=>self.constructor_draft.demands(body.saturating_sub(parent),self.draft_store.owned_disposer_installed(),A::draft_store_owners_source_demands)?,_=>self.constructor_interaction.demands(body.saturating_sub(parent),self.interaction_store.owned_disposer_installed(),crate::local_interaction::retirement::interaction_store_owners_source_demands)?};
         demand.copy_bytes=demand.copy_bytes.checked_add(parent).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"constructor close parent quote overflow"))?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"constructor close parent depth overflow"))?;Ok(demand)
     }
-    fn close_store_constructor_unit(&mut self,grant:RetainedCloneGrant)->Result<bool,ValueError>{
+    pub(crate) fn close_store_constructor_unit(&mut self,grant:RetainedCloneGrant)->Result<bool,ValueError>{
         let phase=ArtifactStoreConstructorPhase::Close;
         if self.has_constructor_receipt(){return Ok(true)}
         if self.constructor_recipient_retired{return Ok(false)}
@@ -1847,7 +1840,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// while the retirements its own publications need are not yet admissible ([`Self::reclaim_child_retirements`]):
     /// the parent already holds every edit in order, the child it names follows once maintenance returned them, and
     /// the instance stays runnable meanwhile (`child_follow_awaits_retirement`).
-    async fn follow_derivable_children(&mut self, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    pub(crate) async fn follow_derivable_children(&mut self, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
         let generation = self.store.generation_now();
         if generation == self.followed_parent_generation || self.children.has_admission_in_flight() {
             return Ok(());
@@ -2204,7 +2197,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// 📥️ Admits one exact envelope decode against a caller-supplied field owner. The domain
     /// route builds that owner from its declared catalog; the framework's own decode-ladder laws
     /// supply a bare one so the ladder is provable without a domain field catalog.
-    fn admit_artifact_envelope_decode_owner(
+    pub(crate) fn admit_artifact_envelope_decode_owner(
         &mut self,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
@@ -2234,7 +2227,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     /// 🎟️ Advances the original ready worker ladder once under the caller's unchanged grant.
-    fn advance_ready_envelope_decode_worker_owners(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    pub(crate) fn advance_ready_envelope_decode_worker_owners(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
         let Some(active)=self.envelope_decode_jobs.get_mut(handle.operation.0)else{return Ok(PluginLifecycleStep::Complete(Default::default()));};
         if active.operation!=handle.operation||active.generation!=handle.generation{return Err(plugin_sdk_fault("ready envelope worker advancement lost its original handle"));}
         if active.decode_worker_owners_are_terminal(){return Ok(PluginLifecycleStep::Complete(Default::default()));}
@@ -2577,7 +2570,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 
     /// 🎟️ Admits the next immutable child-content publication once its retirement slot is vacant — reclaimed first when
     /// an older retirement still holds it ([`Self::reclaim_child_retirements`]).
-    fn admit_child_content_publication(&mut self) -> Result<u64, Fault> {
+    pub(crate) fn admit_child_content_publication(&mut self) -> Result<u64, Fault> {
         self.admit_child_content_publication_span(1)?;
         Ok(self.child_content_generation + 1)
     }
@@ -2595,7 +2588,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         Ok(())
     }
 
-    async fn publish_child_content_member(&mut self, generation: u64, slot: &str, child_id: &str) -> Result<(), Fault> {
+    pub(crate) async fn publish_child_content_member(&mut self, generation: u64, slot: &str, child_id: &str) -> Result<(), Fault> {
         self.publish_member_content(generation, MemberKeyRef::root(slot, child_id)).await
     }
 
@@ -2946,7 +2939,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     /// 📏️ Quotes the next retiring typed-operation turn: its private child group's close, one owner hand-off, or the operation's own retirement.
-    fn typed_operation_retirement_demands(&self, operation_id: u64, body: usize) -> Result<RetirementDemand, Fault> {
+    pub(crate) fn typed_operation_retirement_demands(&self, operation_id: u64, body: usize) -> Result<RetirementDemand, Fault> {
         let operation = self.tool_operations.get(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-retirement-authority"), "typed operation owner changed before its retirement quote"))?;
         if operation.close_fault_pending(){return operation.close_fault_demands(body).map_err(plugin_retirement_fault);}
         if let Some(group) = operation.owned_child_group {
@@ -2958,16 +2951,20 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     #[inline(never)]
-    fn retire_typed_operation_unit(&mut self, operation_id: u64, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    pub(crate) fn retire_typed_operation_unit(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+        let grant=cx.retained_grant();let demand=self.typed_operation_retirement_demands(operation_id,grant.maximum_copy_bytes)?;
+        crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|self.retire_typed_operation_granted(operation_id,same,actual).map(|step|(step,false)))
+    }
+
+    fn retire_typed_operation_granted(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
         self.request_gesture_cancellation(operation_id);
         let item = RetainedCloneProgress { copied_items: 1, ..Default::default() };
-        if self.tool_operations.get(operation_id).is_some_and(MountedTypedCommandFullOperation::close_fault_pending){return self.tool_operations.get_mut(operation_id).unwrap().close_fault_step(grant).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(plugin_retirement_fault);}
+        if self.tool_operations.get(operation_id).is_some_and(MountedTypedCommandFullOperation::close_fault_pending){return self.tool_operations.get_mut(operation_id).unwrap().close_fault_step(grant).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(Into::into);}
         if let Some(group) = self.tool_operations.get(operation_id).and_then(|operation| operation.owned_child_group) {
             if self.private_child_groups.get(group).is_some() {
                 return Ok(match self.close_private_child_group_operation_step(group, grant)? {
                     semio_framework_job::InteractiveJobCloseStep::Pending { progress } | semio_framework_job::InteractiveJobCloseStep::Complete { progress } => PluginLifecycleStep::Progress(progress),
                     semio_framework_job::InteractiveJobCloseStep::Blocked => PluginLifecycleStep::Blocked { reason: "private child group close awaits its owner" },
-                    semio_framework_job::InteractiveJobCloseStep::Refused { kind, .. } => return Err(plugin_sdk_fault(format!("private child group close was refused: {kind:?}"))),
                 });
             }
             if grant.maximum_items == 0 { return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress::default())); }
@@ -2980,10 +2977,10 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             .tool_operations
             .get_mut(operation_id)
             .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-retirement-authority"), "typed operation owner changed during one bounded retirement unit"))?;
-        let step = operation.retirement_step(grant)?;
+        let step = operation.retirement_step(cx)?;
         let PluginLifecycleStep::Complete(progress) = step else { return Ok(step) };
         if !self.tool_operations.get(operation_id).is_some_and(MountedTypedCommandFullOperation::terminal_is_empty) {
-            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-terminal"), "typed operation reported Complete without exact terminal emptiness"));
+            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-terminal"), "typed operation reported Complete without exact terminal emptiness").into());
         }
         let operation =
             self.tool_operations.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-retirement-authority"), "terminal typed operation changed before exact removal"))?;
@@ -3001,37 +2998,37 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// unit per rotation on the shared live-cleanup job, so a sustained action rate filled all
     /// [`ARTIFACT_LIVE_OUTPUT_SLOTS`] classes and every later action was refused
     /// `interactive-job.typed-operation-capacity`.
-    fn retire_typed_operation_run(&mut self, operation_id: u64, retained:RetainedCloneGrant) -> Result<(), Fault> {
-        let started_us = semio_framework_job::default_now_us();
+    fn retire_typed_operation_run(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),crate::PluginLifecycleFailure>{
+        let started_us=cx.now_us();
         for _ in 0..INTERACTIVE_TURN_WORKER_PUMPS {
             if !self.tool_operations.get(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Retiring) {
                 return Ok(());
             }
             if self.tool_operations.get(operation_id).is_some_and(|operation|operation.granted_retirement_ready()&&operation.granted_retirement_pending()){
-                let grant=crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.close,retained);
-                let step=self.tool_operations.get_mut(operation_id).unwrap().granted_retirement_step(grant).map_err(|error|plugin_sdk_fault(error.into_message()))?;
-                if !step.progress().fits(grant){return Err(plugin_sdk_fault("original typed operation retirement exceeded its issuer grant"));}
+                let grant=crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.close,cx.retained_grant());
+                let step=semio_framework_job::close_original_retained_step(cx,self.tool_operations.get(operation_id).unwrap().granted_retirement_demands(grant.maximum_copy_bytes)?,|actual|self.tool_operations.get_mut(operation_id).unwrap().granted_retirement_step(actual))?;
+                if !step.progress().fits(grant){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typed operation retirement exceeded its issuer grant").with_retained_progress(step.progress()).into());}
                 let progress=step.progress();if progress==RetainedCloneProgress::default(){return Ok(());}
                 let owner=self.tool_operations.get_mut(operation_id).unwrap();assert!(owner.original_retirement_receipt.is_none(),"original mounted Close receipt cannot be overwritten before acknowledgement");owner.original_retirement_receipt=Some((grant,progress));return Ok(());
 
             }
-            let grant = crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.close, retained);
+            let grant = crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.close, cx.retained_grant());
             let demand = self.typed_operation_retirement_demands(operation_id, grant.maximum_copy_bytes)?;
             if !plugin_grant_funds(demand, grant) {
                 return Ok(());
             }
-            match self.retire_typed_operation_unit(operation_id, grant)? {
+            match cx.with_retained_loan(grant,|same|self.retire_typed_operation_unit(operation_id,same))? {
                 PluginLifecycleStep::Blocked { .. } | PluginLifecycleStep::AwaitingInput { .. } => return Ok(()),
                 PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) => {
                     if !progress.fits(grant) {
-                        return Err(plugin_sdk_fault("typed operation retirement exceeded its issuer grant"));
+                        return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"typed operation retirement exceeded its issuer grant").with_retained_progress(progress).into());
                     }
                     if progress == RetainedCloneProgress::default() {
                         return Ok(());
                     }
                 }
             }
-            if started_us.is_some_and(|started_us| semio_framework_job::default_now_us().is_some_and(|now_us| now_us.saturating_sub(started_us) >= INTERACTIVE_TURN_WORKER_WALL_US)) {
+            if cx.should_yield()||started_us.is_some_and(|started_us|cx.now_us().is_some_and(|now_us|now_us.saturating_sub(started_us)>=INTERACTIVE_TURN_WORKER_WALL_US)) {
                 return Ok(());
             }
         }
@@ -3324,46 +3321,46 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     #[cfg(test)]
-    async fn test_snapshot(&self) -> A::Snapshot {
+    pub(crate) async fn test_snapshot(&self) -> A::Snapshot {
         self.store.snapshot().expect("materialize snapshot")
     }
 
     /// 🧪️ The document store itself — needed to assert on checkpoint metadata
     /// (`composition_pins`), which no snapshot-level accessor exposes.
     #[cfg(test)]
-    async fn test_store(&self) -> &ArtifactStore<A::Snapshot, A::Mutation> {
+    pub(crate) async fn test_store(&self) -> &ArtifactStore<A::Snapshot, A::Mutation> {
         &self.store
     }
 
     /// ⚔️ Test-only mutable store access for conflict lifecycle fixtures.
     #[cfg(test)]
-    async fn test_store_mut(&mut self) -> &mut ArtifactStore<A::Snapshot, A::Mutation> {
+    pub(crate) async fn test_store_mut(&mut self) -> &mut ArtifactStore<A::Snapshot, A::Mutation> {
         &mut self.store
     }
 
     /// 🧹️ Test-only probe: whether a cancelled segmented output still waits in bounded cleanup.
     #[cfg(test)]
-    fn test_segmented_closure_contains(&self, operation_id: u64) -> bool {
+    pub(crate) fn test_segmented_closure_contains(&self, operation_id: u64) -> bool {
         self.segmented_closures.contains(operation_id)
     }
 
     /// 🧪️ The config-store twin of `test_snapshot`.
     #[cfg(test)]
-    async fn test_config(&self) -> A::Config {
+    pub(crate) async fn test_config(&self) -> A::Config {
         self.config_store.snapshot().expect("materialize config snapshot")
     }
 
     /// 🧪️ Direct access to the wrapped app — used to assert on app-private test fixtures (e.g.
     /// `TestApp::received_actions`) that a framework-owned interception must never populate.
     #[cfg(test)]
-    async fn test_app(&self) -> &A {
+    pub(crate) async fn test_app(&self) -> &A {
         &self.app
     }
 
     /// 🧪️ Refreshes (backfilling the command log) and returns the current `HistoryView` —
     /// the merged command+operation timeline test harness accessor.
     #[cfg(test)]
-    async fn test_history(&mut self) -> HistoryView {
+    pub(crate) async fn test_history(&mut self) -> HistoryView {
         self.refresh_cache().await.expect("refresh cache");
         self.build_history_view(None).await
     }
@@ -3373,7 +3370,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// the host sees it (ticket 26/09/16/INPUT-CAUSALITY-LEDGER: the inline interaction fold),
     /// which no registry-less typed command can reach and no reserved route carries.
     #[cfg(test)]
-    async fn test_dispatch_emit(&mut self, verb: &str, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
+    pub(crate) async fn test_dispatch_emit(&mut self, verb: &str, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
         self.dispatch_emit(verb, emit, meta, identity).await
     }
 
@@ -3384,7 +3381,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// afterwards through the very same `result_from_last_edit` the unmigrated route uses, instead of
     /// every law reaching into the store by hand.
     #[cfg(test)]
-    async fn test_result_from_last_edit(&self, verb: &str, meta: &ActionMeta, tail_offset: (usize, usize)) -> InvocationResult {
+    pub(crate) async fn test_result_from_last_edit(&self, verb: &str, meta: &ActionMeta, tail_offset: (usize, usize)) -> InvocationResult {
         self.result_from_last_edit(verb, meta, Vec::new(), Vec::new(), UiDirtyScope::default(), tail_offset).await
     }
 
@@ -3392,21 +3389,21 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// `dispatch_emit`'s own `tail_offset`, so a settling fixture can report only the operations ONE
     /// dispatch added to a coalesced edit.
     #[cfg(test)]
-    fn test_edit_tail_lengths(&self) -> (usize, usize) {
+    pub(crate) fn test_edit_tail_lengths(&self) -> (usize, usize) {
         self.store.edit_mutations().map_or((0, 0), |(forwards, inverse, _)| (forwards.len(), inverse.len()))
     }
 
     /// 🧪️ The store's last edit id, or `None` on a store that has never committed one —
     /// `dispatch_emit`'s `amended_same_edit` identity test, for a settling fixture.
     #[cfg(test)]
-    fn test_last_edit_id(&self) -> Option<String> {
+    pub(crate) fn test_last_edit_id(&self) -> Option<String> {
         self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone())
     }
 
     /// 🧪️ The persisted-plus-leftover selection half the panels and every app read —
     /// what a folded interaction verb must have moved.
     #[cfg(test)]
-    fn test_interaction_selection_snapshot(&self) -> protocol::InteractionState {
+    pub(crate) fn test_interaction_selection_snapshot(&self) -> protocol::InteractionState {
         self.interaction_selection_snapshot()
     }
 
@@ -3431,7 +3428,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// 🧾️ Appends one entry to the session command log. `timestamp: None` stamps "now"
     /// (live dispatch); `Some(..)` preserves an edit's original `started_at` (backfill). Always a
     /// fresh row (`count: 1`) — folding consecutive `View`/`🐚️Shell` dispatches is `record_command`'s job.
-    fn push_log_entry(&mut self, append: CommandLogAppend<'_>) {
+    pub(crate) fn push_log_entry(&mut self, append: CommandLogAppend<'_>) {
         let CommandLogAppend { action_id, label, kind, edit_id, transition_id, timestamp, inverse } = append;
         self.next_command_seq += 1;
         let mut record = Some(CommandLogEntry {
@@ -3470,7 +3467,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// History panel renders every row in whatever locale the shell is showing right now.
     /// A row with no declaring definition falls back to its `action_id`, which is
     /// locale-invariant data, not untranslated English.
-    fn record_command(&mut self, action_id: &str, kind: ActionKind, label: Option<LocalizedLabel>, edit_id: Option<String>, child_edit_ids: Vec<String>, inverse: Option<InverseAction>) {
+    pub(crate) fn record_command(&mut self, action_id: &str, kind: ActionKind, label: Option<LocalizedLabel>, edit_id: Option<String>, child_edit_ids: Vec<String>, inverse: Option<InverseAction>) {
         if !history_row_is_recorded(kind, edit_id.is_some() || !child_edit_ids.is_empty(), inverse.is_some()) {
             return;
         }
@@ -3486,7 +3483,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 
     /// 🏷️ The registry label (every locale) of the action or command `verb` names — how a persisted
     /// [`protocol::Edit::verb`] becomes a history label at projection time; `None` for a verb this app does not declare.
-    fn verb_label(&self, verb: &str) -> Option<LocalizedLabel> {
+    pub(crate) fn verb_label(&self, verb: &str) -> Option<LocalizedLabel> {
         self.registry.get(verb).map(|definition| definition.label.clone()).or_else(|| self.registry.get_command(verb).map(|definition| definition.label.clone())).or_else(|| runtime_verb_label(verb))
     }
 
@@ -3708,7 +3705,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// (ticket 26/09/18 S11). The parent document lane is authoritative whenever the row
     /// published into it; the other two answer only for a row that has no parent edit at
     /// all, which is exactly the Child/Config-only case the fix above exists for.
-    async fn build_history_view(&self, previous: Option<&HistoryView>) -> HistoryView {
+    pub(crate) async fn build_history_view(&self, previous: Option<&HistoryView>) -> HistoryView {
         let envelope = self.store.envelope();
         let labelled: HashMap<&str, &MutationView> =
             previous.map_or_else(HashMap::new, |previous| previous.commands.iter().flat_map(|row| row.mutations.iter()).filter(|mutation| !mutation.superseded).map(|mutation| (mutation.mutation_id.as_str(), mutation)).collect());
@@ -4014,7 +4011,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// 🧾️ Converts the authoritative command log into a typed host projection patch. Rows are
     /// never folded or capped here; the host controls its own visible window. A delta patch reads only its dirty rows
     /// (each found by its `seq` in the newest-first view, design §20.14) and shares the cached view, never copies it.
-    async fn history_patch(&mut self, snapshot: bool) -> Result<HistoryPatch, Fault> {
+    pub(crate) async fn history_patch(&mut self, snapshot: bool) -> Result<HistoryPatch, Fault> {
         self.refresh_cache().await?;
         let history = std::sync::Arc::clone(&self.cache.as_ref().expect("history cache refreshed").3);
         let dirty = std::mem::take(&mut self.history_dirty_sequences);
@@ -4078,7 +4075,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     ///
     /// 🧾️ The history view is patched, not rebuilt ([`Self::refresh_history_view`], design §20.14): the cache's own
     /// share of it is dropped first, so the retained view stays the only owner and is patched in its own allocation.
-    async fn refresh_cache(&mut self) -> Result<(), Fault> {
+    pub(crate) async fn refresh_cache(&mut self) -> Result<(), Fault> {
         while self.command_prune_requested() || self.pending_command_prune.is_some() {
             self.advance_command_prune_step(self.mounted_policy.maintenance, false)?;
             plugin_job_yield_once().await;
@@ -4103,7 +4100,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     /// 🎯️ Shares immutable cache inputs with a command job without cloning the document or history.
-    fn command_cache_inputs(&self) -> (std::sync::Arc<A::Snapshot>, std::sync::Arc<A::Config>, std::sync::Arc<HistoryView>) {
+    pub(crate) fn command_cache_inputs(&self) -> (std::sync::Arc<A::Snapshot>, std::sync::Arc<A::Config>, std::sync::Arc<HistoryView>) {
         let (_, snapshot, config, history) = self.cache.as_ref().expect("cache refreshed before command scheduling");
         (std::sync::Arc::clone(snapshot), std::sync::Arc::clone(config), std::sync::Arc::clone(history))
     }
@@ -4322,7 +4319,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// world overlay still lands), and one diagnostic per verb that could not be applied.
     /// A failed carrier applies no verb: its pick did not happen. The typed-operation ladder,
     /// which never enters here, has its own twin ([`Self::publish_mounted_typed_inline_interaction_unit`]).
-    async fn dispatch_emit(&mut self, verb: &str, mut emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
+    pub(crate) async fn dispatch_emit(&mut self, verb: &str, mut emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
         if !emit.owned_child_emits.is_empty()||emit.owned_child_emits.capacity()!=0||!emit.child_preparations.is_empty()||emit.child_preparations.capacity()!=0{
             return self.mount_original_emit_publication(verb, emit, meta, None).await;
         }
@@ -4632,7 +4629,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// here). A free-standing method (not inlined into `dispatch_emit_group`) so it is directly
     /// unit-testable against a synthetic `created_children` list, independent of the `ChildEmit`
     /// wire path (which never emits a `ChildGenesis` itself today).
-    async fn absorb_created_children(&mut self, created_children: Vec<(ArtifactRef, M)>) -> Result<(), Fault> {
+    pub(crate) async fn absorb_created_children(&mut self, created_children: Vec<(ArtifactRef, M)>) -> Result<(), Fault> {
         for (target, mut member) in created_children {
             let publication_generation = self.admit_child_content_publication()?;
             let slot = self.composition.graph().await.slot_of(&target.artifact_id).await.ok_or_else(|| plugin_sdk_fault("created child has no exact target ownership slot"))?.to_owned();
@@ -5611,7 +5608,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// destructure" reasoning `dispatch_typed_command_inner` already uses: `pending_presence` is
     /// WRITTEN inside the walk while `interaction_hover`/`peer_presence` are only ever READ by
     /// it, so a snapshot avoids an aliasing conflict against `&mut self`.
-    async fn stamp_and_cache_interaction_ui(&mut self, tree: &ComponentTree, state: &protocol::InteractionState, body_key: &str) -> UiAssemblyResult<()> {
+    pub(crate) async fn stamp_and_cache_interaction_ui(&mut self, tree: &ComponentTree, state: &protocol::InteractionState, body_key: &str) -> UiAssemblyResult<()> {
         let hover = self.interaction_hover.clone();
         let peers = std::sync::Arc::clone(&self.peer_presence);
         let own_color = self.own_color;
@@ -6476,9 +6473,16 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     async fn dispatch_reserved_original_producer(&mut self,verb:&str,raw:&[u8],decoded_items:usize,job:ArtifactReservedToolJob,completion:ArtifactToolCompletion<A>,meta:&ActionMeta,admission:Option<semio_framework::ToolWireAdmission>,mut permit:FrameworkReservedCommitPermit)->Result<InvocationResult,Fault>{
         let id=permit.operation.operation.0;
         let started=self.mount_original_reserved_owners(verb,None,Some(job),Some(completion),meta,Some((permit.operation,permit.lease,permit.identity.take().ok_or_else(||plugin_sdk_fault("original reserved producer lost its authoring receipt"))?))).await?;
-        let(operation,cancel,job)={let mounted=self.tool_operations.get(id).expect("original producer owns its admitted slot");(mounted.operation,mounted.cancellation_lease.as_ref().expect("original producer lease").cancel_token(),mounted.reserved_producer.as_ref().expect("original producer job").clone())};
-        if let Err(fault)=self.drive_framework_reserved_worker(verb,raw,decoded_items,job,meta,admission,operation,cancel,true).await{let mounted=self.tool_operations.get_mut(id).expect("refused original producer remains mounted");mounted.terminal_fault.get_or_insert_with(||ArtifactBoundedToolFault::from_fault(&fault));mounted.cancellation_lease.as_ref().expect("original producer lease").cancel();}
-        self.finish_mounted_reserved_completion(id);
+        let proof=self.qualified_tool_proof(verb)?;
+        let key=proof.key();
+        let admitted=match admission{Some(admitted)=>admitted,None=>self.tool_jobs.admit_exact_wire(key.controller_id.clone(),key.tool_id.clone(),proof.schema_id(),raw).map_err(|error|plugin_sdk_fault(error.to_string()))?};
+        if decoded_items>proof.contract().max_decoded_items||!proof.admits::<A>(&admitted){return Err(plugin_sdk_fault("original reserved producer failed its exact owner/factory/schema admission"));}
+        let mounted=self.tool_operations.get_mut(id).expect("original producer owns its admitted slot");
+        let job=mounted.reserved_producer.as_ref().expect("original reserved producer remains retained").clone();
+        let dispatched=self.tool_jobs.dispatch(semio_framework::ToolOperationSpec::new(key.controller_id,key.tool_id,proof.schema_id(),job,mounted.operation)).map_err(|error|plugin_sdk_fault(error.to_string()))?;
+        mounted.session_rejected=Some(crate::reserved_job_session::RefusedWorkerSource::pending(dispatched.job,mounted.operation));
+        mounted.terminal_seen=false;
+        mounted.stage=MountedTypedCommandFullOperationStage::Worker;
         Ok(started)
     }
 
@@ -6550,7 +6554,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// §3, gap N17): every verb but a view or interaction verb waits — nothing reads or edits the document being replaced;
     /// hover and pick read only the selection (audit W2A-13) — except `historyEditCancelReplay`, which cancels the load;
     /// `None` while no load runs.
-    fn document_loading_refusal(&self, verb: &str) -> Option<Fault> {
+    pub(crate) fn document_loading_refusal(&self, verb: &str) -> Option<Fault> {
         let mut loading = false;
         self.document_archive_loads.each_id(|operation| loading |= self.document_archive_loads.get(operation).is_some_and(ActiveDocumentArchiveLoad::loading));
         let exempt = matches!(self.declared_action_kind(verb), Some(ActionKind::View | ActionKind::Interaction)) || INTERACTION_ACTION_IDS.contains(&verb) || verb == semio_framework::HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID;
@@ -6562,7 +6566,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         self.registry.get(verb).map(|definition| definition.kind).or_else(|| self.registry.get_command(verb).map(|command| command.kind))
     }
 
-    async fn dispatch_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
+    pub(crate) async fn dispatch_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
         if A::ROLE == AppRole::Viewer && viewer_rejects_action(action) {
             return Err(viewer_read_only_fault(action));
         }
@@ -6774,7 +6778,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// particular window kind (`🗒️note` declares all 48 of its verbs this way). A concrete
     /// kind must own the verb; `"*"` addresses the app registry directly, exactly as
     /// `dispatch_action` does for every verb the shell sends.
-    async fn preview_addressed_action(&mut self, invocation: &ManifestActionInvocation, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+    pub(crate) async fn preview_addressed_action(&mut self, invocation: &ManifestActionInvocation, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
         let address = &invocation.address;
         let owner_app_id = self.app.instance_id().await;
         if address.app_id != owner_app_id {
@@ -7018,8 +7022,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// 🛑️ ONE operation's structural fault is that operation's fault, never the turn's:
     /// see [`Self::fault_typed_operation_worker`].
     /// 🏃️ Spends ONE host turn's grant on consecutive worker steps of one mounted operation: every step receives what the turn still owns, the receipts are summed into the one original receipt the host takes, and the drive hands the turn back when the grant is exhausted, a step made no progress, the operation left the worker stage or its close mode changed.
-    fn drive_typed_operation_worker(&mut self, operation_id: u64, retained:RetainedCloneGrant) -> Result<(), Fault> {
-        let started_us = semio_framework_job::default_now_us();
+    fn drive_typed_operation_worker(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),crate::PluginLifecycleFailure>{
+        let retained=cx.retained_grant();let started_us=cx.now_us();
         let mut turn: Option<(bool, RetainedCloneGrant)> = None;
         let mut spent = RetainedCloneProgress::default();
         let mut failure = None;
@@ -7031,12 +7035,12 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             let policy=if closing{self.mounted_policy.close}else{self.mounted_policy.preparation};
             let (_,turn_grant)=*turn.get_or_insert((closing,crate::plugin_runtime::original_plugin_turn_grant(policy,retained)));
             let grant=crate::plugin_runtime::original_plugin_turn_grant(policy,crate::plugin_runtime::remaining_plugin_turn_grant(turn_grant,spent));
-            let stepped=operation.drive_worker_step(grant);
-            let progress=match &stepped{Ok(step)=>step.progress().unwrap_or_default(),Err(fault)=>fault.retained_progress()};
-            spent=spent.checked_add(progress).map_err(|error|plugin_sdk_fault(error.to_string()))?;
+            let stepped=cx.with_retained_loan(grant,|same|operation.drive_worker_step(same));
+            let progress=match &stepped{Ok(step)=>step.progress().unwrap_or_default(),Err(failure)=>failure.primary.retained_progress()};
+            spent=spent.checked_add(progress)?;
             if let Err(fault)=stepped{failure=Some(fault);break;}
             if progress.copied_items==0||crate::plugin_runtime::remaining_plugin_turn_grant(turn_grant,spent).maximum_items==0{break;}
-            if started_us.is_some_and(|started_us|semio_framework_job::default_now_us().is_some_and(|now_us|now_us.saturating_sub(started_us)>=INTERACTIVE_TURN_WORKER_WALL_US)){break;}
+            if cx.should_yield()||started_us.is_some_and(|started_us|cx.now_us().is_some_and(|now_us|now_us.saturating_sub(started_us)>=INTERACTIVE_TURN_WORKER_WALL_US)){break;}
         }
         if spent!=RetainedCloneProgress::default(){
             let (closing,grant)=turn.expect("a worker turn that spent anything was granted");
@@ -7046,7 +7050,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
         #[cfg(target_arch="wasm32")]
         if let Some(now_ms)=semio_framework_job::default_now_ms(){semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get))).pump(now_ms);}
-        match failure{Some(fault)=>self.fault_typed_operation_worker(operation_id,&fault),None=>Ok(())}
+        match failure{Some(failure)=>Err(failure.into()),None=>Ok(())}
     }
 
     /// 🔎️ Whether any live envelope decode still has worker close or step work this turn can run.
@@ -7128,9 +7132,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         (streak >= TYPED_OPERATION_STALL_WITNESS_FLOOR && streak.is_power_of_two()).then_some(streak)
     }
 
-    async fn advance_typed_operation_publication_one(&mut self, retained:RetainedCloneGrant) -> Result<(), Fault> {
+    pub(crate) async fn advance_typed_operation_publication_one(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),crate::PluginLifecycleFailure>{
         let before = self.typed_operation_stall_witness();
-        let advanced = self.advance_typed_operation_publication_unit(retained).await;
+        let advanced = self.advance_typed_operation_publication_unit(cx).await;
         if let (Some(before), Some(after)) = (before, self.typed_operation_stall_witness()) {
             if let Some(streak) = Self::typed_operation_stall_streak(before, after) {
                 let verb = self.tool_operations.get(after.0).map_or("<released>", |operation| operation.verb.as_str());
@@ -7221,10 +7225,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// migrated dispatch's document change lands on the Artifact lane, so this is where the
     /// revalidation belongs; `mounted` is out of the registry here, so the async pass is free
     /// to borrow the app, and the flag makes it exactly one pass per operation.
-    async fn advance_typed_operation_publication_unit(&mut self, retained:RetainedCloneGrant) -> Result<(), Fault> {
+    async fn advance_typed_operation_publication_unit(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),crate::PluginLifecycleFailure>{
+        let retained=cx.retained_grant();if cx.should_yield(){return Ok(())}
         if !self.latest_wins_commands.is_empty() && (self.latest_wins_turn || self.tool_operations.is_empty()) {
             self.latest_wins_turn = false;
-            return self.advance_latest_wins_command_one(retained).await;
+            return self.advance_latest_wins_command_one(retained).await.map_err(Into::into);
         }
         self.latest_wins_turn = true;
         let Some((index, operation_id)) = self.next_advanceable_typed_operation() else {
@@ -7234,11 +7239,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         self.typed_publication_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
         if self.tool_operations.get(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Worker) {
             record_typed_operation_unit(TypedOperationUnitKind::Worker);
-            return self.drive_typed_operation_worker(operation_id,retained);
+            return self.drive_typed_operation_worker(operation_id,cx);
         }
         if self.tool_operations.get(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Retiring) {
             record_typed_operation_unit(TypedOperationUnitKind::Retirement);
-            return self.retire_typed_operation_run(operation_id,retained);
+            return self.retire_typed_operation_run(operation_id,cx);
         }
         if !self.tool_operations.get_mut(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Publishing) {
             record_typed_operation_unit(TypedOperationUnitKind::Idle);
@@ -7289,7 +7294,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             mounted.identity_progress = progress;
         }
         self.tool_operations.insert_admitted(operation_id, mounted);
-        driver_result
+        driver_result.map_err(Into::into)
     }
 
     /// 🏃️ Drives ONE mounted operation's publication ladder for a bounded slice of this continuation
@@ -7309,7 +7314,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// the host must acknowledge before the operation may continue (`stage` leaves `Publishing`), a
     /// completion that is not ready yet so nothing is staged to advance, [`TYPED_OPERATION_PUBLICATION_PUMPS`],
     /// and [`INTERACTIVE_TURN_WORKER_WALL_US`]. Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B54.
-    async fn publish_mounted_typed_operation_run(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained:RetainedCloneGrant) -> Result<(), Fault> {
+    pub(crate) async fn publish_mounted_typed_operation_run(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained:RetainedCloneGrant) -> Result<(), Fault> {
         if mounted.identity.is_none() {
             let completion = mounted.completion.as_ref().ok_or_else(|| plugin_sdk_fault("mounted publication lacks its original effect completion"))?;
             let (receipt, progress) = completion.take_authoring_identity()?.ok_or_else(|| plugin_sdk_fault("mounted publication lacks its original app-owned effect receipt"))?;
@@ -7515,7 +7520,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         Ok(())
     }
 
-    async fn advance_latest_wins_command_one(&mut self,retained:RetainedCloneGrant) -> Result<(), Fault> {
+    pub(crate) async fn advance_latest_wins_command_one(&mut self,retained:RetainedCloneGrant) -> Result<(), Fault> {
         if retained.maximum_items==0||retained.maximum_depth==0{return Ok(());}
         let Some(operation_id) = self.latest_wins_order.items.front().copied() else { return Ok(()) };
         let mut pending = self.latest_wins_commands.remove(operation_id).expect("exact pending keyed command");
@@ -7898,7 +7903,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         mounted.queue_page(TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::WindowConfig, &receipt)?)
     }
 
-    fn publish_mounted_typed_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained:RetainedCloneGrant) -> Result<(), Fault> {
+    pub(crate) fn publish_mounted_typed_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained:RetainedCloneGrant) -> Result<(), Fault> {
         if mounted.reject_cancelled_publication()? {
             self.handoff_mounted_durable_publication(mounted)?;
             return Ok(());
@@ -8321,13 +8326,13 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
     }
 
-    fn can_admit_typed_operation(&self, operation: u64) -> bool {
+    pub(crate) fn can_admit_typed_operation(&self, operation: u64) -> bool {
         self.tool_operations.can_insert(operation) && self.typed_operation_reservations[operation as usize % ARTIFACT_LIVE_OUTPUT_SLOTS].is_none()
     }
 
     /// 🎰️ Whether every fixed typed-operation and segmented-output authority owns nothing in this one
     /// residue class of `id % ARTIFACT_LIVE_OUTPUT_SLOTS`.
-    fn typed_operation_slot_is_vacant(&self, slot: usize) -> bool {
+    pub(crate) fn typed_operation_slot_is_vacant(&self, slot: usize) -> bool {
         self.tool_operations.slot_is_vacant(slot)
             && self.typed_operation_reservations[slot].is_none()
             && self.latest_wins_commands.slot_is_vacant(slot)
@@ -8348,7 +8353,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// operation happens to share that class — a hover/tick/camera storm then fails while 63 slots sit
     /// empty. Ingress therefore chooses the vacant slot and mints the id for it, and refusal now means
     /// actual saturation of all fixed slots.
-    fn admit_typed_operation_slot(&self) -> Option<semio_framework_job::OperationId> {
+    pub(crate) fn admit_typed_operation_slot(&self) -> Option<semio_framework_job::OperationId> {
         if !self.latest_wins_order.allocation_admitted || self.latest_wins_order.len() >= ARTIFACT_LIVE_OUTPUT_SLOTS {
             return None;
         }
@@ -8356,7 +8361,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         Some(semio_framework_job::allocate_operation_id_in_slot(ARTIFACT_LIVE_OUTPUT_SLOTS as u64, slot as u64))
     }
 
-    async fn dispatch_typed_command_inner(&mut self, command: Box<A::Command>, admission: AdmittedToolCommand, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
+    pub(crate) async fn dispatch_typed_command_inner(&mut self, command: Box<A::Command>, admission: AdmittedToolCommand, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
         if self.live_runtime_instance_id != Some(meta.instance_id) {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.live-instance"), format!("typed command '{}' does not belong to the mounted live app instance", admission.verb)));
         }
@@ -8466,14 +8471,14 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 
     /// 🧪️ Observes actual capture authority without exposing production dispatch preparation.
     #[cfg(test)]
-    async fn test_capture_presence_roots(&mut self, command: &A::Command, meta: &ActionMeta) -> Result<(std::sync::Arc<PeerPresenceRoot>, std::sync::Arc<store::os_store::presence::PresencePeersRoot<A::Presence>>), Fault> {
+    pub(crate) async fn test_capture_presence_roots(&mut self, command: &A::Command, meta: &ActionMeta) -> Result<(std::sync::Arc<PeerPresenceRoot>, std::sync::Arc<store::os_store::presence::PresencePeersRoot<A::Presence>>), Fault> {
         let TypedCommandRoots { peer_presence, presence_peers, .. } = self.capture_typed_command_roots(command, meta).await?;
         Ok((peer_presence, presence_peers))
     }
 
     /// 🧪️ Mounts an exact typed admission so laws can observe the boundary before producer completion.
     #[cfg(test)]
-    async fn test_mount_typed_command(&mut self, command: A::Command, verb: &str, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
+    pub(crate) async fn test_mount_typed_command(&mut self, command: A::Command, verb: &str, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
         let payload = ::protocol::OpBinary::encode_op(&command).map_err(|error| error.into_fault())?;
         let admission = self.admit_command_wire(verb, &payload, 1).await?;
         self.dispatch_typed_command_inner(Box::new(command), admission, meta, identity).await
@@ -8719,10 +8724,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 stage: MountedTypedCommandFullOperationStage::Worker,
             },
         );
-        if let Some(active) = self.tool_operations.get_mut(operation_id.0) {
-            self.typed_operation_reservations[operation_id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = None;
-            let _ = active.drive_worker_step(self.mounted_policy.maintenance)?;
-        }
+        self.typed_operation_reservations[operation_id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = None;
         let mut started = Self::empty_result(&verb, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await;
         started.output = DslValue::Object(vec![("operationId".into(), DslValue::String(operation_id.0.to_string())), ("generation".into(), DslValue::String(generation.0.to_string()))]);
         Ok(started)
@@ -8839,7 +8841,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     #[cfg(test)]
-    fn typed_operation_result_state_for_test(&self, operation_id: u64) -> Option<(TypedOperationResultToken, TypedOperationResultLane, bool, bool)> {
+    pub(crate) fn typed_operation_result_state_for_test(&self, operation_id: u64) -> Option<(TypedOperationResultToken, TypedOperationResultLane, bool, bool)> {
         let operation = self.tool_operations.get(operation_id)?;
         let page = operation.result_page.as_ref()?;
         Some((page.token, page.lane, operation.result_page_presented, operation.stage == MountedTypedCommandFullOperationStage::AwaitingAck))
@@ -8934,7 +8936,7 @@ const MAINTENANCE_CHILD_MEMBER_STAGE: u8 = 20;
 
 /// 🌡️ Occupancy of the child-root or child-member retirement registry at which maintenance spends out-of-turn steps on
 /// it — a quarter of the fixed [`ARTIFACT_LIVE_OUTPUT_SLOTS`], as the stores' displaced-owner pressure is of theirs.
-const MAINTENANCE_CHILD_RETIREMENT_PRESSURE_OCCUPANCY: usize = ARTIFACT_LIVE_OUTPUT_SLOTS / 4;
+pub(crate) const MAINTENANCE_CHILD_RETIREMENT_PRESSURE_OCCUPANCY: usize = ARTIFACT_LIVE_OUTPUT_SLOTS / 4;
 
 /// ⏳️ Rounds one child publication spends reclaiming the retirements ahead of it before it waits instead.
 
@@ -8972,44 +8974,16 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         if A::mounted_jobs_terminal_is_empty(instance_id) { return Ok(MountedOwnerPhaseV1::Maintenance); }
         A::mounted_job_maintenance_phase(instance_id).ok_or_else(|| plugin_sdk_fault("retained mounted owner did not declare its preparation or maintenance phase"))
     }
-    fn mounted_owner_maintenance_step(&mut self, turn: &mut MountedOwnerTurnV1<'_, '_>) -> Result<PluginLifecycleStep, Fault> {
-        let identity = turn.identity();
-        if self.live_runtime_instance_id != Some(identity.instance_id) || !matches!(turn.phase(), MountedOwnerPhaseV1::Preparation | MountedOwnerPhaseV1::Maintenance) {
-            return Err(plugin_sdk_fault("mounted maintenance does not own this live instance and phase"));
-        }
-        if !A::mounted_jobs_terminal_is_empty(identity.instance_id) {
-            let step = match A::mounted_job_maintenance_step(identity.instance_id, turn.grant()) { Ok(step) => step, Err(error) => { turn.record(error.retained_progress(), false, false).map_err(ValueError::into_fault)?; return Err(error); } };
-            if let Some(progress) = step.progress() { turn.record(progress, matches!(step, PluginLifecycleStep::Complete(_)), A::mounted_jobs_terminal_is_empty(identity.instance_id)).map_err(ValueError::into_fault)?; }
-            if matches!(step, PluginLifecycleStep::Complete(_)) && !A::mounted_jobs_terminal_is_empty(identity.instance_id) {
-                return Err(plugin_sdk_fault("mounted maintenance violated its actual receipt or terminal witness"));
-            }
-            return Ok(match step { PluginLifecycleStep::Complete(progress) if !self.maintenance_terminal_is_empty() => PluginLifecycleStep::Progress(progress), step => step });
-        }
-        let step = match self.maintenance_step(turn.grant()){Ok(step)=>step,Err(error)=>{turn.record(error.retained_progress(),false,false).map_err(ValueError::into_fault)?;return Err(error);}};
-        if let Some(progress) = step.progress() { turn.record(progress, matches!(step, PluginLifecycleStep::Complete(_)), self.maintenance_terminal_is_empty()).map_err(ValueError::into_fault)?; }
-        Ok(step)
+    fn mounted_owner_maintenance_step(&mut self,turn:&mut MountedOwnerTurnV1<'_,'_>)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+        let identity=turn.identity();if self.live_runtime_instance_id!=Some(identity.instance_id)||!matches!(turn.phase(),MountedOwnerPhaseV1::Preparation|MountedOwnerPhaseV1::Maintenance){return Err(plugin_sdk_fault("mounted maintenance does not own this live instance and phase").into())}
+        let step=turn.advance_lifecycle(|cx,loan|if !A::mounted_jobs_terminal_is_empty(identity.instance_id){let demand=A::mounted_job_maintenance_demands(identity.instance_id,loan.maximum_copy_bytes)?;crate::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,actual|Ok((A::mounted_job_maintenance_step(identity.instance_id,same,actual)?,true)))}else{self.maintenance_step(cx,loan)})?;
+        Ok(match step{PluginLifecycleStep::Complete(progress)if !self.maintenance_terminal_is_empty()=>PluginLifecycleStep::Progress(progress),step=>step})
     }
 
-    fn mounted_owner_close_step(&mut self, turn: &mut MountedOwnerTurnV1<'_, '_>) -> Result<PluginLifecycleStep, Fault> {
-        let identity = turn.identity();
-        if self.live_runtime_instance_id != Some(identity.instance_id) || turn.phase() != MountedOwnerPhaseV1::Close {
-            return Err(plugin_sdk_fault("mounted close does not own this live instance and phase"));
-        }
-        if !A::mounted_jobs_terminal_is_empty(identity.instance_id) {
-            let step = match A::mounted_job_close_step(identity.instance_id, turn.grant()) { Ok(step) => step, Err(error) => { turn.record(error.retained_progress(), false, false).map_err(ValueError::into_fault)?; return Err(error); } };
-            if let Some(progress) = step.progress() { turn.record(progress, matches!(step, PluginLifecycleStep::Complete(_)), A::mounted_jobs_terminal_is_empty(identity.instance_id)).map_err(ValueError::into_fault)?; }
-            if matches!(step, PluginLifecycleStep::Complete(_)) && !A::mounted_jobs_terminal_is_empty(identity.instance_id) {
-                return Err(plugin_sdk_fault("mounted close violated its actual receipt or terminal witness"));
-            }
-            return Ok(match step { PluginLifecycleStep::Complete(progress) if !self.close_terminal_is_empty() => PluginLifecycleStep::Progress(progress), step => step });
-        }
-        let step = match self.close_step(turn.grant()){Ok(step)=>step,Err(error)=>{turn.record(error.retained_progress(),false,false).map_err(ValueError::into_fault)?;return Err(error);}};
-        if let (Some((_, phase, original, progress)), Some(actual)) = (self.constructor_receipt(), step.progress()) {
-            if *phase != ArtifactStoreConstructorPhase::Close || *original != turn.grant() || actual != *progress { return Err(plugin_sdk_fault("mounted constructor close differs from its original phase receipt")); }
-            self.take_constructor_receipt();
-        }
-        if let Some(progress) = step.progress() { turn.record(progress, matches!(step, PluginLifecycleStep::Complete(_)), self.close_terminal_is_empty()).map_err(ValueError::into_fault)?; }
-        Ok(step)
+    fn mounted_owner_close_step(&mut self,turn:&mut MountedOwnerTurnV1<'_,'_>)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+        let identity=turn.identity();if self.live_runtime_instance_id!=Some(identity.instance_id)||turn.phase()!=MountedOwnerPhaseV1::Close{return Err(plugin_sdk_fault("mounted close does not own this live instance and phase").into())}
+        let step=turn.advance_lifecycle(|cx,loan|if !A::mounted_jobs_terminal_is_empty(identity.instance_id){let demand=A::mounted_job_close_demands(identity.instance_id,loan.maximum_copy_bytes)?;crate::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,actual|Ok((A::mounted_job_close_step(identity.instance_id,same,actual)?,A::mounted_jobs_terminal_is_empty(identity.instance_id))))}else{self.close_step(cx,loan)})?;
+        Ok(match step{PluginLifecycleStep::Complete(progress)if !self.close_terminal_is_empty()=>PluginLifecycleStep::Progress(progress),step=>step})
     }
 
     fn close_retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
@@ -9035,16 +9009,13 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
     }
 
     /// 🎟️ Advances one genuine original owner under the complete caller grant.
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
-        if self.has_constructor_receipt() { return Ok(PluginLifecycleStep::AwaitingInput { reason: "original constructor receipt awaits its phase recipient" }); }
-        let demand=self.close_retirement_demands(grant.maximum_copy_bytes).map_err(|error|Fault::from(error.into_message()))?;
-        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(Default::default()));}
-        if !self.constructor_terminal_is_empty() {
-            self.close_store_constructor_unit(grant).map_err(|error| { let progress = error.retained_progress(); plugin_sdk_fault(error.into_message()).with_retained_progress(progress) })?;
-            return Ok(PluginLifecycleStep::Progress(self.constructor_receipt().map_or(Default::default(), |(_, _, _, progress)| *progress)));
-        }
-        let step = self.close_ladder_step(grant)?;
-        Ok(PluginLifecycleStep::retained(step, self.close_terminal_is_empty()))
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+        if self.has_constructor_receipt(){return Ok(PluginLifecycleStep::AwaitingInput{reason:"original constructor receipt awaits its phase recipient"})}
+        let demand=self.close_retirement_demands(loan.maximum_copy_bytes)?;
+        crate::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,grant|{
+            if !self.constructor_terminal_is_empty(){self.close_store_constructor_unit(grant)?;let progress=self.constructor_receipt().map_or(Default::default(),|(_,_,_,progress)|*progress);self.take_constructor_receipt();return Ok((PluginLifecycleStep::Progress(progress),false))}
+            let step=self.close_ladder_step(same,grant)?;let terminal=self.close_terminal_is_empty();Ok((PluginLifecycleStep::retained(step,terminal),terminal))
+        })
     }
 
     fn close_terminal_is_empty(&self) -> bool {
@@ -9104,8 +9075,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
     }
 
     /// 🎡️ Visits the live-maintenance units in fair order and forwards the unchanged grant to the first that releases something.
-    fn maintenance_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
-        self.maintenance_ladder_step(grant)
+    fn maintenance_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>, loan:RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::PluginLifecycleFailure> {
+        self.maintenance_ladder_step(cx,loan)
     }
 
     fn maintenance_terminal_is_empty(&self) -> bool {
@@ -9151,19 +9122,31 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
             .collect()
     }
 
-    async fn advance_typed_operation_publication(&mut self, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, retained: RetainedCloneGrant) -> Result<(), Fault> {
+    async fn advance_typed_operation_publication(&mut self, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), crate::PluginLifecycleFailure> {
+        let retained=cx.retained_grant();if cx.should_yield(){return Ok(())}
         if self.local_interaction_query_receipt.is_some(){return Ok(())}
         if self.has_constructor_receipt() { return Ok(()); }
-        if self.store_constructor_is_pending() { self.drive_store_constructor_unit(crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.preparation,retained)).map_err(|error| plugin_sdk_fault(error.into_message()))?; return Ok(()); }
+        if self.store_constructor_is_pending() { self.drive_store_constructor_unit(crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.preparation,retained))?; return Ok(()); }
         if self.time_travel.has_command_receipt() || self.tool_runs.has_original_receipt() || (0..ARTIFACT_LIVE_OUTPUT_SLOTS).any(|index|self.tool_operations.entry(index).is_some_and(|(_,owner)|owner.publication_ownership_progress.is_some()||owner.original_retirement_receipt.is_some())){return Ok(());}
         if !self.reserved_commits.is_empty() && self.reserved_commit_outcome.is_none() {
             self.step_framework_reserved_commit().await?;
             return Ok(());
         }
         if self.tool_run_has_pending_work() {
-            self.drive_tool_run_turn(crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.maintenance,retained), identity).await?;
+            let tool_run_before=cx.retained_progress();
+            self.drive_tool_run_turn(cx, identity).await?;
+            if cx.retained_progress()!=tool_run_before{
+                if !self.tool_runs.has_original_receipt(){
+                    let after=cx.retained_progress();
+                    let difference=|after:usize,before:usize|after.checked_sub(before).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original ToolRun recipient currency moved backwards"));
+                    let progress=RetainedCloneProgress{copied_items:difference(after.copied_items,tool_run_before.copied_items)?,copied_bytes:difference(after.copied_bytes,tool_run_before.copied_bytes)?,retained_capacity_bytes:difference(after.retained_capacity_bytes,tool_run_before.retained_capacity_bytes)?,released_bytes:difference(after.released_bytes,tool_run_before.released_bytes)?};
+                    self.tool_runs.retain_original_receipt(retained,progress)?;
+                }
+                return Ok(())
+            }
             if self.tool_runs.has_original_receipt(){return Ok(());}
         }
+        let retained=cx.retained_grant();
         if self.time_travel_has_pending_work() {
             self.drive_time_travel_turn(crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.maintenance,retained), identity).await?;
             if self.time_travel.has_command_receipt(){return Ok(());}
@@ -9175,7 +9158,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
                 return Ok(());
             }
         }
-        self.advance_typed_operation_publication_one(retained).await
+        self.advance_typed_operation_publication_one(cx).await.map_err(Into::into)
     }
 
     fn take_typed_operation_preparation_receipt(&mut self) -> Option<(semio_framework_job::OperationId, RetainedCloneGrant, RetainedCloneProgress)> {
@@ -9917,29 +9900,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         Ok(())
     }
 
-    /// 🏃️ A host poll is the interactive drive of a whole-document load, and the only drive of a read-back merge once
-    /// its log is decoded (`merge_document_archive`: the merge awaits the store and the app, which a maintenance step
-    /// cannot). The background
-    /// maintenance pump advances one family per step across the whole rotation, which leaves the
-    /// ~20k bounded steps a demo-sized archive needs (decode, hydrate, member open, closure,
-    /// candidate views, commit) well over a minute from `Ready` in the browser; each poll therefore
-    /// spends up to `DOCUMENT_ARCHIVE_POLL_WALL_US` on that same rotation before reporting, so
-    /// progress scales with how eagerly the host asks and the pump's own bounds stay untouched.
+    /// 📬️ Observes the original mounted load; its registered maintenance job drives retained work.
     async fn poll_document_archive_load(&mut self, operation: u64, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<protocol::DocumentArchiveLoadStatus, Fault> {
-        let started_us = semio_framework_job::default_now_us();
-        while self.document_archive_loads.get(operation).is_some_and(|active| !active.terminal()) {
-            if self.document_archive_loads.get(operation).is_some_and(ActiveDocumentArchiveLoad::awaits_merge) {
-                self.merge_document_archive(operation, identity).await?;
-            }
-            let grant = RetainedCloneGrant { maximum_copy_bytes: DOCUMENT_ARCHIVE_POLL_STEP_BYTES.min(self.mounted_policy.maintenance.maximum_copy_bytes), ..self.mounted_policy.maintenance };
-            let demand = self.maintenance_retirement_demands(grant.maximum_copy_bytes).map_err(|error| Fault::from(error.into_message()))?;
-            crate::bounded_ownership::runtime_lifecycle_step(demand, grant, |grant| {
-                let step = self.maintenance_step(grant)?;
-                Ok((step, self.maintenance_terminal_is_empty()))
-            })?;
-            if semio_framework_job::default_now_us().zip(started_us).is_none_or(|(now, started)| now.saturating_sub(started) >= DOCUMENT_ARCHIVE_POLL_WALL_US) {
-                break;
-            }
+        if self.document_archive_loads.get(operation).is_some_and(ActiveDocumentArchiveLoad::awaits_merge) {
+            self.merge_document_archive(operation, identity).await?;
         }
         self.document_archive_loads.get(operation).map(ActiveDocumentArchiveLoad::status).ok_or_else(|| document_load_fault(DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "recursive document archive authority changed before status publication"))
     }
@@ -10367,7 +10331,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     ///
     /// 🧭️ An app that declares no exporter for this port keeps the document-pack
     /// answer verbatim — the ONE behaviour this override preserves bit for bit.
-    async fn produce_media(&mut self, port: &str, owner: &mut store::NativeSnapshotEncodeOwner<'_,'_>) -> Result<MediaArtifact, MediaArtifactError> {
+    async fn produce_media(&mut self, port: &str, owner: &mut crate::io::control::NativeSnapshotEncodeOwner<'_,'_>) -> Result<MediaArtifact, MediaArtifactError> {
         if port == NATURAL_FILE_PORT {
             let codec = A::natural_file_codec().await.ok_or_else(|| MediaArtifactError::Payload("natural file exporter is not mounted".into()))?;
             self.refresh_cache().await.map_err(|fault| MediaArtifactError::Payload(fault.message))?;

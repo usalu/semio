@@ -2,7 +2,8 @@
 
 use super::{ErasedSnapshotRetirement, MemberOpenDiagnostic, conflict_from_history_conflict, mutation_meta_from_history_op_meta};
 use {semio_framework_artifact_reference::ArtifactRef};
-use crate::os_store::{store_schema::ArtifactEnvelope, serialization::ArtifactPack, ArtifactStore, ArtifactStoreInitializationRuntime, document_store_owners::DocumentStoreOwners, replay::EditReplay, OwnerRef, replay::ReplayStep};
+use pack::snapshot::ArtifactPack;
+use crate::os_store::{store_schema::ArtifactEnvelope, ArtifactStore, ArtifactStoreInitializationRuntime, document_store_owners::DocumentStoreOwners, replay::EditReplay, OwnerRef, replay::ReplayStep};
 use crate::{CompositionPin, Edit, FromValue, Mutation, OpBinary, OpText, ToValue};
 use semio_framework_job::{Generation, OperationId, StepContext};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
@@ -200,7 +201,7 @@ where
 
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     pub fn from_decoded_pack(
@@ -1039,7 +1040,7 @@ mod release_tests;
 
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
@@ -1086,7 +1087,7 @@ where
 
 impl<P, M> ErasedSnapshotRetirement for RetainedPersistedDocumentHydration<P, M>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands(0)?.copy_bytes) }

@@ -603,13 +603,13 @@ async fn cmd_diff(rest: &[String], context: &crate::os_pack::control::CommandCon
     }
     println!("common prefix: {common_prefix} edits");
 
-    let remaining_a = &log_a.edits[common_prefix..];
-    let remaining_b = &log_b.edits[common_prefix..];
-    let by_id_b: HashMap<&str, (usize, &crate::os_spr::HistoryEdit)> = remaining_b.iter().enumerate().map(|(i, edit)| (edit.id.as_str(), (common_prefix + i, edit))).collect();
-    let ids_a: HashSet<&str> = remaining_a.iter().map(|edit| edit.id.as_str()).collect();
+    let remaining_a=||log_a.edits.iter().skip(common_prefix);
+    let remaining_b=||log_b.edits.iter().skip(common_prefix);
+    let by_id_b: HashMap<&str, (usize, &crate::os_spr::HistoryEdit)> = remaining_b().enumerate().map(|(i, edit)| (edit.id.as_str(), (common_prefix + i, edit))).collect();
+    let ids_a: HashSet<&str> = remaining_a().map(|edit| edit.id.as_str()).collect();
 
     let mut differs = false;
-    for (i, edit) in remaining_a.iter().enumerate() {
+    for (i, edit) in remaining_a().enumerate() {
         let ordinal = common_prefix + i;
         match by_id_b.get(edit.id.as_str()) {
             None => {
@@ -624,7 +624,7 @@ async fn cmd_diff(rest: &[String], context: &crate::os_pack::control::CommandCon
             }
         }
     }
-    for (i, edit) in remaining_b.iter().enumerate() {
+    for (i, edit) in remaining_b().enumerate() {
         if !ids_a.contains(edit.id.as_str()) {
             println!("only-in-b: ordinal={} id={}", common_prefix + i, edit.id);
             differs = true;

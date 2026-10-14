@@ -1,0 +1,19 @@
+{
+  "workshop": null,
+  "stockId": null,
+  "stockLabel": null,
+  "stockPose": null,
+  "stockPayload": null,
+  "stockSolid": null,
+  "stepPayloads": {
+    "removed": [
+      {
+        "id": "step-1",
+        "index": 0
+      }
+    ],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

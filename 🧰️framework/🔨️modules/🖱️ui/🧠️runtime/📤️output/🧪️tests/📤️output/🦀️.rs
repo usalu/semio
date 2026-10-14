@@ -2,7 +2,7 @@ use super::*;
 
 //#region 🧪️OutputAdmission
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
 
 fn ready(surface: &str, generation: u64) -> (SurfaceReconciler, Option<SurfaceReconcileReadyPatch>) {

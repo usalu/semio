@@ -3,7 +3,7 @@ use protocol::Mutation;
 
 #[test]
 fn response_events_match_shared_vectors_and_undo() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️events.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📨️response/🔣️events.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mut before = FormsSnapshot::default();
         before.responses = semio_framework_pack_json::from_json_str(&case["before"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -26,7 +26,7 @@ fn response_events_match_shared_vectors_and_undo() {
 
 #[test]
 fn submission_checks_every_step_and_keeps_visible_answers() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️submission.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📨️response/🔣️submission.json")).unwrap();
     let definition = semio_framework_pack_json::from_json_str(&fixture["definition"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let values = semio_framework_pack_json::from_json_str(&case["values"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -42,7 +42,7 @@ fn submission_checks_every_step_and_keeps_visible_answers() {
 /// 🕰️ Every accepted timestamp survives JavaScript and native JSON decoding exactly.
 #[test]
 fn response_timestamps_match_portable_integer_vectors() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️timestamps.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📨️response/🔣️timestamps.json")).unwrap();
     for case in vectors["cases"].as_array().unwrap() {
         let value = serde_json::json!({ "id": "response-a", "submittedAt": case["submittedAt"], "definitionVersion": "revision-a", "answers": [] });
         let decoded: Result<super::FormsResponse, _> = semio_framework_pack_json::from_json_str(&value.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject);

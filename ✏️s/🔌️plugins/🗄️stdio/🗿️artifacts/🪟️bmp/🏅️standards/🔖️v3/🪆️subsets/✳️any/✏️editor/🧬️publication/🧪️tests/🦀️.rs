@@ -26,7 +26,7 @@ fn close(cursor:&mut BmpPublicationCursor){
 
 #[test]
 fn retained_bmp_publication_keeps_exact_components_indices_and_reserved_samples() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let base=BmpSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(row["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
         let paint=&row["paint"];let region=BmpRegion{x:paint["x"].as_u64().unwrap()as u32,y:paint["y"].as_u64().unwrap()as u32,width:paint["width"].as_u64().unwrap()as u32,height:paint["height"].as_u64().unwrap()as u32};let revision=crate::schema::operations::bmp_revision(&base);
@@ -55,7 +55,7 @@ fn retained_bmp_publication_cancellation_closes_partial_result_copy() {
 #[test]
 fn retained_bmp_publication_canonical_reader_preserves_neutral_owned_fields() {
     use semio_framework_value::FromValue;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let grant=encoding_grant(1,17);
     for case in fixture["cases"].as_array().unwrap() {
         let snapshot=BmpSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(case["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
@@ -75,7 +75,7 @@ fn retained_bmp_publication_canonical_reader_preserves_neutral_owned_fields() {
 #[test]
 fn retained_bmp_publication_canonical_diff_preserves_neutral_owned_fields() {
     use crate::schema::diff::BmpDiff;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let grant=encoding_grant(1,17);
     for case in fixture["cases"].as_array().unwrap() {
         let snapshot=BmpSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(case["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
@@ -96,7 +96,7 @@ fn retained_bmp_publication_canonical_diff_preserves_neutral_owned_fields() {
 #[test]
 fn retained_bmp_publication_replacement_and_inverse_use_bounded_typed_image_owners(){
     use protocol::Mutation;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_depth:64,maximum_release_bytes:4096};
     for row in fixture["cases"].as_array().unwrap().iter().chain(fixture["replacementCases"].as_array().unwrap().iter()){
         let target=BmpSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(row["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();

@@ -26,7 +26,7 @@ enum HygienicVariant {
 }
 
 fn hygienic_cases() -> (Vec<String>, Vec<HygienicRecord>) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️hygienic-bindings/🔣️.json")).expect("neutral hygiene vectors");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️hygienic-bindings/🔣️.json")).expect("neutral hygiene vectors");
     let names = fixture["names"].as_array().unwrap().iter().map(|name| name.as_str().unwrap().to_string()).collect();
     let cases = fixture["cases"].as_array().unwrap().iter().map(|case| serde_json::from_value(case.clone()).expect("serde hygiene case")).collect();
     (names, cases)

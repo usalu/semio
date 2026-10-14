@@ -14,7 +14,7 @@ import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
 import { parseGisTerrainArtifact } from "../../🟦️.ts";
 import { parseGisTerrainSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseGisTerrainDiff, applyGisTerrainDiff } from "../../🔺️diff/🟦️.ts";
-import vectors from "../../🧫️fixtures/🪪️document/🔣️.json" with { type: "json" };
+import vectors from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json" with { type: "json" };
 
 
 import {type ImportedMap} from "../../🗺️imported-map/🟦️.ts";
@@ -40,7 +40,7 @@ export function testTerrainDocumentContractOracle(): void {
     diff: { schema: diffSchema, parse: value=>parseGisTerrainDiff(foreignDiff(value)), nativeJson },
     validDocuments: [{ input: vectors.document, output: vectors.document }, { input: empty, output: empty }],
     invalidDocuments: vectors.invalidDocuments, invalidDiffs: vectors.invalidDiffs,
-    mutationRoots: [join(import.meta.dir, "../../../🧫️fixtures/🧬️mutations")],
+    mutationRoots: [join(import.meta.dir, "../../../🧪️tests/🧫️fixtures/🧬️mutations")],
     committed: { snapshots: 4, diffs: 2 },
   });
   assert.deepEqual(nativeJson(parseGisTerrainDiff(foreignDiff(vectors.diff))), vectors.diff);

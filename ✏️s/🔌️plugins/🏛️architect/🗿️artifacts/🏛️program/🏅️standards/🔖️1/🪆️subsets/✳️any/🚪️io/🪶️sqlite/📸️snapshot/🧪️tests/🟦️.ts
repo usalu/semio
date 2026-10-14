@@ -3,8 +3,8 @@ import * as ownerSqlite0 from "../🟦️.ts";
 import{expect,test}from"bun:test";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
-import laws from"../🧫️fixtures/🔣️.json";
-import snapshot from"../../../../🧫️fixtures/🧬️mutations/👥️stakeholder/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json";
+import laws from"./🧫️fixtures/🔣️.json";
+import snapshot from"../../../../🧪️tests/🧫️fixtures/🧬️mutations/👥️stakeholder/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json";
 import schema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import ioSchema from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json";
 import childSchema from"../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json";
@@ -55,7 +55,7 @@ for(const phase of["projectSnapshot","reconstructSnapshot"] as const)test("Archi
 
 test("Architect every authored double position remains independently queryable with exact NaN words",async()=>{const{expected}=await completeOracleFixture(),input=structuredClone(expected),bits=0xfff0000000000123n;for(const[slot,field]of laws.binary64Fields)(input as unknown as Record<string,Record<string,unknown>[]>)[slot!]![0]![field!]={bits};const database=await ownerSqlite0.programSnapshotToSqliteDatabase(input),db=Database.deserialize(await exportSqliteDatabase(database));try{for(const[,field,table,column]of laws.binary64Fields){expect(db.query("SELECT "+column+" AS query,printf('%016llx',"+column+"_ieee754_bits) AS word,"+column+"_ieee754_class AS kind FROM "+table).get()).toEqual({query:null,word:"fff0000000000123",kind:"nan"})}expect(await ownerSqlite0.programSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).toEqual(input)}finally{db.close()}});
 
-import semanticCellCases from "../🧫️fixtures/📏️cells/🔣️.json";
+import semanticCellCases from "./🧫️fixtures/📏️cells/🔣️.json";
 
 test("Architect independent neutral semantic cell schema owns the complete eleven cases",()=>{expect(semanticCellCases["tableCount"]).toEqual(685);expect(semanticCellCases["rowCount"]).toEqual(172);expect(new Set(semanticCellCases.cases.map(item=>item.name)).size).toBe(11)});
 for(const item of semanticCellCases.cases)test("Architect complete semantic cell frontier "+item.name,async()=>{

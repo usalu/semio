@@ -33,7 +33,7 @@ import antaLatin from "../../../../🔨️modules/🖼️assets/🔤️fonts/�
 import antaExtended from "../../../../🔨️modules/🖼️assets/🔤️fonts/🚀️anta/➕️latin-ext/📖️regular/🔤️outline.ttf?inline";
 import antaMath from "../../../../🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🧮️math/📖️regular/🔤️outline.ttf?inline";
 import antaSymbols from "../../../../🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🔣️symbols/📖️regular/🔤️outline.ttf?inline";
-import geometry from "../../🧫️fixtures/🕷️radar-geometry/🔣️.json";
+import geometry from "../🧫️fixtures/🕷️radar-geometry/🔣️.json";
 
 interface Fixture {
   readonly frame: RadarFrame;

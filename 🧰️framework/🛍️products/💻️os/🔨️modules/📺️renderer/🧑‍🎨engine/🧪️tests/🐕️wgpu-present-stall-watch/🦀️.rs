@@ -5,7 +5,7 @@ mod present_stall_watch_tests {
     use super::*;
 
     fn fixture() -> serde_json::Value {
-        serde_json::from_str(include_str!("../../🧫️fixtures/🐕️present-stall-watch/🔣️.json")).expect("present stall watch fixture parses")
+        serde_json::from_str(include_str!("../🧫️fixtures/🐕️present-stall-watch/🔣️.json")).expect("present stall watch fixture parses")
     }
 
     fn phase(tag: &str) -> AppPresentPhase {

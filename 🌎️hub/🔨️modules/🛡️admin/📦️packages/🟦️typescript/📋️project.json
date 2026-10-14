@@ -7,8 +7,9 @@
       "{projectRoot}/**/*",
       "{workspaceRoot}/🌎️hub/🔨️modules/🛡️admin/🏗️builder/🌐️vite/🟦️.ts",
       "{workspaceRoot}/🌎️hub/🔨️modules/🛡️admin/🧬️schema/**/*",
-      "{workspaceRoot}/🌎️hub/🔨️modules/🛡️admin/🧱️elements/**/*"
-    , "{workspaceRoot}/🌎️hub/🔨️modules/🛡️admin/🧪️tests/🎚️config/🟦️.ts"]
+      "{workspaceRoot}/🌎️hub/🔨️modules/🛡️admin/🧱️elements/**/*",
+      "{workspaceRoot}/🌎️hub/🔨️modules/🛡️admin/🧪️tests/🎚️config/🟦️.ts"
+    ]
   },
   "targets": {
     "dev": {
@@ -45,7 +46,7 @@
       },
       "cache": true,
       "outputs": [
-        "{projectRoot}/📤️dist"
+        "{projectRoot}/📤️dist/{options.env.SEMIO_BUILD_MODE}"
       ]
     },
     "test": {

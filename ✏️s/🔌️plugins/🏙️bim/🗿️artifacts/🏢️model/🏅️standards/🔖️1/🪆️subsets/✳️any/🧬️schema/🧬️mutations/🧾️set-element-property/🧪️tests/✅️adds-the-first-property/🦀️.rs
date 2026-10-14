@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🧾️set-element-property/✅️adds-the-first-property",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧾️set-element-property/✅️adds-the-first-property/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧾️set-element-property/✅️adds-the-first-property/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧾️set-element-property/✅️adds-the-first-property/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧾️set-element-property/✅️adds-the-first-property/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧾️set-element-property/✅️adds-the-first-property/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧾️set-element-property/✅️adds-the-first-property/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧾️set-element-property/✅️adds-the-first-property/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧾️set-element-property/✅️adds-the-first-property/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧾️set-element-property/✅️adds-the-first-property/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧾️set-element-property/✅️adds-the-first-property/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

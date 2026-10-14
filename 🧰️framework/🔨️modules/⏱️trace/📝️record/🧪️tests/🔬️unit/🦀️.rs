@@ -5,7 +5,7 @@
 use super::*;
 
 fn vocabulary() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🧫️fixtures/🛰️span-vocabulary/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🛰️span-vocabulary/🔣️.json")).unwrap()
 }
 
 //#region 🌍️Vocabulary
@@ -207,7 +207,7 @@ fn record_schema() -> serde_json::Value {
 }
 
 fn record_vectors() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
 
 fn vector_record(value: &serde_json::Value) -> TraceRecord {

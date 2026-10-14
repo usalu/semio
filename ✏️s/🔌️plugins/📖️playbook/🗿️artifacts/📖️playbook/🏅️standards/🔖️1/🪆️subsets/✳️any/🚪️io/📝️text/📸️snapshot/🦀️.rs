@@ -13,12 +13,12 @@ pub const FACADE_GENERATOR_EXAMPLE_TEXT: &str = include_str!("../../../🖼️as
 
 /// 📖️ Parses `.playbook` DSL text into a `PlaybookSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<PlaybookSnapshot, semio_framework_diagnostic::TextError> {
-    <PlaybookSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <PlaybookSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `PlaybookSnapshot` back to `.playbook` DSL text.
 pub fn print_dsl(document: &PlaybookSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(document)
+    pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -85,7 +85,7 @@ impl PlaybookPackRecord {
     }
 }
 
-impl store::os_store::serialization::ArtifactDsl for PlaybookSnapshot {
+impl pack::snapshot::ArtifactDsl for PlaybookSnapshot {
     const EXTENSION: &'static str = "playbook";
     fn envelope_id() -> &'static str {
         "playbook.playbook"
@@ -100,7 +100,7 @@ impl store::os_store::serialization::ArtifactDsl for PlaybookSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&PlaybookPackRecord::from_snapshot(self).__dsl_to_record(), &PlaybookPackRecord::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -111,14 +111,14 @@ impl store::os_store::serialization::ArtifactDsl for PlaybookSnapshot {
 /// `🗣️.dsl.semio` artifact.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn parse_playbook_dsl(text: &str) -> Result<PlaybookSnapshot, String> {
-    <PlaybookSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <PlaybookSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
 /// 🖨️ Prints a [`PlaybookSnapshot`] back to `.playbook` DSL text under a name an external caller can reach, paired
 /// with [`parse_playbook_dsl`].
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn print_playbook_dsl(snapshot: &PlaybookSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
+    pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

@@ -10,7 +10,7 @@
 //! rects, so five clicks on the painted label dispatched nothing
 //! (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-tree-row-hit-test-2026-09-12.md`).
 //!
-//! Oracle: `🖱️ui/🧫️fixtures/🌳️tree-row-rects/🔣️.json`; its TypeScript twin is
+//! Oracle: `🖱️ui/🧪️tests/🧫️fixtures/🌳️tree-row-rects/🔣️.json`; its TypeScript twin is
 //! `📺️renderer/🧑‍🎨engine/🧪️tests/🌳️tree-row-rects/🟦️.ts`, which pins the same rows against the
 //! React `Tree`'s own row metric (`treeRowHeightPx`).
 
@@ -26,7 +26,7 @@ use crate::wgpu::Label;
 use serde_json::Value;
 
 fn law() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🌳️tree-row-rects/🔣️.json")).expect("tree row rect fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🌳️tree-row-rects/🔣️.json")).expect("tree row rect fixture")
 }
 
 fn case<'a>(law: &'a Value, name: &str) -> &'a Value {

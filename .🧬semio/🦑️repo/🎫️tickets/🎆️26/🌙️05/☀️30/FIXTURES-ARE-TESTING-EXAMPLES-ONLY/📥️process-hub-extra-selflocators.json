@@ -1,0 +1,103 @@
+[
+  {
+    "path": "🌎️hub/🧪️tests/🧫️fixtures/🧱️foundation-source/🔣️.json",
+    "before": "fc51bf445304237da86d715dbef8c5ff3bfe7d046da283fecbc384dc8d659b34",
+    "after": "3db31b73fe0bff997c5ba54e4db9d1cb0fce80724cecd5555df324e617304414",
+    "edits": [
+      {
+        "start": 10790,
+        "end": 10885,
+        "from": "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🧫️fixtures/{🚇️pipe-v1,⏳️idle-admission-v1}/🔣️.json",
+        "to": "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🧪️tests/🧫️fixtures/{🚇️pipe-v1,⏳️idle-admission-v1}/🔣️.json"
+      },
+      {
+        "start": 10577,
+        "end": 10641,
+        "from": "{workspaceRoot}/🌎️hub/🧫️fixtures/🧱️foundation-source/🔣️.json",
+        "to": "{workspaceRoot}/🌎️hub/🧪️tests/🧫️fixtures/🧱️foundation-source/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🌎️hub/🧪️tests/🧫️fixtures/🧱️socket-grant-command-source/🔣️.json",
+    "before": "9f7eceedb2f98df6518f2862bf73e10ed8f92c195157715407d1cc9cdeb6c82a",
+    "after": "c31cac4ae0871e80a0ded3a5e1461c638ebf0321b88f37f7727f189bdf20b08b",
+    "edits": [
+      {
+        "start": 7295,
+        "end": 7382,
+        "from": "{workspaceRoot}/🌎️hub/📇️directory/🧫️fixtures/🔌️scoped-socket-revocation-v1/🔣️.json",
+        "to": "{workspaceRoot}/🌎️hub/📇️directory/🧪️tests/🧫️fixtures/🔌️scoped-socket-revocation-v1/🔣️.json"
+      },
+      {
+        "start": 7062,
+        "end": 7136,
+        "from": "{workspaceRoot}/🌎️hub/🧫️fixtures/🧱️socket-grant-command-source/🔣️.json",
+        "to": "{workspaceRoot}/🌎️hub/🧪️tests/🧫️fixtures/🧱️socket-grant-command-source/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🧬️retained-gis-browser/🔣️.json",
+    "before": "dd315eee944ed56fdc97460cc97869e2363248c460f4c430bb22cede79bddf7f",
+    "after": "1d11f07f9f25f1c80a92e0daa4ec2bf5314681a7b7fc27c02f600e3cec10507a",
+    "edits": [
+      {
+        "start": 74,
+        "end": 165,
+        "from": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧬️stdio-gis-bootstrap/🔣️.json",
+        "to": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🧬️stdio-gis-bootstrap/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🤝️gis-map-collaboration/🔣️.json",
+    "before": "99fdd3123fb797017df12340bc8326dafce1c5ae496f4ed1d809cd3692423d82",
+    "after": "5df22445dfcf141a0c383265ba4532c4473f73988eebf261cf0a46767b5ef882",
+    "edits": [
+      {
+        "start": 334,
+        "end": 393,
+        "from": "🌎️hub/🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json",
+        "to": "🌎️hub/🧪️tests/🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json"
+      },
+      {
+        "start": 215,
+        "end": 307,
+        "from": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧬️retained-gis-browser/🔣️.json",
+        "to": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🧬️retained-gis-browser/🔣️.json"
+      },
+      {
+        "start": 98,
+        "end": 189,
+        "from": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧬️stdio-gis-bootstrap/🔣️.json",
+        "to": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🧬️stdio-gis-bootstrap/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🧫️fixtures/🏃️command-ownership/🔣️.json",
+    "before": "4198db6a6f9694ca908d71efbf2b278ea1642c3ec95fcfa7c2adc9b07afe3f9f",
+    "after": "21bfde46c412bb56b58d8aeafdcd3f5c595943e9d8c252bc4fed21cef0e0c0b8",
+    "edits": [
+      {
+        "start": 12633,
+        "end": 12712,
+        "from": "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧫️fixtures/🏃️command-ownership/🔣️.json",
+        "to": "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🧫️fixtures/🏃️command-ownership/🔣️.json"
+      },
+      {
+        "start": 10024,
+        "end": 10103,
+        "from": "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧫️fixtures/🏃️command-ownership/🔣️.json",
+        "to": "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🧫️fixtures/🏃️command-ownership/🔣️.json"
+      },
+      {
+        "start": 7743,
+        "end": 7822,
+        "from": "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧫️fixtures/🏃️command-ownership/🔣️.json",
+        "to": "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🧫️fixtures/🏃️command-ownership/🔣️.json"
+      }
+    ]
+  }
+]

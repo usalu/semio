@@ -120,7 +120,7 @@ fn raster_owned_map_removal_returns_exact_pair_and_populated_drop_refuses() {
 
 #[test]
 fn retained_mask_keys_and_transforms_survive_clone_and_bounded_retirement() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧬️schema/🧫️fixtures/🎭️mask/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🔬️contract/🎭️mask/🔣️.json")).unwrap();
     for (index,case) in fixture["cases"].as_array().unwrap().iter().enumerate() {
         let mask:crate::RasterLayerMask=semio_framework_pack_json::from_json_str(&case["mask"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let mut base=empty_raster_document();
@@ -402,8 +402,8 @@ fn raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_c
     // 🗜️ The whole-document pack codec READS the populated forest and asset pool (it used to refuse
     // them outright) and must not consume, move or reallocate a single owner while doing so — the
     // pointer identities asserted below are what prove it.
-    let packed = <RasterSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
-    let decoded = <RasterSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&packed).expect("a populated Raster snapshot packs and decodes whole");
+    let packed = <RasterSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
+    let decoded = <RasterSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&packed).expect("a populated Raster snapshot packs and decodes whole");
     assert_eq!(decoded.assets.len(), snapshot.assets.len(), "the whole-document pack carries every asset handle");
     assert_eq!(decoded.layers.len(), snapshot.layers.len(), "the whole-document pack carries every layer");
     retirement::retire_raster_snapshot(decoded);
@@ -640,7 +640,7 @@ fn retained_asset_insertion_at_full_capacity_refuses_without_changing_source() {
 
 #[test]
 fn retained_layer_clone_preserves_protection_during_history_replay() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut base=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();base.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let operation=RasterMutation::RenameLayer(rename_layer::RenameLayer {layer_id:"locked-pixel".into(),new_name:"Accepted history".into()});
     let candidate=drive_raster_candidate(&base,&operation,981);

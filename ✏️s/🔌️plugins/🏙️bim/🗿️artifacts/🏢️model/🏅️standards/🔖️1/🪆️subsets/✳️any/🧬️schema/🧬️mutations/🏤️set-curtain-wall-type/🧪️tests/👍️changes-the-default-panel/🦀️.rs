@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🏤️set-curtain-wall-type/👍️changes-the-default-panel",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/👍️changes-the-default-panel/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/👍️changes-the-default-panel/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/👍️changes-the-default-panel/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/👍️changes-the-default-panel/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/👍️changes-the-default-panel/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/👍️changes-the-default-panel/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/👍️changes-the-default-panel/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/👍️changes-the-default-panel/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/👍️changes-the-default-panel/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/👍️changes-the-default-panel/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

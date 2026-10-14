@@ -1,0 +1,34 @@
+\documentclass{article}
+\usepackage{semio-viz-probe}
+\usepackage{semio-viz-shape}
+\ExplSyntaxOn
+% 🔗 Generates one link and records the SVG path it produced.
+\cs_new_protected:Npn \semio_probe_link:nn #1#2 {
+  \SemioVizLink[ draw=false, #2 ]
+  \exp_args:NnV \SemioVizProbeValues { link/#1 } \g_semio_viz_shape_result_tl
+}
+% 🎀 Generates one chord ribbon and records the SVG path it produced.
+\cs_new_protected:Npn \semio_probe_ribbon:nn #1#2 {
+  \SemioVizRibbon[ draw=false, #2 ]
+  \exp_args:NnV \SemioVizProbeValues { ribbon/#1 } \g_semio_viz_shape_result_tl
+}
+\ExplSyntaxOff
+\begin{document}
+\ExplSyntaxOn
+\SemioVizProbeBegin{shape-links-ribbons}{links}
+\semio_probe_link:nn { horizontal } { kind=horizontal, source={10,20}, target={80,60} }
+\semio_probe_link:nn { vertical }   { kind=vertical,   source={10,20}, target={80,60} }
+\semio_probe_link:nn { radial }     { kind=radial,     source={0.5,30}, target={2.5,90} }
+\semio_probe_link:nn { flat }       { kind=horizontal, source={10,20}, target={10,20} }
+\SemioVizProbeBegin{shape-links-ribbons}{ribbons}
+\semio_probe_ribbon:nn { plain }
+  { radius=100, startAngle=0.2, endAngle=0.9, targetStartAngle=2.1, targetEndAngle=2.9 }
+\semio_probe_ribbon:nn { padded }
+  { radius=100, startAngle=0.2, endAngle=0.9, targetStartAngle=2.1, targetEndAngle=2.9, padAngle=0.06 }
+\semio_probe_ribbon:nn { radii }
+  { radius=120, startAngle=0.2, endAngle=0.9, targetRadius=80, targetStartAngle=2.1, targetEndAngle=2.9 }
+\semio_probe_ribbon:nn { self }
+  { radius=100, startAngle=0.2, endAngle=0.9, targetStartAngle=0.2, targetEndAngle=0.9 }
+\SemioVizProbeEnd
+\ExplSyntaxOff
+\end{document}

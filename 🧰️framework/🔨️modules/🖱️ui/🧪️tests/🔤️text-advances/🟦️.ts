@@ -2,7 +2,7 @@
  * row, with kerning off and with its default kerning, to exactly the two widths the neutral fixture records, so the fixture the
  * wgpu atlas answers to (`🔬️targets-wgpu-text-unit`) is Chromium's own and never a hand-copied number.
  *
- * 🧫️ Read from `🖱️ui/🧫️fixtures/🔤️text-advances/🔣️.json` (schema `🖱️ui/🧬️schema/🔤️text-advances/🔣️.json`).
+ * 🧫️ Read from `🖱️ui/🧪️tests/🧫️fixtures/🔤️text-advances/🔣️.json` (schema `🖱️ui/🧬️schema/🔤️text-advances/🔣️.json`).
  */
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 
 import { chromium } from "playwright";
 import { describe, expect, it } from "vitest";
-import fixture from "../../🧫️fixtures/🔤️text-advances/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/🔤️text-advances/🔣️.json" with { type: "json" };
 
 const fonts = resolve(dirname(fileURLToPath(import.meta.url)), "../../../🖼️assets/🔤️fonts");
 const faceFiles: Record<string, string> = {

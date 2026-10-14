@@ -4,7 +4,7 @@ use super::*;
 fn retained_copy_original_backing_uses_shared_four_axis_allocator_law(){
  use semio_framework_value::retained_clone::RetainedCloneGrant;
  use semio_framework_trace::observe_heap_allocations_on_this_thread;
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../♻️close/🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../♻️close/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let capacity=row["capacity"].as_u64().unwrap()as usize;let mut bytes=Vec::with_capacity(capacity);bytes.extend_from_slice(row["content"].as_str().unwrap().as_bytes());let actual=bytes.capacity();
   let mut reserved=row["reserved"].as_bool().unwrap();let mut complete=row["complete"].as_bool().unwrap();let demand=retained_copy_close_demands(&bytes,reserved,complete);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert_eq!(demand.release_bytes,actual);
@@ -117,7 +117,7 @@ impl ArtifactDsl for FixtureSnapshot {
 }
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🪆️snapshot-edits/🔣️patch-cases.json")).expect("language-neutral snapshot edit fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🪆️snapshot-edits/🔣️patch-cases.json")).expect("language-neutral snapshot edit fixture")
 }
 
 fn snapshot(value: &serde_json::Value) -> FixtureSnapshot {
@@ -211,7 +211,7 @@ impl fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparat
 
 #[test]
 fn retained_native_route_refuses_without_fallback_and_lifecycle_is_cancelable() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️retained-native/🔣️.json")).expect("retained native fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️retained-native/🔣️.json")).expect("retained native fixture");
     let primary: ArtifactPreparationFactory<u8, u8> = std::sync::Arc::new(ProbePreparationFactory { accepts: |mutation| *mutation == 1, retained_bytes: 11 });
     let fallback: ArtifactPreparationFactory<u8, u8> = std::sync::Arc::new(ProbePreparationFactory { accepts: |_| true, retained_bytes: 22 });
     let factory: ArtifactPreparationFactory<u8, u8> = routed_native_edit_preparation_factory(Some(NativeEditPreparationRoute::new(|mutation| *mutation == 1 || *mutation == 2, primary)), fallback);
@@ -449,7 +449,7 @@ fn source_replacement_validates_the_complete_snapshot_without_defaulting() {
 
 #[test]
 fn malformed_source_is_admitted_by_bounded_preflight_then_reports_its_exact_typed_span() {
-    let diagnostic_fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🩺️source-diagnostic/🔣️.json")).expect("source diagnostic fixture");
+    let diagnostic_fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🩺️source-diagnostic/🔣️.json")).expect("source diagnostic fixture");
     let edit_fixture = fixture();
     let base = snapshot(&edit_fixture["base"]);
     for row in diagnostic_fixture["cases"].as_array().expect("diagnostic cases") {
@@ -515,7 +515,7 @@ fn source_preserves_wide_integers_with_an_independent_json_oracle() {
 
 #[test]
 fn an_octet_string_equals_the_json_array_of_its_octets() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🟰️octet-equivalence/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🟰️octet-equivalence/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let octets = row["octets"].as_array().unwrap().iter().map(|octet| octet.as_u64().unwrap() as u8).collect::<Vec<_>>();
         let json = serde_json::to_string(&row["json"]).unwrap();

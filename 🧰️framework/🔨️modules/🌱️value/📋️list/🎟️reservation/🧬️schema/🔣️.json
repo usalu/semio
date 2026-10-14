@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "grant",
+    "rows",
+    "rowBytes",
+    "payloadPageBytes",
+    "payloadCopies",
+    "partialFinalRows",
+    "interruptAfter"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.value.list.original-reservation-custody.v1"
+    },
+    "grant": {
+      "const": [
+        1,
+        17,
+        65536,
+        262144,
+        64
+      ]
+    },
+    "rows": {
+      "const": 4096
+    },
+    "rowBytes": {
+      "const": 96
+    },
+    "payloadPageBytes": {
+      "const": 4096
+    },
+    "payloadCopies": {
+      "const": 0
+    },
+    "partialFinalRows": {
+      "const": 13
+    },
+    "interruptAfter": {
+      "const": [
+        0,
+        1,
+        2,
+        3,
+        16,
+        42,
+        43,
+        256,
+        672,
+        673,
+        1000,
+        4096
+      ]
+    }
+  }
+}

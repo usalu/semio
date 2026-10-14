@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 
 import { applyPatch } from "fast-json-patch";
-import fixture from "../../🧫️fixtures/🪪️pack-identity/🔣️.json";
+import fixture from "../🧫️fixtures/🪪️pack-identity/🔣️.json";
 
 /** 🪪️ Exact window Pack identity neither changes nor materializes a foreign target partition. */
 export function testWindowConfigPackIdentityContract(): void {

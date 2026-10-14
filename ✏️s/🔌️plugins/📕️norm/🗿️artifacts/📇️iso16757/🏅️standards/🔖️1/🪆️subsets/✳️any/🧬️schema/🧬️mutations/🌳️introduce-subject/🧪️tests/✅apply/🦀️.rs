@@ -1,10 +1,10 @@
 //! 🧪️ Committed vector `🌳️introduce-subject` / `✅apply`: the canonical wire of the op reaches the committed after-snapshot and diff, and its own inverse restores the before-snapshot.
 use crate::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/✅apply/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/✅apply/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/✅apply/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/✅apply/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/✅apply/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌳️introduce-subject/✅apply/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌳️introduce-subject/✅apply/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌳️introduce-subject/✅apply/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌳️introduce-subject/✅apply/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌳️introduce-subject/✅apply/🎯️outcome/🔣️.json");
 fn before() -> Iso16757Snapshot { semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before") }
 fn mutation() -> Iso16757Mutation { semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation") }
 fn apply(mutation: &Iso16757Mutation, base: &Iso16757Snapshot) -> Iso16757Snapshot {

@@ -5,7 +5,7 @@ import glob from "fast-glob";
 import TOML from "@iarna/toml";
 import Ajv from "ajv";
 import {cargoWorkspaceForManifest,cargoWorkspaceMembers,discoverCargoWorkspaces} from "../🟦️.ts";
-import fixture from "../🧫️fixtures/🧭️native-discovery/🔣️.json";
+import fixture from "./🧫️fixtures/🧭️native-discovery/🔣️.json";
 
 test("Cargo production ownership never reads testing collections and preserves genuine module owners",()=>{
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Explicit artifact storage required");

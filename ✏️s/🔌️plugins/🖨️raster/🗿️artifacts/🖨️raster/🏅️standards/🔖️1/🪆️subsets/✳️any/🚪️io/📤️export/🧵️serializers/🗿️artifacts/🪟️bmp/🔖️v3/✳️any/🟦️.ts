@@ -72,5 +72,5 @@ export function rasterCanvasToBmpV3(canvas: RasterCanvas): Uint8Array {
   return out;
 }
 
-/** 🔡️ Lowercase hex, the shape `🧫️fixtures/*.json` stores and both languages compare on. */
+/** 🔡️ Lowercase hex, the shape `🧪️tests/🧫️fixtures/*.json` stores and both languages compare on. */
 export const bmpBytesToHex = (bytes: Uint8Array): string => Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");

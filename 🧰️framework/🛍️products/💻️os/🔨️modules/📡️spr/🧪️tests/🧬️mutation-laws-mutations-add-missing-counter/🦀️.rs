@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn direct_fixture_contract() {
-    super::super::super::tests::assert_leaf::<AddMissingCounter>(1, CounterMutation::AddMissingCounter, include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/🚫️add-missing-counter/🔣️.json"), include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/🚫️add-missing-counter/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    super::super::super::tests::assert_leaf::<AddMissingCounter>(1, CounterMutation::AddMissingCounter, include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/🚫️add-missing-counter/🔣️.json"), include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/🚫️add-missing-counter/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }
 
 /// ➕️ A missing-target forward outcome is not an invertible mutation: the sum law refuses it.

@@ -1,4 +1,5 @@
 //! 🧱️ Handwritten Block owned relational fields.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::*;
 use std::collections::{BTreeMap, BTreeSet};
 use store::{
@@ -6,7 +7,7 @@ use store::{
         artifact::{Cell, RowWriter, Reconstruction},
         SnapshotEncoding, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue,
     },
-    os_store::serialization::ArtifactSqliteSnapshot,
+    os_store::serialization::ArtifactSqliteSnapshotHost,
 };
 use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
@@ -358,17 +359,17 @@ fn write_rows(v:&Block3dSnapshot,out:&mut RowWriter<'_,'_>,total:usize)->Result<
         Ok(())
 }
 fn forecast(v:&Block3dSnapshot,c:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<usize,ValueError>{let total=total_rows(v,c,phase)?;let mut out=RowWriter::borrowed(c,phase)?;write_rows(v,&mut out,total)?;out.finish_borrowed()?;Ok(total)}
-impl ArtifactSqliteSnapshot for Block3dSnapshot {
+impl ArtifactSqliteSnapshotHost for Block3dSnapshot {
     fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{preflight::check(self,encoding,c)}
 
-    const SQLITE_SCHEMA: &'static str = SQL;
+    
     fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
         admit_schema(c)?;
         c.check_rows(5)?;
         let limits = c.limits();
         store::decode_sqlite_snapshot_record_native(
             payload,
-            <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),
+            <Self as pack::snapshot::ArtifactDsl>::envelope_id(),
             Self::__dsl_spec_producer(),
             |record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
                 admission::admit(record,native,limits)?;
@@ -379,10 +380,24 @@ impl ArtifactSqliteSnapshot for Block3dSnapshot {
     }
     fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
         forecast(self, c, SqliteSnapshotPhase::EncodeNative)?;
-        store::encode_sqlite_snapshot_record_native(encoding, <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), c,native_owner)
+        store::encode_sqlite_snapshot_record_native(encoding, <Self as pack::snapshot::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), c,native_owner)
     }
-    fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let total=forecast(self,c,SqliteSnapshotPhase::ProjectSnapshot)?;let mut out=RowWriter::new(SQL,c)?;write_rows(self,&mut out,total)?;out.finish()}
-    fn from_sqlite_database(d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+    
+    
+    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, _d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
+        c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1).map_err(store::io_schema::IoError::from_value_error)?;
+        if dialect.artifact_kind != "s.block.block3d" || dialect.standard != "1" || dialect.subset != "*" {
+            return Err(store::io_schema::IoError::from_value_error(invalid("Block3d declared dialect differs")));
+        }
+        let child=&self.catalog.target.dialect;catalog_dialect(&child.artifact_kind,&child.standard,&child.subset).map_err(store::io_schema::IoError::from_value_error)?;
+        c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1).map_err(store::io_schema::IoError::from_value_error)?;
+        Ok(store::io_schema::IoOutcome::clean(()))
+    }
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for Block3dSnapshot {
+const SQLITE_SCHEMA: &'static str = SQL;
+fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let total=forecast(self,c,SqliteSnapshotPhase::ProjectSnapshot)?;let mut out=RowWriter::new(SQL,c)?;write_rows(self,&mut out,total)?;out.finish()}
+fn from_sqlite_database(d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
         let mut rows = Rows::new(d, c)?;
         let doc = rows.one(0, 0)?;
         let mut v = Cursor::new(doc, 1, c);
@@ -442,15 +457,6 @@ impl ArtifactSqliteSnapshot for Block3dSnapshot {
         v.done()?;
         rows.finish(c)?;
         Ok(Self { schema, object_kind, representations, catalog, vortex_kind_extra, vortices, compatibility: rules, attributes, authors, camera3d, meta })
-    }
-    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, _d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
-        c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1).map_err(store::io_schema::IoError::from_value_error)?;
-        if dialect.artifact_kind != "s.block.block3d" || dialect.standard != "1" || dialect.subset != "*" {
-            return Err(store::io_schema::IoError::from_value_error(invalid("Block3d declared dialect differs")));
-        }
-        let child=&self.catalog.target.dialect;catalog_dialect(&child.artifact_kind,&child.standard,&child.subset).map_err(store::io_schema::IoError::from_value_error)?;
-        c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1).map_err(store::io_schema::IoError::from_value_error)?;
-        Ok(store::io_schema::IoOutcome::clean(()))
     }
 }
 

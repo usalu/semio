@@ -19,7 +19,7 @@ use semio_s_artifact_puzzle_3d::editor::puzzle3d::Puzzle3dPlayApp;
 use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::FillRunReason;
 use std::time::{Duration, Instant};
 
-const FILL_RUN_FIXTURE: &str = include_str!("../../🧫️fixtures/🎞️fill-run.json");
+const FILL_RUN_FIXTURE: &str = include_str!("../🧫️fixtures/🎞️fill-run.json");
 pub(crate) const FILL_RUN_TURNS: usize = 262_144;
 
 fn fixture() -> serde_json::Value {

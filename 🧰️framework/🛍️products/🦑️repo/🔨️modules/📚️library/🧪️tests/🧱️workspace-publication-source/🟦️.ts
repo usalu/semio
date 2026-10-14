@@ -287,7 +287,7 @@ test("historical FEM regeneration authority is retired while evidence bytes rema
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🏭️owned-generator-preview-inventory/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🏭️owned-generator-preview-inventory/🔣️.json",
   ];
   for (const path of authorities) expect(readFileSync(join(repoRoot, path), "utf8").includes(fixture.retirement.generatorId), path).toBe(false);
   const router = readFileSync(join(repoRoot, authorities[0]!), "utf8");

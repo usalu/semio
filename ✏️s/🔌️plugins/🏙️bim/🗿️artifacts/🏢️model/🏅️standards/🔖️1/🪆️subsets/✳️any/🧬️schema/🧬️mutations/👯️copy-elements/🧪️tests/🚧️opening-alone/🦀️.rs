@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "👯️copy-elements/🚧️opening-alone",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/👯️copy-elements/🚧️opening-alone/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/👯️copy-elements/🚧️opening-alone/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/👯️copy-elements/🚧️opening-alone/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/👯️copy-elements/🚧️opening-alone/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/👯️copy-elements/🚧️opening-alone/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👯️copy-elements/🚧️opening-alone/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👯️copy-elements/🚧️opening-alone/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👯️copy-elements/🚧️opening-alone/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👯️copy-elements/🚧️opening-alone/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👯️copy-elements/🚧️opening-alone/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

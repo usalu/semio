@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "fields", "tables", "originalGrant", "nativeMaximumBytes", "sqlMaximumBytes", "maximumCloseTurns", "checkpointBytes", "literal", "signedOffsets", "cases", "octets", "edits"],
+  "properties": {
+    "version": {"const": 1},
+    "fields": {"const": ["schema", "compressionMethod", "windowBits", "compressionLevelHint", "dictId", "payload"]},
+    "tables": {"const": {"deflate_document": 6, "deflate_payload_byte": 4}},
+    "originalGrant": {"$ref": "#/definitions/grant"},
+    "nativeMaximumBytes": {"const": 67108864},
+    "sqlMaximumBytes": {"const": 67108864},
+    "maximumCloseTurns": {"const": 65536},
+    "checkpointBytes": {"const": 256},
+    "literal": {"type": "string"},
+    "signedOffsets": {"const": [0, -1, -1000]},
+    "cases": {"type": "array", "minItems": 16, "maxItems": 16, "items": {"$ref": "#/definitions/case"}},
+    "octets": {"type": "array", "minItems": 256, "maxItems": 256, "uniqueItems": true, "items": {"type": "integer", "minimum": 0, "maximum": 255}},
+    "edits": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["name", "sql", "reconstruct"], "properties": {"name": {"type": "string"}, "sql": {"type": "string"}, "reconstruct": {"enum": ["invalid", "changed"]}}}}
+  },
+  "definitions": {
+    "grant": {"type": "object", "additionalProperties": false, "required": ["maximumItems", "maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes", "maximumDepth"], "properties": {"maximumItems": {"const": 1048576}, "maximumCopyBytes": {"const": 16777216}, "maximumCapacityBytes": {"const": 16777216}, "maximumReleaseBytes": {"const": 16777216}, "maximumDepth": {"const": 4096}}},
+    "case": {"type": "object", "additionalProperties": false, "required": ["compressionMethod", "windowBits", "compressionLevelHint", "dictId"], "properties": {"compressionMethod": {"type": "integer", "minimum": 0, "maximum": 15}, "windowBits": {"type": "integer", "minimum": 0, "maximum": 15}, "compressionLevelHint": {"enum": ["fastest", "fast", "default", "maximum"]}, "dictId": {"anyOf": [{"type": "null"}, {"type": "integer", "minimum": 0, "maximum": 4294967295}]}}}
+  }
+}

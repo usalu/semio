@@ -1,6 +1,7 @@
 //! 🎧️ Original audio channels and scalar indexes share one retained relational prefix.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{SemioAudioSnapshot,SemioAudioFormat,SemioAudioChannel,SemioAudioTag,identity};
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteValue,artifact::{RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteValue,artifact::{RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[derive(semio_framework_value::RetireOwned)]
 struct Prefix{snapshot:Option<SemioAudioSnapshot>,validation:SchemaValidationStorage,channels:RowIndexStorage,samples:RowIndexStorage,tags:RowIndexStorage,order:Vec<usize>,tag_order:Vec<usize>,grouped:Vec<usize>}

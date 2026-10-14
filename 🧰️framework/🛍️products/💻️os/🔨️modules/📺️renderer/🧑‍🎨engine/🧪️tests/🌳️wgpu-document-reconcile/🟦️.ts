@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { uiIntentToActionDescriptor } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import type { UiValue } from "@semio-tech/framework";
-import laws from "../../🧫️fixtures/🌳️wgpu-document-reconcile/🔣️.json";
+import laws from "../🧫️fixtures/🌳️wgpu-document-reconcile/🔣️.json";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const engineRoot = resolve(suiteRoot, "../..");

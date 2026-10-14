@@ -1,6 +1,6 @@
 use super::*;
 
-fn fixture_router_grant()->semio_framework_job::RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../🛎️services/🧫️fixtures/🧮️compute-retained/🔣️.json")).unwrap();serde_json::from_value(law["callerGrant"].clone()).unwrap()}
+fn fixture_router_grant()->semio_framework_job::RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../🛎️services/🧪️tests/🧫️fixtures/🧮️compute-retained/🔣️.json")).unwrap();serde_json::from_value(law["callerGrant"].clone()).unwrap()}
 use semio_framework_async::testkit::ManualRuntime;
 use std::sync::atomic::AtomicUsize;
 
@@ -46,20 +46,20 @@ struct RecordingRouterJob {
 }
 
 impl InteractiveJob for RecordingRouterJob {
-    fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,semio_framework_value::ValueError>{
-        if cx.is_cancelled()||self.closing{let grant=cx.retained_grant();if grant.maximum_items<2||grant.maximum_copy_bytes<std::mem::size_of::<bool>()||grant.maximum_depth==0{return Ok(None)}self.cancelled=true;cx.consume_retained(semio_framework_job::RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<bool>(),..Default::default()})?;return JobOutcomeBorrow::admit_cancelled(cx)}
+    fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
+        if cx.is_cancelled()||self.closing{let grant=cx.retained_grant();if grant.maximum_items<2||grant.maximum_copy_bytes<std::mem::size_of::<bool>()||grant.maximum_depth==0{return Ok(None)}self.cancelled=true;cx.consume_retained(semio_framework_job::RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<bool>(),..Default::default()})?;return JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
         if cx.should_yield(){return Ok(None)}
         cx.consume_fuel(1);
         if !self.yielded {
             let grant=cx.retained_grant();if grant.maximum_items<2||grant.maximum_copy_bytes<std::mem::size_of::<bool>()||grant.maximum_depth==0{return Ok(None)}
             self.yielded = true;
             cx.consume_retained(semio_framework_job::RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<bool>(),..Default::default()})?;
-            return JobOutcomeBorrow::admit_yield(cx);
+            return JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         if self.writer.is_none(){let grant=cx.retained_grant();let copied_bytes=std::mem::size_of::<Option<RetainedPayloadBuilder>>();if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return Ok(None)}self.writer=Some(RetainedPayloadBuilder::new(JobPayloadStream::CommitOutput));cx.consume_retained(semio_framework_job::RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()})?;return Ok(None)}
         let writer=self.writer.as_mut().unwrap();if !writer.is_initialized(){writer.advance_initialization(cx)?;return Ok(None)}if self.cursor<b"ok".len(){writer.append_original(cx,b"ok",&mut self.cursor)?;return Ok(None)}if writer.published().is_none(){writer.seal(cx)?;return Ok(None)}
         if !self.completed{let grant=cx.retained_grant();let copied_bytes=std::mem::size_of::<usize>()+std::mem::size_of::<bool>();if grant.maximum_items<2||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return Ok(None)}self.calls.as_ref().expect("recording router calls").fetch_add(1,Ordering::SeqCst);self.completed=true;cx.consume_retained(semio_framework_job::RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()})?;}
-        JobOutcomeBorrow::admit_complete(cx,None,self.writer.as_ref().and_then(RetainedPayloadBuilder::published))
+        JobOutcomeBorrow::admit_complete(cx,None,self.writer.as_ref().and_then(RetainedPayloadBuilder::published)).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn borrow_outcome<'a>(&'a self,original:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,semio_framework_value::ValueError>{
@@ -70,10 +70,11 @@ impl InteractiveJob for RecordingRouterJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> InteractiveJobCloseStep {
+    fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         self.begin_close();
+        let grant=cx.retained_grant();if cx.should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
         use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetirementTurnError};
-        if let Some(writer)=self.writer.as_mut(){if writer.terminal_is_empty(){let copied_bytes=std::mem::size_of::<Option<RetainedPayloadBuilder>>();if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return InteractiveJobCloseStep::Blocked}drop(self.writer.take());return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}}}return match writer.close_step_granted(grant){Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}}
+        if let Some(writer)=self.writer.as_mut(){if writer.terminal_is_empty(){let copied_bytes=std::mem::size_of::<Option<RetainedPayloadBuilder>>();if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return Ok(InteractiveJobCloseStep::Blocked)}let progress=RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()};cx.consume_retained(progress)?;drop(self.writer.take());cx.consume_fuel(1);return Ok(InteractiveJobCloseStep::Pending{progress})}let step=writer.close_step_granted(grant).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;cx.consume_retained(step.progress())?;cx.consume_fuel(1);return Ok(InteractiveJobCloseStep::Pending{progress:step.progress()})}
         let demand=self.close_demands();
         let result=semio_framework_value::advance_retirement_turn(demand,grant,|_|{
             if self.calls.as_ref().is_some_and(|original|Arc::weak_count(original)!=0){return Ok((RetainedCloneStep::Progress(Default::default()),false));}
@@ -81,7 +82,10 @@ impl InteractiveJob for RecordingRouterJob {
             let released_bytes=if let Some(original)=Arc::into_inner(original){drop(original);demand.release_bytes}else{0};
             Ok((RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes,..Default::default()}),true))
         });
-        match result{Ok(step)if self.calls.is_none()=>InteractiveJobCloseStep::Complete{progress:step.progress()},Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},Err(RetirementTurnError::Owner(error)|RetirementTurnError::Receipt(error))=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}.admit(grant,self.terminal_is_empty())
+        let step=result.map_err(|error|match error{RetirementTurnError::Owner(error)|RetirementTurnError::Receipt(error)=>semio_framework_job::OriginalTurnFailure::debit_original(error,cx)})?;
+        let step=if self.calls.is_none(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{InteractiveJobCloseStep::Pending{progress:step.progress()}};
+        let step=step.admit(grant,self.terminal_is_empty()).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
+        cx.consume_retained(step.progress())?;if step.progress().copied_items!=0{cx.consume_fuel(1)}Ok(step)
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.receiving_close_demands()?.copy_bytes)}
     fn next_close_capacity_byte_demand(&self,_body:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.receiving_close_demands()?.capacity_bytes)}
@@ -431,7 +435,7 @@ fn router_effect_original_sources_keep_capacity_until_funded_close() {
         let oracle:Vec<u8>=serde_json::from_str(&serde_json::to_string(text.as_bytes()).unwrap()).unwrap();assert_eq!(oracle,text.as_bytes());
         eprintln!("[DEBUG] original router source length{} capacity{capacity} close{turns} copied{copies} released{released} drop0",text.len());
     }
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();
     assert_eq!(fixture["expectedDropReleaseBytes"],0);
     for row in fixture["sources"].as_array().unwrap(){
@@ -444,7 +448,7 @@ fn router_effect_original_sources_keep_capacity_until_funded_close() {
 
 #[test]
 fn router_effect_original_box_frame_has_a_separate_funded_terminal_turn(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();
     assert_eq!(fixture["wrapper"]["separateTerminalFrame"],true);assert_eq!(fixture["wrapper"]["normalFactoryBirthQualified"],false);
     let mut source=Vec::with_capacity(fixture["sources"][0]["capacity"].as_u64().unwrap()as usize);source.extend_from_slice(fixture["sources"][0]["text"].as_str().unwrap().as_bytes());let source_capacity=source.capacity();
@@ -469,7 +473,7 @@ fn router_effect_original_box_frame_has_a_separate_funded_terminal_turn(){
 
 #[test]
 fn router_effect_recording_leases_keep_unique_shared_and_weak_backing_custody(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();
     for case in fixture["recordingLeases"].as_array().unwrap(){
         let source=Arc::new(AtomicUsize::new(7));let bytes=semio_framework_value::shared_retirement_allocation_bytes::<AtomicUsize>();
         let mut alias=(case=="alias").then(||RecordingRouterJob{calls:Some(source.clone()),yielded:false,closing:false,cancelled:false,completed:false,cursor:0,writer:None});let weak=(case=="weak").then(||Arc::downgrade(&source));let mut owner=RecordingRouterJob{calls:Some(source),yielded:false,closing:false,cancelled:false,completed:false,cursor:0,writer:None};owner.begin_close();

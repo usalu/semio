@@ -21,7 +21,7 @@ extern crate semio_framework_schema as framework_schema;
 // conditional-compilation bug here) — this crate declares no `serde` feature, so rustc flags the value as
 // unrecognized. Harmless, but a hard error under `-D warnings` without this crate-wide allow.
 
-pub use store::os_store::serialization::ArtifactDsl;
+pub use pack::snapshot::ArtifactDsl;
 pub use schema::stroke::{StrokeCap, StrokeJoin};
 pub use schema::fill_rule::FillRule;
 pub use schema::font_family::DrawingFontFamily;

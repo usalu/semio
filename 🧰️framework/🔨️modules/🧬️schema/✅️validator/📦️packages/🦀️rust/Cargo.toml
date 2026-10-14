@@ -20,7 +20,7 @@ path = "🦀️.rs"
 [dependencies]
 semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
-semio-framework-pack = { workspace = true }
+semio-framework-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde_json = { workspace = true }

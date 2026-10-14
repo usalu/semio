@@ -7,10 +7,10 @@
 
 use super::laws;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚚️move-selection/🕳️bare/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚚️move-selection/🕳️bare/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚚️move-selection/🕳️bare/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚚️move-selection/🕳️bare/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-selection/🕳️bare/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-selection/🕳️bare/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-selection/🕳️bare/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-selection/🕳️bare/🎯️outcome/🔣️.json");
 
 /// ⛔️ The refused or no-op motion leaves the document byte-identical and emits the declared diagnostic.
 #[test]

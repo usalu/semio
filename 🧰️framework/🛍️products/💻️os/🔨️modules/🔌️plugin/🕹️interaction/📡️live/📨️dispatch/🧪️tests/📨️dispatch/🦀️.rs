@@ -287,7 +287,7 @@ fn drive_close_lease(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeA
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_witness_survives_quarantine_removal_and_reused_id() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     close_lease_app(&runtime).await;
     let mut lease = crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).unwrap();
@@ -330,7 +330,7 @@ async fn instance_lifetime_close_constructs_worker_shell_before_exact_live_detac
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_rejects_foreign_root_and_exhaustion_before_detach() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     close_lease_app(&runtime).await;
     let mut old = crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).unwrap();
@@ -481,13 +481,14 @@ async fn a_merge_archive_command_is_admitted_under_its_own_sequence_on_both_rout
 }
 
 async fn query_app() -> VcsArtifactApp<TestApp> {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "semantic-unicode-over-page").unwrap();
     let mut state = row["expected"].clone(); state["hover"] = serde_json::json!({});
     let state: InteractionState = serde_json::from_value(state).unwrap();
     let envelope = store::os_store::document_materialize::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "query-dispatch", state, None);
     let mut interaction = store::ArtifactStore::new(envelope, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap();
-    store::install_unscheduled_catalog(&mut interaction, crate::local_interaction::retirement::funded_interaction_store_owners()).unwrap();
+    let mut receiving = crate::local_interaction::query::tests::original_receiving_recipient();
+    crate::local_interaction::query::tests::install_original_interaction_owners(&mut interaction, &mut receiving);
     let mut app = interaction_app_raw(crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     let mut previous = std::mem::replace(&mut app.interaction_store, interaction);
     previous.close_owned_unscheduled().unwrap();

@@ -25,24 +25,24 @@ fn sample() -> SemioDrawingSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn json_pack_round_trips() {
     let snap = sample();
-    let bytes = <SemioDrawingSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioDrawingSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioDrawingSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioDrawingSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_text_round_trips() {
     let snap = sample();
-    let text = <SemioDrawingSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
-    let back = <SemioDrawingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioDrawingSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snap);
+    let back = <SemioDrawingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn default_snapshot_round_trips() {
     let snap = SemioDrawingSnapshot::default();
-    let bytes = <SemioDrawingSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioDrawingSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioDrawingSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioDrawingSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 }
 
@@ -52,8 +52,8 @@ async fn default_snapshot_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn demo_snapshot_round_trips_pack_and_dsl() {
     let demo = demo_drawing_snapshot();
-    let packed = <SemioDrawingSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&demo);
-    assert_eq!(<SemioDrawingSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&packed).expect("decode"), demo);
-    let text = <SemioDrawingSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&demo);
-    assert_eq!(<SemioDrawingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse"), demo);
+    let packed = <SemioDrawingSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&demo);
+    assert_eq!(<SemioDrawingSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&packed).expect("decode"), demo);
+    let text = <SemioDrawingSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&demo);
+    assert_eq!(<SemioDrawingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse"), demo);
 }

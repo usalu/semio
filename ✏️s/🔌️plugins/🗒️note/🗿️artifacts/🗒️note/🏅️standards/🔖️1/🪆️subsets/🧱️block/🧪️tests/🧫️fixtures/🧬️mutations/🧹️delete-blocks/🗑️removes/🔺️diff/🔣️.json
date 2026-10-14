@@ -1,0 +1,31 @@
+{
+  "schema": null,
+  "id": null,
+  "title": null,
+  "blocks": {
+    "rows": [
+      {
+        "row": "remove",
+        "id": "blk-image",
+        "parentId": null,
+        "index": 4
+      },
+      {
+        "row": "remove",
+        "id": "blk-ink",
+        "parentId": null,
+        "index": 1
+      }
+    ]
+  },
+  "gridVisible": null,
+  "gridSpacing": null,
+  "gridSubdivisions": null,
+  "gridOpacity": null,
+  "snapEnabled": null,
+  "snapGridSpacing": null,
+  "pencilWidth": null,
+  "eraserRadius": null,
+  "assets": null,
+  "linkedArtifact": null
+}

@@ -3,5 +3,8 @@
   "private": true,
   "scripts": {
     "test": "nx run @semio-tech/schema-validator-rs:test"
+  },
+  "devDependencies": {
+    "@semio-tech/process": "workspace:*"
   }
 }

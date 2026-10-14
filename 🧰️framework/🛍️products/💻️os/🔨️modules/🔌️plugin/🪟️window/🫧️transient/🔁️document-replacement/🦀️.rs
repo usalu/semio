@@ -37,7 +37,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 }
 
 /// ♻️ Advances one displaced document's windows fairly even while another owner is blocked.
-fn retire_document_window_registry_step(registries: &mut ArtifactFixedRegistry<WindowTransientOwnerRegistry>, cursor: &mut usize, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
+pub(crate) fn retire_document_window_registry_step(registries: &mut ArtifactFixedRegistry<WindowTransientOwnerRegistry>, cursor: &mut usize, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
     let demand=retire_document_window_registry_demands(registries,*cursor,grant.maximum_copy_bytes,closing).map_err(|error|plugin_sdk_fault(error.into_message()))?;
     if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(Default::default()));}
     let Some((index,generation))=registries.next_id_from(*cursor)else{
@@ -63,7 +63,7 @@ fn retire_document_window_registry_step(registries: &mut ArtifactFixedRegistry<W
 }
 
 /// 📏️ Borrows one original generation or its exact final empty registry allocation.
-fn retire_document_window_registry_demands(registries:&ArtifactFixedRegistry<WindowTransientOwnerRegistry>,cursor:usize,body:usize,closing:bool)->Result<RetirementDemand,ValueError>{
+pub(crate) fn retire_document_window_registry_demands(registries:&ArtifactFixedRegistry<WindowTransientOwnerRegistry>,cursor:usize,body:usize,closing:bool)->Result<RetirementDemand,ValueError>{
     if let Some((_,generation))=registries.next_id_from(cursor){let original=registries.get(generation).expect("selected original window transient generation remains owned");return if original.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<WindowTransientOwnerRegistry>(),depth:1,..Default::default()})}else{original.retirement_demands(body)};}
     let release_bytes=if closing{registries.empty_backing_byte_demand().unwrap_or(0)}else{0};
     Ok(RetirementDemand{release_bytes,depth:usize::from(release_bytes!=0),..Default::default()})

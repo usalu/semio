@@ -5,7 +5,7 @@ use super::*;
 fn original_mesh_tessellation_normal_cursor_preserves_all_actual_receipts(){
     use crate::test_support::observe_tessellation_system as observe;
     use protocol::value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
     for close_copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){for cut in std::iter::once(None).chain(law["normalTessellation"]["cancellationTurns"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize))){
         let(mut job,source)=observe(||MeshTessellationJob::new(super::tessellation_metadata_tests::authored_source(&law)));let original=job.mesh.vertices.as_ptr();let originals:Vec<_>=job.mesh.attributes.iter().map(|(key,attribute)|(key.clone(),key.as_ptr()as usize,attribute.values.as_ptr()as usize)).collect();let(mut born,mut freed,mut turns,mut completed)=(source.0,source.1,0,None);
         loop{

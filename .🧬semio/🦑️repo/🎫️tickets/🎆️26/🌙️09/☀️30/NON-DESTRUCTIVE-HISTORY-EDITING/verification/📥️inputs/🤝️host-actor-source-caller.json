@@ -1,4 +1,5 @@
 {
+  "buildMode": "prototype",
   "workspaceRoot": "/Users/ueli/Documents/semio",
   "arguments": [
     "nx",

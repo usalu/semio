@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔏️set-classification-system/🚫️replaces-the-entries",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏️set-classification-system/🚫️replaces-the-entries/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏️set-classification-system/🚫️replaces-the-entries/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏️set-classification-system/🚫️replaces-the-entries/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏️set-classification-system/🚫️replaces-the-entries/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔏️set-classification-system/🚫️replaces-the-entries/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔏️set-classification-system/🚫️replaces-the-entries/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔏️set-classification-system/🚫️replaces-the-entries/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔏️set-classification-system/🚫️replaces-the-entries/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔏️set-classification-system/🚫️replaces-the-entries/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔏️set-classification-system/🚫️replaces-the-entries/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

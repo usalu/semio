@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
-import { cmdBudgetMs } from "../../../🏃️process/⏱️budget/🟦️.ts";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { cmdBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 📜️ `@semio-tech/framework-schema` task router. */
 import { resolve } from "node:path";
-import { BundleScript, ScriptRouter, type ScriptCommand } from "../../../🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter, type ScriptCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { CheckScript, GenerateScript, PreviewGeneratedScript } from "../../🏷️entity-kinds/🏃️execution/🟦️.ts";
 
 class TestScript extends BundleScript {
@@ -36,7 +36,7 @@ class EntityOwnershipScript extends BundleScript {
     if (segments.length) throw Error("test entity-ownership accepts no arguments");
     const { proveEntityCatalogOwnership } = await import("../../🧪️tests/🏷️entity-kinds/📏️ownership/🟦️.ts");
     await proveEntityCatalogOwnership(this.repoRoot);
-    const { runVitestV1, readVitestPolicyV1 } = await import("../../../🏃️process/🧪️testing/🧪️vitest/🟦️.ts");
+    const { runVitestV1, readVitestPolicyV1 } = await import("../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts");
     await runVitestV1(readVitestPolicyV1(process.env, this.root), [resolve(this.root, "../../🧪️tests/🏷️entity-kinds/🟦️.ts")], resolve(this.root, "../../🧪️tests/🎚️config/🟦️.ts"), process.env);
   }
 }

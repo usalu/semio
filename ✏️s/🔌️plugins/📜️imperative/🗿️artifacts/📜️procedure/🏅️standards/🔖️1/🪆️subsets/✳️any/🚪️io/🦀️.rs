@@ -70,8 +70,8 @@ pub mod derived_composition {
             for source in sources {
                 if source.dialect == DIALECT {
                     let snapshot = match &source.payload {
-                        AnalyzeSource::Text(text) => <ProcedureSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() })?,
-                        AnalyzeSource::Binary(bytes) => <ProcedureSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() })?,
+                        AnalyzeSource::Text(text) => <ProcedureSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() })?,
+                        AnalyzeSource::Binary(bytes) => <ProcedureSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() })?,
                     };
                     return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::High, diagnostics: Vec::new() });
                 }
@@ -130,8 +130,8 @@ pub mod io_registry {
     fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::ProcedureSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == PROCEDURE_DIALECT) {
             return match &source.payload {
-                IoPayload::Text(text) => <crate::ProcedureSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() }),
-                IoPayload::Binary(bytes) => <crate::ProcedureSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() }),
+                IoPayload::Text(text) => <crate::ProcedureSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() }),
+                IoPayload::Binary(bytes) => <crate::ProcedureSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() }),
             };
         }
         if let Some(source) = sources.iter().find(|s| s.dialect == IMPERATIVE_JSON_BRIDGE_DIALECT) {
@@ -201,10 +201,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self { snapshot: <ProcedureSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?, diagnostics: Vec::new() })
+            Ok(Self { snapshot: <ProcedureSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?, diagnostics: Vec::new() })
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self { snapshot: <ProcedureSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?, diagnostics: Vec::new() })
+            Ok(Self { snapshot: <ProcedureSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?, diagnostics: Vec::new() })
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <ProcedureMutation as protocol::Mutation<ProcedureSnapshot>>::diff(&mutation, &self.snapshot);
@@ -255,14 +255,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <ProcedureSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <ProcedureSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <ProcedureSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <ProcedureSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

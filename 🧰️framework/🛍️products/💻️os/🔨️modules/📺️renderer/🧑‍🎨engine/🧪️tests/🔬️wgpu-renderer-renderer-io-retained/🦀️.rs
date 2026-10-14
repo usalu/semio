@@ -20,7 +20,7 @@ impl std::task::Wake for RendererIoPollWake {
 #[test]
 fn a_contended_renderer_io_poll_wakes_itself_until_the_exact_session_can_register() {
     let _owner = RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error| error.into_inner());
-    let contract: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️native-asset-response/🔣️.json")).expect("native asset contract");
+    let contract: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📄️native-asset-response/🔣️.json")).expect("native asset contract");
     let contention = &contract["rendererIoContention"];
     assert_eq!(contention["registrationState"].as_str(), Some("checkedOut"));
     assert_eq!(contention["exactGenerationLive"].as_bool(), Some(true));
@@ -84,7 +84,7 @@ fn mounted_registry_max_plus_one_zero_pump_drop_and_generation_are_exact() {
 #[test]
 fn headless_entrypoint_drives_retained_io_and_matches_the_json_oracle() {
     let _owner = RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error| error.into_inner());
-    let contract: serde_json::Value = serde_json::from_str(include_str!("../../🎯️targets/🧊️wgpu/⌨️native-entrypoint/🧫️fixtures/🚪️headless/🔣️.json")).expect("headless contract");
+    let contract: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧊️wgpu/⌨️native-entrypoint/🚪️headless/🔣️.json")).expect("headless contract");
     let root = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
     std::fs::create_dir_all(&root).expect("test output root");
     let path = root.join(format!("headless-entrypoint-{}.json",std::process::id()));
@@ -108,7 +108,7 @@ fn headless_entrypoint_drives_retained_io_and_matches_the_json_oracle() {
 fn native_surface_capture_precedes_worker_device_preparation() {
     fn assert_factory<F: std::future::Future<Output = Result<GpuContext, String>> + Send>(_: impl FnOnce(Arc<winit::window::Window>) -> Result<F, String>) {}
     assert_factory(GpuContext::from_window);
-    let contract: serde_json::Value = serde_json::from_str(include_str!("../../🎯️targets/🧊️wgpu/⌨️native-entrypoint/🧫️fixtures/🪟️surface/🔣️.json")).expect("surface contract");
+    let contract: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧊️wgpu/⌨️native-entrypoint/🪟️surface/🔣️.json")).expect("surface contract");
     let source = include_str!("../../🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
     let resumed = &source[source.find("fn resumed(").expect("window callback")..];
     let mut phases = vec![(resumed.find("event_loop.create_window(").expect("create window"), "window"), (resumed.find("GpuContext::from_window(").expect("capture surface"), "surface"), (resumed.find("crate::spawn_app_task(").expect("delegate device preparation"), "worker")];
@@ -120,7 +120,7 @@ fn native_surface_capture_precedes_worker_device_preparation() {
 #[test]
 fn native_app_worker_completes_io_without_a_presentation_host() {
     let _owner = RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error| error.into_inner());
-    let contract:serde_json::Value=serde_json::from_str(include_str!("../../🎯️targets/🧊️wgpu/⌨️native-entrypoint/🧫️fixtures/🚪️headless/🔣️.json")).expect("worker I/O contract");
+    let contract:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧊️wgpu/⌨️native-entrypoint/🚪️headless/🔣️.json")).expect("worker I/O contract");
     let root=std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
     std::fs::create_dir_all(&root).expect("test output root");
     let path=root.join(format!("application-worker-io-{}.json",std::process::id()));
@@ -145,7 +145,7 @@ fn native_app_worker_completes_io_without_a_presentation_host() {
 #[test]
 fn native_kernel_worker_completes_io_without_a_presentation_host() {
     let _owner = RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error| error.into_inner());
-    let contract:serde_json::Value=serde_json::from_str(include_str!("../../🎯️targets/🧊️wgpu/⌨️native-entrypoint/🧫️fixtures/🚪️headless/🔣️.json")).expect("worker I/O contract");
+    let contract:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧊️wgpu/⌨️native-entrypoint/🚪️headless/🔣️.json")).expect("worker I/O contract");
     let root=std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
     std::fs::create_dir_all(&root).expect("test output root");
     let path=root.join(format!("kernel-worker-io-{}.json",std::process::id()));
@@ -171,7 +171,7 @@ fn native_kernel_worker_completes_io_without_a_presentation_host() {
 fn native_component_reader_admits_local_dev_artifacts_above_catalog_network_bound() {
     use std::io::Write;
     let _owner=RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error|error.into_inner());
-    let contract:serde_json::Value=serde_json::from_str(include_str!("../../🎯️targets/🧊️wgpu/⌨️native-entrypoint/🧫️fixtures/🚪️headless/🔣️.json")).expect("component input contract");
+    let contract:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧊️wgpu/⌨️native-entrypoint/🚪️headless/🔣️.json")).expect("component input contract");
     assert_eq!(semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,contract["networkComponentMaxBytes"].as_u64().expect("network bound"));
     let root=std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
     std::fs::create_dir_all(&root).expect("test output root");
@@ -203,7 +203,7 @@ fn native_component_reader_admits_local_dev_artifacts_above_catalog_network_boun
 #[test]
 fn native_smoke_without_a_selected_application_returns_failure() {
     let _owner=RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error|error.into_inner());
-    let contract:serde_json::Value=serde_json::from_str(include_str!("../../🎯️targets/🧊️wgpu/⌨️native-entrypoint/🧫️fixtures/🚪️headless/🔣️.json")).expect("smoke contract");
+    let contract:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧊️wgpu/⌨️native-entrypoint/🚪️headless/🔣️.json")).expect("smoke contract");
     let fixture=&contract["emptySmoke"];
     let registry:serde_json::Value=serde_json::from_str(include_str!("../../../../🔌️plugin/📇️registry/🛂️descriptor-verification/🧬️schema/🔣️.json")).expect("current descriptor contract");
     assert_eq!(fixture["descriptor"]["executionProtocol"]["appChannelVersion"],registry["$defs"]["PackageDescriptorV1"]["properties"]["executionProtocol"]["properties"]["appChannelVersion"]["const"],"the smoke input uses the current host channel");

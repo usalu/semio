@@ -1,6 +1,6 @@
 /** 🧫️ Handcrafted DWG typed boundary fixture shared by component and complete snapshot laws. */
 import type { DwgEntityBody,DwgEntityCommon,DwgLinearDimensionEntity,DwgViewportEntity } from "../../../../../../🧬️schema/🟦️.ts";
-import fixture from "../../../🧫️fixtures/📐️entities/🔣️.json";
+import fixture from "../../🧫️fixtures/📐️entities/🔣️.json";
 
 const max=BigInt(fixture.unsignedMaximum),nan={bits:BigInt("0x"+fixture.nanBits)},zero={bits:BigInt("0x"+fixture.negativeZeroBits)},infinity={bits:BigInt("0x"+fixture.negativeInfinityBits)};
 const common:DwgEntityCommon={mode:"reserved",color:{kind:"byBlock",index:65535,rgb:4294967295,transparency:0,name:"",bookName:undefined,colorHandle:max},linetypeScale:nan,linetype:"byLayer",plotStyle:"continuous",material:"explicit",shadow:255,invisible:65535,lineweight:255,layerHandle:max,linetypeHandle:undefined,materialHandle:0n,shadowHandle:max,plotStyleHandle:undefined,fullVisualStyleHandle:0n,faceVisualStyleHandle:max,edgeVisualStyleHandle:undefined};

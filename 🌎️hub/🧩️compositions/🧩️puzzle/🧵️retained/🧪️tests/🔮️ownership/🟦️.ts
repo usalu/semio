@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import contract from "../../🧫️fixtures/🔮️ownership/🔣️.json";
+import contract from "../🧫️fixtures/🔮️ownership/🔣️.json";
 import { inspectRustCompileReferences } from "../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../..");

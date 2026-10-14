@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "../🧪️tests/🧫️fixtures/🔣️.json";
 
 test("native pending replay cleanup admits each physical ownership lane", async () => {
   const database = new Database(":memory:");

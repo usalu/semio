@@ -556,7 +556,7 @@ COMPONENT
 - 🔁️ Refactored
 - 🐛️ Bug fix
 
-Before every [release](#-release-) the [repo](#-repo-) is archived 📦️
+Before every [native-build](#-release-) the [repo](#-repo-) is archived 📦️
 
 ### 🏷️ Tag [↑](#-gitstyle-)
 
@@ -596,7 +596,7 @@ Are you worried about committing all those binary application files (`.zip`, `.g
 
 Well, normally you should be 💾️
 
-But as we archive and squash all commits on every [release](#-release-) nothing is lost or polluted 💯️
+But as we archive and squash all commits on every [native-build](#-release-) nothing is lost or polluted 💯️
 
 </details>
 

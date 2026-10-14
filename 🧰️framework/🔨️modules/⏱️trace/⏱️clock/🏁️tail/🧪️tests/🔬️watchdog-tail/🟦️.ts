@@ -29,7 +29,7 @@ type WatchdogTailFixture = {
 };
 
 export function testWatchdogTailFixture(): void {
-  const fixture: WatchdogTailFixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture: WatchdogTailFixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   
   
   

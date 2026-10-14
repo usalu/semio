@@ -1,0 +1,17 @@
+{
+  "changes": [
+    {
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/Cargo.toml",
+      "exclusive": false,
+      "beforeSha256": "da677ba7978c79aac0df6cf793844f261533bb36ea96f6de518a49f815bc0b7c",
+      "afterSha256": "97eb927de07225aef542839e1cbf96580a8702dcfc6b21fc1807483bb9c21657",
+      "spans": [
+        {
+          "before": "[workspace.dependencies.semio-framework-artifact-reference]\n",
+          "after": "[workspace.dependencies.semio-framework-pack]\npath = \"../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust\"\n\n[workspace.dependencies.semio-framework-artifact-reference]\n"
+        }
+      ],
+      "role": "Actual existing inherited runtime pack dependency, required by original BIM Cargo package; real package semio-framework-pack/lib pack exists. No new dependency or trial protocol."
+    }
+  ]
+}

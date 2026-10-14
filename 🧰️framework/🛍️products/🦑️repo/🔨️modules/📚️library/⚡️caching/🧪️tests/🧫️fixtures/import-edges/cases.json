@@ -1,0 +1,10 @@
+{
+  "expectedEdges": [
+    {
+      "source": "fixture-a",
+      "target": "fixture-b",
+      "sourceFile": "a/deep/util.js",
+      "type": "static"
+    }
+  ]
+}

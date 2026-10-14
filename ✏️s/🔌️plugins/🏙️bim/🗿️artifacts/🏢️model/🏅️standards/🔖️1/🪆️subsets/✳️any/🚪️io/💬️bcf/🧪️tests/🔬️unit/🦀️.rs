@@ -4,7 +4,7 @@ use super::*;
 use crate::{IssueViewpoint, Point2};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const FRAME: &str = include_str!("../../../../🧫️fixtures/💡️inferences/🧨️clash-sets/🏢️frame/📸️snapshot/🔣️.json");
+const FRAME: &str = include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🧨️clash-sets/🏢️frame/📸️snapshot/🔣️.json");
 
 fn camera() -> ViewCamera {
     ViewCamera { target: Point2 { x: 3.0, y: 2.0 }, target_height: 1.5, azimuth: 0.8, pitch: 0.5, distance: 12.0 }

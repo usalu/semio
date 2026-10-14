@@ -36,7 +36,7 @@ struct HostileCase {
 }
 
 fn cases() -> Cases {
-    serde_json::from_str(include_str!("../../../🧫️fixtures/🎒️zip-archive-cases/🔣️.json")).expect("zip archive cases parse")
+    serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🎒️zip-archive-cases/🔣️.json")).expect("zip archive cases parse")
 }
 
 fn ours(entries: &[EntryCase]) -> Vec<u8> {

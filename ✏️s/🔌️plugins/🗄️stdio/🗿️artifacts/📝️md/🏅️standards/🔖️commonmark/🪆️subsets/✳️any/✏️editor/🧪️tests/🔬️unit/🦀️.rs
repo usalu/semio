@@ -150,7 +150,7 @@ async fn one_applied_change_set_is_one_splice_source_edit() {
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 
-const SPLICE_SOURCE: &str = include_str!("../../../🧫️fixtures/✂️splice-source/🔣️.json");
+const SPLICE_SOURCE: &str = include_str!("../../../🧪️tests/🧫️fixtures/✂️splice-source/🔣️.json");
 
 /// ⚖️ LAW (corpus `🧫️fixtures/✂️splice-source`): the ranges of a row carry the committed document to exactly the parse of the
 /// source they mean, and the leaf's own concrete inverse carries it back to the committed document.

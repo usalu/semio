@@ -4,7 +4,7 @@ import ts from "typescript";
 import { fileURLToPath } from "node:url";
 import { ecmaIdentifierValue, ecmaProgram, ecmaStringValue, ecmaTokens, type EcmaToken } from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
-import examples from "../🧫️fixtures/🔣️.json";
+import examples from "./🧫️fixtures/🔣️.json";
 
 const admit = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/EcmaToken`)!;
 

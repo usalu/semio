@@ -1,3 +1,4 @@
+import { phaseCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { createHash, webcrypto } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, truncateSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -346,7 +347,7 @@ describe("strict plugin catalog completion", () => {
   });
 
   it("preserves opt-in emission deadlines through guard and child-process budgets", async () => {
-    const fixtureDir = join(import.meta.dirname, "../../../🖨️describe/🧫️fixtures/⏱️emission-budget");
+    const fixtureDir = join(import.meta.dirname, "../../../🖨️describe/🧪️tests/🧫️fixtures/⏱️emission-budget");
     const cases = JSON.parse(readFileSync(join(fixtureDir, "🔣️.json"), "utf8"));
     const describeSchema = JSON.parse(readFileSync(join(import.meta.dirname, "../../../🖨️describe/🧬️schema/🔣️.json"), "utf8"));
     const describeAjv = new Ajv({ strict: true });
@@ -367,6 +368,7 @@ describe("strict plugin catalog completion", () => {
       const clock = vi.spyOn(Date, "now").mockImplementation(() => now);
       try {
         await expect(emitSemanticDescriptorV1(repoRoot, { artifactRoot, component }, {
+          compiler: phaseCompilerAdmissionControlV1(new AbortController().signal, 30000, () => undefined, async () => undefined),
           deadlineMs: row.budgetMs,
           checkpoint(stage) {
             if (stage === "validate") now = row.elapsedMs;
@@ -395,20 +397,21 @@ describe("strict plugin catalog completion", () => {
     const linkedComponent = join(artifactRoot, "linked.wasm");
     symlinkSync(component, linkedComponent);
     const request = { component, artifactRoot };
+    const compiler = phaseCompilerAdmissionControlV1(new AbortController().signal, 30000, () => undefined, async () => undefined);
     const cases: readonly [string, Parameters<typeof emitSemanticDescriptorV1>[1], Parameters<typeof emitSemanticDescriptorV1>[2], RegExp][] = [
-      ["outside the artifact root", { ...request, component: outsideComponent }, {}, /resolves outside the declared artifact root/],
-      ["an empty artifact", { ...request, component: emptyComponent }, {}, /regular non-symlink file/],
-      ["a symlinked artifact", { ...request, component: linkedComponent }, {}, /regular non-symlink file/],
-      ["an artifact root that is a file", { ...request, artifactRoot: component }, {}, /regular non-symlink directory/],
-      ["a cancelled emission", request, { cancelled: () => true }, /cancelled at validate/],
-      ["an exhausted deadline", request, { deadlineMs: -1 }, /deadline of -1ms exceeded/],
+      ["outside the artifact root", { ...request, component: outsideComponent }, { compiler }, /resolves outside the declared artifact root/],
+      ["an empty artifact", { ...request, component: emptyComponent }, { compiler }, /regular non-symlink file/],
+      ["a symlinked artifact", { ...request, component: linkedComponent }, { compiler }, /regular non-symlink file/],
+      ["an artifact root that is a file", { ...request, artifactRoot: component }, { compiler }, /regular non-symlink directory/],
+      ["a cancelled emission", request, { compiler, cancelled: () => true }, /cancelled at validate/],
+      ["an exhausted deadline", request, { compiler, deadlineMs: -1 }, /deadline of -1ms exceeded/],
     ];
     for (const [label, input, control, expected] of cases) {
       await expect(emitSemanticDescriptorV1(repoRoot, input, control), label).rejects.toThrow(expected);
       expect(readdirSync(artifactRoot).sort(), label).toEqual(["component.wasm", "empty.wasm", "linked.wasm"]);
     }
     const stages: string[] = [];
-    await expect(emitSemanticDescriptorV1(repoRoot, request, { checkpoint: (stage) => { stages.push(stage); if (stages.length === 2) throw new Error("stopped after emit"); } })).rejects.toThrow(/stopped after emit/);
+    await expect(emitSemanticDescriptorV1(repoRoot, request, { compiler, checkpoint: (stage) => { stages.push(stage); if (stages.length === 2) throw new Error("stopped after emit"); } })).rejects.toThrow(/stopped after emit/);
     expect(stages).toEqual(["validate", "emit"]);
     expect(readdirSync(artifactRoot).sort()).toEqual(["component.wasm", "empty.wasm", "linked.wasm"]);
   });

@@ -24,7 +24,8 @@
     "jstat": "1.9.6",
     "mathjs": "14.0.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.17",
+    "@semio-tech/process": "workspace:*"
   },
   "nx": {
     "includedScripts": []

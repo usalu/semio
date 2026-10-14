@@ -121,7 +121,7 @@ fn every_hub_refusal_becomes_a_typed_gateway_error_that_names_the_code() {
 
 #[test]
 fn actual_owner_protocol_matches_the_portable_auth_schema_and_preserves_bindings() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let protocol = hub_agent_credential_protocol_v1();
     let credential = (protocol.decode)(&serde_json::to_vec(&fixture["credential"]).unwrap()).unwrap();
     let request = (protocol.request)(&credential, "mcp.fixture").unwrap();
@@ -142,7 +142,7 @@ fn actual_native_exchange_uses_the_injected_owner_route_and_preserves_origin_and
     let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
     listener.set_nonblocking(true).unwrap();
     let origin = format!("http://{}", listener.local_addr().unwrap());
-    let mut fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let mut fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     fixture["credential"]["hubOrigin"] = serde_json::json!(origin);
     let credential = decode_hub_agent_credential_v1(&serde_json::to_vec(&fixture["credential"]).unwrap()).unwrap();
     let protocol = hub_agent_credential_protocol_v1();
@@ -184,7 +184,7 @@ fn actual_native_exchange_uses_the_injected_owner_route_and_preserves_origin_and
 
 #[test]
 fn owner_credential_and_grant_boundaries_follow_the_portable_auth_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for (document, vectors) in [("credential", "credentialVectors"), ("grant", "grantVectors")] {
         for vector in fixture[vectors].as_array().unwrap() {
             let mut value = fixture[document].clone(); value[vector["field"].as_str().unwrap()] = vector["value"].clone();

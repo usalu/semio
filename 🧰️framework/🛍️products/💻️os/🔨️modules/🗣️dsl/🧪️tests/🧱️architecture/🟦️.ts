@@ -14,7 +14,7 @@ type Corpus = Readonly<{
 }>;
 const root = resolve(import.meta.dir, "../../../../../../.."), owner = resolve(root, "🧰️framework/🔨️modules/🗣️dsl");
 const read = (path: string): string => readFileSync(resolve(root, path), "utf8");
-const corpus = JSON.parse(readFileSync(resolve(owner, "🧫️fixtures/🧱️ownership/🔣️.json"), "utf8")) as Corpus;
+const corpus = JSON.parse(readFileSync(resolve(owner, "🧪️tests/🧫️fixtures/🧱️ownership/🔣️.json"), "utf8")) as Corpus;
 const grammar = corpus.mappings.find(row => row.role === "grammar")!;
 const actualGrammar = (): string => read(grammar.destination);
 const tokens = (source: string): readonly string[] => rustTokens(source).map(token => token.text);

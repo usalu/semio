@@ -5,8 +5,8 @@ import {encodeIeee754Cells,readBinary64,readBinary32} from "../🟦️.ts";
 import { binary64, binary32, parseBinary64, parseBinary32 } from "../../../../🌱️value/🔢️ieee754/🟦️.ts";
 import { parseBinary64Transport, parseBinary32Transport } from "../../../📝️text/🔢️ieee754/🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase, parseSqliteDatabaseSchema } from "../../🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json";
-import integerFixture from "../🧫️fixtures/🎯️integer-query.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+import integerFixture from "./🧫️fixtures/🎯️integer-query.json";
 
 const columns = [{ index: 1, width: 64 }, { index: 2, width: 32 }] as const;
 const sql = "CREATE TABLE exact_scalar(id INTEGER PRIMARY KEY, large REAL, small REAL, large_ieee754_bits INTEGER, large_numeric_class TEXT, small_ieee754_bits INTEGER, small_numeric_class TEXT);";
@@ -67,7 +67,7 @@ test("integer query scalars must agree with IEEE words without rounding", async 
 });
 
 test("owned IEEE independent SQLite corruptions and column ceilings preserve intrinsic refusal kinds",async()=>{
- const {default:refusal}=await import("../🧫️fixtures/⚠️refusal/🔣️.json");const schema=parseSqliteDatabaseSchema(sql),row={rowid:BigInt(refusal.rowid),values:encodeIeee754Cells([BigInt(refusal.rowid),binary64(0),binary32(0)],columns)},bytes=await exportSqliteDatabase({tables:[{...schema.tables[0]!,rows:[row]}]});
+ const {default:refusal}=await import("./🧫️fixtures/⚠️refusal/🔣️.json");const schema=parseSqliteDatabaseSchema(sql),row={rowid:BigInt(refusal.rowid),values:encodeIeee754Cells([BigInt(refusal.rowid),binary64(0),binary32(0)],columns)},bytes=await exportSqliteDatabase({tables:[{...schema.tables[0]!,rows:[row]}]});
  for(const[index,edit]of refusal.edits.entries()){const db=Database.deserialize(bytes,{safeIntegers:true});try{db.run(edit);const query=db.query("SELECT large,small,large_ieee754_bits,large_numeric_class,small_ieee754_bits,small_numeric_class FROM exact_scalar").get() as Record<string,unknown>;expect(query).toBeDefined();const current=(await importSqliteDatabase(new Uint8Array(db.serialize()))).tables[0]!.rows[0]!;expect(()=>index<3?readBinary64(current,1,columns):readBinary32(current,2,columns)).toThrow(expect.objectContaining({kind:refusal.malformedRefusal}));}finally{db.close()}}
  expect(()=>encodeIeee754Cells([1n,binary64(0),binary32(0)],columns,6)).toThrow(expect.objectContaining({kind:refusal.columnRefusal}));
 });

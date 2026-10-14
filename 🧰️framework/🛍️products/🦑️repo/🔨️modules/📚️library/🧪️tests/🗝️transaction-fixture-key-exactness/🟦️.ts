@@ -3,11 +3,11 @@ import { readFileSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 /** 🧩️ Validate the exact keys of each transaction example or runtime authority catalog. */
-const fixturesRoot = resolve(import.meta.dir, "../../🧫️fixtures");
+const fixturesRoot = resolve(import.meta.dir, "../🧫️fixtures");
 const assetsRoot = resolve(import.meta.dir, "../../🖼️assets");
 
 const groups: readonly { readonly directory: string; readonly root?: string; readonly exactKeys: readonly string[] }[] = [
-  { directory: "🚨️transaction-sentinel-cases", root: assetsRoot, exactKeys: ["schemaVersion", "symlinkFlavorCases", "virtualPathPolicyCases"] },
+  { directory: "🚨️transaction-sentinel-cases", exactKeys: ["schemaVersion", "symlinkFlavorCases", "virtualPathPolicyCases"] },
   { directory: "🎲️transaction-disposition-outcomes", exactKeys: ["affectedStateCases", "expectedDispositionOperations", "negativeDispositionCases", "schemaVersion"] },
   { directory: "🤝️transaction-protocol", exactKeys: ["failureStages", "journalStates", "schemaVersion", "virtualPreimageNodes"] },
   { directory: "📒️transaction-ledger-boundaries", exactKeys: ["boundaries", "schemaVersion", "transactionLedgers", "workspaceLedgers"] },
@@ -38,8 +38,8 @@ test("the dead attemptLayout key was dropped, not smuggled into any split fixtur
   }
 });
 
-test("sentinel case rows keep the exact shape the normalization engine requires", () => {
-  const value = JSON.parse(readFileSync(join(assetsRoot, "🚨️transaction-sentinel-cases/🔣️.json"), "utf8")) as {
+test("sentinel case rows retain portable test inputs", () => {
+  const value = JSON.parse(readFileSync(join(fixturesRoot, "🚨️transaction-sentinel-cases/🔣️.json"), "utf8")) as {
     virtualPathPolicyCases: Record<string, unknown>[];
     symlinkFlavorCases: Record<string, unknown>[];
   };

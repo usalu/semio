@@ -1,12 +1,12 @@
 //#region 🧬️JobTestMutations
 use semio_framework_value_derive::{FromValue, ToValue};
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
-struct JobTestSnapshot {
-    value: i32,
+pub(crate) struct JobTestSnapshot {
+    pub(crate) value: i32,
 }
 
 impl ArtifactPack for JobTestSnapshot {
@@ -17,12 +17,15 @@ impl ArtifactPack for JobTestSnapshot {
         serde_json::from_slice(bytes).map_err(|error| match (u32::try_from(error.line()), u32::try_from(error.column())) { (Ok(line), Ok(column)) => store::PackError::from(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(line, column))), _ => store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, error.to_string())) })
     }
 }
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for JobTestSnapshot {
+
+}
 
 /// 🧮️ Ordered checked additions preserve intermediate rejection during structural composition.
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
-struct JobTestDiff {
+pub(crate) struct JobTestDiff {
     deltas: Vec<i32>,
 }
 
@@ -47,7 +50,7 @@ impl protocol::MutationDiff<JobTestSnapshot> for JobTestDiff {
 
 #[path = "../../🧪️testing/🧬️job-test-mutations/🧬️mutations/🦀️.rs"]
 mod mutations;
-use mutations::{AddValue, JobTestOp};
+pub(crate) use mutations::{AddValue, JobTestOp};
 
 #[path = "../🧬️job-test-mutations-unit/🦀️.rs"]
 mod tests;

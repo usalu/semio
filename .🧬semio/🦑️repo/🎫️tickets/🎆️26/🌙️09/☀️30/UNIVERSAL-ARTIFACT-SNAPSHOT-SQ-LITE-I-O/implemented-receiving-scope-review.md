@@ -1,0 +1,17 @@
+# Implemented Receiving Scope Review
+
+Read-only source inspection, 2026-10-13. Native94213 pending per parent; no execution here.
+
+`🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🦀️.rs:144` implements an inline guard holding original mutable Control and previous bool. receiving_scope sets true; Drop restores previous. No heap, fresh controller, ledger copy or callback replacement occurs. Exclusive nested borrows provide ordinary reverse lexical restoration. Public standalone Rust package `📦️packages/🦀️rust/🦀️.rs:19` explicitly reexports the repository-owned guard.
+
+Actual three child constructors at lines183/193/202 inherit `required_allocation`. Workspace/retirement children lend the original ledger/port/callback; original-allocation child binds supplied actual port and starts local forwarding0. Direct nonzero admission line226 rejects missing port after pure ceiling arithmetic but before callback/counter/ledger mutation. Stage callback likewise checks before updates. Existing port errors propagate unchanged. Zero requests remain permitted, and bound zero requests still invoke port. Native-paid receipt settlement APIs remain unchanged. No concrete lower implementation defect found in this intended first-party lexical invariant.
+
+At inspection, current OS IO file had no receiving_scope call and TypedFileSettlement still held RefCell<&mut Control>. Therefore lower guard alone had not yet activated production whole-operation enforcement. Parent is migrating settlement; retain guard through owner close/publication and refusal residual, not only binder body. Avoid conflating lower Source/Native test qualification with every provider's active production admission.
+
+## JSON Receiving Prerequisite
+
+Actual JsonMember/JsonValue/JsonSnapshot in `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs` derive RetireOwned. Value branches are Null, Bool, exact Number.lexeme String, String.value, Array Vec<JsonValue>, Object ordered Vec<JsonMember>; duplicate keys are legal base snapshot fields. Retained candidate Option<JsonValue>/Option<JsonSnapshot> can use existing typed retirement rather than an external JSON carrier. No new JSON receiving module was mounted at inspection.
+
+Lower `artifact::receiving::ReceivingWallet` supports paid vectors and text for both original directions. Port.vector/text preserve the destination before allocation and settle actual native delta even on failure; Port.work prices item/copy/depth before mutation. Enum variant transitions need complete header/move work before assignment, and displaced nonempty branches must move into retained retirement slots rather than drop locally. Copy Number.lexeme exactly, never derive ownership from query REAL values.
+
+A static retained native frame cannot store source-borrowed JsonValue references. Use owned integer work descriptors/source paths or allocation-free borrowed traversal with retained cursor state; frame owns all paid index/path vectors and reconstruction candidate variants. For Object construct each JsonMember key/value in retained slots before moving to paid member vector, preserving duplicate/insertion order. For Array prepay vector backing and child moves. Error/cancellation retains partial branch and traversal state until original close. Derive RetireOwned for owned descriptor enums/frame; borrowed transient references stay confined to binder scope. This extends the earlier `json-original-recursive-receiving-map.md`; it is a design prerequisite, not implementation qualification.

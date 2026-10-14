@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "previousWindow": "other-window",
+  "typed": "owner scoped",
+  "panel": { "surface": "owner-preferences-panel", "label": "Preferences" },
+  "focusSequence": ["measures", "search", "actions", "body"],
+  "lateBlur": "measures",
+  "cases": [
+    {
+      "kind": "body",
+      "window": "scope-window",
+      "surface": "scope-window"
+    },
+    {
+      "kind": "measures",
+      "window": "scope-window",
+      "surface": "scope-window/framework.section.measures"
+    },
+    {
+      "kind": "actions",
+      "window": "scope-window",
+      "surface": "scope-window/framework.section.engagements"
+    },
+    {
+      "kind": "search",
+      "window": "scope-window",
+      "surface": "scope-window/framework.section.engagements.search"
+    }
+  ]
+}

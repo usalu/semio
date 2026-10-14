@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "📈️set-schedule/🏢️scopes-the-storeys-and-phases",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/📈️set-schedule/🏢️scopes-the-storeys-and-phases/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/📈️set-schedule/🏢️scopes-the-storeys-and-phases/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/📈️set-schedule/🏢️scopes-the-storeys-and-phases/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/📈️set-schedule/🏢️scopes-the-storeys-and-phases/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/📈️set-schedule/🏢️scopes-the-storeys-and-phases/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📈️set-schedule/🏢️scopes-the-storeys-and-phases/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📈️set-schedule/🏢️scopes-the-storeys-and-phases/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📈️set-schedule/🏢️scopes-the-storeys-and-phases/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📈️set-schedule/🏢️scopes-the-storeys-and-phases/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📈️set-schedule/🏢️scopes-the-storeys-and-phases/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

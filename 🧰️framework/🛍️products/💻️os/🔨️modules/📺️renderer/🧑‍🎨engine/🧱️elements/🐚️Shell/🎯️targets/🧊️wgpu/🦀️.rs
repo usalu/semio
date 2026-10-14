@@ -1764,6 +1764,10 @@ struct ShellChromeBuildState {
     refused_guest_fault: Option<RefusedGuestFault>,
     #[cfg(not(target_arch = "wasm32"))]
     refused_frame_fault: Option<semio_framework_actor::pack::PackError>,
+    #[cfg(not(target_arch="wasm32"))]
+    refused_kernel_fault:Option<semio_framework_actor::KernelError>,
+    #[cfg(not(target_arch="wasm32"))]
+    refused_actor_call:Option<semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall>,
     /// 🌉️ MCP agent bridge consumer (presence + parked approvals), packet W1j.
     agent: crate::agent_bridge::AgentBridgeState,
     /// ✅️ The approvals modal's own open/dismiss state, alongside `agent.pending_approvals`.
@@ -3203,6 +3207,10 @@ pub struct ShellPluginFault {
     pub detail: String,
     #[cfg(not(target_arch = "wasm32"))]
     pub frame: Option<semio_framework_actor::pack::PackError>,
+    #[cfg(not(target_arch="wasm32"))]
+    pub kernel:Option<semio_framework_actor::KernelError>,
+    #[cfg(not(target_arch="wasm32"))]
+    pub actor_call:Option<semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall>,
 }
 
 /// 🧯 One SURFACE whose `render_with_document` failed, kept as data for exactly the reason
@@ -3216,6 +3224,12 @@ pub struct ShellSurfaceFault {
     pub surface_id: String,
     pub body_key: String,
     pub detail: String,
+    #[cfg(not(target_arch="wasm32"))]
+    pub frame:Option<semio_framework_actor::pack::PackError>,
+    #[cfg(not(target_arch="wasm32"))]
+    pub kernel:Option<semio_framework_actor::KernelError>,
+    #[cfg(not(target_arch="wasm32"))]
+    pub actor_call:Option<semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall>,
 }
 
 /// 🪟️ One bounded roster mutation whose first retained body is the release condition for its
@@ -5393,6 +5407,7 @@ impl ShellState {
         window_id: &str,
         window_rect: Rect,
         world_resources: &mut infinite_world::world::World3dBuildContext,
+        cx:&mut semio_framework_job::StepContext<'_>,
     ) -> bool {
         if !self.window_measures_documents.contains_key(window_id) {
             return true;
@@ -5422,7 +5437,7 @@ impl ShellState {
             let viewport_height_for_widgets = draw.screen_height();
             let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
             ctx.pick_clip = Some(rect);
-            render_ui_document_step(&mut cursor.document, &document, rect, &mut ctx, surface.as_str(), controller.as_str(), self.chrome_build.driver.drag, &mut hosts)
+            render_ui_document_step(&mut cursor.document, &document, rect, &mut ctx, surface.as_str(), controller.as_str(), self.chrome_build.driver.drag, &mut hosts, cx)
         };
         self.window_measures_documents.insert(window_id.to_string(), document);
         if complete {
@@ -7626,7 +7641,7 @@ impl ShellState {
     /// stays alive: a trapped guest is that plugin's failure, not the renderer's.
     fn record_plugin_fault(&mut self, plugin_id: &str, app_id: &str, detail: String) {
         Self::debug_log(&format!("[TRACE] wgpu shell boot: plugin {plugin_id} app {app_id} faulted: {detail}"));
-        self.plugin_faults.push(ShellPluginFault { plugin_id: plugin_id.to_string(), app_id: app_id.to_string(), detail });
+        self.plugin_faults.push(ShellPluginFault { plugin_id: plugin_id.to_string(), app_id: app_id.to_string(), detail,#[cfg(not(target_arch="wasm32"))] frame:None,#[cfg(not(target_arch="wasm32"))] kernel:None,#[cfg(not(target_arch="wasm32"))] actor_call:None });
         self.error = self.fault_status();
     }
 
@@ -7639,9 +7654,9 @@ impl ShellState {
     /// `eprintln!` except `debug_log`'s own native arm.
     fn record_surface_fault(&mut self, surface_id: &str, body_key: &str, refusal: crate::program_bridge::ProgramFault) {
         #[cfg(not(target_arch = "wasm32"))]
-        let frame = refusal.frame;
+        let (frame,kernel,actor_call)=(refusal.frame,refusal.kernel,refusal.actor_call);
         #[cfg(not(target_arch = "wasm32"))]
-        let detail = if frame.is_some() { LocalizedLabel::native("The input could not be delivered.", "Die Eingabe konnte nicht zugestellt werden.").resolve(self.active_terminology(), self.active_locale()).to_string() } else { refusal.text };
+        let detail = if frame.is_some()||kernel.is_some()||actor_call.is_some() { LocalizedLabel::native("The input could not be delivered.", "Die Eingabe konnte nicht zugestellt werden.").resolve(self.active_terminology(), self.active_locale()).to_string() } else { refusal.text };
         #[cfg(target_arch = "wasm32")]
         let detail = refusal.text;
         Self::debug_log(&format!("[TRACE] wgpu-shell surface fault surface={surface_id} body={body_key} detail={detail}"));
@@ -7649,9 +7664,9 @@ impl ShellState {
             existing.body_key = body_key.to_string();
             existing.detail = detail;
             #[cfg(not(target_arch = "wasm32"))]
-            { existing.frame = frame; }
+            { existing.frame = frame;existing.kernel=kernel;existing.actor_call=actor_call; }
         } else {
-            self.surface_faults.push(ShellSurfaceFault { surface_id: surface_id.to_string(), body_key: body_key.to_string(), detail, #[cfg(not(target_arch = "wasm32"))] frame });
+            self.surface_faults.push(ShellSurfaceFault { surface_id: surface_id.to_string(), body_key: body_key.to_string(), detail, #[cfg(not(target_arch = "wasm32"))] frame,#[cfg(not(target_arch="wasm32"))] kernel,#[cfg(not(target_arch="wasm32"))] actor_call });
         }
         self.error = self.fault_status();
     }
@@ -14309,7 +14324,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         if let Some((epoch, instance_id, expected, outcome)) = self.poll_directory_home_publication() {
             if let ShellDirectoryHomePublicationOutcome::Rejected(refusal) = &outcome {
-                if self.chrome_build.refused_frame_fault.is_none() { self.chrome_build.refused_frame_fault = refusal.frame; }
+                if self.chrome_build.refused_frame_fault.is_none() { self.chrome_build.refused_frame_fault = refusal.frame; }if self.chrome_build.refused_kernel_fault.is_none(){self.chrome_build.refused_kernel_fault=refusal.kernel;}if self.chrome_build.refused_actor_call.is_none(){self.chrome_build.refused_actor_call=refusal.actor_call;}
             }
             let current = self.directory_home.as_ref().is_some_and(|home| !home.closed && home.bootstrap.bootstrap_epoch() == epoch && home.instance_id == instance_id);
             if current {
@@ -21823,6 +21838,7 @@ impl ShellState {
         window_id: &str,
         window_rect: Rect,
         world_resources: &mut infinite_world::world::World3dBuildContext,
+        cx:&mut semio_framework_job::StepContext<'_>,
     ) -> bool {
         if self.projection_pane_folded(window_id) || self.world3d_host_id_for_window(window_id).is_none() || !surface_fits_overlay(theme, window_rect) {
             return true;
@@ -21865,7 +21881,7 @@ impl ShellState {
             let viewport_height_for_widgets = draw.screen_height();
             let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
             ctx.pick_clip = Some(rect);
-            render_ui_document_step(&mut cursor.document, &document, rect, &mut ctx, surface.as_str(), controller.as_str(), self.chrome_build.driver.drag, &mut hosts)
+            render_ui_document_step(&mut cursor.document, &document, rect, &mut ctx, surface.as_str(), controller.as_str(), self.chrome_build.driver.drag, &mut hosts, cx)
         };
         self.window_projection_documents.insert(window_id.to_string(), document);
         if complete {
@@ -22660,6 +22676,7 @@ impl ShellState {
         window_id: &str,
         window_rect: Rect,
         world_resources: &mut infinite_world::world::World3dBuildContext,
+        cx:&mut semio_framework_job::StepContext<'_>,
     ) -> bool {
         let folded = if search { self.window_search_folded(window_id) } else { self.window_actions_folded(window_id) };
         if folded || !surface_fits_overlay(theme, window_rect) {
@@ -22684,7 +22701,7 @@ impl ShellState {
             let viewport_height_for_widgets = draw.screen_height();
             let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
             ctx.pick_clip = Some(rect);
-            render_ui_document_step(&mut cursor.document, &document, rect, &mut ctx, surface.as_str(), controller.as_str(), self.chrome_build.driver.drag, &mut hosts)
+            render_ui_document_step(&mut cursor.document, &document, rect, &mut ctx, surface.as_str(), controller.as_str(), self.chrome_build.driver.drag, &mut hosts, cx)
         };
         if search {
             self.window_search_documents.insert(window_id.to_string(), document);
@@ -24574,7 +24591,7 @@ impl ShellState {
     /// answers the `code: message` text every `String` dispatch channel carries.
     fn refused_guest_call(&mut self, refusal: crate::program_bridge::ProgramFault, app: &AppDefinition) -> String {
         #[cfg(not(target_arch = "wasm32"))]
-        { if self.chrome_build.refused_frame_fault.is_none() { self.chrome_build.refused_frame_fault = refusal.frame; } }
+        { if self.chrome_build.refused_frame_fault.is_none() { self.chrome_build.refused_frame_fault = refusal.frame; }if self.chrome_build.refused_kernel_fault.is_none(){self.chrome_build.refused_kernel_fault=refusal.kernel;}if self.chrome_build.refused_actor_call.is_none(){self.chrome_build.refused_actor_call=refusal.actor_call;} }
         #[cfg(not(target_arch = "wasm32"))]
         let detail = if refusal.frame.is_some() { program_fault_text(&refusal, self.active_terminology(), self.active_locale()) } else { refusal.text };
         #[cfg(target_arch = "wasm32")]
@@ -24588,7 +24605,7 @@ impl ShellState {
     /// as a raw code; answers the text the open's own status keeps ([`program_fault_text`]).
     pub(crate) fn note_refused_open(&mut self, refusal: crate::program_bridge::ProgramFault) -> String {
         #[cfg(not(target_arch = "wasm32"))]
-        { if self.chrome_build.refused_frame_fault.is_none() { self.chrome_build.refused_frame_fault = refusal.frame; } }
+        { if self.chrome_build.refused_frame_fault.is_none() { self.chrome_build.refused_frame_fault = refusal.frame; }if self.chrome_build.refused_kernel_fault.is_none(){self.chrome_build.refused_kernel_fault=refusal.kernel;}if self.chrome_build.refused_actor_call.is_none(){self.chrome_build.refused_actor_call=refusal.actor_call;} }
         let detail = program_fault_text(&refusal, self.active_terminology(), self.active_locale());
         self.chrome_build.refused_guest_fault = refusal.fault.map(|fault| RefusedGuestFault { fault, notices: Vec::new() });
         #[cfg(not(target_arch = "wasm32"))]
@@ -26922,7 +26939,9 @@ impl ShellState {
         input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         world_resources: &mut infinite_world::world::World3dBuildContext,
-    ) -> bool {
+        cx:&mut semio_framework_job::StepContext<'_>,
+    ) -> Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let mut failure=None;let completed=(||{
         if let Some(census) = cursor.note_opportunity() {
             Self::debug_log(&format!("[TRACE] wgpu-shell chrome walk parked {census} windows={}", self.dock_window_plan.len()));
             crate::interpreter::note_chrome_walk_parked(&census);
@@ -26932,7 +26951,7 @@ impl ShellState {
         let body = self.body_rect(theme);
         match cursor.phase {
             ShellChromeFramePhase::CloseDocument => {
-                let close_consumed = crate::interpreter::close_ui_document_one() || self.close_document_one();
+                let close_consumed=match crate::interpreter::close_ui_document_one(cx){Ok(advanced)=>advanced||self.close_document_one(),Err(error)=>{failure=Some(error);return false}};
                 begin_ui_document_opportunity(close_consumed);
                 if crate::interpreter::ui_document_close_pending() {
                     return false;
@@ -27082,7 +27101,7 @@ impl ShellState {
                     Err(()) => return false,
                 };
                 let mut overlay_slot = Some(overlay);
-                let complete = self.render_main_window_step(&mut cursor.child, draw, &mut overlay_slot, atlas, icons, input, theme, body, world_resources);
+                let complete = self.render_main_window_step(&mut cursor.child, draw, &mut overlay_slot, atlas, icons, input, theme, body, world_resources, cx);
                 drop(binding);
                 if !complete {
                     return false;
@@ -27102,7 +27121,7 @@ impl ShellState {
                 cursor.advance(ShellChromeFramePhase::Panels);
             }
             ShellChromeFramePhase::Panels if self.mobile_panel_active() => {
-                if !self.render_mobile_panel_step(&mut cursor.child, overlay, atlas, icons, input, theme, body, world_resources) {
+                if !self.render_mobile_panel_step(&mut cursor.child, overlay, atlas, icons, input, theme, body, world_resources, cx) {
                     return false;
                 }
                 cursor.advance(ShellChromeFramePhase::AgentChatHeader);
@@ -27112,7 +27131,7 @@ impl ShellState {
                     cursor.advance(ShellChromeFramePhase::AgentChatHeader);
                     return false;
                 };
-                if self.anchor_open(anchor) && !self.render_panel_step(&mut cursor.child, anchor, overlay, None, atlas, icons, input, theme, body, world_resources) {
+                if self.anchor_open(anchor) && !self.render_panel_step(&mut cursor.child, anchor, overlay, None, atlas, icons, input, theme, body, world_resources, cx) {
                     return false;
                 }
                 cursor.setup += 1;
@@ -27167,7 +27186,7 @@ impl ShellState {
                 cursor.advance(ShellChromeFramePhase::HubWorkspace);
             }
             ShellChromeFramePhase::HubWorkspace => {
-                if !self.render_hub_workspace_step(&mut cursor.child, overlay, atlas, icons, input, theme, w, h, world_resources) {
+                if !self.render_hub_workspace_step(&mut cursor.child, overlay, atlas, icons, input, theme, w, h, world_resources, cx) {
                     return false;
                 }
                 cursor.advance(ShellChromeFramePhase::SpaceAdministration);
@@ -27246,6 +27265,7 @@ impl ShellState {
             ShellChromeFramePhase::Complete => return true,
         }
         cursor.terminal_is_complete()
+    })();match failure{Some(error)=>Err(error),None=>Ok(completed)}
     }
 
     /// 📨️ Coalesces the persisted chrome load without touching platform storage in the frame step.
@@ -27969,6 +27989,7 @@ impl ShellState {
         theme: &Theme,
         bounds: Rect,
         world_resources: &mut infinite_world::world::World3dBuildContext,
+        cx:&mut semio_framework_job::StepContext<'_>,
     ) -> bool {
         match cursor.phase {
             0 => {
@@ -28034,7 +28055,7 @@ impl ShellState {
                     let viewport_height_for_widgets = draw.screen_height();
                     let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
                     ctx.pick_clip = Some(window_rect);
-                    render_ui_document_step(&mut cursor.document, &document, window_rect, &mut ctx, window_id.as_str(), controller.as_str(), self.chrome_build.driver.drag, &mut hosts)
+                    render_ui_document_step(&mut cursor.document, &document, window_rect, &mut ctx, window_id.as_str(), controller.as_str(), self.chrome_build.driver.drag, &mut hosts, cx)
                 };
                 self.restore_window_document(&window_id, document);
                 if !complete {
@@ -28059,7 +28080,7 @@ impl ShellState {
                     cursor.phase = 5;
                     return false;
                 };
-                if !self.paint_window_measures_step(cursor, draw, overlay, atlas, icons, input, theme, &window_id, window_rect, world_resources) {
+                if !self.paint_window_measures_step(cursor, draw, overlay, atlas, icons, input, theme, &window_id, window_rect, world_resources, cx) {
                     return false;
                 }
                 cursor.document = UiDocumentFrameCursor::default();
@@ -28109,7 +28130,7 @@ impl ShellState {
                     cursor.phase = 5;
                     return false;
                 };
-                if !self.paint_window_projection_step(cursor, draw, overlay, atlas, icons, input, theme, &window_id, window_rect, world_resources) {
+                if !self.paint_window_projection_step(cursor, draw, overlay, atlas, icons, input, theme, &window_id, window_rect, world_resources, cx) {
                     return false;
                 }
                 cursor.scalar = 0;
@@ -28126,7 +28147,7 @@ impl ShellState {
                     cursor.phase = 5;
                     return false;
                 };
-                if !self.paint_window_pane_body_step(false, cursor, draw, overlay, atlas, icons, input, theme, &window_id, window_rect, world_resources) {
+                if !self.paint_window_pane_body_step(false, cursor, draw, overlay, atlas, icons, input, theme, &window_id, window_rect, world_resources, cx) {
                     return false;
                 }
                 cursor.document = UiDocumentFrameCursor::default();
@@ -28139,7 +28160,7 @@ impl ShellState {
                     cursor.phase = 5;
                     return false;
                 };
-                if !self.paint_window_pane_body_step(true, cursor, draw, overlay, atlas, icons, input, theme, &window_id, window_rect, world_resources) {
+                if !self.paint_window_pane_body_step(true, cursor, draw, overlay, atlas, icons, input, theme, &window_id, window_rect, world_resources, cx) {
                     return false;
                 }
                 cursor.document = UiDocumentFrameCursor::default();
@@ -28439,6 +28460,7 @@ impl ShellState {
         theme: &Theme,
         world_resources: &mut infinite_world::world::World3dBuildContext,
         anchor: PanelAnchor,
+        cx:&mut semio_framework_job::StepContext<'_>,
     ) -> Option<bool> {
         let controller = self.document_controller_id();
         let document = self.panel_documents.remove(window)?;
@@ -28452,7 +28474,7 @@ impl ShellState {
             let viewport_height_for_widgets = panel_draw.screen_height();
             let mut ctx = framework_widget_context(panel_draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
             ctx.pick_clip = Some(content);
-            render_ui_document_step(&mut cursor.document, &document, content, &mut ctx, window, controller.as_str(), self.chrome_build.driver.drag, &mut hosts)
+            render_ui_document_step(&mut cursor.document, &document, content, &mut ctx, window, controller.as_str(), self.chrome_build.driver.drag, &mut hosts, cx)
         };
         self.panel_documents.insert(window.to_string(), document);
         Some(complete)
@@ -28483,6 +28505,7 @@ impl ShellState {
         theme: &Theme,
         body: Rect,
         world_resources: &mut infinite_world::world::World3dBuildContext,
+        cx:&mut semio_framework_job::StepContext<'_>,
     ) -> bool {
         match cursor.phase {
             0 => {
@@ -28503,7 +28526,7 @@ impl ShellState {
                         return false;
                     };
                     let content = self.anchor_content_rect(anchor, panel, theme);
-                    let _ = self.render_panel_document_opportunity(cursor, window.as_str(), content, panel_draw, overlay, atlas, icons, input, theme, world_resources, anchor);
+                    let _ = self.render_panel_document_opportunity(cursor, window.as_str(), content, panel_draw, overlay, atlas, icons, input, theme, world_resources, anchor, cx);
                     if !cursor.document.layout_is_accepted() && !cursor.document.terminal_is_fault() {
                         return false;
                     }
@@ -28566,7 +28589,7 @@ impl ShellState {
                     return false;
                 }
                 let content = self.anchor_content_rect(anchor, panel, theme);
-                let complete = self.render_panel_document_opportunity(cursor, window.as_str(), content, panel_draw, overlay, atlas, icons, input, theme, world_resources, anchor).unwrap_or(false);
+                let complete = self.render_panel_document_opportunity(cursor, window.as_str(), content, panel_draw, overlay, atlas, icons, input, theme, world_resources, anchor, cx).unwrap_or(false);
                 if !complete {
                     if !cursor.document.terminal_is_fault() {
                         return false;
@@ -28627,6 +28650,7 @@ impl ShellState {
         theme: &Theme,
         body: Rect,
         world_resources: &mut infinite_world::world::World3dBuildContext,
+        cx:&mut semio_framework_job::StepContext<'_>,
     ) -> bool {
         let tabs = self.mobile_panel_tabs();
         if !self.mobile_panel_visible || tabs.is_empty() {
@@ -28674,7 +28698,7 @@ impl ShellState {
                     let viewport_height_for_widgets = panel_draw.screen_height();
                     let mut ctx = framework_widget_context(panel_draw, None, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
                     ctx.pick_clip = Some(content);
-                    render_ui_document_step(&mut cursor.document, &document, content, &mut ctx, window.as_str(), controller.as_str(), self.chrome_build.driver.drag, &mut hosts)
+                    render_ui_document_step(&mut cursor.document, &document, content, &mut ctx, window.as_str(), controller.as_str(), self.chrome_build.driver.drag, &mut hosts, cx)
                 };
                 self.panel_documents.insert(window.as_str().to_string(), document);
                 if !complete {
@@ -30285,6 +30309,7 @@ impl ShellState {
         width: f32,
         height: f32,
         world_resources: &mut infinite_world::world::World3dBuildContext,
+        cx:&mut semio_framework_job::StepContext<'_>,
     ) -> bool {
         if !self.hub_workspace_open {
             close_chrome_overlay_glass_content(cursor, overlay);
@@ -30332,7 +30357,7 @@ impl ShellState {
                     let viewport_height_for_widgets = overlay.screen_height();
                     let mut ctx = framework_widget_context(overlay, None, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
                     ctx.pick_clip = Some(content);
-                    render_ui_document_step(&mut cursor.document, &document, content, &mut ctx, surface, controller.as_str(), self.chrome_build.driver.drag, &mut hosts)
+                    render_ui_document_step(&mut cursor.document, &document, content, &mut ctx, surface, controller.as_str(), self.chrome_build.driver.drag, &mut hosts, cx)
                 };
                 self.panel_documents.insert(surface.to_string(), document);
                 if !complete {

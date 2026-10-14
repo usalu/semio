@@ -73,8 +73,8 @@ use semio_framework_diagnostic::TextSpan;
                 }
             }
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <JpgSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <JpgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <JpgSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).ok(),
+                IoPayload::Text(text) => <JpgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => check_baseline_content(&snapshot),

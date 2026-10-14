@@ -5,7 +5,7 @@ use crate::polygon_area;
 use serde_json::Value;
 
 fn fixtures() -> Value {
-    serde_json::from_str(include_str!("../../../🧫️fixtures/🔪️section/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔪️section/🔣️.json")).unwrap()
 }
 
 fn ring(v: &Value) -> Vec<Point> {

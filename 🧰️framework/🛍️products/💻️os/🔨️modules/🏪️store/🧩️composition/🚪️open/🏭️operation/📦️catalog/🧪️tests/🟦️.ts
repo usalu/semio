@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { Buffer } from "node:buffer";
 import { applyPatch } from "fast-json-patch";
-import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 
 test("member opening admits original sources then funds tickets before snapshot decoding", async () => {
   const sources = fixture.disposer + fixture.factories.reduce((sum, factory) => sum + factory.arc, 0);

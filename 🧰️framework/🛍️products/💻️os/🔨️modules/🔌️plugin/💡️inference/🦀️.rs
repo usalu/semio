@@ -5,7 +5,7 @@
 use protocol::{OpBinary, OpText};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::{BTreeMap, BTreeSet};
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
 use crate::artifact_identity::ArtifactExecutableIdentity;
 use crate::artifact_identity::ArtifactIdentity;
@@ -140,7 +140,7 @@ pub fn inference_child_dependency_parts(key: &str) -> Option<(&str, &str)> {
 
 /// 🧵️ The owned child at `slot`/`child_id` of the requesting composed document, decoded from the request's dependencies (design
 /// §20.15: readers compose on read; the requester injects every owned child under [`inference_child_dependency`]).
-pub fn inference_child<S: ArtifactPack>(request: &ArtifactInferenceExecutionRequest<'_>, slot: &str, child_id: &str) -> Result<S, ArtifactInferenceExecutionError> {
+pub fn inference_child<S: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>(request: &ArtifactInferenceExecutionRequest<'_>, slot: &str, child_id: &str) -> Result<S, ArtifactInferenceExecutionError> {
     let key = inference_child_dependency(slot, child_id);
     let (_, pack) = request.dependencies.iter().find(|(name, _)| *name == key).ok_or_else(|| ArtifactInferenceExecutionError::new("artifact-inference.child-missing", format!("the request carries no owned child {slot}/{child_id}")))?;
     S::decode_pack(pack).map_err(|error| ArtifactInferenceExecutionError::new("artifact-inference.child-decode", format!("owned child {slot}/{child_id}: {error:?}")))
@@ -164,7 +164,8 @@ pub struct ArtifactInferenceExecutionStep {pub execution:Option<ArtifactInferenc
 impl ArtifactInferenceExecution {pub fn into_step(self,terminal:bool)->ArtifactInferenceExecutionStep {let retained_progress=self.retirement_progress;ArtifactInferenceExecutionStep{execution:Some(self),retained_progress,terminal}}}
 
 /// 💡️ Non-capturing bounded inference implementation.
-pub type ArtifactInference = for<'a> fn(&ArtifactInferenceExecutionRequest<'a>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError>;
+pub type ArtifactInferenceStepContext<'a>=semio_framework_job::StepContext<'a>;
+pub type ArtifactInference = for<'a,'cx> fn(&ArtifactInferenceExecutionRequest<'a>,&mut ArtifactInferenceStepContext<'cx>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError>;
 
 /// ♻️ Borrows the actual original child retained by the registered executable.
 pub type ArtifactInferenceDemands = for<'a> fn(&ArtifactInferenceExecutionRequest<'a>,usize)->Result<RetirementDemand,ValueError>;
@@ -172,7 +173,7 @@ pub type ArtifactInferenceDemands = for<'a> fn(&ArtifactInferenceExecutionReques
 #[derive(Clone, Copy)]
 pub(crate) enum ArtifactInferenceExecutable {
     Pure(ArtifactInference,ArtifactInferenceDemands),
-    Contextual(for<'a> fn(&ArtifactInferenceExecutionRequest<'a>, &dyn std::any::Any) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError>,for<'a> fn(&ArtifactInferenceExecutionRequest<'a>,&dyn std::any::Any,usize)->Result<RetirementDemand,ValueError>),
+    Contextual(for<'a,'cx> fn(&ArtifactInferenceExecutionRequest<'a>, &dyn std::any::Any,&mut ArtifactInferenceStepContext<'cx>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError>,for<'a> fn(&ArtifactInferenceExecutionRequest<'a>,&dyn std::any::Any,usize)->Result<RetirementDemand,ValueError>),
 }
 
 /// 🧰️ Native type-erased bounded inference entry.
@@ -189,13 +190,13 @@ impl std::fmt::Debug for ArtifactInferenceService {
 impl ArtifactInferenceService {
     pub const fn new(metadata:ArtifactInferenceServiceMetadata,infer:ArtifactInference,demands:ArtifactInferenceDemands)->Self{Self{metadata,infer:ArtifactInferenceExecutable::Pure(infer,demands)}}
     /// 🔗️ Binds both normal work and child closure to the same original resource context.
-    pub const fn new_contextual(metadata:ArtifactInferenceServiceMetadata,infer:for<'a> fn(&ArtifactInferenceExecutionRequest<'a>,&dyn std::any::Any)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>,demands:for<'a> fn(&ArtifactInferenceExecutionRequest<'a>,&dyn std::any::Any,usize)->Result<RetirementDemand,ValueError>)->Self{Self{metadata,infer:ArtifactInferenceExecutable::Contextual(infer,demands)}}
+    pub const fn new_contextual(metadata:ArtifactInferenceServiceMetadata,infer:for<'a,'cx> fn(&ArtifactInferenceExecutionRequest<'a>,&dyn std::any::Any,&mut ArtifactInferenceStepContext<'cx>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>,demands:for<'a> fn(&ArtifactInferenceExecutionRequest<'a>,&dyn std::any::Any,usize)->Result<RetirementDemand,ValueError>)->Self{Self{metadata,infer:ArtifactInferenceExecutable::Contextual(infer,demands)}}
     pub const fn metadata(&self)->ArtifactInferenceServiceMetadata{self.metadata}
     /// 🧷️ Returns the capability identity of the actual request-aware executable.
-    pub fn executable_identity(&self)->ArtifactExecutableIdentity{ArtifactExecutableIdentity(match self.infer{ArtifactInferenceExecutable::Pure(infer,_)=>infer as usize,ArtifactInferenceExecutable::Contextual(infer,_)=>infer as usize})}
-    pub fn infer(&self,request:&ArtifactInferenceExecutionRequest<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{match self.infer{ArtifactInferenceExecutable::Pure(infer,_)=>infer(request),ArtifactInferenceExecutable::Contextual(_,_)=>Err(ArtifactInferenceExecutionError::new("artifact-inference.context-required","inference requires its owning instance resource context"))}}
+    pub fn executable_identity(&self)->ArtifactExecutableIdentity{ArtifactExecutableIdentity::from_function_pointer(match self.infer{ArtifactInferenceExecutable::Pure(infer,_)=>infer as *const (),ArtifactInferenceExecutable::Contextual(infer,_)=>infer as *const ()})}
+    pub fn infer(&self,request:&ArtifactInferenceExecutionRequest<'_>,cx:&mut ArtifactInferenceStepContext<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{match self.infer{ArtifactInferenceExecutable::Pure(infer,_)=>infer(request,cx),ArtifactInferenceExecutable::Contextual(_,_)=>Err(ArtifactInferenceExecutionError::new("artifact-inference.context-required","inference requires its owning instance resource context"))}}
     /// 🧩️ Executes with the resource owner already retained by the calling instance.
-    pub fn infer_with_context(&self,request:&ArtifactInferenceExecutionRequest<'_>,context:&dyn std::any::Any)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{match self.infer{ArtifactInferenceExecutable::Pure(infer,_)=>infer(request),ArtifactInferenceExecutable::Contextual(infer,_)=>infer(request,context)}}
+    pub fn infer_with_context(&self,request:&ArtifactInferenceExecutionRequest<'_>,context:&dyn std::any::Any,cx:&mut ArtifactInferenceStepContext<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{match self.infer{ArtifactInferenceExecutable::Pure(infer,_)=>infer(request,cx),ArtifactInferenceExecutable::Contextual(infer,_)=>infer(request,context,cx)}}
     /// ♻️ Quotes only the actual child belonging to this original request and context.
     pub fn retirement_demands(&self,request:&ArtifactInferenceExecutionRequest<'_>,context:Option<&dyn std::any::Any>,copy:usize)->Result<RetirementDemand,ValueError>{match self.infer{ArtifactInferenceExecutable::Pure(_,demands)=>demands(request,copy),ArtifactInferenceExecutable::Contextual(_,demands)=>demands(request,context.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original inference child requires its owning context"))?,copy)}}
     fn identical_to(&self,other:&Self)->bool{self.metadata==other.metadata&&match(self.infer,other.infer){(ArtifactInferenceExecutable::Pure(a,ad),ArtifactInferenceExecutable::Pure(b,bd))=>std::ptr::fn_addr_eq(a,b)&&std::ptr::fn_addr_eq(ad,bd),(ArtifactInferenceExecutable::Contextual(a,ad),ArtifactInferenceExecutable::Contextual(b,bd))=>std::ptr::fn_addr_eq(a,b)&&std::ptr::fn_addr_eq(ad,bd),_=>false}}
@@ -272,9 +273,9 @@ impl ArtifactInferenceServiceRegistry {
         self.by_key.values().map(ArtifactInferenceService::metadata).collect()
     }
 
-    pub fn infer(&self, artifact_kind: &str, inference_schema: &str, request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
+    pub fn infer(&self, artifact_kind: &str, inference_schema: &str, request: &ArtifactInferenceExecutionRequest<'_>,cx:&mut ArtifactInferenceStepContext<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
         let service = self.get(artifact_kind, inference_schema).ok_or_else(|| ArtifactInferenceExecutionError::new("artifact-inference.not-registered", format!("no native inference service for {artifact_kind}/{inference_schema}")))?;
-        service.infer(request)
+        service.infer(request,cx)
     }
 }
 
@@ -325,10 +326,10 @@ pub fn list_artifact_inference_services() -> Result<Vec<ArtifactInferenceService
 }
 
 /// 💡️ Runs one bounded native inference through its immutable request contract.
-pub async fn infer_artifact(artifact_kind: &str, inference_schema: &str, request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
+pub async fn infer_artifact(artifact_kind: &str, inference_schema: &str, request: &ArtifactInferenceExecutionRequest<'_>,cx:&mut ArtifactInferenceStepContext<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     let service =
         artifact_inference_service(artifact_kind, inference_schema).map_err(|error|ArtifactInferenceExecutionError::native(error,true))?.ok_or_else(|| ArtifactInferenceExecutionError::new("artifact-inference.not-registered", format!("no native inference service for {artifact_kind}/{inference_schema}")))?;
-    service.infer(request)
+    service.infer(request,cx)
 }
 
 #[cfg(test)]
@@ -419,7 +420,7 @@ impl ArtifactDocumentPayload {
     /// an inference factory is a synchronous contract, so the settle happens at the call site.
     pub async fn snapshot<P, Mutation>(&self) -> Result<P, String>
     where
-        P: Clone + ArtifactPack + 'static,
+        P: Clone + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
         Mutation: OpText + OpBinary + store::Mutation<P> + 'static,
     {
         let (pack, spr) = self.pair()?;
@@ -435,7 +436,7 @@ impl ArtifactDocumentPayload {
     /// decode path instead of re-deriving it per kind.
     pub fn settled_snapshot<P, Mutation>(&self) -> Result<P, String>
     where
-        P: Clone + ArtifactPack + 'static,
+        P: Clone + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
         Mutation: OpText + OpBinary + store::Mutation<P> + 'static,
     {
         ::semio_framework_async::poll::resolve_ready(self.snapshot::<P, Mutation>())
@@ -735,6 +736,12 @@ include!("../🧪️tests/🔬️app-artifact-inference-wire/🦀️.rs");
 #[derive(semio_framework_value::RetireOwned)]
 pub enum ArtifactInferenceGatewayFailure{Native(ValueError),Json(semio_framework_pack_json::JsonError),Execution(ArtifactInferenceExecutionError),Literal(&'static str)}
 
+/// 🧾️ Holds the original semantic cause and a distinct original receipt refusal.
+#[derive(semio_framework_value::RetireOwned)]
+pub struct ArtifactInferenceGatewayRefusal{pub primary:ArtifactInferenceGatewayFailure,pub receipt_refusal:Option<ValueError>}
+impl From<ArtifactInferenceGatewayFailure> for ArtifactInferenceGatewayRefusal{fn from(primary:ArtifactInferenceGatewayFailure)->Self{Self{primary,receipt_refusal:None}}}
+impl From<ValueError> for ArtifactInferenceGatewayRefusal{fn from(primary:ValueError)->Self{ArtifactInferenceGatewayFailure::Native(primary).into()}}
+
 impl From<ValueError> for ArtifactInferenceGatewayFailure{fn from(value:ValueError)->Self{Self::Native(value)}}
 
 impl ArtifactInferenceGatewayFailure {
@@ -749,6 +756,14 @@ impl ArtifactInferenceGatewayFailure {
     JsonError::UnexpectedEof=>("json.unexpectedEof","unexpectedEof",Default::default()),JsonError::UnexpectedByte{..}=>("json.unexpectedByte","unexpectedByte",Default::default()),JsonError::InvalidNumber(_)=>("json.invalidNumber","invalidNumber",Default::default()),JsonError::InvalidEscape(_)=>("json.invalidEscape","invalidEscape",Default::default()),JsonError::InvalidUnicodeEscape(_)=>("json.invalidUnicodeEscape","invalidUnicodeEscape",Default::default()),JsonError::UnpairedSurrogate(_)=>("json.unpairedSurrogate","unpairedSurrogate",Default::default()),JsonError::ControlCharacterInString{..}=>("json.controlCharacterInString","controlCharacterInString",Default::default()),JsonError::InvalidUtf8=>("json.invalidUtf8","invalidUtf8",Default::default()),JsonError::TrailingData(_)=>("json.trailingData","trailingData",Default::default()),JsonError::MaxDepthExceeded(_)=>("json.maxDepthExceeded","maxDepthExceeded",Default::default()),
    }}
   }
+ }
+ /// 🧭️ Borrows scalar JSON positions from the same retained grammar refusal.
+ pub(crate) fn fault_source(&self)->Option<semio_framework_diagnostic::FaultSource>{
+  use semio_framework_pack_json::JsonError;use semio_framework_diagnostic::FaultSource;let Self::Json(error)=self else{return None};Some(match error{
+   JsonError::UnexpectedByte{found,offset}|JsonError::ControlCharacterInString{byte:found,offset}=>FaultSource{offset:Some(*offset as u64),byte:Some(*found),depth:None},
+   JsonError::InvalidNumber(offset)|JsonError::InvalidEscape(offset)|JsonError::InvalidUnicodeEscape(offset)|JsonError::UnpairedSurrogate(offset)|JsonError::TrailingData(offset)|JsonError::DuplicateMember{offset,..}=>FaultSource{offset:Some(*offset as u64),..Default::default()},
+   JsonError::MaxDepthExceeded(depth)=>FaultSource{depth:Some(u64::from(*depth)),..Default::default()},_=>return None,
+  })
  }
  pub(crate) fn source_identity(&self)->usize{self.fault_wire_fields().1.as_ptr()as usize}
 }

@@ -3,7 +3,7 @@ use protocol::MutationDiff;
 
 #[test]
 fn decoded_image_assets_preserve_every_field_without_a_carrier() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖼️decoded-image/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔬️contract/🖼️decoded-image/🔣️.json")).unwrap();
     for case in corpus["cases"].as_array().unwrap() {
         let image: SemioImageSnapshot = semio_framework_pack_json::from_json_str(&case["image"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(crate::raster_image_content_id("image", &image), case["contentId"].as_str().unwrap());

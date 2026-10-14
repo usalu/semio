@@ -22,7 +22,12 @@
     "bindingYields",
     "bindingRemovalYields",
     "guestEntry",
-    "entryOriginalAuthority"
+    "entryOriginalAuthority",
+    "jobOutputHeldOnReturnDenial",
+    "jobOutputHeaderCopyBytes",
+    "failureWorkUnitsSpent",
+    "sameIdentityJobsActivelyClosed",
+    "originalActorFaultHeldDuringCleanup"
   ],
   "properties": {
     "contract": {
@@ -174,6 +179,21 @@
         65536,
         16
       ]
+    },
+    "jobOutputHeldOnReturnDenial": {
+      "const": true
+    },
+    "jobOutputHeaderCopyBytes": {
+      "const": 0
+    },
+    "failureWorkUnitsSpent": {
+      "const": 4
+    },
+    "sameIdentityJobsActivelyClosed": {
+      "const": true
+    },
+    "originalActorFaultHeldDuringCleanup": {
+      "const": true
     }
   }
 }

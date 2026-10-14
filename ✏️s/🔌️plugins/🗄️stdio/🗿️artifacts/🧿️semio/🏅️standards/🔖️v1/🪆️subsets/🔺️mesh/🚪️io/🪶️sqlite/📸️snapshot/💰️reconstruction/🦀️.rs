@@ -1,6 +1,7 @@
 //! 🔺️ Original mesh reconstruction retains every typed buffer and scalar relationship frontier.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{SemioMeshSnapshot,SemioMesh,SemioPrimitive,SemioTopology,SemioMaterial,SemioTexture,SemioPoint3,SemioUv,SemioRgba,identity,float_columns,tick};
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{FloatRow,RowIndex,RowIndexStorage,reconstruct_text_into,reconstruct_blob_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{FloatRow,RowIndex,RowIndexStorage,reconstruct_text_into,reconstruct_blob_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[derive(semio_framework_value::RetireOwned)]
 struct Prefix{snapshot:Option<SemioMeshSnapshot>,validation:SchemaValidationStorage,indices:[RowIndexStorage;9],orders:[Vec<usize>;9]}

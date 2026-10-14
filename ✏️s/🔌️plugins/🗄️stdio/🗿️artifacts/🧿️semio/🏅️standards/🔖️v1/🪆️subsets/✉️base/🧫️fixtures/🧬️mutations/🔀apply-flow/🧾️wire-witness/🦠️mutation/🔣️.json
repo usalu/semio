@@ -1,9 +1,0 @@
-{
-  "mutation": "applyFlow",
-  "payload": {
-    "mutation": {
-      "mutation": "removeEdge",
-      "id": "e1"
-    }
-  }
-}

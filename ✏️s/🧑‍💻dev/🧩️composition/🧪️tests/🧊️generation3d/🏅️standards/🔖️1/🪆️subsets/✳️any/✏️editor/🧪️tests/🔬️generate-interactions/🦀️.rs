@@ -11,7 +11,7 @@ use super::*;
 use crate::editor_domain::editor_laws::serial_execution;
 
 //#region 🎛️Fixture
-const GENERATE_INTERACTIONS_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🎛️generate-mode-interactions.json");
+const GENERATE_INTERACTIONS_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎛️generate-mode-interactions.json");
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -2,7 +2,7 @@ use crate::standards::v1::subsets::any::schema::diff::{DrawingLayerPatch, diff_s
 
 #[test]
 fn typed_patch_preserves_explicit_clear_with_json_oracle() {
-    let fixture = include_str!("../../../../../🧫️fixtures/🔺️diff/🩹️typed-clear/🔣️.json");
+    let fixture = include_str!("../../../../../🧪️tests/🧫️fixtures/🔺️diff/🩹️typed-clear/🔣️.json");
     let decoded: DrawingLayerPatch = semio_framework_pack_json::from_json_str(fixture, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let oracle: DrawingLayerPatch = serde_json::from_str(fixture).unwrap();
     assert_eq!(decoded, oracle);

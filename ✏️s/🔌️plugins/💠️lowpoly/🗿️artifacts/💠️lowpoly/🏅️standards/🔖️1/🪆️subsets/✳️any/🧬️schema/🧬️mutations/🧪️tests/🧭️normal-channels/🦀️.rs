@@ -8,7 +8,7 @@ use crate::{LowpolyMeshAttribute, LowpolyMeshAttributeDomain, LowpolyMeshAttribu
 use semio_framework_3d::mesh::{Vec3, VertexId};
 use semio_framework_value::DslValue;
 
-const BEFORE: &str = include_str!("../../../../🧫️fixtures/🧬️mutations/🌀️rotate-selection/📐️lifts/📸️snapshot/⬅️before/🔣️.json");
+const BEFORE: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌀️rotate-selection/📐️lifts/📸️snapshot/⬅️before/🔣️.json");
 const SELECTED: [u32; 3] = [0, 1, 2];
 
 fn authored_channel(state: &LowpolyMeshState) -> LowpolyMeshAttribute {

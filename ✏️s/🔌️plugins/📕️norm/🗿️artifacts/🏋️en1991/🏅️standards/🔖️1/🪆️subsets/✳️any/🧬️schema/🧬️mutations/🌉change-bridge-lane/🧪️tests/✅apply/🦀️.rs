@@ -5,11 +5,11 @@
 /// 🚦 The committed `change-bridge-lane` vector holds the specification-vector law.
 const VECTOR: super::Vector = super::Vector {
         kind: "change-bridge-lane",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌉change-bridge-lane/✅apply/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌉change-bridge-lane/✅apply/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌉change-bridge-lane/✅apply/📸️snapshot/➡️after/🔣️.json"),
-        diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌉change-bridge-lane/✅apply/🔺️diff/🔣️.json"),
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌉change-bridge-lane/✅apply/🎯️outcome/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌉change-bridge-lane/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌉change-bridge-lane/✅apply/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌉change-bridge-lane/✅apply/📸️snapshot/➡️after/🔣️.json"),
+        diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌉change-bridge-lane/✅apply/🔺️diff/🔣️.json"),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌉change-bridge-lane/✅apply/🎯️outcome/🔣️.json"),
 };
 
 #[test]

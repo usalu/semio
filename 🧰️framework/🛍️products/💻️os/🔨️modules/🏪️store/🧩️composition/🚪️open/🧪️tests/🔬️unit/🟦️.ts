@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { Buffer } from "node:buffer";
 import { applyPatch } from "fast-json-patch";
-import opening from "../../🧫️fixtures/🔣️.json" with { type: "json" };
+import opening from "../🧫️fixtures/🔣️.json" with { type: "json" };
 import demand from "../../../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json" with { type: "json" };
 
 test("member opening retains six rejection stages and queries indivisible physical owners", async () => {

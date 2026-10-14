@@ -2,7 +2,7 @@ import { configureHostPorts, type IconRenderRequest } from "@semio-tech/ui-react
 import { expect, it } from "vitest";
 import Ajv2020 from "ajv/dist/2020";
 import { renderIconRequest } from "../../🚚️request/🟦️.ts";
-import fixture from "../../🧫️fixtures/🚚️request/🔣️.json";
+import fixture from "../🧫️fixtures/🚚️request/🔣️.json";
 
 it("validates the neutral icon request transport fixture", () => {
 });

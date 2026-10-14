@@ -10,20 +10,20 @@ use std::sync::{LazyLock, Mutex};
 use semio_framework_job::{InteractiveJobCloseStep as CloseStep, RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 
-fn prepared_close_gate(grant: RetainedCloneGrant, terminal: bool, release: Result<usize, ValueError>) -> Option<CloseStep> {
-    if terminal { return Some(CloseStep::Complete { progress: RetainedCloneProgress::default() }); }
-    let bytes = match release { Ok(bytes) => bytes, Err(error) => return Some(CloseStep::Refused { kind: error.kind, progress: error.retained_progress() }) };
-    if grant.maximum_items == 0 || bytes > grant.maximum_release_bytes { return Some(CloseStep::Pending { progress: RetainedCloneProgress::default() }); }
-    if grant.maximum_depth == 0 { return Some(CloseStep::Refused { kind: ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() }); }
+fn prepared_close_gate(grant: RetainedCloneGrant, terminal: bool, release: Result<usize, ValueError>) -> Option<Result<CloseStep,ValueError>> {
+    if terminal { return Some(Ok(CloseStep::Complete { progress: RetainedCloneProgress::default() })); }
+    let bytes = match release { Ok(bytes) => bytes, Err(error) => return Some(Err(error)) };
+    if grant.maximum_items == 0 || bytes > grant.maximum_release_bytes { return Some(Ok(CloseStep::Pending { progress: RetainedCloneProgress::default() })); }
+    if grant.maximum_depth == 0 { return Some(Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original prepared close requires depth"))); }
     None
 }
 
-fn prepared_close_progress(released_bytes: usize) -> CloseStep {
-    CloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes } }
+fn prepared_close_progress(released_bytes: usize) -> Result<CloseStep,ValueError> {
+    Ok(CloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes } })
 }
 
-fn prepared_close_child(step: CloseStep) -> CloseStep {
-    match step { CloseStep::Complete { progress } => CloseStep::Pending { progress }, step => step }
+fn prepared_close_child(step: Result<CloseStep,ValueError>) -> Result<CloseStep,ValueError> {
+    step.map(|step|match step { CloseStep::Complete { progress } => CloseStep::Pending { progress }, step => step })
 }
 
 fn prepared_vec_bytes<T>(value: &Vec<T>) -> Result<usize, ValueError> {
@@ -42,17 +42,17 @@ fn prepared_close_text(key: &mut String) -> usize {
 }
 
 
-fn prepared_close_bytes(bytes: &mut Vec<u8>, grant: RetainedCloneGrant) -> CloseStep {
+fn prepared_close_bytes(bytes: &mut Vec<u8>, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
     if !bytes.is_empty() {
-        if grant.maximum_items == 0 || grant.maximum_copy_bytes == 0 { return CloseStep::Pending { progress: RetainedCloneProgress::default() } }
-        if grant.maximum_depth == 0 { return CloseStep::Refused { kind: ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() } }
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes == 0 { return Ok(CloseStep::Pending { progress: RetainedCloneProgress::default() }); }
+        if grant.maximum_depth == 0 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original prepared bytes close requires depth")); }
         let processed = bytes.len().min(grant.maximum_copy_bytes);
         bytes.truncate(bytes.len() - processed);
-        return CloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: processed, ..Default::default() } }
+        return Ok(CloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: processed, ..Default::default() } });
     }
     let release = bytes.capacity();
-    if grant.maximum_items == 0 || release > grant.maximum_release_bytes { return CloseStep::Pending { progress: RetainedCloneProgress::default() } }
-    if grant.maximum_depth == 0 { return CloseStep::Refused { kind: ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() } }
+    if grant.maximum_items == 0 || release > grant.maximum_release_bytes { return Ok(CloseStep::Pending { progress: RetainedCloneProgress::default() }); }
+    if grant.maximum_depth == 0 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original prepared byte backing close requires depth")); }
     drop(std::mem::take(bytes));
     prepared_close_progress(release)
 }
@@ -68,14 +68,14 @@ fn prepared_abandoned_demands<'a, T: 'a>(mut slots: impl Iterator<Item = (&'a At
     state.store(queued, Ordering::Release);
     result
 }
-fn prepared_abandoned_close<'a, T: 'a>(mut slots: impl Iterator<Item = (&'a AtomicU8, &'a AtomicPtr<T>)>, queued: u8, grant: RetainedCloneGrant, empty: fn(&T) -> bool, close: fn(&mut T, RetainedCloneGrant) -> CloseStep) -> CloseStep {
-    let Some((state, owner)) = slots.find(|(state, _)| state.compare_exchange(queued, 3, Ordering::AcqRel, Ordering::Acquire).is_ok()) else { return CloseStep::Complete { progress: RetainedCloneProgress::default() } };
+fn prepared_abandoned_close<'a, T: 'a>(mut slots: impl Iterator<Item = (&'a AtomicU8, &'a AtomicPtr<T>)>, queued: u8, grant: RetainedCloneGrant, empty: fn(&T) -> bool, close: fn(&mut T, RetainedCloneGrant) -> Result<CloseStep,ValueError>) -> Result<CloseStep,ValueError> {
+    let Some((state, owner)) = slots.find(|(state, _)| state.compare_exchange(queued, 3, Ordering::AcqRel, Ordering::Acquire).is_ok()) else { return Ok(CloseStep::Complete { progress: RetainedCloneProgress::default() }); };
     let pointer = owner.swap(std::ptr::null_mut(), Ordering::AcqRel);
-    if pointer.is_null() { state.store(queued, Ordering::Release); return CloseStep::Blocked }
+    if pointer.is_null() { state.store(queued, Ordering::Release); return Ok(CloseStep::Blocked); }
     let mut value = unsafe { Box::from_raw(pointer) };
     let step = if empty(&value) {
-        if grant.maximum_items == 0 || grant.maximum_release_bytes < size_of::<T>() { CloseStep::Pending { progress: RetainedCloneProgress::default() } }
-        else if grant.maximum_depth == 0 { CloseStep::Refused { kind: ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() } }
+        if grant.maximum_items == 0 || grant.maximum_release_bytes < size_of::<T>() { Ok(CloseStep::Pending { progress: RetainedCloneProgress::default() }) }
+        else if grant.maximum_depth == 0 { Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original abandoned prepared backing close requires depth")) }
         else { drop(value); state.store(0, Ordering::Release); return prepared_close_progress(size_of::<T>()) }
     } else { prepared_close_child(close(&mut value, grant)) };
     owner.store(Box::into_raw(value), Ordering::Release);
@@ -266,10 +266,10 @@ impl<T> PreparedFixedList<T> {
         Ok(if self.len == 0 && self.pages.iter().any(Option::is_some) { size_of::<PreparedFixedPage<T>>() } else { 0 })
     }
 
-    fn close_backing_granted(&mut self, grant: RetainedCloneGrant) -> CloseStep {
+    fn close_backing_granted(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
         let demand = self.next_close_release_byte_demand();
         if let Some(step) = prepared_close_gate(grant, self.terminal_is_empty(), demand.clone()) { return step; }
-        if self.len != 0 { return CloseStep::Refused { kind: ValueRefusalKind::InvariantViolated, progress: RetainedCloneProgress::default() }; }
+        if self.len != 0 { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original prepared fixed pages still hold members")); }
         self.release_backing_step();
         prepared_close_progress(demand.unwrap_or(0))
     }
@@ -690,8 +690,8 @@ impl PreparedAtlasPermit {
         Some(Self { generation, items: 1, pages, payload_bytes, backing_bytes, payload_units, backing_units, release_phase: 0 })
     }
 
-    fn close_original_step(&mut self, grant: RetainedCloneGrant) -> CloseStep {
-        if self.release_phase > 3 { return CloseStep::Complete { progress: RetainedCloneProgress::default() }; }
+    fn close_original_step(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
+        if self.release_phase > 3 { return Ok(CloseStep::Complete { progress: RetainedCloneProgress::default() }); }
         let progress = atlas_progress(size_of::<u64>() * 2 + size_of::<u8>(), 0, 0);
         if let Some(step) = atlas_gate(grant, progress) { return step; }
         let delta = match self.release_phase {
@@ -705,10 +705,10 @@ impl PreparedAtlasPermit {
         let current = PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire);
         let Some(next) = current.checked_sub(delta) else { return atlas_refused(ValueRefusalKind::InvariantViolated); };
         if PREPARED_ATLAS_PROCESS_PERMITS.compare_exchange(current, next, Ordering::AcqRel, Ordering::Acquire).is_err() {
-            return CloseStep::Pending { progress: RetainedCloneProgress::default() };
+            return Ok(CloseStep::Pending { progress: RetainedCloneProgress::default() });
         }
         self.release_phase += 1;
-        CloseStep::Pending { progress }
+        Ok(CloseStep::Pending { progress })
     }
 }
 
@@ -753,13 +753,13 @@ fn atlas_progress(copied_bytes: usize, retained_capacity_bytes: usize, released_
     RetainedCloneProgress { copied_items: 1, copied_bytes, retained_capacity_bytes, released_bytes }
 }
 
-fn atlas_refused(kind: ValueRefusalKind) -> CloseStep {
-    CloseStep::Refused { kind, progress: RetainedCloneProgress::default() }
+fn atlas_refused(kind: ValueRefusalKind) -> Result<CloseStep,ValueError> {
+    Err(ValueError::literal(kind,"original prepared atlas close refused"))
 }
 
-fn atlas_gate(grant: RetainedCloneGrant, progress: RetainedCloneProgress) -> Option<CloseStep> {
+fn atlas_gate(grant: RetainedCloneGrant, progress: RetainedCloneProgress) -> Option<Result<CloseStep,ValueError>> {
     if grant.maximum_depth == 0 { return Some(atlas_refused(ValueRefusalKind::DepthLimit)); }
-    (!progress.fits(grant)).then_some(CloseStep::Pending { progress: RetainedCloneProgress::default() })
+    (!progress.fits(grant)).then_some(Ok(CloseStep::Pending { progress: RetainedCloneProgress::default() }))
 }
 
 fn atlas_cap(received: RetainedCloneGrant, original: RetainedCloneGrant) -> RetainedCloneGrant {
@@ -786,30 +786,30 @@ impl PreparedAtlasAbandonment {
         atlas_progress(size_of::<Self>() + size_of::<*mut Self>() + size_of::<u8>(), 0, size_of::<Self>())
     }
 
-    fn close_original_step(&mut self, grant: RetainedCloneGrant) -> CloseStep {
+    fn close_original_step(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
         let grant = atlas_cap(grant, self.authority.retirement);
         let progress = self.original_close_progress();
         if let Some(step) = atlas_gate(grant, progress) { return step; }
-        if self.handoff_pending { self.handoff_pending = false; self.closing = true; return CloseStep::Pending { progress }; }
+        if self.handoff_pending { self.handoff_pending = false; self.closing = true; return Ok(CloseStep::Pending { progress }); }
         if let Some(index) = self.len.checked_sub(1) {
             let Some(slots) = self.slots.as_mut() else { return atlas_refused(ValueRefusalKind::InvariantViolated); };
             if slots[index].is_none() { return atlas_refused(ValueRefusalKind::InvariantViolated); }
             self.len = index;
             self.closing = true;
             drop(slots[index].take());
-            return CloseStep::Pending { progress };
+            return Ok(CloseStep::Pending { progress });
         }
-        if self.slots.is_some() { self.closing = true; drop(self.slots.take()); return CloseStep::Pending { progress }; }
+        if self.slots.is_some() { self.closing = true; drop(self.slots.take()); return Ok(CloseStep::Pending { progress }); }
         if let Some(permit) = self.permit.as_mut() {
             if permit.release_phase <= 3 {
                 let step = permit.close_original_step(grant);
-                return match step { CloseStep::Pending { progress: child } if child.copied_items != 0 => { self.closing = true; CloseStep::Pending { progress } }, step => step };
+                return match step { Ok(CloseStep::Pending { progress: child }) if child.copied_items != 0 => { self.closing = true; Ok(CloseStep::Pending { progress }) }, step => step };
             }
             self.closing = true;
             self.permit = None;
-            return CloseStep::Pending { progress };
+            return Ok(CloseStep::Pending { progress });
         }
-        CloseStep::Complete { progress: RetainedCloneProgress::default() }
+        Ok(CloseStep::Complete { progress: RetainedCloneProgress::default() })
     }
 }
 
@@ -820,15 +820,15 @@ impl PreparedAtlasPages {
 
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.owner.as_ref().map_or(0, |owner| owner.original_close_progress().released_bytes)) }
 
-    pub fn close_original_step(&mut self, grant: RetainedCloneGrant) -> CloseStep {
-        let Some(owner) = self.owner.as_mut() else { return CloseStep::Complete { progress: RetainedCloneProgress::default() }; };
+    pub fn close_original_step(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
+        let Some(owner) = self.owner.as_mut() else { return Ok(CloseStep::Complete { progress: RetainedCloneProgress::default() }); };
         let grant = atlas_cap(grant, owner.authority.retirement);
         let progress = owner.original_close_progress();
         if let Some(step) = atlas_gate(grant, progress) { return step; }
         if !owner.terminal_is_empty() || owner.handoff_pending {
-            let step = owner.close_original_step(grant);
+            let step = owner.close_original_step(grant)?;
             atlas_add(&mut self.observed, step.progress());
-            return step;
+            return Ok(step);
         }
         let slot = usize::from(self.abandonment_slot);
         if PREPARED_ATLAS_ABANDONMENT_STATE[slot].load(Ordering::Acquire) != 1 { return atlas_refused(ValueRefusalKind::InvariantViolated); }
@@ -836,10 +836,10 @@ impl PreparedAtlasPages {
         PREPARED_ATLAS_ABANDONMENT_STATE[slot].store(0, Ordering::Release);
         self.abandonment_slot = u8::MAX;
         atlas_add(&mut self.observed, progress);
-        CloseStep::Complete { progress }
+        Ok(CloseStep::Complete { progress })
     }
 
-    fn close_granted(&mut self, grant: RetainedCloneGrant) -> CloseStep { self.close_original_step(grant) }
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> { self.close_original_step(grant) }
 
     pub fn try_new(width: u32, height: u32, channels: u8, byte_len: usize, authority: PreparedAtlasAuthority) -> Result<(Self, RetainedCloneProgress), ValueError> {
         let fault = |message| ValueError::literal(ValueRefusalKind::OwnershipLimit, message);
@@ -936,11 +936,11 @@ impl PreparedAtlasPages {
         Ok(RetainedCloneGrant::default())
     }
 
-    pub fn close_abandoned_step(grant: RetainedCloneGrant) -> CloseStep {
+    pub fn close_abandoned_step(grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
         for (state, owner) in PREPARED_ATLAS_ABANDONMENT_STATE.iter().zip(PREPARED_ATLAS_ABANDONMENT_OWNER.iter()) {
             if state.load(Ordering::Acquire) != 2 { continue; }
-            if grant.maximum_items == 0 { return CloseStep::Pending { progress: RetainedCloneProgress::default() }; }
-            if state.compare_exchange(2, 3, Ordering::AcqRel, Ordering::Acquire).is_err() { return CloseStep::Pending { progress: RetainedCloneProgress::default() }; }
+            if grant.maximum_items == 0 { return Ok(CloseStep::Pending { progress: RetainedCloneProgress::default() }); }
+            if state.compare_exchange(2, 3, Ordering::AcqRel, Ordering::Acquire).is_err() { return Ok(CloseStep::Pending { progress: RetainedCloneProgress::default() }); }
             let pointer = owner.load(Ordering::Acquire);
             if pointer.is_null() { state.store(2, Ordering::Release); return atlas_refused(ValueRefusalKind::InvariantViolated); }
             let value = unsafe { &mut *pointer };
@@ -951,14 +951,14 @@ impl PreparedAtlasPages {
                 owner.store(std::ptr::null_mut(), Ordering::Release);
                 drop(unsafe { Box::from_raw(pointer) });
                 state.store(0, Ordering::Release);
-                return CloseStep::Pending { progress };
+                return Ok(CloseStep::Pending { progress });
             }
             let step = value.close_original_step(grant);
             state.store(2, Ordering::Release);
             return step;
         }
-        if PREPARED_ATLAS_ABANDONMENT_STATE.iter().any(|state| state.load(Ordering::Acquire) == 3) { return CloseStep::Pending { progress: RetainedCloneProgress::default() }; }
-        CloseStep::Complete { progress: RetainedCloneProgress::default() }
+        if PREPARED_ATLAS_ABANDONMENT_STATE.iter().any(|state| state.load(Ordering::Acquire) == 3) { return Ok(CloseStep::Pending { progress: RetainedCloneProgress::default() }); }
+        Ok(CloseStep::Complete { progress: RetainedCloneProgress::default() })
     }
 }
 
@@ -983,13 +983,13 @@ impl PreparedRasterPages {
         Ok(0)
     }
 
-    fn close_with_key_granted(&mut self, key: &mut String, grant: RetainedCloneGrant) -> CloseStep {
+    fn close_with_key_granted(&mut self, key: &mut String, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
         let demand = self.next_close_release_byte_demand(key);
         if let Some(step) = prepared_close_gate(grant, self.terminal_is_empty() && key.capacity() == 0, demand.clone()) { return step; }
         let phase = self.close_phase;
         let credit = self.credit.is_some();
         self.retire_with_key_step(key);
-        if phase == 10 && credit && self.credit.is_some() { return CloseStep::Blocked; }
+        if phase == 10 && credit && self.credit.is_some() { return Ok(CloseStep::Blocked); }
         prepared_close_progress(demand.unwrap_or(0))
     }
 
@@ -1138,42 +1138,22 @@ impl PreparedRasterRejected {
         self
     }
 
-    pub fn close_step(&mut self) -> bool {
-        if !self.source.is_empty() {
-            self.source.truncate(self.source.len().saturating_sub(PREPARED_RASTER_PAGE_BYTES));
-            return false;
-        }
-        if !self.source_released {
-            self.source = Vec::new();
-            self.source_released = true;
-            return false;
-        }
-        if !self.retained_source.is_empty() {
-            self.retained_source.truncate(self.retained_source.len().saturating_sub(PREPARED_RASTER_PAGE_BYTES));
-            return false;
-        }
-        if !self.retained_source_released {
-            self.retained_source = Vec::new();
-            self.retained_source_released = true;
-            return false;
-        }
-        if self.key.pop().is_some() {
-            return false;
-        }
-        if !self.key_released {
-            self.key = String::new();
-            self.key_released = true;
-            return false;
-        }
-        if let Some(credit) = self.credit.as_ref() {
-            let Ok(mut ledger) = PREPARED_RASTER_LEDGER.lock() else { return false };
-            if !ledger.release(credit) {
-                return false;
-            }
-            self.credit = None;
-            return false;
-        }
-        true
+    pub fn next_close_demands(&self,_copy:usize)->Result<RetainedCloneGrant,ValueError>{
+        let release=if !self.source.is_empty(){0}else if !self.source_released{prepared_vec_bytes(&self.source)?}else if !self.retained_source.is_empty(){0}else if !self.retained_source_released{prepared_vec_bytes(&self.retained_source)?}else if !self.key.is_empty(){0}else if !self.key_released{self.key.capacity()}else{0};
+        prepared_owner_demands(self.terminal_is_empty(),Ok(release))
+    }
+
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<CloseStep,ValueError>{
+        let demand=self.next_close_demands(grant.maximum_copy_bytes)?;
+        if let Some(step)=prepared_close_gate(grant,self.terminal_is_empty(),Ok(demand.maximum_release_bytes)){return step}
+        if !self.source.is_empty(){self.source.truncate(self.source.len().saturating_sub(PREPARED_RASTER_PAGE_BYTES));}
+        else if !self.source_released{self.source=Vec::new();self.source_released=true;}
+        else if !self.retained_source.is_empty(){self.retained_source.truncate(self.retained_source.len().saturating_sub(PREPARED_RASTER_PAGE_BYTES));}
+        else if !self.retained_source_released{self.retained_source=Vec::new();self.retained_source_released=true;}
+        else if !self.key.is_empty(){self.key.pop();}
+        else if !self.key_released{self.key=String::new();self.key_released=true;}
+        else if let Some(credit)=self.credit.as_ref(){let mut ledger=match PREPARED_RASTER_LEDGER.try_lock(){Ok(ledger)=>ledger,Err(std::sync::TryLockError::WouldBlock)=>return Ok(CloseStep::Blocked),Err(std::sync::TryLockError::Poisoned(_))=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original raster credit ledger poisoned"))};if !ledger.release(credit){return Ok(CloseStep::Blocked)}self.credit=None;}
+        prepared_close_progress(demand.maximum_release_bytes)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -1322,6 +1302,8 @@ pub enum PreparedRasterProducerStep {
 }
 
 impl PreparedRasterProducer {
+    pub fn next_close_demands(&self,_copy:usize)->Result<RetainedCloneGrant,ValueError>{prepared_owner_demands(self.terminal_is_empty(),self.next_close_release_byte_demand())}
+
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
         if let Some(pages) = self.pages.as_ref() {
             if !pages.slots.is_empty() || !pages.backing.is_empty() { return Ok(0); }
@@ -1337,7 +1319,7 @@ impl PreparedRasterProducer {
         Ok(0)
     }
 
-    fn close_granted(&mut self, grant: RetainedCloneGrant) -> CloseStep {
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
         let demand = self.next_close_release_byte_demand();
         if let Some(step) = prepared_close_gate(grant, self.terminal_is_empty(), demand.clone()) { return step; }
         if let Some(pages) = self.pages.as_mut() {
@@ -1354,7 +1336,7 @@ impl PreparedRasterProducer {
             let phase = pages.close_phase;
             let credit = pages.credit.is_some();
             pages.retire_metadata_step();
-            if phase == 10 && credit && pages.credit.is_some() { return CloseStep::Blocked; }
+            if phase == 10 && credit && pages.credit.is_some() { return Ok(CloseStep::Blocked); }
         }
         prepared_close_progress(demand.unwrap_or(0))
     }
@@ -1447,11 +1429,8 @@ impl PreparedRasterProducer {
         self.closing = true;
     }
 
-    pub fn close_step(&mut self) -> bool {
-        
-        let Ok(release) = self.next_close_release_byte_demand() else { return false; };
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: release, maximum_depth: 1 };
-        matches!(self.close_granted(grant), CloseStep::Complete { .. }) && self.terminal_is_empty()
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
+        self.close_granted(grant)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -1535,7 +1514,7 @@ impl PreparedRenderEviction {
 }
 
 impl PreparedRenderUpload {
-    fn next_close_demands(&self, maximum_copy_bytes: usize) -> Result<RetainedCloneGrant, ValueError> {
+    pub fn next_close_demands(&self, maximum_copy_bytes: usize) -> Result<RetainedCloneGrant, ValueError> {
         if let Self::SceneRaster { key, lease } = self {
             if key.capacity() == 0 && !lease.terminal_is_empty() {
                 return Ok(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: lease.next_close_copy_byte_demand()?, maximum_capacity_bytes: lease.next_close_capacity_byte_demand(maximum_copy_bytes)?, maximum_release_bytes: lease.next_close_release_byte_demand()?, maximum_depth: lease.next_close_depth_demand()? });
@@ -1555,7 +1534,7 @@ impl PreparedRenderUpload {
         }
     }
 
-    fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         match self {
             #[cfg(test)]
             Self::GlyphAtlas { pixels, .. } | Self::IconAtlas { pixels, .. } => pixels.capacity() == 0,
@@ -1581,7 +1560,7 @@ impl PreparedRenderUpload {
         }
     }
 
-    fn close_granted(&mut self, grant: RetainedCloneGrant) -> CloseStep {
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
         let demand = self.next_close_release_byte_demand();
         if let Some(step) = prepared_close_gate(grant, self.terminal_is_empty(), demand.clone()) { return step; }
         match self {
@@ -1593,7 +1572,7 @@ impl PreparedRenderUpload {
             Self::RasterPages { key, pixels } => return pixels.close_with_key_granted(key, grant),
             Self::SceneRaster { key, lease } => {
                 if key.capacity() != 0 { prepared_close_text(key); }
-                else { return match lease.close_step(grant) { Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)) => CloseStep::Pending { progress }, Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) => CloseStep::Complete { progress }, Err(error) => CloseStep::Refused { kind: error.kind, progress: error.retained_progress() } }; }
+                else { return lease.close_step(grant).map(|step|match step { semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => CloseStep::Pending { progress }, semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => CloseStep::Complete { progress } }); }
             }
             Self::Mesh { key, .. } => { prepared_close_text(key); }
         }
@@ -1634,10 +1613,8 @@ impl PreparedRenderUpload {
     }
 
     /// 🧹 Releases one page, byte, or key scalar from a rejected upload owner.
-    pub fn close_step(&mut self) -> bool {
-        
-        let Ok(grant) = self.next_close_demands(0) else { return false; };
-        matches!(self.close_granted(grant), CloseStep::Complete { .. }) && self.terminal_is_empty()
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
+        self.close_granted(grant)
     }
 }
 
@@ -1753,7 +1730,7 @@ impl PreparedRenderCommandPages {
         Ok(if self.len != 0 { 0 } else if self.page_count != 0 { size_of::<PreparedRenderCommandPage>() } else if self.directories.iter().any(Option::is_some) { size_of::<PreparedRenderCommandDirectory>() } else { 0 })
     }
 
-    fn close_granted(&mut self, grant: RetainedCloneGrant) -> CloseStep {
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
         let demand = self.next_close_release_byte_demand();
         if let Some(step) = prepared_close_gate(grant, self.terminal_is_empty(), demand.clone()) { return step; }
         self.close_step();
@@ -1893,7 +1870,7 @@ impl PreparedRenderPacket {
         Ok(0)
     }
 
-    fn close_granted(&mut self, grant: RetainedCloneGrant) -> CloseStep {
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
         let demand = self.next_close_release_byte_demand();
         if let Some(step) = prepared_close_gate(grant, self.retirement_is_empty(), demand) { return step; }
         if let Some(upload) = self.uploads.last_mut() {
@@ -1920,7 +1897,7 @@ impl PreparedRenderPacket {
         if let Some(permit) = self.permit.as_mut() {
             let phase = permit.release_phase;
             if permit.release_step() { self.permit = None; }
-            else if permit.release_phase == phase { return CloseStep::Blocked; }
+            else if permit.release_phase == phase { return Ok(CloseStep::Blocked); }
             return prepared_close_progress(0);
         }
         match self.retirement_phase {
@@ -1931,13 +1908,13 @@ impl PreparedRenderPacket {
             4 => self.limits = PreparedRenderLimits::default(),
             5 => {
                 if self.abandonment_slot != u8::MAX {
-                    let Some(state) = PREPARED_RENDER_PACKET_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return CloseStep::Refused { kind: ValueRefusalKind::InvariantViolated, progress: RetainedCloneProgress::default() }; };
+                    let Some(state) = PREPARED_RENDER_PACKET_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original prepared packet abandonment slot is absent")); };
                     let current = state.load(Ordering::Acquire);
-                    if !matches!(current, 1 | 3) || state.compare_exchange(current, if current == 3 { 3 } else { 0 }, Ordering::AcqRel, Ordering::Acquire).is_err() { return CloseStep::Blocked; }
+                    if !matches!(current, 1 | 3) || state.compare_exchange(current, if current == 3 { 3 } else { 0 }, Ordering::AcqRel, Ordering::Acquire).is_err() { return Ok(CloseStep::Blocked); }
                     self.abandonment_slot = u8::MAX;
                 }
             }
-            _ => return CloseStep::Complete { progress: RetainedCloneProgress::default() },
+            _ => return Ok(CloseStep::Complete { progress: RetainedCloneProgress::default() }),
         }
         self.retirement_phase += 1;
         prepared_close_progress(0)
@@ -2035,11 +2012,11 @@ impl PreparedRenderPacket {
         demand.maximum_copy_bytes = self.next_close_copy_byte_demand()?;
         Ok(demand)
     }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> CloseStep { self.close_granted(grant) }
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> { self.close_granted(grant) }
     pub fn next_abandoned_close_demands(copy: usize) -> Result<RetainedCloneGrant, ValueError> {
         prepared_abandoned_demands(PREPARED_RENDER_PACKET_ABANDONMENT_STATE.iter().zip(PREPARED_RENDER_PACKET_ABANDONMENT_OWNER.iter()), 2, copy, Self::next_close_demands, Self::retirement_is_empty)
     }
-    pub fn close_abandoned_step(grant: RetainedCloneGrant) -> CloseStep {
+    pub fn close_abandoned_step(grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
         prepared_abandoned_close(PREPARED_RENDER_PACKET_ABANDONMENT_STATE.iter().zip(PREPARED_RENDER_PACKET_ABANDONMENT_OWNER.iter()), 2, grant, Self::retirement_is_empty, Self::close_granted)
     }
 
@@ -2166,7 +2143,7 @@ impl PreparedRenderInputRejected {
 }
 
 impl PreparedRenderInput {
-    fn next_close_demands(&self, copy: usize) -> Result<RetainedCloneGrant, ValueError> {
+    pub fn next_close_demands(&self, copy: usize) -> Result<RetainedCloneGrant, ValueError> {
         if let Some(upload) = self.uploads.get(self.uploads.len().saturating_sub(1)) { if !upload.terminal_is_empty() { return upload.next_close_demands(copy); } }
         let mut demand = prepared_owner_demands(self.terminal_is_empty(), self.next_close_release_byte_demand())?;
         demand.maximum_copy_bytes = self.next_close_copy_byte_demand()?;
@@ -2192,7 +2169,7 @@ impl PreparedRenderInput {
         Ok(0)
     }
 
-    fn close_granted(&mut self, grant: RetainedCloneGrant) -> CloseStep {
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
         let demand = self.next_close_release_byte_demand();
         if let Some(step) = prepared_close_gate(grant, self.terminal_is_empty(), demand) { return step; }
         if let Some(upload) = self.uploads.last_mut() {
@@ -2224,13 +2201,13 @@ impl PreparedRenderInput {
         if let Some(permit) = self.permit.as_mut() {
             let phase = permit.release_phase;
             if permit.release_step() { self.permit = None; }
-            else if permit.release_phase == phase { return CloseStep::Blocked; }
+            else if permit.release_phase == phase { return Ok(CloseStep::Blocked); }
             return prepared_close_progress(0);
         }
         if self.abandonment_slot != u8::MAX {
-            let Some(state) = PREPARED_RENDER_INPUT_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return CloseStep::Refused { kind: ValueRefusalKind::InvariantViolated, progress: RetainedCloneProgress::default() }; };
+            let Some(state) = PREPARED_RENDER_INPUT_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original prepared input abandonment slot is absent")); };
             let current = state.load(Ordering::Acquire);
-            if !matches!(current, 1 | 3) || state.compare_exchange(current, if current == 3 { 3 } else { 0 }, Ordering::AcqRel, Ordering::Acquire).is_err() { return CloseStep::Blocked; }
+            if !matches!(current, 1 | 3) || state.compare_exchange(current, if current == 3 { 3 } else { 0 }, Ordering::AcqRel, Ordering::Acquire).is_err() { return Ok(CloseStep::Blocked); }
             self.abandonment_slot = u8::MAX; return prepared_close_progress(0);
         }
         prepared_close_progress(0)
@@ -2362,13 +2339,11 @@ impl PreparedRenderInput {
         Ok(())
     }
 
-    pub fn close_step(&mut self) -> bool {
-        
-        let Ok(grant) = self.next_close_demands(0) else { return false; };
-        matches!(self.close_granted(grant), CloseStep::Complete { .. }) && self.terminal_is_empty()
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
+        self.close_granted(grant)
     }
 
-    fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.uploads.terminal_is_empty()
             && self.raster_producers.terminal_is_empty()
             && self.evictions.terminal_is_empty()
@@ -2386,7 +2361,7 @@ impl PreparedRenderInput {
         prepared_abandoned_demands(PREPARED_RENDER_INPUT_ABANDONMENT_STATE.iter().zip(PREPARED_RENDER_INPUT_ABANDONMENT_OWNER.iter()), 2, copy, Self::next_close_demands, Self::terminal_is_empty)
     }
 
-    pub fn close_abandoned_step(grant: RetainedCloneGrant) -> CloseStep {
+    pub fn close_abandoned_step(grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
         prepared_abandoned_close(PREPARED_RENDER_INPUT_ABANDONMENT_STATE.iter().zip(PREPARED_RENDER_INPUT_ABANDONMENT_OWNER.iter()), 2, grant, Self::terminal_is_empty, Self::close_granted)
     }
 }
@@ -2478,10 +2453,10 @@ impl PreparedRenderReceiver {
         demand
     }
 
-    fn close_granted(&mut self, grant: RetainedCloneGrant) -> CloseStep {
-        if !self.owned { return CloseStep::Complete { progress: RetainedCloneProgress::default() }; }
-        if grant.maximum_items == 0 { return CloseStep::Pending { progress: RetainedCloneProgress::default() }; }
-        if grant.maximum_depth == 0 { return CloseStep::Refused { kind: ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() }; }
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
+        if !self.owned { return Ok(CloseStep::Complete { progress: RetainedCloneProgress::default() }); }
+        if grant.maximum_items == 0 { return Ok(CloseStep::Pending { progress: RetainedCloneProgress::default() }); }
+        if grant.maximum_depth == 0 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original prepared mailbox close requires depth")); }
         let Some(slot) = PREPARED_RENDER_MAILBOX.get(usize::from(self.slot)) else { self.owned = false; return prepared_close_progress(0); };
         if slot.generation.load(Ordering::Acquire) != self.generation { self.owned = false; return prepared_close_progress(0); }
         if slot.state.load(Ordering::Acquire) == 1 && slot.packet.load(Ordering::Acquire).is_null() {
@@ -2490,12 +2465,12 @@ impl PreparedRenderReceiver {
             self.owned = false;
             return prepared_close_progress(0);
         }
-        if slot.state.compare_exchange(2, 3, Ordering::AcqRel, Ordering::Acquire).is_err() { return CloseStep::Blocked; }
+        if slot.state.compare_exchange(2, 3, Ordering::AcqRel, Ordering::Acquire).is_err() { return Ok(CloseStep::Blocked); }
         let pointer = slot.packet.load(Ordering::Acquire);
         if pointer.is_null() { slot.state.store(1, Ordering::Release); return prepared_close_progress(0); }
         let packet = unsafe { &mut *pointer };
         let step = if packet.retirement_is_empty() {
-            if grant.maximum_release_bytes < size_of::<PreparedRenderPacket>() { CloseStep::Pending { progress: RetainedCloneProgress::default() } }
+            if grant.maximum_release_bytes < size_of::<PreparedRenderPacket>() { Ok(CloseStep::Pending { progress: RetainedCloneProgress::default() }) }
             else {
                 slot.packet.store(std::ptr::null_mut(), Ordering::Release);
                 unsafe { drop(Box::from_raw(pointer)); }
@@ -2574,7 +2549,7 @@ impl PreparedRenderReceiver {
     pub fn next_abandoned_close_demands(copy: usize) -> Result<RetainedCloneGrant, ValueError> {
         prepared_abandoned_demands(PREPARED_RENDER_MAILBOX.iter().map(|slot| (&slot.state, &slot.packet)), 4, copy, PreparedRenderPacket::next_close_demands, PreparedRenderPacket::retirement_is_empty)
     }
-    pub fn close_abandoned_step(grant: RetainedCloneGrant) -> CloseStep {
+    pub fn close_abandoned_step(grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
         prepared_abandoned_close(PREPARED_RENDER_MAILBOX.iter().map(|slot| (&slot.state, &slot.packet)), 4, grant, PreparedRenderPacket::retirement_is_empty, PreparedRenderPacket::close_granted)
     }
 
@@ -2699,13 +2674,13 @@ impl PreparedRenderJobRejected {
         self.input.take()
     }
 
-    pub fn close_step(&mut self) -> bool {
-        let Some(input) = self.input.as_mut() else { return true };
-        if !input.close_step() {
-            return false;
-        }
-        self.input = None;
-        true
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<CloseStep,ValueError>{
+        let Some(input)=self.input.as_mut()else{return Ok(CloseStep::Complete{progress:Default::default()})};
+        if !input.terminal_is_empty(){return prepared_close_child(input.close_step(grant))}
+        if grant.maximum_items==0{return Ok(CloseStep::Pending{progress:Default::default()})}
+        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original rejected render input header requires depth"))}
+        self.input=None;
+        Ok(CloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -2736,11 +2711,11 @@ impl PreparedRenderJob {
         if !self.receiver.terminal_is_empty() { return self.receiver.next_close_release_byte_demand(); }
         self.fault_payload.retirement_demands().map(|demand| demand.release_bytes)
     }
-    fn close_granted(&mut self, grant: RetainedCloneGrant) -> CloseStep {
-        if !self.closing { return CloseStep::Blocked }
-        if self.terminal_is_empty() { return CloseStep::Complete { progress: RetainedCloneProgress::default() }; }
-        if grant.maximum_items == 0 { return CloseStep::Pending { progress: RetainedCloneProgress::default() }; }
-        if grant.maximum_depth == 0 { return CloseStep::Refused { kind: ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() }; }
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
+        if !self.closing { return Ok(CloseStep::Blocked); }
+        if self.terminal_is_empty() { return Ok(CloseStep::Complete { progress: RetainedCloneProgress::default() }); }
+        if grant.maximum_items == 0 { return Ok(CloseStep::Pending { progress: RetainedCloneProgress::default() }); }
+        if grant.maximum_depth == 0 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original prepared render job close requires depth")); }
         if let Some(upload) = self.rejected_upload.as_mut() {
             if !upload.terminal_is_empty() { return prepared_close_child(upload.close_granted(grant)) }
             self.rejected_upload = None; return prepared_close_progress(0)
@@ -2759,18 +2734,15 @@ impl PreparedRenderJob {
         }
         if !self.receiver.terminal_is_empty() { return prepared_close_child(self.receiver.close_granted(grant)) }
         if !self.fault_payload.terminal_is_empty() {
-            return match self.fault_payload.close_step_granted(grant) {
-                Ok(step) => CloseStep::Pending { progress: step.progress() },
-                Err(error) => CloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
-            };
+            return self.fault_payload.close_step_granted(grant).map(|step|CloseStep::Pending { progress: step.progress() });
         }
         if self.abandonment_slot != u8::MAX {
-            let Some(state) = PREPARED_RENDER_JOB_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return CloseStep::Refused { kind: ValueRefusalKind::InvariantViolated, progress: RetainedCloneProgress::default() } };
+            let Some(state) = PREPARED_RENDER_JOB_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original prepared render job abandonment slot is absent")); };
             let current = state.load(Ordering::Acquire);
-            if !matches!(current, 1 | 3) || state.compare_exchange(current, if current == 3 { 3 } else { 0 }, Ordering::AcqRel, Ordering::Acquire).is_err() { return CloseStep::Blocked }
+            if !matches!(current, 1 | 3) || state.compare_exchange(current, if current == 3 { 3 } else { 0 }, Ordering::AcqRel, Ordering::Acquire).is_err() { return Ok(CloseStep::Blocked); }
             self.abandonment_slot = u8::MAX; return prepared_close_progress(0)
         }
-        CloseStep::Complete { progress: RetainedCloneProgress::default() }
+        Ok(CloseStep::Complete { progress: RetainedCloneProgress::default() })
     }
 
     /// 🩺️ The exact reason this job refused, once it has refused — the string [`Self::fault_outcome`]
@@ -2866,14 +2838,14 @@ impl PreparedRenderJob {
         PREPARED_RENDER_JOB_ABANDONMENT_STATE[index].store(2, Ordering::Release);
         result
     }
-    pub fn close_abandoned_step(grant: RetainedCloneGrant) -> CloseStep {
-        let Some(slot) = PREPARED_RENDER_JOB_ABANDONMENT_STATE.iter().position(|state| state.compare_exchange(2, 3, Ordering::AcqRel, Ordering::Acquire).is_ok()) else { return CloseStep::Complete { progress: RetainedCloneProgress::default() } };
+    pub fn close_abandoned_step(grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
+        let Some(slot) = PREPARED_RENDER_JOB_ABANDONMENT_STATE.iter().position(|state| state.compare_exchange(2, 3, Ordering::AcqRel, Ordering::Acquire).is_ok()) else { return Ok(CloseStep::Complete { progress: RetainedCloneProgress::default() }); };
         let pointer = PREPARED_RENDER_JOB_ABANDONMENT_OWNER[slot].swap(std::ptr::null_mut(), Ordering::AcqRel);
-        if pointer.is_null() { PREPARED_RENDER_JOB_ABANDONMENT_STATE[slot].store(2, Ordering::Release); return CloseStep::Blocked }
+        if pointer.is_null() { PREPARED_RENDER_JOB_ABANDONMENT_STATE[slot].store(2, Ordering::Release); return Ok(CloseStep::Blocked); }
         let mut job = unsafe { Box::from_raw(pointer) };
         let step = if job.terminal_is_empty() {
-            if grant.maximum_items == 0 || grant.maximum_release_bytes < size_of::<Self>() { CloseStep::Pending { progress: RetainedCloneProgress::default() } }
-            else if grant.maximum_depth == 0 { CloseStep::Refused { kind: ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() } }
+            if grant.maximum_items == 0 || grant.maximum_release_bytes < size_of::<Self>() { Ok(CloseStep::Pending { progress: RetainedCloneProgress::default() }) }
+            else if grant.maximum_depth == 0 { Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original abandoned prepared job close requires depth")) }
             else {
                 drop(job); PREPARED_RENDER_JOB_ABANDONMENT_STATE[slot].store(0, Ordering::Release);
                 return prepared_close_progress(size_of::<Self>())
@@ -3473,18 +3445,18 @@ impl PreparedRenderJob {
         self.usage.include_draw(usage.draw_items, usage.draw_bytes) && (usage.upload_items == 0 || self.usage.include_upload(usage.upload_bytes, usage.scene_raster_bytes))
     }
 
-    fn fault_outcome<'a>(&'a mut self, fault: &'static str, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    fn fault_outcome<'a>(&'a mut self, fault: &'static str, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         self.fault = Some(fault);
         self.closing = true;
         self.publish_fault(cx)
     }
 
-    fn publish_fault<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    fn publish_fault<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if !self.fault_payload.advance_initialization(cx)? || !self.fault_payload.seal(cx)? { return Ok(None); }
-        JobOutcomeBorrow::admit_fault(cx, self.fault_payload.published().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "prepared fault owner was not sealed"))?)
+        JobOutcomeBorrow::admit_fault(cx, self.fault_payload.published().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "prepared fault owner was not sealed"))?).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
-    fn complete<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    fn complete<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if !self.packet_command_staged {
             let command = PreparedRenderCommand { kind: PreparedRenderCommandKind::Packet, source: 0, digest: self.digest, draw_cursor: None, packet_overlay: false };
             let Some(commands) = self.commands.as_mut() else { return self.fault_outcome("prepared render command owner was missing", cx) };
@@ -3492,7 +3464,7 @@ impl PreparedRenderJob {
                 return self.fault_outcome("prepared render packet command credits exhausted", cx);
             }
             self.packet_command_staged = true;
-            return JobOutcomeBorrow::admit_yield(cx);
+            return JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         if !self.published {
             let Some(input) = self.input.take() else { return self.fault_outcome("prepared render input was missing before publication", cx) };
@@ -3538,9 +3510,9 @@ impl PreparedRenderJob {
                 return self.fault_outcome("prepared render packet mailbox publication refused", cx);
             }
             self.published = true;
-            return JobOutcomeBorrow::admit_yield(cx);
+            return JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
-        JobOutcomeBorrow::admit_complete(cx, None, None)
+        JobOutcomeBorrow::admit_complete(cx, None, None).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -3586,12 +3558,12 @@ impl Drop for PreparedRenderJob {
 }
 
 impl InteractiveJob for PreparedRenderJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         let grant = cx.retained_grant();
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(None); }
         if cx.is_cancelled() {
             self.closing = true;
-            return JobOutcomeBorrow::admit_cancelled(cx);
+            return JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         if cx.should_yield() { return Ok(None); }
         if self.fault.is_some() { return self.publish_fault(cx); }
@@ -3619,12 +3591,12 @@ impl InteractiveJob for PreparedRenderJob {
             }
             if cx.is_cancelled() {
                 self.closing = true;
-                return JobOutcomeBorrow::admit_cancelled(cx);
+                return JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
             }
             if self.input().is_some_and(|input| input.preview_generation != cx.generation().0) {
                 return self.fault_outcome("prepared render generation became stale after raster work", cx);
             }
-            return JobOutcomeBorrow::admit_yield(cx);
+            return JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         if !self.raster_backing_closed {
             cx.consume_fuel(1);
@@ -3632,7 +3604,7 @@ impl InteractiveJob for PreparedRenderJob {
             if input.raster_producers.release_backing_step() {
                 self.raster_backing_closed = true;
             }
-            return JobOutcomeBorrow::admit_yield(cx);
+            return JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         let Some(usage) = self.measure_next() else {
             return self.complete(cx);
@@ -3647,12 +3619,12 @@ impl InteractiveJob for PreparedRenderJob {
         }
         if cx.is_cancelled() {
             self.closing = true;
-            return JobOutcomeBorrow::admit_cancelled(cx);
+            return JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         if input.preview_generation != cx.generation().0 || !input.permit.as_ref().is_some_and(PreparedRenderProcessPermit::matches) {
             return self.fault_outcome("prepared render generation became stale after one worker unit", cx);
         }
-        JobOutcomeBorrow::admit_yield(cx)
+        JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
@@ -3669,7 +3641,15 @@ impl InteractiveJob for PreparedRenderJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> CloseStep { self.close_granted(grant) }
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<CloseStep,semio_framework_job::OriginalTurnFailure> {
+        let grant=cx.retained_grant();
+        if cx.should_yield(){return Ok(CloseStep::Pending{progress:Default::default()})}
+        let step=self.close_granted(grant).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
+        let step=step.admit(grant,self.terminal_is_empty()).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
+        cx.consume_retained(step.progress()).map_err(semio_framework_job::OriginalTurnFailure::from)?;
+        if step.progress().copied_items!=0{cx.consume_fuel(1)}
+        Ok(step)
+    }
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { self.next_close_demands(0).map(|grant| grant.maximum_copy_bytes) }
     fn next_close_capacity_byte_demand(&self, _copy: usize) -> Result<usize, ValueError> { self.next_close_demands(_copy).map(|grant| grant.maximum_capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { self.next_close_demands(0).map(|grant| grant.maximum_release_bytes) }

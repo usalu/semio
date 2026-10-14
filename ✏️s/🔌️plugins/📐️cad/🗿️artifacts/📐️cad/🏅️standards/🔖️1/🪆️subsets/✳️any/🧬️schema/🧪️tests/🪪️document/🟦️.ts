@@ -11,7 +11,7 @@ import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
 import { parseCadArtifact } from "../../🟦️.ts";
 import { parseCadSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseCadDiff } from "../../🔺️diff/🟦️.ts";
-import vectors from "../../🧫️fixtures/🪪️document/🔣️.json" with { type: "json" };
+import vectors from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json" with { type: "json" };
 import { testCadWorldWindowConfigContract } from "../../../✏️editor/🎭️modes/✏️edit/🪟️windows/🎚️config/🧬️schema/🧪️tests/🪪️document/🟦️.ts";
 
 type InvalidDocument = { kind: string; field?: string; value: unknown };
@@ -37,7 +37,7 @@ export function testCadDocumentContractOracle(): void {
     diff: { schema: diffSchema, parse: parseCadDiff },
     validDocuments: [{ input: vectors.document, output: vectors.document }, { input: mismatchedChild, output: mismatchedChild }],
     invalidDocuments, invalidDiffs: vectors.invalidDiffs,
-    mutationRoots: [fileURLToPath(new URL("../../../🧫️fixtures/🧬️mutations", import.meta.url))],
+    mutationRoots: [fileURLToPath(new URL("../../../🧪️tests/🧫️fixtures/🧬️mutations", import.meta.url))],
     committed: { snapshots: 42, diffs: 21 },
   });
   assert.deepEqual(parseCadSnapshot(mismatchedChild), mismatchedChild);

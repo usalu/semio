@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { findWorkspaceRoot } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { serviceMcpTestArtifactRoot } from "../📁️artifact-root/🟦️.ts";
 /** 🤖️ The live agent loop, end to end, with nothing mocked on either side: a real `semio-os-mcp`
  * stdio gateway launched exactly as `.mcp.json` launches it, a real React `dev` session in a real

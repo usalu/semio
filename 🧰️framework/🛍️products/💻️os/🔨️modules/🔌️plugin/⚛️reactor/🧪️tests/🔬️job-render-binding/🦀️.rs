@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn job_completion_ownership_survives_newer_render_generations() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🏁️job-completion-ownership/🔣️.json")).expect("neutral job ownership fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🏁️job-completion-ownership/🔣️.json")).expect("neutral job ownership fixture");
     for case in fixture["cases"].as_array().unwrap() {
         let mut registry = JobRenderBindingRegistry::new();
         for step in case["steps"].as_array().unwrap() {

@@ -39,7 +39,7 @@ import {
   type QuizStep,
   type StorageArea,
 } from "@semio-tech/quiz-react";
-import navigation from "../../🧫️fixtures/🚏️navigation/🔣️.json";
+import navigation from "../🧫️fixtures/🚏️navigation/🔣️.json";
 
 //#region 🧫️Vectors
 type Step = { readonly screen: string; readonly page?: string; readonly run?: string };

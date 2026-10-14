@@ -1,0 +1,16 @@
+{
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "properties": {
+            "removed": [
+              1
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

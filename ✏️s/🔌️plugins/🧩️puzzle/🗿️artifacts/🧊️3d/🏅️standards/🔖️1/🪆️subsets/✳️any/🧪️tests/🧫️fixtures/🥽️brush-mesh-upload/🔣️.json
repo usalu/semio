@@ -1,0 +1,34 @@
+{
+  "commandRawBytes": 8192,
+  "pageValues": 1024,
+  "pageBase64Chars": 5464,
+  "uploadSlots": 4,
+  "maxPages": 384,
+  "faults": [
+    "puzzle3d-register-mesh-envelope",
+    "puzzle3d-register-mesh-payload",
+    "puzzle3d-register-mesh-gap",
+    "puzzle3d-register-mesh-capacity",
+    "puzzle3d-register-mesh-digest",
+    "puzzle3d-register-mesh-geometry"
+  ],
+  "example": {
+    "surfaceId": "world-3d",
+    "url": "/test/paged.glb",
+    "digest": "e07173f7b4274637fe83e05959a14251c67d0d83a8067f486ad4bec69795d992",
+    "positions": [-1, -1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1, -1, -1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1],
+    "indices": [0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2],
+    "pages": [
+      {
+        "page": 0,
+        "pageCount": 1,
+        "positionsB64": "AACAvwAAgL8AAIC/AACAPwAAgL8AAIC/AACAPwAAgD8AAIC/AACAvwAAgD8AAIC/AACAvwAAgL8AAIA/AACAPwAAgL8AAIA/AACAPwAAgD8AAIA/AACAvwAAgD8AAIA/",
+        "indicesB64": "AAAAAAEAAAACAAAAAAAAAAIAAAADAAAABAAAAAYAAAAFAAAABAAAAAcAAAAGAAAAAAAAAAQAAAAFAAAAAAAAAAUAAAABAAAAAgAAAAYAAAAHAAAAAgAAAAcAAAADAAAAAAAAAAMAAAAHAAAAAAAAAAcAAAAEAAAAAQAAAAUAAAAGAAAAAQAAAAYAAAACAAAA"
+      }
+    ]
+  },
+  "documentScale": [
+    { "url": "/asset/🥽️mesh/🧊️placeholder.glb", "positions": 25344, "indices": 48384, "pages": 72 },
+    { "url": "/asset/🥽️mesh/◀️hexagonal-cut-concrete-forest-left.glb", "positions": 2541, "indices": 2874, "pages": 6 }
+  ]
+}

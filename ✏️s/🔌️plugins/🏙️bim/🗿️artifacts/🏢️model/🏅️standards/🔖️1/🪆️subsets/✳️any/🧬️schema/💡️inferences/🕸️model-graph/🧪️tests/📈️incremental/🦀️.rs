@@ -5,7 +5,7 @@ use crate::{Axis, Entry, ModelDiff, Opening, Point2, Wall, WallPatch};
 use std::time::Instant;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const FULL: &str = include_str!("../../../../../🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
+const FULL: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
 
 fn line(from: (f64, f64), to: (f64, f64)) -> Axis {
     Axis::Line { start: Point2 { x: from.0, y: from.1 }, end: Point2 { x: to.0, y: to.1 } }
@@ -88,7 +88,7 @@ mod annotations {
     use crate::{AnnotationStylePatch, ColumnPatch, DimensionPatch, Entry, ModelDiff, OpeningPatch, Point2, ProjectPatch, StoreyPatch, TextNotePatch, WallTypePatch};
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-    const ROOM: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🪧️annotation-layout/🏠️room/📸️snapshot/🔣️.json");
+    const ROOM: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪧️annotation-layout/🏠️room/📸️snapshot/🔣️.json");
 
     fn room() -> ModelSnapshot {
         from_json_str(ROOM, JsonMemberPolicy::Reject).expect("the room decodes")
@@ -193,7 +193,7 @@ mod ceilings {
     use crate::{Ceiling, CeilingPatch, CeilingType, CeilingTypePatch, Entry, Layer, LayerFunction, ModelDiff, Point2, ProjectPatch, Vertex};
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-    const HOUSE: &str = include_str!("../../../../../🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
+    const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
 
     fn corner(x: f64, y: f64) -> Vertex {
         Vertex { point: Point2 { x, y }, bulge: 0.0 }
@@ -291,7 +291,7 @@ mod wall_depth {
     use crate::{Assigned, Entry, ModelDiff, ProjectPatch, RoofPatch, RoofShape, SlabPatch, Slope, WallPatch};
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-    const ATTIC: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/📸️snapshot/🔣️.json");
+    const ATTIC: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/📸️snapshot/🔣️.json");
 
     fn attic() -> ModelSnapshot {
         from_json_str(ATTIC, JsonMemberPolicy::Reject).expect("the attic decodes")
@@ -397,7 +397,7 @@ mod sheets {
     use crate::{Entry, ModelDiff, Point2, ProjectPatch, Sheet, SheetPatch, StoreyPatch, Viewport, ViewportPatch};
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-    const FULL: &str = include_str!("../../../../../🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
+    const FULL: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
 
     fn placed() -> ModelSnapshot {
         let mut snapshot: ModelSnapshot = from_json_str(FULL, JsonMemberPolicy::Reject).expect("the house decodes");
@@ -509,7 +509,7 @@ mod coordination {
     use protocol::Inference;
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-    const FRAME: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🧨️clash-sets/🏢️frame/📸️snapshot/🔣️.json");
+    const FRAME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧨️clash-sets/🏢️frame/📸️snapshot/🔣️.json");
 
     fn frame() -> ModelSnapshot {
         let mut snapshot: ModelSnapshot = from_json_str(FRAME, JsonMemberPolicy::Reject).expect("the frame decodes");

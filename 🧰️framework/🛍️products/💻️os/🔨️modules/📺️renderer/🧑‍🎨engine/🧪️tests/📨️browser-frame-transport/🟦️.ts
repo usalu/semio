@@ -1,3 +1,4 @@
+import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -67,7 +68,7 @@ class FakeWorker implements BrowserFrameWorkerPort {
 }
 
 function transport(worker: FakeWorker, hooks: { diagnostics?: string[]; directives?: number[]; faults?: string[]; turns?: string[]; now?: () => number } = {}): BrowserFrameTransport {
-  return new BrowserFrameTransport({
+  return new BrowserFrameTransport({ originalWorkStock: fixtureOriginalWorkStock(),
     worker,
     boot: {
       bindingsModuleUrl: "renderer.js",
@@ -100,7 +101,7 @@ describe("retained browser clock deadlines", () => {
     let frameSequence = 0;
     const setTimer = vi.fn((callback: () => void, delay: number) => setTimeout(callback, delay) as unknown as number);
     const clearTimer = vi.fn((handle: number) => clearTimeout(handle));
-    const subject = new BrowserFrameTransport({
+    const subject = new BrowserFrameTransport({ originalWorkStock: fixtureOriginalWorkStock(),
       worker,
       boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 8, height: 8, dpr: 1, locale: "en", descriptor: testBootDescriptor("s"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM, storage: TEST_HOST_STORAGE },
       now: () => Date.now(),
@@ -122,7 +123,7 @@ describe("retained browser clock deadlines", () => {
     return { worker, subject, raf, flushRaf, reply, setTimer, clearTimer };
   }
 
-  const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../../../../../🔨️modules/🖱️ui/🖌️render/🧫️fixtures/⏱️deadline/🔣️.json"), "utf8")) as { cases: { id: string; steps: ({ key: number; dueMs: number | null } | { nowMs: number; fired: boolean; nextMs: number | null })[] }[] };
+  const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../../../../../🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/⏱️deadline/🔣️.json"), "utf8")) as { cases: { id: string; steps: ({ key: number; dueMs: number | null } | { nowMs: number; fired: boolean; nextMs: number | null })[] }[] };
   for (const row of fixture.cases.filter(row => row.steps.every(step => !("key" in step) || step.key === 1))) it(`waits without rAF and replays ${row.id}`, () => {
     vi.useFakeTimers();
     vi.setSystemTime(0);
@@ -577,7 +578,7 @@ describe("browser frame worker transport", () => {
     const worker = new FakeWorker();
     const overruns: string[] = [];
     let now = 0;
-    const subject = new BrowserFrameTransport({
+    const subject = new BrowserFrameTransport({ originalWorkStock: fixtureOriginalWorkStock(),
       worker,
       boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, locale: "en", descriptor: testBootDescriptor("s"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM, storage: TEST_HOST_STORAGE },
       now: () => now,
@@ -597,7 +598,7 @@ describe("browser frame worker transport", () => {
   it("fails the surface only when a UI hook throws, under its own fault code", () => {
     const worker = new FakeWorker();
     const faults: string[] = [];
-    const subject = new BrowserFrameTransport({
+    const subject = new BrowserFrameTransport({ originalWorkStock: fixtureOriginalWorkStock(),
       worker,
       boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, locale: "en", descriptor: testBootDescriptor("s"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM, storage: TEST_HOST_STORAGE },
       now: () => 0,
@@ -620,7 +621,7 @@ describe("browser frame worker transport", () => {
       original(message);
       if (message.kind === "batch") now += 50;
     };
-    const subject = new BrowserFrameTransport({
+    const subject = new BrowserFrameTransport({ originalWorkStock: fixtureOriginalWorkStock(),
       worker,
       boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, locale: "en", descriptor: testBootDescriptor("s"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM, storage: TEST_HOST_STORAGE },
       now: () => now,
@@ -1055,7 +1056,7 @@ function bootHarness(tongue: "en" | "de" = "en") {
   const faults: { readonly code: string; readonly detail: string; readonly fallback: BrowserFrameFallbackState }[] = [];
   let nextTimerId = 1;
   let nowMs = 0;
-  const subject = new BrowserFrameTransport({
+  const subject = new BrowserFrameTransport({ originalWorkStock: fixtureOriginalWorkStock(),
     worker,
     boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 8, height: 8, dpr: 1, locale: tongue, descriptor: testBootDescriptor("generation3d"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM, storage: TEST_HOST_STORAGE },
     now: () => nowMs,
@@ -1194,7 +1195,7 @@ describe("wgpu boot liveness watchdog, replayed on a third-party clock", () => {
     try {
       const worker = new FakeWorker();
       const faults: string[] = [];
-      const subject = new BrowserFrameTransport({
+      const subject = new BrowserFrameTransport({ originalWorkStock: fixtureOriginalWorkStock(),
         worker,
         boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 8, height: 8, dpr: 1, locale: "en", descriptor: testBootDescriptor("generation3d"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM, storage: TEST_HOST_STORAGE },
         now: () => Date.now(),

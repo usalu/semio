@@ -1,0 +1,28 @@
+\documentclass{article}
+\usepackage{semio-viz-spatial}
+\ExplSyntaxOn
+% 📤 Emits one record per isoline ring, in grid coordinates: node (i,j) sits at (i,j), which is d3-contour's
+% 📤 own report shifted by exactly -0.5 in both axes, because its case table is written on half-integer corners.
+\cs_new_protected:Npn \semio_probe_ring:n #1
+  {
+    \tl_set:Nn \l_tmpa_tl {#1}
+    \tl_replace_all:Nnn \l_tmpa_tl { ; } { , }
+    \use:x
+      {
+        \exp_not:N \SemioVizProbeEval { spatial/contour }
+          { \exp_not:V \l_tmpa_tl }
+      }
+  }
+\ExplSyntaxOff
+\begin{document}
+\SemioVizProbeBegin{spatial-contours-density}{marching-squares}
+\SemioVizProbePage
+\SemioVizProbePrecision{6}
+\ExplSyntaxOn
+\clist_map_inline:nn { 4, 6 }
+  {
+    \SemioVizContour { demo-grid } { #1 }
+    \seq_map_inline:Nn \g_semio_viz_spatial_rings_seq { \semio_probe_ring:n {##1} }
+  }
+\ExplSyntaxOff
+\end{document}

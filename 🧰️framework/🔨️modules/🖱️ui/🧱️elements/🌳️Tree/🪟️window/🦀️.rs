@@ -2,7 +2,7 @@
 //! (`treeWindowVisibleRowsForViewport`, `treeWindowRequestsForViewport`, `capTreeWindowRequests`) and of the React observer's
 //! body/served rules (`treeWindowBodyRequestsV1`, `treeWindowServedRequestsV1`, `treeWindowReportSignatureV1`,
 //! `📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx`). One rule, two hosts: both read the same neutral vectors
-//! (`🧫️fixtures/🪟️window-requests/🔣️.json`, `🧬️contract/🧫️fixtures/🪟️tree-window-served.json`), so React and wgpu request the same
+//! (`🧪️tests/🧫️fixtures/🪟️window-requests/🔣️.json`, `🧬️contract/🧪️tests/🧫️fixtures/🪟️tree-window-served.json`), so React and wgpu request the same
 //! windows for the same viewport. Pure: no layout, no DOM, no retained tree — a host measures, this answers.
 //! @see 🎫️ 26/09/16 ARTIFACT-TREE-VIRTUALISED-STREAMING · 📓️design-virtualised-tree.md §6.1, §7
 

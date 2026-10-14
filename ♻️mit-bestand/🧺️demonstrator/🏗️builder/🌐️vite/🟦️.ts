@@ -1,5 +1,6 @@
+import { canonicalWasmBuildVitePlugin } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts";
 import { builtPluginModulesRootIn } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
-import { readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { viteCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -40,15 +41,15 @@ const resolvedPlaygroundAssets = DEMONSTRATOR_RUNTIME_TARGETS.flatMap((target) =
 const { pluginModuleDirNames, extensionModuleDirNames } = demonstratorRuntimeModuleLayout([...new Set(DEMONSTRATOR_RUNTIME_TARGETS.map((target) => target.pluginId))]);
 //#endregion 🔖️DemonstratorUnionAssets
 
-export default defineConfig(({ command }) => {
-  const profile = readBuildMode(process.env.SEMIO_BUILD_MODE) === "prototype" ? "dev" : "release";
+export default defineConfig(({ command, mode }) => {
+  const profile = readBuildMode(mode);
   const development = command === "serve" ? readDemonstratorActivation(repoRoot) : undefined;
-  const pluginModulesDir = command === "build" ? builtPluginModulesRootIn(repoRoot, readBuildMode(process.env.SEMIO_BUILD_MODE)) : path.join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
+  const pluginModulesDir = builtPluginModulesRootIn(repoRoot, profile);
   const installedExtensionsDir = development?.extensionsDirectory ?? pluginModulesDir;
   return {
   root: playDir,
   base: "./",
-  cacheDir: viteCacheDirectory(repoCacheDirectory(repoRoot, "vite", "mit-bestand-demonstrator"), process.env, import.meta.url),
+  cacheDir: viteCacheDirectory(repoCacheDirectory(repoRoot, "vite", "mit-bestand-demonstrator"), { ...process.env, SEMIO_BUILD_MODE: readBuildMode(mode) }, import.meta.url),
   publicDir: path.join(playDir, "public"),
   assetsInclude: ["**/*.wasm"],
   worker: { format: "es" },
@@ -82,6 +83,7 @@ export default defineConfig(({ command }) => {
     },
   },
   plugins: [
+      canonicalWasmBuildVitePlugin(repoRoot, readBuildMode(mode)),
     semioServeCloseVitePlugin(),
     ...semioHostHtmlVitePlugin(repoRoot, {
       title: "Entwerfen mit Bestand · Demonstrator",
@@ -99,7 +101,7 @@ export default defineConfig(({ command }) => {
     ...semioAssetsVitePlugin(repoRoot),
     ...(command === "build" ? [browserArtifactVitePlugin(demonstratorRuntimeAssetSources(repoRoot, "release"))] : [
       ...pluginModuleDirNames.flatMap((name) => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) })),
-      ...staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/🪞️vendor`, root: path.relative(repoRoot, demonstratorRuntimeAssetSources(repoRoot, "dev").find(row => row.owner === "infinite:fonts")!.root) }),
+      ...staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/🪞️vendor`, root: path.relative(repoRoot, demonstratorRuntimeAssetSources(repoRoot, "prototype").find(row => row.owner === "infinite:fonts")!.root) }),
       ...extensionModuleDirNames.flatMap(name => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_EXTENSION_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(installedExtensionsDir, name)) })),
     ]),
     staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `/${DEMONSTRATOR_ASSETS_DIR}`, root: DEMONSTRATOR_ASSETS_DIR }),
@@ -113,6 +115,6 @@ export default defineConfig(({ command }) => {
       exclude: ["playwright", "playwright-core", "chromium-bidi", "fsevents", ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE],
     }),
   },
-  build: semioViteBuild(),
+  build: semioViteBuild(undefined, readBuildMode(mode)),
   };
 });

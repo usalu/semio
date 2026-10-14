@@ -4,7 +4,7 @@ import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import {existsSync,readFileSync} from "node:fs";
 import schema from "../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 test("original retained codec catalog keeps borrowed sources and its actual receipt frontier",()=>{
  expect(new Ajv().compile(schema)(fixture)).toBe(true);
  const db=new Database(":memory:");try{db.exec("CREATE TABLE custody(phase TEXT,source TEXT,catalog INTEGER,receipt INTEGER,terminal INTEGER)");for(const row of fixture.custody)db.query("INSERT INTO custody VALUES(?,?,?,?,?)").run(row.phase,row.source,Number(row.catalog),Number(row.receipt),Number(row.terminal));expect(db.query("SELECT count(DISTINCT source) AS originals FROM custody").get()).toEqual({originals:1});expect(db.query("SELECT phase FROM custody WHERE terminal=1 AND (catalog=1 OR receipt=1)").all()).toEqual([]);expect(db.query("SELECT receipt FROM custody WHERE phase='catalogClosed'").get()).toEqual({receipt:1});}finally{db.close()}

@@ -1,7 +1,7 @@
 use super::*;
 use crate::results_window_config::{addressed, ChangeSelectedCheckIndex, NormResultsWindowConfig, NormResultsWindowConfigMutation};
 use protocol::{Mutation, OpBinary, OpText};
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 fn block_on_norm_results_windows<F: std::future::Future>(future: F) -> F::Output {
     let mut future = std::pin::pin!(future);
@@ -35,7 +35,7 @@ impl<A: semio_framework_plugin::PluginApp> Drop for ClosingFixtureApp<A> {
 
 #[test]
 fn norm_results_window_ownership_mutations_match_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🪟️results/🎚️config/🧫️fixtures/🔬️window-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🪟️results/🎚️config/🧪️tests/🧫️fixtures/🔬️window-ownership/🔣️.json")).unwrap();
     let base: NormResultsWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut windows = std::collections::BTreeMap::<String, NormResultsWindowConfig>::new();
     for row in fixture["windowInstances"].as_array().unwrap() {

@@ -13,7 +13,7 @@ fn vertical_layout_distributes_children() {
 
 #[test]
 fn number_stepper_square_buttons_match_the_shared_react_geometry() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️stepper-presentation/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪜️stepper-presentation/🔣️.json")).unwrap();
     for case in law["geometry"].as_array().unwrap() {
         let rect = |value: &serde_json::Value| Rect::new(value[0].as_f64().unwrap() as f32, value[1].as_f64().unwrap() as f32, value[2].as_f64().unwrap() as f32, value[3].as_f64().unwrap() as f32);
         assert_eq!(
@@ -27,7 +27,7 @@ fn number_stepper_square_buttons_match_the_shared_react_geometry() {
 
 #[test]
 fn number_stepper_display_matches_reacts_twelve_significant_digits() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️stepper-presentation/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪜️stepper-presentation/🔣️.json")).unwrap();
     for case in law["numbers"].as_array().unwrap() {
         assert_eq!(ui_contract::format_ui_number(case["value"].as_f64().unwrap()), case["text"].as_str().unwrap());
     }
@@ -38,7 +38,7 @@ fn number_stepper_display_matches_reacts_twelve_significant_digits() {
 
 #[test]
 fn slider_cells_range_and_thumb_match_the_shared_react_geometry() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎚️slider-presentation/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎚️slider-presentation/🔣️.json")).unwrap();
     let rect = |value: &serde_json::Value| Rect::new(value[0].as_f64().unwrap() as f32, value[1].as_f64().unwrap() as f32, value[2].as_f64().unwrap() as f32, value[3].as_f64().unwrap() as f32);
     let close_rect = |left: Rect, right: Rect| [left.x - right.x, left.y - right.y, left.w - right.w, left.h - right.h].into_iter().all(|delta| delta.abs() < 0.001);
     for case in law["cases"].as_array().unwrap() {
@@ -55,7 +55,7 @@ fn slider_cells_range_and_thumb_match_the_shared_react_geometry() {
 
 #[test]
 fn slider_unit_is_a_shrink_to_content_sibling_outside_the_inner_track_and_readout() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎚️slider-presentation/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎚️slider-presentation/🔣️.json")).unwrap();
     let unit = &law["unit"];
     let value = unit["value"].as_f64().unwrap();
     let gap = unit["gap"].as_f64().unwrap() as f32;

@@ -1,6 +1,7 @@
 //! 🧊️ Original BRep reconstruction retains topology, NURBS fields and all scalar source indexes.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{SemioBrepSnapshot,BrepVertex,BrepEdge,BrepLoop,BrepLoopEdge,BrepFace,BrepShell,BrepShellFace,BrepSolid,BrepSolidShell,BrepCoedge,BrepCurve,BrepCurve2,BrepSurface,SemioPoint3,identity,boolean,unsigned64,float_columns,point2,point3,shape};
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{FloatRow,RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{FloatRow,RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[path="📐️geometry/🦀️.rs"]mod geometry;
 #[derive(semio_framework_value::RetireOwned)]

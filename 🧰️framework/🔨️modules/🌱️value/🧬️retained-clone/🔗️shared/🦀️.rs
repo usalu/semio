@@ -8,13 +8,12 @@ pub struct SharedCloneCursor<T:Send+Sync+'static>{state:ManuallyDrop<State<T>>}
 impl<T:Send+Sync+'static> Default for SharedCloneCursor<T>{fn default()->Self{Self{state:ManuallyDrop::new(State{output:None,source:None,close:Default::default(),closing:false,spent:false})}}}
 impl<T:Send+Sync+'static> RetainedClone for SealedShared<T>{type Cursor=SharedCloneCursor<T>;fn retained_clone_cursor()->Self::Cursor{Default::default()}}
 impl<T:Send+Sync+'static> RetainedCloneCursor<SealedShared<T>> for SharedCloneCursor<T>{
- fn advance_demands(&self,source:RetainedCloneRef<'_,SealedShared<T>>,_body:usize)->Result<RetirementDemand,ValueError>{if self.state.closing||self.state.spent{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original shared clone is closing or spent"));}Ok(RetirementDemand{copy_bytes:if self.state.source.is_none(){source.binding_copy_bytes()}else if self.state.output.is_none(){size_of::<SealedShared<T>>()}else{0},depth:1,..Default::default()})}
+ fn advance_demands(&self,source:RetainedCloneRef<'_,SealedShared<T>>,_body:usize)->Result<RetirementDemand,ValueError>{if self.state.closing||self.state.spent{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original shared clone is closing or spent"));}Ok(RetirementDemand{copy_bytes:if self.state.source.is_none(){source.binding_copy_bytes()}else if self.state.output.is_none(){0}else{0},depth:1,..Default::default()})}
  fn advance(&mut self,source:RetainedCloneRef<'_,SealedShared<T>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let state=&mut *self.state;if state.closing||state.spent{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original shared clone is closing or spent"));}
   if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
   if let Some(progress)=source.bind(&mut state.source,grant)?{return Ok(RetainedCloneStep::Progress(progress));}
   if state.output.is_some(){return Ok(RetainedCloneStep::Complete(Default::default()));}
-  if grant.maximum_copy_bytes<size_of::<SealedShared<T>>(){return Ok(RetainedCloneStep::Progress(Default::default()));}
   let(output,progress)=source.get().try_duplicate(grant)?;state.output=Some(output);Ok(RetainedCloneStep::Complete(progress))
  }
  fn take(&mut self)->Option<SealedShared<T>>{if self.state.closing||self.state.spent{return None;}let output=self.state.output.take();if output.is_some(){self.state.spent=true;}output}

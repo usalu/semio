@@ -13,7 +13,7 @@ import { argControl, type ActionArgDef, type DialogDefinition } from "@semio-tec
 import { Slider, Stepper, ToggleGroup, UIDialog, type UIDialogFieldBinding } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
 import { useState } from "react";
-import dialogChoicesFixture from "../../../../🛂️manifest/🧫️fixtures/🧫️dialog-choices/🔣️.json";
+import dialogChoicesFixture from "../../../../🛂️manifest/🧪️tests/🧫️fixtures/🧫️dialog-choices/🔣️.json";
 // #endregion 🔌️Adapters
 
 // 🗨️#region 🗨️UIDialog

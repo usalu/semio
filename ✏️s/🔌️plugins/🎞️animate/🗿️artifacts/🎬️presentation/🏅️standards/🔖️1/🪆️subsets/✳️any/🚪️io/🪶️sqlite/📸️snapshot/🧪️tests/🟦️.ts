@@ -1,7 +1,7 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 
 import nativeSchema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import artifactSchema from "../../../../🧬️schema/🔣️.json";
@@ -9,7 +9,7 @@ import diffSchema from "../../../../🧬️schema/🔺️diff/🔣️.json";
 import replaceSourceSchema from "../../../../🧬️schema/🧬️mutations/🖼️replace-source/🧬️schema/🔣️.json";
 import childSchema from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json";
 import ioSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json";
-import references from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/📝️text/🗿️artifact-reference/🪆️binding/🧫️fixtures/🔣️.json";
+import references from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/📝️text/🗿️artifact-reference/🪆️binding/🧪️tests/🧫️fixtures/🔣️.json";
 import * as sqliteOwner from "../🟦️.ts";
 import referenceSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import * as owner from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
@@ -40,7 +40,7 @@ test("Presentation caller budgets bound real complete entities and values",async
 for(const phase of["projectSnapshot","reconstructSnapshot"]as const)test("Presentation cancellation interrupts "+phase+" within owned tile traversal",async()=>{const expected=snapshot();expected.tiles=Array.from({length:fixture.control.collectionLength},()=>structuredClone(expected.tiles[0]!));const database=await own.presentationSnapshotToSqliteDatabase(expected);const c=new AbortController();let reached=false;const options:ArtifactSqliteOptions={signal:c.signal,onProgress:event=>{if(event.phase===phase&&event.completed>=256){reached=true;c.abort()}}};await expect(phase==="projectSnapshot"?own.presentationSnapshotToSqliteDatabase(expected,options):own.presentationSnapshotFromSqliteDatabase(database,options)).rejects.toHaveProperty("kind","canceled");expect(reached).toBe(true);const initial=new AbortController();initial.abort();await expect(phase==="projectSnapshot"?own.presentationSnapshotToSqliteDatabase(snapshot(),{signal:initial.signal}):own.presentationSnapshotFromSqliteDatabase(database,{signal:initial.signal})).rejects.toHaveProperty("kind","canceled")});
 
 
-import semanticCells from "../../../../🧬️schema/📸️snapshot/🧫️fixtures/📏️semantic-cells/🔣️.json";
+import semanticCells from "../../../../🧪️tests/🧫️fixtures/📸️snapshot/📏️semantic-cells/🔣️.json";
 test("Presentation complete independent SQL semantic cell extent",async()=>{
  for(const c of semanticCells.cases){const s=snapshot();if(c.word!==null){const value={bits:BigInt("0x"+c.word)};s.source.frame={x:value,y:value,width:value,height:value};s.source.sourceAspect=value;s.tiles[0]!.crop={...s.source.frame};}if(c.mode!=="complete"){s.tiles=[];if(c.mode==="absent"){delete s.source.sourceAspect;delete s.source.pdfPage;}else{s.source.sourceAspect=binary64(-0);s.source.pdfPage=0;}}
   const d=await own.presentationSnapshotToSqliteDatabase(s),oracle=Database.deserialize(await exportSqliteDatabase(d));

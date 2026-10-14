@@ -1,0 +1,10 @@
+{
+  "profiles": ["prototype", "release"],
+  "olderThanMs": 10000,
+  "paths": [
+    {"path": "prototype/build/owner/unit/data", "bytes": "original prototype"},
+    {"path": "release/build/owner/unit/data", "bytes": "original release"}
+  ],
+  "cancelAfterMs": 30,
+  "expected": {"beforeRelease": 2, "afterPrune": 0, "separateProfiles": true}
+}

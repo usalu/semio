@@ -6,11 +6,11 @@ use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutat
 use crate::DrawingSnapshot;
 use protocol::{Mutation, SemanticMutation};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/🎯️outcome/🔣️.json");
 
 fn before() -> DrawingSnapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")

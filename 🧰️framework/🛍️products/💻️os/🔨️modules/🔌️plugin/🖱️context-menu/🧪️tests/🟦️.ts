@@ -1,7 +1,7 @@
 /** 🗣️ The context-menu selection glossary and phrase cases agree with the schema and with ICU's own CLDR plural rules, list conjunctions and number formatting (`Intl`), the independent oracle for the Rust `selection_count_phrase`. */
 import {expect,test} from "bun:test";
 
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 
 type Locale="en"|"de";
 type Kind=keyof typeof fixture.kinds;

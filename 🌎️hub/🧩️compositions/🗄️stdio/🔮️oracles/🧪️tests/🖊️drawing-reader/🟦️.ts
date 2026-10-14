@@ -6,7 +6,7 @@ import Ajv from "ajv";
 import * as toml from "@iarna/toml";
 import { validateJsonSchemaSubset } from "../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import { inspectRustCompileReferences, rustTokens, rustTokenPairs } from "../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
-import contract from "../../🧫️fixtures/🖊️drawing-reader/🔣️.json";
+import contract from "../🧫️fixtures/🖊️drawing-reader/🔣️.json";
 import { extractedDxfMutationSource } from "./🧩️preservation/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../..");
@@ -103,7 +103,7 @@ test("additive complete lower native cohort preserves the original full oracle r
 test("the actual native semantic law resolves the declared closed fixture input", () => {
   const source = `${contract.owner}/🧪️tests/🔬️semantic/🦀️.rs`;
   const fixtures = inspectRustCompileReferences(read(source)).filter(({ path }) => path.endsWith("🔣️.json")).map(({ path }) => resolve(root, source, "..", path));
-  expect(fixtures).toEqual([resolve(root, contract.owner, "🧫️fixtures/🖊️semantic/🔣️.json")]);
+  expect(fixtures).toEqual([resolve(root, contract.owner, "🧪️tests/🧫️fixtures/🖊️semantic/🔣️.json")]);
   expect(fixtures.every(path => existsSync(path))).toBe(true);
   expect(JSON.parse(readFileSync(fixtures[0]!, "utf8"))).toEqual(contract.cases);
 });

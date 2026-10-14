@@ -111,7 +111,7 @@ async fn loading_an_example_swaps_the_document_through_an_effect_and_never_a_mut
         assert!(emit.artifact_mutations.is_empty(), "example {id} must not reach the mutation seam");
         let [semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr }] = emit.effects.as_slice() else { panic!("example {id} must emit exactly one LoadDocument effect") };
         assert!(!pack.is_empty() && !spr.is_empty(), "example {id} emitted an empty document");
-        let loaded = <EnergyModelSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("the emitted pack decodes");
+        let loaded = <EnergyModelSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("the emitted pack decodes");
         assert_eq!(loaded.model, model, "example {id} loaded a different model than its own leaf declares");
     }
     let fault = reduce(&EnergyModelEditorCommand::SetActiveExample { example_id: "nonsense".into() }, &doc).err().expect("an unknown example id is refused");
@@ -566,7 +566,7 @@ async fn a_config_press_is_one_config_edit_a_cancel_is_none_and_neither_is_a_his
 //#endregion 🎚️ScrubLaws
 
 //#region ⏯️SimulationToolRun
-const RUN_FIXTURE: &str = include_str!("../../🧵️simulation-session/🧫️fixtures/🔣️.json");
+const RUN_FIXTURE: &str = include_str!("../../🧵️simulation-session/🧪️tests/🧫️fixtures/🔣️.json");
 
 fn run_fixture() -> serde_json::Value {
     serde_json::from_str(RUN_FIXTURE).expect("run fixture parses")
@@ -589,7 +589,7 @@ async fn simulation_app() -> EnergyEditorApp {
     model.run_period.end_month = period["endMonth"].as_u64().unwrap() as u8;
     model.run_period.end_day = period["endDay"].as_u64().unwrap() as u8;
     let snapshot = snapshot_of(&model);
-    let pack = <EnergyModelSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
+    let pack = <EnergyModelSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
     let envelope = store::os_store::document_materialize::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, "model", snapshot, None).into_owners();
     let spr = store::os_store::text_format::print_document_spr(&envelope).await.expect("fixture spr");
     let mut app = dispatchable_app().await;

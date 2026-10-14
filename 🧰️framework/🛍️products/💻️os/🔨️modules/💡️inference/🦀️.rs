@@ -10,6 +10,7 @@
 //! 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING; dependency-hash design
 //! from the closed ticket 26/04/17/OPTIMIZE-FLATTEN-DESIGN-WITH-MERKLE-HASH-CACHE).
 
+use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use crate::os_spr::command::TouchedPaths;
@@ -20,6 +21,7 @@ use std::sync::Arc;
 //#region 🔖️DepHash
 /// 🔑 Per-entity dependency hash — one link in a merkle dependency chain.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct DepHash(pub [u8; 32]);
 
 impl DepHash {
@@ -74,6 +76,7 @@ pub struct InferenceStep<K> {
 
 /// 🚫 A compute that could not produce a value: a stable machine code and a readable message.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct InferenceFault {
     pub code: String,
     pub message: String,
@@ -87,6 +90,7 @@ impl InferenceFault {
 
 /// 🛑 Why a driver call could not finish: a plan that names a parent before computing it, a compute that failed, or a cancelled run.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum InferenceError {
     MissingParent { key: String, parent: String },
     Compute { key: String, fault: InferenceFault },
@@ -121,8 +125,8 @@ pub enum ComputeStep<V> {
 /// trait real derivation math (e.g. a flatten engine) implements; an artifact's top-level
 /// `Inference::infer` assembles its `XInference` struct from one or more `InferredField`s.
 pub trait InferredField<P>: Send + Sync + 'static {
-    type Key: Clone + Eq + std::hash::Hash + Ord + Send + Sync + ToValue + FromValue + 'static;
-    type Value: Clone + Send + Sync + 'static;
+    type Key: RetireOwned + Clone + Eq + std::hash::Hash + Ord + Send + Sync + ToValue + FromValue + 'static;
+    type Value: RetireOwned + Clone + Send + Sync + 'static;
     type Dependency: ToValue;
 
     const FIELD_ID: &'static str;
@@ -176,6 +180,7 @@ pub trait InferredField<P>: Send + Sync + 'static {
 /// ⚙️ Optionality + configuration surface. Default = DISABLED: with no cache every path degenerates
 /// to plain recompute — caching is strictly opt-in per host.
 #[derive(Clone, Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct InferenceCacheConfig {
     pub enabled: bool,
     pub budget_bytes: usize,
@@ -192,6 +197,7 @@ impl Default for InferenceCacheConfig {
 /// 💾 Whether cached inference results are also checkpointed durably (via a `db_projection`
 /// adapter, kept out of this wasm-safe kernel crate — see the framework-level `db_artifact` module).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum InferencePersistence {
     None,
     Projection,
@@ -199,8 +205,28 @@ pub enum InferencePersistence {
 //#endregion 🔖️Config
 
 //#region 🔖️Cache
+/// 🧬️ Concrete inference values carry a mandatory typed retirement producer through erasure.
+trait InferenceOwnedValue:Any+Send+Sync {
+ fn as_any(&self)->&dyn Any;
+ fn into_any(self:Box<Self>)->Box<dyn Any+Send+Sync>;
+ fn boxed_retirement_birth_bytes(&self)->usize;
+ fn retire_boxed(self:Box<Self>)->Box<dyn RetirementCursor>;
+}
+impl<T:RetireOwned+Sync> InferenceOwnedValue for T {
+ fn as_any(&self)->&dyn Any{self}
+ fn into_any(self:Box<Self>)->Box<dyn Any+Send+Sync>{self}
+ fn boxed_retirement_birth_bytes(&self)->usize{semio_framework_value::retirement::boxed_owner_birth_bytes::<T>()}
+ fn retire_boxed(self:Box<Self>)->Box<dyn RetirementCursor>{self.retirement()}
+}
+impl RetireOwned for Box<dyn InferenceOwnedValue>{
+ fn retirement(self)->Box<dyn RetirementCursor>{self.retire_boxed()}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(self.as_ref().boxed_retirement_birth_bytes())}
+ fn controlled_retirement_supported()->bool{true}
+}
+
+#[derive(semio_framework_value::RetireOwned)]
 struct CacheEntry {
-    value: Arc<dyn Any + Send + Sync>,
+    value: Box<dyn InferenceOwnedValue>,
     byte_len: usize,
     tick: u64,
 }
@@ -209,6 +235,7 @@ struct CacheEntry {
 /// mechanism, keyed by [`DepHash`] instead of a raw content hash of caller-supplied input. Values are held typed
 /// and in memory (no encode/decode round trip), recency is a monotonic tick so a hit is O(log n), and an entry that
 /// alone exceeds the budget is never stored, so `used_bytes` never exceeds `budget_bytes`.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct InferenceCache {
     config: InferenceCacheConfig,
     entries: HashMap<DepHash, CacheEntry>,
@@ -220,6 +247,7 @@ pub struct InferenceCache {
 
 /// 📊 Hit/miss counters — populated only when `config.record_stats` is set.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct InferenceCacheStats {
     pub hits: u64,
     pub misses: u64,
@@ -265,7 +293,7 @@ impl InferenceCache {
         if !self.config.enabled {
             return None;
         }
-        let hit = self.entries.get(&key).and_then(|entry| entry.value.downcast_ref::<V>().cloned());
+        let hit = self.entries.get(&key).and_then(|entry| entry.value.as_ref().as_any().downcast_ref::<V>().cloned());
         if hit.is_some() {
             self.touch(key);
         }
@@ -279,7 +307,7 @@ impl InferenceCache {
         hit
     }
 
-    fn insert<V: Send + Sync + 'static>(&mut self, key: DepHash, value: V, byte_len: usize) {
+    fn insert<V: RetireOwned + Send + Sync + 'static>(&mut self, key: DepHash, value: V, byte_len: usize) {
         if !self.config.enabled {
             return;
         }
@@ -293,7 +321,7 @@ impl InferenceCache {
         self.ensure_budget(byte_len);
         self.clock += 1;
         self.recency.insert(self.clock, key);
-        self.entries.insert(key, CacheEntry { value: Arc::new(value), byte_len, tick: self.clock });
+        self.entries.insert(key, CacheEntry { value: Box::new(value), byte_len, tick: self.clock });
         self.used_bytes = self.used_bytes.saturating_add(byte_len);
     }
 
@@ -322,6 +350,7 @@ impl InferenceCache {
 
 //#region 🔖️Session
 /// 🔗 One entity as the last run of its field left it: the dependency hash its value was computed under, the parents it was computed from, its share of the field digest and the run that last looked at it.
+#[derive(semio_framework_value::RetireOwned)]
 struct Link<K> {
     hash: DepHash,
     parents: Vec<K>,
@@ -330,7 +359,8 @@ struct Link<K> {
 }
 
 /// 🧠 What a field keeps between two runs: its values, one [`Link`] per value, the digest of all links and whether the values are known to match the last snapshot.
-struct Stored<K, V> {
+#[derive(semio_framework_value::RetireOwned)]
+struct Stored<K:Eq+std::hash::Hash+Ord, V> {
     values: BTreeMap<K, V>,
     links: HashMap<K, Link<K>>,
     digest: [u64; 4],
@@ -338,20 +368,22 @@ struct Stored<K, V> {
     sound: bool,
 }
 
-impl<K, V> Stored<K, V> {
+impl<K:Eq+std::hash::Hash+Ord, V> Stored<K, V> {
     fn empty() -> Self {
         Self { values: BTreeMap::new(), links: HashMap::new(), digest: [0; 4], epoch: 0, sound: false }
     }
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct SessionEntry {
     digest: [u64; 4],
-    stored: Box<dyn Any + Send + Sync>,
+    stored: Box<dyn InferenceOwnedValue>,
 }
 
 /// 🧭 Per-artifact-instance state of the diff-driven entry points: per field id the values of the last run with their dependency links. [`infer_field_after_diff`] and the stepped [`InferenceSession::begin_update`] consult it
 /// to skip a whole field the diff does not touch, to carry every entity a diff and its parents did not move, and to skip the compute of an entity whose dependency hash did not move.
 #[derive(Default)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct InferenceSession {
     entries: HashMap<&'static str, SessionEntry>,
 }
@@ -374,13 +406,13 @@ impl InferenceSession {
 
     /// 🗂️ The values of the last run of field `F`, if there was one.
     pub fn field_values<P, F: InferredField<P>>(&self) -> Option<&BTreeMap<F::Key, F::Value>> {
-        self.entries.get(F::FIELD_ID).and_then(|entry| entry.stored.downcast_ref::<Stored<F::Key, F::Value>>()).map(|stored| &stored.values)
+        self.entries.get(F::FIELD_ID).and_then(|entry| entry.stored.as_ref().as_any().downcast_ref::<Stored<F::Key, F::Value>>()).map(|stored| &stored.values)
     }
 
     /// 🚦 Starts an update of field `F` after `diff`. The field's values move into the update; [`finish_update`](Self::finish_update) gives them back. With `reuse` an entity is carried or confirmed instead of recomputed
     /// (the caller passes whether its cache is enabled: with no cache every update is a plain recompute).
     pub fn begin_update<P, F: InferredField<P>, D: crate::os_spr::command::DiffRegions>(&mut self, diff: &D, reuse: bool) -> FieldUpdate<F::Key, F::Value> {
-        let stored = self.entries.remove(F::FIELD_ID).and_then(|entry| entry.stored.downcast::<Stored<F::Key, F::Value>>().ok()).map_or_else(Stored::empty, |stored| *stored);
+        let stored = self.entries.remove(F::FIELD_ID).and_then(|entry| entry.stored.into_any().downcast::<Stored<F::Key, F::Value>>().ok()).map_or_else(Stored::empty, |stored| *stored);
         let touched = diff.touches();
         let known = stored.sound;
         let gated = known && !touched.intersects_any(F::reads());
@@ -397,7 +429,7 @@ impl InferenceSession {
     }
 
     /// 🏁 Ends an update, finished or not: the values stay in the session and are trusted by the next update only when this one ran to its end.
-    pub fn finish_update<K: Clone + Eq + std::hash::Hash + Ord + Send + Sync + 'static, V: Send + Sync + 'static>(&mut self, update: FieldUpdate<K, V>) -> FieldDelta<K, V> {
+    pub fn finish_update<K: RetireOwned + Clone + Eq + std::hash::Hash + Ord + Send + Sync + 'static, V: RetireOwned + Send + Sync + 'static>(&mut self, update: FieldUpdate<K, V>) -> FieldDelta<K, V> {
         let done = update.gated || update.cursor.is_done();
         let FieldUpdate { field, values, track, gated, computed, hits, .. } = update;
         let Track { links, digest, epoch, changes, carried, confirmed, .. } = track;

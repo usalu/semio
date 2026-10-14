@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔝️set-wall-top/🧲️frees-the-height",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔝️set-wall-top/🧲️frees-the-height/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔝️set-wall-top/🧲️frees-the-height/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔝️set-wall-top/🧲️frees-the-height/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔝️set-wall-top/🧲️frees-the-height/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔝️set-wall-top/🧲️frees-the-height/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔝️set-wall-top/🧲️frees-the-height/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔝️set-wall-top/🧲️frees-the-height/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔝️set-wall-top/🧲️frees-the-height/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔝️set-wall-top/🧲️frees-the-height/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔝️set-wall-top/🧲️frees-the-height/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

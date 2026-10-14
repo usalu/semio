@@ -4,7 +4,7 @@ import {join} from "node:path";
 import {Buffer} from "node:buffer";
 test("retained admission examples agree with the independent buffer allocation oracle",()=>{
  const root=join(import.meta.dir,"..");
- const fixture=JSON.parse(readFileSync(join(root,"🧫️fixtures/🔣️.json"),"utf8"));
+ const fixture=JSON.parse(readFileSync(join(root,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
  const bytes=(value:number|string)=>value==="usize-max"?Number.MAX_VALUE:Number(value);
  for(const row of fixture.limits){
   const refusal=row.maximumRawBytes===0||row.maximumWorkItems===0?"capacity-is-zero":null;

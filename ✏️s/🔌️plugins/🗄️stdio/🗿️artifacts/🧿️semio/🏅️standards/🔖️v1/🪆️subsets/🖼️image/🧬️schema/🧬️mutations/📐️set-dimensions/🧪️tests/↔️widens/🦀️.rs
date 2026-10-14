@@ -12,11 +12,11 @@ use crate::schema::mutations::SemioImageMutation;
 use crate::schema::snapshot::SemioImageSnapshot;
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️set-dimensions/↔️widens/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️set-dimensions/↔️widens/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️set-dimensions/↔️widens/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️set-dimensions/↔️widens/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️set-dimensions/↔️widens/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️set-dimensions/↔️widens/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️set-dimensions/↔️widens/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️set-dimensions/↔️widens/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️set-dimensions/↔️widens/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️set-dimensions/↔️widens/🎯️outcome/🔣️.json");
 
 fn before() -> SemioImageSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-dimensions before snapshot decodes")

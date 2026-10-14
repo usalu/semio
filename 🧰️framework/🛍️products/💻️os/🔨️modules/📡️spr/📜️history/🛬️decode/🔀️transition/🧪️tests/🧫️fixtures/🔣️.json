@@ -1,0 +1,62 @@
+{
+  "grant": {
+    "items": 1,
+    "copyBytes": 2,
+    "capacityBytes": 65536,
+    "releaseBytes": 262144,
+    "depth": 64
+  },
+  "limits": {
+    "fileBytes": 67108864,
+    "frameBodyBytes": 1048576,
+    "records": 8192,
+    "maximumFields": 128,
+    "maximumTextBytes": 1048576,
+    "maximumBinaryBytes": 1048576,
+    "maximumJsonBytes": 1048576,
+    "maximumJsonAllocationBytes": 8388608,
+    "maximumJsonItems": 65536,
+    "maximumJsonDepth": 64
+  },
+  "source": {
+    "operation": 43,
+    "generation": 7,
+    "pageBytes": 3,
+    "prefixHex": "aa",
+    "suffixHex": "bb"
+  },
+  "transitions": [
+    {
+      "wireHex": "01000274310008617574686f72c3a903070900030001ff",
+      "id": "t1",
+      "actor": "authoré",
+      "hlt": [
+        3,
+        7,
+        9
+      ],
+      "dependencies": [],
+      "payloadHex": "0001ff",
+      "observed": null
+    },
+    {
+      "wireHex": "02000274320008617574686f72c3a90307090200056465702d3100056465702d3202aabb00096f6273657276656421",
+      "id": "t2",
+      "actor": "authoré",
+      "hlt": [
+        3,
+        7,
+        9
+      ],
+      "dependencies": [
+        "dep-1",
+        "dep-2"
+      ],
+      "payloadHex": "aabb",
+      "observed": "observed!"
+    }
+  ],
+  "control": {
+    "maximumAllocationBytes": 8388608
+  }
+}

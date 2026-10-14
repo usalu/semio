@@ -385,7 +385,7 @@ async fn app_frame_window_configs_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn window_config_transport_matches_shared_cross_language_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/📡️channel/🪟️window-config.json")).expect("window config fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📡️channel/🪟️window-config.json")).expect("window config fixture parses");
     let cases = [
         (
             "loadWindowConfig",
@@ -545,7 +545,7 @@ async fn app_frame_operation_completed_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn app_frame_operation_completed_matches_shared_cross_language_json_vector() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/📡️channel/🏁️app-frame-operation-completed.json")).expect("operation completion fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📡️channel/🏁️app-frame-operation-completed.json")).expect("operation completion fixture parses");
     let frame = AppFrame::OperationCompleted { operation: 7, revision: 5, ui_scope: vec![1], history_patch: vec![2] };
     assert_eq!(hex_encode(&encode_app_frame(&frame).await).await, fixture["OperationCompleted"].as_str().expect("frame fixture hex"));
     let wide = AppFrame::OperationCompleted { operation: 7, revision: 0xfedc_ba98_7654_3210, ui_scope: vec![1], history_patch: vec![2] };
@@ -702,7 +702,7 @@ async fn a_merge_archive_command_is_the_load_encoding_under_its_own_tag() {
 /// archive commands and the load status with its `ahead` varint after `total`, byte for byte, in both directions.
 #[semio_framework_async_macros::async_test]
 async fn document_archive_merge_matches_shared_cross_language_json_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/📡️channel/🧲️document-archive-merge.json")).expect("document archive merge fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📡️channel/🧲️document-archive-merge.json")).expect("document archive merge fixture parses");
     let bytes = |value: &serde_json::Value| value.as_array().expect("bytes").iter().map(|byte| byte.as_u64().expect("byte") as u8).collect::<Vec<u8>>();
     let seq = fixture["seq"].as_u64().expect("seq");
     let archive = || DocumentArchivePack { parent_pack: bytes(&fixture["archive"]["parent_pack"]), parent_spr: bytes(&fixture["archive"]["parent_spr"]), members: Vec::new() };
@@ -1094,7 +1094,7 @@ async fn channel_version_matches_the_shared_cross_language_pin() {
 /// (`admitGuestChannelVersion`) replays the same corpus.
 #[semio_framework_async_macros::async_test]
 async fn a_host_admits_only_a_guest_of_its_own_channel_version() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️channel-handshake/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️channel-handshake/🔣️.json")).unwrap();
     assert_eq!(law["code"].as_str(), Some(CHANNEL_MISMATCH_CODE));
     for case in law["cases"].as_array().unwrap() {
         let name = case["name"].as_str().unwrap();
@@ -1120,8 +1120,8 @@ async fn a_host_admits_only_a_guest_of_its_own_channel_version() {
 /// a change to either side's encode/decode that shifts these bytes fails on exactly one side.
 #[semio_framework_async_macros::async_test]
 async fn channel_transaction_fixtures_match_shared_cross_language_json_vectors() {
-    let command_json = include_str!("../../../../../🧫️fixtures/📡️channel/🧾️app-command-transaction.json");
-    let frame_json = include_str!("../../../../../🧫️fixtures/📡️channel/📨️app-frame-transaction.json");
+    let command_json = include_str!("../../../../../🧪️tests/🧫️fixtures/📡️channel/🧾️app-command-transaction.json");
+    let frame_json = include_str!("../../../../../🧪️tests/🧫️fixtures/📡️channel/📨️app-frame-transaction.json");
     let command_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(command_json).expect("🧾️app-command-transaction.json must parse");
     let frame_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(frame_json).expect("📨️app-frame-transaction.json must parse");
     assert_eq!(command_vectors.len(), 7, "🧾️app-command-transaction.json vector count changed");
@@ -1147,7 +1147,7 @@ async fn channel_transaction_fixtures_match_shared_cross_language_json_vectors()
 /// `AppFrame` variants were added for opening, so only the command-side vector file exists.
 #[semio_framework_async_macros::async_test]
 async fn channel_opening_fixtures_match_shared_cross_language_json_vectors() {
-    let command_json = include_str!("../../../../../🧫️fixtures/📡️channel/🚪️app-command-opening.json");
+    let command_json = include_str!("../../../../../🧪️tests/🧫️fixtures/📡️channel/🚪️app-command-opening.json");
     let command_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(command_json).expect("🚪️app-command-opening.json must parse");
     assert_eq!(command_vectors.len(), 4, "🚪️app-command-opening.json vector count changed");
 
@@ -1167,8 +1167,8 @@ async fn channel_opening_fixtures_match_shared_cross_language_json_vectors() {
 /// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/`.
 #[semio_framework_async_macros::async_test]
 async fn channel_merge_fixtures_match_shared_cross_language_json_vectors() {
-    let command_json = include_str!("../../../../../🧫️fixtures/📡️channel/🔀️app-command-merge.json");
-    let frame_json = include_str!("../../../../../🧫️fixtures/📡️channel/📢️app-frame-merge.json");
+    let command_json = include_str!("../../../../../🧪️tests/🧫️fixtures/📡️channel/🔀️app-command-merge.json");
+    let frame_json = include_str!("../../../../../🧪️tests/🧫️fixtures/📡️channel/📢️app-frame-merge.json");
     let command_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(command_json).expect("🔀️app-command-merge.json must parse");
     let frame_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(frame_json).expect("📢️app-frame-merge.json must parse");
     assert_eq!(command_vectors.len(), 3, "🔀️app-command-merge.json vector count changed");
@@ -1191,7 +1191,7 @@ async fn channel_merge_fixtures_match_shared_cross_language_json_vectors() {
 
 #[semio_framework_async_macros::async_test]
 async fn media_export_wire_matches_the_language_neutral_fixture_above_number_safe_range() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎬️media-export-wire/🔣️.json")).expect("media export wire fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎬️media-export-wire/🔣️.json")).expect("media export wire fixture parses");
     assert_eq!(fixture["channelVersion"].as_u64().unwrap(), CHANNEL_VERSION as u64);
     let handle = MediaExportHandleWire {
         app_instance_id: 42,
@@ -1236,7 +1236,7 @@ async fn media_export_wire_matches_the_language_neutral_fixture_above_number_saf
 /// 🪪️ The scalar owner query roundtrips the shared wire vectors without a document archive.
 #[semio_framework_async_macros::async_test]
 async fn document_identity_wire_matches_the_language_neutral_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document-identity-wire/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️document-identity-wire/🔣️.json")).unwrap();
     assert_eq!(fixture["channelVersion"].as_u64().unwrap(), CHANNEL_VERSION as u64);
     assert!(serde_json::from_value::<AppDocumentIdentity>(serde_json::json!({ "appInstanceId": 17 })).is_err());
     assert!(serde_json::from_value::<AppDocumentIdentity>(serde_json::json!({ "appInstanceId": 17, "parentDocumentId": null, "claimedControllerId": "foreign" })).is_err());
@@ -1274,7 +1274,7 @@ async fn document_identity_wire_matches_the_language_neutral_fixture() {
 /// itself (`admittedByGuest`, the media import of a whole document) is driven from its first poll under the next sequence.
 #[test]
 fn the_document_archive_load_host_sends_the_scripted_commands_and_ends_in_the_scripted_outcome() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️document-archive-load-host/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️document-archive-load-host/🔣️.json")).unwrap();
     let first = law["firstSequence"].as_u64().unwrap();
     let state = |name: &str| match name {
         "pending" => DocumentArchiveLoadState::Pending,

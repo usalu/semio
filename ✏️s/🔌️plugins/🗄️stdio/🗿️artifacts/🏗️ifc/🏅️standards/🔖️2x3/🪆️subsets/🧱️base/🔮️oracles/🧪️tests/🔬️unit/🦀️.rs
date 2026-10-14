@@ -1,7 +1,7 @@
 use super::{oracle_apply_mutation, oracle_round_trip, project_ifc_2x3_any};
 use semio_repo_test_host::{parse_json, Json};
 
-const FIXTURE: &[u8] = include_bytes!("../../../🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc");
+const FIXTURE: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc");
 
 /// 🧾️ The case's own `Examples` rows — the leaf wire payloads the scenarios run.
 fn feature_rows() -> Vec<(String, Json)> {

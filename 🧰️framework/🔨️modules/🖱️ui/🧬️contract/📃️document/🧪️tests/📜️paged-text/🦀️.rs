@@ -1,11 +1,11 @@
-//! 📜️ `UiDocumentLease::read_paged_text` over `🧬️contract/🧫️fixtures/📜️paged-text.json`: the retained
+//! 📜️ `UiDocumentLease::read_paged_text` over `🧬️contract/🧪️tests/🧫️fixtures/📜️paged-text.json`: the retained
 //! wire home of every reserved refresh section reassembles byte-for-byte from any record insertion
 //! order, and `serde_json` independently parses the recovered payload back to the authored value.
 
 use super::*;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🧫️fixtures/📜️paged-text.json")).expect("paged-text fixture parses")
+    serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📜️paged-text.json")).expect("paged-text fixture parses")
 }
 
 fn text(value: &str) -> crate::UiText {

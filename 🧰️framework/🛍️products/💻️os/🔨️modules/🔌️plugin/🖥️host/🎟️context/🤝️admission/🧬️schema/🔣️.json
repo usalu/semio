@@ -14,7 +14,17 @@
     "requiredReceiving",
     "requiredClose",
     "ownedExports",
-    "singleOriginalCheckout"
+    "singleOriginalCheckout",
+    "callerOwnedSource",
+    "rawReceivingBeforeReady",
+    "sameIdentityLoan",
+    "supplierOwnsNextEpoch",
+    "originalGrant",
+    "sourceCapacity",
+    "installedCheckoutBeforeGuest",
+    "rawReceiptBeforeSemanticOutcome",
+    "sameEventOwnerAcrossMoreWork",
+    "schedulerReturnBeforeNextInput"
   ],
   "properties": {
     "contract": {
@@ -92,7 +102,43 @@
     "ownedExports": {
       "const": 24
     },
+    "callerOwnedSource": {
+      "const": true
+    },
+    "originalGrant": {
+      "const": [
+        32,
+        32,
+        4096,
+        4096,
+        8
+      ]
+    },
+    "sourceCapacity": {
+      "const": 97
+    },
+    "rawReceivingBeforeReady": {
+      "const": true
+    },
+    "sameIdentityLoan": {
+      "const": true
+    },
+    "supplierOwnsNextEpoch": {
+      "const": true
+    },
     "singleOriginalCheckout": {
+      "const": true
+    },
+    "installedCheckoutBeforeGuest": {
+      "const": true
+    },
+    "rawReceiptBeforeSemanticOutcome": {
+      "const": true
+    },
+    "sameEventOwnerAcrossMoreWork": {
+      "const": true
+    },
+    "schedulerReturnBeforeNextInput": {
       "const": true
     }
   }

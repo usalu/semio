@@ -2,8 +2,8 @@
 //! state: the wire of the one mutation, its diff and inverse, every codec round trip, the footprint, and the window owners'
 //! registration, snapshot read and addressing.
 #[cfg(test)] use semio_framework_os_kernel::one_item::ArtifactStoreOneItemFootprint;
-#[cfg(test)] use semio_framework_os_kernel::serialization::ArtifactPack;
-#[cfg(test)] use semio_framework_os_kernel::serialization::ArtifactDsl;
+#[cfg(test)] use pack::snapshot::ArtifactPack;
+#[cfg(test)] use pack::snapshot::ArtifactDsl;
 
 use crate::{protocol, store};
 
@@ -74,7 +74,7 @@ fn the_snapshot_diff_sets_only_the_differing_fields() {
 /// pack of another envelope is refused.
 #[test]
 fn the_root_codecs_round_trip_through_their_envelope() {
-    use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+    use pack::snapshot::{ArtifactDsl, ArtifactPack};
     assert_eq!(ProbeTransient::parse_dsl(&probe().print_dsl()).expect("the DSL parses"), probe());
     assert_eq!(ProbeTransient::decode_pack(&probe().encode_pack()).expect("the pack decodes"), probe());
     assert_eq!(ProbeTransient::decode_pack(&[]).expect("an empty pack"), ProbeTransient::default());

@@ -15,7 +15,7 @@ use semio_s_artifact_stdio_txt::TxtSnapshot;
 pub fn register() {}
 
 pub fn serialize(snapshot: &Generation3dSnapshot) -> Result<TxtSnapshot, semio_framework_diagnostic::TextError> {
-    Ok(TxtSnapshot::from_body(&<Generation3dSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(snapshot)))
+    Ok(TxtSnapshot::from_body(&<Generation3dSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(snapshot)))
 }
 
 pub fn serialize_bytes(snapshot: &Generation3dSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {

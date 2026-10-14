@@ -62,7 +62,7 @@ use semio_framework_plugin::NoConfigMutation;
 use semio_framework_plugin::NoDraft;
 use semio_framework_plugin::NoDraftMutation;
 use std::sync::Arc;
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 use semio_framework_2d::compute::EngineHandles;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
@@ -614,7 +614,8 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
     /// framework measures [`Self::extent`] once in its preflight phase, so a turn never re-derives it:
     /// doing so cloned the whole working scene and re-parsed the edit JSON on every per-item turn,
     /// which made each microturn cost O(document) and the operation quadratic.
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<EquationPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<EquationPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<EquationPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<EquationPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context, operation } = *input;
         if self.cursor > self.extent {
             return Err(Fault::from("equation-command-extent-overflow"));
@@ -733,6 +734,9 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
             }
             EquationWorkPhase::Finish => self.finish(command, source, context, operation).map(ArtifactCommandWorkStep::Complete),
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn checkpoint_byte(&self,index:usize)->Option<u8>{match index{0..=3=>Some(b"MRC1"[index]),4=>Some(self.phase as u8),5..=7=>Some(0),8..=15=>Some(((self.cursor as u64)>>((index-8)*8))as u8),16..=23=>Some((self.digest>>((index-16)*8))as u8),24..=31=>Some((self.operation_identity>>((index-24)*8))as u8),32..=39=>Some(((self.extent as u64)>>((index-32)*8))as u8),_=>None}}
@@ -1198,6 +1202,7 @@ impl ArtifactEditor for EquationPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

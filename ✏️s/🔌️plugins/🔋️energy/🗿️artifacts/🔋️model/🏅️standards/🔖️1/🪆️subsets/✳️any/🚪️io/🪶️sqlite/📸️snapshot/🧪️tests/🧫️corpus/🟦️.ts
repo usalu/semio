@@ -1,5 +1,5 @@
 /** 🧫️ Explicit test-only ownership of the independent finite Serde fixture. */
-import corpus from "../../🧫️fixtures/🔣️.json";
+import corpus from "../🧫️fixtures/🔣️.json";
 import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import type {EnergyModelSnapshot,EnergyVertex} from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 const f=binary64;

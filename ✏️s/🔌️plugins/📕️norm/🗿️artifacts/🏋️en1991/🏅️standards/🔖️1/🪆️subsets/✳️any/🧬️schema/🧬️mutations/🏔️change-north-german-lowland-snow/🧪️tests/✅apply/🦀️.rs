@@ -5,11 +5,11 @@
 /// ⛄ The committed `change-north-german-lowland-snow` vector holds the specification-vector law.
 const VECTOR: super::Vector = super::Vector {
         kind: "change-north-german-lowland-snow",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏔️change-north-german-lowland-snow/✅apply/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏔️change-north-german-lowland-snow/✅apply/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏔️change-north-german-lowland-snow/✅apply/📸️snapshot/➡️after/🔣️.json"),
-        diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏔️change-north-german-lowland-snow/✅apply/🔺️diff/🔣️.json"),
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏔️change-north-german-lowland-snow/✅apply/🎯️outcome/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏔️change-north-german-lowland-snow/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏔️change-north-german-lowland-snow/✅apply/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏔️change-north-german-lowland-snow/✅apply/📸️snapshot/➡️after/🔣️.json"),
+        diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏔️change-north-german-lowland-snow/✅apply/🔺️diff/🔣️.json"),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏔️change-north-german-lowland-snow/✅apply/🎯️outcome/🔣️.json"),
 };
 
 #[test]

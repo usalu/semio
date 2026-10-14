@@ -10,5 +10,8 @@
   "scripts": {
     "verify-generation3d-document-io": "bun nx run @semio-tech/procedural-generation3d-rs:verify-generation3d-document-io",
     "verify-generation3d-preview-window-transient": "bun nx run @semio-tech/procedural-generation3d-rs:verify-generation3d-preview-window-transient"
+  },
+  "devDependencies": {
+    "@semio-tech/framework": "workspace:*"
   }
 }

@@ -1,0 +1,12 @@
+{
+  "CreateGeneration": {
+    "generation": {
+      "id": "gen-2",
+      "name": "Taller",
+      "values": {
+        "height": 5
+      }
+    },
+    "index": null
+  }
+}

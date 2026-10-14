@@ -1,0 +1,86 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/📤️effect/🧬️schema/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [
+      "schema",
+      "fields",
+      "sharedLeases",
+      "originalHeadersCopyBytes",
+      "decoderRootSameArc",
+      "instanceFaultOriginalSource",
+      "completeStateAbsent",
+      "completeOutputAbsent",
+      "copies",
+      "terminalDropBytes",
+      "jobFields",
+      "completionRefusalFields"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🫙️prefix/🧮️projection.json",
+    "id": null,
+    "title": null,
+    "properties": [
+      "contract",
+      "domains",
+      "schema",
+      "language",
+      "content",
+      "kind",
+      "href",
+      "expectedRows"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🎛️control/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [
+      "schema",
+      "mapCount",
+      "cancelAfterWork",
+      "maxRows",
+      "keys",
+      "binary64Words",
+      "commonPrefix"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️canonical/🧬️schema/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [
+      "copyCapacityLimit",
+      "turnLimit",
+      "pauses",
+      "cases",
+      "scalar",
+      "scalarExpected"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧬️schema/🕰️history/🔣️.json",
+    "id": null,
+    "title": "Restored Drawing History Actors",
+    "properties": [
+      "author",
+      "observer",
+      "kind",
+      "before",
+      "after",
+      "actions"
+    ],
+    "items": [],
+    "description": ""
+  }
+]

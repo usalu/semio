@@ -17,7 +17,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     readonly throws?: boolean;
     readonly shellFramePayload: readonly number[] | null;
   };
-  const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../🧫️fixtures/📨️effect-wire-routes/🔣️.json"), "utf8")) as {
+  const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../🧪️tests/🧫️fixtures/📨️effect-wire-routes/🔣️.json"), "utf8")) as {
     readonly instanceId: number;
     readonly routedTargets: readonly string[];
     readonly u64Fields: readonly string[];

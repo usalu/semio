@@ -8,7 +8,7 @@ use super::*;
 use db_storage::WalStorage as _;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/⏱️throughput/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/⏱️throughput/🔣️.json")).unwrap()
 }
 
 fn fixture_u64(value: &serde_json::Value, path: &[&str]) -> u64 {

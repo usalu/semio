@@ -45,7 +45,7 @@ import {
   type InputProvenanceV1,
   type InputRefusalReasonV1,
 } from "../../🧱️elements/🏛️ShellHost/🎯️input-ledger/🟦️.ts";
-import identityGate from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔐️identity-gate.json";
+import identityGate from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔐️identity-gate.json";
 
 const REFUSAL_REASONS = Object.keys(INPUT_REFUSAL_RETRYABLE_V1) as InputRefusalReasonV1[];
 

@@ -88,7 +88,7 @@ mod artifact_definition_contract_tests {
 #[test]
 fn definition_hierarchy_vectors_preserve_owned_validation() {
     use super::*;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️definition-hierarchy/🔣️.json")).expect("independent hierarchy corpus");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪜️definition-hierarchy/🔣️.json")).expect("independent hierarchy corpus");
     for row in fixture["cases"].as_array().expect("hierarchy cases") {
         let owner = ArtifactDefinition::stdio("ifc").expect("owned root");
         let cap = ArtifactCapability::new(ArtifactIdentity::parse(row["identity"].as_str().unwrap()).unwrap(), ArtifactCapabilityKind::parse(row["category"].as_str().unwrap()).unwrap()).descriptor(b"vector".to_vec()).unwrap();

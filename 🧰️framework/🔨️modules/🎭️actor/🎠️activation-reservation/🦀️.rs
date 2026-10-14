@@ -69,7 +69,7 @@ impl Kernel {
         if self.actors.contains_key(&actor) {
             return Err(KernelActivationRefused { request, reason: KernelActivationFault::Occupied });
         }
-        let budget = lane_defaults::budget_for(request.lane, request.retained);
+        let budget = lane_defaults::budget_for(request.lane);
         let shard = if request.lane == Lane::Interactive {
             let avoid = self.saturated_shards().await;
             self.shards.pin_avoiding(actor, &avoid).await
@@ -77,7 +77,7 @@ impl Kernel {
             self.shards.pin(actor).await
         };
         let authority = Arc::new(ReservationAuthority);
-        self.scheduler.register_actor_state(actor, request.package.clone(), request.lane, budget, shard, false).await;
+        self.scheduler.register_actor_state(actor, request.package.clone(), request.lane, budget, shard, false, request.retained).await;
         self.next_ordinal.insert(request.package.clone(), next);
         self.actors.insert(
             actor,

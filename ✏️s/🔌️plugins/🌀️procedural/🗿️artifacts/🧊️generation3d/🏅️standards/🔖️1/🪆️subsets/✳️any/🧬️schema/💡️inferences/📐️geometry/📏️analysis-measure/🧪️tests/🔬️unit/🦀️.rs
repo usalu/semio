@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 #[path = "../../../🧪️tests/🧰️oracle-support/🦀️.rs"]
 mod support;
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🔣️.json");
+const FIXTURE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/📏️analysis-measure/🔣️.json");
 
 fn start_of(id: &str) -> StartFn {
     COMPUTES.iter().find(|entry| entry.id == id).expect("registered").start

@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout};
 use crate::{LocationLine, ModelMutation};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🦚️set-wall-location/✅️moves-to-the-exterior-face/📸️snapshot/⬅️before/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦚️set-wall-location/✅️moves-to-the-exterior-face/📸️snapshot/⬅️before/🔣️.json");
 
 #[semio_framework_async_macros::async_test]
 async fn the_face_offsets_follow_the_location_line() {

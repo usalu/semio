@@ -153,7 +153,7 @@ class BudgetSession {
 }
 
 function fixture(): Fixture {
-  const path = fileURLToPath(new URL("../../../../../🧫️fixtures/⏱️evaluate-budget.json", import.meta.url));
+  const path = fileURLToPath(new URL("../../../../../🧪️tests/🧫️fixtures/⏱️evaluate-budget.json", import.meta.url));
   return JSON.parse(readFileSync(path, "utf8")) as Fixture;
 }
 

@@ -4,7 +4,7 @@ import {Database} from "bun:sqlite";
 import {existsSync,readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import grantSchema from "../../../../../🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
 
 test("original SQLite receiving preserves plain declaration and extent oracles without trial admission",()=>{

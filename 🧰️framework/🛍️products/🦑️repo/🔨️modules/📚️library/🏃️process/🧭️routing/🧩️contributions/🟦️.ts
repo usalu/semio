@@ -1,3 +1,4 @@
+import { checkScriptInvocation, type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { discoverPackages } from "../../../🔍️discovery/🟦️.ts";
@@ -36,11 +37,12 @@ export function resolveOwnedScriptRoute(routes: readonly OwnedScriptRoute[], seg
 }
 
 /** ▶️ Executes an admitted owner's Nx target with progress, cancellation and inherited output ownership. */
-export async function dispatchOwnedScriptRoute(repoRoot: string, segments: readonly string[]): Promise<boolean> {
+export async function dispatchOwnedScriptRoute(invocation: ScriptInvocation, repoRoot: string, segments: readonly string[]): Promise<boolean> {
+  checkScriptInvocation(invocation);
   const selected = resolveOwnedScriptRoute(ownedScriptRoutes(repoRoot), segments);
   if (!selected) return false;
   const { route, args } = selected;
-  await runRepositoryCommand(process.execPath, ["nx", "run", `${route.project}:${route.target}`, ...(args.length ? ["--", ...args] : [])], repoRoot, `owned-command:${route.project}:${route.target}`);
+  await runRepositoryCommand(invocation,process.execPath, ["nx", "run", `${route.project}:${route.target}`, ...(args.length ? ["--", ...args] : [])], repoRoot, `owned-command:${route.project}:${route.target}`, {version:1,maximumElapsedMilliseconds:0,output:null});
   return true;
 }
 

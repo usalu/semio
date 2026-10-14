@@ -3,8 +3,8 @@ import { expect, test } from "vitest";
 
 import { getValueByPointer } from "fast-json-patch";
 import { createShellI18nInstance, disposeShellI18nInstance, resolveUiLabel, uiChromeTranslationBundles } from "../../../../🎯️targets/⚛️react/🌐️i18n/🟦️.ts";
-import fixture from "../../🧫️fixtures/🌐️translation-totality/🔣️.json";
-import outcomeCodes from "../../../../../📡️replication/🎮️mutation/🧫️fixtures/🧫️outcome-code/🔣️.json";
+import fixture from "../🧫️fixtures/🌐️translation-totality/🔣️.json";
+import outcomeCodes from "../../../../../📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🧫️outcome-code/🔣️.json";
 
 test("every frozen outcome code has distinct en and de labels", () => {
   const keys = [...outcomeCodes.codes.map((row) => row.code.slice("mutation.".length).replace(/-([a-z0-9])/g, (_, letter: string) => letter.toUpperCase())), "apply"];

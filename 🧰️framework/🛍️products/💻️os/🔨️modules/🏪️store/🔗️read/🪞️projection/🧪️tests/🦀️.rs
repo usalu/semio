@@ -3,7 +3,7 @@ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 
 #[test]
 fn original_projection_retirement_keeps_the_exact_issuer_and_all_physical_receipts(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in corpus["cases"].as_array().unwrap(){
   let registry=store::SnapshotReadRegistryHandle::new();let source=Arc::new(row["owner"].as_str().unwrap().to_owned());let pointer=Arc::as_ptr(&source);
   let lease=registry.try_issue(Arc::clone(&source)).unwrap_or_else(|_|panic!("original projection read issue failed"));let(index,generation)=(lease.index,lease.generation);

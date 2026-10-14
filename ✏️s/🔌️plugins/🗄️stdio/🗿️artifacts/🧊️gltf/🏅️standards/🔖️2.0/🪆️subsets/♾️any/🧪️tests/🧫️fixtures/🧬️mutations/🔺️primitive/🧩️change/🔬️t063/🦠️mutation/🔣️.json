@@ -1,0 +1,16 @@
+{
+  "mutation": "changePrimitiveExtensionData",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "mesh": 0,
+      "primitive": 0,
+      "data": {
+        "state": "present",
+        "value": {
+          "KHR_draco_mesh_compression": {}
+        }
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 //! 💰️ DOCX complete literal native fields settle one persistent backing stage.
 use super::*;
 use semio_framework_value::{ValueError,ValueRefusalKind,NativeEncodeControl,NativeDecodeControl,DecodedValue};
-use semio_framework_os_kernel::os_store::serialization::ArtifactSqliteSnapshot;
+use semio_framework_os_kernel::os_store::serialization::ArtifactSqliteSnapshotHost;
 fn retire(value:DocxSnapshot){value.retire_sqlite_snapshot();}
 fn measured(snapshot:&DocxSnapshot,encoding:SnapshotEncoding,limits:SqliteDatabaseLimits,native:&mut NativeEncodeControl<'_>)->Result<usize,ValueError>{
  native.begin_stage(0)?;let mut writer=OpcNativeWriter{control:native,output:None,count:0,rows:0,limits,encoding};write(snapshot,&mut writer)?;let count=writer.count;native.checkpoint()?;Ok(count)

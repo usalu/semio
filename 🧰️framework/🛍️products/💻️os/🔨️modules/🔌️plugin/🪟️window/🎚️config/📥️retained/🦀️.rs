@@ -17,16 +17,16 @@ mod physical_ownership_tests {
     #[test]
     fn window_config_paged_registry_actual_authored_root_metadata_producer() {
         use super::super::retained_pack_load_tests::RetainedLoadCameraConfig;
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗂️registry/🧫️fixtures/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗂️registry/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
         let law = &fixture["rootMetadata"];
         let ((producer, absent), getter) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| (
-            <RetainedLoadCameraConfig as store::os_store::serialization::ArtifactPack>::record_spec_producer(),
-            <semio_framework_value::DslValue as store::os_store::serialization::ArtifactPack>::record_spec_producer(),
+            <RetainedLoadCameraConfig as pack::snapshot::ArtifactPack>::record_spec_producer(),
+            <semio_framework_value::DslValue as pack::snapshot::ArtifactPack>::record_spec_producer(),
         ));
         assert_eq!(producer.is_some(), law["ownedProducer"].as_bool().unwrap());
         assert_eq!(absent.is_some(), law["schemaLessProducer"].as_bool().unwrap());
         assert_eq!((getter.requested_bytes, getter.released_bytes), (law["getterAllocationBytes"].as_u64().unwrap() as usize, law["getterReleaseBytes"].as_u64().unwrap() as usize));
-        assert_eq!(<RetainedLoadCameraConfig as store::os_store::serialization::ArtifactDsl>::envelope_id(), law["owner"].as_str().unwrap());
+        assert_eq!(<RetainedLoadCameraConfig as pack::snapshot::ArtifactDsl>::envelope_id(), law["owner"].as_str().unwrap());
         let mut accepted = |_| true;
         let mut native = semio_framework_value::NativeDecodeControl::new_retained(&mut accepted);
         native.admit_turn_capacity(law["maximumCapacityBytes"].as_u64().unwrap() as usize).unwrap();
@@ -56,7 +56,7 @@ mod physical_ownership_tests {
 
     #[test]
     fn window_config_paged_registry_retained_source_reservation_uses_capacity_authority() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗂️registry/🧫️fixtures/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗂️registry/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
         let body = fixture["maximumPageBytes"].as_u64().unwrap() as usize;
         let mut decoder = RetainedWindowConfigStateDecode::<IdentityWindowOwner>::new();
         decoder.phase = RetainedStatePhase::Ingress;
@@ -92,7 +92,7 @@ mod physical_ownership_tests {
 
     #[test]
     fn window_config_paged_registry_actual_inline_parser_retains_original_backing() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗂️registry/🧫️fixtures/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗂️registry/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
         let body = fixture["maximumPageBytes"].as_u64().unwrap() as usize;
         let mut accepted = |_| true;
         let mut native = semio_framework_value::NativeDecodeControl::new_retained(&mut accepted);
@@ -352,7 +352,7 @@ struct RetainedTypedOwners<O: WindowConfigOwner> {
 
 impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
     fn new(native: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, WindowConfigPackLoadDiagnostic> {
-        let producer = <O::State as store::os_store::serialization::ArtifactPack>::borrowed_record_spec_producer().ok_or(WindowConfigPackLoadDiagnostic::TypedState)?;
+        let producer = <O::State as pack::snapshot::ArtifactPack>::borrowed_record_spec_producer().ok_or(WindowConfigPackLoadDiagnostic::TypedState)?;
         let spec = producer.decode(native).map_err(|_| WindowConfigPackLoadDiagnostic::TypedState)?;
         let stack = Vec::new();
         let wrappers = Vec::new();
@@ -844,7 +844,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
     }
 
     fn validate_envelope(&mut self, pack: &[u8], grant: RetainedCloneGrant) -> Result<bool, WindowConfigPackLoadDiagnostic> {
-        let envelope_id = <O::State as store::os_store::serialization::ArtifactDsl>::envelope_id();
+        let envelope_id = <O::State as pack::snapshot::ArtifactDsl>::envelope_id();
         let expected_token_bytes = envelope_id.len().checked_add(".pack v1".len()).ok_or(WindowConfigPackLoadDiagnostic::EnvelopeIdentity)?;
         let header_bytes = 12usize.checked_add(expected_token_bytes).ok_or(WindowConfigPackLoadDiagnostic::EnvelopeIdentity)?;
         if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < header_bytes.saturating_add(size_of::<RetainedWindowConfigTypedState<O>>()) {
@@ -1659,7 +1659,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigPackLoad for TypedWindowConfigPackL
     }
 
     fn demand_bytes(&self) -> usize {
-        let envelope_id = <O::State as store::os_store::serialization::ArtifactDsl>::envelope_id();
+        let envelope_id = <O::State as pack::snapshot::ArtifactDsl>::envelope_id();
         12usize.saturating_add(envelope_id.len()).saturating_add(".pack v1".len()).saturating_add(size_of::<RetainedWindowConfigTypedState<O>>())
     }
 

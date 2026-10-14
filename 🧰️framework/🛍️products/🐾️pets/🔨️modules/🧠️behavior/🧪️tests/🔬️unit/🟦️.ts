@@ -28,7 +28,7 @@ const RISES = sampled(16, 64, 512);
 
 /** 🧫️ One committed fixture of the product. */
 function fixture<T>(name: string): T {
-  return JSON.parse(readFileSync(resolve(HERE, "../../../../🧫️fixtures", name, "🔣️.json"), "utf8")) as T;
+  return JSON.parse(readFileSync(resolve(HERE, "../../../../🧪️tests/🧫️fixtures", name, "🔣️.json"), "utf8")) as T;
 }
 
 type Circumstance = { readonly id: string; readonly mode: PetMode; readonly quiet: boolean; readonly movers: number; readonly fidgeters: number; readonly roam: boolean; readonly hops: boolean; readonly crowd: number; readonly watched: boolean; readonly whims: boolean; readonly fidgets: boolean; readonly needs: Needs };

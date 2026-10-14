@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import Ajv from "ajv";
 import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import fixture from "../../🧫️fixtures/🎯️stack-drop-destination/🔣️.json";
+import fixture from "../🧫️fixtures/🎯️stack-drop-destination/🔣️.json";
 import { applyModeDrop, modeDockOutLayout } from "../../🟦️";
 
 type Layout = Parameters<typeof applyModeDrop>[0];

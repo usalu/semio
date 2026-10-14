@@ -5,11 +5,11 @@
 /// 📈 The committed `change-assumed-delta-t` vector holds the specification-vector law.
 const VECTOR: super::Vector = super::Vector {
         kind: "change-assumed-delta-t",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌡️change-assumed-delta-t/✅apply/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌡️change-assumed-delta-t/✅apply/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌡️change-assumed-delta-t/✅apply/📸️snapshot/➡️after/🔣️.json"),
-        diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌡️change-assumed-delta-t/✅apply/🔺️diff/🔣️.json"),
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌡️change-assumed-delta-t/✅apply/🎯️outcome/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌡️change-assumed-delta-t/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌡️change-assumed-delta-t/✅apply/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌡️change-assumed-delta-t/✅apply/📸️snapshot/➡️after/🔣️.json"),
+        diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌡️change-assumed-delta-t/✅apply/🔺️diff/🔣️.json"),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌡️change-assumed-delta-t/✅apply/🎯️outcome/🔣️.json"),
 };
 
 #[test]

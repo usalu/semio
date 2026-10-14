@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🟧️set-slab-type/🧲️restacks",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🟧️set-slab-type/🧲️restacks/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🟧️set-slab-type/🧲️restacks/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🟧️set-slab-type/🧲️restacks/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🟧️set-slab-type/🧲️restacks/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🟧️set-slab-type/🧲️restacks/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🟧️set-slab-type/🧲️restacks/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🟧️set-slab-type/🧲️restacks/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🟧️set-slab-type/🧲️restacks/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🟧️set-slab-type/🧲️restacks/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🟧️set-slab-type/🧲️restacks/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

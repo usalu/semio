@@ -1,5 +1,27 @@
 # TXT Semantic Receiving Audit
 
+## Authoritative Relocated Default Follow-up
+
+Current trait is `os_store::serialization::ArtifactSqliteSnapshot`, declared in store/🚪️io/🦀️.rs; TXT current import already uses that path. Store still publicly reexports NativeSnapshotDecodeOwner/NativeSnapshotEncodeOwner/NativeSnapshotBodyWallet. Historical fail-closed defaults below are no longer current: current P/R defaults delegate to `📦️codec/🪶️snapshot-capability/🪆️workspace-receiving/🦀️.rs`.
+
+The workspace defaults run cold authored to_sqlite_database/from_sqlite_database under original native scoped maximum, checkpoint and with_encoding_receiver allocation port loan passed to SqliteSnapshotControl::with_original_allocation. Directional validator defaults checkpoint original native then call cold subset validation. staged installs an original workspace recipient, executes the stage and retires it using original owner.receive if nonempty. This is actual current shared routing, not evidence of all cold handwritten allocation/prefix behavior or runtime execution; the generic function's `_observer` loan is not forwarded to SQL child in the visible call.
+
+Explicit TXT retained Projection/Reconstruction Port hooks are still a distinct original typed-body/receipt/prefix qualification. Audit actual cold allocations under the new receiver before stating they are denied or admitted; they are no longer simply UnsupportedOwner defaults. Preserve concurrent shared workspace changes rather than reverting them to match historical Source guards.
+
+Parent recovered original Source41219 terminal1pass/2fail/22expectations: one real four-hook absence RED and one unsupported draft2020 schema under draft7 witness. Parent changed semantic input witness to Ajv2020; immutable lifecycle grants remain independently canonical wire-schema checked. Whole fixture is intentionally not a schema authority, so the earlier aggregate-schema suggestion is optional design commentary, not a missing mandatory contract. No Source rerun or Native result follows from this audit.
+
+## Resumed Current Contract Inspection (2026-10-13)
+
+Current semantic fixture is `snapshot/🫴️receiving/🧫️fixtures/🔣️.json`; its semantic-input schema is nested at `🧫️fixtures/🧬️schema/🔣️.json`; owning Source file is `🫴️receiving/🧪️tests/🟦️.ts`. Imports resolve that exact schema location. Source requires four explicit hooks, original receive Projection/Reconstruction, post_body enabling and full TXT kind/standard checks. At this inspection `🫴️receiving/🦀️.rs` is absent. Source41219 terminal status is not in the inspected saved execution report, so no RED outcome is inferred.
+
+The input schema closes table/row/cell object shape, exact definitions, four-cell tuples and names. It does not establish single-root cardinality, rowid-ID equality, parent existence, distinct identities or contiguous ordinals; those rightly remain semantic relational rules. The schema validates only each case.database, not the entire original fixture or original cause/custody contracts. Body/close grants are independently validated, but fixture version/source bounds/case snapshots/malformed expected message strings currently lack a closed aggregate contract. A whole-fixture schema would strengthen schema-first authority without pretending cross-row constraints are ordinary JSON Schema checks.
+
+Source malformed witness inserts through SQLite constraints and also checks authored original rowid/values rather than re-reading SQL-coerced cells, correctly avoiding SQLite's numeric-to-TEXT coercion as false evidence for typed originals. It checks explicit identity/ordinal predicates and changed content column type, but does not independently assert expected cause/message and does not prove exact schema token equality beyond that one wrong-definition example. Current valid witness reads schema/flags/ending and ordered content, but it does not compare every explicit rowid/ID/parent/ordinal and declaration string returned by SQLite. Add exact authored row/metadata queries if claiming complete rows.
+
+Staged billing remains valid against actual owner receive: Port bills original body spans; binder settles residual before taking output, drops Port and RefCell borrow, enables post_body; original observer then reconciles frame/retirement charges at pre-close/final publication checkpoints while output remains retained. Preserve exact SQL text cause at Port inner callback, not through observe_progress bool conversion. Avoid moving completed database/snapshot out of original frame before any fallible settle; repeated reconciliation must be idempotent. Final output only leaves receiving custody after publication demand and original final checkpoint.
+
+No production/test changes or execution were made by this audit; implementation reinspection is required when the actual module appears.
+
 Read-only source audit, no builds/tests. TXT native encoding Native7620 is left untouched. Domain base is `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/`.
 
 ## Actual current routing

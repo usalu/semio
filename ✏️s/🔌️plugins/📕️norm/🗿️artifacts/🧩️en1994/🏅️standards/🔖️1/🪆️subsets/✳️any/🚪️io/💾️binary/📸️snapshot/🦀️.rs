@@ -11,12 +11,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `Document` to its binary pack form.
 pub fn encode(document: &En1994Snapshot) -> Vec<u8> {
-    store::os_store::serialization::ArtifactPack::encode_pack(document)
+    pack::snapshot::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Document` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<En1994Snapshot, PackError> {
-    <En1994Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)
+    <En1994Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)
 }
 
 #[cfg(test)]
@@ -34,11 +34,11 @@ use framework_schema::ArtifactSchema;
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 /// 📦️ Decodes pack bytes.
 pub fn decode_en1994_pack(bytes: &[u8]) -> Result<En1994Snapshot, String> {
-    <En1994Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
+    <En1994Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
 }
 /// 📦️ Encodes pack bytes.
 pub fn encode_en1994_pack(snapshot: &En1994Snapshot) -> Vec<u8> {
-    store::os_store::serialization::ArtifactPack::encode_pack(snapshot)
+    pack::snapshot::ArtifactPack::encode_pack(snapshot)
 }
 }
 pub use native_snapshot_codec::*;

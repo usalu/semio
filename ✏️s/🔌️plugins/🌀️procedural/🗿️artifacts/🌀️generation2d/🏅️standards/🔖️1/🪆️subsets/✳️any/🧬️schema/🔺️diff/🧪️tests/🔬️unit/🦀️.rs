@@ -10,7 +10,7 @@ fn camera_diff(oracle: &serde_json::Value, key: &str) -> (Generation2dDiff, Came
 /// ➕️ Absorb keeps the incoming value of a scalar field, keeps the other rows, and the absorbed diff applies like its parts.
 #[test]
 fn diff_absorb_prefers_incoming_camera_and_preserves_other_rows() {
-    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧲️absorb/🔣️.json")).unwrap();
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🧲️absorb/🔣️.json")).unwrap();
     let base = Generation2dSnapshotRead::new(empty_generation2d_snapshot());
     let (mut sum, _) = camera_diff(&oracle, "firstCamera");
     MutationDiff::absorb(&mut sum, Generation2dDiff { selected_generation: Some(Generation2dSelectionChange { id: None }), ..Default::default() });

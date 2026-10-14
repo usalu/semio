@@ -1,7 +1,7 @@
 /** 🧫️ Shared Binary semantic fixture and independent SQL editing interoperability. */
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import { binarySnapshotToSqliteDatabase, binarySnapshotFromSqliteDatabase, BINARY_SQLITE_SCHEMA } from "../🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework";
 import { parseBinarySnapshot } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
@@ -96,7 +96,7 @@ test("Binary snapshot typed boundary requires integer byte arrays", () => {
   expect(() => parseBinarySnapshot({ schema: fixture.schema, bytes: "00ff" })).toThrow();
 });
 
-import controlFixture from "../🧫️fixtures/🛬️native-control/🔣️.json";
+import controlFixture from "./🧫️fixtures/🛬️native-control/🔣️.json";
 
 import Ajv2020 from "ajv/dist/2020";
 test("Binary native control corpus retains complete literal owned fields independently of external format",async()=>{
@@ -111,7 +111,7 @@ import {NativeDecodeControl as BudgetDecodeControl} from "../../../../../../../.
 import {SqliteAllocationControl as BudgetAllocationControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 import SemanticAjv2020 from "ajv/dist/2020";
-import completeSemantic from "../🧫️fixtures/🛂️semantic/🔣️.json";
+import completeSemantic from "./🧫️fixtures/🛂️semantic/🔣️.json";
 
 test("binary closed complete semantic cells agree with independent third-party SQL",async()=>{
  expect(completeSemantic["tableWidths"]["binary_document"]).toEqual(2);expect(completeSemantic["tableWidths"]["binary_byte"]).toEqual(4);
@@ -131,7 +131,7 @@ test("Original Binary required paid receiver keeps the raw carrier and canonical
  const { readFileSync } = await import("node:fs");
  const { resolve } = await import("node:path");
  const repo=resolve(import.meta.dir,"../../../../../../../../../../../../..");
- const original=JSON.parse(readFileSync(new URL("../🫴️receiving/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+ const original=JSON.parse(readFileSync(new URL("../🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
  const { semioSchemaAjvV1 } = await import(resolve(repo,"🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts"));
  const grant=JSON.parse(readFileSync(resolve(repo,"🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json"),"utf8"));
  expect(semioSchemaAjvV1({strict:true}).compile(grant)(original.original.grant)).toBe(true);
@@ -147,4 +147,4 @@ test("Original Binary required paid receiver keeps the raw carrier and canonical
  console.log("[DEBUG] Original required Binary receiver uses canonical supplied Grant and independent Buffer/Uint8Array raw-carrier output; actual System cancellation proof is separate");
 });
 
-test("current Binary examples have no whole-trial schema authority", async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../🫴️receiving/🧫️fixtures/🧬️schema/🔣️.json",import.meta.url))).toBe(false);});
+test("current Binary examples have no whole-trial schema authority", async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../🫴️receiving/🧪️tests/🧫️fixtures/🧬️schema/🔣️.json",import.meta.url))).toBe(false);});

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🏟️create-curtain-wall-type/✨️adds-a-door-default",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/✨️adds-a-door-default/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/✨️adds-a-door-default/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/✨️adds-a-door-default/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/✨️adds-a-door-default/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/✨️adds-a-door-default/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/✨️adds-a-door-default/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/✨️adds-a-door-default/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/✨️adds-a-door-default/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/✨️adds-a-door-default/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏟️create-curtain-wall-type/✨️adds-a-door-default/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

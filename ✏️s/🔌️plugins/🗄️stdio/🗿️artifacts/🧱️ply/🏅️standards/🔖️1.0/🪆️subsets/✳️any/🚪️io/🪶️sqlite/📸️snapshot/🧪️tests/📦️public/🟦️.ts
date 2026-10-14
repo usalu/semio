@@ -2,8 +2,8 @@ import {plySnapshotToSqliteDatabase,plySnapshotFromSqliteDatabase,plySnapshotVal
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import ieee from "../../🧫️fixtures/🔢️ieee754/🔣️.json";
-import declarations from "../../🧫️fixtures/📋️declaration-state.json";
+import ieee from "../🧫️fixtures/🔢️ieee754/🔣️.json";
+import declarations from "../🧫️fixtures/📋️declaration-state.json";
 import {parsePlyElementDiff} from "../../../../../🧬️schema/🔺️diff/🟦️.ts";
 
 test("PLY declaration patches retain unsigned64 independent metadata",()=>{

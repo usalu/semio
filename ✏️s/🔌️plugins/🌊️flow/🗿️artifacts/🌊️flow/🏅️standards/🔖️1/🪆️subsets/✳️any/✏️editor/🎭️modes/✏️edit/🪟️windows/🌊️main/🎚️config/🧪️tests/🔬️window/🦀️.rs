@@ -51,7 +51,7 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                     artifact_app_laws::decode_fixture_scene(&json).map_err(str::to_string)
                 }
 
-                let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+                let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
                 let left_id = fixture["windowInstances"][0]["id"].as_str().unwrap();
                 let right_id = fixture["windowInstances"][1]["id"].as_str().unwrap();
                 let generation_id = fixture["windowInstances"][3]["id"].as_str().unwrap();
@@ -274,7 +274,7 @@ fn flow_two_window_config_commands_in_one_turn_both_land() {
 
 #[semio_framework_async_macros::async_test]
 async fn flow_window_ownership_mutations_match_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
     let base_config: FlowMainWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let base_transient: FlowWindowTransient = semio_framework_pack_json::from_json_str(&fixture["baseTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in fixture["configMutations"].as_array().unwrap() {

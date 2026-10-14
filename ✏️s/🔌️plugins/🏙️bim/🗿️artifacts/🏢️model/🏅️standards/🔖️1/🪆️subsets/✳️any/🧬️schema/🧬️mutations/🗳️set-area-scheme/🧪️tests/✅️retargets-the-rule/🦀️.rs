@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🗳️set-area-scheme/✅️retargets-the-rule",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗳️set-area-scheme/✅️retargets-the-rule/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗳️set-area-scheme/✅️retargets-the-rule/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗳️set-area-scheme/✅️retargets-the-rule/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗳️set-area-scheme/✅️retargets-the-rule/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗳️set-area-scheme/✅️retargets-the-rule/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗳️set-area-scheme/✅️retargets-the-rule/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗳️set-area-scheme/✅️retargets-the-rule/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗳️set-area-scheme/✅️retargets-the-rule/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗳️set-area-scheme/✅️retargets-the-rule/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗳️set-area-scheme/✅️retargets-the-rule/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

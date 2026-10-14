@@ -87,7 +87,7 @@ async fn rendered_drawing_canvas(app:&mut DrawingApp,fixture:Option<&str>,view:&
 }
 
 fn drawing_envelope_wire() -> Vec<u8> {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
 
     let mut snapshot = default_drawing_document("drawing-retained-load", None);
     let mut group = crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Nested")).to_string().into()).expect("nonempty authored identity"), "Nested");
@@ -601,7 +601,7 @@ async fn settled(app: &mut DrawingApp, command: DrawingCommand, meta: &semio_fra
 
 /// 📸️ Loads test geometry through the same retained envelope owner as the host.
 fn load_drawing_fixture(app: &mut DrawingApp, snapshot: &DrawingSnapshot) {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     let pack = snapshot.encode_pack().iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let wire = serde_json::to_vec(&serde_json::json!({
         "schema": DRAWING_DOCUMENT_SCHEMA, "id": snapshot.id,
@@ -620,7 +620,7 @@ fn assert_one_artifact_publication(receipt: &artifact_laws::TypedOperationFixtur
 
 #[semio_framework_async_macros::async_test]
 async fn direct_drag_projects_without_editing_and_publishes_only_on_release() {
-    let surface_behavior: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🎬️surface-behavior/🔣️.json"))).expect("shared surface behavior fixture");
+    let surface_behavior: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🎬️surface-behavior/🔣️.json"))).expect("shared surface behavior fixture");
     let law = surface_behavior["cases"].as_array().unwrap().iter().find(|entry| entry["id"] == "draw-canvas2d").expect("Draw surface behavior");
     assert_eq!(law["appId"], "s.draw.drawing@1/*#editor");
     assert_eq!(law["terminalPolicy"], "cancelled-action-discards-draft");
@@ -993,7 +993,7 @@ async fn utility_registry_declares_all_canvas_utilities_scoped_to_the_window() {
 /// 🧰️ Owned guest decoding agrees with independent serde on nullable addressed arms.
 #[test]
 fn initial_utility_maps_preserve_clears_in_owned_and_serde_guest_contexts() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🧫️fixtures/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🧪️tests/🧫️fixtures/🔣️.json"))).unwrap();
     for locale in ["en", "de"] {
         for row in fixture["cases"].as_array().unwrap() {
             let input = serde_json::json!({"locale":locale,"terminology":"native","activeUtilityByWindowId":row["activeUtilityByWindowId"]});
@@ -1012,7 +1012,7 @@ fn initial_utility_maps_preserve_clears_in_owned_and_serde_guest_contexts() {
 /// 🌅️ The window declares its actual initial arm without inferring the first utility reference.
 #[test]
 fn initial_window_utility_decisions_follow_the_neutral_contract() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🧫️fixtures/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🧪️tests/🧫️fixtures/🔣️.json"))).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let utilities: Vec<semio_framework::UtilityRef> = serde_json::from_value(row["utilityIds"].clone()).unwrap();
         let initial: Option<semio_framework::UtilityRef> = serde_json::from_value(row["initialUtilityId"].clone()).unwrap();
@@ -1033,7 +1033,7 @@ fn initial_window_utility_decisions_follow_the_neutral_contract() {
 /// 🌄️ The actual producer declares an accepted arm independently of toolbar ordering.
 #[semio_framework_async_macros::async_test]
 async fn initial_canvas_utility_is_explicit_in_the_manifest() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🧫️fixtures/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🧪️tests/🧫️fixtures/🔣️.json"))).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "fresh-draw-does-not-infer-first-reference").unwrap();
     let definition = create_drawing_app();
     let canvas = definition.window_kinds.iter().find(|window| window.id == DRAWING_PLAY_WINDOW_CANVAS).unwrap();
@@ -1056,7 +1056,7 @@ async fn strokes_interaction_domain_enumerates_document_layers_on_the_canvas_win
 /// 🧰️ Armed tools preserve palette actions; genuine operation authority owns mutation exclusion.
 #[semio_framework_async_macros::async_test]
 async fn armed_canvas_utilities_keep_declared_document_actions_available() {
-    let policy: serde_json::Value = serde_json::from_str(include_str!("../../🪛️utilities/🎬️actions/🧫️fixtures/🔣️.json")).unwrap();
+    let policy: serde_json::Value = serde_json::from_str(include_str!("../../🪛️utilities/🎬️actions/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let definition = create_drawing_app();
     let canvas = definition.window_kinds.iter().find(|window| window.id == policy["windowKind"].as_str().unwrap()).unwrap();
     let actions = semio_framework::window_kind_actions(&definition, canvas);
@@ -1072,7 +1072,7 @@ async fn armed_canvas_utilities_keep_declared_document_actions_available() {
 /// 🛑️ Document publication retires armed-tool previews before a stale pointer release.
 #[semio_framework_async_macros::async_test]
 async fn armed_canvas_utilities_retire_gestures_after_document_actions() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪛️utilities/🎬️actions/🧫️fixtures/🛑️interruption/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪛️utilities/🎬️actions/🧪️tests/🧫️fixtures/🛑️interruption/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let utility = row["utility"].as_str().unwrap();
         let (mut app, mut meta) = inline_selection_app().await;
@@ -1188,7 +1188,7 @@ async fn drawing_labels_translate_panels_in_german() {
 
 #[semio_framework_async_macros::async_test]
 async fn drawing_window_status_tracks_live_selection_in_both_explicit_locales() {
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧮️status/🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧮️status/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut witnesses=0;
     for locale in [semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Locale::De] {
         let language=if locale==semio_framework_ui_locale::Locale::En {"en"} else {"de"};
@@ -1897,7 +1897,7 @@ async fn point_click_persists_and_local_position_rebinds_but_topology_edit_prune
 
 #[semio_framework_async_macros::async_test]
 async fn every_keyboard_nudge_moves_document_axes_and_undoes_once() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎮️commands/🕹️nudge-selection/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎮️commands/🕹️nudge-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture.as_array().unwrap() {
         let (mut app,meta)=inline_selection_app().await;
         let mut layer=crate::schema::create_layer_by_kind(crate::schema::identity::DrawingIdentity::admit((("shape:rect")).to_string().into()).expect("nonempty authored identity"), "shape:rect");
@@ -2012,7 +2012,7 @@ async fn modified_node_picks_and_combined_drag_preserve_layers_and_one_history_e
 #[semio_framework_async_macros::async_test]
 async fn fill_rule_selection_edit_undoes_as_one_history_entry() {
     let mut app=drawing_app().await;
-    let before:DrawingSnapshot=serde_json::from_str(include_str!("../../../../🎨️style/🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let before:DrawingSnapshot=serde_json::from_str(include_str!("../../../../🎨️style/🧪️tests/🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd/📸️snapshot/⬅️before/🔣️.json")).unwrap();
     let mut before=before;
     let mut second=before.layers[0].clone();
     crate::schema::layer_base_mut(&mut second).id="shape-b".into();
@@ -2085,8 +2085,8 @@ async fn ungroup_selects_promoted_children_and_undoes_as_one_history_entry() {
 #[semio_framework_async_macros::async_test]
 async fn group_isolation_selection_edit_undoes_as_one_history_entry() {
     let mut app=drawing_app().await;
-    let before:DrawingSnapshot=serde_json::from_str(include_str!("../../../../🎨️style/🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/⬅️before/🔣️.json")).unwrap();
-    let after:DrawingSnapshot=serde_json::from_str(include_str!("../../../../🎨️style/🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/➡️after/🔣️.json")).unwrap();
+    let before:DrawingSnapshot=serde_json::from_str(include_str!("../../../../🎨️style/🧪️tests/🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let after:DrawingSnapshot=serde_json::from_str(include_str!("../../../../🎨️style/🧪️tests/🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/➡️after/🔣️.json")).unwrap();
     load_drawing_fixture(&mut app,&before);
     artifact_laws::assert_undo_redo_round_trip(&mut *app,DrawingCommand::PatchLayers(patch_layers::PatchLayers { index:None,layer_ids:vec!["group-a".into()],field:"isolation".into(),value:"true".into()}),|app|app.snapshot().unwrap(),before,after, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
 }
@@ -2166,7 +2166,7 @@ async fn registered_pointer_yields_while_real_scene_job_is_pending_and_then_sele
 /// 📤️ The registered PNG command publishes exact neutral pixels once and changes no source or history.
 #[semio_framework_async_macros::async_test]
 async fn png_export_command_publishes_one_real_download_from_the_registered_factory(){
- let sources:Vec<serde_json::Value>=serde_json::from_str(include_str!("../../../🧬️schema/🎬️scene/📋️prepare/🧫️fixtures/🔣️.json")).unwrap();let mut samples:Vec<serde_json::Value>=serde_json::from_str(include_str!("../../🎮️commands/📤️export-document/🧫️fixtures/🔣️.json")).unwrap();let styles:Vec<serde_json::Value>=serde_json::from_str(include_str!("../../🎮️commands/📤️export-document/🧫️fixtures/🎨️styles/🔣️.json")).unwrap();for style in styles{samples.push(serde_json::json!({"name":style["name"],"source":"rectangle","width":2,"height":1,"transparent":true,"expected":style["expected"],"layers":style["layers"],"channelTolerance":style["channelTolerance"]}));}
+ let sources:Vec<serde_json::Value>=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🔣️.json")).unwrap();let mut samples:Vec<serde_json::Value>=serde_json::from_str(include_str!("../../🎮️commands/📤️export-document/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let styles:Vec<serde_json::Value>=serde_json::from_str(include_str!("../../🎮️commands/📤️export-document/🧪️tests/🧫️fixtures/🎨️styles/🔣️.json")).unwrap();for style in styles{samples.push(serde_json::json!({"name":style["name"],"source":"rectangle","width":2,"height":1,"transparent":true,"expected":style["expected"],"layers":style["layers"],"channelTolerance":style["channelTolerance"]}));}
  for sample in samples{let row=sources.iter().find(|row|row["name"]==sample["source"]).unwrap();let mut authored=row["document"].clone();if let Some(layers)=sample.get("layers"){authored["layers"]=layers.clone();}authored["artboard"]=serde_json::json!({"width":2,"height":1});let document:DrawingSnapshot=serde_json::from_value(authored).unwrap();let(mut app,meta)=inline_selection_app().await;load_drawing_fixture(&mut app,&document);let before=app.snapshot().unwrap();let edits=app.history_snapshot().await.unwrap().edit_count;let command=export_document::ExportDocument{format:"png".into(),width:Some(2),height:Some(1),transparent:Some(sample["transparent"].as_bool().unwrap())};let(result,receipt)=settled(&mut app,DrawingCommand::ExportDocument(command),&meta).await;
   assert!(result.mutations.is_empty());assert_eq!(receipt.completions,1);assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact));let[Effect::DownloadMediaExport{filename,mime_type,data,encoding}]=receipt.effects.as_slice()else{panic!("one sealed PNG download required")};assert!(filename.ends_with(".png"));assert_eq!(mime_type,"image/png");assert_eq!(encoding.as_deref(),Some("base64"));let bytes=base64_codec::base64_standard_decode(data).unwrap();let mut decoder=png::Decoder::new(std::io::Cursor::new(&bytes)).read_info().unwrap();let mut pixels=vec![0;decoder.output_buffer_size()];let info=decoder.next_frame(&mut pixels).unwrap();assert_eq!((info.width,info.height),(2,1));let expected:Vec<u8>=serde_json::from_value(sample["expected"].clone()).unwrap();let tolerance=sample["channelTolerance"].as_u64().unwrap_or(0)as u8;assert_eq!(info.buffer_size(),expected.len());for(actual,expected)in pixels[..info.buffer_size()].iter().zip(expected.iter()){assert!(actual.abs_diff(*expected)<=tolerance);}assert_eq!(app.snapshot().unwrap(),before);assert_eq!(app.history_snapshot().await.unwrap().edit_count,edits);artifact_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);assert!(app.close_terminal_is_empty());eprintln!("[DEBUG] Registered native PNG {} published once, independent decoder matched shared pixels, source/history unchanged and app owners closed",sample["name"]);
  }

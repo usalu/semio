@@ -1,0 +1,67 @@
+import {isAbsolute,join} from "node:path";
+import {runOwnedCommand,captureOwnedProcess,type OwnedCommandOptions,type OwnedProcessCaptureOptions,type OwnedProcessCaptureResult} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {runExactCargoLaws,readExactCargoLawPolicyV1,exactExecutableFingerprint,type ExactCargoLawOptions,type ExactCargoLawPort,type ExactCargoLawReceipt} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import {checkScriptInvocation,advanceScriptInvocation,scriptInvocationEnvironment} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {getWorkspaceRoot} from "../../../🗂️workspaces/🟦️.ts";
+import {cargoRepositoryPackageSelections,cargoWorkspacePreparationInvocationV1,type CargoPreparationInvocationV1} from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
+import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
+import {isGeneratedPath} from "../../../⚡️caching/🟦️.ts";
+import {cargoTargetDirectory} from "../../../⚡️caching/🦀️cargo/🗂️directories/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../📦️packages/🟦️typescript/🧬️schema/🟦️.ts";
+import preparationSchema from "../🛠️preparation/🧬️schema/🔣️.json";
+import preparationPolicy from "../🛠️preparation/📋️policy/🔣️.json";
+
+/** 📋️ Declares Repository preparation line authority independently of byte capacity. */
+export type RepositoryCargoPreparationPolicyV1=Readonly<{version:1;maximumOutputLines:number}>;
+/** 🔐️ Admits required Repository preparation authority before acquisition. */
+export function readRepositoryCargoPreparationPolicyV1(value:unknown):RepositoryCargoPreparationPolicyV1{
+  if(validateJsonSchemaSubset(preparationSchema,value).length)throw Error("Complete repository preparation policy required");
+  return value as RepositoryCargoPreparationPolicyV1;
+}
+/** ⚙️ Reads the explicit first-party preparation transport declaration. */
+export function configuredRepositoryCargoPreparationPolicyV1():RepositoryCargoPreparationPolicyV1{return readRepositoryCargoPreparationPolicyV1(preparationPolicy);}
+/** 🔌️ Receives actual selection, command and capture operations without bypassing preparation. */
+export type RepositoryExactCargoLawPort={
+  fingerprint:ExactCargoLawPort["fingerprint"];
+  prepare(command:string,args:string[],options:OwnedProcessCaptureOptions):CargoPreparationInvocationV1|undefined|Promise<CargoPreparationInvocationV1|undefined>;
+  execute(command:string,args:string[],cwd:string,label:string,budget:number,options:OwnedCommandOptions):Promise<void>;
+  capture(command:string,args:string[],options:OwnedProcessCaptureOptions):Promise<OwnedProcessCaptureResult>;
+};
+/** 📥️ Carries the sole original operation and complete Repository preparation declaration. */
+export type RepositoryExactCargoLawOptions=Omit<ExactCargoLawOptions,"manifestPaths"|"cargoTargetDir"|"cancelled">&{manifestPath?:string;preparation:RepositoryCargoPreparationPolicyV1};
+
+/** 🦀️ Owns Repository selection and preparation for exact native laws. */
+export async function runRepositoryExactCargoLaws(options:RepositoryExactCargoLawOptions,port?:RepositoryExactCargoLawPort):Promise<readonly ExactCargoLawReceipt[]> {
+  const preparation=readRepositoryCargoPreparationPolicyV1(options.preparation);
+  readExactCargoLawPolicyV1(options.policy);
+  checkScriptInvocation(options.invocation);
+  await advanceScriptInvocation(options.invocation, "repository:exact-cargo-selection", "loading");
+  const root = getWorkspaceRoot(), environment = options.env ?? process.env;
+  const artifactDirectory = options.artifactDir ?? environment.SEMIO_TEST_ARTIFACT_DIR;
+  if (!artifactDirectory || !isAbsolute(artifactDirectory) || !isGeneratedPath(artifactDirectory)) throw new Error("Repository exact Cargo laws require generated artifact storage");
+  const selected = options.manifestPath ? [] : cargoRepositoryPackageSelections(root, options.groups.map(group => group.package));
+  const manifestPaths = Object.fromEntries(options.groups.map((group, index) => [group.package, options.manifestPath ?? join(root, selected[index]!.manifest)]));
+  const host:RepositoryExactCargoLawPort=port??{fingerprint:exactExecutableFingerprint,prepare:(_command,args,capture)=>cargoWorkspacePreparationInvocationV1(repositoryCargoPreparationStorageV1(root),root,args,capture.cwd,capture.env),execute:runOwnedCommand,capture:captureOwnedProcess};
+  const preparedPort: ExactCargoLawPort = {
+    fingerprint: host.fingerprint,
+    probe: async (command, args, capture) => {
+      if (command === "cargo") {
+        if (capture.invocation !== options.invocation) throw Error("Exact original Cargo preparation invocation required");
+        const started = performance.now();
+        await advanceScriptInvocation(options.invocation, "repository:exact-cargo-preparation", "running");
+        const remaining=():number=>{
+          checkScriptInvocation(options.invocation);
+          const parent=options.invocation.control.remainingMilliseconds(),phase=capture.budgetMs===0?null:capture.budgetMs-(performance.now()-started),budget=parent===null?phase:phase===null?parent:Math.min(parent,phase);
+          if(budget!==null&&budget<=0)throw Error("Exact Cargo phase authority exhausted during preparation");
+          return budget??0;
+        };
+        remaining();
+        const request=await host.prepare(command,args,capture);
+        if(request)await host.execute(request.command,[...request.args],request.cwd,"cargo:selected-preparation",remaining(),{env:scriptInvocationEnvironment(options.invocation,request.environment),stdout:"stderr",output:{maximumBytes:capture.maxOutputBytes,maximumLines:preparation.maximumOutputLines},signal:options.invocation.control.signal,onProgress:async line=>{await advanceScriptInvocation(options.invocation,"repository:exact-cargo-preparation","running");process.stderr.write(line+"\n");}});
+        return await host.capture(command,args,{...capture,budgetMs:remaining()});
+      }
+      return await host.capture(command,args,capture);
+    },
+  };
+  return await runExactCargoLaws({ ...options, manifestPaths, cargoTargetDir: cargoTargetDirectory(root, environment) }, preparedPort);
+}

@@ -13,7 +13,8 @@
     "bindgen",
     "wasmPack",
     "searchPath",
-    "leaseDirectory"
+    "leaseDirectory",
+    "sourceOwner"
   ],
   "properties": {
     "version": {
@@ -99,7 +100,83 @@
       "type": "string",
       "minLength": 1,
       "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+    },
+    "sourceOwner": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/|[A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$"
+    },
+    "compilerConfiguration": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
     }
   },
-  "$id": "https://semio.tech/framework/process/wasm-build/policy/v1"
+  "$id": "https://semio.tech/framework/process/wasm-build/policy/v1",
+  "definitions": {
+    "PackageOwner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "sourceOwner",
+        "mode",
+        "output"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "sourceOwner": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/|[A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$"
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "output": {
+          "enum": [
+            "dist/wasm/prototype",
+            "dist/wasm/release"
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "mode",
+            "output"
+          ],
+          "properties": {
+            "mode": {
+              "const": "prototype"
+            },
+            "output": {
+              "const": "dist/wasm/prototype"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "mode",
+            "output"
+          ],
+          "properties": {
+            "mode": {
+              "const": "release"
+            },
+            "output": {
+              "const": "dist/wasm/release"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

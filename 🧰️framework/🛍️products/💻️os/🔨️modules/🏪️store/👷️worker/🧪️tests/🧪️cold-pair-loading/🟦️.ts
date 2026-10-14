@@ -1,5 +1,5 @@
 import fc from "fast-check";
-import examples from "../../🧫️fixtures/🧫️cold-pair-loading/🔣️.json";
+import examples from "../🧫️fixtures/🧫️cold-pair-loading/🔣️.json";
 import type { ColdDocumentPairCursor, ColdPairIngressStatus } from "../../../../../../../🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts";
 import type { ActorInstanceLifetime } from "../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
 

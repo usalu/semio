@@ -12,7 +12,7 @@ import { describe, expect, it } from "vitest";
 import { decodePackValue } from "@semio-tech/framework-os";
 import type { TextEditorScene } from "@semio-tech/framework";
 import { sameScenePackV1, textEditorSyncPackV1 } from "../../🟦️.tsx";
-import fixture from "../../🧫️fixtures/🪞️echo-pack/🔣️.json";
+import fixture from "../🧫️fixtures/🪞️echo-pack/🔣️.json";
 // #endregion 🔌️Adapters
 
 // #region 🪞️EchoPackLaws

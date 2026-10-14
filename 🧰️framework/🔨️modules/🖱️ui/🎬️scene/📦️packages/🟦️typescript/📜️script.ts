@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { runOwnedCommand } from "../../../../🏃️process/🎛️owned-execution/🟦️.ts";
-import { cmdBudgetMs } from "../../../../🏃️process/⏱️budget/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runOwnedCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { cmdBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🎬️ Tests scene payload projections against their shared neutral fixtures. */
 import { resolve } from "node:path";
 
-import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {

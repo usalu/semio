@@ -5,7 +5,7 @@
 //! `store::semio_format::BINARY_MAGIC`, the 8-byte magic `ArtifactPack::encode_pack` used to
 //! emit before this fix — see `📸️snapshot/🦀️.rs`).
 use crate::BinarySnapshot;
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 #[semio_framework_async_macros::async_test]
 async fn carrier_native_is_raw() {

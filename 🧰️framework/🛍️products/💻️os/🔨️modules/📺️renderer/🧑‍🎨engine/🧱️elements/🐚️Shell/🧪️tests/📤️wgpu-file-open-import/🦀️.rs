@@ -53,7 +53,7 @@ struct FileOpenImportSnapshot {
 }
 
 fn fixture() -> FileOpenImportSnapshot {
-    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/📤️file-open-import/🔣️.json")).expect("file-open-import fixture JSON")
+    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/📤️file-open-import/🔣️.json")).expect("file-open-import fixture JSON")
 }
 
 /// 📥️ One picked file becomes exactly the actions the fixture declares — one per chunk, in order,
@@ -178,7 +178,7 @@ fn both_dispatch_paths_answer_through_the_one_host_effect_funnel() {
 
 #[test]
 fn file_open_import_retains_texture_target_without_overriding_chunk_envelope() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/📤️file-open-import/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/📤️file-open-import/🔣️.json")).unwrap();
     let target = &fixture["targetArguments"];
     let mut fields: Vec<_> = target.as_object().unwrap().iter().map(|(name, value)| (name.clone(), DslValue::String(value.as_str().unwrap().into()))).collect();
     fields.push(("payload".into(), DslValue::String("invalid envelope override".into())));

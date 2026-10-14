@@ -161,7 +161,7 @@ pub fn dag_scene_of_content(content: &SemioGraphSnapshot) -> DagScene {
 
 /// 🕸️ The deterministic content-addressed CHILD handle of a scene — same `(child_id, target)` for identical content.
 pub fn dag_content_child_handle(scene: &DagScene) -> DagContentChild {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     let child_id = store::content_id("dag-content", &<SemioGraphSnapshot as ArtifactPack>::encode_pack(&dag_content_snapshot(scene)));
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "graph".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
@@ -215,7 +215,7 @@ pub fn dag_derivable_scene(snapshot: &DagSnapshot) -> Option<DagScene> {
 
 /// 🌱️ Packs the derivable `content` member (the react shell's `loadDocumentPair` sends `members: []`).
 pub fn genesis_dag_child_pack(snapshot: &DagSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     (slot == "content" && child_id == snapshot.content.child_id).then(|| dag_derivable_scene(snapshot)).flatten().map(|scene| <SemioGraphSnapshot as ArtifactPack>::encode_pack(&dag_content_snapshot(&scene)))
 }
 //#endregion 🔖️Scene

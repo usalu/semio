@@ -3,7 +3,7 @@
 #[test]
 fn intrinsic_media_wire_neutral_materialization_uses_observed_physical_allowances(){
     use semio_framework_value::{NativeDecodeControl,ValueRefusalKind};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧮️wire-materialization/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🧮️wire-materialization/🔣️.json")).unwrap();
     let octets=|text:&str|text.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect::<Vec<_>>();
     for row in fixture["cases"].as_array().unwrap(){
         let bytes=octets(row["rawHex"].as_str().unwrap());let limits=&row["limits"];let mut options=DecodeOptions::default();
@@ -37,8 +37,8 @@ fn intrinsic_media_wire_neutral_materialization_uses_observed_physical_allowance
 #[test]
 fn intrinsic_media_wire_direct_helpers_settle_complete_allocator_requests(){
     use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueRefusalKind};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎞️intrinsic-media/🔣️.json")).unwrap();
-    let depths:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎞️intrinsic-media/🌲️depth/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🎞️intrinsic-media/🔣️.json")).unwrap();
+    let depths:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🎞️intrinsic-media/🌲️depth/🔣️.json")).unwrap();
     let word=u64::from_str_radix(depths["leafWord"].as_str().unwrap(),16).unwrap();
     let mut cases=vec![literal(&fixture["value"])];
     for row in depths["cases"].as_array().unwrap().iter().filter(|row|row["accepted"]==true){
@@ -96,7 +96,7 @@ fn neutral(value:&DslValue)->serde_json::Value{
 
 #[test]
 fn intrinsic_media_wire_preserves_actual_order_duplicate_keys_and_full_literal_words(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎞️intrinsic-media/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🎞️intrinsic-media/🔣️.json")).unwrap();
     let value=literal(&fixture["value"]);let spec=RecordSpec::new(None,RecordLayout::Lines,vec![FieldSpec::new(1,"value",Shape::Value)]);
     let mut record=RecordValue::default();record.fields.insert(1,FieldValue::Value(value));
     let bytes=encode_record_body(&spec,&record,&EncodeOptions::default()).unwrap();
@@ -117,7 +117,7 @@ fn intrinsic_media_wire_direct_helpers_share_semantic_depth_and_typed_control(){
     let bytes=encode_value_record_body_controlled(1,&value,&options,&mut output).expect("one intrinsic array edge is semantic depth one");
     let mut input=NativeDecodeControl::new(usize::MAX,&mut decode_accept);let decoding=DecodeOptions{limits:options.limits.clone(),..Default::default()};
     assert_eq!(neutral(&decode_value_record_body_exact_controlled(&bytes,1,&decoding,&mut input).unwrap()),neutral(&value));
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎞️intrinsic-media/🔣️.json")).unwrap();let value=literal(&fixture["value"]);
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🎞️intrinsic-media/🔣️.json")).unwrap();let value=literal(&fixture["value"]);
     let mut output=NativeEncodeControl::new(usize::MAX,&mut accept);let bytes=encode_value_record_body_controlled(1,&value,&EncodeOptions::default(),&mut output).unwrap();let needed=output.owned_bytes();assert!(needed>=bytes.len());
     let mut exact=NativeEncodeControl::new(needed,&mut accept);assert_eq!(encode_value_record_body_controlled(1,&value,&EncodeOptions::default(),&mut exact).unwrap(),bytes);
     let mut short=NativeEncodeControl::new(needed-1,&mut accept);assert!(matches!(encode_value_record_body_controlled(1,&value,&EncodeOptions::default(),&mut short),Err(PackRefusal::ValueRefusal(error)) if error.kind==ValueRefusalKind::OwnershipLimit));
@@ -135,7 +135,7 @@ fn intrinsic_media_wire_direct_helpers_share_semantic_depth_and_typed_control(){
 #[test]
 fn intrinsic_media_wire_direct_helpers_honor_the_complete_declared_depth_frontier(){
     use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueRefusalKind};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎞️intrinsic-media/🌲️depth/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🎞️intrinsic-media/🌲️depth/🔣️.json")).unwrap();
     let word=u64::from_str_radix(fixture["leafWord"].as_str().unwrap(),16).unwrap();
     for row in fixture["cases"].as_array().unwrap(){
         let edges=u16::try_from(row["edges"].as_u64().unwrap()).unwrap();let maximum=u16::try_from(row["maxDepth"].as_u64().unwrap()).unwrap();let accepted=row["accepted"].as_bool().unwrap();

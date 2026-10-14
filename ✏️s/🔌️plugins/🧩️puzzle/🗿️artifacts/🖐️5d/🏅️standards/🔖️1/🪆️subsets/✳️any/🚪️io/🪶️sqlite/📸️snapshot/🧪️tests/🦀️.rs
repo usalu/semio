@@ -1,11 +1,12 @@
 //! 🧩️ Actual Puzzle5d capability and native scalar baselines precede owner mounting.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::Puzzle5dSnapshot;
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::*};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::*};
 
 #[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
 mod original_owners;
 
-fn laws()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn laws()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 
 fn complete(word:u64)->Puzzle5dSnapshot{
  use crate::*;
@@ -59,7 +60,7 @@ fn sqlite_snapshot_puzzle5d_rejects_malformed_graphs_presence_and_scalar_domains
 fn sqlite_snapshot_puzzle5d_actual_typed_and_play_erased_io_preserves_every_field(){
  let declared=crate::standards::v1::subsets::any::schema::snapshot::native_codec();let typed=declared.snapshot_sqlite.expect("actual typed declaration");let typed_schema=declared.schema;
  let play=store::bare_artifact_codec::<crate::Puzzle5dPlaySnapshot,crate::Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA);let play_schema=play.schema;let play=play.snapshot_sqlite.expect("actual Play declaration");let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.puzzle.puzzle5d".into(),standard:"1".into(),subset:"*".into()};
- for hex in laws()["binary64Bits"].as_array().unwrap(){let s=complete(u64::from_str_radix(hex.as_str().unwrap(),16).unwrap());for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(&s)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(&s))};for(provider,schema)in[(&typed,&typed_schema),(&play,&play_schema)]{let d=original_owners::with_decoding(|native_owner|(provider.export)(schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(project(&restore(&d).unwrap()),project(&s));let actual=original_owners::with_encoding(|native_owner|(provider.import)(schema,&dialect,&mut Some(d),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(actual,payload);}}}
+ for hex in laws()["binary64Bits"].as_array().unwrap(){let s=complete(u64::from_str_radix(hex.as_str().unwrap(),16).unwrap());for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&s)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&s))};for(provider,schema)in[(&typed,&typed_schema),(&play,&play_schema)]{let d=original_owners::with_decoding(|native_owner|(provider.export)(schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(project(&restore(&d).unwrap()),project(&s));let actual=original_owners::with_encoding(|native_owner|(provider.import)(schema,&dialect,&mut Some(d),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(actual,payload);}}}
 }
 
 #[test]
@@ -71,7 +72,7 @@ fn sqlite_snapshot_puzzle5d_exact_borrowed_and_owned_row_frontiers_admit_before_
 #[test]
 fn sqlite_snapshot_puzzle5d_all_four_copy_phases_have_real_interior_cancellation(){
  let mut s=complete(0);s.kind_catalogs_extra.as_mut().unwrap().parts[0].description="日本😀".repeat(32768);let d=project(&s);
- for phase in[SqliteSnapshotPhase::ProjectSnapshot,SqliteSnapshotPhase::ReconstructSnapshot,SqliteSnapshotPhase::EncodeNative,SqliteSnapshotPhase::DecodeNative]{let mut interior=false;let mut callback=|p:SqliteSnapshotProgress|{if p.phase==phase&&p.total>65536&&p.completed>=65536&&p.completed<p.total{interior=true;false}else{true}};let result=match phase{SqliteSnapshotPhase::ProjectSnapshot=>original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut callback,|c|s.to_sqlite_database(c).map(|_|())),SqliteSnapshotPhase::ReconstructSnapshot=>original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut callback,|c|Puzzle5dSnapshot::from_sqlite_database(&d,c).map(|_|())),SqliteSnapshotPhase::EncodeNative=>{let mut c=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());original_owners::with_encoding(|native_owner|s.encode_sqlite_snapshot_native(SnapshotEncoding::Text,&mut c, native_owner)).map(|_|())},_=>{let mut c=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());original_owners::with_decoding(|native_owner|Puzzle5dSnapshot::decode_sqlite_snapshot_native(&store::io_schema::IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(&s)),&mut c, native_owner)).map(|_|())}};assert!(result.is_err());assert!(interior,"phase {phase:?}");}
+ for phase in[SqliteSnapshotPhase::ProjectSnapshot,SqliteSnapshotPhase::ReconstructSnapshot,SqliteSnapshotPhase::EncodeNative,SqliteSnapshotPhase::DecodeNative]{let mut interior=false;let mut callback=|p:SqliteSnapshotProgress|{if p.phase==phase&&p.total>65536&&p.completed>=65536&&p.completed<p.total{interior=true;false}else{true}};let result=match phase{SqliteSnapshotPhase::ProjectSnapshot=>original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut callback,|c|s.to_sqlite_database(c).map(|_|())),SqliteSnapshotPhase::ReconstructSnapshot=>original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut callback,|c|Puzzle5dSnapshot::from_sqlite_database(&d,c).map(|_|())),SqliteSnapshotPhase::EncodeNative=>{let mut c=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());original_owners::with_encoding(|native_owner|s.encode_sqlite_snapshot_native(SnapshotEncoding::Text,&mut c, native_owner)).map(|_|())},_=>{let mut c=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());original_owners::with_decoding(|native_owner|Puzzle5dSnapshot::decode_sqlite_snapshot_native(&store::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&s)),&mut c, native_owner)).map(|_|())}};assert!(result.is_err());assert!(interior,"phase {phase:?}");}
 }
 
 #[test]
@@ -89,9 +90,9 @@ fn sqlite_snapshot_puzzle5d_native_part_and_scale_words_survive_actual_text_and_
  for hex in laws()["binary64Bits"].as_array().unwrap(){
   let bits=u64::from_str_radix(hex.as_str().unwrap(),16).unwrap();let value=f64::from_bits(bits);
   let mut expected=Puzzle5dSnapshot::default();let mut part=crate::Puzzle5dPart::default();part.id="literal\0😀".into();part.part_2d.x=value;part.part_2d.y=value;part.part_3d.origin=[value;3];part.part_3d.scale=Some(crate::Puzzle5dScale::Uniform(value));expected.parts.push(part);
-  let packed=<Puzzle5dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack_with(&expected,&store::PackEncodeOptions::default()).unwrap();
-  let binary=<Puzzle5dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack_with(&packed,&store::PackDecodeOptions::default()).unwrap();
-  let text=<Puzzle5dSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&expected);let textual=<Puzzle5dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).unwrap();
+  let packed=<Puzzle5dSnapshot as pack::snapshot::ArtifactPack>::encode_pack_with(&expected,&store::PackEncodeOptions::default()).unwrap();
+  let binary=<Puzzle5dSnapshot as pack::snapshot::ArtifactPack>::decode_pack_with(&packed,&store::PackDecodeOptions::default()).unwrap();
+  let text=<Puzzle5dSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&expected);let textual=<Puzzle5dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).unwrap();
   for actual in[binary,textual]{assert_eq!(actual.parts[0].part_2d.x.to_bits(),bits,"x {hex}");assert_eq!(actual.parts[0].part_2d.y.to_bits(),bits,"y {hex}");assert_eq!(actual.parts[0].part_3d.origin.map(f64::to_bits),[bits;3],"origin {hex}");match actual.parts[0].part_3d.scale{Some(crate::Puzzle5dScale::Uniform(value))=>assert_eq!(value.to_bits(),bits,"scale {hex}"),_=>panic!("uniform scale variant lost")};assert_eq!(actual.parts[0].id,expected.parts[0].id);}
  }
 }
@@ -100,8 +101,8 @@ fn sqlite_snapshot_puzzle5d_native_part_and_scale_words_survive_actual_text_and_
 fn sqlite_snapshot_puzzle5d_actual_play_text_retains_the_typed_word_authority(){
  for hex in laws()["binary64Bits"].as_array().unwrap(){
   let bits=u64::from_str_radix(hex.as_str().unwrap(),16).unwrap();let mut expected=Puzzle5dSnapshot::default();let mut part=crate::Puzzle5dPart::default();part.id="literal\0😀".into();part.part_2d.x=f64::from_bits(bits);expected.parts.push(part);
-  let packed=<Puzzle5dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack_with(&expected,&store::PackEncodeOptions::default()).unwrap();let play=<crate::Puzzle5dPlaySnapshot as store::os_store::serialization::ArtifactPack>::decode_pack_with(&packed,&store::PackDecodeOptions::default()).unwrap();
-  let text=<crate::Puzzle5dPlaySnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&play);let restored=<crate::Puzzle5dPlaySnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).unwrap();assert_eq!(restored.typed().parts.len(),1,"part ownership {hex}");assert_eq!(restored.typed().parts[0].part_2d.x.to_bits(),bits,"actual Play Text {hex}");
+  let packed=<Puzzle5dSnapshot as pack::snapshot::ArtifactPack>::encode_pack_with(&expected,&store::PackEncodeOptions::default()).unwrap();let play=<crate::Puzzle5dPlaySnapshot as pack::snapshot::ArtifactPack>::decode_pack_with(&packed,&store::PackDecodeOptions::default()).unwrap();
+  let text=<crate::Puzzle5dPlaySnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&play);let restored=<crate::Puzzle5dPlaySnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).unwrap();assert_eq!(restored.typed().parts.len(),1,"part ownership {hex}");assert_eq!(restored.typed().parts[0].part_2d.x.to_bits(),bits,"actual Play Text {hex}");
  }
 }
 
@@ -123,7 +124,7 @@ fn sqlite_snapshot_puzzle5d_controlled_native_scale_preserves_both_exact_variant
 
 #[test]
 fn sqlite_snapshot_puzzle5d_borrowed_scale_matches_neutral_list_shape() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(corpus["scaleDsl"]["shape"], "list");
     assert_eq!(corpus["scaleDsl"]["item"], "float");
     let semio_framework_dsl_record::BorrowedShape::List(item) = <crate::Puzzle5dScale as semio_framework_dsl_record::BorrowedDslField>::SHAPE else { panic!("Scale metadata lost its self-delimiting list") };

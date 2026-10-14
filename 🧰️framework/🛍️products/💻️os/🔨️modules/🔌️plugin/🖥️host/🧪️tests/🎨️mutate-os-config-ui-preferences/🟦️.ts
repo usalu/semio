@@ -60,7 +60,7 @@ type Row = { vector: string; kind: string; field: string; status: string };
 function fixtures(scenario: string): Vectors {
   const entry = VECTOR_DIR[scenario];
   if (entry === undefined) throw new Error(`mutate-os-config-ui-preferences (typescript): no specification vector registered for scenario ${JSON.stringify(scenario)}`);
-  const dir = join(CONFIG_MUTATIONS, entry[0], "🧫️fixtures", entry[1]);
+  const dir = join(CONFIG_MUTATIONS, entry[0], "🧪️tests/🧫️fixtures", entry[1]);
   const read = (path: string): unknown => JSON.parse(readFileSync(join(dir, path), "utf8"));
   return { before: read("📸️snapshot/⬅️before/🔣️.json") as UiPreferences, mutation: read("🦠️mutation/🔣️.json") as UiPreferencesConfigMutation, after: read("📸️snapshot/➡️after/🔣️.json") as UiPreferences, outcome: read("🎯️outcome/🔣️.json") as { status: string } };
 }

@@ -1,10 +1,10 @@
 //! 🧪️ Committed vector `🌚️update-site` / `🟰noop`: re-applying the op to the after-snapshot it already produced is refused with `mutation.no-op` (warning) and leaves the document untouched.
 use crate::{En1998Diff, En1998Mutation, En1998Snapshot};
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌚️update-site/🟰noop/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌚️update-site/🟰noop/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌚️update-site/🟰noop/🦠️mutation/🔣️.json");
-const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌚️update-site/🟰noop/🔺️diff/🚫️.absent");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌚️update-site/🟰noop/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌚️update-site/🟰noop/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌚️update-site/🟰noop/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌚️update-site/🟰noop/🦠️mutation/🔣️.json");
+const DIFF_ABSENT: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌚️update-site/🟰noop/🔺️diff/🚫️.absent");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌚️update-site/🟰noop/🎯️outcome/🔣️.json");
 fn before() -> En1998Snapshot { semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before") }
 fn mutation() -> En1998Mutation { semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation") }
 #[test]

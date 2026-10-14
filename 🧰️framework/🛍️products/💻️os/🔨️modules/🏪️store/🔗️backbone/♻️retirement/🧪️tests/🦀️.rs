@@ -5,7 +5,7 @@ mod admission;
 
 #[test]
 fn backbone_retirement_preserves_original_empty_capacities_and_exact_release() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let mut queue = VecDeque::with_capacity(law["emptyCapacity"].as_u64().unwrap() as usize);
     let mut ids = Vec::with_capacity(113);
     let mut empty_id = String::with_capacity(8192);

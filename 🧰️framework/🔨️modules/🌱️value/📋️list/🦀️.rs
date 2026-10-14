@@ -59,6 +59,9 @@ impl PageAllocation for ExactAllocation {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️counter/🦀️.rs"]
 mod counter_tests;
+#[cfg(test)]
+#[path="🎟️reservation/🧪️tests/🦀️.rs"]
+mod original_reservation_tests;
 
 #[cfg(test)]
 #[path = "🧪️tests/📋️list/🦀️.rs"]
@@ -386,16 +389,19 @@ impl<T, const N: usize> PagedList<T, N> {
     /// 🪜️ Quotes the actual prospective page path before its next backing allocation.
     pub fn next_reserve_depth_demand(&self)->Result<usize,PagedListError>{
         if self.has_reserved_slot(){return Ok(0)}
+        self.next_page_reserve_depth_demand()
+    }
+    fn next_page_reserve_depth_demand(&self)->Result<usize,PagedListError>{
         self.next_page_allocation_bytes()?;
         self.height().max(Self::page_height(self.capacity/self.page_items())).checked_add(3).ok_or(PagedListError{kind:PagedListRefusalKind::OwnershipLimit,reason:"fixed list reserve depth overflow"})
     }
 
-    /// 🧮️ Quotes the original page, header and scalar moves of the next reservation before any allocation.
+    /// 🪹️ Quotes payload copies before native empty-header birth or original header ownership reparenting.
     pub fn next_reserve_copy_byte_demand(&self)->Result<usize,PagedListError>{
         if self.has_reserved_slot(){return Ok(0)}
         self.next_page_copy_byte_demand()
     }
-    /// 🧮️ Quotes the original page, header and scalar moves of the next allocation toward a requested logical capacity.
+    /// 🧭️ Quotes original payload copies toward a declared capacity without copying owned page headers.
     pub fn next_capacity_copy_byte_demand(&self,capacity:usize)->Result<usize,PagedListError>{
         if capacity>N{return Err(PagedListError{kind:PagedListRefusalKind::OwnershipLimit,reason:"fixed list logical capacity exhausted"})}
         if capacity<=self.capacity{return Ok(0)}
@@ -403,17 +409,7 @@ impl<T, const N: usize> PagedList<T, N> {
     }
     fn next_page_copy_byte_demand(&self)->Result<usize,PagedListError>{
         self.next_page_allocation_bytes()?;
-        let page=self.capacity/self.page_items();let root_height=self.height();
-        if Self::page_height(page)>root_height{return Ok(size_of::<Page<T>>()+3*size_of::<Vec<Page<T>>>()+size_of::<usize>());}
-        let mut link=&self.root;
-        for height in (0..=root_height).rev(){
-            match link.first(){
-                None=>return Ok(size_of::<Page<T>>()+size_of::<Vec<Page<T>>>()+size_of::<usize>()),
-                Some(Page::Branch{children,..})=>link=&children[Self::slot(page,height)],
-                Some(Page::Leaf{..})=>return Ok(size_of::<Vec<T>>()+3*size_of::<usize>()),
-            }
-        }
-        Err(PagedListError{kind:PagedListRefusalKind::InvariantViolated,reason:"fixed list page authority is missing"})
+        Ok(0)
     }
 
     /// 🎟️ Returns the next single backing allocation needed to reach a requested logical capacity.
@@ -424,7 +420,7 @@ impl<T, const N: usize> PagedList<T, N> {
         if capacity <= self.capacity {
             return Ok(None);
         }
-        self.next_page_allocation_bytes().map(Some)
+        self.next_page_allocation_bytes_for_limit(capacity).map(Some)
     }
 
     fn next_page_allocation_bytes(&self) -> Result<usize, PagedListError> { self.next_page_allocation_bytes_for_limit(N) }
@@ -453,7 +449,8 @@ impl<T, const N: usize> PagedList<T, N> {
         if self.has_reserved_slot() { return Ok(Default::default()); }
         let copy=self.next_reserve_copy_byte_demand().map_err(|error|PagedListAllocationError{allocated_bytes:0,kind:error.kind,reason:error.reason})?;
         let capacity=self.next_allocation_bytes().map_err(|error|PagedListAllocationError{allocated_bytes:0,kind:error.kind,reason:error.reason})?;
-        if grant.maximum_items==0||grant.maximum_depth==0||copy>grant.maximum_copy_bytes||capacity>grant.maximum_capacity_bytes { return Ok(Default::default()); }
+        let depth=self.next_reserve_depth_demand().map_err(|error|PagedListAllocationError{allocated_bytes:0,kind:error.kind,reason:error.reason})?;
+        if grant.maximum_items==0||grant.maximum_depth<depth||copy>grant.maximum_copy_bytes||capacity>grant.maximum_capacity_bytes { return Ok(Default::default()); }
         let progress=self.reserve_one(grant.maximum_capacity_bytes)?;
         Ok(crate::retained_clone::RetainedCloneProgress{copied_items:usize::from(progress.progressed),copied_bytes:if progress.progressed{copy}else{0},retained_capacity_bytes:progress.allocated_bytes,released_bytes:0})
     }
@@ -462,7 +459,8 @@ impl<T, const N: usize> PagedList<T, N> {
         let refused=|error:PagedListError|PagedListAllocationError{allocated_bytes:0,kind:error.kind,reason:error.reason};
         let copy=self.next_capacity_copy_byte_demand(capacity).map_err(refused)?;
         let Some(bytes)=self.next_capacity_allocation_bytes(capacity).map_err(refused)? else { return Ok(Default::default()); };
-        if grant.maximum_items==0||grant.maximum_depth==0||copy>grant.maximum_copy_bytes||bytes>grant.maximum_capacity_bytes { return Ok(Default::default()); }
+        let depth=self.next_page_reserve_depth_demand().map_err(refused)?;
+        if grant.maximum_items==0||grant.maximum_depth<depth||copy>grant.maximum_copy_bytes||bytes>grant.maximum_capacity_bytes { return Ok(Default::default()); }
         let progress=self.reserve_capacity_one(capacity,grant.maximum_capacity_bytes)?;
         Ok(crate::retained_clone::RetainedCloneProgress{copied_items:usize::from(progress.progressed),copied_bytes:if progress.progressed{copy}else{0},retained_capacity_bytes:progress.allocated_bytes,released_bytes:0})
     }
@@ -503,7 +501,7 @@ impl<T, const N: usize> PagedList<T, N> {
             return Err(PagedListAllocationError { allocated_bytes: 0, kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list logical capacity exhausted" });
         }
         if capacity <= self.capacity { return Ok(PagedListProgress::default()); }
-        self.reserve_page(grant)
+        self.reserve_page_using_for_limit::<ExactAllocation>(grant,capacity)
     }
 
     pub fn reserve_full(&mut self) -> Result<bool, PagedListError> {

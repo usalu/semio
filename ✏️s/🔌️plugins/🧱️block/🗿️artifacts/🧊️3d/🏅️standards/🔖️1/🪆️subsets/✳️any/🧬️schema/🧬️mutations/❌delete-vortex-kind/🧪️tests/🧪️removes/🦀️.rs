@@ -10,11 +10,11 @@ use crate::standards::v1::subsets::any::schema::mutations::inverse_block3d_mutat
 
 use crate::Block3dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/❌delete-vortex-kind/🧪️removes/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/❌delete-vortex-kind/🧪️removes/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/❌delete-vortex-kind/🧪️removes/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/❌delete-vortex-kind/🧪️removes/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/❌delete-vortex-kind/🧪️removes/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/❌delete-vortex-kind/🧪️removes/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/❌delete-vortex-kind/🧪️removes/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/❌delete-vortex-kind/🧪️removes/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/❌delete-vortex-kind/🧪️removes/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/❌delete-vortex-kind/🧪️removes/🎯️outcome/🔣️.json");
 
 fn before() -> Block3dSnapshot {
     crate::validate_vortex_kind_catalog(&[

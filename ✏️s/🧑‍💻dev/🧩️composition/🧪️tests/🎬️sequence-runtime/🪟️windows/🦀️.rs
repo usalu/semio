@@ -50,7 +50,7 @@ fn sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows(
                 artifact_app_laws::decode_fixture_scene_with_lanes(&json).map_err(str::to_string)
             }
 
-            let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📽️main/🎚️config/🧫️fixtures/🔬️window-ownership/🔣️.json")).unwrap();
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📽️main/🎚️config/🧪️tests/🧫️fixtures/🔬️window-ownership/🔣️.json")).unwrap();
             let ids: Vec<&str> = fixture["windowInstances"].as_array().unwrap().iter().map(|row| row["id"].as_str().unwrap()).collect();
             let view = ViewModel {
                 window_instances: vec![

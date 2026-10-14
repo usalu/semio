@@ -7,7 +7,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn compose_direct_round_trips_a_native_binary_payload() {
         let snapshot = crate::standards::v_raw::subsets::any::schema::empty_binary_snapshot();
-        let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snapshot);
+        let bytes = pack::snapshot::ArtifactPack::encode_pack(&snapshot);
         let sources = [ErasedComposeSource { dialect: DIALECT, payload: IoPayload::Binary(bytes) }];
         let composed = compose(DIALECT, &sources).expect("compose");
         assert_eq!(composed.dialect, DIALECT);

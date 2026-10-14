@@ -7,7 +7,7 @@ import { LOCAL_SESSION_BROKER_FILE, parseLocalSessionBrokerRecordV1, parseLocalS
 
 /** 🧪️ Shared contract cases and live loopback exchanges prove issuer/client ownership. */
 export async function proveLocalSessionBrokerContract(artifactDirectory: string): Promise<number> {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const defs = { record: "LocalSessionBrokerRecordV1", request: "LocalSessionRequestV1", session: "LocalSessionV1" } as const;
   const parsers = { record: parseLocalSessionBrokerRecordV1, request: parseLocalSessionRequestV1, session: parseLocalSessionV1 };

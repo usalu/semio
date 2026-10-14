@@ -1,0 +1,22 @@
+{
+  "mutation": "editBlockInkStroke",
+  "id": "blk-ink",
+  "newPoints": [
+    [
+      0.0,
+      0.0
+    ],
+    [
+      10.0,
+      4.0
+    ],
+    [
+      20.0,
+      0.0
+    ]
+  ],
+  "newX": 25.0,
+  "newY": 150.0,
+  "newWidth": 20.0,
+  "newHeight": 4.0
+}

@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "source": [
+    [
+      0.5,
+      -2.25,
+      4.0
+    ],
+    [
+      -1.0,
+      0.0,
+      2.0
+    ]
+  ],
+  "spareCapacity": 4,
+  "copyGrants": [
+    1,
+    3,
+    64
+  ],
+  "futureArrayBytes": 12,
+  "futureElementBytes": 4,
+  "selectedChildCopyBytes": 0,
+  "oneItemPerGrant": true,
+  "quoteHeap": [
+    0,
+    0
+  ],
+  "constructorHeap": [
+    0,
+    0
+  ],
+  "physical": "sourcePlusAdmittedFrames",
+  "terminalDropBytes": 0
+}

@@ -13,7 +13,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { type SchemaTestExample, type SchemaDiagnostic, type SchemaDiagnosticCode, GRAPHQL_EXPORT_KEYWORDS, SCHEMA_DIAGNOSTIC_CODES, SCHEMA_DIAGNOSTIC_CODE_TABLE, SCHEMA_DIAGNOSTIC_EMITTERS, SCHEMA_FIXTURE_STAGES, TAXONOMY_REL_PATH, TEST_DOMAIN_REL_PATH, clearSchemaContractCache, declaresSchemaExport, declaresSchemaExportParser, discoverSchemaFixtures, testInputUrisIn, isFixtureOwnedPath, isJsonSchemaDefinition, leafDescriptorCoverage, matchesTaxonomyPathPattern, mutationLeafDirectories, mutationLeafSchemaId, parseSchemaUri, readLeafDescriptors, readSchemaCatalog, repoRootFromHere, resolveTestInputs, resolvePayloadSchemas, resolveSchemaExport, runSchemaFixture, schemaContractDiagnostics, schemaDiagnosticCodesEmittedBy, schemaExportCompletenessDiagnostics, schemaFixtureIsolationDiagnostics, schemaMeasurementDisagreementDiagnostics, schemaOwnerEligibilityDiagnostics, schemaPlacementDiagnostics, schemaResolutionDiagnostics, schemaScopeEligibility, schemaTreeFiles, submodulePaths, validateAgainstJsonSchema } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { parseFeature } from "../../../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts";
-import cases from "../../🧫️fixtures/🧬️schema-invariants/🔣️.json";
+import cases from "../🧫️fixtures/🧬️schema-invariants/🔣️.json";
 import protocolSchema from "../../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json";
 //#endregion 🔌️Adapters
 
@@ -768,7 +768,7 @@ describe("🔗️ the fixture resolver speaks schema://", () => {
  * translation table between two vocabularies would be the adapter this ticket exists to remove.
  */
 describe("🤝️ parity with the catalog generator's own vector", () => {
-  const VECTOR = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧬️schema-scope-catalog/🔣️.json";
+  const VECTOR = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧬️schema-scope-catalog/🔣️.json";
   const PLACEMENT_CODES = new Set(["schema-placement-forbidden-filename", "schema-placement-outside-module", "schema-contracts-directory-forbidden"]);
   type GeneratorCase = { id: string; files: Record<string, unknown>; expected: { scopes: Record<string, { path: string; level: string }>; diagnosticCodes: string[]; placementPaths: string[]; fixtureAuthorityPaths?: string[] } };
 

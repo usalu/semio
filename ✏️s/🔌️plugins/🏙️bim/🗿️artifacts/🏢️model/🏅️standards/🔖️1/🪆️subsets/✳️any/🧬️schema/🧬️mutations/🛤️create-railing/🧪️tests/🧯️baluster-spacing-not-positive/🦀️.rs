@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🛤️create-railing/🧯️baluster-spacing-not-positive",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛤️create-railing/🧯️baluster-spacing-not-positive/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛤️create-railing/🧯️baluster-spacing-not-positive/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛤️create-railing/🧯️baluster-spacing-not-positive/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛤️create-railing/🧯️baluster-spacing-not-positive/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛤️create-railing/🧯️baluster-spacing-not-positive/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛤️create-railing/🧯️baluster-spacing-not-positive/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛤️create-railing/🧯️baluster-spacing-not-positive/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛤️create-railing/🧯️baluster-spacing-not-positive/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛤️create-railing/🧯️baluster-spacing-not-positive/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛤️create-railing/🧯️baluster-spacing-not-positive/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

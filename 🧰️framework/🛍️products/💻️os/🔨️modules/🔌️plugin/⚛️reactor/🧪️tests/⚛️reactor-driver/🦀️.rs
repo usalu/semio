@@ -1,14 +1,14 @@
 use super::*;
 
-fn queue_external_patch(patch: UiPatch) {
+pub(crate) fn queue_external_patch(patch: UiPatch) {
     pending::with_state(|pending| pending.borrow_mut().push_external(patch)).unwrap();
 }
 
-fn patch_receipt_is_issued(receipt: ActorUiPatchReceipt) -> bool {
+pub(crate) fn patch_receipt_is_issued(receipt: ActorUiPatchReceipt) -> bool {
     pending::with_state(|pending| pending.borrow().receipt_is_issued(receipt))
 }
 
-async fn poll_with_patch_output_fault<PA: crate::plugin_app::PluginApp>(
+pub(crate) async fn poll_with_patch_output_fault<PA: crate::plugin_app::PluginApp>(
     runtime: &crate::plugin_runtime::PluginRuntime<PA>,
     events: Vec<Event>,
     budget: semio_framework::kernel::Budget,
@@ -36,18 +36,18 @@ async fn poll_with_patch_output_fault<PA: crate::plugin_app::PluginApp>(
     (result, receipt)
 }
 
-async fn poll_with_output_failure<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, events: Vec<Event>, budget: semio_framework::kernel::Budget) -> Result<(), semio_framework::Fault> {
+pub(crate) async fn poll_with_output_failure<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, events: Vec<Event>, budget: semio_framework::kernel::Budget) -> Result<(), semio_framework::Fault> {
     turn::poll_kernel_output(runtime, events, None, None, budget, |_| Err(reactor_close_fault("injected output conversion failure")), |_, ()| (), &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await
 }
 
 /// ▶️ The exact `run_until_idle` call `poll` makes after routing events, exposed directly.
-async fn run_until_idle(max_iterations: u32) -> bool {
+pub(crate) async fn run_until_idle(max_iterations: u32) -> bool {
     TASK_EXECUTOR.with(|executor| executor.run_until_idle(max_iterations))
 }
 
 /// ✅️ The exact `REGISTRY::resolve` call `poll`'s `Event::Completed` arm makes, exposed
 /// directly — the native stand-in for "an injected `Event::Completed`".
-async fn resolve_request(id: u64, result: Result<Vec<u8>, semio_framework::Fault>) {
+pub(crate) async fn resolve_request(id: u64, result: Result<Vec<u8>, semio_framework::Fault>) {
     REGISTRY.with(|registry| registry.resolve(semio_framework::kernel::RequestId(id), result));
 }
 
@@ -55,7 +55,7 @@ async fn resolve_request(id: u64, result: Result<Vec<u8>, semio_framework::Fault
 /// resolution surfaces as `Err` here instead — `drain_task_resumes` frames that straight to
 /// the shell without ever reaching `plugin_runtime`, so a test asserting on it never needs
 /// `plugin_resume_task` at all).
-async fn pop_task_resume() -> Option<(u32, crate::app_emission::ActionMeta, Result<crate::plugin_runtime::TaskResumeInput, semio_framework::Fault>)> {
+pub(crate) async fn pop_task_resume() -> Option<(u32, crate::app_emission::ActionMeta, Result<crate::plugin_runtime::TaskResumeInput, semio_framework::Fault>)> {
     TASK_RESUMES.with(|resumes| resumes.borrow_mut().pop()).map(|resume| {
         let input = match resume.outcome {
             TaskResumeOutcome::Command(bytes) => Ok(crate::plugin_runtime::TaskResumeInput::Command(bytes)),
@@ -68,15 +68,15 @@ async fn pop_task_resume() -> Option<(u32, crate::app_emission::ActionMeta, Resu
     })
 }
 
-async fn task_count_for_instance(instance: u32) -> usize {
+pub(crate) async fn task_count_for_instance(instance: u32) -> usize {
     TASK_RECORDS.with(|records| records.borrow().count_instance(instance))
 }
 
-async fn task_key_is_live(instance: u32, key: &str) -> bool {
+pub(crate) async fn task_key_is_live(instance: u32, key: &str) -> bool {
     TASK_RECORDS.with(|records| records.borrow().find_key(instance, key).is_some())
 }
 
-async fn set_instance_quota(instance: u32, outstanding_requests: u64) {
+pub(crate) async fn set_instance_quota(instance: u32, outstanding_requests: u64) {
     INSTANCE_METADATA.with(|metadata| {
         let mut metadata = metadata.borrow_mut();
         if let Some(entry) = metadata.slots.get_mut(InstanceMetadataRegistry::index(instance)).filter(|entry| entry.instance == instance) {
@@ -87,7 +87,7 @@ async fn set_instance_quota(instance: u32, outstanding_requests: u64) {
     });
 }
 
-async fn pending_request_count() -> usize {
+pub(crate) async fn pending_request_count() -> usize {
     REGISTRY.with(|registry| registry.pending_ids().len())
 }
 
@@ -96,7 +96,7 @@ async fn pending_request_count() -> usize {
 /// fired. Needed because retiring a request out from under a LIVE task deliberately issues no
 /// wake (`RequestRegistry::begin_cancel_instance`), so `run_until_idle` alone would never visit
 /// the parked task that must observe its retirement. Answers how many tasks completed on it.
-async fn poll_instance_tasks_once(instance: u32) -> usize {
+pub(crate) async fn poll_instance_tasks_once(instance: u32) -> usize {
     let ids: Vec<_> = (0..REACTOR_TASK_SLOTS).filter_map(|index| TASK_RECORDS.with(|records| records.borrow().entry_at(index).and_then(|(id, record)| (record.instance == instance).then_some(id)))).collect();
     let mut completed = 0;
     for id in ids {
@@ -111,7 +111,7 @@ async fn poll_instance_tasks_once(instance: u32) -> usize {
 /// 🚫️ The exact `RequestRegistry::cancel_instance` call `poll`'s `Event::InstanceClose` arm
 /// makes right after `cancel_instance_tasks`, exposed directly for a test to run the SAME
 /// two-step sequence natively.
-async fn cancel_instance_registry_requests(instance: u32) -> usize {
+pub(crate) async fn cancel_instance_registry_requests(instance: u32) -> usize {
     REGISTRY.with(|registry| {
         let before = registry.pending_ids().len();
         let mut cursor = registry.begin_cancel_instance(instance);
@@ -123,12 +123,12 @@ async fn cancel_instance_registry_requests(instance: u32) -> usize {
 //#region 🔖️M2PresenceHooks
 /// 🎯️ M1: the exact `PATCHES.revision` read `poll`'s intent-batching loop guards every
 /// `UiIntent` against, exposed directly.
-async fn patches_revision(surface: &str) -> ui_contract::UiRevision {
+pub(super) async fn patches_revision(surface: &str) -> ui_contract::UiRevision {
     PATCHES.with(|patches| patches.revision(surface))
 }
 
 /// 🩹️ Test-only completion driver over the same retained mounted authority.
-async fn patches_diff(surface: &str, tree: semio_framework_ui_runtime::ComponentTree) -> Option<UiPatch> {
+pub(super) async fn patches_diff(surface: &str, tree: semio_framework_ui_runtime::ComponentTree) -> Option<UiPatch> {
     PATCHES.with(|patches| {
         if !patches.can_begin(surface) {
             return None;
@@ -175,19 +175,19 @@ async fn patches_diff(surface: &str, tree: semio_framework_ui_runtime::Component
 
 /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): the exact `PRESENCE.record_own` call `poll`'s
 /// dirty-render loop makes for each drained `PresenceUpdate`, exposed directly.
-async fn presence_record_own(surface: &str, node_key: &str, own: ui_contract::OwnPresence, ttl_ms: u32) {
+pub(super) async fn presence_record_own(surface: &str, node_key: &str, own: ui_contract::OwnPresence, ttl_ms: u32) {
     let surface = ui_contract::SurfaceId::try_from(surface).expect("bounded test surface");
     PRESENCE.with(|hub| hub.borrow_mut().record_own(surface, node_key.to_string(), own, ttl_ms));
 }
 
 /// 👥️ M2: the exact `PRESENCE.record_peer` call, exposed directly.
-async fn presence_record_peer(surface: &str, node_key: &str, mark: ui_contract::PeerMark, ttl_ms: u32, now_ms: u64) {
+pub(super) async fn presence_record_peer(surface: &str, node_key: &str, mark: ui_contract::PeerMark, ttl_ms: u32, now_ms: u64) {
     let surface = ui_contract::SurfaceId::try_from(surface).expect("bounded test surface");
     PRESENCE.with(|hub| hub.borrow_mut().record_peer(surface, node_key.to_string(), mark, ttl_ms, now_ms));
 }
 
 /// 👥️ M2: the exact `expire`-then-`flush` sequence `poll` runs once per turn, exposed directly.
-async fn presence_expire_and_flush(now_ms: u64) -> Vec<ui_contract::PresenceUpdate> {
+pub(super) async fn presence_expire_and_flush(now_ms: u64) -> Vec<ui_contract::PresenceUpdate> {
     PRESENCE.with(|hub| {
         let mut hub = hub.borrow_mut();
         hub.expire(now_ms);

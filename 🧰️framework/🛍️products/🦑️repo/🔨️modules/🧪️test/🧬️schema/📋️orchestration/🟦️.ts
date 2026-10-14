@@ -1,7 +1,7 @@
 import { type FeatureStep } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { type SchemaDiagnostic, type SchemaFixtureReport, discoverSchemaFixtures, readSchemaCatalog, runSchemaFixture, schemaContractDiagnostics } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { parseFeature } from "../../../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts";
-import { Script } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { type ActionArgDef, type FaultNoticeDefinition, type InputSchemaAudit, SHELL_LOCALES, SHELL_TERMINOLOGIES, argControl, inputLabelGlossary, inputNumericTransport, inputShape, isFaultNoticeCode, isShellLocale, isShellTerminology, mutationInputAudit, mutationInputInstance, validateFaultNotices } from "../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { parseSchemaInvariants } from "../../../../../../🔨️modules/🛂️manifest/🧬️schema/🟦️.ts";
 import { type Dirent, existsSync, readdirSync, readFileSync } from "node:fs";
@@ -1769,7 +1769,7 @@ const FAULT_NOTICE_SDK_OWNER = "🔌️plugin";
 /** 🫙️ Catch-all codes that name no refusal: a site raising one is an anonymous fault. */
 const FAULT_NOTICE_CATCH_ALL = new Set(["plugin.internal"]);
 /** 🗄️ The framework's notice tables (history-lane refusals, framework-namespace refusals any app raises): a code they declare is labelled. */
-const FAULT_NOTICE_FRAMEWORK_TABLES = ["🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/🧫️history-notices/🔣️.json", "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/🧫️framework-notices/🔣️.json"] as const;
+const FAULT_NOTICE_FRAMEWORK_TABLES = ["🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧫️history-notices/🔣️.json", "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧫️framework-notices/🔣️.json"] as const;
 
 /** 🔭️ The findings `schema fault-notices` reports: `all`, or `history-editing` — the refusals a person meets while editing history,
  * loading a document or running a tool (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING scope): every framework-namespace code a plugin

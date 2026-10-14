@@ -1,0 +1,23 @@
+{
+  "schema": "semio.flow.browser-runtime-lifetime/v1",
+  "sessions": ["A", "B"],
+  "initialSessions": 0,
+  "openRequestIds": ["1", "2"],
+  "afterCloseA": { "retired": ["A"], "live": ["B"], "globalCloseCalls": 0, "siblingCommand": "completed" },
+  "receipt": { "event": 2657, "body": ["slot:u32", "generation:u32"], "origin": "open-request", "completion": "exact-acknowledged-terminal" },
+  "duplicateRuntime": "rejected-before-frame",
+  "duplicateClose": "same-promise",
+  "lateOpen": "exact-session-retired",
+  "openFailure": {
+    "verifiedRejection": { "nativeSession": "absent", "entry": "released" },
+    "uncertainTransport": { "entry": "retained-until-host-terminal", "globalCloseCalls": 1, "terminal": true }
+  },
+  "backpressure": { "closeControlRejections": 3, "receiptAckRejections": 2, "eventSlotCollision": "retained-pending-publication" },
+  "mountedHosts": {
+    "sharedRuntime": true,
+    "afterUnmountA": { "closedSlots": [1], "liveSlot": 2, "command": 2610, "globalCloseCalls": 0 },
+    "afterUnmountB": { "closedSlots": [1, 2], "globalCloseCalls": 0 },
+    "lateUnmount": { "heldOpenSlot": 1, "liveSlot": 2, "closedSlots": [1], "command": 2610 }
+  },
+  "runtimeClose": { "globalCloseCalls": 1, "newOpens": "rejected", "terminal": true }
+}

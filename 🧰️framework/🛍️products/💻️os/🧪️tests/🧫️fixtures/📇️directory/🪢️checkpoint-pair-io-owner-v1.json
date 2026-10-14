@@ -1,0 +1,17 @@
+{
+  "schema": "directory.checkpoint-pair.io-owner/v1",
+  "owner": "os_directory::io::binary::checkpoint_pair",
+  "nativeLaw": "canonical_checkpoint_pair_native_body_has_explicit_io_owner",
+  "semanticMethods": [
+    "admit",
+    "admit_rebootstrap"
+  ],
+  "physicalBodies": [
+    "PairCursor",
+    "decode_canonical_checkpoint_pair_v1"
+  ],
+  "typescriptBodies": [
+    "CanonicalPairCursor",
+    "decodeCanonicalCheckpointPairV1"
+  ]
+}

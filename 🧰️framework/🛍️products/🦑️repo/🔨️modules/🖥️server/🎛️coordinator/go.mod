@@ -5,3 +5,7 @@ go 1.25
 require github.com/usalu/semio/repo/go v0.0.0
 
 replace github.com/usalu/semio/repo/go => ../../📚️library
+
+require github.com/usalu/semio/framework/filesystem/durability v0.0.0
+
+replace github.com/usalu/semio/framework/filesystem/durability => ../../../../../🔨️modules/📁️filesystem/🛡️durability/📦️packages/🐹️go

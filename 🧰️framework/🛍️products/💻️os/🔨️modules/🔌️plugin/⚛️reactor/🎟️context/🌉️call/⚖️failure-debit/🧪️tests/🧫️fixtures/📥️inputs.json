@@ -1,0 +1,134 @@
+[
+  {
+    "grant": {
+      "maximumItems": 16,
+      "maximumCopyBytes": 128,
+      "maximumCapacityBytes": 128,
+      "maximumReleaseBytes": 128,
+      "maximumDepth": 8
+    },
+    "recipient": {
+      "copiedItems": 2,
+      "copiedBytes": 7,
+      "retainedCapacityBytes": 9,
+      "releasedBytes": 11
+    },
+    "originalReceipt": {
+      "copiedItems": 3,
+      "copiedBytes": 13,
+      "retainedCapacityBytes": 17,
+      "releasedBytes": 19
+    },
+    "fuel": 11
+  },
+  {
+    "grant": {
+      "maximumItems": 4,
+      "maximumCopyBytes": 128,
+      "maximumCapacityBytes": 128,
+      "maximumReleaseBytes": 128,
+      "maximumDepth": 8
+    },
+    "recipient": {
+      "copiedItems": 2,
+      "copiedBytes": 7,
+      "retainedCapacityBytes": 9,
+      "releasedBytes": 11
+    },
+    "originalReceipt": {
+      "copiedItems": 3,
+      "copiedBytes": 13,
+      "retainedCapacityBytes": 17,
+      "releasedBytes": 19
+    },
+    "fuel": 11
+  },
+  {
+    "grant": {
+      "maximumItems": 16,
+      "maximumCopyBytes": 19,
+      "maximumCapacityBytes": 128,
+      "maximumReleaseBytes": 128,
+      "maximumDepth": 8
+    },
+    "recipient": {
+      "copiedItems": 2,
+      "copiedBytes": 7,
+      "retainedCapacityBytes": 9,
+      "releasedBytes": 11
+    },
+    "originalReceipt": {
+      "copiedItems": 3,
+      "copiedBytes": 13,
+      "retainedCapacityBytes": 17,
+      "releasedBytes": 19
+    },
+    "fuel": 11
+  },
+  {
+    "grant": {
+      "maximumItems": 16,
+      "maximumCopyBytes": 128,
+      "maximumCapacityBytes": 25,
+      "maximumReleaseBytes": 128,
+      "maximumDepth": 8
+    },
+    "recipient": {
+      "copiedItems": 2,
+      "copiedBytes": 7,
+      "retainedCapacityBytes": 9,
+      "releasedBytes": 11
+    },
+    "originalReceipt": {
+      "copiedItems": 3,
+      "copiedBytes": 13,
+      "retainedCapacityBytes": 17,
+      "releasedBytes": 19
+    },
+    "fuel": 11
+  },
+  {
+    "grant": {
+      "maximumItems": 16,
+      "maximumCopyBytes": 128,
+      "maximumCapacityBytes": 128,
+      "maximumReleaseBytes": 29,
+      "maximumDepth": 8
+    },
+    "recipient": {
+      "copiedItems": 2,
+      "copiedBytes": 7,
+      "retainedCapacityBytes": 9,
+      "releasedBytes": 11
+    },
+    "originalReceipt": {
+      "copiedItems": 3,
+      "copiedBytes": 13,
+      "retainedCapacityBytes": 17,
+      "releasedBytes": 19
+    },
+    "fuel": 11
+  },
+  {
+    "grant": {
+      "maximumItems": 16,
+      "maximumCopyBytes": 128,
+      "maximumCapacityBytes": 128,
+      "maximumReleaseBytes": 128,
+      "maximumDepth": 8
+    },
+    "recipient": {
+      "copiedItems": 2,
+      "copiedBytes": 7,
+      "retainedCapacityBytes": 9,
+      "releasedBytes": 11
+    },
+    "originalReceipt": {
+      "copiedItems": 3,
+      "copiedBytes": 13,
+      "retainedCapacityBytes": 17,
+      "releasedBytes": 19
+    },
+    "fuel": 1
+  }
+]

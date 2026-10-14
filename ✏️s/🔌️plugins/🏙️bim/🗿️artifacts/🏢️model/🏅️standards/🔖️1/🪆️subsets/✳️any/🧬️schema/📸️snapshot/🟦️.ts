@@ -1,6 +1,6 @@
 /** 🧬️ BIM model snapshot schema — authored parameters only; nothing derivable is stored. */
 
-import type { PropertyKind, TemplateTarget, AnchorEnd, WallSide, TagCategory, Terminator, DimensionUnit, FamilyCategory, ParameterKind, SolidAxis, MepSystem, ElementClass, RuleKind, RuleSeverity, IssueStatus, IssuePriority, IsoSize, Orientation, MaterialCategory, LayerFunction, LocationLine, Phase, DoorLeaves, Swing, Turn, StringerKind, RiserKind, ScheduleCategory, ScheduleField, ScheduleOp, EndJoin, ViewKind, DetailLevel, ViewCategory, HostSide, AreaMeasure, AnnotationAnchor, ParametricProfile, SolidShape, MepShape, Paper, CurtainGrid, CurtainPanel, Axis, TopConstraint, Profile, RoofShape, OpeningKind, StairFlight, PropertyValue, Infill, SpaceBoundary, ScheduleKey, PropertyDef, PropertyTemplate, ClassificationItem, ClassificationSystem, SpaceConditions, Dimension, Tag, TextNote, Leader, AnnotationStyle, ExprPoint, ExprPoint3, Family, FamilyParameter, FamilySolid, Point3, Component, ComponentOverride, MepElement, ElementSelector, RuleScope, ClashRef, SectionBox, IssueViewpoint, ClashSet, Rule, Issue, IssueComment, Sheet, Viewport, SheetRevision, WallSweep, Point2, Rgb, Vertex, Slope, StairStringer, Baluster, RailingHost, Layer, Project, Material, WallType, SlabType, CeilingType, RoofType, ColumnType, BeamType, WindowType, DoorType, Site, Building, Storey, GridLine, Wall, CurtainWallType, CurtainPanelOverride, CurtainWall, Column, Beam, Slab, Ceiling, Roof, Opening, Stair, Railing, Ramp, Space, Zone, AreaScheme, ViewPlane, ViewCrop, ViewCamera, View, ScheduleColumn, ScheduleSort, ScheduleFilter, ScheduleGroup, Schedule, PropertySet, ClassificationSet } from "../🟦️.ts";
+import type { OptionGroup, DesignOption, Workset, ElementMembership, PropertyKind, TemplateTarget, AnchorEnd, WallSide, TagCategory, Terminator, DimensionUnit, FamilyCategory, ParameterKind, SolidAxis, MepSystem, ElementClass, RuleKind, RuleSeverity, IssueStatus, IssuePriority, IsoSize, Orientation, MaterialCategory, LayerFunction, LocationLine, Phase, DoorLeaves, Swing, Turn, StringerKind, RiserKind, ScheduleCategory, ScheduleField, ScheduleOp, EndJoin, ViewKind, DetailLevel, ViewCategory, HostSide, AreaMeasure, AnnotationAnchor, ParametricProfile, SolidShape, MepShape, Paper, CurtainGrid, CurtainPanel, Axis, TopConstraint, Profile, RoofShape, OpeningKind, StairFlight, PropertyValue, Infill, SpaceBoundary, ScheduleKey, PropertyDef, PropertyTemplate, ClassificationItem, ClassificationSystem, SpaceConditions, Dimension, Tag, TextNote, Leader, AnnotationStyle, ExprPoint, ExprPoint3, Family, FamilyParameter, FamilySolid, Point3, Component, ComponentOverride, MepElement, ElementSelector, RuleScope, ClashRef, SectionBox, IssueViewpoint, ClashSet, Rule, Issue, IssueComment, Sheet, Viewport, SheetRevision, WallSweep, Point2, Rgb, Vertex, Slope, StairStringer, Baluster, RailingHost, Layer, Project, Material, WallType, SlabType, CeilingType, RoofType, ColumnType, BeamType, WindowType, DoorType, Site, Building, Storey, GridLine, Wall, CurtainWallType, CurtainPanelOverride, CurtainWall, Column, Beam, Slab, Ceiling, Roof, Opening, Stair, Railing, Ramp, Space, Zone, AreaScheme, ViewPlane, ViewCrop, ViewCamera, View, ScheduleColumn, ScheduleSort, ScheduleFilter, ScheduleGroup, Schedule, PropertySet, ClassificationSet } from "../🟦️.ts";
 
 export interface ModelSnapshot {
   /** @state artifact */
@@ -117,6 +117,11 @@ export interface ModelSnapshot {
   properties?: Record<string, PropertySet>;
   /** @state artifact */
   classifications?: Record<string, ClassificationSet>;
+  option_groups?: Record<string, OptionGroup>;
+  design_options?: Record<string, DesignOption>;
+  worksets?: Record<string, Workset>;
+  element_options?: Record<string, ElementMembership>;
+  element_worksets?: Record<string, ElementMembership>;
 }
 
 

@@ -1,16 +1,17 @@
-import { buildModePolicy, readBuildMode } from "../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { scriptCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { buildModePolicy, readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { cargoBuildDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { buildRepositoryCargoArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
-import { RELEASE_DRIVER_POLICY_V1 } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts";
-import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { NATIVE_BUILD_DRIVER_POLICY_V1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts";
+import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { DESCRIPTOR_JSON_REL_PATH, findPluginCargoFiles, parseComponentSourceOwnerV1, type ComponentSourceOwnerV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
 import { COMPONENT_PROFILE_POLICIES, COMPONENT_RECEIPT_SCHEMA_ID, COMPONENT_TARGET, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, componentProfileV1, componentProvenanceDigestsV1, rustToolchainIdentityV1, writeComponentReceiptV1, type ComponentDeliverableV1, type ComponentProfileV1, type ComponentReceiptV1 } from "../🏷️component-receipt/🟦️.ts";
-import { decodeCargoProvenanceV1 } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
-import { fileSha256V1, STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts";
+import { decodeCargoProvenanceV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+import { fileSha256V1, STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { verifySemanticDescriptorPairBytesV1 } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
 import { DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, freshWasmArtifactSize, publishedDescriptorEmitter } from "../🏗️component-build/🟦️.ts";
@@ -39,14 +40,14 @@ export function componentStageTargetsV1(repoRoot: string): readonly ComponentSta
  * diagnostic `SEMIO_PLUGIN_SYMBOLS=1` build needs compiler arguments, hence `cargo rustc`. */
 export function componentCargoV1(packageName: string, profile: ComponentProfileV1): Readonly<{ command: "build" | "rustc"; args: readonly string[]; environment: Readonly<Record<string, string>> }> {
   const args = ["-p", packageName, "--lib", "--target", COMPONENT_TARGET, "--profile", profile];
-  const environment = { CARGO_UNSTABLE_FEATURE_UNIFICATION: "true", CARGO_RESOLVER_FEATURE_UNIFICATION: RELEASE_DRIVER_POLICY_V1.featureUnification };
+  const environment = { CARGO_UNSTABLE_FEATURE_UNIFICATION: "true", CARGO_RESOLVER_FEATURE_UNIFICATION: NATIVE_BUILD_DRIVER_POLICY_V1.featureUnification };
   return process.env.SEMIO_PLUGIN_SYMBOLS === "1" ? { command: "rustc", args: [...args, "--", "-C", "strip=none"], environment } : { command: "build", args, environment };
 }
 
 /** 🏗️ Builds one component crate under one profile through the repository cargo port and stages exactly its linked
  * component into the profile's deliverable directory; resolves with that deliverable and the cargo provenance receipt
  * the build wrote, the evidence the component receipt's `sourceTreeDigest`/`provenanceSha256` are derived from. */
-export async function buildComponentDeliverableV1(repoRoot: string, target: ComponentStageTargetV1, profile: ComponentProfileV1, signal?: AbortSignal): Promise<Readonly<{ deliverable: ComponentDeliverableV1; provenance: string }>> {
+export async function buildComponentDeliverableV1(repoRoot: string, target: ComponentStageTargetV1, profile: ComponentProfileV1, control: CompilerAdmissionControl): Promise<Readonly<{ deliverable: ComponentDeliverableV1; provenance: string }>> {
   const deliverable = componentDeliverableV1(target.crateRoot, target.packageName, profile);
   const cargo = componentCargoV1(target.packageName, profile);
   let provenance: string | undefined;
@@ -55,7 +56,7 @@ export async function buildComponentDeliverableV1(repoRoot: string, target: Comp
     environment: { ...process.env, ...cargo.environment },
     deliverables: [".wasm"],
     output: relative(target.crateRoot, deliverable.directory),
-    ...(signal ? { signal } : {}),
+    control,
     provenance: (path) => { provenance = path; },
     validate: (files) => {
       if (files.size !== 1 || !files.has(target.wasmOut)) throw new Error(`${target.pluginId}: a component deliverable holds exactly ${target.wasmOut}, not ${[...files.keys()].join(", ")}`);
@@ -106,7 +107,7 @@ function publishSemanticPair(ownerRoot: string, emission: SemanticDescriptorEmis
 
 /** 🛂️ The cached describe stage over one staged deliverable: the semantic descriptor pair exactly these bytes answer, keyed by the component's digest and the
  * emitter binary's digest, strict-decoded and refused when it names another component. */
-export async function describeComponentStageV1(repoRoot: string, target: ComponentStageTargetV1, deliverable: ComponentDeliverableV1, cache: StageCacheV1, control: DescriptorEmissionControlV1 = {}): Promise<SemanticDescriptorEmissionV1> {
+export async function describeComponentStageV1(repoRoot: string, target: ComponentStageTargetV1, deliverable: ComponentDeliverableV1, cache: StageCacheV1, control: DescriptorEmissionControlV1): Promise<SemanticDescriptorEmissionV1> {
   const emitter = publishedDescriptorEmitter(repoRoot), [component, tool] = await Promise.all([fileSha256V1(deliverable.wasm), emitterDigest(emitter)]);
   const output = mkdtempSync(join(dirname(deliverable.directory), ".describe-"));
   try {
@@ -114,7 +115,7 @@ export async function describeComponentStageV1(repoRoot: string, target: Compone
       const emission = await emitSemanticDescriptorV1(repoRoot, { component: deliverable.wasm, artifactRoot: dirname(deliverable.directory) }, control);
       writeFileSync(join(directory, DESCRIPTOR_PACK_FILENAME), emission.packBytes);
       writeFileSync(join(directory, DESCRIPTOR_JSON_FILENAME), emission.jsonBytes);
-    }, control.signal);
+    }, control.compiler.signal);
     const packBytes = readFileSync(join(output, DESCRIPTOR_PACK_FILENAME)), jsonBytes = readFileSync(join(output, DESCRIPTOR_JSON_FILENAME)), pair = verifySemanticDescriptorPairBytesV1(jsonBytes, packBytes);
     if (pair.pluginId !== target.pluginId || pair.packageId !== target.packageId || pair.role !== target.role) throw new Error(`${target.pluginId}: the component describes ${pair.pluginId} (${pair.packageId}, ${pair.role})`);
     return Object.freeze({ pluginId: pair.pluginId, packageId: pair.packageId, role: pair.role, version: pair.version, componentSha256: component, jsonBytes, packBytes, semanticSha256: pair.semanticSha256 });
@@ -174,7 +175,7 @@ export function writeComponentStageReceiptV1(repoRoot: string, target: Component
 
 /** 🧾️ The describe stage over one narrowly built deliverable: emits (cached) the semantic descriptor of exactly these bytes, settles it against the committed
  * pair by `mode`, then writes the receipt whose provenance is the Merkle root over every unit of that narrow build. */
-export async function describeComponentDeliverableV1(repoRoot: string, target: ComponentStageTargetV1, built: Readonly<{ deliverable: ComponentDeliverableV1; provenance: string }>, mode: ComponentDescribeModeV1, control: DescriptorEmissionControlV1 = {}): Promise<Readonly<{ receipt: ComponentReceiptV1; drift: readonly string[] }>> {
+export async function describeComponentDeliverableV1(repoRoot: string, target: ComponentStageTargetV1, built: Readonly<{ deliverable: ComponentDeliverableV1; provenance: string }>, mode: ComponentDescribeModeV1, control: DescriptorEmissionControlV1): Promise<Readonly<{ receipt: ComponentReceiptV1; drift: readonly string[] }>> {
   const { deliverable } = built;
   rmSync(deliverable.receipt, { force: true });
   const emission = await describeComponentStageV1(repoRoot, target, deliverable, stageCacheV1(repoCacheDirectory(repoRoot, STAGE_CACHE_POLICY_V1.warmRoot)), control);
@@ -185,9 +186,9 @@ export async function describeComponentDeliverableV1(repoRoot: string, target: C
 }
 
 /** 🧩️ The complete stage chain of one component under one profile: build, stage, describe, receipt. */
-export async function stageComponentV1(repoRoot: string, target: ComponentStageTargetV1, profile: ComponentProfileV1, mode: ComponentDescribeModeV1, signal?: AbortSignal): Promise<Readonly<{ deliverable: ComponentDeliverableV1; receipt: ComponentReceiptV1; drift: readonly string[] }>> {
-  const built = await buildComponentDeliverableV1(repoRoot, target, profile, signal);
-  const described = await describeComponentDeliverableV1(repoRoot, target, built, mode, { cancelled: () => signal?.aborted ?? false, ...(signal ? { signal } : {}) });
+export async function stageComponentV1(repoRoot: string, target: ComponentStageTargetV1, profile: ComponentProfileV1, mode: ComponentDescribeModeV1, control: CompilerAdmissionControl): Promise<Readonly<{ deliverable: ComponentDeliverableV1; receipt: ComponentReceiptV1; drift: readonly string[] }>> {
+  const built = await buildComponentDeliverableV1(repoRoot, target, profile, control);
+  const described = await describeComponentDeliverableV1(repoRoot, target, built, mode, { compiler: control, cancelled: () => control.signal.aborted });
   return Object.freeze({ deliverable: built.deliverable, ...described });
 }
 
@@ -197,17 +198,9 @@ export async function stageComponentV1(repoRoot: string, target: ComponentStageT
 export class ComponentScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length !== 2 || segments[0] !== "--manifest") throw new Error("usage: component --manifest <Cargo.toml>");
-    const controller = new AbortController(), abort = (): void => controller.abort();
-    process.once("SIGINT", abort);
-    process.once("SIGTERM", abort);
-    try {
-      const target = componentStageTargetV1(this.repoRoot, segments[1]!);
-      const staged = await stageComponentV1(this.repoRoot, target, SHIPPED_COMPONENT_PROFILE, "verify", controller.signal);
-      console.log(`component ${target.pluginId}: ${staged.receipt.wasmBytes} B ${staged.receipt.profile} wasm ${staged.receipt.wasmSha256.slice(0, 12)}… describes the committed semantic descriptor ${staged.receipt.semanticDescriptorSha256.slice(0, 12)}… -> ${relative(this.repoRoot, staged.deliverable.receipt)}`);
-    } finally {
-      process.removeListener("SIGINT", abort);
-      process.removeListener("SIGTERM", abort);
-    }
+    const target = componentStageTargetV1(this.repoRoot, segments[1]!);
+    const staged = await stageComponentV1(this.repoRoot, target, SHIPPED_COMPONENT_PROFILE, "verify", scriptCompilerAdmissionControlV1(this.invocation, "component:build", 0));
+    console.log(`component ${target.pluginId}: ${staged.receipt.wasmBytes} B ${staged.receipt.profile} wasm ${staged.receipt.wasmSha256.slice(0, 12)}… describes the committed semantic descriptor ${staged.receipt.semanticDescriptorSha256.slice(0, 12)}… -> ${relative(this.repoRoot, staged.deliverable.receipt)}`);
   }
 }
 
@@ -225,7 +218,7 @@ export function componentsDescribeArgumentsV1(segments: readonly string[]): Read
  * semantic pair from exactly those bytes, one receipt per component, a summary at the end. Every component is attempted; the command fails after
  * the summary when any of them failed. Shipped bytes are described through the build driver instead.
  * @see ../../🏗️build/🧩️driver-stages/🟦️.ts */
-export async function describeIterateComponentsV1(repoRoot: string, segments: readonly string[], signal?: AbortSignal): Promise<void> {
+export async function describeIterateComponentsV1(repoRoot: string, segments: readonly string[], control: CompilerAdmissionControl): Promise<void> {
   const { all, pluginIds, profile } = componentsDescribeArgumentsV1(segments);
   const targets = componentStageTargetsV1(repoRoot);
   const unknown = pluginIds.filter((id) => !targets.some((target) => target.pluginId === id));
@@ -234,10 +227,10 @@ export async function describeIterateComponentsV1(repoRoot: string, segments: re
   const failures: string[] = [];
   let rewritten = 0;
   for (const [index, target] of selected.entries()) {
-    signal?.throwIfAborted();
+    control.signal.throwIfAborted();
     const started = Date.now();
     try {
-      const staged = await stageComponentV1(repoRoot, target, profile, "write", signal);
+      const staged = await stageComponentV1(repoRoot, target, profile, "write", control);
       if (staged.drift.length) rewritten++;
       console.log(`components describe ${index + 1}/${selected.length} ${target.pluginId}: ${staged.drift.length ? `rewrote the committed pair (${staged.drift.length} path(s))` : "committed pair unchanged"} from ${profile} bytes in ${Math.round((Date.now() - started) / 1000)} s`);
     } catch (error) {
@@ -260,7 +253,7 @@ export function profileIndependenceSampleV1(targets: readonly ComponentStageTarg
 /** ⚖️ `components profile-independence [--sample <n>] [--seed <n>] | <plugin-id…>`: the semantic descriptor of each component
  * must be byte-equal under `wasm-release` and `wasm-prototype` — the law that makes an iterate-written descriptor valid for
  * release. Release bytes are verified against the committed pair; iterate bytes are described locally and compared. */
-export async function profileIndependenceV1(repoRoot: string, segments: readonly string[], signal?: AbortSignal): Promise<void> {
+export async function profileIndependenceV1(repoRoot: string, segments: readonly string[], control: CompilerAdmissionControl): Promise<void> {
   const option = (name: string, fallback: number): number => {
     const index = segments.indexOf(name);
     const value = index === -1 ? fallback : Number(segments[index + 1]);
@@ -273,9 +266,9 @@ export async function profileIndependenceV1(repoRoot: string, segments: readonly
   if (named.length && selected.length !== named.length) throw new Error(`components profile-independence: ${named.filter((id) => !selected.some((target) => target.pluginId === id)).join(", ")} name no discovered component`);
   const failures: string[] = [];
   for (const target of selected) {
-    signal?.throwIfAborted();
-    const release = await stageComponentV1(repoRoot, target, SHIPPED_COMPONENT_PROFILE, "verify", signal).catch((error: Error) => error);
-    const iterate = await stageComponentV1(repoRoot, target, "wasm-prototype", "local", signal).catch((error: Error) => error);
+    control.signal.throwIfAborted();
+    const release = await stageComponentV1(repoRoot, target, SHIPPED_COMPONENT_PROFILE, "verify", control).catch((error: Error) => error);
+    const iterate = await stageComponentV1(repoRoot, target, "wasm-prototype", "local", control).catch((error: Error) => error);
     if (release instanceof Error || iterate instanceof Error) failures.push(`${target.pluginId}: ${(release instanceof Error ? release : iterate as Error).message.split("\n")[0]}`);
     else if (release.receipt.semanticDescriptorSha256 !== iterate.receipt.semanticDescriptorSha256) failures.push(`${target.pluginId}: wasm-release describes ${release.receipt.semanticDescriptorSha256}, wasm-prototype ${iterate.receipt.semanticDescriptorSha256}:\n    ${iterate.drift.join("\n    ")}`);
     console.log(`profile-independence ${target.pluginId}: ${release instanceof Error || iterate instanceof Error ? "FAILED" : release.receipt.semanticDescriptorSha256 === iterate.receipt.semanticDescriptorSha256 ? `equal ${release.receipt.semanticDescriptorSha256.slice(0, 12)}… (release ${release.receipt.wasmBytes} B, iterate ${iterate.receipt.wasmBytes} B)` : "DIFFERENT"}`);

@@ -1,0 +1,129 @@
+{
+  "schema": "semio.framework.kernel.ui-dirty-scope.v1",
+  "owner": "🧰️framework/🔨️modules/🎠️kernel - UiDirtyScope selection + union",
+  "note": "The law every shell on every renderer answers to: a settle re-renders EXACTLY the surfaces its `InvocationResult.ui_scope` names, a scope-less settle (`full`) re-renders all of them, and a `none` scope opens no pass at all. React has always read this (`🛠️ShellHelpers/🟦️.tsx`'s `uiRefreshWants*` + `buildUiRefreshRequest`); the wgpu shell's `refresh_ui` walked every window and panel unconditionally and threw the field away — 116 of 137 renders per converging edit answered `patched=0` and the flow window was re-minted eight times for nothing (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-edit-convergence-perf-2026-09-14.md` §7).",
+  "sections": {
+    "note": "The flag-addressed sections of one batched `refresh-ui`. Windows and panels are addressed by BODY KEY instead — two live instances of one window kind share a body key and are selected together, exactly as `sessionWindowInstances` fans them out.",
+    "flags": ["utilities", "tools", "engagements", "measures", "labels"],
+    "catalogueNote": "The app-static operator/palette catalogue has no flag of its own: only a full scope asks the guest for it."
+  },
+  "surfaces": {
+    "note": "The generation3d edit-mode surface census a converging preview actually refreshes, taken from `🐍️wgpu-edit-perf-probe.mjs`'s own census.",
+    "windowBodies": ["procedural-main", "procedural-preview"],
+    "panelBodies": ["properties", "outline"]
+  },
+  "selections": [
+    {
+      "id": "a-scope-less-settle-still-renders-all",
+      "note": "A program that emits no `uiScope` deserializes to `full` on both sides, so today's whole-shell refresh is what an unmodified plugin keeps getting.",
+      "scope": { "kind": "full" },
+      "windowBodies": ["procedural-main", "procedural-preview"],
+      "panelBodies": ["properties", "outline"],
+      "flags": { "utilities": true, "tools": true, "engagements": true, "measures": true, "labels": true },
+      "catalogue": true,
+      "asksForNothing": false
+    },
+    {
+      "id": "a-none-scope-opens-no-pass",
+      "note": "A pure telemetry/heartbeat action, and every rejected typed operation.",
+      "scope": { "kind": "none" },
+      "windowBodies": [],
+      "panelBodies": [],
+      "flags": { "utilities": false, "tools": false, "engagements": false, "measures": false, "labels": false },
+      "catalogue": false,
+      "asksForNothing": true
+    },
+    {
+      "id": "a-settle-that-dirties-one-window-renders-exactly-that-surface",
+      "note": "The measured case: a `flowEvalTick` hop dirties the preview body and nothing else. The flow window keeps the document it already has.",
+      "scope": { "kind": "partial", "windowBodies": ["procedural-preview"] },
+      "windowBodies": ["procedural-preview"],
+      "panelBodies": [],
+      "flags": { "utilities": false, "tools": false, "engagements": false, "measures": false, "labels": false },
+      "catalogue": false,
+      "asksForNothing": false
+    },
+    {
+      "id": "a-partial-scope-naming-a-panel-leaves-every-window-alone",
+      "scope": { "kind": "partial", "panelBodies": ["properties"], "measures": true },
+      "windowBodies": [],
+      "panelBodies": ["properties"],
+      "flags": { "utilities": false, "tools": false, "engagements": false, "measures": true, "labels": false },
+      "catalogue": false,
+      "asksForNothing": false
+    },
+    {
+      "id": "an-empty-partial-scope-is-not-a-full-one",
+      "note": "`partial` with nothing named asks for nothing renderable — it must never widen to `full` by accident, which is the exact shape a missing-field default would produce.",
+      "scope": { "kind": "partial" },
+      "windowBodies": [],
+      "panelBodies": [],
+      "flags": { "utilities": false, "tools": false, "engagements": false, "measures": false, "labels": false },
+      "catalogue": false,
+      "asksForNothing": false
+    }
+  ],
+  "unions": [
+    {
+      "id": "full-absorbs-everything",
+      "first": { "kind": "full" },
+      "second": { "kind": "partial", "windowBodies": ["procedural-preview"] },
+      "union": { "kind": "full" }
+    },
+    {
+      "id": "none-is-the-identity",
+      "first": { "kind": "none" },
+      "second": { "kind": "partial", "panelBodies": ["outline"], "tools": true },
+      "union": { "kind": "partial", "panelBodies": ["outline"], "tools": true }
+    },
+    {
+      "id": "none-is-the-identity-on-the-right-too",
+      "first": { "kind": "partial", "panelBodies": ["outline"], "tools": true },
+      "second": { "kind": "none" },
+      "union": { "kind": "partial", "panelBodies": ["outline"], "tools": true }
+    },
+    {
+      "id": "two-partials-union-body-keys-in-first-seen-order-without-duplicates",
+      "note": "A second pass asked for while the first was still crossing into the guest owes the UNION, never the newer alone — otherwise the first pass's surfaces silently stop updating.",
+      "first": { "kind": "partial", "windowBodies": ["procedural-main"], "measures": true },
+      "second": { "kind": "partial", "windowBodies": ["procedural-preview", "procedural-main"], "panelBodies": ["properties"], "engagements": true },
+      "union": { "kind": "partial", "windowBodies": ["procedural-main", "procedural-preview"], "panelBodies": ["properties"], "engagements": true, "measures": true }
+    },
+    {
+      "id": "two-none-scopes-stay-none",
+      "first": { "kind": "none" },
+      "second": { "kind": "none" },
+      "union": { "kind": "none" }
+    }
+  ],
+  "hostEffectEarnings": [
+    {
+      "id": "an-effect-pass-that-rewrote-no-render-input-earns-nothing",
+      "note": "The scope a dispatch declares is what the GUEST dirtied. What the HOST dirtied by applying that dispatch's own effects is unioned on top, never substituted.",
+      "effects": ["dispatchAction", "spawnJob"],
+      "declared": { "kind": "partial", "windowBodies": ["procedural-preview"] },
+      "refresh": { "kind": "partial", "windowBodies": ["procedural-preview"] }
+    },
+    {
+      "id": "set-active-utility-earns-every-window-body-plus-tools-and-measures",
+      "note": "Measured on the puzzle 3d editor (ticket 26/09/02 wave B37): the verb armed `scene.active_utility`, the operation completed with `UiDirtyScope::None`, and the armed body was never fetched — the world pane published `select` for thirty seconds.",
+      "effects": ["setActiveUtility"],
+      "declared": { "kind": "none" },
+      "refresh": { "kind": "partial", "windowBodies": ["procedural-main", "procedural-preview"], "tools": true, "utilities": true, "measures": true }
+    },
+    {
+      "id": "set-panel-and-load-document-earn-the-widest-scope",
+      "note": "Neither names a body of its own and `panelJson` feeds every section, so the only honest answer is `full`.",
+      "effects": ["setActiveTool", "setPanel"],
+      "declared": { "kind": "partial", "windowBodies": ["procedural-preview"] },
+      "refresh": { "kind": "full" }
+    }
+  ],
+  "laws": [
+    "a-settle-that-dirties-one-window-renders-exactly-that-surface",
+    "a-scope-less-settle-still-renders-every-surface",
+    "a-none-scope-opens-no-refresh-pass-at-all",
+    "a-coalesced-pass-covers-the-union-of-every-scope-asked-for-while-it-ran",
+    "a-host-effect-pass-unions-what-it-rewrote-onto-what-the-guest-declared"
+  ]
+}

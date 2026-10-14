@@ -9,7 +9,7 @@ thread_local! {
     static SAMPLE_AT_TERMINAL: Cell<Option<usize>> = const { Cell::new(None) };
 }
 fn sample_count() -> Option<usize> {
-    site_registry().try_lock().ok().map(|registry| registry.iter().flatten().find(|(site, _)| *site == "test.input-tail").map_or(0, |(_, ring)| ring.len()))
+    site_registry().try_lock().map(|registry| registry.iter().flatten().find(|(site, _)| *site == "test.input-tail").map_or(0, |(_, ring)| ring.len()))
 }
 fn clock() -> Option<u64> {
     READINGS.with(|readings| match *readings.borrow() {
@@ -40,7 +40,7 @@ impl Drop for ClockScope {
     }
 }
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
 //#endregion 🕰️ClockFixture
 
@@ -93,8 +93,8 @@ fn watchdog_tail_a_previous_success_cannot_change_a_later_same_operation_result(
 
 #[test]
 fn watchdog_tail_held_optional_telemetry_keeps_terminal_fault_without_waiting() {
-    let site = site_registry().lock().unwrap_or_else(PoisonError::into_inner);
-    let violations = violation_ring().lock().unwrap_or_else(PoisonError::into_inner);
+    let site = site_registry().try_lock().expect("original static telemetry fixture gate is available");
+    let violations = violation_ring().try_lock().expect("original static telemetry fixture gate is available");
     let (returned, verdict) = std::thread::scope(|scope| {
         let (sent, received) = std::sync::mpsc::sync_channel(1);
         let worker = scope.spawn(move || {

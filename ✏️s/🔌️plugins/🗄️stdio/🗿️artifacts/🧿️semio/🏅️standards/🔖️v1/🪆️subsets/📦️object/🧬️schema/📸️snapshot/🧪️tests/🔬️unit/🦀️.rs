@@ -29,16 +29,16 @@ async fn minimal_schema_valid_json_defaults_optional_children() {
 #[semio_framework_async_macros::async_test]
 async fn json_pack_round_trips() {
     let snap = SemioObjectSnapshot::default();
-    let bytes = <SemioObjectSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioObjectSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioObjectSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioObjectSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_text_round_trips() {
     let snap = SemioObjectSnapshot::default();
-    let text = <SemioObjectSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
-    let back = <SemioObjectSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioObjectSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snap);
+    let back = <SemioObjectSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back);
 }
 
@@ -47,11 +47,11 @@ async fn dsl_text_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
     let snap = demo_object_snapshot();
-    let bytes = <SemioObjectSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioObjectSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioObjectSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioObjectSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
-    let text = <SemioObjectSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
-    let back_text = <SemioObjectSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioObjectSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snap);
+    let back_text = <SemioObjectSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back_text);
 }
 
@@ -61,7 +61,7 @@ async fn codec_retention_law() {
 #[semio_framework_async_macros::async_test]
 async fn parent_snapshot_stores_only_child_handles_never_content() {
     let snap = demo_object_snapshot();
-    let text = <SemioObjectSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
+    let text = <SemioObjectSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snap);
     assert!(text.contains(&enc_str("crate-brep")), "hex-encoded child_id must be present");
     assert!(!text.to_lowercase().contains("vertices") && !text.to_lowercase().contains("faces"), "must never embed brep/mesh field names — only the handle");
 }

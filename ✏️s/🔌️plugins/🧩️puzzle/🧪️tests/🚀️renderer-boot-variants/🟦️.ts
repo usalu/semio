@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { parseSurfaceAppId } from "@semio-tech/framework";
 import { PLAYGROUND_BUILD_TARGETS } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
-import corpus from "../../🧫️fixtures/🚀️renderer-boot-variants/🔣️.json";
+import corpus from "../🧫️fixtures/🚀️renderer-boot-variants/🔣️.json";
 
 test("puzzle owns all four original renderer variant coordinates", () => {
   expect(corpus.rows).toHaveLength(4);

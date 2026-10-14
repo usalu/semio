@@ -9,7 +9,7 @@ import artifactSchema from "../../🔣️.json" with { type: "json" };
 import snapshotSchema from "../../📸️snapshot/🔣️.json" with { type: "json" };
 import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
 import mutationSchema from "../../🧬️mutations/🔣️.json" with { type: "json" };
-import fixture from "../../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
+import fixture from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document-contract/🔣️.json" with { type: "json" };
 
 import { parseWiresArtifact } from "../../🟦️.ts";
 import { parseWiresSnapshot } from "../../📸️snapshot/🟦️.ts";

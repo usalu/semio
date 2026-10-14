@@ -29,8 +29,8 @@ fn relations_are_distinct_and_ascending() {
 #[test]
 fn pack_round_trips_every_example() {
     for document in crate::examples::documents() {
-        let bytes = <Wfc2dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&document);
-        let decoded = <Wfc2dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("pack decodes");
+        let bytes = <Wfc2dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&document);
+        let decoded = <Wfc2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("pack decodes");
         assert_eq!(decoded, document);
     }
 }

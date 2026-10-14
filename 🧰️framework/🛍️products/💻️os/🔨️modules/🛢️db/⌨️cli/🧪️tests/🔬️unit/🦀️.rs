@@ -5,7 +5,7 @@ async fn cli_verify_checks_neutral_logical_commit_boundaries() {
     if !crate::db_storage::process_isolated_law("db_cli::tests::cli_verify_checks_neutral_logical_commit_boundaries") {
         return;
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧪️tests/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     for (name, expected) in [("aborted-commands-snapshot-cas-have-no-effects", Some(0)), ("two-commands-only-after-logical-commit", Some(2)), ("wrong-commit-count", None), ("active-incomplete-needs-durable-abort", None)] {
         let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == name).expect("registered neutral CLI boundary");
         let document = db::db_ids::ArtifactId::from("committed-cli");

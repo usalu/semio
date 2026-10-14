@@ -1,7 +1,7 @@
 use super::*;
 use crate::app_fixture::{app_with_registry, render_body};
 
-const KEYBOARD_REACHABILITY_FIXTURE_JSON: &str = include_str!("../../../../../../../🧫️fixtures/⌨️keyboard-reachability.json");
+const KEYBOARD_REACHABILITY_FIXTURE_JSON: &str = include_str!("../../../../../../../🧪️tests/🧫️fixtures/⌨️keyboard-reachability.json");
 
 #[test]
 fn flow_graph_node_status_is_localized() {
@@ -32,7 +32,7 @@ async fn the_node_graph_canvas_declares_the_activate_binding_the_keyboard_snapsh
     assert!(json.contains(row["shortcut"].as_str().expect("shortcut")), "the canvas must advertise its chord as aria-keyshortcuts");
 }
 
-const GRAPH_OUTLINE_LAW: &str = include_str!("../../🧫️fixtures/🔬️unit/🔣️.json");
+const GRAPH_OUTLINE_LAW: &str = include_str!("../🧫️fixtures/🔬️unit/🔣️.json");
 
 fn law_outline_projection() -> serde_json::Value {
     let law: serde_json::Value = serde_json::from_str(GRAPH_OUTLINE_LAW).expect("graph outline law json");

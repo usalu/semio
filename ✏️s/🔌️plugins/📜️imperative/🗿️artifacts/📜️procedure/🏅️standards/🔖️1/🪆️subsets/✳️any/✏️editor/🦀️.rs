@@ -56,7 +56,7 @@ use semio_framework_plugin::TopologyNode;
 // `semio_framework::*` elsewhere) — see `crate::PROCEDURE_DIALECT`'s own
 // definition for the qualified form this file only reads back through that constant.
 use semio_framework_2d::compute::EngineHandles;
-use store::{os_store::serialization::ArtifactPack, };
+use store::{pack::snapshot::ArtifactPack, };
 
 /// 🏷️ Admits semantic labels for the imperative editor.
 pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
@@ -480,6 +480,7 @@ impl ArtifactEditor for ImperativePlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

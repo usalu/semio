@@ -10,11 +10,11 @@ use std::collections::VecDeque;
 type MemberMutationTriple = (KernelMutation, MutationId, InverseMutation);
 
 pub(crate) struct MountedMemberReceiptSource<'a> {
-    publication: &'a dyn store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication,
-    document: ArtifactHandle,
-    invocation_id: &'a str,
-    group_id: &'a str,
-    fallback_author: &'a str,
+    pub(crate) publication: &'a dyn store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication,
+    pub(crate) document: ArtifactHandle,
+    pub(crate) invocation_id: &'a str,
+    pub(crate) group_id: &'a str,
+    pub(crate) fallback_author: &'a str,
 }
 impl MountedMemberReceiptSource<'_> {
     fn identity(&self) -> [(usize, usize); 5] {
@@ -30,7 +30,7 @@ impl MountedMemberReceiptSource<'_> {
     }
 }
 
-struct MountedMemberReceiptOutput {
+pub(crate) struct MountedMemberReceiptOutput {
     document: ArtifactHandle,
     edit_id: String,
     triples: VecDeque<MemberMutationTriple>,
@@ -79,7 +79,7 @@ impl MountedMemberReceipt {
         Ok(())
     }
     /// 🔢️ Exposes the current original forward ordinal so its exact schema can be borrowed per turn.
-    fn operation_index(&self) -> Option<usize> { (!self.closing && !self.transferred && self.index < self.operation_count).then_some(self.index) }
+    pub(crate) fn operation_index(&self) -> Option<usize> { (!self.closing && !self.transferred && self.index < self.operation_count).then_some(self.index) }
     pub(crate) fn next_capacity_byte_demand(&self, source: &MountedMemberReceiptSource<'_>) -> Result<usize, ValueError> {
         self.validate(source)?;
         match self.phase {

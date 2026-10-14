@@ -17,7 +17,7 @@ fn equivalent_inner_producer()->RecordSpecProducer{RecordSpecProducer{ordinary:e
 #[test]
 fn schema_hash_controlled_full_allocator_requests_and_same_caller_are_admitted(){
  use semio_framework_value::{NativeEncodeControl,NativeDecodeControl,ValueRefusalKind};
- let contract:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🔑️schema-hash/💰️storage/🔣️.json")).unwrap();
+ let contract:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🔑️schema-hash/💰️storage/🔣️.json")).unwrap();
  assert_eq!(contract["requests"],"fullSystemAllocatorRequests");
  assert_eq!(contract["cumulative"],"sameCallerNoRefund");
  assert_eq!(contract["failureChannel"]["diagnostic"],"actualReturnedMessageCapacity");

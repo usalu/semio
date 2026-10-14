@@ -1,6 +1,6 @@
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 
 /** 🚨️ Independent classifier: the same verdict the Rust mounted operation reaches, written without any of its code. */

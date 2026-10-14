@@ -115,9 +115,9 @@ fn drawing_canvas_window_ownership_runtime_isolates_reloads_and_restores_exact_i
 
 #[test]
 fn drawing_canvas_window_ownership_matches_neutral_fixture_and_codecs() {
-    use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+    use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
     let base_config: DrawingCanvasWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let next_config: DrawingCanvasWindowConfig = semio_framework_pack_json::from_json_str(&fixture["nextConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let config_mutation: DrawingCanvasWindowConfigMutation = semio_framework_pack_json::from_json_str(&fixture["configMutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -146,7 +146,7 @@ fn drawing_canvas_window_ownership_matches_neutral_fixture_and_codecs() {
 /// ⚖️ The canvas configuration's concrete inverse sums to exactly the negative of its sparse diff, and `between` is its state delta.
 #[semio_framework_async_macros::async_test]
 async fn config_inverse_sums_to_the_negative_diff() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
     let base_config: DrawingCanvasWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let next_config: DrawingCanvasWindowConfig = semio_framework_pack_json::from_json_str(&fixture["nextConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let config_mutation: DrawingCanvasWindowConfigMutation = semio_framework_pack_json::from_json_str(&fixture["configMutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

@@ -34,7 +34,7 @@ import {
   type RunView,
 } from "@semio-tech/quiz";
 import { Deputy, REVISED, materialRevision, type HeldLearner } from "@semio-tech/quiz-react";
-import vectors from "../../🧫️fixtures/🧾️learner-lifecycle/🔣️.json";
+import vectors from "../🧫️fixtures/🧾️learner-lifecycle/🔣️.json";
 
 interface Step {
   readonly command: Command;

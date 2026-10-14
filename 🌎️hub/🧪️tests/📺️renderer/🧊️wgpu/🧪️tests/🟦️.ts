@@ -6,7 +6,7 @@ const owner="🌎️hub/🧪️tests/📺️renderer/🧊️wgpu",general="🧰�
 
 /** 🧊️ Verifies Specific command ownership and retained native selections with the independent TypeScript oracle. */
 export async function proveHubRendererCommandOwnershipV1(root:string):Promise<void>{
- const require=createRequire(join(root,"package.json")),ts=require("typescript"),fixture=JSON.parse(await readFile(join(root,owner,"🧫️fixtures/🔣️.json"),"utf8"));
+ const require=createRequire(join(root,"package.json")),ts=require("typescript"),fixture=JSON.parse(await readFile(join(root,owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
  assert.equal(new Set(fixture.commands.map((row:any)=>row.command)).size,fixture.commands.length);assert.equal(fixture.commands.length,5);
  const source=await readFile(join(root,general,"📜️script.ts"),"utf8"),parsed=ts.createSourceFile("router.ts",source,ts.ScriptTarget.Latest,true),specific:string[]=[];
  const visit=(node:any)=>{if(ts.isStringLiteralLike(node)&&["🌎️hub","✏️s"].some(prefix=>node.text===prefix||node.text.startsWith(prefix+"/")))specific.push(node.text);ts.forEachChild(node,visit);};visit(parsed);

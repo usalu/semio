@@ -8,7 +8,7 @@ export async function registerTransientApplyRefusalTests(
   twin: { readonly HUB_TRANSIENT_APPLY_REFUSAL_CODE: string; readonly hubTransientApplyRefusalV1: (messages: ArrayLike<number>) => boolean },
 ): Promise<void> {
   const { describe, it, expect } = vitest;
-  const { default: fixture } = await import("../../../../🔨️modules/📡️replication/🚧️apply-refusal/🧫️fixtures/🔣️.json");
+  const { default: fixture } = await import("../../../../🔨️modules/📡️replication/🚧️apply-refusal/🧪️tests/🧫️fixtures/🔣️.json");
   const { default: schema } = await import("../../../../🔨️modules/📡️replication/🚧️apply-refusal/🧬️schema/🔣️.json");
   const encode = (messages: unknown[]): Uint8Array => new TextEncoder().encode(JSON.stringify(messages));
 

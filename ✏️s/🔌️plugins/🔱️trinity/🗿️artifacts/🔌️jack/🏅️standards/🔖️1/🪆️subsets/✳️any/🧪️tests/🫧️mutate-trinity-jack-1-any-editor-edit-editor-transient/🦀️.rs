@@ -14,11 +14,11 @@ use semio_repo_test_host::law::vector::Vector;
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-editor-selection" => Vector {
-            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient/🧫️fixtures/🔤️set-editor/✅️set/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient/🧫️fixtures/🔤️set-editor/✅️set/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient/🧫️fixtures/🔤️set-editor/✅️set/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient/🧫️fixtures/🔤️set-editor/✅️set/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient/🧫️fixtures/🔤️set-editor/✅️set/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient/🧪️tests/🧫️fixtures/🔤️set-editor/✅️set/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient/🧪️tests/🧫️fixtures/🔤️set-editor/✅️set/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient/🧪️tests/🧫️fixtures/🔤️set-editor/✅️set/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient/🧪️tests/🧫️fixtures/🔤️set-editor/✅️set/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient/🧪️tests/🧫️fixtures/🔤️set-editor/✅️set/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),

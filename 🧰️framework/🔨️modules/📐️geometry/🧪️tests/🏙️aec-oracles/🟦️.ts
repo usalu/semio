@@ -1,10 +1,10 @@
-/** 🧫️ Third-party (`three`) reproduction of the language-agnostic geometry fixtures in `🧫️fixtures/*` — arcs, loops, triangulation and extrusions. */
+/** 🧫️ Third-party (`three`) reproduction of the language-agnostic geometry fixtures in `🧪️tests/🧫️fixtures/*` — arcs, loops, triangulation and extrusions. */
 import { expect, test } from "vitest";
 import { BufferAttribute, EllipseCurve, ExtrudeGeometry, Path, Shape, ShapeUtils, Triangle, Vector2, Vector3 } from "three";
-import bulge from "../../🧫️fixtures/🌙️bulge/🔣️.json";
-import loops from "../../🧫️fixtures/➰️loops/🔣️.json";
-import triangulation from "../../🧫️fixtures/🔺️triangulation/🔣️.json";
-import mesh from "../../🧫️fixtures/🕸️mesh/🔣️.json";
+import bulge from "../🧫️fixtures/🌙️bulge/🔣️.json";
+import loops from "../🧫️fixtures/➰️loops/🔣️.json";
+import triangulation from "../🧫️fixtures/🔺️triangulation/🔣️.json";
+import mesh from "../🧫️fixtures/🕸️mesh/🔣️.json";
 
 type Seg = { start: number[]; end: number[]; bulge: number };
 

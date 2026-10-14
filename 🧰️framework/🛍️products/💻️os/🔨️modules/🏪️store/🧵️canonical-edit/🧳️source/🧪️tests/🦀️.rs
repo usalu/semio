@@ -8,7 +8,7 @@ fn drive_close(owner:&mut dyn ArtifactStoreCanonicalOwner<bool>){owner.begin_clo
 
 #[test]
 fn canonical_store_original_native_source_preserves_semantic_paged_identity_hash_and_all_cancellation_frontiers(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for repeat in[1,fixture["actorRepeat"].as_u64().unwrap()as usize]{for cancelled_at in[Some(0),Some(1),Some(2),Some(3),Some(4),Some(5),Some(6),None]{
   let actor="ä\0".repeat(repeat);let authority=authority(actor.clone());let edit=authority.next_edit(true,vec![false]);let digest=crate::os_store::ledger::CursorRevisionAccumulator::edit_digest(&edit);let original=Box::new(edit);let pointer=original.as_ref()as*const Edit<bool>;let id=original.id.as_ptr();let forwards=original.forwards.as_ptr();
   let(mut owner,heap)=observe(||ArtifactStoreCanonicalSource::new(Arc::clone(&authority),original));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut cancelled=false;let mut turns=0;

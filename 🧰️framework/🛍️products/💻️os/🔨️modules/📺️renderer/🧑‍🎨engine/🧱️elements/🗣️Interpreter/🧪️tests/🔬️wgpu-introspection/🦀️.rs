@@ -64,7 +64,7 @@ fn focus_path_is_recorded_for_the_focused_node() {
 
 #[test]
 fn the_accessibility_dump_announces_visible_windows_and_keeps_named_diagnostics() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/♿️wgpu-accessibility-visibility/🔣️.json")).expect("visibility fixture parses");
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/♿️wgpu-accessibility-visibility/🔣️.json")).expect("visibility fixture parses");
     let mut engine = ui_wgpu::wgpu::Ui::new(semio_framework_ui_locale::Locale::En);
     for window_id in law["liveWindows"].as_array().expect("live windows") {
         engine.set_viewport(window_id.as_str().expect("window id"), 400.0, 300.0);

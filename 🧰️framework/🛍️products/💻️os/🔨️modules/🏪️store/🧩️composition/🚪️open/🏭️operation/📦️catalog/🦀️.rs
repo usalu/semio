@@ -2,7 +2,7 @@
 
 #[test]
 fn member_catalog_constructor_birth_and_retirement_match_original_system_allocations() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for bounded in [false, true] {
         let (birth, allocated, released) = crate::test_allocation::observe_backing(|| if bounded { bounded_artifact_store_owners_birth_demand::<DemoSnapshot, DemoMutation>().unwrap() } else { <DemoSnapshot as MemberStoreOwner<DemoMutation>>::member_store_owners_birth_demand().unwrap() });
         assert_eq!((allocated, released), (0, 0));
@@ -69,28 +69,10 @@ fn member_catalog_initial_open_cancellation_pays_original_catalog_and_page_befor
     let (open, allocated, released) = crate::test_allocation::observe_backing(|| Open::begin(request, grant).unwrap_or_else(|_| panic!("original funded begin")));
     let mut open = open;
     assert_eq!((allocated, released), (birth.capacity_bytes, 0));
-    let mut born = outstanding + allocated;
-    let mut physical = 0;
-    let mut turns = 0;
-    while !ErasedSnapshotRetirement::terminal_is_empty(&open) && turns < 65_536 {
-        let (demand, allocated, released) = crate::test_allocation::observe_backing(|| {
-            let copy_bytes = ErasedSnapshotRetirement::next_copy_byte_demand(&open).unwrap();
-            semio_framework_value::RetirementDemand { copy_bytes, capacity_bytes: ErasedSnapshotRetirement::next_capacity_byte_demand(&open, copy_bytes).unwrap(), release_bytes: ErasedSnapshotRetirement::next_release_byte_demand(&open).unwrap(), depth: ErasedSnapshotRetirement::next_depth_demand(&open).unwrap() }
-        });
-        assert_eq!((allocated, released), (0, 0));
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-        let (step, allocated, released) = crate::test_allocation::observe_backing(|| ErasedSnapshotRetirement::close_step(&mut open, grant).unwrap());
-        let progress = step.progress();
-        assert!(progress.fits(grant));
-        assert_eq!((allocated, released), (progress.retained_capacity_bytes, progress.released_bytes));
-        assert!(progress.copied_items > 0 || matches!(step, RetainedCloneStep::Complete(_)), "exact current cancellation grant must advance original custody");
-        if matches!(step, RetainedCloneStep::Complete(_)) { assert!(ErasedSnapshotRetirement::terminal_is_empty(&open)); }
-        born += allocated;
-        physical += released;
-        turns += 1;
-    }
-    assert!(ErasedSnapshotRetirement::terminal_is_empty(&open));
-    assert_eq!(physical, born, "request born {request_born} freed {request_freed} outstanding {outstanding} source birth {} turns {turns}", birth.capacity_bytes);
+    let initial_born=outstanding+allocated;
+    let(added,physical,turns)=retire_original_member_open(&mut open);
+    let born=initial_born+added;
+    assert_eq!(physical,born,"original request and catalog birth must all return under unchanged source policy");
     let (final_bytes, allocated, released) = crate::test_allocation::observe_backing(|| MemberOpenOperation::terminal_drop_byte_demand(&open).expect("terminal original open declares no remaining physical allocation"));
     assert_eq!((allocated, released, final_bytes), (0, 0, 0));
     let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop(open));

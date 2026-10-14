@@ -9,7 +9,7 @@ struct BoundFields { title:String, chunks:Vec<Vec<u8>>, labels:Vec<String> }
 #[test]
 fn sqlite_snapshot_native_binding_controls_typed_field_materialization() {
     use std::{io::Write,process::{Command,Stdio}};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();
     
     let title=fixture["title"].as_str().unwrap().to_string();
     let chunks:Vec<Vec<u8>>=serde_json::from_value(fixture["chunks"].clone()).unwrap();
@@ -67,7 +67,7 @@ struct RetainedRecord { fields:Vec<RetainedField>, later:bool }
 #[test]
 fn sqlite_snapshot_native_binding_retires_partial_owned_fields() {
     use std::{io::Write,process::{Command,Stdio}};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();
     
     let script="import{Database}from'bun:sqlite';const x=JSON.parse(await Bun.stdin.text());const f=x.fixture;const d=new Database(':memory:');d.run('CREATE TABLE work(id INTEGER PRIMARY KEY,completed INTEGER NOT NULL)');for(let i=1;i<=f.count;i++)d.run('INSERT INTO work VALUES(?,?)',i,i+f.retirement.initialWork);await Bun.write(Bun.stdout,JSON.stringify(d.query('SELECT COUNT(*) AS count FROM work WHERE completed <= ?').get(f.cancelAfter)));d.close();";
     let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(serde_json::json!({"fixture":fixture}).to_string().as_bytes()).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let independent:serde_json::Value=serde_json::from_slice(&output.stdout).unwrap();assert_eq!(independent["count"],fixture["retirement"]["canceledFields"]);
@@ -84,7 +84,7 @@ fn sqlite_snapshot_native_binding_retires_partial_owned_fields() {
 #[test]
 fn sqlite_snapshot_native_binding_controls_declared_variants() {
     use semio_framework_dsl_record::DslVariants;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();
     let mut progress=|_:NativeDecodeProgress|true;let mut control=NativeDecodeControl::new(65536,&mut progress);
     for row in fixture["variants"].as_array().unwrap(){let expected=if row["keyword"]=="label"{BoundVariant::Label{text:row["text"].as_str().unwrap().into()}}else{BoundVariant::Empty};let (keyword,record)=expected.to_named_record();assert_eq!(BoundVariant::from_named_record_controlled(&keyword,&record,&mut control).unwrap(),expected);}
     assert_eq!(BoundOrdinal::from_value_controlled(&FieldValue::Enum(1),&mut control).unwrap(),BoundOrdinal::Second);
@@ -95,7 +95,7 @@ fn sqlite_snapshot_native_binding_controls_declared_variants() {
 #[test]
 fn sqlite_snapshot_native_binding_controlled_pack_keeps_one_cumulative_budget() {
     use dsl::{PackDecodeOptions,PackEncodeOptions,PackLimits,pack_rt};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();
     let expected=BoundFields{title:fixture["title"].as_str().unwrap().into(),chunks:serde_json::from_value(fixture["chunks"].clone()).unwrap(),labels:serde_json::from_value(fixture["labels"].clone()).unwrap()};
     let bytes=pack_rt::encode_record_body(&BoundFields::__dsl_spec(),&expected.__dsl_to_record(),&PackEncodeOptions::default()).unwrap();
     let mut progress=|_:NativeDecodeProgress|true;let mut control=NativeDecodeControl::new(65536,&mut progress);
@@ -110,7 +110,7 @@ fn sqlite_snapshot_native_binding_controlled_pack_keeps_one_cumulative_budget() 
 fn sqlite_snapshot_native_binding_controlled_document_cancels_during_inflation() {
     use dsl::{PackDecodeOptions,PackEncodeOptions,pack_rt};
     use std::{io::Write,process::{Command,Stdio}};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();
     let expected=BoundFields{title:fixture["title"].as_str().unwrap().repeat(fixture["count"].as_u64().unwrap() as usize*16),chunks:serde_json::from_value(fixture["chunks"].clone()).unwrap(),labels:serde_json::from_value(fixture["labels"].clone()).unwrap()};
     let encoded=pack_rt::encode_document(&BoundFields::__dsl_spec(),&expected.__dsl_to_record(),&PackEncodeOptions::default()).unwrap();
     let script="import{inflateRawSync}from'node:zlib';const x=JSON.parse(await Bun.stdin.text());const b=Buffer.from(x.bytes);let p=32;function v(){let n=0,s=0;for(;;){const x=b[p++];n+=(x&127)*2**s;if(!(x&128))return n;s+=7;if(s>63)throw Error('varint')}}let found=false;while(p<b.length-84){const kind=b[p++],flags=b[p++],stored=v(),raw=flags&1?v():stored;const payload=b.subarray(p,p+stored);p+=stored+4;const decoded=flags&1?inflateRawSync(payload):payload;if(decoded.length!==raw)throw Error('length');if(decoded.includes(Buffer.from(x.title)))found=true;}await Bun.write(Bun.stdout,JSON.stringify(found));";
@@ -124,7 +124,7 @@ fn sqlite_snapshot_native_binding_controlled_document_cancels_during_inflation()
 fn sqlite_snapshot_native_binding_controls_artifact_child_identity() {
     use {semio_framework_os_kernel::os_store::artifact_child::ArtifactChild,semio_framework_artifact_reference::ArtifactRef};
     use std::{io::Write,process::{Command,Stdio}};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔗️child/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔗️child/🔣️.json")).unwrap();
     let strings=["childId","artifactId","artifactKind","standard","subset"].map(|key|fixture[key].as_str().unwrap());let total=strings.iter().map(|text|text.len()).sum::<usize>();let expected=ArtifactRef{artifact_id:strings[1].into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:strings[2].into(),standard:strings[3].into(),subset:strings[4].into()}};
     let mut record=semio_framework_dsl_record::RecordValue::default();record.fields.insert(0,semio_framework_dsl_record::FieldValue::Text(strings[0].into()));record.fields.insert(1,<ArtifactRef as semio_framework_dsl_record::DslField>::to_value(&expected));let value=semio_framework_dsl_record::FieldValue::Record(record);
     let mut accepted=|_:NativeDecodeProgress|true;let mut control=NativeDecodeControl::new(total,&mut accepted);let actual=ArtifactChild::<()>::from_value_controlled(&value,&mut control).unwrap();assert_eq!(actual.child_id,strings[0]);assert_eq!(actual.target,expected);assert_eq!(control.owned_bytes(),total);
@@ -139,7 +139,7 @@ fn sqlite_snapshot_native_binding_controlled_text_preserves_owned_literals() {
 use semio_framework_dsl_record::ParseOptions;
 use semio_framework_dsl_record::JoinMode;
     use std::{io::Write,process::{Command,Stdio}};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();
     let expected=BoundFields{title:fixture["title"].as_str().unwrap().repeat(16384),chunks:serde_json::from_value(fixture["chunks"].clone()).unwrap(),labels:serde_json::from_value(fixture["labels"].clone()).unwrap()};let spec=BoundFields::__dsl_spec();let text=semio_framework_dsl_record::print(&expected.__dsl_to_record(),&spec,semio_framework_dsl_record::JoinMode::Document);
     let script=r#"const x=JSON.parse(await Bun.stdin.text());const m=x.text.match(/title=("(?:[^"\\]|\\.)*")/);if(!m)throw Error('title');const literal=m[1].replace(/\\u\{([0-9a-fA-F]+)\}/g,(_,n)=>{const v=parseInt(n,16);return v<65536?'\\u'+v.toString(16).padStart(4,'0'):String.fromCodePoint(v)});await Bun.write(Bun.stdout,JSON.stringify(JSON.parse(literal)===x.title));"#;
     let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(serde_json::json!({"text":text,"title":expected.title}).to_string().as_bytes()).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));assert_eq!(serde_json::from_slice::<bool>(&output.stdout).unwrap(),true);
@@ -157,7 +157,7 @@ struct ChunkFields { chunks:Vec<ChunkField> }
 #[test]
 fn sqlite_snapshot_native_binding_controls_chunk_reconstruction(){
     use dsl::{PackDecodeOptions,PackEncodeOptions,pack_rt};use std::{io::Write,process::{Command,Stdio}};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();let expected=ChunkFields{chunks:serde_json::from_value::<Vec<Vec<u8>>>(fixture["chunks"].clone()).unwrap().into_iter().map(|bytes|ChunkField{bytes}).collect()};let mut options=PackEncodeOptions::default();options.chunk_threshold=1;options.chunk_size=2;let spec=ChunkFields::__dsl_spec();let bytes=pack_rt::encode_document(&spec,&expected.__dsl_to_record(),&options).unwrap();let mut accepted=|_:NativeDecodeProgress|true;let mut control=NativeDecodeControl::new(1_000_000,&mut accepted);let mut verified=PackDecodeOptions::default();verified.verification=semio_framework_os_kernel::VerificationLevel::Full;let(record,_)=pack_rt::decode_document_controlled(&bytes,&spec,&verified,&mut control).unwrap();assert_eq!(ChunkFields::__dsl_from_record_controlled(&record,&mut control).unwrap(),expected);
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();let expected=ChunkFields{chunks:serde_json::from_value::<Vec<Vec<u8>>>(fixture["chunks"].clone()).unwrap().into_iter().map(|bytes|ChunkField{bytes}).collect()};let mut options=PackEncodeOptions::default();options.chunk_threshold=1;options.chunk_size=2;let spec=ChunkFields::__dsl_spec();let bytes=pack_rt::encode_document(&spec,&expected.__dsl_to_record(),&options).unwrap();let mut accepted=|_:NativeDecodeProgress|true;let mut control=NativeDecodeControl::new(1_000_000,&mut accepted);let mut verified=PackDecodeOptions::default();verified.verification=semio_framework_os_kernel::VerificationLevel::Full;let(record,_)=pack_rt::decode_document_controlled(&bytes,&spec,&verified,&mut control).unwrap();assert_eq!(ChunkFields::__dsl_from_record_controlled(&record,&mut control).unwrap(),expected);
     let repeated=expected.chunks[0].bytes.repeat(fixture["count"].as_u64().unwrap() as usize*64);let length=repeated.len();let large=ChunkFields{chunks:vec![ChunkField{bytes:repeated}]};let mut identity=options.clone();identity.codec=semio_framework_os_kernel::CodecId(0);identity.chunk_size=length as u64;let large_bytes=pack_rt::encode_document(&spec,&large.__dsl_to_record(),&identity).unwrap();
     for verification in [semio_framework_os_kernel::VerificationLevel::Trusted,semio_framework_os_kernel::VerificationLevel::Standard]{let mut interior=false;let mut canceled=|event:NativeDecodeProgress|{if event.total==length&&event.completed>=4096&&event.completed<event.total{interior=true;false}else{true}};let mut control=NativeDecodeControl::new(1_000_000,&mut canceled);let mut decode=PackDecodeOptions::default();decode.verification=verification;assert!(pack_rt::decode_document_controlled(&large_bytes,&spec,&decode,&mut control).is_err());assert!(interior);}
     let mut large_work=false;let mut observed=|event:NativeDecodeProgress|{large_work|=event.total==length;true};let mut control=NativeDecodeControl::new(64_000,&mut observed);assert!(pack_rt::decode_document_controlled(&large_bytes,&spec,&verified,&mut control).is_err());assert!(control.owned_bytes()<=64_000);drop(control);assert!(!large_work);

@@ -1,0 +1,55 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/framework-plugin:test",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_media_exporter_fault_keeps_typed_owner_and_backings_without_heap) | test(original_media_exporter_fault_receiving_cancellation_keeps_backings_until_funded_close) | test(original_media_fault_projection_refuses_before_birth_then_funds_exact_source_and_fault_close) | test(original_media_fault_projection_callback_cancellation_retains_exact_source_until_paid_close) | test(original_media_whole_operation_admits_before_export_and_retains_typed_refusal) | test(original_whole_media_exporter_cancellation_keeps_parent_output_until_original_funded_close) | test(original_media_whole_receiving_preserves_successful_artifact_and_paid_close) | test(checkpoint_restart_transient_close_retains_the_exact_store_until_granted)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "selection": [
+    "nx",
+    "run",
+    "@semio-tech/framework-plugin:test",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_media_exporter_fault_keeps_typed_owner_and_backings_without_heap) | test(original_media_exporter_fault_receiving_cancellation_keeps_backings_until_funded_close) | test(original_media_fault_projection_refuses_before_birth_then_funds_exact_source_and_fault_close) | test(original_media_fault_projection_callback_cancellation_retains_exact_source_until_paid_close) | test(original_media_whole_operation_admits_before_export_and_retains_typed_refusal) | test(original_whole_media_exporter_cancellation_keeps_parent_output_until_original_funded_close) | test(original_media_whole_receiving_preserves_successful_artifact_and_paid_close) | test(checkpoint_restart_transient_close_retains_the_exact_store_until_granted)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "buildMode": "prototype",
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
+    "transport": {
+      "maximumBytes": 268435456,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": false
+    }
+  }
+}

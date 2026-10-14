@@ -88,7 +88,7 @@ fn cancelled_clipboard_outcome_preserves_original_input_until_descriptor_ack_and
     use semio_framework_job::{StepContextOwner, StepBudget, OperationId, Generation, JobOutcomeKind, JobOutcomeView};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["clipboardOutcome"];
-    let original: serde_json::Value = serde_json::from_str(include_str!("../../../🧵️job/📬️outcome/🤝️loan/🧫️fixtures/🔣️.json")).unwrap();
+    let original: serde_json::Value = serde_json::from_str(include_str!("../../../🧵️job/📬️outcome/🤝️loan/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let policy = &original["policy"];
     let supplied = RetainedCloneGrant { maximum_items: policy["items"].as_u64().unwrap() as usize, maximum_copy_bytes: policy["copy"].as_u64().unwrap() as usize, maximum_capacity_bytes: policy["capacity"].as_u64().unwrap() as usize, maximum_release_bytes: policy["release"].as_u64().unwrap() as usize, maximum_depth: policy["depth"].as_u64().unwrap() as usize };
     let (mut owner, _) = StepContextOwner::new(OperationId(1), Generation(1), supplied).unwrap();
@@ -140,7 +140,7 @@ fn cancelled_clipboard_outcome_preserves_original_input_until_descriptor_ack_and
 fn cancelled_clipboard_driver_binds_the_original_producer_witness(){
     use semio_framework_job::{InteractiveJob,StepContextOwner,StepBudget,OperationId,Generation,JobOutcomeView,RetainedCloneGrant,RetainedCloneProgress};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
-    let original:serde_json::Value=serde_json::from_str(include_str!("../../../🧵️job/📬️outcome/🤝️loan/🧫️fixtures/🔣️.json")).unwrap();
+    let original:serde_json::Value=serde_json::from_str(include_str!("../../../🧵️job/📬️outcome/🤝️loan/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let policy=&original["policy"];
     let grant=RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:policy["release"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize};
     let(mut owner,_)=StepContextOwner::new(OperationId(1),Generation(1),grant).unwrap();
@@ -163,7 +163,7 @@ fn cancelled_clipboard_driver_binds_the_original_producer_witness(){
 fn original_clipboard_session_admission_is_paid_before_birth_and_preserves_denied_owners() {
     use semio_framework_job::{BatchDriveConfig,BatchJobParams,Generation,InteractiveJob,InteractiveStage,OperationId,RetainedCloneGrant,RetainedCloneProgress,StepBudget,StepContextOwner,WorkerJobSession};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
-    let original:serde_json::Value=serde_json::from_str(include_str!("../../../🧵️job/📬️outcome/🤝️loan/🧫️fixtures/🔣️.json")).unwrap();
+    let original:serde_json::Value=serde_json::from_str(include_str!("../../../🧵️job/📬️outcome/🤝️loan/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let policy=&original["policy"];
     let supplied=RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:policy["release"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize};
     let demand=WorkerJobSession::<ClipboardIoJob>::admission_demand();

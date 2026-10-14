@@ -91,7 +91,7 @@ fn from_value_agrees_with_serde_json_oracle_decode() {
 
 #[test]
 fn indexed_mesh_metadata_cursor_matches_serde_with_bounded_large_values() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎨️attributes/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎨️attributes/🔣️.json")).unwrap();
     let owned=serde_json::to_string(&fixture["indexedMesh"]).unwrap();
     let value=json::parse(&owned,json::JsonMemberPolicy::Reject).unwrap();
     let attributes=HistoryFoldIndex::from_value(json::to_dsl_value(&value["attributes"])).unwrap();
@@ -106,7 +106,7 @@ fn indexed_mesh_metadata_cursor_matches_serde_with_bounded_large_values() {
 
 #[test]
 fn polygon_source_parser_shares_indexed_fixture_and_refuses_invalid_owned_channels() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎨️attributes/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎨️attributes/🔣️.json")).unwrap();
     for name in ["mesh","indexedMesh"] {
         let source=parse_polygon_mesh_source(&fixture[name].to_string()).unwrap();
         let encoded=serde_json::from_str::<serde_json::Value>(&crate::io::text::encode_polygon_mesh_source(&source)).unwrap();for field in ["faces","attributes","materials","textures"] {assert_eq!(encoded[field],fixture[name][field]);}for (a,b) in encoded["vertices"].as_array().unwrap().iter().zip(fixture[name]["vertices"].as_array().unwrap()) {for (a,b) in a.as_array().unwrap().iter().zip(b.as_array().unwrap()) {assert_eq!(a.as_f64(),b.as_f64());}}

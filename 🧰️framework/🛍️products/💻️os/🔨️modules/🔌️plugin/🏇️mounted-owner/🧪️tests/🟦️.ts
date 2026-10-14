@@ -5,9 +5,9 @@ import { resolve } from "node:path";
 import { Database } from "bun:sqlite";
 import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import contextSchema from "../🧬️schema/🧾️context/🔣️.json";
-import contextFixture from "../🧫️fixtures/🧾️context/🔣️.json";
+import contextFixture from "./🧫️fixtures/🧾️context/🔣️.json";
 type Observation = typeof fixture.vectors[number]["observation"];
 interface MountedOwnerOracleV1 { valid(value:unknown):boolean; policy(value:unknown):boolean; verdict(value:Observation):string }
 type NestedObservation = typeof fixture.nestedJobs[number]["observation"];
@@ -31,7 +31,7 @@ function createMountedOwnerOracleV1():MountedOwnerOracleV1 {
  return {valid:value=>validate(value)===true,policy:value=>validatePolicy(value)===true,verdict:value=>{
   if(!validate(value))return "refused";
   if(!bounded(Object.fromEntries(Object.entries(value.expectedIdentity).map(([key,identity])=>[key,{const:identity}])),value.identity))return "refused";
-  if(value.schedule.cancelled)return "cancelled";
+  if(value.schedule.cancelled&&value.phase!=="close")return "cancelled";
   if(!bounded({clockAvailable:{const:true},fuel:{type:"integer",minimum:1}},value.schedule)||BigInt(value.schedule.nowUs)>=BigInt(value.schedule.deadlineUs))return "held";
   const grant=value.grant,demand=value.demand;
   if(!bounded({maximumItems:{type:"integer",minimum:1},maximumCopyBytes:{type:"integer",minimum:demand.copyBytes},maximumCapacityBytes:{type:"integer",minimum:demand.capacityBytes},maximumReleaseBytes:{type:"integer",minimum:demand.releaseBytes},maximumDepth:{type:"integer",minimum:demand.depth}},grant))return "held";
@@ -42,10 +42,10 @@ function createMountedOwnerOracleV1():MountedOwnerOracleV1 {
  }};
 }
 test("portable mounted ownership schema agrees with strict independent Ajv",()=>{
- const oracle=createMountedOwnerOracleV1();expect(fixture.vectors).toHaveLength(28);
+ const oracle=createMountedOwnerOracleV1();expect(fixture.vectors).toHaveLength(29);
  for(const vector of fixture.vectors){expect(validateJsonSchemaSubset(schema,vector.observation)).toEqual([]);expect(oracle.valid(vector.observation)).toBe(true);}
  for(const vector of fixture.invalid){expect(validateJsonSchemaSubset(schema,vector.observation).length).toBeGreaterThan(0);expect(oracle.valid(vector.observation)).toBe(false);}
- console.log("[DEBUG] Mounted turn schema: all27 original observations plus actual initial store generation0 and eight malformed grants/identities/clocks agreed with strict Ajv");
+ console.log("[DEBUG] Mounted turn schema: all29 observations including actual initial store generation0 and same canceled original close and eight malformed grants/identities/clocks agreed with strict Ajv");
 });
 test("all independent physical currencies and original scheduling ownership have portable oracle verdicts",()=>{
  const oracle=createMountedOwnerOracleV1();for(const vector of fixture.vectors)expect(oracle.verdict(vector.observation)).toBe(vector.expected);
@@ -82,7 +82,7 @@ test("actual native verdicts reproduce the complete strict independent mounted o
  const results:unknown=JSON.parse(readFileSync(path,"utf8"));
  const oracle=createMountedOwnerOracleV1(),expected=fixture.vectors.map(vector=>({id:vector.id,actual:oracle.verdict(vector.observation)}));
  expect(results).toEqual(expected);
- console.log("[DEBUG] All28 actual native mounted turn verdicts agreed with strict independent Ajv, including exact decimal-u64 identity and clocks");
+ console.log("[DEBUG] All29 actual native mounted turn verdicts agreed with strict independent Ajv, including exact decimal-u64 identity and clocks");
 });
 test("actual runtime mounted receivers require caller policy and typed scheduling turn",()=>{
  const root=resolve(import.meta.dir,"../../../../../../.."),source=readFileSync(resolve(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"),"utf8");
@@ -131,7 +131,7 @@ test("portable mounted ownership consumes the original context memory wallet onc
 });
 
 test("actual native verdicts preserve original mounted actor capture and full physical close",()=>{
- const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🎭️actor/🔣️.json",import.meta.url),"utf8"));
+ const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🎭️actor/🔣️.json",import.meta.url),"utf8"));
  const source=process.env.SEMIO_MOUNTED_OWNER_RESULTS;if(!source)throw Error("actual original mounted output authority is required");
  const rows=JSON.parse(readFileSync(resolve(source,"../actor.json"),"utf8"))as {id:string;textBytes:number;copyBytes:number;capacityBytes:number;releaseBytes:number;turns:number;births:number;releases:number;deniedHeapBytes:number;dropHeapBytes:number}[];
  const ajv=new Ajv({strict:true,allErrors:true});const valid=ajv.compile({type:"array",minItems:3,maxItems:3,items:{type:"object",required:["id","textBytes","copyBytes","capacityBytes","releaseBytes","turns","births","releases","deniedHeapBytes","dropHeapBytes"],additionalProperties:false,properties:{id:{type:"string"},textBytes:{type:"integer",minimum:1,maximum:256},copyBytes:{type:"integer",minimum:1,maximum:law.nativeGrant[1]},capacityBytes:{type:"integer",minimum:1,maximum:law.nativeGrant[2]},releaseBytes:{const:0},turns:{type:"integer",minimum:1,maximum:999},births:{type:"integer",minimum:1},releases:{type:"integer",minimum:1},deniedHeapBytes:{const:0},dropHeapBytes:{const:0}}}});
@@ -141,7 +141,7 @@ test("actual native verdicts preserve original mounted actor capture and full ph
 });
 
  test("runtime policy records the actual failed producer before refusing its mounted turn",()=>{
- const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/⚠️receipt/🔣️.json",import.meta.url),"utf8"));
+ const law=JSON.parse(readFileSync(new URL("🧫️fixtures/⚠️receipt/🔣️.json",import.meta.url),"utf8"));
  const schema=JSON.parse(readFileSync(new URL("../🧬️schema/⚠️receipt/🔣️.json",import.meta.url),"utf8"));
  expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
  const producer=Buffer.alloc(law.producerCapacity);const db=new Database(":memory:");
@@ -156,7 +156,7 @@ test("runtime policy receives the original child failure before propagation",()=
 });
 
 test("runtime policy retains actual nested error debit without consuming it twice",()=>{
- const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/⚠️receipt/🔣️.json",import.meta.url),"utf8"));
+ const law=JSON.parse(readFileSync(new URL("🧫️fixtures/⚠️receipt/🔣️.json",import.meta.url),"utf8"));
  const schema=JSON.parse(readFileSync(new URL("../🧬️schema/⚠️receipt/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
  const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");const method=source.slice(source.indexOf("pub fn advance_job("),source.indexOf("pub fn progress("));
  expect(method.includes("let result = job(self.context, grant);")).toBe(true);expect(method.includes("self.progress = self.progress.checked_add(actual)")).toBe(true);expect(method.includes("let receipt = result?")).toBe(true);expect(method.indexOf("self.progress = self.progress.checked_add(actual)")).toBeLessThan(method.indexOf("let receipt = result?"));expect(method.includes("consume_retained(")).toBe(false);
@@ -164,7 +164,7 @@ test("runtime policy retains actual nested error debit without consuming it twic
 });
 
 test("runtime policy alias custody keeps final Arc payload and shell distinct",()=>{
- const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔗️alias/🔣️.json",import.meta.url),"utf8"));const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🔗️alias/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);expect(validateJsonSchemaSubset(schema,law)).toEqual([]);
+ const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🔗️alias/🔣️.json",import.meta.url),"utf8"));const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🔗️alias/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);expect(validateJsonSchemaSubset(schema,law)).toEqual([]);
  const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");expect(source.includes("pub mod alias_retirement;")).toBe(true);const alias=readFileSync(new URL("../🔗️alias/🦀️.rs",import.meta.url),"utf8");expect(alias.includes("pub struct MountedOwnerCellV1")).toBe(true);expect(alias.includes("Mutex<Box<T>>")).toBe(false);
  const db=new Database(":memory:");try{db.run("CREATE TABLE phase(phase TEXT,release INTEGER)");for(const[phase,release]of [["arc-backing",32],["payload",64],["box-shell",24]])db.query("INSERT INTO phase VALUES(?,?)").run(phase,release);expect(db.query("SELECT sum(release) AS release,count(*) AS phases FROM phase").get()).toEqual({release:120,phases:3});expect(db.query("SELECT phase FROM phase ORDER BY rowid").all()).toEqual(law.finalPhases.map((phase:string)=>({phase})));}finally{db.close();}
 });

@@ -3,7 +3,7 @@ import artifactReferenceSchema from "../../../../../../../../../../../../../../�
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
-import fixture from"../../🧫️fixtures/🕸️mesh/🔣️.json";
+import fixture from"../🧫️fixtures/🕸️mesh/🔣️.json";
 
 import{parseLowpolyArtifact}from"../../../../../🧬️schema/🟦️.ts";
 import{lowpolySnapshotToSqliteDatabase,lowpolySnapshotFromSqliteDatabase}from"../../🟦️.ts";

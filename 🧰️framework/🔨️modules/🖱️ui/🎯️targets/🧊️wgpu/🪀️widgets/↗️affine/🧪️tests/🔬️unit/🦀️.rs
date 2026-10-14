@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn authored_glyph_family_selects_original_catalog_face() {
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../📝️text/🧫️fixtures/🎨️catalog/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/📝️text/🎨️catalog/🔣️.json")).unwrap();
     let mut atlas=FontAtlas::shaped_default();
     let size=law["size"].as_f64().unwrap()as f32;
     for row in law["families"].as_array().unwrap(){
@@ -20,7 +20,7 @@ fn authored_glyph_family_selects_original_catalog_face() {
 
 #[test]
 fn authored_glyph_runs_transform_the_actual_font_atlas_quads() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🖍️draw/🏷️types/↗️affine/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/↗️affine/🔣️.json")).unwrap();
     let mut atlas=FontAtlas::builtin();
     let mut plain=DrawList::default();
     draw_text_face_on(&mut plain,&mut atlas,TextFace::Sans,"AV Ä",2.0,24.0,18.0,Rgba::new(0.2,0.4,0.6,0.8));
@@ -100,7 +100,7 @@ fn authored_glyph_image_shader_paints_the_actual_affine_quad() {
         wgpu::VertexBufferLayout {array_stride:std::mem::size_of::<crate::wgpu::draw_types::UiInstance>() as u64,step_mode:wgpu::VertexStepMode::Instance,attributes:&wgpu::vertex_attr_array![1=>Float32x4,2=>Float32x4,3=>Float32x4,4=>Float32x4,5=>Float32x4]},
     ]},primitive:Default::default(),depth_stencil:None,multisample:Default::default(),fragment:Some(wgpu::FragmentState {module:&shader,entry_point:Some("fs_main"),compilation_options:Default::default(),targets:&[Some(wgpu::ColorTargetState {format:wgpu::TextureFormat::Rgba8Unorm,blend:None,write_mask:wgpu::ColorWrites::ALL})]}),multiview_mask:None,cache:None});
     let vertices=device.create_buffer_init(&wgpu::util::BufferInitDescriptor {label:Some("affine_vertices"),contents:bytemuck::cast_slice(&[[0.0_f32,0.0],[1.0,0.0],[0.0,1.0],[0.0,1.0],[1.0,0.0],[1.0,1.0]]),usage:wgpu::BufferUsages::VERTEX});
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🖍️draw/🏷️types/↗️affine/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/↗️affine/🔣️.json")).unwrap();
     for sample in fixture["cases"].as_array().unwrap() {
         let rect=std::array::from_fn(|index|sample["rect"][index].as_f64().unwrap() as f32);
         let mut matrix=std::array::from_fn(|index|sample["matrix"][index].as_f64().unwrap() as f32);

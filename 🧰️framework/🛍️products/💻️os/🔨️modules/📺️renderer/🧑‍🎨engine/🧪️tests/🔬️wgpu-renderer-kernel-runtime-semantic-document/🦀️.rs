@@ -936,7 +936,7 @@ mod semantic_document_tests {
     }
 
     fn turn_fairness() -> serde_json::Value {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️kernel-pool-future/🔣️.json")).expect("neutral kernel fairness contract");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️kernel-pool-future/🔣️.json")).expect("neutral kernel fairness contract");
         fixture["turnFairness"].clone()
     }
 
@@ -1104,7 +1104,7 @@ mod semantic_document_tests {
                 .collect()
         }
 
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️kernel-pool-future/🔣️.json")).expect("neutral kernel admission traces");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️kernel-pool-future/🔣️.json")).expect("neutral kernel admission traces");
         for case in fixture["admissions"].as_array().expect("admission cases") {
             let id = case["id"].as_str().unwrap();
             let producers = case["producers"].as_u64().unwrap() as u32;
@@ -1255,7 +1255,7 @@ mod semantic_document_tests {
 /// `RUST_MIN_STACK`, so the repo runner's 128 MiB floor cannot hide a re-inflated frame here.
 #[test]
 fn kernel_runtime_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
     let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
         .as_array()
         .expect("🧱️ the budget lists its tables")
@@ -1297,7 +1297,7 @@ fn kernel_pool_future_releases_its_owner_lock_before_polling_and_resumes_every_w
         })
     }
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️kernel-pool-future/🔣️.json")).expect("neutral kernel future trace");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️kernel-pool-future/🔣️.json")).expect("neutral kernel future trace");
     let runtime = tokio::runtime::Builder::new_current_thread().build().expect("third-party future oracle");
     for case in fixture["cases"].as_array().expect("trace cases") {
         let pending = case["pendingWakes"].as_u64().expect("pending wake count") as usize;
@@ -1377,7 +1377,7 @@ fn kernel_response_delivery_never_parks_without_a_wake() {
         (actual, state.wakes.load(Ordering::SeqCst))
     }
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️kernel-pool-future/🔣️.json")).expect("neutral kernel response traces");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️kernel-pool-future/🔣️.json")).expect("neutral kernel response traces");
     for case in fixture["responses"].as_array().expect("response cases") {
         let boundary = case["delivery"].as_str().unwrap();
         let expected = case["value"].as_u64().unwrap() as u32;

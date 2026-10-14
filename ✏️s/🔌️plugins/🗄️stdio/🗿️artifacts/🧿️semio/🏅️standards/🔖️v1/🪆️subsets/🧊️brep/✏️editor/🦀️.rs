@@ -164,7 +164,8 @@ impl ArtifactCommandWork<EditorApp<SemioBrepEditor>> for SemioBrepSetVertexWork 
         Ok(semio_framework_value::RetirementDemand { copy_bytes: args.vertex_id.len(), capacity_bytes: args.vertex_id.len().saturating_add(size_of::<SemioBrepMutation>()), release_bytes: 0, depth: 1 })
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<SemioBrepEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<SemioBrepEditor>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<SemioBrepEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<SemioBrepEditor>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.complete {
             return Err(Fault::from("stdio.semio.brep.set-vertex.work-closed"));
         }
@@ -187,6 +188,9 @@ impl ArtifactCommandWork<EditorApp<SemioBrepEditor>> for SemioBrepSetVertexWork 
             return Ok(ArtifactCommandWorkStep::Complete(Emit::default()));
         }
         Ok(ArtifactCommandWorkStep::Complete(Emit::mutations(vec![SemioBrepMutation::MoveVertex(MoveVertex { vertex_id: args.vertex_id.clone(), new_point: point })])))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) {

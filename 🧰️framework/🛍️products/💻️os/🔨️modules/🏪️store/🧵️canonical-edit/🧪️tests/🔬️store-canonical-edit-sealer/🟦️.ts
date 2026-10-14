@@ -14,7 +14,7 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; editHosti
   const base = join(WORKSPACE_ROOT, storePath, "🧵️canonical-edit");
   const contract = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(base, "🧪️testing/🧬️schema/🔣️.json"), "utf8"));
-  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔏️canonical-edit-sealer.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🔏️canonical-edit-sealer.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).addSchema(contract).compile({ ...schema, $ref: "#/$defs/CanonicalEditSealerEdit" });
   if (!validate(fixture.edit)) throw new Error(`canonical edit payload schema: ${JSON.stringify(validate.errors)}`);
@@ -102,7 +102,7 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; editHosti
     [store, source.replace("self.encoder.encode_chunk(edit.as_ref(), &mut self.last_chunk[..maximum])", "serde_json::to_vec(edit.as_ref())")],
   ];
   for (const [candidateStore, candidateSealer] of sourceHostiles) if (exact(candidateStore, candidateSealer)) throw new Error("canonical Store sealer accepted hostile authority/serialization source");
-  const mapDescriptor = JSON.parse(readFileSync(join(base, "🧫️fixtures/🗺️canonical-borrowed-map.json"), "utf8"));
+  const mapDescriptor = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🗺️canonical-borrowed-map.json"), "utf8"));
   const validateMap = new Ajv({ strict: true, allErrors: true }).addSchema(contract).compile({ ...schema, $ref: "#/$defs/CanonicalBorrowedMapEdit" });
   if (!validateMap(mapDescriptor.edit)) throw new Error(`borrowed map edit schema: ${JSON.stringify(validateMap.errors)}`);
   const mapEditHostiles = [{ ...mapDescriptor.edit, extra: true }, { ...mapDescriptor.edit, forwards: [{ Replace: {} }] }];
@@ -150,7 +150,7 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; editHosti
     [source, borrowed.replace("maximum_depth: ARTIFACT_CANONICAL_JSON_DEPTH - top", "maximum_depth: ARTIFACT_CANONICAL_JSON_DEPTH")],
   ];
   for (const [parent, child] of mapSourceHostiles) if (borrowedExact(parent, child)) throw new Error("borrowed map accepted hostile lifetime/source substitution");
-  const readerFixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/📖️canonical-reader.json"), "utf8"));
+  const readerFixture = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/📖️canonical-reader.json"), "utf8"));
   if (readerFixture.expectedByteLength !== mapExpected.length || createHash("sha256").update(mapExpected).digest("hex") !== readerFixture.expectedJsonSha256) throw new Error("typed canonical reader Node byte oracle mismatch");
   for (const maximum of readerFixture.grants.filter((grant: number) => grant > 0)) {
     const iterator = canonicalBytes(revisionValue(mapDescriptor.edit));

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "swap-success",
+    "restore": false,
+    "refuse": true,
+    "primary": null,
+    "receiptRefusal": null,
+    "movedOriginalRemainsNarrowed": true,
+    "replacementRemainsOriginal": true
+  },
+  {
+    "id": "swap-existing-pair",
+    "restore": false,
+    "refuse": true,
+    "primary": "Original semantic source 源🌊",
+    "receiptRefusal": "Original receipt source 源🌊",
+    "movedOriginalRemainsNarrowed": true,
+    "replacementRemainsOriginal": true
+  },
+  {
+    "id": "swap-unwind",
+    "restore": false,
+    "refuse": false,
+    "primary": null,
+    "receiptRefusal": null,
+    "movedOriginalRemainsNarrowed": true,
+    "replacementRemainsOriginal": true
+  },
+  {
+    "id": "replace-success",
+    "restore": false,
+    "refuse": true,
+    "primary": null,
+    "receiptRefusal": null,
+    "movedOriginalRemainsNarrowed": true,
+    "replacementRemainsOriginal": true
+  }
+]

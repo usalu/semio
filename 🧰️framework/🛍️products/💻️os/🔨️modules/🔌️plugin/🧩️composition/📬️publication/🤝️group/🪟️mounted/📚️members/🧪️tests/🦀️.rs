@@ -3,8 +3,8 @@ fn receipt_set_observe(operation:impl FnOnce()->RetainedCloneStep,grant:Retained
 fn receipt_set_close(owner:&mut MountedGroupMemberReceipts){for _ in 0..100000{if owner.terminal_is_empty(){break;}let demand=owner.next_close_byte_demand().unwrap();let grant=receipt_set_grant(0,demand);receipt_set_observe(||owner.close_step(RetainedCloneGrant{maximum_items:0,..grant}).unwrap(),receipt_set_grant(0,0));if demand>0{receipt_set_observe(||owner.close_step(receipt_set_grant(0,demand-1)).unwrap(),receipt_set_grant(0,0));}receipt_set_observe(||owner.close_step(grant).unwrap(),grant);}assert!(owner.terminal_is_empty());}
 #[test]
 fn mounted_group_member_receipts_preserve_noncontiguous_rows_and_exact_all_physical_frames(){
-    let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
-    let original:serde_json::Value=serde_json::from_str(include_str!("../../🧾️receipt/📦️group/👤️member/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let original:serde_json::Value=serde_json::from_str(include_str!("../../🧾️receipt/📦️group/👤️member/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in corpus["cases"].as_array().unwrap(){for stop in [None,Some(0),Some(1),Some(7),Some(31),Some(127),Some(257)]{
         let group=case["groupId"].as_str().unwrap();let actor=case["actor"].as_str().unwrap();let parent=case["parent"].as_bool().unwrap();let children=case["children"].as_u64().unwrap()as usize;
         let mut owner=Box::new(MountedGroupMemberReceipts::from_original(group,actor,ArtifactHandle(41),parent,children).unwrap());let mut fixture=original.clone();fixture["groupId"]=case["groupId"].clone();let mut turns=0;let mut operations=0;

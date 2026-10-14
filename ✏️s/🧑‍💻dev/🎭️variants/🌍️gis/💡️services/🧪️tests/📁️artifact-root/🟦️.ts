@@ -1,5 +1,5 @@
 import { mkdirSync } from "node:fs";
-import { findWorkspaceRoot } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 
 /** 📁️ Places every service composition temporary input beneath its inherited test-output owner. */

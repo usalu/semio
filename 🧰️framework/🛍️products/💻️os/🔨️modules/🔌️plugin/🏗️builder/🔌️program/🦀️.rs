@@ -148,8 +148,8 @@ impl<PA: PluginApp> Plugin<PA> {
         wire_list_artifact_inference_services_with_routes(self.runtime.inference_services(), self.runtime.routed_inferences())
     }
 
-    pub(crate) fn wire_artifact_infer_cold(&self, request: &[u8],operation:u64,generation:u64) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
-        wire_artifact_infer_from_cold(self.runtime.inference_services(), request,operation,generation)
+    pub(crate) fn wire_artifact_infer_cold(&self, request: &[u8],operation:u64,generation:u64,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
+        wire_artifact_infer_from_cold(self.runtime.inference_services(), request,operation,generation,cx)
     }
 
     pub(crate) fn wire_list_artifact_mutations(&self) -> Vec<u8> {

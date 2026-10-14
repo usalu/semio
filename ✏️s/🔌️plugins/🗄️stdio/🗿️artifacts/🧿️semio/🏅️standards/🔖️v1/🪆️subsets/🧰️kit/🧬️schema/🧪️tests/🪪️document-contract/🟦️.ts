@@ -62,7 +62,7 @@ export function testSemioKitDocumentContract(): void {
     "../../../../✉️base/🧬️schema/🪆️child/🔣️.json",
     "../../../../✉️base/🧬️schema/🧮️geometry/🔣️.json",
   ]) ajv.addSchema(read(path));
-  const fixtures = read("../../🧫️fixtures/🪪️document-contract/🔣️.json");
+  const fixtures = read("../../../🧪️tests/🧫️fixtures/🪪️document-contract/🔣️.json");
   const snapshotSchema = ajv.compile(read("../../📸️snapshot/🔣️.json"));
   const artifactSchema = ajv.compile(read("../../🔣️.json"));
   const diffSchema = ajv.compile(read("../../🔺️diff/🔣️.json"));
@@ -96,7 +96,7 @@ export function testSemioKitDocumentContract(): void {
   const parseMutation = mutationContract.parseSemioKitMutation;
   let snapshots = 0, diffs = 0, mutations = 0;
   const mutationVariants = new Set<string>();
-  const corpusRoot = fileURLToPath(new URL("../../../🧫️fixtures/🧬️mutations", import.meta.url));
+  const corpusRoot = fileURLToPath(new URL("../../../🧪️tests/🧫️fixtures/🧬️mutations", import.meta.url));
   for (const file of fg.sync("**/🔣️.json", { cwd: corpusRoot, absolute: true })) {
     const value = JSON.parse(readFileSync(file, "utf8"));
     if (file.includes("/📸️snapshot/")) {

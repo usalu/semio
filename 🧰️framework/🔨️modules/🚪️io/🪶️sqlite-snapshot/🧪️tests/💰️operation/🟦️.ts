@@ -2,7 +2,7 @@
 import {expect,test} from "bun:test";
 
 import {Database} from "bun:sqlite";
-import fixture from "../../🧫️fixtures/💰️operation/🔣️.json";
+import fixture from "../🧫️fixtures/💰️operation/🔣️.json";
 
 import { exportSqliteDatabase, importSqliteDatabase, SqliteAllocationControl, type SqliteDatabase, type SqliteDatabaseOptions } from "../../🟦️.ts";
 import {ArtifactSqliteProjection} from "../../🧩️artifact/🟦️.ts";

@@ -1,0 +1,24 @@
+{
+  "rows": {
+    "modified": [
+      {
+        "index": 1,
+        "diff": {
+          "cells": {
+            "modified": [
+              {
+                "index": 1,
+                "diff": {
+                  "value": {
+                    "kind": "int",
+                    "lexeme": "3755251"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

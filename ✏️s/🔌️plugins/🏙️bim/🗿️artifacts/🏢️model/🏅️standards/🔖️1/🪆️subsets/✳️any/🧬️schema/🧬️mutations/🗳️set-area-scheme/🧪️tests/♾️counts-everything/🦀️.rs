@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🗳️set-area-scheme/♾️counts-everything",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗳️set-area-scheme/♾️counts-everything/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗳️set-area-scheme/♾️counts-everything/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗳️set-area-scheme/♾️counts-everything/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗳️set-area-scheme/♾️counts-everything/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗳️set-area-scheme/♾️counts-everything/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗳️set-area-scheme/♾️counts-everything/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗳️set-area-scheme/♾️counts-everything/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗳️set-area-scheme/♾️counts-everything/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗳️set-area-scheme/♾️counts-everything/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗳️set-area-scheme/♾️counts-everything/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

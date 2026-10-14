@@ -1,0 +1,18 @@
+{
+  "solids": {
+    "added": [
+      {
+        "index": 1,
+        "item": {
+          "id": "so2",
+          "shells": [
+            {
+              "shell": "s1",
+              "isVoid": true
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

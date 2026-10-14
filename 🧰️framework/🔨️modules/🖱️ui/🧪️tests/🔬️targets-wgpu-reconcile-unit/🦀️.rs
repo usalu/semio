@@ -475,7 +475,7 @@ fn changing_only_a_field_error_dirties_layout_for_the_new_error_band() {
 #[test]
 fn node_graph_surface_reconciles_paged_records_and_host_snapshot() {
     use ui_scene::SceneDoc;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎬️scene/🧫️fixtures/🚚️node-graph-scene-lanes/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎬️scene/🧪️tests/🧫️fixtures/🚚️node-graph-scene-lanes/🔣️.json")).unwrap();
     let node: ui_scene::NodeGraphNodeRecord = serde_json::from_value(fixture["node"].clone()).unwrap();
     let count = fixture["nodeCount"].as_u64().unwrap() as usize;
     let nodes = (0..count).map(|index| ui_scene::NodeGraphNodeRecord { id: index.to_string(), ..node.clone() }).collect();

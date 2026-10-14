@@ -1,4 +1,4 @@
-import type { BuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import type { BuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { COMPONENT_MODULE_DIRECTORIES } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { join, relative } from "node:path";
 import { playRuntimeComponentIds } from "../🟦️.ts";

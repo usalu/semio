@@ -11,7 +11,8 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@semio-tech/framework": "workspace:*"
   },
   "author": {
     "name": "Ueli Saluz",

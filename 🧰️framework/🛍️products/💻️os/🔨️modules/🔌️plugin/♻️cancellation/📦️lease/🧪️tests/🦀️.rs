@@ -14,7 +14,7 @@ fn close_original(cursor:&mut ToolCancellationLeaseRetirement,canonical:&ToolCan
 }
 #[test]
 fn original_cancellation_lease_detaches_scopes_and_returns_each_actual_child(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let canonical=ManuallyDrop::new(ToolCancellationHandle::default());let keyed=row["keyed"].as_bool().unwrap();let original=if keyed{canonical.begin_keyed(original_key(1)).unwrap()}else{canonical.begin(original_key(1)).unwrap()};let sibling=if row["operations"]==2{Some(canonical.begin_keyed(original_key(2)).unwrap())}else{None};
   if row["permit"].as_bool().unwrap(){let(permit,heap)=observe(||original.try_claim_publication().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(_,heap)=observe(||drop(permit));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}

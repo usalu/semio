@@ -1611,14 +1611,14 @@
       "files": [
         {
           "role": "input-svg",
-          "path": "../🧫️fixtures/🖌️change-stroke-color/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🖌️change-stroke-color/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:3e8de7fa0ef36d0aefcf37aaf2caeac477d275e1d0ffb45de01474332fc1db34",
           "bytes": 440
         },
         {
           "role": "expected-svg",
-          "path": "../🧫️fixtures/🖌️change-stroke-color/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🖌️change-stroke-color/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:a7a0f32ddaf424f2caedd1a8ef4c36d945931d68027bbb1c1a895ca91f0ac07b",
           "bytes": 440
@@ -1664,14 +1664,14 @@
       "files": [
         {
           "role": "input-svg",
-          "path": "../🧫️fixtures/📐️change-stroke-width/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/📐️change-stroke-width/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:3e8de7fa0ef36d0aefcf37aaf2caeac477d275e1d0ffb45de01474332fc1db34",
           "bytes": 440
         },
         {
           "role": "expected-svg",
-          "path": "../🧫️fixtures/📐️change-stroke-width/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/📐️change-stroke-width/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:bc07397ea1cbf06b53eac5582dd68b08864f21599c420eaed331fbdbe7fcc8d5",
           "bytes": 440
@@ -1717,14 +1717,14 @@
       "files": [
         {
           "role": "input-svg",
-          "path": "../🧫️fixtures/🌱️create-layer/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🌱️create-layer/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:3e8de7fa0ef36d0aefcf37aaf2caeac477d275e1d0ffb45de01474332fc1db34",
           "bytes": 440
         },
         {
           "role": "expected-svg",
-          "path": "../🧫️fixtures/🌱️create-layer/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🌱️create-layer/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:303be3d7eff3f52f54f9278e39268e38164a45ba8803810ccec200f8374f5ef7",
           "bytes": 486
@@ -1770,14 +1770,14 @@
       "files": [
         {
           "role": "input-svg",
-          "path": "../🧫️fixtures/➕️create-node/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/➕️create-node/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:3e8de7fa0ef36d0aefcf37aaf2caeac477d275e1d0ffb45de01474332fc1db34",
           "bytes": 440
         },
         {
           "role": "expected-svg",
-          "path": "../🧫️fixtures/➕️create-node/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/➕️create-node/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:63bd0821d216e6dc9772d3907124ec29732dca20aed9eaa4a7eab78d0bd98e46",
           "bytes": 543
@@ -1823,14 +1823,14 @@
       "files": [
         {
           "role": "input-svg",
-          "path": "../🧫️fixtures/🗑️delete-layer/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🗑️delete-layer/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:303be3d7eff3f52f54f9278e39268e38164a45ba8803810ccec200f8374f5ef7",
           "bytes": 486
         },
         {
           "role": "expected-svg",
-          "path": "../🧫️fixtures/🗑️delete-layer/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🗑️delete-layer/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:3e8de7fa0ef36d0aefcf37aaf2caeac477d275e1d0ffb45de01474332fc1db34",
           "bytes": 440
@@ -1876,14 +1876,14 @@
       "files": [
         {
           "role": "input-svg",
-          "path": "../🧫️fixtures/➖️delete-node/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/➖️delete-node/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:63bd0821d216e6dc9772d3907124ec29732dca20aed9eaa4a7eab78d0bd98e46",
           "bytes": 543
         },
         {
           "role": "expected-svg",
-          "path": "../🧫️fixtures/➖️delete-node/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/➖️delete-node/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:3e8de7fa0ef36d0aefcf37aaf2caeac477d275e1d0ffb45de01474332fc1db34",
           "bytes": 440
@@ -1929,14 +1929,14 @@
       "files": [
         {
           "role": "input-svg",
-          "path": "../🧫️fixtures/🖐️drag-nodes/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🖐️drag-nodes/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:3e8de7fa0ef36d0aefcf37aaf2caeac477d275e1d0ffb45de01474332fc1db34",
           "bytes": 440
         },
         {
           "role": "expected-svg",
-          "path": "../🧫️fixtures/🖐️drag-nodes/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🖐️drag-nodes/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:bd0d8d920150c31040af904728ec593b02882c6120fc8a0e194e9990454e4924",
           "bytes": 494
@@ -1982,14 +1982,14 @@
       "files": [
         {
           "role": "input-svg",
-          "path": "../🧫️fixtures/🫓️flatten-node/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🫓️flatten-node/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:f8111670a9dc3ee074e526dba1aeca8f74f6ec7802ea2e0b1c18d4d5b42cf725",
           "bytes": 505
         },
         {
           "role": "expected-svg",
-          "path": "../🧫️fixtures/🫓️flatten-node/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🫓️flatten-node/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:89b73c1c73d6d751ca1f365b0abcee28309dc7d8682bf0080f529c0c86c2b4a8",
           "bytes": 494
@@ -2035,14 +2035,14 @@
       "files": [
         {
           "role": "input-svg",
-          "path": "../🧫️fixtures/🧷️group-nodes/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🧷️group-nodes/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:3e8de7fa0ef36d0aefcf37aaf2caeac477d275e1d0ffb45de01474332fc1db34",
           "bytes": 440
         },
         {
           "role": "expected-svg",
-          "path": "../🧫️fixtures/🧷️group-nodes/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🧷️group-nodes/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:a4ca4abb1bbb6744be434376a9b6806b67dca9ed69d6801f04c69d067c84b9f7",
           "bytes": 505
@@ -2088,14 +2088,14 @@
       "files": [
         {
           "role": "input-svg",
-          "path": "../🧫️fixtures/📍️move-node/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/📍️move-node/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:3e8de7fa0ef36d0aefcf37aaf2caeac477d275e1d0ffb45de01474332fc1db34",
           "bytes": 440
         },
         {
           "role": "expected-svg",
-          "path": "../🧫️fixtures/📍️move-node/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/📍️move-node/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:9436db1c198d10a89304e52cbbd74312bb36daf786f3030db47403bc4dd23924",
           "bytes": 467
@@ -2141,14 +2141,14 @@
       "files": [
         {
           "role": "input-svg",
-          "path": "../🧫️fixtures/🔀️reorder-nodes/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🔀️reorder-nodes/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:3e8de7fa0ef36d0aefcf37aaf2caeac477d275e1d0ffb45de01474332fc1db34",
           "bytes": 440
         },
         {
           "role": "expected-svg",
-          "path": "../🧫️fixtures/🔀️reorder-nodes/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🔀️reorder-nodes/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:edab26aa8be3bed6c9e20d35effdd26ff49ab8410eeb055f14ce364e4800981b",
           "bytes": 440
@@ -2194,14 +2194,14 @@
       "files": [
         {
           "role": "input-svg",
-          "path": "../🧫️fixtures/🪣️replace-fill/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🪣️replace-fill/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:3e8de7fa0ef36d0aefcf37aaf2caeac477d275e1d0ffb45de01474332fc1db34",
           "bytes": 440
         },
         {
           "role": "expected-svg",
-          "path": "../🧫️fixtures/🪣️replace-fill/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🪣️replace-fill/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:4425064e87eb8f32de3ed382dbd31c0eca255af96ad5fdcc76a9f972cd6334ae",
           "bytes": 440
@@ -2247,14 +2247,14 @@
       "files": [
         {
           "role": "input-svg",
-          "path": "../🧫️fixtures/🛤️replace-path/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🛤️replace-path/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:3e8de7fa0ef36d0aefcf37aaf2caeac477d275e1d0ffb45de01474332fc1db34",
           "bytes": 440
         },
         {
           "role": "expected-svg",
-          "path": "../🧫️fixtures/🛤️replace-path/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🛤️replace-path/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:8ad96205c0983bd4a8665e4980626ce63374bd6852671d0288b639d02a4a4cd5",
           "bytes": 440
@@ -2300,14 +2300,14 @@
       "files": [
         {
           "role": "input-svg",
-          "path": "../🧫️fixtures/🔄️rotate-node/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🔄️rotate-node/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:3e8de7fa0ef36d0aefcf37aaf2caeac477d275e1d0ffb45de01474332fc1db34",
           "bytes": 440
         },
         {
           "role": "expected-svg",
-          "path": "../🧫️fixtures/🔄️rotate-node/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🔄️rotate-node/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:f59ba9eb440e5e1252c979592aa829cf8b5de2a2c0f6afd215c8a6554d7c1869",
           "bytes": 436
@@ -2353,14 +2353,14 @@
       "files": [
         {
           "role": "input-svg",
-          "path": "../🧫️fixtures/📏️scale-node/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/📏️scale-node/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:3e8de7fa0ef36d0aefcf37aaf2caeac477d275e1d0ffb45de01474332fc1db34",
           "bytes": 440
         },
         {
           "role": "expected-svg",
-          "path": "../🧫️fixtures/📏️scale-node/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/📏️scale-node/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:fd4df87cd6a35746c0ed91ad82874a271a7ffe716a9075817c2e407f12932f89",
           "bytes": 436
@@ -2406,14 +2406,14 @@
       "files": [
         {
           "role": "input-svg",
-          "path": "../🧫️fixtures/🎈️unflatten-node/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🎈️unflatten-node/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:89b73c1c73d6d751ca1f365b0abcee28309dc7d8682bf0080f529c0c86c2b4a8",
           "bytes": 494
         },
         {
           "role": "expected-svg",
-          "path": "../🧫️fixtures/🎈️unflatten-node/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🎈️unflatten-node/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:f8111670a9dc3ee074e526dba1aeca8f74f6ec7802ea2e0b1c18d4d5b42cf725",
           "bytes": 505
@@ -2459,14 +2459,14 @@
       "files": [
         {
           "role": "input-svg",
-          "path": "../🧫️fixtures/💫️ungroup-node/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/💫️ungroup-node/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:a4ca4abb1bbb6744be434376a9b6806b67dca9ed69d6801f04c69d067c84b9f7",
           "bytes": 505
         },
         {
           "role": "expected-svg",
-          "path": "../🧫️fixtures/💫️ungroup-node/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/💫️ungroup-node/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:3e8de7fa0ef36d0aefcf37aaf2caeac477d275e1d0ffb45de01474332fc1db34",
           "bytes": 440

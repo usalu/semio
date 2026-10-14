@@ -3,7 +3,7 @@ use super::{SourceChange, SourceProjection, SourceProjectionError};
 
 #[test]
 fn source_projection_preserves_explicit_deletion_and_exact_predecessors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("projection corpus");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("projection corpus");
     for row in fixture["cases"].as_array().expect("cases") {
         let files = &row["files"];
         let read = |path: &str| files[path].as_str();

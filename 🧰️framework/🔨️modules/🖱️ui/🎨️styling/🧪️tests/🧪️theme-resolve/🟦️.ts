@@ -1,9 +1,9 @@
-import geometryFixture from "../../🧫️fixtures/📐️theme-geometry/🔣️.json";
+import geometryFixture from "../🧫️fixtures/📐️theme-geometry/🔣️.json";
 import geometryBindings from "../../🌓️theme/📐️geometry/🔣️.json";
 type TestSource = { readonly directory: string; readonly url: string };
 type ColorStringOracle = { readonly get: { rgb(value: string): readonly [number, number, number, number] | null } };
 
-import canonicalThemeDocument from "../../🧫️fixtures/🎨️canonical-theme-document/🔣️.json" with { type: "json" };
+import canonicalThemeDocument from "../🧫️fixtures/🎨️canonical-theme-document/🔣️.json" with { type: "json" };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🌓️theme/🟦️.ts"), "parseUiTheme" | "resolveThemeAppearancePalettes" | "resolveThemeMetrics" | "resolveThemePaint" | "serializeUiTheme">, source: TestSource): Promise<void> {
   const { parseUiTheme, resolveThemeAppearancePalettes, resolveThemeMetrics, resolveThemePaint, serializeUiTheme } = dependencies;
@@ -64,7 +64,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { createRequire } = await import("node:module");
       const colorString = createRequire(source.url)("color-string") as ColorStringOracle;
       const directory = dirname(fileURLToPath(source.url));
-      const fixture = resolve(directory, "../🧫️fixtures/🎨️canonical-theme-document/🔣️.json");
+      const fixture = resolve(directory, "🧫️fixtures/🎨️canonical-theme-document/🔣️.json");
       const products = resolve(directory, "../../../../🛍️products").replaceAll("\\", "/") + "/";
       const program = `import { parseUiTheme, serializeUiTheme, resolveThemePaint } from ${JSON.stringify(resolve(directory, "🏛️model/🟦️.ts"))}; import fixture from ${JSON.stringify(fixture)} with { type: "json" }; const theme=parseUiTheme(fixture); console.log(JSON.stringify({id:theme.id,label:theme.label,paint:resolveThemePaint(theme.colors,theme.appearances.light.chrome.accent),roundTrip:JSON.stringify(parseUiTheme(JSON.parse(serializeUiTheme(theme))))===JSON.stringify(theme)}));`;
       const standalone = String.raw`import { build } from "esbuild"; const bundle=await build({stdin:{contents:${JSON.stringify(program)},resolveDir:${JSON.stringify(directory)}},bundle:true,platform:"node",format:"esm",write:false,plugins:[{name:"neutral-theme-document",setup(builder){builder.onLoad({filter:/.*/},input=>input.path.replaceAll("\\","/").startsWith(${JSON.stringify(products)})?{errors:[{text:"General theme loads a concrete product: "+input.path}]}:undefined)}}]});await import("data:text/javascript;base64,"+Buffer.from(bundle.outputFiles[0].text).toString("base64"));`;

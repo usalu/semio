@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn neutral_affine_matrices_roundtrip_without_losing_shear_or_collapsed_axes() {
-    let cases: serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let cases: serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧮️geometry/↗️affine/🔣️.json")).unwrap();
     for sample in cases.as_array().unwrap() {
         let matrix: [f64;6]=serde_json::from_value(sample["matrix"].clone()).unwrap();
         let actual=drawing_transform_to_matrix(&drawing_matrix_to_transform(matrix));

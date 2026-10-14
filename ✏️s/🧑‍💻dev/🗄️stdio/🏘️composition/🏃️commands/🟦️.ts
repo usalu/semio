@@ -1,26 +1,26 @@
-import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { buildStdioComposition, checkStdioComposition } from "../🏗️build/🟦️.ts";
-import { testStdioComposition } from "../../🧪️tests/🧩️composition-consumption/🟦️.ts";
-import { testStdioOfficeSchemaContracts } from "../../🧪️tests/📚️office-schema-contract/🟦️.ts";
 
 /** 📦️ Builds the Stdio composition package. */
 export class StdioCompositionBuildScript extends BundleScript {
   async run(): Promise<void> {
-    await buildStdioComposition(this.root);
+    await buildStdioComposition(this.root, undefined, this.invocation);
   }
 }
 
 /** 🔎️ Checks the Stdio composition package. */
 export class StdioCompositionCheckScript extends BundleScript {
   async run(): Promise<void> {
-    await checkStdioComposition(this.root);
+    await checkStdioComposition(this.root, this.invocation);
   }
 }
 
 /** 🧪️ Builds and consumes the Stdio composition package. */
 export class StdioCompositionTestScript extends BundleScript {
   async run(): Promise<void> {
-    await testStdioComposition(this.root);
-    testStdioOfficeSchemaContracts();
+    const { testStdioComposition } = await import("../../🧪️tests/🧩️composition-consumption/🟦️.ts");
+    const { testStdioOfficeSchemaContracts } = await import("../../🧪️tests/📚️office-schema-contract/🟦️.ts");
+    await testStdioComposition(this.root, this.invocation);
+    await testStdioOfficeSchemaContracts(this.invocation);
   }
 }

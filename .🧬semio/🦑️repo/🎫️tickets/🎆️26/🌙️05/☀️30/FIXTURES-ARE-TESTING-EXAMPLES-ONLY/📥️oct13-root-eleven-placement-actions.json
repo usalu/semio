@@ -1,0 +1,380 @@
+{
+  "exclusive": false,
+  "actions": [
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🧪️fixtures/👥️graph-timeline-authors/🔣️.json",
+      "target": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/👥️graph-timeline-authors/🔣️.json",
+      "sha256": "f946d569946b7d3ca2a6deeebdd37b940366684e5383d08bba1e3da67c28f531",
+      "sourceExists": true,
+      "sourceSha256": "f946d569946b7d3ca2a6deeebdd37b940366684e5383d08bba1e3da67c28f531",
+      "targetExists": true,
+      "targetSha256": "f946d569946b7d3ca2a6deeebdd37b940366684e5383d08bba1e3da67c28f531",
+      "action": "remove-obsolete-copy",
+      "reason": "exact duplicate canonical test example already exists"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🧪️test/🧫️fixtures/🔌️adapter-ownership/🔣️.json",
+      "target": "🧰️framework/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🔌️adapter-ownership/🔣️.json",
+      "sha256": "d511845e563ac648965584eb8943a70571717f380799b88a06ab89adb53d5a8d",
+      "sourceExists": true,
+      "sourceSha256": "d511845e563ac648965584eb8943a70571717f380799b88a06ab89adb53d5a8d",
+      "targetExists": false,
+      "targetSha256": null,
+      "action": "move",
+      "reason": "testing example under actual Tests collection"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🧫️fixtures/🔣️.json",
+      "target": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "c088c90f065e41c21203e983466fcc9f83cefdd4e8304a8ecd89460a738e791f",
+      "sourceExists": true,
+      "sourceSha256": "c088c90f065e41c21203e983466fcc9f83cefdd4e8304a8ecd89460a738e791f",
+      "targetExists": false,
+      "targetSha256": null,
+      "action": "move",
+      "reason": "testing example under actual Tests collection"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🧫️fixtures/🔣️.json",
+      "target": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "13f7cee5e2c17357dc8b14a03b5a46b9ed130d602fb52fa31efcf60a7eaf7fa4",
+      "sourceExists": true,
+      "sourceSha256": "13f7cee5e2c17357dc8b14a03b5a46b9ed130d602fb52fa31efcf60a7eaf7fa4",
+      "targetExists": false,
+      "targetSha256": null,
+      "action": "move",
+      "reason": "testing example under actual Tests collection"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🚪️command/🧫️fixtures/🔣️.json",
+      "target": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🚪️command/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "ff0cc2765e4272f0a7a34c4a94618a2ca1757f9b420ece3239a64fae6bc21cf9",
+      "sourceExists": true,
+      "sourceSha256": "ff0cc2765e4272f0a7a34c4a94618a2ca1757f9b420ece3239a64fae6bc21cf9",
+      "targetExists": false,
+      "targetSha256": null,
+      "action": "move",
+      "reason": "testing example under actual Tests collection"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/📖️source/🧫️fixtures/🔣️.json",
+      "target": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/📖️source/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "b6cab79e3d5368b2f9909f60ca564f765ba69f2fe0b9b3a8df062fb396f16218",
+      "sourceExists": true,
+      "sourceSha256": "b6cab79e3d5368b2f9909f60ca564f765ba69f2fe0b9b3a8df062fb396f16218",
+      "targetExists": false,
+      "targetSha256": null,
+      "action": "move",
+      "reason": "testing example under actual Tests collection"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️fixtures/⏰️chrome-deadline/🔣️.json",
+      "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/⏰️chrome-deadline/🔣️.json",
+      "sha256": "d54df3ccdf20492e958def5876a54a489a8420e388b99bfb94af10bb66deeb22",
+      "sourceExists": true,
+      "sourceSha256": "d54df3ccdf20492e958def5876a54a489a8420e388b99bfb94af10bb66deeb22",
+      "targetExists": false,
+      "targetSha256": null,
+      "action": "move",
+      "reason": "testing example under actual Tests collection"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json",
+      "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️tests/🧫️fixtures/📦️lifecycle/🔣️.json",
+      "sha256": "a2bd05c817cc25ca8fbb2c5bc3271c1fcc4e222c43b7ab43d1fafff8910e786b",
+      "sourceExists": true,
+      "sourceSha256": "a2bd05c817cc25ca8fbb2c5bc3271c1fcc4e222c43b7ab43d1fafff8910e786b",
+      "targetExists": false,
+      "targetSha256": null,
+      "action": "move",
+      "reason": "testing example under actual Tests collection"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️fixtures/🧬️canonical-xml-authority/🔣️.json",
+      "target": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🧬️canonical-xml-authority/🔣️.json",
+      "sha256": "7a03cea4d4394bab70b325e83a31bf186f79a2e4d51782a7c2b71919f04ac4d1",
+      "sourceExists": true,
+      "sourceSha256": "7a03cea4d4394bab70b325e83a31bf186f79a2e4d51782a7c2b71919f04ac4d1",
+      "targetExists": true,
+      "targetSha256": "74c229d03b7ecdd45918d4b988a4ca9ee31e08517db3972f344d4b7fc84d0c10",
+      "action": "remove-obsolete-copy",
+      "reason": "same authored XML case was already corrected at canonical test owner; obsolete unbound alias copy lacks its own three preservation markers"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧪️fixtures/🏁️job-completion-ownership/🔣️.json",
+      "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🏁️job-completion-ownership/🔣️.json",
+      "sha256": "6cdb70c97184c719ee3c867a58d35e11cb2653ae9d7b07edb536c6b09f0d19dd",
+      "sourceExists": true,
+      "sourceSha256": "6cdb70c97184c719ee3c867a58d35e11cb2653ae9d7b07edb536c6b09f0d19dd",
+      "targetExists": false,
+      "targetSha256": null,
+      "action": "move",
+      "reason": "testing example under actual Tests collection"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️fixtures/🪟️collection-tree-shape/🔣️.json",
+      "target": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️tests/🧫️fixtures/🪟️collection-tree-shape/🔣️.json",
+      "sha256": "bd23e75dc971f8a2a7a2560a6abc6382ec686a934376b11cd611562634fd2544",
+      "sourceExists": true,
+      "sourceSha256": "bd23e75dc971f8a2a7a2560a6abc6382ec686a934376b11cd611562634fd2544",
+      "targetExists": false,
+      "targetSha256": null,
+      "action": "move",
+      "reason": "testing example under actual Tests collection"
+    }
+  ],
+  "readers": [
+    {
+      "path": "🧰️framework/🔨️modules/🧪️test/🔌️adapter/🧪️tests/🟦️.ts",
+      "beforeSha256": "665c443da7c059d8fef893a9886ca392bcc6c869cbc220f448692b8d0022f3be",
+      "afterSha256": "50078ac15d4c57c4b58b55c98bcb745cfcf4b65cae2981334e66a8d769aac85a",
+      "spans": [
+        {
+          "before": "../../🧫️fixtures/🔌️adapter-ownership/🔣️.json",
+          "after": "../../🧪️tests/🧫️fixtures/🔌️adapter-ownership/🔣️.json",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🧪️tests/🟦️.ts",
+      "beforeSha256": "6152b65a910abd3301ec8d8f59dffdc08d7a08eb6c3a9a2b730e472d8fc459bf",
+      "afterSha256": "90d065a958aee0c293a3c2fda173c5eac9e1f78be2b3accf67ee62e509efd42e",
+      "spans": [
+        {
+          "before": "../🧫️fixtures/🔣️.json",
+          "after": "./🧫️fixtures/🔣️.json",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🚪️command/🧪️tests/🟦️.ts",
+      "beforeSha256": "0bde88ee63098da350a30a71b8b3a7c4ffd3e03ac2beb5baa489d49cf4d54d35",
+      "afterSha256": "05845ed9f8db81a280dd7cfe755c00c68fe9fb397ca8340437309560cae819d0",
+      "spans": [
+        {
+          "before": "../🧫️fixtures/🔣️.json",
+          "after": "./🧫️fixtures/🔣️.json",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🧪️tests/🟦️.ts",
+      "beforeSha256": "c77bb7b4fea1c78658d1b271f83e610f6033460b10b8200888a6b51ed71821a3",
+      "afterSha256": "45544a513477231471ebed7eaab1328cb0b342f3f37fc255d84ea08412915800",
+      "spans": [
+        {
+          "before": "../🧫️fixtures/🔣️.json",
+          "after": "./🧫️fixtures/🔣️.json",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🧪️tests/🦀️.rs",
+      "beforeSha256": "d58ed8397cc528e277a532b272cf0524657523506374be82db05b8881d4c7786",
+      "afterSha256": "9c79cc22bf56920f83a48f1e6a2b4ef9eb9f5c8dee2a0131df10a440a2d9d2d4",
+      "spans": [
+        {
+          "before": "../🧫️fixtures/🔣️.json",
+          "after": "./🧫️fixtures/🔣️.json",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/📖️source/🧪️tests/🟦️.ts",
+      "beforeSha256": "beaedd4abf2e59ba61d4c4d233a4ea307e7180b7c680a662a449843b5159605d",
+      "afterSha256": "53bd2ad063c4a792b42f57bc8a7988759f5cc8d62b1f7e69f24676694242d458",
+      "spans": [
+        {
+          "before": "../🧫️fixtures/🔣️.json",
+          "after": "./🧫️fixtures/🔣️.json",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/📖️source/🧪️tests/🦀️.rs",
+      "beforeSha256": "1e718a8719ab9d3ac55ed65c801ea3a69634ee0d98201d0d042e6e9e7bbbdb19",
+      "afterSha256": "7d3800b0870db730b0ca4ab74ee7b801864c225c42e92389811ca90386f64a45",
+      "spans": [
+        {
+          "before": "../🧫️fixtures/🔣️.json",
+          "after": "./🧫️fixtures/🔣️.json",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "0efabcb7c777bc1f92b562dcb33efec259b7c23db549cd8262dd6f9283bdefef",
+      "afterSha256": "a99ccd7bead0fff1156b986c732bc677004a869c1fb4e90b3a510b268a793f3c",
+      "spans": [
+        {
+          "before": "../../🧪️fixtures/🪟️collection-tree-shape/🔣️.json",
+          "after": "../🧫️fixtures/🪟️collection-tree-shape/🔣️.json",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🗄️stdio-details-tree/🟦️.tsx",
+      "beforeSha256": "f0790f78bb6bcd4906c32cd726924ac8fedc9d5f7b561f8f36117ab1cfc40519",
+      "afterSha256": "12b7b8fb911d8f9cc9e782687aef7d253dea9922d5afc59e8a8f5cb2d6226f9d",
+      "spans": [
+        {
+          "before": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️fixtures/🪟️collection-tree-shape/🔣️.json",
+          "after": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️tests/🧫️fixtures/🪟️collection-tree-shape/🔣️.json",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⏰️shell-chrome-deadline/🟦️.tsx",
+      "beforeSha256": "2227c7e2d0807894e0c5c5f09551ba7bc30f76c3c5883958131c6f0fe7212b22",
+      "afterSha256": "d60c3506193b7607f417a6dd14c706c1f7786819688c14a554c2c8909970e1c3",
+      "spans": [
+        {
+          "before": "../../🧱️elements/🐚️Shell/🧪️fixtures/⏰️chrome-deadline/🔣️.json",
+          "after": "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/⏰️chrome-deadline/🔣️.json",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "ba5eeeac12de6e86e7adc9c8c5c400a3b2fb59619343b6dc6bf0a7f8ddaf2e7b",
+      "afterSha256": "7918e11ea53f3e652f39be0fe8a5c30e332292fc17705b527b3468db162d35db",
+      "spans": [
+        {
+          "before": "../../🧪️fixtures/📦️lifecycle/🔣️.json",
+          "after": "../🧫️fixtures/📦️lifecycle/🔣️.json",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🚚️handoff/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "0688d8096504421ca3b04533565061748059ed393fadcde38475d3e25f5590a1",
+      "afterSha256": "13845a08b03e2e5676a5f530876164fb479de41441260c28f2a71fe2d5c1cba7",
+      "spans": [
+        {
+          "before": "../../../🧪️fixtures/📦️lifecycle/🔣️.json",
+          "after": "../../../🧪️tests/🧫️fixtures/📦️lifecycle/🔣️.json",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🟦️.ts",
+      "beforeSha256": "dca42b9e96c9396dde30b9e7349a484045d7a8b13499f1baacbb0a1b189f622b",
+      "afterSha256": "2a5479f63f8ac1ce5e7c433a429aed2ce366c28f8ec06a2ff3cc0f7087db3c46",
+      "spans": [
+        {
+          "before": "../../🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json",
+          "after": "../../🧬️snapshot-clone/🧪️tests/🧫️fixtures/📦️lifecycle/🔣️.json",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "659d07ded9ad91e2a37ac9c123e8247c54ef876a6e1eb1044ad30bacef7ab09e",
+      "afterSha256": "f3c0b213252871e91414abb2b68afabf356aa5435104bfeef3c578bca87ceec3",
+      "spans": [
+        {
+          "before": "../../🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json",
+          "after": "../../🧬️snapshot-clone/🧪️tests/🧫️fixtures/📦️lifecycle/🔣️.json",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
+      "beforeSha256": "1aaa2161ad3d739bdd30301884cafe19d58475299255667d94f876c6379cc9e0",
+      "afterSha256": "f6bcc8bd4c86018e08f8d448a8e5b04524597e5097eeea652a380e853bb75f16",
+      "spans": [
+        {
+          "before": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️fixtures/🪟️collection-tree-shape/🔣️.json",
+          "after": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️tests/🧫️fixtures/🪟️collection-tree-shape/🔣️.json",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔌️plugin-runtime/🟦️.tsx",
+      "beforeSha256": "2825ed3ab080bf17e7e786ca0bb9df7c7c6340b49d23f5a71c7c51c131ffa68d",
+      "afterSha256": "53fea838f2889ea76b4adad34311266e062803aa98c730f6539d3cdf7b1033e9",
+      "spans": [
+        {
+          "before": "../../../../🔌️plugin/⚛️reactor/🧪️fixtures/🏁️job-completion-ownership/🔣️.json",
+          "after": "../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🏁️job-completion-ownership/🔣️.json",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧪️tests/🔬️job-render-binding/🦀️.rs",
+      "beforeSha256": "4885499daa19e8a8258160eb13aa0900aa54a8a25b99d8885ba295aa67c0955c",
+      "afterSha256": "106382b4c4119df9f50af67b542e710384be384566cd1fac1cf4298481332005",
+      "spans": [
+        {
+          "before": "../../🧪️fixtures/🏁️job-completion-ownership/🔣️.json",
+          "after": "../🧫️fixtures/🏁️job-completion-ownership/🔣️.json",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-agent-overlays/🦀️.rs",
+      "beforeSha256": "b71e914858ec76c6a6df5f6ebf89232dc23b579ea463755fde342c5d8f08bb94",
+      "afterSha256": "734299e5f02c5d4e7b3472b096a928b7d4ff21ff99f24bdefb25412c0e68c2de",
+      "spans": [
+        {
+          "before": "../../🧪️fixtures/⏰️chrome-deadline/🔣️.json",
+          "after": "../🧫️fixtures/⏰️chrome-deadline/🔣️.json",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "beforeSha256": "dfcfbd1d688edee0acd84a82285923ada82153c1b7024f7b64aa49d47bef65e2",
+      "afterSha256": "527a6c0649b26c9e6671a9b25338424ad5665fa91595f55f13da2f356a229f39",
+      "spans": [
+        {
+          "before": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️fixtures/📦️lifecycle",
+          "after": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️tests/🧫️fixtures/📦️lifecycle",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "beforeSha256": "b449b87b6f0edd94b27dfe1caea5250acb830205abb0442ca0af64173b2d75a4",
+      "afterSha256": "a370ef8d8c01bc9ce4d9eb619afcf7528b7e1500edeed62f65d0b6405a23f561",
+      "spans": [
+        {
+          "before": "🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json",
+          "after": "🧬️snapshot-clone/🧪️tests/🧫️fixtures/📦️lifecycle/🔣️.json",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
+      "beforeSha256": "ebe3b9cb01ac1f736537acaa2c87021c54b9972de2ca6d72380e90ba0387e9fc",
+      "afterSha256": "b97ee51b8a4a330cbb959873908c841dbc28dbc6eade4299ecf57a857910bdc0",
+      "spans": [
+        {
+          "before": "🧫️fixtures/⚡️production-cache-input-boundary/🔣️.json",
+          "after": "🧪️tests/🧫️fixtures/⚡️production-cache-input-boundary/🔣️.json",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

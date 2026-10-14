@@ -5,11 +5,11 @@
 /// 🪁 The committed `change-wind-zone` vector holds the specification-vector law.
 const VECTOR: super::Vector = super::Vector {
         kind: "change-wind-zone",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪁change-wind-zone/✅apply/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪁change-wind-zone/✅apply/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪁change-wind-zone/✅apply/📸️snapshot/➡️after/🔣️.json"),
-        diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪁change-wind-zone/✅apply/🔺️diff/🔣️.json"),
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪁change-wind-zone/✅apply/🎯️outcome/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪁change-wind-zone/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪁change-wind-zone/✅apply/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪁change-wind-zone/✅apply/📸️snapshot/➡️after/🔣️.json"),
+        diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪁change-wind-zone/✅apply/🔺️diff/🔣️.json"),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪁change-wind-zone/✅apply/🎯️outcome/🔣️.json"),
 };
 
 #[test]

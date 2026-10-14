@@ -5,7 +5,7 @@ use semio_repo_test_host::law::feature_rows;
 /// 🧫️ The real committed package `🧱️mutate-pptx-ecma-376` runs on — the seven-slide subset derived
 /// once from a real 62-slide conference deck, with real titles, real placeholders and real
 /// `a:xfrm` geometry in EMUs.
-const FIXTURE: &[u8] = include_bytes!("../../../🧫️fixtures/📽️.pptx");
+const FIXTURE: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/📽️.pptx");
 
 /// 🪢️ The four kinds that write the package plumbing (`[Content_Types].xml`, the `*.rels` parts); the slide/shape projection does not reach them, so they are proven by
 /// the cases below through `project_pptx_plumbing`.

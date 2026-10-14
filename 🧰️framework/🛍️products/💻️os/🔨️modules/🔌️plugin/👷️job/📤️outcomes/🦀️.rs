@@ -1,14 +1,13 @@
 //! 📤️ One job lends every semantic outcome from payload pages it still owns until a paid physical closure.
 use crate::tool_contract::ReservedOutcomeKind;
-use crate::tool_contract::receive_step;
-use crate::tool_contract::close_result;
 use crate::tool_contract::BoundedFaultText;
-use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, RetainedJobPublication, StepContext};
+use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, RetainedJobPublication, StepContext,OriginalTurnFailure};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError};
 
 /// 🚦️ What one cleanup turn decided, before its outcome is lent from the pages the job owns.
 pub(crate) enum CleanupTurn {
+    OriginalFailure(OriginalTurnFailure),
     Yield,
     Cancelled,
     Complete,
@@ -36,10 +35,10 @@ impl CleanupOutcomes {
         self.publication.terminal_is_empty()
     }
 
-    fn retire(&mut self, cx: &mut StepContext<'_>) -> Result<(), ValueError> {
+    fn retire(&mut self, cx: &mut StepContext<'_>) -> Result<(), OriginalTurnFailure> {
         if !self.publication.terminal_is_empty() {
-            let step = self.publication.close_step(cx.retained_grant());
-            receive_step(cx, step)?;
+            let step=self.publication.close_step(cx.retained_grant()).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?;
+            cx.consume_retained(step.progress())?;
         }
         if self.publication.terminal_is_empty() {
             self.delivered = false;
@@ -47,12 +46,12 @@ impl CleanupOutcomes {
         Ok(())
     }
 
-    fn advance<'a>(&'a mut self, kind: ReservedOutcomeKind, source: &[u8], cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    fn advance<'a>(&'a mut self, kind: ReservedOutcomeKind, source: &[u8], cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
         let publication_kind = match kind {
             ReservedOutcomeKind::Preview => JobPublicationKind::Preview,
             ReservedOutcomeKind::Checkpoint { applied_progress } => JobPublicationKind::Checkpoint { applied_progress },
             ReservedOutcomeKind::Fault => JobPublicationKind::Fault,
-            ReservedOutcomeKind::Commit => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "a cleanup job publishes no commit output")),
+            ReservedOutcomeKind::Commit => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "a cleanup job publishes no commit output").into()),
         };
         let original = self.publication.advance_from_source(publication_kind, source, cx)?;
         self.delivered |= original.is_some();
@@ -107,7 +106,7 @@ impl CleanupPublication {
         self.pending = Some(ReservedOutcomeKind::Fault);
     }
 
-    fn advance_pending<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    fn advance_pending<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
         let Some(kind) = self.pending else { return Ok(None) };
         let source: &[u8] = if kind == ReservedOutcomeKind::Fault { self.fault.as_bytes() } else { &self.state };
         let outcome = self.outcomes.advance(kind, source, cx)?;
@@ -122,16 +121,17 @@ impl CleanupPublication {
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.outcomes.terminal_is_empty()
+        self.pending.is_none()&&self.outcomes.terminal_is_empty()
     }
 
     pub(crate) fn close_demands(&self) -> Result<RetirementDemand, ValueError> {
         self.outcomes.close_demands()
     }
 
-    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        self.pending = None;
-        close_result(self.outcomes.close_step(grant))
+    pub(crate) fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+        let demand=if self.pending.is_some(){RetirementDemand{depth:1,..Default::default()}}else{self.outcomes.close_demands()?};
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|if self.pending.take().is_some(){Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}else{self.outcomes.close_step(grant)})?;
+        Ok(match step{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress}}else{InteractiveJobCloseStep::Pending{progress}},InteractiveJobCloseStep::Blocked=>InteractiveJobCloseStep::Blocked})
     }
 }
 
@@ -149,9 +149,9 @@ pub(crate) trait CleanupJob {
 }
 
 /// ▶️ One bounded step: retire the previous page, else author the pending page, else decide a new turn.
-pub(crate) fn drive_turn<'a, J: CleanupJob>(job: &'a mut J, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+pub(crate) fn drive_turn<'a, J: CleanupJob>(job: &'a mut J, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
     if cx.is_cancelled() {
-        return JobOutcomeBorrow::admit_cancelled(cx);
+        return JobOutcomeBorrow::admit_cancelled(cx).map_err(OriginalTurnFailure::from);
     }
     if job.publication_mut().outcomes.is_delivered() {
         job.publication_mut().outcomes.retire(cx)?;
@@ -159,9 +159,10 @@ pub(crate) fn drive_turn<'a, J: CleanupJob>(job: &'a mut J, cx: &mut StepContext
     }
     if job.publication_mut().pending.is_none() {
         match job.advance(cx) {
-            CleanupTurn::Yield => return JobOutcomeBorrow::admit_yield(cx),
-            CleanupTurn::Cancelled => return JobOutcomeBorrow::admit_cancelled(cx),
-            CleanupTurn::Complete => return JobOutcomeBorrow::admit_complete(cx, None, None),
+            CleanupTurn::OriginalFailure(original)=>return Err(original),
+            CleanupTurn::Yield => return JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from),
+            CleanupTurn::Cancelled => return JobOutcomeBorrow::admit_cancelled(cx).map_err(OriginalTurnFailure::from),
+            CleanupTurn::Complete => return JobOutcomeBorrow::admit_complete(cx, None, None).map_err(OriginalTurnFailure::from),
             CleanupTurn::Checkpoint(applied_progress) => {
                 let instance_id = job.instance_id();
                 job.publication_mut().queue_checkpoint(instance_id, applied_progress);

@@ -1,22 +1,24 @@
 #!/usr/bin/env bun
-import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🧭️ Repo CLI task router. */
 import { existsSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import type { FileLinter } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { defineLint, goLevelTestArgs, resolveCliBin, runCanonicalGoBuild, runCanonicalGoTests, runCmd } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepoScriptMain } from "../../../../📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 import { readEntityCatalog, type EntityCatalogSource } from "../../../../../../../🔨️modules/🧬️schema/🏷️entity-kinds/📥️source/🟦️.ts";
-import { writeGeneratedFileIfChanged } from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts";
+import { writeGeneratedFileIfChanged } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 import { emitGo, GENERATOR_ID, REFRESH_COMMAND } from "../../🏷️entity-kinds/📽️projection/🟦️.ts";
 
 export const policyFile = "🐹️.go";
 
 const REPO_CLIENT_DIR = join("🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "💻️client");
 const REPO_CLI_GO = join(REPO_CLIENT_DIR, "⌨️cli");
+const REPO_CLI_MAIN = join(REPO_CLI_GO,"📦️packages","🐹️go","📦️main");
 
 export const policy = defineLint("repo-client-cli-main-go", (l: FileLinter) => {
   const n = l.lines().length;
@@ -48,10 +50,11 @@ class DevScript extends BundleScript {
 }
 
 class BuildScript extends BundleScript {
-  run(): void {
-    runCanonicalGoBuild(join(this.repoRoot, REPO_CLI_GO), ["-trimpath", "-ldflags=-s -w", "-o", join(this.repoRoot, REPO_CLIENT_DIR, process.platform === "win32" ? "client.exe" : "client"), "./cmd/repo"], {
+  async run(): Promise<void> {
+    await runCanonicalGoBuild(join(this.repoRoot, REPO_CLI_MAIN), ["-o", resolveCliBin(this.repoRoot), "."], { control: scriptCompilerAdmissionControlV1(this.invocation, "go:build", 0), 
       env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") },
       budgetMs: buildBudgetMs(),
+      
     });
   }
 }

@@ -1,0 +1,18 @@
+{
+  "shells": {
+    "added": [
+      {
+        "index": 1,
+        "item": {
+          "id": "s2",
+          "faces": [
+            {
+              "face": "f1",
+              "orientation": false
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "TransactionProposal": "0f01017001010100",
+  "TransactionPrepared": "10017401010100",
+  "TransactionCommitted": "1101740165",
+  "TransactionRolledBack": "120174"
+}

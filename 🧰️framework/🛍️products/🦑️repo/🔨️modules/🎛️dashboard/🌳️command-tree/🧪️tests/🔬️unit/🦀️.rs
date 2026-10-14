@@ -21,7 +21,7 @@ fn playground_renderers_and_examples_select_actual_nx_targets() {
     fs::write(crate::catalog::generated_dir(&root).join("🚀️playgrounds.json"), r#"[{"variant":"demo","pluginId":"plugin","cratePath":"plugin/rs","aliases":[],"ports":{"react":3100,"wgpu":3200},"examples":["🎬️first","🎬️second"]}]"#).unwrap();
     let registry = crate::inventory::discover(&root, &std::sync::atomic::AtomicBool::new(false));
     let tree = tree(&registry, true);
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🗣️launch-axes/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🗣️launch-axes/🔣️.json")).unwrap();
     for renderer in fixture["renderers"].as_array().unwrap() {
         let mut selection = &tree;
         for key in ["dev", "plugin", "demo", renderer["id"].as_str().unwrap()] { selection = selection.children.iter().find(|child| child.key == key).unwrap_or_else(|| panic!("{key} below {}", selection.key)); }
@@ -114,7 +114,7 @@ fn tree_json_states_every_leaf_kind_and_the_go_argv_of_repo_leaves() {
 
 #[test]
 fn nx_inferred_targets_are_selectable_without_authored_project_rows() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🌳️inferred-targets/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🌳️inferred-targets/🔣️.json")).unwrap();
     let root = temp_root("inferred");
     fs::create_dir_all(root.join("owner/📦️packages/🦀️rust")).unwrap();
     fs::create_dir_all(root.join(".nx/workspace-data")).unwrap();
@@ -129,7 +129,7 @@ fn nx_inferred_targets_are_selectable_without_authored_project_rows() {
 
 #[test]
 fn nx_inferred_targets_survive_an_in_progress_graph_publication() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🌳️inferred-targets/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🌳️inferred-targets/🔣️.json")).unwrap();
     let root = temp_root("inferred-publication");
     fs::create_dir_all(root.join("owner/📦️packages/🦀️rust")).unwrap();
     fs::create_dir_all(root.join(".nx/workspace-data")).unwrap();

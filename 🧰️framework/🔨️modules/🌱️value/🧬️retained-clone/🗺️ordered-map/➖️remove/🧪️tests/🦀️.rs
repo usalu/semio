@@ -14,7 +14,7 @@ fn close<K:BoundedOrd+RetireOwned,V:RetireOwned+Sync>(cursor:&mut RetainedOrdere
 }
 #[test]
 fn owned_removal_matches_std_map_and_retires_original_pages_on_completion_and_cancellation(){
- let fixture:Fixture=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();assert_eq!(fixture.page_capacity,RETAINED_ORDERED_MAP_PAGE_CAPACITY);
+ let fixture:Fixture=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();assert_eq!(fixture.page_capacity,RETAINED_ORDERED_MAP_PAGE_CAPACITY);
  for case in fixture.cases {for interrupted in fixture.interruption_turns.iter().copied().map(Some).chain([None]) {
   let(map,heap)=observe_retirement_allocations(||(0..case.count as u64).map(|key|(key,())).collect::<RetainedOrderedMap<_,_>>());let original=heap.0;assert_eq!(heap.1,0);let pointer=map.pages.as_ptr();
   let (refused,heap)=observe_retirement_allocations(||RetainedOrderedMapRemoveCursor::admit(map,case.key,Default::default()));assert_eq!(heap,(0,0));let(error,map,key)=refused.err().unwrap();assert_eq!(error.kind,crate::ValueRefusalKind::WorkLimit);assert_eq!(map.pages.as_ptr(),pointer);
@@ -27,7 +27,7 @@ fn owned_removal_matches_std_map_and_retires_original_pages_on_completion_and_ca
 }
 #[test]
 fn owned_removal_string_keys_and_values_keep_exact_heap_custody(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let keys=fixture["stringKeys"].as_array().unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let keys=fixture["stringKeys"].as_array().unwrap();
  for target in fixture["stringTargets"].as_array().unwrap(){
   let target=target.as_str().unwrap();let(map,heap)=observe_retirement_allocations(||keys.iter().map(|key|{let key=key.as_str().unwrap();(key.to_owned(),key.repeat(3))}).collect::<RetainedOrderedMap<_,_>>());let mut original=heap.0-heap.1;
   let(key,heap)=observe_retirement_allocations(||target.to_owned());original+=heap.0;assert_eq!(heap.1,0);let bytes=RetainedOrderedMapRemoveCursor::<String,String>::constructor_capacity_bytes();let copy=RetainedOrderedMapRemoveCursor::<String,String>::constructor_copy_bytes();let(admitted,heap)=observe_retirement_allocations(||RetainedOrderedMapRemoveCursor::admit(map,key,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:bytes,maximum_depth:1,..Default::default()}));let(mut cursor,receipt)=admitted.unwrap_or_else(|_|panic!("string removal admission"));assert_eq!(heap,(receipt.retained_capacity_bytes,0));let mut born=heap.0;let mut freed=0;let mut output=None;

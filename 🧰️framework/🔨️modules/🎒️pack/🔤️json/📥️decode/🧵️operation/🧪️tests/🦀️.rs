@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_value::{DslValue,NativeDecodeControl,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
 
-fn law()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn law()->serde_json::Value{serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn grant(value:&serde_json::Value)->RetainedCloneGrant{serde_json::from_value(value.clone()).unwrap()}
 fn policy(law:&serde_json::Value)->JsonReadPolicy{let limits=&law["limits"];JsonReadPolicy{limits:JsonReadLimits{maximum_bytes:limits["maximumBytes"].as_u64().unwrap(),maximum_allocation_bytes:limits["maximumAllocationBytes"].as_u64().unwrap()as usize,maximum_depth:limits["maximumDepth"].as_u64().unwrap()as usize,maximum_items:limits["maximumItems"].as_u64().unwrap()},normal:grant(&law["normalAuthority"]),retirement:grant(&law["retirementAuthority"])}}
 fn close<S:JsonReadSource+Copy>(operation:&mut JsonReadOperation<'_,'_,S,DslValue>,law:&serde_json::Value){

@@ -75,24 +75,24 @@ pub mod derived_composition {
     /// reuse of all 13 already-tested invariant checks, never duplicated here.
     async fn dispatch_validate(snapshot: &SemioSnapshot) -> Vec<Diagnostic> {
         match &snapshot.subset {
-            SemioSubsetSnapshot::Brep(s) => SemioBrepValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Mesh(s) => SemioMeshValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Model(s) => SemioModelValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Value(s) => SemioValueValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Document(s) => SemioDocumentValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_document::schema::snapshot::SemioDocumentSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Cad(s) => SemioCadValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_cad::schema::snapshot::SemioCadSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Drawing(s) => SemioDrawingValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Image(s) => SemioImageValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Video(s) => SemioVideoValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_video::schema::snapshot::SemioVideoSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Audio(s) => SemioAudioValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_audio::schema::snapshot::SemioAudioSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Animation(s) => SemioAnimationValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Presentation(s) => SemioPresentationValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Flow(s) => SemioFlowValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Text(s) => SemioTextValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Table(s) => SemioTableValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Graph(s) => SemioGraphValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Object(s) => SemioObjectValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Kit(s) => SemioKitValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Brep(s) => SemioBrepValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Mesh(s) => SemioMeshValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Model(s) => SemioModelValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Value(s) => SemioValueValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Document(s) => SemioDocumentValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_document::schema::snapshot::SemioDocumentSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Cad(s) => SemioCadValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_cad::schema::snapshot::SemioCadSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Drawing(s) => SemioDrawingValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Image(s) => SemioImageValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Video(s) => SemioVideoValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_video::schema::snapshot::SemioVideoSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Audio(s) => SemioAudioValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_audio::schema::snapshot::SemioAudioSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Animation(s) => SemioAnimationValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Presentation(s) => SemioPresentationValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Flow(s) => SemioFlowValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Text(s) => SemioTextValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Table(s) => SemioTableValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Graph(s) => SemioGraphValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Object(s) => SemioObjectValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Kit(s) => SemioKitValidator::validate(&IoPayload::Binary(<semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s))).await,
         }
     }
 
@@ -101,8 +101,8 @@ pub mod derived_composition {
 
         async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <SemioSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <SemioSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <SemioSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).ok(),
+                IoPayload::Text(text) => <SemioSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => dispatch_validate(&snapshot).await,
@@ -256,10 +256,10 @@ pub mod derived_construction {
             Self { snapshot }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<SemioSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<SemioSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SemioSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<SemioSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <SemioMutation as protocol::Mutation<SemioSnapshot>>::diff(&mutation, &self.snapshot);
@@ -320,14 +320,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <SemioSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <SemioSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <SemioSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <SemioSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

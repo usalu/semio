@@ -7,7 +7,7 @@ import Ajv from "ajv";
 import { build } from "esbuild";
 import { createSourceFile, isFunctionDeclaration, parseConfigFileTextToJson, ScriptTarget } from "typescript";
 import { prepareJavascriptDependencies, SyncScript, RefreshLockScript } from "../📜️script.ts";
-import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { bunDistribution, bunArchiveExecutable } from "../../🛠️tools/🟦️bun/📜️script.ts";
 import { zipSync, unzipSync } from "fflate";
 import { activateWhenNxWatcherReady, waitForNxTargetStart, nxChildEnvironment, nxWatcherEnvironment, NxOutputSpoolV1 } from "../../📜️script.ts";
@@ -62,7 +62,7 @@ if(events.length!==1)throw Error('startup blocked');watcher.stdout.emit('data',B
 });
 
 test("ordinary graphs run independently while Nx source watchers use the daemon", () => {
-  expect(nxChildEnvironment({ TASK: "a" }, ["run", "a:dev"], false)).toEqual({ TASK: "a", NX_DAEMON: "false" });
+  expect(nxChildEnvironment({ TASK: "a" }, ["run", "a:dev"], false)).toEqual({ TASK: "a", NX_DAEMON: "true" });
   expect(nxChildEnvironment({ TASK: "b" }, ["watch"], true)).toEqual({ TASK: "b", NX_DAEMON: "true" });
   expect(nxChildEnvironment({ NX_DAEMON: "true" }, ["run", "a:build"], true)).toEqual({ NX_DAEMON: "false" });
   expect(nxChildEnvironment({ NX_DAEMON: "true" }, ["run", "a:test"], false)).toEqual({ NX_DAEMON: "true" });

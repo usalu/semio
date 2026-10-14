@@ -1,0 +1,13 @@
+{
+  "messages": [
+    {
+      "code": "mutation.no-op",
+      "level": "warning",
+      "target": [
+        "frame-rect",
+        "frame-text"
+      ]
+    }
+  ],
+  "status": "no-op"
+}

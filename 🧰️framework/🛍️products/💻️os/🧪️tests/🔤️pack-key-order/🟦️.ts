@@ -16,7 +16,7 @@ type Fixture = {
   readonly fuzz: { readonly seed: number; readonly pairs: number; readonly maxLength: number; readonly alphabet: readonly string[] };
 };
 
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔤️pack-key-order/🔣️.json", import.meta.url), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔤️pack-key-order/🔣️.json", import.meta.url), "utf8")) as Fixture;
 const oracle = (left: string, right: string): number => Math.sign(Buffer.compare(Buffer.from(left, "utf8"), Buffer.from(right, "utf8")));
 
 /** 🎲️ xorshift32 — the fuzz is reproducible from the fixture's seed alone. */

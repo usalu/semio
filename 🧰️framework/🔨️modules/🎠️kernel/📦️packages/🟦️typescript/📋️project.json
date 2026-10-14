@@ -32,6 +32,28 @@
         "command": "bun ./📜️script.ts test localized-label",
         "forwardAllArgs": true
       }
+    },
+    "test-receipt-port": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test receipt-port"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
     }
   }
 }

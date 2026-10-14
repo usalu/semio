@@ -1,5 +1,6 @@
-import { resolveTestLevel, atTestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { phaseCompilerAdmissionControlV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { resolveTestLevel, atTestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { requirePlaygroundVariant } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
 import { devHubCatalogBootstrapPublisherV1 } from "../../🚀️local-bootstrap/👷️dev-owner/🟦️.ts";
 /** 🧩️ Semantic collaboration verification owner. */
@@ -17,8 +18,8 @@ import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
 
@@ -442,6 +443,7 @@ function collabPluginArtifactPath(target: DeployedRegistryEntryV1): string {
 
 /** 🧱️ Prepares only the plugin components consumed by the collaboration scenario. */
 async function collabPrebuildPlugins(): Promise<void> {
+  const control = phaseCompilerAdmissionControlV1(new AbortController().signal, COLLAB_E2E_PREBUILD_BUDGET_MS, wait => console.log(`[DEBUG] Collaboration compiler wait ${wait.resource}`), () => new Promise(done => setImmediate(done)));
   const defaultVariant = requirePlaygroundVariant(DEFAULT_PLAYGROUND_VARIANT);
   ensureAppleDeveloperDir();
   const lease = acquirePluginBuildLease(defaultVariant, 0);
@@ -459,7 +461,7 @@ async function collabPrebuildPlugins(): Promise<void> {
       }
       for (const target of required) {
         try {
-          await buildPlugin(target);
+          await buildPlugin(target, control);
         } catch (error) {
           console.error(`[collab-e2e] required plugin build failed: ${target.pluginId}`, error);
         }
@@ -490,7 +492,7 @@ const COLLAB_E2E_DEV_SCRIPT = "./🧰️framework/🛍️products/💻️os/🔨
  * because the Nx `dev-…` target is a WATCH: it re-activates on any peer's source write, which under this
  * repo's concurrent fleet means the staged tree moves mid-scenario. Activate once, serve detached. */
 function collabActivateShellRuntime(): void {
-  runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:activate-s-react-dev"], {
+  runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:activate-s-react-prototype"], {
     cwd: repoRoot,
     ...daemonBudgetOpts({ SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react", SEMIO_BUILD_MODE: "prototype" }),
   });
@@ -1644,7 +1646,7 @@ async function runCollabE2eVerify(opts: { readonly hub: string | undefined; read
     const hubBaseUrl = external?.baseUrl ?? `http://127.0.0.1:${hubPort}`;
     try {
       if (process.env.S_COLLAB_SKIP_ACTIVATE === "1") {
-        console.log("[collab-e2e] S_COLLAB_SKIP_ACTIVATE=1 — skipping activate-s-react-dev");
+        console.log("[collab-e2e] S_COLLAB_SKIP_ACTIVATE=1 — skipping activate-s-react-prototype");
       } else {
         collabActivateShellRuntime();
       }

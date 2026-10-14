@@ -1,3 +1,4 @@
+import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -69,7 +70,7 @@ function harness(options: { now?: () => number; onProgress?: (stage: string) => 
   const faults: string[] = [];
   const faultStates: BrowserFrameFallbackState[] = [];
   const continuations: Array<() => void> = [];
-  const transport = new BrowserFrameTransport({
+  const transport = new BrowserFrameTransport({ originalWorkStock: fixtureOriginalWorkStock(),
     worker,
     boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, locale: "en", descriptor: testBootDescriptor("generation3d"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM, storage: TEST_HOST_STORAGE },
     ...(options.now ? { now: options.now } : {}),

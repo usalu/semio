@@ -3,7 +3,7 @@ use semio_framework_value::{FromValue, ToValue};
 use serde_json::Value;
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../../../🧬️schema/🗂️catalogue/🧫️fixtures/🔣️.json")).expect("catalogue fixture parses")
+    serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🗂️catalogue/🔣️.json")).expect("catalogue fixture parses")
 }
 
 fn catalogue_folder() -> std::path::PathBuf {

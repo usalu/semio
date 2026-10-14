@@ -1,0 +1,902 @@
+{
+  "description": "Language-agnostic laws of the brep.evaluate widgets. A circle of radius 2 evaluates by its own angle, a line by the fraction of its segment, an edge by its curve parameter and a wire by member index plus fraction in member direction; a face answers through its supporting surface with the normal turned outward. Every expected number is derived from the closed form of the primitive. TypeScript recomputes the circle, line and plane cases with three.",
+  "tolerance": 1e-09,
+  "cases": [
+    {
+      "name": "circle point at the start",
+      "kind": "brep.evaluate.curvePoint",
+      "inputs": {
+        "curve": {
+          "recipe": "circle",
+          "center": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "radius": 2
+        },
+        "parameter": 0
+      },
+      "outputs": {
+        "point": [
+          2,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "circle point at a quarter turn",
+      "kind": "brep.evaluate.curvePoint",
+      "inputs": {
+        "curve": {
+          "recipe": "circle",
+          "center": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "radius": 2
+        },
+        "parameter": 1.5707963267948966
+      },
+      "outputs": {
+        "point": [
+          0,
+          2,
+          0
+        ]
+      }
+    },
+    {
+      "name": "line point at half the segment",
+      "kind": "brep.evaluate.curvePoint",
+      "inputs": {
+        "curve": {
+          "recipe": "line",
+          "start": [
+            0,
+            0,
+            0
+          ],
+          "end": [
+            2,
+            0,
+            0
+          ]
+        },
+        "parameter": 0.5
+      },
+      "outputs": {
+        "point": [
+          1,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "edge point at its own parameter",
+      "kind": "brep.evaluate.curvePoint",
+      "inputs": {
+        "curve": {
+          "recipe": "edge",
+          "of": {
+            "recipe": "box",
+            "size": [
+              2,
+              2,
+              2
+            ]
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            2,
+            0,
+            0
+          ]
+        },
+        "parameter": 1
+      },
+      "outputs": {
+        "point": [
+          1,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "wire point on the first member",
+      "kind": "brep.evaluate.curvePoint",
+      "inputs": {
+        "curve": {
+          "recipe": "rectangleWire",
+          "width": 2,
+          "height": 1
+        },
+        "parameter": 0.5
+      },
+      "outputs": {
+        "point": [
+          1,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "wire point on the second member",
+      "kind": "brep.evaluate.curvePoint",
+      "inputs": {
+        "curve": {
+          "recipe": "rectangleWire",
+          "width": 2,
+          "height": 1
+        },
+        "parameter": 1.5
+      },
+      "outputs": {
+        "point": [
+          2,
+          0.5,
+          0
+        ]
+      }
+    },
+    {
+      "name": "wire point on the fourth member runs against the y axis",
+      "kind": "brep.evaluate.curvePoint",
+      "inputs": {
+        "curve": {
+          "recipe": "rectangleWire",
+          "width": 2,
+          "height": 1
+        },
+        "parameter": 3.5
+      },
+      "outputs": {
+        "point": [
+          0,
+          0.5,
+          0
+        ]
+      }
+    },
+    {
+      "name": "circle tangent at the start",
+      "kind": "brep.evaluate.curveTangent",
+      "inputs": {
+        "curve": {
+          "recipe": "circle",
+          "center": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "radius": 2
+        },
+        "parameter": 0
+      },
+      "outputs": {
+        "tangent": [
+          0,
+          1,
+          0
+        ]
+      }
+    },
+    {
+      "name": "circle tangent at a quarter turn",
+      "kind": "brep.evaluate.curveTangent",
+      "inputs": {
+        "curve": {
+          "recipe": "circle",
+          "center": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "radius": 2
+        },
+        "parameter": 1.5707963267948966
+      },
+      "outputs": {
+        "tangent": [
+          -1,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "line tangent is the unit direction",
+      "kind": "brep.evaluate.curveTangent",
+      "inputs": {
+        "curve": {
+          "recipe": "line",
+          "start": [
+            0,
+            0,
+            0
+          ],
+          "end": [
+            2,
+            0,
+            0
+          ]
+        },
+        "parameter": 0.25
+      },
+      "outputs": {
+        "tangent": [
+          1,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "wire tangent on the second member",
+      "kind": "brep.evaluate.curveTangent",
+      "inputs": {
+        "curve": {
+          "recipe": "rectangleWire",
+          "width": 2,
+          "height": 1
+        },
+        "parameter": 1.5
+      },
+      "outputs": {
+        "tangent": [
+          0,
+          1,
+          0
+        ]
+      }
+    },
+    {
+      "name": "wire tangent on the third member points back along x",
+      "kind": "brep.evaluate.curveTangent",
+      "inputs": {
+        "curve": {
+          "recipe": "rectangleWire",
+          "width": 2,
+          "height": 1
+        },
+        "parameter": 2.5
+      },
+      "outputs": {
+        "tangent": [
+          -1,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "circle domain",
+      "kind": "brep.evaluate.curveDomain",
+      "inputs": {
+        "curve": {
+          "recipe": "circle",
+          "center": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "radius": 2
+        }
+      },
+      "outputs": {
+        "start": 0,
+        "end": 6.283185307179586,
+        "span": 6.283185307179586
+      }
+    },
+    {
+      "name": "wire domain counts its members",
+      "kind": "brep.evaluate.curveDomain",
+      "inputs": {
+        "curve": {
+          "recipe": "rectangleWire",
+          "width": 2,
+          "height": 1
+        }
+      },
+      "outputs": {
+        "start": 0,
+        "end": 4,
+        "span": 4
+      }
+    },
+    {
+      "name": "an unbounded line has no domain",
+      "kind": "brep.evaluate.curveDomain",
+      "inputs": {
+        "curve": {
+          "recipe": "line",
+          "start": [
+            0,
+            0,
+            0
+          ],
+          "end": [
+            2,
+            0,
+            0
+          ]
+        }
+      },
+      "fault": {
+        "code": "generation3d.geometry.domain-unbounded",
+        "port": "curve"
+      }
+    },
+    {
+      "name": "circle curvature is one over the radius",
+      "kind": "brep.evaluate.curveCurvature",
+      "inputs": {
+        "curve": {
+          "recipe": "circle",
+          "center": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "radius": 2
+        },
+        "parameter": 1.0
+      },
+      "outputs": {
+        "curvature": 0.5
+      }
+    },
+    {
+      "name": "line curvature is zero",
+      "kind": "brep.evaluate.curveCurvature",
+      "inputs": {
+        "curve": {
+          "recipe": "line",
+          "start": [
+            0,
+            0,
+            0
+          ],
+          "end": [
+            2,
+            0,
+            0
+          ]
+        },
+        "parameter": 0.5
+      },
+      "outputs": {
+        "curvature": 0
+      }
+    },
+    {
+      "name": "closest parameter on a circle",
+      "kind": "brep.evaluate.curveClosestParameter",
+      "inputs": {
+        "curve": {
+          "recipe": "circle",
+          "center": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "radius": 2
+        },
+        "point": [
+          0,
+          3,
+          0
+        ]
+      },
+      "outputs": {
+        "parameter": 1.5707963267948966,
+        "point": [
+          0,
+          2,
+          0
+        ],
+        "distance": 1
+      }
+    },
+    {
+      "name": "closest parameter on a line",
+      "kind": "brep.evaluate.curveClosestParameter",
+      "inputs": {
+        "curve": {
+          "recipe": "line",
+          "start": [
+            0,
+            0,
+            0
+          ],
+          "end": [
+            2,
+            0,
+            0
+          ]
+        },
+        "point": [
+          1,
+          1,
+          0
+        ]
+      },
+      "outputs": {
+        "parameter": 0.5,
+        "point": [
+          1,
+          0,
+          0
+        ],
+        "distance": 1
+      }
+    },
+    {
+      "name": "closest parameter on a wire",
+      "kind": "brep.evaluate.curveClosestParameter",
+      "inputs": {
+        "curve": {
+          "recipe": "rectangleWire",
+          "width": 2,
+          "height": 1
+        },
+        "point": [
+          3,
+          0.5,
+          0
+        ]
+      },
+      "outputs": {
+        "parameter": 1.5,
+        "point": [
+          2,
+          0.5,
+          0
+        ],
+        "distance": 1
+      }
+    },
+    {
+      "name": "closest parameter off the end of an edge stays on the edge",
+      "kind": "brep.evaluate.curveClosestParameter",
+      "inputs": {
+        "curve": {
+          "recipe": "edge",
+          "of": {
+            "recipe": "box",
+            "size": [
+              2,
+              2,
+              2
+            ]
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            2,
+            0,
+            0
+          ]
+        },
+        "point": [
+          5,
+          0,
+          0
+        ]
+      },
+      "outputs": {
+        "parameter": 2,
+        "point": [
+          2,
+          0,
+          0
+        ],
+        "distance": 3
+      }
+    },
+    {
+      "name": "a parameter beyond the circle is refused",
+      "kind": "brep.evaluate.curvePoint",
+      "inputs": {
+        "curve": {
+          "recipe": "circle",
+          "center": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "radius": 2
+        },
+        "parameter": 7
+      },
+      "fault": {
+        "code": "generation3d.geometry.parameter-range",
+        "port": "parameter"
+      }
+    },
+    {
+      "name": "a negative wire parameter is refused",
+      "kind": "brep.evaluate.curveTangent",
+      "inputs": {
+        "curve": {
+          "recipe": "rectangleWire",
+          "width": 2,
+          "height": 1
+        },
+        "parameter": -0.5
+      },
+      "fault": {
+        "code": "generation3d.geometry.parameter-range",
+        "port": "parameter"
+      }
+    },
+    {
+      "name": "a solid is not a curve",
+      "kind": "brep.evaluate.curvePoint",
+      "inputs": {
+        "curve": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "parameter": 0
+      },
+      "fault": {
+        "code": "generation3d.geometry.shape-kind",
+        "port": "curve"
+      }
+    },
+    {
+      "name": "plane point at the origin of its frame",
+      "kind": "brep.evaluate.surfacePoint",
+      "inputs": {
+        "surface": {
+          "recipe": "plane",
+          "origin": [
+            1,
+            2,
+            3
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        "u": 0,
+        "v": 0
+      },
+      "outputs": {
+        "point": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "name": "top face point at the corner of its frame",
+      "kind": "brep.evaluate.surfacePoint",
+      "inputs": {
+        "surface": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [
+              2,
+              2,
+              2
+            ]
+          },
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        "u": 0,
+        "v": 0
+      },
+      "outputs": {
+        "point": [
+          0,
+          0,
+          2
+        ]
+      }
+    },
+    {
+      "name": "plane normal",
+      "kind": "brep.evaluate.surfaceNormal",
+      "inputs": {
+        "surface": {
+          "recipe": "plane",
+          "origin": [
+            1,
+            2,
+            3
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        "u": 0,
+        "v": 0
+      },
+      "outputs": {
+        "normal": [
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "top face normal points out",
+      "kind": "brep.evaluate.surfaceNormal",
+      "inputs": {
+        "surface": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [
+              2,
+              2,
+              2
+            ]
+          },
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        "u": 0,
+        "v": 0
+      },
+      "outputs": {
+        "normal": [
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "bottom face normal points out",
+      "kind": "brep.evaluate.surfaceNormal",
+      "inputs": {
+        "surface": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [
+              2,
+              2,
+              2
+            ]
+          },
+          "normal": [
+            0,
+            0,
+            -1
+          ]
+        },
+        "u": 0,
+        "v": 0
+      },
+      "outputs": {
+        "normal": [
+          0,
+          0,
+          -1
+        ]
+      }
+    },
+    {
+      "name": "sphere face normal at the start of the grid points out",
+      "kind": "brep.evaluate.surfaceNormal",
+      "inputs": {
+        "surface": {
+          "recipe": "curvedFace",
+          "of": {
+            "recipe": "sphere",
+            "radius": 1
+          }
+        },
+        "u": 0,
+        "v": 0
+      },
+      "outputs": {
+        "normal": [
+          1,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "closest parameters on a plane",
+      "kind": "brep.evaluate.surfaceClosestUv",
+      "inputs": {
+        "surface": {
+          "recipe": "plane",
+          "origin": [
+            1,
+            2,
+            3
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        "point": [
+          1,
+          2,
+          5
+        ]
+      },
+      "outputs": {
+        "u": 0,
+        "v": 0,
+        "point": [
+          1,
+          2,
+          3
+        ],
+        "distance": 2
+      }
+    },
+    {
+      "name": "closest parameters on a face use its supporting surface",
+      "kind": "brep.evaluate.surfaceClosestUv",
+      "inputs": {
+        "surface": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [
+              2,
+              2,
+              2
+            ]
+          },
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        "point": [
+          3,
+          4,
+          7
+        ]
+      },
+      "outputs": {
+        "u": 3,
+        "v": 4,
+        "point": [
+          3,
+          4,
+          2
+        ],
+        "distance": 5
+      }
+    },
+    {
+      "name": "closest parameters on a sphere",
+      "kind": "brep.evaluate.surfaceClosestUv",
+      "inputs": {
+        "surface": {
+          "recipe": "curvedFace",
+          "of": {
+            "recipe": "sphere",
+            "radius": 1
+          }
+        },
+        "point": [
+          0,
+          0,
+          3
+        ]
+      },
+      "outputs": {
+        "point": [
+          0,
+          0,
+          1
+        ],
+        "distance": 2,
+        "u": 0,
+        "v": 1.5707963267948966
+      }
+    },
+    {
+      "name": "a curve is not a surface",
+      "kind": "brep.evaluate.surfacePoint",
+      "inputs": {
+        "surface": {
+          "recipe": "circle",
+          "center": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "radius": 2
+        },
+        "u": 0,
+        "v": 0
+      },
+      "fault": {
+        "code": "generation3d.geometry.shape-kind",
+        "port": "surface"
+      }
+    }
+  ]
+}

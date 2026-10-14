@@ -1,0 +1,446 @@
+{
+  "receipts": [
+    {
+      "id": "shipped-release",
+      "valid": true,
+      "value": {
+        "schema": "semio.plugin.component-receipt/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "profile": "wasm-release",
+        "target": "wasm32-wasip2",
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "wasmBytes": 14056513,
+        "semanticDescriptorSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+        "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    },
+    {
+      "id": "local-iterate",
+      "valid": true,
+      "value": {
+        "schema": "semio.plugin.component-receipt/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "profile": "wasm-prototype",
+        "target": "wasm32-wasip2",
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "wasmBytes": 314572800,
+        "semanticDescriptorSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+        "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    },
+    {
+      "id": "release-at-shipped-bound",
+      "valid": true,
+      "value": {
+        "schema": "semio.plugin.component-receipt/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "profile": "wasm-release",
+        "target": "wasm32-wasip2",
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "wasmBytes": 268435456,
+        "semanticDescriptorSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+        "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    },
+    {
+      "id": "release-over-shipped-bound",
+      "valid": false,
+      "value": {
+        "schema": "semio.plugin.component-receipt/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "profile": "wasm-release",
+        "target": "wasm32-wasip2",
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "wasmBytes": 268435457,
+        "semanticDescriptorSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+        "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    },
+    {
+      "id": "iterate-at-local-cap",
+      "valid": true,
+      "value": {
+        "schema": "semio.plugin.component-receipt/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "profile": "wasm-prototype",
+        "target": "wasm32-wasip2",
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "wasmBytes": 536870912,
+        "semanticDescriptorSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+        "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    },
+    {
+      "id": "iterate-over-local-cap",
+      "valid": false,
+      "value": {
+        "schema": "semio.plugin.component-receipt/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "profile": "wasm-prototype",
+        "target": "wasm32-wasip2",
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "wasmBytes": 536870913,
+        "semanticDescriptorSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+        "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    },
+    {
+      "id": "too-small",
+      "valid": false,
+      "value": {
+        "schema": "semio.plugin.component-receipt/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "profile": "wasm-release",
+        "target": "wasm32-wasip2",
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "wasmBytes": 7,
+        "semanticDescriptorSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+        "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    },
+    {
+      "id": "fractional-bytes",
+      "valid": false,
+      "value": {
+        "schema": "semio.plugin.component-receipt/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "profile": "wasm-release",
+        "target": "wasm32-wasip2",
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "wasmBytes": 1.5,
+        "semanticDescriptorSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+        "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    },
+    {
+      "id": "unknown-profile",
+      "valid": false,
+      "value": {
+        "schema": "semio.plugin.component-receipt/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "profile": "wasm-dev",
+        "target": "wasm32-wasip2",
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "wasmBytes": 14056513,
+        "semanticDescriptorSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+        "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    },
+    {
+      "id": "foreign-target",
+      "valid": false,
+      "value": {
+        "schema": "semio.plugin.component-receipt/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "profile": "wasm-release",
+        "target": "wasm32-unknown-unknown",
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "wasmBytes": 14056513,
+        "semanticDescriptorSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+        "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    },
+    {
+      "id": "foreign-schema",
+      "valid": false,
+      "value": {
+        "schema": "semio.plugin.component-receipt/v2",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "profile": "wasm-release",
+        "target": "wasm32-wasip2",
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "wasmBytes": 14056513,
+        "semanticDescriptorSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+        "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    },
+    {
+      "id": "uppercase-digest",
+      "valid": false,
+      "value": {
+        "schema": "semio.plugin.component-receipt/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "profile": "wasm-release",
+        "target": "wasm32-wasip2",
+        "wasmSha256": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "wasmBytes": 14056513,
+        "semanticDescriptorSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+        "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    },
+    {
+      "id": "short-digest",
+      "valid": false,
+      "value": {
+        "schema": "semio.plugin.component-receipt/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "profile": "wasm-release",
+        "target": "wasm32-wasip2",
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "wasmBytes": 14056513,
+        "semanticDescriptorSha256": "555555555555555555555555555555555555555555555555555555555555555",
+        "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+        "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    },
+    {
+      "id": "toolchain-without-commit",
+      "valid": false,
+      "value": {
+        "schema": "semio.plugin.component-receipt/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "profile": "wasm-release",
+        "target": "wasm32-wasip2",
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "wasmBytes": 14056513,
+        "semanticDescriptorSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "toolchain": "rustc 1.99.0-nightly",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+        "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    },
+    {
+      "id": "malformed-plugin-id",
+      "valid": false,
+      "value": {
+        "schema": "semio.plugin.component-receipt/v1",
+        "pluginId": "Note",
+        "packageId": "semio:note",
+        "profile": "wasm-release",
+        "target": "wasm32-wasip2",
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "wasmBytes": 14056513,
+        "semanticDescriptorSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+        "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    },
+    {
+      "id": "malformed-package-id",
+      "valid": false,
+      "value": {
+        "schema": "semio.plugin.component-receipt/v1",
+        "pluginId": "note",
+        "packageId": "note",
+        "profile": "wasm-release",
+        "target": "wasm32-wasip2",
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "wasmBytes": 14056513,
+        "semanticDescriptorSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+        "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    },
+    {
+      "id": "missing-provenance",
+      "valid": false,
+      "value": {
+        "schema": "semio.plugin.component-receipt/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "profile": "wasm-release",
+        "target": "wasm32-wasip2",
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "wasmBytes": 14056513,
+        "semanticDescriptorSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333"
+      }
+    },
+    {
+      "id": "unknown-member",
+      "valid": false,
+      "value": {
+        "schema": "semio.plugin.component-receipt/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "profile": "wasm-release",
+        "target": "wasm32-wasip2",
+        "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "wasmBytes": 14056513,
+        "semanticDescriptorSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+        "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+        "hashes": {
+          "wasmSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      }
+    }
+  ],
+  "deliverables": [
+    {
+      "crateRoot": "plugins/🗒️note/📦️packages/🦀️rust",
+      "packageName": "semio-hub-note",
+      "profile": "wasm-release",
+      "directory": "plugins/🗒️note/📦️packages/🦀️rust/dist/components/release",
+      "wasm": "plugins/🗒️note/📦️packages/🦀️rust/dist/components/release/semio_hub_note.wasm",
+      "receipt": "plugins/🗒️note/📦️packages/🦀️rust/dist/components/release/🧾️receipt.json"
+    },
+    {
+      "crateRoot": "plugins/🗒️note/📦️packages/🦀️rust",
+      "packageName": "semio-hub-note",
+      "profile": "wasm-prototype",
+      "directory": "plugins/🗒️note/📦️packages/🦀️rust/dist/components/prototype",
+      "wasm": "plugins/🗒️note/📦️packages/🦀️rust/dist/components/prototype/semio_hub_note.wasm",
+      "receipt": "plugins/🗒️note/📦️packages/🦀️rust/dist/components/prototype/🧾️receipt.json"
+    }
+  ],
+  "toolchain": [
+    {
+      "verbose": "rustc 1.99.0-nightly (9f36de775 2026-07-19)\nbinary: rustc\ncommit-hash: 9f36de775bc636c8e88c31a173c2bcb6995956a0\ncommit-date: 2026-07-19\nhost: aarch64-apple-darwin\nrelease: 1.99.0-nightly\nLLVM version: 22.1.8\n",
+      "identity": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)"
+    },
+    {
+      "verbose": "rustc 1.90.0 (1159e78c4747b02ef996e55082b704c09b970588 2025-09-14)\nbinary: rustc\ncommit-hash: 1159e78c4747b02ef996e55082b704c09b970588\ncommit-date: 2025-09-14\nhost: x86_64-unknown-linux-gnu\nrelease: 1.90.0\nLLVM version: 20.1.8\n",
+      "identity": "rustc 1.90.0 (1159e78c4747b02ef996e55082b704c09b970588)"
+    },
+    {
+      "verbose": "rustc 1.99.0-nightly\nbinary: rustc\nrelease: 1.99.0-nightly\n",
+      "identity": null
+    }
+  ],
+  "provenance": {
+    "roots": {
+      "repository": "/work/semio",
+      "build": "/work/semio/.🧬semio/🦑️repo/⚡️cache/cargo/build",
+      "cargoHome": "/home/dev/.cargo",
+      "home": "/home/dev"
+    },
+    "observed": {
+      "units": [
+        {
+          "inputs": [
+            {
+              "path": "/work/semio/🧰️framework/🔨️modules/🔏️hash/🦀️.rs",
+              "kind": "file",
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000001"
+            },
+            {
+              "path": "/work/semio/🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust/Cargo.toml",
+              "kind": "file",
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000002"
+            },
+            {
+              "path": "/home/dev/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quote-1.0.45/src/lib.rs",
+              "kind": "file",
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000003"
+            }
+          ],
+          "artifacts": [
+            {
+              "path": "/work/semio/.🧬semio/🦑️repo/⚡️cache/cargo/build/wasm32-wasip2/wasm-release/deps/libsemio_framework_hash-0f.rlib",
+              "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "path": "/work/semio/.🧬semio/🦑️repo/⚡️cache/cargo/build/wasm32-wasip2/wasm-release/build/semio-hub-note/out/generated.rs",
+              "kind": "file",
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000004"
+            },
+            {
+              "path": "/home/dev/.rustup/toolchains/nightly-2026-07-20-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/lib.rs",
+              "kind": "file",
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000005"
+            },
+            {
+              "path": "/work/semio/Cargo.lock",
+              "kind": "file",
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000006"
+            },
+            {
+              "path": "/work/semio/🧰️framework/🔨️modules/🔏️hash/🦀️.rs",
+              "kind": "file",
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000001"
+            }
+          ],
+          "artifacts": [
+            {
+              "path": "/work/semio/🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust/dist/components/release/semio_hub_note.wasm",
+              "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "path": "/opt/toolchains/wasm-component-ld",
+              "kind": "file",
+              "sha256": null
+            }
+          ],
+          "artifacts": []
+        }
+      ],
+      "buildResources": [
+        {
+          "package_id": "path+file:///work/semio/🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust#semio-hub-note@0.1.0",
+          "out_dir": "/work/semio/.🧬semio/🦑️repo/⚡️cache/cargo/build/wasm32-wasip2/wasm-release/build/semio-hub-note/out",
+          "path": "/work/semio/.🧬semio/🦑️repo/⚡️cache/cargo/build/wasm32-wasip2/wasm-release/build/semio-hub-note/out/semio-runtime-resource-inputs.jsonl",
+          "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+          "resources": [
+            {
+              "input": {
+                "kind": "read",
+                "path": "/work/semio/🧰️framework/🔨️modules/🔏️hash/🦀️.rs"
+              },
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000001"
+            }
+          ]
+        }
+      ]
+    },
+    "leaves": [
+      "011a71338c46c6a13a0aed3a75435dabcd90469970e15e8db1475b59a5eee78b",
+      "2d0ecdb5c8f8f4f7ed475c5d03e4902f9fc516000cca4af043064f75019bc57c",
+      "d0adbde84c42c9f214e14248e34dcdb0f00038873ecab9bfe04804bcdbb73d80",
+      "fc21b89fa611b7efc5fec017c8a6ee8b967e0b51ff6f7b7c95c47dc1f09897c8"
+    ],
+    "sourceTreeDigest": "d5ba54bb3465359ad278b76a188ce77564609de9de89107e379967a2b7a74115",
+    "provenanceSha256": "91a52e75a8de7c7ebfc3ccd4d7910da1920a8b43d71584d6ed56bbde004fc981"
+  }
+}

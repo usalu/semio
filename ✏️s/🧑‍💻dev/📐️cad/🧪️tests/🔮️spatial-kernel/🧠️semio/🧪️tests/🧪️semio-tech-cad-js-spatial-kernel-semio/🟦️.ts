@@ -85,7 +85,7 @@ function brepInvokeCalls(source: string): { readonly method: string; readonly ke
   }));
 }
 
-const AFFINE_FIXTURE_PATH = "../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🧫️fixtures/🔁️affine-transforms/🔣️.json";
+const AFFINE_FIXTURE_PATH = "../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🧪️tests/🧫️fixtures/🔁️affine-transforms/🔣️.json";
 
 /** 📥️ Reads the fixture and refuses a renamed contract or an empty case list, so a drift never passes over zero vectors. */
 async function affineFixture(source: TestSource): Promise<AffineFixture> {

@@ -1,10 +1,10 @@
 //! 🧪️ Committed vector `➕add-member` / `⛔dupe`: re-applying the op to the after-snapshot it already produced is refused with `mutation.duplicate-id` (fatal) and leaves the document untouched.
 use crate::{En1999Diff, En1999Mutation, En1999Snapshot};
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-member/⛔dupe/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-member/⛔dupe/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-member/⛔dupe/🦠️mutation/🔣️.json");
-const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-member/⛔dupe/🔺️diff/🚫️.absent");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-member/⛔dupe/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕add-member/⛔dupe/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕add-member/⛔dupe/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕add-member/⛔dupe/🦠️mutation/🔣️.json");
+const DIFF_ABSENT: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕add-member/⛔dupe/🔺️diff/🚫️.absent");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕add-member/⛔dupe/🎯️outcome/🔣️.json");
 fn before() -> En1999Snapshot { semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before") }
 fn mutation() -> En1999Mutation { semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation") }
 #[test]

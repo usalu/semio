@@ -90,7 +90,7 @@ struct DriveFixture {
 }
 
 fn fixture() -> DriveFixture {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🧵️spawned-job-drive/🔣️.json")).expect("spawned-job-drive fixture JSON")
+    serde_json::from_str(include_str!("../🧫️fixtures/🧵️spawned-job-drive/🔣️.json")).expect("spawned-job-drive fixture JSON")
 }
 
 fn transcript(running_prefix: u32, tail: &[SpawnedJobStep]) -> Vec<SpawnedJobStep> {

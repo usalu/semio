@@ -8,7 +8,7 @@ use replication::{PresenceDomain, PresenceInteraction};
 use serde_json::Value;
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/👕️canvas-presence/🔣️.json")).expect("canvas presence fixture")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/👕️canvas-presence/🔣️.json")).expect("canvas presence fixture")
 }
 
 /// 🔢️ A fixture value with every number as `f64`, so an `f32` screen coordinate compares to its JSON integer.

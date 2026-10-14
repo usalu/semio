@@ -17,7 +17,7 @@
 //! `InputState` loaded exactly the way the shell loads it: the window's own `ScrollRegion` first,
 //! the body's entries after.
 //!
-//! Oracle: `🖱️ui/🧫️fixtures/🎯️retained-hit-targets/🔣️.json`; its TypeScript twin is
+//! Oracle: `🖱️ui/🧪️tests/🧫️fixtures/🎯️retained-hit-targets/🔣️.json`; its TypeScript twin is
 //! `📺️renderer/🧑‍🎨engine/🧪️tests/🎯️retained-hit-targets/🟦️.ts`.
 
 use super::{HitKind, HitTarget, InputState};
@@ -32,7 +32,7 @@ use crate::wgpu::Label;
 use serde_json::Value;
 
 fn law() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🎯️retained-hit-targets/🔣️.json")).expect("retained hit target fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🎯️retained-hit-targets/🔣️.json")).expect("retained hit target fixture")
 }
 
 /// 🎬️ A scene host that paints one rect per slot — enough for the `Scenes` phase of a body whose

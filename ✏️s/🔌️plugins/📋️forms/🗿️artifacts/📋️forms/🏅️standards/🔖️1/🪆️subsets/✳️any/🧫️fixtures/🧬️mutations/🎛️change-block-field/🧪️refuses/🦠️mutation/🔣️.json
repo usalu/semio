@@ -1,6 +1,0 @@
-{
-  "mutation": "changeBlockField",
-  "blockId": "q-area",
-  "field": "min",
-  "value": 150.0
-}

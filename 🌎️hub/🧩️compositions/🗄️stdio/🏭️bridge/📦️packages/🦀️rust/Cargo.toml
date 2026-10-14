@@ -21,6 +21,7 @@ name = "semio-hub-stdio-mutation-bridge"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-pack = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 # 🧩️ Composition Dependencies

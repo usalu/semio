@@ -1,4 +1,4 @@
-import { readBuildMode, type BuildMode } from "../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { readBuildMode, type BuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { join } from "node:path";
 
 /** 📦️ Authored fields that decide where a browser release bundle is published. */

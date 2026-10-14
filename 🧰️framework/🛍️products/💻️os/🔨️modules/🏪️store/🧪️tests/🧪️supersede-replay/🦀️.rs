@@ -16,7 +16,7 @@ fn fixture_demo_owners()->DocumentStoreOwners<DemoSnapshot,DemoMutation> {
 
 pub(super) async fn fixture_author<P, M>(store: &mut ArtifactStore<P, M>, command: ArtifactCommand<M>) -> Result<CommandReceipt, VcsError>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     let mut observed = 0;
@@ -37,7 +37,7 @@ fn fixture_planning_policy()->RetainedCloneGrant { RetainedCloneGrant { maximum_
 
 /// 🎟️ Finalizes the original replay through the fixture caller's existing identity authority.
 async fn fixture_finalize<P,M>(store:&mut ArtifactStore<P,M>,finished:EditReplayResult<P,M>,finalization:HistoryFinalization)->Result<CommandReceipt,VcsError>
-where P:Clone+ToValue+FromValue+ArtifactPack+Send+Sync+'static,M:Clone+ToValue+FromValue+Mutation<P>+OpBinary+OpText+Send+'static {
+where P:Clone+ToValue+FromValue+ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot+Send+Sync+'static,M:Clone+ToValue+FromValue+Mutation<P>+OpBinary+OpText+Send+'static {
     let mut observed=0;
     let mut observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=FIXTURE_IDENTITY_BYTE_CEILING);observed=progress.owned_bytes;true};
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(FIXTURE_IDENTITY_BYTE_CEILING,&mut observer).expect("original fixture finalization identity authority");
@@ -123,7 +123,7 @@ fn outcomes_by_position(store: &ArtifactStore<DemoSnapshot, DemoMutation>, outco
 /// blocking case is refused with nothing changed.
 #[semio_framework_async_macros::async_test]
 async fn supersede_replay_corpus_matches_the_store() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️supersede-replay/🔣️.json")).expect("corpus parses");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️supersede-replay/🔣️.json")).expect("corpus parses");
     for case in corpus["cases"].as_array().expect("cases") {
         let name = case["name"].as_str().expect("case name");
         let initial: Option<i32> = serde_json::from_value(case["initial"]["n"].clone()).expect("initial n");
@@ -666,7 +666,7 @@ async fn a_member_document_with_supersessions_hydrates_to_its_superseded_state()
 
 #[semio_framework_async_macros::async_test]
 async fn retained_hydration_preserves_the_original_opened_actor_across_stored_authors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️opened-hydration-actor/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️opened-hydration-actor/🔣️.json")).unwrap();
     let opened = fixture["openedActor"].as_str().unwrap();
     let author = fixture["historyAuthor"].as_str().unwrap();
     assert_ne!(opened, author);
@@ -723,7 +723,7 @@ async fn retained_hydration_preserves_the_original_opened_actor_across_stored_au
 
 #[semio_framework_async_macros::async_test]
 async fn cancelled_hydration_retires_the_same_original_opened_actor_owner() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️opened-hydration-actor/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️opened-hydration-actor/🔣️.json")).unwrap();
     let source = demo_store("cancelled-opened-actor", Some(0)).await;
     let files = print_document_pack(source.envelope()).await.unwrap();
     let history = crate::os_spr::decode_history(&files.spr, &crate::os_spr::DecodeOptions::default()).await.unwrap();
@@ -1066,7 +1066,7 @@ async fn a_viewer_head_round_trips_through_the_spr_pack() {
 #[semio_framework_async_macros::async_test]
 async fn a_config_store_holds_undo_and_redo_only() {
     use crate::os_spr::HistoryTransitionKind::{Checkout, Commit, Supersede};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/📡️replication/🔗️causal/🧫️fixtures/🧫️history-transition/🔣️.json")).expect("history transition fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/📡️replication/🔗️causal/🧪️tests/🧫️fixtures/🧫️history-transition/🔣️.json")).expect("history transition fixture parses");
     let admitted = |shape: &str| -> Vec<String> {
         let row = fixture["shapes"].as_array().expect("shape rows").iter().find(|row| row["shape"] == shape).expect("a shape row");
         row["admits"].as_array().expect("admits").iter().map(|kind| kind.as_str().expect("kind").to_string()).collect()
@@ -1308,7 +1308,7 @@ async fn a_refused_local_transition_retracts_and_the_author_converges_with_the_h
 /// ⌛️ Planning, prefix folding and replay each yield after one unit; cancelled and stale cursors never publish.
 #[semio_framework_async_macros::async_test]
 async fn bounded_history_read_cursors_obey_the_neutral_law() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️supersede-replay/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️supersede-replay/🔣️.json")).unwrap();
     let law = &corpus["boundedHistoryRead"];
     let close_items = law["closeGrant"]["maximumItems"].as_u64().unwrap() as usize;
     let release_bytes = law["closeGrant"]["maximumReleaseBytes"].as_u64().unwrap() as usize;

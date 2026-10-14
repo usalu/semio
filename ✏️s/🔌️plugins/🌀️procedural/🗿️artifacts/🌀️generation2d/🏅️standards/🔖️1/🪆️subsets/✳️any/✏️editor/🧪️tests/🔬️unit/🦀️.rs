@@ -604,7 +604,7 @@ fn the_demo_run_job_traces_every_node_settles_and_stays_under_the_interactive_ce
     use crate::retirement_driver::{close_job, step_once, Stepped};
     use semio_framework_job::{Generation, OperationId};
     use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunTick, ToolRunTraceOp};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/⏯️preview-eval-run.json")).expect("run fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/⏯️preview-eval-run.json")).expect("run fixture");
     let row = &fixture["demoRun"];
     let expected = &row["expected"];
     let (window_id, kind) = (row["window"]["id"].as_str().unwrap(), edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW);
@@ -1028,7 +1028,7 @@ async fn import_params_in_patches_matching_input_slider() {
 
 #[semio_framework_async_macros::async_test]
 async fn import_intrinsic_params_borrows_the_canonical_numeric_rows_and_retires_source() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📥️media/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📥️media/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let oracle = case["input"].as_object().unwrap().get("slider").and_then(serde_json::Value::as_f64).unwrap_or(fixture["initialValue"].as_f64().unwrap());
         assert_eq!(oracle, case["expected"].as_f64().unwrap());

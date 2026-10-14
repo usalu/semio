@@ -13,7 +13,7 @@ export async function testImportEdgeEquality(workspace: string, output: string):
   const pgPath = join(repositoryData, "project-graph.json"), fmPath = join(repositoryData, "file-map.json");
   assert.ok(existsSync(pgPath) && existsSync(fmPath), "registered Nx invocation must publish its current repository graph and file map");
   const pg = JSON.parse(readFileSync(pgPath, "utf8")), fm = JSON.parse(readFileSync(fmPath, "utf8"));
-  const fixtureRoot = join(import.meta.dir, "../../🧫️fixtures/import-edges");
+  const fixtureRoot = join(import.meta.dir, "../🧫️fixtures/import-edges");
   const cases = JSON.parse(readFileSync(join(fixtureRoot, "cases.json"), "utf8"));
   const root = mkdtempSync(join(output, "e-"));
   const dataDir = join(root, ".nx/workspace-data");

@@ -5,10 +5,10 @@ import * as ts from "typescript";
 import {readFileSync,writeFileSync,mkdirSync,mkdtempSync,existsSync} from "node:fs";
 import {resolve,join,dirname} from "node:path";
 import {spawnSync} from "node:child_process";
-import law from "../../../🧫️fixtures/📍️ownership/🧭️direction/🔣️.json";
+import law from "../../🧫️fixtures/📍️ownership/🧭️direction/🔣️.json";
 const root=resolve(import.meta.dir,"../../../../../../.."),read=(path:string)=>readFileSync(join(root,path),"utf8"),owner="🧰️framework/🔨️modules/◻️2d/🧮️compute";
 test("closed neutral compute ownership contains only portable fields",()=>{
- const fixture = JSON.parse(read(owner + "/🧫️fixtures/📍️ownership/🔣️.json"));
+ const fixture = JSON.parse(read(owner + "/🧪️tests/🧫️fixtures/📍️ownership/🔣️.json"));
  expect(Object.keys(fixture).sort()).toEqual([...law.keys].sort());
  for(const path of [fixture.source,fixture.unit])expect(path.startsWith(law.neutralPrefix+"/")).toBe(true);
 });

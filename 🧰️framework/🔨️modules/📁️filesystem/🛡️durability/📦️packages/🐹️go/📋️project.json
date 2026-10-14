@@ -1,0 +1,6 @@
+{
+  "name": "@semio-tech/framework-filesystem-durability-go",
+  "projectType": "library",
+  "sourceRoot": "🧰️framework/🔨️modules/📁️filesystem/🛡️durability/📦️packages/🐹️go",
+  "tags": ["role:framework", "language:go"]
+}

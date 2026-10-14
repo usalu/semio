@@ -1,0 +1,13 @@
+{
+  "files": [
+    "src/direct/manifest.json",
+    "src/package/owned-manifest.json",
+    "src/package/node_modules/dependency/manifest.json"
+  ],
+  "expected": [
+    "src/direct/manifest.json",
+    "src/package/owned-manifest.json"
+  ],
+  "dependencyLink": "src/package/node_modules/@semio-tech/framework",
+  "sourceLink": "src/source-link"
+}

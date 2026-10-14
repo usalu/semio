@@ -13,7 +13,7 @@ use ui_tui::tui::event::{mods, Event, Key, KeyEvent, MouseButton, MouseEvent, Mo
 use ui_tui::tui::geometry::{Pos, Size};
 use ui_tui::tui::theme::{Status, Theme};
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../../🧫️fixtures/🔎️launcher/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔎️launcher/🔣️.json")).unwrap() }
 
 fn registry() -> Arc<Registry> {
     let facts: Facts = serde_json::from_value(fixture()["workspace"].clone()).unwrap();
@@ -94,7 +94,7 @@ fn spawned(dashboard: &Dashboard) -> Vec<(String, SessionCommand)> {
 
 #[test]
 fn native_leader_bytes_match_the_shared_control_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/⌨️controls/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/⌨️controls/🔣️.json")).unwrap();
     let bytes: Vec<u8> = fixture["bytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
     let mut parser = ui_tui::tui::ansi::AnsiParser::new();
     let mut events = Vec::new();
@@ -105,7 +105,7 @@ fn native_leader_bytes_match_the_shared_control_vectors() {
 
 #[test]
 fn decoded_terminal_keys_resolve_through_the_keymap_exactly_as_written() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/⌨️controls/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/⌨️controls/🔣️.json")).unwrap();
     let bytes: Vec<u8> = fixture["bytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
     let mut parser = ui_tui::tui::ansi::AnsiParser::new();
     let mut events = Vec::new();
@@ -119,7 +119,7 @@ fn decoded_terminal_keys_resolve_through_the_keymap_exactly_as_written() {
 
 #[test]
 fn terminal_bytes_become_the_keymaps_canonical_spellings() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/⌨️keymap/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/⌨️keymap/🔣️.json")).unwrap();
     for row in fixture["terminal"].as_array().unwrap() {
         let bytes: Vec<u8> = row["bytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
         let mut parser = ui_tui::tui::ansi::AnsiParser::new();

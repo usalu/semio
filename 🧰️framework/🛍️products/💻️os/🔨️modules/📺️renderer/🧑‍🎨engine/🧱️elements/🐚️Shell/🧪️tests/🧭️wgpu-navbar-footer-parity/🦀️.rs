@@ -21,7 +21,7 @@ fn repo_root() -> std::path::PathBuf {
 
 #[test]
 fn explicit_window_titles_follow_the_live_session_owner() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🌐️instance-title/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧪️tests/🧫️fixtures/🌐️instance-title/🔣️.json")).unwrap();
     let mut shell = super::window_pane_chrome_tests::split_pane_shell();
     for owner in fixture["owners"].as_array().unwrap() {
         let session = shell.session.as_mut().unwrap();
@@ -42,7 +42,7 @@ fn explicit_window_titles_follow_the_live_session_owner() {
 }
 
 fn chrome_geometry_fixture() -> Value {
-    let path = repo_root().join("🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🔝️navbar-centered-band/🔣️.json");
+    let path = repo_root().join("🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🔝️navbar-centered-band/🔣️.json");
     serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("read {}: {error}", path.display()))).expect("navbar centered-band fixture")
 }
 
@@ -188,7 +188,7 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
         Some(false),
         "🔀️ replacement reconcile clears the predecessor instead of retaining two selected rows"
     );
-    let title_fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🌐️instance-title/🔣️.json")).unwrap();
+    let title_fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧪️tests/🧫️fixtures/🌐️instance-title/🔣️.json")).unwrap();
     for transition in title_fixture["transitions"].as_array().unwrap() {
         shell.locale_id = transition["locale"].as_str().unwrap().into();
         shell.sync_dock();
@@ -322,7 +322,7 @@ fn an_unfolded_projection_pane_publishes_its_rows_within_one_frame_budget() {
     }
     let heights: Vec<f32> = rows.iter().map(|row| row.rect.y).collect();
     assert!(heights.windows(2).all(|pair| pair[1] > pair[0]), "⏱️ and reads top-down in React's declared order: {heights:?}");
-    let projection_fixture: Value = serde_json::from_str(include_str!("../../../🌐️World3dHost/🧫️fixtures/🔀️projection-pane/🔣️.json")).unwrap();
+    let projection_fixture: Value = serde_json::from_str(include_str!("../../../🌐️World3dHost/🧪️tests/🧫️fixtures/🔀️projection-pane/🔣️.json")).unwrap();
     let declared_heights: Vec<f32> = projection_fixture["rows"].as_array().unwrap().iter().map(|item| {
         let suffix = format!(".{}", semio_framework::element_id_segment(item["templateId"].as_str().unwrap()));
         rows.iter().find(|row| row.control_id.as_deref().is_some_and(|id| id.ends_with(&suffix))).unwrap().rect.y
@@ -462,7 +462,7 @@ fn the_navbar_cluster_walks_to_completion_and_keeps_its_bands() {
     let resumed = hits.iter().find(|(id, _)| id == "fixture.leading.resumed").expect("🧭️ resumed fixture tab");
     let resumed_item = ChromeGroupItem { control_id: "", icon_id: Some("box"), label: Some(resumed_label), active: false, disabled: false, kind: HitKind::Toggle };
     assert!((resumed.1.w - retained_panel_chrome_item_width(&mut atlas, &theme, &resumed_item).expect("measured panel tab")).abs() < 0.01, "🧭️ the physical chip includes React's trailing grip extent");
-    let dock_fixture: Value = serde_json::from_str(&std::fs::read_to_string(repo_root().join("🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/📐️dock-axis-geometry/🔣️.json")).expect("shared physical React dock oracle")).expect("dock geometry fixture");
+    let dock_fixture: Value = serde_json::from_str(&std::fs::read_to_string(repo_root().join("🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/📐️dock-axis-geometry/🔣️.json")).expect("shared physical React dock oracle")).expect("dock geometry fixture");
     let leading_icon = dock_fixture["panelChrome"]["leadingIconPixels"].as_f64().expect("leading icon pixels") as f32;
     let grip = dock_fixture["panelChrome"]["dragHandlePixels"].as_f64().expect("drag handle pixels") as f32;
     let measured_width = theme.padding_standard * 2.0 + leading_icon + atlas.measure_text(resumed_label, theme.font_size_small).0 + theme.gap_standard * 2.0 + grip;
@@ -637,7 +637,7 @@ fn app_manifest_carries_the_introduction_the_tour_arms_on() {
 }
 
 fn chrome_metrics_fixture() -> Value {
-    let path = repo_root().join("🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🔝️navbar-centered-band/🔣️.json");
+    let path = repo_root().join("🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🔝️navbar-centered-band/🔣️.json");
     serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("read {}: {error}", path.display()))).expect("navbar centered-band fixture")
 }
 

@@ -6,7 +6,7 @@ import { applyPatch } from "fast-json-patch";
 import Ajv from "ajv";
 import retirementContract from "../../../../../../../../../🔨️modules/🌱️value/♻️retirement/🧬️contract/🧬️schema/🔣️.json" with { type: "json" };
 import orderedRetirement from "../../../../../../../../../🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json" with { type: "json" };
-import fixture from "../../../📏️retirement/🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "../../../📏️retirement/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 
 test("erased retirement uses separate fallible demands and a paid terminal box turn", async () => {
   const oracle = new Ajv({ strict: false });
@@ -91,7 +91,7 @@ test("member-open retirement requires the original full allocation including emp
 });
 
 test("member-open inline page work and whole backing release remain separate authorities", async () => {
-  const input = await Bun.file(new URL("../../../📏️retirement/🧫️fixtures/📄️inline.json", import.meta.url)).json();
+  const input = await Bun.file(new URL("../../../📏️retirement/🧪️tests/🧫️fixtures/📄️inline.json", import.meta.url)).json();
   for (const row of input.cases) {
     let retained = row.inputBytes;
     const pages = Math.ceil(retained / input.pageBytes);
@@ -454,7 +454,7 @@ test("optional preparation source birth funds the whole original Arc tree before
 
 
 test("original source iterator retains its actual allocation extent through prefix handoff", async () => {
-  const neutral = await Bun.file(new URL("../../../../../♻️retirement/📦️backing/🧫️fixtures/🔣️.json", import.meta.url)).json();
+  const neutral = await Bun.file(new URL("../../../../../♻️retirement/📦️backing/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
   const law = neutral.sourceIterator;
   const source = Buffer.allocUnsafeSlow(law.backingCapacity * 8);
   law.values.forEach((value: string, index: number) => source.writeBigUInt64LE(BigInt(value), index * 8));
@@ -532,7 +532,7 @@ test("source factory tree quotes capacity and depth before its constructor callb
 
 
 test("bounded config factory admits actual typed owner and preserves full receipts", async () => {
-  const neutral = await Bun.file(new URL("../../../../../♻️retirement/📦️backing/🧫️fixtures/🔣️.json", import.meta.url)).json();
+  const neutral = await Bun.file(new URL("../../../../../♻️retirement/📦️backing/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
   const law = neutral.boundedConfigFactory;
   const payload = Buffer.from(law.body.repeat(law.repeat), "utf8");
   const oracle = new Ajv({ strict: false });
@@ -677,7 +677,7 @@ test("ready config auxiliary owner needs capacity and no transferred catalog", a
 
 
 test("completed original publication retains factory and physical frame custody", async () => {
-  const neutral = await Bun.file(new URL("../../../../../♻️retirement/📦️backing/🧫️fixtures/🔣️.json", import.meta.url)).json();
+  const neutral = await Bun.file(new URL("../../../../../♻️retirement/📦️backing/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
   const law = neutral.completedRecordCustody;
   for (const wordBytes of law.wordBytes) {
   const original = Buffer.allocUnsafeSlow(law.factorySources * law.pointerWordsPerCapability * wordBytes);
@@ -764,7 +764,7 @@ test("history fold terminal output retains actual physical cleanup receipt", asy
 });
 
 test("original document Store disposer forwards full grants and terminal receipt", async () => {
-  const neutral = await Bun.file(new URL("../../../../../♻️retirement/📦️backing/🧫️fixtures/🔣️.json", import.meta.url)).json();
+  const neutral = await Bun.file(new URL("../../../../../♻️retirement/📦️backing/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
   const law = neutral.storeDisposer;
   const oracle = new Ajv({ strict: false });
   oracle.addSchema(orderedRetirement);
@@ -815,7 +815,7 @@ test("hydration fold outputs retain original custody before receipt refusal", as
 test("member input buffer birth preserves explicit capacity authority before allocation", async () => {
   const oracle = new Ajv({ strict: false }); oracle.addSchema(orderedRetirement); oracle.addSchema(retirementContract);
   const valid = oracle.compile({ $ref: retirementContract.$id + "#/$defs/Grant" });
-  const plain = await Bun.file(new URL("../../../🏭️operation/📏️birth/🧫️fixtures/🔣️.json", import.meta.url)).json();
+  const plain = await Bun.file(new URL("../../../🏭️operation/📏️birth/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
   const capacity = plain.inputBuffer.capacityBytes;
   expect(valid(plain.inputBuffer.policy)).toBe(true);
   for (const grant of [
@@ -844,7 +844,7 @@ test("member input buffer birth preserves explicit capacity authority before all
 });
 
 test("original evaluation resource scopes preserve complete physical grants", async () => {
-  const neutral = await Bun.file(new URL("../../../../../♻️retirement/📦️backing/🧫️fixtures/🔣️.json", import.meta.url)).json();
+  const neutral = await Bun.file(new URL("../../../../../♻️retirement/📦️backing/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
   const law = neutral.evaluationResources;
   const backing = Buffer.allocUnsafeSlow(law.releaseBytes);
   const state = applyPatch({ source: backing.byteLength, admitted: law.capacityBytes, physical: 0 }, [{ op: "replace", path: "/physical", value: backing.byteLength + law.capacityBytes }], true).newDocument;
@@ -896,7 +896,7 @@ test("initialization catalog birth admits one exact original lane under supplied
   oracle.addSchema(orderedRetirement);
   oracle.addSchema(retirementContract);
   const grants = oracle.compile({ $ref: `${retirementContract.$id}#/$defs/Grant` });
-  const plain = await Bun.file(new URL("../../../../../🏗️initialization/📚️catalog/🧫️fixtures/🔣️.json", import.meta.url)).json();
+  const plain = await Bun.file(new URL("../../../../../🏗️initialization/📚️catalog/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
   const policy = plain.birthPolicy;
   expect(grants(policy)).toBe(true);
   expect(plain.birthCancelCuts).toEqual(Array.from({ length: plain.lanes.length + 1 }, (_, index) => index));
@@ -959,7 +959,7 @@ test("genesis admission preserves original payload and envelope metadata under s
 
 test("original inference retained wallet transports every unequal and zero axis", async () => {
   const root = new URL("../../../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/", import.meta.url);
-  const fixture = await Bun.file(new URL("🧫️fixtures/🔣️.json", root)).json();
+  const fixture = await Bun.file(new URL("🧪️tests/🧫️fixtures/🔣️.json", root)).json();
   const schema = await Bun.file(new URL("🧬️schema/🔣️.json", root)).json();
   const validate = new Ajv().compile(schema);
   for (const row of fixture.rows) {
@@ -1058,7 +1058,7 @@ test("envelope birth retains original phased catalogs before hydration advanceme
 
 test("original inference reports the actual independent physical receipt", async () => {
   const root = new URL("../../../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/", import.meta.url);
-  const fixture = await Bun.file(new URL("🧫️fixtures/🔣️.json", root)).json();
+  const fixture = await Bun.file(new URL("🧪️tests/🧫️fixtures/🔣️.json", root)).json();
   const validate = new Ajv().compile(await Bun.file(new URL("🧬️schema/🧾️progress.json", root)).json());
   for (const row of fixture.receipts) {
     expect(validate(row)).toBe(true);
@@ -1107,7 +1107,7 @@ test("original interactive cancellation retains the same deep owner until physic
 
 
 test("actual snapshot input step funds original birth and both physical copies", async () => {
-  const plain = await Bun.file(new URL("../../../🏭️operation/📏️birth/🧫️fixtures/🔣️.json", import.meta.url)).json();
+  const plain = await Bun.file(new URL("../../../🏭️operation/📏️birth/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
   const row = plain.snapshotInput;
   const oracle = new Ajv({ strict: false }); oracle.addSchema(orderedRetirement); oracle.addSchema(retirementContract);
   expect(oracle.compile({ $ref: retirementContract.$id + "#/$defs/Grant" })(row.policy)).toBe(true);
@@ -1140,8 +1140,8 @@ test("canonical reader ownership preserves the original byte oracle under indepe
   const { resolve } = await import("node:path");
   const root = process.cwd();
   const base = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/";
-  const row = JSON.parse(readFileSync(resolve(root, base + "🧫️fixtures/📖️canonical-reader.json"), "utf8"));
-  const original = JSON.parse(readFileSync(resolve(root, base + "🧫️fixtures/🗺️canonical-borrowed-map.json"), "utf8"));
+  const row = JSON.parse(readFileSync(resolve(root, base + "🧪️tests/🧫️fixtures/📖️canonical-reader.json"), "utf8"));
+  const original = JSON.parse(readFileSync(resolve(root, base + "🧪️tests/🧫️fixtures/🗺️canonical-borrowed-map.json"), "utf8"));
   const oracle = new Ajv({ strict: false }); oracle.addSchema(retirementContract); oracle.addSchema(orderedRetirement);
   const validate = oracle.compile({ $ref: retirementContract.$id + "#/$defs/Grant" });
   expect(validate(row.retirementGrant)).toBe(true);
@@ -1182,7 +1182,7 @@ test("canonical reader ownership preserves the original byte oracle under indepe
 test("member request physical grants remain caller policy independent of the close frontier",async()=>{
  const fs=await import("node:fs"),path=await import("node:path");
  const base=path.join(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open");
- const law=JSON.parse(fs.readFileSync(path.join(base,"📏️retirement/🧫️fixtures/🔣️.json"),"utf8"));
+ const law=JSON.parse(fs.readFileSync(path.join(base,"📏️retirement/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
  const ajv=new Ajv({strict:false});ajv.addSchema(orderedRetirement);ajv.addSchema(retirementContract);const validate=ajv.compile({$ref:retirementContract.$id+"#/$defs/Grant"});
  expect(validate(law.physicalCloseGrant)).toBe(true);expect(Object.values(law.physicalCloseGrant)).toEqual([1,4096,0,262144,64]);
  const source=fs.readFileSync(path.join(base,"🧪️tests/🔬️unit/🦀️.rs"),"utf8");
@@ -1206,7 +1206,7 @@ test("snapshot input receipts debit the original context wallet exactly once",as
  expect(input.includes("let caller = cx.retained_grant()")).toBe(true);
  for(const axis of ["items","copy_bytes","capacity_bytes","release_bytes","depth"])expect(input.includes("grant.maximum_"+axis+".min(caller.maximum_"+axis+")")).toBe(true);
  expect(input.includes("self.pending(expected_bytes, progress, cx)")).toBe(true);
- const plain=JSON.parse(fs.readFileSync(path.join(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📏️birth/🧫️fixtures/🔣️.json"),"utf8")).snapshotInput;
+ const plain=JSON.parse(fs.readFileSync(path.join(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📏️birth/🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).snapshotInput;
  const grant=plain.policy,remaining={...grant};
  const bytes=new Uint8Array(plain.payloadBytes),receipt={copiedItems:1,copiedBytes:bytes.byteLength*plain.expected.copiesPerPayloadByte,retainedCapacityBytes:0,releasedBytes:0};
  const expected={...remaining,maximumItems:remaining.maximumItems-receipt.copiedItems,maximumCopyBytes:remaining.maximumCopyBytes-receipt.copiedBytes};
@@ -1219,7 +1219,7 @@ test("snapshot input receipts debit the original context wallet exactly once",as
 test("member and hydration paid turns preserve the original physical wallet",async()=>{
  const fs=await import("node:fs"),path=await import("node:path");
  const base=path.join(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store");
- const plain=JSON.parse(fs.readFileSync(path.join(base,"🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🔣️.json"),"utf8")).physicalWallet;
+ const plain=JSON.parse(fs.readFileSync(path.join(base,"🧩️composition/🚪️open/📏️retirement/🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).physicalWallet;
  const ajv=new Ajv({strict:false});ajv.addSchema(orderedRetirement);ajv.addSchema(retirementContract);const validate=ajv.compile({$ref:retirementContract.$id+"#/$defs/Grant"});expect(validate(plain.grant)).toBe(true);
  const axes=[["maximumItems","copiedItems"],["maximumCopyBytes","copiedBytes"],["maximumCapacityBytes","retainedCapacityBytes"],["maximumReleaseBytes","releasedBytes"]];
  const backing=Buffer.allocUnsafeSlow(plain.grant.maximumCapacityBytes);expect(backing.buffer.byteLength).toBe(plain.receipts[0].retainedCapacityBytes);expect(backing.byteLength).toBe(plain.receipts[1].releasedBytes);
@@ -1244,7 +1244,7 @@ test("snapshot native consumers retain the genuine caller controls and progress 
  expect(snapshot.includes("semio_framework_value::native_decoding::NativeDecodeProgress")).toBe(true);expect(snapshot.includes("semio_framework_value::native_encoding::NativeEncodeProgress")).toBe(true);
  const guards=encoding.slice(encoding.indexOf("    GuardedEncoding,"),encoding.indexOf("#[test]"));
  expect(guards.includes("native_owner: &mut NativeSnapshotEncodeOwner")).toBe(true);expect(guards.includes("let native = native_owner.native();")).toBe(true);expect(guards.includes("NativeEncodeControl::new")).toBe(false);expect(guards.includes("encoding, control, native_owner")).toBe(true);
- const original=decoding.slice(decoding.indexOf("impl ArtifactSqliteSnapshot for DecodedBuffers"),decoding.indexOf("fn to_sqlite_database"));expect(original.includes("native: &mut NativeSnapshotDecodeOwner")).toBe(true);expect(original.includes("            native,")).toBe(true);
+ const original=decoding.slice(decoding.indexOf("impl ArtifactSqliteSnapshotHost for DecodedBuffers"),decoding.indexOf("fn to_sqlite_database"));expect(original.includes("native: &mut NativeSnapshotDecodeOwner")).toBe(true);expect(original.includes("            native,")).toBe(true);
  const bytes=Buffer.from("雪","utf8");expect(new TextEncoder().encode("雪")).toEqual(new Uint8Array(bytes));expect(JSON.parse(JSON.stringify({bytes:[...bytes],originalControl:true}))).toEqual({bytes:[...bytes],originalControl:true});
  for(const [name,input]of [["snapshot",snapshot],["encoding",encoding],["decoding",decoding]]){const grammar=spawnSync("rustfmt",["--edition","2021","--emit","stdout"],{input,encoding:"utf8",timeout:2000});expect(grammar.error,name).toBeUndefined();expect(grammar.status,name).toBe(0);}
  console.log("[DEBUG] Current exact native progress domains and supplied original codec controls forwarded; independent UTF8 oracle preserved, actual compiler/runtime renewal required");
@@ -1252,7 +1252,7 @@ test("snapshot native consumers retain the genuine caller controls and progress 
 
 test("native snapshot encoder keeps one original paid receipt wallet",async()=>{
  const fs=await import("node:fs"),path=await import("node:path");const root=process.cwd();
- const plain=JSON.parse(fs.readFileSync(path.join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🔣️.json"),"utf8")).physicalWallet;
+ const plain=JSON.parse(fs.readFileSync(path.join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📏️retirement/🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).physicalWallet;
  const ajv=new Ajv({strict:false});ajv.addSchema(orderedRetirement);ajv.addSchema(retirementContract);expect(ajv.compile({$ref:retirementContract.$id+"#/$defs/Grant"})(plain.grant)).toBe(true);
  let used={copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0};let remaining={...plain.grant};const axes=[["maximumItems","copiedItems"],["maximumCopyBytes","copiedBytes"],["maximumCapacityBytes","retainedCapacityBytes"],["maximumReleaseBytes","releasedBytes"]];
  for(const receipt of plain.receipts){const operations=axes.map(([grant,progress])=>({op:"replace",path:"/"+grant,value:remaining[grant]-receipt[progress]}));for(const [grant,progress]of axes){expect(receipt[progress]).toBeLessThanOrEqual(remaining[grant]);used[progress]+=receipt[progress];}remaining=applyPatch(remaining,operations,true,false).newDocument;}
@@ -1288,13 +1288,13 @@ test("native snapshot writer keeps its static cursor in the original paid recipi
 
 test("native snapshot decoder retains constructor output before cancellation",async()=>{
  const fs=await import("node:fs"),path=await import("node:path");const root=process.cwd(),base="🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store";
- const plain=JSON.parse(fs.readFileSync(path.join(root,base,"📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧫️fixtures/🔣️.json"),"utf8"));
+ const plain=JSON.parse(fs.readFileSync(path.join(root,base,"📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
  const ajv=new Ajv({strict:false});ajv.addSchema(orderedRetirement);ajv.addSchema(retirementContract);expect(ajv.compile({$ref:retirementContract.$id+"#/$defs/Grant"})(plain.callerGrant)).toBe(true);
  const bytes=Buffer.from("雪","utf8"),original=new Uint8Array(bytes.length);original.set(new TextEncoder().encode("雪"));expect([...original]).toEqual([...bytes]);
  const source=fs.readFileSync(path.join(root,base,"📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs"),"utf8");
- const body=source.slice(source.indexOf("impl ArtifactSqliteSnapshot for DecodedBuffers"),source.indexOf("fn to_sqlite_database"));
+ const body=source.slice(source.indexOf("impl ArtifactSqliteSnapshotHost for DecodedBuffers"),source.indexOf("fn to_sqlite_database"));
  expect(body.includes("native: &mut NativeSnapshotDecodeOwner")).toBe(true);expect(body.includes("bind_original_buffers,")).toBe(true);
- const binding=source.slice(source.indexOf("fn bind_original_buffers"),source.indexOf("impl ArtifactSqliteSnapshot for DecodedBuffers"));
+ const binding=source.slice(source.indexOf("fn bind_original_buffers"),source.indexOf("impl ArtifactSqliteSnapshotHost for DecodedBuffers"));
  expect(binding.indexOf("*snapshot_output = Some")<binding.indexOf("body.allocate_vec_into(")).toBe(true);expect(binding.includes("std::mem::take(bytes)")).toBe(true);expect(binding.includes("Ok(())")).toBe(true);
  expect(source.includes("impl RetireOwned for DecodedBuffers")).toBe(true);expect(source.includes("self.buffers.retirement()")).toBe(true);
  const defining=fs.readFileSync(path.join(root,"🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs"),"utf8");expect(defining.includes("pub fn copy_bytes_into")).toBe(true);expect(defining.includes("output.extend_from_slice(chunk)")).toBe(true);
@@ -1303,7 +1303,7 @@ test("native snapshot decoder retains constructor output before cancellation",as
 
 test("named native ownership laws use independent positive grants",async()=>{
  const fs=await import("node:fs"),path=await import("node:path");const root=process.cwd(),base="🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store";
- const plain=JSON.parse(fs.readFileSync(path.join(root,base,"🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json"),"utf8"));const ajv=new Ajv({strict:false});ajv.addSchema(orderedRetirement);ajv.addSchema(retirementContract);expect(ajv.compile({$ref:retirementContract.$id+"#/$defs/Grant"})(plain.physicalCloseGrant)).toBe(true);
+ const plain=JSON.parse(fs.readFileSync(path.join(root,base,"🧩️composition/📨️emission/📦️owned/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));const ajv=new Ajv({strict:false});ajv.addSchema(orderedRetirement);ajv.addSchema(retirementContract);expect(ajv.compile({$ref:retirementContract.$id+"#/$defs/Grant"})(plain.physicalCloseGrant)).toBe(true);
  const source=fs.readFileSync(path.join(root,base,"🧪️tests/🔬️unit/🦀️.rs"),"utf8");
  for(const name of ["current_box_retirement_preserves_denied_owner_and_exact_physical_shell","current_typed_option_birth_retains_exact_original_and_paid_shell"]){
   const start=source.indexOf("fn "+name);expect(start).toBeGreaterThanOrEqual(0);const end=source.indexOf("\n#[test]",start);const body=source.slice(start,end<0?undefined:end);
@@ -1344,7 +1344,7 @@ test("current shared actor native callers retain genuine lease and original buff
  expect(request.includes("request.actor.0.capacity()")).toBe(false);expect(hydration.includes("owner.actor.0.capacity()")).toBe(false);
  expect(request.includes("request.closing_actor.as_ref().unwrap().as_ptr()")).toBe(true);expect(request.includes("SharedUtf8::admit(actor")).toBe(true);
  expect(history.includes("|value,output,native,body|")).toBe(true);expect(history.includes("body.admit_frontier(")).toBe(true);expect(history.includes("body.record_progress(")).toBe(true);expect(history.includes("*output=Some(())")).toBe(true);expect(history.includes("store::NativeSnapshotDecodeOwner::new(&mut original_native,caller_grant())")).toBe(true);
- const law=JSON.parse(fs.readFileSync(path.join(base,"🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🔣️.json"),"utf8"));
+ const law=JSON.parse(fs.readFileSync(path.join(base,"🧩️composition/🚪️open/📏️retirement/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
  expect(law.physicalCloseGrant.maximumCopyBytes).toBe(4096);
  for(const row of law.cases){const bytes=new TextEncoder().encode(row.text),original=Buffer.allocUnsafeSlow(row.capacityBytes);original.set(bytes);expect(bytes.byteLength).toBe(Buffer.byteLength(row.text,"utf8"));expect(original.byteLength).toBe(row.capacityBytes);expect(original.subarray(0,bytes.length).toString("utf8")).toBe(row.text);}
  console.log("[DEBUG] Shared actor source retains original payload buffer after funded lease transfer; fixed policy/Buffer/TextEncoder oracle preserved, native identity and System law unrun");
@@ -1352,21 +1352,21 @@ test("current shared actor native callers retain genuine lease and original buff
 
 test("native body octet spans debit independent policy and retain original cancelled backing",async()=>{
  const fs=await import("node:fs"),path=await import("node:path"),root=process.cwd();
- const neutral=JSON.parse(fs.readFileSync(path.join(root,"🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🪆️receiving/🔣️.json"),"utf8")).bodyCopy;
+ const neutral=JSON.parse(fs.readFileSync(path.join(root,"🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/🪆️receiving/🔣️.json"),"utf8")).bodyCopy;
  const ajv=new Ajv({strict:false});ajv.addSchema(orderedRetirement);ajv.addSchema(retirementContract);const validate=ajv.compile({$ref:retirementContract.$id+"#/$defs/Grant"});
  expect(validate(neutral.grant)).toBe(true);expect(validate(neutral.closeGrant)).toBe(true);
  const payload=new TextEncoder().encode(neutral.text.repeat(neutral.repeat)),oracle=Buffer.from(neutral.text.repeat(neutral.repeat),"utf8");expect(payload).toEqual(new Uint8Array(oracle));expect(payload.byteLength).toBeGreaterThan(neutral.cancelAt);
  for(const completed of [neutral.cancelAt,payload.byteLength]){const backing=Buffer.allocUnsafeSlow(payload.byteLength);backing.set(payload.subarray(0,completed));expect(backing.subarray(0,completed)).toEqual(oracle.subarray(0,completed));const receipt={copiedItems:1,copiedBytes:completed,retainedCapacityBytes:backing.byteLength,releasedBytes:0};const remaining=applyPatch(neutral.grant,[{op:"replace",path:"/maximumItems",value:neutral.grant.maximumItems-receipt.copiedItems},{op:"replace",path:"/maximumCopyBytes",value:neutral.grant.maximumCopyBytes-receipt.copiedBytes},{op:"replace",path:"/maximumCapacityBytes",value:neutral.grant.maximumCapacityBytes-receipt.retainedCapacityBytes}],true,false).newDocument;expect(remaining.maximumCapacityBytes).toBeLessThan(payload.byteLength);expect(remaining.maximumReleaseBytes).toBe(neutral.grant.maximumReleaseBytes);expect(remaining.maximumDepth).toBe(neutral.grant.maximumDepth);}
  const control=fs.readFileSync(path.join(root,"🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs"),"utf8"),decoder=fs.readFileSync(path.join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs"),"utf8");
  expect(control.includes("pub fn copy_bytes_into(&mut self,native:")).toBe(true);expect(control.includes("let result=native.copy_bytes_into(bytes,output)")).toBe(true);expect(control.includes("copied_bytes:output.len(),retained_capacity_bytes:output.capacity()")).toBe(true);
- const actual=decoder.slice(decoder.indexOf("fn bind_original_buffers"),decoder.indexOf("impl ArtifactSqliteSnapshot for DecodedBuffers"));expect(actual.includes("body.allocate_vec_into(")).toBe(true);expect(actual.includes("body.record_progress(")).toBe(true);expect(actual.includes("std::mem::take(bytes)")).toBe(true);expect(actual.includes("copy_bytes_into")).toBe(false);
+ const actual=decoder.slice(decoder.indexOf("fn bind_original_buffers"),decoder.indexOf("impl ArtifactSqliteSnapshotHost for DecodedBuffers"));expect(actual.includes("body.allocate_vec_into(")).toBe(true);expect(actual.includes("body.record_progress(")).toBe(true);expect(actual.includes("std::mem::take(bytes)")).toBe(true);expect(actual.includes("copy_bytes_into")).toBe(false);
  for(const input of [control,decoder]){const parsed=spawnSync("rustfmt",["--edition","2021","--emit","stdout"],{input,encoding:"utf8",timeout:2000});expect(parsed.error).toBeUndefined();expect(parsed.status).toBe(0);}
  console.log("[DEBUG] Native octet body fixed policy/Buffer/TextEncoder/JSONPatch oracle complete; original producer helper route explicit, native System/cancel law unrun");
 });
 
 test("failed native field admission uses genuine bounds and preserves real performed receipts",async()=>{
  const fs=await import("node:fs"),path=await import("node:path"),root=process.cwd(),base=path.join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store");
- const neutral=JSON.parse(fs.readFileSync(path.join(base,"🚪️io/🚫️refusal/🧫️fixtures/🔣️.json"),"utf8"));const ajv=new Ajv({strict:false});ajv.addSchema(orderedRetirement);ajv.addSchema(retirementContract);const validate=ajv.compile(JSON.parse(fs.readFileSync(path.join(root,"🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🧾️progress.json"),"utf8")));
+ const neutral=JSON.parse(fs.readFileSync(path.join(base,"🚪️io/🚫️refusal/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));const ajv=new Ajv({strict:false});ajv.addSchema(orderedRetirement);ajv.addSchema(retirementContract);const validate=ajv.compile(JSON.parse(fs.readFileSync(path.join(root,"🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🧾️progress.json"),"utf8")));
  for(const row of neutral.cases){expect(validate(row.receipt)).toBe(true);const total=applyPatch({capacity:0,released:0},[{op:"replace",path:"/capacity",value:row.receipt.retainedCapacityBytes},{op:"replace",path:"/released",value:row.receipt.releasedBytes}],true,false).newDocument;expect(total.capacity).toBe(row.expectedTotalCapacity);expect(total.released).toBe(row.expectedTotalRelease);}
  const original=fs.readFileSync(path.join(base,"🧪️tests/🔬️unit/🦀️.rs"),"utf8");const start=original.indexOf("fn field_close_failure_preserves_real_receipts_through_the_original_decode_job()");const actual=original.slice(start,original.indexOf("\n#[test]",start));expect(actual.includes("fn maximum_retained_close_bytes(&self)->usize { ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_FIELD_BYTES }")).toBe(true);expect(actual.includes("assert_eq!(progress.retained_capacity_bytes,allocated)")).toBe(true);expect(actual.includes("assert_eq!(progress.released_bytes,released)")).toBe(true);
  const allocated=Buffer.allocUnsafeSlow(1024);expect(allocated.byteLength).toBe(1024);expect(allocated.byteLength).toBeLessThan(262144*6);
@@ -1375,7 +1375,7 @@ test("failed native field admission uses genuine bounds and preserves real perfo
 
 test("original VCS checkpoint measurement stays borrowed and cannot become consuming authority",async()=>{
  const fs=await import("node:fs"),path=await import("node:path"),{default:Ajv2020}=await import("ajv/dist/2020.js"),root=process.cwd(),base=path.join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control");
- const plain=JSON.parse(fs.readFileSync(path.join(base,"🧫️fixtures/📥️input/🔣️.json"),"utf8")).checkpointProjection;
+ const plain=JSON.parse(fs.readFileSync(path.join(base,"🧪️tests/🧫️fixtures/📥️input/🔣️.json"),"utf8")).checkpointProjection;
  const original={maximum:plain.originalMaximumBytes,owned:0,finished:false,reserved_return:0,phase_start_owned:0,phase_start_reserved_return:0,received_output:0,received_input:0,received_retirement:plain.hostCharge};
  const projected=applyPatch(original,[{op:"add",path:"/kind",value:"original-retirement-measurement"},{op:"replace",path:"/received_retirement",value:original.received_retirement+plain.proposedCharge}],true,false).newDocument;
  const oracle=new Ajv2020({strict:false});expect(oracle.compile(JSON.parse(fs.readFileSync(path.join(base,"🔎️measurement/🧬️schema/🔣️.json"),"utf8")))(projected)).toBe(true);expect(oracle.compile(JSON.parse(fs.readFileSync(path.join(base,"🧬️schema/🧾️receipt/🔣️.json"),"utf8")))(projected)).toBe(false);
@@ -1398,7 +1398,7 @@ test("native SQLite binding transfers each original octet backing under unchange
  expect(received.every((buffer: Buffer,index: number)=>buffer.buffer===original[index].buffer)).toBe(true);
  expect(received.map((buffer: Buffer)=>buffer.length)).toEqual(row.bufferBytes);
  const native=fs.readFileSync(path.join(base,"🪶️native-decoding/🧪️tests/🦀️.rs"),"utf8");
- const binding=native.slice(native.indexOf("fn bind_original_buffers"),native.indexOf("impl ArtifactSqliteSnapshot for DecodedBuffers"));
+ const binding=native.slice(native.indexOf("fn bind_original_buffers"),native.indexOf("impl ArtifactSqliteSnapshotHost for DecodedBuffers"));
  expect(binding).toContain("body.admit_frontier");
  expect(binding).toContain("std::mem::take(bytes)");
  expect(binding).not.toContain("copy_bytes_into");
@@ -1415,7 +1415,7 @@ test("original history mutation ordinals preserve the full unsigned64 domain acr
  const {default:Decimal}=await import("decimal.js");const OrdinalDecimal=Decimal.clone({precision:40});
  const root="🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/";
  const schema=await Bun.file(root+"📜️history/🆔️ordinal/🧬️schema/🔣️.json").json(),validate=new Ajv({strict:false}).compile(schema);
- const backing=await Bun.file(root+"♻️retirement/📦️backing/🧫️fixtures/🔣️.json").json();
+ const backing=await Bun.file(root+"♻️retirement/📦️backing/🧪️tests/🧫️fixtures/🔣️.json").json();
  const maximum=18446744073709551615n;
  expect(backing.vcsRetirement.forwards).toEqual(["0",maximum.toString()]);
  expect(backing.vcsRetirement.inverse).toEqual(["9","7"]);

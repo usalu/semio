@@ -2,7 +2,7 @@
 import { expect, test } from "bun:test";
 import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import schema from "../../../../../🧱️block/🧬️schema/🧬️mutations/🤏️drag-blocks/🧬️schema/🔣️.json";
-import mutation from "../../../../../🧱️block/🧫️fixtures/🧬️mutations/🤏️drag-blocks/🤏️nudges/🦠️mutation/🔣️.json";
+import mutation from "../../../../../🧱️block/🧪️tests/🧫️fixtures/🧬️mutations/🤏️drag-blocks/🤏️nudges/🦠️mutation/🔣️.json";
 import { parseDragBlocks } from "../../../../../🧱️block/🧬️schema/🧬️mutations/🤏️drag-blocks/🟦️.ts";
 
 test("the schema and the parser admit exactly the same dragBlocks records", () => {

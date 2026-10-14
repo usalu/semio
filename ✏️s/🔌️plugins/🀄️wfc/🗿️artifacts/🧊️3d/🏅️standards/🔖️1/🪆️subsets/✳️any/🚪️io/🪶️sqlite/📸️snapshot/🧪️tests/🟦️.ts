@@ -1,7 +1,7 @@
 /** 🧊️ Complete irregular-slot, typed-media and optional relation fixture. */
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
-import f from "../🧫️fixtures/🔣️.json";
+import f from "./🧫️fixtures/🔣️.json";
 import type {Wfc3dSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {WFC3D_SQLITE_SCHEMA,wfc3dSnapshotToSqliteDatabase,wfc3dSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";

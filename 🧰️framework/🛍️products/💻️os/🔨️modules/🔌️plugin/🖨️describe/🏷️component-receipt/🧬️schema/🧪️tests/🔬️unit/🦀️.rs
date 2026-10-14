@@ -1,7 +1,7 @@
 use super::{ComponentProfileV1, ComponentReceiptV1, ITERATE_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_MAX_BYTES};
 
 /// 🧫️ The language-agnostic receipt law the TypeScript projection and the Ajv oracle run as well.
-const FIXTURE: &str = include_str!("../../../🧫️fixtures/🔣️.json");
+const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/🔣️.json");
 
 fn rows() -> Vec<(String, bool, serde_json::Value)> {
     let fixture: serde_json::Value = serde_json::from_str(FIXTURE).expect("receipt fixture json");

@@ -9,7 +9,7 @@ import { resolveIconRenderStroke } from "../../../../../../../🔨️modules/�
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎨️world3d-glb-outline/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎨️world3d-glb-outline/🔣️.json"), "utf8"));
 
 type Point = readonly [number, number, number];
 type Segment = readonly [Point, Point];

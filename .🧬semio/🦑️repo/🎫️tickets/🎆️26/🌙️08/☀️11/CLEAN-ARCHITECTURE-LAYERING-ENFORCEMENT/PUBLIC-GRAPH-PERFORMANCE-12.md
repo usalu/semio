@@ -1,0 +1,6 @@
+# Public Graph Performance 12
+
+Read-only current installed dependency-cruiser source exposes `skipAnalysisNotInRules`, default false in `src/main/options/defaults.mjs`. Its enrichment forwards that flag to per-module derivations; independent package config template recommends enabling it when only rule-relevant analysis is needed. This may explain historical original240s graph time spent in unrelated enrichment, but no current graph runtime or equivalence/performance proof is claimed. No options, rules, source membership, caps or exemptions changed. Original whole actual graph receiving remains required before a governing performance cut; preserve all authored rules and every followed source/edge.
+
+
+Current actual canonical receiver still captures complete declared rules, every present taxonomy area plus all root TS/JS files, independent followed-source inventory, original240000ms/128MiB/65536Line subprocess declaration, and validates graph completeness before edge acceptance. No `skipAnalysisNotInRules` option introduced; installed dependency-cruiser defaults remain unchanged. Actual whole current graph remains pending after complete receiving/bootstrap gates, so installed-source optimization hints do not establish a runtime bottleneck or authorize a scope/cap change.

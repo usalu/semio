@@ -4,12 +4,12 @@ import { resolve, join } from "node:path";
 
 import { Command } from "commander";
 import { spawnSync } from "node:child_process";
-import { BundleScript, findWorkspaceRoot } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, findWorkspaceRoot } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 type Call = { kind: string; args: string[]; level?: string; coverage?: boolean; budgetMs?: number };
 type Case = { id: string; argv: string[]; inheritedLevel?: string; calls: Call[]; rejected: boolean; level: string; coverage: boolean };
 const ui = resolve(import.meta.dir, "../.."), packageRoot = join(ui, "📦️packages/🦀️rust"), root = findWorkspaceRoot(ui);
-const corpus = JSON.parse(readFileSync(join(ui, "🧫️fixtures/🧭️native-command/🔣️.json"), "utf8")) as { cases: Case[] };
+const corpus = JSON.parse(readFileSync(join(ui, "🧪️tests/🧫️fixtures/🧭️native-command/🔣️.json"), "utf8")) as { cases: Case[] };
 let calls: Call[] = [];
 mock.module(resolve(ui, "../🏃️process/🧪️testing/🦀️cargo/🟦️.ts"), () => ({
   readCargoTestPolicyV1: () => ({}),

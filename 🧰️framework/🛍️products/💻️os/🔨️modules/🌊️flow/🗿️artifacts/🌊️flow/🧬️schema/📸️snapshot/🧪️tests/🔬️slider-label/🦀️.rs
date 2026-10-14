@@ -2,8 +2,8 @@ use super::*;
 
 #[test]
 fn authored_slider_labels_survive_json_dag_and_chrome() {
-    let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🏷️slider-labels.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let third_party: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏷️slider-labels.json")).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🏷️slider-labels.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let third_party: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🏷️slider-labels.json")).unwrap();
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&fixture)).unwrap(), third_party);
     for row in fixture.get("cases").and_then(semio_framework_pack_json::Value::as_array).unwrap() {
         let widget_value = row.get("widget").cloned().expect("fixture widget");

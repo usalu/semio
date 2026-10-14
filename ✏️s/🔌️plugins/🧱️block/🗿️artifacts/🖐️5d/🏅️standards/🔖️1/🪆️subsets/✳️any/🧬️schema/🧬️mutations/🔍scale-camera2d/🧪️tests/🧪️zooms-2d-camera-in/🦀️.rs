@@ -10,11 +10,11 @@ use crate::standards::v1::subsets::any::schema::mutations::inverse_block5d_mutat
 
 use crate::Block5dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔍scale-camera2d/🧪️zooms-2d-camera-in/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔍scale-camera2d/🧪️zooms-2d-camera-in/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔍scale-camera2d/🧪️zooms-2d-camera-in/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔍scale-camera2d/🧪️zooms-2d-camera-in/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔍scale-camera2d/🧪️zooms-2d-camera-in/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍scale-camera2d/🧪️zooms-2d-camera-in/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍scale-camera2d/🧪️zooms-2d-camera-in/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍scale-camera2d/🧪️zooms-2d-camera-in/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍scale-camera2d/🧪️zooms-2d-camera-in/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍scale-camera2d/🧪️zooms-2d-camera-in/🎯️outcome/🔣️.json");
 
 fn before() -> Block5dSnapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")

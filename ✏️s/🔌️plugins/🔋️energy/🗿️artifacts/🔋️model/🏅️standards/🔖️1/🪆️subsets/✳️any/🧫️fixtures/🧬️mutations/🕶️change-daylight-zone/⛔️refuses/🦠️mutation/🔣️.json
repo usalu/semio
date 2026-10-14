@@ -1,5 +1,0 @@
-{
-  "mutation": "changeDaylightZoneGlareLimit",
-  "id": 14,
-  "newGlareLimit": -5.0
-}

@@ -10,11 +10,11 @@ use crate::mutations::{inverse_gis_map_mutation, GisMapMutation};
 use crate::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
 use crate::GisMapSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲remove-position-property/🧽drops/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲remove-position-property/🧽drops/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲remove-position-property/🧽drops/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲remove-position-property/🧽drops/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧲remove-position-property/🧽drops/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧲remove-position-property/🧽drops/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧲remove-position-property/🧽drops/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧲remove-position-property/🧽drops/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧲remove-position-property/🧽drops/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧲remove-position-property/🧽drops/🎯️outcome/🔣️.json");
 const LABEL: &str = "remove-position-property/drops-position-middle-property";
 
 fn decode(text: &str) -> GisMapSnapshot {

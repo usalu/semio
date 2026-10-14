@@ -1,0 +1,535 @@
+{
+  "fixes": [
+    {
+      "path": "🧰️framework/📏️script-boundary/🧪️tests/🟦️.ts",
+      "before": "6b211a982030e41028ff70bfd1fa956d8f3f866043e483bc7cb98768277aebd8",
+      "after": "f3c15e62fcf0973f1c459c23998a0d3f84836de0fdc79fc9fb7a02950a33962e",
+      "edits": [
+        {
+          "start": 287,
+          "end": 307,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🐹️go-build/🧪️tests/🟦️.ts",
+      "before": "14f008c37a370ee83425dc850442578d7da165bafdf624cb65476338d8988e52",
+      "after": "220981fd422f4f6bd720b1920bfc70147c6d8b4db6f4ba4291958c4254fe1741",
+      "edits": [
+        {
+          "start": 219,
+          "end": 239,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/🧪️tests/🟦️.ts",
+      "before": "704430981ba988a02f95810af061f830a82a96d9b280b9e76daf34e4bf39b256",
+      "after": "e93f679be8b6cbe83ef6cf9fc3df92ea2229f5053378d9ce17567fa43b780604",
+      "edits": [
+        {
+          "start": 282,
+          "end": 302,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🧪️tests/🟦️.ts",
+      "before": "dcb9946e60e8a87f0d2060beebf1ae8169bde7a87727c6a884ae3c01dc72bd22",
+      "after": "5eca482ed42bd0452995d9e93ea7adfab1c416980da54a863702f1b2e63b1fe0",
+      "edits": [
+        {
+          "start": 232,
+          "end": 252,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🔒️lease/🧪️tests/🟦️.ts",
+      "before": "725e934ca12073bccc5147c9c3569a8af0fd252f2370dcd5bbc8804328fe5424",
+      "after": "f1f9425d65c6bcb58a97f3e9b232bbf5d059a44587ceecf805dd10eb0cbf950f",
+      "edits": [
+        {
+          "start": 327,
+          "end": 350,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🧪️tests/🟦️.ts",
+      "before": "0c16a455007fdba7b46bf12106c5e7d98253b6d18ee0f309c6e5072b1ff84fd0",
+      "after": "1d291a4a722e2cdbbf113d281cc641f3abf7f5aba9a97e106435ee5a627819d3",
+      "edits": [
+        {
+          "start": 570,
+          "end": 590,
+          "from": "🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🧪️tests/🖊️drawing-reader/🟦️.ts",
+      "before": "ba8c713bfaf61eb4a3220f294d8ab58794b0780a0c3131560ce19b266786e844",
+      "after": "97d110202c1e6379de5256a65982d92369d4958e8c02bd81fa16b80436cdf42e",
+      "edits": [
+        {
+          "start": 534,
+          "end": 578,
+          "from": "../../🧫️fixtures/🖊️drawing-reader/🔣️.json",
+          "to": "../🧫️fixtures/🖊️drawing-reader/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🧪️tests/🧫️private-reader/🟦️.ts",
+      "before": "7b32b5525a8b56fa35d4caced2c83f959d6740e252e8de1187613bab4107347a",
+      "after": "9d13b511e7d985d15e44dd6028d00f62c9f6a055b18154d2de8d11dd9ccf1772",
+      "edits": [
+        {
+          "start": 467,
+          "end": 508,
+          "from": "../../🧫️fixtures/🧩️composition/🔣️.json",
+          "to": "../🧫️fixtures/🧩️composition/🔣️.json"
+        },
+        {
+          "start": 394,
+          "end": 438,
+          "from": "../../🧫️fixtures/🧫️private-reader/🔣️.json",
+          "to": "../🧫️fixtures/🧫️private-reader/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/📇️directory/🧪️tests/🎯️admin-intent-v1/🟦️.ts",
+      "before": "ba208d0c497f114f91b2d6448347dd9bfdf3c6ee6416cd6e1df03a4caf28217c",
+      "after": "ef6bc7eb502c483f1c4528a0c46265d0bb06b78b9b81f55e761d42bd1efe90e8",
+      "edits": [
+        {
+          "start": 113,
+          "end": 158,
+          "from": "../../🧫️fixtures/🎯️admin-intent-v1/🔣️.json",
+          "to": "../🧫️fixtures/🎯️admin-intent-v1/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🧩️puzzle/🧵️retained/🧪️tests/🔮️ownership/🟦️.ts",
+      "before": "e3ad9d1a80ba61c174911c22da178d763b25771b2c96622627245978ccba43a9",
+      "after": "667613b367c547c70730228776ebd19405ecafbca935353333990d31c02ccef2",
+      "edits": [
+        {
+          "start": 213,
+          "end": 252,
+          "from": "../../🧫️fixtures/🔮️ownership/🔣️.json",
+          "to": "../🧫️fixtures/🔮️ownership/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts",
+      "before": "35f24ff2506ed05945a8712bf4dfe364d1fee17934e32e328f594f67306f0f45",
+      "after": "e7ae222d5bd9edbaf85f56f2f761534081444476ef680d44f35c986f657b5224",
+      "edits": [
+        {
+          "start": 289,
+          "end": 312,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🧪️tests/🟦️.ts",
+      "before": "2a964227471ef1876427e50c2eef6f81c9da7f1219367f5713cc2015114b6356",
+      "after": "5bf788ee34018a69203221aebe98d751dd821516d48c3365cc0a79bcd5f1fe69",
+      "edits": [
+        {
+          "start": 1252,
+          "end": 1275,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎰️jobserver/🧪️tests/🟦️.ts",
+      "before": "158be2e6831d37e057ff84b85e7a496e5c1c2af728db88930ba34bcd7296369c",
+      "after": "847ee9ca3ee48d37aaf01d583d29f3c731fe9b557a13ed84866e7311becfc34d",
+      "edits": [
+        {
+          "start": 255,
+          "end": 278,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🟦️.ts",
+      "before": "2f2cba53057b43335f48a5f41e72246efdea992a81b902228ec5ae35d1b24720",
+      "after": "02910f27ceb2ae0006a232a946882ccd92a0bf898fb3e16dfdd35ba65bcbb02d",
+      "edits": [
+        {
+          "start": 220,
+          "end": 243,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🗃️stage-cache/🧪️tests/🟦️.ts",
+      "before": "628f492bb8664e5367cf89c52d1cd443928c189a7d24fa84ca98ebea6539dcf0",
+      "after": "2bbfe4fa7f249198174b4f3c3675865d2de8713bd21d80852a6c9a48a92f99d8",
+      "edits": [
+        {
+          "start": 430,
+          "end": 453,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🟦️.ts",
+      "before": "f5a25b3d6ea3d8a5dd483bdf2f93af63d6acb7c1b7fbc544838db8e802a332e3",
+      "after": "2137bc890d6c1326eff4b24eb2099426a74b92167b3335f5805c96dcdc6bcecb",
+      "edits": [
+        {
+          "start": 233,
+          "end": 256,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📈️telemetry/🧪️tests/🟦️.ts",
+      "before": "e13ac000a7cfe560597c85b87a8cd1ac7c9860024c2b55f49339cd4104b01529",
+      "after": "ba6d2f7a84d3ead3ca70d8a1ab74dc556e2193f66c67d1dbbb1e0cdd3a35ab12",
+      "edits": [
+        {
+          "start": 194,
+          "end": 217,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪐️space/🏛️ownership/🧮️compute/🧪️tests/🟦️.ts",
+      "before": "6603c99a83e5971730f400adf5a2549b7d0a3519a146da578f27319fddd56a83",
+      "after": "abe2f6d2175451559c2fe5fd5269c0276e46fe1fd43ae62afad23424b98acaa1",
+      "edits": [
+        {
+          "start": 449,
+          "end": 472,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪐️space/🧪️testing/🧪️tests/🔮️ownership/🟦️.ts",
+      "before": "6337bd5c3072537c5cc324599ff0e0066ee6bb8dd7b2519850dee5b45682aefb",
+      "after": "cc6ef2e466998f464eae69ef79dc54f1ef21ba94bc0d4dfd86355305cf18f6d1",
+      "edits": [
+        {
+          "start": 173,
+          "end": 212,
+          "from": "../../🧫️fixtures/🔮️ownership/🔣️.json",
+          "to": "../🧫️fixtures/🔮️ownership/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧪️tests/🟦️.ts",
+      "before": "af760a55be007a28b4ef581aa433a9ea287c7b527889cfd80ed26d9766bb8127",
+      "after": "5a59057a60aeb60b730557a291218ef5b8f6bad6557fc79e8c8dfaf8357bd6aa",
+      "edits": [
+        {
+          "start": 248,
+          "end": 271,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts",
+      "before": "ed30c490b40325406664b1d1edbc6596b223efa53cb63717b2cc0276725e4abb",
+      "after": "6ec2d4b4a1b4306fb850631d512f211919152fa0dbf1df5389175efebc510293",
+      "edits": [
+        {
+          "start": 260,
+          "end": 283,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts",
+      "before": "1d4083a481eefcd6a8866de6b28ecf7f6dff57daa882d3b9ab08eac99716583b",
+      "after": "3f64c512d5afb1116e0a2c1da2afdde86f238aecda4fdeb67bf25c567193e3d0",
+      "edits": [
+        {
+          "start": 1307,
+          "end": 1344,
+          "from": "../🧫️fixtures/📨️managed-output.json",
+          "to": "🧫️fixtures/📨️managed-output.json"
+        },
+        {
+          "start": 1093,
+          "end": 1116,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "before": "1431d9cdf42244052c127042465ea12d0e3fc4db880cfe1b12888a43bdcee968",
+      "after": "c7d934d1abdaa0f616aa90c4a6b7b43fa7240c08bfc4704e8d502a57cfbb2c92",
+      "edits": [
+        {
+          "start": 154,
+          "end": 177,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🧪️tests/🟦️.ts",
+      "before": "7b4fe4fbedafc31d8d6483366bb797377313247a62755dbd9730e9cca13b9cc1",
+      "after": "31bac1c4281fdd95b099be9fa271c51a3c2e8d950f9a7b05055d98cf4fb237ae",
+      "edits": [
+        {
+          "start": 315,
+          "end": 338,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🟦️.ts",
+      "before": "a88bdcfcab34a91762adace20d7901e0cd234afcb98d6c3f96db20f40575a23f",
+      "after": "fc260dde50f9abe91c97a4fef3ed28a2961c906ef5cbb851786f5ae41314d0cd",
+      "edits": [
+        {
+          "start": 445,
+          "end": 468,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧪️tests/⏱️finite/🟦️.ts",
+      "before": "330cf8389e9da497248795563389c37c0ff7ee01158b5fe90b1bdb1aff160470",
+      "after": "d815fb05683f6fb57c822bb4d3361a7d9d84eab1562e3c3ce3547038997c2116",
+      "edits": [
+        {
+          "start": 155,
+          "end": 186,
+          "from": "../../🧫️fixtures/⏱️finite.json",
+          "to": "../🧫️fixtures/⏱️finite.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧪️tests/🟦️.ts",
+      "before": "9daeecf28e4ba3e520fe11c50cff299799518b597fcad132afa98a5e4828d281",
+      "after": "8097415d2997b77f65d240a47bdce4aa96acffbdb0bf5f8906753c65e7dc8dcc",
+      "edits": [
+        {
+          "start": 331,
+          "end": 354,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/🚢️shipped-fleet/🪶️sqlite/🟦️.ts",
+      "before": "5f647912eb15875537be4fd4139b7da41715120a2466ccf2fb6c2306422e892c",
+      "after": "09f960b3cf55304e0602125094ccabbce2e302d833c1b45b61150fd919b281eb",
+      "edits": [
+        {
+          "start": 310,
+          "end": 376,
+          "from": "../../../🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧠️owners/🔣️.json",
+          "to": "../../🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧠️owners/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🛑️interruption/🧪️tests/🟦️.ts",
+      "before": "3ec1c347694fe7d3688fb7b7d1ee6c7f14f0de254490f8ba100f71c91210a78f",
+      "after": "4fc96ab2db0847d5be3bf680e7ae0cf611c7bc45082ccc730694d0b5e26ff644",
+      "edits": [
+        {
+          "start": 61,
+          "end": 84,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🧪️tests/🟦️.ts",
+      "before": "9bc9216850e64671dc4e0772cecdd2fb6dedb4f45d22609f75baff6ecec572e6",
+      "after": "dbe9a98f2f927641f20ae2c6fb147225e4b519719b9b7ec46cefabcb8e317812",
+      "edits": [
+        {
+          "start": 61,
+          "end": 84,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🧪️tests/🟦️.ts",
+      "before": "4ca2fb0adfcae62c37aaffa2c42ee616ee588f209b9029f4db487f3f81a0cf1e",
+      "after": "88fea10a8ada76dac70fee5bef7950faa3a732e1a199b39ba17d9f0c5a2cc5c3",
+      "edits": [
+        {
+          "start": 128,
+          "end": 151,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/🧪️tests/♻️native-receipt/🟦️.ts",
+      "before": "17d50a92671eb9a2f7064a2fb94aae34f603c1cf3e5a5f9b7ba644f5997adf26",
+      "after": "847a7159cb25de388c3b0b0dacd33480cc488181960acda957ee7a09ff14bb44",
+      "edits": [
+        {
+          "start": 448,
+          "end": 491,
+          "from": "../../🧫️fixtures/♻️native-receipt/🔣️.json",
+          "to": "../🧫️fixtures/♻️native-receipt/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🧪️tests/🖊️drawing-reader/🧩️preservation/🟦️.ts",
+      "before": "e72016f153f0c477813d718592149a5adee4d11f2e9320b60d56d0982b8a3a51",
+      "after": "0b14f23737b357984b14b3100ea462e04ed21594399def30b90cfd76d870738c",
+      "edits": [
+        {
+          "start": 279,
+          "end": 326,
+          "from": "../../../🧫️fixtures/🖊️drawing-reader/🔣️.json",
+          "to": "../../🧫️fixtures/🖊️drawing-reader/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🧪️tests/🏷️type/🟦️.ts",
+      "before": "17abeb363cb0bb6ecd9bd5461b8ec415e69897f89409062d5c41af99c4679e5e",
+      "after": "0951b850673369a7351035141608f9a254d122df7175a1aa383910f0942eb251",
+      "edits": [
+        {
+          "start": 303,
+          "end": 337,
+          "from": "../../🧫️fixtures/🏷️type/🔣️.json",
+          "to": "../🧫️fixtures/🏷️type/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🧪️tests/🧫️private-reader/🧩️preservation/🟦️.ts",
+      "before": "e71b9703a1e2721018ab0e054e0f91ccdfad9eb80c464c29a7a145bda6f7e983",
+      "after": "88cad77bbba6b6f4b87ce15e7ef1869613afcc21031df20620b267f76f7753e7",
+      "edits": [
+        {
+          "start": 188,
+          "end": 235,
+          "from": "../../../🧫️fixtures/🧫️private-reader/🔣️.json",
+          "to": "../../🧫️fixtures/🧫️private-reader/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🧪️tests/🧩️composition/🟦️.ts",
+      "before": "1a0bf5221cacd9f97f38c4c6cec76a1be9a36dc53fe7d9afc7e0a8581b4fb9e3",
+      "after": "0becb4c242cde3976ebacf133cd4c5b8591a9dbcba34dc1713e37c0da10140af",
+      "edits": [
+        {
+          "start": 1157,
+          "end": 1201,
+          "from": "../../🧫️fixtures/🖊️drawing-reader/🔣️.json",
+          "to": "../🧫️fixtures/🖊️drawing-reader/🔣️.json"
+        },
+        {
+          "start": 1078,
+          "end": 1132,
+          "from": "../../🧫️fixtures/🧪️development-dependencies/🔣️.json",
+          "to": "../🧫️fixtures/🧪️development-dependencies/🔣️.json"
+        },
+        {
+          "start": 1002,
+          "end": 1049,
+          "from": "../../🧫️fixtures/🚮️artifact-deletion/🔣️.json",
+          "to": "../🧫️fixtures/🚮️artifact-deletion/🔣️.json"
+        },
+        {
+          "start": 924,
+          "end": 976,
+          "from": "../../🧫️fixtures/🌳️contribution-selection/🔣️.json",
+          "to": "../🧫️fixtures/🌳️contribution-selection/🔣️.json"
+        },
+        {
+          "start": 857,
+          "end": 898,
+          "from": "../../🧫️fixtures/🧩️composition/🔣️.json",
+          "to": "../🧫️fixtures/🧩️composition/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️composition/🧪️tests/🧱️production-preparation/🟦️.ts",
+      "before": "4a921f4ac3ab2843c08ec048bc3b7bc827d0eade7f9e4590698cd29df4549447",
+      "after": "0ee532b6a51380ada927964465121ed8868c249a911300a91656747848f8c166",
+      "edits": [
+        {
+          "start": 248,
+          "end": 300,
+          "from": "../../🧫️fixtures/🧱️production-preparation/🔣️.json",
+          "to": "../🧫️fixtures/🧱️production-preparation/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🏗️bootstrap/🧾️provenance/🧪️tests/🟦️.ts",
+      "before": "b3a6e8fdc46e531a4d04a721cc79e0903501b4acfaf6c8070297fc7af84c842b",
+      "after": "8c70a312843fc0409e7e3a2426ca359fabde7f4bad7437cd586c15a04c93cfa0",
+      "edits": [
+        {
+          "start": 965,
+          "end": 988,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "🧫️fixtures/🔣️.json"
+        }
+      ]
+    }
+  ],
+  "missing": []
+}

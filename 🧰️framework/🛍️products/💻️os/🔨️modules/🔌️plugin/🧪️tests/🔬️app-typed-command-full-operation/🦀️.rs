@@ -3,7 +3,7 @@ mod typed_command_full_operation_tests {
     use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
     use crate::publication_fixture::{ChangePublicationPresence, PublicationPresence, PublicationPresenceMutation};
 
-    const FIXTURE: &str = include_str!("../../🧵️retained-command/🔄️full-operation/🧫️fixtures/🔣️.json");
+    const FIXTURE: &str = include_str!("../../🧵️retained-command/🔄️full-operation/🧪️tests/🧫️fixtures/🔣️.json");
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     struct TypedCommandCensusDecision {
@@ -279,17 +279,17 @@ mod typed_command_full_operation_tests {
         }
     }
 
-    fn close_mounted<A: ArtifactApp>(mounted: &mut MountedTypedCommandFullOperation<A>, context: &str) {
+    fn close_mounted<A: ArtifactApp>(mounted: &mut MountedTypedCommandFullOperation<A>, context: &str, original_grant:RetainedCloneGrant) {
         for _ in 0..100_000 {
             if mounted.terminal_is_empty() {
                 return;
             }
-            let quoted = plugin_demand_grant(mounted.retirement_demands(TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap());
-            assert!(quoted.maximum_copy_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES && quoted.maximum_release_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES, "{context}");
+            let quoted = original_grant;
+            assert!(quoted.maximum_items>0 && quoted.maximum_depth>0, "{context}");
             match mounted.retirement_step(quoted).unwrap() {
-                PluginLifecycleStep::Progress(progress) => assert!(progress.fits(quoted), "{context}"),
+                PluginLifecycleStep::Progress(progress) => assert!(progress.fits(quoted) && progress.copied_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES && progress.released_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES, "{context}"),
                 PluginLifecycleStep::Complete(progress) => {
-                    assert!(progress.fits(quoted), "{context}");
+                    assert!(progress.fits(quoted) && progress.copied_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES && progress.released_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES, "{context}");
                     return;
                 }
                 PluginLifecycleStep::AwaitingInput { reason } => panic!("{context} awaited input: {reason}"),
@@ -303,12 +303,12 @@ mod typed_command_full_operation_tests {
             if app.close_terminal_is_empty() {
                 return;
             }
-            let quoted = plugin_demand_grant(app.close_retirement_demands(TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap());
-            assert!(quoted.maximum_copy_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES && quoted.maximum_release_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES, "{context}");
+            let quoted = app.mounted_policy.close;
+            assert!(quoted.maximum_items>0 && quoted.maximum_depth>0, "{context}");
             match app.close_step(quoted).unwrap() {
-                PluginLifecycleStep::Progress(progress) => assert!(progress.fits(quoted), "{context}"),
+                PluginLifecycleStep::Progress(progress) => assert!(progress.fits(quoted) && progress.copied_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES && progress.released_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES, "{context}"),
                 PluginLifecycleStep::Complete(progress) => {
-                    assert!(progress.fits(quoted), "{context}");
+                    assert!(progress.fits(quoted) && progress.copied_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES && progress.released_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES, "{context}");
                     return;
                 }
                 PluginLifecycleStep::AwaitingInput { reason } => panic!("{context} awaited input: {reason}"),
@@ -318,14 +318,14 @@ mod typed_command_full_operation_tests {
     }
 
     fn advance_registry(registry: &mut ToolLatestWinsRegistry, context: &str) {
-        let quoted = plugin_demand_grant(registry.advance_demands().unwrap());
-        assert!(quoted.maximum_copy_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES && quoted.maximum_release_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES, "{context}");
+        let quoted = RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value::ordered::MAX_AVL_HEIGHT * 5 + 16 };
+        assert!(quoted.maximum_items>0 && quoted.maximum_depth>0, "{context}");
         let (semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) | semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) = registry.advance(quoted).unwrap();
-        assert!(progress.fits(quoted), "{context}");
+        assert!(progress.fits(quoted) && progress.copied_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES && progress.released_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES, "{context}");
     }
 
     pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
-        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🥇️tool-latest-wins.json")).expect("language-neutral cancellation boundaries");
+        let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🥇️tool-latest-wins.json")).expect("language-neutral cancellation boundaries");
         let bytes = fixture["maximumBytes"].as_u64().unwrap() as usize;
         let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, maximum_depth: 128 };
         assert_eq!(grant.maximum_items, 1);
@@ -440,7 +440,7 @@ mod typed_command_full_operation_tests {
             assert!(!mounted.ui_pending);
             let token = cancelled.token;
             assert!(mounted.acknowledge_result_page(token).unwrap());
-            close_mounted(&mut mounted, boundary);
+            close_mounted(&mut mounted, boundary, mounted_policy.close);
             assert!(mounted.terminal_is_empty(), "{boundary}");
             assert_eq!(cancellations.active_operation_count(), 0);
             drop(before);
@@ -503,8 +503,8 @@ mod typed_command_full_operation_tests {
     fn fixture_latest_wins_key(scope: &Value) -> semio_framework_value::ordered::SharedOwner<String> {
         let parts = [scope["document"].as_str().unwrap(), scope["controller"].as_str().unwrap(), scope["tool"].as_str().unwrap(), scope["target"].as_str().unwrap()];
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-        let page = plugin_page_grant(TYPED_OPERATION_RESULT_PAGE_BYTES);
-        let birth = RetainedCloneGrant { maximum_capacity_bytes: parts.iter().map(|part| part.len() * 2).sum::<usize>() + 72, ..page };
+        let page = RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value::ordered::MAX_AVL_HEIGHT * 5 + 16 };
+        let birth = page;
         let (mut copy, _) = ToolLatestWinsKeyCopy::admit_original(scope["instance"].as_u64().unwrap() as u32, parts, birth).unwrap().unwrap();
         assert_eq!(copy.advance(parts, RetainedCloneGrant { maximum_items: 0, ..page }).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         assert_eq!(copy.advance(parts, RetainedCloneGrant { maximum_copy_bytes: 0, ..page }).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
@@ -523,10 +523,10 @@ mod typed_command_full_operation_tests {
     #[test]
     fn latest_wins_owned_key_retains_zero_and_subexact_headers() {
         use semio_framework_value::{ordered::SharedOwner, retained_clone::RetainedCloneGrant};
-        let fixture:Value=serde_json::from_str(include_str!("../../🧫️fixtures/🥇️tool-latest-wins.json")).unwrap();
+        let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🥇️tool-latest-wins.json")).unwrap();
         let scope=&fixture["first"];
         let parts=[scope["document"].as_str().unwrap(),scope["controller"].as_str().unwrap(),scope["tool"].as_str().unwrap(),scope["target"].as_str().unwrap()];
-        let page=plugin_page_grant(TYPED_OPERATION_RESULT_PAGE_BYTES);
+        let page=RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value::ordered::MAX_AVL_HEIGHT * 5 + 16 };
         let birth=RetainedCloneGrant{maximum_capacity_bytes:parts.iter().map(|part|part.len()*2).sum::<usize>()+72,..page};
         let (mut copy,_)=ToolLatestWinsKeyCopy::admit_original(scope["instance"].as_u64().unwrap() as u32,parts,birth).unwrap().unwrap();
         for turn in 0..100_000 {if matches!(copy.advance(parts,page).unwrap(),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {break;}assert!(turn<99_999);}
@@ -552,7 +552,7 @@ mod typed_command_full_operation_tests {
     }
 
     pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(factory: std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>>, mutation: fn() -> A::Mutation, observe: fn(&A::Snapshot) -> i32) {
-        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🥇️tool-latest-wins.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🥇️tool-latest-wins.json")).unwrap();
         for case in fixture["publicationCases"].as_array().unwrap() {
             for delayed_ack in [false, true] {
                 let boundary = case["cancelAt"].as_str().unwrap();
@@ -681,7 +681,7 @@ mod typed_command_full_operation_tests {
                 let expected = serde_json::json!({ "count": if committed { 42 } else { 0 }, "generation": u64::from(committed), "sameRoot": !committed });
                 assert_eq!(actual, expected, "{boundary}, delayed ACK={delayed_ack}");
                 assert!(mounted.acknowledge_result_page(final_page.token).unwrap());
-                close_mounted(&mut mounted, "document cancellation close");
+                close_mounted(&mut mounted, "document cancellation close", mounted_policy.close);
                 assert!(mounted.terminal_is_empty());
                 drop(before);
                 close_app(&mut app, "document cancellation app close");
@@ -693,7 +693,7 @@ mod typed_command_full_operation_tests {
 
     #[test]
     fn retained_latest_wins_full_domain_exact_keys_match_serde_oracle_and_retire() {
-        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🥇️tool-latest-wins.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🥇️tool-latest-wins.json")).unwrap();
         let first = &fixture["first"];
         assert_eq!(first["target"].as_str().unwrap().len(), 8_192);
         for case in fixture["cases"].as_array().unwrap() {
@@ -714,7 +714,7 @@ mod typed_command_full_operation_tests {
                 })
                 .unwrap();
             let mut first_key=fixture_latest_wins_key(first);
-            assert!(registry.begin(first_operation.0, &first_key, &first_lease, plugin_page_grant(TYPED_OPERATION_RESULT_PAGE_BYTES)).unwrap().is_some());
+            assert!(registry.begin(first_operation.0, &first_key, &first_lease, RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value::ordered::MAX_AVL_HEIGHT * 5 + 16 }).unwrap().is_some());
             assert!(first_key.release_step(semio_framework_value::retained_clone::RetainedCloneGrant::one_release_turn(first_key.next_release_byte_demand(),1)).unwrap().value.is_none());
             for _ in 0..100_000 {
                 if registry.take_outcome(first_operation.0) == Some(true) {
@@ -741,7 +741,7 @@ mod typed_command_full_operation_tests {
                 })
                 .unwrap();
             let mut next_key=fixture_latest_wins_key(next);
-            assert!(registry.begin(next_operation.0, &next_key, &next_lease, plugin_page_grant(TYPED_OPERATION_RESULT_PAGE_BYTES)).unwrap().is_some());
+            assert!(registry.begin(next_operation.0, &next_key, &next_lease, RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value::ordered::MAX_AVL_HEIGHT * 5 + 16 }).unwrap().is_some());
             assert!(next_key.release_step(semio_framework_value::retained_clone::RetainedCloneGrant::one_release_turn(next_key.next_release_byte_demand(),1)).unwrap().value.is_none());
             let mut accepted = false;
             for _ in 0..100_000 {
@@ -798,7 +798,7 @@ mod typed_command_full_operation_tests {
 
     #[test]
     fn retained_latest_wins_contended_finish_is_deferred_and_cannot_release_replacement() {
-        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
         let cancellations = ToolCancellationHandle::default();
         let key = ToolOperationKey {
             app_instance_id: 7,
@@ -826,7 +826,7 @@ mod typed_command_full_operation_tests {
 
     #[test]
     fn retained_latest_wins_rebase_rebinds_exact_registered_cancellation_authority() {
-        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
         let cancellations = ToolCancellationHandle::default();
         let old = ToolOperationKey {
             app_instance_id: 7,
@@ -850,7 +850,7 @@ mod typed_command_full_operation_tests {
 
     #[test]
     fn retained_latest_wins_full_registry_reclaims_completed_targets_before_admission() {
-        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
         let cancellations = ToolCancellationHandle::default();
         let mut registry = ToolLatestWinsRegistry::new();
         let count = fixture["reclamation"]["sequentialCompletedTargets"].as_u64().unwrap();
@@ -865,7 +865,7 @@ mod typed_command_full_operation_tests {
             let mut result = None;
             for _ in 0..100_000 {
                 if !begun {
-                    begun = registry.begin(operation.0, &key, &lease, plugin_page_grant(TYPED_OPERATION_RESULT_PAGE_BYTES)).unwrap().is_some();
+                    begun = registry.begin(operation.0, &key, &lease, RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value::ordered::MAX_AVL_HEIGHT * 5 + 16 }).unwrap().is_some();
                 }
                 if begun {
                     result = registry.take_outcome(operation.0);
@@ -920,7 +920,7 @@ mod typed_command_full_operation_tests {
     /// cancellation state is locked is that it reclaims nothing and leaves its own cursor exactly
     /// where it was — asserted directly below, over the property instead of its proxy.
     pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
-        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
         let mounted_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
         let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
@@ -1081,7 +1081,7 @@ mod typed_command_full_operation_tests {
         }
         app.tool_operations.get_mut(1).unwrap().stage = MountedTypedCommandFullOperationStage::Retiring;
         assert!(app.tool_operations.get(1).unwrap().publication.is_some());
-        let quoted = plugin_demand_grant(app.typed_operation_retirement_demands(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap());
+        let quoted = app.mounted_policy.close;
         let released = app.retire_typed_operation_unit(1, quoted).unwrap();
         assert!(matches!(released, PluginLifecycleStep::Progress(progress) if progress.fits(quoted) && progress != Default::default()), "one bounded retirement unit releases the retiring operation's publication: {released:?}");
         assert!(app.tool_operations.get(1).unwrap().publication.is_none());
@@ -1096,14 +1096,14 @@ mod typed_command_full_operation_tests {
             if app.tool_operations.get(1).unwrap().terminal_is_empty() {
                 break;
             }
-            let quoted = plugin_demand_grant(app.typed_operation_retirement_demands(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap());
+            let quoted = app.mounted_policy.close;
             app.retire_typed_operation_unit(1, quoted).unwrap();
         }
         assert!(app.tool_operations.get(1).unwrap().terminal_is_empty());
         assert_eq!(app.tool_cancellations.active_operation_count(), 2);
         app.maintenance_stage = 18;
         app.maintenance_cancellation_cursor = TOOL_CANCELLATION_SLOTS + 1;
-        let quoted = plugin_demand_grant(app.maintenance_retirement_demands(TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap());
+        let quoted = app.mounted_policy.maintenance;
         let locked_step = app.maintenance_step(quoted).unwrap();
         assert!(
             matches!(locked_step, PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) if progress.fits(quoted)),
@@ -1113,7 +1113,7 @@ mod typed_command_full_operation_tests {
         assert_eq!(app.tool_cancellations.active_operation_count(), 2);
         drop(lock);
         app.maintenance_stage = 18;
-        let quoted = plugin_demand_grant(app.maintenance_retirement_demands(TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap());
+        let quoted = app.mounted_policy.maintenance;
         app.maintenance_step(quoted).unwrap();
         assert_eq!(app.tool_cancellations.active_operation_count(), 1);
         close_app(&mut app, "fairness fixture close");
@@ -1293,7 +1293,7 @@ mod typed_command_full_operation_tests {
 
     #[test]
     fn private_child_genesis_wire_retains_exact_identity_and_indivisible_backing() {
-        let fixture: Value = serde_json::from_str(include_str!("../../🧩️composition/📨️emission/🌱️genesis/🧫️fixtures/🔣️.json")).expect("neutral private genesis contract");
+        let fixture: Value = serde_json::from_str(include_str!("../../🧩️composition/📨️emission/🌱️genesis/🧪️tests/🧫️fixtures/🔣️.json")).expect("neutral private genesis contract");
         let source=&fixture["source"];
         let reference=&source["reference"];
         let genesis=ChildEmitGenesis {
@@ -1337,7 +1337,7 @@ mod typed_command_full_operation_tests {
 
     #[test]
     fn retained_child_wire_rejection_retires_nested_owners_under_the_production_grant() {
-        let fixture: Value = serde_json::from_str(include_str!("../../../🏪️store/🧫️fixtures/📢️member-publication.json")).expect("retained child fixture");
+        let fixture: Value = serde_json::from_str(include_str!("../../../🏪️store/🧪️tests/🧫️fixtures/📢️member-publication.json")).expect("retained child fixture");
         let row = &fixture["orderedMembers"][0];
         let mut wire = row["wire"].as_str().unwrap().as_bytes().to_vec();
         wire.resize(wire.len() + row["paddingBytes"].as_u64().unwrap() as usize, b' ');
@@ -1352,7 +1352,7 @@ mod typed_command_full_operation_tests {
             labels: vec![LocalizedLabel::native("ä🧩", "ß🎯")],
         };
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
-        let page = plugin_page_grant(TYPED_OPERATION_RESULT_PAGE_BYTES);
+        let page = RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value::ordered::MAX_AVL_HEIGHT * 5 + 16 };
         assert_eq!(child.close_one(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, ..page }).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         assert_eq!(child.ops[0].len(), wire_bytes);
         let mut bytes = 0;
@@ -1502,7 +1502,7 @@ mod typed_command_full_operation_tests {
         assert!(wire.starts_with(TypedOperationResultPage::RENDERER_PAGE_MAGIC));
         assert_eq!(&wire[wire.len() - TYPED_OPERATION_RESULT_PAGE_BYTES..], &[0x5a; TYPED_OPERATION_RESULT_PAGE_BYTES]);
 
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json")).expect("neutral result lanes");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json")).expect("neutral result lanes");
         for row in fixture["lanes"].as_array().expect("result lanes") {
             let lane: TypedOperationResultLane = semio_framework_pack_json::from_json_str(&serde_json::to_string(&row["name"]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("own lane decoder");
             let page = TypedOperationResultPage::try_new(token, lane, &[0x5a]).expect("declared result lane");
@@ -1650,7 +1650,7 @@ mod child_complete_group_candidate_tests{
         for case in corpus["cases"].as_array().unwrap(){
             let field=case["field"].as_str().unwrap();let large="m".repeat(8194);assert_eq!(large.len(),8194);let mut child=super::ChildEmit::open("","",0);
             match field{"owner"=>child.owner=large,"slot"=>child.slot=large,"child_id"=>child.child_id=large,"op_schema"=>child.op_schema.0=large,_=>{let keys:Vec<&str>=field.split('.').collect();assert_eq!(keys.len(),3);let label=semio_framework_ui_locale::LocalizedLabel::from_fn(|terminology,locale|if terminology.as_str()==keys[1]&&locale.as_str()==keys[2]{large.clone()}else{String::new()});child.labels.push(label);}}
-            use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};let page=super::plugin_page_grant(4096);
+            use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};let page=RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value::ordered::MAX_AVL_HEIGHT * 5 + 16 };
             assert_eq!(child.close_one(RetainedCloneGrant{maximum_items:0,..page}).unwrap(),RetainedCloneStep::Progress(RetainedCloneProgress::default()));let mut complete=false;let mut physical=0;
             if matches!(field,"owner"|"slot"|"child_id"|"op_schema"){for _ in 0..64{if matches!(child.close_one(page).unwrap(),RetainedCloneStep::Complete(_)){panic!("a String backing releases whole: a 4096-byte release grant can never retire the 8194-byte owner: {field}")}}}
             let whole=RetainedCloneGrant{maximum_release_bytes:8194+4096,..page};

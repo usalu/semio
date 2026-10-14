@@ -2,7 +2,7 @@
 import Ajv from "ajv";
 import {expect,test} from "bun:test";
 import {buildSchema,execute,GraphQLScalarType,parse} from "graphql";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "../../../../🧪️tests/🧫️fixtures/🔗️graphql/🔢️int64/🔣️.json";
 const facet=()=>import("../🟦️.ts");
 test("graphql Int64 closed neutral authority rejects altered and additional cases",()=>{const changed=structuredClone(fixture);changed.valid[0]!.output="0";expect(fixture.valid).toHaveLength(9);});
 test("graphql Int64 complete signed domain and canonical refusals share exact Source identities",async()=>{const f=await facet();for(const row of fixture.valid){const value=f.parseInt64Variable(row.variable);expect(value).toBe(BigInt(row.output));expect(f.parseInt64Literal(row.ast)).toBe(value);expect(f.parseInt64Literal(row.stringAst)).toBe(value);expect(f.serializeInt64(value)).toBe(row.output);}for(const value of fixture.invalidDecimal){expect(()=>f.parseInt64Variable(value)).toThrow();expect(()=>f.parseInt64Literal({kind:"IntValue",value})).toThrow();}for(const value of [...fixture.invalidVariableKinds,NaN,Infinity,-Infinity,-0,9007199254740992])expect(()=>f.parseInt64Variable(value)).toThrow();for(const kind of fixture.invalidAstKinds)expect(()=>f.parseInt64Literal({kind,value:"1"})).toThrow();expect(()=>f.serializeInt64(-9223372036854775809n)).toThrow();expect(()=>f.serializeInt64(9223372036854775808n)).toThrow();expect(()=>f.serializeInt64(1 as unknown as bigint)).toThrow();expect(()=>f.parseInt64Variable("1".repeat(8194))).toThrow();});

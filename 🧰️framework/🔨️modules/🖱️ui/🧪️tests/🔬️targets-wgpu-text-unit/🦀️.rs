@@ -161,7 +161,7 @@ fn the_layout_advance_source_is_the_atlas_advance() {
 }
 
 /// 🔤️ LAW (WG11 T7a): the shared corpus — both faces, sizes 2xs…2xl, en + de strings — sums its ADVANCES within the fixture's
-/// tolerance (0.5 px) of Chromium's UNKERNED DOM width (`🧫️fixtures/🔤️text-advances`, re-measured in Chromium by the React-side law).
+/// tolerance (0.5 px) of Chromium's UNKERNED DOM width (`🧪️tests/🧫️fixtures/🔤️text-advances`, re-measured in Chromium by the React-side law).
 #[test]
 fn the_shared_corpus_advances_sum_to_chromiums_unkerned_width() {
     for_each_corpus_row(|atlas, face, text, size, row| {
@@ -177,10 +177,10 @@ fn the_shared_corpus_measures_as_chromium_does_with_kerning() {
     for_each_corpus_row(|atlas, face, text, size, row| (atlas.measure_text_face(face, text, size).0, row["kernedWidthPx"].as_f64().expect("kerned width") as f32));
 }
 
-/// 🔤️ Walks every corpus row (`🧫️fixtures/🔤️text-advances`) through `width`, which answers the wgpu width and the Chromium width it
+/// 🔤️ Walks every corpus row (`🧪️tests/🧫️fixtures/🔤️text-advances`) through `width`, which answers the wgpu width and the Chromium width it
 /// must land within the fixture's tolerance of.
 fn for_each_corpus_row(mut width: impl FnMut(&mut FontAtlas, super::TextFace, &str, f32, &serde_json::Value) -> (f32, f32)) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔤️text-advances/🔣️.json")).expect("the text advance corpus parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔤️text-advances/🔣️.json")).expect("the text advance corpus parses");
     let tolerance = fixture["tolerancePx"].as_f64().expect("tolerance") as f32;
     let mut atlas = FontAtlas::shaped_default();
     for row in fixture["rows"].as_array().expect("corpus rows") {
@@ -224,7 +224,7 @@ fn original_borrowed_font_pair_reader_matches_swash_and_keeps_every_native_sourc
     let observe=|body:&mut dyn FnMut()|semio_framework_trace::observe_heap_allocations_on_this_thread(body).1;
     let heap=observe(&mut||drop(vec![0u8;37]));assert_eq!((heap.requested_bytes,heap.released_bytes),(37,37));
     let(original,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(super::PairKerning::default);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut original=original;
-    let source=super::ANTA_LATIN.as_ptr();let mono=super::SHARE_TECH_MONO_LATIN.as_ptr();let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔤️text-advances/🔣️.json")).unwrap();let mut oracle=super::ShapeContext::new();let mut pairs=0;
+    let source=super::ANTA_LATIN.as_ptr();let mono=super::SHARE_TECH_MONO_LATIN.as_ptr();let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔤️text-advances/🔣️.json")).unwrap();let mut oracle=super::ShapeContext::new();let mut pairs=0;
     for row in fixture["rows"].as_array().unwrap(){
         let face=if row["face"].as_str().unwrap_or("sans")=="mono"{super::TextFace::Mono}else{super::TextFace::Sans};let font=super::SwashFontRef::from_index(super::authored_face_bytes(face),0).unwrap();let units=f32::from(font.metrics(&[]).units_per_em);let metrics=font.glyph_metrics(&[]);let text=row["text"].as_str().unwrap();let mut previous=None;
         for right in text.chars(){if let Some(left)=previous{let expected=if super::is_zero_width_format_char(left)||super::is_zero_width_format_char(right)||font.charmap().map(left)==0||font.charmap().map(right)==0{0.0}else{let mut bytes=[0u8;8];let len=left.encode_utf8(&mut bytes).len();let end=len+right.encode_utf8(&mut bytes[len..]).len();let mut shaper=oracle.builder(font).features(&[("liga",0),("clig",0),("calt",0)]).build();shaper.add_str(std::str::from_utf8(&bytes[..end]).unwrap());let(mut shaped,mut nominal,mut glyphs)=(0.0,0.0,0);shaper.shape_with(|cluster|for glyph in cluster.glyphs{shaped+=glyph.advance;nominal+=metrics.advance_width(glyph.id);glyphs+=1});if glyphs==2{(shaped-nominal)/units}else{0.0}};
@@ -593,7 +593,7 @@ fn a_newline_always_breaks_and_a_trailing_space_hangs() {
 
 /// ⚖️ LAW (ticket 26/09/23 session 14d, WG11): `white-space: pre-wrap` keeps every space, and the spaces ending a line hang —
 /// a line whose last word fits breaks AFTER its trailing spaces, never before that word (the DiffView presentation fixture's
-/// `preWrap` vector, `🧬️contract/🧫️fixtures/🆚️diff-view-presentation/🔣️.json`). A hard newline still breaks, empty lines stay.
+/// `preWrap` vector, `🧬️contract/🧪️tests/🧫️fixtures/🆚️diff-view-presentation/🔣️.json`). A hard newline still breaks, empty lines stay.
 #[test]
 fn pre_wrap_keeps_repeated_spaces_and_hangs_the_ones_ending_a_line() {
     use super::TextFace;
@@ -645,7 +645,7 @@ fn the_retained_painter_breaks_where_the_measure_says() {
 #[test]
 fn actual_font_pair_queries_match_swash_without_retaining_native_cache_storage() {
     use crate::wgpu::host::physical_job_close_tests::measured;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔤️text-advances/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔤️text-advances/🔣️.json")).unwrap();
     let (mut original, births, frees) = measured(super::PairKerning::default);
     assert_eq!((births, frees), (0, 0));
     let sans = original.sans.unwrap().data.as_ptr();

@@ -1,0 +1,10 @@
+{
+  "from": "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/📦️receipt/🔣️.json",
+  "to": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/📦️receipt/🔣️.json",
+  "sha256": "b0a5a564c41e5fbcfe5b8474b3cd2320fdb9639e1209c8d6aa076521cfb9a3f6",
+  "reader": {
+    "path": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/📦️receipt/🟦️.ts",
+    "from": "../../🧫️fixtures/📦️receipt/🔣️.json",
+    "to": "../🧫️fixtures/📦️receipt/🔣️.json"
+  }
+}

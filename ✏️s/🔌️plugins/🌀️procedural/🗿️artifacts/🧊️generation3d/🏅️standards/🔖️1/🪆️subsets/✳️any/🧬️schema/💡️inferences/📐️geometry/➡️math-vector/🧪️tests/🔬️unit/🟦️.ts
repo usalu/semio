@@ -5,7 +5,7 @@ import { disagreements, type FixtureCase, type OracleResult } from "../../../�
 
 type Triple = [number, number, number];
 type Fixture = { tolerance: number; angleTolerance: number; cases: FixtureCase[] };
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(new URL("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/➡️math-vector/🔣️.json", import.meta.url), "utf8")) as Fixture;
 const prefix = "generation3d.geometry.";
 
 const vec = (inputs: Record<string, unknown>, port: string): Vector3 => new Vector3(...(inputs[port] as Triple));

@@ -6,7 +6,7 @@ import { mkdtempSync, mkdirSync, existsSync, writeFileSync, readFileSync, rmSync
 import { join, resolve } from "node:path";
 import { once } from "node:events";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
-import corpus from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import corpus from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, listMapTilesForBounds, lonLatToTileXY, mapTileCacheRoots, prefetchMapTiles, type GisMapTileProvidersV1 } from "../🟦️.ts";
 
 /** 🧪️ Checks schema-owned coordinates and real bounded HTTP cache work against independent oracles. */

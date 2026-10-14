@@ -1,4 +1,4 @@
-const IDENTITY_FIXTURE: &str = include_str!("../../🧫️fixtures/🧫️plugin-identity/🔣️.json");
+const IDENTITY_FIXTURE: &str = include_str!("../🧫️fixtures/🧫️plugin-identity/🔣️.json");
 const COMPONENT_MANIFEST: &str = include_str!("../../🧩️component/📦️packages/🦀️rust/Cargo.toml");
 
 /// 🪪️ The language-agnostic identity tuple, read once and shared by every authority assertion.

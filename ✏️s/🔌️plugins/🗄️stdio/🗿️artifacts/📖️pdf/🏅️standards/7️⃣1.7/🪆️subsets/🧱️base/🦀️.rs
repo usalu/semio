@@ -89,7 +89,7 @@ pub mod derived_analysis {
                     AnalyzeSource::Text(text) => match if text.as_bytes().starts_with(b"%PDF-") {
                         crate::standards::v1_7::subsets::base::io::import::decode_pdf(text.as_bytes()).map_err(|error| format!("{error:?}"))
                     } else {
-                        <PdfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+                        <PdfSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
                     } {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
@@ -100,7 +100,7 @@ pub mod derived_analysis {
                     AnalyzeSource::Binary(bytes) => match if crate::standards::v1_7::subsets::base::io::import::sniff_pdf(bytes).is_some() {
                         crate::standards::v1_7::subsets::base::io::import::decode_pdf(bytes).map_err(|error| format!("{error:?}"))
                     } else {
-                        <PdfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
+                        <PdfSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
                     } {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {

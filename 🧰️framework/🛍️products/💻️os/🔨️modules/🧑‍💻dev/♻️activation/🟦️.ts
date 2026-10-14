@@ -1,6 +1,6 @@
-import { readBuildMode, type BuildMode } from "../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { readBuildMode, type BuildMode } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -28,7 +28,7 @@ export type ActivationArtifact = { readonly pluginId: string; readonly artifactS
 export type ActivationReceipt = {
   readonly schema: "semio.dev.activation/v1";
   readonly variant: string;
-  readonly profile: "dev" | "release";
+  readonly profile: "prototype" | "release";
   readonly plugins: readonly (ActivationArtifact & { readonly rebuiltAt: number })[];
 };
 
@@ -37,7 +37,7 @@ const keys = (value: unknown, expected: readonly string[]): value is Record<stri
 
 /** 🧾️ Validates the completed runtime receipt defined by {@link ./🧬️schema/🔣️.json} `#/$defs/DevActivationV1`. */
 export function parseActivationReceipt(value: unknown): ActivationReceipt {
-  if (!keys(value, ["schema", "variant", "profile", "plugins"]) || value.schema !== "semio.dev.activation/v1" || typeof value.variant !== "string" || !identity.test(value.variant) || !["dev", "release"].includes(String(value.profile)) || !Array.isArray(value.plugins)) throw new Error("Invalid activation receipt");
+  if (!keys(value, ["schema", "variant", "profile", "plugins"]) || value.schema !== "semio.dev.activation/v1" || typeof value.variant !== "string" || !identity.test(value.variant) || !["prototype", "release"].includes(String(value.profile)) || !Array.isArray(value.plugins)) throw new Error("Invalid activation receipt");
   const seen = new Set<string>();
   for (const row of value.plugins) {
     const rowKeys = Object.keys(row as object).sort().join();
@@ -49,7 +49,7 @@ export function parseActivationReceipt(value: unknown): ActivationReceipt {
 }
 
 /** 🕰️ Keeps warm activations unchanged and advances changed content despite clock rollback. */
-export function nextActivationReceipt(variant: string, profile: "dev" | "release", completed: readonly ActivationArtifact[], previous?: ActivationReceipt, now = Date.now()): ActivationReceipt {
+export function nextActivationReceipt(variant: string, profile: "prototype" | "release", completed: readonly ActivationArtifact[], previous?: ActivationReceipt, now = Date.now()): ActivationReceipt {
   if (previous) parseActivationReceipt(previous);
   if (previous && (previous.variant !== variant || previous.profile !== profile)) throw new Error("Activation receipt identity mismatch");
   if (!Number.isSafeInteger(now)) throw new Error("Invalid activation clock");
@@ -70,21 +70,27 @@ export function readActivationReceipt(directory: string): ActivationReceipt {
 }
 
 /** 🗂️ Separates each renderer, variant and profile's activation and installations from compiled artifacts. */
-export function developmentRuntimeRoot(packageRoot: string, variant: string, profile: "dev" | "release", renderer: "react" | "wgpu"): string {
+export function developmentRuntimeRoot(packageRoot: string, variant: string, profile: "prototype" | "release", renderer: "react" | "wgpu"): string {
   if (!["react", "wgpu"].includes(renderer)) throw new Error("Select a development renderer: react or wgpu");
   parseActivationReceipt({ schema: "semio.dev.activation/v1", variant, profile, plugins: [] });
   return join(packageRoot, "dist", "runtime", renderer, profile, variant);
 }
 
-/** 🔌️ THE plugin-modules root — the ONE directory every producer writes and every consumer reads, for every host profile:
- * `@semio-tech/framework-plugin-web:support`, every crate's `materialize` (shipped `wasm-release` modules) and
- * `components iterate` (the one local `wasm-prototype` module being edited) write it; the react Vite `/🔌️plugin-modules`
- * mount, the WGPU browser host, the native runner's `SEMIO_PLUGIN_MODULES`, `prepare`/`activate` and the production
- * distribution copy read it. There is one shipped component profile, so there is one module root: a host profile selects
- * the host build, never a second copy of the plugins, and every module carries the `🧾️receipt.json` that names its
- * profile, which is how release consumers refuse a local iterate module (ticket 26/09/23 wave A2). Derived from this
- * module's own location — never from a workspace walk — so Vite's config bundler resolves it without pulling repository
- * discovery in, and so no caller can pick a second root. */
+/** 🔖️ Keys one component's mutable source state with a bounded digest. */
+export function activationSourceFreshnessKey(pluginId: string): string {
+  if (!identity.test(pluginId)) throw new Error("Invalid activation component identity");
+  return createHash("sha256").update(pluginId).digest("hex").slice(0, 24);
+}
+
+/** 🔖️ Keeps mutable source indices outside compiled snapshots and reserves room for staging names. */
+export function activationSourceFreshnessDirectory(runtimeRoot: string, pluginId: string): string {
+  const directory = join(runtimeRoot, "🔖️", activationSourceFreshnessKey(pluginId));
+  if (directory.length + 64 > 256) throw new Error("Activation source-state path exceeds the repository path limit");
+  return directory;
+}
+
+/** 🔌️ Resolves the leased active browser-module projection used by publication owners.
+ * Build and activation consumers select immutable mode-qualified roots through {@link builtPluginModulesRootIn}. */
 export function pluginModulesRoot(): string {
   return pluginModulesRootIn(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../.."));
 }

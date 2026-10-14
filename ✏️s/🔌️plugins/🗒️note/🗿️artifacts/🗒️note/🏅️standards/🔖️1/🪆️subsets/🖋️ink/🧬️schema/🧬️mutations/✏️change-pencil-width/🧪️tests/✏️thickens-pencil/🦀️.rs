@@ -10,11 +10,11 @@ use crate::schema::mutations::{apply_note_mutation, inverse_note_mutation, NoteM
 use crate::{NoteBlockNode, NoteDiff, NoteSnapshot};
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️change-pencil-width/✏️thickens-pencil/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️change-pencil-width/✏️thickens-pencil/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️change-pencil-width/✏️thickens-pencil/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️change-pencil-width/✏️thickens-pencil/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️change-pencil-width/✏️thickens-pencil/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️change-pencil-width/✏️thickens-pencil/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️change-pencil-width/✏️thickens-pencil/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️change-pencil-width/✏️thickens-pencil/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️change-pencil-width/✏️thickens-pencil/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️change-pencil-width/✏️thickens-pencil/🎯️outcome/🔣️.json");
 
 fn before() -> NoteSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

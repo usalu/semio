@@ -1,0 +1,1350 @@
+{
+  "version": 1,
+  "pins": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/parent.json",
+      "bytes": 1102,
+      "sha256": "c78fb630cba59927efa200d5653c2d616691dfeb9ba6a047b54a641d217a2436"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/scope.json",
+      "bytes": 1182,
+      "sha256": "0b89b29f44edce598037fca2aa024ca4ef2bc0bc81445b532ff72e645740cad1"
+    },
+    {
+      "path": "bun.lock",
+      "bytes": 537260,
+      "sha256": "82793c9ad08bf63ed3f8a654f10761f637303755c6cad71f8577157a9e3d3dde"
+    },
+    {
+      "path": "package.json",
+      "bytes": 13133,
+      "sha256": "5658405bba43d07a93f62e3bcde0e1e673eb02409eb38331f029fb519bd2851b"
+    },
+    {
+      "path": "♻️mit-bestand/bun.lock",
+      "bytes": 525347,
+      "sha256": "5c9af9483ef051c46deaf20d9fcb59cdefff7e6ac83306e5a629310b1b9d2759"
+    },
+    {
+      "path": "♻️mit-bestand/package.json",
+      "bytes": 27133,
+      "sha256": "d9972e568b7a82874c142d6cf8dc0a7ee813bc61981a84173b8112cbad53373c"
+    },
+    {
+      "path": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/package.json",
+      "bytes": 1607,
+      "sha256": "71e1b3385125ef69aaee709a0c05c581a88c2e4ecbc267d30e0c62e2da3f2dff"
+    },
+    {
+      "path": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript/package.json",
+      "bytes": 572,
+      "sha256": "db340c71b69483c42a4c063e168c57beb28bc5a3a92b413d1e179e706ebd7cd6"
+    },
+    {
+      "path": "♻️mit-bestand/🧺️demonstrator/package.json",
+      "bytes": 1217,
+      "sha256": "65cfeef92552e30e011b8959cc9265cc5cb524a1b0f2df23050fc413adf2fda7"
+    },
+    {
+      "path": "✏️s/bun.lock",
+      "bytes": 512455,
+      "sha256": "d1d08b60801c8441696faa809d302112b437da7d5b1c01ef1e570502465b614c"
+    },
+    {
+      "path": "✏️s/package.json",
+      "bytes": 25196,
+      "sha256": "f5a475d5d0e5a9d3352a26a75827e3f65a43d71eaced0b9f6705a0d05da98cfd"
+    },
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🟦️typescript/package.json",
+      "bytes": 1090,
+      "sha256": "0554b45ac4bd49ec86fe7f033f9f71f2649625249d499d82ece6a8cfa4404d85"
+    },
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/package.json",
+      "bytes": 657,
+      "sha256": "a0350ad7d31655652d0410ced39f1ae86638fad118df14d0b984ef2334db29e7"
+    },
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json",
+      "bytes": 895,
+      "sha256": "939cc1338d1641f31224d2f0759adc7b204d07d9b9e75c624d2149aaeda7093b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/📦️packages/🟦️typescript/package.json",
+      "bytes": 903,
+      "sha256": "27b7431e68bab40e28e639b5e97818e9d2543a1601ea52ed983a5374f451c044"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🟦️typescript/package.json",
+      "bytes": 813,
+      "sha256": "458e88c16c2340a913ad12decdf6f3d3079cb1a018fd056ba532c67baae6678c"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust/package.json",
+      "bytes": 419,
+      "sha256": "6a3f2a1f51583ba59f55d164a4d6926849fe913606996258f82f3e7b5be288af"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/package.json",
+      "bytes": 545,
+      "sha256": "48e357bdf4e79ab1e6dbb9cdcc062e2cf373d6999159d0b95f1fe92380bae7f8"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript/package.json",
+      "bytes": 953,
+      "sha256": "c6eb8a5ee5825a62f9ee0d5caebd10e6f23a5e2c5c522bd400c7dabd26d824e6"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/package.json",
+      "bytes": 361,
+      "sha256": "3a44f88af71a0fb349e675bde7e231ce595498521eef03d55ac83008b683e00f"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust/package.json",
+      "bytes": 496,
+      "sha256": "16ffdcad3cc6b25117781db03afb03eba6ce0fddbfcb6fec97f712e54e1b4178"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/package.json",
+      "bytes": 474,
+      "sha256": "f7fa5425b06e4763b9017d4bfc1b32d7520d1a1689fffd530312844ccfa16373"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust/package.json",
+      "bytes": 401,
+      "sha256": "00f183d988399aa0a544b194b2213a2d474bb9d15856a924e3d2ff477e7b4f96"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🟦️typescript/package.json",
+      "bytes": 825,
+      "sha256": "3823a6784c9953d66104bc7683319218c31e940a77ac51952e2f9dbcf898933c"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json",
+      "bytes": 941,
+      "sha256": "80268694f74334362a31df71b014be5a8c86e26d43af41e69b96ffb10fe2e3ca"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust/package.json",
+      "bytes": 385,
+      "sha256": "4ce8f60024bbbc38ffe365f6722509c532dfce7b0b3920a604c86091ba05a7f3"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/package.json",
+      "bytes": 1046,
+      "sha256": "5906a367777048afd4a3cb1615290e9b90937fc41162bd5b38192372c885a902"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/package.json",
+      "bytes": 369,
+      "sha256": "57ce34209c020601e8baa34ba085bcee948847737d4bb4bb79e7b4b64adf75f8"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/package.json",
+      "bytes": 255,
+      "sha256": "bea8c9e66bc7046d45f1552bbc74fe15b1302b5880af0d2e5afcee56462aeb0e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/package.json",
+      "bytes": 629,
+      "sha256": "4acb1e36372bf8bf06c342640545bd8cb040b4a94e63893ecf92d39183a80fc0"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json",
+      "bytes": 876,
+      "sha256": "6d0750f786860d4d0cf894908bf97387883685f4f018314a9310223023b979e0"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust/package.json",
+      "bytes": 489,
+      "sha256": "c3b44f4e6777724e8a48101504bb7e5b1eb16edf62d2347e5d9a6773f748cc22"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust/package.json",
+      "bytes": 369,
+      "sha256": "eb134446789299877cc4c99f81273eae35772d5099051867003f9f66659a9b1c"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust/package.json",
+      "bytes": 487,
+      "sha256": "b6fae6f3ab84faa99a7caf5d8852c2b5dd2e7976a039f0ae85a4dfca152e2528"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/package.json",
+      "bytes": 357,
+      "sha256": "7f7e45ce3f1d7dc53b602883ee29a8894251f4a081d5ec88f89359bea3699311"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/package.json",
+      "bytes": 741,
+      "sha256": "1c48c3c32fca03428daa4f69feb24990ae1be2848fe3594f221514dcf6498733"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/package.json",
+      "bytes": 650,
+      "sha256": "33bb4aa9a932b4ac9905b14a94ad3b2fb20ce7494d733e4e31f0a259e1d2ac2c"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/package.json",
+      "bytes": 653,
+      "sha256": "557972086ec573de491d708d89f513a4cf51804164587f585a7d12c491553b90"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/package.json",
+      "bytes": 670,
+      "sha256": "0c2dadfef57ebc371368d4f091cb97b7a1f959a991203b9991f920e6bb783c2b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust/package.json",
+      "bytes": 387,
+      "sha256": "b76bd20c098c4ac20deb54f2a7989dcab69bc576b4c3f99bea446c344db6ee04"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust/package.json",
+      "bytes": 395,
+      "sha256": "c096053117fb4e00a07cc5cef49e98674309fa70ccee9c055b3964b4bd40c3e4"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/📦️packages/🟦️typescript/package.json",
+      "bytes": 876,
+      "sha256": "6f7edf07b30c619e3ee15958fbef9e775342ea50d9991bdca67d4e7c97134148"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust/package.json",
+      "bytes": 385,
+      "sha256": "bb8bded37be415159942e6d5a51437e320d73957fd4558b750bcf654371d441b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript/package.json",
+      "bytes": 872,
+      "sha256": "3b661dce7f9dfc145c9b0460f249722e61def8291ff8bf41547feb2e5964452b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🟦️typescript/package.json",
+      "bytes": 969,
+      "sha256": "94995d373d0cc3b1bc66c82aec8cd2b24e5b9e7af19ec5a4d1f271233ae23f23"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/package.json",
+      "bytes": 282,
+      "sha256": "9cc9aef2711fe2073e6c4b5974cff71cc22fe483082f00b4400e52fc77208318"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🟦️typescript/package.json",
+      "bytes": 1013,
+      "sha256": "aa97368aeda8e7f868bf902e32ad8475e6bdc9490b8b5142e01fbeae3d792786"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust/package.json",
+      "bytes": 621,
+      "sha256": "e00c0fef91e11a8e74cf3b54bdb20be613bd1b7c56942e6b6d3876915274c2cb"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/package.json",
+      "bytes": 984,
+      "sha256": "31db7c3e3fda34c2fd972b21f65a43e7f2d3896bf358b6524e3f54d95a94953f"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/package.json",
+      "bytes": 474,
+      "sha256": "9dc215b0f70a42fa5edd8684f06c444640019f456ca7c393f157b3e4d2fdd29f"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🟦️typescript/package.json",
+      "bytes": 763,
+      "sha256": "38e64af3f05053f54115442070fbab18ac466fec7887e770641a41d2c2660084"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust/package.json",
+      "bytes": 357,
+      "sha256": "9db919ecc9fea4379081f82008ce228b0ad10e3b1a99b6085a316e45b6c2432b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/package.json",
+      "bytes": 949,
+      "sha256": "f327a836edaac18c6d394fab851a03b2db421aa665407564b018f1803109063d"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust/package.json",
+      "bytes": 387,
+      "sha256": "b87761e69fb469c937e492e1d6278b291432a47c481a888f0adcd0e65fafd2a0"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript/package.json",
+      "bytes": 872,
+      "sha256": "f5a7226d4554a6fff2ecbc1988cab38302e62a53d087b89b4a5a63d1d6150bef"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript/package.json",
+      "bytes": 1271,
+      "sha256": "29c3c9488bb77ed2e75cbe014bc07c9870adee5db7fc4c09bbedeebf38863a6d"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript/package.json",
+      "bytes": 1046,
+      "sha256": "9b2f7c00928a4f693f7a9a7ebf1644a01739cdacda5ab7ce11cecd9ad92cfde2"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust/package.json",
+      "bytes": 305,
+      "sha256": "c23cde1bdca3087321cbb8b77f3891e5d6e1108d074bcda57882d54b31fc8666"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🟦️typescript/package.json",
+      "bytes": 1046,
+      "sha256": "f167b7ea1d6217d541107370c9a3535316a9cd6ec05fed8d218f21ee163f4bed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🦀️rust/package.json",
+      "bytes": 383,
+      "sha256": "1e0b90587db34785e90e0980bb597635a280837f8b5eb902a566ff1982d08fb3"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript/package.json",
+      "bytes": 1058,
+      "sha256": "650f8cff8dbbf8e929b59b343b2c421b828665c10cc16bab32368b750d68815b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/package.json",
+      "bytes": 369,
+      "sha256": "f1fa7de16b13592fe6f51d12f83b39aabf5fd17085bf48ba6dbe19e0fdc761ba"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust/package.json",
+      "bytes": 373,
+      "sha256": "4de6e92607b9827ad01b6e1450cf9a267284cfd247be60ba528cf0341e4fc01b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/📦️packages/🟦️typescript/package.json",
+      "bytes": 848,
+      "sha256": "2338223cd387e9e033aa279b69b80dab29851de2a303edba00ba77f579bd188e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏛️ownership/🧮️compute/package.json",
+      "bytes": 299,
+      "sha256": "0c2b6f453647d44b9dfb003eb12bda83dc00f8de9677b86c6d2da3fc604962e5"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/package.json",
+      "bytes": 209,
+      "sha256": "bad18b1e4dad49177a633af5136f9aa65b836b89ae6cc41890fbabfb311c1ce5"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/package.json",
+      "bytes": 938,
+      "sha256": "b46a2c70fab956cd42568619d0cd67d2f68dd119fd5279a2dcae1e11f0838317"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript/package.json",
+      "bytes": 1033,
+      "sha256": "e043edc6e27d131df914113f753792f9c477b5e022cb164f10171d41abd72bca"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/package.json",
+      "bytes": 363,
+      "sha256": "e4251a52c4fd532a573b623e0e794c5099c12570274aa465a28bfafe2a9e02cf"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust/package.json",
+      "bytes": 387,
+      "sha256": "ea8bcd7e3dc533e31872b408bd5fc9ddb957a247dbe16de3a74d460ad5229038"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript/package.json",
+      "bytes": 1461,
+      "sha256": "e05874c85d6fab42732cb5c8bb4271d563af541ac456401bd1ff79918f91e917"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/📋️forms/📦️packages/🟦️typescript/package.json",
+      "bytes": 459,
+      "sha256": "c3b131eaa96b4df968a35c9e34799859d8cdeedfa0aa90a562d6a5c3e87626d8"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/package.json",
+      "bytes": 1653,
+      "sha256": "00d0831feb418a8a312e9d4d9ff6e522a6c52aa8e9c2e0a6ea9a38ff716c455a"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/📕️norm/📦️packages/🟦️typescript/package.json",
+      "bytes": 580,
+      "sha256": "5ed82deb8fd2b1803d30f3a1a984d8616da6c95b4e321e7fcc0de5fee411f328"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/package.json",
+      "bytes": 2915,
+      "sha256": "edf481f2b8b59f5b82a8c8ec1bb0c5b18e7285bf261be5e949fe893256137985"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🗒️note/📦️packages/🟦️typescript/package.json",
+      "bytes": 448,
+      "sha256": "546653635ed5f89e79dd70ad8890c19e8420b7f80b0384a2faa4dd9a25d053d6"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript/package.json",
+      "bytes": 652,
+      "sha256": "c754fbcf5df41b8991c188d13fab8c94d563e33ceb9ba48536beed4871f572ed"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript/package.json",
+      "bytes": 469,
+      "sha256": "33635838da277a94e1771f98e5fa6b607076771603fe5c94ce4c538ce6efebbd"
+    },
+    {
+      "path": "🌎️hub/bun.lock",
+      "bytes": 518892,
+      "sha256": "ecc8c93e1fc2f44db6c4bcd26bf376970fdd58c7daac36f2c68f8f115733e4f8"
+    },
+    {
+      "path": "🌎️hub/package.json",
+      "bytes": 27392,
+      "sha256": "66fe2c5d1113bea9b201b3ec516acf01134e51c1e42302531d7e1b2fe809dd20"
+    },
+    {
+      "path": "🌎️hub/📦️packages/🟦️typescript/package.json",
+      "bytes": 995,
+      "sha256": "53941ed7cf0a3f12abba7c64a7574b57b91d8f42366f0ddbeb42915a56380a67"
+    },
+    {
+      "path": "🌎️hub/🔐️auth/🔌️client/📦️packages/🦀️rust/package.json",
+      "bytes": 344,
+      "sha256": "3ebfa2c68f22517e9355229b6fbf6d78fdf9bc32b1826a4e73ed2c25b37f3857"
+    },
+    {
+      "path": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
+      "bytes": 1179,
+      "sha256": "24763a939fb0f8b306afe6f7f2728a5f0b5d72eeabcc14bb83a47ad8deb15768"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/package.json",
+      "bytes": 818,
+      "sha256": "eb1179dad8849bb17ca9de8031ac6c5112c3f1a0dafe944eab087759ec73f54c"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/package.json",
+      "bytes": 901,
+      "sha256": "cd81230c29ca0474aa685f368aed9bccba158c2fd34df993e2049233aa12aed7"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪐️space/🏛️ownership/🧮️compute/package.json",
+      "bytes": 297,
+      "sha256": "bfe36f8ec03aeb6a45fee82ee0fd0f168de895c8c8570306b22a57f2c06924df"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/package.json",
+      "bytes": 207,
+      "sha256": "13843753f18e39daac145c96540c9bc25c84e3f8927d291ed5dcc84c57ec237d"
+    },
+    {
+      "path": "🎓️teaching/bun.lock",
+      "bytes": 418926,
+      "sha256": "5e6c790383a6e9ded5aa45b8678779a4a0ef17a44915321a60b093abd2a434aa"
+    },
+    {
+      "path": "🎓️teaching/package.json",
+      "bytes": 10559,
+      "sha256": "647fd6c172b11cb003a40e9a28cc89d3749f11c1a3da56a02bca48791c31e8bb"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/package.json",
+      "bytes": 1663,
+      "sha256": "7bd794d9d39f778a299ade0b282d113e6c61985a83fc8d523667e3f8a7c2e80b"
+    },
+    {
+      "path": "🏢️semio-tech/bun.lock",
+      "bytes": 516278,
+      "sha256": "3e7d562b2cd77fe8d9404e3aef7000542490c08a463e5244ed43a1fd323d92e5"
+    },
+    {
+      "path": "🏢️semio-tech/package.json",
+      "bytes": 26914,
+      "sha256": "beb70cb48dbc7c970210e9f49697d4b35824bf869a490b68cb2b7e304766695f"
+    },
+    {
+      "path": "🏢️semio-tech/🎡️play/package.json",
+      "bytes": 1320,
+      "sha256": "1875ee56825840cd3e54618deedb07cfbe21a7e323c4b2fbf475547ef188b966"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/package.json",
+      "bytes": 3238,
+      "sha256": "0cf7ac4dfd688e0861de6b5c85fe00f702b79dd8f4c0eb4bbbe8f5ee07294166"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/⏱️budget/🟦️.ts",
+      "bytes": 407,
+      "sha256": "d4338ee9649db91969abe482177019b06f9f49571347219a2230c77272921f3b"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️command/🟦️.ts",
+      "bytes": 399,
+      "sha256": "5e78ac52cb7650a97accfb7fed6bd030e1537c3837502fd1c6b2f341dac38224"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts",
+      "bytes": 544,
+      "sha256": "68467faf41706f93855f563cc1c917281c549067cc4d0326f79a94c3d5a7f075"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🎚️mode/🟦️.ts",
+      "bytes": 350,
+      "sha256": "2cd373a516b6c5b71f64a6d4d172a36d65dfbfbbdcef279de045df095311f66b"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🎟️capacity/🟦️.ts",
+      "bytes": 367,
+      "sha256": "d5dfdc1096b69640ab4f6de8977cb173e199c5df31e03bcd1b6ed8b529d96dd4"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🗃️state/🟦️.ts",
+      "bytes": 336,
+      "sha256": "5f1e129d94ea6fe4ce75527d23d8a1a8eb2c99bf0799c6002561755e0a8eabfa"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🟦️typescript/🟦️.ts",
+      "bytes": 325,
+      "sha256": "af8b3d28228f04fe44b662d89373a85e15bf678916450cdcb5b04bdbb279f806"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📋️context/🟦️.ts",
+      "bytes": 320,
+      "sha256": "7f0ffee9e2d634938fcbd94e3204f3f4cd6ae1426559b801fa17e0c50b099c77"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts",
+      "bytes": 477,
+      "sha256": "0e3918b03d6b06495523513b0edcc3008d38ebd231b1133687bf1d07453b200f"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "bytes": 1028,
+      "sha256": "d45f3a7d7bca33d38500848b48f81645bde203d6135c8c6ffbb956d40a8251b2"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts",
+      "bytes": 695,
+      "sha256": "606d49b59d8b81a07ce439ce84ef1c1ce67d37d0edf49863237a117dded45537"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts",
+      "bytes": 734,
+      "sha256": "e80a65352bd665da4d3423995f633a83abc96945699fce9b7a24d4f584263da3"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🐹️go-build/🟦️.ts",
+      "bytes": 352,
+      "sha256": "b9ce6faf62b4ad51ecff1dc695f08c8337034dc66fb1b1b852c6e5f1127df5a3"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+      "bytes": 360,
+      "sha256": "2bdc9f6a8208b83ea3441e11fc25c516601cb26ec8b14c1fdedd09dd93b77078"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts",
+      "bytes": 501,
+      "sha256": "b22830b1dc8205b800f06dd0cdd12c45e022f3de7624164964d95adcf318d614"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
+      "bytes": 208,
+      "sha256": "837492d587d74f2d9cc35f225fac881b74d4b758dc8416c26b6530ba470a7a28"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🔒️leases/🟦️.ts",
+      "bytes": 389,
+      "sha256": "1a3d57fb9a6320d61b8a9d73adfba88521dc3247343e72b09ed4390c88a5e9b9"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts",
+      "bytes": 462,
+      "sha256": "5f495fccc2c18bbcbb84a92930a32d82c901593fd2d6e0f3086f599b29957c46"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎛️execution/🟦️.ts",
+      "bytes": 329,
+      "sha256": "34a059d5b08567fe67f3fe5bb7aff6966a5685c833aae2993163c5e872dbedc1"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+      "bytes": 514,
+      "sha256": "3a2bd1bab9afa0f48e77efd36a16b527dfd398a78dcd137877f95c41598a6144"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️laws/🟦️.ts",
+      "bytes": 557,
+      "sha256": "3117e5b86a52e5547a2fec74d9366c96dbc61a630d487a54e41c73ebbcc07545"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🧪️vitest/🟦️.ts",
+      "bytes": 369,
+      "sha256": "4f7ed2792088fb1a1c49d21ed150a0f87a9093b404b5bdbec68a75021dfd44e4"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts",
+      "bytes": 771,
+      "sha256": "c0cf2be8a80ea396d30bfdf85771f5eaab0bc580622981c671b737714380a43b"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/📁️filesystem/🟦️.ts",
+      "bytes": 428,
+      "sha256": "9857c4992ab402c9b5f91da09eaf8902a5e5f614e14ca2a87b24d8260e7cff35"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🧬️schema/🟦️.ts",
+      "bytes": 313,
+      "sha256": "eeec24c8ca827def995831c2a2b49e2dce8de1c53098da8cef93a59551b57d0c"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🦀️rust/package.json",
+      "bytes": 679,
+      "sha256": "635292d13d9a55b682ffd27ddc85a6843754c179878511b188f4b899ef074e9d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🦀️rust/package.json",
+      "bytes": 408,
+      "sha256": "4171b74896cae871fff4d11a60fd486e634259ba0fab0e18d16efc2e32a3732f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust/package.json",
+      "bytes": 478,
+      "sha256": "da80a117c34077328f07228b1dc8d49a48353e36a09d2e01dec46d369777c1d7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/package.json",
+      "bytes": 887,
+      "sha256": "f1b5795c949e63aa3ce8d22ccfd5b6bc406f4f6891839a4a9808f502c0fb9bb3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/package.json",
+      "bytes": 717,
+      "sha256": "17638619abca156e753ea1e88552938f2c534b5e35c4bf280dacc858171ca4ee"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🟦️.ts",
+      "bytes": 1353,
+      "sha256": "295344a5c5605a0cedb280d7d8358ce8dd30f3fdea92e73f8ea1a1d7674033b2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/package.json",
+      "bytes": 317,
+      "sha256": "4025c51a9493ddffd2252a7e70bd7ae17378476620685218c995df4540f470f4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/package.json",
+      "bytes": 491,
+      "sha256": "a4b82a642aa9e9ba43dab6ec9c883a0fdfb8eb278231166bde6d5d7e264400c7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️execution/package.json",
+      "bytes": 285,
+      "sha256": "36589fb03220b27f9487fd5f7dca42d085269179247c42feec3edb9daa5d08ef"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/package.json",
+      "bytes": 431,
+      "sha256": "7d8db8f885ade6df0a6370d72f151b1575d412f10f8431f3b9fb559a3c30198c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/package.json",
+      "bytes": 467,
+      "sha256": "53eb55395772ff3f55c487321eb42f877433ece25de6c8ad7f11ad7bcde20e73"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/package.json",
+      "bytes": 1001,
+      "sha256": "612cf511074e514297b88669eacda6e62e0939eb09b0a7aec645909fa0cb5a4a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust/package.json",
+      "bytes": 437,
+      "sha256": "3a6c42c6fc0fb6bb1865d4aed214dddab699e81e686e988031f4729065be6818"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust/package.json",
+      "bytes": 669,
+      "sha256": "a53ec28303f9cc73c97bb5d8e8ad482b433dfec558ec11bc31bb2465f1e8c47a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/package.json",
+      "bytes": 903,
+      "sha256": "84f7cf4b96cfc3012261f6ad00ce4ccce4950ea06ade1d03dc560c13104873f7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/📦️packages/🟦️typescript/package.json",
+      "bytes": 279,
+      "sha256": "398ecd977e8ad0b7bd3f1aaec3ff6be2c4e49512c9c2647d40384856a5b331c2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/package.json",
+      "bytes": 434,
+      "sha256": "6ef248634a3f58d1db498096ff26975c803b4613e340f84d9fc1766703a17293"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/package.json",
+      "bytes": 1142,
+      "sha256": "8175cd71b5b2decffe37b13de2cb96a0931fe9e643b3bc79179f677f932a30c7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/package.json",
+      "bytes": 831,
+      "sha256": "408805f7e4ee38d11e909db79e924ccd1a7893c3a210e71929cd7c2dd363f6d9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/package.json",
+      "bytes": 1151,
+      "sha256": "32eed672a8c8e0648eed4bd660875c5598ce7bc3a571c59dab7a8eb0b4cb864a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+      "bytes": 12732,
+      "sha256": "b823e17b076e7f389e67e604302e1e5bbf60d50cd0247cc753d278f638def133"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "bytes": 9362,
+      "sha256": "62cacc7e986e21623572eac2b5287a82c923d5aa5b043b5541725d0e8347edaa"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json",
+      "bytes": 2128,
+      "sha256": "e26f26f0bd062e4d08fcb728ad50a5b69f72b57915c863ff4131efe558ce453d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts",
+      "bytes": 273,
+      "sha256": "9610713ed696f3ccfc968f21afa3f7df57932a65af9b7c53a12210a5a41189fa"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️command/🟦️.ts",
+      "bytes": 295,
+      "sha256": "afb09e3bfc1976476f892397c27eee559822ee7c4b39665f7f72a0d841885010"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "bytes": 673,
+      "sha256": "8c9925f74e43903b15a1a20485be1d90e231264bc5d9204944e86851de54f55b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts",
+      "bytes": 216,
+      "sha256": "57c6c0148565d4cf7a59deed5ed90e51ddf90c3f420347d89f3f0c98458bd98f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts",
+      "bytes": 390,
+      "sha256": "20052ef531cc4060eb1e22b3563ee7ef373d8abc60c0c5f591eb1109204ea759"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗃️state/🟦️.ts",
+      "bytes": 197,
+      "sha256": "73c43336220b28664c4b90428663b8a32ddada48299468ae40e1a367bfb2f042"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts",
+      "bytes": 187,
+      "sha256": "4d4e3ec44019e7c4bd390c435e34b091a667cb6e9cea1521ab06b9f6855f945b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/🟦️.ts",
+      "bytes": 186,
+      "sha256": "6131bf908dab6138907845b82a60cf7bef1f823a777dfe08d69ae8eeaec8aa45"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts",
+      "bytes": 343,
+      "sha256": "db4b5b30d79098d816089c981b7dabafe593cfb379a1c3ac848c7bcd67148ff4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts",
+      "bytes": 1014,
+      "sha256": "dac5a6e37d769ba95768dc54fad8671bdf902f845931a848e841054d576a71ea"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts",
+      "bytes": 561,
+      "sha256": "7b6ffab84cd63d7ab60891580a2c389fad06d75899bfa6010a277eb3183691b5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts",
+      "bytes": 600,
+      "sha256": "b5647e77755569ad139ccb6c01d40e3d8c515029b2b13ac11c6fb36a03d21b39"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🐹️go-build/🟦️.ts",
+      "bytes": 218,
+      "sha256": "812262de85b6e32435418a9e8cd418eb159dcbb856172dbf7f63c1c19b830f3e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts",
+      "bytes": 226,
+      "sha256": "ad2d14429a0d0102180bb6804e06d97aec53b70ac6b0355a1528c093f5d4961e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts",
+      "bytes": 367,
+      "sha256": "a9f1d197ff0b050ca20ae284b6ad0b7045c27165ba6e020c9ec71201121e5acb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts",
+      "bytes": 141,
+      "sha256": "745d81e573b4e57c9bf90cbc93c5a0405f32d34485992f9eae2c2e6d38bbff3f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+      "bytes": 304,
+      "sha256": "34207f7e29c36c7bd54b86c7e08194add051fdff10367ad0402284ab3331667f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts",
+      "bytes": 328,
+      "sha256": "f6212656ac20f28597bf3426de92bf30cbe6b8d142d5dff46a1437c7f92198cb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts",
+      "bytes": 195,
+      "sha256": "b143bbadfabb3d6b51b40f65d6a48083769a1665f1212c901af6285184cbc92a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts",
+      "bytes": 380,
+      "sha256": "6883cceca53ec8f4cd2fb03a5751ba9c7a88a4ff5f81d6edbc5d07fa531c1440"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts",
+      "bytes": 451,
+      "sha256": "9acfb6ed203be1406ba5f935430fede532f00b53bc4d4c537f8d2ae965f4479b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts",
+      "bytes": 235,
+      "sha256": "d5a2dac56db53a53109d4d4fb8fa34671ad6237f1ba7858e2a74838a178a3008"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "bytes": 1108,
+      "sha256": "95b774cc4dd2f563aaf11f670bc4ac340ea0ff57f931459dc250e8bdef6e1ea3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+      "bytes": 2971,
+      "sha256": "3df81b9a89a5c5e56bb37ecf579c0684dca29beacc50035fa6bfcfe75cb9c7ff"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏗️mesh-engine/🏛️ownership/🎨️attributes/package.json",
+      "bytes": 307,
+      "sha256": "155c79e85caa8320bf897511e3572dd2cd3a6fc02afd4d497fe77a84456d2f91"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/package.json",
+      "bytes": 352,
+      "sha256": "6d61554bc5114def291dddd64c9302b0ecbed65dd106f9ed1554d1c18d3d04a6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/📦️packages/🟦️typescript/package.json",
+      "bytes": 305,
+      "sha256": "967fff2f71e05186fd8e3e85f065940d2c57a15b769d4a4920ecac4fb24f17cd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/package.json",
+      "bytes": 376,
+      "sha256": "01fe5d54eacfddb72e259072288e261d9026097b51e7603d3f6e0e20faedfa21"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust/package.json",
+      "bytes": 346,
+      "sha256": "e809240f4185c003b65d49cda220b4a5d9abc764e381ed9dd0164ca07bc6db93"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
+      "bytes": 883,
+      "sha256": "d939a558eddbfa1055d3f21f71c8818319955af58f7bfdff17f1e913f83099d2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/package.json",
+      "bytes": 427,
+      "sha256": "c037fef45fa448dce174d4d30a1df0b92e72c6f15c34c75b27c7475d05fa3712"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔄️machine/📦️packages/🟦️typescript/package.json",
+      "bytes": 758,
+      "sha256": "7603e43119e98f242f00b136361aa383c2a4306832cdc133e1dbadd63dbec81a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/package.json",
+      "bytes": 310,
+      "sha256": "e6799fc57f278183327f8c71465ca5c8636211c8d938837570b2bb7c10526530"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust/package.json",
+      "bytes": 423,
+      "sha256": "437c3eee9ec869990666e02fe7849dfcda1b542991cf3cba5fe505b35d54b04d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust/package.json",
+      "bytes": 530,
+      "sha256": "9febd4a81dddaaa1714f59df213cc6111f7ac5d9eaebcdd2e0db281b79ad2400"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/package.json",
+      "bytes": 1575,
+      "sha256": "4b87630c826fc09f3dfe72668fb7b70c18462f60f6d39c2a109473a21fcae126"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🎨️palette.css",
+      "bytes": 44,
+      "sha256": "e1ee441ae1935518e0ffb00ba22e12b20917f2e4b477ae7decf30fb79fd1777e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🔤️tokens/🟦️.ts",
+      "bytes": 501,
+      "sha256": "09d29561389a6a6b1837fc1efd391c4ad353168684c617f36585e20114f74979"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🖌️ui.css",
+      "bytes": 39,
+      "sha256": "23e5d18059bd933efd30b77117d4f3c3853fbd4dc72bfedff7a35460f8a9c34e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+      "bytes": 2359,
+      "sha256": "cec6c516b138a3b4d804a620c5b3040b30110dbe1fa43ad2c5072c915f4edd33"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🌐️globals-ui.css",
+      "bytes": 50,
+      "sha256": "db638afbe8e8e61a5511c184fed35ddde6c2ae99c81ed20e83242e9ee0736287"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🌓️theme.css",
+      "bytes": 91,
+      "sha256": "fd14e7bcb4e0e29e235ea3beb434159ddfe266ac4d1dae48b92dd8c82fb002ec"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🧵️.css",
+      "bytes": 49,
+      "sha256": "a4ac479a1d7e9dc97cbec0bdc7ef2932337a1bc48095fe2d069c83617d7f12e4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/package.json",
+      "bytes": 360,
+      "sha256": "ddcaa681c677d42849900f479fa07a9e11b7cb8e2a9c3d2b5718d520dbd13761"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/package.json",
+      "bytes": 597,
+      "sha256": "d7e1447db34f81114d64deaa09d3ab7cb438e2632e4811db45e16e2155c6cec3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
+      "bytes": 779,
+      "sha256": "9bc1e0bb32ce858991e81dde3e98fc221a5e0cb706e52966874ae3b3ba19bca6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/package.json",
+      "bytes": 237,
+      "sha256": "389f6390ac60e3fbb58ed0a104171939acd228a0d66d5e41c8ab0618e73253b6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/package.json",
+      "bytes": 428,
+      "sha256": "80df614a0a8798678720e14fc919a2e4676f75f7d3f38bfdc9419b9b395c88f9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/package.json",
+      "bytes": 496,
+      "sha256": "2506cdb286a3cec8f10d52225730dab983035eee57c56677a1c0f821090bb6ed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust/package.json",
+      "bytes": 458,
+      "sha256": "256fe2441fb56a4ce039ff31efa36c448e932bc4beadf97354fd39d91f270bca"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/package.json",
+      "bytes": 437,
+      "sha256": "3f0943ca49f122ac554b79ca1270171bd6c68d5b54945cb77b7fd2d883c6561d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/package.json",
+      "bytes": 315,
+      "sha256": "113703d8f20622c97099ac65aca87b1578e03589843cdd8e95f4f3058edf564c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust/package.json",
+      "bytes": 453,
+      "sha256": "0255f1607acda6a2e371e04dab02d6a32f50838816e92a8cfc1168b6b19e560c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/package.json",
+      "bytes": 508,
+      "sha256": "7a2bd0e460b141676dab90e9f5c8ae827b43f101d3c284d8bfa42d135d7a9af7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/package.json",
+      "bytes": 516,
+      "sha256": "c19b49f1423864318ad82553d487bccf2b2e2fbe834cf29f32d3eb6e76553978"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/package.json",
+      "bytes": 632,
+      "sha256": "3c3dc26a08d63bef59bf066e4fce289c21c73021d4e73dac67336c004b161958"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust/package.json",
+      "bytes": 530,
+      "sha256": "d7340366553707798af955a699327da9cd03be163eba517a5c145b9e2044e7bc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/package.json",
+      "bytes": 774,
+      "sha256": "254e543bc6197d3cc2f003fb2512b9e266bb6a134fa7a9ae3ee95d54dc1e8cfc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/package.json",
+      "bytes": 331,
+      "sha256": "f3e1ca3ac5ab43dd1992a2dd8c05c612988e33177332c3dbe3edd2864405a45f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "bytes": 149,
+      "sha256": "22f68a1cdabdcdb7d2f6d1fad86341816ab5d0e9c79ea21fcfa0c1dd10da8aec"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust/package.json",
+      "bytes": 214,
+      "sha256": "aff9f62399ca198dbe434f32ceddfa69e23a3089e25e56415ac29c94b2c4c0f5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/📦️packages/🟦️typescript/package.json",
+      "bytes": 289,
+      "sha256": "217ccfdfff03cad0aee3f0705f70bb053704c74a318722f882119297f6ea2162"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/package.json",
+      "bytes": 560,
+      "sha256": "481eaa7a71b3651e700453d13cf3a72c0182e2a88150227a48410c8cec593669"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/package.json",
+      "bytes": 903,
+      "sha256": "f0f663af178b7034a12ce108601076462c9d2f07f8acbbb2106280acce352de4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/package.json",
+      "bytes": 545,
+      "sha256": "df80777c0ee7b065d5a4ffa8181986972f456508aae5d0a71c31ecffd5a429f0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust/package.json",
+      "bytes": 575,
+      "sha256": "335f20bf231df8f5d3091e82f0683f91ecbe820a1bfa3abdd6f8c2e942dcef08"
+    },
+    {
+      "path": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+      "bytes": 1722,
+      "sha256": "e183898ea6183574d07e9ef80a35a92c446a791a52bcf5f75bb1405c53710bfc"
+    },
+    {
+      "path": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/🎨️.css",
+      "bytes": 29,
+      "sha256": "124e37dd430f43bd185b7242f8f2a9648b302e815cb42459793bd448c4f88487"
+    },
+    {
+      "path": "🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript/package.json",
+      "bytes": 896,
+      "sha256": "017aa419650162264092f1b18e6012bba96aa6316eba799e9d2b88c8a87e6550"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/package.json",
+      "bytes": 796,
+      "sha256": "bcaf05dafae317823f0b88c10961335dfd89bf05b8e89b9340a8a1ce28373b0f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "bytes": 1457,
+      "sha256": "6115ccad37eed858135436068498f18beb185f5e0efa95514b6d96eaaec81b8b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+      "bytes": 1353,
+      "sha256": "0ecaa120578274bc93ac1aceb5790b3bfd631beeda563eb1aec45dc4a226876d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/🎨️.css",
+      "bytes": 29,
+      "sha256": "124e37dd430f43bd185b7242f8f2a9648b302e815cb42459793bd448c4f88487"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/package.json",
+      "bytes": 993,
+      "sha256": "f4a79b58026f372cc4141657d30849410105e970f9313ed27a18aee1601570b9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🏛️ownership/🧮️compute/package.json",
+      "bytes": 297,
+      "sha256": "4184365d0dd54447b391fbaad8293789aaa82a9c0f2d66cd3207089c470e2aa2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
+      "bytes": 1288,
+      "sha256": "d3b3dccdf8588504f15feada66c2dbe84e4bdf63743ce7708bd5cf7bc6ec5e35"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/package.json",
+      "bytes": 1261,
+      "sha256": "0b51ef5a2d3e01214cad18d85ee18d879cfb9e632cb2f2c485c83e57a37703fa"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
+      "bytes": 1006,
+      "sha256": "a543fac58eee468fb1e2e9712697c312556d437f17f6d1e0b2ce5734a4dcac45"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json",
+      "bytes": 882,
+      "sha256": "02c38eb7c5b75bf254650c50d4718816eadc82f7f6b87caebb8beb62e825190d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🏛️ownership/🧮️compute/package.json",
+      "bytes": 307,
+      "sha256": "b5894b4ddddf810aa2db441c6f77a9b3ab64aa2572f6a2bf4ac5acb3ec549617"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/package.json",
+      "bytes": 488,
+      "sha256": "f2d38b81bbb7acf7b0d7ae99e90c3311ef8877f287900e19e639ced7f9b15abb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/🟦️.ts",
+      "bytes": 260,
+      "sha256": "d08ab30c89007195d7b66fcdb1e5740580366a1124727a37e9acb49d98df4d0d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+      "bytes": 1776,
+      "sha256": "7113815f9b9bb1acfdd60adf26e71c7154deecb4976d0f8baee2b75c2c065b78"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/package.json",
+      "bytes": 1996,
+      "sha256": "4c17fce0b8351fed1a293e18f254b794bac960edecdd457344c0ff521fbabb4a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust/package.json",
+      "bytes": 280,
+      "sha256": "afff1a3a7dea47cf373985b621995273e55b3676e668c420ca56913f1ac7926f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧮️compute/package.json",
+      "bytes": 305,
+      "sha256": "d2428eed888c2aef54a5ddfa4c99c5f9d16ae104aaa358697af690966273505b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/package.json",
+      "bytes": 519,
+      "sha256": "9ace0d84fff21cb5fba6826f7605e745f07032d832153b086f997edd597a9f68"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/package.json",
+      "bytes": 894,
+      "sha256": "f211f7fa8efb0be3b33805574dddd96fe50839501a85431f50b522bb17d0d86f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/package.json",
+      "bytes": 503,
+      "sha256": "493efa30a8d2bbcddb974edc12834b87aa5e1e34ce8cf4bc1c1b53d0bfae5e27"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🏛️ownership/🧮️compute/package.json",
+      "bytes": 345,
+      "sha256": "3d6cc7970eff517b48eff1c0ca2ed42d749f8b3218d14972934b0680e3a2b907"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/package.json",
+      "bytes": 615,
+      "sha256": "39fbebecd52e16aa474b84dbbefaf8f7a243c231924e74566ad03c19ef21c9f4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/package.json",
+      "bytes": 995,
+      "sha256": "ee5f48129294645f7a2df5c9318935edcf3854150515e9de43ade7112c4c212b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript/package.json",
+      "bytes": 714,
+      "sha256": "2dd42922df686de2587d050b668925121d61825baffcf818f5b114c995c41ecc"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json",
+      "bytes": 1709,
+      "sha256": "68407e2b467ae61dc7a9b3b8135cadbaf14dc3e7167239a842d46a3c66be90d1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust/package.json",
+      "bytes": 303,
+      "sha256": "ae7850f4306c32731163ec0e03e30a6d1b35377f0e19ab6b6e81fa2fe7d2db3f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json",
+      "bytes": 1789,
+      "sha256": "41e5e3d631d1100b4ebea77c86f24d61c2ac3500f4ba6df58f84d5ec4386410f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/package.json",
+      "bytes": 1169,
+      "sha256": "0dd565fc874b091c871e29d6c4007ed38def032cc495df8db3f02f7da4ceb6fb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/package.json",
+      "bytes": 805,
+      "sha256": "e1a631320cd01ab3b34e0ba8cf5da95ed72f89af0fe87609d84c965ac678ff98"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/package.json",
+      "bytes": 405,
+      "sha256": "8b8e0a3a209264c4ecad4eacff1095f64ed0e92896647da9aa6d36905de3a18d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json",
+      "bytes": 29817,
+      "sha256": "4bde3acd4c5da3009f4d737c9d1662e919b407a693aded63802b5b5d08e6df4b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/📦️packages/🟦️typescript/package.json",
+      "bytes": 411,
+      "sha256": "32aaf24a57d4ba1036c3919a9e8cc98999ae962a65755ac3e15d1abbc4684f44"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
+      "bytes": 411,
+      "sha256": "64d00efd1168d6ed8efa7e19a352019a1f626f2c63918faf83c56a0634e44e08"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+      "bytes": 10171,
+      "sha256": "e95d0a56d11acc7402de66dd95bf8b3a32077f174f461ca90230efe852470537"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "bytes": 139447,
+      "sha256": "7f17a42d31cda75bb99fa8ac24501e8024ac3da7264ea6566155b9041bd11afb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "bytes": 1118395,
+      "sha256": "1a9bb2232bda038bfb8f1d1baccce95fcf284c34a21a39a052b3785b64a674c7"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🟦️.ts",
+      "bytes": 1162,
+      "sha256": "ef20f2a94425a8f000abc7ae3b2db0f40aaa5d40b5737122c42342687a0e0a2d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs",
+      "bytes": 29850,
+      "sha256": "1a4e6de78e08ea0110d39965aa63ec7a2872b1ccff39c252eda0c8429245566e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🟦️.ts",
+      "bytes": 2854,
+      "sha256": "ae4c25479bbc2d52fbb40102ad7da394433b6fdbe0cc8556fdcd28f73fc6787b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🟨️.cjs",
+      "bytes": 8354,
+      "sha256": "42fd861f6a6411ff3744e0e62026da4f7273f7d9721a9b33b82fa74e02d5a036"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🧪️tests/🟦️.ts",
+      "bytes": 11327,
+      "sha256": "140ce3b4b189e31d4b2e38f3e8534780baf97283d7a5cb60a31e6dc7f190916e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🟦️.ts",
+      "bytes": 15336,
+      "sha256": "3adb6db0c66c0ef0c781c638a65a44779eac30f000d7d23a2079a467881cd020"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️dependency-direction/🟦️.ts",
+      "bytes": 51597,
+      "sha256": "b2c90fda0d8a2652481ae882dc286aa0ea6b8ff07a42bbc1ae6a8fea5ffb1c17"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️dependency-direction/🔣️.json",
+      "bytes": 138042,
+      "sha256": "156f8f5cb9d8a76dfbba96e87bbfdae6b57060ce449975db2eb43492c8a26d0d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️dependency-direction/🔣️.json",
+      "bytes": 7901,
+      "sha256": "a45d42576192e8a48f814ee1dc96a1f1d2fb6af1084bfa3e00a20f7689ba14ef"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
+      "bytes": 723,
+      "sha256": "0031aa15b00cfaeb1cd523c27967b9d9e40c0ca19394f86287fe91f2e40f4281"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/package.json",
+      "bytes": 935,
+      "sha256": "3d45e566b0ab0ead533d831f9e57c51947b7196f8bf5b5b2f17abeac5f8e3b61"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/📜️script.ts",
+      "bytes": 1531,
+      "sha256": "5b2fa8d37b582aa471ebcd37ba68f7ead4c29fac15621cb423bda39c5026a19c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/📜️script.ts",
+      "bytes": 1524,
+      "sha256": "68c6fd87cce640407b6b625228ae7ebc6346462b4298c58b87ca0ebeb3de6513"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts",
+      "bytes": 1618,
+      "sha256": "d134c4ca9ea669c11eaeb0998c779f938f0f2f9c8e8f8a32c384bee187885b2a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧬️schema/🔣️.json",
+      "bytes": 203,
+      "sha256": "80a098a1f51e60abf051c3caa03204bf9ff15576657c95587dc8b13b0806c450"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "bytes": 3338,
+      "sha256": "a0d9d9c6abb5fa7310c2821eee61cf984cf28efe776500f666d7d82dcd9b8beb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 745,
+      "sha256": "55ef2a9eb4f38fb41da28b1f53fbb0459b1ad7e4361a91c46e94809d9e9251d4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 2139,
+      "sha256": "eaa295680713f510d66568c5e676768563a45bac88b50f906f36402e02776b02"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts",
+      "bytes": 7708,
+      "sha256": "01c2874328f9043092be01078d5e665e901ea524f82521b963cfb94b19cb0853"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🟦️.ts",
+      "bytes": 8365,
+      "sha256": "b3e32cc2d2dd6edcf9981ad9db35a345a3d81016d0b70f095fd4a0dbd78ba305"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 887,
+      "sha256": "273404eababda87916cdfe589ccd7bb86dbd9b932bb7502d7b2c61d76bb394d6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧬️schema/🔣️.json",
+      "bytes": 958,
+      "sha256": "5d1d93e3acc6b52b5f4617f08356a1755f91eb7023b444ea0cedb2c77ff24826"
+    }
+  ]
+}

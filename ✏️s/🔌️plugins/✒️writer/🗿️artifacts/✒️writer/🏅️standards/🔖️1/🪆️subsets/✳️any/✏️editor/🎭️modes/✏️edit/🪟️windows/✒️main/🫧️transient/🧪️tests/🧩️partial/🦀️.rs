@@ -5,7 +5,7 @@ use semio_framework_plugin::WindowTransientOwner;
 
 #[test]
 fn writer_window_state_partial_construction_preserves_large_utf8_and_cancels() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧩️partial/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧩️partial/🔣️.json")).unwrap();
     let text = fixture["payload"]["text"].as_str().unwrap().repeat(fixture["payload"]["repeat"].as_u64().unwrap() as usize);
     assert_eq!(text.len(), fixture["payload"]["utf8Bytes"].as_u64().unwrap() as usize);
     let owners = WriterMainWindowTransientOwner::build_owners();

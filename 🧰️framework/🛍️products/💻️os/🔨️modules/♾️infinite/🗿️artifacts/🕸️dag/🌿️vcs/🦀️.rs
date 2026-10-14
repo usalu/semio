@@ -603,7 +603,7 @@ pub async fn create_dag_store(id: &str, snapshot: DagSnapshot, actor: ActorId) -
 
 #[cfg(test)]
 fn opened_dag_test_actor() -> ActorId {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️demo-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🪪️demo-ownership/🔣️.json")).unwrap();
     ActorId(fixture["openedActor"].as_str().unwrap().into())
 }
 

@@ -68,7 +68,7 @@ fn retire(root: Arc<Edit<MapMutation>>, lifetime: &MapLifetime) {
 //#region 🧪️ReaderLifecycle
 #[test]
 fn canonical_reader_large_borrowed_map_matches_serde_and_transfers_exact_root() {
-    let reader_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📖️canonical-reader.json")).unwrap();
+    let reader_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📖️canonical-reader.json")).unwrap();
     for bytes in [FRAME_COPY_FLOOR, 100, 4096] {
         let (mut reader, fixture, lifetime) = make_reader();
         let address = Arc::as_ptr(reader.owned.root.as_ref().unwrap());
@@ -229,7 +229,7 @@ impl ArtifactCanonicalJsonTree for ErrorRoot {
 
 #[test]
 fn canonical_reader_error_after_partial_unicode_output_accounts_every_initialized_byte() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🚧️canonical-error-progress.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🚧️canonical-error-progress.json")).unwrap();
     let oracle = serde_json::to_string(&serde_json::json!([fixture["text"], null])).unwrap();
     let prefix = oracle.strip_suffix("null]").unwrap().as_bytes();
     assert_eq!(prefix, fixture["expectedPrefix"].as_str().unwrap().as_bytes());
@@ -292,7 +292,7 @@ fn canonical_reader_error_after_partial_unicode_output_accounts_every_initialize
 
 #[test]
 fn canonical_reader_indexed_cursor_error_preserves_actual_chunk_prefix() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🚧️canonical-error-progress.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🚧️canonical-error-progress.json")).unwrap();
     for maximum in [1, 7, 256, 4096] {
         let root = ErrorRoot { text: fixture["text"].as_str().unwrap().into(), borrowed: false, error: ErrorLeaf };
         let mut cursor = ArtifactCanonicalJsonCursor::default();
@@ -323,10 +323,10 @@ fn canonical_reader_indexed_cursor_error_preserves_actual_chunk_prefix() {
 
 #[test]
 fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🚧️canonical-error-progress.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🚧️canonical-error-progress.json")).unwrap();
     for borrowed in [false, true] {
         for maximum_bytes in [1, 7, 4096] {
-            let mut value: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔏️canonical-edit-sealer.json")).unwrap();
+            let mut value: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔏️canonical-edit-sealer.json")).unwrap();
             value["edit"]["forwards"] = serde_json::json!([]);
             value["edit"]["inverse"] = serde_json::json!([]);
             let mut oracle = Edit::<DslValue>::from_value(value["edit"].take().into()).unwrap();

@@ -1,6 +1,6 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv/dist/2020.js";
-import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
+import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import schema from "../🔣️.json" with {type:"json"};
 import {OrderedMapRemoval} from "../🟦️.ts";
 const valid=new Ajv({strict:true}).compile(schema);

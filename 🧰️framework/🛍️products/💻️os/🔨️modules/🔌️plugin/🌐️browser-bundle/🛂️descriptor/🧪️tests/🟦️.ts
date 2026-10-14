@@ -3,7 +3,7 @@ import {readFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {types} from "@bytecodealliance/jco";
 import ts from "typescript";
-import corpus from "../🧫️fixtures/🔣️.json" with {type:"json"};
+import corpus from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {ACTOR_COMPONENT_EXPORTS,parseActorComponentExports} from "../🟦️.ts";
 
 test("actor exports derive from the owned WIT and independent JCO types",async()=>{

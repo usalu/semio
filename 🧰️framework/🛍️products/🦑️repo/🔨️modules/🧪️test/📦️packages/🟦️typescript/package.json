@@ -19,7 +19,8 @@
     "semver": "7.8.5",
     "tree-sitter-wasms": "0.1.13",
     "typescript": "^5.9.3",
-    "web-tree-sitter": "0.20.8"
+    "web-tree-sitter": "0.20.8",
+    "@semio-tech/process": "workspace:*"
   },
   "_comment": "🔮️ Every dependency here is test-only by construction: this package is the repository test platform, never a production target. `clsx` is a REGISTERED ORACLE (📇️registry/🔣️.json) — `bun ./📜️script.ts dependency` fails if it ever becomes production-reachable.",
   "nx": {

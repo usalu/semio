@@ -205,7 +205,7 @@ pub const CAD_DRAWINGS_SLOT: &str = "drawings";
 /// child, and a fresh instance plus a creation leaf is a loadable document. A child the snapshot does not declare has
 /// no genesis.
 pub fn cad_genesis_child_pack(snapshot: &CadSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     if slot == "breps" {
         return snapshot.breps.iter().any(|child| child.child_id == child_id).then(|| <semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot as ArtifactPack>::encode_pack(&Default::default()));
     }

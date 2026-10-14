@@ -18,8 +18,8 @@ fn close(owner:Box<dyn ErasedSnapshotRetirement>,copy:usize,born:usize,original:
 
 #[test]
 fn neutral_fixture_retires_exact_mutation_shared_snapshot_and_final_snapshot_owners(){
- let source=include_str!("../../../🌿️vcs/🧫️fixtures/🔣️mutations.json");let oracle:serde_json::Value=serde_json::from_str(source).unwrap();let parsed=semio_framework_pack_json::parse(source,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&parsed)).unwrap(),oracle);
- let laws:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();
+ let source=include_str!("../../../🌿️vcs/🧪️tests/🧫️fixtures/🔣️mutations.json");let oracle:serde_json::Value=serde_json::from_str(source).unwrap();let parsed=semio_framework_pack_json::parse(source,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&parsed)).unwrap(),oracle);
+ let laws:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();
  for copy in laws["retirement"]["copyBytes"].as_array().unwrap(){let copy=copy.as_u64().unwrap()as usize;
   let(snapshot,a,b)=heap(||crate::sqlite_snapshot_tests::full(0x8000000000000000));let original=a-b;let pointer=snapshot.nodes.as_ptr();let factory=DagOwnedSnapshotRetirementFactory;let bytes=factory.retirement_birth_bytes(&snapshot);let mut value=snapshot;
   for grant in [Grant{maximum_items:0,maximum_capacity_bytes:bytes,maximum_depth:1,..Default::default()},Grant{maximum_items:1,maximum_capacity_bytes:bytes-1,maximum_depth:1,..Default::default()},Grant{maximum_items:1,maximum_capacity_bytes:bytes,maximum_depth:0,..Default::default()}]{let(result,a,b)=heap(||factory.retire_owned(value,grant));let(_,returned)=result.err().unwrap();assert_eq!((a,b),(0,0));assert_eq!(returned.nodes.as_ptr(),pointer);value=returned;}
@@ -36,7 +36,7 @@ fn neutral_fixture_retires_exact_mutation_shared_snapshot_and_final_snapshot_own
 #[test]
 fn dag_opens_as_an_owned_member_through_its_own_pack_codec(){
  assert_eq!(std::any::type_name::<<DagSnapshot as MemberStoreOwner<DagMutation>>::SnapshotOpen>(),std::any::type_name::<crate::os_store::PackMemberSnapshotOpen<DagSnapshot>>());
- let snapshot=crate::default_dag_document();let encoded=crate::os_store::serialization::ArtifactPack::encode_pack(&snapshot);let decoded=<DagSnapshot as crate::os_store::serialization::ArtifactPack>::decode_pack(&encoded).unwrap();assert_eq!(decoded.nodes,snapshot.nodes);assert!(<DagSnapshot as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported());
+ let snapshot=crate::default_dag_document();let encoded=pack::snapshot::ArtifactPack::encode_pack(&snapshot);let decoded=<DagSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&encoded).unwrap();assert_eq!(decoded.nodes,snapshot.nodes);assert!(<DagSnapshot as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported());
  let(mut owner,born,released)=heap(||semio_framework_value::retirement::controlled::ControlledRetirement::new(decoded).unwrap());assert_eq!((born,released),(0,0));let grant=Grant{maximum_items:0,maximum_depth:1,..Default::default()};let(step,a,b)=heap(||owner.step(grant).unwrap());assert_eq!(step.progress(),Progress::default());assert_eq!((a,b),(0,0));
  for turn in 0..1_000_000{let copy=owner.next_copy_byte_demand().unwrap().max(7);let grant=Grant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy.max(owner.next_copy_byte_demand().unwrap())).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};owner.step(grant).unwrap();if owner.terminal_is_empty(){return;}assert!(turn<999_999);}
 }

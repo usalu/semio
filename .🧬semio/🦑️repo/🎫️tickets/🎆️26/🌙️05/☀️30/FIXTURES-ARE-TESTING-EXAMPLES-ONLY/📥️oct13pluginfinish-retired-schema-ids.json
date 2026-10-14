@@ -1,0 +1,30 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/♻️close/🧬️schema/🔣️.json",
+    "id": "stdio.original-copy-close.v1"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🚦️controlled/🧬️schema/🔣️.json",
+    "id": "stdio.part21.original-decode.v1"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🔣️hex-splices/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/binary/raw/any/hex-splices-corpus/schema.json"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️owned/🧬️schema/🔣️.json",
+    "id": "https://schemas.semio.tech/draw/owned-export"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧬️schema/🔣️.json",
+    "id": "https://semio.tech/s/draw/scene/text-fixtures"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/📏️physical/🧬️schema/🔣️.json",
+    "id": "semio.draw.scene.physical-retirement.v1"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧵️publication/🧬️schema/🔣️.json",
+    "id": "https://semio.tech/s/draw/import-image-publication"
+  }
+]

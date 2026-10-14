@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🕹️set-opening/🧮️restores-the-type-sill",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/🧮️restores-the-type-sill/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/🧮️restores-the-type-sill/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/🧮️restores-the-type-sill/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/🧮️restores-the-type-sill/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️set-opening/🧮️restores-the-type-sill/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/🧮️restores-the-type-sill/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/🧮️restores-the-type-sill/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/🧮️restores-the-type-sill/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/🧮️restores-the-type-sill/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-opening/🧮️restores-the-type-sill/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

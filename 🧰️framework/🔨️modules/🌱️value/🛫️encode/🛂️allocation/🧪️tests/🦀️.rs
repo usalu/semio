@@ -2,7 +2,7 @@
 use crate::native_encoding::{NativeEncodeControl,NativeEncodeAllocation,NativeForwardedEncodeControl};
 use crate::{ValueError,ValueRefusalKind};
 use std::sync::atomic::{AtomicUsize,Ordering};
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 #[test]
 fn forwarded_allocation_precedes_every_small_owned_span_and_retains_the_same_authority(){
  let neutral=fixture();let law=&neutral["ownership"];let ceiling=law["ceiling"].as_u64().unwrap()as usize;

@@ -12,7 +12,7 @@ fn base(value: &Value) -> BTreeMap<String, DslValue> {
 /// 🧪️ Shared neutral vectors check codec, strict application, compact composition and atomic failure.
 #[test]
 fn shared_map_delta_neutral_contract() {
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let expected = decode(&row["compact"]);
         let mut composed = MapDelta::default();

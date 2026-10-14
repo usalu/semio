@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { testFemPcgWireOracle } from "../📦️pcg-wire/🟦️.ts";
 import Ajv2020 from "ajv/dist/2020.js";
 import { applyPatch, type Operation } from "fast-json-patch";
-import fixture from "../../🧫️fixtures/⛽️publication-grant/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/⛽️publication-grant/🔣️.json" with { type: "json" };
 
 
 export function testFemPcgPublicationGrantOracle(): void {

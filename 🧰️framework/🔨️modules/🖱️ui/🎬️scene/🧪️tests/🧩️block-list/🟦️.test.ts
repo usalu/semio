@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import {validateJsonSchemaSubset} from "../../../../🧬️schema/✅️validator/🟦️.ts";
 import {blockListPaletteTargetStepIdV1,type BlockListScene} from "../../🧬️schema/🧩️block-list/🟦️.ts";
 import schema from "../../🧬️schema/🧩️block-list/🔣️.json" with {type:"json"};
-import fixture from "../../🧫️fixtures/🧩️block-list/🔣️.json" with {type:"json"};
+import fixture from "../🧫️fixtures/🧩️block-list/🔣️.json" with {type:"json"};
 const oracle=new Ajv({strict:false}).compile(schema);
 describe("Typed block-list scene",()=>{
  test("owned schema admission agrees with independent Ajv",()=>{

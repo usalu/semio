@@ -134,7 +134,7 @@ func TestAnalyzeReadsBreachCacheJSON(t *testing.T) {
 
 // 🧫️statutesFixtureDir is the surviving statute fixture tree. The godfile-era
 // `repo/asset/fixture/some/folder` was deleted with the legacy tree.
-const statutesFixtureDir = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder"
+const statutesFixtureDir = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures/📁️some/📁️folder"
 
 func readStatutesFixture(t *testing.T, folder string) string {
 	t.Helper()
@@ -1170,7 +1170,7 @@ func TestSystemPolicy(t *testing.T) {
 		}
 	})
 	t.Run("derivation equals the language-agnostic fixture", func(t *testing.T) {
-		data, err := os.ReadFile("../../../📚️library/⚡️caching/📦️artifacts/📝️derived-config/🧫️fixtures/📝️derived-config/🔣️.json")
+		data, err := os.ReadFile("../../../📚️library/⚡️caching/📦️artifacts/📝️derived-config/🧪️tests/🧫️fixtures/📝️derived-config/🔣️.json")
 		if err != nil {
 			t.Fatal(err)
 		}

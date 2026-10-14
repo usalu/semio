@@ -4,7 +4,7 @@ import { isAbsolute, join, resolve, sep } from "node:path";
 import { createHash } from "node:crypto";
 import policySchema from "./📋️policy/🧬️schema/🔣️.json";
 import configuredPolicy from "./📋️policy/🔣️.json";
-import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { advanceScriptInvocation, checkScriptInvocation, type ScriptInvocation } from "../../../🧭️routing/📥️invocation/🟦️.ts";
 
 export type ExactCargoLawGroup = {

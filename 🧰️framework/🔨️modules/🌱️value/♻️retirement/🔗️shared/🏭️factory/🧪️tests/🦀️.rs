@@ -15,7 +15,7 @@ fn turn(owner:&mut Option<Box<dyn ErasedSnapshotRetirement>>,copy:usize)->(usize
 
 #[test]
 fn original_factory_shared_aliases_cancel_with_exact_full_grants_and_physical_receipts() {
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(law["ownershipMoves"],serde_json::json!({"items":1,"copyBytes":0}));
     for text in law["texts"].as_array().unwrap(){for count in law["aliases"].as_array().unwrap(){for copy in law["copyBytes"].as_array().unwrap(){for cancel in law["cancelAt"].as_array().unwrap(){
         let text=text.as_str().unwrap();let count=count.as_u64().unwrap()as usize;let copy=copy.as_u64().unwrap()as usize;let cancel=cancel.as_u64().unwrap()as usize;

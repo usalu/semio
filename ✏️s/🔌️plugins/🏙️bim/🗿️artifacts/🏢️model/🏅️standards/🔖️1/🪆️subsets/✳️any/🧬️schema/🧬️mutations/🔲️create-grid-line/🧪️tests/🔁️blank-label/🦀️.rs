@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔲️create-grid-line/🔁️blank-label",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️create-grid-line/🔁️blank-label/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️create-grid-line/🔁️blank-label/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️create-grid-line/🔁️blank-label/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️create-grid-line/🔁️blank-label/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️create-grid-line/🔁️blank-label/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲️create-grid-line/🔁️blank-label/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲️create-grid-line/🔁️blank-label/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲️create-grid-line/🔁️blank-label/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲️create-grid-line/🔁️blank-label/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲️create-grid-line/🔁️blank-label/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

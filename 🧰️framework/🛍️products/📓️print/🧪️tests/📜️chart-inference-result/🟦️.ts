@@ -1,4 +1,4 @@
-import ownership from "../../🧫️fixtures/🚪️inference-native-ownership/🔣️.json";
+import ownership from "../🧫️fixtures/🚪️inference-native-ownership/🔣️.json";
 import semanticSchema from "../../🧬️schema/💡️inferences/🔣️.json";
 import {inferVizChartSnapshot} from "../../🧬️schema/💡️inferences/🟦️.ts";
 import {inferVizChart} from "../../🔨️modules/🏠️host/💡️inferences/🟦️.ts";

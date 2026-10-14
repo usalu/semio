@@ -41,7 +41,7 @@ fn hub_command_opens_the_route_overlay_without_adding_a_default_dock_tab() {
 
 #[test]
 fn neutral_session_link_and_multi_document_vectors_fold_to_the_shared_summary() {
-    let fixture: HubProjectionFixture = serde_json::from_str(include_str!("../../../../🧫️fixtures/🔗️hub-projection/🔣️.json")).expect("hub projection fixture");
+    let fixture: HubProjectionFixture = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔗️hub-projection/🔣️.json")).expect("hub projection fixture");
     for case in fixture.cases {
         let summary = shell_hub_connection_summary_v1(&case.projection);
         assert_eq!(summary.state.as_str(), case.expected.state, "{} state", case.id);
@@ -763,7 +763,7 @@ struct NativeGuestJourney {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn native_guest_journey() -> NativeGuestJourney {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/⏯️native-guest-journey/🔣️.json")).expect("native guest journey fixture")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/⏯️native-guest-journey/🔣️.json")).expect("native guest journey fixture")
 }
 
 /// ⏯️ Mounts the fixture's staged guest in one native wgpu shell with no hub, authors the fixture's

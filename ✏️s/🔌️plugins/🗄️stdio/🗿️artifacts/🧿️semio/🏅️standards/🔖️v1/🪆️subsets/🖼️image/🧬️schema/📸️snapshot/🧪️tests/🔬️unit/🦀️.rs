@@ -10,16 +10,16 @@ fn populated() -> SemioImageSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn json_pack_round_trips() {
     let snap = SemioImageSnapshot::default();
-    let bytes = <SemioImageSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioImageSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioImageSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioImageSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_text_round_trips() {
     let snap = SemioImageSnapshot::default();
-    let text = <SemioImageSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
-    let back = <SemioImageSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioImageSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snap);
+    let back = <SemioImageSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back);
 }
 
@@ -28,10 +28,10 @@ async fn dsl_text_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
     let snap = populated();
-    let bytes = <SemioImageSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioImageSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioImageSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioImageSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
-    let text = <SemioImageSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
-    let back_text = <SemioImageSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioImageSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snap);
+    let back_text = <SemioImageSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back_text);
 }

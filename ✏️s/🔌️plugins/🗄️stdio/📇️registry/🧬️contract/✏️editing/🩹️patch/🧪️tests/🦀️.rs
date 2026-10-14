@@ -63,7 +63,7 @@ impl OpBinary for PublicationMutation {
 }
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("neutral compact snapshot fixture")
+    serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("neutral compact snapshot fixture")
 }
 
 fn value(input: &serde_json::Value) -> DslValue {
@@ -435,7 +435,7 @@ fn rfc6902(document: &serde_json::Value, ordered: &DslValue, part: &SnapshotPatc
 #[test]
 fn chunked_inverses_match_the_typescript_twin_and_replay_through_an_independent_rfc6902_applier() {
     let fixture = fixture();
-    let ordered: DslValue = semio_framework_pack_json::from_json_str(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let ordered: DslValue = semio_framework_pack_json::from_json_str(include_str!("🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let block = &fixture["chunkedInverses"];
     let budget = block["budget"].as_u64().unwrap() as usize;
     let Some(DslValue::Array(cases)) = ordered.get("chunkedInverses").and_then(|block| block.get("cases")) else { panic!("ordered chunkedInverses cases") };
@@ -562,7 +562,7 @@ fn a_continued_part_defers_the_whole_snapshot_invariant_to_the_run_end() {
 fn paged_snapshot_patch_original_json_source_keeps_every_variant_and_owned_prefix(){
     use kernel::operation_bytes::{OwnedOperationBytes,OperationByteMeasurement,OperationBytePreparation,OperationByteCloseStep};
     use semio_framework_value::{NativeEncodeControl,ValueRefusalKind};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📦️operation-source.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📦️operation-source.json")).unwrap();
     let mut operations=Vec::new();
     for case in fixture["cases"].as_array().unwrap(){let text=case.as_str().unwrap();let patch=SnapshotPatch::parse_op(text).unwrap();assert_eq!(patch.encode_op().unwrap(),text.as_bytes());assert_eq!(serde_json::from_str::<serde_json::Value>(&patch.print_op()).unwrap(),serde_json::from_str::<serde_json::Value>(text).unwrap());operations.push(patch);}
     operations.push(SnapshotPatch::Set{path:"/title".into(),value:DslValue::String(fixture["word"].as_str().unwrap().repeat(fixture["payloadBytes"].as_u64().unwrap()as usize))});
@@ -589,7 +589,7 @@ fn paged_snapshot_patch_original_json_source_keeps_every_variant_and_owned_prefi
 #[test]
 fn paged_snapshot_patch_original_json_source_honors_paid_allocation_policy(){
     use kernel::operation_bytes::{OperationBytePreparation,OperationByteCloseStep};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📦️operation-source.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📦️operation-source.json")).unwrap();
     let patch=SnapshotPatch::Set{path:"/title".into(),value:DslValue::String(fixture["word"].as_str().unwrap().repeat(fixture["payloadBytes"].as_u64().unwrap()as usize))};
     let expected=patch.encode_op().unwrap();let allocation=fixture["allocationBytes"].as_u64().unwrap()as usize;let items=fixture["maximumCloseItems"].as_u64().unwrap()as usize;let bytes=fixture["maximumCloseBytes"].as_u64().unwrap()as usize;let steps=expected.len()+fixture["closeStepScaffold"].as_u64().unwrap()as usize;
     let mut preparation=OperationBytePreparation::try_new(expected.len(),allocation).unwrap();let mut allow=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(allocation,&mut allow);
@@ -605,8 +605,8 @@ fn paged_snapshot_patch_original_json_source_honors_paid_allocation_policy(){
 fn retained_snapshot_patch_reader_moves_original_cells_and_retains_refused_candidate(){
     use kernel::operation_bytes::{OwnedOperationBytes,OperationByteOutput,OperationByteComparison,OperationByteCloseStep};
     use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueRefusalKind};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📦️operation-source.json")).unwrap();
-    let read_fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📦️operation-read.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📦️operation-source.json")).unwrap();
+    let read_fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📦️operation-read.json")).unwrap();
     let allocation=fixture["allocationBytes"].as_u64().unwrap()as usize;let cleanup=read_fixture["maximumCleanupBytes"].as_u64().unwrap()as usize;
     let policy=&read_fixture["normalStepGrant"];let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:policy["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:policy["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:policy["maximumDepth"].as_u64().unwrap()as usize};
     let close_source=|source:&mut OwnedOperationBytes|{for _ in 0..source.len()+128{match source.close_one(1,4096).unwrap(){OperationByteCloseStep::Complete=>break,OperationByteCloseStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1);assert!(released_bytes<=4096);}}}assert!(source.terminal_is_empty());};

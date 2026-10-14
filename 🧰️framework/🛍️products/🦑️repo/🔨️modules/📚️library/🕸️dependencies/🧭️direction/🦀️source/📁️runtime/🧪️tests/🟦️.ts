@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import Ajv from "ajv";
 import micromatch from "micromatch";
 import { inspectRustPathLiterals } from "../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📁️paths/🟦️.ts";
-const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 
 test("closed runtime direction corpus has independent schema admission", () => {
   

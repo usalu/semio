@@ -9,7 +9,7 @@ import { rustTokens, rustTokenPairs } from "../../../../../../🔨️modules/�
 type Channel = Readonly<{ snapshot: string; diff: string; mutation: string; leafOwner: string; command: string; editor: string; viewer: string; dialect: string; schema: string }>;
 type Fixture = Readonly<{ version: 1; source: string; originalSource: string; originalSha256: string; canonicalHandles: readonly string[]; channels: readonly Channel[] }>;
 const owner = resolve(import.meta.dir, "../.."), read = (path: string): unknown => JSON.parse(readFileSync(resolve(owner, path), "utf8"));
-const fixture = read("🧫️fixtures/🏗️fixture-channel-interfaces/🔣️.json") as Fixture;
+const fixture = read("🧪️tests/🧫️fixtures/🏗️fixture-channel-interfaces/🔣️.json") as Fixture;
 const current = (): string => readFileSync(resolve(import.meta.dir, fixture.source), "utf8");
 const tokens = (source: string): readonly string[] => rustTokens(source).map(token => token.text);
 

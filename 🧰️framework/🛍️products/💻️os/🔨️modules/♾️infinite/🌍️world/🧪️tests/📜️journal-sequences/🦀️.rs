@@ -16,7 +16,7 @@
 use super::tests::{mesh_oracle_from_buffers, publish_oracle_mesh, take_actions, with_world_step_context};
 use super::*;
 
-const JOURNAL_SEQUENCES: &str = include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧫️fixtures/📜️journal-sequences.json");
+const JOURNAL_SEQUENCES: &str = include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/📜️journal-sequences.json");
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(JOURNAL_SEQUENCES).expect("journal sequence fixture parses")

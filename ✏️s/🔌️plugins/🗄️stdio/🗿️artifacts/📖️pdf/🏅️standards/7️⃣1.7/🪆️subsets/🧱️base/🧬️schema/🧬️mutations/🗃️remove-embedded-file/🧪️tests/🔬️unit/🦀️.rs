@@ -10,13 +10,13 @@ fn semantic_identity_is_owned_by_this_leaf() {
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
-    let (before, after) = support::snapshots(include_bytes!("../../../../../🧫️fixtures/🗃️remove-embedded-file/⬅️before.pdf"), include_bytes!("../../../../../🧫️fixtures/🗃️remove-embedded-file/➡️after.pdf"));
+    let (before, after) = support::snapshots(include_bytes!("../../../../../🧪️tests/🧫️fixtures/🗃️remove-embedded-file/⬅️before.pdf"), include_bytes!("../../../../../🧪️tests/🧫️fixtures/🗃️remove-embedded-file/➡️after.pdf"));
     assert_mutation_inverse_sum_law(&PdfMutation::RemoveEmbeddedFile(RemoveEmbeddedFile { id: support::removed(&before.embedded_files, &after.embedded_files).id }), &before).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_restores_a_middle_row() {
-    let (mut base, after) = support::snapshots(include_bytes!("../../../../../🧫️fixtures/🗃️remove-embedded-file/⬅️before.pdf"), include_bytes!("../../../../../🧫️fixtures/🗃️remove-embedded-file/➡️after.pdf"));
+    let (mut base, after) = support::snapshots(include_bytes!("../../../../../🧪️tests/🧫️fixtures/🗃️remove-embedded-file/⬅️before.pdf"), include_bytes!("../../../../../🧪️tests/🧫️fixtures/🗃️remove-embedded-file/➡️after.pdf"));
     let target = support::removed(&base.embedded_files, &after.embedded_files);
     let mut first = target.clone();
     first.id = "first".to_string();

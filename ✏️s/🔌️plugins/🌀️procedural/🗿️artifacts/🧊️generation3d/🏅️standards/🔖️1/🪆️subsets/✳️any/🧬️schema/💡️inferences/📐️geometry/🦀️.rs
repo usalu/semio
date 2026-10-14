@@ -26,7 +26,7 @@ use compute::{WidgetJob, WidgetStep};
 use inputs::resolve_inputs;
 use protocol::{ComputeStep, InferenceFault, InferencePending, InferenceStep, InferredField};
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, SynapseSpec, Widget};
-use semio_framework_value::{DslValue, ToValue};
+use semio_framework_artifact_flow_flow::neural::Dictionary;
 use std::any::Any;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::sync::Arc;
@@ -106,31 +106,40 @@ pub struct GeometryWire {
     pub to_port: String,
 }
 
+/// 🌿️ Native dependency literals preserve dictionary sharing and keep source scalars as ordinary semantic fields.
+#[derive(Clone, Debug, PartialEq)]
+pub enum GeometryDependencyLiteral {
+    Parameters(Dictionary),
+    Number { value: f64 },
+    Text { value: String },
+    Absent,
+}
+
 /// 🔑️ Everything a widget's evaluation reads besides its parents' values: the widget variant, admitted kind definition, stored literals and incoming wiring.
 #[derive(Clone, Debug, PartialEq)]
 pub struct GeometryDependency {
     pub variant: String,
     pub kind: String,
     pub kind_definition: Option<Kind>,
-    pub literal: DslValue,
+    pub literal: GeometryDependencyLiteral,
     pub wiring: Vec<GeometryWire>,
 }
 
 fn dependency_of(host: &FlowHostSnapshot, catalogue: &Catalogue, key: &str) -> GeometryDependency {
     let wiring = host.synapses.iter().filter(|synapse| synapse.to == key).map(|synapse| GeometryWire { from: synapse.from.clone(), from_port: synapse.from_port.clone(), to_port: synapse.to_port.clone() }).collect();
-    let number = |value: f64| DslValue::Object(vec![("value".to_string(), DslValue::float(value))]);
-    let text = |value: &str| DslValue::Object(vec![("value".to_string(), DslValue::String(value.to_string()))]);
+    let number = |value: f64| GeometryDependencyLiteral::Number { value };
+    let text = |value: &str| GeometryDependencyLiteral::Text { value: value.to_string() };
     let (variant, kind, literal) = match host.widgets.iter().find(|widget| widget_id(widget) == key) {
-        Some(Widget::Neuron { neuron_kind, params, .. }) => ("neuron", neuron_kind.clone(), params.to_value()),
+        Some(Widget::Neuron { neuron_kind, params, .. }) => ("neuron", neuron_kind.clone(), GeometryDependencyLiteral::Parameters(params.clone())),
         Some(Widget::InputSlider { value, .. }) => ("input-slider", String::new(), number(*value)),
         Some(Widget::InputNote { text: note, .. }) => ("input-note", String::new(), text(note)),
         Some(Widget::InputImage { src, .. }) => ("input-image", String::new(), text(src)),
         Some(Widget::Variable { name, .. }) => ("variable", String::new(), text(name)),
-        Some(Widget::OutputPreview { .. }) => ("output-preview", String::new(), DslValue::Null),
-        Some(Widget::OutputAction { .. }) => ("output-action", String::new(), DslValue::Null),
-        Some(Widget::OutputExport { .. }) => ("output-export", String::new(), DslValue::Null),
+        Some(Widget::OutputPreview { .. }) => ("output-preview", String::new(), GeometryDependencyLiteral::Absent),
+        Some(Widget::OutputAction { .. }) => ("output-action", String::new(), GeometryDependencyLiteral::Absent),
+        Some(Widget::OutputExport { .. }) => ("output-export", String::new(), GeometryDependencyLiteral::Absent),
         Some(Widget::Cluster { name, .. }) => ("cluster", String::new(), text(name)),
-        None => ("missing", String::new(), DslValue::Null),
+        None => ("missing", String::new(), GeometryDependencyLiteral::Absent),
     };
     GeometryDependency { variant: variant.to_string(), kind_definition: catalogue.kind(&kind).cloned(), kind, literal, wiring }
 }

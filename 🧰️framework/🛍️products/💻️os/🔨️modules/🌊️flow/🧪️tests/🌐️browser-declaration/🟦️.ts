@@ -9,7 +9,7 @@ import { flowBrowserDeclaration } from "../../🕸️wasm/🌐️browser/📝️
 import { flowWasmContract } from "../../🕸️wasm/🔮️oracles/🛂️contract-admission/🟦️.ts";
 
 const testDirectory = fileURLToPath(new URL(".", import.meta.url));
-const browserTypesFixturePath = join(testDirectory, "../../🕸️wasm/🧫️fixtures/📝️browser-types/🔣️.json");
+const browserTypesFixturePath = join(testDirectory, "../../🕸️wasm/🧪️tests/🧫️fixtures/📝️browser-types/🔣️.json");
 const declarationPath = join(testDirectory, "../../🕸️wasm/🌐️browser/📝️declaration/🤖️generated/🟦️.d.ts");
 
 export async function testFlowBrowserDeclaration(packageRoot: string): Promise<void> {

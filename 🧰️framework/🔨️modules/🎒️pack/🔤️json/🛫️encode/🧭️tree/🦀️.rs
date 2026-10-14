@@ -410,7 +410,7 @@ pub struct ArtifactCanonicalJsonTreeCursor {
 }
 
 impl ArtifactCanonicalJsonTreeCursor {
-    pub fn constructor_demand() -> RetirementDemand { RetirementDemand { copy_bytes: size_of::<RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>>(), depth: 1, ..Default::default() } }
+    pub fn constructor_demand() -> RetirementDemand { RetirementDemand { depth: 1, ..Default::default() } }
     pub fn admit(owner: RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>, grant: RetainedCloneGrant) -> Result<(Self, RetainedCloneProgress), (ValueError, RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>)> {
         let demand = Self::constructor_demand();
         if !Self::admitted(demand, grant) { return Err((ValueError::literal(ValueRefusalKind::WorkLimit, "canonical tree constructor requires original alias transfer admission"), owner)); }
@@ -420,7 +420,7 @@ impl ArtifactCanonicalJsonTreeCursor {
     fn admitted(demand: RetirementDemand, grant: RetainedCloneGrant) -> bool { grant.maximum_items != 0 && demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth }
     fn pending_closure_demand(&self) -> Result<RetirementDemand, ValueError> {
         let owner = self.pending.as_ref().ok_or_else(|| refusal("canonical pending alias is absent"))?;
-        if owner.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: size_of::<RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>>(), depth: 1, ..Default::default() }); }
+        if owner.terminal_is_empty() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
         let copy_bytes = owner.next_close_copy_byte_demand()?;
         Ok(RetirementDemand { copy_bytes, capacity_bytes: owner.next_close_capacity_byte_demand(copy_bytes)?, release_bytes: owner.next_close_release_byte_demand()?, depth: owner.next_close_depth_demand()? })
     }
@@ -430,17 +430,18 @@ impl ArtifactCanonicalJsonTreeCursor {
         if self.pending.is_some() {
             if self.closing { return self.pending_closure_demand(); }
             if !self.frames.has_reserved_slot() { return Ok(RetirementDemand { capacity_bytes: self.frames.next_allocation_bytes().map_err(ValueError::from)?, depth: 1, ..Default::default() }); }
-            return Ok(RetirementDemand { copy_bytes: size_of::<NativeFrame>(), depth: 1, ..Default::default() });
+            return Ok(RetirementDemand { depth: 1, ..Default::default() });
         }
         if let Some(frame) = self.frames.last() {
             if self.closing || frame.phase == Phase::Complete {
-                if frame.owner.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: size_of::<NativeFrame>(), depth: 1, ..Default::default() }); }
+                if frame.owner.terminal_is_empty() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
                 return frame.closure_demand();
             }
             let copy_bytes = match frame.phase {
                 Phase::Inspect => match frame.owner.borrow()?.get().canonical_tree_node()? { Node::Array(_) | Node::Object(_) | Node::String(_) | Node::Text(_) => 0, _ => 64 },
-                Phase::ArrayChild | Phase::ObjectChild => size_of::<RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>>(),
-                Phase::ArrayNext if frame.ordinal < frame.length && frame.ordinal == 0 => size_of::<RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>>(),
+                Phase::ArrayChild | Phase::ObjectChild => 0,
+                Phase::ArrayNext if frame.ordinal < frame.length && frame.ordinal == 0 => 0,
+                Phase::ObjectNext if frame.ordinal < frame.length && frame.ordinal == 0 => 0,
                 _ => 1,
             };
             return Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() });
@@ -479,7 +480,6 @@ impl ArtifactCanonicalJsonTreeCursor {
                 progress.copied_bytes = written;
                 written_bytes = written;
             } else {
-                let inspected = frame.phase == Phase::Inspect;
                 let byte = match frame.phase {
                     Phase::Inspect => {
                         let reference = frame.owner.borrow()?;
@@ -533,7 +533,7 @@ impl ArtifactCanonicalJsonTreeCursor {
                     Phase::ObjectColon => { frame.phase = Phase::ObjectChild; Some(b':') }
                     _ => return Err(refusal("canonical native traversal phase is invalid")),
                 };
-                if !inspected && progress.copied_bytes == 0 { progress.copied_bytes = 1; }
+                if demand.copy_bytes == 1 && progress.copied_bytes == 0 { progress.copied_bytes = 1; }
                 if let Some(byte) = byte { output[0] = byte; written_bytes = 1; }
             }
         } else {
@@ -550,3 +550,7 @@ impl Drop for ArtifactCanonicalJsonTreeCursor { fn drop(&mut self) { assert!(sel
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
+
+#[path="📨️wire/🦀️.rs"]
+mod original_wire;
+pub use original_wire::{ArtifactCanonicalJsonTreeWireCursor,ArtifactCanonicalJsonTreeWireStep};

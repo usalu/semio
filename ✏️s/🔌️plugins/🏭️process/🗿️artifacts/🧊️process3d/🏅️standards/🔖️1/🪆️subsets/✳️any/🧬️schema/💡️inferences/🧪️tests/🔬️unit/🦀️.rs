@@ -110,7 +110,7 @@ async fn box_primitive_spans_from_local_origin_corner() {
 /// and the dowel itself) is a boolean the kernel answers, and each subtractive step reduces the volume.
 #[semio_framework_async_macros::async_test]
 async fn timber_document_replays_every_step_with_monotone_subtractive_volume() {
-    let text = include_str!("../🧫️fixtures/🪵️timber-replay/🔣️.json");
+    let text = include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🪵️timber-replay/🔣️.json");
     let fixture: serde_json::Value = serde_json::from_str(text).expect("neutral timber scene");
     let exact: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("lossless neutral timber scene");
     let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
@@ -141,7 +141,7 @@ async fn timber_document_replays_every_step_with_monotone_subtractive_volume() {
 #[test]
 fn semantic_memo_hashes_literal_words_without_transport() {
     use semio_framework_value::{DslValue, Number};
-    let text = include_str!("🧫️fixtures/🔣️semantic-memo.json");
+    let text = include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🔬️unit/🔣️semantic-memo.json");
     let independent: serde_json::Value = serde_json::from_str(text).unwrap();
     let DslValue::Array(literals) = semio_framework_pack_json::from_json_str::<DslValue>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap() else { panic!("neutral array"); };
     assert_eq!(literals.len(), independent.as_array().unwrap().len());

@@ -5,9 +5,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import Ajv from "ajv";
 import deepEqual from "fast-deep-equal";
 import directorySchema from "../../../../📇️directory/🧬️schema/🔣️.json";
-import propertiesFixture from "../../🧱️elements/🛂️SpaceAdministration/🧫️fixtures/⚙️properties/🔣️.json";
-import deleteFixture from "../../🧱️elements/🛂️SpaceAdministration/🧫️fixtures/🗑️delete-space/🔣️.json";
-import admissionFixture from "../../../../📇️directory/🧬️schema/🏛️administration/🧫️fixtures/🛂️command-admission/🔣️.json";
+import propertiesFixture from "../../🧱️elements/🛂️SpaceAdministration/🧪️tests/🧫️fixtures/⚙️properties/🔣️.json";
+import deleteFixture from "../../🧱️elements/🛂️SpaceAdministration/🧪️tests/🧫️fixtures/🗑️delete-space/🔣️.json";
+import admissionFixture from "../../../../📇️directory/🧪️tests/🧫️fixtures/🏛️administration/🛂️command-admission/🔣️.json";
 
 
 

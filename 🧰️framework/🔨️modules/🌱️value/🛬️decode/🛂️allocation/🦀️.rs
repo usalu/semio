@@ -17,7 +17,7 @@ pub struct NativeForwardedDecodeContinuation<'a>{receipt:Option<NativeDecodeCont
 pub struct NativeForwardedDecodeControl<'a>{inner:NativeDecodeControl<'a>}
 
 /// 🧾️ Consumes the same scalar ledger while its original recipient remains physically retained.
-pub struct NativeForwardedDecodeReceipt{receipt:NativeDecodeContinuation,recipient:usize}
+pub struct NativeForwardedDecodeReceipt{receipt:NativeDecodeContinuation,recipient:u64}
 impl NativeForwardedDecodeReceipt{
  /// 📊️ Reports already admitted ownership without copying its authority.
  pub fn owned_bytes(&self)->usize{self.receipt.owned_bytes}
@@ -33,11 +33,11 @@ impl<'a> NativeForwardedDecodeControl<'a>{
  pub fn detach(self)->Result<NativeForwardedDecodeReceipt,(ValueError,Self)>{
   let receipt=match self.inner.continuation(){Ok(receipt)=>receipt,Err(error)=>return Err((error,self))};
   let Some(recipient)=self.inner.retirement.as_ref()else{return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"detached native receiving requires its original retained recipient"),self))};
-  Ok(NativeForwardedDecodeReceipt{receipt,recipient:std::ptr::from_ref(&**recipient)as usize})
+  Ok(NativeForwardedDecodeReceipt{receipt,recipient:recipient.identity})
  }
  /// ▶️ Reborrows the original receiving imports and exact retained recipient without resetting admission.
  pub fn rebind(receipt:NativeForwardedDecodeReceipt,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool,allocate:&'a mut NativeDecodeAllocationPort<'a>,recipient:&'a mut NativeDecodeRetirementRecipient)->Result<Self,(ValueError,NativeForwardedDecodeReceipt)>{
-  if receipt.recipient!=std::ptr::from_ref(&*recipient)as usize||receipt.receipt.owned_bytes>receipt.receipt.maximum_bytes||(receipt.receipt.total!=0&&receipt.receipt.completed>receipt.receipt.total){return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"detached native receiving mismatches its original recipient or ledger"),receipt))}
+  if receipt.recipient!=recipient.identity||receipt.receipt.owned_bytes>receipt.receipt.maximum_bytes||(receipt.receipt.total!=0&&receipt.receipt.completed>receipt.receipt.total){return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"detached native receiving mismatches its original recipient or ledger"),receipt))}
   let mut inner=NativeDecodeControl::resume(receipt.receipt,callback).expect("validated original native receiving receipt");inner.allocation=Binding::Forwarded(allocate);inner.retirement=Some(recipient);Ok(Self{inner})
  }
  /// ⏸️ Moves original allocation and retirement authority together with the cumulative receipt.
@@ -47,7 +47,7 @@ impl<'a> NativeForwardedDecodeControl<'a>{
 }
 impl<'a> NativeForwardedDecodeContinuation<'a>{
  /// 🏭️ Binds the original caller port directly without creating replacement progress authority.
- pub fn new(maximum_bytes:usize,allocate:&'a mut NativeDecodeAllocationPort<'a>)->Self{Self{receipt:Some(NativeDecodeContinuation{receiving:false,maximum_bytes,owned_bytes:0,completed:0,total:0,stage:0}),allocate,retirement:None}}
+ pub fn new(maximum_bytes:usize,allocate:&'a mut NativeDecodeAllocationPort<'a>)->Self{Self{receipt:Some(NativeDecodeContinuation{ledger:super::next_ledger(),receiving:false,maximum_bytes,owned_bytes:0,completed:0,total:0,stage:0}),allocate,retirement:None}}
  /// 🫴️ Installs the original caller return slot before retained decoder ownership exists.
  pub fn install_retirement_recipient(&mut self,recipient:&'a mut NativeDecodeRetirementRecipient)->Result<(),ValueError>{if self.retirement.is_some()||!crate::ErasedSnapshotRetirement::terminal_is_empty(recipient){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"forwarded decoder requires one empty original retirement slot"))}self.retirement=Some(recipient);Ok(())}
  /// 🔁️ Reborrows original ports and retirement slot for one synchronous receiving hop.

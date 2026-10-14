@@ -170,7 +170,8 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for ScheduleCsvWork {
         (self.job.is_none() && command.command_id() == self.tool_id).then_some(1)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BimModelApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<BimModelApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BimModelApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<BimModelApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let BimCommand::ExportScheduleCsv(payload) = input.command else { return Err(Fault::from("bim-schedule-csv-work-mismatch")) };
         if self.job.is_none() {
             let shown = schedule::config::from_snapshot(input.context.and_then(|context| context.window_config.as_ref())).schedule;
@@ -189,6 +190,9 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for ScheduleCsvWork {
                 ArtifactCommandWorkStep::Complete(download(input.snapshot, &id, text))
             }
         })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 //#endregion 🔖️Work

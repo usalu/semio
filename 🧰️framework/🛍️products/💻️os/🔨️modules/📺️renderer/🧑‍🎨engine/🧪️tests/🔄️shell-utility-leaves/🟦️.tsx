@@ -8,7 +8,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import { TaskManagerWindow, type TaskManagerTaskV1 } from "../../🧱️elements/🧵️TaskManager/🟦️.tsx";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "🔄️shell-utility-leaves", "🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "🔄️shell-utility-leaves", "🔣️.json"), "utf8"));
 
 const independentSelectedChoice = (uri: string | null): string | null => {
   if (uri === null) return null;

@@ -14,11 +14,11 @@ use crate::mutations::{inverse_playbook_mutation, PlaybookMutation};
 use crate::{PlaybookDiff, PlaybookSnapshot};
 use crate::central_apply::{apply_playbook_mutation};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️change-title/🧪️changes/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️change-title/🧪️changes/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️change-title/🧪️changes/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️change-title/🧪️changes/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️change-title/🧪️changes/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️change-title/🧪️changes/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️change-title/🧪️changes/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️change-title/🧪️changes/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️change-title/🧪️changes/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️change-title/🧪️changes/🎯️outcome/🔣️.json");
 
 fn mutation() -> PlaybookMutation {
     semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")

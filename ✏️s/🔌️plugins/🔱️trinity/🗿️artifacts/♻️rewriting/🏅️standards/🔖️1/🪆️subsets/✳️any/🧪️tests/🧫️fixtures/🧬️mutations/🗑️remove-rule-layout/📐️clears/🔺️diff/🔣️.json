@@ -1,0 +1,17 @@
+{
+  "workingGraph": null,
+  "lhs": null,
+  "rhs": null,
+  "parameterBindings": null,
+  "ruleLayout": {
+    "entries": [
+      {
+        "key": "shaft",
+        "precondition": "present",
+        "operation": {
+          "kind": "remove"
+        }
+      }
+    ]
+  }
+}

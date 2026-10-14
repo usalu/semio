@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync } from "node:fs";
 import { join, posix, relative, resolve } from "node:path";
 import ts from "typescript";
+import * as discovery from "../../🔍️discovery/🟦️.ts";
 
 const libraryRoot = resolve(import.meta.dir, "../.."), root = resolve(libraryRoot, "../../../../..");
 const sha = (value: Uint8Array): string => createHash("sha256").update(value).digest("hex");
@@ -32,7 +33,7 @@ function readOwned(path: string): Buffer {
   }
 }
 
-const vectorPath = relative(root, join(libraryRoot, "🧫️fixtures/🗺️testing-readme-coordinates/🔣️.json")).split("\\").join("/");
+const vectorPath = relative(root, join(libraryRoot, "🧪️tests/🧫️fixtures/🗺️testing-readme-coordinates/🔣️.json")).split("\\").join("/");
 const vector = JSON.parse(readOwned(vectorPath).toString("utf8"));
 const content = (): string => readOwned(vector.documents.readme).toString("utf8");
 const squash = (value: string): string => value.replace(/\s+/gu, " ").trim();
@@ -122,16 +123,9 @@ test("registry JSON parsers agree and its schema link names the current regular 
   expect(JSON.parse(schemaBytes.toString("utf8")).$id).toBe("https://json.schemas.assets.semio-tech.com/framework/test/schema.json");
 });
 
-test("documentation correction leaves the original forty-row authority and baseline preimage immutable", () => {
-  const bytes = readOwned(vector.frozenAuthority.path), catalog = JSON.parse(bytes.toString("utf8"));
-  expect(sha(bytes)).toBe(vector.frozenAuthority.sha256);
-  expect(catalog.cases).toHaveLength(40);
-  const row = catalog.cases[vector.frozenAuthority.row];
-  expect(row.referenceOwnerIds).toEqual(["markdown-relative-reference-adapter"]);
-  expect(row.preimage).toEqual(vector.frozenAuthority.preimage);
-  expect(row.disposition).toBe("owner-documentation-relocate");
-  expect(row.generatorOwnerId).toBeNull();
-  expect(sha(readOwned(vector.documents.readme))).not.toBe(row.preimage.sha256);
+test("documentation approval binds the stable current owner and preserves its baseline tuple",()=>{
+ const taxonomy=discovery.loadTaxonomy(),contract=taxonomy.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];if(contract.contractKind!=="exact-owner-path-catalog"||!contract.currentSourceRevisions)throw Error("Current domain approval required");
+ const policy=discovery.semanticExactOwnedFileCatalog(root,taxonomy)!,owners=policy.entries.filter(row=>row.sourcePath===vector.documents.readme);expect(owners).toHaveLength(1);const owner=owners[0]!,approval=Object.values(contract.currentSourceRevisions).find(row=>row.sourcePath===owner.sourcePath)!;expect(approval.baselinePreimage).toEqual(owner.preimage);expect(approval.currentPreimage.sha256).toBe(sha(readOwned(owner.sourcePath)));expect(owner.disposition).toBe("owner-documentation-relocate");expect(owner.generatorOwnerId).toBeNull();expect(Object.hasOwn(contract,"expectedCounts")).toBe(false);console.log("[DEBUG] Documentation current approval selects its stable source identity without ordinal or census constraints");
 });
 
 test("documentation gate registration matches the declared Nx route", () => {

@@ -12,8 +12,8 @@ use crate::standards::v_ecma_376::subsets::base::schema::construction::build_min
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::{apply_xlsx_mutation, cell_address::xlsx_cell_address, set_cell::SetCell, XlsxMutation};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxSnapshot, XlsxWorkbook};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✍️set-cell/🧮️widens/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✍️set-cell/🧮️widens/📸️snapshot/➡️after/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✍️set-cell/🧮️widens/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✍️set-cell/🧮️widens/📸️snapshot/➡️after/🔣️.json");
 
 /// 🧮️ The declared workbook: a total formula at `B4` over `expr`, and an empty cell at `B5` below it.
 fn declared_workbook(expr: &str) -> XlsxWorkbook {

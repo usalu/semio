@@ -18,7 +18,7 @@ impl ArtifactDsl for RetainedTextSnapshot {
 
 #[test]
 fn native_document_codec_requires_only_declared_snapshot_capabilities() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let relational = row["relational"].as_bool().unwrap();
         let codec = if relational { bare_artifact_codec::<DemoSnapshot, DemoMutation>("capability.relational") } else { bare_artifact_codec::<RetainedTextSnapshot, RetainedTextMutation>("capability.pack") };

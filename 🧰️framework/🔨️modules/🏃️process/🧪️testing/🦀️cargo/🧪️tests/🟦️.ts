@@ -6,7 +6,7 @@ import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
 
 test("Cargo coverage compile phase excludes incompatible report suppression",async()=>{
- const owner=resolve(import.meta.dir,".."),require=createRequire(import.meta.url),fixture=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")),law=fixture.coveragePhases;
+ const owner=resolve(import.meta.dir,".."),require=createRequire(import.meta.url),fixture=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")),law=fixture.coveragePhases;
  const validate=new(require("ajv").default)({strict:true}).compile({type:"array",minItems:3,maxItems:3,items:{type:"object",required:["phase","operation","noRun","noReport","noClean","extractOverwrite"],additionalProperties:false,properties:{phase:{enum:["build","assert","report"]},operation:{enum:["nextest-archive","nextest","report"]},noRun:{type:"boolean"},noReport:{type:"boolean"},noClean:{type:"boolean"},extractOverwrite:{type:"boolean"}}}});expect(validate(law)).toBe(true);
  const {Database}=await import("bun:sqlite"),db=new Database(":memory:");try{db.run("CREATE TABLE coverage_phase(phase TEXT,no_run INTEGER,no_report INTEGER)");for(const row of law)db.query("INSERT INTO coverage_phase VALUES(?,?,?)").run(row.phase,Number(row.noRun),Number(row.noReport));expect(db.query("SELECT count(*) AS conflicts FROM coverage_phase WHERE no_run=1 AND no_report=1").get()).toEqual({conflicts:0});}finally{db.close();}
  const refused=spawnSync("cargo",["llvm-cov","nextest","--no-run","--no-report"],{cwd:owner,encoding:"utf8",timeout:5000});expect(refused.status).not.toBe(0);expect(refused.stderr).toContain("--no-report may not be used together with --no-run");
@@ -16,8 +16,8 @@ test("Cargo coverage compile phase excludes incompatible report suppression",asy
 });
 
 test("Cargo retains failed build stdout without admitting invalid metadata", async () => {
-  const owner = resolve(import.meta.dir, ".."), fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🚨️failed-build/🔣️.json"), "utf8"));
-  const api = await import("../🟦️.ts"), base = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")).policies[0];
+  const owner = resolve(import.meta.dir, ".."), fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🚨️failed-build/🔣️.json"), "utf8"));
+  const api = await import("../🟦️.ts"), base = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")).policies[0];
   const artifact = process.env.SEMIO_TEST_ARTIFACT_DIR!; expect(artifact).toBeTruthy(); mkdirSync(artifact, { recursive: true });
   const temporary = mkdtempSync(join(artifact, "f-"));
   const program = "const fs=require('node:fs'),bytes=Buffer.from(process.env.CARGO_FAILED_STDOUT,'utf8'),split=Number(process.env.CARGO_FAILED_SPLIT);if(process.env.CARGO_FAILED_CALLS)fs.appendFileSync(process.env.CARGO_FAILED_CALLS,JSON.stringify(process.argv.slice(1))+'\\n');process.stdout.write(bytes.subarray(0,split));setImmediate(()=>{process.stdout.write(bytes.subarray(split));process.exitCode=Number(process.env.CARGO_FAILED_EXIT);});";
@@ -39,13 +39,13 @@ test("Cargo retains failed build stdout without admitting invalid metadata", asy
 }, 10_000);
 
 test("Kernel package executes neutral target selections through its exact bounded Cargo driver",async()=>{
- const repository=resolve(import.meta.dir,"../../../../../.."),kernel=join(repository,"🧰️framework/🛍️products/💻️os"),fixture=JSON.parse(readFileSync(join(kernel,"🧫️fixtures/🏃️kernel-test-runner/🔣️.json"),"utf8")),require=createRequire(import.meta.url),ts=require("typescript"),api=await import("../🟦️.ts"),levels=await import("../../🎚️budget/🟦️.ts");
+ const repository=resolve(import.meta.dir,"../../../../../.."),kernel=join(repository,"🧰️framework/🛍️products/💻️os"),fixture=JSON.parse(readFileSync(join(kernel,"🧪️tests/🧫️fixtures/🏃️kernel-test-runner/🔣️.json"),"utf8")),require=createRequire(import.meta.url),ts=require("typescript"),api=await import("../🟦️.ts"),levels=await import("../../🎚️budget/🟦️.ts");
  const source=readFileSync(join(kernel,"📦️packages/🦀️rust/📜️script.ts"),"utf8"),parsed=ts.createSourceFile("kernel-script.ts",source,ts.ScriptTarget.Latest,true),declaration=parsed.statements.find((row:any)=>ts.isClassDeclaration(row)&&row.name?.text==="TestScript");expect(declaration).toBeTruthy();
  const body=ts.transpileModule(declaration.getText(parsed),{compilerOptions:{target:ts.ScriptTarget.ESNext,module:ts.ModuleKind.None}}).outputText;
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR!;expect(output).toBeTruthy();mkdirSync(output,{recursive:true});const temporary=mkdtempSync(join(output,"k-")),oldLevel=process.env.SEMIO_TEST_LEVEL,oldCoverage=process.env.SEMIO_COVERAGE;
  try{
   mkdirSync(join(temporary,"src"));mkdirSync(join(temporary,"tests"));const manifest=join(temporary,"Cargo.toml"),config=join(temporary,"nextest.toml"),target=join(temporary,"target");writeFileSync(manifest,fixture.manifest);writeFileSync(join(temporary,"src/lib.rs"),fixture.source);writeFileSync(join(temporary,"tests/selection.rs"),fixture.integration);writeFileSync(config,fixture.config);
-  const base=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧫️fixtures/🔣️.json"),"utf8")).policies[0];
+  const base=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8")).policies[0];
   for(const row of fixture.cases){
    process.env.SEMIO_TEST_LEVEL="fundamental";process.env.SEMIO_COVERAGE="0";
    const environment={...process.env,CARGO_TARGET_DIR:target,CARGO_BUILD_TARGET_DIR:target,CARGO_BUILD_BUILD_DIR:target,SEMIO_CARGO_TEST_POLICY:JSON.stringify({...base,manifestPath:manifest,targetDirectory:target,configPath:config,artifactDirectory:temporary,buildDirectory:join(temporary,"b"),leaseDirectory:join(temporary,"l"),retainArtifacts:false,coverageEnabled:false})};let calls=0;
@@ -56,7 +56,7 @@ test("Kernel package executes neutral target selections through its exact bounde
 },30000);
 
 test("Cargo keeps capture and output controls on Nextest execution with independent CLI authorities",async()=>{
-  const owner=resolve(import.meta.dir,".."),fixture=JSON.parse(readFileSync(resolve(owner,"🧫️fixtures/🎬️execution/🔣️.json"),"utf8")),base=JSON.parse(readFileSync(resolve(owner,"🧫️fixtures/🔣️.json"),"utf8")).policies[0],api=await import("../🟦️.ts");
+  const owner=resolve(import.meta.dir,".."),fixture=JSON.parse(readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/🎬️execution/🔣️.json"),"utf8")),base=JSON.parse(readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).policies[0],api=await import("../🟦️.ts");
   const help=spawnSync("cargo",["nextest","run","--help"],{encoding:"utf8"});expect(help.status).toBe(0);for(const option of ["--no-capture","--success-output","--failure-output"])expect(help.stdout).toContain(option);
   const program="const{parseArgs}=require('node:util');const args=JSON.parse(process.argv[1]);const options={'no-capture':{type:'boolean'},nocapture:{type:'boolean'},'success-output':{type:'string'},'failure-output':{type:'string'}};process.stdout.write(JSON.stringify(parseArgs({args,options,strict:false,tokens:true}).tokens.filter(t=>t.kind==='option'&&t.name in options).map(t=>t.rawName+(t.value===undefined?'':'='+t.value))));";
   for(const item of fixture.cases){
@@ -75,7 +75,7 @@ test("Cargo keeps capture and output controls on Nextest execution with independ
 },15000);
 
 test("Cargo refuses an empty selected snapshot suite with the independent Nextest status",async()=>{
-  const owner=resolve(import.meta.dir,".."),fixture=JSON.parse(readFileSync(resolve(owner,"🧫️fixtures/🕳️selection/🔣️.json"),"utf8")),base=JSON.parse(readFileSync(resolve(owner,"🧫️fixtures/🔣️.json"),"utf8")).policies[0],api=await import("../🟦️.ts");
+  const owner=resolve(import.meta.dir,".."),fixture=JSON.parse(readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/🕳️selection/🔣️.json"),"utf8")),base=JSON.parse(readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).policies[0],api=await import("../🟦️.ts");
   const output=process.env.SEMIO_TEST_ARTIFACT_DIR!;expect(output).toBeTruthy();mkdirSync(output,{recursive:true});const temporary=mkdtempSync(join(output,"s-"));
   try{
     mkdirSync(join(temporary,"src"));const manifest=join(temporary,"Cargo.toml"),config=join(temporary,"nextest.toml"),target=join(temporary,"target");writeFileSync(manifest,fixture.manifest);writeFileSync(join(temporary,"src/lib.rs"),fixture.source);writeFileSync(config,fixture.config);
@@ -86,7 +86,7 @@ test("Cargo refuses an empty selected snapshot suite with the independent Nextes
 });
 
 test("Cargo execution preserves exact owner policy and separates compilation from assertions", async () => {
-  const owner=resolve(import.meta.dir,".."), require=createRequire(import.meta.url), fixture=JSON.parse(readFileSync(resolve(owner,"🧫️fixtures/🔣️.json"),"utf8")), schema=JSON.parse(readFileSync(resolve(owner,"🧬️schema/🔣️.json"),"utf8"));
+  const owner=resolve(import.meta.dir,".."), require=createRequire(import.meta.url), fixture=JSON.parse(readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")), schema=JSON.parse(readFileSync(resolve(owner,"🧬️schema/🔣️.json"),"utf8"));
   const validate=new (require("ajv").default)({strict:true}).compile(schema), api=await import("../🟦️.ts");
   expect(api.cargoLintPlanV1({manifestPath:"/owner/Cargo.toml",packages:["owner-package"],cwd:"/owner",extraArgs:fixture.lint.arguments},fixture.policies[0]).args).toEqual(fixture.lint.command);
   expect(api.partitionNextestExecutionFilters(fixture.arguments)).toEqual(fixture.partition);
@@ -127,7 +127,7 @@ test("Cargo execution preserves exact owner policy and separates compilation fro
 },10000);
 
 test("Cargo reporter options remain execution-owned with independent Node argument authority",async()=>{
- const owner=resolve(import.meta.dir,".."), fixture=JSON.parse(readFileSync(resolve(owner,"🧫️fixtures/📣️reporting/🔣️.json"),"utf8")), base=JSON.parse(readFileSync(resolve(owner,"🧫️fixtures/🔣️.json"),"utf8")).policies[0], api=await import("../🟦️.ts");
+ const owner=resolve(import.meta.dir,".."), fixture=JSON.parse(readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/📣️reporting/🔣️.json"),"utf8")), base=JSON.parse(readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).policies[0], api=await import("../🟦️.ts");
  const cases=fixture.cases.map((item:any)=>({item,split:api.partitionNextestExecutionFilters(item.arguments),plan:api.cargoTestPlanV1({manifestPath:base.manifestPath,packages:["owner-package"],cwd:"/owner",extraArgs:item.arguments},base,"/owner/results/binaries.json")}));
  const batches=cases.flatMap(({item,plan}:any)=>[item.arguments.slice(0,item.arguments.includes("--")?item.arguments.indexOf("--"):item.arguments.length),plan[1]!.args.slice(0,plan[1]!.args.indexOf("--"))]);
  const program="const{parseArgs}=require('node:util');const batches=JSON.parse(process.argv[1]);process.stdout.write(JSON.stringify(batches.map(args=>parseArgs({args,options:{'status-level':{type:'string',multiple:true},'final-status-level':{type:'string',multiple:true}},strict:false,tokens:true}).tokens.filter(t=>t.kind==='option'&&(t.name==='status-level'||t.name==='final-status-level')).map(t=>[t.name,t.value]))));";

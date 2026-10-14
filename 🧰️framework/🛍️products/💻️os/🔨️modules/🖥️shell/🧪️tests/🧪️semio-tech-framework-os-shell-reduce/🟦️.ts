@@ -29,7 +29,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(source.url));
-      const fixturesDir = join(here, "🧫️fixtures");
+      const fixturesDir = join(here, "🧪️tests/🧫️fixtures");
       const files = readdirSync(fixturesDir).filter((name) => name.endsWith(".json"));
       expect(files.length).toBeGreaterThanOrEqual(65);
 

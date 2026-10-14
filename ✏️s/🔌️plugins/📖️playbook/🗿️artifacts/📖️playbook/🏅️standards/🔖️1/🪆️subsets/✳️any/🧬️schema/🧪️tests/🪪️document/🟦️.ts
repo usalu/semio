@@ -12,7 +12,7 @@ import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
 import * as artifact from "../../🟦️.ts";
 import * as snapshot from "../../📸️snapshot/🟦️.ts";
 import * as diff from "../../🔺️diff/🟦️.ts";
-import vectors from "../../🧫️fixtures/🪪️document/🔣️.json" with { type: "json" };
+import vectors from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json" with { type: "json" };
 
 function snapshotFiles(root: string): string[] {
   return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
@@ -39,14 +39,14 @@ export function testPlaybookDocumentContractOracle(): void {
     validDocuments: [{ input: vectors.document, output: vectors.document }, { input: titled, output: titled }],
     invalidDocuments: [missingTitle, ...Object.entries(vectors.invalidDocumentFields).map(([key, value]) => ({ ...vectors.document, [key]: value })), ...vectors.invalidChildren.map((child) => ({ ...vectors.document, document: child }))],
     invalidDiffs: [{ artifact: { ...vectors.document, steps: [] } }, { document: { childId: "missing-target" } }, { steps: [] }],
-    mutationRoots: [join(import.meta.dir, "../../../🧫️fixtures/🧬️mutations")],
+    mutationRoots: [join(import.meta.dir, "../../../🧪️tests/🧫️fixtures/🧬️mutations")],
     committed: { snapshots: 18, diffs: 5 },
   });
   for (const schema of [artifactSchema, snapshotSchema, diffSchema] as Array<Record<string, any>>) {
     assert.equal(childKind(schema, "document"), "s.stdio.semio");
     assert.equal(childKind(schema, "flow"), "s.stdio.semio");
   }
-  const files = snapshotFiles(join(import.meta.dir, "../../../🧫️fixtures/🧬️mutations"));
+  const files = snapshotFiles(join(import.meta.dir, "../../../🧪️tests/🧫️fixtures/🧬️mutations"));
   assert.equal(files.length, 18);
   for (const path of files) {
     const value = snapshot.parsePlaybookSnapshot(JSON.parse(readFileSync(path, "utf8")));

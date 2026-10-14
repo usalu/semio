@@ -9,23 +9,16 @@ use crate::os_spr::HybridLogicalTimestamp;
 use crate::os_spr::{DiffRegions, Mutation, MutationDiff, TouchedPaths};
 use crate::os_vcs::Author;
 use crate::os_vcs::Identified;
-use semio_framework_diagnostic::TextError;
-use semio_framework_diagnostic::TextSpan;
-use crate::os_pack::{DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOptions, PackError};
-use crate::os_pack::pack_rt;
 #[cfg(target_arch = "wasm32")]
 use super::backbone::resolve_backbone;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use super::backbone::local_storage_backbone_key;
-use pack_rt::renormalize_whole_number_floats;
-use super::{ArtifactDsl, ArtifactPack, ArtifactSqliteSnapshot, ArtifactSqliteSnapshotCodec};
 
 /// 📌️ One member document's position at the moment a `SpaceCheckpoint` was recorded.
 /// 🔮️ serde stays TEST-ONLY: feeds `SpaceHistoryMutation`'s own `cfg_attr(test)` oracle
 /// derive transitively (`CommitSpaceCheckpoint` → `SpaceCheckpoint` → this type). Production never
 /// serializes through serde, so this never reaches a shipped plugin component.
-#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -40,8 +33,7 @@ pub struct SpaceMemberPin {
 
 /// 🗄️ A space-wide checkpoint: one pin per registered member, so checking it out (or an
 /// alternative built on top of it) fans out deterministically to every member's own VCS.
-#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct SpaceCheckpoint {
     pub id: String,
@@ -54,8 +46,7 @@ pub struct SpaceCheckpoint {
 }
 
 /// 🔮️ serde stays TEST-ONLY — see `SpaceMemberPin`'s docstring above.
-#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -229,26 +220,3 @@ impl DiffRegions for SpaceHistoryDiff {
     }
 }
 
-impl ArtifactDsl for SpaceHistorySnapshot {
-    const EXTENSION: &'static str = "space-history";
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| TextError::new(error.kind, error.message, TextSpan::at(1, 1)))
-    }
-    fn print_dsl(&self) -> String {
-        semio_framework_pack_json::to_json_string(self)
-    }
-}
-
-impl ArtifactPack for SpaceHistorySnapshot {
-    fn sqlite_snapshot_codec() -> Option<ArtifactSqliteSnapshotCodec> {
-        Some(<Self as ArtifactSqliteSnapshot>::sqlite_codec())
-    }
-    fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        let value = ToValue::to_value(self);
-        Ok(pack_rt::encode_pack_value(&value))
-    }
-    fn decode_pack_with(bytes: &[u8], _options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let value = pack_rt::decode_pack_value(bytes)?;
-        FromValue::from_value(renormalize_whole_number_floats(value)).map_err(PackError::from)
-    }
-}

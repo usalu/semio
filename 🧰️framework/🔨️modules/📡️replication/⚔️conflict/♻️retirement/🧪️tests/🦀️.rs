@@ -6,7 +6,7 @@ use semio_framework_value::retained_clone::RetainedCloneProgress;
 use crate::ids::{ActorId,ArtifactId,HybridLogicalTimestamp,MutationId,SchemaId};
 use semio_framework_diagnostic::Severity;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
-fn fixture()->serde_json::Value {serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value {serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn string(value:&str,capacity:usize)->String {let mut result=String::with_capacity(capacity.max(value.len()));result.push_str(value);result}
 fn strings(row:&serde_json::Value,key:&str,capacity:&str)->Vec<String> {let mut values=Vec::with_capacity(row[capacity].as_u64().unwrap()as usize);for value in row[key].as_array().unwrap(){values.push(string(value.as_str().unwrap(),23));}values}
 fn bytes(row:&serde_json::Value,key:&str,capacity:&str)->Vec<u8> {let mut values=Vec::with_capacity(row[capacity].as_u64().unwrap()as usize);for value in row[key].as_array().unwrap(){values.push(value.as_u64().unwrap()as u8);}values}

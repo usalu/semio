@@ -7,7 +7,7 @@ import ts from "typescript";
 import { computeWorkspaces, getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
-const fixturePath = join(import.meta.dir, "../../🧫️fixtures/🧱️wasm-package-wrappers/🔣️.json");
+const fixturePath = join(import.meta.dir, "../🧫️fixtures/🧱️wasm-package-wrappers/🔣️.json");
 
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as any;
 const suppliedArtifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;

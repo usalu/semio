@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn icon_status_matches_the_shared_host_lifecycle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🖼️IconRenderHost/🧫️fixtures/🏷️status/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🖼️IconRenderHost/🧪️tests/🧫️fixtures/🏷️status/🔣️.json")).unwrap();
     let pack = &fixture["locales"][0];
     let labels = SceneChromeLabels::english().icon_render;
     for sample in fixture["cases"].as_array().unwrap() {
@@ -25,7 +25,7 @@ fn a_refused_icon_subject_leaves_rendering_without_faulting_the_world_snapshot()
 
 #[test]
 fn icon_frame_geometry_matches_the_actual_react_host() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🖼️IconRenderHost/🧫️fixtures/🖼️frame-presentation/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🖼️IconRenderHost/🧪️tests/🧫️fixtures/🖼️frame-presentation/🔣️.json")).unwrap();
     let mut atlas = ui_wgpu::wgpu::FontAtlas::shaped_default();
     let theme = Theme::default();
     for sample in fixture["cases"].as_array().unwrap() {
@@ -51,7 +51,7 @@ fn icon_frame_geometry_matches_the_actual_react_host() {
 
 #[test]
 fn icon_camera_matches_the_shared_three_projection_contract() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🖼️icon-render-camera/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️icon-render-camera/🔣️.json")).unwrap();
     let tolerance = fixture["tolerance"].as_f64().unwrap();
     for sample in fixture["cases"].as_array().unwrap() {
         let request: IconRenderRequestFields = serde_json::from_value(sample["request"].clone()).unwrap();
@@ -177,7 +177,7 @@ fn icon_render_status_reports_rendering_until_the_subject_mesh_is_resident() {
 
 #[test]
 fn icon_render_maps_the_shared_lighting_fixture_to_the_world_environment() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../♾️infinite/🌍️world/🧫️fixtures/🌞️scene-lighting/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../♾️infinite/🌍️world/🧪️tests/🧫️fixtures/🌞️scene-lighting/🔣️.json")).unwrap();
     let request: IconRenderRequestFields = serde_json::from_value(fixture["iconRenderRequest"].clone()).unwrap();
     let environment: serde_json::Value = serde_json::from_str(&icon_render_environment_json(&request)).unwrap();
     assert_eq!(environment["ambient"], fixture["worldEnvironment"]["ambient"]);
@@ -190,7 +190,7 @@ fn icon_render_maps_the_shared_lighting_fixture_to_the_world_environment() {
     for (field, value) in fixture["worldEnvironment"]["material"].as_object().expect("the lit material") {
         assert_eq!(&environment["material"][field], value, "material.{field} carries the fixture's lighting value");
     }
-    let outline: serde_json::Value = serde_json::from_str(include_str!("../../../🖼️IconRenderHost/🧫️fixtures/📤️svg-export/🔣️.json")).unwrap();
+    let outline: serde_json::Value = serde_json::from_str(include_str!("../../../🖼️IconRenderHost/🧪️tests/🧫️fixtures/📤️svg-export/🔣️.json")).unwrap();
     assert_eq!(environment["material"]["stroke"], outline["material"]["stroke"], "an icon outline defaults to React's own stroke");
 }
 

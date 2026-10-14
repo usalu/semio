@@ -3,7 +3,7 @@ use super::*;
 use directory::os_plugin_module_schema::TrustedPluginModuleIndexV1;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧫️fixtures/🧩️plugin-module/🔣️.json")).expect("plugin module fixture")
+    serde_json::from_str(include_str!("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧪️tests/🧫️fixtures/🧩️plugin-module/🔣️.json")).expect("plugin module fixture")
 }
 
 fn source(fixture: &serde_json::Value) -> TrustedPluginModuleSourceV1<'_> {

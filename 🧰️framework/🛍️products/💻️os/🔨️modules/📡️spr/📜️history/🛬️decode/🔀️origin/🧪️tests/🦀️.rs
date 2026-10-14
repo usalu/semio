@@ -7,7 +7,7 @@ fn close_partial(p:&mut RetainedHistoryOriginPartial,g:RetainedCloneGrant)->(usi
 fn close_text(text:String,g:RetainedCloneGrant)->(usize,usize){let mut partial=RetainedHistoryOriginPartial::empty(DslValue::String(text));close_partial(&mut partial,g)}
 #[test]
 fn original_history_origin_native_projection_preserves_original_payloads_and_paid_discarded_custody(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let p=&law["grant"];let n=|k:&str|p[k].as_u64().unwrap()as usize;let g=RetainedCloneGrant{maximum_items:n("items"),maximum_copy_bytes:n("copyBytes"),maximum_capacity_bytes:n("capacityBytes"),maximum_release_bytes:n("releaseBytes"),maximum_depth:n("depth")};
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let p=&law["grant"];let n=|k:&str|p[k].as_u64().unwrap()as usize;let g=RetainedCloneGrant{maximum_items:n("items"),maximum_copy_bytes:n("copyBytes"),maximum_capacity_bytes:n("capacityBytes"),maximum_release_bytes:n("releaseBytes"),maximum_depth:n("depth")};
  for row in law["origins"].as_array().unwrap(){for cancel in[0,1,3,10,30,128,10000]{
   let mut original=Some(semio_framework_pack_json::from_json_str::<DslValue>(row["json"].as_str().unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());let held=extent(original.as_ref().unwrap());let expected:serde_json::Value=serde_json::from_str(row["json"].as_str().unwrap()).unwrap();
   let original_texts=match original.as_ref().unwrap(){DslValue::Object(fields)=>{let find=|key:&str|fields.iter().find(|(k,_)|k==key).and_then(|(_,v)|if let DslValue::String(s)=v{Some(s.as_ptr()as usize)}else{None});[find("pluginId"),find("mutationId")]},_=>unreachable!()};

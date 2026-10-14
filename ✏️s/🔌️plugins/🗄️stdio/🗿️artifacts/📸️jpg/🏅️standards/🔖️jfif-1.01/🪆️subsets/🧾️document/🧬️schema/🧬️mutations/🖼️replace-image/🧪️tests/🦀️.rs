@@ -3,7 +3,7 @@ use super::*;
 use protocol::{Mutation,DiffAlgebra,OpBinary,OpText};
 #[test]
 fn imported_image_intent_preserves_every_semantic_owner_and_inverse(){
- let raw:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let raw:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖼️replace-image/🔣️.json")).unwrap();
  let initial:JpgImage=semio_framework_pack_json::from_json_str(&raw["initialImage"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
  let image:JpgImage=semio_framework_pack_json::from_json_str(&raw["importedImage"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
  let base=JpgSnapshot{schema:crate::STDIO_JPG_DOCUMENT_SCHEMA.into(),image:initial};

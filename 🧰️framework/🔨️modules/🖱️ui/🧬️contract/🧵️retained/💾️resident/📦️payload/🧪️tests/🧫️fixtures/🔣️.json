@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "recordBytes": 16,
+  "fieldBytes": 8,
+  "instanceBase": { "bytes": 304, "slots": 5, "owners": 5 },
+  "instanceReusedPointer": { "from": "childObserved", "to": "pending" },
+  "payloadFields": ["instance", "facade", "previous", "next", "head", "tail", "cursor", "builder", "storageCell", "reader", "evidence", "closing", "closed", "field", "record", "cell", "phase", "witness", "parentSlot", "failure", "pending"],
+  "payloadRecords": [
+    { "name": "state", "fields": 21 },
+    { "name": "facade", "fields": 1 },
+    { "name": "terminalWitness", "fields": 2 },
+    { "name": "parentSlot", "fields": 7 }
+  ],
+  "slot": { "bytes": 72, "slots": 1, "owners": 1 },
+  "neutralCell": { "bytes": 296, "slots": 6, "owners": 6 },
+  "neutralRecord": { "bytes": 264, "slots": 3, "owners": 3 },
+  "expectedInstance": { "bytes": 376, "slots": 6, "owners": 6 },
+  "expectedPayload": { "bytes": 312, "slots": 4, "owners": 4 },
+  "expectedPayloadTotal": { "bytes": 872, "slots": 13, "owners": 13 },
+  "admissionBytes": [296, 64, 64, 64, 264, 64, 272, 64, 64, 104, 64],
+  "admissionPhases": ["bootstrap", "cell-observation", "claim", "claim-observation", "record", "record-observation", "shell", "source-install", "source-observation", "finalization", "publication"],
+  "sourceReleaseTurns": ["capture-original-parent-slot", "body-proof", "source-detach", "observe-original-detachment", "ui-source-detach", "source-settle", "observe-source-settled", "replace-observation-with-domain-proof", "domain-unlink"],
+  "cancellationPrefixes": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+  "constructionFaults": [{ "method": "installResidentPayload", "prefix": 7, "after": false }, { "method": "installResidentPayload", "prefix": 7, "after": true }, { "method": "payload-finalizer", "prefix": 9, "after": false }, { "method": "witness-finalizer", "prefix": 9, "after": false }],
+  "refusedSource": { "prefix": 7, "installKind": "rejected", "privateUnboundProofRequired": true, "closeComplete": true },
+  "settledField": { "attempts": 3, "kind": "rejected", "bytes": 0, "sameObservation": true, "newAdmission": false },
+  "laws": ["foreign-field-no-allocation", "same-field-retry-same-original-payload", "other-field-cannot-steal-pending-slot", "source-binding-before-finalizer", "source-refusal-retains-original-shell", "source-after-install-throw-recovers-original-binding", "slot-before-cell-return", "record-before-shell-construction", "parent-roster-before-fallible-fields", "empty-child-slot-funded-before-construction", "child-terminal-before-field-detachment", "field-detach-observation-before-record-refund", "first-fault-no-refund", "short-grant-no-phase-advance"]
+}

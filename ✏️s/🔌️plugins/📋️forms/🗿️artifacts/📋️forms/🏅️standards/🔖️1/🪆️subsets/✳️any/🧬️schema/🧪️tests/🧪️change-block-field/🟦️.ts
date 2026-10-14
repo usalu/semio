@@ -15,7 +15,7 @@ import leafSchema from "../../🧬️mutations/🎛️change-block-field/🧬️
 import type { FormQuestion, FormStep } from "../../🧬️mutations/🟦️.ts";
 import { BLOCK_FIELDS, applyBlockField, diagnoseChangeBlockField, parseChangeBlockField, readBlockField } from "../../🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts";
 
-const FIXTURES = fileURLToPath(new URL("../../../🧫️fixtures/🧬️mutations/🎛️change-block-field", import.meta.url));
+const FIXTURES = fileURLToPath(new URL("../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-block-field", import.meta.url));
 const ajv = new Ajv({ strict: false, allErrors: false });
 ajv.addSchema(definitionSchema);
 const validate = ajv.compile(leafSchema);

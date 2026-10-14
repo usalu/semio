@@ -1,0 +1,27 @@
+{
+  "schema": null,
+  "name": null,
+  "grid": null,
+  "paragraphStyles": null,
+  "characterStyles": {
+    "inserted": [],
+    "removed": [
+      {
+        "id": "char-b",
+        "index": 1
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "stories": null,
+  "links": null,
+  "parentPages": null,
+  "spreads": null,
+  "pages": null,
+  "printTarget": null,
+  "backgroundDrawing": null,
+  "drawingTexts": [],
+  "referencedModel": null,
+  "dataFields": null
+}

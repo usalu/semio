@@ -12,7 +12,7 @@ type Fixture = {
   windows: [WindowCase, WindowCase];
 };
 
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as Fixture;
 const windowSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
 const noConfigSchema = { type: "object", additionalProperties: false, maxProperties: 0 } as const;
 

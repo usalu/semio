@@ -4,11 +4,11 @@ use semio_framework_os_kernel as store;
 use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},RetirementDemand};
 use semio_s_artifact_stdio_semio_flow::io::binary::snapshot::{SemioFlowSnapshotDecode, SemioFlowSnapshotDecodeStep};
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
-use store::{os_store::serialization::ArtifactPack,ErasedSnapshotRetirement,MemberOpenDiagnostic,MemberOpenRequest,MemberSnapshotOpenOperation,os_store::owned_schema_decode::OwnedSchemaDecodeCredits,os_store::owned_schema_decode::OwnedSchemaDecodePage,os_store::owned_schema_decode::OwnedSchemaDecodePages};
+use store::{pack::snapshot::ArtifactPack,ErasedSnapshotRetirement,MemberOpenDiagnostic,MemberOpenRequest,MemberSnapshotOpenOperation,os_store::owned_schema_decode::OwnedSchemaDecodeCredits,os_store::owned_schema_decode::OwnedSchemaDecodePage,os_store::owned_schema_decode::OwnedSchemaDecodePages};
 #[global_allocator]
 static FLOW_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🧾️original/🔣️.json")).unwrap()}
-fn wires()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🧾️original/🔣️.json")).unwrap()}
+fn wires()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
 fn bytes(value:&str)->Vec<u8>{value.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect()}
 fn policy(f:&serde_json::Value)->RetainedCloneGrant{let p=&f["policy"];RetainedCloneGrant{maximum_items:p["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:p["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:p["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:p["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:p["maximumDepth"].as_u64().unwrap()as usize}}
 fn request(wire:&[u8],subset:&str)->MemberOpenRequest{

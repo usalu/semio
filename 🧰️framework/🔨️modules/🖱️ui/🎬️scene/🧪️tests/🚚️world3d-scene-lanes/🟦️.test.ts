@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 
-import fixture from "../../🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json";
+import fixture from "../🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json";
 import { DEFAULT_WORLD3D_PRESENTATION, parseWorld3dPresentation, WORLD3D_SCENE_LANES, world3dSceneFromLanes } from "../../🟦️.ts";
 
 test("world scene carriers and presentation match their language-neutral schema", () => {

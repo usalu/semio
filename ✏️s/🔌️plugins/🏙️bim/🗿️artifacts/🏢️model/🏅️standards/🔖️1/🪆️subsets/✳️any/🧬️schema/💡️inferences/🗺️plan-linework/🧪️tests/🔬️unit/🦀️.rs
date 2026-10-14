@@ -6,8 +6,8 @@ use protocol::Inference;
 use std::collections::BTreeSet;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const HOUSE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🗺️plan-linework/🏡️house/📸️snapshot/🔣️.json");
-const CURVED: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🗺️plan-linework/🌀️curved/📸️snapshot/🔣️.json");
+const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🗺️plan-linework/🏡️house/📸️snapshot/🔣️.json");
+const CURVED: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🗺️plan-linework/🌀️curved/📸️snapshot/🔣️.json");
 
 fn house() -> ModelSnapshot {
     from_json_str(HOUSE, JsonMemberPolicy::Reject).expect("house decodes")
@@ -303,7 +303,7 @@ fn editing_the_cut_height_of_a_storey_redraws_its_plan_only() {
     assert_eq!(incremental, ModelInference::infer(&edited).expect("infers"), "and the result equals a fresh inference");
 }
 
-const RAMPS: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🛝️ramp-runs/🏞️ramps/📸️snapshot/🔣️.json");
+const RAMPS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛝️ramp-runs/🏞️ramps/📸️snapshot/🔣️.json");
 
 fn ramps() -> ModelSnapshot {
     from_json_str(RAMPS, JsonMemberPolicy::Reject).expect("ramps decode")

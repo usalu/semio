@@ -1,9 +1,9 @@
 /** 🌐️ Portable geometry lifetime laws exercised against the actual browser Wasm instance. */
 import { strict as assert } from "node:assert";
-import fixture from "../../🧫️fixtures/🏷️session-lifetime/🔣️.json";
+import fixture from "../🧫️fixtures/🏷️session-lifetime/🔣️.json";
 import Ajv from "ajv";
 import schema from "../../🧬️schema/🔣️.json";
-import retirementFixture from "../../🧫️fixtures/🧹️retirement/🔣️.json";
+import retirementFixture from "../🧫️fixtures/🧹️retirement/🔣️.json";
 import { SemioGeometrySession } from "../../🟦️.ts";
 export async function browserSessionLaws(): Promise<void> {
   const validate = new Ajv({ strict:true,allErrors:true }).addKeyword("x-semio-formats").addSchema(schema).getSchema(`${schema.$id}#/$defs/SemioGeometryCloseReceiptV1`)!;

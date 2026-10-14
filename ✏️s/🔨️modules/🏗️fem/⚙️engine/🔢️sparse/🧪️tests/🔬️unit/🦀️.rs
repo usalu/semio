@@ -35,7 +35,7 @@ fn grant_of(items: usize, bytes: usize) -> RetainedCloneGrant {
 
 #[test]
 fn numerical_page_subspace_work_persists_solver_state_without_physical_retirement_cursor() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
     let operation = test_operation(494);
     let mut sequence = 0;
     let mut observations = Vec::new();
@@ -111,7 +111,7 @@ fn numerical_page_modal_complete_close_retains_empty_capacitated_matrix() {
     fn inner_owners(owner: &ModalInputConstruction) -> usize {
         owner.complete.as_ref().map_or(0, |(matrix, _)| usize::from(matrix.vals.capacity() != 0) + usize::from(matrix.rowind.capacity() != 0) + usize::from(matrix.colptr.capacity() != 0))
     }
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
     let mut observations = Vec::new();
     for row in corpus["closeCases"].as_array().unwrap() {
         let empty = || Csr::from_owned_parts(0, Vec::new(), Vec::new(), Vec::new());
@@ -154,7 +154,7 @@ fn numerical_page_subspace_restore_close_preserves_every_ungranted_backing() {
     fn inner_owners(state: Option<&SubspaceCheckpoint>) -> usize {
         state.map_or(0, |state| state.k_factor.l_cols.iter().filter(|owner| owner.capacity() != 0).count() + usize::from(state.k_factor.d.capacity() != 0))
     }
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
     let mut observations = Vec::new();
     for row in corpus["closeCases"].as_array().unwrap() {
         let operation = test_operation(493);
@@ -193,7 +193,7 @@ fn numerical_page_subspace_restore_close_preserves_every_ungranted_backing() {
 
 #[test]
 fn numerical_page_restore_fault_is_sticky_before_later_input_or_allocation() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
     for row in corpus["stickyFaultCases"].as_array().unwrap() {
     let expected = match row["expected"].as_str().unwrap() { "Admission" => NumericalCheckpointFault::Admission, "Stale" => NumericalCheckpointFault::Stale, _ => unreachable!() };
     let operation = test_operation(492);
@@ -228,7 +228,7 @@ fn numerical_page_restore_fault_is_sticky_before_later_input_or_allocation() {
 
 #[test]
 fn numerical_page_matrix_restore_retains_dimensions_and_partial_capacity_across_pages() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
     let mut observations = Vec::new();
     for row in corpus["matrixRestoreCases"].as_array().unwrap() {
         let rows = row["rows"].as_u64().unwrap() as usize;
@@ -324,7 +324,7 @@ fn numerical_page_restore_close_preserves_ungranted_backing_and_retires_one_owne
     fn inner_owners(state: Option<&LdltCheckpoint>) -> usize {
         state.map_or(0, |state| state.row_lists.iter().filter(|owner| owner.capacity() != 0).count() + state.l_cols.iter().filter(|owner| owner.capacity() != 0).count())
     }
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
     let mut observations = Vec::new();
     for row in corpus["closeCases"].as_array().unwrap() {
         let operation = test_operation(490);
@@ -364,7 +364,7 @@ fn numerical_page_restore_close_preserves_ungranted_backing_and_retires_one_owne
 
 #[test]
 fn numerical_page_restore_rejects_hostile_coordinates_without_changing_target_backing() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
     let mut observations = Vec::new();
     for row in corpus["restoreFaultCases"].as_array().unwrap() {
         let mut owner: PagedList<f64, 8192> = PagedList::default();
@@ -411,7 +411,7 @@ fn numerical_page_restore_rejects_hostile_coordinates_without_changing_target_ba
 
 #[test]
 fn numerical_page_restore_accepts_every_declared_paged_scalar_continuation() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
     let mut observations = Vec::new();
     for row in corpus["cases"].as_array().unwrap() {
         let count = row["count"].as_u64().unwrap() as usize;
@@ -537,7 +537,7 @@ fn numerical_page_ldlt_checkpoint_restores_maximum_admitted_matrix() {
 #[test]
 fn numerical_page_scalar_owner_continues_before_writing_past_exact_backing() {
     use semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
     let mut observations = Vec::new();
     assert_eq!(corpus["pageBytes"].as_u64().unwrap() as usize, JOB_PAYLOAD_PAGE_BYTES);
     for row in corpus["cases"].as_array().unwrap() {
@@ -628,7 +628,7 @@ fn numerical_page_all_owner_entries_preserve_cursor_until_their_width_fits() {
         }
     }
 
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
     let mut matrix = MatD::zeros(1, 1);
     matrix.data[0] = 1.5;
     let mut integers = PagedList::<u32, 1>::empty();
@@ -1001,7 +1001,7 @@ fn dense_symmetric_eigen_jacobi_handles_zero_size_matrix() {
 /// 🚧 PCG construction rejects an oversized scalar owner before reserving any of its backing.
 #[test]
 fn pcg_job_construction_checks_order_before_backing_allocation() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⛽️publication-grant/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⛽️publication-grant/🔣️.json")).unwrap();
     let ceiling = fixture["construction"]["backingCeilingBytes"].as_u64().unwrap() as usize;
     let mut observations = Vec::new();
     for (index, case) in fixture["construction"]["cases"].as_array().unwrap().iter().enumerate() {
@@ -1035,7 +1035,7 @@ fn pcg_job_construction_checks_order_before_backing_allocation() {
 /// 🧮 Retained vector and mounted RHS construction preserve the independent NumPy norm.
 #[test]
 fn pcg_job_construction_uses_actual_rhs_norm() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️pcg-wire/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️pcg-wire/🔣️.json")).unwrap();
     let mut observations = Vec::new();
     for row in fixture["rhsNorm"]["cases"].as_array().unwrap() {
         let rhs: Vec<f64> = row["rhs"].as_array().unwrap().iter().map(|value| value.as_f64().unwrap()).collect();
@@ -1088,7 +1088,7 @@ fn pcg_job_construction_uses_actual_rhs_norm() {
 /// 🚫 Invalid RHS values retain their first constructor fault and close every backing owner.
 #[test]
 fn pcg_job_construction_rejects_nonfinite_rhs_without_losing_owners() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️pcg-wire/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️pcg-wire/🔣️.json")).unwrap();
     let mut observations = Vec::new();
     for row in fixture["rhsNorm"]["invalid"].as_array().unwrap() {
         let rhs: Vec<f64> = row["rhsBits"].as_array().unwrap().iter().map(|bits| f64::from_bits(u64::from_str_radix(bits.as_str().unwrap(), 16).unwrap())).collect();
@@ -1143,7 +1143,7 @@ fn pcg_job_construction_rejects_nonfinite_rhs_without_losing_owners() {
 /// 📜 PCG publication uses canonical retained numerical pages and derives output scalars in place.
 #[test]
 fn pcg_job_publication_matches_canonical_wire_pages() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️pcg-wire/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️pcg-wire/🔣️.json")).unwrap();
     let mut observations = Vec::new();
     for case in fixture["cases"].as_array().unwrap() {
         let operation = test_operation(fixture["operation"].as_u64().unwrap());
@@ -1230,7 +1230,7 @@ fn test_operation(id: u64) -> Operation {
 /// 📣️ PCG publication consumes its own grant and preserves pending control state on refusal.
 #[test]
 fn pcg_job_publication_grants_preserve_pending_state_and_work_cursor() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⛽️publication-grant/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⛽️publication-grant/🔣️.json")).unwrap();
     let mut observations = Vec::new();
     for (index, case) in fixture["cases"].as_array().unwrap().iter().enumerate() {
         let operation = test_operation(980 + index as u64);
@@ -1272,7 +1272,7 @@ fn pcg_job_publication_grants_preserve_pending_state_and_work_cursor() {
 /// 🧭️ Each admitted initial PCG scalar fills the already owned search direction.
 #[test]
 fn pcg_job_initial_precondition_preserves_admitted_direction_backing() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔢️scalar-owners/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔢️scalar-owners/🔣️.json")).unwrap();
     let case = &fixture["precondition"];
     let diagonal: Vec<f64> = serde_json::from_value(case["diagonal"].clone()).unwrap();
     let residual: Vec<f64> = serde_json::from_value(case["residual"].clone()).unwrap();
@@ -1306,7 +1306,7 @@ fn pcg_job_initial_precondition_preserves_admitted_direction_backing() {
 /// 🪜️ Retained LDLT substitution visits every factor column before diagonal scaling.
 #[test]
 fn subspace_factor_cursor_matches_numpy_for_three_nondiagonal_right_hand_sides() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔢️scalar-owners/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔢️scalar-owners/🔣️.json")).unwrap();
     let case = &fixture["factor"];
     let lower: Vec<Vec<f64>> = serde_json::from_value(case["lower"].clone()).unwrap();
     let rhs: Vec<Vec<f64>> = serde_json::from_value(case["rhs"].clone()).unwrap();
@@ -1349,7 +1349,7 @@ fn subspace_factor_cursor_matches_numpy_for_three_nondiagonal_right_hand_sides()
 /// 🎶 Modal publication replaces every scalar before exposing terminal convergence.
 #[test]
 fn subspace_publication_restarts_at_zero_and_commits_convergence_after_the_last_scalar() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔢️scalar-owners/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔢️scalar-owners/🔣️.json")).unwrap();
     let case = &fixture["publication"];
     let diagonal: Vec<f64> = serde_json::from_value(case["diagonal"].clone()).unwrap();
     let eigenvalues: Vec<f64> = serde_json::from_value(case["eigenvalues"].clone()).unwrap();
@@ -1396,7 +1396,7 @@ fn subspace_publication_restarts_at_zero_and_commits_convergence_after_the_last_
 /// 🛑 Every PCG publication cut preserves its suspended state and retires exact physical backing.
 #[test]
 fn pcg_job_publication_every_cut_cancels_without_losing_backing() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️pcg-wire/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️pcg-wire/🔣️.json")).unwrap();
     let mut failures = Vec::new();
     let mut cuts = 0;
     for case in fixture["cases"].as_array().unwrap() {
@@ -1459,7 +1459,7 @@ fn pcg_job_publication_every_cut_cancels_without_losing_backing() {
 /// ⏸️ Every PCG restore cut retains its exact input and candidate until cancellation cleanup.
 #[test]
 fn pcg_job_restore_every_cut_cancels_without_advancing_candidate() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️pcg-wire/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️pcg-wire/🔣️.json")).unwrap();
     let pages: Vec<Vec<u8>> = fixture["cases"][0]["fields"].as_array().unwrap().iter().map(|field| {
         field["hex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()
     }).collect();
@@ -1533,7 +1533,7 @@ fn pcg_job_restore_every_cut_cancels_without_advancing_candidate() {
 /// 🧱 PCG restores CSR continuation pages and solves the independent dense rank-one fixture.
 #[test]
 fn pcg_job_checkpoint_dense_csr_continuations_restore_exactly() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️pcg-wire/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️pcg-wire/🔣️.json")).unwrap();
     let dense = &fixture["denseRestore"];
     let n = dense["order"].as_u64().unwrap() as usize;
     let mut matrix = Coo::new(n);
@@ -1591,7 +1591,7 @@ fn pcg_payload_from_pages(operation: Operation, pages: &[Vec<u8>]) -> RetainedJo
 /// 🧯 Every malformed PCG owner retains its first fault and physically drains the exact candidate.
 #[test]
 fn pcg_job_restore_rejects_malformed_owners_and_closes_exact_backing() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️pcg-wire/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️pcg-wire/🔣️.json")).unwrap();
     let pages: Vec<Vec<u8>> = fixture["cases"][0]["fields"].as_array().unwrap().iter().map(|field| {
         field["hex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()
     }).collect();

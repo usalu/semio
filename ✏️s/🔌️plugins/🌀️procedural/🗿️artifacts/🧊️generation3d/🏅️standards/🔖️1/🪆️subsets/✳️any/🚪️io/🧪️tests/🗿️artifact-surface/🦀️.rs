@@ -27,8 +27,8 @@ use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::d
 use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::{export_stdio_kinds, import_stdio_kinds, mesh_bridge};
 
 //#region 🧫️Fixture
-const SURFACE_JSON: &str = include_str!("../../../🧫️fixtures/🚪️io/🗿️artifact-surface.json");
-const SCENE_IMPORT_JSON: &str = include_str!("../../🧫️fixtures/🎬️scene-import/🔣️.json");
+const SURFACE_JSON: &str = include_str!("../../../🧪️tests/🧫️fixtures/🚪️io/🗿️artifact-surface.json");
+const SCENE_IMPORT_JSON: &str = include_str!("../🧫️fixtures/🎬️scene-import/🔣️.json");
 
 /// 🎬️ Scene placement is authored as graph parameters and agrees with independent matrix algebra.
 #[test]
@@ -328,7 +328,7 @@ fn prepared_geometry_merge_preserves_indices_bounds_and_oracle_volume() {
 #[test]
 fn prepared_geometry_merge_preserves_surface_metadata_or_refuses_incompatible_domains() {
     use semio_framework_value::FromValue;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     let meshes = fixture["cases"].as_array().unwrap().iter().map(|row| {
         let value = semio_framework_pack_json::parse(&row["prepared"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap()
@@ -386,7 +386,7 @@ fn graph_registry_does_not_claim_geometry_materialization() {
 #[test]
 fn prepared_surface_channels_enter_the_editable_mesh_without_loss() {
     use semio_framework_value::FromValue;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let owned = semio_framework_pack_json::parse(&row["prepared"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let mesh = semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&owned)).unwrap();
@@ -428,7 +428,7 @@ fn assert_json_numbers_and_structure(actual: &serde_json::Value, expected: &serd
 fn polygon_surface_import_preserves_original_faces_and_corner_or_vertex_channels() {
     use semio_framework_value::FromValue;
     use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts::{obj::v3_0::any as obj, ply::v1_0::any as ply};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧩️polygon-import/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧩️polygon-import/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let source = semio_framework_pack_json::parse(&row["source"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let document = match row["format"].as_str().unwrap() {
@@ -464,7 +464,7 @@ fn polygon_surface_import_preserves_original_faces_and_corner_or_vertex_channels
 #[test]
 fn prepared_surface_exports_keep_the_supported_channels() {
     use semio_framework_value::FromValue;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let value = semio_framework_pack_json::parse(&row["prepared"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let prepared = semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap();
@@ -496,7 +496,7 @@ fn prepared_surface_exports_keep_the_supported_channels() {
 #[test]
 fn prepared_face_surface_channels_expand_with_independent_triangle_area() {
     use semio_framework_value::FromValue;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     for row in fixture["faceChannels"].as_array().unwrap() {
         let source = semio_framework_pack_json::parse(&row["prepared"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let mesh = semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&source)).unwrap();
@@ -524,7 +524,7 @@ fn prepared_face_surface_channels_expand_with_independent_triangle_area() {
 #[test]
 fn gltf_surface_accessor_domains_match_the_independent_normalized_fixture() {
     use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts as import_leaves;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     for row in fixture["gltfAccessors"]["cases"].as_array().unwrap() {
         let source = row["document"].to_string();
         let mesh = import_leaves::gltf::v2_0::any::mesh_from_bytes(source.as_bytes()).unwrap();
@@ -555,8 +555,8 @@ fn gltf_surface_accessor_domains_match_the_independent_normalized_fixture() {
 #[test]
 fn gltf_import_declared_domains_are_admitted_before_allocation() {
     use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts::gltf::v2_0::any;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
-    let admission:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🚧️import-admission/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
+    let admission:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🚧️import-admission/🔣️.json")).unwrap();
     let source=&fixture["gltfSurfaceAuthoring"]["cases"][0]["document"];
     for row in admission["refusals"].as_array().unwrap() {
         let mut invalid=source.clone();
@@ -584,7 +584,7 @@ fn gltf_import_declared_domains_are_admitted_before_allocation() {
 #[test]
 fn gltf_authored_surface_metadata_enters_the_editable_constructor() {
     use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts::gltf::v2_0::any;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     for row in fixture["gltfSurfaceAuthoring"]["cases"].as_array().unwrap() {
         let document = any::deserialize_bytes(row["document"].to_string().as_bytes()).unwrap();
         let (kind, data) = mesh_bridge::imported_source(&document).unwrap();
@@ -618,8 +618,8 @@ fn gltf_authored_attribute_palettes_restore_editable_source_domains() {
     use semio_framework_value::FromValue;
     use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfJson;
     use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::{import::deserializers::artifacts::gltf::v2_0::any as import,export::serializers::artifacts::gltf::v2_0::any as export};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
-    let metadata:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔁️authored-attributes/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
+    let metadata:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔁️authored-attributes/🔣️.json")).unwrap();
     let prepared=&fixture["gltfExport"]["prepared"];
     let value=semio_framework_pack_json::parse(&prepared.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mesh=semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap();
@@ -667,7 +667,7 @@ fn gltf_authored_attribute_palettes_restore_editable_source_domains() {
 #[test]
 fn prepared_surface_format_diagnostics_are_fixture_driven() {
     use semio_framework_value::FromValue;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     for row in fixture["diagnostics"].as_array().unwrap() {
         let source = &fixture["cases"][row["case"].as_u64().unwrap() as usize]["prepared"];
         let value = semio_framework_pack_json::parse(&source.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -694,7 +694,7 @@ fn prepared_surface_format_diagnostics_are_fixture_driven() {
 #[test]
 fn prepared_surface_export_preserves_partial_materials_with_owning_defaults() {
     use semio_framework_value::FromValue;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     for row in fixture["materialDefaults"].as_array().unwrap() {
         let mut source = fixture["cases"][1]["prepared"].clone();
         source["materials"]["red"] = row["source"].clone();
@@ -713,7 +713,7 @@ fn prepared_surface_export_preserves_partial_materials_with_owning_defaults() {
 #[test]
 fn prepared_surface_export_scope_uses_the_existing_graph_connections() {
     use semio_framework_value::FromValue;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     let mut host = fixture["exportScope"]["host"].clone();
     host["schema"] = "flow.host_snapshot".into();
     host["camera"] = serde_json::json!({"x":0,"y":0,"zoom":1});
@@ -769,13 +769,13 @@ fn imported_graph_text_registry_round_trip_preserves_graph_and_retires_rebuilt_s
 fn gltf_prepared_export_retains_rich_channels_and_role_sampling() {
     use semio_framework_value::FromValue;
     use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::export::serializers::artifacts::gltf::v2_0::any;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     let row = &fixture["gltfExport"];
     let value = semio_framework_pack_json::parse(&row["prepared"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut mesh = semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap();
     mesh.component_references = serde_json::from_value(row["componentReferences"].clone()).unwrap();
     mesh.validate_component_references().unwrap();
-    let cutoff_case: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🖌️render/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
+    let cutoff_case: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
     let cutoff = cutoff_case["alphaCutoffCase"]["value"].as_f64().unwrap();
     let mut mask = mesh.clone();
     let semio_framework_value::DslValue::Object(fields) = mask.materials.get_mut("paint").unwrap() else { panic!("owned material fields") };
@@ -953,7 +953,7 @@ fn gltf_prepared_export_retains_rich_channels_and_role_sampling() {
 fn document_io_retained_envelope_resumes_bytes_cancels_and_retires_without_publication() {
     use semio_framework_value::NativeEncodeControl;
     use std::{io::Write,process::{Command,Stdio}};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();let continuation=&fixture["documentContinuation"];let law=&continuation["envelope"];let text=law["text"].as_str().unwrap().repeat(law["textRepeats"].as_u64().unwrap()as usize);let binary=(0..law["binaryLength"].as_u64().unwrap()).map(|i|i as u8).collect::<Vec<_>>();let text_row=document_io::EXPORT_FORMATS.iter().find(|r|r.id=="txt").unwrap();let binary_row=document_io::EXPORT_FORMATS.iter().find(|r|r.id=="las").unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();let continuation=&fixture["documentContinuation"];let law=&continuation["envelope"];let text=law["text"].as_str().unwrap().repeat(law["textRepeats"].as_u64().unwrap()as usize);let binary=(0..law["binaryLength"].as_u64().unwrap()).map(|i|i as u8).collect::<Vec<_>>();let text_row=document_io::EXPORT_FORMATS.iter().find(|r|r.id=="txt").unwrap();let binary_row=document_io::EXPORT_FORMATS.iter().find(|r|r.id=="las").unwrap();
     let mut child=Command::new("bun").args(["-e","await Bun.write(Bun.stdout,Buffer.from(await Bun.stdin.arrayBuffer()).toString('base64'));"]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&binary).unwrap();let oracle=child.wait_with_output().unwrap();assert!(oracle.status.success());let encoded=String::from_utf8(oracle.stdout).unwrap();
     let retire=|envelope:document_io::Generation3dDocumentEnvelope|{let mut retirement=crate::retirement_driver::retire_owned_for_test(envelope,"document envelope");crate::retirement_driver::drive_erased_released(retirement.as_mut(),"document envelope");};
     for budget in continuation["budgets"].as_array().unwrap() {for (row,bytes,expected) in [(text_row,text.as_bytes().to_vec(),text.as_str()),(binary_row,binary.clone(),encoded.as_str())] {

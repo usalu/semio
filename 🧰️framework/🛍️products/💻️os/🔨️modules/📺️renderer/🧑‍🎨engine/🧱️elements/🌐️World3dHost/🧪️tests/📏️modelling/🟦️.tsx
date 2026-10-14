@@ -3,7 +3,7 @@
  * and the sub-element highlight tokens.
  *
  * 🧫️ Every expectation about ramps, legends, pick targets and section planes is read from
- * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/📏️world3d-modelling/🔣️.json`, whose values were produced with three.js, never with our
+ * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/📏️world3d-modelling/🔣️.json`, whose values were produced with three.js, never with our
  * own code; the screen-space geometry is checked against hand-computed orthographic pixels.
  *
  * 🎭️ Only the WebGL seam is replaced, exactly as in `🧪️tests/🖱️world3d-interaction`: `@react-three/fiber` hands out a real
@@ -12,7 +12,7 @@ import { act, cleanup, render } from "@semio-tech/ui-react/test";
 import { createElement, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BufferAttribute, BufferGeometry, Color, ColorManagement, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, Plane, SRGBColorSpace, Vector3 } from "three";
-import fixture from "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/📏️world3d-modelling/🔣️.json" with { type: "json" };
+import fixture from "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/📏️world3d-modelling/🔣️.json" with { type: "json" };
 
 const recorded = vi.hoisted(() => ({ frames: [] as ((state: unknown, delta: number) => void)[], camera: null as PerspectiveCamera | null, size: { width: 800, height: 600 } }));
 

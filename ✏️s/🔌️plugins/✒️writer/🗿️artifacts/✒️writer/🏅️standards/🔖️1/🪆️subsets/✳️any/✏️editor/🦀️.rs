@@ -85,7 +85,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
@@ -569,7 +569,8 @@ impl ArtifactCommandWork<EditorApp<WriterPlayApp>> for WriterRetainedCommandWork
         writer_command_admitted(command, snapshot, writer_window_transient(context)).then_some(1)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<WriterPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<WriterPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<WriterPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<WriterPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let window_transient = writer_window_transient(input.context);
         if !writer_command_admitted(input.command, input.snapshot, window_transient) {
             return Err(Fault::from("writer-command-admission"));
@@ -578,6 +579,9 @@ impl ArtifactCommandWork<EditorApp<WriterPlayApp>> for WriterRetainedCommandWork
         let window_config = input.context.and_then(|context| context.window_config.as_ref()).and_then(|snapshot| snapshot.get::<WriterMainWindowConfigOwner>());
         let (emit, ephemeral) = writer_command_emit(input.command, input.snapshot, view_state, window_config, window_transient).map_err(Fault::from)?;
         Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
@@ -964,6 +968,7 @@ impl ArtifactEditor for WriterPlayApp {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

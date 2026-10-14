@@ -17,7 +17,7 @@ fn authored_kind(text:&str)->ValueRefusalKind {
 
 #[test]
 fn canonical_pack_producer_authority_is_required_and_preserves_owned_causes() {
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../⚠️error/🧫️fixtures/🧭️cause/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../⚠️error/🧪️tests/🧫️fixtures/🧭️cause/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let expected=authored_kind(row["expectedKind"].as_str().unwrap());
   let message=row["message"].as_str().unwrap();
@@ -64,7 +64,7 @@ fn canonical_pack_producer_authority_is_required_and_preserves_owned_causes() {
 
 #[test]
 fn canonical_pack_borrowed_factories_preserve_real_paged_metadata() {
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../⚠️error/🧫️fixtures/🧭️cause/📋️paged/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../⚠️error/🧪️tests/🧫️fixtures/🧭️cause/📋️paged/🔣️.json")).unwrap();
  let reason="same deliberately misleading cancellation/limit prose";
  for row in fixture["cases"].as_array().unwrap(){
   let kind=match row["kind"].as_str().unwrap(){

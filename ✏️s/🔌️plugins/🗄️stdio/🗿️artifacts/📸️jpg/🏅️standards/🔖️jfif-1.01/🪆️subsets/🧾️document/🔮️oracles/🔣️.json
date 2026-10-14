@@ -635,14 +635,14 @@
       "files": [
         {
           "role": "expected-before-jpg",
-          "path": "../🧫️fixtures/🪪️change-jfif-header-applied/⬅️before.jpg",
+          "path": "../🧪️tests/🧫️fixtures/🪪️change-jfif-header-applied/⬅️before.jpg",
           "mediaType": "image/jpeg",
           "sha256": "sha256:70e16bf0f3bf866caae6c9a53efa5b3a272620b7dfbe6b109d0f36d01fd958ed",
           "bytes": 1278
         },
         {
           "role": "expected-after-jpg",
-          "path": "../🧫️fixtures/🪪️change-jfif-header-applied/➡️after.jpg",
+          "path": "../🧪️tests/🧫️fixtures/🪪️change-jfif-header-applied/➡️after.jpg",
           "mediaType": "image/jpeg",
           "sha256": "sha256:4c0135fef715dad077b68cf1fd04b338bb6b659883fd697836edb9d8746499a2",
           "bytes": 1278
@@ -685,14 +685,14 @@
       "files": [
         {
           "role": "expected-before-jpg",
-          "path": "../🧫️fixtures/📥️insert-other-segment-applied/⬅️before.jpg",
+          "path": "../🧪️tests/🧫️fixtures/📥️insert-other-segment-applied/⬅️before.jpg",
           "mediaType": "image/jpeg",
           "sha256": "sha256:70e16bf0f3bf866caae6c9a53efa5b3a272620b7dfbe6b109d0f36d01fd958ed",
           "bytes": 1278
         },
         {
           "role": "expected-after-jpg",
-          "path": "../🧫️fixtures/📥️insert-other-segment-applied/➡️after.jpg",
+          "path": "../🧪️tests/🧫️fixtures/📥️insert-other-segment-applied/➡️after.jpg",
           "mediaType": "image/jpeg",
           "sha256": "sha256:02e956de50b9d58c42eafaad7dbd2dffa664440eb48b5de5d92b7b2c9f360c33",
           "bytes": 1534
@@ -735,14 +735,14 @@
       "files": [
         {
           "role": "expected-before-jpg",
-          "path": "../🧫️fixtures/🗑️remove-other-segment-applied/⬅️before.jpg",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-other-segment-applied/⬅️before.jpg",
           "mediaType": "image/jpeg",
           "sha256": "sha256:02e956de50b9d58c42eafaad7dbd2dffa664440eb48b5de5d92b7b2c9f360c33",
           "bytes": 1534
         },
         {
           "role": "expected-after-jpg",
-          "path": "../🧫️fixtures/🗑️remove-other-segment-applied/➡️after.jpg",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-other-segment-applied/➡️after.jpg",
           "mediaType": "image/jpeg",
           "sha256": "sha256:70e16bf0f3bf866caae6c9a53efa5b3a272620b7dfbe6b109d0f36d01fd958ed",
           "bytes": 1278
@@ -785,14 +785,14 @@
       "files": [
         {
           "role": "expected-before-jpg",
-          "path": "../🧫️fixtures/🔲️replace-pixels-applied/⬅️before.jpg",
+          "path": "../🧪️tests/🧫️fixtures/🔲️replace-pixels-applied/⬅️before.jpg",
           "mediaType": "image/jpeg",
           "sha256": "sha256:70e16bf0f3bf866caae6c9a53efa5b3a272620b7dfbe6b109d0f36d01fd958ed",
           "bytes": 1278
         },
         {
           "role": "expected-after-jpg",
-          "path": "../🧫️fixtures/🔲️replace-pixels-applied/➡️after.jpg",
+          "path": "../🧪️tests/🧫️fixtures/🔲️replace-pixels-applied/➡️after.jpg",
           "mediaType": "image/jpeg",
           "sha256": "sha256:45687f4f55f2e9880671323c94533f0523cd7b9bd348c087cd459e97b95fd35c",
           "bytes": 646
@@ -835,14 +835,14 @@
       "files": [
         {
           "role": "expected-before-jpg",
-          "path": "../🧫️fixtures/🔎️change-jfif-header/⬅️before.jpg",
+          "path": "../🧪️tests/🧫️fixtures/🔎️change-jfif-header/⬅️before.jpg",
           "mediaType": "image/jpeg",
           "sha256": "sha256:f79cf3a6f8789c06c010ba2d4298ac6e5b7b00b9920b021bb3db8542ae4ff3a8",
           "bytes": 804
         },
         {
           "role": "expected-after-jpg",
-          "path": "../🧫️fixtures/🔎️change-jfif-header/➡️after.jpg",
+          "path": "../🧪️tests/🧫️fixtures/🔎️change-jfif-header/➡️after.jpg",
           "mediaType": "image/jpeg",
           "sha256": "sha256:a40a1cfa0ac0e684843a4626e9ed9f6254e1a18a7c0de8877e90409e98913847",
           "bytes": 804
@@ -883,14 +883,14 @@
       "files": [
         {
           "role": "expected-before-jpg",
-          "path": "../🧫️fixtures/🖼️replace-image-applied/⬅️before.jpg",
+          "path": "../🧪️tests/🧫️fixtures/🖼️replace-image-applied/⬅️before.jpg",
           "mediaType": "image/jpeg",
           "sha256": "sha256:70e16bf0f3bf866caae6c9a53efa5b3a272620b7dfbe6b109d0f36d01fd958ed",
           "bytes": 1278
         },
         {
           "role": "expected-after-jpg",
-          "path": "../🧫️fixtures/🖼️replace-image-applied/➡️after.jpg",
+          "path": "../🧪️tests/🧫️fixtures/🖼️replace-image-applied/➡️after.jpg",
           "mediaType": "image/jpeg",
           "sha256": "sha256:1102fb6f8a23f3fce2acfb54e6eb117edd559975753799e4bc91c521d2c1611d",
           "bytes": 889

@@ -507,7 +507,7 @@ pub(crate) mod context {
             Effect::LoadDocument { pack, .. } => Some(pack.clone()),
             _ => None,
         });
-        let document = <Puzzle3dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack.expect("an import publishes one whole-document load")).expect("the load carries a puzzle 3D document");
+        let document = <Puzzle3dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack.expect("an import publishes one whole-document load")).expect("the load carries a puzzle 3D document");
         semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&document))
     }
 
@@ -1378,7 +1378,7 @@ async fn measured_host_turn(app: &mut Puzzle3dApp) {
 
 #[test]
 fn retained_publication_contracts_are_an_exact_nonempty_tool_bijection() {
-    let scene_snapshot: Value = parse(include_str!("../../../🧫️fixtures/🗄️retained-jobs/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Puzzle3D retained route scene_snapshot");
+    let scene_snapshot: Value = parse(include_str!("../../../🧪️tests/🧫️fixtures/🗄️retained-jobs/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Puzzle3D retained route scene_snapshot");
     assert_eq!(scene_snapshot.get("toolIds"), Some(&Value::Array(PUZZLE3D_RETAINED_TOOL_IDS.iter().map(|id| Value::from(*id)).collect())));
     let manifest = create_puzzle3d_app();
     for tool_id in PUZZLE3D_RETAINED_TOOL_IDS {
@@ -2138,7 +2138,7 @@ async fn puzzle3d_play_projection_pack_round_trips() {
 /// as equal and cannot state this; the object count on BOTH halves can.
 #[semio_framework_async_macros::async_test]
 async fn play_snapshot_typed_authority_survives_every_store_round_trip() {
-    use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+    use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
     let app = app().await;
     let snapshot = app.snapshot().expect("projection");
     let objects = snapshot.value().get("objects").and_then(semio_framework_value::DslValue::as_array).map(<[_]>::len).unwrap_or(0);
@@ -2977,7 +2977,7 @@ async fn the_world_scene_names_built_in_meshes_by_reference_and_fits_its_fixed_c
 /// crate's Rust lane table and `🧰️framework/🔨️modules/🔺️mesh/🟦️.ts`'s `WORLD3D_SCENE_LANES` are
 /// pinned against, read here so the real Nakagin publication is measured against the same bounds the
 /// TypeScript assembler enforces.
-const PUZZLE3D_WORLD3D_LANE_CONTRACT: &str = include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json");
+const PUZZLE3D_WORLD3D_LANE_CONTRACT: &str = include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json");
 
 /// 🗼️ Loads the Nakagin Capsule Tower example through the REAL typed `setActiveExample` command and
 /// drives it to quiescence, exactly as the navbar picker does.
@@ -5228,7 +5228,7 @@ async fn a_motionless_gumball_release_leaves_zero_trace() {
 /// exactly the case's guest edits and moves the object by its offset; a gesture that dispatches nothing publishes nothing.
 #[semio_framework_async_macros::async_test]
 async fn the_world3d_local_gumball_cases_land_as_their_guest_edits() {
-    let corpus = parse(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧫️fixtures/🛠️gumball-live-protocol.json")), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the protocol corpus parses");
+    let corpus = parse(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🛠️gumball-live-protocol.json")), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the protocol corpus parses");
     let cases: Vec<&Value> = corpus.get("cases").and_then(Value::as_array).expect("cases").iter().filter(|case| case.get("live").and_then(Value::as_bool) == Some(false)).collect();
     assert_eq!(cases.len(), 4, "the corpus carries the four local one-shot cases");
     for case in cases {

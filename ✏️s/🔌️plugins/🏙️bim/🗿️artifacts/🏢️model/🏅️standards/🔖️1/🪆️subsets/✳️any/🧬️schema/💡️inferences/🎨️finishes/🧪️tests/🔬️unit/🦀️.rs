@@ -6,10 +6,10 @@ use crate::{Assigned, CeilingPatch, Entry, ModelDiff, SpacePatch};
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const ROOMS: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🎨️finishes/🏡️rooms/📸️snapshot/🔣️.json");
-const ROOMS_TABLE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🎨️finishes/🏡️rooms/💡️inference/🎨️finishes/🔣️.json");
-const ONE_ROOM: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🎨️finishes/🏠️one-room/📸️snapshot/🔣️.json");
-const ONE_ROOM_TABLE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🎨️finishes/🏠️one-room/💡️inference/🎨️finishes/🔣️.json");
+const ROOMS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🎨️finishes/🏡️rooms/📸️snapshot/🔣️.json");
+const ROOMS_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🎨️finishes/🏡️rooms/💡️inference/🎨️finishes/🔣️.json");
+const ONE_ROOM: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🎨️finishes/🏠️one-room/📸️snapshot/🔣️.json");
+const ONE_ROOM_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🎨️finishes/🏠️one-room/💡️inference/🎨️finishes/🔣️.json");
 
 fn load(text: &str) -> ModelSnapshot {
     from_json_str(text, JsonMemberPolicy::Reject).expect("the fixture decodes")

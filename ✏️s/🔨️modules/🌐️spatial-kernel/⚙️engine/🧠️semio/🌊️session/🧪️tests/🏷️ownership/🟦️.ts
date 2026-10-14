@@ -12,7 +12,7 @@ export function sessionLaws() {
   const verbs = ajv.getSchema(`${schema.$id}#/$defs/SemioGeometryVerbsV1`)!;
   assert(verbs(JSON.parse(read("🔣️.json"))), JSON.stringify(verbs.errors));
   const closeReceipt = ajv.getSchema(`${schema.$id}#/$defs/SemioGeometryCloseReceiptV1`)!;
-  const retirement = JSON.parse(read("🧫️fixtures/🧹️retirement/🔣️.json"));
+  const retirement = JSON.parse(read("🧪️tests/🧫️fixtures/🧹️retirement/🔣️.json"));
   const closeGrant=ajv.getSchema(`${schema.$id}#/$defs/SemioGeometryCloseGrantV1`)!;
   for (const grant of retirement.grants) assert(closeGrant(grant),JSON.stringify(closeGrant.errors));
   for (const receipt of retirement.receipts) assert(closeReceipt(receipt),JSON.stringify(closeReceipt.errors));
@@ -28,7 +28,7 @@ export function sessionLaws() {
       assert.equal(admits(adequate) ? "pending" : "blocked",boundary.adequatePhase);
     }
   }
-  const fixture = JSON.parse(read("🧫️fixtures/🏷️ownership/🔣️.json"));
+  const fixture = JSON.parse(read("🧪️tests/🧫️fixtures/🏷️ownership/🔣️.json"));
   for (const group of fixture.groups) {
     const source = read(group.source);
     assert.deepEqual([...source.matchAll(/#\[test\]\s*fn (\w+)/g)].map(match => match[1]), group.laws);

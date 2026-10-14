@@ -2,7 +2,7 @@
 
 use super::*;
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🧲️scene-input-residency/🔣️.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/🧲️scene-input-residency/🔣️.json");
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(FIXTURE).expect("scene input residency fixture")

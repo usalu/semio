@@ -2,13 +2,13 @@
 use super::*;
 
 fn fixture() -> (serde_json::Value, serde_json::Value) {
-    let cases = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
-    let retirement = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/♻️retirement/🔣️.json")).unwrap();
+    let cases = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
+    let retirement = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/♻️retirement/🔣️.json")).unwrap();
     (cases, retirement)
 }
 
 fn close(cursor: &mut dyn ErasedSnapshotRetirement, bytes: usize) -> usize {
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📨️authority.json")).unwrap();let original:RetainedCloneGrant=serde_json::from_value(law["wholeOperationGrant"].clone()).unwrap();let mut recipient=store::NativeSnapshotBodyWallet::new(original);
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📨️authority.json")).unwrap();let original:RetainedCloneGrant=serde_json::from_value(law["wholeOperationGrant"].clone()).unwrap();let mut recipient=crate::io::control::NativeSnapshotBodyWallet::new(original);
     let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(RetainedCloneGrant{maximum_items:0,..recipient.remaining_grant()}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(serde_json::to_value([physical.requested_bytes,physical.released_bytes]).unwrap(),law["zeroItemPhysicalBytes"]);
     let(mut released,mut original_completed,mut physical_matches)=(0,false,true);
     for _ in 0..200_000 {

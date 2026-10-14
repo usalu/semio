@@ -4,7 +4,7 @@ import { BoxGeometry, type BufferGeometry, SphereGeometry, Vector3 } from "three
 import { disagreements, type FixtureCase, type OracleResult } from "../../../🧪️tests/🧰️oracle-support/🟦️.ts";
 
 type Fixture = { tolerance: number; cases: FixtureCase[] };
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(new URL("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🧊️brep-primitive/🔣️.json", import.meta.url), "utf8")) as Fixture;
 const catalogue = JSON.parse(readFileSync(new URL("../../../../../🗂️catalogue/🔣️brep-primitive.json", import.meta.url), "utf8")) as { kinds: { id: string }[] };
 const prefix = "generation3d.geometry.";
 

@@ -2,7 +2,7 @@ use super::operation_bytes::{OperationByteCloseStep, OwnedOperationBytes};
 
 #[test]
 fn owned_operation_byte_pages_preserve_8194_words_and_return_each_actual_backing_under_4096() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let source = &fixture["source"];
     let expected: Vec<u8> = source["prefixUtf8"].as_str().unwrap().bytes().chain(std::iter::repeat_n(source["paddingByte"].as_u64().unwrap() as u8, source["paddingCount"].as_u64().unwrap() as usize)).collect();
     let maximum = fixture["maximumBytes"].as_u64().unwrap() as usize;
@@ -71,7 +71,7 @@ fn owned_operation_byte_pages_preserve_8194_words_and_return_each_actual_backing
 fn owned_operation_byte_pages_borrowed_reader_keeps_the_same_8194_source_without_flattening() {
     use crate::codec::{ByteReader, ByteSpan};
     use super::operation_bytes::OperationByteOutput;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let expected: Vec<u8> = fixture["source"]["prefixUtf8"].as_str().unwrap().bytes().chain(std::iter::repeat_n(32, 8192)).collect();
     let mut owner = OwnedOperationBytes::try_new(8194, 65536).unwrap();
     let mut allow = |_| true;
@@ -112,7 +112,7 @@ fn owned_operation_byte_pages_borrowed_reader_keeps_the_same_8194_source_without
 fn owned_operation_byte_pages_canonical_comparison_retains_exact_source_and_first_difference_without_allocation(){
     use super::operation_bytes::{OperationByteComparison,OperationByteOutput};
     use crate::codec::ByteSpan;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let expected:Vec<u8>=fixture["source"]["prefixUtf8"].as_str().unwrap().bytes().chain(std::iter::repeat_n(32,8192)).collect();
     let mut source=OwnedOperationBytes::try_new(expected.len(),65536).unwrap();
     let mut allow=|_|true;
@@ -166,7 +166,7 @@ fn owned_operation_byte_pages_canonical_comparison_retains_exact_source_and_firs
 #[test]
 fn owned_operation_byte_pages_complete_operation_limit_counts_header_and_returns_refused_prefix(){
     use super::operation_bytes::{OperationByteLimitedOutput,OperationByteOutput};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let expected:Vec<u8>=fixture["source"]["prefixUtf8"].as_str().unwrap().bytes().chain(std::iter::repeat_n(32,8192)).collect();
     let close=|source:&mut OwnedOperationBytes|{for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap(){if source.close_one(1,4096).unwrap()==OperationByteCloseStep::Complete{break;}}assert!(source.terminal_is_empty());assert_eq!(source.allocated_bytes(),0);};
     for maximum in [expected.len(),expected.len()-1]{
@@ -211,7 +211,7 @@ fn owned_operation_byte_pages_complete_operation_limit_counts_header_and_returns
 #[test]
 fn owned_operation_byte_pages_fund_complete_backing_across_hops_before_actual_emission(){
     use super::operation_bytes::{OperationBytePreparation,OperationByteFundingStep,OperationByteOutput};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let expected:Vec<u8>=fixture["source"]["prefixUtf8"].as_str().unwrap().bytes().chain(std::iter::repeat_n(32,8192)).collect();
     let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;
     for canceled in [false,true]{
@@ -259,7 +259,7 @@ fn owned_operation_byte_pages_fund_complete_backing_across_hops_before_actual_em
 #[test]
 fn owned_operation_byte_pages_empty_prepaid_handback_keeps_exact_zero_payload_authority(){
     use super::operation_bytes::OperationBytePreparation;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut prepared=OperationBytePreparation::try_new(fixture["emptyOperationLength"].as_u64().unwrap()as usize,65536).unwrap();
     assert!(prepared.is_funded());assert_eq!(prepared.accepted_prefix().unwrap().len(),0);
     let mut source=prepared.take_ready().unwrap();assert!(prepared.terminal_is_empty());assert_eq!(source.allocated_bytes(),0);
@@ -273,7 +273,7 @@ fn owned_operation_byte_pages_empty_prepaid_handback_keeps_exact_zero_payload_au
 #[test]
 fn owned_operation_byte_pages_measure_complete_operation_without_retaining_payload_or_resetting_control(){
     use super::operation_bytes::{OperationByteMeasurement,OperationByteOutput};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let expected:Vec<u8>=fixture["source"]["prefixUtf8"].as_str().unwrap().bytes().chain(std::iter::repeat_n(32,8192)).collect();
     for maximum in [expected.len(),expected.len()-1]{
         let mut measured=OperationByteMeasurement::new(maximum as u64);
@@ -303,7 +303,7 @@ fn owned_operation_byte_pages_measure_complete_operation_without_retaining_paylo
 #[test]
 fn operation_byte_comparison_preserves_enclosing_workload_on_acceptance_and_refusal(){
     use super::operation_bytes::{OperationByteComparison,OperationByteOutput};
-    let f:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧭️caller-stage.json")).unwrap();
+    let f:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🧭️caller-stage.json")).unwrap();
     let source:Vec<u8>=serde_json::from_value(f["source"].clone()).unwrap();let foreign:Vec<u8>=serde_json::from_value(f["foreign"].clone()).unwrap();
     for candidate in [&source,&foreign]{
         let observed=std::cell::Cell::new((0,0));
@@ -323,7 +323,7 @@ fn child_paged_operation_carrier_borrows_exact8194_and_returns_actual_pages_with
     use super::operation_bytes::{OperationSourceCollection,OperationByteReturnStep,OperationByteOutput};
     use crate::value::list::PagedList;
     use crate::value::retirement::allocation_return::{ParentAllocationReturn,AllocationReturnStep};
-    let f:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🏠️child-carrier.json")).unwrap();
+    let f:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🏠️child-carrier.json")).unwrap();
     let max=f["maximumBytes"].as_u64().unwrap()as usize;
     let mut operation=OwnedOperationBytes::try_new(f["maximumPayloadBytes"].as_u64().unwrap()as usize,f["maximumAllocationBytes"].as_u64().unwrap()as usize).unwrap();
     let mut allow=|_|true;let mut encoding=crate::value::NativeEncodeControl::new(f["maximumAllocationBytes"].as_u64().unwrap()as usize,&mut allow);

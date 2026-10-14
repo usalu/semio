@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🪧️place-elements/🚧️kind-mismatch",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪧️place-elements/🚧️kind-mismatch/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪧️place-elements/🚧️kind-mismatch/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪧️place-elements/🚧️kind-mismatch/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪧️place-elements/🚧️kind-mismatch/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪧️place-elements/🚧️kind-mismatch/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪧️place-elements/🚧️kind-mismatch/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪧️place-elements/🚧️kind-mismatch/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪧️place-elements/🚧️kind-mismatch/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪧️place-elements/🚧️kind-mismatch/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪧️place-elements/🚧️kind-mismatch/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

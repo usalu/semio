@@ -88,7 +88,7 @@ fn absorb_modify_then_remove_drops_the_modification() {
 
 #[test]
 fn exact_fixture_empty_inverse_absorb_and_source_removal_laws() {
-    let bytes = include_bytes!("../../../../🧫️fixtures/🎬️.mp4").to_vec();
+    let bytes = include_bytes!("../../../../🧪️tests/🧫️fixtures/🎬️.mp4").to_vec();
     let base = crate::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
 
     let empty = Mp4Diff::default();

@@ -1,0 +1,11 @@
+{
+  "parent": 1,
+  "label": "日本🧬️\u0000",
+  "labelUtf8Bytes": 14,
+  "cases": [
+    {"id": "valid", "owner": 1, "maximumBytes": 4096, "cancel": false, "expectedKind": null},
+    {"id": "missing-owner", "owner": 2, "maximumBytes": 4096, "cancel": false, "expectedKind": "invalidValue"},
+    {"id": "pre-cancel", "owner": 1, "maximumBytes": 4096, "cancel": true, "expectedKind": "canceled"},
+    {"id": "no-ownership", "owner": 1, "maximumBytes": 0, "cancel": false, "expectedKind": "ownershipLimit"}
+  ]
+}

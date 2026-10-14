@@ -5,7 +5,7 @@ use super::*;
 fn shared_artifact_addressing_matches_neutral_identities_and_rejects_foreign_fields() {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _,DialectCoordinateText as _};
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️artifact-addressing/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️artifact-addressing/🔣️.json")).unwrap();
     for row in fixture["valid"].as_array().unwrap() {
         let value = DslValue::from(row["child"].clone());
         let mut child = ArtifactChild::<()>::from_value(value).unwrap();
@@ -33,7 +33,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 /// 🔗️ Link identity admits exactly its target, pin variant and role across native JSON and independent vectors.
 #[test]
 fn shared_artifact_addressing_links_match_neutral_pin_variants_and_reject_foreign_fields() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️artifact-addressing/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️artifact-addressing/🔣️.json")).unwrap();
     for row in fixture["validLinks"].as_array().unwrap() {
         let link = ArtifactLink::from_value(DslValue::from(row.clone())).unwrap();
         let encoded = semio_framework_pack_json::to_json_string(&link);
@@ -50,7 +50,7 @@ fn shared_artifact_addressing_links_match_neutral_pin_variants_and_reject_foreig
 /// computes it.
 #[test]
 fn content_id_is_the_specified_sha256_prefix() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️artifact-addressing/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️artifact-addressing/🔣️.json")).unwrap();
     for row in fixture["contentIds"].as_array().unwrap() {
         let (prefix, text) = (row["prefix"].as_str().unwrap(), row["text"].as_str().unwrap());
         let id = content_id(prefix, text.as_bytes());

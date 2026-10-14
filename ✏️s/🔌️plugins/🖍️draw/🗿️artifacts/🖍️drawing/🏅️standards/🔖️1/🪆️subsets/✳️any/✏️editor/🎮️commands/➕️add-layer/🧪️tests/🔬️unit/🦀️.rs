@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn repeated_layer_creation_fixtures() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let mut document = DrawingSnapshot::default();
     for kind in fixture["kinds"].as_array().unwrap() {
         for _ in 0..fixture["repetitions"].as_u64().unwrap() {
@@ -16,7 +16,7 @@ fn repeated_layer_creation_fixtures() {
 
 #[test]
 fn created_layers_have_the_shared_visible_appearance() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎨️appearance/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎨️appearance/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let layer=admitted_layer(&DrawingSnapshot::default(),case["kind"].as_str().unwrap()).unwrap();
         let expected:crate::DrawingAttributes=serde_json::from_value(case["attributes"].clone()).unwrap();

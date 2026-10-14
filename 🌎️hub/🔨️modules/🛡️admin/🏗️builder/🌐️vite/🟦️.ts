@@ -1,3 +1,6 @@
+import { viteCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
+import { readBuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { semioViteBuild } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🎚️mode/🟦️.ts";
 // #region 🔌️Adapters
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +13,7 @@ const repoRoot = resolve(dir, "../../../../..");
 
 export default defineOwnedBuildConfig({
   root: dir,
+  cacheDir: viteCacheDirectory(resolve(repoRoot, ".🧬semio/🦑️repo/⚡️cache/vite/hub-admin"), process.env, import.meta.url),
   base: "/admin/",
   define: { "import.meta.vitest": "undefined" },
   plugins: [semioEmojiIndexHtmlVitePlugin(dir), ...semioFaviconVitePlugin(repoRoot), ...staticDeployMarkerVitePlugins(undefined), uiReactBuildPlugin(), ...uiTailwindBuildPlugins()],
@@ -26,7 +30,8 @@ export default defineOwnedBuildConfig({
     fs: { allow: [repoRoot] },
   },
   build: {
-    outDir: "📤️dist",
+    ...semioViteBuild(),
+    outDir: resolve(dir, "📤️dist", readBuildMode(process.env.SEMIO_BUILD_MODE)),
     emptyOutDir: true,
   },
 });

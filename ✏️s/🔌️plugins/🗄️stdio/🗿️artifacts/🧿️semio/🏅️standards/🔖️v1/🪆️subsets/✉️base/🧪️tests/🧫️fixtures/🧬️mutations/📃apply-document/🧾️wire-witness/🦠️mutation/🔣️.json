@@ -1,0 +1,9 @@
+{
+  "mutation": "applyDocument",
+  "payload": {
+    "mutation": {
+      "mutation": "removeImage",
+      "id": "img1"
+    }
+  }
+}

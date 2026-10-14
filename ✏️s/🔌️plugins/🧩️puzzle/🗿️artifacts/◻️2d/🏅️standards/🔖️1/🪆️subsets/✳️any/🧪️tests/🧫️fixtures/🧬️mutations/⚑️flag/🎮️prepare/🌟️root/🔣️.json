@@ -1,0 +1,306 @@
+{
+  "format": 1,
+  "control": {
+    "maximumItems": 1,
+    "maximumBytes": 17,
+    "largePrefix": "幅🙂",
+    "largeRepeats": 5000
+  },
+  "cases": [
+    {
+      "id": "node-root/set",
+      "kind": "node-root",
+      "rows": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": true
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": null,
+      "inverse": [
+        {
+          "mutation": "changeNodeRoot",
+          "id": "a",
+          "newRoot": null
+        }
+      ],
+      "after": [
+        {
+          "id": "a",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "node-root/clear",
+      "kind": "node-root",
+      "rows": [
+        {
+          "id": "a",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": null
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": true,
+      "inverse": [
+        {
+          "mutation": "changeNodeRoot",
+          "id": "a",
+          "newRoot": true
+        }
+      ],
+      "after": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ]
+    },
+    {
+      "id": "node-root/false-is-authored",
+      "kind": "node-root",
+      "rows": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": false
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": null,
+      "inverse": [
+        {
+          "mutation": "changeNodeRoot",
+          "id": "a",
+          "newRoot": null
+        }
+      ],
+      "after": [
+        {
+          "id": "a",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "node-root/same-null",
+      "kind": "node-root",
+      "rows": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": null
+      },
+      "status": "no-op",
+      "index": 0,
+      "previous": null,
+      "inverse": [
+        {
+          "mutation": "changeNodeRoot",
+          "id": "a",
+          "newRoot": null
+        }
+      ],
+      "after": null
+    },
+    {
+      "id": "node-root/same-false",
+      "kind": "node-root",
+      "rows": [
+        {
+          "id": "a",
+          "value": false
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": false
+      },
+      "status": "no-op",
+      "index": 0,
+      "previous": false,
+      "inverse": [
+        {
+          "mutation": "changeNodeRoot",
+          "id": "a",
+          "newRoot": false
+        }
+      ],
+      "after": null
+    },
+    {
+      "id": "node-root/missing",
+      "kind": "node-root",
+      "rows": [
+        {
+          "id": "a",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "missing",
+        "value": false
+      },
+      "status": "target-missing",
+      "index": null,
+      "previous": null,
+      "inverse": [],
+      "after": null
+    },
+    {
+      "id": "node-root/first-duplicate",
+      "kind": "node-root",
+      "rows": [
+        {
+          "id": "a",
+          "value": false
+        },
+        {
+          "id": "a",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": true
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": false,
+      "inverse": [
+        {
+          "mutation": "changeNodeRoot",
+          "id": "a",
+          "newRoot": false
+        }
+      ],
+      "after": [
+        {
+          "id": "a",
+          "value": true
+        },
+        {
+          "id": "a",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "node-root/empty",
+      "kind": "node-root",
+      "rows": [
+        {
+          "id": "",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "",
+        "value": false
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": true,
+      "inverse": [
+        {
+          "mutation": "changeNodeRoot",
+          "id": "",
+          "newRoot": true
+        }
+      ],
+      "after": [
+        {
+          "id": "",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "node-root/nul-unicode",
+      "kind": "node-root",
+      "rows": [
+        {
+          "id": "Größe\u0000幅",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "Größe\u0000幅",
+        "value": true
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": null,
+      "inverse": [
+        {
+          "mutation": "changeNodeRoot",
+          "id": "Größe\u0000幅",
+          "newRoot": null
+        }
+      ],
+      "after": [
+        {
+          "id": "Größe\u0000幅",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "node-root/large-prefix",
+      "kind": "node-root",
+      "rows": [
+        {
+          "id": "$large:a",
+          "value": true
+        },
+        {
+          "id": "$large:b",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "$large:b",
+        "value": false
+      },
+      "status": "changed",
+      "index": 1,
+      "previous": null,
+      "inverse": [
+        {
+          "mutation": "changeNodeRoot",
+          "id": "$large:b",
+          "newRoot": null
+        }
+      ],
+      "after": [
+        {
+          "id": "$large:a",
+          "value": true
+        },
+        {
+          "id": "$large:b",
+          "value": false
+        }
+      ]
+    }
+  ]
+}

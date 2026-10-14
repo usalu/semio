@@ -488,6 +488,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-io-base64",
+ "semio-framework-job",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-replication",
@@ -555,6 +556,8 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-hash",
+ "semio-framework-io-schema",
+ "semio-framework-io-sqlite-snapshot",
  "semio-framework-pack-error",
  "semio-framework-pack-json",
  "semio-framework-replication",
@@ -594,6 +597,7 @@ dependencies = [
  "semio-framework-io-base64",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin-mounted-owner",
  "semio-framework-replication",
@@ -721,6 +725,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-pack",
+ "semio-framework-replication",
  "semio-framework-ui",
  "semio-framework-ui-locale",
  "semio-framework-value",
@@ -809,6 +814,7 @@ name = "semio-framework-value"
 version = "0.1.0"
 dependencies = [
  "semio-framework-io-base64",
+ "semio-framework-schema-registry",
  "semio-framework-value-derive",
  "serde",
  "serde_json",
@@ -860,6 +866,7 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",

@@ -1,0 +1,23 @@
+{
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": null,
+  "durableArtifacts": null,
+  "calibration": {
+    "cameras": {
+      "rows": []
+    },
+    "rig": {
+      "rows": [
+        {
+          "row": "remove",
+          "key": "cam-a"
+        }
+      ]
+    }
+  },
+  "params": null,
+  "gcps": null,
+  "results": null
+}

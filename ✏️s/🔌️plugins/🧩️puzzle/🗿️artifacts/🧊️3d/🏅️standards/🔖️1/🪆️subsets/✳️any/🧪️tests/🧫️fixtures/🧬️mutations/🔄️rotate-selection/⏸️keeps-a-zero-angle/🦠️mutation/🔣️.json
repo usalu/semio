@@ -1,0 +1,12 @@
+{
+  "angle": 0.0,
+  "axis": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "mutation": "rotateSelection",
+  "targets": [
+    "object-a"
+  ]
+}

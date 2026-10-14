@@ -12,7 +12,7 @@ import { abstractionOwnershipRustCommands, abstractionOwnershipSchemaFields } fr
 /** 🧪️ Compares language-independent ownership vectors with Ajv and real schema representations. */
 export function abstractionOwnershipChecks(root: string, operations: PolicySourceOperations = POLICY_SOURCE_OPERATIONS): number {
   const schema = abstractionOwnershipSchema(root, operations),
-    fixturePath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧫️fixtures/🧪️abstraction-ownership/🔣️.json",
+    fixturePath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🧫️fixtures/🧪️abstraction-ownership/🔣️.json",
     fixtureSource = policySourceText(root, fixturePath, operations);
   if (fixtureSource.state !== "file") throw new Error(`Abstraction ownership fixture ${fixturePath} is ${fixtureSource.state}.`);
   const fixture = JSON.parse(fixtureSource.text) as {

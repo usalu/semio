@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "exact",
+      "pattern": "Cargo.toml",
+      "path": "Cargo.toml",
+      "expected": true
+    },
+    {
+      "id": "exact-absent",
+      "pattern": "Cargo.toml",
+      "path": "a/Cargo.toml",
+      "expected": false
+    },
+    {
+      "id": "globstar-zero",
+      "pattern": "**/Cargo.toml",
+      "path": "Cargo.toml",
+      "expected": true
+    },
+    {
+      "id": "globstar-one",
+      "pattern": "**/Cargo.toml",
+      "path": "a/Cargo.toml",
+      "expected": true
+    },
+    {
+      "id": "globstar-many",
+      "pattern": "**/Cargo.toml",
+      "path": "a/b/Cargo.toml",
+      "expected": true
+    },
+    {
+      "id": "globstar-prefix-no-separator",
+      "pattern": "**/Cargo.toml",
+      "path": "aCargo.toml",
+      "expected": false
+    },
+    {
+      "id": "star-one",
+      "pattern": "packages/*/Cargo.toml",
+      "path": "packages/owned/Cargo.toml",
+      "expected": true
+    },
+    {
+      "id": "star-refuses-separator",
+      "pattern": "packages/*/Cargo.toml",
+      "path": "packages/owned/child/Cargo.toml",
+      "expected": false
+    },
+    {
+      "id": "exclude-descendants",
+      "pattern": "**/guest/**",
+      "path": "a/guest/b/c",
+      "expected": true
+    },
+    {
+      "id": "question",
+      "pattern": "a?/Cargo.toml",
+      "path": "ab/Cargo.toml",
+      "expected": true
+    },
+    {
+      "id": "question-many",
+      "pattern": "a?/Cargo.toml",
+      "path": "abc/Cargo.toml",
+      "expected": false
+    },
+    {
+      "id": "question-unicode",
+      "pattern": "?/Cargo.toml",
+      "path": "🙂/Cargo.toml",
+      "expected": true
+    },
+    {
+      "id": "class",
+      "pattern": "[a-c]/Cargo.toml",
+      "path": "b/Cargo.toml",
+      "expected": true
+    },
+    {
+      "id": "class-outside",
+      "pattern": "[a-c]/Cargo.toml",
+      "path": "d/Cargo.toml",
+      "expected": false
+    },
+    {
+      "id": "class-negated",
+      "pattern": "[!a-c]/Cargo.toml",
+      "path": "d/Cargo.toml",
+      "expected": true
+    },
+    {
+      "id": "braces",
+      "pattern": "{a,b}/Cargo.toml",
+      "path": "b/Cargo.toml",
+      "expected": true
+    },
+    {
+      "id": "nested-braces",
+      "pattern": "{a,{b,c}}/Cargo.toml",
+      "path": "c/Cargo.toml",
+      "expected": true
+    },
+    {
+      "id": "unicode-literal",
+      "pattern": "📦️packages/🦀️rust/Cargo.toml",
+      "path": "📦️packages/🦀️rust/Cargo.toml",
+      "expected": true
+    },
+    {
+      "id": "trailing-globstar",
+      "pattern": "a/**",
+      "path": "a/b/c",
+      "expected": true
+    },
+    {"id":"excluded-root-descendant","pattern":"**/guest/**","path":"guest/a","expected":true},
+    {"id":"excluded-directory-only","pattern":"**/guest/**","path":"a/guest","expected":false},
+    {"id":"excluded-directory-slash","pattern":"**/guest/**","path":"a/guest/","expected":true},
+    {"id":"excluded-similar-segment","pattern":"**/guest/**","path":"a/guestly/b","expected":false},
+    {"id":"excluded-parent-match","pattern":"**/guest","path":"a/guest","expected":true},
+    {"id":"excluded-parent-descendant","pattern":"**/guest","path":"a/guest/b","expected":false},
+    {"id":"excluded-unicode-segment","pattern":"**/🏅️standards/**","path":"a/🏅️standards/b","expected":true},
+    {"id":"literal-same-length-refused","pattern":"abc","path":"abd","expected":false},
+    {
+      "id": "embedded-stars",
+      "pattern": "a**b",
+      "path": "a/c/b",
+      "expected": false
+    }
+  ]
+}

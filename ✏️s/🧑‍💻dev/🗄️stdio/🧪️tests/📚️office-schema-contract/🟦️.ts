@@ -1,3 +1,4 @@
+import type { ScriptInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -34,7 +35,7 @@ const valid = (validate: ValidateFunction, value: Json, label: string): void => 
 const invalid = (validate: ValidateFunction, value: Json, label: string): void => assert(!validate(value), `${label}: stale stub unexpectedly passed`);
 
 /** 🧪️ Validates current OOXML snapshot/diff fixtures through Ajv and their complete TypeScript guards. */
-export function testStdioOfficeSchemaContracts(repoRoot = getWorkspaceRoot()): void {
+export async function testStdioOfficeSchemaContracts(invocation: ScriptInvocation, repoRoot = getWorkspaceRoot()): Promise<void> {
   const artifacts = join(repoRoot, '✏️s/🔌️plugins/🗄️stdio/🗿️artifacts');
   const addressRoot = join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧭️xml-address');
   const addresses = json(join(addressRoot, '🧫️fixtures/🔣️.json')) as { valid: Json[]; invalid: Json[] };
@@ -81,8 +82,8 @@ export function testStdioOfficeSchemaContracts(repoRoot = getWorkspaceRoot()): v
     invalid(validateXmlDiff, diff, 'XML null triple');
     assert.throws(() => parseXmlDiff(diff));
   }
-  for (const row of cases) runStdioTypeScriptCompiler(join(artifacts, row.artifact, '🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts'), ['--noEmit', '--allowImportingTsExtensions']);
-  runStdioTypeScriptCompiler(join(repoRoot, '✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🧬️public-facets/🟦️.ts'), ['--noEmit', '--allowImportingTsExtensions']);
+  for (const row of cases) await runStdioTypeScriptCompiler(join(artifacts, row.artifact, '🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts'), ['--noEmit', '--allowImportingTsExtensions'], invocation);
+  await runStdioTypeScriptCompiler(join(repoRoot, '✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🧬️public-facets/🟦️.ts'), ['--noEmit', '--allowImportingTsExtensions'], invocation);
   for (const row of cases) {
     const base = join(artifacts, row.artifact, '🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base');
     const snapshotSchema = json(join(base, '🧬️schema/📸️snapshot/🔣️.json'));

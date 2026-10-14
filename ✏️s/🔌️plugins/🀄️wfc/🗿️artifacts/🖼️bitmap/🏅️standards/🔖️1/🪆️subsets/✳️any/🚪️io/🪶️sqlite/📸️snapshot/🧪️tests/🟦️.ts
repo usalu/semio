@@ -4,7 +4,7 @@ import {readFileSync} from "node:fs";
 import {dirname,join} from "node:path";
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import type {BitmapSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {WFC_BITMAP_SQLITE_SCHEMA,bitmapSnapshotToSqliteDatabase,bitmapSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
@@ -33,7 +33,7 @@ test("WFC fifteen exact owning SQLite commands are declared by their owner Nx ta
 
 test("WFC fifteen owning Source build check test commands are declared by their owner Nx targets",()=>{expectOwningTargets(fixture.owningSourceTargets);});
 
-import byteFields from "../../../📝️text/📸️snapshot/🧫️fixtures/byte-fields/🔣️.json";
+import byteFields from "../../../📝️text/📸️snapshot/🧪️tests/🧫️fixtures/byte-fields/🔣️.json";
 test("bitmap intrinsic bytes and physical base64 agree with independent Buffer",()=>{
  for(const vector of byteFields.vectors){const bytes=Uint8Array.from(vector.bytes);expect(Buffer.from(bytes).toString("base64")).toBe(vector.base64);expect(encodeBase64(bytes)).toBe(vector.base64);expect(decodeBase64(vector.base64)).toEqual(bytes);expect(bitmapJsonBind<{pixels:Uint8Array}>({pixels:vector.base64}).pixels).toEqual(bytes);expect(bitmapJsonValue({pixels:bytes})).toEqual({pixels:vector.base64});}
  for(const text of byteFields.refused)expect(()=>decodeBase64(text)).toThrow();

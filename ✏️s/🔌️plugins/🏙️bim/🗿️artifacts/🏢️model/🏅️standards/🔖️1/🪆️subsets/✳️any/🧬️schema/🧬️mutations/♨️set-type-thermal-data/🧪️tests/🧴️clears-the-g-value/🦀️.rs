@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "♨️set-type-thermal-data/🧴️clears-the-g-value",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧴️clears-the-g-value/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧴️clears-the-g-value/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧴️clears-the-g-value/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧴️clears-the-g-value/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧴️clears-the-g-value/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧴️clears-the-g-value/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧴️clears-the-g-value/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧴️clears-the-g-value/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧴️clears-the-g-value/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧴️clears-the-g-value/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

@@ -1,8 +1,8 @@
 #[derive(Clone,Copy,PartialEq,Eq)]
-enum PendingPublicationOutcomePhase{Uncaptured,Captured,Released}
+pub(crate) enum PendingPublicationOutcomePhase{Uncaptured,Captured,Released}
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum PendingPublicationDisposition{Accepted,Rejected,Lenient}
-pub(crate) struct PendingPublicationOutcome{phase:PendingPublicationOutcomePhase,disposition:PendingPublicationDisposition,report:Option<ArtifactBoundedToolFault>}
+pub(crate) struct PendingPublicationOutcome{pub(crate) phase:PendingPublicationOutcomePhase,disposition:PendingPublicationDisposition,report:Option<ArtifactBoundedToolFault>}
 impl PendingPublicationOutcome{
  pub(crate) const fn new()->Self{Self{phase:PendingPublicationOutcomePhase::Uncaptured,disposition:PendingPublicationDisposition::Accepted,report:None}}
  fn pending(&self)->bool{self.phase!=PendingPublicationOutcomePhase::Uncaptured}
@@ -87,13 +87,13 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
 }
 /// 🧱️ A blank mounted operation for laws that read one retained field of it.
 #[cfg(test)]
-fn test_blank_mounted_operation<A:ArtifactApp>()->MountedTypedCommandFullOperation<A>{
+pub(crate) fn test_blank_mounted_operation<A:ArtifactApp>()->MountedTypedCommandFullOperation<A>{
  MountedTypedCommandFullOperation::<A>{verb:String::new(),meta:ActionMeta{actor:Default::default(),instance_id:19,view_state:None},operation:semio_framework_job::Operation::new(semio_framework_job::OperationId(23),semio_framework_job::RevisionId(0),semio_framework_job::Generation(1),0),canonical_revision:[0;32],artifact_generation:0,config_generation:0,draft_generation:0,presence_generation:0,transient_generation:0,window_config_authority:None,window_transient_authority:None,publication_lanes:&[],session:None,session_rejected:None,reserved_producer:None,completion:None,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:None,identity:None,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,terminal_seen:false,worker_resume_pending:false,publication:None,pending_artifact_publication:None,pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,pending_child_publication:None,owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,captured_child_content:None,captured_child_content_generation:0,result_page:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_ownership_progress:None,original_retirement_receipt:None,actor_capture:None,publication_attempt:0,ui_pending:false,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,command_logged:false,interaction_revalidated:false,retained_close_fault:None,retained_close_fault_retirement:None,retained_close_fault_refusal:None,terminal_fault:None,stage:MountedTypedCommandFullOperationStage::Publishing}
 }
 /// 🚨️ An operation retains a structural refusal exactly when its close fault or its refused owner can never retire: the language-agnostic corpus decides which retained causes are structural.
 #[cfg(test)]
-fn test_retained_structural_refusal<A:ArtifactApp>(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🚨️structural-refusal/🧫️fixtures/🔣️.json")).unwrap();
+pub(crate) fn test_retained_structural_refusal<A:ArtifactApp>(){
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../🚨️structural-refusal/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let structural=corpus["structuralRefusalKinds"].as_array().unwrap().iter().map(|kind|kind.as_str().unwrap()).collect::<Vec<_>>();
  assert_eq!(structural,["UnsupportedOwner"]);
  for row in corpus["cases"].as_array().unwrap(){
@@ -109,7 +109,7 @@ fn test_retained_structural_refusal<A:ArtifactApp>(){
  }
 }
 #[cfg(test)]
-fn test_original_mounted_child_frontier<A:ArtifactApp>(original:impl FnOnce()->Vec<A::Mutation>,grant:RetainedCloneGrant){
+pub(crate) fn test_original_mounted_child_frontier<A:ArtifactApp>(original:impl FnOnce()->Vec<A::Mutation>,grant:RetainedCloneGrant){
  let(mut mounted,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{
   let mut child=PendingChildGroupPublication::<A>::new(original(),vec![ChildEmit::open("original","child",0)],Some(protocol::TransactionRef{id:"original".repeat(1171),tool:"original-tool".into()})).unwrap();child.begin_dispatch().unwrap();child.commit(ChildPublicationResultV1{invocation_id:"original-invocation".repeat(457),committed_members:1,child_content_generation:1}).unwrap();
   let mut mounted=MountedTypedCommandFullOperation::<A>{verb:String::new(),meta:ActionMeta{actor:Default::default(),instance_id:19,view_state:None},operation:semio_framework_job::Operation::new(semio_framework_job::OperationId(23),semio_framework_job::RevisionId(0),semio_framework_job::Generation(1),0),canonical_revision:[0;32],artifact_generation:0,config_generation:0,draft_generation:0,presence_generation:0,transient_generation:0,window_config_authority:None,window_transient_authority:None,publication_lanes:&[],session:None,session_rejected:None,reserved_producer:None,completion:None,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:None,identity:None,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,terminal_seen:true,worker_resume_pending:false,publication:None,pending_artifact_publication:None,pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,pending_child_publication:Some(child),owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,captured_child_content:None,captured_child_content_generation:0,result_page:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_ownership_progress:None,original_retirement_receipt:None,actor_capture:None,publication_attempt:0,ui_pending:false,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,command_logged:false,interaction_revalidated:false,retained_close_fault:None,retained_close_fault_retirement:None,retained_close_fault_refusal:None,terminal_fault:None,stage:MountedTypedCommandFullOperationStage::Publishing};

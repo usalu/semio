@@ -8,7 +8,7 @@ import { writePdfOperations, readPdfOperations, pdfContentNumberColumns } from "
 import { exportSqliteDatabase, importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 test("PDF content operators retain every named scalar, intrinsic image and ordered relationship", async () => {
-  const fixture = JSON.parse(await Bun.file(new URL("../../🖋️content/🧫️fixtures/🔣️.json", import.meta.url)).text(), (key, value) => key === "bits" ? BigInt(value) : value);
+  const fixture = JSON.parse(await Bun.file(new URL("../../🖋️content/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).text(), (key, value) => key === "bits" ? BigInt(value) : value);
   const input: PdfOp[] = fixture.operations;
   const out = await PdfProjection.create(PDF17_SQLITE_SCHEMA, {}, pdfContentNumberColumns); const root = await writePdfOperations(out, input);
   const bytes = await exportSqliteDatabase(await out.finish()); const sql = Database.deserialize(bytes);
@@ -29,7 +29,7 @@ test("PDF content rejects foreign IEEE operands and bounds intrinsic ownership c
 }, { timeout:30_000 });
 
 test("PDF logical code units retain u32 precision in independent integer rows", async()=>{
-  const fixture=JSON.parse(await Bun.file(new URL("../../../../🧫️fixtures/🔢️logical-character-codes/🔣️.json",import.meta.url)).text());
+  const fixture=JSON.parse(await Bun.file(new URL("../../../../🧪️tests/🧫️fixtures/🔢️logical-character-codes/🔣️.json",import.meta.url)).text());
   for(const sample of fixture.cases){
     const input:PdfOp[]=[{op:"showText",text:{kind:"codes",codes:sample.codes}},{op:"showTextArray",items:[{kind:"codes",codes:sample.codes}]}];
     const out=await PdfProjection.create(PDF17_SQLITE_SCHEMA,{},pdfContentNumberColumns);const root=await writePdfOperations(out,input);

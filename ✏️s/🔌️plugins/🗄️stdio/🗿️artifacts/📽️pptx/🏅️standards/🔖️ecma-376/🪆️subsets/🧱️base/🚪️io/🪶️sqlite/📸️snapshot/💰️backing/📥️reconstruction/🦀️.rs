@@ -1,4 +1,5 @@
 //! 📥️ All three canonical PPTX owners remain guarded through complete relational reconstruction.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_ecma_376::subsets::base::io::sqlite::snapshot::{Documents, Parts, PptxSnapshot, PptxXmlPart, OPC, XML};
 use semio_framework_os_kernel::{
     sqlite_snapshot::{
@@ -6,7 +7,7 @@ use semio_framework_os_kernel::{
         transfer::{heap_sort, reserve},
         validate_sqlite_database_schema_controlled, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase, ValueError, ValueRefusalKind,
     },
-    os_store::serialization::ArtifactSqliteSnapshot,
+    os_store::serialization::ArtifactSqliteSnapshotHost,
 };
 use semio_framework_value::DecodedValue;
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::reconstruct_xml_documents;

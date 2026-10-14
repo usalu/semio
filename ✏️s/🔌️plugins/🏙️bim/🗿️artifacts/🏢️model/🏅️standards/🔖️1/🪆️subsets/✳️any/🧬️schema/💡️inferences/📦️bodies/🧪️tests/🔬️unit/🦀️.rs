@@ -11,7 +11,7 @@ fn bodies(snapshot: &ModelSnapshot, storey: &str, levels: &BTreeMap<String, Stor
 use crate::{Slope, TopConstraint};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const HOUSE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🗺️plan-linework/🏡️house/📸️snapshot/🔣️.json");
+const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🗺️plan-linework/🏡️house/📸️snapshot/🔣️.json");
 
 fn house() -> ModelSnapshot {
     from_json_str(HOUSE, JsonMemberPolicy::Reject).expect("house decodes")

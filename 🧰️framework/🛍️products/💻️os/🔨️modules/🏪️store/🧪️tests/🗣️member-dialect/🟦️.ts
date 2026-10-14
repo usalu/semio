@@ -11,7 +11,7 @@ import { testInitialChildIdentityFixture } from "../🪪️initial-child-identit
 export function testMemberDialectFixture(): void {
   testInitialChildIdentityFixture();
   const read = (path: string) => readFileSync(new URL(path, testSourceUrl.href), "utf8");
-  const fixture = JSON.parse(read("./🧫️fixtures/🔣️.json"));
+  const fixture = JSON.parse(read("./🧪️tests/🧫️fixtures/🔣️.json"));
   const contracts = new Ajv({ strict: true, allErrors: true });
   const ajv = new Ajv2019({ strict: true, allErrors: true });
   const admission = JSON.parse(read("./🧬️schema/🔣️.json"));

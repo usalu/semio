@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import schema from "../🧬️schema/🔣️.json";
-import corpus from "../🧫️fixtures/🔣️.json";
-import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/🟦️.ts";
+import corpus from "./🧫️fixtures/🔣️.json";
+import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import * as owned from "../../🟦️.ts";
 
 test("actual owned command failures retain canonical terminal outcomes against independent Node close", async () => {

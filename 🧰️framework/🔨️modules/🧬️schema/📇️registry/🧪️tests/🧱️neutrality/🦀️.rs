@@ -5,7 +5,7 @@ use serde_json::{json, Value};
 use std::sync::{mpsc, Arc, Barrier};
 use std::time::Duration;
 
-const CORPUS: &str = include_str!("../../../🧫️fixtures/🧱️neutrality/🔣️.json");
+const CORPUS: &str = include_str!("../../../🧪️tests/🧫️fixtures/🧱️neutrality/🔣️.json");
 
 fn text(value: &Value) -> &'static str {
     Box::leak(value.as_str().expect("authored string").to_string().into_boxed_str())

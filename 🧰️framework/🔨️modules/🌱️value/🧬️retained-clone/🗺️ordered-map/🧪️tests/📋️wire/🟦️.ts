@@ -1,6 +1,6 @@
 import {expect,test} from "bun:test";
 import {readFileSync} from "node:fs";
-import fixture from "../../🧫️fixtures/📋️wire/🔣️.json" with {type:"json"};
+import fixture from "../🧫️fixtures/📋️wire/🔣️.json" with {type:"json"};
 
 test("cold context dictionaries preserve independent JSON map semantics and original paged authority",()=>{
  for(const row of fixture.cases){const oracle=Object.fromEntries(row.entries);expect(oracle).toEqual(row.expected);const sorted=Object.entries(oracle).sort(([left],[right])=>left<right?-1:left>right?1:0);expect(Object.fromEntries(sorted)).toEqual(JSON.parse(JSON.stringify(row.expected)));}

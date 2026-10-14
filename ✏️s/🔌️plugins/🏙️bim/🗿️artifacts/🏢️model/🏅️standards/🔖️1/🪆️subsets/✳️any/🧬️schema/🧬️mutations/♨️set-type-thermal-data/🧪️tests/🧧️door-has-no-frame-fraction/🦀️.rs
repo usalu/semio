@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "♨️set-type-thermal-data/🧧️door-has-no-frame-fraction",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧧️door-has-no-frame-fraction/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧧️door-has-no-frame-fraction/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧧️door-has-no-frame-fraction/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧧️door-has-no-frame-fraction/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧧️door-has-no-frame-fraction/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧧️door-has-no-frame-fraction/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧧️door-has-no-frame-fraction/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧧️door-has-no-frame-fraction/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧧️door-has-no-frame-fraction/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧧️door-has-no-frame-fraction/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

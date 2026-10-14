@@ -3,10 +3,10 @@ import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { parseStrokeCap, parseStrokeJoin } from "../../🟦️.ts";
 import {decodeDashText} from "../../../../🚪️io/📝️text/🖊️dash/🟦️.ts";
-import enumCases from "../../🧫️fixtures/🎚️enums/🔣️.json";
+import enumCases from "../../../../🧪️tests/🧫️fixtures/🖊️stroke/🎚️enums/🔣️.json";
 import strokeSchema from "../../🧬️schema/🔣️.json";
 import artifactSchema from "../../../🔣️.json";
-import cases from "../../🧫️fixtures/🔣️.json";
+import cases from "../../../../🧪️tests/🧫️fixtures/🖊️stroke/🔣️.json";
 
 test("stroke dashes accept editable patterns and reject invalid input", () => {
   

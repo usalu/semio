@@ -2,7 +2,7 @@ use super::*;
 
 /// 🧫️ `🧫️fixtures/🧵️video-render-job/🔣️.json` — folded by this law and by its TypeScript twin alike.
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🧵️video-render-job/🔣️.json")).expect("video render job fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🧵️video-render-job/🔣️.json")).expect("video render job fixture")
 }
 
 fn events(value: &serde_json::Value) -> Vec<VideoRenderJobEvent> {

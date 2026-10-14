@@ -32,7 +32,7 @@ async fn read_step_rejects_missing_data_section() {
 /// 🌲️ The committed Rhino/ST-Developer export of the hexagonal-cut concrete forest piece — one
 /// manifold solid, 57 planar faces, every edge a degree-1 or degree-3 B-spline with a collinear
 /// control polygon, every `AXIS2_PLACEMENT_3D` leaving its `ref_direction` unset (`$`).
-const CONCRETE_FOREST_STEP: &str = include_str!("../../../../🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp");
+const CONCRETE_FOREST_STEP: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp");
 
 /// 🧊️ The piece's volume as an independent oracle: the signed-tetrahedron sum over the committed
 /// GLB export's 958 triangles (`♻️mit-bestand/🖼️asset/🏚️abbau-aufbau/◀️hexagonal-cut-concrete-forest-left.glb`),

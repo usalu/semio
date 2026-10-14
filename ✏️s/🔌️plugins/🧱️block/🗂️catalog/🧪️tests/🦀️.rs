@@ -2,7 +2,7 @@
 use semio_framework_value::ToValue;
 #[test]
 fn catalog_matches_the_closed_portable_declaration(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("portable catalog declaration");assert_eq!(fixture["schemaVersion"],1);
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("portable catalog declaration");assert_eq!(fixture["schemaVersion"],1);
  let spec=semio_s_plugin_block_catalog::artifact_kind();assert_eq!(spec.id,semio_s_plugin_block_catalog::ARTIFACT_ID);
  let mut calls=0usize;let mut progress=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{calls+=1;event.owned_bytes<=65536&&(event.total==0||event.completed<=event.total)};
  let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut progress);let owned=spec.to_value_controlled(&mut control).expect("controlled catalog projection");drop(control);assert!(calls>0);

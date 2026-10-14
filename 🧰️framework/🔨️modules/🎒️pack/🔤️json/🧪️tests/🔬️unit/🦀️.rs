@@ -9,7 +9,7 @@ const JSON_NORMAL_TEST_POLICY:RetainedCloneGrant=RetainedCloneGrant{maximum_item
 
 #[test]
 fn completed_json_projection_frame_reuses_inline_authority_without_transient_admission(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📦️completed-frame/🔣️.json")).unwrap();let source=law["source"].as_str().unwrap();let expected:serde_json::Value=serde_json::from_str(source).unwrap();let mut projection=JsonValueProjection::new(parse(source,JsonMemberPolicy::Reject).unwrap());let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut accepted);
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/📦️completed-frame/🔣️.json")).unwrap();let source=law["source"].as_str().unwrap();let expected:serde_json::Value=serde_json::from_str(source).unwrap();let mut projection=JsonValueProjection::new(parse(source,JsonMemberPolicy::Reject).unwrap());let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut accepted);
     for _ in 0..law["maximumTurns"].as_u64().unwrap(){if projection.retirement.is_some(){break;}assert!(projection.step(1,3,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none());}assert!(projection.retirement.is_some());let admitted=control.owned_bytes();let mut released=0;
     let original={let owner=projection.retirement.as_mut().unwrap();use semio_framework_value::{retirement::{RetirementCursor,RetirementStep},retained_clone::RetainedCloneGrant};let phase=owner.phase;let demand=owner.release_demand();assert!(demand>3);for grant in[RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:3,maximum_capacity_bytes:0,maximum_release_bytes:demand,maximum_depth:1},RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:0,maximum_release_bytes:demand-1,maximum_depth:1}]{let(step,born,physical)=test_allocation::observe_backing(||owner.close_step(grant));assert!(matches!(step,RetirementStep::BudgetExhausted));assert_eq!((born,physical),(0,0));assert_eq!(owner.phase,phase);assert_eq!(owner.release_demand(),demand);}owner.frame.values.allocation+owner.frame.entries.allocation+owner.frame.array.capacity()*std::mem::size_of::<DslValue>()+owner.frame.object.capacity()*std::mem::size_of::<(String,DslValue)>()};
     for _ in 0..law["maximumTurns"].as_u64().unwrap(){if projection.retirement.is_none(){break;}let(result,born,physical)=test_allocation::observe_backing(||projection.step(1,3,&mut control,JSON_NORMAL_TEST_POLICY));assert!(result.unwrap().is_none());assert_eq!(born,0,"completed input backing needs no fresh retirement scaffold");assert_eq!(control.owned_bytes(),admitted,"original source admission is conserved through physical input release");released+=physical;}
@@ -40,7 +40,7 @@ fn retire_json_with_independent_grants<T: semio_framework_value::retirement::Ret
 
 #[test]
 fn original_json_parser_writer_and_value_retire_with_independent_physical_grants() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎮️retirement/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🎮️retirement/🔣️.json")).unwrap();
     let source = law["source"].as_str().unwrap();
     let expected: serde_json::Value = serde_json::from_str(source).unwrap();
     let value = parse(source, JsonMemberPolicy::Reject).unwrap();
@@ -65,7 +65,7 @@ fn original_json_parser_writer_and_value_retire_with_independent_physical_grants
     }
 }
 
-fn owned_json_fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🚦️owned-controls.json")).unwrap()}
+fn owned_json_fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🚦️owned-controls.json")).unwrap()}
 fn retire_original_json<T:semio_framework_value::retirement::RetireOwned>(value:T,maximum_copy_bytes:usize,maximum_turns:u64){let law=serde_json::json!({"maximumItems":1,"maximumCopyBytes":maximum_copy_bytes,"maximumDepth":4096,"maximumTurns":maximum_turns});retire_json_with_independent_grants(value,&law);}
 fn owned_json_text(f:&serde_json::Value)->String{f["textUnit"].as_str().unwrap().repeat(f["textRepeats"].as_u64().unwrap() as usize)}
 
@@ -210,7 +210,7 @@ fn macro_borrows_records_and_matches_json_vectors() {
             DslValue::object([("name".into(), self.name.to_value()), ("count".into(), self.count.to_value())])
         }
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️macro-values.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️macro-values.json")).unwrap();
     for vector in fixture.as_array().unwrap() {
         let record = Record { name: vector["name"].as_str().unwrap().into(), count: vector["count"].as_u64().unwrap() };
         let borrowed = &record;
@@ -823,7 +823,7 @@ fn realistic_payloads_byte_match_serde_json() {
 
 #[test]
 fn borrowed_json_source_sink_keeps_caller_prefix_policy_and_original_words(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🫳️source-sink.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️source-sink.json")).unwrap();
     let text=fixture["word"].as_str().unwrap().repeat(fixture["repeats"].as_u64().unwrap()as usize);
     let source=DslValue::Object(vec![("first".into(),DslValue::String(text.clone())),("second".into(),DslValue::Array(vec![DslValue::uint(u64::MAX),DslValue::int(i64::MIN),DslValue::float(-0.0),DslValue::float(2.5),DslValue::Bool(false),DslValue::Null,DslValue::Bytes(vec![0,127,255])]))]);
     let independent=serde_json::json!({"first":text,"second":[u64::MAX,i64::MIN,-0.0,2.5,false,null,[0,127,255]]}).to_string();
@@ -855,7 +855,7 @@ fn borrowed_json_source_sink_keeps_caller_prefix_policy_and_original_words(){
 #[test]
 fn retained_json_borrowed_source_uses_original_pages_utf8_and_refusal_owner(){
     use semio_framework_value::{NativeDecodeControl,ValueRefusalKind,list::PagedList};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🫳️read-source.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️read-source.json")).unwrap();
     let text=fixture["source"].as_str().unwrap();
     let source=PagedList::<u8,16384>::try_from_iter(text.bytes()).unwrap();
     let pointer=source.get(0).unwrap()as *const u8;
@@ -894,7 +894,7 @@ fn retained_json_borrowed_source_uses_original_pages_utf8_and_refusal_owner(){
 #[test]
 fn retained_json_direct_semantic_source_moves_admitted_original_cells_without_tree_mirror(){
     use semio_framework_value::{DslValue,Number,NativeDecodeControl,list::PagedList};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🫳️read-source.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️read-source.json")).unwrap();
     let text=fixture["source"].as_str().unwrap();let source=PagedList::<u8,16384>::try_from_iter(text.bytes()).unwrap();
     let mut accepted=|_|true;let mut control=NativeDecodeControl::new(131072,&mut accepted);
     let mut cursor=JsonBorrowedDslCursor::new(&source,JsonMemberPolicy::Reject,fixture_read_policy(&fixture)).unwrap();
@@ -921,7 +921,7 @@ fn retained_json_direct_semantic_source_moves_admitted_original_cells_without_tr
 #[test]
 fn retained_json_borrowed_source_honors_complete_caller_extent_depth_and_paid_allocation(){
     use semio_framework_value::{DslValue,NativeDecodeControl,ValueRefusalKind,list::PagedList};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🫳️read-limits.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️read-limits.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap(){
         let text=row["source"].as_str().unwrap();let source=PagedList::<u8,16384>::try_from_iter(text.bytes()).unwrap();
         let limits=JsonReadLimits{maximum_bytes:text.len()as u64,maximum_allocation_bytes:fixture["decodeAllocationBytes"].as_u64().unwrap()as usize,maximum_depth:row["maximumDepth"].as_u64().unwrap()as usize,maximum_items:row["maximumItems"].as_u64().unwrap()};
@@ -950,7 +950,7 @@ fn retained_json_cursor_owns_exact_borrowed_source_view(){
     #[derive(Clone,Copy)]
     struct OriginalView<'source>{owner:&'source PagedList<u8,16384>,start:usize,length:usize}
     impl JsonReadSource for OriginalView<'_>{fn byte_len(&self)->usize{self.length}fn byte_at(&self,index:usize)->Option<u8>{(index<self.length).then(||self.owner.get(self.start+index).copied()).flatten()}}
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🫳️read-source.json")).unwrap();let text=fixture["source"].as_str().unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️read-source.json")).unwrap();let text=fixture["source"].as_str().unwrap();
     let source=PagedList::<u8,16384>::try_from_iter(std::iter::once(b'!').chain(text.bytes()).chain(std::iter::once(b'?'))).unwrap();
     let pointer=source.get(1).unwrap()as *const u8;
     let view=OriginalView{owner:&source,start:1,length:text.len()};
@@ -984,7 +984,7 @@ fn close_borrowed_json<S:JsonReadSource+Copy,V:JsonParsedValue>(cursor:JsonSourc
 #[test]
 fn borrowed_json_retirement_admission_preserves_original_source_on_refusal(){
     use semio_framework_value::{NativeDecodeControl,retained_clone::RetainedCloneGrant};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️borrowed-retirement/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🎟️borrowed-retirement/🔣️.json")).unwrap();
     let source=law["source"].as_str().unwrap();
     for row in law["cases"].as_array().unwrap(){
         let mut cursor=JsonBorrowedParseCursor::new(source,JsonMemberPolicy::Reject,fixture_read_policy(&law)).unwrap();
@@ -1027,7 +1027,7 @@ fn borrowed_json_writer_retains_cumulative_admission_across_real_observer_grants
 
 #[test]
 fn original_json_normal_frontiers_preserve_actual_independent_receipts(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️normal/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🎟️normal/🔣️.json")).unwrap();
     let grant:RetainedCloneGrant=serde_json::from_value(law["grant"].clone()).unwrap();
     let zero=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0};
     for text in law["sources"].as_array().unwrap(){

@@ -1,0 +1,289 @@
+{
+  "schema": "semio.app.publication-authority.v1",
+  "apps": [
+    {
+      "owner": "DrawingPlayApp",
+      "toolIdsConstants": [
+        "DRAWING_GESTURE_TOOL_IDS",
+        "DRAWING_BOUNDED_TOOL_IDS",
+        "DRAWING_PATH_TOOL_IDS",
+        "DRAWING_IMAGE_TOOL_IDS",
+        "DRAWING_EXPORT_TOOL_IDS"
+      ],
+      "source": "🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "routes": [
+        {
+          "id": "canvasPointerDown",
+          "lanes": [
+            "artifact",
+            "window-transient"
+          ]
+        },
+        {
+          "id": "canvasPointerMove",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "canvasPointerUp",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "canvasDoubleClick",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "canvasCommitDraft",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "canvasEscape",
+          "lanes": [
+            "artifact",
+            "window-transient"
+          ]
+        },
+        {
+          "id": "setSnapshot",
+          "lanes": [
+            "host-only"
+          ]
+        },
+        {
+          "id": "commitDocument",
+          "lanes": [
+            "host-only"
+          ]
+        },
+        {
+          "id": "loadDocumentJson",
+          "lanes": [
+            "host-only"
+          ]
+        },
+        {
+          "id": "setActiveExample",
+          "lanes": [
+            "host-only"
+          ]
+        },
+        {
+          "id": "setSelectedOpacity",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "engagementSubmit",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "addLayer",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "dropLayerKind",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "moveLayer",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "deleteLayer",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "duplicateLayer",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "toggleLayerVisible",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "combineBoolean",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "patchLayer",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "patchLayers",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "setCamera",
+          "lanes": [
+            "window-config"
+          ]
+        },
+        {
+          "id": "setCameraZoom",
+          "lanes": [
+            "window-config"
+          ]
+        },
+        {
+          "id": "engagementInput",
+          "lanes": [
+            "window-transient"
+          ]
+        },
+        {
+          "id": "exportDocument",
+          "lanes": [
+            "host-only"
+          ]
+        },
+        {
+          "id": "editSelection",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "editPath",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "editFill",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "nudgeSelectionLeft",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "nudgeSelectionLeftFast",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "nudgeSelectionRight",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "nudgeSelectionRightFast",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "nudgeSelectionUp",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "nudgeSelectionUpFast",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "nudgeSelectionDown",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "nudgeSelectionDownFast",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "deleteSelection",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "importImage",
+          "lanes": [
+            "artifact",
+            "interaction"
+          ]
+        }
+      ],
+      "laws": {
+        "bounded": true,
+        "cancel": true,
+        "replay": true,
+        "freshness": true,
+        "ack": true,
+        "incrementalClose": true
+      },
+      "ui": {
+        "locales": [
+          "en",
+          "de"
+        ],
+        "accessibleLabels": true,
+        "customizableUi": true
+      },
+      "reservedToolIdsConstant": "DRAWING_CLIPBOARD_RESERVED_IDS",
+      "reservedRoutes": [
+        {
+          "id": "copy",
+          "lanes": [
+            "host-only"
+          ]
+        },
+        {
+          "id": "cut",
+          "lanes": [
+            "artifact",
+            "child"
+          ]
+        },
+        {
+          "id": "paste",
+          "lanes": [
+            "artifact",
+            "child"
+          ]
+        }
+      ],
+      "reservedProducerSource": "🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧵️job/🦀️.rs"
+    }
+  ]
+}

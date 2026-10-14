@@ -4,7 +4,7 @@ import {join} from "node:path";
 import Ajv from "ajv";
 import {runOwnedCommand,type OwnedCommandOptions} from "../../🟦️.ts";
 import domain from "../../🧬️schema/📬️output.json";
-import fixture from "../../🧫️fixtures/📬️output/🔣️.json";
+import fixture from "../🧫️fixtures/📬️output/🔣️.json";
 
 const oracle='const r=JSON.parse(process.argv[1]),a=Buffer.concat(r.stdout.map(x=>Buffer.from(x,"hex"))),b=Buffer.concat(r.stderr.map(x=>Buffer.from(x,"hex"))),lines=x=>Array.from(x).filter(v=>v===10).length+(x.length&&x[x.length-1]!==10?1:0);process.stdout.write(JSON.stringify({bytes:a.length+b.length,lines:lines(a)+lines(b),values:[...a.toString("utf8").split("\\n").filter((x,i,all)=>x.length||i<all.length-1),...b.toString("utf8").split("\\n").filter((x,i,all)=>x.length||i<all.length-1)]}));';
 const child='const fs=require("node:fs"),r=JSON.parse(process.argv[1]);fs.writeFileSync(process.argv[2],String(process.pid));(async()=>{for(const [fd,chunks] of [[1,r.stdout],[2,r.stderr]])for(const chunk of chunks){fs.writeSync(fd,Buffer.from(chunk,"hex"));await new Promise(done=>setImmediate(done));}if(!r.accepted)setInterval(()=>{},10);})();';

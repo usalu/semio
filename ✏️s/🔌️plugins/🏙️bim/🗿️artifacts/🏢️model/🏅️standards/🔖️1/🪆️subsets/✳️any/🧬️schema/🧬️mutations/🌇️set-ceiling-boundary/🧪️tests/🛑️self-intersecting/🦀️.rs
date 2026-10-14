@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🌇️set-ceiling-boundary/🛑️self-intersecting",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/🛑️self-intersecting/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/🛑️self-intersecting/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/🛑️self-intersecting/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/🛑️self-intersecting/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/🛑️self-intersecting/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/🛑️self-intersecting/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/🛑️self-intersecting/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/🛑️self-intersecting/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/🛑️self-intersecting/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌇️set-ceiling-boundary/🛑️self-intersecting/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

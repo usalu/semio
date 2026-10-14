@@ -5,7 +5,7 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 
 #[test]
 fn graph_parameter_intent_matches_strict_typed_schema() {
-    let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in fixture.get("cases").and_then(semio_framework_pack_json::Value::as_array).unwrap() {
         let payload: SetGraphParameter = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(row)).unwrap();
         payload.validate().unwrap();
@@ -32,7 +32,7 @@ fn graph_parameter_intent_rejects_non_finite_before_retained_admission() {
 
 #[test]
 fn graph_parameter_intent_retirement_preserves_exact_bytes_and_worker_transfer() {
-    let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let text = fixture.get("longWidgetId").unwrap();
     let law = fixture.get("retirement").unwrap();
     for pause in law.get("cancelAt").and_then(semio_framework_pack_json::Value::as_array).unwrap() {
@@ -74,7 +74,7 @@ fn graph_parameter_intent_retirement_preserves_exact_bytes_and_worker_transfer()
 fn original_graph_intent_indexed_json_retains_exact_strings_and_system_receipts() {
     use crate::os_store::ArtifactCanonicalJsonCursor;
     use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let row = &fixture["canonicalPolicy"];
     let grant = RetainedCloneGrant { maximum_items: row["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: row["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: row["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: row["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: row["maximumDepth"].as_u64().unwrap() as usize };
     for row in fixture["cases"].as_array().unwrap() {

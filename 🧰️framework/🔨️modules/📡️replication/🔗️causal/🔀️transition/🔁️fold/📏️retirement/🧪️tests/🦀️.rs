@@ -9,7 +9,7 @@ fn close_fold_and_check_original_grants(job:&mut HistoryFoldJob<'_,()>){
 
 #[test]
 fn bounded_history_fold_physical_retirement_preserves_whole_queued_owners_and_terminal_frames(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();assert_eq!(law["independentCredits"].as_array().unwrap().len(),5);
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();assert_eq!(law["independentCredits"].as_array().unwrap().len(),5);
     for extent in law["extents"].as_array().unwrap(){let extent=extent.as_u64().unwrap()as usize;let mut job=HistoryFoldJob::<()>::new(|_|std::future::pending());let mut original=Vec::with_capacity(extent);if extent!=0{original.push(37u8);}assert_eq!(original.capacity(),extent);assert_eq!(original.len(),extent.min(law["logicalItems"].as_u64().unwrap()as usize));let birth=owned_retirement_birth_bytes::<Vec<u8>>();job.control.0.retirement_capacity.store(birth,Ordering::Relaxed);job.control.0.retirement_items.store(1,Ordering::Relaxed);job.control.retire(original);let expected=job.control.demands(7).unwrap();assert_eq!(job.next_capacity_byte_demand(7).unwrap(),expected.capacity_bytes);assert_eq!(job.next_release_byte_demand().unwrap(),expected.release_bytes);close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));println!("[DEBUG] fold extent={extent} independent capacity/release/depth refusals preserve original queued owners; trace equals receipts; terminalDrop0heap");}
 }
 
@@ -20,7 +20,7 @@ fn bounded_history_fold_cancellation_preserves_tracked_future_and_error_backings
 
 #[test]
 fn bounded_history_fold_new_local_admission_retains_original_across_same_poll_refusal(){
-    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for extent in law["extents"].as_array().unwrap() {
         let extent = extent.as_u64().unwrap() as usize;
         let mut original = Vec::with_capacity(extent);
@@ -82,7 +82,7 @@ fn bounded_history_fold_unsupported_local_refusal_returns_original_before_regist
 
 #[test]
 fn bounded_history_fold_cancellation_keeps_multiple_preborn_locals_and_waiting_original(){
-    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let extents: Vec<usize> = law["mixedLocalExtents"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as usize).collect();
     for admitted in law["prebornLocalCounts"].as_array().unwrap() {
         let admitted = admitted.as_u64().unwrap() as usize;
@@ -115,7 +115,7 @@ fn bounded_history_manual_protocol_variants_declare_exact_native_birth_and_relea
         close_fold_and_check_original_grants(&mut job);
         let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     }
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for variant in law["manualProtocolVariants"].as_array().unwrap(){match variant.as_str().unwrap(){
         "input"=>check(crate::InputReplacement::Input{schema:"owned-schema".into(),payload:vec![1u8,2,3]}),
         "withdrawn"=>check(crate::InputReplacement::Withdrawn),
@@ -135,7 +135,7 @@ fn bounded_history_manual_protocol_variants_declare_exact_native_birth_and_relea
 fn bounded_history_multiple_waiting_originals_refuse_independent_item_undergrant(){
     let first=String::from_utf8(vec![37u8;8194]).unwrap();let second=vec![41u8;65536];
     let mut job=HistoryFoldJob::<()>::new(move|control|{let first=control.track(first).unwrap_or_else(|_|unreachable!());let second=control.track(second).unwrap_or_else(|_|unreachable!());async move{let first=first.await;let second=second.await;drop((first,second));Ok(())}});
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let expected=law["waitingOriginalItemDemand"].as_u64().unwrap() as usize;assert_eq!(job.next_local_admission_item_demand(),expected);
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let expected=law["waitingOriginalItemDemand"].as_u64().unwrap() as usize;assert_eq!(job.next_local_admission_item_demand(),expected);
     job.request_cancel();let grant=job.next_step_grant(expected,7).unwrap();
     for items in 0..expected{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(RetainedCloneGrant{maximum_items:items,..grant}).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(job.next_local_admission_item_demand(),expected);}
     let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(grant).unwrap());let progress=step.progress();assert_eq!(progress.copied_items,expected);assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));assert_eq!(job.next_local_admission_item_demand(),0);close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));println!("[DEBUG] two waiting fold originals require exactly two real frame items; zero/subexact item grants preserve original custody and heap; funded atomic future release reports both actual births");
@@ -154,7 +154,7 @@ fn bounded_history_shared_actor_admission_retains_preborn_shell_and_actual_recei
         control.0.admitted_retirement_capacity.store(0,Ordering::Relaxed);
         control.0.admitted_original_copy.store(0,Ordering::Relaxed);
     }
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️actor.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️actor.json")).unwrap();
     let mut job=HistoryFoldJob::<()>::new(|_|std::future::pending());
     let original=law["original"].as_str().unwrap().to_owned();let pointer=original.as_ptr();
     let mut source=job.control.track(original).unwrap_or_else(|_|unreachable!());

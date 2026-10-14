@@ -3,17 +3,17 @@ import "../💰️frontiers/🟦️.ts";
 import Ajv from "ajv/dist/2020";
 import "../💰️operation/🟦️.ts";
 import { readFileSync } from "node:fs";
-import ownership from "../../🧫️fixtures/🫳️import-ownership/🔣️.json";
+import ownership from "../🧫️fixtures/🫳️import-ownership/🔣️.json";
 /** 🧫️ Semantic relational SQLite interoperability against Bun's independent engine. */
 import { Database } from "bun:sqlite";
 import { describe, expect, test } from "bun:test";
 import { SqliteOperation, exportSqliteDatabase, importSqliteDatabase, parseSqliteDatabaseSchema, validateSqliteDatabaseSchema, type SqliteDatabase, type SqliteValue } from "../../🟦️.ts";
-import corpus from "../../🧫️fixtures/🏛️relational/🔣️.json";
-import projectionFixture from "../../🧫️fixtures/🏗️projection/🔣️.json";
+import corpus from "../🧫️fixtures/🏛️relational/🔣️.json";
+import projectionFixture from "../🧫️fixtures/🏗️projection/🔣️.json";
 import { ArtifactSqliteProjection, artifactSqliteTables } from "../../🧩️artifact/🟦️.ts";
-import frontierFixture from "../../🧫️fixtures/💰️frontiers/🔣️.json";
-import controlFixture from "../../🧫️fixtures/🧮️database-control/🔣️.json";
-import backingFixture from "../../🧫️fixtures/💰️production/🔣️.json";
+import frontierFixture from "../🧫️fixtures/💰️frontiers/🔣️.json";
+import controlFixture from "../🧫️fixtures/🧮️database-control/🔣️.json";
+import backingFixture from "../🧫️fixtures/💰️production/🔣️.json";
 
 
 async function authoredBackingDatabase():Promise<SqliteDatabase>{
@@ -413,12 +413,13 @@ test("physical SQLite transfer produces validated relational values and cancella
 test("exact guest snapshot transport matches its language-neutral schema", () => {
   const base = new URL("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/", import.meta.url);
   const schema = JSON.parse(readFileSync(new URL("🔣️.json", base), "utf8"));
-  const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", base), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../../🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json", base), "utf8"));
+  const request = { dialect: fixture.dialect, encoding: fixture.encoding, payload: fixture.payload, limits: fixture.limits };
   const validate = new Ajv({ strict: true }).compile(schema);
-  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  expect(validate({ ...fixture, encoding: "opaque" })).toBe(false);
-  expect(validate({ ...fixture, limits: { ...fixture.limits, max_rows: -1 } })).toBe(false);
-  expect(validate({ ...fixture, payload: [256] })).toBe(false);
+  expect(validate(request), JSON.stringify(validate.errors)).toBe(true);
+  expect(validate({ ...request, encoding: "opaque" })).toBe(false);
+  expect(validate({ ...request, limits: { ...request.limits, max_rows: -1 } })).toBe(false);
+  expect(validate({ ...request, payload: [256] })).toBe(false);
 });
 
 
@@ -427,7 +428,7 @@ test("explicit keyed projection completes in independent SQLite rowid order and 
 test("keyed projection cancels during heap ordering and rejects duplicate physical identities",async()=>{const f=projectionFixture.keyedOrder;let armed=false,inside=false;const abort=new AbortController(),p=await ArtifactSqliteProjection.create(projectionFixture.schemaSql,{signal:abort.signal,onProgress:progress=>{if(armed&&progress.completed===f.rows+f.cancelAt){inside=true;abort.abort();}}});for(let key=f.rows;key>0;key--)await p.insert(projectionFixture.table,[""],BigInt(key));armed=true;await expect(p.finish()).rejects.toHaveProperty("kind","canceled");expect(inside).toBe(true);const complete=await ArtifactSqliteProjection.create(projectionFixture.schemaSql);for(let key=f.rows;key>0;key--)await complete.insert(projectionFixture.table,[key.toString()],BigInt(key));const db=Database.deserialize(await exportSqliteDatabase(await complete.finish()));try{expect(db.query("SELECT count(*) AS n FROM explicit_entity").get()).toEqual({n:f.rows});expect(db.query("SELECT id FROM explicit_entity ORDER BY id").all()).toEqual(Array.from({length:f.rows},(_,i)=>({id:i+1})));}finally{db.close();}const duplicate=await ArtifactSqliteProjection.create(projectionFixture.schemaSql);await duplicate.insert(projectionFixture.table,["a"],1n);await duplicate.insert(projectionFixture.table,["b"],1n);await expect(duplicate.finish()).rejects.toThrow("identities must be unique");});
 
 
-import allocationFixture from "../../🧫️fixtures/🧮️allocation/🔣️.json";
+import allocationFixture from "../🧫️fixtures/🧮️allocation/🔣️.json";
 import {SqliteAllocationControl} from "../../🟦️.ts";
 
 test("SQLite allocation ledger has independent cumulative cross-stage admission and before-allocation refusal",()=>{
@@ -450,6 +451,6 @@ test("SQLite native allocation bridge settles real interior cancellation before 
   let next:NativeDecodeControl|undefined;await expect(authority.stage(maximum=>(next=new NativeDecodeControl(maximum,()=>true)),c=>c.copyBytes(source.subarray(0,f.refusedBytes)))).rejects.toThrow();expect(next!.ownedBytes).toBe(0);expect(authority.remainingBytes()).toBe(f.remainingAfterCancellation);
 });
 
-import transfer from "../../🧫️fixtures/🔁️transfer/🔣️.json";
+import transfer from "../🧫️fixtures/🔁️transfer/🔣️.json";
 test("complete snapshot transfer budgets distinguish native copies from actual relational file ownership",async()=>{const database=parseSqliteDatabaseSchema(transfer.schemaSql);database.tables[0]!.rows.push({rowid:1n,values:[1n,transfer.literal]});const file=await exportSqliteDatabase(database),independent=Database.deserialize(file);try{expect(independent.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(independent.query("SELECT id,literal FROM transfer_literal").all()).toEqual([{id:1,literal:transfer.literal}]);const native=Buffer.byteLength(transfer.literal);expect(independent.query("SELECT length(CAST(literal AS BLOB)) AS bytes FROM transfer_literal").get()).toEqual({bytes:native});expect(file.byteLength).toBeGreaterThan(native*(transfer.exportCopies+transfer.importCopies));expect((await importSqliteDatabase(independent.serialize())).tables[0]!.rows[0]!.values).toEqual([1n,transfer.literal]);}finally{independent.close();}
 });

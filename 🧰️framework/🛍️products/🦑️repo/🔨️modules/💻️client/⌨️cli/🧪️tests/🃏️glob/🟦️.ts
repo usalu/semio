@@ -12,7 +12,7 @@ interface GlobFixture {
 
 /** 🧭️ Verifies the neutral policy-glob expectations against an independent matcher. */
 export function verifyFixtureGlobOracle(): void {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🃏️glob/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🃏️glob/🔣️.json", import.meta.url), "utf8"));
   
   for (const row of fixture.cases) if (minimatch(row.path, row.pattern) !== row.match) throw new Error(`Reference glob mismatch: ${row.id}`);
   console.log(`Fixture glob reference: ${fixture.cases.length} vectors verified`);
@@ -20,7 +20,7 @@ export function verifyFixtureGlobOracle(): void {
 
 /** 🪟️ Independently enumerates the neutral lifecycle filesystem with the existing third-party glob oracle. */
 export function verifyTicketRetentionOracle(): void {
-  const fixture = JSON.parse(readFileSync(new URL("../../../../🎫️tickets/🧫️fixtures/🔓️open-close-reopen-lifecycle/🔓️lifecycle.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../../../../🎫️tickets/🧪️tests/🧫️fixtures/🔓️open-close-reopen-lifecycle/🔓️lifecycle.json", import.meta.url), "utf8"));
   const owner = process.env.SEMIO_TICKET_DIR;
   const root = mkdtempSync(join(owner ? join(owner, "🗑️generated") : tmpdir(), "ticket-retention-oracle-"));
   try {

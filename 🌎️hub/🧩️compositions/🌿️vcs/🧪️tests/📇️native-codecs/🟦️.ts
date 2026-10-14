@@ -1,9 +1,9 @@
-import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { runRepositoryExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** 🧬️ Compiles one PascalCase `$defs` export of the `s.vcs` scope-owned draft-07 schema module.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json */
@@ -40,7 +40,7 @@ export async function proveVcsNativeCodecReceipts(repoRoot: string): Promise<voi
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as VcsNativeCodecFixture;
   const validate = await compileVcsScopeExport(repoRoot, "VcsNativeCodecManifestV1");
   if (!validate(fixture)) throw new Error(`invalid VCS receipt corpus: ${JSON.stringify(validate.errors)}`);
-  const documentIdRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🌱️artifact-document-id-v1");
+  const documentIdRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🌱️artifact-document-id-v1");
   const documentIds = JSON.parse(readFileSync(join(documentIdRoot, "🔣️.json"), "utf8")) as { cases: ReadonlyArray<{ id: string; documentId: string; accepted: boolean }> };
   const registryModule = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json"), "utf8"));
   const { default: RegistryAjv } = await import("ajv");
@@ -62,7 +62,7 @@ export async function proveVcsNativeCodecReceipts(repoRoot: string): Promise<voi
     if (bytes.length !== row.protocolBytes || nodeHash !== row.protocolSha256 || webHash !== nodeHash || /^0{64}$/u.test(nodeHash)) throw new Error(`VCS protocol receipt mismatch ${row.factoryId}`);
     if (row.kind !== `s.${fixture.pluginId}.${row.extension}` || row.capability !== `${row.kind}.codec.document` || row.factoryId !== `${fixture.pluginId}.${row.extension}.v1` || row.schema !== `${fixture.pluginId}.${row.extension}`) throw new Error("VCS receipt canonical owner mismatch");
   }
-  const hostileVectors = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📇️native-codecs/🔣️.json"), "utf8")) as { readonly hostile: readonly string[] };
+  const hostileVectors = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📇️native-codecs/🔣️.json"), "utf8")) as { readonly hostile: readonly string[] };
   const expected = new Map(fixture.receipts.map((row: any) => [row.factoryId, JSON.stringify(row)]));
   const admitted = (candidate: any): boolean => candidate.pluginId === "vcs" && candidate.packageId === "semio:vcs" && candidate.packageVersion === version && candidate.receipts.length === 1
     && new Set(candidate.receipts.map((row: any) => row.factoryId)).size === 1
@@ -101,7 +101,7 @@ export class NativeCodecCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveVcsNativeCodecReceipts(this.repoRoot);
     if (process.argv.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-hub-vcs", target: { kind: "test", name: "native_codecs" }, laws: ["vcs_native_receipts_bind_literal_one_codec_closure_without_identity_or_factory_substitution", "vcs_native_receipt_closure_denies_every_hostile_row_including_the_retired_document_kind"] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(this.repoRoot, process.env.SEMIO_TEST_ARTIFACT_DIR) : undefined, progress(event) { console.log(`vcs-native-codecs ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`); } });
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-hub-vcs", target: { kind: "test", name: "native_codecs" }, laws: ["vcs_native_receipts_bind_literal_one_codec_closure_without_identity_or_factory_substitution", "vcs_native_receipt_closure_denies_every_hostile_row_including_the_retired_document_kind"] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(this.repoRoot, process.env.SEMIO_TEST_ARTIFACT_DIR) : undefined, progress(event) { console.log(`vcs-native-codecs ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`); } });
     for (const receipt of receipts) console.log(`vcs-native-codec-receipt: ${JSON.stringify(receipt)}`);
     console.log("vcs-native-codec-check: exact=1 literal-codecs=1; no hub catalog activation, provider link or client mount");
   }

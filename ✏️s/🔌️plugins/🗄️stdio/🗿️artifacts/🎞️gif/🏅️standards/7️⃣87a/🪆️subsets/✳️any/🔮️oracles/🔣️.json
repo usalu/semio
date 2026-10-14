@@ -479,14 +479,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/⏸️no-mutation/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/⏸️no-mutation/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:361229558a192837ae06c5f553029f2546ce4134ec9271e53fc258284bea4a58",
           "bytes": 76
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/⏸️no-mutation/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/⏸️no-mutation/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:361229558a192837ae06c5f553029f2546ce4134ec9271e53fc258284bea4a58",
           "bytes": 76
@@ -527,14 +527,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/🖥️set-screen-size/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/🖥️set-screen-size/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:bdd47b88c3d972b13a95547f059eb7ae5844de6b9b4be4a8fefc71691269591b",
           "bytes": 51
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/🖥️set-screen-size/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/🖥️set-screen-size/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:106daf3c0acc92769909ad6facad3a04948feaf783e88393fd297998dde6976b",
           "bytes": 51
@@ -575,14 +575,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/🎨️set-global-color-table/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/🎨️set-global-color-table/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:bdd47b88c3d972b13a95547f059eb7ae5844de6b9b4be4a8fefc71691269591b",
           "bytes": 51
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/🎨️set-global-color-table/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/🎨️set-global-color-table/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:3f832516dab094146562862b213f32da88c17df251af0b5feec4a1fdd245bc3b",
           "bytes": 51
@@ -623,14 +623,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/🖌️set-background-color-index/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/🖌️set-background-color-index/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:bdd47b88c3d972b13a95547f059eb7ae5844de6b9b4be4a8fefc71691269591b",
           "bytes": 51
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/🖌️set-background-color-index/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/🖌️set-background-color-index/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:dbb4ef67adecfbc11e126f586771f1e79a7d62c96f961186729346e10a30e3a3",
           "bytes": 51
@@ -671,14 +671,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/➕️insert-image/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-image/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:361229558a192837ae06c5f553029f2546ce4134ec9271e53fc258284bea4a58",
           "bytes": 76
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/➕️insert-image/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-image/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:08ef2c90b89c0737d69f3e279e8d530c7c6cb35d35f5130e6151b4b620e19ce5",
           "bytes": 103
@@ -719,14 +719,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/➖️remove-image/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-image/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:524b43e1325d11e255604a8307dd3e43c830391d818ec809413c20ed9476cf03",
           "bytes": 103
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/➖️remove-image/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-image/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:361229558a192837ae06c5f553029f2546ce4134ec9271e53fc258284bea4a58",
           "bytes": 76
@@ -767,14 +767,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/🔀️move-image/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/🔀️move-image/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:361229558a192837ae06c5f553029f2546ce4134ec9271e53fc258284bea4a58",
           "bytes": 76
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/🔀️move-image/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/🔀️move-image/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:9550d90a958672f963ddc2ec1fd4fb08983255d2f72c06fe262d09411bac9187",
           "bytes": 76
@@ -815,14 +815,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/📐️set-image-geometry/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/📐️set-image-geometry/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:bdd47b88c3d972b13a95547f059eb7ae5844de6b9b4be4a8fefc71691269591b",
           "bytes": 51
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/📐️set-image-geometry/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/📐️set-image-geometry/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:0d6135723ec3f37c8f5c9b35d4ababa6ad46aa660d26228673b46939e3be3fd2",
           "bytes": 51
@@ -863,14 +863,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/🎞️set-image-pixels/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/🎞️set-image-pixels/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:bdd47b88c3d972b13a95547f059eb7ae5844de6b9b4be4a8fefc71691269591b",
           "bytes": 51
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/🎞️set-image-pixels/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/🎞️set-image-pixels/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:fb821f200ce848d523f85546b8c0491af51a4189631e4f1aeee9e8c99c4ba6ff",
           "bytes": 53
@@ -911,14 +911,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/🪜️set-image-interlace/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/🪜️set-image-interlace/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:a726b81a804adf9401576d5e7764ff6320c0f5b58b89fd4163d369be7c4f2d61",
           "bytes": 100
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/🪜️set-image-interlace/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/🪜️set-image-interlace/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:290596c60d2985d1a6913485c1d74522bb184a3d2d923406a8711924bd72d133",
           "bytes": 95
@@ -959,14 +959,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/⚖️set-pixel-aspect-ratio/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/⚖️set-pixel-aspect-ratio/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:d474501d75b20bc1f40d7452365e5a5d98696cfcf8b6eff43b6224d3c0061559",
           "bytes": 81
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/⚖️set-pixel-aspect-ratio/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/⚖️set-pixel-aspect-ratio/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:73ba575f86858039aafee719c4ce736f1b43a45f8ec7374afd840da97358dc02",
           "bytes": 81

@@ -1,6 +1,6 @@
 /// 🧪️ Independent schema fixture authority is explicit at every original camera test boundary.
 pub(crate) fn camera_fixture_grant() -> semio_framework_job::RetainedCloneGrant {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../⏱️camera/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../⏱️camera/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     serde_json::from_value(fixture["rootGrant"].clone()).unwrap()
 }
 
@@ -34,7 +34,7 @@ pub fn sweep_expired_scene_camera_dispatches(now_ms: f64) -> Vec<ActionDescripto
             SceneCameraDispatchStep::Pending => {}
             SceneCameraDispatchStep::Action(action) => actions.push(action),
             SceneCameraDispatchStep::Complete => return actions,
-            SceneCameraDispatchStep::Fault(_) => { while !matches!(cursor.close_step(grant), semio_framework_job::InteractiveJobCloseStep::Complete { .. }) {} return actions; },
+            SceneCameraDispatchStep::Fault(_) => { while !matches!(cursor.close_step(grant).unwrap(), semio_framework_job::InteractiveJobCloseStep::Complete { .. }) {} return actions; },
         }
     }
 }

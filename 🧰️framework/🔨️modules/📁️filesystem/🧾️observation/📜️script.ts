@@ -1,13 +1,18 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {resolve} from "node:path";
-import {BundleScript,ScriptRouter} from "../../🏃️process/🧭️routing/🟦️.ts";
-import {runScriptMain} from "../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import {runOwnedCommand} from "../../🏃️process/🎛️owned-execution/🟦️.ts";
-import {cmdBudgetMs} from "../../🏃️process/⏱️budget/🟦️.ts";
+import {BundleScript,ScriptRouter} from "../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {runScriptMain} from "../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {runOwnedCommand} from "../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {cmdBudgetMs} from "../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🧾️ Runs the defining portable physical observation and strict implementation checks. */
 class TestScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
+  if(segments.length===1&&segments[0]==="journal"){
+   await runOwnedCommand(process.execPath,["test",resolve(this.root,"📥️journal/🧪️tests/🟦️.ts")],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
+   await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions",resolve(this.root,"📥️journal/🟦️.ts")],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
+   return;
+  }
   if(segments.length)throw Error("physical observation test accepts no arguments");
   await runOwnedCommand(process.execPath,[resolve(this.root,"📜️script.ts"),"test-worker"],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
   await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions",resolve(this.root,"🟦️.ts")],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});

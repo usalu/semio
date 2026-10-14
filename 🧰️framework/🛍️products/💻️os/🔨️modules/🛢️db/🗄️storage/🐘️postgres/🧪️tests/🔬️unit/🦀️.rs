@@ -193,7 +193,7 @@ async fn payload_hash_is_deterministic_and_content_addressed() {
 //#region 🔖️WriterFence
 #[test]
 fn writer_fence_constants_and_lock_keys_match_the_neutral_contract() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔐️writer/🧫️fixtures/🌐️remote-guard/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔐️writer/🧪️tests/🧫️fixtures/🌐️remote-guard/🔣️.json")).unwrap();
     let postgres = &fixture["postgres"];
     assert_eq!(postgres["lockNamespace"], WAL_WRITER_LOCK_NAMESPACE);
     assert_eq!(postgres["applicationName"], WAL_WRITER_APPLICATION_NAME);

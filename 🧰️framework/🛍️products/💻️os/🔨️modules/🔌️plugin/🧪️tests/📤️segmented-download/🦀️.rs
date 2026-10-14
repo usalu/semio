@@ -10,7 +10,7 @@ use crate::media_contract::ArtifactOutputChunks;
 use crate::media_contract::ARTIFACT_OUTPUT_CHUNK_BYTES;
 use crate::media_contract::ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES;
 
-const CONTRACT_FIXTURE: &str = include_str!("../../../../../../🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🧫️fixtures/🔣️.json");
+const CONTRACT_FIXTURE: &str = include_str!("../../../../../../🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🧪️tests/🧫️fixtures/🔣️.json");
 
 fn contract() -> serde_json::Value {
     serde_json::from_str::<serde_json::Value>(CONTRACT_FIXTURE).expect("the segmented-download contract fixture parses")["contract"].clone()

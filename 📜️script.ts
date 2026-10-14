@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
+import { scriptCompilerAdmissionControlV1 } from "./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {type PolicyModSpan,policyMaskLiterals,policyTestModSpans,policyLineInTestMod,interactivityCfgTestItemSpans} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📋️policy/🔎️source/🟦️.ts";
 import {type InteractivityToolRunRequirement,INTERACTIVITY_TOOL_RUN_TRIGGER,interactivityToolRunWithin,interactivityToolRunScopePath,interactivityToolRunCode,interactivityToolRunEnclosing,interactivityToolRunLocalLifecycleFailures,interactivityToolRunLegacyTraceFailures,interactivityToolRunDeclarationFailures,interactivityToolRunReservedActionFailures} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📋️policy/⏯️tool-run/🟦️.ts";
-import { exactCargoGeneratedOutputHasLiveLease } from "./🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { resolveTestLevel, testLevelRank } from "./🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "./🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts";
-import { TEST_LEVELS, type TestLevel } from "./🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { resolveTestLevel, testLevelRank } from "./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { TEST_LEVELS, type TestLevel } from "./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { NativeDependenciesScript } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts";
 import { toolJobArtifactEnvelopeRejectionTransferSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️tool-job-artifact-envelope-rejection-transfer/🟦️.ts";
 import { toolJobLiveFixedReplaySelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-live-fixed-replay/🟦️.ts";
@@ -49,7 +49,7 @@ import { microsecondsFromMilliseconds } from "./🧰️framework/🔨️modules/
  * 🧭️ Monorepo command router: `bun ./📜️script.ts <verb> [segments…]` (e.g. `📜️script.ts dev storybook`, `📜️script.ts dev mcp stdio os`).
  */
 import { dispatchOwnedScriptRoute, canonicalFilenameForKind, canonicalFilenamesForKind, canonicalPrimaryFilenameForKind, createTaxonomyPathMatcher, createFixedContractResolver, coverageDir, coverageEnabled, daemonBudgetOpts, devToolingEnv, discoverOwners, discoverPackages, discoverPackageProblems, dispatchPolicyArgv, dispatchSubcommand, defineLint, fixedContractFilename, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, loadTaxonomy, resolveSchemaFacetKind, schemaFacetFormatEntries, semanticDirectoryKindId, enforceCoverageThreshold, getWorkspaceRoot, getRepoMetaDir, getMapCacheDir, getSemioRoot, HUB_DATA_DIR_NAME, MAP_CACHE_DIR_NAME, REPO_META_DIR_NAME, SPACE_DATA_DIR_NAME, goCoverageArgs, goLevelTestArgs, goProfileToLcov, mergeLcov, orchestratorBudgetOpts, parseLcov, renderLcov, resolveCliBin, resolveMcpBin, runCmd, runCmdStatus, runCanonicalGoBuild, runCanonicalGoTests, runProbe, runRepositoryTestCommand, spawnDaemon, summarizeCoverage, semioReleaseEnv, semioNxParallelFlag, installMicroCommitGitHooks, runCommit, runMicroCommit, runWorkspaceScriptMain, TechnologyLinter, tryRun, type BreachRecord, type PackageRole, type LcovFileRecord } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { Script, ScriptRouter } from "./🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { Script, ScriptRouter } from "./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { checkDerivedConfig, writeDerivedConfig } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📝️derived-config/🟦️.ts";
 import { repoCacheDirectory } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
@@ -5418,6 +5418,7 @@ type FixedOperationFixtureCase = {
 
 type FixedOperationFixture = {
   schema: string;
+  caller:{operation:number;generation:number;clockMicros:number;deadlineMicros:number;fuel:number;admission:FixedOperationFixtureCloseGrant};
   cases: FixedOperationFixtureCase[];
 };
 
@@ -5442,10 +5443,16 @@ function toolJobFixedOperationFixtureIndex(operation: number, generation: number
 }
 
 function toolJobFixedOperationFixtureRun(root: string): FixedOperationFixtureOutput {
-  const fixturePath = "🧰️framework/🔨️modules/🧵️job/🧫️fixtures/📇️fixed-operation-registry-law.json";
+  const fixturePath = "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📇️fixed-operation-registry-law.json";
   const fixture = JSON.parse(policyReadFileSafe(root, fixturePath)) as FixedOperationFixture;
   if (!fixture || fixture.schema !== "semio.framework.job.fixed-operation-registry-law.v1" || !Array.isArray(fixture.cases))
     throw new Error("[verify interactivity tool-jobs fixed-operation-fixture] fixture root is not exact.");
+  toolJobFixedOperationFixtureAssertKeys(fixture as unknown as Record<string,unknown>,["schema","caller","cases"],"root");
+  toolJobFixedOperationFixtureAssertKeys(fixture.caller as unknown as Record<string,unknown>,["operation","generation","clockMicros","deadlineMicros","fuel","admission"],"original caller");
+  for(const field of ["operation","generation","clockMicros","deadlineMicros","fuel"] as const)toolJobFixedOperationFixtureAssertInteger(fixture.caller[field],0,Number.MAX_SAFE_INTEGER,`original caller.${field}`);
+  toolJobFixedOperationFixtureAssertKeys(fixture.caller.admission,["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"],"original caller.admission");
+  for(const field of ["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"] as const)toolJobFixedOperationFixtureAssertInteger(fixture.caller.admission[field],0,Number.MAX_SAFE_INTEGER,`original caller.admission.${field}`);
+  if(fixture.caller.clockMicros!==1||fixture.caller.deadlineMicros!==2||fixture.caller.fuel!==1)throw Error("Original fixed fixture caller clock and CPU changed");
   const requiredIds = ["aba", "byte-maximum-plus-one", "cancel-stale", "collision", "empty", "interrupted-repeated-close", "maximum-plus-one", "single"];
   if (fixture.cases.map((entry) => entry.id).sort().join("\0") !== requiredIds.join("\0"))
     throw new Error("[verify interactivity tool-jobs fixed-operation-fixture] law case identities are not an exact bijection.");
@@ -5578,7 +5585,7 @@ type SharedFrameworkActionRouteFixture = {
 };
 
 function toolJobSharedFrameworkActionFixtureRun(root: string): { schema: string; routes: string[]; descriptor: string[]; hostile: string[] } {
-  const fixture = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧫️fixtures/⚖️shared-framework-action-routes-law.json")) as SharedFrameworkActionRouteFixture;
+  const fixture = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/⚖️shared-framework-action-routes-law.json")) as SharedFrameworkActionRouteFixture;
   if (fixture.schema !== "semio.framework.plugin.shared-framework-action-routes.v1" || fixture.routes.length !== 12)
     throw new Error("[verify interactivity tool-jobs shared-action-fixture] fixture root is not exact.");
   const expectedIds = TOOL_JOB_FRAMEWORK_RESERVED_IDS.filter((id) => !["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint", "revertToCommand", "configuration-binary"].includes(id)).sort();
@@ -5642,35 +5649,38 @@ function toolJobSharedFrameworkActionFixtureRun(root: string): { schema: string;
 
 function toolJobFixedOperationRustFixtureSource(root: string): string {
   toolJobFixedOperationFixtureRun(root);
-  const fixture = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧫️fixtures/📇️fixed-operation-registry-law.json")) as FixedOperationFixture;
+  const fixture = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📇️fixed-operation-registry-law.json")) as FixedOperationFixture;
+  const admission=fixture.caller.admission;
+  const original=`RetainedCloneGrant{maximum_items:${admission.maximumItems},maximum_copy_bytes:${admission.maximumCopyBytes},maximum_capacity_bytes:${admission.maximumCapacityBytes},maximum_release_bytes:${admission.maximumReleaseBytes},maximum_depth:${admission.maximumDepth}}`;
   const lines = [
     "// 🧪️ Generated from 📇️fixed-operation-registry-law.json by the root verifier.",
     "#[test]",
     "fn language_neutral_fixed_operation_registry_laws_execute_production_registry() {",
+    `    let source=${original};let mut caller=OriginalJobFixtureCaller::admit(OperationId(${fixture.caller.operation}),Generation(${fixture.caller.generation}),source,caller_clock,${fixture.caller.deadlineMicros},${fixture.caller.fuel});`,
   ];
   let identity = 100;
   for (const testCase of fixture.cases) {
     lines.push("    {", `        let mut registry = FixedOperationRegistry::<Owner, ${testCase.capacity}>::new(${testCase.maximumBytes});`, "        let mut output = Vec::new();");
     for (const step of testCase.steps) {
       if (step.action === "admit") {
-        lines.push(`        fixture_admit(&mut registry, &mut output, OperationId(${step.operation}), Generation(${step.generation}), ${step.bytes}, ${identity}, ${JSON.stringify(step.owner)});`);
+        lines.push(`        fixture_admit(&mut caller,&mut registry, &mut output, OperationId(${step.operation}), Generation(${step.generation}), ${step.bytes}, ${identity}, ${JSON.stringify(step.owner)});`);
         identity += 1;
       } else if (step.action === "take") {
-        lines.push(`        fixture_take(&mut registry, &mut output, OperationId(${step.operation}), Generation(${step.generation}));`);
+        lines.push(`        fixture_take(&mut caller,&mut registry, &mut output, OperationId(${step.operation}), Generation(${step.generation}));`);
       } else if (step.action === "cancel") {
         lines.push(`        fixture_cancel(&mut registry, &mut output, OperationId(${step.operation}), Generation(${step.generation}));`);
       } else if (step.action === "cancelStaleStep") {
         lines.push(`        fixture_cancel_stale(&mut registry, &mut output, OperationId(${step.operation}), Generation(${step.liveGeneration}));`);
       } else if (step.action === "close") {
         const grant = step.grant;
-        lines.push(`        fixture_close(&mut registry, &mut output, RetainedCloneGrant { maximum_items: ${grant.maximumItems}, maximum_copy_bytes: ${grant.maximumCopyBytes}, maximum_capacity_bytes: ${grant.maximumCapacityBytes}, maximum_release_bytes: ${grant.maximumReleaseBytes}, maximum_depth: ${grant.maximumDepth} });`);
+        lines.push(`        fixture_close(&mut caller,&mut registry, &mut output, RetainedCloneGrant { maximum_items: ${grant.maximumItems}, maximum_copy_bytes: ${grant.maximumCopyBytes}, maximum_capacity_bytes: ${grant.maximumCapacityBytes}, maximum_release_bytes: ${grant.maximumReleaseBytes}, maximum_depth: ${grant.maximumDepth} });`);
       } else if (step.action === "inspect") {
         lines.push("        fixture_inspect(&registry, &mut output);");
       }
     }
     lines.push(`        fixture_assert(${JSON.stringify(testCase.id)}, &mut registry, output, &[${testCase.expected.map((entry) => JSON.stringify(entry)).join(", ")}]);`, "    }");
   }
-  lines.push("}", "");
+  lines.push("    caller.retire(source);","}", "");
   return lines.join("\n");
 }
 
@@ -7171,7 +7181,7 @@ async function runInterfaceImportGate(root: string): Promise<void> {
 
 export class VerifyScript extends Script {
   async run(segments: string[]): Promise<void> {
-    if (await dispatchOwnedScriptRoute(this.root, ["verify", ...segments])) return;
+    if (await dispatchOwnedScriptRoute(this.invocation,this.root, ["verify", ...segments])) return;
     if (segments[0] === "canonical-architecture") {
       if (segments.length !== 1) throw new Error("Expected verify canonical-architecture");
       this.runCanonicalArchitecture();
@@ -7411,7 +7421,7 @@ export class VerifyScript extends Script {
     
     if (segments[0] === "artifact-contract-ownership") {
       abstractionOwnershipChecks(this.root);
-      const fixture = JSON.parse(readFileSync(join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧫️fixtures/🧪️abstraction-ownership/🔣️.json"), "utf8")) as { artifactSchemas: string[] };
+      const fixture = JSON.parse(readFileSync(join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🧫️fixtures/🧪️abstraction-ownership/🔣️.json"), "utf8")) as { artifactSchemas: string[] };
       const packages = [...new Set(fixture.artifactSchemas.map((path) => {
         const manifest = Bun.TOML.parse(readFileSync(join(this.root, path.split("/🏅️standards/")[0], "📦️packages/🦀️rust/Cargo.toml"), "utf8")) as { package: { name: string } };
         return manifest.package.name;
@@ -8036,7 +8046,7 @@ export class VerifyScript extends Script {
    * exit 0); flip [[INTERACTIVITY_AUDIT_SEVERITY]] to `"deny"` at Phase 3 packet P3c.
    */
   private async runInteractivityAudit(): Promise<void> {
-    await dispatchOwnedScriptRoute(this.root, ["verify", "puzzle-fill-policy-self-tests"]);
+    await dispatchOwnedScriptRoute(this.invocation,this.root, ["verify", "puzzle-fill-policy-self-tests"]);
     const apps = interactivityAllAppDiscovery(this.root);
     const appSelfTests = await interactivityAllAppDiscoverySelfTests();
     console.log(`[verify interactivity apps] ${apps.descriptors.length} descriptor(s), ${apps.appCount} app declaration(s), ${apps.playgrounds} dashboard playground command(s), ${apps.surfaceCount} dev surface(s) over ${apps.renderers.join("/")}, ${apps.actionCount} action row(s), ${apps.surfaceCoveredAppCount} surface-covered app context(s), ${apps.surfaceMissingAppCount} missing surface context(s), ${apps.gates} dashboard-startable gate(s), ${appSelfTests} hostile/oracle self-test(s).`);
@@ -8278,11 +8288,11 @@ export class VerifyScript extends Script {
       return;
     }
     if (args.includes("--p6i-only")) {
-      await dispatchOwnedScriptRoute(this.root, ["verify", "fem-live-visual-publication", ...args]);
+      await dispatchOwnedScriptRoute(this.invocation,this.root, ["verify", "fem-live-visual-publication", ...args]);
       return;
     }
     if (args.includes("--p6h-only")) {
-      await dispatchOwnedScriptRoute(this.root, ["verify", "fem-numerical-microcursor", ...args]);
+      await dispatchOwnedScriptRoute(this.invocation,this.root, ["verify", "fem-numerical-microcursor", ...args]);
       return;
     }
     if (args.includes("--self-test")) {
@@ -9776,10 +9786,10 @@ function historyClosurePluginProduction(path: string): boolean {
 export const HISTORY_CLOSURE_RULES: readonly HistoryClosureRule[] = [
   { id: "amend-emit", anchors: ["Emit::amend", "amend_config"], pattern: /\b(?:Action)?Emit::amend\b|\bamend_config\b/, applies: () => true, allow: [], reason: "a gesture is a tool transaction (artifact lane) or one config edit at gesture end (config lane); no emission amends the previous edit" },
   { id: "amend-last", anchors: ["AmendLast", "amendLast"], pattern: /\bAmendLast\w*|\bamendLast\w*/, applies: () => true, allow: [], reason: "the Store has no amend command on any lane; a transaction-scoped open edit (§15) is the only growing edit" },
-  { id: "coalesce-key", anchors: ["coalesce_key", "coalesceKey"], pattern: /\bcoalesce_key\b|\bcoalesceKey\b|\bset_coalesce_key\b/, applies: () => true, allow: ["🌎️hub/🧩️compositions/🪐️space/🧪️testing/🧫️fixtures/🔮️ownership/🔣️.json"], reason: "no emission, edit, digest, wire frame, persisted record or fixture carries a coalesce key; history rows group by TransactionRef" },
+  { id: "coalesce-key", anchors: ["coalesce_key", "coalesceKey"], pattern: /\bcoalesce_key\b|\bcoalesceKey\b|\bset_coalesce_key\b/, applies: () => true, allow: ["🌎️hub/🧩️compositions/🪐️space/🧪️testing/🧪️tests/🧫️fixtures/🔮️ownership/🔣️.json"], reason: "no emission, edit, digest, wire frame, persisted record or fixture carries a coalesce key; history rows group by TransactionRef" },
   { id: "preview-contract", anchors: ["UtilityPreviewContract"], pattern: /\bUtilityPreviewContract\b/, applies: () => true, allow: [], reason: "the actions-vs-tools contract is `🔖️ToolContract`; there is no preview pattern beside tool machines" },
-  { id: "bracket-verb", anchors: ["transformBegin", "transformEnd", "paintStrokeBegin", "paintStrokeEnd"], pattern: /\b(?:transform|paintStroke)(?:Begin|End)\b/, applies: () => true, allow: ["🧰️framework/🔨️modules/🛂️manifest/🧫️fixtures/🖐️gumball-verb-audience.json", "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs"], reason: "a gesture is one tool-machine press with stream/commit/abort phases; no bracket verb exists" },
-  { id: "host-snapshot-bracket", anchors: ["setHostSnapshot", "SetHostSnapshot", "set_host_snapshot"], pattern: /\bsetHostSnapshot\b|\bSetHostSnapshot\b|\bset_host_snapshot\b/, applies: (path) => !HISTORY_CLOSURE_TESTS.test(path), allow: ["🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json"], reason: "node-graph hosts journal id-keyed rows (move/connect/delete); a whole host snapshot is never a history mutation (refusal laws and the shared refusal fixture name it)" },
+  { id: "bracket-verb", anchors: ["transformBegin", "transformEnd", "paintStrokeBegin", "paintStrokeEnd"], pattern: /\b(?:transform|paintStroke)(?:Begin|End)\b/, applies: () => true, allow: ["🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🖐️gumball-verb-audience.json", "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs"], reason: "a gesture is one tool-machine press with stream/commit/abort phases; no bracket verb exists" },
+  { id: "host-snapshot-bracket", anchors: ["setHostSnapshot", "SetHostSnapshot", "set_host_snapshot"], pattern: /\bsetHostSnapshot\b|\bSetHostSnapshot\b|\bset_host_snapshot\b/, applies: (path) => !HISTORY_CLOSURE_TESTS.test(path), allow: ["🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json"], reason: "node-graph hosts journal id-keyed rows (move/connect/delete); a whole host snapshot is never a history mutation (refusal laws and the shared refusal fixture name it)" },
   { id: "edit-literal", anchors: ["Edit"], pattern: /\bprotocol::Edit\s*\{|(?<![\w:])Edit\s*\{\s*line\s*:/, applies: historyClosurePluginProduction, allow: [], reason: "plugins never hand-build an edit; `ArtifactStoreOneItemLiveAuthority::next_edit` mints it from the Store authority" },
   { id: "release-plain-commit", anchors: ["artifact_mutations", "Emit::mutations(", "Emit::commit("], pattern: /\bartifact_mutations\s*:|\bEmit::(?:mutations|commit)\(/, applies: historyClosurePluginProduction, allow: [], within: /pointer_up|_release$|^release_/, unless: /\b(?:commit|stream|abort)_transaction\b|\bnode_drag\w*|\bToolStep::/, reason: "a pointer/drag sequence commits through its tool machine (`commit_transaction`); a release handler never publishes an absolute final-state leaf (L6)" },
   { id: "footprint-hand", anchors: ["for_one_", "ArtifactStoreOneItemFootprint"], pattern: /\bfor_one_invertible_item\b|\bfor_one_item\b|\bArtifactStoreOneItemFootprint\s*\{\s*work_items\b/, applies: (path) => path.endsWith(".rs") && !path.startsWith(HISTORY_CLOSURE_STORE) && !HISTORY_CLOSURE_TESTS.test(path), allow: [], reason: "a fold footprint is derived from the leaf's `x-semio-inverse-rows` through `ArtifactStoreOneItemFootprint::for_leaf`; a hand count under-declares multi-row inverses" },
@@ -13542,7 +13552,7 @@ export class TestScript extends Script {
         prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(this.root),this.root,["test", "--manifest-path", join(cwd, "Cargo.toml")],cwd,process.env);
         env.SEMIO_CARGO_TEST_POLICY = JSON.stringify(repositoryCargoTestPolicyV1(join(cwd, "Cargo.toml"), cwd));
       } else env.SEMIO_VITEST_POLICY = JSON.stringify(repositoryVitestPolicyV1(cwd, env));
-      const { runOwnedCommand } = await import("./🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts");
+      const { runOwnedCommand } = await import("./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
       await runOwnedCommand(process.execPath, [join(cwd, "📜️script.ts"), "test", level, ...rest.slice(2)], cwd, `canvas-${rest[1]}:test`, 0, { env });
       return;
     }
@@ -13562,9 +13572,10 @@ export class TestScript extends Script {
     if (rest[0] === "repo-mcp") {
       await this.runRepoGoTest(`./${REPO_MCP_GO}`, level, rest.slice(1));
       const mcpOut = resolveMcpBin(this.root);
-      runCanonicalGoBuild(join(this.root, REPO_MCP_GO), ["-o", mcpOut, "."], {
+      await runCanonicalGoBuild(join(this.root, REPO_MCP_GO), ["-o", mcpOut, "."], {
         env: { ...process.env, GOWORK: join(this.root, "go.work") },
         budgetMs: buildBudgetMs(),
+        control: scriptCompilerAdmissionControlV1(this.invocation, "repo-mcp:go-build", buildBudgetMs()),
       });
       await this.runRepoGoTest(`./${REPO_CLIENT_GO}`, level, ["-run", "Mcp|MCP|mcp", ...rest.slice(1)]);
       return;
@@ -14287,9 +14298,6 @@ export class StdioScript extends Script {
 
 
 
-Helpers
-
-
 //#region 🔖️PublishScript
 export class PublishScript extends Script {
   run(segments: string[]): void {
@@ -14703,7 +14711,7 @@ export class SchemaScript extends Script {
     mkdirSync(base, { recursive: true });
     const module = join(this.root, "🧰️framework/🔨️modules/🧬️schema");
     const { loadProductionSchemaEntriesV1 } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🟦️.ts");
-    const { runOwnedCommand } = await import("./🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts");
+    const { runOwnedCommand } = await import("./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
     const directory = mkdtempSync(join(base, "registry-")), output = join(directory, "entries.json");
     let text = "";
     try {
@@ -14840,18 +14848,10 @@ export class SchemaScript extends Script {
 class ComponentsScript extends Script {
   async run(segments: string[]): Promise<void> {
     const [subcommand, ...rest] = segments;
-    const controller = new AbortController(), cancel = (): void => controller.abort(Error("components cancelled"));
-    process.once("SIGINT", cancel);
-    process.once("SIGTERM", cancel);
-    try {
-      if (subcommand === "describe") return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts")).describeComponentsV1(this.repoRoot, rest, controller.signal);
-      if (subcommand === "profile-independence") return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts")).profileIndependenceV1(this.repoRoot, rest, controller.signal);
-      if (subcommand === "iterate" && rest.length === 1) return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/🟦️.ts")).iterateComponentV1(rest[0]!);
-      throw new Error("usage: components describe <plugin-id…>|--all [--profile wasm-release|wasm-prototype] | components iterate <plugin-id> | components profile-independence [--sample <n>] [--seed <n>]|<plugin-id…>");
-    } finally {
-      process.removeListener("SIGINT", cancel);
-      process.removeListener("SIGTERM", cancel);
-    }
+    if (subcommand === "describe") return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts")).describeComponentsV1(this.repoRoot, rest, scriptCompilerAdmissionControlV1(this.invocation, "components:describe", 0));
+    if (subcommand === "profile-independence") return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts")).profileIndependenceV1(this.repoRoot, rest, scriptCompilerAdmissionControlV1(this.invocation, "components:profile", 0));
+    if (subcommand === "iterate" && rest.length === 1) return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/🟦️.ts")).iterateComponentV1(rest[0]!, scriptCompilerAdmissionControlV1(this.invocation, "components:iterate", 0));
+    throw new Error("usage: components describe <plugin-id…>|--all [--profile wasm-release|wasm-prototype] | components iterate <plugin-id> | components profile-independence [--sample <n>] [--seed <n>]|<plugin-id…>");
   }
 }
 //#endregion 🔖️ComponentsScript
@@ -14859,25 +14859,15 @@ class ComponentsScript extends Script {
 //#region 🔖️ReleaseScript
 /** 🚀️ `release` (`workspace:release`): the one release build driver over every discovered component. It owns every component Cargo pass (one per workspace) and
  * the jobs this project's `release` target declares (descriptor emitter, fonts, browser support) under one jobserver, memory admission and telemetry, and
- * streams each component through describe, transpile, `wasm-opt`, its module probe and publication as Cargo links it; `SEMIO_RELEASE_GENERATION=fresh`
+ * streams each component through describe, transpile, `wasm-opt`, its module probe and publication as Cargo links it; `SEMIO_NATIVE_BUILD_GENERATION=fresh`
  * compiles cold into a new generation.
  * @see ./🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts */
 class ReleaseScript extends Script {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw new Error("The release driver accepts no arguments; SEMIO_RELEASE_GENERATION=fresh selects a cold generation");
-    const [{ releaseGenerationKindV1, runReleaseDriverV1 }, { cargoDirectories, releasePipelinePlanV1 }, { componentDriverStagesV1 }] = await Promise.all([import("./🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts"), import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts"), import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts")]);
-    const { plan, jobEnvironment } = releasePipelinePlanV1(this.repoRoot, JSON.parse(readFileSync(join(this.repoRoot, "📋️project.json"), "utf8")).targets.release.metadata.semio.release);
-    const controller = new AbortController(), cancel = (): void => controller.abort(Error("Release build cancelled"));
-    process.once("SIGINT", cancel);
-    process.once("SIGTERM", cancel);
-    this.invocation.control.signal.addEventListener("abort", cancel, { once: true });
-    try {
-      await runReleaseDriverV1({ plan, cwd: this.repoRoot, cacheRoot: repoCacheDirectory(this.repoRoot), shared: cargoDirectories(this.repoRoot), generation: releaseGenerationKindV1(process.env), leaseDirectory: repoCacheDirectory(this.repoRoot, "agents", "resource-leases"), environment: process.env, signal: controller.signal, stages: componentDriverStagesV1(this.repoRoot), jobEnvironment });
-    } finally {
-      process.removeListener("SIGINT", cancel);
-      process.removeListener("SIGTERM", cancel);
-      this.invocation.control.signal.removeEventListener("abort", cancel);
-    }
+    if (segments.length) throw new Error("The release driver accepts no arguments; SEMIO_NATIVE_BUILD_GENERATION=fresh selects a cold generation");
+    const [{ nativeBuildGenerationKindV1, runNativeBuildDriverV1 }, { cargoDirectories, nativeBuildPipelinePlanV1 }, { componentDriverStagesV1 }] = await Promise.all([import("./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts"), import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts"), import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts")]);
+    const { plan, jobEnvironment } = nativeBuildPipelinePlanV1(this.repoRoot, JSON.parse(readFileSync(join(this.repoRoot, "📋️project.json"), "utf8")).targets.release.metadata.semio.release);
+    await runNativeBuildDriverV1({ plan, compilerConfiguration: join(this.repoRoot,".cargo/config.toml"), cwd: this.repoRoot, cacheRoot: repoCacheDirectory(this.repoRoot), shared: cargoDirectories(this.repoRoot), generation: nativeBuildGenerationKindV1(process.env), leaseDirectory: join(this.repoRoot, ".cache", "framework", "leases"), environment: process.env, control: scriptCompilerAdmissionControlV1(this.invocation, "native:driver", 0), stages: componentDriverStagesV1(this.repoRoot), jobEnvironment });
   }
 }
 //#endregion 🔖️ReleaseScript
@@ -20517,7 +20507,7 @@ function policyMutationArtifactEngineBreaches(repoRoot: string): BreachRecord[] 
  */
 /** 📖️The frozen outcome-code vocabulary's language-agnostic document — the one table this gate, the Rust protocol
  * (`OUTCOME_CODES`, persistence) and the TypeScript twin (`outcomeCodeLevel`) share. */
-const POLICY_OUTCOME_CODE_FIXTURE = "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🧫️outcome-code/🔣️.json";
+const POLICY_OUTCOME_CODE_FIXTURE = "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🧫️outcome-code/🔣️.json";
 type PolicyOutcomeLevel = "info" | "warning" | "error" | "fatal";
 export type PolicyOutcomeVocabulary = Readonly<{ codes: ReadonlyMap<string, PolicyOutcomeLevel>; applyPattern: RegExp; applyLevel: PolicyOutcomeLevel }>;
 

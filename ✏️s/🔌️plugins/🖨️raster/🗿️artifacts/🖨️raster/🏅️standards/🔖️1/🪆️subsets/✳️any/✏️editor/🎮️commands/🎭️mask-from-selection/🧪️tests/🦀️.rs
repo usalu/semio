@@ -4,7 +4,7 @@ use protocol::Mutation;
 
 #[test]
 fn selection_mask_preserves_soft_coverage_and_round_trips_history() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let mut document = crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
     document.layers.push(crate::standards::v1::subsets::any::schema::create_pixel_layer("Paint",3,2));
     let id = crate::standards::v1::subsets::any::schema::layer_node_id(&document.layers[0]).to_owned();
@@ -65,7 +65,7 @@ fn selection_mask_cancellation_releases_private_work_without_publication() {
 
 #[test]
 fn protected_pixels_refuse_before_preparation() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for id in ["locked-pixel","inherited-pixel"] {
         let command=MaskFromSelection {layer_id:id.into(),expected_image_key:None,selection:vec![crate::mutations::paint_stroke::RasterSelectionSpan { start: 0, length: 1, coverage: 255 }]};

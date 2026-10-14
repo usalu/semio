@@ -3,7 +3,7 @@ use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, docume
 use crate::{ModelSnapshot, SpaceConditions};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const ENERGY: &str = include_str!("../../../../../../🧫️fixtures/🏗️ifc/🔥️energy/📸️snapshot/🔣️.json");
+const ENERGY: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🔥️energy/📸️snapshot/🔣️.json");
 
 fn energy() -> ModelSnapshot {
     from_json_str(ENERGY, JsonMemberPolicy::Reject).expect("the committed energy model decodes")
@@ -125,7 +125,7 @@ fn the_report_is_deterministic_and_parses_as_json() {
     assert!(first.starts_with('{') && first.ends_with('}') && first.matches('{').count() == first.matches('}').count() && first.matches('"').count() % 2 == 0, "{first}");
 }
 
-const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🔥️energy");
+const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🔥️energy");
 
 #[test]
 fn the_committed_files_are_the_current_export() {

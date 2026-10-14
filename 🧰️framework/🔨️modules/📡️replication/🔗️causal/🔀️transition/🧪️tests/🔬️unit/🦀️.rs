@@ -356,7 +356,7 @@ fn fixture_replacement(json: &serde_json::Value) -> InputReplacement {
 /// proof shared with the TypeScript runner).
 #[test]
 fn durable_collaborative_redo_fixture_survives_reload_and_hub_restart() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🗄️durable-collaborative-redo-v1/🔣️.json")).expect("durable collaborative redo fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🗄️durable-collaborative-redo-v1/🔣️.json")).expect("durable collaborative redo fixture parses");
     assert_eq!(fixture["schema"].as_str(), Some("semio.history.durable-collaborative-redo.v1"));
     let edits: Vec<FoldEdit> = fixture["edits"]
         .as_array()
@@ -411,7 +411,7 @@ fn durable_collaborative_redo_fixture_survives_reload_and_hub_restart() {
 
 #[test]
 fn the_language_agnostic_fixture_matches_the_codec_byte_for_byte() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧫️history-transition/🔣️.json")).expect("history transition fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧫️history-transition/🔣️.json")).expect("history transition fixture parses");
     assert_eq!(fixture["diffSchema"].as_str(), Some(HISTORY_TRANSITION_SCHEMA));
     let clock = HybridLogicalTimestamp { actor: fixture["idClock"]["actor"].as_u64().expect("idClock actor"), physical_ms: fixture["idClock"]["physicalMs"].as_u64().expect("idClock physicalMs"), logical: fixture["idClock"]["logical"].as_u64().expect("idClock logical") };
     for case in fixture["cases"].as_array().expect("fixture cases") {
@@ -487,7 +487,7 @@ fn a_supersede_envelope_depends_on_its_targets() {
 }
 
 fn supersede_fold_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🧫️fixtures/🧫️supersede-fold/🔣️.json")).expect("supersede fold fixture parses")
+    serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧫️supersede-fold/🔣️.json")).expect("supersede fold fixture parses")
 }
 
 fn fixture_step_envelope(document: &ArtifactId, step: &serde_json::Value) -> crate::causal::MutationEnvelope {
@@ -611,7 +611,7 @@ fn supersession_values_round_trip() {
 #[test]
 fn bounded_history_fold_obeys_the_neutral_law() {
     use semio_framework_value::ErasedSnapshotRetirement;
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🔁️fold/🧫️fixtures/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🔁️fold/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let fixture = supersede_fold_fixture();
     let document = ArtifactId(fixture["documentId"].as_str().unwrap().into());
     let edits: Vec<FoldEdit> = fixture["edits"].as_array().unwrap().iter().map(|row| FoldEdit { id: row["id"].as_str().unwrap().into(), actor: row["actor"].as_str().map(Into::into), timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: row["logicalMs"].as_u64().unwrap(), logical: 0 }, mutation_ids: row["mutationIds"].as_array().unwrap().iter().map(|id| MutationId(id.as_str().unwrap().into())).collect(), line: row["line"].as_str().map(str::to_owned) }).collect();
@@ -654,7 +654,7 @@ fn bounded_history_fold_obeys_the_neutral_law() {
 #[test]
 fn bounded_history_transition_decoding_obeys_the_neutral_law() {
     use semio_framework_value::ErasedSnapshotRetirement;
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🔁️fold/🧫️fixtures/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🔁️fold/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut cases: Vec<(Vec<u8>, Result<HistoryTransition, crate::ProtocolError>)> = every_transition().into_iter().map(|transition| (encode_history_transition(&transition), Ok(transition))).collect();
     for row in law["decodeCases"].as_array().unwrap() {
         let bytes: Vec<u8> = row["payloadHex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect();
@@ -689,7 +689,7 @@ fn bounded_history_transition_decoding_obeys_the_neutral_law() {
 #[test]
 fn bounded_history_envelope_decoding_obeys_the_neutral_law() {
     use semio_framework_value::ErasedSnapshotRetirement;
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🔁️fold/🧫️fixtures/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🔁️fold/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in law["envelopeCases"].as_array().unwrap() {
         let bytes: Vec<u8> = row["payloadHex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect();
         let mut position = 0;

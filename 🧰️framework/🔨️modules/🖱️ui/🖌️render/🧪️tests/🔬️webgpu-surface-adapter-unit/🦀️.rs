@@ -3,8 +3,8 @@ use super::*;
 use crate::abi::{AbiOperation, AbiPageBytes, AbiPortRejection};
 use std::collections::VecDeque;
 
-const GPU_SURFACE_TRACE_FIXTURE: &str = include_str!("../../🧫️fixtures/🧊️webgpu/📊️.tsv");
-const GPU_SURFACE_LIMITS_FIXTURE: &str = include_str!("../../🧫️fixtures/🧊️webgpu/📐️surface-port-limits.tsv");
+const GPU_SURFACE_TRACE_FIXTURE: &str = include_str!("../🧫️fixtures/🧊️webgpu/📊️.tsv");
+const GPU_SURFACE_LIMITS_FIXTURE: &str = include_str!("../🧫️fixtures/🧊️webgpu/📐️surface-port-limits.tsv");
 
 #[derive(Default)]
 struct MockPort {

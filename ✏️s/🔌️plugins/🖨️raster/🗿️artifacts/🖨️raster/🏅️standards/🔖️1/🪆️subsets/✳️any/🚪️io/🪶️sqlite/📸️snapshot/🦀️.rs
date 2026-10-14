@@ -1,4 +1,5 @@
 //! 🖨️ Authored Raster layers, masks, intrinsic variants and literal child relationships.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::*;
 use crate::standards::v1::subsets::any::schema::snapshot::RasterSnapshot;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Projection,Cell,FloatColumn,FloatRow,Reconstruction,insert_ieee754}};
@@ -127,20 +128,20 @@ fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)-
  }}if r.rows.values().any(|v|!v.is_empty()){return Err(invalid("orphan Raster entities"))}r.control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;for id in root_ids{owner.0.as_mut().unwrap().layers.push(forest.0.remove(&id).ok_or_else(||invalid("Raster root owner"))?);}if !forest.0.is_empty(){return Err(invalid("unowned Raster layer"))}Ok(owner.0.take().unwrap())
 }
 
-impl store::os_store::serialization::ArtifactSqliteSnapshot for RasterSnapshot{
- const SQLITE_SCHEMA:&'static str=SCHEMA;
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{project(self,control)}
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{reconstruct(database,control)}
+impl store::os_store::serialization::ArtifactSqliteSnapshotHost for RasterSnapshot{
+ 
+ 
+ 
  fn retire_sqlite_snapshot(self){retire_snapshot(self)}
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
   let maximum_rows=control.limits().max_rows;
-  store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
+  store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
    let document=standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::__dsl_from_record_controlled(record,native)?;document.into_snapshot(maximum_rows,native)
   })(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
  }
  fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
   let maximum_rows=control.limits().max_rows;
-  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::__dsl_spec_producer(),|native|{
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::__dsl_spec_producer(),|native|{
    let document=standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::from_snapshot(self,maximum_rows,native)?;
    document.__dsl_to_record_controlled(native)
   },control,native_owner)
@@ -155,6 +156,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
   validate_sqlite_database_schema(database,SCHEMA,control.limits()).map_err(io)?;
   Ok(store::io_schema::IoOutcome::clean(()))
  }
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for RasterSnapshot {
+const SQLITE_SCHEMA:&'static str=SCHEMA;
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{project(self,control)}
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{reconstruct(database,control)}
 }
 
 #[cfg(test)]

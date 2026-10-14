@@ -6,7 +6,7 @@ use crate::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform,
 
 #[semio_framework_async_macros::async_test]
 async fn mask_asset_and_transform_round_trip_through_text_and_pack() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧬️schema/🧫️fixtures/🎭️mask/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🔬️contract/🎭️mask/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mask:RasterLayerMask=semio_framework_pack_json::from_json_str(&case["mask"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&mask)).unwrap();
@@ -98,7 +98,7 @@ async fn pack_round_trips_representative_document() {
         ],
     };
     store::os_store::test_support::assert_dsl_pack_equivalence_cold(&document, crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot);
-    let spec = <RasterSnapshot as store::os_store::serialization::ArtifactPack>::record_spec().expect("raster declares its pack record spec");
+    let spec = <RasterSnapshot as pack::snapshot::ArtifactPack>::record_spec().expect("raster declares its pack record spec");
     assert_ne!(store::os_pack::schema_hash(&spec), [0u8; 32]);
     let decoded = decode(&encode(&document)).expect("decode");
     let image = |snapshot: &RasterSnapshot| snapshot.assets.iter().next().and_then(|(_, child)| child.local_owner::<semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot>()).map(|image| image.as_ref().clone());

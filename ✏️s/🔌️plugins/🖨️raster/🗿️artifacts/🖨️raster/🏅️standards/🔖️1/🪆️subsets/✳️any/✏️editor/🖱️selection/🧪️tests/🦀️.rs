@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn layer_selection_matches_neutral_wire_arguments() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap(){
         let args=layer_selection_args(row["id"].as_str().unwrap()).unwrap();
         let json:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&args)).unwrap();

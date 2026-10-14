@@ -1,7 +1,7 @@
 use super::*;
 #[test]
 fn neutral_baseline_facts_preserve_every_native_conformance_axis(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🏅️conformance/🔣️.json")).unwrap();
  for case in corpus["cases"].as_array().unwrap(){
   let facts:JpgBaselineFacts=semio_framework_pack_json::from_json_str(&case["facts"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
   let owned=semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&facts));assert_eq!(serde_json::from_str::<serde_json::Value>(&owned).unwrap(),case["facts"]);

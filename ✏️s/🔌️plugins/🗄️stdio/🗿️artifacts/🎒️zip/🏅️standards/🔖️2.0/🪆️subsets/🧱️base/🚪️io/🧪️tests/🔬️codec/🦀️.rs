@@ -154,8 +154,8 @@ fn zip_deflate_round_trip() {
 #[test]
 fn codec_round_trip() {
     let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "x".into(), data: b"y".to_vec(), ..Default::default() }], comment: String::new(), ..Default::default() };
-    let pack = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
-    let decoded = <ZipSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("decode");
+    let pack = pack::snapshot::ArtifactPack::encode_pack(&snap);
+    let decoded = <ZipSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("decode");
     assert_eq!(decoded, snap);
 }
 
@@ -242,7 +242,7 @@ fn decode_rich_synthetic_archive() {
 
 #[test]
 fn header_fidelity_fixture_survives_exactly_and_matches_independent_zip_reader() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧭️header-fidelity/🔣️.json")).expect("neutral ZIP header fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧭️header-fidelity/🔣️.json")).expect("neutral ZIP header fixture");
     let bytes = |at: &serde_json::Value| at.as_array().expect("byte array").iter().map(|value| value.as_u64().expect("byte") as u8).collect::<Vec<_>>();
     let number = |at: &serde_json::Value| at.as_u64().expect("number");
     let directory = &fixture["directory"];
@@ -462,15 +462,15 @@ async fn deterministic_logical_round_trip() {
     assert_eq!(e.name, "readme.md");
     assert_eq!(e.data, snap.entries[0].data);
 
-    let archive_bytes: &[u8] = include_bytes!("../../../🧫️fixtures/📦️opc.zip");
+    let archive_bytes: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/📦️opc.zip");
     let logical = decode_zip(archive_bytes).expect("decode the committed OPC package");
     assert_eq!(logical.entries.len(), 6);
 
-    let dsl = <ZipSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&logical);
-    let from_dsl = <ZipSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&dsl).expect("parse logical ZIP DSL");
+    let dsl = <ZipSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&logical);
+    let from_dsl = <ZipSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&dsl).expect("parse logical ZIP DSL");
     assert_eq!(from_dsl, logical);
-    let pack = <ZipSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&logical);
-    let from_pack = <ZipSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("decode logical ZIP pack");
+    let pack = <ZipSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&logical);
+    let from_pack = <ZipSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("decode logical ZIP pack");
     assert_eq!(from_pack, logical);
 
     let self_diff = ZipDiff::default();

@@ -1,7 +1,0 @@
-{
-  "limitBytes": 8388608,
-  "retainBytes": 65536,
-  "cycles": 3,
-  "tail": "preserved diagnostic 🧬️ tail\n",
-  "append": "original append descriptor remains live\n"
-}

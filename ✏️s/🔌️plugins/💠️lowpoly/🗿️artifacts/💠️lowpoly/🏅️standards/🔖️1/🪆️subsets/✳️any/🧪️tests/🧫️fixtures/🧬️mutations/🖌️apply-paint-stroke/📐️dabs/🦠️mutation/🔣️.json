@@ -1,0 +1,21 @@
+{
+  "ApplyPaintStroke": {
+    "color": [
+      0.78431374,
+      0.11764706,
+      0.11764706
+    ],
+    "eraser": false,
+    "hardness": 0.5,
+    "layerIndex": 0,
+    "objectId": "obj-hull",
+    "opacity": 1.0,
+    "points": [
+      [
+        1.5,
+        0.5
+      ]
+    ],
+    "radius": 1.5
+  }
+}

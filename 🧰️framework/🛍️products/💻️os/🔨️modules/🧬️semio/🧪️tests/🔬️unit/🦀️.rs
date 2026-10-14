@@ -20,7 +20,7 @@ fn retire_original_semio_owner<T:semio_framework_value::retirement::RetireOwned>
 #[test]
 fn retained_text_envelope_preserves_original_body_and_bounds_resume_cancel_and_release() {
     use semio_framework_value::{NativeEncodeControl, ValueRefusalKind};
-    let fixture: serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🚦️controlled/🔣️.json")).unwrap();
+    let fixture: serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🚦️controlled/🔣️.json")).unwrap();
     let body=fixture["textBody"].as_str().unwrap().repeat(fixture["retained"]["textRepeats"].as_u64().unwrap() as usize);
     let id=fixture["id"].as_str().unwrap(); let version=fixture["version"].as_u64().unwrap() as u16;
     let expected=wrap_text(&SemioEnvelope::from_envelope_id(id,Component::Dsl,version).unwrap(),&body);
@@ -59,7 +59,7 @@ fn retained_text_envelope_preserves_original_body_and_bounds_resume_cancel_and_r
 
 #[test]
 fn semio_envelope_identity_matches_independent_neutral_vectors() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️envelope-identity/🔣️.json")).expect("neutral envelope vectors");
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️envelope-identity/🔣️.json")).expect("neutral envelope vectors");
     let expected = &vectors["expected"];
     for case in vectors["cases"].as_array().unwrap() {
         let item = &case["envelope"];
@@ -107,7 +107,7 @@ mod emission;
 #[test]
 fn original_controlled_binary_refusal_keeps_borrowed_wire_and_zero_system_allocation() {
     use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🚦️controlled/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🚦️controlled/🔣️.json")).unwrap();
     let id=fixture["id"].as_str().unwrap();let version=fixture["version"].as_u64().unwrap()as u16;
     let wire=wrap_binary(&SemioEnvelope::from_envelope_id(id,Component::Pack,version).unwrap(),fixture["textBody"].as_str().unwrap().as_bytes());
     for row in fixture["binaryRefusals"].as_array().unwrap(){

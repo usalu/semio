@@ -4,7 +4,7 @@ import {Database} from "bun:sqlite";
 import {readFileSync,mkdirSync,writeFileSync} from "node:fs";
 import {resolve} from "node:path";
 test("ownership group roots match SQLite cycle and atomic publication oracle",()=>{
- const f=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧫️fixtures/🔣️.json"),"utf8"));
+ const f=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));
  const db=new Database(":memory:");db.exec("create table owns(child text primary key,parent text not null,slot text not null)");
  const put=db.query("insert into owns(child,parent,slot) values(?3,?1,?2)");
  const cycle=db.query("with recursive ancestors(id) as (select ?1 union select parent from owns join ancestors on owns.child=ancestors.id) select count(*) as total from ancestors where id=?2");
@@ -19,7 +19,7 @@ test("ownership group roots match SQLite cycle and atomic publication oracle",()
 });
 
 function compileProductionForest(){
- const f=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧫️fixtures/🔣️.json"),"utf8"));
+ const f=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));
  const ticket=process.env.SEMIO_TICKET_DIR;if(!ticket)throw new Error("SEMIO_TICKET_DIR is required for generated graph compiler outputs");
  const output=resolve(ticket,"🗑️generated","composition-group-rust-isolation");mkdirSync(output,{recursive:true});
  const tuple=(row:string[])=>`(${row.map(value=>JSON.stringify(value)).join(",")})`;
@@ -39,7 +39,7 @@ test("actual production ownership root executes the neutral forest in isolation"
 });
 
 test("ownership forest retirement keeps independent work and physical release axes",()=>{
- const f=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧫️fixtures/🔣️.json"),"utf8")).closeAxes;
+ const f=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8")).closeAxes;
  const db=new Database(":memory:");db.exec("create table owner(capacity integer not null)");for(const capacity of f.stringCapacities)db.query("insert into owner values(?)").run(capacity);
  const schema=JSON.parse(readFileSync(resolve(process.cwd(),"🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json"),"utf8"));const validate=new Ajv().compile(schema.$defs.Grant);
  const rowBytes=f.rowWords*f.wordBytes;expect(rowBytes).toBe(f.retirement.copiedBytes);expect((db.query("select sum(capacity) as total from owner").get() as {total:number}).total).toBe(f.retirement.releasedBytes);
@@ -49,11 +49,11 @@ test("ownership forest retirement keeps independent work and physical release ax
 });
 
 test("original adjacency rows match independent SQLite unique-edge ownership",()=>{
- const f=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧫️fixtures/🔣️.json"),"utf8")).links;const db=new Database(":memory:");db.exec("create table edge(source text,target text,primary key(source,target))");for(const [source,targets] of f.rows)for(const target of targets)db.query("insert or ignore into edge values(?,?)").run(source,target);expect(db.query("select source,target from edge order by source,target").all().map((r:any)=>[r.source,r.target])).toEqual(f.expected);db.close();console.log("[DEBUG] SQLite original links unique ordered rows="+f.expected.length+" terminalDropRequired="+f.terminalDropBytes);
+ const f=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8")).links;const db=new Database(":memory:");db.exec("create table edge(source text,target text,primary key(source,target))");for(const [source,targets] of f.rows)for(const target of targets)db.query("insert or ignore into edge values(?,?)").run(source,target);expect(db.query("select source,target from edge order by source,target").all().map((r:any)=>[r.source,r.target])).toEqual(f.expected);db.close();console.log("[DEBUG] SQLite original links unique ordered rows="+f.expected.length+" terminalDropRequired="+f.terminalDropBytes);
 });
 
 test("forest preparation reserves native capacity independently from copied identifier words",()=>{
- const f=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧫️fixtures/🔣️.json"),"utf8")).preparationAxes;
+ const f=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8")).preparationAxes;
  const db=new Database(":memory:");db.exec("create table identifier(octets blob not null)");for(const text of f.edge)db.query("insert into identifier values(?)").run(new TextEncoder().encode(text));
  const bytes=(db.query("select sum(length(octets)) as bytes from identifier").get() as {bytes:number}).bytes;expect(bytes).toBe(f.bodyBytes);expect(f.count*f.rowWords*f.wordBytes).toBe(f.rowBackingBytes);
  const copied=bytes+f.rowWords*f.wordBytes;expect(copied).toBe(f.copiedBytes);for(const grant of f.grants)expect(grant.copy>=copied&&grant.capacity>=bytes).toBe(grant.expected);

@@ -1,0 +1,189 @@
+{
+  "version": 1,
+  "capacity": 2,
+  "phases": [
+    {
+      "phase": "preparing",
+      "grant": 296,
+      "kind": "pending",
+      "output": false,
+      "resident": {
+        "bytes": 296,
+        "slots": 6,
+        "owners": 6
+      },
+      "linked": 0
+    },
+    {
+      "phase": "cell-held",
+      "grant": 64,
+      "kind": "pending",
+      "output": false,
+      "resident": {
+        "bytes": 296,
+        "slots": 6,
+        "owners": 6
+      },
+      "linked": 0
+    },
+    {
+      "phase": "claiming",
+      "grant": 64,
+      "kind": "pending",
+      "output": false,
+      "resident": {
+        "bytes": 296,
+        "slots": 6,
+        "owners": 6
+      },
+      "linked": 0
+    },
+    {
+      "phase": "claimed",
+      "grant": 64,
+      "kind": "pending",
+      "output": false,
+      "resident": {
+        "bytes": 296,
+        "slots": 6,
+        "owners": 6
+      },
+      "linked": 0
+    },
+    {
+      "phase": "record-admitting",
+      "grant": 264,
+      "kind": "pending",
+      "output": false,
+      "resident": {
+        "bytes": 1008,
+        "slots": 12,
+        "owners": 12
+      },
+      "linked": 0
+    },
+    {
+      "phase": "record-held",
+      "grant": 64,
+      "kind": "pending",
+      "output": false,
+      "resident": {
+        "bytes": 1008,
+        "slots": 12,
+        "owners": 12
+      },
+      "linked": 0
+    },
+    {
+      "phase": "installing",
+      "grant": 64,
+      "kind": "pending",
+      "output": false,
+      "resident": {
+        "bytes": 1008,
+        "slots": 12,
+        "owners": 12
+      },
+      "linked": 0
+    },
+    {
+      "phase": "installed",
+      "grant": 64,
+      "kind": "pending",
+      "output": false,
+      "resident": {
+        "bytes": 1008,
+        "slots": 12,
+        "owners": 12
+      },
+      "linked": 0
+    },
+    {
+      "phase": "slot-held",
+      "grant": 272,
+      "kind": "pending",
+      "output": false,
+      "resident": {
+        "bytes": 1008,
+        "slots": 12,
+        "owners": 12
+      },
+      "linked": 1
+    },
+    {
+      "phase": "facade-held",
+      "grant": 80,
+      "kind": "pending",
+      "output": false,
+      "resident": {
+        "bytes": 1008,
+        "slots": 12,
+        "owners": 12
+      },
+      "linked": 1
+    },
+    {
+      "phase": "published",
+      "grant": 64,
+      "kind": "ready",
+      "output": true,
+      "resident": {
+        "bytes": 1008,
+        "slots": 12,
+        "owners": 12
+      },
+      "linked": 1
+    }
+  ],
+  "short": {
+    "kind": "blocked",
+    "items": 0,
+    "bytes": 0,
+    "linked": 0,
+    "ledgerBytes": 0
+  },
+  "repeat": {
+    "sameOutput": true,
+    "bytes": 0,
+    "linked": 1
+  },
+  "faultValues": [
+    "null",
+    "undefined",
+    "false",
+    "zero",
+    "opaque"
+  ],
+  "unknownBytes": 8193,
+  "faults": {
+    "sameCell": true,
+    "sameRecord": true,
+    "sameOriginalFault": true,
+    "replacement": false,
+    "getterReads": 0
+  },
+  "closingPrefixes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "dispatch": {
+    "beforeReady": false,
+    "withoutReceiver": false
+  },
+  "retainedCancellation": {
+    "unlink": false,
+    "refund": false,
+    "capacityRecovered": false
+  },
+  "maximumSequence": "18446744073709551615"
+}

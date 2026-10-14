@@ -8,8 +8,8 @@ const WORKSPACE_ROOT = process.cwd();
 export function flowTypedRetirementSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained");
   const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
-  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔣️.json"), "utf8"));
-  const fields = JSON.parse(readFileSync(join(base, "🧫️fixtures/🧬️fields/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
+  const fields = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🧬️fields/🔣️.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/FlowCamera" });
   if (!validate(fixture.hostSnapshot.camera)) throw new Error("Flow camera violates its semantic contract");

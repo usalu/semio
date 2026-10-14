@@ -66,7 +66,7 @@ export async function registerBooleanDifferentialTests(vitest: Vitest, source: T
 
   describe("boolean differential matrix", () => {
     it("manifold-3d reproduces the fixture's volume, area, topology and emptiness for every case", () => {
-      const fixture = read(source, "./📐️brep/🛠️operations/🔀️boolean/🧫️fixtures/differential-matrix/🔣️.json");
+      const fixture = read(source, "./📐️brep/🛠️operations/🔀️boolean/🧪️tests/🧫️fixtures/differential-matrix/🔣️.json");
       expect(fixture.cases.length).toBeGreaterThan(0);
       const failures: string[] = [];
       for (const entry of fixture.cases as MatrixCase[]) {

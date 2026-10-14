@@ -16,6 +16,10 @@ use semio_framework_dsl_record::{FieldSpec,FieldValue,RecordLayout,RecordSpec,Re
 use crate::{write_varint_i64, write_varint_u64, ByteReader, ChunkId, CodecId, PackLimits};
 use std::collections::{HashMap, HashSet};
 
+#[path="🛬️decode/📖️source/🦀️.rs"]
+mod original_record_source;
+pub use original_record_source::{RetainedRecordBodySourceDecode,RetainedRecordBodyReadLimits,RetainedRecordBodySourceStep};
+
 #[path = "🎟️storage/🦀️.rs"]
 mod original_storage;
 
@@ -904,7 +908,7 @@ impl RetainedValueCursor {
         self.stack_allocation_bytes()
     }
 
-    pub fn next_allocation_bytes(&mut self) -> Result<Option<usize>, PackRefusal> {
+    pub fn next_allocation_bytes(&self) -> Result<Option<usize>, PackRefusal> {
         if let Some(fault) = self.fault.clone() {
             return Err(fault);
         }
@@ -1572,7 +1576,7 @@ impl RetainedRecordBodyCursor {
         self.allocated_bytes_checked().unwrap_or(usize::MAX)
     }
 
-    fn allocation_need(&mut self) -> Result<Option<(RetainedRecordBodyAllocationOwner, usize)>, PackRefusal> {
+    fn allocation_need(&self) -> Result<Option<(RetainedRecordBodyAllocationOwner, usize)>, PackRefusal> {
         if let Some(fault) = self.fault.clone() {
             return Err(fault);
         }
@@ -1580,7 +1584,7 @@ impl RetainedRecordBodyCursor {
             return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvariantViolated, what: "retained-record-body", offset: self.offset, detail: "allocation after close" });
         }
         if self.phase == RetainedRecordBodyPhase::Value {
-            let value = self.value.as_mut().ok_or_else(|| PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvariantViolated, what: "retained-record-body", offset: self.offset, detail: "value owner missing" })?;
+            let value = self.value.as_ref().ok_or_else(|| PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvariantViolated, what: "retained-record-body", offset: self.offset, detail: "value owner missing" })?;
             return value.next_allocation_bytes().map(|need| need.map(|bytes| (RetainedRecordBodyAllocationOwner::Value, bytes)));
         }
         let Some((offset, byte)) = self.pending else { return Ok(None) };
@@ -1592,10 +1596,7 @@ impl RetainedRecordBodyCursor {
                         .ok()
                         .filter(|target| *target <= self.symbols.maximum_symbols())
                         .ok_or(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "retained record-body symbol count" })?;
-                    self.symbols
-                        .next_symbol_allocation_bytes(target, offset)
-                        .map_err(|fault| fault.into_pack_refusal("retained-record-body-symbol-allocation"))?
-                        .map(|bytes| (RetainedRecordBodyAllocationOwner::SymbolSpans { target, offset }, bytes))
+                    {let bytes=self.symbols.source_reserve_demands(true,target,offset).map_err(|fault|fault.into_pack_refusal("retained-record-body-symbol-allocation"))?.capacity_bytes;(bytes!=0).then_some((RetainedRecordBodyAllocationOwner::SymbolSpans{target,offset},bytes))}
                 }
             },
             RetainedRecordBodyPhase::SymbolLength { cursor, .. } => {
@@ -1612,10 +1613,7 @@ impl RetainedRecordBodyCursor {
                 None => None,
                 Some(_) => {
                     let target = self.symbols.scalar_len().checked_add(1).filter(|target| *target <= self.symbols.maximum_scalars()).ok_or(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "retained record-body symbol scalars" })?;
-                    self.symbols
-                        .next_scalar_allocation_bytes(target, offset)
-                        .map_err(|fault| fault.into_pack_refusal("retained-record-body-symbol-allocation"))?
-                        .map(|bytes| (RetainedRecordBodyAllocationOwner::SymbolScalars { target, offset }, bytes))
+                    {let bytes=self.symbols.source_reserve_demands(false,target,offset).map_err(|fault|fault.into_pack_refusal("retained-record-body-symbol-allocation"))?.capacity_bytes;(bytes!=0).then_some((RetainedRecordBodyAllocationOwner::SymbolScalars{target,offset},bytes))}
                 }
             },
             RetainedRecordBodyPhase::Value | RetainedRecordBodyPhase::Closing | RetainedRecordBodyPhase::Closed => None,
@@ -1642,6 +1640,34 @@ impl RetainedRecordBodyCursor {
             self.fault.get_or_insert_with(|| fault.clone());
         }
         result
+    }
+
+    /// 🔍️ Quotes the original next physical allocation or scalar write without moving pending source.
+    pub fn source_step_demands(&self)->Result<semio_framework_value::RetirementDemand,PackRefusal>{
+        use semio_framework_value::RetirementDemand;
+        let mut demand=if let Some((owner,bytes))=self.allocation_need()?{match owner{
+            RetainedRecordBodyAllocationOwner::SymbolSpans{target,offset}=>self.symbols.source_reserve_demands(true,target,offset).map_err(|error|error.into_pack_refusal("retained-record-body-source"))?,
+            RetainedRecordBodyAllocationOwner::SymbolScalars{target,offset}=>self.symbols.source_reserve_demands(false,target,offset).map_err(|error|error.into_pack_refusal("retained-record-body-source"))?,
+            RetainedRecordBodyAllocationOwner::Value=>RetirementDemand{capacity_bytes:bytes,depth:1,..Default::default()},
+        }}else{match(self.phase,self.pending){
+            (RetainedRecordBodyPhase::SymbolText{remaining,cursor,..},Some((offset,byte)))if cursor.preview(byte,offset)?.is_some()=>{let mut next=self.symbols.source_write_demands(false)?;if remaining==1{next.depth=next.depth.max(self.symbols.source_write_demands(true)?.depth)}next},
+            (RetainedRecordBodyPhase::SymbolLength{cursor,..},Some((offset,byte)))if cursor.preview(byte,offset)?==Some(0)=>self.symbols.source_write_demands(true)?,
+            _=>RetirementDemand{depth:1,..Default::default()},
+        }};
+        demand.depth=demand.depth.checked_add(1).ok_or(PackRefusal::LimitExceeded{kind:ValueRefusalKind::DepthLimit,limit:"record-body source physical depth"})?;Ok(demand)
+    }
+    /// 🧹️ Scalar symbol and native index removal has no payload copy; actual backing release stays distinct.
+    pub fn source_close_demands(&self)->Result<semio_framework_value::RetirementDemand,PackRefusal>{
+        use semio_framework_value::RetirementDemand;
+        if self.terminal_is_empty(){return Ok(Default::default())}
+        let mut demand=if self.pending.is_some()||self.catalog_complete_pending{RetirementDemand{depth:1,..Default::default()}}
+        else{match self.close_phase{
+            RetainedRecordBodyClosePhase::ValueLogical=>RetirementDemand{depth:if self.value.is_some(){2}else{1},..Default::default()},
+            RetainedRecordBodyClosePhase::SymbolsLogical=>{let mut next=self.symbols.retirement_demands()?;next.copy_bytes=0;next.release_bytes=0;next},
+            RetainedRecordBodyClosePhase::SymbolsPhysical=>{let mut next=self.symbols.retirement_demands()?;next.copy_bytes=0;next},
+            RetainedRecordBodyClosePhase::ValuePhysical=>RetirementDemand{release_bytes:self.value.as_ref().and_then(RetainedValueCursor::next_release_allocation_bytes).unwrap_or(0),depth:2,..Default::default()},
+        }};
+        demand.depth=demand.depth.checked_add(1).ok_or(PackRefusal::LimitExceeded{kind:ValueRefusalKind::DepthLimit,limit:"record-body source physical depth"})?;Ok(demand)
     }
 
     pub fn reserve_allocation(&mut self, maximum_bytes: usize) -> Result<RetainedRecordBodyAllocationStep, RetainedRecordBodyAllocationError> {
@@ -3002,7 +3028,7 @@ impl PackSchemaGraph {
     /// 🧮️ Hashes the owned graph incrementally without copying a canonical-byte carrier.
     pub fn hash_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(&self,control:&mut C)->Result<[u8;32],PackRefusal>{controlled_schema::hash_graph(self,control).map_err(PackRefusal::from)}
 
-    /// 🗺️ The language-neutral JSON form of this graph (`🧫️fixtures/🔑️schema-hash`): one array
+    /// 🗺️ The language-neutral JSON form of this graph (`🧪️tests/🧫️fixtures/🔑️schema-hash`): one array
     /// of field objects per record, each shape `{ "kind": .., payload }`, so any language can
     /// recompute [`Self::canonical_bytes`] and the hash from it.
     pub fn to_json(&self) -> semio_framework_pack_json::Value {
@@ -3066,7 +3092,7 @@ impl PackSchemaGraph {
     /// 🧾️ The canonical byte encoding hashed by [`schema_hash`]: `varint(records)`, then per
     /// record `varint(fields)`, then per field `varint(id) text(key) flags(optional=1|flatten=2)
     /// shape`, where `text = varint(len) utf8` and `shape = tag payload` (tags 1..=27 in
-    /// `PackSchemaShape` declaration order; see `🧫️fixtures/🔑️schema-hash`).
+    /// `PackSchemaShape` declaration order; see `🧪️tests/🧫️fixtures/🔑️schema-hash`).
     pub fn canonical_bytes(&self) -> Vec<u8> {
         let mut out = Vec::new();
         write_varint_u64(&mut out, self.records.len() as u64);

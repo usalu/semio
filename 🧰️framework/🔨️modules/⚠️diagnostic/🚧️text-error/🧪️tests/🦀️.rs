@@ -2,7 +2,7 @@ use super::*;
 use semio_framework_value::{DslValue, FromValue, NativeDecodeControl, NativeEncodeControl, ToValue, ValueError, ValueRefusalKind};
 use std::{io::Write, process::{Command, Stdio}};
 
-fn text_refusal_fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
+fn text_refusal_fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
 fn text_refusal_kind(value: &str) -> ValueRefusalKind {
     match value { "invalidValue" => ValueRefusalKind::InvalidValue, "canceled" => ValueRefusalKind::Canceled, "ownershipLimit" => ValueRefusalKind::OwnershipLimit, "allocationFailed" => ValueRefusalKind::AllocationFailed, "workLimit" => ValueRefusalKind::WorkLimit, "depthLimit" => ValueRefusalKind::DepthLimit, "unsupportedOwner" => ValueRefusalKind::UnsupportedOwner, "invariantViolated" => ValueRefusalKind::InvariantViolated, _ => panic!("closed kind") }
 }

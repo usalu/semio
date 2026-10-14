@@ -11,7 +11,7 @@ fn close_authority_cursor(cursor:&mut DeflateRetainedCursor){
 #[cfg(feature="deflate")]
 #[test]
 fn actual_retained_deflate_syntax_lifecycle_and_requested_ceiling_are_distinct(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../⚠️error/🧫️fixtures/🧭️cause/📡️codec/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../⚠️error/🧪️tests/🧫️fixtures/🧭️cause/📡️codec/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let mut grammar=DeflateRetainedCursor::try_new(0,0,0).unwrap();
   let mut terminal=None;
@@ -62,7 +62,7 @@ fn actual_retained_deflate_syntax_lifecycle_and_requested_ceiling_are_distinct()
 #[test]
 fn public_pack_primitives_and_replication_share_the_defining_error_identity(){
     use semio_framework_pack_error::PackRefusal as CanonicalRefusal;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/⚠️error/🪪️identity/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/⚠️error/🪪️identity/🔣️.json")).unwrap();
     for row in fixture["primitiveCases"].as_array().unwrap(){
         let bytes:Vec<u8>=row["bytes"].as_array().unwrap().iter().map(|value|u8::try_from(value.as_u64().unwrap()).unwrap()).collect();let mut position=0;
         let result:Result<u64,CanonicalRefusal>=crate::read_varint_u64(&bytes,&mut position);
@@ -78,8 +78,8 @@ fn public_pack_typed_causes_preserve_owned_messages_and_fault_identity(){
     use semio_framework_pack_error::PackRefusal as CanonicalRefusal;
     use semio_framework_diagnostic::{FaultFrom,FaultOrigin,Severity};
     use semio_framework_value::{ValueError,ValueRefusalKind};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../⚠️error/🧫️fixtures/⚠️refusal/🔣️.json")).unwrap();
-    let identity:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/⚠️error/🪪️identity/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../⚠️error/🧪️tests/🧫️fixtures/⚠️refusal/🔣️.json")).unwrap();
+    let identity:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/⚠️error/🪪️identity/🔣️.json")).unwrap();
     fn kind(value:&str)->ValueRefusalKind{match value{"InvalidValue"=>ValueRefusalKind::InvalidValue,"Canceled"=>ValueRefusalKind::Canceled,"OwnershipLimit"=>ValueRefusalKind::OwnershipLimit,"AllocationFailed"=>ValueRefusalKind::AllocationFailed,"WorkLimit"=>ValueRefusalKind::WorkLimit,"DepthLimit"=>ValueRefusalKind::DepthLimit,"UnsupportedOwner"=>ValueRefusalKind::UnsupportedOwner,"InvariantViolated"=>ValueRefusalKind::InvariantViolated,_=>panic!("unknown authored kind")}}
     for row in fixture["cases"].as_array().unwrap(){
         let expected_kind=kind(row["kind"].as_str().unwrap());let mut cause=ValueError::new(expected_kind,row["message"].as_str().unwrap());for part in row["path"].as_array().unwrap(){cause=cause.under(part.as_str().unwrap());}let allocation=cause.message.as_ptr();

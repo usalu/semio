@@ -1,7 +1,7 @@
 import * as sqliteOwner from "../🟦️.ts";
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 test("EN1994 owning snapshot exposes both semantic SQLite directions",()=>{expect(Object.hasOwn(sqliteOwner,"en1994SnapshotToSqliteDatabase")).toBe(true);expect(Object.hasOwn(sqliteOwner,"en1994SnapshotFromSqliteDatabase")).toBe(true)});
 test("EN1994 neutral complete composite snapshot agrees with independent JSON schema",()=>{const validate=new Ajv({strict:false}).compile(schema);expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true)});
@@ -9,9 +9,9 @@ test("EN1994 schema owns exact annex and unsigned stud widths",()=>{const valida
 
 import {Database} from "bun:sqlite";
 import {Buffer} from "node:buffer";
-import controls from "../🧫️fixtures/🎛️control.json";
-import words from "../🧫️fixtures/🔢️binary64.json";
-import choices from "../🧫️fixtures/🛂️choices.json";
+import controls from "./🧫️fixtures/🎛️control.json";
+import words from "./🧫️fixtures/🔢️binary64.json";
+import choices from "./🧫️fixtures/🛂️choices.json";
 import { EN1994_SQLITE_SCHEMA, en1994SnapshotToSqliteDatabase, en1994SnapshotFromSqliteDatabase, type En1994SqliteSnapshot } from "../🟦️.ts";
 import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
@@ -47,7 +47,7 @@ test("EN1994 expensive action collections and owned text support progress cancel
 });
 
 import NormSemanticAjv from "ajv/dist/2020.js";
-import normSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {en1994SnapshotToSqliteDatabase as normSemanticProject,en1994SnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
 import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

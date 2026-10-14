@@ -1,7 +1,0 @@
-{
-  "operation": "addCounterSequence",
-  "deltas": [
-    2,
-    3
-  ]
-}

@@ -23,14 +23,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/➕️insert-point/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-point/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:ade43cdac81af5655ba6b349b24bd9623e89cdc721ace4068b1cb2e9b3f9621f",
           "bytes": 1409
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/➕️insert-point/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-point/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:a41c8512d5378fa4d411eef05f7ab311eaa5e1c2b9a6798fc20bcef6f6c58353",
           "bytes": 1754
@@ -65,14 +65,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/➖️remove-point/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-point/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:ade43cdac81af5655ba6b349b24bd9623e89cdc721ace4068b1cb2e9b3f9621f",
           "bytes": 1409
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/➖️remove-point/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-point/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:222696f5a6079dfddb80f1fc0cf9ef68a93a976ed706650cfd417994e2ffc845",
           "bytes": 1064
@@ -107,14 +107,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/✏️set-point/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/✏️set-point/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:ade43cdac81af5655ba6b349b24bd9623e89cdc721ace4068b1cb2e9b3f9621f",
           "bytes": 1409
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/✏️set-point/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/✏️set-point/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:c78f13ffb6ed3b2174c61c976e000b52262130361557339888f8d105130382b0",
           "bytes": 1409

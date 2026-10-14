@@ -1,5 +1,6 @@
 //! 🔍️ Generation3d play app panel — the selection inspector.
 
+use crate::standards::v1::subsets::any::io::text::value::{widget_input_literal, widget_input_of_literal_as};
 use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use crate::widget_id;
@@ -34,8 +35,8 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(host_snapshot: &FlowHostSnapshot, selected_node_ids: &[String], labels: &Generation3dLabels, windows: &semio_framework_plugin::TreeWindows<'_>, locale: semio_framework_ui_locale::Locale, terminology: semio_framework_ui_locale::Terminology, meshes: &[semio_framework_plugin::MeshData], eval_json: &str, status_json: &str, export_ready: bool) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let Some(selected_id) = selected_node_ids.first() else {
+pub fn render(host_snapshot: &FlowHostSnapshot, selected_node_ids: &[String], labels: &Generation3dLabels, windows: &semio_framework_plugin::TreeWindows<'_>, locale: semio_framework_ui_locale::Locale, terminology: semio_framework_ui_locale::Terminology, meshes: &[semio_framework_plugin::MeshData], eval_json: &str, status_json: &str, export_ready: bool,source_revision:Option<&str>) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    if selected_node_ids.is_empty() {
         return PanelTreeBuilder::new("procedural-play-inspector")?
             .section(
                 "procedural-play-inspector.empty",
@@ -47,15 +48,32 @@ pub fn render(host_snapshot: &FlowHostSnapshot, selected_node_ids: &[String], la
                 ])?,
             )?
             .build();
-    };
+    }
+    if selected_node_ids.len() > 1 {
+        return PanelTreeBuilder::new("procedural-play-inspector")?.window_indexed_section(windows, "procedural-play-inspector.selection", Some(crate::ui_label(labels.widget_group.as_str())?), true, selected_node_ids.len(), |index| {
+            let selected_id = &selected_node_ids[index];
+            let prefix = format!("procedural-play-inspector.selection.{index}");
+            let fields = if let Some(widget) = host_snapshot.widgets.iter().find(|widget| widget_id(widget) == selected_id) {
+                widget_fields(host_snapshot, selected_id, widget, &prefix, labels, windows, locale, terminology, meshes, eval_json, status_json, export_ready,source_revision)?
+            } else { semio_framework_plugin::ui_node_list([tree_item(&format!("{prefix}.none"), labels.no_selection.as_str())])? };
+            semio_framework_ui_contract::tree_item(crate::ui_label(selected_id)?).try_id(&prefix).and_then(|row| row.try_children(fields).map_err(|error| error.builder)).and_then(|row| row.try_build()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.selection", "fixed UI selection admission failed"))
+        })?.build();
+    }
+    let selected_id = &selected_node_ids[0];
     let Some(widget) = host_snapshot.widgets.iter().find(|entry| widget_id(entry) == selected_id) else {
         return PanelTreeBuilder::new("procedural-play-inspector")?
             .section("procedural-play-inspector.empty", Some(crate::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, semio_framework_plugin::ui_node_list([tree_item("procedural-play-inspector.none", labels.no_selection.as_str())])?)?
             .build();
     };
+    let fields = widget_fields(host_snapshot, selected_id, widget, "procedural-play-inspector", labels, windows, locale, terminology, meshes, eval_json, status_json, export_ready,source_revision)?;
+    PanelTreeBuilder::new("procedural-play-inspector")?.section("procedural-play-inspector.widget", Some(crate::ui_label(labels.widget_group.as_str())?), true, fields)?.build()
+}
+
+/// 🎯️ Each selected widget retains an independent key namespace and absolute mutation target.
+fn widget_fields(host_snapshot: &FlowHostSnapshot, selected_id: &str, widget: &Widget, prefix: &str, labels: &Generation3dLabels, windows: &semio_framework_plugin::TreeWindows<'_>, locale: semio_framework_ui_locale::Locale, terminology: semio_framework_ui_locale::Terminology, meshes: &[semio_framework_plugin::MeshData], eval_json: &str, status_json: &str, export_ready: bool,source_revision:Option<&str>) -> UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
     let mut fields = semio_framework_plugin::UiFixedList::default();
     fields
-        .try_push(tree_item("procedural-play-inspector.id", format!("{}: {}", labels.id_field.as_str(), widget_id(widget)))?)
+        .try_push(tree_item(&format!("{prefix}.id"), format!("{}: {}", labels.id_field.as_str(), widget_id(widget)))?)
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
     if let Widget::InputSlider { value, min, max, .. } = widget {
         let widget_ids = ui_value_list([crate::ui_value_text(selected_id)?])?;
@@ -63,7 +81,7 @@ pub fn render(host_snapshot: &FlowHostSnapshot, selected_node_ids: &[String], la
         let (action, args) = ActionFactory::new(GENERATION_3D_PLAY_APP_ID).action("patchFlowWidgets", Some(action_args))?;
         let control = input(InputKind::Number)
             .value(crate::ui_text(value.to_string())?).commit(crate::ui_text("blur")?).try_label(labels.value_field.as_str()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.control-label", "fixed UI input admission failed"))?
-            .try_id("procedural-play-inspector.value.input")
+            .try_id(&format!("{prefix}.value.input"))
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.control-id", "fixed UI inspector admission failed"))?;
         let control = match args {
             Some(args) => control.try_on_with(Trigger::Commit, action, args),
@@ -83,7 +101,7 @@ pub fn render(host_snapshot: &FlowHostSnapshot, selected_node_ids: &[String], la
         // from the inspector (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `🐍️react-gap-probe.mjs`
         // step `inspection-edit`).
         let row = semio_framework_ui_contract::tree_item(crate::ui_label(labels.value_field.as_str())?)
-            .try_id("procedural-play-inspector.value")
+            .try_id(&format!("{prefix}.value"))
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.field-id", "fixed UI inspector admission failed"))?
             .try_children([control])
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.field-child", "fixed UI inspector admission failed"))?
@@ -91,34 +109,34 @@ pub fn render(host_snapshot: &FlowHostSnapshot, selected_node_ids: &[String], la
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.field", "fixed UI inspector admission failed"))?;
         fields.try_push(row).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
         fields
-            .try_push(tree_item("procedural-play-inspector.range", format!("{}: {min}..{max}", labels.range_field.as_str()))?)
+            .try_push(tree_item(&format!("{prefix}.range"), format!("{}: {min}..{max}", labels.range_field.as_str()))?)
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
     }
     if let Widget::InputNote { text, .. } = widget {
-        let row = if crate::editor::generation3d::commands::set_widget_input::mesh_source_text(host_snapshot, selected_id, "text").is_ok() { mesh_source_input(windows, selected_id, "text", text, labels)? }
-        else if text.len() <= semio_framework_ui_contract::UI_TEXT_MAX_BYTES { editable_input("procedural-play-inspector.note", labels.value_field.as_str(), selected_id, "text", None, text, Some(InputKind::LongText))? }
-        else { tree_item("procedural-play-inspector.note", labels.input_text_too_long.as_str())? };
+        let row = if crate::editor::generation3d::commands::set_widget_input::mesh_source_text(host_snapshot, selected_id, "text").is_ok() { mesh_source_input_at(windows, &format!("{prefix}.mesh"), selected_id, "text", text, labels)? }
+        else if text.len() <= semio_framework_ui_contract::UI_TEXT_MAX_BYTES { editable_input(&format!("{prefix}.note"), labels.value_field.as_str(), selected_id, "text", None, text, Some(InputKind::LongText))? }
+        else { tree_item(&format!("{prefix}.note"), labels.input_text_too_long.as_str())? };
         fields.try_push(row).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
     }
     if let Widget::Neuron { neuron_kind, params, .. } = widget {
         fields
-            .try_push(tree_item("procedural-play-inspector.neuron-kind", crate::editor::generation3d::terminology::generation3d_catalogue_name(labels, neuron_kind, neuron_kind))?)
+            .try_push(tree_item(&format!("{prefix}.neuron-kind"), crate::editor::generation3d::terminology::generation3d_catalogue_name(labels, neuron_kind, neuron_kind))?)
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
         let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
         if let Some(info) = infos.get(neuron_kind) {
             for port in &info.inputs {
-                let key = format!("procedural-play-inspector.input.{}", port.name);
+                let key = format!("{prefix}.input.{}", port.name);
                 let label = crate::editor::generation3d::terminology::generation3d_input_name(labels, &port.name, port.label.as_deref().unwrap_or(&port.name));
                 if neuron_kind == "brep.mesh.construct" && port.name == "data" {
                     let row = match crate::editor::generation3d::commands::set_widget_input::mesh_source_text(host_snapshot, selected_id, "data") {
-                        Ok((_, _, text)) => mesh_source_input(windows, selected_id, "data", &text, labels)?,
+                        Ok((_, _, text)) => mesh_source_input_at(windows, &format!("{prefix}.mesh"), selected_id, "data", &text, labels)?,
                         Err(_) => tree_item(&key, labels.input_connect_hint.as_str())?,
                     };
                     fields.try_push(row).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
                     continue;
                 }
                 if let Some(connection) = host_snapshot.synapses.iter().find(|synapse| synapse.to == *selected_id && synapse.to_port == port.name) {
-                    fields.try_push(tree_item(&key, format!("{label}: {} ({}.{})", labels.input_connected.as_str(), connection.from, connection.from_port))?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
+                    fields.try_push(connected_source(&key, label, &connection.from, &connection.from_port, labels)?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
                     continue;
                 }
                 let current = params.get(&port.name).or(port.default.as_ref());
@@ -137,7 +155,7 @@ pub fn render(host_snapshot: &FlowHostSnapshot, selected_node_ids: &[String], la
                 if port.cardinality.is_collection() {
                     let schema = value.as_ref().and_then(|value| value.get("0")).and_then(|value| value.get("$schema")).and_then(semio_framework_value::DslValue::as_str).filter(|schema| port.item_types.iter().any(|declared| declared == schema)).or_else(|| port.item_types.first().map(String::as_str)).unwrap_or("");
                     let items = match value.as_ref() {
-                        Some(value) => crate::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue::of_literal_as(value, schema).and_then(|value| value.items()),
+                        Some(value) => widget_input_of_literal_as(value, schema).and_then(|value| value.items()),
                         None => crate::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue::collection(schema, Vec::new()).and_then(|value| value.items()),
                     };
                     let row = if let Some(items) = items { collection_input(windows, &key, label, selected_id, &port.name, &items, &port.cardinality, labels)? } else { tree_item(&key, format!("{label}: {}", labels.input_connect_hint.as_str()))? };
@@ -165,7 +183,7 @@ pub fn render(host_snapshot: &FlowHostSnapshot, selected_node_ids: &[String], la
             let status = statuses.as_ref().and_then(|value| value.get(selected_id)).and_then(|value| value.get("status")).and_then(semio_framework_pack_json::Value::as_str);
             let error = entry.and_then(|entry| entry.get("error")).and_then(semio_framework_pack_json::Value::as_str);
             for port in &info.outputs {
-                let key = format!("procedural-play-inspector.output.{}", port.name);
+                let key = format!("{prefix}.output.{}", port.name);
                 let label = crate::editor::generation3d::terminology::generation3d_input_name(labels, &port.name, port.label.as_deref().unwrap_or(&port.name));
                 let value = entry.and_then(|entry| entry.get("out")).and_then(|outputs| outputs.get(&port.name));
                 let row = if error.is_some() || status == Some("error") { tree_item(&key, format!("{label}: {}", labels.mesh_output_error.as_str()))? }
@@ -173,40 +191,68 @@ pub fn render(host_snapshot: &FlowHostSnapshot, selected_node_ids: &[String], la
                 else if let Some(value) = value { reflected_output(windows, &key, label, value, 0, labels)? }
                 else { tree_item(&key, format!("{label}: {}", labels.input_value_unavailable.as_str()))? };
                 fields.try_push(row).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.outputs", "fixed UI output admission failed"))?;
+                if let Some(value)=value{if let Some(actions)=analysis_actions(&key,label,selected_id,port,value,status,source_revision,labels)?{fields.try_push(actions).map_err(|_|semio_framework_plugin::PluginAssemblyError::new("ui.inspection.analysis","fixed UI analysis admission failed"))?;}}
             }
         }
     }
     if let Widget::Variable { name, schema, .. } = widget {
         fields
-            .try_push(editable_item_with_facet("procedural-play-inspector.variable-name", labels.input_variable_name.as_str(), selected_id, "name", None, None, Some("variableName"), name, Some(InputKind::Text))?)
+            .try_push(editable_item_with_facet(&format!("{prefix}.variable-name"), labels.input_variable_name.as_str(), selected_id, "name", None, None, Some("variableName"), name, Some(InputKind::Text))?)
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
         fields
-            .try_push(editable_item_with_facet("procedural-play-inspector.variable-schema", labels.input_variable_type.as_str(), selected_id, "schema", None, None, Some("variableSchema"), schema, Some(InputKind::Text))?)
+            .try_push(editable_item_with_facet(&format!("{prefix}.variable-schema"), labels.input_variable_type.as_str(), selected_id, "schema", None, None, Some("variableSchema"), schema, Some(InputKind::Text))?)
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
         let evaluation = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok();
         let value = evaluation.as_ref().and_then(|evaluation| evaluation.get(selected_id)).and_then(|entry| entry.get("out")).and_then(semio_framework_pack_json::Value::as_object).and_then(|outputs| outputs.iter().next().map(|(_, value)| value)).and_then(reflected_value).unwrap_or_else(|| labels.input_value_unavailable.as_str().to_string());
-        fields.try_push(tree_item("procedural-play-inspector.variable-value", format!("{}: {value}", labels.value_field.as_str()))?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
+        fields.try_push(tree_item(&format!("{prefix}.variable-value"), format!("{}: {value}", labels.value_field.as_str()))?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
     }
     if let Widget::OutputAction { action, .. } = widget {
         fields
-            .try_push(tree_item("procedural-play-inspector.action", format!("{}: {action}", labels.value_field.as_str()))?)
+            .try_push(tree_item(&format!("{prefix}.action"), format!("{}: {action}", labels.value_field.as_str()))?)
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
     }
     if let Widget::OutputExport { format, .. } = widget {
         fields
-            .try_push(export_format_input(selected_id, format, labels, locale, terminology)?)
+            .try_push(export_format_input_at(&format!("{prefix}.export-format"), selected_id, format, labels, locale, terminology)?)
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
-        fields.try_push(export_connected_button(selected_id, format, labels, export_ready)?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
-        if !export_ready { fields.try_push(tree_item("procedural-play-inspector.export-pending", labels.input_export_pending.as_str())?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?; }
+        fields.try_push(export_connected_button_at(&format!("{prefix}.export-connected"), selected_id, format, labels, export_ready)?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
+        if !export_ready { fields.try_push(tree_item(&format!("{prefix}.export-pending"), labels.input_export_pending.as_str())?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?; }
         for diagnostic in crate::standards::v1::subsets::any::io::document_io::format_diagnostics(meshes, format) {
-            fields.try_push(tree_item(&format!("procedural-play-inspector.export-loss.{}", diagnostic.code), diagnostic.label.resolve(terminology, locale).to_string())?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
+            fields.try_push(tree_item(&format!("{prefix}.export-loss.{}", diagnostic.code), diagnostic.label.resolve(terminology, locale).to_string())?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
         }
     }
-    PanelTreeBuilder::new("procedural-play-inspector")?.section("procedural-play-inspector.widget", Some(crate::ui_label(labels.widget_group.as_str())?), true, fields)?.build()
+    Ok(fields)
 }
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
+
+/// 🔌️ Connected input navigation uses the existing framework graph-selection event.
+fn connected_source(key: &str, label: &str, source: &str, port: &str, labels: &Generation3dLabels) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let error = || semio_framework_plugin::PluginAssemblyError::new("ui.inspection.source", "fixed UI source admission failed");
+    let targets = crate::editor::generation3d::modes::edit::windows::flow::graph_targets_json("node", source);
+    let args = crate::ui_value_map([("domainId", crate::ui_value_text("graph")?), ("targets", crate::ui_value_text(&targets)?), ("merge", crate::ui_value_text("replace")?), ("method", crate::ui_value_text("pick")?)])?;
+    let (action, args) = ActionFactory::new(GENERATION_3D_PLAY_APP_ID).action("interactionSelect", Some(args))?;
+    let button = semio_framework_ui_contract::button(crate::ui_label(&format!("{}: {source}", labels.input_inspect_source.as_str()))?).try_id(format!("{key}.source")).map_err(|_| error())?;
+    let button = match args {Some(args)=>button.try_on_with(Trigger::Activate, action, args),None=>button.try_on(Trigger::Activate, action)}.map_err(|_| error())?.try_build().map_err(|_| error())?;
+    semio_framework_ui_contract::tree_item(crate::ui_label(&format!("{label}: {} ({source}.{port})", labels.input_connected.as_str()))?).try_id(key).map_err(|_| error())?.try_child(button).map_err(|_| error())?.try_build().map_err(|_| error())
+}
+
+/// 📏️ Current typed outputs offer only genuine registry analysis endpoints through AddWidget.
+fn analysis_actions(key:&str,label:&str,widget:&str,port:&semio_framework_os_flow::neural::ChannelSpec,value:&semio_framework_pack_json::Value,status:Option<&str>,revision:Option<&str>,labels:&Generation3dLabels)->UiAssemblyResult<Option<semio_framework_plugin::BuiltNode>>{
+    if status!=Some("ok")||port.cardinality.is_collection(){return Ok(None)}
+    let Some(revision)=revision.filter(|revision|revision.len()==64&&revision.bytes().all(|byte|byte.is_ascii_digit()||(b'a'..=b'f').contains(&byte)))else{return Ok(None)};
+    let Some(schema)=value.get("$schema").and_then(semio_framework_pack_json::Value::as_str).filter(|schema|matches!(*schema,"geometry"|"mesh")&&port.value_types.iter().any(|kind|kind==schema))else{return Ok(None)};
+    if value.get(if schema=="geometry"{"handle"}else{"data"}).and_then(semio_framework_pack_json::Value::as_str).is_none_or(str::is_empty){return Ok(None)}
+    let error=||semio_framework_plugin::PluginAssemblyError::new("ui.inspection.analysis","fixed UI analysis admission failed");
+    let infos=semio_framework_os_flow::flow_neuron_kind_info_map();let mut count=0;let mut row=semio_framework_ui_contract::tree_item(crate::ui_label(&format!("{}: {label}",labels.input_analyze.as_str()))?).try_id(format!("{key}.analysis")).map_err(|_|error())?;
+    for operation in ["brep.measure.volume","brep.measure.area","brep.measure.length","brep.measure.centerOfMass","brep.measure.boundingBox","brep.measure.validate","brep.mesh.analyze"]{
+        let Some(target)=infos.get(operation).and_then(|info|info.inputs.iter().find(|input|input.value_types.iter().any(|kind|kind==schema)))else{continue};
+        let name=crate::editor::generation3d::terminology::generation3d_catalogue_name(labels,operation,operation);let args=crate::ui_value_map([("kind",crate::ui_value_text("neuron")?),("neuronKind",crate::ui_value_text(operation)?),("sourceWidget",crate::ui_value_text(widget)?),("sourcePort",crate::ui_value_text(&port.name)?),("targetPort",crate::ui_value_text(&target.name)?),("sourceRevision",crate::ui_value_text(revision)?)])?;
+        let(action,args)=ActionFactory::new(GENERATION_3D_PLAY_APP_ID).action("addWidget",Some(args))?;let button=semio_framework_ui_contract::button(crate::ui_label(&format!("{}: {name}",labels.input_analyze.as_str()))?).try_id(format!("{key}.analysis.{operation}")).map_err(|_|error())?;let button=match args{Some(args)=>button.try_on_with(Trigger::Activate,action,args),None=>button.try_on(Trigger::Activate,action)}.map_err(|_|error())?.try_build().map_err(|_|error())?;row=row.try_child(button).map_err(|_|error())?;count+=1;
+    }
+    if count==0{return Ok(None)}Ok(Some(row.try_build().map_err(|_|error())?))
+}
 
 /// 🎛️ One labeled input commits typed edits through the retained document command.
 fn editable_input(key: &str, label: &str, widget: &str, channel: &str, component: Option<&str>, value: &str, kind: Option<InputKind>) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
@@ -242,8 +288,7 @@ fn editable_field(key: &str, label: &str, value: &str, kind: Option<InputKind>, 
 }
 
 /// 📤️ Export format options come from the artifact's owning document codecs.
-fn export_format_input(widget: &str, format: &str, labels: &Generation3dLabels, locale: semio_framework_ui_locale::Locale, terminology: semio_framework_ui_locale::Terminology) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let key = "procedural-play-inspector.export-format";
+fn export_format_input_at(key: &str, widget: &str, format: &str, labels: &Generation3dLabels, locale: semio_framework_ui_locale::Locale, terminology: semio_framework_ui_locale::Terminology) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let args = crate::ui_value_map([("widgetId", crate::ui_value_text(widget)?), ("channel", crate::ui_value_text("format")?), ("facet", crate::ui_value_text("exportFormat")?)])?;
     let (action, args) = ActionFactory::new(GENERATION_3D_PLAY_APP_ID).action("setWidgetInput", Some(args))?;
     let mut select = semio_framework_ui_contract::select(crate::ui_text(format)?).try_id(format!("{key}.input")).and_then(|select| select.try_label(labels.input_export_format.as_str())).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.export-select", "fixed UI select admission failed"))?;
@@ -256,12 +301,12 @@ fn export_format_input(widget: &str, format: &str, labels: &Generation3dLabels, 
 }
 
 /// 📤️ A connected export uses the existing artifact-owned command and codec roster.
-fn export_connected_button(widget: &str, format: &str, labels: &Generation3dLabels, ready: bool) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn export_connected_button_at(key: &str, widget: &str, format: &str, labels: &Generation3dLabels, ready: bool) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let args = crate::ui_value_map([("widgetId", crate::ui_value_text(widget)?), ("format", crate::ui_value_text(format)?)])?;
     let (action, args) = ActionFactory::new(GENERATION_3D_PLAY_APP_ID).action("exportDocument", Some(args))?;
-    let button = semio_framework_ui_contract::button(crate::ui_label(labels.input_export_connected.as_str())?).disabled(!ready).try_id("procedural-play-inspector.export-connected.button").map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.export-button", "fixed UI button admission failed"))?;
+    let button = semio_framework_ui_contract::button(crate::ui_label(labels.input_export_connected.as_str())?).disabled(!ready).try_id(format!("{key}.button")).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.export-button", "fixed UI button admission failed"))?;
     let button = match args { Some(args) => button.try_on_with(Trigger::Activate, action, args), None => button.try_on(Trigger::Activate, action) }.map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.export-binding", "fixed UI button admission failed"))?.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.export-button", "fixed UI button admission failed"))?;
-    semio_framework_ui_contract::tree_item(crate::ui_label(labels.input_export_connected.as_str())?).try_id("procedural-play-inspector.export-connected").map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.export-row", "fixed UI row admission failed"))?.try_children([button]).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.export-row", "fixed UI row admission failed"))?.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.export-row", "fixed UI row admission failed"))
+    semio_framework_ui_contract::tree_item(crate::ui_label(labels.input_export_connected.as_str())?).try_id(key).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.export-row", "fixed UI row admission failed"))?.try_children([button]).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.export-row", "fixed UI row admission failed"))?.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.export-row", "fixed UI row admission failed"))
 }
 
 /// 🪞️ Reflected values come from the retained evaluation, bounded to readable scalar or coordinate text.
@@ -279,7 +324,7 @@ fn reflected_value(value: &semio_framework_pack_json::Value) -> Option<String> {
 fn reflected_output(windows: &semio_framework_plugin::TreeWindows<'_>, key: &str, label: &str, value: &semio_framework_pack_json::Value, depth: usize, labels: &Generation3dLabels) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     use semio_framework_pack_json::Value;
     if let Some(text) = reflected_value(value) { return tree_item(key, format!("{label}: {text}")); }
-    if depth >= 16 || matches!(value.get("$schema").and_then(Value::as_str), Some("geometry" | "mesh")) { return tree_item(key, format!("{label}: {}", value.get("$schema").and_then(Value::as_str).unwrap_or(labels.input_value_unavailable.as_str()))); }
+    if depth >= 16 { return tree_item(key, format!("{label}: {}", value.get("$schema").and_then(Value::as_str).unwrap_or(labels.input_value_unavailable.as_str()))); }
     let array = value.as_array(); let object: Vec<_> = value.as_object().map(|fields| fields.iter().filter(|(name, _)| *name != "$schema").collect()).unwrap_or_default();
     if array.is_none() && value.as_object().is_none() { return tree_item(key, format!("{label}: {}", labels.input_value_unavailable.as_str())); }
     let count = array.map_or(object.len(), Vec::len); let error = || semio_framework_plugin::PluginAssemblyError::new("ui.inspection.output", "fixed UI output admission failed");
@@ -287,13 +332,19 @@ fn reflected_output(windows: &semio_framework_plugin::TreeWindows<'_>, key: &str
     semio_framework_plugin::tree_window_indexed_item(windows, row, key, true, count, |index| {
         let (name, value) = if let Some(array) = array { ((index + 1).to_string(), &array[index]) } else { let (name, value) = object[index]; (name.to_string(), value) };
         let name = if name.len() <= semio_framework_ui_contract::UI_TEXT_MAX_BYTES / 2 { name } else { (index + 1).to_string() };
-        reflected_output(windows, &format!("{key}.{index}"), &name, value, depth + 1, labels)
+        let name = crate::editor::generation3d::terminology::generation3d_input_name(labels, &name, &name);
+        reflected_output(windows, &format!("{key}.{index}"), name, value, depth + 1, labels)
     })
 }
 
 /// 🥽️ Indexed polygon data shares the owning text port and retained tree windows.
+#[cfg(test)]
 fn mesh_source_input(windows: &semio_framework_plugin::TreeWindows<'_>, widget: &str, channel: &str, text: &str, labels: &Generation3dLabels) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let key = "procedural-play-inspector.mesh";
+    mesh_source_input_at(windows, "procedural-play-inspector.mesh", widget, channel, text, labels)
+}
+
+/// 🪟️ Source topology fields share the selected widget namespace and retained window authority.
+fn mesh_source_input_at(windows: &semio_framework_plugin::TreeWindows<'_>, key: &str, widget: &str, channel: &str, text: &str, labels: &Generation3dLabels) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let Ok(source) = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject) else { return tree_item(key, labels.mesh_invalid.as_str()); };
     let error = || semio_framework_plugin::PluginAssemblyError::new("ui.inspection.mesh", "fixed UI mesh admission failed");
     let mut group = semio_framework_ui_contract::tree_item(crate::ui_label(labels.mesh_source.as_str())?).try_id(key).map_err(|_| error())?;
@@ -464,7 +515,7 @@ fn collection_input(windows: &semio_framework_plugin::TreeWindows<'_>, key: &str
     semio_framework_plugin::tree_window_indexed_item(windows, group, key, true, items.len(), |index| {
         let item_key = format!("{key}.{index}");
         let item_label = format!("{label} {} {}", labels.input_list_item.as_str(), index + 1);
-        let literal = items[index].literal();
+        let literal = widget_input_literal(&items[index]);
         let mut row = semio_framework_ui_contract::tree_item(crate::ui_label(&item_label)?).try_id(&item_key).map_err(|_| error())?;
         let schema = items[index].schema();
         if matches!(schema, "point" | "vector") {

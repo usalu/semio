@@ -1,5 +1,5 @@
-fn test_mounted_private_child_frame<A:ArtifactApp,M:SpaceMember+MemberFactory+'static>(app:&mut VcsArtifactApp<A,M>){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+pub(crate) fn test_mounted_private_child_frame<A:ArtifactApp,M:SpaceMember+MemberFactory+'static>(app:&mut VcsArtifactApp<A,M>){
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let frame=MountedPrivateChildGroup::<M>::frame_birth_bytes();assert!(frame<=262_144);
     let backing=app.private_child_groups.empty_backing_byte_demand().unwrap();assert!(backing>0&&backing<=262_144);
     for(index,row)in law["cases"].as_array().unwrap().iter().enumerate(){

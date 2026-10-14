@@ -67,7 +67,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn clean_snapshot_composes_and_stamps_iso21320() {
         let snapshot = ZipIso21320Builder::new().with_stored_entry("a.txt", b"hello".to_vec()).build().unwrap();
-        let bytes = <ZipSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
+        let bytes = <ZipSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let composed = ZipIso21320ComposerComposition::compose(&sources).expect("clean archive must compose to iso21320");
         assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);

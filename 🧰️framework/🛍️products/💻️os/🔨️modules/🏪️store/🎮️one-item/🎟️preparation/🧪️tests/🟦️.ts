@@ -2,7 +2,7 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 test("Store preparation admits the actual full child receipt without checkpoint-derived currencies",()=>{
  const db=new Database(":memory:");try{db.exec("CREATE TABLE axes(name TEXT,offered INTEGER,consumed INTEGER)");for(const row of fixture.cases){db.exec("DELETE FROM axes");for(const axis of ["items","copy","capacity","release"] as const)db.query("INSERT INTO axes VALUES(?,?,?)").run(axis,row.grant[axis],row.receipt[axis]);db.query("INSERT INTO axes VALUES(?,?,?)").run("depth",row.grant.depth,row.requiredDepth);expect((db.query("SELECT COUNT(*) AS count FROM axes WHERE consumed>offered").get() as {count:number}).count===0).toBe(row.accepted);}}finally{db.close();}
  const source=readFileSync(new URL("../../../🦀️.rs",import.meta.url),"utf8");expect(source.includes("Progress(ArtifactStoreOneItemCheckpoint, RetainedCloneProgress)")).toBe(true);expect(source.includes("Prepared(ArtifactStoreOneItemCheckpoint, RetainedCloneProgress)")).toBe(true);expect(source.includes("pub fn ownership_progress(&self) -> RetainedCloneProgress")).toBe(true);expect(source.includes("validate_original_preparation_step(step, grant, owner.prepared().is_some())")).toBe(true);console.log("[DEBUG] SQLite admits four actual receipt currencies and the independent original depth gate and reject each overspent axis without checkpoint inference");

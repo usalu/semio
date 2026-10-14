@@ -63,7 +63,7 @@ const DXF_RECIPES = [
 const STEP_RECIPES = ["step-add-entity-circle", "step-remove-entity-line", "step-set-entity-geometry-circle-radius"] as const;
 
 const CRATE_DIR = join(import.meta.dir, "..", "🔬️probes", "📖️reader", "📦️packages", "🦀️rust");
-const COMMITTED_FIXTURES = join(import.meta.dir, "..", "🧫️fixtures");
+const COMMITTED_FIXTURES = join(import.meta.dir, "..", "🧪️tests/🧫️fixtures");
 //#endregion 🗂️Recipes
 
 //#region 🧩️Carrier
@@ -71,7 +71,7 @@ const COMMITTED_FIXTURES = join(import.meta.dir, "..", "🧫️fixtures");
 function carrier(): number {
   const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
   if (build.status !== 0) return build.status ?? 1;
-  return spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
+  return spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧪️tests/🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
 }
 //#endregion 🧩️Carrier
 

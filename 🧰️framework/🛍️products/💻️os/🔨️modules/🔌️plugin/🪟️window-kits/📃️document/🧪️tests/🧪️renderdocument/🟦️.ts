@@ -28,7 +28,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("matches the language-neutral editable draft fixture", () => {
-      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/✏️editable/🔣️.json", source.url), "utf8")) as Fixture;
+      const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🧫️fixtures/✏️editable/🔣️.json", source.url), "utf8")) as Fixture;
       
       
       

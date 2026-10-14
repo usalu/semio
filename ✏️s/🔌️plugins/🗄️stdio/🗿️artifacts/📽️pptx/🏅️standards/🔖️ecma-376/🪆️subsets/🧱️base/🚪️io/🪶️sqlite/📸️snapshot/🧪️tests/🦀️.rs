@@ -1,7 +1,8 @@
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_ecma_376::subsets::base::io::sqlite::snapshot::*;
 #[path = "💰️backing/🦀️.rs"]
 mod owned_requests;
-use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
 fn profile_fixture(plan: &serde_json::Value) -> PptxSnapshot {
     use semio_s_artifact_stdio_zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode};
     let mut opc = OpcPackage::default();
@@ -19,7 +20,7 @@ fn profile_fixture(plan: &serde_json::Value) -> PptxSnapshot {
 }
 #[test]
 fn sqlite_snapshot_pptx_exact_profile_policies_use_typed_root_namespace_entities() {
-    let plan: serde_json::Value = serde_json::from_str(include_str!("../../../../🧬️schema/📸️snapshot/🧫️fixtures/🛡️profile/🔣️.json")).unwrap();
+    let plan: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🛡️profile/🔣️.json")).unwrap();
     let limits = SqliteDatabaseLimits::default();
     for case in plan["cases"].as_array().unwrap() {
         let snapshot = profile_fixture(case);
@@ -46,19 +47,19 @@ async fn sqlite_snapshot_pptx_actual_exact_profile_declarations_preserve_owned_w
         .artifact(crate::declaration(crate::definition().unwrap()).unwrap())
         .try_build()
         .unwrap();
-    let plan: serde_json::Value = serde_json::from_str(include_str!("../../../../🧬️schema/📸️snapshot/🧫️fixtures/🛡️profile/🔣️.json")).unwrap();
+    let plan: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🛡️profile/🔣️.json")).unwrap();
     let limits = SqliteDatabaseLimits::default();
     for case in plan["cases"].as_array().unwrap().iter().filter(|case| case["codes"].as_array().unwrap().len() == case["warnings"].as_u64().unwrap() as usize) {
         let snapshot = profile_fixture(case);
         let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.pptx".into(), standard: "ecma-376".into(), subset: case["subset"].as_str().unwrap().into() };
         for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-            let exported = io_export_sqlite_snapshot(&dialect, &snapshot, encoding, limits, &mut |_| true).await.unwrap();
+            let exported = async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=encoding;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap();
             assert_eq!(exported.diagnostics.len(), case["warnings"].as_u64().unwrap() as usize);
-            let restored = io_import_sqlite_snapshot::<PptxSnapshot>(&dialect, &exported.value, limits, &mut |_| true).await.unwrap();
+            let restored = async{let original_file_dialect=&dialect;let original_file_input=&exported.value;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<PptxSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap();
             assert_eq!(restored.value, snapshot);
             assert_eq!(restored.diagnostics.len(), exported.diagnostics.len());
             let foreign = semio_framework_artifact_reference::ArtifactDialect { subset: if dialect.subset == "strict" { "transitional".into() } else { "strict".into() }, ..dialect.clone() };
-            assert!(io_import_sqlite_snapshot::<PptxSnapshot>(&foreign, &exported.value, limits, &mut |_| true).await.is_err());
+            assert!(async{let original_file_dialect=&foreign;let original_file_input=&exported.value;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<PptxSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.is_err());
             restored.value.retire_sqlite_snapshot();
         }
         snapshot.retire_sqlite_snapshot();
@@ -67,7 +68,7 @@ async fn sqlite_snapshot_pptx_actual_exact_profile_declarations_preserve_owned_w
 #[test]
 fn sqlite_snapshot_pptx_native_grammar_describes_complete_owned_fields() {
     let snapshot = fixture();
-    let text = <PptxSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot);
+    let text = <PptxSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snapshot);
     let (envelope, body) = store::semio_format::split_text_preamble(&text).unwrap();
     let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).unwrap();
     assert!(semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros())
@@ -79,7 +80,7 @@ fn sqlite_snapshot_pptx_native_grammar_describes_complete_owned_fields() {
 #[test]
 fn sqlite_snapshot_pptx_native_protocol_checks_complete_literal_fields() {
     let snapshot = fixture();
-    let bytes = <PptxSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
+    let bytes = <PptxSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
     let (_, body) = store::semio_format::unwrap_binary(&bytes).unwrap();
     let protocol = semio_framework_dsl::parse_protocol(crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).unwrap();
     assert_eq!(semio_framework_dsl::walk_protocol(&protocol, &body).unwrap().consumed, body.len());
@@ -92,7 +93,7 @@ fn sqlite_snapshot_pptx_native_protocol_checks_complete_literal_fields() {
     snapshot.retire_sqlite_snapshot();
 }
 fn fixture() -> PptxSnapshot {
-    semio_framework_pack_json::from_json_str(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
+    semio_framework_pack_json::from_json_str(include_str!("🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
 }
 #[test]
 fn sqlite_snapshot_pptx_all_owned_fields_and_literal_package_domains() {
@@ -201,8 +202,8 @@ async fn sqlite_snapshot_pptx_actual_declaration_exposes_complete_typed_snapshot
     semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("PPTX SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
     let dialect = ArtifactDialect { artifact_kind: "s.stdio.pptx".into(), standard: "ecma-376".into(), subset: "*".into() };
     let snapshot = fixture();
-    let file = io_export_sqlite_snapshot(&dialect, &snapshot, SnapshotEncoding::Binary, SqliteDatabaseLimits::default(), &mut |_| true).await.unwrap().value;
-    let restored = io_import_sqlite_snapshot::<PptxSnapshot>(&dialect, &file, SqliteDatabaseLimits::default(), &mut |_| true).await.unwrap().value;
+    let file = async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=SnapshotEncoding::Binary;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
+    let restored = async{let original_file_dialect=&dialect;let original_file_input=&file;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<PptxSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value;
     assert_eq!(restored, snapshot);
     restored.retire_sqlite_snapshot();
     snapshot.retire_sqlite_snapshot();
@@ -234,7 +235,7 @@ fn sqlite_snapshot_pptx_actual_erased_native_boundaries_retain_all_owned_fields(
     let snapshot = fixture();
     let limits = SqliteDatabaseLimits::default();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.pptx".into(), standard: "ecma-376".into(), subset: "*".into() };
-    let codec = <PptxSnapshot as ArtifactSqliteSnapshot>::sqlite_codec();
+    let codec = <PptxSnapshot as ArtifactSqliteSnapshotHost>::sqlite_codec();
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
         let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(crate::STDIO_PPTX_DOCUMENT_SCHEMA, &dialect, &mut Some(db), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap().value;
@@ -247,7 +248,7 @@ fn sqlite_snapshot_pptx_actual_erased_native_boundaries_retain_all_owned_fields(
 }
 #[test]
 fn sqlite_snapshot_pptx_deep_erased_native_input_output_are_interior_cancellable() {
-    let plan: serde_json::Value = serde_json::from_str(include_str!("../../../../🧬️schema/📸️snapshot/🧫️fixtures/🛫️native/🔣️.json")).unwrap();
+    let plan: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🛫️native/🔣️.json")).unwrap();
     std::thread::Builder::new()
         .stack_size(plan["smallStackBytes"].as_u64().unwrap() as usize)
         .spawn(move || {
@@ -274,7 +275,7 @@ fn sqlite_snapshot_pptx_deep_erased_native_input_output_are_interior_cancellable
             let snapshot = Owner(Some(snapshot));
             let limits = SqliteDatabaseLimits::default();
             let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.pptx".into(), standard: "ecma-376".into(), subset: "*".into() };
-            let codec = <PptxSnapshot as ArtifactSqliteSnapshot>::sqlite_codec();
+            let codec = <PptxSnapshot as ArtifactSqliteSnapshotHost>::sqlite_codec();
             for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
                 let db = snapshot.0.as_ref().unwrap().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
                 let expected_database = db.clone();
@@ -338,7 +339,7 @@ fn sqlite_snapshot_pptx_native_exact_file_and_entity_admission() {
 
 #[test]
 fn sqlite_snapshot_pptx_complete_literal_native_file_matches_independent_fixture() {
-    let plan: serde_json::Value = serde_json::from_str(include_str!("../../../../🧬️schema/📸️snapshot/🧫️fixtures/🧩️native-literals/🔣️.json")).unwrap();
+    let plan: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧩️native-literals/🔣️.json")).unwrap();
     let snapshot: PptxSnapshot = semio_framework_pack_json::from_json_str(&plan["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let defaults = SqliteDatabaseLimits::default();
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
@@ -384,7 +385,7 @@ fn sqlite_snapshot_pptx_borrowed_preflight_pays_frontiers_without_materializing_
         let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap();
         let error = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_allocation_bytes: 1, ..limits }), native_owner)).unwrap_err();
         assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::OwnershipLimit);
-        let error = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| <PptxSnapshot as ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_allocation_bytes: 1, ..limits }), native_owner)).unwrap_err();
+        let error = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| <PptxSnapshot as ArtifactSqliteSnapshotHost>::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_allocation_bytes: 1, ..limits }), native_owner)).unwrap_err();
         assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::OwnershipLimit);
     }
     snapshot.retire_sqlite_snapshot();
@@ -527,7 +528,7 @@ async fn sqlite_snapshot_pptx_strict_initial_has_independent_complete_package_an
         relationships.sort_by(|left, right| (left["source"].as_str(), left["id"].as_str()).cmp(&(right["source"].as_str(), right["id"].as_str())));
         serde_json::Value::Array(relationships)
     }
-    let contract: serde_json::Value = serde_json::from_str(include_str!("../../../../🧬️schema/📸️snapshot/🧫️fixtures/🔒️strict-initial/🔣️.json")).unwrap();
+    let contract: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🔒️strict-initial/🔣️.json")).unwrap();
     let mut expected_edges = contract["relationships"].as_array().unwrap().clone();
     expected_edges.sort_by(|left,right| (left["source"].as_str(),left["id"].as_str()).cmp(&(right["source"].as_str(),right["id"].as_str())));
     let expected_edges = serde_json::Value::Array(expected_edges);
@@ -540,8 +541,8 @@ async fn sqlite_snapshot_pptx_strict_initial_has_independent_complete_package_an
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind:"s.stdio.pptx".into(),standard:"ecma-376".into(),subset:"strict".into() };
     for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text] {
         let limits=SqliteDatabaseLimits::default();
-        let bytes=io_export_sqlite_snapshot(&dialect,&owner,encoding,limits,&mut |_|true).await.unwrap().value;
-        let restored=io_import_sqlite_snapshot::<PptxSnapshot>(&dialect,&bytes,limits,&mut |_|true).await.unwrap().value;
+        let bytes=async{let original_file_dialect=&dialect;let original_file_input=&owner;let original_file_encoding=encoding;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
+        let restored=async{let original_file_dialect=&dialect;let original_file_input=&bytes;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<PptxSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value;
         assert_eq!(restored,owner);
         let native_back=crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx(&restored).unwrap();
         assert_eq!(independent_package(&native_back),contract["projection"]);

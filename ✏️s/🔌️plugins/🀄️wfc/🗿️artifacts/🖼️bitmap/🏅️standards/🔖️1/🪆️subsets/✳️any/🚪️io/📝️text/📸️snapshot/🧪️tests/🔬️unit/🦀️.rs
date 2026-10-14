@@ -35,13 +35,13 @@ fn the_normative_grammar_names_this_facets_dialect() {
 
 #[test]
 fn the_extension_and_envelope_are_this_artifacts_own() {
-    assert_eq!(<BitmapSnapshot as store::os_store::serialization::ArtifactDsl>::EXTENSION, "wfcbitmap");
-    assert_eq!(<BitmapSnapshot as store::os_store::serialization::ArtifactDsl>::envelope_id(), "wfc.bitmap");
+    assert_eq!(<BitmapSnapshot as pack::snapshot::ArtifactDsl>::EXTENSION, "wfcbitmap");
+    assert_eq!(<BitmapSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(), "wfc.bitmap");
 }
 
 #[test]
 fn intrinsic_pixels_have_physical_byte_fixtures() {
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/byte-fields/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/byte-fields/🔣️.json")).unwrap();
  for vector in fixture["vectors"].as_array().unwrap(){let bytes:Vec<u8>=vector["bytes"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap() as u8).collect();let text=vector["base64"].as_str().unwrap();assert_eq!(super::encode_base64(&bytes),text);assert_eq!(super::decode_base64(text),Some(bytes.clone()));let region=crate::diff::BitmapPixelRegion{pixels:bytes.clone(),..Default::default()};let physical=crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&region);let oracle:serde_json::Value=serde_json::from_str(&physical).unwrap();assert_eq!(oracle["pixels"],text);assert!(<crate::diff::BitmapPixelRegion as semio_framework_value::FromValue>::from_value(oracle.clone().into()).is_err());let admitted:crate::diff::BitmapPixelRegion=crate::standards::v1::subsets::any::io::text::bitmap_json_decode(&physical).unwrap();assert_eq!(admitted.pixels,bytes);}
  for text in fixture["refused"].as_array().unwrap(){assert!(super::decode_base64(text.as_str().unwrap()).is_none());}
  eprintln!("[DEBUG] bitmap intrinsic pixel fixtures=5 physical JSON serde oracle=agree refusals=6");

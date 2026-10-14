@@ -11,7 +11,7 @@ fn fixture_frame_grant() -> RetainedCloneGrant {
 #[test]
 fn partial_control_deadline_publication_cannot_erase_another_owner_when_a_candidate_is_discarded() {
     let (runtime, witness) = runtime_with_presented_input_candidate();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/🧫️fixtures/⏱️deadline/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/⏱️deadline/🔣️.json")).unwrap();
     for row in fixture["sources"].as_array().unwrap() {
         runtime.publish_shell_clock_deadline(row["shellDueUs"].as_f64().map(|value| value / 1_000_000.0));
         runtime.publish_retained_control_deadline(row["uiDueUs"].as_f64().map(|value| value / 1_000_000.0));
@@ -51,7 +51,7 @@ fn retained_clock_publication_preserves_the_live_frame_and_uses_its_completion_w
         observed.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
     }));
     let before = runtime.0.presentation_authority.current();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/🧫️fixtures/⏱️deadline/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/⏱️deadline/🔣️.json")).unwrap();
     for row in fixture["bridges"].as_array().unwrap() {
         let seconds = row["dueUs"].as_f64().map(|microseconds| microseconds / 1_000_000.0);
         runtime.publish_retained_control_deadline(seconds);
@@ -119,7 +119,7 @@ fn stale_runtime_frame_generation_is_rejected() {
 
 #[test]
 fn retained_frame_owner_turn_advances_once_and_charges_terminal_work() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap_or_else(|_| panic!("frame turn fixture"));
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap_or_else(|_| panic!("frame turn fixture"));
     let turns = fixture["requests"][0]["remainingTurns"].as_u64().unwrap_or_else(|| panic!("frame turn count"));
     let mut calls = 0;
     for turn in 0..turns {
@@ -378,7 +378,7 @@ fn component_close_transiently_retires_the_creating_frame_and_readmits_the_same_
 
 #[test]
 fn original_frame_directive_inline_retirement_preserves_the_full_independent_grant() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️frame-close/🔣️.json")).expect("frame close corpus");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/♻️frame-close/🔣️.json")).expect("frame close corpus");
     let caller = &fixture["caller"];
     let grant = RetainedCloneGrant {
         maximum_items: caller["maximumItems"].as_u64().unwrap() as usize,
@@ -387,29 +387,55 @@ fn original_frame_directive_inline_retirement_preserves_the_full_independent_gra
         maximum_release_bytes: caller["maximumReleaseBytes"].as_u64().unwrap() as usize,
         maximum_depth: caller["maximumDepth"].as_u64().unwrap() as usize,
     };
+    let source=fixture_frame_grant();
+    let ((cancel,cancel_birth),cancel_heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::CancelToken::admit_root(source).unwrap().unwrap());
+    assert_eq!((cancel_birth.retained_capacity_bytes,cancel_birth.released_bytes),(cancel_heap.requested_bytes,cancel_heap.released_bytes));
+    let ((mut authority,ledger_birth),ledger_heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::JobPayloadAuthority::admit(OperationId(99),Generation(99),source).unwrap().unwrap());
+    assert_eq!((ledger_birth.retained_capacity_bytes,ledger_birth.released_bytes),(ledger_heap.requested_bytes,ledger_heap.released_bytes));
     let mut job = FrameBuildJob::new(inputs(1_000.0));
-    let mut sequence = 0;
-    let mut retained_progress = RetainedCloneProgress::default();
-    let mut context = StepContext::new(OperationId(99), Generation(99), semio_framework_job::StepBudget::new(1, u64::MAX, fixture_frame_grant()), root_cancel_token(), frozen_clock, &mut sequence, &mut retained_progress);
-    assert!(job.step(&mut context).unwrap().is_none());
-    assert_eq!(context.retained_progress(), RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Option<FrameDirectives>>(), ..RetainedCloneProgress::default() });
-    job.begin_close();
-    let original = job.complete.as_ref().unwrap() as *const FrameDirectives;
-    assert_eq!(job.next_close_copy_byte_demand().unwrap(), size_of::<FrameDirectives>());
-    assert_eq!(job.next_close_capacity_byte_demand(0).unwrap(), 0);
-    assert_eq!(job.next_close_release_byte_demand().unwrap(), 0);
-    assert_eq!(job.next_close_depth_demand().unwrap(), 1);
-    for short in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_copy_bytes: 0, ..grant }] {
-        assert_eq!(job.close_step(short), InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
-        assert_eq!(job.complete.as_ref().unwrap() as *const FrameDirectives, original);
+    let mut sequence=0;
+    let mut receipt=RetainedCloneProgress::default();
+    {
+        let mut cx=StepContext::with_payload_authority(OperationId(99),Generation(99),semio_framework_job::StepBudget::new(1,u64::MAX,source),&cancel,frozen_clock,&mut sequence,&mut receipt,&authority).unwrap();
+        assert!(job.step(&mut cx).unwrap().is_none());
+        assert_eq!(cx.retained_progress(),RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<FrameDirectives>>(),..Default::default()});
     }
-    assert_eq!(job.close_step(RetainedCloneGrant { maximum_depth: 0, ..grant }), InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() });
-    assert_eq!(job.complete.as_ref().unwrap() as *const FrameDirectives, original);
-    let receipt = RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<FrameDirectives>(), ..RetainedCloneProgress::default() };
-    assert_eq!(job.close_step(grant), InteractiveJobCloseStep::Pending { progress: receipt });
-    assert!(receipt.fits(grant));
-    assert!(job.terminal_is_empty());
-    assert_eq!(job.next_close_copy_byte_demand().unwrap(), 0);
-    assert_eq!(job.close_step(RetainedCloneGrant::default()), InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
+    job.begin_close();
+    let original=job.complete.as_ref().unwrap() as *const FrameDirectives;
+    assert_eq!(job.next_close_copy_byte_demand().unwrap(),size_of::<FrameDirectives>());
+    assert_eq!(job.next_close_capacity_byte_demand(0).unwrap(),0);
+    assert_eq!(job.next_close_release_byte_demand().unwrap(),0);
+    assert_eq!(job.next_close_depth_demand().unwrap(),1);
+    for short in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{
+        let mut recorded=Default::default();
+        let mut cx=StepContext::with_payload_authority(OperationId(99),Generation(99),semio_framework_job::StepBudget::new(1,u64::MAX,short),&cancel,frozen_clock,&mut sequence,&mut recorded,&authority).unwrap();
+        let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(&mut cx));
+        if short.maximum_depth==0{let failure=result.unwrap_err();assert_eq!(failure.primary.kind,semio_framework_value::ValueRefusalKind::DepthLimit);assert_eq!(failure.primary.retained_progress(),Default::default());assert!(failure.receipt_refusal.is_none());}
+        else{assert_eq!(result.unwrap(),InteractiveJobCloseStep::Pending{progress:Default::default()});}
+        assert_eq!(cx.retained_progress(),Default::default());
+        assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+        assert_eq!(job.complete.as_ref().unwrap() as *const FrameDirectives,original);
+    }
+    let receipt=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<FrameDirectives>(),..Default::default()};
+    {
+        let mut recorded=Default::default();
+        let mut cx=StepContext::with_payload_authority(OperationId(99),Generation(99),semio_framework_job::StepBudget::new(1,u64::MAX,grant),&cancel,frozen_clock,&mut sequence,&mut recorded,&authority).unwrap();
+        let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(&mut cx).unwrap());
+        assert_eq!(step,InteractiveJobCloseStep::Pending{progress:receipt});
+        assert_eq!(cx.retained_progress(),receipt);
+        assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+        assert!(job.terminal_is_empty());
+        assert_eq!(job.close_step(&mut cx).unwrap(),InteractiveJobCloseStep::Complete{progress:Default::default()});
+        assert_eq!(cx.retained_progress(),receipt);
+    }
+    let (_,drop_heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));
+    assert_eq!((drop_heap.requested_bytes,drop_heap.released_bytes),(0,0));
+    let mut released=0;
+    for _ in 0..64{if authority.terminal_is_empty(){break}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||authority.close_step(source).unwrap());assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(heap.requested_bytes,heap.released_bytes));released+=heap.released_bytes;}
+    assert!(authority.terminal_is_empty());drop(authority);
+    let mut cancel=semio_framework_async::CancelTokenRetirement::from_token(cancel);
+    for _ in 0..64{if cancel.terminal_is_empty(){break}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cancel.close_step(source).unwrap());assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(heap.requested_bytes,heap.released_bytes));released+=heap.released_bytes;}
+    assert!(cancel.terminal_is_empty());drop(cancel);
+    assert_eq!(released,cancel_heap.requested_bytes+ledger_heap.requested_bytes);
     eprintln!("[DEBUG] original frame directive copy={} physicalRelease={}", receipt.copied_bytes, receipt.released_bytes);
 }

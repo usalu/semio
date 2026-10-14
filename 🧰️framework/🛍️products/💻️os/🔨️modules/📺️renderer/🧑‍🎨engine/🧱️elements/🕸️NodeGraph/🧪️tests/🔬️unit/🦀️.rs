@@ -195,7 +195,7 @@ fn node_graph_scene_payload_rejects_an_invalid_typed_viewport() {
 
 #[test]
 fn neutral_json_refusals_expose_only_the_defining_general_value_error() {
-    let corpus: Value = serde_json::from_str(include_str!("../../⚠️refusal/🧫️fixtures/🔣️.json")).expect("refusal corpus");
+    let corpus: Value = serde_json::from_str(include_str!("../../⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json")).expect("refusal corpus");
     let rows = corpus["cases"].as_array().expect("refusal cases");
     assert_eq!(rows.len(), 6);
     for row in rows {
@@ -217,7 +217,7 @@ fn neutral_json_refusals_expose_only_the_defining_general_value_error() {
 
 #[test]
 fn node_graph_scene_viewport_matches_the_shared_neutral_contract() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🪟️viewport/🧫️fixtures/🪟️poses/🔣️.json")).expect("shared viewport fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🧫️fixtures/🪟️poses/🔣️.json")).expect("shared viewport fixture");
     let mut cases = 0;
     for row in fixture["cases"].as_array().expect("viewport cases").iter().filter(|row| row["dimension"] == "2d") {
         let value = row["value"].clone();

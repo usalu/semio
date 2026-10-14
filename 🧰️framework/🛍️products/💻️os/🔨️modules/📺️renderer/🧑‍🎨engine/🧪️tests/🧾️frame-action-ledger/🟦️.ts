@@ -17,7 +17,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-import receiptFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧾️correlated-action-receipts/🔣️.json";
+import receiptFixture from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧾️correlated-action-receipts/🔣️.json";
 
 it("correlates receipt refusals independently of identical action payloads", () => {
   const refused = new Set<number>();

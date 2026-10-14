@@ -8,7 +8,7 @@ import { NEVER, of } from "rxjs";
 type Scalar = number | string | boolean | null;
 type Row = Readonly<{id: string; state: "Ready" | "Pending"; value?: Scalar; expected: Readonly<{state: "Ready" | "Pending"; value?: Scalar; polls: number}>}>;
 const owner = resolve(import.meta.dir, ".."), read = (path: string): string => readFileSync(resolve(owner, path), "utf8");
-const fixture = JSON.parse(read("🧫️fixtures/🔣️.json")) as {cases: Row[]};
+const fixture = JSON.parse(read("🧪️tests/🧫️fixtures/🔣️.json")) as {cases: Row[]};
 
 test("every language-neutral readiness row matches an independent synchronous observer", () => {
   for (const row of fixture.cases) {

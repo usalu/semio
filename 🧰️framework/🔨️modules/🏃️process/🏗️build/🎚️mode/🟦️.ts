@@ -1,5 +1,14 @@
+import { readFileSync } from "node:fs";
+
 /** 🏗️ Owns the portable compiler intent admitted by the build-mode schema. */
 export type BuildMode = "prototype" | "release";
+
+/** 🎛️ Enumerates every admitted compiler intent without exposing private schema storage. */
+export function buildModesV1(): readonly BuildMode[] {
+  const values: unknown = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", import.meta.url), "utf8")).enum;
+  if (!Array.isArray(values)) throw Error("Owned build mode schema enumeration required");
+  return Object.freeze(values.map(readBuildMode));
+}
 
 /** 🎚️ Selects one build intent without accepting aliases or implicit optimization. */
 export function readBuildMode(value: unknown): BuildMode {

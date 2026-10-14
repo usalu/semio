@@ -19,7 +19,7 @@ export const CARGO_PROVENANCE_PHYSICAL_BUDGET_V1 = Object.freeze({ maxBytes: 16 
 
 /** 🔐️ Builds the one finite physical observation control every provenance producer hands to the receipt writer. `scale` is the number of
  * component invocations one invocation stands for (a release driver pass links many components at once); bytes, work and deadline grow with it. */
-export function cargoProvenancePhysicalControlV1(authority: { readonly cancelled: () => boolean; readonly remainingMs?: () => number; readonly deadlineMs?: number; readonly scale?: number; readonly onProgress: (progress: FileObservationProgressV1) => void }): FileObservationControlV1 {
+export function cargoProvenancePhysicalControlV1(authority: { readonly cancelled: () => boolean; readonly remainingMs?: () => number | null; readonly deadlineMs?: number; readonly scale?: number; readonly onProgress: (progress: FileObservationProgressV1) => void }): FileObservationControlV1 {
   const scale = authority.scale ?? 1;
   if (!Number.isSafeInteger(scale) || scale < 1) throw Error("Physical provenance scale must be a positive integer");
   const started = performance.now(), deadlineMs = (authority.deadlineMs ?? CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.deadlineMs) * scale;
@@ -28,7 +28,7 @@ export function cargoProvenancePhysicalControlV1(authority: { readonly cancelled
     maxWork: CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.maxWork * scale,
     chunkBytes: CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.chunkBytes,
     cancelled: authority.cancelled,
-    remainingMs: () => Math.min(authority.remainingMs?.() ?? Infinity, deadlineMs - (performance.now() - started)),
+    remainingMs: () => Math.min(authority.remainingMs?.() ?? deadlineMs, deadlineMs - (performance.now() - started)),
     onProgress: authority.onProgress,
   });
 }

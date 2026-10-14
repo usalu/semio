@@ -7,7 +7,7 @@ import Ajv from "ajv";
 import {buildSync} from "esbuild";
 import {cargoPreparationProgramSourcesV1,admitCargoPreparationObservationV1,assertCargoPreparationObservationCurrentV1} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 
 test("actual preparation program custody binds distinct fixture and tracked defining roots without source copies",()=>{
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Explicit custody artifact root required");const root=join(artifacts,"r"),sourceRoot=process.cwd(),custody=fileURLToPath(new URL("../🟦️.ts",import.meta.url)),producer=fileURLToPath(new URL("../../📜️script.ts",import.meta.url)),entry=join(root,"📜️script.ts");mkdirSync(root,{recursive:true});writeFileSync(entry,fixture.program.replace("{CUSTODY}",JSON.stringify(custody.replaceAll("\\","/"))));

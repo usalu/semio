@@ -4,7 +4,7 @@ use protocol::{Mutation, OpBinary, OpText};
 
 #[test]
 fn imperative_configuration_contract_vectors_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
     let base: ImperativeConfig = semio_framework_pack_json::from_json_str(&vectors["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned base decoder");
     assert_eq!(<ImperativeConfigMutation as Mutation<ImperativeConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().expect("cases").len());
     for vector in vectors["cases"].as_array().expect("cases") {

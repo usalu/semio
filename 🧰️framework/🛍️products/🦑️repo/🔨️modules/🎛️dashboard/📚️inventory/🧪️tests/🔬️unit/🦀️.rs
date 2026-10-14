@@ -2,7 +2,7 @@ use super::*;
 use std::sync::atomic::AtomicBool;
 use std::time::Duration;
 
-const FIXTURE: &str = include_str!("../../../🧫️fixtures/🎮️registry/🏗️workspace.json");
+const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/🎮️registry/🏗️workspace.json");
 
 fn materialise(name: &str) -> PathBuf {
     let nanos = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();

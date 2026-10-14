@@ -56,7 +56,8 @@
     "jstat": "1.9.6",
     "markdown-it": "14.3.0",
     "mathjs": "14.0.0",
-    "suncalc": "1.9.0"
+    "suncalc": "1.9.0",
+    "@semio-tech/process": "workspace:*"
   },
   "scripts": {
     "generate-font-metrics": "nx run @semio-tech/print:generate-font-metrics"

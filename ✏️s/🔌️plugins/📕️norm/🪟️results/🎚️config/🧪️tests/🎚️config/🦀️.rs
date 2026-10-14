@@ -12,7 +12,7 @@ struct OraclePayload {
 #[test]
 fn config_mutation_fixture_matches_serde_and_round_trips() {
     assert_eq!(std::any::TypeId::of::<NormResultsWindowConfig>(), std::any::TypeId::of::<NormResultsWindowConfig>(), "the runtime config must be the schema-owned type");
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let descriptors = <NormResultsWindowConfigMutation as Mutation<NormResultsWindowConfig>>::DESCRIPTORS;
     assert_eq!(descriptors.len(), 1, "config has exactly one concrete semantic field mutation");
     let descriptor = &descriptors[0];
@@ -72,7 +72,7 @@ fn config_mutation_fixture_matches_serde_and_round_trips() {
 /// 🧾️ The committed `change-selected-check-index` wire witness IS the canonical Rust wire of its aggregate op.
 #[test]
 fn committed_wire_witness_is_the_canonical_wire() {
-    let witnessed: NormResultsWindowConfigMutation = semio_framework_os_kernel::os_store::test_support::assert_wire_witness(include_str!("../../🧫️fixtures/🧬️mutations/☑️change-selected-check-index/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    let witnessed: NormResultsWindowConfigMutation = semio_framework_os_kernel::os_store::test_support::assert_wire_witness(include_str!("../🧫️fixtures/🧬️mutations/☑️change-selected-check-index/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_eq!(<NormResultsWindowConfigMutation as Mutation<NormResultsWindowConfig>>::descriptor(&witnessed).semantic_kind, "change-selected-check-index");
     assert_wire_transition(&witnessed, &serde_json::json!(3));
 }

@@ -1,0 +1,17 @@
+{
+  "changes": [
+    {
+      "path": ".vscode/launch.json",
+      "exclusive": false,
+      "beforeSha256": "ea44f61d44b2c698c873d8c93fa716b9d7551bcaebab013aabed8d143c5618a4",
+      "afterSha256": "5709307abaf38bd90b5f4ed9da136f073364d49c10a816acd710ecc773c0c056",
+      "spans": [
+        {
+          "before": "\"bun nx run @semio-tech/bim-model-rs:test --args=\\\"quick --lib the_committed_components_file_is_the_current_export -- --nocapture\\\" --skip-nx-cache\"",
+          "after": "\"bun nx run @semio-tech/bim-model-rs:test --skip-nx-cache -- quick --lib the_committed_components_file_is_the_current_export -- --nocapture\""
+        }
+      ]
+    }
+  ],
+  "reason": "Original Native owner executor transports exact args and __unparsed__ arrays without shell parsing. Current GUI --args string becomes Cargo --args option. Use literal Nx -- boundary, preserving same package/test selector and actual custody."
+}

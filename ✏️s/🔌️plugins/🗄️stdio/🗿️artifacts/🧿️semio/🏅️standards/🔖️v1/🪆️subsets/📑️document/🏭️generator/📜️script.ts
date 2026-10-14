@@ -123,7 +123,7 @@ const CARRIER_KINDS = ["insert-image", "remove-image", "set-image-bytes"] as con
  *  directory — the registry loader stamps `manifestDir` to where `🔣️oracle.json` lives. A bare
  *  `<recipe>/<file>` therefore resolves to a non-existent `🔮️oracles/<recipe>/<file>` and every digest
  *  reads as a mismatch; the mesh pilot lost 369 fixtures to exactly that. */
-const FIXTURE_PATH_PREFIX = "../🧫️fixtures";
+const FIXTURE_PATH_PREFIX = "../🧪️tests/🧫️fixtures";
 
 /** 📦️ A fixed 1980-01-01 stamp, not a wall clock. JSZip defaults `date` to `new Date()`, which would
  *  make every regenerated container differ from the committed one and `fixture reproduce` fail forever
@@ -477,7 +477,7 @@ async function main(argv: readonly string[]): Promise<number> {
     console.error("[generator] reviewed fixture directory authority must contain exactly one unique entry per recipe");
     return 1;
   }
-  const canonicalOutDir = join(import.meta.dir, "..", "🧫️fixtures");
+  const canonicalOutDir = join(import.meta.dir, "..", "🧪️tests/🧫️fixtures");
   const outDir = process.env.SEMIO_FIXTURE_OUT ?? value("--out") ?? canonicalOutDir;
 
   if (command === "generate" || command === "manifests") {
@@ -528,7 +528,7 @@ async function main(argv: readonly string[]): Promise<number> {
     const engineDir = join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust");
     const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(engineDir, "Cargo.toml")], { stdio: "inherit" });
     if (build.status !== 0) throw new Error(`cargo build failed with status ${build.status}`);
-    const fixturesDir = join(import.meta.dir, "..", "🧫️fixtures");
+    const fixturesDir = join(import.meta.dir, "..", "🧪️tests/🧫️fixtures");
     if (command === "carrier") {
       const run = spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [fixturesDir], { stdio: "inherit" });
       if (run.status !== 0) return run.status ?? 1;

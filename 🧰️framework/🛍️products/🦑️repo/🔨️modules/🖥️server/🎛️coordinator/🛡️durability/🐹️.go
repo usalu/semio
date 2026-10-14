@@ -9,6 +9,7 @@
 package main
 
 import (
+	durability "github.com/usalu/semio/framework/filesystem/durability"
 	"errors"
 	"fmt"
 	"io"
@@ -70,7 +71,7 @@ func (nativeStoreOperations) Stat(path string) (os.FileInfo, error) {
 }
 
 func (nativeStoreOperations) Rename(source string, destination string) error {
-	return renameStorePath(source, destination)
+	return durability.Rename(source, destination)
 }
 
 func (nativeStoreOperations) Remove(path string) error {
@@ -83,7 +84,7 @@ func (nativeStoreOperations) Remove(path string) error {
 
 func (nativeStoreOperations) SyncParent(path string) error {
 	parent := filepath.Dir(path)
-	if err := syncStoreParent(parent); err != nil {
+	if err := durability.SyncParent(parent); err != nil {
 		return fmt.Errorf("%w: %s: %v", ErrDurabilityUnsupported, parent, err)
 	}
 	return nil

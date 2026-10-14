@@ -9,7 +9,7 @@ import schema from "../🧬️schema/🔣️.json";
 import {parseApplyFilter} from "../../🟦️.ts";
 
 const validate=semioSchemaAjvV1({allErrors:true}).compile(schema);
-const root=join(import.meta.dir,"../../../../🧫️fixtures/🧬️mutations/🌈️apply-filter");
+const root=join(import.meta.dir, "../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌈️apply-filter");
 const cases=readdirSync(root);
 
 test("every committed apply-filter mutation is accepted by the schema and the twin alike",()=>{

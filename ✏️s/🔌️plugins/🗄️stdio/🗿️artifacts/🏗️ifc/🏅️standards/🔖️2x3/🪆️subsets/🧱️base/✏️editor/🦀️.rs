@@ -87,7 +87,7 @@ const IFC2X3_ANY_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
 fn ifc2x3_any_editor_example_snapshot(example_id: &str) -> Ifc2x3Snapshot {
     if example_id == crate::examples::demo::ID {
-        <Ifc2x3Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+        <Ifc2x3Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         Ifc2x3Snapshot::default()
     }
@@ -232,6 +232,7 @@ impl ArtifactEditor for Ifc2x3AnyEditor {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

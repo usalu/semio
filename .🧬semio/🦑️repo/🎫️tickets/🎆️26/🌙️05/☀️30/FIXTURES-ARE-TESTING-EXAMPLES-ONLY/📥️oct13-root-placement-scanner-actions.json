@@ -1,0 +1,12 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "aa0eb43a93e26ca9db521b48c7ed0d3fc26387a87cf3d15bb0811afe9c93e780",
+      "afterSha256": "228d4d620ba22f29804fed7d5c606355b5974c5a253b802c14029d0a76f84307",
+      "exclusive": false,
+      "scope": "Use proper complement for original scanner fixture-collection predicate"
+    }
+  ]
+}

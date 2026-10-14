@@ -6,7 +6,7 @@ import glob from "fast-glob";
 import Ajv from "ajv/dist/2020.js";
 import { writeRustLayerOracle } from "../../../../../../🧪️tests/🧱️rust-source-direction/🔮️oracle/🟦️.ts";
 import { inspectRustSourceDirection, verifyRustSourceDirection } from "../../../🏃️execution/🟦️.ts";
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../../../../../../🧬️schema/🧱️rust-source-direction/🔣️.json", import.meta.url), "utf8"));
 const validateReport = new Ajv({ strict: true }).compile({ $schema: schema.$schema, $defs: schema.$defs, $ref: "#/$defs/report" });
 test("actual Rust source-direction execution rejects declared runtime owner paths even after Specific deletion", async () => {

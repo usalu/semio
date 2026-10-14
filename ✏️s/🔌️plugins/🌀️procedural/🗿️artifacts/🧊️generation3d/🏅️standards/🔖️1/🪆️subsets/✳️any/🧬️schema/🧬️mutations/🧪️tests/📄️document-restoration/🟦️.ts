@@ -1,7 +1,7 @@
 import {test, expect} from "bun:test";
 import {applyPatch, compare, type Operation} from "fast-json-patch";
 import Ajv from "ajv";
-import fixture from "../../🧫️fixtures/📄️document-restoration/🔣️.json";
+import fixture from "../../../../🧪️tests/🧫️fixtures/🧬️mutations/📄️document-restoration/🔣️.json";
 import selectSchema from "../../👆️select-generation/🧬️schema/🔣️.json";
 import previewSchema from "../../📝️change-generation-preview/🧬️schema/🔣️.json";
 

@@ -1,9 +1,10 @@
 //! 🗂️ Literal collection folders and document/blob bodies with exact unsigned sizes.
 #[path="./📏️preflight/🦀️.rs"]mod preflight;
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::{CollectionSnapshot,CollectionFolder,CollectionEntry,ArtifactBody,S_COLLECTION_SCHEMA};
 use semio_framework_os_kernel as store;
-use store::os_store::serialization::ArtifactSqliteSnapshot;
+use store::os_store::serialization::ArtifactSqliteSnapshotHost;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{RowWriter,Cell}};
 #[path="../../../../../🪶️sqlite/🦀️.rs"]mod fields;
 /// 🚪️ The explicitly authored native envelope-version coordinate for this builtin owner.
@@ -21,18 +22,29 @@ fn write_rows(value:&CollectionSnapshot,total:usize,p:&mut RowWriter<'_,'_>)->Re
    match row.body.as_ref(){ArtifactBody::Document{schema,document_id}=>p.insert_key("collection_document_body",entry,&[Cell::Text(schema),Cell::Text(document_id)])?,ArtifactBody::Blob{blob}=>p.insert_key("collection_blob_body",entry,&[Cell::Text(&blob.hash),Cell::Integer((blob.size>>32)as i64),Cell::Integer((blob.size&0xffff_ffff)as i64),Cell::Text(&blob.media_type)])?}p.checkpoint_total(total)?;
   }Ok(())}
 fn semantic(value:&CollectionSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{schema(control)?;let total=rows(value)?;control.check_rows(total)?;let mut p=RowWriter::borrowed(control,phase)?;write_rows(value,total,&mut p)?;p.finish_borrowed()}
-impl ArtifactSqliteSnapshot for CollectionSnapshot{
+impl ArtifactSqliteSnapshotHost for CollectionSnapshot{
  fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{owner.native().checkpoint().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;self.validate_sqlite_snapshot_subset(dialect,database,control)}
  fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_,'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{owner.native().checkpoint().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;self.validate_sqlite_snapshot_subset(dialect,database,control)}
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+ 
  fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{preflight::check(self,encoding,control)}
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->Result<store::io::IoPayload,ValueError>{
   semantic(self,SqliteSnapshotPhase::EncodeNative,control)?;
   store::encode_sqlite_snapshot_record_native(encoding,Self::__DSL_ENVELOPE_ID,Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
  fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError>{control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;schema(control)?;let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,Self::__DSL_ENVELOPE_ID,Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admission::record(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_owner)}
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let total=rows(self)?;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,total)?;schema(control)?;control.check_rows(total)?;let mut p=RowWriter::new(Self::SQLITE_SCHEMA,control)?;write_rows(self,total,&mut p)?;p.finish()}
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+ 
+ 
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
+  (|| -> Result<store::io_schema::IoOutcome<()>,ValueError> {
+  control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!=S_COLLECTION_SCHEMA||dialect.standard!="1"||dialect.subset!="*"{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "collection does not own this SQLite coordinate"))}let candidate=Self::from_sqlite_database(database,control)?;if self!=&candidate{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "collection semantic state differs"))}Ok(store::io_schema::IoOutcome::clean(()))
+ 
+  })().map_err(store::io_schema::IoError::from_value_error)
+ }
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for CollectionSnapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let total=rows(self)?;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,total)?;schema(control)?;control.check_rows(total)?;let mut p=RowWriter::new(Self::SQLITE_SCHEMA,control)?;write_rows(self,total,&mut p)?;p.finish()}
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
   schema(control)?;validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
   let doc=database.table("collection_document")?.single_row()?;if doc.values.len()!=3||doc.integer(0)?!=doc.rowid{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "collection document identity differs"))}
   let document_bodies=database.table("collection_document_body")?;let blob_bodies=database.table("collection_blob_body")?;let entry_table=database.table("collection_entry")?;if document_bodies.rows.len().checked_add(blob_bodies.rows.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit, "collection body count overflow"))?!=entry_table.rows.len(){return Err(ValueError::new(ValueRefusalKind::InvalidValue, "collection requires exactly one owned body per entry"))}
@@ -43,11 +55,5 @@ impl ArtifactSqliteSnapshot for CollectionSnapshot{
    let body=match(row.text(7)?,document,blob){("document",Some(body),None)=>{if body.values.len()!=3||body.integer(0)?!=body.rowid{return Err(fields::invalid("collection document body identity differs"))}ArtifactBody::Document{schema:fields::text(body,1,&mut native)?,document_id:fields::text(body,2,&mut native)?}},("blob",None,Some(body))=>{if body.values.len()!=5||body.integer(0)?!=body.rowid{return Err(fields::invalid("collection blob body identity differs"))}ArtifactBody::Blob{blob:store::BlobRef{hash:fields::text(body,1,&mut native)?,size:word(body,2)?,media_type:fields::text(body,4,&mut native)?}}},_=>return Err(fields::invalid("collection body variant or ownership differs"))};
    native.charge(size_of::<ArtifactBody>())?;entries.push(CollectionEntry{id:fields::text(row,3,&mut native)?,folder_id:fields::optional(row,4,&mut native)?,name:fields::text(row,5,&mut native)?,kind_id:fields::text(row,6,&mut native)?,body:Box::new(body)});native.step()?;
   }native.checkpoint()?;Ok(Self{schema,name,folders,entries})})
- }
- fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
-  (|| -> Result<store::io_schema::IoOutcome<()>,ValueError> {
-  control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!=S_COLLECTION_SCHEMA||dialect.standard!="1"||dialect.subset!="*"{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "collection does not own this SQLite coordinate"))}let candidate=Self::from_sqlite_database(database,control)?;if self!=&candidate{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "collection semantic state differs"))}Ok(store::io_schema::IoOutcome::clean(()))
- 
-  })().map_err(store::io_schema::IoError::from_value_error)
  }
 }

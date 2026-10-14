@@ -3,7 +3,7 @@
 
 use crate::mutations::{change_seed, pin_pixel, set_input_pixels};
 use crate::schema::snapshot::{BitmapSnapshot};
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 
 fn examples() -> Vec<BitmapSnapshot> {
     vec![crate::examples::rooms_16::snapshot(), crate::examples::flowers_24::snapshot()]

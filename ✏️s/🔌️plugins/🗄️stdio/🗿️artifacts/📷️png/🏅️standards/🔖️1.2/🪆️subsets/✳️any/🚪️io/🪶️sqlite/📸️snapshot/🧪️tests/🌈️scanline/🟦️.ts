@@ -4,12 +4,12 @@ import {Database} from "bun:sqlite";
 import {decodePngSnapshot,encodePngSnapshot} from "../../../../💾️binary/📸️snapshot/🟦️.ts";
 import {deflateSync,inflateSync} from "node:zlib";
 import {PNG} from "pngjs";
-import fixture from "../../🧫️fixtures/🌈️scanline/🔣️.json";
+import fixture from "../🧫️fixtures/🌈️scanline/🔣️.json";
 
 import {pngSnapshotToSqliteDatabase,pngSnapshotFromSqliteDatabase} from "../../🟦️.ts";
 import {parsePngNative,encodePngNative} from "../../🧩️chunks/🟦️.ts";
 import {parseCompression,encodeCompression} from "../../../../../../../../../../🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🗜️compression/🟦️.ts";
-import dynamicFixture from "../../🧫️fixtures/🗜️compression/🔣️.json";
+import dynamicFixture from "../🧫️fixtures/🗜️compression/🔣️.json";
 
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
 function crc(bytes:Uint8Array):number{let v=0xffffffff;for(const byte of bytes){v^=byte;for(let i=0;i<8;i++)v=(v>>>1)^((v&1)?0xedb88320:0)}return(~v)>>>0}

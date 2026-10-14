@@ -74,7 +74,7 @@ export const BOOT_RESOURCE_KINDS_V1: readonly BootResourceKindV1[] = ["module", 
 
 /** 📖️ Reads `🧑‍💻dev/🧫️fixtures/🥾️boot-budget.json`. */
 export function readBootBudgetFixtureV1(): BootBudgetFixtureV1 {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🥾️boot-budget.json", import.meta.url), "utf8")) as BootBudgetFixtureV1;
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🥾️boot-budget.json", import.meta.url), "utf8")) as BootBudgetFixtureV1;
   if (fixture.schema !== "semio.os-dev.boot-budget/v1") throw new Error(`boot budget: unexpected schema ${String(fixture.schema)}`);
   return fixture;
 }

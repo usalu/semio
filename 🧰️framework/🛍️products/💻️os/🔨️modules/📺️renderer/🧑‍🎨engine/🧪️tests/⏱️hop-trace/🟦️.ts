@@ -8,7 +8,7 @@
  * list rather than a hand-kept copy.
  */
 import { describe, expect, it } from "vitest";
-import fixture from "../../../../../../../🔨️modules/⏱️trace/🧫️fixtures/🪃️hop-stages/🔣️.json" with { type: "json" };
+import fixture from "../../../../../../../🔨️modules/⏱️trace/🧪️tests/🧫️fixtures/🪃️hop-stages/🔣️.json" with { type: "json" };
 import {
   createHopTracer,
   HOP_TRACE_MEASURE_PREFIX,

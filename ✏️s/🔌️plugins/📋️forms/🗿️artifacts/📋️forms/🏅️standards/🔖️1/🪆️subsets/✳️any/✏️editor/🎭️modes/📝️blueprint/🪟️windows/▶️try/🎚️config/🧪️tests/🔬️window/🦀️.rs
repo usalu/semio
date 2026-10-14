@@ -3,7 +3,7 @@ use crate::editor::forms::commands::{next_step, reset_try, set_try_value};
 use crate::editor::forms::modes::blueprint::windows::try_wizard::transient::{FormsTryWindowLease, FormsTryWindowTransient};
 use crate::{forms_snapshot_with_state, FormStep, FORMS_DOCUMENT_SCHEMA};
 use semio_framework::kernel::Effect;
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 
 fn block_on_forms_try_window<F: std::future::Future>(future: F) -> F::Output {
     let mut future = std::pin::pin!(future);
@@ -296,7 +296,7 @@ fn forms_try_window_ownership_mutations_match_neutral_fixture_and_codecs() {
     use crate::editor::forms::modes::blueprint::windows::try_wizard::transient::FormsTryWindowTransientMutation;
     use protocol::{Mutation, OpBinary, OpText};
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).expect("Forms Try ownership fixture JSON");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window/🔣️.json")).expect("Forms Try ownership fixture JSON");
     let base_config: FormsTryWindowConfig = semio_framework_pack_json::from_json_str(&fixture["windows"]["left"]["config"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Forms Try base config");
     let config_mutation: FormsTryWindowConfigMutation = semio_framework_pack_json::from_json_str(&fixture["leftMutations"]["advance"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Forms Try config mutation");
     let after_config = protocol::apply_diff(config_mutation.diff(&base_config).diff(), &base_config).expect("apply Forms Try config mutation");

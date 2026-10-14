@@ -9,7 +9,7 @@ use semio_framework_dsl::Recognizer;
 use semio_framework_dsl::parse_grammar;
 #[test]
 fn explicit_fragment_selection_matches_the_independent_reference_corpus() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧩️selection/🔣️.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧩️selection/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let mut registry = FragmentRegistry::new();
         for name in case["selectedFragments"].as_array().unwrap() {
@@ -30,7 +30,7 @@ fn explicit_fragment_selection_matches_the_independent_reference_corpus() {
 }
 #[test]
 fn lexical_and_escape_outputs_match_independent_codec_goldens() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧱️ownership/🔣️.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧱️ownership/🔣️.json")).unwrap();
     for case in cases["independentCases"].as_array().unwrap() {
         let text = case["text"].as_str().unwrap();
         assert_eq!(escape_text(text), case["escaped"].as_str().unwrap());

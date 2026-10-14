@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "widths": [
+    { "name": "requestOwner", "representation": "exact-original-object-reference", "bytes": 8 },
+    { "name": "cell", "representation": "private-neutral-admission-reference", "bytes": 8 },
+    { "name": "record", "representation": "private-neutral-record-reference", "bytes": 8 },
+    { "name": "entry", "representation": "exact-private-roster-entry-reference", "bytes": 8 },
+    { "name": "phase", "representation": "finite-enum-word", "bytes": 8 },
+    { "name": "failure", "representation": "first-exact-root-or-private-sentinel-reference", "bytes": 8 },
+    { "name": "witness", "representation": "private-exact-domain-witness-reference", "bytes": 8 }
+  ],
+  "basePool": { "bytes": 192, "slots": 4, "owners": 4 },
+  "proposedPool": { "bytes": 264, "slots": 5, "owners": 5 },
+  "firstChild": { "prepareBytes": [296, 64, 64, 64, 264, 64, 440, 64, 128], "domain": { "bytes": 376, "slots": 6, "owners": 6 }, "total": { "bytes": 936, "slots": 15, "owners": 15 }, "retirementTurns": 16 },
+  "cancellationPrefixes": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+  "constructionFaults": ["record-install-before", "record-install-after", "scope-finalizer", "owner-attach-before", "owner-attach-after", "binding-set-before", "binding-set-after"],
+  "concurrent": { "instanceId": 8, "guestLifetime": "14", "busyKind": "blocked", "liveScopes": 2 },
+  "noCell": [{ "reason": "ledger-closing", "kind": "rejected" }, { "reason": "capacity", "kind": "blocked" }],
+  "admissionFaults": [{ "method": "prepareAdmission", "after": false, "prefix": 0 }, { "method": "prepareAdmission", "after": true, "prefix": 0 }, { "method": "claimAdmission", "after": false, "prefix": 2 }, { "method": "claimAdmission", "after": true, "prefix": 2 }, { "method": "reserveRecord", "after": false, "prefix": 4 }, { "method": "reserveRecord", "after": true, "prefix": 4 }],
+  "foreignComposition": { "sameLedger": true, "sameNumericLifetime": true, "kind": "rejected", "workBytes": 0, "proxyReads": 0 },
+  "laws": ["zero-grant-no-state-change", "foreign-request-does-not-replace-slot", "live-child-does-not-occupy-transition-slot", "handoff-before-roster-unlink", "terminal-child-full-grant-defers-handoff", "record-refund-does-not-refund-parent-slot", "cancel-before-record-closes-original-cell", "cancel-after-install-closes-original-shell", "wrapper-fault-keeps-original-slot", "fault-held-slot-never-reused", "concurrent-roster-children-remain-owned", "no-structural-terminal-callback"],
+  "trace": [
+    { "event": "admit", "owner": "a", "slot": "a", "roster": [] },
+    { "event": "register", "owner": "a", "slot": null, "roster": ["a"] },
+    { "event": "admit", "owner": "b", "slot": "b", "roster": ["a"] },
+    { "event": "register", "owner": "b", "slot": null, "roster": ["a", "b"] },
+    { "event": "capture-retirement", "owner": "a", "slot": "a", "roster": ["a", "b"] },
+    { "event": "unlink-domain-empty", "owner": "a", "slot": "a", "roster": ["b"] },
+    { "event": "refunded-observed", "owner": "a", "slot": null, "roster": ["b"] },
+    { "event": "capture-retirement", "owner": "b", "slot": "b", "roster": ["b"] },
+    { "event": "fault", "owner": "b", "slot": "b", "roster": ["b"] }
+  ]
+}

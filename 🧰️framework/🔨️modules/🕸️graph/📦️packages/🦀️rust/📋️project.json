@@ -15,7 +15,7 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📽️projection/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧩️suite/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧫️fixtures/🔣️outputs.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧫️fixtures/🔣️outputs.json",
       "{workspaceRoot}/🧰️framework/🔨️modules/🪪️identity/🛣️path/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
@@ -26,7 +26,7 @@
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/**/*.rs",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧩️suite/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧫️fixtures/🔣️outputs.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧫️fixtures/🔣️outputs.json",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📥️admission/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📇️catalog/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📤️publication/🟦️.ts",
@@ -96,6 +96,7 @@
       }
     },
     "test-manifest-contract": {
+      "metadata": { "semio": { "execution": { "version": 1, "kind": "source" } } },
       "executor": "nx:run-commands",
       "cache": false,
       "dependsOn": [],

@@ -1,7 +1,7 @@
 import { existsSync as originalCorpusAuthorityExists } from "node:fs";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
-import corpus from "../../🧫️fixtures/⏱️finite.json";
+import corpus from "../🧫️fixtures/⏱️finite.json";
 import policySchema from "../../🧬️schema/🔣️.json";
 import envelopeSchema from "../../🏃️process/🧬️schema/🔣️.json";
 import { checkScriptInvocation, type ScriptProgress } from "../../🟦️.ts";

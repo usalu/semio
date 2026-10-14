@@ -3,7 +3,10 @@
   "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧪️tests/🎚️config/🟦️.ts"]
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧪️tests/🎚️config/🟦️.ts"
+    ]
   },
   "targets": {
     "dev": {
@@ -27,10 +30,9 @@
         "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
       },
-      "cache": true,
+      "cache": false,
       "outputs": [
-        "{projectRoot}/../../server",
-        "{projectRoot}/../../server.exe"
+        "{workspaceRoot}/dist/{options.env.SEMIO_BUILD_MODE}/repo-coordinator/next"
       ]
     },
     "start": {
@@ -55,8 +57,16 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "test-next-rebuild": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test next-rebuild"
+      }
     }
   }
 }
-
-

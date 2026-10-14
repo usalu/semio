@@ -6,7 +6,7 @@ import ts from "typescript";
 import { loadTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️root-taxonomy-workflow-source/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🧱️root-taxonomy-workflow-source/🔣️.json"), "utf8"));
 
 const relativeSpecifier = (consumer: string, owner: string): string => {
   const path = relative(resolve(repoRoot, consumer, ".."), resolve(repoRoot, owner)).replaceAll("\\", "/");

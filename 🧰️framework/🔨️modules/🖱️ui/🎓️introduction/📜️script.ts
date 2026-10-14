@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
-import { BundleScript, ScriptRouter } from "../../🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import { runBudgetedTestCommand } from "../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
-import { testLevelBudgetMs } from "../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runBudgetedTestCommand } from "../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import { testLevelBudgetMs } from "../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 
 /** 🎓️ Runs the neutral introduction corpus and strict owned-interface checks. */
 class TestScript extends BundleScript {

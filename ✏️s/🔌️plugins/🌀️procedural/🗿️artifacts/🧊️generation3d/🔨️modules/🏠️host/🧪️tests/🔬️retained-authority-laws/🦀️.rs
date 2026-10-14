@@ -100,7 +100,7 @@ fn semantic_digest(result: &Generation3dSemanticResult) -> u64 {
 
 #[test]
 fn small_move_widget_feature_matches_the_test_only_third_party_oracle() {
-    let source = include_bytes!("../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🔬️p8yz-b-third-party-oracle-laws.json");
+    let source = include_bytes!("../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️p8yz-b-third-party-oracle-laws.json");
     let oracle = SerdeJsonMoveOracle.evaluate(source).expect("third-party P3 semantic oracle");
     let mut snapshot = Generation3dSnapshot::default();
     snapshot.host_snapshot.widgets = vec![
@@ -339,19 +339,19 @@ fn every_displaced_replay_owner_pays_its_own_flow_frontier_under_its_quoted_gran
 #[test]
 fn semantic_wire_vectors_match_independent_json_oracle() {
     use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{WidgetInputPlane, WidgetInputValue};
-    use crate::standards::v1::subsets::any::schema::mutations::{generation3d_number_literal,generation3d_param_number,generation3d_param_vector,generation3d_vector_literal};
+    use crate::standards::v1::subsets::any::schema::mutations::{generation3d_number_value,generation3d_param_number,generation3d_param_vector,generation3d_vector_value};
 
     use semio_framework_artifact_flow_flow::{Widget, WidgetLayout};
-    let record = |id: &str, kind: &str, params: Vec<(&str, semio_framework_value::DslValue)>| Widget::Neuron {
+    let record = |id: &str, kind: &str, params: Vec<(&str, semio_framework_artifact_flow_flow::neural::Value)>| Widget::Neuron {
         id: id.into(),
         neuron_kind: kind.into(),
-        params: params.into_iter().fold(semio_framework_artifact_flow_flow::neural::Dictionary::new(), |record, (key, literal)| record.insert(key, <semio_framework_artifact_flow_flow::neural::Value as semio_framework_value::FromValue>::from_value(literal).expect("a typed literal is a neural value"))),
+        params: params.into_iter().fold(semio_framework_artifact_flow_flow::neural::Dictionary::new(), |record, (key, literal)| record.insert(key, literal)),
         input_ports: Vec::new(),
         output_ports: Vec::new(),
         preview: false,
     };
     every_variant_decodes_through_retained_structural_grants();
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧫️fixtures/🧬️semantic-wire/🔣️.json")).expect("independent serde corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🧫️fixtures/🧬️semantic-wire/🔣️.json")).expect("independent serde corpus");
     for case in corpus["cases"].as_array().expect("wire vectors") {
         let mutation = <Generation3dMutation as semio_framework_value::FromValue>::from_value(case["mutation"].clone().into()).expect("first-party mutation decoder");
         let text = protocol::OpText::print_op(&mutation);
@@ -362,11 +362,11 @@ fn semantic_wire_vectors_match_independent_json_oracle() {
         let mut snapshot = Generation3dSnapshot::default();
         for widget in std::mem::take(&mut snapshot.host_snapshot.widgets) { widget.retire_cold(); }
         snapshot.host_snapshot.widgets.push(Widget::InputSlider { id: "slider".into(), label: "Slider".into(), value: 0.0, min: -10.0, max: 10.0, step: 0.5 });
-        snapshot.host_snapshot.widgets.push(record("translate", "brep.xform.translate", vec![("offset", generation3d_vector_literal("vector", [0.0; 3])), ("label", WidgetInputValue::Text(String::new()).literal())]));
-        snapshot.host_snapshot.widgets.push(record("rotate", "brep.xform.rotate", vec![("axis", generation3d_vector_literal("vector", [0.0, 0.0, 1.0])), ("angle", generation3d_number_literal(0.0))]));
-        snapshot.host_snapshot.widgets.push(record("scale", "brep.xform.scale", vec![("factor", generation3d_vector_literal("vector", [1.0; 3])), ("center", generation3d_vector_literal("point", [0.0; 3])), ("uniform", WidgetInputValue::Boolean(false).literal())]));
+        snapshot.host_snapshot.widgets.push(record("translate", "brep.xform.translate", vec![("offset", generation3d_vector_value("vector", [0.0; 3])), ("label", WidgetInputValue::Text(String::new()).neural_value())]));
+        snapshot.host_snapshot.widgets.push(record("rotate", "brep.xform.rotate", vec![("axis", generation3d_vector_value("vector", [0.0, 0.0, 1.0])), ("angle", generation3d_number_value(0.0))]));
+        snapshot.host_snapshot.widgets.push(record("scale", "brep.xform.scale", vec![("factor", generation3d_vector_value("vector", [1.0; 3])), ("center", generation3d_vector_value("point", [0.0; 3])), ("uniform", WidgetInputValue::Boolean(false).neural_value())]));
         snapshot.host_snapshot.widgets.push(record("shape", "semantic-wire-law.collections", vec![("items", semio_framework_value::DslValue::Object(vec![("$schema".into(), semio_framework_value::DslValue::String("list".into()))]))]));
-        snapshot.host_snapshot.widgets.push(record("section", "semantic-wire-law.sections", vec![("plane", WidgetInputValue::Plane(WidgetInputPlane { origin: [0.0; 3], normal: [0.0, 0.0, 1.0] }).literal())]));
+        snapshot.host_snapshot.widgets.push(record("section", "semantic-wire-law.sections", vec![("plane", WidgetInputValue::Plane(WidgetInputPlane { origin: [0.0; 3], normal: [0.0, 0.0, 1.0] }).neural_value())]));
         snapshot.host_snapshot.layout.insert("slider".into(), WidgetLayout { x: 0.0, y: 0.0 });
         let before_schema = snapshot.host_snapshot.schema.clone();
         if let Some(displaced) = generation3d_apply_initialization_mutation(&mut snapshot, &mutation).expect("direct semantic replay") {
@@ -392,7 +392,7 @@ fn semantic_wire_vectors_match_independent_json_oracle() {
             }
             _ => {
                 let (index, key) = match &mutation { Generation3dMutation::DragTransforms(_) => (1, "offset"), Generation3dMutation::RotateTransforms(_) => (2, "axis"), Generation3dMutation::ScaleTransforms(_) => (3, "factor"), _ => unreachable!() };
-                let params = semio_framework_value::ToValue::to_value(&snapshot.host_snapshot.widgets[index]).get("params").cloned().expect("operator params");
+                let Widget::Neuron { params, .. } = &snapshot.host_snapshot.widgets[index] else { panic!("operator params") };
                 let axes: [f64; 3] = std::array::from_fn(|axis| expected[key][axis].as_f64().expect("independent vector"));
                 assert_eq!(generation3d_param_vector(&params, key, [f64::NAN; 3]), axes);
                 if key == "axis" { assert_eq!(generation3d_param_number(&params, "angle", f64::NAN), expected["angle"].as_f64().expect("oracle angle")); }

@@ -1,4 +1,5 @@
-import { readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { canonicalWasmBuildVitePlugin } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts";
+import { readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { builtPluginModulesRootIn } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import { viteCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
 import path from "node:path";
@@ -12,7 +13,6 @@ import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../../🧰️framework/🛍
 import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { devStreamMuxServer, semioBackboneVitePlugin, semioBlobVitePlugin, semioActivationVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
 import { semioExtensionStoreVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts";
-import { pluginModulesRootIn } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import { repoCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { playGisMapTileServeMode } from "../../🔨️modules/📦️site/🗺️tile-serve-mode/🟦️.ts";
 import { playDevStaticDirMounts } from "../../🔨️modules/🧩️runtime/📦️assets/🟦️.ts";
@@ -31,15 +31,15 @@ const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = ["@semio-tech/framework-surface-r
 const resolvedPlaygroundAssets = PLAY_RUNTIME_TARGETS.flatMap(target => target.assets);
 const { extensionModuleDirNames } = playRuntimeModuleLayout();
 
-export default defineConfig(({ command }) => {
+export default defineConfig(({ command, mode }) => {
   const development = command === "serve" ? readPlayActivation(repoRoot) : undefined;
-  const pluginModulesDir = command === "build" ? builtPluginModulesRootIn(repoRoot, readBuildMode(process.env.SEMIO_BUILD_MODE)) : pluginModulesRootIn(repoRoot);
+  const pluginModulesDir = builtPluginModulesRootIn(repoRoot, readBuildMode(mode));
   const installedExtensionsDir = development?.extensionsDirectory ?? pluginModulesDir;
   const extensionDir = (name: string): string => playExtensionDirectory(name, pluginModulesDir, development?.extensionDirectories);
   return {
     root: playDir,
     base: ".",
-    cacheDir: viteCacheDirectory(repoCacheDirectory(repoRoot, "vite", "semio-tech-play"), process.env, import.meta.url),
+    cacheDir: viteCacheDirectory(repoCacheDirectory(repoRoot, "vite", "semio-tech-play"), { ...process.env, SEMIO_BUILD_MODE: readBuildMode(mode) }, import.meta.url),
     publicDir: path.join(playDir, "public"),
     assetsInclude: ["**/*.wasm"],
     worker: { format: "es" },
@@ -70,6 +70,7 @@ export default defineConfig(({ command }) => {
       watch: process.env.SEMIO_TECH_PLAY_FROZEN === "true" ? null : { ignored: ["**/📇️registry/🤖️generated/**", "**/🤖️generated/**"] },
     },
     plugins: [
+      canonicalWasmBuildVitePlugin(repoRoot, readBuildMode(mode)),
       semioServeCloseVitePlugin(),
       ...semioHostHtmlVitePlugin(repoRoot, { title: "semio · Play", entry: "./🟦️.tsx", bodyClass: "h-screen w-screen overflow-hidden bg-background text-foreground", cnameHost: PLAY_HOST }),
       semioEmojiIndexHtmlVitePlugin(playDir),
@@ -89,6 +90,6 @@ export default defineConfig(({ command }) => {
       entries: [path.join(playDir, "🌐️.html")],
       ...playgroundSceneHostOptimizeDeps({ exclude: ["playwright", "playwright-core", "chromium-bidi", "fsevents", ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE] }),
     },
-    build: semioViteBuild(),
+    build: semioViteBuild(undefined, readBuildMode(mode)),
   };
 });

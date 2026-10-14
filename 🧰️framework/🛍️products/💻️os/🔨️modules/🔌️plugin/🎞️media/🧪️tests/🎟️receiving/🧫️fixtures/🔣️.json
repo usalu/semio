@@ -1,0 +1,17 @@
+{
+  "schema": "semio.media.original-receiving-success/v1",
+  "port": "value:original",
+  "kind": "fixture.original-output",
+  "data": [
+    0,
+    255,
+    172,
+    0
+  ],
+  "sourcePointersPreserved": true,
+  "exporterCalls": 1,
+  "terminalDropHeap": [
+    0,
+    0
+  ]
+}

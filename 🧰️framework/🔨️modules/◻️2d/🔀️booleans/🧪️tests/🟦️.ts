@@ -3,8 +3,8 @@ import {expect,test} from "vitest";
 import Ajv from "ajv";
 import pc from "polygon-clipping";
 import sharp from "sharp";
-import rows from "../🧫️fixtures/🔣️.json";
-import endpointRows from "../🧫️fixtures/🔗️endpoints/🔣️.json";
+import rows from "./🧫️fixtures/🔣️.json";
+import endpointRows from "./🧫️fixtures/🔗️endpoints/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {BooleanJob,booleanRegions,type BooleanInput,type BooleanProgress} from "../🟦️.ts";
 import {pathSegmentsToSvgD,type PathSegment,type Vec2} from "../../🟦️.ts";
@@ -72,7 +72,7 @@ test("async operations yield and reject observer aborts before publication",asyn
 });
 
 /** 🧹️ Neutral private arrangements retire without consuming caller geometry. */
-import retirementRows from "../🧫️fixtures/🧹️retirement/🔣️.json";
+import retirementRows from "./🧫️fixtures/🧹️retirement/🔣️.json";
 const retirementValid=ajv.compile({$ref:schema.$id+"#/definitions/retirementProgress"});
 test("boolean retirement hands off original operands and completed paths while draining private arrangements",()=>{
  for(const row of retirementRows.cases)for(const grant of [1,7,4096]){
@@ -98,6 +98,6 @@ test("boolean retirement hands off original operands and completed paths while d
  }
 });
 
-import admissionRows from "../../🧹️retire/🧫️fixtures/📥️admission/🔣️.json";
+import admissionRows from "../../🧹️retire/🧪️tests/🧫️fixtures/📥️admission/🔣️.json";
 import admissionSchema from "../../🧹️retire/🧬️schema/📥️admission/🔣️.json";
 test("retained Boolean admission preserves refused input until close",()=>{expect(new Ajv({strict:true}).compile(admissionSchema)(admissionRows)).toBe(true);for(const row of admissionRows.cases){if(row.kind!=="boolean")continue;const input:BooleanInput={...rows[0]!.input as BooleanInput,maxEdges:row.maxEdges!},operands=input.operands;expect(valid(input)).toBe(false);expect(()=>new BooleanJob(input)).toThrow(/contract/);const job=BooleanJob.admit(input);expect((job as unknown as {input:BooleanInput}).input.operands).toBe(operands);expect(()=>job.advance(1)).toThrow(/contract/);expect(()=>job.result()).toThrow(/contract/);const retired=job.intoRetirement();expect(retired.operands).toBe(operands);expect(retired.output).toBe(null);while(!retired.job.advance(1).done){}expect(retired.job.terminalIsEmpty()).toBe(true);console.log("[DEBUG] Refused Boolean admission retained actual operands until explicit close");}});

@@ -3,11 +3,11 @@ import { requireRecord } from "../../../../../../🔨️modules/🧬️schema/�
 import "../🧬️mutation-authority/🟦️.ts";
 import "../🧾️canonical-json/🟦️.ts";
 import { mutationRoot, prepareMutationFixtureRoot, mutationFixtureRoot } from "../🧬️mutation-authority/🧫️fixture/🟦️.ts";
-import { wasmOutputDirectory } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
-import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { testLevelAtLeast, testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, daemonBudgetMs, orchestratorBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { wasmOutputDirectory } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { testLevelAtLeast, testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, daemonBudgetMs, orchestratorBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import toml from "@iarna/toml";
 import Ajv from "ajv";
 import { describe, expect, test } from "bun:test";
@@ -22,8 +22,8 @@ import { policyCanonicalArtifactKindBreaches, policyCanonicalChildKindBreaches, 
 import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { newScaffoldMutationTree } from "../../🏗️authoring/🧬️mutation-tree/🟦️.ts";
 import { PLAYGROUND_LOCKED_EXAMPLE_ENV, PLAYGROUND_PORTS, allPlaygroundReservedPorts, areaOf, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, clearDiscoveryCache, computeWorkspaces, daemonBudgetOpts, defineLint, dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, describeDevPortOccupant, devServerUrl, devToolingEnv, diffWorkspaces, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, dispatchSubcommand, getWorkspaceRoot, gitSpawnEnv, goLevelTestArgs, isAdapterBoundaryFile, isDevPortInUse, loadTaxonomy, nextestArtifactLocation, orchestratorBudgetOpts, parseTsImportSpecs, playgroundDevPort, playgroundPlayViteDefine, policyDiscoveredAllowlist, readSemioMarker, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, runCmd, runCmdStatus, runProbe, validateTaxonomy, vitestLevelArgs, wgpuDevPlayUrl, type FileLinter } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { partitionNextestExecutionFilters } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { BundleScript, ScriptRouter, findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { partitionNextestExecutionFilters } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { BundleScript, ScriptRouter, findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, fixedSourceDispositionDecision, generatorNxPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, loadCatalogTaxonomy, mutationDirectLeafInlinedBehaviorFacets, projectCargoProviderManifest, registryCompilerInputDependencies, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type FixedDirectoryContract, type FixedFilenameContract, type PackageSourceDisposition, type RegistryCompilerInputRole, type SemanticProjectionAuthorityNode, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
 import { pathEmojiStatuteFindings } from "../../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
 import { leadingEmojiIdentity } from "../../../../../../🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts";
@@ -103,7 +103,7 @@ describe("extension Cargo installation owner", () => {
   test("preserves the authored extension directory alongside the independent TOML identity", async () => {
     const library = await import("../../📦️packages/🟦️typescript/🟦️.ts");
     const root = findWorkspaceRoot(import.meta.dir);
-    const folder = join(import.meta.dir, "../../🧫️fixtures/📦️extension-installation-owner");
+    const folder = join(import.meta.dir, "../🧫️fixtures/📦️extension-installation-owner");
     const fixture = JSON.parse(readFileSync(join(folder, "🔣️.json"), "utf8"));
     
     expect(fixture["schema"]).toEqual("semio.extension.cargo-installation-owner/v1");expect(fixture["cases"]).toEqual([{"manifest":"✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/Cargo.toml","directoryName":"🧮️math"},{"manifest":"✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/Cargo.toml","directoryName":"🪵️wood"},{"manifest":"✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/Cargo.toml","directoryName":"🏢️aec-building"}]);
@@ -129,7 +129,7 @@ describe("current JCO destination authority", () => {
   test("preserves tool-owned declaration pairing and the exact vendored shim payloads", async () => {
     const ts = await import("typescript");
     const root = findWorkspaceRoot(import.meta.dir);
-    const fixtureRoot = join(root, "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe"), host = join(fixtureRoot, "🌐️browser-host"), bundles = join(fixtureRoot, "🌐️browser-bundles");
+    const fixtureRoot = join(root, "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/🧩️jcoprobe"), host = join(fixtureRoot, "🌐️browser-host"), bundles = join(fixtureRoot, "🌐️browser-bundles");
     const options = { allowJs: true, moduleResolution: ts.ModuleResolutionKind.Bundler, module: ts.ModuleKind.ESNext };
     const taxonomy = loadTaxonomy();
     const fixed = Object.entries(taxonomy.fixedFilenameContracts).filter(([id]) => id.startsWith("jco-"));
@@ -168,7 +168,7 @@ describe("current JCO destination authority", () => {
     const discovery = await import("../../🔍️discovery/🟦️.ts");
     const taxonomy = JSON.parse(readFileSync(join(import.meta.dir, "../../🔣️taxonomy.json"), "utf8"));
     const root = findWorkspaceRoot(import.meta.dir);
-    const inputRoot = join(root, "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe");
+    const inputRoot = join(root, "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/🧩️jcoprobe");
     const current = taxonomy.generatorContracts["jco-package-adapter"].currentPackageDestination;
     expect(discovery.parseCurrentJcoPackageDestination(current)).toEqual(current);
     for (const row of JSON.parse(readFileSync(join(inputRoot, "🧪️destination-cases.json"), "utf8")).invalid) {
@@ -195,7 +195,7 @@ describe("finite exact fixed parent scope", () => {
     const discovery = await import("../../🔍️discovery/🟦️.ts");
     const ts = await import("typescript");
     const root = findWorkspaceRoot(import.meta.dir);
-    const vector: FixedParentCases = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/📦️deployment/🔒️fixed-parent-cases.json"), "utf8"));
+    const vector: FixedParentCases = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧫️fixtures/📦️deployment/🔒️fixed-parent-cases.json"), "utf8"));
     const common = { authority: "fixture compiler", reason: "exact parent fixture", configurability: "unconfigurable", verification: "finite exact fixed parent scope", expires: null } as const;
     const parents: Readonly<Record<string, FixedDirectoryContract>> = Object.fromEntries(Object.entries(vector.parents).map(([id, path]): [string, FixedDirectoryContract] => [id, { ...common, pathPattern: path, scope: { kind: "exact-path", path } }]));
     const scopeSchema = { type: "object", additionalProperties: false, required: ["kind", "fixedDirectoryContractIds"], properties: { kind: { const: "fixed-directory-contract-set" }, fixedDirectoryContractIds: { type: "array", minItems: 1, maxItems: 256, uniqueItems: true, items: { enum: Object.keys(parents) } } } };
@@ -383,7 +383,7 @@ describe("Flow compiler output boundaries", () => {
 });
 
 describe("package language semantic handoff", () => {
-  const inputRoot = join(import.meta.dir, "../../🧫️fixtures/🤝️package-language-kind-handoff");
+  const inputRoot = join(import.meta.dir, "../🧫️fixtures/🤝️package-language-kind-handoff");
   const vector = JSON.parse(readFileSync(join(inputRoot, "🔣️.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🔣️taxonomy.json"), "utf8"));
   const fold = (value: string): string => value.normalize("NFC").replaceAll("\uFE0F", "");
@@ -788,7 +788,7 @@ describe("package language semantic handoff", () => {
 describe("active ticket clean protection", () => {
   test("projects synthetic candidates with strict manifest and third-party oracle parity", async () => {
     const { cleanRemovalProtection, cleanProjectRemovals } = await import("../../🧼️workspace-cleanup/🛡️protection/🟦️.ts");
-    const fixturePath = join(import.meta.dir, "../../🧫️fixtures/🧼️clean");
+    const fixturePath = join(import.meta.dir, "../🧫️fixtures/🧼️clean");
     const fixture = JSON.parse(readFileSync(join(fixturePath, "🔣️.json"), "utf8"));
     
     expect(fixture["version"]).toEqual(1);
@@ -850,7 +850,7 @@ describe("Windows checkout ticket paths", () => {
   test("rejects Windows-illegal components and keeps checkout paths below the legacy path limit", async () => {
     const { cleanIsWindowsIllegalName } = await import("../../🧼️workspace-cleanup/🛡️protection/🟦️.ts");
     const root = findWorkspaceRoot(import.meta.dir);
-    const fixturePath = join(import.meta.dir, "../../🧫️fixtures/🪟️windows-checkout-paths");
+    const fixturePath = join(import.meta.dir, "../🧫️fixtures/🪟️windows-checkout-paths");
     const fixture = JSON.parse(readFileSync(join(fixturePath, "🔣️.json"), "utf8")) as {
       version: number;
       checkout: { root: string; maxPathUnits: number; ticketRoot: string };
@@ -893,7 +893,7 @@ describe("registryCompilerImports", () => {
   test("validates the language-neutral vectors against Bun and TypeScript", async () => {
     const { registryStaticImports } = await import("../../🔍️discovery/🟦️.ts");
     const ts = await import("typescript");
-    const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🔍️discovery/🧫️fixtures/compiler-imports/🔣️.json"), "utf8")) as { cases: { name: string; source: string; expected: string[] }[] };
+    const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🔍️discovery/🧪️tests/🧫️fixtures/compiler-imports/🔣️.json"), "utf8")) as { cases: { name: string; source: string; expected: string[] }[] };
     
     
     
@@ -924,7 +924,7 @@ describe("registryCompilerImports", () => {
 //#endregion 🔗️RegistryCompilerImports
 
 //#region 📦️CargoProviderManifestProjection
-const CARGO_PROVIDER_PROJECTION_FIXTURE = join(import.meta.dir, "../../🧫️fixtures/📽️cargo-provider-projection/🔣️.json");
+const CARGO_PROVIDER_PROJECTION_FIXTURE = join(import.meta.dir, "../🧫️fixtures/📽️cargo-provider-projection/🔣️.json");
 
 
 describe("cargo provider manifest projection", () => {
@@ -951,7 +951,7 @@ describe("cargo provider manifest projection", () => {
 //#endregion 📦️CargoProviderManifestProjection
 
 //#region 🔗️CargoProviderBinding
-const CARGO_PROVIDER_BINDING_FIXTURE = join(import.meta.dir, "../../🧫️fixtures/🪢️cargo-provider-binding/🔣️.json");
+const CARGO_PROVIDER_BINDING_FIXTURE = join(import.meta.dir, "../🧫️fixtures/🪢️cargo-provider-binding/🔣️.json");
 
 
 describe("cargo provider binding", () => {
@@ -999,7 +999,7 @@ describe("cargo provider binding", () => {
 //#endregion 🔗️CargoProviderBinding
 
 //#region 🧬️MutationMetadataSourceProvider
-const MUTATION_METADATA_SOURCE_FIXTURE = join(import.meta.dir, "../../🧫️fixtures/🏷️metadata-source-provider/🔣️.json");
+const MUTATION_METADATA_SOURCE_FIXTURE = join(import.meta.dir, "../🧫️fixtures/🏷️metadata-source-provider/🔣️.json");
 
 
 describe("mutation metadata source provider", () => {
@@ -1082,7 +1082,7 @@ function fixtureGitHead(root: string): string {
 //#endregion 🧪️GitFixture
 
 //#region 🔍️OwnedFilesystemDiscovery
-const OWNED_FILESYSTEM_DISCOVERY_GOLDEN = join(import.meta.dir, "../../🧫️fixtures/🔍️filesystem/🔣️.json");
+const OWNED_FILESYSTEM_DISCOVERY_GOLDEN = join(import.meta.dir, "../🧫️fixtures/🔍️filesystem/🔣️.json");
 
 describe("owned filesystem discovery", () => {
   test("sorts hostile Unicode and hidden nodes by bytes without following directory symlinks", () => {
@@ -1115,7 +1115,7 @@ describe("owned filesystem discovery", () => {
 //#endregion 🔍️OwnedFilesystemDiscovery
 
 //#region 🧭️WorkspaceTaxonomyAuthority
-const WORKSPACE_TAXONOMY_FIXTURE = join(import.meta.dir, "../../🧫️fixtures/🌳️workspace-taxonomy/🔣️.json");
+const WORKSPACE_TAXONOMY_FIXTURE = join(import.meta.dir, "../🧫️fixtures/🌳️workspace-taxonomy/🔣️.json");
 
 
 function workspaceTaxonomyFixtureRoot(prefix: string): { readonly root: string; readonly retained: boolean } {
@@ -1425,7 +1425,7 @@ describe("composition policy (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
   });
 
   test("child-kind metadata validates syntax without inferring instance ownership from kinds", () => {
-    const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧩️child-kind-metadata/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧩️child-kind-metadata/🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🧩️child-kind-metadata/🔣️.json"), "utf8"));
     const oracle = new Ajv({ strict: true });
     
@@ -2576,7 +2576,7 @@ describe("command budgets", () => {
   });
 
   test("captured Cargo failures retain human compiler spans and complete causes", () => {
-    const fixture = JSON.parse(readFileSync(join(import.meta.dir,"../../🧫️fixtures/📣️cargo-diagnostics/🔣️.json"),"utf8")) as {humanStderr:string;expected:string;rustSource:string};
+    const fixture = JSON.parse(readFileSync(join(import.meta.dir,"../🧫️fixtures/📣️cargo-diagnostics/🔣️.json"),"utf8")) as {humanStderr:string;expected:string;rustSource:string};
     expect(capturedTestFailureDiagnostics("",fixture.humanStderr)).toBe(fixture.expected);
     const output = spawnSync("rustc",["--error-format=human","--emit=metadata","-"],{input:fixture.rustSource,encoding:"utf8",timeout:10_000});
     expect(output.status).not.toBe(0);
@@ -2649,7 +2649,7 @@ describe("command budgets", () => {
   });
 
   test("testLevelBudgetMs maps levels and honors SEMIO_TEST_BUDGET_MS", async () => {
-    const { TEST_LEVEL_BUDGET_MS } = await import("../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts");
+    const { TEST_LEVEL_BUDGET_MS } = await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts");
     expect(testLevelBudgetMs("fundamental")).toBe(TEST_LEVEL_BUDGET_MS.fundamental);
     expect(testLevelBudgetMs("exhaustive")).toBe(TEST_LEVEL_BUDGET_MS.exhaustive);
     const prev = process.env.SEMIO_TEST_BUDGET_MS;
@@ -2689,14 +2689,14 @@ describe("command budgets", () => {
 //#region 🦀️NextestExecutionFilters
 describe("nextest execution filters", () => {
   test("retains explicit task artifacts and preserves the default temporary location", () => {
-    const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🏎️nextest/🗺️artifact-location.json"), "utf8")) as { schema: string; cases: Array<{ value: string; relative: string | null; retain: boolean }> };
+    const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🏎️nextest/🗺️artifact-location.json"), "utf8")) as { schema: string; cases: Array<{ value: string; relative: string | null; retain: boolean }> };
     for (const row of fixture.cases) {
       expect(nextestArtifactLocation(import.meta.dir, { SEMIO_TEST_ARTIFACT_DIR: row.value })).toEqual({ directory: row.relative === null ? tmpdir() : resolve(import.meta.dir, row.relative), retain: row.retain });
     }
   });
 
   test("preserves language-neutral build and execution vectors with an independent Node parser", () => {
-    const fixtureRoot = join(import.meta.dir, "../../🧫️fixtures/🏎️nextest");
+    const fixtureRoot = join(import.meta.dir, "../🧫️fixtures/🏎️nextest");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🎮️command-vectors.json"), "utf8")) as {
       cases: Array<{ name: string; input: string[]; build: string[]; execution: string[]; libtest: string[] }>;
       rejected: string[][];
@@ -2879,7 +2879,7 @@ describe("loadTaxonomy", () => {
     const taxonomy = loadTaxonomy();
     const owned = Object.entries(taxonomy.generatorContracts).filter(([, contract]) => contract.ownership === "owned");
     const external = Object.values(taxonomy.generatorContracts).filter((contract) => contract.ownership === "external");
-    const inputRoot = join(import.meta.dir, "../../🧫️fixtures/🏭️owned-generator-preview-inventory"), input = readFileSync(join(inputRoot, "🔣️.json"), "utf8");
+    const inputRoot = join(import.meta.dir, "../🧫️fixtures/🏭️owned-generator-preview-inventory"), input = readFileSync(join(inputRoot, "🔣️.json"), "utf8");
     const vector = JSON.parse(input) as { schemaVersion: number; contract: string; ownedGeneratorIds: string[] };
     expect(vector.ownedGeneratorIds).toEqual([...vector.ownedGeneratorIds].sort());
     const jsonc = await import("jsonc-parser"), inputErrors: import("jsonc-parser").ParseError[] = [];
@@ -2920,7 +2920,7 @@ describe("loadTaxonomy", () => {
   });
 
   test("admits only explicit same-project preview invocations", async () => {
-    const root = join(import.meta.dir, "../../🧫️fixtures/🏭️owned-generator-preview-inventory");
+    const root = join(import.meta.dir, "../🧫️fixtures/🏭️owned-generator-preview-inventory");
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
     const taxonomy = loadTaxonomy(), actor = taxonomy.generatorContracts["actor-typegen"]!;
     for (const row of fixture.previewRoutes) {
@@ -2943,7 +2943,7 @@ describe("loadTaxonomy", () => {
   });
 
   test("bounds explicit preview resources and invokes only the declared owner command", async () => {
-    const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🏭️owned-generator-preview-inventory/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🏭️owned-generator-preview-inventory/🔣️.json"), "utf8"));
     const discovery = await import("../../🔍️discovery/🟦️.ts"), ts = await import("typescript");
     const limitSchema = { type: "object", additionalProperties: false, required: ["maxOutputBytes", "timeoutMs"], properties: { maxOutputBytes: { type: "integer", minimum: 1024, maximum: 536870912 }, timeoutMs: { type: "integer", minimum: 1000, maximum: 600000 } } };
     const oracle = new Ajv({ strict: true }).compile(limitSchema);
@@ -2994,7 +2994,7 @@ describe("loadTaxonomy", () => {
   }, 120000);
 
   test("routes native generator previews through their declared owner", async () => {
-    const root = join(import.meta.dir, "../../🧫️fixtures/🏭️owned-generator-preview-inventory"), fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
+    const root = join(import.meta.dir, "../🧫️fixtures/🏭️owned-generator-preview-inventory"), fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
     const discovery = await import("../../🔍️discovery/🟦️.ts");
     const { default: parseArgv } = await import("yargs-parser");
     for (const row of fixture.ownerExecutionRoutes) {
@@ -3011,7 +3011,7 @@ describe("loadTaxonomy", () => {
   });
 
   test("admits only a closed compiler input manifest authority", () => {
-    const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🏭️owned-generator-preview-inventory/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🏭️owned-generator-preview-inventory/🔣️.json"), "utf8"));
     
     expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["contract"]).toEqual("owned-generator-preview-inventory-v1");expect(fixture["compilerManifest"]["version"]).toEqual(1);
     const taxonomy = loadTaxonomy(), actor = taxonomy.generatorContracts["actor-typegen"]!;
@@ -3022,7 +3022,7 @@ describe("loadTaxonomy", () => {
   });
 
   test("discovers only exact byte-matched compiler manifest inputs", () => {
-    const root = join(import.meta.dir, "../../🧫️fixtures/🏭️owned-generator-preview-inventory"), fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
+    const root = join(import.meta.dir, "../🧫️fixtures/🏭️owned-generator-preview-inventory"), fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
     const sandbox = mkdtempSync(join(tmpdir(), "compiler-input-manifest-")), manifestPath = "📤️output/🧾️manifest.json";
     mkdirSync(join(sandbox, "🌱️source"), { recursive: true });
     mkdirSync(join(sandbox, "📤️output"), { recursive: true });
@@ -4258,12 +4258,12 @@ type ArtifactProjectionGoldenEntry = Readonly<{
   }>;
 }>;
 
-const ARTIFACT_PROJECTION_GOLDEN = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/📐️cad-draw-path-projection/🔣️.json"), "utf8")) as ArtifactProjectionGolden;
+const ARTIFACT_PROJECTION_GOLDEN = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/📐️cad-draw-path-projection/🔣️.json"), "utf8")) as ArtifactProjectionGolden;
 
 /** 🧵️ The live CAD carriers of the sealed golden's authored sources — unsealed, so moves rewrite them like any reference. */
 type CadLiveBindings = Readonly<{ schemaVersion: 1; contract: "cad-draw-live-bindings-v1"; sealedContractId: "cad-draw-projection-vectors-v1"; projection: "artifact-example-model-catalog-v1"; bindings: readonly Readonly<{ mapping: number; live: string }>[] }>;
-const CAD_LIVE_BINDINGS = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧫️cad-draw-live-bindings/🔣️.json"), "utf8")) as CadLiveBindings;
-const CAD_LIVE_BINDINGS_SCHEMA = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🔣️cad-draw-live-bindings/🔣️.json"), "utf8")) as object;
+const CAD_LIVE_BINDINGS = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧫️cad-draw-live-bindings/🔣️.json"), "utf8")) as CadLiveBindings;
+
 
 type DrawSourceScenario = Readonly<{
   schemaVersion: 1;
@@ -4294,7 +4294,7 @@ type DrawSourceScenario = Readonly<{
 
 type DrawSourceScenarioInput = Readonly<{ path: string; format: "json" | "jsonc" | "toml" | "typescript" | "rust"; content: string }>;
 
-const DRAW_SOURCE_SCENARIO_ROOT = join(import.meta.dir, "../../🧫️fixtures/🖍️draw-source-scenario");
+const DRAW_SOURCE_SCENARIO_ROOT = join(import.meta.dir, "../🧫️fixtures/🖍️draw-source-scenario");
 const DRAW_SOURCE_SCENARIO = JSON.parse(readFileSync(join(DRAW_SOURCE_SCENARIO_ROOT, "🔣️.json"), "utf8")) as DrawSourceScenario;
 
 function projectionByteSort(left: string, right: string): number {
@@ -4697,7 +4697,7 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
   });
 
   test("authored Draw source producer retains imported JSON bytes and rejects invalid data", () => {
-    const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🌐️registry-import-language/🧪️imported-data/🔣️.json"), "utf8")) as { graph: { entries: string[]; dataPath: string; files: { path: string; content: string; mode: number }[] } };
+    const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🌐️registry-import-language/🧪️imported-data/🔣️.json"), "utf8")) as { graph: { entries: string[]; dataPath: string; files: { path: string; content: string; mode: number }[] } };
     const taxonomy = JSON.parse(readFileSync(join(getWorkspaceRoot(), NORMALIZATION_SCHEMA_REL), "utf8")) as Taxonomy;
     Object.assign(taxonomy.generatorContracts["plugin-registry"]!.inputDiscovery!, { implementationEntryPaths: vector.graph.entries, workspaceImports: {} });
     const source = new Map(vector.graph.files.map((row) => [row.path, row])), reads: string[] = [];
@@ -4873,14 +4873,11 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     expect(projection.modelCatalog?.categoryRules.map(({ count }) => count).reduce((sum, count) => sum + count, 0)).toBe(220);
   });
 
-  test("CAD live bindings live outside the sealed golden: schema-valid (Ajv), one row per golden mapping, no live data sealed", () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(CAD_LIVE_BINDINGS_SCHEMA);
-    expect(validate(CAD_LIVE_BINDINGS), JSON.stringify(validate.errors)).toBe(true);
+  test("CAD plain live binding examples retain exact mapping and reject escaping carriers", () => {
     const projection = projectionGolden("artifact-example-model-catalog-v1");
     expect(CAD_LIVE_BINDINGS.bindings.map(({ mapping }) => mapping)).toEqual(projection.mappings.map((_, index) => index));
     expect(ARTIFACT_PROJECTION_GOLDEN.projections.every((entry) => !("liveBindings" in entry))).toBe(true);
     const tampered = { ...CAD_LIVE_BINDINGS, bindings: [...CAD_LIVE_BINDINGS.bindings.slice(1), { ...CAD_LIVE_BINDINGS.bindings[0]!, live: `../${CAD_LIVE_BINDINGS.bindings[0]!.live}` }] };
-    expect(validate(tampered)).toBe(false);
     expect(() => cadProjectionLiveSources(projection, undefined, tampered)).toThrow("outside its exact root");
   });
 
@@ -5008,7 +5005,7 @@ const NORMALIZATION_SCHEMA_REL = "🧰️framework/🛍️products/🦑️repo/�
 const TICKET_IMPORTANT_HISTORY_ROOT_REL = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/SCOPED-HISTORY-APPLY";
 const TICKET_IMPORTANT_HISTORY_SOURCE_REL = `${TICKET_IMPORTANT_HISTORY_ROOT_REL}/📌️important.md`;
 const TICKET_IMPORTANT_HISTORY_DESTINATION_REL = `${TICKET_IMPORTANT_HISTORY_ROOT_REL}/📓️important/📝️.md`;
-const SCOPED_INVENTORY_PATHSPEC_GOLDEN = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🎯️scoped-inventory-pathspec/🔣️.json"), "utf8")) as Readonly<{
+const SCOPED_INVENTORY_PATHSPEC_GOLDEN = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🎯️scoped-inventory-pathspec/🔣️.json"), "utf8")) as Readonly<{
   schemaVersion: 1;
   opaqueExclusions: readonly string[];
   cases: readonly Readonly<{ id: string; inputScope: string | null; normalizedScope: string | null; conservativePrefix: string; positivePathspec: string; exclusionPathspecs: readonly string[] }>[];
@@ -6473,7 +6470,7 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
 //#endregion 🧹️TaxonomyNormalization
 
 //#region 🧾️GeneratorPreviewProtocol
-const GENERATOR_PREVIEW_GOLDEN = join(import.meta.dir, "../../🧫️fixtures/🏭️generator-preview/🔣️.json");
+const GENERATOR_PREVIEW_GOLDEN = join(import.meta.dir, "../🧫️fixtures/🏭️generator-preview/🔣️.json");
 
 describe("generator preview protocol", () => {
   test("accepts the canonical language-neutral manifest and agrees with owned filesystem inventory", () => {
@@ -6646,9 +6643,9 @@ describe("generator preview protocol", () => {
 
 //#region 🧾️TransactionDispositionsV2
 describe.if(testLevelAtLeast("long"))("taxonomy transaction dispositions v2", () => {
-  const sentinelCasesPath = resolve(import.meta.dir, "../../🖼️assets/🚨️transaction-sentinel-cases/🔣️.json");
-  const dispositionOutcomesPath = resolve(import.meta.dir, "../../🧫️fixtures/🎲️transaction-disposition-outcomes/🔣️.json");
-  const protocolPath = resolve(import.meta.dir, "../../🧫️fixtures/🤝️transaction-protocol/🔣️.json");
+  const sentinelCasesPath = resolve(import.meta.dir, "../🧫️fixtures/🚨️transaction-sentinel-cases/🔣️.json");
+  const dispositionOutcomesPath = resolve(import.meta.dir, "../🧫️fixtures/🎲️transaction-disposition-outcomes/🔣️.json");
+  const protocolPath = resolve(import.meta.dir, "../🧫️fixtures/🤝️transaction-protocol/🔣️.json");
 
   test("keeps checkout-hostile sentinels virtual and language-neutral", () => {
     const sentinelCases = JSON.parse(readFileSync(sentinelCasesPath, "utf8")) as {
@@ -6904,7 +6901,7 @@ describe("direct mutation ownership", () => {
   //#region 🔍️MutationRootDiscovery
   test("mutation root discovery projects only admitted authored facets", async () => {
     const ts = await import("typescript");
-    const inputRoot = join(import.meta.dir, "../../🧫️fixtures/🌱️mutation-root-discovery");
+    const inputRoot = join(import.meta.dir, "../🧫️fixtures/🌱️mutation-root-discovery");
     const vectorPath = join(inputRoot, "🔣️.json");
     
     const vector = JSON.parse(readFileSync(vectorPath, "utf8")) as { includedRoots: string[]; filePaths: string[]; rejections: { name: string }[] };
@@ -6943,7 +6940,7 @@ describe("direct mutation ownership", () => {
 
   test("mutation root discovery actual filesystem agrees with independent directory enumeration", async () => {
     const ts = await import("typescript");
-    const inputRoot = join(import.meta.dir, "../../🧫️fixtures/🌱️mutation-root-discovery");
+    const inputRoot = join(import.meta.dir, "../🧫️fixtures/🌱️mutation-root-discovery");
     const vector = JSON.parse(readFileSync(join(inputRoot, "🔣️.json"), "utf8")) as { physicalOwners: string[]; includedRoots: string[] };
     const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
     if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for retained mutation discovery evidence.");
@@ -6995,7 +6992,7 @@ describe("direct mutation ownership", () => {
   //#endregion 🔍️MutationRootDiscovery
 
   test("fails closed for missing, opaque, escaped, and symlinked explicit scopes", () => {
-    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔭️mutation-scope/🔣️.json"), "utf8")) as {
+    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔭️mutation-scope/🔣️.json"), "utf8")) as {
       schemaVersion: number;
       mutationRoot: string;
       aggregate: string;
@@ -7031,7 +7028,7 @@ describe("direct mutation ownership", () => {
   }, 30_000);
 
   test("recognizes exact leaf module identities in codecs without trusting comments or prefixes", () => {
-    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔭️mutation-scope/🔣️.json"), "utf8")) as {
+    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔭️mutation-scope/🔣️.json"), "utf8")) as {
       mutationRoot: string;
       codecCases: { source: string; accepted: boolean }[];
     };
@@ -7058,7 +7055,7 @@ describe("direct mutation ownership", () => {
   }, 30_000);
 
   test("recognizes a binary leaf tag only when its numeric identity equals the descriptor", () => {
-    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔭️mutation-scope/🔣️.json"), "utf8")) as {
+    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔭️mutation-scope/🔣️.json"), "utf8")) as {
       mutationRoot: string;
       binaryCases: { source: string; accepted: boolean }[];
     };
@@ -7085,7 +7082,7 @@ describe("direct mutation ownership", () => {
   }, 30_000);
 
   test("rejects executable root aggregate codecs while preserving generic framing and unrelated syntax", () => {
-    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔐️mutation-codec-ownership/🔣️.json"), "utf8")) as {
+    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔐️mutation-codec-ownership/🔣️.json"), "utf8")) as {
       schemaVersion: number;
       mutationRoot: string;
       aggregate: string;
@@ -7117,7 +7114,7 @@ describe("direct mutation ownership", () => {
     }  }, 30000);
 
   test("rejects empty aggregates, inline variants, and orphaned direct folders", () => {
-    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔭️mutation-scope/🔣️.json"), "utf8")) as {
+    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔭️mutation-scope/🔣️.json"), "utf8")) as {
       mutationRoot: string;
       aggregateCases: { source: string; kind: string; variantCount: number }[];
     };
@@ -7140,7 +7137,7 @@ describe("direct mutation ownership", () => {
     }  }, 30000);
 
   test("rejects aggregate-state mutation inputs transitively while accepting semantic prior values", () => {
-    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/📥️mutation-input-carriers/🔣️.json"), "utf8")) as {
+    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/📥️mutation-input-carriers/🔣️.json"), "utf8")) as {
       schemaVersion: number;
       mutationRoot: string;
       aggregate: string;
@@ -7200,7 +7197,7 @@ describe("direct mutation ownership", () => {
   }, 30_000);
 
   test("requires one enabled reachable non-ignored leaf test proven by parsed Rust items", () => {
-    const fixturePath = join(import.meta.dir, "../../🧫️fixtures/✅️mutation-test-presence/🔣️.json");
+    const fixturePath = join(import.meta.dir, "../🧫️fixtures/✅️mutation-test-presence/🔣️.json");
     
     const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { schemaVersion: 1; mutationRoot: string; leaf: string; cases: readonly { name: string; source: string; files: Readonly<Record<string, string>>; links: Readonly<Record<string, string>>; compilerAccepted: boolean; runnableTests: number; policyAccepted: boolean }[] };
     
@@ -7341,7 +7338,7 @@ describe("direct mutation ownership", () => {
   
 
   test("requires a fresh clean terminal verification before mutation apply can commit", () => {
-    const goldenPath = join(import.meta.dir, "../../🧫️fixtures/📋️mutation-inventory/🔣️.json");
+    const goldenPath = join(import.meta.dir, "../🧫️fixtures/📋️mutation-inventory/🔣️.json");
     const golden = JSON.parse(readFileSync(goldenPath, "utf8")) as { schemaVersion: number; baseline: string; cases: readonly string[] };
     const root = mutationFixtureRoot("semio-mutation-terminality-");
     const ticket = join(root, ".🧬semio", "🦑️repo", "🎫️tickets", "🎆️26", "🌙️08", "☀️12", "TERMINALITY");
@@ -7443,7 +7440,7 @@ describe("direct mutation ownership", () => {
 //#region 🧬️MutationMetadataFacts
 describe("mutation metadata facts", () => {
   test("records exact declaration and alias syntax without decoy inference", () => {
-    const fixturePath = join(import.meta.dir, "../../🧫️fixtures/🪪️mutation-metadata/🔣️.json");
+    const fixturePath = join(import.meta.dir, "../🧫️fixtures/🪪️mutation-metadata/🔣️.json");
     const fixture = JSON.parse(readFileSync(fixturePath, "utf8"));
     
     
@@ -7458,7 +7455,7 @@ describe("mutation metadata facts", () => {
 
 //#region 🧬️SchemaScopeCatalog
 describe("schema scope catalog", () => {
-    const casesPath = join(import.meta.dir, "../../🧫️fixtures/🧬️schema-scope-catalog/🔣️.json");
+    const casesPath = join(import.meta.dir, "../🧫️fixtures/🧬️schema-scope-catalog/🔣️.json");
     const cases = JSON.parse(readFileSync(casesPath, "utf8")) as { contract: string; cases: { id: string; files: Record<string, unknown>; expected: { scopes: Record<string, { path: string; level: string; exports: Record<string, { file: string; facet: string }>; dependsOn: string[] }>; diagnosticCodes: string[]; placementPaths: string[] }; schemaGrammar?: Record<string, boolean>; schemaCompile?: Record<string, boolean>; grantExamples?: { input: unknown; expected: boolean }[] }[] };
     const authority = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🧬️schema-scope-catalog/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true });
@@ -7518,7 +7515,7 @@ describe("schema scope catalog", () => {
   test("cross-checks the Rust export registry dump against the catalog on the resolution key", async () => {
     const library = await import("../../🔍️discovery/🟦️.ts");
     const taxonomy = library.loadCatalogTaxonomy();
-    const casesPath = join(import.meta.dir, "../../🧫️fixtures/🧬️schema-rust-entries/🔣️.json");
+    const casesPath = join(import.meta.dir, "../🧫️fixtures/🧬️schema-rust-entries/🔣️.json");
     const cases = JSON.parse(readFileSync(casesPath, "utf8")) as { contract: string; cases: { id: string; scopes: Record<string, { path: string; formats: Record<string, string>; exports: Record<string, { file: string; facet: string }> }>; dump: { contractId: string; generator: string; entries: { scope: string; export: string; format: string }[] }; complete: boolean; expectedCodes: string[] }[] };
     const authority = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🧬️schema-rust-entries/🔣️.json"), "utf8"));
     

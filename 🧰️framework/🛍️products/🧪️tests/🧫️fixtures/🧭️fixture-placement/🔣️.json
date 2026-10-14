@@ -1,0 +1,52 @@
+{
+  "owners": [
+    "💻️os",
+    "🖥️server",
+    "🐾️pets",
+    "🎤️presentation",
+    "❓️quiz",
+    "📓️print"
+  ],
+  "cases": [
+    {
+      "id": "neutral-owner",
+      "path": "🌱️value/🧪️tests/🧫️fixtures/example.json",
+      "accepted": true
+    },
+    {
+      "id": "test-subject",
+      "path": "🌱️value/🧪️tests/🧭️example/🧫️fixtures/example.json",
+      "accepted": true
+    },
+    {
+      "id": "outside-tests",
+      "path": "🌱️value/🧫️fixtures/example.json",
+      "accepted": false
+    },
+    {
+      "id": "tests-after-fixtures",
+      "path": "🌱️value/🧫️fixtures/🧪️tests/example.json",
+      "accepted": false
+    },
+    {
+      "id": "package-owned",
+      "path": "🌱️value/📦️packages/🟦️typescript/🧪️tests/🧫️fixtures/example.json",
+      "accepted": false
+    },
+    {
+      "id": "target-owned",
+      "path": "🌱️value/🎯️targets/⚛️react/🧪️tests/🧫️fixtures/example.json",
+      "accepted": false
+    },
+    {
+      "id": "implementation-owned",
+      "path": "🌱️value/🧩️implementations/native/🧪️tests/🧫️fixtures/example.json",
+      "accepted": false
+    },
+    {
+      "id": "production-schema-owned",
+      "path": "🌱️value/🧬️schema/🔗️graphql/🧪️tests/🧫️fixtures/example.json",
+      "accepted": false
+    }
+  ]
+}

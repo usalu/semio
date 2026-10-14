@@ -9,5 +9,5 @@
     "pid":{"type":"integer","minimum":1,"maximum":9999999999},
     "owner":{"type":"string","pattern":"^[A-Za-z0-9._-]{1,64}$"}
   },
-  "definitions":{"Protocol":{"const":{"arrivalDigits":12,"arrivalBase":16,"pidDigits":10,"maximumAbsolutePathUtf16":256}}}
+  "definitions":{"Protocol":{"const":{"arrivalDigits":12,"arrivalBase":16,"pidDigits":10,"maximumAbsolutePathUtf16":256}},"Claim":{"type":"object","additionalProperties":false,"required":["version","pid","mode","sharedCohort"],"properties":{"version":{"const":1},"pid":{"type":"integer","minimum":1},"mode":{"enum":["shared","exclusive"]},"sharedCohort":{"type":"boolean"}}}}
 }

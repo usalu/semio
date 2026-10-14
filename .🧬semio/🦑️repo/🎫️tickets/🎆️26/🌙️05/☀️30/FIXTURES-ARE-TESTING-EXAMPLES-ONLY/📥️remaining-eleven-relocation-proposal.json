@@ -1,0 +1,59 @@
+{
+  "moves": [
+    {
+      "source": "🧰️framework/🔨️modules/🖱️ui/🧪️fixtures/👥️graph-timeline-authors/🔣️.json",
+      "target": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️fixtures/👥️graph-timeline-authors/🔣️.json",
+      "sha256": "f946d569946b7d3ca2a6deeebdd37b940366684e5383d08bba1e3da67c28f531"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🧪️test/🧫️fixtures/🔌️adapter-ownership/🔣️.json",
+      "target": "🧰️framework/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🔌️adapter-ownership/🔣️.json",
+      "sha256": "d511845e563ac648965584eb8943a70571717f380799b88a06ab89adb53d5a8d"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🧫️fixtures/🔣️.json",
+      "target": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "c088c90f065e41c21203e983466fcc9f83cefdd4e8304a8ecd89460a738e791f"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🧫️fixtures/🔣️.json",
+      "target": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "13f7cee5e2c17357dc8b14a03b5a46b9ed130d602fb52fa31efcf60a7eaf7fa4"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🚪️command/🧫️fixtures/🔣️.json",
+      "target": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🚪️command/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "ff0cc2765e4272f0a7a34c4a94618a2ca1757f9b420ece3239a64fae6bc21cf9"
+    },
+    {
+      "source": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/📖️source/🧫️fixtures/🔣️.json",
+      "target": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/📖️source/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "b6cab79e3d5368b2f9909f60ca564f765ba69f2fe0b9b3a8df062fb396f16218"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️fixtures/⏰️chrome-deadline/🔣️.json",
+      "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧪️fixtures/⏰️chrome-deadline/🔣️.json",
+      "sha256": "d54df3ccdf20492e958def5876a54a489a8420e388b99bfb94af10bb66deeb22"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json",
+      "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️tests/🧪️fixtures/📦️lifecycle/🔣️.json",
+      "sha256": "a2bd05c817cc25ca8fbb2c5bc3271c1fcc4e222c43b7ab43d1fafff8910e786b"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️fixtures/🧬️canonical-xml-authority/🔣️.json",
+      "target": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧪️fixtures/🧬️canonical-xml-authority/🔣️.json",
+      "sha256": "7a03cea4d4394bab70b325e83a31bf186f79a2e4d51782a7c2b71919f04ac4d1"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧪️fixtures/🏁️job-completion-ownership/🔣️.json",
+      "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧪️tests/🧪️fixtures/🏁️job-completion-ownership/🔣️.json",
+      "sha256": "6cdb70c97184c719ee3c867a58d35e11cb2653ae9d7b07edb536c6b09f0d19dd"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️fixtures/🪟️collection-tree-shape/🔣️.json",
+      "target": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️tests/🧪️fixtures/🪟️collection-tree-shape/🔣️.json",
+      "sha256": "bd23e75dc971f8a2a7a2560a6abc6382ec686a934376b11cd611562634fd2544"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "contract": "runtime-taxonomy-asset-paths-v1",
+  "cases": [
+    {
+      "id": "direct-asset",
+      "path": "🗿️owner/🖼️assets/🔣️.json",
+      "valid": true
+    },
+    {
+      "id": "nested-asset",
+      "path": "🗿️owner/🖼️assets/📇️catalog/🔣️.json",
+      "valid": true
+    },
+    {
+      "id": "fixture-input",
+      "path": "🗿️owner/🧫️fixtures/📇️catalog/🔣️.json",
+      "valid": false
+    },
+    {
+      "id": "schema-input",
+      "path": "🗿️owner/🧬️schema/📇️catalog/🔣️.json",
+      "valid": false
+    },
+    {
+      "id": "asset-lookalike",
+      "path": "🗿️owner/🖼️assets-copy/📇️catalog/🔣️.json",
+      "valid": false
+    }
+  ]
+}

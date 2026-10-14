@@ -1,0 +1,20 @@
+{
+  "objects": {
+    "added": [
+      {
+        "index": 1,
+        "item": {
+          "childId": "obj-2",
+          "target": {
+            "artifactId": "obj-2",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "object"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

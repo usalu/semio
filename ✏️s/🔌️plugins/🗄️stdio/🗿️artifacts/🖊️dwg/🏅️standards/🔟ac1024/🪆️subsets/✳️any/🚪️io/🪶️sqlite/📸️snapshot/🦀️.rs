@@ -1,4 +1,5 @@
 //! 🖊️ DWG's explicit domain relational schema and typed ownership modules.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[path="📏️encoding/🦀️.rs"]
 mod encoding;
@@ -51,13 +52,13 @@ mod mleader_style;
 #[path="📏️constraints/🦀️.rs"]
 mod constraints;
 
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl}};
 #[path="📏️encoding/🛬️admission/🦀️.rs"]
 mod native_admission;
 
-impl ArtifactSqliteSnapshot for DwgSnapshot {
-    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{admit_native_rows(self,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)}
-    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();let snapshot=store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {construct_native_record(record,native,limits)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;admit_native_rows(&snapshot,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,control)?;Ok(snapshot)}
+impl ArtifactSqliteSnapshotHost for DwgSnapshot {
+    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{admit_native_rows(self,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)}
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();let snapshot=store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {construct_native_record(record,native,limits)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;admit_native_rows(&snapshot,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,control)?;Ok(snapshot)}
     fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{encoding::preflight(self,control)}
 
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{(|| -> Result<semio_framework_os_kernel::io_schema::IoOutcome<()>,ValueError>{
@@ -67,7 +68,12 @@ impl ArtifactSqliteSnapshot for DwgSnapshot {
   if candidate.project_sqlite_database(control)?!=self.project_sqlite_database(control)?{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG owned state differs from its semantic projection"));}
   Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))
  })().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
- const SQLITE_SCHEMA:&'static str=concat!(
+ 
+ 
+ 
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for DwgSnapshot {
+const SQLITE_SCHEMA:&'static str=concat!(
  include_str!("📄️document/🗄️.sql"),"\n",include_str!("🔧️header/🗄️.sql"),"\n",
  include_str!("✏️drawing/🗄️.sql"),"\n",include_str!("🗃️tables/🗄️.sql"),"\n",
  include_str!("📐️entities/🗄️.sql"),"\n",include_str!("📦️objects/🗄️.sql"),"\n",
@@ -76,8 +82,8 @@ impl ArtifactSqliteSnapshot for DwgSnapshot {
  include_str!("🖌️styles/👁️visual/🗄️.sql"),"\n",include_str!("🖌️styles/🧱️material/🗄️.sql"),"\n",
  include_str!("🖌️styles/🗃️table/🗄️.sql"),"\n",include_str!("📃️layout/🗄️.sql"),"\n",
  include_str!("🖌️styles/↗️mleader/🗄️.sql"),"\n",include_str!("📏️constraints/🗄️.sql"));
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.project_sqlite_database(control)}
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{Self::reconstruct_sqlite_database(database,control)}
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.project_sqlite_database(control)}
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{Self::reconstruct_sqlite_database(database,control)}
 }
 impl DwgSnapshot {
 /// 🗄️ Projects the owned DWG relational fields with typed refusals.

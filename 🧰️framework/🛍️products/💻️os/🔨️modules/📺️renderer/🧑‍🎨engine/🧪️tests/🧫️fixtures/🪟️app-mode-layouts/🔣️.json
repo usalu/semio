@@ -1,0 +1,248 @@
+{
+  "note": "🪟️ One language-neutral contract for the question BOTH renderer targets have to answer the same way: given an app manifest and an active mode, which window INSTANCES are laid out, in what tree, at what fractions, and which one is focused. React answers it with `resolveLayoutForMode` (🎠️kernel/🟦️.ts) + `resolveFrameworkLayoutSeed`/`collectFrameworkLayoutWindowSeeds` (🛠️ShellHelpers/🟦️.tsx); wgpu answers it with `semio_framework::resolve_layout_for_mode` + `DockState::from_app`/`apply_layout_diff` (🛰️Dock/🎯️targets/🧊️wgpu/🦀️.rs) and then SOLVES the tree into rects the chrome walk paints. Before this fixture existed the wgpu shell painted `active_window_id` alone over the whole body and never consulted the dock at all, so edit mode's Preview window had no rect, no arena subtree and no World3d engine surface (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).",
+  "provenance": {
+    "generation3d-edit": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs — `create_default_layout([flow, preview], \"row\", [68.0, 32.0], [\"Flow\", \"Preview\"])`, mode `edit` with no `layout_id`, so the app's `default_layout`.",
+    "generation3d-generate": "…/✏️editor/🎭️modes/🧬️generate/🦀️.rs — named layout `generation3d-generate`, `create_default_layout([generations, form, preview], \"row\", [22.0, 43.0, 35.0], …)`, referenced by mode `generate`'s `layout_id`.",
+    "generation3d-view": "…/👁️viewer/🎭️modes/👁️view/🦀️.rs — a single full-pane stack with one window.",
+    "canvasNote": "`canvas` is the dock canvas the wgpu chrome walk hands the root (the body rect inset by the theme's panel inset). React lays the same tree out with CSS flex and is asserted on the TREE and the FRACTIONS, not on pixels; the Rust law additionally solves the tree with the dock's own solver and asserts these rects."
+  },
+  "canvas": { "x": 0.0, "y": 0.0, "w": 1000.0, "h": 800.0 },
+  "cases": [
+    {
+      "id": "generation3d-edit-is-a-row-split",
+      "activeModeId": "edit",
+      "app": {
+        "defaultModeId": "edit",
+        "modes": [
+          { "id": "edit" },
+          { "id": "generate", "layoutId": "generation3d-generate" }
+        ],
+        "windowKinds": [
+          { "id": "procedural-main", "label": "Flow" },
+          { "id": "procedural-preview", "label": "Preview" },
+          { "id": "generation3d-generations", "label": "Generations" },
+          { "id": "generation3d-generate-form", "label": "Form" },
+          { "id": "generation3d-generate-preview", "label": "Preview" }
+        ],
+        "defaultLayout": {
+          "root": {
+            "kind": "row",
+            "children": [
+              { "kind": "stack", "size": 68.0, "children": [{ "kind": "window", "windowKindId": "procedural-main", "title": "Flow" }] },
+              { "kind": "stack", "size": 32.0, "children": [{ "kind": "window", "windowKindId": "procedural-preview", "title": "Preview" }] }
+            ]
+          }
+        },
+        "namedLayouts": [
+          {
+            "id": "generation3d-generate",
+            "layout": {
+              "root": {
+                "kind": "row",
+                "children": [
+                  { "kind": "stack", "size": 22.0, "children": [{ "kind": "window", "windowKindId": "generation3d-generations", "title": "Generations" }] },
+                  { "kind": "stack", "size": 43.0, "children": [{ "kind": "window", "windowKindId": "generation3d-generate-form", "title": "Form" }] },
+                  { "kind": "stack", "size": 35.0, "children": [{ "kind": "window", "windowKindId": "generation3d-generate-preview", "title": "Preview" }] }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "expected": {
+        "resolvedLayoutId": null,
+        "axis": "row",
+        "windowInstances": [
+          { "id": "procedural-main", "windowKindId": "procedural-main" },
+          { "id": "procedural-preview", "windowKindId": "procedural-preview" }
+        ],
+        "activeWindowId": "procedural-main",
+        "stacks": [
+          { "path": "0", "windows": ["procedural-main"], "active": "procedural-main", "fraction": 0.68, "rect": [0.0, 0.0, 680.0, 800.0] },
+          { "path": "1", "windows": ["procedural-preview"], "active": "procedural-preview", "fraction": 0.32, "rect": [680.0, 0.0, 320.0, 800.0] }
+        ]
+      }
+    },
+    {
+      "id": "generation3d-generate-is-the-named-three-pane-row",
+      "activeModeId": "generate",
+      "app": {
+        "defaultModeId": "edit",
+        "modes": [
+          { "id": "edit" },
+          { "id": "generate", "layoutId": "generation3d-generate" }
+        ],
+        "windowKinds": [
+          { "id": "procedural-main", "label": "Flow" },
+          { "id": "procedural-preview", "label": "Preview" },
+          { "id": "generation3d-generations", "label": "Generations" },
+          { "id": "generation3d-generate-form", "label": "Form" },
+          { "id": "generation3d-generate-preview", "label": "Preview" }
+        ],
+        "defaultLayout": {
+          "root": {
+            "kind": "row",
+            "children": [
+              { "kind": "stack", "size": 68.0, "children": [{ "kind": "window", "windowKindId": "procedural-main", "title": "Flow" }] },
+              { "kind": "stack", "size": 32.0, "children": [{ "kind": "window", "windowKindId": "procedural-preview", "title": "Preview" }] }
+            ]
+          }
+        },
+        "namedLayouts": [
+          {
+            "id": "generation3d-generate",
+            "layout": {
+              "root": {
+                "kind": "row",
+                "children": [
+                  { "kind": "stack", "size": 22.0, "children": [{ "kind": "window", "windowKindId": "generation3d-generations", "title": "Generations" }] },
+                  { "kind": "stack", "size": 43.0, "children": [{ "kind": "window", "windowKindId": "generation3d-generate-form", "title": "Form" }] },
+                  { "kind": "stack", "size": 35.0, "children": [{ "kind": "window", "windowKindId": "generation3d-generate-preview", "title": "Preview" }] }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "expected": {
+        "resolvedLayoutId": "generation3d-generate",
+        "axis": "row",
+        "windowInstances": [
+          { "id": "generation3d-generations", "windowKindId": "generation3d-generations" },
+          { "id": "generation3d-generate-form", "windowKindId": "generation3d-generate-form" },
+          { "id": "generation3d-generate-preview", "windowKindId": "generation3d-generate-preview" }
+        ],
+        "activeWindowId": "generation3d-generations",
+        "stacks": [
+          { "path": "0", "windows": ["generation3d-generations"], "active": "generation3d-generations", "fraction": 0.22, "rect": [0.0, 0.0, 220.0, 800.0] },
+          { "path": "1", "windows": ["generation3d-generate-form"], "active": "generation3d-generate-form", "fraction": 0.43, "rect": [220.0, 0.0, 430.0, 800.0] },
+          { "path": "2", "windows": ["generation3d-generate-preview"], "active": "generation3d-generate-preview", "fraction": 0.35, "rect": [650.0, 0.0, 350.0, 800.0] }
+        ]
+      }
+    },
+    {
+      "id": "viewer-role-is-one-full-pane-stack",
+      "activeModeId": "view",
+      "app": {
+        "defaultModeId": "view",
+        "modes": [{ "id": "view" }],
+        "windowKinds": [{ "id": "procedural-view-preview", "label": "Preview" }],
+        "defaultLayout": {
+          "root": { "kind": "stack", "children": [{ "kind": "window", "windowKindId": "procedural-view-preview", "title": "Preview" }] }
+        },
+        "namedLayouts": []
+      },
+      "expected": {
+        "resolvedLayoutId": null,
+        "axis": "stack",
+        "windowInstances": [{ "id": "procedural-view-preview", "windowKindId": "procedural-view-preview" }],
+        "activeWindowId": "procedural-view-preview",
+        "stacks": [{ "path": "", "windows": ["procedural-view-preview"], "active": "procedural-view-preview", "fraction": 1.0, "rect": [0.0, 0.0, 1000.0, 800.0] }]
+      }
+    },
+    {
+      "id": "a-mode-naming-an-undeclared-layout-falls-back-to-the-default",
+      "activeModeId": "generate",
+      "app": {
+        "defaultModeId": "edit",
+        "modes": [
+          { "id": "edit" },
+          { "id": "generate", "layoutId": "not-declared" }
+        ],
+        "windowKinds": [
+          { "id": "procedural-main", "label": "Flow" },
+          { "id": "procedural-preview", "label": "Preview" }
+        ],
+        "defaultLayout": {
+          "root": {
+            "kind": "row",
+            "children": [
+              { "kind": "stack", "size": 68.0, "children": [{ "kind": "window", "windowKindId": "procedural-main", "title": "Flow" }] },
+              { "kind": "stack", "size": 32.0, "children": [{ "kind": "window", "windowKindId": "procedural-preview", "title": "Preview" }] }
+            ]
+          }
+        },
+        "namedLayouts": []
+      },
+      "expected": {
+        "resolvedLayoutId": null,
+        "axis": "row",
+        "windowInstances": [
+          { "id": "procedural-main", "windowKindId": "procedural-main" },
+          { "id": "procedural-preview", "windowKindId": "procedural-preview" }
+        ],
+        "activeWindowId": "procedural-main",
+        "stacks": [
+          { "path": "0", "windows": ["procedural-main"], "active": "procedural-main", "fraction": 0.68, "rect": [0.0, 0.0, 680.0, 800.0] },
+          { "path": "1", "windows": ["procedural-preview"], "active": "procedural-preview", "fraction": 0.32, "rect": [680.0, 0.0, 320.0, 800.0] }
+        ]
+      }
+    },
+    {
+      "id": "two-instances-of-one-kind-are-two-laid-out-windows",
+      "activeModeId": "edit",
+      "app": {
+        "defaultModeId": "edit",
+        "modes": [{ "id": "edit" }],
+        "windowKinds": [{ "id": "procedural-preview", "label": "Preview" }],
+        "defaultLayout": {
+          "root": {
+            "kind": "column",
+            "children": [
+              { "kind": "stack", "size": 60.0, "children": [{ "kind": "window", "windowKindId": "procedural-preview", "title": "Top" }] },
+              { "kind": "stack", "size": 40.0, "children": [{ "kind": "window", "windowKindId": "procedural-preview", "instanceId": "procedural-preview-2", "title": "Perspective" }] }
+            ]
+          }
+        },
+        "namedLayouts": []
+      },
+      "expected": {
+        "resolvedLayoutId": null,
+        "axis": "column",
+        "windowInstances": [
+          { "id": "procedural-preview", "windowKindId": "procedural-preview" },
+          { "id": "procedural-preview-2", "windowKindId": "procedural-preview" }
+        ],
+        "activeWindowId": "procedural-preview",
+        "extraInstances": [{ "id": "procedural-preview-2", "windowKindId": "procedural-preview" }],
+        "stacks": [
+          { "path": "0", "windows": ["procedural-preview"], "active": "procedural-preview", "fraction": 0.6, "rect": [0.0, 0.0, 1000.0, 480.0] },
+          { "path": "1", "windows": ["procedural-preview-2"], "active": "procedural-preview-2", "fraction": 0.4, "rect": [0.0, 480.0, 1000.0, 320.0] }
+        ]
+      }
+    },
+    {
+      "id": "a-tabbed-stack-lays-out-only-its-active-window",
+      "activeModeId": "edit",
+      "app": {
+        "defaultModeId": "edit",
+        "modes": [{ "id": "edit" }],
+        "windowKinds": [
+          { "id": "procedural-main", "label": "Flow" },
+          { "id": "procedural-preview", "label": "Preview" }
+        ],
+        "defaultLayout": {
+          "root": {
+            "kind": "stack",
+            "activeWindowKindId": "procedural-preview",
+            "children": [
+              { "kind": "window", "windowKindId": "procedural-main", "title": "Flow" },
+              { "kind": "window", "windowKindId": "procedural-preview", "title": "Preview" }
+            ]
+          }
+        },
+        "namedLayouts": []
+      },
+      "expected": {
+        "resolvedLayoutId": null,
+        "axis": "stack",
+        "windowInstances": [
+          { "id": "procedural-main", "windowKindId": "procedural-main" },
+          { "id": "procedural-preview", "windowKindId": "procedural-preview" }
+        ],
+        "activeWindowId": "procedural-preview",
+        "stacks": [{ "path": "", "windows": ["procedural-main", "procedural-preview"], "active": "procedural-preview", "fraction": 1.0, "rect": [0.0, 0.0, 1000.0, 800.0] }]
+      }
+    }
+  ]
+}

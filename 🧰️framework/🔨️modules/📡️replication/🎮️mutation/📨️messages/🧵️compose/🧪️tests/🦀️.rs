@@ -21,7 +21,7 @@ impl ArtifactMessageSource for Source {
     fn target_count(&self) -> usize { self.targets.len() }
     fn target(&self, index: usize) -> Option<&dyn Utf8Text> { self.targets.get(index).map(|target| target as &dyn Utf8Text) }
 }
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 fn source(row: &serde_json::Value) -> Source {
     Source {
         level: match row["level"].as_str().unwrap() { "fatal"=>Severity::Fatal, "error"=>Severity::Error, "warning"=>Severity::Warning, _=>Severity::Info },

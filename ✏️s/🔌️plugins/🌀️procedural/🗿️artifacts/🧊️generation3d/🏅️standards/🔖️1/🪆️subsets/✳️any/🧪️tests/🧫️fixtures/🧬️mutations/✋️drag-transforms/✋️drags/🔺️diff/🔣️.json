@@ -1,0 +1,38 @@
+{
+  "schema": null,
+  "camera": null,
+  "widgets": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "extrude__gumball_translate",
+        "patch": {
+          "kind": "replace",
+          "widget": {
+            "kind": "neuron",
+            "id": "extrude__gumball_translate",
+            "neuronKind": "brep.xform.translate",
+            "params": {
+              "offset": {
+                "$schema": "vector",
+                "x": 1.5,
+                "y": -2.0,
+                "z": 0.25
+              }
+            },
+            "inputPorts": [],
+            "outputPorts": [],
+            "preview": false
+          }
+        }
+      }
+    ]
+  },
+  "synapses": null,
+  "layout": null,
+  "generations": null,
+  "selectedGeneration": null,
+  "previewText": null
+}

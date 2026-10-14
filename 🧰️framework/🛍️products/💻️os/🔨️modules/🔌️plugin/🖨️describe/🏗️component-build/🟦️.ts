@@ -1,11 +1,12 @@
-import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { existsSync, lstatSync } from "node:fs";
 import { join } from "node:path";
 import { cargoTargetDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { buildRepositoryCargoArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { devToolingEnv, resolveWorkspaceBin, runRepositoryCargoTests, runCmd } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { COMPONENT_TARGET, type ComponentProfileV1 } from "../🏷️component-receipt/🟦️.ts";
 export const CRATE_NAME = "semio-framework-plugin-describe";
 /** 🛠️ The Cargo profile the emitter is built under: the workspace's build-time host tool profile (`[profile.host-tool]`). */
@@ -17,7 +18,7 @@ export const FRESH_IO_CHUNK_BYTES = 64 * 1024;
 
 export class DescriptorBuildScript extends BundleScript {
   async run(): Promise<void> {
-    await buildRepositoryCargoArtifacts(join(import.meta.dir, "..", "📦️packages", "🦀️rust", "Cargo.toml"), ["--profile", DESCRIBE_TOOL_PROFILE, "--bin", CRATE_NAME], this.repoRoot);
+    await buildRepositoryCargoArtifacts(join(import.meta.dir, "..", "📦️packages", "🦀️rust", "Cargo.toml"), ["--profile", DESCRIBE_TOOL_PROFILE, "--bin", CRATE_NAME], this.repoRoot, { control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0) });
   }
 }
 

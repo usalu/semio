@@ -1,6 +1,7 @@
 //! 🪶️ Unmounted authored SQLite mapping adds paid literal-field copies after its owning baseline.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_v3::subsets::any::schema::snapshot::*;
-use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
 
@@ -10,10 +11,16 @@ fn word(row: &SqliteRow, column: usize) -> Result<u16, ValueError> { u16::try_fr
 fn unsigned(row: &SqliteRow, column: usize) -> Result<u32, ValueError> { u32::try_from(row.integer(column)?).map_err(|error|invalid(error.to_string())) }
 fn signed(row: &SqliteRow, column: usize) -> Result<i32, ValueError> { i32::try_from(row.integer(column)?).map_err(|error|invalid(error.to_string())) }
 
-impl ArtifactSqliteSnapshot for BmpSnapshot {
-    const SQLITE_SCHEMA: &'static str = include_str!("../../🗄️.sql");
+impl ArtifactSqliteSnapshotHost for BmpSnapshot {
+    
 
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
+    
+
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for BmpSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("../../🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
         let count = pixels_count(self.width, self.height)?;
         if self.pixels.len() != count.checked_mul(4).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"BMP pixel size overflow"))? { return Err(invalid("BMP pixels must contain one RGBA tuple per grid position")); }
         let total = count.checked_add(self.palette.len()).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"BMP entity count overflow"))?;
@@ -38,8 +45,7 @@ impl ArtifactSqliteSnapshot for BmpSnapshot {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, total, total)?;
         Ok(database)
     }
-
-    fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
         validate_sqlite_database_schema(database, Self::SQLITE_SCHEMA, control.limits())?;
         control.check_database(database, SqliteSnapshotPhase::ReconstructSnapshot)?;
         let document = database.table("bmp_document")?.single_row()?;

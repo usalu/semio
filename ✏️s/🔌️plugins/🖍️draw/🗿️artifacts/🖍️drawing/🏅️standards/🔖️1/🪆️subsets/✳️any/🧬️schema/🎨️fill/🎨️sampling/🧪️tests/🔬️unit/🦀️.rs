@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn shared_fill_samples() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🎨️fill/🎨️sampling/🔣️.json")).unwrap();
     let mut count=0;
     for case in cases.as_array().unwrap() {
         let fill:FillStyle=serde_json::from_value(case["fill"].clone()).unwrap();
@@ -35,7 +35,7 @@ fn preparation_owns_stops_and_rejects_invalid_numbers() {
 
 #[test]
 fn prepared_paint_retirement_drains_actual_stop_owners_and_composes_the_real_ramp() {
-    let sources:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let rows:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
+    let sources:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🎨️fill/🎨️sampling/🔣️.json")).unwrap();let rows:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🎨️fill/🎨️sampling/🧹️retirement/🔣️.json")).unwrap();
     for row in rows.as_array().unwrap(){for grant in [1,7,4096]{
         let source=sources.as_array().unwrap().iter().find(|source|source["name"]==row["source"]).unwrap();let mut fill:FillStyle=serde_json::from_value(source["fill"].clone()).unwrap();
         if let Some(repeat)=row["repeat"].as_u64(){match &mut fill {FillStyle::LinearGradient{stops,..}|FillStyle::RadialGradient{stops,..}=>*stops=vec![stops[0].clone();repeat as usize].into(),_=>panic!("gradient required")}}

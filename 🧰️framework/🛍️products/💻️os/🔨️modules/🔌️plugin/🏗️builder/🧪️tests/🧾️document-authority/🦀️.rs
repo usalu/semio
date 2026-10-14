@@ -2,7 +2,7 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn schema_document_authority_follows_portable_owner_corpus() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧾️document-authority/🔣️.json")).expect("portable owner corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧾️document-authority/🔣️.json")).expect("portable owner corpus");
     for row in corpus["cases"].as_array().expect("cases") {
         let input = &row["input"];
         let plugin_id = input["pluginId"].as_str().expect("plugin identity");

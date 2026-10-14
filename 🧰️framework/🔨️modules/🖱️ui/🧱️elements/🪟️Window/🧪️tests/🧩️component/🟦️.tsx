@@ -4,17 +4,17 @@ import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Window } from "../../🟦️.tsx";
 import { uiDataLabel } from "../../../🎗️UiLabel/🟦️.tsx";
-import chromeStacking from "../../🧫️fixtures/🪜️chrome-stacking.json";
+import chromeStacking from "../🧫️fixtures/🪜️chrome-stacking.json";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import Ajv from "ajv";
 import { I18nextProvider } from "react-i18next";
 import { Mode } from "../../../🎨️Canvas/🟦️.tsx";
 import { createShellI18nInstance, disposeShellI18nInstance } from "../../../../🎯️targets/⚛️react/🟦️.tsx";
-import dockNames from "../../../../🧫️fixtures/🪟️dock-accessible-names/🔣️.json";
+import dockNames from "../../../../🧪️tests/🧫️fixtures/🪟️dock-accessible-names/🔣️.json";
 import Ajv2020 from "ajv/dist/2020.js";
-import searchRouting from "../../🧫️fixtures/🔎️search-fold-routing/🔣️.json";
-import paneFolds from "../../🧫️fixtures/🔀️pane-fold-independence/🔣️.json";
+import searchRouting from "../🧫️fixtures/🔎️search-fold-routing/🔣️.json";
+import paneFolds from "../🧫️fixtures/🔀️pane-fold-independence/🔣️.json";
 import { createMemoryStoragePort } from "@semio-tech/framework";
 import { ShellScopeProvider, createShellScope } from "../../../🐚️ShellScope/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -69,7 +69,7 @@ it("unfolds only Search for admitted printable keys in either explicit locale", 
 });
 
 // #region 🪜️ChromeStacking
-/** 🪜️ The chrome-stacking law, replayed from `🧫️fixtures/🪜️chrome-stacking.json`. jsdom computes no stacking, so this
+/** 🪜️ The chrome-stacking law, replayed from `🧪️tests/🧫️fixtures/🪜️chrome-stacking.json`. jsdom computes no stacking, so this
  * suite asserts the STRUCTURE that makes the law hold (isolated body root, chrome panes as its siblings at the pane
  * level); the live `s` matrix probe replays the same fixture's intent against Chromium's hit-testing. */
 type ChromeStackingFixture = {
@@ -151,7 +151,7 @@ describe("Dock accessible names", () => {
   }
 });
 
-import contentClearance from "../../🧫️fixtures/🚧️content-clearance/🔣️.json";
+import contentClearance from "../🧫️fixtures/🚧️content-clearance/🔣️.json";
 import { ChromeAwareWindowScrollSurface, Scrollable } from "../../../../🎯️targets/⚛️react/🟦️.tsx";
 
 it("keeps the first chrome-aware content control reachable without changing scroll position", () => {

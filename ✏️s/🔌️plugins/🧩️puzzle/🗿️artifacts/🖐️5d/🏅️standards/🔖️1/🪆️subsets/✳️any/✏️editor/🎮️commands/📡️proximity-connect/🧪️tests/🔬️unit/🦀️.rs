@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::puzzle5d::{capsule_dream_example_document, concrete_forest_example_document, find_part_by_grip_full_id, nakagin_example_document, Puzzle5dPart, PUZZLE5D_PROXIMITY_RADIUS};
 
-const PROXIMITY_FIXTURE: &str = include_str!("../../🧫️fixtures/🔣️.json");
+const PROXIMITY_FIXTURE: &str = include_str!("../🧫️fixtures/🔣️.json");
 
 /// 🐢️ The search as it shipped before the spatial index — a scan of every grip of every part with a fastener
 /// scan and two whole-document grip lookups per grip in reach — kept verbatim as the differential oracle.

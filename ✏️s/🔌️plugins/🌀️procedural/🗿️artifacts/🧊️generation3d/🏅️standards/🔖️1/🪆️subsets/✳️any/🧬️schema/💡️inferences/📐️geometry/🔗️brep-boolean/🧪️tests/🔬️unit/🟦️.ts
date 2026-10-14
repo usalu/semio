@@ -4,7 +4,7 @@ import { disagreements, type FixtureCase } from "../../../🧪️tests/🧰️or
 import { oracleCase } from "../../../🧪️tests/🧰️construction-support/🟦️.ts";
 
 type Fixture = { tolerance: number; cases: FixtureCase[] };
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(new URL("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🔗️brep-boolean/🔣️.json", import.meta.url), "utf8")) as Fixture;
 const catalogue = JSON.parse(readFileSync(new URL("../../../../../🗂️catalogue/🔣️brep-boolean.json", import.meta.url), "utf8")) as { kinds: { id: string }[] };
 
 test("the fixture states every brep.boolean kind of the catalogue and no other", () => {

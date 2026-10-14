@@ -24,7 +24,7 @@ pub fn arrange(bounds:&[[f64;4]],operation:&str)->Option<Vec<[f64;2]>> {
 mod tests {
     #[test]
     fn world_arrangement_matches_shared_cases() {
-        let rows:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+        let rows:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧮️geometry/📏️arrangement/🔣️.json")).unwrap();
         for row in rows.as_array().unwrap() {
             let bounds:Vec<[f64;4]>=serde_json::from_value(row["bounds"].clone()).unwrap();
             let expected:Option<Vec<[f64;2]>>=serde_json::from_value(row["deltas"].clone()).unwrap();

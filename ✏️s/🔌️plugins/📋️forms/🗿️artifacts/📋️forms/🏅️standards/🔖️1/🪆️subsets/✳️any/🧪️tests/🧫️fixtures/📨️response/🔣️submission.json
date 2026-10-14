@@ -1,0 +1,156 @@
+{
+  "definition": {
+    "steps": [
+      {
+        "id": "intro",
+        "title": "Introduction",
+        "blocks": [
+          {
+            "id": "name",
+            "kind": "text",
+            "label": "Name",
+            "required": true
+          },
+          {
+            "id": "show",
+            "kind": "boolean",
+            "label": "Show Details"
+          },
+          {
+            "id": "note",
+            "kind": "note",
+            "label": "Note",
+            "text": "Read this"
+          }
+        ]
+      },
+      {
+        "id": "details",
+        "title": "Details",
+        "blocks": [
+          {
+            "id": "length",
+            "kind": "number",
+            "label": "Length",
+            "min": 0,
+            "max": 10,
+            "step": 2,
+            "required": true,
+            "condition": {
+              "kind": "var",
+              "name": "show"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "id": "response-a",
+    "submittedAt": 1790545740000,
+    "definitionVersion": "revision-a"
+  },
+  "cases": [
+    {
+      "name": "collect visible answers",
+      "values": {
+        "name": "Ada",
+        "show": true,
+        "length": 4,
+        "orphan": "ignore"
+      },
+      "expected": {
+        "response": {
+          "id": "response-a",
+          "submittedAt": 1790545740000,
+          "definitionVersion": "revision-a",
+          "answers": [
+            {
+              "questionId": "name",
+              "label": "Name",
+              "kind": "text",
+              "value": "Ada"
+            },
+            {
+              "questionId": "show",
+              "label": "Show Details",
+              "kind": "boolean",
+              "value": true
+            },
+            {
+              "questionId": "length",
+              "label": "Length",
+              "kind": "number",
+              "value": 4
+            }
+          ]
+        },
+        "errors": []
+      }
+    },
+    {
+      "name": "omit hidden answers",
+      "values": {
+        "name": "Ada",
+        "show": false,
+        "length": 999
+      },
+      "expected": {
+        "response": {
+          "id": "response-a",
+          "submittedAt": 1790545740000,
+          "definitionVersion": "revision-a",
+          "answers": [
+            {
+              "questionId": "name",
+              "label": "Name",
+              "kind": "text",
+              "value": "Ada"
+            },
+            {
+              "questionId": "show",
+              "label": "Show Details",
+              "kind": "boolean",
+              "value": false
+            }
+          ]
+        },
+        "errors": []
+      }
+    },
+    {
+      "name": "validate previous steps",
+      "values": {
+        "name": "",
+        "show": false,
+        "length": 4
+      },
+      "expected": {
+        "response": null,
+        "errors": [
+          {
+            "questionId": "name",
+            "code": "required"
+          }
+        ]
+      }
+    },
+    {
+      "name": "validate later steps",
+      "values": {
+        "name": "Ada",
+        "show": true,
+        "length": 3
+      },
+      "expected": {
+        "response": null,
+        "errors": [
+          {
+            "questionId": "length",
+            "code": "step"
+          }
+        ]
+      }
+    }
+  ]
+}

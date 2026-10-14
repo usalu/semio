@@ -79,7 +79,7 @@ use semio_framework_plugin::UtilityCategory;
 use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 use semio_framework_2d::compute::EngineHandles;
 
 /// 🌱️ Load effect for a whole document: example switches, JSON loads and imports replace the document through the
@@ -1325,6 +1325,7 @@ impl ArtifactEditor for RasterPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

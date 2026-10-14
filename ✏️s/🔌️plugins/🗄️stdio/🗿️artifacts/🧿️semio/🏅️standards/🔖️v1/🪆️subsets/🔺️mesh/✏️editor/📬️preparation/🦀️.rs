@@ -109,7 +109,7 @@ mod tests {
     use crate::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive, SemioTexture};
 
     fn fixture() -> serde_json::Value {
-        serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../📇️registry/🧬️contract/✏️editing/🧫️fixtures/🧵️retained-native/🔣️.json"))).expect("retained native fixture")
+        serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../📇️registry/🧬️contract/✏️editing/🧪️tests/🧫️fixtures/🧵️retained-native/🔣️.json"))).expect("retained native fixture")
     }
 
     fn snapshot() -> SemioMeshSnapshot {

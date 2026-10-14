@@ -1,10 +1,10 @@
 use super::*;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 #[test]
 fn preview_lifecycle_matches_language_neutral_third_party_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️unit/🔄️preview-lifecycle/🔣️.json")).expect("fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️unit/🔄️preview-lifecycle/🔣️.json")).expect("fixture");
     let mut typed = Generation3dTransient::default();
     let mut oracle = serde_json::Map::new();
     for step in fixture["steps"].as_array().expect("steps") {

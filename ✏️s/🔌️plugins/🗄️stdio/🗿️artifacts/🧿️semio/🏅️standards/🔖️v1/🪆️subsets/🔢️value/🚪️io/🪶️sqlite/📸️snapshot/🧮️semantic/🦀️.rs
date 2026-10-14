@@ -1,8 +1,9 @@
 //! 🌳️ Borrowed native primitives admit complete Value entities, ownership links and resolved references.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{SemioValueSnapshot,SqliteDatabaseLimits,ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 use semio_framework_value::native_decoding::NativeDecodeControl;
-use store::os_store::serialization::ArtifactSqliteSnapshot;
+use store::os_store::serialization::ArtifactSqliteSnapshotHost;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Semio value native primitive differs from its authored shape")}
 pub fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio value semantic extent overflow"))}

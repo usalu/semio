@@ -30,7 +30,7 @@ fn drain(mut owner: Box<dyn semio_framework_value::ErasedSnapshotRetirement>, it
 
 #[test]
 fn rewriting_window_config_document_retirement_respects_exact_grants() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/♻️retirement/🔣️.json")).unwrap();
     for budget in fixture["budgets"].as_array().unwrap() {
         let items = budget["items"].as_u64().unwrap() as usize;
         for row in fixture["snapshots"].as_array().unwrap() {

@@ -48,11 +48,11 @@ import {
   type AgentDelegationRowV1,
   type AgentDelegationSummaryV1,
 } from "../../../../../../📇️directory/🤖️delegations/🟦️.ts";
-import delegationListVectors from "../../../../../../📇️directory/🤖️delegations/🧫️fixtures/📋️agent-delegation-list.json";
+import delegationListVectors from "../../../../../../📇️directory/🤖️delegations/🧪️tests/🧫️fixtures/📋️agent-delegation-list.json";
 import { AgentDelegations, agentDelegationInstantV1 } from "../../🟦️.tsx";
 import Ajv from "ajv";
 import directorySchema from "../../../../../../📇️directory/🧬️schema/🔣️.json" with { type: "json" };
-import mcpClientLaw from "../../../../../../📇️directory/🤖️delegations/🧫️fixtures/🔌️mcp-client-config.json" with { type: "json" };
+import mcpClientLaw from "../../../../../../📇️directory/🤖️delegations/🧪️tests/🧫️fixtures/🔌️mcp-client-config.json" with { type: "json" };
 import { useHubConnection, type HubConnectionPortV1 } from "../../../🔗️HubConnection/🟦️.tsx";
 import { type HubConnectionStorageV1 } from "../../../../../../📇️directory/🔐️sign-in/🟦️.ts";
 // #endregion 🔌️Adapters

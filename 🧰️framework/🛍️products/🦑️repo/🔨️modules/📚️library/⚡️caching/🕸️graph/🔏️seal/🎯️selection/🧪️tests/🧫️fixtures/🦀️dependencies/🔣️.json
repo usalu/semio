@@ -1,0 +1,12 @@
+{
+  "version":1,
+  "files":{
+    "Cargo.toml":"[workspace]\nresolver=\"2\"\nmembers=[\"value\",\"derive\"]\n",
+    "value/Cargo.toml":"[package]\nname=\"value\"\nversion=\"0.1.0\"\n[dependencies]\nderive={path=\"../derive\"}\n",
+    "derive/Cargo.toml":"[package]\nname=\"derive\"\nversion=\"0.1.0\"\n[dev-dependencies]\nvalue={path=\"../value\"}\n",
+    "value/src/lib.rs":"pub const VALUE:u8=1;\n",
+    "derive/src/lib.rs":"pub const DERIVE:u8=1;\n"
+  },
+  "production":[["value","derive"]],
+  "test":[["derive","value"]]
+}

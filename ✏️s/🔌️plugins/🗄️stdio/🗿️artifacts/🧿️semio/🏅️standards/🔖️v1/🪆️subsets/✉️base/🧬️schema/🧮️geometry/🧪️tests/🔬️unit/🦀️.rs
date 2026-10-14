@@ -19,7 +19,7 @@ where
 
 #[semio_framework_async_macros::async_test]
 async fn stdio_document_contract_shared_geometry_matches_independent_oracle() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("neutral geometry vectors");
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/🔣️.json")).expect("neutral geometry vectors");
     let cases = fixtures["cases"].as_array().expect("geometry cases");
     for case in cases {
         let input = &case["input"];

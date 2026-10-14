@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "originalCaller": {"owner":"artifact.command-corpus","maximumElapsedMilliseconds":10000},
   "cases": [
     {"id":"explicit-argv","commands":["verify"],"selected":"verify","args":["Ω","","space ' data"],"status":0,"error":null},
     {"id":"second-owner","commands":["verify","inspect"],"selected":"inspect","args":["literal"],"status":0,"error":null},

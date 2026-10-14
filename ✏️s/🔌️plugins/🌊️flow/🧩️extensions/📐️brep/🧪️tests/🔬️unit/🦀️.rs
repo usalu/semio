@@ -342,7 +342,7 @@ async fn schema_component_deconstructs_geometry() {
 /// 🧩️ The live topology widget exposes every reachable component through its existing owner.
 #[semio_framework_async_macros::async_test]
 async fn topology_widget_exposes_every_shape_kind_and_exact_labels() {
-    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/🎯️component-picking/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️component-picking/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let session = Session::new();
     let mut registry = Registry::new();
     register(&mut registry, &session);
@@ -663,7 +663,7 @@ async fn packaged_widget_descriptor_matches_live_registration() {
 #[semio_framework_async_macros::async_test]
 async fn portable_channel_identity_fixtures_match_live_widgets() {
     let registry = neural_engine::ColdOwner::new(module_registry(geometry_session()));
-    let fixtures = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🪪️channels/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixtures = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🪪️channels/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for fixture in fixtures.get("cases").unwrap().as_array().unwrap() {
         let info = registry.operator_info(fixture.get("operator").unwrap().as_str().unwrap()).unwrap();
         let channels = if fixture.get("direction").unwrap().as_str() == Some("inputs") { &info.inputs } else { &info.outputs };
@@ -690,7 +690,7 @@ fn geometry_session() -> &'static Session {
 async fn brep_deconstruct_resolves_selected_labels_without_ordinal_identity() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-label-selection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-label-selection/🔣️.json")).unwrap();
     let row = &fixture["box"];
     let point = parry3d::math::Point::new;
     let edge_length = parry3d::shape::Segment::new(point(0.0,0.0,0.0),point(row["width"].as_f64().unwrap() as f32,0.0,0.0)).length();
@@ -727,7 +727,7 @@ async fn brep_deconstruct_resolves_selected_labels_without_ordinal_identity() {
 }
 
 pub(crate) fn geometry_test_retained()->semio_framework_pack_json::Value {
-    let fixture=semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🚪️retirement/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture=semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🚪️retirement/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     fixture.get("evaluate").unwrap().get("retained").unwrap().clone()
 }
 
@@ -741,7 +741,7 @@ async fn brep_deconstruct_scopes_source_handles_across_collection_reorder() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let registry = neural_engine::ColdOwner::new(module_registry(geometry_session()));
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-label-selection/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-label-selection/🔣️.json")).unwrap();
     let shape = |width| registry.dispatch_cold("brep.prim3d.box",Dictionary::new().insert("width",Value::Dictionary(number_dictionary(width))).insert("depth",Value::Dictionary(number_dictionary(3.0))).insert("height",Value::Dictionary(number_dictionary(4.0)))).unwrap();
     let selected = channel_payload(&shape(2.0),"solid").await;
     let other = channel_payload(&shape(5.0),"solid").await;

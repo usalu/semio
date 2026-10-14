@@ -9,7 +9,7 @@ import { describe, expect, test } from "vitest";
 let workspace = dirname(fileURLToPath(import.meta.url));
 while (!existsSync(join(workspace, ".git"))) workspace = resolve(workspace, "..");
 const world = join(workspace, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "♾️infinite", "🌍️world");
-const fixture = JSON.parse(readFileSync(join(world, "🧫️fixtures", "🧲️scene-input-residency", "🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(world, "🧪️tests/🧫️fixtures", "🧲️scene-input-residency", "🔣️.json"), "utf8"));
 
 const snap = (point: readonly number[], enabled: boolean, factor: number): number[] => enabled && factor > 0 ? new Vector3(point[0], point[1], point[2]).divideScalar(factor).round().multiplyScalar(factor).toArray() : [...point];
 

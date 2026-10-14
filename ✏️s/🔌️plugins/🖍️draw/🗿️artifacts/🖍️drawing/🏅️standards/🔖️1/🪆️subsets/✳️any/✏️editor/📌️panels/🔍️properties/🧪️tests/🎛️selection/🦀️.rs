@@ -17,7 +17,7 @@ fn retire_inspector_view(view:ViewModel){
 
 #[test]
 fn inspector_selection_fixtures() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
     let mut layer = create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Rectangle")).to_string().into()).expect("nonempty authored identity"), "Rectangle");
     layer_base_mut(&mut layer).id = "shape.a".into();
     let document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
@@ -92,7 +92,7 @@ fn inspector_input_rows(node: &serde_json::Value, output: &mut Vec<serde_json::V
 
 #[test]
 fn node_coordinates_are_grouped_into_readable_pairs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎛️node-rows/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎛️node-rows/🔣️.json")).unwrap();
     let segments: Vec<PathSegment> = serde_json::from_value(fixture["segments"].clone()).unwrap();
     for labels in [&DrawingPlayLabels::NATIVE_EN, &DrawingPlayLabels::NATIVE_DE] {
         for disabled in [false, true] {
@@ -109,7 +109,7 @@ fn node_coordinates_are_grouped_into_readable_pairs() {
 
 #[test]
 fn gradient_coordinates_and_stops_have_labeled_rows() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎨️fill-rows/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️fill-rows/🔣️.json")).unwrap();
     for labels in [&DrawingPlayLabels::NATIVE_EN, &DrawingPlayLabels::NATIVE_DE] {
         for disabled in [false, true] {
             for case in fixture["cases"].as_array().unwrap() {
@@ -179,7 +179,7 @@ fn inspector_controls_bind_the_events_the_host_dispatches() {
         }
         for child in node["children"].as_array().unwrap() { check(child, events, count); }
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
     let mut layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Curve")).to_string().into()).expect("nonempty authored identity"), "Curve", vec![PathSegment::Move { to: [0.0,0.0] },PathSegment::Cubic { ctrl1: [0.0,12.0],ctrl2: [12.0,12.0],to: [12.0,0.0] }].into());
     layer_base_mut(&mut layer).attributes.fill = crate::schema::fill::edit_fill(None,&crate::schema::fill::FillEdit::Type { value: crate::schema::fill::FillType::LinearGradient }).unwrap();
     let id = layer_base(&layer).id.clone();
@@ -312,7 +312,7 @@ fn blend_inspector_exposes_every_mode_and_preserves_mixed_and_locked_states() {
         if node.key.as_str() == "drawing-inspector.blendMode.input" { return Some(node.disabled); }
         node.children.iter().find_map(disabled)
     }
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧬️schema/🧬️mutations/🧫️fixtures/🎛️field-patch/🔣️.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️field-patch/🔣️.json")).unwrap();
     let modes = cases.as_array().unwrap().iter().filter(|case| case["patch"]["field"] == "blendMode" && case["accepted"] == true).map(|case| case["patch"]["value"].as_str().unwrap()).collect::<Vec<_>>();
     assert_eq!(modes.len(), 16);
     let view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
@@ -344,7 +344,7 @@ fn blend_inspector_exposes_every_mode_and_preserves_mixed_and_locked_states() {
 
 #[test]
 fn authored_geometry_controls_match_shared_inspector_contract() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎛️geometry/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎛️geometry/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let layer=crate::schema::create_layer_by_kind(crate::schema::identity::DrawingIdentity::admit(((case["kind"].as_str().unwrap())).to_string().into()).expect("nonempty authored identity"), case["kind"].as_str().unwrap());
         let id=crate::schema::layer_id(&layer).to_string_owner();
@@ -365,7 +365,7 @@ fn authored_geometry_controls_match_shared_inspector_contract() {
 
 #[test]
 fn node_mode_and_simplification_controls_dispatch_semantic_edits() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎛️geometry/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎛️geometry/🔣️.json")).unwrap();
     let segment=PathSegment::Move{to:[0.0,0.0]};
     for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {
         let row=node_row("path",0,&segment,None,false,labels).unwrap();
@@ -383,7 +383,7 @@ fn node_mode_and_simplification_controls_dispatch_semantic_edits() {
 /// 🧭️ Neutral eligibility cases reach the actual bilingual inspector with inherited locks and original groups.
 #[test]
 fn inspector_actions_respect_selection_eligibility() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎬️actions/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎬️actions/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let selection=&row["selection"];
         let count=selection["count"].as_u64().unwrap() as usize;

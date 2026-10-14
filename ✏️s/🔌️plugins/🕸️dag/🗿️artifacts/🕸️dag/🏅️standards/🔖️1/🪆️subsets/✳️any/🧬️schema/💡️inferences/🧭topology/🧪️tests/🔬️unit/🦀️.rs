@@ -53,7 +53,7 @@ async fn port_endpoints_resolve_to_their_nodes() {
 /// large layered DAG (best of the fixture's attempts); above it the inference would need a stepped run.
 #[semio_framework_async_macros::async_test]
 async fn topology_of_a_large_layered_dag_stays_below_the_interactive_ceiling() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⏱️cost.json")).expect("cost law parses");
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧭topology/⏱️cost.json")).expect("cost law parses");
     let (layers, width) = (law["layers"].as_u64().expect("layers") as usize, law["width"].as_u64().expect("width") as usize);
     let id = |layer: usize, column: usize| format!("n{layer}-{column}");
     let nodes: Vec<DagNodeSpec> = (0..layers).flat_map(|layer| (0..width).map(move |column| (layer, column))).map(|(layer, column)| node(&id(layer, column))).collect();

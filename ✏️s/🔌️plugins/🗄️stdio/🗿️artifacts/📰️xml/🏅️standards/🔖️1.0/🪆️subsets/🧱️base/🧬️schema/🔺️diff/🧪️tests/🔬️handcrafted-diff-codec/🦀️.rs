@@ -23,7 +23,7 @@ fn diff_codec_text_binary_roundtrip_law() {
 #[test]
 fn explicit_null_removes_declaration_and_doctype_without_erasing_unchanged_fields() {
     use semio_framework_value::ToValue;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏳️optional-clear/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🏳️optional-clear/🔣️.json")).unwrap();
     let mut before = XmlSnapshot::default();
     before.doc.declaration = Some(XmlDeclaration { version: "1.0".into(), ..Default::default() });
     before.doc.doctype = Some(XmlDoctype { name: "root".into(), ..Default::default() });

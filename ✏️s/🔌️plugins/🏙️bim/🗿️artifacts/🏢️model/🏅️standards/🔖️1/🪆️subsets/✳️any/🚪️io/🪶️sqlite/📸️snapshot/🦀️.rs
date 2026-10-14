@@ -1,4 +1,5 @@
 //! 🏢️ Literal BIM fields, exact scalar words and owned authored relationships.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::*;
 use std::collections::{BTreeMap,BTreeSet};
 use semio_framework_value::{ValueError,ValueRefusalKind,NativeDecodeControl};
@@ -75,6 +76,10 @@ enumeration!(ScheduleOp;Equals,NotEquals,Contains,Greater,GreaterOrEqual,Less,Le
 enumeration!(EndJoin;Miter,Butt,None);enumeration!(ViewKind;Plan,CeilingPlan,Section,Elevation,Orthographic,Perspective);
 enumeration!(DetailLevel;Coarse,Medium,Fine);enumeration!(ViewCategory;Walls,CurtainWalls,Columns,Beams,Slabs,Roofs,Openings,Stairs,Railings,Spaces,Grids);
 enumeration!(HostSide;Left,Right);enumeration!(AreaMeasure;Gross,Net);
+enumeration!(ElementClass;Wall,CurtainWall,Window,Door,Column,Beam,Slab,Ceiling,Roof,Stair,Ramp,Railing,WallSweep,Component,Mep);
+enumeration!(MepSystem;Supply,Return,Exhaust,DomesticWater,Waste,Gas,Power,Data,Lighting);
+enumeration!(RuleKind;MinClearHeight,MaxRiser,MinTread,MinStairWidth,MinDoorWidth,MaxRampSlope,MinCorridorWidth,MaxCompartmentArea);
+enumeration!(RuleSeverity;Error,Warning,Note);enumeration!(IssueStatus;Open,InProgress,Resolved,Closed);enumeration!(IssuePriority;Low,Normal,High,Critical);
 macro_rules! scalar_record{($t:ty;$($field:ident:$kind:ty),+)=>{impl Scalar for $t{
  const WIDTH:usize=0$(+<$kind as Scalar>::WIDTH)+;
  fn append<'a>(&'a self,c:&mut Cells<'a>)->Result<()>{$(self.$field.append(c)?;)+Ok(())}
@@ -89,6 +94,18 @@ scalar_record!(ViewPlane;start:Point2,end:Point2);scalar_record!(ViewCrop;min:Po
 scalar_record!(ViewCamera;target:Point2,target_height:f64,azimuth:f64,pitch:f64,distance:f64);
 scalar_record!(RailingHost;element:String,side:HostSide,edge:u32,inset:f64);
 scalar_record!(ClassificationItem;code:String,title:String,parent:Option<String>);
+scalar_record!(Point3;x:f64,y:f64,z:f64);scalar_record!(Restraints;x:bool,y:bool,z:bool,rx:bool,ry:bool,rz:bool);
+scalar_record!(ClashRef;set:String,first:String,second:String);scalar_record!(SectionBox;min:Point3,max:Point3);
+impl Scalar for StructuralLocation{
+ const WIDTH:usize=10;
+ fn append<'a>(&'a self,c:&mut Cells<'a>)->Result<()>{match self{Self::Point{station}=>{c.push(Cell::Text("Point"))?;station.append(c)?;c.nulls(6)},Self::Line{start,end}=>{c.push(Cell::Text("Line"))?;c.nulls(3)?;start.append(c)?;end.append(c)},Self::Area=>{c.push(Cell::Text("Area"))?;c.nulls(9)}}}
+ fn read(row:&SqliteRow,index:&mut usize,n:&mut NativeDecodeControl<'_>)->Result<Self>{let kind=match next(row,index)?{SqliteValue::Text(value)=>value.as_str(),_=>return Err(invalid("BIM structural location requires symbol"))};match kind{"Point"=>{let station=f64::read(row,index,n)?;absent(row,*index,6)?;*index+=6;Ok(Self::Point{station})},"Line"=>{absent(row,*index,3)?;*index+=3;Ok(Self::Line{start:f64::read(row,index,n)?,end:f64::read(row,index,n)?})},"Area"=>{absent(row,*index,9)?;*index+=9;Ok(Self::Area)},_=>Err(invalid("BIM structural location symbol is undeclared"))}}
+}
+impl Scalar for MepShape{
+ const WIDTH:usize=10;
+ fn append<'a>(&'a self,c:&mut Cells<'a>)->Result<()>{match self{Self::Duct{width,height}=>{c.push(Cell::Text("Duct"))?;width.append(c)?;height.append(c)?;c.nulls(3)},Self::Tray{width,height}=>{c.push(Cell::Text("Tray"))?;width.append(c)?;height.append(c)?;c.nulls(3)},Self::Pipe{diameter}=>{c.push(Cell::Text("Pipe"))?;c.nulls(6)?;diameter.append(c)}}}
+ fn read(row:&SqliteRow,index:&mut usize,n:&mut NativeDecodeControl<'_>)->Result<Self>{let kind=match next(row,index)?{SqliteValue::Text(value)=>value.as_str(),_=>return Err(invalid("BIM MEP shape requires symbol"))};match kind{"Duct"|"Tray"=>{let width=f64::read(row,index,n)?;let height=f64::read(row,index,n)?;absent(row,*index,3)?;*index+=3;Ok(if kind=="Duct"{Self::Duct{width,height}}else{Self::Tray{width,height}})},"Pipe"=>{absent(row,*index,6)?;*index+=6;Ok(Self::Pipe{diameter:f64::read(row,index,n)?})},_=>Err(invalid("BIM MEP shape symbol is undeclared"))}}
+}
 struct Reader<'d,'n,'p>{database:&'d SqliteDatabase,native:&'n mut NativeDecodeControl<'p>,groups:BTreeMap<(&'static str,usize),BTreeMap<i64,Vec<&'d SqliteRow>>>,used:BTreeSet<(&'static str,i64)>}
 impl<'d,'n,'p>Reader<'d,'n,'p>{
  fn use_row(&mut self,table:&'static str,row:&SqliteRow)->Result<()>{self.native.charge(96)?;if !self.used.insert((table,row.rowid)){return Err(invalid("BIM row is multiply owned"))}Ok(())}
@@ -198,6 +215,23 @@ macro_rules! entity{($t:ty;$($field:ident:$kind:ty),+$(; $($child:ident:$nested:
  fn children(&self,p:&mut RowWriter<'_,'_>,parent:i64)->Result<()>{$( $($write(p,parent,&self.$child,$wa)?;)+ )?let _=(p,parent);Ok(())}
  fn read_at(r:&mut Reader<'_,'_,'_>,row:&SqliteRow,start:usize)->Result<Self>{r.native.charge(std::mem::size_of::<Self>())?;let mut i=start;$(let $field=<$kind as Scalar>::read(row,&mut i,r.native)?;)+if i!=row.values.len(){return Err(invalid("BIM entity has extra scalar columns"))}Ok(Self{$($field,)+$( $($child:$read(r,row.rowid,$ra)?,)+ )?})}
 }}}
+entity!(StructuralSupport;name:String,member:String,location:StructuralLocation,offset:Point3,restraints:Restraints);
+entity!(LoadCase;name:String,category:String,factor:f64);entity!(StructuralLoad;name:String,load_case:String,member:String,location:StructuralLocation,force:Point3,moment:Point3);
+entity!(OptionGroup;name:String);entity!(DesignOption;group:String,name:String,primary:bool);entity!(Workset;name:String,default_visible:bool);entity!(ElementMembership;target:String);
+entity!(SpaceConditions;occupancy:Option<String>,occupancy_density:Option<f64>,heating_setpoint:Option<f64>,cooling_setpoint:Option<f64>,ventilation_rate:Option<f64>,lighting_power_density:Option<f64>,equipment_power_density:Option<f64>,schedule:Option<String>);
+entity!(ClashSet;name:String,tolerance:f64,clearance:f64;a:ElementSelector=>write_selector(("bim_clash_a",["bim_clash_a_class","bim_clash_a_storey","bim_clash_a_phase","bim_clash_a_element"])),read_selector(("bim_clash_a",["bim_clash_a_class","bim_clash_a_storey","bim_clash_a_phase","bim_clash_a_element"])),b:ElementSelector=>write_selector(("bim_clash_b",["bim_clash_b_class","bim_clash_b_storey","bim_clash_b_phase","bim_clash_b_element"])),read_selector(("bim_clash_b",["bim_clash_b_class","bim_clash_b_storey","bim_clash_b_phase","bim_clash_b_element"])));
+entity!(Rule;name:String,kind:RuleKind,limit:f64,severity:RuleSeverity;scope:RuleScope=>write_scope(()),read_scope(()));
+entity!(Issue;title:String,description:String,status:IssueStatus,priority:IssuePriority,assignee:String,author:String,created:String,clash:Option<ClashRef>;labels:Vec<String>=>write_list("bim_issue_label"),read_list("bim_issue_label"),elements:Vec<String>=>write_list("bim_issue_element"),read_list("bim_issue_element"),viewpoint:Option<IssueViewpoint>=>write_viewpoint(()),read_viewpoint(()));
+entity!(IssueComment;issue:String,author:String,date:String,text:String);
+entity!(Component;storey:String,family:String,position:Point2,elevation:f64,rotation:f64,mirrored:bool,host:Option<String>,system:Option<MepSystem>,name:String);
+entity!(ComponentOverride;component:String,name:String,value:String);
+entity!(MepElement;storey:String,system:MepSystem,shape:MepShape,name:String;path:Vec<Point3>=>write_list("bim_mep_path"),read_list("bim_mep_path"));
+fn write_selector(p:&mut RowWriter<'_,'_>,parent:i64,value:&ElementSelector,tables:(&str,[&str;4]))->Result<()>{let id=p.insert(tables.0,&[Cell::Integer(parent)])?;list(p,tables.1[0],id,&value.classes)?;list(p,tables.1[1],id,&value.storeys)?;list(p,tables.1[2],id,&value.phases)?;list(p,tables.1[3],id,&value.ids)}
+fn read_selector(r:&mut Reader<'_,'_,'_>,parent:i64,tables:(&'static str,[&'static str;4]))->Result<ElementSelector>{let row=r.required(tables.0,parent,1,2)?;Ok(ElementSelector{classes:r.list(tables.1[0],row.rowid)?,storeys:r.list(tables.1[1],row.rowid)?,phases:r.list(tables.1[2],row.rowid)?,ids:r.list(tables.1[3],row.rowid)?})}
+fn write_scope(p:&mut RowWriter<'_,'_>,parent:i64,value:&RuleScope,_:())->Result<()>{let id=p.insert("bim_rule_scope",&[Cell::Integer(parent),Cell::Text(&value.filter)])?;list(p,"bim_rule_scope_storey",id,&value.storeys)?;list(p,"bim_rule_scope_phase",id,&value.phases)?;list(p,"bim_rule_scope_element",id,&value.ids)}
+fn read_scope(r:&mut Reader<'_,'_,'_>,parent:i64,_:())->Result<RuleScope>{let row=r.required("bim_rule_scope",parent,1,3)?;let mut index=2;Ok(RuleScope{filter:String::read(row,&mut index,r.native)?,storeys:r.list("bim_rule_scope_storey",row.rowid)?,phases:r.list("bim_rule_scope_phase",row.rowid)?,ids:r.list("bim_rule_scope_element",row.rowid)?})}
+fn write_viewpoint(p:&mut RowWriter<'_,'_>,parent:i64,value:&Option<IssueViewpoint>,_:())->Result<()>{if let Some(value)=value{let mut c=Cells::new();c.push(Cell::Integer(parent))?;value.camera.append(&mut c)?;value.section.append(&mut c)?;let id=c.emit(p,"bim_issue_viewpoint")?;list(p,"bim_issue_isolate",id,&value.isolate)?;}Ok(())}
+fn read_viewpoint(r:&mut Reader<'_,'_,'_>,parent:i64,_:())->Result<Option<IssueViewpoint>>{let Some(row)=r.optional("bim_issue_viewpoint",parent,1,38)?else{return Ok(None)};let mut index=2;Ok(Some(IssueViewpoint{camera:ViewCamera::read(row,&mut index,r.native)?,section:Option::<SectionBox>::read(row,&mut index,r.native)?,isolate:r.list("bim_issue_isolate",row.rowid)?}))}
 entity!(Material;name:String,category:MaterialCategory,color:Rgb,density:f64,conductivity:f64,specific_heat:f64);
 entity!(WallType;name:String;layers:Vec<Layer>=>write_list("bim_wall_layer"),read_list("bim_wall_layer"));
 entity!(SlabType;name:String;layers:Vec<Layer>=>write_list("bim_slab_layer"),read_list("bim_slab_layer"));
@@ -296,6 +330,22 @@ fn visit_rows(snapshot:&ModelSnapshot,p:&mut RowWriter<'_,'_>)->Result<()>{
  let root=p.insert("bim_document",&[Cell::Text(&snapshot.schema)])?;
  let project=p.insert("bim_project",&[Cell::Integer(root),Cell::Text(&snapshot.project.name),Cell::Text(&snapshot.project.description),Cell::Text(&snapshot.project.author),Cell::Text(&snapshot.project.organization)])?;
  list(p,"bim_phase_name",project,&snapshot.project.phase_names)?;
+ write_map(p,"bim_support",root,&snapshot.supports)?;
+ write_map(p,"bim_load_case",root,&snapshot.load_cases)?;
+ write_map(p,"bim_structural_load",root,&snapshot.loads)?;
+ write_map(p,"bim_option_group",root,&snapshot.option_groups)?;
+ write_map(p,"bim_design_option",root,&snapshot.design_options)?;
+ write_map(p,"bim_workset",root,&snapshot.worksets)?;
+ write_map(p,"bim_element_option",root,&snapshot.element_options)?;
+ write_map(p,"bim_element_workset",root,&snapshot.element_worksets)?;
+ write_map(p,"bim_space_conditions",root,&snapshot.space_conditions)?;
+ write_map(p,"bim_clash_set",root,&snapshot.clash_sets)?;
+ write_map(p,"bim_rule",root,&snapshot.rules)?;
+ write_map(p,"bim_issue",root,&snapshot.issues)?;
+ write_map(p,"bim_issue_comment",root,&snapshot.issue_comments)?;
+ write_map(p,"bim_component",root,&snapshot.components)?;
+ write_map(p,"bim_component_override",root,&snapshot.component_overrides)?;
+ write_map(p,"bim_mep_element",root,&snapshot.mep_elements)?;
  write_map(p,"bim_material",root,&snapshot.materials)?;
  write_map(p,"bim_wall_type",root,&snapshot.wall_types)?;
  write_map(p,"bim_slab_type",root,&snapshot.slab_types)?;
@@ -357,6 +407,23 @@ fn restore(database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Mo
  semantic_cells::extent(c.limits())?;c.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;store::sqlite_snapshot::validate_sqlite_database_schema(database,SCHEMA,c.limits())?;
  let maximum=c.limits().max_value_bytes;let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,event.completed,event.total).is_ok();let mut native=NativeDecodeControl::new(maximum,&mut progress);native.charge(std::mem::size_of::<ModelSnapshot>())?;let mut r=Reader{database,native:&mut native,groups:BTreeMap::new(),used:BTreeSet::new()};let document=r.singleton("bim_document",2)?;let root=document.rowid;let schema=r.native.copy_text(document.text(1)?)?;let row=r.required("bim_project",root,1,6)?;let mut i=2;let project=Project{name:String::read(row,&mut i,r.native)?,description:String::read(row,&mut i,r.native)?,author:String::read(row,&mut i,r.native)?,organization:String::read(row,&mut i,r.native)?,phase_names:r.list("bim_phase_name",row.rowid)?};
  let result=ModelSnapshot{schema,project,
+ supports:read_map(&mut r,"bim_support",root)?,
+ load_cases:read_map(&mut r,"bim_load_case",root)?,
+ loads:read_map(&mut r,"bim_structural_load",root)?,
+ option_groups:read_map(&mut r,"bim_option_group",root)?,
+ design_options:read_map(&mut r,"bim_design_option",root)?,
+ worksets:read_map(&mut r,"bim_workset",root)?,
+ element_options:read_map(&mut r,"bim_element_option",root)?,
+ element_worksets:read_map(&mut r,"bim_element_workset",root)?,
+ space_conditions:read_map(&mut r,"bim_space_conditions",root)?,
+ clash_sets:read_map(&mut r,"bim_clash_set",root)?,
+ rules:read_map(&mut r,"bim_rule",root)?,
+ issues:read_map(&mut r,"bim_issue",root)?,
+ issue_comments:read_map(&mut r,"bim_issue_comment",root)?,
+ components:read_map(&mut r,"bim_component",root)?,
+ component_overrides:read_map(&mut r,"bim_component_override",root)?,
+ mep_elements:read_map(&mut r,"bim_mep_element",root)?,
+
  materials:read_map(&mut r,"bim_material",root)?,
  wall_types:read_map(&mut r,"bim_wall_type",root)?,
  slab_types:read_map(&mut r,"bim_slab_type",root)?,
@@ -405,11 +472,16 @@ fn restore(database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Mo
  properties:read_properties(&mut r,root)?,classifications:read_maps(&mut r,root,["bim_classification_element","bim_classification_assignment"])?};r.finish()?;Ok(result)
 }
 /// 🪶️ One authored relational visitor admits every native and public snapshot route.
-impl store::os_store::serialization::ArtifactSqliteSnapshot for ModelSnapshot{
- const SQLITE_SCHEMA:&'static str=SCHEMA;
+impl store::os_store::serialization::ArtifactSqliteSnapshotHost for ModelSnapshot{
+ 
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:store::sqlite_snapshot::SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<()>{admit(self,c)}
- fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase>{project(self,c)}
- fn from_sqlite_database(database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self>{restore(database,c)}
- fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload>{admit(self,c)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)}
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self>{let limits=c.limits();semantic_cells::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {semantic_cells::admit_record(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
+ 
+ 
+ fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload>{admit(self,c)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self>{let limits=c.limits();semantic_cells::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_> = (|| {semantic_cells::admit_record(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for ModelSnapshot {
+const SQLITE_SCHEMA:&'static str=SCHEMA;
+fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase>{project(self,c)}
+fn from_sqlite_database(database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self>{restore(database,c)}
 }

@@ -20,7 +20,7 @@ import { WFC_GRID2D_DOCUMENT_SCHEMA, directionOffset, oppositeDirection, type Gr
 
 const here = dirname(fileURLToPath(import.meta.url));
 const subset = join(here, "../../..");
-const vectorsRoot = join(subset, "🧫️fixtures/🧬️mutations");
+const vectorsRoot = join(subset, "🧪️tests/🧫️fixtures/🧬️mutations");
 
 interface Outcome {
   status: "applied" | "rejected";

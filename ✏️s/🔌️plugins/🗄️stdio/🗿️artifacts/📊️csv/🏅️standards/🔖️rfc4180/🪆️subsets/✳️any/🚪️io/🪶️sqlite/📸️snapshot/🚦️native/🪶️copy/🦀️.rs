@@ -1,14 +1,21 @@
 //! 🪶️ Unmounted authored SQLite mapping adds paid literal-field copies after its owning baseline.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_rfc4180::subsets::any::schema::snapshot::{CsvField, CsvRecord, CsvSnapshot};
-use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use std::collections::{BTreeMap, BTreeSet};
 use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
 
-impl ArtifactSqliteSnapshot for CsvSnapshot {
-    const SQLITE_SCHEMA: &'static str = include_str!("../../🗄️.sql");
+impl ArtifactSqliteSnapshotHost for CsvSnapshot {
+    
 
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
+    
+
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for CsvSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("../../🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, self.records.len())?;
         let mut total = self.records.len();
         for (ordinal, record) in self.records.iter().enumerate() {
@@ -48,8 +55,7 @@ impl ArtifactSqliteSnapshot for CsvSnapshot {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, total, total)?;
         Ok(database)
     }
-
-    fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
         validate_sqlite_database_schema(database, Self::SQLITE_SCHEMA, control.limits())?;
         control.check_database(database, SqliteSnapshotPhase::ReconstructSnapshot)?;
         let total = database.table("csv_record")?.rows.len().checked_add(database.table("csv_field")?.rows.len()).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"CSV entity count overflow"))?;

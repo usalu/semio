@@ -1,24 +1,25 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { buildWasmWebV1, readWasmBuildPolicyV1 } from "../../../🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
+import { scriptCompilerAdmissionControlV1 } from '../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts';
+import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { buildWasmWebV1, readWasmBuildPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { BROWSER_CANVAS_HOT_CRATES } from "../../../🖱️ui/🖌️render/🏗️build/🕸️browser/🟦️.ts";
 import { resolve } from "node:path";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🦀️ `@semio-tech/framework-editor-rs` router: `bun ./📜️script.ts wasm`. */
 
-import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 class WasmScript extends BundleScript {
   async run(): Promise<void> {
-    await buildWasmWebV1({
+    await buildWasmWebV1({control:scriptCompilerAdmissionControlV1(this.invocation,"wasm:build",buildBudgetMs()),
       rsDir: this.root,
       componentDir: resolve(this.root, "../../🧩️component/📦️packages/🦀️rust"),
       logPrefix: "framework/editor/rs",
       wasmBaseName: "framework_editor",
-      shipProfile: "wasm-release",
-      devOptimizedCrates: BROWSER_CANVAS_HOT_CRATES,
+      prototypeOptimizedCrates: BROWSER_CANVAS_HOT_CRATES,
       pkg: {
         name: "@semio-tech/framework-editor-rs",
         files: ["framework_editor_bg.wasm", "framework_editor.js", "framework_editor.d.ts", "framework_editor_bg.wasm.d.ts"],
@@ -41,7 +42,7 @@ class TestScript extends BundleScript {
 class OwnedErrorScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw Error("test-owned-error accepts no arguments");
-  const {runBudgetedTestCommand}=await import("../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts"),{testLevelBudgetMs}=await import("../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts");
+  const {runBudgetedTestCommand}=await import("../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts"),{testLevelBudgetMs}=await import("../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts");
   const source=resolve(this.root,"../../⚠️error/🧪️tests/🟦️.ts");
   await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
  }

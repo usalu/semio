@@ -5,7 +5,7 @@ use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schem
 use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
-const DOCUMENT_ROWS_LAW: &str = include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧫️fixtures/🔬️unit/🔣️.json");
+const DOCUMENT_ROWS_LAW: &str = include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🧫️fixtures/🔬️unit/🔣️.json");
 
 #[semio_framework_async_macros::async_test]
 async fn document_lists_widgets() {

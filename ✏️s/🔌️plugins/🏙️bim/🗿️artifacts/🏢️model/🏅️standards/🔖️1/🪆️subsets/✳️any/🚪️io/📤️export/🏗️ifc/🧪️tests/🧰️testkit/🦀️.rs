@@ -7,7 +7,7 @@ use semio_s_artifact_stdio_ifc::part21::{Part21Document, Part21Instance, Part21V
 use std::collections::BTreeMap;
 
 /// 🏠️ The committed export fixture: one site, one building, four storeys and every element family.
-pub const HOUSE: &str = include_str!("../../../../../🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
+pub const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
 
 /// 🏠️ The decoded house model.
 pub fn house() -> ModelSnapshot {
@@ -15,7 +15,7 @@ pub fn house() -> ModelSnapshot {
 }
 
 /// 🏷️ The committed psets fixture: the house with three classification systems (tables with parents), several systems per element and per type, type-level property sets and the property set templates of the IFC4 library.
-pub const PSETS: &str = include_str!("../../../../../🧫️fixtures/🏗️ifc/🏷️psets/📸️snapshot/🔣️.json");
+pub const PSETS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏷️psets/📸️snapshot/🔣️.json");
 
 /// 🏷️ The decoded psets model.
 pub fn psets() -> ModelSnapshot {
@@ -23,7 +23,7 @@ pub fn psets() -> ModelSnapshot {
 }
 
 /// 🪧️ The committed annotated room: dimensions, tags, a note and a leader around four walls, a window, a grid line and a column.
-pub const NOTATED: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🪧️annotation-layout/🏠️room/📸️snapshot/🔣️.json");
+pub const NOTATED: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪧️annotation-layout/🏠️room/📸️snapshot/🔣️.json");
 
 /// 🪧️ The decoded annotated room.
 pub fn notated() -> ModelSnapshot {
@@ -31,7 +31,7 @@ pub fn notated() -> ModelSnapshot {
 }
 
 /// 🔲️ The committed ceilings: a board ceiling with a hole, a sloped and a diagonally sloped tile ceiling and one with a half-round end, on two storeys.
-pub const CEILINGS: &str = include_str!("../../../../../🧫️fixtures/🏗️ifc/🔲️ceilings/📸️snapshot/🔣️.json");
+pub const CEILINGS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🔲️ceilings/📸️snapshot/🔣️.json");
 
 /// 🔲️ The decoded ceilings model.
 pub fn ceilings() -> ModelSnapshot {
@@ -39,7 +39,7 @@ pub fn ceilings() -> ModelSnapshot {
 }
 
 /// 🪑️ The committed components model: every category of family, free, hosted, rotated and mirrored components, overrides, terminals of several systems and ducts, pipes and trays on two storeys.
-pub const COMPONENTS: &str = include_str!("../../../../../🧫️fixtures/🏗️ifc/🪑️components/📸️snapshot/🔣️.json");
+pub const COMPONENTS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🪑️components/📸️snapshot/🔣️.json");
 
 /// 🪑️ The decoded components model.
 pub fn components() -> ModelSnapshot {
@@ -98,7 +98,7 @@ pub fn tags(document: &Part21Document, entity: &str) -> Vec<String> {
 }
 
 /// 🧗️ The committed attic: gable and hip roofs with walls under them, a wall standing on a sloped slab, baseboards, a hand rail, a door, a window with a reveal and a plain window.
-pub const ATTIC: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/📸️snapshot/🔣️.json");
+pub const ATTIC: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/📸️snapshot/🔣️.json");
 
 /// 🧗️ The decoded attic model.
 pub fn attic() -> ModelSnapshot {

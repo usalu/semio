@@ -133,7 +133,7 @@ async fn moving_never_writes_and_a_lost_pointer_drops_the_route() {
     assert!(rig.finish().mutations.is_empty());
 }
 
-const GESTURE_CASES: &str = include_str!("../../../../../🧫️fixtures/🛠️gestures/🔣️.json");
+const GESTURE_CASES: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🛠️gestures/🔣️.json");
 
 #[semio_framework_async_macros::async_test]
 async fn the_routes_the_oracle_measured_replay_through_the_clicks_to_the_same_path_and_length() {

@@ -1,15 +1,13 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv from "ajv";
+import Ajv2020 from "ajv/dist/2020";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
-import schema from "../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
-import failureSchema from "../🧬️schema/⚠️frontier.json";
-import failureFixture from "../🧫️fixtures/⚠️frontier.json";
+import grantSchema from "../../../../../🧵️job/🏃️work/🎟️grant/🧬️schema/🔣️.json";
+import fixture from "../🧪️tests/🧫️fixtures/🔣️.json";
+import failureFixture from "../🧪️tests/🧫️fixtures/⚠️frontier.json";
 
 test("failed original frontiers author work without inventing copy or backing effects",()=>{
-  expect(new Ajv({strict:true,allErrors:true}).compile(failureSchema)(failureFixture)).toBe(true);
   const database=new Database(":memory:");
   try{
     const value=JSON.parse(failureFixture.sources[0]) as string;
@@ -24,14 +22,16 @@ test("failed original frontiers author work without inventing copy or backing ef
 });
 
 test("post-effect cancellation receipts retain independently authored work",()=>{
-  const validate=new Ajv({strict:true,allErrors:true}).compile(schema);
-  expect(validate(fixture)).toBe(true);
+  const validate=new Ajv2020({strict:true,allErrors:true}).compile(grantSchema);
+  expect(validate(fixture.preparationGrant)).toBe(true);
+  expect(validate(fixture.closeGrant)).toBe(true);
   const database=new Database(":memory:");
   try{
     const value=JSON.parse(fixture.source) as string;
     const independent=database.query("SELECT length(CAST(? AS BLOB)) AS bytes").get(value) as {bytes:number};
     expect(independent.bytes).toBe(4);
     for(const row of fixture.cases){
+      expect(validate(row.grant)).toBe(true);
       expect(row.receipt.copiedItems).toBe(row.grant.maximumItems);
       expect(row.receipt.copiedBytes).toBeLessThanOrEqual(row.grant.maximumCopyBytes);
       expect(row.receipt.retainedCapacityBytes).toBeLessThanOrEqual(row.grant.maximumCapacityBytes);
@@ -39,13 +39,13 @@ test("post-effect cancellation receipts retain independently authored work",()=>
       if(row.frontier==="stringCopy")expect(row.receipt.copiedBytes).toBe(1);
       if(row.frontier==="stringCapacity")expect(row.receipt.retainedCapacityBytes).toBe(independent.bytes);
       for(const axis of Object.keys(row.grant)){
-        const missing=structuredClone(fixture) as Record<string,unknown>;
-        delete (missing.preparationGrant as Record<string,unknown>)[axis];
+        const missing=structuredClone(row.grant) as Record<string,unknown>;
+        delete missing[axis];
         expect(validate(missing)).toBe(false);
       }
     }
   }finally{database.close();}
-  console.log("[DEBUG] JSON post-effect receipt3 strict schema and independent SQLite UTF8 byte ownership passed");
+  console.log("[DEBUG] JSON post-effect receipt3 canonical Grant validation and independent SQLite UTF8 byte ownership passed");
 });
 
 test("actual grammar publishes physical progress before the post-effect cancellation checkpoint",()=>{
@@ -57,3 +57,5 @@ test("actual grammar publishes physical progress before the post-effect cancella
 });
 
 test("original receipt order fold 0 keeps plain trials outside schema authority",async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../🧬️schema/🔣️.json",import.meta.url))).toBe(false);console.log("[DEBUG] Original receipt/order/fold trial has no whole-corpus schema authority");});
+
+test("original receipt order fold 4 keeps frontier trials outside schema authority",async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../🧬️schema/⚠️frontier.json",import.meta.url))).toBe(false);console.log("[DEBUG] Original failed-frontier trial has no whole-corpus schema authority");});

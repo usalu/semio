@@ -3,9 +3,9 @@
 use super::super::super::UiPreferences;
 use super::super::UiPreferencesConfigMutation;
 
-const BEFORE: &str = include_str!("../../🧫️fixtures/🎨️updates-every-os-ui-preference/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../🧫️fixtures/🎨️updates-every-os-ui-preference/📸️snapshot/➡️after/🔣️.json");
-const MUTATIONS: &str = include_str!("../../🧫️fixtures/🎨️updates-every-os-ui-preference/🦠️mutations/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️ui-preferences/🎨️updates-every-os-ui-preference/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️ui-preferences/🎨️updates-every-os-ui-preference/📸️snapshot/➡️after/🔣️.json");
+const MUTATIONS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️ui-preferences/🎨️updates-every-os-ui-preference/🦠️mutations/🔣️.json");
 
 fn preferences(text: &str) -> UiPreferences {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("OS UI preferences decode")

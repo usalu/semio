@@ -8,8 +8,8 @@ type TestStore = ArtifactStore<protocol::InteractionState, InteractionConfigMuta
 type Query = LocalInteractionLiveQuery<protocol::InteractionState, protocol::InteractionState>;
 use crate::local_interaction::query::tests::original_receiving_recipient;
 
-async fn stores() -> ([TestStore; 3],store::NativeSnapshotBodyWallet) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
+async fn stores() -> ([TestStore; 3],crate::io::control::NativeSnapshotBodyWallet) {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "semantic-unicode-over-page").unwrap();
     let mut state = row["expected"].clone();
     state["hover"] = serde_json::json!({});
@@ -29,29 +29,29 @@ fn query(stores: &[TestStore; 3], generation: u64) -> Query {
     Query::new(13, generation, identity, Some(stores[0].snapshot_read().unwrap()), Some(stores[1].snapshot_read().unwrap()), Some(stores[2].snapshot_read().unwrap()))
 }
 
-fn advance_original<D,C,Q:LocalInteractionQueryCapture>(query:&mut LocalInteractionLiveQuery<D,C,Q>,recipient:&mut store::NativeSnapshotBodyWallet,width:usize)->LocalInteractionLiveStep{
+fn advance_original<D,C,Q:LocalInteractionQueryCapture>(query:&mut LocalInteractionLiveQuery<D,C,Q>,recipient:&mut crate::io::control::NativeSnapshotBodyWallet,width:usize)->LocalInteractionLiveStep{
     let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||query.advance(ArtifactStoreOneItemGrant::from_retained(recipient.remaining_grant()),width).unwrap());
     let progress=match step{LocalInteractionLiveStep::Advanced{ownership,..}=>ownership,LocalInteractionLiveStep::Blocked=>RetainedCloneProgress::default()};
     recipient.record_progress(progress).unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));step
 }
-fn close_original<D,C,Q:LocalInteractionQueryCapture>(query:&mut LocalInteractionLiveQuery<D,C,Q>,recipient:&mut store::NativeSnapshotBodyWallet)->RetainedCloneStep{
+fn close_original<D,C,Q:LocalInteractionQueryCapture>(query:&mut LocalInteractionLiveQuery<D,C,Q>,recipient:&mut crate::io::control::NativeSnapshotBodyWallet)->RetainedCloneStep{
     let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||query.close_step(recipient.remaining_grant()).unwrap());let progress=step.progress();recipient.record_progress(progress).unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));step
 }
-fn pump(stores:&mut[TestStore;3],owners:&mut[Option<Box<dyn ErasedSnapshotRetirement>>;3],recipient:&mut store::NativeSnapshotBodyWallet){
+fn pump(stores:&mut[TestStore;3],owners:&mut[Option<Box<dyn ErasedSnapshotRetirement>>;3],recipient:&mut crate::io::control::NativeSnapshotBodyWallet){
     for(store,owner)in stores.iter_mut().zip(owners.iter_mut()){
         if owner.is_none(){let((received,progress),physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store.take_returned_snapshot_read_retirement(recipient.remaining_grant()).unwrap());recipient.record_progress(progress).unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));*owner=received;}
         if let Some(active)=owner.as_mut(){let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||active.close_step(recipient.remaining_grant()).unwrap());let progress=step.progress();recipient.record_progress(progress).unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));if matches!(step,RetainedCloneStep::Complete(_)){assert!(active.terminal_is_empty());let(_,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner.take()));assert_eq!((physical.requested_bytes,physical.released_bytes),(0,0));}}
     }
 }
-fn reclaim_returned_leases(stores:&mut[TestStore;3],recipient:&mut store::NativeSnapshotBodyWallet){
+fn reclaim_returned_leases(stores:&mut[TestStore;3],recipient:&mut crate::io::control::NativeSnapshotBodyWallet){
     let mut owners=[None,None,None];for _ in 0..1_000_000{pump(stores,&mut owners,recipient);if owners.iter().all(Option::is_none)&&stores.iter().all(TestStore::snapshot_read_leases_terminal_is_empty){return}}
     panic!("the capture Stores never reclaimed their exact returned read leases");
 }
-fn finish_close(stores:&mut[TestStore;3],query:&mut Query,recipient:&mut store::NativeSnapshotBodyWallet)->LocalInteractionQueryReply{
+fn finish_close(stores:&mut[TestStore;3],query:&mut Query,recipient:&mut crate::io::control::NativeSnapshotBodyWallet)->LocalInteractionQueryReply{
     for _ in 0..1_000_000{let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||query.close_step(recipient.remaining_grant()).unwrap());let progress=step.progress();recipient.record_progress(progress).unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));if matches!(step,RetainedCloneStep::Complete(_)){assert!(query.owners_are_empty());}assert!(query.take_reply_admitted(|_|false).is_none());assert!(!query.terminal_is_empty());if let Some(reply)=query.take_reply(){assert!(query.terminal_is_empty());reclaim_returned_leases(stores,recipient);return reply}}
     panic!("live query never returned all three exact roots");
 }
-fn close_stores(stores:&mut[TestStore;3],recipient:&mut store::NativeSnapshotBodyWallet){
+fn close_stores(stores:&mut[TestStore;3],recipient:&mut crate::io::control::NativeSnapshotBodyWallet){
     for store in stores{for _ in 0..1_000_000{let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store.close_owned_step(recipient.remaining_grant()).unwrap());let progress=step.progress();recipient.record_progress(progress).unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));if matches!(step,RetainedCloneStep::Complete(_)){break}}assert!(store.close_owned_terminal_is_empty())}
 }
 
@@ -248,7 +248,7 @@ fn local_interaction_runtime_query_generation_exhausts_before_slot_admission() {
 
 #[test]
 fn local_interaction_live_partial_error_preserves_wrapper_emission_and_retirement_counts() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/📃️query/🔣️.json")).unwrap();
     for bytes in [1, 64, 4096] {
         let source = crate::local_interaction::query::tests::hostile_capture_for_live_law();
         let inputs = LocalInteractionInputReads::<(), ()>::from_optional(None, None);let mut recipient=original_receiving_recipient();
@@ -299,7 +299,7 @@ fn local_interaction_live_partial_error_preserves_wrapper_emission_and_retiremen
 
 #[semio_framework_async_macros::async_test]
 async fn original_live_page_refusal_preserves_borrowed_page_before_any_heap_copy(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../📃️query/🧫️fixtures/📨️authority.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../../📃️query/🧪️tests/🧫️fixtures/📨️authority.json")).unwrap();
     let(mut stores,mut recipient)=stores().await;let mut query=query(&stores,41);assert!(matches!(query.take_reply(),Some(LocalInteractionQueryReply::Started{..})));
     for _ in 0..law["maximumTurns"].as_u64().unwrap(){advance_original(&mut query,&mut recipient,64);if query.reply_ready(){break}}
     let page=query.owned.query.as_ref().unwrap().page().unwrap();assert!(!page.bytes.is_empty());let original=(page.bytes.as_ptr(),page.bytes.len(),page.token.clone());

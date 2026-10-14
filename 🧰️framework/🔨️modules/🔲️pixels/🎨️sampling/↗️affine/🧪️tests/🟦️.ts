@@ -2,11 +2,11 @@
 import {test,expect,spyOn} from "bun:test";
 import Ajv from "ajv";
 import {areaOracle,canvasOracle,delta} from "./🔭️oracles/🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {AffineImageJob,sampleAffineImage,type AffineImageInput} from "../🟦️.ts";
 import {CoverageJob} from "../../../🖊️coverage/🟦️.ts";
-import retirementCases from "../🧫️fixtures/🧹️retirement/🔣️.json";
+import retirementCases from "./🧫️fixtures/🧹️retirement/🔣️.json";
 const validate=new Ajv({strict:true}).compile(schema);
 const validateProgress=new Ajv({strict:true}).compile({definitions:schema.definitions,$ref:"#/definitions/progress"});
 const validateRetirement=new Ajv({strict:true}).compile({definitions:schema.definitions,$ref:"#/definitions/retirement"});

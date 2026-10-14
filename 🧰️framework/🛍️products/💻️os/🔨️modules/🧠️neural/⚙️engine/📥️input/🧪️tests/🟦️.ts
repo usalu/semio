@@ -2,7 +2,7 @@ import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {applyPatch,type Operation} from "fast-json-patch";
 import engineContract from "../../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 
 test("original neural input merge agrees with independent JSONPatch",()=>{
  const domain=new Ajv({strict:true,allErrors:true});domain.addSchema(engineContract);const validateValue=domain.compile({$ref:engineContract.$id+"#/$defs/Value"});

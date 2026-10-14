@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "⚖️create-rule/🧱️adds-a-note-for-one-element",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️create-rule/🧱️adds-a-note-for-one-element/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️create-rule/🧱️adds-a-note-for-one-element/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️create-rule/🧱️adds-a-note-for-one-element/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️create-rule/🧱️adds-a-note-for-one-element/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️create-rule/🧱️adds-a-note-for-one-element/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚖️create-rule/🧱️adds-a-note-for-one-element/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚖️create-rule/🧱️adds-a-note-for-one-element/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚖️create-rule/🧱️adds-a-note-for-one-element/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚖️create-rule/🧱️adds-a-note-for-one-element/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚖️create-rule/🧱️adds-a-note-for-one-element/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

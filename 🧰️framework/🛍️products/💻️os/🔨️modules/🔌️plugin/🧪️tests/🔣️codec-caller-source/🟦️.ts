@@ -270,7 +270,7 @@ function hostileSources(fixture: Fixture, sources: Sources): void {
 }
 
 export function testPluginCodecCallerSource(repoRoot: string): void {
-  const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", testSourceUrl.href), "utf8")) as Fixture;
+  const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🧫️fixtures/🔣️.json", testSourceUrl.href), "utf8")) as Fixture;
   modelOracle(fixture);
   const sources = Object.fromEntries(Object.entries(fixture.native.sources).map(([name, path]) => [name, readFileSync(resolve(repoRoot, path), "utf8")])) as Sources;
   hostileSources(fixture, sources);

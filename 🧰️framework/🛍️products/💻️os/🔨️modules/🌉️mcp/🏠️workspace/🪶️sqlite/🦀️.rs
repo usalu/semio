@@ -1,4 +1,5 @@
 //! 🪶️ Probe values are relational syntax nodes with explicit collection ordinals.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding};
 use semio_framework_value::{DslValue,Number,ValueError,ValueRefusalKind};
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
@@ -17,10 +18,10 @@ fn number_value<P:semantic::Port>(text:&str,scanner:&mut Option<semio_framework_
  loop{port.work(1,0)?;let cursor=scanner.as_mut().unwrap();let number=cursor.step(text).map_err(|_|ValueError::literal(ValueRefusalKind::InvalidValue,"Probe number column must be a finite JSON numeric literal"))?;if let Some(number)=number{if cursor.position()!=text.len(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Probe number column has trailing numeric bytes"))}return Ok(DslValue::Number(match number{semio_framework_pack_json::Number::UInt(value)=>Number::UInt(value),semio_framework_pack_json::Number::Int(value)=>Number::Int(value),semio_framework_pack_json::Number::Float(value)=>Number::Float(value)}));}}
 }
 
-impl store::os_store::serialization::ArtifactSqliteSnapshot for super::ProbeSnapshot{
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let mut frame=semantic::Projection::new();let mut port=semantic::Direct{control,phase:SqliteSnapshotPhase::ProjectSnapshot};semantic::project(&self.0,&mut frame,&mut port)?;Ok(frame.database)}
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{let mut frame=semantic::Reconstruction::new();let mut port=semantic::Direct{control,phase:SqliteSnapshotPhase::ReconstructSnapshot};semantic::reconstruct(database,&mut frame,&mut port).map(Self)}
+impl store::os_store::serialization::ArtifactSqliteSnapshotHost for super::ProbeSnapshot{
+ 
+ 
+ 
  fn to_sqlite_database_receiving(&self,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<SqliteDatabase,ValueError>{
   let result=(||{
   if control.allocation_remaining_bytes()==0{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"Probe SQL projection has no original backing authority"))}
@@ -62,6 +63,11 @@ impl store::os_store::serialization::ArtifactSqliteSnapshot for super::ProbeSnap
   if let Some(error)=refused{Err(error)}else{result}
  }
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{super::probe_json::validate_with(&self.0,&mut |_|control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0))}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for super::ProbeSnapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let mut frame=semantic::Projection::new();let mut port=semantic::Direct{control,phase:SqliteSnapshotPhase::ProjectSnapshot};semantic::project(&self.0,&mut frame,&mut port)?;Ok(frame.database)}
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{let mut frame=semantic::Reconstruction::new();let mut port=semantic::Direct{control,phase:SqliteSnapshotPhase::ReconstructSnapshot};semantic::reconstruct(database,&mut frame,&mut port).map(Self)}
 }
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

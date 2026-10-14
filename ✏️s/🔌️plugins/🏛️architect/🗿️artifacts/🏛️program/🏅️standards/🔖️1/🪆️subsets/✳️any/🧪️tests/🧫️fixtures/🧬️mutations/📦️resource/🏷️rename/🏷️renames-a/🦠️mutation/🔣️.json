@@ -1,0 +1,5 @@
+{
+  "mutation": "renameResource",
+  "id": "resource-a",
+  "newName": "Renamed Resource A"
+}

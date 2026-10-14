@@ -35,9 +35,9 @@ pub(crate) enum PendingArtifactStorePublication<A: ArtifactApp> {
 #[derive(Clone, Debug, PartialEq, Eq, ToValue,semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub(crate) struct ChildPublicationResultV1 {
-    invocation_id: String,
-    committed_members: usize,
-    child_content_generation: u64,
+    pub(crate) invocation_id: String,
+    pub(crate) committed_members: usize,
+    pub(crate) child_content_generation: u64,
 }
 
 /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): what ONE composed gesture's linearized
@@ -190,7 +190,7 @@ impl<A: ArtifactApp> PendingChildGroupPublication<A> {
 }
 
 #[cfg(test)]
-fn test_original_pending_child_group_closure<A:ArtifactApp>(original:impl FnOnce()->Vec<A::Mutation>,grant:RetainedCloneGrant){
+pub(crate) fn test_original_pending_child_group_closure<A:ArtifactApp>(original:impl FnOnce()->Vec<A::Mutation>,grant:RetainedCloneGrant){
     let(mut owner,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||PendingChildGroupPublication::<A>::new(original(),vec![ChildEmit::open("original","child",0)],Some(protocol::TransactionRef{id:"t".repeat(8192),tool:"original-tool".into()})).unwrap());
     let mut born=heap.requested_bytes;let mut released=heap.released_bytes;let pointer=owner.artifact_mutations.as_ptr();owner.begin_close();let mut turns=0;
     while !owner.terminal_is_empty(){
@@ -299,7 +299,7 @@ impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
     }
 
     /// 💥️ The owning store's own rejection reason, for as long as the retirement still retains it.
-    fn fault(&self) -> Option<&str> {
+    pub(crate) fn fault(&self) -> Option<&str> {
         match self {
             Self::Artifact(publication) => publication.fault(),
             Self::Config(publication) => publication.fault(),
@@ -366,11 +366,11 @@ pub(crate) fn original_reserved_arc_frame_bytes<T>()->usize{std::alloc::Layout::
 
 /// 🧾️ Copies a bounded original fault while the checked-out descriptor keeps the native payload immovable.
 pub(crate) struct MountedWorkerFaultCapture {
-    original: usize,
-    expected: usize,
-    page: usize,
-    offset: usize,
-    bounded: ArtifactBoundedToolFault,
+    pub(crate) original: usize,
+    pub(crate) expected: usize,
+    pub(crate) page: usize,
+    pub(crate) offset: usize,
+    pub(crate) bounded: ArtifactBoundedToolFault,
 }
 
 /// 🧮️ Reports the next original copy or metadata unit without creating a replacement fault.

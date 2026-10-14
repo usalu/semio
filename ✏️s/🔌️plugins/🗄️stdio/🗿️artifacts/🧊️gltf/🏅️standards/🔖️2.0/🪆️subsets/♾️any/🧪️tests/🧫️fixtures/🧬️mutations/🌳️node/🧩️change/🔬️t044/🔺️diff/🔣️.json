@@ -1,0 +1,17 @@
+{
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "extensions": {
+            "state": "present",
+            "value": {
+              "KHR_lights_punctual": {}
+            }
+          }
+        }
+      }
+    ]
+  }
+}

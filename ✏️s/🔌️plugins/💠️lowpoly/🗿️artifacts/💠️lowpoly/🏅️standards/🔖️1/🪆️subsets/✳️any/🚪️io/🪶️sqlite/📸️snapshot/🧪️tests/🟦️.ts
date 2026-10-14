@@ -2,7 +2,7 @@
 import{test,expect}from"bun:test";
 import"./🕸️mesh/🟦️.ts";
 import{Database}from"bun:sqlite";
-import fixture from"../🧫️fixtures/🔣️.json"with{type:"json"};
+import fixture from"./🧫️fixtures/🔣️.json"with{type:"json"};
 import{parseLowpolyArtifact}from"../../../../🧬️schema/🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 function snapshot():import("../../../../🧬️schema/📸️snapshot/🟦️.ts").LowpolySnapshot{const words=fixture.floatWords.map(word=>({bits:parseInt(word,16)}));return{schema:fixture.schema,objects:fixture.objectIds.map((id,index)=>({id,name:fixture.names[index]!,transform:{position:[words[0]!,words[1]!,words[2]!],rotation:[words[3]!,words[4]!,words[5]!],scale:[words[6]!,words[7]!,words[8]!]},smoothShading:index===1,meshState:null,mesh:index===0?fixture.meshChild:null,meshContent:index===0?fixture.meshContent:"",paintLayers:index<2?[{name:"same",visible:index===0,opacity:{bits:parseInt(fixture.opacityWords[index]!,16)},blendMode:"independent",pixels:Uint8Array.from(index===0?fixture.pixels:[])}]:[]}))};}

@@ -4,7 +4,7 @@ use super::super::{tests::DemoSnapshot, fixture_mutations::demo::DemoMutation};
 
 #[test]
 fn original_retained_codec_catalog_preserves_input_receipt_and_cancellation_heap() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let policy = &fixture["grant"];
     let n = |axis: &str| policy[axis].as_u64().unwrap() as usize;
     let grant = RetainedCloneGrant { maximum_items: n("items"), maximum_copy_bytes: n("copy"), maximum_capacity_bytes: n("capacity"), maximum_release_bytes: n("release"), maximum_depth: n("depth") };

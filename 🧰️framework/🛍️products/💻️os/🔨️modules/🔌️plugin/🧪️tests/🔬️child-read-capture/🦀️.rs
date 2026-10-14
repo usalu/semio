@@ -1,7 +1,7 @@
 //! 🧪️ Unmounted host capture law belongs inside the existing plugin builder contract module.
 #[semio_framework_async_macros::async_test]
 async fn child_read_capture_retains_exact_existing_lease_across_publication_and_release(){
- let contract:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️child/👁️capture/🔣️.json")).expect("closed capture contract");
+ let contract:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪆️child/👁️capture/🔣️.json")).expect("closed capture contract");
  let slot=contract["slot"].as_str().expect("slot");let id=contract["childId"].as_str().expect("child");
  let mut app=contract_composed_app_raw().await;
  app.register_child(slot,id,test_child_dialect().await,new_test_child(id).await.expect("actual child")).await.expect("register exact child");

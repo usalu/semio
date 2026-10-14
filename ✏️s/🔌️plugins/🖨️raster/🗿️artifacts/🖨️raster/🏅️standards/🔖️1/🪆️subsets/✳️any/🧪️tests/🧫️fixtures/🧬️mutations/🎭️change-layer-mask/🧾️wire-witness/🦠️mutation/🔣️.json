@@ -1,0 +1,21 @@
+{
+  "mutation": "changeLayerMask",
+  "layerId": "paint",
+  "expected": null,
+  "mask": {
+    "enabled": true,
+    "linked": true,
+    "invert": false,
+    "width": 32,
+    "height": 16,
+    "imageKey": null,
+    "transform": {
+      "x": 0.0,
+      "y": 0.0,
+      "a": 1.0,
+      "b": 0.0,
+      "c": 0.0,
+      "d": 1.0
+    }
+  }
+}

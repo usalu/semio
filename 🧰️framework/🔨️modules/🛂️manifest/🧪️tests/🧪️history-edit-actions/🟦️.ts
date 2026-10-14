@@ -2,7 +2,7 @@
  * beside this file; oracle: Ajv (2020-12) validates the fixture and rejects hostile rows. */
 import { describe, expect, test } from "bun:test";
 
-import fixture from "../../🧫️fixtures/🧫️history-edit-actions/🔣️.json";
+import fixture from "../🧫️fixtures/🧫️history-edit-actions/🔣️.json";
 
 import {
   DIALOG_CHOICE_ARG,

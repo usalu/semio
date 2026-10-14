@@ -1,4 +1,5 @@
 //! 📝️ Handcrafted CommonMark block, inline and ordered ownership entities.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_commonmark::subsets::any::schema::snapshot::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
@@ -6,7 +7,7 @@ use std::collections::{BTreeMap,BTreeSet};
 use crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::{OwnedNodes,RetireNode};
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
-use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{NativeEncodingBound,Cell,RowWriter,reconstruct_text},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase},os_store::serialization::ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{NativeEncodingBound,Cell,RowWriter,reconstruct_text},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase},os_store::serialization::ArtifactSqliteSnapshotHost};
 
 #[derive(Clone,Copy)]
 enum BlockOwner{Document,Quote(i64),Item(i64)}
@@ -48,7 +49,7 @@ fn visit_rows(snapshot:&MdSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueEr
   }},
  }}Ok(())
 }
-fn project(snapshot:&MdSnapshot,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic::extent(control.limits())?;let mut out=RowWriter::new(<MdSnapshot as ArtifactSqliteSnapshot>::SQLITE_SCHEMA,control)?;visit_rows(snapshot,&mut out)?;out.finish()}
+fn project(snapshot:&MdSnapshot,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic::extent(control.limits())?;let mut out=RowWriter::new(<MdSnapshot as ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA,control)?;visit_rows(snapshot,&mut out)?;out.finish()}
 
 type Entities<'a>=BTreeMap<i64,&'a SqliteRow>;
 type Children=BTreeMap<i64,Vec<i64>>;
@@ -118,8 +119,8 @@ fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)-
 }
 
 impl MdSnapshot{pub(crate)fn admit_sqlite_values(&self,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<(),ValueError>{semantic::extent(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(self,&mut out)?;out.finish_borrowed()}pub(crate)fn admit_sqlite_record(value:&semio_framework_dsl_record::RecordValue,limits:store::sqlite_snapshot::SqliteDatabaseLimits,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),ValueError>{semantic::admit_record(value,limits,native)}}
-impl ArtifactSqliteSnapshot for MdSnapshot{
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+impl ArtifactSqliteSnapshotHost for MdSnapshot{
+ 
  fn preflight_sqlite_snapshot_encoding(&self, _encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
   let result=(||->Result<(),ValueError>{
   self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;let mut bound = NativeEncodingBound::file_only(control)?;
@@ -169,8 +170,13 @@ impl ArtifactSqliteSnapshot for MdSnapshot{
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{decode_hook(payload,control,native_control)}
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{encode_hook(self,encoding,control,native_owner)}
  fn retire_sqlite_snapshot(self){retire_hook(self)}
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{project(self,control)}
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;let mut snapshot=OwnedSnapshot(Some(reconstruct(database,control)?));control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;snapshot.0.take().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"CommonMark completed snapshot is missing"))}
+ 
+ 
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for MdSnapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{project(self,control)}
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;let mut snapshot=OwnedSnapshot(Some(reconstruct(database,control)?));control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;snapshot.0.take().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"CommonMark completed snapshot is missing"))}
 }
 
 struct OwnedSnapshot(Option<MdSnapshot>);
@@ -181,7 +187,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
  let result=(||->Result<(),ValueError>{
  control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!="s.stdio.md"||dialect.standard!="commonmark"||dialect.subset!="*"{return Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,format!("CommonMark does not own semantic subset {}",dialect.to_coordinate())))}
- let restored=OwnedSnapshot(Some(<MdSnapshot as ArtifactSqliteSnapshot>::from_sqlite_database(database,control)?));let expected=project(snapshot,control)?;let candidate=project(restored.0.as_ref().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"CommonMark retained candidate is missing"))?,control)?;let total=expected.tables.iter().try_fold(0usize,|total,table|total.checked_add(table.rows.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"CommonMark comparison work overflow")))?;let mut completed=0;
+ let restored=OwnedSnapshot(Some(<MdSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::from_sqlite_database(database,control)?));let expected=project(snapshot,control)?;let candidate=project(restored.0.as_ref().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"CommonMark retained candidate is missing"))?,control)?;let total=expected.tables.iter().try_fold(0usize,|total,table|total.checked_add(table.rows.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"CommonMark comparison work overflow")))?;let mut completed=0;
  if expected.tables.len()!=candidate.tables.len(){return Err(invalid("CommonMark document identity disagrees with its snapshot"))}for(wanted,actual)in expected.tables.iter().zip(&candidate.tables){if wanted.name!=actual.name||wanted.rows.len()!=actual.rows.len(){return Err(invalid("CommonMark document identity disagrees with its snapshot"))}for(row,other)in wanted.rows.iter().zip(&actual.rows){if completed%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,completed,total)?;}if row.rowid!=other.rowid||row.values!=other.values{return Err(invalid("CommonMark document identity disagrees with its snapshot"))}completed+=1;}}
  control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,completed,total)?;Ok(())
  })();result.map(|()|store::io_schema::IoOutcome::clean(())).map_err(store::io_schema::IoError::from_value_error)

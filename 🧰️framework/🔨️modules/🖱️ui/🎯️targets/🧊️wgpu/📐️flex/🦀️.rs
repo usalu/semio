@@ -913,19 +913,26 @@ impl FlexTree {
         fn bytes<T>(value:&Vec<T>)->Result<usize,semio_framework_value::ValueError>{value.capacity().checked_mul(size_of::<T>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"flex backing extent overflow"))}
         if self.flows.capacity()!=0{return bytes(&self.flows)}if self.grids.capacity()!=0{return bytes(&self.grids)}if self.intrinsic.capacity()!=0{return bytes(&self.intrinsic)}if self.resolved.capacity()!=0{return bytes(&self.resolved)}if self.main.capacity()!=0{return bytes(&self.main)}bytes(&self.cross)
     }
-    pub(crate) fn close_granted(&mut self,grant:semio_framework_job::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
-        use semio_framework_job::{InteractiveJobCloseStep as Step,RetainedCloneProgress};
-        let empty=RetainedCloneProgress::default();if self.close_is_empty(){return Step::Complete{progress:empty}}
-        if grant.maximum_items==0{return Step::Pending{progress:empty}}
-        let bytes=match self.next_close_release_byte_demand(){Ok(bytes)=>bytes,Err(error)=>return Step::Refused{kind:error.kind,progress:error.retained_progress()}};
-        if bytes>grant.maximum_release_bytes{return Step::Pending{progress:empty}}if grant.maximum_depth==0{return Step::Refused{kind:semio_framework_value::ValueRefusalKind::DepthLimit,progress:Default::default()}}
-        if let Some(Some(grid))=self.grids.last_mut(){
-            let result=if grid.columns.pop().is_some(){None}else if !grid.columns.terminal_is_empty(){Some(grid.columns.release_empty_page(grant.maximum_release_bytes))}else if grid.rows.pop().is_some(){None}else if !grid.rows.terminal_is_empty(){Some(grid.rows.release_empty_page(grant.maximum_release_bytes))}else{*self.grids.last_mut().unwrap()=None;return Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}}};
-            return match result{Some(Ok(receipt))=>Step::Pending{progress:RetainedCloneProgress{copied_items:usize::from(receipt.progressed),released_bytes:receipt.released_allocation_bytes,..Default::default()}},Some(Err(error))=>{let error=semio_framework_value::ValueError::from(error);Step::Refused{kind:error.kind,progress:error.retained_progress()}},None=>Step::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}}}
+    pub(crate) fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{
+        if let Some(Some(grid))=self.grids.last(){
+            let depth=if !grid.columns.is_empty(){grid.columns.next_pop_depth_demand()}else if !grid.columns.terminal_is_empty(){grid.columns.next_release_depth_demand()}else if !grid.rows.is_empty(){grid.rows.next_pop_depth_demand()}else if !grid.rows.terminal_is_empty(){grid.rows.next_release_depth_demand()}else{return Ok(1)}.map_err(semio_framework_value::ValueError::from)?;
+            return depth.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original grid close native parent depth overflow"))
         }
-        if self.flows.pop().is_some(){self.grids.pop();self.intrinsic.pop();self.resolved.pop();return Step::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}}}
-        macro_rules! release{($field:ident)=>{if self.$field.capacity()!=0{drop(std::mem::take(&mut self.$field));return Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}}}}}
-        release!(flows);release!(grids);release!(intrinsic);release!(resolved);release!(main);release!(cross);Step::Complete{progress:empty}
+        Ok(usize::from(!self.close_is_empty()))
+    }
+    pub(crate) fn close_granted(&mut self,grant:semio_framework_job::RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
+        use semio_framework_job::{InteractiveJobCloseStep as Step,RetainedCloneProgress};
+        let empty=RetainedCloneProgress::default();if self.close_is_empty(){return Ok(Step::Complete{progress:empty})}
+        if grant.maximum_items==0{return Ok(Step::Pending{progress:empty})}
+        let bytes=match self.next_close_release_byte_demand(){Ok(bytes)=>bytes,Err(error)=>return Err(error)};
+        let depth=self.next_close_depth_demand()?;if bytes>grant.maximum_release_bytes||grant.maximum_depth<depth{return Ok(Step::Pending{progress:empty})}
+        if let Some(Some(grid))=self.grids.last_mut(){
+            let result=if grid.columns.pop().is_some(){None}else if !grid.columns.terminal_is_empty(){Some(grid.columns.release_empty_page(grant.maximum_release_bytes))}else if grid.rows.pop().is_some(){None}else if !grid.rows.terminal_is_empty(){Some(grid.rows.release_empty_page(grant.maximum_release_bytes))}else{*self.grids.last_mut().unwrap()=None;return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}})};
+            return match result{Some(Ok(receipt))=>Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:usize::from(receipt.progressed),released_bytes:receipt.released_allocation_bytes,..Default::default()}}),Some(Err(error))=>{let error=semio_framework_value::ValueError::from(error);Err(error)},None=>Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}
+        }
+        if self.flows.pop().is_some(){self.grids.pop();self.intrinsic.pop();self.resolved.pop();return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}
+        macro_rules! release{($field:ident)=>{if self.$field.capacity()!=0{drop(std::mem::take(&mut self.$field));return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}})}}}
+        release!(flows);release!(grids);release!(intrinsic);release!(resolved);release!(main);release!(cross);Ok(Step::Complete{progress:empty})
     }
     pub(crate) fn close_is_empty(&self)->bool{self.flows.capacity()==0&&self.grids.capacity()==0&&self.intrinsic.capacity()==0&&self.resolved.capacity()==0&&self.main.capacity()==0&&self.cross.capacity()==0}
 

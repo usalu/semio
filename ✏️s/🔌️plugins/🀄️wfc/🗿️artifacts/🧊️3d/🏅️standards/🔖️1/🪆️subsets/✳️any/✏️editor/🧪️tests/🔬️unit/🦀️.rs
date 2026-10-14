@@ -276,7 +276,7 @@ fn every_declared_action_bridges_through_command_from_action() {
 #[test]
 fn node_graph_rows_follow_the_shared_contract() {
     let document = crate::examples::two_room_corridor::snapshot();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json"))).expect("the node-graph row fixture is JSON");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json"))).expect("the node-graph row fixture is JSON");
     for case in fixture["accepted"].as_array().expect("accepted rows") {
         let result = graph_edit_mutations(&document, &serde_json::json!([case["row"].clone()]).to_string());
         match case["row"]["operation"].as_str() {

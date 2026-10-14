@@ -24,7 +24,7 @@ impl Deserializer<Grid2dSnapshot> for JsonIntoGrid2d {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "JsonIntoGrid2d: expected a binary json payload")));
         };
-        let json = <JsonSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| match error { store::PackError::Refusal(store::PackRefusal::TextRefusal(error)) => text_refusal(error), error => IoError::from_value_error(match error.into_value_error() { Ok(error) => error.under("JsonIntoGrid2d: json decode"), Err(error) => semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, format!("JsonIntoGrid2d: json decode: in-memory decode reported a transport failure: {error}")) }) })?;
+        let json = <JsonSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| match error { store::PackError::Refusal(store::PackRefusal::TextRefusal(error)) => text_refusal(error), error => IoError::from_value_error(match error.into_value_error() { Ok(error) => error.under("JsonIntoGrid2d: json decode"), Err(error) => semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, format!("JsonIntoGrid2d: json decode: in-memory decode reported a transport failure: {error}")) }) })?;
         let snapshot = deserialize(&json).map_err(text_refusal)?;
         Ok(IoOutcome::clean(snapshot))
     }

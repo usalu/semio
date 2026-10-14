@@ -371,6 +371,7 @@ pub struct FaultScope {
 /// 🔗️ One hop in a {@link Fault} cause chain.
 #[derive(Clone, Debug, PartialEq)]
 pub struct FaultCause {
+    pub retained_progress:Option<semio_framework_value::RetainedCloneProgress>,
     pub message: String,
     pub code: Option<FaultCode>,
 }
@@ -394,6 +395,22 @@ pub fn is_fault_param_name(name: &str) -> bool {
     chars.next().is_some_and(|first| first.is_ascii_lowercase()) && chars.all(|rest| rest.is_ascii_alphanumeric())
 }
 
+/// 🧭️ Exact scalar positions borrowed from the original source failure.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct FaultSource {pub offset:Option<u64>,pub byte:Option<u8>,pub depth:Option<u64>}
+impl ToValue for FaultSource {
+ fn to_value_controlled(&self,c:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<DslValue,ValueError>{controlled::encode_source(self,c)}
+ fn to_value(&self)->DslValue{DslValue::Object([("offset",self.offset),("byte",self.byte.map(u64::from)),("depth",self.depth)].into_iter().filter_map(|(key,value)|value.map(|value|(key.into(),value.to_value()))).collect())}
+}
+impl FromValue for FaultSource {
+ fn from_value_controlled(value:&DslValue,c:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::decode_source(value,c)}
+ fn from_value(value:DslValue)->Result<Self,ValueError>{
+  let DslValue::Object(fields)=value else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"expected closed Fault.source object"))};let mut result=Self::default();let mut seen=0u8;
+  for(name,value)in fields{let(index,slot)=match name.as_str(){"offset"=>(0,&mut result.offset),"depth"=>(2,&mut result.depth),"byte"=>{if seen&2!=0{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"duplicate Fault.source scalar"))}seen|=2;result.byte=Some(value.as_u64().and_then(|value|u8::try_from(value).ok()).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"Fault.source byte exceeds u8"))?);continue},_=>return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"unknown Fault.source scalar"))};if seen&(1<<index)!=0{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"duplicate Fault.source scalar"))}seen|=1<<index;*slot=Some(value.as_u64().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"expected exact unsigned Fault.source scalar"))?);}
+  Ok(result)
+ }
+}
+
 /// 🧯️ Structured abort report crossing every os boundary.
 /// Scope metadata and notice params own separate allocations to keep error return values compact.
 #[derive(Clone, Debug, PartialEq)]
@@ -405,6 +422,7 @@ pub struct Fault {
     pub message: String,
     pub scope: Box<FaultScope>,
     pub span: Option<TextSpan>,
+    pub source: Option<FaultSource>,
     pub causes: Vec<FaultCause>,
     /// 🔣️ The placeholder values of this fault's localized notice; absent when it names none.
     pub params: Option<Box<FaultParams>>,
@@ -503,6 +521,7 @@ impl ToValue for FaultCause {
         if let Some(code) = &self.code {
             entries.push(("code".to_string(), code.to_value()));
         }
+        if let Some(progress) = self.retained_progress { entries.push(("retainedProgress".into(), progress.to_value())); }
         DslValue::Object(entries)
     }
 }
@@ -523,7 +542,8 @@ impl FromValue for FaultCause {
             None | Some(DslValue::Null) => None,
             Some(slot) => Some(FaultCode::from_value(slot)?),
         };
-        Ok(FaultCause { message, code })
+        let retained_progress = find("retainedProgress").map(semio_framework_value::RetainedCloneProgress::from_value).transpose()?;
+        Ok(FaultCause { message, code, retained_progress })
     }
 }
 
@@ -542,6 +562,7 @@ impl ToValue for Fault {
         if let Some(span) = &self.span {
             entries.push(("span".to_string(), span.to_value()));
         }
+        if let Some(source) = &self.source { entries.push(("source".into(), source.to_value())); }
         if !self.causes.is_empty() {
             entries.push(("causes".to_string(), DslValue::Array(self.causes.iter().map(ToValue::to_value).collect())));
         }
@@ -605,6 +626,7 @@ impl FromValue for Fault {
                 None | Some(DslValue::Null) => None,
                 Some(slot) => Some(TextSpan::from_value(slot)?),
             },
+            source: match find("source") { None | Some(DslValue::Null)=>None, Some(value)=>Some(FaultSource::from_value(value)?) },
             causes: match find("causes") {
                 None | Some(DslValue::Null) => Vec::new(),
                 Some(DslValue::Array(items)) => items.into_iter().map(FaultCause::from_value).collect::<Result<_, _>>()?,
@@ -643,7 +665,7 @@ impl Fault {
     /// 🫴️ Attaches the same original receipt before crossing a diagnostic boundary.
     pub fn with_retained_progress(mut self,progress:semio_framework_value::RetainedCloneProgress)->Self{self.retained_progress=progress;self}
     pub fn new(origin: FaultOrigin, code: impl Into<FaultCode>, message: impl Into<String>) -> Self {
-        Self { retained_progress:Default::default(),origin, code: code.into(), severity: Severity::Error, message: message.into(), scope: Box::default(), span: None, causes: Vec::new(), params: None, retryable: false }
+        Self { retained_progress:Default::default(),origin, code: code.into(), severity: Severity::Error, message: message.into(), scope: Box::default(), span: None, source:None, causes: Vec::new(), params: None, retryable: false }
     }
 
     /// 🔣️ Names one placeholder value of this fault's localized notice (`{name}`, design §20.12); a later value for the
@@ -709,7 +731,7 @@ pub trait FaultFrom {
     /// 👁️ Builds a diagnostic while the original typed refusal remains with its owner.
     fn to_fault(&self) -> Fault {
         let params = Some(self.fault_params()).filter(|params| !params.0.is_empty()).map(Box::new);
-        Fault { retained_progress:Default::default(),origin: self.fault_origin(), code: self.fault_code(), severity: self.fault_severity(), message: self.fault_message(), scope: Box::new(self.fault_scope()), span: self.fault_span(), causes: self.fault_causes(), params, retryable: self.fault_retryable() }
+        Fault { retained_progress:Default::default(),origin: self.fault_origin(), code: self.fault_code(), severity: self.fault_severity(), message: self.fault_message(), scope: Box::new(self.fault_scope()), span: self.fault_span(), source:None, causes: self.fault_causes(), params, retryable: self.fault_retryable() }
     }
 
     fn into_fault(self)->Fault where Self:Sized{self.to_fault()}

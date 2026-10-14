@@ -370,11 +370,11 @@ mod tests {
     #[test]
     fn language_neutral_planner_witnesses_match_expected_deliveries() {
         let examples = [
-            include_str!("../../../🧫️fixtures/➡️single-edge/🔣️.json"),
-            include_str!("../../../🧫️fixtures/🔗️chain/🔣️.json"),
-            include_str!("../../../🧫️fixtures/💎️diamond/🔣️.json"),
-            include_str!("../../../🧫️fixtures/💤️no-dirty/🔣️.json"),
-            include_str!("../../../🧫️fixtures/🛑️dead-end/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/➡️single-edge/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🔗️chain/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/💎️diamond/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/💤️no-dirty/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🛑️dead-end/🔣️.json"),
         ];
         for example in examples {
             let oracle: serde_json::Value = serde_json::from_str(example).unwrap();

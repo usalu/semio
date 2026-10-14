@@ -210,7 +210,7 @@ pub(crate) fn parse_image_snapshot_body(body: &str) -> Result<SemioImageSnapshot
 
 /// 🎁 Real structured text/binary codecs — replaces the old hex-dump-of-`serde_json` shortcut.
 /// Wrapped in the repo-wide `store::semio_format` envelope, unchanged.
-impl store::os_store::serialization::ArtifactDsl for SemioImageSnapshot {
+impl pack::snapshot::ArtifactDsl for SemioImageSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA
@@ -226,26 +226,26 @@ impl store::os_store::serialization::ArtifactDsl for SemioImageSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_image_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📥️ Parses this subset's own committed `.dsl.semio` text into a real [`SemioImageSnapshot`] — a
-/// thin wrapper over `store::os_store::serialization::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
+/// thin wrapper over `pack::snapshot::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
 /// crate's private `store` extern-crate item (the `🖼️mutate-semio-image` test adapter, whose
 /// `identity-round-trip` scenario reads the REAL committed `📚️examples/🖼️swatch` artifact rather than
 /// a JSON transcription of it) can still drive the same codec production does. Same shape and same
 /// rationale as `🌊️flow`'s own bridge.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_image_dsl(text: &str) -> Result<SemioImageSnapshot, String> {
-    <SemioImageSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <SemioImageSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
-/// 📤️ The `store::os_store::serialization::ArtifactDsl::print_dsl` inverse of [`parse_semio_image_dsl`] — same rationale.
+/// 📤️ The `pack::snapshot::ArtifactDsl::print_dsl` inverse of [`parse_semio_image_dsl`] — same rationale.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_image_dsl(snapshot: &SemioImageSnapshot) -> String {
-    <SemioImageSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(snapshot)
+    <SemioImageSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

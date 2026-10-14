@@ -62,7 +62,7 @@ use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::WindowEngagement;
 use semio_framework_plugin::WindowEngagementInput;
 use semio_framework_plugin::WindowEngagementStatus;
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 use semio_framework_2d::compute::EngineHandles;
 use std::collections::HashMap;
 
@@ -851,7 +851,7 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for DrawingInstanceO
         Ok(if self.operations.is_empty() { Default::default() } else { semio_framework_value::RetirementDemand { release_bytes: DRAWING_GESTURE_RAW_BYTES, depth: 4, ..Default::default() } })
     }
 
-    fn maintenance_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
         for _ in 0..DRAWING_GESTURE_OPERATION_SLOTS {
             match self.operations.close_step(grant) {
                 semio_framework_job::InteractiveJobCloseStep::Pending { progress } if progress == Default::default() && !self.operations.is_empty() => continue,
@@ -864,7 +864,7 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for DrawingInstanceO
         Ok(semio_framework_plugin::PluginLifecycleStep::Progress(Default::default()))
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
         self.closing = true;
         if !self.close_begun {
             for _ in 0..DRAWING_GESTURE_OPERATION_SLOTS {
@@ -872,7 +872,7 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for DrawingInstanceO
             }
             self.close_begun = true;
         }
-        self.maintenance_step(grant)
+        self.maintenance_step(cx,grant)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -1472,6 +1472,7 @@ fn drawing_bounded_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJo
         semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
             command: *request.command,
             snapshot: request.snapshot,
+            snapshot_read: request.snapshot_read,
             config: request.config,
             history: request.history,
             interaction_state: request.interaction_state,
@@ -1926,9 +1927,9 @@ impl ArtifactEditor for DrawingPlayApp {
 
     fn mounted_job_prepare_snapshot_read(operation:semio_framework_plugin::AppRenderOperationContext,snapshot:&Self::Snapshot)->bool{geometry_session::prepare(operation,snapshot)}
     fn mounted_job_maintenance_demands(instance:u32,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{geometry_session::maintenance_demands(instance,body)}
-    fn mounted_job_maintenance_step(instance:u32,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_plugin::PluginLifecycleStep,Fault>{geometry_session::maintenance(instance,grant)}
+    fn mounted_job_maintenance_step(instance:u32,cx:&mut semio_framework_job::StepContext<'_>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure>{geometry_session::maintenance(instance,grant).map_err(semio_framework_plugin::PluginLifecycleFailure::from)}
     fn mounted_job_close_demands(instance:u32,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{geometry_session::close_demands(instance,body)}
-    fn mounted_job_close_step(instance:u32,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_plugin::PluginLifecycleStep,Fault>{geometry_session::close(instance,grant)}
+    fn mounted_job_close_step(instance:u32,cx:&mut semio_framework_job::StepContext<'_>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure>{geometry_session::close(instance,grant).map_err(semio_framework_plugin::PluginLifecycleFailure::from)}
     fn mounted_jobs_terminal_is_empty(instance:u32)->bool{geometry_session::terminal_is_empty(instance)}
     fn pending_effects(_owner:&semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,doc:&ArtifactView<'_,DrawingSnapshot>,_cfg:&ConfigView<'_,NoConfig>,_view:Option<&semio_framework_plugin::ViewModel>)->Vec<semio_framework::kernel::Effect>{geometry_session::reconcile(doc)}
 

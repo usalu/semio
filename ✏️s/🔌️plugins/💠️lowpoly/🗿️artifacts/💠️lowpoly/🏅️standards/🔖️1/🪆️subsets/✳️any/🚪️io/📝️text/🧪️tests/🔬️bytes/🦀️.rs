@@ -4,7 +4,7 @@ use semio_framework_value::{FromValue, ToValue};
 /// 🧫️ Intrinsic octets and physical base64 agree with the independent JSON/base64 oracle.
 #[test]
 fn lowpoly_intrinsic_bytes_have_one_semantic_owner_and_physical_json_codec() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️bytes/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️bytes/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let run = crate::schema::PixelRun { offset: case["offset"].as_u64().unwrap() as u32, bytes: case["octets"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect() };
         let value = run.to_value();

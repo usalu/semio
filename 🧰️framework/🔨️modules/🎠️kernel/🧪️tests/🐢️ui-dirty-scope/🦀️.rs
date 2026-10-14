@@ -58,7 +58,7 @@ struct ScopeFixture {
 }
 
 fn fixture() -> ScopeFixture {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🐢️ui-dirty-scope/🔣️.json")).expect("ui-dirty-scope fixture JSON")
+    serde_json::from_str(include_str!("../🧫️fixtures/🐢️ui-dirty-scope/🔣️.json")).expect("ui-dirty-scope fixture JSON")
 }
 
 const FLAGS: [(UiDirtySection, fn(&FlagsFixture) -> bool); 5] = [

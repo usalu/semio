@@ -1,4 +1,4 @@
-/** 🦀️ Native dependency closure law over `../../🧫️fixtures/🦀️native-dependency-closures/🔣️.json`: the plugin's `nativeDependencyRoots`, which
+/** 🦀️ Native dependency closure law over `../🧫️fixtures/🦀️native-dependency-closures/🔣️.json`: the plugin's `nativeDependencyRoots`, which
  * shares every non-root crate closure across the roots of one graph construction, answers every root (with and without tests, in sequence,
  * through one shared memo) exactly what the original per-root visited-set traversal from Git `HEAD` answers, including thrown errors.
  * Oracle: the pre-change implementation itself, compiled from the fixture's pinned `oracleRevision`. */
@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import ts from "typescript";
 
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🦀️native-dependency-closures/🔣️.json"), "utf8")) as { schemaVersion: number; oracleRevision: string; manifests: Record<string, string>; roots: string[] };
+const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🦀️native-dependency-closures/🔣️.json"), "utf8")) as { schemaVersion: number; oracleRevision: string; manifests: Record<string, string>; roots: string[] };
 const pluginPath = resolve(import.meta.dir, "../../../🟨️.mjs"), repoRoot = execFileSync("git", ["rev-parse", "--show-toplevel"], { cwd: import.meta.dir, encoding: "utf8" }).trim();
 const toml = createRequire(pluginPath)("@iarna/toml") as { parse: (text: string) => unknown };
 type Roots = (root: string, workspaceRoot: string, tests?: boolean, cache?: Map<string, unknown>, closures?: Map<string, unknown>) => readonly string[];

@@ -1,5 +1,5 @@
-import { buildModePolicy, readBuildMode, type BuildMode } from "../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
-import { builtinModules } from "node:module";
+import { buildModePolicy, readBuildMode, type BuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { builtinModules, createRequire } from "node:module";
 import { resolve } from "node:path";
 
 const extensionExternals = new Set(["vscode", ...builtinModules]);
@@ -21,9 +21,14 @@ export function extensionBuildConfig(root: string, entry: string, outputDirector
       enforce: "pre" as const,
       async transform(code: string, id: string) {
         if (!/\.[cm]?[jt]sx?(?:\?|$)/.test(id) || !code.includes("import.meta.vitest")) return;
-        const { transformWithEsbuild } = await import("vite");
-        const result = await transformWithEsbuild(code, id, { define, treeShaking: true, minifySyntax: policy.optimize, sourcemap: policy.sourceMap });
-        return { code: result.code, map: null };
+        const ts = createRequire(resolve(root, "package.json"))("typescript"), source = ts.createSourceFile(id, code, ts.ScriptTarget.Latest, true, /\.[jt]sx(?:\?|$)/u.test(id) ? ts.ScriptKind.TSX : /\.[cm]?js(?:\?|$)/u.test(id) ? ts.ScriptKind.JS : ts.ScriptKind.TS), edits: { start: number; end: number; replacement: string }[] = [];
+        const visit = (node: any) => {
+          if (ts.isIfStatement(node) && node.expression.getText(source).replaceAll(/\s/gu, "") === "import.meta.vitest") { edits.push({ start: node.getStart(source), end: node.end, replacement: node.elseStatement?.getText(source) ?? "" }); return; }
+          ts.forEachChild(node, visit);
+        };
+        visit(source); let stripped = code;
+        for (const edit of edits.sort((left, right) => right.start - left.start)) stripped = stripped.slice(0, edit.start) + edit.replacement + stripped.slice(edit.end);
+        return { code: stripped, map: null };
       },
     }],
     root,
@@ -32,7 +37,7 @@ export function extensionBuildConfig(root: string, entry: string, outputDirector
       lib: { entry: resolve(root, entry), formats: ["cjs" as const], fileName: () => outputFile },
       minify: policy.optimize ? "esbuild" as const : false as const,
       outDir: resolve(root, outputDirectory),
-      rollupOptions: { external: (id: string) => id.startsWith("node:") || extensionExternals.has(id) },
+      rollupOptions: { treeshake: policy.optimize, external: (id: string) => id.startsWith("node:") || extensionExternals.has(id) },
       sourcemap: policy.sourceMap,
       target: "node22",
       watch: watch ? {} : undefined,

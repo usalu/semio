@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "surface": {
+    "id": "canvas2d-camera-gestures",
+    "controllerId": "canvas2d-camera-controller",
+    "windowId": "canvas2d-camera-window",
+    "width": 400,
+    "height": 300
+  },
+  "wheel": {
+    "initialCamera": { "x": 12, "y": -8, "zoom": 2 },
+    "anchor": { "x": 300, "y": 75 },
+    "zoomInDeltaY": -120,
+    "zoomOutDeltaY": 120,
+    "zoomInFactor": 1.1,
+    "zoomOutFactor": 0.9,
+    "zoomMinimum": 0.05,
+    "zoomMaximum": 32,
+    "settleDelayMs": 120,
+    "expectedAction": "setCamera"
+  },
+  "wheelBursts": [
+    {
+      "id": "two-zoom-in-events",
+      "deltas": [-120, -120],
+      "expectedFactors": [1.1, 1.1],
+      "expectedActionCount": 1
+    },
+    {
+      "id": "zoom-in-then-out-events",
+      "deltas": [-120, 120],
+      "expectedFactors": [1.1, 0.9],
+      "expectedActionCount": 1
+    }
+  ],
+  "mountLifetime": {
+    "steps": [
+      { "key": "camera-a", "authoredZoom": 2, "expectedZoom": 2.2 },
+      { "key": "camera-a", "authoredZoom": 8, "expectedZoom": 2.42 },
+      { "key": "camera-b", "authoredZoom": 3, "expectedZoom": 3.3 }
+    ],
+    "retiredDeadlineActions": 0,
+    "removedCameraActions": 0
+  },
+  "sameKeySceneRemount": {
+    "key": "camera-a",
+    "intermediateComponent": "container",
+    "initialAuthoredZoom": 2,
+    "refreshAuthoredZoom": 8,
+    "expectedRefreshZoom": 2.42,
+    "remountAuthoredZoom": 4,
+    "expectedRemountZoom": 4.4,
+    "retiredDeadlineActions": 0,
+    "remountedCameraActions": 1
+  },
+  "sequentialWindowLifetime": {
+    "mountCount": 257,
+    "maximumLiveWindows": 1,
+    "liveWindowsAfterClose": 0,
+    "retiredDeadlineActions": 0,
+    "activeGestureActions": ["canvasPointerDown"],
+    "closedGestureActions": 0
+  },
+  "siblingWindowLifetime": {
+    "cameras": [{ "x": 12, "y": -8, "zoom": 2 }, { "x": -20, "y": 30, "zoom": 4 }],
+    "expectedZooms": [2.2, 4.4],
+    "survivingZoom": 4.84,
+    "retiredActions": 0
+  },
+  "panCases": [
+    {
+      "id": "primary-active-pan",
+      "activeUtility": "transformMove",
+      "button": 0,
+      "start": { "x": 140, "y": 120 },
+      "end": { "x": 180, "y": 145 },
+      "expectedCamera": { "x": -8, "y": -20.5, "zoom": 2 },
+      "expectedActions": [],
+      "expectedCameraAction": true
+    },
+    {
+      "id": "middle-button-pan",
+      "activeUtility": "selectDirect",
+      "button": 1,
+      "start": { "x": 140, "y": 120 },
+      "end": { "x": 180, "y": 145 },
+      "expectedCamera": { "x": -8, "y": -20.5, "zoom": 2 },
+      "expectedActions": [],
+      "expectedCameraAction": true
+    },
+    {
+      "id": "right-button-gesture",
+      "activeUtility": "selectDirect",
+      "button": 2,
+      "start": { "x": 140, "y": 120 },
+      "end": { "x": 180, "y": 145 },
+      "expectedCamera": { "x": 12, "y": -8, "zoom": 2 },
+      "expectedActions": ["canvasPointerDown", "canvasPointerMove", "canvasPointerUp"],
+      "expectedCameraAction": false
+    }
+  ]
+}

@@ -11,7 +11,7 @@ use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunVerdict, TOOL_
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🎞️layout-run.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/🎞️layout-run.json");
 
 fn fixture() -> Value {
     serde_json::from_str(FIXTURE).expect("reorganize fixture parses")
@@ -24,7 +24,7 @@ fn identity() -> ToolRunIdentity {
 fn metabolism() -> DslValue {
     let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::metabolism_wires_example_snapshot().expect("metabolism example");
     let pack = crate::genesis_wires_child_pack(&snapshot, crate::WIRES_CONTENT_SLOT, &snapshot.content.child_id).expect("declared metabolism child");
-    let content = <crate::SemioGraphSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("full metabolism graph child");
+    let content = <crate::SemioGraphSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("full metabolism graph child");
     crate::wires_composed(&snapshot, &content).board
 }
 

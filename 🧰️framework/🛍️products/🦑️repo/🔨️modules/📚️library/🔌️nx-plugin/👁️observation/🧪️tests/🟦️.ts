@@ -1,4 +1,4 @@
-/** 👁️ Inference observation law over `../🧫️fixtures/🔣️.json`: a persisted inference result is reused exactly while every filesystem fact the
+/** 👁️ Inference observation law over `./🧫️fixtures/🔣️.json`: a persisted inference result is reused exactly while every filesystem fact the
  * computation observed still holds, identical rewrites stay hits, any observed change is a miss, and a hit always equals a fresh recomputation.
  * Oracles: Ajv validates every persisted record against `../🧬️schema/🔣️.json`; fast-glob independently lists the probed directory. */
 import { expect, test } from "bun:test";
@@ -9,7 +9,7 @@ import Ajv from "ajv";
 import fastGlob from "fast-glob";
 
 type Scenario = { id: string; mutation: { op: "none" | "write" | "replace-directory-with-file"; path?: string; content?: string }; expected: "hit" | "miss" };
-const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as { schemaVersion: number; files: Record<string, string>; scenarios: Scenario[] };
+const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as { schemaVersion: number; files: Record<string, string>; scenarios: Scenario[] };
 const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8")));
 const { observedFs, observeInference } = await import(new URL("../🟨️.mjs", import.meta.url).href) as typeof import("../🟨️.mjs");
 

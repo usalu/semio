@@ -1,11 +1,12 @@
 //! 📽️ Master/layout/slide relationships, authored shapes and embedded typed document blocks.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow,RowIndex};
 use crate::schema::snapshot::{SemioPresentationSnapshot, SlideMaster, SlideLayout, Slide, SlideShape, SlideFrame, SlidePictureImage, SlideTableRow, SlideTableCell, PlaceholderKind};
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio_document::io::sqlite::snapshot::{DocSqliteTables, project_block_collection};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 const BLOCKS:DocSqliteTables=DocSqliteTables{collection:"semio_presentation_collection",member:"semio_presentation_member",block:"semio_presentation_block",paragraph:"semio_presentation_paragraph",heading:"semio_presentation_heading",run:"semio_presentation_run",list:"semio_presentation_list",list_item:"semio_presentation_list_item",table:"semio_presentation_table",table_row:"semio_presentation_table_row",table_cell:"semio_presentation_table_cell",code:"semio_presentation_code",quote:"semio_presentation_quote",image_block:"semio_presentation_image_block",page_break:"semio_presentation_page_break"};
 #[path="🧮️semantic/🦀️.rs"]
 pub(crate)mod semantic;
@@ -42,7 +43,7 @@ fn presentation_owner(row:SqliteRow<'_>)->Result<(u8,Option<i64>),ValueError>{ma
 #[path="💰️reconstruction/🦀️.rs"]
 mod reconstruction;
 
-impl ArtifactSqliteSnapshot for SemioPresentationSnapshot{
+impl ArtifactSqliteSnapshotHost for SemioPresentationSnapshot{
 fn retire_sqlite_snapshot(self){drop(semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 
 fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
@@ -56,6 +57,11 @@ let row=database.table("semio_presentation_document")?.single_row()?;
 if row.rowid!=1||row.integer(0)?!=1||row.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned document identity differs from projected semantic fields"));}
 control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))})().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
 
+
+
+
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for SemioPresentationSnapshot {
 const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
 fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.project_sqlite_database(c)}
 fn from_sqlite_database(db:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError> {semantic::layout(c.limits())?;Self::reconstruct_sqlite_database(db, c, Self::SQLITE_SCHEMA)}

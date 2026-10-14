@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "➖️create-beam/💪️adds-an-arc-beam",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️create-beam/💪️adds-an-arc-beam/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️create-beam/💪️adds-an-arc-beam/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️create-beam/💪️adds-an-arc-beam/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️create-beam/💪️adds-an-arc-beam/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️create-beam/💪️adds-an-arc-beam/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️create-beam/💪️adds-an-arc-beam/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️create-beam/💪️adds-an-arc-beam/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️create-beam/💪️adds-an-arc-beam/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️create-beam/💪️adds-an-arc-beam/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️create-beam/💪️adds-an-arc-beam/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

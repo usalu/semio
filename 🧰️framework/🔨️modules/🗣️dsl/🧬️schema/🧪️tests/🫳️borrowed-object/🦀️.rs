@@ -37,7 +37,7 @@ fn sqlite_snapshot_native_encoding_record_backing_matches_actual_allocator_reque
  use semio_framework_value::{NativeEncodeControl,ValueRefusalKind};
  fn construct(count:usize,start:u16,integer:i64,control:&mut NativeEncodeControl<'_>)->Result<EncodedRecord,semio_framework_value::ValueError>{let mut record=EncodedRecord::new(count,control)?;for index in 0..count{record.insert(start+index as u16,FieldValue::Int(integer+index as i64))?;}Ok(record)}
  fn no_backing_request(refused:&RequestObservation,baseline:&RequestObservation){for layout in &refused.layouts[..refused.length]{assert!(!baseline.layouts[..baseline.length].contains(layout),"refused constructor requested an observed backing layout {layout:?}");}}
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/💰️record-backing/🔣️.json")).unwrap();let start=fixture["primitive"]["fieldIdStart"].as_u64().unwrap()as u16;let integer=fixture["primitive"]["integerStart"].as_i64().unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/💰️record-backing/🔣️.json")).unwrap();let start=fixture["primitive"]["fieldIdStart"].as_u64().unwrap()as u16;let integer=fixture["primitive"]["integerStart"].as_i64().unwrap();
  for count in fixture["cardinalities"].as_array().unwrap(){let count=count.as_u64().unwrap()as usize;let mut accepted=|_|true;let mut control=NativeEncodeControl::new(usize::MAX,&mut accepted);
   let(result,baseline)=observe_requests(||construct(count,start,integer,&mut control));let record=result.unwrap();let paid=control.owned_bytes();assert_eq!(record.as_record().fields.len(),count);for index in 0..count{assert!(matches!(record.as_record().get(start+index as u16),Some(FieldValue::Int(value))if *value==integer+index as i64));}drop(record);assert!(paid>=baseline.bytes,"count {count}: admitted {paid} bytes before actual full backing requests {}",baseline.bytes);if count==0{assert_eq!(baseline.bytes,0);assert_eq!(paid,0);}else{assert!(baseline.bytes>0);}
   let mut accepted=|_|true;let mut exact=NativeEncodeControl::new(baseline.bytes,&mut accepted);let(result,requests)=observe_requests(||construct(count,start,integer,&mut exact));let record=result.unwrap_or_else(|error|panic!("count {count}: measured exact backing allowance {} refused: {error:?}",baseline.bytes));assert_eq!(requests.bytes,baseline.bytes);assert_eq!(exact.owned_bytes(),baseline.bytes);drop(record);
@@ -49,7 +49,7 @@ fn sqlite_snapshot_native_encoding_record_backing_matches_actual_allocator_reque
 
 #[test]
 fn sqlite_snapshot_native_encoding_borrowed_object_occurrences_keep_payload_allocations_bounded() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🫳️borrowed-object/🔣️.json")).unwrap();
     let bytes = fixture["payloadBytes"].as_u64().unwrap() as usize;
     let depth = fixture["depth"].as_u64().unwrap() as usize;
     let wide = fixture["unsigned"].as_str().unwrap().parse::<u64>().unwrap();
@@ -98,7 +98,7 @@ fn record_rejected_payload_deallocation(pointer:*mut u8){
 fn sqlite_snapshot_native_encoding_record_denied_insert_reclaims_deep_owned_payload(){
  use crate::native_encoding::EncodedRecord;
  use semio_framework_value::{NativeEncodeControl,ValueRefusalKind};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/💰️record-backing/🛑️rejected-insert/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/💰️record-backing/🛑️rejected-insert/🔣️.json")).unwrap();
  let stack=usize::try_from(fixture["stackBytes"].as_u64().unwrap()).unwrap();
  std::thread::Builder::new().stack_size(stack).spawn(move||{
   let slots=usize::try_from(fixture["slots"].as_u64().unwrap()).unwrap();let id=u16::try_from(fixture["existing"]["id"].as_u64().unwrap()).unwrap();let denied_id=u16::try_from(fixture["rejected"]["id"].as_u64().unwrap()).unwrap();let depth=usize::try_from(fixture["rejected"]["depth"].as_u64().unwrap()).unwrap();let payload_bytes=usize::try_from(fixture["rejected"]["payloadBytes"].as_u64().unwrap()).unwrap();let byte=u8::try_from(fixture["rejected"]["byte"].as_u64().unwrap()).unwrap();
@@ -127,7 +127,7 @@ fn tagged_cursor_statements()->crate::BorrowedShape{crate::BorrowedShape::Statem
 #[test]
 fn sqlite_snapshot_native_borrowed_tagged_cursor_uses_actual_four_family_views_and_canonical_text(){
  use crate::{DslField,native_encoding::FieldProjectionView as V,BorrowedFieldSpec as F,BorrowedShape as H};use semio_framework_value::NativeEncodeControl;
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🏷️tagged/🔣️.json")).unwrap();let text=fixture["text"].as_str().unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🫳️borrowed-object/🏷️tagged/🔣️.json")).unwrap();let text=fixture["text"].as_str().unwrap();
  let variant=|keyword:&str|match keyword{"document"=>TaggedCursorVariant::Document{text:text.into()},"blob"=>TaggedCursorVariant::Blob{text:text.into()},_=>panic!("closed tagged variant")};
  let source=TaggedCursorRecord{many:vec![variant("document"),variant("blob")],nested:vec![variant("blob"),variant("document")],maybe:Some(variant("document")),required:Box::new(variant("blob"))};
  let output=std::process::Command::new("bun").args(["-e",r#"import{Database}from"bun:sqlite";const f=JSON.parse(process.argv[1]);if(Buffer.byteLength(f.text,"utf8")!==f.textBytes)throw Error("closed tagged corpus");const db=new Database(":memory:");try{db.run("CREATE TABLE projection(slot INTEGER,ordinal INTEGER,tag TEXT,value TEXT)");for(const[slot,item]of f.slots.entries())for(const[ordinal,tag]of item.variants.entries())db.run("INSERT INTO projection VALUES(?,?,?,?)",[slot,ordinal,tag,f.text]);console.log(JSON.stringify(db.query("SELECT slot,ordinal,tag,value,length(CAST(value AS BLOB)) AS bytes FROM projection ORDER BY slot,ordinal").all()));}finally{db.close();}"#]).arg(fixture.to_string()).output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let rows:serde_json::Value=serde_json::from_slice(&output.stdout).unwrap();
@@ -150,7 +150,7 @@ struct BorrowedNumericCoordinates{
 #[test]
 fn sqlite_snapshot_native_borrowed_coordinates_and_direction_keep_authored_sigils_and_every_word(){
  use crate::{DslField,BorrowedFieldSpec as F,BorrowedShape as H,native_encoding::{FieldProjectionSource,FieldProjectionView as V}};use semio_framework_value::{NativeEncodeControl,ValueRefusalKind};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📍️coordinates/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🫳️borrowed-object/📍️coordinates/🔣️.json")).unwrap();
  const FIELDS:&[F]=&[F::new(0,"coord1",H::Coord(1)),F::new(1,"coord2",H::Coord(2)),F::new(2,"coord3",H::Coord(3)),F::new(3,"dir3",H::Dir)];let spec=crate::BorrowedRecordSpec{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};
  for case in fixture["cases"].as_array().unwrap(){let bits=u64::from_str_radix(case["word"].as_str().unwrap(),16).unwrap();let value=f64::from_bits(bits);let source=BorrowedNumericCoordinates{coord1:[value;1],coord2:[value;2],coord3:[value;3],dir3:[value;3]};let ordinary=print(&source.__dsl_to_record(),&BorrowedNumericCoordinates::__dsl_spec(),JoinMode::Document);assert_eq!(ordinary,case["text"].as_str().unwrap());assert_eq!(ordinary.len(),case["bytes"].as_u64().unwrap()as usize);
  let out=std::process::Command::new("bun").args(["-e",r#"import{Database}from'bun:sqlite';const f=JSON.parse(process.argv[1]),word=process.argv[2],actual=process.argv[3];const c=f.cases.find(c=>c.word===word);if(actual!==c.text)throw Error('literal wire');let raw;if(c.atom.startsWith('nan64_'))raw=BigInt('0x'+c.atom.slice(6));else{const value=c.atom==='inf'?Infinity:c.atom==='-inf'?-Infinity:Number(c.atom);const b=new ArrayBuffer(8),v=new DataView(b);v.setFloat64(0,value,false);raw=v.getBigUint64(0,false)}if(raw!==BigInt('0x'+word))throw Error('independent IEEE word');const db=new Database(':memory:');try{db.run('CREATE TABLE emitted(word TEXT,wire TEXT)');db.run('INSERT INTO emitted VALUES(?,?)',[word,c.text]);console.log(JSON.stringify(db.query('SELECT wire,length(CAST(wire AS BLOB)) AS bytes FROM emitted WHERE word=?').get(word)))}finally{db.close()}"#]).arg(fixture.to_string()).arg(case["word"].as_str().unwrap()).arg(&ordinary).output().unwrap();assert!(out.status.success(),"{}",String::from_utf8_lossy(&out.stderr));let interpreted:serde_json::Value=serde_json::from_slice(&out.stdout).unwrap();assert_eq!(interpreted["wire"],case["text"]);assert_eq!(interpreted["bytes"],case["bytes"]);
@@ -215,7 +215,7 @@ fn authored_borrowed_kind(shape:crate::BorrowedShape)->&'static str{
 fn child_authored_borrowed_schema_preserves_static_metadata_and_lazy_owner_edges(){
  use crate::{BorrowedDslField,BorrowedDslRecord,BorrowedDslVariants,BorrowedShape as H};
  const SPEC:crate::BorrowedRecordSpec=<AuthoredBorrowedOwner as BorrowedDslRecord>::RECORD;
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🏭️authored-static/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🫳️borrowed-object/🏭️authored-static/🔣️.json")).unwrap();
  assert_eq!(SPEC.keyword,fixture["record"]["keyword"].as_str());assert_eq!(SPEC.layout,RecordLayout::Lines);assert_eq!(SPEC.fields.len(),fixture["record"]["fields"].as_array().unwrap().len());
  for(field,expected)in SPEC.fields.iter().zip(fixture["record"]["fields"].as_array().unwrap()){
   assert_eq!(field.id as u64,expected["id"].as_u64().unwrap());assert_eq!(field.key,expected["key"].as_str().unwrap());assert_eq!(field.position.map(u64::from),expected["position"].as_u64());assert_eq!(field.optional,expected["optional"].as_bool().unwrap());assert_eq!(field.defines,expected["defines"].as_str());assert!(!field.flatten&&!field.is_call_name);assert_eq!(authored_borrowed_kind(field.shape),expected["kind"].as_str().unwrap());

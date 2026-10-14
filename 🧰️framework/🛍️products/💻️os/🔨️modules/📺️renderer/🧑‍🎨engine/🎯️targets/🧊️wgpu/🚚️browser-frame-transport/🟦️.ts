@@ -1,3 +1,5 @@
+import { OriginalBootstrapRootPort, type OriginalBootstrapRequest, type OriginalBootstrapResponse } from "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/📮️port/🟦️.ts";
+import type { OriginalBootstrapOwner } from "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🟦️.ts";
 import type { PluginCatalogRowsV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 import type { WgpuPluginModule, WgpuPluginRegistrySelection } from "../🧩️plugin-modules/🛂️admission/🟦️.ts";
 import { BROWSER_MEDIA_CAPACITY, mediaSlotAuthorityKey, parsePresentedMediaSlots, type BrowserMediaCommand, type BrowserMediaOperation, type BrowserMediaResult, type BrowserMediaRelease, type BrowserMediaValue, type PresentedMediaSlot } from "../../../🎬️media/🌐️browser/🟦️.ts";
@@ -337,7 +339,8 @@ export type BrowserFrameHostIoResult = { readonly kind: "host-io-result"; readon
 
 export type BrowserFrameImageDecodeResult = { readonly kind: "image-decode-result"; readonly lifecycle: number; readonly requestId: number; readonly bitmap: ImageBitmap | null; readonly detail?: string };
 
-export type BrowserFrameUiMessage = BrowserMediaRelease | BrowserMediaCommand | BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameImageDecodeResult | BrowserFrameHostAppearance | BrowserFrameHostStorage | BrowserFrameHostAgentBridge | BrowserFrameHostIntroductionPolicy | BrowserFrameHostPageHidden | BrowserFrameHostWindowBlur | { readonly kind: "close"; readonly lifecycle: number };
+export type BrowserFrameUiMessage =
+  | OriginalBootstrapResponse | BrowserMediaRelease | BrowserMediaCommand | BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameImageDecodeResult | BrowserFrameHostAppearance | BrowserFrameHostStorage | BrowserFrameHostAgentBridge | BrowserFrameHostIntroductionPolicy | BrowserFrameHostPageHidden | BrowserFrameHostWindowBlur | { readonly kind: "close"; readonly lifecycle: number };
 
 /** 🧵️ The frame Worker's own step ledger, as the UI isolate sees it. The Worker prices its steps
  * against `WORKER_STEP_BUDGET_MS` with the same executing-span law the UI isolate uses for its turns
@@ -351,6 +354,7 @@ export type BrowserFrameWorkerStepReport = {
 };
 
 export type BrowserFrameWorkerMessage =
+  | OriginalBootstrapRequest
   | BrowserMediaResult
   | { readonly kind: "boot-progress"; readonly lifecycle: number; readonly stage: string; readonly progress: number; readonly worker: BrowserFrameWorkerStepReport }
   | { readonly kind: "boot-liveness"; readonly lifecycle: number }
@@ -421,6 +425,7 @@ export type BrowserFrameDiagnostic = {
 };
 
 export type BrowserFrameTransportOptions = {
+  readonly originalWorkStock: OriginalBootstrapOwner;
   readonly worker: BrowserFrameWorkerPort;
   readonly boot: Omit<BrowserFrameWorkerBoot, "kind" | "lifecycle">;
   readonly now?: () => number;
@@ -518,7 +523,9 @@ export class BrowserFrameTransport {
   private nextIntrospectionId = 1;
   private readonly imageDecodes = new Map<number, AbortController>();
 
+  readonly #originalWork: OriginalBootstrapRootPort;
   constructor(options: BrowserFrameTransportOptions) {
+    this.#originalWork = new OriginalBootstrapRootPort(options.originalWorkStock, response => this.worker.postMessage(response));
     this.worker = options.worker;
     this.now = options.now ?? (() => performance.now());
     this.locale = options.boot.locale === "de" ? "de" : "en";
@@ -1007,6 +1014,7 @@ export class BrowserFrameTransport {
   }
 
   private receive(message: BrowserFrameWorkerMessage): void {
+    if (message.kind === "original-stock-request") { void this.#originalWork.receive(message); return; }
     if (message.kind === "shard-spawn") {
       if (this.status !== "booting" && this.status !== "ready") return;
       this.runUiHook("shard-spawn", () => this.spawnShardWorker(message.shardIndex, message.url));

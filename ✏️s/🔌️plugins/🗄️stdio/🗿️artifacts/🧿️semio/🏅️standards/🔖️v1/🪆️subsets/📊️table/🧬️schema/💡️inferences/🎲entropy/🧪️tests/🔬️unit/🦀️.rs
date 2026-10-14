@@ -111,7 +111,7 @@ async fn changing_the_other_column_misses_only_its_own_entry() {
 #[test]
 fn owned_dependency_matches_neutral_fixture_and_serde_oracle() {
     use store::InferredField;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🌱️owned-dependency/🔣️.json")).expect("neutral dependency");
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🎲entropy/🌱️owned-dependency/🔣️.json")).expect("neutral dependency");
     let symbols=fixture["symbols"].as_array().unwrap(); let snapshot=SemioTableSnapshot {columns:vec![SemioTableColumn{name:"coin".into(),kind:SemioTableCellKind::Str}],rows:symbols.iter().map(|value|SemioTableRow{cells:vec![SemioValue::Str{value:value.as_str().unwrap().into()}]}).collect(),..Default::default()};
     let dependency=ColumnEntropy::dep_input(&snapshot,&"coin".into(),&[]);
     let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&dependency)).expect("owned dependency output");

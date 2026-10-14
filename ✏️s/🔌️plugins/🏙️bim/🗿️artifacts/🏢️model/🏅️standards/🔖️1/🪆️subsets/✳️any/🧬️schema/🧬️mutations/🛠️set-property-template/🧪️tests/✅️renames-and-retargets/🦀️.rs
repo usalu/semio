@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🛠️set-property-template/✅️renames-and-retargets",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛠️set-property-template/✅️renames-and-retargets/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛠️set-property-template/✅️renames-and-retargets/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛠️set-property-template/✅️renames-and-retargets/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛠️set-property-template/✅️renames-and-retargets/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛠️set-property-template/✅️renames-and-retargets/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛠️set-property-template/✅️renames-and-retargets/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛠️set-property-template/✅️renames-and-retargets/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛠️set-property-template/✅️renames-and-retargets/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛠️set-property-template/✅️renames-and-retargets/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛠️set-property-template/✅️renames-and-retargets/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

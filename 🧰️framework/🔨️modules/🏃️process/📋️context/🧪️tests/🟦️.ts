@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 
 test("Process cache authority is explicit, schema-owned and bound to the current owner",async()=>{
-  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧫️fixtures/🔣️.json"),"utf8")),schema=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧬️schema/🔣️.json"),"utf8")),validate=new (createRequire(import.meta.url)("ajv").default)({strict:true}).compile(schema),api=await import("../🟦️.ts");
+  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8")),schema=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧬️schema/🔣️.json"),"utf8")),validate=new (createRequire(import.meta.url)("ajv").default)({strict:true}).compile(schema),api=await import("../🟦️.ts");
   for(const key of ["cwd","cacheRoot","leaseDirectory"])fixture[key]=resolve(fixture[key]);
   const env={SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(fixture)};
   expect(validate(fixture)).toBe(true);expect(api.readProcessOwnerContextV1(env,fixture.cwd)).toEqual(fixture);

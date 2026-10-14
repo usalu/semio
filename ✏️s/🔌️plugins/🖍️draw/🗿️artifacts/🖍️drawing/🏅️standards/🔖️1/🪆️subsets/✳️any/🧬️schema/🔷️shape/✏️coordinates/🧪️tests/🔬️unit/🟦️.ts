@@ -6,7 +6,7 @@ import {binary64,binary64Value,type Binary64} from "../../../../../../../../../.
 import type {DrawingLayerNode} from "../../../../🟦️.ts";
 import {SHAPE_COORDINATE_FIELDS,shapeCoordinate,setShapeCoordinate,type ShapeCoordinateField} from "../../🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
-import rows from "../../🧫️fixtures/🔣️.json";
+import rows from "../../../../../🧪️tests/🧫️fixtures/🔷️shape/✏️coordinates/🔣️.json";
 const capture=(value:unknown):unknown=>typeof value==="number"?binary64(value):Array.isArray(value)?value.map(capture):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).map(([key,value])=>[key,capture(value)])):value;
 const query=(value:unknown):unknown=>value&&typeof value==="object"&&"bits" in value?binary64Value(value as Binary64):Array.isArray(value)?value.map(query):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).map(([key,value])=>[key,query(value)])):value;
 test("all shape coordinate fixture outputs match independent immutable scalar patches",()=>{

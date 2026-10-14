@@ -19,11 +19,11 @@ use crate::WriterDiff;
 use crate::WriterSnapshot;
 use crate::central_apply::{apply_writer_mutation};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️edit-text/⚠️warns/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️edit-text/⚠️warns/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️edit-text/⚠️warns/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️edit-text/⚠️warns/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️edit-text/⚠️warns/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-text/⚠️warns/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-text/⚠️warns/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-text/⚠️warns/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-text/⚠️warns/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-text/⚠️warns/🎯️outcome/🔣️.json");
 
 /// 📝 The body the committed `document` handle stands for, persisted on the committed snapshot's own
 /// `text` payload field — byte-identical to the payload's own `text`, which is the whole point of this

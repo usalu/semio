@@ -20,7 +20,7 @@ fn pointer_move_storm_coalesces_to_one_sample() {
 }
 
 fn ordered_scroll_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../📥️input/🎡️ordered-scroll/🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../📥️input/🎡️ordered-scroll/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 
 fn fixture_modifiers(value: &serde_json::Value) -> EventModifiers {

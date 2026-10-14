@@ -61,7 +61,7 @@ async fn the_load_document_effect_carries_the_model_it_was_given() {
     let effect = energy_model_load_document_effect("model", &model, &EnergyModelLinkSlots::default());
     let semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr } = effect else { panic!("a whole-document load must be a LoadDocument effect") };
     assert!(!spr.is_empty(), "the genesis envelope must still print an spr");
-    let loaded = <EnergyModelSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("the emitted pack decodes");
+    let loaded = <EnergyModelSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("the emitted pack decodes");
     assert_eq!(loaded.model, model);
     assert_eq!(loaded.schema, ENERGY_MODEL_DOCUMENT_SCHEMA);
 }

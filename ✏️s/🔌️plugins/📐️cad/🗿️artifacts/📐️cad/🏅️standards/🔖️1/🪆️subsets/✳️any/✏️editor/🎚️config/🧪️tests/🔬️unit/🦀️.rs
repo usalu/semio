@@ -15,16 +15,16 @@ async fn cad_config_dsl_round_trips_a_populated_record() {
         active_example_id: Some("demo".into()),
         ..CadConfig::default()
     };
-    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&config);
-    let parsed = <CadConfig as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("cad config dsl parses");
+    let text = pack::snapshot::ArtifactDsl::print_dsl(&config);
+    let parsed = <CadConfig as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("cad config dsl parses");
     assert_eq!(parsed, config);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn cad_config_pack_round_trips() {
     let config = CadConfig { selected_node_ids: vec!["node-1".into()], hovered_reference_id: Some("reference-1".into()), ..CadConfig::default() };
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&config);
-    let decoded = <CadConfig as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&config);
+    let decoded = <CadConfig as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, config);
 }
 
@@ -38,7 +38,7 @@ async fn cad_sun_config_round_trips_through_world_sun_config() {
 
 #[semio_framework_async_macros::async_test]
 async fn cad_config_operation_snapshot_round_trips_and_restores_exactly() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️inline-layout/🔣️.json")).expect("neutral config mutation layout fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️inline-layout/🔣️.json")).expect("neutral config mutation layout fixture");
     let base = CadConfig::default();
     let next = CadConfig { selected_node_ids: serde_json::from_value(fixture["selectedNodeIds"].clone()).expect("neutral selection"), ..CadConfig::default() };
     let operation = CadConfigMutation::Set(SetEdit { config: Box::new(next.clone()) });

@@ -7,7 +7,7 @@ import { mutationDomainOwnersProblems, mutationOwnerIdentity, loadCatalogTaxonom
 
 type LayoutCase = { readonly name: string; readonly accepted: boolean; readonly relativeSource?: string };
 
-const fixture = await Bun.file(new URL("../../🧫️fixtures/🛂️mutation-source-authority/🔣️.json", import.meta.url)).json();
+const fixture = await Bun.file(new URL("../🧫️fixtures/🛂️mutation-source-authority/🔣️.json", import.meta.url)).json();
 const document = await Bun.file(new URL("../../🧬️schema/🔣️.json", import.meta.url)).json();
 const ajv = new Ajv({ strict: true, allErrors: true });
 ajv.addSchema(document);
@@ -32,7 +32,7 @@ const hostile = [
 assert(!acceptsLayout("domain/🧬️mutations/🆕️insert-page/unknown/🦀️.rs"));
 assert(!acceptsLayout("domain/🧬️mutations/🆕️insert-page/🦠️mutation/nested/🦀️.rs"));
 
-const domainFixture = await Bun.file(new URL("../../../../../../../🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json", import.meta.url)).json();
+const domainFixture = await Bun.file(new URL("../../../../../../../🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json", import.meta.url)).json();
 const taxonomy = { ...loadCatalogTaxonomy(), mutationDomainOwners: { [domainFixture.mutationRoot]: domainFixture.domains } };
 assert.deepEqual(mutationDomainOwnersProblems(taxonomy.mutationDomainOwners), []);
 const explicitOwners = Object.entries(domainFixture.domains).flatMap(([domain, operations]) => Object.entries(operations as Record<string, string>).map(([operation, identity]) => ({ owner: `${domain}/${operation}`, identity })));

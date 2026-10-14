@@ -1,0 +1,26 @@
+import {expect,test} from "bun:test";
+import {mkdtempSync,writeFileSync} from "node:fs";
+import {join} from "node:path";
+import {setImmediate} from "node:timers/promises";
+import fixture from "./🔣️.json";
+import * as api from "../../🟦️.ts";
+import {nativeCallerPhaseV1} from "../../../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {runOwnedCommand} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+
+const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Original custody artifact declaration required");
+for(const row of fixture.cases)test(row.id,async()=>{
+ const root=mkdtempSync(join(artifacts,"rc49-")),entry=join(root,"📜️script.ts"),module=join(root,"module.ts"),controller=new AbortController(),reason=Error("Original custody cancellation"),ledger:string[]=[],calls:string[]=[],started=performance.now();writeFileSync(entry,fixture.program);writeFileSync(module,fixture.module);
+ const invocation:ScriptInvocation={policy:{version:1,owner:row.id,maximumElapsedMilliseconds:fixture.maximumElapsedMilliseconds},capabilities:{workspaceRoot:root,buildMode:"prototype",arguments:["nx","run","@semio-tech/repo-lib:test-original-default-preparation-control"],selection:["nx","run","@semio-tech/repo-lib:test-original-default-preparation-control"],native:{artifactDirectory:join(root,"target"),transport:fixture.transport,child:{maximumElapsedMilliseconds:fixture.maximumElapsedMilliseconds},network:{offline:false}}},control:{signal:controller.signal,remainingMilliseconds:()=>fixture.remainingMilliseconds-(performance.now()-started),async publish(event){ledger.push(event.command);await setImmediate();if(row.operation==="refused")throw Error("Original custody publication refused");},async yieldContinuation(){ledger.push("yield");await setImmediate();}}},phase=nativeCallerPhaseV1(invocation,root);
+ const control={signal:controller.signal,advance:async()=>phase.advance("custody:physical"),childBudget:(requested:number)=>Math.min(requested,phase.budget()),childOptions:(environment:Readonly<Record<string,string|undefined>>)=>({...phase.options(environment),signal:controller.signal,output:fixture.transport}),async captureChild(command:string,args:string[],cwd:string,environment:Readonly<Record<string,string|undefined>>,input:string|undefined):Promise<string>{
+  await phase.advance("custody:child");expect(command).toBe(process.execPath);expect(cwd).toBe(root);expect(phase.leaseControl.signal).toBe(controller.signal);expect(ledger.at(-1)).toBe("yield");calls.push(args[1]!);let output="";const budget=phase.budget();expect(budget).toBeGreaterThan(0);expect(budget).toBeLessThanOrEqual(fixture.remainingMilliseconds);expect(Number.isInteger(budget)).toBe(false);await runOwnedCommand(command,args,cwd,"custody:original-child",budget,{...phase.options(environment),input,stdout:"stderr",onLine:(line,stream)=>{if(stream==="stdout")output+=line+"\n";}});phase.budget();return output;
+ }};
+ if(row.operation==="cancelled")controller.abort(reason);
+ const node=Bun.spawn(["node","--eval",'const fs=require("node:fs"),p=require("node:path"),crypto=require("node:crypto"),ts=require("typescript"),[root,entry]=JSON.parse(process.argv[1]),source=fs.readFileSync(entry),tree=ts.createSourceFile(entry,source.toString(),ts.ScriptTarget.Latest,true),edge=tree.statements.find(ts.isImportDeclaration),selected=require.resolve(p.resolve(root,edge.moduleSpecifier.text));console.log(JSON.stringify({selected,source:crypto.createHash("sha256").update(source).digest("hex"),module:crypto.createHash("sha256").update(fs.readFileSync(selected)).digest("hex")}));',JSON.stringify([root,entry])],{stdout:"pipe",stderr:"pipe"});
+ try{
+  let result:Awaited<ReturnType<typeof api.cargoPreparationProgramSourcesV1>>|undefined,refusal:unknown;try{result=await api.cargoPreparationProgramSourcesV1(root,entry,control);if(row.operation==="resolve")await api.assertCargoPreparationObservationCurrentV1({...result,version:1,root,script:entry,command:["capture-program"],outputs:[]},control);}catch(error){refusal=error;}
+  const [stdout,stderr,code]=await Promise.all([new Response(node.stdout).text(),new Response(node.stderr).text(),node.exited]);expect(code,stderr).toBe(0);const independent=JSON.parse(stdout);
+  if(row.operation==="refused")expect(String(refusal)).toContain("Original custody publication refused");else if(row.operation==="cancelled")expect(refusal).toBe(reason);else{expect(refusal).toBeUndefined();expect(result?.sources.find(input=>input.path===entry)?.sha256).toBe(independent.source);expect(result?.sources.find(input=>input.path===module)?.sha256).toBe(independent.module);expect(result?.resolutions.find(edge=>edge.source===entry)?.selected).toBe(independent.selected);}
+  expect(calls).toEqual(row.expectedCalls);if(calls.length)expect(ledger).toContain("yield");console.log("[DEBUG] "+JSON.stringify({id:row.id,calls,ledger,refusal:String(refusal)}));
+ }finally{if(node.exitCode===null){node.kill();await node.exited;}}
+},fixture.maximumElapsedMilliseconds);

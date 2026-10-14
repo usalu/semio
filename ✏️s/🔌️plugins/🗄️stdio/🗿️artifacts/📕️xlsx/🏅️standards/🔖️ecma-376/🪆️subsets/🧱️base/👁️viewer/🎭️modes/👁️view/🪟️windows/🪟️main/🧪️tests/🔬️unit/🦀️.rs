@@ -38,7 +38,7 @@ fn viewer_projects_requested_sparse_grid_windows_against_calamine() {
     use calamine::Reader;
     use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_PATH_SEPARATOR};
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧫️fixtures/🪟️viewer-cell-window/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🪟️viewer-cell-window/🔣️.json")).unwrap();
     let sheets = fixture["sheets"]
         .as_array()
         .unwrap()

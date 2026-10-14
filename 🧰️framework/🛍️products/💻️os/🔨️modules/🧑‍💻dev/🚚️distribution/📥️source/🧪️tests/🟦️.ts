@@ -7,7 +7,7 @@ import { dirname, join, relative } from "node:path";
 import { distributionStaticSourcePaths } from "../🟦️.ts";
 import { DISTRIBUTION_LAYOUT, parseDistributionManifest, parseDistributionStaticInputs } from "../../🟦️.ts";
 
-const examples = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔣️.json"), "utf8"));
+const examples = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8"));
 
 test("distribution production coordinates refuse testing collections with genuine schema parity", () => {

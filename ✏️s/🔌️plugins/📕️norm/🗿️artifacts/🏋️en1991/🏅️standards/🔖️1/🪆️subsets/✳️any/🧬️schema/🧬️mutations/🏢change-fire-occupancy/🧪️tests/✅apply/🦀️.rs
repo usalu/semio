@@ -5,11 +5,11 @@
 /// 🏬 The committed `change-fire-occupancy` vector holds the specification-vector law.
 const VECTOR: super::Vector = super::Vector {
         kind: "change-fire-occupancy",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏢change-fire-occupancy/✅apply/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏢change-fire-occupancy/✅apply/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏢change-fire-occupancy/✅apply/📸️snapshot/➡️after/🔣️.json"),
-        diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏢change-fire-occupancy/✅apply/🔺️diff/🔣️.json"),
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏢change-fire-occupancy/✅apply/🎯️outcome/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏢change-fire-occupancy/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏢change-fire-occupancy/✅apply/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏢change-fire-occupancy/✅apply/📸️snapshot/➡️after/🔣️.json"),
+        diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏢change-fire-occupancy/✅apply/🔺️diff/🔣️.json"),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏢change-fire-occupancy/✅apply/🎯️outcome/🔣️.json"),
 };
 
 #[test]

@@ -7,7 +7,7 @@ import { pathToFileURL } from "node:url";
 /** 🦀️ Compares inferred test ownership with Cargo's local package graph and mounted compiler inputs. */
 export async function testInferredNativeInputs(workspace: string, output: string): Promise<void> {
   const require = createRequire(import.meta.url);
-  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🦀️inputs/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🦀️inputs/🔣️.json"), "utf8"));
   const root = mkdtempSync(join(output, "inferred-native-inputs-"));
   const put = (path: string, content: string) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); };
   for (const [path, content] of Object.entries(fixture.files)) put(path, String(content));

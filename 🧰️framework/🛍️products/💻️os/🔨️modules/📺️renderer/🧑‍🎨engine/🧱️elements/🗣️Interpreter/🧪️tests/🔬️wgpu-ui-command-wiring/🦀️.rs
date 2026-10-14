@@ -39,7 +39,7 @@ fn retained_document_close_queue_is_bounded_and_same_window_replacement_costs_no
 }
 
 fn ingress_opportunity_document() -> UiDocumentLease {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🌳️document-tree-reconcile/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🌳️document-tree-reconcile/🔣️.json")).unwrap();
     let source = &fixture["document"];
     let mut builder = ui_contract::UiDocumentBuilder::try_new(
         1,
@@ -117,7 +117,7 @@ fn fixture_intent(descriptor: ActionDescriptor, seq: usize) -> ui_wgpu::wgpu::Ui
 
 #[test]
 fn window_action_context_retained_commands_preserve_the_clicked_window() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🔬️window-action-context/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔬️window-action-context/🔣️.json")).unwrap();
     let window_id = fixture["clickedWindowId"].as_str().unwrap();
     for (case_index, case) in fixture["cases"].as_array().unwrap().iter().enumerate() {
         let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
@@ -826,7 +826,7 @@ fn scene_command_dispatches_an_ink_canvas_scroll_action() {
 }
 
 fn ink_editing_law() -> Value {
-    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🖋️ink-canvas-editing/🔣️.json")).expect("shared InkCanvas editing law parses")
+    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖋️ink-canvas-editing/🔣️.json")).expect("shared InkCanvas editing law parses")
 }
 
 fn ink_editing_scene(law: &Value) -> UiNode {
@@ -887,7 +887,7 @@ fn dispatch_ink_pointer(window_id: &str, node: NodeId, surface_id: &str, rect: R
 
 #[test]
 fn ink_pointer_cancel_retires_only_the_exact_in_progress_owner_without_publishing() {
-    let cancellation: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🛑️scene-pointer-cancellation/🔣️.json")).expect("shared scene cancellation fixture");
+    let cancellation: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🛑️scene-pointer-cancellation/🔣️.json")).expect("shared scene cancellation fixture");
     let ink_case = cancellation["cases"].as_array().unwrap().iter().find(|case| case["family"] == "ink").expect("Ink cancellation case");
     assert_eq!(ink_case["terminal"], "discard");
     assert_eq!(ink_case["preservePublished"], serde_json::json!(["selection", "camera"]));
@@ -947,7 +947,7 @@ fn ink_pointer_cancel_retires_only_the_exact_in_progress_owner_without_publishin
 
 #[test]
 fn a_streamed_note_ink_gesture_aborts_on_physical_cancel_while_stale_continuation_is_inert() {
-    let surface_behavior: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🎬️surface-behavior/🔣️.json")).expect("shared app surface behavior");
+    let surface_behavior: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🎬️surface-behavior/🔣️.json")).expect("shared app surface behavior");
     let behavior = surface_behavior["cases"].as_array().unwrap().iter().find(|entry| entry["id"] == "note-ink-canvas").expect("Note Ink behavior");
     assert_eq!(behavior["controllerId"], "s.note.note@1/*#editor");
     assert_eq!(behavior["terminalPolicy"], "cancelled-action-discards-draft");
@@ -2113,7 +2113,7 @@ fn presented_editor_ink_clipboard_owners_rebase_only_after_same_host_pixels_are_
 #[test]
 fn presented_ink_intent_finishes_before_an_unchanged_same_host_sibling_refresh_is_accepted() {
     while !close_scene_interaction_step() {}
-    let contract: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
+    let contract: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
     let packet = &contract["sceneIntentPresentation"];
     let records = packet["records"].as_array().unwrap();
     let children = |index: usize| records[index].as_array().unwrap().iter().map(|id| id.as_u64().unwrap()).collect::<Vec<_>>();
@@ -2153,7 +2153,7 @@ fn presented_ink_intent_finishes_before_an_unchanged_same_host_sibling_refresh_i
 #[test]
 fn presented_ink_intent_uses_old_authored_content_before_a_changed_same_host_successor_starts() {
     while !close_scene_interaction_step() {}
-    let contract: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
+    let contract: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
     let packet = &contract["sceneIntentPresentation"];
     let records = packet["records"].as_array().unwrap();
     let children = |index: usize| records[index].as_array().unwrap().iter().map(|id| id.as_u64().unwrap()).collect::<Vec<_>>();
@@ -2193,7 +2193,7 @@ fn presented_ink_intent_uses_old_authored_content_before_a_changed_same_host_suc
 #[test]
 fn presented_ink_intent_in_a_hidden_window_does_not_block_an_unrelated_candidate() {
     while !close_scene_interaction_step() {}
-    let contract: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
+    let contract: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
     let packet = &contract["sceneIntentPresentation"];
     let rows = contract["barrierScope"].as_array().unwrap();
     assert!(rows.iter().any(|row| row["name"] == "hidden-window" && row["blocks"] == false));
@@ -2223,7 +2223,7 @@ fn presented_ink_intent_in_a_hidden_window_does_not_block_an_unrelated_candidate
 #[test]
 fn presented_ink_intent_from_a_stale_revision_does_not_block_the_current_candidate() {
     while !close_scene_interaction_step() {}
-    let contract: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
+    let contract: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
     let packet = &contract["sceneIntentPresentation"];
     let rows = contract["barrierScope"].as_array().unwrap();
     assert!(rows.iter().any(|row| row["name"] == "stale-revision" && row["blocks"] == false));
@@ -2253,7 +2253,7 @@ fn presented_ink_intent_from_a_stale_revision_does_not_block_the_current_candida
 #[test]
 fn presented_ink_intent_barrier_has_an_independent_bounded_progress_owner() {
     while !close_scene_interaction_step() {}
-    let contract: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
+    let contract: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
     let packet = &contract["sceneIntentPresentation"];
     let records = packet["records"].as_array().unwrap();
     let children = |index: usize| records[index].as_array().unwrap().iter().map(|id| id.as_u64().unwrap()).collect::<Vec<_>>();
@@ -2509,7 +2509,7 @@ fn retained_input_commit_has_a_generation_bound_completion_receipt() {
     settle_retained_input_receipt(ui_wgpu::wgpu::ActionQueueReceipt { source: ui_wgpu::wgpu::ActionQueueReceiptSource::CanvasTextEditor, ..receipt }, true);
     assert!(RETAINED_INPUT_RECEIPTS.with(|cell| cell.borrow().slots.iter().any(Option::is_some)), "equal tokens of other receipt sources cannot consume an input completion");
     crate::settle_renderer_action_receipt(receipt, crate::engine_canvas::TextEditorActionOutcome::Cancelled);
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🚦️input-draft-disposition/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🚦️input-draft-disposition/🔣️.json")).unwrap();
     let capacity = corpus["receiptCapacity"].as_u64().unwrap() as usize;
     assert_eq!(capacity, ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY);
     let intent = commands.iter().find_map(|command| match command { ui_wgpu::wgpu::UiCommand::App { intent, .. } => Some(intent), _ => None }).unwrap();
@@ -2544,7 +2544,7 @@ fn retained_input_commit_has_a_generation_bound_completion_receipt() {
 
 #[test]
 fn retained_input_refusal_settlement_obeys_the_shared_draft_disposition_law() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🚦️input-draft-disposition/🔣️.json" )).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🚦️input-draft-disposition/🔣️.json" )).unwrap();
     for (index, law) in corpus["cases"].as_array().unwrap().iter().enumerate() {
         let window = format!("draft-disposition-{index}");
         let document = retained_input_document(&window, law["kind"].as_str().unwrap(), law["base"].clone());

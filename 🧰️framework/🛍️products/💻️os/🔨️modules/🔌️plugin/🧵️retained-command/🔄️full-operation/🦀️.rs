@@ -94,10 +94,6 @@ use crate::artifact_instance::MAINTENANCE_STAGES;
 #[cfg(test)]
 use crate::artifact_instance::typed_operation_document_is_fresh;
 #[cfg(test)]
-use crate::bounded_ownership::plugin_demand_grant;
-#[cfg(test)]
-use crate::bounded_ownership::plugin_page_grant;
-#[cfg(test)]
 use crate::command_admission::ToolLatestWinsRegistry;
 #[cfg(test)]
 use crate::reserved_jobs::QualifiedToolProof;
@@ -133,24 +129,24 @@ pub(crate) struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub(crate) session_rejected: Option<crate::reserved_job_session::RefusedWorkerSource<semio_framework::ErasedToolJob>>,
     pub(crate) reserved_producer: Option<ArtifactReservedToolJob>,
     pub(crate) completion: Option<ArtifactToolCompletion<A>>,
-    completion_retirement:Option<ControlledRetirement<ArtifactToolCompletion<A>>>,
-    publication_retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
-    output_retirement:Option<ControlledRetirement<ArtifactOutputChunks>>,
-    raw_input: Option<ArtifactToolRawInput>,
-    output_chunks: Option<ArtifactOutputChunks>,
+    pub(crate) completion_retirement:Option<ControlledRetirement<ArtifactToolCompletion<A>>>,
+    pub(crate) publication_retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
+    pub(crate) output_retirement:Option<ControlledRetirement<ArtifactOutputChunks>>,
+    pub(crate) raw_input: Option<ArtifactToolRawInput>,
+    pub(crate) output_chunks: Option<ArtifactOutputChunks>,
     pub(crate) cancellation_lease: Option<ToolCancellationLease>,
     pub(crate) identity: Option<semio_framework_value::native_encoding::NativeEncodeContinuation>,
     pub(crate) identity_progress: semio_framework_value::native_encoding::NativeEncodeProgress,
-    worker_semantic_pending: bool,
+    pub(crate) worker_semantic_pending: bool,
     pub(crate) worker_outcome_pending: bool,
-    worker_fault_capture: Option<MountedWorkerFaultCapture>,
+    pub(crate) worker_fault_capture: Option<MountedWorkerFaultCapture>,
     pub(crate) terminal_seen: bool,
-    worker_resume_pending: bool,
+    pub(crate) worker_resume_pending: bool,
     pub(crate) publication: Option<ArtifactToolCompletionValue<A>>,
     pub(crate) pending_artifact_publication: Option<PendingArtifactStorePublication<A>>,
-    pending_publication_outcome:PendingPublicationOutcome,
+    pub(crate) pending_publication_outcome:PendingPublicationOutcome,
     pub(crate) pending_window_config_receipt:Option<store::os_store::presence::LaneItemReceipt>,
-    cancellation_retirement:Option<Box<ToolCancellationLeaseRetirement>>,
+    pub(crate) cancellation_retirement:Option<Box<ToolCancellationLeaseRetirement>>,
     pub(crate) pending_child_publication: Option<PendingChildGroupPublication<A>>,
     pub(crate) owned_child_group: Option<u64>,
     pub(crate) owned_child_committed: bool,
@@ -159,7 +155,7 @@ pub(crate) struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub(crate) captured_child_content_generation: u64,
     pub(crate) result_page: Option<TypedOperationResultPage>,
     pub(crate) result_page_presented: bool,
-    result_sequence: u32,
+    pub(crate) result_sequence: u32,
     /// 🧮️ The publication ladder's OWN monotone progress: how many publication units actually
     /// moved this operation's pending store publication, counted by the store's checkpoint
     /// rather than by the unit having been spent. A healthy ladder that folds one mutation per
@@ -168,7 +164,7 @@ pub(crate) struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub(crate) publication_progress: u64,
     /// 🧮️ The last checkpoint the pending publication answered with, so a unit that repeats it
     /// verbatim is recognised as no movement at all instead of as progress.
-    publication_checkpoint: Option<store::os_store::one_item::ArtifactStoreOneItemCheckpoint>,
+    pub(crate) publication_checkpoint: Option<store::os_store::one_item::ArtifactStoreOneItemCheckpoint>,
     pub(crate) publication_ownership_progress: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
     pub(crate) original_retirement_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
     pub(crate) actor_capture: Option<ControlledRetirement<semio_framework_value::SharedUtf8>>,
@@ -187,8 +183,8 @@ pub(crate) struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub(crate) interaction_revalidated: bool,
     pub(crate) terminal_fault: Option<ArtifactBoundedToolFault>,
     pub(crate) retained_close_fault: Option<Fault>,
-    retained_close_fault_retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
-    retained_close_fault_refusal:Option<ValueError>,
+    pub(crate) retained_close_fault_retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
+    pub(crate) retained_close_fault_refusal:Option<ValueError>,
     pub(crate) stage: MountedTypedCommandFullOperationStage,
 }
 
@@ -198,12 +194,12 @@ include!("../🪟️mounted/♻️frontier/🦀️.rs");
 
 
 /// 🪢️ Returns the worker's original cancellation ancestor alias against the lease root the operation still owns, since that root can never become unique while the operation retains it.
-fn return_session_cancel_alias(session: &semio_framework_job::MountedWorkerJobSession<semio_framework::ErasedToolJob>, lease: &Option<ToolCancellationLease>, grant: RetainedCloneGrant) -> Option<Result<PluginLifecycleStep, Fault>> {
+fn return_session_cancel_alias(session: &semio_framework_job::MountedWorkerJobSession<semio_framework::ErasedToolJob>, lease: &Option<ToolCancellationLease>, grant: RetainedCloneGrant) -> Option<Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure>> {
     let lease = lease.as_ref()?;
     matches!(session.has_original_cancel_alias_witness(&lease.token), Ok(true)).then(|| match session.return_original_cancel_alias_step(&lease.token, grant) {
         Ok(Some(step)) => Ok(PluginLifecycleStep::Progress(step.progress())),
         Ok(None) | Err(semio_framework_job::WorkerJobDemandError::Contention(_)) => Ok(PluginLifecycleStep::AwaitingInput { reason: "typed operation original cancellation alias awaits its issuing root" }),
-        Err(semio_framework_job::WorkerJobDemandError::Refused(error)) => Err(plugin_retirement_fault(error)),
+        Err(semio_framework_job::WorkerJobDemandError::Refused(error)) => Err(error.into()),
     })
 }
 
@@ -244,10 +240,20 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     /// arrive: publication would spin on `completion.take() == None` for as long as the host
     /// keeps advancing it. The operation is terminal the moment its session is refused —
     /// cancel the lease so the next publication unit mints the exact fault page.
-    pub(crate) fn drive_worker_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    pub(crate) fn drive_worker_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
+        let grant=cx.retained_grant();let demand=if cx.is_cancelled()&&self.session_rejected.as_ref().is_some_and(|source|source.admission_pending()){self.worker_retirement_demands(grant.maximum_copy_bytes)?}else{self.worker_step_demands(grant.maximum_copy_bytes)?};
+        crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+            let step=(||->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
         if self.stage != MountedTypedCommandFullOperationStage::Worker {return Ok(PluginLifecycleStep::Blocked{reason:"typed command awaits its bounded revision-validated publication or ACK turn"});}
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
         if let Some(rejected)=self.session_rejected.as_mut(){
+            if rejected.admission_pending()&&!cx.is_cancelled(){
+                let config=semio_framework_job::BatchDriveConfig{retained:grant,site:"plugin_framework_reserved_route",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:0};
+                let before=cx.retained_progress();
+                if let Some(session)=rejected.admit_pending(config,cx)?{self.session=Some(session);drop(self.session_rejected.take());}
+                let after=cx.retained_progress();
+                return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}));
+            }
             if rejected.terminal_is_empty(){
                 let bytes=size_of_val(rejected);
                 if grant.maximum_copy_bytes<bytes{return Ok(PluginLifecycleStep::Progress(Default::default()));}
@@ -256,12 +262,12 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
                 if let Some(lease)=self.cancellation_lease.as_ref(){lease.cancel();}
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));
             }
-            let demand=rejected.retirement_demands(grant.maximum_copy_bytes).map_err(|error|plugin_sdk_fault(error.to_string()))?;
-            return crate::bounded_ownership::runtime_lifecycle_step(demand,grant,|grant|{let step=rejected.close_step(grant).admit(grant,rejected.terminal_is_empty());Ok((match step{
+            let demand=rejected.retirement_demands(grant.maximum_copy_bytes)?;
+            return crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{let step=rejected.close_step(cx)?.admit(grant,rejected.terminal_is_empty())?;Ok((match step{
                 semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),
                 semio_framework_job::InteractiveJobCloseStep::Blocked=>PluginLifecycleStep::AwaitingInput{reason:"typed operation rejected-session close awaits its worker handback"},
-                semio_framework_job::InteractiveJobCloseStep::Refused{kind,progress}=>return Err(plugin_sdk_fault(format!("typed operation rejection retirement refused: {kind:?}")).with_retained_progress(progress))
-            },false))});
+
+            },false))}).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         let session=self.session.as_mut().ok_or_else(||Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.typed-operation-session"),"typed operation lost its persistent worker session before publication"))?;
         if self.worker_fault_capture.is_some(){
@@ -288,19 +294,19 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
                 drop(self.session.take());self.stage=MountedTypedCommandFullOperationStage::Publishing;
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));
             }
-            if let Some(step)=return_session_cancel_alias(session,&self.cancellation_lease,grant){return step;}
+            if let Some(step)=return_session_cancel_alias(session,&self.cancellation_lease,grant){return step.map_err(semio_framework_job::OriginalTurnFailure::from);}
             let demand=match session.retirement_demands(grant.maximum_copy_bytes){
                 Ok(demand)=>demand,
                 Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>return Ok(PluginLifecycleStep::AwaitingInput{reason:"typed operation original worker close quote awaits its handback"}),
-                Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>return Err(plugin_sdk_fault(error.to_string()))
+                Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>return Err(error.into())
             };
-            return crate::bounded_ownership::runtime_lifecycle_step(demand,grant,|grant|{let step=session.close_step(grant);Ok((match step{
+            return crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{let step=session.close_step(cx)?;Ok((match step{
                 semio_framework_job::WorkerJobCloseStep::Pending{progress}if progress.fits(grant)=>PluginLifecycleStep::Progress(progress),
                 semio_framework_job::WorkerJobCloseStep::Complete{progress}if progress.fits(grant)&&session.terminal_is_empty()=>PluginLifecycleStep::Progress(progress),
                 semio_framework_job::WorkerJobCloseStep::Blocked=>PluginLifecycleStep::AwaitingInput{reason:"typed operation mounted session close awaits its worker handback"},
-                semio_framework_job::WorkerJobCloseStep::Refused{kind,progress}=>return Err(plugin_sdk_fault(format!("typed operation session retirement refused: {kind:?}")).with_retained_progress(progress)),
-                _=>return Err(plugin_sdk_fault("typed operation worker violated its original grant or terminal witness").with_retained_progress(step.progress()))
-            },false))});
+
+                _=>return Err(plugin_sdk_fault("typed operation worker violated its original grant or terminal witness").with_retained_progress(step.progress()).into())
+            },false))}).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         if self.worker_semantic_pending{
             let outcome=match session.checked_out_outcome(){
@@ -323,21 +329,22 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             self.worker_semantic_pending=false;self.worker_outcome_pending=true;
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));
         }
-        match session.pump_one_for_interactive_turn(grant){
+        match session.pump_one_for_interactive_turn(cx){
             Ok(semio_framework_job::WorkerJobPoll::Outcome|semio_framework_job::WorkerJobPoll::Terminal)=>{
                 let Some((issued,progress))=session.take_checked_out_retained_step_receipt()else{return Ok(PluginLifecycleStep::Blocked{reason:"typed operation original worker receipt awaits its sole recipient"});};
                 self.worker_semantic_pending=true;
-                if !progress.fits(issued)||!progress.fits(grant)||issued.maximum_items>grant.maximum_items||issued.maximum_copy_bytes>grant.maximum_copy_bytes||issued.maximum_capacity_bytes>grant.maximum_capacity_bytes||issued.maximum_release_bytes>grant.maximum_release_bytes||issued.maximum_depth>grant.maximum_depth{return Err(plugin_sdk_fault("typed operation original worker receipt exceeded its received turn").with_retained_progress(progress));}
+                if !progress.fits(issued)||!progress.fits(grant)||issued.maximum_items>grant.maximum_items||issued.maximum_copy_bytes>grant.maximum_copy_bytes||issued.maximum_capacity_bytes>grant.maximum_capacity_bytes||issued.maximum_release_bytes>grant.maximum_release_bytes||issued.maximum_depth>grant.maximum_depth{return Err(plugin_sdk_fault("typed operation original worker receipt exceeded its received turn").with_retained_progress(progress).into());}
                 if matches!(session.checked_out_outcome(),Ok(None))&&session.resume().is_ok(){self.worker_semantic_pending=false;}
                 Ok(PluginLifecycleStep::Progress(progress))
             }
             Ok(semio_framework_job::WorkerJobPoll::Submitted|semio_framework_job::WorkerJobPoll::Rejected)=>Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),
             Ok(_)=>Ok(PluginLifecycleStep::AwaitingInput{reason:"typed operation mounted worker awaits its next outcome"}),
-            Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Contention(_)))
-            |Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Pool(semio_framework_async::WorkerSubmitErrorKind::Contended|semio_framework_async::WorkerSubmitErrorKind::Saturated)))
-            |Err(semio_framework_job::MountedWorkerJobPumpFault::Take(semio_framework_job::WorkerJobTakeFault::Pending))=>Ok(PluginLifecycleStep::AwaitingInput{reason:"typed operation mounted worker awaits transient scheduler authority"}),
-            Err(_)=>Ok(PluginLifecycleStep::Blocked{reason:"typed operation mounted worker failed to make structural progress"})
+            Err(failure)=>Err(failure)
+
         }
+    
+            })()?;Ok((step,self.terminal_is_empty()))
+        }).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     /// 🔔️ Exposes the captured canonical wire only after every original fault byte has been funded.
@@ -443,7 +450,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     pub(crate) fn worker_step_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let item = RetirementDemand { depth: 1, ..Default::default() };
         if self.stage != MountedTypedCommandFullOperationStage::Worker { return Ok(Default::default()); }
-        if self.session_rejected.is_some() { return self.worker_retirement_demands(body); }
+        if let Some(source)=self.session_rejected.as_ref(){return if source.admission_pending(){source.admission_demands()}else{self.worker_retirement_demands(body)};}
         let Some(session) = self.session.as_ref() else { return Ok(item) };
         if self.worker_fault_capture.is_some() {
             return match session.checked_out_outcome() {
@@ -478,7 +485,10 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     }
 
     /// ♻️ Closes the original mounted worker session, its refused admission and its inline capture markers under the unchanged grant.
-    fn retire_worker_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn retire_worker_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
+        let grant=cx.retained_grant();let demand=self.worker_retirement_demands(grant.maximum_copy_bytes)?;
+        crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+            let step=(||->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
         let item = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         if let Some(rejected) = self.session_rejected.as_mut() {
             if rejected.terminal_is_empty() {
@@ -486,15 +496,15 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
                 drop(self.session_rejected.take());
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_bytes: bytes, ..item }));
             }
-            let demand = rejected.retirement_demands(grant.maximum_copy_bytes).map_err(plugin_retirement_fault)?;
-            return crate::bounded_ownership::runtime_lifecycle_step(demand, grant, |grant| {
-                let step = rejected.close_step(grant).admit(grant, rejected.terminal_is_empty());
+            let demand = rejected.retirement_demands(grant.maximum_copy_bytes)?;
+            return crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant| {
+                let step = rejected.close_step(cx)?.admit(grant, rejected.terminal_is_empty())?;
                 Ok((match step {
                     semio_framework_job::InteractiveJobCloseStep::Pending { progress } | semio_framework_job::InteractiveJobCloseStep::Complete { progress } => PluginLifecycleStep::Progress(progress),
                     semio_framework_job::InteractiveJobCloseStep::Blocked => PluginLifecycleStep::AwaitingInput { reason: "typed operation rejected-session close awaits its worker handback" },
-                    semio_framework_job::InteractiveJobCloseStep::Refused { kind, progress } => return Err(plugin_sdk_fault(format!("typed operation rejection retirement refused: {kind:?}")).with_retained_progress(progress)),
+
                 }, false))
-            });
+            }).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         if let Some(session) = self.session.as_mut() {
             if session.terminal_is_empty() {
@@ -503,27 +513,30 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_bytes: bytes, ..item }));
             }
             session.begin_close();
-            if let Some(step) = return_session_cancel_alias(session, &self.cancellation_lease, grant) { return step; }
+            if let Some(step) = return_session_cancel_alias(session, &self.cancellation_lease, grant) { return step.map_err(semio_framework_job::OriginalTurnFailure::from); }
             let demand = match session.retirement_demands(grant.maximum_copy_bytes) {
                 Ok(demand) => demand,
                 Err(semio_framework_job::WorkerJobDemandError::Contention(_)) => return Ok(PluginLifecycleStep::AwaitingInput { reason: "typed operation original worker close quote awaits its handback" }),
-                Err(semio_framework_job::WorkerJobDemandError::Refused(error)) => return Err(plugin_sdk_fault(error.to_string())),
+                Err(semio_framework_job::WorkerJobDemandError::Refused(error)) => return Err(error.into()),
             };
-            return crate::bounded_ownership::runtime_lifecycle_step(demand, grant, |grant| {
-                let step = session.close_step(grant);
+            return crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant| {
+                let step = session.close_step(cx)?;
                 Ok((match step {
                     semio_framework_job::WorkerJobCloseStep::Pending { progress } if progress.fits(grant) => PluginLifecycleStep::Progress(progress),
                     semio_framework_job::WorkerJobCloseStep::Complete { progress } if progress.fits(grant) => PluginLifecycleStep::Progress(progress),
                     semio_framework_job::WorkerJobCloseStep::Blocked => PluginLifecycleStep::AwaitingInput { reason: "typed operation mounted session close awaits its worker handback" },
-                    semio_framework_job::WorkerJobCloseStep::Refused { kind, progress } => return Err(plugin_sdk_fault(format!("typed operation session retirement refused: {kind:?}")).with_retained_progress(progress)),
-                    _ => return Err(plugin_sdk_fault("typed operation worker violated its original grant or terminal witness").with_retained_progress(step.progress())),
+
+                    _ => return Err(plugin_sdk_fault("typed operation worker violated its original grant or terminal witness").with_retained_progress(step.progress()).into()),
                 }, false))
-            });
+            }).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         self.worker_fault_capture = None;
         self.worker_semantic_pending = false;
         self.worker_outcome_pending = false;
         Ok(PluginLifecycleStep::Progress(item))
+    
+            })()?;Ok((step,self.terminal_is_empty()))
+        }).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     /// 📏️ Quotes the exact next [`Self::retirement_step`] turn, one original owner at a time in the same order.
@@ -546,26 +559,29 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     }
 
     /// 🎟️ Returns each original mounted owner under the caller's unchanged grant.
-    pub(crate) fn retirement_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    pub(crate) fn retirement_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
+        let grant=cx.retained_grant();let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
+        crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+            let step=(||->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
         let empty = RetainedCloneProgress::default();
         let item = RetainedCloneProgress { copied_items: 1, ..empty };
         if self.stage != MountedTypedCommandFullOperationStage::Retiring { return Ok(PluginLifecycleStep::Blocked { reason: "typed operation is not admitted for retirement" }); }
         if self.result_page.is_some() { return Ok(PluginLifecycleStep::Blocked { reason: "typed operation retains an unacknowledged result page" }); }
         if self.terminal_is_empty() { return Ok(PluginLifecycleStep::Complete(empty)); }
-        let demand = self.retirement_demands(grant.maximum_copy_bytes).map_err(plugin_retirement_fault)?;
-        if !plugin_turn_admitted(demand, grant)? { return Ok(PluginLifecycleStep::Progress(empty)); }
-        if self.close_fault_pending(){return self.close_fault_step(grant).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(plugin_retirement_fault);}
-        if self.worker_retirement_pending() { return self.retire_worker_step(grant); }
+        let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
+        if !plugin_grant_funds(demand, grant) { return Ok(PluginLifecycleStep::Progress(empty)); }
+        if self.close_fault_pending(){return self.close_fault_step(grant).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(semio_framework_job::OriginalTurnFailure::from);}
+        if self.worker_retirement_pending() { return self.retire_worker_step(cx); }
         if self.pending_window_config_receipt.take().is_some(){return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_bytes:size_of::<store::os_store::presence::LaneItemReceipt>(),..item}));}
         if self.granted_retirement_ready() && self.granted_retirement_pending() {
-            let step = self.granted_retirement_step(grant).map_err(plugin_retirement_fault)?;
-            semio_framework_value::retained_clone::admit_retained_clone_progress(grant, step.progress(), "typed operation granted retirement").map_err(plugin_retirement_fault)?;
+            let step = self.granted_retirement_step(grant)?;
+            semio_framework_value::retained_clone::admit_retained_clone_progress(grant, step.progress(), "typed operation granted retirement")?;
             return Ok(PluginLifecycleStep::Progress(step.progress()));
         }
         if self.publication_retirement.is_none() {
-            if self.meta.view_state.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.meta.view_state, &mut self.publication_retirement, grant).map(|step| PluginLifecycleStep::Progress(step.progress())).map_err(plugin_retirement_fault); }
-            if self.window_config_authority.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.window_config_authority, &mut self.publication_retirement, grant).map(|step| PluginLifecycleStep::Progress(step.progress())).map_err(plugin_retirement_fault); }
-            if self.window_transient_authority.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.window_transient_authority, &mut self.publication_retirement, grant).map(|step| PluginLifecycleStep::Progress(step.progress())).map_err(plugin_retirement_fault); }
+            if self.meta.view_state.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.meta.view_state, &mut self.publication_retirement, grant).map(|step| PluginLifecycleStep::Progress(step.progress())).map_err(semio_framework_job::OriginalTurnFailure::from); }
+            if self.window_config_authority.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.window_config_authority, &mut self.publication_retirement, grant).map(|step| PluginLifecycleStep::Progress(step.progress())).map_err(semio_framework_job::OriginalTurnFailure::from); }
+            if self.window_transient_authority.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.window_transient_authority, &mut self.publication_retirement, grant).map(|step| PluginLifecycleStep::Progress(step.progress())).map_err(semio_framework_job::OriginalTurnFailure::from); }
         }
         if self.captured_child_content.take().is_some() { return Ok(PluginLifecycleStep::Progress(item)); }
         if self.pending_publication_outcome.pending() || self.pending_publication_outcome.report.is_some() {
@@ -578,11 +594,14 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             let original = std::mem::take(&mut self.meta.actor);
             return match original.close_original_lease(grant) {
                 Ok((text, progress)) => { let released = text.as_ref().map_or(0, String::capacity); drop(text); Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { released_bytes: progress.released_bytes + released, ..progress })) }
-                Err((error, original)) => { self.meta.actor = original; Err(plugin_retirement_fault(error)) }
+                Err((error, original)) => { self.meta.actor = original; Err(error.into()) }
             };
         }
         if !self.terminal_is_empty() { return Ok(PluginLifecycleStep::Blocked { reason: "original mounted authority awaits its typed retirement issuer" }); }
         Ok(PluginLifecycleStep::Complete(empty))
+    
+            })()?;Ok((step,self.terminal_is_empty()))
+        }).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     /// 📏️ Quotes cancellation handback separately from original owner retirement.
@@ -592,10 +611,13 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     }
 
     /// 🎟️ Withdraws inline result custody before closing retained originals.
-    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
-        let demand = self.close_demands(grant.maximum_copy_bytes).map_err(plugin_retirement_fault)?;
-        if !plugin_turn_admitted(demand, grant)? { return Ok(PluginLifecycleStep::Progress(Default::default())); }
-        if self.stage == MountedTypedCommandFullOperationStage::Retiring { return self.retirement_step(grant); }
+    pub(crate) fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
+        let grant=cx.retained_grant();let demand=self.close_demands(grant.maximum_copy_bytes)?;
+        crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+            let step=(||->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
+        let demand = self.close_demands(grant.maximum_copy_bytes)?;
+        if !plugin_grant_funds(demand, grant) { return Ok(PluginLifecycleStep::Progress(Default::default())); }
+        if self.stage == MountedTypedCommandFullOperationStage::Retiring { return self.retirement_step(cx); }
         self.user_cancel_requested = true;
         self.result_page = None;
         self.result_page_presented = false;
@@ -603,7 +625,11 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         self.progress_pending = false;
         self.stage = MountedTypedCommandFullOperationStage::Retiring;
         Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+    
+            })()?;Ok((step,self.terminal_is_empty()))
+        }).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
+
     pub(crate) fn terminal_is_empty(&self) -> bool {
         self.stage == MountedTypedCommandFullOperationStage::Retiring
             && self.session.is_none()
@@ -669,31 +695,31 @@ pub(crate) enum TypedCommandFullOperationPhase {
 }
 
 pub(crate) struct TypedCommandFullOperationJob<A: ArtifactApp> {
-    operation: Option<semio_framework_job::Operation>,
-    parent_document_id: Option<String>,
-    command: Option<std::sync::Arc<A::Command>>,
-    snapshot: Option<std::sync::Arc<A::Snapshot>>,
-    config: Option<std::sync::Arc<A::Config>>,
-    history: Option<std::sync::Arc<HistoryView>>,
-    children: Option<std::sync::Arc<ChildContentView>>,
-    draft: Option<std::sync::Arc<A::Draft>>,
-    interaction_state: Option<std::sync::Arc<protocol::InteractionState>>,
-    interaction_hover: Option<std::sync::Arc<InteractionHoverState>>,
-    peer_presence: Option<std::sync::Arc<PeerPresenceRoot>>,
-    presence_local: Option<store::os_store::snapshot_read::SnapshotRead<A::Presence>>,
-    presence_peers: Option<std::sync::Arc<store::os_store::presence::PresencePeersRoot<A::Presence>>>,
-    transient: Option<std::sync::Arc<A::Transient>>,
-    contract: semio_framework::ToolExecutionContract,
-    decoded_items: usize,
-    phase: TypedCommandFullOperationPhase,
-    prepare_cursor: u8,
-    reducer_cursor: u8,
-    output: Option<ArtifactToolCompletion<A>>,
-    state: [u8; 3],
-    fault_message: &'static [u8],
-    pending: Option<crate::tool_contract::ReservedOutcomeKind>,
-    outcomes: crate::tool_contract::ReservedJobOutcomes,
-    closing: bool,
+    pub(crate) operation: Option<semio_framework_job::Operation>,
+    pub(crate) parent_document_id: Option<String>,
+    pub(crate) command: Option<std::sync::Arc<A::Command>>,
+    pub(crate) snapshot: Option<std::sync::Arc<A::Snapshot>>,
+    pub(crate) config: Option<std::sync::Arc<A::Config>>,
+    pub(crate) history: Option<std::sync::Arc<HistoryView>>,
+    pub(crate) children: Option<std::sync::Arc<ChildContentView>>,
+    pub(crate) draft: Option<std::sync::Arc<A::Draft>>,
+    pub(crate) interaction_state: Option<std::sync::Arc<protocol::InteractionState>>,
+    pub(crate) interaction_hover: Option<std::sync::Arc<InteractionHoverState>>,
+    pub(crate) peer_presence: Option<std::sync::Arc<PeerPresenceRoot>>,
+    pub(crate) presence_local: Option<store::os_store::snapshot_read::SnapshotRead<A::Presence>>,
+    pub(crate) presence_peers: Option<std::sync::Arc<store::os_store::presence::PresencePeersRoot<A::Presence>>>,
+    pub(crate) transient: Option<std::sync::Arc<A::Transient>>,
+    pub(crate) contract: semio_framework::ToolExecutionContract,
+    pub(crate) decoded_items: usize,
+    pub(crate) phase: TypedCommandFullOperationPhase,
+    pub(crate) prepare_cursor: u8,
+    pub(crate) reducer_cursor: u8,
+    pub(crate) output: Option<ArtifactToolCompletion<A>>,
+    pub(crate) state: [u8; 3],
+    pub(crate) fault_message: &'static [u8],
+    pub(crate) pending: Option<crate::tool_contract::ReservedOutcomeKind>,
+    pub(crate) outcomes: crate::tool_contract::ReservedJobOutcomes,
+    pub(crate) closing: bool,
 }
 
 impl<A: ArtifactApp> TypedCommandFullOperationJob<A> {
@@ -710,7 +736,7 @@ impl<A: ArtifactApp> TypedCommandFullOperationJob<A> {
             return if demand == RetirementDemand::default() { item } else { demand };
         }
         let retained = self.command.is_some() || self.snapshot.is_some() || self.config.is_some() || self.history.is_some() || self.children.is_some() || self.draft.is_some() || self.interaction_state.is_some() || self.interaction_hover.is_some() || self.peer_presence.is_some() || self.presence_local.is_some() || self.presence_peers.is_some() || self.transient.is_some() || self.output.is_some();
-        if retained { item } else { RetirementDemand::default() }
+        if retained||self.operation.is_some()||!self.closing||self.pending.is_some() { item } else { RetirementDemand::default() }
     }
 
     fn checkpoint(&mut self) {
@@ -726,10 +752,10 @@ impl<A: ArtifactApp> TypedCommandFullOperationJob<A> {
 }
 
 impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A> {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, ValueError> {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         use crate::tool_contract::ReservedOutcomeKind;
         if cx.is_cancelled() {
-            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         if self.outcomes.is_delivered() {
             self.outcomes.retire(cx)?;
@@ -748,7 +774,7 @@ impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOpe
             return Ok(outcome);
         }
         if cx.should_yield() || cx.fuel_remaining() == 0 {
-            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
+            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         if self.decoded_items > self.contract.max_decoded_items || self.contract.max_work_units_per_step == 0 || self.contract.max_output_bytes == 0 {
             self.fault(b"typed command admission exceeds its fixed item, work, or output cap");
@@ -809,41 +835,20 @@ impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOpe
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        use semio_framework_job::InteractiveJobCloseStep;
-        self.closing = true;
-        self.pending = None;
-        let empty = RetainedCloneProgress::default();
-        let item = RetainedCloneProgress { copied_items: 1, ..empty };
-        if self.outcomes.terminal_is_empty() && self.owner_terminal_is_empty() {
-            self.operation = None;
-            return InteractiveJobCloseStep::Complete { progress: empty };
-        }
-        if !self.outcomes.terminal_is_empty() {
-            return crate::tool_contract::close_result(self.outcomes.close_step(grant));
-        }
-        if !plugin_grant_funds(self.owner_close_demand(), grant) {
-            return InteractiveJobCloseStep::Pending { progress: empty };
-        }
-        if let Some(parent) = self.parent_document_id.as_mut() {
-            return InteractiveJobCloseStep::Pending {
-                progress: plugin_text_close(parent, grant).unwrap_or_else(|| {
-                    self.parent_document_id = None;
-                    item
-                }),
-            };
-        }
-        macro_rules! release_one {
-            ($($field:ident),+) => {$(
-                if self.$field.is_some() {
-                    drop(self.$field.take());
-                    return InteractiveJobCloseStep::Pending { progress: item };
-                }
-            )+};
-        }
-        release_one!(command, snapshot, config, history, children, draft, interaction_state, interaction_hover, peer_presence, presence_local, presence_peers, transient, output);
-        self.operation = None;
-        InteractiveJobCloseStep::Complete { progress: empty }
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_job::{InteractiveJobCloseStep,close_original_retained_step};
+        if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
+        let demand=self.close_demand()?;
+        close_original_retained_step(cx,demand,|grant|{
+            self.closing=true;self.pending=None;
+            if !self.outcomes.terminal_is_empty(){return self.outcomes.close_step(grant)}
+            let item=RetainedCloneProgress{copied_items:1,..Default::default()};
+            if let Some(parent)=self.parent_document_id.as_mut(){return Ok(RetainedCloneStep::Progress(plugin_text_close(parent,grant).unwrap_or_else(||{self.parent_document_id=None;item})))}
+            macro_rules! return_alias{($($field:ident),+)=>{$(if let Some(original)=self.$field.as_ref(){if std::sync::Arc::strong_count(original)<=1{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"typed command requires its original final owner retirement cursor"))}drop(self.$field.take());return Ok(RetainedCloneStep::Progress(item));})+}}
+            return_alias!(command,snapshot,config,history,children,draft,interaction_state,interaction_hover,peer_presence,presence_peers,transient);
+            if self.presence_local.is_some()||self.output.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"typed command requires its original retained completion or snapshot-read retirement cursor"))}
+            self.operation=None;Ok(RetainedCloneStep::Complete(item))
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
@@ -931,7 +936,7 @@ impl<A: ArtifactApp> semio_framework::ToolJobFactory for TypedCommandFullOperati
 }
 
 #[cfg(test)]
-async fn test_retained_keyed_dispatch<A: ArtifactApp + Default>(
+pub(crate) async fn test_retained_keyed_dispatch<A: ArtifactApp + Default>(
     registry: AppActionRegistry,
     command: fn(&str, i32) -> A::Command,
     mutation: fn(i32) -> A::Mutation,
@@ -940,7 +945,7 @@ async fn test_retained_keyed_dispatch<A: ArtifactApp + Default>(
     mounted_policy: crate::MountedOwnerPolicyV1,
     identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
 ) {
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
     let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1)));
     for case in fixture["cases"].as_array().unwrap() {
         let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry.clone(), protocol::ActorId("fixture".into()), mounted_policy, identity).await;
@@ -1094,7 +1099,7 @@ async fn test_retained_keyed_dispatch<A: ArtifactApp + Default>(
 /// mint-then-test model visits every residue class across that span, so it fails here deterministically),
 /// a real dispatch must succeed there, and only true saturation may refuse.
 #[cfg(test)]
-async fn test_typed_operation_slot_preadmission<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+pub(crate) async fn test_typed_operation_slot_preadmission<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     const VACANT: usize = 11;
     let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into()), mounted_policy, identity).await;
     app.bind_instance_id(7).await;
@@ -1163,7 +1168,7 @@ async fn test_typed_operation_slot_preadmission<A: ArtifactApp + Default>(regist
 /// `plugin_runtime::advance_typed_operation_output` does, with no maintenance call at all, and requires
 /// the occupancy to return to zero after every single action.
 #[cfg(test)]
-async fn test_typed_operation_slot_retirement_under_storm<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+pub(crate) async fn test_typed_operation_slot_retirement_under_storm<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     const ACTIONS: usize = 200;
     const HOST_CONTINUATIONS_PER_ACTION: usize = 512;
     const RECEIVER: u32 = 7;
@@ -1195,7 +1200,7 @@ async fn test_typed_operation_slot_retirement_under_storm<A: ArtifactApp + Defau
 /// path a refused or faulted operation also takes (it mounts a terminal `Fault` page instead of a
 /// terminal publication). After each, the fixed slot array must be empty again.
 #[cfg(test)]
-async fn test_typed_operation_slot_release_on_every_outcome<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+pub(crate) async fn test_typed_operation_slot_release_on_every_outcome<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     const CONTINUATIONS: usize = 512;
     const RECEIVER: u32 = 7;
     let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into()), mounted_policy, identity).await;
@@ -1344,7 +1349,7 @@ fn assert_landing_terminal_lane(terminal: Option<&(TypedOperationResultLane, Str
 /// in the browser on wasm #46 as a one-command lag on every catalogue add, duplicate, delete and
 /// volume-brush add (`📓️2026-09-11-wave-B14-settle-semantics.md` §6).
 #[cfg(test)]
-async fn test_typed_operation_never_parks_a_turn_that_reports_no_runnable_work<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+pub(crate) async fn test_typed_operation_never_parks_a_turn_that_reports_no_runnable_work<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     const CONTINUATIONS: usize = 512;
     const RECEIVER: u32 = 7;
     let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into()), mounted_policy, identity).await;
@@ -1367,7 +1372,7 @@ async fn test_typed_operation_never_parks_a_turn_that_reports_no_runnable_work<A
 /// (`presented result page must not be republished before an explicit retry deadline`). Only the turn's
 /// own status can keep the acknowledgement coming, so the status is what this law pins.
 #[cfg(test)]
-async fn test_typed_operation_completes_under_a_status_only_host_call<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+pub(crate) async fn test_typed_operation_completes_under_a_status_only_host_call<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     const CONTINUATIONS: usize = 512;
     const RECEIVER: u32 = 7;
     let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into()), mounted_policy, identity).await;
@@ -1403,7 +1408,7 @@ async fn test_typed_operation_completes_under_a_status_only_host_call<A: Artifac
 /// all, so those laws are green over a ladder that never published. This law names that refusal instead
 /// of hiding it, and turns into the completion pin the moment the fixture reaches `Terminal`.
 #[cfg(test)]
-async fn test_typed_operation_lands_its_edit_inside_the_admitting_call<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+pub(crate) async fn test_typed_operation_lands_its_edit_inside_the_admitting_call<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     const CONTINUATIONS: usize = 512;
     const RECEIVER: u32 = 7;
     let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into()), mounted_policy, identity).await;
@@ -1489,29 +1494,29 @@ async fn close_fixture_app_to_terminal_emptiness<A: ArtifactApp>(app: &mut VcsAr
 }
 
 #[cfg(test)]
-async fn test_retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = crate::publication_fixture::PublicationPresence, PresenceMutation = crate::publication_fixture::PublicationPresenceMutation> + Default>() {
+pub(crate) async fn test_retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = crate::publication_fixture::PublicationPresence, PresenceMutation = crate::publication_fixture::PublicationPresenceMutation> + Default>() {
     typed_command_full_operation_tests::retained_cancellation_publication_boundaries::<A>().await;
 }
 
 #[cfg(test)]
-fn fixture_close_turn<P: PluginApp>(app: &mut P) -> PluginLifecycleStep {
-    let demand = app.close_retirement_demands(TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
-    app.close_step(plugin_demand_grant(demand)).unwrap()
+fn fixture_close_turn<P: PluginApp>(app: &mut P, original_grant:RetainedCloneGrant) -> PluginLifecycleStep {
+    let _demand = app.close_retirement_demands(TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
+    app.close_step(original_grant).unwrap()
 }
 
 #[cfg(test)]
-fn fixture_maintenance_turn<P: PluginApp>(app: &mut P) -> PluginLifecycleStep {
-    let demand = app.maintenance_retirement_demands(TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
-    app.maintenance_step(plugin_demand_grant(demand)).unwrap()
+fn fixture_maintenance_turn<P: PluginApp>(app: &mut P, original_grant:RetainedCloneGrant) -> PluginLifecycleStep {
+    let _demand = app.maintenance_retirement_demands(TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
+    app.maintenance_step(original_grant).unwrap()
 }
 
 #[cfg(test)]
-async fn test_retained_latest_wins_slot_and_publication_fairness<A: ArtifactApp<Presence = crate::publication_fixture::PublicationPresence, PresenceMutation = crate::publication_fixture::PublicationPresenceMutation> + Default>() {
+pub(crate) async fn test_retained_latest_wins_slot_and_publication_fairness<A: ArtifactApp<Presence = crate::publication_fixture::PublicationPresence, PresenceMutation = crate::publication_fixture::PublicationPresenceMutation> + Default>() {
     typed_command_full_operation_tests::retained_latest_wins_slot_and_publication_fairness::<A>().await;
 }
 
 #[cfg(test)]
-async fn test_retained_document_cancellation<A: ArtifactApp + Default>(
+pub(crate) async fn test_retained_document_cancellation<A: ArtifactApp + Default>(
     factory: std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>>,
     mutation: fn() -> A::Mutation,
     observe: fn(&A::Snapshot) -> i32,

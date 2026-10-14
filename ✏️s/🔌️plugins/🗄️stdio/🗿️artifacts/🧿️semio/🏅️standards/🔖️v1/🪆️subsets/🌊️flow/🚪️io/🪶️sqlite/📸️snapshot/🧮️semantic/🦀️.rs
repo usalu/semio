@@ -1,6 +1,7 @@
 //! 🌊️ Borrowed Flow primitives count exact coordinates, ordered parameters and port-addressed edges.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{SemioFlowSnapshot,ValueError,ValueRefusalKind};
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_value::native_decoding::NativeDecodeControl;
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 type Result<T>=std::result::Result<T,ValueError>;

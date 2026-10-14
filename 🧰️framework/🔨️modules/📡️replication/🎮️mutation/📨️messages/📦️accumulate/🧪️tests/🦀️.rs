@@ -46,7 +46,7 @@ fn close(ledger: &mut ReplayMessageAccumulator) {
 
 #[test]
 fn replay_message_accumulator_native_original_rows_paid_vec_scaffold_and_partial_transfer() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let count = law["nativeRows"].as_u64().unwrap() as usize;
     for cancel_at in std::iter::once(None).chain(law["cancelAt"].as_array().unwrap().iter().map(|value| Some(value.as_u64().unwrap() as usize))) {
         let mut messages = Vec::with_capacity(count);

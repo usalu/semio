@@ -194,6 +194,7 @@ pub(crate) fn validate_mesh_attribute_sample(name:&str,attribute:&MeshAttribute,
 
 #[path="🌲️canonical/🦀️.rs"]
 mod canonical_tree;
+pub use canonical_tree::{MeshCanonicalDecoder,MeshCanonicalIntakeSource};
 //#region MeshData
 #[derive(Clone, Debug, PartialEq, Default)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]

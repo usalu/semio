@@ -1,5 +1,5 @@
-import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🧩️ Semantic activation readiness owner. */
 
 import { existsSync } from "node:fs";
@@ -8,15 +8,15 @@ import { join } from "node:path";
 
 import { pathToFileURL } from "node:url";
 
-import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, healthyPreparedComponents, pluginModulesRoot, preparedComponentVerdict, readActivationReceipt } from "../🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, healthyPreparedComponents, builtPluginModulesRootIn, preparedComponentVerdict, readActivationReceipt } from "../🟦️.ts";
 
 import { stagedComponentFacts } from "../🔍️freshness/🟦️.ts";
 
 import { playgroundCatalog } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 
 import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 
 
@@ -140,12 +140,12 @@ async function awaitChildExit(child: SpawnDaemonHandle["child"], deadlineMs: num
  * makes it runnable straight after a 3-hour activation to say what that activation actually produced. */
 class ColdBootCheckScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    const [variant, renderer, profile] = args as [string, "react" | "wgpu", "dev" | "release"];
-    if (args.length !== 3 || !["react", "wgpu"].includes(renderer) || !["dev", "release"].includes(profile)) throw new Error("cold-boot-check <variant> react|wgpu <dev|release>");
+    const [variant, renderer, profile] = args as [string, "react" | "wgpu", "prototype" | "release"];
+    if (args.length !== 3 || !["react", "wgpu"].includes(renderer) || !["prototype", "release"].includes(profile)) throw new Error("cold-boot-check <variant> react|wgpu <prototype|release>");
     const playground = playgroundCatalog.find((row) => row.variant === variant);
     if (!playground) throw new Error(`Missing generated playground ${variant}`);
     const repoRoot = getWorkspaceRoot();
-    const moduleRoot = pluginModulesRoot();
+    const moduleRoot = builtPluginModulesRootIn(repoRoot, profile);
     const sessionPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", variant, "🎮️playground-session", "🟦️.ts");
     const session = (await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION;
     const receiptRoot = join(developmentRuntimeRoot(this.root, variant, profile, renderer), "activation");

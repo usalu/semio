@@ -36,7 +36,7 @@ pub fn definition(label: LocalizedLabel) -> ToolDefinition {
 /// ⏯️ The fill run declaration (`$defs.Puzzle2dFillRun`): a mutating run revalidated at finalize and resumed on a
 /// count change, reporting `placement2d` trace records.
 pub fn run_definition() -> ToolRunDefinition {
-    ToolRunDefinition {
+    ToolRunDefinition { receiving: semio_framework_tool_run::ToolRunReceivingLimits::REPORTS,
         mutating: true,
         rebase: ToolRunRebasePolicy::Revalidate,
         reconfigure: ToolRunReconfigurePolicy::Resume,

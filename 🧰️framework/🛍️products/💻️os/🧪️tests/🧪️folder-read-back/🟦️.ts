@@ -19,7 +19,7 @@ type Run = { readonly calls: string[]; readonly outcomes: Outcome[] };
 const cancel = (): DOMException => new DOMException("the person cancelled the load", "AbortError");
 const cancelled = (error: unknown): boolean => error instanceof DOMException && error.name === "AbortError";
 
-const fixtures = new URL("../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🧫️fixtures/🧫️folder-read-back/", import.meta.url);
+const fixtures = new URL("../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🧪️tests/🧫️fixtures/🧫️folder-read-back", import.meta.url);
 const corpus = JSON.parse(readFileSync(new URL("🔣️.json", fixtures), "utf8")) as { readonly cases: readonly Case[] };
 
 /** ⏯️ Drives the route with one case's events and answers the calls it made and how each event ended. */

@@ -10,8 +10,8 @@ type LabelCase = { readonly id: string; readonly rust: string; readonly sites: r
 type EditabilityCase = { readonly kind: string; readonly verdict: MutationLeafEditability["verdict"] };
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
-const labels = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧫️mutation-labels/🔣️.json"), "utf8")) as { readonly cases: readonly LabelCase[] };
-const editability = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧫️fixtures/🧫️mutation-editability/🔣️.json"), "utf8")) as { readonly aggregate: string; readonly cases: readonly EditabilityCase[] };
+const labels = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🧫️mutation-labels/🔣️.json"), "utf8")) as { readonly cases: readonly LabelCase[] };
+const editability = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧫️fixtures/🧫️mutation-editability/🔣️.json"), "utf8")) as { readonly aggregate: string; readonly cases: readonly EditabilityCase[] };
 
 await Parser.init();
 const parser = new Parser();
@@ -285,7 +285,7 @@ describe("schema-mutation-editability", () => {
     }
   }, 60_000);
   test("the manifest dependency reader reads the derive's language-agnostic cases like Bun's TOML parser", () => {
-    const vectors = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../../../💻️os/🔨️modules/🗣️dsl/✨️derive/🧫️fixtures/🧫️manifest-path-dependencies/🔣️.json"), "utf8")) as { readonly cases: readonly { readonly name: string; readonly manifest: string; readonly text: string; readonly paths: readonly string[] }[] };
+    const vectors = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../../../💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🧫️fixtures/🧫️manifest-path-dependencies/🔣️.json"), "utf8")) as { readonly cases: readonly { readonly name: string; readonly manifest: string; readonly text: string; readonly paths: readonly string[] }[] };
     expect(vectors.cases.length).toBeGreaterThan(3);
     for (const vector of vectors.cases) {
       const oracle = Object.values(((Bun.TOML.parse(vector.text) as { dependencies?: Record<string, unknown> }).dependencies ?? {}) as Record<string, { path?: string }>).flatMap((entry) => (typeof entry.path === "string" ? [posix.normalize(posix.join(posix.dirname(vector.manifest), entry.path))] : []));

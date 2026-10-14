@@ -1,6 +1,6 @@
 //! 📡️ Replication contract — TypeScript twin of the Rust `protocol` crate.
 //!
-//! Byte-for-byte identical to `📦️packages/🦀️rust`'s encoders: the 20 frames in `🧫️fixtures/📡️wire`
+//! Byte-for-byte identical to `📦️packages/🦀️rust`'s encoders: the 20 frames in `🧪️tests/🧫️fixtures/📡️wire`
 //! are the shared gate both sides must reproduce. Frame layout is `lane u8`, `frame tag u8`, then
 //! fields in declaration order — no length prefix, no per-field tags.
 
@@ -447,7 +447,7 @@ export const REPLAY_SEVERITIES = Object.freeze(["info", "warning", "error", "fat
 export type ReplaySeverity = (typeof REPLAY_SEVERITIES)[number];
 
 /** 📖️ Twin of Rust `OUTCOME_CODES`: the frozen outcome-code vocabulary and the one level each code fixes
- * (`🎮️mutation/🧫️fixtures/🧫️outcome-code`). */
+ * (`🎮️mutation/🧪️tests/🧫️fixtures/🧫️outcome-code`). */
 export const OUTCOME_CODES = Object.freeze([
   ["mutation.target-missing", "error"],
   ["mutation.target-referenced", "error"],

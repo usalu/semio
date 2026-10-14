@@ -1,0 +1,28 @@
+{
+  "schema": null,
+  "camera": null,
+  "widgets": null,
+  "synapses": null,
+  "layout": null,
+  "generations": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "gen-2",
+          "name": "Taller",
+          "values": {
+            "storeys": 5
+          }
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "selectedGeneration": {
+    "id": "gen-2"
+  },
+  "previewText": null
+}

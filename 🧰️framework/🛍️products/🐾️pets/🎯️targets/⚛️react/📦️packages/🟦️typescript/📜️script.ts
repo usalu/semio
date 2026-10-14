@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
-import { typecheckProject } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️typescript/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { resolve as compilerStatePath } from "node:path";
+import { typecheckProject } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** ⚛️ `@semio-tech/pets-react` router: `bun ./📜️script.ts <test [quick|long|exhaustive] | typecheck | dev>`. */
 import { join } from "node:path";
-import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runCmd, runViteBunxDev, runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🧪️ `test` — the React suites of the pets product, in jsdom. */
@@ -19,7 +20,7 @@ class TestScript extends BundleScript {
 /** 🪁️ `typecheck` — the target, its stories and its suites against the compiler. */
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await typecheckProject({ workspace: this.repoRoot, cwd: this.root, project: "tsconfig.json", owner: "pets-react:typescript", args: segments, timeoutMs: 120_000, execution: { signal: this.invocation.control.signal } });
+    await typecheckProject({ workspace: this.repoRoot, stateRoot: compilerStatePath(this.repoRoot, ".cache", "framework"), invocation: this.invocation, cwd: this.root, project: "tsconfig.json", owner: "pets-react:typescript", args: segments, timeoutMs: 120_000 });
   }
 }
 

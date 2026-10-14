@@ -1,4 +1,4 @@
-import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { publishWorkspaceMembership } from "../📣️publication/🟦️.ts";
 
 /** 🎛️ Admits exactly one workspace publication mode. */

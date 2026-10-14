@@ -16,7 +16,7 @@ fn view_state(locale: &str) -> semio_framework_plugin::ViewModel {
 
 #[test]
 fn shooting_semantic_panels_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️panels.json")).expect("neutral UI vectors");
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️panels.json")).expect("neutral UI vectors");
     let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let cfg = ShootingConfig::default();
     for row in vectors["cases"].as_array().expect("locales") {

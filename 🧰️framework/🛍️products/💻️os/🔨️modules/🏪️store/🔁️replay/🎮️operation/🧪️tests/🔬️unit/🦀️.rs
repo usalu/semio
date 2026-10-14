@@ -159,7 +159,7 @@ fn close_owned<T:RetireOwned>(value:T){let mut owner=ControlledRetirement::new(v
 
 #[test]
 fn cooperative_history_operation_obeys_the_neutral_law() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("neutral operation law");
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("neutral operation law");
     let context = ArtifactReplayPreparationContext { mode: ArtifactReplayPreparationMode::Report, operation_index: 0, generation: 7, base_revision: [9; 32] };
     for case in law["cases"].as_array().unwrap() {
         for bytes in law["grants"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize) {
@@ -230,7 +230,7 @@ impl ArtifactReplayPreparation<(), ()> for EmptyPreparation {
 
 #[test]
 fn cooperative_history_preparation_receipts_keep_each_physical_currency() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for row in law["turnReceipts"]["cases"].as_array().unwrap() {
         let amount = |key: &str| row[key].as_u64().unwrap() as usize;
         let progress = RetainedCloneProgress { copied_items: amount("items"), copied_bytes: amount("copy"), retained_capacity_bytes: amount("capacity"), released_bytes: amount("release") };

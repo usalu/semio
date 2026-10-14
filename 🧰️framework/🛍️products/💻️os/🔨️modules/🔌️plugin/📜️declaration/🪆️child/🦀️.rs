@@ -1,7 +1,7 @@
 //! 🪆️ The composed children an app reads: the child content view, its pages, entries and their read retirement.
 use semio_framework::Fault;
 use semio_framework_artifact_reference::ArtifactRef;
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 use store::SpaceMember;
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_value::RetirementDemand;
@@ -87,13 +87,13 @@ impl<'a> MemberKeyRef<'a> {
 }
 
 pub(crate) struct ChildContentEntry {
-    owner: String,
-    slot: String,
-    child_id: String,
+    pub(crate) owner: String,
+    pub(crate) slot: String,
+    pub(crate) child_id: String,
     pub(crate) artifact_id: String,
-    dialect: ArtifactDialect,
-    revision: [u8; 32],
-    snapshot: store::os_store::snapshot_read::ErasedSnapshotRead,
+    pub(crate) dialect: ArtifactDialect,
+    pub(crate) revision: [u8; 32],
+    pub(crate) snapshot: store::os_store::snapshot_read::ErasedSnapshotRead,
 }
 
 impl ChildContentEntry {
@@ -109,7 +109,7 @@ pub(crate) struct PreparedChildContentIdentity {
 
 pub(crate) struct PreparedChildContentEntry {
     entry: ManuallyDrop<Option<ChildContentEntry>>,
-    metadata: ManuallyDrop<Option<[String; 7]>>,
+    pub(crate) metadata: ManuallyDrop<Option<[String; 7]>>,
     metadata_cursor: usize,
     visibility: ManuallyDrop<Option<std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>>>,
     generation: u64,
@@ -187,7 +187,7 @@ impl PreparedChildContentEntry {
         self.close_metadata_step(visibility_retainer, grant)
     }
 
-    fn close_metadata_step(&mut self, visibility_retainer: &std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, Fault> {
+    pub(crate) fn close_metadata_step(&mut self, visibility_retainer: &std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, Fault> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if self.visibility.as_ref().is_none_or(|visibility| !std::sync::Arc::ptr_eq(visibility, visibility_retainer)) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let demand = self.retirement_demands();
@@ -225,8 +225,8 @@ impl Default for ChildContentPage {
 }
 
 #[derive(Clone)]
-struct ChildContentRoot {
-    pages: [Option<std::sync::Arc<ChildContentPage>>; CHILD_CONTENT_PAGES],
+pub(crate) struct ChildContentRoot {
+    pub(crate) pages: [Option<std::sync::Arc<ChildContentPage>>; CHILD_CONTENT_PAGES],
     pub(crate) len: usize,
 }
 
@@ -560,12 +560,12 @@ impl ChildContentView {
     }
 
     /// 🧵️ Selects an immutable child snapshot capability without exposing concrete ownership.
-    pub fn typed_read<S: ArtifactPack + Send + Sync + 'static>(&self, slot: &str, child_id: &str) -> Result<store::os_store::snapshot_read::SnapshotReadRef<'_, S>, Fault> {
+    pub fn typed_read<S: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static>(&self, slot: &str, child_id: &str) -> Result<store::os_store::snapshot_read::SnapshotReadRef<'_, S>, Fault> {
         self.typed_read_at(MemberKeyRef::root(slot, child_id))
     }
 
     /// 🪡️ [`Self::typed_read`] of the member at one exact owner edge, whatever its depth.
-    pub fn typed_read_at<S: ArtifactPack + Send + Sync + 'static>(&self, key: MemberKeyRef<'_>) -> Result<store::os_store::snapshot_read::SnapshotReadRef<'_, S>, Fault> {
+    pub fn typed_read_at<S: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static>(&self, key: MemberKeyRef<'_>) -> Result<store::os_store::snapshot_read::SnapshotReadRef<'_, S>, Fault> {
         let (slot, child_id) = (key.slot, key.child_id);
         let snapshot = &self.find(key)?.ok_or_else(|| plugin_sdk_fault(format!("no live child store for slot {slot} child {child_id}")))?.snapshot;
         snapshot.typed::<S>().ok_or_else(|| plugin_sdk_fault(format!("child snapshot type mismatch for slot {slot} child {child_id}")))
@@ -637,7 +637,7 @@ impl ChildContentRetainers for ChildContentOwners {
 
 impl ChildContentOwners {
     /// 🈳️ The owner set of a retirement with no live sibling.
-    fn none() -> Self {
+    pub(crate) fn none() -> Self {
         Self { views: std::array::from_fn(|_| ChildContentView::EMPTY), len: 0 }
     }
 

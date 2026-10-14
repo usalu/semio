@@ -6,7 +6,7 @@ use super::*;
 use crate::os_directory::schema::{DocumentOpenCheckpointV1, RebootstrapRequired};
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../../../../🧫️fixtures/📇️directory/🪢️canonical-checkpoint-pair-v1.json")).expect("canonical pair fixture")
+    serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/📇️directory/🪢️canonical-checkpoint-pair-v1.json")).expect("canonical pair fixture")
 }
 
 fn hex_bytes(value: &serde_json::Value) -> Vec<u8> {
@@ -103,7 +103,7 @@ fn a_pair_is_admitted_only_as_the_checkpoint_a_rebootstrap_control_names() {
 
 #[test]
 fn canonical_checkpoint_pair_native_body_has_explicit_io_owner() {
-    let owner: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧫️fixtures/📇️directory/🪢️checkpoint-pair-io-owner-v1.json")).expect("neutral owner");
+    let owner: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/📇️directory/🪢️checkpoint-pair-io-owner-v1.json")).expect("neutral owner");
     assert!(module_path!().contains(owner["owner"].as_str().expect("owner")));
     eprintln!("[DEBUG] Directory native binary body owner {}", module_path!());
 }

@@ -1,7 +1,7 @@
 import {parseFormsJsonResponse} from "../../../🔣️json/🟦️.ts";
 import assert from "node:assert/strict";
 import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import responseSchema from "../../../../../../🧬️schema/📨️response/🔣️.json";
 import { exportResponses, exportResponseChunks, responseRows } from "../🟦️.ts";
 

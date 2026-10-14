@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 
 
 const here = (path: string) => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8"));
-const fixture = here("../../🧫️fixtures/📇️directory/🧩️execution-target-module-resolution-v1.json");
+const fixture = here("../🧫️fixtures/📇️directory/🧩️execution-target-module-resolution-v1.json");
 const corpus = here(`../../../../../${fixture.corpus}`);
 const hexBytes = (value: string) => Uint8Array.from(value.match(/../gu) ?? [], (pair) => Number.parseInt(pair, 16));
 const sha256 = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");

@@ -23,7 +23,7 @@ import { generatorPreviewExecution, generatorPreviewResourceLimits, registryCata
 
 import { parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile } from "../🔍️discovery/🟦️.ts";
 
-import { parseGeneratorInputProjection, parseSemanticOwnedCurrentSourceRevisions, semanticExactOwnedDocumentCorrectionAuthority, semanticOwnedInputFileSnapshot, type GeneratorInputProjection, type SemanticOwnedInputFileSnapshot } from "../🔍️discovery/🟦️.ts";
+import { parseGeneratorInputProjection, parseCurrentSourceApprovals, semanticExactOwnedDocumentCorrectionAuthority, semanticOwnedInputFileSnapshot, type GeneratorInputProjection, type SemanticOwnedInputFileSnapshot } from "../🔍️discovery/🟦️.ts";
 import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustNonRepoJoinBaseSpans, validateFrozenCoordinateEvidenceContracts, type RustModuleGraph, type FrozenCoordinateEvidenceContract } from "../🔍️discovery/🟦️.ts";
 import { rustTokens as rustSyntaxTokens, rustTokenPairs } from "../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { validateFrozenMarkdownCoordinateEvidenceContracts, type FrozenMarkdownCoordinateEvidenceContract } from "../🔍️discovery/🟦️.ts";
@@ -33,7 +33,7 @@ import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } fr
 import { fileURLToPath } from "node:url";
 import { moduleSourceClosureDigest, openRecordStore, pruneRecordStoreNamespaces, recordKey, type RecordStore } from "../⚡️caching/🗃️records/🟦️.ts";
 import { repoCacheDirectory } from "../⚡️caching/🟦️.ts";
-import { artifactPathProjectionCatalogRoots, createTaxonomyPathMatcher, renderArtifactPathProjectionRoot, semanticArtifactEmptyFacetProjectionAuthority, semanticExactOwnedFileCatalog, semanticExactOwnedFileProjectionAuthority, semanticOwnedFileHistoryProjectionAuthority, semanticOwnedFileProjectionAuthority, semanticOwnedPrimaryFileProjectionAuthority, semanticPathProjectionAuthority, semanticPathProjectionReferenceConsumers, type SemanticExactOwnedFileCase, type SemanticExactOwnedFileCatalog, type SemanticFacetPrimaryFileProjectionContract, type SemanticPathProjectionReferenceConsumerForm, type SemanticProjectionAuthorityNode } from "../🔍️discovery/🟦️.ts";
+import { artifactPathProjectionCatalogRoots, createTaxonomyPathMatcher, renderArtifactPathProjectionRoot, semanticArtifactEmptyFacetProjectionAuthority, semanticExactOwnedFileCatalog, semanticExactOwnedFileProjectionAuthority, semanticOwnedFileHistoryProjectionAuthority, semanticOwnedFileProjectionAuthority, semanticOwnedPrimaryFileProjectionAuthority, semanticPathProjectionAuthority, semanticPathProjectionReferenceConsumers, type OwnerProjectionEntry, type OwnerProjectionPolicy, type SemanticFacetPrimaryFileProjectionContract, type SemanticPathProjectionReferenceConsumerForm, type SemanticProjectionAuthorityNode } from "../🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 📜️Contracts
@@ -77,10 +77,10 @@ export interface ReferenceEdit {
 }
 
 export interface TaxonomyMoveSourceAuthority {
-  readonly kind: "exact-owner-current-source-revision-v1";
-  readonly revisionId: "testing-readme-protocol-v2-reviewed";
+  readonly kind: "exact-owner-current-source-approval-v1";
+  readonly revisionId: string;
   readonly revisionDigest: string;
-  readonly inputs: readonly Readonly<{ role: "schema" | "catalog" | "expectation"; path: string; preimage: Extract<TaxonomyLeafPreimage, { nodeKind: "file" }> }>[];
+  readonly inputs: readonly Readonly<{ role: "schema" | "catalog" | "approval"; path: string; preimage: Extract<TaxonomyLeafPreimage, { nodeKind: "file" }> }>[];
 }
 
 export interface TaxonomyMove {
@@ -189,8 +189,7 @@ export type TaxonomyRemovalAuthority =
   | Readonly<{ kind: "exact-owner-generated-source"; catalogPath: string; catalogContentHash: string; generatorContractId: string; destinationPath: string; outputPreimage: Extract<TaxonomyLeafPreimage, { nodeKind: "file" }>; authorityDigest: string }>
   | Readonly<{ kind: "byte-and-mode-identical"; evidenceSetDigest: string; retainedFinalPath: string; members: readonly TaxonomyEvidenceMember[] }>
   | Readonly<{ kind: "exact-path-mutation"; catalogPath: string; catalogContentHash: string; caseId: string; sourcePath: string; sourcePreimage: Extract<TaxonomyLeafPreimage, { nodeKind: "file" }>; disposition: "remove"; authorityDigest: string }>
-  | Readonly<{ kind: "owner-manifest-status"; contractId: "ticket-important-markdown-v1"; ownerPath: string; manifestPath: string; manifestPreimage: Extract<TaxonomyLeafPreimage, { nodeKind: "file" }>; status: "closed"; contentState: "zero-byte"; authorityDigest: string }>
-  | Readonly<{ kind: "serialized-path-sentinel"; catalogPath: string; catalogContentHash: string; caseId: string; serializedInputPath: string; expectedViolationCode: "windows-reserved-name" | "trailing-dot-or-space"; authorityDigest: string }>;
+  | Readonly<{ kind: "owner-manifest-status"; contractId: "ticket-important-markdown-v1"; ownerPath: string; manifestPath: string; manifestPreimage: Extract<TaxonomyLeafPreimage, { nodeKind: "file" }>; status: "closed"; contentState: "zero-byte"; authorityDigest: string }>;
 
 export interface TaxonomyEvidenceRemoval {
   readonly operationId: string;
@@ -198,7 +197,7 @@ export interface TaxonomyEvidenceRemoval {
   readonly preimage: TaxonomyLeafPreimage;
   readonly authority: TaxonomyRemovalAuthority;
   readonly embeddedTicketRootId?: string;
-  readonly rationaleRule: "redundant-ticket-evidence-v1" | "serialized-platform-sentinel-v1" | "ticket-important-closed-empty-v1" | "ticket-important-exact-empty-residue-v1" | "exact-owner-generated-source-retirement-v1" | "nested-cargo-generated-source-retirement-v1";
+  readonly rationaleRule: "redundant-ticket-evidence-v1" | "ticket-important-closed-empty-v1" | "ticket-important-exact-empty-residue-v1" | "exact-owner-generated-source-retirement-v1" | "nested-cargo-generated-source-retirement-v1";
   readonly ownerId: string;
 }
 
@@ -382,7 +381,6 @@ type SemanticKindDescendantContract = Omit<SemanticExactDescendantContract, "req
   requiredNodes: readonly SemanticDescendantKindNode[];
   exclusiveAlternatives: readonly Readonly<{ id: string; mode: "exactly-one"; nodes: readonly SemanticDescendantKindNode[] }>[];
 }>;
-const TRANSACTION_SENTINEL_CASES_CATALOG_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🚨️transaction-sentinel-cases/🔣️.json";
 const TICKET_IMPORTANT_EXACT_MUTATIONS_CATALOG_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/💉️ticket-important-exact-mutations/🔣️.json";
 const TICKET_IMPORTANT_EXACT_GOVERNED_SOURCES = [
   ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️12/WINDOW-APP-PANEL-CONTRACTS/🧪️window-policy-fixture/🎛️apps/🧪️fixture/🎭️modes/🧪️mode/🪟️windows/🧪️component-window/👥️presence/📌️important.md",
@@ -526,14 +524,7 @@ function parseRemovalAuthority(value: unknown, name: string): TaxonomyRemovalAut
     if (result.authorityDigest !== sha256(canonicalJson(digestible))) throw new Error(`${name}.authorityDigest does not match its authority`);
     return result;
   }
-  if (candidate.kind === "serialized-path-sentinel") {
-    const row = planRecord(value, name, ["kind", "catalogPath", "catalogContentHash", "caseId", "serializedInputPath", "expectedViolationCode", "authorityDigest"]);
-    if (row.expectedViolationCode !== "windows-reserved-name" && row.expectedViolationCode !== "trailing-dot-or-space") throw new Error(`${name}.expectedViolationCode is invalid`);
-    const result = { kind: "serialized-path-sentinel" as const, catalogPath: planPath(row.catalogPath, `${name}.catalogPath`), catalogContentHash: planString(row.catalogContentHash, `${name}.catalogContentHash`, PLAN_HASH), caseId: planString(row.caseId, `${name}.caseId`), serializedInputPath: planString(row.serializedInputPath, `${name}.serializedInputPath`), expectedViolationCode: row.expectedViolationCode as "windows-reserved-name" | "trailing-dot-or-space", authorityDigest: planString(row.authorityDigest, `${name}.authorityDigest`, PLAN_HASH) };
-    const { authorityDigest: _digest, ...digestible } = result;
-    if (result.authorityDigest !== sha256(canonicalJson(digestible))) throw new Error(`${name}.authorityDigest does not match its authority`);
-    return result;
-  }
+  
   throw new Error(`${name}.kind is invalid`);
 }
 
@@ -549,12 +540,12 @@ function parseReferenceEdit(value: unknown, name: string): ReferenceEdit {
 /** 🪪️ Parses exact role-labelled current-source evidence without authenticating its current bytes. */
 function parseMoveSourceAuthority(value: unknown, name: string): TaxonomyMoveSourceAuthority {
   const row = planRecord(value, name, ["kind", "revisionId", "revisionDigest", "inputs"]);
-  if (row.kind !== "exact-owner-current-source-revision-v1" || row.revisionId !== "testing-readme-protocol-v2-reviewed") throw new Error(`${name} has an unsupported current-source revision`);
+  if (row.kind !== "exact-owner-current-source-approval-v1" || typeof row.revisionId !== "string" || !/^[a-z][a-z0-9-]*$/u.test(row.revisionId)) throw new Error(`${name} has an unsupported current-source revision`);
   if (!Array.isArray(row.inputs) || row.inputs.length !== 3) throw new Error(`${name}.inputs must contain exactly three role-labelled files`);
   const roles = new Set<string>(), paths = new Set<string>();
   const inputs = row.inputs.map((value: unknown, index: number): TaxonomyMoveSourceAuthority["inputs"][number] => {
     const label = `${name}.inputs[${index}]`, input = planRecord(value, label, ["role", "path", "preimage"]);
-    if (input.role !== "schema" && input.role !== "catalog" && input.role !== "expectation") throw new Error(`${label}.role is invalid`);
+    if (input.role !== "schema" && input.role !== "catalog" && input.role !== "approval") throw new Error(`${label}.role is invalid`);
     const path = planPath(input.path, `${label}.path`);
     if (/[\\\u0000-\u001f:*?"<>|]/u.test(path) || Buffer.from(path).toString("utf8") !== path || /^(?:compose|temp\/compose)(?:\/|$)/u.test(path)) throw new Error(`${label}.path is unsafe`);
     if (roles.has(input.role) || paths.has(path)) throw new Error(`${name}.inputs have duplicate roles or paths`);
@@ -649,7 +640,7 @@ export function parseTaxonomyPlan(value: unknown): TaxonomyPlan {
   const evidenceRemovals = (row.evidenceRemovals as unknown[]).map((value, index) => {
     const name = `taxonomy plan evidenceRemovals[${index}]`;
     const entry = planRecord(value, name, ["operationId", "sourcePath", "preimage", "authority", "rationaleRule", "ownerId"], ["embeddedTicketRootId"]);
-    if (entry.rationaleRule !== "redundant-ticket-evidence-v1" && entry.rationaleRule !== "serialized-platform-sentinel-v1" && entry.rationaleRule !== "ticket-important-closed-empty-v1" && entry.rationaleRule !== "ticket-important-exact-empty-residue-v1" && entry.rationaleRule !== "exact-owner-generated-source-retirement-v1" && entry.rationaleRule !== "nested-cargo-generated-source-retirement-v1") throw new Error(`${name}.rationaleRule is invalid`);
+    if (entry.rationaleRule !== "redundant-ticket-evidence-v1" && entry.rationaleRule !== "ticket-important-closed-empty-v1" && entry.rationaleRule !== "ticket-important-exact-empty-residue-v1" && entry.rationaleRule !== "exact-owner-generated-source-retirement-v1" && entry.rationaleRule !== "nested-cargo-generated-source-retirement-v1") throw new Error(`${name}.rationaleRule is invalid`);
     const operationId = parseOperationId(entry, name);
     const result: TaxonomyEvidenceRemoval = { operationId, sourcePath: planPath(entry.sourcePath, `${name}.sourcePath`), preimage: parseLeafPreimage(entry.preimage, `${name}.preimage`), authority: parseRemovalAuthority(entry.authority, `${name}.authority`), embeddedTicketRootId: entry.embeddedTicketRootId === undefined ? undefined : planString(entry.embeddedTicketRootId, `${name}.embeddedTicketRootId`, PLAN_OPERATION_ID), rationaleRule: entry.rationaleRule, ownerId: planString(entry.ownerId, `${name}.ownerId`) };
     if (result.authority.kind === "nested-cargo-generated-source") {
@@ -663,7 +654,7 @@ export function parseTaxonomyPlan(value: unknown): TaxonomyPlan {
       if (result.rationaleRule !== "ticket-important-closed-empty-v1" || result.embeddedTicketRootId !== undefined || dirname(result.sourcePath) !== result.authority.ownerPath || result.authority.manifestPath !== `${result.authority.ownerPath}/🎫️ticket.json` || basename(result.sourcePath) !== "📌️important.md" || result.preimage.nodeKind !== "file" || result.preimage.size !== 0) throw new Error(`${name} ticket lifecycle authority is not bound to its exact owner and zero-byte source`);
     } else if (result.authority.kind === "exact-path-mutation") {
       if (result.rationaleRule !== "ticket-important-exact-empty-residue-v1" || result.embeddedTicketRootId !== undefined || result.sourcePath !== result.authority.sourcePath || canonicalJson(result.preimage) !== canonicalJson(result.authority.sourcePreimage)) throw new Error(`${name} exact path authority is not bound to its frozen removal`);
-    } else if (result.rationaleRule !== "serialized-platform-sentinel-v1" || result.embeddedTicketRootId !== undefined) throw new Error(`${name} serialized sentinel authority has an invalid rationale or embedded-root binding`);
+    }
     const { operationId: _id, ...digestible } = result;
     if (operationId !== dispositionOperationId("evidence-removal", digestible)) throw new Error(`${name}.operationId does not match its fields`);
     return result;
@@ -1705,7 +1696,7 @@ function referenceCoordinateRoots(repoRoot: string, paths: Iterable<string>, tax
   for (const [index, path] of ordered.entries()) {
     report(progress, operation, "incoming-coordinate-roots", index, ordered.length, path);
     checkCancellation(repoRoot, cancelFile);
-    if (isExcluded(path, taxonomy) || path.split("/").includes(".git") || ancestorReferenceCoordinateRoot(path, roots)) continue;
+    if (isExcluded(path, taxonomy) || taxonomyFixturePayloadPath(path, taxonomy.discoverySchema) || path.split("/").includes(".git") || ancestorReferenceCoordinateRoot(path, roots)) continue;
     const marker = admit(repoRoot, `${path}/.git`, "Reference repository marker"), stat = lstatOrNull(marker);
     if (!stat) { observe?.(`${path}/.git`, null); continue; }
     if (stat.isSymbolicLink()) throw new Error(`Reference repository marker is a symlink: ${path}/.git`);
@@ -1757,6 +1748,7 @@ function incomingReferenceLexicalAdmission(targets: Iterable<string>): (content:
 /** 👁️ One incoming-reference candidate as the snapshot reads it: a symlink with its target, a textual file with its bytes, or `undefined`
  * for anything else. An invalid frozen evidence document is reported by the reference planner, never thrown here. */
 function incomingReferenceObservation(repoRoot: string, path: string, taxonomy: LoadedTaxonomy, admit: typeof assertLexicalInputOutsideOpaque): Readonly<{ stat: Stats; target?: string; bytes?: Buffer }> | undefined {
+  if (taxonomyFixturePayloadPath(path, taxonomy.discoverySchema)) return undefined;
   const absolute = admit(repoRoot, path, "Incoming reference candidate"), stat = lstatOrNull(absolute);
   if (!stat || stat.isDirectory()) return undefined;
   if (stat.isSymbolicLink()) return { stat, target: readlinkSync(absolute) };
@@ -1820,7 +1812,7 @@ function incomingReferenceSnapshot(inventory: TaxonomyInventory, taxonomy: Loade
   const entries: TaxonomyInventoryEntry[] = [], contents = new Map<string, string>(), admit = createLexicalInputSession();
   for (const [index, path] of referenceCandidatesWithProgress(scan ? [...scan.observed.keys()] : paths, "plan", options.progress)) {
     checkCancellation(inventory.repoRoot, options.cancelFile);
-    if (admitted.has(path)) continue;
+    if (admitted.has(path) || taxonomyFixturePayloadPath(path, taxonomy.discoverySchema)) continue;
     const observed = scan ? scan.observed.get(path)! : incomingReferenceObservation(inventory.repoRoot, path, taxonomy, admit);
     if (!observed) continue;
     const stat = observed.stat;
@@ -3648,9 +3640,15 @@ function leafContent(repoRoot: string, path: string, contentHash: string): () =>
   };
 }
 
+/** 🧊️ Recognizes inert fixture payloads from existing language-neutral test collection policy. */
+export function taxonomyFixturePayloadPath(path: string, policy: Pick<LoadedTaxonomy["discoverySchema"], "testsDirName" | "testFixturesDirName">): boolean {
+  const segments = path.split("/");
+  return segments.some((segment, index) => segment === policy.testFixturesDirName && segments.slice(0, index).includes(policy.testsDirName));
+}
+
 function referenceGraph(repoRoot: string, entries: ReadonlyMap<string, MutableInventoryEntry>, taxonomy: LoadedTaxonomy, progress?: TaxonomyInventoryOptions["progress"], cancelFile?: string, store: RecordStore | null = null, workers = 1): void {
   const known = referencePathIndex(entries.keys()), opaqueLeaves = opaqueLeafNames(taxonomy);
-  const files = [...entries.values()].filter((entry) => entry.nodeKind === "file" && textualPath(entry.sourcePath) && (entry.size ?? 0) <= 16 * 1024 * 1024);
+  const files = [...entries.values()].filter((entry) => entry.nodeKind === "file" && textualPath(entry.sourcePath) && !taxonomyFixturePayloadPath(entry.sourcePath, taxonomy.discoverySchema) && (entry.size ?? 0) <= 16 * 1024 * 1024);
   if (store) precomputeReferenceDigests(store, repoRoot, files.filter((entry) => !isExcluded(entry.sourcePath, taxonomy)).map((entry) => [entry.sourcePath, entry.contentHash, entry.size ?? 0] as const), opaqueLeaves, workers, progress, cancelFile);
   report(progress, "inventory", "references", 0, files.length);
   for (let index = 0; index < files.length; index++) {
@@ -3900,27 +3898,27 @@ function externalProjectionReferenceEntries(inventory: TaxonomyInventory, moves:
 
 interface ExactOwnerMoveIndex {
   readonly moving: ReadonlySet<string>;
-  readonly owners: readonly SemanticExactOwnedFileCatalog["cases"][number][];
+  readonly owners: readonly OwnerProjectionPolicy["entries"][number][];
   readonly authoredMoves: ReadonlyMap<string, TaxonomyMove>;
   readonly markdownSources: ReadonlySet<string>;
 }
 
-const exactOwnerMoveIndexes = new WeakMap<readonly TaxonomyMove[], WeakMap<SemanticExactOwnedFileCatalog, ExactOwnerMoveIndex>>();
+const exactOwnerMoveIndexes = new WeakMap<readonly TaxonomyMove[], WeakMap<OwnerProjectionPolicy, ExactOwnerMoveIndex>>();
 
 /** 🧭️ The README-owner moves and catalog cases every exact-owner token check consults, derived once per move list and catalog. */
-function exactOwnerMoveIndex(catalog: SemanticExactOwnedFileCatalog, moves: readonly TaxonomyMove[]): ExactOwnerMoveIndex {
+function exactOwnerMoveIndex(catalog: OwnerProjectionPolicy, moves: readonly TaxonomyMove[]): ExactOwnerMoveIndex {
   let byCatalog = exactOwnerMoveIndexes.get(moves);
   if (!byCatalog) exactOwnerMoveIndexes.set(moves, byCatalog = new WeakMap());
   const cached = byCatalog.get(catalog);
   if (cached) return cached;
   const moving = new Set(moves.filter((move) => move.rationaleRule === "readme-license-owner-projection-v1").map((move) => move.sourcePath)), authoredMoves = new Map<string, TaxonomyMove>();
   for (const move of moves) if (moving.has(move.sourcePath) && !authoredMoves.has(move.sourcePath)) authoredMoves.set(move.sourcePath, move);
-  const index = { moving, owners: catalog.cases.filter((entry) => moving.has(entry.sourcePath)), authoredMoves, markdownSources: new Set(catalog.cases.filter((entry) => entry.referenceOwnerIds.includes("markdown-relative-reference-adapter")).map((entry) => entry.sourcePath)) };
+  const index = { moving, owners: catalog.entries.filter((entry) => moving.has(entry.sourcePath)), authoredMoves, markdownSources: new Set(catalog.entries.filter((entry) => entry.referenceOwnerIds.includes("markdown-relative-reference-adapter")).map((entry) => entry.sourcePath)) };
   byCatalog.set(catalog, index);
   return index;
 }
 
-function exactOwnedReferenceTokens(path: string, content: string, catalog: SemanticExactOwnedFileCatalog | null, moves: readonly TaxonomyMove[], taxonomy: LoadedTaxonomy): Readonly<{ tokens: readonly ReferenceToken[]; problems: readonly string[] }> {
+function exactOwnedReferenceTokens(path: string, content: string, catalog: OwnerProjectionPolicy | null, moves: readonly TaxonomyMove[], taxonomy: LoadedTaxonomy): Readonly<{ tokens: readonly ReferenceToken[]; problems: readonly string[] }> {
   if (!catalog) return { tokens: [], problems: [] };
   const { owners, authoredMoves } = exactOwnerMoveIndex(catalog, moves);
   const tokens: ReferenceToken[] = [], problems: string[] = [];
@@ -3955,13 +3953,13 @@ function exactOwnedReferenceTokens(path: string, content: string, catalog: Seman
   return { tokens, problems };
 }
 
-function externalExactOwnedReferenceEntries(inventory: TaxonomyInventory, moves: readonly TaxonomyMove[], catalog: SemanticExactOwnedFileCatalog | null, taxonomy: LoadedTaxonomy): readonly TaxonomyInventoryEntry[] {
+function externalExactOwnedReferenceEntries(inventory: TaxonomyInventory, moves: readonly TaxonomyMove[], catalog: OwnerProjectionPolicy | null, taxonomy: LoadedTaxonomy): readonly TaxonomyInventoryEntry[] {
   if (!catalog || !moves.some((move) => move.rationaleRule === "readme-license-owner-projection-v1")) return [];
   const admitted = new Set(inventory.entries.map((entry) => entry.sourcePath));
   const moving = new Set(moves.map((move) => move.sourcePath));
-  const required = new Set(catalog.cases.filter((entry) => moving.has(entry.sourcePath)).flatMap((entry) => entry.referenceOwnerIds).filter((id) => ["repo-cli-dev-docs-go", "commonmark-scratch-rust-reader"].includes(id)).map((id) => catalog.referenceOwners[id].ownerPath));
+  const required = new Set(catalog.entries.filter((entry) => moving.has(entry.sourcePath)).flatMap((entry) => entry.referenceOwnerIds).filter((id) => ["repo-cli-dev-docs-go", "commonmark-scratch-rust-reader"].includes(id)).map((id) => catalog.referenceOwners[id].ownerPath));
   const paths = new Set(required);
-  for (const entry of catalog.cases) {
+  for (const entry of catalog.entries) {
     const source = assertLexicalInputOutsideOpaque(inventory.repoRoot, entry.sourcePath, "Exact owner reference", true);
     const active = lstatOrNull(source) ? entry.sourcePath : entry.destinationPath;
     const absolute = assertLexicalInputOutsideOpaque(inventory.repoRoot, active, "Exact owner reference", true);
@@ -3982,7 +3980,7 @@ function externalExactOwnedReferenceEntries(inventory: TaxonomyInventory, moves:
   return rows;
 }
 
-function exactOwnedMarkdownTarget(referencePath: string, token: ReferenceToken, catalog: SemanticExactOwnedFileCatalog | null, moves: readonly TaxonomyMove[], taxonomy: LoadedTaxonomy): string | null {
+function exactOwnedMarkdownTarget(referencePath: string, token: ReferenceToken, catalog: OwnerProjectionPolicy | null, moves: readonly TaxonomyMove[], taxonomy: LoadedTaxonomy): string | null {
   if (token.rewriteKind === "exact-owner-reference" || token.adapter !== "markdown" || !catalog) return null;
   const index = exactOwnerMoveIndex(catalog, moves);
   if (!index.markdownSources.has(referencePath) || !index.moving.has(referencePath)) return null;
@@ -4146,7 +4144,7 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
   const ownerCatalog = exactOwnedFileCatalog(inventory.repoRoot, taxonomy);
   const ownerConsumers = externalExactOwnedReferenceEntries(inventory, moves, ownerCatalog, taxonomy);
   const facetConsumers = externalArtifactEmptyFacetReferenceEntries(inventory, moves, taxonomy);
-  known = referencePathIndex([...known.exact, ...incoming.paths, ...ownerConsumers.map((entry) => entry.sourcePath), ...facetConsumers.map((entry) => entry.sourcePath), ...(ownerCatalog?.cases.flatMap((entry) => [entry.sourcePath, entry.destinationPath]) ?? [])], inventory.repoRoot, incoming.coordinateRoots, undefined, options.cancelFile, new Set(inventory.entries.filter((entry) => entry.sourcePath !== entry.normalizedPath).map((entry) => entry.sourcePath)));
+  known = referencePathIndex([...known.exact, ...incoming.paths, ...ownerConsumers.map((entry) => entry.sourcePath), ...facetConsumers.map((entry) => entry.sourcePath), ...(ownerCatalog?.entries.flatMap((entry) => [entry.sourcePath, entry.destinationPath]) ?? [])], inventory.repoRoot, incoming.coordinateRoots, undefined, options.cancelFile, new Set(inventory.entries.filter((entry) => entry.sourcePath !== entry.normalizedPath).map((entry) => entry.sourcePath)));
   const moveBySource = new Map(moves.map((move) => [move.sourcePath, move]));
   const destinationBySource = new Map(inventory.entries
     .filter((entry) => entry.sourcePath !== entry.normalizedPath && generatorContractsForOutputPath(entry.sourcePath, taxonomy).length === 0)
@@ -4183,7 +4181,7 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
   const accountedIncoming = new Set<string>();
   const artifactContexts = artifactReferenceProjections(inventory, moves, taxonomy);
   for (const context of artifactContexts) for (const problem of context.authorityProblems) unresolved.push(violation("projection-reference-authority-invalid", context.sourceRoot, `${context.id}: ${problem}`));
-  const generatedOwnerSources = new Set(ownerCatalog?.cases.filter((entry) => entry.generatorOwnerId !== null).map((entry) => entry.sourcePath) ?? []);
+  const generatedOwnerSources = new Set(ownerCatalog?.entries.filter((entry) => entry.generatorOwnerId !== null).map((entry) => entry.sourcePath) ?? []);
   for (const removal of removals) if (removal.authority.kind === "nested-cargo-generated-source") {
     const authority = removal.authority, catalogContract = taxonomy.schema.semanticPackageProjectionContracts["nested-cargo-packages-v1"];
     const row = packageCatalog?.packages.find((row) => row.id === authority.packageId), mapping = row?.mappings.find((mapping) => mapping.sourcePath === removal.sourcePath);
@@ -4191,7 +4189,7 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
     if (!mapping || mapping.disposition !== "generated" || authority.catalogPath !== catalogContract.authorityCatalogPath || authority.catalogContentHash !== catalogContract.authorityCatalogSha256 || authority.destinationPath !== mapping.destinationPath || removal.preimage.nodeKind !== "file" || removal.preimage.contentHash !== mapping.sourceHash || removal.preimage.size !== mapping.sourceSize || !entry || canonicalJson(inventoryLeafPreimage(entry)) !== canonicalJson(removal.preimage) || !row!.generatedSourceRetirements.some((item) => item.sourcePath === removal.sourcePath && item.destinationPath === authority.destinationPath && item.generatorContractId === authority.generatorContractId && item.sourceMode === removal.preimage.mode)) throw new Error("Generated source reference exclusion lacks exact retirement authority: " + removal.sourcePath);
     generatedOwnerSources.add(removal.sourcePath);
   }
-  const candidates = [...new Map([...inventory.entries, ...incoming.entries, ...externalProjectionReferenceEntries(inventory, moves, artifactContexts, taxonomy), ...ownerConsumers, ...facetConsumers].map((entry) => [entry.sourcePath, entry])).values()].filter((entry) => entry.nodeKind === "file" && textualPath(entry.sourcePath) && !generatedOwnerSources.has(entry.sourcePath) && generatorContractsForOutputPath(entry.sourcePath, taxonomy).length === 0).sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath));
+  const candidates = [...new Map([...inventory.entries, ...incoming.entries, ...externalProjectionReferenceEntries(inventory, moves, artifactContexts, taxonomy), ...ownerConsumers, ...facetConsumers].map((entry) => [entry.sourcePath, entry])).values()].filter((entry) => entry.nodeKind === "file" && textualPath(entry.sourcePath) && !taxonomyFixturePayloadPath(entry.sourcePath, taxonomy.discoverySchema) && !generatedOwnerSources.has(entry.sourcePath) && generatorContractsForOutputPath(entry.sourcePath, taxonomy).length === 0).sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath));
   const store = referenceTokenStore(inventory.repoRoot), stamps = inventoryLeafStamps.get(inventory), admit = createLexicalInputSession(), reach = referenceResolutionReach(destinationBySource.keys()), opaqueLeaves = opaqueLeafNames(taxonomy);
   const facetContract = taxonomy.schema.semanticOwnedFileProjectionContracts["artifact-empty-facet-primary-markdown-v1"];
   const contentGated = new Set<string>([
@@ -4402,18 +4400,21 @@ function ancestorDirectoryKindIds(path: string, kinds: ReadonlyMap<string, strin
 }
 
 //#region 🧭️Canonical Mutation Case Pair
-/** 🪞️ The schema-side path a subset's `🧫️fixtures/🧬️mutations` mirror stands for, so a registered domain owner's
+/** 🪞️ The schema-side path a subset's `🧪️tests/🧫️fixtures/🧬️mutations` mirror stands for, so a registered domain owner's
  * `<domain>/<verb>` layout resolves identically on both sides; any other path is returned unchanged. */
 function mutationFixtureMirrorOwnerPath(path: string, taxonomy: LoadedTaxonomy): string {
-  const mirror = `/${taxonomy.discoverySchema.testFixturesDirName}/🧬️mutations/`, at = path.indexOf(mirror);
-  return at < 0 ? path : `${path.slice(0, at)}/${taxonomy.discoverySchema.mutationPayloadSchemaLocation.directoryName}/🧬️mutations/${path.slice(at + mirror.length)}`;
+  const contract = taxonomy.discoverySchema;
+  const mirror = `/${contract.testsDirName}/${contract.testFixturesDirName}/${contract.schemaScopeOwnerLevels.mutationsFacetDirName}/`;
+  let at = path.indexOf(mirror);
+  while (at >= 0 && path.slice(0, at).endsWith(`/${contract.schemaScopeOwnerLevels.moduleMemberDirName}`)) at = path.indexOf(mirror, at + mirror.length);
+  return at < 0 ? path : `${path.slice(0, at)}/${contract.mutationPayloadSchemaLocation.directoryName}/${contract.schemaScopeOwnerLevels.mutationsFacetDirName}/${path.slice(at + mirror.length)}`;
 }
 
 /** 🧬️ Mutation leaf owners proven by their own canonical descriptor: the configured schema version naming exactly this
  * directory as its `owner`, with a semantic identity. This structural authority replaces per-name leaf registries; the
  * identity's agreement with the directory stays governed by the mutation payload authority law. A
- * `🧫️fixtures/🧬️mutations/<leaf>` mirror is proven through its schema-side owner, whose descriptor is read from disk when
- * the inventory scope excludes it. A `🧫️fixtures/<leaf>` or `🧫️fixtures/<leaf>-<scenario>` vector directory (leaf names
+ * `🧪️tests/🧫️fixtures/🧬️mutations/<leaf>` mirror is proven through its schema-side owner, whose descriptor is read from disk when
+ * the inventory scope excludes it. A `🧪️tests/🧫️fixtures/<leaf>` or `🧪️tests/🧫️fixtures/<leaf>-<scenario>` vector directory (leaf names
  * compared without U+FE0F) is proven through a sibling `🧬️schema/🧬️mutations/<leaf>` and returned itself, and so is each
  * of its scenario children holding a fixture bundle (`🦠️mutation`, `📸️snapshot`, `🔺️diff`); the set holds proven leaf
  * owners plus the vector and scenario directories they own. */
@@ -4459,8 +4460,8 @@ function provenMutationLeafOwners(repoRoot: string, directories: readonly string
   for (const directory of directories) {
     const owned = mutationFixtureMirrorOwnerPath(directory, taxonomy);
     if (owned !== directory) prove(owned);
-    if (basename(dirname(directory)) !== taxonomy.discoverySchema.testFixturesDirName) continue;
-    const root = `${dirname(dirname(directory))}/${taxonomy.discoverySchema.mutationPayloadSchemaLocation.directoryName}/🧬️mutations`, vector = emojiFold(basename(directory));
+    if (basename(dirname(directory)) !== taxonomy.discoverySchema.testFixturesDirName || basename(dirname(dirname(directory))) !== taxonomy.discoverySchema.testsDirName || basename(dirname(dirname(dirname(directory)))) === taxonomy.discoverySchema.schemaScopeOwnerLevels.moduleMemberDirName) continue;
+    const root = `${dirname(dirname(dirname(directory)))}/${taxonomy.discoverySchema.mutationPayloadSchemaLocation.directoryName}/🧬️mutations`, vector = emojiFold(basename(directory));
     for (const leaf of leafNames(root)) {
       const folded = emojiFold(leaf);
       if (vector !== folded && !vector.startsWith(`${folded}-`)) continue;
@@ -4848,8 +4849,8 @@ function normalizeMutationCasePairs(
         }
         const implementationRoot = `${subsetRoot}/🧬️schema/🧬️mutations/${mutationName}/🧪️tests/${vector.scenarioDirectoryName}`.normalize("NFC");
         const sourceMutationRelativePath = source.mutationRoot.slice(`${subsetRoot}/🧬️schema/🧬️mutations/`.length);
-        const fixtureSourceRoot = `${subsetRoot}/🧫️fixtures/🧬️mutations/${sourceMutationRelativePath}/${source.sourceScenarioDirectoryName}`.normalize("NFC");
-        const fixtureRoot = `${subsetRoot}/🧫️fixtures/🧬️mutations/${mutationName}/${vector.scenarioDirectoryName}`.normalize("NFC");
+        const fixtureSourceRoot = `${subsetRoot}/🧪️tests/🧫️fixtures/🧬️mutations/${sourceMutationRelativePath}/${source.sourceScenarioDirectoryName}`.normalize("NFC");
+        const fixtureRoot = `${subsetRoot}/🧪️tests/🧫️fixtures/🧬️mutations/${mutationName}/${vector.scenarioDirectoryName}`.normalize("NFC");
         const fixtureSource = { ...source, scenarioRoot: fixtureSourceRoot };
         const fixtureProblem = projectionBundleProblem(fixtureSource, entries, kinds, fixtureContract, taxonomy);
         if (fixtureProblem) {
@@ -4910,12 +4911,12 @@ function validateMutationCasePairs(
   const implementations = [...entries.values()].filter((entry) => entry.nodeKind === "directory").map((entry) => projectionSourceAt(entry.sourcePath, scope, entries, _kinds, taxonomy)).filter((entry): entry is MutationProjectionSource => entry !== null);
   for (const source of implementations) {
     const ownerRelativePath = source.mutationRoot.slice(`${source.subsetRoot}/🧬️schema/🧬️mutations/`.length);
-    expected.add(`${source.subsetRoot}/🧫️fixtures/🧬️mutations/${ownerRelativePath}/${source.sourceScenarioDirectoryName}`.normalize("NFC"));
+    expected.add(`${source.subsetRoot}/🧪️tests/🧫️fixtures/🧬️mutations/${ownerRelativePath}/${source.sourceScenarioDirectoryName}`.normalize("NFC"));
   }
   for (const entry of entries.values()) {
     if (entry.nodeKind !== "directory") continue;
     if (/\/🧪️tests\/🪆️[^/]+\/[^/]+\/🧪️[^/]+$/u.test(entry.sourcePath)) entry.violations.push(violation("mutation-projected-storage-forbidden", entry.sourcePath, "Mutation cases must use the subset-owned canonical implementation and fixture roots"));
-    const looksLikeFixtureScenario = entry.sourcePath.includes("/🧫️fixtures/🧬️mutations/") && entries.has(`${entry.sourcePath}/🦠️mutation`) && entries.has(`${entry.sourcePath}/📸️snapshot`) && entries.has(`${entry.sourcePath}/🔺️diff`) && entries.has(`${entry.sourcePath}/🎯️outcome`);
+    const looksLikeFixtureScenario = entry.sourcePath.includes("/🧪️tests/🧫️fixtures/🧬️mutations/") && entries.has(`${entry.sourcePath}/🦠️mutation`) && entries.has(`${entry.sourcePath}/📸️snapshot`) && entries.has(`${entry.sourcePath}/🔺️diff`) && entries.has(`${entry.sourcePath}/🎯️outcome`);
     if (looksLikeFixtureScenario && !expected.has(entry.sourcePath)) entry.violations.push(violation("mutation-fixture-unpaired", entry.sourcePath, "Fixture bundle has no canonical implementation case"));
   }
 }
@@ -5143,12 +5144,12 @@ function projectNestedCargoPackages(repoRoot: string, entries: Map<string, Mutab
 //#endregion 📦️Nested Cargo Packages
 
 //#region 📃️Exact Owner Leaves
-function exactOwnedFileCatalog(repoRoot: string, taxonomy: LoadedTaxonomy): SemanticExactOwnedFileCatalog | null {
+function exactOwnedFileCatalog(repoRoot: string, taxonomy: LoadedTaxonomy): OwnerProjectionPolicy | null {
   return semanticExactOwnedFileCatalog(repoRoot, taxonomy.discoverySchema);
 }
 
 interface ExactOwnedCatalogSnapshot {
-  readonly catalog: SemanticExactOwnedFileCatalog | null;
+  readonly catalog: OwnerProjectionPolicy | null;
   readonly input: SemanticOwnedInputFileSnapshot | null;
 }
 
@@ -5158,35 +5159,34 @@ function exactOwnedCatalogSnapshot(repoRoot: string, taxonomy: LoadedTaxonomy): 
   return { catalog, input };
 }
 
-function exactOwnedCurrentRevisions(taxonomy: LoadedTaxonomy): ReturnType<typeof parseSemanticOwnedCurrentSourceRevisions> | undefined {
+function exactOwnedCurrentRevisions(taxonomy: LoadedTaxonomy): ReturnType<typeof parseCurrentSourceApprovals> | undefined {
   const contract = taxonomy.schema.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];
   return contract?.contractKind === "exact-owner-path-catalog" ? contract.currentSourceRevisions : undefined;
 }
 
 function exactOwnedCurrentRawPath(path: string, snapshot: ExactOwnedCatalogSnapshot, taxonomy: LoadedTaxonomy): boolean {
-  return Object.values(exactOwnedCurrentRevisions(taxonomy) ?? {}).some((row) => row.sourcePath === path || snapshot.catalog?.cases[row.catalogCaseIndex]?.sourcePath === path);
+  return Object.values(exactOwnedCurrentRevisions(taxonomy) ?? {}).some((row) => row.sourcePath === path && snapshot.catalog?.entries.some(entry => entry.sourcePath === row.sourcePath) === true);
 }
 
 function exactOwnedFileResolution(repoRoot: string, entry: TaxonomyInventoryEntry, snapshot: ExactOwnedCatalogSnapshot, taxonomy: LoadedTaxonomy): Readonly<{ result: ReturnType<typeof semanticExactOwnedFileProjectionAuthority>; sourceAuthority?: TaxonomyMoveSourceAuthority }> {
-  const catalog = snapshot.catalog, owner = catalog?.cases.find((row) => row.sourcePath === entry.sourcePath || row.destinationPath === entry.sourcePath);
-  if (!catalog || !owner) throw new Error("Exact owner catalog is absent or does not govern this source: " + entry.sourcePath);
-  const source = assertLexicalInputOutsideOpaque(repoRoot, owner.sourcePath, "Exact owner source", true), destination = assertLexicalInputOutsideOpaque(repoRoot, owner.destinationPath, "Exact owner destination", true);
+  const catalog = snapshot.catalog, owner = catalog?.entries.find(row => row.sourcePath === entry.sourcePath || row.destinationPath === entry.sourcePath);
+  if (!catalog || !owner) throw new Error("Owner projection policy does not govern this source: " + entry.sourcePath);
+  const source = assertLexicalInputOutsideOpaque(repoRoot, owner.sourcePath, "Owner source", true), destination = assertLexicalInputOutsideOpaque(repoRoot, owner.destinationPath, "Owner destination", true);
   const destinationPreimage = lstatOrNull(destination)?.isFile() ? leafPreimage(destination) : undefined;
   const facts = { path: entry.sourcePath, nodeKind: entry.nodeKind, contentHash: entry.contentHash, mode: entry.mode, size: entry.size, sourcePresent: lstatOrNull(source) !== null, destinationPresent: lstatOrNull(destination) !== null, destinationPreimage, occupiedPaths: exactOwnedDestinationOccupancy(repoRoot, owner.destinationPath) };
   if (!exactOwnedCurrentRawPath(entry.sourcePath, snapshot, taxonomy)) return { result: semanticExactOwnedFileProjectionAuthority(catalog, facts) };
   const contract = taxonomy.schema.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];
-  if (contract?.contractKind !== "exact-owner-path-catalog" || !contract.currentSourceRevisions || !taxonomy.input || !snapshot.input) throw new Error("Current source is missing its exact parsed schema or catalog snapshot");
-  const selected = Object.values(contract.currentSourceRevisions).find((row) => row.catalogCaseIndex === catalog.cases.indexOf(owner));
-  if (!selected || selected.sourcePath !== owner.sourcePath || entry.sourcePath !== owner.sourcePath) throw new Error("Current source coordinate does not match its original catalog row");
+  if (contract?.contractKind !== "exact-owner-path-catalog" || !contract.currentSourceRevisions || !taxonomy.input || !snapshot.input) throw new Error("Current source is missing its declared policy inputs");
+  const selected = Object.values(contract.currentSourceRevisions).find(row => row.sourcePath === owner.sourcePath);
+  if (!selected || entry.sourcePath !== owner.sourcePath) throw new Error("Current source does not match its stable policy owner");
   const sourceInput = semanticOwnedInputFileSnapshot(repoRoot, entry.sourcePath);
   if (!sourceInput || canonicalJson(inventoryLeafPreimage(entry)) !== canonicalJson({ nodeKind: "file", contentHash: sourceInput.contentHash, mode: sourceInput.mode, size: sourceInput.size })) throw new Error("Current source changed since inventory: " + entry.sourcePath);
-  const expectation = semanticOwnedInputFileSnapshot(repoRoot, selected.expectationsPath);
-  if (!expectation) throw new Error("Current source expectation is absent: " + selected.expectationsPath);
-  const result = semanticExactOwnedFileProjectionAuthority(catalog, facts, { contract, revisions: contract.currentSourceRevisions, expectations: [expectation] });
-  const authority = result.currentSource;
-  if (result.disposition !== "project" || result.problems.length || authority?.disposition !== "revised" || authority.revisionId !== "testing-readme-protocol-v2-reviewed" || !authority.revisionDigest) return { result };
-  const inputs: TaxonomyMoveSourceAuthority["inputs"] = ([{ role: "schema", input: taxonomy.input }, { role: "catalog", input: snapshot.input }, { role: "expectation", input: expectation }] as const).map(({ role, input }) => ({ role, path: input.path, preimage: { nodeKind: "file" as const, contentHash: input.contentHash, mode: input.mode, size: input.size } })).sort((left, right) => generatorPathCompare(left.path, right.path));
-  return { result, sourceAuthority: { kind: "exact-owner-current-source-revision-v1", revisionId: authority.revisionId, revisionDigest: authority.revisionDigest, inputs } };
+  const approval = semanticOwnedInputFileSnapshot(repoRoot, selected.approvalPath);
+  if (!approval) throw new Error("Current source approval is absent: " + selected.approvalPath);
+  const result = semanticExactOwnedFileProjectionAuthority(catalog, facts, { contract, revisions: contract.currentSourceRevisions, expectations: [approval] }), authority = result.currentSource;
+  if (result.disposition !== "project" || result.problems.length || authority?.disposition !== "revised" || !authority.revisionId || !authority.revisionDigest || authority.sourcePath !== owner.sourcePath) return { result };
+  const inputs: TaxonomyMoveSourceAuthority["inputs"] = ([{ role: "schema", input: taxonomy.input }, { role: "catalog", input: snapshot.input }, { role: "approval", input: approval }] as const).map(({ role, input }) => ({ role, path: input.path, preimage: { nodeKind: "file" as const, contentHash: input.contentHash, mode: input.mode, size: input.size } })).sort((left, right) => generatorPathCompare(left.path, right.path));
+  return { result, sourceAuthority: { kind: "exact-owner-current-source-approval-v1", revisionId: authority.revisionId, revisionDigest: authority.revisionDigest, inputs } };
 }
 
 function exactOwnedDestinationOccupancy(repoRoot: string, path: string): readonly string[] {
@@ -5209,11 +5209,11 @@ function exactOwnedDestinationOccupancy(repoRoot: string, path: string): readonl
   }
   return occupied;
 }
-function exactOwnedEvidenceProblems(repoRoot: string, entry: SemanticExactOwnedFileCase, catalog: SemanticExactOwnedFileCatalog): readonly string[] {
+function exactOwnedEvidenceProblems(repoRoot: string, entry: OwnerProjectionEntry, catalog: OwnerProjectionPolicy): readonly string[] {
   const evidence = catalog.ownerEvidence[entry.ownerEvidenceId];
   const problems: string[] = [];
   for (const declared of evidence.evidencePaths) {
-    const projected = catalog.cases.find((candidate) => candidate.sourcePath === declared);
+    const projected = catalog.entries.find((candidate) => candidate.sourcePath === declared);
     const path = projected && !lstatOrNull(absolutePath(repoRoot, declared)) ? projected.destinationPath : declared;
     const absolute = assertLexicalInputOutsideOpaque(repoRoot, path, "Exact owner evidence", true);
     const stat = lstatOrNull(absolute);
@@ -5241,7 +5241,7 @@ function projectExactOwnedFiles(repoRoot: string, entries: Map<string, MutableIn
     }
     return;
   }
-  const governed = new Map(catalog.cases.flatMap((entry) => [[entry.sourcePath, entry], [entry.destinationPath, entry]] as const));
+  const governed = new Map(catalog.entries.flatMap((entry) => [[entry.sourcePath, entry], [entry.destinationPath, entry]] as const));
   for (const entry of entries.values()) {
     const owner = governed.get(entry.sourcePath);
     if (!owner || entry.nodeKind === "directory") continue;
@@ -5267,7 +5267,7 @@ function projectExactOwnedFiles(repoRoot: string, entries: Map<string, MutableIn
     entry.violations = entry.violations.filter((problem) => !["package-role-unresolved", "package-implementation-file", "package-implementation-destination-unresolved"].includes(problem.code));
     if (owner.fixedContractId) entry.fixedContractId = owner.fixedContractId;
   }
-  const destinations = new Map(catalog.cases.filter((entry) => entry.disposition !== "fixed").map((entry) => [dirname(entry.destinationPath), entry]));
+  const destinations = new Map(catalog.entries.filter((entry) => entry.disposition !== "fixed").map((entry) => [dirname(entry.destinationPath), entry]));
   for (const directory of entries.values()) {
     if (directory.nodeKind !== "directory" || !["📃️readme", "⚖️license"].includes(basename(directory.sourcePath))) continue;
     const owner = destinations.get(directory.sourcePath);
@@ -6004,7 +6004,7 @@ function planSymlinkTargetEdits(inventory: TaxonomyInventory, taxonomy: LoadedTa
   const edits: TaxonomySymlinkTargetEdit[] = [];
   const violations: TaxonomyViolation[] = [];
   const bySource = new Map(inventory.entries.map((entry) => [entry.sourcePath, entry]));
-  const links = [...inventory.entries, ...incomingReferenceSnapshot(inventory, taxonomy, options).entries].filter((candidate) => candidate.nodeKind === "symlink" && candidate.symlinkTarget !== undefined);
+  const links = [...inventory.entries, ...incomingReferenceSnapshot(inventory, taxonomy, options).entries].filter((candidate) => candidate.nodeKind === "symlink" && candidate.symlinkTarget !== undefined && !taxonomyFixturePayloadPath(candidate.sourcePath, taxonomy.discoverySchema));
   for (const entry of links) {
     const oldTarget = entry.symlinkTarget!;
     const logicalTargetSourcePath = logicalRepositorySymlinkTargetPath(inventory.repoRoot, entry.sourcePath, oldTarget);
@@ -6224,7 +6224,7 @@ const frozenEvidenceCoordinateCache = new WeakMap<Uint8Array, FrozenEvidenceReco
 function frozenEvidenceContractIndex(taxonomy: LoadedTaxonomy): ReadonlyMap<string, Readonly<{ path: string }>> {
   const cached = frozenEvidenceContractIndexes.get(taxonomy);
   if (cached) return cached;
-  const index = new Map([...Object.values(taxonomy.discoverySchema.frozenCoordinateEvidenceContracts), ...Object.values(taxonomy.discoverySchema.frozenMarkdownCoordinateEvidenceContracts)].map((contract) => [contract.path, contract]));
+  const index = new Map([...Object.values(taxonomy.discoverySchema.frozenCoordinateEvidenceContracts), ...Object.values(taxonomy.discoverySchema.frozenMarkdownCoordinateEvidenceContracts)].filter(contract => !taxonomyFixturePayloadPath(contract.path, taxonomy.discoverySchema)).map((contract) => [contract.path, contract]));
   frozenEvidenceContractIndexes.set(taxonomy, index);
   return index;
 }
@@ -6294,7 +6294,8 @@ function isFrozenSourceCoordinateToken(path: string, bytes: Uint8Array, token: R
   if (frozenPlanCoordinateAuthority(path, bytes).coordinates.has(`${token.start}\0${token.end}\0${token.value}`)) return true;
   const owner = taxonomy.schema.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];
   const taxonomyPath = sourceRelative(relative(repoRoot, taxonomy.path));
-  if (path !== taxonomyPath && path !== taxonomy.schema.semanticPackageProjectionContracts["nested-cargo-packages-v1"].authorityCatalogPath && !(owner?.contractKind === "exact-owner-path-catalog" && path === owner.authorityCatalogPath)) return false;
+  const approvalDeclaration = owner?.contractKind === "exact-owner-path-catalog" ? Object.values(owner.currentSourceRevisions ?? {}).find(row => row.approvalPath === path) : undefined;
+  if (path !== taxonomyPath && path !== taxonomy.schema.semanticPackageProjectionContracts["nested-cargo-packages-v1"].authorityCatalogPath && !(owner?.contractKind === "exact-owner-path-catalog" && path === owner.authorityCatalogPath) && !approvalDeclaration) return false;
   let cached = frozenCoordinateCache.get(bytes);
   if (!cached || cached.path !== path || cached.taxonomy !== taxonomy) {
     const content = Buffer.from(bytes).toString("utf8"), allowed = new Map<string, string>(), targets = new Set<string>();
@@ -6304,10 +6305,14 @@ function isFrozenSourceCoordinateToken(path: string, bytes: Uint8Array, token: R
     const add = (location: string, value: string): void => { allowed.set(location, value); targets.add(value); };
     if (ownerContract?.contractKind === "exact-owner-path-catalog" && path === ownerContract.authorityCatalogPath && sha256(bytes) === ownerContract.authorityCatalogSha256) {
       const catalog = exactOwnedFileCatalog(repoRoot, taxonomy)!;
-      catalog.cases.forEach((row, index) => add(`/cases/${index}/sourcePath`, row.sourcePath));
+      catalog.entries.forEach((row, index) => add(`/entries/${index}/sourcePath`, row.sourcePath));
       for (const [id, row] of Object.entries(catalog.ownerEvidence)) row.evidencePaths.forEach((value, index) => add(`/ownerEvidence/${pointer(id)}/evidencePaths/${index}`, value));
       for (const [id, row] of Object.entries(catalog.referenceOwners)) add(`/referenceOwners/${pointer(id)}/ownerPath`, row.ownerPath);
       for (const [id, row] of Object.entries(catalog.generatorOwners)) { add(`/generatorOwners/${pointer(id)}/ownerPath`, row.ownerPath); add(`/generatorOwners/${pointer(id)}/currentOutputPath`, row.currentOutputPath); }
+    }
+    if (approvalDeclaration && ownerContract?.contractKind === "exact-owner-path-catalog" && sha256(bytes) === approvalDeclaration.approvalSha256) {
+      const catalog = exactOwnedFileCatalog(repoRoot, taxonomy), row = catalog?.entries.find(entry => entry.sourcePath === approvalDeclaration.sourcePath), approval = JSON.parse(content);
+      if (row && catalog?.ownerEvidence[row.ownerEvidenceId]?.kind === "ordinary-owner-doc" && row.disposition === "owner-documentation-relocate" && canonicalJson(row.preimage) === canonicalJson(approvalDeclaration.baselinePreimage) && approval.schemaVersion === 1 && approval.kind === "current-source-approval" && approval.sourcePath === row.sourcePath && approval.policy?.path === ownerContract.authorityCatalogPath && approval.policy?.sha256 === ownerContract.authorityCatalogSha256 && approval.baseline?.commit === approvalDeclaration.baselineCommit && approval.baseline?.blob === approvalDeclaration.baselineBlob && canonicalJson(approval.baseline?.preimage) === canonicalJson(approvalDeclaration.baselinePreimage) && canonicalJson(approval.currentPreimage) === canonicalJson(approvalDeclaration.currentPreimage)) add("/sourcePath", row.sourcePath);
     }
     if (path === packageContract.authorityCatalogPath && sha256(bytes) === packageContract.authorityCatalogSha256) {
       const catalog = semanticPackageProjectionCatalog(repoRoot, taxonomy.discoverySchema)!;
@@ -6322,18 +6327,18 @@ function isFrozenSourceCoordinateToken(path: string, bytes: Uint8Array, token: R
         if (canonicalJson(data) === canonicalJson(ownerContract.authoredDocumentCorrections)) {
           const owners = exactOwnedFileCatalog(repoRoot, taxonomy);
           for (const [id, row] of Object.entries(ownerContract.authoredDocumentCorrections)) {
-            const owner = owners?.cases.find((entry) => entry.sourcePath === row.sourcePath && entry.destinationPath === row.destinationPath && entry.disposition === "owner-documentation-relocate" && canonicalJson(entry.preimage) === canonicalJson(row.preimage));
+            const owner = owners?.entries.find((entry) => entry.sourcePath === row.sourcePath && entry.destinationPath === row.destinationPath && entry.disposition === "owner-documentation-relocate" && canonicalJson(entry.preimage) === canonicalJson(row.preimage));
             if (owner) add(`/semanticOwnedFileProjectionContracts/readme-license-owner-leaves-v1/authoredDocumentCorrections/${pointer(id)}/sourcePath`, row.sourcePath);
           }
         }
         if (ownerContract.currentSourceRevisions && taxonomy.input?.path === taxonomyPath && taxonomy.input.contentHash === sha256(bytes) && taxonomy.input.size === bytes.byteLength && Buffer.from(taxonomy.input.bytes).equals(bytes)) {
-          let revisions: ReturnType<typeof parseSemanticOwnedCurrentSourceRevisions> | undefined;
-          try { revisions = parseSemanticOwnedCurrentSourceRevisions(JSON.parse(content).semanticOwnedFileProjectionContracts?.["readme-license-owner-leaves-v1"]?.currentSourceRevisions); } catch {}
+          let revisions: ReturnType<typeof parseCurrentSourceApprovals> | undefined;
+          try { revisions = parseCurrentSourceApprovals(JSON.parse(content).semanticOwnedFileProjectionContracts?.["readme-license-owner-leaves-v1"]?.currentSourceRevisions); } catch {}
           if (revisions && canonicalJson(revisions) === canonicalJson(ownerContract.currentSourceRevisions)) {
             const owners = exactOwnedFileCatalog(repoRoot, taxonomy);
             for (const [id, row] of Object.entries(revisions)) {
-              const owner = owners?.cases[row.catalogCaseIndex];
-              if (owner?.sourcePath === row.sourcePath && owner.disposition === "owner-documentation-relocate" && owner.fixedContractId === null && owner.generatorOwnerId === null && owner.ownerEvidenceId === "nx-project-owner-documentation" && canonicalJson(owner.preimage) === canonicalJson(row.baselinePreimage)) add(`/semanticOwnedFileProjectionContracts/readme-license-owner-leaves-v1/currentSourceRevisions/${pointer(id)}/sourcePath`, row.sourcePath);
+              const owner = owners?.entries.find(entry => entry.sourcePath === row.sourcePath);
+              if (owner?.sourcePath === row.sourcePath && owner.disposition === "owner-documentation-relocate" && owner.fixedContractId === null && owner.generatorOwnerId === null && owners?.ownerEvidence[owner.ownerEvidenceId]?.kind === "ordinary-owner-doc" && canonicalJson(owner.preimage) === canonicalJson(row.baselinePreimage)) add(`/semanticOwnedFileProjectionContracts/readme-license-owner-leaves-v1/currentSourceRevisions/${pointer(id)}/sourcePath`, row.sourcePath);
             }
           }
         }
@@ -6429,7 +6434,7 @@ function lexicalTargetIncomingReferences(repoRoot: string, targetPaths: Readonly
   const rows: string[] = [];
   for (const [, path] of referenceCandidatesWithProgress([...candidates].sort(generatorPathCompare), "apply", progress)) {
     checkCancellation(repoRoot, cancelFile);
-    if (isExcluded(path, taxonomy) || ignoredSourceRoots.some((root) => path === root || path.startsWith(`${root}/`)) || (transactionRoot && (path === transactionRoot || path.startsWith(`${transactionRoot}/`)))) continue;
+    if (isExcluded(path, taxonomy) || taxonomyFixturePayloadPath(path, taxonomy.discoverySchema) || ignoredSourceRoots.some((root) => path === root || path.startsWith(`${root}/`)) || (transactionRoot && (path === transactionRoot || path.startsWith(`${transactionRoot}/`)))) continue;
     const absolute = assertLexicalInputOutsideOpaque(repoRoot, path, "Terminal incoming reference");
     const stat = lstatOrNull(absolute);
     if (!stat || stat.isDirectory()) { observePreflightReferenceNode(basis, path, stat); continue; }
@@ -6574,7 +6579,7 @@ function planExactGeneratedOwnerRemovals(inventory: TaxonomyInventory, taxonomy:
   const contract = taxonomy.schema.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];
   if (!catalog || contract?.contractKind !== "exact-owner-path-catalog") return [];
   const rows: TaxonomyEvidenceRemoval[] = [];
-  for (const owner of catalog.cases.filter((entry) => entry.generatorOwnerId !== null)) {
+  for (const owner of catalog.entries.filter((entry) => entry.generatorOwnerId !== null)) {
     const source = inventory.entries.find((entry) => entry.sourcePath === owner.sourcePath);
     if (!source || source.nodeKind !== "file" || source.violations.some((entry) => entry.severity === "error") || source.normalizedPath !== owner.destinationPath) continue;
     const outputPreimage = { nodeKind: "file" as const, contentHash: owner.preimage.sha256, mode: Number.parseInt(owner.preimage.mode, 8), size: owner.preimage.size };
@@ -6646,57 +6651,11 @@ function planTicketImportantRemovals(inventory: TaxonomyInventory, taxonomy: Loa
   return { removals: removals.sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath)), violations: stableViolations(violations) };
 }
 
-interface SerializedSentinelCase {
-  readonly id: string;
-  readonly inputPath: string;
-  readonly physicalSourcePath: string | null;
-  readonly expectedViolationCode: "windows-reserved-name" | "trailing-dot-or-space";
-  readonly sourceContentHash: string;
-}
 
-function serializedSentinelCases(repoRoot: string): { readonly catalogContentHash: string; readonly cases: readonly SerializedSentinelCase[] } | null {
-  const absolute = absolutePath(repoRoot, TRANSACTION_SENTINEL_CASES_CATALOG_PATH);
-  const stat = lstatOrNull(absolute);
-  if (!stat) return null;
-  if (!stat.isFile() || stat.isSymbolicLink()) throw new Error("Transaction sentinel cases authority catalog must be a regular no-follow file");
-  const bytes = readFileSync(absolute);
-  const value = requireRecord(JSON.parse(bytes.toString("utf8")) as unknown, "transaction sentinel cases catalog");
-  requireExactKeys(value, ["schemaVersion", "virtualPathPolicyCases", "symlinkFlavorCases"], "transaction sentinel cases catalog");
-  if (value.schemaVersion !== 1 || !Array.isArray(value.virtualPathPolicyCases) || !Array.isArray(value.symlinkFlavorCases)) throw new Error("Transaction sentinel cases catalog has an invalid schema");
-  const cases = value.virtualPathPolicyCases.map((item, index) => {
-    const row = requireRecord(item, `transaction sentinel cases catalog.virtualPathPolicyCases[${index}]`);
-    requireExactKeys(row, ["id", "inputPath", "physicalSourcePath", "expectedViolationCode", "sourceContentHash"], `transaction sentinel cases catalog.virtualPathPolicyCases[${index}]`);
-    if (row.expectedViolationCode !== "windows-reserved-name" && row.expectedViolationCode !== "trailing-dot-or-space") throw new Error("Transaction sentinel cases catalog has an invalid violation code");
-    if (row.physicalSourcePath !== null && typeof row.physicalSourcePath !== "string") throw new Error("Transaction sentinel cases catalog has an invalid physical source path");
-    return { id: planString(row.id, "sentinel case id"), inputPath: planPath(row.inputPath, "sentinel input path"), physicalSourcePath: row.physicalSourcePath === null ? null : planPath(row.physicalSourcePath, "sentinel physical source path"), expectedViolationCode: row.expectedViolationCode, sourceContentHash: planString(row.sourceContentHash, "sentinel content hash", PLAN_HASH) } as SerializedSentinelCase;
-  }).sort((left, right) => generatorPathCompare(left.id, right.id));
-  if (new Set(cases.map((entry) => entry.id)).size !== cases.length || new Set(cases.map((entry) => entry.inputPath)).size !== cases.length) throw new Error("Transaction sentinel cases must have unique IDs and input paths");
-  return { catalogContentHash: sha256(bytes), cases };
-}
 
-function planSerializedEvidenceRemovals(inventory: TaxonomyInventory): { readonly removals: readonly TaxonomyEvidenceRemoval[]; readonly violations: readonly TaxonomyViolation[] } {
-  const fixtureEntry = inventory.entries.find((entry) => entry.sourcePath === TRANSACTION_SENTINEL_CASES_CATALOG_PATH);
-  if (!fixtureEntry) return { removals: [], violations: [] };
-  const authority = serializedSentinelCases(inventory.repoRoot);
-  if (!authority || fixtureEntry.nodeKind !== "file" || fixtureEntry.contentHash !== authority.catalogContentHash) return { removals: [], violations: [violation("serialized-sentinel-authority-invalid", TRANSACTION_SENTINEL_CASES_CATALOG_PATH, "Serialized sentinel catalog bytes are not frozen by inventory")] };
-  const removals: TaxonomyEvidenceRemoval[] = [];
-  const violations: TaxonomyViolation[] = [];
-  for (const sentinel of authority.cases) {
-    if (sentinel.physicalSourcePath === null) continue;
-    const entry = inventory.entries.find((candidate) => candidate.sourcePath === sentinel.physicalSourcePath);
-    if (!entry) continue;
-    if (entry.nodeKind !== "file" || entry.contentHash !== sentinel.sourceContentHash || entry.referencesIn.length > 0 || !entry.violations.some((row) => row.code === sentinel.expectedViolationCode)) {
-      violations.push(violation("serialized-sentinel-source-invalid", sentinel.inputPath, `Physical sentinel does not match serialized case ${sentinel.id}`));
-      continue;
-    }
-    const removalAuthority = { kind: "serialized-path-sentinel" as const, catalogPath: TRANSACTION_SENTINEL_CASES_CATALOG_PATH, catalogContentHash: authority.catalogContentHash, caseId: sentinel.id, serializedInputPath: sentinel.inputPath, expectedViolationCode: sentinel.expectedViolationCode, authorityDigest: "" };
-    const { authorityDigest: _authorityDigest, ...digestible } = removalAuthority;
-    const frozenAuthority = { ...removalAuthority, authorityDigest: sha256(canonicalJson(digestible)) };
-    const provisional = { sourcePath: entry.sourcePath, preimage: inventoryLeafPreimage(entry), authority: frozenAuthority, rationaleRule: "serialized-platform-sentinel-v1" as const, ownerId: entry.ownerId };
-    removals.push({ operationId: dispositionOperationId("evidence-removal", provisional), ...provisional });
-  }
-  return { removals: removals.sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath)), violations: stableViolations(violations) };
-}
+
+
+
 
 interface MoveReferenceAuthority {
   readonly moves: readonly TaxonomyMove[];
@@ -6710,7 +6669,7 @@ interface MoveReferenceAuthority {
 
 function planMoveReferenceAuthority(inventory: TaxonomyInventory, taxonomy: LoadedTaxonomy, options: TaxonomyPlanOptions, embeddedRoots: readonly TaxonomyEmbeddedTicketRootDisposition[], evidenceRemovals: readonly TaxonomyEvidenceRemoval[]): MoveReferenceAuthority {
   const ownerSnapshot = exactOwnedCatalogSnapshot(inventory.repoRoot, taxonomy);
-  const ownerMappings = new Map(ownerSnapshot.catalog?.cases.filter((entry) => entry.disposition !== "fixed").map((entry) => [entry.sourcePath, entry.destinationPath]) ?? []);
+  const ownerMappings = new Map(ownerSnapshot.catalog?.entries.filter((entry) => entry.disposition !== "fixed").map((entry) => [entry.sourcePath, entry.destinationPath]) ?? []);
   const packageMappings = new Map(semanticPackageProjectionCatalog(inventory.repoRoot, taxonomy.discoverySchema)?.packages.flatMap((row) => row.mappings.map((mapping) => [mapping.sourcePath, mapping.destinationPath] as const)) ?? []);
   const embeddedPrefixes = embeddedRoots.map((root) => root.sourceMetadataRoot);
   const removalSources = new Set(evidenceRemovals.map((entry) => entry.sourcePath));
@@ -7015,7 +6974,7 @@ function plannedAffectedStateDigests(inventory: TaxonomyInventory, plan: Pick<Ta
     }
     if (removal.authority.kind === "owner-manifest-status") { const manifest = authorityStateRow(removal.authority.manifestPath); pre.push(manifest); post.push(manifest); }
     if (removal.authority.kind === "exact-path-mutation" || removal.authority.kind === "exact-owner-generated-source" || removal.authority.kind === "nested-cargo-generated-source") { const catalog = authorityStateRow(removal.authority.catalogPath); pre.push(catalog); post.push(catalog); }
-    if (removal.authority.kind === "serialized-path-sentinel") { const fixture = authorityStateRow(removal.authority.catalogPath); pre.push(fixture); post.push(fixture); }
+    
   }
   for (const root of plan.embeddedTicketRoots) { pre.push({ path: root.sourceMetadataRoot, state: "directory-tree", tree: root.sourceTreeDigest }); post.push({ path: root.sourceMetadataRoot, state: "absent" }); }
   for (const edit of plan.symlinkTargetEdits) {
@@ -7060,12 +7019,10 @@ export function planTaxonomy(inventory: TaxonomyInventory, options: TaxonomyPlan
   checkCancellation(inventory.repoRoot, options.cancelFile);
   const embedded = planEmbeddedTicketRoots(inventory, taxonomy);
   const trailingRemovals = planTrailingEvidenceRemovals(inventory);
-  const serializedRemovals = planSerializedEvidenceRemovals(inventory);
   const ticketImportantRemovals = planTicketImportantRemovals(inventory, taxonomy);
   const generatedOwnerRemovals = [...planExactGeneratedOwnerRemovals(inventory, taxonomy), ...planNestedCargoGeneratedSourceRemovals(inventory, taxonomy)];
-  const serializedSources = new Set(serializedRemovals.removals.map((entry) => entry.sourcePath));
   const ticketImportantSources = new Set(ticketImportantRemovals.removals.map((entry) => entry.sourcePath));
-  const evidenceRemovals = [...embedded.removals, ...trailingRemovals.filter((entry) => !serializedSources.has(entry.sourcePath) && !ticketImportantSources.has(entry.sourcePath)), ...serializedRemovals.removals, ...ticketImportantRemovals.removals, ...generatedOwnerRemovals].sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath));
+  const evidenceRemovals = [...embedded.removals, ...trailingRemovals.filter((entry) => !ticketImportantSources.has(entry.sourcePath)), ...ticketImportantRemovals.removals, ...generatedOwnerRemovals].sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath));
   const ownedRemovals = new Set(evidenceRemovals.map((entry) => entry.sourcePath));
   const embeddedPrefixes = embedded.roots.map((root) => root.sourceMetadataRoot);
   const isEmbedded = (path: string): boolean => embeddedPrefixes.some((root) => path === root || path.startsWith(`${root}/`));
@@ -7082,7 +7039,6 @@ export function planTaxonomy(inventory: TaxonomyInventory, options: TaxonomyPlan
     ...generators.violations,
     ...symlinks.violations,
     ...embedded.violations,
-    ...serializedRemovals.violations,
     ...ticketImportantRemovals.violations,
   ];
   for (const group of references.collisionGroups) if (group.sources.some((source) => !isEmbedded(source))) unresolved.push(violation(`collision-${group.comparison}`, group.paths[0] ?? group.sources[0], `Normalization collision ${group.id}: ${group.sources.join(", ")}`));
@@ -7238,13 +7194,15 @@ export function* verifyTaxonomyScopes(options: TaxonomyScopesOptions): Generator
 }
 
 /** 🫧️ The scope a verdict must be computed over for `scope` to be judged whole (verifier closure): a scope inside a mutation facet —
- * below `<owner>/🧬️schema/🧬️mutations` or `<owner>/🧫️fixtures/🧬️mutations`, or a `🧬️schema` / `🧫️fixtures` directory that holds a
+ * below `<owner>/🧬️schema/🧬️mutations` or `<owner>/🧪️tests/🧫️fixtures/🧬️mutations`, or a `🧬️schema` / `🧪️tests/🧫️fixtures` directory that holds a
  * `🧬️mutations` (`holdsMutations`) — widens to `<owner>`, the root that owns both the implementation cases and their fixture
  * bundles, because the case-pairing rules read both sides; every other scope is closed already. */
-export function taxonomyClosedScope(scope: string, holdsMutations: (path: string) => boolean): string {
+export function taxonomyClosedScope(scope: string, holdsMutations: (path: string) => boolean, taxonomy: Pick<LoadedTaxonomy["discoverySchema"], "testsDirName" | "testFixturesDirName" | "schemaScopeOwnerLevels">): string {
   const segments = scope.replace(/\/+$/u, "").split("/");
-  const at = segments.findIndex((segment, index) => index > 0 && (segment === "🧬️schema" || segment === "🧫️fixtures") && (segments[index + 1] === "🧬️mutations" || (index === segments.length - 1 && holdsMutations(segments.join("/")))));
-  return at < 0 ? segments.join("/") : segments.slice(0, at).join("/");
+  const levels = taxonomy.schemaScopeOwnerLevels;
+  const at = segments.findIndex((segment, index) => index > 0 && (segment === levels.facetDirName && segments[index - 1] !== levels.moduleMemberDirName || segment === taxonomy.testFixturesDirName && segments[index - 1] === taxonomy.testsDirName && segments[index - 2] !== levels.moduleMemberDirName) && (segments[index + 1] === levels.mutationsFacetDirName || index === segments.length - 1 && holdsMutations(segments.join("/"))));
+  const owner = at > 0 && segments[at] === taxonomy.testFixturesDirName ? at - 1 : at;
+  return owner < 0 ? segments.join("/") : segments.slice(0, owner).join("/");
 }
 
 /** 🧵️ {@link verifyTaxonomyScopes} under closure: every scope is verified over its {@link taxonomyClosedScope} — one verification per
@@ -7254,7 +7212,8 @@ export function taxonomyClosedScope(scope: string, holdsMutations: (path: string
 export function verifyTaxonomyScopesClosed(options: TaxonomyScopesOptions): TaxonomyScopeVerification[] {
   const { scopes, ...shared } = options;
   const own = scopes.map((scope) => scope.replace(/\/+$/u, ""));
-  const closed = own.map((scope) => taxonomyClosedScope(scope, (path) => existsSync(join(shared.repoRoot, path, "🧬️mutations"))));
+  const taxonomy = loadTaxonomy(shared).discoverySchema;
+  const closed = own.map((scope) => taxonomyClosedScope(scope, (path) => existsSync(join(shared.repoRoot, path, taxonomy.schemaScopeOwnerLevels.mutationsFacetDirName)), taxonomy));
   const verdicts = new Map<string, TaxonomyScopeVerification>();
   for (const verification of verifyTaxonomyScopes({ ...shared, scopes: [...new Set(closed)] })) verdicts.set(verification.scope, verification);
   return scopes.map((scope, index) => {
@@ -8008,7 +7967,7 @@ function removalAuthorityPaths(authority: TaxonomyRemovalAuthority): readonly st
 
 function removalIncomingIgnoredSourceRoots(removal: TaxonomyEvidenceRemoval): readonly string[] {
   if (removal.authority.kind === "exact-path-mutation" || removal.authority.kind === "exact-owner-generated-source" || removal.authority.kind === "nested-cargo-generated-source") return [removal.sourcePath, removal.authority.catalogPath];
-  if (removal.authority.kind === "serialized-path-sentinel") return [removal.sourcePath, removal.authority.catalogPath];
+  
   return [removal.sourcePath];
 }
 
@@ -8059,7 +8018,7 @@ function assertTicketImportantRemovalAuthority(repoRoot: string, removal: Taxono
   }
   if (removal.authority.kind === "exact-owner-generated-source") {
     const contract = taxonomy.schema.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];
-    const owner = exactOwnedFileCatalog(repoRoot, taxonomy)?.cases.find((entry) => entry.sourcePath === removal.sourcePath);
+    const owner = exactOwnedFileCatalog(repoRoot, taxonomy)?.entries.find((entry) => entry.sourcePath === removal.sourcePath);
     const authority = removal.authority;
     if (contract?.contractKind !== "exact-owner-path-catalog" || !owner || owner.generatorOwnerId !== authority.generatorContractId || owner.destinationPath !== authority.destinationPath || contract.authorityCatalogPath !== authority.catalogPath || contract.authorityCatalogSha256 !== authority.catalogContentHash || canonicalJson(removal.preimage) !== canonicalJson(authority.outputPreimage) || owner.preimage.sha256 !== authority.outputPreimage.contentHash || owner.preimage.size !== authority.outputPreimage.size || Number.parseInt(owner.preimage.mode, 8) !== authority.outputPreimage.mode) throw new Error("Exact generated owner retirement authority changed: " + removal.sourcePath);
     return;
@@ -8465,11 +8424,6 @@ function reconcileTransactionOwnedTuples(repoRoot: string, plan: TaxonomyPlan, j
             : absolutePath(repoRoot, owningMove.sourcePath)
         : absolutePath(repoRoot, member.finalPath);
       if (!lstatOrNull(retained) || canonicalJson(leafPreimage(retained)) !== canonicalJson(member.preimage)) throw new Error(`resume-state-drift: retained evidence ${member.finalPath}`);
-    } else if (entry.authority.kind === "serialized-path-sentinel") {
-      const fixture = serializedSentinelCases(repoRoot);
-      const authority = entry.authority;
-      const sentinel = fixture?.cases.find((candidate) => candidate.id === authority.caseId);
-      if (!fixture || fixture.catalogContentHash !== entry.authority.catalogContentHash || !sentinel || sentinel.inputPath !== entry.authority.serializedInputPath || sentinel.physicalSourcePath !== entry.sourcePath || sentinel.expectedViolationCode !== entry.authority.expectedViolationCode || sentinel.sourceContentHash !== entry.preimage.contentHash) throw new Error(`resume-state-drift: serialized sentinel authority ${entry.operationId}`);
     } else if (entry.authority.kind === "exact-path-mutation") assertTicketImportantExactRemovalAuthority(repoRoot, entry);
     else assertTicketImportantRemovalAuthority(repoRoot, entry, taxonomy);
   }
@@ -10229,12 +10183,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
     for (const removal of plan.evidenceRemovals) assertLeafPreimage(repoRoot, removal.sourcePath, removal.preimage);
     for (const removal of plan.evidenceRemovals) {
       if (removal.authority.kind === "byte-and-mode-identical") for (const member of removal.authority.members) assertLeafPreimage(repoRoot, member.sourcePath, member.preimage);
-      else if (removal.authority.kind === "serialized-path-sentinel") {
-        const fixture = serializedSentinelCases(repoRoot);
-        const authority = removal.authority;
-        const sentinel = fixture?.cases.find((entry) => entry.id === authority.caseId);
-        if (removal.authority.catalogPath !== TRANSACTION_SENTINEL_CASES_CATALOG_PATH || !fixture || fixture.catalogContentHash !== removal.authority.catalogContentHash || !sentinel || sentinel.inputPath !== removal.authority.serializedInputPath || sentinel.physicalSourcePath !== removal.sourcePath || sentinel.expectedViolationCode !== removal.authority.expectedViolationCode || sentinel.sourceContentHash !== removal.preimage.contentHash) throw new Error(`Serialized sentinel authority changed: ${removal.authority.caseId}`);
-      } else if (removal.authority.kind === "exact-path-mutation") assertTicketImportantExactRemovalAuthority(repoRoot, removal);
+      else if (removal.authority.kind === "exact-path-mutation") assertTicketImportantExactRemovalAuthority(repoRoot, removal);
       else assertTicketImportantRemovalAuthority(repoRoot, removal, taxonomy);
     }
     for (const edit of plan.symlinkTargetEdits) {

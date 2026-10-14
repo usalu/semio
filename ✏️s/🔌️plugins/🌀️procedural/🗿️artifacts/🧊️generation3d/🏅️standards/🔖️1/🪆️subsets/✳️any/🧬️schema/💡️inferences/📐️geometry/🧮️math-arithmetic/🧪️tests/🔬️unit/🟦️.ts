@@ -4,7 +4,7 @@ import { MathUtils } from "three";
 import { disagreements, type FixtureCase, type OracleResult } from "../../../🧪️tests/🧰️oracle-support/🟦️.ts";
 
 type Fixture = { tolerance: number; faults: Record<"divisionByZero" | "domain" | "overflow" | "range", string>; cases: FixtureCase[] };
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(new URL("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🧮️math-arithmetic/🔣️.json", import.meta.url), "utf8")) as Fixture;
 const { divisionByZero, domain, overflow, range } = fixture.faults;
 
 const value = (inputs: Record<string, unknown>, port: string): number => inputs[port] as number;

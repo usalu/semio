@@ -478,7 +478,7 @@ fn text_editor_outbox_preserves_local_echo_during_temporary_action_credit_pressu
 #[test]
 fn text_editor_host_signals_end_the_typing_run_with_the_corpus_reasons() {
     let _serialized = engine_surface_law_guard();
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/✂️text-splice/🔣️.json")).expect("text-splice corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/✂️text-splice/🔣️.json")).expect("text-splice corpus");
     for row in corpus["hostSignals"].as_array().expect("host signals") {
         let (signal, commit) = (row["signal"].as_str().expect("signal"), row["commit"].as_str().expect("commit"));
         if signal == "idle" {
@@ -852,7 +852,7 @@ fn paint2d_navigator_middle_drag_pans_the_content_camera() {
 #[test]
 fn paint2d_navigator_wheel_matches_the_mounted_react_camera_contract() {
     let _serialized = engine_surface_law_guard();
-    let fixture: Value = serde_json::from_str(include_str!("../../../🖌️Paint2dHost/🧫️fixtures/🧭️navigator-camera/🔣️.json")).expect("neutral Navigator camera fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../🖌️Paint2dHost/🧪️tests/🧫️fixtures/🧭️navigator-camera/🔣️.json")).expect("neutral Navigator camera fixture");
     for sample in fixture["cases"].as_array().expect("camera cases") {
         let surface_id = sample["id"].as_str().expect("case identity");
         drop_engine_surface(surface_id);
@@ -977,7 +977,7 @@ fn paint2d_long_stroke_streams_ticks_then_commits_under_one_press() {
 #[test]
 fn paint2d_mask_stroke_publishes_one_paint_stroke_at_the_shared_target(){
     let _serialized=engine_surface_law_guard();
-    let fixture:Value=serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🎭️mask-stroke/🔣️.json")).unwrap();
+    let fixture:Value=serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🎭️mask-stroke/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap().iter().filter(|case|case["assets"].as_object().unwrap().is_empty()){
         let surface_id=format!("paint2d-mask-{}",case["name"].as_str().unwrap());drop_engine_surface(&surface_id);
         let mut scene=paint2d_scene(&surface_id,"paintBrush",&["p"]);let paint=scene.paint_2d.as_mut().unwrap();paint.document_sync_json=case["document"].to_string();paint.paint_target="mask".into();paint.mask_value=96;

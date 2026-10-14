@@ -12,7 +12,7 @@ export async function registerServerWireTests(vitest: NonNullable<ImportMeta["vi
   const { describe, expect, it, vi } = vitest;
 
   const productRoot = dirname(fileURLToPath(source.url));
-  const fixture = JSON.parse(readFileSync(resolve(productRoot, "🧫️fixtures/🔌️wire/🔣️.json"), "utf8")) as {
+  const fixture = JSON.parse(readFileSync(resolve(productRoot, "🧪️tests/🧫️fixtures/🔌️wire/🔣️.json"), "utf8")) as {
     schema: string;
     routes: { method: string; path: string; group: string }[];
     errors: { status: number; kind: string }[];

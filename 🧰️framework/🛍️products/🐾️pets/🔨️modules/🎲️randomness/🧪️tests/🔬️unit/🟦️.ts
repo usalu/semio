@@ -17,7 +17,7 @@ type Vectors = {
   readonly picks: readonly { readonly id: string; readonly seed: number; readonly stream: number; readonly count: number; readonly weights: readonly number[]; readonly expected: readonly number[] }[];
 };
 
-const VECTORS = JSON.parse(readFileSync(new URL("../../../../🧫️fixtures/🎲️counter-randomness/🔣️.json", import.meta.url), "utf8")) as Vectors;
+const VECTORS = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/🎲️counter-randomness/🔣️.json", import.meta.url), "utf8")) as Vectors;
 const SOURCE = readFileSync(new URL("../../🟦️.ts", import.meta.url), "utf8");
 const SEED = 20261002;
 

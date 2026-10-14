@@ -1,6 +1,6 @@
 use super::*;
 pub(crate) fn fixture()->PptxSnapshot{
- let neutral:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("closed neutral outline fixture");
+ let neutral:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧾outline/🔣️.json")).expect("closed neutral outline fixture");
  semio_framework_pack_json::from_json_str(&neutral["snapshot"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("actual OPC and XML fixture")
 }
 #[semio_framework_async_macros::async_test]

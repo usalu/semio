@@ -4,9 +4,9 @@ import ts from "typescript";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { ownedScriptRoutes, resolveOwnedScriptRoute } from "../../🏃️process/🧭️routing/🧩️contributions/🟦️.ts";
-import fixture from "../../🧫️fixtures/🧱️owned-script-routes/🔣️.json";
+import fixture from "../🧫️fixtures/🧱️owned-script-routes/🔣️.json";
 
 
 test("portable command ownership matrix agrees with independent JSON schema and declarative selection", () => {

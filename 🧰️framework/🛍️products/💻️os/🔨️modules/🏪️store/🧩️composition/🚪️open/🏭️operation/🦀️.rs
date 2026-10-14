@@ -7,9 +7,10 @@ use super::{ErasedSnapshotRetirement, MemberOpenAdmissionError, MemberOpenDiagno
 use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close};
 use crate::os_spr::format::retained::RetainedSprLimits;
-use crate::os_store::{serialization::ArtifactPack, ArtifactStore, MemberFactory, document_store_owners::MemberStoreOwner};
+use pack::snapshot::ArtifactPack;
+use crate::os_store::{ArtifactStore, MemberFactory, document_store_owners::MemberStoreOwner};
 use crate::{FromValue, Mutation, OpBinary, OpText, ToValue};
-use semio_framework_job::{Generation, OperationId, StepContext};
+use semio_framework_job::{Generation, OperationId, StepContext, OriginalTurnFailure};
 use std::{marker::PhantomData, mem::ManuallyDrop};
 
 /// 📥️ Funds one exact original contiguous input allocation before installing its retained owner.
@@ -126,7 +127,7 @@ impl<P> PackMemberSnapshotOpen<P> {
     }
 }
 
-impl<P: ArtifactPack + semio_framework_value::retirement::RetireOwned> MemberSnapshotOpenOperation for PackMemberSnapshotOpen<P> {
+impl<P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned> MemberSnapshotOpenOperation for PackMemberSnapshotOpen<P> {
     type Snapshot = P;
     fn begin_birth_bytes(request: &MemberOpenRequest) -> Result<usize, MemberOpenDiagnostic> { request.admitted_expected().map(|_| 0) }
 
@@ -277,14 +278,19 @@ impl<M: Send> MemberOpenOperation for UnsupportedMemberFactoryOpen<M> {
         }
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        let empty = RetainedCloneProgress::default();
-        if self.snapshot.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
-        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
-        if grant.maximum_depth < self.next_depth_demand()? { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "unsupported factory requires admitted child depth")); }
-        let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        let step = self.snapshot.close_step(child)?;
-        admit_retained_clone_close(child, step, self.snapshot.terminal_is_empty(), "unsupported factory request")
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<RetainedCloneStep, OriginalTurnFailure> {
+        let empty=RetainedCloneProgress::default();
+        if self.snapshot.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}
+        let request=self.snapshot.request.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"unsupported factory lost original request"))?;
+        if cx.operation()!=request.operation()||cx.generation()!=request.generation(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"unsupported factory close changed operation identity").into())}
+        let mut grant=cx.retained_grant();
+        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}
+        if grant.maximum_depth<self.next_depth_demand()?{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"unsupported factory requires original child depth").into())}
+        if cx.should_yield(){return Ok(RetainedCloneStep::Progress(empty))}
+        grant.maximum_copy_bytes=grant.maximum_copy_bytes.min(usize::try_from(cx.fuel_remaining().saturating_sub(1)).unwrap_or(usize::MAX));
+        let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
+        let result=self.snapshot.close_step(child).and_then(|step|admit_retained_clone_close(child,step,self.snapshot.terminal_is_empty(),"unsupported factory request"));
+        super::receive_member_close(cx,result)
     }
     fn terminal_is_empty(&self) -> bool { self.snapshot.terminal_is_empty() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.snapshot.next_copy_byte_demand() }
@@ -315,7 +321,7 @@ enum Phase {
 pub struct InitialMemberStoreOpen<F, P, M>
 where
     F: MemberFactory + 'static,
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields,
     M: Clone + ToValue + FromValue + Mutation<P>,
 {
     snapshot_open: ManuallyDrop<Option<P::SnapshotOpen>>,
@@ -354,7 +360,7 @@ where
 impl<F, P, M> InitialMemberStoreOpen<F, P, M>
 where
     F: MemberFactory + 'static,
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields,
     M: Clone + ToValue + FromValue + Mutation<P>,
 {
     fn history_page_due(&self) -> bool { self.history_page.is_some() && self.phase == Phase::Rejected }
@@ -385,7 +391,7 @@ where
 impl<F, P, M> InitialMemberStoreOpen<F, P, M>
 where
     F: MemberFactory + 'static,
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn close_owned_field(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
@@ -926,30 +932,10 @@ where
     }
 }
 
-impl<F, P, M> ErasedSnapshotRetirement for InitialMemberStoreOpen<F, P, M>
-where
-    F: MemberFactory + 'static,
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
-{
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        Ok(match self.close_owned_field(grant)? {
-            RetainedCloneStep::Complete(progress) if !self.ownership_is_empty() => RetainedCloneStep::Progress(progress),
-            step => step,
-        })
-    }
-
-    fn terminal_is_empty(&self) -> bool { self.ownership_is_empty() && !self.history_page_due() }
-    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
-    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.retirement_demands(body)?.capacity_bytes) }
-    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.release_bytes) }
-    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
-}
-
 impl<F, P, M> MemberOpenOperation for InitialMemberStoreOpen<F, P, M>
 where
     F: MemberFactory + 'static,
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     type Member = Box<ArtifactStore<P, M>>;
@@ -958,24 +944,27 @@ where
         self.step_store(cx, grant)
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        ErasedSnapshotRetirement::close_step(self, grant)
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<RetainedCloneStep, OriginalTurnFailure> {
+        if cx.operation()!=self.operation||cx.generation()!=self.generation{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original member close changed operation identity").into())}
+        let mut grant=cx.retained_grant();
+        if !self.terminal_is_empty()&&grant.maximum_items>0&&grant.maximum_depth<self.next_depth_demand()?{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"initial member close exceeds original depth").into())}
+        if cx.should_yield(){return Ok(RetainedCloneStep::Progress(Default::default()))}
+        grant.maximum_copy_bytes=grant.maximum_copy_bytes.min(usize::try_from(cx.fuel_remaining().saturating_sub(1)).unwrap_or(usize::MAX));
+        let result=self.close_owned_field(grant).map(|step|match step{RetainedCloneStep::Complete(progress)if !self.ownership_is_empty()=>RetainedCloneStep::Progress(progress),step=>step});
+        super::receive_member_close(cx,result)
     }
-
-    fn terminal_is_empty(&self) -> bool {
-        ErasedSnapshotRetirement::terminal_is_empty(self)
-    }
-    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { ErasedSnapshotRetirement::next_copy_byte_demand(self) }
-    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { ErasedSnapshotRetirement::next_capacity_byte_demand(self, body) }
-    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { ErasedSnapshotRetirement::next_release_byte_demand(self) }
-    fn next_depth_demand(&self) -> Result<usize, ValueError> { ErasedSnapshotRetirement::next_depth_demand(self) }
+    fn terminal_is_empty(&self) -> bool { self.ownership_is_empty()&&!self.history_page_due() }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.retirement_demands(body)?.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
     fn terminal_drop_byte_demand(&self) -> Option<usize> { self.ownership_is_empty().then(|| self.history_page.as_deref().map_or(0, |page| size_of_val(page))) }
 }
 
 impl<F, P, M> Drop for InitialMemberStoreOpen<F, P, M>
 where
     F: MemberFactory + 'static,
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields,
     M: Clone + ToValue + FromValue + Mutation<P>,
 {
     /// 💣️ A panic already unwinding through a live open must not become a double panic that aborts the
@@ -994,7 +983,7 @@ mod snapshot_input_tests {
 
     #[test]
     fn member_actual_snapshot_input_turns_preserve_original_grants_and_system_receipts() {
-        let plain: serde_json::Value = serde_json::from_str(include_str!("📏️birth/🧫️fixtures/🔣️.json")).unwrap();
+        let plain: serde_json::Value = serde_json::from_str(include_str!("📏️birth/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
         let row = &plain["snapshotInput"];
         let policy = &row["policy"];
         let policy = RetainedCloneGrant { maximum_items: policy["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: policy["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: policy["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: policy["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: policy["maximumDepth"].as_u64().unwrap() as usize };

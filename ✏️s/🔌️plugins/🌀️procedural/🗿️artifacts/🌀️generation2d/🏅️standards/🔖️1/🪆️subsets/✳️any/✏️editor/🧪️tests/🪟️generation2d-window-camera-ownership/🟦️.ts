@@ -27,7 +27,7 @@ type Fixture = {
 const workspace = process.cwd();
 const editor = join(workspace, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor");
 const readJson = (path: string): any => JSON.parse(readFileSync(path, "utf8"));
-const fixture = readJson(join(editor, "🧫️fixtures/🪟️generation2d-window-camera-ownership/🔣️.json")) as Fixture;
+const fixture = readJson(join(editor, "🧪️tests/🧫️fixtures/🪟️generation2d-window-camera-ownership/🔣️.json")) as Fixture;
 const viewportSchema = readJson(join(workspace, "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json"));
 const ownerSchemas = new Map<Kind, any>([
   ["generation2d-main", readJson(join(editor, "🎭️modes/✏️edit/🪟️windows/🕸️flow/🎚️config/🧬️schema/🔣️.json"))],

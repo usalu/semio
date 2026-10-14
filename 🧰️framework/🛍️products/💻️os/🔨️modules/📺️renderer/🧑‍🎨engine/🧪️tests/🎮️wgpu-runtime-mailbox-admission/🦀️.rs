@@ -19,7 +19,7 @@
 use super::{BoundedCompletionQueue, Completion, InteractionCheckoutLedger, InteractionCheckoutStep};
 use serde_json::Value;
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🎮️wgpu-runtime-mailbox-admission/🔣️.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/🎮️wgpu-runtime-mailbox-admission/🔣️.json");
 
 /// 🔟️ The widest bound any row asks for; `CAPACITY` is a const generic, so the replay runs one queue
 /// per declared capacity rather than a runtime field.

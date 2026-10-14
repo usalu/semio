@@ -6,7 +6,7 @@ import { directorySocketGrantDecision, type DirectorySocketGrantVector } from ".
 
 /** 🧾️ Verifies the scoped socket fixture against owned schemas, decisions, and relay admission. */
 export async function proveScopedDirectorySocketRevocationFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub", "📇️directory", "🧫️fixtures", "🔌️scoped-socket-revocation-v1");
+  const root = join(repoRoot, "🌎️hub", "📇️directory", "🧪️tests/🧫️fixtures", "🔌️scoped-socket-revocation-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const scopeContract = hubSchemaExport(repoRoot, "schema://hub.directory/DirectorySocketScopeV1");
   const messageContract = hubSchemaExport(repoRoot, "schema://hub.directory/DirectorySocketMessageRoutingV1");

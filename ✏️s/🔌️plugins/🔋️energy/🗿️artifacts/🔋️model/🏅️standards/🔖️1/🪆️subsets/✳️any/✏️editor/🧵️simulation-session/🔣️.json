@@ -6,38 +6,203 @@
   "$ref": "https://json.schemas.assets.semio-tech.com/framework/tool-run/schema.json#/$defs/ToolRunDefinition",
   "x-semio-toolRun": {
     "toolId": "energySimulation",
-    "label": { "en": "Energy simulation", "de": "Energiesimulation" },
+    "label": {
+      "en": "Energy simulation",
+      "de": "Energiesimulation"
+    },
     "mutating": false,
     "rebase": "restart",
     "reconfigure": "restart",
-    "unit": { "en": "timesteps", "de": "Zeitschritte" },
+    "unit": {
+      "en": "timesteps",
+      "de": "Zeitschritte"
+    },
     "trace": "none",
     "runJob": "energy.simulation.run",
-    "settings": { "config": ["/zoneTimestepMinutes", "/systemTimestepMinutes", "/warmupDays"] },
-    "windows": ["energy.model.3d", "energy.simulation"],
+    "settings": {
+      "config": [
+        "/zoneTimestepMinutes",
+        "/systemTimestepMinutes",
+        "/warmupDays"
+      ]
+    },
+    "windows": [
+      "energy.model.3d",
+      "energy.simulation"
+    ],
     "stages": [
-      { "id": "capture", "en": "Capturing the model", "de": "Modell wird erfasst" },
-      { "id": "prepare", "en": "Preparing weather, geometry and zones", "de": "Wetter, Geometrie und Zonen werden vorbereitet" },
-      { "id": "warmup", "en": "Warming up", "de": "Einschwingen" },
-      { "id": "run", "en": "Solving timesteps", "de": "Zeitschritte werden gelöst" },
-      { "id": "finalize", "en": "Sizing and summarizing", "de": "Auslegung und Zusammenfassung" },
-      { "id": "encode", "en": "Encoding the final result", "de": "Endergebnis wird kodiert" }
+      {
+        "id": "capture",
+        "en": "Capturing the model",
+        "de": "Modell wird erfasst"
+      },
+      {
+        "id": "prepare",
+        "en": "Preparing weather, geometry and zones",
+        "de": "Wetter, Geometrie und Zonen werden vorbereitet"
+      },
+      {
+        "id": "warmup",
+        "en": "Warming up",
+        "de": "Einschwingen"
+      },
+      {
+        "id": "run",
+        "en": "Solving timesteps",
+        "de": "Zeitschritte werden gelöst"
+      },
+      {
+        "id": "finalize",
+        "en": "Sizing and summarizing",
+        "de": "Auslegung und Zusammenfassung"
+      },
+      {
+        "id": "encode",
+        "en": "Encoding the final result",
+        "de": "Endergebnis wird kodiert"
+      }
     ],
     "counters": [
-      { "id": "warmupTimesteps", "en": "Warmup timesteps", "de": "Einschwing-Zeitschritte" },
-      { "id": "runTimesteps", "en": "Run timesteps", "de": "Lauf-Zeitschritte" },
-      { "id": "tiersPublished", "en": "Quality tiers published", "de": "Veröffentlichte Qualitätsstufen" },
-      { "id": "facilityElectricityWh", "en": "Facility electricity (Wh)", "de": "Anlagenelektrizität (Wh)" }
+      {
+        "id": "warmupTimesteps",
+        "en": "Warmup timesteps",
+        "de": "Einschwing-Zeitschritte"
+      },
+      {
+        "id": "runTimesteps",
+        "en": "Run timesteps",
+        "de": "Lauf-Zeitschritte"
+      },
+      {
+        "id": "tiersPublished",
+        "en": "Quality tiers published",
+        "de": "Veröffentlichte Qualitätsstufen"
+      },
+      {
+        "id": "facilityElectricityWh",
+        "en": "Facility electricity (Wh)",
+        "de": "Anlagenelektrizität (Wh)"
+      }
     ],
     "reasons": [
-      { "code": 0, "id": "steadyStateEstimate", "verdict": "success", "args": ["kWh"], "en": "Steady-state estimate (provisional): {0} kWh facility electricity", "de": "Stationäre Schätzung (vorläufig): {0} kWh Anlagenelektrizität" },
-      { "code": 1, "id": "designDay", "verdict": "success", "args": ["kWh", "runTimesteps", "totalRunTimesteps"], "en": "Design day (provisional): {0} kWh after {1} of {2} timesteps", "de": "Auslegungstag (vorläufig): {0} kWh nach {1} von {2} Zeitschritten" },
-      { "code": 2, "id": "coarseTimestep", "verdict": "success", "args": ["kWh", "runTimesteps", "totalRunTimesteps"], "en": "Coarse timestep (provisional): {0} kWh after {1} of {2} timesteps", "de": "Grober Zeitschritt (vorläufig): {0} kWh nach {1} von {2} Zeitschritten" },
-      { "code": 3, "id": "final", "verdict": "success", "args": ["kWh", "runTimesteps", "totalRunTimesteps"], "en": "Final: {0} kWh after {1} of {2} timesteps", "de": "Endgültig: {0} kWh nach {1} von {2} Zeitschritten" },
-      { "code": 4, "id": "warmupConverged", "verdict": "success", "args": ["warmupTimesteps"], "en": "Warmup converged after {0} timesteps", "de": "Einschwingen nach {0} Zeitschritten konvergiert" },
-      { "code": 5, "id": "captureRejected", "verdict": "danger", "args": [], "en": "The model exceeds the capture capacity", "de": "Das Modell überschreitet die Erfassungskapazität" },
-      { "code": 6, "id": "admissionRejected", "verdict": "danger", "args": [], "en": "The model exceeds the simulation capacity", "de": "Das Modell überschreitet die Simulationskapazität" },
-      { "code": 7, "id": "simulationFaulted", "verdict": "danger", "args": ["completedTimesteps"], "en": "The simulation failed after {0} timesteps", "de": "Die Simulation ist nach {0} Zeitschritten fehlgeschlagen" }
-    ]
+      {
+        "code": 0,
+        "id": "steadyStateEstimate",
+        "verdict": "success",
+        "args": [
+          "kWh"
+        ],
+        "en": "Steady-state estimate (provisional): {0} kWh facility electricity",
+        "de": "Stationäre Schätzung (vorläufig): {0} kWh Anlagenelektrizität"
+      },
+      {
+        "code": 1,
+        "id": "designDay",
+        "verdict": "success",
+        "args": [
+          "kWh",
+          "runTimesteps",
+          "totalRunTimesteps"
+        ],
+        "en": "Design day (provisional): {0} kWh after {1} of {2} timesteps",
+        "de": "Auslegungstag (vorläufig): {0} kWh nach {1} von {2} Zeitschritten"
+      },
+      {
+        "code": 2,
+        "id": "coarseTimestep",
+        "verdict": "success",
+        "args": [
+          "kWh",
+          "runTimesteps",
+          "totalRunTimesteps"
+        ],
+        "en": "Coarse timestep (provisional): {0} kWh after {1} of {2} timesteps",
+        "de": "Grober Zeitschritt (vorläufig): {0} kWh nach {1} von {2} Zeitschritten"
+      },
+      {
+        "code": 3,
+        "id": "final",
+        "verdict": "success",
+        "args": [
+          "kWh",
+          "runTimesteps",
+          "totalRunTimesteps"
+        ],
+        "en": "Final: {0} kWh after {1} of {2} timesteps",
+        "de": "Endgültig: {0} kWh nach {1} von {2} Zeitschritten"
+      },
+      {
+        "code": 4,
+        "id": "warmupConverged",
+        "verdict": "success",
+        "args": [
+          "warmupTimesteps"
+        ],
+        "en": "Warmup converged after {0} timesteps",
+        "de": "Einschwingen nach {0} Zeitschritten konvergiert"
+      },
+      {
+        "code": 5,
+        "id": "captureRejected",
+        "verdict": "danger",
+        "args": [],
+        "en": "The model exceeds the capture capacity",
+        "de": "Das Modell überschreitet die Erfassungskapazität"
+      },
+      {
+        "code": 6,
+        "id": "admissionRejected",
+        "verdict": "danger",
+        "args": [],
+        "en": "The model exceeds the simulation capacity",
+        "de": "Das Modell überschreitet die Simulationskapazität"
+      },
+      {
+        "code": 7,
+        "id": "simulationFaulted",
+        "verdict": "danger",
+        "args": [
+          "completedTimesteps"
+        ],
+        "en": "The simulation failed after {0} timesteps",
+        "de": "Die Simulation ist nach {0} Zeitschritten fehlgeschlagen"
+      }
+    ],
+    "receiving": {
+      "tick": {
+        "maximumFileBytes": 262144,
+        "maximumSegmentBytes": 262144,
+        "maximumSymbols": 4096,
+        "maximumDepth": 64,
+        "maximumItems": 262144,
+        "maximumTotalAllocationBytes": 16777216,
+        "maximumSymbolUtf8Bytes": 262144,
+        "maximumSymbolScalars": 262144,
+        "maximumCursorAllocationBytes": 4194304
+      },
+      "recordBody": {
+        "maximumFileBytes": 1048576,
+        "maximumSegmentBytes": 1048576,
+        "maximumSymbols": 16384,
+        "maximumDepth": 64,
+        "maximumItems": 1048576,
+        "maximumTotalAllocationBytes": 67108864,
+        "maximumSymbolUtf8Bytes": 1048576,
+        "maximumSymbolScalars": 1048576,
+        "maximumCursorAllocationBytes": 16777216
+      },
+      "history": {
+        "fileBytes": 67108864,
+        "frameBodyBytes": 1048576,
+        "records": 8192,
+        "maximumFields": 128,
+        "maximumTextBytes": 1048576,
+        "maximumBinaryBytes": 1048576,
+        "maximumJsonBytes": 1048576,
+        "maximumJsonAllocationBytes": 8388608,
+        "maximumJsonItems": 65536,
+        "maximumJsonDepth": 64
+      }
+    }
   }
 }

@@ -340,7 +340,7 @@ fn the_artifact_bound_genesis_document_resolves_and_solves() {
 //#region ⏱️RelayCrossingGrant
 /// ⏱️ The language-agnostic law this region replays: `semio.infer`'s `Pump` must spend the host's
 /// whole crossing grant on the mounted session instead of ending the crossing at the first outcome.
-const RELAY_CROSSING_LAW: &str = include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧫️fixtures/⏱️relay-crossing-grant-law.json");
+const RELAY_CROSSING_LAW: &str = include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/⏱️relay-crossing-grant-law.json");
 
 /// 🔁️ The reactor's job futures settle inside the state action that polls them, so one poll with a
 /// no-op waker is the whole drive; a pending future here is itself a law violation.

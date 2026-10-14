@@ -3,7 +3,7 @@ use base64::Engine;
 
 #[test]
 fn runtime_capability_standard_vectors_preserve_each_declared_owner() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️definition-hierarchy/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪜️definition-hierarchy/🔣️.json")).unwrap();
     for row in corpus["runtimeCases"].as_array().unwrap() {
         let standards = row["standards"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect::<Vec<_>>();
         assert_eq!(runtime_standard(standards.iter().copied(), row["identity"].as_str().unwrap(), row["category"].as_str().unwrap()).is_ok(), row["accepted"].as_bool().unwrap());
@@ -19,7 +19,7 @@ fn standard_base64_matches_the_reference_implementation() {
 
 #[test]
 fn artifact_assembly_layout_and_identity_match_neutral_budget() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️assembly/🔣️.json")).expect("assembly fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️assembly/🔣️.json")).expect("assembly fixture");
     let definition = ArtifactDefinition::stdio(fixture["artifact"].as_str().expect("artifact")).expect("definition");
     let assembly = definition_only_assembly("binary", definition).expect("definition-only assembly");
     assert_eq!(serde_json::to_value(assembly.definition().identity().as_str()).expect("identity oracle"), fixture["identity"]);
@@ -29,7 +29,7 @@ fn artifact_assembly_layout_and_identity_match_neutral_budget() {
 
 #[test]
 fn addressed_table_contract_requires_the_complete_cell_address_and_allows_empty_text() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📊️addressed-table/🔣️.json")).expect("addressed table fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📊️addressed-table/🔣️.json")).expect("addressed table fixture");
     let definition = addressed_table_window_kind();
     let action = definition.actions.iter().find(|action| action.id == fixture["action"]).expect("fixture action");
     let required = action.args.iter().filter(|argument| argument.required).map(|argument| argument.id.as_str()).collect::<Vec<_>>();

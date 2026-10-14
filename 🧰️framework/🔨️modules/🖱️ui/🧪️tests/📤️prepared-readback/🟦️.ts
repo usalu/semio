@@ -8,7 +8,7 @@ import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 
 const uiRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const fixture = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/📤️prepared-readback/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(uiRoot, "🧪️tests/🧫️fixtures/📤️prepared-readback/🔣️.json"), "utf8"));
 
 describe("📤️ Prepared target readback", () => {
   it("validates the shared byte and allocation contract", () => {

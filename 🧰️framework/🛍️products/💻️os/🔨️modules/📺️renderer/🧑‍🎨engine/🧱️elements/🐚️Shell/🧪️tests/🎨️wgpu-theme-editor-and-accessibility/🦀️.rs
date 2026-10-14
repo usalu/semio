@@ -11,7 +11,7 @@
 use super::*;
 
 fn accessibility_fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/♿️wgpu-accessibility-interaction/🔣️.json")).expect("accessibility fixture")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/♿️wgpu-accessibility-interaction/🔣️.json")).expect("accessibility fixture")
 }
 
 fn shell_with_nested_app_settings() -> ShellState {
@@ -78,7 +78,7 @@ fn shell_with_open_theme_section(section: &str) -> ShellState {
 }
 
 fn theme_publication_fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/🎨️settings-theme-publication/🔣️.json")).expect("theme publication fixture")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🎨️settings-theme-publication/🔣️.json")).expect("theme publication fixture")
 }
 
 fn retained_theme_control_state(shell: &ShellState, surface: &str, control_id: &str) -> String {
@@ -181,7 +181,7 @@ fn the_embedded_theme_document_carries_every_section_react_enumerates() {
 /// independent value oracle with the same id, label, paint token and metric.
 #[test]
 fn canonical_theme_fixture_matches_the_json_oracle() {
-    let text = include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🧫️fixtures/🎨️canonical-theme-document/🔣️.json");
+    let text = include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧫️fixtures/🎨️canonical-theme-document/🔣️.json");
     let document = ThemeDocument::parse(text).expect("canonical theme fixture");
     let oracle: Value = serde_json::from_str(text).expect("serde_json oracle");
     assert_eq!(document.id, oracle["id"].as_str().expect("id"));
@@ -195,7 +195,7 @@ fn canonical_theme_fixture_matches_the_json_oracle() {
 
 #[test]
 fn canonical_theme_parser_rejects_shapes_reacts_parser_rejects() {
-    let text = include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🧫️fixtures/🎨️canonical-theme-document/🔣️.json");
+    let text = include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧫️fixtures/🎨️canonical-theme-document/🔣️.json");
     let mut value: Value = serde_json::from_str(text).expect("canonical fixture");
     value.as_object_mut().expect("theme object").remove("canvasFonts");
     assert_eq!(ThemeDocument::parse(&value.to_string()), None);
@@ -878,7 +878,7 @@ fn the_flagged_keybinding_rows_match_reacts_registry() {
 
 #[test]
 fn accepted_dock_names_match_painted_instance_titles_and_localized_react_actions() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🪟️dock-accessible-names/🔣️.json")).expect("dock names fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🪟️dock-accessible-names/🔣️.json")).expect("dock names fixture");
     for locale in fixture["locales"].as_array().expect("locales") {
         for layout in ["split", "maximized", "stacked"] {
             let mut shell = super::window_pane_chrome_tests::split_pane_shell();
@@ -1084,7 +1084,7 @@ fn compact_theme_spacing_and_named_metrics_match_neutral_css_pixels() {
 }
 
 fn theme_geometry_fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🧫️fixtures/📐️theme-geometry/🔣️.json")).expect("theme geometry fixture")
+    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧫️fixtures/📐️theme-geometry/🔣️.json")).expect("theme geometry fixture")
 }
 
 #[test]

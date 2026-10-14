@@ -12,7 +12,7 @@ import { sourceFileFactByteCompare, sourceFileFactCatalog, sourceFileFactReferen
 
 //#region 🧭️Inputs
 
-const vectorsPath = resolve(import.meta.dir, "../../🧫️fixtures/📋️mutation-inventory/🧾️source-file-facts/🔣️.json");
+const vectorsPath = resolve(import.meta.dir, "../🧫️fixtures/📋️mutation-inventory/🧾️source-file-facts/🔣️.json");
 const capturedSourcePath = resolve(import.meta.dir, "../../🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts");
 const taxonomyPath = resolve(import.meta.dir, "../../🔣️taxonomy.json");
 

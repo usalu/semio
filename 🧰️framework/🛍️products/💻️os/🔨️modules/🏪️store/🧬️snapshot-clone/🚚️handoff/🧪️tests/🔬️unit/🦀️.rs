@@ -19,7 +19,7 @@ fn source(entries: usize) -> PagedList<String, 64> {
 
 #[test]
 fn partial_paged_cursor_is_transferred_and_closed_under_driver_grants() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️fixtures/📦️lifecycle/🔣️.json")).expect("retained cursor handoff fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📦️lifecycle/🔣️.json")).expect("retained cursor handoff fixture");
     let handoff = &fixture["handoff"];
     let entries = handoff["sourceEntries"].as_u64().expect("handoff source entries") as usize;
     let maximum_items = handoff["closeGrant"]["maximumItems"].as_u64().expect("handoff maximum items") as usize;

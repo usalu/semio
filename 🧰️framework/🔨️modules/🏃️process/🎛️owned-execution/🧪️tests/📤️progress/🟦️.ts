@@ -5,7 +5,7 @@ import {resolve,join} from "node:path";
 import JSON5 from "json5";
 import {build} from "esbuild";
 
-const owner = resolve(import.meta.dir, "../.."), fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📤️progress/🔣️.json"), "utf8"));
+const owner = resolve(import.meta.dir, "../.."), fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📤️progress/🔣️.json"), "utf8"));
 test("explicit progress output preserves canonical stdout against the independent process oracle",async()=>{
  const source=`setTimeout(()=>process.stdout.write(${JSON.stringify(fixture.expectedStdout)}),${fixture.delayMs})`,invocation=`try{await runOwnedCommand("node",["-e",${JSON.stringify(source)}],process.cwd(),${JSON.stringify(fixture.label)},${fixture.budgetMs},{onProgress:line=>process.stderr.write(line+"\\n")});}catch(error){console.error(error);process.exit(1)}`;
  let code=`const{runOwnedCommand}=await import(${JSON.stringify(join(owner,"🟦️.ts"))});${invocation}`;

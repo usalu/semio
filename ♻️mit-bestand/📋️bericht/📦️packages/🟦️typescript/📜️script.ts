@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 🏚️ Validates report sources, Nx contracts and produced PDF documents. */
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, dirname, join, resolve } from "node:path";
-import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { ActorNetworkScript, actorNetworkData, validateActorNetwork, validateActorNetworkAssets, validateActorNetworkRenderSync } from "../../🔨️modules/👥️actor-network/📜️script.ts";
 const packageRoot = import.meta.dir, ownerRoot = join(packageRoot, "../..");
 const reportCatalog = JSON.parse(readFileSync(join(ownerRoot, "🔨️modules/📄️documents/🔣️.json"), "utf8")) as { documents: { id: string; texPath: string; actorNetwork: boolean }[] };
@@ -16,7 +16,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const level = segments[0] ?? "quick";
     if (!["quick", "long", "exhaustive"].includes(level)) throw new Error(`unknown report test level: ${level}`);
-    const fixture = JSON.parse(readFileSync(join(ownerRoot, "🧫️fixtures/🔣️report-family.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(ownerRoot, "🧪️tests/🧫️fixtures/🔣️report-family.json"), "utf8"));
     const require = createRequire(import.meta.url), modulePath = join(ownerRoot, "🔨️modules/📄️documents");
     const schema = JSON.parse(readFileSync(join(modulePath, "🧬️schema/🔣️.json"), "utf8"));
     assert.ok(new (require("ajv").default)({ strict: false }).validate(schema, reportCatalog));
@@ -35,7 +35,7 @@ class TestScript extends BundleScript {
       assert.deepEqual(project.targets[`watch-${document.id}`].dependsOn, [`build-${document.id}`]);
     }
     assert.deepEqual(project.targets.build.dependsOn, reportCatalog.documents.map(document => `build-${document.id}`));
-    const boundaries = JSON.parse(readFileSync(join(ownerRoot, "🧫️fixtures/🧭️commands.json"), "utf8"));
+    const boundaries = JSON.parse(readFileSync(join(ownerRoot, "🧪️tests/🧫️fixtures/🧭️commands.json"), "utf8"));
     for (const entry of boundaries.entries) {
       const bundle = await require("esbuild").build({ entryPoints: [join(ownerRoot, entry)], bundle: true, write: false, metafile: true, platform: "node", format: "esm", packages: "external", logLevel: "silent" });
       const inputs = Object.keys(bundle.metafile.inputs);
@@ -85,7 +85,7 @@ class TestScript extends BundleScript {
       const canvas = require("@napi-rs/canvas");
       (globalThis as { DOMMatrix?: unknown }).DOMMatrix ??= canvas.DOMMatrix;
       const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
-      const expected = JSON.parse(readFileSync(join(ownerRoot, "🧫️fixtures/📄️pdf.json"), "utf8"));
+      const expected = JSON.parse(readFileSync(join(ownerRoot, "🧪️tests/🧫️fixtures/📄️pdf.json"), "utf8"));
       for (const vector of expected.documents) {
         const path = join(packageRoot, "dist/documents", vector.id, `${basename(DOCUMENTS[vector.id]!, ".tex")}.pdf`);
         const pdf = await getDocument({ data: new Uint8Array(readFileSync(path)) }).promise;

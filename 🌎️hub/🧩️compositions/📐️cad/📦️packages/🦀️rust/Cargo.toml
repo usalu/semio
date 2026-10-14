@@ -26,6 +26,7 @@ storyGlobs = ["../../../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐�
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-cad-cad = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }

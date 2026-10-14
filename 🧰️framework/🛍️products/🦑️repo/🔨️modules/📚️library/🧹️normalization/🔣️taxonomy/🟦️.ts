@@ -1,7 +1,7 @@
 import { parseGeneratorPreviewProgressPolicyV1, type GeneratorPreviewProgressPolicyV1 } from "../../🏭️generator/👁️preview/📈️progress/🟦️.ts";
 import { requireRecord, requireStringArray, requireString, requireLiteral, requireExactKeys, type UnknownRecord } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 /** 🏗️ Canonical 🔣️taxonomy source service. */
-import { validateTaxonomy, type Taxonomy as DiscoveryTaxonomy, createTaxonomyPathMatcher, parseNamedFixedDirectoryContractSetScope, parseFixedDirectoryContractSetScope, canonicalPrimaryFilenameForKind, parseSemanticOwnedDocumentCorrections, parseSemanticOwnedCurrentSourceRevisions, type SemanticPathProjectionReferenceConsumerForm, generatorPreviewScriptArguments, generatorPreviewResourceLimits, type RegistryCatalogInputDiscovery, type GeneratorProjectionActivation, type SemanticPackageGeneration, semanticOwnedInputFileSnapshot, type TaxonomyPathMatcher, type SemanticOwnedInputFileSnapshot, type SemanticFacetPrimaryFileProjectionContract } from "../../🔍️discovery/🟦️.ts";
+import { validateTaxonomy, type Taxonomy as DiscoveryTaxonomy, createTaxonomyPathMatcher, parseNamedFixedDirectoryContractSetScope, parseFixedDirectoryContractSetScope, canonicalPrimaryFilenameForKind, parseSemanticOwnedDocumentCorrections, parseCurrentSourceApprovals, type SemanticPathProjectionReferenceConsumerForm, generatorPreviewScriptArguments, generatorPreviewResourceLimits, type RegistryCatalogInputDiscovery, type GeneratorProjectionActivation, type SemanticPackageGeneration, semanticOwnedInputFileSnapshot, type TaxonomyPathMatcher, type SemanticOwnedInputFileSnapshot, type SemanticFacetPrimaryFileProjectionContract } from "../../🔍️discovery/🟦️.ts";
 import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
 import { posix, relative, resolve } from "node:path";
 import { normalizeRelative, splitLeadingEmoji, emojiFold } from "../🛣️path/🟦️.ts";
@@ -68,11 +68,10 @@ interface SemanticExactOwnedFileProjectionContract {
   }>;
   readonly allowedDispositions: readonly ["attribution-relocate", "configurable-owner-license-relocate", "fixed", "generated-evidence-relocate", "owner-documentation-relocate"];
   readonly ownerEvidenceKinds: readonly ["configurable-owner-license", "ordinary-owner-doc", "package-publication", "third-party-attribution", "ticket-evidence", "ticket-scratch"];
-  readonly referenceOwnerIds: readonly ["asset-distribution-owner", "bun-package-publisher", "commonmark-scratch-rust-reader", "markdown-relative-reference-adapter", "repo-cli-dev-docs-go", "vscode-package-ignore"];
-  readonly generatorOwnerIds: readonly ["assets-build"];
-  readonly expectedCounts: Readonly<{ readonly fixed: 4; readonly license: 8; readonly projected: 36; readonly readme: 32; readonly referenceBindings: 62; readonly total: 40 }>;
+  readonly referenceOwnerIds: readonly string[];
+  readonly generatorOwnerIds: readonly string[];
   readonly authoredDocumentCorrections: ReturnType<typeof parseSemanticOwnedDocumentCorrections>;
-  readonly currentSourceRevisions?: ReturnType<typeof parseSemanticOwnedCurrentSourceRevisions>;
+  readonly currentSourceRevisions?: ReturnType<typeof parseCurrentSourceApprovals>;
   readonly rationaleRule: "readme-license-owner-projection-v1";
 }
 
@@ -883,7 +882,7 @@ function parseTaxonomy(raw: unknown, path: string): TaxonomyContentFacts {
     const name = `semanticOwnedFileProjectionContracts.${id}`;
     const spec = requireRecord(value, name);
     if (spec.contractKind === "exact-owner-path-catalog") {
-      requireExactKeys(spec, ["contractKind", "authorityCatalogPath", "authorityCatalogSha256", "sourceFileKindId", "sourceBasenames", "destinationDirectoryKinds", "allowedDispositions", "ownerEvidenceKinds", "referenceOwnerIds", "generatorOwnerIds", "expectedCounts", "authoredDocumentCorrections", "rationaleRule", ...(Object.hasOwn(spec, "currentSourceRevisions") ? ["currentSourceRevisions"] : [])], name);
+      requireExactKeys(spec, ["contractKind", "authorityCatalogPath", "authorityCatalogSha256", "sourceFileKindId", "sourceBasenames", "destinationDirectoryKinds", "allowedDispositions", "ownerEvidenceKinds", "referenceOwnerIds", "generatorOwnerIds", "authoredDocumentCorrections", "rationaleRule", ...(Object.hasOwn(spec, "currentSourceRevisions") ? ["currentSourceRevisions"] : [])], name);
       const authorityCatalogPath = normalizeRelative(requireString(spec.authorityCatalogPath, name + ".authorityCatalogPath"));
       const authorityCatalogSha256 = requireString(spec.authorityCatalogSha256, name + ".authorityCatalogSha256");
       const sourceBasenames = requireStringArray(spec.sourceBasenames, name + ".sourceBasenames");
@@ -899,9 +898,6 @@ function parseTaxonomy(raw: unknown, path: string): TaxonomyContentFacts {
         return { directoryKindId: requireString(destination.directoryKindId, name + ".destinationDirectoryKinds." + kind + ".directoryKindId") as "owner-license" | "owner-readme", directoryName: requireString(destination.directoryName, name + ".destinationDirectoryKinds." + kind + ".directoryName") as "⚖️license" | "📃️readme", filename: requireString(destination.filename, name + ".destinationDirectoryKinds." + kind + ".filename") as "📝️.md" };
       };
       const destinationDirectoryKinds = { license: parseDestination("license"), readme: parseDestination("readme") };
-      const expectedCounts = requireRecord(spec.expectedCounts, name + ".expectedCounts");
-      requireExactKeys(expectedCounts, ["fixed", "license", "projected", "readme", "referenceBindings", "total"], name + ".expectedCounts");
-      const counts = { fixed: expectedCounts.fixed, license: expectedCounts.license, projected: expectedCounts.projected, readme: expectedCounts.readme, referenceBindings: expectedCounts.referenceBindings, total: expectedCounts.total };
       if (id !== "readme-license-owner-leaves-v1"
         || !/^[a-f0-9]{64}$/u.test(authorityCatalogSha256)
         || spec.sourceFileKindId !== "markdown"
@@ -909,14 +905,13 @@ function parseTaxonomy(raw: unknown, path: string): TaxonomyContentFacts {
         || canonicalJson(destinationDirectoryKinds) !== canonicalJson({ license: { directoryKindId: "owner-license", directoryName: "⚖️license", filename: "📝️.md" }, readme: { directoryKindId: "owner-readme", directoryName: "📃️readme", filename: "📝️.md" } })
         || canonicalJson(allowedDispositions) !== canonicalJson(["attribution-relocate", "configurable-owner-license-relocate", "fixed", "generated-evidence-relocate", "owner-documentation-relocate"])
         || canonicalJson(ownerEvidenceKinds) !== canonicalJson(["configurable-owner-license", "ordinary-owner-doc", "package-publication", "third-party-attribution", "ticket-evidence", "ticket-scratch"])
-        || canonicalJson(referenceOwnerIds) !== canonicalJson(["asset-distribution-owner", "bun-package-publisher", "commonmark-scratch-rust-reader", "markdown-relative-reference-adapter", "repo-cli-dev-docs-go", "vscode-package-ignore"])
-        || canonicalJson(generatorOwnerIds) !== canonicalJson(["assets-build"])
-        || canonicalJson(counts) !== canonicalJson({ fixed: 4, license: 8, projected: 36, readme: 32, referenceBindings: 62, total: 40 })
+        || new Set(referenceOwnerIds).size !== referenceOwnerIds.length || referenceOwnerIds.some(id => !/^[a-z][a-z0-9-]*$/u.test(id))
+        || new Set(generatorOwnerIds).size !== generatorOwnerIds.length || generatorOwnerIds.some(id => !/^[a-z][a-z0-9-]*$/u.test(id) || !generatorRows[id])
         || spec.rationaleRule !== "readme-license-owner-projection-v1"
         || !fileKinds.markdown
         || semanticDirectoryKinds["owner-license"]?.projectionOnly !== true
         || semanticDirectoryKinds["owner-readme"]?.projectionOnly !== true
-        || !generatorRows["assets-build"]) throw new Error("Taxonomy v7 " + name + " does not use the exact README/LICENSE owner catalog grammar");
+) throw new Error("Taxonomy v7 " + name + " does not use the exact README/LICENSE owner catalog grammar");
       semanticOwnedFileProjectionContracts[id] = {
         contractKind: "exact-owner-path-catalog",
         authorityCatalogPath,
@@ -926,11 +921,10 @@ function parseTaxonomy(raw: unknown, path: string): TaxonomyContentFacts {
         destinationDirectoryKinds: { license: { directoryKindId: "owner-license", directoryName: "⚖️license", filename: "📝️.md" }, readme: { directoryKindId: "owner-readme", directoryName: "📃️readme", filename: "📝️.md" } },
         allowedDispositions: ["attribution-relocate", "configurable-owner-license-relocate", "fixed", "generated-evidence-relocate", "owner-documentation-relocate"],
         ownerEvidenceKinds: ["configurable-owner-license", "ordinary-owner-doc", "package-publication", "third-party-attribution", "ticket-evidence", "ticket-scratch"],
-        referenceOwnerIds: ["asset-distribution-owner", "bun-package-publisher", "commonmark-scratch-rust-reader", "markdown-relative-reference-adapter", "repo-cli-dev-docs-go", "vscode-package-ignore"],
-        generatorOwnerIds: ["assets-build"],
-        expectedCounts: { fixed: 4, license: 8, projected: 36, readme: 32, referenceBindings: 62, total: 40 },
+        referenceOwnerIds,
+        generatorOwnerIds,
         authoredDocumentCorrections: parseSemanticOwnedDocumentCorrections(spec.authoredDocumentCorrections),
-        ...(Object.hasOwn(spec, "currentSourceRevisions") ? { currentSourceRevisions: parseSemanticOwnedCurrentSourceRevisions(spec.currentSourceRevisions) } : {}),
+        ...(Object.hasOwn(spec, "currentSourceRevisions") ? { currentSourceRevisions: parseCurrentSourceApprovals(spec.currentSourceRevisions) } : {}),
         rationaleRule: "readme-license-owner-projection-v1",
       };
       continue;

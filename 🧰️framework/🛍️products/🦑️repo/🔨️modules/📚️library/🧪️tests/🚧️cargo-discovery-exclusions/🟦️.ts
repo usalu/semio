@@ -10,7 +10,7 @@ import { isDiscoverySkipDirectory, taxonomyRelativePathIsExcluded } from "../../
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🚧️cargo-discovery-exclusions/🔣️.json"), "utf8")) as { schemaVersion: number; opaquePaths: string[]; virtualRoots: string[]; traversal: { enumeration: string; metadata: string; symlinks: string }; symlinks: string[]; manifests: { path: string; package: string; admitted: boolean }[]; execution: { target: string; command: string } };
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🚧️cargo-discovery-exclusions/🔣️.json"), "utf8")) as { schemaVersion: number; opaquePaths: string[]; virtualRoots: string[]; traversal: { enumeration: string; metadata: string; symlinks: string }; symlinks: string[]; manifests: { path: string; package: string; admitted: boolean }[]; execution: { target: string; command: string } };
 const taxonomy = JSON.parse(readFileSync(join(repoRoot, library, "🔣️taxonomy.json"), "utf8"));
 /** 🧫️ Models filesystem entries in memory and rejects any attempt to touch an opaque path. */
 function virtualFilesystem(root: string, namesOnly = false): { api: any; reads: string[]; fileReads: string[]; content: Map<string, string> } {

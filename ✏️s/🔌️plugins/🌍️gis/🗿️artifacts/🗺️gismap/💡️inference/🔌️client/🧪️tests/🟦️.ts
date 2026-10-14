@@ -9,7 +9,7 @@ type Fixture = { readonly schemaVectors: readonly { readonly name: string; reado
 /** ⚖️ Validates the owner wire vectors independently with Ajv and the TypeScript recovery decoder. */
 export function proveGisMapInferenceClientV1(): number {
   const owner = join(import.meta.dir, "..");
-  const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")) as Fixture;
+  const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")) as Fixture;
   const validators = new Map<string, ReturnType<Ajv["compile"]>>();
   let checks = 0;
   for (const vector of fixture.schemaVectors) {

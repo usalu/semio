@@ -23,7 +23,7 @@ export type OrderedScrollFixture = {
 };
 
 export function orderedScrollFixture(): OrderedScrollFixture {
-  return JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as OrderedScrollFixture;
+  return JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as OrderedScrollFixture;
 }
 
 function retainedQueueEvents(events: readonly OrderedScrollEvent[]): OrderedScrollEvent[] {

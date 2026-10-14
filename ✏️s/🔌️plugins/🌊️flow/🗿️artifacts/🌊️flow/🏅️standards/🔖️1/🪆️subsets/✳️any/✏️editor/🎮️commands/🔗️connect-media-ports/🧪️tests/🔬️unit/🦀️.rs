@@ -16,7 +16,7 @@ macro_rules! drain_children {
 fn connection_keeps_the_original_typed_owner_until_publication() {
     use semio_framework_plugin::app::ChildEmitPreparationStep;
     crate::editor::flow::unit_tests::context::install_first_party_light_flow_extensions_for_tests();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/owned-connection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/owned-connection/🔣️.json")).unwrap();
     assert_eq!(fixture["seedSource"], "publishedDemo");
     let composed = crate::examples::demo::snapshot_from_text(crate::examples::demo::PRIMARY_TEXT).expect("published neutral seed has explicit layout");
     let config = FlowMainWindowConfig::default();
@@ -67,7 +67,7 @@ async fn removal_routes_publish_original_typed_owners() {
     use crate::editor::flow::unit_tests::context::{composed_scene, dispatch, flow_app_with_registry, select_graph, settle};
     use crate::editor::flow::FlowCommand;
     use crate::editor::flow::commands::{delete_selection::DeleteSelection, disconnect::Disconnect, remove_widget::RemoveWidget};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/owned-connection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/owned-connection/🔣️.json")).unwrap();
     for case in fixture["removals"].as_array().unwrap() {
         let mut app = flow_app_with_registry().await;
         let coordinate = app.snapshot().unwrap().content.child_id.clone();

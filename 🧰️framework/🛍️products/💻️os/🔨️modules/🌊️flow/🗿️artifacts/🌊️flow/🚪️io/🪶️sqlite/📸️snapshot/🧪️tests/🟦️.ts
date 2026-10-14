@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import { readFileSync } from "node:fs";
-const fixture = JSON.parse(readFileSync(new URL("../../../../🧫️fixtures/🪶️sqlite/🔣️.json", import.meta.url), "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json", import.meta.url), "utf8"));
 const sql = readFileSync(new URL("../🗄️.sql", import.meta.url), "utf8");
 test("framework Flow neutral corpus covers actual widgets, chrome and neural values", () => {
   expect(fixture.widgetKinds).toHaveLength(9); expect(fixture.chromeKinds).toHaveLength(5); expect(fixture.neuralVariants).toHaveLength(6); expect(fixture.literal.includes("\0")).toBe(true);
@@ -41,7 +41,7 @@ test("independent SQLite interprets exact decimal words and signed neural intege
   } finally { db.close(); }
 });
 
-const families = JSON.parse(readFileSync(new URL("../../../../🧫️fixtures/🪶️sqlite/🚦️owned-families.json", import.meta.url), "utf8"));
+const families = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/🪶️sqlite/🚦️owned-families.json", import.meta.url), "utf8"));
 test("closed Flow ownership demands cover actual ordered and recursive neural families", () => {
   expect(families.families).toEqual(["orderedMap", "orderedSet", "tree", "neuron", "synapse"]);
   expect(families.recordFields.tree).toEqual(["neurons", "synapses"]);

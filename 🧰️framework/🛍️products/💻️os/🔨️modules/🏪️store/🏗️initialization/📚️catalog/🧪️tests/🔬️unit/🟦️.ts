@@ -3,7 +3,7 @@ import {Database} from "bun:sqlite";
 import {applyPatch} from "fast-json-patch";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
-import fixture from "../../🧫️fixtures/🔣️.json" with {type:"json"};
+import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
 test("empty initialization catalog retires one admitted native page at a time",()=>{
  expect(fixture.currencies).toEqual({copyBytes:0,capacityBytes:0,release:"exact-native-page-and-final-directory",depth:1,terminalReceipt:"full-final-page-release"});
  const database=new Database(":memory:");try{

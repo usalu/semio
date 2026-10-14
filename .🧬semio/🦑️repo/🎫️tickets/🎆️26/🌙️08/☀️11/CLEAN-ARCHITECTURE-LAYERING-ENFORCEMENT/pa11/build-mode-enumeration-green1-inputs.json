@@ -1,0 +1,518 @@
+{
+  "version": 1,
+  "qualification": "Whole actual closest-owned BuildMode command import closure plus entire original3/new1 laws; physical/hash claims, actual edges, external system/test library specifiers separate; not whole graph acceptance",
+  "claims": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🧬️schema/🔣️.json",
+      "bytes": 619,
+      "sha256": "3570198a28e8f2f34c7fef6ed316ab3c7b8da04112298997bafcc4871c535d8c",
+      "inode": 324468106,
+      "mtimeMs": 1791588506168.4849
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🟦️.ts",
+      "bytes": 1785,
+      "sha256": "1b04c6fd409d3030d0a2194bfdd6d826f9a751420f425930000fd11c6f4b32fb",
+      "inode": 324509130,
+      "mtimeMs": 1791590035547.2908
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📤️stdout.json",
+      "bytes": 165,
+      "sha256": "98da81ef2a1bc61081ceb5a4e27c74959068c51531d1971bc22423db08b1fa8b",
+      "inode": 324543363,
+      "mtimeMs": 1791591962890.036
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📬️output.json",
+      "bytes": 452,
+      "sha256": "826b1f70f7b7c6bf1b5fa99b24211b8fd0039537d8b8d4880dbe6d1f8b9b1828",
+      "inode": 324589880,
+      "mtimeMs": 1791594411537.5874
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "bytes": 9045,
+      "sha256": "0e85d70f2e6bea7824b2c3880ec13259c3d04051d2aaf480652c6de4706843e7",
+      "inode": 306866045,
+      "mtimeMs": 1791910227422.7979
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/📜️script.ts",
+      "bytes": 1524,
+      "sha256": "68c6fd87cce640407b6b625228ae7ebc6346462b4298c58b87ca0ebeb3de6513",
+      "inode": 330344141,
+      "mtimeMs": 1791917326970.5435
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 745,
+      "sha256": "55ef2a9eb4f38fb41da28b1f53fbb0459b1ad7e4361a91c46e94809d9e9251d4",
+      "inode": 329368314,
+      "mtimeMs": 1791902904039.4893
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "bytes": 3338,
+      "sha256": "a0d9d9c6abb5fa7310c2821eee61cf984cf28efe776500f666d7d82dcd9b8beb",
+      "inode": 329368316,
+      "mtimeMs": 1791918875403.3872
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧬️schema/🔣️.json",
+      "bytes": 203,
+      "sha256": "80a098a1f51e60abf051c3caa03204bf9ff15576657c95587dc8b13b0806c450",
+      "inode": 329368312,
+      "mtimeMs": 1791902904031.8857
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts",
+      "bytes": 1618,
+      "sha256": "d134c4ca9ea669c11eaeb0998c779f938f0f2f9c8e8f8a32c384bee187885b2a",
+      "inode": 329368404,
+      "mtimeMs": 1791918875402.7117
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+      "bytes": 12732,
+      "sha256": "b823e17b076e7f389e67e604302e1e5bbf60d50cd0247cc753d278f638def133",
+      "inode": 324724278,
+      "mtimeMs": 1791917326971.0078
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/📋️policy/🧬️schema/🔣️.json",
+      "bytes": 349,
+      "sha256": "522246923cb5d7d684320efafe0813ed947a8bfe8903b5fe337d862403bb02ce",
+      "inode": 324673873,
+      "mtimeMs": 1791597569034.9797
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+      "bytes": 6555,
+      "sha256": "c0c3d346323fbf3d263bda1a16cfe83d43072fcfb0326998d8f2c205b918546d",
+      "inode": 301546322,
+      "mtimeMs": 1791907717489.2346
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "bytes": 652,
+      "sha256": "25b5cb010e0b143b3d0c333ab7689b620fa7598254d42b3bfee4a1d8dd4d1ed5",
+      "inode": 324600398,
+      "mtimeMs": 1791907118423.5906
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts",
+      "bytes": 328,
+      "sha256": "f6212656ac20f28597bf3426de92bf30cbe6b8d142d5dff46a1437c7f92198cb",
+      "inode": 324600407,
+      "mtimeMs": 1791594639033.0515
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "bytes": 1108,
+      "sha256": "95b774cc4dd2f563aaf11f670bc4ac340ea0ff57f931459dc250e8bdef6e1ea3",
+      "inode": 324600393,
+      "mtimeMs": 1791668386429.3872
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts",
+      "bytes": 3826,
+      "sha256": "5f7c306eca4755e6dfeaeab67155b3460f5414119abe16aa72151b7423669834",
+      "inode": 301273613,
+      "mtimeMs": 1790860617948.274
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json",
+      "bytes": 1247,
+      "sha256": "b4d0746aea2f3daff5a49bc7623b2c5d6c37f9341c13330b2ed8d0c9373fb2a2",
+      "inode": 324302808,
+      "mtimeMs": 1791584724461.811
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "bytes": 5531,
+      "sha256": "66d001007c289158aeb927fa9ded6c782e33db14f461b10301b53967684f958a",
+      "inode": 324302810,
+      "mtimeMs": 1791917803185.2302
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+      "bytes": 550,
+      "sha256": "85c7b282907bd607fe78181c5c038eedc06be45950890b922b78e3aa185c5ac0",
+      "inode": 324286802,
+      "mtimeMs": 1791584724461.3083
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+      "bytes": 4019,
+      "sha256": "3c161d5872c8fca2390dc5723a1a437d2b7098ef0f718a4c83fc37caef78dd23",
+      "inode": 324298041,
+      "mtimeMs": 1791917803184.9167
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+      "bytes": 1339,
+      "sha256": "06200b3f26dcea04f4d16c00fd2a4a4d89366918e4c23c597cf90eaafef57446",
+      "inode": 301272911,
+      "mtimeMs": 1791563138440.9934
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "bytes": 5477,
+      "sha256": "283c76fdb8b0da19a0506b010a0fd44d33287a20cf7297abc3deebb2427c8eea",
+      "inode": 301272910,
+      "mtimeMs": 1791565613802.0652
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+      "bytes": 2971,
+      "sha256": "3df81b9a89a5c5e56bb37ecf579c0684dca29beacc50035fa6bfcfe75cb9c7ff",
+      "inode": 301314509,
+      "mtimeMs": 1790858359798.16
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "bytes": 149,
+      "sha256": "22f68a1cdabdcdb7d2f6d1fad86341816ab5d0e9c79ea21fcfa0c1dd10da8aec",
+      "inode": 329519559,
+      "mtimeMs": 1791907118631.0168
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+      "bytes": 12503,
+      "sha256": "1521f2e9d07141acf1477a563693a05b44896ebdfa47d1b5b7ba24add6886ac0",
+      "inode": 301240099,
+      "mtimeMs": 1791900863033.6443
+    },
+    {
+      "path": "bun.lock",
+      "bytes": 537260,
+      "sha256": "82793c9ad08bf63ed3f8a654f10761f637303755c6cad71f8577157a9e3d3dde",
+      "inode": 329622618,
+      "mtimeMs": 1791908602494.0483
+    },
+    {
+      "path": "nx.json",
+      "bytes": 3160,
+      "sha256": "7cd0477c866b7be8cf33a5014ad9c5a4d551bd49d5c37725ebfc771077e6340f",
+      "inode": 306839411,
+      "mtimeMs": 1791916782910.9624
+    },
+    {
+      "path": "package.json",
+      "bytes": 13133,
+      "sha256": "5658405bba43d07a93f62e3bcde0e1e673eb02409eb38331f029fb519bd2851b",
+      "inode": 323505639,
+      "mtimeMs": 1791908527077.9558
+    }
+  ],
+  "edges": [
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "./🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "../🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/📜️script.ts",
+      "specifier": "../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/📜️script.ts",
+      "specifier": "../../📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/📜️script.ts",
+      "specifier": "../../📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts",
+      "specifier": "../../../../🧪️testing/🎚️budget/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts",
+      "specifier": "../../../../🧪️testing/🎚️budget/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "specifier": "../../../🎛️owned-execution/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "specifier": "../../../🎛️owned-execution/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "specifier": "../../../📥️capture/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "specifier": "../../../📥️capture/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "specifier": "../../../🪓️termination/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "specifier": "../../../🪓️termination/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+      "specifier": "../🪓️termination/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+      "specifier": "../🧭️routing/📥️invocation/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+      "specifier": "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+      "specifier": "./📋️policy/🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/📥️capture/📋️policy/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+      "specifier": "./🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+      "specifier": "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "specifier": "../🪓️termination/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "specifier": "./📪️outcome/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "specifier": "./🧬️schema/📤️stdout.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📤️stdout.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "specifier": "./🧬️schema/📬️output.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📬️output.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "specifier": "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "specifier": "./📪️outcome/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🟦️.ts",
+      "specifier": "./🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "specifier": "../../../🧭️routing/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "specifier": "../../../🧭️routing/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "specifier": "../../../🧭️routing/📥️invocation/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "specifier": "../../../🧭️routing/📥️invocation/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "specifier": "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "specifier": "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "specifier": "../../../🧭️routing/🚪️entrypoint/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "specifier": "../../../🧭️routing/🚪️entrypoint/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+      "specifier": "../📥️invocation/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "specifier": "./📥️invocation/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "specifier": "./📥️invocation/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "specifier": "./🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "specifier": "../🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "specifier": "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts",
+      "specifier": "./🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧬️schema/🔣️.json"
+    }
+  ],
+  "external": [
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "bun:test"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "ajv"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "typescript"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/📜️script.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/📜️script.ts",
+      "specifier": "node:path"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+      "specifier": "node:child_process"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+      "specifier": "node:child_process"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "specifier": "node:string_decoder"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "specifier": "node:child_process"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "specifier": "node:stream"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "specifier": "node:path"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "node:module"
+    }
+  ]
+}

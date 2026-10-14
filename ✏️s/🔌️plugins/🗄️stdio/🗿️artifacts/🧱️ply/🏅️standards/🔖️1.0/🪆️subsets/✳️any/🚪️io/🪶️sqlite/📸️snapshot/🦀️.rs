@@ -1,7 +1,8 @@
 //! 🧱️ Independent PLY declarations, row cells and recursive typed value entities.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1_0::subsets::any::schema::snapshot::*;
 use semio_framework_value::ValueError;
-use store::os_store::serialization::ArtifactSqliteSnapshot;
+use store::os_store::serialization::ArtifactSqliteSnapshotHost;
 use store::sqlite_snapshot::validate_sqlite_database_schema;
 use store::sqlite_snapshot::SqliteDatabase;
 use store::sqlite_snapshot::SqliteRow;
@@ -102,15 +103,20 @@ impl PlySnapshot{
   if !forest.0.is_empty(){return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"PLY unconsumed values"))}control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,total,total)?;Ok(snapshot.take())
  }
 }
-impl ArtifactSqliteSnapshot for PlySnapshot{
+impl ArtifactSqliteSnapshotHost for PlySnapshot{
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{let maximum_rows=control.limits().max_rows;control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;control.check_rows(1)?;self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,"stdio.ply",crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::spec_producer(),|native|crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::record_controlled(self,native,maximum_rows),control,native_owner)}
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let maximum_rows=control.limits().max_rows;let snapshot=store::decode_sqlite_snapshot_record_native(payload,"stdio.ply",crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::reconstruct_record_controlled(record,native,maximum_rows)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;let mut owner=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(snapshot,crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::retire);owner.as_mut().admit_sqlite_values(control,SqliteSnapshotPhase::DecodeNative)?;Ok(owner.take())}
  fn retire_sqlite_snapshot(self){crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::retire(self)}
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+ 
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{(||->Result<(),ValueError>{let mut bound=NativeEncodingBound::new(control)?;bound.add(1024)?;bound.repeated(self.schema.len(),6)?;for comment in&self.comments{bound.add(64)?;bound.repeated(comment.len(),6)?;}for element in&self.elements{bound.add(256)?;bound.repeated(element.name.len(),6)?;for property in&element.properties{bound.add(256)?;bound.repeated(property.name().len(),6)?;}for row in&element.rows{bound.add(64)?;let mut pending=vec![row.values.iter()];while let Some(values)=pending.last_mut(){if let Some(value)=values.next(){bound.add(1164)?;if let PlyValue::List(values)=value{pending.push(values.iter());}}else{pending.pop();}}}}bound.finish()})()}
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.project_sqlite_database(control)}
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{Self::reconstruct_sqlite_database(database,control)}
+ 
+ 
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{(||->Result<store::io_schema::IoOutcome<()>,ValueError>{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!="s.stdio.ply"||dialect.standard!="1.0"||dialect.subset!="*"{return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"geometry owned SQLite dialect differs"))}let candidate=Self::reconstruct_sqlite_database(database,control)?;let mut candidate=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(candidate,crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::retire);let actual=candidate.as_mut().project_sqlite_database(control)?;if actual!=self.project_sqlite_database(control)?{return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"PLY document identity differs"))}Ok(store::io_schema::IoOutcome::clean(()))})().map_err(|error|store::io_schema::IoError::from_value_error(error))}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for PlySnapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.project_sqlite_database(control)}
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{Self::reconstruct_sqlite_database(database,control)}
 }
 
 #[cfg(test)]

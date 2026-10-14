@@ -76,7 +76,7 @@ fn truncated_input_errs_not_panics() {
 fn viewport_projection_pack_round_trips_every_shared_mode_orientation_pair() {
     use semio_framework_ui_viewport::{Viewport3dProjectionFramePolicy, Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionPreferences, Viewport3dProjectionSpec};
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🪟️viewport/🧫️fixtures/📐️projection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🪟️viewport/🧪️tests/🧫️fixtures/📐️projection/🔣️.json")).unwrap();
     let preferences: Viewport3dProjectionPreferences = serde_json::from_value(fixture["defaultPreferences"].clone()).unwrap();
     let bytes = to_bytes(&preferences).unwrap();
     assert_eq!(from_bytes::<Viewport3dProjectionPreferences>(&bytes).unwrap(), preferences);
@@ -132,7 +132,7 @@ fn viewport_projection_render_math_matches_the_shared_three_oracle() {
     use crate::math::{frame_projection_orbit_to_spec_bounds, projection_spec_matrix, projection_spec_orientation_look, projection_spec_project_ndc, projection_spec_unproject_ndc, Camera3d, CameraProjection3d, Mat4Math, OrbitController, Vec3Math, WORLD_PROJECTION_FRAME_PADDING};
     use semio_framework_ui_viewport::Viewport3dProjectionSpec;
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🪟️viewport/🧫️fixtures/📐️projection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🪟️viewport/🧪️tests/🧫️fixtures/📐️projection/🔣️.json")).unwrap();
     let parity = &fixture["renderParity"];
     let viewport = &parity["viewport"];
     let mut camera = Camera3d::default();
@@ -237,7 +237,7 @@ fn owned_scene_neutral_vectors_match_native_serde_packet() {
             serializer.serialize_bytes(self.0)
         }
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧵️retained/🧫️fixtures/🎬️owned-scene/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🎬️owned-scene/🔣️.json")).unwrap();
     let cases = fixture["cases"].as_array().unwrap();
     assert_eq!(cases.len(), 19);
     for case in cases {
@@ -326,7 +326,7 @@ fn typed_scene_neutral_catalog_matches_native_serde_contracts() {
             _ => false,
         }
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧵️retained/🧫️fixtures/🧾️typed-scene/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🧾️typed-scene/🔣️.json")).unwrap();
     assert_eq!(fixture["cases"].as_array().unwrap().len(), 15);
     for case in fixture["cases"].as_array().unwrap() {
         assert!(admitted(case), "{case}");
@@ -337,7 +337,7 @@ fn typed_scene_neutral_catalog_matches_native_serde_contracts() {
 }
 #[test]
 fn scene_pack_numeric_widths_do_not_wrap() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧵️retained/🧫️fixtures/🔢️scene-numeric/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🔢️scene-numeric/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let bytes: Vec<u8> = case["hex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|digits| u8::from_str_radix(std::str::from_utf8(digits).unwrap(), 16).unwrap()).collect();
         let admitted = match case["type"].as_str().unwrap() {

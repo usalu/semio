@@ -23,14 +23,14 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/🧩️insert-chunk-applied/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/🧩️insert-chunk-applied/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
         },
         {
           "role": "expected-after-avi",
-          "path": "../🧫️fixtures/🧩️insert-chunk-applied/➡️after.avi",
+          "path": "../🧪️tests/🧫️fixtures/🧩️insert-chunk-applied/➡️after.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:55fb0795e7f46bb8022e95a5a71a865aa7b757054eb462bdbfc5a6e7174fdd68",
           "bytes": 526
@@ -73,7 +73,7 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/🚫️insert-chunk-rejected-missing-stream/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/🚫️insert-chunk-rejected-missing-stream/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
@@ -116,14 +116,14 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/🗑️remove-chunk-applied/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-chunk-applied/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
         },
         {
           "role": "expected-after-avi",
-          "path": "../🧫️fixtures/🗑️remove-chunk-applied/➡️after.avi",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-chunk-applied/➡️after.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:f779bef843866f679e9233454fd1b8c5b56fba3fa5a52e75cd483ccfe939c875",
           "bytes": 470
@@ -166,7 +166,7 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/❓️remove-chunk-rejected-missing-chunk/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/❓️remove-chunk-rejected-missing-chunk/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
@@ -209,14 +209,14 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/🔑️set-chunk-keyframe-applied/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/🔑️set-chunk-keyframe-applied/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
         },
         {
           "role": "expected-after-avi",
-          "path": "../🧫️fixtures/🔑️set-chunk-keyframe-applied/➡️after.avi",
+          "path": "../🧪️tests/🧫️fixtures/🔑️set-chunk-keyframe-applied/➡️after.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:e967b92fed43d49ce7588382902ec4d3b20f7cd0b707872cc3b82eeb67de6ce4",
           "bytes": 498
@@ -259,7 +259,7 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/⚠️set-chunk-keyframe-rejected-missing-chunk/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/⚠️set-chunk-keyframe-rejected-missing-chunk/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
@@ -302,14 +302,14 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/🧱️add-unknown-chunk-applied/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/🧱️add-unknown-chunk-applied/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
         },
         {
           "role": "expected-after-avi",
-          "path": "../🧫️fixtures/🧱️add-unknown-chunk-applied/➡️after.avi",
+          "path": "../🧪️tests/🧫️fixtures/🧱️add-unknown-chunk-applied/➡️after.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:bf318fba1f227cc927d108de1a1931ad3844f7189a32df46708f46c61a46f273",
           "bytes": 510
@@ -352,7 +352,7 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/⛔️add-unknown-chunk-rejected-out-of-bounds/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/⛔️add-unknown-chunk-rejected-out-of-bounds/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
@@ -395,14 +395,14 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/🧹️remove-unknown-chunk-applied/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/🧹️remove-unknown-chunk-applied/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
         },
         {
           "role": "expected-after-avi",
-          "path": "../🧫️fixtures/🧹️remove-unknown-chunk-applied/➡️after.avi",
+          "path": "../🧪️tests/🧫️fixtures/🧹️remove-unknown-chunk-applied/➡️after.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:3866d6c95f412a0b48159db58462079117b70a5368b8310496200277da1af6e4",
           "bytes": 486
@@ -445,7 +445,7 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/🔍️remove-unknown-chunk-rejected-missing/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/🔍️remove-unknown-chunk-rejected-missing/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498

@@ -1,4 +1,4 @@
-import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
+import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
 const canceledKind=refusalFixture.cases.find(item=>item.id==="canceled-projection")!.expectedKind;
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
@@ -7,8 +7,8 @@ import {buildSchema,graphqlSync,isUnionType} from "graphql";
 import schema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import artifactSchema from "../../../../🧬️schema/🔣️.json";
 import textSchema from "../../../📝️text/📸️snapshot/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
-import controls from "../🧫️fixtures/🎛️control.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+import controls from "./🧫️fixtures/🎛️control.json";
 import {parseAviSnapshot,type AviSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {parseAviSnapshot as parseTextSnapshot,type AviSnapshot as TextSnapshot} from "../../../📝️text/📸️snapshot/🟦️.ts";
 import {parseAviSnapshot as parseBinarySnapshot,type AviSnapshot as BinarySnapshot} from "../../../💾️binary/📸️snapshot/🟦️.ts";

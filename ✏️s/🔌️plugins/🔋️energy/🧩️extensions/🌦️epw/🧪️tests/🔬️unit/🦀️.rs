@@ -49,7 +49,7 @@ fn epw_parse_rejects_malformed_text() {
 
 #[test]
 fn portable_weather_vectors_match_csv_and_serde_oracles() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌦️weather/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌦️weather/🔣️.json")).unwrap();
     for row in vectors["cases"].as_array().unwrap() {
         let input = row["input"].as_str().unwrap();
         let actual = parse(input);

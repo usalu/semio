@@ -19,7 +19,7 @@ fn original(row:&serde_json::Value)->LocalizedLabel{
 }
 #[test]
 fn localized_label_original_backing_retirement_obeys_all_physical_grants(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../../🏷️label/♻️retirement/🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../🏷️label/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  assert_eq!(Terminology::COUNT*Locale::COUNT,4);
  for row in law["cases"].as_array().unwrap(){
   let label=original(row);let oracle:LocalizedLabel=serde_json::from_value(serde_json::to_value(&label).unwrap()).unwrap();assert_eq!(label,oracle);
@@ -42,7 +42,7 @@ fn localized_label_original_backing_retirement_obeys_all_physical_grants(){
 
 #[test]
 fn localized_label_original_backing_direct_cursor_preserves_every_denied_cell(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../../🏷️label/♻️retirement/🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../🏷️label/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in law["cases"].as_array().unwrap(){
   let mut cursor=LocalizedLabelRetirement::new(original(row));
   for index in 0..Terminology::COUNT*Locale::COUNT{

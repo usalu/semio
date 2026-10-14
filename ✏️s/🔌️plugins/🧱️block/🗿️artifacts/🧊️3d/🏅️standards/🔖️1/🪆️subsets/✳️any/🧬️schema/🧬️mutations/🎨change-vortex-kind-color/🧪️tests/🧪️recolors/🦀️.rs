@@ -10,11 +10,11 @@ use crate::standards::v1::subsets::any::schema::mutations::inverse_block3d_mutat
 
 use crate::Block3dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨change-vortex-kind-color/🧪️recolors/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨change-vortex-kind-color/🧪️recolors/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨change-vortex-kind-color/🧪️recolors/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨change-vortex-kind-color/🧪️recolors/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨change-vortex-kind-color/🧪️recolors/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨change-vortex-kind-color/🧪️recolors/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨change-vortex-kind-color/🧪️recolors/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨change-vortex-kind-color/🧪️recolors/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨change-vortex-kind-color/🧪️recolors/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨change-vortex-kind-color/🧪️recolors/🎯️outcome/🔣️.json");
 
 fn before() -> Block3dSnapshot {
     crate::validate_vortex_kind_catalog(&[

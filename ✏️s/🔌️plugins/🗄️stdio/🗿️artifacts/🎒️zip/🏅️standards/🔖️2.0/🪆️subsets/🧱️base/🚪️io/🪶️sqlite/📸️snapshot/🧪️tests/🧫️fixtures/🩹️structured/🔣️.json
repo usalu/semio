@@ -1,0 +1,51 @@
+{
+  "cases": [
+    {
+      "patch": {
+        "operation": "set",
+        "path": "/schema",
+        "value": "Grüße"
+      },
+      "source": "{\"operation\":\"set\",\"path\":\"/schema\",\"value\":\"Grüße\"}"
+    },
+    {
+      "patch": {
+        "operation": "insert",
+        "path": "/entries/0",
+        "index": 2,
+        "value": {
+          "name": "a",
+          "data": [
+            1,
+            2
+          ]
+        }
+      },
+      "source": "{\"operation\":\"insert\",\"path\":\"/entries/0\",\"index\":2,\"value\":{\"name\":\"a\",\"data\":[1,2]}}"
+    },
+    {
+      "patch": {
+        "operation": "remove",
+        "path": "/entries/1"
+      },
+      "source": "{\"operation\":\"remove\",\"path\":\"/entries/1\"}"
+    },
+    {
+      "patch": {
+        "operation": "move",
+        "path": "/entries/0",
+        "from": "/entries/1",
+        "index": 1
+      },
+      "source": "{\"operation\":\"move\",\"path\":\"/entries/0\",\"from\":\"/entries/1\",\"index\":1}"
+    },
+    {
+      "patch": {
+        "operation": "rename",
+        "path": "/metadata",
+        "key": "with space"
+      },
+      "source": "{\"operation\":\"rename\",\"path\":\"/metadata\",\"key\":\"with space\"}"
+    }
+  ]
+}

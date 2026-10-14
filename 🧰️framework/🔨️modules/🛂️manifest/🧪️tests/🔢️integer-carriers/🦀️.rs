@@ -23,7 +23,7 @@ struct IntegerCarrierFixture {
 }
 
 fn fixture() -> IntegerCarrierFixture {
-    serde_json::from_str(include_str!("../../🪟️view-context/🧫️fixtures/🔢️integer-carriers/🔣️.json")).expect("the integer-carrier fixture parses")
+    serde_json::from_str(include_str!("../../🪟️view-context/🧪️tests/🧫️fixtures/🔢️integer-carriers/🔣️.json")).expect("the integer-carrier fixture parses")
 }
 
 fn hex(bytes: &[u8]) -> String {

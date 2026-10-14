@@ -1,7 +1,7 @@
 {
   "schema": "semio.os.test-browser-host-staging/v1",
   "variant": "s",
-  "profile": "dev",
+  "profile": "prototype",
   "moduleSetSha256": "1111111111111111111111111111111111111111111111111111111111111111",
   "activationReceiptSha256": "2222222222222222222222222222222222222222222222222222222222222222",
   "host": {

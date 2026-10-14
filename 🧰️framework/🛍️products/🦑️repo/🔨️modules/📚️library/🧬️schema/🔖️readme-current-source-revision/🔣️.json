@@ -1,88 +1,60 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "One Approved Current README Source Revision",
-  "definitions": {
-    "execution": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "target",
-        "command",
-        "route",
-        "source"
-      ],
-      "properties": {
-        "target": {
-          "const": "test-readme-current-source-revision"
-        },
-        "command": {
-          "const": "bun ./📜️script.ts test readme-current-source-revision"
-        },
-        "route": {
-          "const": "readme-current-source-revision"
-        },
-        "source": {
-          "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔖️readme-current-source-revision/🟦️.ts"
-        }
-      }
-    }
-  },
+  "title": "Current Source Approval Registry",
   "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "testing-readme-protocol-v2-reviewed"
-  ],
-  "properties": {
-    "testing-readme-protocol-v2-reviewed": {
+  "propertyNames": {
+    "type": "string",
+    "pattern": "^[a-z][a-z0-9-]*$"
+  },
+  "additionalProperties": {
+    "$ref": "#/definitions/CurrentSourceApproval"
+  },
+  "definitions": {
+    "CurrentSourceApproval": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "catalogCaseIndex",
         "sourcePath",
         "baselineCommit",
         "baselineBlob",
         "baselinePreimage",
         "currentPreimage",
-        "expectationsPath",
-        "expectationsSha256"
+        "approvalPath",
+        "approvalSha256"
       ],
       "properties": {
         "sourcePath": {
           "type": "string",
-          "minLength": 1,
-          "pattern": "^(?!/)(?!.*[\\\\:*?\"<>|\\u0000-\\u001f])(?!.*//)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!compose(?:/|$))(?!temp/compose(?:/|$)).+/README\\.md$"
-        },
-        "catalogCaseIndex": {
-          "const": 31
+          "pattern": "^(?!/)(?!.*[\\\\:*?\"<>|\\u0000-\\u001f])(?!.*//)(?!.*(?:^|/)\\.\\.?(?:/|$)).+$"
         },
         "baselineCommit": {
           "type": "string",
-          "pattern": "^[0-9a-f]{40}$"
+          "pattern": "^[a-f0-9]{40}$"
         },
         "baselineBlob": {
           "type": "string",
-          "pattern": "^[0-9a-f]{40}$"
+          "pattern": "^[a-f0-9]{40}$"
         },
         "baselinePreimage": {
           "type": "object",
           "additionalProperties": false,
           "required": [
             "sha256",
-            "size",
-            "mode"
+            "mode",
+            "size"
           ],
           "properties": {
             "sha256": {
               "type": "string",
-              "pattern": "^[0-9a-f]{64}$"
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "mode": {
+              "const": "0644"
             },
             "size": {
               "type": "integer",
               "minimum": 0,
               "maximum": 9007199254740991
-            },
-            "mode": {
-              "const": "0644"
             }
           }
         },
@@ -91,32 +63,138 @@
           "additionalProperties": false,
           "required": [
             "sha256",
-            "size",
-            "mode"
+            "mode",
+            "size"
           ],
           "properties": {
             "sha256": {
               "type": "string",
-              "pattern": "^[0-9a-f]{64}$"
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "mode": {
+              "const": "0644"
             },
             "size": {
               "type": "integer",
               "minimum": 0,
               "maximum": 9007199254740991
-            },
-            "mode": {
-              "const": "0644"
             }
           }
         },
-        "expectationsPath": {
+        "approvalPath": {
           "type": "string",
-          "minLength": 1,
-          "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))(?!compose(?:/|$))(?!temp/compose(?:/|$)).+\\.json$"
+          "pattern": "^(?!/)(?!.*[\\\\:*?\"<>|\\u0000-\\u001f])(?!.*//)(?!.*(?:^|/)\\.\\.?(?:/|$)).+$"
         },
-        "expectationsSha256": {
+        "approvalSha256": {
           "type": "string",
-          "pattern": "^[0-9a-f]{64}$"
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "CurrentSourceApprovalDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "sourcePath",
+        "policy",
+        "baseline",
+        "currentPreimage"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "kind": {
+          "const": "current-source-approval"
+        },
+        "sourcePath": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*[\\\\:*?\"<>|\\u0000-\\u001f])(?!.*//)(?!.*(?:^|/)\\.\\.?(?:/|$)).+$"
+        },
+        "policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "pattern": "^(?!/)(?!.*[\\\\:*?\"<>|\\u0000-\\u001f])(?!.*//)(?!.*(?:^|/)\\.\\.?(?:/|$)).+$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "baseline": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "commit",
+            "blob",
+            "preimage"
+          ],
+          "properties": {
+            "commit": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{40}$"
+            },
+            "blob": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{40}$"
+            },
+            "preimage": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "sha256",
+                "mode",
+                "size"
+              ],
+              "properties": {
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "mode": {
+                  "const": "0644"
+                },
+                "size": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          }
+        },
+        "currentPreimage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256",
+            "mode",
+            "size"
+          ],
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "mode": {
+              "const": "0644"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
         }
       }
     }

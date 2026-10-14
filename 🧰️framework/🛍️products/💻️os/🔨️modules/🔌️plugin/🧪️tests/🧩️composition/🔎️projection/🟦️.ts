@@ -8,7 +8,7 @@ import {Database} from "bun:sqlite";
 type Row={slot:string;childId:string;artifactId:string;kind:string;standard:string;subset:string};
 type Fixture={contractId:string;cases:{id:string;rows:Row[]}[];overrideRefusal:{revision:number;code:string;message:string}};
 export function testDeclaredChildProjectionOracle():void {
- const path=new URL("../../../🧩️composition/🔎️projection/🧫️fixtures/🔣️.json",import.meta.url);
+ const path=new URL("../../../🧩️composition/🔎️projection/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url);
  assert(existsSync(path),"closed declared projection fixture must be published");
  const fixture=JSON.parse(readFileSync(path,"utf8")) as Fixture;
  

@@ -1,4 +1,4 @@
-"""Third-party reproduction of the expression fixtures in `🧫️fixtures/*` with Python's own `ast`, `math`, `decimal`, `networkx` and `jsonschema`.
+"""Third-party reproduction of the expression fixtures in `🧪️tests/🧫️fixtures/*` with Python's own `ast`, `math`, `decimal`, `networkx` and `jsonschema`.
 
 Every fixture case carries a Python rendering of its expression. The oracle parses that rendering with `ast.parse`, checks dimensions, evaluates it lazily
 in SI base units and resolves parameter sets with `networkx` strongly connected components and topological generations; the result must equal the

@@ -1,0 +1,58 @@
+{
+  "seam": {
+    "eventKind": "request",
+    "effectTag": "respond",
+    "eventFields": ["req", "params"],
+    "paramFields": ["origin", "capability", "payload"],
+    "effectFields": ["req", "outcome"],
+    "outcomeArms": ["ok", "fault"],
+    "originTag": "shell",
+    "turnBudget": 64,
+    "answeredOnTurn": 1,
+    "contiguousRequestCeilingBytes": 65536,
+    "hostAnswerCeilingBytes": 8388608
+  },
+  "capability": "echo",
+  "rows": [
+    {
+      "name": "inactive",
+      "bundle": false,
+      "capability": "echo",
+      "requestText": "{\"value\":1}",
+      "outcome": "fault",
+      "faultCode": "extension.inactive"
+    },
+    {
+      "name": "ok",
+      "bundle": true,
+      "capability": "echo",
+      "requestText": "{\"value\":41}",
+      "outcome": "ok",
+      "answerText": "{\"echo\":{\"value\":41}}"
+    },
+    {
+      "name": "empty-answer",
+      "bundle": true,
+      "capability": "echo",
+      "requestText": "{}",
+      "outcome": "ok",
+      "answerText": "{\"echo\":{}}"
+    },
+    {
+      "name": "handler-fault",
+      "bundle": true,
+      "capability": "echo",
+      "requestText": "not-json",
+      "outcome": "fault",
+      "faultCode": "extension.evaluate.bad-request"
+    },
+    {
+      "name": "unknown-capability",
+      "bundle": true,
+      "capability": "tessellate",
+      "requestText": "{}",
+      "outcome": "fault",
+      "faultCode": "extension.unknown-capability"
+    }
+  ]
+}

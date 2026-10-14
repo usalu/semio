@@ -23,6 +23,6 @@ impl Serializer<DagSnapshot> for DagIntoJson {
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn serialize(from: &DagSnapshot, _: &ArchiveChildren, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let json = serialize(from).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DagIntoJson: {error}"))))?;
-        Ok(IoOutcome::clean(IoPayload::Binary(<JsonSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&json))))
+        Ok(IoOutcome::clean(IoPayload::Binary(<JsonSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&json))))
     }
 }

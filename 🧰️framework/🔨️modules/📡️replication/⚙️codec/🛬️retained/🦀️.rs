@@ -101,6 +101,7 @@ impl RetainedWireFieldDecode{
   let value=original.take().unwrap().into_bytes();let mut owner=Self::new(&value,false);*owner.output=Some(value);owner.phase=1;owner.closing=true;owner.receipt=Some((grant,RetainedCloneProgress{copied_items:1,..Default::default()}));Ok(Some(owner))
  }
  /// 📐️ Observes the same original published backing without source access or new work.
+ pub fn output_bytes(&self)->usize{self.output_extent}
  pub fn close_demands(&self)->RetirementDemand{if self.receipt.is_some()||self.phase==3||!self.closing{return Default::default()}RetirementDemand{release_bytes:self.output.as_ref().map_or(0,Vec::capacity),depth:1,..Default::default()}}
  fn validate_source<S:RetainedWireByteSource+?Sized>(&self,source:&S)->Result<(),ValueError>{let identity=source.original_source_identity();if identity.address!=self.original||identity.extent!=self.extent||identity.authority!=self.authority{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original wire source identity or extent changed"))}Ok(())}
  pub fn receipt(&self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.receipt}

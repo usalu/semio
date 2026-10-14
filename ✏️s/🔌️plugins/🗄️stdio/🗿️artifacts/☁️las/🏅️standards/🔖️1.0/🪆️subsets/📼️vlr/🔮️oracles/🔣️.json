@@ -23,14 +23,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/📥️insert-vlr/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/📥️insert-vlr/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:dd31f6e945a285b515d30e56726bfcfc26d2f1acc7e629e6b588d6b74395969f",
           "bytes": 1527
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/📥️insert-vlr/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/📥️insert-vlr/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:b44b386726914f8fde8e7d2ee06283776affa8d37c23877ba7a88732d56d79d2",
           "bytes": 1645
@@ -65,14 +65,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🗑️remove-vlr/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-vlr/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:b44b386726914f8fde8e7d2ee06283776affa8d37c23877ba7a88732d56d79d2",
           "bytes": 1645
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🗑️remove-vlr/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-vlr/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:0013739b405024dd6f9a22c8ea16924af24bfdfa8e0caed016985c4bf4a05843",
           "bytes": 1529
@@ -107,14 +107,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🗃️set-vlr-data/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🗃️set-vlr-data/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:dd31f6e945a285b515d30e56726bfcfc26d2f1acc7e629e6b588d6b74395969f",
           "bytes": 1527
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🗃️set-vlr-data/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🗃️set-vlr-data/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:8c682de5b1804354e73a20cf788feb4b81319208ae56c57f93b4be32fedf002b",
           "bytes": 1535

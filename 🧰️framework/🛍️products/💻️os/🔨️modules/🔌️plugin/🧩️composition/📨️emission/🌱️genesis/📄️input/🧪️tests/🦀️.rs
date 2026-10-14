@@ -2,7 +2,7 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn child_emission_private_genesis_writer_streams_canonical_pages_and_retains_every_cancelled_owner(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🏪️store/🧩️composition/🚪️open/🌱️genesis/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🏪️store/🧩️composition/🚪️open/🌱️genesis/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let reference=|value:&serde_json::Value|semio_framework_artifact_reference::ArtifactRef{artifact_id:value["artifact_id"].as_str().unwrap().into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:value["dialect"]["artifact_kind"].as_str().unwrap().into(),standard:value["dialect"]["standard"].as_str().unwrap().into(),subset:value["dialect"]["subset"].as_str().unwrap().into()}};
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:262144,maximum_release_bytes:0,maximum_depth:64};
     for row in fixture["cases"].as_array().unwrap(){
@@ -28,7 +28,7 @@ async fn child_emission_private_genesis_writer_streams_canonical_pages_and_retai
 
 #[test]
 fn child_emission_private_input_writer_fills_only_admitted_inline_prefix() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let source=serde_json::to_vec(&fixture["source"].as_str().unwrap().repeat(257)).unwrap();
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:262144,maximum_release_bytes:0,maximum_depth:64};
     let mut cursor=PrivateChildInputPages::default();let mut position=0;let mut ready=false;
@@ -49,7 +49,7 @@ fn child_emission_private_input_writer_fills_only_admitted_inline_prefix() {
 
 #[test]
 fn child_emission_private_input_pages_preserve_exact_source_and_whole_backing() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:fixture["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:fixture["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:0,maximum_depth:64};
     for count in fixture["repeatCounts"].as_array().unwrap(){
         let original=fixture["source"].as_str().unwrap().repeat(count.as_u64().unwrap()as usize);

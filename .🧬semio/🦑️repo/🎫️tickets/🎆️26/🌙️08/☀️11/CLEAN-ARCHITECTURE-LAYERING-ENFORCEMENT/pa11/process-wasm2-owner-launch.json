@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "🏃️Process Whole Current WASM Package Owner Producer Receiving 2",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-process:test-wasm-build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.05733
+      },
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/w2",
+        "SEMIO_TOOLRUN_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/w2",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "{\"version\":1,\"policy\":{\"version\":1,\"owner\":\"process-wasm-owner-receiving\",\"maximumElapsedMilliseconds\":0},\"deadlineEpochMilliseconds\":null,\"capabilities\":{}}"
+      }
+    }
+  ],
+  "retireNames": []
+}

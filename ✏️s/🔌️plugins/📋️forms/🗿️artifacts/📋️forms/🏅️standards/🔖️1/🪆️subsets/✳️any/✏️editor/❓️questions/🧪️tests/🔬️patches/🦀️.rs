@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn question_patches_match_shared_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️patches.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️patches.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let before: FormQuestion = semio_framework_pack_json::from_json_str(&case["before"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let value = semio_framework_pack_json::parse(&case["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -20,7 +20,7 @@ fn question_patches_match_shared_vectors() {
 
 #[test]
 fn question_choices_match_shared_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️choices.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️choices.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let before: FormQuestion = semio_framework_pack_json::from_json_str(&case["before"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let value = semio_framework_pack_json::parse(&case["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

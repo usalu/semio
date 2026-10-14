@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn retained_empty_initialization_catalog_releases_one_exact_native_page_without_ungranted_heap_work() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let lanes = fixture["lanes"].as_array().unwrap();
     let page_slots = fixture["pageSlots"].as_u64().unwrap() as usize;
     let mut catalog = ArtifactStoreInitializationOwnerCatalog::try_new().unwrap();
@@ -46,7 +46,7 @@ fn retained_empty_initialization_catalog_releases_one_exact_native_page_without_
 
 #[test]
 fn retained_initialization_catalog_birth_denial_and_cancellation_preserve_every_original_page() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let row = &fixture["birthPolicy"];
     let policy = RetainedCloneGrant { maximum_items: row["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: row["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: row["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: row["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: row["maximumDepth"].as_u64().unwrap() as usize };
     for cut in fixture["birthCancelCuts"].as_array().unwrap() {

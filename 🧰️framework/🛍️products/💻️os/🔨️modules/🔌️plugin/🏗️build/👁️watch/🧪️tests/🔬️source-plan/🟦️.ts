@@ -15,7 +15,7 @@ export async function testNativeSourceWatchPlanV1(workspace: string, artifacts: 
   const program = ts.createProgram([source], { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, strict: true, allowImportingTsExtensions: true, noEmit: true, skipLibCheck: true, types: ["node", "bun"] });
   const unit = program.getSourceFile(source)!;
   assert.deepEqual([...program.getSyntacticDiagnostics(unit), ...program.getSemanticDiagnostics(unit)].map(issue => ts.flattenDiagnosticMessageText(issue.messageText, "\n")), []);
-  const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(root, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
   mkdirSync(artifacts, { recursive: true });
   const temporary = mkdtempSync(join(artifacts, "source-watch-"));
   try {

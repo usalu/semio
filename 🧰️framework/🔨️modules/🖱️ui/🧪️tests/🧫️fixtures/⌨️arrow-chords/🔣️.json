@@ -1,0 +1,50 @@
+[
+  {
+    "id": "left",
+    "chord": "arrowleft",
+    "key": "ArrowLeft",
+    "shift": false
+  },
+  {
+    "id": "left-shift",
+    "chord": "shift+arrowleft",
+    "key": "ArrowLeft",
+    "shift": true
+  },
+  {
+    "id": "right",
+    "chord": "arrowright",
+    "key": "ArrowRight",
+    "shift": false
+  },
+  {
+    "id": "right-shift",
+    "chord": "shift+arrowright",
+    "key": "ArrowRight",
+    "shift": true
+  },
+  {
+    "id": "up",
+    "chord": "arrowup",
+    "key": "ArrowUp",
+    "shift": false
+  },
+  {
+    "id": "up-shift",
+    "chord": "shift+arrowup",
+    "key": "ArrowUp",
+    "shift": true
+  },
+  {
+    "id": "down",
+    "chord": "arrowdown",
+    "key": "ArrowDown",
+    "shift": false
+  },
+  {
+    "id": "down-shift",
+    "chord": "shift+arrowdown",
+    "key": "ArrowDown",
+    "shift": true
+  }
+]

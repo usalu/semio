@@ -1,11 +1,13 @@
 //! 🧱️ Genuine Block3d Native owned catalog address and scalar baselines.
 #[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
 mod original_owners;
+use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::Block3dSnapshot;
 use crate::*;
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 fn laws() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()
 }
 fn words() -> Vec<u64> {
     laws()["binary64Bits"].as_array().unwrap().iter().map(|v| u64::from_str_radix(v.as_str().unwrap(), 16).unwrap()).collect()
@@ -155,7 +157,7 @@ fn independent_edit(bytes: &[u8], sql: &str) -> Vec<u8> {
 }
 #[test]
 fn sqlite_snapshot_block3d_independent_edited_physical_database_preserves_every_word() {
-    use store::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshot};
+    use store::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
     for word in words() {
         let expected = full(word);
         let database = original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|expected.to_sqlite_database(sqlite_control)).unwrap();
@@ -182,7 +184,7 @@ fn sqlite_snapshot_block3d_independent_edited_physical_database_preserves_every_
 }
 #[test]
 fn sqlite_snapshot_block3d_independent_malformed_entities_refuse() {
-    use store::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshot};
+    use store::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
     let database = original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|full(0).to_sqlite_database(sqlite_control)).unwrap();
     let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
     for edit in [
@@ -201,7 +203,7 @@ fn sqlite_snapshot_block3d_independent_malformed_entities_refuse() {
 }
 #[test]
 fn sqlite_snapshot_block3d_row_frontier_and_real_four_phase_cancellation() {
-    use store::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshot};
+    use store::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
     let mut expected = full(0);
     expected.object_kind.description = "😀".repeat(32768);
     let limits = SqliteDatabaseLimits { max_rows: 14, ..SqliteDatabaseLimits::default() };
@@ -269,7 +271,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// 🗃️ Actual owner editor/viewer app wrappers for public I/O registration.
 pub(crate) enum PublicApps: PluginApp {Editor(VcsArtifactApp<EditorApp<crate::editor::block3d::Block3dPlayApp>>),Viewer(VcsArtifactApp<ViewerApp<crate::viewer::block3d::Block3dViewer>>),}
 }
-struct PublicOwned(Option<Block3dSnapshot>);impl PublicOwned{fn new(value:Block3dSnapshot)->Self{Self(Some(value))}fn get(&self)->&Block3dSnapshot{self.0.as_ref().unwrap()}}impl Drop for PublicOwned{fn drop(&mut self){if let Some(value)=self.0.take(){<Block3dSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(value);}}}
+struct PublicOwned(Option<Block3dSnapshot>);impl PublicOwned{fn new(value:Block3dSnapshot)->Self{Self(Some(value))}fn get(&self)->&Block3dSnapshot{self.0.as_ref().unwrap()}}impl Drop for PublicOwned{fn drop(&mut self){if let Some(value)=self.0.take(){<Block3dSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(value);}}}
 fn exact(a:&Block3dSnapshot,b:&Block3dSnapshot){use semio_framework_value::{DslValue,Number,ToValue};fn same(a:&DslValue,b:&DslValue){match(a,b){(DslValue::Number(Number::Float(a)),DslValue::Number(Number::Float(b)))=>assert_eq!(a.to_bits(),b.to_bits()),(DslValue::Array(a),DslValue::Array(b))=>{assert_eq!(a.len(),b.len());for(a,b)in a.iter().zip(b){same(a,b);}},(DslValue::Object(a),DslValue::Object(b))=>{assert_eq!(a.len(),b.len());for((ka,a),(kb,b))in a.iter().zip(b){assert_eq!(ka,kb);same(a,b);}},_=>assert_eq!(a,b)}}same(&a.to_value(),&b.to_value());}
 
 fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder("block").label("Populated public SQLite").version("0.0.1").package_id("semio:block").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}
@@ -277,16 +279,16 @@ fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder("block").lab
 async fn sqlite_snapshot_block3d_populated_actual_app_public_both_forms(){
 use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};
 register();let dialect=ArtifactDialect{artifact_kind:"s.block.block3d".into(),standard:"1".into(),subset:"*".into()};let sqlite=ArtifactDialect::from(SQLITE_SNAPSHOT);for route in[io_route(&dialect,&sqlite,1).await.unwrap().value,io_route(&sqlite,&dialect,1).await.unwrap().value]{assert_eq!(route.hops.len(),1);assert_eq!(route.fidelity,IoFidelity::Exact);}
-for word in words(){let expected=PublicOwned::new(full(word));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=io_export_sqlite_snapshot(&dialect,expected.get(),encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;let actual=PublicOwned::new(io_import_sqlite_snapshot::<Block3dSnapshot>(&dialect,&bytes,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value);exact(actual.get(),expected.get());assert_eq!((actual.get()).encode_pack(),(expected.get()).encode_pack());assert_eq!((actual.get()).print_dsl(),(expected.get()).print_dsl());}}
+for word in words(){let expected=PublicOwned::new(full(word));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=async{let original_file_dialect=&dialect;let original_file_input=expected.get();let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;let actual=PublicOwned::new(async{let original_file_dialect=&dialect;let original_file_input=&bytes;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<Block3dSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value);exact(actual.get(),expected.get());assert_eq!((actual.get()).encode_pack(),(expected.get()).encode_pack());assert_eq!((actual.get()).print_dsl(),(expected.get()).print_dsl());}}
 eprintln!("[DEBUG] block3d actual app public both forms preserve complete owner and words");
 }
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_block3d_populated_public_independent_edit_retirement(){
 use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot};use std::{io::Write,process::{Command,Stdio}};
 register();let dialect=ArtifactDialect{artifact_kind:"s.block.block3d".into(),standard:"1".into(),subset:"*".into()};
-for word in words(){let expected=PublicOwned::new(full(word));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=io_export_sqlite_snapshot(&dialect,expected.get(),encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;
+for word in words(){let expected=PublicOwned::new(full(word));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=async{let original_file_dialect=&dialect;let original_file_input=expected.get();let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
 let script=r#"import{Database}from'bun:sqlite';const d=Database.deserialize(await Bun.stdin.bytes(),{safeIntegers:true});if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');if(d.query('SELECT COUNT(*) AS n FROM sqlite_schema WHERE type=\'table\'').get().n!==14n)throw Error('table census');if(d.query('SELECT COUNT(*) AS n FROM block3_document').get().n!==1n)throw Error('literalRows:block3_document');if(d.query('SELECT COUNT(*) AS n FROM block3_kind').get().n!==1n)throw Error('literalRows:block3_kind');if(d.query('SELECT COUNT(*) AS n FROM block3_catalog_child').get().n!==1n)throw Error('literalRows:block3_catalog_child');if(d.query('SELECT COUNT(*) AS n FROM block3_representation').get().n!==1n)throw Error('literalRows:block3_representation');if(d.query('SELECT COUNT(*) AS n FROM block3_representation_tag').get().n!==2n)throw Error('literalRows:block3_representation_tag');if(d.query('SELECT COUNT(*) AS n FROM block3_representation_attribute').get().n!==1n)throw Error('literalRows:block3_representation_attribute');if(d.query('SELECT COUNT(*) AS n FROM block3_vortex_kind_extra').get().n!==1n)throw Error('literalRows:block3_vortex_kind_extra');if(d.query('SELECT COUNT(*) AS n FROM block3_vortex').get().n!==1n)throw Error('literalRows:block3_vortex');if(d.query('SELECT COUNT(*) AS n FROM block3_compatibility').get().n!==1n)throw Error('literalRows:block3_compatibility');if(d.query('SELECT COUNT(*) AS n FROM block3_attribute').get().n!==1n)throw Error('literalRows:block3_attribute');if(d.query('SELECT COUNT(*) AS n FROM block3_author').get().n!==1n)throw Error('literalRows:block3_author');if(d.query('SELECT COUNT(*) AS n FROM block3_camera3d').get().n!==1n)throw Error('literalRows:block3_camera3d');if(d.query('SELECT COUNT(*) AS n FROM block3_meta').get().n!==1n)throw Error('literalRows:block3_meta');const m=d.query('SELECT * FROM semio_snapshot').get();if(JSON.stringify(Object.keys(m))!==JSON.stringify(['id','artifact_kind','standard','subset','schema_version','native_encoding'])||m.id!==1n||m.schema_version!==1n)throw Error('completePublicMetadata');if(m.artifact_kind!=='s.block.block3d'||m.standard!=='1'||m.subset!=='*'||m.native_encoding!==process.argv[1])throw Error('metadata');d.query('UPDATE block3_kind SET description=? WHERE id=1').run('independent 日本\u0000');await Bun.write(Bun.stdout,d.serialize());d.close();"#;
-let mut child=Command::new("bun").args(["--eval",script,encoding.as_str(),&(laws()).to_string()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let out=child.wait_with_output().unwrap();assert!(out.status.success(),"{}",String::from_utf8_lossy(&out.stderr));let actual=PublicOwned::new(io_import_sqlite_snapshot::<Block3dSnapshot>(&dialect,&out.stdout,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value);let mut literal=full(word);literal.object_kind.description="independent 日本\0".into();let literal=PublicOwned::new(literal);exact(actual.get(),literal.get());assert_eq!((actual.get()).encode_pack(),(literal.get()).encode_pack());assert_eq!((actual.get()).print_dsl(),(literal.get()).print_dsl());}}
+let mut child=Command::new("bun").args(["--eval",script,encoding.as_str(),&(laws()).to_string()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let out=child.wait_with_output().unwrap();assert!(out.status.success(),"{}",String::from_utf8_lossy(&out.stderr));let actual=PublicOwned::new(async{let original_file_dialect=&dialect;let original_file_input=&out.stdout;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<Block3dSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value);let mut literal=full(word);literal.object_kind.description="independent 日本\0".into();let literal=PublicOwned::new(literal);exact(actual.get(),literal.get());assert_eq!((actual.get()).encode_pack(),(literal.get()).encode_pack());assert_eq!((actual.get()).print_dsl(),(literal.get()).print_dsl());}}
 eprintln!("[DEBUG] block3d independent public SQL edit complete owner and retirement");
 }
 }
@@ -294,22 +296,22 @@ eprintln!("[DEBUG] block3d independent public SQL edit complete owner and retire
 #[test]
 fn sqlite_snapshot_block3d_json_transport_corpus_is_closed_and_third_party_measured() {
     use std::{io::Write,process::{Command,Stdio}};
-    let corpus=include_str!("../🧫️fixtures/🔢️transport/🔣️.json");
+    let corpus=include_str!("🧫️fixtures/🔢️transport/🔣️.json");
     let script=r#"import Ajv from'ajv';const c=JSON.parse(process.argv[1]),word=process.argv[2],v=JSON.parse(await Bun.stdin.text());const a=new Ajv({strict:true});const valid=a.compile(JSON.parse(process.argv[3]).$defs.Binary64);for(const path of c.roles){const cell=path.reduce((v,k)=>v[k],v);if(!valid(cell)||cell.bits!==word)throw Error('literal IEEE role');const bytes=Buffer.from(cell.bits,'hex');if(new DataView(bytes.buffer,bytes.byteOffset,8).getBigUint64(0)!==BigInt('0x'+word))throw Error('independent bytes');}for(const invalid of c.invalidWords)if(valid(invalid))throw Error('invalid word');"#;
     for word in words(){let snapshot=full(word);let text=crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::json_text(&snapshot);let mut child=Command::new("bun").args(["-e",script,corpus,&format!("{word:016x}"),include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json")]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(text.as_bytes()).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let restored=crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::from_json_text(&text).unwrap();assert_words(&restored,word);
     let fixture:serde_json::Value=serde_json::from_str(corpus).unwrap();for bad in fixture["invalidWords"].as_array().unwrap(){let mut value:serde_json::Value=serde_json::from_str(&text).unwrap();value["vortices"][0]["position"][0]=bad.clone();assert!(crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::from_json_text(&value.to_string()).is_err());}}
 }
 #[test]
 fn sqlite_snapshot_block3d_typed_catalog_dialect_is_required_by_every_native_form() {
- use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::*};
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔢️transport/🔣️.json")).unwrap();
+ use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::*};
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔢️transport/🔣️.json")).unwrap();
  for row in corpus["childDialects"]["refused"].as_array().unwrap(){let mut s=full(0);s.catalog.target.dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:row["artifactKind"].as_str().unwrap().into(),standard:row["standard"].as_str().unwrap().into(),subset:row["subset"].as_str().unwrap().into()};assert!(original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|s.to_sqlite_database(sqlite_control)).is_err());for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{let payload=match encoding{SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(s.print_dsl()),SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(s.encode_pack_with(&Default::default()).unwrap())};assert!(original_owners::with_decoding(|native_owner|Block3dSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).is_err());assert!(original_owners::with_encoding(|native_owner|s.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).is_err());}}
 }
 
 #[test]
 fn sqlite_snapshot_block3d_complete_native_limits_follow_independent_all_cell_corpus(){
- use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::*};use std::{io::Write,process::{Command,Stdio}};
- let corpus=include_str!("../🧫️fixtures/🛂️semantic/🔣️.json");let plan:serde_json::Value=serde_json::from_str(corpus).unwrap();
+ use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::*};use std::{io::Write,process::{Command,Stdio}};
+ let corpus=include_str!("🧫️fixtures/🛂️semantic/🔣️.json");let plan:serde_json::Value=serde_json::from_str(corpus).unwrap();
  let oracle=r#"import{Database}from'bun:sqlite';const p=JSON.parse(process.argv[1]),sample=JSON.parse(process.argv[2]);const db=Database.deserialize(await Bun.stdin.bytes());try{if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('SQL integrity');let rows=0,bytes=0;for(const[table,width]of Object.entries(p.tableWidths)){const fields=db.query('PRAGMA table_info('+table+')').all().map(v=>v.name);if(fields.length!==width)throw Error('columns');const cells=fields.map(name=>"CASE typeof("+name+") WHEN 'integer' THEN 8 WHEN 'real' THEN 8 WHEN 'text' THEN length(CAST("+name+" AS BLOB)) WHEN 'blob' THEN length("+name+") ELSE 0 END").join('+');const extent=db.query('SELECT COUNT(*) AS rows,COALESCE(SUM('+cells+'),0) AS bytes FROM '+table).get();rows+=extent.rows;bytes+=extent.bytes;}if(rows!==sample.rows||bytes!==sample.bytes)throw Error('all cells '+JSON.stringify({rows,bytes,sample}));}finally{db.close()}"#;
  for sample in plan["cases"].as_array().unwrap(){let word=u64::from_str_radix(sample["word"].as_str().unwrap(),16).unwrap();let snapshot=full(word);let defaults=SqliteDatabaseLimits::default();let database=original_owners::with_sqlite_recipient(defaults,&mut |_|true,|sqlite_control|snapshot.to_sqlite_database(sqlite_control)).unwrap();let file=export_sqlite_database(&database,defaults,&mut |_|true).unwrap();let mut child=Command::new("bun").args(["-e",oracle,corpus,&sample.to_string()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&file).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));
  let rows=sample["rows"].as_u64().unwrap()as usize;let bytes=sample["bytes"].as_u64().unwrap()as usize;
@@ -330,16 +332,16 @@ fn sqlite_snapshot_block3d_actual_borrowed_wire_matches_all_words_and_owned_chil
  let result=match encoding{SnapshotEncoding::Text=>semio_framework_dsl_record::measure_print_borrowed(&source,&exact_borrowed_wire::spec(),maximum,&mut native),SnapshotEncoding::Binary=>{let mut options=store::os_pack::record::EncodeOptions::default();options.limits.max_file_len=maximum as u64;store::os_pack::record::measure_document_borrowed(&source,&exact_borrowed_wire::spec(),&options,&mut native)}};
  if maximum==body{assert_eq!(result.expect("actual retained child and target must be borrowed without Record mirrors"),body);use semio_framework_dsl_record::{DslField,native_encoding::FieldProjectionView as V};for(path,expected)in[(&[0][..],source.catalog.child_id.as_str()),(&[1,0][..],source.catalog.target.artifact_id.as_str()),(&[1,1][..],source.catalog.target.dialect.artifact_kind.as_str()),(&[1,2][..],source.catalog.target.dialect.standard.as_str()),(&[1,3][..],source.catalog.target.dialect.subset.as_str())]{let V::Text(actual)=DslField::projection_view(&source.catalog,path).unwrap()else{panic!("literal borrowed child field")};assert_eq!(actual.as_ptr(),expected.as_ptr());assert_eq!(actual.len(),expected.len());}assert!(DslField::projection_view(&source.catalog,&[1,4]).is_err());assert!(DslField::projection_view(&source.catalog,&[0,0]).is_err());assert!(DslField::projection_key(&source.catalog,&[],0).is_err())}else{assert!(result.is_err(),"one actual wire octet short");}
  }
- for maximum in[length,length-1]{let limits=SqliteDatabaseLimits{max_file_bytes:maximum,..Default::default()};assert_eq!(<Block3dSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::preflight_sqlite_snapshot_encoding(&source,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_ok(),maximum==length,"actual envelope and borrowed wire file ceiling");}
+ for maximum in[length,length-1]{let limits=SqliteDatabaseLimits{max_file_bytes:maximum,..Default::default()};assert_eq!(<Block3dSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::preflight_sqlite_snapshot_encoding(&source,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_ok(),maximum==length,"actual envelope and borrowed wire file ceiling");}
  }
- <Block3dSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(source);
+ <Block3dSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(source);
  }
 }
 
 #[test]
 fn sqlite_snapshot_block3d_complete_borrowed_semantic_gate_copied_limits_exact_and_one_short(){
- use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::*};
- let plan:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();
+ use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::*};
+ let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();
  let defaults=SqliteDatabaseLimits::default();
  for sample in plan["cases"].as_array().unwrap(){let word=u64::from_str_radix(sample["word"].as_str().unwrap(),16).unwrap();let s=full(word);let rows=sample["rows"].as_u64().unwrap()as usize;let bytes=sample["bytes"].as_u64().unwrap()as usize;
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let input=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(s.encode_pack_with(&Default::default()).unwrap()),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(s.print_dsl())};

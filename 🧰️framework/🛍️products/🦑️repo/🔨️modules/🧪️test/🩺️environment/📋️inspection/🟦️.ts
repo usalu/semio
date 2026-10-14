@@ -2,7 +2,7 @@ import { oracleHostPython } from "../../🖥️host/🏗️materialization/🟦�
 import { type Implementation } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { discoverTestCases, testCacheDir, testTaxonomy } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { runProbe } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { Script } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join, relative, sep } from "node:path";
 
 /** 🕸️ Emits the per-case Nx project graph the plugin generates, for inspection and for CI. */

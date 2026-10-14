@@ -4,8 +4,8 @@ import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { CLEAN_OVERSIZED_IGNORED_FILE_MAX_BYTES, CLEAN_TICKET_FILE_MAX_BYTES } from "../../🧼️workspace-cleanup/🔍️candidate-discovery/🟦️.ts";
 import { CleanScript } from "../../🧼️workspace-cleanup/🎮️command/🟦️.ts";
-import { createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import type { ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type { ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const clean = (root: string): Promise<void> => withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "clean-ticket-runs-test", maximumElapsedMilliseconds: 0 }, {}, Date.now()), async (invocation: ScriptInvocation) => { await new CleanScript(root, root, invocation).run([]); });
 

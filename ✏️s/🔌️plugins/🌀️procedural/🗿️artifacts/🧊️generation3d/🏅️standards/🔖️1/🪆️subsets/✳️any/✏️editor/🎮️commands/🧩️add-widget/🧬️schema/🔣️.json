@@ -45,6 +45,22 @@
     },
     "y": {
       "type": "number"
+    },
+    "sourceWidget": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sourcePort": {
+      "type": "string",
+      "minLength": 1
+    },
+    "targetPort": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sourceRevision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
     }
   },
   "allOf": [
@@ -106,6 +122,61 @@
           ]
         }
       }
+    },
+    {
+      "if": {
+        "anyOf": [
+          {
+            "required": [
+              "sourceWidget"
+            ]
+          },
+          {
+            "required": [
+              "sourcePort"
+            ]
+          },
+          {
+            "required": [
+              "targetPort"
+            ]
+          },
+          {
+            "required": [
+              "sourceRevision"
+            ]
+          }
+        ]
+      },
+      "then": {
+        "properties": {
+          "kind": {
+            "const": "neuron"
+          }
+        }
+      }
     }
-  ]
+  ],
+  "dependencies": {
+    "sourceWidget": [
+      "sourcePort",
+      "targetPort",
+      "sourceRevision"
+    ],
+    "sourcePort": [
+      "sourceWidget",
+      "targetPort",
+      "sourceRevision"
+    ],
+    "targetPort": [
+      "sourceWidget",
+      "sourcePort",
+      "sourceRevision"
+    ],
+    "sourceRevision": [
+      "sourceWidget",
+      "sourcePort",
+      "targetPort"
+    ]
+  }
 }

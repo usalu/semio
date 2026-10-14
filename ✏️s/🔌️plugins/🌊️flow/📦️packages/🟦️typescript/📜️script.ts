@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🌊️ `@semio-tech/flow-js` router: `bun ./📜️script.ts test`. */
 import { resolve } from "node:path";
 import { runCmd, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -142,8 +142,8 @@ class ActionCohortAuditScript extends BundleScript {
     const flowRoot = resolve(this.root, "../..");
     const noteRoot = resolve(flowRoot, "../🗒️note");
     const fixtures = [
-      await Bun.file(resolve(flowRoot, "🧫️fixtures/🎬️action-cohort/🔣️.json")).json() as Fixture,
-      await Bun.file(resolve(noteRoot, "🧫️fixtures/🧪️action-cohort/🔣️.json")).json() as Fixture,
+      await Bun.file(resolve(flowRoot, "🧪️tests/🧫️fixtures/🎬️action-cohort/🔣️.json")).json() as Fixture,
+      await Bun.file(resolve(noteRoot, "🧪️tests/🧫️fixtures/🧪️action-cohort/🔣️.json")).json() as Fixture,
     ];
     const scope = segments[0] ?? "all";
     if (!["all", "flow", "note"].includes(scope)) throw new Error(`unknown action-cohort scope ${scope}`);

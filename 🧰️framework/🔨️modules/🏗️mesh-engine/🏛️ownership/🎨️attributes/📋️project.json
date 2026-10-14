@@ -10,7 +10,7 @@
       "inputs": [
         "sharedGlobals",
         "{projectRoot}/**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🏗️mesh-engine/🧫️fixtures/🎨️attributes/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🎨️attributes/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🏗️mesh-engine/🧬️schema/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🔬️mesh-data-from-value-round-trip/🦀️.rs"
       ],

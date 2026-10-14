@@ -5,7 +5,7 @@ use crate::ModelSnapshot;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_s_artifact_stdio_ifc::part21::{Part21Document, Part21Value};
 
-const ENERGY: &str = include_str!("../../../../../../🧫️fixtures/🏗️ifc/🔥️energy/📸️snapshot/🔣️.json");
+const ENERGY: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🔥️energy/📸️snapshot/🔣️.json");
 
 fn energy() -> ModelSnapshot {
     from_json_str(ENERGY, JsonMemberPolicy::Reject).expect("the committed energy model decodes")

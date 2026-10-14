@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import sharp from "sharp";
-import maskFixture from "../../🧫️fixtures/🔣️.json";
+import maskFixture from "../🧫️fixtures/🔣️.json";
 test("selection mask coverage matches the Sharp alpha-channel oracle",async()=>{
   const {width,height,selection,expectedRgba}=maskFixture;
   const alpha=Buffer.alloc(width*height);

@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { act } from "react";
 import { fireEvent, render } from "@testing-library/react";
 import Ajv2020 from "ajv/dist/2020";
-import tooltipFixture from "../../../../🧫️fixtures/💡️retained-control-tooltip/🔣️.json" with { type: "json" };
+import tooltipFixture from "../../../../🧪️tests/🧫️fixtures/💡️retained-control-tooltip/🔣️.json" with { type: "json" };
 import { UiKeybindingsProvider } from "../../../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
 import { DEFAULT_UI_DRIVER, UiDriverProvider } from "../../../🚗️UiDriver/🟦️.tsx";
 import { ChromeControlHint } from "../../🟦️.tsx";

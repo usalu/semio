@@ -5,8 +5,8 @@ use store::{ArtifactStore, SpaceMember};
 
 type InteractionStore = ArtifactStore<InteractionState, InteractionConfigMutation>;
 
-async fn fixture() -> (InteractionStore, LocalInteractionCaptureCursor, Vec<u8>, store::NativeSnapshotBodyWallet) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
+async fn fixture() -> (InteractionStore, LocalInteractionCaptureCursor, Vec<u8>, crate::io::control::NativeSnapshotBodyWallet) {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "semantic-unicode-over-page").unwrap();
     let mut state = row["expected"].clone();
     state["hover"] = serde_json::json!({"private": {"channel": "pointer", "ids": ["hover-is-not-captured"]}});
@@ -28,11 +28,11 @@ async fn fixture() -> (InteractionStore, LocalInteractionCaptureCursor, Vec<u8>,
     (store, cursor, expected,recipient)
 }
 
-fn recipient()->store::NativeSnapshotBodyWallet {
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../📃️query/🧫️fixtures/📨️authority.json")).unwrap();
-    store::NativeSnapshotBodyWallet::new(serde_json::from_value(law["wholeOperationGrant"].clone()).unwrap())
+fn recipient()->crate::io::control::NativeSnapshotBodyWallet {
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../../📃️query/🧪️tests/🧫️fixtures/📨️authority.json")).unwrap();
+    crate::io::control::NativeSnapshotBodyWallet::new(serde_json::from_value(law["wholeOperationGrant"].clone()).unwrap())
 }
-fn finish(cursor: &mut LocalInteractionCaptureCursor, bytes: usize, recipient:&mut store::NativeSnapshotBodyWallet) -> Vec<u8> {
+fn finish(cursor: &mut LocalInteractionCaptureCursor, bytes: usize, recipient:&mut crate::io::control::NativeSnapshotBodyWallet) -> Vec<u8> {
     let mut result = Vec::new();
     for _ in 0..200_000 {
         let prior=cursor.completed_bytes();let mut output=[0;4096];let grant=ArtifactStoreOneItemGrant::from_retained(recipient.remaining_grant());
@@ -41,7 +41,7 @@ fn finish(cursor: &mut LocalInteractionCaptureCursor, bytes: usize, recipient:&m
     }
     panic!("capture failed to complete");
 }
-fn close(store: &mut InteractionStore, cursor: &mut LocalInteractionCaptureCursor, recipient:&mut store::NativeSnapshotBodyWallet) {
+fn close(store: &mut InteractionStore, cursor: &mut LocalInteractionCaptureCursor, recipient:&mut crate::io::control::NativeSnapshotBodyWallet) {
     cursor.begin_close();let mut retirement:Option<Box<dyn ErasedSnapshotRetirement>>=None;
     for _ in 0..1_000_000 {
         let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(recipient.remaining_grant()).unwrap());let progress=step.progress();recipient.record_progress(progress).unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));

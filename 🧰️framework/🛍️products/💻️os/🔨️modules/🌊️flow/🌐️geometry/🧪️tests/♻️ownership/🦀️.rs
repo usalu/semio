@@ -18,11 +18,10 @@ impl GeometryPort for OriginalPort {
     fn next_retain_depth_demand(&self)->Result<usize,ValueError>{self.retaining.as_ref().map_or(Ok(0),ControlledRetirement::next_depth_demand)}
     fn retain_step_progress(&self)->RetainedCloneProgress{self.receipt}
     fn retain_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.receipt=Default::default();let Some(owner)=&mut self.retaining else{return Ok(RetainedCloneStep::Complete(Default::default()));};let result=owner.step(grant);self.receipt=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.retaining=None;}Ok(step)}
-    fn next_tessellate_copy_byte_demand(&self,_:&str,_:f64)->Result<usize,ValueError>{Ok(0)}
-    fn next_tessellate_capacity_byte_demand(&self,_:&str,_:f64,_:usize)->Result<usize,ValueError>{Ok(0)}
-    fn next_tessellate_release_byte_demand(&self,_:&str,_:f64)->Result<usize,ValueError>{Ok(0)}
-    fn next_tessellate_depth_demand(&self,_:&str,_:f64)->Result<usize,ValueError>{Ok(0)}
-    fn tessellate_step(&self,_:&str,_:f64,_:usize,_:RetainedCloneGrant)->Result<(GeometryStep,RetainedCloneProgress),ValueError>{Ok((GeometryStep::Cancelled,Default::default()))}
+    fn tessellation_demands(&self,_:GeometryWorkIdentity,_:&str,_:f64,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(Default::default())}
+    fn tessellate_step(&self,_:GeometryWorkIdentity,_:&str,_:f64,_:usize,_:RetainedCloneGrant)->Result<(GeometryStep,GeometryWorkProgress),GeometryWorkFailure>{Ok((GeometryStep::Cancelled,Default::default()))}
+    fn cancel_tessellation_demands(&self,_identity:GeometryWorkIdentity,_handle:&str,_tolerance:f64,_copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(Default::default())}
+    fn cancel_tessellation_step(&self,_identity:GeometryWorkIdentity,_handle:&str,_tolerance:f64,_units:usize,_grant:RetainedCloneGrant)->Result<(RetainedCloneStep,GeometryWorkProgress),GeometryWorkFailure>{Ok((RetainedCloneStep::Complete(Default::default()),Default::default()))}
     fn dispose(&self,_:&str)->Result<(),String>{Ok(())}
     fn begin_cancel(&mut self)->Result<(),ValueError>{self.cancelling=true;Ok(())}
     fn cancel_terminal_is_empty(&self)->bool{!self.cancelling}
@@ -45,7 +44,7 @@ impl GeometryPort for OriginalPort {
 #[test]
 fn original_geometry_port_full_grant_retains_child_and_terminal_box() {
     use allocation::observe_backing;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/♻️ownership/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/♻️ownership/🔣️.json")).unwrap();
     for copy in fixture["copyGrants"].as_array().unwrap(){
         let ((port,pointer),source_births,source_frees)=observe_backing(||{let mut value=String::with_capacity(fixture["source"]["capacityBytes"].as_u64().unwrap() as usize);value.push_str(fixture["source"]["text"].as_str().unwrap());let pointer=value.as_ptr();let mut port=Box::new(OriginalPort{owner:semio_framework_value::retirement::controlled::RetainedOwnerGate::new(ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("original port source refused: {error}"))),retaining:None,cancelling:false,receipt:Default::default()});assert_eq!(port.owner.get_mut().original().unwrap().as_ptr(),pointer);(port as Box<dyn GeometryPort>,pointer)});
         assert_eq!(source_frees,0);
@@ -74,7 +73,7 @@ fn original_geometry_port_full_grant_retains_child_and_terminal_box() {
 #[test]
 fn original_geometry_port_retain_returns_exact_refused_source() {
     use allocation::observe_backing;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️work.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️work.json")).unwrap();
     let mut port=OriginalPort {owner:semio_framework_value::retirement::controlled::RetainedOwnerGate::new(ControlledRetirement::new(String::new()).unwrap_or_else(|_|unreachable!())),retaining:None,cancelling:false,receipt:Default::default()};
     drop(port.owner.get_mut().take_original());
     let (handles,born,freed)=observe_backing(||{let mut handles=Vec::with_capacity(fixture["requestCapacityItems"].as_u64().unwrap() as usize);for handle in fixture["handles"].as_array().unwrap(){handles.push(handle.as_str().unwrap().to_string());}handles});assert_eq!(freed,0);let vector=handles.as_ptr();let key=handles[0].as_ptr();
@@ -89,7 +88,7 @@ fn original_geometry_port_retain_returns_exact_refused_source() {
 #[test]
 fn original_geometry_port_cancel_retains_actual_payload_until_funded_closure(){
     use allocation::observe_backing;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/♻️ownership/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/♻️ownership/🔣️.json")).unwrap();
     for copy in fixture["copyGrants"].as_array().unwrap(){
         let((mut port,pointer),source,before)=observe_backing(||{let mut text=String::with_capacity(fixture["source"]["capacityBytes"].as_u64().unwrap()as usize);text.push_str(fixture["source"]["text"].as_str().unwrap());let pointer=text.as_ptr();(OriginalPort {owner:semio_framework_value::retirement::controlled::RetainedOwnerGate::new(ControlledRetirement::new(text).unwrap_or_else(|_|unreachable!())),retaining:None,cancelling:false,receipt:Default::default()},pointer)});assert_eq!(before,0);
         let(result,birth,release)=observe_backing(||port.begin_cancel());result.unwrap();assert_eq!((birth,release),(0,0));assert_eq!(port.owner.get_mut().original().unwrap().as_ptr(),pointer);assert!(!port.cancel_terminal_is_empty());

@@ -4,7 +4,7 @@ use super::*;
 use serde_json::Value;
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/🚗️driver-editor/🔣️.json")).expect("driver fixture")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🚗️driver-editor/🔣️.json")).expect("driver fixture")
 }
 
 fn find_id<'a>(value: &'a Value, id: &str) -> Option<&'a Value> {

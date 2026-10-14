@@ -6,7 +6,7 @@ use crate::wgpu::tree::UiDocumentTree;
 use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiNodeId, UiNodeRecord, UiRevision};
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🪗️retained-section-collapse/🔣️.json")).expect("retained Section fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🪗️retained-section-collapse/🔣️.json")).expect("retained Section fixture")
 }
 
 fn mounted_disclosure(fixture: &serde_json::Value) -> UiTree {

@@ -18,8 +18,8 @@ struct Committed {
 
 fn committed() -> Vec<Committed> {
     vec![
-        Committed { example: super::blocks::ID, json: include_str!("../../🧱️blocks/🧫️fixtures/🧩️example/🔣️.json"), snapshot: super::blocks::snapshot },
-        Committed { example: super::pipes_3d::ID, json: include_str!("../../🪠️pipes-3d/🧫️fixtures/🧩️example/🔣️.json"), snapshot: super::pipes_3d::snapshot },
+        Committed { example: super::blocks::ID, json: include_str!("../../🧱️blocks/🧪️tests/🧫️fixtures/🧩️example/🔣️.json"), snapshot: super::blocks::snapshot },
+        Committed { example: super::pipes_3d::ID, json: include_str!("../../🪠️pipes-3d/🧪️tests/🧫️fixtures/🧩️example/🔣️.json"), snapshot: super::pipes_3d::snapshot },
     ]
 }
 

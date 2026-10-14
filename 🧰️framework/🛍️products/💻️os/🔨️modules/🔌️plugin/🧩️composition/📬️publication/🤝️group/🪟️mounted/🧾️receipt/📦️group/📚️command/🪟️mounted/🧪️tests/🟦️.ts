@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { applyPatch } from "fast-json-patch";
-import fixture from "../../🧫️fixtures/🔣️.json" with { type: "json" };
-import pruning from "../../🧹️pruning/🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "../../🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
+import pruning from "../../🧹️pruning/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 
 test("mounted command history uses original paged append and whole physical retirement", async () => {
   

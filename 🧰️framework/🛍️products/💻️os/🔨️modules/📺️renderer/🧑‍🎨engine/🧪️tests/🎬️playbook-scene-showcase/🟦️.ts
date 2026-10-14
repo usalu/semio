@@ -23,7 +23,7 @@ type FilesFixture = {
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
 const taxonomy = "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🏗️builder";
-const fixture = JSON.parse(readFileSync(resolve(repoRoot, taxonomy, "🧫️fixtures/🎬️scene-showcase/🔣️.json"), "utf8")) as { readonly windows: readonly WindowFixture[]; readonly files: FilesFixture };
+const fixture = JSON.parse(readFileSync(resolve(repoRoot, taxonomy, "🧪️tests/🧫️fixtures/🎬️scene-showcase/🔣️.json"), "utf8")) as { readonly windows: readonly WindowFixture[]; readonly files: FilesFixture };
 
 describe("registered Playbook scene showcase", () => {
   it("projects the authored routes through the actual scene builder", () => {

@@ -32,7 +32,7 @@ fn fixture_owner(row: &serde_json::Value, source: &[u8], authority: PreparedAtla
 #[test]
 fn atlas_original_metadata_undergrant_retains_every_original_page_and_backing() {
     let _guard = super::tests::prepared_process_guard();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🎟️atlas/🔣️.json")).unwrap();
     let authority = PreparedAtlasAuthority { normal: fixture_grant(&fixture["authority"]["normal"]), retirement: fixture_grant(&fixture["authority"]["retirement"]) };
     for row in fixture["cases"].as_array().unwrap() {
         let source = vec![row["sourceByte"].as_u64().unwrap() as u8; row["sourceBytes"].as_u64().unwrap() as usize];
@@ -47,7 +47,7 @@ fn atlas_original_metadata_undergrant_retains_every_original_page_and_backing() 
             let len = pages.len();
             for denied in [RetainedCloneGrant { maximum_copy_bytes: 0, ..authority.retirement }, RetainedCloneGrant { maximum_items: 0, ..authority.retirement }, RetainedCloneGrant { maximum_depth: 0, ..authority.retirement }] {
                 let (step, heap) = observe_heap_allocations_on_this_thread(|| pages.close_original_step(denied));
-                assert!(matches!(step, CloseStep::Pending { progress } if progress == Default::default()) || matches!(step, CloseStep::Refused { kind: ValueRefusalKind::DepthLimit, progress } if progress == Default::default()));
+                match step{Ok(CloseStep::Pending{progress})=>assert_eq!(progress,Default::default()),Err(error)=>{assert_eq!(error.kind,ValueRefusalKind::DepthLimit);assert_eq!(error.retained_progress(),Default::default())},other=>panic!("original denied atlas close changed ownership: {other:?}")}
                 assert_eq!(heap, HeapAllocationObservation::default());
                 assert_eq!(pages.len(), len);
                 assert_eq!(pages.owner.as_ref().map(|owner| &**owner as *const _), owner);
@@ -55,7 +55,7 @@ fn atlas_original_metadata_undergrant_retains_every_original_page_and_backing() 
                 assert_eq!(pages.len().checked_sub(1).and_then(|index| pages.page(index).map(|page| page.0.as_ptr())), last);
             }
             let quoted = pages.owner.as_ref().unwrap().original_close_progress();
-            let (step, heap) = observe_heap_allocations_on_this_thread(|| pages.close_original_step(authority.retirement));
+            let (step, heap) = observe_heap_allocations_on_this_thread(|| pages.close_original_step(authority.retirement).unwrap());
             assert_eq!(step.progress(), quoted);
             assert!(step.progress().fits(authority.retirement));
             assert_eq!((quoted.retained_capacity_bytes, quoted.released_bytes), (heap.requested_bytes, heap.released_bytes));
@@ -73,7 +73,7 @@ fn atlas_original_metadata_undergrant_retains_every_original_page_and_backing() 
 #[test]
 fn atlas_abandonment_publishes_the_pre_admitted_original_header_without_heap_effects() {
     let _guard = super::tests::prepared_process_guard();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🎟️atlas/🔣️.json")).unwrap();
     let authority = PreparedAtlasAuthority { normal: fixture_grant(&fixture["authority"]["normal"]), retirement: fixture_grant(&fixture["authority"]["retirement"]) };
     for row in fixture["cases"].as_array().unwrap() {
         let source = vec![row["sourceByte"].as_u64().unwrap() as u8; row["sourceBytes"].as_u64().unwrap() as usize];
@@ -89,19 +89,19 @@ fn atlas_abandonment_publishes_the_pre_admitted_original_header_without_heap_eff
         for _ in 0..64 {
             for denied in [RetainedCloneGrant { maximum_copy_bytes: 0, ..authority.retirement }, RetainedCloneGrant { maximum_items: 0, ..authority.retirement }] {
                 let (step, heap) = observe_heap_allocations_on_this_thread(|| PreparedAtlasPages::close_abandoned_step(denied));
-                assert!(matches!(step, CloseStep::Pending { progress } if progress == Default::default()));
+                assert!(matches!(step, Ok(CloseStep::Pending { progress }) if progress == Default::default()));
                 assert_eq!(heap, HeapAllocationObservation::default());
                 assert_eq!(PREPARED_ATLAS_ABANDONMENT_OWNER[slot].load(Ordering::Acquire), original);
             }
             let quoted = unsafe { &*original }.original_close_progress();
-            let (step, heap) = observe_heap_allocations_on_this_thread(|| PreparedAtlasPages::close_abandoned_step(authority.retirement));
+            let (step, heap) = observe_heap_allocations_on_this_thread(|| PreparedAtlasPages::close_abandoned_step(authority.retirement).unwrap());
             assert_eq!(step.progress(), quoted);
             assert!(step.progress().fits(authority.retirement));
             assert_eq!((quoted.retained_capacity_bytes, quoted.released_bytes), (heap.requested_bytes, heap.released_bytes));
             assert!(!heap.overflowed);
             release += heap.released_bytes;
             if PREPARED_ATLAS_ABANDONMENT_OWNER[slot].load(Ordering::Acquire).is_null() {
-                complete = matches!(PreparedAtlasPages::close_abandoned_step(authority.retirement), CloseStep::Complete { .. });
+                complete = matches!(PreparedAtlasPages::close_abandoned_step(authority.retirement).unwrap(), CloseStep::Complete { .. });
                 break;
             }
         }

@@ -2,7 +2,7 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {inflateRawSync} from "node:zlib";
-import grammarFixture from "../../🧫️fixtures/🧭️cause/📡️codec/🔣️.json";
+import grammarFixture from "../../🧪️tests/🧫️fixtures/🧭️cause/📡️codec/🔣️.json";
 
 test("system zlib independently confirms the closed retained DEFLATE grammar corpus",()=>{
  for(const row of grammarFixture.cases){
@@ -19,8 +19,8 @@ test("system zlib independently confirms the closed retained DEFLATE grammar cor
 
 import Ajv from "ajv/dist/2020.js";
 import causeKindSchema from "../../🧬️schema/🧭️cause/🪪️kind/🔣️.json";
-import causeKindFixture from "../../🧫️fixtures/🧭️cause/🪪️kind/🔣️.json";
-import fixture from "../../🧫️fixtures/🧭️cause/🔣️.json";
+import causeKindFixture from "../../🧪️tests/🧫️fixtures/🧭️cause/🪪️kind/🔣️.json";
+import fixture from "../../🧪️tests/🧫️fixtures/🧭️cause/🔣️.json";
 import {PackError,type PackErrorData} from "../../🟦️.ts";
 import {ValueError,type ValueRefusalKind} from "../../../../🌱️value/⚠️refusal/🟦️.ts";
 import {TextError} from "../../../../⚠️diagnostic/🚧️text-error/🟦️.ts";
@@ -76,7 +76,7 @@ test("actual canonical Pack projection matches independent SQLite output without
   expect(new Set(fixture.cases.filter(row=>row.variant==="RetainedMalformed"||row.variant==="RetainedAllocation").map(row=>row.expectedKind)).size).toBeGreaterThan(3);
  }finally{database.close();}
 });
-import pagedFixture from "../../🧫️fixtures/🧭️cause/📋️paged/🔣️.json";
+import pagedFixture from "../../🧪️tests/🧫️fixtures/🧭️cause/📋️paged/🔣️.json";
 
 test("borrowed factories preserve lower kinds and byte witnesses against independent SQLite",()=>{
  

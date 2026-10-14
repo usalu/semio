@@ -845,49 +845,26 @@ pub(crate) struct EngineCanvasPacket {
     document_generation: u64,
     scene_revision: u64,
     metrics_generation: u64,
-    scene: canvas::Scene,
-    scene_retirement: Option<canvas::OpaqueSceneRetirementToken>,
-    scene_retirement_faulted: bool,
+    scene: ManuallyDrop<canvas::Scene>,
+    scene_retirement: ManuallyDrop<canvas::CanvasSceneRetirement>,
     clear: Color,
     width: u32,
     height: u32,
 }
 
 impl EngineCanvasPacket {
-    pub(crate) fn close_step(&mut self) -> bool {
-        if !self.surface.id.terminal_is_empty() {
-            self.surface.id.close_step();
-            return false;
-        }
-        if let Some(token) = self.scene_retirement {
-            return match canvas::advance_opaque_scene_retirement(token, 1, 4096) {
-                canvas::OpaqueSceneRetirementStep::Blocked | canvas::OpaqueSceneRetirementStep::Pending { .. } => false,
-                canvas::OpaqueSceneRetirementStep::Complete { .. } => {
-                    self.scene_retirement = None;
-                    false
-                }
-                canvas::OpaqueSceneRetirementStep::Fault => {
-                    self.scene_retirement_faulted = true;
-                    false
-                }
-            };
-        }
-        if self.scene.retirement_is_empty() {
-            return !self.scene_retirement_faulted;
-        }
-        let Some(token) = canvas::reserve_opaque_scene_retirement() else {
-            return false;
-        };
-        let scene = std::mem::take(&mut self.scene);
-        canvas::publish_opaque_scene_retirement(token, scene);
-        self.scene_retirement = Some(token);
-        false
+    pub(crate) fn next_close_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if !self.surface.id.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}self.scene_retirement.next_demands(&self.scene,copy)}
+    pub(crate) fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
+        let demand=self.next_close_demands(cx.retained_grant().maximum_copy_bytes).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{if !self.surface.id.terminal_is_empty(){self.surface.id.close_step();Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}))}else{self.scene_retirement.close_step(&mut self.scene,grant)}})?;
+        if self.terminal_is_empty(){Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()})}else{Ok(step)}
     }
+    pub(crate) fn terminal_is_empty(&self) -> bool {self.surface.id.terminal_is_empty()&&self.scene_retirement.terminal_is_empty(&self.scene)}
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.surface.id.terminal_is_empty() && self.scene.retirement_is_empty() && self.scene_retirement.is_none() && !self.scene_retirement_faulted
-    }
 }
+
+impl Drop for EngineCanvasPacket{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original EngineCanvas scene dropped before paid retirement");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.scene);ManuallyDrop::drop(&mut self.scene_retirement)}}}}
 
 const ENGINE_CANVAS_FRAME_PACKET_CAPACITY: usize = 256;
 
@@ -991,8 +968,8 @@ pub(crate) struct EngineCanvasBuildContext {
     document_generation: u64,
     #[cfg(test)]
     scene_revision: u64,
-    packets: Box<[Option<EngineCanvasPacket>; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]>,
-    rejected: Box<[Option<EngineCanvasPacket>; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]>,
+    packets: semio_framework_async::OriginalFixedSlotPages<EngineCanvasPacket,16,16>,
+    rejected: semio_framework_async::OriginalFixedSlotPages<EngineCanvasPacket,16,16>,
     len: usize,
     rejected_len: usize,
     reservation_sequence: u64,
@@ -1007,8 +984,8 @@ impl Default for EngineCanvasBuildContext {
             document_generation: 0,
             #[cfg(test)]
             scene_revision: 0,
-            packets: semio_framework_async::boxed_fixed_slots(|| None),
-            rejected: semio_framework_async::boxed_fixed_slots(|| None),
+            packets: semio_framework_async::OriginalFixedSlotPages::new(),
+            rejected: semio_framework_async::OriginalFixedSlotPages::new(),
             len: 0,
             rejected_len: 0,
             reservation_sequence: 0,
@@ -1024,6 +1001,27 @@ impl EngineCanvasBuildContext {
         Self { document_generation, scene_revision, ..Self::default() }
     }
 
+    pub(crate) fn prepared(&self)->bool{self.packets.prepared()&&self.rejected.prepared()}
+    pub(crate) fn prepare_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if cx.is_cancelled(){return Err(semio_framework_job::OriginalTurnFailure::debit_original(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original EngineCanvas page birth canceled"),cx))}
+        if self.prepared(){return Ok(true)}
+        let bytes=if !self.packets.prepared(){self.packets.birth_bytes()}else{self.rejected.birth_bytes()};
+        semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{capacity_bytes:bytes,depth:1,..Default::default()},|grant|if !self.packets.prepared(){self.packets.birth(grant)}else{self.rejected.birth(grant)})?;Ok(self.prepared())
+    }
+    pub(crate) fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_job::InteractiveJobCloseStep as Close;
+        if self.terminal_is_empty(){return Ok(Close::Complete{progress:Default::default()})}
+        let index=self.rejected_len.checked_sub(1).map(|index|(true,index)).or_else(||self.len.checked_sub(1).map(|index|(false,index)));
+        if let Some((rejected,index))=index{
+            let slot=if rejected{&mut self.rejected[index]}else{&mut self.packets[index]};
+            if let Some(packet)=slot.as_mut(){let step=packet.close_step(cx)?;if packet.terminal_is_empty(){*slot=None;if rejected{self.rejected_len=index}else{self.len=index}}return Ok(match step{Close::Complete{progress}=>Close::Pending{progress},step=>step})}
+            return semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{depth:1,..Default::default()},|_|{if rejected{self.rejected_len=index}else{self.len=index}Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}))})
+        }
+        let bytes=if !self.packets.empty(){self.packets.release_bytes()}else{self.rejected.release_bytes()};
+        if bytes!=0{return semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{release_bytes:bytes,depth:1,..Default::default()},|grant|if !self.packets.empty(){self.packets.release(grant)}else{self.rejected.release(grant)})}
+        semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{depth:1,..Default::default()},|_|{self.outstanding_reservations=0;self.published_reservation_sequence=self.reservation_sequence;Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}))})
+    }
+
     pub(crate) fn take_packet_step(&mut self) -> Result<Option<EngineCanvasPacket>, EngineCanvasPacket> {
         if let Some(index) = self.rejected_len.checked_sub(1) {
             self.rejected_len = index;
@@ -1037,7 +1035,7 @@ impl EngineCanvasBuildContext {
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.len == 0 && self.rejected_len == 0 && self.reservation_sequence == self.published_reservation_sequence && self.outstanding_reservations == 0 && self.packets.iter().all(Option::is_none) && self.rejected.iter().all(Option::is_none)
+        self.len == 0 && self.rejected_len == 0 && self.reservation_sequence == self.published_reservation_sequence && self.outstanding_reservations == 0 && self.packets.empty() && self.rejected.empty()
     }
 
     /// 📦️ Admits one painted engine surface as a frame packet. The staged scene carries the surface's
@@ -1045,7 +1043,7 @@ impl EngineCanvasBuildContext {
     /// gate (`engine_gpu_freshness_matches`) compares like with like and a graph that did not move
     /// reuses its texture. Returns the scene back when the frame's packet credits are spent.
     fn publish_staged(&mut self, staged: StagedEngineScene) -> Result<(), StagedEngineScene> {
-        if self.len == ENGINE_CANVAS_FRAME_PACKET_CAPACITY {
+        if !self.prepared()||self.len == ENGINE_CANVAS_FRAME_PACKET_CAPACITY {
             return Err(staged);
         }
         self.packets[self.len] = Some(EngineCanvasPacket {
@@ -1053,9 +1051,8 @@ impl EngineCanvasBuildContext {
             document_generation: staged.document_generation,
             scene_revision: staged.scene_revision,
             metrics_generation: staged.surface.metrics_generation,
-            scene: staged.scene,
-            scene_retirement: None,
-            scene_retirement_faulted: false,
+            scene: ManuallyDrop::new(staged.scene),
+            scene_retirement: Default::default(),
             clear: staged.clear,
             width: staged.width.max(1),
             height: staged.height.max(1),
@@ -1104,9 +1101,8 @@ impl EngineCanvasBuildContext {
             document_generation: reservation.generation,
             scene_revision: self.scene_revision,
             metrics_generation: reservation.surface.metrics_generation,
-            scene,
-            scene_retirement: None,
-            scene_retirement_faulted: false,
+            scene:ManuallyDrop::new(scene),
+            scene_retirement: Default::default(),
             clear,
             width,
             height,

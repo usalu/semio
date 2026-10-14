@@ -1,5 +1,5 @@
-import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { loadDevContribution, resolveDevContributionFile } from "../../🧩️contribution/📥️loading/🟦️.ts";
 /** 🧩️ Semantic activation serve owner. */
 
@@ -10,8 +10,8 @@ import { existsSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import { playgroundCatalog, resolvePlaygroundFilter } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 
@@ -25,8 +25,8 @@ import { DEV_LOCAL_HUB_DATA_ENV, DEV_LOCAL_HUB_PROFILE_ENV } from "../../🚀️
 class ServeScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const [variant, renderer, selectedProfile, ...serverArgs] = args;
-    if (renderer !== "react" || !["dev", "release"].includes(selectedProfile)) throw new Error("serve <variant> react <dev|release> [server options]");
-    const profile = selectedProfile as "dev" | "release", runtime = developmentRuntimeRoot(this.root, variant, profile, "react");
+    if (renderer !== "react" || !["prototype", "release"].includes(selectedProfile)) throw new Error("serve <variant> react <prototype|release> [server options]");
+    const profile = selectedProfile as "prototype" | "release", runtime = developmentRuntimeRoot(this.root, variant, profile, "react");
     const receiptRoot = join(runtime, "activation");
     // activate only PUBLISHES (never builds). Warm `served` skips activate when a matching receipt
     // already names the host — content-hash freshness is reported read-only below without re-publishing.

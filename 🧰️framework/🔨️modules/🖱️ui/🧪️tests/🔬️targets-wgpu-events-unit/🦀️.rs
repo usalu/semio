@@ -184,7 +184,7 @@ fn hit_test_skips_hit_transparent_node_but_still_matches_its_children() {
 
 #[test]
 fn wheel_over_an_escaped_select_popup_scrolls_its_accepted_viewport_only() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).unwrap();
     let law = &fixture["select"]["wheel"];
     let mut tree = UiTree::new();
     let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 160.0, 100.0));
@@ -233,7 +233,7 @@ fn wheel_over_an_escaped_select_popup_scrolls_its_accepted_viewport_only() {
 
 #[test]
 fn keyboard_movement_reveals_the_highlighted_select_row_without_committing_it() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔽️select-popup-geometry/🔣️.json")).expect("Select popup geometry fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔽️select-popup-geometry/🔣️.json")).expect("Select popup geometry fixture");
     let mut tree = UiTree::new();
     let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, fixture["cases"][1]["viewportHeight"].as_f64().expect("viewport height") as f32));
     let mut authored = select_ui("reveal", "row-1");
@@ -743,7 +743,7 @@ fn ime_commit_inserts_the_composed_text_and_clears_composition() {
 /// the actual React Stepper oracle, including the browser-owned selection, clipboard and IME paths.
 #[test]
 fn number_stepper_editing_and_hold_repeat_match_the_neutral_react_contract() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⌨️number-stepper-editing/🔣️.json")).expect("NumberStepper editing fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⌨️number-stepper-editing/🔣️.json")).expect("NumberStepper editing fixture");
     let uniform = &fixture["uniform"];
     let number = |value: &serde_json::Value| value.as_f64().expect("fixture number");
     let min = number(&uniform["min"]);
@@ -1355,7 +1355,7 @@ fn slider_ui(id: &str, value: f64) -> UiNode {
 
 #[test]
 fn slider_pointer_mapping_is_confined_to_the_shared_track_cell() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎚️slider-presentation/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎚️slider-presentation/🔣️.json")).unwrap();
     for pointer in law["pointer"].as_array().unwrap() {
         let case = law["cases"].as_array().unwrap().iter().find(|case| case["id"] == pointer["case"]).unwrap();
         let bounds = Rect::new(case["bounds"][0].as_f64().unwrap() as f32, case["bounds"][1].as_f64().unwrap() as f32, case["bounds"][2].as_f64().unwrap() as f32, case["bounds"][3].as_f64().unwrap() as f32);
@@ -1379,7 +1379,7 @@ fn slider_pointer_mapping_is_confined_to_the_shared_track_cell() {
 
 #[test]
 fn slider_external_unit_sibling_is_inert_and_never_enters_track_value_mapping() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎚️slider-presentation/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎚️slider-presentation/🔣️.json")).unwrap();
     let unit = &law["unit"];
     let placement = unit["placements"].as_array().unwrap().iter().find(|placement| placement["kind"] == "standalone").unwrap();
     let bounds = Rect::new(placement["bounds"][0].as_f64().unwrap() as f32, placement["bounds"][1].as_f64().unwrap() as f32, placement["bounds"][2].as_f64().unwrap() as f32, placement["bounds"][3].as_f64().unwrap() as f32);
@@ -1552,7 +1552,7 @@ fn slider_key_values_match_reacts_step_multiplier_and_clamp() {
 /// canvas receives — the same rows the contract twins and React's `Slider` answer.
 #[test]
 fn slider_key_values_answer_the_shared_keyboard_law_rows() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧫️fixtures/🧫️number-controls/🔣️.json")).expect("number-controls fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧪️tests/🧫️fixtures/🧫️number-controls/🔣️.json")).expect("number-controls fixture");
     for row in fixture["keys"].as_array().expect("key rows").iter().filter(|row| !row["min"].is_null() && !row["max"].is_null() && row["step"].as_f64().is_some_and(|step| step > 0.0)) {
         let number = |field: &str| row[field].as_f64().expect("fixture number");
         let UiNode::Slider(mut slider) = slider_ui("s", number("current")) else { unreachable!() };
@@ -1576,7 +1576,7 @@ fn slider_key_values_answer_the_shared_keyboard_law_rows() {
 /// the local controlled draft drives later keys while an older declaration is still visible.
 #[test]
 fn slider_readout_editing_matches_the_neutral_react_contract() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⌨️slider-readout-editing/🔣️.json")).expect("Slider editing fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⌨️slider-readout-editing/🔣️.json")).expect("Slider editing fixture");
     let range = &fixture["slider"];
     let double_click = &fixture["doubleClick"];
     let number = |value: &serde_json::Value| value.as_f64().expect("fixture number");
@@ -1947,7 +1947,7 @@ fn named_bound(value: f64, refusal: &str) -> ui_contract::UiNumberBound {
 /// rows React's `uiNumberFieldKey` answers.
 #[test]
 fn every_field_key_row_names_the_law_key_the_shared_corpus_declares() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧫️fixtures/🧫️number-controls/🔣️.json")).expect("number-controls fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧪️tests/🧫️fixtures/🧫️number-controls/🔣️.json")).expect("number-controls fixture");
     let rows = fixture["fieldKeys"].as_array().expect("field key rows");
     assert!(!rows.is_empty(), "the corpus declares field keys");
     for row in rows {
@@ -1971,7 +1971,7 @@ fn every_field_key_row_names_the_law_key_the_shared_corpus_declares() {
 /// as the physical key the retained canvas receives: the stepper reports the law's value — the rows React's `Stepper` answers.
 #[test]
 fn stepper_keys_answer_the_shared_keyboard_law_rows() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧫️fixtures/🧫️number-controls/🔣️.json")).expect("number-controls fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧪️tests/🧫️fixtures/🧫️number-controls/🔣️.json")).expect("number-controls fixture");
     let mut asked = 0;
     for row in fixture["keys"].as_array().expect("key rows") {
         let number = |field: &str| row[field].as_f64();
@@ -2126,7 +2126,7 @@ fn draft_field(kind: &str, value: &str) -> UiNode {
 /// nothing — the rows React's text fields answer.
 #[test]
 fn text_fields_answer_the_shared_text_keyboard_law_rows() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧫️fixtures/🧫️text-controls/🔣️.json")).expect("text-controls fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧪️tests/🧫️fixtures/🧫️text-controls/🔣️.json")).expect("text-controls fixture");
     let rows = fixture["keys"].as_array().expect("key rows");
     assert!(rows.len() >= 15, "single-line, multi-line and number rows");
     for row in rows {

@@ -432,14 +432,14 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/➕️insert-sheet-applied/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-sheet-applied/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:e355ac95b3e240cbe730720710d23b84cae2a2605c4b23bf3be62b17da88fb3d",
           "bytes": 4784
         },
         {
           "role": "expected-after-xlsx",
-          "path": "../🧫️fixtures/➕️insert-sheet-applied/➡️after.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-sheet-applied/➡️after.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:fc6415c517aaee75233e244fa19f15079f0cddd241752d5cccf8e0b44afea76e",
           "bytes": 5211
@@ -482,14 +482,14 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/➖️remove-sheet-applied/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-sheet-applied/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:fc6415c517aaee75233e244fa19f15079f0cddd241752d5cccf8e0b44afea76e",
           "bytes": 5211
         },
         {
           "role": "expected-after-xlsx",
-          "path": "../🧫️fixtures/➖️remove-sheet-applied/➡️after.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-sheet-applied/➡️after.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:e355ac95b3e240cbe730720710d23b84cae2a2605c4b23bf3be62b17da88fb3d",
           "bytes": 4784
@@ -532,14 +532,14 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/🏷️rename-sheet-applied/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/🏷️rename-sheet-applied/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:e355ac95b3e240cbe730720710d23b84cae2a2605c4b23bf3be62b17da88fb3d",
           "bytes": 4784
         },
         {
           "role": "expected-after-xlsx",
-          "path": "../🧫️fixtures/🏷️rename-sheet-applied/➡️after.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/🏷️rename-sheet-applied/➡️after.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:82fec6b8f3441593b3747f71b5a71676c2d07d5362ec2289d3029b5c4fc93173",
           "bytes": 4787
@@ -582,14 +582,14 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/✍️set-cell-applied/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/✍️set-cell-applied/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:a253aee30cf22c633e20dd5c8184f4dd3916635cc092f0f5fab9e9903e780dfe",
           "bytes": 4835
         },
         {
           "role": "expected-after-xlsx",
-          "path": "../🧫️fixtures/✍️set-cell-applied/➡️after.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/✍️set-cell-applied/➡️after.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:bb256f44678c6e8c136cdfa4eb920716a51762afb604d79bfe9e7d4fe190746f",
           "bytes": 4835
@@ -632,14 +632,14 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/🧽️remove-cell-applied/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/🧽️remove-cell-applied/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:db4886a78ddf7c9876a78186dfa616e881ec03aaca3d0f256ef69bb796ac691f",
           "bytes": 4834
         },
         {
           "role": "expected-after-xlsx",
-          "path": "../🧫️fixtures/🧽️remove-cell-applied/➡️after.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/🧽️remove-cell-applied/➡️after.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:916cd753f9cd3760cbcd6f35809dbc843a5d86197e23c4ca0d529c28c7722b13",
           "bytes": 4823
@@ -682,14 +682,14 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/📥️insert-shared-string-applied/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/📥️insert-shared-string-applied/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:73a4ee0facac066d7ee847c946e53162191cdea7367d770399cf4ee496f0f9ff",
           "bytes": 5114
         },
         {
           "role": "expected-after-xlsx",
-          "path": "../🧫️fixtures/📥️insert-shared-string-applied/➡️after.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/📥️insert-shared-string-applied/➡️after.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:97fceeb02054f6a37ff4ceb697401053887abdba10ec000baffc0d7b6d5d234a",
           "bytes": 5130
@@ -724,14 +724,14 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/📤️remove-shared-string-applied/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/📤️remove-shared-string-applied/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:97fceeb02054f6a37ff4ceb697401053887abdba10ec000baffc0d7b6d5d234a",
           "bytes": 5130
         },
         {
           "role": "expected-after-xlsx",
-          "path": "../🧫️fixtures/📤️remove-shared-string-applied/➡️after.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/📤️remove-shared-string-applied/➡️after.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:73a4ee0facac066d7ee847c946e53162191cdea7367d770399cf4ee496f0f9ff",
           "bytes": 5114
@@ -766,14 +766,14 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/🔤️set-shared-string-applied/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/🔤️set-shared-string-applied/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:73a4ee0facac066d7ee847c946e53162191cdea7367d770399cf4ee496f0f9ff",
           "bytes": 5114
         },
         {
           "role": "expected-after-xlsx",
-          "path": "../🧫️fixtures/🔤️set-shared-string-applied/➡️after.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/🔤️set-shared-string-applied/➡️after.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:302f795163941ef217b5b5cc3a62f9482f7cd33ed433f35fd8f88907570ce830",
           "bytes": 5114
@@ -808,14 +808,14 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/📎️set-relationship-inserts-an-external-hyperlink-first/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/📎️set-relationship-inserts-an-external-hyperlink-first/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
           "bytes": 10257
         },
         {
           "role": "expected-after-xlsx",
-          "path": "../🧫️fixtures/📎️set-relationship-inserts-an-external-hyperlink-first/➡️after.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/📎️set-relationship-inserts-an-external-hyperlink-first/➡️after.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:5808fec706060663bb87e8d71e31a01a66ef48effdd745c8173b5f77b0cbf579",
           "bytes": 10300
@@ -858,14 +858,14 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/📎️set-relationship-appends-an-external-hyperlink/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/📎️set-relationship-appends-an-external-hyperlink/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
           "bytes": 10257
         },
         {
           "role": "expected-after-xlsx",
-          "path": "../🧫️fixtures/📎️set-relationship-appends-an-external-hyperlink/➡️after.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/📎️set-relationship-appends-an-external-hyperlink/➡️after.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:eb70172d50911dd57f70cbde3f9bbff43f48ca8a0450b04acee9431e5a9a4385",
           "bytes": 10302
@@ -908,14 +908,14 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/📎️set-relationship-retypes-the-last-root-relationship/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/📎️set-relationship-retypes-the-last-root-relationship/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
           "bytes": 10257
         },
         {
           "role": "expected-after-xlsx",
-          "path": "../🧫️fixtures/📎️set-relationship-retypes-the-last-root-relationship/➡️after.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/📎️set-relationship-retypes-the-last-root-relationship/➡️after.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:a5e044ae10f09c31cb3be2dc0790d9bfb0e5ff8af40946f57e34f49b977509c1",
           "bytes": 10266
@@ -958,14 +958,14 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/📎️set-relationship-no-op-identical-relationship/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/📎️set-relationship-no-op-identical-relationship/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
           "bytes": 10257
         },
         {
           "role": "expected-after-xlsx",
-          "path": "../🧫️fixtures/📎️set-relationship-no-op-identical-relationship/➡️after.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/📎️set-relationship-no-op-identical-relationship/➡️after.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:0552b7d411a80f266366b1891bdf10063b35e8f56c2bb5bc55dff4fbcbd93e55",
           "bytes": 10253
@@ -1008,14 +1008,14 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/🧷️remove-relationship-drops-the-last-root-relationship/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/🧷️remove-relationship-drops-the-last-root-relationship/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
           "bytes": 10257
         },
         {
           "role": "expected-after-xlsx",
-          "path": "../🧫️fixtures/🧷️remove-relationship-drops-the-last-root-relationship/➡️after.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/🧷️remove-relationship-drops-the-last-root-relationship/➡️after.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:a8302729b430b722f511388ea0c57122d84d835a0251c24191e58ffed4435d3d",
           "bytes": 10237
@@ -1058,14 +1058,14 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/🧷️remove-relationship-drops-an-added-hyperlink/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/🧷️remove-relationship-drops-an-added-hyperlink/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:5808fec706060663bb87e8d71e31a01a66ef48effdd745c8173b5f77b0cbf579",
           "bytes": 10300
         },
         {
           "role": "expected-after-xlsx",
-          "path": "../🧫️fixtures/🧷️remove-relationship-drops-an-added-hyperlink/➡️after.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/🧷️remove-relationship-drops-an-added-hyperlink/➡️after.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:0552b7d411a80f266366b1891bdf10063b35e8f56c2bb5bc55dff4fbcbd93e55",
           "bytes": 10253
@@ -1108,7 +1108,7 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/🧷️remove-relationship-rejected-missing-id/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/🧷️remove-relationship-rejected-missing-id/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
           "bytes": 10257
@@ -1151,14 +1151,14 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/📇️set-content-type-inserts-a-default-first/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/📇️set-content-type-inserts-a-default-first/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
           "bytes": 10257
         },
         {
           "role": "expected-after-xlsx",
-          "path": "../🧫️fixtures/📇️set-content-type-inserts-a-default-first/➡️after.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/📇️set-content-type-inserts-a-default-first/➡️after.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:e637447a403b27b5c1f78e57401e2f67f2eac2d16001cce247cd7d968149e9ad",
           "bytes": 10268
@@ -1201,14 +1201,14 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/📇️set-content-type-retypes-an-existing-default/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/📇️set-content-type-retypes-an-existing-default/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
           "bytes": 10257
         },
         {
           "role": "expected-after-xlsx",
-          "path": "../🧫️fixtures/📇️set-content-type-retypes-an-existing-default/➡️after.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/📇️set-content-type-retypes-an-existing-default/➡️after.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:537eaeac3c71c6db11408a067f3525ee56609a52cefedc82e7807ba309a4c14a",
           "bytes": 10266
@@ -1251,14 +1251,14 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/📇️set-content-type-no-op-identical-entry/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/📇️set-content-type-no-op-identical-entry/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
           "bytes": 10257
         },
         {
           "role": "expected-after-xlsx",
-          "path": "../🧫️fixtures/📇️set-content-type-no-op-identical-entry/➡️after.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/📇️set-content-type-no-op-identical-entry/➡️after.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:1f3cbdd70d9579b986946bb76cf0b3e54bae32bb36bbda25d353aaf2ea9c6aa2",
           "bytes": 10256
@@ -1301,7 +1301,7 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/📇️set-content-type-rejected-default-in-another-case/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/📇️set-content-type-rejected-default-in-another-case/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:e637447a403b27b5c1f78e57401e2f67f2eac2d16001cce247cd7d968149e9ad",
           "bytes": 10268
@@ -1344,14 +1344,14 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/🧺️remove-content-type-drops-an-added-default/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/🧺️remove-content-type-drops-an-added-default/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:e637447a403b27b5c1f78e57401e2f67f2eac2d16001cce247cd7d968149e9ad",
           "bytes": 10268
         },
         {
           "role": "expected-after-xlsx",
-          "path": "../🧫️fixtures/🧺️remove-content-type-drops-an-added-default/➡️after.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/🧺️remove-content-type-drops-an-added-default/➡️after.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:1f3cbdd70d9579b986946bb76cf0b3e54bae32bb36bbda25d353aaf2ea9c6aa2",
           "bytes": 10256
@@ -1394,7 +1394,7 @@
       "files": [
         {
           "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/🧺️remove-content-type-rejected-missing-entry/⬅️before.xlsx",
+          "path": "../🧪️tests/🧫️fixtures/🧺️remove-content-type-rejected-missing-entry/⬅️before.xlsx",
           "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "sha256": "sha256:f43f00b9dcd4e0af10f341e818c8d313568558ba8943e9c30065d674383a6531",
           "bytes": 10257

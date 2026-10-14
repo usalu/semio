@@ -7,7 +7,7 @@ fn transition_grant()->RetainedCloneGrant {RetainedCloneGrant {maximum_items:1,m
 fn session_grant(source:&Session)->RetainedCloneGrant {let copy=source.next_close_copy_byte_demand().unwrap();RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:source.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:source.next_close_release_byte_demand().unwrap(),maximum_depth:source.next_close_depth_demand().unwrap()}}
 fn capture_grant(source:&semio_s_spatial_kernel_semio_session::SessionCapture)->RetainedCloneGrant {let copy=source.next_close_copy_byte_demand().unwrap();RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:source.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:source.next_close_release_byte_demand().unwrap(),maximum_depth:source.next_close_depth_demand().unwrap()}}
 fn retire_port(port:Box<dyn GeometryPort>) { GeometryPortRetirement::new(port).retire_cold(); }
-fn fixture() -> Value { serde_json::from_str(include_str!("../../🧫️fixtures/🏷️session-lifetime/🔣️.json")).unwrap() }
+fn fixture() -> Value { serde_json::from_str(include_str!("../🧫️fixtures/🏷️session-lifetime/🔣️.json")).unwrap() }
 fn invoke(session: &Session, method: &str, args: Value) -> Value {
     let result: Value = serde_json::from_str(&session.brep_invoke_json(method, &args.to_string())).unwrap();
     assert!(result.get("error").is_none(), "{method}: {result}");
@@ -66,7 +66,7 @@ fn cancelling_one_authority_preserves_another_job_for_the_same_handle() {
 }
 #[test]
 fn closing_one_authority_preserves_other_live_claim_and_refuses_foreign_disposal() {
-    let boundary:Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
+    let boundary:Value = serde_json::from_str(include_str!("../🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
     let boundary = &boundary["portBoundary"];
     let source = Session::new();
     let handle = invoke(&source, "box", json!({ "width":2,"depth":3,"height":4 }))["handle"].as_str().unwrap().to_owned();
@@ -144,7 +144,7 @@ fn a_neutral_flow_session_closes_its_explicitly_supplied_geometry_authority() {
     assert_eq!(serde_json::to_value(&*calls.lock().unwrap()).unwrap(), fixture()["lifecycle"]);
     let calls = std::sync::Arc::new(std::sync::Mutex::new(Vec::with_capacity(16)));
     let mut retirement = GeometryPortRetirement::new(Box::new(RecordingPort { calls:calls.clone(),sealed:std::sync::atomic::AtomicBool::new(false),terminal:false,inline:[0;8192] }));
-    let fixture:Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
+    let fixture:Value = serde_json::from_str(include_str!("../🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
     let boundary = &fixture["portBoundary"];
     use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
     let grant=|row:&Value|RetainedCloneGrant{maximum_items:row["items"].as_u64().unwrap() as usize,maximum_copy_bytes:row["copyBytes"].as_u64().unwrap() as usize,maximum_capacity_bytes:row["capacityBytes"].as_u64().unwrap() as usize,maximum_release_bytes:row["releaseBytes"].as_u64().unwrap() as usize,maximum_depth:row["depth"].as_u64().unwrap() as usize};
@@ -176,7 +176,7 @@ fn a_neutral_flow_session_closes_its_explicitly_supplied_geometry_authority() {
 
 #[test]
 fn bounded_family_retirement_preserves_siblings_waits_readers_and_can_pause() {
-    let fixture:Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
+    let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
     assert!(std::panic::catch_unwind(||drop(Session::new())).is_err());
     let shared=Session::new();let mut capture=shared.capture();
     assert_eq!(capture.close_step(RetainedCloneGrant {maximum_items:0,..transition_grant()}).unwrap().progress(),RetainedCloneProgress::default());

@@ -35,7 +35,7 @@
 
 use std::cell::Cell;
 use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
-use std::sync::{Mutex, OnceLock, PoisonError};
+use std::sync::OnceLock;
 
 //#region 🕰️Clock
 /// 🕰️ Host-installable monotonic-microseconds clock override, checked by [`now_us`] before falling
@@ -340,6 +340,7 @@ type SiteRegistry = [Option<(&'static str, PercentileRing)>; SITE_CAPACITY];
 static OMITTED_SITE_SAMPLES: AtomicU64 = AtomicU64::new(0);
 static OMITTED_EVENTS: AtomicU64 = AtomicU64::new(0);
 static OMITTED_VIOLATIONS: AtomicU64 = AtomicU64::new(0);
+static RECORDED_VIOLATIONS: AtomicU64 = AtomicU64::new(0);
 
 /// 📇️ Fixed static backing admits optional site samples without a lazy allocation.
 fn site_registry() -> &'static StaticTryGate<SiteRegistry> {
@@ -492,8 +493,8 @@ impl CallbackVerdict {
 /// for the never-shrinking total).
 const VIOLATION_RING_CAPACITY: usize = 128;
 
-fn violation_ring() -> &'static Mutex<BoundedRing<ContractViolation, VIOLATION_RING_CAPACITY>> {
-    static RING: Mutex<BoundedRing<ContractViolation, VIOLATION_RING_CAPACITY>> = Mutex::new(BoundedRing::new());
+fn violation_ring() -> &'static StaticTryGate<BoundedRing<ContractViolation, VIOLATION_RING_CAPACITY>> {
+    static RING: StaticTryGate<BoundedRing<ContractViolation, VIOLATION_RING_CAPACITY>> = StaticTryGate::new(BoundedRing::new());
     &RING
 }
 
@@ -549,8 +550,9 @@ impl Watchdog {
             record_site_sample(self.site, elapsed);
         }
         if let Some(violation) = verdict.violation() {
-            if let Ok(mut ring) = violation_ring().try_lock() {
+            if let Some(mut ring) = violation_ring().try_lock() {
                 ring.push(violation);
+                RECORDED_VIOLATIONS.fetch_add(1, Ordering::Relaxed);
             } else {
                 OMITTED_VIOLATIONS.fetch_add(1, Ordering::Relaxed);
             }
@@ -558,21 +560,24 @@ impl Watchdog {
         verdict
     }
 
-    /// 📸️ Every violation recorded so far, oldest first, capped at the last [`VIOLATION_RING_CAPACITY`].
+    /// 📸️ Optional nonblocking snapshot, oldest first, empty during another telemetry borrow.
     pub fn violations() -> Vec<ContractViolation> {
-        violation_ring().lock().unwrap_or_else(PoisonError::into_inner).snapshot()
+        violation_ring().try_lock().map_or_else(Vec::new, |ring| ring.snapshot())
     }
 
     /// 🔢️ Total violations ever recorded — unlike [`Watchdog::violations`], never shrunk by ring
     /// eviction, so a long-running host can still see "how bad has it been" after the ring wraps.
     pub fn violation_count() -> u64 {
-        violation_ring().lock().unwrap_or_else(PoisonError::into_inner).total()
+        RECORDED_VIOLATIONS.load(Ordering::Relaxed)
     }
 
     /// 🧹️ Resets the violation store — for test isolation and for a host that has finished quarantining
     /// every reported offender and wants a clean slate.
     pub fn clear() {
-        violation_ring().lock().unwrap_or_else(PoisonError::into_inner).clear();
+        if let Some(mut ring) = violation_ring().try_lock() {
+            ring.clear();
+            RECORDED_VIOLATIONS.store(0, Ordering::Relaxed);
+        }
     }
 }
 
@@ -947,8 +952,8 @@ const TRACE_RING_CAPACITY: usize = 4096;
 
 static NEXT_SEQUENCE: AtomicU64 = AtomicU64::new(1);
 
-fn trace_ring() -> &'static Mutex<BoundedRing<TraceEvent, TRACE_RING_CAPACITY>> {
-    static RING: Mutex<BoundedRing<TraceEvent, TRACE_RING_CAPACITY>> = Mutex::new(BoundedRing::new());
+fn trace_ring() -> &'static StaticTryGate<BoundedRing<TraceEvent, TRACE_RING_CAPACITY>> {
+    static RING: StaticTryGate<BoundedRing<TraceEvent, TRACE_RING_CAPACITY>> = StaticTryGate::new(BoundedRing::new());
     &RING
 }
 
@@ -964,7 +969,7 @@ pub fn record_trace_event_at(operation: OperationId, generation: Generation, sta
         return None;
     };
     let event = TraceEvent { operation, generation, sequence: NEXT_SEQUENCE.fetch_add(1, Ordering::SeqCst), stage, at_us };
-    if let Ok(mut ring) = trace_ring().try_lock() {
+    if let Some(mut ring) = trace_ring().try_lock() {
         ring.push(event);
     } else {
         OMITTED_EVENTS.fetch_add(1, Ordering::Relaxed);
@@ -1007,9 +1012,9 @@ pub fn record_failed(operation: OperationId, generation: Generation) -> Option<T
     push_trace_event(operation, generation, TraceStage::Failed)
 }
 
-/// 📸️ Every trace event recorded so far, oldest first, capped at the last [`TRACE_RING_CAPACITY`].
+/// 📷️ Optional nonblocking event snapshot, oldest first, empty during another telemetry borrow.
 pub fn trace_snapshot() -> Vec<TraceEvent> {
-    trace_ring().lock().unwrap_or_else(PoisonError::into_inner).snapshot()
+    trace_ring().try_lock().map_or_else(Vec::new, |ring| ring.snapshot())
 }
 
 /// 📸️ [`trace_snapshot`] filtered to one operation, in recorded order — the end-to-end

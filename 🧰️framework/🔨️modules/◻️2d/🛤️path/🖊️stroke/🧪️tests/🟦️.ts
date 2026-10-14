@@ -3,11 +3,11 @@ import {expect,test,vi} from "vitest";
 import Ajv from "ajv";
 import sharp from "sharp";
 import {createCanvas} from "@napi-rs/canvas";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {StrokeOutlineJob,prepareStroke,type StrokeOutlineInput} from "../🟦️.ts";
 import {CoverageJob} from "../../../../🔲️pixels/🖊️coverage/🟦️.ts";
-import retirementRows from "../🧫️fixtures/🧹️retirement/🔣️.json";
+import retirementRows from "./🧫️fixtures/🧹️retirement/🔣️.json";
 test("stroke retirement transfers completed paint and retains interrupted private owners until granted cleanup",async()=>{
  const validProgress=new Ajv({strict:true}).compile(schema.definitions.retirementProgress);
  for(const row of retirementRows)for(const grant of [1,7,4096]){

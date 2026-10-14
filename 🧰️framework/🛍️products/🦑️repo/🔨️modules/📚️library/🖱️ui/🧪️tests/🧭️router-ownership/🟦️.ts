@@ -9,9 +9,9 @@ import { runInNewContext } from "node:vm";
 import Ajv from "ajv";
 import ts from "typescript";
 import { build, type Plugin } from "esbuild";
-import { BundleScript, findWorkspaceRoot } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import corpus from "../../🧫️fixtures/🧭️router-ownership/🔣️.json";
+import { BundleScript, findWorkspaceRoot } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import corpus from "../🧫️fixtures/🧭️router-ownership/🔣️.json";
 
 
 const root = findWorkspaceRoot(import.meta.dir);

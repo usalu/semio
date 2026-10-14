@@ -1,8 +1,0 @@
-{
-  "mutation": "applyKit",
-  "payload": {
-    "mutation": {
-      "DeleteProperties": {}
-    }
-  }
-}

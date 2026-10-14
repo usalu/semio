@@ -250,7 +250,7 @@ where S: RetainedClone + serde::Serialize + serde::de::DeserializeOwned, M: Wind
     }
 }
 
-fn fixture() -> Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
 
 const WIDE: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
 

@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::inferences::schedules::{Schedule
 use crate::{ModelInference, ModelSnapshot, Schedule, ScheduleCategory, ScheduleColumn, ScheduleField, ScheduleKey};
 use protocol::Inference;
 
-const HOUSE: &str = include_str!("../../../../../🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
+const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
 
 /// 🏠️ The committed house without schedules.
 pub fn house() -> ModelSnapshot {

@@ -1,6 +1,8 @@
 
 use super::*;
 
+fn caller_clock()->Option<u64>{Some(1)}
+
 #[derive(Debug)]
 struct Owner {
     identity: u64,
@@ -19,10 +21,10 @@ impl Owner {
         Self { identity, fixture_label: Some(label), bytes: vec![0; bytes], cancelled: false, closing: false }
     }
 
-    fn close_all(&mut self) {
+    fn close_all(&mut self,caller:&mut OriginalJobFixtureCaller) {
         self.begin_close();
         for _ in 0..16 {
-            let _ = self.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:8,maximum_depth:64});
+            let _ = caller.turn(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:8,maximum_depth:64},|cx|self.close_step(cx)).unwrap();
             if self.terminal_is_empty() {
                 return;
             }
@@ -44,15 +46,11 @@ impl FixedOperationOwner for Owner {
         self.closing = true;
     }
 
-    fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep {
-        if !self.closing || grant.maximum_items==0 || grant.maximum_depth==0{return InteractiveJobCloseStep::Blocked;}
-        let final_turn=self.bytes.len()<=1;
-        if !self.bytes.is_empty() && grant.maximum_copy_bytes<1{return InteractiveJobCloseStep::Pending{progress:Default::default()};}
-        if final_turn && grant.maximum_release_bytes<self.bytes.capacity(){return InteractiveJobCloseStep::Pending{progress:Default::default()};}
-        let copied=usize::from(self.bytes.pop().is_some());
-        let released_bytes=if final_turn{let bytes=self.bytes.capacity();drop(std::mem::take(&mut self.bytes));bytes}else{0};
-        let progress=RetainedCloneProgress{copied_items:copied,copied_bytes:1*copied,released_bytes,..Default::default()};
-        if final_turn{InteractiveJobCloseStep::Complete{progress}}else{InteractiveJobCloseStep::Pending{progress}}
+    fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+        let grant=cx.retained_grant();if !self.closing||cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(InteractiveJobCloseStep::Blocked)}let final_turn=self.bytes.len()<=1;
+        if !self.bytes.is_empty()&&grant.maximum_copy_bytes<1||final_turn&&grant.maximum_release_bytes<self.bytes.capacity(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        let copied=usize::from(self.bytes.pop().is_some());let released_bytes=if final_turn{let bytes=self.bytes.capacity();drop(std::mem::take(&mut self.bytes));bytes}else{0};let progress=RetainedCloneProgress{copied_items:copied,copied_bytes:copied,released_bytes,..Default::default()};cx.consume_fuel(1);cx.consume_retained(progress)?;
+        Ok(if final_turn{InteractiveJobCloseStep::Complete{progress}}else{InteractiveJobCloseStep::Pending{progress}})
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -66,9 +64,9 @@ impl Drop for Owner {
     }
 }
 
-fn drain<const CAPACITY: usize>(registry: &mut FixedOperationRegistry<Owner, CAPACITY>) {
+fn drain<const CAPACITY: usize>(registry: &mut FixedOperationRegistry<Owner, CAPACITY>,caller:&mut OriginalJobFixtureCaller) {
     for _ in 0..64 {
-        let _ = registry.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:8,maximum_depth:64});
+        let _ = caller.turn(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:8,maximum_depth:64},|cx|registry.close_step(cx)).unwrap();
         if registry.is_empty() {
             return;
         }
@@ -76,23 +74,23 @@ fn drain<const CAPACITY: usize>(registry: &mut FixedOperationRegistry<Owner, CAP
     panic!("fixed operation registry did not close within capacity × owner bound");
 }
 
-fn fixture_admit<const CAPACITY: usize>(registry: &mut FixedOperationRegistry<Owner, CAPACITY>, output: &mut Vec<String>, operation: OperationId, generation: Generation, bytes: usize, identity: u64, label: &'static str) {
+fn fixture_admit<const CAPACITY: usize>(caller:&mut OriginalJobFixtureCaller,registry: &mut FixedOperationRegistry<Owner, CAPACITY>, output: &mut Vec<String>, operation: OperationId, generation: Generation, bytes: usize, identity: u64, label: &'static str) {
     match registry.admit(FixedOperationKey::new(operation, generation), Owner::fixture(identity, label, bytes)) {
         Ok(()) => output.push(format!("admit:accepted:{label}")),
         Err(mut rejected) => {
             assert_eq!(rejected.owner.identity, identity);
             assert_eq!(rejected.owner.fixture_label, Some(label));
             output.push(format!("admit:rejected:{label}"));
-            rejected.owner.close_all();
+            rejected.owner.close_all(caller);
         }
     }
 }
 
-fn fixture_take<const CAPACITY: usize>(registry: &mut FixedOperationRegistry<Owner, CAPACITY>, output: &mut Vec<String>, operation: OperationId, generation: Generation) {
+fn fixture_take<const CAPACITY: usize>(caller:&mut OriginalJobFixtureCaller,registry: &mut FixedOperationRegistry<Owner, CAPACITY>, output: &mut Vec<String>, operation: OperationId, generation: Generation) {
     match registry.take(FixedOperationKey::new(operation, generation)) {
         Some(mut owner) => {
             output.push(format!("take:{}", owner.fixture_label.expect("fixture owner label")));
-            owner.close_all();
+            owner.close_all(caller);
         }
         None => output.push("take:none".into()),
     }
@@ -106,12 +104,11 @@ fn fixture_cancel_stale<const CAPACITY: usize>(registry: &mut FixedOperationRegi
     output.push(format!("stale:{}", registry.cancel_stale_step(operation, live_generation)));
 }
 
-fn fixture_close<const CAPACITY: usize>(registry: &mut FixedOperationRegistry<Owner, CAPACITY>, output: &mut Vec<String>, grant:RetainedCloneGrant) {
-    let state = match registry.close_step(grant) {
+fn fixture_close<const CAPACITY: usize>(caller:&mut OriginalJobFixtureCaller,registry: &mut FixedOperationRegistry<Owner, CAPACITY>, output: &mut Vec<String>, grant:RetainedCloneGrant) {
+    let state = match caller.turn(grant,|cx|registry.close_step(cx)).unwrap() {
         InteractiveJobCloseStep::Blocked => "blocked",
         InteractiveJobCloseStep::Pending { .. } => "pending",
         InteractiveJobCloseStep::Complete {progress} => "complete",
-        InteractiveJobCloseStep::Refused{kind,..}=>panic!("original fixed owner close refused: {kind:?}"),
     };
     output.push(format!("close:{state}"));
 }
@@ -130,18 +127,19 @@ include!("../🧪️fixed-operation-registry-cases/🦀️.rs");
 
 #[test]
 fn maximum_plus_one_and_saturation_return_the_exact_owner() {
+    let source=crate::component::TEST_RETAINED_POLICY;let mut caller=OriginalJobFixtureCaller::admit(OperationId(97841),Generation(1),source,caller_clock,2,1);
     let mut registry = FixedOperationRegistry::<Owner, 2>::new(4);
     let key = FixedOperationKey::new(OperationId(1), Generation(7));
     registry.admit(key, Owner::new(11, 4)).expect("exact maximum");
     let mut byte_rejected = registry.admit(FixedOperationKey::new(OperationId(2), Generation(7)), Owner::new(12, 1)).expect_err("maximum plus one");
     assert_eq!(byte_rejected.owner.identity, 12);
     assert_eq!(byte_rejected.owner.bytes.len(), 1);
-    byte_rejected.owner.close_all();
+    byte_rejected.owner.close_all(&mut caller);
     let mut collision_rejected = registry.admit(FixedOperationKey::new(OperationId(3), Generation(7)), Owner::new(13, 0)).expect_err("fixed-slot collision");
     assert_eq!(collision_rejected.owner.identity, 13);
-    collision_rejected.owner.close_all();
+    collision_rejected.owner.close_all(&mut caller);
     assert!(registry.cancel(key));
-    drain(&mut registry);
+    drain(&mut registry,&mut caller);
     assert_eq!(registry.retained_bytes(), 0);
 
     let mut full = FixedOperationRegistry::<Owner, 2>::new(8);
@@ -151,14 +149,16 @@ fn maximum_plus_one_and_saturation_return_the_exact_owner() {
     full.admit(second, Owner::new(15, 1)).expect("exact fixed capacity");
     let mut capacity_rejected = full.admit(FixedOperationKey::new(OperationId(2), Generation(0)), Owner::new(16, 1)).expect_err("fixed capacity plus one");
     assert_eq!(capacity_rejected.owner.identity, 16);
-    capacity_rejected.owner.close_all();
+    capacity_rejected.owner.close_all(&mut caller);
     assert!(full.cancel(first));
     assert!(full.cancel(second));
-    drain(&mut full);
+    drain(&mut full,&mut caller);
+    caller.retire(source);
 }
 
 #[test]
 fn stale_generation_interrupted_close_and_aba_preserve_exact_authority() {
+    let source=crate::component::TEST_RETAINED_POLICY;let mut caller=OriginalJobFixtureCaller::admit(OperationId(97841),Generation(1),source,caller_clock,2,1);
     let mut registry = FixedOperationRegistry::<Owner, 4>::new(8);
     let stale = FixedOperationKey::new(OperationId(9), Generation(1));
     registry.admit(stale, Owner::new(21, 2)).expect("stale owner");
@@ -173,17 +173,18 @@ fn stale_generation_interrupted_close_and_aba_preserve_exact_authority() {
     for _ in 0..4 {
         let _ = registry.cancel_stale_step(OperationId(9), Generation(2));
     }
-    let _ = registry.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:8,maximum_depth:64});
+    let _ = caller.turn(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:8,maximum_depth:64},|cx|registry.close_step(cx)).unwrap();
     assert!(!registry.is_empty(), "interrupted close must retain the exact owner");
-    drain(&mut registry);
+    drain(&mut registry,&mut caller);
     let fresh = FixedOperationKey::new(OperationId(9), Generation(2));
     registry.admit(fresh, Owner::new(22, 0)).expect("fresh ABA generation");
     assert!(registry.take(stale).is_none());
     let mut owner = registry.take(fresh).expect("exact accepted owner handback");
     assert_eq!(owner.identity, 22);
-    owner.close_all();
-    assert!(matches!(registry.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:8,maximum_depth:64}), InteractiveJobCloseStep::Complete {..}));
-    assert!(matches!(registry.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:8,maximum_depth:64}), InteractiveJobCloseStep::Complete {..}));
+    owner.close_all(&mut caller);
+    assert!(matches!(caller.turn(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:8,maximum_depth:64},|cx|registry.close_step(cx)).unwrap(), InteractiveJobCloseStep::Complete {..}));
+    assert!(matches!(caller.turn(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:8,maximum_depth:64},|cx|registry.close_step(cx)).unwrap(), InteractiveJobCloseStep::Complete {..}));
+    caller.retire(source);
 }
 
 #[test]

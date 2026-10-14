@@ -1,0 +1,13 @@
+{
+  "mutation": "createStream",
+  "stream": {
+    "id": "stream-c",
+    "name": "Top",
+    "kind": "image-sequence",
+    "cameraId": "cam-b",
+    "syncOffsetMs": 0.0,
+    "fpsHint": 12.0,
+    "frames": [],
+    "source": null
+  }
+}

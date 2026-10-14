@@ -4,7 +4,7 @@ import { Database } from "bun:sqlite";
 import Ajv from "ajv";
 import { readFileSync } from "node:fs";
 import * as snapshot from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import { parsePlaygroundDiff } from "../../../../🧬️schema/🔺️diff/🟦️.ts";
 import { parsePlaygroundTopology } from "../../../../🧬️schema/💡️inferences/🟦️.ts";

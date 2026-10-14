@@ -6,9 +6,9 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import type { ComponentSceneHostProps } from "@semio-tech/framework";
 import * as sessionLoader from "../../../🪪️WasmSessionLoader/🟦️.tsx";
 import * as nodeGraph from "../../../🕸️NodeGraph/🟦️.tsx";
-import fixture from "../../🧫️fixtures/📝️explicit-draft/🔣️.json";
-import law from "../../🧫️fixtures/📝️explicit-draft/⚖️lifecycle.json";
-import retention from "../../🧫️fixtures/📝️explicit-draft/🧭️retention.json";
+import fixture from "../🧫️fixtures/📝️explicit-draft/🔣️.json";
+import law from "../🧫️fixtures/📝️explicit-draft/⚖️lifecycle.json";
+import retention from "../🧫️fixtures/📝️explicit-draft/🧭️retention.json";
 import { LocalDocumentOwnerContext, LocalDocumentOwnerRegistryV1, LocalDocumentWindowContext, type LocalDocumentOwnerV1 } from "../../../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 import { retainedTextEditorDraftCountV1, TextEditorHost } from "../../🟦️.tsx";
 

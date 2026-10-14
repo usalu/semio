@@ -57,7 +57,7 @@ pub(crate) fn close(owner: &mut dyn ErasedSnapshotRetirement) -> usize {
 
 #[test]
 fn raw_replay_custody_refusal_cancel_and_original_capacities_are_independently_granted() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(law["cancellation"]["retained"], 5);
     let mut owner = original();
     let state = Arc::as_ptr(owner.original.state.as_ref().unwrap());

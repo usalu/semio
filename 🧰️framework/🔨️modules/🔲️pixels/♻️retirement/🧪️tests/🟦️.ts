@@ -3,7 +3,7 @@ import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import Ajv2020 from "ajv/dist/2020";
 import {applyPatch} from "fast-json-patch";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {NumericIndex} from "../../../🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🟦️.ts";
 import numericFixture from "../../../🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🧪️tests/📜️fixtures/🔣️.json";

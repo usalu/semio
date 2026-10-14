@@ -2,7 +2,7 @@ import {expect, test} from "bun:test";
 import Ajv from "ajv";
 import Decimal from "decimal.js";
 import contract from "../../../📸️snapshot/💰️costs/🔣️.json";
-import fixture from "../../../../🧫️fixtures/💡️inferences/💰️costs/🔣️.json";
+import fixture from "../../../../🧪️tests/🧫️fixtures/💡️inferences/💰️costs/🔣️.json";
 import {inferCosts} from "../🟦️.ts";
 import type {CostItem, TypeCostLink} from "../../../📸️snapshot/💰️costs/🟦️.ts";
 

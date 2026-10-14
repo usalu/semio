@@ -3,7 +3,7 @@
  * A genuine second implementation, not a re-export: the field tables below restate the Rust
  * struct declaration order, the writer restates `serde_json`'s escaping and `pack::json`'s float
  * lexeme rule, and `🧪️tests/🟦️.ts` asserts the result is byte-identical to the JSON the Rust leaf
- * produced for every `📚️examples/**\/🗣️.dsl.semio` fixture (`🧫️fixtures/*.json`).
+ * produced for every `📚️examples/**\/🗣️.dsl.semio` fixture (`🧪️tests/🧫️fixtures/*.json`).
  */
 
 import type { Block5dSnapshot } from "../../../../../../../🧬️schema/📸️snapshot/🟦️";

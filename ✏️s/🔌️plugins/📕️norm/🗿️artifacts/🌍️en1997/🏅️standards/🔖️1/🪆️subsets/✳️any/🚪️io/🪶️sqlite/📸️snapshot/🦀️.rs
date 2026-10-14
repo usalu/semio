@@ -1,8 +1,9 @@
 //! 🌍️ Handwritten geotechnical entities and exact native binary64 states.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::En1997Snapshot;
 use crate::{SoilLayer,SpreadFoundation,FoundationLoadCase,Pile,PileTestProfile,RetainingWall,Slope,UpliftCase,document::AnnexChoice};
 use std::collections::BTreeMap;
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,RowWriter,reconstruct_text,NativeEncodingBound}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,RowWriter,reconstruct_text,NativeEncodingBound}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 
@@ -25,7 +26,7 @@ fn ordered<'a>(rows:impl IntoIterator<Item=FloatRow<'a>>,parent:i64,c:&mut Sqlit
 fn groups<'a>(rows:Entities<'a>,parents:&Entities<'_>,c:&mut SqliteSnapshotControl<'_>)->Result<BTreeMap<i64,Vec<FloatRow<'a>>>, ValueError>{let mut out=BTreeMap::<i64,Vec<FloatRow<'a>>>::new();for(n,r)in rows.into_values().enumerate(){checkpoint(c,n,0)?;let p=r.integer(1)?;if !parents.contains_key(&p){return Err(invalid("EN1997 owning foreign key is dangling"));}out.entry(p).or_default().push(r);}Ok(out)}
 fn text(r:FloatRow<'_>,i:usize,c:&mut SqliteSnapshotControl<'_>)->Result<String, ValueError>{reconstruct_text(c,r.text(i)?)}
 /// 🪪️ Optional native capability supplied by the actual geotechnical pack owner.
-pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1997Snapshot as ArtifactSqliteSnapshot>::sqlite_codec()}
+pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1997Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec()}
 impl En1997Snapshot{
  fn write_sqlite_rows(&self,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
   p.insert_key_float("en1997_document",1,&[Cell::Text(&self.structure_id),Cell::Integer(i64::from(self.geotechnical_category)),Cell::Text(&self.design_situation),Cell::Text(&self.design_approach),Cell::Text(annex(self.annex)),Cell::Real(self.groundwater_level),Cell::Real(self.investigation_depth)],DOCUMENT)?;
@@ -39,17 +40,24 @@ impl En1997Snapshot{
  }
  fn admit_sqlite_values(&self,c:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<(),ValueError>{semio_s_artifact_norm_contract::sqlite_native::schema(En1997Snapshot::SQLITE_SCHEMA,9,42,c)?;let mut p=RowWriter::borrowed(c,phase)?;self.write_sqlite_rows(&mut p)?;p.finish_borrowed()}
 }
-impl ArtifactSqliteSnapshot for En1997Snapshot{
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=c.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admission::admit(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
+impl ArtifactSqliteSnapshotHost for En1997Snapshot{
+ 
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=c.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admission::admit(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
 
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload, ValueError>{
   self.admit_sqlite_values(c,SqliteSnapshotPhase::EncodeNative)?;
-  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)
  }
 
- fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let mut p=RowWriter::new(Self::SQLITE_SCHEMA,c)?;self.write_sqlite_rows(&mut p)?;p.finish()}
- fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{
+ 
+ 
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.norm.en1997"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(invalid("EN1997 owned dialect differs")));}c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(store::io_schema::IoError::from_value_error)?;Ok(store::io_schema::IoOutcome::clean(()))}
+ fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(), ValueError>{self.admit_sqlite_values(c,SqliteSnapshotPhase::EncodeNative)?;let mut b=NativeEncodingBound::file_only(c)?;let mut rows=1;for count in[self.layers.len(),self.footings.len(),self.piles.len(),self.retaining_walls.len(),self.slopes.len(),self.uplift_cases.len()]{admit_rows(&mut b,&mut rows,count)?;}for v in &self.footings{admit_rows(&mut b,&mut rows,v.load_cases.len())?;}for v in &self.piles{admit_rows(&mut b,&mut rows,v.test_profiles.len())?;}b.add(16384)?;for s in[&self.structure_id,&self.design_situation,&self.design_approach]{b.repeated(s.len(),24)?;}for v in &self.layers{b.add(32768)?;for s in[&v.id,&v.soil_type]{b.repeated(s.len(),24)?;}}for v in &self.footings{b.add(16384)?;b.repeated(v.id.len(),24)?;for a in &v.load_cases{b.add(16384)?;for s in[&a.id,&a.design_situation]{b.repeated(s.len(),24)?;}}}for v in &self.piles{b.add(32768)?;for s in[&v.id,&v.pile_type]{b.repeated(s.len(),24)?;}for a in &v.test_profiles{b.add(8192)?;b.repeated(a.id.len(),24)?;}}for v in &self.retaining_walls{b.add(32768)?;for s in[&v.id,&v.earth_pressure_mode,&v.wall_movement]{b.repeated(s.len(),24)?;}}for v in &self.slopes{b.add(8192)?;for s in[&v.id,&v.governing_layer_id]{b.repeated(s.len(),24)?;}}for v in &self.uplift_cases{b.add(16384)?;b.repeated(v.id.len(),24)?;}b.finish()}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for En1997Snapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let mut p=RowWriter::new(Self::SQLITE_SCHEMA,c)?;self.write_sqlite_rows(&mut p)?;p.finish()}
+fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{
   c.check_database(d,SqliteSnapshotPhase::ReconstructSnapshot)?;validate_sqlite_database_schema(d,Self::SQLITE_SCHEMA,c.limits())?;
   let documents=entities(d,"en1997_document",8,DOCUMENT,c)?;if documents.len()!=1||!documents.contains_key(&1){return Err(invalid("EN1997 requires one identity-1 document"));}let r=documents[&1];
   let category=u8::try_from(r.integer(2)?).map_err(|e| invalid(e.to_string()))?;
@@ -63,8 +71,6 @@ impl ArtifactSqliteSnapshot for En1997Snapshot{
   let mut uplift_cases=Vec::new();for v in ordered(entities(d,"en1997_uplift_case",9,UPLIFT,c)?.into_values(),1,c)?{checkpoint(c,uplift_cases.len(),0)?;uplift_cases.push(UpliftCase{id:text(v,3,c)?,permanent_stabilizing:v.real(4)?,permanent_destabilizing:v.real(5)?,variable_destabilizing:v.real(6)?,pore_pressure:v.real(7)?,total_stress:v.real(8)?});}
   let result=Self{structure_id:text(r,1,c)?,geotechnical_category:category,design_situation:text(r,3,c)?,design_approach:text(r,4,c)?,annex:read_annex(r.text(5)?)?,groundwater_level:r.real(6)?,investigation_depth:r.real(7)?,layers,footings,piles,retaining_walls,slopes,uplift_cases};c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(result)
  }
- fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.norm.en1997"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(invalid("EN1997 owned dialect differs")));}c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(store::io_schema::IoError::from_value_error)?;Ok(store::io_schema::IoOutcome::clean(()))}
- fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(), ValueError>{self.admit_sqlite_values(c,SqliteSnapshotPhase::EncodeNative)?;let mut b=NativeEncodingBound::file_only(c)?;let mut rows=1;for count in[self.layers.len(),self.footings.len(),self.piles.len(),self.retaining_walls.len(),self.slopes.len(),self.uplift_cases.len()]{admit_rows(&mut b,&mut rows,count)?;}for v in &self.footings{admit_rows(&mut b,&mut rows,v.load_cases.len())?;}for v in &self.piles{admit_rows(&mut b,&mut rows,v.test_profiles.len())?;}b.add(16384)?;for s in[&self.structure_id,&self.design_situation,&self.design_approach]{b.repeated(s.len(),24)?;}for v in &self.layers{b.add(32768)?;for s in[&v.id,&v.soil_type]{b.repeated(s.len(),24)?;}}for v in &self.footings{b.add(16384)?;b.repeated(v.id.len(),24)?;for a in &v.load_cases{b.add(16384)?;for s in[&a.id,&a.design_situation]{b.repeated(s.len(),24)?;}}}for v in &self.piles{b.add(32768)?;for s in[&v.id,&v.pile_type]{b.repeated(s.len(),24)?;}for a in &v.test_profiles{b.add(8192)?;b.repeated(a.id.len(),24)?;}}for v in &self.retaining_walls{b.add(32768)?;for s in[&v.id,&v.earth_pressure_mode,&v.wall_movement]{b.repeated(s.len(),24)?;}}for v in &self.slopes{b.add(8192)?;for s in[&v.id,&v.governing_layer_id]{b.repeated(s.len(),24)?;}}for v in &self.uplift_cases{b.add(16384)?;b.repeated(v.id.len(),24)?;}b.finish()}
 }
 fn admit_rows(b:&mut NativeEncodingBound<'_,'_>,rows:&mut usize,add:usize)->Result<(), ValueError>{*rows=rows.checked_add(add).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "EN1997 native row count overflow"))?;b.check_rows(*rows)?;b.checkpoint()}
 

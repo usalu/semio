@@ -5,13 +5,13 @@ mod private_child_metadata {
 
     #[derive(Clone, Copy)]
     pub(crate) struct PrivateChildMemberMetadataSource<'a> {
-        expected: &'a ArtifactRef,
-        parent_id: &'a str,
-        parent_dialect: &'a ArtifactDialect,
-        key: MemberKeyRef<'a>,
-        actor: &'a str,
-        transaction: Option<&'a protocol::TransactionRef>,
-        group_id: Option<&'a str>,
+        pub(crate) expected: &'a ArtifactRef,
+        pub(crate) parent_id: &'a str,
+        pub(crate) parent_dialect: &'a ArtifactDialect,
+        pub(crate) key: MemberKeyRef<'a>,
+        pub(crate) actor: &'a str,
+        pub(crate) transaction: Option<&'a protocol::TransactionRef>,
+        pub(crate) group_id: Option<&'a str>,
     }
 
     impl<'a> PrivateChildMemberMetadataSource<'a> {
@@ -21,7 +21,7 @@ mod private_child_metadata {
         }
     }
 
-    struct PrivateChildMemberMetadataParts {
+    pub(crate) struct PrivateChildMemberMetadataParts {
         pub(crate) expected: ArtifactRef,
         pub(crate) owner: store::OwnerRef,
         pub(crate) actor: ActorId,
@@ -199,13 +199,13 @@ mod private_child_metadata {
     }
 
     #[derive(Clone, Copy)]
-    pub(crate) struct PrivatePublicationMetadataSource<'a> { actor: &'a SharedUtf8, transaction: Option<&'a protocol::TransactionRef>, group_id: Option<&'a str> }
+    pub(crate) struct PrivatePublicationMetadataSource<'a> { pub(crate) actor: &'a SharedUtf8, pub(crate) transaction: Option<&'a protocol::TransactionRef>, pub(crate) group_id: Option<&'a str> }
 
     impl<'a> PrivatePublicationMetadataSource<'a> {
         fn fields(self) -> [&'a str; 4] { let (id, tool) = self.transaction.map(|transaction| (transaction.id.as_str(), transaction.tool.as_str())).unwrap_or(("", "")); [self.actor.as_str(), id, tool, self.group_id.unwrap_or("")] }
     }
 
-    pub(crate) struct PrivatePublicationMetadataParts { actor: SharedUtf8, transaction: Option<protocol::TransactionRef>, group_id: Option<String> }
+    pub(crate) struct PrivatePublicationMetadataParts { pub(crate) actor: SharedUtf8, pub(crate) transaction: Option<protocol::TransactionRef>, pub(crate) group_id: Option<String> }
 
     impl PrivatePublicationMetadataParts {
         fn actor_if_owned(&mut self) -> Option<&mut SharedUtf8> { self.actor.has_owner().then_some(&mut self.actor) }

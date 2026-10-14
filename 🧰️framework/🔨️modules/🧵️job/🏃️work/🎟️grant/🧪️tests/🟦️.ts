@@ -1,7 +1,7 @@
 import {test,expect} from "bun:test";
 import Ajv2020 from "ajv/dist/2020";
 import Decimal from "decimal.js";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {RetainedWorkBudget} from "../🟦️.ts";
 const validate=new Ajv2020({strict:true}).compile(schema);

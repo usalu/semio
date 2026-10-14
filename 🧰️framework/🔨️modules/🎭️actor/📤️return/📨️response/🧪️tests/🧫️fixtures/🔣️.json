@@ -1,0 +1,26 @@
+{
+  "version":1,
+  "magicHex":"73727201",
+  "maximumBytes":4161,
+  "tags":{"result":0,"fault":1},
+  "faultTags":{"requestRefused":0,"executionFault":1,"resultFault":2},
+  "vectors":[
+    {"value":{"kind":"result","activationGeneration":"7","transportRequestSequence":9,"result":{"kind":"pending","identity":{"origin":{"activationGeneration":"7","requestSequence":9},"returnSequence":"11"},"reason":"working"}},"resultHex":"0107090b00","hex":"737272010007090107090b00"},
+    {"value":{"kind":"result","activationGeneration":"7","transportRequestSequence":128,"result":{"kind":"control","control":{"kind":"inputAck","receipt":{"identity":{"origin":{"activationGeneration":"7","requestSequence":9},"returnSequence":"11"},"pageSequence":"1","length":3,"final":true}},"outcome":"accepted","fault":"none"}},"resultHex":"040107090b0103010000","hex":"7372720100078001040107090b0103010000"},
+    {"value":{"kind":"result","activationGeneration":"7","transportRequestSequence":10,"result":{"kind":"protocolFault","fault":"malformedControl"}},"resultHex":"050c","hex":"7372720100070a050c"},
+    {"value":{"kind":"result","activationGeneration":"18446744073709551615","transportRequestSequence":9007199254740991,"result":{"kind":"protocolFault","fault":"mixedControl"}},"resultHex":"050d","hex":"7372720100ffffffffffffffffff01ffffffffffffff0f050d"},
+    {"value":{"kind":"fault","activationGeneration":"7","transportRequestSequence":9,"fault":"requestRefused"},"resultHex":"","hex":"7372720101070900"},
+    {"value":{"kind":"fault","activationGeneration":"7","transportRequestSequence":128,"fault":"executionFault"},"resultHex":"","hex":"737272010107800101"},
+    {"value":{"kind":"fault","activationGeneration":"18446744073709551615","transportRequestSequence":9007199254740991,"fault":"resultFault"},"resultHex":"","hex":"7372720101ffffffffffffffffff01ffffffffffffff0f02"}
+  ],
+  "maximumPage":{"sharedPageVector":1,"headerHex":"7372720100ffffffffffffffffff01ffffffffffffff0f","wireBytes":4161},
+  "headerCases":[
+    {"hex":"73727201000709ff","header":{"kind":"result","activationGeneration":"7","transportRequestSequence":9},"bodyValid":false},
+    {"hex":"737272010107800103","header":{"kind":"fault","activationGeneration":"7","transportRequestSequence":128},"bodyValid":false},
+    {"hex":"737272010007090108090b00","header":{"kind":"result","activationGeneration":"7","transportRequestSequence":9},"bodyValid":false}
+  ],
+  "invalidHex":["73727202000709050c","73727201020709050c","73727201000009050c","73727201000700050c","7372720100870009050c","7372720100ffffffffffffffffff0209050c","7372720100078080808080808010050c","7372720101070903","737272010107090000","73727201000709","73727201000709ff","737272010007090108090b00"],
+  "backings":{"wholeFixed":true,"offsetView":false,"wholeView":false,"shared":false,"resizable":false,"detached":false,"proxy":false,"oversized":false},
+  "transfer":{"senderDetached":true,"receiverResizable":false,"receiverWholeBacking":true,"customPropertyTransferred":false,"bytesEqual":true},
+  "authority":{"formatMintsPage":false,"transportDiffersFromReturnOrigin":true,"protocolFaultNeedsTransportCorrelation":true,"unknownRootsRetained":true,"workerSlotRequired":true,"noVariableErrors":true}
+}

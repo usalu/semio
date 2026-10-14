@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 📜️ `@semio-tech/framework-graph` task router. */
-import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { CheckGeneratedScript, GenerateScript, LintScript, ManifestContractScript, PreviewGeneratedScript, TestScript } from "../../🛂️manifest/🏃️execution/🟦️.ts";
 
 import { resolve } from "node:path";
@@ -11,7 +11,7 @@ import { resolve } from "node:path";
 class NativeTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-native accepts no arguments");
-    const {runCargoTestsV1,readCargoTestPolicyV1} = await import("../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts");
+    const {runCargoTestsV1,readCargoTestPolicyV1} = await import("../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts");
     await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-graph"],cwd:this.root,extraArgs:["--lib","--no-fail-fast"]},readCargoTestPolicyV1(process.env));
   }
 }

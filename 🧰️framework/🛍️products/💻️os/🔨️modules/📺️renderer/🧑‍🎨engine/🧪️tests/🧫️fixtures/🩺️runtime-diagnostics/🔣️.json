@@ -1,0 +1,11 @@
+{
+  "key": "SEMIO_RUNTIME_DIAGNOSTICS",
+  "metaName": "semio-runtime-diagnostics",
+  "workerUrl": "http://127.0.0.1/frame-worker.js",
+  "cases": [
+    { "name": "off by default", "stored": null, "server": null, "enabled": false, "workerUrl": "http://127.0.0.1/frame-worker.js" },
+    { "name": "server launch enables", "stored": null, "server": "1", "enabled": true, "workerUrl": "http://127.0.0.1/frame-worker.js?diagnostics=1" },
+    { "name": "stored false overrides server", "stored": "0", "server": "1", "enabled": false, "workerUrl": "http://127.0.0.1/frame-worker.js" },
+    { "name": "stored true overrides server", "stored": "yes", "server": "0", "enabled": true, "workerUrl": "http://127.0.0.1/frame-worker.js?diagnostics=1" }
+  ]
+}

@@ -34,7 +34,7 @@ struct FixtureExpected {
 }
 
 fn fixture() -> Fixture {
-    serde_json::from_str(include_str!("../../🧫️fixtures/⏱️frame-latency/🔣️.json")).expect("frame latency fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/⏱️frame-latency/🔣️.json")).expect("frame latency fixture")
 }
 
 #[test]

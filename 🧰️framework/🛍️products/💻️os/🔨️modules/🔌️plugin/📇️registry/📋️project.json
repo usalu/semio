@@ -4,17 +4,27 @@
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔄️refresh/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/{🎮️playground-session/🏃️execution/🟦️.ts,📦️packages/🟦️typescript/📜️script.ts}",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🎚️config/🟦️.ts"
+      "{workspaceRoot}/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry/\ud83d\udd04\ufe0frefresh/\ud83d\udfe6\ufe0f.ts",
+      "{workspaceRoot}/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83e\uddd1\u200d\ud83d\udcbbdev/{\ud83c\udfae\ufe0fplayground-session/\ud83c\udfc3\ufe0fexecution/\ud83d\udfe6\ufe0f.ts,\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript/\ud83d\udcdc\ufe0fscript.ts}",
+      "{workspaceRoot}/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry/\ud83e\uddea\ufe0ftests/\ud83c\udf9a\ufe0fconfig/\ud83d\udfe6\ufe0f.ts"
     ]
   },
   "targets": {
+    "test-semantic-source-pairs": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test-semantic-source-pairs"
+      }
+    },
     "generate": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts generate",
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts generate",
         "forwardAllArgs": true
       },
       "cache": true,
@@ -28,32 +38,32 @@
     "preview-generated": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts preview-generated"
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts preview-generated"
       },
       "outputs": []
     },
     "check-generated": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts check-generated"
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts check-generated"
       }
     },
     "native-catalog-selection-check": {
       "executor": "nx:run-commands",
       "cache": true,
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts native-catalog-selection-check"
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts native-catalog-selection-check"
       },
       "outputs": []
     },
     "catalog-complete": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts catalog-complete",
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts catalog-complete",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -61,8 +71,8 @@
     "check": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts check",
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts check",
         "forwardAllArgs": true
       },
       "dependsOn": [
@@ -72,7 +82,7 @@
         "default",
         "^default",
         {
-          "dependentTasksOutputFiles": ".🧬semio/🦑️repo/⚡️cache/🔏️generator-inputs/📇️registry/🔣️.json"
+          "dependentTasksOutputFiles": ".\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\u26a1\ufe0fcache/\ud83d\udd0f\ufe0fgenerator-inputs/\ud83d\udcc7\ufe0fregistry/\ud83d\udd23\ufe0f.json"
         }
       ]
     },
@@ -80,8 +90,8 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts rebuild-all",
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts rebuild-all",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -90,8 +100,8 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts guest-framework-check"
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts guest-framework-check"
       },
       "outputs": []
     },
@@ -99,8 +109,8 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts verify-staged",
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify-staged",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -108,8 +118,8 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts test",
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
         "forwardAllArgs": true
       },
       "dependsOn": [
@@ -121,8 +131,8 @@
     "surface-schema": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts surface-schema",
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts surface-schema",
         "forwardAllArgs": true
       },
       "cache": false
@@ -130,8 +140,8 @@
     "surface-schema-check": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts surface-schema --check"
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts surface-schema --check"
       },
       "cache": true,
       "outputs": []
@@ -139,8 +149,8 @@
     "new": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts new",
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts new",
         "forwardAllArgs": true
       },
       "cache": false
@@ -148,8 +158,8 @@
     "rust-taxonomy-mounts-check": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts rust-taxonomy-mounts-check"
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts rust-taxonomy-mounts-check"
       },
       "cache": true,
       "outputs": [
@@ -159,8 +169,8 @@
     "plugin-root-ownership-check": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts plugin-root-ownership-check"
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts plugin-root-ownership-check"
       },
       "cache": true,
       "outputs": [
@@ -172,8 +182,8 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts test-catalog-contract",
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test-catalog-contract",
         "forwardAllArgs": true
       }
     },
@@ -182,15 +192,15 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts test-deployment-contract",
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test-deployment-contract",
         "forwardAllArgs": true
       }
     },
     "test-asset-contract": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bun 📜️script.ts test-asset-contract",
+        "command": "bun \ud83d\udcdc\ufe0fscript.ts test-asset-contract",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
@@ -207,8 +217,8 @@
       "dependsOn": [],
       "outputs": [],
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts test-component-owners"
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test-component-owners"
       },
       "metadata": {
         "workspaceCommand": [
@@ -223,8 +233,19 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts test-playground-default-contract"
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test-playground-default-contract"
+      }
+    },
+    "test-rebuild-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udcc7\ufe0fregistry",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test-rebuild-contract",
+        "forwardAllArgs": true
       }
     }
   },

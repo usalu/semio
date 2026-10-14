@@ -1,5 +1,5 @@
 fn contract() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🚪️io/🪪️bindings/🧫️fixtures/🔣️.json")).expect("original codec binding contract")
+    serde_json::from_str(include_str!("../../../🚪️io/🪪️bindings/🧪️tests/🧫️fixtures/🔣️.json")).expect("original codec binding contract")
 }
 
 fn flat(schema: &str) -> ArtifactDeclaration {

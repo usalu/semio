@@ -88,7 +88,8 @@ where
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::new(FaultOrigin::App, "s.home.directory-event-page.work-repeated", "a directory page work steps once"));
         }
@@ -101,6 +102,9 @@ where
         let emit = Emit { events: vec![event], ..Default::default() };
         let ephemeral = EphemeralEmit { presence: Vec::new(), transient: answer.item.into_iter().collect(), window_transient: Vec::new() };
         Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 //#endregion 🔖️Work

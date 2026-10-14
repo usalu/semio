@@ -6,7 +6,8 @@ use semio_framework::{kernel::ActorId, Fault, FaultCode, FaultOrigin};
 /// the `io` mount), so it is named through the `store::io::` path everywhere in this file,
 /// exactly like the sibling `🎞️gif` migration leaf (`semio_framework_artifact_reference::ArtifactDialect`) already does.
 use semio_framework_artifact_reference::ArtifactRef;
-use store::{os_store::store_schema::ArtifactEnvelope, os_store::serialization::ArtifactPack, ArtifactStore, os_store::composition_coordinator::CompositionCoordinator, MemberFactory, Mutation, SpaceMember};
+use pack::snapshot::ArtifactPack;
+use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore, os_store::composition_coordinator::CompositionCoordinator, MemberFactory, Mutation, SpaceMember};
 /// 🏅️🪆️🎯️ Standards/subsets dialect vocabulary (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO phase
 /// 2). Defined in `semio_framework` so plugins and the OS product
 /// share one definition without an inverted dependency; re-exported here verbatim.
@@ -383,7 +384,7 @@ pub fn publish_document_store_candidate_if_authoritative<P, Mutation>(
     validate: impl FnOnce() -> Result<(), Fault>,
 ) -> Result<ArtifactStore<P, Mutation>, (Fault, ArtifactStore<P, Mutation>)>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     if let Err(fault) = validate() {
@@ -400,7 +401,7 @@ pub(crate) fn publish_boxed_document_store_candidate_if_authoritative<P, Mutatio
     validate: impl FnOnce() -> Result<(), Fault>,
 ) -> Result<Box<ArtifactStore<P, Mutation>>, (Fault, Box<ArtifactStore<P, Mutation>>)>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     if let Err(fault) = validate() {
@@ -411,9 +412,9 @@ where
 }
 
 pub(crate) struct CompositionPinsRetirement {
-    pins: ManuallyDrop<Option<Vec<vcs::CompositionPin>>>,
+    pub(crate) pins: ManuallyDrop<Option<Vec<vcs::CompositionPin>>>,
     active: ManuallyDrop<Option<vcs::CompositionPin>>,
-    field: u8,
+    pub(crate) field: u8,
 }
 
 impl CompositionPinsRetirement {
@@ -434,7 +435,7 @@ impl CompositionPinsRetirement {
     }
 
     /// 📐️ Quotes one original pin transfer, native field, or separate vector backing.
-    fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
+    pub(crate) fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         if let Some(pin) = self.active.as_ref() {
             let value = match self.field { 0 => Some(&pin.child_ref.artifact_id), 1 => Some(&pin.child_ref.dialect.artifact_kind), 2 => Some(&pin.child_ref.dialect.standard), 3 => Some(&pin.child_ref.dialect.subset), 4 => Some(&pin.checkpoint_id), _ => None };
             return Ok(value.map_or(RetirementDemand { copy_bytes: size_of_val(&*self.active), depth: 1, ..Default::default() }, |value| RetirementDemand { copy_bytes: size_of::<String>() + size_of::<u8>(), release_bytes: value.capacity(), depth: 1, ..Default::default() }));
@@ -446,7 +447,7 @@ impl CompositionPinsRetirement {
     }
 
     /// 🧹️ Retains every original until all five caller currencies admit its physical unit.
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let demand = self.retirement_demands().map_err(|error| plugin_sdk_fault(error.into_message()))?;
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -458,7 +459,7 @@ impl CompositionPinsRetirement {
         } else { drop(self.pins.take()); }
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() }))
     }
-    fn terminal_is_empty(&self) -> bool {
+    pub(crate) fn terminal_is_empty(&self) -> bool {
         self.pins.is_none() && self.active.is_none()
     }
 }
@@ -558,15 +559,15 @@ impl ArtifactStoreReplacementLeg {
 /// A bare "guard rejected" is unactionable; which of the seven conditions tripped is the answer.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub(crate) struct ArtifactStoreReplacementPublicationGuard {
-    closing: bool,
-    cancelled: bool,
-    parent_generation: u64,
-    live_generation: u64,
-    base_child_generation: u64,
-    child_generation: u64,
-    complete_candidate: bool,
-    retirement_admitted: bool,
-    next_generation: bool,
+    pub(crate) closing: bool,
+    pub(crate) cancelled: bool,
+    pub(crate) parent_generation: u64,
+    pub(crate) live_generation: u64,
+    pub(crate) base_child_generation: u64,
+    pub(crate) child_generation: u64,
+    pub(crate) complete_candidate: bool,
+    pub(crate) retirement_admitted: bool,
+    pub(crate) next_generation: bool,
 }
 
 impl ArtifactStoreReplacementRefusal {
@@ -632,7 +633,7 @@ impl ArtifactStoreReplacementRefusal {
 
 pub(crate) struct ActiveArtifactStoreReplacement<P, Mutation, M>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
     M: SpaceMember + MemberFactory,
 {
@@ -652,7 +653,7 @@ where
     pub(crate) retained_disposer: ManuallyDrop<ArtifactDisposal<ArtifactStore<P, Mutation>>>,
     pub(crate) member_ingress: ManuallyDrop<Option<OwnedDocumentMemberIngressRegistry>>,
     active_member_ingress: ManuallyDrop<Option<OwnedDocumentMemberIngress>>,
-    active_member_open: ManuallyDrop<Option<M::Open>>,
+    pub(crate) active_member_open: ManuallyDrop<Option<M::Open>>,
     pub(crate) candidate_children: ManuallyDrop<Option<ChildMemberRegistry<M>>>,
     pub(crate) candidate_content: ManuallyDrop<Option<ChildContentView>>,
     candidate_content_retirement: ManuallyDrop<Option<ChildContentRetirement>>,
@@ -677,7 +678,7 @@ where
 
 impl<P, Mutation, M> ActiveArtifactStoreReplacement<P, Mutation, M>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
     M: SpaceMember + MemberFactory,
 {
@@ -738,7 +739,7 @@ where
     /// 🔎️ The first leg's refusal as its typed fault, for a caller that must name why a stalled
     /// replacement never reached its target state.
     #[cfg(test)]
-    fn refusal_fault(&self) -> Option<Fault> {
+    pub(crate) fn refusal_fault(&self) -> Option<Fault> {
         self.refusal.map(ArtifactStoreReplacementRefusal::into_fault)
     }
 
@@ -764,7 +765,7 @@ where
 
     /// 🧪️ Borrows the terminal retained store frame through its exact replacement authority.
     #[cfg(test)]
-    fn terminal_store_frame_bytes(&self) -> Option<usize> {
+    pub(crate) fn terminal_store_frame_bytes(&self) -> Option<usize> {
         if !matches!(self.state, ActiveArtifactStoreReplacementState::RetiringRejectedCandidate | ActiveArtifactStoreReplacementState::RetiringCommittedStore) { return None; }
         self.retained_store.as_ref().filter(|owner| owner.close_owned_store_terminal_is_empty()).map(|owner| std::mem::size_of_val(owner.as_ref()))
     }
@@ -879,23 +880,19 @@ where
         RetirementDemand { copy_bytes: OWNED_DOCUMENT_MEMBER_PREPARATION_BYTES, depth: 1, ..Default::default() }
     }
 
-    pub(crate) fn drive_member_open(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    pub(crate) fn drive_member_open(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure> {
         let idle = RetainedCloneProgress::default();
         let item = RetainedCloneProgress { copied_items: 1, ..idle };
         if grant.maximum_items == 0 { return Ok(PluginLifecycleStep::Progress(idle)); }
         if self.active_member_open.is_some() {
             if self.active_member_ingress.as_ref().is_none_or(|ingress| !ingress.has_identity()) {
-                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "active member open lost its exact retained ingress identity"));
+                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "active member open lost its exact retained ingress identity").into());
             }
-            let mut sequence = self.member_step_sequence;
-            let mut receipt = RetainedCloneProgress::default();
-            let fuel = grant.maximum_items.max(grant.maximum_copy_bytes.min(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)) as u64;
-            let step = {
-                let mut cx = semio_framework_job::StepContext::new(self.operation, self.generation, semio_framework_job::StepBudget::new(fuel, u64::MAX, grant), self.cancel.as_ref().expect("live replacement cancellation root").clone(), semio_framework_job::default_now_us, &mut sequence, &mut receipt);
-                store::MemberOpenOperation::step(self.active_member_open.as_mut().expect("active member open remains retained"), &mut cx, grant)
-            };
-            self.member_step_sequence = sequence;
-            let spent = RetainedCloneProgress { copied_items: receipt.copied_items.max(1), ..receipt };
+            let before=cx.retained_progress();
+            let step=cx.with_retained_loan(grant,|same|Ok(store::MemberOpenOperation::step(self.active_member_open.as_mut().expect("active member open remains retained"),same,grant)))?;
+            let after=cx.retained_progress();
+            let delta=|end:usize,start:usize|end.checked_sub(start).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original member receipt moved before its initiating recipient"));
+            let spent=RetainedCloneProgress{copied_items:delta(after.copied_items,before.copied_items)?,copied_bytes:delta(after.copied_bytes,before.copied_bytes)?,retained_capacity_bytes:delta(after.retained_capacity_bytes,before.retained_capacity_bytes)?,released_bytes:delta(after.released_bytes,before.released_bytes)?};
             return match step {
                 store::MemberOpenStep::Pending(_) => Ok(PluginLifecycleStep::Progress(spent)),
                 store::MemberOpenStep::Rejected(diagnostic) => {
@@ -907,7 +904,7 @@ where
                 store::MemberOpenStep::Ready(member) => {
                     if !store::MemberOpenOperation::terminal_is_empty(self.active_member_open.as_ref().expect("ready member open remains retained")) {
                         *self.retiring_child = self.active_member_ingress.as_mut().and_then(OwnedDocumentMemberIngress::take_identity).map(|(_, reference, owner)| ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
-                        return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "ready member open retained nonterminal ownership"));
+                        return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "ready member open retained nonterminal ownership").into());
                     }
                     drop(self.active_member_open.take());
                     let (ordinal, reference, owner) = self.active_member_ingress.as_mut().and_then(OwnedDocumentMemberIngress::take_identity).expect("active member identity was verified before its exact open step");
@@ -918,7 +915,7 @@ where
                     }
                     let Some(candidate) = self.candidate_children.as_mut() else {
                         *self.retiring_child = Some(ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
-                        return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "member candidate registry was lost before exact admission"));
+                        return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "member candidate registry was lost before exact admission").into());
                     };
                     let owner_key = if self.retained_store.as_ref().is_some_and(|parent| parent.envelope().id == owner.parent.artifact_id) { "" } else { owner.parent.artifact_id.as_str() };
                     let admission = match candidate.admit_identity(MemberKeyRef { owner: owner_key, slot: &owner.slot, child_id: &owner.child_id }) {
@@ -926,19 +923,19 @@ where
                         Err(fault) => {
                             *self.retiring_child = Some(ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
                             self.refuse(ArtifactStoreReplacementRefusal::Invariant { leg: ArtifactStoreReplacementLeg::Members, detail: "an owned-member or candidate-view authority returned its own exact refusal" });
-                            return Err(fault);
+                            return Err(fault.into());
                         }
                     };
                     let Some(candidate_source_generation) = self.candidate_source_generation.checked_add(1) else {
                         let cancelled = candidate.cancel_admission(&admission);
                         debug_assert!(cancelled, "candidate admission remains exclusive until insertion");
                         *self.retiring_child = Some(ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
-                        return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "owned document candidate generation exhausted"));
+                        return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "owned document candidate generation exhausted").into());
                     };
                     candidate.insert_admitted(admission, reference, owner, member);
                     let ingress = self.active_member_ingress.take().expect("ready member ingress remains retained");
                     if !ingress.terminal_is_empty() {
-                        return Err(plugin_sdk_fault("ready member ingress retained ownership after exact handoff"));
+                        return Err(plugin_sdk_fault("ready member ingress retained ownership after exact handoff").into());
                     }
                     drop(ingress);
                     self.next_member_ordinal += 1;
@@ -949,15 +946,15 @@ where
         }
         if self.active_member_ingress.is_none() {
             let Some(registry) = self.member_ingress.as_mut() else {
-                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opening member set lost its exact ingress registry"));
+                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opening member set lost its exact ingress registry").into());
             };
             if self.next_member_ordinal == registry.expected {
                 if !registry.sealed || registry.len != 0 {
-                    return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opened member set did not consume every sealed ordinal"));
+                    return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opened member set did not consume every sealed ordinal").into());
                 }
                 let step = registry.close_step(grant)?;
                 if !matches!(step, RetainedCloneStep::Complete(_)) { return Ok(PluginLifecycleStep::Progress(step.progress())); }
-                if !registry.terminal_is_empty() { return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opened member registry returned false terminal")); }
+                if !registry.terminal_is_empty() { return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opened member registry returned false terminal").into()); }
                 let registry = self.member_ingress.take().expect("terminal member ingress registry remains retained");
                 drop(registry);
                 self.closure = Some(store::OwnedDocumentClosure::new(self.operation, self.generation, self.candidate_source_generation, self.expires_at_us));
@@ -965,12 +962,12 @@ where
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() }));
             }
             let Some(ingress) = registry.take(self.next_member_ordinal) else {
-                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "sealed member set lost an exact ordinal before open"));
+                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "sealed member set lost an exact ordinal before open").into());
             };
             *self.active_member_ingress = Some(ingress);
         }
         if self.active_member_ingress.as_ref().is_none_or(|ingress| !ingress.has_request()) {
-            return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "member ingress lost its exact retained open request"));
+            return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "member ingress lost its exact retained open request").into());
         }
         let ingress = self.active_member_ingress.as_mut().expect("funded factory retains its exact ingress");
         match M::begin_open(&mut ingress.request, grant) {
@@ -1137,24 +1134,24 @@ where
     }
 
     /// 🧹️ Keeps original custody until every child and separate parent transfer is admitted.
-    pub(crate) fn drive_rejected_members(&mut self, current_content: &ChildContentView, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
-        let demand = self.replacement_member_retirement_demands(grant.maximum_copy_bytes).map_err(|error| plugin_sdk_fault(error.into_message()))?;
+    pub(crate) fn drive_rejected_members(&mut self, current_content: &ChildContentView,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure> {
+        let demand = self.replacement_member_retirement_demands(grant.maximum_copy_bytes).map_err(crate::PluginLifecycleFailure::from)?;
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(PluginLifecycleStep::Progress(Default::default())); }
         let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
         let paid = || PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() });
-        let parent = |step: RetainedCloneStep, terminal: bool| -> Result<PluginLifecycleStep, Fault> {
-            let admitted = semio_framework_value::retained_clone::admit_retained_clone_close(child,step,terminal,"replacement original member child").map_err(|error| plugin_sdk_fault(error.into_message()))?;
+        let parent = |step: RetainedCloneStep, terminal: bool| -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure> {
+            let admitted = semio_framework_value::retained_clone::admit_retained_clone_close(child,step,terminal,"replacement original member child").map_err(crate::PluginLifecycleFailure::from)?;
             Ok(PluginLifecycleStep::Progress(admitted.progress()))
         };
         if self.closure.is_some() { drop(self.closure.take()); return Ok(paid()); }
         if let Some(open) = self.active_member_open.as_mut() {
             if store::MemberOpenOperation::terminal_is_empty(open) { drop(self.active_member_open.take()); return Ok(paid()); }
-            let step = store::MemberOpenOperation::close_step(open,child).map_err(|error| plugin_sdk_fault(error.into_message()))?;
+            let step=cx.with_retained_loan(child,|same|store::MemberOpenOperation::close_step(open,same))?;
             return parent(step,store::MemberOpenOperation::terminal_is_empty(open));
         }
         if let Some(ingress) = self.active_member_ingress.as_mut() {
             if ingress.terminal_is_empty() { drop(self.active_member_ingress.take()); return Ok(paid()); }
-            let step = ingress.close_step(child).map_err(|error| { let progress=error.retained_progress();plugin_sdk_fault(error.into_message()).with_retained_progress(progress) })?; return parent(step,ingress.terminal_is_empty());
+            let step = ingress.close_step(child).map_err(crate::PluginLifecycleFailure::from)?; return parent(step,ingress.terminal_is_empty());
         }
         if let Some(registry) = self.member_ingress.as_mut() {
             if registry.terminal_is_empty() { drop(self.member_ingress.take()); return Ok(paid()); }
@@ -1163,7 +1160,7 @@ where
         if let Some(registry) = self.displaced_content_retirements.as_mut() {
             let children = self.candidate_children.as_mut().ok_or_else(|| plugin_sdk_fault("replacement original displaced roots lost their member registry"))?;
             let current = self.candidate_content.as_ref().ok_or_else(|| plugin_sdk_fault("replacement original displaced roots lost their current root"))?;
-            if original_child_root_retirement_demands::<M>(registry,children,None,self.displaced_content_retirement_cursor,child.maximum_copy_bytes,true).map_err(|error|plugin_sdk_fault(error.into_message()))?.is_none() { drop(self.displaced_content_retirements.take()); return Ok(paid()); }
+            if original_child_root_retirement_demands::<M>(registry,children,None,self.displaced_content_retirement_cursor,child.maximum_copy_bytes,true).map_err(crate::PluginLifecycleFailure::from)?.is_none() { drop(self.displaced_content_retirements.take()); return Ok(paid()); }
             let step = advance_original_child_root_retirement(registry,children,None,current,None,None,&mut self.displaced_content_retirement_cursor,child,true)?;
             return parent(step,registry.is_empty() && registry.slots.is_empty());
         }
@@ -1174,14 +1171,14 @@ where
             let inner = RetainedCloneGrant { maximum_copy_bytes: child.maximum_copy_bytes - reserved, ..child };
             let owners = ChildContentBorrowedOwners::none();
             let step = retirement.close_step(children,None,current_content,&owners,inner)?;
-            let step = semio_framework_value::retained_clone::admit_retained_clone_close(inner,step,retirement.terminal_is_empty(),"replacement original candidate root").map_err(|error|plugin_sdk_fault(error.into_message()))?;
+            let step = semio_framework_value::retained_clone::admit_retained_clone_close(inner,step,retirement.terminal_is_empty(),"replacement original candidate root").map_err(crate::PluginLifecycleFailure::from)?;
             let receipt = step.progress();
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_bytes: receipt.copied_bytes + reserved, ..receipt }));
         }
         if self.candidate_content.is_some() { let content = self.candidate_content.take().expect("original candidate root remains retained"); *self.candidate_content_retirement = Some(ChildContentRetirement::new(content,true)); return Ok(paid()); }
         if let Some(composition) = self.candidate_composition.as_mut() {
             if composition.terminal_is_empty() { drop(self.candidate_composition.take()); return Ok(paid()); }
-            let step = composition.close_step(child).map_err(|error|plugin_sdk_fault(error.into_message()))?; return parent(step,composition.terminal_is_empty());
+            let step = composition.close_step(child).map_err(crate::PluginLifecycleFailure::from)?; return parent(step,composition.terminal_is_empty());
         }
         if let Some(pins) = self.displaced_pins.as_mut() {
             if pins.terminal_is_empty() { drop(self.displaced_pins.take()); return Ok(paid()); }
@@ -1209,7 +1206,7 @@ where
             return match cancel.close_step(child) {
                 Ok(step) => parent(step,cancel.terminal_is_empty()),
                 Err(semio_framework_async::CancelTokenRetirementError::Blocked(_)) => Ok(PluginLifecycleStep::AwaitingInput { reason: "replacement original cancellation retains its waiter or alias" }),
-                Err(semio_framework_async::CancelTokenRetirementError::Refused(error)) => Err(plugin_sdk_fault(error.into_message())),
+                Err(semio_framework_async::CancelTokenRetirementError::Refused(error)) => Err(crate::PluginLifecycleFailure::from(error)),
             };
         }
         if let Some(original) = self.cancel_signal.as_ref() {
@@ -1372,7 +1369,7 @@ where
 
 impl<P, Mutation, M> Drop for ActiveArtifactStoreReplacement<P, Mutation, M>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
     M: SpaceMember + MemberFactory,
 {
@@ -1385,13 +1382,13 @@ where
 }
 
 pub(crate) struct ArtifactStoreReplacementAdmissionTarget<'a, A: ArtifactApp, M: SpaceMember + MemberFactory> {
-    jobs: &'a mut ArtifactFixedRegistry<ActiveArtifactStoreReplacement<A::Snapshot, A::Mutation, M>>,
-    operation: semio_framework_job::OperationId,
-    generation: semio_framework_job::Generation,
-    child_content_generation: u64,
-    retained:RetainedCloneGrant,
-    actor: ActorId,
-    marker: std::marker::PhantomData<fn() -> A>,
+    pub(crate) jobs: &'a mut ArtifactFixedRegistry<ActiveArtifactStoreReplacement<A::Snapshot, A::Mutation, M>>,
+    pub(crate) operation: semio_framework_job::OperationId,
+    pub(crate) generation: semio_framework_job::Generation,
+    pub(crate) child_content_generation: u64,
+    pub(crate) retained:RetainedCloneGrant,
+    pub(crate) actor: ActorId,
+    pub(crate) marker: std::marker::PhantomData<fn() -> A>,
 }
 
 impl<A: ArtifactApp, M: SpaceMember + MemberFactory> store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordTarget<A::Snapshot, A::Mutation> for ArtifactStoreReplacementAdmissionTarget<'_, A, M> {
@@ -1633,7 +1630,7 @@ where
 
 impl<P, Mutation> ActiveDocumentArchiveLoad<P, Mutation>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     pub(crate) fn new(operation: u64, archive: protocol::DocumentArchivePack, history: protocol::RetainedHistoryDecode) -> Self {
@@ -1787,8 +1784,8 @@ where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue,Mu
 }
 
 /// 📏️ Borrows the exact archive frontier and separate original registry backing.
-fn original_document_archive_close_demands<P,Mutation>(document_archive_loads:&ArtifactFixedRegistry<ActiveDocumentArchiveLoad<P,Mutation>>,body:usize,closing:bool)->Result<Option<RetirementDemand>,ValueError>
-where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack+Send+Sync+'static,Mutation:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+store::Mutation<P>+OpBinary+OpText+Send+'static{
+pub(crate) fn original_document_archive_close_demands<P,Mutation>(document_archive_loads:&ArtifactFixedRegistry<ActiveDocumentArchiveLoad<P,Mutation>>,body:usize,closing:bool)->Result<Option<RetirementDemand>,ValueError>
+where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot+Send+Sync+'static,Mutation:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+store::Mutation<P>+OpBinary+OpText+Send+'static{
     if let Some(operation)=original_document_archive_close_slot(document_archive_loads,closing){
         let active=document_archive_loads.get(operation).expect("original archive close slot");
         return if active.terminal()||active.terminal_target.is_none()||active.inputs_are_empty(){Ok(Some(RetirementDemand{release_bytes:if active.terminal(){active.fault.capacity()}else{0},depth:1,..Default::default()}))}else{active.retirement_demands(body).map(Some)};
@@ -1797,8 +1794,8 @@ where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Ar
 }
 
 /// 🎟️ Yields actual child progress before terminal status, slot removal, or backing release.
-fn advance_original_document_archive_close<P,Mutation>(document_archive_loads:&mut ArtifactFixedRegistry<ActiveDocumentArchiveLoad<P,Mutation>>,grant:RetainedCloneGrant,closing:bool)->Result<RetainedCloneStep,ValueError>
-where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack+Send+Sync+'static,Mutation:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+store::Mutation<P>+OpBinary+OpText+Send+'static{
+pub(crate) fn advance_original_document_archive_close<P,Mutation>(document_archive_loads:&mut ArtifactFixedRegistry<ActiveDocumentArchiveLoad<P,Mutation>>,grant:RetainedCloneGrant,closing:bool)->Result<RetainedCloneStep,ValueError>
+where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot+Send+Sync+'static,Mutation:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+store::Mutation<P>+OpBinary+OpText+Send+'static{
     let idle=RetainedCloneProgress::default();
     let Some(demand)=original_document_archive_close_demands(document_archive_loads,grant.maximum_copy_bytes,closing)?else{return Ok(RetainedCloneStep::Complete(idle));};
     if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(idle));}
@@ -1851,4 +1848,4 @@ mod original_catalog_constructor;
 
 pub use original_catalog_constructor::{ArtifactStoreConstructorKind,ArtifactStoreConstructorPhase};
 
-use original_catalog_constructor::OriginalCatalogConstructor;
+pub(crate) use original_catalog_constructor::OriginalCatalogConstructor;

@@ -1,4 +1,4 @@
-fn original_retained_turn() -> semio_framework_actor::RetainedTurnInput { let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧫️fixtures/🔣️.json")).unwrap(); serde_json::from_value(law["input"].clone()).unwrap() }
+fn original_retained_turn() -> semio_framework_actor::RetainedTurnInput { let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🧫️fixtures/🔣️.json")).unwrap(); serde_json::from_value(law["input"].clone()).unwrap() }
 use super::*;
 use crate::{GuestRuntime, MockGuestRuntime, PackageHash, PackageId, PackageRef};
 use semio_framework_plugin_interpreter::JobStep;
@@ -11,7 +11,7 @@ use std::time::Duration;
 /// registry and the native executor values moved across asynchronous boundaries.
 #[semio_framework_async_macros::async_test]
 async fn shard_stack_authority_matches_the_neutral_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧱️stack-authority.json")).expect("stack authority fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧱️stack-authority.json")).expect("stack authority fixture");
     let maximum = fixture["maximumInlineBytes"].as_u64().expect("maximum inline bytes") as usize;
     let registry = |id: &str| fixture["registries"].as_array().expect("registry rows").iter().find(|row| row["id"] == id).expect("stack authority row");
     let seeds = registry("shard-replay-seeds");
@@ -40,7 +40,7 @@ async fn encode_frame(frame: super::super::ShardFrame) -> Vec<u8> {
 
 #[semio_framework_async_macros::async_test]
 async fn registration_acknowledgement_and_terminal_refusal_preserve_exact_owners() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔁️lifecycle/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔁️lifecycle/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["registrationStages"].as_array().unwrap() {
         let stage = row.as_str().unwrap();
         let mock = Arc::new(MockGuestRuntime::new().await);
@@ -104,7 +104,7 @@ async fn registration_acknowledgement_and_terminal_refusal_preserve_exact_owners
 
 #[semio_framework_async_macros::async_test]
 async fn terminal_registration_reply_wakes_outside_the_state_lock() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔁️lifecycle/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔁️lifecycle/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     struct Probe {
         executor: std::sync::Weak<ShardExecutor>,
         lockable: AtomicBool,
@@ -142,7 +142,7 @@ async fn terminal_registration_reply_wakes_outside_the_state_lock() {
 
 #[semio_framework_async_macros::async_test]
 async fn admitted_registration_reply_wakes_outside_the_state_lock() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔁️lifecycle/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔁️lifecycle/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     struct Probe {
         executor: std::sync::Weak<ShardExecutor>,
         lockable: AtomicBool,
@@ -217,8 +217,8 @@ async fn shard_executor_drives_a_turn_for_a_registered_actor_via_the_worker_pool
         cancel_of: None,
         payload: Payload::Event { bytes: serde_json::to_vec(&super::super::fixture_instance_close_event()).unwrap() },
     };
-    let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive, original_retained_turn());
-    let bytes = encode_frame(super::super::ShardFrame::Grant { actor, retained: original_retained_turn(), budget, envelopes: vec![envelope] }).await;
+    let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
+    let bytes = encode_frame(super::super::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![envelope] }).await;
     executor.send_frame(bytes, semio_framework_actor::Lane::Interactive).await;
 
     match wait_for_one(&outcomes) {
@@ -232,7 +232,7 @@ async fn shard_executor_drives_a_turn_for_a_registered_actor_via_the_worker_pool
 
 #[semio_framework_async_macros::async_test]
 async fn fifo_ingress_selects_interactive_before_earlier_background_without_unbounded_drain() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/♻️relay-lifecycle.json")).expect("neutral relay lifecycle fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/♻️relay-lifecycle.json")).expect("neutral relay lifecycle fixture");
     let case = &fixture["ingressCases"][0];
     let frames = case["frames"].as_array().expect("ingress frames");
     let actor_number = |index: usize| u32::try_from(frames[index]["actor"].as_u64().expect("actor")).expect("actor fits");
@@ -284,15 +284,13 @@ async fn fifo_ingress_selects_interactive_before_earlier_background_without_unbo
     };
     let background_lane = lane(0);
     let interactive_lane = lane(1);
-    let background_frame = encode_frame(super::super::ShardFrame::Grant {         actor: background,
-        retained: original_retained_turn(),
-        budget: semio_framework_actor::lane_defaults::budget_for(background_lane, original_retained_turn()),
+    let background_frame = encode_frame(super::super::ShardFrame::Grant { retained: original_retained_turn(),         actor: background,
+        budget: semio_framework_actor::lane_defaults::budget_for(background_lane),
         envelopes: vec![envelope(background, background_lane, frames[0]["sequence"].as_u64().expect("background sequence"))],
     })
     .await;
-    let interactive_frame = encode_frame(super::super::ShardFrame::Grant {         actor: interactive,
-        retained: original_retained_turn(),
-        budget: semio_framework_actor::lane_defaults::budget_for(interactive_lane, original_retained_turn()),
+    let interactive_frame = encode_frame(super::super::ShardFrame::Grant { retained: original_retained_turn(),         actor: interactive,
+        budget: semio_framework_actor::lane_defaults::budget_for(interactive_lane),
         envelopes: vec![envelope(interactive, interactive_lane, frames[1]["sequence"].as_u64().expect("interactive sequence"))],
     })
     .await;
@@ -330,7 +328,7 @@ async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_an
         let pool = Arc::new(WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, worker_count)));
         let outcomes = OutcomeSink::new();
         let executor = ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock.clone())), vec![(actor, instance)], outcomes.clone(),crate::shard::test_identity_issuer()).await;
-        let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive, original_retained_turn());
+        let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
         let event = Envelope {
             to: actor,
             from: semio_framework_actor::Origin::Kernel,
@@ -342,7 +340,7 @@ async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_an
             payload: Payload::Event { bytes: serde_json::to_vec(&semio_framework::kernel::Event::Wake).expect("wake") },
         };
         let submit_started = std::time::Instant::now();
-        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, retained: original_retained_turn(), budget, envelopes: vec![event] }).await, semio_framework_actor::Lane::Interactive).await;
+        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![event] }).await, semio_framework_actor::Lane::Interactive).await;
         assert!(submit_started.elapsed() < Duration::from_millis(8), "one mounted replay ingress opportunity exceeded 8ms");
         assert!(matches!(wait_for_one(&outcomes), ShardOutcome::Turn { actor: reported, .. } if reported == actor.0));
 
@@ -360,7 +358,7 @@ async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_an
         let turn = JobTurn { job, operation, step_sequence: 0 };
         mock.script_job_step(actor, JobStep::Running { progress: Some(vec![11, 13]) }).await;
         let step = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn } };
-        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, retained: original_retained_turn(), budget, envelopes: vec![step] }).await, semio_framework_actor::Lane::Interactive).await;
+        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![step] }).await, semio_framework_actor::Lane::Interactive).await;
         let original = wait_for_one(&outcomes);
         assert!(matches!(&original, ShardOutcome::Job { request: observed, publication, .. } if *observed == request && matches!(&publication.outcome, semio_framework_actor::JobStepOutcome::PreviewReady { preview } if *preview == [11, 13])));
 
@@ -374,12 +372,12 @@ async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_an
             cancel_of: None,
             payload: Payload::JobReplay { turn, request, worker_count: u16::try_from(worker_count).expect("worker count"), worker_slot: 0 },
         };
-        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, retained: original_retained_turn(), budget, envelopes: vec![replay] }).await, semio_framework_actor::Lane::Interactive).await;
+        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![replay] }).await, semio_framework_actor::Lane::Interactive).await;
         assert!(matches!(wait_for_one(&outcomes), ShardOutcome::Resumed { actor: reported, operation: observed } if reported == actor.0 && observed == operation));
         mock.script_job_step(actor, JobStep::Done { output: vec![11, 13] }).await;
         mock.script_turn(actor, MockGuestRuntime::idle_turn(original_retained_turn()).await).await;
         let replay_step = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 4, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn } };
-        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, retained: original_retained_turn(), budget, envelopes: vec![replay_step] }).await, semio_framework_actor::Lane::Interactive).await;
+        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![replay_step] }).await, semio_framework_actor::Lane::Interactive).await;
         let replayed = outcomes.wait_for(2, Duration::from_secs(2));
         assert!(
                 replayed.iter().any(|outcome| matches!(outcome, ShardOutcome::Job { request: observed, publication, .. } if *observed == request && matches!(&publication.outcome, semio_framework_actor::JobStepOutcome::Complete { candidate } if candidate.output == [11, 13]))),
@@ -425,7 +423,7 @@ async fn every_actors_grant_lands_on_the_shard_it_was_registered_on_across_k_sha
     let package = PackageRef { package: PackageId("grant-routing-property".to_string()), hash: PackageHash([55u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
     let instantiate_budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
-    let grant_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive, original_retained_turn());
+    let grant_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
 
     for i in 0..ACTORS {
         let actor = ActorId::new(0, 0, i as u32, 0).await;
@@ -443,7 +441,7 @@ async fn every_actors_grant_lands_on_the_shard_it_was_registered_on_across_k_sha
             cancel_of: None,
             payload: Payload::Event { bytes: serde_json::to_vec(&super::super::fixture_instance_close_event()).unwrap() },
         };
-        let bytes = encode_frame(super::super::ShardFrame::Grant { actor, retained: original_retained_turn(), budget: grant_budget, envelopes: vec![envelope] }).await;
+        let bytes = encode_frame(super::super::ShardFrame::Grant { retained: original_retained_turn(), actor, budget: grant_budget, envelopes: vec![envelope] }).await;
         executors[shard_id.0 as usize].send_frame(bytes, semio_framework_actor::Lane::Interactive).await;
     }
 
@@ -545,7 +543,7 @@ async fn concurrent_send_frame_bursts_never_drop_an_outcome() {
         actors.push(actor);
     }
     let executor = ShardExecutor::new(pool, Arc::new(GuestRuntimes::Mock(mock.clone())), initial, outcomes.clone(),crate::shard::test_identity_issuer()).await;
-    let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive, original_retained_turn());
+    let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
 
     let mut handles = Vec::new();
     for (i, actor) in actors.into_iter().enumerate() {
@@ -561,7 +559,7 @@ async fn concurrent_send_frame_bursts_never_drop_an_outcome() {
                 cancel_of: None,
                 payload: Payload::Event { bytes: serde_json::to_vec(&super::super::fixture_instance_close_event()).unwrap() },
             };
-            let bytes = semio_framework_async::block_on(encode_frame(super::super::ShardFrame::Grant { actor, retained: original_retained_turn(), budget, envelopes: vec![envelope] }));
+            let bytes = semio_framework_async::block_on(encode_frame(super::super::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![envelope] }));
             semio_framework_async::block_on(executor.send_frame(bytes, semio_framework_actor::Lane::Interactive));
         }));
     }

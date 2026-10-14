@@ -1,7 +1,7 @@
 /** 🖼️ Complete TIFF frontiers laws retain their original operation limits. */
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
-import fixture from "../../../../../🧬️schema/📸️snapshot/🧫️fixtures/💰️frontiers/🔣️.json";
+import fixture from "../../../../../🧪️tests/🧫️fixtures/📸️snapshot/💰️frontiers/🔣️.json";
 import {exportSqliteDatabase,SqliteOperation} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import { tiffSnapshotToSqliteDatabase, tiffSnapshotToSqliteFile, tiffSnapshotFromSqliteFile } from "../../🟦️.ts";
 const small={schema:"stdio.tiff" as const,ifds:[]};

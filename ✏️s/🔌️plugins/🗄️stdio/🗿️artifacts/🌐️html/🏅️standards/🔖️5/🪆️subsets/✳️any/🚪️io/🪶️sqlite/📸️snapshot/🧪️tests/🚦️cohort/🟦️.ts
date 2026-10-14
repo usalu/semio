@@ -2,7 +2,7 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
-import neutral from "../../🧫️fixtures/🚦️cohort/🔣️.json";
+import neutral from "../🧫️fixtures/🚦️cohort/🔣️.json";
 
 import * as publicHtml from "../../../../../../../../../🟦️.ts";
 import type {HtmlSnapshot,HtmlNode} from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";

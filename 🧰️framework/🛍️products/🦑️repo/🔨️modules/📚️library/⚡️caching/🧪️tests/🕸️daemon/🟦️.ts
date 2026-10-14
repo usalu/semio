@@ -9,7 +9,7 @@ import { spawnSync } from "node:child_process";
 /** 🧹️ Confirms the native Nx source watcher excludes compiler and map cache writes. */
 export function testWorkspaceWatchIgnores(workspace: string, output: string): void {
   const require = createRequire(join(workspace, "package.json"));
-  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/watcher-readiness/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/watcher-readiness/🔣️.json"), "utf8"));
   const rules = readFileSync(join(workspace, ".nxignore"), "utf8"), ignore = require("ignore")().add(rules);
   for (const path of fixture.ignored) assert.ok(ignore.ignores(path), `Nx must ignore derived cache ${path}`);
   assert.equal(ignore.ignores(fixture.source), false);
@@ -96,7 +96,7 @@ export async function testWatcherReadiness(workspace: string): Promise<void> {
 
 /** 🧵️ Exercises the installed Nx scheduler at controlled native discovery boundaries. */
 export async function testGraphCoalescing(workspace: string, source?: string): Promise<void> {
-  const require = createRequire(join(workspace, "package.json")), fixtureRoot = join(import.meta.dir, "../../🧫️fixtures/graph-coalescing");
+  const require = createRequire(join(workspace, "package.json")), fixtureRoot = join(import.meta.dir, "../🧫️fixtures/graph-coalescing");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
   source ??= readFileSync(require.resolve("nx/src/daemon/server/project-graph-incremental-recomputation"), "utf8");
   const tick = () => new Promise<void>(accept => setImmediate(accept));

@@ -1,4 +1,4 @@
-import { Script } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { checkAgentClients, writeAgentClients } from "../🟦️.ts";
 
 /** 🤖️ `agents write|check`: derives the MCP configuration of every agent and editor client from the root dashboard declaration, or fails on drift.

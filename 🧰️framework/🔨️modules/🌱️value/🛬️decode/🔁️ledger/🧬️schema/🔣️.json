@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "control",
+    "grant",
+    "text",
+    "textBytes",
+    "hops",
+    "foreign",
+    "authority",
+    "callback"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumAllocationBytes"
+      ],
+      "properties": {
+        "maximumAllocationBytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "text": {
+      "type": "string"
+    },
+    "textBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "hops": {
+      "const": [
+        "local-pause-resume",
+        "local-recipient-detach-bind",
+        "forwarded-pause-resume",
+        "forwarded-detach-rebind",
+        "forwarded-recipient-move"
+      ]
+    },
+    "foreign": {
+      "const": [
+        "fresh-ledger",
+        "fresh-recipient"
+      ]
+    },
+    "authority": {
+      "const": "opaqueConsumingReceipt"
+    },
+    "callback": {
+      "const": "originalSupplierRebind"
+    }
+  }
+}

@@ -11,7 +11,7 @@ import { uiAccessibilityRoleV1 } from "../../../../../../../🔨️modules/🖱�
 import type { Component } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "♿️native-accessibility-tree", "🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "♿️native-accessibility-tree", "🔣️.json"), "utf8"));
 
 /** 🎭️ Every role the shared contract derives, over every component type and every container role, pressed or not. */
 function contractRoles(): Set<string> {

@@ -1,8 +1,0 @@
-{
-  "ChangeNodeLabel": {
-    "id": {
-      "value": "a"
-    },
-    "new_label": "Sensor"
-  }
-}

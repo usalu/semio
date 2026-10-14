@@ -1,0 +1,30 @@
+{
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "mesh": 1
+        }
+      }
+    ]
+  },
+  "meshes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "name": null
+        }
+      }
+    ],
+    "added": [
+      {
+        "index": 1,
+        "item": {
+          "name": "hull"
+        }
+      }
+    ]
+  }
+}

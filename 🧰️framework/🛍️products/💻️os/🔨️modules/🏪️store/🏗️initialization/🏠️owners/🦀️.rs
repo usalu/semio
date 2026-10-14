@@ -8,7 +8,7 @@ use crate::os_store::snapshot_read::artifact_retirement_owner_demands;
 use crate::os_store::snapshot_read::artifact_retirement_owner_close;
 use crate::os_store::snapshot_read::ArtifactStoreEnvelopeRetirement;
 use crate::ArtifactStoreCursorDisposer;
-use crate::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 use crate::os_store::snapshot_read::ArtifactGenesisRetirement;
 use crate::MemberSnapshotOpenOperation;
 use super::history_read_admission;
@@ -575,7 +575,7 @@ impl<T: semio_framework_value::retirement::RetireOwned + Sync> SnapshotRetiremen
 /// 🧮️ Prices the exact bounded catalog constructor without constructing factory owners.
 pub fn bounded_artifact_store_owners_birth_bytes<P, Mutation>() -> usize
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned,
 {
     DocumentStoreOwners::<P, Mutation>::source_birth_bytes::<BoundedArtifactRetirementFactory<P>, BoundedArtifactRetirementFactory<P>, BoundedArtifactRetirementFactory<Mutation>, ArtifactStoreCursorDisposer<P, Mutation>>().expect("bounded catalog native source layout")
@@ -584,7 +584,7 @@ where
 /// 📏️ Quotes original leaf factory Arcs and the inline disposer before any retirement ticket birth.
 pub fn bounded_artifact_store_owners_birth_demand<P, Mutation>() -> Result<RetainedCloneBirthDemand, ValueError>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned,
 {
     Ok(RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<P, Mutation>::source_birth_bytes::<BoundedArtifactRetirementFactory<P>, BoundedArtifactRetirementFactory<P>, BoundedArtifactRetirementFactory<Mutation>, ArtifactStoreCursorDisposer<P, Mutation>>()?, depth: 1 })
@@ -592,7 +592,7 @@ where
 
 /// 📐️ Borrows the native source headers and birth before invoking their original constructor.
 pub fn bounded_artifact_store_owners_source_demands<P,Mutation>()->Result<semio_framework_value::RetirementDemand,ValueError>
-where P:Clone+ToValue+FromValue+ArtifactPack+semio_framework_value::retirement::RetireOwned+Sync,
+where P:Clone+ToValue+FromValue+ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot+semio_framework_value::retirement::RetireOwned+Sync,
 Mutation:Clone+ToValue+FromValue+self::Mutation<P>+OpBinary+OpText+semio_framework_value::retirement::RetireOwned{
  let birth=bounded_artifact_store_owners_birth_demand::<P,Mutation>()?;
  Ok(semio_framework_value::RetirementDemand{copy_bytes:0,capacity_bytes:birth.capacity_bytes,depth:birth.depth,..Default::default()})
@@ -601,7 +601,7 @@ Mutation:Clone+ToValue+FromValue+self::Mutation<P>+OpBinary+OpText+semio_framewo
 /// 🗃️ Admits the original typed catalog source ingress while retaining separate factory-ticket births.
 pub fn bounded_artifact_store_owners<P, Mutation>(grant: RetainedCloneGrant) -> Result<(DocumentStoreOwners<P, Mutation>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<P, Mutation>>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJsonTree + Send + Sync + 'static,
 {
     let demand = bounded_artifact_store_owners_birth_demand::<P, Mutation>().map_err(|error| DocumentStoreOwnersAdmissionError { error, owners: None, progress: Default::default() })?;
@@ -612,7 +612,7 @@ where
 /// 🌳️ Admits the original bounded catalog and preparation source tree in one funded ingress.
 pub fn bounded_artifact_store_owners_with_one_item_preparation<P, Mutation>(grant: RetainedCloneGrant, preparation_birth: RetainedCloneBirthDemand, construct: impl FnOnce() -> Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>) -> Result<(DocumentStoreOwners<P, Mutation>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<P, Mutation>>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJsonTree + Send + Sync + 'static,
 {
     DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, preparation_birth, || (BoundedArtifactRetirementFactory::<P>::new(), BoundedArtifactRetirementFactory::<P>::new(), BoundedArtifactRetirementFactory::<Mutation>::new(), ArtifactStoreCursorDisposer::<P, Mutation>::new(), construct())).map(|(owners, progress)| (owners.with_batch_digest(), progress))
@@ -648,7 +648,7 @@ where
 /// 🗃️ Funds the framework's bounded catalog for a throwaway reduction store that no scheduler grants.
 pub fn funded_bounded_artifact_store_owners<P, Mutation>() -> Result<DocumentStoreOwners<P, Mutation>, ValueError>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJsonTree + Send + Sync + 'static,
 {
     fund_document_store_owners(bounded_artifact_store_owners_birth_demand::<P, Mutation>()?, bounded_artifact_store_owners::<P, Mutation>)
@@ -657,7 +657,7 @@ where
 /// 🗃️🧷️ Funds the bounded catalog together with one original preparation authority for a store that no scheduler grants: the authority's source extent is priced from its own constructed Arc and its quoted retirement ticket tree, so the catalog retires it like every other original factory.
 pub fn funded_bounded_artifact_store_owners_with_one_item_preparation<P, Mutation>(preparation: Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>) -> Result<DocumentStoreOwners<P, Mutation>, ValueError>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJsonTree + Send + Sync + 'static,
 {
     let overflow = || ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "preparation source extent overflow");

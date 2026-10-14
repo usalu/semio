@@ -2,8 +2,8 @@
 /** 🌱️ Executes the shared authority's complete app and portable native laws. */
 import {resolve} from "node:path";
 import {readMutationInventoryExecutionPolicy} from "../../../../../../🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🟦️.ts";
-import {acquireCargoBuildLeaseV1} from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
-import {readCargoTestPolicyV1,runCargoTestsV1} from "../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import {acquireCargoBuildLeaseV1} from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import {readCargoTestPolicyV1,runCargoTestsV1} from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 if(process.argv[2]!=="test"){
  const {runArtifactRustPackageMain}=await import("../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts");
  await runArtifactRustPackageMain(import.meta.dir,"semio-s-space-core");

@@ -54,6 +54,22 @@ pub struct FixedCommandPage {
     len: u16,
 }
 
+struct FixedCommandPageRetirement{bytes:std::mem::ManuallyDrop<Option<Box<[u8;COMMAND_PAGE_MAXIMUM_BYTES]>>>}
+impl semio_framework_value::retirement::RetireOwned for FixedCommandPage{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(FixedCommandPageRetirement{bytes:std::mem::ManuallyDrop::new(Some(self.bytes))})}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<FixedCommandPageRetirement>())}
+ fn controlled_retirement_supported()->bool{true}
+}
+impl semio_framework_value::retirement::RetirementCursor for FixedCommandPageRetirement{
+ fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep as Step;if self.bytes.is_none(){return Step::Complete}if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<COMMAND_PAGE_MAXIMUM_BYTES{return Step::BudgetExhausted}drop(self.bytes.take());Step::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,released_bytes:COMMAND_PAGE_MAXIMUM_BYTES,..Default::default()})}
+ fn terminal_is_empty(&self)->bool{self.bytes.is_none()}
+ fn next_work_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+ fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
+ fn next_close_byte_demand(&self)->Option<usize>{Some(if self.bytes.is_some(){COMMAND_PAGE_MAXIMUM_BYTES}else{0})}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}
+impl Drop for FixedCommandPageRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.bytes.is_none(),"original command page dropped before funded release");if self.bytes.is_none(){unsafe{std::mem::ManuallyDrop::drop(&mut self.bytes)}}}}
+
 impl FixedCommandPage {
     pub fn try_from_array(bytes: [u8; COMMAND_PAGE_MAXIMUM_BYTES], len: u32) -> Result<Self, semio_framework_diagnostic::Fault> {
         let len = usize::try_from(len).map_err(|_| semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.command-page-length"), "command page length is not representable"))?;
@@ -1061,6 +1077,7 @@ impl CommandBatchDriver {
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct CommandPageCursor {
     pub owner: u64,
     pub generation: u64,

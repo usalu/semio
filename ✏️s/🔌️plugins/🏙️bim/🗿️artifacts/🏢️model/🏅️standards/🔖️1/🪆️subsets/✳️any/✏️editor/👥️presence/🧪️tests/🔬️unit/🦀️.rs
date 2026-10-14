@@ -1,7 +1,7 @@
 use super::*;
 use protocol::os_spr::protocol_laws::{assert_mutation_inverse_sum_law};
 use protocol::{Mutation, OpBinary, OpText};
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 fn busy() -> BimPresence {
     BimPresence { engagement_input: "Kitchen".into(), storey: "st-first".into(), owned_worksets: Vec::new(), camera: store::Viewport2d { x: 4.0, y: 3.0, zoom: 2.0 } }

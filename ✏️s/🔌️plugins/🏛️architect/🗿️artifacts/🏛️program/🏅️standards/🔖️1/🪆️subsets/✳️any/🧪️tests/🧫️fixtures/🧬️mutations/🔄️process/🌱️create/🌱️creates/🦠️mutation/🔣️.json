@@ -1,0 +1,42 @@
+{
+  "mutation": "createProcess",
+  "process": {
+    "id": "process-a",
+    "name": "Process A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "code": "",
+    "category": "",
+    "trigger": null,
+    "inputs": [],
+    "outputs": [],
+    "steps": [],
+    "actors": [],
+    "equipmentIds": [],
+    "elementIds": [],
+    "duration": null,
+    "frequency": null,
+    "criticalPath": false,
+    "bottlenecks": [],
+    "dependencies": [],
+    "kpis": [],
+    "automationLevel": null,
+    "failureModes": [],
+    "improvementOpportunities": [],
+    "regulatoryRefs": [],
+    "ownerId": null,
+    "workflowType": null,
+    "handoffPoints": [],
+    "qualityGates": []
+  }
+}

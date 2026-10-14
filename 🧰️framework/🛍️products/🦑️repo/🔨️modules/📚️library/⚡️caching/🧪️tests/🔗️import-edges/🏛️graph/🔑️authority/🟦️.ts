@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 
 type Phase = { file: string; projects: Record<string, string>; packages: Record<string, string>; locked: Record<string, string> };
 const caching = resolve(import.meta.dir, "../../../.."), workspace = process.cwd();
-const fixture = JSON.parse(readFileSync(join(caching, "🧫️fixtures/import-edges/🔁️context/🔣️.json"), "utf8")) as { graphAuthority: { module: string; export: string }; contexts: { id: string; phases: Phase[] }[]; lockScopes: { id: string; file: string; source: string; before: string; after: string; beforeTarget: string; afterTarget: string }[]; authorityInputs: { id: string; files: Record<string, string>; path: string; after: string }[] };
+const fixture = JSON.parse(readFileSync(join(caching, "🧪️tests/🧫️fixtures/import-edges/🔁️context/🔣️.json"), "utf8")) as { graphAuthority: { module: string; export: string }; contexts: { id: string; phases: Phase[] }[]; lockScopes: { id: string; file: string; source: string; before: string; after: string; beforeTarget: string; afterTarget: string }[]; authorityInputs: { id: string; files: Record<string, string>; path: string; after: string }[] };
 
 test("retained Nx reuse admits only current roots manifests lock scope and implementation authority", async () => {
   const nxJson = JSON.parse(readFileSync(join(workspace, "nx.json"), "utf8"));

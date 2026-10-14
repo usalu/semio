@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import sharp from "sharp";
 import {parseRasterConfig} from "../../🧬️schema/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
-import fixture from "../../🧫️fixtures/🖌️brush-style/🔣️.json";
+import fixture from "../🧫️fixtures/🖌️brush-style/🔣️.json";
 
 const validate=new Ajv({strict:false,validateFormats:false}).compile(schema);
 const config=(brushColor:string,brushHardness:number)=>({brushSize:24,brushOpacity:1,brushColor,brushHardness,paintTarget:"pixels",maskValue:255,fillTolerance:24,camera:{x:0,y:0,zoom:1}});
@@ -28,7 +28,7 @@ test("brush style schema and parser reject malformed colors and hardness",()=>{
   }
 });
 
-import masks from "../../🧫️fixtures/🎭️mask-paint/🔣️.json";
+import masks from "../🧫️fixtures/🎭️mask-paint/🔣️.json";
 for(const row of masks.cases)test(`paint target ${row.target} at mask value ${row.value}`,()=>{
   const value={...config("#2878dc",1),paintTarget:row.target,maskValue:row.value};
   expect(validate(value)).toBe(true);expect(parseRasterConfig(value)).toEqual({...value,compositeViewport:undefined});
@@ -38,7 +38,7 @@ test("paint target and mask coverage reject invalid values",()=>{
   for(const maskValue of [...masks.invalidValues,NaN,Infinity]){const value={...config("#2878dc",1),maskValue};expect(validate(value)).toBe(false);expect(()=>parseRasterConfig(value)).toThrow();}
 });
 
-import tolerances from "../../🧫️fixtures/🌊️fill-tolerance/🔣️.json";
+import tolerances from "../🧫️fixtures/🌊️fill-tolerance/🔣️.json";
 for(const fillTolerance of tolerances.cases)test(`bucket tolerance ${fillTolerance}`,()=>{
   const value={...config("#2878dc",1),fillTolerance};
   expect(validate(value)).toBe(true);expect(parseRasterConfig(value)).toEqual({...value,compositeViewport:undefined});
@@ -47,7 +47,7 @@ test("bucket tolerance rejects values outside 0..255",()=>{
   for(const fillTolerance of [...tolerances.invalidValues,NaN,Infinity]){const value={...config("#2878dc",1),fillTolerance};expect(validate(value)).toBe(false);expect(()=>parseRasterConfig(value)).toThrow();}
 });
 
-import selections from "../../🧫️fixtures/🎯️pixel-selection/🔣️.json";
+import selections from "../🧫️fixtures/🎯️pixel-selection/🔣️.json";
 import { parsePixelLayerSelectionV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🎯️selection/🟦️.ts";
 for(const row of selections.cases)test(`completed selection: ${row.name}`,async()=>{
   const value={...config("#2878dc",1),paintTarget:row.selection.target,pixelSelection:row.selection};
@@ -70,7 +70,7 @@ test("completed selection rejects malformed coverage and incompatible paint targ
 });
 
 import {PAINT2D_SCENE_LANES,paint2dSceneFromLanes,type Paint2dScene} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts";
-import sceneContract from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json";
+import sceneContract from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json";
 
 test("completed selection survives the shared optional scene carrier",()=>{
   expect(PAINT2D_SCENE_LANES).toEqual(sceneContract.lanes);

@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 type Codec = { artifactKind: string; artifactSchema: string; packSchemaHash: string };
 type Case = { id: string; declared: [string, string][]; linked: Codec[]; unowned?: string[]; refusal?: string };
 type Classify = (pairs: readonly (readonly [string, string])[], linked: readonly Codec[]) => ReadonlySet<string>;
-const fixture = JSON.parse(readFileSync(new URL("../../🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/⛓️linked-codec-ownership/🔣️.json", import.meta.url), "utf8")) as { schema: string; cases: Case[] };
+const fixture = JSON.parse(readFileSync(new URL("../../🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/⛓️linked-codec-ownership/🔣️.json", import.meta.url), "utf8")) as { schema: string; cases: Case[] };
 
 /** 🧬️ The exact `trustedBootstrapLinkedUnownedKindsV1` of the hub's `📜️script.ts`, lifted out of its source and
  * transpiled here: importing the script would load Bun-only modules the Vitest node environment cannot run. */

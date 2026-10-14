@@ -6,8 +6,8 @@ fn restored_actor_receives_original_decoder_and_grant_before_arc_birth(){
     use semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner;
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     use std::cell::Cell;
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🫴️actor.json")).unwrap();
-    let policies:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🫴️actor.json")).unwrap();
+    let policies:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/🎟️encode-owner/🔣️.json")).unwrap();
     let grant_for=|id:&str|serde_json::from_value::<RetainedCloneGrant>(policies["cases"].as_array().unwrap().iter().find(|row|row["id"]==id).unwrap()["grant"].clone()).unwrap();
     let close_grant=grant_for("full");let maximum=policies["nativeMaximumBytes"].as_u64().unwrap()as usize;let text=law["source"].as_str().unwrap();
     let frame=law["frameLayouts"].as_array().unwrap().iter().find(|row|row["nativeWordBytes"].as_u64().unwrap()as usize==std::mem::size_of::<usize>()).unwrap()["arcBytes"].as_u64().unwrap()as usize;
@@ -59,7 +59,7 @@ async fn checkpoint_requires_its_complete_declared_authority() {
 
 #[test]
 fn checkpoint_actor_contract_matches_independent_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("neutral checkpoint fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("neutral checkpoint fixture");
     for case in fixture["cases"].as_array().expect("checkpoint cases") {
         let source = serde_json::to_string(&case["pack"]).expect("neutral checkpoint JSON");
         let independent = serde_json::from_str::<CheckpointPack>(&source);

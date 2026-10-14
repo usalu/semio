@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import { matchesSemioEnvelope, type SemioEnvelope } from "../../🟦️.ts";
-import vectors from "../../🧫️fixtures/🪪️envelope-identity/🔣️.json" with { type: "json" };
+import vectors from "../🧫️fixtures/🪪️envelope-identity/🔣️.json" with { type: "json" };
 
 export function testSemioEnvelopeIdentity(): void {
   const expected = vectors.expected;

@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import Ajv from "ajv";
 import schema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
 import { parseIoEntryDescriptor, parseIoRoute } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
-import fixture from "../../🧫️fixtures/📇️descriptor-parity.json" with { type: "json" };
+import fixture from "../🧫️fixtures/📇️descriptor-parity.json" with { type: "json" };
 import { ioEntries } from "../../🟦️.ts";
 
 export function testArtifactIoDescriptorParity(): number {

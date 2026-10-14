@@ -18,8 +18,8 @@ import * as snapshot from "../../📸️snapshot/🟦️.ts";
 import * as diff from "../../🔺️diff/🟦️.ts";
 import definitionSchema from "../../📝️definition/🔣️.json";
 import responseSchema from "../../📨️response/🔣️.json";
-import vectors from "../../🧫️fixtures/🪪️document/🔣️.json" with { type: "json" };
-import importVectors from "../../🧫️fixtures/📥️import/🔣️.json";
+import vectors from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json" with { type: "json" };
+import importVectors from "../../../🧪️tests/🧫️fixtures/🔬️contract/📥️import/🔣️.json";
 import contactTemplate from "../../../🖼️assets/📇️contact/🔣️.json";
 
 /** 📥️ Canonical import shares schema and identity checks with an independent JSON Schema oracle. */
@@ -57,7 +57,7 @@ export function testFormsDocumentContractOracle(): void {
     invalidDocuments: [...vectors.invalidIdentityDocuments, ...Object.entries(vectors.invalidDocumentFields).map(([key, value]) => ({ ...vectors.document, [key]: value })), ...vectors.invalidChildren.map((child) => ({ ...vectors.document, structure: child }))],
     invalidDiffs: vectors.invalidDiffs,
     validDiffs: [...vectors.patchCases.map((item) => ({ input: item.diff, output: item.diff })),...vectors.validIndependentChildDiffs.map(value=>({input:value,output:value}))],
-    mutationRoots: [fileURLToPath(new URL("../../../🧫️fixtures/🧬️mutations", import.meta.url))],
+    mutationRoots: [fileURLToPath(new URL("../../../🧪️tests/🧫️fixtures/🧬️mutations", import.meta.url))],
     committed: { snapshots: 30, diffs: 9 },
   });
   for (const item of vectors.patchCases) {
@@ -87,8 +87,8 @@ export async function testFormsMutationSchemas(): Promise<void> {
   }
   const validate = ajv.compile(JSON.parse(readFileSync(join(mutationRoot, "🔣️.json"), "utf8")));
   const walk = (directory: string): string[] => readdirSync(directory, { withFileTypes: true }).flatMap(entry => entry.isDirectory() ? walk(join(directory, entry.name)) : [join(directory, entry.name)]);
-  const native = walk(join(root, "../🧫️fixtures/🧬️mutations")).filter(path => path.endsWith("/🦠️mutation/🔣️.json")).map(path => JSON.parse(readFileSync(path, "utf8")));
-  const responses = JSON.parse(readFileSync(join(root, "📨️response/🧫️fixtures/🔣️events.json"), "utf8")).cases.map((entry: { event: unknown }) => entry.event);
+  const native = walk(join(root, "../🧪️tests/🧫️fixtures/🧬️mutations")).filter(path => path.endsWith("/🦠️mutation/🔣️.json")).map(path => JSON.parse(readFileSync(path, "utf8")));
+  const responses = JSON.parse(readFileSync(join(root, "../🧪️tests/🧫️fixtures/📨️response/🔣️events.json"), "utf8")).cases.map((entry: { event: unknown }) => entry.event);
   for (const value of [...native, ...responses]) assert.equal(validate(value), true, JSON.stringify(validate.errors));
   assert.equal(validate({ mutation: "unknown", id: "q" }), false);
   for (const path of ["🔗️.graphql", "📸️snapshot/🔗️.graphql", "🔺️diff/🔗️.graphql", "📝️definition/🔗️.graphql", "📨️response/🔗️.graphql", "🧬️mutations/🔗️.graphql"]) parse(readFileSync(join(root, path), "utf8"));

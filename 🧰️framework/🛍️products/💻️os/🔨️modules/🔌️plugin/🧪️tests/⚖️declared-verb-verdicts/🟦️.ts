@@ -82,7 +82,7 @@ function findings(probe: Probe): Finding[] {
 
 /** ⚖️ The AJV twin of `artifact_app_laws::declared_verb_findings`: every case of the language-agnostic verdict fixture answered exactly as written. */
 export function declaredVerbVerdictOracle(): number {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/⚖️declared-verb-verdicts.json", import.meta.url), "utf8")) as Fixture;
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/⚖️declared-verb-verdicts.json", import.meta.url), "utf8")) as Fixture;
   assert(fixture.cases.length >= 31, "the fixture keeps every rule's positive and negative case");
   for (const { name, probe, findings: expected } of fixture.cases) assert.deepEqual(findings(probe), expected.map((finding) => (finding.argument === undefined ? { finding: finding.finding } : finding)), name);
   return fixture.cases.length;
@@ -90,7 +90,7 @@ export function declaredVerbVerdictOracle(): number {
 
 /** 🧬️ AJV independently admits every declared representative and refuses every invalid neutral payload. */
 export function declaredBridgeArgumentOracle(): number {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🎮️declared-bridge-arguments.json", import.meta.url), "utf8")) as { cases: { name: string; expected?: unknown; invalid?: unknown[]; errorArgument?: string }[] };
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🎮️declared-bridge-arguments.json", import.meta.url), "utf8")) as { cases: { name: string; expected?: unknown; invalid?: unknown[]; errorArgument?: string }[] };
   const policies = JSON.parse(readFileSync(new URL("../../🧪️testing/⚖️declared-verb-verdicts/🧬️schema/🔣️.json", import.meta.url), "utf8")).$defs as Record<string, object>;
   const validator = new Ajv({ strict: true, allErrors: true });
   let count = 0;

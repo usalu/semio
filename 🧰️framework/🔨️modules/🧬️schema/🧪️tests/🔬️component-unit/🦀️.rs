@@ -520,7 +520,7 @@ async fn scope_schema_exports_register_into_the_os_wide_catalog() {
 //#endregion 🔖️SchemaExportResolution
 
 //#region 🔖️Draft07OracleVectors
-const DRAFT07_VECTORS: &str = include_str!("../../🧫️fixtures/✅️draft07-validation-vectors.json");
+const DRAFT07_VECTORS: &str = include_str!("../🧫️fixtures/✅️draft07-validation-vectors.json");
 
 fn pointer_to_owned_path(pointer: &str) -> String {
     pointer.split('/').skip(1).fold("$".to_string(), |path, segment| if segment.chars().all(|entry| entry.is_ascii_digit()) { format!("{path}[{segment}]") } else { format!("{path}.{segment}") })
@@ -597,7 +597,7 @@ async fn owned_pattern_matcher_covers_the_supported_ecma_subset() {
 fn fragment_validation_uses_only_the_smallest_required_post_edit_frontier() {
     use crate::{OwnedJsonSchemaValidator, SchemaFragmentContextRefusal, SchemaFragmentOperation, SchemaFragmentPathSegment, SchemaFragmentValueShape};
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🩹️fragment-validation-vectors.json")).expect("fragment fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🩹️fragment-validation-vectors.json")).expect("fragment fixture");
     let validator = OwnedJsonSchemaValidator::compile(&fixture["input"]["schema"].to_string()).expect("fragment schema");
     let payload_bytes = fixture["payloadRepeatBytes"].as_u64().expect("payload bytes") as usize;
     let mut base = fixture["base"].clone();

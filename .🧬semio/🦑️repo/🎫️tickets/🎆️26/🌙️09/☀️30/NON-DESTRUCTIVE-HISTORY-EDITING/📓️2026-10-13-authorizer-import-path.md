@@ -1,0 +1,10 @@
+# Authorizer Import Path Investigation
+
+Core enclosing native18828 stopped before Cargo at no-follow lstat ENOENT with mojibake graph/seal/selection/sdk ancestry. Root source oracle18570 separately stopped before its assertions at NoCachedProjectGraph. Read-only active chat “Refactor build infrastructure” identifies its owner as actively validating the immutable authorizer bundle and independent compiler source-closure oracle. No foreign messages were sent, no shared cache was deleted, and no authorizer code was overwritten.
+
+A local read-only Bun system import-scanner API probe compares string versus UTF8 byte input against three exact Unicode import spellings (all emoji, mixed accented/Greek/emoji, accented Latin). Diagnostic output is retained only in generated/root-authorizer-import-api-probe-20261013.jsonl. This is API investigation without Nx because current normal graph preparation itself is the failure under investigation; it is not a registered feature test, native acceptance, or evidence that graph preparation works. The actual result must be inspected before selecting any source repair.
+
+
+### Actual System API Probe and Current Normal Successor
+
+The read-only Bun1.3.14 probe emitted six exact=false results: all three literal Unicode paths (graph/seal/selection/sdk emoji, mixed café/Ω/graph emoji, and café alone) were returned as UTF-8 bytes interpreted as Latin-1 by scanImports for both String and UTF-8 Buffer input. Buffer input therefore does not resolve the ancestry defect. Generated evidence remains under root-authorizer-import-api-probe-20261013.jsonl. The foreign build owner installed a guarded lossless Latin-1→UTF-8 round-trip at the actual source capture. Root did not edit its bootstrap/authorizer spans. Core k20309 subsequently reached Cargo (35 cfg-test prerequisite failures, zero native executions), and Root normal completion c23033 passed15 admission cases+10 completion assertions. Neither result certifies editor runtime; no private launcher/cache bypass or cache deletion was used.

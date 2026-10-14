@@ -14,6 +14,13 @@ pub use retained_fold::RetainedHistoryFold;
 #[path="🛬️decode/📋️records/🦀️.rs"]
 mod retained_history_records;
 pub use retained_history_records::{RetainedHistoryRecords,RetainedHistoryRecordsStep};
+#[path="🛬️decode/📋️records/📦️paged/🦀️.rs"]
+mod retained_history_paged_records;
+pub use retained_history_paged_records::RetainedHistoryPagedRecords;
+#[path="🛬️decode/📋️records/📦️paged/👁️source/🦀️.rs"]
+mod original_history_edits;
+pub use original_history_edits::OriginalHistoryEdits;
+pub type HistoryEdits=semio_framework_value::list::PagedList<HistoryEdit,{usize::MAX}>;
 #[path="🛬️decode/🧾️operation/🦀️.rs"]
 mod retained_history_operation;
 pub use retained_history_operation::{RetainedHistoryOpDecode,RetainedHistoryOpDecodeStep};
@@ -26,6 +33,33 @@ pub use retained_history_message::{RetainedHistoryMessageDecode,RetainedHistoryM
 #[path="🛬️decode/🔀️origin/🦀️.rs"]
 mod retained_history_origin;
 pub use retained_history_origin::{RetainedHistoryOriginProjection,RetainedHistoryOriginPartial,RetainedHistoryOriginJsonDecode,RetainedHistoryOriginJsonStep};
+#[path="🛬️decode/🧾️metadata/🦀️.rs"]
+mod retained_history_metadata;
+pub use retained_history_metadata::{RetainedHistoryOpMetaDecode,RetainedHistoryOpMetaStep,RetainedHistoryOpMetaPartial,RetainedHistoryOpMetaFault};
+#[path="🛬️decode/🔀️transition/🦀️.rs"]
+mod retained_history_transition;
+pub use retained_history_transition::{RetainedHistoryTransitionDecode,RetainedHistoryTransitionStep,RetainedHistoryTransitionPartial};
+#[path="🛬️decode/🧵️edit/🦀️.rs"]
+mod retained_history_edit;
+pub use retained_history_edit::{RetainedHistoryEditDecode,RetainedHistoryEditStep,RetainedHistoryEditPartial};
+#[path="🛬️decode/📇️identity-records/🦀️.rs"]
+mod retained_history_identity_records;
+pub use retained_history_identity_records::{RetainedHistoryIdentityRecordDecode,RetainedHistoryIdentityRecordKind,RetainedHistoryIdentityRecord,RetainedHistoryIdentityRecordPartial,RetainedHistoryIdentityRecordStep};
+#[path="🛬️decode/⚔️conflict/🦀️.rs"]
+mod retained_history_conflict;
+pub use retained_history_conflict::{RetainedHistoryConflictDecode,RetainedHistoryConflictPartial,RetainedHistoryConflictStep};
+#[path="🛬️decode/🗂️file/📚️frames/🦀️.rs"]
+mod retained_history_source_frames;
+pub use retained_history_source_frames::{RetainedHistorySourceFrames,RetainedHistorySourceFrame,RetainedHistorySourceFramesStep};
+#[path="🛬️decode/🔀️transition/🛂️payload/🦀️.rs"]
+mod retained_history_transition_validation;
+pub use retained_history_transition_validation::{RetainedHistoryTransitionPayloadValidation,RetainedHistoryTransitionPayloadValidationReceipt,RetainedHistoryTransitionPayloadValidationStep};
+#[path="🛬️decode/🗂️file/🦀️.rs"]
+mod retained_history_source;
+pub use retained_history_source::{RetainedHistorySourceDecode,RetainedHistorySourcePartial,RetainedHistorySourceStep};
+#[path="🛬️decode/🗂️file/🗜️deflate/🦀️.rs"]
+mod retained_history_deflate;
+pub use retained_history_deflate::{RetainedHistoryDeflateDecode,RetainedHistoryDeflatePayload,RetainedHistoryDeflateStep};
 
 #[path = "🛂️identity/🦀️.rs"]
 pub(crate) mod identity;
@@ -52,7 +86,7 @@ use std::collections::{HashMap, HashSet};
 pub struct HistoryLog {
     pub doc_id: String,
     pub schema: String,
-    pub edits: Vec<HistoryEdit>,
+    pub edits: HistoryEdits,
     /// 🔀️ Structural history steps (`REC_TRANSITION`) — undo/redo, commits, branches,
     /// checkouts and repins — in persisted order; the fold orders them by `(hlt, id)`.
     pub transitions: Vec<HistoryTransitionRecord>,
@@ -387,7 +421,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
     let mut pending: Option<PendingEdit> = None;
     let mut forwards: Vec<OpPayload> = Vec::new();
 
-    fn flush(pending: &mut Option<PendingEdit>, forwards: &mut Vec<OpPayload>, edits: &mut Vec<HistoryEdit>) {
+    fn flush(pending: &mut Option<PendingEdit>, forwards: &mut Vec<OpPayload>, edits: &mut HistoryEdits) {
         if let Some(header) = pending.take() {
             edits.push(HistoryEdit {
                 id: header.id,
@@ -1404,7 +1438,7 @@ impl RetainedHistoryDecode {
             0 if self.validation_index < log.edits.len() => {
                 let index = self.validation_index;
                 let edit = &log.edits[index];
-                if edit.id.trim().is_empty() || log.edits[..index].iter().any(|prior| prior.id == edit.id) {
+                if edit.id.trim().is_empty() || log.edits.iter().take(index).any(|prior| prior.id == edit.id) {
                     return Err(format!("SPR history repeats or omits authoritative edit {}", edit.id));
                 }
                 if self.require_persisted_document && edit.meta.is_none() {

@@ -1,0 +1,17 @@
+# Remaining Eleven Roots and Nx Oracle
+
+Current originals still exist: eleven files, one per remaining root. Exact source/target/SHA256 relocation input 📥️remaining-eleven-relocation-proposal.json. Target inserts tests beneath actual semantic owner and preserves authored 🧫️fixtures/🧪️fixtures spelling. No direct module-named collection roots are moved. Read-only Source; no builds/cache deletions.
+
+Twenty-one exact-file relative import/include/Nx locator spans with current source SHA/context in 📥️remaining-eleven-readers-proposal.json. Each resolves against the actual planned file, not a bare token. Context must retain test negative specimens if present; candidates whose actual expression is import/include/readFile or registered project input are direct reader rebases. Relative path recomputed from unchanged consumer file to moved target.
+
+Additional computed seam not fully captured by exact-file quote resolver: OS store emission/owned/tests source :291 join(base,"snapshot-clone/fixtures/lifecycle") needs tests before alias fixtures after snapshot-clone. OS package script :1964 full preparationRoot is a real reader directory; update it to snapshot-clone/tests/fixtures/lifecycle. Core test adapter source ../../fixtures/adapter-ownership becomes ../../tests/fixtures/adapter-ownership. Inventory/execution/command and Pack source tests directly under owner/tests read ../fixtures today; moved fixture sibling becomes ./fixtures. Renderer chrome deadline source import resolves from engine/tests/case to Shell/tests/alias-fixtures. StdIO details native unit source ../../alias-fixtures becomes ../alias-fixtures because alias is now sibling under tests. Project input strings must follow same exact source map.
+
+## Current Nx Oracle Review
+
+production-cache-input-boundary Source currently calls getTargetInputs(nxJson,project,target).selfInputs before minimatch/native selection, so named groups are expanded by actual Nx; independent oracle receives expanded patterns. Rule is `(no positives OR any positive match) AND no negative match` at :31-33. For groups that deliberately contain positives this equals requested any-positive/no-negative; negation-only all-input behavior is separately exercised by workspace-negation-closure and should not be silently changed.
+
+Both original target selector and exact collection boundary test compare native filterUsingGlobPatterns with minimatch applied to same flattened patterns. This is independent matching engine parity, not independent named group expansion proof; add a portable explicit expected-membership vector to verify shared named-group contents if needed.
+
+Current source closure digest contract is exactly version/files and strict parser expects Object.keys length2; private SEMIO_SOURCE_CLOSURE env instructions refer persisted manifest. No envRefs requirement in inspected current code. Manifest oracle must resolve env instruction to exact source files and hash current presence/absence bytes, not interpret env input name as a file glob.
+
+Actual unresolved source coordinate observed: production-cache-input-boundary :24 still reads join(root,library,"fixtures/production-cache-input-boundary/JSON") (emoji exact source in current hash). Library fixture moved under library/tests/fixtures, so update computed read before adopting the test result. No execution here; source hash recorded in strict-eleven-reader-oracle-hash.json.

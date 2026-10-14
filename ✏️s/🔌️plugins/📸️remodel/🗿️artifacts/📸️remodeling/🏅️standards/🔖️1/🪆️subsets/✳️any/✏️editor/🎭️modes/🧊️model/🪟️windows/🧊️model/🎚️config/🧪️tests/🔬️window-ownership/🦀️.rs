@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::remodeling::modes::analyze::windows::report::config::{self as report_config, RemodelingReportWindowConfig, RemodelingReportWindowConfigMutation, RemodelingReportWindowConfigOwner};
 use crate::editor::remodeling::modes::capture::windows::frames::config::{self as frames_config, RemodelingFramesWindowConfig, RemodelingFramesWindowConfigMutation, RemodelingFramesWindowConfigOwner};
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 fn block_on_remodel_windows<F: std::future::Future>(future: F) -> F::Output {
     let mut future = std::pin::pin!(future);
@@ -34,7 +34,7 @@ where
 
 #[test]
 fn remodel_window_ownership_mutations_match_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window-ownership/🔣️.json")).unwrap();
     let model_base: RemodelingModelWindowConfig = semio_framework_pack_json::from_json_str(&fixture["base"]["model"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let frames_base: RemodelingFramesWindowConfig = semio_framework_pack_json::from_json_str(&fixture["base"]["frames"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let report_base: RemodelingReportWindowConfig = semio_framework_pack_json::from_json_str(&fixture["base"]["report"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

@@ -11,7 +11,7 @@ async fn scene(app: &mut VcsArtifactApp<ViewerApp<DrawingViewer>>,view: &ViewMod
 
 #[semio_framework_async_macros::async_test]
 async fn drawing_viewer_camera_ownership_and_restore() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let manifest = || App { definition: create_drawing_viewer(),examples: Vec::new() };
     let mut app = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<DrawingViewer>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
     app.bind_instance_id(91).await;

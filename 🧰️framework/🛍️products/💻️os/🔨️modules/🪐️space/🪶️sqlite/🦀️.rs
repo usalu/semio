@@ -152,13 +152,13 @@ pub(crate) fn grouped<'a>(table: &'a SqliteTable, width: usize, parents: &[&Sqli
 #[test]
 fn sqlite_snapshot_space_fields_nested_controls_preserve_refusal_authority() {
     use semio_framework_os_kernel::sqlite_snapshot::SqliteValue;
-    let corpus: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("🧫️fixtures/⚠️refusal/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let corpus: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("🧪️tests/🧫️fixtures/⚠️refusal/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let parent = corpus["parent"].as_i64().unwrap();
     for case in corpus["cases"].as_array().unwrap() {
         let owner = case["owner"].as_i64().unwrap();
         let table = SqliteTable {
             name: "space_field_child".into(),
-            sql: include_str!("🧫️fixtures/⚠️refusal/🗄️.sql").into(),
+            sql: include_str!("🧪️tests/🧫️fixtures/⚠️refusal/🗄️.sql").into(),
             rows: vec![SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Integer(owner), SqliteValue::Integer(0), SqliteValue::Text(corpus["label"].as_str().unwrap().into())] }],
         };
         let mut accepted = |_| !case["cancel"].as_bool().unwrap();

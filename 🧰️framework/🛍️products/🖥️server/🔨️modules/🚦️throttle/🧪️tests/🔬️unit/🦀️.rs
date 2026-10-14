@@ -5,7 +5,7 @@ use std::net::{Ipv4Addr, Ipv6Addr};
 use std::num::NonZeroU32;
 
 /// 🧫️ The shared schedule document, read from the product root rather than copied into this module.
-const FIXTURE: &str = include_str!("../../../../🧫️fixtures/🚦️throttle/🔣️.json");
+const FIXTURE: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🚦️throttle/🔣️.json");
 
 fn v4(last: u8) -> ClientKey {
     ClientKey::of(IpAddr::V4(Ipv4Addr::new(203, 0, 113, last)))

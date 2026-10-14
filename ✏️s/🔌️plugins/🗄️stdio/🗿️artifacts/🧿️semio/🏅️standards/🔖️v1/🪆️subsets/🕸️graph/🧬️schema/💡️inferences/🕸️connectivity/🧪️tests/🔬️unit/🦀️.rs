@@ -112,7 +112,7 @@ async fn distinct_keys_never_collide_in_the_cache() {
 #[test]
 fn owned_dependency_matches_neutral_fixture_and_serde_oracle() {
     use store::InferredField;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🌱️owned-dependency/🔣️.json")).expect("neutral dependency");
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🕸️connectivity/🌱️owned-dependency/🔣️.json")).expect("neutral dependency");
     let mut names:Vec<String>=serde_json::from_value(fixture["nodes"].clone()).unwrap(); let mut edges:Vec<(String,String)>=serde_json::from_value(fixture["edges"].clone()).unwrap(); let key=fixture["key"].as_str().unwrap().to_string(); let snapshot=SemioGraphSnapshot{nodes:names.iter().map(|id|node(id)).collect(),edges:edges.iter().enumerate().map(|(i,(a,b))|edge(&i.to_string(),a,b)).collect(),..Default::default()};
     let dependency=NodeConnectivity::dep_input(&snapshot,&key,&[]);
     let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&dependency)).expect("owned dependency output");

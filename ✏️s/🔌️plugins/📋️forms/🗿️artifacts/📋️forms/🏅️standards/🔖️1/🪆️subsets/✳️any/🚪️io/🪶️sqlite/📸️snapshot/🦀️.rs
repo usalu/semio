@@ -1,4 +1,5 @@
 //! 📋️ Thirty literal Forms tables retain the complete owned intrinsic and condition domains.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v1::subsets::any::schema::snapshot::FormsSnapshot;
 use crate::{FormExpr,FormQuestion};
@@ -53,20 +54,25 @@ pub fn project<'s>(snapshot:&'s FormsSnapshot,control:&mut SqliteSnapshotControl
 #[path="📥️reconstruction/🦀️.rs"]pub mod reconstruction;
 pub use reconstruction::reconstruct;
 
-impl store::os_store::serialization::ArtifactSqliteSnapshot for FormsSnapshot{
- const SQLITE_SCHEMA:&'static str=SQL;
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{project(self,control)}
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{reconstruct(database,control)}
+impl store::os_store::serialization::ArtifactSqliteSnapshotHost for FormsSnapshot{
+ 
+ 
+ 
  fn retire_sqlite_snapshot(self){reconstruction::retire_snapshot(self)}
  fn preflight_sqlite_snapshot_encoding(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{crate::standards::v1::subsets::any::io::binary::snapshot::pack::preflight(self,encoding,control)}
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let maximum=control.limits().max_rows;store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),crate::standards::v1::subsets::any::io::binary::snapshot::pack::record_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {crate::standards::v1::subsets::any::io::binary::snapshot::pack::reconstruct_record_controlled(record,native,maximum)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
- fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{let counts=admission::forecast(self,control,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),crate::standards::v1::subsets::any::io::binary::snapshot::pack::record_spec_producer(),|native|crate::standards::v1::subsets::any::io::binary::snapshot::pack::record_controlled(self,&counts,native),control,native_owner)}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let maximum=control.limits().max_rows;store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),crate::standards::v1::subsets::any::io::binary::snapshot::pack::record_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {crate::standards::v1::subsets::any::io::binary::snapshot::pack::reconstruct_record_controlled(record,native,maximum)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
+ fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{let counts=admission::forecast(self,control,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),crate::standards::v1::subsets::any::io::binary::snapshot::pack::record_spec_producer(),|native|crate::standards::v1::subsets::any::io::binary::snapshot::pack::record_controlled(self,&counts,native),control,native_owner)}
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
   if dialect.artifact_kind!="s.forms.forms"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"Forms exact coordinate differs")))}
   let candidate=reconstruct(database,control).map_err(store::io_schema::IoError::from_value_error)?;let actual=project(&candidate,control);reconstruction::retire_snapshot(candidate);
   if project(self,control).map_err(store::io_schema::IoError::from_value_error)?!=actual.map_err(store::io_schema::IoError::from_value_error)?{return Err(store::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue,"Forms relational fields disagree with typed snapshot")))}
   Ok(store::io_schema::IoOutcome::clean(()))
  }
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for FormsSnapshot {
+const SQLITE_SCHEMA:&'static str=SQL;
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{project(self,control)}
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{reconstruct(database,control)}
 }
 
 #[cfg(test)]

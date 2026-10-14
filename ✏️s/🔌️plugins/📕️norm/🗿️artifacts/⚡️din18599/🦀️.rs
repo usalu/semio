@@ -332,7 +332,7 @@ pub fn din18599_climate_table_child(climate: &MonthlyClimate) -> Din18599Climate
 /// 🌱️ Initial pack of the derived climate table the snapshot names (`ArtifactApp::genesis_child_pack`); `None` for any
 /// other slot and for a handle that is not the derivation of the snapshot's own climate.
 pub fn genesis_din18599_child_pack(snapshot: &Din18599Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     (slot == DIN18599_CLIMATE_TABLE_SLOT && child_id == snapshot.climate_table.child_id && child_id == din18599_climate_table_child(&snapshot.climate).child_id).then(|| din18599_climate_table_from_data(&snapshot.climate).encode_pack())
 }
 

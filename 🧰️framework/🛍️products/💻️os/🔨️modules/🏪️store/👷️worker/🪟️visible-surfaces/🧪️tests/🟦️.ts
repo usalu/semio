@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import { createRequire } from "node:module";
 import policy from "../🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
-import examples from "../🧫️fixtures/🔣️.json";
+import examples from "./🧫️fixtures/🔣️.json";
 import { browserActorVisibleSurfacesV1, type BrowserActorVisibleTurnV1 } from "../🟦️.ts";
 
 const require = createRequire(import.meta.url);

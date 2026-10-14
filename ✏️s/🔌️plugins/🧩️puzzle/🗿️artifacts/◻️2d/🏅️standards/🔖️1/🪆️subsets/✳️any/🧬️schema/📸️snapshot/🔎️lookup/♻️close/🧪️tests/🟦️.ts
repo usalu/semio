@@ -2,8 +2,8 @@ import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
-import fixture from "../🧫️fixtures/🔣️.json";
-import lookup from "../../🧫️fixtures/🔣️.json";
+import fixture from "../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🔎️lookup/♻️close/🔣️.json";
+import lookup from "../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🔎️lookup/🔣️.json";
 
 test("Puzzle2d lookup preserves original topology while closing actual source custody through independent grant axes",()=>{
  const db=new Database(":memory:");db.exec("CREATE TABLE owner(outer_idx INTEGER,inner_idx INTEGER,id TEXT);CREATE TABLE close_owner(ordinal INTEGER PRIMARY KEY,role TEXT)");

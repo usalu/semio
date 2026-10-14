@@ -1,0 +1,17 @@
+{
+  "cases": [
+    "pre-abort",
+    "physical",
+    "success",
+    "child"
+  ],
+  "physicalCancellationAt": 3,
+  "policy": {
+    "maximumElapsedMilliseconds": 30000,
+    "pollMilliseconds": 10,
+    "transport": {
+      "maximumBytes": 1048576,
+      "maximumLines": 65536
+    }
+  }
+}

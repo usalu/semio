@@ -4,7 +4,7 @@ import {join} from "node:path";
 import Ajv2020 from "ajv/dist/2020.js";
 import {applyPatch} from "fast-json-patch";
 test("original context header custody never certifies unsupported payload leaves",()=>{
- const corpus=JSON.parse(readFileSync(join(import.meta.dir,"../🧫️fixtures/🔣️.json"),"utf8"));
+ const corpus=JSON.parse(readFileSync(join(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));
  const schema=JSON.parse(readFileSync(join(import.meta.dir,"../🧬️schema/🔣️.json"),"utf8"));
  const validate=new Ajv2020({strict:true,allErrors:true}).compile(schema);expect(validate(corpus),JSON.stringify(validate.errors)).toBe(true);
  for(const row of corpus.cases){const original={pending:row.original};const projected=applyPatch(original,row.headerAdmitted?[{op:"move",from:"/pending",path:"/issued"}]:[],true,false).newDocument as unknown as {pending?:typeof row.original;issued?:typeof row.original};expect(projected.pending??projected.issued).toEqual(row.original);expect({retained:true,terminal:false}).toEqual(row.expected);}

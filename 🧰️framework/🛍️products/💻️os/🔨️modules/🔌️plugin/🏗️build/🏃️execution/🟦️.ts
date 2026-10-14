@@ -1,5 +1,6 @@
-import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { scriptCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { requirePlaygroundVariant } from "../../📇️registry/🎮️playground/⭐️default/🟦️.ts";
 /** 🧩️ Semantic plugin build execution owner. */
 
@@ -8,8 +9,8 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv, semioNxParallel } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import type { PluginBuildTargetV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
 
@@ -37,8 +38,8 @@ import { ensureAppleDeveloperDir } from "../../../🧑‍💻dev/⚙️engine/�
  * requests onto the SAME `target/` cargo lock) and the two-crate collab-e2e prebuild. The full-catalog
  * entry points (`buildPlugins`/`buildPluginsStreaming`) go through `buildPluginCatalog` instead, which
  * pipelines this same pair of stages across many targets. */
-async function buildPlugin(target: PluginBuildTargetV1): Promise<void> {
-  await materializePlugin(target, await buildPluginCargo(target));
+async function buildPlugin(target: PluginBuildTargetV1, control: CompilerAdmissionControl): Promise<void> {
+  await materializePlugin(target, await buildPluginCargo(target, control));
   publishShardWorker();
 }
 
@@ -133,10 +134,10 @@ async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonl
  *
  * Every target is attempted before the summary reports failures. Unlike the streaming dev build,
  * an incomplete explicit build rejects so callers cannot mistake stale artifacts for fresh outputs. */
-export async function buildPlugins(filterPlugin?: string): Promise<void> {
+export async function buildPlugins(control: CompilerAdmissionControl, filterPlugin?: string): Promise<void> {
   ensureAppleDeveloperDir();
   const targets = await preparePluginBuildTargets(filterPlugin);
-  const { failedPluginIds } = await buildPluginCatalog(targets);
+  const { failedPluginIds } = await buildPluginCatalog(targets, control);
   const builtCount = targets.length - failedPluginIds.length;
   console.log(`plugin catalog build summary: ${builtCount}/${targets.length} crate(s) produced .wasm`);
   if (failedPluginIds.length > 0) {
@@ -153,17 +154,17 @@ export async function buildPlugins(filterPlugin?: string): Promise<void> {
  * `buildPluginCatalog` keeps the cargo stage itself serial (concurrent `cargo build`s just contend on
  * the shared `target/` lock) but overlaps each target's MATERIALIZE stage with the next target's cargo
  * build (T-P8) — a single broken crate no longer aborts the rest of the catalog either way. */
-export async function buildPluginsStreaming(filterPlugin?: string): Promise<void> {
+export async function buildPluginsStreaming(control: CompilerAdmissionControl, filterPlugin?: string): Promise<void> {
   const targets = await preparePluginBuildTargets(filterPlugin);
   const hostPluginId = resolvePlaygroundFilter(requirePlaygroundVariant(filterPlugin ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_PLAYGROUND_VARIANT)).pluginId;
   const ordered = [...targets].sort((a, b) => (a.pluginId === hostPluginId ? -1 : b.pluginId === hostPluginId ? 1 : 0));
-  await buildPluginCatalog(ordered);
+  await buildPluginCatalog(ordered, control);
 }
 
 class PluginBuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND;
-    await buildPlugins(filterPlugin || undefined);
+    await buildPlugins(scriptCompilerAdmissionControlV1(this.invocation, "plugins:build", 0), filterPlugin || undefined);
   }
 }
 

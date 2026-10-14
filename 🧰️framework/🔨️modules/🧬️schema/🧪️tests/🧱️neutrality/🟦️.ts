@@ -34,7 +34,7 @@ type Corpus = Readonly<{
 
 const root = resolve(import.meta.dir, "../../../../..");
 const owner = resolve(import.meta.dir, "../..");
-const corpus = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🧱️neutrality/🔣️.json"), "utf8")) as Corpus;
+const corpus = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🧱️neutrality/🔣️.json"), "utf8")) as Corpus;
 const read = (relative: string): string => readFileSync(join(root, relative), "utf8");
 const source = (relative: string): string => existsSync(join(root, relative)) ? read(relative) : "";
 

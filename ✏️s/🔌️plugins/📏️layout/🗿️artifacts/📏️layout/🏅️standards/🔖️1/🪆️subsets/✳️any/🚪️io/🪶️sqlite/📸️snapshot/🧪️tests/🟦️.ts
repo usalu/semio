@@ -2,7 +2,7 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv/dist/2020.js";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 
 import {parseGridSettings,parseCharacterStyle,parseTextStyleRun,parseImageLink,parseLayoutDrawingChild} from "../../../../🧬️schema/🟦️.ts";
 const f64=(text:string)=>({bits:BigInt("0x"+text)}),f32=(text:string)=>({bits:parseInt(text,16)});
@@ -21,7 +21,7 @@ test("Layout inline Drawing owns actual entities and permits interior component 
 
 import {layoutArtifactFromNativeJson,layoutArtifactNativeJson} from "../../../📝️text/📸️snapshot/🪪️native-json/🟦️.ts";
 import {layoutDiffFromNativeJson} from "../../../📝️text/🔺️diff/🪪️native-json/🟦️.ts";
-import documents from "../../../../🧬️schema/🧫️fixtures/🪪️document/🔣️.json";
+import documents from "../../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json";
 test("Layout native JSON explicitly names finite projection and owned nonfinite refusal",()=>{expect(layoutArtifactNativeJson(layoutArtifactFromNativeJson(documents.document))).toEqual(documents.document);expect(()=>layoutArtifactNativeJson(owned())).toThrow("finite number");});
 
 import NativeAjv from "ajv";
@@ -56,14 +56,14 @@ test("Layout native JSON obeys unsigned numeric schema without inventing decimal
   expect(()=>layoutArtifactFromNativeJson(invalid)).toThrow("unsigned64");
 });
 
-import dictionaryFixture from "../🧫️fixtures/🧾️dictionary/🔣️.json";
+import dictionaryFixture from "./🧫️fixtures/🧾️dictionary/🔣️.json";
 
 import {parseLayoutArtifact} from "../../../../🧬️schema/🟦️.ts";
 import type{IntrinsicValue}from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
 import dictionaryNativeSchema from "../../../../../../../../../../../📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧾️dictionary/🔣️.json";
 import{formDictionaryNativeJson,formDictionaryFromNativeJson}from"../../../../../../../../../../../📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧾️dictionary/🪪️native-json/🟦️.ts";
 import{parseMediaPayload}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🎞️media/🟦️.ts";
-import unsignedFixture from"../🧫️fixtures/🧾️dictionary/🔢️unsigned/🔣️.json";
+import unsignedFixture from"./🧫️fixtures/🧾️dictionary/🔢️unsigned/🔣️.json";
 
 const dictionaryValue=(source:unknown):IntrinsicValue=>{
  const value=source as{kind:string;value?:unknown;items?:unknown[];members?:{name:string;value:unknown}[]};
@@ -134,7 +134,7 @@ test("Layout dictionary unsigned magnitudes are independently readable and edita
  for(const magnitude of unsignedFixture.refused){const malformed={tables:database.tables.map(table=>({...table,rows:table.rows.map(row=>({...row,values:[...row.values]}))}))},table=malformed.tables.find(table=>table.name==="layout_dictionary_unsigned")!;table.rows[0]!.values[1]=magnitude;await expect(layoutSnapshotFromSqliteDatabase(malformed)).rejects.toThrow();}
 });
 
-import changeFixture from "../🧫️fixtures/🧾️dictionary/🔺️diff/🔣️.json";
+import changeFixture from "./🧫️fixtures/🧾️dictionary/🔺️diff/🔣️.json";
 
 import{parseLayoutDiff}from"../../../../🧬️schema/🔺️diff/🟦️.ts";
 test("Layout dictionary changes distinguish unchanged, clear, present empty and member null",()=>{
@@ -144,7 +144,7 @@ test("Layout dictionary changes distinguish unchanged, clear, present empty and 
 });
 
 import{parse as parseGraphql,buildASTSchema,graphql,GraphQLScalarType,Kind}from"graphql";
-import interfaceFixture from"../🧫️fixtures/🧾️dictionary/🌐️interfaces/🔣️.json";
+import interfaceFixture from"./🧫️fixtures/🧾️dictionary/🌐️interfaces/🔣️.json";
 
 test("Shared intrinsic interfaces own nine typed cases, complete magnitudes, words, octets and ordered members",async()=>{
  expect(interfaceFixture["schema"]).toEqual("intrinsic.value-interface/v1");expect(interfaceFixture["variants"]).toEqual(["DslNull","DslBoolean","DslUnsigned","DslSigned","DslFloat","DslText","DslBytes","DslArray","DslObject"]);expect(interfaceFixture["unsigned"]).toEqual(["0","18446744073709551615"]);expect(interfaceFixture["signed"]).toEqual(["-9223372036854775808","9223372036854775807"]);expect(interfaceFixture["refusedUnsigned"]).toEqual(["-1","00","18446744073709551616"]);expect(interfaceFixture["floatBits"]).toEqual(["0000000000000000","8000000000000000","0000000000000001","0010000000000000","7fefffffffffffff","7ff0000000000000","fff0000000000000","7ff8000000000001"]);expect(interfaceFixture["bytes"]).toEqual([0,127,128,255]);expect(interfaceFixture["members"]).toEqual(["","\u0000","repeat","repeat"]);
@@ -178,10 +178,10 @@ test("Live Forms to Layout transport names real VCS boundaries and complete intr
  try{oracle.exec("CREATE TABLE live_value(ordinal INTEGER PRIMARY KEY,question_id TEXT NOT NULL UNIQUE,kind TEXT NOT NULL,word BLOB)");for(const[index,entry]of dictionaryFixture.dictionary.entries.entries())oracle.run("INSERT INTO live_value VALUES(?,?,?,NULL)",[index,names[index]!,entry.value.kind]);for(const[index,word]of dictionaryFixture.floatWords.entries()){const bytes=Buffer.alloc(8);bytes.writeBigUInt64LE(BigInt("0x"+word));oracle.run("INSERT INTO live_value VALUES(?,?,?,?)",[index+9,names[index+9]!,"float",bytes]);}expect(oracle.query("SELECT question_id,kind FROM live_value ORDER BY ordinal").all()).toEqual(names.map((question_id,index)=>({question_id,kind:index<9?dictionaryFixture.valueKinds[index]!:"float"})));const words=oracle.query("SELECT word FROM live_value WHERE word IS NOT NULL ORDER BY ordinal").all() as {word:Uint8Array}[];expect(words.map(row=>Buffer.from(row.word).readBigUInt64LE().toString(16).padStart(16,"0"))).toEqual(dictionaryFixture.floatWords);expect(oracle.query("SELECT length(CAST(question_id AS BLOB)) AS bytes FROM live_value WHERE ordinal=5").get()).toEqual({bytes:Buffer.byteLength(names[5]!)});}finally{oracle.close();}
 });
 
-import byteOwner from "../🧫️fixtures/🧾️dictionary/💰️bytes/🔣️.json";
+import byteOwner from "./🧫️fixtures/🧾️dictionary/💰️bytes/🔣️.json";
 
 import {sqliteOperation} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import topologyOwner from "../🧫️fixtures/🧱️capture/🔣️.json";
+import topologyOwner from "./🧫️fixtures/🧱️capture/🔣️.json";
 
 test("Layout complete relational topology is captured before actual mutable callbacks",async()=>{
  const expected={authority:"literalSqlTopologyBeforeCallback",layoutTables:43,mutations:["tableMetadata","rowOwnerArray","cellOwnerArray","literalCellReplacement","tableOwnerArray"]};expect(topologyOwner["authority"]).toEqual("literalSqlTopologyBeforeCallback");expect(topologyOwner["layoutTables"]).toEqual(43);expect(topologyOwner["mutations"]).toEqual(["tableMetadata","rowOwnerArray","cellOwnerArray","literalCellReplacement","tableOwnerArray"]);expect(topologyOwner).toEqual(expected);

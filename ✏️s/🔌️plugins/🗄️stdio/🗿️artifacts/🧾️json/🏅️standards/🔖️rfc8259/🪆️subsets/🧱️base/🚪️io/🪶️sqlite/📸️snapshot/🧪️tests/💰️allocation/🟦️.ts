@@ -2,10 +2,10 @@
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import Ajv from "ajv";
-import fixture from "../../🧫️fixtures/💰️allocation/🔣️.json";
+import fixture from "../🧫️fixtures/💰️allocation/🔣️.json";
 
 
-import neutral from "../../🧫️fixtures/🔣️.json";
+import neutral from "../🧫️fixtures/🔣️.json";
 
 test("JSON controlled Native budget is closed owned backing with unchanged witnesses", () => {
  

@@ -3,7 +3,7 @@ import { Database } from "bun:sqlite";
 import * as snapshot from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import * as artifact from "../../../../🧬️schema/🟦️.ts";
 import * as diff from "../../../../🧬️schema/🔺️diff/🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import {fem2dSnapshotToSqliteDatabase,fem2dSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import type {FemDof} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase,type SqliteValue} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

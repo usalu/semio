@@ -6,8 +6,7 @@ use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::Generation3dSnapshot;
 //#region 🔖️ChangeSchema
 /// 🔧 Whole-artifact scope — the fixture has exactly one schema field.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ChangeSchema {
     pub new_schema: String,

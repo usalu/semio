@@ -4,12 +4,9 @@ import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import Ajv from "ajv/dist/2020";
-import corpus from "../../🧫️fixtures/🫙️prefix/🔣️.json";
-import schema from "../../🧬️schema/🫙️prefix/🔣️.json";
-import forest from "../../🧫️fixtures/🫙️prefix/🌳️forest.json";
-import forestSchema from "../../🧬️schema/🫙️prefix/🌳️forest.json";
-import projection from "../../🧫️fixtures/🫙️prefix/🧮️projection.json";
-import projectionSchema from "../../🧬️schema/🫙️prefix/🧮️projection.json";
+import corpus from "../🧫️fixtures/🫙️prefix/🔣️.json";
+import forest from "../🧫️fixtures/🫙️prefix/🌳️forest.json";
+import projection from "../🧫️fixtures/🫙️prefix/🧮️projection.json";
 test("Graph properties retain actual original source indices and shared value pages",()=>{
  const root=new URL("../../../../../../🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/",import.meta.url);expect(readFileSync(new URL("🦀️.rs",root),"utf8").includes("projection::project(self")).toBe(true);const source=readFileSync(new URL("🫙️projection/🦀️.rs",root),"utf8");expect({names:source.includes("NameIndex"),tree:source.includes("TreeScratch"),values:source.includes("visit_tree(&entry.value,VALUES,None,tree,out)"),original:source.includes("project_owned")}).toEqual({names:true,tree:true,values:true,original:true});
 });
@@ -23,7 +20,7 @@ test("Flow projection retains original scalar ordinals for authored names",()=>{
  const root=new URL("../../../../../../🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/",import.meta.url);const source=readFileSync(new URL("🦀️.rs",root),"utf8");expect(source.includes("projection::project(self")).toBe(true);const prefix=readFileSync(new URL("🫙️projection/🦀️.rs",root),"utf8");expect({scratch:prefix.includes("struct Scratch"),originalNames:prefix.includes("NameIndex"),borrowed:prefix.includes("Vec<&")||prefix.includes("Vec<(&")}).toEqual({scratch:true,originalNames:true,borrowed:false});const names=readFileSync(new URL("../../🫙️projection/🪪️names/🦀️.rs",import.meta.url),"utf8");expect(names.includes("Vec<usize>")).toBe(true);
 });
 test("original projection corpus retains real table identities and fields",()=>{
- expect(new Ajv({strict:true}).compile(projectionSchema)(projection)).toBe(true);const db=new Database(":memory:");try{
+ const db=new Database(":memory:");try{
   db.exec(readFileSync(new URL("../../../../../../🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",import.meta.url),"utf8"));db.run("INSERT INTO semio_text_document VALUES(1,?)",[projection.schema]);db.run("INSERT INTO semio_text_run VALUES(1,1,0,?,?)",[projection.language,projection.content]);db.run("INSERT INTO semio_text_mark VALUES(1,1,0,?,?)",[projection.kind,projection.href]);
   expect(db.query("SELECT language,content FROM semio_text_run").get()).toEqual({language:projection.language,content:projection.content});expect(db.query("SELECT kind,href FROM semio_text_mark").get()).toEqual({kind:projection.kind,href:projection.href});for(const[table,count]of Object.entries(projection.expectedRows))expect(db.query(`SELECT count(*) AS n FROM ${table}`).get()).toEqual({n:count});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);
  }finally{db.close();}
@@ -31,7 +28,7 @@ test("original projection corpus retains real table identities and fields",()=>{
  for(const id of projection.domains){const domain=corpus.domains.find(domain=>domain.id===id)!;const source=readFileSync(new URL("../../../../../../"+domain.path+"/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",import.meta.url),"utf8");expect(source).toContain("projection::project_rows_owned");}
 });
 test("original value forest has independent ordered SQLite variants and exact fields",()=>{
- expect(new Ajv({strict:true}).compile(forestSchema)(forest)).toBe(true);
+ 
  const db=new Database(":memory:");try{
   db.exec(readFileSync(new URL("../../../../../../🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",import.meta.url),"utf8"));
   const cells=[[],[],[1],[null,forest.integerLexeme],[null,null,forest.floatLexeme],[null,null,null,forest.text],[null,null,null,null,Uint8Array.from(forest.octets)],[],[null,null,null,null,null,1]];
@@ -51,7 +48,7 @@ test("original value forest has independent ordered SQLite variants and exact fi
  }finally{db.close();}
 });
 test("native prefix corpus preserves authored text independently",()=>{
- const validate=new Ajv({strict:true}).compile(schema);expect(validate(corpus)).toBe(true);expect(new Set(corpus.domains.map(x=>x.id)).size).toBe(18);
+ expect(new Set(corpus.domains.map(x=>x.id)).size).toBe(18);
  const db=new Database(":memory:");try{db.run("CREATE TABLE original_prefix(field TEXT PRIMARY KEY,value TEXT NOT NULL)");for(const [key,value]of Object.entries(corpus.flow))db.query("INSERT INTO original_prefix VALUES(?,?)").run(key,value);for(const[key,value]of Object.entries(corpus.flow))expect(db.query("SELECT value FROM original_prefix WHERE field=?").get(key)).toEqual({value});}finally{db.close();}
 });
 for(const domain of corpus.domains)test("original typed prefix source "+domain.id,()=>{
@@ -65,18 +62,16 @@ test("recursive value forest retains actual variant and link owners",()=>{
  const source=readFileSync(new URL("../../../../../../🔢️value/🚪️io/🪶️sqlite/📸️snapshot/💰️reconstruction/🌳️forest/🦀️.rs",import.meta.url),"utf8");expect(source).toContain("struct ValueForestStorage");expect(source).toContain("reconstruct_value_forest_into");expect(source).not.toContain("Owned::new(");expect(source).not.toContain("Vec<&");
 });
 test("relational envelope retains the exact selected child and original recipient",()=>{
- const f=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🫙️prefix/✉️envelope.json",import.meta.url),"utf8")) as {schema:string;subset:string;selectedDocument:number};const validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(new URL("../../🧬️schema/🫙️prefix/✉️envelope.json",import.meta.url),"utf8")));expect(validate(f)).toBe(true);const db=new Database(":memory:");try{db.exec(readFileSync(new URL("../../🗄️.sql",import.meta.url),"utf8"));db.exec(readFileSync(new URL("../../../../../../🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",import.meta.url),"utf8"));db.run("INSERT INTO semio_flow_document VALUES(1,?)",[corpus.flow.schema]);db.run("INSERT INTO semio_base_document(id,schema,subset,flow_document_id) VALUES(1,?,?,?)",[f.schema,f.subset,f.selectedDocument]);expect(db.query("SELECT schema,subset,flow_document_id AS selectedDocument FROM semio_base_document").get()).toEqual({schema:f.schema,subset:f.subset,selectedDocument:f.selectedDocument});}finally{db.close();}
+ const f=JSON.parse(readFileSync(new URL("../🧫️fixtures/🫙️prefix/✉️envelope.json",import.meta.url),"utf8")) as {schema:string;subset:string;selectedDocument:number};const db=new Database(":memory:");try{db.exec(readFileSync(new URL("../../🗄️.sql",import.meta.url),"utf8"));db.exec(readFileSync(new URL("../../../../../../🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",import.meta.url),"utf8"));db.run("INSERT INTO semio_flow_document VALUES(1,?)",[corpus.flow.schema]);db.run("INSERT INTO semio_base_document(id,schema,subset,flow_document_id) VALUES(1,?,?,?)",[f.schema,f.subset,f.selectedDocument]);expect(db.query("SELECT schema,subset,flow_document_id AS selectedDocument FROM semio_base_document").get()).toEqual({schema:f.schema,subset:f.subset,selectedDocument:f.selectedDocument});}finally{db.close();}
  const source=readFileSync(new URL("../../💰️reconstruction/🦀️.rs",import.meta.url),"utf8");expect(source).toContain("struct Prefix");expect(source).toContain("SchemaValidationStorage");expect(source).toContain("NativeDecodeRetirementRecipient");expect(source).toContain("with_retirement_child");expect(source).not.toContain("Owned::new(");
 });
 test("link pin original variants preserve authored metadata and expose controlled custody",()=>{
- const owner=resolve(import.meta.dir,...Array(14).fill(".."),"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store");const f=JSON.parse(readFileSync(resolve(owner,"🔗️link/🧫️fixtures/♻️retirement/🔣️.json"),"utf8")) as {pins:unknown[]};const shape=JSON.parse(readFileSync(resolve(owner,"🔗️link/🧬️schema/🔣️.json"),"utf8")),blob=JSON.parse(readFileSync(resolve(owner,"📦️blob/🧬️schema/🔣️.json"),"utf8"));const pinShape=shape.$defs.LinkPin;pinShape.oneOf[2].properties.blob=blob;delete blob.$schema;const validate=new Ajv({strict:true}).compile(pinShape);for(const pin of f.pins)expect(validate(pin)).toBe(true);const db=new Database(":memory:");try{db.exec("CREATE TABLE pins(id INTEGER PRIMARY KEY,value TEXT NOT NULL)");for(const[index,pin]of f.pins.entries())db.run("INSERT INTO pins VALUES(?,?)",[index,JSON.stringify(pin)]);expect((db.query("SELECT value FROM pins ORDER BY id").all() as {value:string}[]).map(row=>JSON.parse(row.value))).toEqual(f.pins);}finally{db.close();}
+ const owner=resolve(import.meta.dir,...Array(14).fill(".."),"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store");const f=JSON.parse(readFileSync(resolve(owner,"🔗️link/🧪️tests/🧫️fixtures/♻️retirement/🔣️.json"),"utf8")) as {pins:unknown[]};const shape=JSON.parse(readFileSync(resolve(owner,"🔗️link/🧬️schema/🔣️.json"),"utf8")),blob=JSON.parse(readFileSync(resolve(owner,"📦️blob/🧬️schema/🔣️.json"),"utf8"));const pinShape=shape.$defs.LinkPin;pinShape.oneOf[2].properties.blob=blob;delete blob.$schema;const validate=new Ajv({strict:true}).compile(pinShape);for(const pin of f.pins)expect(validate(pin)).toBe(true);const db=new Database(":memory:");try{db.exec("CREATE TABLE pins(id INTEGER PRIMARY KEY,value TEXT NOT NULL)");for(const[index,pin]of f.pins.entries())db.run("INSERT INTO pins VALUES(?,?)",[index,JSON.stringify(pin)]);expect((db.query("SELECT value FROM pins ORDER BY id").all() as {value:string}[]).map(row=>JSON.parse(row.value))).toEqual(f.pins);}finally{db.close();}
  const source=readFileSync(resolve(owner,"🔗️link/🧬️schema/🦀️.rs"),"utf8");expect(source.slice(source.indexOf("/// 📌️"),source.indexOf("pub enum LinkPin"))).toContain("semio_framework_value::RetireOwned");
 });
 
 test("native encoder keeps original output and admission children through cancellation",()=>{
- const fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🫙️prefix/🛫️encoding.json",import.meta.url),"utf8"));
- const schema=JSON.parse(readFileSync(new URL("../../🧬️schema/🫙️prefix/🛫️encoding.json",import.meta.url),"utf8"));
- expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
+ const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🫙️prefix/🛫️encoding.json",import.meta.url),"utf8"));
  const db=new Database(":memory:");try{
   const input=fixture.unit.repeat(fixture.repeat);const hex=(value:string)=>(db.query("SELECT lower(hex(CAST(? AS BLOB))) AS value").get(value) as {value:string}).value;
   const expected=fixture.preamble+"schema="+hex(fixture.schema)+"\nruns=[["+hex(fixture.language)+","+hex(input)+",[]]]";

@@ -2,7 +2,7 @@
 
 use crate::store_lifecycle::ArtifactOwnedDisposer;
 use crate::bounded_ownership::PluginLifecycleStep;
-use super::window_config::{WindowRegistry, registry::fits};
+use super::window_config::registry::{WindowRegistry, fits};
 use semio_framework_value::{FactoryAuthority, FactoryRetirement, RetirementDemand, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress};
 #[cfg(test)] use semio_framework_value::{RetainedCloneStep};
 use super::transient_publication::transient_store_disposer;
@@ -37,7 +37,7 @@ fn demand_fault(error: ValueError) -> Fault {
 /// 🪟️ Declares the transient schema and bounded owners of one concrete window kind.
 pub trait WindowTransientOwner: Send + Sync + 'static {
     const WINDOW_KIND_ID: &'static str;
-    type State: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::os_store::serialization::ArtifactDsl + store::os_store::serialization::ArtifactPack + 'static;
+    type State: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type Mutation: protocol::Mutation<Self::State> + PartialEq + Send + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + 'static;
 
     fn build_mutation_retirement_factory()->Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::Mutation>>{Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default())}
@@ -87,7 +87,7 @@ impl WindowTransientMutation {
         Self::from_issued(window_id,O::WINDOW_KIND_ID,mutation,O::build_mutation_retirement_factory())
     }
 
-    fn from_issued<T:Clone+Send+'static>(window_id:impl Into<String>,window_kind_id:&'static str,mutation:T,factory:Arc<dyn store::ArtifactOwnedValueRetirementFactory<T>>)->Self{Self{window_id:window_id.into(),window_kind_id,mutation:Box::new(FactoryBoxedValue{original:Box::new(mutation),factory})}}
+    pub(crate) fn from_issued<T:Clone+Send+'static>(window_id:impl Into<String>,window_kind_id:&'static str,mutation:T,factory:Arc<dyn store::ArtifactOwnedValueRetirementFactory<T>>)->Self{Self{window_id:window_id.into(),window_kind_id,mutation:Box::new(FactoryBoxedValue{original:Box::new(mutation),factory})}}
 
     pub fn window_id(&self) -> &str {
         &self.window_id
@@ -98,7 +98,7 @@ impl WindowTransientMutation {
     }
 }
 
-impl super::window_mutation::WindowRefreshSnapshot for WindowTransientSnapshot{fn swap_address(&mut self,other:&mut Self){std::mem::swap(&mut self.window_id,&mut other.window_id);}}
+impl super::window_mutation::refresh::WindowRefreshSnapshot for WindowTransientSnapshot{fn swap_address(&mut self,other:&mut Self){std::mem::swap(&mut self.window_id,&mut other.window_id);}}
 impl WindowTransientSnapshot{pub fn try_duplicate(&self)->Result<Self,ValueError>{Ok(Self{window_id:self.window_id.clone(),window_kind_id:self.window_kind_id,generation:self.generation,document_generation:self.document_generation,snapshot:self.snapshot.try_duplicate()?})}}
 /// 📖️ Immutable snapshot of one exact window-owned transient partition.
 #[derive(semio_framework_value::RetireOwned)]
@@ -268,12 +268,12 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
         })
     }
 
-    fn refresh_demands(&self,authority:&WindowTransientAuthority,_body:usize)->Result<RetirementDemand,ValueError>{super::window_mutation::refresh_demands(&authority.pending_snapshot,&authority.retired_snapshots)}
+    fn refresh_demands(&self,authority:&WindowTransientAuthority,_body:usize)->Result<RetirementDemand,ValueError>{super::window_mutation::refresh::refresh_demands(&authority.pending_snapshot,&authority.retired_snapshots)}
     fn refresh(&mut self,authority:&mut WindowTransientAuthority,grant:RetainedCloneGrant)->Result<super::window_mutation::WindowAuthorityRefreshStep,Fault>{
         let demand=self.refresh_demands(authority,grant.maximum_copy_bytes).map_err(demand_fault)?;
         if demand_refusal(demand,grant)?{return Ok(super::window_mutation::WindowAuthorityRefreshStep::Pending(Default::default()));}
         if authority.pending_snapshot.is_none(){let partition=self.partition(&authority.window_id);let snapshot=partition.store.current_read_erased().map_err(Fault::from)?;authority.pending_snapshot=Some(WindowTransientSnapshot{window_id:String::new(),window_kind_id:O::WINDOW_KIND_ID,generation:partition.store.generation_now(),document_generation:authority.snapshot.document_generation,snapshot});return Ok(super::window_mutation::WindowAuthorityRefreshStep::Pending(RetainedCloneProgress{copied_items:1,..Default::default()}));}
-        let step=super::window_mutation::refresh_transfer(&mut authority.snapshot,&mut authority.pending_snapshot,&mut authority.retired_snapshots,grant).map_err(demand_fault)?;
+        let step=super::window_mutation::refresh::refresh_transfer(&mut authority.snapshot,&mut authority.pending_snapshot,&mut authority.retired_snapshots,grant).map_err(demand_fault)?;
         if matches!(step,super::window_mutation::WindowAuthorityRefreshStep::Ready(_)){authority.generation=authority.snapshot.generation;}Ok(step)
     }
     fn begin(&mut self, operation: semio_framework_job::OperationId, expected_generation: u64, document_generation: u64, mutation: WindowTransientMutation) -> Result<Box<dyn ErasedWindowTransientPublication>, RejectedWindowTransientEmission> {
@@ -652,7 +652,7 @@ macro_rules! transient_root {
             }
         }
 
-        impl $crate::__kernel::serialization::ArtifactDsl for $state {
+        impl pack::snapshot::ArtifactDsl for $state {
             const EXTENSION: &'static str = $extension;
 
             fn envelope_id() -> &'static str {
@@ -673,7 +673,7 @@ macro_rules! transient_root {
             }
         }
 
-        impl $crate::__kernel::serialization::ArtifactPack for $state {
+        impl pack::snapshot::ArtifactPack for $state {
             fn encode_pack_with(&self, _options: &$crate::__kernel::PackEncodeOptions) -> Result<Vec<u8>, $crate::__kernel::PackError> {
                 let envelope = $crate::__kernel::semio_format::SemioEnvelope::from_envelope_id($envelope, $crate::__kernel::semio_format::Component::Pack, 1).map_err(|error| $crate::__kernel::PackError::from(error.into_value_error()))?;
                 Ok($crate::__kernel::semio_format::wrap_binary(&envelope, $crate::__pack_json::to_json_string(self).as_bytes()))
@@ -691,6 +691,9 @@ macro_rules! transient_root {
                 $crate::__pack_json::from_json_str(text, $crate::__pack_json::JsonMemberPolicy::Reject).map_err($crate::__kernel::PackError::from)
             }
         }
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $state {
+
+}
     };
 }
 

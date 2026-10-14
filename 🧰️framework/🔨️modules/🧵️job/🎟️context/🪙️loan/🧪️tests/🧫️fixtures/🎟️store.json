@@ -1,0 +1,62 @@
+[
+  {
+    "id": "failed-field",
+    "operation": 91,
+    "generation": 7,
+    "fuel": 8192,
+    "deadlineUs": 1500,
+    "clockUs": 1000,
+    "grant": {
+      "maximumItems": 8192,
+      "maximumCopyBytes": 8388608,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 131072,
+      "maximumDepth": 128
+    }
+  },
+  {
+    "id": "wallet-cleanup",
+    "operation": 98146,
+    "generation": 17,
+    "fuel": 8192,
+    "deadlineUs": 1500,
+    "clockUs": 1000,
+    "grant": {
+      "maximumItems": 8192,
+      "maximumCopyBytes": 8388608,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 131072,
+      "maximumDepth": 128
+    }
+  },
+  {
+    "id": "rejected-setup",
+    "operation": 66,
+    "generation": 1,
+    "fuel": 8192,
+    "deadlineUs": 1500,
+    "clockUs": 1000,
+    "grant": {
+      "maximumItems": 8192,
+      "maximumCopyBytes": 8388608,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 131072,
+      "maximumDepth": 128
+    }
+  },
+  {
+    "id": "interactive-envelope",
+    "operation": 91,
+    "generation": 7,
+    "fuel": 8192,
+    "deadlineUs": 1500,
+    "clockUs": 1000,
+    "grant": {
+      "maximumItems": 8192,
+      "maximumCopyBytes": 8388608,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 131072,
+      "maximumDepth": 128
+    }
+  }
+]

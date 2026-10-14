@@ -3,7 +3,7 @@ import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import bidiFactory from "bidi-js";
 import schema from "../🧬️schema/🔣️.json";
-import rows from "../🧫️fixtures/🔣️.json";
+import rows from "./🧫️fixtures/🔣️.json";
 import {UnicodeBidiJob} from "../🟦️.ts";
 import {UnicodeDataAdmissionJob,unicodeSourceUrl} from "../../🟦️.ts";
 const reference=(foreign:ReturnType<typeof bidiFactory>,text:string,direction:"auto"|"ltr"|"rtl")=>{const result=foreign.getEmbeddingLevels(text,direction);for(const paragraph of result.paragraphs){const local=foreign.getEmbeddingLevels(text.slice(paragraph.start,paragraph.end+1),direction);result.levels.set(local.levels,paragraph.start);}return result;};

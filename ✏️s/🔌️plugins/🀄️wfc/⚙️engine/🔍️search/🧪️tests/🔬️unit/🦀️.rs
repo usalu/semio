@@ -254,7 +254,7 @@ fn cancel_token_reflects_state() {
 
 #[test]
 fn restart_only_never_proves_unsat_on_unsatisfiable_instance() {
-    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔍️decoding-and-graphs/🔣️.json")).unwrap();
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔍️decoding-and-graphs/🔣️.json")).unwrap();
     let row = &oracle["restart"];
     let base = row["base"].as_u64().unwrap();
     let geometric = RestartSchedule::Geometric { base, factor: row["factor"].as_f64().unwrap() };

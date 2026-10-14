@@ -135,7 +135,7 @@ pub fn gis_map_snapshot_with_derived_children(mut document: GisMapSnapshot) -> G
 /// functions of the parent snapshot, so a fresh boot or whole-document load materializes the same
 /// composed children inference would derive later.
 pub fn genesis_gis_map_child_pack(document: &GisMapSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     if slot == "drawing" && child_id == document.drawing.child_id {
         let drawing = schema::gis_map_snapshot_to_drawing(document);
         return Some(<SemioDrawingSnapshot as ArtifactPack>::encode_pack(&drawing));
@@ -229,11 +229,11 @@ impl Drop for InferenceOutputGuard {
 pub fn infer_gis_map_controlled(
     request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>,
     checkpoint: &mut dyn FnMut(u64) -> Result<(), semio_framework_plugin::ArtifactInferenceExecutionError>,
-) -> Result<semio_framework_plugin::ArtifactInferenceExecutionStep, semio_framework_plugin::ArtifactInferenceExecutionError> {
+, cx:&mut semio_framework_plugin::ArtifactInferenceStepContext<'_>) -> Result<semio_framework_plugin::ArtifactInferenceExecutionStep, semio_framework_plugin::ArtifactInferenceExecutionError> {
     use crate::standards::v1::subsets::any::schema::inferences::{bounds::controlled_lon_lat_bounds, GisMapInference};
     let allocation = admit_gis_map_inference_request(request)?;
     checkpoint(0)?;
-    let snapshot = <GisMapSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|_| semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.snapshot-decode", "invalid canonical map snapshot"))?;
+    let snapshot = <GisMapSnapshot as pack::snapshot::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|_| semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.snapshot-decode", "invalid canonical map snapshot"))?;
     let mut work = 1u64;
     checkpoint(work)?;
     let bounds = controlled_lon_lat_bounds(&snapshot, &mut |depth| {
@@ -263,7 +263,7 @@ pub fn infer_gis_map_controlled(
 }
 
 /// 🧠️ Whole-map native entry uses the same controlled fold with its finite request budgets.
-fn infer_gis_map(request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>) -> Result<semio_framework_plugin::ArtifactInferenceExecutionStep, semio_framework_plugin::ArtifactInferenceExecutionError> {
+fn infer_gis_map(request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>, cx:&mut semio_framework_plugin::ArtifactInferenceStepContext<'_>) -> Result<semio_framework_plugin::ArtifactInferenceExecutionStep, semio_framework_plugin::ArtifactInferenceExecutionError> {
     infer_gis_map_controlled(request, &mut |_| Ok(()))
 }
 //#endregion 💡️InferenceService

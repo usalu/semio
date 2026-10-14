@@ -4,7 +4,7 @@ import {spawnSync} from "node:child_process";
 import {readFileSync,existsSync,mkdirSync,rmSync} from "node:fs";
 import {join} from "node:path";
 import * as receiver from "../🟦️.ts";
-import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import corpus from "./🔣️.json";
 import schema from "../📥️invocation/🧬️schema/🔣️.json";
 

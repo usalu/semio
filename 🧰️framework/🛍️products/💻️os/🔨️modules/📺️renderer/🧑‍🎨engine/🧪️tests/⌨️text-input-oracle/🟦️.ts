@@ -9,8 +9,8 @@
 import { chromium, type Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { TEXT_EDITOR_READ_ONLY_REFUSALS, reconcileTextEditorEchoV1, refuseTextEditorEditV1, type TextEditorEchoStateV1 } from "../../🧱️elements/✏️TextEditor/🟦️.tsx";
-import localEcho from "../../🧱️elements/✏️TextEditor/🧫️fixtures/🔁️local-echo/🔣️.json";
-import fixture from "../../../../../../../🔨️modules/✍️editor/🧫️fixtures/⌨️text-input/🔣️.json";
+import localEcho from "../../🧱️elements/✏️TextEditor/🧪️tests/🧫️fixtures/🔁️local-echo/🔣️.json";
+import fixture from "../../../../../../../🔨️modules/✍️editor/🧪️tests/🧫️fixtures/⌨️text-input/🔣️.json";
 // #endregion 🔌️Adapters
 
 // #region 🧪️Harness

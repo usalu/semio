@@ -129,18 +129,6 @@ pub struct FlowEvalRelease {
 /// 🪪️ The request id every hop effect of the run carries; the hop's own payload is its address.
 const PREVIEW_EVAL_HOP_REQUEST: u64 = 103;
 
-/// ⏱️ Units ONE budgeted `evaluate` step spends before the round trip re-checks its wall deadline.
-/// Mirrors `flow_extension_sdk::EVALUATE_STEP_BUDGET`; declared here because the REQUESTER picks
-/// the budget its own interactivity needs, and the extension only honours it.
-pub const EVALUATE_STEP_BUDGET: u64 = 8;
-
-/// ⌛️ Wall-clock allowance for ONE `evaluate` round trip. Deliberately far below the host shard
-/// watchdog's 16 s silence threshold AND below its 5 s ordinary heartbeat window: a worker that
-/// returns to its event loop every 2 s cannot be mistaken for a dead one, which is exactly the
-/// mistake that killed every actor on shard 0 when `brep.bool.cut` ran 16 s inside one turn
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub const EVALUATE_STEP_WALL_MICROS: u64 = 2_000_000;
-
 /// ⏱️ The evaluation hop the run job hands the host, addressed to ONE preview window.
 pub fn tick_effect(window_id: &str, window_kind_id: &str) -> Effect {
     hop_effect("flowEvalTick", window_id, window_kind_id)
@@ -639,25 +627,9 @@ pub fn session_preview_mesh(handle: &str, session: &FlowEvalSession) -> Option<M
     mesh_has_preview_geometry(&data).then_some(data)
 }
 
-/// 🧵️ Reads the chain's resolved mesh first, then advances only the retained session's supplied
-/// geometry authority. Working retains its job for the next turn. A caller without an authority
-/// receives no native fallback; component guests resolve meshes through the explicit broker.
-pub fn mesh_data_for_preview_handle(handle: &str, tolerance: f64, session: Option<&FlowEvalSession>) -> Option<MeshData> {
-    if let Some(session) = session {
-        if let Some(data) = session_preview_mesh(handle, session) {
-            return Some(data);
-        }
-        if session.preview_diagnostics(handle).is_some() {
-            return None;
-        }
-    }
-    let port = session?.geometry_port()?;
-    let copy_bytes = port.next_tessellate_copy_byte_demand(handle, tolerance).ok()?;
-    let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy_bytes, maximum_capacity_bytes: port.next_tessellate_capacity_byte_demand(handle, tolerance, copy_bytes).ok()?, maximum_release_bytes: port.next_tessellate_release_byte_demand(handle, tolerance).ok()?, maximum_depth: port.next_tessellate_depth_demand(handle, tolerance).ok()? };
-    match port.tessellate_step(handle, tolerance, 24, grant) {
-        Ok((semio_framework_os_flow::geometry::GeometryStep::Ready(data), _)) => mesh_has_preview_geometry(&data).then_some(data),
-        _ => None,
-    }
+/// 🧵️ Rendering consumes only mesh output completed by the retained preview chain.
+pub fn mesh_data_for_preview_handle(handle: &str, _tolerance: f64, session: Option<&FlowEvalSession>) -> Option<MeshData> {
+    session_preview_mesh(handle, session?)
 }
 
 /// 🔁️ The converged walk's brep handle for the same preview channel leaf — used while a slider edit
@@ -989,7 +961,7 @@ pub fn evaluate_tick(
     for pending in pending_extension_evals {
         let resume = session.has_evaluation_progress(pending.node_hash);
         let dependency_json = if resume { String::new() } else { geometry_dependency_json(host_snapshot, &pending.neuron_id) };
-        extension_invocations.push(evaluate_invocation(pending, resume, dependency_json, window_id, window_kind_id, &retained_grant));
+        extension_invocations.push(evaluate_invocation(pending, resume, dependency_json, window_id, window_kind_id));
     }
     if extension_invocations.is_empty() && !more {
         extension_invocations.extend(preview_tessellate_invocations(window_id, window_kind_id, session, host_snapshot, tolerance, retained_grant)?);
@@ -1011,18 +983,16 @@ pub fn evaluate_tick(
     Ok(FlowEvalTickOutcome { extension_invocations, publication, census_moved: node_census_digest(session.status_json()) != census_before })
 }
 
-/// 📨️ The budgeted `evaluate` request one parked extension evaluation crosses to its plugin with, addressed back at the window that owes the answer. A resumed request carries neither input nor dependency: its job is keyed by `nodeHash`.
-pub fn evaluate_invocation(pending: semio_framework_artifact_flow_flow::neural::PendingExtensionEval, resume: bool, dependency_json: String, window_id: &str, window_kind_id: &str, retained_grant: &semio_framework_value::RetainedCloneGrant) -> ExtensionInvocation {
+/// 📨️ The original evaluation request carries business identity and address; its caller lends execution authority through the actual context.
+pub fn evaluate_invocation(pending: semio_framework_artifact_flow_flow::neural::PendingExtensionEval, resume: bool, dependency_json: String, window_id: &str, window_kind_id: &str) -> ExtensionInvocation {
     let request_json = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([
-        ("retained".to_string(), semio_framework_value::ToValue::to_value(retained_grant)),
+        ("neuronId".to_string(), semio_framework_value::DslValue::String(pending.neuron_id)),
         ("operatorId".to_string(), semio_framework_value::DslValue::String(pending.operator_id.clone())),
         ("inputJson".to_string(), semio_framework_value::DslValue::String(if resume { String::new() } else { pending.input_json })),
         ("dependencyJson".to_string(), semio_framework_value::DslValue::String(dependency_json)),
         ("operatorVersion".to_string(), semio_framework_value::DslValue::String(format!("registry:{};geometry:1;policy:1", semio_framework_os_flow::flow_extension_registry_generation()))),
         ("nodeHash".to_string(), semio_framework_value::DslValue::uint(pending.node_hash)),
         ("resume".to_string(), semio_framework_value::DslValue::Bool(resume)),
-        ("budget".to_string(), semio_framework_value::DslValue::uint(EVALUATE_STEP_BUDGET)),
-        ("wallMicros".to_string(), semio_framework_value::DslValue::uint(EVALUATE_STEP_WALL_MICROS)),
         ("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string())),
         ("windowKindId".to_string(), semio_framework_value::DslValue::String(window_kind_id.to_string())),
         ("extensionId".to_string(), semio_framework_value::DslValue::String(pending.extension_id.clone())),
@@ -1105,7 +1075,7 @@ pub fn resolve_eval(payload: &FlowEvalResolve, session: &mut FlowEvalSession, gr
     let outcome = session.resolve_preview_eval_cold(payload.node_hash, &payload.output_json)?;
     note_eval_answer_fault(payload, session, grant)?;
     if let semio_framework_os_flow::PreviewEvalOutcome::Pending(pending) = outcome {
-        return Ok(vec![evaluate_invocation(pending, true, String::new(), &payload.window_id, &payload.window_kind_id, &grant)]);
+        return Ok(vec![evaluate_invocation(pending, true, String::new(), &payload.window_id, &payload.window_kind_id)]);
     }
     let given_up = match &outcome {
         semio_framework_os_flow::PreviewEvalOutcome::Complete { output_json } => semio_framework_os_flow::host::io::evaluation_response::decode_flow_node_output_json(output_json).map(|output|session.seed_node_cache(payload.node_hash,output)).is_err(),

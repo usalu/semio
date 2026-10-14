@@ -12,10 +12,10 @@ use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
 use semio_framework::io_schema::IoPayload;
 use semio_framework_plugin::mesh_from_kind;
 
-const PLY_FIXTURE: &[u8] = include_bytes!("../../🧫️fixtures/🧱️four-points.ply");
-const OBJ_FIXTURE: &str = include_str!("../../🧫️fixtures/🗿️unit-cube.obj");
-const STL_FIXTURE: &str = include_str!("../../🧫️fixtures/🔺️unit-tetra.stl");
-const PNG_FIXTURE: &[u8] = include_bytes!("../../🧫️fixtures/📷️two-by-two.png");
+const PLY_FIXTURE: &[u8] = include_bytes!("../🧫️fixtures/🧱️four-points.ply");
+const OBJ_FIXTURE: &str = include_str!("../🧫️fixtures/🗿️unit-cube.obj");
+const STL_FIXTURE: &str = include_str!("../🧫️fixtures/🔺️unit-tetra.stl");
+const PNG_FIXTURE: &[u8] = include_bytes!("../🧫️fixtures/📷️two-by-two.png");
 
 /// 🔺️ Triangle count under EITHER `SemioPrimitive` convention: stdio's obj/stl/gltf import leaves
 /// flatten face corners into a non-indexed soup ("empty `indices` means sequential"), while its ply

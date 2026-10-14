@@ -14,7 +14,7 @@ type DoorAnswer = { readonly name: string; readonly verb: "read" | "write"; read
 
 const engine = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const readJson = (path: string): unknown => JSON.parse(readFileSync(path, "utf8"));
-const corpus = readJson(join(engine, "🧫️fixtures", "🧫️wgpu-backbone-folder-door", "🔣️.json")) as { readonly requests: readonly DoorRequest[]; readonly answers: readonly DoorAnswer[] };
+const corpus = readJson(join(engine, "🧪️tests/🧫️fixtures", "🧫️wgpu-backbone-folder-door", "🔣️.json")) as { readonly requests: readonly DoorRequest[]; readonly answers: readonly DoorAnswer[] };
 const archive = new Uint8Array([1, 2, 3]);
 
 const base64Bytes = (value: string): Uint8Array => Uint8Array.from(atob(value), (character) => character.charCodeAt(0));

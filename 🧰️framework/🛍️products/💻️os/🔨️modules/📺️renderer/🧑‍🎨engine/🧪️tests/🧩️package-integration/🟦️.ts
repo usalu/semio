@@ -1,3 +1,4 @@
+import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
 // @vitest-environment node
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
@@ -6,18 +7,18 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { encodeDocumentArchiveBytes, decodeDocumentArchiveBytes } from "@semio-tech/framework-os";
-import documentSurfaceFixture from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/📄️document/🧫️fixtures/🔣️.json";
+import documentSurfaceFixture from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/📄️document/🧪️tests/🧫️fixtures/🔣️.json";
 import emojiRegex from "emoji-regex";
 import ts from "typescript";
 import { loadTaxonomy, parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
-import browserAuthorityFixture from "../../🧫️fixtures/🧊️wgpu-browser-entry-authority/🔣️.json";
+import browserAuthorityFixture from "../🧫️fixtures/🧊️wgpu-browser-entry-authority/🔣️.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json";
 import { assertPinnedBunVersion, decodeAstralEscapes } from "../../🎯️targets/🧊️wgpu/⚙️browser-build/🟦️.ts";
 import { decodeInvocationPayloads, pluginHandleForBridge, reconcileRetainedWindowPatch, retireWgpuOwnedUiInstanceLifecycle, settleFailedInstanceOpen, WgpuOwnedUiInstanceRoute, type WgpuPluginHandle } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";
 import { resolvePlaygroundBoot, type PluginCatalog } from "@semio-tech/framework";
-import bootSelectionFixture from "../../🧫️fixtures/🔬️wgpu-shell-boot-selection/🔣️.json";
-import activationFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🎬️artifact-activation/🔣️.json";
-import operationPublicationCorpus from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🧫️operation-publication/🔣️.json";
+import bootSelectionFixture from "../🧫️fixtures/🔬️wgpu-shell-boot-selection/🔣️.json";
+import activationFixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🎬️artifact-activation/🔣️.json";
+import operationPublicationCorpus from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧫️operation-publication/🔣️.json";
 
 import { coerceTurnResult } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { semioSchemaAjvV1 } from "../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
@@ -279,7 +280,7 @@ it("crosses the document-backbone door with an exact u64 binding generation and 
   });
 
   it("composes one nonempty WGPU surface through exact patch acknowledgement and terminal owner retirement", async () => {
-    const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/⏱️lifecycle-scheduler.json");
+    const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️lifecycle-scheduler.json");
     const { default: equal } = await import("fast-deep-equal");
     const { encodePackValue } = await import("@semio-tech/framework-os");
     const { OwnedResidentLedger } = await import("../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts");
@@ -325,7 +326,7 @@ it("crosses the document-backbone door with an exact u64 binding generation and 
       },
       terminate() {},
     };
-    const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1_048_576, slots: 4_096, owners: 4_096, control: { bytes: 65_536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
+    const client = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: new OwnedResidentLedger({ bytes: 1_048_576, slots: 4_096, owners: 4_096, control: { bytes: 65_536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
     const actorId = "wgpu-owned-ui#1";
     await client.activate(actorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET);
     const lifecycle = client.captureInstanceLifecycle(actorId, 1);

@@ -8,7 +8,7 @@ struct CommittedRasterChildOwnerOracle;
 
 impl RasterChildOwnerOracle for CommittedRasterChildOwnerOracle {
     fn expected() -> semio_framework_pack_json::Value {
-        semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧫️child-owner-isolation/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral Raster child-owner fixture")
+        semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🧫️child-owner-isolation/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral Raster child-owner fixture")
     }
 }
 

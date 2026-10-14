@@ -9,8 +9,38 @@
     ]
   },
   "targets": {
-    "test-retained-work-source":{"executor":"nx:run-commands","cache":false,"options":{"cwd":"🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-retained-work source"}},
-    "test-retained-work-native":{"executor":"nx:run-commands","cache":false,"options":{"cwd":"🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-retained-work native"}},
+    "test-original-turn-failure-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-turn-failure source"
+      }
+    },
+    "test-original-turn-failure-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-turn-failure native"
+      }
+    },
+    "test-retained-work-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-retained-work source"
+      }
+    },
+    "test-retained-work-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-retained-work native"
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {
@@ -48,6 +78,30 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-session-return native"
+      }
+    },
+    "test-original-close-context-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-close-context-source"
+      }
+    },
+    "test-original-close-context-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-close-context-native"
+      }
+    },
+    "test-original-retained-loan-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-retained-loan-native"
       }
     }
   }

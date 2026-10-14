@@ -1,0 +1,278 @@
+{
+  "cases": [
+    {
+      "id": "strict-valid",
+      "subset": "strict",
+      "xml": "<w:document xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\" conformance=\"strict\"/>",
+      "relationshipBase": "http://purl.oclc.org/ooxml/officeDocument/relationships",
+      "codes": [],
+      "warnings": 0,
+      "document": {
+        "root": {
+          "kind": "element",
+          "name": "w:document",
+          "attrs": [
+            {
+              "name": "xmlns:w",
+              "value": "http://purl.oclc.org/ooxml/wordprocessingml/main"
+            },
+            {
+              "name": "conformance",
+              "value": "strict"
+            }
+          ],
+          "children": []
+        },
+        "prolog": [],
+        "epilog": []
+      }
+    },
+    {
+      "id": "strict-missing-conformance",
+      "subset": "strict",
+      "xml": "<w:document xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>",
+      "relationshipBase": "http://purl.oclc.org/ooxml/officeDocument/relationships",
+      "codes": [
+        "stdio.docx.strict.conformance-attr-missing"
+      ],
+      "warnings": 1,
+      "document": {
+        "root": {
+          "kind": "element",
+          "name": "w:document",
+          "attrs": [
+            {
+              "name": "xmlns:w",
+              "value": "http://purl.oclc.org/ooxml/wordprocessingml/main"
+            }
+          ],
+          "children": []
+        },
+        "prolog": [],
+        "epilog": []
+      }
+    },
+    {
+      "id": "strict-vml",
+      "subset": "strict",
+      "xml": "<w:document xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\" xmlns:v=\"urn:schemas-microsoft-com:vml\" conformance=\"strict\"/>",
+      "relationshipBase": "http://purl.oclc.org/ooxml/officeDocument/relationships",
+      "codes": [
+        "stdio.docx.strict.vml-present"
+      ],
+      "warnings": 0,
+      "document": {
+        "root": {
+          "kind": "element",
+          "name": "w:document",
+          "attrs": [
+            {
+              "name": "xmlns:w",
+              "value": "http://purl.oclc.org/ooxml/wordprocessingml/main"
+            },
+            {
+              "name": "xmlns:v",
+              "value": "urn:schemas-microsoft-com:vml"
+            },
+            {
+              "name": "conformance",
+              "value": "strict"
+            }
+          ],
+          "children": []
+        },
+        "prolog": [],
+        "epilog": []
+      }
+    },
+    {
+      "id": "strict-transitional-relationship",
+      "subset": "strict",
+      "xml": "<w:document xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\" conformance=\"strict\"/>",
+      "relationshipBase": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+      "codes": [
+        "stdio.docx.strict.non-strict-relationship-base"
+      ],
+      "warnings": 0,
+      "document": {
+        "root": {
+          "kind": "element",
+          "name": "w:document",
+          "attrs": [
+            {
+              "name": "xmlns:w",
+              "value": "http://purl.oclc.org/ooxml/wordprocessingml/main"
+            },
+            {
+              "name": "conformance",
+              "value": "strict"
+            }
+          ],
+          "children": []
+        },
+        "prolog": [],
+        "epilog": []
+      }
+    },
+    {
+      "id": "transitional-valid",
+      "subset": "transitional",
+      "xml": "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"/>",
+      "relationshipBase": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+      "codes": [],
+      "warnings": 0,
+      "document": {
+        "root": {
+          "kind": "element",
+          "name": "w:document",
+          "attrs": [
+            {
+              "name": "xmlns:w",
+              "value": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+            }
+          ],
+          "children": []
+        },
+        "prolog": [],
+        "epilog": []
+      }
+    },
+    {
+      "id": "transitional-strict-claim",
+      "subset": "transitional",
+      "xml": "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" conformance=\"strict\"/>",
+      "relationshipBase": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+      "codes": [
+        "stdio.docx.transitional.conformance-attr-invalid"
+      ],
+      "warnings": 1,
+      "document": {
+        "root": {
+          "kind": "element",
+          "name": "w:document",
+          "attrs": [
+            {
+              "name": "xmlns:w",
+              "value": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+            },
+            {
+              "name": "conformance",
+              "value": "strict"
+            }
+          ],
+          "children": []
+        },
+        "prolog": [],
+        "epilog": []
+      }
+    },
+    {
+      "id": "transitional-strict-namespace",
+      "subset": "transitional",
+      "xml": "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:extra=\"http://purl.oclc.org/ooxml/drawingml/main\"/>",
+      "relationshipBase": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+      "codes": [
+        "stdio.docx.transitional.strict-ns-present"
+      ],
+      "warnings": 0,
+      "document": {
+        "root": {
+          "kind": "element",
+          "name": "w:document",
+          "attrs": [
+            {
+              "name": "xmlns:w",
+              "value": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+            },
+            {
+              "name": "xmlns:extra",
+              "value": "http://purl.oclc.org/ooxml/drawingml/main"
+            }
+          ],
+          "children": []
+        },
+        "prolog": [],
+        "epilog": []
+      }
+    },
+    {
+      "id": "text-is-not-namespace-declaration",
+      "subset": "strict",
+      "xml": "<w:document xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\" conformance=\"strict\"><w:t>urn:schemas-microsoft-com:vml</w:t></w:document>",
+      "relationshipBase": "http://purl.oclc.org/ooxml/officeDocument/relationships",
+      "codes": [],
+      "warnings": 0,
+      "document": {
+        "root": {
+          "kind": "element",
+          "name": "w:document",
+          "attrs": [
+            {
+              "name": "xmlns:w",
+              "value": "http://purl.oclc.org/ooxml/wordprocessingml/main"
+            },
+            {
+              "name": "conformance",
+              "value": "strict"
+            }
+          ],
+          "children": [
+            {
+              "kind": "element",
+              "name": "w:t",
+              "attrs": [],
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "urn:schemas-microsoft-com:vml"
+                }
+              ]
+            }
+          ]
+        },
+        "prolog": [],
+        "epilog": []
+      }
+    },
+    {
+      "id": "incidental-child-namespace-is-not-main-root",
+      "subset": "strict",
+      "xml": "<foreign conformance=\"strict\"><w:document xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/></foreign>",
+      "relationshipBase": "http://purl.oclc.org/ooxml/officeDocument/relationships",
+      "codes": [
+        "stdio.docx.strict.main-ns-missing"
+      ],
+      "warnings": 0,
+      "document": {
+        "root": {
+          "kind": "element",
+          "name": "foreign",
+          "attrs": [
+            {
+              "name": "conformance",
+              "value": "strict"
+            }
+          ],
+          "children": [
+            {
+              "kind": "element",
+              "name": "w:document",
+              "attrs": [
+                {
+                  "name": "xmlns:w",
+                  "value": "http://purl.oclc.org/ooxml/wordprocessingml/main"
+                }
+              ],
+              "children": []
+            }
+          ]
+        },
+        "prolog": [],
+        "epilog": []
+      }
+    }
+  ],
+  "largeTextCharacters": 100000,
+  "cancelAfter": 256,
+  "smallValueBudget": 1024
+}

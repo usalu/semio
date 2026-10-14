@@ -1,13 +1,13 @@
 import * as sqliteOwner from "../🟦️.ts";
 import{expect,test}from"bun:test";
 import Ajv from"ajv";
-import fixture from"../🧫️fixtures/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
 import schema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import{Database}from"bun:sqlite";
 import{Buffer}from"node:buffer";
-import controls from"../🧫️fixtures/🎛️control.json";
-import words from"../🧫️fixtures/🔢️binary64.json";
-import choices from"../🧫️fixtures/🛂️choices.json";
+import controls from"./🧫️fixtures/🎛️control.json";
+import words from"./🧫️fixtures/🔢️binary64.json";
+import choices from"./🧫️fixtures/🛂️choices.json";
 import { EN1996_SQLITE_SCHEMA, en1996SnapshotToSqliteDatabase, en1996SnapshotFromSqliteDatabase, type En1996SqliteSnapshot, type En1996SqliteWall } from "../🟦️.ts";
 import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
@@ -50,7 +50,7 @@ test("EN1996 initial and nested expensive operations support cancellation and ow
 });
 
 import NormSemanticAjv from "ajv/dist/2020.js";
-import normSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {en1996SnapshotToSqliteDatabase as normSemanticProject,en1996SnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
 import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

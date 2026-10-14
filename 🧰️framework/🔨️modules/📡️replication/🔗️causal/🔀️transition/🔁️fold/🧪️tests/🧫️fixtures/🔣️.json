@@ -1,0 +1,73 @@
+{
+  "schema": "semio.history.bounded-fold/v1",
+  "workGrants": [
+    1,
+    2,
+    7
+  ],
+  "byteGrants": [
+    1,
+    7,
+    4096
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    7,
+    31
+  ],
+  "expected": {
+    "sameSemanticFold": true,
+    "progressMonotone": true,
+    "noWorkAfterCancel": true,
+    "terminalEmpty": true
+  },
+  "decodeCases": [
+    {
+      "payloadHex": "040741c3a9f09f988000",
+      "valid": true,
+      "checkpoint": "Aé😀"
+    },
+    {
+      "payloadHex": "0409c3846e646572756e6700",
+      "valid": true,
+      "checkpoint": "Änderung"
+    },
+    {
+      "payloadHex": "0400636b",
+      "valid": false,
+      "checkpoint": null
+    },
+    {
+      "payloadHex": "0402c32800",
+      "valid": false,
+      "checkpoint": null
+    },
+    {
+      "payloadHex": "0401410000",
+      "valid": false,
+      "checkpoint": null
+    }
+  ],
+  "envelopeCases": [
+    {
+      "payloadHex": "016d01640741c3a9f09f9880000000017303aabbcc01730001020300",
+      "valid": true,
+      "actor": "Aé😀",
+      "diffPayloadHex": "aabbcc"
+    },
+    {
+      "payloadHex": "016d01640741c3a9f09f9880000000017303aabbcc0173000102030000",
+      "valid": false,
+      "actor": null,
+      "diffPayloadHex": null
+    },
+    {
+      "payloadHex": "016d01640741c3a9f09f9880000000017303aabbcc01730001020308",
+      "valid": false,
+      "actor": null,
+      "diffPayloadHex": null
+    }
+  ]
+}

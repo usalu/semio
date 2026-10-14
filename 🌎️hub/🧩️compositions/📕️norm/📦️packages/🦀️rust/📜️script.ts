@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 📏️ `@semio-tech/norm-plugin` router: `bun ./📜️script.ts test`. */
 import Ajv from "ajv";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { runCargo, runRepositoryCargoTests, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { SHIPPED_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
 
 /** 🪶️ Headroom this plugin holds under `SHIPPED_COMPONENT_MAX_BYTES`, so fifteen standards artifacts
@@ -176,7 +176,7 @@ class ResultsWindowConfigSourceScript extends BundleScript {
     const declarations = filesBelow(configRoot).filter((path) => path.endsWith(".rs")).flatMap((path) => [...readFileSync(path, "utf8").matchAll(/pub struct NormResultsWindowConfig\b/g)].map(() => path));
     if (declarations.length !== 1 || declarations[0] !== join(configRoot, "🧬️schema", "🦀️.rs")) throw new Error("NormResultsWindowConfig must have one schema-owned Rust declaration");
     const schema = JSON.parse(readFileSync(join(configRoot, "🧬️schema", "🧬️mutations", "☑️change-selected-check-index", "🧬️schema", "🔣️.json"), "utf8"));
-    const fixture = JSON.parse(readFileSync(join(configRoot, "🧫️fixtures", "🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(configRoot, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     const aggregate = JSON.parse(readFileSync(join(configRoot, "🧬️schema", "🧬️mutations", "🔣️.json"), "utf8"));
     const ajv = new Ajv({ allErrors: true, strict: true });
     ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
@@ -255,7 +255,7 @@ type SurfaceFixture = { contractId: "semio.norm.surface-render/v1"; rows: Surfac
 
 class SurfaceRenderSourceScript extends BundleScript {
   run(): void {
-    const testRoot = join(this.root, "..", "..", "🖥️app-surface", "🧫️fixtures");
+    const testRoot = join(this.root, "..", "..", "🖥️app-surface", "🧪️tests/🧫️fixtures");
     const module = JSON.parse(readFileSync(join(this.repoRoot, PLUGIN_OWNER, "🧬️schema", "🔣️.json"), "utf8")) as { $id: string };
     const fixture = JSON.parse(readFileSync(join(testRoot, "🔣️.json"), "utf8")) as SurfaceFixture;
     const pluginRoot = readFileSync(join(this.root, "..", "..", "🦀️.rs"), "utf8");
@@ -388,7 +388,7 @@ class CheckScript extends BundleScript {
 class MutationLeafTaxonomyGenerateScript extends BundleScript {
   run(): void {
     const value = taxonomy(this.repoRoot);
-    writeFileSync(join(this.repoRoot, PLUGIN_OWNER, "🧫️fixtures/📇️mutation-leaf-taxonomy-v1/🔣️.json"), `${JSON.stringify(value, null, 2)}\n`);
+    writeFileSync(join(this.repoRoot, "✏️s/🔌️plugins/📕️norm/🧪️tests/🧫️fixtures/📇️mutation-leaf-taxonomy-v1/🔣️.json"), `${JSON.stringify(value, null, 2)}\n`);
     console.log(`norm mutation-leaf taxonomy generated: ${value.rows.length} payloads`);
   }
 }
@@ -397,7 +397,7 @@ class MutationLeafTaxonomyCheckScript extends BundleScript {
   run(): void {
     const actual = taxonomy(this.repoRoot);
     const module = JSON.parse(readFileSync(join(this.repoRoot, PLUGIN_OWNER, "🧬️schema/🔣️.json"), "utf8"));
-    const fixture = JSON.parse(readFileSync(join(this.repoRoot, PLUGIN_OWNER, "🧫️fixtures/📇️mutation-leaf-taxonomy-v1/🔣️.json"), "utf8")) as MutationLeafTaxonomy;
+    const fixture = JSON.parse(readFileSync(join(this.repoRoot, "✏️s/🔌️plugins/📕️norm/🧪️tests/🧫️fixtures/📇️mutation-leaf-taxonomy-v1/🔣️.json"), "utf8")) as MutationLeafTaxonomy;
     const ajv = new Ajv({ allErrors: true, strict: true });
     ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
     ajv.addSchema(module);

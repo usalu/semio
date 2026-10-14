@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::any::schema::{create_drawing_path_layer};
 use crate::{
     DrawingArtboard, DrawingCircle, DrawingEllipse, DrawingGroupBody, DrawingImageAsset, DrawingLayerNode, DrawingLine, DrawingPolygon, DrawingShapeBody, DrawingTextBody, FillStyle, GradientStop, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA,
 };
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
 
 fn representative_drawing_document() -> DrawingSnapshot {
     let mut assets = semio_framework_value::paged::PagedMap::default();

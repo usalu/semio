@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fromPairs } from "lodash-es";
-import laws from "../../🧫️fixtures/🧩️wgpu-module-routes/🔣️.json";
+import laws from "../🧫️fixtures/🧩️wgpu-module-routes/🔣️.json";
 import { wgpuBrowserMounts, type WgpuBrowserConfiguration } from "../../🎯️targets/🧊️wgpu/🌐️server/🟦️.ts";
 import { MODULE_ROUTES, moduleRoutePath } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 

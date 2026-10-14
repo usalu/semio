@@ -7,7 +7,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#endregion 📖️SemioGrammar
 
 use crate::RewritingSnapshot;
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
 
 /// 📄️ The bundled Nakagin `label-core` rewrite rule, handcrafted in the `.rewriting` DSL — mirrors the
 /// `trinity-rewriting` app's own real default rule over a trimmed two-node/one-edge slice of the
@@ -46,7 +46,7 @@ use std::collections::BTreeMap;
 use semio_framework_graph::manifest::PropertyValue;
 
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
-impl store::os_store::serialization::ArtifactDsl for RewritingSnapshot {
+impl pack::snapshot::ArtifactDsl for RewritingSnapshot {
     const EXTENSION: &'static str = "rewriting";
     fn envelope_id() -> &'static str {
         "trinity.rewriting"
@@ -61,7 +61,7 @@ impl store::os_store::serialization::ArtifactDsl for RewritingSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -83,17 +83,17 @@ pub fn decode_rewriting_snapshot_json(text: &str) -> Result<RewritingSnapshot, s
 }
 
 /// 📝️ Parses `.rewriting.dsl.semio` text into a [`RewritingSnapshot`] — a named, non-async pass-through
-/// of this type's own handcrafted `store::os_store::serialization::ArtifactDsl` impl above, whose trait and error type are
+/// of this type's own handcrafted `pack::snapshot::ArtifactDsl` impl above, whose trait and error type are
 /// both unnameable outside this crate, so `mutate-rewriting-1`'s `identity-round-trip` scenario
 /// reaches the real committed artifact
 /// (`../../🖼️assets/🎬️demo/🗣️.dsl.semio`) through this instead.
 pub fn parse_rewriting_dsl(text: &str) -> Result<RewritingSnapshot, String> {
-    <RewritingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+    <RewritingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
 
 /// 📝️ Renders the declared typed Rewriting document through its owned DSL facet.
 pub fn print_rewriting_dsl(snapshot: &RewritingSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
+    pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

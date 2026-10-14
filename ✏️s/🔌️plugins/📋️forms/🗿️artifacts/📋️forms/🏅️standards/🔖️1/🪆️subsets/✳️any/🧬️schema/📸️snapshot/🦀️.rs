@@ -86,7 +86,7 @@ impl Default for FormsSnapshot {
 //#endregion 🔖️Snapshot
 
 // 🧬️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (design.md §1 CORRECTION): the native
-// `store::os_store::serialization::ArtifactDsl`/`store::os_store::serialization::ArtifactPack` codec impls (and their hex/LEB128 primitives) moved to
+// `pack::snapshot::ArtifactDsl`/`pack::snapshot::ArtifactPack` codec impls (and their hex/LEB128 primitives) moved to
 // `🚪️io/📸️snapshot/{📝️text,💾️binary}` — this facet root keeps only the struct + pure defaults, no
 // codecs (design.md rule: `🧬️schema` is types + pure transforms only). Their round-trip tests moved
 // with them.

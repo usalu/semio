@@ -2,7 +2,7 @@
 import {expect,test,spyOn} from "bun:test";
 import Ajv from "ajv";
 import sharp from "sharp";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {CompositeJob,compositeImage,type CompositeInput,type CompositeLayer} from "../🟦️.ts";
 
@@ -84,7 +84,7 @@ test("async compositor exposes progress and observes cancellation",async()=>{
 
 
 test("compositor retirement retains genuine private owners and preserves shared and published bytes",async()=>{
-  const rows=(await import("../🧫️fixtures/🧹️retirement/🔣️.json")).default;
+  const rows=(await import("./🧫️fixtures/🧹️retirement/🔣️.json")).default;
   
   const check=new Ajv({strict:true}).compile({$defs:schema.$defs,$ref:"#/$defs/Retirement"});
   for(const row of rows)for(const grant of [1,7,4096]){

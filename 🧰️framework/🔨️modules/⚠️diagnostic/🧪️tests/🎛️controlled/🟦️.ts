@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv/dist/2020.js";
 import ts from "typescript";
-import { BundleScript } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import valueSchema from "../../../🌱️value/⚠️refusal/🧬️schema/🔣️.json" with { type: "json" };
 import schema from "../../🧬️schema/🎛️controlled/🔣️.json" with { type: "json" };
-import fixture from "../../🧫️fixtures/🎛️controlled/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/🎛️controlled/🔣️.json" with { type: "json" };
 
 /** 🎛️ Validates the closed neutral Diagnostic cases with an independent schema engine. */
 export class TestScript extends BundleScript {

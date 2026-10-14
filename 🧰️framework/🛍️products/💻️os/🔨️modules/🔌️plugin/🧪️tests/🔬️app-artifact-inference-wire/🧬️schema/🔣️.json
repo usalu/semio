@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "generation",
+    "fuel",
+    "deadlineUs",
+    "clockUs",
+    "grant"
+  ],
+  "properties": {
+    "operation": {
+      "const": 71
+    },
+    "generation": {
+      "const": 3
+    },
+    "fuel": {
+      "const": 32
+    },
+    "deadlineUs": {
+      "const": 1000000
+    },
+    "clockUs": {
+      "const": 1
+    },
+    "grant": {
+      "$ref": "../../../../../../../%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8C%B1%EF%B8%8Fvalue/%F0%9F%A7%AC%EF%B8%8Fretained-clone/%F0%9F%8C%90%EF%B8%8Fwire/%F0%9F%A7%AC%EF%B8%8Fschema/%F0%9F%94%A3%EF%B8%8F.json"
+    }
+  }
+}

@@ -5,7 +5,7 @@ import "./🪆️owner/🟦️.ts";
 import {Database} from "bun:sqlite";
 import {test,expect} from "bun:test";
 import {PNG} from "pngjs";
-import fixture from "../../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json";
+import fixture from "../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json";
 import {parsePngSnapshot,defaultPngSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {encodePngSnapshot,decodePngSnapshot} from "../../../💾️binary/📸️snapshot/🟦️.ts";
 import {PNG_SQLITE_SCHEMA,pngSnapshotToSqliteDatabase,pngSnapshotFromSqliteDatabase} from "../🟦️.ts";

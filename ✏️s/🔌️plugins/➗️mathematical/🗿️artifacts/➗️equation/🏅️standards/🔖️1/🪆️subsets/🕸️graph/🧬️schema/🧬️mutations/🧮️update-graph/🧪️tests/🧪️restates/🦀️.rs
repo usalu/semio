@@ -14,11 +14,11 @@ use crate::standards::v1::subsets::graph::schema::mutations::update_graph_algori
 use crate::{EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_value::ToValue;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/🎯️outcome/🔣️.json");
 
 fn before() -> EquationSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

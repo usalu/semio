@@ -10,11 +10,11 @@
 use crate::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
 use crate::{RemodelingDiff, RemodelingSnapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕸️update-mesh-params/🔳️doubles/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕸️update-mesh-params/🔳️doubles/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕸️update-mesh-params/🔳️doubles/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕸️update-mesh-params/🔳️doubles/🎯️outcome/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕸️update-mesh-params/🔳️doubles/🔺️diff/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕸️update-mesh-params/🔳️doubles/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕸️update-mesh-params/🔳️doubles/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕸️update-mesh-params/🔳️doubles/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕸️update-mesh-params/🔳️doubles/🎯️outcome/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕸️update-mesh-params/🔳️doubles/🔺️diff/🔣️.json");
 
 fn before() -> RemodelingSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

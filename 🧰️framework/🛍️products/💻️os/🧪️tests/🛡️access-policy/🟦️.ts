@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
 import policy from "../../🔨️modules/📇️directory/🛡️access-policy/🔣️.json";
 import schema from "../../🔨️modules/📇️directory/🛡️access-policy/🧬️schema/🔣️.json";
-import fixture from "../../🔨️modules/📇️directory/🛡️access-policy/🧫️fixtures/🔣️.json";
+import fixture from "../../🔨️modules/📇️directory/🛡️access-policy/🧪️tests/🧫️fixtures/🔣️.json";
 import { directoryAccessPermits, parseDirectoryAccessPolicyV1, type DirectoryAccessActionV1, type DirectoryAccessRoleV1 } from "../../🔨️modules/📇️directory/🛡️access-policy/🧬️schema/🟦️.ts";
 
 describe("shared directory access policy", () => {

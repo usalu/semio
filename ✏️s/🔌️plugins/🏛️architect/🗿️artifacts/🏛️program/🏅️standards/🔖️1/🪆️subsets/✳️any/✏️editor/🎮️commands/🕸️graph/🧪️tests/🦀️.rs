@@ -5,7 +5,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView};
 
 #[test]
 fn graph_tools_follow_the_language_neutral_transaction_law() {
-    let fixture = semio_framework_pack_json::parse(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🛠️graph-tool/🔣️.json")), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
+    let fixture = semio_framework_pack_json::parse(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🛠️graph-tool/🔣️.json")), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
     for case in fixture.get("cases").unwrap().as_array().unwrap() {
         let mut program = crate::standards::v1::subsets::any::schema::snapshot::sample_plugin();
         program.elements[0].header.id = EntityId("a".into());

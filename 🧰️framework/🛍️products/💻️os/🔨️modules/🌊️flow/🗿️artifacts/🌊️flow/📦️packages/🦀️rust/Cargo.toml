@@ -20,6 +20,7 @@ path = "../../🦀️.rs"
 protocol-laws = []
 
 [dependencies]
+semio-framework-pack = { path = "../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-canvas = { path = "../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
@@ -30,6 +31,7 @@ semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/�
 semio-framework-dsl = { path = "../../../../../../../../🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-artifact-infinite-dag = { workspace = true }
 semio-framework-os-kernel = { workspace = true }

@@ -19,7 +19,7 @@ import { describe, expect, it } from "vitest";
 import { decodeCommandEnvelope, decodeQueryEnvelope, encodeCommandOutcome, encodeQueryResult, type CommandEnvelope, type CommandOutcome, type HttpResponse, type HttpTransport } from "@semio-tech/framework-server";
 import { handleActorId, normalizeHandle, type HandleView, type IdentifyLearnerCommand, type Query, type Rejection } from "@semio-tech/quiz";
 import { IdentityScreen, ProctorClient, ProctorThrottled, QUIZ_LOCALES, QuizSession, failureProblem, handleFault, handleFaultMessage, localStore, memoryStorageOrigin, quizInstance, quizText, type HandleFault, type SessionFailure } from "@semio-tech/quiz-react";
-import step from "../../🧫️fixtures/🎭️identity-step/🔣️.json";
+import step from "../🧫️fixtures/🎭️identity-step/🔣️.json";
 
 type Locale = (typeof QUIZ_LOCALES)[number];
 type FaultVector = { readonly kind: string; readonly length?: number; readonly characters?: readonly (readonly number[])[] };

@@ -1,0 +1,819 @@
+{
+  "version": 1,
+  "traces": [
+    {
+      "mode": "copied",
+      "trace": [
+        {
+          "action": "release",
+          "expected": {
+            "kind": "ready",
+            "bytes": 0,
+            "phase": "issued",
+            "sourceToken": true,
+            "sourceFragment": true,
+            "fragmentField": true,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": false,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "detach-before-ui-bind",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "issued",
+            "sourceToken": true,
+            "sourceFragment": true,
+            "fragmentField": true,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": false,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "ui-bind",
+          "expected": {
+            "kind": "pending",
+            "bytes": 64,
+            "phase": "issued",
+            "sourceToken": true,
+            "sourceFragment": true,
+            "fragmentField": true,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "detach-before-consumed",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "issued",
+            "sourceToken": true,
+            "sourceFragment": true,
+            "fragmentField": true,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "consume",
+          "expected": {
+            "kind": "complete",
+            "bytes": 1,
+            "phase": "issued",
+            "sourceToken": true,
+            "sourceFragment": true,
+            "fragmentField": true,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "detach-short",
+          "expected": {
+            "kind": "blocked",
+            "bytes": 0,
+            "phase": "issued",
+            "sourceToken": true,
+            "sourceFragment": true,
+            "fragmentField": true,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "detach-foreign",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "issued",
+            "sourceToken": true,
+            "sourceFragment": true,
+            "fragmentField": true,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "detach",
+          "expected": {
+            "kind": "pending",
+            "bytes": 64,
+            "phase": "sourceDetached",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "observe-after-wrapper-fault",
+          "expected": {
+            "kind": "ready",
+            "bytes": 0,
+            "phase": "sourceDetached",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "settle-before-ui-detach",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "sourceDetached",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "ui-detach",
+          "expected": {
+            "kind": "pending",
+            "bytes": 64,
+            "phase": "sourceDetached",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": true,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "settle-short",
+          "expected": {
+            "kind": "blocked",
+            "bytes": 0,
+            "phase": "sourceDetached",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": true,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "settle-foreign",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "sourceDetached",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": true,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "settle",
+          "expected": {
+            "kind": "complete",
+            "bytes": 64,
+            "phase": "settled",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": false,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": true
+          }
+        },
+        {
+          "action": "observe-settled-after-wrapper-fault",
+          "expected": {
+            "kind": "ready",
+            "bytes": 0,
+            "phase": "settled",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": false,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": true
+          }
+        },
+        {
+          "action": "settle-replay",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "settled",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": false,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": true
+          }
+        },
+        {
+          "action": "detach-replay",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "settled",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": false,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": true
+          }
+        },
+        {
+          "action": "ui-forget",
+          "expected": {
+            "kind": "complete",
+            "bytes": 64,
+            "phase": "settled",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": false,
+            "uiBody": false,
+            "uiObservation": false,
+            "nextRange": true
+          }
+        }
+      ]
+    },
+    {
+      "mode": "cancelled",
+      "trace": [
+        {
+          "action": "release",
+          "expected": {
+            "kind": "ready",
+            "bytes": 0,
+            "phase": "issued",
+            "sourceToken": true,
+            "sourceFragment": true,
+            "fragmentField": true,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": false,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "detach-before-ui-bind",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "issued",
+            "sourceToken": true,
+            "sourceFragment": true,
+            "fragmentField": true,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": false,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "ui-bind",
+          "expected": {
+            "kind": "pending",
+            "bytes": 64,
+            "phase": "issued",
+            "sourceToken": true,
+            "sourceFragment": true,
+            "fragmentField": true,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "detach-short",
+          "expected": {
+            "kind": "blocked",
+            "bytes": 0,
+            "phase": "issued",
+            "sourceToken": true,
+            "sourceFragment": true,
+            "fragmentField": true,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "detach-foreign",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "issued",
+            "sourceToken": true,
+            "sourceFragment": true,
+            "fragmentField": true,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "detach",
+          "expected": {
+            "kind": "pending",
+            "bytes": 64,
+            "phase": "sourceDetached",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "observe-after-wrapper-fault",
+          "expected": {
+            "kind": "ready",
+            "bytes": 0,
+            "phase": "sourceDetached",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "settle-before-ui-detach",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "sourceDetached",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "ui-detach",
+          "expected": {
+            "kind": "pending",
+            "bytes": 64,
+            "phase": "sourceDetached",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": true,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "settle-short",
+          "expected": {
+            "kind": "blocked",
+            "bytes": 0,
+            "phase": "sourceDetached",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": true,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "settle-foreign",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "sourceDetached",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": true,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "settle",
+          "expected": {
+            "kind": "complete",
+            "bytes": 64,
+            "phase": "settled",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": false,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "observe-settled-after-wrapper-fault",
+          "expected": {
+            "kind": "ready",
+            "bytes": 0,
+            "phase": "settled",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": false,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "settle-replay",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "settled",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": false,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "detach-replay",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "settled",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": false,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "ui-forget",
+          "expected": {
+            "kind": "complete",
+            "bytes": 64,
+            "phase": "settled",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": false,
+            "uiBody": false,
+            "uiObservation": false,
+            "nextRange": false
+          }
+        }
+      ]
+    },
+    {
+      "mode": "copied-close",
+      "trace": [
+        {
+          "action": "release",
+          "expected": {
+            "kind": "ready",
+            "bytes": 0,
+            "phase": "issued",
+            "sourceToken": true,
+            "sourceFragment": true,
+            "fragmentField": true,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": false,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "detach-before-ui-bind",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "issued",
+            "sourceToken": true,
+            "sourceFragment": true,
+            "fragmentField": true,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": false,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "ui-bind",
+          "expected": {
+            "kind": "pending",
+            "bytes": 64,
+            "phase": "issued",
+            "sourceToken": true,
+            "sourceFragment": true,
+            "fragmentField": true,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "close",
+          "expected": {
+            "kind": "pending",
+            "bytes": 0,
+            "phase": "issued",
+            "sourceToken": true,
+            "sourceFragment": true,
+            "fragmentField": true,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "detach-short",
+          "expected": {
+            "kind": "blocked",
+            "bytes": 0,
+            "phase": "issued",
+            "sourceToken": true,
+            "sourceFragment": true,
+            "fragmentField": true,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "detach-foreign",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "issued",
+            "sourceToken": true,
+            "sourceFragment": true,
+            "fragmentField": true,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "detach",
+          "expected": {
+            "kind": "pending",
+            "bytes": 64,
+            "phase": "sourceDetached",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "observe-after-wrapper-fault",
+          "expected": {
+            "kind": "ready",
+            "bytes": 0,
+            "phase": "sourceDetached",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "settle-before-ui-detach",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "sourceDetached",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": true,
+            "uiBody": true,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "ui-detach",
+          "expected": {
+            "kind": "pending",
+            "bytes": 64,
+            "phase": "sourceDetached",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": true,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "settle-short",
+          "expected": {
+            "kind": "blocked",
+            "bytes": 0,
+            "phase": "sourceDetached",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": true,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "settle-foreign",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "sourceDetached",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": true,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "settle",
+          "expected": {
+            "kind": "complete",
+            "bytes": 64,
+            "phase": "settled",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": false,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "observe-settled-after-wrapper-fault",
+          "expected": {
+            "kind": "ready",
+            "bytes": 0,
+            "phase": "settled",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": false,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "settle-replay",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "settled",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": false,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "detach-replay",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "settled",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": false,
+            "uiBody": false,
+            "uiObservation": true,
+            "nextRange": false
+          }
+        },
+        {
+          "action": "ui-forget",
+          "expected": {
+            "kind": "complete",
+            "bytes": 64,
+            "phase": "settled",
+            "sourceToken": false,
+            "sourceFragment": false,
+            "fragmentField": false,
+            "fieldSlots": false,
+            "uiBody": false,
+            "uiObservation": false,
+            "nextRange": false
+          }
+        }
+      ]
+    }
+  ],
+  "negativeIdentities": [
+    "foreign-field",
+    "foreign-fragment",
+    "foreign-proof",
+    "foreign-observation",
+    "forged-prototype",
+    "proxy"
+  ],
+  "faults": {
+    "positions": [
+      "before-finalize",
+      "after-finalize",
+      "after-release",
+      "after-detach",
+      "after-settle"
+    ],
+    "values": [
+      "null",
+      "undefined",
+      "false",
+      "zero",
+      "object"
+    ],
+    "unknownBytes": 8193,
+    "originalRetained": true,
+    "replacementMinted": false
+  },
+  "readiness": {
+    "formatOnly": true,
+    "positiveRuntime": false,
+    "sourceMetadataAdmitted": false,
+    "evidenceRefundBeforeUiForget": false,
+    "nativeInputAck": false
+  }
+}

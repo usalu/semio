@@ -50,7 +50,7 @@ const workspaceRoot = getWorkspaceRoot();
 const productRoot = join(workspaceRoot, "🧰️framework", "🛍️products", "📓️print");
 
 /** 🖼️ The committed evidence file of the `🖼️gallery-render` case. */
-export const PRINT_GALLERY_EVIDENCE_PATH = join(productRoot, "🧫️fixtures", "🖼️gallery-render", "🖼️gallery-render.json");
+export const PRINT_GALLERY_EVIDENCE_PATH = join(productRoot, "🧪️tests/🧫️fixtures", "🖼️gallery-render", "🖼️gallery-render.json");
 
 
 

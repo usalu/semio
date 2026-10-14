@@ -1,0 +1,10 @@
+{
+  "mutation": "editLhs",
+  "newLhs": {
+    "pattern": {
+      "leftVar": "c",
+      "leftKind": "Piece"
+    },
+    "whereClause": "c.name != 'shaft'"
+  }
+}

@@ -1,12 +1,9 @@
 /** 🌊️ Original close admission agrees with independent SQLite and the actual native owner source. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import Ajv from "ajv/dist/2020";
-import f from "../../🧫️fixtures/🧾️original/🔣️.json";
-import schema from "../../🧬️schema/🧾️original/🔣️.json";
+import f from "../🧫️fixtures/🧾️original/🔣️.json";
 const fields={items:"maximumItems",copy:"maximumCopyBytes",capacity:"maximumCapacityBytes",release:"maximumReleaseBytes",depth:"maximumDepth"}as const;
 test("Flow original close neutral denials match SQLite independent currency predicate",()=>{
- expect(new Ajv().compile(schema)(f)).toBe(true);
  const db=new Database(":memory:");try{
   for(const row of f.denials){const demand={maximumItems:1,maximumCopyBytes:7,maximumCapacityBytes:37,maximumReleaseBytes:113,maximumDepth:4},key=fields[row.axis as keyof typeof fields],grant={...f.policy,[key]:demand[key]-1};const admitted=db.query("SELECT (? >= ? AND ? >= ? AND ? >= ? AND ? >= ? AND ? >= ?) AS admitted").get(grant.maximumItems,demand.maximumItems,grant.maximumCopyBytes,demand.maximumCopyBytes,grant.maximumCapacityBytes,demand.maximumCapacityBytes,grant.maximumReleaseBytes,demand.maximumReleaseBytes,grant.maximumDepth,demand.maximumDepth)as{admitted:number};expect(admitted.admitted).toBe(0);expect(row.refusal).toBe(row.axis==="depth"?"error":"progress");}
  }finally{db.close();}

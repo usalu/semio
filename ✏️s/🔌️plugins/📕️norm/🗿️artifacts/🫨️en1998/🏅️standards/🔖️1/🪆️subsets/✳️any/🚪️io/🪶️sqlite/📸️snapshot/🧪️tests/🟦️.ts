@@ -1,6 +1,6 @@
 import{expect,test}from"bun:test";
 import Ajv from"ajv";
-import fixture from"../🧫️fixtures/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
 import schema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import artifactSchema from"../../../../🧬️schema/🔣️.json";
 import*as owner from"../🟦️.ts";
@@ -12,9 +12,9 @@ test("EN1998 schema enforces every native unsigned8 member counterexample",()=>{
 
 import {Database} from "bun:sqlite";
 import {Buffer} from "node:buffer";
-import controls from "../🧫️fixtures/🎛️control.json";
-import words from "../🧫️fixtures/🔢️binary64.json";
-import choices from "../🧫️fixtures/🛂️choices.json";
+import controls from "./🧫️fixtures/🎛️control.json";
+import words from "./🧫️fixtures/🔢️binary64.json";
+import choices from "./🧫️fixtures/🛂️choices.json";
 import { EN1998_SQLITE_SCHEMA, en1998SnapshotToSqliteDatabase, en1998SnapshotFromSqliteDatabase, type En1998SqliteSnapshot } from "../🟦️.ts";
 import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
@@ -52,7 +52,7 @@ test("EN1998 nested variable collections and owned text support cancellation and
  expected.annex="x".repeat(controls.largeTextBytes);await expect(en1998SnapshotToSqliteDatabase(expected,{maxValueBytes:controls.largeTextBytes-1})).rejects.toThrow();const c=new AbortController();let reached=false;await expect(en1998SnapshotToSqliteDatabase(expected,{signal:c.signal,onProgress:event=>{if(event.phase==="projectSnapshot"&&event.completed>0&&event.total===0){reached=true;c.abort()}}})).rejects.toHaveProperty("kind","canceled");expect(reached).toBe(true);
 });
 
-import diffRecordFixture from "../../../../🧬️schema/🔺️diff/🧫️fixtures/🔣️.json";
+import diffRecordFixture from "../../../../🧪️tests/🧫️fixtures/🔺️diff/🔣️.json";
 test("EN1998 diff records retain the neutral empty delta and authored record roles",async()=>{
  expect(new Ajv({strict:true}).compile({type:"object",additionalProperties:false})(diffRecordFixture.empty)).toBe(true);
  for(const [index,path] of ["../../../../🧬️schema/🔺️diff/🦀️.rs","../../../../🧬️schema/🦀️.rs"].entries()){

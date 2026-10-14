@@ -12,7 +12,10 @@ import { testBrowserDistribution } from "../🌐️browser/🟦️.ts";
 import { testContinuousServices } from "../🖥️services/🟦️.ts";
 import { testServiceReadiness } from "../🌐️service-readiness/🟦️.ts";
 import { testDependencyBootstrap, testNxTooling, testDependencyCancellation } from "../📦️dependencies/🟦️.ts";
-import { testResourceLeases } from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts";
+import { type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { runProcessTestOwner } from "../🧭️ownership/🟦️.ts";
 import { testCachePrune } from "../🧹️cache-prune/🟦️.ts";
 import { testWasmOptimizer } from "../🕸️wasm/🟦️.ts";
 import { testCiBaseline } from "../../🚦️ci/🧭️baseline/🧪️tests/🧭️baseline-selection/🟦️.ts";
@@ -51,7 +54,7 @@ export function proveCachePolicy(workspace: string, internals: { targetPolicy(na
 }
 
 /** 🧪️ Verifies native source and command ownership against compiler and bundler input oracles. */
-export async function testCommandInputs(workspace: string, output: string): Promise<void> {
+export async function testCommandInputs(workspace: string, output: string, invocation: ScriptInvocation): Promise<void> {
   await testGraphRevision(workspace, output);
   await testWasmOptimizer(workspace, output);
   await testBinaryenToolchain(workspace, output);
@@ -75,8 +78,8 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   await testNativeDependencies(workspace, output);
   await testCargoCleanupBoundary(workspace, output);
   const { testWgpuWasmOutputs } = await import("../🧊️wasm-outputs/🟦️.ts");
-  await testWgpuWasmOutputs(workspace, output);
-  await testWgpuBrowserServing(workspace, output);
+  await testWgpuWasmOutputs(workspace, output, invocation);
+  await testWgpuBrowserServing(workspace, output, invocation);
   const { testWgpuBootInputs } = await import("../../../../../../💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧊️wgpu-browser-boot-cache-inputs/🟦️.ts");
   await testWgpuBootInputs(workspace, output);
   const { testTypeScriptSourceInputs } = await import("../../../🕸️dependencies/🟦️typescript/🧪️tests/⚡️inputs/🟦️.ts");
@@ -92,7 +95,7 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   await testWatcherReadiness(workspace);
   testWorkspaceWatchIgnores(workspace, output);
   await testContinuousServices(workspace, output);
-  await testResourceLeases(output);
+  await runProcessTestOwner(invocation, workspace, output, "resource-leases");
   await testCachePrune(output);
   testWorkspaceRoots(workspace, output);
   await testRuntimeComponents(workspace);
@@ -109,7 +112,7 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   await testProductionBrowserArtifacts(workspace, output);
   await testServiceReadiness(workspace, output);
   await testBunDependencies(workspace, output);
-  await testNativePreparation(workspace, output);
+  await testNativePreparation(workspace, output, invocation);
   const { testGeneratorOwnership, testWgpuGeneratorOwnership, testWgpuGeneratorPublication, testBrowserTransportOwnership, testBrowserInputClosure } = await import("../🧬️generator-ownership/🟦️.ts");
   await testGeneratorOwnership(workspace, output);
   await testBrowserTransportOwnership(workspace);
@@ -130,7 +133,7 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   await testPlaygroundInputView(workspace);
   const { testInferredNativeInputs } = await import("../../../../🧪️test/🕸️dependencies/🧪️tests/🦀️inputs/🟦️.ts");
   await testInferredNativeInputs(workspace, output);
-  const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures");
+  const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures");
   const root = mkdtempSync(join(output, "native-inputs-"));
   try {
     const cases = JSON.parse(readFileSync(join(fixtures, "native-inputs/🧫️cases.json"), "utf8"));
@@ -183,7 +186,7 @@ export async function testCommandInputs(workspace: string, output: string): Prom
 export async function testBrowserModuleRelocation(workspace: string): Promise<void> {
   const require = createRequire(import.meta.url), directory = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports");
   const { rewritePreview2ShimImportSource } = await import(pathToFileURL(join(directory, "🟦️.ts")).href);
-  const fixture = JSON.parse(readFileSync(join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🕸️imports/🧫️cases.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🕸️imports/🧫️cases.json"), "utf8"));
   const lexer = await import("es-module-lexer");
   await lexer.init;
   for (const row of fixture.cases) {
@@ -279,7 +282,7 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
 
 /** 🕸️ Compares runtime selection with an independent directed-graph traversal. */
 export async function testRuntimeComponents(workspace: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/runtime-components");
+  const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/runtime-components");
   const fixture = JSON.parse(readFileSync(join(fixtures, "🔣️.json"), "utf8"));
   
   const pluginModule = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
@@ -300,10 +303,10 @@ export async function testRuntimeComponents(workspace: string): Promise<void> {
   const targets = cacheInternals.playgroundPreparationTargets(paths, workspace, dev), projects = new Map(components.map((row: any) => [row.pluginId, row.project]));
   const { testSelectedRuntimeDependencies } = await import("../🎯️selected-runtime/🟦️.ts");
   testSelectedRuntimeDependencies(targets);
-  const vectors = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/nx-contract/🔣️.json"), "utf8")).closurePreparation;
+  const vectors = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/nx-contract/🔣️.json"), "utf8")).closurePreparation;
   const moduleOutputs = (ids: readonly string[]) => ids.flatMap((id: string) => { const directory = components.find((row: any) => row.pluginId === id)?.["deployment-directory"]; return directory === undefined ? [] : [`{workspaceRoot}/${vectors.modules}/${directory}`]; }).sort();
   let checked = 0;
-  for (const component of components) for (const row of component.playground ?? []) for (const profile of ["dev", "release"]) {
+  for (const component of components) for (const row of component.playground ?? []) for (const profile of ["prototype", "release"]) {
     const bootExpected = oracle(components, [{ id: component.pluginId, appScoped: true }]), fullExpected = oracle(components, [component.pluginId]);
     const prepare = targets[`prepare-${row.variant}-react-${profile}`];
     assert.equal(prepare.cache, false, `${row.variant} ${profile}: a preparation builds through the driver and answers to Cargo freshness`);
@@ -334,7 +337,7 @@ export async function testRuntimeComponents(workspace: string): Promise<void> {
 /** 🗂️ Keeps producers inside the workspace supplied by Nx's own task environment. */
 export function testWorkspaceRoots(workspace: string, output: string): void {
   const require = createRequire(import.meta.url), root = mkdtempSync(join(output, "workspace-roots-"));
-  const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🗂️workspace-roots.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/🗂️workspace-roots.json"), "utf8"));
   
   
   try {
@@ -353,7 +356,7 @@ export function testWorkspaceRoots(workspace: string, output: string): void {
 
 /** 🧶️ Validates location-sensitive locked dependencies against Nx's native hash planner. */
 export async function testBunDependencies(workspace: string, output: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/bun-dependencies");
+  const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/bun-dependencies");
   const cases = JSON.parse(readFileSync(join(fixtures, "🔣️.json"), "utf8"));
   
   const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
@@ -404,8 +407,8 @@ export async function testBunDependencies(workspace: string, output: string): Pr
 }
 
 /** 🧬️ Compares prerequisite closure with Cargo's independent package and dependency model. */
-export async function testNativePreparation(workspace: string, output: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/native-preparation");
+export async function testNativePreparation(workspace: string, output: string, invocation: ScriptInvocation): Promise<void> {
+  const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/native-preparation");
   const cases = JSON.parse(readFileSync(join(fixtures, "🧫️cases.json"), "utf8"));
   
   const nativeInput = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🎛️native-input/🟦️.ts")).href);
@@ -488,15 +491,16 @@ writeFileSync(dependency, process.env.SEMIO_CAPTURE_REPLACEMENT_BYTES!);
     process.env.SEMIO_CAPTURE_PRIMARY_BYTES = cases.artifactCapture.primary;
     process.env.SEMIO_CAPTURE_REPLACEMENT_BYTES = cases.artifactCapture.replacement;
     process.env.SEMIO_CAPTURE_DELAY_MS = String(cases.artifactCapture.delayMs);
-    await nativeBuild.buildRepositoryCargoArtifacts("package/Cargo.toml", [], captureRoot);
-    assert.equal(readFileSync(join(packageRoot, "dist/build/deps/libfixture_dependency.rlib"), "utf8"), cases.artifactCapture.dependency, "Cargo dependency must be captured before a successor can replace its shared output");
-    assert.equal(readFileSync(join(packageRoot, "dist/build/libfixture_primary.rlib"), "utf8"), cases.artifactCapture.primary, "Cargo primary output must be captured from the same compiler event epoch");
+    const control = scriptCompilerAdmissionControlV1(invocation, "native:capture-fixture", 30000), published = join(packageRoot, "dist/build", readBuildMode(process.env.SEMIO_BUILD_MODE));
+    await nativeBuild.buildRepositoryCargoArtifacts("package/Cargo.toml", [], captureRoot, { control });
+    assert.equal(readFileSync(join(published, "deps/libfixture_dependency.rlib"), "utf8"), cases.artifactCapture.dependency, "Cargo dependency must be captured before a successor can replace its shared output");
+    assert.equal(readFileSync(join(published, "libfixture_primary.rlib"), "utf8"), cases.artifactCapture.primary, "Cargo primary output must be captured from the same compiler event epoch");
     process.env.SEMIO_CAPTURE_MISSING = "1";
     const failureStarted = Date.now();
-    await assert.rejects(nativeBuild.buildRepositoryCargoArtifacts("package/Cargo.toml", [], captureRoot), /ENOENT/);
+    await assert.rejects(nativeBuild.buildRepositoryCargoArtifacts("package/Cargo.toml", [], captureRoot, { control }), /ENOENT/);
     assert.ok(Date.now() - failureStarted < 5000, "A capture failure must cancel and await Cargo without leaving the build alive");
-    assert.equal(readFileSync(join(packageRoot, "dist/build/deps/libfixture_dependency.rlib"), "utf8"), cases.artifactCapture.dependency, "A capture failure must preserve the previous dependency output");
-    assert.equal(readFileSync(join(packageRoot, "dist/build/libfixture_primary.rlib"), "utf8"), cases.artifactCapture.primary, "A capture failure must preserve the previous primary output");
+    assert.equal(readFileSync(join(published, "deps/libfixture_dependency.rlib"), "utf8"), cases.artifactCapture.dependency, "A capture failure must preserve the previous dependency output");
+    assert.equal(readFileSync(join(published, "libfixture_primary.rlib"), "utf8"), cases.artifactCapture.primary, "A capture failure must preserve the previous primary output");
     assert.equal(readdirSync(join(packageRoot, "dist")).some((name) => name.startsWith("cargo-artifacts-")), false, "A capture failure must remove its private directory");
   } finally {
     process.env.PATH = capturePath;
@@ -537,7 +541,7 @@ writeFileSync(dependency, process.env.SEMIO_CAPTURE_REPLACEMENT_BYTES!);
 /** 🪵️ Exercises Nx's installed error formatter against a bounded diagnostic contract. */
 export function testNxDaemonDiagnostics(workspace: string, output: string): void {
   const require = createRequire(join(workspace, "package.json")), root = mkdtempSync(join(output, "daemon-tail-"));
-  const vector = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/nx-contract/🔣️.json"), "utf8")).daemonLog;
+  const vector = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/nx-contract/🔣️.json"), "utf8")).daemonLog;
   const source = `
     const fs = require("node:fs"), assert = require("node:assert/strict");
     const client = require(${JSON.stringify(require.resolve("nx/src/daemon/client/client.js"))});
@@ -566,7 +570,7 @@ export function testNxDaemonDiagnostics(workspace: string, output: string): void
 /** 🧭️ Keeps task-scoped reporting and selection out of daemon graph identity while preserving caller values. */
 export function testNxDaemonTaskEnvironment(workspace: string): void {
   const require = createRequire(join(workspace, "package.json"));
-  const vector = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/nx-contract/🔣️.json"), "utf8")).daemonTaskEnvironment;
+  const vector = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/nx-contract/🔣️.json"), "utf8")).daemonTaskEnvironment;
   const source = `
     const assert = require("node:assert/strict"), nx = require(${JSON.stringify(require.resolve("nx/src/daemon/client/daemon-environment.js"))});
     const vector = ${JSON.stringify(vector)};
@@ -590,7 +594,7 @@ export function testNxDaemonTaskEnvironment(workspace: string): void {
 export function testNxDaemonRetention(workspace: string, output: string): void {
   const require = createRequire(join(workspace, "package.json")), directory = mkdtempSync(join(output, "daemon-retention-"));
   const original = require.resolve("nx/src/daemon/logger.js"), source = original;
-  const vector = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/📓️daemon-retention.json"), "utf8"));
+  const vector = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/📓️daemon-retention.json"), "utf8"));
   const code = `
   const fs = require("node:fs"), assert = require("node:assert/strict"), path = require("node:path"), logger = {};
   const load = require("node:module").createRequire(${JSON.stringify(original)});
@@ -636,7 +640,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
   const { assert, cacheInternals, chmodSync, copyFileSync, createRequire, devToolingEnv, dirname, EventEmitter, existsSync, getWorkspaceRoot, join, lstatSync, mkdirSync, mkdtempSync, plugin, readFileSync, relative, resolve, rmSync, SCRIPT_ROOT, spawn, stageRepositoryArtifacts, utimesSync, wasmBindgenVersion, wasmBuildArguments, wasmBuildEnvironment, writeFileSync } = dependencies;
 
   /** 🧪️ Executes language-neutral policy examples against the Nx project plugin. */
-  async function testCacheContracts(): Promise<void> {
+  async function testCacheContracts(invocation: ScriptInvocation): Promise<void> {
     const { validate } = createRequire(testSource.url)("jsonschema");
     const policy = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🔣️policy.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧬️schema/🔣️.json"), "utf8"));
@@ -725,9 +729,10 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       assert.equal(disabled.cache, row.disabledCache, `${row.target}: owner cache refusal precedes automatic cache families`);
       assert.equal(isCacheableTask({ cache: enabled.cache, continuous: enabled.continuous === true, target: { project: "probe", target: row.target }, overrides: {} }), row.cache, `${row.target}: nx isCacheableTask`);
     }
-    await testCommandInputs(root, ticketOutput(root, []));
+    await testCommandInputs(root, ticketOutput(root, []), invocation);
     await (await import("../🚀️bootstrap/🟦️.ts")).testNxBootstrap(root, ticketOutput(root, []));
-    await (await import("../📦️publication/🟦️.ts")).testArtifactPublication(ticketOutput(root, []));
+    await runProcessTestOwner(invocation, root, ticketOutput(root, []), "artifact-publication");
+    await runProcessTestOwner(invocation, root, ticketOutput(root, []), "native-artifact-publication");
     await (await import("../📇️artifacts/🟦️.ts")).testArtifactRegistry(root, ticketOutput(root, []));
     await (await import("../🌎️hub/🟦️.ts")).testHubBuild(root);
     await testDependencyBootstrap(root, ticketOutput(root, []));
@@ -804,8 +809,8 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     }
     assert.throws(() => activation.parseActivationReceipt({ ...activationReceipt, plugins: [...activationReceipt.plugins, ...activationReceipt.plugins] }), /Duplicate/);
     assert.throws(() => activation.parseActivationReceipt({ ...activationReceipt, unknown: true }), /Invalid/);
-    assert.throws(() => activation.nextActivationReceipt("other", "dev", [], activationReceipt, 500), /identity/);
-    assert.throws(() => activation.nextActivationReceipt("../note", "dev", [], undefined, 500), /Invalid/);
+    assert.throws(() => activation.nextActivationReceipt("other", "prototype", [], activationReceipt, 500), /identity/);
+    assert.throws(() => activation.nextActivationReceipt("../note", "prototype", [], undefined, 500), /Invalid/);
     const sessionProject = contracts.find((project) => project.name === vectors.playgroundSessions.project)!;
     for (const variant of vectors.playgroundSessions.variants) {
       const session = sessionProject.targets[`session-${variant}`];
@@ -834,7 +839,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
         assert.equal(preparation.metadata?.semio?.orchestrator, true);
         const wgpuTargetName = `prepare-${playground.variant}-wgpu-${profile}`, wgpuPreparation = preparationProject.targets[wgpuTargetName];
         assert.ok(wgpuPreparation, `${wgpuTargetName} needs declared prerequisites`);
-        assert.ok(wgpuPreparation.dependsOn.includes(`@semio-tech/framework-renderer-wgpu:${profile === "release" ? "wasm-release" : "wasm"}`));
+        assert.ok(wgpuPreparation.dependsOn.includes(`@semio-tech/framework-renderer-wgpu:wasm`));
         assert.equal(wgpuPreparation.cache, false, `${wgpuTargetName} builds its closure through the driver`);
         assert.deepEqual(wgpuPreparation.outputs, preparation.outputs, `${wgpuTargetName} publishes the same boot closure modules`);
         const activationName = `activate-${playground.variant}-react-${profile}`, activationTarget = preparationProject.targets[activationName];
@@ -888,8 +893,8 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     for (const entry of vectors.nativeBinaries) {
       const project = contracts.find((project) => project.name === entry.project)!;
       assert.equal(project.targets[entry.target].cache, true, `${entry.project} binary must be restorable`);
-      assert.deepEqual(project.targets[entry.target].outputs, [entry.output]);
-      assert.ok(project.targets[entry.consumer].dependsOn.includes(entry.target));
+      const oracle=createRequire(testSource.url)("nx/src/tasks-runner/utils").getOutputs({[entry.project]:{data:project}}, {project:entry.project,target:entry.target,configuration:entry.configuration},{});
+      assert.deepEqual(oracle,[entry.output.replace("{projectRoot}",project.root)]);
     }
     for (const entry of vectors.components) {
       const project = contracts.find((project) => project.name === entry.project)!;
@@ -1012,9 +1017,9 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       for (const vector of invocations.invalid) assert.throws(() => resolvePrint(vector));
     }
     for (const command of ["prepare", "activate", "serve", "dev"]) {
-      const selected = `@semio-tech/framework-os-dev:${command}-note-react-dev`;
+      const selected = `@semio-tech/framework-os-dev:${command}-note-react-prototype`;
       const invocation = resolveInvocation(["run", selected]);
-      assert.equal(invocation.watch, command === "dev" ? "@semio-tech/framework-os-dev:activate-note-react-dev" : undefined);
+      assert.equal(invocation.watch, command === "dev" ? "@semio-tech/framework-os-dev:activate-note-react-prototype" : undefined);
       assert.equal(invocation.env.SEMIO_BUILD_MODE, "prototype");
       assert.equal(resolveInvocation(["run", selected, "--graph=stdout"]).watch, undefined);
     }

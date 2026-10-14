@@ -7,13 +7,13 @@
 //! (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-document-reconcile-2026-09-12.md` §6). The same
 //! shape refused a retirement whose presentation slot it had itself begun to consume.
 //!
-//! The neutral oracle is `🖱️ui/🧫️fixtures/🖼️raster-witness-lifecycle/🔣️.json`; its TypeScript twin is
+//! The neutral oracle is `🖱️ui/🧪️tests/🧫️fixtures/🖼️raster-witness-lifecycle/🔣️.json`; its TypeScript twin is
 //! `📺️renderer/🧑‍🎨engine/🧪️tests/🖼️wgpu-raster-witness/🟦️.ts`.
 
 use super::*;
 
 fn law() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🖼️raster-witness-lifecycle/🔣️.json")).expect("raster witness lifecycle fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🖼️raster-witness-lifecycle/🔣️.json")).expect("raster witness lifecycle fixture")
 }
 
 fn witness(law: &serde_json::Value, name: &str) -> RasterTextureWitness {

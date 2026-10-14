@@ -2,7 +2,7 @@
 use super::*;
 use protocol::Mutation;
 use semio_framework_pixels::{RasterImage,png_encoding::PngEncodeJob};
-fn fixture()->serde_json::Value {serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value {serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn document(layers:&serde_json::Value,fixture:&serde_json::Value)->RasterSnapshot {
     let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
     document.layers=semio_framework_pack_json::from_json_str(&layers.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

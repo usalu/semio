@@ -4,7 +4,7 @@ use super::*;
 use crate::{Point2, Point3, SectionBox, ViewCamera};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const HOUSE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️create-beam/✅️adds-below-the-storey-top/📸️snapshot/⬅️before/🔣️.json");
+const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️create-beam/✅️adds-below-the-storey-top/📸️snapshot/⬅️before/🔣️.json");
 
 fn model() -> ModelSnapshot {
     let mut document: serde_json::Value = serde_json::from_str(HOUSE).expect("the committed house is JSON");

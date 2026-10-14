@@ -281,13 +281,13 @@ fn kinds_match_the_enum_and_the_catalog() {
 #[test]
 fn play_snapshot_pack_shares_the_typed_record_identity_and_round_trips() {
     use crate::Puzzle5dPlaySnapshot;
-    let spec = <Puzzle5dPlaySnapshot as store::os_store::serialization::ArtifactPack>::record_spec().expect("play snapshot declares its record spec");
+    let spec = <Puzzle5dPlaySnapshot as pack::snapshot::ArtifactPack>::record_spec().expect("play snapshot declares its record spec");
     assert_eq!(store::os_pack::schema_hash(&spec), store::os_pack::schema_hash(&Puzzle5dSnapshot::__dsl_spec()));
     assert_ne!(store::os_pack::schema_hash(&spec), [0u8; 32]);
     let play = Puzzle5dPlaySnapshot::from_typed(Puzzle5dSnapshot::default());
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&play);
-    assert_eq!(bytes, store::os_store::serialization::ArtifactPack::encode_pack(play.typed()));
-    assert_eq!(<Puzzle5dPlaySnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode play pack"), play);
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&play);
+    assert_eq!(bytes, pack::snapshot::ArtifactPack::encode_pack(play.typed()));
+    assert_eq!(<Puzzle5dPlaySnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode play pack"), play);
 }
 
 /// 📍️ LAW (design wave-2 ruling): deleting or disconnecting a MIDDLE row restores it at its original position, and the

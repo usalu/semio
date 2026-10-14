@@ -1,6 +1,7 @@
 //! 🧹️ Public HTML cold retirement and late SQL refusal share literal neutral ownership.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase}};
 std::thread_local!{
  static TRACK:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};
  static REFUSE:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};
@@ -25,7 +26,7 @@ unsafe impl std::alloc::GlobalAlloc for ObservedAllocator{
 }
 #[global_allocator]
 static OBSERVED_ALLOCATOR:ObservedAllocator=ObservedAllocator;
-fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🧹️lifecycle/🔣️.json")).unwrap()}
+fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🧹️lifecycle/🔣️.json")).unwrap()}
 fn leaf(index:usize,cases:&serde_json::Value)->HtmlNode{let value=&cases["leaves"][index%4];let text=value["text"].as_str().unwrap().to_owned();match value["kind"].as_str().unwrap(){"text"=>HtmlNode::Text{text},"comment"=>HtmlNode::Comment{text},"rawText"=>HtmlNode::RawText{parent_kind:match value["parentKind"].as_str().unwrap(){"script"=>RawTextKind::Script,"style"=>RawTextKind::Style,_=>panic!("literal raw kind")},text},_=>panic!("literal leaf kind")}}
 fn attributes(cases:&serde_json::Value)->Vec<HtmlAttr>{cases["attributes"].as_array().unwrap().iter().map(|value|HtmlAttr{name:value["name"].as_str().unwrap().to_owned(),value:value.get("value").map(|value|value.as_str().unwrap().to_owned())}).collect()}
 fn tree(case:usize,cases:&serde_json::Value)->(HtmlSnapshot,usize){

@@ -22,7 +22,7 @@ use framework_schema::ArtifactSchema;
 use std::fmt;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 
-impl store::os_store::serialization::ArtifactDsl for DwgSnapshot {
+impl pack::snapshot::ArtifactDsl for DwgSnapshot {
     const EXTENSION: &'static str = "dwg";
     fn envelope_id() -> &'static str {
         "stdio.dwg"
@@ -38,7 +38,7 @@ impl store::os_store::serialization::ArtifactDsl for DwgSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }

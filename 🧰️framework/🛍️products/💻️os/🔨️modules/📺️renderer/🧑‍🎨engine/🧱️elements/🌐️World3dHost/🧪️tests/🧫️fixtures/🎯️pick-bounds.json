@@ -1,0 +1,77 @@
+{
+  "$comment": "🎯️ Local-space extents a screen-space hit test must use for one instance's mesh, declared neutrally. A URL-backed mesh record carries no inline `data` (the guest publishes {id, url} for every catalogue representation), so the corners have to come from the loaded GLB's own bounds; only while that GLB is still loading may the unit cube stand in. Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B46.",
+  "unitCube": [
+    [-0.5, -0.5, -0.5],
+    [0.5, -0.5, -0.5],
+    [-0.5, 0.5, -0.5],
+    [0.5, 0.5, -0.5],
+    [-0.5, -0.5, 0.5],
+    [0.5, -0.5, 0.5],
+    [-0.5, 0.5, 0.5],
+    [0.5, 0.5, 0.5]
+  ],
+  "recordedBounds": {
+    "/mesh/capsule.glb": [
+      [-1.25, -2.0, -1.25],
+      [1.25, -2.0, -1.25],
+      [-1.25, 2.0, -1.25],
+      [1.25, 2.0, -1.25],
+      [-1.25, -2.0, 1.25],
+      [1.25, -2.0, 1.25],
+      [-1.25, 2.0, 1.25],
+      [1.25, 2.0, 1.25]
+    ]
+  },
+  "cases": [
+    {
+      "name": "inline mesh data wins over everything",
+      "meshData": { "positions": [-3, -3, -3, 3, 3, 3], "normals": [], "indices": [] },
+      "meshUrl": "/mesh/capsule.glb",
+      "expect": "meshData",
+      "expectedSpan": [6, 6, 6]
+    },
+    {
+      "name": "a url-backed mesh uses the loaded GLB's recorded extents",
+      "meshUrl": "/mesh/capsule.glb",
+      "expect": "recorded",
+      "expectedSpan": [2.5, 4, 2.5]
+    },
+    {
+      "name": "a url-backed mesh whose GLB has not loaded yet falls back to the unit cube",
+      "meshUrl": "/mesh/not-loaded.glb",
+      "expect": "unitCube",
+      "expectedSpan": [1, 1, 1]
+    },
+    {
+      "name": "a mesh with neither data nor url falls back to the unit cube",
+      "expect": "unitCube",
+      "expectedSpan": [1, 1, 1]
+    },
+    {
+      "name": "an empty inline mesh is not geometry and does not shadow the recorded extents",
+      "meshData": { "positions": [], "normals": [], "indices": [] },
+      "meshUrl": "/mesh/capsule.glb",
+      "expect": "recorded",
+      "expectedSpan": [2.5, 4, 2.5]
+    }
+  ],
+  "projectedPick": {
+    "$comment": "🖱️ The nearest projected AABB containing the click wins. `a` is a small box the click misses when it is sized as a unit cube and hits when it is sized from the GLB — the exact difference measured on the 180-object Nakagin tower (containing=0 before, containing=14 after).",
+    "click": { "x": 474, "y": 407 },
+    "candidates": [
+      { "id": "capsule-unit", "corners": [[460, 393], [488, 393], [460, 423], [488, 423]], "depth": 40 },
+      { "id": "capsule-glb", "corners": [[392, 349], [489, 349], [392, 437], [489, 437]], "depth": 40 },
+      { "id": "far-away", "corners": [[10, 10], [60, 10], [10, 60], [60, 60]], "depth": 5 }
+    ],
+    "expectedHit": "capsule-unit"
+  },
+  "leftoverOverlay": {
+    "$comment": "🎯️ The host's leftover overlay exists to make a pick visible before the guest's own lane answers. `activeObjectId` is a single field several readers take instead of the list (gumball target, Inspection focus, `data-selection-json`), so it has to travel with the ids the overlay supplies.",
+    "cases": [
+      { "name": "overlay ids carry the active object", "baseIds": [], "baseActiveObjectId": null, "overlayIds": ["picked"], "expectedIds": ["picked"], "expectedActiveObjectId": "picked" },
+      { "name": "an active object the overlay still names does not move", "baseIds": ["a", "b"], "baseActiveObjectId": "b", "overlayIds": ["a", "b"], "expectedIds": ["a", "b"], "expectedActiveObjectId": "b" },
+      { "name": "an active object the overlay dropped is replaced", "baseIds": ["gone"], "baseActiveObjectId": "gone", "overlayIds": ["picked"], "expectedIds": ["picked"], "expectedActiveObjectId": "picked" },
+      { "name": "an empty overlay leaves the guest's own answer alone", "baseIds": ["a"], "baseActiveObjectId": "a", "overlayIds": [], "expectedIds": ["a"], "expectedActiveObjectId": "a" }
+    ]
+  }
+}

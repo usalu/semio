@@ -62,7 +62,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { dirname, join } = await import("node:path");
     const { fileURLToPath } = await import("node:url");
     const root = dirname(fileURLToPath(source.url));
-    const fixture = await readFile(join(root, "🔗️causal/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json"), "utf8");
+    const fixture = await readFile(join(root, "🔗️causal/🧪️tests/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json"), "utf8");
     return { fixture: JSON.parse(fixture) as Fixture };
   }
 

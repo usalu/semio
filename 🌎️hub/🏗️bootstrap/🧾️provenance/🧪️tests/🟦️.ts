@@ -3,12 +3,12 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync, renameSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { retainTrustedCargoInvocationV1, trustedCatalogByteClaimV1, trustedCatalogProvenancePathV1, writeTrustedCatalogPublicationProvenanceV1, readTrustedCatalogPublicationProvenanceV1 } from "../🟦️.ts";
-import { decodeCargoProvenanceV1, encodeCargoProvenanceV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+import { decodeCargoProvenanceV1, encodeCargoProvenanceV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 import {observePhysicalFileV1,type FileObservationControlV1} from "../../../../🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
 
 export function createTrustedCatalogProvenanceTests() {
   async function testTrustedCatalogProvenanceV1(repoRoot: string) {
-    const fixture=JSON.parse(readFileSync(join(import.meta.dir,"../🧫️fixtures/🔣️.json"),"utf8"));
+    const fixture=JSON.parse(readFileSync(join(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));
     const started=Date.now(),control:FileObservationControlV1={maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>false,remainingMs:()=>60_000-(Date.now()-started),onProgress:()=>{}};
     const evidence=process.env.SEMIO_TEST_ARTIFACT_DIR!; assert(evidence);
     const root=mkdtempSync(join(evidence,"trusted-catalog-producer-neutral-"));

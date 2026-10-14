@@ -5,7 +5,7 @@ import stableStringify from "fast-json-stable-stringify";
 
 /** 🎟️ Independent JSON Patch and Map references preserve original ordered insertion output. */
 export function testHistoryIndexInsertion():void{
- const fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🎟️insertion/🔣️.json",import.meta.url),"utf8"));
+ const fixture=JSON.parse(readFileSync(new URL("../../🧪️tests/🧫️fixtures/🎟️insertion/🔣️.json",import.meta.url),"utf8"));
  const map=new Map<string,string>(fixture.sourceRows);const source=Object.fromEntries(map);
  const patched=applyPatch(source,fixture.insertions.map(([key,value]:[string,string])=>({op:"add" as const,path:"/"+key,value})),true,false).newDocument;
  for(const [key,value]of fixture.insertions)map.set(key,value);

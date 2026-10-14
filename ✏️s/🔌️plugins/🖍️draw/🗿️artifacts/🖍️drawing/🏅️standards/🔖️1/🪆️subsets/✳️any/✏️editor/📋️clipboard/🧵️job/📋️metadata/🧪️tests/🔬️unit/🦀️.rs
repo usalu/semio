@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn clipboard_metadata_replays_neutral_json_patch_membership_and_exact_backing(){
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let (mut table,heap)=observe(Table::<()>::new);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     let mut keys=Vec::<String>::new();
     for row in fixture["metadataCases"].as_array().unwrap(){let key=row["key"].as_str().unwrap();let admitted=table.admitted;let ((added,live),heap)=observe(||{let added=if row["operation"]=="insert"{table.insert_key(key).unwrap()}else{table.remove(key);false};(added,table.len())});assert_eq!(heap.released_bytes,0);assert_eq!(heap.requested_bytes,table.admitted-admitted);assert_eq!(added,row["added"].as_bool().unwrap());assert_eq!(live,row["live"].as_array().unwrap().len());if !keys.iter().any(|candidate|candidate==key){keys.push(key.into());}let mut actual=keys.iter().filter(|key|table.contains(key)).cloned().collect::<Vec<_>>();actual.sort();assert_eq!(actual,serde_json::from_value::<Vec<String>>(row["live"].clone()).unwrap());}

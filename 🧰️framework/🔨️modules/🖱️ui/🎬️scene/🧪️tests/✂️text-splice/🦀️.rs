@@ -4,7 +4,7 @@ use super::{rebase_text_edits, TextSplice, TextSpliceComposition, TEXT_EDITOR_TY
 use serde_json::Value;
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/✂️text-splice/🔣️.json")).expect("text splice fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/✂️text-splice/🔣️.json")).expect("text splice fixture")
 }
 
 fn splice(value: &Value) -> TextSplice {
@@ -120,7 +120,7 @@ fn every_typing_session_folds_into_the_fixture_runs() {
 /// ⚖️ LAW: the host's typing-run protocol constants are the tool-machine owner's (typing-law fixture).
 #[test]
 fn the_typing_protocol_constants_are_the_tool_machine_owners() {
-    let law: Value = serde_json::from_str(include_str!("../../../../🛠️tool-machine/🧫️fixtures/🧫️typing-law/🔣️.json")).expect("typing law");
+    let law: Value = serde_json::from_str(include_str!("../../../../🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️typing-law/🔣️.json")).expect("typing law");
     assert_eq!((law["args"]["buffer"].as_str(), law["args"]["commit"].as_str(), law["idleMs"].as_u64()), (Some(TEXT_EDITOR_TYPING_BUFFER_ARG), Some(TEXT_EDITOR_TYPING_COMMIT_ARG), Some(TEXT_EDITOR_TYPING_IDLE_MS)));
 }
 
@@ -128,7 +128,7 @@ fn the_typing_protocol_constants_are_the_tool_machine_owners() {
 /// `reasons`), so a host commit signal is never refused.
 #[test]
 fn every_host_signal_commits_with_a_tool_machine_reason() {
-    let law: Value = serde_json::from_str(include_str!("../../../../🛠️tool-machine/🧫️fixtures/🧫️typing-law/🔣️.json")).expect("typing law");
+    let law: Value = serde_json::from_str(include_str!("../../../../🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️typing-law/🔣️.json")).expect("typing law");
     let reasons: Vec<&str> = law["reasons"].as_array().unwrap().iter().filter_map(Value::as_str).collect();
     let rows = fixture()["hostSignals"].as_array().unwrap().clone();
     let mut signals: Vec<&str> = rows.iter().map(|row| row["signal"].as_str().unwrap()).collect();
@@ -212,7 +212,7 @@ fn draft_wire_borrows_original_changes_and_retains_refusal_prefixes() {
 
 #[test]
 fn draft_wire_incremental_cursor_keeps_original_source_and_cumulative_admission(){
-    let policy:Value=serde_json::from_str(include_str!("../../✂️text-splice/📡️draft-wire/🧫️fixtures/🔣️.json")).unwrap();
+    let policy:Value=serde_json::from_str(include_str!("../../✂️text-splice/📡️draft-wire/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let caller=&policy["callerGrant"];
     let grant=protocol::value::RetainedCloneGrant{maximum_items:caller["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:caller["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:caller["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:caller["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:caller["maximumDepth"].as_u64().unwrap()as usize};
     use protocol::value::{NativeEncodeControl,ValueError,ValueRefusalKind};

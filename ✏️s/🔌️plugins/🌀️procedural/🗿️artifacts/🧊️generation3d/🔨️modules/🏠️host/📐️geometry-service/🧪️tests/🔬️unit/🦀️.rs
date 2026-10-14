@@ -8,7 +8,7 @@ use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, OrderedMa
 use semio_framework_plugin::{WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
 
 //#region 🧸️Fixtures
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🔣️.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/🔣️.json");
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(FIXTURE).expect("the service fixture parses")

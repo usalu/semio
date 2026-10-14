@@ -7,7 +7,7 @@ mod label_shapes_laws {
     use super::*;
     use serde_json::Value;
 
-    const FIXTURE: &str = include_str!("../../🧫️fixtures/🏷️label-shapes/🔣️.json");
+    const FIXTURE: &str = include_str!("../🧫️fixtures/🏷️label-shapes/🔣️.json");
 
     fn fixture() -> Value {
         serde_json::from_str(FIXTURE).expect("label-shapes fixture")

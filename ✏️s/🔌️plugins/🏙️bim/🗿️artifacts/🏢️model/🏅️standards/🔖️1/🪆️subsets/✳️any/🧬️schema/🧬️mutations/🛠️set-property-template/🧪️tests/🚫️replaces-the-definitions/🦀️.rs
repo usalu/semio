@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🛠️set-property-template/🚫️replaces-the-definitions",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛠️set-property-template/🚫️replaces-the-definitions/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛠️set-property-template/🚫️replaces-the-definitions/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛠️set-property-template/🚫️replaces-the-definitions/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛠️set-property-template/🚫️replaces-the-definitions/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛠️set-property-template/🚫️replaces-the-definitions/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛠️set-property-template/🚫️replaces-the-definitions/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛠️set-property-template/🚫️replaces-the-definitions/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛠️set-property-template/🚫️replaces-the-definitions/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛠️set-property-template/🚫️replaces-the-definitions/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛠️set-property-template/🚫️replaces-the-definitions/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

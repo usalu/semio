@@ -45,7 +45,7 @@ export async function issueNativeOwnerInvocationV1(options,context,environment,n
   const values=selected.configuration===undefined?[]:[selected.configuration],arguments_=caller.selection.slice(3),boundary=arguments_.indexOf("--"),flags=arguments_.slice(0,boundary<0?undefined:boundary);
   for(let index=0;index<flags.length;index++){const flag=flags[index];if(flag==="--configuration"||flag==="-c")values.push(flags[++index]);else if(/^(?:--configuration|-c)=/u.test(flag))values.push(flag.slice(flag.indexOf("=")+1));}
   if(values.some(value=>typeof value!=="string"||!value||value!==values[0]))throw Error("Original selected Nx configuration refused");
-  const configuration=values[0]??context.projectsConfigurations?.projects?.[selected.project]?.targets?.[selected.target]?.defaultConfiguration;
+  const declared=context.projectsConfigurations?.projects?.[selected.project]?.targets?.[selected.target],policy=declared?.metadata?.semio?.buildMode,configuration=values[0]??(policy?(policy.fixed??caller.buildMode):undefined)??declared?.defaultConfiguration;
   selectedTasks=Object.keys(graph.tasks).filter(id=>{const target=graph.tasks[id]?.target;return target?.project===selected.project&&target?.target===selected.target&&(target.configuration??undefined)===configuration;});
   if(selectedTasks.length!==1)throw Error("Original selected Nx graph task refused");
  }else if(["run-many","affected"].includes(caller.selection[1])){
@@ -54,13 +54,15 @@ export async function issueNativeOwnerInvocationV1(options,context,environment,n
   const operation=caller.selection[1],command=operation==="run-many"?yargsRunManyCommand:require(resolve(nxRoot,"dist/src/command-line/affected/command-object.js")).yargsAffectedCommand;
   const parsed=withOverrides(command.builder(yargs()).exitProcess(false).parseSync(caller.selection.slice(1))),{nxArgs}=splitArgsIntoNxArgsAndOverrides(parsed,operation,{printWarnings:false},context.nxJsonConfiguration??{});
   const selected=operation==="run-many"?projectsToRun(nxArgs,context.projectGraph):await require(resolve(nxRoot,"dist/src/command-line/affected/affected.js")).getAffectedGraphNodes(nxArgs,context.projectGraph),projects=new Set(selected.map(project=>project.name));
-  selectedTasks=Object.keys(graph.tasks).filter(id=>{const target=graph.tasks[id]?.target,configuration=nxArgs.configuration??context.projectsConfigurations?.projects?.[target?.project]?.targets?.[target?.target]?.defaultConfiguration;return projects.has(target?.project)&&nxArgs.targets.includes(target?.target)&&(target.configuration??undefined)===configuration;});
+  selectedTasks=Object.keys(graph.tasks).filter(id=>{const target=graph.tasks[id]?.target,declared=context.projectsConfigurations?.projects?.[target?.project]?.targets?.[target?.target],policy=declared?.metadata?.semio?.buildMode,configuration=nxArgs.configuration??(policy?(policy.fixed??caller.buildMode):undefined)??declared?.defaultConfiguration;return projects.has(target?.project)&&nxArgs.targets.includes(target?.target)&&(target.configuration??undefined)===configuration;});
   if(selectedTasks.length===0)throw Error("Original selected Nx graph tasks refused");
  }else throw Error("Original selected Nx command required");
  const reachable=new Set(),pending=[...selectedTasks];while(pending.length){const id=pending.pop();if(reachable.has(id))continue;if(!graph.tasks[id]||!Array.isArray(graph.dependencies[id]))throw Error("Original Nx dependency graph incomplete");reachable.add(id);pending.push(...graph.dependencies[id]);}
  const admitted=[...reachable].filter(id=>{const target=graph.tasks[id].target;return target.project===context.projectName&&target.target===context.targetName&&(target.configuration??undefined)===(context.configurationName??undefined);});
  const declared=context.projectsConfigurations?.projects?.[context.projectName]?.targets?.[context.targetName],request=options.nativeOwnerCommand;
- if(admitted.length!==1||!declared||!conforms(nativeSchema.properties.command,request))throw Error("Original discovered native task command refused");
+ if(admitted.length!==1)throw Error(`Original native task reachability refused: ${context.projectName}:${context.targetName}:${context.configurationName??""} admitted=${admitted.length}`);
+ if(!declared)throw Error("Original discovered native target declaration required");
+ if(!conforms(nativeSchema.properties.command,request))throw Error("Original discovered native command schema refused");
  const task=graph.tasks[admitted[0]],require=createRequire(import.meta.url),nxRoot=dirname(require.resolve("nx/package.json")),{combineOptionsForExecutor}=require(resolve(nxRoot,"dist/src/utils/params.js"));
  const expected=combineOptionsForExecutor(structuredClone(task.overrides),task.target.configuration,structuredClone(declared),executorSchema,context.projectName,context.cwd??".",false);
  if(expected.command!==options.command||JSON.stringify(expected.nativeOwnerCommand)!==JSON.stringify(request)||(expected.forwardAllArgs!==false)!==(options.forwardAllArgs!==false))throw Error("Original discovered native task command changed");

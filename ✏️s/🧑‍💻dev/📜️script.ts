@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 class CompositionScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("composition-check accepts no arguments");
@@ -20,7 +20,7 @@ class CatalogScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("catalog-check accepts no arguments");
     const { resolve } = await import("node:path");
-    const { runOwnedCommand } = await import("../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts");
+    const { runOwnedCommand } = await import("../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
     await runOwnedCommand(process.execPath, [resolve(this.repoRoot, "node_modules/vitest/vitest.mjs"), "run", "--config", resolve(import.meta.dirname, "🧩️catalog/🧪️tests/🎚️config/🟦️.ts")], this.repoRoot, "specific-catalog", 300000, { env: { ...process.env, SEMIO_TEST_LEVEL: "long" } });
   }
 }

@@ -4,7 +4,7 @@ use protocol::Mutation;
 
 #[test]
 fn layer_drop_shared_vectors_match_json_tree_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let snapshot: RasterSnapshot = semio_framework_pack_json::from_json_str(&fixture["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let payload = MoveLayer { layer_id: row["layerId"].as_str().unwrap().into(), target_row_id: row["targetRowId"].as_str().unwrap().into(), drop_position: row["dropPosition"].as_str().unwrap().into() };

@@ -120,7 +120,7 @@ impl ArtifactCanonicalJson for FixtureMutation {
 }
 
 fn fixture() -> (Edit<FixtureMutation>, serde_json::Value) {
-    let value: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔏️canonical-edit-sealer.json")).unwrap();
+    let value: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔏️canonical-edit-sealer.json")).unwrap();
     (Edit::from_value(value["edit"].clone().into()).unwrap(), value)
 }
 
@@ -380,7 +380,7 @@ fn canonical_sealer_preserves_large_domains_and_all_wire_metadata_origins() {
 #[test]
 fn canonical_authority_final_unicode_strings_retire_under_single_byte_grants() {
     use semio_framework_value::{factory_ticket_demands, close_factory_ticket, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔏️canonical-edit-sealer.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔏️canonical-edit-sealer.json")).unwrap();
     let law = &fixture["authorityRetirement"];
     let mut authority = authority();
     let fields = ["actor", "group", "edit", "line"].map(|name| law[name].as_str().unwrap().to_owned());
@@ -424,7 +424,7 @@ fn canonical_authority_final_unicode_strings_retire_under_single_byte_grants() {
 /// operations an amend appended equals its from-scratch digest.
 #[test]
 fn edit_digest_chains_match_the_neutral_vectors_and_extend_incrementally() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️edit-digest-chains.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔗️edit-digest-chains.json")).unwrap();
     let edit_of = |case: &serde_json::Value| match case.get("edit") {
         Some(edit) => Edit::<DslValue>::from_value(edit.clone().into()).unwrap(),
         None => {
@@ -461,7 +461,7 @@ fn canonical_json_original_supplied_depth_and_prefix_conserve_every_real_turn() 
             })
         }
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚧️canonical-error-progress.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚧️canonical-error-progress.json")).unwrap();
     let limits = &fixture["retainedPolicy"];
     let original = RetainedCloneGrant {
         maximum_items: limits["maximumItems"].as_u64().unwrap() as usize,

@@ -1,6 +1,7 @@
 //! 🛫️ The authored native owner must emit exact ordinary bytes with cumulative admission and real interior cancellation.
-use store::{os_store::serialization::ArtifactDsl,os_store::serialization::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase}};
-pub(crate) fn assert_output<T:ArtifactDsl+ArtifactPack+ArtifactSqliteSnapshot>(snapshot:&T,semantic_value_bytes:usize){
+use pack::snapshot::ArtifactSqliteSnapshot as _;
+use store::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase}};
+pub(crate) fn assert_output<T:ArtifactDsl+ArtifactPack+ArtifactSqliteSnapshotHost>(snapshot:&T,semantic_value_bytes:usize){
  assert!(semantic_value_bytes>0);
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let actual=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap();let expected=match encoding{SnapshotEncoding::Binary=>store::io::IoPayload::Binary(snapshot.encode_pack()),SnapshotEncoding::Text=>store::io::IoPayload::Text(snapshot.print_dsl())};assert!(actual==expected,"controlled native wire differs");let count=match &actual{store::io::IoPayload::Binary(bytes)=>bytes.len(),store::io::IoPayload::Text(text)=>text.len()};assert!(count>65536);
  let exact=SqliteDatabaseLimits{max_value_bytes:semantic_value_bytes,max_file_bytes:count,..SqliteDatabaseLimits::default()};let admitted=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,exact), native_owner)).unwrap();assert!(actual==admitted,"exact semantic and file limits changed wire");eprintln!("[DEBUG] controlled native {encoding:?} semanticValueBytes={semantic_value_bytes} nativeFileBytes={count}");
@@ -11,7 +12,7 @@ pub(crate) fn assert_output<T:ArtifactDsl+ArtifactPack+ArtifactSqliteSnapshot>(s
 }
 
 /// 🌳️ The independent engine precedes late schema-copy cancellation on the authored small retirement stack.
-pub(crate) fn assert_reconstruction<T:ArtifactSqliteSnapshot+Send+'static>(snapshot:T,schema_bytes:usize,stack_bytes:usize){
+pub(crate) fn assert_reconstruction<T:ArtifactSqliteSnapshotHost+Send+'static>(snapshot:T,schema_bytes:usize,stack_bytes:usize){
  use std::{io::Write,process::{Command,Stdio}};
  let database=semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut |_|true, |control| snapshot.to_sqlite_database(control)).unwrap();snapshot.retire_sqlite_snapshot();
  let bytes=store::sqlite_snapshot::export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();

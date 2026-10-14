@@ -1,5 +1,5 @@
 /** 🖊️ Canonical textControlsSelfTests: the TypeScript half of the text-control keyboard law (ticket 26/09/30 design §22.7),
- * answering the very same `🧫️fixtures/🧫️text-controls/🔣️.json` rows the Rust `🔬️component-unit` law answers through
+ * answering the very same `🧪️tests/🧫️fixtures/🧫️text-controls/🔣️.json` rows the Rust `🔬️component-unit` law answers through
  * `text_input_key`. Ajv validates the fixture against its schema; the third-party oracle of what a key means to a real field
  * (`@testing-library/user-event` typing into a rendered single-line and multi-line field) judges the same rows in the
  * renderer's `🧪️text-keyboard-law`. */
@@ -18,7 +18,7 @@ const PHYSICAL: Readonly<Record<TextInputKey, string>> = { enter: "Enter", escap
 /** 🖊️ Answers every shared fixture row, returning how many assertions the corpus carried. */
 export function textControlsSelfTests(): number {
   const Ajv2020 = createRequire(import.meta.url)("ajv/dist/2020").default;
-  const fixture = read("../../🧫️fixtures/🧫️text-controls/🔣️.json") as Fixture;
+  const fixture = read("../🧫️fixtures/🧫️text-controls/🔣️.json") as Fixture;
   
   
   let checks = 1;

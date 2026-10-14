@@ -11,7 +11,7 @@ type Label = Readonly<{ en: string; de: string }>;
 type Case = Readonly<{ id: string; command: Readonly<{ kind: string; value: string | number }>; verb: string; leaves: readonly Label[]; expected: Label }>;
 type Fixture = Readonly<{ registry: readonly Readonly<{ verb: string; label: Label }>[]; cases: readonly Case[] }>;
 
-const FIXTURE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧫️history-label-reload";
+const FIXTURE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🧫️history-label-reload";
 
 /** 🌐️ A history label supplies both explicit locales. */
 function assertLabel(label: unknown): asserts label is Label {

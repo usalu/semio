@@ -4,7 +4,7 @@ import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import createTileSchema from "../../../../🧬️schema/🧬️mutations/🧱️create-tile/🧬️schema/🔣️.json";
 import changeMediaSchema from "../../../../🧬️schema/🧬️mutations/🖼️change-tile-media/🧬️schema/🔣️.json";
-import f from "../🧫️fixtures/🔣️.json";
+import f from "./🧫️fixtures/🔣️.json";
 import type {Grid3dSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {WFC_GRID3D_SQLITE_SCHEMA,grid3dSnapshotToSqliteDatabase,grid3dSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
@@ -21,7 +21,7 @@ test("grid3d malformed graph/IEEE/scalar widths and controlled allocation",async
 test("grid3d authored duplicate and unresolved identifiers remain literal owned state",async()=>{for(const fixture of f.literalIdentityStates){const source=structuredClone(input);source.tiles.forEach((tile,index)=>{tile.id=fixture.tileIds[index]!;});source.rules[0]!.id=fixture.ruleId;source.rules[0]!.tileAId=fixture.tileAId;source.rules[0]!.tileBId=fixture.tileBId;source.rules.push(structuredClone(source.rules[0]!));source.pinned[0]!.tileId=fixture.pinTileId;const db=Database.deserialize(await exportSqliteDatabase(await grid3dSnapshotToSqliteDatabase(source)));try{expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(db.query("SELECT authored_id FROM wfc_grid3d_tile ORDER BY ordinal").all()).toEqual(fixture.tileIds.map(authored_id=>({authored_id})));expect(db.query("SELECT authored_id,tile_a_id,tile_b_id FROM wfc_grid3d_rule ORDER BY ordinal").all()).toEqual([0,1].map(()=>({authored_id:fixture.ruleId,tile_a_id:fixture.tileAId,tile_b_id:fixture.tileBId})));expect(await grid3dSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).toEqual(source);}finally{db.close();}}});
 
 import Ajv2020 from "ajv/dist/2020";
-import semanticPlan from "../🧫️fixtures/🛂️semantic/🔣️.json";
+import semanticPlan from "./🧫️fixtures/🛂️semantic/🔣️.json";
 
 test("grid3d independently measures every authored semantic cell and IEEE companion",async()=>{
  expect(semanticPlan["schema"]).toEqual("s.wfc.grid3d.sqlite.semantic-admission/v1");expect(semanticPlan["rows"]).toEqual(21);expect(semanticPlan["columns"]).toEqual(9);expect(semanticPlan["valueBytes"]).toEqual(984);expect(semanticPlan["tableRows"]["wfc_grid3d_document"]).toEqual(1);expect(semanticPlan["tableRows"]["wfc_grid3d_cell_size"]).toEqual(5);expect(semanticPlan["tableRows"]["wfc_grid3d_tile"]).toEqual(2);expect(semanticPlan["tableRows"]["wfc_grid3d_mesh"]).toEqual(1);expect(semanticPlan["tableRows"]["wfc_grid3d_position"]).toEqual(4);expect(semanticPlan["tableRows"]["wfc_grid3d_index"]).toEqual(2);expect(semanticPlan["tableRows"]["wfc_grid3d_color"]).toEqual(1);expect(semanticPlan["tableRows"]["wfc_grid3d_mesh_child"]).toEqual(1);

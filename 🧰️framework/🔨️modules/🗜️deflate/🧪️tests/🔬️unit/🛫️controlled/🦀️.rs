@@ -4,7 +4,7 @@ use super::*;
 mod refusal;
 static DENY_ALLOCATION_SIZE:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
 
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../../🧫️fixtures/🛫️controlled/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🛫️controlled/🔣️.json")).unwrap()}
 struct Control{maximum:usize,owned:usize,events:Vec<DeflateEncodeProgress>,cancel:Option<DeflateEncodePhase>,cancel_at:usize}
 impl Control{fn new(maximum:usize)->Self{Self{maximum,owned:0,events:Vec::new(),cancel:None,cancel_at:usize::MAX}}}
 impl DeflateEncodeControl for Control{

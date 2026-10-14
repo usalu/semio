@@ -7,7 +7,7 @@ import { execFileSync } from "node:child_process";
 import { linkedSessionEngines } from "../../⚙️engine/🧭️selection/🟦️.ts";
 import { declaredBrowserSessionEnginesV1 } from "../../⚙️engine/🧭️selection/🟨️.mjs";
 import schema from "../../🧩️contribution/🧬️schema/🔣️.json";
-import fixture from "../../🧫️fixtures/🧩️contribution/🔣️.json";
+import fixture from "../🧫️fixtures/🧩️contribution/🔣️.json";
 import { ownedDevPath, parseDevContribution } from "../../🧩️contribution/🧬️schema/🟦️.ts";
 import { loadDevContribution, resolveDevContributionFile } from "../../🧩️contribution/📥️loading/🟦️.ts";
 import { resolveShellBrandById } from "../../🏷️brand/🟦️.ts";

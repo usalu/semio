@@ -129,7 +129,7 @@ function historyColumnsFromParts(parts: readonly StoryPuzzle5dPart[]): readonly 
 //#endregion HistorySynthesis
 
 //#region PluginEmulator
-/** 🖱️ Story-local mirror of the ONE `MergeMode` set algebra (`🕹️interaction/🧫️fixtures/🎯️merge-modes.json`) — see `../3d/World.stories.tsx`'s copy. */
+/** 🖱️ Story-local mirror of the ONE `MergeMode` set algebra (`🕹️interaction/🧪️tests/🧫️fixtures/🎯️merge-modes.json`) — see `../3d/World.stories.tsx`'s copy. */
 function applyStoryMerge(current: readonly string[], id: string, merge: string): string[] {
   const set = new Set(current);
   if (merge === "replace" || merge === "range") return [id];

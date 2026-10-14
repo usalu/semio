@@ -24,7 +24,7 @@ pub use retirement_continuation::{NativeRetirementDecodeContinuation,NativeDetac
 pub struct NativeDecodeProgress { pub completed:usize, pub total:usize, pub owned_bytes:usize }
 
 /// 🧵️ An opaque consuming receipt retains this operation's admission across callback lifetimes.
-pub struct NativeDecodeContinuation { receiving:bool, maximum_bytes:usize, owned_bytes:usize, completed:usize, total:usize, stage:u64 }
+pub struct NativeDecodeContinuation { ledger:u64, receiving:bool, maximum_bytes:usize, owned_bytes:usize, completed:usize, total:usize, stage:u64 }
 
 static LEDGERS:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(1);
 fn next_ledger()->u64{LEDGERS.try_update(std::sync::atomic::Ordering::Relaxed,std::sync::atomic::Ordering::Relaxed,|ledger|ledger.checked_add(1)).expect("native decode ledger identity space exhausted")}
@@ -85,12 +85,12 @@ impl<'a> NativeDecodeControl<'a> {
     }
     fn continuation(&self)->Result<NativeDecodeContinuation,ValueError>{
         if self.depth!=0||self.owned_bytes>self.maximum_bytes||(self.total!=0&&self.completed>self.total){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native decode continuation lacks valid cumulative accounting"));}
-        Ok(NativeDecodeContinuation{receiving:self.receiving,maximum_bytes:self.maximum_bytes,owned_bytes:self.owned_bytes,completed:self.completed,total:self.total,stage:self.stage})
+        Ok(NativeDecodeContinuation{ledger:self.ledger,receiving:self.receiving,maximum_bytes:self.maximum_bytes,owned_bytes:self.owned_bytes,completed:self.completed,total:self.total,stage:self.stage})
     }
     /// ▶️ Rebinds a moved operation receipt to the current hop's cancellation callback.
     pub fn resume(receipt:NativeDecodeContinuation,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Result<Self,ValueError>{
         if receipt.owned_bytes>receipt.maximum_bytes||(receipt.total!=0&&receipt.completed>receipt.total){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native decode continuation has invalid cumulative accounting"));}
-        Ok(Self{ledger:next_ledger(),scope_maximum:None,allocation:allocation::Binding::Local,receiving:receipt.receiving,retirement:None,maximum_bytes:receipt.maximum_bytes,owned_bytes:receipt.owned_bytes,completed:receipt.completed,total:receipt.total,started:false,stage:receipt.stage,depth:0,callback})
+        Ok(Self{ledger:receipt.ledger,scope_maximum:None,allocation:allocation::Binding::Local,receiving:receipt.receiving,retirement:None,maximum_bytes:receipt.maximum_bytes,owned_bytes:receipt.owned_bytes,completed:receipt.completed,total:receipt.total,started:false,stage:receipt.stage,depth:0,callback})
     }
 
     /// 🚦️ Binds the explicit allocation ceiling and cancellation callback.
@@ -173,3 +173,7 @@ mod tests;
 #[cfg(test)]
 #[path = "⚠️refusal/🧪️tests/🦀️.rs"]
 mod literal_refusal_tests;
+
+#[cfg(test)]
+#[path="🔁️ledger/🧪️tests/🦀️.rs"]
+mod original_ledger_tests;

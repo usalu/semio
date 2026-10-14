@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
-import corpus from "../../🧫️fixtures/🔌️container-providers/🔣️.json";
+import corpus from "../🧫️fixtures/🔌️container-providers/🔣️.json";
 import schema from "../../🧬️schema/🔌️container-providers/🔣️.json";
 
 /** 🔌️Checks the shared native selection corpus against strict AJV and independent metadata filtering. */

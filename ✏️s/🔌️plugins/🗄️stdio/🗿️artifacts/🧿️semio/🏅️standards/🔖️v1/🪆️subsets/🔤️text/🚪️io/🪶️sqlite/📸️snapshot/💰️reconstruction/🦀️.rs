@@ -1,6 +1,7 @@
 //! 🧶️ Original text reconstruction retains its complete snapshot and scalar relationship workspace.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{SemioTextSnapshot,SemioTextRun,SemioTextMark,SemioTextMarkKind,identity};
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{RowIdentity,RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{RowIdentity,RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[derive(semio_framework_value::RetireOwned)]
 struct Prefix{snapshot:Option<SemioTextSnapshot>,validation:SchemaValidationStorage,runs:RowIndexStorage,marks:RowIndexStorage,order:Vec<usize>,grouped:Vec<usize>}

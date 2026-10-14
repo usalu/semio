@@ -2,7 +2,7 @@ import { test, expect } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, existsSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import * as toml from "@iarna/toml";
-import cases from "../../🧫️fixtures/🧱️production-preparation/🔣️.json";
+import cases from "../🧫️fixtures/🧱️production-preparation/🔣️.json";
 import { BRIDGE_MANIFEST, CATALOG_MANIFEST, COMPONENT_MANIFEST, prepareStdioComposition } from "../../🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../..");

@@ -8,8 +8,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import * as TOML from "@iarna/toml";
 import axes from "../../🎚️axes/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
-import retirementFixture from "../🏷️label/♻️retirement/🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+import retirementFixture from "../🏷️label/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json";
 import labelSchema from "../🧬️schema/🏷️localized-label/🔣️.json";
 import { Locale, Terminology, LocalizedLabel, LocaleContractError, type LabelValue } from "../🟦️.ts";
 

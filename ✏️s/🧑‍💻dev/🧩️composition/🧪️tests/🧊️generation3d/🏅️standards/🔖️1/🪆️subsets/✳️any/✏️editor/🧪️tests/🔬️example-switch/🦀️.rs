@@ -132,7 +132,7 @@ async fn set_active_example_starts_the_run_that_evaluates_every_attached_preview
 /// republish exactly that example's authored widget ids on the flow window, leak none of the
 /// previous example's, re-arm every attached preview window's chain from the gesture's own emit, and
 /// leave no preview holding the previous example's evaluation.
-const EXAMPLE_SWITCH_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🎨️example-switch.json");
+const EXAMPLE_SWITCH_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️example-switch.json");
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

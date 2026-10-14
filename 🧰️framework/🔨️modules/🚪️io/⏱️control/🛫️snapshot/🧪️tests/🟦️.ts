@@ -9,7 +9,7 @@ import {validateJsonSchemaSubset} from "../../../../🧬️schema/✅️validato
 import fixture from "./🧫️fixtures/🔣️.json";
 import grantSchema from "../../../../🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
 import decoder from "./🧫️fixtures/🛬️cursor.json";
-import nativeOwner from "../🧫️fixtures/🦀️owner/🔣️.json";
+import nativeOwner from "./🧫️fixtures/🦀️owner/🔣️.json";
 
 test("original receiving Native route selects the actual OS kernel mounted laws",async()=>{
  expect(existsSync(resolve(import.meta.dir,"../🧬️schema/🦀️owner/🔣️.json"))).toBe(false);

@@ -1,0 +1,17 @@
+{
+  "changes": [
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/📦️close/🦀️.rs",
+      "exclusive": false,
+      "beforeSha256": "2d545dcef2a666f15ac9578df7fb006bc6b8d248a8a58acf85a10b23b15c9d1e",
+      "afterSha256": "ee13e8854fd33a356471b194c0463d829137b1808abc3872051a75e3023c770f",
+      "spans": [
+        {
+          "before": "crate::FaultCause{message,code}",
+          "after": "crate::FaultCause{message,code,..}"
+        }
+      ],
+      "role": "Borrow only existing message/code fields while preserving actual new retained_progress in original cause slot; no field mutation or substitute caller/fault."
+    }
+  ]
+}

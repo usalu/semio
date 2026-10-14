@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🏪️delete-curtain-panel-override/✅️removes",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏪️delete-curtain-panel-override/✅️removes/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏪️delete-curtain-panel-override/✅️removes/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏪️delete-curtain-panel-override/✅️removes/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏪️delete-curtain-panel-override/✅️removes/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏪️delete-curtain-panel-override/✅️removes/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏪️delete-curtain-panel-override/✅️removes/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏪️delete-curtain-panel-override/✅️removes/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏪️delete-curtain-panel-override/✅️removes/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏪️delete-curtain-panel-override/✅️removes/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏪️delete-curtain-panel-override/✅️removes/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

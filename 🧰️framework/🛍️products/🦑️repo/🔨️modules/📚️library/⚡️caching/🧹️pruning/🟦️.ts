@@ -1,7 +1,7 @@
 import { existsSync, lstatSync, readdirSync, rmdirSync, rmSync, unlinkSync } from "node:fs";
 import { basename, dirname, join, relative, sep } from "node:path";
-import {acquireResourceLease} from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {acquireCargoBuildLeaseV1,cargoBuildLeaseIdentityV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
+import {acquireResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {acquireCargoBuildLeaseV1,acquireCargoStoreLeaseV1,cargoBuildLeaseIdentityV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 
 export type CacheUnitKind = "cargo-build" | "cargo-incremental" | "cargo-incremental-session" | "cargo-target-file" | "directory";
 /** 📦️ One independently deletable slice of a cache area: a compilation unit, an incremental crate dir, a stale finalized incremental session, an uplifted file, or a whole scratch directory. */
@@ -31,6 +31,14 @@ export interface AreaPlan {
 export interface PrunePlan {
   readonly generatedAtMs: number;
   readonly areas: readonly AreaPlan[];
+}
+
+/** 🛡️ Rescans and prunes a shared compiler store only after all admitted profiles release it. */
+export async function withCargoCacheMaintenanceV1<T>(options:Readonly<{buildDirectory:string;leaseDirectory:string;control:ResourceLeaseControl}>,run:()=>Promise<T>):Promise<T>{
+  checkResourceLeaseControl(options.control);const signal=options.control.signal,prune=await acquireResourceLease({directory:options.leaseDirectory,resource:"cache-prune",mode:"exclusive",signal,control:options.control});
+  let store:Awaited<ReturnType<typeof acquireCargoStoreLeaseV1>>|undefined;
+  try{store=await acquireCargoStoreLeaseV1({directory:options.leaseDirectory,buildDirectory:options.buildDirectory,mode:"exclusive",signal,control:options.control});checkResourceLeaseControl(options.control);const result=await run();checkResourceLeaseControl(options.control);return result;}
+  finally{store?.release();prune.release();}
 }
 
 /**
@@ -197,15 +205,16 @@ export function scanCargoIncrementalUnits(buildDir: string, signal: AbortSignal,
 }
 
 /** 🔒️ Compacts only superseded finalized sessions after admitting their exact compiler profile. */
-export async function compactCargoIncrementalSessionsV1(options:Readonly<{buildDirectory:string;leaseDirectory:string;profile:string;signal:AbortSignal;dryRun:boolean;onUnit?:(unit:CacheUnit)=>void}>):Promise<Readonly<{profile:string;paths:readonly string[];bytes:number;dryRun:boolean}>>{
- const identity=cargoBuildLeaseIdentityV1(options.buildDirectory,["--profile",options.profile]),prune=await acquireResourceLease({directory:options.leaseDirectory,resource:"cache-prune",mode:"exclusive",signal:options.signal});
+export async function compactCargoIncrementalSessionsV1(options:Readonly<{buildDirectory:string;leaseDirectory:string;profile:string;control:ResourceLeaseControl;dryRun:boolean;onUnit?:(unit:CacheUnit)=>void}>):Promise<Readonly<{profile:string;paths:readonly string[];bytes:number;dryRun:boolean}>>{
+ checkResourceLeaseControl(options.control);const signal=options.control.signal;
+ const identity=cargoBuildLeaseIdentityV1(options.buildDirectory,["--profile",options.profile]),prune=await acquireResourceLease({directory:options.leaseDirectory,resource:"cache-prune",mode:"exclusive",signal,control:options.control});
  let compiler:Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>>|undefined;
  try{
-  compiler=await acquireCargoBuildLeaseV1({directory:options.leaseDirectory,buildDirectory:identity.buildDirectory,args:["--profile",identity.profile],signal:options.signal});
-  const scan=scanCargoIncrementalUnits(identity.buildDirectory,options.signal),working=new Set(scan.units.filter(unit=>unit.lockHeld).map(unit=>unit.path));
+  compiler=await acquireCargoBuildLeaseV1({directory:options.leaseDirectory,buildDirectory:identity.buildDirectory,args:["--profile",identity.profile],signal,control:options.control});
+  const scan=scanCargoIncrementalUnits(identity.buildDirectory,signal,()=>checkResourceLeaseControl(options.control));checkResourceLeaseControl(options.control);const working=new Set(scan.units.filter(unit=>unit.lockHeld).map(unit=>unit.path));
   const candidates=scan.staleSessions.filter(unit=>{const parts=unit.path.split("/"),index=parts.indexOf("incremental");return index>0&&parts[index-1]===identity.profile&&!working.has(parts.slice(0,-1).join("/"));}).sort((left,right)=>left.path.localeCompare(right.path));
   let bytes=0;const paths:string[]=[];
-  for(const unit of candidates){options.signal.throwIfAborted();options.onUnit?.(unit);if(!options.dryRun)deleteUnit(identity.buildDirectory,unit);paths.push(unit.path);bytes+=unit.bytes;}
+  for(const unit of candidates){checkResourceLeaseControl(options.control);options.onUnit?.(unit);checkResourceLeaseControl(options.control);if(!options.dryRun)deleteUnit(identity.buildDirectory,unit);paths.push(unit.path);bytes+=unit.bytes;}
   return {profile:identity.profile,paths,bytes,dryRun:options.dryRun};
  }finally{compiler?.release();prune.release();}
 }

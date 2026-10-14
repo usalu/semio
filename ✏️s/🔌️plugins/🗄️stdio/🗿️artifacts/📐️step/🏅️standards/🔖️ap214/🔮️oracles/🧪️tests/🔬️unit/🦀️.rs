@@ -27,7 +27,7 @@ fn committed_history_intents_match_independent_part21_reader_and_class_edits() {
 /// 🧫️ The real committed AP214 fixture — a real Rhino 8.31 / ST-Developer v19.2 export whose
 /// entire DATA section is untouched real data.
 fn fixture() -> Vec<u8> {
-    include_bytes!("../../../🪆️subsets/🧱️base/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp").to_vec()
+    include_bytes!("../../../🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp").to_vec()
 }
 
 /// 🧪️ Every ISO 10303-21 §6.4.2 control directive this projection has to survive, read off a

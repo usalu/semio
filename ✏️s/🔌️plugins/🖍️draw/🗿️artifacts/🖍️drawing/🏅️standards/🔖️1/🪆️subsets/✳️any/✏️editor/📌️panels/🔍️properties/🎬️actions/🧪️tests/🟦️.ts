@@ -1,13 +1,13 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv2020 from "ajv/dist/2020";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {drawingSelectionActionAvailable} from "../🟦️.ts";
 
 test("inspector selection actions match neutral cases and independent relational eligibility",()=>{
- const validate=new Ajv2020({strict:true}).compile(schema);expect(validate(fixture)).toBe(true);
- expect(validate({...fixture,cases:[{...fixture.cases[0]!,selection:{...fixture.cases[0]!.selection,count:-1}}]})).toBe(false);
+ const validate=new Ajv2020({strict:true}).compile(schema);for(const row of fixture.cases)expect(validate(row.selection)).toBe(true);
+ expect(validate({...fixture.cases[0]!.selection,count:-1})).toBe(false);
  const db=new Database(":memory:");
  try{
   db.exec("CREATE TABLE rules(action TEXT PRIMARY KEY,minimum INTEGER,parent INTEGER,shape INTEGER,ungroup INTEGER); INSERT INTO rules VALUES ('group',1,1,0,0),('ungroup',1,0,0,1),('toPath',1,0,1,0),('duplicate',1,1,0,0),('delete',1,1,0,0),('bringForward',1,1,0,0),('sendBackward',1,1,0,0),('bringToFront',1,1,0,0),('sendToBack',1,1,0,0),('alignLeft',2,0,0,0),('alignCenter',2,0,0,0),('alignRight',2,0,0,0),('alignTop',2,0,0,0),('alignMiddle',2,0,0,0),('alignBottom',2,0,0,0),('distributeHorizontal',3,0,0,0),('distributeVertical',3,0,0,0)");

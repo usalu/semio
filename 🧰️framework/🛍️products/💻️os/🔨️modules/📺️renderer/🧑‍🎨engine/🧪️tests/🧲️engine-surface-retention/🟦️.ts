@@ -17,7 +17,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 test("Chromium preserves the exact captured sibling when a new scene is inserted before it", async () => {
-  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json"), "utf8"));
   const plan = fixture.siblingInsertion as { records: number[][]; receiver: number; terminalReceivers: number; events: string[] };
   const { chromium } = await import("playwright");
   const browser = await chromium.launch({ headless: true });
@@ -68,7 +68,7 @@ test("Chromium preserves the exact captured sibling when a new scene is inserted
 });
 
 test("Chromium retires every pointer capture with its removed scene and admits a fresh owner", async () => {
-  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json"), "utf8"));
   const { chromium } = await import("playwright");
   const browser = await chromium.launch({ headless: true });
   try {
@@ -115,7 +115,7 @@ test("Chromium retires every pointer capture with its removed scene and admits a
 
 test("Chromium captures the topmost scene through release outside every scene", async () => {
   const { default: Ajv } = await import("ajv/dist/2020.js");
-  const fixtureRoot = join(import.meta.dir, "../../🧫️fixtures/🪪️scene-pointer-owner");
+  const fixtureRoot = join(import.meta.dir, "../🧫️fixtures/🪪️scene-pointer-owner");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
   
   
@@ -257,7 +257,7 @@ test("Chromium routes retained scene pointer and wheel events through the same l
 }, 30000);
 
 const engineRoot = join(import.meta.dir, "..", "..");
-const law = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "🧲️engine-surface-retention", "🔣️.json"), "utf8"));
+const law = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "🧲️engine-surface-retention", "🔣️.json"), "utf8"));
 
 type Bounds = readonly [number, number, number, number];
 type Drain = { surfaceId: string; windowId: string; kind: string; controllerId: string; bounds: Bounds; created?: boolean };

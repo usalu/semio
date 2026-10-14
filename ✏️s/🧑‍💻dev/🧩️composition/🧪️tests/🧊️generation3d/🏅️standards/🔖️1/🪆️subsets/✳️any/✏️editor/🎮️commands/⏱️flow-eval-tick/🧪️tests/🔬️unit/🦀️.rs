@@ -17,7 +17,7 @@ async fn flow_eval_tick_does_not_panic_with_nothing_pending() {
 }
 
 //#region 🚧️ContributionGatedArming
-const CONTRIBUTION_GATED_ARMING_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🚧️contribution-gated-arming.json");
+const CONTRIBUTION_GATED_ARMING_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/🚧️contribution-gated-arming.json");
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

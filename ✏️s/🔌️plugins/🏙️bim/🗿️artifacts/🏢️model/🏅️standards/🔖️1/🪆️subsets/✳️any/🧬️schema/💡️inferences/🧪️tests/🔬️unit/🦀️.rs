@@ -2,7 +2,7 @@ use super::*;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const HOUSE: &str = include_str!("../../../../🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
+const HOUSE: &str = include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
 
 fn house() -> ModelSnapshot {
     from_json_str(HOUSE, JsonMemberPolicy::Reject).expect("house decodes")
@@ -27,11 +27,11 @@ async fn infers_a_level_per_storey_and_a_layout_per_wall() {
     assert_eq!(inferred.wall_layout.keys().collect::<Vec<_>>(), snapshot.walls.keys().collect::<Vec<_>>());
 }
 
-const LEVELS: &str = include_str!("../../../../🧫️fixtures/💡️inferences/🏠️house/💡️inference/🪜️storey-levels/🔣️.json");
-const LAYOUTS: &str = include_str!("../../../../🧫️fixtures/💡️inferences/🏠️house/💡️inference/🧱️wall-layout/🔣️.json");
+const LEVELS: &str = include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/💡️inference/🪜️storey-levels/🔣️.json");
+const LAYOUTS: &str = include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/💡️inference/🧱️wall-layout/🔣️.json");
 
-const JOINS_SNAPSHOT: &str = include_str!("../../../../🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json");
-const JOINS_LAYOUTS: &str = include_str!("../../../../🧫️fixtures/💡️inferences/🔗️wall-joins/💡️inference/🧱️wall-layout/🔣️.json");
+const JOINS_SNAPSHOT: &str = include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json");
+const JOINS_LAYOUTS: &str = include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🔗️wall-joins/💡️inference/🧱️wall-layout/🔣️.json");
 
 fn disagreements(expected: &serde_json::Value, actual: &serde_json::Value, path: &str) -> Vec<String> {
     use serde_json::Value;

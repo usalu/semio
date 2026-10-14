@@ -1,9 +1,8 @@
-import "../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts";
 import { test, expect } from "bun:test";
 import { existsSync, mkdirSync, readFileSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🦀️exact-cargo-laws/🔣️.json", import.meta.url), "utf8"));
+import { createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🦀️exact-cargo-laws/🔣️.json", import.meta.url), "utf8"));
 
 test("active exact Cargo lease protects ticket evidence from workspace cleanup", async () => {
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;

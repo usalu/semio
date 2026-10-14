@@ -1,7 +1,8 @@
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
 use crate::os_spr::{ArtifactId, Edit, Mutation, MutationComposition, MutationDiff, MutationDiffParticipation, MutationInvertibility, MutationLanguageSurface, MutationLeafDescriptor, MutationOutcomeClass, OpBinary, OpText};
 use crate::os_store::{
-    artifact_codec, document_materialize::create_document_envelope, pack_rt, text_format::parse_document_pack, text_format::parse_document_text, text_format::print_document_pack, text_format::print_document_text, text_format::print_edit_lines, codec_registry::register_document_codec, serialization::ArtifactCodec, store_schema::ArtifactCommand, serialization::ArtifactDsl, serialization::ArtifactPack, BlobStore,
+    artifact_codec, document_materialize::create_document_envelope, pack_rt, text_format::parse_document_pack, text_format::parse_document_text, text_format::print_document_pack, text_format::print_document_text, text_format::print_edit_lines, codec_registry::register_document_codec, serialization::ArtifactCodec, store_schema::ArtifactCommand, pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack, BlobStore,
     PackDecodeOptions, PackEncodeOptions, PackError, text_format::ParsedDocumentText,
 };
 use serde::{Deserialize, Serialize};
@@ -189,9 +190,14 @@ pub(super) struct DemoSnapshot {
 }
 
 
-impl crate::os_store::serialization::ArtifactSqliteSnapshot for DemoSnapshot {
-    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
-    fn to_sqlite_database(&self, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<crate::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
+impl crate::os_store::serialization::ArtifactSqliteSnapshotHost for DemoSnapshot {
+    
+    
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for DemoSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<crate::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
         use crate::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
         let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
@@ -199,7 +205,7 @@ impl crate::os_store::serialization::ArtifactSqliteSnapshot for DemoSnapshot {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
         Ok(database)
     }
-    fn from_sqlite_database(database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+fn from_sqlite_database(database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         use crate::sqlite_snapshot::{SqliteValue, SqliteSnapshotPhase};
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
         let rows = &database.table("demo_state")?.rows;
@@ -232,9 +238,7 @@ impl ArtifactDsl for DemoSnapshot {
 
 impl ArtifactPack for DemoSnapshot {
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<crate::os_store::serialization::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as crate::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())
-    }
+    
 
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
@@ -251,6 +255,11 @@ impl ArtifactPack for DemoSnapshot {
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
+    }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for DemoSnapshot {
+fn sqlite_snapshot_codec() -> Option<crate::os_store::serialization::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as crate::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())
     }
 }
 
@@ -1126,7 +1135,7 @@ async fn rollback_envelope_synthesizes_an_undo_from_the_original_inverse() {
 
 /// 🎬️ Compares nineteen committed wire specimens with Rust encoding and decoding without
 /// modifying them. The TypeScript replication suite consumes the same semantic-owner files
-/// under `🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire`.
+/// under `🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire`.
 /// The current socket hello round-trips in memory; the committed obsolete hello must reject.
 #[semio_framework_async_macros::async_test]
 async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
@@ -2751,7 +2760,7 @@ async fn a_refused_supersession_is_retracted_as_a_typed_refusal() {
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn the_folder_archive_presence_corpus_matches_the_native_actor() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧫️folder-archive-presence/🔣️.json")).expect("the corpus parses");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧫️folder-archive-presence/🔣️.json")).expect("the corpus parses");
     let (document, schema) = ("presence-1", "s.test.root/1/*");
     let mut archives: std::collections::HashMap<&str, Vec<u8>> = std::collections::HashMap::new();
     for name in ["a", "b"] {

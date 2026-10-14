@@ -4,3 +4,6 @@ pub mod genesis;
 
 #[path="🌿️vcs/🦀️.rs"]
 pub mod vcs;
+
+#[path="🪪️author/🦀️.rs"]
+mod author;

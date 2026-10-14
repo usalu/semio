@@ -19,7 +19,7 @@ impl super::ArtifactCanonicalJson for TextRoot {
 
 #[test]
 fn canonical_native_paged_utf8_key_and_scalar_match_serde_with_zero_heap_copy_turns() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🎒️pack/🔤️json/🛫️encode/🔤️text/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🎒️pack/🔤️json/🛫️encode/🔤️text/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let key: String = row["keyChunks"].as_array().unwrap().iter().map(|part| part.as_str().unwrap()).collect();
         let value: String = row["valueChunks"].as_array().unwrap().iter().map(|part| part.as_str().unwrap()).collect();

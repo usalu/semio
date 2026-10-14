@@ -1248,6 +1248,7 @@ export function initialShellState(_props: {
   readonly locks?: ResolvedShellLocks;
   readonly defaults?: FrameworkOsDefaults;
   readonly storage: StoragePort;
+  readonly locale: UiLocale;
 }): ShellState {
   const locks = _props.locks ?? {};
   const defaults = _props.defaults ?? {};
@@ -1256,7 +1257,7 @@ export function initialShellState(_props: {
     appearance: "system",
     layout: "desktop",
     driverId: "default",
-    locale: uiI18n.resolvedLanguage?.toLowerCase().startsWith("de") ? "de" : "en",
+    locale: _props.locale,
     terminology: "native",
     themeId: "semio",
   });

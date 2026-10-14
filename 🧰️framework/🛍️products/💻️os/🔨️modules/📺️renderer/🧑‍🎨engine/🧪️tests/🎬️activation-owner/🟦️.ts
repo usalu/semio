@@ -1,3 +1,4 @@
+import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
 /** 🎬️ The hub's cross-plugin open, as the shell composes it: a session holding only the host plugin
  * cannot route another plugin's artifact kind, resolves that kind's owner from the catalog's declared
  * `on-artifact-kind:` rows, installs it, and routes the SAME open against the rebuilt router. */
@@ -112,7 +113,7 @@ function recordingShardWorker(sent: unknown[]) {
   return worker;
 }
 
-const ACTIVATION_BUDGET: ShardBudget = { fuel: 1000, wallMs: 4, memoryBytes: 1 << 20, uiNodes: 100, mailboxLen: 16, maxEffects: 8, maxPatchBytes: 1 << 16 };
+const ACTIVATION_BUDGET: ShardBudget = { fuel: 1000, wallMs: 4, memoryBytes: 1 << 20, uiNodes: 100, mailboxLen: 16, maxEffects: 8, maxPatchBytes: 1 << 16,maxFrames:1 };
 
 async function flushMicrotasks(ticks = 16): Promise<void> {
   for (let index = 0; index < ticks; index += 1) await Promise.resolve();
@@ -136,7 +137,7 @@ describe("hub cross-plugin activation reason", () => {
   it("sends the kind-derived activate event to the freshly activated guest, and sends none for a manual activation", async () => {
     const kindSent: unknown[] = [];
     const kindRegistry = new ActivationRegistry({
-      shardClient: new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => recordingShardWorker(kindSent) }),
+      shardClient: new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => recordingShardWorker(kindSent) }),
       defaultBudget: ACTIVATION_BUDGET,
       fetchAssets: async () => [],
     });
@@ -148,7 +149,7 @@ describe("hub cross-plugin activation reason", () => {
 
     const manualSent: unknown[] = [];
     const manualRegistry = new ActivationRegistry({
-      shardClient: new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => recordingShardWorker(manualSent) }),
+      shardClient: new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => recordingShardWorker(manualSent) }),
       defaultBudget: ACTIVATION_BUDGET,
       fetchAssets: async () => [],
     });

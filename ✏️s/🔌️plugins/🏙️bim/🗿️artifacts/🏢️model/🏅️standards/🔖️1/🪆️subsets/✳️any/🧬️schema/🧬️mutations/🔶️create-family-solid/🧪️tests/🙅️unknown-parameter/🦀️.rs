@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔶️create-family-solid/🙅️unknown-parameter",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔶️create-family-solid/🙅️unknown-parameter/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔶️create-family-solid/🙅️unknown-parameter/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔶️create-family-solid/🙅️unknown-parameter/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔶️create-family-solid/🙅️unknown-parameter/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔶️create-family-solid/🙅️unknown-parameter/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔶️create-family-solid/🙅️unknown-parameter/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔶️create-family-solid/🙅️unknown-parameter/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔶️create-family-solid/🙅️unknown-parameter/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔶️create-family-solid/🙅️unknown-parameter/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔶️create-family-solid/🙅️unknown-parameter/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

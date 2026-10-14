@@ -8,7 +8,7 @@ import { runInNewContext } from "node:vm";
 
 /** 🔗️ Checks runtime import ownership against esbuild, including source-byte changes and erased types. */
 export async function testCommandImportClosure(workspace: string, output: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/command-imports/🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/command-imports/🔣️.json"), "utf8"));
   const { cacheInternals } = await import("../../../🟨️.mjs"), root = mkdtempSync(join(output, "command-imports-"));
   try {
     for (const [path, source] of Object.entries(fixture.files)) writeFileSync(join(root, path), source as string);

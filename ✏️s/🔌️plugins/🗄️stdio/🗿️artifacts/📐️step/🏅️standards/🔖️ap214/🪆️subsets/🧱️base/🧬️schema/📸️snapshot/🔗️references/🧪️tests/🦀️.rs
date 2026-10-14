@@ -5,7 +5,7 @@ use protocol::MutationDiff;
 
 #[test]
 fn history_edit_step_reference_closure_preserves_cycles_and_refuses_invalid_candidate_before_serialization() {
-    let corpus=semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
+    let corpus=semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🔗️references/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     let cases=corpus.get("cases").and_then(Value::as_array).unwrap();
     assert_eq!(cases.len(),8);
     for case in cases {

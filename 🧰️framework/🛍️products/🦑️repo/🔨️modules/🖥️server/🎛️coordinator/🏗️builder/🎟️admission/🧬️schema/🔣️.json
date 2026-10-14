@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.coordinator.builder/DevelopmentRebuildAdmissionV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["participants", "sessions", "maximumElapsedMilliseconds", "controlShape"],
+  "properties": {
+    "participants": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "sessions": { "const": 2 },
+    "maximumElapsedMilliseconds": { "type": "integer", "minimum": 1000 },
+    "controlShape": { "const": "prototype-ports" }
+  },
+  "definitions": { "Protocol": { "const": { "version": 1, "scope": "development-rebuild", "overlappingCompilers": "one-shared-host-claim", "idleClaims": 0 } } }
+}

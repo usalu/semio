@@ -1,5 +1,5 @@
 //! 🗣️ CAD artifact — the textual `.cad` document grammar surface: `parse_dsl`/`print_dsl` over the
-//! derive-generated `store::os_store::serialization::ArtifactDsl`, plus the handcrafted `default` example the app registers.
+//! derive-generated `pack::snapshot::ArtifactDsl`, plus the handcrafted `default` example the app registers.
 
 use crate::CadSnapshot;
 
@@ -16,12 +16,12 @@ pub const CAD_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../📚️example
 
 /// 📖️ Parses `.cad` DSL text into a `CadSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<CadSnapshot, semio_framework_diagnostic::TextError> {
-    <CadSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <CadSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `CadSnapshot` back to `.cad` DSL text.
 pub fn print_dsl(document: &CadSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(document)
+    pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -67,7 +67,7 @@ pub(crate) fn require_exact_children(s: &CadSnapshot) -> Result<(), String> {
 
 /// ✉️ `ArtifactDsl` and `ArtifactPack` are the derived spec-driven text and pack of the one
 /// `dsl::DslRecord` spec; both re-check every composed child's exact identity on decode.
-impl store::os_store::serialization::ArtifactDsl for CadSnapshot {
+impl pack::snapshot::ArtifactDsl for CadSnapshot {
     const EXTENSION: &'static str = "cad";
     fn envelope_id() -> &'static str {
         "cad.cad"
@@ -84,7 +84,7 @@ impl store::os_store::serialization::ArtifactDsl for CadSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }

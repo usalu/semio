@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.nx.graph-environment/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "taskOnly",
+    "graphDependent",
+    "proofTransport"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "taskOnly": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z_0-9]+$"
+      }
+    },
+    "graphDependent": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z_0-9]+$"
+      }
+    },
+    "proofTransport": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z_0-9]+$"
+      }
+    }
+  }
+}

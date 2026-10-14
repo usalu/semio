@@ -8,7 +8,7 @@ use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
 use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::ViewModel;
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
 
 fn demo() -> Fem2dSnapshot {
     Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).expect("the bundled demo fixture parses")

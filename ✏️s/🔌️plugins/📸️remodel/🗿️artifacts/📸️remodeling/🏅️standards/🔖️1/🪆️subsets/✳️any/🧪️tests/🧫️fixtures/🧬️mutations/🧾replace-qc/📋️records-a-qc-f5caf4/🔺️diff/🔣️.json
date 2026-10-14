@@ -1,0 +1,56 @@
+{
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": null,
+  "durableArtifacts": null,
+  "calibration": null,
+  "params": null,
+  "gcps": null,
+  "results": {
+    "sparse": null,
+    "dense": null,
+    "mesh": null,
+    "trajectory": null,
+    "tracks": null,
+    "geo": null,
+    "qc": {
+      "value": {
+        "reprojectionRmsPx": {
+          "bits": "3fd0000000000000"
+        },
+        "gcpCheckpointRmse": null,
+        "watertight": {
+          "vertexCount": 512,
+          "triangleCount": 1020,
+          "boundaryEdgeCount": 0,
+          "boundaryLoopCount": 0,
+          "nonManifoldEdgeCount": 0,
+          "nonManifoldVertexCount": 0,
+          "connectedComponents": 1,
+          "consistentlyOriented": true,
+          "eulerCharacteristic": "2",
+          "genus": "0",
+          "signedVolume": {
+            "bits": "4029000000000000"
+          },
+          "selfIntersectionPairs": 0,
+          "closedFallbackUsed": false,
+          "isClosed": true,
+          "isTwoManifold": true,
+          "isWatertight": true
+        },
+        "meanTrackLength": {
+          "bits": "41000000"
+        },
+        "registeredFrameRatio": {
+          "bits": "3f600000"
+        },
+        "denseCoverageRatio": {
+          "bits": "3f000000"
+        },
+        "warnings": []
+      }
+    }
+  }
+}

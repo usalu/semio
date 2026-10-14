@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::En1993Snapshot;
 
 /// 🔩️ The high-strength-connection example fixture, handcrafted in `en1993`'s DSL
-/// (`store::os_store::serialization::ArtifactDsl`): an S460 high-strength steel member and bolted/welded connection
+/// (`pack::snapshot::ArtifactDsl`): an S460 high-strength steel member and bolted/welded connection
 /// worked example (4×M24 grade 10.9 bolts, safe-life fatigue assessment, subgrade K2 toughness)
 /// under the EN annex — distinct from `En1993Snapshot::default()`'s DE-annex/S355/2-bolt/damage-tolerant
 /// values so the grammar's non-default branches (annex, bolt count, fatigue method, HSS section
@@ -18,12 +18,12 @@ pub const EN1993_HIGH_STRENGTH_CONNECTION_EXAMPLE_TEXT: &str = include_str!("../
 
 /// 📖️ Parses `.en1993` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<En1993Snapshot, semio_framework_diagnostic::TextError> {
-    <En1993Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <En1993Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.en1993` DSL text.
 pub fn print_dsl(document: &En1993Snapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(document)
+    pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
 #[cfg(test)]
@@ -69,7 +69,7 @@ pub fn decode_en1993_snapshot_json(text: &str) -> Result<En1993Snapshot, String>
 /// async runtime to drive one.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_en1993_dsl(text: &str) -> Result<En1993Snapshot, String> {
-    <En1993Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+    <En1993Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
 
 /// 🖨️ Prints a [`En1993Snapshot`] back to its canonical `.dsl.semio` body. Canonical is the operative
@@ -77,7 +77,7 @@ pub fn decode_en1993_dsl(text: &str) -> Result<En1993Snapshot, String> {
 /// scenario asserts byte-exactness rather than the no-byte-pass-through inequality.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_en1993_dsl(snapshot: &En1993Snapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
+    pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

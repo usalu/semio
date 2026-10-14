@@ -1,0 +1,13 @@
+# Prepared Render Job Rejection Caller Review
+
+Current read-only source, no build/test. Root reports Kernel60484 stopped on actual UI two-error wrapper floor; runtime remains pending.
+
+Actual `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs:2681` PreparedRenderJobRejected owns static fault and Option<PreparedRenderInput>. Wrapper2695 is grantless bool yet input2360 requires supplied RetainedCloneGrant and Result<bool,ValueError>. No new caller authority should be manufactured inside it.
+
+Prefer a supplied-grant, progress-returning canonical close operation delegating to the child's existing close_granted, with complete errors preserved. Child receipt must escape the wrapper for original caller debit; merely returning bool fixes syntax but hides actual births/releases. Terminal input removal also needs its admitted logical item/header move, and must not remove the Option on refusal. Expose exact demand/terminal witnesses needed by original receiver, rather than deriving an admitted grant from demand.
+
+Critical test distinction: prepared-unit337/338/481/487/505/510 calls named rejected.close_step refer to PreparedRasterProducer/PreparedRasterReservation rejections, NOT PreparedRenderJobRejected. They are unrelated to this exact repair. Existing unit69 authored finite grant is items1/copy65536/capacity65536/release16777216/depth64; unit38 and packet helper5 instead derive grants from measured demand, so should not be reused as original-authority policy evidence. A meaningful new wrapper fixture should hold original PreparedRenderInput from actual failed try_new, assert source pointer, denied zero/underfunded close retains it, funded same owner close publishes exact heap/receipt, and final terminal drop zero. Register under existing prepared UI Source/native owner rather than unrelated raster tests.
+
+True production IconRenderHost scene path (`🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🎯️targets/🧊️wgpu/📤️export/🎬️scene/🦀️.rs`): transfer323 retains Err in job_rejected330; close410/437 invokes grantless wrapper. This close boundary itself has no original grant/context parameter. It needs actual caller loan propagation, not local finite/demand-derived funding.
+
+Actual renderer WGPU owns job_rejected16364 from PreparedRenderJob::try_new; receiving close16485 currently returns `frame_receive_close(frame_unpriced_child(),cx)` when this field exists. Genuine original context is already present there. A paid wrapper can be integrated into that real frame receiver using its supplied cx grant and exact returned receipt, preserving refusal slot custody. Do not replace the current explicit unpriced refusal with invented authority or discard the rejection.

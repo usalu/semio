@@ -2,7 +2,7 @@ use super::*;
 use crate::registry::Facts;
 use ui_tui::tui::widget::{TreeState, WidgetState};
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../../../🧫️fixtures/🔎️launcher/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔎️launcher/🔣️.json")).unwrap() }
 
 fn registry() -> Arc<Registry> {
     let facts: Facts = serde_json::from_value(fixture()["workspace"].clone()).unwrap();

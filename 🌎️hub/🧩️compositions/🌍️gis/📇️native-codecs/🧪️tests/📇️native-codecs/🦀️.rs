@@ -2,7 +2,7 @@
 
 use geo::BoundingRect;
 use semio_framework_os_kernel as store;
-use semio_framework_os_kernel::{os_store::serialization::ArtifactPack, DslValue, FromValue, Mutation, MutationDiff};
+use semio_framework_os_kernel::{pack::snapshot::ArtifactPack, DslValue, FromValue, Mutation, MutationDiff};
 use semio_framework_plugin::{ArtifactInferenceExecutionRequest, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
 use semio_s_artifact_gis_gismap::{gis_map_inference_service, gis_map_snapshot_with_derived_children, infer_gis_map_controlled, GisMapSnapshot};
 use semio_hub_gis::native_codecs::native_codec_factory_receipts;
@@ -24,13 +24,13 @@ fn assert_zero_history<P, M>(parsed: store::os_store::text_format::ParsedDocumen
 #[semio_framework_async_macros::async_test]
 async fn gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_factory_substitution() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔣️.json")).unwrap();
-    let document_ids: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🌱️artifact-document-id-v1/🔣️.json")).unwrap();
+    let document_ids: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🌱️artifact-document-id-v1/🔣️.json")).unwrap();
     let document_id = document_ids["cases"].as_array().unwrap().iter().find(|row| row["accepted"] == true).unwrap()["documentId"].as_str().unwrap();
     let snapshot = GisMapSnapshot::default();
     let pack = snapshot.encode_pack();
     let (envelope, _) = store::semio_format::unwrap_binary(&pack).unwrap();
-    assert_eq!(envelope.envelope_id(), <GisMapSnapshot as store::os_store::serialization::ArtifactDsl>::envelope_id());
-    assert_ne!(envelope.envelope_id(), <GisMapSnapshot as store::os_store::serialization::ArtifactDsl>::EXTENSION);
+    assert_eq!(envelope.envelope_id(), <GisMapSnapshot as pack::snapshot::ArtifactDsl>::envelope_id());
+    assert_ne!(envelope.envelope_id(), <GisMapSnapshot as pack::snapshot::ArtifactDsl>::EXTENSION);
     assert_eq!(GisMapSnapshot::decode_pack(&pack).unwrap(), snapshot);
     let receipts = native_codec_factory_receipts().expect("complete inert GIS closure");
     assert_eq!(receipts.len(), fixture["receipts"].as_array().unwrap().len());
@@ -104,7 +104,7 @@ async fn gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_
 
 #[test]
 fn gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline_trace() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/💡️inference-control/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/💡️inference-control/🔣️.json")).unwrap();
     let features = &fixture["snapshot"];
     let snapshot = gis_map_snapshot_with_derived_children(GisMapSnapshot {
         positions: FromValue::from_value(DslValue::from(&features["positions"])).unwrap(),
@@ -192,7 +192,7 @@ fn gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline
 /// `ArtifactCodec::print_mirror`, and then hands the same bytes to the store forever after.
 #[semio_framework_async_macros::async_test]
 async fn gis_guest_genesis_is_byte_for_byte_the_linked_codec_pair_on_one_generation() {
-    let document_ids: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🌱️artifact-document-id-v1/🔣️.json")).unwrap();
+    let document_ids: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🌱️artifact-document-id-v1/🔣️.json")).unwrap();
     let document_id = document_ids["cases"].as_array().unwrap().iter().find(|row| row["accepted"] == true).unwrap()["documentId"].as_str().unwrap();
     for receipt in native_codec_factory_receipts().expect("complete inert GIS closure") {
         let identity = receipt.identity();

@@ -5,10 +5,10 @@
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🚪️io/**/*.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🧫️fixtures/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/**/*",
       "{projectRoot}/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🧪️tests/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/🧫️fixtures/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/🧪️tests/🧫️fixtures/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/🧬️schema/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
     ]

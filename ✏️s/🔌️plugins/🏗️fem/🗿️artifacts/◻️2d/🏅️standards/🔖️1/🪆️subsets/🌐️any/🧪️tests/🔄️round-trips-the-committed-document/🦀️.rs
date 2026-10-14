@@ -53,7 +53,7 @@ mod subject {
     /// The CARRIER identity is Rust-only and asserted here in role, on the artifact's own committed
     /// example: `law::round_trip_preserves` for the semantic half, `law::carrier_is_exact` for the
     /// byte half — deliberately the fixpoint law rather than the wave's no-pass-through tripwire,
-    /// because `store::os_store::serialization::ArtifactDsl` documents canonical `print_dsl` output as a `parse_dsl`
+    /// because `pack::snapshot::ArtifactDsl` documents canonical `print_dsl` output as a `parse_dsl`
     /// fixpoint. The pack decoding is a separate binary codec, so agreeing on one model cannot be
     /// reached by carrying text bytes across.
     ///

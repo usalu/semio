@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
-import corpus from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import corpus from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import { createAssetBuildPluginsV1, parseAssetDeliveryDeclarationV1, type AssetDeliveryProviderV1 } from "../🟦️.ts";
 
 describe("caller-owned asset dispatch", () => {

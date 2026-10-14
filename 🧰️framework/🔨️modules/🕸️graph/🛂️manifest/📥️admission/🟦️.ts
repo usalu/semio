@@ -1,6 +1,9 @@
 /** 📥️ No-follow discovery and parsing for graph manifest inputs. */
 import { lstatSync, readdirSync, readFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
+import policy from "./🔣️.json";
+
+const excludedDirectories = new Set(policy.excludedDirectoryNames);
 
 export type ManifestAxes = { portModel?: string; directedness?: string };
 export type ManifestPropertyDef = { name: string; kind: "data" | "derived"; valueType?: unknown; expr?: string };
@@ -44,6 +47,7 @@ export function findManifestFiles(root: string, inputAreas: readonly string[], e
   const out: string[] = [];
   function excluded(path: string): boolean {
     const identity = relative(root, path).replaceAll("\\", "/");
+    if (identity.split("/").some(segment => excludedDirectories.has(segment))) return true;
     return excludedInputPaths.some(prefix => identity === prefix || identity.startsWith(prefix + "/"));
   }
   function walk(dir: string): void {

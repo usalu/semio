@@ -1,12 +1,14 @@
-import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { checkResourceLeaseControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import { type CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🧩️ Semantic plugin catalog refresh owner. */
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import type { PluginBuildTargetV1 } from "../🔎️discovery/🟦️.ts";
 
@@ -27,12 +29,14 @@ import type { ComponentDeliverableV1 } from "../../🖨️describe/🏷️compon
  * per target. Injectable fakes support tests without a real toolchain. */
 async function buildPluginCatalog(
   orderedTargets: readonly PluginBuildTargetV1[],
-  cargoFn: (target: PluginBuildTargetV1) => Promise<{ readonly deliverable: ComponentDeliverableV1 }> = buildPluginCargo,
+  control: CompilerAdmissionControl,
+  cargoFn: (target: PluginBuildTargetV1) => Promise<{ readonly deliverable: ComponentDeliverableV1 }> = target => buildPluginCargo(target, control),
   materializeFn: (target: PluginBuildTargetV1, built: { readonly deliverable: ComponentDeliverableV1 }) => Promise<void> = materializePlugin,
   concurrencyLimit: number = materializeConcurrencyLimit(),
   publishShardWorkerFn: () => void = publishShardWorker,
   cargoLimit: number = cargoConcurrencyLimit(),
 ): Promise<{ readonly failedPluginIds: readonly string[] }> {
+  checkResourceLeaseControl(control);
   const cargoLimiter = createConcurrencyLimiter(cargoLimit);
   const materializeLimiter = createConcurrencyLimiter(concurrencyLimit);
   const failed: string[] = [];
@@ -40,8 +44,11 @@ async function buildPluginCatalog(
   await Promise.all(orderedTargets.map((target) => cargoLimiter.run(async () => {
     let cargoResult: { readonly deliverable: ComponentDeliverableV1 };
     try {
+      checkResourceLeaseControl(control);
       cargoResult = await cargoFn(target);
+      checkResourceLeaseControl(control);
     } catch (error) {
+      checkResourceLeaseControl(control);
       failed.push(target.pluginId);
       console.error(`plugin build failed, continuing with remaining targets: ${target.pluginId}`, error);
       return;
@@ -49,8 +56,11 @@ async function buildPluginCatalog(
     materializeTasks.push(
       materializeLimiter.run(async () => {
         try {
+          checkResourceLeaseControl(control);
           await materializeFn(target, cargoResult);
+          checkResourceLeaseControl(control);
         } catch (error) {
+          checkResourceLeaseControl(control);
           failed.push(target.pluginId);
           console.error(`plugin materialize failed: ${target.pluginId}`, error);
         }
@@ -58,6 +68,7 @@ async function buildPluginCatalog(
     );
   })));
   await Promise.all(materializeTasks);
+  checkResourceLeaseControl(control);
   publishShardWorkerFn();
   return { failedPluginIds: failed };
 }

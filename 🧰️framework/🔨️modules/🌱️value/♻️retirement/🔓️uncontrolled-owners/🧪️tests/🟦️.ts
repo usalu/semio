@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {readFileSync} from "node:fs";
 import {join,resolve} from "node:path";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 
 const repoRoot=resolve(import.meta.dir,"../../../../../..");

@@ -1,0 +1,591 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.job.original-turn-failure",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "closeGrant",
+    "copyGrants",
+    "wire",
+    "faultWire",
+    "contextWire"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "primary",
+          "grant",
+          "expectedReceiptKind"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "semanticOnly",
+              "receiptRefused"
+            ]
+          },
+          "primary": {
+            "$ref": "#/$defs/ValueError"
+          },
+          "grant": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json#/$defs/Grant"
+          },
+          "expectedReceiptKind": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              null,
+              "invariantViolated"
+            ]
+          }
+        }
+      }
+    },
+    "closeGrant": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json#/$defs/Grant"
+    },
+    "copyGrants": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "wire": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primary",
+        "receiptRefusal"
+      ],
+      "properties": {
+        "primary": {
+          "$ref": "#/$defs/ValueError"
+        },
+        "receiptRefusal": {
+          "$ref": "#/$defs/ValueError"
+        }
+      }
+    },
+    "faultWire": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primary",
+        "receiptRefusal"
+      ],
+      "properties": {
+        "primary": {
+          "$ref": "#/$defs/Fault"
+        },
+        "receiptRefusal": {
+          "$ref": "#/$defs/ValueError"
+        }
+      }
+    },
+    "contextWire": {
+      "const": {
+        "primary": {
+          "origin": "app",
+          "code": "shape.operation-refused",
+          "severity": "warning",
+          "message": "Original topology diagnostic 源🌊",
+          "scope": {
+            "appId": "generation3d",
+            "module": "brep"
+          },
+          "retryable": true,
+          "retainedProgress": {
+            "copiedItems": 2,
+            "copiedBytes": 3,
+            "retainedCapacityBytes": 5,
+            "releasedBytes": 7
+          },
+          "span": {
+            "line": 3,
+            "column": 5,
+            "length": 7
+          },
+          "params": {
+            "operation": "cut",
+            "selection": "face:71"
+          },
+          "causes": [
+            {
+              "message": "Original child diagnostic 源🌊",
+              "code": "geometry.non-manifold",
+              "retainedProgress": {
+                "copiedItems": 11,
+                "copiedBytes": 13,
+                "retainedCapacityBytes": 17,
+                "releasedBytes": 19
+              }
+            }
+          ],
+          "source": {
+            "offset": 31,
+            "byte": 93,
+            "depth": 7
+          }
+        },
+        "receiptRefusal": {
+          "kind": "invariantViolated",
+          "message": "receipt 源🌊",
+          "retainedProgress": {
+            "copiedItems": 11,
+            "copiedBytes": 13,
+            "retainedCapacityBytes": 17,
+            "releasedBytes": 19
+          }
+        },
+        "contextRefusal": {
+          "kind": "workLimit",
+          "message": "original context refusal 源",
+          "retainedProgress": {
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ValueError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "message",
+        "retainedProgress"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "invalidValue",
+            "canceled",
+            "ownershipLimit",
+            "allocationFailed",
+            "workLimit",
+            "depthLimit",
+            "unsupportedOwner",
+            "invariantViolated"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retainedProgress": {
+          "$ref": "flow.original-retained-progress"
+        }
+      }
+    },
+    "FaultCode": {
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "info",
+        "warning",
+        "error",
+        "fatal"
+      ]
+    },
+    "FaultOrigin": {
+      "enum": [
+        "edge",
+        "renderer",
+        "os",
+        "module",
+        "plugin",
+        "app",
+        "extension",
+        "framework"
+      ]
+    },
+    "TextSpan": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "line": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "column": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      },
+      "required": [
+        "line",
+        "column",
+        "length"
+      ]
+    },
+    "FaultScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pluginId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "appId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "instanceId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "module": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bodyKey": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": []
+    },
+    "ExpectedSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tokens": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "keywords": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "keys": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": []
+    },
+    "FaultCause": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "code": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FaultCode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retainedProgress": {
+          "$ref": "#/$defs/RetainedProgress"
+        }
+      },
+      "required": [
+        "message"
+      ]
+    },
+    "FaultParams": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z][A-Za-z0-9]*$"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "TextError": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "span": {
+          "$ref": "#/$defs/TextSpan"
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "$ref": "https://semio.tech/schema/value/refusal#/$defs/kind"
+        }
+      },
+      "required": [
+        "kind",
+        "message",
+        "span"
+      ]
+    },
+    "Diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/FaultCode"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "span": {
+          "$ref": "#/$defs/TextSpan"
+        },
+        "message": {
+          "type": "string"
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExpectedSet"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FaultScope"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "span",
+        "message"
+      ]
+    },
+    "Fault": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "origin": {
+          "$ref": "#/$defs/FaultOrigin"
+        },
+        "code": {
+          "$ref": "#/$defs/FaultCode"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "message": {
+          "type": "string"
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FaultScope"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "span": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TextSpan"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causes": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FaultCause"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "params": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FaultParams"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retryable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retainedProgress": {
+          "$ref": "#/$defs/RetainedProgress"
+        },
+        "source": {
+          "$ref": "#/$defs/FaultSource"
+        }
+      },
+      "required": [
+        "origin",
+        "code",
+        "severity",
+        "message",
+        "retainedProgress"
+      ]
+    },
+    "RetainedProgress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copiedItems",
+        "copiedBytes",
+        "retainedCapacityBytes",
+        "releasedBytes"
+      ],
+      "properties": {
+        "copiedItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copiedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retainedCapacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releasedBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "FaultSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "byte": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        }
+      },
+      "required": []
+    }
+  }
+}

@@ -77,8 +77,8 @@ impl TryFrom<Snapshot> for JsonSnapshot{
 }
 
 
-impl store::os_store::serialization::ArtifactPack for JsonSnapshot{
- fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())}
+impl pack::snapshot::ArtifactPack for JsonSnapshot{
+ 
  fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Snapshot::__dsl_spec())}
  fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{
   let inner=store::pack_rt::encode_document(&Snapshot::__dsl_spec(),&Snapshot::from(self).__dsl_to_record(),options)?;
@@ -90,6 +90,9 @@ impl store::os_store::serialization::ArtifactPack for JsonSnapshot{
   let(record,_)=store::pack_rt::decode_document(&inner,&Snapshot::__dsl_spec(),options)?;
   Snapshot::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)?.try_into().map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
  }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for JsonSnapshot {
+fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())}
 }
 
 pub(crate) fn preflight(snapshot:&JsonSnapshot,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<(),semio_framework_value::ValueError>{

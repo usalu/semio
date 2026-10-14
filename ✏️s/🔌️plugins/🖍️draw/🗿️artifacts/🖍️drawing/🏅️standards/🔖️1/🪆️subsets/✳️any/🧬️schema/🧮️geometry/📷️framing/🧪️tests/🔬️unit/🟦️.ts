@@ -1,7 +1,7 @@
 /** 📷️ Shared artwork framing traces checked against Three.js transformed points. */
 import { expect,test } from "bun:test";
 import { Box2,CubicBezierCurve,Matrix3,QuadraticBezierCurve,Vector2 } from "three";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/📷️framing/🔣️.json";
 import { drawingSceneBounds,type FramingNode } from "../../🟦️.ts";
 test("framing fixtures conform to their neutral schema",() => expect(new Set(fixture.cases.map(row=>row.name)).size).toBe(fixture.cases.length));
 for (const item of fixture.cases) test(item.name,() => {

@@ -126,7 +126,7 @@ use crate::STDIO_JPG_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use crate::standards::v_jfif_1_01::subsets::document::io::text::snapshot as owned_text;
 
-impl store::os_store::serialization::ArtifactDsl for JpgSnapshot {
+impl pack::snapshot::ArtifactDsl for JpgSnapshot {
     const EXTENSION: &'static str = "jpg";
     fn envelope_id() -> &'static str {
         "stdio.jpg"

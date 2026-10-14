@@ -9,7 +9,7 @@ struct InlineStatement { #[dsl(statements)] statement:InlineVariant }
 
 #[test]
 fn required_inline_statement_roundtrips_the_native_owner_and_refuses_zero_or_two(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../✨️derive/🧫️fixtures/🏷️required-inline/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/✨️derive/🏷️required-inline/🔣️.json")).unwrap();
  for row in corpus["valid"].as_array().unwrap(){
   let value=&row["statement"];let expected=InlineStatement{statement:match value["kind"].as_str().unwrap(){"rect"=>InlineVariant::Rect{width:value["width"].as_f64().unwrap()},"text"=>InlineVariant::Text{text:value["text"].as_str().unwrap().into()},_=>unreachable!()}};
   assert_eq!(serde_json::from_value::<InlineStatement>(row.clone()).unwrap(),expected);

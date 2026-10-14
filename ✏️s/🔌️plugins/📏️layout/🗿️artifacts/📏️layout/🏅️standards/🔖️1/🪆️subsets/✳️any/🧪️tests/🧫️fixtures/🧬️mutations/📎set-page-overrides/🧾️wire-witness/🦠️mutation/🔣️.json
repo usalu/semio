@@ -1,0 +1,19 @@
+{
+  "SetPageOverrides": {
+    "id": "page-2",
+    "overrides": [
+      {
+        "objectId": "frame-header",
+        "bounds": {
+          "x": 10.0,
+          "y": 10.0,
+          "w": 190.0,
+          "h": 20.0,
+          "rotation": 0.0
+        },
+        "visible": true,
+        "locked": null
+      }
+    ]
+  }
+}

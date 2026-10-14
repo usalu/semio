@@ -1,0 +1,8 @@
+{
+  "code": "mutation.invariant",
+  "path": [
+    "node-a",
+    "handle-new"
+  ],
+  "status": "rejected"
+}

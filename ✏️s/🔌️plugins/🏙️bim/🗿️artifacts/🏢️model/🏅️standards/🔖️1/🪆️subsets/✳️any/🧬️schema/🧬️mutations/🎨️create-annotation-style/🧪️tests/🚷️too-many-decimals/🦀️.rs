@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🎨️create-annotation-style/🚷️too-many-decimals",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨️create-annotation-style/🚷️too-many-decimals/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨️create-annotation-style/🚷️too-many-decimals/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨️create-annotation-style/🚷️too-many-decimals/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨️create-annotation-style/🚷️too-many-decimals/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨️create-annotation-style/🚷️too-many-decimals/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️create-annotation-style/🚷️too-many-decimals/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️create-annotation-style/🚷️too-many-decimals/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️create-annotation-style/🚷️too-many-decimals/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️create-annotation-style/🚷️too-many-decimals/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️create-annotation-style/🚷️too-many-decimals/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

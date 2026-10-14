@@ -1,10 +1,10 @@
 //! 🧪 Curation's native record and transports agree with neutral JSON inputs.
 use crate::{CurationSnapshot, schema::{CurationArtifact, diff::CurationDiff}};
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 #[test]
 fn curation_document_contract_exact_children_and_native_transports() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document-contract/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document-contract/🔣️.json")).unwrap();
     let snapshot: CurationSnapshot = semio_framework_pack_json::from_json_str(&vectors["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let artifact: CurationArtifact = semio_framework_pack_json::from_json_str(&vectors["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(artifact.to_snapshot(), snapshot);

@@ -476,14 +476,14 @@
       "files": [
         {
           "role": "expected-before-svg",
-          "path": "../🧫️fixtures/📣️set-declaration-applied/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/📣️set-declaration-applied/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:1082a4032f75bc8b615cdb2fcaff429fe365d4563a912a301ec859f3d57adbf1",
           "bytes": 359
         },
         {
           "role": "expected-after-svg",
-          "path": "../🧫️fixtures/📣️set-declaration-applied/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/📣️set-declaration-applied/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:81c732a2efad2dbffebb809aeff80ad913f28d3fd09f901e5d09abbad6564105",
           "bytes": 375
@@ -526,14 +526,14 @@
       "files": [
         {
           "role": "expected-before-svg",
-          "path": "../🧫️fixtures/📜️set-doctype-applied/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/📜️set-doctype-applied/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:1082a4032f75bc8b615cdb2fcaff429fe365d4563a912a301ec859f3d57adbf1",
           "bytes": 359
         },
         {
           "role": "expected-after-svg",
-          "path": "../🧫️fixtures/📜️set-doctype-applied/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/📜️set-doctype-applied/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:45519aec89afc3c83d3afbc83550206adc20eb2fbd0dec1600d98b8a5a407317",
           "bytes": 299
@@ -576,14 +576,14 @@
       "files": [
         {
           "role": "expected-before-svg",
-          "path": "../🧫️fixtures/➕️insert-element-applied/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-element-applied/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:1082a4032f75bc8b615cdb2fcaff429fe365d4563a912a301ec859f3d57adbf1",
           "bytes": 359
         },
         {
           "role": "expected-after-svg",
-          "path": "../🧫️fixtures/➕️insert-element-applied/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-element-applied/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:e62d32836d593be05dc74a7aaf3fbb1b8b5e129afc6734885c7dbe30ab3e8fd5",
           "bytes": 401
@@ -626,14 +626,14 @@
       "files": [
         {
           "role": "expected-before-svg",
-          "path": "../🧫️fixtures/➖️remove-element-applied/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-element-applied/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:1082a4032f75bc8b615cdb2fcaff429fe365d4563a912a301ec859f3d57adbf1",
           "bytes": 359
         },
         {
           "role": "expected-after-svg",
-          "path": "../🧫️fixtures/➖️remove-element-applied/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-element-applied/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:72f8125409a9f1b70f4ecd3f7da25fc407caec87e433afb748783e01ed025b24",
           "bytes": 330
@@ -676,14 +676,14 @@
       "files": [
         {
           "role": "expected-before-svg",
-          "path": "../🧫️fixtures/🔤️set-element-name-applied/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🔤️set-element-name-applied/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:1082a4032f75bc8b615cdb2fcaff429fe365d4563a912a301ec859f3d57adbf1",
           "bytes": 359
         },
         {
           "role": "expected-after-svg",
-          "path": "../🧫️fixtures/🔤️set-element-name-applied/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🔤️set-element-name-applied/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:96289aba8d1d0764c8bd515ec3ffdcc60cba29dfbca473f39b3eb1fd20a0acfb",
           "bytes": 362
@@ -726,14 +726,14 @@
       "files": [
         {
           "role": "expected-before-svg",
-          "path": "../🧫️fixtures/🏷️set-attribute-applied/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-attribute-applied/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:1082a4032f75bc8b615cdb2fcaff429fe365d4563a912a301ec859f3d57adbf1",
           "bytes": 359
         },
         {
           "role": "expected-after-svg",
-          "path": "../🧫️fixtures/🏷️set-attribute-applied/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-attribute-applied/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:4a748ec30eaaffa31e87c9578b8a27236eb7607dcc8cb1f3de810d99345e25de",
           "bytes": 370
@@ -776,14 +776,14 @@
       "files": [
         {
           "role": "expected-before-svg",
-          "path": "../🧫️fixtures/✍️set-text-applied/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/✍️set-text-applied/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:1082a4032f75bc8b615cdb2fcaff429fe365d4563a912a301ec859f3d57adbf1",
           "bytes": 359
         },
         {
           "role": "expected-after-svg",
-          "path": "../🧫️fixtures/✍️set-text-applied/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/✍️set-text-applied/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:e4ec2b7e8e54f92cc3dd35331796df3f499b8131451351701a862220295e93c8",
           "bytes": 359
@@ -826,14 +826,14 @@
       "files": [
         {
           "role": "expected-before-svg",
-          "path": "../🧫️fixtures/🖼️set-view-box-applied/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🖼️set-view-box-applied/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:1082a4032f75bc8b615cdb2fcaff429fe365d4563a912a301ec859f3d57adbf1",
           "bytes": 359
         },
         {
           "role": "expected-after-svg",
-          "path": "../🧫️fixtures/🖼️set-view-box-applied/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🖼️set-view-box-applied/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:5ea5e91a781e394a30c6651fcad0c594e2b16b19ab8025e240982d71ac9b1178",
           "bytes": 359
@@ -876,14 +876,14 @@
       "files": [
         {
           "role": "expected-before-svg",
-          "path": "../🧫️fixtures/🔄️set-transform-applied/⬅️before.svg",
+          "path": "../🧪️tests/🧫️fixtures/🔄️set-transform-applied/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:1082a4032f75bc8b615cdb2fcaff429fe365d4563a912a301ec859f3d57adbf1",
           "bytes": 359
         },
         {
           "role": "expected-after-svg",
-          "path": "../🧫️fixtures/🔄️set-transform-applied/➡️after.svg",
+          "path": "../🧪️tests/🧫️fixtures/🔄️set-transform-applied/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:b7dc800fdc1e91f5f0a2828a6f7431e6ad05acea0cc11d271050acaa81266d4a",
           "bytes": 368

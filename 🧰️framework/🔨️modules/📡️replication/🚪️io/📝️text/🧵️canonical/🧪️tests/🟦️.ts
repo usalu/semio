@@ -5,7 +5,7 @@ import { readFileSync, existsSync } from "node:fs";
 test("persistent protocol canonical fields preserve exact revision bytes and original native field ownership", () => {
  const root = new URL("../", import.meta.url);
  const read = (path: string) => JSON.parse(readFileSync(new URL(path, root), "utf8"));
- const fixture = read("🧫️fixtures/🔣️.json");
+ const fixture = read("🧪️tests/🧫️fixtures/🔣️.json");
  
  const db = new Database(":memory:"); db.exec("CREATE TABLE fields(ordinal INTEGER PRIMARY KEY, name TEXT, original INTEGER)");
  for (const row of fixture.cases) {

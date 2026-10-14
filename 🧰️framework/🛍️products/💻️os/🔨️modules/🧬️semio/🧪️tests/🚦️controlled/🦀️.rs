@@ -4,7 +4,7 @@ use semio_framework_value::native_decoding::*;
 #[test]
 fn sqlite_snapshot_native_envelope_borrows_admitted_payload() {
     use std::{io::Write,process::{Command,Stdio}};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🚦️controlled/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🚦️controlled/🔣️.json")).unwrap();
     let id=fixture["id"].as_str().unwrap();let version=fixture["version"].as_u64().unwrap() as u16;
     let envelope=SemioEnvelope::from_envelope_id(id,Component::Pack,version).unwrap();let body=vec![127;fixture["bodyBytes"].as_u64().unwrap() as usize];let bytes=wrap_binary(&envelope,&body);
     let mut accepted=|_:NativeDecodeProgress|true;let mut control=NativeDecodeControl::new(0,&mut accepted);

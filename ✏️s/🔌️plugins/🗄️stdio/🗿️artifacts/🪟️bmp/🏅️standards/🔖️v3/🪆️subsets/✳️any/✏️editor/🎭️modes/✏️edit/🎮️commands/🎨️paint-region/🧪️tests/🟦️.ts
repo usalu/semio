@@ -1,5 +1,5 @@
 import Ajv2020 from "ajv/dist/2020.js";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 
 /** 🎨️ Validates the neutral BMP paint action corpus with an independent JSON Schema engine. */

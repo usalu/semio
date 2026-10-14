@@ -4,7 +4,7 @@ use super::{mutations, snapshot};
 use semio_framework_value::ToValue;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("neutral IO fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("neutral IO fixture")
 }
 
 #[test]

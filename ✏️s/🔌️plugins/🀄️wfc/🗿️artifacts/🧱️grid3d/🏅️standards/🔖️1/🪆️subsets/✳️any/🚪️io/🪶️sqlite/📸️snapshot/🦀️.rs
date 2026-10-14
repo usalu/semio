@@ -1,6 +1,7 @@
 //! 🧱️ Nonuniform grid, exact mesh buffers, tile permissions and durable child targets.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::{Grid3dSnapshot,Grid3dTile,Grid3dTileMedia,Grid3dMesh,Grid3dColor,Grid3dRule,Grid3dDirection,Grid3dPinnedCell,Grid3dCell};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Cell,RowWriter,Reconstruction,FloatColumn,FloatRow}}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Cell,RowWriter,Reconstruction,FloatColumn,FloatRow}}};
 use std::collections::{BTreeMap,BTreeSet};
 use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
@@ -25,10 +26,17 @@ pub(crate)fn write_rows(value:&Grid3dSnapshot,p:&mut RowWriter<'_,'_>)->Result<(
  for(i,r)in value.masked.iter().enumerate(){p.insert("wfc_grid3d_mask",&[Cell::Integer(1),Cell::Integer(number(i)?),Cell::Integer(i64::from(r.x)),Cell::Integer(i64::from(r.y)),Cell::Integer(i64::from(r.z))])?;}
  Ok(())}
 pub(crate)fn semantic(value:&Grid3dSnapshot,phase:SqliteSnapshotPhase,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{authored_schema(c)?;let mut p=RowWriter::borrowed(c,phase)?;write_rows(value,&mut p)?;p.finish_borrowed()}
-impl ArtifactSqliteSnapshot for Grid3dSnapshot{
-const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+impl ArtifactSqliteSnapshotHost for Grid3dSnapshot{
+
 fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{controlled_native::decode_sqlite_snapshot_native(payload,c,native_control)}
 fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{controlled_native::encode_sqlite_snapshot_native(self,encoding,c,native_owner)}
+
+
+fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic(self,SqliteSnapshotPhase::EncodeNative,c)?;let component=match encoding{SnapshotEncoding::Binary=>store::semio_format::Component::Pack,SnapshotEncoding::Text=>store::semio_format::Component::Dsl};let prefix=store::semio_format::declared_envelope_prefix_len(<Self as pack::snapshot::ArtifactDsl>::envelope_id(),component,1)?;if prefix>c.limits().max_file_bytes{return Err(invalid("grid3d declared native frame exceeds file allowance"))}Ok(())}
+fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.wfc.grid3d"||dialect.standard!="1"||dialect.subset!="*"{return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(invalid("grid3d dialect differs from its owned wildcard")))}if d.table("wfc_grid3d_document").map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?.single_row().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?.text(1).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?!=self.schema{return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(invalid("grid3d projected schema differs")))}c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for Grid3dSnapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
 fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let mut p=RowWriter::new(Self::SQLITE_SCHEMA,c)?;write_rows(self,&mut p)?;p.finish()}
 fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
  validate_sqlite_database_schema(d,Self::SQLITE_SCHEMA,c.limits())?;c.check_database(d,SqliteSnapshotPhase::ReconstructSnapshot)?;let doc=FloatRow::new(d.table("wfc_grid3d_document")?.single_row()?,&[])?;identity(doc,9)?;if doc.rowid!=1{return Err(invalid("grid3d root identity must be one"))}let seed=doc.text(2)?.parse::<u64>().map_err(|_|invalid("grid3d seed exceeds unsigned64"))?;if seed.to_string()!=doc.text(2)?{return Err(invalid("grid3d seed requires canonical decimal"))}
@@ -45,8 +53,6 @@ fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Res
  let mut masked=Vec::new();for r in mask_rows{for _ in 0..3{owned.scalar()?;}masked.push(Grid3dCell{x:word(r,3)?,y:word(r,4)?,z:word(r,5)?});}for _ in 0..7{owned.scalar()?;}owned.checkpoint()?;let [cell_sizes_x,cell_sizes_y,cell_sizes_z]=cell_sizes;
  Ok(Self{schema,seed,width:word(doc,3)?,height:word(doc,4)?,depth:word(doc,5)?,periodic_x:flag(doc,6)?,periodic_y:flag(doc,7)?,periodic_z:flag(doc,8)?,cell_sizes_x,cell_sizes_y,cell_sizes_z,tiles,rules,pinned,masked})
 }
-fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic(self,SqliteSnapshotPhase::EncodeNative,c)?;let component=match encoding{SnapshotEncoding::Binary=>store::semio_format::Component::Pack,SnapshotEncoding::Text=>store::semio_format::Component::Dsl};let prefix=store::semio_format::declared_envelope_prefix_len(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),component,1)?;if prefix>c.limits().max_file_bytes{return Err(invalid("grid3d declared native frame exceeds file allowance"))}Ok(())}
-fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.wfc.grid3d"||dialect.standard!="1"||dialect.subset!="*"{return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(invalid("grid3d dialect differs from its owned wildcard")))}if d.table("wfc_grid3d_document").map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?.single_row().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?.text(1).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?!=self.schema{return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(invalid("grid3d projected schema differs")))}c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))}
 }
 
 #[cfg(test)]

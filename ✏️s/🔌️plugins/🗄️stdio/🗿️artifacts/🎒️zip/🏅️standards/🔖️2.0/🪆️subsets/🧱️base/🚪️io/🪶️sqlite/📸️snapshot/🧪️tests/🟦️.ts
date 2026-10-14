@@ -1,8 +1,8 @@
-import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
+import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
 const canceledKind=refusalFixture.cases.find(item=>item.id==="canceled-projection")!.expectedKind;
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import { parseZipSnapshot } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { ZIP_SQLITE_SCHEMA, zipSnapshotToSqliteDatabase, zipSnapshotFromSqliteDatabase, zipSnapshotValidateSqliteSubset } from "../🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework";
@@ -39,7 +39,7 @@ test("ZIP header ownership, legacy option presence, widths and budgets reject in
   await expect(zipSnapshotToSqliteDatabase(snapshot, { signal: controller.signal, onProgress: event => { if (event.completed >= 256) controller.abort(); } })).rejects.toHaveProperty("kind",canceledKind);
 });
 
-import subsetFixture from "../🧫️fixtures/🚦️subsets.json";
+import subsetFixture from "./🧫️fixtures/🚦️subsets.json";
 
 test("ZIP exact named snapshot guards use full independent local and central metadata", async () => {
   for (const sample of subsetFixture.cases) {
@@ -93,9 +93,9 @@ test("ZIP wildcard snapshots retain the full native unsigned16 method domain",as
 
 import Ajv2020 from "ajv/dist/2020.js";
 import Ajv from "ajv";
-import structuredPatches from "../../../../🧬️schema/🧬️mutations/🧫️fixtures/🩹️structured/🔣️.json";
+import structuredPatches from "./🧫️fixtures/🩹️structured/🔣️.json";
 
-import nativeControl from "../🧫️fixtures/🚦️native.json";
+import nativeControl from "./🧫️fixtures/🚦️native.json";
 
 
 test("ZIP native control corpus matches independent exact semantic row admission",async()=>{
@@ -136,7 +136,7 @@ test("ZIP structured mutation corpus preserves operation fields and optional pre
 });
 
 import NormSemanticAjv from "ajv/dist/2020.js";
-import normSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {zipSnapshotToSqliteDatabase as normSemanticProject,zipSnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
 import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

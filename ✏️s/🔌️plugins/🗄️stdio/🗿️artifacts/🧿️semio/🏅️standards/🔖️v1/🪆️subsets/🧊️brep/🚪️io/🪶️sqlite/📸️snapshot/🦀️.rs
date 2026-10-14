@@ -1,10 +1,11 @@
 //! 🧊️ Full typed BRep topology, analytic geometry, p-curves and NURBS parameter sequences.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn, FloatRow as SqliteRow};
 use crate::schema::snapshot::{SemioBrepSnapshot, BrepVertex, BrepEdge, BrepLoop, BrepLoopEdge, BrepCoedge, BrepFace, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepCurve, BrepCurve2, BrepSurface};
 use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding}};
 #[path="🧮️semantic/🦀️.rs"]
 pub(crate)mod semantic;
 fn unsigned64(mut value:u64,buffer:&mut[u8;20])->&str{let mut start=buffer.len();loop{start-=1;buffer[start]=b'0'+(value%10)as u8;value/=10;if value==0{break}}std::str::from_utf8(&buffer[start..]).expect("decimal digits are UTF8")}
@@ -42,7 +43,7 @@ fn project_surface(surface:&BrepSurface,p:&mut RowWriter<'_,'_>)->Result<i64,Val
 fn brep_invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 /// 🛂️ Rejects contradictory analytic fields outside the actual selected variant.
 fn shape(row:SqliteRow<'_>,active:&[usize])->Result<(),ValueError>{for index in 2..row.values.len(){if !active.contains(&index)&&!row.is_null(index)?{return Err(brep_invalid("contradictory BRep analytic geometry fields"))}}Ok(())}
-impl ArtifactSqliteSnapshot for SemioBrepSnapshot{
+impl ArtifactSqliteSnapshotHost for SemioBrepSnapshot{
 fn retire_sqlite_snapshot(self){drop(semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 
 fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
@@ -56,6 +57,11 @@ let row=database.table("semio_brep_document")?.single_row()?;
 if row.rowid!=1||row.integer(0)?!=1||row.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned document identity differs from projected semantic fields"));}
 control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))})();result.map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
 
+
+
+
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for SemioBrepSnapshot {
 const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
 fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.project_sqlite_database(c)}
 fn from_sqlite_database(db:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError> {let result=(||->Result<Self,ValueError>{ semantic::layout(c.limits())?;Self::reconstruct_sqlite_database(db, c, Self::SQLITE_SCHEMA) })();result}

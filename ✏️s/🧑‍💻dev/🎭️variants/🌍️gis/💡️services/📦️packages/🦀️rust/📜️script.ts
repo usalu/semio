@@ -1,25 +1,29 @@
 #!/usr/bin/env bun
-import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { runRepositoryExactCargoLaws, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import { readBuildMode, buildModeEnvironment } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runRepositoryExactCargoLaws, runVitest, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { buildRepositoryCargoArtifacts } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { NativeScript } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts";
 import { nativeServiceCompositionLaws } from "../../🧪️tests/🔌️service-composition/🟦️.ts";
 class BuildScript extends BundleScript {
   async run([kind,profile,...args]:string[]):Promise<void> {
-    if(args.length || !["native","mcp"].includes(kind) || !["dev","release"].includes(profile))throw new Error("Service build requires an exact executable and profile");
+    if(args.length || !["native","mcp"].includes(kind))throw new Error("Service build requires an exact executable and mode");
+    const mode=readBuildMode(profile);
+    if(process.env.SEMIO_BUILD_MODE!==undefined&&readBuildMode(process.env.SEMIO_BUILD_MODE)!==mode)throw Error("Service build mode contradicts its original environment");
     const binary=`semio-s-gis-services-${kind}`;
-    await buildRepositoryCargoArtifacts(`${this.root}/Cargo.toml`,["-p","semio-s-dev-gis-services","--bin",binary,"--features",kind==="native"?"native-renderer":"mcp-service",...(profile==="release"?["--release"]:[])],this.repoRoot,{output:`dist/${kind}-${profile}`,sourcesRecord:`${binary}.sources.json`});
+    await buildRepositoryCargoArtifacts(`${this.root}/Cargo.toml`,["-p","semio-s-dev-gis-services","--bin",binary,"--features",kind==="native"?"native-renderer":"mcp-service"],this.repoRoot,{ control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0), environment:buildModeEnvironment(mode),output:`dist/${kind}-${mode}`,sourcesRecord:`${binary}.sources.json`});
   }
 }
 class SourceScript extends BundleScript { async run():Promise<void> {nativeServiceCompositionLaws(this.repoRoot);} }
 class TestScript extends BundleScript {
   async run():Promise<void> {
     nativeServiceCompositionLaws(this.repoRoot);
-    const laws=await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd:this.repoRoot, env:{...process.env,CARGO_BUILD_JOBS:"1",RUST_MIN_STACK:"33554432"}, nativeEnv:{RUST_MIN_STACK:"268435456"}, groups:[{package:"semio-s-dev-gis-services",target:{kind:"lib"},laws:["tests::native_composition_installs_the_real_owner_and_matches_the_portable_oracle","tests::installed_owner_cannot_execute_without_a_verified_document_lease"]}], progress:event=>console.log(`native-service ${event.stage} ${event.package} ${event.law??""}`) });
+    const laws=await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd:this.repoRoot, env:{...process.env,CARGO_BUILD_JOBS:"1",RUST_MIN_STACK:"33554432"}, nativeEnv:{RUST_MIN_STACK:"268435456"}, groups:[{package:"semio-s-dev-gis-services",target:{kind:"lib"},laws:["tests::native_composition_installs_the_real_owner_and_matches_the_portable_oracle","tests::installed_owner_cannot_execute_without_a_verified_document_lease"]}], progress:event=>console.log(`native-service ${event.stage} ${event.package} ${event.law??""}`) });
     console.log(`native-service-runtime: exact=${laws.length} passed`);
   }
 }

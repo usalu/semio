@@ -6,7 +6,7 @@ import type { CacheInventory } from "../../🧮️composition/🟦️.ts";
 
 /** 🕸️ Compares the entire audited surface with native Nx's resolved multi-provider graph. */
 export async function testNativeInventory(workspace: string, inventory: (root: string) => CacheInventory): Promise<CacheInventory> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🕸️coverage/🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🕸️coverage/🔣️.json"), "utf8"));
   const { readCachedProjectGraph } = require("@nx/devkit"), graph = readCachedProjectGraph(), result = inventory(workspace);
   const { createTaskGraph } = require("nx/src/tasks-runner/create-task-graph"), { isCacheableTask } = require("nx/src/tasks-runner/utils");
   const names = Object.keys(graph.nodes).sort();

@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn original_dynamic_value_clone_cold_input_requires_original_authority(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️retained-clone/🌱️dynamic/🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️retained-clone/🌱️dynamic/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(law["rootTransferCopyBytes"],0);
     let source=std::sync::Arc::new(DslValue::Null);let original=std::sync::Arc::as_ptr(&source);
     use crate::retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneGrant};
@@ -14,7 +14,7 @@ fn original_dynamic_value_clone_cold_input_requires_original_authority(){
 use std::sync::Arc;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
 
 fn limits() -> DslValueCloneLimits {

@@ -14,11 +14,11 @@ use semio_repo_test_host::law::vector::Vector;
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-camera" => Vector {
-            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/✅️set/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/✅️set/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/✅️set/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/✅️set/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/✅️set/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧪️tests/🧫️fixtures/🎥️set-camera/✅️set/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧪️tests/🧫️fixtures/🎥️set-camera/✅️set/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧪️tests/🧫️fixtures/🎥️set-camera/✅️set/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧪️tests/🧫️fixtures/🎥️set-camera/✅️set/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧪️tests/🧫️fixtures/🎥️set-camera/✅️set/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),
@@ -29,11 +29,11 @@ fn vector(kind: &str) -> Result<Vector, String> {
 fn kept(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-camera" => Vector {
-            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧪️tests/🧫️fixtures/🎥️set-camera/🟰️set/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧪️tests/🧫️fixtures/🎥️set-camera/🟰️set/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧪️tests/🧫️fixtures/🎥️set-camera/🟰️set/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧪️tests/🧫️fixtures/🎥️set-camera/🟰️set/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧪️tests/🧫️fixtures/🎥️set-camera/🟰️set/🎯️outcome/🔣️.json"),
             observable: false,
         },
         other => return Err(format!("no committed no-op vector for {other:?}")),

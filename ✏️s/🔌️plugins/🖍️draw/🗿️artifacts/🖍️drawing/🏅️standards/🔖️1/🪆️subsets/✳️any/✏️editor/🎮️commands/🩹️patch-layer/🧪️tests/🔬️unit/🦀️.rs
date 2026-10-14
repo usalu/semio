@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn field_history_fixtures_admit_only_changed_facets() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let document:DrawingSnapshot=serde_json::from_value(fixture["document"].clone()).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mutation:DrawingMutation=serde_json::from_value(case["mutation"].clone()).unwrap();
@@ -26,9 +26,9 @@ fn missing_field_target_is_an_error_instead_of_an_unchanged_submission() {
 
 #[test]
 fn every_bulk_field_target_is_admitted_before_publication() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let document:DrawingSnapshot=serde_json::from_value(fixture["document"].clone()).unwrap();
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎯️selection/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎯️selection/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let ids:Vec<String>=serde_json::from_value(case["ids"].clone()).unwrap();
         let selected=super::super::patch_layers::selected_targets(&document,&ids);

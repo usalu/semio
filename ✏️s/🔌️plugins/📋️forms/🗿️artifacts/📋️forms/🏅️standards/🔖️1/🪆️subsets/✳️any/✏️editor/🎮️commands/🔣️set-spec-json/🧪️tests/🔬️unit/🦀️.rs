@@ -50,8 +50,8 @@ async fn set_spec_json_with_invalid_json_reports_a_fault() {
 #[test]
 fn canonical_import_vectors_preserve_document_identity_and_answers() {
     use protocol::Mutation;
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧬️schema/🧫️fixtures/📥️import/🔣️.json")).unwrap();
-    let current: FormsSnapshot = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧬️schema/🧫️fixtures/💾️persistence/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🔬️contract/📥️import/🔣️.json")).unwrap();
+    let current: FormsSnapshot = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🔬️contract/💾️persistence/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let history = semio_framework_plugin::HistoryView::empty();
     let config = FormsConfig::default();
     for case in vectors["cases"].as_array().unwrap() {

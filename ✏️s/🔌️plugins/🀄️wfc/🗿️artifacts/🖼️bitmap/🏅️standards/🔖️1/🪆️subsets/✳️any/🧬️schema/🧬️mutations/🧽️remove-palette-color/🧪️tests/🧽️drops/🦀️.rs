@@ -9,11 +9,11 @@ use crate::diff::BitmapDiff;
 use crate::mutations::{inverse_bitmap_mutation, BitmapMutation};
 use crate::schema::snapshot::BitmapSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧽️remove-palette-color/🧽️drops/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧽️remove-palette-color/🧽️drops/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧽️remove-palette-color/🧽️drops/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧽️remove-palette-color/🧽️drops/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧽️remove-palette-color/🧽️drops/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧽️remove-palette-color/🧽️drops/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧽️remove-palette-color/🧽️drops/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧽️remove-palette-color/🧽️drops/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧽️remove-palette-color/🧽️drops/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧽️remove-palette-color/🧽️drops/🎯️outcome/🔣️.json");
 
 fn before() -> BitmapSnapshot {
     crate::standards::v1::subsets::any::io::text::bitmap_json_decode(BEFORE).expect("before snapshot decodes")

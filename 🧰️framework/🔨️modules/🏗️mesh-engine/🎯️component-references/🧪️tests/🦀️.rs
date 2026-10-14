@@ -3,7 +3,7 @@ use pack::value::{retained_clone::{RetainedCloneGrant,RetainedCloneStep},retirem
 
 #[test]
 fn component_reference_table_preserves_original_labels_and_wire_map_then_retires_exact_backings(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let schema:serde_json::Value=serde_json::from_str(include_str!("../🧬️schema/🔣️.json")).unwrap();
     use std::io::Write;let mut oracle=std::process::Command::new("bun").args(["-e","import Ajv from 'ajv';const x=JSON.parse(await Bun.stdin.text());const valid=new Ajv({strict:true}).compile(x.schema);for(const table of x.fixture.tables)if(!valid(table))throw Error('schema');console.log(JSON.stringify(x.fixture.tables.map(table=>Object.entries(table).sort(([a],[b])=>a<b?-1:a>b?1:0))));"]).stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped()).spawn().unwrap();oracle.stdin.take().unwrap().write_all(serde_json::json!({"schema":schema,"fixture":fixture}).to_string().as_bytes()).unwrap();let output=oracle.wait_with_output().unwrap();assert!(output.status.success());let reference:Vec<Vec<(String,Vec<String>)>>=serde_json::from_slice(&output.stdout).unwrap();
     for row in reference{for work in fixture["copyGrants"].as_array().unwrap(){let work=work.as_u64().unwrap()as usize;

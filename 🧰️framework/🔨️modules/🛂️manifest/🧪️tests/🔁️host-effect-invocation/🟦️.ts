@@ -3,7 +3,7 @@
  * {@link hostEffectInvocationV1}: React's `encodeEffect*Invocation` and the wgpu frame worker's
  * contributions re-arm. */
 import { describe, expect, test } from "bun:test";
-import fixture from "../../🧫️fixtures/🔁️host-effect-invocation/🔣️.json";
+import fixture from "../🧫️fixtures/🔁️host-effect-invocation/🔣️.json";
 import { appCommandIdsV1, hostEffectInvocationV1, type HostEffectDispatchScope, type PluginManifest } from "../../🟦️.ts";
 
 const scope = fixture.scope as HostEffectDispatchScope;

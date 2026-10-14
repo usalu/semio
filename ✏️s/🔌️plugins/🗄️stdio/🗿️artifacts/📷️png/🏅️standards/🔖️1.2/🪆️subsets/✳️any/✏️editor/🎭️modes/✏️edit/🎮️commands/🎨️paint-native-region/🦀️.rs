@@ -143,7 +143,8 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PaintNativeRegionWork {
         Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<PngMutation>(), depth: 1, ..Default::default() })
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<PngEditor>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<PngEditor>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<PngEditor>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<PngEditor>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.closing || self.complete { return Err(fault("stdio.png.native-region.work-closed", "Native PNG paint work is already closed")); }
         let PngEditCommand::Native(PngNativeEditCommand::PaintNativeRegion(command)) = input.command else { return Err(fault("stdio.png.native-region.route-mismatch", "Native PNG paint work received another command")); };
         if action_id(command.paint.profile) != self.tool_id { return Err(fault("stdio.png.native-region.route-mismatch", "Native PNG paint action and profile differ")); }
@@ -167,6 +168,9 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PaintNativeRegionWork {
             }
         }
         Ok(ArtifactCommandWorkStep::Progress{stage:"png-native-region-intent",preview:br#"{"en":"Preparing PNG paint intent","de":"PNG-Malabsicht wird vorbereitet"}"#})
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) {

@@ -8,13 +8,13 @@ use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::RewritingSnapshot;
 use crate::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/🔺️diff/🔣️.json");
-const BEFORE_CHILD:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/📸️snapshot/⬅️before/🪆️child/🔣️.json");
-const AFTER_CHILD:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/📸️snapshot/➡️after/🪆️child/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/🔺️diff/🔣️.json");
+const BEFORE_CHILD:&str=include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/📸️snapshot/⬅️before/🪆️child/🔣️.json");
+const AFTER_CHILD:&str=include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/📸️snapshot/➡️after/🪆️child/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/🎯️outcome/🔣️.json");
 
 fn before() -> RewritingSnapshot {
     {let mut value=crate::standards::v1::subsets::any::io::text::snapshot::decode_rewriting_snapshot_json(BEFORE).expect("before snapshot decodes");let child=semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json(BEFORE_CHILD).expect("declared complete Semio child decodes");semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut value.working_graph.content,child);value}

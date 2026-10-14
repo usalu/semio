@@ -1,5 +1,5 @@
 import {expect,test} from "bun:test";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import {parseSHomeSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {parseSHomeArtifact} from "../../../../🧬️schema/🟦️.ts";
 import {parseSHomeDiff} from "../../../../🧬️schema/🔺️diff/🟦️.ts";
@@ -35,6 +35,6 @@ test("Home exact declared coordinates and resource/cancellation gates precede ma
 });
 
 test("Home closed corpus independently pins exact semantic cells and unsigned words",async()=>{
- const {default:Ajv}=await import("ajv/dist/2020");const corpus=(await import("../🧫️fixtures/🛂️semantic/🔣️.json")).default;expect(corpus["schema"]).toEqual("s.space.home.sqlite.semantic-admission/v1");expect(corpus["rows"]).toEqual(1);expect(corpus["columns"]).toEqual(4);expect(corpus["scalarBytes"]).toEqual(24);
+ const {default:Ajv}=await import("ajv/dist/2020");const corpus=(await import("./🧫️fixtures/🛂️semantic/🔣️.json")).default;expect(corpus["schema"]).toEqual("s.space.home.sqlite.semantic-admission/v1");expect(corpus["rows"]).toEqual(1);expect(corpus["columns"]).toEqual(4);expect(corpus["scalarBytes"]).toEqual(24);
  for(const row of corpus.cases){const snapshot={schema:row.schema,catalogGeneration:BigInt(row.catalogGeneration)},database=await homeSnapshotToSqliteDatabase(snapshot,{maxValueBytes:row.valueBytes,maxRows:corpus.rows,maxColumns:corpus.columns});const oracle=Database.deserialize(await exportSqliteDatabase(database));try{expect(oracle.query("SELECT COUNT(*) AS rows,MAX(8+length(CAST(schema AS BLOB))+8+8) AS bytes FROM home_document").get()).toEqual({rows:corpus.rows,bytes:row.valueBytes});expect(oracle.query("SELECT catalog_generation_high AS high,catalog_generation_low AS low FROM home_document").get()).toEqual({high:row.high,low:row.low});}finally{oracle.close();}for(const options of[{maxValueBytes:row.valueBytes-1},{maxRows:0},{maxColumns:3}])await expect(homeSnapshotToSqliteDatabase(snapshot,options)).rejects.toThrow();}
 });

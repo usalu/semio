@@ -13,13 +13,13 @@ use ui_wgpu::wgpu::InputState;
 use ui_wgpu::wgpu::{WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
 
 fn pane_fixture() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🪟️window-pane-chrome/🔣️.json")).expect("window pane chrome fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🪟️window-pane-chrome/🔣️.json")).expect("window pane chrome fixture")
 }
 
 /// 🧰️ Guest assignments are idempotent while actual user presses retain their toggle behavior.
 #[test]
 fn guest_utility_assignments_preserve_armed_tools_and_window_scope() {
-    let fixture: Value = serde_json::from_str(include_str!("../../🧰️utility-assignment/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../🧰️utility-assignment/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mut shell = split_pane_shell();
         let session = shell.session.clone().unwrap();
@@ -351,12 +351,16 @@ fn a_pane_chips_hit_row_is_flushed_after_its_window_body_and_before_the_panels_t
     let mut frame = ShellChromeFrameCursor { phase: ShellChromeFramePhase::PaneOverlayHits, setup: 0, child: ShellChromeChildCursor::default(), ..ShellChromeFrameCursor::default() };
     let mut overlay = DrawList::default();
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     for _ in 0..4096 {
-        shell.render_chrome_step(&mut frame, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, &mut world_resources);
+        caller.turn(|cx|shell.render_chrome_step(&mut frame,&mut draw,&mut overlay,&mut atlas,&icons,&mut input,&theme,&mut world_resources,cx)).expect("original fixture chrome caller");
         if !matches!(frame.phase, ShellChromeFramePhase::PaneOverlayHits) {
             break;
         }
     }
+    for _ in 0..128{if world_resources.terminal_is_empty(){break}caller.turn(|cx|world_resources.close_step(cx)).expect("original fixture world retirement");}
+    assert!(world_resources.terminal_is_empty());
+    caller.finish();
     assert!(matches!(frame.phase, ShellChromeFramePhase::Panels), "🪟️ the chips' rows are flushed BEFORE the panels that occlude them, never after");
     assert!(shell.pane_overlay_hits.is_empty(), "🪟️ and the whole held row is drained in that one phase");
     let registered: Vec<String> = input.staged_hits().iter().filter_map(|hit| hit.control_id.clone()).collect();
@@ -479,7 +483,7 @@ fn window_caps_read_the_authored_instance_title() {
 
 #[test]
 fn projection_template_creation_names_each_new_window_and_moving_keeps_its_chrome() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🌐️instance-title/🔣️.json")).expect("instance title fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧪️tests/🧫️fixtures/🌐️instance-title/🔣️.json")).expect("instance title fixture");
     for physical in [false, true] {
         for instance in fixture["instances"].as_array().unwrap() {
             let mut shell = split_pane_shell();
@@ -514,7 +518,7 @@ fn projection_template_creation_names_each_new_window_and_moving_keeps_its_chrom
 
 #[test]
 fn locale_roundtrip_preserves_instance_titles_and_localizes_singletons() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🌐️instance-title/🔣️.json")).expect("instance title fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧪️tests/🧫️fixtures/🌐️instance-title/🔣️.json")).expect("instance title fixture");
     let mut app = split_pane_app();
     let kind_id = fixture["windowKind"].as_str().unwrap();
     app.window_kinds.first_mut().id = kind_id.into();

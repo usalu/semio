@@ -6,7 +6,17 @@ use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::{generation3d_label_number,Generation3dMutation};
 
 use crate::Generation3dSnapshot;
-use semio_framework_pack_json::ArtifactCanonicalJsonTree;
+use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
+
+/// 🔢️ Native numeric carriers preserve portable numeric admission without Atom's boolean coercion.
+pub(crate) fn neural_number(value: &NeuralValue) -> Option<f64> {
+    match value.as_atom()? { Atom::Integer(value) => Some(*value as f64), Atom::Decimal(value) => Some(*value), _ => None }
+}
+
+/// 🔘️ Native boolean admission accepts the boolean carrier alone.
+pub(crate) fn neural_boolean(value: &NeuralValue) -> Option<bool> {
+    match value.as_atom()? { Atom::Boolean(value) => Some(*value), _ => None }
+}
 
 //#region 🔖️WidgetInputValue
 /// 📏️ The longest text input, in characters (the schema's `maxLength`).
@@ -17,8 +27,7 @@ pub const CHANGE_WIDGET_INPUT_MAXIMUM_CHANNEL: usize = 256;
 pub const CHANGE_WIDGET_INPUT_LABEL_TEXT: usize = 32;
 
 /// 📐️ A plane literal — an origin point and a normal vector.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct WidgetInputPlane {
     pub origin: [f64; 3],
@@ -26,8 +35,7 @@ pub struct WidgetInputPlane {
 }
 
 /// 🔣️ One typed input literal — on the wire `{type, value}`, a point or a vector as `[x, y, z]`.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 #[value(tag = "type", content = "value", rename_all = "camelCase")]
 pub enum WidgetInputValue {
     Number(f64),
@@ -96,38 +104,38 @@ impl WidgetInputValue {
         }
     }
 
-    /// 🧩️ The typed literal an operator param holds: `{"$schema", value}`, or `{"$schema", x, y, z}` for a point or a
-    /// vector.
-    pub fn literal(&self) -> semio_framework_value::DslValue {
+    /// 🧩️ Builds the evaluator-owned typed dictionary, without a portable representation hop.
+    pub fn neural_value(&self) -> NeuralValue {
         if let Some(items) = self.items() {
-            return semio_framework_value::DslValue::Object(std::iter::once(("$schema".into(), semio_framework_value::DslValue::String("list".into()))).chain(items.iter().enumerate().map(|(index, item)| (index.to_string(), item.literal()))).collect());
+            let mut dictionary = Dictionary::with_schema("list");
+            for (index, item) in items.iter().enumerate() { dictionary = dictionary.insert(index.to_string(), item.neural_value()); }
+            return NeuralValue::Dictionary(dictionary);
         }
-        let schema = ("$schema".to_string(), semio_framework_value::DslValue::String(self.schema().into()));
-        let scalar = |value| semio_framework_value::DslValue::Object(vec![schema.clone(), ("value".to_string(), value)]);
+        let mut dictionary = Dictionary::with_schema(self.schema());
         match self {
-            Self::Number(value) => scalar(semio_framework_value::DslValue::float(*value)),
-            Self::Text(value) => scalar(semio_framework_value::DslValue::String(value.clone())),
-            Self::Boolean(value) => scalar(semio_framework_value::DslValue::Bool(*value)),
-            Self::Point(axes) | Self::Vector(axes) => semio_framework_value::DslValue::Object(std::iter::once(schema.clone()).chain(["x", "y", "z"].iter().zip(axes).map(|(axis, value)| (axis.to_string(), semio_framework_value::DslValue::float(*value)))).collect()),
-            Self::Plane(WidgetInputPlane { origin, normal }) => semio_framework_value::DslValue::Object(vec![schema.clone(), ("origin".to_string(), Self::Point(*origin).literal()), ("normal".to_string(), Self::Vector(*normal).literal())]),
+            Self::Number(value) => dictionary = dictionary.insert("value", NeuralValue::Atom(Atom::Decimal(*value))),
+            Self::Text(value) => dictionary = dictionary.insert("value", NeuralValue::Atom(Atom::String(value.clone()))),
+            Self::Boolean(value) => dictionary = dictionary.insert("value", NeuralValue::Atom(Atom::Boolean(*value))),
+            Self::Point(axes) | Self::Vector(axes) => { for (axis, value) in ["x", "y", "z"].iter().zip(axes) { dictionary = dictionary.insert(*axis, NeuralValue::Atom(Atom::Decimal(*value))); } }
+            Self::Plane(WidgetInputPlane { origin, normal }) => dictionary = dictionary.insert("origin", Self::Point(*origin).neural_value()).insert("normal", Self::Vector(*normal).neural_value()),
             _ => unreachable!(),
         }
+        NeuralValue::Dictionary(dictionary)
     }
 
-    /// 🔎️ The typed input a param literal states, or `None` for a literal of another shape.
-    pub fn of_literal(literal: &semio_framework_value::DslValue) -> Option<Self> {
-        if literal.get("$schema").and_then(semio_framework_value::DslValue::as_str) == Some("list") {
-            return Self::of_literal_as(literal, literal.get("0")?.get("$schema")?.as_str()?);
-        }
-        let number = |key: &str| literal.get(key).and_then(semio_framework_value::DslValue::as_f64);
+    /// 🔎️ Classifies one evaluator-owned literal using strict atom carriers.
+    pub fn of_neural_value(value: &NeuralValue) -> Option<Self> {
+        let literal = value.as_dictionary()?;
+        if literal.schema() == Some("list") { return Self::of_neural_value_as(value, literal.get("0")?.as_dictionary()?.schema()?); }
+        let number = |key: &str| literal.get(key).and_then(neural_number);
         let axes = || Some([number("x")?, number("y")?, number("z")?]);
-        Some(match literal.get("$schema").and_then(semio_framework_value::DslValue::as_str)? {
+        Some(match literal.schema()? {
             "number" => Self::Number(number("value")?),
-            "text" => Self::Text(literal.get("value")?.as_str()?.to_string()),
-            "boolean" => Self::Boolean(literal.get("value")?.as_bool()?),
+            "text" => Self::Text(literal.get("value")?.as_atom()?.as_str()?.to_string()),
+            "boolean" => Self::Boolean(neural_boolean(literal.get("value")?)?),
             "point" => Self::Point(axes()?),
             "vector" => Self::Vector(axes()?),
-            "plane" => match (Self::of_literal(literal.get("origin")?)?, Self::of_literal(literal.get("normal")?)?) {
+            "plane" => match (Self::of_neural_value(literal.get("origin")?)?, Self::of_neural_value(literal.get("normal")?)?) {
                 (Self::Point(origin), Self::Vector(normal)) => Self::Plane(WidgetInputPlane { origin, normal }),
                 _ => return None,
             },
@@ -135,13 +143,13 @@ impl WidgetInputValue {
         })
     }
 
-    /// 🏷️ Reads an existing neural list dictionary using its declared element type, including an empty list.
-    pub fn of_literal_as(literal: &semio_framework_value::DslValue, schema: &str) -> Option<Self> {
-        if literal.get("$schema").and_then(semio_framework_value::DslValue::as_str) != Some("list") { return Self::of_literal(literal); }
-        let fields = literal.as_object()?;
-        if fields.iter().any(|(key, _)| key != "$schema" && key.parse::<usize>().ok().is_none_or(|index| index.to_string() != *key)) { return None; }
-        let count = fields.len().checked_sub(1)?;
-        let items = (0..count).map(|index| Self::of_literal(literal.get(&index.to_string())?)).collect::<Option<Vec<_>>>()?;
+    /// 🏷️ Classifies a native homogeneous collection using its declared element type, including empty lists.
+    pub fn of_neural_value_as(value: &NeuralValue, schema: &str) -> Option<Self> {
+        let literal = value.as_dictionary()?;
+        if literal.schema() != Some("list") { return Self::of_neural_value(value); }
+        if literal.keys().any(|key| key != "$schema" && key.parse::<usize>().ok().is_none_or(|index| index.to_string() != *key)) { return None; }
+        let count = literal.len().checked_sub(1)?;
+        let items = (0..count).map(|index| Self::of_neural_value(literal.get(&index.to_string())?)).collect::<Option<Vec<_>>>()?;
         Self::collection(schema, items)
     }
 
@@ -180,31 +188,7 @@ pub struct ChangeWidgetInput {
     pub input: WidgetInputValue,
 }
 
-/// 🧵️ Canonical tree of the flattened wire record: `id` and `channel` followed by the input's own `type` and `value` fields.
-impl ArtifactCanonicalJsonTree for ChangeWidgetInput {
-    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
-        match self.input.canonical_tree_node()? {
-            semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(length) => Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(length + 2)),
-            _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "change-widget-input flattened input is not an object")),
-        }
-    }
 
-    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn ArtifactCanonicalJsonTree, semio_framework_value::ValueError> {
-        match ordinal {
-            0 => Ok(&self.id),
-            1 => Ok(&self.channel),
-            _ => self.input.canonical_tree_child(ordinal - 2),
-        }
-    }
-
-    fn canonical_tree_key(&self, ordinal: usize) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> {
-        match ordinal {
-            0 => Ok("id".into()),
-            1 => Ok("channel".into()),
-            _ => self.input.canonical_tree_key(ordinal - 2),
-        }
-    }
-}
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 pub fn change_widget_input(id: impl Into<String>, channel: impl Into<String>, input: WidgetInputValue) -> Generation3dMutation {
@@ -258,20 +242,23 @@ impl ChangeWidgetInput {
     /// history folds identically on a replica without the operator's extension.
     pub fn landing(&self, widget: &semio_framework_artifact_flow_flow::Widget, wired: bool) -> Result<Option<semio_framework_artifact_flow_flow::Widget>, InputRefusal> {
         use semio_framework_artifact_flow_flow::Widget;
-        let stored = match widget {
-            Widget::Neuron { params, .. } => semio_framework_value::ToValue::to_value(params.get(&self.channel).ok_or(InputRefusal::UnknownChannel)?),
-            Widget::InputNote { text, .. } if self.channel == "text" => WidgetInputValue::Text(text.clone()).literal(),
+        let current = match widget {
+            Widget::Neuron { params, .. } => {
+                let stored = params.get(&self.channel).ok_or(InputRefusal::UnknownChannel)?;
+                if wired { return Err(InputRefusal::Wired); }
+                let literal = stored.as_dictionary();
+                let stored_list = literal.and_then(Dictionary::schema) == Some("list");
+                let stored_item = literal.and_then(|literal| literal.get("0")).and_then(NeuralValue::as_dictionary).and_then(Dictionary::schema);
+                if stored_list != self.input.items().is_some() || stored_item.is_some_and(|schema| schema != self.input.schema()) { return Err(InputRefusal::PortContract); }
+                WidgetInputValue::of_neural_value_as(stored, self.input.schema()).ok_or(InputRefusal::Untyped)?
+            }
+            Widget::InputNote { text, .. } if self.channel == "text" => {
+                if wired { return Err(InputRefusal::Wired); }
+                if self.input.items().is_some() { return Err(InputRefusal::PortContract); }
+                WidgetInputValue::Text(text.clone())
+            }
             _ => return Err(InputRefusal::UnknownChannel),
         };
-        if wired {
-            return Err(InputRefusal::Wired);
-        }
-        let stored_list = stored.get("$schema").and_then(semio_framework_value::DslValue::as_str) == Some("list");
-        let stored_item = stored.get("0").and_then(|item| item.get("$schema")).and_then(semio_framework_value::DslValue::as_str);
-        if stored_list != self.input.items().is_some() || stored_item.is_some_and(|schema| schema != self.input.schema()) {
-            return Err(InputRefusal::PortContract);
-        }
-        let current = WidgetInputValue::of_literal_as(&stored, self.input.schema()).ok_or(InputRefusal::Untyped)?;
         if current.schema() != self.input.schema() {
             return Err(InputRefusal::OtherType(current.schema()));
         }
@@ -281,7 +268,7 @@ impl ChangeWidgetInput {
         match (widget, &self.input) {
             (Widget::InputNote { id, .. }, WidgetInputValue::Text(text)) => Ok(Some(Widget::InputNote { id: id.clone(), text: text.clone() })),
             (Widget::InputNote { .. }, _) => Err(InputRefusal::OtherType("text")),
-            _ => crate::standards::v1::subsets::any::schema::mutations::generation3d_with_params(widget, vec![(self.channel.as_str(), self.input.literal())]).map(Some).ok_or(InputRefusal::Untyped),
+            _ => Ok(Some(crate::standards::v1::subsets::any::schema::mutations::generation3d_with_params(widget, vec![(self.channel.as_str(), self.input.neural_value())]))),
         }
     }
 }

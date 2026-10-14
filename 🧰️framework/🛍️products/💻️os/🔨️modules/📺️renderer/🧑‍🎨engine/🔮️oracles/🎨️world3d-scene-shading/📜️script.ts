@@ -1,10 +1,10 @@
 /** 🎨️ Actual Three/WebGPU pixel comparison for the shared World3d shading fixture. */
 import Ajv2020 from "ajv/dist/2020.js";
-import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { createHash } from "node:crypto";
-import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 declare const THREE: any;
 declare const worldSurfaceMaterial: (name: string, material: any, vertexColors: boolean) => any;
@@ -1254,7 +1254,7 @@ function renderReferenceVisual(fixture: any) {
 }
 
 export async function runReferenceVisualOracle(repoRoot: string, outputDirectory?: string, webgpu = false): Promise<void> {
-  const fixtureArgument = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🖼️reference-visual/🔣️.json");
+  const fixtureArgument = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧪️tests/🧫️fixtures/🖼️reference-visual/🔣️.json");
   const output = outputDirectory ? resolve(outputDirectory) : undefined;
   if (output) await mkdir(output, { recursive: true });
   const fixture = JSON.parse(await readFile(fixtureArgument, "utf8")) as PixelOracleFixture;
@@ -1515,7 +1515,7 @@ async function renderGridWgpu(input: any) {
 }
 
 async function runGridVisualOracle(repoRoot: string, outputDirectory: string | undefined, webgpu: boolean): Promise<void> {
-  const fixtureArgument = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🌐️grid-visual/🔣️.json");
+  const fixtureArgument = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧪️tests/🧫️fixtures/🌐️grid-visual/🔣️.json");
   const fixture = JSON.parse(await readFile(fixtureArgument, "utf8")) as PixelOracleFixture;
   const output = outputDirectory ? resolve(outputDirectory) : undefined;
   if (output) await mkdir(output, { recursive: true });
@@ -1598,7 +1598,7 @@ export async function runSceneShadingOracle(
   command: "shading-oracle" | "shading-s2-oracle" | "shading-wgpu" | "shading-s2-wgpu" | "shading-s2-current-mesh" | "shading-s2-ordered-mesh" | "shading-s2-painted" | "shading-s2-celebration",
   outputDirectory?: string,
 ): Promise<void> {
-  const fixtureArgument = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🎨️scene-shading/🔣️.json");
+  const fixtureArgument = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧪️tests/🧫️fixtures/🎨️scene-shading/🔣️.json");
   const output = outputDirectory ? resolve(outputDirectory) : undefined;
   if (output) await mkdir(output, { recursive: true });
   const playwrightSpecifier = "playwright";
@@ -1782,11 +1782,11 @@ function renderAuthoredSurfaceReference(input: any) {
 async function runAuthoredSurfaceOracle(repoRoot: string, output: string): Promise<void> {
   await mkdir(output, { recursive: true });
   const engine = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine");
-  const surface = JSON.parse(await readFile(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json"), "utf8"));
+  const surface = JSON.parse(await readFile(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json"), "utf8"));
   const schema = JSON.parse(await readFile(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧬️schema/🎨️world3d-inline-surface/🔣️.json"), "utf8"));
   const validate = new Ajv2020({ allErrors: true }).compile(schema);
   if (!validate(surface)) throw new Error(JSON.stringify(validate.errors));
-  const fixture = JSON.parse(await readFile(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🎨️scene-shading/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(await readFile(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧪️tests/🧫️fixtures/🎨️scene-shading/🔣️.json"), "utf8"));
   fixture.textureCases = surface.pixelCases.map((row: any) => ({ ...row, preserveVertexColor: true, emissiveIntensity: 0 }));
   const shaderDirectory = join(output, "native-shader");
   await mkdir(shaderDirectory, { recursive: true });

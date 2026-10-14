@@ -5,8 +5,8 @@ use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_plugin::ViewModel;
 use semio_framework_ui_locale::{Locale, Terminology};
 
-const DEFECTS: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json");
-const CLEAN: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/⚠️diagnostics/🏡️clean/📸️snapshot/🔣️.json");
+const DEFECTS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json");
+const CLEAN: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/🏡️clean/📸️snapshot/🔣️.json");
 
 fn model(text: &str) -> (ModelSnapshot, ModelInference) {
     let snapshot: ModelSnapshot = from_json_str(text, JsonMemberPolicy::Reject).expect("fixture decodes");

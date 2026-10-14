@@ -1,0 +1,12 @@
+{
+  "materials": {
+    "modified": [
+      {
+        "key": "mat-a",
+        "diff": {
+          "metallic": 1.0
+        }
+      }
+    ]
+  }
+}

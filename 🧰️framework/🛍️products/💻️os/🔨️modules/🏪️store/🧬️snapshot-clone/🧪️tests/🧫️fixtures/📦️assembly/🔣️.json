@@ -1,0 +1,1 @@
+{"copyCapacityLimit":4096,"originalFrontiers":["detach-forward","close-forward-source","remove-source-slot","unwrap-forward-arc","birth-post-arc","admit-inverse-vector"],"authorityRequired":["items","copy","capacity","release","depth"],"refusalsRetainOriginal":true}

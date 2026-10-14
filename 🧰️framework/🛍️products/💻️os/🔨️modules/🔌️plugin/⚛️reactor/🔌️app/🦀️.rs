@@ -78,9 +78,9 @@ use crate::app_contract::whole_document_media;
 pub trait PluginApp: Send + 'static {
     /// 🏇️ Advances the real live mounted owner under its original scheduling and physical turn.
     fn mounted_owner_maintenance_phase(&self) -> Result<MountedOwnerPhaseV1, Fault>;
-    fn mounted_owner_maintenance_step(&mut self, turn: &mut MountedOwnerTurnV1<'_, '_>) -> Result<PluginLifecycleStep, Fault>;
+    fn mounted_owner_maintenance_step(&mut self, turn: &mut MountedOwnerTurnV1<'_, '_>) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure>;
     /// 🏁️ Closes the real mounted owner under the caller's independently declared close turn.
-    fn mounted_owner_close_step(&mut self, turn: &mut MountedOwnerTurnV1<'_, '_>) -> Result<PluginLifecycleStep, Fault>;
+    fn mounted_owner_close_step(&mut self, turn: &mut MountedOwnerTurnV1<'_, '_>) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure>;
     /// 📏️ Exact physical allocation needed by the currently retained close authority.
     fn close_retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
     /// 🌱️ Exact physical allocation needed by the selected live maintenance authority.
@@ -92,13 +92,13 @@ pub trait PluginApp: Send + 'static {
     async fn bind_actor(&mut self, _actor: &str) {}
     /// 🧹 Releases one synchronous, bounded close unit. Implementations must never suspend and
     /// may return `Complete` only after their final destructor is constant-time.
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault>;
+    fn close_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>, loan:RetainedCloneGrant) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure>;
     /// 🧹 Proves that every deep owner has reached its terminal empty shell. The runtime checks
     /// this after `close_step` returns `Complete` and before releasing the erased app allocation.
     fn close_terminal_is_empty(&self) -> bool;
     /// 🧹 Releases one bounded nonterminal quarantine unit while the app remains live. This is
     /// scheduled on the shared maintenance worker and must never perform application-visible work.
-    fn maintenance_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault>;
+    fn maintenance_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>, loan:RetainedCloneGrant) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure>;
     /// 🪹️ Every live retirement frontier and its retained directory backing is empty.
     fn maintenance_terminal_is_empty(&self) -> bool;
     /// 🌡️ True while a displaced-owner queue of the document or a config-lane store sits at or
@@ -114,7 +114,7 @@ pub trait PluginApp: Send + 'static {
     async fn tool_owner_witness(&self) -> ToolOwnerWitness;
     async fn tool_public_contracts(&self) -> Vec<ArtifactToolPublicContract>;
     /// 📬️ Advances at most one typed-operation store or host publication unit.
-    async fn advance_typed_operation_publication(&mut self, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, retained: RetainedCloneGrant) -> Result<(), Fault>;
+    async fn advance_typed_operation_publication(&mut self, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), crate::PluginLifecycleFailure>;
     /// 🧾️ Returns one exact preparation receipt without deriving work from its checkpoint.
     fn take_typed_operation_preparation_receipt(&mut self) -> Option<(semio_framework_job::OperationId, RetainedCloneGrant, RetainedCloneProgress)>;
     /// ♻️ Transfers one original mounted Close receipt before another ownership producer.
@@ -502,7 +502,7 @@ pub trait PluginApp: Send + 'static {
     /// `PluginApp` gets for free without declaring any `media_ports()`. Apps whose media output isn't simply their raw document
     /// (computed/derived outputs) override this directly; `port` is accepted for parity with `export_media` and ignored by the
     /// default (there is exactly one document to hand back).
-    async fn produce_media(&mut self, port: &str, _owner: &mut store::NativeSnapshotEncodeOwner<'_,'_>) -> Result<MediaArtifact, MediaArtifactError> {
+    async fn produce_media(&mut self, port: &str, _owner: &mut crate::io::control::NativeSnapshotEncodeOwner<'_,'_>) -> Result<MediaArtifact, MediaArtifactError> {
         let archive = self.document_archive().await.map_err(|fault| MediaArtifactError::Payload(fault.message))?;
         whole_document_media(port, self.artifact_schema().await.to_string(), &archive).await
     }

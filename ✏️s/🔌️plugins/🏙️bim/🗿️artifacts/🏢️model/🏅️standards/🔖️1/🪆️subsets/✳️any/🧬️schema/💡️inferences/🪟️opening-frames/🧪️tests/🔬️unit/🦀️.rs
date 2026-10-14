@@ -3,10 +3,10 @@ use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds,
 use crate::{Entry, ModelDiff, OpeningPatch, StoreyPatch, WallPatch};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const PLACED: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🪟️opening-frames/🏡️placed/📸️snapshot/🔣️.json");
-const INVALID: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🪟️opening-frames/⚠️invalid/📸️snapshot/🔣️.json");
-const PLACED_TABLE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🪟️opening-frames/🏡️placed/💡️inference/🪟️opening-frames/🔣️.json");
-const INVALID_TABLE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🪟️opening-frames/⚠️invalid/💡️inference/🪟️opening-frames/🔣️.json");
+const PLACED: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪟️opening-frames/🏡️placed/📸️snapshot/🔣️.json");
+const INVALID: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪟️opening-frames/⚠️invalid/📸️snapshot/🔣️.json");
+const PLACED_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪟️opening-frames/🏡️placed/💡️inference/🪟️opening-frames/🔣️.json");
+const INVALID_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪟️opening-frames/⚠️invalid/💡️inference/🪟️opening-frames/🔣️.json");
 
 fn placed() -> ModelSnapshot {
     from_json_str(PLACED, JsonMemberPolicy::Reject).expect("placed decodes")

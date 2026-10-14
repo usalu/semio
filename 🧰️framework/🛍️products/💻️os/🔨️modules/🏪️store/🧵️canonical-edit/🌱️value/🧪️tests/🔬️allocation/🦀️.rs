@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn shared_value_canonical_json_rejects_overcapacity_before_admitting_key_storage() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["reservationCases"].as_array().unwrap() {
         let requested = case["requested"].as_u64().unwrap() as usize;
         let allocated = case["allocated"].as_u64().unwrap() as usize;

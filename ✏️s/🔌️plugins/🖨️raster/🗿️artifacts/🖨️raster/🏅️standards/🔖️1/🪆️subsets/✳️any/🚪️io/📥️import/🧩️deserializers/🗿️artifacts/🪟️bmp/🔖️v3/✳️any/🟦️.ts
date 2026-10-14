@@ -51,7 +51,7 @@ export function bmpV3ToRasterCanvas(bytes: Uint8Array): RasterCanvas {
   return { width, height, rgba8 };
 }
 
-/** 🔡️ Parses the lowercase hex `🧫️fixtures/*.json` stores back into bytes. */
+/** 🔡️ Parses the lowercase hex `🧪️tests/🧫️fixtures/*.json` stores back into bytes. */
 export function bmpHexToBytes(hex: string): Uint8Array {
   if (hex.length % 2 !== 0) throw new Error("bmp import: hex payload has an odd length");
   const out = new Uint8Array(hex.length / 2);

@@ -26,7 +26,7 @@ type Fixture = {
 };
 
 const here = fileURLToPath(new URL(".", import.meta.url));
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔬️window/🔣️.json", import.meta.url), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔬️window/🔣️.json", import.meta.url), "utf8")) as Fixture;
 const configSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
 const transientSchema = JSON.parse(readFileSync(new URL("../../../🫧️transient/🧬️schema/🔣️.json", import.meta.url), "utf8"));
 

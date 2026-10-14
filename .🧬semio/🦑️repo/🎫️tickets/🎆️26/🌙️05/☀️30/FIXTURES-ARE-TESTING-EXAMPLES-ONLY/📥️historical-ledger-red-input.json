@@ -1,0 +1,7 @@
+{
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🕰️historical-json-source-encoding/🟦️.ts",
+  "before": "f8421b6d1173a10946fb7ad4b226d68a7cb476af3542c84ea33adc48a4cbc525",
+  "after": "b172586bb57442c0dbe19c055c8d43cf82a651373831fadb7df5eb25cf2bf537",
+  "sourceReaderFix": "Canonical actual Tests/Fixtures path",
+  "regression": "Actual public whole-ledger schema must be absent"
+}

@@ -1,0 +1,6 @@
+{
+  "operation": "setDummyCount",
+  "payload": {
+    "value": 1
+  }
+}

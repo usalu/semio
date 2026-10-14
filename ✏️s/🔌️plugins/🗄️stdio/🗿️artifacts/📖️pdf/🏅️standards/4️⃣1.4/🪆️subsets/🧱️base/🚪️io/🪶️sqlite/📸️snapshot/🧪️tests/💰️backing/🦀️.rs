@@ -1,8 +1,9 @@
 //! 🔬️ Complete direct domain backing is observed without a copied carrier authority.
 #[path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs"]
 mod observer;
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1_4::subsets::base::io::sqlite::snapshot::*;
-use store::os_store::serialization::ArtifactSqliteSnapshot;
+use store::os_store::serialization::ArtifactSqliteSnapshotHost;
 
 pub(super) fn verify(snapshot: &PdfSnapshot) {
     let limits = sqlite_snapshot::SqliteDatabaseLimits::default();

@@ -15,7 +15,7 @@ fn value_round_trip_matches_serde_shape() {
     check(Vec3::new(1.0, 2.0, 3.0));
     check(VertexId(7));
     check(WeldMode::ByDistance);
-    let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../🌱️value/⚠️refusal/🔁️codec/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../🌱️value/⚠️refusal/🔁️codec/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let wire=&corpus["valid"][0]["wire"];
     let error=MeshKernelError::Retained(protocol::value::ValueError::new(protocol::value::ValueRefusalKind::from_wire(wire["kind"].as_str().unwrap()).unwrap(),wire["message"].as_str().unwrap()).with_retained_progress(serde_json::from_value(wire["retainedProgress"].clone()).unwrap()));
     let MeshKernelError::Retained(cause)=error else{unreachable!()};let mut permit=|_|true;
@@ -929,7 +929,7 @@ fn the_seam_set_encodes_in_ascending_order() {
 fn original_mesh_tessellation_cancellation_retains_exact_output_until_funded_closure(){
     use crate::test_support::observe_tessellation_system as observe;
     use protocol::value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
     for copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as usize){
         let(mut job,source)=observe(||{let positions=serde_json::from_value::<Vec<[f32;3]>>(law["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(law["faces"].clone()).unwrap();let mut job=MeshTessellationJob::new(HalfedgeMesh::from_faces(&positions,&faces).unwrap());while job.output.as_ref().unwrap().positions.is_empty(){assert!(matches!(job.step(super::tessellation_metadata_tests::funded_normal_grant(&job)).unwrap().0,MeshTessellationStep::Working(_)));}job});
         let output=job.output.as_ref().unwrap().positions.as_ptr();let original=job.mesh.vertices.as_ptr();let progress=job.progress();
@@ -945,7 +945,7 @@ fn original_mesh_tessellation_cancellation_retains_exact_output_until_funded_clo
 #[test]
 fn original_mesh_tessellation_source_collection_requires_original_buffer_reservation(){
     use crate::test_support::observe_tessellation_system as observe;
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
     let(mut job,source)=observe(||{let positions=serde_json::from_value::<Vec<[f32;3]>>(law["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(law["faces"].clone()).unwrap();MeshTessellationJob::new(HalfedgeMesh::from_faces(&positions,&faces).unwrap())});
     let original=job.mesh.vertices.as_ptr();
     let(mut reservation_born,mut reservation_freed)=(0,0);

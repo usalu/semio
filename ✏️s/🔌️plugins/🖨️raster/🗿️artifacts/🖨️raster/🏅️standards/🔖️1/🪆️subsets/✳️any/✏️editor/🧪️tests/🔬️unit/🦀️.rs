@@ -138,7 +138,7 @@ use store::os_store::backbone::MemoryBackbone;
 /// exclusively through the retained page authority. The envelope the wire describes is retired here
 /// through the same owner bundle the app's decode hook installs, one bounded grant per turn.
 fn raster_envelope_wire() -> Vec<u8> {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
 
     let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
     let snapshot_pack = snapshot.encode_pack();
@@ -1099,7 +1099,7 @@ async fn mounted_config_lane_publishes_viewport_and_camera() {
 
 #[semio_framework_async_macros::async_test]
 async fn layer_tree_and_scene_keep_exact_domain_selection_ids() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖱️selection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🖱️selection/🔣️.json")).unwrap();
     let selected: Vec<String> = serde_json::from_value(fixture["selectedIds"].clone()).unwrap();
     let hovered = fixture["hoveredId"].as_str();
     let mut document = empty_raster_document();
@@ -1135,7 +1135,7 @@ async fn inspector_patch_values_preserve_numeric_names_and_typed_controls() {
 #[semio_framework_async_macros::async_test]
 async fn selection_mask_retained_publication_survives_undo_and_redo() {
     use crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎮️commands/🎭️mask-from-selection/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎮️commands/🎭️mask-from-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut app=context::app().await;
     context::dispatch(&mut app,RasterCommand::AddLayer(add_layer::AddLayer {kind:"pixel".into()})).await;
     let snapshot=app.snapshot().unwrap();
@@ -1235,7 +1235,7 @@ async fn protection_controls_publish_and_restore_retained_history() {
 #[test]
 fn structural_commands_refuse_protected_sources_and_destination_parents() {
     use protocol::Mutation;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let history=semio_framework_plugin::HistoryView::empty();let doc=ArtifactView::new(&document,&history);
     let config=RasterConfig::default();let cfg=semio_framework_plugin::ConfigView {snapshot:&config,window:None};

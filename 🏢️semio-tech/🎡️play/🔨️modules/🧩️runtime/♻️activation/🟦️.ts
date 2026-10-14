@@ -2,7 +2,7 @@ import { COMPONENT_MODULE_DIRECTORIES } from "../../../../../🧰️framework/�
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, parseActivationReceipt, pluginModulesRootIn, publishActivationReceipt, readActivationReceipt, type ActivationReceipt } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, parseActivationReceipt, builtPluginModulesRootIn, publishActivationReceipt, readActivationReceipt, type ActivationReceipt } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import type { ActivationComponentSpec } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
 import { runtimeComponentClosure } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
 import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
@@ -14,12 +14,12 @@ import { PLAY_RUNTIME_TARGETS, playPaneClosureRoot, playRuntimeComponentIds } fr
 
 //#region 🛣️PlayActivationLanes
 /** 📦️ Repository-relative root of the `@semio-tech/framework-os-dev` package every lane's
- * `activate-<lane>-react-dev` target writes its receipt below. */
+ * `activate-<lane>-react-prototype` target writes its receipt below. */
 const OS_DEV_PACKAGE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript";
 
 /** 🧾️ The play-owned directory holding the merged receipt its Vite server consumes — no single
  * framework lane can produce play's cross-app union, because each one publishes one variant's closure. */
-export const PLAY_UNION_RECEIPT_DIRECTORY = "🏢️semio-tech/🎡️play/dist/♻️activation/dev";
+export const PLAY_UNION_RECEIPT_DIRECTORY = "🏢️semio-tech/🎡️play/dist/♻️activation/prototype";
 
 /** 🛣️ The fewest pane variants whose activation closures together cover every pane component —
  * greedy by newly covered components, ties broken by grid order, so the result is deterministic. Pane
@@ -45,7 +45,7 @@ export function playActivationLanes(): readonly string[] {
 
 /** 🗂️ One lane's framework-owned development runtime root. */
 function playLaneRuntimeRoot(workspace: string, lane: string): string {
-  return developmentRuntimeRoot(join(workspace, OS_DEV_PACKAGE_ROOT), lane, "dev", "react");
+  return developmentRuntimeRoot(join(workspace, OS_DEV_PACKAGE_ROOT), lane, "prototype", "react");
 }
 
 /** 🗂️ Every lane's receipt directory, in lane order — what the union watcher subscribes to. */
@@ -91,7 +91,7 @@ function activationFilesDigestSync(files: ReadonlyMap<string, string>): string {
  * tens of megabytes), so a fleet whose lanes all agree never reads a byte. `undefined` when the component
  * or the support tree is not staged at all, which is a fact for the caller, never a thrown error. */
 export function playInstalledArtifactSha256(workspace: string): (pluginId: string) => string | undefined {
-  const moduleRoot = pluginModulesRootIn(workspace), digests = new Map<string, string | undefined>();
+  const moduleRoot = builtPluginModulesRootIn(workspace, "prototype"), digests = new Map<string, string | undefined>();
   let support: string | undefined;
   return (pluginId) => {
     if (digests.has(pluginId)) return digests.get(pluginId);
@@ -124,7 +124,7 @@ type PlayActivationCandidate = { readonly lane: string; readonly row: Activation
 
 /** ⚖️ Picks the row a component is SERVED from when its lanes disagree. Every lane stages into one
  * `🔌️plugin-modules` root, so a disagreement never means two artifacts — it means one lane re-activated
- * (a peer running `activate-<lane>-react-dev` after the coordinator's full activation) and its siblings
+ * (a peer running `activate-<lane>-react-prototype` after the coordinator's full activation) and its siblings
  * still carry the previous sha. Refusing the whole merge there killed :6033 at three serve starts in two
  * days for a runtime that was perfectly consistent on disk, so the rule is: the row whose sha equals the
  * INSTALLED artifact wins (newest receipt by mtime among equals), the other lanes are named in a one-line
@@ -136,7 +136,7 @@ function playServedActivationRow(pluginId: string, candidates: readonly PlayActi
   if (new Set(candidates.map(candidate => candidate.row.artifactSha256)).size === 1) return { ...candidates[0]!.row, rebuiltAt: earliest(candidates) };
   const installed = options.installedArtifactSha256?.(pluginId);
   const served = candidates.filter(candidate => candidate.row.artifactSha256 === installed);
-  if (served.length === 0) throw new Error(`Stale play activation lane: ${pluginId} is ${candidates.map(candidate => `${candidate.row.artifactSha256} in ${candidate.lane}`).join(" but ")}, and the installed artifact (${installed ?? "unreadable"}) matches none of them (run bun nx run @semio-tech/framework-os-dev:activate-${candidates[0]!.lane}-react-dev)`);
+  if (served.length === 0) throw new Error(`Stale play activation lane: ${pluginId} is ${candidates.map(candidate => `${candidate.row.artifactSha256} in ${candidate.lane}`).join(" but ")}, and the installed artifact (${installed ?? "unreadable"}) matches none of them (run bun nx run @semio-tech/framework-os-dev:activate-${candidates[0]!.lane}-react-prototype)`);
   const newest = served.reduce((best, candidate) => candidate.receiptMtimeMs > best.receiptMtimeMs ? candidate : best);
   options.warn?.(`[play] lane drift: ${pluginId} served from ${newest.lane} (${installed!.slice(0, 8)}), stale in ${candidates.filter(candidate => candidate.row.artifactSha256 !== installed).map(candidate => candidate.lane).join(", ")}`);
   return { ...newest.row, rebuiltAt: earliest(served) };
@@ -149,7 +149,7 @@ export function mergePlayActivationReceipts(lanes: readonly PlayActivationLaneRe
   const candidates = new Map<string, PlayActivationCandidate[]>();
   for (const { lane, receipt, receiptMtimeMs } of lanes) {
     parseActivationReceipt(receipt);
-    if (receipt.profile !== "dev") throw new Error(`Play activation lane ${lane} is not a dev activation: ${receipt.profile}`);
+    if (receipt.profile !== "prototype") throw new Error(`Play activation lane ${lane} is not a prototype activation: ${receipt.profile}`);
     if (receipt.variant !== lane) throw new Error(`Play activation lane ${lane} carries a ${receipt.variant} receipt`);
     for (const row of receipt.plugins) {
       const candidate = { lane, row, receiptMtimeMs: receiptMtimeMs ?? 0 }, listed = candidates.get(row.pluginId);
@@ -159,7 +159,7 @@ export function mergePlayActivationReceipts(lanes: readonly PlayActivationLaneRe
   const expected = [...expectedPluginIds].sort(), present = [...candidates.keys()].sort();
   const missing = expected.filter(id => !candidates.has(id)), extra = present.filter(id => !expected.includes(id));
   if (missing.length > 0 || extra.length > 0) throw new Error(`Play activation does not contain its exact runtime union — missing: ${missing.join(", ") || "(none)"}; extra: ${extra.join(", ") || "(none)"}`);
-  return parseActivationReceipt({ schema: "semio.dev.activation/v1", variant, profile: "dev", plugins: present.map(id => playServedActivationRow(id, candidates.get(id)!, options)) });
+  return parseActivationReceipt({ schema: "semio.dev.activation/v1", variant, profile: "prototype", plugins: present.map(id => playServedActivationRow(id, candidates.get(id)!, options)) });
 }
 
 /** 📖️ Reads one lane's receipt, naming the exact target that produces it when it is absent. Its
@@ -170,7 +170,7 @@ function readPlayActivationLane(workspace: string, lane: string): PlayActivation
   try { return { lane, receipt: readActivationReceipt(directory), receiptMtimeMs: statSync(join(directory, ACTIVATION_RECEIPT_FILE)).mtimeMs }; }
   catch (error) {
     if ((error as NodeJS.ErrnoException | undefined)?.code !== "ENOENT") throw error;
-    throw new Error(`Missing play activation lane receipt: ${lane} (run bun nx run @semio-tech/framework-os-dev:activate-${lane}-react-dev)`);
+    throw new Error(`Missing play activation lane receipt: ${lane} (run bun nx run @semio-tech/framework-os-dev:activate-${lane}-react-prototype)`);
   }
 }
 

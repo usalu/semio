@@ -9,7 +9,7 @@ mod reserved_verb_answer_tests {
     use super::*;
 
     fn fixture() -> serde_json::Value {
-        serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🧫️fixtures/🕹️reserved-verb-answer/🔣️.json")).expect("reserved verb answer fixture parses")
+        serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🕹️reserved-verb-answer/🔣️.json")).expect("reserved verb answer fixture parses")
     }
 
     /// 📦️ One `AppFrame::Invocation` exactly as the fixture's `admission`/`settled` half describes it.

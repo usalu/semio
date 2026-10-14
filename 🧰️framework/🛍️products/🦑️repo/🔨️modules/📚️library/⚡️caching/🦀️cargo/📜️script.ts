@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { CargoRelayScript, NativeScript } from "../📦️artifacts/📋️native-orchestration/🟦️.ts";
 
 const router = new ScriptRouter(dirname(fileURLToPath(import.meta.url))).register("native", NativeScript).register("relay", CargoRelayScript);

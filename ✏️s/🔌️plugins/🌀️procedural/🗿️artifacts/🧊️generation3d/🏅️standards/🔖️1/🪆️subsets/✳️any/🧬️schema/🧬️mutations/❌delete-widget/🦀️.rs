@@ -8,8 +8,7 @@ use crate::Generation3dSnapshot;
 //#region 🔖️DeleteWidget
 /// 🗑️ Removes the widget with `id`; the diff/inverse leaves capture the full removed payload from
 /// `base` so undo is a real `create-widget`, never a sentinel.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct DeleteWidget {
     pub id: String,

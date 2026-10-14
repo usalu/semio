@@ -8,8 +8,7 @@ use crate::Generation3dSnapshot;
 
 //#region 🔖️MoveNodes
 /// 🚚️ Moves every addressed widget's canvas position by `(dx, dy)`.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct MoveNodes {
     pub ids: Vec<String>,

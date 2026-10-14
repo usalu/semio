@@ -4,7 +4,7 @@ mod document_window_replacement_tests {
 
     #[test]
     fn retained_window_input_document_scope_renewal_cancels_old_and_admits_new_work() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🪟️window/🫧️transient/🧫️fixtures/🪟️retained-window-input/🔣️.json"))).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🪟️window/🫧️transient/🧪️tests/🧫️fixtures/🪟️retained-window-input/🔣️.json"))).unwrap();
         let expected = &fixture["documentReplacement"];
         let key =
             |id| ToolOperationKey { app_instance_id: 11, document: ArtifactDocumentAuthority(11), operation_id: semio_framework_job::OperationId(id), base_revision: semio_framework_job::RevisionId(0), generation: semio_framework_job::Generation(0) };
@@ -41,7 +41,7 @@ mod document_window_replacement_tests {
 
     #[test]
     fn retained_window_input_retirement_reaches_later_document_generations() {
-        let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪟️retained-window-input/🔣️.json")).unwrap();
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪟️retained-window-input/🔣️.json")).unwrap();
         let p=&fixture["retirementPolicy"];
         let grant=RetainedCloneGrant{maximum_items:p["items"].as_u64().unwrap()as usize,maximum_copy_bytes:p["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:p["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:p["release"].as_u64().unwrap()as usize,maximum_depth:p["depth"].as_u64().unwrap()as usize};
         let mut blocked = WindowTransientOwnerRegistry::for_document_generation(1);

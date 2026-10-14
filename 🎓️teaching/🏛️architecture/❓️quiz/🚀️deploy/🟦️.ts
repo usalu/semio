@@ -1,4 +1,4 @@
-import { readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 /** 🚀️ Operator verbs of the architecture quiz: the site goes to a CDN at the site host, the proctor runs as a zero-touch
  * Docker stack (proctor + Caddy) at the proctor host, both hosts from `🔣️.json`.
  *
@@ -377,10 +377,10 @@ export function siteArtifactProblems(dist: string, proctorOrigin: string): strin
 /** 🚚️ `publish` — a fresh release build of the site with the proctor origin baked in (`PROCTOR_URL`, else the production
  * proctor), verified as the CDN artifact and staged with `_headers` under `dist/pages/quizzes`, ready for any static host
  * (GitHub Pages, Cloudflare Pages, Netlify). Nothing is uploaded; a build for another proctor is flagged as a rehearsal. */
-export function publishQuizSite(bundleRoot: string, build: () => void): void {
+export async function publishQuizSite(bundleRoot: string, build: () => Promise<void>): Promise<void> {
   const proctorOrigin = releaseProctorOrigin();
   say(`building the site for ${QUIZ_SITE_ORIGIN} against ${proctorOrigin}`);
-  build();
+  await build();
   const dist = join(bundleRoot, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE));
   const problems = siteArtifactProblems(dist, proctorOrigin);
   if (problems.length > 0) throw new Error(`the site artifact is not publishable:\n- ${problems.join("\n- ")}`);
@@ -949,7 +949,7 @@ export function deployCheckSteps(targets: Readonly<Record<string, unknown>>): re
  * no drift from `🔣️.json`, the package's sources against the compiler, the catalog valid in the Rust core, the site
  * built and verified as the CDN artifact, the image built, the image check, the stack check, and the package's
  * end-to-end gate. Nothing is pushed or uploaded. */
-export async function checkQuizDeployment(repoRoot: string, bundleRoot: string, build: () => void, segments: readonly string[]): Promise<void> {
+export async function checkQuizDeployment(repoRoot: string, bundleRoot: string, build: () => Promise<void>, segments: readonly string[]): Promise<void> {
   const tagged = flag(segments, "--tag") ? ["--tag", flag(segments, "--tag")!] : [];
   const jobs = flag(segments, "--jobs") ? ["--jobs", flag(segments, "--jobs")!] : [];
   const targets = (JSON.parse(readFileSync(join(bundleRoot, "📋️project.json"), "utf8")) as { targets: Record<string, unknown> }).targets;

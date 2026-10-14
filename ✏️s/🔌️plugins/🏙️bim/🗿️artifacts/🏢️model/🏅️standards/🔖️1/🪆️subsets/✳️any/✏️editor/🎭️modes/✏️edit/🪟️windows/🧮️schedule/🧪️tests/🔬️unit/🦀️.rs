@@ -3,7 +3,7 @@ use crate::schedule_kit::{preset, PRESETS};
 use crate::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
 use protocol::Inference;
 
-const HOUSE: &str = include_str!("../../../../../../../🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
+const HOUSE: &str = include_str!("../../../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
 
 fn house() -> (ModelSnapshot, ModelInference) {
     let mut snapshot = decode_model_snapshot_json(HOUSE).expect("the committed house decodes");

@@ -17,12 +17,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 #[semio_framework_async_macros::async_test]
 async fn structure_zones_and_both_link_slots_round_trip_through_text_and_binary() {
     let snapshot = sample_with_composition();
-    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
-    let from_text = <EnergyModelSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse round-tripped text");
+    let text = pack::snapshot::ArtifactDsl::print_dsl(&snapshot);
+    let from_text = <EnergyModelSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse round-tripped text");
     assert_eq!(from_text, snapshot);
 
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snapshot);
-    let from_binary = <EnergyModelSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode round-tripped binary");
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&snapshot);
+    let from_binary = <EnergyModelSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode round-tripped binary");
     assert_eq!(from_binary, snapshot);
     store::os_store::test_support::assert_pack_schema_identity(&snapshot);
 }
@@ -41,10 +41,10 @@ async fn absent_link_slots_round_trip_as_none() {
     without_either.referenced_model = None;
     without_either.weather_link = None;
     for snapshot in [without_referenced_model, without_weather, without_either] {
-        let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
-        assert_eq!(<EnergyModelSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse"), snapshot);
-        let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snapshot);
-        assert_eq!(<EnergyModelSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode"), snapshot);
+        let text = pack::snapshot::ArtifactDsl::print_dsl(&snapshot);
+        assert_eq!(<EnergyModelSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse"), snapshot);
+        let bytes = pack::snapshot::ArtifactPack::encode_pack(&snapshot);
+        assert_eq!(<EnergyModelSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode"), snapshot);
     }
 }
 
@@ -56,9 +56,9 @@ async fn the_two_link_slots_are_not_interchangeable_on_the_wire() {
     let snapshot = sample_with_composition();
     let mut swapped = snapshot.clone();
     std::mem::swap(&mut swapped.referenced_model, &mut swapped.weather_link);
-    assert_ne!(store::os_store::serialization::ArtifactDsl::print_dsl(&swapped), store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot));
-    assert_ne!(store::os_store::serialization::ArtifactPack::encode_pack(&swapped), store::os_store::serialization::ArtifactPack::encode_pack(&snapshot));
-    assert_eq!(<EnergyModelSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&store::os_store::serialization::ArtifactPack::encode_pack(&swapped)).expect("decode"), swapped);
+    assert_ne!(pack::snapshot::ArtifactDsl::print_dsl(&swapped), pack::snapshot::ArtifactDsl::print_dsl(&snapshot));
+    assert_ne!(pack::snapshot::ArtifactPack::encode_pack(&swapped), pack::snapshot::ArtifactPack::encode_pack(&snapshot));
+    assert_eq!(<EnergyModelSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack::snapshot::ArtifactPack::encode_pack(&swapped)).expect("decode"), swapped);
 }
 
 /// 🧪️ `energy_structure_from_model`/`energy_model_from_structure` round-trip the whole `Model`

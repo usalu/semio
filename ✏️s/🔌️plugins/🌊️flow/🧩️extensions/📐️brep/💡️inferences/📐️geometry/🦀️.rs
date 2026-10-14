@@ -41,17 +41,17 @@ impl GeometryInferenceTurn{
  fn terminal_is_empty(&self)->bool{self.cursor.is_none()&&self.wire.is_none()&&self.metadata.iter().all(Option::is_none)&&self.active.is_none()}
  fn retirement_demands(&self,registry:&neural_engine::SharedRegistry,copy:usize)->Result<RetirementDemand,ValueError>{if let Some(cursor)=&self.cursor{return cursor.retirement_demands_with_registry(registry,copy)}if let Some(active)=&self.active{return semio_framework_value::factory_ticket_demands(active,copy)}if self.wire.is_some(){return Ok(geometry_birth::<String>())}if self.metadata.iter().any(Option::is_some){return Ok(geometry_birth::<Vec<u8>>())}Ok(Default::default())}
  fn close_step(&mut self,registry:&neural_engine::SharedRegistry,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}if let Some(cursor)=&mut self.cursor{let step=cursor.close_step_with_registry(registry,grant)?;if cursor.terminal_is_empty(){self.cursor=None;}return Ok(RetainedCloneStep::Progress(step.progress()))}if self.active.is_some(){return semio_framework_value::close_factory_ticket(&mut self.active,grant)}if self.wire.is_some(){return geometry_admit(&mut self.wire,&mut self.active,grant)}if let Some(source)=self.metadata.iter_mut().find(|source|source.is_some()){return geometry_admit(source,&mut self.active,grant)}Ok(RetainedCloneStep::Complete(Default::default()))}
- fn step(&mut self,registry:&neural_engine::SharedRegistry,request:&ArtifactInferenceExecutionRequest<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{
-  let grant=request.retained;let pending=|retained_progress|ArtifactInferenceExecutionStep{execution:None,retained_progress,terminal:false};
-  if grant.maximum_items==0||grant.maximum_depth==0{return Ok(pending(Default::default()))}
+ fn step(&mut self,registry:&neural_engine::SharedRegistry,request:&ArtifactInferenceExecutionRequest<'_>, cx:&mut semio_framework_plugin::ArtifactInferenceStepContext<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{
+  let available=cx.retained_grant();let grant=RetainedCloneGrant{maximum_items:available.maximum_items.min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX)),..available};let pending=|retained_progress|ArtifactInferenceExecutionStep{execution:None,retained_progress,terminal:false};
+  if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(pending(Default::default()))}
   if !self.matches(request){return Err(ArtifactInferenceExecutionError::native(ValueError::literal(ValueRefusalKind::OwnershipLimit,"geometry inference retains another original caller"),false))}
-  if request.cancelled{self.begin_close();}if self.closing{let step=self.close_step(registry,grant).map_err(|error|ArtifactInferenceExecutionError::native(error,false))?;return Ok(ArtifactInferenceExecutionStep{execution:None,retained_progress:step.progress(),terminal:self.terminal_is_empty()})}
+  if request.cancelled||cx.is_cancelled(){self.begin_close();}if self.closing{let step=self.close_step(registry,grant).map_err(|error|ArtifactInferenceExecutionError::native(error,false))?;return Ok(ArtifactInferenceExecutionStep{execution:None,retained_progress:step.progress(),terminal:self.terminal_is_empty()})}
   if let Some(cursor)=&mut self.cursor{
    if !cursor.matches(request.operation,request.generation,request.canonical_payload){return Err(ArtifactInferenceExecutionError::native(ValueError::literal(ValueRefusalKind::OwnershipLimit,"geometry inference retains another original caller"),false))}
    if self.quality.is_none(){if let Some(original)=cursor.original_request(){if !original.operator_id.is_empty(){self.quality=geometry_operator_quality_ref(registry,&original.operator_id);}}}
    if cursor.terminal_is_empty()&&self.wire.is_some(){self.cursor=None;return Ok(pending(geometry_item()))}
    let input=flow_extension_sdk::EvaluationRequestContextInput{cancellation_id:request.cancellation_id,policy:request.policy,dependencies:request.dependencies,work_units:request.budgets.work_units,wait_terminal:true};
-   let (reply,receipt)=cursor.step_with_context(registry,request.canonical_payload,grant,request.cancelled,input).map_err(|error|{cursor.begin_close();self.closing=true;ArtifactInferenceExecutionError::native(error,false)})?;
+   let (reply,receipt)=cursor.step_with_context(registry,request.canonical_payload,cx,input).map_err(|error|{cursor.begin_close();self.closing=true;ArtifactInferenceExecutionError::native(error,false)})?;
    if let Some(reply)=reply{assert!(reply.returned_request.is_none()&&reply.refusal.is_none(),"original callback keeps denied source in its cursor");self.faulted=reply.faulted;self.complete=reply.complete;self.wire=reply.wire;}
    return Ok(pending(receipt));
   }
@@ -107,12 +107,12 @@ pub(crate) fn geometry_operator_quality(registry: &neural_engine::Registry, oper
     super::NODE_KERNEL_METHOD.iter().find(|(id, _)| *id == operator).map(|(_, method)| format!("{:?}", super::operation_quality(method))).unwrap_or_else(|| "Unsupported".into())
 }
 
-fn infer_geometry(request:&ArtifactInferenceExecutionRequest<'_>,context:&dyn std::any::Any)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{
+fn infer_geometry(request:&ArtifactInferenceExecutionRequest<'_>,context:&dyn std::any::Any, cx:&mut semio_framework_plugin::ArtifactInferenceStepContext<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{
  let context=context.downcast_ref::<GeometryInferenceContext>().ok_or_else(||ArtifactInferenceExecutionError::native(ValueError::literal(ValueRefusalKind::InvalidValue,"geometry inference requires its original execution owner"),true))?;
  if request.canonical_payload.len()as u64>request.budgets.allocation_bytes{return Err(ArtifactInferenceExecutionError::native(ValueError::literal(ValueRefusalKind::OwnershipLimit,"geometry source exceeds original allocation authority"),true))}
- let mut owner=context.normal.lock().expect("original geometry cursor");if owner.is_none(){if request.retained.maximum_items==0||request.retained.maximum_depth==0{return Ok(ArtifactInferenceExecutionStep{execution:None,retained_progress:Default::default(),terminal:false})}*owner=Some(GeometryInferenceTurn::new(request));}
+ let mut owner=context.normal.lock().expect("original geometry cursor");if owner.is_none(){if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(ArtifactInferenceExecutionStep{execution:None,retained_progress:Default::default(),terminal:false})}*owner=Some(GeometryInferenceTurn::new(request));}
  #[cfg(test)] GEOMETRY_INFERENCE_CALLS.fetch_add(1,std::sync::atomic::Ordering::SeqCst);
- let result=owner.as_mut().unwrap().step(context.registry(),request)?;if result.terminal{assert!(owner.as_ref().unwrap().terminal_is_empty());*owner=None;}Ok(result)
+ let result=owner.as_mut().unwrap().step(context.registry(),request,cx)?;if result.terminal{assert!(owner.as_ref().unwrap().terminal_is_empty());*owner=None;}Ok(result)
 }
 
 /// ♻️ Borrows the actual selected child only under its original callback source.

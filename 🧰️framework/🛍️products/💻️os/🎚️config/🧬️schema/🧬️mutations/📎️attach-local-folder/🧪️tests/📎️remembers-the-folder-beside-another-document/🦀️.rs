@@ -9,11 +9,11 @@
 
 use super::{LocalFoldersDiff, LocalFolderBindings, LocalFoldersConfigMutation};
 
-const BEFORE: &str = include_str!("../../🧫️fixtures/📎️remembers-the-folder-beside-another-document/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../🧫️fixtures/📎️remembers-the-folder-beside-another-document/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../🧫️fixtures/📎️remembers-the-folder-beside-another-document/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../🧫️fixtures/📎️remembers-the-folder-beside-another-document/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../🧫️fixtures/📎️remembers-the-folder-beside-another-document/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/🎯️outcome/🔣️.json");
 
 fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")

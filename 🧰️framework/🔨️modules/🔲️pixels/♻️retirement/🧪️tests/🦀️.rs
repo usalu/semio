@@ -22,7 +22,7 @@ pub(crate) fn drain<T:RetireOwned>(value:T)->(usize,usize){
 #[test]
 fn retained_physical_raster_children_obey_allocator_grants(){
  use crate::{coverage::{CoverageInput,CoverageJob,CoverageRule},affine_sampling::{AffineImageInput,AffineImageJob,AffineSampling},compositing::{CompositeJob,CompositeLayer,CompositeContent,CompositeBlend}};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for stop in fixture["interruptions"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){
   let mut coverage=CoverageJob::new(CoverageInput{width:8,height:8,transform:[1.,0.,0.,1.,0.,0.],rule:CoverageRule::NonZero,contours:vec![vec![[0.,0.],[8.,0.],[8.,8.],[0.,8.]]]}).unwrap();if stop>0{coverage.advance(stop).unwrap();}coverage.cancel();let retired=coverage.into_retirement().0;let(a,r)=drain(retired);assert!(r>a);
   let source=Arc::new(RasterImage{width:2,height:2,pixels:vec![255;16]});let mut sample=AffineImageJob::new(AffineImageInput{source:source.clone(),width:8,height:8,origin:[0.,0.],transform:[4.,0.,0.,4.,0.,0.],sampling:AffineSampling::Area}).unwrap();if stop>0{sample.advance(stop).unwrap();}sample.cancel();let(a,r)=drain(sample.into_retirement().0);assert!(r>a);assert_eq!(source.pixels,vec![255;16]);assert_eq!(Arc::strong_count(&source),1);
@@ -33,7 +33,7 @@ fn retained_physical_raster_children_obey_allocator_grants(){
 #[test]
 fn retained_physical_geometry_children_obey_allocator_grants(){
  use semio_framework_2d::{PathSegment,flatten::{PathFlattenInput,PathFlattenJob},stroke::{StrokeOutlineInput,StrokeOutlineJob,StrokeContour,StrokeGeometryStyle,StrokeGeometryCap,StrokeGeometryJoin}};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for stop in fixture["interruptions"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){
   let mut flatten=PathFlattenJob::new(PathFlattenInput{segments:vec![PathSegment::Move{to:[0.,0.]},PathSegment::Cubic{ctrl1:[0.,8.],ctrl2:[8.,8.],to:[8.,0.]},PathSegment::Close],transform:[1.,0.,0.,1.,0.,0.],tolerance:0.1}).unwrap();if stop>0{flatten.advance(stop).unwrap();}flatten.cancel();let(a,r)=drain(flatten.into_retirement().0);assert!(r>a);
   let mut stroke=StrokeOutlineJob::new(StrokeOutlineInput{contours:vec![StrokeContour{points:vec![[0.,0.],[8.,0.],[8.,8.]],closed:false}],transform:[1.,0.,0.,1.,0.,0.],tolerance:0.1,style:StrokeGeometryStyle{width:2.,cap:StrokeGeometryCap::Round,join:StrokeGeometryJoin::Round,miter_limit:4.,dash:vec![1.,1.],dash_offset:0.}}).unwrap();if stop>0{stroke.advance(stop).unwrap();}stroke.cancel();let(a,r)=drain(stroke.into_retirement().0);assert!(r>a);
@@ -51,7 +51,7 @@ fn retained_physical_numeric_scratch_matches_reference_and_allocator(){
 #[test]
 fn retained_physical_boolean_and_trace_children_obey_allocator_grants(){
  use semio_framework_2d::{PathSegment,booleans::{BooleanJob,BooleanInput,BooleanOperand,BooleanOperation,BooleanFillRule},trace::{BitmapTraceJob,BitmapTraceInput}};
- let boolean_rows:serde_json::Value=serde_json::from_str(include_str!("../../../◻️2d/🔀️booleans/🧫️fixtures/🔣️.json")).unwrap();let trace_rows:serde_json::Value=serde_json::from_str(include_str!("../../../◻️2d/🔍️trace/🧫️fixtures/🔣️.json")).unwrap();
+ let boolean_rows:serde_json::Value=serde_json::from_str(include_str!("../../../◻️2d/🔀️booleans/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let trace_rows:serde_json::Value=serde_json::from_str(include_str!("../../../◻️2d/🔍️trace/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in boolean_rows.as_array().unwrap(){let input=&row["input"];let source=BooleanInput{operation:BooleanOperation::parse(input["operation"].as_str().unwrap()).unwrap(),operands:input["operands"].as_array().unwrap().iter().map(|operand|BooleanOperand{fill_rule:if operand["fillRule"]=="evenodd"{BooleanFillRule::Evenodd}else{BooleanFillRule::Nonzero},contours:operand["contours"].as_array().unwrap().iter().map(|ring|ring.as_array().unwrap().iter().map(|p|[p[0].as_f64().unwrap(),p[1].as_f64().unwrap()]).collect()).collect()}).collect(),epsilon:input["epsilon"].as_f64().unwrap(),max_edges:input["maxEdges"].as_u64().unwrap()as usize,max_parameters:input["maxParameters"].as_u64().unwrap()as usize,max_atomic_edges:input["maxAtomicEdges"].as_u64().unwrap()as usize,max_segments:input["maxSegments"].as_u64().unwrap()as usize,max_work:input["maxWork"].as_u64().unwrap()};
   for stop in [0,1,10,100,4096]{let mut job=BooleanJob::new(source.clone()).unwrap();if stop>0{job.advance(stop).unwrap();}job.cancel();let(retired,operands,output)=job.into_retirement();assert!(output.is_none());drain(retired);drain(operands);}
   let mut job=BooleanJob::new(source).unwrap();while !job.advance(4096).unwrap().done{}let(retired,operands,output)=job.into_retirement();let output=output.unwrap();let mut first=[0.;2];let mut previous=[0.;2];let mut area=0.;let mut contours=0;for segment in &output{match segment{PathSegment::Move{to}=>{first=*to;previous=*to;contours+=1;},PathSegment::Line{to}=>{area+=previous[0]*to[1]-to[0]*previous[1];previous=*to;},PathSegment::Close=>area+=previous[0]*first[1]-first[0]*previous[1],_=>unreachable!()}}assert_eq!(contours,row["expected"]["contours"].as_u64().unwrap());assert!((area/2.-row["expected"]["area"].as_f64().unwrap()).abs()<1e-5);drain(retired);drain(operands);drain(output);
@@ -70,7 +70,7 @@ fn retained_physical_png_encoder_obeys_allocator_grants(){
 }
 #[test]
 fn retained_physical_mask_leases_require_actual_backing_grants(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap().iter().filter(|row|row["input"]["kind"]=="mask"){
   let bytes:Vec<u8>=row["input"]["bytes"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect();let lease=MaskLease::from(bytes.clone());let source=lease.0;
   let alias=(row["input"]["aliases"].as_u64().unwrap()>0).then(||source.clone());let weak=(row["input"]["weakLeases"].as_u64().unwrap()>0).then(||Arc::downgrade(&source));
@@ -86,7 +86,7 @@ fn retained_physical_curved_boolean_children_obey_allocator_grants(){
  use semio_framework_2d::{PathSegment,booleans::{BooleanOperation,BooleanFillRule,paths::{PathBooleanJob,PathBooleanInput,PathBooleanOperand}}};
  fn point(value:&serde_json::Value)->[f64;2]{[value[0].as_f64().unwrap(),value[1].as_f64().unwrap()]}
  fn segment(value:&serde_json::Value)->PathSegment{match value["kind"].as_str().unwrap(){"move"=>PathSegment::Move{to:point(&value["to"])},"line"=>PathSegment::Line{to:point(&value["to"])},"quad"=>PathSegment::Quad{ctrl:point(&value["ctrl"]),to:point(&value["to"])},"cubic"=>PathSegment::Cubic{ctrl1:point(&value["ctrl1"]),ctrl2:point(&value["ctrl2"]),to:point(&value["to"])},"arc"=>PathSegment::Arc{rx:value["rx"].as_f64().unwrap(),ry:value["ry"].as_f64().unwrap(),rotation:value["rotation"].as_f64().unwrap(),large_arc:value["largeArc"].as_bool().unwrap(),sweep:value["sweep"].as_bool().unwrap(),to:point(&value["to"])},"close"=>PathSegment::Close,_=>unreachable!()}}
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../◻️2d/🔀️booleans/🛤️paths/🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../◻️2d/🔀️booleans/🛤️paths/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){let source=PathBooleanInput{operation:BooleanOperation::parse(row["operation"].as_str().unwrap()).unwrap(),operands:row["operands"].as_array().unwrap().iter().map(|v|PathBooleanOperand{segments:v["segments"].as_array().unwrap().iter().map(segment).collect(),transform:std::array::from_fn(|i|v["transform"][i].as_f64().unwrap()),tolerance:v["tolerance"].as_f64().unwrap(),fill_rule:if v["fillRule"]=="evenodd"{BooleanFillRule::Evenodd}else{BooleanFillRule::Nonzero}}).collect(),epsilon:1e-8,max_edges:65536,max_parameters:262144,max_atomic_edges:65536,max_segments:65536,max_work:10000000};
   for stop in [0,1,10,100,4096]{let mut job=PathBooleanJob::new(source.clone()).unwrap();if stop>0{job.advance(stop).unwrap();}job.cancel();let(retired,output)=job.into_retirement();assert!(output.is_none());drain(retired);}
   let mut job=PathBooleanJob::new(source).unwrap();while !job.advance(4096).unwrap().done{}let(retired,output)=job.into_retirement();let output=output.unwrap();assert_eq!(output.iter().filter(|s|matches!(s,PathSegment::Move{..})).count(),row["contours"].as_u64().unwrap()as usize);drain(retired);drain(output);

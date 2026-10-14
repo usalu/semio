@@ -63,7 +63,7 @@ async fn check_surface<A: PluginApp>(app: &mut A, definition: &AppDefinition, fi
 
 #[semio_framework_async_macros::async_test]
 async fn norm_public_surfaces_render_all_declared_bodies() {
-    let fixture: Fixture = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Fixture = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture.contract_id, "semio.norm.surface-render/v1");
     assert_eq!(fixture.rows.len(), 30);
     let plugin = semio_hub_norm::plugin().expect("the real norm plugin must assemble its complete surface registry");
@@ -154,7 +154,7 @@ macro_rules! assert_norm_pair {
 /// publication-lane availability check, both of which fail closed on a mechanical classification flip.
 #[semio_framework_async_macros::async_test]
 async fn every_norm_editor_action_is_migrated_onto_the_shared_owned_factory() {
-    let fixture: RetainedFixture = serde_json::from_str(include_str!("../../../../../../✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🧫️fixtures/🧫️retained-command-dispositions/🔣️.json")).unwrap();
+    let fixture: RetainedFixture = serde_json::from_str(include_str!("../../../../../../✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🧪️tests/🧫️fixtures/🧫️retained-command-dispositions/🔣️.json")).unwrap();
     assert!(fixture.factory.shared);
     assert_eq!(fixture.factory.payload_schema, semio_s_artifact_norm_contract::app_surface::NORM_RETAINED_PAYLOAD_SCHEMA);
     assert_eq!(fixture.factory.maximum_raw_bytes, semio_s_artifact_norm_contract::app_surface::NORM_RETAINED_RAW_BYTES);

@@ -1,3 +1,4 @@
+import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
 // @vitest-environment jsdom
 /**
  * 🎮️ TypeScript twin over `🧫️fixtures/🎮️wgpu-browser-input-wire/🔣️.json`.
@@ -45,7 +46,7 @@ const TEST_HOST_STORAGE: WgpuHostStorageSnapshot = {};
 type FixtureRow = { readonly id: string; readonly why: string; readonly dom: Record<string, unknown>; readonly wire: Record<string, unknown>; readonly dispatch: Record<string, unknown> | null };
 
 const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🎮️wgpu-browser-input-wire/🔣️.json"), "utf8")) as { readonly rows: readonly FixtureRow[] };
-const orderedScroll = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎡️ordered-scroll/🧫️fixtures/🔣️.json"), "utf8")) as OrderedScrollFixture;
+const orderedScroll = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎡️ordered-scroll/🧪️tests/🧫️fixtures/🔣️.json"), "utf8")) as OrderedScrollFixture;
 
 /** 🖱️ The fixture's `dom` column minus the `devicePixelRatio` the surface, not the event, owns. */
 function domEvent(row: FixtureRow): { event: BrowserFrameDomEvent; dpr: number } {
@@ -71,7 +72,7 @@ class FakeWorker implements BrowserFrameWorkerPort {
 }
 
 function readyTransport(worker: FakeWorker): BrowserFrameTransport {
-  const transport = new BrowserFrameTransport({
+  const transport = new BrowserFrameTransport({ originalWorkStock: fixtureOriginalWorkStock(),
     worker,
     boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 1434, height: 836, dpr: 1, locale: "en", descriptor: testBootDescriptor("generation3d"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM, storage: TEST_HOST_STORAGE },
     setTimer: () => 1,

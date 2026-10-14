@@ -92,7 +92,7 @@ async fn codec_retention_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn incremental_cursor_yields_bounded_pages_matching_the_real_fixture() {
-    let fixture = include_bytes!("../../../🧫️fixtures/🔊️.mp3");
+    let fixture = include_bytes!("../../../🧪️tests/🧫️fixtures/🔊️.mp3");
     let decoded = decode_mp3(fixture).expect("decode real LAME fixture");
     let mut cursor = Mp3EncodeCursor::new(&decoded);
     let mut encoded = Vec::new();
@@ -122,7 +122,7 @@ fn playback_snapshot_retirement_preserves_original_observers_and_each_exact_gran
     use semio_framework_plugin::{ArtifactSnapshotDisposer, PluginLifecycleStep};
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     for weak in [false, true] {
-        let decoded = decode_mp3(include_bytes!("../../../🧫️fixtures/🔊️.mp3")).unwrap();
+        let decoded = decode_mp3(include_bytes!("../../../🧪️tests/🧫️fixtures/🔊️.mp3")).unwrap();
         let mut snapshot = Some(std::sync::Arc::new(decoded));
         let pointer = std::sync::Arc::as_ptr(snapshot.as_ref().unwrap());
         let strong = (!weak).then(|| snapshot.as_ref().unwrap().clone());
@@ -181,7 +181,7 @@ async fn id3v1_trailer_round_trips() {
 #[test]
 fn owned_fixture_publication_reports_canonical_logical_carriers() {
     playback_snapshot_retirement_preserves_original_observers_and_each_exact_grant();
-    use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+    use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
     use semio_s_artifact_stdio_mp3_test_oracle::standards::v_mpeg1_layer3::subsets::any::project_mp3;
     let native = real_fixture();
     let snapshot = decode_mp3(&native).unwrap();

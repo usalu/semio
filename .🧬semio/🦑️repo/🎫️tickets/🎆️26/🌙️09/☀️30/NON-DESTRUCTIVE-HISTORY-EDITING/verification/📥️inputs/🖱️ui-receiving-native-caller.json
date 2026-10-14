@@ -1,0 +1,55 @@
+{
+  "buildMode": "prototype",
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/framework-plugin:test",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_reactor_publication_receipts_preserve_all_five_tuples_and_same_recipient_once) | test(issued_shard_batch_has_one_original_ledger_and_one_terminal_return) | test(original_command_checkpoint_cursor_preserves_every_arc1_byte_and_zero_copy_metadata)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "selection": [
+    "nx",
+    "run",
+    "@semio-tech/framework-plugin:test",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_reactor_publication_receipts_preserve_all_five_tuples_and_same_recipient_once) | test(issued_shard_batch_has_one_original_ledger_and_one_terminal_return) | test(original_command_checkpoint_cursor_preserves_every_arc1_byte_and_zero_copy_metadata)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
+    "transport": {
+      "maximumBytes": 536870912,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": false
+    }
+  }
+}

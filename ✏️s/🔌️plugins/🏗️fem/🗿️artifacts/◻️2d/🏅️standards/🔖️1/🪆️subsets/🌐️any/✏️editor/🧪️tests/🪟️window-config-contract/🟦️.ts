@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
-import documentAdmission from "../../../🧫️fixtures/🧬️document-admission/🔣️.json" with { type: "json" };
+import documentAdmission from "../../../🧪️tests/🧫️fixtures/🧬️document-admission/🔣️.json" with { type: "json" };
 import fem2dDocumentSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import { parseFem2dArtifact } from "../../../🧬️schema/🟦️.ts";
 import { testFem2dModelWindowConfigContract } from "../../🎭️modes/✏️edit/🪟️windows/🧱️model/🎚️config/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts";

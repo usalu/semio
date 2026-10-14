@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { isAbsolute, resolve, join } from "node:path";
-import { validateJsonSchemaSubset } from "../../🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 📋️ Gives an owner its explicitly selected execution and compiler state stores. */
 export type ProcessOwnerContextV1=Readonly<{version:1;cwd:string;cacheRoot:string;leaseDirectory:string}>;

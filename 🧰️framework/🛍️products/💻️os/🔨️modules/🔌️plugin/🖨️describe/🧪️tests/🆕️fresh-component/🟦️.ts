@@ -1,8 +1,8 @@
 import { createHash,randomBytes } from "node:crypto";
 import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync, cpSync } from "node:fs";
 import { isAbsolute, join, resolve } from "node:path";
-import { acquireCargoBuildLeaseV1 } from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
-import { decodeCargoProvenanceV1 } from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+import { acquireCargoBuildLeaseV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import { decodeCargoProvenanceV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { readStableBuildFile } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { semanticOwnedInputFileSnapshot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
@@ -11,7 +11,7 @@ import { SHIPPED_COMPONENT_MAX_BYTES } from "../../🏷️component-receipt/🟦
 import { FRESH_SOURCE_EPOCH_LIMITS, captureFreshSourceEpochV1, freshSourceEpochBytesV1, freshSourceOrderedJson, parseFreshRustDepInfoV1 } from "../../🧾️source-epoch/🟦️.ts";
 import {parseFreshProcessPolicyV1,type FreshProcessControlV1} from "../../🏭️fresh-component/🎛️control/🟦️.ts";
 import { setImmediate } from "node:timers/promises";
-import type { ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import type { ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { captureFreshComponentInputs, freshRun, freshStage, stageFreshComponentInputs } from "../../🏭️fresh-component/🟦️.ts";
 
 /** 🧪️ Authors the original fixture owner whose actual signal bounds every owned fresh process. */
@@ -369,7 +369,7 @@ export function createFreshComponentTests() {
     const artifactRoot = testArtifactRoot(repoRoot);
     assert(artifactRoot && isAbsolute(artifactRoot) && artifactRoot.split(/[\\/]/u).includes("🗑️generated"));
     const evidence = mkdtempSync(join(artifactRoot, "f-"));
-    const {default:Ajv}=await import("ajv"),processFixture=(await import("../../🏭️fresh-component/🎛️control/🧫️fixtures/🔣️.json")).default,processSchema=(await import("../../🏭️fresh-component/🎛️control/🧬️schema/🔣️.json")).default,entrySchema=(await import("../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🧬️schema/🔣️.json")).default,storageSchema=(await import("../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🧬️schema/🔣️.json")).default,admit=new Ajv({strict:true}).addSchema(entrySchema).addSchema(storageSchema).compile(processSchema);assert.equal(admit(processFixture.policy),true);assert.deepEqual(parseFreshProcessPolicyV1(processFixture.policy),processFixture.policy);for(const field of processFixture.required){const invalid={...processFixture.policy};delete invalid[field];assert.equal(admit(invalid),false);assert.throws(()=>parseFreshProcessPolicyV1(invalid));}
+    const {default:Ajv}=await import("ajv"),processFixture=(await import("../../🏭️fresh-component/🎛️control/🧪️tests/🧫️fixtures/🔣️.json")).default,processSchema=(await import("../../🏭️fresh-component/🎛️control/🧬️schema/🔣️.json")).default,entrySchema=(await import("../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🧬️schema/🔣️.json")).default,storageSchema=(await import("../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🧬️schema/🔣️.json")).default,admit=new Ajv({strict:true}).addSchema(entrySchema).addSchema(storageSchema).compile(processSchema);assert.equal(admit(processFixture.policy),true);assert.deepEqual(parseFreshProcessPolicyV1(processFixture.policy),processFixture.policy);for(const field of processFixture.required){const invalid={...processFixture.policy};delete invalid[field];assert.equal(admit(invalid),false);assert.throws(()=>parseFreshProcessPolicyV1(invalid));}
     const requiredRoot=join(evidence,"missing-process-owner");mkdirSync(requiredRoot);const startedOwner=performance.now();await assert.rejects(freshRun(process.execPath,["-e","process.stdout.write('[DEBUG] unauthorized owner executed')"],repoRoot,{...process.env},{diagnosticsRoot:requiredRoot,cancelled:()=>false,remainingMs:()=>Math.floor(5000-(performance.now()-startedOwner)),checkpoint:()=>{}} as unknown as FreshProcessControlV1,"missing-process-owner",0,1),/Fresh process policy required/);assert.deepEqual(readdirSync(requiredRoot),[]);
     const processPolicy=parseFreshProcessPolicyV1({...processFixture.policy,storage:{version:1,directory:artifactRoot}});
     for (const row of fixture.cases) {
@@ -469,7 +469,7 @@ export function createFreshComponentTests() {
     const ownerCompiler=join(ownerRoot,"c"),ownerTarget=join(ownerRoot,"t"),ownerEnv={...process.env,CARGO_TARGET_DIR:ownerTarget,CARGO_BUILD_BUILD_DIR:ownerCompiler},ownerStarted=performance.now(),ownerSignal=new AbortController(),ownerProgress:string[]=[],ownerControl={process:processPolicy,invocation:freshOwner("owner",ownerSignal),cancelled:()=>ownerSignal.signal.aborted,remainingMs:()=>Math.floor(60_000-(performance.now()-ownerStarted)),checkpoint:(stage:string)=>{ownerProgress.push(stage);}};
     const ownerManifest=join(ownerRoot,"nested/package/Cargo.toml"), ownerLock=join(ownerRoot,"nested/Cargo.lock"), ownerArgs=[...ownership.consumerArguments,"-p",ownership.nestedName];
     const unprepared=Bun.spawnSync(["cargo",...ownership.consumerArguments,"--manifest-path",ownerManifest],{cwd:ownerRoot,env:ownerEnv});assert.notEqual(unprepared.exitCode,0,"independent locked/offline Cargo must refuse a missing owner lock");assert(!existsSync(ownerLock),"refusal must not publish the lock");
-    const {acquireQueuedResourceLease}=await import("../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts");
+    const {acquireQueuedResourceLease}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts");
     const preparationDirectory=processPolicy.storage.directory,preparationResource=`cargo-preparation:${ownerRoot}`,preparationQueue=join(preparationDirectory,createHash("sha256").update(preparationResource).digest("hex")+".queue");
     for(const row of fixture.queuedPreparationCases){
       const root=join(evidence,row.name);mkdirSync(root);let observedAt:number|undefined,progress=0;

@@ -4,7 +4,7 @@ use crate::editor::fem2d::modes::edit::windows::model::{find_node_2d, screen_2d,
 use crate::Viewport2d;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig, ViewModel, ViewWindowInstance};
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
 
 type Fem2dSnapshot = crate::Fem2dSnapshot;
 

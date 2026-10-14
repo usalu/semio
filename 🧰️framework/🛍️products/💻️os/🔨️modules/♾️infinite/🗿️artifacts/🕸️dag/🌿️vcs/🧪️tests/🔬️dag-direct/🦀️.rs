@@ -3,25 +3,25 @@ use super::*;
 use protocol::{MutationLeaf, OpBinary, OpText, SemanticMutation};
 
 fn fixture() -> Value {
-    semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️mutations.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral Dag mutation fixture")
+    semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️mutations.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral Dag mutation fixture")
 }
 
 /// 🧾️ The committed wire witness of each direct leaf, in roster order: the Rust `ToValue` of one aggregate operation.
 const WITNESSES: [&str; 14] = [
-    include_str!("../../🧫️fixtures/🧬️mutations/➕️create-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/✏️rename-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/🔤️change-node-name/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/↔️move-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/📐️resize-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/🖼️change-node-icon/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/🔡️change-node-abbreviation/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/🧮️change-node-operator-kind/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node-kind/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/🗃️replace-node-properties/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/🔀️reorder-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/🔗️connect-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/✂️disconnect-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/➕️create-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/✏️rename-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/🔤️change-node-name/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/↔️move-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/📐️resize-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/🖼️change-node-icon/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/🔡️change-node-abbreviation/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/🧮️change-node-operator-kind/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-node-kind/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/🗃️replace-node-properties/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/🔀️reorder-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/🔗️connect-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/✂️disconnect-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"),
 ];
 
 fn witness(index: usize) -> Value {

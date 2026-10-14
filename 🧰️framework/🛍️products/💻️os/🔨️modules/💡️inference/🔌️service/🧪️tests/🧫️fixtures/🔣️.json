@@ -1,0 +1,85 @@
+{
+  "schema": "semio.test.installed-service-laws/v1",
+  "scope": {
+    "spaceId": "space/one",
+    "documentId": "document?one"
+  },
+  "owner": "neutral",
+  "serviceId": "neutral.service",
+  "operations": [
+    {
+      "name": "valid",
+      "value": {
+        "owner": "neutral",
+        "serviceId": "neutral.service",
+        "action": "run",
+        "operationEpoch": 1,
+        "payload": {
+          "value": 7
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "missing-owner",
+      "value": {
+        "serviceId": "neutral.service",
+        "action": "run",
+        "operationEpoch": 1,
+        "payload": {}
+      },
+      "valid": false
+    },
+    {
+      "name": "zero-epoch",
+      "value": {
+        "owner": "neutral",
+        "serviceId": "neutral.service",
+        "action": "run",
+        "operationEpoch": 0,
+        "payload": {}
+      },
+      "valid": false
+    },
+    {
+      "name": "foreign-authority",
+      "value": {
+        "owner": "neutral",
+        "serviceId": "neutral.service",
+        "action": "run",
+        "operationEpoch": 1,
+        "payload": {},
+        "credential": "forged"
+      },
+      "valid": false
+    }
+  ],
+  "lifecycle": [
+    "install-neutral",
+    "install-secondary",
+    "dispatch-neutral",
+    "remove-secondary",
+    "dispatch-secondary",
+    "dispatch-neutral",
+    "remove-neutral",
+    "dispatch-neutral",
+    "install-neutral",
+    "dispatch-neutral",
+    "remove-neutral",
+    "dispatch-neutral"
+  ],
+  "expected": {
+    "neutralCalls": 3,
+    "secondaryCalls": 0,
+    "neutralRetired": 2,
+    "secondaryRetired": 1,
+    "absentDispatches": 3
+  },
+  "request": {
+    "value": 7
+  },
+  "reply": {
+    "value": 7
+  },
+  "path": "/spaces/space%2Fone/documents/document%3Fone/contributed/neutral/run"
+}

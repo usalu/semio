@@ -55,7 +55,7 @@ fn extracted_model_relations_match_von_neumann_stencil() {
 fn periodic_sample_solves_on_a_same_size_wrapped_grid() {
     use crate::grid2d::{Boundary, Grid2dTopology};
     use crate::solver_grid2d::Grid2dSolverBuilder;
-    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔍️decoding-and-graphs/🔣️.json")).unwrap();
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔍️decoding-and-graphs/🔣️.json")).unwrap();
     let row = &oracle["sample"];
     let size = row["size"].as_u64().unwrap() as usize;
     let tiles: Vec<TileId> = serde_json::from_value::<Vec<u32>>(row["tiles"].clone()).unwrap().into_iter().map(TileId).collect();

@@ -1,7 +1,7 @@
 //! 🫳️ Neutral owned UTF-8/octet reconstruction, interior cancellation and cumulative admission.
 use super::{reconstruct_blob,reconstruct_text,Reconstruction};
 use super::super::{export_sqlite_database,SqliteDatabase,SqliteDatabaseLimits,SqliteRow,SqliteSnapshotControl as Control,SqliteSnapshotPhase as Phase,SqliteSnapshotProgress,SqliteValue};
-fn plan()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🫳️reconstruction/🔣️.json")).unwrap()}
+fn plan()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🫳️reconstruction/🔣️.json")).unwrap()}
 fn payloads(plan:&serde_json::Value)->(String,Vec<u8>){(plan["textUnit"].as_str().unwrap().repeat(plan["textRepeats"].as_u64().unwrap()as usize),plan["blobUnit"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u8).collect::<Vec<_>>().repeat(plan["blobRepeats"].as_u64().unwrap()as usize))}
 #[test]
 fn reconstruction_owned_copy_cancels_inside_utf8_and_octets(){

@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/compiler-state/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "root",
+    "owner",
+    "compiler",
+    "configuration",
+    "mode"
+  ],
+  "properties": {
+    "root": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "compiler": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "configuration": {
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "prototype",
+        "release"
+      ]
+    },
+    "platform": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "architecture": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    }
+  },
+  "definitions": {
+    "Materialization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "leaseDirectory",
+        "files"
+      ],
+      "properties": {
+        "leaseDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "maxLength": 256
+          }
+        }
+      }
+    }
+  }
+}

@@ -10,11 +10,11 @@ use crate::standards::v1::subsets::any::schema::mutations::inverse_block5d_mutat
 
 use crate::Block5dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🙅remove-author/🧪️uncredits-ada/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🙅remove-author/🧪️uncredits-ada/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🙅remove-author/🧪️uncredits-ada/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🙅remove-author/🧪️uncredits-ada/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🙅remove-author/🧪️uncredits-ada/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🙅remove-author/🧪️uncredits-ada/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🙅remove-author/🧪️uncredits-ada/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🙅remove-author/🧪️uncredits-ada/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🙅remove-author/🧪️uncredits-ada/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🙅remove-author/🧪️uncredits-ada/🎯️outcome/🔣️.json");
 
 fn before() -> Block5dSnapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")

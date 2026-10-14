@@ -11,8 +11,8 @@ import { resolve } from "node:path";
 import { testGeneration3dIoInputContracts } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts";
 import { testGeneration3dIoAuthorityFixture } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔁️round-trip/🛡️authority/🟦️.ts";
 import { assertGeneration3dSemanticWire } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🧬️semantic-wire/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runCmd, runCargo, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative } from "node:path";
@@ -34,11 +34,12 @@ class OwnedVerifyScript extends BundleScript {
       return;
     }
     if (segments[0] === "generation3d-widget-inputs") {
+      console.log(`generation3d-mesh-selection checks=${generation3dMeshSelectionSelfTests()} independentAjv=true`);
       console.log(`generation3d-widget-input checks=${generation3dWidgetInputSelfTests()} independentAjv=true`);
       console.log(`generation3d-widget-creation checks=${generation3dWidgetCreationSelfTests()} independentAjv=true`);
       console.log(`generation3d-terminology checks=${generation3dTerminologySelfTests()}`);
       const testRoot = join(this.repoRoot, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input");
-      runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", "--resolveJsonModule", `${testRoot}/🧪️tests/🔬️unit/🟦️.ts`], { cwd: this.repoRoot });
+      runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", "--resolveJsonModule", `${testRoot}/🧪️tests/🔬️unit/🟦️.ts`,join(testRoot,"../🥽️edit-mesh-selection/🧪️tests/🔬️unit/🟦️.ts")], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "semantic-wire") {

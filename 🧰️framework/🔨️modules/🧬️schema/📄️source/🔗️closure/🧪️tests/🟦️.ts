@@ -8,7 +8,7 @@ import { parseTree, findNodeAtLocation, type ParseError } from "jsonc-parser";
 
 const root = resolve(import.meta.dir, "..");
 const contract = JSON.parse(readFileSync(resolve(root, "🔣️.json"), "utf8"));
-const corpus = JSON.parse(readFileSync(resolve(root, "🧫️fixtures/🔣️.json"), "utf8"));
+const corpus = JSON.parse(readFileSync(resolve(root, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
 const limits = { sourceBytes: 2000000, documentBytes: 1000000, coordinateBytes: 1000000, depth: 256, schemas: 10000, resources: 10000, references: 10000, chunk: 128 };
 const control = () => ({ limits: { ...limits }, cancelled: () => false, progress: (_: import("../🟦️.ts").SchemaReferenceProgress) => {}, yield: async () => { await new Promise<void>(resolve => setTimeout(resolve, 0)); } });
 type Position = { id: string; path: string; pointer: string };

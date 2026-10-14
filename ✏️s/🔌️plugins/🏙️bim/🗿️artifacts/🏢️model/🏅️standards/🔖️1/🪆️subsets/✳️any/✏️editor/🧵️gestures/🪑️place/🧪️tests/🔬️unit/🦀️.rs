@@ -202,7 +202,7 @@ async fn a_terminal_shows_its_connector_cross_in_the_ghost() {
     assert_eq!(terminal, plain + 2, "two strokes make the cross");
 }
 
-const GESTURE_CASES: &str = include_str!("../../../../../🧫️fixtures/🛠️gestures/🔣️.json");
+const GESTURE_CASES: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🛠️gestures/🔣️.json");
 
 fn cases(key: &str) -> Vec<serde_json::Value> {
     let all: serde_json::Value = serde_json::from_str(GESTURE_CASES).expect("the committed cases");

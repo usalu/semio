@@ -7,7 +7,7 @@ import { PlaygroundBootPlanner, PLUGIN_GRAPH_CHUNK_ROWS, resolvePlaygroundBoot }
 import { SUSTAINED_TURN_OVERRUN_TURNS, TurnClock, TurnLedger, WORKER_STEP_BUDGET_MS } from "../../🎯️targets/🧊️wgpu/⏱️turn-budget/🟦️.ts";
 import { FrameTurnScheduler, WorkerTurnTaskQueue, nextFrameSequence } from "../../🎯️targets/🧊️wgpu/🧵️frame-turn-scheduler/🟦️.ts";
 import { admitPluginCatalogV1, pluginCatalogV1 } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
-import catalogFixture from "../../../../🔌️plugin/📇️registry/🧫️fixtures/🧩️composition/🔣️.json";
+import catalogFixture from "../../../../🔌️plugin/📇️registry/🧪️tests/🧫️fixtures/🧩️composition/🔣️.json";
 const catalog = pluginCatalogV1(admitPluginCatalogV1(catalogFixture.cases[1].input, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }));
 
 const ENGINE_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -15,9 +15,9 @@ const FRAME_WORKER_TS = join(ENGINE_ROOT, "🎯️targets", "🧊️wgpu", "🎞
 const FRAME_JOB_RS = join(ENGINE_ROOT, "🎯️targets", "🧊️wgpu", "🧵️frame-job", "🦀️.rs");
 const BROWSER_WORKER_RS = join(ENGINE_ROOT, "🎯️targets", "🧊️wgpu", "🌐️browser-worker", "🦀️.rs");
 const RENDERER_RS = join(ENGINE_ROOT, "🎯️targets", "🧊️wgpu", "🧊️renderer", "🦀️.rs");
-const FRAME_TURN_FIXTURE = join(ENGINE_ROOT, "🧫️fixtures", "🧵️frame-turn-scheduling", "🔣️.json");
+const FRAME_TURN_FIXTURE = join(ENGINE_ROOT, "🧪️tests/🧫️fixtures", "🧵️frame-turn-scheduling", "🔣️.json");
 
-const COMPONENT_CLOSE_TURN_FIXTURE = join(ENGINE_ROOT, "🧫️fixtures", "🧵️component-close-frame-turn", "🔣️.json");
+const COMPONENT_CLOSE_TURN_FIXTURE = join(ENGINE_ROOT, "🧪️tests/🧫️fixtures", "🧵️component-close-frame-turn", "🔣️.json");
 
 const FRAME_TURN_SCHEDULER_TS = join(ENGINE_ROOT, "🎯️targets", "🧊️wgpu", "🧵️frame-turn-scheduler", "🟦️.ts");
 
@@ -234,7 +234,7 @@ describe("wgpu frame-Worker step budget", () => {
   });
 
   it("Chromium preserves every byte of an admitted native response page", async () => {
-    const directory = join(ENGINE_ROOT, "🧫️fixtures", "📄️native-asset-response");
+    const directory = join(ENGINE_ROOT, "🧪️tests/🧫️fixtures", "📄️native-asset-response");
     const fixture = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8"));
     
     
@@ -260,7 +260,7 @@ describe("wgpu frame-Worker step budget", () => {
   });
 
   it("validates native reference decode retirement and derives every one-page grant independently", () => {
-    const directory = join(ENGINE_ROOT, "🧫️fixtures", "📄️native-asset-response");
+    const directory = join(ENGINE_ROOT, "🧪️tests/🧫️fixtures", "📄️native-asset-response");
     const fixture = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8"));
     
     
@@ -302,7 +302,7 @@ describe("wgpu frame-Worker step budget", () => {
   });
 
   it("keeps a contended mounted-I/O task runnable until its exact generation can register", async () => {
-    const directory = join(ENGINE_ROOT, "🧫️fixtures", "📄️native-asset-response");
+    const directory = join(ENGINE_ROOT, "🧪️tests/🧫️fixtures", "📄️native-asset-response");
     const fixture = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8"));
     
     

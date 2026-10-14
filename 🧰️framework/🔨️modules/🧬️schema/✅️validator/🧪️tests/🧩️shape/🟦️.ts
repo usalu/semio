@@ -17,7 +17,7 @@ interface Guards {
   requireLiteral<T extends string>(value: unknown, label: string, allowed: readonly T[]): T;
   requireExactKeys(value: Record<string, unknown>, keys: readonly string[], label: string): void;
 }
-const corpus: { readonly schemaVersion: 1; readonly json: readonly Row[]; readonly runtime: readonly Row[] } = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧩️shape/🔣️.json"), "utf8"));
+const corpus: { readonly schemaVersion: 1; readonly json: readonly Row[]; readonly runtime: readonly Row[] } = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🧩️shape/🔣️.json"), "utf8"));
 const sourcePath = resolve(import.meta.dir, "../../🟦️.ts");
 const allRows = [...corpus.json, ...corpus.runtime];
 const names = ["requireRecord", "requireStringArray", "requireString", "requireLiteral", "requireExactKeys"] as const;

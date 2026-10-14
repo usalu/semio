@@ -13,7 +13,8 @@
       "actionLedgers": [
         ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️law-routes-actions.json",
         ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️reader-endpoints.json",
-        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-target-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-target-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-node-key-routes-actions.json"
       ],
       "codepoints": 47,
       "utf16": 47
@@ -23,7 +24,8 @@
       "actionLedgers": [
         ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️law-routes-actions.json",
         ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️reader-endpoints.json",
-        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-target-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-target-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-node-key-routes-actions.json"
       ],
       "codepoints": 55,
       "utf16": 56
@@ -255,12 +257,21 @@
     {
       "path": "📜️script.ts",
       "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-replica-handoff-actions.json",
         ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-boundary-actions.json",
         ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-placement-actions.json",
         ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-source-actions.json"
       ],
       "codepoints": 39,
       "utf16": 40
+    },
+    {
+      "path": "🧫️fixtures/🧫️outcome-law-gate/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-replica-handoff-actions.json"
+      ],
+      "codepoints": 65,
+      "utf16": 68
     },
     {
       "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧪️tests/🟦️.ts",
@@ -451,6 +462,23 @@
       "utf16": 96
     },
     {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🏷️label/♻️retirement/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-four-actions.json"
+      ],
+      "codepoints": 101,
+      "utf16": 108
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-four-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-four-test-actions.json"
+      ],
+      "codepoints": 77,
+      "utf16": 83
+    },
+    {
       "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json",
       "actionLedgers": [
         ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json"
@@ -474,6 +502,14 @@
       ],
       "codepoints": 95,
       "utf16": 101
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🖼️atlas/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-four-actions.json"
+      ],
+      "codepoints": 107,
+      "utf16": 116
     },
     {
       "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧪️tests/🔬️unit/🟦️.ts",
@@ -600,6 +636,14 @@
       "utf16": 99
     },
     {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔢️integer-carriers.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-four-actions.json"
+      ],
+      "codepoints": 108,
+      "utf16": 114
+    },
+    {
       "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
       "actionLedgers": [
         ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️tess-current-actions.json"
@@ -622,6 +666,14 @@
       ],
       "codepoints": 84,
       "utf16": 90
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-placement-actions.json"
+      ],
+      "codepoints": 73,
+      "utf16": 78
     },
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs",
@@ -1307,7 +1359,9 @@
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️frame-close/🟦️.ts",
       "actionLedgers": [
         ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-seven-trial-test-actions.json",
-        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-six-trial-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-six-trial-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-four-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-four-test-actions.json"
       ],
       "codepoints": 114,
       "utf16": 123
@@ -1328,6 +1382,31 @@
       ],
       "codepoints": 118,
       "utf16": 128
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust/📋️project.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-node-key-routes-actions.json"
+      ],
+      "codepoints": 148,
+      "utf16": 160
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust/📜️script.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-node-key-route-path-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-node-key-routes-actions.json"
+      ],
+      "codepoints": 145,
+      "utf16": 157
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-four-actions.json"
+      ],
+      "codepoints": 132,
+      "utf16": 143
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🔣️.json",
@@ -1581,6 +1660,7 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
       "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-replica-handoff-actions.json",
         ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️reader-endpoints.json"
       ],
       "codepoints": 116,
@@ -2029,6 +2109,432 @@
       ],
       "codepoints": 119,
       "utf16": 127
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/README.md",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 84,
+      "utf16": 89
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 113,
+      "utf16": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🔮️oracles/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 92,
+      "utf16": 99
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-module-ancestry-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-placement-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-placement-scanner-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-resolution-actions.json"
+      ],
+      "codepoints": 80,
+      "utf16": 86
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/📐️test-layout/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-layout-output-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-module-ancestry-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-placement-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 102,
+      "utf16": 110
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🚷️discovery-boundaries/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 111,
+      "utf16": 119
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️fault-notices-gate/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 109,
+      "utf16": 117
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️mutation-caps/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 104,
+      "utf16": 112
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️mutation-history-gates/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 113,
+      "utf16": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️mutation-input-declarations/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 118,
+      "utf16": 126
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️mutation-payload-parity/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 114,
+      "utf16": 122
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️test-platform/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 104,
+      "utf16": 112
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/⚖️phase-output-drain/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 122,
+      "utf16": 130
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🌐️html-source-pair/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 120,
+      "utf16": 129
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/📐️test-layout/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-module-ancestry-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-payload-correction-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 115,
+      "utf16": 124
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/📡️protocol-vector.txt",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 115,
+      "utf16": 123
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🚷️discovery-boundaries/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 124,
+      "utf16": 133
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️fault-notices-gate/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-payload-correction-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 122,
+      "utf16": 131
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️mutation-caps/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 117,
+      "utf16": 126
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️mutation-input-declarations/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 131,
+      "utf16": 140
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️mutation-labels/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 119,
+      "utf16": 128
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️mutation-payload-parity/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 127,
+      "utf16": 136
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧬️mutation-fixtures/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-payload-correction-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 121,
+      "utf16": 130
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧬️schema-invariants/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-payload-correction-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 121,
+      "utf16": 130
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧭️contribution-directory-ownership/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 136,
+      "utf16": 145
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧭️fixture-resolution/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-payload-correction-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 122,
+      "utf16": 131
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧱️command-composition-source/🐍️.py",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 128,
+      "utf16": 137
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧱️command-composition-source/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-payload-correction-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 130,
+      "utf16": 139
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧾️artifact-root-source/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 124,
+      "utf16": 133
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧬️mutation-fixtures/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 108,
+      "utf16": 116
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧬️schema-invariants/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 108,
+      "utf16": 116
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧭️fixture-resolution/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-resolution-test-actions.json"
+      ],
+      "codepoints": 109,
+      "utf16": 117
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧱️command-composition-source/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 117,
+      "utf16": 125
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧾️artifact-root-source/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 111,
+      "utf16": 119
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/⚖️phase-output-drain/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 114,
+      "utf16": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🌐️html-source-pair/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 112,
+      "utf16": 120
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/📐️test-layout/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-layout-rust-input-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-placement-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 107,
+      "utf16": 115
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/📡️protocol-vector.txt",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 107,
+      "utf16": 114
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🚷️discovery-boundaries/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 116,
+      "utf16": 124
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧫️fault-notices-gate/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 114,
+      "utf16": 122
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧫️mutation-caps/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 109,
+      "utf16": 117
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧫️mutation-input-declarations/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 123,
+      "utf16": 131
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧫️mutation-labels/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 111,
+      "utf16": 119
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧫️mutation-payload-parity/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 119,
+      "utf16": 127
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧬️mutation-fixtures/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 113,
+      "utf16": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧬️schema-invariants/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 113,
+      "utf16": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧭️contribution-directory-ownership/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 128,
+      "utf16": 136
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧭️fixture-resolution/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-resolution-test-actions.json"
+      ],
+      "codepoints": 114,
+      "utf16": 122
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧱️command-composition-source/🐍️.py",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 120,
+      "utf16": 128
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧱️command-composition-source/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 122,
+      "utf16": 130
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧾️artifact-root-source/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json"
+      ],
+      "codepoints": 116,
+      "utf16": 124
     }
   ],
   "retainedLedgerInputs": [
@@ -2044,6 +2550,18 @@
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️law-routes-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️mesh-law-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-layout-output-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-layout-rust-input-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-module-ancestry-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-module-ancestry-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-placement-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-placement-scanner-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-placement-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-payload-correction-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-platform-placement-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-replica-handoff-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-resolution-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct13-root-resolution-test-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️pdf-cancel-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️plugin-target-correction.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️reader-endpoints.json",
@@ -2160,6 +2678,8 @@
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-producer-schema-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-producer-test-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-selection-parser-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-node-key-route-path-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-node-key-routes-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-collection-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-collection-test-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-core-actions.json",
@@ -2199,6 +2719,8 @@
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-six-trial-grant-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-boundary22-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-boundary22-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-four-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-four-test-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-watcher-current-types-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-workspace-policy-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-workspace-policy-test-actions.json",
@@ -3517,5 +4039,6 @@
       "sha256": "d5fd5441d042258c218a3dae68b6aa8c3d404081f1435afdb1010e5723edd8ab"
     }
   ],
-  "wholeFileExclusivityClaim": false
+  "wholeFileExclusivityClaim": false,
+  "exclusive": false
 }

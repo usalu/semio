@@ -16,7 +16,7 @@ import { clearContributionCache, isTestOraclePath, scanDeclaredDependencies } fr
 import { isBlockingBreach } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../../📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import { oracleHostPython, provisionPythonInterpreter, pythonSiteDirectories } from "../../🖥️host/🏗️materialization/🟦️.ts";
-import oracleDirectoryCases from "../../🧫️fixtures/🧭️contribution-directory-ownership/🔣️.json";
+import oracleDirectoryCases from "../🧫️fixtures/🧭️contribution-directory-ownership/🔣️.json";
 import protocolSchema from "../../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json";
 
 /** 🧭️ Repo-relative, forward-slashed path — the shape every discovered record carries. */
@@ -328,7 +328,7 @@ describe("🧹️ clean safety", () => {
   }, 60_000);
 
   test("no tracked fixture, source file or compose path is ever a clean candidate", () => {
-    const sentinelFixture = join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/📡️protocol-vector.txt");
+    const sentinelFixture = join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/📡️protocol-vector.txt");
     const before = readFileSync(sentinelFixture, "utf8");
     const report = cleanTestOutputs(repoRoot, { dry: true });
     for (const row of report.removals) {

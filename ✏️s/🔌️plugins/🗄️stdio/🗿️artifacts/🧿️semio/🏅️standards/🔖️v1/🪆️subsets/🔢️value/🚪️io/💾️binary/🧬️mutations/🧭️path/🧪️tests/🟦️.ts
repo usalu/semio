@@ -1,7 +1,7 @@
 /** 🧪️ Neutral binary path frames match an independent protobuf varint/UTF-8 writer. */
 import {test,expect} from "bun:test";
 import protobuf from "protobufjs/minimal";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import {encodeSemioValuePath,decodeSemioValuePath} from "../🟦️.ts";
 import type {SemioValuePath} from "../../../../../🧬️schema/🧬️mutations/🟦️.ts";
 

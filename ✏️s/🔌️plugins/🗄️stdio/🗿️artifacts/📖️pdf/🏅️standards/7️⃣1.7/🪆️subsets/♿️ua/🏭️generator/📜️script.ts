@@ -43,7 +43,7 @@ import { currentPlatform } from "../../../../../../../../../../🧰️framework/
 const HERE = import.meta.dir;
 const ENGINE_DIR = join(HERE, "🔁️codec", "📦️packages", "🦀️rust");
 const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate");
-const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
+const FIXTURES_DIR = join(HERE, "..", "🧪️tests/🧫️fixtures");
 const SUBSET = "ua";
 const ORACLE_ID = "lopdf-pdf-1-7-ua-mutate-reader";
 const COMPARISON_PROFILE = "semantic-pdf-conformance-ua-v1";

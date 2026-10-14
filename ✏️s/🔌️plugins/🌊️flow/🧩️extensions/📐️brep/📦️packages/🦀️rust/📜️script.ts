@@ -1,13 +1,14 @@
 #!/usr/bin/env bun
+import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { join } from "node:path";
-import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️laws/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 📦️ Extension package router: `bun ./📜️script.ts <test|package>`. */
 import { brepExtensionRetirementOracle, geometryInferenceOracle, channelIdentityOracle } from "../../🧪️tests/🔬️extension-guest-standalone/🟦️.ts";
-import { runRepositoryCargoTests, runRepositoryExactCargoLaws, runBun, runExtensionComponentPackage } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { runRepositoryCargoTests, runRepositoryExactCargoLaws, runBun, runExtensionComponentPackage, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -29,7 +30,7 @@ class MeshOracleScript extends BundleScript {
 class PackageScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("package writes the Nx-owned deliverable and accepts no output override");
-    await runExtensionComponentPackage({ componentDir: join(import.meta.dir, "../../🧩️component/📦️packages/🦀️rust"), repoRoot: this.repoRoot });
+    await runExtensionComponentPackage({ control: scriptCompilerAdmissionControlV1(this.invocation, "component:package", 0), componentDir: join(import.meta.dir, "../../🧩️component/📦️packages/🦀️rust"), repoRoot: this.repoRoot });
   }
 }
 
@@ -40,7 +41,7 @@ class CanonicalArchitectureScript extends BundleScript {
     console.log(`geometry-inference-oracle cases=${geometryInferenceOracle(import.meta.dir)}`);
     console.log(`channel-identity-oracle cases=${channelIdentityOracle(import.meta.dir)}`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3600000), lawMilliseconds: 600000 }, cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" }, nativeEnv: { RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-s-plugin-flow-brep", target: { kind: "lib" }, laws: [
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3600000), lawMilliseconds: 600000 }, cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" }, nativeEnv: { RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-s-plugin-flow-brep", target: { kind: "lib" }, laws: [
         "bundle_identity_matches_catalogue_fixture",
         "extension_guest_retires_actual_session_geometry_and_inflight_tessellation",
         "extension_bundle_extends_flow_and_evaluates_box",

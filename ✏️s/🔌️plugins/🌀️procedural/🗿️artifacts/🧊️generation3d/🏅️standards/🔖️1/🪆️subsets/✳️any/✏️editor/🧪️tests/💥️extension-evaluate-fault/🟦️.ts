@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import extensionEvaluateFaultFixture from "../../🧫️fixtures/💥️extension-evaluate-fault.json";
+import extensionEvaluateFaultFixture from "../🧫️fixtures/💥️extension-evaluate-fault.json";
   // 💥️ The preview status a refused `evaluate` publishes, over the SAME fixture the guest law
   // `an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_install_clears_it` drives
   // (`🧊️generation3d/…/✏️editor/🧪️tests/🔬️unit/🦀️.rs`). The host never authors this object — it

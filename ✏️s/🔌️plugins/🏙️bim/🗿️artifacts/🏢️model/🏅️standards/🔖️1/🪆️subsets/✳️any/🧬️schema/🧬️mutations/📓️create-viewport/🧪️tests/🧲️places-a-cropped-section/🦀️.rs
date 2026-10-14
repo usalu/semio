@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "📓️create-viewport/🧲️places-a-cropped-section",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/📓️create-viewport/🧲️places-a-cropped-section/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/📓️create-viewport/🧲️places-a-cropped-section/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/📓️create-viewport/🧲️places-a-cropped-section/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/📓️create-viewport/🧲️places-a-cropped-section/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/📓️create-viewport/🧲️places-a-cropped-section/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📓️create-viewport/🧲️places-a-cropped-section/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📓️create-viewport/🧲️places-a-cropped-section/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📓️create-viewport/🧲️places-a-cropped-section/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📓️create-viewport/🧲️places-a-cropped-section/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📓️create-viewport/🧲️places-a-cropped-section/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

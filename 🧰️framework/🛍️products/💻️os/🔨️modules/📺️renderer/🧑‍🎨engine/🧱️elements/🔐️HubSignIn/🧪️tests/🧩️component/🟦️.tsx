@@ -12,7 +12,7 @@ import Ajv from "ajv";
 import equal from "fast-deep-equal";
 import { useState, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import fixture from "../../../../../../📇️directory/🧫️fixtures/🔐️sign-in/🔣️.json";
+import fixture from "../../../../../../📇️directory/🧪️tests/🧫️fixtures/🔐️sign-in/🔣️.json";
 import {
   HUB_AUTH_ERROR_SCHEMA_V1,
   HUB_CONNECTION_BOOK_MAX_ENTRIES,

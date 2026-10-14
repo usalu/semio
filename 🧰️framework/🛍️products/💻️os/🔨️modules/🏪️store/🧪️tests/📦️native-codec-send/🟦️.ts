@@ -8,7 +8,7 @@ import _ from "lodash";
 
 //#region 🧵️CodecSendOracle
 export function testNativeCodecSendFixture(): void {
-  const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", testSourceUrl.href), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🧫️fixtures/🔣️.json", testSourceUrl.href), "utf8"));
   const contract = JSON.parse(readFileSync(new URL("../../🧪️testing/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
   ajv.addSchema(contract);

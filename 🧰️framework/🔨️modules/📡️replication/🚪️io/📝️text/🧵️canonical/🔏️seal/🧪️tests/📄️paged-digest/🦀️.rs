@@ -35,8 +35,8 @@ fn framed_digest(id:&str,canonical:&[u8])->[u8;32]{
 
 #[test]
 fn paged_seal_digests_equal_the_one_event_seal_and_the_independent_framed_oracle(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
- let cases:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let cases:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for(index,row)in cases["cases"].as_array().unwrap().iter().enumerate(){
   let decode=||semio_framework_pack_json::from_json_str::<Edit<bool>>(&serde_json::to_string(&row["edit"]).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
   let(paged_length,paged_digest,paged_turns)=seal(decode(),true);

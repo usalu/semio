@@ -22,7 +22,7 @@ fn expected_facets(value: &serde_json::Value) -> Option<ActionArgNumberFacets> {
 
 #[test]
 fn every_descriptor_derives_the_number_facets_of_the_shared_corpus() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️number-facets/🔣️.json")).expect("number-facets fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️number-facets/🔣️.json")).expect("number-facets fixture");
     let cases = fixture["cases"].as_array().expect("cases");
     assert!(cases.len() >= 9, "the corpus covers dial, log slider, steppers, number field, vector, step/precision edges and non-numbers");
     for case in cases {
@@ -39,7 +39,7 @@ fn every_descriptor_derives_the_number_facets_of_the_shared_corpus() {
 
 #[test]
 fn every_facet_row_keeps_the_contract_number_range_and_detent_laws() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️number-facets/🔣️.json")).expect("number-facets fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️number-facets/🔣️.json")).expect("number-facets fixture");
     for case in fixture["cases"].as_array().expect("cases") {
         let name = case["name"].as_str().expect("case name");
         let Some(facets) = serde_json::from_value::<ActionArgDef>(case["def"].clone()).expect("descriptor").number_facets(Locale::En) else { continue };

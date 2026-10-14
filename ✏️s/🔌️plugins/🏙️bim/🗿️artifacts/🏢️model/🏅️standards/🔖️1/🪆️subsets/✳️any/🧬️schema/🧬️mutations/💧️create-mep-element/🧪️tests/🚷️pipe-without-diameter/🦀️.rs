@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "💧️create-mep-element/🚷️pipe-without-diameter",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/💧️create-mep-element/🚷️pipe-without-diameter/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/💧️create-mep-element/🚷️pipe-without-diameter/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/💧️create-mep-element/🚷️pipe-without-diameter/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/💧️create-mep-element/🚷️pipe-without-diameter/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/💧️create-mep-element/🚷️pipe-without-diameter/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💧️create-mep-element/🚷️pipe-without-diameter/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💧️create-mep-element/🚷️pipe-without-diameter/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💧️create-mep-element/🚷️pipe-without-diameter/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💧️create-mep-element/🚷️pipe-without-diameter/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💧️create-mep-element/🚷️pipe-without-diameter/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

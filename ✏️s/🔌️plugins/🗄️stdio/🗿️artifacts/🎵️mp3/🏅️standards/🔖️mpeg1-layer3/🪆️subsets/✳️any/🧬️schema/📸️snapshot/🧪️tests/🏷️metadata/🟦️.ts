@@ -1,5 +1,5 @@
 import {expect,test} from "bun:test";
-import fixture from "../../../../🧫️fixtures/🏷️metadata.json";
+import fixture from "../../../../🧪️tests/🧫️fixtures/🏷️metadata.json";
 import {parseId3v1Tag,parseId3v2Tag} from "../../🟦️.ts";
 test("MP3 neutral metadata is semantic rather than native representation",async()=>{
  const rust=await Bun.file(new URL("../../🏷️metadata/🦀️.rs",import.meta.url)).text();

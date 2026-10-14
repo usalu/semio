@@ -1,0 +1,18 @@
+{
+  "CreateEdge": {
+    "id": {
+      "value": "e1"
+    },
+    "source": {
+      "value": "a"
+    },
+    "target": {
+      "value": "b"
+    },
+    "kind": "data",
+    "label": "A to B",
+    "source_port": null,
+    "target_port": null,
+    "properties": []
+  }
+}

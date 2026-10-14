@@ -1,0 +1,47 @@
+{
+  "cases": [
+    {
+      "path": "owner/🧫️fixtures",
+      "outside": true
+    },
+    {
+      "path": "owner/🧪️tests/🧫️fixtures",
+      "outside": false
+    },
+    {
+      "path": "owner/🧪️tests/case/🧫️fixtures",
+      "outside": false
+    },
+    {
+      "path": "owner/🔨️modules/🧫️fixtures",
+      "outside": false
+    },
+    {
+      "path": "owner/🔨️modules/🧪️tests/🧫️fixtures",
+      "outside": true
+    },
+    {
+      "path": "owner/🔨️modules/🧫️fixtures/🧪️tests/🧫️fixtures",
+      "outside": false
+    },
+    {
+      "path": "owner/🧬️schema/🧫️fixtures",
+      "outside": true
+    },
+    {
+      "path": "owner/🧪️tests/🧫️fixtures/leaf",
+      "outside": false
+    }
+  ],
+  "physicalScopes": [
+    "🧰️framework",
+    "✏️s",
+    "🌎️hub",
+    "🎓️teaching",
+    "♻️mit-bestand",
+    "👴️leutwiler",
+    "🏢️semio-tech",
+    "🧪️tests",
+    "🧬️schema"
+  ]
+}

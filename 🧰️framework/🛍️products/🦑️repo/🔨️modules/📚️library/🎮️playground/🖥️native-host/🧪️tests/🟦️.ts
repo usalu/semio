@@ -1,15 +1,16 @@
 import assert from "node:assert/strict";
 import { readFileSync,lstatSync } from "node:fs";
 import { resolve } from "node:path";
+import {createRequire} from "node:module";
 import Ajv from "ajv";
 import * as toml from "@iarna/toml";
 import { admitPlaygroundNativeHostV1, parsePlaygroundNativeHostV1, nativeHostSourceFactsV1,nativeHostArtifactPathV1,declaredPlaygroundHostInputPathsV1 } from "../🟨️.mjs";
 
 /** 🖥 Checks an open owner producer inventory against independent JSON and TOML oracles. */
 export function nativeHostContractLaws(repoRoot:string):void {
-  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧫️fixtures/🔣️.json"),"utf8"));
+  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"./🧫️fixtures/🔣️.json"),"utf8"));
   const validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(resolve(import.meta.dir,"../🧬️schema/🔣️.json"),"utf8")));
-  const facts={package:fixture.owner.package,project:fixture.owner.project,binaries:[fixture.owner.binary],targets:["native-build","native-build-release"]};
+  const facts={package:fixture.owner.package,project:fixture.owner.project,binaries:[fixture.owner.binary],targets:["native-build"],modes:{"native-build":["prototype","release"]}};
   for (const row of fixture.cases) {
     if(row.input===null) {assert.equal(admitPlaygroundNativeHostV1(undefined,()=>{throw new Error("unselected owner read")}),undefined);continue;}
     const invoke=()=>admitPlaygroundNativeHostV1(row.input,()=>facts);
@@ -19,20 +20,22 @@ export function nativeHostContractLaws(repoRoot:string):void {
   const source=`nativeHost = { cratePath = "${fixture.owner.cratePath}", project = "${fixture.owner.project}", package = "${fixture.owner.package}", binary = "${fixture.owner.binary}", target = "${fixture.owner.target}" }`;
   assert.deepEqual(parsePlaygroundNativeHostV1(source),(toml.parse(source) as any).nativeHost);
   for(const invalid of [source+"\n"+source,source.replace('binary = "alpha-native"','binary = "alpha-native", binary = "other"'),source.replace('binary = "alpha-native"','unknown = "alpha-native"')]) assert.throws(()=>parsePlaygroundNativeHostV1(invalid));
-  for(const changed of [{...facts,targets:["native-build"]},{...facts,binaries:[]},{...facts,project:"foreign"}]) assert.throws(()=>admitPlaygroundNativeHostV1(fixture.owner,()=>changed));
-  const root=fixture.owner.cratePath, sources=new Map<string,string>([[`${root}/Cargo.toml`, '[package]\nname = "alpha-native"\n\n[[bin]]\nname = "alpha-native"\n'],[`${root}/📋️project.json`, JSON.stringify({root,name:fixture.owner.project,targets:{"native-build":{executor:"nx:run-commands",options:{cwd:root,command:"bun ./📜️script.ts build dev"}},"native-build-release":{executor:"nx:run-commands",options:{cwd:root,command:"bun ./📜️script.ts build release"}}}})],[`${root}/📜️script.ts`, "export {}"]]);
+  for(const changed of [{...facts,modes:{"native-build":["prototype"]}},{...facts,binaries:[]},{...facts,project:"foreign"}]) assert.throws(()=>admitPlaygroundNativeHostV1(fixture.owner,()=>changed));
+  const root=fixture.owner.cratePath, sources=new Map<string,string>([[`${root}/Cargo.toml`, '[package]\nname = "alpha-native"\n\n[[bin]]\nname = "alpha-native"\n'],[`${root}/📋️project.json`, JSON.stringify({root,name:fixture.owner.project,targets:{"native-build":{executor:"nx:run-commands",outputs:["{projectRoot}/dist/native-{options.env.SEMIO_BUILD_MODE}"],configurations:{prototype:{env:{SEMIO_BUILD_MODE:"prototype"}},release:{env:{SEMIO_BUILD_MODE:"release"}}},options:{cwd:root,command:"bun ./📜️script.ts build"}}}})],[`${root}/📜️script.ts`, "export {}"]]);
   const directories=new Set(root.split("/").map((_:string,index:number)=>root.split("/").slice(0,index+1).join("/")));
   const view={kind:(path:string)=>sources.has(path)?"file":directories.has(path)?"directory":null,readText:(path:string)=>sources.get(path)!};
-  assert.deepEqual(nativeHostSourceFactsV1(root,view),{...facts,outputs:{"native-build":undefined,"native-build-release":undefined}});
+  assert.deepEqual(nativeHostSourceFactsV1(root,view),{...facts,outputs:{"native-build":{prototype:["{projectRoot}/dist/native-prototype"],release:["{projectRoot}/dist/native-release"]}}});
   for(const bad of [`${root}/Cargo.toml`,root,"owners"]) assert.throws(()=>nativeHostSourceFactsV1(root,{...view,kind:(path:string)=>path===bad?"symlink":view.kind(path)}));
   assert.throws(()=>nativeHostSourceFactsV1(root,{...view,readText:(path:string)=>path.endsWith("📜️script.ts")?" ".repeat(1024*1024+1):view.readText(path)}));
   const actualRoot=repoRoot, actualHost={cratePath:"✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",project:"@semio-tech/s-gis-services-native",package:"semio-s-dev-gis-services",binary:"semio-s-gis-services-native",target:"native-build"};
   const actualView={kind:(path:string)=>{try {const stat=lstatSync(resolve(actualRoot,path));return stat.isSymbolicLink()?"symlink":stat.isDirectory()?"directory":stat.isFile()?"file":null;}catch{return null;}},readText:(path:string)=>readFileSync(resolve(actualRoot,path),"utf8")};
   assert.deepEqual(admitPlaygroundNativeHostV1(actualHost,(owner:string)=>nativeHostSourceFactsV1(owner,actualView)),actualHost);
   const actualFacts=nativeHostSourceFactsV1(actualHost.cratePath,actualView);
+  const getOutputs=createRequire(import.meta.url)("nx/src/tasks-runner/utils").getOutputs,project=JSON.parse(actualView.readText(`${actualHost.cratePath}/📋️project.json`));for(const row of fixture.modes){const outputs=getOutputs({[actualHost.project]:{data:project}},{project:actualHost.project,target:actualHost.target,configuration:row.mode},{});assert.deepEqual(outputs,[`${actualHost.cratePath}/${row.directory}`]);assert.equal(nativeHostArtifactPathV1(actualHost,row.mode,actualFacts,row.platform),`${outputs[0]}/${actualHost.binary}${row.suffix}`);}
+  const factsSchema=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧬️schema/🔣️.json"),"utf8"));factsSchema.$ref="#/$defs/NativeHostSourceFactsV1";assert(new Ajv({strict:true}).compile(factsSchema)(actualFacts));
   const actualMcpHost={...actualHost,binary:"semio-s-gis-services-mcp",target:"mcp-build"};
   assert.deepEqual(admitPlaygroundNativeHostV1(actualMcpHost,(owner:string)=>nativeHostSourceFactsV1(owner,actualView)),actualMcpHost);
-  assert.equal(nativeHostArtifactPathV1(actualMcpHost,"dev",actualFacts,"linux"),`${actualMcpHost.cratePath}/dist/mcp-dev/${actualMcpHost.binary}`);
+  assert.equal(nativeHostArtifactPathV1(actualMcpHost,"prototype",actualFacts,"linux"),`${actualMcpHost.cratePath}/dist/mcp-prototype/${actualMcpHost.binary}`);
   assert.equal(nativeHostArtifactPathV1(actualMcpHost,"release",actualFacts,"win32"),`${actualMcpHost.cratePath}/dist/mcp-release/${actualMcpHost.binary}.exe`);
   const manifest=`[[package.metadata.semio.playground]]\n${source}\nmcpHost = ${source.slice(source.indexOf("{"))}\n`;
   const parsed=toml.parse(manifest) as any;
@@ -41,8 +44,8 @@ export function nativeHostContractLaws(repoRoot:string):void {
   assert.deepEqual(declaredPlaygroundHostInputPathsV1(manifest,view),expectedInputs);
   assert.deepEqual(declaredPlaygroundHostInputPathsV1("[[package.metadata.semio.playground]]\nvariant = \"empty\"",{...view,readText:()=>{throw new Error("unselected host read");}}),[]);
   assert.throws(()=>declaredPlaygroundHostInputPathsV1(manifest,{...view,kind:(path:string)=>path.endsWith("📜️script.ts")?null:view.kind(path)}));
-  assert.equal(nativeHostArtifactPathV1(actualHost,"dev",actualFacts,"linux"),`${actualHost.cratePath}/dist/native-dev/${actualHost.binary}`);
+  assert.equal(nativeHostArtifactPathV1(actualHost,"prototype",actualFacts,"linux"),`${actualHost.cratePath}/dist/native-prototype/${actualHost.binary}`);
   assert.equal(nativeHostArtifactPathV1(actualHost,"release",actualFacts,"win32"),`${actualHost.cratePath}/dist/native-release/${actualHost.binary}.exe`);
-  for(const outputs of [[],["{workspaceRoot}/foreign"],["{projectRoot}/../foreign"],["{projectRoot}/dist/a","{projectRoot}/dist/b"]]) assert.throws(()=>nativeHostArtifactPathV1(actualHost,"dev",{...actualFacts,outputs:{"native-build":outputs}},"linux"));
+  for(const outputs of [[],["{workspaceRoot}/foreign"],["{projectRoot}/../foreign"],["{projectRoot}/dist/a","{projectRoot}/dist/b"]]) assert.throws(()=>nativeHostArtifactPathV1(actualHost,"prototype",{...actualFacts,outputs:{"native-build":{prototype:outputs,release:[]}}},"linux"));
   console.log(`native-host-contract: vectors=${fixture.cases.length} ajv=1 toml=1 absent-read=0 malformed=3 producer=3 source=5 actual=2 profiles=4 outputs=4 input-closure=3 passed`);
 }

@@ -43,7 +43,7 @@ fn rfc3339_projection_keeps_epoch_domain_data_and_rejects_invalid_calendar_dates
 
 #[semio_framework_async_macros::async_test]
 async fn authored_audit_record_projects_to_a_real_event_feed_scene() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("neutral EventFeed producer fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("neutral EventFeed producer fixture");
     let source = &fixture["source"];
     let mut program = sample_plugin();
     let mut audit = event(source["timestamp"].as_str().expect("timestamp"), source["success"].as_bool().expect("success"));

@@ -4,7 +4,7 @@ use crate::standards::v_ecma_376::subsets::base::io::sqlite::snapshot::tests::*;
 mod observed;
 #[test]
 fn sqlite_snapshot_xlsx_relational_owned_requests_match_actual_allocator() {
-    let plan: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/💰️backing/🔬️requests/🔣️.json")).unwrap();
+    let plan: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/💰️backing/🔬️requests/🔣️.json")).unwrap();
     assert_eq!(plan["phases"], serde_json::json!(["projectSnapshot", "reconstructSnapshot"]));
     let snapshot = fixture();
     let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();

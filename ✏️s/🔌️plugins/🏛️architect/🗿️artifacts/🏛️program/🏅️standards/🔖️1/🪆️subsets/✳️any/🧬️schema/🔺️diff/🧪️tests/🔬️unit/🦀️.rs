@@ -111,7 +111,7 @@ async fn apply_addresses_a_rejected_collection_delta_by_its_section() {
 #[test]
 fn architect_native_sparse_diff_preserves_declared_roles_and_exact_text() {
     use semio_framework_dsl_record::{parse_exact, print, JoinMode, ParseOptions};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔗️native-roles/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🔗️native-roles/🔣️.json")).unwrap();
     let delta: ProgramStakeholdersDelta = serde_json::from_value(fixture["delta"].clone()).unwrap();
     for value in [ProgramDiff::default(), ProgramDiff { stakeholders: Some(delta), ..Default::default() }] {
         let record = value.__dsl_to_record();

@@ -76,7 +76,7 @@ const RECIPES: readonly Recipe[] = [
 //#endregion 🧬️Contract
 
 //#region 🏭️Generate
-const FIXTURE_PATH_PREFIX = "../🧫️fixtures";
+const FIXTURE_PATH_PREFIX = "../🧪️tests/🧫️fixtures";
 
 function contentDigest(bytes: Buffer): string {
   return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
@@ -90,9 +90,9 @@ function platformId(): string {
 
 function fixtureRoot(recipe: Recipe, override: string | null): string {
   if (override !== null) return override;
-  if (recipe.subset === "hdrl") return join(import.meta.dir, "..", "🧫️fixtures");
-  if (recipe.subset === "idx1") return join(import.meta.dir, "..", "..", "📇️idx1", "🧫️fixtures");
-  return join(import.meta.dir, "..", "..", "🎞️movi", "🧫️fixtures");
+  if (recipe.subset === "hdrl") return join(import.meta.dir, "..", "🧪️tests/🧫️fixtures");
+  if (recipe.subset === "idx1") return join(import.meta.dir, "..", "..", "📇️idx1", "🧪️tests/🧫️fixtures");
+  return join(import.meta.dir, "..", "..", "🎞️movi", "🧪️tests/🧫️fixtures");
 }
 
 /** 🦀️ Shells out to the standalone `riff-avi-codec` binary — the ONLY place this file touches it. */

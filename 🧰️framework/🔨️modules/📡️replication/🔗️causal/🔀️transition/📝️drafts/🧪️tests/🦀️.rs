@@ -33,7 +33,7 @@ fn close(owner:(HistoryInputDrafts,Vec<(MutationId,InputReplacement)>),held:usiz
 }
 #[test]
 fn history_drafts_preserve_original_replaced_input_rows_and_every_arena_on_cancel() {
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for copy in law["copyGrants"].as_array().unwrap(){for cancel in law["cancelAt"].as_array().unwrap(){
         let(owner,heap)=observe_heap_allocations_on_this_thread(||original(&law));let mut owner=owner;let held=heap.requested_bytes-heap.released_bytes;
         let expected=law["expectedOrder"].as_array().unwrap().iter().map(|id|id.as_str().unwrap()).collect::<Vec<_>>();assert_eq!(owner.keys().map(|id|id.0.as_str()).collect::<Vec<_>>(),expected);

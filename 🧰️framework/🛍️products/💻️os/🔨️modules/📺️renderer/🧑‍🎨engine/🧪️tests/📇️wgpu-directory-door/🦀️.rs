@@ -22,7 +22,7 @@ fn a_get_request_carries_the_op_verb_url_and_no_body() {
 
 #[test]
 fn every_directory_hop_carries_the_neutral_bounded_deadline() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⏳️wgpu-directory-http-deadline/🔣️.json")).expect("fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⏳️wgpu-directory-http-deadline/🔣️.json")).expect("fixture");
     let encoded = encode_directory_door_request(HttpMethod::Get, fixture["request"]["url"].as_str().expect("url"), None, None).expect("encodes");
     let request: serde_json::Value = serde_json::from_str(&encoded).expect("request");
     assert_eq!(request["timeoutMs"], fixture["timeoutMs"]);

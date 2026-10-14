@@ -2,7 +2,7 @@ use super::*;
 use crate::os_vcs::ArtifactGroupVisibilityOwner;
 #[semio_framework_async_macros::async_test]
 async fn composition_group_siblings_commit_without_post_flip_allocation_or_stale_tokens() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let mut graph=CompositionGraph::new().await;
     let rows=fixture["siblings"]["additions"].as_array().unwrap();
     let mut owner=ArtifactGroupVisibilityOwner::new();let visibility=owner.view();
@@ -69,7 +69,7 @@ fn prepare_edge(graph: &CompositionGraph, preparation: &mut GroupOwnsPreparation
 
 #[semio_framework_async_macros::async_test]
 async fn composition_group_sorted_root_is_atomic_and_every_owner_retirement_is_physically_funded() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let mut graph = CompositionGraph::new().await;
     graph.insert_owns("prior", "old", "before").await.unwrap();
     let before_generation = graph.owns_generation;
@@ -113,7 +113,7 @@ async fn composition_group_sorted_root_is_atomic_and_every_owner_retirement_is_p
 
 #[semio_framework_async_macros::async_test]
 async fn composition_group_cycle_hops_and_cancellation_preserve_original_forest() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let mut graph = CompositionGraph::new().await;
     for row in fixture["cycle"]["initial"].as_array().unwrap() { graph.insert_owns(row[0].as_str().unwrap(), row[1].as_str().unwrap(), row[2].as_str().unwrap()).await.unwrap(); }
     let mut owner = ArtifactGroupVisibilityOwner::new(); let visibility = owner.view();
@@ -183,7 +183,7 @@ async fn composition_group_weak_authority_remains_external_without_false_frame_r
 
 #[semio_framework_async_macros::async_test]
 async fn composition_group_empty_additions_preserve_original_root_with_exact_backing_grant() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let row=&fixture["emptyAdditionRoot"]["original"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let row=&fixture["emptyAdditionRoot"]["original"];
     let mut graph=CompositionGraph::new().await;graph.insert_owns(row[0].as_str().unwrap(),row[1].as_str().unwrap(),row[2].as_str().unwrap()).await.unwrap();
     let mut owner=ArtifactGroupVisibilityOwner::new();let visibility=owner.view();let mut preparation=graph.begin_owns_group(&visibility,0).unwrap();
     for _ in 0..10000{if seal_root(&graph,&mut preparation).unwrap()==GroupOwnsStep::RootPrepared{break;}}

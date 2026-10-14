@@ -1,5 +1,5 @@
 /** 🔬️ Canonical accessibilityProjectionSelfTests: the TypeScript half of the shared accessibility
- * projection laws, answering the very same `🧫️fixtures/♿️accessibility-projection.json` rows the Rust
+ * projection laws, answering the very same `🧪️tests/🧫️fixtures/♿️accessibility-projection.json` rows the Rust
  * `🔬️accessibility-unit` laws answer through `accessibility_role`/`accessibility_projection_node`.
  * Two independent implementations, one fixture — which is what makes "the wgpu renderer announces the
  * same tree React does" a law rather than a claim. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END. */
@@ -40,7 +40,7 @@ type ToggleCase = { readonly id: string; readonly component: Component; readonly
 
 /** ♿️ Answers every shared fixture row, returning how many assertions the corpus carried. */
 export function accessibilityProjectionSelfTests(): number {
-  const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("../../🧫️fixtures/♿️accessibility-projection.json", import.meta.url)), "utf8")) as Fixture;
+  const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("../🧫️fixtures/♿️accessibility-projection.json", import.meta.url)), "utf8")) as Fixture;
   let checks = 0;
   const components = new Set<string>();
   for (const row of fixture.roles) {
@@ -51,7 +51,7 @@ export function accessibilityProjectionSelfTests(): number {
   }
   assert.equal(components.size, 19, "the fixture covers every one of the contract's 19 components");
 
-  const toggles = JSON.parse(readFileSync(fileURLToPath(new URL("../../🧫️fixtures/♿️retained-toggle-semantics/🔣️.json", import.meta.url)), "utf8")) as { readonly cases: readonly ToggleCase[] };
+  const toggles = JSON.parse(readFileSync(fileURLToPath(new URL("../🧫️fixtures/♿️retained-toggle-semantics/🔣️.json", import.meta.url)), "utf8")) as { readonly cases: readonly ToggleCase[] };
   for (const [index, row] of toggles.cases.entries()) {
     const record = {
       id: index,
@@ -126,7 +126,7 @@ export function accessibilityProjectionSelfTests(): number {
   assert(decorative, "the fixture declares a decorative node");
   assert.equal(decorative.role, "img", "a hidden node still carries the role it would have had, rather than vanishing");
   checks += 2;
-  const progress = JSON.parse(readFileSync(fileURLToPath(new URL("../../🧫️fixtures/📶️progress.json", import.meta.url)), "utf8")) as { readonly cases: readonly ProgressCase[] };
+  const progress = JSON.parse(readFileSync(fileURLToPath(new URL("../🧫️fixtures/📶️progress.json", import.meta.url)), "utf8")) as { readonly cases: readonly ProgressCase[] };
   for (const row of progress.cases) {
     assert.equal(uiAccessibilityRoleV1(row.component, false), row.accessibility.role, `${row.id}: role`);
     assert.equal(uiAccessibilityIsFocusableV1(row.component, false), row.accessibility.focusable, `${row.id}: focusable`);

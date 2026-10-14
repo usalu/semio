@@ -145,6 +145,7 @@ crate-type = ["cdylib"]
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-pack = { path = "../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-hub-stdio-semio = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-plugin = { workspace = true }
 

@@ -1,0 +1,14 @@
+{
+  "$comment": "↔️ One panel resize vocabulary shared by React Panel.resizeSides/deltaFactor and WGPU render_panel_step. Width is measured in the shared compact UI spacing token. Native suffixes preserve the retained drag sign: inner is negative, outer positive.",
+  "widthUiSpacing": 1,
+  "cases": [
+    { "anchor": "top-left", "handles": [{ "edge": "right", "deltaFactor": 1, "nativeSuffix": "outer" }] },
+    { "anchor": "top-middle", "handles": [{ "edge": "left", "deltaFactor": -2, "nativeSuffix": "inner" }, { "edge": "right", "deltaFactor": 2, "nativeSuffix": "outer" }] },
+    { "anchor": "top-right", "handles": [{ "edge": "left", "deltaFactor": -1, "nativeSuffix": "inner" }] },
+    { "anchor": "right-middle", "handles": [{ "edge": "left", "deltaFactor": -1, "nativeSuffix": "inner" }] },
+    { "anchor": "bottom-right", "handles": [{ "edge": "left", "deltaFactor": -1, "nativeSuffix": "inner" }] },
+    { "anchor": "bottom-middle", "handles": [{ "edge": "left", "deltaFactor": -2, "nativeSuffix": "inner" }, { "edge": "right", "deltaFactor": 2, "nativeSuffix": "outer" }] },
+    { "anchor": "bottom-left", "handles": [{ "edge": "right", "deltaFactor": 1, "nativeSuffix": "outer" }] },
+    { "anchor": "left-middle", "handles": [{ "edge": "right", "deltaFactor": 1, "nativeSuffix": "outer" }] }
+  ]
+}

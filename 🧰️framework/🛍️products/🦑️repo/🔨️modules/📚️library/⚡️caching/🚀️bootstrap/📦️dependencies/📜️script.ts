@@ -1,12 +1,16 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {parseCargoPreparationStorageV1,type CargoPreparationStorageV1} from "../../../🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { Script, ScriptRouter, checkScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import {repositoryCargoPreparationStorageV1, prepareCargoWorkspaceInvocation } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
+import { Script, ScriptRouter, checkScriptInvocation,type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {runOwnedCommand} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {type NativeCallerPhaseV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import { prepareCargoWorkspaceInvocation,cargoWorkspacePreparationInvocationV1 } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
+import {repositoryCargoPreparationStorageV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { publishBunWorkspaceOwnership } from "../../../🗂️workspaces/🟦️bun/🟦️.ts";
+import {cargoPreparationControlV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import {withPreparedCargoDependencyPairV1} from "../../../🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts";
 import {fileURLToPath} from "node:url";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
@@ -51,8 +55,28 @@ async function executeTool(command:string,args:string[],cwd:string,signal:AbortS
 }
 
 /** 🦀️ Executes only the owned prepared dependency pair without a public preparation bypass. */
-export async function runPreparedCargoDependencyPairV1(root:string,manifest:string,signal:AbortSignal,storage:CargoPreparationStorageV1,runner?:(command:string,args:string[],cwd:string,signal:AbortSignal,capture:boolean|"ignore",environment:NodeJS.ProcessEnv,storage:CargoPreparationStorageV1)=>Promise<string>):Promise<void> {
- await withPreparedCargoDependencyPairV1(storage,root,manifest,signal,async(args,cwd,signal)=>{if(runner)await runner("cargo",args,cwd,signal,false,process.env,storage);else await executeTool("cargo",args,cwd,signal,false,process.env);},[fileURLToPath(import.meta.url),fileURLToPath(new URL("./🏗️native/📜️script.ts",import.meta.url))]);
+export async function runPreparedCargoDependencyPairV1(root:string,manifest:string,invocation:ScriptInvocation,storage:CargoPreparationStorageV1,runner:NativeDependencyToolRunnerV1,phase:NativeCallerPhaseV1):Promise<void> {
+ checkScriptInvocation(invocation);if(phase.leaseControl.signal!==invocation.control.signal||phase.authority.original!==invocation.capabilities)throw Error("Original native pair control required");await phase.advance("cargo:prepared-pair");
+ const execute=runner===runNativeDependencyToolV1?runBoundedNativeDependencyToolV1:runner;
+ await withPreparedCargoDependencyPairV1(storage,root,manifest,phase.leaseControl,async(args,cwd,signal)=>{await phase.advance("cargo:"+args[0]);await execute("cargo",args,cwd,signal,false,process.env,storage,phase);phase.budget();},async(cwd,signal)=>{await phase.advance("cargo:identity");const result=await execute("cargo",["--version"],cwd,signal,true,process.env,storage,phase);phase.budget();return result;},cargoPreparationControlV1(phase),[fileURLToPath(import.meta.url),fileURLToPath(new URL("./🏗️native/📜️script.ts",import.meta.url))]);
+}
+
+/** 🔌️ Receives the original native phase for each actual bounded dependency tool. */
+export type NativeDependencyToolRunnerV1=(command:string,args:string[],cwd:string,signal:AbortSignal,capture:boolean|"ignore",environment:Readonly<Record<string,string|undefined>>,storage:CargoPreparationStorageV1,phase:NativeCallerPhaseV1)=>Promise<string>;
+/** 🏃️ Runs native dependency children with the exact incoming signal and independent declared transport. */
+export async function runNativeDependencyToolV1(command:string,args:string[],cwd:string,signal:AbortSignal,capture:boolean|"ignore",environment:Readonly<Record<string,string|undefined>>,storage:CargoPreparationStorageV1,phase:NativeCallerPhaseV1):Promise<string>{
+ if(signal!==phase.leaseControl.signal)throw Error("Original native tool signal required");phase.budget();parseCargoPreparationStorageV1(storage);
+ const preparation=command==="cargo"?cargoWorkspacePreparationInvocationV1(storage,phase.authority.repositoryRoot,args,cwd,environment):undefined;
+ if(preparation)await runBoundedNativeDependencyToolV1(preparation.command,[...preparation.args],preparation.cwd,signal,false,preparation.environment,storage,phase);
+ return runBoundedNativeDependencyToolV1(command,args,cwd,signal,capture,environment,storage,phase);
+}
+
+/** 🔗️ Executes already prepared dependency children inside their existing exclusive custody. */
+async function runBoundedNativeDependencyToolV1(command:string,args:string[],cwd:string,signal:AbortSignal,capture:boolean|"ignore",environment:Readonly<Record<string,string|undefined>>,storage:CargoPreparationStorageV1,phase:NativeCallerPhaseV1):Promise<string>{
+ if(signal!==phase.leaseControl.signal)throw Error("Original native tool signal required");phase.budget();parseCargoPreparationStorageV1(storage);
+ await phase.advance(command+":"+args[0]);let output="";
+ try{await runOwnedCommand(command,args,cwd,"native-dependencies:"+command,phase.budget(),{...phase.options(environment),stdout:capture===true?"stderr":capture==="ignore"?"ignore":"inherit",onLine:capture===true?line=>{output+=line+"\n";}:undefined});phase.budget();return output;}
+ catch(error){signal.throwIfAborted();throw error;}
 }
 
 /** 📦️ Runs the selected Bun runtime through the shared process owner. */
@@ -116,4 +140,5 @@ export class ContractCheckScript extends Script {
 
 if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(getWorkspaceRoot()).register("sync", SyncScript).register("lock", RefreshLockScript).register("contract-check", ContractCheckScript)).run(process.argv.slice(2), original));
 
-export {repositoryCargoPreparationStorageV1} from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
+
+export {repositoryCargoPreparationStorageV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";

@@ -17,7 +17,7 @@ import { pairContentDigest, sprFrames } from "../🧠️residency/🟦️.ts";
 type FixturePair = { name: string; kindId: string; documentId: string; streamHex: string; sprFrames: { kind: number; flags: number; rawLength: number | null; payloadLength: number }[]; contentDigest: string };
 type Fixture = { pairs: FixturePair[]; sameContent: string[][]; differentContent: string[][] };
 
-const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🪞️pair-content-v1/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/🪞️pair-content-v1/🔣️.json"), "utf8")) as Fixture;
 const pair = (name: string) => fixture.pairs.find((entry) => entry.name === name)!;
 const stream = (entry: FixturePair) => Buffer.from(entry.streamHex, "hex");
 

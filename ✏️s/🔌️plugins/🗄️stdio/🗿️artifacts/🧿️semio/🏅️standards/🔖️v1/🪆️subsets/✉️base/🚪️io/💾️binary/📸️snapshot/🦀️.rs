@@ -54,24 +54,24 @@ pub(crate) fn encode_semio_snapshot_binary(snap: &SemioSnapshot) -> Vec<u8> {
     out.push(subset_ordinal(&snap.subset));
     write_bytes_lp(&mut out, snap.schema.as_bytes());
     let payload = match &snap.subset {
-        SemioSubsetSnapshot::Brep(s) => <SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Mesh(s) => <SemioMeshSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Model(s) => <SemioModelSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Value(s) => <SemioValueSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Document(s) => <SemioDocumentSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Cad(s) => <SemioCadSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Drawing(s) => <SemioDrawingSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Image(s) => <SemioImageSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Video(s) => <SemioVideoSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Audio(s) => <SemioAudioSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Animation(s) => <SemioAnimationSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Presentation(s) => <SemioPresentationSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Flow(s) => <SemioFlowSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Text(s) => <SemioTextSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Table(s) => <SemioTableSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Graph(s) => <SemioGraphSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Object(s) => <SemioObjectSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Kit(s) => <SemioKitSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Brep(s) => <SemioBrepSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Mesh(s) => <SemioMeshSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Model(s) => <SemioModelSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Value(s) => <SemioValueSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Document(s) => <SemioDocumentSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Cad(s) => <SemioCadSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Drawing(s) => <SemioDrawingSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Image(s) => <SemioImageSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Video(s) => <SemioVideoSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Audio(s) => <SemioAudioSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Animation(s) => <SemioAnimationSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Presentation(s) => <SemioPresentationSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Flow(s) => <SemioFlowSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Text(s) => <SemioTextSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Table(s) => <SemioTableSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Graph(s) => <SemioGraphSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Object(s) => <SemioObjectSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Kit(s) => <SemioKitSnapshot as pack::snapshot::ArtifactPack>::encode_pack(s),
     };
     out.extend_from_slice(&payload);
     out
@@ -88,48 +88,51 @@ pub(crate) fn decode_semio_snapshot_binary(bytes: &[u8]) -> Result<SemioSnapshot
     let schema = String::from_utf8(read_bytes_lp(&mut reader)?).map_err(|e| e.to_string())?;
     let payload = reader.read_bytes(reader.remaining()).map_err(|e| e.to_string())?;
     let subset = match tag {
-        0 => SemioSubsetSnapshot::Brep(<SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        1 => SemioSubsetSnapshot::Mesh(<SemioMeshSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        2 => SemioSubsetSnapshot::Model(<SemioModelSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        3 => SemioSubsetSnapshot::Value(<SemioValueSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        4 => SemioSubsetSnapshot::Document(<SemioDocumentSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        5 => SemioSubsetSnapshot::Cad(<SemioCadSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        6 => SemioSubsetSnapshot::Drawing(<SemioDrawingSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        7 => SemioSubsetSnapshot::Image(<SemioImageSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        8 => SemioSubsetSnapshot::Video(<SemioVideoSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        9 => SemioSubsetSnapshot::Audio(<SemioAudioSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        10 => SemioSubsetSnapshot::Animation(<SemioAnimationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        11 => SemioSubsetSnapshot::Presentation(<SemioPresentationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        12 => SemioSubsetSnapshot::Flow(<SemioFlowSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        13 => SemioSubsetSnapshot::Text(<SemioTextSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        14 => SemioSubsetSnapshot::Table(<SemioTableSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        15 => SemioSubsetSnapshot::Graph(<SemioGraphSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        16 => SemioSubsetSnapshot::Object(<SemioObjectSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        17 => SemioSubsetSnapshot::Kit(<SemioKitSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        0 => SemioSubsetSnapshot::Brep(<SemioBrepSnapshot as pack::snapshot::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        1 => SemioSubsetSnapshot::Mesh(<SemioMeshSnapshot as pack::snapshot::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        2 => SemioSubsetSnapshot::Model(<SemioModelSnapshot as pack::snapshot::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        3 => SemioSubsetSnapshot::Value(<SemioValueSnapshot as pack::snapshot::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        4 => SemioSubsetSnapshot::Document(<SemioDocumentSnapshot as pack::snapshot::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        5 => SemioSubsetSnapshot::Cad(<SemioCadSnapshot as pack::snapshot::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        6 => SemioSubsetSnapshot::Drawing(<SemioDrawingSnapshot as pack::snapshot::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        7 => SemioSubsetSnapshot::Image(<SemioImageSnapshot as pack::snapshot::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        8 => SemioSubsetSnapshot::Video(<SemioVideoSnapshot as pack::snapshot::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        9 => SemioSubsetSnapshot::Audio(<SemioAudioSnapshot as pack::snapshot::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        10 => SemioSubsetSnapshot::Animation(<SemioAnimationSnapshot as pack::snapshot::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        11 => SemioSubsetSnapshot::Presentation(<SemioPresentationSnapshot as pack::snapshot::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        12 => SemioSubsetSnapshot::Flow(<SemioFlowSnapshot as pack::snapshot::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        13 => SemioSubsetSnapshot::Text(<SemioTextSnapshot as pack::snapshot::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        14 => SemioSubsetSnapshot::Table(<SemioTableSnapshot as pack::snapshot::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        15 => SemioSubsetSnapshot::Graph(<SemioGraphSnapshot as pack::snapshot::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        16 => SemioSubsetSnapshot::Object(<SemioObjectSnapshot as pack::snapshot::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        17 => SemioSubsetSnapshot::Kit(<SemioKitSnapshot as pack::snapshot::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
         other => return Err(format!("semio snapshot: unknown subset tag {other}")),
     };
     Ok(SemioSnapshot { schema, subset })
 }
 
-impl store::os_store::serialization::ArtifactPack for SemioSnapshot {
+impl pack::snapshot::ArtifactPack for SemioSnapshot {
     /// 🪶️ Publishes the owned typed relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec()) }
+    
 
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_semio_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+        if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let _ = options;
         decode_semio_snapshot_binary(&inner).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
     }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SemioSnapshot {
+fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec()) }
 }
 }
 
@@ -163,12 +166,12 @@ use crate::io::text::snapshot::*;
 /// each other on the two real committed artifacts instead of against itself.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_envelope_pack(bytes: &[u8]) -> Result<SemioSnapshot, String> {
-    <SemioSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
+    <SemioSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
 }
-/// 📤️ The `store::os_store::serialization::ArtifactPack::encode_pack` inverse of [`decode_semio_envelope_pack`].
+/// 📤️ The `pack::snapshot::ArtifactPack::encode_pack` inverse of [`decode_semio_envelope_pack`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_semio_envelope_pack(snapshot: &SemioSnapshot) -> Vec<u8> {
-    <SemioSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(snapshot)
+    <SemioSnapshot as pack::snapshot::ArtifactPack>::encode_pack(snapshot)
 }
 }
 pub use native_snapshot_codec::*;

@@ -1,5 +1,0 @@
-{
-  "mutation": "changeObjectAnchor",
-  "id": "object-a",
-  "newAnchor": "derived"
-}

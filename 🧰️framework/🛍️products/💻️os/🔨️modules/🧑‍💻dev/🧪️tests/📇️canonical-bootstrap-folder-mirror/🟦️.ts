@@ -1,5 +1,5 @@
-import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🧩️ Semantic canonical bootstrap verification owner. */
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
@@ -9,8 +9,8 @@ import { createHash } from "node:crypto";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import { decodeDocumentPackBytes, decodePackValue, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, encodeDocumentArchiveBytes, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
 
@@ -55,7 +55,7 @@ type CanonicalPairFrontierCaseV1 = {
 //#endregion 🧬️Contracts
 
 function canonicalBootstrapFolderMirrorFixtureRoot(repoRoot: string): string {
-  return join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/📇️folder/📣️canonical-bootstrap-folder-mirror-v1");
+  return join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/📇️folder/📣️canonical-bootstrap-folder-mirror-v1");
 }
 
 function canonicalBootstrapFolderMirrorReserve(corpus: CanonicalBootstrapFolderMirrorCorpusV1, aggregateSha256: string, documentId = corpus.documentId): CanonicalBootstrapFolderMirrorReserveV1 {
@@ -84,7 +84,7 @@ class CanonicalBootstrapFolderMirrorCheckScript extends BundleScript {
     if (!['source', 'process'].includes(phase) || segments.length !== 1) throw new Error("canonical-bootstrap-folder-mirror-check expects source|process");
     const fixtureRoot = canonicalBootstrapFolderMirrorFixtureRoot(this.repoRoot);
     const corpus = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as CanonicalBootstrapFolderMirrorCorpusV1;
-    const canonicalPairRoot = join(this.repoRoot, "🌎️hub", "🛰️lag-rebootstrap", "🧫️fixtures", "🪢️canonical-pair");
+    const canonicalPairRoot = join(this.repoRoot, "🌎️hub", "🛰️lag-rebootstrap", "🧪️tests/🧫️fixtures", "🪢️canonical-pair");
     const canonicalPairCorpus = JSON.parse(readFileSync(join(canonicalPairRoot, "🔣️.json"), "utf8")) as { selection: { documentId: string; baseline: Record<string, unknown> }; frontierCases: readonly CanonicalPairFrontierCaseV1[] };
     const lagModule = JSON.parse(readFileSync(join(this.repoRoot, "🌎️hub", "🛰️lag-rebootstrap", "🧬️schema", "🔣️.json"), "utf8")) as { $id: string };
     const { default: Ajv } = await import("ajv");

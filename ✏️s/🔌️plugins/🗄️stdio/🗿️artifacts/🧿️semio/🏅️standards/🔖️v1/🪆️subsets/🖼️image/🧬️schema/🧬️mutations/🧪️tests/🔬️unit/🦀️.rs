@@ -78,8 +78,8 @@ async fn inverse_law() {
 async fn codec_retention_law() {
     let mut snap = fixture();
     snap = semio_s_artifact_stdio_semio_base::applied(&snap, &SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Author".into(), value: "x".into(), at: None })).0;
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
-    let decoded = <SemioImageSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&snap);
+    let decoded = <SemioImageSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
 }
 //#endregion 🔖️CodecRetentionLaw

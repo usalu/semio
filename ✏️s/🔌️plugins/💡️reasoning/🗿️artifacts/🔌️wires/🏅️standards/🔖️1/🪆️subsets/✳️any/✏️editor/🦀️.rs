@@ -107,7 +107,7 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
 /// `🎮️commands/🧬️set-active-example::set_active_example` uses instead of a banned whole-snapshot mutation. The
 /// spr is a fresh, edit-free op-log — a genesis envelope with no history to encode.
 pub fn reset_wires_document_effect(document: &WiresSnapshot) -> Effect {
-    let pack = <WiresSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let pack = <WiresSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("reasoning-wires", crate::MINDMAP_WIRES_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
@@ -378,7 +378,8 @@ impl ArtifactCommandWork<EditorApp<ReasoningWiresPlayApp>> for WiresWindowDragWo
         (command.command_id() == self.tool_id).then(|| wires_retained_extent(command, snapshot, interaction)).flatten()
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<ReasoningWiresPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<ReasoningWiresPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<ReasoningWiresPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<ReasoningWiresPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed || self.visited >= WIRES_RETAINED_WORK_ITEMS {
             return Err(Fault::from("wires-window-drag-work-capacity"));
         }
@@ -472,6 +473,9 @@ impl ArtifactCommandWork<EditorApp<ReasoningWiresPlayApp>> for WiresWindowDragWo
             }
             _ => Err(Fault::from("wires-window-drag-route")),
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -639,6 +643,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

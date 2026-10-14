@@ -1,14 +1,17 @@
+import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {consumeOwnerArgumentsV1} from "../../../🔌️nx-plugin/📤️arguments/🟨️.mjs";
 import {nativeOwnerTestManifestRequestV1} from "./🗺️owner-test-manifests/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { BundleScript, scriptInvocationBudget } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { advanceScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import { BundleScript, scriptInvocationBudget } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { advanceScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readNativeOwnerCapabilities } from "./📥️invocation/🟦️.ts";
 import { CARGO_RELAY_BUDGET_ENV, cargoStreamingStatus, runCmdStatus } from "../../../🏃️process/🟦️.ts";
-import { repositoryProcessOwnerContextV1, repositoryVitestPolicyV1, repositoryCargoTestPolicyV1, repositoryWasmBuildPolicyV1 } from "../../../🟦️.ts";
-import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {repositoryProcessOwnerContextV1,repositoryVitestPolicyV1} from "../../../🏃️process/📋️context/🔣️policy/🟦️.ts";
+import {repositoryCargoTestPolicyV1} from "../../../🏃️process/🦀️cargo/🔣️policy/🟦️.ts";
+import {repositoryWasmBuildPolicyV1} from "../../../🏃️process/🕸️wasm/🔣️policy/🟦️.ts";
+import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { runRepositoryCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { repositoryCargoArtifactBuildPolicyV1, buildRepositoryCargoArtifacts } from "../🏗️native-build/🟦️.ts";
 import { artifactRustCargoArguments } from "../🎛️native-input/🟦️.ts";
@@ -16,11 +19,11 @@ import { artifactRustCargoArguments } from "../🎛️native-input/🟦️.ts";
 /** 🔐️ The owner policies a native or script owner's environment carries, exactly as the Nx owner commands author them: `process` (Vitest policy and process
  * owner context), `cargo` (the repository Cargo artifact policy) and `wasm` (the repository wasm-bindgen compiler policy). `buildDirectory` redirects both
  * compiler policies into a release generation's build directory. */
-export function ownerEnvironmentV1(cwd: string, policies: readonly ("process" | "cargo" | "wasm")[], buildDirectory?: string): Record<string, string> {
+export function ownerEnvironmentV1(cwd: string, policies: readonly ("process" | "cargo" | "wasm")[], buildDirectory?: string, childEnvironment: Readonly<Record<string,string|undefined>> = process.env): Record<string, string> {
   const environment: Record<string, string> = {};
   if (policies.includes("process")) Object.assign(environment, { SEMIO_VITEST_POLICY: JSON.stringify(repositoryVitestPolicyV1(cwd)), SEMIO_PROCESS_OWNER_CONTEXT: JSON.stringify(repositoryProcessOwnerContextV1(cwd)) });
-  if (policies.includes("cargo")) environment.SEMIO_CARGO_ARTIFACT_POLICY = JSON.stringify({ ...repositoryCargoArtifactBuildPolicyV1(cwd), ...(buildDirectory ? { buildDirectory } : {}) });
-  if (policies.includes("wasm")) environment.SEMIO_WASM_BUILD_POLICY = JSON.stringify({ ...repositoryWasmBuildPolicyV1(cwd), ...(buildDirectory ? { buildDirectory } : {}) });
+  if (policies.includes("cargo")) environment.SEMIO_CARGO_ARTIFACT_POLICY = JSON.stringify({ ...repositoryCargoArtifactBuildPolicyV1(cwd, undefined, childEnvironment), ...(buildDirectory ? { buildDirectory } : {}) });
+  if (policies.includes("wasm")) environment.SEMIO_WASM_BUILD_POLICY = JSON.stringify({ ...repositoryWasmBuildPolicyV1(cwd, childEnvironment), ...(buildDirectory ? { buildDirectory } : {}) });
   return environment;
 }
 
@@ -38,7 +41,7 @@ export class CargoRelayScript extends BundleScript {
   }
 }
 
-/** 🦀️ Routes native Cargo and component operations to their owned behaviors. */
+/** 🦀️ Routes native Cargo operations to their owned behaviors. */
 export class NativeScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const [tool, operation] = args;
@@ -72,19 +75,10 @@ export class NativeScript extends BundleScript {
       console.log("[cargo:locked-metadata] dependency lock validated");
       return;
     }
-    if (tool === "component") {
-      if (index !== 1 || args.length !== 3 || !manifest) throw new Error("native component --manifest <Cargo.toml>");
-      const metadata = (Bun.TOML.parse(readFileSync(resolve(this.repoRoot, manifest), "utf8")) as { package?: { metadata?: { component?: { package?: string } } } }).package?.metadata?.component?.package;
-      if (!metadata?.startsWith("semio:")) throw new Error(`Not a plugin component manifest: ${manifest}`);
-      const { buildComponentClosureV1 } = await import("../../../../../../💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts");
-      const outcome = await buildComponentClosureV1(this.repoRoot, new Set([metadata.slice("semio:".length)]), { signal: this.invocation.control.signal });
-      console.log(`[component] ${metadata}: built, described and materialized; report ${outcome.report}`);
-      return;
-    }
     if (tool !== "cargo" || (operation !== "build" && operation !== "check" && operation !== "test") || !manifest) throw new Error("native cargo build|check|test --manifest <Cargo.toml> [quick|long|exhaustive] [cargo argument…]");
     const { cargoArgs: extra, testLevel } = artifactRustCargoArguments(operation, args.slice(index + 2));
     if (operation === "build") {
-      await buildRepositoryCargoArtifacts(manifest, extra, this.repoRoot);
+      await buildRepositoryCargoArtifacts(manifest, extra, this.repoRoot, { control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0) });
       return;
     }
     const status = runCmdStatus("cargo", [operation, "--locked", "--manifest-path", resolve(this.repoRoot, manifest), ...extra], { cwd: this.repoRoot, ...(testLevel ? { env: { ...process.env, SEMIO_TEST_LEVEL: testLevel } } : {}) });

@@ -13,7 +13,7 @@ fn demo_host_snapshot() -> FlowHostSnapshot {
 }
 
 fn demo_text(host: &FlowHostSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(host)
+    pack::snapshot::ArtifactDsl::print_dsl(host)
 }
 
 #[semio_framework_async_macros::async_test]
@@ -32,7 +32,7 @@ async fn demo_example_ships_the_laid_out_default_graph_as_its_content_genesis() 
     let snapshot = crate::examples::demo::snapshot_from_text(crate::examples::demo::PRIMARY_TEXT).expect("demo parses");
     let scene = snapshot.to_host_snapshot();
     let ids: Vec<&str> = scene.widgets.iter().map(crate::schema::widget_id).collect();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("neutral demo graph");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("neutral demo graph");
     assert_eq!(crate::FLOW_DOCUMENT_SCHEMA, fixture["parentSchema"].as_str().unwrap());
     assert_eq!(serde_json::to_value(&ids).expect("independent widget array"), fixture["widgetIds"]);
     assert_eq!(scene.synapses.len() as u64, fixture["synapseCount"].as_u64().unwrap());

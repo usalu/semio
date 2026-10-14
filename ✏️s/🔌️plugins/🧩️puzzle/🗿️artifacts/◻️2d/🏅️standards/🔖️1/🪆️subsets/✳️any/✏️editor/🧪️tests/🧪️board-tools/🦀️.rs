@@ -9,7 +9,7 @@ use crate::editor::puzzle2d::unit_tests::context::*;
 use semio_framework::kernel::HistoryEntry;
 use semio_framework_plugin::InvocationResult;
 
-const BOARD_TOOLS_CORPUS: &str = include_str!("../../🧫️fixtures/🧫️board-tools/🔣️.json");
+const BOARD_TOOLS_CORPUS: &str = include_str!("../🧫️fixtures/🧫️board-tools/🔣️.json");
 
 /// 🧫️ The corpus, its schema tag checked.
 fn corpus() -> Value {

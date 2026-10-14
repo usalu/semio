@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn preferences_match_independent_language_neutral_vectors() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/⚙️preferences/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/⚙️preferences/🔣️.json")).unwrap();
     assert_eq!(serde_json::to_value(Preferences::default()).unwrap(), vectors["defaults"]);
     for value in vectors["valid"].as_array().unwrap() { assert!(Change::parse(&value.to_string()).is_ok()); }
     for value in vectors["invalid"].as_array().unwrap() { assert!(Change::parse(&value.to_string()).is_err(), "{value}"); }
@@ -92,7 +92,7 @@ fn keymap_arguments_override_the_journal_and_reject_mistakes() {
 
 #[test]
 fn preferences_pre_select_only_the_launch_parameters_a_command_offers() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔎️launcher/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔎️launcher/🔣️.json")).unwrap();
     let facts: crate::registry::Facts = serde_json::from_value(fixture["workspace"].clone()).unwrap();
     let registry = crate::registry::Registry::build(Path::new("workspace"), &facts);
     let preferences = Preferences { language: "de".into(), renderer: "wgpu-wasm".into(), ..Default::default() };

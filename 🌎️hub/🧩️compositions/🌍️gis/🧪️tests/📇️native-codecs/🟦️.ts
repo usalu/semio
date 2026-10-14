@@ -1,9 +1,9 @@
-import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { runRepositoryExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { compileGisScopeExport } from "../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/🧰️schema/🟦️.ts";
 import { proveGisControlledProposal } from "../💡️inference-control/🟦️.ts";
 
@@ -16,7 +16,7 @@ export async function proveGisNativeCodecReceipts(repoRoot: string): Promise<voi
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validate = await compileGisScopeExport(repoRoot, GIS_SCHEMA_MODULE, "GisNativeCodecsReceipt");
   for (const receipt of fixture.receipts) if (!validate(receipt)) throw new Error(`invalid GIS codec receipt: ${JSON.stringify(validate.errors)}`);
-  const documentIdRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🌱️artifact-document-id-v1");
+  const documentIdRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🌱️artifact-document-id-v1");
   const documentIds = JSON.parse(readFileSync(join(documentIdRoot, "🔣️.json"), "utf8")) as { cases: ReadonlyArray<{ id: string; documentId: string; accepted: boolean }> };
   const registryModule = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json"), "utf8"));
   const { default: RegistryAjv } = await import("ajv");
@@ -43,7 +43,7 @@ export async function proveGisNativeCodecReceipts(repoRoot: string): Promise<voi
       : [[1, "exaggeration", false], [2, "importedFeaturesJson", false], [3, "mesh", true]];
     if (row.packRecord.keyword !== row.extension || JSON.stringify(row.packRecord.fields.map((field: any) => [field.id, field.key, field.optional])) !== JSON.stringify(fields)) throw new Error("GIS structural pack record mismatch");
   }
-  const hostileVectors = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📇️native-codecs/🔣️.json"), "utf8")) as { readonly hostile: readonly string[] };
+  const hostileVectors = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📇️native-codecs/🔣️.json"), "utf8")) as { readonly hostile: readonly string[] };
   const expected = new Map(fixture.receipts.map((row: any) => [row.factoryId, JSON.stringify(row)]));
   const admitted = (candidate: any): boolean => candidate.pluginId === "gis" && candidate.packageId === "semio:gis" && candidate.packageVersion === version && candidate.receipts.length === 2
     && new Set(candidate.receipts.map((row: any) => row.factoryId)).size === 2
@@ -72,7 +72,7 @@ export class NativeCodecCheckScript extends BundleScript {
     await proveGisNativeCodecReceipts(this.repoRoot);
     await proveGisControlledProposal(this.repoRoot);
     if (process.argv.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 60_000 }, cwd: this.root, groups: [{ package: "semio-hub-gis", target: { kind: "test", name: "native_codecs" }, laws: ["gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_factory_substitution", "gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline_trace"] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(this.repoRoot, process.env.SEMIO_TEST_ARTIFACT_DIR) : undefined, progress(event) { console.log(`gis-native-codecs ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`); } });
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 60_000 }, cwd: this.root, groups: [{ package: "semio-hub-gis", target: { kind: "test", name: "native_codecs" }, laws: ["gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_factory_substitution", "gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline_trace"] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(this.repoRoot, process.env.SEMIO_TEST_ARTIFACT_DIR) : undefined, progress(event) { console.log(`gis-native-codecs ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`); } });
     for (const receipt of receipts) console.log(`gis-native-codec-receipt: ${JSON.stringify(receipt)}`);
     console.log("gis-native-codec-check: exact=2 literal-codecs=2 controlled-proposal=1; no hub catalog activation or approved inference acceptance");
   }

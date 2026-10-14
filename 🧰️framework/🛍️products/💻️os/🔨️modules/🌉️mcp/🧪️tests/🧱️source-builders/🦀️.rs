@@ -31,7 +31,7 @@ use semio_framework_ui::wgpu::SurfaceKind;
 /// 🧱️ A schema-authored neutral package exercises retained catalog and inference discovery.
 pub fn catalog_contract_descriptor() -> (PackageDescriptor, Vec<u8>) {
     use semio_framework_value::ToValue;
-    let json = include_str!("../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/📦️catalog-package/🔣️.json");
+    let json = include_str!("../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/📦️catalog-package/🔣️.json");
     let descriptor: PackageDescriptor = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("catalog package contract");
     assert_eq!(descriptor, serde_json::from_str::<PackageDescriptor>(json).expect("independent catalog package parser"));
     let bytes = semio_framework_os_kernel::os_pack::pack_rt::encode_wire_value(&descriptor.to_value());

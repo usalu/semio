@@ -8,8 +8,8 @@ use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use std::collections::BTreeSet;
 
-const ROOM: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🪑️components/🏠️room/📸️snapshot/🔣️.json");
-const TABLE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🪑️components/🏠️room/💡️inference/🪑️components/🔣️.json");
+const ROOM: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪑️components/🏠️room/📸️snapshot/🔣️.json");
+const TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪑️components/🏠️room/💡️inference/🪑️components/🔣️.json");
 
 fn room() -> ModelSnapshot {
     from_json_str(ROOM, JsonMemberPolicy::Reject).expect("the room decodes")

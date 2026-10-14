@@ -221,7 +221,7 @@ async fn a_typed_point_on_the_world_and_the_section_surface_is_a_click_there_too
     assert!(step.refused.is_none(), "a section takes distance along the line and height");
 }
 
-const TYPED_CASES: &str = include_str!("../../../../../🧫️fixtures/🛠️gestures/🔣️.json");
+const TYPED_CASES: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🛠️gestures/🔣️.json");
 
 #[semio_framework_async_macros::async_test]
 async fn the_lines_the_third_party_oracle_resolved_resolve_to_the_same_points() {

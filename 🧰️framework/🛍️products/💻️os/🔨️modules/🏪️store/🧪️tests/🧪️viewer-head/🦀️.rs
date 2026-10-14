@@ -171,7 +171,7 @@ async fn the_viewer_head_corpus_matches_two_stores() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️viewer-head/🔣️.json")).expect("the corpus parses");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️viewer-head/🔣️.json")).expect("the corpus parses");
     for case in corpus["cases"].as_array().expect("cases") {
         let name = case["name"].as_str().expect("a case name");
         let initial = case["initial"]["n"].as_i64().map(|n| i32::try_from(n).expect("an i32"));
@@ -217,7 +217,7 @@ async fn a_content_revision_names_a_head_whatever_line_its_replica_stood_on() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️viewer-head/🔣️.json")).expect("the corpus parses");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️viewer-head/🔣️.json")).expect("the corpus parses");
     for case in corpus["cases"].as_array().expect("cases") {
         let name = case["name"].as_str().expect("a case name");
         let initial = case["initial"]["n"].as_i64().map(|n| i32::try_from(n).expect("an i32"));

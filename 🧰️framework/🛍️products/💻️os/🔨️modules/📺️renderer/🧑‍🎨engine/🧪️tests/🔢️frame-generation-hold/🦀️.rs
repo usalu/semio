@@ -50,7 +50,7 @@ struct HoldFixture {
 }
 
 fn fixture() -> HoldFixture {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔢️frame-generation-hold/🔣️.json")).expect("frame-generation-hold fixture JSON")
+    serde_json::from_str(include_str!("../🧫️fixtures/🔢️frame-generation-hold/🔣️.json")).expect("frame-generation-hold fixture JSON")
 }
 
 #[derive(Default)]

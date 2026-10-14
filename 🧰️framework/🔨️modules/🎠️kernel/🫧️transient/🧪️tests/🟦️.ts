@@ -17,7 +17,7 @@ interface Store {
   reset(): void;
 }
 type Provider = Readonly<{ create: () => Store; shared: Store; box: Store["box"]; map: Store["map"]; set: Store["set"]; weakMap: Store["weakMap"] }>;
-const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as { cases: readonly { id: string; expected: unknown }[] };
+const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as { cases: readonly { id: string; expected: unknown }[] };
 
 class ReferenceStore implements Store {
   private readonly boxes = new LRUCache<string, { current: unknown }>({ max: 128 });

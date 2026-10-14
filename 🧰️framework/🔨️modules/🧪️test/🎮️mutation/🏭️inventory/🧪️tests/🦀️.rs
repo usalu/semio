@@ -14,7 +14,7 @@ fn source(rows: &Value) -> Vec<MutationInventoryLeaf<'_>> {
         MutationInventoryLeaf { owner: row["owner"].as_str().unwrap(), id: row["id"].as_str().unwrap(), variant: row["variant"].as_str().unwrap(), outcomes, outcome_count: classes.len() }
     }).collect()
 }
-fn corpus() -> Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
+fn corpus() -> Value { serde_json::from_str(include_str!("./🧫️fixtures/🔣️.json")).unwrap() }
 fn coordinate(row: &Value) -> MutationInventoryCoordinate<'_> {
     MutationInventoryCoordinate { artifact: row["artifact"].as_str().unwrap(), standard: row["standard"].as_str().unwrap(), subset: row["subset"].as_str().unwrap(), surface: row["surface"].as_str(), owner: row["owner"].as_str().unwrap() }
 }

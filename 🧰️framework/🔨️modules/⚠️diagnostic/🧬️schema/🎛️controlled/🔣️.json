@@ -170,6 +170,9 @@
               "type": "null"
             }
           ]
+        },
+        "retainedProgress": {
+          "$ref": "#/$defs/RetainedProgress"
         }
       },
       "required": [
@@ -331,6 +334,9 @@
         },
         "retainedProgress": {
           "$ref": "#/$defs/RetainedProgress"
+        },
+        "source": {
+          "$ref": "#/$defs/FaultSource"
         }
       },
       "required": [
@@ -368,6 +374,28 @@
           "minimum": 0
         }
       }
+    },
+    "FaultSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "byte": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        }
+      },
+      "required": []
     }
   },
   "$ref": "#/$defs/Fault"

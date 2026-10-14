@@ -12,7 +12,7 @@ type Fixture = {
   readonly soaks: readonly { readonly name: string; readonly samples: readonly SoakSample[]; readonly expected: { readonly heapSlopeMBPerMin: number; readonly workersSlopeMBPerMin: number; readonly domGrowthRatio: number; readonly listenerGrowthRatio: number; readonly maxFramesPerSec: number; readonly violationKinds: readonly string[] } }[];
 };
 
-const fixture = JSON.parse(readFileSync(new URL("../../../🧫️fixtures/💤️idle-budget.json", import.meta.url), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/💤️idle-budget.json", import.meta.url), "utf8")) as Fixture;
 const KIND_OF_VIOLATION: readonly [RegExp, string][] = [[/^JS heap/u, "heap"], [/^worker heaps/u, "workers"], [/^DOM nodes/u, "dom"], [/^event listeners/u, "listeners"], [/frames\/s while idle$/u, "frames"]];
 
 describe("idle-budget reducers", () => {

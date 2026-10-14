@@ -1,0 +1,97 @@
+{
+  "grant": {
+    "items": 1,
+    "copyBytes": 2,
+    "capacityBytes": 65536,
+    "releaseBytes": 262144,
+    "depth": 64
+  },
+  "limits": {
+    "fileBytes": 67108864,
+    "frameBodyBytes": 1048576,
+    "records": 8192,
+    "maximumFields": 128,
+    "maximumTextBytes": 1048576,
+    "maximumBinaryBytes": 1048576,
+    "maximumJsonBytes": 1048576,
+    "maximumJsonAllocationBytes": 8388608,
+    "maximumJsonItems": 65536,
+    "maximumJsonDepth": 64
+  },
+  "source": {
+    "operation": 43,
+    "generation": 7,
+    "pageBytes": 3,
+    "prefixHex": "aa",
+    "suffixHex": "bb"
+  },
+  "priorEditIds": [
+    "prior-original"
+  ],
+  "edits": [
+    {
+      "wireHex": "02000006656469742d31000868616e646d61646500010202aabb",
+      "expected": {
+        "id": "edit-1",
+        "startedAt": "handmade",
+        "actor": null,
+        "finishedAt": null,
+        "lane": null,
+        "verb": null,
+        "line": null,
+        "ops": [
+          {
+            "binaryHex": "aabb",
+            "text": null
+          }
+        ],
+        "inverse": [],
+        "meta": null
+      }
+    },
+    {
+      "wireHex": "02f30006656469742d320100000a617574686f722de6bca2028a2708646f63756d656e74046564697401066272616e6368010203010203010202fefd00000701",
+      "expected": {
+        "id": "edit-2",
+        "startedAt": "1970-01-01T00:00:00Z",
+        "actor": "author-漢",
+        "finishedAt": "1970-01-01T00:00:02.501Z",
+        "lane": "document",
+        "verb": "edit",
+        "line": "branch",
+        "ops": [
+          {
+            "binaryHex": "010203",
+            "text": null
+          }
+        ],
+        "inverse": [
+          {
+            "binaryHex": "fefd",
+            "text": null
+          }
+        ],
+        "meta": [
+          {
+            "opId": null,
+            "dependencies": [],
+            "baseVersion": 7,
+            "authorId": null,
+            "hlt": null,
+            "undoPolicy": 1,
+            "payloadHash": null,
+            "groupId": null,
+            "origin": {
+              "kind": "owner"
+            },
+            "messages": [],
+            "transaction": null
+          }
+        ]
+      }
+    }
+  ],
+  "control": {
+    "maximumAllocationBytes": 8388608
+  }
+}

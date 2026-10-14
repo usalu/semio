@@ -1,3 +1,4 @@
+import { canonicalWasmBuildVitePlugin } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts";
 import { readBuildMode } from "../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 import { semioViteBuild } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🎚️mode/🟦️.ts";
 import { viteCacheDirectory } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
@@ -18,7 +19,7 @@ import { semioAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspaceP
 import { uiTailwindBuildPlugins } from "../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 import { resolveActiveScopes, buildScopeStoryGlobs, buildScopeAliases, buildScopeWatchIgnores, type StoryScope } from "./📖️stories/🧭️coordination/🟦️.ts";
 import { repoCacheDirectory } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { pluginModulesRoot } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
+import { pluginModulesRoot, builtPluginModulesRootIn } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 
 const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
@@ -80,7 +81,7 @@ const config: StorybookConfig = {
   // the shell's "plugin artifact missing" panel instead of booting. These are build OUTPUTS produced
   // by `dev`'s materialize step, not sources — storybook only serves whatever is already on disk and
   // never triggers a cargo build itself.
-  staticDirs: [{ from: pluginModulesRoot(), to: "/plugin-modules" }],
+  staticDirs: [{ from: process.env.SEMIO_STORYBOOK_BUILD === "true" ? builtPluginModulesRootIn(repoRootPath, readBuildMode(process.env.SEMIO_BUILD_MODE)) : pluginModulesRoot(), to: "/plugin-modules" }],
   addons: [getAbsolutePath("@storybook/addon-vitest"), getAbsolutePath("@storybook/addon-docs")],
   framework: {
     name: getAbsolutePath("@storybook/react-vite"),
@@ -151,6 +152,7 @@ const config: StorybookConfig = {
     if (!hasUiAssetsPlugin) {
       config.plugins.push(...semioAssetsVitePlugin(repoRootPath));
     }
+    if (configType !== "DEVELOPMENT") config.plugins.unshift(canonicalWasmBuildVitePlugin(repoRootPath, readBuildMode(process.env.SEMIO_BUILD_MODE)));
     config.plugins.push(playgroundFlowWasmDevStubPlugin(repoRootPath));
     // #region 🔖️ScopeAssetsAndPlugins
     /** 🌐️ Static-dir / tile-proxy / mesh-collection assets declared by active scopes (e.g. `framework/os`'s `/plugin-modules`, `/renderer-modules`). */
@@ -194,9 +196,10 @@ const config: StorybookConfig = {
       target: "es2022",
       loader: { ...(config.optimizeDeps.esbuildOptions?.loader || {}), ".ts": "tsx" },
     };
+    const currentRollup = config.build?.rollupOptions;
     config.build = { ...config.build, ...semioViteBuild(undefined, configType === "DEVELOPMENT" ? "prototype" : readBuildMode(process.env.SEMIO_BUILD_MODE)) };
     config.build.target = "es2022";
-    config.build.rollupOptions = config.build.rollupOptions || {};
+    config.build.rollupOptions = { ...currentRollup, ...config.build.rollupOptions };
     const existingExternal = config.build.rollupOptions.external;
     config.build.rollupOptions.external = Array.isArray(existingExternal)
       ? [...existingExternal, /\.node$/]

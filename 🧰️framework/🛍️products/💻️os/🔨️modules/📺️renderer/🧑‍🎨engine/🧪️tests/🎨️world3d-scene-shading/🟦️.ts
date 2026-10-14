@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🎨️scene-shading/🔣️.json"), "utf8")) as any;
+const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧪️tests/🧫️fixtures/🎨️scene-shading/🔣️.json"), "utf8")) as any;
 
 const expectVector = (actual: readonly number[], expected: readonly number[], precision = 7) => actual.forEach((value, index) => expect(value).toBeCloseTo(expected[index]!, precision));
 

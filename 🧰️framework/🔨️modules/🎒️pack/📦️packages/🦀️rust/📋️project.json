@@ -12,7 +12,11 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/**/*.rs",
-      "{projectRoot}/**/*"
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/📸️snapshot/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/📝️text/📸️snapshot/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/💾️binary/📸️snapshot/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📸️snapshot/**/*"
     ]
   },
   "targets": {

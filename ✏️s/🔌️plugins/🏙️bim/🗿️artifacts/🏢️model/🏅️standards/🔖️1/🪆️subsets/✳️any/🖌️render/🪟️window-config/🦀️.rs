@@ -11,7 +11,7 @@ macro_rules! bim_window_config {
 
         store::sparse_record_diff! { record: $config, diff: $diff, fields: { $($field: $ty),+ } }
 
-        impl store::os_store::serialization::ArtifactDsl for $config {
+        impl pack::snapshot::ArtifactDsl for $config {
             const EXTENSION: &'static str = Self::__DSL_EXTENSION;
             fn envelope_id() -> &'static str {
                 Self::__DSL_ENVELOPE_ID
@@ -23,21 +23,21 @@ macro_rules! bim_window_config {
             }
             fn print_dsl(&self) -> String {
                 let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-                let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid BIM window configuration envelope");
+                let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid BIM window configuration envelope");
                 store::semio_format::wrap_text(&envelope, &body)
             }
         }
 
-        impl store::os_store::serialization::ArtifactPack for $config {
+        impl pack::snapshot::ArtifactPack for $config {
             fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
                 let body = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-                let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
+                let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
                 Ok(store::semio_format::wrap_binary(&envelope, &body))
             }
             fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
                 let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
-                if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-                    return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+                if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+                    return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
                 }
                 let (record, _) = store::pack_rt::decode_document(&body, &Self::__dsl_spec(), options)?;
                 Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)
@@ -46,6 +46,9 @@ macro_rules! bim_window_config {
                 Some(Self::__dsl_spec())
             }
         }
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $config {
+
+}
 
         /// 📦️ Payload of `Replace`: the window's whole configuration under the wire field `config`.
         #[derive(semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -170,7 +173,7 @@ macro_rules! bim_window_config {
 #[cfg(test)]
 pub async fn assert_window_config_laws<S, D, M>(base: &S, mutation: &M)
 where
-    S: store::os_store::serialization::ArtifactDsl + store::os_store::serialization::ArtifactPack + Clone + std::fmt::Debug + PartialEq + 'static,
+    S: pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + std::fmt::Debug + PartialEq + 'static,
     D: protocol::MutationDiff<S> + 'static,
     M: protocol::Mutation<S, Diff = D> + protocol::OpText + protocol::OpBinary + Clone + std::fmt::Debug + PartialEq,
 {

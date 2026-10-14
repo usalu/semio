@@ -1,9 +1,9 @@
 //! 🧫️ Literal protocol boundaries, known physical work and bounded iterative scopes.
 use crate::{parse_protocol,print_protocol,walk_protocol,walk_literal_protocol_controlled,NativeDecodeControl};
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 #[test]
 fn protocol_literal_bit_fields_have_neutral_buffer_witness(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧮️bits/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🧮️bits/🔣️.json")).unwrap();
  for case in fixture["cases"].as_array().unwrap(){
   let source=fixture["source"].as_str().unwrap().replace("MASK",case["mask"].as_str().unwrap());
   let spec=parse_protocol(&source).unwrap();assert_eq!(parse_protocol(&print_protocol(&spec)).unwrap(),spec);

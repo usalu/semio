@@ -24,7 +24,7 @@ type Case = Readonly<{
 }>;
 type Fixture = Readonly<{ cases: readonly Case[] }>;
 
-const FIXTURE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧫️supersede-ledger";
+const FIXTURE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🧫️supersede-ledger";
 
 /** 📚️ One case's transitions in fold order with their roles, entries and each author's undo and redo stacks. */
 class Ledger {

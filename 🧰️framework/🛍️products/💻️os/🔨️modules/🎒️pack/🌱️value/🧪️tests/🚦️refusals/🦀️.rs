@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn pack_output_refusals_preserve_private_categories_and_terminal_messages(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🚦️refusals/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🚦️refusals/🔣️.json")).unwrap();
     let record=RecordValue::default();
     let mut deny=|_|false;let mut control=NativeEncodeControl::new(usize::MAX,&mut deny);let mut symbols=Symbols{entries:Vec::new()};
     let canceled=symbols.record(None,&record,0,64,&mut control).unwrap_err();

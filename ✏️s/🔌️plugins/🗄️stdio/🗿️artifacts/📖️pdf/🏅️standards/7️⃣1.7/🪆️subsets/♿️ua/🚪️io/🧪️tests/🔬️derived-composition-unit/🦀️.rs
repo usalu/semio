@@ -43,7 +43,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn missing_markinfo_fails_compose() {
         let snapshot = PdfSnapshot::default();
-        let bytes = <PdfSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
+        let bytes = <PdfSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let err = PdfUaComposerComposition::compose(&sources).expect_err("an untagged document must not stamp ua");
         assert!(err.diagnostics.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::ua::io::CODE_MARKINFO), "got {:?}", err.diagnostics);

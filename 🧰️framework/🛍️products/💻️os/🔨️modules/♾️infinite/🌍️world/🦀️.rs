@@ -87,11 +87,24 @@ use ui_wgpu::wgpu::{screen_select_components, screen_select_instances};
 //#region 📦️PreparedWorldResources
 const WORLD3D_FRAME_RESOURCE_CAPACITY: usize = 256;
 
+const WORLD3D_RESOURCE_PAGE: usize = 16;
+type WorldSlots<T> = semio_framework_async::OriginalFixedSlotPages<T,WORLD3D_RESOURCE_PAGE,{WORLD3D_FRAME_RESOURCE_CAPACITY/WORLD3D_RESOURCE_PAGE}>;
+
 /// 🧯️ Retirement steps a refused raster admission is given to reach terminal — one page of its source
 /// per step, so a 16 MiB item needs 1 024 of them. The bound exists only so a poisoned ledger lock
 /// cannot spin forever; reaching it leaks that one credit, which a lock that is already poisoned has
 /// lost anyway.
 const WORLD_RASTER_REFUSAL_CLOSE_STEPS: u32 = 8_192;
+
+fn world_close_string_demand(key:&String)->semio_framework_value::RetainedCloneGrant{semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_release_bytes:if key.is_empty(){key.capacity()}else{0},maximum_depth:1,..Default::default()}}
+fn world_close_string(key:&mut String,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
+    use semio_framework_job::InteractiveJobCloseStep as Close;
+    if key.is_empty()&&key.capacity()==0{return Ok(Close::Complete{progress:Default::default()})}
+    let demand=world_close_string_demand(key);
+    if grant.maximum_items==0||grant.maximum_depth<demand.maximum_depth||grant.maximum_release_bytes<demand.maximum_release_bytes{return Ok(Close::Pending{progress:Default::default()})}
+    if !key.is_empty(){key.pop();}else{drop(std::mem::take(key));}
+    Ok(Close::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,released_bytes:demand.maximum_release_bytes,..Default::default()}})
+}
 
 pub enum World3dBuildRejected {
     Upload(PreparedRenderUpload),
@@ -101,27 +114,19 @@ pub enum World3dBuildRejected {
 }
 
 impl World3dBuildRejected {
-    pub fn close_step(&mut self) -> bool {
-        match self {
-            Self::Upload(upload) => upload.close_step(),
-            Self::RasterProducer(producer) => {
-                producer.begin_close();
-                producer.close_step()
-            }
-            Self::RasterAdmission(rejected) => rejected.close_step(),
-            Self::Eviction(PreparedRenderEviction::Mesh { key }) => key.pop().is_none(),
-        }
+    pub fn next_close_demands(&self,copy:usize)->Result<semio_framework_value::RetainedCloneGrant,semio_framework_value::ValueError>{
+        match self{Self::Upload(owner)=>owner.next_close_demands(copy),Self::RasterProducer(owner)=>owner.next_close_demands(copy),Self::RasterAdmission(owner)=>owner.next_close_demands(copy),Self::Eviction(PreparedRenderEviction::Mesh{key})=>Ok(world_close_string_demand(key))}
+    }
+    pub fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
+        match self{Self::Upload(owner)=>owner.close_step(grant),Self::RasterProducer(owner)=>{owner.begin_close();owner.close_step(grant)},Self::RasterAdmission(owner)=>owner.close_step(grant),Self::Eviction(PreparedRenderEviction::Mesh{key})=>world_close_string(key,grant)}
     }
 
     pub fn terminal_is_empty(&self) -> bool {
         match self {
-            Self::Upload(PreparedRenderUpload::GlyphAtlasPages { pixels } | PreparedRenderUpload::IconAtlasPages { pixels }) => pixels.terminal_is_empty(),
-            Self::Upload(PreparedRenderUpload::RasterPages { key, .. }) => key.is_empty(),
-            Self::Upload(PreparedRenderUpload::SceneRaster { key, .. }) => key.is_empty(),
-            Self::Upload(PreparedRenderUpload::Mesh { key, .. }) => key.is_empty(),
+            Self::Upload(owner) => owner.terminal_is_empty(),
             Self::RasterProducer(producer) => producer.terminal_is_empty(),
             Self::RasterAdmission(rejected) => rejected.terminal_is_empty(),
-            Self::Eviction(PreparedRenderEviction::Mesh { key }) => key.is_empty(),
+            Self::Eviction(PreparedRenderEviction::Mesh { key }) => key.is_empty()&&key.capacity()==0,
         }
     }
 }
@@ -129,18 +134,19 @@ impl World3dBuildRejected {
 /// 📦️ Worker-owned World3d resource requests. It contains only CPU buffers and cache keys; device,
 /// queue, texture, and surface authority remain in the prepared renderer presenter.
 pub struct World3dBuildContext {
-    uploads: Box<[Option<PreparedRenderUpload>; WORLD3D_FRAME_RESOURCE_CAPACITY]>,
+    uploads: WorldSlots<PreparedRenderUpload>,
     upload_len: usize,
-    raster_producers: Box<[Option<PreparedRasterProducer>; WORLD3D_FRAME_RESOURCE_CAPACITY]>,
+    raster_producers: WorldSlots<PreparedRasterProducer>,
     raster_producer_len: usize,
-    evictions: Box<[Option<PreparedRenderEviction>; WORLD3D_FRAME_RESOURCE_CAPACITY]>,
+    evictions: WorldSlots<PreparedRenderEviction>,
     eviction_len: usize,
-    mesh_requests: Box<[Option<(String, u64)>; WORLD3D_FRAME_RESOURCE_CAPACITY]>,
+    mesh_requests: WorldSlots<(String, u64)>,
     mesh_request_len: usize,
-    raster_requests: Box<[Option<String>; WORLD3D_FRAME_RESOURCE_CAPACITY]>,
+    raster_requests: WorldSlots<String>,
     raster_request_len: usize,
     rejected: Option<World3dBuildRejected>,
-    cursor_wake: WorldCursorWakeAuthority,
+    cursor_wake: std::mem::ManuallyDrop<Option<WorldCursorWakeAuthority>>,
+    cursor_wake_retirement: Option<semio_framework_value::retirement::shared::SharedControlledRetirement<Mutex<WorldCursorWakeState>>>,
     cursor_wake_token: Option<WorldCursorWakeToken>,
     cursor_wake_fault: Option<WorldCursorWakeFault>,
 }
@@ -162,7 +168,7 @@ pub enum WorldCursorWakeFault {
     GenerationExhausted,
 }
 
-#[derive(Default)]
+#[derive(Clone,Copy,Default)]
 struct WorldCursorWakeState {
     generation: u64,
     acknowledged_generation: u64,
@@ -171,6 +177,8 @@ struct WorldCursorWakeState {
     closing: bool,
     terminal: bool,
 }
+
+semio_framework_value::artifact_retire_leaf!(WorldCursorWakeState);
 
 #[derive(Clone, Default)]
 pub struct WorldCursorWakeAuthority(std::sync::Arc<Mutex<WorldCursorWakeState>>);
@@ -247,29 +255,42 @@ impl WorldCursorWakeAuthority {
 impl World3dBuildContext {
     pub fn new(cursor_wake: WorldCursorWakeAuthority) -> Self {
         Self {
-            uploads: semio_framework_async::boxed_fixed_slots(|| None),
+            uploads: WorldSlots::new(),
             upload_len: 0,
-            raster_producers: semio_framework_async::boxed_fixed_slots(|| None),
+            raster_producers: WorldSlots::new(),
             raster_producer_len: 0,
-            evictions: semio_framework_async::boxed_fixed_slots(|| None),
+            evictions: WorldSlots::new(),
             eviction_len: 0,
-            mesh_requests: semio_framework_async::boxed_fixed_slots(|| None),
+            mesh_requests: WorldSlots::new(),
             mesh_request_len: 0,
-            raster_requests: semio_framework_async::boxed_fixed_slots(|| None),
+            raster_requests: WorldSlots::new(),
             raster_request_len: 0,
             rejected: None,
-            cursor_wake,
+            cursor_wake:std::mem::ManuallyDrop::new(Some(cursor_wake)),
+            cursor_wake_retirement:None,
             cursor_wake_token: None,
             cursor_wake_fault: None,
         }
     }
 
+    pub fn prepared(&self)->bool{self.uploads.prepared()&&self.raster_producers.prepared()&&self.evictions.prepared()&&self.mesh_requests.prepared()&&self.raster_requests.prepared()}
+    /// 🎟️ Allocates one physical slot page from the same original context before resource admission.
+    pub fn prepare_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if cx.is_cancelled(){return Err(semio_framework_job::OriginalTurnFailure::debit_original(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original world page birth canceled"),cx))}
+        if self.prepared(){return Ok(true)}
+        let bytes=if !self.uploads.prepared(){self.uploads.birth_bytes()}else if !self.raster_producers.prepared(){self.raster_producers.birth_bytes()}else if !self.evictions.prepared(){self.evictions.birth_bytes()}else if !self.mesh_requests.prepared(){self.mesh_requests.birth_bytes()}else if !self.raster_requests.prepared(){self.raster_requests.birth_bytes()}else{0};
+        semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{capacity_bytes:bytes,depth:1,..Default::default()},|grant|{
+            if !self.uploads.prepared(){self.uploads.birth(grant)}else if !self.raster_producers.prepared(){self.raster_producers.birth(grant)}else if !self.evictions.prepared(){self.evictions.birth(grant)}else if !self.mesh_requests.prepared(){self.mesh_requests.birth(grant)}else if !self.raster_requests.prepared(){self.raster_requests.birth(grant)}else{Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default()))}
+        })?;
+        Ok(self.prepared())
+    }
+
     pub fn ensure_mesh(&mut self, key: &str, version: u64, lease: Mesh3dLease) {
-        if self.mesh_requests[..self.mesh_request_len].iter().flatten().any(|candidate| candidate.0 == key && candidate.1 == version) {
+        if self.mesh_requests.iter().take(self.mesh_request_len).flatten().any(|candidate| candidate.0 == key && candidate.1 == version) {
             return;
         }
         let upload = PreparedRenderUpload::Mesh { key: key.to_string(), version, lease };
-        if self.mesh_request_len == WORLD3D_FRAME_RESOURCE_CAPACITY || self.upload_len == WORLD3D_FRAME_RESOURCE_CAPACITY {
+        if self.mesh_request_len >= WORLD3D_FRAME_RESOURCE_CAPACITY || self.upload_len >= WORLD3D_FRAME_RESOURCE_CAPACITY {
             if self.rejected.is_none() {
                 self.rejected = Some(World3dBuildRejected::Upload(upload));
             }
@@ -285,7 +306,7 @@ impl World3dBuildContext {
     ///
     /// The predicate [`retain_ensured_world_draws`] enforces the residency law with.
     pub fn has_mesh_request(&self, key: &str, version: u64) -> bool {
-        self.mesh_requests[..self.mesh_request_len].iter().flatten().any(|candidate| candidate.0 == key && candidate.1 == version)
+        self.mesh_requests.iter().take(self.mesh_request_len).flatten().any(|candidate| candidate.0 == key && candidate.1 == version)
     }
 
     /// 🖼️ Admits ONE decoded raster into this frame's world uploads, TAKING its pixels.
@@ -302,11 +323,11 @@ impl World3dBuildContext {
     /// chrome lane's `queue_decoded_raster_upload` has always had — and the producer, not the world,
     /// owns their bounded retirement from then on.
     pub fn ensure_world_plane_texture(&mut self, key: &str, lease: SceneRasterLease) {
-        if self.raster_requests[..self.raster_request_len].iter().flatten().any(|candidate| candidate == key) {
+        if self.raster_requests.iter().take(self.raster_request_len).flatten().any(|candidate| candidate == key) {
             return;
         }
         let upload = PreparedRenderUpload::SceneRaster { key: key.to_string(), lease };
-        if self.raster_request_len == WORLD3D_FRAME_RESOURCE_CAPACITY || self.upload_len == WORLD3D_FRAME_RESOURCE_CAPACITY {
+        if self.raster_request_len >= WORLD3D_FRAME_RESOURCE_CAPACITY || self.upload_len >= WORLD3D_FRAME_RESOURCE_CAPACITY {
             if self.rejected.is_none() {
                 self.rejected = Some(World3dBuildRejected::Upload(upload));
             }
@@ -320,7 +341,7 @@ impl World3dBuildContext {
 
     pub fn evict_mesh(&mut self, key: &str) {
         let eviction = PreparedRenderEviction::Mesh { key: key.to_string() };
-        if self.eviction_len == WORLD3D_FRAME_RESOURCE_CAPACITY {
+        if self.eviction_len >= WORLD3D_FRAME_RESOURCE_CAPACITY {
             if self.rejected.is_none() {
                 self.rejected = Some(World3dBuildRejected::Eviction(eviction));
             }
@@ -334,7 +355,7 @@ impl World3dBuildContext {
         if self.cursor_wake_token.is_some() || self.cursor_wake_fault.is_some() {
             return;
         }
-        match self.cursor_wake.request() {
+        match self.cursor_wake.as_ref().expect("original world authority remains owned").request() {
             Ok(token) => self.cursor_wake_token = Some(token),
             Err(fault) => self.cursor_wake_fault = Some(fault),
         }
@@ -402,16 +423,6 @@ impl World3dBuildContext {
             }
             return Ok(false);
         }
-        if let Some(index) = self.mesh_request_len.checked_sub(1) {
-            self.mesh_request_len = index;
-            self.mesh_requests[index] = None;
-            return Ok(false);
-        }
-        if let Some(index) = self.raster_request_len.checked_sub(1) {
-            self.raster_request_len = index;
-            self.raster_requests[index] = None;
-            return Ok(false);
-        }
         Ok(true)
     }
 
@@ -422,72 +433,72 @@ impl World3dBuildContext {
             && self.mesh_request_len == 0
             && self.raster_request_len == 0
             && self.rejected.is_none()
-            && self.uploads.iter().all(Option::is_none)
-            && self.raster_producers.iter().all(Option::is_none)
-            && self.evictions.iter().all(Option::is_none)
-            && self.mesh_requests.iter().all(Option::is_none)
-            && self.raster_requests.iter().all(Option::is_none)
+            && self.cursor_wake_token.is_none()
+            && self.cursor_wake_fault.is_none()
+            && self.uploads.empty()
+            && self.raster_producers.empty()
+            && self.evictions.empty()
+            && self.mesh_requests.empty()
+            && self.raster_requests.empty()
+            && self.cursor_wake.is_none()
+            && self.cursor_wake_retirement.is_none()
     }
 
-    /// 🧹️ Releases one untransferred frame resource per cancellation turn.
-    pub fn close_step(&mut self) -> bool {
-        if let Some(rejected) = self.rejected.as_mut() {
-            if !rejected.close_step() {
-                return false;
-            }
-            self.rejected = None;
-            return false;
-        }
-        if let Some(index) = self.raster_producer_len.checked_sub(1) {
-            let Some(producer) = self.raster_producers[index].as_mut() else {
-                self.raster_producer_len = index;
-                return false;
-            };
-            producer.begin_close();
-            if !producer.close_step() {
-                return false;
-            }
-            self.raster_producers[index] = None;
-            self.raster_producer_len = index;
-            return false;
-        }
-        if let Some(index) = self.upload_len.checked_sub(1) {
-            let Some(upload) = self.uploads[index].as_mut() else {
-                self.upload_len = index;
-                return false;
-            };
-            if !upload.close_step() {
-                return false;
-            }
-            self.uploads[index] = None;
-            self.upload_len = index;
-            return false;
-        }
-        if let Some(index) = self.eviction_len.checked_sub(1) {
-            let Some(PreparedRenderEviction::Mesh { key }) = self.evictions[index].as_mut() else {
-                self.eviction_len = index;
-                return false;
-            };
-            if key.pop().is_some() {
-                return false;
-            }
-            self.evictions[index] = None;
-            self.eviction_len = index;
-            return false;
-        }
-        if let Some(index) = self.mesh_request_len.checked_sub(1) {
-            self.mesh_requests[index] = None;
-            self.mesh_request_len = index;
-            return false;
-        }
-        if let Some(index) = self.raster_request_len.checked_sub(1) {
-            self.raster_requests[index] = None;
-            self.raster_request_len = index;
-            return false;
-        }
-        true
+    pub fn next_close_demands(&self,copy:usize)->Result<semio_framework_value::RetainedCloneGrant,semio_framework_value::ValueError>{
+        if self.cursor_wake_token.is_some()||self.cursor_wake_fault.is_some(){return Ok(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()})}
+        if let Some(owner)=self.rejected.as_ref(){return owner.next_close_demands(copy)}
+        if let Some(owner)=self.raster_producer_len.checked_sub(1).and_then(|index|self.raster_producers[index].as_ref()){return owner.next_close_demands(copy)}
+        if let Some(owner)=self.upload_len.checked_sub(1).and_then(|index|self.uploads[index].as_ref()){return owner.next_close_demands(copy)}
+        if let Some(PreparedRenderEviction::Mesh{key})=self.eviction_len.checked_sub(1).and_then(|index|self.evictions[index].as_ref()){return Ok(world_close_string_demand(key))}
+        if let Some((key,_))=self.mesh_request_len.checked_sub(1).and_then(|index|self.mesh_requests[index].as_ref()){return Ok(world_close_string_demand(key))}
+        if let Some(key)=self.raster_request_len.checked_sub(1).and_then(|index|self.raster_requests[index].as_ref()){return Ok(world_close_string_demand(key))}
+        if !self.uploads.empty(){return Ok(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_release_bytes:self.uploads.release_bytes(),maximum_depth:1,..Default::default()})}
+        if !self.raster_producers.empty(){return Ok(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_release_bytes:self.raster_producers.release_bytes(),maximum_depth:1,..Default::default()})}
+        if !self.evictions.empty(){return Ok(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_release_bytes:self.evictions.release_bytes(),maximum_depth:1,..Default::default()})}
+        if !self.mesh_requests.empty(){return Ok(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_release_bytes:self.mesh_requests.release_bytes(),maximum_depth:1,..Default::default()})}
+        if !self.raster_requests.empty(){return Ok(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_release_bytes:self.raster_requests.release_bytes(),maximum_depth:1,..Default::default()})}
+        if self.cursor_wake.is_some(){return Ok(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()})}
+        if let Some(owner)=self.cursor_wake_retirement.as_ref(){return Ok(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:owner.next_copy_byte_demand()?,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy)?,maximum_release_bytes:owner.next_release_byte_demand()?,maximum_depth:owner.next_depth_demand()?})}
+        Ok(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()})
     }
+
+    /// 🧹️ Releases one untransferred resource through the same original caller and complete failure receipt.
+    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_job::InteractiveJobCloseStep as Close;
+        if self.terminal_is_empty(){return Ok(Close::Complete{progress:Default::default()})}
+        let grant=self.next_close_demands(cx.retained_grant().maximum_copy_bytes).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
+        let demand=semio_framework_value::RetirementDemand{copy_bytes:grant.maximum_copy_bytes,capacity_bytes:grant.maximum_capacity_bytes,release_bytes:grant.maximum_release_bytes,depth:grant.maximum_depth};
+        let mut blocked=false;
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|self.close_granted(grant).map(|step|match step{Close::Pending{progress}=>semio_framework_value::RetainedCloneStep::Progress(progress),Close::Complete{progress}=>semio_framework_value::RetainedCloneStep::Complete(progress),Close::Blocked=>{blocked=true;semio_framework_value::RetainedCloneStep::Progress(Default::default())}}))?;
+        if blocked{return Ok(Close::Blocked)}
+        if self.terminal_is_empty(){Ok(Close::Complete{progress:step.progress()})}else{Ok(step)}
+    }
+
+    fn close_granted(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
+        use semio_framework_job::InteractiveJobCloseStep as Close;
+        if self.cursor_wake_token.take().is_some()||self.cursor_wake_fault.take().is_some(){return Ok(Close::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}})}
+        if let Some(owner)=self.rejected.as_mut(){let step=owner.close_step(grant)?;if owner.terminal_is_empty(){self.rejected=None}return Ok(match step{Close::Complete{progress}=>Close::Pending{progress},step=>step})}
+        if let Some(index)=self.raster_producer_len.checked_sub(1){if let Some(owner)=self.raster_producers[index].as_mut(){owner.begin_close();let step=owner.close_step(grant)?;if owner.terminal_is_empty(){self.raster_producers[index]=None;self.raster_producer_len=index}return Ok(match step{Close::Complete{progress}=>Close::Pending{progress},step=>step})}self.raster_producer_len=index;}
+        else if let Some(index)=self.upload_len.checked_sub(1){if let Some(owner)=self.uploads[index].as_mut(){let step=owner.close_step(grant)?;if owner.terminal_is_empty(){self.uploads[index]=None;self.upload_len=index}return Ok(match step{Close::Complete{progress}=>Close::Pending{progress},step=>step})}self.upload_len=index;}
+        else if let Some(index)=self.eviction_len.checked_sub(1){if let Some(PreparedRenderEviction::Mesh{key})=self.evictions[index].as_mut(){let step=world_close_string(key,grant)?;if key.is_empty()&&key.capacity()==0{self.evictions[index]=None;self.eviction_len=index}return Ok(match step{Close::Complete{progress}=>Close::Pending{progress},step=>step})}self.eviction_len=index;}
+        else if let Some(index)=self.mesh_request_len.checked_sub(1){if let Some((key,_))=self.mesh_requests[index].as_mut(){let step=world_close_string(key,grant)?;if key.is_empty()&&key.capacity()==0{self.mesh_requests[index]=None;self.mesh_request_len=index}return Ok(match step{Close::Complete{progress}=>Close::Pending{progress},step=>step})}self.mesh_request_len=index;}
+        else if let Some(index)=self.raster_request_len.checked_sub(1){if let Some(key)=self.raster_requests[index].as_mut(){let step=world_close_string(key,grant)?;if key.is_empty()&&key.capacity()==0{self.raster_requests[index]=None;self.raster_request_len=index}return Ok(match step{Close::Complete{progress}=>Close::Pending{progress},step=>step})}self.raster_request_len=index;}
+        if self.raster_producer_len==0&&self.upload_len==0&&self.eviction_len==0&&self.mesh_request_len==0&&self.raster_request_len==0{
+            if !self.uploads.empty(){let bytes=self.uploads.release_bytes();if grant.maximum_release_bytes<bytes{return Ok(Close::Pending{progress:Default::default()})}let step=self.uploads.release(grant)?;return Ok(Close::Pending{progress:step.progress()})}
+            if !self.raster_producers.empty(){let bytes=self.raster_producers.release_bytes();if grant.maximum_release_bytes<bytes{return Ok(Close::Pending{progress:Default::default()})}let step=self.raster_producers.release(grant)?;return Ok(Close::Pending{progress:step.progress()})}
+            if !self.evictions.empty(){let bytes=self.evictions.release_bytes();if grant.maximum_release_bytes<bytes{return Ok(Close::Pending{progress:Default::default()})}let step=self.evictions.release(grant)?;return Ok(Close::Pending{progress:step.progress()})}
+            if !self.mesh_requests.empty(){let bytes=self.mesh_requests.release_bytes();if grant.maximum_release_bytes<bytes{return Ok(Close::Pending{progress:Default::default()})}let step=self.mesh_requests.release(grant)?;return Ok(Close::Pending{progress:step.progress()})}
+            if !self.raster_requests.empty(){let bytes=self.raster_requests.release_bytes();if grant.maximum_release_bytes<bytes{return Ok(Close::Pending{progress:Default::default()})}let step=self.raster_requests.release(grant)?;return Ok(Close::Pending{progress:step.progress()})}
+
+        }
+        if let Some(authority)=self.cursor_wake.take(){self.cursor_wake_retirement=Some(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(authority.0));return Ok(Close::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}})}
+        if let Some(owner)=self.cursor_wake_retirement.as_mut(){let step=owner.step(grant)?;if owner.terminal_is_empty(){self.cursor_wake_retirement=None}return Ok(Close::Pending{progress:step.progress()})}
+        Ok(Close::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}})
+    }
+
 }
+
+impl Drop for World3dBuildContext{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original world resources dropped before paid close");if self.terminal_is_empty(){unsafe{std::mem::ManuallyDrop::drop(&mut self.cursor_wake)}}}}
 //#endregion 📦️PreparedWorldResources
 
 use semio_framework::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};

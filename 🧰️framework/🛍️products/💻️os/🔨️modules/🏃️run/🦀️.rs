@@ -99,6 +99,8 @@ pub enum RunError {
     },
     Cycle(Vec<String>),
     Host(String),
+    Kernel(semio_framework_actor::KernelError),
+    ActorCall(semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall),
     Frame(semio_framework_actor::pack::PackError),
     /// 🤝️ The guest itself was refused at admission (`ActivationRefusal.fault`, e.g. `plugin.channel-mismatch` with its
     /// `guest`/`host` params): the structured fault, so the runner's caller tells its localized notice.
@@ -139,6 +141,8 @@ impl std::fmt::Display for RunError {
             Self::NoConverter { class, from, to } => write!(formatter, "no media converter registered for {class:?}: {from:?} -> {to:?}"),
             Self::Cycle(nodes) => write!(formatter, "workflow has a cycle (unreachable nodes: {nodes:?})"),
             Self::Host(message) => write!(formatter, "host error: {message}"),
+            Self::Kernel(error) => std::fmt::Display::fmt(error,formatter),
+            Self::ActorCall(original) => write!(formatter,"original actor call refused: {original:?}"),
             Self::Frame(error) => std::fmt::Display::fmt(error, formatter),
             Self::Refused(fault) => write!(formatter, "{}: {}", fault.code.0, fault.message),
             Self::Media(error) => write!(formatter, "media error: {error}"),
@@ -154,6 +158,7 @@ impl std::error::Error for RunError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Media(error) => Some(error),
+            Self::Kernel(error) => Some(error),
             Self::Frame(error) => Some(error),
             Self::Io { source, .. } => Some(source),
             Self::Serde(error) => Some(error),
@@ -1717,6 +1722,14 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
             }
             for outcome in &outcomes {
                 match outcome {
+                    semio_framework_plugin_host::shard::ShardOutcome::OriginalCall { actor: reported, returned, continuation, call } => {
+                        self.kernel.kernel_mut().receive_original_call(RuntimeActorId(*reported),*returned,*continuation).map_err(RunError::Kernel)?;
+                        if let Some(original)=call{
+                            if original.input!=returned.input||original.spent!=returned.spent{return Err(RunError::ActorCall(*original));}
+                            use semio_framework_plugin_host::original_actor_context::OriginalActorFixedKind;
+                            if *reported==actor.0&&matches!(original.kind,OriginalActorFixedKind::Failure{..}|OriginalActorFixedKind::Admission{refusal:Some(_),..}|OriginalActorFixedKind::Close{refusal:Some(_),..}){return Err(RunError::ActorCall(*original));}
+                        }
+                    }
                     semio_framework_plugin_host::shard::ShardOutcome::Turn { actor: reported, result, .. } => {
                         self.kernel.kernel_mut().complete(RuntimeActorId(*reported), result, self.now_ms).await.map_err(|error| RunError::Host(format!("kernel completion failed: {error:?}")))?;
                         if *reported == actor.0 {

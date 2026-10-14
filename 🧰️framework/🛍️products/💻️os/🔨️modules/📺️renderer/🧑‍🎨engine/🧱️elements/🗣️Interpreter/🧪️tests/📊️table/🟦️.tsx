@@ -16,11 +16,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { dirname, join } = await import("node:path");
   const { fileURLToPath } = await import("node:url");
 
-  const fixtureDir = join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🧪️conformance/🧩️component/📊️table");
+  const fixtureDir = join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🧪️conformance/🧩️component/📊️table");
   const snapshot = JSON.parse(readFileSync(join(fixtureDir, "📸️snapshot.json"), "utf8"));
-  const matrixFixtureDir = join(dirname(fileURLToPath(source.url)), "../../../../🔌️plugin/🪟️window-kits/📊️table/🧫️fixtures/↔️two-axis");
+  const matrixFixtureDir = join(dirname(fileURLToPath(source.url)), "../../../../🔌️plugin/🪟️window-kits/📊️table/🧪️tests/🧫️fixtures/↔️two-axis");
   const matrixFixture = JSON.parse(readFileSync(join(matrixFixtureDir, "🔣️.json"), "utf8"));
-  const rowTargetDir = join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🎯️row-target");
+  const rowTargetDir = join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🎯️row-target");
   const rowTarget = JSON.parse(readFileSync(join(rowTargetDir, "🔣️.json"), "utf8"));
 
   function mount(onIntent: (intent: any) => void, windows: unknown = null, sourceSnapshot: any = snapshot) {
@@ -159,7 +159,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("caps the scroll viewport at the rows the guest serves, by the fixture's viewport law", () => {
-      const served = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🪟️tree-window-served.json"), "utf8"));
+      const served = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🪟️tree-window-served.json"), "utf8"));
       expect(served.tableViewportCaps.length).toBeGreaterThan(0);
       for (const row of served.tableViewportCaps) expect(tableWindowViewportCapRowsV1(row.learned, row.previous, row.total), row.name).toBe(row.capRows);
     });

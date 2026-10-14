@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🍰️split-slab/🧱️sends-a-hole-with-its-piece",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🍰️split-slab/🧱️sends-a-hole-with-its-piece/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🍰️split-slab/🧱️sends-a-hole-with-its-piece/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🍰️split-slab/🧱️sends-a-hole-with-its-piece/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🍰️split-slab/🧱️sends-a-hole-with-its-piece/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🍰️split-slab/🧱️sends-a-hole-with-its-piece/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🍰️split-slab/🧱️sends-a-hole-with-its-piece/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🍰️split-slab/🧱️sends-a-hole-with-its-piece/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🍰️split-slab/🧱️sends-a-hole-with-its-piece/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🍰️split-slab/🧱️sends-a-hole-with-its-piece/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🍰️split-slab/🧱️sends-a-hole-with-its-piece/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

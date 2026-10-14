@@ -5,7 +5,7 @@ import sum from "lodash/sum";
 
 /** 🧮️ Exercises byte reservation, task retirement and retry examples against independent allocation primitives. */
 export async function proveMemoryBackendBackingFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧫️fixtures/🧮️memory-backing");
+  const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧪️tests/🧫️fixtures/🧮️memory-backing");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const inline = 128;
   const lengths = fixture.tables.map((row: { slots: number }, index: number) => row.slots * (index + 1) * 8);

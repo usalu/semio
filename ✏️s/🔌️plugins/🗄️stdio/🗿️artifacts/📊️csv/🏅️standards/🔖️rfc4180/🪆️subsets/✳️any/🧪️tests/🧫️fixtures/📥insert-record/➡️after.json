@@ -1,0 +1,42 @@
+{
+  "schema": "stdio.csv",
+  "hasHeader": true,
+  "records": [
+    {
+      "fields": [
+        {
+          "value": "id",
+          "quoted": false
+        },
+        {
+          "value": "name",
+          "quoted": false
+        }
+      ]
+    },
+    {
+      "fields": [
+        {
+          "value": "1",
+          "quoted": false
+        },
+        {
+          "value": "widget",
+          "quoted": false
+        }
+      ]
+    },
+    {
+      "fields": [
+        {
+          "value": "2",
+          "quoted": false
+        },
+        {
+          "value": "gadget",
+          "quoted": false
+        }
+      ]
+    }
+  ]
+}

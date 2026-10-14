@@ -34,7 +34,7 @@ struct EncodingFixture {
 }
 
 fn fixture() -> EncodingFixture {
-    serde_json::from_str(include_str!("../../🧫️fixtures/⬇️media-export-encoding/🔣️.json")).expect("media-export-encoding fixture JSON")
+    serde_json::from_str(include_str!("../🧫️fixtures/⬇️media-export-encoding/🔣️.json")).expect("media-export-encoding fixture JSON")
 }
 
 /// ⬇️ Every fixture export decodes to exactly the bytes the fixture declares.

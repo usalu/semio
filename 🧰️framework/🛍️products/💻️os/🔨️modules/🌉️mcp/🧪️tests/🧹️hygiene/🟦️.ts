@@ -19,7 +19,7 @@ const bin = requireMcpBinary(repoRoot);
 describe("document descriptor schema oracle", () => {
   it("accepts the shared Rust and TypeScript fixture with AJV", () => {
     const schema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📇️directory", "🧬️schema", "🔣️.json"), "utf8")) as object;
-    const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🧫️fixtures", "📇️directory", "🪪️document-descriptor.json"), "utf8")) as { valid: object; conflictingSchemaHash: object; crossSpaceSameDocument: object };
+    const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🧪️tests/🧫️fixtures", "📇️directory", "🪪️document-descriptor.json"), "utf8")) as { valid: object; conflictingSchemaHash: object; crossSpaceSameDocument: object };
     const validate = new Ajv({ strict: false }).compile({ ...schema, $ref: "#/$defs/DocumentDescriptor" });
     expect(validate(fixture.valid), JSON.stringify(validate.errors)).toBe(true);
     expect(validate(fixture.conflictingSchemaHash), JSON.stringify(validate.errors)).toBe(true);
@@ -29,7 +29,7 @@ describe("document descriptor schema oracle", () => {
 
   it("validates structural artifact authority fixtures and rejects fixed-hash and overflow boundaries with AJV", () => {
     const schema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📇️directory", "🧬️schema", "🔣️.json"), "utf8")) as object;
-    const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🧫️fixtures", "📇️directory", "🛡️artifact-authority.json"), "utf8")) as {
+    const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🧪️tests/🧫️fixtures", "📇️directory", "🛡️artifact-authority.json"), "utf8")) as {
       checkpoint: Record<string, unknown>;
       retention: object;
       scopeBoundaries: Record<string, object>;

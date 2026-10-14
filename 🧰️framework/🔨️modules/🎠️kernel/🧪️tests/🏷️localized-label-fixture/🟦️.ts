@@ -15,7 +15,7 @@ import { historyEntryLabelText } from "../../🟦️.ts";
 /** 📄️ `fileURLToPath`, never `new URL(...).pathname`: the latter percent-encodes every emoji segment. */
 const read = (relative: string): unknown => JSON.parse(readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8")) as unknown;
 
-const fixture = read("../../../🖱️ui/🌐️locale/🧫️fixtures/🏷️localized-label/🔣️.json") as {
+const fixture = read("../../../🖱️ui/🌐️locale/🧪️tests/🧫️fixtures/🏷️localized-label/🔣️.json") as {
   readonly axes: { readonly terminologies: readonly string[]; readonly locales: readonly string[] };
   readonly rows: readonly { readonly id: string; readonly wire: unknown; readonly resolve: Readonly<Record<string, string>> }[];
   readonly refusals: readonly { readonly id: string; readonly wire: unknown; readonly schemaError: string; readonly resolve: Readonly<Record<string, string>> }[];

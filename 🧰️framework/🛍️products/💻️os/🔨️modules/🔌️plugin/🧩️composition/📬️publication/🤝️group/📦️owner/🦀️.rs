@@ -10,15 +10,15 @@ use store::MemberOpenOperation;
 pub(crate) const PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN: usize = 64;
 
 pub(crate) struct PrivateChildGroupSource {
-    parent: store::MemberStoreOwnedBatch,
-    parent_touched: bool,
-    children: Vec<OwnedChildEmit>,
-    transaction: Option<protocol::TransactionRef>,
-    group_id: String,
+    pub(crate) parent: store::MemberStoreOwnedBatch,
+    pub(crate) parent_touched: bool,
+    pub(crate) children: Vec<OwnedChildEmit>,
+    pub(crate) transaction: Option<protocol::TransactionRef>,
+    pub(crate) group_id: String,
 }
 
 #[derive(Clone,Copy)]
-struct PrivateChildPreparedReceiptIdentity {
+pub(crate) struct PrivateChildPreparedReceiptIdentity {
     index: usize,
     publication: usize,
     edit: (usize,usize),
@@ -242,7 +242,7 @@ pub(crate) struct PrivateChildPublicationGroup<M: SpaceMember + MemberFactory> {
 }
 
 impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
-    fn parent_touched(&self) -> bool { self.parent_touched }
+    pub(crate) fn parent_touched(&self) -> bool { self.parent_touched }
 
 
     fn frame_birth_bytes() -> usize { size_of::<Self>() }
@@ -254,8 +254,8 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         Ok(Self { parent_source: ManuallyDrop::new(Some(source.parent)), parent_touched: source.parent_touched, parent_identity: None, sources: ManuallyDrop::new(Some(source.children.into())), original_metadata: Some(PrivatePublicationMetadata::from_parts(PrivatePublicationMetadataParts { actor: Default::default(), transaction: source.transaction, group_id: Some(source.group_id) })), parent_issuer: PrivatePublicationMetadataIssuer::new(), parent_metadata: None, parent_lane: None, parent_receipt_copied: false, rows: ManuallyDrop::new(std::array::from_fn(|_| None)), count, input_cursor: 0, open_cursor: 0, lane_cursor: 0, entry_cursor: 0, graph_cursor: 0, visibility_owner: None, visibility: None, graph: None, parent_read: ManuallyDrop::new(None), projection_cursor: 0, projection_row: 0, projection_matched: false, projection_ready: false, future: ManuallyDrop::new(None), displaced: ManuallyDrop::new(std::array::from_fn(|_| None)), committed: false, closing: false, complete: false })
     }
     fn transaction(&self) -> Option<&protocol::TransactionRef> { self.original_metadata.as_ref().and_then(PrivatePublicationMetadata::parts).and_then(|parts| parts.transaction.as_ref()) }
-    fn group_id(&self) -> &str { self.original_metadata.as_ref().and_then(PrivatePublicationMetadata::parts).and_then(|parts| parts.group_id.as_deref()).expect("private group retains its original common identity") }
-    fn prepared_publication(&self, index: usize) -> Option<&dyn store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication> {
+    pub(crate) fn group_id(&self) -> &str { self.original_metadata.as_ref().and_then(PrivatePublicationMetadata::parts).and_then(|parts| parts.group_id.as_deref()).expect("private group retains its original common identity") }
+    pub(crate) fn prepared_publication(&self, index: usize) -> Option<&dyn store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication> {
         if self.closing || self.committed { return None; }
         if index == 0 { return self.parent_lane.as_ref()?.prepared_publication(); }
         self.rows.get(index.checked_sub(1)?)?.as_ref()?.lane.as_ref()?.prepared_publication()
@@ -282,7 +282,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         Some(PrivateChildPreparedReceipt { index, edit_id: row.lane.as_ref()?.prepared_edit_id()?, reference, key: Some(parts.key.borrowed()), group_id })
     }
     /// 🧿️ Borrows the actual prepared child artifact identity without constructing a parent reference.
-    fn prepared_child_artifact_id<'a>(&'a self, index: usize, registry: &'a ChildMemberRegistry<M>) -> Option<&'a str> {
+    pub(crate) fn prepared_child_artifact_id<'a>(&'a self, index: usize, registry: &'a ChildMemberRegistry<M>) -> Option<&'a str> {
         if self.closing || self.committed || index == 0 { return None; }
         self.prepared_publication(index)?;
         let row = self.rows.get(index - 1)?.as_ref()?;
@@ -292,7 +292,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
     }
 
     /// 🪪️ Seals the exact original publication and edit addresses for bounded acknowledgment.
-    fn prepared_receipt_identity(&self, index: usize) -> Option<PrivateChildPreparedReceiptIdentity> {
+    pub(crate) fn prepared_receipt_identity(&self, index: usize) -> Option<PrivateChildPreparedReceiptIdentity> {
         let publication = self.prepared_publication(index)?;
         let edit = publication.prepared_edit_id()?;
         if index == 0 && (!self.parent_touched || self.parent_receipt_copied) { return None; }
@@ -302,7 +302,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
     }
 
     /// 🔐️ Acknowledges only the still-retained exact original addresses without comparing copied strings.
-    fn acknowledge_prepared_receipt_identity(&mut self, identity: PrivateChildPreparedReceiptIdentity, grant: RetainedCloneGrant) -> bool {
+    pub(crate) fn acknowledge_prepared_receipt_identity(&mut self, identity: PrivateChildPreparedReceiptIdentity, grant: RetainedCloneGrant) -> bool {
         if grant.maximum_items == 0 { return false; }
         let Some(current) = self.prepared_receipt_identity(identity.index) else { return false; };
         if current.publication != identity.publication || current.edit != identity.edit || current.group != identity.group { return false; }
@@ -324,22 +324,22 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         row.receipt_copied = true;
         true
     }
-    fn child_count(&self) -> usize { self.count }
+    pub(crate) fn child_count(&self) -> usize { self.count }
     fn parent_reference(&self) -> Option<&ArtifactRef> { self.rows.first()?.as_ref()?.metadata.as_ref()?.parts().map(|parts| &parts.registry_owner.parent) }
-    fn inputs_ready(&self) -> bool { self.input_cursor == self.count && self.parent_metadata.is_some() }
-    fn openings_ready(&self) -> bool { self.open_cursor == self.count }
-    fn publications_ready(&self) -> bool { self.lane_cursor == self.count && (!self.parent_touched || self.parent_lane.as_ref().is_some_and(PrivateOwnedPublicationLane::staged)) }
-    fn entries_ready(&self) -> bool { self.entry_cursor == self.count }
-    fn projection_ready(&self) -> bool { self.projection_ready }
+    pub(crate) fn inputs_ready(&self) -> bool { self.input_cursor == self.count && self.parent_metadata.is_some() }
+    pub(crate) fn openings_ready(&self) -> bool { self.open_cursor == self.count }
+    pub(crate) fn publications_ready(&self) -> bool { self.lane_cursor == self.count && (!self.parent_touched || self.parent_lane.as_ref().is_some_and(PrivateOwnedPublicationLane::staged)) }
+    pub(crate) fn entries_ready(&self) -> bool { self.entry_cursor == self.count }
+    pub(crate) fn projection_ready(&self) -> bool { self.projection_ready }
     fn committed(&self) -> bool { self.committed }
     /// 🧮️ Queries only the next full metadata or separately allocated row frame.
-    fn next_input_capacity_byte_demand(&self, registry: &ChildMemberRegistry<M>, parent_id: &str, dialect: &ArtifactDialect, actor: &semio_framework_value::SharedUtf8) -> Result<usize, ValueError> {
+    pub(crate) fn next_input_capacity_byte_demand(&self, registry: &ChildMemberRegistry<M>, parent_id: &str, dialect: &ArtifactDialect, actor: &semio_framework_value::SharedUtf8) -> Result<usize, ValueError> {
         if self.parent_metadata.is_none() { return Ok(self.parent_issuer.next_capacity_byte_demand(PrivatePublicationMetadataSource { actor, transaction: self.transaction(), group_id: Some(self.group_id()) }).unwrap_or(0)); }
         if self.input_cursor == self.count { return Ok(0); }
         self.rows[self.input_cursor].as_ref().map_or(Ok(Self::row_birth_bytes()), |row| row.input_capacity(registry, parent_id, dialect, actor.as_str(), self.transaction(), self.group_id()))
     }
     /// 🧵️ Advances one funded parent field, row frame, or original child input phase.
-    fn advance_inputs(&mut self, registry: &ChildMemberRegistry<M>, parent_id: &str, dialect: &ArtifactDialect, actor: &semio_framework_value::SharedUtf8, operation: OperationId, generation: Generation, expires_at_us: u64, now_us: u64, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub(crate) fn advance_inputs(&mut self, registry: &ChildMemberRegistry<M>, parent_id: &str, dialect: &ArtifactDialect, actor: &semio_framework_value::SharedUtf8, operation: OperationId, generation: Generation, expires_at_us: u64, now_us: u64, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let grant = group_grant(grant);
         if self.closing || grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if self.parent_metadata.is_none() {
@@ -363,14 +363,14 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         if row.input_ready { self.input_cursor += 1; }
         Ok(step)
     }
-    fn next_open_birth_demand(&self) -> Result<store::RetainedCloneBirthDemand, Fault> {
+    pub(crate) fn next_open_birth_demand(&self) -> Result<store::RetainedCloneBirthDemand, Fault> {
         let Some(row) = self.rows.get(self.open_cursor).and_then(Option::as_ref) else { return Ok(store::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }); };
         let mut birth = row.open_birth_demand()?;
         if row.request.is_some() { birth.depth = birth.depth.checked_add(2).ok_or_else(|| plugin_sdk_fault("original open birth row/group depth overflow"))?; }
         Ok(birth)
     }
     /// 🚪️ Drives only the exact funded factory selected by the retained original request.
-    fn advance_openings(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant, begin: fn(&mut Option<store::MemberOpenRequest>, RetainedCloneGrant) -> Result<Option<M::Open>, store::MemberOpenDiagnostic>) -> Result<RetainedCloneStep, Fault> {
+    pub(crate) fn advance_openings(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant, begin: fn(&mut Option<store::MemberOpenRequest>, RetainedCloneGrant) -> Result<Option<M::Open>, store::MemberOpenDiagnostic>) -> Result<RetainedCloneStep, Fault> {
         let grant = group_grant(grant);
         if self.closing || grant.maximum_items == 0 || !self.inputs_ready() { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if self.open_cursor == self.count { return Ok(RetainedCloneStep::Complete(Default::default())); }
@@ -386,7 +386,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         if row.advance_open(cx, RetainedCloneGrant { maximum_depth: grant.maximum_depth - 2, ..grant }, begin)? { self.open_cursor += 1; return Ok(group_structural()); }
         Ok(group_structural())
     }
-    fn next_open_retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub(crate) fn next_open_retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let Some(row) = self.rows.get(self.open_cursor).and_then(Option::as_ref).filter(|row| row.member.is_some()) else { return Ok(Default::default()) };
         let Some(open) = row.open.as_ref() else { return Ok(Default::default()) };
         let mut demand = if open.terminal_is_empty() {
@@ -398,7 +398,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         Ok(demand)
     }
     fn visibility_birth_bytes() -> usize { 2 * size_of::<usize>() + size_of::<vcs::ArtifactGroupVisibility>().next_multiple_of(align_of::<usize>()) }
-    fn next_publication_capacity_byte_demand(&self, parent: &impl SpaceMember, registry: &ChildMemberRegistry<M>) -> Result<usize, Fault> {
+    pub(crate) fn next_publication_capacity_byte_demand(&self, parent: &impl SpaceMember, registry: &ChildMemberRegistry<M>) -> Result<usize, Fault> {
         if self.visibility.is_none() { return Ok(Self::visibility_birth_bytes()); }
         if let Some(lane) = self.parent_lane.as_ref().filter(|lane| !lane.staged()) { return lane.next_capacity_byte_demand(parent).map_err(plugin_sdk_fault); }
         if self.lane_cursor == self.count { return Ok(0); }
@@ -406,7 +406,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         row.lane.as_ref().map_or(Ok(0), |lane| lane.next_capacity_byte_demand(row.member(registry)?).map_err(plugin_sdk_fault))
     }
     /// 🪜️ Retains parent and child typed lanes under one pending common visibility owner.
-    fn advance_publications(&mut self, parent: &mut impl SpaceMember, registry: &mut ChildMemberRegistry<M>, operation: OperationId, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+    pub(crate) fn advance_publications(&mut self, parent: &mut impl SpaceMember, registry: &mut ChildMemberRegistry<M>, operation: OperationId, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
         let grant = group_grant(grant);
         if self.closing || grant.maximum_items == 0 || !self.openings_ready() { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if self.parent_identity.is_none() { self.parent_identity = Some(parent.one_item_publication_identity()); return Ok(group_structural()); }
@@ -438,7 +438,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
     fn next_projection_capacity_byte_demand(&self) -> usize { if self.parent_touched && self.parent_read.is_none() && !self.projection_ready { store::os_store::snapshot_read::ErasedSnapshotRead::LEASE_ALLOCATION_BYTES } else { 0 } }
     fn next_projection_release_byte_demand(&self) -> usize { if self.parent_read.is_some() && self.projection_row == self.count { store::os_store::snapshot_read::ErasedSnapshotRead::LEASE_ALLOCATION_BYTES } else { 0 } }
     /// 🔎️ Checks one exact local-child and target tuple against the staged parent before returning its private lease.
-    fn advance_projection(&mut self, parent: &impl SpaceMember, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+    pub(crate) fn advance_projection(&mut self, parent: &impl SpaceMember, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
         let grant = group_grant(grant);
         if self.closing || grant.maximum_items == 0 || !self.publications_ready() { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if self.projection_ready { return Ok(RetainedCloneStep::Complete(Default::default())); }
@@ -484,7 +484,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         if row.entry.is_none() { store::os_store::snapshot_read::ErasedSnapshotRead::LEASE_ALLOCATION_BYTES } else { ChildContentView::prepared_entry_birth_bytes() }
     }
     /// 🪞️ Prebuilds one candidate lease, fixed registry slot, or immutable view insertion before publication.
-    fn advance_entries(&mut self, registry: &mut ChildMemberRegistry<M>, live: &ChildContentView, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+    pub(crate) fn advance_entries(&mut self, registry: &mut ChildMemberRegistry<M>, live: &ChildContentView, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
         let grant = group_grant(grant);
         if self.closing || grant.maximum_items == 0 || !self.projection_ready { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if self.entries_ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
@@ -510,7 +510,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
     }
     fn next_displaced_view_release_byte_demand(&self) -> usize { self.displaced.iter().flatten().next().map_or(0, ChildContentView::prepared_structure_close_byte_demand) }
     /// 🪵️ Retires one intermediate frontier against the two known immutable owners without live recapture.
-    fn close_displaced_view_step(&mut self, live: &ChildContentView, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+    pub(crate) fn close_displaced_view_step(&mut self, live: &ChildContentView, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let Some(view) = self.displaced.iter_mut().flatten().next() else { return Ok(RetainedCloneStep::Complete(Default::default())); };
         let future = self.future.as_ref().unwrap_or(live);
@@ -525,13 +525,13 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         let target = if let Some(genesis) = row.raw.as_ref().and_then(|raw| raw.genesis.as_ref()) { &genesis.reference } else { &registry.member(parts.key.borrowed()).ok_or_else(|| plugin_sdk_fault("private graph lost its original existing target"))?.reference };
         Ok((&parts.registry_owner.parent.artifact_id, &parts.registry_owner.slot, &target.artifact_id))
     }
-    fn next_graph_demands(&self, graph: &store::os_store::composition_coordinator::CompositionGraph, registry: &ChildMemberRegistry<M>) -> Result<RetirementDemand, Fault> {
+    pub(crate) fn next_graph_demands(&self, graph: &store::os_store::composition_coordinator::CompositionGraph, registry: &ChildMemberRegistry<M>) -> Result<RetirementDemand, Fault> {
         let Some(preparation) = self.graph.as_ref() else { return Ok(RetirementDemand { copy_bytes: size_of::<store::GroupOwnsPreparation>(), capacity_bytes: 0, release_bytes: 0, depth: 1 }); };
         if self.graph_cursor < self.count { let (parent, slot, child) = self.graph_edge(self.graph_cursor, registry)?; return preparation.next_edge_demands(graph, parent, slot, child).map_err(|_| plugin_sdk_fault("private graph rejected its exact edge authority")); }
         Ok(preparation.next_preparation_demands(graph))
     }
     /// 🌳️ Builds one sorted ownership row or ancestor hop with separate source-word and backing grants.
-    fn advance_graph(&mut self, graph: &mut store::os_store::composition_coordinator::CompositionGraph, registry: &ChildMemberRegistry<M>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+    pub(crate) fn advance_graph(&mut self, graph: &mut store::os_store::composition_coordinator::CompositionGraph, registry: &ChildMemberRegistry<M>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
         let idle=RetainedCloneProgress::default();
         if self.closing || grant.maximum_items == 0 || !self.entries_ready() || self.displaced.iter().any(Option::is_some) { return Ok(RetainedCloneStep::Progress(idle)); }
         let demand=self.next_graph_demands(graph,registry)?;
@@ -549,9 +549,9 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         }
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..idle }))
     }
-    fn ready(&self, graph: &store::os_store::composition_coordinator::CompositionGraph) -> bool { !self.closing && !self.committed && self.count <= PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN && self.publications_ready() && self.projection_ready && self.entries_ready() && self.displaced.iter().all(Option::is_none) && self.graph.as_ref().is_some_and(|preparation| graph.owns_group_ready(preparation)) }
+    pub(crate) fn ready(&self, graph: &store::os_store::composition_coordinator::CompositionGraph) -> bool { !self.closing && !self.committed && self.count <= PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN && self.publications_ready() && self.projection_ready && self.entries_ready() && self.displaced.iter().all(Option::is_none) && self.graph.as_ref().is_some_and(|preparation| graph.owns_group_ready(preparation)) }
     /// 🔓️ Transfers at most sixty-five already staged roots and their prebuilt view before any host output.
-    fn commit(&mut self, parent: &mut impl SpaceMember, registry: &mut ChildMemberRegistry<M>, graph: &mut store::os_store::composition_coordinator::CompositionGraph, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<Option<ChildContentView>, Fault> {
+    pub(crate) fn commit(&mut self, parent: &mut impl SpaceMember, registry: &mut ChildMemberRegistry<M>, graph: &mut store::os_store::composition_coordinator::CompositionGraph, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<Option<ChildContentView>, Fault> {
         if !grant.permits_one() || grant.maximum_capacity_bytes < 4096 || !self.ready(graph) { return Ok(None); }
         if !self.parent_touched && self.parent_identity != Some(parent.one_item_publication_identity()) { return Err(plugin_sdk_fault("untouched parent authority changed before private child decision")); }
         let visibility = self.visibility.as_ref().unwrap();
@@ -576,7 +576,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         Ok(self.future.take())
     }
     /// 📏️ Exposes the entire next close allocation, preserving each original owner on undergrant.
-    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
         let release = |release_bytes| RetirementDemand { release_bytes, depth: 1, ..Default::default() };
         let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "private group owner depth overflow"))?; Ok(demand) };
@@ -605,7 +605,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         Ok(RetirementDemand { depth: usize::from(!self.complete), ..Default::default() })
     }
     /// ♻️ Returns private reads before staged abort and preserves each independently granted original owner.
-    fn close_step(&mut self, parent: &mut impl SpaceMember, registry: &mut ChildMemberRegistry<M>, graph: &mut store::os_store::composition_coordinator::CompositionGraph, live: &ChildContentView, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+    pub(crate) fn close_step(&mut self, parent: &mut impl SpaceMember, registry: &mut ChildMemberRegistry<M>, graph: &mut store::os_store::composition_coordinator::CompositionGraph, live: &ChildContentView, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
         let grant = group_grant(grant);
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -686,7 +686,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         self.complete = true;
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..empty }))
     }
-    fn terminal_is_empty(&self) -> bool { self.complete && self.parent_source.is_none() && self.sources.is_none() && self.original_metadata.is_none() && self.parent_metadata.is_none() && self.parent_lane.is_none() && self.parent_issuer.terminal_is_empty() && self.rows.iter().all(Option::is_none) && self.graph.is_none() && self.parent_read.is_none() && self.future.is_none() && self.displaced.iter().all(Option::is_none) && self.visibility.is_none() && self.visibility_owner.is_none() }
+    pub(crate) fn terminal_is_empty(&self) -> bool { self.complete && self.parent_source.is_none() && self.sources.is_none() && self.original_metadata.is_none() && self.parent_metadata.is_none() && self.parent_lane.is_none() && self.parent_issuer.terminal_is_empty() && self.rows.iter().all(Option::is_none) && self.graph.is_none() && self.parent_read.is_none() && self.future.is_none() && self.displaced.iter().all(Option::is_none) && self.visibility.is_none() && self.visibility_owner.is_none() }
 }
 
 fn group_grant(grant: RetainedCloneGrant) -> RetainedCloneGrant { RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant } }

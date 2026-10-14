@@ -1,0 +1,8 @@
+{
+  "path": "🧰️framework/🔨️modules/🏃️process/🧪️tests/🧭️fixture-placement/🟦️.ts",
+  "before": "6f6c84075346de1b3b1c57c4dec108ab90c2724cc649add0896db074cf81338d",
+  "after": "bceef0bd4dafde6e093347750d26975f6407c7165dae3dc0755409bcf90581e9",
+  "from": "🧪️tests/🧫️fixtures",
+  "to": "🧫️fixtures",
+  "role": "semantic segment classifiers, not reader paths"
+}

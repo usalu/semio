@@ -50,7 +50,7 @@ fn restore_never_drops_live_retained_owners() {
 
 #[test]
 fn retirement_obeys_language_neutral_grants_and_reaches_terminal_empty() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧫️grant-frontier/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧫️grant-frontier/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let text = row["unit"].as_str().unwrap().repeat(row["repetitions"].as_u64().unwrap() as usize);
         let body = row["grantBytes"].as_u64().unwrap() as usize;

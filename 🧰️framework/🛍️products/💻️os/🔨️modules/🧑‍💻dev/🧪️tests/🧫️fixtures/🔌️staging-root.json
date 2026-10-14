@@ -1,0 +1,329 @@
+{
+  "root": {
+    "packageRelativePath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist",
+    "modulesDirectoryName": "🔌️plugin-modules",
+    "profiles": [
+      "prototype",
+      "release"
+    ],
+    "rejectedProfiles": [
+      "",
+      "DEV",
+      "ship",
+      "debug",
+      "dev/release",
+      "../release"
+    ],
+    "consumers": [
+      {
+        "id": "react-vite-mount",
+        "renderer": "react",
+        "profile": "prototype"
+      },
+      {
+        "id": "react-vite-mount",
+        "renderer": "react",
+        "profile": "release"
+      },
+      {
+        "id": "wgpu-vite-mount",
+        "renderer": "wgpu",
+        "profile": "prototype"
+      },
+      {
+        "id": "wgpu-native-descriptor-source",
+        "renderer": "wgpu",
+        "profile": "prototype"
+      },
+      {
+        "id": "wgpu-native-descriptor-source",
+        "renderer": "wgpu",
+        "profile": "release"
+      },
+      {
+        "id": "prepare-and-activate",
+        "renderer": "react",
+        "profile": "prototype"
+      },
+      {
+        "id": "prepare-and-activate",
+        "renderer": "wgpu",
+        "profile": "release"
+      }
+    ],
+    "retiredRoots": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/wgpu-modules"
+    ],
+    "retiredSymbols": [
+      "PLUGIN_MODULES_ROOT",
+      "browserModuleRoot",
+      "wgpuActivatedModulesRoot",
+      "stageWgpuPluginModules"
+    ],
+    "sourceFiles": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📜️script.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🏃️execution/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔄️refresh/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🛂️descriptor/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📥️installation/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🏃️execution/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/👁️watch/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📊️size/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🏗️staging/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🧭️selection/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/📤️publication/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🔐️lease/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🩺️readiness/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/📥️installation/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🔍️freshness/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️serve/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️capability-policy/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️export-path-policy/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️host-handle-policy/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🏃️execution/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🎬️studio/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🔬️catalog-smoke/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/✅️verification/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🏗️structure/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🖼️pixels/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🔬️probe/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🌐️server-pool/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/📊️report/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🏃️execution/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📥️source/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📋️plan/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏗️compiler/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📤️publication/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔍️freshness/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏃️execution/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📽️projection/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📤️publication/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/📋️plan/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/🖥️host/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/🌐️browser/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/📏️measured-row/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/🏃️execution/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧬️schema/🛂️validation/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/📇️canonical-bootstrap-folder-mirror/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🦀️native/📜️script.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🌐️wasm/📜️script.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/📜️script.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🌐️.html",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🎚️config/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🟦️.ts"
+    ]
+  },
+  "freshness": {
+    "command": "bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-prototype",
+    "cases": [
+      {
+        "name": "matching content hashes are fresh even when mtimes would look stale",
+        "facts": {
+          "pluginId": "procedural",
+          "role": "plugin",
+          "activationTracked": true,
+          "stagedAtMs": 1000,
+          "newestSourceMs": 9000,
+          "newestSourcePath": "s/plugin.rs",
+          "sourceContentSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "stagedSourceContentSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "receiptArtifactSha256": "a1"
+        },
+        "verdict": {
+          "pluginId": "procedural",
+          "kind": "fresh"
+        },
+        "line": null
+      },
+      {
+        "name": "mismatched content hashes are loudly stale regardless of mtime",
+        "facts": {
+          "pluginId": "procedural",
+          "role": "plugin",
+          "activationTracked": true,
+          "stagedAtMs": 9000,
+          "newestSourceMs": 1000,
+          "newestSourcePath": "s/plugins/procedural/plugin.rs",
+          "sourceContentSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "stagedSourceContentSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "receiptArtifactSha256": "a1"
+        },
+        "verdict": {
+          "pluginId": "procedural",
+          "kind": "source-changed",
+          "detail": "source bbbbbbbbbbbb… ≠ staged aaaaaaaaaaaa…"
+        },
+        "line": "[stale] procedural: source-changed — source bbbbbbbbbbbb… ≠ staged aaaaaaaaaaaa… — run: bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-prototype"
+      },
+      {
+        "name": "absent content hashes stay fresh so legacy receipts do not false-stale",
+        "facts": {
+          "pluginId": "flow",
+          "role": "plugin",
+          "activationTracked": true,
+          "stagedAtMs": 1757600000000,
+          "newestSourceMs": 1757690000000,
+          "newestSourcePath": "s/flow.rs",
+          "receiptArtifactSha256": "a1"
+        },
+        "verdict": {
+          "pluginId": "flow",
+          "kind": "fresh"
+        },
+        "line": null
+      },
+      {
+        "name": "nothing staged outranks every other verdict",
+        "facts": {
+          "pluginId": "flow",
+          "role": "plugin",
+          "activationTracked": true,
+          "newestSourceMs": 1757690000000,
+          "newestSourcePath": "s/flow.rs"
+        },
+        "verdict": {
+          "pluginId": "flow",
+          "kind": "unstaged",
+          "detail": "no staged module directory"
+        },
+        "line": "[stale] flow: unstaged — no staged module directory — run: bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-prototype"
+      },
+      {
+        "name": "a staged module missing from the activation receipt is reported",
+        "facts": {
+          "pluginId": "flow",
+          "role": "plugin",
+          "activationTracked": true,
+          "stagedAtMs": 1757600000000,
+          "newestSourceMs": 1000
+        },
+        "verdict": {
+          "pluginId": "flow",
+          "kind": "unactivated",
+          "detail": "staged 2025-09-11T14:13:20.000Z but absent from the activation receipt"
+        },
+        "line": "[stale] flow: unactivated — staged 2025-09-11T14:13:20.000Z but absent from the activation receipt — run: bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-prototype"
+      },
+      {
+        "name": "a materialized-but-never-published extension is never a silent no-op",
+        "facts": {
+          "pluginId": "flow-extension-math",
+          "role": "extension",
+          "activationTracked": true,
+          "stagedAtMs": 1757690000000,
+          "newestSourceMs": 1000,
+          "receiptArtifactSha256": "b2"
+        },
+        "verdict": {
+          "pluginId": "flow-extension-math",
+          "kind": "unpublished",
+          "detail": "installed (nothing) ≠ activated b2"
+        },
+        "line": "[stale] flow-extension-math: unpublished — installed (nothing) ≠ activated b2 — run: bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-prototype"
+      },
+      {
+        "name": "an extension published at the activated hash is fresh",
+        "facts": {
+          "pluginId": "flow-extension-math",
+          "role": "extension",
+          "activationTracked": true,
+          "stagedAtMs": 1757690000000,
+          "newestSourceMs": 1000,
+          "receiptArtifactSha256": "b2",
+          "installedPackageHash": "b2"
+        },
+        "verdict": {
+          "pluginId": "flow-extension-math",
+          "kind": "fresh"
+        },
+        "line": null
+      },
+      {
+        "name": "an extension published at a previous hash is reported",
+        "facts": {
+          "pluginId": "flow-extension-math",
+          "role": "extension",
+          "activationTracked": true,
+          "stagedAtMs": 1757690000000,
+          "newestSourceMs": 1000,
+          "receiptArtifactSha256": "b2",
+          "installedPackageHash": "b1"
+        },
+        "verdict": {
+          "pluginId": "flow-extension-math",
+          "kind": "unpublished",
+          "detail": "installed b1 ≠ activated b2"
+        },
+        "line": "[stale] flow-extension-math: unpublished — installed b1 ≠ activated b2 — run: bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-prototype"
+      },
+      {
+        "name": "a receipt-less lane asks only the questions it can answer",
+        "facts": {
+          "pluginId": "procedural",
+          "role": "extension",
+          "activationTracked": false,
+          "stagedAtMs": 1757690000000,
+          "newestSourceMs": 1000
+        },
+        "verdict": {
+          "pluginId": "procedural",
+          "kind": "fresh"
+        },
+        "line": null
+      },
+      {
+        "name": "a receipt-less lane still reports content-hash drift",
+        "facts": {
+          "pluginId": "procedural",
+          "role": "plugin",
+          "activationTracked": false,
+          "stagedAtMs": 1757600000000,
+          "newestSourceMs": 1757690000000,
+          "newestSourcePath": "s/plugins/procedural/plugin.rs",
+          "sourceContentSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "stagedSourceContentSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "verdict": {
+          "pluginId": "procedural",
+          "kind": "source-changed",
+          "detail": "source bbbbbbbbbbbb… ≠ staged aaaaaaaaaaaa…"
+        },
+        "line": "[stale] procedural: source-changed — source bbbbbbbbbbbb… ≠ staged aaaaaaaaaaaa… — run: bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-prototype"
+      }
+    ],
+    "walk": {
+      "outputDirectories": [
+        "dist",
+        "target",
+        "node_modules",
+        "pkg",
+        ".git"
+      ],
+      "generatedOwnerFiles": [
+        "🔣️.json",
+        "🛂️.descriptor.semio"
+      ],
+      "concurrency": {
+        "files": 32,
+        "components": 4
+      },
+      "yielding": {
+        "files": 1500,
+        "maxSynchronousShare": 0.1,
+        "description": "A freshness walk over a tree without a staged index hashes every file, and still does all but a small share of that work after its first await (the synchronous prefix is only the index read), so a dev server keeps answering while it runs; ticket 26/09/23 F3 measured 48.9 s synchronous over 54 131 files before the fix."
+      }
+    }
+  }
+}

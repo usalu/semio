@@ -12,7 +12,7 @@ pub(crate) const LOCAL_INTERACTION_QUERY_PAGE_BYTES: usize = 256;
 use protocol::LocalInteractionQueryToken as LocalInteractionPageToken;
 
 /// 👁️ A borrowed page cannot outlive or mutate its exact query owner.
-struct LocalInteractionPageView<'a> {
+pub(crate) struct LocalInteractionPageView<'a> {
     pub token: &'a LocalInteractionPageToken,
     pub terminal: bool,
     pub bytes: &'a [u8],
@@ -243,4 +243,4 @@ impl<C: LocalInteractionQueryCapture> LocalInteractionQuery<C> {
 
 #[cfg(test)]
 #[path = "🧪️tests/📃️query/🦀️.rs"]
-mod tests;
+pub(crate) mod tests;

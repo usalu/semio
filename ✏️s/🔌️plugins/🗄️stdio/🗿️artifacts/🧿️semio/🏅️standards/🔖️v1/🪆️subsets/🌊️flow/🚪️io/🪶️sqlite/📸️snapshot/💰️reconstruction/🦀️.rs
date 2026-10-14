@@ -1,6 +1,7 @@
 //! 🪢️ Original flow nodes, edges and ordered parameter fields share one retained relational workspace.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{SemioFlowSnapshot,FlowNode,FlowParam,FlowEdge,PortRef,SemioPoint2,identity,single_float_row,float_columns};
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[derive(semio_framework_value::RetireOwned)]
 struct Prefix{snapshot:Option<SemioFlowSnapshot>,validation:SchemaValidationStorage,nodes:RowIndexStorage,parameters:RowIndexStorage,edges:RowIndexStorage,order:Vec<usize>,edge_order:Vec<usize>,grouped:Vec<usize>,node_names:Vec<usize>,edge_names:Vec<usize>}

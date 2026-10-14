@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createDevPluginSource } from "@semio-tech/framework";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { rendererResidentLedger } from "../../💾️resident/🟦️.ts";
-import residentFixture from "../../💾️resident/🧫️fixtures/🔣️.json";
+import residentFixture from "../../💾️resident/🧪️tests/🧫️fixtures/🔣️.json";
 import {
   BootstrapStatusNotice,
   ExecutionTargetStatusNotice,
@@ -15,7 +15,7 @@ import {
   resolveRequiredHostApps,
   type BootstrapUiStatus,
 } from "../../🧱️elements/🏛️ShellHost/🪪️host-bootstrap/🟦️.tsx";
-import hostBootstrapFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🪪️host-bootstrap/🔣️.json";
+import hostBootstrapFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🪪️host-bootstrap/🔣️.json";
 import { pluginAvailabilityRouteV1, pluginInstallBandTextV1, pluginInstallProgressTotalV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import { localProgramsV1, programPluginIdV1, sessionProgramsV1, upsertLoadedProgramV1, type LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import { extensionProgramForV1, invocationPluginIdV1, spaceIndexOpeningArgsV1 } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";

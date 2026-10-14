@@ -10,7 +10,7 @@ import { ticketOutput } from "../../🎫️output/🟦️.ts";
 
 test("artifact verification reruns for semantic provider, fixture, DDL and shared control edits", async () => {
   const workspace = getWorkspaceRoot(); const output = ticketOutput(workspace, []);
-  const fixture = await Bun.file(new URL("../../🧫️fixtures/🗿️artifact-source/🔣️.json", import.meta.url)).json();
+  const fixture = await Bun.file(new URL("../🧫️fixtures/🗿️artifact-source/🔣️.json", import.meta.url)).json();
   const root = mkdtempSync(join(output, "artifact-source-"));
   const put = (path: string, value: unknown): void => { const file = join(root, path); mkdirSync(dirname(file), { recursive: true }); writeFileSync(file, typeof value === "string" ? value : JSON.stringify(value)); };
   const require = createRequire(join(workspace, "package.json"));

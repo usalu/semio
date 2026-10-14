@@ -8,7 +8,7 @@ import {Database} from "bun:sqlite";
 /** 🌿️ Original VCS ownership laws use plain examples and independent JSONPatch/UTF8 references. */
 export function testOriginalVcsClosure():void{
  assert.equal(existsSync(new URL("../🧬️schema/🔣️.json",import.meta.url)),false,"Testing examples cannot own schema authority");
- const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+ const fixture=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
  const schema=JSON.parse(readFileSync(new URL("../../../../../../../🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json",import.meta.url),"utf8"));
  const ajv=new Ajv({strict:true,allErrors:true}).addSchema(schema),validateGrant=ajv.compile({$ref:schema.$id+"#/$defs/Grant"}),validateProgress=ajv.compile({$ref:schema.$id+"#/$defs/Progress"});let assertions=0;
  const contract=JSON.parse(readFileSync(new URL("../../../../../../../🔨️modules/🌱️value/♻️retirement/🧬️contract/🧬️schema/🔣️.json",import.meta.url),"utf8"));ajv.addSchema(contract);const validateDemand=ajv.compile({$ref:contract.$id+"#/$defs/Demand"});

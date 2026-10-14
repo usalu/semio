@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "⚖️create-rule/🧴️adds-a-corridor-width",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️create-rule/🧴️adds-a-corridor-width/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️create-rule/🧴️adds-a-corridor-width/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️create-rule/🧴️adds-a-corridor-width/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️create-rule/🧴️adds-a-corridor-width/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️create-rule/🧴️adds-a-corridor-width/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚖️create-rule/🧴️adds-a-corridor-width/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚖️create-rule/🧴️adds-a-corridor-width/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚖️create-rule/🧴️adds-a-corridor-width/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚖️create-rule/🧴️adds-a-corridor-width/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚖️create-rule/🧴️adds-a-corridor-width/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

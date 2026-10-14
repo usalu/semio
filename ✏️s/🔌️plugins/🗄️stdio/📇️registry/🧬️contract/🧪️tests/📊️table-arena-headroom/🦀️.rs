@@ -134,7 +134,7 @@ fn cost(render: impl FnOnce() -> UiAssemblyResult<BuiltNode>) -> usize {
 
 #[test]
 fn every_table_argument_the_arena_refuses_is_a_capacity_refusal() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📊️table-arena-headroom/🔣️.json")).expect("neutral table arena fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📊️table-arena-headroom/🔣️.json")).expect("neutral table arena fixture");
     let revision = fixture["revision"].as_str().expect("revision");
     drain();
     let held = hold_until(0);
@@ -148,7 +148,7 @@ fn every_table_argument_the_arena_refuses_is_a_capacity_refusal() {
 
 #[test]
 fn a_short_arena_shortens_the_table_window_keeps_the_structure_controls_and_recovers() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📊️table-arena-headroom/🔣️.json")).expect("neutral table arena fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📊️table-arena-headroom/🔣️.json")).expect("neutral table arena fixture");
     let revision = fixture["revision"].as_str().expect("revision");
     let locales = [(Locale::En, "en"), (Locale::De, "de")];
     for case in fixture["cases"].as_array().expect("cases") {

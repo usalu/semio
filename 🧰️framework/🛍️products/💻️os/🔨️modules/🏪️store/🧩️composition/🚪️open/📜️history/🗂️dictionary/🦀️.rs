@@ -491,6 +491,12 @@ pub(crate) struct VerifiedMemberHistoryDictionary {
 }
 
 impl VerifiedMemberHistoryDictionary {
+    pub(super) fn original_history_close_source(&self,cx:&StepContext<'_>)->Result<super::super::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
+        self.owners.as_ref().and_then(|owners|owners.input.as_ref()).ok_or(MemberOpenDiagnostic::Stale)?.original_history_close_source(cx)
+    }
+    pub(super) fn original_history_source(&mut self,cx:&StepContext<'_>)->Result<super::super::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
+        self.check_step_authority(cx)?;self.owners.as_ref().and_then(|owners|owners.input.as_ref()).ok_or(MemberOpenDiagnostic::Stale)?.original_history_source(cx)
+    }
     pub(super) fn check_step_authority(&mut self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
         if let Some(error) = self.diagnostic {
             return Err(error);

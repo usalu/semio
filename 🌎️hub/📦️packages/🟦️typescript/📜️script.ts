@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
-import { typecheckProject } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️typescript/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { resolve as compilerStatePath } from "node:path";
+import { typecheckProject } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🌎️ `os-hub-ts` (nx `os-hub-ts`) router: `bun ./📜️script.ts <test [quick|long|exhaustive] [args…]|two-client-e2e <sqlite|postgres|neo4j>|document-growth-e2e <sqlite|postgres|neo4j>|backend <up|down|status> <postgres|neo4j|all>|backend run <postgres|neo4j> -- <command…>|backup-restore-drill|shutdown-drill|residency-watch|hub-freshness|agent-ceiling-check|docker-image-build|docker-image-check|typecheck>`.
  * Bun integration-test harness that boots the REAL `os-hub` binary and drives it with two
  * independent clients to prove the hub's collaboration contract end-to-end (ticket
@@ -10,10 +11,10 @@ import { resolveTestLevel } from "../../../🧰️framework/🔨️modules/🏃�
  * reports the whole e2e suite as skipped in well under a second. */
 import { randomBytes } from "node:crypto";
 import { join } from "node:path";
-import { type TestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { type TestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { runBunxStatus, runCargo, runVitest, runRepositoryTestCommand } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { HUB_BACKEND_ENGINE, HUB_BACKENDS, claimHubBackend, ensureHubBackend, freeLoopbackPort, hubBackendEngineVersion, hubBackendIdentity, hubBackendName, hubBackendStatus, hubDevBinaryPath, hubDevPostgresBinaryPath, stopHubBackend, type HubBackendName, type HubBackendProgress } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 
@@ -587,7 +588,7 @@ class DockerImageCheckScript extends BundleScript {
 /** 🪁️ Type-checks every `🌎️hub/**` TypeScript source against the hub-scoped `tsconfig.json`. */
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await typecheckProject({ workspace: this.repoRoot, cwd: this.root, project: "tsconfig.json", owner: "hub:typescript", args: segments, timeoutMs: 120_000, execution: { signal: this.invocation.control.signal } });
+    await typecheckProject({ workspace: this.repoRoot, stateRoot: compilerStatePath(this.repoRoot, ".cache", "framework"), invocation: this.invocation, cwd: this.root, project: "tsconfig.json", owner: "hub:typescript", args: segments, timeoutMs: 120_000 });
   }
 }
 

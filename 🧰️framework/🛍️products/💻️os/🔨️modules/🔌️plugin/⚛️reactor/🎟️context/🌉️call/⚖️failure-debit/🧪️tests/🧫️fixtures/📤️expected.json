@@ -1,0 +1,62 @@
+[
+  {
+    "recipient": {
+      "copiedItems": 5,
+      "copiedBytes": 20,
+      "retainedCapacityBytes": 26,
+      "releasedBytes": 30
+    },
+    "fuel": 8,
+    "accepted": true
+  },
+  {
+    "recipient": {
+      "copiedItems": 5,
+      "copiedBytes": 20,
+      "retainedCapacityBytes": 26,
+      "releasedBytes": 30
+    },
+    "fuel": 8,
+    "accepted": false
+  },
+  {
+    "recipient": {
+      "copiedItems": 5,
+      "copiedBytes": 20,
+      "retainedCapacityBytes": 26,
+      "releasedBytes": 30
+    },
+    "fuel": 8,
+    "accepted": false
+  },
+  {
+    "recipient": {
+      "copiedItems": 5,
+      "copiedBytes": 20,
+      "retainedCapacityBytes": 26,
+      "releasedBytes": 30
+    },
+    "fuel": 8,
+    "accepted": false
+  },
+  {
+    "recipient": {
+      "copiedItems": 5,
+      "copiedBytes": 20,
+      "retainedCapacityBytes": 26,
+      "releasedBytes": 30
+    },
+    "fuel": 8,
+    "accepted": false
+  },
+  {
+    "recipient": {
+      "copiedItems": 5,
+      "copiedBytes": 20,
+      "retainedCapacityBytes": 26,
+      "releasedBytes": 30
+    },
+    "fuel": 0,
+    "accepted": true
+  }
+]

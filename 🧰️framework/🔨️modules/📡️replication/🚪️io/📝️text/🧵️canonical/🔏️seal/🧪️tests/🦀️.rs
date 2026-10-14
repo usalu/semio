@@ -7,7 +7,7 @@ fn hex(bytes:[u8;32])->String{bytes.iter().map(|byte|format!("{byte:02x}")).coll
 
 #[test]
 fn canonical_native_source_handoff_refuses_extracted_original_without_losing_custody(){
- let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+ let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let edit=Box::new(semio_framework_pack_json::from_json_str::<Edit<bool>>(&serde_json::to_string(&cases["cases"][0]["edit"]).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
  let pointer=edit.as_ref()as*const Edit<bool>;let id=edit.id.as_ptr();
  let admitted=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:131072,maximum_depth:4096};
@@ -21,8 +21,8 @@ fn canonical_native_source_handoff_refuses_extracted_original_without_losing_cus
 
 #[test]
 fn canonical_native_edit_seal_preserves_original_box_and_fields_after_framed_digest_and_cancellation(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
- let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for(index,row)in cases["cases"].as_array().unwrap().iter().enumerate(){
   let mut pauses:Vec<(Option<usize>,Option<Phase>,bool)>=fixture["pauses"].as_array().unwrap().iter().map(|value|(Some(value.as_u64().unwrap()as usize),None,false)).collect();
   for phase in [Phase::Header,Phase::HashStart,Phase::Hash,Phase::TakeOwner,Phase::SourceClose,Phase::Finalize,Phase::Ready]{pauses.push((None,Some(phase),false));}pauses.push((None,None,true));pauses.push((None,None,false));

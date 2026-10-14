@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import schema from "../../🔣️.json" with { type: "json" };
-import fixture from "../../🧫️fixtures/🪪️document/🔣️.json" with { type: "json" };
+import fixture from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json" with { type: "json" };
 import { applyCadWorldWindowTransientMutation, parseCadWorldWindowTransient } from "../../🟦️.ts";
 
 /** ⚖️ The CAD world-window transient contract: Ajv (third-party) and the TypeScript twin agree on every fixture row. */

@@ -866,7 +866,7 @@ impl UiDocumentLease {
     /// `framework.section.catalogue`, …) that `semio_framework_plugin::app::paged_text_carrier`
     /// publishes; the walk follows the record graph, so any page order reassembles byte-identically.
     ///
-    /// See `🧬️contract/🧫️fixtures/📜️paged-text.json`.
+    /// See `🧬️contract/🧪️tests/🧫️fixtures/📜️paged-text.json`.
     pub fn read_paged_text(&self) -> Result<String, UiPagedTextError> {
         let root = self.header().map_err(UiPagedTextError::Lease)?.root;
         let read = (0..UI_DOCUMENT_PUBLISH_OPPORTUNITIES)

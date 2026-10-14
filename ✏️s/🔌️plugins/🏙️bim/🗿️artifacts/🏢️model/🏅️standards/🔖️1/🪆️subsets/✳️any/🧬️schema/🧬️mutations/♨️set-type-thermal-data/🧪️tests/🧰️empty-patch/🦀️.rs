@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "♨️set-type-thermal-data/🧰️empty-patch",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧰️empty-patch/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧰️empty-patch/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧰️empty-patch/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧰️empty-patch/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧰️empty-patch/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧰️empty-patch/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧰️empty-patch/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧰️empty-patch/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧰️empty-patch/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♨️set-type-thermal-data/🧰️empty-patch/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

@@ -1,13 +1,20 @@
 //! 🪶️ Unmounted authored SQLite mapping adds paid literal-field copies after its owning baseline.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
-use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
 
-impl ArtifactSqliteSnapshot for BinarySnapshot {
-    const SQLITE_SCHEMA: &'static str = include_str!("../../🗄️.sql");
+impl ArtifactSqliteSnapshotHost for BinarySnapshot {
+    
 
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
+    
+
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for BinarySnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("../../🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, self.bytes.len())?;
         control.check_rows(self.bytes.len().checked_add(1).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"binary entity count overflow"))?)?;
         control.check_value_bytes(self.bytes.len().checked_mul(32).and_then(|count| count.checked_add(self.schema.len())).and_then(|count| count.checked_add(8)).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"binary value size overflow"))?)?;
@@ -23,8 +30,7 @@ impl ArtifactSqliteSnapshot for BinarySnapshot {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, self.bytes.len(), self.bytes.len())?;
         Ok(database)
     }
-
-    fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
         validate_sqlite_database_schema(database, Self::SQLITE_SCHEMA, control.limits())?;
         control.check_database(database, SqliteSnapshotPhase::ReconstructSnapshot)?;
         let total = database.table("binary_byte")?.rows.len();

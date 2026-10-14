@@ -1,0 +1,24 @@
+{
+  "schema": "semio.repository.go-executable-ownership/v1",
+  "general": {
+    "script": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+    "project": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+    "source": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🐹️go-build/🧪️tests/🚀️executables/🟦️.ts"
+  },
+  "repository": {
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🐹️executable-owners/🟦️.ts",
+    "fixture": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🐹️executable-owners/🔣️.json"
+  },
+  "target": "test-go-executable-acceptance",
+  "repositoryProject": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "executionContracts": {
+    "test-go-executable-acceptance": { "version": 1, "kind": "orchestration" },
+    "test-go-executable-ownership": { "version": 1, "kind": "source" }
+  },
+  "selector": "go-executable-acceptance",
+  "modes": ["prototype", "release"],
+  "owners": ["client", "repo", "coordinator"],
+  "protocol": "2024-11-05",
+  "serverName": "repo",
+  "health": "ok"
+}

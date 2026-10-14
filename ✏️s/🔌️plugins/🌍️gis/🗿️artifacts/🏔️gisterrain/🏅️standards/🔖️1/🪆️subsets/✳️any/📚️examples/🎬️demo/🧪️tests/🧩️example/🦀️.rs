@@ -7,7 +7,7 @@ async fn primary_asset_is_nonempty() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_child_handle_addresses_its_own_target() {
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
-    let snapshot = <crate::GisTerrainSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
+    let snapshot = <crate::GisTerrainSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
     let mesh = snapshot.mesh.expect("demo fixture carries its composed mesh");
     assert_eq!(mesh.child_id, mesh.target.artifact_id);
 }
@@ -17,7 +17,7 @@ async fn mesh_child_handle_addresses_its_own_target() {
 async fn inference_determinism_law() {
     use protocol::Inference;
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
-    let snapshot = <crate::GisTerrainSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
+    let snapshot = <crate::GisTerrainSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
     let inference = crate::standards::v1::subsets::any::schema::inferences::GisTerrainInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::GisTerrainInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }

@@ -11,7 +11,7 @@ fn item(id: &str, count: u32) -> CuratedItem {
 }
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🧺️parent-lanes/🔣️.json")).expect("neutral parent lanes")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🧺️parent-lanes/🔣️.json")).expect("neutral parent lanes")
 }
 
 fn state(base: &CurationSnapshot, rows: &serde_json::Value) -> CurationSnapshot {

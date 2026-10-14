@@ -117,8 +117,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
    *   for an editor that never declared the action (`appOffersRegisteredExamples`). A non-editor still
    *   needs the action on a window kind or on the app. Restated here rather than imported, because
    *   `🛠️ShellHelpers` is the renderer's React surface and this gate is a static read of committed JSON.
-   * — `labels` is the text each row RENDERS in that picker: play is terminology-`native` and locale-`en`
-   *   (`PLAY_LOCALE`/`PLAY_TERMINOLOGY`), so the navbar shows `label.native.en`, which is authored prose
+   * — `labels` is the text each row RENDERS in that picker: the catalog fixture declares the explicit English locale
+   *   and play retains native terminology, so the navbar shows `label.native.en`, which is authored prose
    *   and NOT the example id spelled out. */
   const publishedExamples = (index: number): Published => {
     if (resolved.has(index)) return resolved.get(index)!;

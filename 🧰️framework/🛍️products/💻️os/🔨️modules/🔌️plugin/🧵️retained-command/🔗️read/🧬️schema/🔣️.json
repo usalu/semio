@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "retirement",
+    "sourceGeneration",
+    "sourceRevision",
+    "sameBusinessIdentity",
+    "transferReceipt",
+    "deniedReceipt",
+    "denials",
+    "replacementSnapshot",
+    "terminalDropBytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "const": "originalStoreSnapshotRead"
+    },
+    "retirement": {
+      "const": "originalTypedRead"
+    },
+    "sourceGeneration": {
+      "const": "actualIssuer"
+    },
+    "sourceRevision": {
+      "const": "actualIssuer"
+    },
+    "sameBusinessIdentity": {
+      "const": true
+    },
+    "transferReceipt": {
+      "const": [
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    "deniedReceipt": {
+      "const": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "denials": {
+      "const": [
+        "fuel",
+        "deadline",
+        "cancel",
+        "items",
+        "depth",
+        "staleRevision",
+        "staleGeneration",
+        "wrongOperation",
+        "wrongGeneration",
+        "borrowedDonor"
+      ]
+    },
+    "replacementSnapshot": {
+      "const": false
+    },
+    "terminalDropBytes": {
+      "const": 0
+    }
+  }
+}

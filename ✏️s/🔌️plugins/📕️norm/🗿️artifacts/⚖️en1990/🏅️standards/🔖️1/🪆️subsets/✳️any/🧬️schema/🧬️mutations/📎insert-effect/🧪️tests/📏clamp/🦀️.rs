@@ -7,10 +7,10 @@
 fn insert_effect_clamp() {
     super::assert_vector(super::Vector {
         kind: "insert-effect",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/📎insert-effect/📏clamp/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/📎insert-effect/📏clamp/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/📎insert-effect/📏clamp/📸️snapshot/➡️after/🔣️.json"),
-        diff: Some(include_str!("../../../../../🧫️fixtures/🧬️mutations/📎insert-effect/📏clamp/🔺️diff/🔣️.json")),
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/📎insert-effect/📏clamp/🎯️outcome/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎insert-effect/📏clamp/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎insert-effect/📏clamp/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎insert-effect/📏clamp/📸️snapshot/➡️after/🔣️.json"),
+        diff: Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎insert-effect/📏clamp/🔺️diff/🔣️.json")),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎insert-effect/📏clamp/🎯️outcome/🔣️.json"),
     });
 }

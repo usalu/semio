@@ -44,7 +44,7 @@ pub fn serialize(snapshot: &ProgramSnapshot) -> Result<XlsxSnapshot, semio_frame
 }
 
 pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
-    Ok(<XlsxSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&serialize(snapshot)?))
+    Ok(<XlsxSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&serialize(snapshot)?))
 }
 
 pub fn serialize_raw_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {

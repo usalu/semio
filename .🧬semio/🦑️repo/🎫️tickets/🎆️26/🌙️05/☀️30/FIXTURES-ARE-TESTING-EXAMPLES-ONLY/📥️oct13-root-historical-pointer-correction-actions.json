@@ -1,0 +1,29 @@
+{
+  "exclusive": false,
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+  "beforeSha256": "0cf43b4799e69222b493bc93011a48f083afc8218c9a886e2092d165e32065da",
+  "afterSha256": "c3e39ed5122709c5f963f14a0bc7f53b93ec7caad414a9c6db39bc5c19ce5be9",
+  "pointers": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+      "pointer": "/exclusions/censusExcludedEvidencePaths/0",
+      "currentSha256": "c3e39ed5122709c5f963f14a0bc7f53b93ec7caad414a9c6db39bc5c19ce5be9",
+      "before": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+      "after": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+      "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+      "targetSha256": "c3e39ed5122709c5f963f14a0bc7f53b93ec7caad414a9c6db39bc5c19ce5be9",
+      "role": "qualified original serialized physical locator"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+      "pointer": "/exclusions/cadDrawGoldenPath",
+      "currentSha256": "c3e39ed5122709c5f963f14a0bc7f53b93ec7caad414a9c6db39bc5c19ce5be9",
+      "before": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
+      "after": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
+      "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
+      "targetSha256": "eca5acc066ccf1ec2f686a1a4cc98fccc3089a87dd354e3c5aa72f687a8b6080",
+      "role": "qualified original serialized physical locator"
+    }
+  ],
+  "reason": "These two fields belong to the recorded historical source snapshot, not current lookup metadata. Original exact preimage identity assertions proved intended frozen input role; restore only the two authored pointer edits, no Source/peer rollback."
+}

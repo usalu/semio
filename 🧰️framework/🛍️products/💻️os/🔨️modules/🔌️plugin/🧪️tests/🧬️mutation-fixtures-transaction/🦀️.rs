@@ -1,6 +1,6 @@
 #[path = "../../🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/🦀️.rs"]
 pub mod mutations;
-use mutations::{SetTransactionCount, SetTransactionCountAndNotify, SetTransactionCountWithoutPreflight, TxnMutation};
+pub(crate) use mutations::{SetTransactionCount, SetTransactionCountAndNotify, SetTransactionCountWithoutPreflight, TxnMutation};
 crate::app_testing::mutation_fixture::wire::fixture_operation_text!(TxnMutation);
 
 #[cfg(test)]
@@ -9,6 +9,7 @@ mod command_close_tests;
 
 // 🧪️ Proves the `🧫️fixtures` transaction helpers and the underlying transaction machinery
 // against a minimal `ArtifactApp` fixture whose notify mutation carries a real foreign step.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::app_testing::artifact_app_laws::{assert_proposes_transaction, assert_transaction_commits_as_one_edit, assert_transaction_rollback_leaves_state_untouched, meta, new_registered_app, settle_registered_typed_operation};
 use crate::window_surface::{built_text_to_component_tree, UiAssemblyResult};
 use crate::app_contract::ArtifactApp;
@@ -33,13 +34,18 @@ use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, o
 
 #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[artifact(extension = "testkit-txn")]
-struct TxnSnapshot {
-    count: i32,
+pub(crate) struct TxnSnapshot {
+    pub(crate) count: i32,
 }
 
-impl store::os_store::serialization::ArtifactSqliteSnapshot for TxnSnapshot {
-    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
-    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
+impl store::os_store::serialization::ArtifactSqliteSnapshotHost for TxnSnapshot {
+    
+    
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for TxnSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
         use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotPhase, SqliteValue};
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
         let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
@@ -47,7 +53,7 @@ impl store::os_store::serialization::ArtifactSqliteSnapshot for TxnSnapshot {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
         Ok(database)
     }
-    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
         let rows = &database.table("transaction_state")?.rows;
         if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 {
@@ -65,7 +71,7 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for TxnSnapsh
     }
 }
 
-impl store::os_store::serialization::ArtifactDsl for TxnSnapshot {
+impl pack::snapshot::ArtifactDsl for TxnSnapshot {
     const EXTENSION: &'static str = "testkit-txn";
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if text.trim().is_empty() {
@@ -78,11 +84,9 @@ impl store::os_store::serialization::ArtifactDsl for TxnSnapshot {
     }
 }
 
-impl store::os_store::serialization::ArtifactPack for TxnSnapshot {
+impl pack::snapshot::ArtifactPack for TxnSnapshot {
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())
-    }
+    
 
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         serde_json::to_vec(self).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))
@@ -94,10 +98,15 @@ impl store::os_store::serialization::ArtifactPack for TxnSnapshot {
         serde_json::from_slice(bytes).map_err(|error| match (u32::try_from(error.line()), u32::try_from(error.column())) { (Ok(line), Ok(column)) => store::PackError::from(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(line, column))), _ => store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, error.to_string())) })
     }
 }
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for TxnSnapshot {
+fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())
+    }
+}
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-struct TxnDiff {
-    count: Option<i32>,
+pub(crate) struct TxnDiff {
+    pub(crate) count: Option<i32>,
 }
 
 impl protocol::DiffAlgebra<TxnSnapshot> for TxnDiff {
@@ -417,41 +426,48 @@ impl ArtifactApp for TxnApp {
     }
 }
 
-fn close_transaction_store_roots(app: &mut VcsArtifactApp<TxnApp>) {
-    crate::app_testing::artifact_app_laws::close_registered_fixture_app(app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
+fn close_transaction_store_roots(app: &mut VcsArtifactApp<TxnApp>, cx:&mut semio_framework_job::StepContext<'_>) {
+    crate::app_testing::artifact_app_laws::close_registered_fixture_app(app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dispatching_a_mutation_with_foreign_steps_proposes_instead_of_applying() {
+    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-    let draft = assert_proposes_transaction(&mut app, TxnCommand::IncrementAndNotify, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
+    let draft = assert_proposes_transaction(&mut app, TxnCommand::IncrementAndNotify, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity(),cx).await;
     assert_eq!(draft.local_ops.len(), 1, "the local op must still be encoded for the proposal");
     assert_eq!(draft.foreign.len(), 1, "the foreign step must be reported");
     assert_eq!(draft.foreign[0].target.artifact_id, "peer-doc");
-    close_transaction_store_roots(&mut app);
+    close_transaction_store_roots(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
 
 /// 🔁️ One dispatch as the host drives it: a mounted app answers with an ADMISSION receipt and hands
 /// the reducer to a worker, so the store only advances once the operation settles. Every law below
 /// reads `snapshot()`/the history right after its dispatch, which is only true after this.
-async fn dispatch_settled(app: &mut VcsArtifactApp<TxnApp>, command: TxnCommand, actor: &str) -> Result<semio_framework::InvocationResult, Fault> {
+async fn dispatch_settled(app: &mut VcsArtifactApp<TxnApp>, command: TxnCommand, actor: &str, cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, crate::bounded_ownership::PluginLifecycleFailure> {
     let action_meta = meta(actor);
     let admitted = app.dispatch_typed(command, &action_meta, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await?;
-    settle_registered_typed_operation(app, action_meta.instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await?;
+    settle_registered_typed_operation(app, action_meta.instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity(),cx).await?;
     Ok(admitted)
 }
 
 #[semio_framework_async_macros::async_test]
 async fn plain_command_still_applies_normally() {
+    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-    dispatch_settled(&mut app, TxnCommand::Increment, "local").await.expect("increment");
+    dispatch_settled(&mut app, TxnCommand::Increment, "local",cx).await.expect("increment");
     assert_eq!(app.snapshot().unwrap().count, 1);
     assert!(app.take_pending_transaction_proposal().await.is_none(), "a plain command must not stash a proposal");
-    close_transaction_store_roots(&mut app);
+    close_transaction_store_roots(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn command_cache_inputs_share_immutable_arcs() {
+    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     app.refresh_cache().await.expect("refresh cache");
     let (_, cached_snapshot, cached_config, cached_history) = app.cache.as_ref().expect("cache");
@@ -459,42 +475,53 @@ async fn command_cache_inputs_share_immutable_arcs() {
     assert!(std::sync::Arc::ptr_eq(cached_snapshot, &snapshot));
     assert!(std::sync::Arc::ptr_eq(cached_config, &config));
     assert!(std::sync::Arc::ptr_eq(cached_history, &history));
-    close_transaction_store_roots(&mut app);
+    close_transaction_store_roots(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_streamed_tick_extends_cached_history_in_place() {
+    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-    dispatch_settled(&mut app, TxnCommand::StreamedIncrement, "local").await.expect("first increment");
+    dispatch_settled(&mut app, TxnCommand::StreamedIncrement, "local",cx).await.expect("first increment");
     let history_ptr = std::sync::Arc::as_ptr(&app.cache.as_ref().expect("first history cache").3);
-    dispatch_settled(&mut app, TxnCommand::StreamedIncrement, "local").await.expect("second increment");
+    dispatch_settled(&mut app, TxnCommand::StreamedIncrement, "local",cx).await.expect("second increment");
     app.refresh_cache().await.expect("extend history cache");
     let history = &app.cache.as_ref().expect("extended history cache").3;
     assert_eq!(std::sync::Arc::as_ptr(history), history_ptr, "a streamed tick must update the uniquely-owned history allocation in place");
     assert_eq!(app.store.envelope().vcs.edits.len(), 1, "streamed increments stay one open edit");
     assert_eq!(history.commands.len(), 1, "streamed increments stay one command row");
     assert_eq!(history.commands[0].op_lines.len(), 2, "only the new operation tail is appended to cached history");
-    close_transaction_store_roots(&mut app);
+    close_transaction_store_roots(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn commit_produces_exactly_one_edit_with_group_id_and_origin() {
+    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let origin = protocol::MutationOrigin::Transaction { initiator: protocol::ForeignTarget { artifact_id: "initiator-doc".into(), artifact_kind: "s.testkit.txn".into(), dialect: None } };
     let edit_id = assert_transaction_commits_as_one_edit(&mut app, "txn-1", vec![SetTransactionCount { value: 7 }.into()], origin, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     assert_eq!(app.snapshot().unwrap().count, 7);
     assert!(!edit_id.is_empty());
     assert!(app.transaction_commit("txn-1", &meta("local"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.is_err(), "committing an already-committed txn_id must fail, not double-apply");
-    close_transaction_store_roots(&mut app);
+    close_transaction_store_roots(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rollback_leaves_state_untouched() {
+    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-    dispatch_settled(&mut app, TxnCommand::Increment, "local").await.expect("increment");
+    dispatch_settled(&mut app, TxnCommand::Increment, "local",cx).await.expect("increment");
     assert_transaction_rollback_leaves_state_untouched(&mut app, "txn-2", vec![SetTransactionCount { value: 99 }.into()]).await;
     assert_eq!(app.snapshot().unwrap().count, 1, "rollback must leave the earlier state exactly as it was");
-    close_transaction_store_roots(&mut app);
+    close_transaction_store_roots(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
 
 /// 🔀️ Contract §5.8 and §5.10 are COMPLEMENTARY, and this test is where that shows: §5.10
@@ -512,10 +539,11 @@ async fn rollback_leaves_state_untouched() {
 /// retains that channel owner, and its close is `Blocked` until the attachment is released.
 #[semio_framework_async_macros::async_test]
 async fn generation_mismatch_is_rejected_with_the_frozen_code() {
+    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut sender = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId("remote".into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let (near, mut far) = MemoryBackbone::pair("mem://txn", "mem://txn").await;
     sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach");
-    dispatch_settled(&mut sender, TxnCommand::Increment, "remote").await.expect("the peer edits its own copy");
+    dispatch_settled(&mut sender, TxnCommand::Increment, "remote",cx).await.expect("the peer edits its own copy");
     let mut envelopes = Vec::new();
     for message in far.receive().await.expect("receive") {
         if let BackboneMessage::Mutations { envelopes: operations } = message {
@@ -534,19 +562,24 @@ async fn generation_mismatch_is_rejected_with_the_frozen_code() {
     app.transaction_rollback("txn-3").await.expect("a rejected commit leaves the transaction pending and explicitly rollback-able");
     sender.detach_backbone().await.expect("sender releases its backbone before close");
     drop(far);
-    close_transaction_store_roots(&mut sender);
-    close_transaction_store_roots(&mut app);
+    close_transaction_store_roots(&mut sender,cx);
+    close_transaction_store_roots(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn second_prepare_while_pending_is_rejected_instance_busy() {
+    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let first = app.transaction_prepare("txn-4a", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 1 })).expect("encode")], &[], Some(protocol::MutationOrigin::Owner)).await;
     assert!(first.rejection.is_none());
     let second = app.transaction_prepare("txn-4b", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 2 })).expect("encode")], &[], Some(protocol::MutationOrigin::Owner)).await;
     let rejection = second.rejection.expect("second prepare while pending must be rejected");
     assert_eq!(rejection.code.0, "transaction.instance-busy");
-    close_transaction_store_roots(&mut app);
+    close_transaction_store_roots(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
 
 /// 🔖️ Read-only surfaces stay unaffected — `render`/`snapshot` never go through
@@ -554,18 +587,22 @@ async fn second_prepare_while_pending_is_rejected_instance_busy() {
 /// RefreshUi/ReadDocument/ContextMenu/ephemeral lanes.
 #[semio_framework_async_macros::async_test]
 async fn a_mutating_command_while_pending_is_rejected_but_reads_still_work() {
+    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let prepared = app.transaction_prepare("txn-5", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 1 })).expect("encode")], &[], Some(protocol::MutationOrigin::Owner)).await;
     assert!(prepared.rejection.is_none());
-    let blocked = dispatch_settled(&mut app, TxnCommand::Increment, "local").await;
+    let blocked = dispatch_settled(&mut app, TxnCommand::Increment, "local",cx).await;
     assert!(blocked.is_err(), "a command emitting artifact mutations must be rejected while a transaction is pending");
     assert_eq!(blocked.unwrap_err().code.0, "transaction.instance-busy");
     assert_eq!(app.snapshot().unwrap().count, 0, "the pending transaction must not have applied anything yet");
-    close_transaction_store_roots(&mut app);
+    close_transaction_store_roots(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn undo_and_redo_by_group() {
+    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     assert_transaction_commits_as_one_edit(&mut app, "txn-6", vec![SetTransactionCount { value: 42 }.into()], protocol::MutationOrigin::Owner, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     assert_eq!(app.snapshot().unwrap().count, 42);
@@ -573,5 +610,7 @@ async fn undo_and_redo_by_group() {
     assert_eq!(app.snapshot().unwrap().count, 0, "undo must revert the transaction's edit");
     app.transaction_redo("txn-6", &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("redo the group");
     assert_eq!(app.snapshot().unwrap().count, 42, "redo must reapply the transaction's edit");
-    close_transaction_store_roots(&mut app);
+    close_transaction_store_roots(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }

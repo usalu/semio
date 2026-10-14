@@ -822,6 +822,7 @@ impl ArtifactEditor for Fem2dPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,
@@ -864,11 +865,11 @@ impl ArtifactEditor for Fem2dPlayApp {
         Ok(crate::editor::fem2d::session::close_demands(instance_id))
     }
 
-    fn mounted_job_maintenance_step(instance_id: u32, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+    fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
         Ok(crate::editor::fem2d::session::maintenance_step(instance_id, grant))
     }
 
-    fn mounted_job_close_step(instance_id: u32, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+    fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
         Ok(crate::editor::fem2d::session::close_step(instance_id, grant))
     }
 
@@ -890,7 +891,7 @@ impl ArtifactEditor for Fem2dPlayApp {
         match port {
             "artifact:out" => {
                 let media_type = fem2d_io().artifact_media_type;
-                let bytes = <Fem2dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(doc.snapshot);
+                let bytes = <Fem2dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(doc.snapshot);
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             "results:out" => {
@@ -918,7 +919,7 @@ impl ArtifactEditor for Fem2dPlayApp {
                     return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let snapshot = <Fem2dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let snapshot = <Fem2dSnapshot as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 Ok(Emit { effects: vec![reset_document_effect(&snapshot)], ..Default::default() })
             }
             "geometry:in" => {
@@ -1286,7 +1287,7 @@ pub fn results_window_instance_id(view_state: &ViewModel) -> Option<String> {
 /// `commands::set_active_example`) builds this effect instead of an `Emit::mutations([...])`.
 /// The spr is a fresh, edit-free op-log for `scene` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(scene: &Fem2dSnapshot) -> semio_framework::kernel::Effect {
-    let pack = <Fem2dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(scene);
+    let pack = <Fem2dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(scene);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("fem2d", crate::FEM_2D_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }

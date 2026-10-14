@@ -2,7 +2,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import { buildScenePath } from "../../🎨️paint/🟦️.ts";
-import fixture from "../../🧫️fixtures/🖊️path/🔣️.json";
+import fixture from "../🧫️fixtures/🖊️path/🔣️.json";
 
 class PathCapture {
   constructor(readonly svg?: string) {}

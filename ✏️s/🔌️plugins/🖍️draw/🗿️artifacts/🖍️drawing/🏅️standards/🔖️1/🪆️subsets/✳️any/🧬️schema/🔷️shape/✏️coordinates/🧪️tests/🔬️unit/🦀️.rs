@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn shape_coordinates_shared_fixtures_and_rejection_atomicity() {
-    let rows:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let rows:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🔷️shape/✏️coordinates/🔣️.json")).unwrap();
     for row in rows.as_array().unwrap() {
         let kind=row["kind"].as_str().unwrap();let field=ShapeCoordinateField::parse(row["field"].as_str().unwrap()).unwrap();
         assert_eq!(field.as_str(),row["field"].as_str().unwrap());

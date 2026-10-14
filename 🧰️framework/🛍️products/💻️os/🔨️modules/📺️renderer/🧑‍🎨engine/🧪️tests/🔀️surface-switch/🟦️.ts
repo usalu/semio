@@ -59,8 +59,8 @@ import {
   type SessionAppSwitchStepV1,
   type SessionWorkKindV1,
 } from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/🟦️.ts";
-import snapshotJson from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔀️surface-switch/🔣️.json";
-import sessionLaneFixtureJson from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🧭️session-lane/🔣️.json";
+import snapshotJson from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔀️surface-switch/🔣️.json";
+import sessionLaneFixtureJson from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🧭️session-lane/🔣️.json";
 import pLimit from "p-limit";
 import { match } from "path-to-regexp";
 import { createActor, setup } from "xstate";

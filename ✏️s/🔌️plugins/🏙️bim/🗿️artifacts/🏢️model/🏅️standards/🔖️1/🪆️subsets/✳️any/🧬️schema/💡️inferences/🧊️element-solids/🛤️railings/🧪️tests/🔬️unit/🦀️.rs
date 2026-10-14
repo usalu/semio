@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::any::schema::inferences::storey_levels::compu
 use crate::ModelInference;
 use protocol::Inference;
 
-const CASE: &str = include_str!("../../../../../../🧫️fixtures/💡️inferences/🧊️element-solids/🛤️railings-posts/🔣️.json");
+const CASE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🛤️railings-posts/🔣️.json");
 
 fn sections(snapshot: &ModelSnapshot, id: &str) -> ((f64, f64), (f64, f64)) {
     let railing = &snapshot.railings[id];

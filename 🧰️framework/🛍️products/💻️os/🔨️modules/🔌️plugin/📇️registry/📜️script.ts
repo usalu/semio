@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runVitest } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** 📦️ Verifies owner-supplied deployment inventory without compiled component prerequisites. */
 class DeploymentContractTestScript extends BundleScript {
@@ -44,6 +44,22 @@ class ComponentOwnerContractTestScript extends BundleScript {
   }
 }
 
+/** 🧬️ Admits committed semantic source pairs with an independent schema oracle. */
+class SemanticSourcePairTestScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("test-semantic-source-pairs accepts no arguments");
+    const { runOwnedCommand } = await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"), { scriptInvocationBudget } = await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
+    await runOwnedCommand(process.execPath, ["test", "./🧪️tests/🧬️semantic-source-pairs/🟦️.ts"], this.root, "registry:semantic-source-pairs", scriptInvocationBudget(this.invocation, 120_000), { signal: this.invocation.control.signal });
+  }
+}
+
+/** 🔁️ Verifies rebuild contribution admission and deletion independence. */
+class RebuildContractTestScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    await runVitest(this.root, ["./🧪️tests/🔁️rebuild/🟦️.ts", ...args], "./🧪️tests/🎚️config/🟦️.ts");
+  }
+}
+
 const router = new ScriptRouter(import.meta.dir)
   .registerLazy("generate", async () => (await import("./📽️projection/🟦️.ts")).GenerateScript)
   .registerLazy("session", async () => (await import("./🎮️playground/🧭️session/🟦️.ts")).SessionScript)
@@ -61,7 +77,9 @@ const router = new ScriptRouter(import.meta.dir)
   .registerLazy("test-catalog-contract", async () => (await import("./✅️catalog-verification/🟦️.ts")).CatalogContractTestScript)
   .register("test-asset-contract", AssetContractTestScript)
   .register("test-deployment-contract", DeploymentContractTestScript)
+  .register("test-rebuild-contract", RebuildContractTestScript)
   .register("test-component-owners", ComponentOwnerContractTestScript)
+  .register("test-semantic-source-pairs", SemanticSourcePairTestScript)
   .register("test-playground-default-contract", PlaygroundDefaultContractTestScript)
   .registerLazy("new", async () => (await import("./🌳️surface-scaffold/🟦️.ts")).NewScript)
   .registerLazy("surface-schema", async () => (await import("./🧬️surface-schema/🟦️.ts")).SurfaceSchemaScript);

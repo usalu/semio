@@ -15,32 +15,64 @@ impl MediaFaultProjection {
     fn terminal_is_empty(&self) -> bool {
         self.fault.terminal_is_empty()
     }
-    fn close_step(&mut self, owner: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> Result<MediaStep, MediaValueError> {
+    fn close_step(&mut self, owner: &mut crate::io::control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<MediaStep, MediaValueError> {
+        close_media_projection(&mut self.fault,owner)
+    }
+}
+/// 🎟️ Retires an admitted media result through its same original native control and wallet.
+fn close_media_projection<T:MediaRetireOwned>(value:&mut MediaControlled<T>,owner:&mut crate::io::control::NativeSnapshotEncodeOwner<'_, '_>)->Result<MediaStep,MediaValueError>{
         let grant = owner.remaining_grant();
         if grant.maximum_items == 0
-            || self.fault.next_copy_byte_demand()? > grant.maximum_copy_bytes
-            || self.fault.next_capacity_byte_demand(grant.maximum_copy_bytes)? > grant.maximum_capacity_bytes
-            || self.fault.next_release_byte_demand()? > grant.maximum_release_bytes
-            || self.fault.next_depth_demand()? > grant.maximum_depth
+            || value.next_copy_byte_demand()? > grant.maximum_copy_bytes
+            || value.next_capacity_byte_demand(grant.maximum_copy_bytes)? > grant.maximum_capacity_bytes
+            || value.next_release_byte_demand()? > grant.maximum_release_bytes
+            || value.next_depth_demand()? > grant.maximum_depth
         {
             return Err(media_frontier_error());
         }
-        let capacity = self.fault.next_capacity_byte_demand(grant.maximum_copy_bytes)?;
+        let capacity = value.next_capacity_byte_demand(grant.maximum_copy_bytes)?;
         owner.native().checkpoint()?;
         owner.native().charge(capacity)?;
-        let result = self.fault.step(grant);
+        let result = value.step(grant);
         let progress = match &result {
             Ok(step) => step.progress(),
             Err(error) => error.retained_progress(),
         };
         owner.record_progress(progress)?;
         result
-    }
+}
+/// 📬️ Preserves the complete successful artifact or typed fault after original receiving.
+#[derive(semio_framework_value::RetireOwned)]
+enum MediaOutputValue{Artifact(MediaArtifact),Fault(Fault)}
+/// 🧳️ Owns one admitted media output until its caller performs paid publication or retirement.
+struct MediaOutputProjection{value:MediaControlled<MediaOutputValue>}
+impl MediaOutputProjection{
+    fn artifact(&self)->Option<&MediaArtifact>{match self.value.original(){Some(MediaOutputValue::Artifact(value))=>Some(value),_=>None}}
+    fn fault(&self)->Option<&Fault>{match self.value.original(){Some(MediaOutputValue::Fault(value))=>Some(value),_=>None}}
+    fn terminal_is_empty(&self)->bool{self.value.terminal_is_empty()}
+    fn close_step(&mut self,owner:&mut crate::io::control::NativeSnapshotEncodeOwner<'_, '_>)->Result<MediaStep,MediaValueError>{close_media_projection(&mut self.value,owner)}
+}
+/// 🛬️ Admits original parent custody before invoking the exporter and projecting its full result.
+fn receive_media_output(owner:&mut crate::io::control::NativeSnapshotEncodeOwner<'_, '_>,exporter:impl FnOnce(&mut crate::io::control::NativeSnapshotEncodeOwner<'_, '_>)->Result<MediaArtifact,MediaArtifactError>)->Result<MediaOutputProjection,MediaValueError>{
+    let grant=owner.remaining_grant();
+    if grant.maximum_items==0||grant.maximum_copy_bytes==0||grant.maximum_capacity_bytes==0||grant.maximum_release_bytes==0||grant.maximum_depth<4{return Err(media_frontier_error())}
+    let value=owner.receive_nested::<MediaArtifactError,MediaOutputValue>(|slot,original|{
+        match exporter(original){
+            Ok(value)=>Ok(MediaOutputValue::Artifact(value)),
+            Err(source)=>{
+                *slot=Some(source);
+                original.record_progress(MediaProgress{copied_items:1,..Default::default()})?;
+                let mut projection=receive_media_artifact_fault(slot,original)?;
+                projection.fault.take_original().map(MediaOutputValue::Fault).ok_or_else(media_projection_error)
+            }
+        }
+    })?;
+    Ok(MediaOutputProjection{value:MediaControlled::new(value).ok().unwrap()})
 }
 struct MediaFaultTextExtent<'a, 'control> {
     bytes: usize,
     native: &'a mut semio_framework_value::NativeEncodeControl<'control>,
-    wallet: &'a mut store::NativeSnapshotBodyWallet,
+    wallet: &'a mut crate::io::control::NativeSnapshotBodyWallet,
     error: Option<MediaValueError>,
 }
 impl std::fmt::Write for MediaFaultTextExtent<'_, '_> {
@@ -94,7 +126,7 @@ impl std::fmt::Write for MediaFaultTextWriter<'_, '_> {
         Ok(())
     }
 }
-fn receive_media_artifact_fault(source: &mut Option<MediaArtifactError>, owner: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> Result<MediaFaultProjection, MediaValueError> {
+fn receive_media_artifact_fault(source: &mut Option<MediaArtifactError>, owner: &mut crate::io::control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<MediaFaultProjection, MediaValueError> {
     use semio_framework_diagnostic::{FaultParams, FaultScope, Severity};
     let grant = owner.remaining_grant();
     if grant.maximum_items == 0 || grant.maximum_copy_bytes == 0 || grant.maximum_capacity_bytes == 0 || grant.maximum_release_bytes == 0 || grant.maximum_depth < 4 {
@@ -103,7 +135,7 @@ fn receive_media_artifact_fault(source: &mut Option<MediaArtifactError>, owner: 
     let original = source.as_ref().ok_or_else(media_projection_error)?;
     let mismatch = matches!(original, MediaArtifactError::SchemaMismatch { .. });
     let code = if mismatch { MEDIA_SCHEMA_MISMATCH_CODE } else { "plugin.internal" };
-    let mut counting = store::NativeSnapshotBodyWallet::new(grant);
+    let mut counting = crate::io::control::NativeSnapshotBodyWallet::new(grant);
     let extent = owner.native().scoped_stage(|native| {
         native.begin_stage(0)?;
         let mut extent = MediaFaultTextExtent { bytes: 0, native, wallet: &mut counting, error: None };
@@ -135,6 +167,7 @@ fn receive_media_artifact_fault(source: &mut Option<MediaArtifactError>, owner: 
             message: String::new(),
             scope: Box::new(FaultScope::default()),
             span: None,
+            source:None,
             causes: Vec::new(),
             params: None,
             retryable: false,

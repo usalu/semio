@@ -8,7 +8,7 @@ fn cursor_grant() -> DagSelectionTextGrant {
 
 #[test]
 fn selected_nodes_cursor_censuses_and_emits_one_byte_per_grant() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️selected-json.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️selected-json.json")).unwrap();
     for case in vectors["cases"].as_array().unwrap() {
         let ids: Vec<String> = case["ids"].as_array().unwrap().iter().map(|id|id.as_str().unwrap().into()).collect();
         let fixture = DagHostSnapshot { schema: "dag.hostDocument".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: ids.iter().map(|id|DagNodeSpec { id: id.clone(), ..Default::default() }).collect(), edges: vec![] };
@@ -591,7 +591,7 @@ fn dag_host_label_overlay_paint_state_json_includes_slider_name() {
 
 #[test]
 fn dag_host_slider_overlay_preserves_language_neutral_field_labels() {
-    let fixture: Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🎚️slider-overlay.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture: Value = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🎚️slider-overlay.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let row = &case["row"];
         let host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {

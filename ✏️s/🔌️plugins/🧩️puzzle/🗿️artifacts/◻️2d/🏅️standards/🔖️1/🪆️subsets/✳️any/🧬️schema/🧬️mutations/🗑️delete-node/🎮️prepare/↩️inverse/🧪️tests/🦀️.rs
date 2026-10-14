@@ -37,7 +37,7 @@ fn retire(inverse:PagedList<Puzzle2dMutation,{usize::MAX}>) {
 fn history_edit_puzzle2d_owned_delete_inverse_preserves_exact_cascade_and_granted_cancellation() {
     assert!(size_of::<Puzzle2dDeleteNodeInverseCursor>()<=4096);
     assert!(size_of::<<Puzzle2dEdge as RetainedClone>::Cursor>()<=4096);
-    let corpus:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🎮️prepare/🔣️.json")).unwrap();
     let text=|value:&serde_json::Value|{let value=value.as_str().unwrap();match value.strip_prefix("$large:"){Some(suffix)=>PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}",corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap() as usize))),None=>value.into()}};
     let mut source=test_source_custody::admit();
     let mut mutation=test_source_custody::admit();

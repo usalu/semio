@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import Ajv from "ajv";
-import corpus from "../../🧫️fixtures/📦️numerical-pages/🔣️.json" with { type: "json" };
+import corpus from "../🧫️fixtures/📦️numerical-pages/🔣️.json" with { type: "json" };
 
 
 export function testNumericalPageOwners(): void {

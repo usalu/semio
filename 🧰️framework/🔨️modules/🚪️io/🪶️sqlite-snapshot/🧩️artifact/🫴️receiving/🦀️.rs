@@ -2,6 +2,21 @@
 use super::super::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase};
 use semio_framework_value::{ValueError,ValueRefusalKind,NativeDecodeControl,NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress};
 use std::{cmp::Ordering,mem::size_of};
+/// 🧾️ The original SQLite receiving scope adopts body, close and publication effects once.
+pub struct ReceivingSettlement<'a,'b>{control:std::cell::RefCell<super::super::SqliteSnapshotReceivingControl<'a,'b>>,before:usize,remaining:usize,phase:SqliteSnapshotPhase,post_body:std::cell::Cell<bool>,cause:std::cell::RefCell<Option<ValueError>>}
+impl<'a,'b> ReceivingSettlement<'a,'b>{
+ /// 🎟️ Borrows the initiating scope and its independently remaining allocation authority.
+ pub fn new(control:&'a mut SqliteSnapshotControl<'b>,before:usize,phase:SqliteSnapshotPhase)->Self{let remaining=control.allocation_remaining_bytes();Self{control:std::cell::RefCell::new(control.receiving_scope()),before,remaining,phase,post_body:std::cell::Cell::new(false),cause:std::cell::RefCell::new(None)}}
+ /// 🫴️ Loans the real original scope while keeping its dynamic borrow private.
+ pub fn with_control<T>(&self,operation:impl FnOnce(&mut SqliteSnapshotControl<'b>)->T)->T{operation(&mut self.control.borrow_mut())}
+ fn settle(&self,owned:usize)->Result<()>{settle(&mut self.control.borrow_mut(),self.remaining,self.before,owned)}
+ /// 📤️ Adopts body effects before any owned frame status or output leaves receiving custody.
+ pub fn finish_body(&self,owned:usize)->Result<()>{self.settle(owned)?;self.post_body.set(true);Ok(())}
+ /// 👁️ Posts later native close and publication effects through that same scope and callback.
+ pub fn observe(&self,owned:usize,completed:usize,total:usize)->bool{if !self.post_body.get(){return true}match self.settle(owned).and_then(|_|self.control.borrow_mut().checkpoint(self.phase,completed,total)){Ok(())=>true,Err(error)=>{*self.cause.borrow_mut()=Some(error);false}}}
+ /// 🧳️ Returns the original callback or allocation refusal without cloning its complete cause.
+ pub fn refused(&self,owned:usize,error:ValueError)->ValueError{match self.settle(owned){Err(cause)=>cause,Ok(())=>self.cause.borrow_mut().take().unwrap_or(error)}}
+}
 type Result<T>=std::result::Result<T,ValueError>;
 fn error(kind:ValueRefusalKind,message:&'static str)->ValueError{ValueError::literal(kind,message)}
 fn invalid(message:&'static str)->ValueError{error(ValueRefusalKind::InvalidValue,message)}
@@ -27,7 +42,13 @@ impl<B:ReceivingWallet> Port<'_,'_,'_,B>{
  pub fn admit(&self,bytes:usize)->Result<()>{if bytes>self.control.allocation_remaining_bytes(){return Err(error(ValueRefusalKind::OwnershipLimit,"SQLite receiving backing exceeds original SQL allowance"))}Ok(())}
  pub fn work(&mut self,depth:usize,copy:usize)->Result<()>{let phase=self.phase();self.control.checkpoint(phase,0,0)?;match &mut self.native{Direction::Decode(native)=>native.checkpoint()?,Direction::Encode(native)=>native.checkpoint()?}self.body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:depth})?;self.body.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})}
  pub fn vector<T>(&mut self,count:usize,output:&mut Vec<T>,depth:usize)->Result<()>{let bytes=count.checked_mul(size_of::<T>()).filter(|bytes|*bytes<=isize::MAX as usize).ok_or_else(||error(ValueRefusalKind::OwnershipLimit,"SQLite receiving vector extent overflow"))?;self.admit(bytes)?;let phase=self.phase();self.control.checkpoint(phase,0,count)?;let before=self.owned();let result=match &mut self.native{Direction::Decode(native)=>self.body.allocate_vec_into(native,count,output,depth),Direction::Encode(native)=>self.body.allocate_encode_vec_into(native,count,output,depth)};self.receipt(before)?;result}
- pub fn text(&mut self,text:&str,output:&mut String,depth:usize)->Result<()>{self.admit(text.len())?;let phase=self.phase();self.control.checkpoint(phase,0,text.len())?;let before=self.owned();let control=&mut *self.control;let body=&mut *self.body;let result=match &mut self.native{Direction::Decode(native)=>{let mut observe=|event:semio_framework_value::native_decoding::NativeDecodeProgress|control.observe_progress(phase,event.completed,event.total);native.scoped_observer(&mut observe,|native|body.copy_text_into(native,text,output,depth))},Direction::Encode(native)=>{let mut observe=|event:semio_framework_value::native_encoding::NativeEncodeProgress|control.observe_progress(phase,event.completed,event.total);native.scoped_observer(&mut observe,|native|body.copy_encode_text_into(native,text,output,depth))}};self.receipt(before)?;result}
+ pub fn text(&mut self,text:&str,output:&mut String,depth:usize)->Result<()>{
+  self.admit(text.len())?;let phase=self.phase();self.control.checkpoint(phase,0,text.len())?;let before=self.owned();let control=&mut *self.control;let body=&mut *self.body;let mut cause=None;
+  let result=match &mut self.native{
+   Direction::Decode(native)=>{let mut observe=|event:semio_framework_value::native_decoding::NativeDecodeProgress|match control.checkpoint(phase,event.completed,event.total){Ok(())=>true,Err(error)=>{cause=Some(error);false}};native.scoped_observer(&mut observe,|native|body.copy_text_into(native,text,output,depth))},
+   Direction::Encode(native)=>{let mut observe=|event:semio_framework_value::native_encoding::NativeEncodeProgress|match control.checkpoint(phase,event.completed,event.total){Ok(())=>true,Err(error)=>{cause=Some(error);false}};native.scoped_observer(&mut observe,|native|body.copy_encode_text_into(native,text,output,depth))}
+  };self.receipt(before)?;result.map_err(|error|cause.unwrap_or(error))
+ }
 }
 /// 🫴️ Moves an original collection through two retained fields without dropping refused growth.
 pub fn relocate_vector<T,B:ReceivingWallet>(original:&mut Vec<T>,replacement:&mut Vec<T>,capacity:usize,depth:usize,port:&mut Port<'_,'_,'_,B>)->Result<()>{

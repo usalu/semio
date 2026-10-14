@@ -4,7 +4,7 @@ import { BoxGeometry, Line3, Triangle, Vector3 } from "three";
 
 /** 🎟️ Independent geometry oracle for the original retained tessellation laws. */
 test("original tessellation grants and unit-box parity agree with Three", () => {
-  const fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🎟️ownership/🔣️.json",import.meta.url),"utf8"));
+  const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🎟️ownership/🔣️.json",import.meta.url),"utf8"));
   const geometry=new BoxGeometry(1,1,1);const position=geometry.getAttribute("position");const index=geometry.getIndex()!;
   let area=0,volume=0;const corners:[Vector3,Vector3,Vector3]=[new Vector3(),new Vector3(),new Vector3()];
   for(let cursor=0;cursor<index.count;cursor+=3){corners.forEach((point,offset)=>point.fromBufferAttribute(position,index.getX(cursor+offset)));area+=new Triangle(...corners).getArea();volume+=corners[0].dot(corners[1].clone().cross(corners[2]))/6;}
@@ -16,7 +16,7 @@ test("original tessellation grants and unit-box parity agree with Three", () => 
   const original=new Map(rows);const removed=fixture.liveRows.removedKeys.map((key:string)=>{const value=rows.get(key)!;rows.delete(key);expect(value).toBe(original.get(key));return key;});
   expect(removed).toEqual(fixture.liveRows.removedKeys);expect(rows.size+removed.length).toBe(fixture.liveRows.keys.length);
   const triangle=fixture.meshImport.positions;expect(new Triangle(...[0,3,6].map(offset=>new Vector3(...triangle.slice(offset,offset+3))) as [Vector3,Vector3,Vector3]).getArea()).toBe(fixture.meshImport.area);
-  const modeling=JSON.parse(readFileSync(new URL("../../../../../🥽️mesh/🧫️fixtures/🛠️modeling/🔣️.json",import.meta.url),"utf8"));
+  const modeling=JSON.parse(readFileSync(new URL("../../../../../🥽️mesh/🧪️tests/🧫️fixtures/🛠️modeling/🔣️.json",import.meta.url),"utf8"));
 expect(area).toBe(modeling.ownedCapture.area);expect(Math.abs(volume)).toBeCloseTo(modeling.ownedCapture.volume,12);
   console.log("[DEBUG] Original tessellation neutral ownership fixture: independent Three area=6 volume=1 triangles=12");
 });

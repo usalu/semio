@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "original": {
+    "operation": 17,
+    "generation": 9
+  },
+  "primaryTypes": [
+    "fault",
+    "value"
+  ],
+  "denials": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth",
+    "work",
+    "deadline"
+  ],
+  "wholePrimary": true,
+  "separateReceiptRefusal": true,
+  "sameSourcePointers": true,
+  "noClone": true,
+  "noFormat": true,
+  "rawEffectsRecordedOnce": true,
+  "workForAdmittedZeroPhysicalProgress": 1,
+  "terminalDrop": 0,
+  "copy": 3,
+  "overdrawCopy": 4,
+  "fault": {
+    "code": "original.lifecycle.source",
+    "message": "original whole Fault 源",
+    "cause": "original nested cause"
+  },
+  "value": {
+    "message": "original whole ValueError 源"
+  },
+  "normalContextRequired": true
+}

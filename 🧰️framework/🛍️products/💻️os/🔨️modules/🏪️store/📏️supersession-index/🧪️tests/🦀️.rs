@@ -2,7 +2,7 @@ use super::*;
 #[test]
 fn owned_history_fold_supersessions_receive_original_index_and_retire_native_custody(){
     use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let mut fold=protocol::HistoryFold::default();let mut independent=serde_json::Map::new();let mut pointers=BTreeMap::new();
     for target in law["targets"].as_array().unwrap(){let target=target.as_str().unwrap();let mut payload=Vec::with_capacity(law["extent"].as_u64().unwrap() as usize);payload.resize(law["logicalItems"].as_u64().unwrap() as usize,37u8);pointers.insert(target.to_owned(),payload.as_ptr() as usize);fold.supersessions.insert(MutationId(target.into()),protocol::EffectiveSupersession{transition_id:format!("transition-{target}"),actor:"actor".into(),timestamp:HybridLogicalTimestamp::new(0,0),scope:None,replacement:protocol::InputReplacement::Input{schema:"owned/v1".into(),payload}});independent.insert(target.into(),serde_json::json!({"transition":format!("transition-{target}"),"payload":[37]}));}
     let received:EffectiveSupersessions=fold.supersessions;

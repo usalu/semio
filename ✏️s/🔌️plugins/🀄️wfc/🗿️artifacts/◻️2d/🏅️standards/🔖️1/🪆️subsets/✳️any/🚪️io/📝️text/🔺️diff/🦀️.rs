@@ -1,4 +1,4 @@
-//! 🔺️ WFC 2D diff — grammar spec asset only. `Wfc2dDiff` has no `impl store::os_store::serialization::ArtifactDsl` anywhere
+//! 🔺️ WFC 2D diff — grammar spec asset only. `Wfc2dDiff` has no `impl pack::snapshot::ArtifactDsl` anywhere
 //! in this plugin: this facet exists purely to register `wfc.wfc2d.diff`'s handcrafted text grammar
 //! for LSP/verification tooling through `io()`'s `LanguageSpec`. The real apply/absorb algebra lives
 //! in `🧬️schema/🔺️diff/🦀️.rs` (pure snapshot transforms).

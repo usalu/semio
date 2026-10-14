@@ -1,0 +1,60 @@
+{
+  "files": {
+    "node_modules/probe/package.json": "{\"name\":\"probe\",\"type\":\"module\",\"exports\":\"./main.js\"}",
+    "node_modules/probe/main.js": "export const value=17;",
+    "node_modules/probe/tool.js": "#!/usr/bin/env node\nconsole.log(17);"
+  },
+  "aliases": [
+    {
+      "path": "node_modules/.bin/probe",
+      "target": "../probe/tool.js"
+    }
+  ],
+  "mutation": {
+    "path": "node_modules/probe/main.js",
+    "bytes": "export const value=29;"
+  },
+  "expected": {
+    "value": 17,
+    "files": 3,
+    "links": 1
+  },
+  "unsafeTarget": "../../../../foreign.js",
+  "identity": {
+    "environment": {
+      "platform": "darwin",
+      "architecture": "arm64",
+      "libc": ""
+    },
+    "files": {
+      "package.json": "{\"name\":\"sdk\",\"private\":true}",
+      "bun.lock": "{\"lockfileVersion\":1}",
+      "patches/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.patch": "--- a/source.js\n+++ b/source.js\n@@ -1 +1 @@\n-old\n+new\n"
+    },
+    "invalidSource": ".semio-authorizer-source.json",
+    "expected": "f5d327849c362fc8099c6d08c2a94b87a613c415c78a347214589bc79132fddb"
+  },
+  "patches": [
+    {
+      "id": "valid",
+      "before": "old\n",
+      "after": "new\n",
+      "patch": "diff --git a/source.js b/source.js\n--- a/source.js\n+++ b/source.js\n@@ -1 +1 @@\n-old\n+new\n",
+      "accept": true
+    },
+    {
+      "id": "hunk-count",
+      "before": "old\n",
+      "after": "new\n",
+      "patch": "diff --git a/source.js b/source.js\n--- a/source.js\n+++ b/source.js\n@@ -1,2 +1 @@\n-old\n+new\n",
+      "accept": false
+    },
+    {
+      "id": "repeated-file",
+      "before": "old\n",
+      "after": "new\n",
+      "patch": "diff --git a/source.js b/source.js\n--- a/source.js\n+++ b/source.js\n@@ -1 +1 @@\n-old\n+new\ndiff --git a/source.js b/source.js\n--- a/source.js\n+++ b/source.js\n@@ -1 +1 @@\n-old\n+new\n",
+      "accept": false
+    }
+  ]
+}

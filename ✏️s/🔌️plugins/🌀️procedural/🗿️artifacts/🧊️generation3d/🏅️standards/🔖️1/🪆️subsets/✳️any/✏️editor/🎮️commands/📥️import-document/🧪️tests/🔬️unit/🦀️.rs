@@ -8,7 +8,7 @@ use super::{admit_payload, GENERATION3D_IMPORT_CAPACITY_CODE, GENERATION3D_IMPOR
 /// language-agnostic surface fixture names (`🧫️fixtures/🚪️io/🗿️artifact-surface.json` `faultCodes.capacity`).
 #[test]
 fn an_import_above_one_artifact_lane_edit_is_refused_by_name() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🚪️io/🗿️artifact-surface.json")).expect("the artifact-surface fixture is valid json");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🚪️io/🗿️artifact-surface.json")).expect("the artifact-surface fixture is valid json");
     assert_eq!(fixture["faultCodes"]["capacity"].as_str(), Some(GENERATION3D_IMPORT_CAPACITY_CODE), "the refusal code is the fixture's");
     assert!(admit_payload(&"x".repeat(GENERATION3D_IMPORT_TOTAL_BYTES)).is_ok(), "a payload at the budget is admitted");
     let refused = admit_payload(&"x".repeat(GENERATION3D_IMPORT_TOTAL_BYTES + 1)).expect_err("one byte above the budget is refused");

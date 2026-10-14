@@ -4,7 +4,7 @@ import { expect, test } from "bun:test";
 import { Buffer } from "node:buffer";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import fixture from "../../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
 function leb(value: number): Buffer {
   const output = [];
   do { const byte = value & 127; value = Math.floor(value / 128); output.push(byte | (value ? 128 : 0)); } while (value);

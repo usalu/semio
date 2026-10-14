@@ -185,7 +185,7 @@ fn cache_mode(requested: &WireArtifactInferenceCacheMode) -> CacheMode {
     }
 }
 
-fn infer_geometry(request: &ArtifactInferenceExecutionRequest<'_>, context: &dyn std::any::Any) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
+fn infer_geometry(request: &ArtifactInferenceExecutionRequest<'_>, context: &dyn std::any::Any, cx:&mut semio_framework_plugin::ArtifactInferenceStepContext<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     let host = context.downcast_ref::<GeometryHost>().ok_or_else(|| ArtifactInferenceExecutionError::new("generation3d.geometry.context", "geometry inference requires its instance's geometry host"))?;
     if request.cancelled {
         host.cancel().map_err(engine_failure)?;

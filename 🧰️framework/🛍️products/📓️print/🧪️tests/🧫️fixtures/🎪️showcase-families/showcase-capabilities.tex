@@ -1,0 +1,81 @@
+\documentclass{article}
+\usepackage{tikz}
+\usetikzlibrary{calc,arrows.meta,shapes.geometric,decorations.pathreplacing,patterns}
+\usepackage{semio-viz-family}
+\usepackage{semio-viz-guide}
+\usepackage{semio-viz-annotation}
+\usepackage{semio-viz-label}
+\usepackage{semio-viz-facet}
+\usepackage{semio-viz-composition}
+\usepackage{semio-viz-spatial}
+\usepackage{semio-viz-showcase}
+\usepackage{semio-viz-probe}
+\ExplSyntaxOn
+% 🧪 One catalogue kind of showcase family #1: its own probe scenario, then the family itself run
+% with nothing but the variant the catalogue entry carries.
+\cs_new_protected:Npn \semio_probe_showcase:nn #1#2 {
+  \semio_viz_probe_begin:nn { showcase-families } { #1/#2 }
+  \semio_viz_family_run:nn {#1} { variant = #2 }
+}
+% 🧪 Every kind of showcase family #1, from the comma list #2 of its catalogue variants.
+\cs_new_protected:Npn \semio_probe_showcase_family:nn #1#2 {
+  \clist_map_inline:nn {#2} { \semio_probe_showcase:nn {#1} {##1} }
+}
+% 🧪 One kind whose catalogue entry names a table of its own: variant #2 of family #1 on table #3,
+% exactly the option list `semio-viz-catalog.sty` hands the family.
+\cs_new_protected:Npn \semio_probe_showcase_on:nnn #1#2#3 {
+  \semio_viz_probe_begin:nn { showcase-families } { #1/#2 }
+  \semio_viz_family_run:nn {#1} { data = #3 , variant = #2 }
+}
+\ExplSyntaxOff
+\begin{document}
+\ExplSyntaxOn
+\tl_set:Nn \l_semio_language_tl { en }
+\bool_set_true:N \l_semio_viz_in_figure_bool
+\ExplSyntaxOff
+\SemioVizProbeOn
+\begin{tikzpicture}[x=1mm,y=1mm]
+\ExplSyntaxOn
+\fp_set:Nn \l_semio_viz_width_fp { 80 }
+\fp_set:Nn \l_semio_viz_height_fp { 40 }
+\semio_probe_showcase_family:nn { encoding } {
+  angle, area-encoding, arrowheads, barycentric-coordinates, cartesian-x-y, curvature,
+  dash, direction, fill, font-size, font-weight, geographic-coordinates,
+  glyph, glyphs, gradient, hatching, height, icon,
+  length, line-width, mini-charts, nested-marks, opacity, pattern,
+  polar-angle-radius, radius, rotation-encoding, stroke, stroke-width, symbol,
+  text-rotation, width
+}
+\semio_probe_showcase_family:nn { grammar } {
+  composition, coordinate-system, custom-tikz-shape, data, encoding, functional,
+  grid, guide, hierarchical, image, link, mark,
+  network-layout, point, rect, shape, size, statistical-transform,
+  tabular, text, transform, x, y
+}
+\semio_probe_showcase_family:nn { figure } {
+  accessibility-friendly-patterns, annotations, clipping, coordinate-transformations,
+  export-safe-typography, faceting, grayscale-safe-encodings, guides,
+  labels, legends, responsive-sizing, themes
+}
+\semio_probe_showcase_family:nn { scale } {
+  band-scale, diverging, identity, linear, logarithmic, ordinal,
+  point-scale, power, quantile, quantize, sequential, square-root,
+  symlog, temporal, threshold
+}
+\semio_probe_showcase_family:nn { shape } { arcs, areas, lines, links, ribbons }
+\semio_probe_showcase_on:nnn { layout-algorithm } { diverging-stack } { demo-series }
+\semio_probe_showcase_on:nnn { layout-algorithm } { histogram-binning } { demo-distribution }
+\semio_probe_showcase_on:nnn { layout-algorithm } { jitter-layout } { demo-distribution }
+\semio_probe_showcase_on:nnn { layout-algorithm } { normalized-stack } { demo-series }
+\semio_probe_showcase_on:nnn { layout-algorithm } { pie-layout } { demo }
+\semio_probe_showcase_on:nnn { layout-algorithm } { stack } { demo-series }
+\semio_probe_showcase_on:nnn { layout-algorithm } { streamgraph-stack } { demo-series }
+\semio_probe_showcase_family:nn { transform-data } {
+  filter, fold, group, join, nest, pivot, rollup, sort, window
+}
+\clist_map_inline:nn { aggregate, bin, kde, normalize, quantile-transform, regression }
+  { \semio_probe_showcase_on:nnn { transform-statistical } {#1} { demo-distribution } }
+\ExplSyntaxOff
+\end{tikzpicture}
+\SemioVizProbeEnd
+\end{document}

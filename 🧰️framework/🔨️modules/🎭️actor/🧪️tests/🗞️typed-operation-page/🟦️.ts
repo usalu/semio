@@ -33,7 +33,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   type Token = { readonly receiver: number; readonly operation: number; readonly generation: number; readonly sequence: number; readonly attempt: number };
   type Message = { readonly name: string; readonly kind: "page" | "appFrame"; readonly lane?: number; readonly payload?: string; readonly appFrameTag?: number; readonly instanceId?: number };
-  const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json"), "utf8")) as {
+  const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json"), "utf8")) as {
     readonly page: { readonly pageMagic: string; readonly ackMagic: string; readonly headerBytes: number; readonly tokenBytes: number; readonly laneOffset: number; readonly lengthOffset: number; readonly maxPayloadBytes: number; readonly pageMagicFirstByte: number };
     readonly lanes: readonly { readonly name: string; readonly tag: number }[];
     readonly invalidTags: readonly number[];

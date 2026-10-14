@@ -4,11 +4,7 @@
 //! (design §20.15); `wires_snapshot` is the parent's identity layer (`schema`, `identities`) and `meta` the kind catalogues,
 //! while the camera is owned by each concrete canvas window.
 //!
-//! Ticket `26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM` design.md §1 CORRECTION: the native
-//! codec (`impl store::os_store::serialization::ArtifactDsl`/`impl store::os_store::serialization::ArtifactPack for WiresSnapshot`, formerly here) now
-//! lives directly under `🚪️io/📸️snapshot/{📝️text,💾️binary}` — one bidirectional trait impl per
-//! representation, unsplit, never mirrored under import/export. This file keeps only the type + its
-//! schema derive, per design.md rule 3 ("🧬️schema keeps types + pure transforms").
+//! Snapshot representation implementations live under IO; this schema owns the native artifact fields.
 
 use crate::WiresContentChild;
 use semio_framework_value::retirement::{deferred, deferred_birth_bytes, deferred_birth_bytes_for, sequence, sequence_birth_bytes, shared::SharedControlledRetirement, RetireOwned, RetirementCursor};

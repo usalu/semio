@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFil
 import { dirname, join } from "node:path";
 import { STAGE_CACHE_POLICY_V1, stageCacheV1, stageKeyCanonicalV1, stageKeyDigestV1, type StageKeyV1 } from "../🟦️.ts";
 
-const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
 const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR;
 if (!artifacts) throw Error("Caller-owned SEMIO_TEST_ARTIFACT_DIR is required");

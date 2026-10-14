@@ -20,7 +20,7 @@ impl Deserializer<EquationSnapshot> for MdIntoEquation {
             return Err(invalid_payload("MdIntoEquation", "expected a binary md payload"));
         };
         let _ = STDIO_MD_DOCUMENT_SCHEMA;
-        let md = <MdSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| pack_decode_refusal("MdIntoEquation", error))?;
+        let md = <MdSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| pack_decode_refusal("MdIntoEquation", error))?;
         let literal = match md.blocks.as_slice() {
             [MdBlock::CodeBlock { info: Some(info), literal }] if info == "json" => literal,
             _ => return Err(invalid_payload("MdIntoEquation", "expected one json code block")),

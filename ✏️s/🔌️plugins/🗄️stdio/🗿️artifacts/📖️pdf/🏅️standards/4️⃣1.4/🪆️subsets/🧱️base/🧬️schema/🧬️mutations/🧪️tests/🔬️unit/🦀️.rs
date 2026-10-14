@@ -54,7 +54,7 @@ fn paged_pdf14_original_source_preserves_five_frames_raw_words_and_fixed_page_gr
     use protocol::{OpBinary,operation_bytes::{OwnedOperationBytes,OperationByteMeasurement,OperationBytePreparation,OperationByteCloseStep}};
     use semio_framework_value::{NativeEncodeControl,ValueRefusalKind};
     use crate::standards::v1_4::subsets::base::schema::snapshot::PageDoc;
-    let neutral:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🫳️operation-source/🔣️.json")).unwrap();
+    let neutral:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️operation-source/🔣️.json")).unwrap();
     let index=|case:&serde_json::Value,key:&str|usize::try_from(case[key].as_u64().unwrap()).unwrap();
     let word=|case:&serde_json::Value,key:&str|f64::from_bits(case[key].as_str().unwrap().parse().unwrap());
     let mut cases=Vec::new();

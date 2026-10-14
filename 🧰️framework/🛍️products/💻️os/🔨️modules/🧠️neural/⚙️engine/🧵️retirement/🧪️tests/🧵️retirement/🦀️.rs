@@ -7,7 +7,7 @@ use std::mem::size_of;
 fn recursive_dictionary_owns_typed_retirement_under_independent_grants() {
     use semio_framework_value::{retirement::{RetireOwned, controlled::ControlledRetirement}, retained_clone::{RetainedCloneGrant, RetainedCloneStep}};
     use super::super::registry::tests::observe_ownership;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎮️typed-owners/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎮️typed-owners/🔣️.json")).unwrap();
     assert!(Dictionary::controlled_retirement_supported());
     assert!(Value::controlled_retirement_supported());
     assert!(Atom::controlled_retirement_supported());
@@ -41,7 +41,7 @@ fn recursive_dictionary_owns_typed_retirement_under_independent_grants() {
 fn finite_schema_operator_fields_preserve_typed_work_and_physical_custody() {
     use semio_framework_value::{retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::RetainedCloneGrant};
     use super::super::registry::tests::observe_ownership;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧬️finite-fields/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧬️finite-fields/🔣️.json")).unwrap();
     fn close<T:RetireOwned>(value:T,original:usize,copy:usize,expected:usize) {
         let mut owner=ControlledRetirement::new(value).map_err(|(error,_)|error).unwrap();let mut births=0;let mut released=0;let mut copied=0;
         for turn in 0..1000000 {
@@ -78,7 +78,7 @@ fn admit_external<T:RetireOwned>(owner:&mut ValueRetirement,value:T) {
 #[test]
 fn original_typed_owner_demands_propagate_without_false_fixed_page_progress() {
     use super::super::registry::tests::observe_ownership;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📏️owned-demand/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📏️owned-demand/🔣️.json")).unwrap();
     let mut source=String::with_capacity(fixture["reservedCapacity"].as_u64().unwrap()as usize);source.push_str(fixture["text"].as_str().unwrap());
     assert_eq!(serde_json::from_str::<String>(&serde_json::to_string(&source).unwrap()).unwrap(),source);
     let pointer=source.as_ptr();let mut owner=ValueRetirement::default();
@@ -102,7 +102,7 @@ fn original_typed_owner_demands_propagate_without_false_fixed_page_progress() {
 #[test]
 fn original_neural_value_frontier_stages_without_hidden_birth() {
     use super::super::registry::tests::observe_ownership;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎮️typed-owners/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎮️typed-owners/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap(){
         let (value,source_births,source_frees)=observe_ownership(||{let mut text=String::with_capacity(row["reservedCapacity"].as_u64().unwrap() as usize);text.push_str(row["text"].as_str().unwrap());Value::Atom(Atom::String(text))});
         assert_eq!(source_frees,0);
@@ -173,7 +173,7 @@ fn payload_bytes(value:&serde_json::Value)->usize {
 #[test]
 fn nested_fixture_preserves_payload_and_closes_all_actual_allocations() {
     use super::super::registry::tests::observe_ownership;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️value-retirement.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️value-retirement.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let text=row["expandedText"]["text"].as_str().unwrap().repeat(row["expandedText"]["repetitions"].as_u64().unwrap()as usize);
         let json=row["json"].as_str().unwrap().replace("$text",&text);let oracle:serde_json::Value=serde_json::from_str(&json).unwrap();
@@ -246,7 +246,7 @@ fn cache_grant(owner:&super::super::NeuralCacheRetirement,copy:usize)->RetainedC
 #[test]
 fn cache_retirement_preserves_shared_roots_and_drains_replaced_nested_values() {
     use super::super::registry::tests::observe_ownership;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🗃️cache-retirement/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🗃️cache-retirement/🔣️.json")).unwrap();
     let seeds:Vec<_>=fixture["operations"].as_array().unwrap().iter().filter(|value|value["op"]=="seed").collect();
     let payload:usize=seeds.iter().map(|seed|seed["field"].as_str().unwrap().len()+seed["text"].as_str().unwrap().len()*seed["repeat"].as_u64().unwrap()as usize).sum();assert_eq!(payload,fixture["expected"]["finalReleasedBytes"].as_u64().unwrap()as usize);
     for copy in [1,64,4096] {
@@ -276,7 +276,7 @@ fn cache_live_final_drop_is_guarded_instead_of_recursively_destroying_dictionari
 #[test]
 fn evaluation_snapshot_and_channel_owners_preserve_payload_and_close_all_allocations() {
     use super::super::registry::tests::observe_ownership;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧮️evaluation-owners/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧮️evaluation-owners/🔣️.json")).unwrap();
     let node=fixture["node"]["text"].as_str().unwrap().repeat(fixture["node"]["repeat"].as_u64().unwrap()as usize);
     let payload=fixture["payload"]["text"].as_str().unwrap().repeat(fixture["payload"]["repeat"].as_u64().unwrap()as usize);
     assert_eq!(node.len()+2*payload.len()+"seednodelabel".len(),fixture["expectedBytes"].as_u64().unwrap()as usize);
@@ -322,7 +322,7 @@ fn body_dependent_birth_uses_the_same_borrowed_body_and_finite_progress() {
         fn next_close_byte_demand(&self)->Option<usize> {Some(self.storage.as_ref().map_or(0,Vec::capacity))}
         fn terminal_release_bytes(&self)->Option<usize> {self.terminal_is_empty().then_some(size_of::<Self>())}
     }
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📏️owned-demand/🔣️.json")).unwrap();let law=&fixture["bodyDependentBirth"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📏️owned-demand/🔣️.json")).unwrap();let law=&fixture["bodyDependentBirth"];
     let mut owner=ValueRetirement::default();
     let birth=semio_framework_value::retirement::owned_retirement_birth_bytes::<BodyOwner>();
     admit_external(&mut owner,BodyOwner {overhead:law["overhead"].as_u64().unwrap()as usize});

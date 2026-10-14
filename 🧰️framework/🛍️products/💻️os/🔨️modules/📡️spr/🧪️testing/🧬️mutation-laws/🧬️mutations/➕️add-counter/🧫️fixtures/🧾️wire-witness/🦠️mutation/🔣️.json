@@ -1,6 +1,0 @@
-{
-  "operation": "addCounter",
-  "payload": {
-    "delta": 5
-  }
-}

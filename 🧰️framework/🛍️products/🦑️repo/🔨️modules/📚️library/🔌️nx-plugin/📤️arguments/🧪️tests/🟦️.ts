@@ -5,7 +5,7 @@ import {fileURLToPath} from "node:url";
 import Ajv from "ajv";
 import {createRequire} from "node:module";
 import {dirname,resolve} from "node:path";
-const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+const fixture=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
 const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8"));
 test("owner arguments are admitted then transported literally and consumed exactly once",async()=>{
  const admit=new Ajv({strict:true}).compile(schema);

@@ -41,7 +41,7 @@ fn plugin_only_catalog(plugin_id: &str) -> Arc<Catalog> {
 fn open_workspace(catalog: Arc<Catalog>) -> Arc<HeadlessWorkspace> {
     let dir = store::test_support::tempdir().expect("tempdir");
     let mut workspace=HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), catalog).expect("opens");
-    workspace.test_discovery=Some(serde_json::from_str(include_str!("../../🧫️fixtures/🧩️neutral-descriptors/🔣️.json")).unwrap());
+    workspace.test_discovery=Some(serde_json::from_str(include_str!("../🧫️fixtures/🧩️neutral-descriptors/🔣️.json")).unwrap());
     Arc::new(workspace)
 }
 

@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{empty_history_view, retire_flow_eval_session};
 
-const PREVIEW_EVAL_RUN_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/⏯️preview-eval-run.json");
+const PREVIEW_EVAL_RUN_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏯️preview-eval-run.json");
 
 /// ⚖️ LAW: the editor's release hop emits exactly the fixture's two kernel release invocations when the
 /// geometry extension is contributed, and nothing when it is not — the same answer the shared

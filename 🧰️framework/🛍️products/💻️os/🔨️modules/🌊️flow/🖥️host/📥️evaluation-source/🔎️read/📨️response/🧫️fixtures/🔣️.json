@@ -1,0 +1,148 @@
+{
+  "done": true,
+  "cancellable": false,
+  "phase": "complete",
+  "unitsDone": 17,
+  "unitsTotal": 17,
+  "nodeHash": 4294967297,
+  "windowId": "source-🌊",
+  "windowKindId": "procedural-preview",
+  "handle": "original-source-handle",
+  "tolerance": 0.1,
+  "mesh": {
+    "positions": [
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0
+    ],
+    "normals": [
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1
+    ],
+    "colors": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      1,
+      0,
+      0,
+      1,
+      1
+    ],
+    "indices": [
+      0,
+      1,
+      2
+    ],
+    "uvs": [
+      0,
+      0,
+      1,
+      0,
+      0,
+      1
+    ],
+    "faceIds": [
+      0
+    ],
+    "vertexIds": [
+      0,
+      1,
+      2
+    ],
+    "edgePositions": [
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0
+    ],
+    "edgeIds": [
+      0,
+      1
+    ],
+    "edgeUvs": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "edgeIsSeam": [
+      0,
+      1
+    ],
+    "paintTextureBase64": "AQID",
+    "attributes": {
+      "customSource": {
+        "domain": "vertex",
+        "semantic": "custom",
+        "interpolation": "nearest",
+        "values": [
+          "源",
+          true,
+          17
+        ],
+        "indices": [
+          0,
+          1,
+          2
+        ]
+      }
+    },
+    "materials": {
+      "surface": {
+        "roughness": 0.25,
+        "source": "原"
+      }
+    },
+    "textures": {
+      "surface": {
+        "mime": "image/png",
+        "bytes": [
+          0,
+          1,
+          2,
+          255
+        ]
+      }
+    },
+    "componentReferences": {
+      "face": [
+        "face:7"
+      ],
+      "edge": [
+        "edge:5",
+        "edge:6"
+      ],
+      "vertex": [
+        "vertex:1",
+        "vertex:2",
+        "vertex:3"
+      ]
+    }
+  }
+}

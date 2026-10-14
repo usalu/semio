@@ -11,7 +11,7 @@ type Fixture = Readonly<{
   trees: readonly Readonly<{ id: string; expectRemoval: boolean; root: string; paths: readonly Readonly<{ path: string; bytes: string }>[] }>[];
 }>;
 
-const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧼️marker-only-folders/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧼️marker-only-folders/🔣️.json"), "utf8")) as Fixture;
 
 
 function materialize(tree: Fixture["trees"][number]): string {

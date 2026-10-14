@@ -1,7 +1,10 @@
 //! 📜️ Literal space checkpoint, clock, author, member and alternative entities.
 #[path="📏️preflight/🦀️.rs"]mod preflight;
+#[path="🛂️validation/🦀️.rs"]mod validation;
+#[path="🫴️receiving/🦀️.rs"]mod receiving;
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::os_spr::HybridLogicalTimestamp;
-use crate::os_store::{serialization::ArtifactSqliteSnapshot, space_history_document::S_SPACE_HISTORY_SCHEMA, space_history_document::SpaceAlternative, space_history_document::SpaceCheckpoint, SpaceHistoryMutation, space_history_document::SpaceHistorySnapshot, space_history_document::SpaceMemberPin};
+use crate::os_store::{serialization::ArtifactSqliteSnapshotHost, space_history_document::S_SPACE_HISTORY_SCHEMA, space_history_document::SpaceAlternative, space_history_document::SpaceCheckpoint, SpaceHistoryMutation, space_history_document::SpaceHistorySnapshot, space_history_document::SpaceMemberPin};
 use crate::os_vcs::Author;
 use crate::sqlite_snapshot::{
     SnapshotEncoding, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase,
@@ -91,8 +94,10 @@ fn write_rows(value:&SpaceHistorySnapshot,total:usize,p:&mut RowWriter<'_, '_>)-
 fn semantic(value:&SpaceHistorySnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
  schema(control)?;let total=rows(value,control,phase)?;let mut writer=RowWriter::borrowed(control,phase)?;write_rows(value,total,&mut writer)?;writer.finish_borrowed()
 }
-impl ArtifactSqliteSnapshot for SpaceHistorySnapshot {
-    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+impl ArtifactSqliteSnapshotHost for SpaceHistorySnapshot {
+    fn to_sqlite_database_receiving(&self,control:&mut SqliteSnapshotControl<'_>,owner:&mut crate::io::control::NativeSnapshotDecodeOwner<'_,'_>)->Result<SqliteDatabase,ValueError>{receiving::project_receiving(Some(self),None,control,owner)}
+    fn from_sqlite_database_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut crate::io::control::NativeSnapshotEncodeOwner<'_,'_>)->Result<Self,ValueError>{receiving::reconstruct_receiving(None,Some(database),control,owner)}
+    
     fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{preflight::check(self,encoding,control)}
     fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut crate::os_store::NativeSnapshotEncodeOwner<'_, '_>) -> Result<crate::io_schema::IoPayload, ValueError> {
         semantic(self,SqliteSnapshotPhase::EncodeNative,control)?;
@@ -102,7 +107,15 @@ impl ArtifactSqliteSnapshot for SpaceHistorySnapshot {
         schema(control)?;
         native::decode(payload, control, native_owner)
     }
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
+    
+    
+    fn validate_sqlite_snapshot_subset(&self,_dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->crate::io_schema::IoResult<()>{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(crate::io_schema::IoError::from_value_error)?;Err(crate::io_schema::IoError::from_value_error(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"space history subset validation requires supplied directional owner")))}
+    fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,native:&mut crate::os_store::NativeSnapshotDecodeOwner<'_,'_>)->crate::io_schema::IoResult<()>{validation::decoding(self,dialect,database,control,native)}
+    fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,native:&mut crate::os_store::NativeSnapshotEncodeOwner<'_,'_>)->crate::io_schema::IoResult<()>{validation::encoding(self,dialect,database,control,native)}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for SpaceHistorySnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
         let result = (|| -> Result<SqliteDatabase, ValueError> {
             schema(control)?;
             let total = rows(self, control, SqliteSnapshotPhase::ProjectSnapshot)?;
@@ -112,7 +125,7 @@ impl ArtifactSqliteSnapshot for SpaceHistorySnapshot {
         })();
         result
     }
-    fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
         schema(control)?;
         validate_sqlite_database_schema(database, Self::SQLITE_SCHEMA, control.limits())?;
         control.check_database(database, SqliteSnapshotPhase::ReconstructSnapshot)?;
@@ -189,19 +202,5 @@ impl ArtifactSqliteSnapshot for SpaceHistorySnapshot {
             c.checkpoint()?;
             Ok(Self { checkpoints, alternatives, active_alternative_id })
         })
-    }
-    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()> {
-        (|| -> Result<crate::io_schema::IoOutcome<()>, ValueError> {
-            control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0)?;
-            if dialect.artifact_kind != S_SPACE_HISTORY_SCHEMA || dialect.standard != "1" || dialect.subset != "*" {
-                return Err(ValueError::new(ValueRefusalKind::InvalidValue, "space history does not own this SQLite coordinate"));
-            }
-            let candidate = Self::from_sqlite_database(database, control)?;
-            if self != &candidate {
-                return Err(ValueError::new(ValueRefusalKind::InvalidValue, "space history semantic state differs"));
-            }
-            Ok(crate::io_schema::IoOutcome::clean(()))
-        })()
-        .map_err(crate::io_schema::IoError::from_value_error)
     }
 }

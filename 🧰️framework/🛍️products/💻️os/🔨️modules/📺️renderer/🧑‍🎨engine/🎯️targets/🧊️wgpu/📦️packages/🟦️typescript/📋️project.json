@@ -227,9 +227,9 @@
       "inputs": [
         "production",
         "^production",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
       ]
     },
     "test-socket-snapshot-sqlite-source": {
@@ -272,9 +272,9 @@
       "inputs": [
         "production",
         "^production",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
       ]
     },
     "test-wgpu-unit": {
@@ -287,9 +287,9 @@
       "inputs": [
         "production",
         "^production",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
       ]
     },
     "canonical-architecture": {
@@ -310,9 +310,9 @@
       "inputs": [
         "production",
         "^production",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
       ]
     },
     "directory-retained-home-bootstrap-source-check": {
@@ -359,7 +359,7 @@
           ]
         },
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🌐️browser-acceptance/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧫️fixtures/🌐️browser-acceptance/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🧫️fixtures/🌐️browser-acceptance/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧬️schema/🌐️browser-acceptance/**/*"
       ],
       "outputs": [],
@@ -387,9 +387,9 @@
         "frameWorkerSources",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/**/*",
         "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎬️.mp4",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
       ],
       "options": {
         "command": "bun ./📜️script.ts test-browser",
@@ -405,9 +405,9 @@
       "inputs": [
         "production",
         "^production",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
       ]
     },
     "test-preview-generated": {
@@ -419,9 +419,9 @@
       "inputs": [
         "production",
         "^production",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
       ]
     },
     "check-browser-worker": {
@@ -563,17 +563,39 @@
         "^nativeSources"
       ],
       "outputs": [
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/wasm-dev"
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/wasm-{options.env.SEMIO_BUILD_MODE}"
       ],
       "dependsOn": [
         "workspace:deps-trunk",
         "workspace:deps-wasm-opt"
       ],
       "options": {
-        "command": "bun ../../🏗️compiler/🌐️wasm/📜️script.ts build dev",
+        "command": "bun ../../🏗️compiler/🌐️wasm/📜️script.ts build",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
-        "forwardAllArgs": true
-      }
+        "forwardAllArgs": true,
+        "args": [
+          "prototype"
+        ]
+      },
+      "configurations": {
+        "prototype": {
+          "args": [
+            "prototype"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "args": [
+            "release"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      },
+      "defaultConfiguration": "prototype"
     },
     "native-environment-check": {
       "executor": "nx:run-commands",
@@ -591,54 +613,41 @@
         "^production"
       ],
       "outputs": [
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/native-dev"
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/native-{options.env.SEMIO_BUILD_MODE}"
       ],
       "options": {
-        "command": "bun \"../../🏗️compiler/🦀️native/📜️script.ts\" build dev",
+        "command": "bun \"../../🏗️compiler/🦀️native/📜️script.ts\" build",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
-        "forwardAllArgs": true
-      }
-    },
-    "native-build-release": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "inputs": [
-        "production",
-        "^production"
-      ],
-      "outputs": [
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/native-release"
-      ],
-      "options": {
-        "command": "bun \"../../🏗️compiler/🦀️native/📜️script.ts\" build release",
-        "cwd": "{projectRoot}"
-      }
+        "forwardAllArgs": true,
+        "args": [
+          "prototype"
+        ]
+      },
+      "configurations": {
+        "prototype": {
+          "args": [
+            "prototype"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "args": [
+            "release"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      },
+      "defaultConfiguration": "prototype"
     },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
         "command": "bun ./📜️script.ts lint",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
-      }
-    },
-    "wasm-release": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "inputs": [
-        "nativeSources",
-        "^nativeSources"
-      ],
-      "outputs": [
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/wasm-release"
-      ],
-      "dependsOn": [
-        "workspace:deps-trunk",
-        "workspace:deps-wasm-opt"
-      ],
-      "options": {
-        "command": "bun ../../🏗️compiler/🌐️wasm/📜️script.ts build release",
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
-        "forwardAllArgs": true
       }
     },
     "native-scale": {
@@ -652,24 +661,31 @@
       ],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "bun ../../⌨️native-entrypoint/📜️script.ts scale dev",
-        "forwardAllArgs": true
-      }
-    },
-    "native-scale-release": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "outputs": [],
-      "dependsOn": [
-        "native-build-release",
-        "@semio-tech/framework-os-scale-fixture:build-wasm",
-        "@semio-tech/framework-os-dev:generate-scale-fixture"
-      ],
-      "options": {
-        "cwd": "{projectRoot}",
-        "command": "bun ../../⌨️native-entrypoint/📜️script.ts scale release",
-        "forwardAllArgs": true
-      }
+        "command": "bun ../../⌨️native-entrypoint/📜️script.ts scale",
+        "forwardAllArgs": true,
+        "args": [
+          "prototype"
+        ]
+      },
+      "configurations": {
+        "prototype": {
+          "args": [
+            "prototype"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "args": [
+            "release"
+          ],
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      },
+      "defaultConfiguration": "prototype"
     },
     "generate-renderer-boot": {
       "executor": "nx:run-commands",
@@ -717,7 +733,7 @@
         "default",
         "browserBootSources",
         "frameWorkerSources",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🪆️embedded-browser/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🪆️embedded-browser/🔣️.json",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-browser/**/*"
       ],
       "options": {
@@ -762,9 +778,9 @@
       "inputs": [
         "production",
         "^production",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
       ],
       "cache": false
     },
@@ -782,6 +798,14 @@
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-native-entrypoint-catalog"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
       }
     }
   },

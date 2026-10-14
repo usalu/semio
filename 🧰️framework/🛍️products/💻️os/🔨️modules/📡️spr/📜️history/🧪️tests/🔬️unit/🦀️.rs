@@ -34,7 +34,7 @@ async fn sample_log() -> HistoryLog {
     HistoryLog {
         doc_id: "doc-1".to_string(),
         schema: "org.semio.demo.v1".to_string(),
-        edits: vec![
+        edits: [
             HistoryEdit { line: None,
                 id: "edit-1".to_string(),
                 actor: Some("alice".into()),
@@ -73,7 +73,7 @@ async fn sample_log() -> HistoryLog {
                     transaction: Some(crate::os_spr::command::TransactionRef { id: "tx-0123456789abcdef".to_string(), tool: "s.puzzle.2d#select".to_string() }),
                 }]), lane: None,
             },
-        ],
+        ].into_iter().collect(),
         transitions: vec![
             transition_record("doc-1", "alice", commit("ck-1", None, "change-1", &["edit-1#0", "edit-1#1", "op-1"]), (1, 1_700_000_001_000, 0)),
             transition_record("doc-1", "alice", crate::os_spr::HistoryTransition::Branch { alternative_id: "alt-1".to_string(), name: "main".to_string(), checkpoint_id: "ck-1".to_string() }, (1, 1_700_000_001_000, 1)),
@@ -536,7 +536,7 @@ async fn transition_payload_round_trips_with_interned_ids() {
 
 #[semio_framework_async_macros::async_test]
 async fn transition_payload_matches_the_language_agnostic_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔀️transition-record/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔀️transition-record/🔣️.json")).unwrap();
     let record = &fixture["record"];
     let hlt: Vec<u64> = record["hlt"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap()).collect();
     let revert = crate::os_spr::HistoryTransition::Revert { mutation_ids: record["transition"]["revert"].as_array().unwrap().iter().map(|id| crate::os_spr::MutationId(id.as_str().unwrap().to_string())).collect() };
@@ -562,7 +562,7 @@ async fn transition_payload_matches_the_language_agnostic_fixture() {
 
 #[semio_framework_async_macros::async_test]
 async fn transition_decoder_rejects_newer_format_truncation_and_trailing_bytes() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔀️transition-record/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔀️transition-record/🔣️.json")).unwrap();
     let mut reader = DictReader::new();
     reader.extend(0, fixture["dictionary"].as_array().unwrap().iter().map(|entry| entry.as_str().unwrap().to_string()).collect::<Vec<_>>()).unwrap();
     let bytes = hex(fixture["recordHex"].as_str().unwrap());
@@ -776,7 +776,7 @@ fn fold_log() -> HistoryLog {
     HistoryLog {
         doc_id: "doc-f".to_string(),
         schema: "schema-f".to_string(),
-        edits: vec![fold_edit("edit-a", "op-a", 100), fold_edit("edit-b", "op-b", 200)],
+        edits: [fold_edit("edit-a", "op-a", 100), fold_edit("edit-b", "op-b", 200)].into_iter().collect(),
         transitions: vec![
             transition_record("doc-f", "alice", crate::os_spr::HistoryTransition::Revert { mutation_ids: vec![crate::os_spr::MutationId("op-b".to_string())] }, (1, 400, 0)),
             transition_record("doc-f", "alice", commit("ck-1", None, "change-1", &["op-a", "op-b"]), (1, 300, 0)),
@@ -864,7 +864,8 @@ async fn reader_edits_forward_matches_log() {
     let bytes = encode_history(&log, &EncodeOptions::default()).await.unwrap();
     let reader = HistoryReader::open(&bytes, &DecodeOptions::default()).await.unwrap();
     let edits: Vec<HistoryEdit> = reader.edits().await.map(|r| r.unwrap()).collect();
-    assert_eq!(edits, log.edits);
+    assert_eq!(edits.len(), log.edits.len());
+    assert!(edits.iter().eq(log.edits.iter()));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -883,9 +884,8 @@ async fn reader_edits_rev_full_matches_reversed_forward() {
     let bytes = encode_history(&log, &EncodeOptions::default()).await.unwrap();
     let reader = HistoryReader::open(&bytes, &DecodeOptions::default()).await.unwrap();
     let rev: Vec<HistoryEdit> = reader.edits_rev(usize::MAX).await.map(|r| r.unwrap()).collect();
-    let mut expected = log.edits;
-    expected.reverse();
-    assert_eq!(rev, expected);
+    assert_eq!(rev.len(), log.edits.len());
+    assert!(rev.iter().eq(log.edits.iter().rev()));
 }
 //#endregion 🔖️Scan
 
@@ -935,7 +935,7 @@ async fn index_round_trips_edits_checkpoints_and_snapshots() {
 #[test]
 fn retained_native_history_fold_obeys_the_neutral_law() {
     use semio_framework_value::ErasedSnapshotRetirement;
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🧫️fixtures/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut plain = fold_log();
     plain.edits[0].meta.as_mut().unwrap()[0].op_id = Some("m".into());
     plain.transitions.clear();

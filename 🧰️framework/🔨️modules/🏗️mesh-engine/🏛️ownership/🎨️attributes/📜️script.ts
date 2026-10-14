@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 🎨️ Runs the neutral mesh attribute owner without native composition preparation. */
 import {resolve} from "node:path";
-import {BundleScript,ScriptRouter} from "../../../🏃️process/🧭️routing/🟦️.ts";
-import {runScriptMain} from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import {runBudgetedTestCommand} from "../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
-import {resolveTestLevel,testLevelBudgetMs} from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import {BundleScript,ScriptRouter} from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {runScriptMain} from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {runBudgetedTestCommand} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import {resolveTestLevel,testLevelBudgetMs} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 class Test extends BundleScript{
  async run(segments:string[]):Promise<void>{
   const {rest}=resolveTestLevel(segments);if(rest.length)throw Error("Mesh attribute ownership accepts no remaining arguments");if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw Error("Caller-owned test output required");

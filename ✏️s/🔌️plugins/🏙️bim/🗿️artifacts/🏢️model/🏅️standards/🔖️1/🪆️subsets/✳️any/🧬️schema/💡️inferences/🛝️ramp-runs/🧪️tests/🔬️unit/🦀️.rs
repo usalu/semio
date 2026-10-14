@@ -178,8 +178,8 @@ fn the_run_table_is_canonical_json_of_every_ramp() {
     assert!((table["rp"]["run_length"].as_f64().expect("a number") - 7.0).abs() < 1e-9);
 }
 
-const RAMPS: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🛝️ramp-runs/🏞️ramps/📸️snapshot/🔣️.json");
-const RAMPS_TABLE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🛝️ramp-runs/🏞️ramps/💡️inference/🛝️ramp-runs/🔣️.json");
+const RAMPS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛝️ramp-runs/🏞️ramps/📸️snapshot/🔣️.json");
+const RAMPS_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛝️ramp-runs/🏞️ramps/💡️inference/🛝️ramp-runs/🔣️.json");
 
 fn ramps() -> ModelSnapshot {
     semio_framework_pack_json::from_json_str(RAMPS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the ramps model decodes")

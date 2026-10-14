@@ -1,0 +1,180 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "features",
+    "links",
+    "expected",
+    "candidateCases",
+    "authorityCases",
+    "bootstrapOrder"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "features": {
+      "const": [
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible",
+        "🧰️framework/🔨️modules/🧵️job/🗑️generated/🧪️tests/🔎️hidden",
+        "🧰️framework/🔨️modules/🧵️job/target/🧪️tests/🔎️hidden",
+        "🧰️framework/🔨️modules/🧵️job/.nx/🧪️tests/🔎️hidden",
+        ".🧬semio/🧪️tests/🔎️hidden",
+        "compose/🧪️tests/🔎️hidden",
+        "temp/compose/🧪️tests/🔎️hidden",
+        "♻️mit-bestand/🔎️recherche/🧪️tests/🔎️hidden"
+      ]
+    },
+    "links": {
+      "const": [
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/🔁️loop",
+          "target": "🧰️framework/🔨️modules/🧵️job"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔗️alias",
+          "target": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔗️source/🥒️.feature",
+          "target": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature",
+          "file": true
+        }
+      ]
+    },
+    "expected": {
+      "const": [
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible"
+      ]
+    },
+    "candidateCases": {
+      "const": [
+        {
+          "id": "empty",
+          "inputs": [],
+          "expected": []
+        },
+        {
+          "id": "visible",
+          "inputs": [
+            "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature"
+          ],
+          "expected": [
+            "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature"
+          ]
+        },
+        {
+          "id": "omitted-existing",
+          "inputs": [
+            "🧰️framework/🔨️modules/🧵️job/🧪️tests/🆕️missing/🥒️.feature"
+          ],
+          "expected": []
+        },
+        {
+          "id": "duplicate",
+          "inputs": [
+            "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature",
+            "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature"
+          ],
+          "expected": [
+            "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature"
+          ]
+        },
+        {
+          "id": "native-separator",
+          "inputs": [
+            "🧰️framework\\🔨️modules\\🧵️job\\🧪️tests\\🔎️visible\\🥒️.feature"
+          ],
+          "expected": [
+            "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature"
+          ]
+        },
+        {
+          "id": "traversal",
+          "inputs": [
+            "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/../🔎️visible/🥒️.feature"
+          ],
+          "expected": []
+        },
+        {
+          "id": "excluded",
+          "inputs": [
+            "🧰️framework/🔨️modules/🧵️job/target/🧪️tests/🔎️hidden/🥒️.feature"
+          ],
+          "expected": []
+        },
+        {
+          "id": "linked-case",
+          "inputs": [
+            "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔗️alias/🥒️.feature"
+          ],
+          "expected": []
+        },
+        {
+          "id": "linked-leaf",
+          "inputs": [
+            "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔗️source/🥒️.feature"
+          ],
+          "expected": []
+        },
+        {
+          "id": "add-member",
+          "inputs": [
+            "🧰️framework/🔨️modules/🧵️job/🧪️tests/🆕️added/🥒️.feature",
+            "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature"
+          ],
+          "expected": [
+            "🧰️framework/🔨️modules/🧵️job/🧪️tests/🆕️added/🥒️.feature",
+            "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature"
+          ],
+          "mutation": {
+            "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🆕️added/🥒️.feature",
+            "operation": "add"
+          }
+        },
+        {
+          "id": "remove-member",
+          "inputs": [
+            "🧰️framework/🔨️modules/🧵️job/🧪️tests/🆕️added/🥒️.feature",
+            "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature"
+          ],
+          "expected": [
+            "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature"
+          ],
+          "mutation": {
+            "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🆕️added/🥒️.feature",
+            "operation": "remove"
+          }
+        }
+      ]
+    },
+    "authorityCases": {
+      "const": [
+        {
+          "id": "root-link",
+          "path": "workspace-alias",
+          "authority": "root"
+        },
+        {
+          "id": "taxonomy-link",
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+          "authority": "taxonomy"
+        },
+        {
+          "id": "policy-link",
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+          "authority": "policy"
+        }
+      ]
+    },
+    "bootstrapOrder": {
+      "const": {
+        "expected": [
+          "ready",
+          "inputs"
+        ]
+      }
+    }
+  }
+}

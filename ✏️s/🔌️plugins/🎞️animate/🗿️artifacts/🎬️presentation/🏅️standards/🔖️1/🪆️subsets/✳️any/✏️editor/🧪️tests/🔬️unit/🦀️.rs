@@ -124,7 +124,7 @@ use super::*;
 #[test]
 fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
     use store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory as _;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️retained-command-limits/🔣️.json")).expect("language-neutral retained fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️retained-command-limits/🔣️.json")).expect("language-neutral retained fixture");
     let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"] == "Migrated").map(|row| row["id"].as_str().expect("route id")).collect();
     assert_eq!(migrated, ANIMATE_PRESENTATION_RETAINED_TOOL_IDS);
     assert_eq!(ANIMATE_PRESENTATION_RETAINED_PUBLICATION_CONTRACTS.len(), migrated.len());
@@ -525,7 +525,7 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     assert!(!tiles.is_empty(), "the demo example must survive the archive door with its tile crops, not an empty deck");
     assert!(!source.src.is_empty(), "the demo example must survive the archive door with its source figure");
     let derived = crate::genesis_presentation_child_pack(&snapshot, "presentation", &snapshot.presentation.child_id).expect("the loaded snapshot still derives its own presentation member");
-    let deck = <semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&derived).expect("the derived presentation member decodes");
+    let deck = <semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&derived).expect("the derived presentation member decodes");
     assert_eq!(deck.slides.len(), tiles.len(), "the genesis-derived deck must carry one slide per loaded tile");
     assert!(!deck.masters.is_empty(), "the genesis-derived deck must carry the loaded source figure as its master");
     artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);

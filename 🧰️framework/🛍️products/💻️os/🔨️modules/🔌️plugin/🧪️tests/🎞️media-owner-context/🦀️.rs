@@ -20,10 +20,10 @@ impl ArtifactInstanceOperationOwner for MediaOwner {
     fn retirement_demands(&self, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::RetirementDemand { release_bytes: if self.closed { 0 } else { self.label.capacity() }, depth: usize::from(!self.closed), ..Default::default() })
     }
-    fn maintenance_step(&mut self, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<crate::bounded_ownership::PluginLifecycleStep, Fault> {
+    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<crate::bounded_ownership::PluginLifecycleStep, crate::bounded_ownership::PluginLifecycleFailure> {
         Ok(crate::bounded_ownership::PluginLifecycleStep::Complete(Default::default()))
     }
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<crate::bounded_ownership::PluginLifecycleStep, Fault> {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<crate::bounded_ownership::PluginLifecycleStep, crate::bounded_ownership::PluginLifecycleFailure> {
         if !self.closed && (grant.maximum_items == 0 || grant.maximum_release_bytes < self.label.capacity()) {
             return Ok(crate::bounded_ownership::PluginLifecycleStep::Progress(Default::default()));
         }
@@ -69,7 +69,8 @@ fn payload(media: Media) -> serde_json::Value {
 /// 🎞️ Editor, viewer, and live VCS exports consume the supplied owner and preserve document defaults.
 #[semio_framework_async_macros::async_test]
 async fn media_export_request_context_preserves_exact_supplied_owner() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎞️media-owner-context.json")).unwrap();
+        let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎞️media-owner-context.json")).unwrap();
     let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(include_str!("../../🧪️testing/🎞️media-owner-context/🧬️schema/🔣️.json")).unwrap();
     let history = HistoryView::empty();
     let snapshot = SurfaceSnapshot { count: 7 };
@@ -103,7 +104,7 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     let supplied = ArtifactInstanceOperationOwnerHandle::new(owner("defaults"));
     let default_editor = <EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, default_port, &doc, &transient).await.unwrap();
     let default_viewer = <ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, default_port, &doc, &transient).await.unwrap();
-    let expected_pack = store::pack_rt::pack_value_to_base64(&store::os_store::serialization::ArtifactPack::encode_pack(&snapshot));
+    let expected_pack = store::pack_rt::pack_value_to_base64(&pack::snapshot::ArtifactPack::encode_pack(&snapshot));
     for media in [default_editor, default_viewer] {
         assert_eq!(media.media_type, MediaType { class: MediaClass::Data, form: MediaForm::Value });
         let MediaPayload::Structured { schema, json } = media.payload else {
@@ -139,6 +140,8 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     assert!(viewer.export_media(default_port).await.is_ok());
     assert!(matches!(editor.export_media("unknown:out").await, Err(MediaError::NotImplemented)));
     assert!(matches!(viewer.export_media("unknown:out").await, Err(MediaError::NotImplemented)));
-    close_registered_fixture_app(&mut editor, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
-    close_registered_fixture_app(&mut viewer, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
-}
+    close_registered_fixture_app(&mut editor, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
+    close_registered_fixture_app(&mut viewer, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
+
+        }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
+    }

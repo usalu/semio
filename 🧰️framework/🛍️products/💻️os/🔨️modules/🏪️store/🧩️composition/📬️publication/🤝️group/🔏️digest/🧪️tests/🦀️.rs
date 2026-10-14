@@ -6,7 +6,7 @@ fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_item
 fn below(full:RetainedCloneGrant)->[RetainedCloneGrant;5]{[RetainedCloneGrant{maximum_items:0,..full},RetainedCloneGrant{maximum_copy_bytes:full.maximum_copy_bytes.saturating_sub(1),..full},RetainedCloneGrant{maximum_capacity_bytes:full.maximum_capacity_bytes.saturating_sub(1),..full},RetainedCloneGrant{maximum_release_bytes:full.maximum_release_bytes.saturating_sub(1),..full},RetainedCloneGrant{maximum_depth:full.maximum_depth.saturating_sub(1),..full}]}
 #[test]
 fn original_group_digest_wrapper_retains_native_edit_and_separate_physical_frame(){
- let policy:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let maximum_turns=policy["maximumTurns"].as_u64().unwrap()as usize;
+ let policy:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let maximum_turns=policy["maximumTurns"].as_u64().unwrap()as usize;
  let cases:serde_json::Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../../../🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🧫️fixtures/🔣️.json"))).unwrap();
  let expected:serde_json::Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../../../🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal/🧫️fixtures/🔣️.json"))).unwrap();
  for(index,row)in cases["cases"].as_array().unwrap().iter().enumerate(){for pause in policy["law"]["nativeDigestCancellationTurns"].as_array().unwrap(){let cancel_at=pause.as_u64().map(|turn|turn as usize);

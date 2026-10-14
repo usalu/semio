@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn closing_input_reports_each_admitted_action_receipt_once() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧾️correlated-action-receipts/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧾️correlated-action-receipts/🔣️.json")).unwrap();
     let rows = fixture["receipts"].as_array().unwrap();
     let mut input = InputState::<()>::default();
     let mut batch = input.reserve_actions(rows.len(), rows.len() * 128).unwrap();
@@ -31,7 +31,7 @@ fn closing_input_reports_each_admitted_action_receipt_once() {
 
 #[test]
 fn a_reopened_text_owner_drains_the_prior_projection_before_projecting_its_current_value() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⌨️text-owner-lifecycle/🔣️.json")).expect("text owner lifecycle fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⌨️text-owner-lifecycle/🔣️.json")).expect("text owner lifecycle fixture");
     assert_eq!(fixture["sequence"], serde_json::json!(["focus", "advance-to-projection", "blur", "refocus", "drain"]));
     let owner = fixture["owner"].as_str().expect("owner").to_string();
     let value = fixture["value"].as_str().expect("value").to_string();

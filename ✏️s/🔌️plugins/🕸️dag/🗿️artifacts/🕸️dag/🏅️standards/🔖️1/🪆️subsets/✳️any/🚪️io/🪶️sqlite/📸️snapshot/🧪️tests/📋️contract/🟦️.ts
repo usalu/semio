@@ -2,7 +2,7 @@
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
 import*as snapshot from"../../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import corpus from"../../🧫️fixtures/🔣️.json";
+import corpus from"../🧫️fixtures/🔣️.json";
 import{readFileSync}from"node:fs";
 const sql=readFileSync(new URL("../../🗄️.sql",import.meta.url),"utf8");
 test("DAG actual persisted Snapshot owns complete parent SQLite capability",()=>{expect(Object.hasOwn(snapshot,"dagSnapshotToSqliteDatabase")).toBe(true);expect(Object.hasOwn(snapshot,"dagSnapshotFromSqliteDatabase")).toBe(true)});
@@ -25,7 +25,7 @@ test("DAG owning inference consumer preserves every named depth under the indepe
 test("DAG owning inference consumer refuses each independently invalid depth",()=>{const validate=new Ajv({strict:false}).compile(inferenceSchema);for(const depth of corpus.invalidInferenceDepthValues){const value={topology:{topoOrder:["node"],depth:{node:depth},cycleFree:true,nodeCount:1}};expect(validate(value)).toBe(false);expect(()=>parseDagInference(value)).toThrow()}});
 
 import Ajv2020 from 'ajv/dist/2020';
-import publicContract from "../../🧫️fixtures/🚦️public/🔣️.json";
+import publicContract from "../🧫️fixtures/🚦️public/🔣️.json";
 
 
 test('DAG populated public neutral contract preserves every original relational field and independent edit', async () => {

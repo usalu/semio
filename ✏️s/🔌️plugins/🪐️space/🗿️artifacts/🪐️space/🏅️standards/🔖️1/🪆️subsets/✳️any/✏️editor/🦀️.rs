@@ -327,7 +327,7 @@ impl ArtifactEditor for SpaceIndexEditor {
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, snapshot_read:request.snapshot_read, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
             SpaceIndexCommand::command_id,
             SPACE_INDEX_RETAINED_RAW_BYTES,
             SPACE_INDEX_RETAINED_WORK_ITEMS,

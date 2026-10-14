@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "📔️set-viewport/🧥️camera-view",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/📔️set-viewport/🧥️camera-view/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/📔️set-viewport/🧥️camera-view/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/📔️set-viewport/🧥️camera-view/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/📔️set-viewport/🧥️camera-view/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/📔️set-viewport/🧥️camera-view/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📔️set-viewport/🧥️camera-view/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📔️set-viewport/🧥️camera-view/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📔️set-viewport/🧥️camera-view/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📔️set-viewport/🧥️camera-view/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📔️set-viewport/🧥️camera-view/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

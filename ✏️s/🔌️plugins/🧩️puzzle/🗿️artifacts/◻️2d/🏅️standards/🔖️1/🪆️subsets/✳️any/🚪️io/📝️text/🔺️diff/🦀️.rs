@@ -15,7 +15,7 @@ semio_framework_os_kernel::diff_text!(crate::standards::v1::subsets::any::schema
 fn history_edit_puzzle2d_diff_records_roundtrip_neutral_authored_deltas(){
  use protocol::{DiffBinary,DiffText};
  use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
- let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for sample in corpus["samples"].as_array().unwrap(){
   let expected=Puzzle2dDiff{schema:sample["json"]["schema"].as_str().map(Into::into),..Default::default()};
   assert_eq!(Puzzle2dDiff::parse_diff(sample["document"].as_str().unwrap()).unwrap(),expected);

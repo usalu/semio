@@ -16,7 +16,7 @@ fn history_read_prepared_derived_snapshot_conserves_original_registry_and_payloa
 }
 #[test]
 fn history_read_retirement_frame_preserves_original_preview_on_every_refusal() {
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let((mut original,snapshots,mutations),heap)=observe_heap_allocations_on_this_thread(||{
         let input=protocol::InputReplacement::Input {schema:String::with_capacity(law["unusedInputCapacity"].as_u64().unwrap()as usize),payload:Vec::with_capacity(law["unusedInputCapacity"].as_u64().unwrap()as usize)};
         let plan=HistoryReadPlan::new(Some(protocol::MutationId(law["originalTarget"].as_str().unwrap().into())),protocol::HistoryInputDrafts::from([(protocol::MutationId(law["originalTarget"].as_str().unwrap().into()),input)]),17,false);

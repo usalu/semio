@@ -1,4 +1,4 @@
-import { buildModeEnvironment, readBuildMode } from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { buildModeEnvironment, readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { fixedTargetBuildMode } from "../../../🔌️nx-plugin/🎚️mode/🟨️.mjs";
 
 type Selection = { args: string[]; env: NodeJS.ProcessEnv; watch?: string };
@@ -27,5 +27,5 @@ export function resolveNxBuildMode(selection: Selection, environment: NodeJS.Pro
   if (values.some(value => value !== mode)) throw new Error(`Conflicting Nx build modes: ${values.join(", ")}`);
   const compilerArguments = tail.slice(1);
   if (targets.some(target => /^(?:build|wasm|native|component|cpp|package|extension-package|bundle)(?:-|$)/.test(target)) && compilerArguments.some(argument => ["--release", "--dist", "--dev", "--prototype", "--mode", "--build-mode"].includes(argument) || /^(?:--mode|--build-mode|--profile)=/.test(argument))) throw new Error("Select the Nx prototype or release configuration before --");
-  return { ...selection, args: [...args, `--configuration=${mode}`, ...tail], env: { ...selection.env, ...buildModeEnvironment(mode, {}) } };
+  return { ...selection, args: selection.args, env: { ...selection.env, ...buildModeEnvironment(mode, {}) } };
 }

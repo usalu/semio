@@ -1,0 +1,248 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/library/owner-projection-policy/schema.json",
+  "title": "Owner Projection Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "ownerEvidence",
+    "referenceOwners",
+    "generatorOwners",
+    "entries"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "owner-projection-policy"
+    },
+    "ownerEvidence": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "evidencePaths"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "configurable-owner-license",
+              "ordinary-owner-doc",
+              "package-publication",
+              "third-party-attribution",
+              "ticket-evidence",
+              "ticket-scratch"
+            ]
+          },
+          "evidencePaths": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(?!/)(?!.*[\\\\:*?\"<>|\\u0000-\\u001f])(?!.*//)(?!.*(?:^|/)\\.\\.?(?:/|$)).+$"
+            },
+            "uniqueItems": true
+          },
+          "expectedPackageName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "private": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "referenceOwners": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "ownerPath"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ownerPath": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "generatorOwners": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ownerPath",
+          "target",
+          "currentOutputPath",
+          "requiredOutputPath"
+        ],
+        "properties": {
+          "ownerPath": {
+            "type": "string",
+            "pattern": "^(?!/)(?!.*[\\\\:*?\"<>|\\u0000-\\u001f])(?!.*//)(?!.*(?:^|/)\\.\\.?(?:/|$)).+$"
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "currentOutputPath": {
+            "type": "string",
+            "pattern": "^(?!/)(?!.*[\\\\:*?\"<>|\\u0000-\\u001f])(?!.*//)(?!.*(?:^|/)\\.\\.?(?:/|$)).+$"
+          },
+          "requiredOutputPath": {
+            "type": "string",
+            "pattern": "^(?!/)(?!.*[\\\\:*?\"<>|\\u0000-\\u001f])(?!.*//)(?!.*(?:^|/)\\.\\.?(?:/|$)).+$"
+          }
+        }
+      }
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/OwnerProjectionEntry"
+      },
+      "uniqueItems": true
+    }
+  },
+  "definitions": {
+    "OwnerProjectionEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourcePath",
+        "destinationPath",
+        "ownerEvidenceId",
+        "disposition",
+        "fixedContractId",
+        "projectionContractId",
+        "referenceOwnerIds",
+        "generatorOwnerId",
+        "preimage"
+      ],
+      "properties": {
+        "sourcePath": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*[\\\\:*?\"<>|\\u0000-\\u001f])(?!.*//)(?!.*(?:^|/)\\.\\.?(?:/|$)).+$"
+        },
+        "destinationPath": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*[\\\\:*?\"<>|\\u0000-\\u001f])(?!.*//)(?!.*(?:^|/)\\.\\.?(?:/|$)).+$"
+        },
+        "ownerEvidenceId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "disposition": {
+          "enum": [
+            "attribution-relocate",
+            "configurable-owner-license-relocate",
+            "fixed",
+            "generated-evidence-relocate",
+            "owner-documentation-relocate"
+          ]
+        },
+        "fixedContractId": {
+          "enum": [
+            "bun-package-license",
+            "bun-package-readme",
+            null
+          ]
+        },
+        "projectionContractId": {
+          "enum": [
+            "exact-owner-license-projection",
+            "exact-owner-readme-projection",
+            null
+          ]
+        },
+        "referenceOwnerIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "generatorOwnerId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "preimage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256",
+            "mode",
+            "size"
+          ],
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "mode": {
+              "const": "0644"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        }
+      }
+    },
+    "SourcePreimage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sha256",
+        "mode",
+        "size"
+      ],
+      "properties": {
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "mode": {
+          "const": "0644"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    }
+  }
+}

@@ -1,7 +1,8 @@
 //! 🕷️ Original graph properties and recursive values share one typed relationship workspace.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{SemioGraphSnapshot,SemioGraphNode,SemioGraphEdge,SemioGraphPort,SemioGraphPortKind,SemioValueEntry,identity,single_float_row,float_columns,VALUES};
 use crate::standards::v1::subsets::value::{schema::snapshot::SemioValue,io::sqlite::snapshot::{ValueForestStorage,reconstruct_value_forest_into}};
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve,heap_sort}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve,heap_sort}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[derive(semio_framework_value::RetireOwned)]
 struct Prefix{snapshot:Option<SemioGraphSnapshot>,validation:SchemaValidationStorage,indexes:[RowIndexStorage;6],orders:[Vec<usize>;6],names:[Vec<usize>;2],roots:Vec<i64>,root_indices:Vec<(i64,usize)>,forest:ValueForestStorage}

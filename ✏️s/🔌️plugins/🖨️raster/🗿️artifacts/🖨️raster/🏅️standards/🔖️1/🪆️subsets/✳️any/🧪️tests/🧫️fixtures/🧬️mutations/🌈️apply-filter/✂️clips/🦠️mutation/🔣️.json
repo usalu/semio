@@ -1,0 +1,18 @@
+{
+  "amount": 1.0,
+  "filter": "brightness",
+  "layerId": "paint",
+  "mutation": "applyFilter",
+  "selection": [
+    {
+      "coverage": 255,
+      "length": 3,
+      "start": 0
+    },
+    {
+      "coverage": 128,
+      "length": 3,
+      "start": 6
+    }
+  ]
+}

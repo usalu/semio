@@ -43,7 +43,8 @@ use std::future::Future;
 /// unused while `--all-targets` needs it — do not remove on the strength of that warning.
 #[allow(unused_imports)]
 use std::pin::Pin;
-use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactEnvelope, os_store::serialization::ArtifactPack, ArtifactStore, ConfigStore, MemberFactory, Mutation, MutationDiff, NoMembers, SpaceMember};
+use pack::snapshot::ArtifactPack;
+use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactEnvelope, ArtifactStore, ConfigStore, MemberFactory, Mutation, MutationDiff, NoMembers, SpaceMember};
 use semio_framework_ui_locale::LocalizedLabel;
 use ui_wgpu::wgpu::ContextMenuItemSpec;
 use ui_wgpu::wgpu::ContextMenuRequest;
@@ -214,15 +215,15 @@ pub trait ArtifactEditor: Default + Send + 'static {
     fn examples() -> Vec<ExampleSource> {
         Vec::new()
     }
-    type Snapshot: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::os_store::serialization::ArtifactDsl + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + 'static;
+    type Snapshot: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + 'static;
     type Mutation: protocol::SemanticMutation<Self::Snapshot> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
-    type Config: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::ConfigRecord + ArtifactPack + 'static;
+    type Config: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::ConfigRecord + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type ConfigMutation: ::protocol::Mutation<Self::Config> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
-    type Draft: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::os_store::serialization::ArtifactDsl + ArtifactPack + 'static;
+    type Draft: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type DraftMutation: ::protocol::Mutation<Self::Draft> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
-    type Presence: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::os_store::serialization::ArtifactDsl + ArtifactPack + store::ArtifactPresenceSnapshot + 'static;
+    type Presence: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::ArtifactPresenceSnapshot + 'static;
     type PresenceMutation: ::protocol::Mutation<Self::Presence> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
-    type Transient: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::os_store::serialization::ArtifactDsl + ArtifactPack + 'static;
+    type Transient: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type TransientMutation: ::protocol::Mutation<Self::Transient> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Command: ::protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static;
 
@@ -237,7 +238,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
 
     fn mounted_job_maintenance_phase(_instance_id: u32) -> Option<MountedOwnerPhaseV1> { None }
 
-    fn mounted_job_maintenance_step(_instance_id: u32, _grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn mounted_job_maintenance_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
 
@@ -245,7 +246,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
         Ok(RetirementDemand::default())
     }
 
-    fn mounted_job_close_step(_instance_id: u32, _grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn mounted_job_close_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
 
@@ -742,7 +743,7 @@ pub async fn artifact_app_genesis_pair<A: ArtifactApp>(document_id: &str) -> Res
 /// under `ArtifactEnvelope` asserts its owners were retired first).
 pub async fn artifact_pair_snapshot<P, Mutation>(pack: &[u8], spr: &[u8]) -> Result<P, store::VcsError>
 where
-    P: Clone + ArtifactPack + 'static,
+    P: Clone + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
     Mutation: OpText + OpBinary + store::Mutation<P> + 'static,
 {
     if pack.is_empty() || spr.is_empty() {
@@ -918,15 +919,15 @@ pub trait ArtifactViewer: Default + Send + 'static {
         Ok((|| None)())
     }
     const DOCUMENT_SCHEMA: &'static str;
-    type Snapshot: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::os_store::serialization::ArtifactDsl + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + 'static;
+    type Snapshot: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + 'static;
     /// 📜️ Decode-only — never constructed by `handle`, but the store's op log must still decode
     /// past edits made by an `ArtifactEditor` sharing this dialect, and labels them in every locale like it.
     type Mutation: protocol::SemanticMutation<Self::Snapshot> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
-    type Config: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::ConfigRecord + ArtifactPack + 'static;
+    type Config: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::ConfigRecord + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type ConfigMutation: ::protocol::Mutation<Self::Config> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
-    type Presence: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::os_store::serialization::ArtifactDsl + ArtifactPack + store::ArtifactPresenceSnapshot + 'static;
+    type Presence: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::ArtifactPresenceSnapshot + 'static;
     type PresenceMutation: ::protocol::Mutation<Self::Presence> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
-    type Transient: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::os_store::serialization::ArtifactDsl + ArtifactPack + 'static;
+    type Transient: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type TransientMutation: ::protocol::Mutation<Self::Transient> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Command: ::protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static;
 
@@ -936,7 +937,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
 
     fn mounted_job_maintenance_phase(_instance_id: u32) -> Option<MountedOwnerPhaseV1> { None }
 
-    fn mounted_job_maintenance_step(_instance_id: u32, _grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn mounted_job_maintenance_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
 
@@ -944,7 +945,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
         Ok(RetirementDemand::default())
     }
 
-    fn mounted_job_close_step(_instance_id: u32, _grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn mounted_job_close_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
 
@@ -1283,11 +1284,11 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     fn mounted_job_maintenance_phase(instance_id: u32) -> Option<MountedOwnerPhaseV1> { E::mounted_job_maintenance_phase(instance_id) }
     fn mounted_job_maintenance_demands(instance_id: u32, body: usize) -> Result<RetirementDemand, ValueError> { E::mounted_job_maintenance_demands(instance_id, body) }
     fn mounted_job_close_demands(instance_id: u32, body: usize) -> Result<RetirementDemand, ValueError> { E::mounted_job_close_demands(instance_id, body) }
-    fn mounted_job_maintenance_step(instance_id: u32, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
-        E::mounted_job_maintenance_step(instance_id, grant)
+    fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
+        E::mounted_job_maintenance_step(instance_id,cx,grant)
     }
-    fn mounted_job_close_step(instance_id: u32, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
-        E::mounted_job_close_step(instance_id, grant)
+    fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
+        E::mounted_job_close_step(instance_id,cx,grant)
     }
     fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
         E::mounted_jobs_terminal_is_empty(instance_id)
@@ -1430,7 +1431,7 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
             return None;
         }
         if example_id.is_empty() {
-            return Some(Ok(<E::Snapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&E::initial_snapshot())));
+            return Some(Ok(<E::Snapshot as pack::snapshot::ArtifactDsl>::print_dsl(&E::initial_snapshot())));
         }
         Some(match examples.into_iter().find(|source| source.id() == example_id) {
             Some(source) => Ok(source.document()),
@@ -1709,11 +1710,11 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     fn mounted_job_maintenance_phase(instance_id: u32) -> Option<MountedOwnerPhaseV1> { V::mounted_job_maintenance_phase(instance_id) }
     fn mounted_job_maintenance_demands(instance_id: u32, body: usize) -> Result<RetirementDemand, ValueError> { V::mounted_job_maintenance_demands(instance_id, body) }
     fn mounted_job_close_demands(instance_id: u32, body: usize) -> Result<RetirementDemand, ValueError> { V::mounted_job_close_demands(instance_id, body) }
-    fn mounted_job_maintenance_step(instance_id: u32, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
-        V::mounted_job_maintenance_step(instance_id, grant)
+    fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
+        V::mounted_job_maintenance_step(instance_id,cx,grant)
     }
-    fn mounted_job_close_step(instance_id: u32, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
-        V::mounted_job_close_step(instance_id, grant)
+    fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
+        V::mounted_job_close_step(instance_id,cx,grant)
     }
     fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
         V::mounted_jobs_terminal_is_empty(instance_id)
@@ -2106,7 +2107,7 @@ impl<S, M> SnapshotBuilder<S, M> {
 
 impl<S, M> ArtifactBuilder for SnapshotBuilder<S, M>
 where
-    S: Default + Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + store::os_store::serialization::ArtifactDsl + ArtifactPack,
+    S: Default + Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
     M: Mutation<S>,
     M::Diff: MutationDiff<S>,
 {

@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "workspace": {
+    "files": {
+      ".gitignore": "dist/\n.nx/workspace-data\nignored/\na/src/index.ts\na/*.private\n",
+      ".nxignore": "/tickets/**\n/.🧬semio/**\n",
+      "nx.json": "{}\n",
+      "package.json": "{\"name\":\"root\"}\n",
+      "a/project.json": "{\"name\":\"a\"}\n",
+      "a/src/index.ts": "export const a = 1;\n",
+      "dist/out.js": "built\n",
+      "tickets/note.md": "scratch\n",
+      "a/🔨️modules/member/Cargo.toml": "[package]\nname=\"member\"\nversion=\"1.0.0\"\n",
+      ".git/info/exclude": "a/local-only/\n"
+    },
+    "observedFile": "a/src/index.ts",
+    "tracked": [
+      "a/src/index.ts"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "unchanged",
+      "mutation": {
+        "kind": "none"
+      },
+      "holds": true
+    },
+    {
+      "id": "observed-content-changed",
+      "mutation": {
+        "kind": "write",
+        "path": "a/src/index.ts",
+        "content": "export const a = 2;\n"
+      },
+      "holds": false
+    },
+    {
+      "id": "observed-rewritten-identically",
+      "mutation": {
+        "kind": "write",
+        "path": "a/src/index.ts",
+        "content": "export const a = 1;\n"
+      },
+      "holds": true
+    },
+    {
+      "id": "file-added-to-indexed-directory",
+      "mutation": {
+        "kind": "write",
+        "path": "a/README.md",
+        "content": "new\n"
+      },
+      "holds": false
+    },
+    {
+      "id": "file-added-to-ignored-directory",
+      "mutation": {
+        "kind": "write",
+        "path": "dist/more.js",
+        "content": "built\n"
+      },
+      "holds": true
+    },
+    {
+      "id": "file-added-to-nxignored-tree",
+      "mutation": {
+        "kind": "write",
+        "path": "tickets/other.md",
+        "content": "scratch\n"
+      },
+      "holds": true
+    },
+    {
+      "id": "core-input-edited",
+      "mutation": {
+        "kind": "write",
+        "path": "package.json",
+        "content": "{\"name\":\"renamed\"}\n"
+      },
+      "holds": false
+    },
+    {
+      "id": "ignore-rule-edited",
+      "mutation": {
+        "kind": "write",
+        "path": ".gitignore",
+        "content": ".nx/workspace-data\n"
+      },
+      "holds": false
+    },
+    {
+      "id": "graph-rewritten",
+      "mutation": {
+        "kind": "write",
+        "path": ".nx/workspace-data/project-graph.json",
+        "content": "{\"nodes\":{\"x\":{}}}\n"
+      },
+      "holds": false
+    },
+    {
+      "id": "empty-taxonomy-directory-added",
+      "mutation": {
+        "kind": "directory",
+        "path": "a/empty/taxonomy/leaf"
+      },
+      "holds": true
+    },
+    {
+      "id": "source-deleted",
+      "mutation": {
+        "kind": "delete",
+        "path": "a/src/index.ts"
+      },
+      "holds": false
+    },
+    {
+      "id": "source-renamed",
+      "mutation": {
+        "kind": "rename",
+        "path": "a/src/index.ts",
+        "destination": "a/src/new.ts"
+      },
+      "holds": false
+    },
+    {
+      "id": "fresh-module-owner",
+      "mutation": {
+        "kind": "write",
+        "path": "new/🔨️modules/member/📋️project.json",
+        "content": "{\"name\":\"new\"}\n"
+      },
+      "holds": false
+    },
+    {
+      "id": "ignored-structural-manifest",
+      "mutation": {
+        "kind": "write",
+        "path": "a/🔨️modules/{collection}/ignored/📋️project.json",
+        "content": "{\"name\":\"fixture\"}\n"
+      },
+      "holds": false
+    },
+    {
+      "id": "metadata-alias-source-ignored",
+      "mutation": {
+        "kind": "write",
+        "path": ".🧬semio/🦅repo/copied/Cargo.toml",
+        "content": "[package]\nname=\"not-source\"\nversion=\"1.0.0\"\n"
+      },
+      "holds": true
+    },
+    {
+      "id": "untracked-file-gitignored",
+      "mutation": {
+        "kind": "write",
+        "path": "a/new.private",
+        "content": "local\n"
+      },
+      "holds": true
+    },
+    {
+      "id": "untracked-info-excluded",
+      "mutation": {
+        "kind": "write",
+        "path": "a/local-only/Cargo.toml",
+        "content": "local\n"
+      },
+      "holds": true
+    }
+  ]
+}

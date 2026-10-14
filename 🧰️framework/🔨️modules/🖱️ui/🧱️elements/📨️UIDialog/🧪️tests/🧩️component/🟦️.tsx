@@ -9,8 +9,8 @@ import { UIDialog, type UIDialogProps } from "../../🟦️.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../🔽️Select/🟦️.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "../../../🗨️Popover/🟦️.tsx";
 import { createShellScope, ShellScopeProvider } from "../../../🐚️ShellScope/🟦️.tsx";
-import fixture from "../../🧫️fixtures/♿️modal/🔣️.json";
-import dialogChoices from "../../../../../🛂️manifest/🧫️fixtures/🧫️dialog-choices/🔣️.json";
+import fixture from "../🧫️fixtures/♿️modal/🔣️.json";
+import dialogChoices from "../../../../../🛂️manifest/🧪️tests/🧫️fixtures/🧫️dialog-choices/🔣️.json";
 
 
 /** 🌐️ Admits a fixture locale string into the shell's declared locale union at the test boundary. */

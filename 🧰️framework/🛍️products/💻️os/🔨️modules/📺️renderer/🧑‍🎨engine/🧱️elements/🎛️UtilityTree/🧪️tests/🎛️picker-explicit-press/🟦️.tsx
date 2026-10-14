@@ -20,7 +20,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { ActionDescriptor, UtilityNode } from "@semio-tech/framework";
 import { UtilityTree } from "../../🟦️.tsx";
 import Ajv from "ajv";
-import paletteFixture from "../../🧫️fixtures/📐️bounded-palette/🔣️.json";
+import paletteFixture from "../🧫️fixtures/📐️bounded-palette/🔣️.json";
 import { createShellScope, ShellScopeProvider } from "@semio-tech/ui-react";
 import { createMemoryStoragePort } from "@semio-tech/framework";
 import { I18nextProvider } from "react-i18next";

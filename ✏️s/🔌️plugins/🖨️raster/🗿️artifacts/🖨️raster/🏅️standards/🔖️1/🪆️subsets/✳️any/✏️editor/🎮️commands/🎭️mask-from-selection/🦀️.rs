@@ -99,7 +99,8 @@ impl ArtifactCommandWork<EditorApp<RasterPlayApp>> for MaskFromSelectionWork {
         let stage=if self.encoding.is_some() {size_of::<PngEncodeJob>()+size_of::<Emit<RasterMutation,RasterConfigMutation>>()} else {size_of::<Candidate>()+command.selection.len().saturating_mul(size_of::<crate::mutations::paint_stroke::RasterSelectionSpan>())};
         Ok(semio_framework_value::RetirementDemand {copy_bytes:stage,depth:1,..Default::default()})
     }
-    fn step(&mut self,input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<RasterPlayApp>>,Fault> {
+    fn step(&mut self,input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<RasterPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.complete { return Err(Fault::from("raster.mask-work-complete")); }
         let RasterCommand::MaskFromSelection(command)=input.command else { return Err(Fault::from("raster.mask-work-mismatch")); };
         if let Some(encoder)=self.encoding.as_mut() {
@@ -116,6 +117,9 @@ impl ArtifactCommandWork<EditorApp<RasterPlayApp>> for MaskFromSelectionWork {
             self.encoding=Some(PngEncodeJob::new(image).map_err(|_|Fault::from("raster.mask-encoding-failed"))?);
         }
         Ok(ArtifactCommandWorkStep::Progress {stage:"mask-create",preview:br#"{"en":"Creating selection mask","de":"Auswahlmaske wird erstellt"}"#})
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
     fn begin_close(&mut self) { if let Some(encoder)=self.encoding.as_mut() {encoder.cancel();} }
     fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep {

@@ -19,7 +19,7 @@ type Vector = Readonly<{
   expectedTests: readonly string[];
 }>;
 
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🐹️canonical-go-discovery/🔣️.json"), "utf8")) as Vector;
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🐹️canonical-go-discovery/🔣️.json"), "utf8")) as Vector;
 
 
 /** 🧱️Materializes one language-neutral discovery vector as an isolated Go module. */

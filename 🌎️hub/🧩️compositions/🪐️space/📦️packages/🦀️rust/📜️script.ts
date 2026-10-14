@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
-import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🪐️ `@semio-tech/space-plugin` router: `bun ./📜️script.ts test`. */
 import { join } from "node:path";
 import assert from "node:assert/strict";
@@ -9,9 +9,9 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import Ajv from "ajv";
 import { parse as parseToml } from "@iarna/toml";
-import { runRepositoryCargoTests, runRepositoryExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { runRepositoryCargoTests, runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** 🧵️ Keeps compiler worker stacks bounded while retaining the native laws' deeper runtime stack. */
 function homeExactCargoEnvironment(): { env: NodeJS.ProcessEnv; nativeEnv: NodeJS.ProcessEnv } {
@@ -43,7 +43,7 @@ class TestScript extends BundleScript {
  * projection is never persisted in the config. */
 function homeDirectoryProjectionPersistenceOracle(repoRoot: string): number {
   const base = join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor");
-  const fixture = JSON.parse(readFileSync(join(base, "🫧️transient/🧫️fixtures/📇️projection-wire-v1/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🫧️transient/🧪️tests/🧫️fixtures/📇️projection-wire-v1/🔣️.json"), "utf8"));
   const module = JSON.parse(readFileSync(join(base, "🫧️transient/🧬️schema/🔣️.json"), "utf8"));
   const directory = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json"), "utf8"));
   const ajv = new Ajv({ strict: false, allErrors: true });
@@ -105,7 +105,7 @@ class HomeDirectoryProjectionPersistenceCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("home-directory-projection-persistence-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [{
+      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [{
           package: "semio-s-artifact-space-home",
           target: { kind: "lib" },
           cargoArgs: ["--features", "component-app-assembly"],
@@ -120,7 +120,7 @@ class HomeDirectoryProjectionPersistenceCheckScript extends BundleScript {
 /** 📄️ Proves Home accepts one sealed directory page as one bounded, non-invertible TRANSIENT item through the page route
  * both surfaces share — never a config (history) edit — and answers the typed receipt the host acknowledges it by. */
 function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
-  const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/📃️event-page-v1.json");
+  const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/📃️event-page-v1.json");
   const schemaPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json");
   const fixture = JSON.parse(readFileSync(fixturePath, "utf8"));
   const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
@@ -138,7 +138,7 @@ function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
   for (const [name, retiredLocalStudioIds] of [["duplicate", ["studio-a", "studio-a"]], ["empty-id", [""]], ["non-string", [7]], ["over-ceiling", Array.from({ length: 257 }, (_, index) => `studio-${index}`)]] as const) {
     assert.equal(validateConfig({ retiredLocalStudioIds }), false, `config schema accepted a ${name} tombstone set`);
   }
-  const retainedFixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🧫️retained-command-limits/🔣️.json"), "utf8"));
+  const retainedFixture = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json"), "utf8"));
   const retained = retainedCommandValidators(repoRoot);
   assert(retained.budget(retainedFixture.limits), JSON.stringify(retained.budget.errors));
   for (const route of retainedFixture.routes) assert(retained.route(route), JSON.stringify(retained.route.errors));
@@ -207,7 +207,7 @@ class HomeDirectoryEventPageOwnerCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("home-directory-event-page-owner-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [{
+      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [{
           package: "semio-s-artifact-space-home",
           target: { kind: "lib" },
           cargoArgs: ["--features", "component-app-assembly"],
@@ -404,7 +404,7 @@ class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("home-directory-identity-rows-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [
+      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [
           {
             package: "semio-framework-plugin-host",
             target: { kind: "lib" },
@@ -437,7 +437,7 @@ class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
 /** 🪪️ Joins the schema-validated component identity fixture to actual owner source and independent Cargo parsers. */
 function spacePluginIdentityOracle(repoRoot: string): number {
   const plugin = join(repoRoot, "🌎️hub/🧩️compositions/🪐️space");
-  const fixture = JSON.parse(readFileSync(join(plugin, "🧫️fixtures/🧫️plugin-identity/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(plugin, "🧪️tests/🧫️fixtures/🧫️plugin-identity/🔣️.json"), "utf8"));
   const module = JSON.parse(readFileSync(join(plugin, "🧬️schema/🪪️plugin-identity/🔣️.json"), "utf8"));
   const identityAjv = new Ajv({ strict: true, allErrors: true });
   identityAjv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
@@ -481,7 +481,7 @@ function interactiveJobCatalogOracle(repoRoot: string): number {
   let checks = spacePluginIdentityOracle(repoRoot);
   let staleRows = 0;
   for (const surface of surfaces) {
-    const fixtureRoot = join(surface.owner, "🧫️fixtures/🧫️retained-command-limits");
+    const fixtureRoot = join(surface.owner, "🧪️tests/🧫️fixtures/🧫️retained-command-limits");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     const retained = retainedCommandValidators(repoRoot);
     assert(retained.budget(fixture.limits), JSON.stringify(retained.budget.errors));
@@ -531,7 +531,7 @@ class PluginIdentityCheckScript extends BundleScript {
 class SnapshotOwnerCensusScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if(segments.length!==1 || !["source","native"].includes(segments[0]!)) throw Error("snapshot-owner-census requires source or native");
-    const fixtureRoot=join(this.repoRoot,"🌎️hub/🧩️compositions/🪐️space/🧫️fixtures/🪶️snapshot-owner-census");
+    const fixtureRoot=join(this.repoRoot,"🌎️hub/🧩️compositions/🪐️space/🧪️tests/🧫️fixtures/🪶️snapshot-owner-census");
     const fixture=JSON.parse(readFileSync(join(fixtureRoot,"🔣️.json"),"utf8")) as {package:string,owners:{package:string,kind:string,sqlPath:string,tables:string[]}[]};
     const manifest=parseToml(readFileSync(join(this.root,"Cargo.toml"),"utf8")) as {package:{name:string},dependencies:Record<string,unknown>};
     assert.equal(manifest.package.name,fixture.package);
@@ -543,7 +543,7 @@ class SnapshotOwnerCensusScript extends BundleScript {
       console.log("[DEBUG] independent Hub Space census owner "+owner.kind+" package="+owner.package+" authored_SQL_tables="+owner.tables.length);
     }
     if(segments[0]==="native"){
-      const receipts=await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd:this.root, env:{...process.env,RUST_MIN_STACK:"268435456"}, groups:[{package:"semio-hub-space",target:{kind:"lib"},laws:["interactive_job_catalog_tests::sqlite_snapshot_composed_owner_census"]}], progress(event){console.log("[DEBUG] Hub Space census Native "+event.stage+" "+(event.law??""));} });
+      const receipts=await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd:this.root, env:{...process.env,RUST_MIN_STACK:"268435456"}, groups:[{package:"semio-hub-space",target:{kind:"lib"},laws:["interactive_job_catalog_tests::sqlite_snapshot_composed_owner_census"]}], progress(event){console.log("[DEBUG] Hub Space census Native "+event.stage+" "+(event.law??""));} });
       console.log("[DEBUG] Hub Space census Native receipts "+JSON.stringify(receipts));
     }
   }
@@ -553,7 +553,7 @@ class InteractiveJobCatalogCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("interactive-job-catalog-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{
+      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{
           package: "semio-hub-space",
           target: { kind: "lib" },
           laws: [
@@ -576,7 +576,7 @@ class InteractiveJobCatalogCheckScript extends BundleScript {
 
 /** 🗃️ Proves PersistenceDataClass routing (WP-C6). */
 function persistenceDataClassOracle(repoRoot: string): number {
-  const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/persistence-data-class-v1/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧫️fixtures/persistence-data-class-v1/🔣️.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧬️schema/persistence-data-class/🔣️.json"), "utf8"));
   const ajv = new Ajv({ strict: false, allErrors: true });
   ajv.addSchema(schema);

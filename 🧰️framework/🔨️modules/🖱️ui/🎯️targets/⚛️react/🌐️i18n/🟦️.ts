@@ -2217,6 +2217,7 @@ function applyUiTranslationBundleTo(instance: typeof i18next, bundle: { readonly
  * (see `FrameworkOsShell`) is the only wiring `useUiTranslation`/`useLabel` call sites need — none of
  * their many call sites throughout this file change. */
 export function createShellI18nInstance(initialLocale: UiLocale): typeof i18next {
+  if (initialLocale !== "en" && initialLocale !== "de") throw new Error("Shell locale requires an explicit supported language source");
   const instance = i18next.createInstance();
   instance.use(initReactI18next);
   void instance.init({

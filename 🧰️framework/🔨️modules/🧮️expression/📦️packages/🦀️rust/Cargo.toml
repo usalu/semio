@@ -25,5 +25,5 @@ path = "../../🧪️tests/📜️conformance/🦀️.rs"
 [dependencies]
 
 [dev-dependencies]
-# 🧪️ Language-agnostic fixtures (`🧫️fixtures/*/🔣️.json`) are parsed by tests only.
+# 🧪️ Language-agnostic fixtures (`🧪️tests/🧫️fixtures/*/🔣️.json`) are parsed by tests only.
 serde_json = { workspace = true, features = ["float_roundtrip"] }

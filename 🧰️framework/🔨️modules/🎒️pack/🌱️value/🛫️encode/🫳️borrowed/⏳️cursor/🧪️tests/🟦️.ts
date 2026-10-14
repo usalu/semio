@@ -4,7 +4,7 @@ import {join} from "node:path";
 import {spawnSync} from "node:child_process";
 import Ajv from "ajv/dist/2020";
 const base=join(import.meta.dir,"..");
-const fixture=JSON.parse(readFileSync(join(base,"🧫️fixtures/🔣️.json"),"utf8"));
+const fixture=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
 const varint=(value:bigint)=>{const bytes=[];do{const byte=Number(value&127n);value>>=7n;bytes.push(byte|(value?128:0));}while(value);return Buffer.from(bytes);};
 const text=(node:any)=>node.value.repeat(node.repeat??1);
 const symbols=(node:any,counts:Map<string,number>,forced:Set<string>,force=false)=>{
@@ -52,7 +52,7 @@ test("canonical borrowed Pack operation has a retained bounded cursor",()=>{
 });
 
 type IntrinsicNode = {kind:"null"}|{kind:"bool",value:boolean}|{kind:"int"|"uint",value:string}|{kind:"float",bits:string}|{kind:"text",value:string}|{kind:"bytes",value:number[]}|{kind:"array",items:IntrinsicNode[]}|{kind:"object",members:{key:string,node:IntrinsicNode}[]};
-const intrinsicFixture:{outputGrants:number[],copyGrants:number[],cancelStops:number[],cases:{name:string,fieldId:number,node:IntrinsicNode,expectedHex:string}[]}=JSON.parse(readFileSync(join(base,"🧫️fixtures/🌱️intrinsic/🔣️.json"),"utf8"));
+const intrinsicFixture:{outputGrants:number[],copyGrants:number[],cancelStops:number[],cases:{name:string,fieldId:number,node:IntrinsicNode,expectedHex:string}[]}=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/🌱️intrinsic/🔣️.json"),"utf8"));
 const intrinsicSymbols=(node:IntrinsicNode,counts:Map<string,number>):void=>{
   if(node.kind==="text")counts.set(node.value,(counts.get(node.value)??0)+1);
   if(node.kind==="array")for(const child of node.items)intrinsicSymbols(child,counts);
@@ -88,7 +88,7 @@ test("retained intrinsic Body preserves ordered duplicate members and exact scal
 test("refused original Pack turns preserve the sole Value receipt and initialized prefix",()=>{
   const schema=JSON.parse(readFileSync(join(base,"🧬️schema/🔣️.json"),"utf8"));
   const refusal=JSON.parse(readFileSync(join(base,"../../../../../🌱️value/⚠️refusal/🔁️codec/🧬️schema/🔣️.json"),"utf8"));
-  const rows=JSON.parse(readFileSync(join(base,"🧫️fixtures/⚠️failure/🔣️.json"),"utf8"));
+  const rows=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/⚠️failure/🔣️.json"),"utf8"));
   const ajv=new Ajv({strict:true});ajv.addSchema(refusal);ajv.addSchema(schema);
   const admit=ajv.compile({$ref:schema.$id+"#/$defs/BorrowedProjectedPackFailure"});
   for(const row of rows.examples){
@@ -114,7 +114,7 @@ test("coupled borrowed Pack and original installed caller retain genuine Rust gr
 });
 
 test("flat intrinsic Pack prices actual traversal depth without changing its inline bound",()=>{
- const rows=JSON.parse(readFileSync(join(base,"🧫️fixtures/⚠️failure/🔣️.json"),"utf8"));const row=rows.depthProbe;
+ const rows=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/⚠️failure/🔣️.json"),"utf8"));const row=rows.depthProbe;
  const bytes=Buffer.concat([varint(0n),varint(1n),varint(BigInt(row.fieldId)),Buffer.from([17]),intrinsicEncode({kind:"bool",value:row.source},[])]);
  expect(bytes.toString("hex")).toBe(row.expectedHex);
  const source=readFileSync(join(base,"🦀️.rs"),"utf8");expect(source).toContain("next_advance_depth_demand");expect(source).not.toContain("grant.maximum_depth < 64");expect(source).toContain("[Frame; 64]");expect(source).toContain("self.depth + 1 == 64");

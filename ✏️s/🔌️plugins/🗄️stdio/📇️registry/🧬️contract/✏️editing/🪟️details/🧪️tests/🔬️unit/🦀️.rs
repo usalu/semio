@@ -205,7 +205,7 @@ fn find_key<'a>(node: &'a BuiltNode, key: &str) -> Option<&'a BuiltNode> {
 
 #[test]
 fn collection_rows_are_open_windowed_tree_item_descendants_with_edit_controls() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🪟️collection-tree-shape/🔣️.json")).expect("collection tree fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️collection-tree-shape/🔣️.json")).expect("collection tree fixture");
     let source = serde_json::to_string(&fixture["snapshot"]).expect("third-party snapshot oracle");
     let schema = serde_json::to_string(&fixture["input"]["schema"]).expect("third-party schema oracle");
     let collection_key = fixture["collectionKey"].as_str().expect("collection key");
@@ -299,7 +299,7 @@ fn collection_rows_are_open_windowed_tree_item_descendants_with_edit_controls() 
 
 #[test]
 fn table_details_first_paint_keeps_fields_reachable_across_repeated_projection() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️first-paint/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️first-paint/🔣️.json")).unwrap();
     let source = serde_json::to_string(&fixture["snapshot"]).unwrap();
     let schema = serde_json::to_string(&fixture["input"]["schema"]).unwrap();
     let snapshot: DslValue = semio_framework_pack_json::from_json_str(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -405,7 +405,7 @@ fn derived_schema_controls_render_only_the_requested_pages() {
             Some((format!("optional{index}"), DslValue::String(String::new())))
         }
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️derived-controls/🔣️.json")).expect("derived-control paging fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️derived-controls/🔣️.json")).expect("derived-control paging fixture");
     let number = |group: &str, field: &str| fixture[group][field].as_u64().expect("fixture number") as usize;
     let provider = DerivedControls { variant_reads: Cell::new(0), property_reads: Cell::new(0), variants: number("variants", "total"), properties: number("missingProperties", "total") };
     let variant_id = format!("{ROOT_PATH_ID}-variants");
@@ -872,9 +872,9 @@ fn external_all_of_union_uses_the_registered_document_shape_for_controls_and_var
             "null".into()
         }
     }
-    const ENVELOPE: &str = include_str!("../../🧫️fixtures/🔗️external-all-of/✉️envelope/🧾️schema-input.json");
-    const MODEL: &str = include_str!("../../🧫️fixtures/🔗️external-all-of/🏛️model/🧾️schema-input.json");
-    const TEXT: &str = include_str!("../../🧫️fixtures/🔗️external-all-of/📝️text/🧾️schema-input.json");
+    const ENVELOPE: &str = include_str!("../🧫️fixtures/🔗️external-all-of/✉️envelope/🧾️schema-input.json");
+    const MODEL: &str = include_str!("../🧫️fixtures/🔗️external-all-of/🏛️model/🧾️schema-input.json");
+    const TEXT: &str = include_str!("../🧫️fixtures/🔗️external-all-of/📝️text/🧾️schema-input.json");
     let empty = semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" };
     for (id, source) in [("s.test.details-envelope", ENVELOPE), ("s.test.details-model", MODEL), ("s.test.details-text", TEXT)] {
         semio_framework_schema_registry::register_artifact_schema_descriptor(semio_framework_schema_registry::ArtifactSchemaDescriptor {
@@ -886,7 +886,7 @@ fn external_all_of_union_uses_the_registered_document_shape_for_controls_and_var
         })
         .expect("schema descriptor publication");
     }
-    let value = semio_framework_pack_json::from_json_str(include_str!("../../🧫️fixtures/🔗️external-all-of/⬅️current/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-agnostic value fixture");
+    let value = semio_framework_pack_json::from_json_str(include_str!("../🧫️fixtures/🔗️external-all-of/⬅️current/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-agnostic value fixture");
     let provider = DslSnapshotDetailsProvider::<EnvelopeFixture>::from_value(value);
     let item_path = [SnapshotDetailPathSegment::Key("subset".into()), SnapshotDetailPathSegment::Key("spatial".into()), SnapshotDetailPathSegment::Index(0)];
     let mut id_path = item_path.to_vec();
@@ -909,7 +909,7 @@ fn external_all_of_union_uses_the_registered_document_shape_for_controls_and_var
     assert_eq!(variants.len(), 1);
     assert_eq!(
         variants[0].value,
-        semio_framework_pack_json::from_json_str::<DslValue>(include_str!("../../🧫️fixtures/🔗️external-all-of/➡️text-variant/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-agnostic target fixture")
+        semio_framework_pack_json::from_json_str::<DslValue>(include_str!("../🧫️fixtures/🔗️external-all-of/➡️text-variant/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-agnostic target fixture")
     );
     let candidate = serde_json::json!({
         "schema":"test.details-envelope",
@@ -1025,7 +1025,7 @@ fn paths_beyond_the_flat_chunk_carrier_open_the_complete_editable_source() {
 
 #[test]
 fn source_drafts_fill_tree_control_width_for_empty_and_nonempty_documents() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️first-paint/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️first-paint/🔣️.json")).unwrap();
     let law = &fixture["sourceDraftLayout"];
     for locale in [Locale::En, Locale::De] {
         for source in law["texts"].as_array().unwrap() {

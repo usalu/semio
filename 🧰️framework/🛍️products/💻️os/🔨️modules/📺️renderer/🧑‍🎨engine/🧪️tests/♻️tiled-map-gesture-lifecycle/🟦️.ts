@@ -1,6 +1,6 @@
 
 import { describe, expect, it } from "vitest";
-import fixture from "../../🧫️fixtures/♻️tiled-map-gesture-lifecycle/🔣️.json";
+import fixture from "../🧫️fixtures/♻️tiled-map-gesture-lifecycle/🔣️.json";
 
 type Scene = { node: number; key: string; kind: string; surfaceId: string };
 

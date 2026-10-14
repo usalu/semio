@@ -62,7 +62,7 @@ fn neutral_window_schema_round_trips_match_the_serde_json_oracle() {
     // 🧫️ This window's OWN neutral oracle (`🪟️window/🧫️fixtures/🔣️.json`). Two `..` too many
     // resolved to the subset-wide `✳️any/🧫️fixtures/🔣️.json` mutation-fixture ARRAY instead, which
     // fails to decode as this object ("invalid type: map, expected a sequence").
-    let fixture: NeutralWindowFixture = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("independent neutral JSON oracle");
+    let fixture: NeutralWindowFixture = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("independent neutral JSON oracle");
     assert_eq!(fixture.windows.len(), 2);
     for case in fixture.windows {
         assert!(!case.id.is_empty());

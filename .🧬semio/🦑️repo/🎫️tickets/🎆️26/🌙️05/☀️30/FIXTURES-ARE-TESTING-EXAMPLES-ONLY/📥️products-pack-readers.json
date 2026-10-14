@@ -1,0 +1,16 @@
+[
+  {
+    "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🔬️unit/🦀️.rs",
+    "before": "752092bedc65169157ac18dd845059d72943aca6b8fb40cf3484a65a35aa5faf",
+    "after": "d846732061c95fefd97c118bca9ce9551c2fce8824eaee91688744642e6c5bdc",
+    "held": false,
+    "edits": [
+      {
+        "start": 31308,
+        "end": 31426,
+        "from": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🧮️wire-materialization/🔣️.json",
+        "to": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🧮️wire-materialization/🔣️.json"
+      }
+    ]
+  }
+]

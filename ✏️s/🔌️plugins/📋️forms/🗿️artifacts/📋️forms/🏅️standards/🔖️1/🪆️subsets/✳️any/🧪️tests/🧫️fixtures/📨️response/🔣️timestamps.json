@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "name": "epoch",
+      "submittedAt": 0,
+      "valid": true
+    },
+    {
+      "name": "ordinary submission",
+      "submittedAt": 1790545740000,
+      "valid": true
+    },
+    {
+      "name": "largest portable integer",
+      "submittedAt": 9007199254740991,
+      "valid": true
+    },
+    {
+      "name": "first unsafe integer",
+      "submittedAt": 9007199254740992,
+      "valid": false
+    },
+    {
+      "name": "before epoch",
+      "submittedAt": -1,
+      "valid": false
+    },
+    {
+      "name": "fractional millisecond",
+      "submittedAt": 0.5,
+      "valid": false
+    }
+  ]
+}

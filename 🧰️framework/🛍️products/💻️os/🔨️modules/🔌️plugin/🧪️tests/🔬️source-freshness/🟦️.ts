@@ -9,7 +9,7 @@ import { assertPluginOutputChildren } from "../../🏗️build/🛂️descriptor
 
 export async function sourceFreshnessOracle(repoRoot: string, artifactRoot: string): Promise<number> {
   const pluginRoot = resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin");
-  const fixture = JSON.parse(readFileSync(join(pluginRoot,"🧫️fixtures/🔍️source-freshness/🔣️.json"),"utf8"));
+  const fixture = JSON.parse(readFileSync(join(pluginRoot,"🧪️tests/🧫️fixtures/🔍️source-freshness/🔣️.json"),"utf8"));
   const schema = JSON.parse(readFileSync(join(pluginRoot,"🏗️build/🔍️freshness/🧬️schema/🔣️.json"),"utf8"));
   const ajv = new Ajv({ strict: true });
   ajv.addSchema(schema);

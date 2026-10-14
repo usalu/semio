@@ -2,7 +2,7 @@
 import {expect,test} from "vitest";
 import Ajv from "ajv";
 import sharp from "sharp";
-import rows from "../🧫️fixtures/🔣️.json";
+import rows from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import flatSchema from "../../../🛤️path/📏️flatten/🧬️schema/🔣️.json";
 import booleanSchema from "../../🧬️schema/🔣️.json";
@@ -47,7 +47,7 @@ test("async publication yields and observes cancellation after completion progre
 });
 
 /** 🧹️ Parent cancellation composes real child retirement rather than eager clears. */
-import retirementRows from "../🧫️fixtures/🧹️retirement/🔣️.json";
+import retirementRows from "./🧫️fixtures/🧹️retirement/🔣️.json";
 const validRetirement=ajv.compile({$ref:schema.$id+"#/definitions/retirementProgress"});
 test("path boolean retirement composes children and preserves only completed output",()=>{
  const fixture=rows.cases.find(r=>r.id===retirementRows.source)!;

@@ -4,7 +4,7 @@ use super::*;
 /// round-trips as data, and refuses a document with an unknown space kind or an empty grant.
 #[test]
 fn declared_access_policy_matches_the_language_neutral_truth_table() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("access policy vectors");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("access policy vectors");
     let policy = DirectoryAccessPolicyV1::declared();
     for row in fixture["policies"].as_array().expect("policies") {
         let source = serde_json::to_string(&row["value"]).expect("policy source");

@@ -9,7 +9,7 @@ import { dirname, join, resolve } from "node:path";
 import { discoverPluginBuildTargets, generatePluginRegistry, generatePluginRegistryReport, parseComponentSourceOwnerV1, parseCompiledComponentOwnerV1, parseRegistryChannelDiagnosticsV1 } from "../🟦️.ts";
 import { REGISTRY_HOST_APP_CHANNEL_VERSION } from "../../🧬️schema/🟦️.ts";
 import contract from "../🧬️schema/🔣️.json";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import identity from "../../../../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json";
 import { parseComponentSourceRowV1, parseCompiledComponentRowV1, parseDeployedRegistryEntryV1, parsePluginBuildTargetV1 } from "../🧬️schema/🟦️.ts";
 

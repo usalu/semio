@@ -7,7 +7,7 @@ use semio_framework_plugin::{ActionMeta, PluginApp, ViewModel, ViewWindowInstanc
 /// ⚖️ The ONE language-agnostic addressing fixture BOTH surfaces answer — subset-level, not
 /// editor-level, since the viewer runs the identical chain and its own laws read the same rows
 /// (`👁️viewer/🧪️tests/🔬️eval-chain`, `contract.ts`).
-const TICK_ADDRESSING_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🪟️tick-addressing.json");
+const TICK_ADDRESSING_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪟️tick-addressing.json");
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -13,7 +13,7 @@ impl PageAllocation for ExcessAllocation {
         owner.try_reserve_exact(slots * 2)
     }
 }
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixtures/⚠️refusal/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/⚠️refusal/🔣️.json")).unwrap() }
 fn run(operation: &str) -> PagedListError {
     if operation == "nextEmpty" { return PagedList::<u64, 0>::default().next_allocation_bytes().unwrap_err(); }
     let mut list = PagedList::<u64, 1>::default();

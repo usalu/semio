@@ -62,7 +62,7 @@ type InputWriterFixture = {
 };
 
 export function testInputWriterFixture(): void {
-  const fixture: InputWriterFixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture: InputWriterFixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   
   
   

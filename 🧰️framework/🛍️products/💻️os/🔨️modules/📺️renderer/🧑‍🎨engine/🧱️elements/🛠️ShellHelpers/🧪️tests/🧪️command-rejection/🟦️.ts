@@ -11,9 +11,9 @@
 import { afterAll, describe, expect, it } from "vitest";
 import type { CommandRejectionV1 } from "@semio-tech/framework-os";
 import { HISTORY_REFUSAL_LABEL_KEYS, LOCAL_COMMAND_REJECTION_NOTICES_V1, commandRejectionNoticeV1, historyRefusalCodeV1, historyRefusalNoticeV1, historyRefusalOfFaultV1, shellLabel, syncShellLabelLocale } from "../../🟦️.tsx";
-import corpus from "../../🧫️fixtures/🧫️command-rejection/🔣️.json";
-import bandCorpus from "../../🧫️fixtures/🧫️time-travel-band/🔣️.json";
-import decodeCorpus from "../../../../../../🏪️store/🧫️fixtures/🧫️command-rejection/🔣️.json";
+import corpus from "../🧫️fixtures/🧫️command-rejection/🔣️.json";
+import bandCorpus from "../🧫️fixtures/🧫️time-travel-band/🔣️.json";
+import decodeCorpus from "../../../../../../🏪️store/🧪️tests/🧫️fixtures/🧫️command-rejection/🔣️.json";
 import rejectionSchema from "../../../../../../🏪️store/🔄️sync/🧬️schema/🔣️command-rejection/🔣️.json";
 import historyPatchSchema from "../../../../../../../../../🔨️modules/🎠️kernel/🧬️schema/🔣️history-patch/🔣️.json";
 // #endregion 🔌️Adapters

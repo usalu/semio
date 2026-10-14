@@ -1,0 +1,39 @@
+{
+  "schema": "s.stdio.semio.table",
+  "columns": [
+    {
+      "name": "city",
+      "kind": "str"
+    },
+    {
+      "name": "population",
+      "kind": "int"
+    }
+  ],
+  "rows": [
+    {
+      "cells": [
+        {
+          "kind": "str",
+          "value": "Hannover"
+        },
+        {
+          "kind": "int",
+          "lexeme": "535932"
+        }
+      ]
+    },
+    {
+      "cells": [
+        {
+          "kind": "str",
+          "value": "Berlin"
+        },
+        {
+          "kind": "int",
+          "lexeme": "3600000"
+        }
+      ]
+    }
+  ]
+}

@@ -5,7 +5,7 @@ import { boardTestSession } from "../../../../../../../../../../../../../🧰️
 import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import * as flowSessionLoader from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 import { Board2dHost, beginPuzzle2dPeerGesture, endPuzzle2dPeerGesture, unregisterBoard2dPeer, puzzle2dPeerOwnsGesture } from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
-import boardSessionFixture from "../../🧫️fixtures/🔣️session-factory.json";
+import boardSessionFixture from "../🧫️fixtures/🔣️session-factory.json";
 import boardSessionSchema from "../../../../🧬️schema/🔣️.json";
 
 const noopAction = () => {};

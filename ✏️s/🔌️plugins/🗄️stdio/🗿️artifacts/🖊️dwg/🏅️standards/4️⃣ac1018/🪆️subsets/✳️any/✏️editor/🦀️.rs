@@ -87,7 +87,7 @@ const DWG_AC1018_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
 fn dwg_ac1018_editor_example_snapshot(example_id: &str) -> DwgSnapshot {
     if example_id == crate::examples::demo::ID {
-        <DwgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+        <DwgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         DwgSnapshot::default()
     }
@@ -227,6 +227,7 @@ impl ArtifactEditor for DwgAc1018Editor {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

@@ -198,7 +198,7 @@ mod window_kits_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn table_kit_pages_large_tables_without_losing_rows() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️table-lanes/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️table-lanes/🔣️.json")).unwrap();
         let count = fixture["rowCount"].as_u64().unwrap() as usize;
         let value = fixture["row"]["0"].as_str().unwrap();
         let view = TableView { columns: vec!["Name".into()], rows: (0..count).map(|_| vec![value.into()]).collect() };
@@ -345,7 +345,7 @@ mod window_kits_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn table_kit_projects_independent_row_and_column_windows_with_logical_addresses() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪟️window-kits/📊️table/🧫️fixtures/↔️two-axis/🔣️.json")).expect("two-axis fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪟️window-kits/📊️table/🧪️tests/🧫️fixtures/↔️two-axis/🔣️.json")).expect("two-axis fixture");
         let row_total = fixture["rowTotal"].as_u64().unwrap() as usize;
         let column_total = fixture["columnTotal"].as_u64().unwrap() as usize;
         let row_offset = fixture["rowOffset"].as_u64().unwrap() as u32;
@@ -468,7 +468,7 @@ mod window_kits_tests {
     /// oracle: the rows read back are compared with the fixture as serde_json values.
     #[semio_framework_async_macros::async_test]
     async fn home_shaped_rows_carry_actions_as_props_and_fill_the_default_window() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪟️window-kits/📊️table/🧫️fixtures/🏠️row-capacity/🔣️.json")).expect("row-capacity fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪟️window-kits/📊️table/🧪️tests/🧫️fixtures/🏠️row-capacity/🔣️.json")).expect("row-capacity fixture");
         let text = |value: &serde_json::Value| value.as_str().expect("fixture text").to_owned();
         let controller = text(&fixture["controller"]);
         let row = &fixture["row"];
@@ -556,7 +556,7 @@ mod window_kits_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn image_kit_renders_the_neutral_localized_unavailable_witness_without_unmounting() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪟️window-kits/🖼️image/🧫️fixtures/🚫️unavailable/🔣️.json")).expect("language-neutral fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪟️window-kits/🖼️image/🧪️tests/🧫️fixtures/🚫️unavailable/🔣️.json")).expect("language-neutral fixture");
         for (locale, key) in [(Locale::En, "en"), (Locale::De, "de")] {
             let node = ImageWindowKit::render_unavailable(locale).expect("unavailable preview remains a renderable image window");
             assert_eq!(node.key.as_str(), fixture["windowKey"].as_str().unwrap());
@@ -632,7 +632,7 @@ mod window_kits_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn document_kit_editable_drafts_match_the_language_neutral_fixture() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪟️window-kits/📃️document/🧫️fixtures/✏️editable/🔣️.json")).expect("fixture json");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪟️window-kits/📃️document/🧪️tests/🧫️fixtures/✏️editable/🔣️.json")).expect("fixture json");
         for case in fixture["cases"].as_array().expect("cases") {
             let locale = match case["locale"].as_str() {
                 Some("de") => Locale::De,
@@ -680,7 +680,7 @@ mod window_kits_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn document_kit_pages_long_unicode_text_without_losing_later_pages() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️text-editor-lanes/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️text-editor-lanes/🔣️.json")).unwrap();
         let case = &fixture["cases"][2];
         let source = case["text"].as_str().unwrap().repeat(case["repeat"].as_u64().unwrap() as usize);
         let view = DocumentView { pages: (0..500).map(|index| DocumentPage { text: index.to_string() }).collect() };

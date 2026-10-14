@@ -160,7 +160,7 @@ pub struct PlaybookPlayApp;
 /// re-stamps the log with the live mount's identity before hydration sees it
 /// (`store::os_store::text_format::stamp_document_spr_identity`), so no app ever states its own mount.
 pub fn reset_playbook_document_effect(document: &PlaybookSnapshot) -> semio_framework_plugin::Effect {
-    let pack = <PlaybookSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let pack = <PlaybookSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("playbook", PLAYBOOK_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
@@ -569,6 +569,7 @@ impl ArtifactEditor for PlaybookPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

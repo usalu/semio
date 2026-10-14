@@ -1,7 +1,7 @@
 import{expect,test}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
-import fixture from"../🧫️fixtures/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
 
 import nativeSchema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import type * as schema from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
@@ -20,7 +20,7 @@ function snapshot():Snapshot{
 }
 const bytes=async(value:Snapshot)=>exportSqliteDatabase(await ports.workflowSnapshotToSqliteDatabase(value));
 const restore=async(value:Uint8Array,options:ArtifactSqliteOptions={})=>ports.workflowSnapshotFromSqliteDatabase(await importSqliteDatabase(value),options);
-test("Workflow intrinsic wire preserves literal schemas and closes all three wire branches",async()=>{const cases=await Bun.file(new URL("../🧫️fixtures/🎞️wire/🔣️.json",import.meta.url)).json(), validator=new Ajv({strict:false,validateFormats:false}).addSchema(nativeSchema);for(const schema of cases.schemas){const expected=snapshot();expected.graph.edges[1]!.contract.wire={kind:"intrinsic",schema} as Snapshot["graph"]["edges"][number]["contract"]["wire"];const neutral=structuredClone(fixture.snapshot);neutral.graph.edges[1].contract.wire={kind:"intrinsic",schema} as typeof neutral.graph.edges[number]["contract"]["wire"];expect(validator.validate(nativeSchema,neutral)).toBe(true);const data=await bytes(expected),db=Database.deserialize(data,{safeIntegers:true});try{expect(db.query("SELECT wire_kind,format_kind,wire_schema FROM workflow_contract ORDER BY id DESC LIMIT 1").get()).toEqual({wire_kind:"intrinsic",format_kind:null,wire_schema:schema});expect(await restore(new Uint8Array(db.serialize()))).toEqual(expected);expect(()=>db.run("UPDATE workflow_contract SET format_kind='invalid' WHERE wire_kind='intrinsic'")).toThrow()}finally{db.close()}}for(const wire of cases.invalid){const expected=structuredClone(fixture.snapshot);expected.graph.edges[1]!.contract.wire=wire;expect(validator.validate(nativeSchema,expected)).toBe(false)}});
+test("Workflow intrinsic wire preserves literal schemas and closes all three wire branches",async()=>{const cases=await Bun.file(new URL("🧫️fixtures/🎞️wire/🔣️.json",import.meta.url)).json(), validator=new Ajv({strict:false,validateFormats:false}).addSchema(nativeSchema);for(const schema of cases.schemas){const expected=snapshot();expected.graph.edges[1]!.contract.wire={kind:"intrinsic",schema} as Snapshot["graph"]["edges"][number]["contract"]["wire"];const neutral=structuredClone(fixture.snapshot);neutral.graph.edges[1].contract.wire={kind:"intrinsic",schema} as typeof neutral.graph.edges[number]["contract"]["wire"];expect(validator.validate(nativeSchema,neutral)).toBe(true);const data=await bytes(expected),db=Database.deserialize(data,{safeIntegers:true});try{expect(db.query("SELECT wire_kind,format_kind,wire_schema FROM workflow_contract ORDER BY id DESC LIMIT 1").get()).toEqual({wire_kind:"intrinsic",format_kind:null,wire_schema:schema});expect(await restore(new Uint8Array(db.serialize()))).toEqual(expected);expect(()=>db.run("UPDATE workflow_contract SET format_kind='invalid' WHERE wire_kind='intrinsic'")).toThrow()}finally{db.close()}}for(const wire of cases.invalid){const expected=structuredClone(fixture.snapshot);expected.graph.edges[1]!.contract.wire=wire;expect(validator.validate(nativeSchema,expected)).toBe(false)}});
 
 
 test("Workflow independent SQLite DDL declares sixteen tables without hidden indices",async()=>{const db=new Database(":memory:");try{db.run(await Bun.file(new URL("../🗄️.sql",import.meta.url)).text());expect(db.query("SELECT count(*) AS n FROM sqlite_master WHERE type='table'").get()).toEqual({n:16});expect(db.query("PRAGMA table_info(workflow_node)").all().length).toBe(22);expect(db.query("PRAGMA table_info(workflow_numeric)").all().length).toBe(14);expect(db.query("SELECT name FROM sqlite_master WHERE type='index'").all()).toEqual([])}finally{db.close()}});
@@ -38,7 +38,7 @@ test("Workflow requested value and file ceilings refuse oversized ownership",asy
 
 
 test("Workflow complete independent SQL cell extent admits equality and refuses one byte short",async()=>{
- const cases=await Bun.file(new URL("../🧫️fixtures/📏️semantic-cells/🔣️.json",import.meta.url)).json();
+ const cases=await Bun.file(new URL("🧫️fixtures/📏️semantic-cells/🔣️.json",import.meta.url)).json();
   for(const item of cases.cases){const expected=snapshot();if(item.name!=="base"){const word={bits:BigInt("0x"+item.name)};for(const node of expected.graph.nodes)for(const key of["x","y","width","height"]as const)node[key]=word;for(const parameter of expected.parameters)if(parameter.type==="numeric"){parameter.value=word;parameter.min=word;parameter.max=word;parameter.step=word}}
   const data=await bytes(expected),db=Database.deserialize(data,{safeIntegers:true});try{
    expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);

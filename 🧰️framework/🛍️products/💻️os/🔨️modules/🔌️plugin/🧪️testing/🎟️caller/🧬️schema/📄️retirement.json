@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "blockBytes",
+    "sourceBytes",
+    "cases"
+  ],
+  "properties": {
+    "blockBytes": {
+      "const": 4096
+    },
+    "sourceBytes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "minItems": 1,
+      "maxItems": 4096
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "items",
+          "releaseBytes",
+          "releasedBytes"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "zero",
+              "short",
+              "exact"
+            ]
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "releaseBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4096
+          },
+          "releasedBytes": {
+            "enum": [
+              0,
+              4096
+            ]
+          }
+        }
+      }
+    }
+  }
+}

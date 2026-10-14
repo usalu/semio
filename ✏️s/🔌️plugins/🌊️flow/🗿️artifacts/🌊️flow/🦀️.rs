@@ -172,7 +172,7 @@ pub fn flow_genesis_content_pack(document: &FlowSnapshot, slot: &str, child_id: 
         return None;
     }
     let scene = document.content.local_owner::<FlowWorkingScene>()?;
-    Some(<SemioFlowSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&flow_content_snapshot_from_working(&scene.widgets, &scene.synapses, &scene.layout)))
+    Some(<SemioFlowSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&flow_content_snapshot_from_working(&scene.widgets, &scene.synapses, &scene.layout)))
 }
 
 /// 🪆️ The flow document every reader and writer works on: the parent's exact `content` coordinate carrying the scene

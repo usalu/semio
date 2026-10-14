@@ -120,7 +120,7 @@ impl OpBinary for DocumentMutation {
     fn decode_op(bytes: &[u8]) -> Result<Self, crate::ProtocolError> { serde_json::from_slice(bytes).map_err(|error| crate::ProtocolError::Io(error.to_string())) }
 }
 
-fn fixture() -> Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
 fn document(json: &Value) -> Document { serde_json::from_value(json.clone()).unwrap() }
 fn mutation(json: &Value) -> DocumentMutation { serde_json::from_value(json.clone()).unwrap() }
 fn rows(json: &Value) -> Vec<DocumentMutation> { json.as_array().unwrap().iter().map(mutation).collect() }

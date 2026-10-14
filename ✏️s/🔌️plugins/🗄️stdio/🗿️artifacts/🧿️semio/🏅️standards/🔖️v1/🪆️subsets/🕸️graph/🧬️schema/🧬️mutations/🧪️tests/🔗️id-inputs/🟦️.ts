@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { mutationInputDefs } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️.ts";
 
-const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));
+const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧪️tests/🔗️id-inputs/🔣️.json"),"utf8"));
 const root=resolve(import.meta.dir,"../..");
 test("Semio Graph native object identifiers expose truthful primitive child controls",()=>{
   for(const row of fixture.cases){

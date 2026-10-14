@@ -1,9 +1,0 @@
-{
-  "operation": "setSlotChildren",
-  "payload": {
-    "children": [
-      "a",
-      "b"
-    ]
-  }
-}

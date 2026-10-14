@@ -1,8 +1,8 @@
-import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { matchesFixture, readSelectors } from "../../🔍️discovery/🎛️selection/🟦️.ts";
 import { contentDigestOf, testEvidenceProblems, installEvidenceFile, loadOracleRegistry, publishTestEvidence, subsetCoordinate, testCacheDir, verifyFixture } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { runProbe } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { Script } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { basename, join } from "node:path";
 

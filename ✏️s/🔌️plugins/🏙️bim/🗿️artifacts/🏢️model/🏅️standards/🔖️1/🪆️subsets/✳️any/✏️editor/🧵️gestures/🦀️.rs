@@ -255,11 +255,11 @@ impl ArtifactInstanceOperationOwner for GestureOwner {
         Ok(semio_framework_value::RetirementDemand::default())
     }
 
-    fn maintenance_step(&mut self, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(Default::default()))
     }
 
-    fn close_step(&mut self, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
         self.sessions.clear();
         Ok(PluginLifecycleStep::Complete(Default::default()))
     }

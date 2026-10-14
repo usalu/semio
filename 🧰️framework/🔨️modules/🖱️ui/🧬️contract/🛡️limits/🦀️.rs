@@ -67,7 +67,7 @@ impl Default for UiDocumentLimits {
 /// attach — so a fixed step count caps a surface patch at a few KiB no matter how large the grant is.
 /// Both the React and the wgpu targets therefore price an intake through
 /// [`UiDocumentLimits::retained_ui_intake_step_ceiling`] instead. The numbers are declared once,
-/// language-agnostically, in `🧵️retained/🧫️fixtures/📥️intake/🔣️.json`'s `budget` and mirrored by the
+/// language-agnostically, in `🧵️retained/🧪️tests/🧫️fixtures/📥️intake/🔣️.json`'s `budget` and mirrored by the
 /// TypeScript twin `RETAINED_UI_INTAKE_STEPS_PER_NODE`
 /// (`📃️UiDocumentStore/📥️intake/🟦️.ts`).
 pub const RETAINED_UI_INTAKE_STEPS_PER_NODE: usize = 8_192;

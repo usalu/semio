@@ -1,0 +1,86 @@
+solid exported
+	facet normal 0 -1 0
+		outer loop
+			vertex 9.999899864196777 -10 10
+			vertex 9.999899864196777 -10 -10
+			vertex 29.999900817871094 -10 -10
+		endloop
+	endfacet
+	facet normal 0 0 -1
+		outer loop
+			vertex 9.999899864196777 10 -10
+			vertex 29.999900817871094 -10 -10
+			vertex 9.999899864196777 -10 -10
+		endloop
+	endfacet
+	facet normal -1 0 0
+		outer loop
+			vertex 9.999899864196777 -10 10
+			vertex 9.999899864196777 10 10
+			vertex 9.999899864196777 -10 -10
+		endloop
+	endfacet
+	facet normal 0 0 1
+		outer loop
+			vertex 9.999899864196777 10 10
+			vertex 9.999899864196777 -10 10
+			vertex 29.999900817871094 -10 10
+		endloop
+	endfacet
+	facet normal -1 0 0
+		outer loop
+			vertex 9.999899864196777 10 10
+			vertex 9.999899864196777 10 -10
+			vertex 9.999899864196777 -10 -10
+		endloop
+	endfacet
+	facet normal 0 1 0
+		outer loop
+			vertex 9.999899864196777 10 10
+			vertex 29.999900817871094 10 10
+			vertex 9.999899864196777 10 -10
+		endloop
+	endfacet
+	facet normal 1 0 0
+		outer loop
+			vertex 29.999900817871094 -10 10
+			vertex 29.999900817871094 -10 -10
+			vertex 29.999900817871094 10 -10
+		endloop
+	endfacet
+	facet normal 0 -1 0
+		outer loop
+			vertex 29.999900817871094 -10 10
+			vertex 9.999899864196777 -10 10
+			vertex 29.999900817871094 -10 -10
+		endloop
+	endfacet
+	facet normal 0 0 -1
+		outer loop
+			vertex 29.999900817871094 10 -10
+			vertex 29.999900817871094 -10 -10
+			vertex 9.999899864196777 10 -10
+		endloop
+	endfacet
+	facet normal 0 1 0
+		outer loop
+			vertex 29.999900817871094 10 10
+			vertex 29.999900817871094 10 -10
+			vertex 9.999899864196777 10 -10
+		endloop
+	endfacet
+	facet normal 0 0 1
+		outer loop
+			vertex 29.999900817871094 10 10
+			vertex 9.999899864196777 10 10
+			vertex 29.999900817871094 -10 10
+		endloop
+	endfacet
+	facet normal 1 0 0
+		outer loop
+			vertex 29.999900817871094 10 10
+			vertex 29.999900817871094 -10 10
+			vertex 29.999900817871094 10 -10
+		endloop
+	endfacet
+endsolid exported

@@ -1,12 +1,16 @@
+use pack::snapshot::ArtifactSqliteSnapshot as _;
+use pack::snapshot::ArtifactSqliteSnapshot;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 
 use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding,artifact::NativeEncodingBound};
 use crate::standards::v3_0::subsets::any::schema::snapshot::*;
-use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use std::collections::{BTreeMap, BTreeSet};
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{Cell,RowWriter,FloatColumn,FloatRow};
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
+#[path="🫴️receiving/🦀️.rs"]
+mod receiving;
 const TABLES:[(&str,usize);14]=[("obj_document",3),("obj_vertex",15),("obj_texcoord",12),("obj_normal",12),("obj_face",3),("obj_face_vertex",9),("obj_group",4),("obj_group_face",6),("obj_object",4),("obj_object_face",6),("obj_face_boundary",4),("obj_material_range",7),("obj_smoothing_range",7),("obj_unknown_statement",6)];
 fn extent(limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{let bytes=ObjSnapshot::SQLITE_SCHEMA.split(';').map(str::trim).filter(|sql|!sql.is_empty()).try_fold(0usize,|sum,sql|sum.checked_add(sql.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"OBJ schema byte overflow")))?;let bytes=TABLES.iter().try_fold(bytes,|sum,(name,_)|sum.checked_add(name.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"OBJ table-name byte overflow")))?;if bytes>limits.max_schema_bytes||TABLES.len()>limits.max_tables||TABLES.iter().any(|(_,width)|*width>limits.max_columns)||limits.max_rows<2{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"OBJ copied authored schema extent exceeds caller limits"))}Ok(())}
 const VERTEX_COLUMNS:&[FloatColumn]=&[FloatColumn::Binary64(3),FloatColumn::Binary64(4),FloatColumn::Binary64(5),FloatColumn::Binary64(6)];
@@ -149,7 +153,7 @@ fn reconstruct_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSn
     }
 }
 
-impl ArtifactSqliteSnapshot for ObjSnapshot {
+impl ArtifactSqliteSnapshotHost for ObjSnapshot {
     fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{(|| -> Result<(),ValueError>{
         let units=self.faces.len().checked_add(self.groups.len()).and_then(|count|count.checked_add(self.objects.len())).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"OBJ native work count overflow"))?;control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,units)?;let mut rows=2usize.checked_add(self.faces.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"OBJ native row count overflow"))?;
         for count in[self.vertices.len(),self.texcoords.len(),self.normals.len(),self.faces.len(),self.groups.len(),self.objects.len(),self.usemtl.len(),self.smoothing_groups.len(),self.unknown_statements.len()]{rows=rows.checked_add(count).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"OBJ native row count overflow"))?;}control.check_rows(rows)?;let mut completed=0usize;
@@ -161,18 +165,21 @@ impl ArtifactSqliteSnapshot for ObjSnapshot {
     fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,"stdio.obj",crate::standards::v3_0::subsets::any::io::binary::snapshot::native_pack::spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic::admit_record(record,limits,native)?;crate::standards::v3_0::subsets::any::io::binary::snapshot::native_pack::reconstruct_record_controlled(record,native,limits.max_rows)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
     fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{self.preflight_sqlite_encoding(_encoding,control)}
 
-    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{( || -> Result<semio_framework_os_kernel::io_schema::IoOutcome<()>,ValueError>{
-        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;
-        if dialect.artifact_kind!="s.stdio.obj"||dialect.standard!="3.0"||dialect.subset!="*"{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"OBJ owned SQLite dialect differs"));}
-        let candidate=Self::reconstruct_sqlite_database(database,control)?;
-        if candidate.project_sqlite_database(control)?!=self.project_sqlite_database(control)?{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"OBJ document identity differs"));}
-        Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))
-    })().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
-    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+    fn to_sqlite_database_receiving(&self,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<SqliteDatabase,ValueError>{receiving::project_receiving(Some(self),None,control,owner)}
+    fn from_sqlite_database_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->Result<Self,ValueError>{receiving::reconstruct_receiving(None,Some(database),control,owner)}
+    fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->store::io_schema::IoResult<()>{(||{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!="s.stdio.obj"||dialect.standard!="3.0"||dialect.subset!="*"{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"OBJ owned SQLite dialect differs"))}receiving::validate_decoding(Some(self),Some(database),control,owner)})().map(|()|store::io_schema::IoOutcome::clean(())).map_err(|error|store::io_schema::IoError::from_value_error(error.with_retained_progress(owner.progress())))}
+    fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->store::io_schema::IoResult<()>{(||{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,0)?;if dialect.artifact_kind!="s.stdio.obj"||dialect.standard!="3.0"||dialect.subset!="*"{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"OBJ owned SQLite dialect differs"))}receiving::validate_encoding(Some(self),Some(database),control,owner)})().map(|()|store::io_schema::IoOutcome::clean(())).map_err(|error|store::io_schema::IoError::from_value_error(error.with_retained_progress(owner.progress())))}
+    fn validate_sqlite_snapshot_subset(&self,_dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,_control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{Err(store::io_schema::IoError::from_value_error(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"OBJ subset validation requires supplied directional owner")))}
+    
 
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> {self.project_sqlite_database(control)}
+    
 
-    fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self,ValueError> {Self::reconstruct_sqlite_database(database,control)}
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for ObjSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> {self.project_sqlite_database(control)}
+fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self,ValueError> {Self::reconstruct_sqlite_database(database,control)}
 }
 
 #[cfg(test)]

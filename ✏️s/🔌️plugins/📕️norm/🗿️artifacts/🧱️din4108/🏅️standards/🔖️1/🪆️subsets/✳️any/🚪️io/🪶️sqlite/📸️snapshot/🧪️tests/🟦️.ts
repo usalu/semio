@@ -1,13 +1,13 @@
 import * as sqliteOwner from "../🟦️.ts";
 import{expect,test}from"bun:test";
 import Ajv from"ajv";
-import fixture from"../🧫️fixtures/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
 import schema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import {Database} from "bun:sqlite";
 import {Buffer} from "node:buffer";
-import controls from "../🧫️fixtures/🎛️control.json";
-import words from "../🧫️fixtures/🔢️binary64.json";
-import choices from "../🧫️fixtures/🛂️choices.json";
+import controls from "./🧫️fixtures/🎛️control.json";
+import words from "./🧫️fixtures/🔢️binary64.json";
+import choices from "./🧫️fixtures/🛂️choices.json";
 import { DIN4108_SQLITE_SCHEMA, din4108SnapshotToSqliteDatabase, din4108SnapshotFromSqliteDatabase, type Din4108SqliteSnapshot } from "../🟦️.ts";
 import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
@@ -46,7 +46,7 @@ test("DIN4108 initial and nested expensive operations support cancellation and b
 });
 
 import NormSemanticAjv from "ajv/dist/2020.js";
-import normSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {din4108SnapshotToSqliteDatabase as normSemanticProject,din4108SnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
 import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

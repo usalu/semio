@@ -13,7 +13,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   const { cleanup, fireEvent, render } = await import("@semio-tech/ui-react/test");
   const { createElement } = await import("react");
-  const { default: lifetime } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🪟️surface-lifetime/🔣️.json");
+  const { default: lifetime } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🪟️surface-lifetime/🔣️.json");
 
   type AnyRecord = Record<string, any>;
 
@@ -133,7 +133,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   //#region 🪪️RetainedSurfaceHost
-  const { default: retention } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🪪️surface-host-retention.json");
+  const { default: retention } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🪪️surface-host-retention.json");
   const { uiSiblingReactKeys, uiChildReactKeys } = dependencies;
 
   /** 🪪️ Projects one fixture body onto the authored `BuiltNode` tree the shell loads into a window's

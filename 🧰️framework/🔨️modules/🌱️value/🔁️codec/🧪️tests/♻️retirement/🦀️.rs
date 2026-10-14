@@ -16,10 +16,10 @@ fn value_intrinsic_retirement_full_system_requests_and_release() {
             _ => panic!("closed intrinsic fixture kind"),
         }
     }
-    let contract: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛬️controlled/🔗️borrowed-keys.json")).unwrap();
+    let contract: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛬️controlled/🔗️borrowed-keys.json")).unwrap();
     let contract = &contract["canonicalRetirement"];
     assert_eq!(contract["releasedBytes"], "completeBorrowedCapacityCensus");
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🎒️pack/🌱️value/🧫️fixtures/🎞️intrinsic-media/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🎞️intrinsic-media/🔣️.json")).unwrap();
     assert_eq!(corpus["contract"], contract["sourceCorpus"]);
     let long = contract["longBranch"]["unit"].as_str().unwrap().repeat(usize::try_from(contract["longBranch"]["repeat"].as_u64().unwrap()).unwrap());
     assert_eq!(long.len(), usize::try_from(contract["longBranch"]["utf8Bytes"].as_u64().unwrap()).unwrap());

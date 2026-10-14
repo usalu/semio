@@ -13,12 +13,12 @@ pub const SEMIO_NOTE_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/�
 
 /// 📖️ Parses `.note` DSL text into a `NoteSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<NoteSnapshot, semio_framework_diagnostic::TextError> {
-    <NoteSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <NoteSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `NoteSnapshot` back to `.note` DSL text.
 pub fn print_dsl(document: &NoteSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(document)
+    pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -38,14 +38,14 @@ mod semio_grammar_conformance;
 /// `🗣️.dsl.semio` artifact.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn parse_note_dsl(text: &str) -> Result<NoteSnapshot, String> {
-    <NoteSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <NoteSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
 /// 🖨️ Prints a [`NoteSnapshot`] back to `.note` DSL text under a name an external caller can reach, paired
 /// with [`parse_note_dsl`].
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn print_note_dsl(snapshot: &NoteSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
+    pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 //#endregion 🔖️ExternalBridges
 
@@ -117,7 +117,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
-impl store::os_store::serialization::ArtifactDsl for NoteSnapshot {
+impl pack::snapshot::ArtifactDsl for NoteSnapshot {
     const EXTENSION: &'static str = "note";
     fn envelope_id() -> &'static str {
         "note.note"
@@ -132,7 +132,7 @@ impl store::os_store::serialization::ArtifactDsl for NoteSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -157,7 +157,7 @@ use crate::NoteImageAsset;
 /// every "semio" example call site (`setActiveExample`, tests). Falls back to the empty document if the
 /// fixture ever fails to parse, matching the old JSON fixture's failure behavior.
 pub fn semio_example_snapshot() -> NoteSnapshot {
-    <NoteSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(SEMIO_NOTE_EXAMPLE_TEXT).unwrap_or_else(|_| empty_note_snapshot())
+    <NoteSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(SEMIO_NOTE_EXAMPLE_TEXT).unwrap_or_else(|_| empty_note_snapshot())
 }
 
 /// 📄️ JSON re-serialization of {@link semio_example_snapshot}, for the framework-generic call sites that

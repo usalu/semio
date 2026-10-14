@@ -9,7 +9,7 @@
 
 use super::*;
 
-const PANEL_RUNNING: &str = include_str!("../../../../../../🔌️plugin/🧫️fixtures/⏯️tool-run/🪧️panel-running.json");
+const PANEL_RUNNING: &str = include_str!("../../../../../../🔌️plugin/🧪️tests/🧫️fixtures/⏯️tool-run/🪧️panel-running.json");
 
 /// 🧾️ The fixture `BuiltNode` wire flattened into pre-order retained records, parents before children.
 fn panel_records(node: &Value, records: &mut Vec<ui_contract::UiNodeRecord>) -> ui_contract::UiNodeId {

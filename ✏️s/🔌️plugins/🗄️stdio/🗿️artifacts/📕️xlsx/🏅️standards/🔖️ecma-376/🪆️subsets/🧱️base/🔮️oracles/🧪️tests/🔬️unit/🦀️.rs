@@ -30,7 +30,7 @@ fn address(node_path: &[f64], revision: &str) -> Json {
 /// `rust_xlsxwriter` build whose pool holds one entry, which is the right input for the grid
 /// kinds and the wrong one for anything that measures the pool.
 fn real_fixture_bytes() -> Vec<u8> {
-    include_bytes!("../../../🧫️fixtures/📕️reuse-marketplaces.xlsx").to_vec()
+    include_bytes!("../../../🧪️tests/🧫️fixtures/📕️reuse-marketplaces.xlsx").to_vec()
 }
 
 fn fixture_bytes() -> Vec<u8> {

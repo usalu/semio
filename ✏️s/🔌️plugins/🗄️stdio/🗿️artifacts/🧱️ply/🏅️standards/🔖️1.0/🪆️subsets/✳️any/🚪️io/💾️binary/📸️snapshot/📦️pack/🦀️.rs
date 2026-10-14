@@ -35,11 +35,14 @@ fn reconstruct(value:Snapshot,control:&mut semio_framework_value::NativeDecodeCo
 }
 impl TryFrom<Snapshot> for PlySnapshot{type Error=String;fn try_from(value:Snapshot)->Result<Self,String>{reconstruct(value,&mut semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut |_|true)).map_err(ValueError::into_message)}}
 
-impl store::os_store::serialization::ArtifactPack for PlySnapshot{
- fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())}
+impl pack::snapshot::ArtifactPack for PlySnapshot{
+ 
  fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{let snapshot=Snapshot::from(self);let inner=store::pack_rt::encode_document(&Snapshot::__dsl_spec(),&snapshot.__dsl_to_record(),options)?;let envelope=store::semio_format::SemioEnvelope::from_envelope_id("stdio.ply",store::semio_format::Component::Pack,1).map_err(|error|store::PackError::from(error.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&inner))}
  fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,inner)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::from(error.into_value_error()))?;if !envelope.matches_identity("stdio.ply",store::semio_format::Component::Pack,1){return Err(store::PackError::from(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PLY snapshot pack identity differs")));}let(record,_)=store::pack_rt::decode_document(&inner,&Snapshot::__dsl_spec(),options)?;Self::try_from(Snapshot::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)?).map_err(|detail| store::PackError::from(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))}
  fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Snapshot::__dsl_spec())}
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for PlySnapshot {
+fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())}
 }
 
 pub(crate) fn retire_value(value:PlyValue){let mut pending=vec![value];while let Some(value)=pending.pop(){if let PlyValue::List(values)=value{pending.extend(values);}}}

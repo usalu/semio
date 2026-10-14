@@ -224,7 +224,7 @@ impl<P> Default for BoundedTransientRootRetirementFactory<P> {
 
 impl<P> store::SnapshotRetirementFactory<P> for BoundedTransientRootRetirementFactory<P>
 where
-    P: store::os_store::serialization::ArtifactDsl + Send + Sync + 'static,
+    P: pack::snapshot::ArtifactDsl + Send + Sync + 'static,
 {
     fn retirement_birth_bytes(&self, _snapshot: &Arc<P>) -> usize { size_of::<BoundedTransientRootRetirement<P>>() }
 
@@ -233,7 +233,7 @@ where
             Ok(progress) => progress,
             Err(error) => return Err((error, snapshot)),
         };
-        let retained_bytes = store::os_store::serialization::ArtifactDsl::print_dsl(snapshot.as_ref()).len();
+        let retained_bytes = pack::snapshot::ArtifactDsl::print_dsl(snapshot.as_ref()).len();
         Ok((Box::new(BoundedTransientRootRetirement { root: Some(snapshot), retained_bytes }), progress))
     }
 }
@@ -263,7 +263,7 @@ where
 
 impl<P, M> ArtifactOwnedDisposer<store::TransientStore<P, M>> for BoundedTransientStoreDisposer<P, M>
 where
-    P: Clone + Default + store::os_store::serialization::ArtifactDsl + Send + Sync + 'static,
+    P: Clone + Default + pack::snapshot::ArtifactDsl + Send + Sync + 'static,
     M: protocol::Mutation<P> + Send + 'static,
 {
     /// 🎒️ Same paging as the root retirement above.
@@ -279,7 +279,7 @@ where
             return Ok(PluginLifecycleStep::Progress(Default::default()));
         }
         if self.terminal_root.is_none() {
-            self.retained_bytes = store::os_store::serialization::ArtifactDsl::print_dsl(owner.current_root().as_ref()).len();
+            self.retained_bytes = pack::snapshot::ArtifactDsl::print_dsl(owner.current_root().as_ref()).len();
             self.retired = Some(std::mem::replace(owner, store::TransientStore::new(P::default())));
             self.terminal_root = Some(Arc::downgrade(&owner.current_root()));
             self.terminal_generation = owner.generation_now();
@@ -330,14 +330,14 @@ where
 
 pub fn bounded_transient_root_retirement_factory<P>() -> Arc<dyn store::SnapshotRetirementFactory<P>>
 where
-    P: store::os_store::serialization::ArtifactDsl + Send + Sync + 'static,
+    P: pack::snapshot::ArtifactDsl + Send + Sync + 'static,
 {
     Arc::new(BoundedTransientRootRetirementFactory::<P>::default())
 }
 
 pub fn bounded_transient_store_disposer<P, M>() -> Box<dyn ArtifactOwnedDisposer<store::TransientStore<P, M>>>
 where
-    P: Clone + Default + store::os_store::serialization::ArtifactDsl + Send + Sync + 'static,
+    P: Clone + Default + pack::snapshot::ArtifactDsl + Send + Sync + 'static,
     M: protocol::Mutation<P> + Send + 'static,
 {
     Box::new(BoundedTransientStoreDisposer::<P, M>::default())

@@ -13,7 +13,7 @@ fn close<T:RetireOwned+Sync>(source:&mut RetainedCloneSource<T>){for turn in 0..
 
 #[test]
 fn canonical_native_identity_assembly_preserves_original_unicode_fields_and_exact_granted_cancellation(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/📦️prepared/🪪️identity/🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/📦️prepared/🪪️identity/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for repeats in [1,fixture["repeat"].as_u64().unwrap()as usize]{for pause in [Some(0),Some(1),Some(3),Some(17),Some(129),None]{
   let actor=fixture["actor"].as_str().unwrap().repeat(repeats);let id=fixture["id"].as_str().unwrap();let native=Authority{actor:actor.as_str().into()};let actor_pointer=native.actor.chunks().next().unwrap().as_ptr();let mut authority=source(native);
   let mut edit=Box::new(Edit::<bool>{id:id.to_owned(),actor:None,line:None,sequence_number:1,forwards:vec![true],mutation_meta:Vec::new(),inverse:crate::value::list::PagedList::new(),verb:None,started_at:String::new(),finished_at:None});edit.id.reserve(8192);let edit_pointer=edit.as_ref()as*const Edit<bool>;let id_pointer=edit.id.as_ptr();let mut edit=source(edit);

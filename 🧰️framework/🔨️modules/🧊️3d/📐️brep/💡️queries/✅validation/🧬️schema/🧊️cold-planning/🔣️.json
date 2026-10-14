@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "version",
+    "retainedPlanning",
+    "retainedLoops"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "retainedPlanning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "itemsPerTurn",
+        "bodyBytes",
+        "cancelStops",
+        "constructorCapacityBytes",
+        "constructorReleaseBytes",
+        "reserveCopyBytes",
+        "metadataCopyBytes",
+        "entityCopyBytes",
+        "capacity",
+        "release",
+        "receiptAxes",
+        "deniedAxes",
+        "terminalDropBytes",
+        "shellEntityCopyBytes",
+        "sourceTetrahedra"
+      ],
+      "properties": {
+        "itemsPerTurn": {
+          "const": 1
+        },
+        "bodyBytes": {
+          "type": "array",
+          "const": [
+            0,
+            1,
+            3,
+            64
+          ]
+        },
+        "cancelStops": {
+          "type": "array",
+          "const": [
+            0,
+            1,
+            3,
+            8,
+            25,
+            null
+          ]
+        },
+        "constructorCapacityBytes": {
+          "const": 0
+        },
+        "constructorReleaseBytes": {
+          "const": 0
+        },
+        "reserveCopyBytes": {
+          "const": 0
+        },
+        "metadataCopyBytes": {
+          "const": 0
+        },
+        "entityCopyBytes": {
+          "const": 8
+        },
+        "capacity": {
+          "const": "originalEmptyVectorSourceExtentOrOriginalShellPage"
+        },
+        "release": {
+          "const": "zeroDuringPlanning"
+        },
+        "receiptAxes": {
+          "type": "array",
+          "const": [
+            "items",
+            "copy",
+            "capacity",
+            "release"
+          ]
+        },
+        "deniedAxes": {
+          "type": "array",
+          "const": [
+            "items",
+            "copy",
+            "capacity",
+            "release",
+            "depth"
+          ]
+        },
+        "terminalDropBytes": {
+          "const": 0
+        },
+        "shellEntityCopyBytes": {
+          "const": 16
+        },
+        "sourceTetrahedra": {
+          "const": [
+            1,
+            80
+          ]
+        }
+      }
+    },
+    "retainedLoops": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "itemsPerTurn",
+        "bodyBytes",
+        "cancelStops",
+        "coedgeCopyBytes",
+        "reserveCopyBytes",
+        "metadataCopyBytes",
+        "maximumPairFindings",
+        "textScalarsPerMinimumEvent",
+        "terminalDropBytes",
+        "sourceTetrahedra",
+        "brokenNeighbor"
+      ],
+      "properties": {
+        "itemsPerTurn": {
+          "const": 1
+        },
+        "bodyBytes": {
+          "const": [
+            0,
+            1,
+            3,
+            64
+          ]
+        },
+        "cancelStops": {
+          "const": [
+            0,
+            1,
+            3,
+            8,
+            25,
+            null
+          ]
+        },
+        "coedgeCopyBytes": {
+          "const": 8
+        },
+        "reserveCopyBytes": {
+          "const": 0
+        },
+        "metadataCopyBytes": {
+          "const": 0
+        },
+        "maximumPairFindings": {
+          "const": 2
+        },
+        "textScalarsPerMinimumEvent": {
+          "const": 1
+        },
+        "terminalDropBytes": {
+          "const": 0
+        },
+        "sourceTetrahedra": {
+          "const": [
+            1,
+            80
+          ]
+        },
+        "brokenNeighbor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "loop",
+            "index",
+            "next",
+            "entity",
+            "code",
+            "message"
+          ],
+          "properties": {
+            "loop": {
+              "const": 0
+            },
+            "index": {
+              "const": 0
+            },
+            "next": {
+              "const": 1
+            },
+            "entity": {
+              "const": "loop-0"
+            },
+            "code": {
+              "const": "next-prev-mismatch"
+            },
+            "message": {
+              "const": "coedge 0's next/prev pointers are not symmetric with its ring neighbor"
+            }
+          }
+        }
+      }
+    }
+  }
+}

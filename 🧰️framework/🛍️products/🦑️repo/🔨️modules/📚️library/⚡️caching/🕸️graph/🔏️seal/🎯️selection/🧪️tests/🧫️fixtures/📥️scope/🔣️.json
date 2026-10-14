@@ -1,0 +1,150 @@
+{
+  "version": 1,
+  "selection": {
+    "project": "leaf",
+    "target": "build",
+    "configuration": "release",
+    "excludeTaskDependencies": false
+  },
+  "nx": {
+    "namedInputs": {
+      "default": [
+        "{projectRoot}/**/*"
+      ]
+    }
+  },
+  "graph": {
+    "nodes": {
+      "leaf": {
+        "name": "leaf",
+        "type": "lib",
+        "data": {
+          "root": "leaf",
+          "name": "leaf",
+          "targets": {
+            "build": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "bun ./📜️script.ts build"
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/compiler/script.ts"
+              ],
+              "defaultConfiguration": "prototype",
+              "configurations": {
+                "prototype": {
+                  "env": {
+                    "SEMIO_BUILD_MODE": "prototype"
+                  }
+                },
+                "release": {
+                  "env": {
+                    "SEMIO_BUILD_MODE": "release"
+                  }
+                }
+              },
+              "dependsOn": [
+                {
+                  "target": "build",
+                  "projects": [
+                    "dependency"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      },
+      "dependency": {
+        "name": "dependency",
+        "type": "lib",
+        "data": {
+          "root": "dependency",
+          "name": "dependency",
+          "targets": {
+            "build": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "bun ./📜️script.ts build"
+              },
+              "inputs": [
+                "default"
+              ],
+              "defaultConfiguration": "prototype",
+              "configurations": {
+                "prototype": {
+                  "env": {
+                    "SEMIO_BUILD_MODE": "prototype"
+                  }
+                },
+                "release": {
+                  "env": {
+                    "SEMIO_BUILD_MODE": "release"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "unrelated": {
+        "name": "unrelated",
+        "type": "lib",
+        "data": {
+          "root": "unrelated",
+          "name": "unrelated",
+          "targets": {
+            "build": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "bun ./📜️script.ts build"
+              },
+              "inputs": [
+                "default"
+              ],
+              "defaultConfiguration": "prototype",
+              "configurations": {
+                "prototype": {
+                  "env": {
+                    "SEMIO_BUILD_MODE": "prototype"
+                  }
+                },
+                "release": {
+                  "env": {
+                    "SEMIO_BUILD_MODE": "release"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "dependencies": {
+      "leaf": [
+        {
+          "source": "leaf",
+          "target": "dependency",
+          "type": "static"
+        }
+      ],
+      "dependency": [],
+      "unrelated": []
+    }
+  },
+  "scope": {
+    "version": 1,
+    "tasks": [
+      "dependency:build:release",
+      "leaf:build:release"
+    ],
+    "roots": [
+      "dependency",
+      "leaf"
+    ],
+    "files": [
+      "compiler/script.ts"
+    ]
+  }
+}

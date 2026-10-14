@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Repository Target Execution Contract",
+  "oneOf": [
+    {
+      "$ref": "#/definitions/Source"
+    },
+    {
+      "$ref": "#/definitions/Native"
+    },
+    {
+      "$ref": "#/definitions/Orchestration"
+    }
+  ],
+  "definitions": {
+    "Source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "source"
+        }
+      }
+    },
+    "Native": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "scope"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "native"
+        },
+        "scope": {
+          "enum": [
+            "production",
+            "test"
+          ]
+        }
+      }
+    },
+    "Orchestration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "orchestration"
+        }
+      }
+    }
+  }
+}

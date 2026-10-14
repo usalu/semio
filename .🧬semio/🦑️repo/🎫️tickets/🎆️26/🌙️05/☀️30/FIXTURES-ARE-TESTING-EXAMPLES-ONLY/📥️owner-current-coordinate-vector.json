@@ -1,0 +1,15 @@
+{
+  "vector": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🗺️testing-readme-coordinates/🔣️.json",
+    "before": "bf9a6eea1fa50be92a0bda593a594f19be917aebb05742acb916e7d85a01aec9",
+    "after": "291795cbe938409c8f9e39004f861c04bd67f6619e98df7500d750d5dc8c4540",
+    "history": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🗺️testing-readme-coordinates/📜️history/🔣️.json",
+    "historyHash": "bf9a6eea1fa50be92a0bda593a594f19be917aebb05742acb916e7d85a01aec9",
+    "authorization": "Root deliberate README tests-only topology edit"
+  },
+  "caller": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔏️path-emoji-statutes/🟦️.ts",
+    "before": "eb36acb8e5ef21f7264724fd00707aa16e2fc6609d6c8866dd5b624ee5911167",
+    "after": "2251d09ee3955e26a63581ad0c58c857c58698264fdefa6c19249aef48da2e2c"
+  }
+}

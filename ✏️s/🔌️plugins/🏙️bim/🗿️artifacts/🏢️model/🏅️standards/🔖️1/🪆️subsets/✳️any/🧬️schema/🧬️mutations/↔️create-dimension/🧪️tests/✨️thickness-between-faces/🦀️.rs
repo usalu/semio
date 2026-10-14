@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "↔️create-dimension/✨️thickness-between-faces",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️create-dimension/✨️thickness-between-faces/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️create-dimension/✨️thickness-between-faces/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️create-dimension/✨️thickness-between-faces/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️create-dimension/✨️thickness-between-faces/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️create-dimension/✨️thickness-between-faces/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↔️create-dimension/✨️thickness-between-faces/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↔️create-dimension/✨️thickness-between-faces/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↔️create-dimension/✨️thickness-between-faces/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↔️create-dimension/✨️thickness-between-faces/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↔️create-dimension/✨️thickness-between-faces/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

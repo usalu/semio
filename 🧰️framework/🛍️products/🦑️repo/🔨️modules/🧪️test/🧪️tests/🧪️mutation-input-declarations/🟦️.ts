@@ -1,4 +1,4 @@
-/** 🎛️ The declaration rules of the `schema-mutation-input-ui` gate (design §22.8) over `🧫️fixtures/🧫️mutation-input-declarations/🔣️.json`
+/** 🎛️ The declaration rules of the `schema-mutation-input-ui` gate (design §22.8) over `🧪️tests/🧫️fixtures/🧫️mutation-input-declarations/🔣️.json`
  * every planted payload schema yields exactly the listed declaration rows and
  * `[code, pointer]` findings, and an independent oracle reaches the same findings — a strict Ajv resolves every `$ref`, tells a
  * number by validating one, and evaluates the rule schemas the gate schema states (`leafShowsInput` over the leaf, `numericDeclared`,
@@ -22,7 +22,7 @@ type Resolved = { readonly key: string; readonly type: string | null; readonly l
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const read = (path: string): Json => JSON.parse(readFileSync(resolve(repoRoot, path), "utf8")) as Json;
-const fixture = read("🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧫️mutation-input-declarations/🔣️.json") as unknown as Fixture;
+const fixture = read("🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️mutation-input-declarations/🔣️.json") as unknown as Fixture;
 const schema = read("🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️mutation-input-declarations/🔣️.json") as Json & { readonly $id: string };
 const manifest = read("🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json") as Json & { readonly $id: string };
 const glossary = new Set(Object.keys(read("🧰️framework/🔨️modules/🛂️manifest/🔣️input-labels.json").labels as Json));

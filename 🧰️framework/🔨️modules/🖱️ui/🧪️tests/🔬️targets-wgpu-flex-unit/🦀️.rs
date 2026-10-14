@@ -1,6 +1,22 @@
 use super::*;
 use ui_contract::{AbsoluteLayout, Align, Axis, EdgeSpace, GridLayout, GridTrack, Justify, LayoutSpec, LeafLayout, ScrollAxes, ScrollLayout, Sizing, SpaceToken, StackLayout};
 
+#[test]
+fn original_flex_grid_close_preserves_native_depth_denial_and_exact_release(){
+    let grant=ui_contract::UI_WORKER_RETIREMENT_POLICY;
+    for count in [1,16,32]{
+        let(mut owner,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let mut grid=GridLayout::default();for _ in 0..count{grid.try_push_column(GridTrack::Fraction(1)).unwrap();grid.try_push_row(GridTrack::Auto).unwrap();}let mut owner=FlexTree::new();owner.grids.push(Some(Box::new(grid)));owner});
+        let mut released=birth.released_bytes;let mut turns=0;let mut depth_denials=0;
+        while !owner.close_is_empty(){
+            let depth=owner.next_close_depth_demand().unwrap();let original=owner.grids.last().and_then(Option::as_deref).map(|grid|grid as*const _);let bytes=owner.next_close_release_byte_demand().unwrap();
+            for denied in [semio_framework_job::RetainedCloneGrant{maximum_items:0,..grant},semio_framework_job::RetainedCloneGrant{maximum_depth:depth.saturating_sub(1),..grant}]{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_granted(denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.grids.last().and_then(Option::as_deref).map(|grid|grid as*const _),original);}
+            if depth>1{depth_denials+=1;}assert!(depth<=grant.maximum_depth&&bytes<=grant.maximum_release_bytes);
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_granted(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(heap.requested_bytes,heap.released_bytes));released+=heap.released_bytes;turns+=1;assert!(turns<4096);
+        }
+        assert!(depth_denials>0);assert_eq!(birth.requested_bytes,released);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] originalFlexGrid count={count} turns={turns} nativeDepthDenials={depth_denials} exactRelease={released} terminalDrop0=true sourceFactoryUncredited=true");
+    }
+}
+
 //#region 🧪️Fixtures
 
 /// 🧪️ Drives the real two-pass ladder `mounted_layout::MountedLayoutJob` walks — measure every node
@@ -82,7 +98,7 @@ fn close(left: f32, right: f32) -> bool {
 }
 
 fn overlay_flow_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/📐️overlay-flow/🔣️.json")).expect("overlay flow fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/📐️overlay-flow/🔣️.json")).expect("overlay flow fixture")
 }
 
 fn snapshot_layout(fixture: &serde_json::Value, node: &str) -> LayoutSpec {
@@ -480,7 +496,7 @@ fn the_flex_tree_releases_exactly_one_node_per_close_grant() {
     let grant = |release| RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: 0, maximum_release_bytes: release, maximum_depth: 1 };
     for step in (1..=4).rev() {
         assert_eq!(flex.len(), step);
-        assert!(matches!(flex.close_granted(grant(0)), Step::Pending { progress } if progress.copied_items == 1 && progress.released_bytes == 0), "each granted logical owner advances exactly once");
+        assert!(matches!(flex.close_granted(grant(0)).unwrap(), Step::Pending { progress } if progress.copied_items == 1 && progress.released_bytes == 0), "each granted logical owner advances exactly once");
     }
     assert!(flex.is_empty());
     assert!(!flex.close_is_empty(), "logical emptiness retains physical backing");
@@ -488,12 +504,12 @@ fn the_flex_tree_releases_exactly_one_node_per_close_grant() {
     for _ in 0..backings {
         let bytes = flex.next_close_release_byte_demand().unwrap();
         assert!(bytes > 0);
-        assert!(matches!(flex.close_granted(grant(bytes - 1)), Step::Pending { progress } if progress == RetainedCloneProgress::default()));
-        let result = flex.close_granted(grant(bytes));
+        assert!(matches!(flex.close_granted(grant(bytes - 1)).unwrap(), Step::Pending { progress } if progress == RetainedCloneProgress::default()));
+        let result = flex.close_granted(grant(bytes)).unwrap();
         assert!(matches!(result, Step::Pending { progress } if progress.copied_items == 1 && progress.released_bytes == bytes && progress.fits(grant(bytes))));
     }
     assert!(flex.close_is_empty());
-    assert!(matches!(flex.close_granted(grant(0)), Step::Complete { progress } if progress == RetainedCloneProgress::default()), "physically empty repeated close releases nothing");
+    assert!(matches!(flex.close_granted(grant(0)).unwrap(), Step::Complete { progress } if progress == RetainedCloneProgress::default()), "physically empty repeated close releases nothing");
 }
 
 #[test]

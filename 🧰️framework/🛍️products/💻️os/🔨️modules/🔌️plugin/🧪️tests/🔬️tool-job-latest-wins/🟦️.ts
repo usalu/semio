@@ -8,7 +8,7 @@ import { WORKSPACE_ROOT, toolJobRustBlock, toolJobPublicationFreshnessBeforeEver
 /** 🧪️ Cross-checks full-domain scope fixtures with system deep equality and semantic Ajv scope validation and guards the active retained admission/publication seam. */
 export function toolJobLatestWinsSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin");
-  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🥇️tool-latest-wins.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🥇️tool-latest-wins.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧬️schema/🔣️.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const ajv = new Ajv({ strict: true, allErrors: true }).addSchema(schema);
@@ -23,7 +23,7 @@ export function toolJobLatestWinsSelfTests(): number {
   const validateScope = ajv.getSchema(`${schema.$id}#/$defs/ToolLatestWinsScope`)!;
   if (!validateScope(fixture.first) || fixture.cases.some((law: any) => !validateScope(law.next))) throw new Error("latest-wins scope violates its semantic contract");
   for (const hostile of [{ ...fixture.first, document: undefined }, { ...fixture.first, inventedAuthority: true }]) if (validateScope(hostile)) throw new Error("latest-wins scope accepted missing document or foreign authority");
-    const integration = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔗️tool-latest-wins-integration.json"), "utf8"));
+    const integration = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🔗️tool-latest-wins-integration.json"), "utf8"));
   
   
   for (const law of integration.cases) {
@@ -110,7 +110,7 @@ export function toolJobLatestWinsSelfTests(): number {
   if (reordered === source || exact(reordered)) throw new Error("latest-wins accepts slot admission after cancellation binding and enqueue");
   if (body(source, "publish_mounted_typed_operation_unit").includes(".await")) throw new Error(`latest-wins publication awaits while holding app/document/operation claims; ${obligations.length} current authority obligations, their removal controls, and admission ordering control passed`);
   const taskSchema = JSON.parse(readFileSync(join(base, "⚛️reactor/🧵️task/🧬️schema/🔣️.json"), "utf8"));
-  const taskFixture = JSON.parse(readFileSync(join(base, "⚛️reactor/🧵️task/🧫️fixtures/📥️admission/🔣️.json"), "utf8"));
+  const taskFixture = JSON.parse(readFileSync(join(base, "⚛️reactor/🧵️task/🧪️tests/🧫️fixtures/📥️admission/🔣️.json"), "utf8"));
   const validateTask = ajv.compile(taskSchema);
   if (!validateTask(taskFixture) || new Set(taskFixture.observations.map((row: { phase: string }) => row.phase)).size !== 7) throw new Error("task admission fixture violates its synchronous ownership boundary");
   const reactor = readFileSync(join(base, "⚛️reactor/🦀️.rs"), "utf8");
@@ -139,7 +139,7 @@ export function toolJobLatestWinsSelfTests(): number {
     [source, reactor, host.replace("pub fn new(registry:", "pub async fn new(registry:")],
   ];
   for (const [main, tasks, handles] of taskHostiles) if (taskAdmissionExact(main, tasks, handles)) throw new Error("task admission accepts a suspended or prematurely invoked user factory");
-  const rawFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧫️fixtures/🚪️raw-allocation-close.json"), "utf8"));
+  const rawFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧪️tests/🧫️fixtures/🚪️raw-allocation-close.json"), "utf8"));
   for (const law of rawFixture.cases) {
     const oracle = Buffer.alloc(law.capacity).subarray(0, law.initializedBytes);
     if (law.initializedBytes > law.capacity || oracle.byteLength !== law.expectedCopiedBytes || oracle.buffer.byteLength !== law.expectedReleasedBytes) throw new Error(`retained raw allocation copy and physical release oracle: ${law.id}`);
@@ -177,7 +177,7 @@ export function toolJobLatestWinsSelfTests(): number {
   ];
   for (const hostile of rawHostiles) if (hostile === rawSource || rawClose(hostile)) throw new Error("retained raw close accepts lost physical custody or capacity-sized copy deadlock");
   console.log("[DEBUG] Original raw close Buffer cases=" + rawFixture.cases.length + "; independent backing/copy and native source refusal laws passed");
-  const childCloseFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧫️fixtures/🧩️child-prepublication-close.json"), "utf8"));
+  const childCloseFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧪️tests/🧫️fixtures/🧩️child-prepublication-close.json"), "utf8"));
   const validateChildGrant = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json"), "utf8")));
   if (!validateChildGrant(childCloseFixture.closeGrant)) throw new Error("original child close caller violates its genuine neutral production grant");
   for (const axis of Object.keys(childCloseFixture.closeGrant)) {
@@ -244,7 +244,7 @@ export function toolJobLatestWinsSelfTests(): number {
   if (!toolJobStoreBatchPublicationBounded(storeSource, source)) throw new Error("mounted Store source binding lost its retained owned-preparation helper");
   const replayingOwnedBegin = storeSource.replace("let footprint = match source.footprint(lane) {", "replay_mutations(); let footprint = match source.footprint(lane) {");
   if (replayingOwnedBegin === storeSource || toolJobStoreBatchPublicationBounded(replayingOwnedBegin, source)) throw new Error("mounted Store source binding accepted replay inside extracted preparation");
-  const dispatchFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧫️fixtures/📌️mounted-dispatch-binding.json"), "utf8"));
+  const dispatchFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧪️tests/🧫️fixtures/📌️mounted-dispatch-binding.json"), "utf8"));
   
   
   const validDispatch = ajv.compile({ const: "none" });

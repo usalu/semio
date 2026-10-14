@@ -24,7 +24,7 @@ fn hidden_field_omitted_at_default() {
 
 //#region ♿️ProjectionLaws
 
-const PROJECTION_FIXTURE: &str = include_str!("../../🧫️fixtures/♿️accessibility-projection.json");
+const PROJECTION_FIXTURE: &str = include_str!("../🧫️fixtures/♿️accessibility-projection.json");
 
 /// ♿️ The role a `Component` implies, for every component the contract declares — answered here by
 /// `accessibility_role` and by the TypeScript `uiAccessibilityRoleV1` twin over the SAME fixture, so
@@ -49,7 +49,7 @@ fn every_component_implies_the_role_the_shared_fixture_declares() {
 /// appearance: the button publishes pressed, while the native checkbox publishes checked.
 #[test]
 fn every_toggle_appearance_projects_only_its_native_state_channel() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♿️retained-toggle-semantics/🔣️.json")).expect("🔀️ the retained-toggle fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/♿️retained-toggle-semantics/🔣️.json")).expect("🔀️ the retained-toggle fixture parses");
     for (index, case) in fixture["cases"].as_array().expect("toggle cases").iter().enumerate() {
         let expected = &case["expected"];
         let record: crate::UiNodeRecord = serde_json::from_value(serde_json::json!({
@@ -156,7 +156,7 @@ pub(crate) fn assert_value_matches(node: &AccessibilityProjectionNode, row: &ser
 /// min/max/now/valuetext while determinate, only `busy` while indeterminate.
 #[test]
 fn every_progress_case_announces_the_value_the_shared_fixture_declares() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📶️progress.json")).expect("📶️ the progress fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📶️progress.json")).expect("📶️ the progress fixture parses");
     let cases = fixture["cases"].as_array().expect("progress cases");
     for case in cases {
         let id = case["id"].as_str().expect("case id");
@@ -187,7 +187,7 @@ fn shortcut_roundtrips() {
 
 #[test]
 fn stepper_accessible_values_match_the_shared_display_and_mixed_contract() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🪜️stepper-presentation/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪜️stepper-presentation/🔣️.json")).unwrap();
     for row in law["numbers"].as_array().unwrap() {
         let mut component: crate::Component = serde_json::from_value(serde_json::json!({"type":"numberStepper","value":row["value"],"step":1.0,"uniform":true})).unwrap();
         assert_eq!(accessibility_value(&component).text.as_deref(), row["text"].as_str());

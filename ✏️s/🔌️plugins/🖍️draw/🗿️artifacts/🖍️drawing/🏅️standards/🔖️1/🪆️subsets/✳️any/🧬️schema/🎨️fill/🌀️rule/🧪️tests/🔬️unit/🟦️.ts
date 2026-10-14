@@ -7,7 +7,7 @@ import Ajv from "ajv";
 import {parseFillRule} from "../../🟦️.ts";
 import {PathHitCursor} from "../../../../🧮️geometry/🎯️picking/🟦️.ts";
 import {parseEditableSvgPath} from "../../../../../🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🛤️path/🟦️.ts";
-import cases from "../../🧫️fixtures/🔣️.json";
+import cases from "../../../../../🧪️tests/🧫️fixtures/🎨️fill/🌀️rule/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 const validate=new Ajv({strict:true}).compile(schema);
 for(const row of cases)test(`authored fill rule: ${row.name}`,()=>{
@@ -31,8 +31,8 @@ test("fill rule refuses unknown values",()=>{for(const value of ["evenOdd","NONZ
 
 import {applyFillRuleEdit} from "../../../../../../🎨️style/🧬️schema/🧬️mutations/🌀️set-layer-fill-rule/🦠️mutation/🟦️.ts";
 import {applyPatch} from "fast-json-patch";
-import before from "../../../../../../🎨️style/🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd/📸️snapshot/⬅️before/🔣️.json";
-import after from "../../../../../../🎨️style/🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd/📸️snapshot/➡️after/🔣️.json";
+import before from "../../../../../../🎨️style/🧪️tests/🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd/📸️snapshot/⬅️before/🔣️.json";
+import after from "../../../../../../🎨️style/🧪️tests/🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd/📸️snapshot/➡️after/🔣️.json";
 test("fill-rule mutation preserves unrelated fields and has an exact inverse",()=>{
   const changed=applyFillRuleEdit(before,{layerId:"shape-a",fillRule:"nonzero"});
   expect(changed).toEqual(after);

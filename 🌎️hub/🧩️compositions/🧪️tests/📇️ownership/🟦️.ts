@@ -5,7 +5,7 @@ import TOML from "@iarna/toml";
 
 /** 🏘️ Authored deployment owners for concrete native components: each a cdylib-only `🧩️component` crate beside its rlib library. */
 export function assertConcreteCompositionOwnership(root: string): string[] {
-  const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/📇️ownership/🔣️.json"), "utf8")) as { components: { package: string; owner: string; component: string; role: string; componentKind: string }[] };
+  const fixture = JSON.parse(readFileSync(join(root, "🧪️tests/🧫️fixtures/📇️ownership/🔣️.json"), "utf8")) as { components: { package: string; owner: string; component: string; role: string; componentKind: string }[] };
   const repoRoot = resolve(root, "../..");
   const names = new Set<string>();
   for (const row of fixture.components) {

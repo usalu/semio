@@ -69,8 +69,8 @@ use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
 use std::collections::{BTreeMap, HashMap};
 use semio_framework_2d::compute::EngineHandles;
-use store::{os_store::serialization::ArtifactPack};
-#[cfg(test)] use store::{os_store::serialization::ArtifactDsl};
+use store::{pack::snapshot::ArtifactPack};
+#[cfg(test)] use store::{pack::snapshot::ArtifactDsl};
 
 //#region 🔖️Constants
 pub(crate) const TRINITY_REWRITING_PLAY_CONTROLLER_ID: &str = "trinity-rewriting-play";
@@ -97,7 +97,7 @@ pub(crate) const TRINITY_REWRITING_PLAY_WINDOW_PARAMETERS: &str = "trinity-rewri
 const TRINITY_REWRITING_PLAY_RULE_NAME: &str = "label-core";
 
 #[cfg(test)]
-const NAKAGIN_CHILD: &str = include_str!("../🧫️fixtures/🪆️child/🏢️initial/🪆️content/🔣️.json");
+const NAKAGIN_CHILD: &str = include_str!("../🧪️tests/🧫️fixtures/🪆️child/🏢️initial/🪆️content/🔣️.json");
 
 const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";
 //#endregion 🔖️Constants
@@ -663,6 +663,7 @@ fn rewriting_build_document_tool_job(request: semio_framework_plugin::app::Artif
         ArtifactRetainedCommandInputs {
             command: *request.command,
             snapshot: request.snapshot,
+            snapshot_read: request.snapshot_read,
             config: request.config,
             history: request.history,
             interaction_state: request.interaction_state,
@@ -819,7 +820,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
                     return Err(MediaError::Payload(port.to_string(), "graph:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let snapshot = <JackSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let snapshot = <JackSnapshot as ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let _ = doc;
                 Ok(Emit::mutations(vec![schema::mutations::edit_working_graph(snapshot)]))
             }

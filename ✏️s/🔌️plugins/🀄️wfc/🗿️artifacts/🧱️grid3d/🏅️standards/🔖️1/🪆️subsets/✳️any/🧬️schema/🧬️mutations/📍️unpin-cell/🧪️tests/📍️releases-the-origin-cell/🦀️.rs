@@ -10,11 +10,11 @@ use crate::diff::Grid3dDiff;
 use crate::mutations::{inverse_grid3d_mutation, Grid3dMutation};
 use crate::schema::snapshot::Grid3dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📍️unpin-cell/📍️releases-the-origin-cell/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📍️unpin-cell/📍️releases-the-origin-cell/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📍️unpin-cell/📍️releases-the-origin-cell/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📍️unpin-cell/📍️releases-the-origin-cell/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📍️unpin-cell/📍️releases-the-origin-cell/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️unpin-cell/📍️releases-the-origin-cell/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️unpin-cell/📍️releases-the-origin-cell/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️unpin-cell/📍️releases-the-origin-cell/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️unpin-cell/📍️releases-the-origin-cell/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️unpin-cell/📍️releases-the-origin-cell/🎯️outcome/🔣️.json");
 
 fn before() -> Grid3dSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

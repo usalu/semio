@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "⬜️create-slab/🚷️zero-area",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/⬜️create-slab/🚷️zero-area/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/⬜️create-slab/🚷️zero-area/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/⬜️create-slab/🚷️zero-area/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/⬜️create-slab/🚷️zero-area/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/⬜️create-slab/🚷️zero-area/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⬜️create-slab/🚷️zero-area/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⬜️create-slab/🚷️zero-area/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⬜️create-slab/🚷️zero-area/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⬜️create-slab/🚷️zero-area/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⬜️create-slab/🚷️zero-area/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

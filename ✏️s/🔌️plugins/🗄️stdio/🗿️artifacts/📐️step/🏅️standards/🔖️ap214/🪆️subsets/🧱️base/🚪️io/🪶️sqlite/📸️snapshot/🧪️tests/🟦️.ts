@@ -1,7 +1,7 @@
 /** 📐️ STEP typed header, graph and IEEE fields remain independently queryable. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import f from "../🧫️fixtures/🔣️.json";
+import f from "./🧫️fixtures/🔣️.json";
 import type {StepSnapshot,StepValue} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {STEP_SQLITE_SCHEMA,stepSnapshotToSqliteDatabase,stepSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
@@ -16,7 +16,7 @@ test("STEP owned variant widths, cycles and large scalar preallocation controls"
 });
 
 test("STEP native ownership limits and nonfinite preflight use explicit independent roles",async()=>{
- const vector=await Bun.file(new URL("../🧫️fixtures/💰️backing/🔣️.json",import.meta.url)).json();
+ const vector=await Bun.file(new URL("🧫️fixtures/💰️backing/🔣️.json",import.meta.url)).json();
  expect(vector.nativeRoles).toEqual({owned:"maxAllocationBytes",semantic:"maxValueBytes",preflight:"paidFrontiersOnly",nonfinite:"retainedBinary64"});
  const db=new Database(":memory:");
  try{db.exec("CREATE TABLE requests(bytes INTEGER NOT NULL CHECK(bytes>=0));");for(const request of vector.ledger.requests)db.run("INSERT INTO requests VALUES(?)",[request]);const sum=(db.query("SELECT sum(bytes) AS spent FROM requests").get()as{spent:number}).spent;expect(sum).toBe(vector.ledger.exact);expect(sum>vector.ledger.refused).toBe(true);const words=new Database(":memory:");try{words.exec("CREATE TABLE literal(bits TEXT NOT NULL, class TEXT NOT NULL);");vector.literal.binary64Words.forEach((word:string,index:number)=>words.run("INSERT INTO literal VALUES(?,?)",[word,vector.literal.binary64Classes[index]]));expect(words.query("SELECT count(*) AS retained FROM literal WHERE class='nan'").get()).toEqual({retained:2});}finally{words.close();}}finally{db.close();}
@@ -35,24 +35,24 @@ test("STEP structural ownership, reference identities, wide words and controls",
 test("STEP artifact and command consumers own exact scalar widths",()=>{const artifact:StepArtifact=fixture(),id=BigInt(f.instanceWords[1]!),value:StepValue={real:{bits:BigInt("0x"+f.binary64Words[6]!)}};const diff:StepDiff={entities:{removed:[id],modified:[{id,diff:{args:{modified:[{index:0,value}]}}}]}};const command:StepMutation={mutation:"setEntityArg",id,argIndex:0,value};expect(artifact.entities[1]!.id).toBe(id);expect(diff.entities!.removed![0]).toBe(id);expect(diff.entities!.modified![0]!.id).toBe(id);expect(command.id).toBe(id);if(typeof command.value!=="object"||!("real" in command.value))throw Error("fixture owned real");expect(command.value.real.bits).toBe(BigInt("0x"+f.binary64Words[6]!));});
 
 test("STEP closed backing contracts separate paid frontiers from exact literal state",async()=>{
- const {default:Ajv}=await import("ajv/dist/2020.js");const vector=await Bun.file(new URL("../🧫️fixtures/💰️backing/🔣️.json",import.meta.url)).json();
+ const {default:Ajv}=await import("ajv/dist/2020.js");const vector=await Bun.file(new URL("🧫️fixtures/💰️backing/🔣️.json",import.meta.url)).json();
  expect(vector["forecast"]).toEqual("unpaidBorrowedBound");expect(vector["stages"]).toEqual(["nativeInput","nativeFields","preflightFrontier","projectionFrontier","relationIndex","reconstructionFields","valueOwnership"]);expect(vector["allocation"]).toEqual("fullConcreteBufferBeforeConstruction");expect(vector["retirement"]).toEqual("noCumulativeRefund");expect(vector["cancellation"]).toEqual("retainAdmittedBytes");expect(vector["ledger"]["requests"]).toEqual([24,48,65536]);expect(vector["ledger"]["expectedSpent"]).toEqual(65608);expect(vector["ledger"]["exact"]).toEqual(65608);expect(vector["ledger"]["refused"]).toEqual(65607);expect(vector["literal"]["unit"]).toEqual("quote\" slash\\ \u0000 世界😀");expect(vector["literal"]["repeat"]).toEqual(4096);expect(vector["literal"]["instanceWord"]).toEqual("18446744073709551615");
  const db=new Database(":memory:");try{db.run("CREATE TABLE admission(request INTEGER NOT NULL CHECK(request>=0),retired INTEGER NOT NULL)");for(const request of vector.ledger.requests)db.run("INSERT INTO admission VALUES(?,1)",[request]);expect(db.query("SELECT sum(request) AS spent FROM admission").get()).toEqual({spent:vector.ledger.expectedSpent});expect(vector.ledger.exact).toBe(vector.ledger.expectedSpent);expect(vector.ledger.refused).toBe(vector.ledger.expectedSpent-1);const text=vector.literal.unit.repeat(vector.literal.repeat);expect(db.query("SELECT length(CAST(? AS BLOB)) AS bytes").get(text)).toEqual({bytes:new TextEncoder().encode(text).length});expect(Buffer.byteLength(text,"utf8")).toBe(new TextEncoder().encode(text).length);const ddl=await Bun.file(new URL("../🗄️.sql",import.meta.url)).text();db.exec(ddl);expect(db.query("SELECT count(*) AS count FROM sqlite_schema WHERE type='table' AND name LIKE 'step_%'").get()).toEqual({count:vector.relations.tableCount});expect(BigInt(vector.literal.instanceWord)).toBe((1n<<64n)-1n);for(const [index,word] of vector.literal.binary64Words.entries()){const bits=BigInt("0x"+word),view=new DataView(new ArrayBuffer(8));view.setBigUint64(0,bits,true);const value=view.getFloat64(0,true);expect(view.getBigUint64(0,true)).toBe(bits);expect(Number.isNaN(value)?"nan":value===Infinity?"positiveInfinity":value===-Infinity?"negativeInfinity":Object.is(value,-0)?"negativeZero":"finite").toBe(vector.literal.binary64Classes[index]);}expect(vector.stages).toEqual(["nativeInput","nativeFields","preflightFrontier","projectionFrontier","relationIndex","reconstructionFields","valueOwnership"]);}finally{db.close()}
 });
 
 test("STEP borrowed preflight pays each complete scratch replacement independently of its bound",async()=>{
- const vector=await Bun.file(new URL("../🧫️fixtures/💰️backing/🔣️.json",import.meta.url)).json();
+ const vector=await Bun.file(new URL("🧫️fixtures/💰️backing/🔣️.json",import.meta.url)).json();
  expect(vector.nativeRoles.preflight).toBe("paidFrontiersOnly");expect(vector.preflightFrontierSlots).toEqual([1,2,4,1,2,1]);
  const db=new Database(":memory:");try{db.exec("CREATE TABLE frontier(slots INTEGER NOT NULL CHECK(slots>0));");for(const slots of vector.preflightFrontierSlots)db.run("INSERT INTO frontier VALUES(?)",[slots]);expect(db.query("SELECT sum(slots) AS paid FROM frontier").get()).toEqual({paid:11});}finally{db.close();}
 });
 
 test("STEP typed roots and boxes expose a closed concrete-storage vocabulary",async()=>{
- const vector=await Bun.file(new URL("../🧫️fixtures/💰️backing/🔣️.json",import.meta.url)).json();
+ const vector=await Bun.file(new URL("🧫️fixtures/💰️backing/🔣️.json",import.meta.url)).json();
  expect(vector.typedConstruction).toEqual({inlineRoot:"noBackingRequest",typedBox:"onePaidSlot"});const db=new Database(":memory:");try{db.exec("CREATE TABLE storage(kind TEXT PRIMARY KEY, slots INTEGER NOT NULL CHECK(slots>=0));INSERT INTO storage VALUES('inlineRoot',0),('typedBox',1);");expect(db.query("SELECT kind,slots FROM storage ORDER BY slots").all()).toEqual([{kind:"inlineRoot",slots:0},{kind:"typedBox",slots:1}]);}finally{db.close();}
 });
 
 import NormSemanticAjv from "ajv/dist/2020.js";
-import normSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {stepSnapshotToSqliteDatabase as normSemanticProject,stepSnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
 import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

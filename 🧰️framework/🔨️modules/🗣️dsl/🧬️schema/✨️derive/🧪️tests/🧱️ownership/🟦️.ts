@@ -9,7 +9,7 @@ type Case = Readonly<{id: string; mode: string; names?: Readonly<{spec: string; 
 const owner = resolve(import.meta.dir, "../.."), read = (path: string): string => readFileSync(resolve(owner, path), "utf8");
 
 test("language-neutral emission modes require explicit projection names and exclude product fronts", () => {
-  const fixture = JSON.parse(read("🧫️fixtures/🧩️composition/🔣️.json")) as {cases: Case[]; ownedFronts: string[]; higherFronts: string[]};
+  const fixture = JSON.parse(read("../../🧪️tests/🧫️fixtures/✨️derive/🧩️composition/🔣️.json")) as {cases: Case[]; ownedFronts: string[]; higherFronts: string[]};
   expect(new Set(fixture.ownedFronts).intersection(new Set(fixture.higherFronts)).size).toBe(0);
   const projection = fixture.cases.find(row => row.mode === "Projection")!;
   expect(Object.values(projection.names!)).toEqual([...projection.members]);
@@ -36,7 +36,7 @@ test("every public compiler front uses the owned system token boundary", () => {
 
 
 test("a required inline tagged owner has exactly one native variant without boxing", () => {
-  const fixture = JSON.parse(read("🧫️fixtures/🏷️required-inline/🔣️.json")) as {valid: unknown[]; invalid: unknown[]; fieldKinds: {type: string; role: string}[]};
+  const fixture = JSON.parse(read("../../🧪️tests/🧫️fixtures/✨️derive/🏷️required-inline/🔣️.json")) as {valid: unknown[]; invalid: unknown[]; fieldKinds: {type: string; role: string}[]};
   for (const row of [...fixture.valid, ...fixture.invalid]) expect(JSON.parse(JSON.stringify(row))).toEqual(row);
   const native = read("../🧪️tests/🏷️required-inline/🦀️.rs");
   expect(native).toContain("serde_json::from_value::<InlineStatement>");

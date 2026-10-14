@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "request": {
+    "type": "GET_SEMIO_FILESYSTEM_JOURNAL",
+    "version": 1,
+    "scope": {
+      "roots": [
+        "sample"
+      ],
+      "files": [
+        "package.json"
+      ]
+    }
+  },
+  "invalid": [
+    {
+      "type": "GET_SEMIO_FILESYSTEM_JOURNAL",
+      "version": 1,
+      "scope": {
+        "roots": [
+          "../escape"
+        ],
+        "files": []
+      }
+    },
+    {
+      "type": "GET_SEMIO_FILESYSTEM_JOURNAL",
+      "version": 1,
+      "scope": {
+        "roots": [
+          "sample"
+        ],
+        "files": []
+      },
+      "extra": true
+    }
+  ],
+  "source": "sample/entry.ts",
+  "manifest": "package.json",
+  "unselected": "peer/entry.ts",
+  "overflowEvents": 3,
+  "probeMilliseconds": 1000,
+  "worker": {
+    "version": 1,
+    "kind": "filesystem-journal",
+    "root": "<original-workspace>",
+    "directory": "<private-data>",
+    "socketPath": "<owned-socket>",
+    "toolingIdentity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "generation": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "configuredSocketLength": 89,
+  "toolingLifetime": {
+    "resourcePrefix": "nx-tooling:",
+    "runningExclusive": "refused",
+    "retiredExclusive": "admitted"
+  }
+}

@@ -5,7 +5,7 @@ import { createRequire } from "node:module";
 
 /** 🌎️ Uses native Nx task construction and esbuild's import graph to verify the Hub build boundary. */
 export async function testHubBuild(workspace: string): Promise<void> {
-  const require = createRequire(join(workspace, "package.json")), directory = resolve(import.meta.dirname, "../../🧫️fixtures/hub-build");
+  const require = createRequire(join(workspace, "package.json")), directory = resolve(import.meta.dirname, "../🧫️fixtures/hub-build");
   const fixture = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8"));
   const project = JSON.parse(readFileSync(join(workspace, fixture.projectRoot, "📋️project.json"), "utf8")), build = project.targets.build;
   assert.deepEqual(build.outputs, [fixture.output]);

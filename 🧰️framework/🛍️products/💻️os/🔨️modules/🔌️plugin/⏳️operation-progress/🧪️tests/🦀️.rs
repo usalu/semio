@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn cancellation_outcomes_preserve_actual_worker_failures() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cancellationOutcomes"].as_array().unwrap() {
         let lane = cancellation_result_lane(row["userRequested"].as_bool().unwrap(), row["workerFault"].as_bool().unwrap());
         assert_eq!(lane, if row["lane"] == "terminal" { TypedOperationResultLane::Terminal } else { TypedOperationResultLane::Fault });
@@ -10,7 +10,7 @@ fn cancellation_outcomes_preserve_actual_worker_failures() {
 }
 #[test]
 fn cancellation_refuses_missing_terminal_and_uncancellable_targets() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cancellationTargets"].as_array().unwrap() {
         assert_eq!(
             operation_cancellation_target_admitted(row["present"].as_bool().unwrap(), row["terminal"].as_bool().unwrap(), row["cancellable"].as_bool().unwrap()),
@@ -22,7 +22,7 @@ fn cancellation_refuses_missing_terminal_and_uncancellable_targets() {
 }
 #[test]
 fn cancellation_identity_matches_the_neutral_schema_cases() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let args = semio_framework_pack_json::from_json_str(&row["args"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let value = decode_operation_cancellation(&args);
@@ -35,7 +35,7 @@ fn cancellation_identity_matches_the_neutral_schema_cases() {
 }
 #[test]
 fn progress_captions_preserve_counter_precision_and_explicit_locale() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for (key, locale) in [("en", Locale::En), ("de", Locale::De)] {
         for count in fixture["counts"].as_array().unwrap() {
             let text = count.as_str().unwrap();

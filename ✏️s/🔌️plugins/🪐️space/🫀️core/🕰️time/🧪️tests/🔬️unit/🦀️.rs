@@ -4,7 +4,7 @@ use super::*;
 /// oracle), and RFC 3339 `saved_at` stamps parsing to the same instants.
 #[semio_framework_async_macros::async_test]
 async fn utc_minute_text_matches_the_shared_fixture_in_both_languages() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🕰️utc-minute/🔣️.json")).expect("fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🕰️utc-minute/🔣️.json")).expect("fixture");
     for case in fixture["cases"].as_array().expect("cases") {
         let epoch_ms = case["epochMs"].as_u64().expect("epochMs");
         assert_eq!(utc_minute_text(epoch_ms, semio_framework_ui_locale::Locale::En), case["en"].as_str().expect("en"), "{case}");

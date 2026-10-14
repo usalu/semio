@@ -4,7 +4,7 @@ use super::*;
 use serde_json::Value;
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/🪟️window-lifecycle-template-drag/🔣️.json")).expect("window lifecycle fixture")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪟️window-lifecycle-template-drag/🔣️.json")).expect("window lifecycle fixture")
 }
 
 fn side(value: &str) -> DockSide {

@@ -16,7 +16,7 @@ const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
 if (!output) throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
 mkdirSync(output, { recursive: true });
 const ticket = resolve(output);
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🥤️rust-finite-target-consumption/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🥤️rust-finite-target-consumption/🔣️.json"), "utf8"));
 const sourcePath = resolve(import.meta.dir, "../../🧹️normalization/🟦️.ts");
 const sourceInputs = normalizationSourceFiles(sourcePath);
 const source = normalizationSourceDeclarations(sourcePath), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);

@@ -10,7 +10,7 @@ import {createFlowBrowserRuntime} from "../../🌐️browser/🏃️runtime/🟨
 /** 🧾️ Actual Flow receiving transport preserves pending, failed and terminal child receipts. */
 export async function testFlowRetainedReceipt():Promise<void>{
  assert.equal(existsSync(new URL("../../🧬️schema/🎟️retained-receipt/🔣️.json",import.meta.url)),false,"original Flow receipt examples cannot own trial schema authority");
- const fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🎟️retained-receipt/🔣️.json",import.meta.url),"utf8"));
+ const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🎟️retained-receipt/🔣️.json",import.meta.url),"utf8"));
  const schema=JSON.parse(readFileSync(new URL("../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🧾️progress.json",import.meta.url),"utf8"));
  const ajv=new Ajv({strict:true,allErrors:true}).addSchema(schema,"flow.original-retained-progress"),validate=ajv.getSchema("flow.original-retained-progress")!;
  assert.deepEqual(fixture.axes,schema.required);assert.equal(validate(fixture.normalFailure.progress),true,JSON.stringify(validate.errors));let assertions=2;

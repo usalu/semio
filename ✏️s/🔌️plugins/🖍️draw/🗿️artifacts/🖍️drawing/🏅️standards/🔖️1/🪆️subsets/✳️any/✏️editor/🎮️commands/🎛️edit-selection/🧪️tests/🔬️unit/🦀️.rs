@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn shape_conversion_fixtures_preserve_identity_style_transform_and_order() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🛤️to-path/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛤️to-path/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let mut value=serde_json::to_value(crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Original")).to_string().into()).expect("nonempty authored identity"), "Original")).unwrap();
         let kind=case["kind"].as_str().unwrap();
@@ -53,7 +53,7 @@ fn conversion_preserves_distinct_parents_and_rejects_locked_or_unsupported_selec
 }
 #[test]
 fn selection_operation_fixtures() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let layers = fixture["layers"].as_array().unwrap().iter().map(|value| {
         let mut layer = crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit(((value["id"].as_str().unwrap())).to_string().into()).expect("nonempty authored identity"), value["id"].as_str().unwrap());
         crate::schema::layer_base_mut(&mut layer).id = value["id"].as_str().unwrap().into();
@@ -123,7 +123,7 @@ fn arrangement_preserves_ancestor_coordinates_and_atomicity() {
             }
         }
     }
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🌍️arrangement/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🌍️arrangement/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let document=DrawingSnapshot {layers:case["nodes"].as_array().unwrap().iter().map(node).collect(),..Default::default()};
         let saved=document.clone();
@@ -143,7 +143,7 @@ fn arrangement_preserves_ancestor_coordinates_and_atomicity() {
 
 #[test]
 fn layer_stack_steps_match_shared_order_in_root_and_group() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🗂️stack/🧫️fixtures/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🗂️stack/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {for nested in [false,true] {
         let layers=case["order"].as_array().unwrap().iter().map(|id| {
             let mut layer=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit(((id.as_str().unwrap())).to_string().into()).expect("nonempty authored identity"), id.as_str().unwrap());
@@ -169,7 +169,7 @@ fn layer_stack_steps_match_shared_order_in_root_and_group() {
 
 #[test]
 fn ungroup_matches_shared_structure_transform_and_selection_cases() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧩️ungroup/🧫️fixtures/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧩️ungroup/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let document=DrawingSnapshot {layers:serde_json::from_value(case["before"].clone()).unwrap(),..Default::default()};
         let saved=document.clone();

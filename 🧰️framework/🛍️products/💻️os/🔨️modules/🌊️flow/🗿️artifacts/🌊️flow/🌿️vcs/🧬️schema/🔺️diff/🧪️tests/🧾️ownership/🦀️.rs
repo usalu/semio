@@ -12,7 +12,7 @@ fn retire_diff(diff: FlowDiff) { MutationDiff::retire_cold(diff); }
 /// history folds use (`os_store::replay_mutations`).
 #[test]
 fn every_delta_variant_retires_cold_without_a_bare_drop() {
-    let vectors = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧾️ownership/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let vectors = semio_framework_pack_json::parse(include_str!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🧾️ownership/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let base: FlowHostSnapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(vectors.get("base").unwrap())).unwrap();
     let widget = base.widgets.first().cloned().unwrap();
     let synapse = base.synapses.first().cloned().unwrap();
@@ -28,7 +28,7 @@ fn every_delta_variant_retires_cold_without_a_bare_drop() {
 
 #[test]
 fn retained_payload_projection_matches_neutral_vectors() {
-    let vectors = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧾️ownership/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let vectors = semio_framework_pack_json::parse(include_str!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🧾️ownership/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let base: FlowHostSnapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(vectors.get("base").unwrap())).unwrap();
     let base_json = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&base));
     for row in vectors.get("cases").and_then(semio_framework_pack_json::Value::as_array).unwrap() {
@@ -59,7 +59,7 @@ fn retained_payload_projection_matches_neutral_vectors() {
 /// the base rows: applying the diff and then its inverse returns to the base.
 #[test]
 fn a_structural_diff_and_its_inverse_read_the_base_rows() {
-    let vectors = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧾️ownership/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let vectors = semio_framework_pack_json::parse(include_str!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🧾️ownership/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let base: FlowHostSnapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(vectors.get("base").unwrap())).unwrap();
     assert!(base.widgets.len() >= 2);
     let (moved, dropped) = (base.widgets[0].clone(), base.synapses.last().cloned().unwrap());

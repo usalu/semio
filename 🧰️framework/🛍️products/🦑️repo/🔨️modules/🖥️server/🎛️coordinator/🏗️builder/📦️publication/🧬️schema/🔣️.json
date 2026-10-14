@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Next Compiler File Trace",
+  "type": "object",
+  "required": [
+    "version",
+    "files"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

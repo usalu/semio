@@ -350,7 +350,7 @@ async fn io_router_compose_still_refuses_to_route_back_into_the_calling_plugin()
 
 #[test]
 fn host_error_layout_matches_language_neutral_budget() {
-    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⚠️error-layout/🔣️.json")).expect("language-neutral error layout budget");
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⚠️error-layout/🔣️.json")).expect("language-neutral error layout budget");
     let host_bytes = size_of::<PluginHostError>();
     let turn_bytes = size_of::<TurnFault>();
     assert!(host_bytes <= oracle["maximumHostErrorInlineBytes"].as_u64().expect("host budget") as usize);

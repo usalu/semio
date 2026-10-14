@@ -1,16 +1,16 @@
-import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
+import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
 const canceledKind=refusalFixture.cases.find(item=>item.id==="canceled-projection")!.expectedKind;
 /** 🧫️ Shared Txt semantic fixture and independent SQL editing interoperability. */
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
-import fixture from "../🧫️fixtures/🔣️.json";
-import nativeFixture from "../🧫️fixtures/🛂️native.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+import nativeFixture from "./🧫️fixtures/🛂️native.json";
 import { txtSnapshotToSqliteDatabase, txtSnapshotFromSqliteDatabase, TXT_SQLITE_SCHEMA } from "../🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework";
 
 /** 🛫️ Original TXT encoding quotes exact raw and binary octets with independent witnesses. */
 test("original TXT native encoding preserves raw line bytes and one retained output backing",async()=>{
- const{readFileSync}=await import("node:fs");const law=JSON.parse(readFileSync(new URL("../🛫️encoding/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+ const{readFileSync}=await import("node:fs");const law=JSON.parse(readFileSync(new URL("../🛫️encoding/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
  const {semioSchemaAjvV1}=await import("../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts");const grantSchema=JSON.parse(readFileSync(new URL("../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json",import.meta.url),"utf8")),admitGrant=semioSchemaAjvV1({strict:true}).compile(grantSchema);for(const grant of [law.bodyGrant,law.closeGrant,law.deniedCloseGrant])expect(admitGrant(grant)).toBe(true);
  expect(Object.values(law.deniedCloseGrant)).toEqual([0,0,0,0,0]);expect(law.bodyGrant.maximumItems).toBe(65536);expect(law.closeGrant.maximumItems).toBe(4096);expect(law.maximumCloseTurns).toBe(65536);expect(law.nativeMaximumBytes).toBe(16777216);
  const db=new Database(":memory:");try{db.exec("CREATE TABLE original_line(ordinal INTEGER PRIMARY KEY,content TEXT NOT NULL)");for(const row of law.cases){const separator=row.lineEnding==="crLf"?"\r\n":"\n",body=row.lines.join(separator)+(row.trailingNewline?separator:"");expect(body).toBe(row.body);expect(new TextEncoder().encode(body)).toEqual(new Uint8Array(Buffer.from(row.body)));db.exec("DELETE FROM original_line");for(const[ordinal,line]of row.lines.entries())db.query("INSERT INTO original_line VALUES(?,?)").run(ordinal,line);expect(db.query("SELECT content FROM original_line ORDER BY ordinal").all()).toEqual(row.lines.map((content:string)=>({content})));const bytes=Buffer.from(body),header=Buffer.alloc(12);Buffer.from(law.prefix.magic).copy(header);header.writeUInt32LE(Buffer.byteLength(law.prefix.token),8);const wrapped=Buffer.concat([header,Buffer.from(law.prefix.token),bytes]);expect(wrapped.length).toBe(bytes.length+law.prefix.bytes);expect(wrapped.subarray(law.prefix.bytes)).toEqual(bytes);expect(wrapped.readUInt32LE(8)).toBe(17);}}
@@ -20,7 +20,7 @@ test("original TXT native encoding preserves raw line bytes and one retained out
 
 /** 🧾️ Closed original TXT cause and copy frontiers are validated independently of Rust admission. */
 test("original TXT encoding retains exact typed causes and admitted output slots",async()=>{
- const{readFileSync}=await import("node:fs");const law=JSON.parse(readFileSync(new URL("../🛫️encoding/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+ const{readFileSync}=await import("node:fs");const law=JSON.parse(readFileSync(new URL("../🛫️encoding/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
  expect(law.copy).toEqual({chunkBytes:65536,prefixItems:3,receivingDepth:2});expect(Buffer.from(law.nativeCause.message).toString("hex")).toBe("6e617469766520656e636f64696e672063616e63656c6564");expect(JSON.parse(JSON.stringify(law.sqlCause))).toEqual(law.sqlCause);
  const producer=readFileSync(new URL("../🛫️encoding/🦀️.rs",import.meta.url),"utf8"),tests=readFileSync(new URL("./🦀️.rs",import.meta.url),"utf8");expect(producer.includes("owner.receive::<Vec<u8>,IoPayload>")).toBe(true);expect(producer.indexOf("*slot=Some(Vec::new())")).toBeLessThan(producer.indexOf("body.allocate_encode_vec_into"));expect(producer.includes("NativeEncodeControl::new")).toBe(false);expect(producer.includes("*slot=Some(error.into_bytes())")).toBe(true);expect(producer.indexOf("body.record_progress",producer.indexOf("fn append("))).toBeLessThan(producer.indexOf("native.advance",producer.indexOf("fn append(")));expect(tests.match(/#\[test\]\s*fn txt_original_encoding_/g)?.length).toBe(5);expect(tests.includes("blocked.set(false)")).toBe(true);expect(tests.includes("sql_before-sql.allocation_remaining_bytes()")).toBe(true);
  console.log("[DEBUG] Original TXT closed typed Native/SQL causes agree with Buffer and JSON, independently admitted copy frontiers retain cancellation bytes before callback and use one genuine supplied owner; Native custody requires owning execution");
@@ -136,7 +136,7 @@ test("Txt projection and reconstruction cancellation", async () => {
   }
 });
 
-import receivingFixture from "../🧫️fixtures/🫴️receiving.json";
+import receivingFixture from "./🧫️fixtures/🫴️receiving.json";
 import Ajv from "ajv";
 import {resolve} from "node:path";
 

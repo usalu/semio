@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "📦️check🦑️repo🟦️types",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:typecheck",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "{\"version\":1,\"policy\":{\"version\":1,\"owner\":\"📦️check🦑️repo🟦️types\",\"maximumElapsedMilliseconds\":0},\"deadlineEpochMilliseconds\":null,\"capabilities\":{}}"
+      },
+      "presentation": {
+        "group": "4_build",
+        "order": 206.166
+      }
+    }
+  ],
+  "retireNames": []
+}

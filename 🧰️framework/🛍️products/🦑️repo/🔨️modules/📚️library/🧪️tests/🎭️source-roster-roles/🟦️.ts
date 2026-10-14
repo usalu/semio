@@ -7,7 +7,7 @@ import ts from "typescript";
 
 //#region 🧭️Inputs
 const inventorySchemaPath = resolve(import.meta.dir, "../../🧬️schema/📋️mutation-inventory/🔣️.json");
-const vectorsPath = resolve(import.meta.dir, "../../🧫️fixtures/📋️mutation-inventory/🎭️source-roster-roles/🔣️.json");
+const vectorsPath = resolve(import.meta.dir, "../🧫️fixtures/📋️mutation-inventory/🎭️source-roster-roles/🔣️.json");
 const vectorsSchemaPath = resolve(import.meta.dir, "../../🧬️schema/📋️mutation-inventory/🎭️source-roster-roles/🔣️.json");
 const sourceRecordPath = resolve(import.meta.dir, "../../🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts");
 const inventorySchema = JSON.parse(readFileSync(inventorySchemaPath, "utf8"));

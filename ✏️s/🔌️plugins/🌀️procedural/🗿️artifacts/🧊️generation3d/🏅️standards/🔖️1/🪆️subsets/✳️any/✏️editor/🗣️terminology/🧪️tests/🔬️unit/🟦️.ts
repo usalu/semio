@@ -24,7 +24,7 @@ const LOCALE_KEYS = ["nativeEn", "nativeDe", "reuseEn", "reuseDe"] as const;
 
 /** 🗣️ Answers every row of the shared roster, returning how many assertions it carried. */
 export function generation3dTerminologySelfTests(): number {
-  const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("../../../../🧫️fixtures/🗣️terminology.json", import.meta.url)), "utf8")) as TerminologyFixture;
+  const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("../../../../🧪️tests/🧫️fixtures/🗣️terminology.json", import.meta.url)), "utf8")) as TerminologyFixture;
   const identical = new Set(fixture.identicalByDesign);
   const rows = Object.entries(fixture.labels);
   assert(rows.length > 0, "the roster is not empty");

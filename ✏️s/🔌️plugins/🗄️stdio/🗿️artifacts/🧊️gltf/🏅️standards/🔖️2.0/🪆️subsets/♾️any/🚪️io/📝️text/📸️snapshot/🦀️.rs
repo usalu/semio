@@ -15,7 +15,7 @@ use crate::standards::v2_0::subsets::any::schema::snapshot::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_dsl_record::DslField;
 use crate::standards::v2_0::subsets::any::io::binary::snapshot::owned_pack::*;
-impl store::os_store::serialization::ArtifactDsl for GltfSnapshot{
+impl pack::snapshot::ArtifactDsl for GltfSnapshot{
  const EXTENSION:&'static str="gltf";
  fn envelope_id()->&'static str{"stdio.gltf"}
  fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{let body=match store::semio_format::split_text_preamble(text){Ok((envelope,body))=>{if !envelope.matches_identity("stdio.gltf",store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("GLTF logical text identity differs").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))}body},Err(_)=>text};let record=semio_framework_dsl_record::parse_exact(body,&Snapshot::__dsl_spec(),&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits::default(),mode:semio_framework_dsl_record::SourceMode::Document})?;Snapshot::__dsl_from_record(&record).map(Into::into)}

@@ -4,11 +4,11 @@ use crate::diff::GisTerrainDiff;
 use crate::mutations::{apply_gis_terrain_mutation, inverse_gis_terrain_mutation, GisTerrainMutation};
 use crate::GisTerrainSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/🎯️outcome/🔣️.json");
 
 /// 🪆️ Verifies the declared parent edit while retaining the committed mesh handle.
 fn before() -> GisTerrainSnapshot {

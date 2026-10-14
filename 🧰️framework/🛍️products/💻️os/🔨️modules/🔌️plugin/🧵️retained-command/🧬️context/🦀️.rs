@@ -5,7 +5,7 @@ use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retirem
 use std::mem::ManuallyDrop;
 #[path="📸️fields/🦀️.rs"]
 mod original_fields;
-use original_fields::{ContextOwnedFields,ContextOriginalResidual,ContextRetirementParts,ContextToolRunMetadata,ContextToolRunSources};
+pub(crate) use original_fields::{ContextOwnedFields,ContextOriginalResidual,ContextRetirementParts,ContextToolRunMetadata,ContextToolRunSources};
 
 enum Source<A:ArtifactApp>{Admitted(SealedShared<ArtifactOwnedToolJobContext<A>>),Refused{original:ArtifactOwnedToolJobContext<A>,fault:ValueError}}
 

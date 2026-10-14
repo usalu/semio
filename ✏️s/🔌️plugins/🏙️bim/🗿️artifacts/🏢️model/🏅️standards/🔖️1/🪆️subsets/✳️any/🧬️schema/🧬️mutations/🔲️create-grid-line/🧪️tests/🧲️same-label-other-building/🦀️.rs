@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔲️create-grid-line/🧲️same-label-other-building",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️create-grid-line/🧲️same-label-other-building/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️create-grid-line/🧲️same-label-other-building/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️create-grid-line/🧲️same-label-other-building/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️create-grid-line/🧲️same-label-other-building/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️create-grid-line/🧲️same-label-other-building/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲️create-grid-line/🧲️same-label-other-building/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲️create-grid-line/🧲️same-label-other-building/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲️create-grid-line/🧲️same-label-other-building/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲️create-grid-line/🧲️same-label-other-building/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲️create-grid-line/🧲️same-label-other-building/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

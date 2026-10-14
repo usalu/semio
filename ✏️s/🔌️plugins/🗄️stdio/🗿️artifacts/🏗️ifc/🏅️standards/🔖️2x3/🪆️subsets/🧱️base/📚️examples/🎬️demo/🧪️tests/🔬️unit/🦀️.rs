@@ -3,10 +3,10 @@ use super::*;
 async fn demo_source_nonempty() {
     use crate::standards::v2x3::subsets::base::schema::{demo_ifc2x3_snapshot,snapshot::Ifc2x3Snapshot};
     let demo=demo_ifc2x3_snapshot();
-    assert_eq!(<Ifc2x3Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("authored IFC2x3 example text"),demo);
-    assert_eq!(store::os_store::serialization::ArtifactDsl::print_dsl(&demo),PRIMARY_TEXT);
+    assert_eq!(<Ifc2x3Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("authored IFC2x3 example text"),demo);
+    assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo),PRIMARY_TEXT);
     let pack=include_bytes!("../../🖼️assets/🎒️.pack.semio");
-    assert_eq!(<Ifc2x3Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("authored IFC2x3 example pack"),demo);
-    assert_eq!(store::os_store::serialization::ArtifactPack::encode_pack(&demo),pack);
+    assert_eq!(<Ifc2x3Snapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("authored IFC2x3 example pack"),demo);
+    assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo),pack);
     let _ = source();
 }

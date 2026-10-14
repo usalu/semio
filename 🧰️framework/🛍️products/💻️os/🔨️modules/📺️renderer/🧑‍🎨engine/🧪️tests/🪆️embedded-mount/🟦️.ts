@@ -1,13 +1,13 @@
 import type { PluginCatalogRowsV1 } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
 const emptyCatalogRows: PluginCatalogRowsV1 = { version: 1, targets: [], hosts: [], playgrounds: [] };
 import { shouldStartIntroduction } from "../../../../../../../🔨️modules/🖱️ui/🎓️introduction/🟦️.ts";
-import bootLifecycle from "../../🧫️fixtures/⏳️boot-lifecycle/🔣️.json";
+import bootLifecycle from "../🧫️fixtures/⏳️boot-lifecycle/🔣️.json";
 // @vitest-environment jsdom
 
 import reactHostSource from "../../🧱️elements/🏛️ShellHost/🟦️.tsx?raw";
 import reactShellSource from "../../🧱️elements/🐚️Shell/🟦️.tsx?raw";
 import ts from "typescript";
-import introductionFixture from "../../🧫️fixtures/🎓️host-introduction/🔣️.json";
+import introductionFixture from "../🧫️fixtures/🎓️host-introduction/🔣️.json";
 import Ajv from "ajv/dist/2020";
 import { createElement } from "react";
 import graphlib from "graphlib";
@@ -15,13 +15,13 @@ import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PlaygroundBootPlanner, expandPluginRegistry, orderPluginRegistryEntries, createMemoryStoragePort, type PluginCatalog } from "@semio-tech/framework";
 import { admitWgpuPluginModules, prepareWgpuPluginModules, assertWgpuPluginPlan } from "../../🎯️targets/🧊️wgpu/🧩️plugin-modules/🟦️.ts";
-import pluginModulesFixture from "../../🧫️fixtures/🧩️plugin-modules/🔣️.json";
+import pluginModulesFixture from "../🧫️fixtures/🧩️plugin-modules/🔣️.json";
 import pluginModulesSchema from "../../🧬️schema/🧩️plugin-modules/🔣️.json";
-import fixture from "../../🧫️fixtures/🪆️embedded-mount/🔣️.json";
+import fixture from "../🧫️fixtures/🪆️embedded-mount/🔣️.json";
 import { bootFrameworkOsWgpu } from "../../🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts";
 import wgpuBootSource from "../../🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts?raw";
-import bootExecutionFixture from "../../🧫️fixtures/🎬️boot-execution/🔣️.json";
-import serviceStatusFixture from "../../🧫️fixtures/⏳️owned-service-status/🔣️.json";
+import bootExecutionFixture from "../🧫️fixtures/🎬️boot-execution/🔣️.json";
+import serviceStatusFixture from "../🧫️fixtures/⏳️owned-service-status/🔣️.json";
 import serviceStatusSchema from "../../🧬️schema/⏳️owned-service-status/🔣️.json";
 import { bootFrameworkOs, initialShellState, shellReducer } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import { parseInstalledServiceStatusV1 } from "@semio-tech/framework-os";
@@ -81,7 +81,7 @@ describe("boot execution capabilities", () => {
     expect(validate(serviceStatusFixture), JSON.stringify(validate.errors)).toBe(true);
     expect(validate({ ...serviceStatusFixture, phase: "idle" })).toBe(false);
     const row = serviceStatusFixture;
-    const initial = initialShellState({ plugins: [], storage: createMemoryStoragePort() });
+    const initial = initialShellState({ locale: "en", plugins: [], storage: createMemoryStoragePort() });
     const opened = shellReducer(initial, { type: "OPEN_INFERENCE_PORT", runtimeKey: row.runtimeKey, operationEpoch: row.operationEpoch });
     expect(opened.inference).toEqual({ portByRuntimeKey: {}, operationEpoch: row.operationEpoch, operationRuntimeKey: row.runtimeKey });
     const status = parseInstalledServiceStatusV1(row.status);
@@ -639,7 +639,7 @@ describe("admitted General empty React mounts", () => {
 
 describe("actual admitted General Dev receiving", () => {
   it("boots an explicit empty variant without generated session authority", async () => {
-    const { default: rows } = await import("../../../../🔌️plugin/📇️registry/🧫️fixtures/🧩️composition/🔣️.json");
+    const { default: rows } = await import("../../../../🔌️plugin/📇️registry/🧪️tests/🧫️fixtures/🧩️composition/🔣️.json");
     const input = rows.cases.find(row => row.id === rows.devBoot.case)!.input;
     const operation = new AbortController(), events: { completed: number; total: number; work: number }[] = [], admission = { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => operation.signal.aborted, progress: (event: { completed: number; total: number; work: number }) => events.push(event) };
     installBrowserRuntime();

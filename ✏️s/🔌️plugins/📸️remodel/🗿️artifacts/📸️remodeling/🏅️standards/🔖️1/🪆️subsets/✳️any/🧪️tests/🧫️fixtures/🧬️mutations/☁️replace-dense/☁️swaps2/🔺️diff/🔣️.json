@@ -1,0 +1,68 @@
+{
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": null,
+  "durableArtifacts": null,
+  "calibration": null,
+  "params": null,
+  "gcps": null,
+  "results": {
+    "sparse": null,
+    "dense": {
+      "value": {
+        "positions": {
+          "kind": "inline",
+          "values": [
+            {
+              "bits": "3f800000"
+            },
+            {
+              "bits": "00000000"
+            },
+            {
+              "bits": "00000000"
+            },
+            {
+              "bits": "00000000"
+            },
+            {
+              "bits": "3f800000"
+            },
+            {
+              "bits": "00000000"
+            }
+          ]
+        },
+        "colors": [
+          16,
+          32,
+          48,
+          64,
+          80,
+          96
+        ],
+        "confidence": {
+          "kind": "inline",
+          "values": [
+            {
+              "bits": "3f400000"
+            },
+            {
+              "bits": "3f000000"
+            }
+          ]
+        },
+        "classification": [
+          2,
+          6
+        ]
+      }
+    },
+    "mesh": null,
+    "trajectory": null,
+    "tracks": null,
+    "geo": null,
+    "qc": null
+  }
+}

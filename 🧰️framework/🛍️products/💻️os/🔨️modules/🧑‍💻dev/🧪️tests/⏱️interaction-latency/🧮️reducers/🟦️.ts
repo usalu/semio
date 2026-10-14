@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { quantileV1, type LatencyScenarios } from "../🟦️.ts";
 
-const fixture = JSON.parse(readFileSync(new URL("../../../🧫️fixtures/⏱️interaction-latency.json", import.meta.url), "utf8")) as LatencyScenarios;
+const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/⏱️interaction-latency.json", import.meta.url), "utf8")) as LatencyScenarios;
 
 describe("interaction-latency scenarios", () => {
   it("judge every scenario on its React commits per input", () => {

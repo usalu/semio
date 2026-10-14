@@ -24,7 +24,7 @@ impl RateLimitClockV1 for ManualClock {
     }
 }
 
-const VECTORS: &str = include_str!("../../🧫️fixtures/🔑️pbkdf2-sha256-vectors-v1/🔣️.json");
+const VECTORS: &str = include_str!("../🧫️fixtures/🔑️pbkdf2-sha256-vectors-v1/🔣️.json");
 
 fn decode_hex(encoded: &str) -> Vec<u8> {
     (0..encoded.len() / 2).map(|index| u8::from_str_radix(&encoded[index * 2..index * 2 + 2], 16).expect("fixture hex")).collect()
@@ -306,7 +306,7 @@ fn the_rate_limit_refusal_is_the_declared_schema_body() {
     }
     assert_eq!(RateLimitRefusalV1::new(RateLimitClassV1::DirectoryCommand, 0).retry_after_ms, 1, "a refusal always names a positive wait");
     assert_eq!(RateLimitRefusalV1::streams(StreamLimitClassV1::ExecutionTargetAsset, 0).retry_after_ms, 1, "a stream refusal always names a positive wait");
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚦️rate-limit-refusal-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚦️rate-limit-refusal-v1/🔣️.json")).unwrap();
     let valid = fixture["valid"].as_array().unwrap();
     assert_eq!(valid.len(), refusals.len(), "the fixture holds one body per refusing class");
     for body in valid {

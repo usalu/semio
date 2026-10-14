@@ -4,7 +4,7 @@ use semio_framework_pack_json::ArtifactCanonicalJsonNode;
 #[test]
 fn snapshot_publication_original_build_six_frontiers_preserve_native_pointers_and_paid_cancellation(){
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📦️assembly/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📦️assembly/🔣️.json")).unwrap();
     let grant=ArtifactStoreOneItemGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:262144,maximum_depth:4096};
     for stop in 0..=law["originalFrontiers"].as_array().unwrap().len(){
         let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), [0;32], 0, 1, crate::os_spr::HybridLogicalTimestamp::new(1,0), "actor α\0😀".into(), None, None, None));
@@ -23,7 +23,7 @@ fn snapshot_publication_original_build_six_frontiers_preserve_native_pointers_an
 
 #[test]
 fn lifecycle_fixture_is_schema_first() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/📦️lifecycle/🔣️.json")).expect("retained clone preparation fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️lifecycle/🔣️.json")).expect("retained clone preparation fixture");
     assert_eq!(fixture["cases"].as_array().expect("lifecycle cases").len(), 6);
     assert!(fixture["largeCapacity"]["stringByteLength"].as_u64().expect("large string byte length") > fixture["grant"]["maximumBytes"].as_u64().expect("per-turn byte grant"));
     assert_eq!(fixture["largeCapacity"]["expectedCode"], "retained-clone.step-grant-too-small");
@@ -114,7 +114,7 @@ impl RetainedCloneEditCursor<u64, BirthMutation> for BirthCursor {
 fn snapshot_clone_preparation_birth_returns_original_request_before_domain_work() {
     use crate::os_store::{SnapshotReadRegistryHandle, one_item_publication::ArtifactStoreOneItemLiveAuthority};
     use semio_framework_trace::observe_heap_allocations_on_this_thread;
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎟️preparation-birth/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎟️preparation-birth/🔣️.json")).unwrap();
     BIRTH_PREFLIGHT_CALLS.store(0, std::sync::atomic::Ordering::Relaxed);
     let factory = RetainedClonePreparationFactory::new(Arc::new(BirthEdit), Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<BirthMutation>::default()), Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<u64>::default()), 64).unwrap();
     let registry = SnapshotReadRegistryHandle::new();

@@ -3,11 +3,11 @@ import Ajv from "ajv";
 import {mkdirSync,writeFileSync,readFileSync,readdirSync} from "node:fs";
 import {join} from "node:path";
 import schema from "../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
-import policy from "../../🎛️control/🚪️cli/🧩️entrypoint/🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+import policy from "../../🎛️control/🚪️cli/🧩️entrypoint/🧪️tests/🧫️fixtures/🔣️.json";
 import {CargoCommandEntryOwnerV1} from "../../🎛️control/🚪️cli/🧩️entrypoint/🟦️.ts";
 import {parseCargoCommandRequestV1,runCargoCommandV1} from "../🟦️.ts";
-import {decodeCargoProvenanceV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+import {decodeCargoProvenanceV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 
 test("actual Cargo command request requires explicit root argv environment and storage",()=>{
  const validate=new Ajv({strict:true}).compile(schema);expect(validate(fixture.request)).toBe(true);expect(parseCargoCommandRequestV1(fixture.request)).toEqual(fixture.request);for(const key of fixture.missing){const value={...fixture.request};delete value[key];expect(validate(value)).toBe(false);expect(()=>parseCargoCommandRequestV1(value)).toThrow();}for(const [key,bad] of fixture.bad){const value={...fixture.request,[key]:bad};expect(validate(value)).toBe(false);expect(()=>parseCargoCommandRequestV1(value)).toThrow();}

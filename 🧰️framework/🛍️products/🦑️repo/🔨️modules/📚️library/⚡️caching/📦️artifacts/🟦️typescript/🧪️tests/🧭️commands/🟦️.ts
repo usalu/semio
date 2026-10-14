@@ -2,12 +2,15 @@ import {test,expect,afterAll} from "bun:test";
 import {join,resolve} from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json";
 import parseArguments from "yargs-parser";
-import {findWorkspaceRoot} from "./../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import {executeCommandV1} from "./../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts";
+import {findWorkspaceRoot} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {executeCommandV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️command/🟦️.ts";
+import {setImmediate} from "node:timers/promises";
+import type {ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 const root=findWorkspaceRoot(import.meta.dir),output=process.env.SEMIO_TEST_ARTIFACT_DIR;
 for(const [index,row] of fixture.cases.entries())test("Artifact command extension: "+row.id,async()=>{
  if(!output)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned output");
- const result=await executeCommandV1({version:1,cwd:root,command:process.execPath,args:[resolve(import.meta.dir,"📜️script.ts"),row.selected,...row.args],manifests:[],preparation:"none"},{version:1,context:{version:1,cwd:root,cacheRoot:join(output,"command-corpus/cache"),leaseDirectory:join(output,"command-corpus/leases")},budgetMs:10000,maximumOutputBytes:65536,artifactDirectory:join(output,"command-corpus",row.id),retainArtifacts:true,cargoPolicies:[],vitestPolicy:null,cargoArtifactPolicy:null},{environment:{...process.env,SEMIO_COMMAND_VECTOR:String(index)},cancelled:()=>false,onProgress:event=>console.log("[DEBUG] Command extension "+row.id+" "+event.phase)});
+ const started=performance.now(),controller=new AbortController(),invocation:ScriptInvocation={policy:{version:1,...fixture.originalCaller},capabilities:{owner:fixture.originalCaller.owner,command:row.selected},control:{signal:controller.signal,remainingMilliseconds:()=>fixture.originalCaller.maximumElapsedMilliseconds-(performance.now()-started),publish(){},async yieldContinuation(){await setImmediate();}}};
+ const result=await executeCommandV1({version:1,cwd:root,command:process.execPath,args:[resolve(import.meta.dir,"📜️script.ts"),row.selected,...row.args],manifests:[],preparation:"none"},{version:1,context:{version:1,cwd:root,cacheRoot:join(output,"command-corpus/cache"),leaseDirectory:join(output,"command-corpus/leases")},budgetMs:10000,maximumOutputBytes:65536,artifactDirectory:join(output,"command-corpus",row.id),retainArtifacts:true,cargoPolicies:[],vitestPolicy:null,cargoArtifactPolicy:null},{environment:{...process.env,SEMIO_COMMAND_VECTOR:String(index)},invocation,onProgress:event=>console.log("[DEBUG] Command extension "+row.id+" "+event.phase)});
  expect(result.reason).toBe("exit");expect(result.status).toBe(row.status);
  const positional=parseArguments([row.selected,...row.args],{configuration:{"parse-numbers":false,"parse-positional-numbers":false}})._;
  expect(positional).toEqual([row.selected,...row.args]);

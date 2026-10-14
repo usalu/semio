@@ -547,7 +547,7 @@ export const WORLD3D_SCENE_LANE_KEY_PREFIX = "framework.scene.world3d.";
  *
  * Mirrors the Rust `World3dSceneLane` / `WORLD3D_SCENE_LANE_*` in
  * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🦀️.rs`. Both sides are pinned against
- * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json`. */
+ * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json`. */
 export const WORLD3D_SCENE_LANES: readonly World3dSceneLane[] = [
   { lane: "meshes", field: "meshesJson", bodyKey: "framework.scene.world3d.meshes", optional: false },
   { lane: "instances", field: "instancesJson", bodyKey: "framework.scene.world3d.instances", optional: false },
@@ -616,7 +616,7 @@ export const CANVAS2D_SCENE_LANE_KEY_PREFIX = "framework.scene.canvas2d.";
 
 /** 🚚️ The canvas-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — mirrors the Rust
  * `Canvas2dSceneLane` / `CANVAS2D_SCENE_LANE_*`; both pinned against
- * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json`. */
+ * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json`. */
 export const CANVAS2D_SCENE_LANES: readonly SceneLane<Canvas2dScene>[] = [
   { lane: "toolRunTrace", field: "toolRunTrace", bodyKey: "framework.scene.canvas2d.toolRunTrace", optional: true },
 ];
@@ -638,7 +638,7 @@ export const BOARD2D_SCENE_LANE_KEY_PREFIX = "framework.scene.board2d.";
 
 /** 🚚️ The board-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — mirrors the Rust
  * `Board2dSceneLane` / `BOARD2D_SCENE_LANE_*`; both pinned against
- * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json`. */
+ * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json`. */
 export const BOARD2D_SCENE_LANES: readonly SceneLane<Board2dScene>[] = [
   { lane: "snapshot", field: "snapshotJson", bodyKey: "framework.scene.board2d.snapshot", optional: false },
   { lane: "toolRunTrace", field: "toolRunTrace", bodyKey: "framework.scene.board2d.toolRunTrace", optional: true },
@@ -661,7 +661,7 @@ export const TILEDMAP_SCENE_LANE_KEY_PREFIX = "framework.scene.tiledmap.";
 
 /** 🚚️ The tiled-map payload field that rides OUTSIDE the fixed-capacity surface doc — mirrors the Rust
  * `TiledMapSceneLane` / `TILEDMAP_SCENE_LANE_*`; both pinned against
- * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️tiledmap-scene-lanes/🔣️.json`. The map descriptor
+ * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️tiledmap-scene-lanes/🔣️.json`. The map descriptor
  * scales with the document (one opaque payload per position/route/region), so it outgrows the 32 KiB
  * surface doc on a real map — the gis `demo` map is 59 667 bytes. */
 export const TILEDMAP_SCENE_LANES: readonly SceneLane<TiledMapScene>[] = [
@@ -685,7 +685,7 @@ export const PAINT2D_SCENE_LANE_KEY_PREFIX = "framework.scene.paint2d.";
 
 /** 🚚️ The paint-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — mirrors the Rust
  * `Paint2dSceneLane` / `PAINT2D_SCENE_LANE_*`; both pinned against
- * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json`. Document, assets and completed
+ * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json`. Document, assets and completed
  * pixel coverage travel separately so the 32 KiB scene header stays bounded. */
 export const PAINT2D_SCENE_LANES: readonly SceneLane<Paint2dScene>[] = [
   { lane: "documentSync", field: "documentSyncJson", bodyKey: "framework.scene.paint2d.documentSync", optional: false },

@@ -14,7 +14,7 @@ use super::*;
 use crate::standards::iana::subsets::any::schema::snapshot::*;
 use framework_schema::ArtifactSchema;
 
-impl store::os_store::serialization::ArtifactDsl for TsvSnapshot{
+impl pack::snapshot::ArtifactDsl for TsvSnapshot{
  const EXTENSION:&'static str="tsv";
  fn envelope_id()->&'static str{"stdio.tsv"}
  fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{if !text.starts_with("semio "){return Ok(decode_tsv(text))}let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|error|semio_framework_diagnostic::TextError::from_value_error(error.into_value_error(),semio_framework_diagnostic::TextSpan::at(1,1)))?;if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"TSV logical Text envelope mismatch",semio_framework_diagnostic::TextSpan::at(1,1)))}Self::__dsl_from_record(&semio_framework_dsl_record::parse_exact(body,&Self::__dsl_spec(),&Default::default())?)}
@@ -56,12 +56,12 @@ pub fn encode_tsv(snap: &TsvSnapshot) -> String {
 /// 📄️ The persisted document (`semio iana.tsv.dsl v1` envelope + body) through the artifact's own `ArtifactDsl` codec,
 /// reachable for a caller that cannot name the trait.
 pub fn parse_tsv_document(text: &str) -> Result<TsvSnapshot, String> {
-    <TsvSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <TsvSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
 /// 📄️ The inverse of [`parse_tsv_document`]: the snapshot printed as its enveloped document.
 pub fn print_tsv_document(snapshot: &TsvSnapshot) -> String {
-    <TsvSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(snapshot)
+    <TsvSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(snapshot)
 }
 }
 pub use snapshot_wire_codec::*;

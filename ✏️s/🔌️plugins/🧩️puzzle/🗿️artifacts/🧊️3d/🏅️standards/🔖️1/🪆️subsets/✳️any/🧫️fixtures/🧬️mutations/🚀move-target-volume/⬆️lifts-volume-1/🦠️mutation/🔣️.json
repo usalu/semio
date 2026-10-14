@@ -1,9 +1,0 @@
-{
-  "mutation": "moveTargetVolume",
-  "id": "volume-1",
-  "newOrigin": [
-    0.0,
-    0.0,
-    5.0
-  ]
-}

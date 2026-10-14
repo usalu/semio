@@ -46,7 +46,7 @@ fn admit_rejected(original: PresencePeerAdmissionRejected<i32>) -> Option<Box<dy
 
 #[test]
 fn retained_presence_peer_rejection_keeps_its_minting_factory_after_source_close() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🛂️peer-admission.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🛂️peer-admission.json")).unwrap();
     let law = &fixture["factoryBinding"];
     let original = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let foreign = Arc::new(std::sync::atomic::AtomicUsize::new(0));
@@ -72,7 +72,7 @@ fn retained_presence_peer_rejection_keeps_its_minting_factory_after_source_close
 
 #[test]
 fn retained_presence_peer_admission_preserves_rejected_actor_allocation_and_payload() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🛂️peer-admission.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🛂️peer-admission.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let factory = Arc::new(Factory(count.clone()));

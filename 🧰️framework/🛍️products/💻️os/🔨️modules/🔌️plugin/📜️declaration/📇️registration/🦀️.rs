@@ -7,7 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 /// the `io` mount), so it is named through the `store::io::` path everywhere in this file,
 /// exactly like the sibling `🎞️gif` migration leaf (`semio_framework_artifact_reference::ArtifactDialect`) already does.
 use semio_framework_artifact_reference::ArtifactKindId;
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 use semio_framework_ui_locale::LocalizedLabel;
 /// 🏅️🪆️🎯️ Standards/subsets dialect vocabulary (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO phase
 /// 2). Defined in `semio_framework` so plugins and the OS product
@@ -397,13 +397,13 @@ impl ArtifactContribution {
     /// suspension calls (io-async-signatures), so the whole body is bridged via `resolve_ready`.
     pub async fn mutation<Snapshot, Op, K>(mut self, target_artifact_schema: impl Into<String>, schema_version: u32, algorithm_version: u32) -> Self
     where
-        Snapshot: Clone + ArtifactPack + 'static,
+        Snapshot: Clone + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
         Op: ::protocol::Mutation<Snapshot> + ::protocol::OpBinary + 'static,
         K: ::protocol::CompositeMutationKind<Snapshot, Op> + 'static,
     {
         fn plan_cold<Snapshot, Op, K>(snapshot_pack: &[u8], payload: &[u8]) -> Result<ContributedMutationPlanOutput, ContributedMutationExecutionError>
         where
-            Snapshot: Clone + ArtifactPack,
+            Snapshot: Clone + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
             Op: ::protocol::Mutation<Snapshot> + ::protocol::OpBinary,
             K: ::protocol::CompositeMutationKind<Snapshot, Op>,
         {
@@ -498,7 +498,7 @@ impl ArtifactContribution {
 /// id namespacing, contributed-inference identity) — pure over already-assembled manifest data,
 /// never touches a runtime registry.
 #[derive(Clone, Debug, PartialEq, Eq)]
-enum ContributionRegistrationError {
+pub(crate) enum ContributionRegistrationError {
     DependencyNotDeclared { plugin_id: String, artifact_kind: String, owner: String },
     InvalidArtifactKind(String),
     MalformedMutationId { plugin_id: String, mutation_id: String },
@@ -735,7 +735,7 @@ pub type ColdContributedMutationPlan = fn(&[u8], &[u8]) -> Result<ContributedMut
 
 /// 🧰️ One committed contributed-mutation runtime entry — the wire roster row plus the fn pointer
 /// `wire_artifact_mutation_plan` calls.
-struct ContributedMutationRuntimeEntry {
+pub(crate) struct ContributedMutationRuntimeEntry {
     roster: WireMutationRosterEntry,
     plan_cold: ColdContributedMutationPlan,
 }
@@ -772,7 +772,7 @@ pub struct WireArtifactMutationPlanResult {
 // (see that trait's own doc), so this wire bridge speaks the first-party codec directly —
 // no more `to_dsl_value`/`from_dsl_value` serde bridge, no `serde_json` in the loop.
 #[cfg(test)]
-async fn encode_contributed_wire<T: semio_framework_value::ToValue>(value: &T) -> Vec<u8> {
+pub(crate) async fn encode_contributed_wire<T: semio_framework_value::ToValue>(value: &T) -> Vec<u8> {
     store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(value))
 }
 

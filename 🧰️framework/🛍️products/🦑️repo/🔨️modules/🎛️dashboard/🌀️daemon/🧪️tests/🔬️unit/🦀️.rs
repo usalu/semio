@@ -5,7 +5,7 @@ use serde_json::Value;
 use std::collections::{BTreeSet, HashMap};
 
 fn control_plane() -> Value {
-    serde_json::from_str(include_str!("../../../🧫️fixtures/🌀️control-plane/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🌀️control-plane/🔣️.json")).unwrap()
 }
 
 fn schema() -> Value {
@@ -124,7 +124,7 @@ fn endpoint_names_are_stable_across_runs_and_toolchains() {
 // #region 🔖️Ready
 #[test]
 fn the_ready_table_decides_every_case() {
-    let table = serde_json::from_str::<Value>(include_str!("../../../🧫️fixtures/🟢️ready/🔣️.json")).unwrap();
+    let table = serde_json::from_str::<Value>(include_str!("../../../🧪️tests/🧫️fixtures/🟢️ready/🔣️.json")).unwrap();
     for case in table["cases"].as_array().unwrap() {
         let ready: Ready = serde_json::from_value(case["ready"].clone()).unwrap();
         let chunks: Vec<&str> = case["chunks"].as_array().unwrap().iter().map(|chunk| chunk.as_str().unwrap()).collect();

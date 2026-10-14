@@ -15,7 +15,7 @@ type Vector = Readonly<{ schemaVersion: number; contractId: string; helper: stri
 type Observation = { value: string; nextCalls: number; iteratorCalls: number };
 const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🧹️normalization/🛣️path/🟦️.ts");
 const sourceBytes = readFileSync(sourcePath), source = ts.createSourceFile(sourcePath, sourceBytes.toString("utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-const vectorBytes = readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔤️taxonomy-leading-grapheme/🔣️.json"), "utf8"), vector: Vector = JSON.parse(vectorBytes);
+const vectorBytes = readFileSync(join(import.meta.dir, "../🧫️fixtures/🔤️taxonomy-leading-grapheme/🔣️.json"), "utf8"), vector: Vector = JSON.parse(vectorBytes);
 const compilers = [{ id: "bun", compile: (code: string): string => new Bun.Transpiler({ loader: "ts" }).transformSync(code) }, { id: "typescript", compile: (code: string): string => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText }];
 const realSegmenter = (): Intl.Segmenter => new Intl.Segmenter(vector.segmenter.locale, { granularity: vector.segmenter.granularity });
 
@@ -149,7 +149,7 @@ test("independent compiled sessions create fresh segment observations without re
 });
 
 test("registers leading grapheme through its closed canonical route", async () => {
-  const directory = join(import.meta.dir, "../../🧫️fixtures/🔤️taxonomy-leading-grapheme/🧪️registration"), bytes = readFileSync(join(directory, "🔣️.json"), "utf8"), registration = JSON.parse(bytes);
+  const directory = join(import.meta.dir, "../🧫️fixtures/🔤️taxonomy-leading-grapheme/🧪️registration"), bytes = readFileSync(join(directory, "🔣️.json"), "utf8"), registration = JSON.parse(bytes);
   const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🔤️taxonomy-leading-grapheme/🧪️registration/🔣️.json"), "utf8")));
   expect(validate(registration), JSON.stringify(validate.errors)).toBe(true);
   for (const changed of [{ ...registration, source: "./🟦️.ts" }, { ...registration, budget: 120000 }, { ...registration, budgetMs: 120000 }, { ...registration, filter: "selected" }, { ...registration, runner: "other" }]) expect(validate(changed)).toBe(false);

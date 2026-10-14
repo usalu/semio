@@ -1,7 +1,7 @@
 /** 🧱️ Shared image preparation preserves the complete composite against libvips. */
 import {expect,test} from "bun:test";
 import sharp from "sharp";
-import fixture from "../../🧫️fixtures/🧱️preparation/🔣️.json";
+import fixture from "../🧫️fixtures/🧱️preparation/🔣️.json";
 import {RasterStackJob,type RasterStackLayer} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🗂️layers/🟦️.ts";
 test("shared source image preparation preserves the composite",async()=>{
   const {width,height,pixel,references,maximumPixelsPerGrant}=fixture;

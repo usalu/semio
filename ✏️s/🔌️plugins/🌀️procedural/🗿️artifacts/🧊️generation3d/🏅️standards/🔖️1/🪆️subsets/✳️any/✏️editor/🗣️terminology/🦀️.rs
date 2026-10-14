@@ -285,6 +285,8 @@ semio_framework_ui_locale::app_labels! {
         value_field: native_en "Value", native_de "Wert", reuse_en "Value", reuse_de "Wert";
         range_field: native_en "Range", native_de "Bereich", reuse_en "Range", reuse_de "Bereich";
         widget_group: native_en "Widget", native_de "Element", reuse_en "Widget", reuse_de "Element";
+        input_inspect_source: native_en "Inspect source", native_de "Quelle untersuchen", reuse_en "Inspect source", reuse_de "Quelle untersuchen";
+        input_analyze: native_en "Analyze", native_de "Analysieren", reuse_en "Analyze", reuse_de "Analysieren";
         input_connected: native_en "Connected", native_de "Verbunden", reuse_en "Connected", reuse_de "Verbunden";
         input_connect_hint: native_en "Connect an output", native_de "Ausgang verbinden", reuse_en "Connect an output", reuse_de "Ausgang verbinden";
         mesh_add_uv: native_en "Add UV attribute", native_de "UV-Attribut hinzufügen", reuse_en "Add UV attribute", reuse_de "UV-Attribut hinzufügen";

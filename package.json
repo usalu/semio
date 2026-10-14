@@ -6,7 +6,6 @@
   "workspaces": [
     "🧰️framework/📦️packages/🟦️typescript",
     "🧰️framework/📦️packages/🦀️rust",
-    "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript",
     "🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript",
@@ -25,6 +24,7 @@
     "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
     "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript",
     "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript",
     "🧰️framework/🔨️modules/🏗️mesh-engine/🏛️ownership/🎨️attributes",
     "🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/📦️packages/🟦️typescript",
@@ -152,7 +152,8 @@
     "storybook": "^10.4.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.50.1",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.17",
+    "@semio-tech/process": "workspace:*"
   },
   "keywords": [
     "kit-of-parts",

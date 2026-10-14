@@ -1,0 +1,19 @@
+{
+  "contract": "sameOriginalSuspendedBatch",
+  "resumeIndices": [
+    0,
+    1,
+    2
+  ],
+  "sameCheckout": true,
+  "sameSourcePointer": true,
+  "renewsGrant": false,
+  "wrongIndexRefused": true,
+  "duplicateIssueRefused": true,
+  "terminalResumeRefused": true,
+  "heap": [
+    0,
+    0
+  ],
+  "completionCount": 1
+}

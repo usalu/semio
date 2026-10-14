@@ -19,7 +19,7 @@ export function testSemioObjectDocumentContract(): void {
   testSchemaRecordOracle();
   const ajv = semioSchemaAjvV1({ allErrors: true }).addSchema(artifactReferenceSchema);
   for (const path of ["../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json","../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json","../../../../✉️base/🧬️schema/🪆️child/🔣️.json","../../../../✉️base/🧬️schema/🧮️geometry/🔣️.json"]) ajv.addSchema(read(path));
-  const fixtures = read("../../🧫️fixtures/🪪️document-contract/🔣️.json");
+  const fixtures = read("../../../🧪️tests/🧫️fixtures/🪪️document-contract/🔣️.json");
   const childIdentity = (value: any): boolean => [["brep","brep"],["mesh","mesh"],["properties","value"]].every(([field,subset]) => !value[field!] || ajv.compile({const:{artifactKind:"s.stdio.semio",standard:"v1",subset}})(value[field!].target.dialect));
   const a = ajv.compile(read("../../🔣️.json"));
   const s = ajv.compile(read("../../📸️snapshot/🔣️.json"));
@@ -49,7 +49,7 @@ export function testSemioObjectDocumentContract(): void {
   addSemioMutationLeafSchemasV1(ajv, new URL("../../🧬️mutations/", import.meta.url));
   const mutationSchema = ajv.compile(read("../../🧬️mutations/🔣️.json"));
   let snapshots = 0, diffs = 0, mutations = 0;
-  const corpusRoot = fileURLToPath(new URL("../../../🧫️fixtures/🧬️mutations", import.meta.url));
+  const corpusRoot = fileURLToPath(new URL("../../../🧪️tests/🧫️fixtures/🧬️mutations", import.meta.url));
   for (const file of fg.sync("**/🔣️.json", { cwd: corpusRoot, absolute: true })) {
     const value = JSON.parse(readFileSync(file, "utf8"));
     if (file.includes("/📸️snapshot/")) {

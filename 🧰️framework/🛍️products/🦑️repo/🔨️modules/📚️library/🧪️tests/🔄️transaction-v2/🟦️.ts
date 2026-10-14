@@ -1,4 +1,4 @@
-import { terminateOwnedProcessTree } from "../../../../../../🔨️modules/🏃️process/🪓️termination/🟦️.ts";
+import { terminateOwnedProcessTree } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 //#region 🧲️Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 // AGPL-3.0 — Transaction Plan/Journal v2 crash, recovery, and concurrency proof.
@@ -22,8 +22,8 @@ type Snapshot = Readonly<Record<string, string>>;
 
 const TICKET_REL = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE";
 const SCHEMA_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
-const TRANSACTION_LEDGER_BOUNDARIES_GOLDEN = resolve(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json");
-const TRANSACTION_PROTOCOL_GOLDEN = resolve(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🤝️transaction-protocol/🔣️.json");
+const TRANSACTION_LEDGER_BOUNDARIES_GOLDEN = resolve(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json");
+const TRANSACTION_PROTOCOL_GOLDEN = resolve(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🤝️transaction-protocol/🔣️.json");
 const NORMALIZATION_MODULE = process.env.SEMIO_TRANSACTION_V2_MODULE ?? resolve(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts");
 const FIXTURE_SCHEMA = process.env.SEMIO_TRANSACTION_V2_SCHEMA ?? resolve(getWorkspaceRoot(), SCHEMA_REL);
 const FIXTURE_RUN_ID = process.env.SEMIO_TRANSACTION_V2_RUN_ID ?? `${process.pid}-${crypto.randomUUID()}`;
@@ -584,7 +584,7 @@ function expectEmptyPlan(row: Fixture): void {
 //#region 🧾️TransactionV2
 describe("transaction plan journal v2 aggregate", () => {
   test("keeps the language-neutral golden aligned with owned no-follow enumeration", async () => {
-    const harness = JSON.parse(readFileSync(join(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🪢️transaction-harness-retention/🔣️.json"), "utf8"));
+    const harness = JSON.parse(readFileSync(join(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🪢️transaction-harness-retention/🔣️.json"), "utf8"));
     const ts = await import("typescript");
     const launcher = ts.createSourceFile(harness.launcherPath, readFileSync(join(getWorkspaceRoot(), harness.launcherPath), "utf8"), ts.ScriptTarget.Latest, true);
     const allocationSource = ts.createSourceFile(harness.allocationPath, readFileSync(join(getWorkspaceRoot(), harness.allocationPath), "utf8"), ts.ScriptTarget.Latest, true);

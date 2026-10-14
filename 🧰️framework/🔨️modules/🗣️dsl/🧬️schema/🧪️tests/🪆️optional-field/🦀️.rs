@@ -5,7 +5,7 @@ struct OptionalDelta { label:Option<Option<String>> }
 
 #[test]
 fn typed_optional_delta_matches_neutral_json_and_document_intent(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../🪆️binding/🪆️optional/🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪆️binding/🪆️optional/🔣️.json")).unwrap();
  for invalid in corpus["invalidDocuments"].as_array().unwrap(){assert!(parse_exact(invalid.as_str().unwrap(),&OptionalDelta::__dsl_spec(),&ParseOptions::default()).is_err(),"invalid terminal input: {invalid}");}
  for sample in corpus["samples"].as_array().unwrap(){
   let expected=match sample["state"].as_str().unwrap(){"omitted"=>OptionalDelta{label:None},"clear"=>OptionalDelta{label:Some(None)},"replace"=>OptionalDelta{label:Some(Some(sample["json"]["label"].as_str().unwrap().into()))},_=>unreachable!()};

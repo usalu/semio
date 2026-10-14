@@ -7,7 +7,7 @@ import {observePhysicalFileV1,readPhysicalFileV1,FileObservationErrorV1,type Fil
 
 /** 🧫️ Joins portable file cases to Noble SHA-256, WebCrypto and JSON Schema outputs. */
 export async function runFileObservationChecksV1():Promise<number>{
- const fixture=JSON.parse(readFileSync(join(import.meta.dir,"../🧫️fixtures/🔣️.json"),"utf8")),schema=JSON.parse(readFileSync(join(import.meta.dir,"../🧬️schema/🔣️.json"),"utf8")),ajv=new Ajv({strict:true});ajv.addSchema(schema);
+ const fixture=JSON.parse(readFileSync(join(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8")),schema=JSON.parse(readFileSync(join(import.meta.dir,"../🧬️schema/🔣️.json"),"utf8")),ajv=new Ajv({strict:true});ajv.addSchema(schema);
  const validate=(kind:string,value:unknown)=>assert(ajv.getSchema(schema.$id+"#/definitions/"+kind)!(value));
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;assert(output);mkdirSync(output,{recursive:true});const directory=mkdtempSync(join(output,"physical-file-"));
  try{

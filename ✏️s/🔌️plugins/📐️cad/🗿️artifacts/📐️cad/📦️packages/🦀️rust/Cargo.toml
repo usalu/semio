@@ -20,6 +20,7 @@ name = "retirement_law"
 path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🧪️tests/⚖️retirement-law/🦀️.rs"
 
 [dependencies]
+semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }

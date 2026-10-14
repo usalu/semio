@@ -1,0 +1,11 @@
+# Artifact IO Root Current October13
+
+The preceding goal turn made concrete progress: replication IO runtime owners and Nx source inputs passed25 tests/588assertions, and shared native turn preflight passed26 real encode/decode receipts inside a full117test run with105passing12failing. The active goal remains incomplete. No old handle is treated as live: root process revalidation found no old Ei/UI/Generation/source PIDs. Current tool inventory still lacks repo MCP ticket/goals resource APIs; the existing ARTIFACTIO ticket is reused and no lifecycle state is fabricated.
+
+Current whole-owner/native turn helper still implements its accepted original bound intersection. Fresh snapshot source has gained an intermediate header charge around receive() since the last native receipt, while factory terminal shell still reports copy0 and wallet record_progress still mutates prior accepted counters before an invalid span refusal. Current sources and a fresh complete original launch row are required before producer decisions. Root will retain all neutral grants, positive physical headers, no-allocation denials, source identity, cumulative accepted receipts and native rosters.
+
+A maximum fleet is active: two High execution lanes own Generation3D and Actor/Host/Media; a Low read-only lane audits current semantic/mutation IO ownership. Audit capacity will rotate into a VCS/Store/Services High lane after the first report, with a second Low audit scheduled as the next slot becomes available. No modifying Git or worktree operations are used.
+
+## Current Native Runner Input Floor
+
+Fresh original Ei session61095/PID97071 settled1 before Cargo: its original preflight referenced the moved operation example corpus. Current examples now live beneath each native test owner's 🧪️tests/🧫️fixtures; corresponding preflight paths were changed explicitly without runtime fallback lookup. The removed whole-trial turn example schema is not recreated or treated as caller authority. All thirteen turn examples retain independent exact BigInt/decimal32/64 arithmetic and actual native receipt assertions; existing production allocation/request/grant schemas remain validated first-party/Ajv. No native passing receipt is claimed for October13 yet.

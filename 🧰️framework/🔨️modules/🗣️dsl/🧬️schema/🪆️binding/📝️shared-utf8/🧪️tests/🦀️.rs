@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn original_shared_utf8_field_borrows_original_source_and_refuses_absent_authority(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪆️binding/📝️shared-utf8/🔣️.json")).unwrap();
  let owner=semio_framework_value::SharedUtf8::from(law["source"].as_str().unwrap());let pointer=owner.as_ptr();
  let native_encoding::FieldProjectionView::Text(text)=owner.projection_view(&[]).unwrap()else{panic!("original shared text")};assert_eq!(text.as_ptr(),pointer);assert_eq!(serde_json::to_string(text).unwrap(),serde_json::to_string(&owner).unwrap());
  assert_eq!(owner.to_value(),FieldValue::Text(text.to_owned()));

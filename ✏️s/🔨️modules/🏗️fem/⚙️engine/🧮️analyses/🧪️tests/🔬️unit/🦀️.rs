@@ -28,7 +28,7 @@ fn assembly_operation(id: u64) -> Operation {
 /// ⛽️ Assembly control, publication, and work transitions share the same exact grant admission.
 #[test]
 fn assembly_triplet_pages_control_transitions_preserve_state_until_granted() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⛽️step-grant/🔣️.json")).expect("assembly step grants");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⛽️step-grant/🔣️.json")).expect("assembly step grants");
     for (index, case) in fixture["cases"].as_array().unwrap().iter().enumerate() {
         let operation = assembly_operation(940 + index as u64);
         let model = Arc::new(cantilever_analysis_model(210e9, 0.02, 8e-6, 3.0, 7_850.0).0);
@@ -58,7 +58,7 @@ fn assembly_triplet_pages_control_transitions_preserve_state_until_granted() {
 
 
 fn assembly_physical_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/📦️physical-owners/🔣️.json")).expect("assembly physical fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/📦️physical-owners/🔣️.json")).expect("assembly physical fixture")
 }
 
 /// 🧱 The mounted model moves as small metadata while payload pages require explicit admission.
@@ -302,7 +302,7 @@ fn merge_fixture_triplet(value: &serde_json::Value) -> AssemblyTriplet {
 /// capacity becomes available, then publishes and advances each exactly once in both merge lanes.
 #[test]
 fn assembly_triplet_pages_merge_refusal_retains_candidate_for_retry() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔀️merge-refusal/🔣️.json")).expect("merge refusal fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔀️merge-refusal/🔣️.json")).expect("merge refusal fixture");
     for (case_index, case) in fixture["cases"].as_array().expect("merge refusal cases").iter().enumerate() {
         let full = case["lane"].as_str().expect("merge lane") == "full";
         let candidate = merge_fixture_triplet(&case["candidate"]);
@@ -421,7 +421,7 @@ fn assembly_triplet_pages_cross_one_physical_page_without_extra_logical_partitio
 /// while preserving one logical CSR and its exact matrix action.
 #[test]
 fn assembly_triplet_pages_build_final_csr_without_contiguous_arrays() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔢️sparse/🧫️fixtures/📚️paged-csr/🔣️.json")).expect("paged CSR fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔢️sparse/🧪️tests/🧫️fixtures/📚️paged-csr/🔣️.json")).expect("paged CSR fixture");
     let expected_order = fixture["order"].as_u64().expect("CSR order") as usize;
     let node_count = expected_order / 3;
     assert_eq!(node_count * 3, expected_order);

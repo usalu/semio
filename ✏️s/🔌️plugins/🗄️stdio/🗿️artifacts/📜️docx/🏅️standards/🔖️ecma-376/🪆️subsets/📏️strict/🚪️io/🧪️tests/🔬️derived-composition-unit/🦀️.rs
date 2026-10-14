@@ -28,7 +28,7 @@ mod tests {
 
     /// 📦️ The artifact pack serializes the authoritative strict XML part without regeneration.
     fn conforming_pack_bytes(snapshot: &DocxSnapshot) -> Vec<u8> {
-        <DocxSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(snapshot)
+        <DocxSnapshot as pack::snapshot::ArtifactPack>::encode_pack(snapshot)
     }
 
     #[semio_framework_async_macros::async_test]
@@ -55,7 +55,7 @@ mod tests {
                 document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}"><w:body/></w:document>"#)).unwrap()).unwrap(),
             }],
         ).expect("bounded test OPC converts to retained ownership");
-        let bytes = <DocxSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
+        let bytes = <DocxSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let err = DocxStrictComposerComposition::compose(&sources).expect_err("transitional relationship base must not stamp strict");
         assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_REL_BASE && d.severity == Severity::Error), "got {:?}", err.diagnostics);

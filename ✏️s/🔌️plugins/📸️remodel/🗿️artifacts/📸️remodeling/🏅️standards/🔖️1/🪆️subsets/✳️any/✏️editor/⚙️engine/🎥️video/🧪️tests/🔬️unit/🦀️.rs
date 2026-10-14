@@ -11,7 +11,7 @@ fn video_container_provider_callbacks_v1() {
     fn project(bytes: &[u8]) -> Result<VideoProbe, VideoError> {
         assert_eq!(bytes, b"future");
         CALLS.fetch_add(1, Ordering::SeqCst);
-        let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔌️container-providers/🔣️.json")).expect("portable corpus");
+        let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔌️container-providers/🔣️.json")).expect("portable corpus");
         Ok(serde_json::from_value(corpus["probes"][0]["probe"].clone()).expect("owned record"))
     }
     fn refuse(_: &[u8]) -> Result<VideoProbe, VideoError> { Err(VideoError::Container("owned callback failure".into())) }
@@ -50,7 +50,7 @@ use semio_s_artifact_stdio_avi::{standards::v1_0::subsets::any::{io as avi_engin
 /// 🔌️Checks every provider record vector before accepting extension-owned samples.
 #[test]
 fn video_container_provider_probe_corpus_v1() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔌️container-providers/🔣️.json")).expect("portable corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔌️container-providers/🔣️.json")).expect("portable corpus");
     for row in corpus["probes"].as_array().expect("probes") {
         let actual = serde_json::from_value::<VideoProbe>(row["probe"].clone()).map(|probe| admit_video_probe_v1(row["provider"].as_str().expect("provider"), &probe)).unwrap_or(false);
         assert_eq!(actual, row["expected"].as_bool().expect("expected"), "{}", row["id"]);
@@ -63,7 +63,7 @@ fn video_container_provider_corpus_v1() {
     fn selected(_: &[u8]) -> bool { true }
     fn unselected(_: &[u8]) -> bool { false }
     fn unused(_: &[u8]) -> Result<VideoProbe, VideoError> { panic!("selection must not invoke probes") }
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔌️container-providers/🔣️.json")).expect("portable corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔌️container-providers/🔣️.json")).expect("portable corpus");
     for row in corpus["cases"].as_array().expect("cases") {
         let providers: Vec<_> = row["providers"].as_array().expect("providers").iter().map(|provider| VideoContainerProviderV1 {
             id: provider["id"].as_str().expect("id"),

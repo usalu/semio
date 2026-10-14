@@ -2,7 +2,7 @@
 import {expect,test,spyOn} from "bun:test";
 import Ajv from "ajv";
 import sharp from "sharp";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {CompositeJob} from "../../🟦️.ts";
 import {RasterStackJob,type RasterStackLayer} from "../🟦️.ts";

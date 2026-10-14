@@ -116,6 +116,40 @@
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite source"
       }
+    },
+    "test-original-receiving-source": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{projectRoot}/../../🟦️.ts",
+        "{projectRoot}/../../📜️artifact-definition.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-receiving-source"
+      }
+    },
+    "test-original-receiving-native": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{projectRoot}/../../🟦️.ts",
+        "{projectRoot}/../../📜️artifact-definition.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-receiving-native"
+      }
     }
   }
 }

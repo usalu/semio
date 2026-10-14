@@ -1,7 +1,7 @@
 use super::*;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🧫️dialog-choices/🔣️.json")).expect("dialog-choices fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🧫️dialog-choices/🔣️.json")).expect("dialog-choices fixture")
 }
 
 fn fixture_dialog(fixture: &serde_json::Value) -> DialogDefinition {

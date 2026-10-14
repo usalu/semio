@@ -8,7 +8,7 @@ use semio_framework_schema::OwnedJsonSchemaValidator;
 fn dsl(value:&serde_json::Value)->DslValue {semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn json(value:&DslValue)->serde_json::Value {serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).unwrap()}
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("GIS proposal fixture")
+    serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("GIS proposal fixture")
 }
 
 fn sample_job_id() -> String {
@@ -168,7 +168,7 @@ fn the_neutral_lifecycles_decode_into_the_closed_event_page_in_order() {
 
 #[test]
 fn a_durable_approval_undo_posts_only_the_hub_target_frontier_and_retry_identity() {
-    let undo_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/↩️gis-map-approval-undo-v1/🔣️.json")).expect("undo fixture");
+    let undo_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/↩️gis-map-approval-undo-v1/🔣️.json")).expect("undo fixture");
     let request=GisMapApprovalUndoRequestV1::from_value(dsl(&undo_fixture["request"])).expect("closed request");
     let scope = DocumentScope::new("space-a", "map-a");
     let response = serde_json::json!({

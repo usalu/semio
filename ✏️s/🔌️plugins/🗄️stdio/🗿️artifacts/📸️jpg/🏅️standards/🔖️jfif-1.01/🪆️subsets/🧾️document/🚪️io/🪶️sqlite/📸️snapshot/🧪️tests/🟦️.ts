@@ -1,11 +1,11 @@
-import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
+import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
 const canceledKind=refusalFixture.cases.find(item=>item.id==="canceled-projection")!.expectedKind;
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
-import intermediate from "../../../../🧬️schema/📸️snapshot/🧫️fixtures/🫳️ownership/🔣️.json";
+import intermediate from "../../../../🧪️tests/🧫️fixtures/📸️snapshot/🫳️ownership/🔣️.json";
 
 import type {JpgSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {JPG_SQLITE_SCHEMA,jpgSnapshotToSqliteDatabase,jpgSnapshotFromSqliteDatabase} from "../🟦️.ts";

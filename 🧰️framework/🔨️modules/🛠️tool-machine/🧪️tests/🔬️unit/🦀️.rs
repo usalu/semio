@@ -6,7 +6,7 @@ use super::*;
 use machine::{InvokeId, StatechartEvent, TestHost, Trigger};
 use serde_json::{json, Value};
 
-const LAW: &str = include_str!("../../🧫️fixtures/🧫️transaction-law/🔣️.json");
+const LAW: &str = include_str!("../🧫️fixtures/🧫️transaction-law/🔣️.json");
 
 fn law() -> Value {
     serde_json::from_str(LAW).expect("fixture parses")
@@ -612,7 +612,7 @@ fn a_host_abort_cancels_the_left_timers_and_invokes_and_rests_the_tool() {
 //#endregion 🔖️RunnerLaws
 
 //#region 🔖️ScrubLaws
-const SCRUB_LAW: &str = include_str!("../../🧫️fixtures/🧫️scrub-law/🔣️.json");
+const SCRUB_LAW: &str = include_str!("../🧫️fixtures/🧫️scrub-law/🔣️.json");
 
 fn scrub_law() -> Value {
     serde_json::from_str(SCRUB_LAW).expect("scrub fixture parses")
@@ -848,7 +848,7 @@ fn a_persisted_scrub_of_another_chart_is_refused() {
 //#endregion 🔖️ScrubLaws
 
 //#region 🔖️TypingLaws
-const TYPING_LAW: &str = include_str!("../../🧫️fixtures/🧫️typing-law/🔣️.json");
+const TYPING_LAW: &str = include_str!("../🧫️fixtures/🧫️typing-law/🔣️.json");
 
 fn typing_law() -> Value {
     serde_json::from_str(TYPING_LAW).expect("typing fixture parses")
@@ -1084,7 +1084,7 @@ fn two_hundred_typed_characters_are_one_run() {
 //#endregion 🔖️TypingLaws
 
 //#region 🔖️NodeDragLaws
-const NODE_DRAG_LAW: &str = include_str!("../../🧫️fixtures/🧫️node-drag-law/🔣️.json");
+const NODE_DRAG_LAW: &str = include_str!("../🧫️fixtures/🧫️node-drag-law/🔣️.json");
 
 fn node_drag_row(json: &Value) -> protocol::DslValue {
     match json {

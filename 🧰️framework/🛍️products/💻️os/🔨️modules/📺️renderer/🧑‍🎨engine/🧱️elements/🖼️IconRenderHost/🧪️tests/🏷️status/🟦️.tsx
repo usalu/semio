@@ -5,7 +5,7 @@ import { cleanup, render, waitFor } from "@semio-tech/ui-react/test";
 import { configureHostPorts, uiI18n } from "@semio-tech/ui-react";
 import { afterEach, expect, it } from "vitest";
 import { IconRenderHost } from "../../🟦️.tsx";
-import fixture from "../../🧫️fixtures/🏷️status/🔣️.json";
+import fixture from "../🧫️fixtures/🏷️status/🔣️.json";
 
 afterEach(cleanup);
 

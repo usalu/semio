@@ -1,6 +1,6 @@
 import {expect,test} from "bun:test";
 import {applyPatch} from "fast-json-patch";
-import fixture from "../../🧫️fixtures/⛽️work-unit-authority.json";
+import fixture from "../🧫️fixtures/⛽️work-unit-authority.json";
 import {pluginTestRunnerSelfTests} from "../../../📦️packages/🦀️rust/📜️script";
 
 test("plugin runner forwards exact library and integration targets against Node's independent argument parser",async()=>{

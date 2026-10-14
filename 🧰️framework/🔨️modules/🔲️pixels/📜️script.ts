@@ -1,14 +1,14 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { runOwnedCommand } from "../🏃️process/🎛️owned-execution/🟦️.ts";
-import { cmdBudgetMs } from "../🏃️process/⏱️budget/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runOwnedCommand } from "../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { cmdBudgetMs } from "../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🔲️ Pixel editing verification through the shared workspace task runner. */
 import { join } from "node:path";
 import taskDescriptor from "./🧪️testing/🧭️ownership/🔣️.json";
 import { readPixelsTaskDescriptorV1 } from "./🧪️testing/🧭️ownership/🟦️.ts";
 
-import { BundleScript, ScriptRouter } from "../🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {

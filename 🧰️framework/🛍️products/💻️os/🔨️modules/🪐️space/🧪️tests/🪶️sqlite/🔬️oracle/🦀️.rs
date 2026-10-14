@@ -6,7 +6,7 @@ pub(super) fn renumber(database: &SqliteDatabase, offset: i64) -> SqliteDatabase
     use std::process::{Command, Stdio};
     let bytes = export_sqlite_database(database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
     let script = r#"import{Database}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));const offset=Number(process.argv.at(-1));const q=s=>'"'+s.replaceAll('"','""')+'"';d.exec('PRAGMA foreign_keys=OFF');for(const{name}of d.query("SELECT name FROM sqlite_schema WHERE type='table'").all()){const columns=new Set(d.query('PRAGMA foreign_key_list('+q(name)+')').all().map(row=>row.from).filter(name=>name!=='id'));d.exec('UPDATE '+q(name)+' SET '+['id=id+'+offset,...[...columns].map(name=>q(name)+'='+q(name)+'+'+offset)].join(','));}if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('renumber integrity');await Bun.write(Bun.stdout,d.serialize());d.close();"#;
-    let mut child = Command::new("bun").args(["-e", script, &offset.to_string()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
+    let mut child = Command::new("bun").args(["-e", script, "--", &offset.to_string()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
     child.stdin.take().unwrap().write_all(&bytes).unwrap();
     let output = child.wait_with_output().unwrap();
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));

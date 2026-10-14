@@ -6,8 +6,8 @@ use std::collections::BTreeMap;
 #[path = "../../../../../🧬️schema/💡️inferences/📐️geometry/⏱️phased-job/🧪️tests/🧰️support/🦀️.rs"]
 mod support;
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🔣️.json");
-const FIXTURE_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/💾️brep-interchange/🧫️fixtures/🔣️.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/🔣️.json");
+const FIXTURE_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/💾️brep-interchange/🧪️tests/🧫️fixtures/🔣️.json");
 
 fn cube(size: f64) -> Arc<ShapeValue> {
     let mut session = KernelSession::new();

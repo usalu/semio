@@ -185,7 +185,7 @@ mod tests {
         let diagnostics = vec![warning];
         assert_eq!(decode_diagnostics(&encode_diagnostics(&diagnostics)).unwrap(), diagnostics);
         assert!(decode_diagnostics(&[0xff]).is_err());
-        let fixture: SnapshotInput = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+        let fixture: SnapshotInput = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();
         assert_eq!(fixture.dialect, "s.testkit.w1c-fixture@1/strict");
         assert_eq!(fixture.limits.native().unwrap().max_rows, 4096);
         let grant=fixture.native.native().unwrap();

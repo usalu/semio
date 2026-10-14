@@ -5,7 +5,7 @@ import opentype from "opentype.js";
 import {FontFaceAdmissionJob,FontReader} from "../../../🟦️.ts";
 import {builtinFontLocations} from "../../../📇️catalog/🟦️.ts";
 import {FontContextJob} from "../🟦️.ts";
-import rows from "../🧫️fixtures/🔣️.json";
+import rows from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import "../🪄️apply/🧪️tests/🟦️.ts";
 const limits={maxFontBytes:67108864,maxTables:128,maxGlyphs:262144,maxPoints:1048576,maxContours:65536,maxComponents:262144,maxDepth:32,maxSegments:1048576,maxWork:1e9};

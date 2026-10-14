@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { Buffer } from "node:buffer";
 import { readFileSync } from "node:fs";
 import { applyPatch } from "fast-json-patch";
-import fixture from "../../🧫️fixtures/📏️close/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/📏️close/🔣️.json" with { type: "json" };
 
 test("ordered map cold close retains whole backing independently of logical text work", () => {
   for (const row of fixture.cases) {

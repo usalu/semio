@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Nx Task Plan Dictionary",
+  "type": "object",
+  "required": ["version", "instructions", "tasks"],
+  "properties": {
+    "version": { "const": 1 },
+    "instructions": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+    "tasks": { "type": "object", "additionalProperties": { "type": "array", "uniqueItems": true, "items": { "type": "integer", "minimum": 0 } } }
+  },
+  "additionalProperties": false
+}

@@ -1,3 +1,4 @@
+import {receiveScriptProcessInvocation} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
 import { serviceMcpTestArtifactRoot } from "../📁️artifact-root/🟦️.ts";
 /** 🤝️ The hub-edit-durability gate: is every accepted hub edit durable collaboration state?
@@ -40,6 +41,7 @@ import { sealSpaceArtifactCreateV1 } from "../../../../../../../🧰️framework
 
 import { createSpaceCommandV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
 
+await receiveScriptProcessInvocation(process.env,async original=>{
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
 function findWorkspaceRoot(start: string): string {
   let current = start;
@@ -59,12 +61,10 @@ const { issueLocalCredential } = await import(join(hubRoot, "🚀️local-bootst
 
 const startedAt = new Date();
 const PROFILE = { profileId: "developer", subject: "local-developer-hub-edit-durability", displayName: "Local Developer", allowedClientClasses: ["native", "mcp", "react-relay"] };
-const cancel = new AbortController();
-process.once("SIGINT", () => cancel.abort());
-process.once("SIGTERM", () => cancel.abort());
+const signal = original.control.signal;
 const BINARY = process.env.OS_MCP_HUB_BINARY || hubDevBinaryPath(join(hubRoot, "📦️packages", "🦀️rust"));
 const SOURCE = process.env.OS_MCP_HUB_DATA_DIR || devLocalHubDataDir(repoRoot);
-if (!process.env.OS_MCP_HUB_DATA_DIR && (await ensureCurrentTrustedCatalogV1(SOURCE, serviceHubCatalogPublisher(repoRoot), { signal: cancel.signal, report: (status) => console.log(devHubStatusTextV1(status, devHubLocaleV1())) })) === "cancelled") process.exit(1);
+if (!process.env.OS_MCP_HUB_DATA_DIR && (await ensureCurrentTrustedCatalogV1(SOURCE, serviceHubCatalogPublisher(original,repoRoot), { signal, report: (status) => console.log(devHubStatusTextV1(status, devHubLocaleV1())) })) === "cancelled") process.exit(1);
 const PORT = process.env.OS_MCP_HUB_PORT ? Number(process.env.OS_MCP_HUB_PORT) : await freeLoopbackPort();
 const ORIGIN = `http://127.0.0.1:${PORT}`;
 if (!existsSync(BINARY) || !existsSync(SOURCE)) throw new Error(`hub-edit-durability-check found no hub binary or data root (${BINARY}, ${SOURCE})`);
@@ -275,3 +275,5 @@ publishAcceptanceCheckResult(
   }),
 );
 process.exit(red.length === 0 ? 0 : 1);
+
+});

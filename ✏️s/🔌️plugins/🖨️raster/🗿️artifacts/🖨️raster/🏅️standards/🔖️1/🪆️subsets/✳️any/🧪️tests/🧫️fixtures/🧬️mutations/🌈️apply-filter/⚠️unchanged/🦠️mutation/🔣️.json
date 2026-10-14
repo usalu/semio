@@ -1,0 +1,7 @@
+{
+  "amount": 0.0,
+  "filter": "grayscale",
+  "layerId": "paint",
+  "mutation": "applyFilter",
+  "selection": null
+}

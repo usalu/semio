@@ -332,7 +332,7 @@ pub use crate::schema::snapshot::ZipEntry;
 #[cfg(test)]
 #[test]
 fn logical_diff_does_not_require_native_comment_encoding(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🚪️logical-diff-independence/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🚪️logical-diff-independence/🔣️.json")).unwrap();
     let base=ZipSnapshot{comment_utf8:fixture["before"]["commentUtf8"].as_bool().unwrap(),..ZipSnapshot::default()};
     let diff=ZipDiff{comment:Some(fixture["mutation"]["comment"].as_str().unwrap().into()),..ZipDiff::default()};
     let after=protocol::apply_diff(&diff,&base).expect("logical comment edit must not materialize native ZIP");

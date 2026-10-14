@@ -9,7 +9,7 @@ type TestSource = { readonly directory: string; readonly url: string };
  * @see 🔌️plugin/🖥️host/🧬️component-codec/🦀️.rs (the native twin) */
 export async function registerComponentCodecReplyTests(vitest: NonNullable<ImportMeta["vitest"]>, _testSource: TestSource): Promise<void> {
   const { describe, it, expect } = vitest;
-  const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧫️fixtures/🔣️.json");
+  const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧪️tests/🧫️fixtures/🔣️.json");
   const { actorCodecAnswer, ACTOR_CODEC_REFUSAL } = await import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🟦️.ts");
   type Case = (typeof fixture.cases)[number];
   type Pair = { readonly packHex: string; readonly sprHex: string };

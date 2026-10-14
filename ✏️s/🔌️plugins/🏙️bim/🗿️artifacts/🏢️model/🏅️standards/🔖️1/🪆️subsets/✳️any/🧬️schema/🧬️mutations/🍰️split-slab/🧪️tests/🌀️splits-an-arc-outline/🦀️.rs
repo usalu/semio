@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🍰️split-slab/🌀️splits-an-arc-outline",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🍰️split-slab/🌀️splits-an-arc-outline/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🍰️split-slab/🌀️splits-an-arc-outline/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🍰️split-slab/🌀️splits-an-arc-outline/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🍰️split-slab/🌀️splits-an-arc-outline/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🍰️split-slab/🌀️splits-an-arc-outline/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🍰️split-slab/🌀️splits-an-arc-outline/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🍰️split-slab/🌀️splits-an-arc-outline/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🍰️split-slab/🌀️splits-an-arc-outline/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🍰️split-slab/🌀️splits-an-arc-outline/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🍰️split-slab/🌀️splits-an-arc-outline/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

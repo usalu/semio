@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn shared_full_grant_owns_original_aliases_weak_backing_and_each_physical_release() {
     use crate::{value::observe_retirement_allocations,retained_clone::RetainedCloneGrant};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📏️shared-physical/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📏️shared-physical/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {for copy in fixture["workBytes"].as_array().unwrap() {
         let copy=copy.as_u64().unwrap()as usize;
         let (root,(born,freed))=observe_retirement_allocations(||{let mut text=String::with_capacity(row["capacity"].as_u64().unwrap()as usize);text.push_str(row["text"].as_str().unwrap());Arc::new(text)});let original=born-freed;let pointer=Arc::as_ptr(&root);let alias=Arc::clone(&root);let weak=Arc::downgrade(&root);assert_eq!(serde_json::to_value(root.as_str()).unwrap(),row["text"]);
@@ -31,7 +31,7 @@ fn erased_controlled_owner_retains_exact_independent_grants_and_returns_refused_
     struct Unsupported(String);
     /// 🚫️ Deliberately refuses controlled retirement so the erased admission returns the original owner.
     impl RetireOwned for Unsupported { fn retirement(self) -> Box<dyn RetirementCursor> { self.0.retirement() } fn controlled_retirement_supported() -> bool { false } }
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎮️erased-controlled/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎮️erased-controlled/🔣️.json")).unwrap();
     let text = law["text"].as_str().unwrap();
     let unsupported = Unsupported(text.into());
     let pointer = unsupported.0.as_ptr();
@@ -153,8 +153,8 @@ fn native_recursive_intrinsic_retirement_admits_each_constructor_and_physical_re
         assert_eq!(observe_retirement_allocations(|| drop(owner)).1, (0, 0));
         println!("[DEBUG] Intrinsic retirement kind={} copy={copied} birth={born} release={released}; exact heap receipts, zero/below nonmovement, terminal0heap", row["kind"]);
     }
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌳️intrinsic/🔣️.json")).unwrap();
-    let frontier_law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎮️frontier/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌳️intrinsic/🔣️.json")).unwrap();
+    let frontier_law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎮️frontier/🔣️.json")).unwrap();
     fn source(row: &serde_json::Value) -> crate::DslValue {
         let capacity = row["capacity"].as_u64().unwrap_or(0) as usize;
         match row["kind"].as_str().unwrap() {
@@ -236,7 +236,7 @@ fn paged_native_controlled_retirement_observes_copy_demand_without_releasing_bac
         assert_eq!(observe_retirement_allocations(|| drop(owner)).1, (0, 0));
         println!("[DEBUG] Native controlled copy demand kind={} copy={copied} physical-release={released}; zero/below with independent capacity retained, exact work frees0, terminal0heap", row["kind"]);
     }
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📏️copy-demand/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️copy-demand/🔣️.json")).unwrap();
     for row in law["cases"].as_array().unwrap() {
         match row["kind"].as_str().unwrap() {
             "u32" => run(row["value"].as_u64().unwrap() as u32, row),
@@ -289,7 +289,7 @@ fn paged_native_retained_clone_close_admits_exact_leaf_and_composite_demand() {
         assert!(terminal&&cursor.terminal_is_empty(),"retained leaf exact demand must reach terminal: {label}");assert_eq!(observe_retirement_allocations(||drop(cursor)).1,(0,0));
         println!("[DEBUG] Retained leaf exact close label={label} demand0heap; zero/one-below/exact separately admitted copy={copied} birth={born} release={released}, copy-turn-free0 terminal0heap");
     }
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️retained-clone/🧫️fixtures/📏️release-authority/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority/🔣️.json")).unwrap();
     run(RetainedCloneSource::from_owner(fixture["leafCloseDemand"]["scalar"].as_u64().unwrap() as u8),"scalar");
     run(RetainedCloneSource::from_owner(fixture["leafCloseDemand"]["text"].as_str().unwrap().to_owned()),"UTF8");
     let value=&fixture["compositeCloseDemand"]["value"];
@@ -313,7 +313,7 @@ crate::artifact_retire_struct!(MacroControlledRecord { label, values, nested });
 #[test]
 fn retirement_struct_macro_defers_exact_field_birth_and_release_allocations() {
     use crate::{retained_clone::RetainedCloneGrant, value::observe_retirement_allocations};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     let values = fixture["cloneClose"]["optionalValues"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u32).collect::<Vec<_>>();
     let label = fixture["controlledRetirement"]["label"].as_str().unwrap();
     let owner = MacroControlledRecord { label: label.into(), values: values.clone(), nested: Some((label.repeat(80), values.clone())) };
@@ -344,7 +344,7 @@ fn retirement_struct_macro_defers_exact_field_birth_and_release_allocations() {
 fn retirement_forward_deque_keeps_original_source_and_exact_physical_backing() {
     use crate::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, value::observe_retirement_allocations};
     use std::collections::VecDeque;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📥️forward-deque/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📥️forward-deque/🔣️.json")).unwrap();
     for count in fixture["rowCounts"].as_array().unwrap() {
         let count = count.as_u64().unwrap() as usize;
         let expected = (0..count).map(|index| index as u32).collect::<Vec<_>>();
@@ -399,7 +399,7 @@ struct ControlledCloneRecord {
 fn paged_native_controlled_retirement_admits_actual_birth_and_release_allocations() {
     use crate::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
     use crate::value::observe_retirement_allocations;
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     let law = &corpus["controlledRetirement"];
     let depth = law["depth"].as_u64().unwrap() as usize;
     let budget = law["maximumBytes"].as_u64().unwrap() as usize;
@@ -447,7 +447,7 @@ fn paged_native_controlled_retirement_admits_actual_birth_and_release_allocation
 fn paged_native_append_close_exposes_exact_capacity_and_release_demand() {
     use crate::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
     use crate::value::observe_retirement_allocations;
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     let text = corpus["prefix"].as_str().unwrap().repeat(corpus["prefixRepeat"].as_u64().unwrap() as usize);
     let budget = corpus["appendClose"]["maximumBytes"].as_u64().unwrap() as usize;
     let mut close = crate::retained_clone::RetainedCloneClose::default();
@@ -513,7 +513,7 @@ fn paged_native_append_close_exposes_exact_capacity_and_release_demand() {
 fn paged_native_clone_close_admits_actual_birth_release_and_zero_grants() {
     use crate::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneStep, RetainedCloneSource};
     use crate::value::observe_retirement_allocations;
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     let law = &corpus["cloneClose"];
     let budget = law["maximumBytes"].as_u64().unwrap() as usize;
     for pause in law["pauseAt"].as_array().unwrap().iter().map(|pause| pause.as_u64().unwrap() as usize).chain(std::iter::once(usize::MAX)) {
@@ -622,7 +622,7 @@ fn neutral_logical_bytes(value:&serde_json::Value)->usize {
 }
 #[test]
 fn owned_retirement_matches_neutral_exact_byte_grants() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();assert_eq!(fixture["cases"].as_array().unwrap().len(),11);
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();assert_eq!(fixture["cases"].as_array().unwrap().len(),11);
     for row in fixture["cases"].as_array().unwrap(){for budget in fixture["budgets"].as_array().unwrap(){
         let (retirement,heap)=crate::value::observe_retirement_allocations(||match row["kind"].as_str().unwrap(){
             "string"=>admit_fixture(row["value"].as_str().unwrap().to_owned()),
@@ -698,7 +698,7 @@ fn owned_retirement_rejects_false_terminal_and_preserves_shared_roots() {
 }
 #[test]
 fn shared_source_leases_release_all_orders_with_one_bounded_owner() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["leases"];let text=law["text"].as_str().unwrap();let oracle:serde_json::Value=serde_json::from_str(&serde_json::to_string(text).unwrap()).unwrap();assert_eq!(oracle.as_str().unwrap().len(),text.len());
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["leases"];let text=law["text"].as_str().unwrap();let oracle:serde_json::Value=serde_json::from_str(&serde_json::to_string(text).unwrap()).unwrap();assert_eq!(oracle.as_str().unwrap().len(),text.len());
     for canceled in law["canceled"].as_array().unwrap(){for order in law["orders"].as_array().unwrap(){
         let source=Arc::new(text.to_owned());let mut leases=vec![Some(Arc::clone(&source)),Some(Arc::clone(&source)),Some(source)];let mut released=0;
         for (position,index) in order.as_array().unwrap().iter().enumerate(){
@@ -716,7 +716,7 @@ fn shared_source_leases_release_all_orders_with_one_bounded_owner() {
 #[test]
 fn native_controls_resume_same_cumulative_admission_and_cancel_before_more_work() {
     use crate::{NativeDecodeControl,NativeEncodeControl};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["continuation"];let maximum=law["maximumBytes"].as_u64().unwrap()as usize;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["continuation"];let maximum=law["maximumBytes"].as_u64().unwrap()as usize;
     let mut accepted=|_|true;let mut encode=NativeEncodeControl::new(maximum,&mut accepted);encode.begin_stage(9).unwrap();encode.charge(5).unwrap();encode.advance(4).unwrap();let receipt=encode.pause().unwrap();
     let event=std::cell::Cell::new(None);let mut resumed=|value|{event.set(Some(value));true};let mut encode=NativeEncodeControl::resume(receipt,&mut resumed).unwrap();encode.checkpoint().unwrap();assert_eq!(event.get().unwrap().completed,4);assert_eq!(event.get().unwrap().total,9);assert_eq!(encode.owned_bytes(),5);encode.charge(8).unwrap();encode.advance(5).unwrap();assert_eq!(encode.owned_bytes(),maximum);assert_eq!(encode.charge(1).unwrap_err().kind,crate::ValueRefusalKind::OwnershipLimit);let receipt=encode.pause().unwrap();let mut canceled=|_|false;let mut encode=NativeEncodeControl::resume(receipt,&mut canceled).unwrap();assert_eq!(encode.step().unwrap_err().kind,crate::ValueRefusalKind::Canceled);assert_eq!(encode.owned_bytes(),maximum);
     let mut accepted=|_|true;let mut decode=NativeDecodeControl::new(maximum,&mut accepted);decode.begin_stage(9).unwrap();decode.charge(5).unwrap();decode.advance(4).unwrap();let receipt=decode.pause().unwrap();
@@ -727,7 +727,7 @@ fn native_controls_resume_same_cumulative_admission_and_cancel_before_more_work(
 #[test]
 fn native_encoding_capacity_admission_consumes_the_same_counter_owner(){
     use crate::{NativeEncodeControl,ValueRefusalKind};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["capacityAdmission"];let prior=&fixture["continuation"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["capacityAdmission"];let prior=&fixture["continuation"];
     let source=Arc::new(law["source"].as_str().unwrap().to_owned());let pointer=source.as_ptr();let reference:serde_json::Value=serde_json::from_str(&serde_json::to_string(&*source).unwrap()).unwrap();assert_eq!(reference.as_str().unwrap().len(),law["sourceBytes"].as_u64().unwrap()as usize);
     let event=std::cell::Cell::new(None);let mut accepted=|value|{assert_eq!(source.as_ptr(),pointer);event.set(Some(value));true};let mut control=NativeEncodeControl::new(prior["maximumBytes"].as_u64().unwrap()as usize,&mut accepted);control.begin_stage(prior["total"].as_u64().unwrap()as usize).unwrap();control.charge(prior["initialBytes"].as_u64().unwrap()as usize).unwrap();control.advance(prior["initialUnits"].as_u64().unwrap()as usize).unwrap();control.checkpoint().unwrap();let before=event.get().unwrap();
     let (mut control,error)=match control.admit_capacity(law["refusedBytes"].as_u64().unwrap()as usize,1,0){Err(rejection)=>rejection,Ok(_)=>panic!("existing ownership cannot fit refused capacity")};assert_eq!(error.kind,ValueRefusalKind::OwnershipLimit);assert_eq!(control.maximum_bytes(),prior["maximumBytes"].as_u64().unwrap()as usize);control.checkpoint().unwrap();assert_eq!(event.get().unwrap(),before);
@@ -741,7 +741,7 @@ fn native_encoding_capacity_admission_consumes_the_same_counter_owner(){
 fn native_capacity_closed_vectors_preserve_the_consumed_admission_owner(){
     use crate::{NativeEncodeControl,ValueRefusalKind};
     fn number(value:&serde_json::Value)->usize{match value.as_str().unwrap(){"usizeMax"=>usize::MAX,"isizeMax"=>isize::MAX as usize,decimal=>decimal.parse().unwrap()}}
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let cases=fixture["capacityAdmission"]["cases"].as_array().unwrap();assert_eq!(cases.len(),12);
     for case in cases {
         let calls=std::cell::Cell::new(0);let event=std::cell::Cell::new(None);
@@ -760,7 +760,7 @@ fn native_capacity_closed_vectors_preserve_the_consumed_admission_owner(){
 use crate::{ValueRefusalKind,retirement::allocation_return::{ParentAllocationReturn,AllocationReturnStep}};
 #[test]
 fn parent_return_fixture_demands_actual_full_allocation_release(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../📦️allocation-return/🧫️fixtures/📦️return.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../📦️allocation-return/🧪️tests/🧫️fixtures/📦️return.json")).unwrap();
     let maximum=fixture["maximumAllocationBytes"].as_u64().unwrap()as usize;let total=fixture["maximumTotalBytes"].as_u64().unwrap()as usize;
     let mut parent=ParentAllocationReturn::<2>::try_new(maximum,total).unwrap();let mut text=fixture["text"].as_str().unwrap().to_owned();let text_pointer=text.as_ptr();let text_capacity=text.capacity();assert_eq!(text_capacity,fixture["expectedTextBytes"].as_u64().unwrap()as usize);
     assert!(!parent.return_text(&mut text,0).unwrap());assert_eq!(text.as_ptr(),text_pointer);assert_eq!(text,fixture["text"].as_str().unwrap());assert!(parent.terminal_is_empty());
@@ -802,7 +802,7 @@ fn controlled_retirement_separates_logical_work_from_exact_physical_release() {
         assert_eq!(observe_retirement_allocations(||drop(owner)).1,(0,0));
         println!("[DEBUG] controlled retirement work/release id={} processed={processed} exact-allocator-free={physical}",row["id"]);
     }
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/⚖️physical-work/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⚖️physical-work/🔣️.json")).unwrap();
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:64};
     for row in law["cases"].as_array().unwrap(){match row["kind"].as_str().unwrap(){
         "u32"=>run(row["value"].as_u64().unwrap()as u32,row,grant),
@@ -815,7 +815,7 @@ fn controlled_retirement_separates_logical_work_from_exact_physical_release() {
 #[test]
 fn controlled_retirement_separates_logical_work_from_exact_physical_release_cold_terminal_frame() {
     use crate::value::observe_retirement_allocations;
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/⚖️physical-work/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⚖️physical-work/🔣️.json")).unwrap();
     let text=law["cases"][1]["value"].as_str().unwrap();
     let (cursor,heap)=observe_retirement_allocations(||admit_fixture(text.to_owned()));let original=heap.0-heap.1;
     let frame=std::mem::size_of_val(cursor.as_ref());assert_eq!(frame,owned_retirement_birth_bytes::<String>());
@@ -838,7 +838,7 @@ fn controlled_retirement_separates_logical_work_from_exact_physical_release_cold
 #[test]
 fn shared_retirement_physical_demand_preserves_original_backing_and_terminal_frames() {
     use crate::value::observe_retirement_allocations;
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📏️shared-physical/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📏️shared-physical/🔣️.json")).unwrap();
     for row in law["cases"].as_array().unwrap(){for copy in law["workBytes"].as_array().unwrap(){
         let copy=copy.as_u64().unwrap()as usize;let mut text=String::with_capacity(row["capacity"].as_u64().unwrap()as usize);text.push_str(row["text"].as_str().unwrap());assert_eq!(serde_json::to_value(&text).unwrap(),row["text"]);let backing=text.capacity();
         let root=Arc::new(text);let pointer=Arc::as_ptr(&root);let (owner,heap)=observe_retirement_allocations(||admit_shared_fixture(root,true));let mut born=heap.0;assert_eq!(heap.1,0);let mut slot=Some(owner);
@@ -860,7 +860,7 @@ fn shared_retirement_physical_demand_preserves_original_backing_and_terminal_fra
 #[test]
 fn erased_snapshot_full_grant_admission_preserves_original_owner_and_all_four_currencies() {
     use crate::retained_clone::RetainedCloneProgress;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📏️shared-physical/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️shared-physical/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let text = row["text"].as_str().unwrap();
         for work in [1usize, 3, 5, 4096] {
@@ -919,7 +919,7 @@ fn erased_snapshot_full_grant_admission_preserves_original_owner_and_all_four_cu
 fn original_heap_and_reverse_preserve_backing_and_full_retirement_receipts(){
     use crate::{value::observe_retirement_allocations as observe,retained_clone::RetainedCloneGrant};
     use std::{collections::BinaryHeap,cmp::Reverse};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧺️heap.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧺️heap.json")).unwrap();
     for copy in law["copyGrants"].as_array().unwrap(){
         let (owner,(source_birth,source_release))=observe(||{let mut heap=BinaryHeap::new();for key in law["keys"].as_array().unwrap(){let mut value=String::with_capacity(law["capacityBytes"].as_u64().unwrap() as usize);value.push_str(key.as_str().unwrap());heap.push(Reverse(value));}heap});
         let backing=owner.as_slice().as_ptr();let pointers:Vec<_>=owner.iter().map(|key|key.0.as_ptr()).collect();let mut oracle=owner.clone();let expected:Vec<_>=std::iter::from_fn(||oracle.pop().map(|key|key.0)).collect();assert_eq!(serde_json::to_value(expected).unwrap(),law["expected"]);
@@ -937,7 +937,7 @@ fn original_heap_and_reverse_preserve_backing_and_full_retirement_receipts(){
 #[test]
 fn original_five_field_tuple_retirement_conserves_every_native_owner_and_receipt() {
     use crate::{retained_clone::RetainedCloneGrant,value::observe_retirement_allocations as observe};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️five-fields/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪆️five-fields/🔣️.json")).unwrap();
     type Mesh=(String,Vec<f32>,Vec<f32>,Vec<u32>,Vec<f32>);
     let (source,original_heap)=observe(||serde_json::from_value::<Mesh>(fixture["fields"].clone()).unwrap());
     assert_eq!(serde_json::to_value(&source).unwrap(),fixture["fields"]);

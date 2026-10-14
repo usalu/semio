@@ -9,5 +9,8 @@
   },
   "scripts": {
     "verify-home-host-panel-owner": "bun nx run @semio-tech/space-home-rs:verify-home-host-panel-owner"
+  },
+  "devDependencies": {
+    "@semio-tech/framework": "workspace:*"
   }
 }

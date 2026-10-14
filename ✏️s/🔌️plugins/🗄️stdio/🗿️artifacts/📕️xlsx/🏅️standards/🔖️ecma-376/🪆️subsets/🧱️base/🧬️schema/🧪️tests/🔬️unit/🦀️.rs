@@ -276,7 +276,7 @@ use crate::schema::refusal::XlsxError;
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
         let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
-        let text = store::os_store::serialization::ArtifactDsl::print_dsl(&demo_xlsx_snapshot());
+        let text = pack::snapshot::ArtifactDsl::print_dsl(&demo_xlsx_snapshot());
         let (envelope, body) = store::semio_format::split_text_preamble(&text).unwrap();
         let native = format!("{}\n{body}", envelope.envelope_id());
         assert!(semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments").recognize(&native).unwrap());
@@ -311,7 +311,7 @@ use crate::schema::refusal::XlsxError;
     async fn protocol_walk_law() {
         let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
         let demo = demo_xlsx_snapshot();
-        let packed = store::os_store::serialization::ArtifactPack::encode_pack(&demo);
+        let packed = pack::snapshot::ArtifactPack::encode_pack(&demo);
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
         let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk must consume every literal snapshot byte");
@@ -343,13 +343,13 @@ use crate::schema::refusal::XlsxError;
 
         let demo = demo_xlsx_snapshot();
 
-        let parsed = <XlsxSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        let parsed = <XlsxSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_xlsx_snapshot()");
-        assert_eq!(store::os_store::serialization::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_xlsx_snapshot()) drifted from the shipped .dsl.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_xlsx_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-        let decoded = <XlsxSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+        let decoded = <XlsxSnapshot as pack::snapshot::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_xlsx_snapshot()");
-        assert_eq!(store::os_store::serialization::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_xlsx_snapshot()) drifted from the shipped .pack.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_xlsx_snapshot()) drifted from the shipped .pack.semio fixture");
     }
 
 
@@ -359,7 +359,7 @@ use crate::schema::refusal::XlsxError;
 #[test]
 fn logical_construction_fixture_matches_calamine_and_native_roundtrips() {
     use calamine::{Data, Reader};
-    const FIXTURE: &str = include_str!("../../../🧫️fixtures/🏗️logical-construction/🔣️.json");
+    const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/🏗️logical-construction/🔣️.json");
     let workbook: XlsxWorkbook = semio_framework_pack_json::from_json_str(FIXTURE, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let snapshot = build_minimal_xlsx(workbook.clone());
     snapshot.validate_authority().unwrap();
@@ -389,9 +389,9 @@ fn logical_construction_fixture_matches_calamine_and_native_roundtrips() {
             assert_eq!(actual.to_string(), expected.to_string(), "{} {}{}", sheet.name, column_letter(cell.col), cell.row);
         }
     }
-    let text = <XlsxSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot);
-    assert_eq!(<XlsxSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).unwrap(), snapshot);
-    assert_eq!(<XlsxSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&store::os_store::serialization::ArtifactPack::encode_pack(&snapshot)).unwrap(), snapshot);
+    let text = <XlsxSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snapshot);
+    assert_eq!(<XlsxSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).unwrap(), snapshot);
+    assert_eq!(<XlsxSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack::snapshot::ArtifactPack::encode_pack(&snapshot)).unwrap(), snapshot);
 }
 
 /// 🧫️ The committed insertion witness applies on its own document and agrees with an independent XLSX reader.
@@ -399,9 +399,9 @@ fn logical_construction_fixture_matches_calamine_and_native_roundtrips() {
 fn insert_cell_wire_witness_matches_committed_document_and_calamine() {
     use calamine::{Data, Reader};
     use crate::schema::mutations::{apply_xlsx_mutation, cell_address::xlsx_cell_vacancy_address, XlsxMutation};
-    const BEFORE: &str = include_str!("../../../🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/📸️snapshot/⬅️before/🔣️.json");
-    const AFTER: &str = include_str!("../../../🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/📸️snapshot/➡️after/🔣️.json");
-    const MUTATION: &str = include_str!("../../../🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/🦠️mutation/🔣️.json");
+    const BEFORE: &str = include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/📸️snapshot/⬅️before/🔣️.json");
+    const AFTER: &str = include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/📸️snapshot/➡️after/🔣️.json");
+    const MUTATION: &str = include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/🦠️mutation/🔣️.json");
     let mut snapshot: XlsxSnapshot = semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let after: XlsxSnapshot = semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mutation: XlsxMutation = semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -419,8 +419,8 @@ fn insert_cell_wire_witness_matches_committed_document_and_calamine() {
 fn insertion_history_inputs_preserve_identity_and_reject_forged_namespace() {
     use crate::schema::mutations::{apply_xlsx_mutation, XlsxMutation};
     use semio_framework_value::ToValue;
-    const BEFORE: &str = include_str!("../../../🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/📸️snapshot/⬅️before/🔣️.json");
-    const MUTATION: &str = include_str!("../../../🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/🦠️mutation/🔣️.json");
+    const BEFORE: &str = include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/📸️snapshot/⬅️before/🔣️.json");
+    const MUTATION: &str = include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/🦠️mutation/🔣️.json");
     const ADDRESS_SCHEMA: &str = include_str!("../../🧬️mutations/🧭️cell-vacancy-address/🔣️.json");
     let mut snapshot: XlsxSnapshot = semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut mutation: XlsxMutation = semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

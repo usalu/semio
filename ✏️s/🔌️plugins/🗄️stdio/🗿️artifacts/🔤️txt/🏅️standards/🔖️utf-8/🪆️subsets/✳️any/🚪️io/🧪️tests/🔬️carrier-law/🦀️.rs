@@ -4,7 +4,7 @@
 //! carry the old `semio stdio.txt.dsl v1` preamble line (`ArtifactDsl::print_dsl` emitted
 //! before this fix — see `📸️snapshot/🦀️.rs`).
 use crate::TxtSnapshot;
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
 
 #[semio_framework_async_macros::async_test]
 async fn carrier_native_is_raw() {

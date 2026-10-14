@@ -1,20 +1,20 @@
 #!/usr/bin/env bun
-import { configuredExactCargoLawPolicyV1 } from "../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-import { runBudgetedTestCommand } from "../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts";
-import { resolveTestLevel, TEST_LEVEL_BUDGET_MS } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { runBudgetedTestCommand } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import { resolveTestLevel, TEST_LEVEL_BUDGET_MS } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 /** 🦀️ `@semio-tech/framework-os-kernel` task router. */
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import {existsSync,readFileSync} from "node:fs";
 import { join, resolve } from "node:path";
 import { type ValidateFunction } from "ajv";
-import { buildBudgetMs } from "../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
-import { runCargo, runRepositoryCargoTests, runRepositoryTestCommand, runRepositoryExactCargoLaws } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { buildBudgetMs } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { runCargo, runRepositoryCargoTests, runRepositoryTestCommand, runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runNestedCargoPackageAdapter } from "../../../🦑️repo/🔨️modules/📚️library/📽️projection/🧩️package-adapter/📦️publication/🟦️.ts";
 import { blake3Hex } from "../../../../🔨️modules/🔏️hash/🟦️.ts";
 import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
@@ -36,7 +36,7 @@ class PagedHistoryStackScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length > 1 || (args.length && args[0] !== "--native")) throw Error("paged-history-stack-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📸️paged-history-stack/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📸️paged-history-stack/🔣️.json"), "utf8"));
     
     
     
@@ -50,7 +50,7 @@ class PagedHistoryStackScript extends BundleScript {
       assert.deepEqual(values, vector.remaining);
     }
     const editSchema = JSON.parse(readFileSync(join(this.repoRoot, "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🔣️.json"), "utf8"));
-    const branchFixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🌿️branch-provenance/🔣️.json"), "utf8"));
+    const branchFixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🌿️branch-provenance/🔣️.json"), "utf8"));
     const branchAjv = semioSchemaAjvV1({ strict: true, allErrors: true });
     const editCheck = branchAjv.compile({ $defs: editSchema.$defs, $ref: "#/$defs/Edit" });
     for (const vector of branchFixture.vectors) {
@@ -63,7 +63,7 @@ class PagedHistoryStackScript extends BundleScript {
     const canonical = storeCanonicalEditSealerSelfTests();
     console.log("paged-history-canonical-oracles: " + JSON.stringify(canonical));
     if (args[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib", name: "semio_framework_os_kernel" }, laws: [
+      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib", name: "semio_framework_os_kernel" }, laws: [
           "os_vcs::tests::paged_history_stack_traversal_follows_the_portable_deque_vectors",
           "os_vcs::tests::history_branch_provenance_follows_portable_required_wire_vectors",
           "os_store::component::canonical_edit::tests::edit_digest_chains_match_the_neutral_vectors_and_extend_incrementally",
@@ -79,7 +79,7 @@ class PagedHistoryStackScript extends BundleScript {
 class DatabaseHistoryCompletionCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("database-history-completion-check accepts only --native");
-    const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧫️fixtures/📜️history-completion");
+    const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🧫️fixtures/📜️history-completion");
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
     
     
@@ -117,7 +117,7 @@ class DatabaseHistoryCompletionCheckScript extends BundleScript {
     }
     console.log("database-history-completion-check: behavior-oracles=retained sqlite-publication=" + fixture.publication.length);
     if (segments[0] !== "--native") return;
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{
         package: "semio-framework-os-kernel-db",
         target: { kind: "lib", name: "db" },
         cargoArgs: ["--all-features"],
@@ -139,7 +139,7 @@ class DatabaseHistoryCompletionCheckScript extends BundleScript {
 class DatabaseCatalogReadOwnershipCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("database-catalog-read-ownership-check accepts only --native");
-    const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧫️fixtures/📖️catalog-read-ownership");
+    const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🧫️fixtures/📖️catalog-read-ownership");
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
     
     
@@ -211,7 +211,7 @@ class DatabaseCatalogReadOwnershipCheckScript extends BundleScript {
     }
     console.log("database-catalog-read-ownership-check: behavior-oracles=retained sqlite-transfers=" + fixture.transfers.length + " sqlite-completion=" + fixture.completion.length + " sqlite-recovery=" + fixture.recovery.length);
     if (segments[0] !== "--native") return;
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{
         package: "semio-framework-os-kernel-db",
         target: { kind: "lib", name: "db" },
         cargoArgs: ["--all-features"],
@@ -238,7 +238,7 @@ class DatabaseCatalogReadOwnershipCheckScript extends BundleScript {
 class DatabaseCapabilityCompletionCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("database-capability-completion-check accepts only --native");
-    const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧫️fixtures/📬️capability-completion");
+    const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🧫️fixtures/📬️capability-completion");
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
     
     
@@ -330,7 +330,7 @@ class DatabaseCapabilityCompletionCheckScript extends BundleScript {
     }
     console.log("database-capability-completion-check: behavior-oracles=retained sqlite-publication=" + fixture.publication.length + " sqlite-retirement=" + fixture.retirement.length + " sqlite-drive-ownership=" + fixture.driveOwnership.length + " sqlite-lease-completion=" + fixture.leaseCompletion.length);
     if (segments[0] !== "--native") return;
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
         {
           package: "semio-framework-os-kernel-db",
           target: { kind: "lib", name: "db" },
@@ -367,14 +367,14 @@ class WalWriterAuthorityCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("wal-writer-authority-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🔐️writer");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     
     
-    const writerDeferredWake = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔔️deferred-wake/🔣️.json"), "utf8"));
+    const writerDeferredWake = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔔️deferred-wake/🔣️.json"), "utf8"));
     
     
     
-    const neutralDeferredWake = JSON.parse(readFileSync(join(this.repoRoot, "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧫️fixtures/🔣️.json"), "utf8"));
+    const neutralDeferredWake = JSON.parse(readFileSync(join(this.repoRoot, "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     
     
     
@@ -414,7 +414,7 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     const missingWriter = writerDeferredWake.runtimeMarkers.writer.filter((marker: string) => !writerDeferredReleaseSource.includes(marker));
     assert.deepEqual(missingWriter, [], `missing writer runtime markers: ${missingWriter.join(", ")}`);
     console.log(`[DEBUG] writer-deferred-wake-independent-oracle: behavior-oracles=retained cases=${writerDeferredWake.cases.length} capacities=64*32*1 runtime-markers=${writerDeferredWake.runtimeMarkers.writer.length}`);
-    const remoteOwner = join(owner, "🧫️fixtures/🌐️remote-guard");
+    const remoteOwner = join(owner, "🧪️tests/🧫️fixtures/🌐️remote-guard");
     const remoteFixture = JSON.parse(readFileSync(join(remoteOwner, "🔣️.json"), "utf8"));
     
     
@@ -436,11 +436,11 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     ] as const)
       assert(sourceOf(path).includes(marker), `missing cross-process writer fence primitive ${marker} in ${path}`);
     console.log(`wal-writer-fence-oracle: behavior-oracles=retained lockKeys=${remoteFixture.postgres.lockKeys.length} laws=${remoteFixture.laws.length}`);
-    const memoryOwner = join(owner, "..", "🧫️fixtures", "🧮️memory-backing");
+    const memoryOwner = join(owner, "..", "🧪️tests/🧫️fixtures", "🧮️memory-backing");
     const memoryFixture = JSON.parse(readFileSync(join(memoryOwner, "🔣️.json"), "utf8"));
     
     
-    const poolUseOwner = join(owner, "..", "🧫️fixtures", "🔐️backend-pool-use");
+    const poolUseOwner = join(owner, "..", "🧪️tests/🧫️fixtures", "🔐️backend-pool-use");
     const poolUseFixture = JSON.parse(readFileSync(join(poolUseOwner, "🔣️.json"), "utf8"));
     
     
@@ -482,11 +482,11 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     assert.equal(memoryFixture.sameSlotReuseBeforeOldResultClose, true);
     assert.equal(memoryFixture.taskSlotReleasedWhileResultRetained, true);
     assert.equal(memoryFixture.droppedResultRetirement, "mounted-io-maintenance");
-    const directoryOwner = join(owner, "..", "🧫️fixtures", "📁️directory-durability");
+    const directoryOwner = join(owner, "..", "🧪️tests/🧫️fixtures", "📁️directory-durability");
     const directoryFixture = JSON.parse(readFileSync(join(directoryOwner, "🔣️.json"), "utf8"));
     
     
-    const openOwner = join(owner, "..", "..", "📝️wal", "🧫️fixtures", "🚪️open-rejection");
+    const openOwner = join(owner, "..", "..", "📝️wal", "🧪️tests/🧫️fixtures", "🚪️open-rejection");
     const openFixture = JSON.parse(readFileSync(join(openOwner, "🔣️.json"), "utf8"));
     
     
@@ -672,7 +672,7 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     const retainedFixtureLaws = readFileSync(join(owner, "..", "🧪️tests", "🔬️db-io-retained-fixtures", "🦀️.rs"), "utf8");
     assert(retainedFixtureLaws.includes("fn wal_writer_mounted_stale_controller_defers_cross_key_wake_and_fences_retry_epoch()"), "missing mounted stale-controller refusal law");
     if (segments[0] !== "--native") return;
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
         {
           package: "semio-framework-os-kernel-db",
           target: { kind: "lib", name: "db" },
@@ -769,7 +769,7 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("wal-committed-transactions-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🧾️committed-transactions/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🧾️committed-transactions/🔣️.json"), "utf8"));
     
     
     assert.deepEqual(fixture.historyProjection.expected, { entries: 1, operationIds: fixture.historyProjection.commands.map((command: any) => command.id), headSeq: fixture.historyProjection.commands.length, commitSeq: 1 });
@@ -832,7 +832,7 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
       assert.deepEqual({ accepted: error === null, transactions: error === null ? transactions : [], nextTxId: error === null ? next.toString() : null, recoverAbort: error === null ? recoverAbort : null, error }, row.expected, row.name);
     }
     console.log(`wal-committed-transactions-independent-oracle: behavior-oracles=retained u64=1 vectors=${fixture.cases.length}`);
-    const faults = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🛑️fail-stop/🔣️.json"), "utf8"));
+    const faults = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🛑️fail-stop/🔣️.json"), "utf8"));
     
     
     assert.deepEqual(
@@ -853,7 +853,7 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
     const history = readFileSync(join(owner, "../🗿️artifact/🦀️.rs"), "utf8");
     assert(history.includes("WalAuthenticatedSource<HistoryPageSet>") && !history.includes("struct HistoryFrameCursor"), "History must consume authenticated committed spans, with no independent frame grammar");
     for (const check of ["history envelope document differs", "history frontier document differs", "history committed frontier is not terminal"]) assert(history.includes(check), `History admission is missing ${check}`);
-    const decoder = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📖️retained-decoder/🔣️.json"), "utf8"));
+    const decoder = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📖️retained-decoder/🔣️.json"), "utf8"));
     
     
     const { default: leb } = await import("@webassemblyjs/leb128/lib/leb.js");
@@ -878,7 +878,7 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
     assert(source.includes("fn wal_read_canonical_varint"), "retained readers must reject noncanonical and overflowing u64 fields");
     console.log(`wal-retained-decoder-independent-oracle: behavior-oracles=retained LEB128=1 vectors=${decoder.varints.length}`);
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
+      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
           {
             package: "semio-framework-os-kernel-db",
             target: { kind: "lib", name: "db" },
@@ -922,7 +922,7 @@ class WalCommittedCompactionCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("wal-committed-compaction-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗜️compact");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🧾️committed-effects/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🧾️committed-effects/🔣️.json"), "utf8"));
     
     
     assert.deepEqual(
@@ -983,7 +983,7 @@ class WalCommittedCompactionCheckScript extends BundleScript {
     assert(laws.includes("fn compaction_applies_only_committed_frontier_snapshot_and_payload_effects("));
     console.log("wal-committed-compaction-independent-oracle: abort effects excluded, global payloads retained, header-only highest preserved");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), cargoArgs: ["--all-features"], groups: [
+      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), cargoArgs: ["--all-features"], groups: [
           {
             package: "semio-framework-os-kernel-db",
             target: { kind: "lib", name: "db" },
@@ -1006,7 +1006,7 @@ class DatabaseShutdownCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("database-shutdown-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🚪️shutdown/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🚪️shutdown/🔣️.json"), "utf8"));
     
     
     assert.deepEqual(fixture.phases, ["authority", "emit", "complete"]);
@@ -1060,7 +1060,7 @@ class DatabaseShutdownCheckScript extends BundleScript {
     assert(artifact.includes("pub fn shutdown_step(&self) -> bool") && artifact.includes("handoff.terminal"));
     console.log(`database-shutdown-independent-oracle: behavior-oracles=retained cases=${fixture.cases.length} retained-authority=1 terminal-ack=1`);
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), cargoArgs: ["--all-features"], groups: [
+      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), cargoArgs: ["--all-features"], groups: [
           {
             package: "semio-framework-os-kernel-db",
             target: { kind: "lib", name: "db" },
@@ -1082,10 +1082,10 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("document-mount-single-flight-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🚪️document-mount");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     
     
-    const mountedPoolUse = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔐️pool-use/🔣️.json"), "utf8"));
+    const mountedPoolUse = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔐️pool-use/🔣️.json"), "utf8"));
     
     
     
@@ -1354,7 +1354,7 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
     }
     console.log(`document-mount-single-flight-independent-oracle: behavior-oracles=retained cases=${fixture.cases.length} waiters=${fixture.capacity.waitersPerDocument} owner-futures=${fixture.capacity.ownerFuturesPerDocument}`);
     if (segments[0] !== "--native") return;
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 180_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 180_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
         {
           package: "semio-framework-os-kernel-db",
           target: { kind: "lib", name: "db" },
@@ -1401,7 +1401,7 @@ class DurableOwnedGroupDecisionCheckScript extends BundleScript {
     const { testDurableOwnedGroupDecisionFixture } = await import("../../🔨️modules/🏪️store/🧪️tests/🗄️durable-owned-group/🟦️.ts");
     testDurableOwnedGroupDecisionFixture();
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
+      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
           {
             package: "semio-framework-os-kernel",
             target: { kind: "lib" },
@@ -1437,7 +1437,7 @@ class DurableGroupJournalCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("durable-group-journal-check accepts only --native");
     const artifactOwner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact");
-    const fixtureOwner = join(artifactOwner, "🧫️fixtures/📓️durable-group-journal");
+    const fixtureOwner = join(artifactOwner, "🧪️tests/🧫️fixtures/📓️durable-group-journal");
     const fixture = JSON.parse(readFileSync(join(fixtureOwner, "🔣️.json"), "utf8"));
     
     
@@ -1462,7 +1462,7 @@ class DurableGroupJournalCheckScript extends BundleScript {
       assert.equal(row.returnedStoreOwners, 3);
     }
     const storeOwner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group");
-    const storeFixture = JSON.parse(readFileSync(join(storeOwner, "🧫️fixtures/🔣️.json"), "utf8"));
+    const storeFixture = JSON.parse(readFileSync(join(storeOwner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     assert.equal(createHash("sha256").update(storeFixture.expected.unsignedJson).digest("hex"), fixture.record.decisionSha256);
     assert.equal(storeFixture.expected.anchorSha256, fixture.record.anchorSha256);
     const varintBytes = (value: number) => {
@@ -1538,7 +1538,7 @@ class DurableGroupJournalCheckScript extends BundleScript {
       `durable-group-journal-independent-oracle: behavior-oracles=retained cases=${fixture.cases.length} witnesses=${fixture.committedDecisionWitnessCases.length} recovery=${fixture.committedRecovery.cases.length} max-event=${maximumEventBytes} store-margin=${fixture.limits.walSegmentBytes - fixture.limits.storeMaximumSegmentBytes}`,
     );
     if (segments[0] !== "--native") return;
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 180_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, cargoArgs: ["--all-features"], laws }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) {
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 180_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, cargoArgs: ["--all-features"], laws }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) {
         console.log(`durable-group-journal-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
       } });
     console.log(`durable-group-journal-native-receipts: ${JSON.stringify(receipts)}`);
@@ -1550,10 +1550,10 @@ class WalRecoveryCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("wal-recovery-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🚑️recovery/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🚑️recovery/🔣️.json"), "utf8"));
     
     
-    const failStop = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🛑️fail-stop/🔣️.json"), "utf8"));
+    const failStop = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🛑️fail-stop/🔣️.json"), "utf8"));
     
     
     assert.deepEqual(
@@ -1672,7 +1672,7 @@ class WalRecoveryCheckScript extends BundleScript {
     const walRetainedLawsSource = readFileSync(join(owner, "🧪️tests/🔬️retained/🦀️.rs"), "utf8");
     for (const law of laws) assert((law.startsWith("db_fault_testing::") ? faultStorageLawsSource : law.startsWith("db_wal::retained_tests::") ? walRetainedLawsSource : walLawsSource).includes(`fn ${law.split("::").at(-1)}(`), `missing exact native law ${law}`);
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws }], progress(event) {
+      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws }], progress(event) {
           console.log(`wal-recovery ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
         } });
       console.log(`wal-recovery-native-receipts: ${JSON.stringify(receipts)}`);
@@ -1686,7 +1686,7 @@ class WalCapacityCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("wal-capacity-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📏️capacity/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📏️capacity/🔣️.json"), "utf8"));
     
     
     const leb = await import("@webassemblyjs/leb128");
@@ -1721,7 +1721,7 @@ class WalCapacityCheckScript extends BundleScript {
     assert(source.includes("fn wal_transaction_frame_bytes("), "missing transaction byte preflight before writes");
     assert(source.includes("const DEFAULT_MAX_SEGMENT_BYTES: u64 = db_storage::DB_IO_MAX_READ_BYTES;"), "WAL and storage must share one byte ceiling");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws: ["db_wal::tests::wal_capacity_preflight_matches_neutral_memory_and_filesystem_boundaries"] }], progress(event) {
+      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws: ["db_wal::tests::wal_capacity_preflight_matches_neutral_memory_and_filesystem_boundaries"] }], progress(event) {
           console.log(`wal-capacity ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
         } });
       console.log(`wal-capacity-native-receipts: ${JSON.stringify(receipts)}`);
@@ -1749,7 +1749,7 @@ class CheckScript extends BundleScript {
 class CanonicalArchitectureScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("canonical-architecture accepts no arguments");
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{
         package: "semio-framework-os-kernel",
         target: { kind: "lib", name: "semio_framework_os_kernel" },
         laws: [
@@ -1906,7 +1906,7 @@ type RetainedPagedOwnerFixtureV1 = {
 class RetainedCloneCheckScript extends BundleScript {
   run(segments: string[]): void {
     if (segments.length) throw new Error("retained-clone-check accepts no arguments");
-    const root = join(this.repoRoot, "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧫️fixtures/📦️nested");
+    const root = join(this.repoRoot, "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🧫️fixtures/📦️nested");
     
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
     
@@ -1921,7 +1921,7 @@ class RetainedCloneCheckScript extends BundleScript {
     assert.equal(capturedLease, fixture.immutableLease.expected);
     assert.notEqual(externalLease, capturedLease);
     assert(fixture.cancellationStops.some((stop: number) => stop > fixture.payloadByteLength / fixture.grant.maximumCopyBytes));
-    const mapRoot = join(this.repoRoot, "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🧫️fixtures/📦️paging");
+    const mapRoot = join(this.repoRoot, "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🧪️tests/🧫️fixtures/📦️paging");
     
     const mapDescriptor = JSON.parse(readFileSync(join(mapRoot, "🔣️.json"), "utf8"));
     
@@ -1961,7 +1961,7 @@ class RetainedCloneCheckScript extends BundleScript {
     externalTarget = mapDescriptor.immutableLookup.externalAfterCapture;
     assert.equal(lowerBound(capturedTarget), mapDescriptor.immutableLookup.expectedOrdinal);
     assert.notEqual(externalTarget, capturedTarget);
-    const preparationRoot = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️fixtures/📦️lifecycle");
+    const preparationRoot = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️tests/🧫️fixtures/📦️lifecycle");
     
     const preparationFixture = JSON.parse(readFileSync(join(preparationRoot, "🔣️.json"), "utf8"));
     
@@ -2014,7 +2014,7 @@ class RetainedCloneCheckScript extends BundleScript {
       assert.equal(row.expected.published, row.kind === "success", row.id);
       assert.equal(row.expected.terminalEmpty, true, row.id);
     }
-    const pagedRoot = join(this.repoRoot, "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🧫️fixtures/📦️copy");
+    const pagedRoot = join(this.repoRoot, "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🧪️tests/🧫️fixtures/📦️copy");
     
     const pagedFixture = JSON.parse(readFileSync(join(pagedRoot, "🔣️.json"), "utf8"));
     
@@ -2031,7 +2031,7 @@ class RetainedCloneCheckScript extends BundleScript {
     assert.equal(pagedFixture.expected.copyRequiresMultipleTurns, true);
     assert.equal(pagedFixture.expected.closeRequiresMultipleTurns, true);
     assert.equal(pagedFixture.expected.terminalEmpty, true);
-    const pagedOwnerRoot = join(this.repoRoot, "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧫️fixtures/📦️owners");
+    const pagedOwnerRoot = join(this.repoRoot, "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧪️tests/🧫️fixtures/📦️owners");
     
     const pagedOwnerFixture = JSON.parse(readFileSync(join(pagedOwnerRoot, "🔣️.json"), "utf8"));
     
@@ -2060,7 +2060,7 @@ class RetainedCloneCheckScript extends BundleScript {
 class DocumentOpeningAttemptNativeCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("document-opening-attempt-native-check accepts no arguments");
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
         {
           package: "semio-framework-os-kernel",
           target: { kind: "lib" },
@@ -2151,7 +2151,7 @@ class SpaceHistorySqliteSourceTestScript extends BundleScript {
 class SnapshotRouteAdmissionScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length!==1||!['source','native'].includes(segments[0]))throw Error('test-snapshot-route-admission requires source or native');
-  const owner=join(this.repoRoot,'🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧪️tests/🪶️transfer/🛂️route');assert.equal(existsSync(join(owner,'🧬️schema/🔣️.json')),false,'Testing examples have no schema authority');const fixture=JSON.parse(readFileSync(join(owner,'🧫️fixtures/🔣️.json'),'utf8'));const ajv=semioSchemaAjvV1({strict:true,allErrors:true});
+  const owner=join(this.repoRoot,'🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧪️tests/🪶️transfer/🛂️route');assert.equal(existsSync(join(owner,'🧬️schema/🔣️.json')),false,'Testing examples have no schema authority');const fixture=JSON.parse(readFileSync(join(owner,'🧪️tests/🧫️fixtures/🔣️.json'),'utf8'));const ajv=semioSchemaAjvV1({strict:true,allErrors:true});
   for(const path of ['🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json','🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json'])ajv.addSchema(JSON.parse(readFileSync(join(this.repoRoot,path),'utf8')));
   const route:SchemaCheck=ajv.compile({$ref:"https://json.schemas.assets.semio-tech.com/framework/io/schema.json#/$defs/IoRoute"});for(const row of fixture.cases)assert(route(row.route),JSON.stringify(route.errors));const grant:SchemaCheck=ajv.compile(JSON.parse(readFileSync(join(this.repoRoot,'🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json'),'utf8')));assert(grant(fixture.original.grant),JSON.stringify(grant.errors));
   const identities=['empty-original-route','disconnected-original-route','sqlite-intermediate-original-route','sqlite-nonexact-original-route','sqlite-self-original-route'];
@@ -2189,7 +2189,7 @@ class SnapshotCodecReceivingScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length!==1||!['source','native'].includes(segments[0]))throw Error('test-snapshot-codec-receiving requires source or native');
   const owner=join(this.repoRoot,'🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement');
-  const fixture=JSON.parse(readFileSync(join(owner,'🧫️fixtures/🔣️.json'),'utf8'));
+  const fixture=JSON.parse(readFileSync(join(owner,'🧪️tests/🧫️fixtures/🔣️.json'),'utf8'));
   const actualGrant=JSON.parse(readFileSync(join(this.repoRoot,'🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json'),'utf8')),validateGrant=semioSchemaAjvV1({strict:true,allErrors:true}).compile(actualGrant);assert(validateGrant(fixture.original.grant),JSON.stringify(validateGrant.errors));
   assert(validateGrant(fixture.original.defaultRefusalGrant),JSON.stringify(validateGrant.errors));
   const{Database}=await import('bun:sqlite');const reference=new Database(':memory:');try{reference.run(readFileSync(join(owner,'🧬️schema/🗄️.sql'),'utf8'));reference.run('INSERT INTO retained_value VALUES(1,7)');assert.deepEqual(reference.query('SELECT id,value FROM retained_value').all(),[{id:1,value:7}]);assert.equal((reference.query('PRAGMA integrity_check').get()as {integrity_check:string}).integrity_check,'ok');}finally{reference.close();}
@@ -2223,7 +2223,7 @@ class DirectoryRuntimeSourceScript extends BundleScript {
 export async function directorySessionAuthorityOracle(repoRoot: string): Promise<number> {
   const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1");
   const schema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8"));
-  const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🪪️session-authority-v1/🔣️.json"), "utf8"));
   const validate: SchemaCheck = semioSchemaAjvV1({ strict: true, allErrors: true }).compile(schema);
   const contract = await import("../../🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts");
   for (const row of fixture.rows) {
@@ -2274,7 +2274,7 @@ class DirectorySessionAuthorityCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("directory-session-authority-check accepts only --native");
     const checks = await directorySessionAuthorityOracle(this.repoRoot);
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{
+      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{
           package: "semio-framework-os-kernel",
           target: { kind: "lib" },
           laws: [
@@ -2293,7 +2293,7 @@ class DirectorySessionAuthorityCheckScript extends BundleScript {
 
 /** 📃️ Proves the shared event-page envelope against an independent JSON Schema and SHA-256 oracle. */
 export async function directoryEventPageContractOracle(repoRoot: string): Promise<number> {
-  const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/📃️event-page-v1.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/📃️event-page-v1.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json"), "utf8"));
   const validator: SchemaCheck = semioSchemaAjvV1({ strict: false, allErrors: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/DirectoryEventPageV1" });
   assert(validator(fixture.valid), JSON.stringify(validator.errors));
@@ -2322,7 +2322,7 @@ export async function directoryEventPageContractOracle(repoRoot: string): Promis
 
 /** 🔌️ Proves both directory clients preserve one canonical event-page response and its bounded header. */
 export async function directoryEventPageClientOracle(repoRoot: string): Promise<number> {
-  const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/📃️event-page-v1.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/📃️event-page-v1.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json"), "utf8"));
   const validator: SchemaCheck = semioSchemaAjvV1({ strict: false, allErrors: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/DirectoryEventPageV1" });
   const canonical = JSON.stringify(fixture.valid);
@@ -2362,7 +2362,7 @@ class DirectoryEventPageContractCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("directory-event-page-contract-check accepts only --native");
     const checks = await directoryEventPageContractOracle(this.repoRoot);
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["os_directory::schema::tests::directory_event_page_v1_matches_language_neutral_receipt_and_rejects_hostiles"] }], progress(event) {
+      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["os_directory::schema::tests::directory_event_page_v1_matches_language_neutral_receipt_and_rejects_hostiles"] }], progress(event) {
           console.log(`directory-event-page-contract ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
         } });
       console.log(`directory-event-page-contract-native-receipts: ${JSON.stringify(receipts)}`);
@@ -2376,7 +2376,7 @@ class DirectoryEventPageClientCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("directory-event-page-client-check accepts only --native");
     const checks = await directoryEventPageClientOracle(this.repoRoot);
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["os_directory::client::tests::directory_event_page_preserves_canonical_bytes_bounds_and_cancels_before_io"] }], progress(event) {
+      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["os_directory::client::tests::directory_event_page_preserves_canonical_bytes_bounds_and_cancels_before_io"] }], progress(event) {
           console.log(`directory-event-page-client ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
         } });
       console.log(`directory-event-page-client-native-receipts: ${JSON.stringify(receipts)}`);
@@ -2387,7 +2387,7 @@ class DirectoryEventPageClientCheckScript extends BundleScript {
 
 /** 🧭️ Proves fetch, exact Home ACK, next-page, and live-cursor ordering independently of either shell. */
 export function directoryEventPageBootstrapOracle(repoRoot: string): number {
-  const trace = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🚀️event-page-bootstrap-v1.json"), "utf8"));
+  const trace = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/🚀️event-page-bootstrap-v1.json"), "utf8"));
     
   
   let cursor = trace.initialAfter;
@@ -2452,7 +2452,7 @@ class WalSegmentStateCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("wal-segment-state-check accepts only --native");
     const checks = walSegmentStateOracle(this.repoRoot);
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), cargoArgs: ["--all-features"], groups: [
+      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), cargoArgs: ["--all-features"], groups: [
           {
             package: "semio-framework-os-kernel-db",
             target: { kind: "lib" },
@@ -2533,7 +2533,7 @@ class MemberDialectCheckScript extends BundleScript {
     testMemberDialectFixture();
     const { testFixtureProjectionRetirement } = await import("../../🔨️modules/🔌️plugin/🧪️tests/🌲️fixture-projection/🟦️.ts");
     testFixtureProjectionRetirement();
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), cargoArgs: segments, groups: [
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), cargoArgs: segments, groups: [
         {
           package: "semio-framework-schema",
           target: { kind: "lib" },
@@ -2613,7 +2613,7 @@ class ReopenStormCheckScript extends BundleScript {
     const wanted = segments.length === 0 || segments.includes("all") ? Object.keys(REOPEN_STORM_LAWS).filter((name) => !REOPEN_STORM_LAWS[name]!.claimed) : segments;
     const unknown = wanted.filter((name) => !(name in REOPEN_STORM_LAWS));
     if (unknown.length) throw new Error(`reopen-storm-check accepts ${Object.keys(REOPEN_STORM_LAWS).join(" | ")} | all, got ${unknown.join(",")}`);
-    const throughput = JSON.parse(readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧫️fixtures/⏱️throughput/🔣️.json"), "utf8"));
+    const throughput = JSON.parse(readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🧫️fixtures/⏱️throughput/🔣️.json"), "utf8"));
     
     
     console.log(`[reopen-storm] throughput example: storm ${throughput.storm.documents}×${throughput.storm.batches}×${throughput.storm.batchEdits}, storm/serial ≤ ${throughput.bounds.stormToSerialRatioMax}`);
@@ -2664,7 +2664,7 @@ class ReopenStormCheckScript extends BundleScript {
 /** 🌐️ Checks owner removal with neutral schema vectors and independent Ajv validation. */
 class DocumentHttpCheckScript extends BundleScript {
   async run(): Promise<void> {
-    const fixture = JSON.parse(readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🧫️fixtures/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     const ajv = semioSchemaAjvV1({ strict: false });
     const declarationSchema = JSON.parse(readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🧬️schema/🔣️.json"), "utf8"));
     const declared = ajv.compile(declarationSchema);
@@ -2687,7 +2687,7 @@ class DocumentHttpCheckScript extends BundleScript {
 class CommandIngressConsumerScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw Error("test-command-ingress-consumer accepts no arguments");
-  const {runBudgetedTestCommand}=await import("../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"),{testLevelBudgetMs}=await import("../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts"),source=resolve(this.root,"../../🔨️modules/📡️spr/🧵️channel/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts");
+  const {runBudgetedTestCommand}=await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts"),{testLevelBudgetMs}=await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts"),source=resolve(this.root,"../../🔨️modules/📡️spr/🧵️channel/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts");
   await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
   await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
  }
@@ -2782,13 +2782,13 @@ class ArtifactKindNativeScript extends BundleScript {
  if(segments.length)throw Error("test-artifact-kind accepts no arguments");
      const artifactDir = process.env.SEMIO_TEST_ARTIFACT_DIR;
     if (!artifactDir) throw new Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned native output");
-    let cancelled = false;
-    const stop = (): void => { cancelled = true; };
-    process.once("SIGINT", stop); process.once("SIGTERM", stop);
-    try {
-      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 }, cwd: this.repoRoot, artifactDir, cancelled: () => cancelled, progress: event => console.log(`[artifact-kind] ${event.stage}`), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["os_io::tests::artifact_kind_id_follows_owner_neutral_corpus"] }] });
+    
+    
+     
+    
+      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 }, cwd: this.repoRoot, artifactDir,  progress: event => console.log(`[artifact-kind] ${event.stage}`), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["os_io::tests::artifact_kind_id_follows_owner_neutral_corpus"] }] });
       console.log(`[DEBUG] artifact-kind native laws=${receipts.reduce((count, receipt) => count + receipt.assertions, 0)}`);
-    } finally { process.off("SIGINT", stop); process.off("SIGTERM", stop); }
+    
 
  }
 }
@@ -2806,12 +2806,11 @@ class ReturnedReadCustodyScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw Error("test-returned-read-custody accepts no arguments");
   const owner=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return");
-  const fixture=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8"));
+  const fixture=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
   for(const row of fixture.cases)assert.equal(row.expectLastCustody,row.otherAliases===0||row.dropOtherBeforeRelease,row.id);
   const artifactDir=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifactDir)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned native output");
-  let cancelled=false;const stop=()=>{cancelled=true;};process.once("SIGINT",stop);process.once("SIGTERM",stop);
-  try{const receipts=await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60000, lawMilliseconds: 120000 }, cwd:this.repoRoot, ...exactCargoStageEnvironments(), artifactDir, cancelled:()=>cancelled, progress:event=>console.log("[DEBUG] returned-read native "+event.stage), groups:[{package:"semio-framework-os-kernel",target:{kind:"lib"},laws:["os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_alias_has_exact_physical_custody","os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_parallel_aliases_credit_exactly_one_frame"]}] });console.log("[DEBUG] returned-read custody receipts "+JSON.stringify(receipts));}
-  finally{process.off("SIGINT",stop);process.off("SIGTERM",stop);}
+  
+  const receipts=await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60000, lawMilliseconds: 120000 }, cwd:this.repoRoot, ...exactCargoStageEnvironments(), artifactDir,  progress:event=>console.log("[DEBUG] returned-read native "+event.stage), groups:[{package:"semio-framework-os-kernel",target:{kind:"lib"},laws:["os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_alias_has_exact_physical_custody","os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_parallel_aliases_credit_exactly_one_frame"]}] });console.log("[DEBUG] returned-read custody receipts "+JSON.stringify(receipts));
  }
 }
 router.register("test-returned-read-custody",ReturnedReadCustodyScript);
@@ -2859,5 +2858,62 @@ class CanonicalPreparationControlSourceScript extends BundleScript {
  }
 }
 router.register("test-canonical-preparation-control-source",CanonicalPreparationControlSourceScript);
+
+/** 📸️ Executes complete legal snapshots through independent SQLite files before original Native custody qualification. */
+class TypedSnapshotFileSourceScript extends BundleScript{
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw Error("test-typed-snapshot-file-source accepts no arguments");
+  const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/📸️typed-snapshot/🧪️tests/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+  await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
+ }
+}
+router.register("test-typed-snapshot-file-source",TypedSnapshotFileSourceScript);
+
+/** 🪶️ Executes the actual complete builtin snapshot file law through supplied original receiving callers. */
+class TypedSnapshotFileNativeScript extends BundleScript{
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw Error("test-typed-snapshot-file-native accepts no arguments");
+  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","sqlite_snapshot_framework_space_history_actual_typed_io_file_metadata_and_route","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env));
+ }
+}
+router.register("test-typed-snapshot-file-native",TypedSnapshotFileNativeScript);
+
+/** 🛂️ Qualifies borrowed seven-table History validation under original directional receiving authority. */
+class SpaceHistoryValidationScript extends BundleScript{
+ async run(segments:string[]):Promise<void>{
+  if(segments.length!==1||!["source","native"].includes(segments[0]!))throw Error("test-space-history-validation requires source or native");
+  if(segments[0]==="source"){
+   const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🛂️validation/🧪️tests/🟦️.ts");
+   await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+   await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
+  }else await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","sqlite_snapshot_framework_space_history_borrowed_validation_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env));
+ }
+}
+router.register("test-space-history-validation",SpaceHistoryValidationScript);
+
+/** 📋️ Qualifies real Config paged source custody under the original finite caller. */
+class ConfigPagedSourceScript extends BundleScript{
+ async run(segments:string[]):Promise<void>{
+  if(segments.length!==1||!["source","native"].includes(segments[0]!))throw Error("test-config-paged-source requires source or native");
+  if(segments[0]==="source"){
+   const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/♻️retirement/📦️backing/🧪️tests/🟦️.ts");
+   await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:this.invocation.control.remainingMilliseconds(),signal:this.invocation.control.signal,throwOnFailure:true});
+   await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:this.invocation.control.remainingMilliseconds(),signal:this.invocation.control.signal,throwOnFailure:true});
+  }else await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","artifact_store_resident_paged_source_preserves_original_pages_order_and_funded_cleanup","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env));
+ }
+}
+router.register("test-config-paged-source",ConfigPagedSourceScript);
+
+/** 🪙️ Qualifies original Store and Presence cleanup callers under their independently supplied phase authority. */
+class OriginalCleanupContextNativeScript extends BundleScript{
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw Error("test-original-cleanup-context-native accepts no arguments");
+  const source=join(this.repoRoot,"🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/🧪️tests/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:this.invocation.control.remainingMilliseconds(),signal:this.invocation.control.signal,throwOnFailure:true});
+  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","-E","test(interactive_envelope_close_reclaims_every_owner_through_the_job_protocol) | test(field_close_failure_preserves_real_receipts_through_the_original_decode_job) | test(normal_decode_release_records_original_wallet_even_after_child_fault) | test(retained_presence_local_capture_cancel_closes_mounted_worker_while_store_remains_open) | test(registered_rejected_pages_obey_zero_short_and_exact_grants) | test(unadmitted_rejected_pages_obey_zero_short_and_exact_grants) | test(original_field_release_survives_registered_and_unadmitted_refusal)","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env));
+ }
+}
+router.register("test-original-cleanup-context-native",OriginalCleanupContextNativeScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "check" }) }));

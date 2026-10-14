@@ -1,0 +1,212 @@
+{
+  "exclusive": false,
+  "actions": [
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "operation": "updated",
+      "beforeSha256": "6629e18e95338c13384dd679eb01a1cb6c810d33a42a6cb8167c1fcc1538b5bd",
+      "afterSha256": "66c07d6a2bf920f14c0f7e32bfc0c986e0a505827b46740dfeb8ac59e249eaa6",
+      "inputs": [
+        "📥️products-readers.json"
+      ],
+      "edits": [
+        {
+          "from": "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/🤖️generated/📇️registry/🔣️.json",
+          "to": "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/⚖️scale/🤖️generated/📇️registry/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": ".vscode/launch.json",
+      "operation": "updated",
+      "beforeSha256": "358082d76bb06e627eb3708cd710c1811762db04b6a33c36643380f27f016671",
+      "afterSha256": "6b2c82e6572b7fd22ade7037c0db6f4bdd6de7cf5baa13159ad18d79be8fd785",
+      "inputs": [
+        "📥️products-readers.json"
+      ],
+      "edits": [
+        {
+          "from": "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/🤖️generated/📇️registry/🔣️.json",
+          "to": "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/⚖️scale/🤖️generated/📇️registry/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️mutation-history-gates/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "854c410ee3cd1984a88c9eb5ed344873f2d4d42d982c7072bd31ed2e1e9825f1",
+      "afterSha256": "6e090c8b1a7d28c7aaf4cfeccd61082c9ae5316ee106d5f0326fc1ef24256ec4",
+      "inputs": [
+        "📥️products-readers.json"
+      ],
+      "edits": [
+        {
+          "from": "../../../../../💻️os/🔨️modules/🗣️dsl/✨️derive/🧫️fixtures/🧫️manifest-path-dependencies/🔣️.json",
+          "to": "../../../../../💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🧫️fixtures/🧫️manifest-path-dependencies/🔣️.json",
+          "occurrences": 1
+        },
+        {
+          "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧫️fixtures/🧫️mutation-editability/🔣️.json",
+          "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧫️fixtures/🧫️mutation-editability/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/⚖️readme-license-owner-authority/🔣️.json",
+      "operation": "updated",
+      "beforeSha256": "b60f16acbde34545d29abfeb50a55d5db6115b2d316b33011db07da34ca7afe9",
+      "afterSha256": "d619ffbcab3e4bbde761a130b2efb37d9789ea76e7a75b30f60357d4e78d570a",
+      "inputs": [
+        "📥️products-readers.json"
+      ],
+      "edits": [
+        {
+          "from": "🧰️framework/🛍️products/💻️os/🧫️fixtures/📃️readme/📝️.md",
+          "to": "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📃️readme/📝️.md",
+          "occurrences": 1
+        },
+        {
+          "from": "🧰️framework/🛍️products/💻️os/🧫️fixtures/README.md",
+          "to": "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/README.md",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "981de69f22ae44143093608930b6b58726810fe1bbd825e5f51263966396896e",
+      "afterSha256": "eba87dc17a08f9ee3765da36c4cf08c9477e9b2be0b499d4908bb1b0a7dbbd39",
+      "inputs": [
+        "📥️products-readers.json"
+      ],
+      "edits": [
+        {
+          "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/📦️deployment/🔒️fixed-parent-cases.json",
+          "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧫️fixtures/📦️deployment/🔒️fixed-parent-cases.json",
+          "occurrences": 1
+        },
+        {
+          "from": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe",
+          "to": "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/🧩️jcoprobe",
+          "occurrences": 2
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "b54bc6a7c41e661be80c9608651576a2719410fb7e2fa3e06e50e1be38f602af",
+      "afterSha256": "63ca796d763cfe6fdd903dd71f57bbb0ae2e9c9f064f56330fd1117544cc67ed",
+      "inputs": [
+        "📥️products-readers.json"
+      ],
+      "edits": [
+        {
+          "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🕸️imports/🧫️cases.json",
+          "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🕸️imports/🧫️cases.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🔐️pool-use-ownership/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "387b91d4f6d9ed0bd90ed598b949e329b8867addac137b926e31072d5612999d",
+      "afterSha256": "fbe40e337b990c773ed169200af983be29a7eb9f8107740af5b167965ee7cc88",
+      "inputs": [
+        "📥️products-readers.json"
+      ],
+      "edits": [
+        {
+          "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🚪️document-mount/🧫️fixtures/🔐️pool-use/🔣️.json",
+          "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🚪️document-mount/🧪️tests/🧫️fixtures/🔐️pool-use/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🔔️deferred-wake-ownership/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "2597fd65d5ef08c9769b5d3f5dfd9d6067029c78b7cbaa7a06d0696de9739af1",
+      "afterSha256": "e1a74235fe5b32bb55432d29b6e96e211125d340d13c9fa6efc3d87103c77d60",
+      "inputs": [
+        "📥️products-readers.json"
+      ],
+      "edits": [
+        {
+          "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🔐️writer/🧫️fixtures/🔔️deferred-wake/🔣️.json",
+          "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🔐️writer/🧪️tests/🧫️fixtures/🔔️deferred-wake/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "bb0d6e02a1a38baaaf78db7be9d631cd2b6becc457a21e7e07f391ff615cf3e0",
+      "afterSha256": "2075eb1270dfb0f2e3d1ec845b2d45dc09c6fe6b4dcc6b311d198911670c81ba",
+      "inputs": [
+        "📥️process-hub-extra-readers.json"
+      ],
+      "edits": [
+        {
+          "from": "🌎️hub/🧩️compositions/🪐️space/🧪️testing/🧫️fixtures/🔮️ownership/🔣️.json",
+          "to": "🌎️hub/🧩️compositions/🪐️space/🧪️testing/🧪️tests/🧫️fixtures/🔮️ownership/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "operation": "updated",
+      "beforeSha256": "b194c64cc8711ed2f893962612fb12b8b2a09232e7099546ab9610070ef171d0",
+      "afterSha256": "bee922e4df3161e3b7dcd6e093b6f5eaf182773be5da20c5301ecb6ad4c93262",
+      "inputs": [
+        "📥️process-hub-extra-readers.json"
+      ],
+      "edits": [
+        {
+          "from": "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🎮️session/🧫️fixtures/🔣️.json",
+          "to": "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🎮️session/🧪️tests/🧫️fixtures/🔣️.json",
+          "occurrences": 2
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+      "operation": "updated",
+      "beforeSha256": "6e395718a328524428ce61cfb5db445bd8b1b3ddd318dafa1b3211271f91901a",
+      "afterSha256": "331d89f72a8fd77cb5bc8edc3eb80dde0eebbdd2d504709fb81888f418379cb0",
+      "inputs": [
+        "📥️process-hub-extra-readers.json"
+      ],
+      "edits": [
+        {
+          "from": "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🧫️fixtures/{🚇️pipe-v1,⏳️idle-admission-v1}/🔣️.json",
+          "to": "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🧪️tests/🧫️fixtures/{🚇️pipe-v1,⏳️idle-admission-v1}/🔣️.json",
+          "occurrences": 1
+        },
+        {
+          "from": "{workspaceRoot}/🌎️hub/🧫️fixtures/🧱️foundation-source/🔣️.json",
+          "to": "{workspaceRoot}/🌎️hub/🧪️tests/🧫️fixtures/🧱️foundation-source/🔣️.json",
+          "occurrences": 1
+        },
+        {
+          "from": "{workspaceRoot}/🌎️hub/📇️directory/🧫️fixtures/🔌️scoped-socket-revocation-v1/🔣️.json",
+          "to": "{workspaceRoot}/🌎️hub/📇️directory/🧪️tests/🧫️fixtures/🔌️scoped-socket-revocation-v1/🔣️.json",
+          "occurrences": 1
+        },
+        {
+          "from": "{workspaceRoot}/🌎️hub/🧫️fixtures/🧱️socket-grant-command-source/🔣️.json",
+          "to": "{workspaceRoot}/🌎️hub/🧪️tests/🧫️fixtures/🧱️socket-grant-command-source/🔣️.json",
+          "occurrences": 1
+        }
+      ]
+    }
+  ],
+  "peerObservations": []
+}

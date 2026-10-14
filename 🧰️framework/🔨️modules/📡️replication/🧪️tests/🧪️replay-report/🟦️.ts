@@ -2,7 +2,7 @@ import Ajv from "ajv";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
-/** 📋️ Validates the language-agnostic replay reports (`⚔️conflict/🧫️fixtures/🧫️replay-report`) against their schema
+/** 📋️ Validates the language-agnostic replay reports (`⚔️conflict/🧪️tests/🧫️fixtures/🧫️replay-report`) against their schema
  * (Ajv) and checks the TypeScript finalize gate against the verdict the Rust `ReplayReport::blocks_finalize` meets. */
 export async function registerReplayReportTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "replayReportBlocksFinalize" | "REPLAY_SEVERITIES">, source: TestSource): Promise<void> {
   const { replayReportBlocksFinalize, REPLAY_SEVERITIES } = dependencies;
@@ -15,7 +15,7 @@ export async function registerReplayReportTests(vitest: NonNullable<ImportMeta["
     const { dirname, join } = await import("node:path");
     const { fileURLToPath } = await import("node:url");
     const root = dirname(fileURLToPath(source.url));
-    const [fixture, schema] = await Promise.all([readFile(join(root, "⚔️conflict/🧫️fixtures/🧫️replay-report/🔣️.json"), "utf8"), readFile(join(root, "⚔️conflict/🧬️schema/🔣️replay-report/🔣️.json"), "utf8")]);
+    const [fixture, schema] = await Promise.all([readFile(join(root, "⚔️conflict/🧪️tests/🧫️fixtures/🧫️replay-report/🔣️.json"), "utf8"), readFile(join(root, "⚔️conflict/🧬️schema/🔣️replay-report/🔣️.json"), "utf8")]);
     return { fixture: JSON.parse(fixture) as Json, schema: JSON.parse(schema) as Json };
   }
 

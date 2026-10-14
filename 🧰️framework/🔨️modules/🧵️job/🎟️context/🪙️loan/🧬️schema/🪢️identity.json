@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "action",
+      "outcome",
+      "original",
+      "replacement",
+      "primary",
+      "receiptRefusal"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "action": {
+        "enum": [
+          "swap",
+          "replace"
+        ]
+      },
+      "outcome": {
+        "enum": [
+          "success",
+          "failure",
+          "unwind"
+        ]
+      },
+      "original": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "recipient",
+          "cursor",
+          "operation",
+          "generation",
+          "payload",
+          "clock",
+          "deadline"
+        ],
+        "properties": {
+          "recipient": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "cursor": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "operation": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "generation": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "payload": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "clock": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "deadline": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "replacement": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "recipient",
+          "cursor",
+          "operation",
+          "generation",
+          "payload",
+          "clock",
+          "deadline"
+        ],
+        "properties": {
+          "recipient": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "cursor": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "operation": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "generation": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "payload": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "clock": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "deadline": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "primary": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "receiptRefusal": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  }
+}

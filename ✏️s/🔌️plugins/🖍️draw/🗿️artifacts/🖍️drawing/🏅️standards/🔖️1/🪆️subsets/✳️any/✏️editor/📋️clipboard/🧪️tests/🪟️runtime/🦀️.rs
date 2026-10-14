@@ -8,7 +8,7 @@ async fn reserved_clipboard(app:&mut DrawingApp,verb:&str,args:Option<semio_fram
 #[semio_framework_async_macros::async_test]
 async fn registered_clipboard_copy_paste_cut_preserve_atomic_inverse_and_live_selection(){
  use semio_framework_value::ToValue;
- let fixtures:Vec<serde_json::Value>=serde_json::from_str(include_str!("../../../../🧬️schema/🎬️scene/📋️prepare/🧫️fixtures/🔣️.json")).unwrap();
+ let fixtures:Vec<serde_json::Value>=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🔣️.json")).unwrap();
  let authored=fixtures.iter().find(|row|row["name"]=="rectangle").unwrap()["document"].clone();let before:DrawingSnapshot=serde_json::from_value(authored).unwrap();let original_id=crate::schema::layer_base(&before.layers[0]).id.to_string_owner();
  let(mut app,meta)=inline_selection_app().await;load_drawing_fixture(&mut app,&before);
  let targets=serde_json::to_string(&vec![serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":original_id})]).unwrap();

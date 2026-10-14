@@ -2,7 +2,7 @@ import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync,readdirSync} from "node:fs";
 import {resolve} from "node:path";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import ts from "typescript";
 
 const readsSpecific=(source:string)=>["/🛍️products/","/✏️s/","/🌎️hub/"].some(prefix=>source.includes(prefix));

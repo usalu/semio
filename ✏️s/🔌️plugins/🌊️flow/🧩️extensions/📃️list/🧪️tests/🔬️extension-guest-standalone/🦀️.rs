@@ -1,6 +1,6 @@
 #[test]
     fn bundle_identity_matches_catalogue_fixture() {
-        let fixture = semio_framework_pack_json::parse(include_str!("../../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let fixture = semio_framework_pack_json::parse(include_str!("../../../🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let mut bundle = bundle();
         assert_eq!(Some(bundle.manifest.extension_id.as_str()), fixture.get("list").and_then(|entry| entry.get("pluginId")).and_then(semio_framework_pack_json::Value::as_str));
         assert_eq!(bundle.manifest.topic_contributions.len(), 2);

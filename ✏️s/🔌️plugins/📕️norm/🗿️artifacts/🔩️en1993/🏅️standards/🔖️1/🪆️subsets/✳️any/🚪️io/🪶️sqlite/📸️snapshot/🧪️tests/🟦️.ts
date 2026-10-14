@@ -1,6 +1,6 @@
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
-import fixture from"../🧫️fixtures/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
 import{EN1993_SQLITE_SCHEMA,en1993SnapshotToSqliteDatabase as project,en1993SnapshotFromSqliteDatabase as restore,type En1993SqliteSnapshot}from"../🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase,type SqliteValue}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 function owned(value:unknown,word=0x3fe0000000000000n):unknown{if(value===0.5)return{bits:word};if(Array.isArray(value))return value.map(v=>owned(v,word));if(value!==null&&typeof value==="object")return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,owned(v,word)]));return value}
@@ -20,7 +20,7 @@ test("EN1993 independently created SQLite trees preserve every owning relationsh
 test("EN1993 published JSON facets retain actual steel fields annex and native widths",async()=>{const{default:Ajv}=await import("ajv");for(const schema of[(await import("../../../../🧬️schema/📸️snapshot/🔣️.json")).default,(await import("../../../../🧬️schema/🔣️.json")).default]){const validate=new Ajv({strict:false}).compile(schema);expect(validate(fixture.snapshot)).toBe(true);const de=structuredClone(fixture.snapshot);de.annex="De";expect(validate(de)).toBe(true);const wrong=structuredClone(fixture.snapshot);wrong.joints[0]!.boltRows=4294967296;expect(validate(wrong)).toBe(false);const category=structuredClone(fixture.snapshot);category.fatigueDetails[0]!.category=256;expect(validate(category)).toBe(false);expect(validate({...fixture.snapshot,opaque:"refused"})).toBe(false)}});
 
 import NormSemanticAjv from "ajv/dist/2020.js";
-import normSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {en1993SnapshotToSqliteDatabase as normSemanticProject,en1993SnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
 import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

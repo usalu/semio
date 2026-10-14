@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::fem2d::modes::edit::windows::model as model_window;
 use crate::editor::fem2d::modes::edit::windows::results as results_window;
 use semio_framework_plugin::{HistoryView, ViewModel, ViewWindowInstance};
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
 
 fn demo() -> Fem2dSnapshot {
     Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).expect("demo document parses")

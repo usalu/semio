@@ -1,5 +1,0 @@
-{
-  "mutation": "changeRefrigerationSystemDefrostSchedule",
-  "id": 420,
-  "newDefrostScheduleId": 99
-}

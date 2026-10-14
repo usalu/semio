@@ -8,7 +8,7 @@ import schema from "../🧬️schema/🔣️.json";
 import {parseFillSelection} from "../../🟦️.ts";
 
 const validate=semioSchemaAjvV1({allErrors:true}).compile(schema);
-const root=join(import.meta.dir,"../../../../🧫️fixtures/🧬️mutations/🫗️fill-selection");
+const root=join(import.meta.dir, "../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫗️fill-selection");
 const cases=readdirSync(root);
 
 test("every committed fill-selection mutation is accepted by the schema and the twin alike",()=>{

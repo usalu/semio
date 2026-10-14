@@ -9,11 +9,11 @@ use crate::mutations::{inverse_vcs_mutation, VcsDemoMutation};
 use crate::VcsSnapshot;
 use crate::central_apply::{apply_vcs_mutation};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚦change-status/🧪️draft-to-review/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚦change-status/🧪️draft-to-review/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚦change-status/🧪️draft-to-review/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚦change-status/🧪️draft-to-review/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚦change-status/🧪️draft-to-review/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚦change-status/🧪️draft-to-review/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚦change-status/🧪️draft-to-review/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚦change-status/🧪️draft-to-review/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚦change-status/🧪️draft-to-review/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚦change-status/🧪️draft-to-review/🎯️outcome/🔣️.json");
 
 fn before() -> VcsSnapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")

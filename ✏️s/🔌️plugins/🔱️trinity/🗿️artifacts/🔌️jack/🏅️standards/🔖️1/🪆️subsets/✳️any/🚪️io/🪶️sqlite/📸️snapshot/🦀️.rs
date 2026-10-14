@@ -1,4 +1,5 @@
 //! 🔌️ Jack manifest entities, independently owned type chains and literal Graph child.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use crate::{Camera, EdgeKindDef, JackContentChild, Manifest, NodeKindDef, PortDirection, PortKindDef, PropertyDef, PropertyKind};
 use semio_framework_value::{ValueType, ValueError, ValueRefusalKind};
@@ -408,21 +409,16 @@ pub(crate) fn validate(value: &JackSnapshot) -> Result<(), ValueError> {
 pub(crate) fn retire_snapshot(value: JackSnapshot) {
     crate::retire_owned_to_terminal(value).expect("Jack explicit retirement");
 }
-impl store::os_store::serialization::ArtifactSqliteSnapshot for JackSnapshot {
-    const SQLITE_SCHEMA: &'static str = SQL;
-    fn to_sqlite_database(&self, c: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
-        validate(self)?;
-        project(self, c)
-    }
-    fn from_sqlite_database(database: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
-        reconstruct(database, c)
-    }
+impl store::os_store::serialization::ArtifactSqliteSnapshotHost for JackSnapshot {
+    
+    
+    
     fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
         c.checkpoint(SqliteSnapshotPhase::DecodeNative, 0, 0)?;
         let max_rows = c.limits().max_rows;
         let value = store::decode_sqlite_snapshot_record_native(
             payload,
-            <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),
+            <Self as pack::snapshot::ArtifactDsl>::envelope_id(),
             crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::__dsl_spec_producer(),
             |record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
                 let flat = crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::__dsl_from_record_controlled(record, native)?;
@@ -440,7 +436,7 @@ impl store::os_store::serialization::ArtifactSqliteSnapshot for JackSnapshot {
         forecast(self, c, SqliteSnapshotPhase::EncodeNative)?;
         store::encode_sqlite_snapshot_record_native(
             encoding,
-            <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),
+            <Self as pack::snapshot::ArtifactDsl>::envelope_id(),
             crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::__dsl_spec_producer(),
             |native| {
                 let flat = crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::from_snapshot_controlled(self, native)?;
@@ -461,6 +457,16 @@ impl store::os_store::serialization::ArtifactSqliteSnapshot for JackSnapshot {
             validate(self)?;
             Ok(store::io_schema::IoOutcome::clean(()))
         })().map_err(store::io_schema::IoError::from_value_error)
+    }
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for JackSnapshot {
+const SQLITE_SCHEMA: &'static str = SQL;
+fn to_sqlite_database(&self, c: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
+        validate(self)?;
+        project(self, c)
+    }
+fn from_sqlite_database(database: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+        reconstruct(database, c)
     }
 }
 

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🎬️set-storey-cut-height/🚫️non-positive",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎬️set-storey-cut-height/🚫️non-positive/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎬️set-storey-cut-height/🚫️non-positive/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎬️set-storey-cut-height/🚫️non-positive/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎬️set-storey-cut-height/🚫️non-positive/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎬️set-storey-cut-height/🚫️non-positive/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎬️set-storey-cut-height/🚫️non-positive/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎬️set-storey-cut-height/🚫️non-positive/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎬️set-storey-cut-height/🚫️non-positive/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎬️set-storey-cut-height/🚫️non-positive/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎬️set-storey-cut-height/🚫️non-positive/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

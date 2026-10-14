@@ -3,7 +3,7 @@ import {expect,it} from "vitest";
 import Ajv from "ajv";
 import {Box2,Vector2} from "three";
 import {chromePanelSafeArea,type Anchor,type SafeAreaYield} from "../../🎯️targets/⚛️react/🟦️.tsx";
-import fixture from "../../🧫️fixtures/🛟️chrome-panel-safe-area/🔣️.json";
+import fixture from "../🧫️fixtures/🛟️chrome-panel-safe-area/🔣️.json";
 
 const box=(row:readonly number[])=>new Box2(new Vector2(row[0],row[1]),new Vector2(row[0]!+row[2]!,row[1]!+row[3]!));
 const intersects=(a:Box2,b:Box2)=>{const size=a.clone().intersect(b).getSize(new Vector2());return size.x>0&&size.y>0;};

@@ -5,7 +5,7 @@ use crate::{ExprPoint3, Family, FamilyParameter, FamilySolid, ModelInference, Pa
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const TABLE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json");
+const TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json");
 
 /// 🛋️ The demo room (walls, storeys) with the families of the table fixture (a table, three profiles, a broken generic one) and a basin (plumbing, one parameter `width`, one cuboid).
 pub(crate) fn furnished() -> ModelSnapshot {

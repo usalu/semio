@@ -37,7 +37,7 @@ async fn raster_config_dsl_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn brush_style_shared_vectors_preserve_session_state_and_reject_invalid_values() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖌️brush-style/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🖌️brush-style/🔣️.json")).unwrap();
     let base = RasterConfig::default();
     for row in fixture["cases"].as_array().unwrap() {
         let color = row["color"].as_str().unwrap().to_string();
@@ -67,7 +67,7 @@ async fn brush_style_shared_vectors_preserve_session_state_and_reject_invalid_va
 
 #[semio_framework_async_macros::async_test]
 async fn mask_paint_config_shared_vectors_round_trip_and_restore(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎭️mask-paint/🔣️.json")).unwrap();let base=RasterConfig::default();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎭️mask-paint/🔣️.json")).unwrap();let base=RasterConfig::default();
     for row in fixture["cases"].as_array().unwrap(){
         let target=RasterConfigMutation::SetPaintTarget(SetPaintTargetEdit {value:row["target"].as_str().unwrap().into()});let value=RasterConfigMutation::SetMaskValue(SetMaskValueEdit {value:row["value"].as_u64().unwrap() as u32});let next=target.diff(&base).diff().clone();let next=value.diff(&next).diff().clone();assert_eq!(next.paint_target,row["target"].as_str().unwrap());assert_eq!(next.mask_value,row["value"].as_u64().unwrap() as u32);assert_eq!(target.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff(),&base);store::os_store::test_support::assert_dsl_round_trip(&next);store::os_store::test_support::assert_op_line_round_trip(&target);store::os_store::test_support::assert_op_line_round_trip(&value);
     }
@@ -79,7 +79,7 @@ async fn mask_paint_config_shared_vectors_round_trip_and_restore(){
 /// past 255 leaves the session untouched.
 #[semio_framework_async_macros::async_test]
 async fn fill_tolerance_shared_vectors_round_trip_and_restore() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌊️fill-tolerance/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌊️fill-tolerance/🔣️.json")).unwrap();
     let base = RasterConfig::default();
     assert_eq!(base.fill_tolerance, 24);
     for row in fixture["cases"].as_array().unwrap() {
@@ -98,7 +98,7 @@ async fn fill_tolerance_shared_vectors_round_trip_and_restore() {
 
 #[semio_framework_async_macros::async_test]
 async fn completed_selection_contract_round_trips_and_survives_style_changes(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎯️pixel-selection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎯️pixel-selection/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap(){
         let selection:RasterPixelSelection=semio_framework_pack_json::from_json_str(&row["selection"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let mut coverage=vec![0;selection.validate().unwrap()];

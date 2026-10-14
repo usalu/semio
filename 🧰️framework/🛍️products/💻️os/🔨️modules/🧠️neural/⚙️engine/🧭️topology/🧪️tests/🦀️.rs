@@ -4,7 +4,7 @@ fn observe<T>(operation:impl FnOnce()->T)->(T,ObservedHeap){let (value,requested
 
 #[test]
 fn original_budgeted_topology_preserves_tree_and_matches_graphlib_order_with_physical_receipts(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){for copy in [1,3,64]{
   let (source,heap)=observe(||Arc::new(Tree{neurons:row["nodes"].as_array().unwrap().iter().map(|id|super::super::Neuron::with_kind(id.as_str().unwrap(),"actual-kind",super::super::Dictionary::new())).collect(),synapses:row["edges"].as_array().unwrap().iter().map(|edge|super::super::Synapse{id:String::new(),from:edge[0].as_str().unwrap().into(),to:edge[1].as_str().unwrap().into(),from_port:String::new(),to_port:String::new()}).collect()}));
   let original=heap.requested_bytes-heap.released_bytes;let pointer=Arc::as_ptr(&source);let (mut owner,heap)=observe(||BudgetedEvalTopology::new(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(Arc::as_ptr(owner.source().unwrap()),pointer);

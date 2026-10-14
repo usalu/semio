@@ -1,7 +1,7 @@
 /** 🧩️ Independent Ajv conformance of actual layout graph and config payloads and hostile inputs; the ToolRun table retains its reason, stage, counter and checkpoint laws. */
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
-import fixture from "../../🧫️fixtures/🎞️layout-run.json";
+import fixture from "../🧫️fixtures/🎞️layout-run.json";
 import schema from "../../🧬️schema/🔣️.json";
 
 const TOOL_RUN_RESERVED_REASON_FLOOR = 0xff00;

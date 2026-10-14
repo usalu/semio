@@ -1,5 +1,0 @@
-{
-  "mutation": "changeBatteryRoundTripEfficiency",
-  "id": 310,
-  "newRoundTripEfficiency": 0.95
-}

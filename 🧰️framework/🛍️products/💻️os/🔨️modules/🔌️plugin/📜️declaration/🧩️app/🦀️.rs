@@ -26,7 +26,8 @@ use semio_framework_ui_contract::*;
 use semio_framework_ui_runtime::ComponentTree;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::HashMap;
-use store::{os_store::store_schema::ArtifactEnvelope, os_store::serialization::ArtifactPack, ArtifactStore, ConfigStore};
+use pack::snapshot::ArtifactPack;
+use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore, ConfigStore};
 use semio_framework_ui_locale::LocalizedLabel;
 use ui_wgpu::wgpu::ContextMenuItemSpec;
 use ui_wgpu::wgpu::ContextMenuRequest;
@@ -162,7 +163,7 @@ pub trait ArtifactApp: Default + Send + 'static {
         Ok(RetirementDemand::default())
     }
 
-    fn mounted_job_maintenance_step(_instance_id: u32, _grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn mounted_job_maintenance_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
     /// 📏️ Quotes the exact next [`Self::mounted_job_close_step`] turn of the owner-local mounted jobs.
@@ -170,7 +171,7 @@ pub trait ArtifactApp: Default + Send + 'static {
         Ok(RetirementDemand::default())
     }
     /// 🧹️ Advances one owner-local mounted background-job close opportunity.
-    fn mounted_job_close_step(_instance_id: u32, _grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn mounted_job_close_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
     /// 🧹️ Exact terminal witness paired with `mounted_job_close_step`. It is also what keeps an app
@@ -410,7 +411,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// keeps its existing full-mutation behavior untouched; `EditorApp<E>`/`ViewerApp<V>` override
     /// it from `E::ROLE`/`V::ROLE` (contract §2.1).
     const ROLE: AppRole = AppRole::Editor;
-    type Snapshot: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::os_store::serialization::ArtifactDsl + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + 'static;
+    type Snapshot: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + 'static;
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): `+ 'static` added to the
     /// three mutation lanes below — every real impl was ALREADY effectively 'static (a plain
     /// owned enum/struct crossing the wasm component boundary via `OpBinary`; none of the ~30
@@ -423,20 +424,20 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// leaf (`MutationKind::label`), so a history row, the history-edit editor and a tool-transaction row are never the
     /// operation's text line — `#[derive(Mutations)]` is the one way an aggregate answers it.
     type Mutation: protocol::SemanticMutation<Self::Snapshot> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
-    type Config: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::ConfigRecord + ArtifactPack + 'static;
+    type Config: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::ConfigRecord + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type ConfigMutation: ::protocol::Mutation<Self::Config> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     /// 📝️ Volatile draft snapshot — use {@link NoDraft} when the app has no draft lane.
-    type Draft: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::os_store::serialization::ArtifactDsl + ArtifactPack + 'static;
+    type Draft: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     /// 📝️ Draft-lane operations applied to {@link store::DraftStore}.
     type DraftMutation: ::protocol::Mutation<Self::Draft> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     /// 👥️ Shared live presence — use {@link NoPresence} when the app has no shareable live state.
-    type Presence: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::os_store::serialization::ArtifactDsl + ArtifactPack + store::ArtifactPresenceSnapshot + 'static;
+    type Presence: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::ArtifactPresenceSnapshot + 'static;
     /// 👥️ Presence-lane operations applied to the app's typed presence snapshot.
     type PresenceMutation: ::protocol::Mutation<Self::Presence> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     /// 🫧️ Ephemeral LOCAL-ONLY UI state — use {@link NoTransient} when the app has none.
     /// The fourth and last state mechanism; see `NoTransient`'s doc for how it differs from a
     /// draft (which is ephemeral *artifact* content, not UI state).
-    type Transient: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::os_store::serialization::ArtifactDsl + ArtifactPack + 'static;
+    type Transient: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     /// 🫧️ Transient-lane operations applied to {@link store::TransientStore}.
     type TransientMutation: ::protocol::Mutation<Self::Transient> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
 
@@ -898,7 +899,7 @@ pub(crate) fn natural_file_input_media(codec: NaturalFileCodec, media_type: Medi
 /// 🌱️ The load/genesis emission of one decoded whole document — what a natural-file import and the default `document:in`
 /// importer publish: `Effect::LoadDocument` carrying the document's pack over a fresh empty history, exactly like a catalogue
 /// example load. It is not a mutation and writes no history row; the runtime stamps the live store's identity on it.
-pub fn document_load_emit<S: ArtifactPack, Mutation, ConfigMutation, DraftMutation>(snapshot: &S, schema: &str) -> Emit<Mutation, ConfigMutation, DraftMutation> {
+pub fn document_load_emit<S: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot, Mutation, ConfigMutation, DraftMutation>(snapshot: &S, schema: &str) -> Emit<Mutation, ConfigMutation, DraftMutation> {
     let pack = snapshot.encode_pack();
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("", schema));
     Emit { effects: vec![Effect::LoadDocument { pack, spr }], ui_scope: UiDirtyScope::Full, ..Emit::default() }
@@ -920,7 +921,7 @@ fn natural_file_action_arg(id: &str, value: &impl semio_framework_value::ToValue
     argument
 }
 
-fn natural_file_action_definitions(codec: NaturalFileCodec) -> [ActionDefinition; 2] {
+pub(crate) fn natural_file_action_definitions(codec: NaturalFileCodec) -> [ActionDefinition; 2] {
     let args = || {
         vec![
             natural_file_action_arg("formatKind", &codec.format_kind),
@@ -1085,7 +1086,7 @@ include!("../../🎞️media/💥️fault/🦀️.rs");
 
 impl MediaArtifact {
     /// 🎞️ Owns exact intrinsic bytes and descriptor text from one borrowed media owner.
-    pub fn encode_intrinsic(port:&str,media_type:MediaType,schema:&str,value:&DslValue,owner:&mut store::NativeSnapshotEncodeOwner<'_ ,'_>)->Result<Self,MediaArtifactError>{
+    pub fn encode_intrinsic(port:&str,media_type:MediaType,schema:&str,value:&DslValue,owner:&mut crate::io::control::NativeSnapshotEncodeOwner<'_ ,'_>)->Result<Self,MediaArtifactError>{
         let (port,schema,data)=encode_intrinsic_parts(port,schema,value,owner)?;
         Ok(Self{descriptor:MediaArtifactDescriptor{edge_id:None,port_id:Some(port),kind_id:None,media_type:Some(media_type),wire:MediaWireFormat::Intrinsic{schema},blob_hash:None},data})
     }
@@ -1142,7 +1143,7 @@ pub struct EphemeralSnapshot {
 /// moves the head (and the scoped history edits it projects) for every replica, so it is a write, not a read cursor.
 /// `try_build_definition` never declares these on a viewer app, so no host offers or binds them to a
 /// Spectator; this guard is the backstop for a dispatch no manifest offered.
-const VIEWER_REJECTED_ACTION_IDS: [&str; 9] = ["undo", "redo", "commitCheckpoint", "createAlternative", semio_framework::SWITCH_ALTERNATIVE_ACTION_ID, "checkoutCheckpoint", REVERT_TO_COMMAND_ACTION_ID, "cut", "paste"];
+pub(crate) const VIEWER_REJECTED_ACTION_IDS: [&str; 9] = ["undo", "redo", "commitCheckpoint", "createAlternative", semio_framework::SWITCH_ALTERNATIVE_ACTION_ID, "checkoutCheckpoint", REVERT_TO_COMMAND_ACTION_ID, "cut", "paste"];
 
 /// 🔒️ Whether a `Viewer`-role instance rejects `action`: the [`VIEWER_REJECTED_ACTION_IDS`] and every history-edit
 /// verb (editing history supersedes inputs, which a viewer never may).

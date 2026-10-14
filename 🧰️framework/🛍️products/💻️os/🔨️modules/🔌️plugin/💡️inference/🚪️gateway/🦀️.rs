@@ -27,7 +27,7 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProg
 use semio_framework_pack_json::{Value,Number,JsonGrammarCursor,JsonSourceCursor,JsonReadLimits,JsonMemberPolicy,JsonWriteCursor,JsonWriteSource,JsonWriteNode};
 
 /// 🧾️ Absence retains the gateway source; a refusal transfers its original typed cause.
-pub struct ArtifactInferenceGatewayStep{pub payload:Option<Vec<u8>>,pub retained_progress:RetainedCloneProgress,pub refusal:Option<ArtifactInferenceGatewayFailure>}
+pub struct ArtifactInferenceGatewayStep{pub payload:Option<Vec<u8>>,pub retained_progress:RetainedCloneProgress,pub refusal:Option<crate::ArtifactInferenceGatewayRefusal>}
 
 /// 📦️ The original request and execution are borrowed directly by the response codec.
 #[derive(semio_framework_value::RetireOwned)]
@@ -140,14 +140,14 @@ impl ArtifactInferenceGateway{
   }else{let Value::Number(Number::UInt(number))=value else{return Err(invalid());};match index{0=>r.wire_version=u32::try_from(*number).map_err(|_|invalid())?,4=>r.artifact_schema_version=u32::try_from(*number).map_err(|_|invalid())?,6=>r.inference_schema_version=u32::try_from(*number).map_err(|_|invalid())?,7=>r.algorithm_version=u32::try_from(*number).map_err(|_|invalid())?,8=>r.policy_version=u32::try_from(*number).map_err(|_|invalid())?,9=>r.revision=*number,10=>r.generation=*number,_=>return Err(invalid())}}
   self.required|=1<<index;self.field+=1;Ok(item())
  }
- fn advance(&mut self,source:&[u8],grant:RetainedCloneGrant,context:Option<&dyn std::any::Any>,cancelled:bool)->Result<(Option<Vec<u8>>,RetainedCloneProgress),ArtifactInferenceGatewayFailure>{
-  self.normal_progress=Default::default();
+ fn advance(&mut self,source:&[u8],cx:&mut semio_framework_job::StepContext<'_>,context:Option<&dyn std::any::Any>)->Result<(Option<Vec<u8>>,RetainedCloneProgress),ArtifactInferenceGatewayFailure>{
+  self.normal_progress=Default::default();let available=cx.retained_grant();let grant=RetainedCloneGrant{maximum_items:available.maximum_items.min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX)),..available};let cancelled=cx.is_cancelled();
   if cancelled{self.closing=true;}
   if self.closing&&(self.active.is_some()||self.discarded_execution.is_some()){return self.close_discarded_execution(grant).map(|step|(None,step.progress())).map_err(Into::into);}
   if self.closing&&!self.child_live{return self.close_step(grant).map(|step|(None,step.progress())).map_err(Into::into);}
   if self.stage==0{
    if self.parser.is_none(){let cursor=JsonSourceCursor::<_,Value>::new(source,JsonMemberPolicy::Reject,JsonReadLimits{maximum_bytes:source.len()as u64,maximum_allocation_bytes:grant.maximum_capacity_bytes,maximum_depth:grant.maximum_depth,maximum_items:source.len()as u64})?;self.parser=Some(cursor.into_grammar().1);return Ok((None,item()));}
-   let mut callback=|_|!cancelled;let mut control=match self.decoding.take(){Some(original)=>NativeDecodeControl::resume(original,&mut callback)?,None=>NativeDecodeControl::new_retained(&mut callback)};let mut cursor=JsonSourceCursor::from_grammar(source,self.parser.take().unwrap());let result=cursor.step(1,&mut control,grant);let receipt=cursor.normal_step_progress();self.normal_progress=receipt;self.parser=Some(cursor.into_grammar().1);self.decoding=Some(control.pause()?);match result{Ok(Some(original))=>{self.root=Some(original);self.stage=1;},Ok(None)=>{},Err(error)=>return Err(ArtifactInferenceGatewayFailure::Json(error))}return Ok((None,receipt));
+   let mut callback=|_|!cx.should_yield()&&!cx.is_cancelled();let mut control=match self.decoding.take(){Some(original)=>NativeDecodeControl::resume(original,&mut callback)?,None=>NativeDecodeControl::new_retained(&mut callback)};let mut cursor=JsonSourceCursor::from_grammar(source,self.parser.take().unwrap());let result=cursor.step(1,&mut control,grant);let receipt=cursor.normal_step_progress();self.normal_progress=receipt;self.parser=Some(cursor.into_grammar().1);self.decoding=Some(control.pause()?);match result{Ok(Some(original))=>{self.root=Some(original);self.stage=1;},Ok(None)=>{},Err(error)=>return Err(ArtifactInferenceGatewayFailure::Json(error))}return Ok((None,receipt));
   }
   if self.stage==1{return self.decode(grant).map(|receipt|(None,receipt)).map_err(Into::into);}
   if self.stage==2{
@@ -158,7 +158,7 @@ impl ArtifactInferenceGateway{
    if request.wire_version!=ARTIFACT_INFERENCE_WIRE_VERSION{return Err(ArtifactInferenceGatewayFailure::Literal("original inference wire version differs"));}
    let metadata=service.metadata();if request.owner!=metadata.owner||request.artifact_kind!=metadata.artifact_kind||request.artifact_schema!=metadata.artifact_schema||request.artifact_schema_version!=metadata.artifact_schema_version||request.inference_schema!=metadata.inference_schema||request.inference_schema_version!=metadata.inference_schema_version||request.algorithm_version!=metadata.algorithm_version||request.policy_version!=metadata.policy_version{return Err(ArtifactInferenceGatewayFailure::Literal("original inference request identity differs from its registered service"));}
    let retained=if self.closing{grant}else{intersect(grant,request.retained)};let view=ArtifactInferenceExecutionRequest{operation:self.operation,generation:self.generation,cancelled:cancelled||self.closing,policy:&request.policy,budgets:&request.budgets,retained,cancellation_id:&request.cancellation_id,previous_state:request.previous_state.as_deref(),requested_cache_mode:request.requested_cache_mode.clone(),canonical_payload:&request.canonical_payload,dependencies:&request.dependencies};
-   let result=match context{Some(context)=>service.infer_with_context(&view,context),None=>service.infer(&view)}.map_err(|error|{self.normal_progress=error.retained_progress;self.child_live=!error.terminal;ArtifactInferenceGatewayFailure::Execution(error)})?;
+   let result=match context{Some(context)=>service.infer_with_context(&view,context,cx),None=>service.infer(&view,cx)}.map_err(|error|{self.normal_progress=error.retained_progress;self.child_live=!error.terminal;ArtifactInferenceGatewayFailure::Execution(error)})?;
    let receipt=result.retained_progress;self.normal_progress=receipt;
    self.child_live=!result.terminal;
    let Some(execution)=result.execution else{if result.terminal&&!self.closing{return Err(ArtifactInferenceGatewayFailure::Literal("terminal original inference callback has no result"));}return Ok((None,receipt));};
@@ -169,7 +169,7 @@ impl ArtifactInferenceGateway{
    self.stage=4;return Ok((None,receipt));
   }
   if self.stage==4{
-   let mut callback=|_|!cancelled;let mut control=match self.encoding.take(){Some(original)=>NativeEncodeControl::resume(original,&mut callback)?,None=>NativeEncodeControl::new_retained(&mut callback)};let writer=self.writer.as_mut().unwrap();let result=writer.step(1,&mut control,grant);let receipt=writer.normal_step_progress();self.normal_progress=receipt;self.encoding=Some(control.pause()?);match result{Ok(Some(original))=>{self.wire=Some(original);self.stage=5;},Ok(None)=>{},Err(error)=>return Err(error.into())}return Ok((None,receipt));
+   let mut callback=|_|!cx.should_yield()&&!cx.is_cancelled();let mut control=match self.encoding.take(){Some(original)=>NativeEncodeControl::resume(original,&mut callback)?,None=>NativeEncodeControl::new_retained(&mut callback)};let writer=self.writer.as_mut().unwrap();let result=writer.step(1,&mut control,grant);let receipt=writer.normal_step_progress();self.normal_progress=receipt;self.encoding=Some(control.pause()?);match result{Ok(Some(original))=>{self.wire=Some(original);self.stage=5;},Ok(None)=>{},Err(error)=>return Err(error.into())}return Ok((None,receipt));
   }
   if self.stage==5{
    if self.active.is_some(){return semio_framework_value::close_factory_ticket(&mut self.active,grant).map(|step|(None,step.progress())).map_err(Into::into);}
@@ -180,9 +180,9 @@ impl ArtifactInferenceGateway{
  }
  pub fn step(&mut self,source:&[u8],cx:&mut semio_framework_job::StepContext<'_>,context:Option<&dyn std::any::Any>)->ArtifactInferenceGatewayStep{
   let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0||cx.should_yield(){return ArtifactInferenceGatewayStep{payload:None,retained_progress:Default::default(),refusal:None};}
-  if !self.matches(cx.operation().0,cx.generation().0,source){return ArtifactInferenceGatewayStep{payload:None,retained_progress:Default::default(),refusal:Some(ArtifactInferenceGatewayFailure::Literal("original inference gateway retains another caller"))};}
-  let (payload,receipt,mut refusal)=match self.advance(source,grant,context,cx.is_cancelled()){Ok((payload,receipt))=>(payload,receipt,None),Err(error)=>{self.closing=true;let receipt=if self.normal_progress!=Default::default(){self.normal_progress}else{match &error{ArtifactInferenceGatewayFailure::Native(error)=>error.retained_progress(),_=>Default::default()}};(None,receipt,Some(error))}};
-  if let Err(error)=cx.consume_retained(receipt){if refusal.is_none(){refusal=Some(error.into());}}cx.consume_fuel(1);ArtifactInferenceGatewayStep{payload,retained_progress:receipt,refusal}
+  if !self.matches(cx.operation().0,cx.generation().0,source){return ArtifactInferenceGatewayStep{payload:None,retained_progress:Default::default(),refusal:Some(ArtifactInferenceGatewayFailure::Literal("original inference gateway retains another caller").into())};}
+  let before_fuel=cx.fuel_remaining();let (payload,receipt,mut refusal)=match self.advance(source,cx,context){Ok((payload,receipt))=>(payload,receipt,None),Err(error)=>{self.closing=true;let receipt=if self.normal_progress!=Default::default(){self.normal_progress}else{match &error{ArtifactInferenceGatewayFailure::Native(error)=>error.retained_progress(),_=>Default::default()}};(None,receipt,Some(crate::ArtifactInferenceGatewayRefusal::from(error)))}};
+  if let Err(error)=cx.consume_retained(receipt){match &mut refusal{Some(original)=>{assert!(original.receipt_refusal.is_none());original.receipt_refusal=Some(error)},None=>refusal=Some(error.into())}}if cx.fuel_remaining()==before_fuel{cx.consume_fuel(receipt.copied_items.max(1) as u64)}ArtifactInferenceGatewayStep{payload,retained_progress:receipt,refusal}
  }
 }
 fn item()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}
@@ -214,16 +214,16 @@ pub fn cancel_artifact_inference(cancellation_id: &str) -> Result<(), ArtifactIn
     Ok(())
 }
 
-pub async fn wire_artifact_infer_cold(request: &[u8],operation:u64,generation:u64) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
+pub async fn wire_artifact_infer_cold(request: &[u8],operation:u64,generation:u64,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
     let registry = artifact_inference_service_registry().read().map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "artifact inference registry is poisoned"))?;
-    wire_artifact_infer_from_cold(&registry, request,operation,generation)
+    wire_artifact_infer_from_cold(&registry, request,operation,generation,cx)
 }
 
-pub(crate) fn wire_artifact_infer_from_cold(registry: &ArtifactInferenceServiceRegistry, request: &[u8],operation:u64,generation:u64) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
-    wire_artifact_infer_from_context_cold(registry, request, None,operation,generation)
+pub(crate) fn wire_artifact_infer_from_cold(registry: &ArtifactInferenceServiceRegistry, request: &[u8],operation:u64,generation:u64,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
+    wire_artifact_infer_from_context_cold(registry, request, None,operation,generation,cx)
 }
 
-fn wire_artifact_infer_from_context_cold(registry: &ArtifactInferenceServiceRegistry, request: &[u8], context: Option<&dyn std::any::Any>,operation:u64,generation:u64) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
+fn wire_artifact_infer_from_context_cold(registry: &ArtifactInferenceServiceRegistry, request: &[u8], context: Option<&dyn std::any::Any>,operation:u64,generation:u64,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
     let request_text = std::str::from_utf8(request).map_err(|error| ArtifactInferenceExecutionError::new("artifact-inference.request-decode", error.to_string()))?;
     let request: WireArtifactInferenceRequest =
         semio_framework_pack_json::from_json_str(request_text, JsonMemberPolicy::Reject).map_err(|error| ArtifactInferenceExecutionError::new("artifact-inference.request-decode", error.to_string()))?;
@@ -235,13 +235,13 @@ fn wire_artifact_infer_from_context_cold(registry: &ArtifactInferenceServiceRegi
         .copied()
         .ok_or_else(|| ArtifactInferenceExecutionError::new("artifact-inference.not-registered", format!("no inference service for {}/{}", request.artifact_kind, request.inference_schema)))?;
     if context.is_none() && matches!(service.infer, ArtifactInferenceExecutable::Contextual(_, _)) {
-        crate::plugin_runtime::with_extension_inference_context(|context| wire_artifact_infer_with_service_cold(request, service, context,operation,generation))
+        crate::plugin_runtime::with_extension_inference_context(|context| wire_artifact_infer_with_service_cold(request, service, context,operation,generation,cx))
     } else {
-        wire_artifact_infer_with_service_cold(request, service, context,operation,generation)
+        wire_artifact_infer_with_service_cold(request, service, context,operation,generation,cx)
     }
 }
 
-fn wire_artifact_infer_with_service_cold(request: WireArtifactInferenceRequest, service: ArtifactInferenceService, context: Option<&dyn std::any::Any>,operation:u64,generation:u64) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
+fn wire_artifact_infer_with_service_cold(request: WireArtifactInferenceRequest, service: ArtifactInferenceService, context: Option<&dyn std::any::Any>,operation:u64,generation:u64,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
     let expected = WireArtifactInferenceMetadata::from(service.metadata());
     validate_wire_request_metadata(&request, &expected)?;
     validate_wire_request_resources(&request)?;
@@ -261,8 +261,8 @@ fn wire_artifact_infer_with_service_cold(request: WireArtifactInferenceRequest, 
         dependencies: &request.dependencies,
     };
     let execution = match context {
-        Some(context) => service.infer_with_context(&execution_request, context),
-        None => service.infer(&execution_request),
+        Some(context) => service.infer_with_context(&execution_request, context,cx),
+        None => service.infer(&execution_request,cx),
     }?.execution.ok_or_else(||ArtifactInferenceExecutionError::new("artifact-inference.pending","cold inference inspection has no completed execution"))?;
     if inference_cancelled(&request.cancellation_id)? {
         crate::plugin_runtime::cancel_extension_inference(&request.cancellation_id);

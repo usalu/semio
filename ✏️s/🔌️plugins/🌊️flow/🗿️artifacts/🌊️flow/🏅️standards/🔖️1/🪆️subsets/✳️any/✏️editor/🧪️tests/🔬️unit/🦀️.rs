@@ -4,7 +4,7 @@ pub(crate) mod context {
     use semio_framework_plugin::artifact_app_laws::meta;
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     use semio_s_artifact_stdio_semio::SemioMembers;
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     
     pub type FlowApp = VcsArtifactApp<EditorApp<FlowPlayApp>, SemioMembers>;
     
@@ -224,9 +224,9 @@ fn retained_content_child_factory_is_exact_and_legacy_closed() {
 #[semio_framework_async_macros::async_test]
 async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires() {
     use semio_framework_plugin::app::TypedOperationResultLane;
-    use store::{os_store::serialization::ArtifactPack, SpaceMember};
+    use store::{pack::snapshot::ArtifactPack, SpaceMember};
 
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️add-widget-retained/🔣️.json")).expect("retained addWidget fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️add-widget-retained/🔣️.json")).expect("retained addWidget fixture");
     let mut app = flow_app_with_registry().await;
     PluginApp::bind_instance_id(&mut *app, 1).await;
     let parent_before = app.snapshot().expect("Flow parent before retained addWidget");
@@ -286,7 +286,7 @@ fn a_node_delete_is_child_removal_leaves_whose_inverses_restore_the_content() {
         synapses: Vec<SynapseSpec>,
         layout: flow::OrderedMap<WidgetLayout>,
     }
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧹️delete-cascade/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🧹️delete-cascade/🔣️.json")).unwrap();
     let label = fixture["label"]["unit"].as_str().unwrap().repeat(fixture["label"]["repetitions"].as_u64().unwrap() as usize);
     assert_eq!(label.len(), fixture["label"]["expectedBytes"].as_u64().unwrap() as usize);
     let mut scene = fixture["scene"].clone();
@@ -333,8 +333,8 @@ fn a_node_delete_is_child_removal_leaves_whose_inverses_restore_the_content() {
 /// exactly one group. Flow's census is additionally the exact row set of its typed command table.
 #[test]
 fn action_cohort_fixtures_match_the_exact_route_census() {
-    let flow: Value = serde_json::from_str(include_str!("../../../../../../../../../🧫️fixtures/🎬️action-cohort/🔣️.json")).expect("Flow action-cohort fixture must be valid JSON");
-    let note: Value = serde_json::from_str(include_str!("../../../../../../../../../../🗒️note/🧫️fixtures/🧪️action-cohort/🔣️.json")).expect("Note action-cohort fixture must be valid JSON");
+    let flow: Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️fixtures/🎬️action-cohort/🔣️.json")).expect("Flow action-cohort fixture must be valid JSON");
+    let note: Value = serde_json::from_str(include_str!("../../../../../../../../../../🗒️note/🧪️tests/🧫️fixtures/🧪️action-cohort/🔣️.json")).expect("Note action-cohort fixture must be valid JSON");
     for (fixture, owner) in [(&flow, "FlowPlayApp"), (&note, "NotePlayApp")] {
         assert_eq!(fixture["owner"], owner);
         let routes: Vec<&str> = fixture["groups"].as_array().expect("groups").iter().flat_map(|group| group["routes"].as_array().expect("routes")).map(|route| route.as_str().expect("route id")).collect();
@@ -530,7 +530,7 @@ async fn retained_move_media_node_preserves_absolute_drop_and_undo() {
     use semio_framework_plugin::app::TypedOperationResultLane;
     use semio_framework_plugin::artifact_app_laws::{settle_history_verb, settle_registered_typed_operation};
     use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
-    use store::{os_store::serialization::ArtifactPack, SpaceMember};
+    use store::{pack::snapshot::ArtifactPack, SpaceMember};
 
     let mut app = flow_app_with_registry().await;
     let receiver = meta("local").instance_id;
@@ -554,7 +554,7 @@ async fn retained_move_media_node_preserves_absolute_drop_and_undo() {
 /// 🧩️ The `content` child's node count — the authoritative witness for every `Child`-lane verb.
 async fn flow_child_node_count(app: &FlowApp, child_id: &str) -> usize {
     use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
-    use store::{os_store::serialization::ArtifactPack, SpaceMember};
+    use store::{pack::snapshot::ArtifactPack, SpaceMember};
 
     SemioFlowSnapshot::decode_pack(&app.child_store("content", child_id).await.expect("Flow content child").document_pack_bytes().await.expect("Flow content child pack"))
         .expect("Flow content child snapshot")
@@ -604,7 +604,7 @@ async fn host_from_snapshot_deletes_edge_selected_by_synapse_domain() {
 async fn two_instances_converge_on_disjoint_edits() {
     use semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation;
     use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
-    use store::{os_store::serialization::ArtifactPack, os_store::backbone::MemoryBackbone, SpaceMember};
+    use store::{pack::snapshot::ArtifactPack, os_store::backbone::MemoryBackbone, SpaceMember};
     async fn probe(app: &FlowApp) -> Vec<(String, i64, i64)> {
         let child_id = app.snapshot().expect("Flow parent snapshot").content.child_id.clone();
         let child = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("Flow content child").document_pack_bytes().await.expect("Flow content child pack")).expect("decode Flow content child");

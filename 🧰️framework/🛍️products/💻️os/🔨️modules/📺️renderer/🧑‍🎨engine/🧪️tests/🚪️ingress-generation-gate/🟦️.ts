@@ -16,7 +16,7 @@
  * is not doing, a different instance, and a pass that has not submitted its turn at all.
  */
 import { describe, expect, it } from "vitest";
-import fixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🚪️ingress-generation-gate.json" with { type: "json" };
+import fixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🚪️ingress-generation-gate.json" with { type: "json" };
 import { resolvePluginCanvasStatus } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import { createUiRefreshCoalescerV1, uiDirtyScopeCoveredByV1, uiRefreshAlreadyAnsweredV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import { uiIntakeOwesYieldV1 } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";

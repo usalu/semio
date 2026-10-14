@@ -3,8 +3,8 @@ import{test,expect}from"bun:test";
 import{Buffer}from"node:buffer";
 import{Database}from"bun:sqlite";
 
-import fixture from"../🧫️fixtures/🔣️.json";
-import bits from"../🧫️fixtures/🧮️bits/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
+import bits from"./🧫️fixtures/🧮️bits/🔣️.json";
 
 test("native bit-field fixtures have independent Buffer words and arithmetic mask witnesses",()=>{
  for(const item of bits.cases){const buffer=Buffer.alloc(8);buffer.writeBigUInt64LE(BigInt(item.word));const word=buffer.readBigUInt64LE();let mask=BigInt(item.mask),remaining=word,present=true;while(mask!==0n){if(mask%2n===1n&&remaining%2n!==1n)present=false;mask/=2n;remaining/=2n;}expect(present).toBe(item.present);expect(buffer.readBigUInt64LE()).toBe(BigInt(item.word));}

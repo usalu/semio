@@ -1,0 +1,22 @@
+{
+  "mutation": "applyDocument",
+  "payload": {
+    "mutation": {
+      "mutation": "insertImage",
+      "image": {
+        "bytes": [
+          137,
+          80,
+          78,
+          71,
+          99,
+          98,
+          97,
+          96
+        ],
+        "id": "img3",
+        "mime": "image/png"
+      }
+    }
+  }
+}

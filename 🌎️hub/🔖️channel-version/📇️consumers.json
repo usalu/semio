@@ -10,32 +10,32 @@
       "occurrences": 3
     },
     {
-      "path": "🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/👥️two-package/🔣️.json",
+      "path": "🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/👥️two-package/🔣️.json",
       "occurrences": 2,
       "derived": "the package trust records"
     },
     {
-      "path": "🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧬️stdio-gis-bootstrap/🔣️.json",
+      "path": "🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🧬️stdio-gis-bootstrap/🔣️.json",
       "occurrences": 2,
       "derived": "profile.generationId (trustedBootstrapProfileEncoding)"
     },
     {
-      "path": "🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧱️generation-stage/🔣️.json",
+      "path": "🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🧱️generation-stage/🔣️.json",
       "occurrences": 3,
       "derived": "the staged generation id"
     },
     {
-      "path": "🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🔗️compiled-dependencies/🔣️.json",
+      "path": "🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🔗️compiled-dependencies/🔣️.json",
       "occurrences": 4,
       "derived": "the rawCases descriptor Pack bytes (decode, set executionProtocol.appChannelVersion, re-encode; hostile rows keep their layout)"
     },
     {
-      "path": "🧫️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json",
+      "path": "🧪️tests/🧫️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json",
       "occurrences": 1,
       "derived": "the frozen-binding digest and the fixtures that quote it"
     },
     {
-      "path": "🧫️fixtures/🤝️two-author-shell-v1/🔣️.json",
+      "path": "🧪️tests/🧫️fixtures/🤝️two-author-shell-v1/🔣️.json",
       "occurrences": 1
     },
     {

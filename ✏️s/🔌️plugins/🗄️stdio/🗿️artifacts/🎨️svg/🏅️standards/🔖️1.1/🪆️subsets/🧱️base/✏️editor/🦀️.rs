@@ -82,7 +82,7 @@ const STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.svg.tool-command.v
 const STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 const STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] };
 fn svg_any_editor_example_snapshot(example_id: &str) -> SvgSnapshot {
-    if example_id == crate::examples::demo::ID { <SvgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default() } else { SvgSnapshot::default() }
+    if example_id == crate::examples::demo::ID { <SvgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default() } else { SvgSnapshot::default() }
 }
 fn svg_any_editor_command_id(command: &SvgAnyEditCommand) -> &'static str {
     if let SvgAnyEditCommand::EditSnapshot { event } = command { return event.action_id(); }
@@ -185,7 +185,7 @@ impl ArtifactEditor for SvgAnyEditor {
         if !STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) { return Ok(None); }
         if svg_any_editor_command_id(&request.command) != request.tool_id { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch")); }
         let operation = AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed.clone(), retained: request.retained };
-        let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, svg_any_editor_command_id, STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, svg_any_editor_retained_reduce, svg_any_editor_retained_extent)));
+        let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, snapshot_read:request.snapshot_read, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, svg_any_editor_command_id, STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, svg_any_editor_retained_reduce, svg_any_editor_retained_extent)));
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -217,7 +217,7 @@ impl ArtifactEditor for SvgAnyEditor {
                 ..Default::default()
             }),
             SvgAnyEditCommand::SetPixelRegion { source } => {
-                let Ok(snapshot) = <SvgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(source) else { return Ok(Emit::default()) };
+                let Ok(snapshot) = <SvgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(source) else { return Ok(Emit::default()) };
                 edit_rules::region(doc.snapshot, &snapshot).map(Emit::mutations).map_err(Fault::from)
             }
         }

@@ -5,8 +5,7 @@
   "required": [
     "neuronId",
     "operatorId",
-    "inputJson",
-    "retained"
+    "inputJson"
   ],
   "properties": {
     "neuronId": {
@@ -33,53 +32,12 @@
       "type": "integer",
       "minimum": 0
     },
-    "budget": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "wallMicros": {
-      "type": "integer",
-      "minimum": 0
-    },
     "roundUnits": {
       "type": "integer",
       "minimum": 0
     },
     "resume": {
       "type": "boolean"
-    },
-    "retained": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "maximumItems",
-        "maximumCopyBytes",
-        "maximumCapacityBytes",
-        "maximumReleaseBytes",
-        "maximumDepth"
-      ],
-      "properties": {
-        "maximumItems": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "maximumCopyBytes": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "maximumCapacityBytes": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "maximumReleaseBytes": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "maximumDepth": {
-          "type": "integer",
-          "minimum": 0
-        }
-      }
     },
     "externalResult": {
       "type": "object",
@@ -112,6 +70,15 @@
           "minimum": 0
         }
       }
+    },
+    "windowId": {
+      "type": "string"
+    },
+    "windowKindId": {
+      "type": "string"
+    },
+    "extensionId": {
+      "type": "string"
     }
   }
 }

@@ -8,6 +8,8 @@
     "family:stdio"
   ],
   "targets": {
+    "test-original-receiving-source":{"executor":"nx:run-commands","options":{"cwd":"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-receiving-source"},"inputs":["default","^production","{projectRoot}/../../🏅️standards/**/*"]},
+    "test-original-receiving-native":{"executor":"nx:run-commands","options":{"cwd":"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-receiving-native"},"inputs":["default","^production","{projectRoot}/../../🏅️standards/**/*"]},
     "build": {
       "executor": "nx:run-commands",
       "cache": true,

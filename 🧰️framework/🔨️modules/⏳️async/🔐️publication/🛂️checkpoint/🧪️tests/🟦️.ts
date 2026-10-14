@@ -8,7 +8,7 @@ import { spawnSync } from "node:child_process";
 type Observation = Readonly<{ outcomes: readonly string[]; attempts: 1; progressEvents: 1; gateHeld: true; reacquired: true }>;
 type Row = Readonly<{ id: string; depth: number; maxTokenNodes: number; actions: readonly string[]; expected: Observation }>;
 type Corpus = Readonly<{ version: 1; cases: readonly Row[] }>;
-const fixture = resolve(import.meta.dir, "../🧫️fixtures/🔣️.json");
+const fixture = resolve(import.meta.dir, "🧫️fixtures/🔣️.json");
 const corpus: Corpus = JSON.parse(readFileSync(fixture, "utf8"));
 
 test("checkpoint observations have one closed independent schema", () => {

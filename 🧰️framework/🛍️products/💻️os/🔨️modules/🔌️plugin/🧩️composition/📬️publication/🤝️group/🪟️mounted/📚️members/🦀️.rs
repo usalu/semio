@@ -43,7 +43,7 @@ impl MountedGroupMemberReceipts {
     fn validate<M: SpaceMember + MemberFactory>(&self,group: &PrivateChildPublicationGroup<M>,actor: &str) -> Result<(),ValueError> {
         if self.closing || self.transferred || self.identity != Self::identity(group.group_id(),actor) || self.rows.child_count != group.child_count() || self.parent_touched != group.parent_touched() { return Err(Self::refusal("mounted receipt set lost its original member/group/actor authority")); } Ok(())
     }
-    fn receipt_index(&self) -> Option<usize> { (!self.closing && !self.transferred && self.receipt_cursor <= self.rows.child_count).then_some(self.receipt_cursor) }
+    pub(crate) fn receipt_index(&self) -> Option<usize> { (!self.closing && !self.transferred && self.receipt_cursor <= self.rows.child_count).then_some(self.receipt_cursor) }
     fn ready_for_final(&self) -> bool { !self.closing && !self.transferred && self.receipt_cursor > self.rows.child_count }
     fn source<'a>(&self, group: &'a PrivateChildPublicationGroup<impl SpaceMember + MemberFactory>, actor: &'a str) -> Result<Option<MountedMemberReceiptSource<'a>>,ValueError> {
         self.validate(group,actor)?;
@@ -52,11 +52,11 @@ impl MountedGroupMemberReceipts {
         let Some(document)=(if index==0 { Some(self.parent_handle) } else { self.issued_document }) else { return Ok(None); };
         Ok(Some(MountedMemberReceiptSource { publication, document, invocation_id: group.group_id(), group_id: group.group_id(), fallback_author: actor }))
     }
-    fn next_capacity_byte_demand<M: SpaceMember + MemberFactory>(&self,group: &PrivateChildPublicationGroup<M>,actor: &str) -> Result<usize,ValueError> {
+    pub(crate) fn next_capacity_byte_demand<M: SpaceMember + MemberFactory>(&self,group: &PrivateChildPublicationGroup<M>,actor: &str) -> Result<usize,ValueError> {
         let Some(source)=self.source(group,actor)? else { return Ok(0); };
         self.rows.rows[self.receipt_cursor].as_ref().map_or(Ok(MountedMemberReceipt::frame_birth_bytes()),|row|row.next_capacity_byte_demand(&source))
     }
-    fn next_release_byte_demand<M: SpaceMember + MemberFactory>(&self,group: &PrivateChildPublicationGroup<M>,actor: &str) -> Result<usize,ValueError> {
+    pub(crate) fn next_release_byte_demand<M: SpaceMember + MemberFactory>(&self,group: &PrivateChildPublicationGroup<M>,actor: &str) -> Result<usize,ValueError> {
         let Some(source)=self.source(group,actor)? else { return Ok(0); };
         self.rows.rows[self.receipt_cursor].as_ref().map_or(Ok(0),|row|row.next_release_byte_demand(&source))
     }
@@ -67,7 +67,7 @@ impl MountedGroupMemberReceipts {
         self.rows.rows[index].as_mut().unwrap().advance(source,grant)
     }
     /// 🧾️ Completes one original member row before its exact pointer acknowledgment unlocks the next member.
-    fn advance_receipt<M: SpaceMember + MemberFactory>(&mut self,group:&mut PrivateChildPublicationGroup<M>,registry:&ChildMemberRegistry<M>,actor:&str,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub(crate) fn advance_receipt<M: SpaceMember + MemberFactory>(&mut self,group:&mut PrivateChildPublicationGroup<M>,registry:&ChildMemberRegistry<M>,actor:&str,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         self.validate(group,actor)?;
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         let Some(index)=self.receipt_index()else{return Ok(RetainedCloneStep::Complete(Default::default()));};
@@ -86,14 +86,14 @@ impl MountedGroupMemberReceipts {
         Ok(MountedGroupReceiptSource{invocation_id:invocation,parent_edit_id:parent,child_edit_ids:MountedGroupChildEditSource::Ready(rows)})
     }
     fn validate_final(&self,invocation:&str)->Result<(),ValueError>{if !self.ready_for_final()||self.identity[0]!=(invocation.as_ptr()as usize,invocation.len()){return Err(Self::refusal("mounted final receipt lost its original completed row set"));}Ok(())}
-    fn next_final_capacity_byte_demand(&self,invocation:&str)->Result<usize,ValueError>{
+    pub(crate) fn next_final_capacity_byte_demand(&self,invocation:&str)->Result<usize,ValueError>{
         self.validate_final(invocation)?;let Some(final_receipt)=self.final_receipt.as_ref()else{return Ok(0);};
         if self.final_phase==0{return final_receipt.next_capacity_byte_demand(&Self::final_source(&self.rows,self.parent_touched,invocation)?);}
         if self.final_phase==2&&self.final_cursor<=self.rows.child_count{let row=self.rows.rows[self.final_cursor].as_ref().unwrap();return final_receipt.next_member_capacity_byte_demand(row.ready_document().unwrap(),row.ready_edit_id().unwrap());}Ok(0)
     }
-    fn next_final_release_byte_demand(&self)->usize{self.final_receipt.as_ref().map_or(0,|row|if self.final_phase==0{row.next_metadata_release_byte_demand()}else if self.final_phase==2{row.next_member_release_byte_demand()}else{0})}
+    pub(crate) fn next_final_release_byte_demand(&self)->usize{self.final_receipt.as_ref().map_or(0,|row|if self.final_phase==0{row.next_metadata_release_byte_demand()}else if self.final_phase==2{row.next_member_release_byte_demand()}else{0})}
     /// 🧬️ Assembles final metadata from noncontiguous completed rows and moves one original triple or member edit per turn.
-    fn advance_final(&mut self,invocation:&str,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub(crate) fn advance_final(&mut self,invocation:&str,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         self.validate_final(invocation)?;if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.final_receipt.is_none(){self.final_receipt=Some(MountedGroupReceipt::new(self.operation_count,&Self::final_source(&self.rows,self.parent_touched,invocation)?)?);return Ok(Self::progress(0,0));}
         let final_receipt=self.final_receipt.as_mut().unwrap();
@@ -103,16 +103,16 @@ impl MountedGroupMemberReceipts {
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
     fn final_receipt(&self)->Option<&MountedGroupReceipt>{self.final_receipt.as_ref()}
-    fn final_receipt_mut(&mut self)->Option<&mut MountedGroupReceipt>{self.final_receipt.as_mut()}
-    fn final_ready(&self)->bool{!self.closing&&self.final_receipt.as_ref().is_some_and(MountedGroupReceipt::is_complete)}
-    fn take_final(&mut self,grant:RetainedCloneGrant)->Option<MountedGroupReceiptOutput>{let output=self.final_receipt.as_mut()?.take(grant)?;self.transferred=true;Some(output)}
+    pub(crate) fn final_receipt_mut(&mut self)->Option<&mut MountedGroupReceipt>{self.final_receipt.as_mut()}
+    pub(crate) fn final_ready(&self)->bool{!self.closing&&self.final_receipt.as_ref().is_some_and(MountedGroupReceipt::is_complete)}
+    pub(crate) fn take_final(&mut self,grant:RetainedCloneGrant)->Option<MountedGroupReceiptOutput>{let output=self.final_receipt.as_mut()?.take(grant)?;self.transferred=true;Some(output)}
     fn next_close_byte_demand(&self)->Result<usize,ValueError>{
         if let Some(triple)=self.pending_triple.as_ref(){return Ok(match self.pending_close_field{0..=9=>MountedGroupReceipt::mutation_demand(&triple.0,self.pending_close_field),10=>triple.1.0.capacity(),11..=14=>MountedGroupReceipt::inverse_demand(&triple.2,self.pending_close_field-11),_=>0});}
         if let Some(row)=self.final_receipt.as_ref().filter(|row|!row.terminal_is_empty()){return Ok(row.next_close_byte_demand());}
         if self.close_cursor<=self.rows.child_count{if let Some(row)=self.rows.rows[self.close_cursor].as_ref(){return if row.terminal_is_empty(){Ok(MountedMemberReceipt::frame_birth_bytes())}else{row.next_close_byte_demand()};}}Ok(0)
     }
     /// 📏️ Retains exact row currencies and separately prices each paid terminal frame.
-    fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
+    pub(crate) fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty() { return Ok(Default::default()); }
         if self.pending_triple.is_some() { return Ok(RetirementDemand { release_bytes: self.next_close_byte_demand()?, depth: if matches!(self.pending_close_field, 7 | 8 | 14) { 4 } else { 3 }, ..Default::default() }); }
         if let Some(row) = self.final_receipt.as_ref().filter(|row| !row.terminal_is_empty()) { return mounted_nested_retirement_demand(row.retirement_demands()?, 1); }
@@ -126,7 +126,7 @@ impl MountedGroupMemberReceipts {
         Ok(RetirementDemand { depth: 2, ..Default::default() })
     }
     /// 🍂️ Keeps all completed row edits, typed vectors and physical frames until their exact release phase is funded.
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub(crate) fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}let demand=self.next_close_byte_demand()?;if grant.maximum_items==0||grant.maximum_release_bytes<demand{return Ok(RetainedCloneStep::Progress(Default::default()));}if !plugin_grant_funds(self.retirement_demands()?, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }self.closing=true;
         if let Some(triple)=self.pending_triple.as_mut(){let ready=match self.pending_close_field{0..=9=>MountedGroupReceipt::clear_mutation(&mut triple.0,self.pending_close_field),10=>{MountedGroupReceipt::clear_text(&mut triple.1.0);true},11..=14=>MountedGroupReceipt::clear_inverse(&mut triple.2,self.pending_close_field-11),_=>{self.pending_triple=None;self.pending_close_field=0;return Ok(Self::progress(0,0));}};if ready{self.pending_close_field+=1;}return Ok(Self::progress(0,demand));}
         if let Some(row)=self.final_receipt.as_mut().filter(|row|!row.terminal_is_empty()){return Ok(row.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }));}
@@ -134,7 +134,7 @@ impl MountedGroupMemberReceipts {
         if self.close_cursor<=self.rows.child_count{if let Some(row)=self.rows.rows[self.close_cursor].as_mut(){if !row.terminal_is_empty(){return row.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 2, ..grant });}drop(self.rows.rows[self.close_cursor].take());self.close_cursor+=1;return Ok(Self::progress(0,demand));}self.close_cursor+=1;return Ok(Self::progress(0,0));}
         let step=self.issuer.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant });self.issuer_closed=true;Ok(step)
     }
-    fn terminal_is_empty(&self)->bool{self.closing&&self.pending_triple.is_none()&&self.final_receipt.is_none()&&self.close_cursor>self.rows.child_count&&self.issuer_closed}
+    pub(crate) fn terminal_is_empty(&self)->bool{self.closing&&self.pending_triple.is_none()&&self.final_receipt.is_none()&&self.close_cursor>self.rows.child_count&&self.issuer_closed}
     fn terminal_frame_byte_demand(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl Drop for MountedGroupMemberReceipts{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"mounted member receipt set requires all original rows and physical frames funded before Drop");}}

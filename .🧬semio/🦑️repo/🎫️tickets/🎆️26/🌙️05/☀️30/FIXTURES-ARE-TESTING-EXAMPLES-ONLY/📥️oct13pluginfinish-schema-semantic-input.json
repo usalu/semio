@@ -1,0 +1,5291 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📸️remodel/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🧬️schema/🔌️container-providers/🔣️.json",
+    "id": "urn:semio:remodel:video-container-providers:v1",
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️reconstruction-session/🔣️.json",
+    "id": "remodeling.reconstruction.run.v1",
+    "title": "Remodeling Reconstruction Run",
+    "properties": [],
+    "items": [],
+    "description": "Source of record for the remodeling reconstruction ToolRunDefinition (📋️tool-run-contract.md §2.4). The run is mutating: every sparse cloud, mesh and raster it produces is a provisional append-content"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-layer/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-adjustment-parameter/schema.json",
+    "title": "Change Layer Adjustment Parameter",
+    "properties": [
+      "mutation",
+      "layerId",
+      "parameter",
+      "expected",
+      "value"
+    ],
+    "items": [],
+    "description": "Changes one brightness/contrast parameter with an expected prior value; null restores the implicit zero default."
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-layer-transform/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-transform/schema.json",
+    "title": "Change Layer Transform",
+    "properties": [
+      "mutation",
+      "layerId",
+      "expected",
+      "transform"
+    ],
+    "items": [],
+    "description": "Replaces the complete invertible affine transform of a pixel or group layer against its exact expected transform."
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎭️change-layer-mask/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-mask/schema.json",
+    "title": "Change Layer Mask",
+    "properties": [
+      "mutation",
+      "layerId",
+      "expected",
+      "mask"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲write-pixel-region/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/write-pixel-region/schema.json",
+    "title": "WritePixelRegion",
+    "properties": [
+      "mutation",
+      "layerId",
+      "target",
+      "x",
+      "y",
+      "width",
+      "height",
+      "samples"
+    ],
+    "items": [],
+    "description": "One rectangle of RGBA8 samples written into the image a layer's pixels or mask show, at (x, y) of that image. A rectangle that already holds the samples is `mutation.no-op`, a missing layer or image i"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️change-layer-locked/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-locked/schema.json",
+    "title": "ChangeLayerLocked",
+    "properties": [
+      "mutation",
+      "layerId",
+      "expected",
+      "locked"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️change-layer-pixels/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-pixels/schema.json",
+    "title": "ChangeLayerPixels",
+    "properties": [
+      "mutation",
+      "layerId",
+      "expectedImageKey",
+      "content",
+      "transform"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/diff.json",
+    "title": "RasterDiff",
+    "properties": [
+      "artifact",
+      "schema",
+      "id",
+      "title",
+      "layers",
+      "assets",
+      "pixels"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️set-pixel-selection/🧬️schema/🔣️.json",
+    "id": null,
+    "title": "SetPixelSelection",
+    "properties": [
+      "selection",
+      "expectedImageKey"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️mask-from-selection/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/editor/mask-from-selection.json",
+    "title": "Create Layer Mask From Selection",
+    "properties": [
+      "layerId",
+      "expectedImageKey",
+      "selection"
+    ],
+    "items": [],
+    "description": "Creates an undoable image-backed mask using ordered non-overlapping [offset,length,coverage] spans in the selected layer image coordinates. Existing mask changes during preparation conflict; source pi"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️move-layer/🧬️schema/🔣️.json",
+    "id": null,
+    "title": "Move Layer",
+    "properties": [
+      "layerId",
+      "targetRowId",
+      "dropPosition"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/📤️effect/🧬️schema/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [
+      "schema",
+      "fields",
+      "sharedLeases",
+      "originalHeadersCopyBytes",
+      "decoderRootSameArc",
+      "instanceFaultOriginalSource",
+      "completeStateAbsent",
+      "completeOutputAbsent",
+      "copies",
+      "terminalDropBytes",
+      "jobFields",
+      "completionRefusalFields"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/📋️project.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏭️process/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json",
+    "title": "Iso16757Snapshot",
+    "properties": [
+      "catalogue",
+      "dictionary",
+      "geometry",
+      "selection",
+      "partNumberRule",
+      "partNumberInputs",
+      "scriptLimits",
+      "exchangeProcess"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎪️demonstrator/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🫧️transient/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/♻️close/🧬️schema/🔣️.json",
+    "id": "stdio.original-copy-close.v1",
+    "title": null,
+    "properties": [
+      "schema",
+      "cases"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🚦️controlled/🧬️schema/🔣️.json",
+    "id": "stdio.part21.original-decode.v1",
+    "title": null,
+    "properties": [
+      "schema",
+      "cases"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/📸️snapshot/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/👁️viewpoint/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/mp4/isobmff/any/snapshot.json",
+    "title": "Mp4Snapshot",
+    "properties": [
+      "schema",
+      "ftyp",
+      "movie",
+      "tracks"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-track/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/mp4/isobmff/any/mutation/insert-track/schema.json",
+    "title": "InsertTrack",
+    "properties": [
+      "mutation",
+      "index",
+      "track"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/📸️snapshot/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/avi/1.0/hdrl/snapshot.json",
+    "title": "AviSnapshot",
+    "properties": [
+      "schema",
+      "mainHeader",
+      "streams",
+      "idx1Present",
+      "unknownChunks",
+      "hdrlExtra"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/🧬️mutations/📥️insert-stream/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/avi/1.0/hdrl/mutation/insert-stream/schema.json",
+    "title": "InsertStream",
+    "properties": [
+      "mutation",
+      "index",
+      "stream"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/🧬️mutations/🎨set-stream-format/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/avi/1.0/hdrl/mutation/set-stream-format/schema.json",
+    "title": "SetStreamFormat",
+    "properties": [
+      "mutation",
+      "streamIndex",
+      "strf"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎞️movi/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/📇️idx1/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/🧩️entities/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📊️tables/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/🧱️blocks/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/snapshot/text.json",
+    "title": "WavSnapshotText",
+    "properties": [
+      "schema",
+      "fmt",
+      "data",
+      "fmtPadByte",
+      "dataPadByte",
+      "otherChunks",
+      "chunkOrder"
+    ],
+    "items": [],
+    "description": "Complete owned WAV snapshot with independent logical chunk indices and exact IEEE754 words."
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/snapshot.json",
+    "title": "WavSnapshot",
+    "properties": [
+      "schema",
+      "fmt",
+      "data",
+      "fmtPadByte",
+      "dataPadByte",
+      "otherChunks",
+      "chunkOrder"
+    ],
+    "items": [],
+    "description": "Complete owned WAV snapshot with independent logical chunk indices and exact IEEE754 words."
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎️set-other-chunks/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/mutation/set-other-chunks/schema.json",
+    "title": "SetOtherChunks",
+    "properties": [
+      "mutation",
+      "chunks",
+      "chunkOrder"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/snapshot.json",
+    "title": "BmpSnapshot",
+    "properties": [
+      "schema",
+      "image"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️replace-samples/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/replace-samples/schema.json",
+    "title": "ReplaceSamples",
+    "properties": [
+      "region",
+      "indices",
+      "samples"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/diff.json",
+    "title": "BmpDiff",
+    "properties": [
+      "image",
+      "rects"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/💾️binary/📸️snapshot/🧮️decoded-components/🔣️.json",
+    "id": "https://semio-tech.github.io/schema/stdio/jpg/jfif-1.01/document/io/binary/decoded-components",
+    "title": "Decoded JPEG Components",
+    "properties": [
+      "width",
+      "height",
+      "componentIds",
+      "samples"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/video/snapshot.json",
+    "title": "SemioVideoSnapshot",
+    "properties": [
+      "schema",
+      "streams"
+    ],
+    "items": [],
+    "description": "streams{kind,codec,width,height,rate,samples{pts,key,data}} — container-typed, payload-opaque."
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/🔺️diff/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/video/diff.json",
+    "title": "SemioVideoDiff",
+    "properties": [
+      "streams"
+    ],
+    "items": [],
+    "description": "Sparse diff: streams is an index-keyed removed/modified/added triple; a modified stream's samples is, recursively, the same triple shape."
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json",
+    "title": "SemioBrepInference",
+    "properties": [
+      "validationReport",
+      "tessellation",
+      "massProperties"
+    ],
+    "items": [],
+    "description": "Derived, non-persisted computation over a SemioBrepSnapshot. See the sibling 🦀️.rs for the real source of truth."
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🫙️prefix/🧮️projection.json",
+    "id": null,
+    "title": null,
+    "properties": [
+      "contract",
+      "domains",
+      "schema",
+      "language",
+      "content",
+      "kind",
+      "href",
+      "expectedRows"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/audio/snapshot.json",
+    "title": "SemioAudioSnapshot",
+    "properties": [
+      "schema",
+      "sampleRate",
+      "format",
+      "channels",
+      "tags"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🧬️mutations/🎙️insert-channel/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/audio/mutation/insert-channel/schema.json",
+    "title": "InsertChannel",
+    "properties": [
+      "mutation",
+      "index",
+      "channel"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🧬️mutations/🌊set-channel-samples/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/audio/mutation/set-channel-samples/schema.json",
+    "title": "SetChannelSamples",
+    "properties": [
+      "mutation",
+      "index",
+      "samples"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/➕add-entry/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/zip/2.0/base/mutation/add-entry/schema.json",
+    "title": "AddEntry",
+    "properties": [
+      "mutation",
+      "entry",
+      "before"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🧬️schema/🧬️mutations/📦add-stored-entry/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/zip/2.0/iso21320/mutation/add-stored-entry/schema.json",
+    "title": "AddStoredEntry",
+    "properties": [
+      "mutation",
+      "entry",
+      "before"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🧬️schema/🧬️mutations/🗜️add-deflated-entry/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/zip/2.0/iso21320/mutation/add-deflated-entry/schema.json",
+    "title": "AddDeflatedEntry",
+    "properties": [
+      "mutation",
+      "entry",
+      "before"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json",
+    "title": "TiffSnapshot",
+    "properties": [
+      "schema",
+      "ifds"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🧮️replace-samples/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/mutation/replace-samples/schema.json",
+    "title": "ReplaceSamplesMutation",
+    "properties": [
+      "ifdIndex",
+      "block",
+      "offset",
+      "samples"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🔺️diff/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/diff.json",
+    "title": "TiffDiff",
+    "properties": [
+      "ifds"
+    ],
+    "items": [],
+    "description": "Sparse diff for stdio.tiff. Every field present = changed to a value. No tri-state fields at this level."
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🔣️hex-splices/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/binary/raw/any/hex-splices-corpus/schema.json",
+    "title": "BinaryHexSplicesCorpusRow",
+    "properties": [
+      "id",
+      "before",
+      "splices",
+      "leaves"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json",
+    "title": "PngSnapshot",
+    "properties": [
+      "schema",
+      "image"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️replace-samples/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/replace-samples/schema.json",
+    "title": "ReplaceSamples",
+    "properties": [
+      "region",
+      "samples"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️paint-native-samples/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/paint-native-samples/schema.json",
+    "title": "Paint Native PNG Samples",
+    "properties": [
+      "revision",
+      "region",
+      "paint"
+    ],
+    "items": [],
+    "description": "Revision-guarded paint intent. Prepared pixels are produced from the source snapshot and native samples during replay."
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/diff.json",
+    "title": "PngDiff",
+    "properties": [
+      "image",
+      "gamma",
+      "rects"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧭️xml-address/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/xml-address.json",
+    "title": "DocxXmlAddress",
+    "properties": [
+      "partPath",
+      "nodePath",
+      "expectedName",
+      "revision"
+    ],
+    "items": [],
+    "description": "Canonical XML part and child path with expanded node name and lineage revision."
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧹️remove-xml-node/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/base/mutation/remove-xml-node/schema.json",
+    "title": "RemoveXmlNode",
+    "properties": [
+      "mutation",
+      "parent",
+      "index",
+      "expectedName",
+      "revision"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json",
+    "title": "PdfSnapshot",
+    "properties": [
+      "schema",
+      "declaredVersion",
+      "pages",
+      "fonts",
+      "images",
+      "forms",
+      "extGStates",
+      "shadings",
+      "patterns",
+      "colorSpaces",
+      "properties",
+      "outlines",
+      "namedDestinations",
+      "pageLabels",
+      "embeddedFiles",
+      "outputIntents",
+      "acroForm",
+      "optionalContent",
+      "pageLayout",
+      "pageMode",
+      "viewerPreferences",
+      "openAction",
+      "language",
+      "markInfo",
+      "metadata",
+      "documentId",
+      "encryption",
+      "info",
+      "catalogExtra",
+      "objects",
+      "trailer",
+      "admittedStreamRoles"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📼️vlr/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📍️points/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/💬️comment/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🎛️graphic-control/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧩️application/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/📃️flatness/🔣️.json",
+    "id": "s.stdio.gltf.inference.flatness.v1",
+    "title": null,
+    "properties": [
+      "value",
+      "unit",
+      "availability",
+      "validity",
+      "diagnosticIds",
+      "quality",
+      "provenance"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/↔️elongation/🔣️.json",
+    "id": "s.stdio.gltf.inference.elongation.v1",
+    "title": null,
+    "properties": [
+      "value",
+      "unit",
+      "availability",
+      "validity",
+      "diagnosticIds",
+      "quality",
+      "provenance"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/📏️slenderness/🔣️.json",
+    "id": "s.stdio.gltf.inference.slenderness.v1",
+    "title": null,
+    "properties": [
+      "value",
+      "unit",
+      "availability",
+      "validity",
+      "diagnosticIds",
+      "quality",
+      "provenance"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/🖼️aspect-ratios/🔣️.json",
+    "id": "s.stdio.gltf.inference.aspect-ratios.v1",
+    "title": null,
+    "properties": [
+      "value",
+      "unit",
+      "availability",
+      "validity",
+      "diagnosticIds",
+      "quality",
+      "provenance"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🥯️handles/🔣️.json",
+    "id": "s.stdio.gltf.inference.handles.v1",
+    "title": null,
+    "properties": [
+      "value",
+      "unit",
+      "availability",
+      "validity",
+      "diagnosticIds",
+      "quality",
+      "provenance"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🔢️genus/🔣️.json",
+    "id": "s.stdio.gltf.inference.genus.v1",
+    "title": null,
+    "properties": [
+      "value",
+      "unit",
+      "availability",
+      "validity",
+      "diagnosticIds",
+      "quality",
+      "provenance"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🕳️holes/🔣️.json",
+    "id": "s.stdio.gltf.inference.holes.v1",
+    "title": null,
+    "properties": [
+      "value",
+      "unit",
+      "availability",
+      "validity",
+      "diagnosticIds",
+      "quality",
+      "provenance"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🧮️euler-characteristic/🔣️.json",
+    "id": "s.stdio.gltf.inference.euler-characteristic.v1",
+    "title": null,
+    "properties": [
+      "value",
+      "unit",
+      "availability",
+      "validity",
+      "diagnosticIds",
+      "quality",
+      "provenance"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/➰️boundary-loops/🔣️.json",
+    "id": "s.stdio.gltf.inference.boundary-loops.v1",
+    "title": null,
+    "properties": [
+      "value",
+      "unit",
+      "availability",
+      "validity",
+      "diagnosticIds",
+      "quality",
+      "provenance"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📦️size/↔️axis-aligned-bounds/🔣️.json",
+    "id": "s.stdio.gltf.inference.axis-aligned-bounds.v1",
+    "title": null,
+    "properties": [
+      "value",
+      "unit",
+      "availability",
+      "validity",
+      "diagnosticIds",
+      "quality",
+      "provenance"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📦️size/📏️overall-size/🔣️.json",
+    "id": "s.stdio.gltf.inference.overall-size.v1",
+    "title": null,
+    "properties": [
+      "value",
+      "unit",
+      "availability",
+      "validity",
+      "diagnosticIds",
+      "quality",
+      "provenance"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎞️animation/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/💿️buffer/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎬️scene/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/💎️material/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🕸️mesh/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🪪️asset/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🦴️skin/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎥️camera/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/🎨️material/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️splice-text/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutation/splice-text/schema.json",
+    "title": "SpliceText",
+    "properties": [
+      "mutation",
+      "start",
+      "deleted",
+      "insert",
+      "before",
+      "after"
+    ],
+    "items": [],
+    "description": "One range-text operation (semio.ui.scene.text-splice.v1): positions and lengths in Unicode scalar values; before/after are up to 32 scalars of the author's context."
+  },
+  {
+    "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🔌️client/🧬️schema/approve-output.json",
+    "id": "gis:document-http/approve-output",
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🔌️client/🧬️schema/undo-input.json",
+    "id": "gis:document-http/undo-input",
+    "title": null,
+    "properties": [
+      "schema",
+      "version",
+      "targetId",
+      "idempotencyKey",
+      "expectedCurrent"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🔌️client/🧬️schema/reconcile-output.json",
+    "id": "gis:document-http/reconcile-output",
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🔌️client/🧬️schema/events-input.json",
+    "id": "gis:document-http/events-input",
+    "title": null,
+    "properties": [
+      "jobId",
+      "after"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🔣️.json",
+    "id": "gis:gismap-inference-laws/v1",
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutations/text.json",
+    "title": "GismapMutation",
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📍️feature/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/feature.json",
+    "title": "GisMapFeature",
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚏set-route-property/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/set-route-property/schema.json",
+    "title": "SetRouteProperty",
+    "properties": [
+      "feature",
+      "key",
+      "value",
+      "before"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗾set-region-property/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/set-region-property/schema.json",
+    "title": "SetRegionProperty",
+    "properties": [
+      "feature",
+      "key",
+      "value",
+      "before"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌set-position-property/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/set-position-property/schema.json",
+    "title": "SetPositionProperty",
+    "properties": [
+      "feature",
+      "key",
+      "value",
+      "before"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🗺️map/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🎛️control/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [
+      "schema",
+      "mapCount",
+      "cancelAfterWork",
+      "maxRows",
+      "keys",
+      "binary64Words",
+      "commonPrefix"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/bim/model/inference.json",
+    "title": "ModelInference",
+    "properties": [
+      "element_solids",
+      "stair_runs",
+      "ramp_runs",
+      "spaces",
+      "quantities",
+      "opening_frames",
+      "storey_levels",
+      "wall_layout",
+      "curtain_layout",
+      "plan_linework",
+      "diagnostics",
+      "zone_totals",
+      "scheme_totals",
+      "diagnostic_index",
+      "families",
+      "effective_properties",
+      "components",
+      "mep",
+      "analytical_members",
+      "structural_analysis"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📊️table/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖼️asset/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧮️math/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📜️document/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖋️ink/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📝️text/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️definition/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/forms/forms/definition.json",
+    "title": "FormsDefinition",
+    "properties": [
+      "steps"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/change-block-field/schema.json",
+    "title": "ChangeBlockField",
+    "properties": [],
+    "items": [],
+    "description": "Sets ONE field of one question to an absolute value (null clears an optional field). Payload-intrinsic breaches are hard bounds; the base-dependent ones the diff refuses as `mutation.invariant` are de"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/❓️questions/📍️placement/🧬️schema/🔣️drop.json",
+    "id": "https://semio.tech/s/forms/question/drop/schema.json",
+    "title": null,
+    "properties": [
+      "stepId",
+      "targetId",
+      "position",
+      "movingId"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json",
+    "title": "ProgramArtifact",
+    "properties": [
+      "schema",
+      "meta",
+      "project",
+      "stakeholders",
+      "users",
+      "activities",
+      "functions",
+      "elements",
+      "quantities",
+      "relationships",
+      "adjacencies",
+      "processes",
+      "flows",
+      "accessRules",
+      "operations",
+      "equipment",
+      "resources",
+      "storage",
+      "environmental",
+      "humanFactors",
+      "accessibility",
+      "privacy",
+      "safety",
+      "security",
+      "regulatory",
+      "siteContext",
+      "organizational",
+      "services",
+      "infrastructure",
+      "information",
+      "communication",
+      "wayfinding",
+      "schedules",
+      "flexibility",
+      "growth",
+      "sustainability",
+      "resilience",
+      "costs",
+      "delivery",
+      "risks",
+      "conflicts",
+      "requirements",
+      "priorities",
+      "scenarios",
+      "options",
+      "decisions",
+      "validations",
+      "performance",
+      "quality",
+      "artifacts",
+      "assumptions",
+      "constraints",
+      "complianceRecords",
+      "approvals",
+      "meetings",
+      "changes",
+      "collaboration",
+      "analyses",
+      "reports",
+      "searchFilters",
+      "statusRecords",
+      "workshops",
+      "surveys",
+      "issues",
+      "auditEvents",
+      "templates",
+      "knowledgePayload",
+      "knowledge",
+      "benchmarksPayload",
+      "benchmarks",
+      "traces",
+      "governance"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/snapshot.json",
+    "title": "ProgramSnapshot",
+    "properties": [
+      "schema",
+      "meta",
+      "project",
+      "stakeholders",
+      "users",
+      "activities",
+      "functions",
+      "elements",
+      "quantities",
+      "relationships",
+      "adjacencies",
+      "processes",
+      "flows",
+      "accessRules",
+      "operations",
+      "equipment",
+      "resources",
+      "storage",
+      "environmental",
+      "humanFactors",
+      "accessibility",
+      "privacy",
+      "safety",
+      "security",
+      "regulatory",
+      "siteContext",
+      "organizational",
+      "services",
+      "infrastructure",
+      "information",
+      "communication",
+      "wayfinding",
+      "schedules",
+      "flexibility",
+      "growth",
+      "sustainability",
+      "resilience",
+      "costs",
+      "delivery",
+      "risks",
+      "conflicts",
+      "requirements",
+      "priorities",
+      "scenarios",
+      "options",
+      "decisions",
+      "validations",
+      "performance",
+      "quality",
+      "artifacts",
+      "assumptions",
+      "constraints",
+      "complianceRecords",
+      "approvals",
+      "meetings",
+      "changes",
+      "collaboration",
+      "analyses",
+      "reports",
+      "searchFilters",
+      "statusRecords",
+      "workshops",
+      "surveys",
+      "issues",
+      "auditEvents",
+      "templates",
+      "knowledgePayload",
+      "knowledge",
+      "benchmarksPayload",
+      "benchmarks",
+      "traces",
+      "governance"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/ℹ️information/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-information-requirement/schema.json",
+    "title": "ReplaceInformationRequirement",
+    "properties": [
+      "mutation",
+      "informationRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/ℹ️information/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-information-requirement/schema.json",
+    "title": "CreateInformationRequirement",
+    "properties": [
+      "mutation",
+      "informationRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏁️benchmark-record/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-benchmark-record/schema.json",
+    "title": "ReplaceBenchmarkRecord",
+    "properties": [
+      "mutation",
+      "benchmarkRecord"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏁️benchmark-record/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-benchmark-record/schema.json",
+    "title": "CreateBenchmarkRecord",
+    "properties": [
+      "mutation",
+      "benchmarkRecord",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️collaboration/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-collaboration-record/schema.json",
+    "title": "ReplaceCollaborationRecord",
+    "properties": [
+      "mutation",
+      "collaborationRecord"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️collaboration/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-collaboration-record/schema.json",
+    "title": "CreateCollaborationRecord",
+    "properties": [
+      "mutation",
+      "collaborationRecord",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎬️scenario/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-scenario/schema.json",
+    "title": "ReplaceScenario",
+    "properties": [
+      "mutation",
+      "scenario"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎬️scenario/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-scenario/schema.json",
+    "title": "CreateScenario",
+    "properties": [
+      "mutation",
+      "scenario",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔬️analysis-record/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-analysis-record/schema.json",
+    "title": "ReplaceAnalysisRecord",
+    "properties": [
+      "mutation",
+      "analysisRecord"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔬️analysis-record/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-analysis-record/schema.json",
+    "title": "CreateAnalysisRecord",
+    "properties": [
+      "mutation",
+      "analysisRecord",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📶️status-record/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-status-record/schema.json",
+    "title": "ReplaceStatusRecord",
+    "properties": [
+      "mutation",
+      "statusRecord"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📶️status-record/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-status-record/schema.json",
+    "title": "CreateStatusRecord",
+    "properties": [
+      "mutation",
+      "statusRecord",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔑️access-rule/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-access-rule/schema.json",
+    "title": "ReplaceAccessRule",
+    "properties": [
+      "mutation",
+      "accessRule"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔑️access-rule/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-access-rule/schema.json",
+    "title": "CreateAccessRule",
+    "properties": [
+      "mutation",
+      "accessRule",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️flexibility/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-flexibility-requirement/schema.json",
+    "title": "ReplaceFlexibilityRequirement",
+    "properties": [
+      "mutation",
+      "flexibilityRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️flexibility/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-flexibility-requirement/schema.json",
+    "title": "CreateFlexibilityRequirement",
+    "properties": [
+      "mutation",
+      "flexibilityRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️organizational/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-organizational-requirement/schema.json",
+    "title": "ReplaceOrganizationalRequirement",
+    "properties": [
+      "mutation",
+      "organizationalRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️organizational/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-organizational-requirement/schema.json",
+    "title": "CreateOrganizationalRequirement",
+    "properties": [
+      "mutation",
+      "organizationalRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💎️quality-record/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-quality-record/schema.json",
+    "title": "ReplaceQualityRecord",
+    "properties": [
+      "mutation",
+      "qualityRecord"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💎️quality-record/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-quality-record/schema.json",
+    "title": "CreateQualityRecord",
+    "properties": [
+      "mutation",
+      "qualityRecord",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️storage/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-storage-requirement/schema.json",
+    "title": "ReplaceStorageRequirement",
+    "properties": [
+      "mutation",
+      "storageRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️storage/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-storage-requirement/schema.json",
+    "title": "CreateStorageRequirement",
+    "properties": [
+      "mutation",
+      "storageRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📒️audit/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-audit-event/schema.json",
+    "title": "ReplaceAuditEvent",
+    "properties": [
+      "mutation",
+      "auditEvent"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📒️audit/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-audit-event/schema.json",
+    "title": "CreateAuditEvent",
+    "properties": [
+      "mutation",
+      "auditEvent",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️constraint-record/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-constraint-record/schema.json",
+    "title": "ReplaceConstraintRecord",
+    "properties": [
+      "mutation",
+      "constraintRecord"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️constraint-record/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-constraint-record/schema.json",
+    "title": "CreateConstraintRecord",
+    "properties": [
+      "mutation",
+      "constraintRecord",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧑️user/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-user-profile/schema.json",
+    "title": "ReplaceUserProfile",
+    "properties": [
+      "mutation",
+      "userProfile"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧑️user/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-user-profile/schema.json",
+    "title": "CreateUserProfile",
+    "properties": [
+      "mutation",
+      "userProfile",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️flow/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-flow-requirement/schema.json",
+    "title": "ReplaceFlowRequirement",
+    "properties": [
+      "mutation",
+      "flowRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️flow/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-flow-requirement/schema.json",
+    "title": "CreateFlowRequirement",
+    "properties": [
+      "mutation",
+      "flowRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️site/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-site-context/schema.json",
+    "title": "ReplaceSiteContext",
+    "properties": [
+      "mutation",
+      "siteContext"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️site/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-site-context/schema.json",
+    "title": "CreateSiteContext",
+    "properties": [
+      "mutation",
+      "siteContext",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️report-record/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-report-record/schema.json",
+    "title": "ReplaceReportRecord",
+    "properties": [
+      "mutation",
+      "reportRecord"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️report-record/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-report-record/schema.json",
+    "title": "CreateReportRecord",
+    "properties": [
+      "mutation",
+      "reportRecord",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️communication/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-communication-requirement/schema.json",
+    "title": "ReplaceCommunicationRequirement",
+    "properties": [
+      "mutation",
+      "communicationRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️communication/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-communication-requirement/schema.json",
+    "title": "CreateCommunicationRequirement",
+    "properties": [
+      "mutation",
+      "communicationRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️process/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-process/schema.json",
+    "title": "ReplaceProcess",
+    "properties": [
+      "mutation",
+      "process"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️process/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-process/schema.json",
+    "title": "CreateProcess",
+    "properties": [
+      "mutation",
+      "process",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️adjacency/🧲️connect/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/connect-adjacency/schema.json",
+    "title": "ConnectAdjacency",
+    "properties": [
+      "mutation",
+      "adjacency",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️relationship/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-relationship/schema.json",
+    "title": "ReplaceRelationship",
+    "properties": [
+      "mutation",
+      "relationship"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️relationship/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-relationship/schema.json",
+    "title": "CreateRelationship",
+    "properties": [
+      "mutation",
+      "relationship",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️change-record/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-change-record/schema.json",
+    "title": "ReplaceChangeRecord",
+    "properties": [
+      "mutation",
+      "changeRecord"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️change-record/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-change-record/schema.json",
+    "title": "CreateChangeRecord",
+    "properties": [
+      "mutation",
+      "changeRecord",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💭️assumption/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-assumption/schema.json",
+    "title": "ReplaceAssumption",
+    "properties": [
+      "mutation",
+      "assumption"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💭️assumption/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-assumption/schema.json",
+    "title": "CreateAssumption",
+    "properties": [
+      "mutation",
+      "assumption",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️equipment/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-equipment/schema.json",
+    "title": "ReplaceEquipment",
+    "properties": [
+      "mutation",
+      "equipment"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️equipment/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-equipment/schema.json",
+    "title": "CreateEquipment",
+    "properties": [
+      "mutation",
+      "equipment",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️growth-plan/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-growth-plan/schema.json",
+    "title": "ReplaceGrowthPlan",
+    "properties": [
+      "mutation",
+      "growthPlan"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️growth-plan/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-growth-plan/schema.json",
+    "title": "CreateGrowthPlan",
+    "properties": [
+      "mutation",
+      "growthPlan",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️operational/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-operational-requirement/schema.json",
+    "title": "ReplaceOperationalRequirement",
+    "properties": [
+      "mutation",
+      "operationalRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️operational/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-operational-requirement/schema.json",
+    "title": "CreateOperationalRequirement",
+    "properties": [
+      "mutation",
+      "operationalRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️search-filter/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-search-filter/schema.json",
+    "title": "ReplaceSearchFilter",
+    "properties": [
+      "mutation",
+      "searchFilter"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️search-filter/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-search-filter/schema.json",
+    "title": "CreateSearchFilter",
+    "properties": [
+      "mutation",
+      "searchFilter",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️program-element/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-program-element/schema.json",
+    "title": "ReplaceProgramElement",
+    "properties": [
+      "mutation",
+      "programElement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️program-element/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-program-element/schema.json",
+    "title": "CreateProgramElement",
+    "properties": [
+      "mutation",
+      "programElement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏃️activity/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-activity/schema.json",
+    "title": "ReplaceActivity",
+    "properties": [
+      "mutation",
+      "activity"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏃️activity/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-activity/schema.json",
+    "title": "CreateActivity",
+    "properties": [
+      "mutation",
+      "activity",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚠️risk/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-risk/schema.json",
+    "title": "ReplaceRisk",
+    "properties": [
+      "mutation",
+      "risk"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚠️risk/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-risk/schema.json",
+    "title": "CreateRisk",
+    "properties": [
+      "mutation",
+      "risk",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💪️resilience/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-resilience-requirement/schema.json",
+    "title": "ReplaceResilienceRequirement",
+    "properties": [
+      "mutation",
+      "resilienceRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💪️resilience/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-resilience-requirement/schema.json",
+    "title": "CreateResilienceRequirement",
+    "properties": [
+      "mutation",
+      "resilienceRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️cost/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-cost-requirement/schema.json",
+    "title": "ReplaceCostRequirement",
+    "properties": [
+      "mutation",
+      "costRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️cost/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-cost-requirement/schema.json",
+    "title": "CreateCostRequirement",
+    "properties": [
+      "mutation",
+      "costRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭐️priority-record/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-priority-record/schema.json",
+    "title": "ReplacePriorityRecord",
+    "properties": [
+      "mutation",
+      "priorityRecord"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭐️priority-record/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-priority-record/schema.json",
+    "title": "CreatePriorityRecord",
+    "properties": [
+      "mutation",
+      "priorityRecord",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️infrastructure/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-infrastructure-requirement/schema.json",
+    "title": "ReplaceInfrastructureRequirement",
+    "properties": [
+      "mutation",
+      "infrastructureRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️infrastructure/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-infrastructure-requirement/schema.json",
+    "title": "CreateInfrastructureRequirement",
+    "properties": [
+      "mutation",
+      "infrastructureRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️resource/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-resource/schema.json",
+    "title": "ReplaceResource",
+    "properties": [
+      "mutation",
+      "resource"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️resource/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-resource/schema.json",
+    "title": "CreateResource",
+    "properties": [
+      "mutation",
+      "resource",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️wayfinding/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-wayfinding-requirement/schema.json",
+    "title": "ReplaceWayfindingRequirement",
+    "properties": [
+      "mutation",
+      "wayfindingRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️wayfinding/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-wayfinding-requirement/schema.json",
+    "title": "CreateWayfindingRequirement",
+    "properties": [
+      "mutation",
+      "wayfindingRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️delivery-constraint/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-delivery-constraint/schema.json",
+    "title": "ReplaceDeliveryConstraint",
+    "properties": [
+      "mutation",
+      "deliveryConstraint"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️delivery-constraint/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-delivery-constraint/schema.json",
+    "title": "CreateDeliveryConstraint",
+    "properties": [
+      "mutation",
+      "deliveryConstraint",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️schedule/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-schedule-requirement/schema.json",
+    "title": "ReplaceScheduleRequirement",
+    "properties": [
+      "mutation",
+      "scheduleRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️schedule/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-schedule-requirement/schema.json",
+    "title": "CreateScheduleRequirement",
+    "properties": [
+      "mutation",
+      "scheduleRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗓️meeting-record/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-meeting-record/schema.json",
+    "title": "ReplaceMeetingRecord",
+    "properties": [
+      "mutation",
+      "meetingRecord"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗓️meeting-record/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-meeting-record/schema.json",
+    "title": "CreateMeetingRecord",
+    "properties": [
+      "mutation",
+      "meetingRecord",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📃️document/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-document/schema.json",
+    "title": "ReplaceDocument",
+    "properties": [
+      "mutation",
+      "document"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📃️document/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-document/schema.json",
+    "title": "CreateDocument",
+    "properties": [
+      "mutation",
+      "document",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️sustainability/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-sustainability-requirement/schema.json",
+    "title": "ReplaceSustainabilityRequirement",
+    "properties": [
+      "mutation",
+      "sustainabilityRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️sustainability/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-sustainability-requirement/schema.json",
+    "title": "CreateSustainabilityRequirement",
+    "properties": [
+      "mutation",
+      "sustainabilityRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚔️conflict/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-conflict/schema.json",
+    "title": "ReplaceConflict",
+    "properties": [
+      "mutation",
+      "conflict"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚔️conflict/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-conflict/schema.json",
+    "title": "CreateConflict",
+    "properties": [
+      "mutation",
+      "conflict",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️privacy/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-privacy-requirement/schema.json",
+    "title": "ReplacePrivacyRequirement",
+    "properties": [
+      "mutation",
+      "privacyRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️privacy/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-privacy-requirement/schema.json",
+    "title": "CreatePrivacyRequirement",
+    "properties": [
+      "mutation",
+      "privacyRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗳️survey/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-survey/schema.json",
+    "title": "ReplaceSurvey",
+    "properties": [
+      "mutation",
+      "survey"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗳️survey/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-survey/schema.json",
+    "title": "CreateSurvey",
+    "properties": [
+      "mutation",
+      "survey",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️knowledge-record/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-knowledge-record/schema.json",
+    "title": "ReplaceKnowledgeRecord",
+    "properties": [
+      "mutation",
+      "knowledgeRecord"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️knowledge-record/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-knowledge-record/schema.json",
+    "title": "CreateKnowledgeRecord",
+    "properties": [
+      "mutation",
+      "knowledgeRecord",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️quantity/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-quantity-requirement/schema.json",
+    "title": "ReplaceQuantityRequirement",
+    "properties": [
+      "mutation",
+      "quantityRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️quantity/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-quantity-requirement/schema.json",
+    "title": "CreateQuantityRequirement",
+    "properties": [
+      "mutation",
+      "quantityRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♿️accessibility/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-accessibility-requirement/schema.json",
+    "title": "ReplaceAccessibilityRequirement",
+    "properties": [
+      "mutation",
+      "accessibilityRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♿️accessibility/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-accessibility-requirement/schema.json",
+    "title": "CreateAccessibilityRequirement",
+    "properties": [
+      "mutation",
+      "accessibilityRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️option/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-option-evaluation/schema.json",
+    "title": "ReplaceOptionEvaluation",
+    "properties": [
+      "mutation",
+      "optionEvaluation"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️option/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-option-evaluation/schema.json",
+    "title": "CreateOptionEvaluation",
+    "properties": [
+      "mutation",
+      "optionEvaluation",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿️environmental/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-environmental-requirement/schema.json",
+    "title": "ReplaceEnvironmentalRequirement",
+    "properties": [
+      "mutation",
+      "environmentalRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿️environmental/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-environmental-requirement/schema.json",
+    "title": "CreateEnvironmentalRequirement",
+    "properties": [
+      "mutation",
+      "environmentalRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️function/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-function/schema.json",
+    "title": "ReplaceFunction",
+    "properties": [
+      "mutation",
+      "function"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️function/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-function/schema.json",
+    "title": "CreateFunction",
+    "properties": [
+      "mutation",
+      "function",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛎️service/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-service-requirement/schema.json",
+    "title": "ReplaceServiceRequirement",
+    "properties": [
+      "mutation",
+      "serviceRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛎️service/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-service-requirement/schema.json",
+    "title": "CreateServiceRequirement",
+    "properties": [
+      "mutation",
+      "serviceRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️stakeholder/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-stakeholder/schema.json",
+    "title": "ReplaceStakeholder",
+    "properties": [
+      "mutation",
+      "stakeholder"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️stakeholder/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-stakeholder/schema.json",
+    "title": "CreateStakeholder",
+    "properties": [
+      "mutation",
+      "stakeholder",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦺️safety/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-safety-requirement/schema.json",
+    "title": "ReplaceSafetyRequirement",
+    "properties": [
+      "mutation",
+      "safetyRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦺️safety/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-safety-requirement/schema.json",
+    "title": "CreateSafetyRequirement",
+    "properties": [
+      "mutation",
+      "safetyRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✅️decision/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-decision/schema.json",
+    "title": "ReplaceDecision",
+    "properties": [
+      "mutation",
+      "decision"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✅️decision/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-decision/schema.json",
+    "title": "CreateDecision",
+    "properties": [
+      "mutation",
+      "decision",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎓️workshop/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-workshop/schema.json",
+    "title": "ReplaceWorkshop",
+    "properties": [
+      "mutation",
+      "workshop"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎓️workshop/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-workshop/schema.json",
+    "title": "CreateWorkshop",
+    "properties": [
+      "mutation",
+      "workshop",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️template-record/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-template-record/schema.json",
+    "title": "ReplaceTemplateRecord",
+    "properties": [
+      "mutation",
+      "templateRecord"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️template-record/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-template-record/schema.json",
+    "title": "CreateTemplateRecord",
+    "properties": [
+      "mutation",
+      "templateRecord",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️security/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-security-requirement/schema.json",
+    "title": "ReplaceSecurityRequirement",
+    "properties": [
+      "mutation",
+      "securityRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️security/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-security-requirement/schema.json",
+    "title": "CreateSecurityRequirement",
+    "properties": [
+      "mutation",
+      "securityRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛂️compliance-record/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-compliance-record/schema.json",
+    "title": "ReplaceComplianceRecord",
+    "properties": [
+      "mutation",
+      "complianceRecord"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛂️compliance-record/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-compliance-record/schema.json",
+    "title": "CreateComplianceRecord",
+    "properties": [
+      "mutation",
+      "complianceRecord",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️performance/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-performance-criterion/schema.json",
+    "title": "ReplacePerformanceCriterion",
+    "properties": [
+      "mutation",
+      "performanceCriterion"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️performance/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-performance-criterion/schema.json",
+    "title": "CreatePerformanceCriterion",
+    "properties": [
+      "mutation",
+      "performanceCriterion",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐛️issue/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-issue/schema.json",
+    "title": "ReplaceIssue",
+    "properties": [
+      "mutation",
+      "issue"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐛️issue/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-issue/schema.json",
+    "title": "CreateIssue",
+    "properties": [
+      "mutation",
+      "issue",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜️regulatory/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-regulatory-requirement/schema.json",
+    "title": "ReplaceRegulatoryRequirement",
+    "properties": [
+      "mutation",
+      "regulatoryRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜️regulatory/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-regulatory-requirement/schema.json",
+    "title": "CreateRegulatoryRequirement",
+    "properties": [
+      "mutation",
+      "regulatoryRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️requirement/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-requirement/schema.json",
+    "title": "ReplaceRequirement",
+    "properties": [
+      "mutation",
+      "requirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️requirement/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-requirement/schema.json",
+    "title": "CreateRequirement",
+    "properties": [
+      "mutation",
+      "requirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👍️approval-record/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-approval-record/schema.json",
+    "title": "ReplaceApprovalRecord",
+    "properties": [
+      "mutation",
+      "approvalRecord"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👍️approval-record/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-approval-record/schema.json",
+    "title": "CreateApprovalRecord",
+    "properties": [
+      "mutation",
+      "approvalRecord",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧠️human/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-human-factor-requirement/schema.json",
+    "title": "ReplaceHumanFactorRequirement",
+    "properties": [
+      "mutation",
+      "humanFactorRequirement"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧠️human/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-human-factor-requirement/schema.json",
+    "title": "CreateHumanFactorRequirement",
+    "properties": [
+      "mutation",
+      "humanFactorRequirement",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✔️validation-record/🏷️rename/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/rename-validation-record/schema.json",
+    "title": "RenameValidationRecord",
+    "properties": [
+      "mutation",
+      "id",
+      "newName"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✔️validation-record/♻️replace/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-validation-record/schema.json",
+    "title": "ReplaceValidationRecord",
+    "properties": [
+      "mutation",
+      "validationRecord"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✔️validation-record/🗑️delete/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/delete-validation-record/schema.json",
+    "title": "DeleteValidationRecord",
+    "properties": [
+      "mutation",
+      "id"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✔️validation-record/🌱️create/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-validation-record/schema.json",
+    "title": "CreateValidationRecord",
+    "properties": [
+      "mutation",
+      "validationRecord",
+      "index"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/architect/program/diff.json",
+    "title": "ProgramDiff",
+    "properties": [
+      "schema",
+      "meta",
+      "project",
+      "stakeholders",
+      "users",
+      "activities",
+      "functions",
+      "elements",
+      "quantities",
+      "relationships",
+      "adjacencies",
+      "processes",
+      "flows",
+      "accessRules",
+      "operations",
+      "equipment",
+      "resources",
+      "storage",
+      "environmental",
+      "humanFactors",
+      "accessibility",
+      "privacy",
+      "safety",
+      "security",
+      "regulatory",
+      "siteContext",
+      "organizational",
+      "services",
+      "infrastructure",
+      "information",
+      "communication",
+      "wayfinding",
+      "schedules",
+      "flexibility",
+      "growth",
+      "sustainability",
+      "resilience",
+      "costs",
+      "delivery",
+      "risks",
+      "conflicts",
+      "requirements",
+      "priorities",
+      "scenarios",
+      "options",
+      "decisions",
+      "validations",
+      "performance",
+      "quality",
+      "artifacts",
+      "assumptions",
+      "constraints",
+      "complianceRecords",
+      "approvals",
+      "meetings",
+      "changes",
+      "collaboration",
+      "analyses",
+      "reports",
+      "searchFilters",
+      "statusRecords",
+      "workshops",
+      "surveys",
+      "issues",
+      "auditEvents",
+      "templates",
+      "knowledge",
+      "benchmarks",
+      "traces",
+      "governance"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/➗️mathematical/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/➗️equation/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📏️layout/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️canonical/🧬️schema/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [
+      "copyCapacityLimit",
+      "turnLimit",
+      "pauses",
+      "cases",
+      "scalar",
+      "scalarExpected"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏗️fem/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🖼️image/🧬️schema/🔣️.json",
+    "id": "schema://s.draw.drawing.1.any.io.image",
+    "title": "Drawing Image IO Admission and Emission",
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️owned/🧬️schema/🔣️.json",
+    "id": "https://schemas.semio.tech/draw/owned-export",
+    "title": null,
+    "properties": [
+      "source",
+      "viewBox",
+      "expected",
+      "formats",
+      "workGrants",
+      "cancelTurns",
+      "deniedBirth",
+      "deniedHandoff",
+      "fault"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json",
+    "title": "DrawingArtifact",
+    "properties": [
+      "schema",
+      "id",
+      "title",
+      "layers",
+      "assets",
+      "artboard"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🧬️schema/🔣️.json",
+    "id": "https://semio.tech/s/draw/scene/booleans",
+    "title": "Bounded Complete Document Boolean Resolution",
+    "properties": [
+      "plan",
+      "limits"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧬️schema/🔣️.json",
+    "id": "https://semio.tech/s/draw/scene/text-fixtures",
+    "title": "Authoritative Glyph Scene Fixtures",
+    "properties": [],
+    "items": [
+      "name",
+      "content",
+      "x",
+      "y",
+      "size",
+      "transform",
+      "fillRule",
+      "fill",
+      "stroke",
+      "expectedGlyphs",
+      "width",
+      "height",
+      "fontFamily",
+      "oracleText",
+      "oracleDirection",
+      "oracleFace",
+      "oracleGlyphs",
+      "oraclePositions"
+    ],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/📏️physical/🧬️schema/🔣️.json",
+    "id": "semio.draw.scene.physical-retirement.v1",
+    "title": null,
+    "properties": [
+      "version",
+      "cases",
+      "grant",
+      "expected"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧬️schema/🔣️.json",
+    "id": "https://semio.tech/s/draw/scene/prepare",
+    "title": "Complete Drawing Document Scene Plan",
+    "properties": [
+      "assets",
+      "nodes"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧬️schema/🕰️history/🔣️.json",
+    "id": null,
+    "title": "Restored Drawing History Actors",
+    "properties": [
+      "author",
+      "observer",
+      "kind",
+      "before",
+      "after",
+      "actions"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️properties/🎬️actions/🧬️schema/🔣️.json",
+    "id": "urn:semio:draw:inspector-selection-actions",
+    "title": null,
+    "properties": [
+      "actions",
+      "cases"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧵️publication/🧬️schema/🔣️.json",
+    "id": "https://semio.tech/s/draw/import-image-publication",
+    "title": null,
+    "properties": [
+      "schema",
+      "identity",
+      "phases",
+      "maximumNodes",
+      "maximumDepth",
+      "name",
+      "selection",
+      "mutations",
+      "deniedAxes",
+      "cancelAfter"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/📥️import-image-asset/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/structure/mutation/import-image-asset/schema.json",
+    "title": "ImportImageAsset",
+    "properties": [
+      "mutation",
+      "assetId",
+      "asset"
+    ],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/📋️project.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🔮️oracles/🔣️.json",
+    "id": null,
+    "title": null,
+    "properties": [],
+    "items": [],
+    "description": ""
+  }
+]

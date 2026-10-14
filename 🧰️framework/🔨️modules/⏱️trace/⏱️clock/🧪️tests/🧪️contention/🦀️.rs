@@ -6,7 +6,7 @@ use std::time::Duration;
 
 //#region 🧰️Fixture
 fn case(id: &str) -> serde_json::Value {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧪️contention/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧪️contention/🔣️.json")).unwrap();
     fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == id).unwrap().clone()
 }
 
@@ -35,11 +35,11 @@ fn held_watchdog(id: &str) {
     std::thread::sleep(Duration::from_millis(10));
     let (returned, verdict) = match law["lock"].as_str().unwrap() {
         "site" => {
-            let guard = site_registry().lock().unwrap_or_else(PoisonError::into_inner);
+            let guard = site_registry().try_lock().expect("original static telemetry fixture gate is available");
             callback_returns_while_held(|| watchdog.finish(), || drop(guard))
         }
         "violation" => {
-            let guard = violation_ring().lock().unwrap_or_else(PoisonError::into_inner);
+            let guard = violation_ring().try_lock().expect("original static telemetry fixture gate is available");
             callback_returns_while_held(|| watchdog.finish(), || drop(guard))
         }
         _ => unreachable!(),
@@ -59,7 +59,7 @@ fn held_watchdog(id: &str) {
 fn microsecond_telemetry_contention_timer_site_does_not_wait() {
     let law = case("timer-site-held");
     let timer = StepTimer::start("test.contention.timer");
-    let guard = site_registry().lock().unwrap_or_else(PoisonError::into_inner);
+    let guard = site_registry().try_lock().expect("original static telemetry fixture gate is available");
     let (returned, ()) = callback_returns_while_held(|| drop(timer), || drop(guard));
     assert_eq!(returned, law["returnsWhileHeld"].as_bool().unwrap());
 }
@@ -79,7 +79,7 @@ fn microsecond_telemetry_contention_event_returns_exact_event_without_waiting() 
     let law = case("event-ring-held");
     let operation = allocate_operation_id();
     let generation = Generation(37);
-    let guard = trace_ring().lock().unwrap_or_else(PoisonError::into_inner);
+    let guard = trace_ring().try_lock().expect("original static telemetry fixture gate is available");
     let (returned, event) = callback_returns_while_held(|| record_failed(operation, generation), || drop(guard));
     let event = event.expect("real-clock exact event exists despite optional ring contention");
     assert_eq!(event.operation, operation);
@@ -92,7 +92,7 @@ fn microsecond_telemetry_contention_event_returns_exact_event_without_waiting() 
 
 #[test]
 fn microsecond_telemetry_exact_verdict_survives_saturation_and_invalid_clock() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧪️contention/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧪️contention/🔣️.json")).unwrap();
     let operation = allocate_operation_id();
     let generation = Generation(51);
     for law in fixture["verdicts"].as_array().unwrap() {
@@ -105,7 +105,7 @@ fn microsecond_telemetry_exact_verdict_survives_saturation_and_invalid_clock() {
     let guard = Watchdog { site: "test.exact-verdict", operation, generation, stage: InteractiveStage::InteractiveStep, start_us: Some(100), finished: true };
     let verdict = guard.report(Some(8_100));
     {
-        let mut ring = violation_ring().lock().unwrap_or_else(PoisonError::into_inner);
+        let mut ring = violation_ring().try_lock().expect("original static telemetry fixture gate is available");
         for _ in 0..VIOLATION_RING_CAPACITY + 1 {
             ring.push(ContractViolation { site: "test.unrelated", operation: OperationId(0), generation, stage: InteractiveStage::UiEvent, elapsed_us: 8_001 });
         }
@@ -122,7 +122,7 @@ fn microsecond_telemetry_exact_verdict_survives_saturation_and_invalid_clock() {
 //#region 📒️SustainedOverrun
 #[test]
 fn microsecond_sustained_overrun_ledger_quarantines_only_attributable_steps() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧪️contention/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧪️contention/🔣️.json")).unwrap();
     assert_eq!(fixture["sustainedOverrunSteps"].as_u64().unwrap(), u64::from(SUSTAINED_OVERRUN_QUARANTINE_STEPS));
     let operation = allocate_operation_id();
     let generation = Generation(83);

@@ -10,7 +10,7 @@ use semio_framework::kernel::HistoryEntry;
 use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
 use semio_framework_plugin::PluginApp;
 
-const SLIDER_GESTURE_FIXTURE_JSON: &str = include_str!("../../../../../🧫️fixtures/🎚️slider-gesture.json");
+const SLIDER_GESTURE_FIXTURE_JSON: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🎚️slider-gesture.json");
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -195,7 +195,7 @@ async fn a_drag_that_moves_nothing_leaves_zero_trace_and_two_drags_are_two_trans
 //#endregion ✋️NodeDrag
 
 //#region 🔗️EditRows
-const NODE_GRAPH_EDIT_ROWS_JSON: &str = include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
+const NODE_GRAPH_EDIT_ROWS_JSON: &str = include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
 
 /// ⚖️ LAW (shared row contract, design §13.3; fixture `🧫️node-graph-edit-rows`): every accepted renderer row decodes, and
 /// every refused one — a whole fixture (`setHostSnapshot`), an ambient-selection delete, an absolute move, an unknown

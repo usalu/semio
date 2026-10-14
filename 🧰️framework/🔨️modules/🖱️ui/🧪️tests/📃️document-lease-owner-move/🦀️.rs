@@ -8,13 +8,13 @@
 //! for the rest of the session (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
 //! `📓️wgpu-blank-paint-2026-09-12.md`). Moving the one owner out and back mints nothing and therefore
 //! cannot run out — that is the rule this file pins, against the real arena, with the neutral fixture
-//! `🖱️ui/🧫️fixtures/📃️document-lease-owner-move/🔣️.json` as the shared oracle
+//! `🖱️ui/🧪️tests/🧫️fixtures/📃️document-lease-owner-move/🔣️.json` as the shared oracle
 //! (its TypeScript twin is `📺️renderer/🧑‍🎨engine/🧪️tests/🖌️wgpu-document-owner-move/🟦️.ts`).
 
 use super::*;
 
 fn law() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/📃️document-lease-owner-move/🔣️.json")).expect("document lease owner-move fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/📃️document-lease-owner-move/🔣️.json")).expect("document lease owner-move fixture")
 }
 
 fn retire(lease: &mut UiDocumentLease) {

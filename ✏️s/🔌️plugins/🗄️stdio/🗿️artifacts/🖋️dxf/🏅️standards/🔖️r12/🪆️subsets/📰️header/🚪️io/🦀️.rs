@@ -91,10 +91,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<DxfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<DxfSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<DxfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<DxfSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::apply_mutation(&mut self.snapshot, &mutation);
@@ -168,14 +168,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match if text.lines().find(|line| !line.trim().is_empty()).is_some_and(|line| line.trim().parse::<i32>().is_ok()) { crate::standards::v_r12::subsets::any::io::text::snapshot::parse_dxf_document(text).map_err(|error|semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error,semio_framework_diagnostic::TextSpan::at(1,1))) } else { <DxfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) } {
+                    AnalyzeSource::Text(text) => match if text.lines().find(|line| !line.trim().is_empty()).is_some_and(|line| line.trim().parse::<i32>().is_ok()) { crate::standards::v_r12::subsets::any::io::text::snapshot::parse_dxf_document(text).map_err(|error|semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error,semio_framework_diagnostic::TextSpan::at(1,1))) } else { <DxfSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) } {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <DxfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <DxfSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

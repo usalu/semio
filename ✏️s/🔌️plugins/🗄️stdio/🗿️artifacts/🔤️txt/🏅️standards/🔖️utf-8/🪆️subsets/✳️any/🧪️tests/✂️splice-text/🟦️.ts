@@ -1,7 +1,7 @@
 /** 🧪️ Third-party and independent oracle of the plain-text splice corpus (`🧫️fixtures/✂️splice-text`): ajv validates every mutation payload against the leaf's JSON schema, and the text each row means is rebuilt by an independent scalar-array implementation. The Rust leaf law replays the same corpus through `splice-text` and the contract's `apply_draft_splices`. */
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
-import corpus from "../../🧫️fixtures/✂️splice-text/🔣️.json";
+import corpus from "../🧫️fixtures/✂️splice-text/🔣️.json";
 import schema from "../../🧬️schema/🧬️mutations/✂️splice-text/🧬️schema/🔣️.json";
 
 type Splice = { readonly offset: number; readonly delete: number; readonly insert: string };

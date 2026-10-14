@@ -28,7 +28,7 @@ fn mounted_original_close_fault_retains_refused_payload_and_retires_actual_frame
  use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneStep};
  use semio_framework_diagnostic::{FaultOrigin,FaultScope,FaultCause,FaultCode};
  use semio_framework_trace::observe_heap_allocations_on_this_thread;
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../🧵️retained-command/🪟️mounted/♻️frontier/⚠️fault/🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../../🧵️retained-command/🪟️mounted/♻️frontier/⚠️fault/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in corpus["cases"].as_array().unwrap(){
   let origin=if row["origin"]=="app"{FaultOrigin::App}else{FaultOrigin::Framework};
   let(original,birth)=observe_heap_allocations_on_this_thread(||{
@@ -60,7 +60,7 @@ fn mounted_original_close_fault_retains_refused_payload_and_retires_actual_frame
  println!("[DEBUG] actual mounted Fault originals preserve String/Box/cause/params through every denied axis and funded body plus separate frame release; existing bounded cause remains authoritative");
 }
 
-const RETIREMENT_AUTHORITY_FIXTURE_JSON: &str = include_str!("../../🧫️fixtures/♻️publication-retirement-authority/🔣️.json");
+const RETIREMENT_AUTHORITY_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/♻️publication-retirement-authority/🔣️.json");
 
 /// 🪟️ The one window kind both window lanes of this fixture partition under.
 const RETIREMENT_WINDOW_KIND: &str = "publication-retirement-window";
@@ -374,6 +374,7 @@ fn config_mutation(value: &str) -> TestConfigMutation {
 /// still co-own the root the superseding write displaced.
 #[semio_framework_async_macros::async_test]
 async fn every_publication_lane_retires_a_rejected_authority_without_faulting_each_turn() {
+    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let fixture = fixture();
     let grant = grant(&fixture);
     let rows = fixture["lanes"].as_array().expect("fixture lanes").clone();
@@ -503,13 +504,16 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
         }
     }
     drop((window_config_authority, window_transient_authority));
-    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
+    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
 
 /// 🔁️ The authority captured at admission is now stale by construction, which is exactly why the
 /// window-transient emission branch refreshes it before it begins.
 #[semio_framework_async_macros::async_test]
 async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
+    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let fixture = fixture();
     let grant = grant(&fixture);
     let expected = fixture["windowTransientReBegin"].clone();
@@ -575,7 +579,9 @@ async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
     assert!(re_begun.terminal_is_empty());
     drop(authority);
     eprintln!("window transient retired a rejected authority over {turns} Ok turns, refused a stale re-begin, and admitted the refreshed one at generation {}", app.window_transient_store.capture(Some(&view)).unwrap().unwrap().generation);
-    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
+    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
 
 /// 🫧️ LAW: a window-transient emission the registry refuses is never dropped. The typed-operation unit hands the
@@ -584,6 +590,7 @@ async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
 /// (the refusal used to consume the mutation, and the retry then completed without it).
 #[semio_framework_async_macros::async_test]
 async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
+    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut app = artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let authority = app.window_transient_store.capture(Some(&retirement_view())).expect("window transient capture").expect("registered window transient owner");
     let generation = authority.generation;
@@ -660,5 +667,7 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
     mounted.publication = None;
     mounted.window_transient_authority = None;
     drop(mounted);
-    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
+    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }

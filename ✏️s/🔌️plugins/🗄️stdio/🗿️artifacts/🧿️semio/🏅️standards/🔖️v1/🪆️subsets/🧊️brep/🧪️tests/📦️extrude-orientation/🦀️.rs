@@ -298,7 +298,7 @@ fn hexagon_profile_with_backward_coedges_extruded_down_faces_outward() {
 #[test]
 fn retained_profiles_survive_every_repeated_extrusion_without_topology_aliases() {
     use semio_framework_3d_brep_engine::{Brep, BrepKernel};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️retained-extrusion/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔁️retained-extrusion/🔣️.json")).unwrap();
     let expected = &fixture["expect"];
     for case in fixture["cases"].as_array().unwrap() {
         let mut kernel = Brep::new();

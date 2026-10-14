@@ -1,0 +1,8 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🪪️mandatory-mutation-descriptor/🟦️.ts",
+  "sha256": "889e9183b326b87665773607ddedc8f44feb67aa8e3b5837288ff6d967f23ad4",
+  "before": "new Set([\"🧪️tests/🧫️fixtures\", \"🧪️fixtures\", \"🧪️tests\"])",
+  "after": "new Set([\"🧫️fixtures\", \"🧫️examples\", \"🧪️fixtures\", \"🧪️examples\", \"🧪️tests\"])",
+  "line": 13,
+  "role": "exact segment membership set consumed by path.split; combined path is invalid marker"
+}

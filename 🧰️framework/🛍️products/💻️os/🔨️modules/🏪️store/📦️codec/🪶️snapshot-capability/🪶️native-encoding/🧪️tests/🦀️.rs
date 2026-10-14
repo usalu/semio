@@ -1,5 +1,7 @@
+use pack::snapshot::ArtifactSqliteSnapshot as _;
+use pack::snapshot::{ArtifactDsl,ArtifactPack};
 use super::*;
-use crate::os_store::serialization::{ArtifactDsl, ArtifactPack, ArtifactSqliteSnapshot};
+use crate::os_store::serialization::{ ArtifactSqliteSnapshotHost};
 use semio_framework_value::DslValue;
 use semio_framework_dsl_record::FieldSpec;
 use semio_framework_dsl_record::FieldValue;
@@ -50,20 +52,28 @@ macro_rules! expansion_owner {
             fn encode_pack_with(&self, _: &PackEncodeOptions) -> Result<Vec<u8>, PackError> { ENCODER_CALLS.with(|count| count.set(count.get() + 1)); Ok(vec![120; self.output_bytes]) }
             fn decode_pack_with(bytes: &[u8], _: &PackDecodeOptions) -> Result<Self, PackError> { Ok(Self { output_bytes: bytes.len() }) }
         }
-        impl ArtifactSqliteSnapshot for $owner {
-            const SQLITE_SCHEMA: &'static str = include_str!("../🧬️schema/🗄️.sql");
-            fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> {
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $owner {
+
+}
+        impl ArtifactSqliteSnapshotHost for $owner {
+            
+            
+            
+            $($guard)*
+        }
+impl pack::snapshot::ArtifactSqliteSnapshot for $owner {
+const SQLITE_SCHEMA: &'static str = include_str!("../🧬️schema/🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> {
                 control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
                 let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
                 database.table_mut("encoding_expansion")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Integer(i64::try_from(self.output_bytes).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"output size exceeds i64"))?)] });
                 Ok(database)
             }
-            fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self,ValueError> {
+fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self,ValueError> {
                 control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
                 Ok(Self { output_bytes: usize::try_from(database.table("encoding_expansion")?.rows[0].integer(1)?).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"stored output size must fit usize"))? })
             }
-            $($guard)*
-        }
+}
     };
 }
 expansion_owner!(MissingEncodingGuard,);
@@ -110,7 +120,7 @@ expansion_owner!(
         GuardedEncoding { output_bytes: self.output_bytes }.encode_sqlite_snapshot_native(encoding, control, native_owner)
     }
     fn preflight_sqlite_snapshot_encoding(&self, _: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
         let mut bound = NativeEncodingBound::new(control)?;
         bound.repeated(self.output_bytes, fixture["exactEncodingAdmission"]["estimateMultiplier"].as_u64().unwrap() as usize)?;
         bound.finish()
@@ -119,14 +129,14 @@ expansion_owner!(
 
 #[test]
 fn sqlite_snapshot_native_exact_output_admission_ignores_approximate_preflight() {
- let snapshot_policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🔣️.json")).unwrap();let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["cases"][0]["grant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
+ let snapshot_policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/🎟️encode-owner/🔣️.json")).unwrap();let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["cases"][0]["grant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
 let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snapshot_encoding_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut snapshot_encoding_native=semio_framework_value::NativeEncodeControl::new(snapshot_native_maximum,&mut snapshot_encoding_progress);snapshot_encoding_native.install_retirement_recipient(&mut snapshot_encoding_recipient).unwrap();let mut snapshot_encoding_owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut snapshot_encoding_native,wallet(snapshot_caller_grant));
 
     use std::{
         io::Write,
         process::{Command, Stdio},
     };
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     
     let case = &fixture["exactEncodingAdmission"];
     let output_bytes = case["outputBytes"].as_u64().unwrap() as usize;
@@ -164,14 +174,14 @@ drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owne
 
 #[test]
 fn sqlite_snapshot_native_encoding_admission_rejects_before_either_encoder() {
- let snapshot_policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🔣️.json")).unwrap();let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["cases"][0]["grant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
+ let snapshot_policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/🎟️encode-owner/🔣️.json")).unwrap();let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["cases"][0]["grant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
 let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snapshot_encoding_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut snapshot_encoding_native=semio_framework_value::NativeEncodeControl::new(snapshot_native_maximum,&mut snapshot_encoding_progress);snapshot_encoding_native.install_retirement_recipient(&mut snapshot_encoding_recipient).unwrap();let mut snapshot_encoding_owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut snapshot_encoding_native,wallet(snapshot_caller_grant));
 
     use std::{
         io::Write,
         process::{Command, Stdio},
     };
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "fixture.expansion".into(), standard: "1".into(), subset: "*".into() };
     for case in fixture["cases"].as_array().unwrap() {
         let output_bytes = case["outputBytes"].as_u64().unwrap() as usize;
@@ -218,14 +228,14 @@ drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owne
 }
 
 fn encoding_stops_inside_owned_output(encoding: SnapshotEncoding) {
- let snapshot_policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🔣️.json")).unwrap();let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["cases"][0]["grant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
+ let snapshot_policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/🎟️encode-owner/🔣️.json")).unwrap();let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["cases"][0]["grant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
 let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snapshot_encoding_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut snapshot_encoding_native=semio_framework_value::NativeEncodeControl::new(snapshot_native_maximum,&mut snapshot_encoding_progress);snapshot_encoding_native.install_retirement_recipient(&mut snapshot_encoding_recipient).unwrap();let mut snapshot_encoding_owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut snapshot_encoding_native,wallet(snapshot_caller_grant));
 
     use std::{
         io::Write,
         process::{Command, Stdio},
     };
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     
     let case = &fixture["interiorEncoding"];
     let output_bytes = case["outputBytes"].as_u64().unwrap() as usize;
@@ -292,9 +302,9 @@ fn with_fresh_encode_owner<R>(maximum: usize, live: &std::cell::Cell<bool>, gran
 
 #[test]
 fn sqlite_snapshot_native_record_owner_output_uses_one_control_through_both_envelopes() {
- let snapshot_policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🔣️.json")).unwrap();let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["cases"][0]["grant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
+ let snapshot_policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/🎟️encode-owner/🔣️.json")).unwrap();let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["cases"][0]["grant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let case = &fixture["typedProjection"];
     let count = case["count"].as_u64().unwrap() as usize;
     let source = ControlledOutputFields { items: (0..count).map(|index| index.to_string()).collect() };
@@ -357,7 +367,7 @@ drop(snapshot_decoding_owner);while snapshot_decoding_native.has_retirement_owne
 #[test]
 fn sqlite_snapshot_native_typed_projection_stops_inside_known_collection_before_ordinary_copy() {
     use semio_framework_value::native_encoding::{NativeEncodeControl, NativeEncodeProgress};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let case = &fixture["typedProjection"];
     let count = case["count"].as_u64().unwrap() as usize;
     let cancel_at = case["cancelAt"].as_u64().unwrap() as usize;
@@ -396,7 +406,7 @@ fn sqlite_snapshot_native_typed_projection_stops_inside_known_collection_before_
 #[test]
 fn sqlite_snapshot_native_physical_text_preserves_escaped_utf8_and_cancels_inside_emission() {
     use semio_framework_value::native_encoding::{NativeEncodeControl, NativeEncodeProgress};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let case = &fixture["physicalText"];
     let expected = case["seed"].as_str().unwrap().repeat(case["repeatCount"].as_u64().unwrap() as usize);
     let maximum = case["maximumBytes"].as_u64().unwrap() as usize;
@@ -444,7 +454,7 @@ fn sqlite_snapshot_native_physical_text_preserves_escaped_utf8_and_cancels_insid
 #[test]
 fn sqlite_snapshot_native_physical_text_keeps_literal_lexer_boundaries() {
     use semio_framework_value::native_encoding::NativeEncodeControl;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let spec = semio_framework_dsl_record::RecordSpec::new(Some("literal"), semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(0, "text", Shape::Text)]);
     for source in fixture["physicalLiteralTexts"].as_array().unwrap() {
         let mut record = semio_framework_dsl_record::RecordValue::default();
@@ -474,7 +484,7 @@ fn sqlite_snapshot_native_physical_text_keeps_literal_lexer_boundaries() {
 
 fn physical_pack_output_controlled(document: bool) {
     use semio_framework_value::native_encoding::{NativeEncodeControl, NativeEncodeProgress};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let case = &fixture["physicalBytes"];
     let length = case["length"].as_u64().unwrap() as usize;
     let maximum = case["maximumBytes"].as_u64().unwrap() as usize;
@@ -532,7 +542,7 @@ fn sqlite_snapshot_native_physical_pack_document_controls_intrinsic_octet_emissi
 #[test]
 fn sqlite_snapshot_native_physical_pack_document_preserves_chunk_indexes_frames_and_caller_ceilings() {
     use semio_framework_value::native_encoding::NativeEncodeControl;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let case = &fixture["physicalBytes"];
     let length = case["length"].as_u64().unwrap() as usize;
     let maximum = case["maximumBytes"].as_u64().unwrap() as usize;
@@ -573,7 +583,7 @@ struct PackControlRow {
 #[test]
 fn sqlite_snapshot_native_physical_pack_expression_has_controlled_literal_printer() {
     use semio_framework_value::native_encoding::{NativeEncodeControl, NativeEncodeProgress};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let case = &fixture["physicalBytes"];
     let count = case["length"].as_u64().unwrap() as usize;
     let maximum = case["maximumBytes"].as_u64().unwrap() as usize;
@@ -602,7 +612,7 @@ fn sqlite_snapshot_native_physical_pack_expression_has_controlled_literal_printe
 #[test]
 fn sqlite_snapshot_native_physical_pack_expression_preserves_all_literal_variable_and_call_names() {
     use semio_framework_value::native_encoding::NativeEncodeControl;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let spec = semio_framework_dsl_record::RecordSpec::new(Some("expression"), semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(0, "value", Shape::Expr)]);
     let options = PackEncodeOptions::default();
     for name in fixture["physicalLiteralTexts"].as_array().unwrap() {
@@ -623,7 +633,7 @@ fn sqlite_snapshot_native_physical_pack_expression_preserves_all_literal_variabl
 #[test]
 fn sqlite_snapshot_native_physical_pack_record_preserves_literal_table_and_numeric_tags() {
     use semio_framework_value::native_encoding::NativeEncodeControl;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let texts: Vec<String> = fixture["physicalLiteralTexts"].as_array().unwrap().iter().map(|value| value.as_str().unwrap().to_string()).collect();
     let rows = [PackControlRow { signed: i64::MIN, unsigned: u64::MAX, float: f64::from_bits(0xfff0000000000001), flag: true, text: Some(texts[13].clone()) }, PackControlRow { signed: i64::MAX, unsigned: 0, float: -0.0, flag: false, text: None }];
     let mut accept = |_| true;

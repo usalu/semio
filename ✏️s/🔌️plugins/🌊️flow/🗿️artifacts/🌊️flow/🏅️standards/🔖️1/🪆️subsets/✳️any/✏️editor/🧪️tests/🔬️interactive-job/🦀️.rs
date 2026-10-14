@@ -9,7 +9,7 @@ use crate::editor::flow::unit_tests::context::flow_app_closing;
 use semio_framework_plugin::ArtifactOwnedToolJobFactory;
 use std::collections::{BTreeMap, BTreeSet};
 
-const FLOW_INTERACTIVE_JOB_FIXTURE: &str = include_str!("../../🧫️fixtures/🧮️interactive-job/🔣️.json");
+const FLOW_INTERACTIVE_JOB_FIXTURE: &str = include_str!("../🧫️fixtures/🧮️interactive-job/🔣️.json");
 
 /// 🧫️ The language-agnostic declaration this whole lane is measured against.
 fn fixture() -> Value {

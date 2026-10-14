@@ -3,7 +3,7 @@ import {expect, test} from "bun:test";
 import {readFileSync} from "node:fs";
 import {applyPatch} from "fast-json-patch";
 
-const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+const law=JSON.parse(readFileSync(new URL("../🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
 const bytes=(value:string)=>Buffer.byteLength(value,"utf8");
 
 test("🧵️ borrowed diagnostic code bytes respect the producer limit",()=>{

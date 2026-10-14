@@ -18,11 +18,11 @@
 import { act, cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { createElement, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import fixture from "../../🧱️elements/🌐️World3dHost/🧫️fixtures/🖱️pointer-gestures.json" with { type: "json" };
-import mergeModes from "../../../../../../../🔨️modules/🕹️interaction/🧫️fixtures/🎯️merge-modes.json" with { type: "json" };
+import fixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🖱️pointer-gestures.json" with { type: "json" };
+import mergeModes from "../../../../../../../🔨️modules/🕹️interaction/🧪️tests/🧫️fixtures/🎯️merge-modes.json" with { type: "json" };
 import type { MergeMode } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
-import identity from "../../🧱️elements/🌐️World3dHost/🧫️fixtures/🪪️world-surface-identity.json" with { type: "json" };
-import instanceTitles from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🌐️instance-title/🔣️.json" with { type: "json" };
+import identity from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🪪️world-surface-identity.json" with { type: "json" };
+import instanceTitles from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🌐️instance-title/🔣️.json" with { type: "json" };
 import { worldProjectionDefaults, type WorldProjectionSpec } from "@semio-tech/infinite-world-r3f";
 
 type Vector3Tuple = readonly [number, number, number];

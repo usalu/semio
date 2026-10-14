@@ -3,7 +3,7 @@ import {expect,test} from "bun:test";
 import {readFileSync} from "node:fs";
 import {applyPatch} from "fast-json-patch";
 import "./🔐️custody/🟦️.ts";
-const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
 test("🔐️ shared factory metadata never enlarges a narrow payload copy grant",()=>{
   expect(law.ownershipMoves).toEqual({items:1,copyBytes:0});
   for(const text of law.texts)for(const aliases of law.aliases)for(const copy of law.copyBytes)for(const cancel of law.cancelAt){

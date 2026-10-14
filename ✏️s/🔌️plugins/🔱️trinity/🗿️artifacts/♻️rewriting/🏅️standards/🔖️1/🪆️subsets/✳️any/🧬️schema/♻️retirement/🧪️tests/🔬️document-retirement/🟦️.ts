@@ -4,7 +4,7 @@ import { semioSchemaAjvV1,addSemioMutationLeafSchemasV1 } from "../../../../../.
 
 /** ♻️ Independent typed-owner accounting retains every declared parent and mutation role. */
 export function testRewritingDocumentRetirementOracle(): void {
- const fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json",import.meta.url),"utf8")),specification=JSON.parse(readFileSync(new URL("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🌳️typed/🔣️.json",import.meta.url),"utf8")),schemaOwner=new URL("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",import.meta.url),ajv=semioSchemaAjvV1({allErrors:true});
+ const fixture=JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/♻️retirement/🔣️.json",import.meta.url),"utf8")),specification=JSON.parse(readFileSync(new URL("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🌳️typed/🔣️.json",import.meta.url),"utf8")),schemaOwner=new URL("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",import.meta.url),ajv=semioSchemaAjvV1({allErrors:true});
  for(const path of specification.schemaDocuments)ajv.addSchema(JSON.parse(readFileSync(new URL(path,schemaOwner),"utf8")));
  ajv.addSchema(JSON.parse(readFileSync(new URL("../../../🔣️.json",import.meta.url),"utf8")));
  addSemioMutationLeafSchemasV1(ajv,new URL("../../../🧬️mutations",import.meta.url));

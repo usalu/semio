@@ -302,7 +302,7 @@ pub fn definition() -> ToolDefinition {
 
 /// ⏯️ Read-only collapse: restart on any base or settings change, no revalidate job, no trace subjects.
 pub fn run_definition() -> ToolRunDefinition {
-    ToolRunDefinition {
+    ToolRunDefinition { receiving: semio_framework_tool_run::ToolRunReceivingLimits::REPORTS,
         mutating: false,
         rebase: ToolRunRebasePolicy::Restart,
         reconfigure: ToolRunReconfigurePolicy::Restart,

@@ -74,11 +74,11 @@ impl ArtifactViewer for Fem3dViewer {
         Ok(crate::live_visual::close_demands(instance_id))
     }
 
-    fn mounted_job_maintenance_step(instance_id: u32, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+    fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
         Ok(crate::live_visual::maintenance_step(instance_id, grant))
     }
 
-    fn mounted_job_close_step(instance_id: u32, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+    fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
         Ok(crate::live_visual::close_step(instance_id, grant))
     }
 

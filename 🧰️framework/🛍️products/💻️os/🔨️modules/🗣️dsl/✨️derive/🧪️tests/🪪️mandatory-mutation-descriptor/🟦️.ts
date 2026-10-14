@@ -5,12 +5,12 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { dirname, join, resolve } from "node:path";
 
 test("production schema search specimens match the independent filesystem oracle", async () => {
-  const vector = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🧬️schema-search/🔣️.json", import.meta.url), "utf8"));
+  const vector = JSON.parse(readFileSync(new URL("../🧫️fixtures/🧬️schema-search/🔣️.json", import.meta.url), "utf8"));
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactRoot) throw Error("Ticket-owned schema search output required");
   mkdirSync(artifactRoot, { recursive: true });
   const base = mkdtempSync(join(artifactRoot, "dsl-schema-search-oracle-"));
-  const collections = new Set(["🧫️fixtures", "🧪️fixtures", "🧪️tests"]);
+  const collections = new Set(["🧫️fixtures", "🧫️examples", "🧪️fixtures", "🧪️examples", "🧪️tests"]);
   const isCollection = (path: string) => path.split("/").some((part, ordinal, parts) => collections.has(part) && parts[ordinal - 1] !== "🔨️modules");
   try {
     for (const [ordinal, item] of vector.cases.entries()) {

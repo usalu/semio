@@ -234,7 +234,7 @@ fn cancelling_a_running_job_only_sets_the_cooperative_flag_until_the_producer_ac
 /// guest blocked in a solve fires once per cancel, late binds fire immediately, terminal jobs never.
 #[test]
 fn a_bound_cancel_hook_obeys_the_language_agnostic_law() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛑️job-cancel-hook-law.json")).expect("law fixture is JSON");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛑️job-cancel-hook-law.json")).expect("law fixture is JSON");
     for case in fixture["cases"].as_array().expect("cases") {
         let name = case["name"].as_str().expect("name");
         let registry = JobRegistry::new();

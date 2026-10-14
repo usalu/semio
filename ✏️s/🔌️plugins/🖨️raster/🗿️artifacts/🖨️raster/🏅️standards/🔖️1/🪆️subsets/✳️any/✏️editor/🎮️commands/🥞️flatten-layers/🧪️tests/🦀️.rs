@@ -4,7 +4,7 @@ use super::*;
 use protocol::Mutation;
 #[test]
 fn flatten_preserves_the_composite_and_restores_every_original_layer() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for capacity in fixture["assetCapacities"].as_array().unwrap() {
     let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
     document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -58,7 +58,7 @@ fn retire(document:RasterSnapshot) {crate::standards::v1::subsets::any::schema::
 
 #[test]
 fn flatten_refuses_a_protected_descendant_without_changing_the_document() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let before=semio_framework_pack_json::to_json_string(&document);
     assert!(prepare(&FlattenLayers {name:"Flattened".into()},&document).is_err());assert_eq!(semio_framework_pack_json::to_json_string(&document),before);

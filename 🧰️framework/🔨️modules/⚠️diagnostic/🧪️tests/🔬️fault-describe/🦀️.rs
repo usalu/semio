@@ -37,7 +37,7 @@ fn bounded_fault_wire_preserves_source_span_and_named_path() {
 
 #[test]
 fn fault_inline_layout_stays_within_the_language_neutral_budget() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧯️fault/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧯️fault/🔣️.json")).unwrap();
     let maximum = fixture["maximumInlineBytes"].as_u64().unwrap() as usize;
     let actual = size_of::<Fault>();
     assert!(actual <= maximum);
@@ -45,7 +45,7 @@ fn fault_inline_layout_stays_within_the_language_neutral_budget() {
 
 #[test]
 fn fault_wire_projection_matches_language_neutral_serde_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧯️fault/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧯️fault/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let input: DslValue = serde_json::from_value(row["input"].clone()).unwrap();
         let fault = Fault::from_value(input).unwrap();

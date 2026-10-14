@@ -406,7 +406,7 @@ fn a_registered_mesh_is_shared_by_id_across_sessions() {
 /// 🥽️ The language-neutral upload contract both ends implement: this decoder, and the renderer's pager
 /// (`🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🟦️.tsx`),
 /// which is held to the same scene_snapshot by `🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts`.
-const BRUSH_MESH_UPLOAD_FIXTURE: &str = include_str!("../../../../🧫️fixtures/🥽️brush-mesh-upload/🔣️.json");
+const BRUSH_MESH_UPLOAD_FIXTURE: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🥽️brush-mesh-upload/🔣️.json");
 
 fn brush_mesh_upload_fixture() -> serde_json::Value {
     serde_json::from_str(BRUSH_MESH_UPLOAD_FIXTURE).expect("brush mesh upload scene_snapshot")

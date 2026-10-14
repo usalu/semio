@@ -2,7 +2,7 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const BOX: &str = include_str!("../../../../../../🧫️fixtures/💡️inferences/🌡️energy-envelope/🏠️box/📸️snapshot/🔣️.json");
+const BOX: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🌡️energy-envelope/🏠️box/📸️snapshot/🔣️.json");
 
 fn table() -> String {
     let model: ModelSnapshot = from_json_str(BOX, JsonMemberPolicy::Reject).expect("the box decodes");

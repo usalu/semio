@@ -13,7 +13,7 @@ impl WindowConfigReplaceMutation<State> for Mutation {
 
 #[test]
 fn window_config_replace_reaches_prepared_through_the_real_sealer_and_closes_under_quotes() {
-    let policy: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let policy: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let parse = |value: &serde_json::Value| -> State { semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap() };
     let (base, next) = (parse(&policy["camera"]["base"]), parse(&policy["camera"]["next"]));
     let edit = WindowConfigReplaceEdit::<State, Mutation>::new();

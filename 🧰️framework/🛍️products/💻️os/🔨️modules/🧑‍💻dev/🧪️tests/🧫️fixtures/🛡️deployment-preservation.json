@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "stalePublicOutput": { "directory": "public/plugin-modules", "filename": "🧾️retained.txt", "content": "another agent's public build evidence\n" },
+  "cases": [
+    { "name": "retained-worker", "filename": "🧵️plugin-worker.js", "content": "/** preserved worker evidence */", "extensionRejected": true },
+    { "name": "unknown-document", "filename": "🧾️unknown.txt", "content": "another agent's retained input\n", "extensionRejected": false },
+    { "name": "misnamed-component", "filename": "fixture_component.core.wasm.backup", "content": "preserved backup bytes", "extensionRejected": false },
+    { "name": "stale-shim", "filename": "🟨️.js", "content": "export function oldInterface() {}\n", "extensionRejected": true }
+  ]
+}

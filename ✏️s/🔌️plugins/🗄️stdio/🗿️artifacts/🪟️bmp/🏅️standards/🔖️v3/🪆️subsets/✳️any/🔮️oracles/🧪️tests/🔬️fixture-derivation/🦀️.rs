@@ -22,7 +22,7 @@ fn derive_real_world_fixture() {
     let mut png_path = repo_root.clone();
     png_path.push("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets/🏛️rathaus-ahlen-grundriss/🖼️.png");
     let mut out_path = repo_root.clone();
-    out_path.push("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧫️fixtures/🏛️rathaus-ahlen-grundriss/🖼️.bmp");
+    out_path.push("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏛️rathaus-ahlen-grundriss/🖼️.bmp");
 
     let png_bytes = std::fs::read(&png_path).expect("read the real PNG floor plan");
     let mut reader = png::Decoder::new(std::io::Cursor::new(&png_bytes)).read_info().expect("png: read_info");

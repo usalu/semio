@@ -1,0 +1,29 @@
+{
+  "conflict": {
+    "id": "inline-conflict",
+    "code": "mergeQuarantined",
+    "message": "Two actors edited the same joint",
+    "quarantined": true
+  },
+  "rowId": "framework.settings.conflicts.inline-conflict",
+  "controls": [
+    {
+      "suffix": "accept",
+      "label": "Accept",
+      "icon": "check",
+      "accept": true
+    },
+    {
+      "suffix": "discard",
+      "label": "Discard",
+      "icon": "x",
+      "accept": false
+    }
+  ],
+  "expected": {
+    "rowCount": 1,
+    "controlComponent": "button",
+    "containerRole": "toolbar",
+    "axis": "horizontal"
+  }
+}

@@ -495,7 +495,7 @@ fn an_example_switch_emits_one_load_and_no_mutation() {
         let emit = puzzle2d_active_example_emit(&command, base, &Puzzle2dConfig::default()).expect("the switch emits");
         assert!(emit.artifact_mutations.is_empty() && emit.config_mutations.is_empty(), "no mutation row: {:?}", emit.artifact_mutations);
         let [Effect::LoadDocument { pack, .. }] = emit.effects.as_slice() else { panic!("one whole-document load: {:?}", emit.effects) };
-        let loaded = <crate::Puzzle2dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("the loaded pack decodes");
+        let loaded = <crate::Puzzle2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("the loaded pack decodes");
         assert_eq!(&loaded, set_active_example::target(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID), "the load carries exactly the example");
     }
 }
@@ -1772,7 +1772,7 @@ fn the_initial_snapshot_costs_only_its_document() {
 #[test]
 fn snapshot_import_requires_the_explicit_payload_contract() {
     use crate::editor::puzzle2d::commands::import_snapshot::puzzle2d_import_value;
-    let vectors: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(include_str!("../../🎮️commands/📥️import-snapshot/🧫️fixtures/📄️payload-input/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("plain input examples");
+    let vectors: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(include_str!("../../🎮️commands/📥️import-snapshot/🧪️tests/🧫️fixtures/📄️payload-input/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("plain input examples");
     for case in vectors["cases"].as_array().expect("input cases") {
         let result = puzzle2d_import_value(&case["args"]);
         assert_eq!(result.is_ok(), case["accepted"].as_bool().expect("acceptance"));

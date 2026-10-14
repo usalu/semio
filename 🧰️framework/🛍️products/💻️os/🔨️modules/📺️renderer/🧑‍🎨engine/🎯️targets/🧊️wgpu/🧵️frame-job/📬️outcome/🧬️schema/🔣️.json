@@ -12,7 +12,12 @@
     "outputPresent",
     "sameCandidate",
     "copyBytes",
-    "cancelAlias"
+    "cancelAlias",
+    "deadlineAdmission",
+    "borrowedCloseContext",
+    "wholeCloseFailure",
+    "singleCloseDebit",
+    "deadlineCaller"
   ],
   "properties": {
     "contract": {
@@ -112,6 +117,63 @@
         "depth": 1,
         "sameRoot": true,
         "retainedUntilPaidReturn": true
+      }
+    },
+    "deadlineAdmission": {
+      "const": {
+        "phases": [
+          "originalInputs",
+          "deniedAlias",
+          "originalAlias",
+          "deniedAdmission",
+          "originalAdmission",
+          "witnessedReturn",
+          "terminal"
+        ],
+        "sameInputsUntilAdmission": true,
+        "sameRoot": true,
+        "aliasItems": 1,
+        "aliasCopyBytes": 0,
+        "returnItems": 1,
+        "returnCopyBytes": 0,
+        "renewedAuthority": false
+      }
+    },
+    "borrowedCloseContext": {
+      "const": true
+    },
+    "wholeCloseFailure": {
+      "const": true
+    },
+    "singleCloseDebit": {
+      "const": true
+    },
+    "deadlineCaller": {
+      "const": {
+        "sameCaller": true,
+        "sameBusinessIdentity": true,
+        "sameOriginalCancel": true,
+        "sameClock": true,
+        "newContext": false,
+        "remainingBefore": [
+          20,
+          64,
+          128,
+          128
+        ],
+        "postedOnce": [
+          3,
+          8,
+          16,
+          0
+        ],
+        "remainingAfter": [
+          17,
+          56,
+          112,
+          128
+        ],
+        "receiveAgain": false
       }
     }
   }

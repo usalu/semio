@@ -1,0 +1,15 @@
+\documentclass{article}
+\usepackage{semio-viz-charts-distribution}
+\usepackage{semio-viz-transform}
+\begin{document}
+\ExplSyntaxOn
+\SemioVizProbeBegin{charts-box-violin}{quartiles}
+\semio_viz_tr_stat_from_table:Nnn \l_tmpa_seq { demo-distribution } { value }
+\semio_viz_tr_stat_sort:N \l_tmpa_seq
+\fp_zero:N \l_tmpa_fp
+\clist_map_inline:nn { 0, 0.05, 0.25, 0.5, 0.75, 0.95, 1 } {
+  \semio_viz_tr_stat_quantile:NnN \l_tmpa_seq {#1} \l_tmpa_fp
+  \semio_viz_probe_values:nx { quantile } { \fp_use:N \l_tmpa_fp }
+}
+\ExplSyntaxOff
+\end{document}

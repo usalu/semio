@@ -1377,6 +1377,7 @@ export interface FrameworkOsShellProps {
   readonly appRole?: AppRole;
   readonly locks?: ResolvedShellLocks;
   readonly defaults?: FrameworkOsDefaults;
+  readonly initialLocale?: UiLocale;
   readonly brand?: ShellBrand;
   readonly shellId?: string;
   readonly storageNamespace?: string;
@@ -2109,15 +2110,11 @@ export async function dispatchInvokeExtensionEffect(
  * {@link ShellScope} — the seam that lets several of these coexist on one page — around the actual shell
  * implementation in {@link FrameworkOsShellInner}. */
 export function FrameworkOsShell(props: FrameworkOsShellProps): React.ReactElement {
-  const { shellId, storageNamespace, ownsPage = false, brand, locks, ...innerProps } = props;
+  const { shellId, storageNamespace, ownsPage = false, brand, locks, initialLocale: requestedLocale, ...innerProps } = props;
   const ephemeral = isEphemeralShellBrand(brand);
   const [scope] = useState<ShellScope>(() => {
     const storage = resolveShellScopeStorage(ephemeral, storageNamespace);
-    // 🐚️ Resolved synchronously (not in a `useEffect`) so an embedded shell never flashes the wrong
-    // locale's chrome on its first paint, mirroring `initUiLocaleSync`'s reasoning for the page-owning
-    // case. `locks.locale` and any previously-stored preference cover the common cases; a brand's own
-    // `defaults.locale` (not available yet here) still lands moments later via the uiPrefs effect below.
-    const initialLocale = locks?.locale ?? readUiPreferences(storage).locale ?? detectShellLocale(typeof navigator !== "undefined" ? navigator.language : undefined);
+    const initialLocale = locks?.locale ?? readUiPreferences(storage).locale ?? requestedLocale ?? detectShellLocale(typeof navigator !== "undefined" ? navigator.language : undefined);
     return createShellScope({ shellId, ownsPage, storage, initialLocale });
   });
   // 🐚️ `scope.rootRef` is a stable object (its identity never changes), so a descendant hook that puts
@@ -2320,7 +2317,7 @@ function FrameworkOsShellInner({
   const locks = locksProp ?? EMPTY_SHELL_LOCKS;
   const defaults = defaultsProp ?? EMPTY_SHELL_DEFAULTS;
   const ephemeral = isEphemeralShellBrand(brand);
-  const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks, defaults, storage: scope.storage }));
+  const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks, defaults, storage: scope.storage, locale: scope.i18n.language as UiLocale }));
   /** 🕹️ This shell's local interaction ({@link createLocalInteractionStoreV1}) — outside `shellState`, so a hover never
    * re-renders the shell. */
   const [localInteraction] = useState(createLocalInteractionStoreV1);
@@ -2563,7 +2560,7 @@ function FrameworkOsShellInner({
           appearance: "system",
           layout: "desktop",
           driverId: DEFAULT_UI_DRIVER.id,
-          locale: "en",
+          locale: scope.i18n.language as UiLocale,
           terminology: UI_TERMINOLOGY_NATIVE,
           themeId: "semio",
         });

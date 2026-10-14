@@ -327,14 +327,14 @@
       "files": [
         {
           "role": "base-pdf",
-          "path": "../🧫️fixtures/📐️set-page-size/⬅️before.pdf",
+          "path": "../🧪️tests/🧫️fixtures/📐️set-page-size/⬅️before.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:420d514df97268584397092ec31eb70f7e7476e314c0741bedd2e3ee76196a06",
           "bytes": 853
         },
         {
           "role": "mutated-pdf",
-          "path": "../🧫️fixtures/📐️set-page-size/➡️after.pdf",
+          "path": "../🧪️tests/🧫️fixtures/📐️set-page-size/➡️after.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:f0049403917f492d24251d82d5bbef2343e670a412cf1cfd99d6b3a9ad202ef9",
           "bytes": 853
@@ -375,14 +375,14 @@
       "files": [
         {
           "role": "base-pdf",
-          "path": "../🧫️fixtures/📉️collapse-page-size/⬅️before.pdf",
+          "path": "../🧪️tests/🧫️fixtures/📉️collapse-page-size/⬅️before.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:420d514df97268584397092ec31eb70f7e7476e314c0741bedd2e3ee76196a06",
           "bytes": 853
         },
         {
           "role": "mutated-pdf",
-          "path": "../🧫️fixtures/📉️collapse-page-size/➡️after.pdf",
+          "path": "../🧪️tests/🧫️fixtures/📉️collapse-page-size/➡️after.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:ef35998c24e5c2891f51e23977010efdcf6c6f07d4d00f726a9c9c85d1ee2e8d",
           "bytes": 849

@@ -294,7 +294,8 @@ impl ArtifactCommandWork<EditorApp<Wfc2dEditor>> for Wfc2dCommandWork {
         (!self.completed && wfc2d_command_id(command) == self.tool_id).then(|| wfc2d_retained_extent(command, snapshot)).flatten()
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Wfc2dEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Wfc2dEditor>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Wfc2dEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Wfc2dEditor>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.completed || wfc2d_command_id(input.command) != self.tool_id {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc2d.retained.route"), "the bounded WFC 2D work rejects an undeclared or completed route"));
         }
@@ -308,6 +309,9 @@ impl ArtifactCommandWork<EditorApp<Wfc2dEditor>> for Wfc2dCommandWork {
         };
         self.completed = true;
         Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { presence: Vec::new(), transient, window_transient: Vec::new() } })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -568,7 +572,7 @@ pub fn wfc2d_example_document(example_id: &str) -> Option<Wfc2dSnapshot> {
 /// re-selecting the example the app already booted on leaves `canUndo` false instead of minting the
 /// phantom history entry a "replace every collection" mutation set would.
 fn wfc2d_load_document_effect(document: &Wfc2dSnapshot) -> semio_framework::kernel::Effect {
-    let pack = <Wfc2dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let pack = <Wfc2dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("wfc", WFC_2D_DOCUMENT_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
@@ -965,6 +969,7 @@ impl ArtifactEditor for Wfc2dEditor {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

@@ -2,7 +2,7 @@
 import { expect, test } from "bun:test";
 import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import schema from "../../../../../🔀️transform/🧬️schema/🧬️mutations/🧭️rotate-layers/🧬️schema/🔣️.json";
-import mutation from "../../../../../🔀️transform/🧫️fixtures/🧬️mutations/🧭️rotate-layers/🧭️quarter-turn/🦠️mutation/🔣️.json";
+import mutation from "../../../../../🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/🧭️rotate-layers/🧭️quarter-turn/🦠️mutation/🔣️.json";
 import { parseRotateLayers } from "../../../../../🔀️transform/🧬️schema/🧬️mutations/🧭️rotate-layers/🦠️mutation/🟦️.ts";
 
 test("the schema and the parser admit exactly the same rotateLayers records", () => {

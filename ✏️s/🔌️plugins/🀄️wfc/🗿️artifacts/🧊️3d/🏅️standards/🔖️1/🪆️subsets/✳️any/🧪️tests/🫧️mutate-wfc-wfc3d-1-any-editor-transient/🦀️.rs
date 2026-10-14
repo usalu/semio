@@ -14,11 +14,11 @@ use semio_repo_test_host::law::vector::Vector;
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-solve" => Vector {
-            before: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🫧️transient/🧪️tests/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🫧️transient/🧪️tests/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🫧️transient/🧪️tests/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🫧️transient/🧪️tests/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🫧️transient/🧪️tests/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),

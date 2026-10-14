@@ -8,7 +8,7 @@ const grantSchema=await Bun.file(new URL("../../../../../../../../🔨️modules
 const ajv=semioSchemaAjvV1({allErrors:true}).addSchema(grantSchema).addSchema(ownerSchema);
 const validateGrant=ajv.compile({$ref:ownerSchema.$id+"#/$defs/Grant"});
 const validateDemand=ajv.compile({$ref:ownerSchema.$id+"#/$defs/Demand"});
-const typed=await Bun.file(new URL("../../🧫️fixtures/🎮️typed-owners/🔣️.json",import.meta.url)).json();
+const typed=await Bun.file(new URL("../🧫️fixtures/🎮️typed-owners/🔣️.json",import.meta.url)).json();
 const validateFrontier=ajv.compile({$ref:ownerSchema.$id+"#/$defs/Frontier"});
 assert(validateFrontier(typed.frontier));
 assert.deepEqual(typed.frontier.currencies,["items","copy","capacity","release","depth"]);
@@ -38,7 +38,7 @@ for(const row of typed.cases) {
 assert(!validateGrant({maximumItems:1,maximumBytes:4096}));
 function bytesOf(value:unknown):number {return typeof value==="string"?Buffer.byteLength(value):value!==null&&typeof value==="object"?Object.entries(value).reduce((sum,[key,child])=>sum+Buffer.byteLength(key)+bytesOf(child),0):0;}
 
-const finite=await Bun.file(new URL("../../🧫️fixtures/🧬️finite-fields/🔣️.json",import.meta.url)).json();
+const finite=await Bun.file(new URL("../🧫️fixtures/🧬️finite-fields/🔣️.json",import.meta.url)).json();
 const finiteSchema=await Bun.file(new URL("../../../🧬️schema/🔣️.json",import.meta.url)).json();
 const typeSchema=await Bun.file(new URL("../../../../../../../../🔨️modules/🌱️value/🏷️type/🧬️schema/🔣️.json",import.meta.url)).json();
 ajv.addSchema(typeSchema).addSchema(finiteSchema);
@@ -51,7 +51,7 @@ function typeText(value:TypeWire):number {return value.kind==="schema"?Buffer.by
 assert.equal(texts([finite.schema.id,finite.schema.module,finite.schema.name,finite.schema.icon,finite.schema.summary])+finite.schema.fields.reduce((sum:number,field:any)=>sum+texts([field.key,field.label??""])+typeText(field.value)+bytesOf(field.default),0),finite.expected.schemaStringBytes);
 assert.equal(texts([finite.operator.id,finite.operator.extension,finite.operator.name,finite.operator.abbreviation,finite.operator.icon,finite.operator.summary,...finite.operator.group,finite.operator.variadicInput.slotKey])+finite.operator.inputs.reduce((sum:number,channel:any)=>sum+texts([channel.code,channel.abbreviation,channel.name,channel.fullName,channel.label??"",...channel.operators,...channel.valueTypes,...channel.itemTypes])+bytesOf(channel.default),0),finite.expected.operatorStringBytes);
 
-const ownedDemand = await Bun.file(new URL("../../🧫️fixtures/📏️owned-demand/🔣️.json", import.meta.url)).json();
+const ownedDemand = await Bun.file(new URL("../🧫️fixtures/📏️owned-demand/🔣️.json", import.meta.url)).json();
 assert.equal(JSON.parse(stableStringify({ text: ownedDemand.text })).text, ownedDemand.text);
 assert.ok(ownedDemand.reservedCapacity > Buffer.byteLength(ownedDemand.text));
 assert.ok(ownedDemand.reservedCapacity > ownedDemand.logicalPage);
@@ -70,7 +70,7 @@ for(const refusal of ownedDemand.birthRefusals) {
 
 
 //#region 🔣️DomainFixture
-const fixture = await Bun.file(new URL("../../🧫️fixtures/🔣️value-retirement.json", import.meta.url)).json();
+const fixture = await Bun.file(new URL("../🧫️fixtures/🔣️value-retirement.json", import.meta.url)).json();
 
 
 const bytes = (value: any): number => typeof value === "string" ? Buffer.byteLength(value) : value && typeof value === "object" ? Object.entries(value).reduce((sum, [key, child]) => sum + Buffer.byteLength(key) + bytes(child), 0) : 0;
@@ -87,7 +87,7 @@ for (const row of fixture.cases) {
 //#endregion 🔣️DomainFixture
 
 //#region 🧠️CacheFixture
-const cacheFixture = await Bun.file(new URL("../../🧫️fixtures/🗃️cache-retirement/🔣️.json", import.meta.url)).json();
+const cacheFixture = await Bun.file(new URL("../🧫️fixtures/🗃️cache-retirement/🔣️.json", import.meta.url)).json();
 
 
 const cache = new Map<number, Record<string, string>>(); const pending: Record<string, string>[] = [];
@@ -112,7 +112,7 @@ assert.equal(finalBytes, cacheFixture.expected.finalReleasedBytes); assert.equal
 //#endregion 🧠️CacheFixture
 
 //#region 📸️EvaluationOwnership
-const evaluation = await Bun.file(new URL("../../🧫️fixtures/🧮️evaluation-owners/🔣️.json", import.meta.url)).json();
+const evaluation = await Bun.file(new URL("../🧫️fixtures/🧮️evaluation-owners/🔣️.json", import.meta.url)).json();
 
 
 const node = evaluation.node.text.repeat(evaluation.node.repeat); const payload = evaluation.payload.text.repeat(evaluation.payload.repeat);
@@ -124,7 +124,7 @@ assert.equal(stableStringify({ node: { label: payload } }), JSON.stringify({ nod
 console.log("[DEBUG] actual Neural retirement independent UTF8/stable JSON, grant accounting, cache ownership and evaluation oracle assertions passed");
 
 const inputPolicy=ajv.compile({$ref:ownerSchema.$id+"#/$defs/InputPolicy"});
-const inputFixture=await Bun.file(new URL("../../../🧫️fixtures/🚦️owned-controls.json",import.meta.url)).json();
+const inputFixture=await Bun.file(new URL("../../../🧪️tests/🧫️fixtures/🚦️owned-controls.json",import.meta.url)).json();
 assert(inputPolicy(inputFixture.retainedBinding.physical));
 for(const field of Object.keys(inputFixture.retainedBinding.physical)){const refused=structuredClone(inputFixture.retainedBinding.physical);delete refused[field];assert(!inputPolicy(refused));}
 assert(!inputPolicy({...inputFixture.retainedBinding.physical,sourceBirthBytes:1}));
@@ -142,7 +142,7 @@ assert.equal(ownedDemand.occupiedSlot,"unreservedBackingOwnershipLimit");
 assert.equal(ownedDemand.entryStorage,"sameVectorBackingPopFront");
 assert.deepEqual(Array.from(new Map([["first","雪"],["second",null]])),[["first","雪"],["second",null]]);
 
-const registryLaw=await Bun.file(new URL("../../../📔️registry/🧫️fixtures/🔣️.json",import.meta.url)).json();
+const registryLaw=await Bun.file(new URL("../../../📔️registry/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).json();
 assert(validateSchema(registryLaw.schema),JSON.stringify(validateSchema.errors));
 assert.deepEqual(JSON.parse(stableStringify(registryLaw.schema)),registryLaw.schema);
 assert.equal(registryLaw.executionOwner.maximumRetirementTurns,10000);

@@ -16,7 +16,7 @@ type Fixture = Readonly<{
   topology: Readonly<{ packagesDirectory: string; targetsDirectory: string; packageLanguageDirectories: readonly string[]; semanticExecutionCollections: readonly string[]; obsoleteExecutionCollections: readonly string[] }>;
 }>;
 
-const owner = join(import.meta.dir, "../../🧫️fixtures/🌳️kind-only-basename");
+const owner = join(import.meta.dir, "../🧫️fixtures/🌳️kind-only-basename");
 const fixture = JSON.parse(readFileSync(join(owner, "🔣️.json"), "utf8")) as Fixture;
 
 const taxonomy = JSON.parse(readFileSync(join(import.meta.dir, "../../🔣️taxonomy.json"), "utf8")) as Taxonomy;

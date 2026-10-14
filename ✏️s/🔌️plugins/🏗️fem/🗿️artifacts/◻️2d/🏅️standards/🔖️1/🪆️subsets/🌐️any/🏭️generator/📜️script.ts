@@ -388,7 +388,7 @@ async function main(argv: readonly string[]): Promise<number> {
     console.error(`[generator] no recipe matches ${JSON.stringify(only)} — known: ${RECIPES.map((recipe) => recipe.id).join(", ")}`);
     return 1;
   }
-  const outDir = process.env.SEMIO_FIXTURE_OUT ?? value("--out") ?? join(import.meta.dir, "..", "..", "🕸️mesh", "🧫️fixtures");
+  const outDir = process.env.SEMIO_FIXTURE_OUT ?? value("--out") ?? join(import.meta.dir, "../../🕸️mesh/🧪️tests/🧫️fixtures");
 
   if (command === "manifests" || command === "generate") {
     const t = await manifold3d();

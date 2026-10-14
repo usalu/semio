@@ -9,11 +9,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn sniff_reports_high_for_real_payloads_low_for_garbage() {
-        let bytes = <SemioPresentationSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&sample());
+        let bytes = <SemioPresentationSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&sample());
         assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), semio_framework_plugin::io::Confidence::High);
         assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a presentation")), semio_framework_plugin::io::Confidence::Low);
 
-        let text = <SemioPresentationSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&sample());
+        let text = <SemioPresentationSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&sample());
         assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Text(&text)), semio_framework_plugin::io::Confidence::High);
         assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Text("garbage")), semio_framework_plugin::io::Confidence::Low);
     }
@@ -21,12 +21,12 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn analyze_decodes_binary_and_text_sources() {
         let snap = sample();
-        let bytes = <SemioPresentationSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
+        let bytes = <SemioPresentationSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
         let analysis = SemioPresentationAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&bytes)]);
         assert_eq!(analysis.confidence, semio_framework_plugin::io::Confidence::High);
         assert_eq!(analysis.parts.snapshot, Some(snap.clone()));
 
-        let text = <SemioPresentationSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
+        let text = <SemioPresentationSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snap);
         let analysis2 = SemioPresentationAnalyzerAnalysis::analyze(&[AnalyzeSource::Text(&text)]);
         assert_eq!(analysis2.parts.snapshot, Some(snap));
     }

@@ -13,7 +13,7 @@ use super::*;
 
 #[test]
 fn extension_inputs_match_the_independent_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪟️view-context/🧫️fixtures/🧩️extension-input/🔣️.json")).expect("extension input vectors");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪟️view-context/🧪️tests/🧫️fixtures/🧩️extension-input/🔣️.json")).expect("extension input vectors");
     for row in fixture["cases"].as_array().expect("cases") {
         let input = &row["context"];
         let view: ViewModel = semio_framework_pack_json::from_json_str(&input.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned context decoder");
@@ -62,7 +62,7 @@ struct GuestDecodeRow {
 }
 
 fn fixture() -> HostContextFixture {
-    serde_json::from_str(include_str!("../../🪟️view-context/🧫️fixtures/🪟️resolved-host-context/🔣️.json")).expect("the resolved-host-context fixture must parse")
+    serde_json::from_str(include_str!("../../🪟️view-context/🧪️tests/🧫️fixtures/🪟️resolved-host-context/🔣️.json")).expect("the resolved-host-context fixture must parse")
 }
 
 fn row_json(valid: &serde_json::Value, row: &InvalidRow) -> String {
@@ -133,7 +133,7 @@ async fn the_panel_capacity_row_is_the_only_long_field() {
 fn view_model_original_retirement_preserves_every_field_and_physical_backing(){
  use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
  use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🪟️view-context/🧫️fixtures/♻️original/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🪟️view-context/🧪️tests/🧫️fixtures/♻️original/🔣️.json")).unwrap();
  for context in fixture["contexts"].as_array().unwrap(){
   let input=context.to_string();let oracle:ViewModel=serde_json::from_value(context.clone()).unwrap();
   let(original,heap)=observe(||semio_framework_pack_json::from_json_str::<ViewModel>(&input,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());

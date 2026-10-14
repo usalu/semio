@@ -9,7 +9,7 @@ import type { DirectoryStreamMessage } from "../../🔨️modules/📇️directo
 
 export async function registerDirectoryAccessChangedTests(vitest: NonNullable<ImportMeta["vitest"]>): Promise<void> {
   const { describe, it, expect } = vitest;
-  const { default: fixture } = await import("../../🔨️modules/📇️directory/🧫️fixtures/🔑️access-changed-v1/🔣️.json");
+  const { default: fixture } = await import("../../🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔑️access-changed-v1/🔣️.json");
   const { default: schema } = await import("../../🔨️modules/📇️directory/🧬️schema/🔣️.json");
   type Case = { id: string; createdOnSocket: string[]; message: DirectoryStreamMessage; frame: DirectoryStreamMessage | null };
   const cases = fixture.cases as unknown as Case[];

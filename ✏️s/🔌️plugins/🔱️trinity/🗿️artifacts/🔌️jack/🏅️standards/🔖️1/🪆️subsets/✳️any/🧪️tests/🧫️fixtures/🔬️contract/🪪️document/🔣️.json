@@ -1,0 +1,20 @@
+{
+  "snapshotFixture": "../../../🧫️fixtures/🧬️mutations/🔎️set-query/🔎️replaces-the-query/📸️snapshot/⬅️before/🔣️.json",
+  "diffFixture": "../../../🧫️fixtures/🧬️mutations/🔎️set-query/🔎️replaces-the-query/🔺️diff/🔣️.json",
+  "expectedChildKind": "s.stdio.semio",
+  "invalidDocuments": [
+    null,
+    {},
+    {
+      "nodes": [],
+      "edges": []
+    }
+  ],
+  "invalidDiffs": [
+    null,
+    {},
+    {
+      "nodes": []
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 //! 🧰️ Original Kit reconstruction retains catalog, relationships, child handles and pin fields.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{SemioKitSnapshot,SemioKitType,SemioKitDesign,SemioKitPiece,SemioKitConnection,SemioObjectSnapshot,SemioModelSnapshot,SemioValueSnapshot,SemioTransform,SemioPoint3,SemioQuaternion,identity,float_columns,kit_blob_size,validate_semio_child_identity};
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{FloatRow,RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{FloatRow,RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_artifact_reference::{ArtifactRef,ArtifactDialect};
 #[derive(semio_framework_value::RetireOwned)]

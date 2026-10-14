@@ -1,0 +1,240 @@
+{
+  "cases": [
+    {
+      "id": "general-only-after-deleting-every-specific-owner",
+      "plans": [
+        {
+          "schema": "semio.plugin-registry.rebuild-chain/v1",
+          "steps": [
+            {
+              "id": "inputs",
+              "stage": "inputs",
+              "command": [
+                "nx",
+                "run",
+                "owner:inputs"
+              ]
+            },
+            {
+              "id": "describe",
+              "stage": "descriptors",
+              "command": [
+                "nx",
+                "run",
+                "owner:describe"
+              ]
+            },
+            {
+              "id": "check",
+              "stage": "registry",
+              "command": [
+                "nx",
+                "run",
+                "owner:check"
+              ]
+            }
+          ],
+          "guestFrameworkChecks": []
+        }
+      ],
+      "expected": [
+        "inputs",
+        "describe",
+        "check"
+      ]
+    },
+    {
+      "id": "all-owner-contributions",
+      "plans": [
+        {
+          "schema": "semio.plugin-registry.rebuild-chain/v1",
+          "steps": [
+            {
+              "id": "inputs",
+              "stage": "inputs",
+              "command": [
+                "nx",
+                "run",
+                "owner:inputs"
+              ]
+            },
+            {
+              "id": "describe",
+              "stage": "descriptors",
+              "command": [
+                "nx",
+                "run",
+                "owner:describe"
+              ]
+            },
+            {
+              "id": "check",
+              "stage": "registry",
+              "command": [
+                "nx",
+                "run",
+                "owner:check"
+              ]
+            }
+          ],
+          "guestFrameworkChecks": []
+        },
+        {
+          "schema": "semio.plugin-registry.rebuild-chain/v1",
+          "steps": [
+            {
+              "id": "guest",
+              "stage": "guests",
+              "command": [
+                "nx",
+                "run",
+                "owner:guest"
+              ]
+            }
+          ],
+          "guestFrameworkChecks": []
+        },
+        {
+          "schema": "semio.plugin-registry.rebuild-chain/v1",
+          "steps": [
+            {
+              "id": "catalog",
+              "stage": "catalog",
+              "command": [
+                "nx",
+                "run",
+                "owner:catalog"
+              ]
+            }
+          ],
+          "guestFrameworkChecks": []
+        }
+      ],
+      "expected": [
+        "inputs",
+        "describe",
+        "check",
+        "guest",
+        "catalog"
+      ]
+    },
+    {
+      "id": "deleting-guest-owner-preserves-general-and-catalog",
+      "plans": [
+        {
+          "schema": "semio.plugin-registry.rebuild-chain/v1",
+          "steps": [
+            {
+              "id": "inputs",
+              "stage": "inputs",
+              "command": [
+                "nx",
+                "run",
+                "owner:inputs"
+              ]
+            },
+            {
+              "id": "describe",
+              "stage": "descriptors",
+              "command": [
+                "nx",
+                "run",
+                "owner:describe"
+              ]
+            },
+            {
+              "id": "check",
+              "stage": "registry",
+              "command": [
+                "nx",
+                "run",
+                "owner:check"
+              ]
+            }
+          ],
+          "guestFrameworkChecks": []
+        },
+        {
+          "schema": "semio.plugin-registry.rebuild-chain/v1",
+          "steps": [
+            {
+              "id": "catalog",
+              "stage": "catalog",
+              "command": [
+                "nx",
+                "run",
+                "owner:catalog"
+              ]
+            }
+          ],
+          "guestFrameworkChecks": []
+        }
+      ],
+      "expected": [
+        "inputs",
+        "describe",
+        "check",
+        "catalog"
+      ]
+    },
+    {
+      "id": "deleting-catalog-owner-preserves-general-and-guest",
+      "plans": [
+        {
+          "schema": "semio.plugin-registry.rebuild-chain/v1",
+          "steps": [
+            {
+              "id": "inputs",
+              "stage": "inputs",
+              "command": [
+                "nx",
+                "run",
+                "owner:inputs"
+              ]
+            },
+            {
+              "id": "describe",
+              "stage": "descriptors",
+              "command": [
+                "nx",
+                "run",
+                "owner:describe"
+              ]
+            },
+            {
+              "id": "check",
+              "stage": "registry",
+              "command": [
+                "nx",
+                "run",
+                "owner:check"
+              ]
+            }
+          ],
+          "guestFrameworkChecks": []
+        },
+        {
+          "schema": "semio.plugin-registry.rebuild-chain/v1",
+          "steps": [
+            {
+              "id": "guest",
+              "stage": "guests",
+              "command": [
+                "nx",
+                "run",
+                "owner:guest"
+              ]
+            }
+          ],
+          "guestFrameworkChecks": []
+        }
+      ],
+      "expected": [
+        "inputs",
+        "describe",
+        "check",
+        "guest"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "exclusive": false,
+  "rows": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧭️fixture-placement/🔣️.json",
+      "beforeSha256": "a7302fc9e76e33e7adcd804a67936e61cc4f521cfcf2ce6580dd8aac5f33a73b",
+      "afterSha256": "c581411a745fbd4b61d59018a31bf018e8358826adad0c86325e0af48535f4e3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "beforeSha256": "04fed623d06a5afff298062f871fd59f95c8c1d5778b76be75913c5ac794e3a2",
+      "afterSha256": "4a8d1f03f18de6c368f19e1b8ef8fa5e50cdcb6d08b46862e6ef6a11f33337f4"
+    }
+  ]
+}

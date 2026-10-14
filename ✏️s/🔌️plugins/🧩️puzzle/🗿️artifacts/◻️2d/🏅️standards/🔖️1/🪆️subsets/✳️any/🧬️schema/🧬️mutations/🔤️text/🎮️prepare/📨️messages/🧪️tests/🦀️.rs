@@ -97,7 +97,7 @@ fn law<T: Puzzle2dTextIntent>(payload: T, plan: Puzzle2dTextPlan, operation: Opt
 
 #[test]
 fn history_edit_puzzle2d_optional_text_diagnostics_borrow_raw_intent_and_compose_under_exact_heap_grants() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let plan = Puzzle2dTextPlan { disposition: if row["expected"].is_null() { Puzzle2dTextDisposition::Changed } else if row["expected"]["level"] == "warning" { Puzzle2dTextDisposition::NoOp } else { Puzzle2dTextDisposition::TargetMissing }, index: row["target"].as_bool().unwrap().then_some(0) };
         let operation = row["operationIndex"].as_u64().map(|value| value as u32);

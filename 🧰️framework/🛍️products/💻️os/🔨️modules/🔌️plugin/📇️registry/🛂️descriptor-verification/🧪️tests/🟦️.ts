@@ -6,7 +6,7 @@ import Ajv from "ajv";
 import { decodeRegistryDescriptorV1, REGISTRY_HOST_APP_CHANNEL_VERSION } from "../../🧬️schema/🟦️.ts";
 
 const contract = JSON.parse(readFileSync(join(import.meta.dir, "../🧬️schema/🔣️.json"), "utf8"));
-const cases = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8")) as { id: string; valid: boolean; value: unknown }[];
+const cases = JSON.parse(readFileSync(join(import.meta.dir, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")) as { id: string; valid: boolean; value: unknown }[];
 const validate = new Ajv({ strict: true }).compile(contract);
 
 describe("current package descriptor admission", () => {

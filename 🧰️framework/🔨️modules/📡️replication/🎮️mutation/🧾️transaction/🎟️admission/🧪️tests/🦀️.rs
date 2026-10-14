@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn original_tool_transaction_admission_preserves_fixed_grants_and_physical_custody(){
  use semio_framework_value::retirement::controlled::ControlledRetirement;
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let clock=crate::ids::HybridLogicalTimestamp{actor:law["clock"]["actor"].as_u64().unwrap(),physical_ms:law["clock"]["physicalMs"].as_u64().unwrap(),logical:law["clock"]["logical"].as_u64().unwrap()};
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let clock=crate::ids::HybridLogicalTimestamp{actor:law["clock"]["actor"].as_u64().unwrap(),physical_ms:law["clock"]["physicalMs"].as_u64().unwrap(),logical:law["clock"]["logical"].as_u64().unwrap()};
  let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:262144,maximum_depth:4096};
  for actor in law["actors"].as_array().unwrap(){for app in law["apps"].as_array().unwrap(){for tool in law["tools"].as_array().unwrap(){
   let(actor,app,tool)=(actor.as_str().unwrap(),app.as_str().unwrap(),tool.as_str().unwrap());let pointers=(actor.as_ptr(),app.as_ptr(),tool.as_ptr());

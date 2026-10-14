@@ -3,7 +3,7 @@ use super::*;
 use std::sync::{Arc,Mutex};
 #[semio_framework_async_macros::async_test]
 async fn command_transport_neutral_owner_cancellation_progress_and_source(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let maximum=fixture["maximumTransportBytes"].as_u64().unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("./🧫️fixtures/🔣️.json")).unwrap();let maximum=fixture["maximumTransportBytes"].as_u64().unwrap();
  let token=CancelToken::root_now();let events=Arc::new(Mutex::new(Vec::new()));let received=events.clone();let context=admit_command_transport(maximum,token.clone(),move|event|received.lock().unwrap().push(event)).unwrap();
  assert!(context.allocated_bytes()>0);assert!(context.allocated_bytes()<maximum as usize);let context=CommandContext::try_new(context,maximum,token.clone(),|_|{}).unwrap();
  let directory=std::path::PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("caller-authored test artifact directory")).join("command-transport-neutral");std::fs::create_dir_all(&directory).unwrap();let path=directory.join("input");let payload=fixture["payload"].as_str().unwrap().as_bytes();std::fs::write(&path,payload).unwrap();
@@ -20,7 +20,7 @@ async fn command_transport_neutral_owner_cancellation_progress_and_source(){
 
 #[semio_framework_async_macros::async_test]
 async fn command_transport_neutral_utf8_transfer_cancellation_and_exact_owner(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let recipe=&fixture["textTransfer"];let maximum=fixture["maximumTransportBytes"].as_u64().unwrap();let payload=recipe["prefix"].as_str().unwrap().repeat(recipe["prefixRepeat"].as_u64().unwrap()as usize)+recipe["tail"].as_str().unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("./🧫️fixtures/🔣️.json")).unwrap();let recipe=&fixture["textTransfer"];let maximum=fixture["maximumTransportBytes"].as_u64().unwrap();let payload=recipe["prefix"].as_str().unwrap().repeat(recipe["prefixRepeat"].as_u64().unwrap()as usize)+recipe["tail"].as_str().unwrap();
  let directory=std::path::PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").unwrap()).join("command-text-transfer");std::fs::create_dir_all(&directory).unwrap();let path=directory.join("input");std::fs::write(&path,payload.as_bytes()).unwrap();
  let token=CancelToken::root_now();let transport=admit_command_transport(maximum,token.clone(),|_|{}).unwrap();let context=CommandContext::try_new(transport,maximum,token.clone(),|_|{}).unwrap();let bytes=read_command_file(&path,maximum,&context).await.unwrap();let capacity=bytes.bytes.capacity();let text=bytes.into_text().unwrap();assert_eq!(&*text,payload);assert_eq!(text.text.capacity(),capacity);assert_eq!(context.inputs.state.lock().unwrap().live,payload.len());drop(text);assert_eq!(context.inputs.state.lock().unwrap().live,0);
  let token=CancelToken::root_now();let transport=admit_command_transport(maximum,token.clone(),|_|{}).unwrap();let context=CommandContext::try_new(transport,maximum,token.clone(),|_|{}).unwrap();let bytes=read_command_file(&path,maximum,&context).await.unwrap();token.cancel_now();let error=bytes.into_text().err().expect("actual cancellation before UTF8 validation");let PackError::Refusal(refusal)=error else{panic!("typed UTF8 cancellation")};assert_eq!(refusal.kind(),ValueRefusalKind::Canceled);assert_eq!(context.inputs.state.lock().unwrap().live,0);

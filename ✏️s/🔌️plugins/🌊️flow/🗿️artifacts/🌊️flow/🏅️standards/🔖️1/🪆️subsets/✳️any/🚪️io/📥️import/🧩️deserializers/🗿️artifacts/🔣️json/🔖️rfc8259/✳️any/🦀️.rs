@@ -11,5 +11,5 @@ pub fn deserialize(from: &JsonSnapshot) -> Result<FlowSnapshot, semio_framework_
 }
 
 pub fn deserialize_text(text: &str) -> Result<FlowSnapshot, semio_framework_diagnostic::TextError> {
-    <FlowSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <FlowSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }

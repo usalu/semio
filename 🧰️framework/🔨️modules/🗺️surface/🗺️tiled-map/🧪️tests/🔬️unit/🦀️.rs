@@ -1,11 +1,11 @@
 
 const VECTOR_TILE_FIXTURES: &[(&str, &[u8])] = &[
-    ("0-0-0", include_bytes!("../../🧫️fixtures/🗺️vector-tiles/0-0-0/🛰️.pbf")),
-    ("1-1-0", include_bytes!("../../🧫️fixtures/🗺️vector-tiles/1-1-0/🛰️.pbf")),
-    ("2-2-1", include_bytes!("../../🧫️fixtures/🗺️vector-tiles/2-2-1/🛰️.pbf")),
-    ("3-4-2", include_bytes!("../../🧫️fixtures/🗺️vector-tiles/3-4-2/🛰️.pbf")),
-    ("4-8-5", include_bytes!("../../🧫️fixtures/🗺️vector-tiles/4-8-5/🛰️.pbf")),
-    ("5-17-11", include_bytes!("../../🧫️fixtures/🗺️vector-tiles/5-17-11/🛰️.pbf")),
+    ("0-0-0", include_bytes!("../🧫️fixtures/🗺️vector-tiles/0-0-0/🛰️.pbf")),
+    ("1-1-0", include_bytes!("../🧫️fixtures/🗺️vector-tiles/1-1-0/🛰️.pbf")),
+    ("2-2-1", include_bytes!("../🧫️fixtures/🗺️vector-tiles/2-2-1/🛰️.pbf")),
+    ("3-4-2", include_bytes!("../🧫️fixtures/🗺️vector-tiles/3-4-2/🛰️.pbf")),
+    ("4-8-5", include_bytes!("../🧫️fixtures/🗺️vector-tiles/4-8-5/🛰️.pbf")),
+    ("5-17-11", include_bytes!("../🧫️fixtures/🗺️vector-tiles/5-17-11/🛰️.pbf")),
 ];
 
 fn vector_tile_fixture(key: &str) -> &'static [u8] {
@@ -15,7 +15,7 @@ fn vector_tile_fixture(key: &str) -> &'static [u8] {
 #[test]
 fn owned_vector_tile_inventory_agrees_with_independent_protobuf_corpus() {
     use super::vector_tiles::GeomType;
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🗺️vector-tiles/🔣️.json")).expect("vector tile corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🗺️vector-tiles/🔣️.json")).expect("vector tile corpus");
     let rows = corpus["tiles"].as_array().expect("tile roster");
     assert_eq!(rows.len(), VECTOR_TILE_FIXTURES.len());
     for row in rows {
@@ -1468,7 +1468,7 @@ fn clamp_map_zoom_and_for_viewport_stay_within_bounds() {
 /// compare identical inputs.
 ///
 /// @see 🧪️tests/🕸️web-mercator-tile-oracle/🥒️.feature
-const MERCATOR_ORACLE_FIXTURE: &str = include_str!("../../🧫️fixtures/🕸️web-mercator-tile-oracle/🔣️.json");
+const MERCATOR_ORACLE_FIXTURE: &str = include_str!("../🧫️fixtures/🕸️web-mercator-tile-oracle/🔣️.json");
 
 #[test]
 fn lod_band_selection_matches_frozen_specification_vectors() {

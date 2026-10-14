@@ -1,3 +1,4 @@
+import { phaseCompilerAdmissionControlV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 /** 🔌️ The dev server's own Vite plugins — backbone document IO, the content-addressed blob
  * endpoint, the plugin hot-swap SSE stream and the production test boundary — kept in a module of
  * their own so `⚙️vite.config.ts` can mount them without pulling `📜️script.ts`'s task router (and
@@ -14,7 +15,7 @@ import { AGENT_BRIDGE_OFFER_ENDPOINT, AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION, ag
 import type { PluginSourceEvent } from "@semio-tech/framework";
 import { MODULE_BRIDGE_FILE } from "../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, mapBoundedV1, stagedModuleMtime, writeStagedSourceFreshness } from "../../🔌️plugin/🏗️build/🔍️freshness/🟦️.ts";
-import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, nextActivationReceipt, observeActivationReceipts, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type ActivationReceipt, type StagedModuleFacts } from "../♻️activation/🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, activationSourceFreshnessDirectory, activationSourceFreshnessKey, developmentRuntimeRoot, nextActivationReceipt, observeActivationReceipts, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type ActivationReceipt, type StagedModuleFacts } from "../♻️activation/🟦️.ts";
 import { blake3Hex } from "../../../../../🔨️modules/🔏️hash/🟦️.ts";
 import { STREAM_MUX_BOUNDS_V1, StreamMuxServerV1, type StreamMuxJobV1, type StreamMuxJsonV1 } from "../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
 import { requestLocalBrokerSession } from "../../📇️directory/🎫️local-session/🗄️broker/🟦️.ts";
@@ -648,7 +649,7 @@ export type ActivationComponentSpec = Readonly<{ pluginId: string; directoryName
  * pass in `📜️script.ts`. A restage that lands while the server runs therefore retires its own warning
  * without a restart, and one that never lands keeps saying so. Asynchronous and bounded (the server keeps answering
  * while it walks); `signal` cancels a pass a newer receipt superseded. */
-export async function reportActivationFreshness(receipt: ActivationReceipt, options: { readonly moduleRoot: string; readonly installRoot: string; readonly components: readonly ActivationComponentSpec[]; readonly signal?: AbortSignal }): Promise<readonly string[]> {
+export async function reportActivationFreshness(receipt: ActivationReceipt, options: { readonly moduleRoot: string; readonly installRoot: string; readonly freshnessRoot?: string; readonly components: readonly ActivationComponentSpec[]; readonly signal?: AbortSignal }): Promise<readonly string[]> {
   const activatedRows = new Map(receipt.plugins.map((row) => [row.pluginId, row]));
   const facts = await mapBoundedV1(options.components, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, async (component): Promise<StagedModuleFacts> => {
     const moduleDirectory = join(options.moduleRoot, component.directoryName);
@@ -660,7 +661,7 @@ export async function reportActivationFreshness(receipt: ActivationReceipt, opti
     }
     const hashes = await resolveBootSourceContentHashes({
       sourceRoot: component.sourceRoot,
-      moduleDirectory,
+      moduleDirectory: options.freshnessRoot ? join(options.freshnessRoot, activationSourceFreshnessKey(component.pluginId)) : moduleDirectory,
       receiptSourceContentSha256: (receiptRow as { sourceContentSha256?: string } | undefined)?.sourceContentSha256,
       signal: options.signal,
     });
@@ -681,7 +682,7 @@ export async function reportActivationFreshness(receipt: ActivationReceipt, opti
 
 
 /** 📡️ Announces explicit Nx activation completion and releases every server-owned subscription. */
-export function semioActivationVitePlugin(options: { readonly receiptDirectory: string; readonly moduleRoot: string; readonly installRoot: string; readonly components: readonly ActivationComponentSpec[] }) {
+export function semioActivationVitePlugin(options: { readonly receiptDirectory: string; readonly moduleRoot: string; readonly installRoot: string; readonly freshnessRoot?: string; readonly components: readonly ActivationComponentSpec[] }) {
   let dispose = (): void => {};
   let staleness: readonly string[] = [];
   return {
@@ -713,7 +714,7 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
         const apply = (): void => {
           freshness?.abort();
           const pass = (freshness = new AbortController());
-          void reportActivationFreshness(receipt, { ...options, signal: pass.signal }).then((lines) => {
+          void reportActivationFreshness(receipt, { ...options, freshnessRoot: join(dirname(options.receiptDirectory), "🔖️"), signal: pass.signal }).then((lines) => {
             if (pass.signal.aborted) return;
             staleness = lines;
             for (const line of lines) console.warn(line);
@@ -751,14 +752,14 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
       server.httpServer?.once("close", dispose);
 
       const jobs = new Map<string, { readonly controller: AbortController; readonly promise: Promise<void>; readonly listeners: Set<(line: string) => void>; owners: number }>();
-      const profile: "dev" | "release" = /(?:^|\/)release(?:\/|$)/.test(options.moduleRoot.replaceAll("\\", "/")) ? "release" : "dev";
+      const profile: "prototype" | "release" = /(?:^|\/)release(?:\/|$)/.test(options.moduleRoot.replaceAll("\\", "/")) ? "release" : "prototype";
 
       const publishOne = async (pluginId: string): Promise<void> => {
         const component = options.components.find((row) => row.pluginId === pluginId);
         if (!component) throw new Error(`Unknown plugin ${pluginId}`);
         const moduleDirectory = join(options.moduleRoot, component.directoryName);
         if (!existsSync(join(moduleDirectory, MODULE_BRIDGE_FILE))) throw new Error(`Module still missing after materialize: ${pluginId}`);
-        const sourceContentSha256 = await writeStagedSourceFreshness(moduleDirectory, component.sourceRoot);
+        const sourceContentSha256 = await writeStagedSourceFreshness(activationSourceFreshnessDirectory(dirname(options.receiptDirectory), pluginId), component.sourceRoot);
         const previous = existsSync(join(options.receiptDirectory, ACTIVATION_RECEIPT_FILE)) ? readActivationReceipt(options.receiptDirectory) : undefined;
         const artifactSha256 = createHash("sha256").update(readFileSync(join(moduleDirectory, MODULE_BRIDGE_FILE))).digest("hex");
         const completed = [
@@ -781,7 +782,7 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
           const promise = (async () => {
             console.log(`[lazy-activate] build ${pluginId} through the build driver`);
             const { buildComponentClosureV1 } = await import("../../🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts");
-            await buildComponentClosureV1(REPO_ROOT, new Set([component.pluginId]), { signal: controller.signal, log: (text) => { const trimmed = text.trim(); if (trimmed) for (const listener of listeners) listener(trimmed.slice(0, STREAM_MUX_BOUNDS_V1.maxDetailLength)); } }).catch((error: unknown) => { throw controller.signal.aborted ? new Error(`cancelled ${pluginId}`) : error; });
+            await buildComponentClosureV1(REPO_ROOT, new Set([component.pluginId]), { control: phaseCompilerAdmissionControlV1(controller.signal, 0, progress => { for (const listener of listeners) listener(`Waiting for compiler capacity (${progress.elapsedMs}ms)`); }, () => new Promise(done => setImmediate(done))), log: (text) => { const trimmed = text.trim(); if (trimmed) for (const listener of listeners) listener(trimmed.slice(0, STREAM_MUX_BOUNDS_V1.maxDetailLength)); } }).catch((error: unknown) => { throw controller.signal.aborted ? new Error(`cancelled ${pluginId}`) : error; });
             await publishOne(pluginId);
             const rebuiltAt = readActivationReceipt(options.receiptDirectory).plugins.find((row) => row.pluginId === pluginId)?.rebuiltAt ?? Date.now();
             send({ kind: "built", pluginId, rebuiltAt });

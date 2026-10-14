@@ -13,7 +13,7 @@
 //! This law drives the REAL router — `EventRouter::dispatch` over a real `UiTree`, through real
 //! hit-testing, real capture and real focus — and reads the `UiCommand::App`s it produced.
 //!
-//! Oracle: `🖱️ui/🧫️fixtures/🎛️retained-control-commit/🔣️.json`; its TypeScript twin is
+//! Oracle: `🖱️ui/🧪️tests/🧫️fixtures/🎛️retained-control-commit/🔣️.json`; its TypeScript twin is
 //! `📺️renderer/🧑‍🎨engine/🧪️tests/🎛️retained-control-commit/🟦️.ts`.
 
 use super::{EventModifiers, EventRouter, PointerButton, UiCommand, UiEvent};
@@ -27,7 +27,7 @@ use semio_framework_value::DslValue;
 use serde_json::Value;
 
 fn law() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🎛️retained-control-commit/🔣️.json")).expect("retained control commit fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🎛️retained-control-commit/🔣️.json")).expect("retained control commit fixture")
 }
 
 /// 🎬️ The retained node's own `ActionDescriptor` for one fixture binding. An ABSENT binding becomes

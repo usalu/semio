@@ -2,7 +2,7 @@ use crate::{interpreter::{CoreInstance,CoreModule,CoreStepOutcome,StepControl,Va
 
 #[test]
 fn owned_scalar_refusal_matches_actual_interpreter_and_independent_wasmtime(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let engine=wasmtime::Engine::default();
     for case in fixture["accepted"].as_array().unwrap(){
         let word=case["word"].as_str().unwrap().parse::<u64>().unwrap();let wat=format!("(module (func (export \"result\") (result i64) i64.const {}))",word as i64);

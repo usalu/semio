@@ -59,7 +59,7 @@ impl ArtifactOperationText for TextOracle {
 
 #[test]
 fn prepared_operation_wire_borrowed_text_matches_neutral_ordered_tuple_and_hex() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for (index, row) in fixture["textCases"].as_array().unwrap().iter().enumerate() {
         let header: &'static [u8] = if index == 0 { &[1, 5] } else { &[1, 6] };
         let source = TextOracle(row["node"].clone());
@@ -118,7 +118,7 @@ fn original_json_policy(fixture: &serde_json::Value) -> RetainedCloneGrant {
 
 #[test]
 fn prepared_operation_wire_borrowed_json_matches_serde_without_birth_or_owner_copy() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for (row_index, row) in fixture["cases"].as_array().unwrap().iter().enumerate() {
         let header: &'static [u8] = if row_index == 2 { &[1, 128, 1] } else { &[1, 6] };
         let mut body = row["body"].clone();
@@ -171,7 +171,7 @@ fn prepared_operation_wire_borrowed_json_matches_serde_without_birth_or_owner_co
 #[test]
 fn prepared_operation_output_preserves_every_original_prefix_and_physical_cancel_cut(){
     use semio_framework_value::{ErasedSnapshotRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
-    let rows:serde_json::Value=serde_json::from_str(include_str!("../📦️output/🧫️fixtures/🔣️.json")).unwrap();
+    let rows:serde_json::Value=serde_json::from_str(include_str!("../📦️output/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let p=&rows["grant"];let policy=RetainedCloneGrant{maximum_items:p["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:p["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:p["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:p["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:p["maximumDepth"].as_u64().unwrap()as usize};
     let maximum=rows["limits"]["maximumPayloadBytes"].as_u64().unwrap()as usize;let capacity=rows["limits"]["maximumCapacityBytes"].as_u64().unwrap()as usize;
     for row in rows["examples"].as_array().unwrap(){
@@ -206,7 +206,7 @@ fn original_text_failure_preserves_initialized_prefix_and_real_system_receipt() 
             Err(ArtifactPreparedOperationError{written_bytes:2,reason:ValueError::literal(ValueRefusalKind::InvariantViolated,"original scalar refusal")})
         }
     }
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let row=&fixture["textFailure"];let p=&row["policy"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let row=&fixture["textFailure"];let p=&row["policy"];
     let grant=RetainedCloneGrant{maximum_items:p["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:p["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:p["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:p["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:p["maximumDepth"].as_u64().unwrap()as usize};
     let original=OriginalScalar("Tür🚪".as_bytes());let pointer=original.0.as_ptr();let mut cursor=ArtifactPreparedOperationCursor::default();let mut output=[0xa5;64];
     let (first,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(ArtifactPreparedOperationSource::Text{header:&[1,5],body:&original},&mut output,grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!((first.written_bytes,first.copied_bytes),(2,2));let header=[output[0],output[1]];
@@ -218,7 +218,7 @@ fn original_text_failure_preserves_initialized_prefix_and_real_system_receipt() 
 
 #[test]
 fn original_text_frontier_uses_supplied_depth_and_zero_system_birth() {
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let policy=&fixture["textFailure"]["policy"];
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let policy=&fixture["textFailure"]["policy"];
  for row in fixture["textDepthRows"].as_array().unwrap(){
   let source=TextOracle(row["node"].clone());let pointer=&source.0 as *const _;let mut actual=Vec::new();let(mut cursor,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(ArtifactPreparedOperationCursor::default);assert_eq!((birth.requested_bytes,birth.released_bytes),(0,0));
   let grant=RetainedCloneGrant{maximum_items:policy["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:policy["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:row["maximumDepth"].as_u64().unwrap()as usize};let mut refused=false;let mut complete=false;
@@ -236,7 +236,7 @@ fn original_text_frontier_uses_supplied_depth_and_zero_system_birth() {
 #[test]
 fn original_operation_contiguous_handoff_conserves_supplied_birth_copy_and_cancel_receipts(){
  use semio_framework_value::{ErasedSnapshotRetirement,retained_clone::RetainedCloneGrant};
- let rows:serde_json::Value=serde_json::from_str(include_str!("../📦️output/🧫️fixtures/🔣️.json")).unwrap();let p=&rows["grant"];
+ let rows:serde_json::Value=serde_json::from_str(include_str!("../📦️output/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let p=&rows["grant"];
  let policy=RetainedCloneGrant{maximum_items:p["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:p["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:p["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:p["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:p["maximumDepth"].as_u64().unwrap()as usize};
  let maximum=rows["limits"]["maximumPayloadBytes"].as_u64().unwrap()as usize;let capacity=rows["limits"]["maximumCapacityBytes"].as_u64().unwrap()as usize;
  for row in rows["examples"].as_array().unwrap(){let original=row["text"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap_or(1)as usize);let pointer=original.as_ptr();
@@ -262,7 +262,7 @@ fn original_operation_contiguous_handoff_conserves_supplied_birth_copy_and_cance
 #[test]
 fn original_operation_rows_preserve_each_buffer_and_paid_collection_cancel_cut(){
  use semio_framework_value::{ErasedSnapshotRetirement,retained_clone::RetainedCloneGrant};
- let rows:serde_json::Value=serde_json::from_str(include_str!("../📦️output/🧫️fixtures/🔣️.json")).unwrap();let p=&rows["grant"];
+ let rows:serde_json::Value=serde_json::from_str(include_str!("../📦️output/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let p=&rows["grant"];
  let policy=RetainedCloneGrant{maximum_items:p["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:p["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:p["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:p["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:p["maximumDepth"].as_u64().unwrap()as usize};
  let maximum=rows["maximumOperations"].as_u64().unwrap()as usize;let capacity=rows["limits"]["maximumCapacityBytes"].as_u64().unwrap()as usize;
  for example in rows["operationRows"].as_array().unwrap(){let expected:Vec<Vec<u8>>=serde_json::from_value(example["expected"].clone()).unwrap();

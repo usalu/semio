@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import { applyPatch, type Operation } from "fast-json-patch";
 import { planRasterRegion, rasterRegionPatch, type RasterRegion, type RasterRegionPlan } from "../🟦️.ts";
 
-const fixture = await Bun.file(new URL("../🧫️fixtures/🔣️.json", import.meta.url)).json();
+const fixture = await Bun.file(new URL("🧫️fixtures/🔣️.json", import.meta.url)).json();
 const schema = await Bun.file(new URL("../🧬️schema/🔣️.json", import.meta.url)).json();
 const validate = new Ajv({ strict: true }).compile(schema);
 

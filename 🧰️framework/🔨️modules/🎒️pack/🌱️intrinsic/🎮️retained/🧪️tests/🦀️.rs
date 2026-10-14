@@ -3,7 +3,7 @@ use super::*;
 use serde_json::Value;
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneStep};
 
-fn corpus()->Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn corpus()->Value{serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn hex(text:&str)->Vec<u8>{text.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect()}
 fn close(cursor:&mut RetainedIntrinsicBody<'_>){
  for _ in 0..100000{
@@ -24,7 +24,7 @@ fn retained_intrinsic_body_neutral_vectors_preserve_serde_and_one_unit_progress(
 }
 #[test]
 fn retained_intrinsic_body_original_corpus_and_partial_cancel_close(){
- let rows:Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+ let rows:Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in rows["cases"].as_array().unwrap(){
   let value=if row["kind"]=="bytes"{DslValue::Bytes(row["expected"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as u8).collect())}else{DslValue::from(&row["expected"])};
   let mut callback=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1<<24,&mut callback);let bytes=crate::record::intrinsic::encode_body(&value,&Default::default(),&mut control).unwrap();
@@ -84,7 +84,7 @@ fn close_document(cursor:&mut RetainedIntrinsicDocument<'_>){
 
 #[test]
 fn retained_intrinsic_document_original_corpus_framing_compression_and_chunk_custody(){
- let rows:Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let plan=corpus();
+ let rows:Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let plan=corpus();
  for row in rows["cases"].as_array().unwrap(){for codec in plan["document"]["codecs"].as_array().unwrap(){for frame in plan["document"]["frameBytes"].as_array().unwrap(){
   let value=if row["kind"]=="bytes"{DslValue::Bytes(row["expected"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as u8).collect())}else{DslValue::from(&row["expected"])};let mut options=crate::record::EncodeOptions::default();options.codec=crate::CodecId(codec.as_u64().unwrap()as u8);options.frame_size=frame.as_u64().unwrap();options.chunk_threshold=plan["document"]["chunkThreshold"].as_u64().unwrap();options.chunk_size=1;
   let mut allow=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1<<24,&mut allow);let bytes=crate::record::intrinsic::encode_document(&value,&options,&mut control).unwrap();let mut cursor=RetainedIntrinsicDocument::new(RetainedIntrinsicInput::Borrowed(&bytes),Default::default(),1<<24).unwrap();assert_eq!(cursor.advance(0,false).unwrap().units,0);

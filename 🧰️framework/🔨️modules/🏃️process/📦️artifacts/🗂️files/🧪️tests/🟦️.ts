@@ -10,7 +10,7 @@ type Corpus = { schema: string; writes: readonly { name: string; initial: string
 /** 🧰️ Checks neutral file publication and traversal against portable vectors and independent tools. */
 export async function testArtifactFiles(outputDirectory: string): Promise<void> {
   const owner = join(dirname(fileURLToPath(import.meta.url)), "..");
-  const source = join(owner, "🟦️.ts"), corpus = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")) as Corpus;
+  const source = join(owner, "🟦️.ts"), corpus = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")) as Corpus;
   const require = createRequire(import.meta.url);
   const { writeGeneratedFileIfChanged, collectArtifactFiles } = await import(pathToFileURL(source).href);
   mkdirSync(outputDirectory, { recursive: true });

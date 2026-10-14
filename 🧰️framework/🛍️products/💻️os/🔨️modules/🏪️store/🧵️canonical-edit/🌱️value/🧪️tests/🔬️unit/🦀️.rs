@@ -29,7 +29,7 @@ fn close_and_return(cursor: &mut ArtifactCanonicalValueAdmission<Arc<DslValue>>)
 }
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
 
 fn entries(value: &serde_json::Value) -> DslValue {
@@ -198,7 +198,7 @@ impl serde::Serialize for OrderedOracle<'_> {
 
 #[test]
 fn shared_value_canonical_json_matches_neutral_vectors_and_serde_json_at_each_chunk_size() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🌱️value/🧬️clone/🧫️fixtures/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🌱️value/🧬️clone/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut values: Vec<DslValue> = vectors["values"].as_array().unwrap().iter().map(DslValue::from).collect();
     let unit = vectors["largeString"]["unit"].as_str().unwrap();
     let repeat = vectors["largeString"]["repeat"].as_u64().unwrap() as usize;

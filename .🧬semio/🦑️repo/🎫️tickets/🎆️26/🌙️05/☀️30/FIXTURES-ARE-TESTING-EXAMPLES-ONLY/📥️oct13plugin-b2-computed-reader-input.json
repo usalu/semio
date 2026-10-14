@@ -1,0 +1,1862 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🖥️server/🧪️tests/🔬️wire/🟦️.ts",
+    "expression": "resolve(productRoot, \"🧫️fixtures/🔌️wire/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/🟦️.ts",
+    "expression": "join(root, product, \"🎮️commands/🧪️print-pipeline-verification/🧫️fixtures/🗺️gallery-identities.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤝️hub-edit-durability/🟦️.ts",
+    "expression": "join(here, \"../../🧫️fixtures/🤝️hub-edit-durability/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🚪️typed-inference/🟦️.ts",
+    "expression": "resolve(import.meta.dir,\"../../🚪️io/🧫️fixtures/🏛️ownership/🧬️schema/🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🚪️io/🧫️fixtures/🏛️ownership/🧬️schema/🔣️.json"
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/💡️inference/🚪️opening/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/📇️directory/🌐️browser-document-open-v1.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/📇️directory/🧫️fixtures/🪪️session-refresh/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/📇️directory/🚦️browser-directory-routes.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/👕️canvas-presence/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../🔨️modules/📡️replication/🧫️fixtures/🚀️artifact-bootstrap/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/📇️directory/🧵️artifact-bootstrap-owner-v1.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/🧑‍💻dev/🧫️fixtures/📇️folder/📣️canonical-bootstrap-folder-mirror-v1/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/📇️directory/🌐️browser-document-open-v1.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧭️opening/🧫️fixtures/📍️scope/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧭️opening/🧫️fixtures/📍️scope/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/📇️directory/🧵️execution-target-body-read-v1.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/📇️directory/🧵️execution-target-body-read-v1.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/📇️directory/🧵️browser-actor-reservation-v1.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/📇️directory/🧵️browser-actor-session-v1.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🧫️fixtures/🪟️host-opening-context/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/📇️directory/⏯️execution-target-resume-v1.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/🏪️store/🧫️fixtures/🔁️document-rebuild-welcome-v1/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/📇️directory/🪟️browser-actor-command-windows-v1.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🛂️artifact-contract/🟦️.ts",
+    "expression": "join(stdioRoot, \"🧫️fixtures/📦️artifact-package/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts",
+    "expression": "join(compositionRoot, \"🧫️fixtures/🏃️command-ownership/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🟦️.ts",
+    "expression": "join(addressRoot, '🧫️fixtures/🔣️.json')",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🟦️.ts",
+    "expression": "join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧫️fixtures/🧭️table-run-projection')",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🟦️.ts",
+    "expression": "join(artifacts, '📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🧫️fixtures/🌿️sparse-triples/🔣️.json')",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🟦️.ts",
+    "expression": "join(base, '🧫️fixtures/🧬️mutations/📸️set-snapshot', row.slug)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🟦️.ts",
+    "expression": "join(subsets, '🧱️base/🧫️fixtures/🧬️mutations/📸️set-snapshot', row.slug, '📸️snapshot/⬅️before/🔣️.json')",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🟦️.ts",
+    "expression": "join(artifacts, '📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🧫️fixtures/🏳️optional-clear/🔣️.json')",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🟦️.ts",
+    "expression": "join(base, '🧬️schema/🔺️diff/🧫️fixtures/🏷️placeholder-kind/🔣️.json')",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🟦️.ts",
+    "expression": "join(base, '🧫️fixtures/🧭️xml-document-boundaries/🔣️.json')",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🌐️geometry-ownership/🟦️.ts",
+    "expression": "join(owner,\"🧫️fixtures/🌐️geometry-ownership/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🌐️geometry-ownership/🟦️.ts",
+    "expression": "join(owner,\"🧫️fixtures/📐️step-session/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧠️semio/🧪️tests/🧪️semio-tech-cad-js-spatial-kernel-semio/🟦️.ts",
+    "expression": "new URL(\"../../../../../🔌️plugins/📐️cad/⚙️engine/🏗️construction/🧫️fixtures/🧱️linear-prism/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🟦️.tsx",
+    "expression": "resolve(dirname(fileURLToPath(testSource.url)), \"../../../🛂️manifest/🧫️fixtures/🖱️tutorial-local-interaction.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts",
+    "expression": "join(HERE, \"..\", \"..\", subset, \"🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts",
+    "expression": "join(HERE, \"..\", \"..\", subset, \"🧫️fixtures\", directoryName)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🟦️.ts",
+    "expression": "join(productRoot, \"🧫️fixtures\", \"🖼️gallery-render\", \"🖼️gallery-render.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧪️playgroundflowwasmdevstubplugin/🟦️.ts",
+    "expression": "resolve(directory, \"../../../../🖼️assets/🗺️tile-proxy/🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧩️suite/🟦️.ts",
+    "expression": "resolve(resolveSemioAssetRoot(repoRoot), \"🔤️fonts/🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧪️theme-resolve/🟦️.ts",
+    "expression": "resolve(directory, \"🧫️fixtures/🎨️canonical-theme-document/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts",
+    "expression": "join(outDir, recipe.subset, \"🧫️fixtures\", recipe.directory)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts",
+    "expression": "join(dir,\"assets/🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🛬️decoder-absence/🟦️.ts",
+    "expression": "resolve(root, decoder, \"🧫️fixtures/🧩️ownership/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🔬️conformance-corpus/🟦️.ts",
+    "expression": "join(packageRoot, \"../🧫️fixtures/🧪️conformance\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🧫️fixtures/🧪️conformance"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧪️tests/🟦️.ts",
+    "expression": "join(root,\"source/🧫️fixtures/retired\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🧾️provenance/🟦️.ts",
+    "expression": "join(repoRoot, library, \"🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🧾️provenance/🟦️.ts",
+    "expression": "join(repoRoot, library, \"🧫️fixtures/🪢️transaction-harness-retention/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts",
+    "expression": "new URL(\"../../../🧫️fixtures/🧬️mutations\", import.meta.url)",
+    "resolved": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations"
+  },
+  {
+    "path": "🧪️tests/🦀️rust-warnings/🟦️.ts",
+    "expression": "join(root, \"🧫️fixtures/🦀️rust-warnings/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "📜️script.ts",
+    "expression": "join(this.root, \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧫️fixtures/🧪️abstraction-ownership/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🔨️modules/🌱️value/🔁️codec/🧫️fixtures\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔁️codec/🧫️fixtures"
+  },
+  {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🔨️modules/🛂️manifest/🧫️fixtures\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🛂️manifest/🧫️fixtures"
+  },
+  {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+    "expression": "join(root, \"🧫️fixtures/🛂️admin-presence-target-recovery-v1\")",
+    "resolved": "/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🧫️fixtures/🛂️admin-presence-target-recovery-v1"
+  },
+  {
+    "path": "🌎️hub/🧪️tests/🤝️integration/🟦️.ts",
+    "expression": "join(root, \"🌎️hub\", \"🛰️lag-rebootstrap\", \"🧫️fixtures\", \"🪢️canonical-pair\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧪️tests/🤝️integration/🟦️.ts",
+    "expression": "join(contractRoot, \"🧫️fixtures\", \"🚇️pipe-v1\", \"🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧪️tests/🤝️integration/🟦️.ts",
+    "expression": "join(root, \"🌎️hub\", \"🔐️auth\", \"🧫️fixtures\", \"🔑️capability-v1\", \"🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧪️tests/🤝️integration/🟦️.ts",
+    "expression": "join(catalogRoot, \"🧫️fixtures\", \"👥️two-package\", \"🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧪️tests/🤝️integration/🟦️.ts",
+    "expression": "join(root, \"🌎️hub\", \"📇️directory\", \"🧫️fixtures\", \"📸️artifact-checkpoint-projection\", \"🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧪️tests/🤝️integration/🟦️.ts",
+    "expression": "join(getWorkspaceRoot(), \"🌎️hub\", \"🗿️artifact-authority\", \"🧫️fixtures\", \"🔌️authority-adapter\", \"🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧪️tests/🤝️integration/🟦️.ts",
+    "expression": "join(root, \"🌎️hub\", \"🗿️artifact-authority\", \"🧫️fixtures\", \"🧱️artifact-chunk-cas\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧪️tests/🤝️integration/🟦️.ts",
+    "expression": "join(root, \"🌎️hub\", \"🛰️lag-rebootstrap\", \"🧫️fixtures\", \"🛟️lag-rebootstrap\", \"🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/🧪️tests/🟦️.ts",
+    "expression": "join(root,owner,\"🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/💠️inventory-artifact-shards/🟦️.ts",
+    "expression": "join(root, \"🧫️fixtures/💠️inventory-artifact-shards/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
+    "expression": "join(candidate, \"🔨️modules\", \"🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
+    "expression": "join(candidate, \"🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔗️markdown-inline-references/🟦️.ts",
+    "expression": "join(run, \"../../🧫️fixtures/🔗️markdown-inline-references/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/⏱️phased-job/🧪️tests/🧰️support/🟦️.ts",
+    "expression": "new URL(\"../../🧫️fixtures/🔣️.json\", testFile)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+    "expression": "join(root, \"🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+    "expression": "join(root, \"🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+    "expression": "join(root, \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/📦️deployment/🔒️fixed-parent-cases.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🧪️tests/📇️ownership/🟦️.ts",
+    "expression": "join(root, \"🧫️fixtures/📇️ownership/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🟦️.ts",
+    "expression": "resolve(getWorkspaceRoot(), \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🟦️.ts",
+    "expression": "resolve(getWorkspaceRoot(), \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🤝️transaction-protocol/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🟦️.ts",
+    "expression": "join(getWorkspaceRoot(), \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🪢️transaction-harness-retention/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts",
+    "expression": "join(repoRoot, \"🌎️hub/🧩️compositions/🌍️gis/🧫️fixtures/🌉️component-cold-map-patch\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-discovery/🟦️.ts",
+    "expression": "join(this.repoRoot, \"🌎️hub\", \"🧩️compositions\", \"🌍️gis\", \"🧫️fixtures\", \"🪪️artifact-identity\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-discovery/🟦️.ts",
+    "expression": "join(this.repoRoot, \"🌎️hub\", \"🧩️compositions\", \"🌍️gis\", \"🧫️fixtures\", \"💡️inference-control\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-discovery/🟦️.ts",
+    "expression": "join(this.repoRoot, \"✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🌉️mcp/🧪️tests/🧫️fixtures/🗺️discovery\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-control/🟦️.ts",
+    "expression": "join(repoRoot, \"🌎️hub/🧩️compositions/🌍️gis/🧫️fixtures/💡️inference-control\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🌱️artifact-document-id-v1\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts",
+    "expression": "join(owner, \"🧫️fixtures/📇️native-codecs/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🗄️durable-three-store-assembly/🟦️.ts",
+    "expression": "join(repoRoot, \"🌎️hub/🧩️compositions/🌍️gis/🧫️fixtures/🗄️durable-three-store-assembly\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌿️vcs/🧪️tests/🪪️native-openable-identity/🟦️.ts",
+    "expression": "join(owner, \"🧫️fixtures/🪪️native-openable-identity/🧬️v1\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌿️vcs/🧪️tests/📇️native-codecs/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🌱️artifact-document-id-v1\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌿️vcs/🧪️tests/📇️native-codecs/🟦️.ts",
+    "expression": "join(owner, \"🧫️fixtures/📇️native-codecs/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/✅️draft07-oracle/🟦️.ts",
+    "expression": "join(dirname(fileURLToPath(import.meta.url)), \"..\", \"..\", \"🧪️tests/🧫️fixtures/✅️draft07-validation-vectors.json\", \"✅️draft07-validation-vectors.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧫️fixtures/✅️draft07-validation-vectors.json/✅️draft07-validation-vectors.json"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🩹️fragment-validation-oracle/🟦️.ts",
+    "expression": "join(dirname(fileURLToPath(import.meta.url)), \"..\", \"..\", \"🧪️tests/🧫️fixtures/🩹️fragment-validation-vectors.json\", \"🩹️fragment-validation-vectors.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧫️fixtures/🩹️fragment-validation-vectors.json/🩹️fragment-validation-vectors.json"
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/📜️script.ts",
+    "expression": "join(surface.owner, \"🧫️fixtures/🧫️retained-command-limits\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🕹️interaction/👆️gesture/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "join(source.directory, \"🧪️tests/🧫️fixtures/🤏️recognizer.json\", \"🤏️recognizer.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📋️owner-cmd-policy/🟦️.ts",
+    "expression": "join(neutralCargo, \"🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📜️script.ts",
+    "expression": "join(root, \"../..\", \"🧫️fixtures\", \"🌳️catalog-root\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📜️script.ts",
+    "expression": "join(import.meta.dir, \"../../🧫️fixtures/🧭️wiring/🗂️subset-directory-wiring\")",
+    "resolved": "/Users/ueli/Documents/semio/🌎️hub/🧩️compositions/🗄️stdio/🧫️fixtures/🧭️wiring/🗂️subset-directory-wiring"
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📜️script.ts",
+    "expression": "join(root, \"../../🧫️fixtures/🖊️dwg-artifact-ownership\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📜️script.ts",
+    "expression": "join(root, \"🧫️fixtures/✏️editor-catalog/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts",
+    "expression": "join(workspace, \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🕸️imports/🧫️cases.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts",
+    "expression": "join(SCRIPT_ROOT, \"🧫️fixtures/nx-contract/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️artifact-packages/🟦️.ts",
+    "expression": "new URL(\"../../../🧫️fixtures/artifact-packages\", import.meta.url)",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/artifact-packages"
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🧪️tests/🖊️drawing-reader/🟦️.ts",
+    "expression": "resolve(root, contract.owner, \"🧫️fixtures/🖊️semantic/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests/🧩️geometry/🟦️.ts",
+    "expression": "join(\"🧫️fixtures\", \"🧩️example\", \"🔣️.json\")",
+    "resolved": "🧫️fixtures/🧩️example/🔣️.json"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests/🧩️geometry/🟦️.ts",
+    "expression": "join(\"🧫️fixtures\", \"⏱️budget-calibration\", \"🔣️.json\")",
+    "resolved": "🧫️fixtures/⏱️budget-calibration/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟦️.ts",
+    "expression": "join(repoRoot, sourceOwner, \"./🧪️tests/🧫️fixtures\", \"🧬️mutations\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️test-platform/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/📡️protocol-vector.txt\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🔐️auth/🔌️client/🧪️tests/🧬️source/🟦️.ts",
+    "expression": "join(general, \"🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🔐️auth/🔌️client/🧪️tests/🧬️source/🟦️.ts",
+    "expression": "join(root, \"🌎️hub/🔐️auth/🔌️client/🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🔨️modules/🛡️admin/🧪️tests/🕸️build-graph/🟦️.ts",
+    "expression": "resolve(root, \"../../🧫️fixtures/🕸️build-graph/🚪️entry-graph.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/🔨️modules/🛡️admin/🧪️tests/🕸️build-graph/🟦️.ts",
+    "expression": "resolve(root, \"../../🧫️fixtures/🕸️build-graph/🎨️stylesheet-graph.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts",
+    "expression": "join(repoRoot, \"🌎️hub/📇️directory/🧫️fixtures/📣️ordered-append-broadcast-v1\")",
+    "resolved": null
+  },
+  {
+    "path": "🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🧾️fixture-verification/🟦️.ts",
+    "expression": "join(repoRoot, \"🌎️hub\", \"📇️directory\", \"🧫️fixtures\", \"🔌️scoped-socket-revocation-v1\")",
+    "resolved": null
+  },
+  {
+    "path": "🏢️semio-tech/🎡️play/🧪️tests/🧪️playpanecoverage/🟦️.ts",
+    "expression": "join(repoRoot, \"🏢️semio-tech/🎡️play/🧪️tests/🎭️acceptance/🧫️fixtures/🔀️roles\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧬️mutation-fixtures/🟦️.ts",
+    "expression": "join(root, dirname(htmlPairs.manifestPath), \"../🧫️fixtures\", pair.directoryName)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts",
+    "expression": "resolve(owner,\"🔗️link/🧫️fixtures/♻️retirement/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/📇️directory-projection/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "join(root, \"✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📇️projection-wire-v1/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/📜️script.ts",
+    "expression": "join(root,\"🧪️tests/🧫️fixtures/🧮️wire-materialization/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"🧪️tests/🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🗺️coverage/🟦️.ts",
+    "expression": "join(dashboard, \"🧫️fixtures/🗺️coverage/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️artifact-bootstrap-protocol/🟦️.ts",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"🧪️tests/🧫️fixtures/🚀️artifact-bootstrap/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️artifact-bootstrap-protocol/🟦️.ts",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"🧪️tests/🧫️fixtures/🚀️artifact-bootstrap\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️artifact-bootstrap-protocol/🟦️.ts",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"🧪️tests/🧫️fixtures/📡️wire\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️outcome-code/🟦️.ts",
+    "expression": "join(root, \"🎮️mutation/🧪️tests/🧫️fixtures/🧫️outcome-code/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️transaction-ref/🟦️.ts",
+    "expression": "join(root, \"🎮️mutation/🧪️tests/🧫️fixtures/🧫️transaction-ref/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️document-backbone-envelope-batch/🟦️.ts",
+    "expression": "join(root, \"🔗️causal/🧪️tests/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🗄️durable-collaborative-redo/🟦️.ts",
+    "expression": "join(root, \"🔗️causal/🧪️tests/🧫️fixtures/🗄️durable-collaborative-redo-v1/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️supersede-fold/🟦️.ts",
+    "expression": "join(root, \"🔗️causal/🧪️tests/🧫️fixtures/🧫️supersede-fold/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️history-transition/🟦️.ts",
+    "expression": "join(root, \"🔗️causal/🧪️tests/🧫️fixtures/🧫️history-transition/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️replay-report/🟦️.ts",
+    "expression": "join(root, \"⚔️conflict/🧪️tests/🧫️fixtures/🧫️replay-report/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️semio-tech-framework-3d-js/🟦️.ts",
+    "expression": "new URL(\"../🖱️ui/🧪️tests/♻️raster-lease-close/🧫️fixtures/🔣️.json\",source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️semio-tech-framework-3d-js/🟦️.ts",
+    "expression": "new URL(\"../../🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧪️tests/🧫️fixtures/♻️inline-source-ownership/🔣️.json\",source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️semio-tech-framework-3d-js/🟦️.ts",
+    "expression": "new URL(\"../🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️analytic-wire-picking/🔣️.json\",source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️semio-tech-framework-3d-js/🟦️.ts",
+    "expression": "new URL(\"./📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️vertex-provenance/🔣️.json\",source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️semio-tech-framework-3d-js/🟦️.ts",
+    "expression": "new URL(\"../🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-source/🔣️.json\",source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️semio-tech-framework-3d-js/🟦️.ts",
+    "expression": "new URL(\"../🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json\",source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️semio-tech-framework-3d-js/🟦️.ts",
+    "expression": "new URL(\"./📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🔗️mesh-transfer-merge/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️semio-tech-framework-3d-js/🟦️.ts",
+    "expression": "new URL(\"../🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️vertex-selection/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️semio-tech-framework-3d-js/🟦️.ts",
+    "expression": "new URL(\"./📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️vertex-provenance/🔣️.json\",source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️semio-tech-framework-3d-js/🟦️.ts",
+    "expression": "new URL(\"./📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️vertex-provenance/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️semio-tech-framework-3d-js/🟦️.ts",
+    "expression": "new URL(\"./📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️component-picking/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️semio-tech-framework-3d-js/🟦️.ts",
+    "expression": "new URL(\"./📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️component-picking/🔣️.json\",source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️semio-tech-framework-3d-js/🟦️.ts",
+    "expression": "new URL(\"./📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🪬️shape-values/🔣️.json\",source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🗺️surface/🧪️tests/🧩️suite/🟦️.ts",
+    "expression": "join(owner, \"🧫️fixtures/🗺️vector-tiles\", row.file)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧊️mesh-pack-decode/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🧊️mesh/mesh-pack-body-v1.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧊️mesh-pack-decode/🟦️.ts",
+    "expression": "new URL(\"../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️component-picking/🔣️.json\",source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧊️mesh-pack-decode/🟦️.ts",
+    "expression": "new URL(\"../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️component-picking/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧊️mesh-pack-decode/🟦️.ts",
+    "expression": "new URL(\"🧫️fixtures/🧊️mesh/mesh-pack-attributes.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"🧫️fixtures\", \"📡️channel\", \"🪟️window-config.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "join(here, \"🧫️fixtures\", \"📡️channel\", \"🔖️channel-version.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/📡️spr/🧵️channel/🧫️fixtures/🧫️channel-handshake/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "join(here, \"🧫️fixtures\", \"📡️channel\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "join(here, \"🧫️fixtures\", \"📡️channel\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "join(here, \"🧫️fixtures\", \"📡️channel\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/👕️canvas-presence/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"🧫️fixtures\", \"📡️channel\", \"🏁️app-frame-operation-completed.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"🧫️fixtures\", \"📡️channel\", \"🧲️document-archive-merge.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/📦️document-cache/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "join(here, \"🧫️fixtures\", \"📡️channel\", \"🔀️app-command-merge.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "join(here, \"🧫️fixtures\", \"📇️directory\", \"⚡️events.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "join(here, \"🧫️fixtures\", \"📇️directory\", \"🪪️document-descriptor.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "join(here, \"🧫️fixtures\", \"📇️directory\", \"🛡️artifact-authority.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "join(here, \"🧫️fixtures\", \"📇️directory\", \"🪪️document-descriptor.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/💡️inference/🚪️opening/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/📇️directory/🏛️administration-worker-wire-v1.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/📇️directory/🧬️schema/🏛️administration/🧫️fixtures/🛂️command-admission/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/📇️directory/🧾️command-receipt-v1.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "new URL(\"./🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/📇️directory/🌱️space-artifact-creation-generation-v1.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+    "expression": "join(here, \"🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧪️tests/📥️command-ingress-pages/🟦️.ts",
+    "expression": "new URL(\"../../📡️replication/📡️wire/🎮️command/📥️ingress/🧪️tests/🧫️fixtures/📄️pages/🔣️.json\", testSource.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📨️effect-wire-routes/🟦️.ts",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"../🧪️tests/🧫️fixtures/📨️effect-wire-routes/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🗞️typed-operation-page/🟦️.ts",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🎁️effect-params-nesting/🟦️.ts",
+    "expression": "join(here, \"../🧪️tests/🧫️fixtures/🎁️effect-params-nesting/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧪️tests/🧪️cold-pair-wit-status-codec-agrees-with-the-neutral-schema-and-rejects-ev/🟦️.ts",
+    "expression": "new URL(\"./🧪️tests/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧪️tests/🧪️actor-ui-patch-receipt-matches-shared-canonical-vectors-and-the-independ/🟦️.ts",
+    "expression": "new URL(\"./🧪️tests/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧪️tests/🧪️actor-ui-patch-receipt-matches-shared-canonical-vectors-and-the-independ/🟦️.ts",
+    "expression": "new URL(\"./🧪️tests/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te/🟦️.ts",
+    "expression": "new URL(\"../../🖱️ui/🧬️contract/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te/🟦️.ts",
+    "expression": "new URL(\"../../🖱️ui/🧬️contract/♻️retirement/📋️list/🧪️tests/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te/🟦️.ts",
+    "expression": "new URL(\"../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧪️tests/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te/🟦️.ts",
+    "expression": "new URL(\"../../🖱️ui/🧬️contract/♻️retirement/📮️handback/🧪️tests/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te/🟦️.ts",
+    "expression": "new URL(\"../../🖱️ui/🧬️contract/♻️retirement/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te/🟦️.ts",
+    "expression": "new URL(\"./🧪️tests/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te/🟦️.ts",
+    "expression": "new URL(\"./🧪️tests/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te/🟦️.ts",
+    "expression": "new URL(\"./🧪️tests/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/📤️return/🧪️tests/🧪️actorreturn-codecs-load-natively-in-node-strip-only-mode-and-preserve-ev/🟦️.ts",
+    "expression": "new URL(\"./🧪️tests/🧫️fixtures/🔣️.json\", source)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧬️schema/🧪️tests/🧪️os-shell-schema-module/🟦️.ts",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"..\", \"🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🧪️semio-tech-framework-os-shell-reduce/🟦️.ts",
+    "expression": "join(here, \"🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/📜️script.ts",
+    "expression": "join(subset, \"🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖼️wgpu-raster-residency/🟦️.ts",
+    "expression": "resolve(uiRoot, \"🧫️fixtures/🖼️raster-residency/🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️raster-residency/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖼️wgpu-raster-residency/🟦️.ts",
+    "expression": "resolve(uiRoot, \"🧫️fixtures/🖼️raster-capacity-followup/🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️raster-capacity-followup/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️frame-close/🟦️.ts",
+    "expression": "new URL(\"✂️text-splice/📡️draft-wire/🧫️fixtures/🔣️.json\", scene)",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧫️fixtures/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️frame-close/🟦️.ts",
+    "expression": "new URL(\"🔑️node-key/🧫️fixtures/🔣️.json\", base)",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🔑️node-key/🧫️fixtures/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔗️backbone-detach/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🔣️.json\", testSourceUrl.href)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🗄️durable-owned-group/🟦️.ts",
+    "expression": "join(owner, \"🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/📦️native-codec-send/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🔣️.json\", testSourceUrl.href)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript/📜️script.ts",
+    "expression": "join(plugin, \"🧫️fixtures\", \"🧫️retained-command-dispositions\", \"🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🧫️fixtures/🧫️retained-command-dispositions/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪗️retained-section-collapse/🟦️.tsx",
+    "expression": "resolve(uiRoot, \"🧫️fixtures/🪗️retained-section-collapse/🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🪗️retained-section-collapse/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "join(defining,\"🧫️fixtures/🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧲️scene-input-residency/🟦️.ts",
+    "expression": "join(world, \"🧫️fixtures\", \"🧲️scene-input-residency\", \"🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧲️scene-input-residency/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🧲️scene-input-residency/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🌳️tree-row-rects/🟦️.ts",
+    "expression": "resolve(uiRoot, \"🧫️fixtures/🌳️tree-row-rects/🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🌳️tree-row-rects/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🌳️tree-row-rects/🟦️.ts",
+    "expression": "resolve(uiRoot, \"🧫️fixtures/🌳️tree-row-density/🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🌳️tree-row-density/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📷️canvas-framing/🟦️.ts",
+    "expression": "resolve(root,\"🧫️fixtures/🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📷️framing/🧫️fixtures/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚙️settings-general-layout/🟦️.ts",
+    "expression": "join(frameworkRoot, \"🔨️modules\", \"🖱️ui\", \"🧫️fixtures\", \"⌨️number-stepper-editing\", \"🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/⌨️number-stepper-editing/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚙️settings-general-layout/🟦️.ts",
+    "expression": "join(frameworkRoot, \"🔨️modules\", \"🖱️ui\", \"🧫️fixtures\", \"⌨️slider-readout-editing\", \"🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/⌨️slider-readout-editing/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+    "expression": "join(base,\"🚪️native-io/🧪️tests/🧫️fixtures/🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🧪️tests/🧫️fixtures/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+    "expression": "join(root,\"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🔗️tool-latest-wins-integration.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🔗️tool-latest-wins-integration.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+    "expression": "join(root,\"🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+    "expression": "join(root,\"🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🧪️tests/🧫️fixtures/🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🧪️tests/🧫️fixtures/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📜️script.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🚀️event-page-bootstrap-v1.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎯️retained-hit-targets/🟦️.ts",
+    "expression": "resolve(uiRoot, \"🧫️fixtures/🎯️retained-hit-targets/🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎯️retained-hit-targets/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎛️retained-control-commit/🟦️.ts",
+    "expression": "resolve(uiRoot, \"🧫️fixtures/🎛️retained-control-commit/🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️retained-control-commit/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎛️retained-control-commit/🟦️.ts",
+    "expression": "resolve(uiRoot, \"🧫️fixtures/🎚️slider-presentation/🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎚️slider-presentation/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+    "expression": "join(shellHostRoot, \"🧫️fixtures/📇️directory-bootstrap/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔐️sign-in/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+    "expression": "join(shellHostRoot, \"🧫️fixtures/👥️presence-scope/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+    "expression": "join(hostRoot, \"🧫️fixtures/🖱️pointer-gestures.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+    "expression": "join(pluginRoot, \"🧫️fixtures/🕹️selection-set.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🎨️world3d-scene-shading/📜️script.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🖼️reference-visual/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🎨️world3d-scene-shading/📜️script.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🌐️grid-visual/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🎨️world3d-scene-shading/📜️script.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🎨️scene-shading/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🎨️world3d-scene-shading/📜️script.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🎨️world3d-scene-shading/📜️script.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🎨️scene-shading/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️publication/🧪️tests/🟦️.ts",
+    "expression": "join(root,\"🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️publication/🧪️tests/🟦️.ts",
+    "expression": "join(root,\"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧮️program-matrix/🟦️.ts",
+    "expression": "join(root, dir, \"🏅️standards\", \"🔖️1\", \"🪆️subsets\", \"✳️any\", \"🧫️fixtures\", \"🧬️mutations\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/⏪️time-travel/🧪️tests/🧩️component/🟦️.tsx",
+    "expression": "join(framework, \"🔨️modules\", \"🖱️ui\", \"🧫️fixtures\", \"♿️disabled-row-action\", \"🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/♿️disabled-row-action/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/⏪️time-travel/🧪️tests/🧩️component/🟦️.tsx",
+    "expression": "join(framework, \"🔨️modules\", \"🛂️manifest\", \"🧪️tests/🧫️fixtures/🧫️dialog-choices/🔣️.json\", \"🧫️dialog-choices\", \"🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🧫️dialog-choices/🔣️.json/🧫️dialog-choices/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/⏪️time-travel/🧪️tests/🧩️component/🟦️.tsx",
+    "expression": "join(framework, \"🔨️modules\", \"🎠️kernel\", \"🧪️tests/🧫️fixtures/🧫️history-notices/🔣️.json\", \"🧫️history-notices\", \"🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧫️history-notices/🔣️.json/🧫️history-notices/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/⏪️time-travel/🧪️tests/🧩️component/🟦️.tsx",
+    "expression": "join(framework, \"🔨️modules\", \"🎠️kernel\", \"🧪️tests/🧫️fixtures/🧫️history-reprojection/🔣️.json\", \"🧫️history-reprojection\", \"🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧫️history-reprojection/🔣️.json/🧫️history-reprojection/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(contractRoot, \"🧫️fixtures/🧬️selected-gis-byte-provenance-v1/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"../../🧫️fixtures/🔗️linked-session-engines.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🔨️modules/🎭️actor/📃️page/🧪️tests/🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/⏳️async-results.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🪞️vendor.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🧹️production-tests.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🧹️production-tests.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/📦️deployment/🧪️cases.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🪞️vendor.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"../../🧫️fixtures/🦀️wasm-profile-policy/🧬️v1/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🛡️deployment-preservation.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🛡️deployment-preservation.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🔬️catalog-smoke.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/📇️canonical-bootstrap-folder-mirror/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/📇️folder/📣️canonical-bootstrap-folder-mirror-v1\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/📇️canonical-bootstrap-folder-mirror/🟦️.ts",
+    "expression": "join(this.repoRoot, \"🌎️hub\", \"🛰️lag-rebootstrap\", \"🧫️fixtures\", \"🪢️canonical-pair\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🧪️typedwire/🟦️.tsx",
+    "expression": "new URL(\"../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧪️tests/🧪️unknown-component-placeholder/🟦️.tsx",
+    "expression": "join(here, \"../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🧪️conformance\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧪️tests/🪟️tree-windows/🟦️.tsx",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🪟️tree-window-served.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧪️tests/🪟️tree-windows/🟦️.tsx",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"../../../../../../../🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧪️tests/🧫️fixtures/🪟️window-requests/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧪️tests/📊️table/🟦️.tsx",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🧪️conformance/🧩️component/📊️table\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧪️tests/📊️table/🟦️.tsx",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"../../../../🔌️plugin/🪟️window-kits/📊️table/🧫️fixtures/↔️two-axis\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧪️tests/📊️table/🟦️.tsx",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🎯️row-target\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧪️tests/📊️table/🟦️.tsx",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"../../🧫️fixtures/♿️editable-controls/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧪️tests/📊️table/🟦️.tsx",
+    "expression": "join(dirname(fileURLToPath(source.url)), \"../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🪟️tree-window-served.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/📜️script.ts",
+    "expression": "resolve(plugin, \"🧫️fixtures/🧪️publication-authority\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/📜️script.ts",
+    "expression": "resolve(subset, \"🧬️schema/🧬️mutations/🧫️fixtures/🎛️field-patch\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/📜️script.ts",
+    "expression": "resolve(subset, \"../../../../🔨️modules/🏠️host/🧰️owned/🧫️fixtures/🧮️mutation-admission\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🧹️hygiene/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework\", \"🛍️products\", \"💻️os\", \"🧫️fixtures\", \"📇️directory\", \"🪪️document-descriptor.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🧹️hygiene/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework\", \"🛍️products\", \"💻️os\", \"🧫️fixtures\", \"📇️directory\", \"🛡️artifact-authority.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧪️tests/🧮️memory-backing/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧫️fixtures/🧮️memory-backing\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/💡️inference/🧪️tests/💼️inference-service-law/🟦️.ts",
+    "expression": "resolve(repoRoot, INFERENCE_ROOT, \"🧫️fixtures/💼️inference-service-law.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🧪️tests/🔎️scalar-witness/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🔣️.json\",testSourceUrl.href)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🛂️mutation-source-authority/🟦️.ts",
+    "expression": "new URL(\"../../../../../../../🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json\", import.meta.url)",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🪪️plugin-identity/🟦️.ts",
+    "expression": "join(owner, \"🧫️fixtures\", \"🧫️plugin-identity\", \"🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧬️surface-schema/🟦️.ts",
+    "expression": "join(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/🧬️surface-schema/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧩️composition/🧪️tests/🟦️.ts",
+    "expression": "join(directory,\"🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🖼️image/🧪️tests/🧪️renderimage/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🚫️unavailable/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📃️document/🧪️tests/🧪️renderdocument/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/✏️editable/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🧪️tests/🧪️browser-actor-patch-handoff-validates-the-neutral-schema-and-exact-owner/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧪️tests/🧪️browser-actor-action-handoff-validates-the-neutral-schema-and-exact-owne/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/🧪️tests/🧪️browser-actor-child-admits-wit-numeric-lists/🟦️.ts",
+    "expression": "new URL(\"../🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️time-travel/🟦️.ts",
+    "expression": "join(repoRoot, PLUGIN_ROOT, \"🧫️fixtures/🧫️time-travel\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🏃️runner-self-tests/🟦️.ts",
+    "expression": "new URL(\"../../🧫️fixtures/🏃️runner/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️source-freshness/🟦️.ts",
+    "expression": "join(pluginRoot,\"🧫️fixtures/🔍️source-freshness/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts",
+    "expression": "join(source.directory, \"🧫️fixtures/🧊️component-factory\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts",
+    "expression": "join(source.directory, \"🧫️fixtures/🔒️compiler-capsule\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts",
+    "expression": "join(source.directory, \"🧫️fixtures/📸️compiler-sources\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts",
+    "expression": "join(source.directory, \"🧫️fixtures/🔏️codegen-policy/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts",
+    "expression": "join(source.directory, \"🧫️fixtures/🪝️async-task-return/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts",
+    "expression": "join(source.directory, \"🧫️fixtures/📦️codegen-manifest/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts",
+    "expression": "join(source.directory, \"🧫️fixtures/🧊️actor-factory\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts",
+    "expression": "join(source.directory, \"🧫️fixtures/🌐️host-activation\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔣️codec-caller-source/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🔣️.json\", testSourceUrl.href)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts",
+    "expression": "new URL(\"../🪪️activation/🚪️instance/🧫️fixtures/🔣️.json\", testSource.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts",
+    "expression": "new URL(\"../🚪️lifetime/🩹️patch/🧫️fixtures/🔣️.json\", testSource.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts",
+    "expression": "new URL(\"../🪪️activation/🚪️instance/🧫️fixtures/🔣️.json\", testSource.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts",
+    "expression": "new URL(\"../🪪️activation/🚪️instance/🧫️fixtures/🔣️.json\", testSource.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts",
+    "expression": "new URL(\"../🪪️activation/🚪️instance/🧫️fixtures/🔣️.json\", testSource.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts",
+    "expression": "new URL(\"../🪪️activation/🧫️fixtures/🔣️.json\", testSource.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts",
+    "expression": "new URL(\"../🚪️lifetime/🧫️fixtures/🔣️.json\", testSource.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts",
+    "expression": "new URL(\"../🚪️lifetime/🧫️fixtures/🔣️.json\", testSource.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts",
+    "expression": "new URL(\"../🪪️activation/📨️inbound/🧫️fixtures/🔣️.json\", testSource.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️reactor-contract-oracles/🟦️.ts",
+    "expression": "resolve(repoRoot, \"🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧪️tests/🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️reactor-contract-oracles/🟦️.ts",
+    "expression": "resolve(repoRoot, \"🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️extension-retirement/🟦️.ts",
+    "expression": "resolve(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧩️extension-retirement\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts",
+    "expression": "join(HERE, \"..\", \"..\", coordinate[0], \"🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/🧪️tests/🧪️authored-extension-installation-identity/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🔣️.json\", source.url)",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+    "expression": "join(kernel, \"🧪️tests/🧫️fixtures/💡️service-operation/🔣️.json\", \"💡️service-operation\", \"🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/💡️service-operation/🔣️.json/💡️service-operation/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+    "expression": "join(root, \"🧪️tests/🧫️fixtures/🔣️.json\", \"🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🎠️activation-reservation/🧪️tests/🧫️fixtures/🔣️.json/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+    "expression": "join(this.repoRoot, \"🧰️framework\", \"🛍️products\", \"💻️os\", \"🧫️fixtures\", \"⚖️scale\", \"🦀️.rs\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/🦀️.rs"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🎨️mutate-os-config-ui-preferences/🟦️.ts",
+    "expression": "join(CONFIG_MUTATIONS, entry[0], \"🧫️fixtures\", entry[1])",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🆕️fresh-component/🟦️.ts",
+    "expression": "resolve(source.directory, \"../../🧫️fixtures/🧾️fresh-source-epoch\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🆕️fresh-component/🟦️.ts",
+    "expression": "resolve(source.directory, \"../../🧫️fixtures/🧊️fresh-staging\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🆕️fresh-component/🟦️.ts",
+    "expression": "resolve(source.directory, \"../../🧫️fixtures/🧵️fresh-process\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📸️checkpoint/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "join(base,\"🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-checkpoint/🟦️.ts",
+    "expression": "join(base, \"🧫️fixtures/📸️artifact-command-checkpoint.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "expression": "join(subset, \"🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "expression": "resolve(owner, \"🧫️fixtures/🧬️history-edits/version-info/🦠️mutation/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "expression": "join(process.cwd(), \"🧫️fixtures\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏷️ownership/🧪️tests/🏷️browser-ownership/🟦️.ts",
+    "expression": "join(ownershipRoot, \"🧫️fixtures\", \"🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🦀️rust/📜️script.ts",
+    "expression": "join(owner,'🧫️fixtures/🔣️.json')",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🪪️runtime-identity/🟦️.ts",
+    "expression": "new URL(\"./🧫️fixtures/🔣️.json\", testSourceUrl.href)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "expression": "new URL(\"../🫴️receiving/🧫️fixtures/🧬️schema/🔣️.json\",import.meta.url)",
+    "resolved": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧫️fixtures/🧬️schema/🔣️.json"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🧠️behavior/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "resolve(HERE, \"../../../../🧫️fixtures\", name, \"🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🐾️pets/🔨️modules/💗️feeling/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "resolve(HERE, \"../../../../🧫️fixtures\", name, \"🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🎞️animation/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "resolve(HERE, \"../../../../🧫️fixtures\", name, \"🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🎥️projection/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "resolve(HERE, \"../../../../🧫️fixtures\", name, \"🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🎪️stage/🧪️tests/🔬️unit/🟦️.ts",
+    "expression": "resolve(HERE, \"../../../../🧫️fixtures\", name, \"🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🎚️config/🧪️tests/🔬️window-config-ownership/🟦️.ts",
+    "expression": "new URL(\"../../🧫️fixtures/🔬️window/🔣️.json\", import.meta.url)",
+    "resolved": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🎚️config/🧫️fixtures/🔬️window/🔣️.json"
+  },
+  {
+    "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
+    "expression": "join(import.meta.dir, \"..\", \"🧫️fixtures\")",
+    "resolved": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures"
+  },
+  {
+    "path": "✏️s/🔌️plugins/➗️mathematical/🧪️tests/📣️publication-authority/🟦️.ts",
+    "expression": "resolve(plugin, \"🧫️fixtures/📣️publication-authority\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🧪️tests/🧪️wire-twins/🟦️.ts",
+    "expression": "join(subset, \"🧫️fixtures/🧬️mutations\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🧪️tests/🪪️document-contract/🟦️.ts",
+    "expression": "join(root, \"../🧫️fixtures/🧬️mutations\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🧪️tests/🪪️document-contract/🟦️.ts",
+    "expression": "join(root, \"../🧫️fixtures/🧬️mutations\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🧪️tests/🔮️oracle-source-ownership/🟦️.ts",
+    "expression": "join(root, control.plugin, \"🧫️fixtures/🔮️oracle-source-ownership/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "expression": "join(owner,\"🧫️fixtures/🎛️history-inputs\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "expression": "join(owner,\"🧫️fixtures/🎛️history-inputs/restore-entities/🦠️mutation/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "expression": "join(owner,\"🧫️fixtures/🎛️history-inputs\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "expression": "join(root,subset,\"🧫️fixtures/🎛️history-inputs\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "expression": "join(root,subset,\"🧫️fixtures/🎛️history-inputs\",directory,\"🦠️mutation/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/📜️script.ts",
+    "expression": "resolve(this.root,\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/📏️counts/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📋️register/🎚️config/🧪️tests/🔬️window-ownership/🟦️.ts",
+    "expression": "new URL(\"../../🧫️fixtures/🔬️window/🔣️.json\", import.meta.url)",
+    "resolved": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📋️register/🎚️config/🧫️fixtures/🔬️window/🔣️.json"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts",
+    "expression": "join(root, \"../..\", subset, \"🧫️fixtures/🧬️mutations\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧪️tests/🔬️extension-guest-standalone/🟦️.ts",
+    "expression": "resolve(root, \"🧪️tests/🧫️fixtures/🪪️channels/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧪️tests/🔬️extension-guest-standalone/🟦️.ts",
+    "expression": "resolve(directory, \"../../🧪️tests/🧫️fixtures/🚪️retirement\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧪️tests/🔬️extension-guest-standalone/🟦️.ts",
+    "expression": "resolve(root, \"🧪️tests/🧫️fixtures/🔣️.json\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts",
+    "expression": "join(outDir, recipe.subsetDirectoryName, \"🧫️fixtures\", recipe.directoryName)",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️retirement/🧪️tests/🟦️.ts",
+    "expression": "resolve(admissionDir,\"🧫️fixtures/🔣️.json\")",
+    "resolved": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎯️action-bus/🚪️admission/🧫️fixtures/🔣️.json"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts",
+    "expression": "join(import.meta.dir, \"../../../🧫️fixtures/🧬️mutations\")",
+    "resolved": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/🧩️map-create-region-group/🟦️.ts",
+    "expression": "join(repoRoot, \"✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/🧫️fixtures/🧩️map-create-region-group\")",
+    "resolved": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🌉️mcp/🧪️tests/🔬️oracle/🟦️.ts",
+    "expression": "resolve(repoRoot, \"🌎️hub/🧫️fixtures/🗳️gis-map-proposal-approval-v1\")",
+    "resolved": null
+  }
+]

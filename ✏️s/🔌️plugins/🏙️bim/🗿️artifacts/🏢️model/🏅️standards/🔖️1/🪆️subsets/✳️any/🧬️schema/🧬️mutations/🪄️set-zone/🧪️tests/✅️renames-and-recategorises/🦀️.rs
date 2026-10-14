@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🪄️set-zone/✅️renames-and-recategorises",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪄️set-zone/✅️renames-and-recategorises/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪄️set-zone/✅️renames-and-recategorises/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪄️set-zone/✅️renames-and-recategorises/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪄️set-zone/✅️renames-and-recategorises/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪄️set-zone/✅️renames-and-recategorises/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪄️set-zone/✅️renames-and-recategorises/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪄️set-zone/✅️renames-and-recategorises/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪄️set-zone/✅️renames-and-recategorises/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪄️set-zone/✅️renames-and-recategorises/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪄️set-zone/✅️renames-and-recategorises/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

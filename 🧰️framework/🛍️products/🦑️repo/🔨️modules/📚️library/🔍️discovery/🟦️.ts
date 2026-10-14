@@ -337,19 +337,18 @@ export interface SemanticOwnedDocumentCorrection {
 }
 
 /** 🪪️ One reviewed current preimage with immutable catalog and baseline lineage. */
-export interface SemanticOwnedCurrentSourceRevision {
-  readonly catalogCaseIndex: 31;
+export interface CurrentSourceApproval {
   readonly sourcePath: string;
   readonly baselineCommit: string;
   readonly baselineBlob: string;
   readonly baselinePreimage: Readonly<{ sha256: string; size: number; mode: "0644" }>;
   readonly currentPreimage: Readonly<{ sha256: string; size: number; mode: "0644" }>;
-  readonly expectationsPath: string;
-  readonly expectationsSha256: string;
+  readonly approvalPath: string;
+  readonly approvalSha256: string;
 }
 
 /** 🧾️ Exact observed expectation bytes and no-follow node witnesses supplied by the caller. */
-export interface SemanticOwnedCurrentSourceExpectation {
+export interface CurrentSourceApprovalSnapshot {
   readonly path: string;
   readonly nodeKind: string;
   readonly mode: number;
@@ -358,16 +357,16 @@ export interface SemanticOwnedCurrentSourceExpectation {
 }
 
 /** 📸️ Exact bytes and file tuple captured through one no-follow descriptor. */
-export interface SemanticOwnedInputFileSnapshot extends SemanticOwnedCurrentSourceExpectation {
+export interface SemanticOwnedInputFileSnapshot extends CurrentSourceApprovalSnapshot {
   readonly nodeKind: "file";
   readonly contentHash: string;
   readonly size: number;
 }
 
 /** 🔏️ A selected source tuple and its revision digest without altering historical catalog rows. */
-export interface SemanticOwnedCurrentSourcePreimageResult {
+export interface CurrentSourceApprovalResult {
   readonly disposition: "none" | "catalog" | "revised" | "problem";
-  readonly catalogCaseIndex: number | null;
+  readonly sourcePath: string | null;
   readonly preimage: Readonly<{ sha256: string; size: number; mode: "0644" }> | null;
   readonly revisionId: string | null;
   readonly revisionDigest: string | null;
@@ -387,11 +386,10 @@ export interface SemanticExactOwnedFileProjectionContract {
   }>;
   readonly allowedDispositions: readonly ["attribution-relocate", "configurable-owner-license-relocate", "fixed", "generated-evidence-relocate", "owner-documentation-relocate"];
   readonly ownerEvidenceKinds: readonly ["configurable-owner-license", "ordinary-owner-doc", "package-publication", "third-party-attribution", "ticket-evidence", "ticket-scratch"];
-  readonly referenceOwnerIds: readonly ["asset-distribution-owner", "bun-package-publisher", "commonmark-scratch-rust-reader", "markdown-relative-reference-adapter", "repo-cli-dev-docs-go", "vscode-package-ignore"];
-  readonly generatorOwnerIds: readonly ["assets-build"];
-  readonly expectedCounts: Readonly<{ readonly fixed: 4; readonly license: 8; readonly projected: 36; readonly readme: 32; readonly referenceBindings: 62; readonly total: 40 }>;
+  readonly referenceOwnerIds: readonly string[];
+  readonly generatorOwnerIds: readonly string[];
   readonly authoredDocumentCorrections: Readonly<Record<string, SemanticOwnedDocumentCorrection>>;
-  readonly currentSourceRevisions?: Readonly<Record<string, SemanticOwnedCurrentSourceRevision>>;
+  readonly currentSourceRevisions?: Readonly<Record<string, CurrentSourceApproval>>;
   readonly rationaleRule: "readme-license-owner-projection-v1";
 }
 
@@ -1134,9 +1132,9 @@ export interface Taxonomy {
   readonly testFixtureLegacyDirectoryNames: readonly string[];
   /** 🧪️ Canonical tests directory name (`🧪️tests`) — the owner-local home of every test case. */
   readonly testsDirName: string;
-  /** 🧫️ Canonical test-fixture directory name (`🧫️fixtures`) — opaque input data owned by the tests beside it. */
+  /** 🧫️ Canonical test-fixture directory name (`🧫️fixtures`) — opaque input data inside its owning tests collection. */
   readonly testFixturesDirName: string;
-  /** 🏷️ The owner kinds that may carry their own `🧪️tests`/`🧫️fixtures` beside their facets. */
+  /** 🏷️ The owner kinds that may carry `🧪️tests` with nested `🧫️fixtures` beside their facets. */
   readonly testOwnerKinds: readonly string[];
   readonly testExamplesDirName: string;
   readonly testOraclesDirName: string;
@@ -2268,7 +2266,7 @@ export function semanticProjectionCatalogProblems(registrations: readonly Semant
         canonicalTuples.add(canonicalTuple);
         if (profile) {
           const implementation = `${sourceOwner ?? catalog.ownerPath}/🧬️schema/🧬️mutations/${canonical}/🧪️tests/${scenario.directoryName}`.normalize("NFC");
-          const fixture = `${sourceOwner ?? catalog.ownerPath}/🧫️fixtures/🧬️mutations/${canonical}/${scenario.directoryName}`.normalize("NFC");
+          const fixture = `${sourceOwner ?? catalog.ownerPath}/🧪️tests/🧫️fixtures/🧬️mutations/${canonical}/${scenario.directoryName}`.normalize("NFC");
           for (const destination of [implementation, fixture]) {
             const destinationKey = destination.replaceAll("\uFE0F", "").toLocaleLowerCase("und");
             if (destinationOwners.has(destinationKey)) problems.push(`${scenarioScope} collides at canonical pair root ${JSON.stringify(destination)}.`);
@@ -4673,11 +4671,11 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
         continue;
       }
       if (contract.contractKind === "exact-owner-path-catalog") {
-        exactKeys(contract, ["contractKind", "authorityCatalogPath", "authorityCatalogSha256", "sourceFileKindId", "sourceBasenames", "destinationDirectoryKinds", "allowedDispositions", "ownerEvidenceKinds", "referenceOwnerIds", "generatorOwnerIds", "expectedCounts", "authoredDocumentCorrections", "rationaleRule", ...(Object.hasOwn(contract, "currentSourceRevisions") ? ["currentSourceRevisions"] : [])], scope);
+        exactKeys(contract, ["contractKind", "authorityCatalogPath", "authorityCatalogSha256", "sourceFileKindId", "sourceBasenames", "destinationDirectoryKinds", "allowedDispositions", "ownerEvidenceKinds", "referenceOwnerIds", "generatorOwnerIds", "authoredDocumentCorrections", "rationaleRule", ...(Object.hasOwn(contract, "currentSourceRevisions") ? ["currentSourceRevisions"] : [])], scope);
         if (Object.hasOwn(contract, "currentSourceRevisions")) {
           try {
-            const revisions = parseSemanticOwnedCurrentSourceRevisions(contract.currentSourceRevisions);
-            for (const [revisionId, revision] of Object.entries(revisions)) if (!exampleAssetPath(revision.expectationsPath, taxonomy)) problems.push(scope + ".currentSourceRevisions." + revisionId + ".expectationsPath must be beneath " + taxonomy.exampleAssetsDirName + ".");
+            const revisions = parseCurrentSourceApprovals(contract.currentSourceRevisions);
+            for (const [revisionId, revision] of Object.entries(revisions)) if (!exampleAssetPath(revision.approvalPath, taxonomy)) problems.push(scope + ".currentSourceRevisions." + revisionId + ".approvalPath must be beneath " + taxonomy.exampleAssetsDirName + ".");
           } catch (error) { problems.push(scope + ".currentSourceRevisions: " + (error instanceof Error ? error.message : String(error))); }
         }
         if (id !== "readme-license-owner-leaves-v1" || contract.rationaleRule !== "readme-license-owner-projection-v1") problems.push(scope + " must be the exact README/LICENSE owner projection contract.");
@@ -4703,16 +4701,10 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
         const exactArrays = [
           [contract.allowedDispositions, "attribution-relocate\0configurable-owner-license-relocate\0fixed\0generated-evidence-relocate\0owner-documentation-relocate", "allowedDispositions"],
           [contract.ownerEvidenceKinds, "configurable-owner-license\0ordinary-owner-doc\0package-publication\0third-party-attribution\0ticket-evidence\0ticket-scratch", "ownerEvidenceKinds"],
-          [contract.referenceOwnerIds, "asset-distribution-owner\0bun-package-publisher\0commonmark-scratch-rust-reader\0markdown-relative-reference-adapter\0repo-cli-dev-docs-go\0vscode-package-ignore", "referenceOwnerIds"],
-          [contract.generatorOwnerIds, "assets-build", "generatorOwnerIds"],
         ] as const;
-        for (const [values, expected, field] of exactArrays) if (!Array.isArray(values) || values.join("\0") !== expected) problems.push(scope + "." + field + " is not the exact frozen registry.");
-        if (!contract.expectedCounts || typeof contract.expectedCounts !== "object" || Array.isArray(contract.expectedCounts)) problems.push(scope + ".expectedCounts must be an object.");
-        else {
-          exactKeys(contract.expectedCounts, ["fixed", "license", "projected", "readme", "referenceBindings", "total"], scope + ".expectedCounts");
-          if (JSON.stringify(contract.expectedCounts) !== JSON.stringify({ fixed: 4, license: 8, projected: 36, readme: 32, referenceBindings: 62, total: 40 })) problems.push(scope + ".expectedCounts must freeze the 40-leaf authority.");
-        }
-        if (!taxonomy.generatorContracts["assets-build"]) problems.push(scope + " requires the assets-build generator owner.");
+        for (const [values, expected, field] of exactArrays) if (!Array.isArray(values) || values.join("\0") !== expected) problems.push(scope + "." + field + " is not the declared domain vocabulary.");
+        for (const [values, field] of [[contract.referenceOwnerIds, "referenceOwnerIds"], [contract.generatorOwnerIds, "generatorOwnerIds"]] as const) if (!Array.isArray(values) || new Set(values).size !== values.length || values.some(id => typeof id !== "string" || !/^[a-z][a-z0-9-]*$/u.test(id))) problems.push(scope + "." + field + " must declare unique domain registry identities.");
+        if (contract.generatorOwnerIds.some(id => !taxonomy.generatorContracts[id])) problems.push(scope + " has an unregistered generator owner.");
         try { parseSemanticOwnedDocumentCorrections(contract.authoredDocumentCorrections); } catch (error) { problems.push(scope + ".authoredDocumentCorrections: " + (error instanceof Error ? error.message : String(error))); }
         if (taxonomy.fixedFilenameContracts["root-script"]?.pathPattern !== "**/📜️script.ts") problems.push(scope + ".authoredDocumentCorrections requires the canonical root-script filename contract.");
         continue;
@@ -4836,7 +4828,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     if (!taxonomy.semanticDirectoryMemberKinds[projectionIds.sourceOwnerKindId] || !taxonomy.semanticDescendantContracts[projectionIds.implementationDescendantContractId] || !taxonomy.semanticDescendantContracts[projectionIds.fixtureDescendantContractId] || !taxonomy.semanticPathProjectionCatalogContracts[projectionIds.catalogContractId]) problems.push("mutationCatalogProjection contract IDs do not agree with its pair registries.");
   }
   const exactImplementation = [{ kindId: "standards", literal: "🏅️standards" }, { kindId: "standard", capture: "standardVersion" }, { kindId: "subsets", literal: "🪆️subsets" }, { kindId: "subset", capture: "subsetId" }, { kindId: "schema", literal: "🧬️schema" }, { kindId: "schema", literal: "🧬️mutations" }, { projectedMemberKindId: "mutation-test-subject", capture: "mutationId" }, { kindId: "tests", literal: "🧪️tests" }, { kindId: "test-case", capture: "scenarioId" }];
-  const exactFixture = [{ kindId: "standards", literal: "🏅️standards" }, { kindId: "standard", capture: "standardVersion" }, { kindId: "subsets", literal: "🪆️subsets" }, { kindId: "subset", capture: "subsetId" }, { kindId: "fixtures", literal: "🧫️fixtures" }, { kindId: "schema", literal: "🧬️mutations" }, { projectedMemberKindId: "mutation-test-subject", capture: "mutationId" }, { kindId: "test-case", capture: "scenarioId" }];
+  const exactFixture = [{ kindId: "standards", literal: "🏅️standards" }, { kindId: "standard", capture: "standardVersion" }, { kindId: "subsets", literal: "🪆️subsets" }, { kindId: "subset", capture: "subsetId" }, { kindId: "tests", literal: "🧪️tests" }, { kindId: "fixtures", literal: "🧫️fixtures" }, { kindId: "schema", literal: "🧬️mutations" }, { projectedMemberKindId: "mutation-test-subject", capture: "mutationId" }, { kindId: "test-case", capture: "scenarioId" }];
   if (JSON.stringify(projectionIds?.implementationSegments) !== JSON.stringify(exactImplementation) || JSON.stringify(projectionIds?.fixtureSegments) !== JSON.stringify(exactFixture)) problems.push("mutationCatalogProjection must encode the exact canonical implementation and fixture root grammars.");
   const implementation = taxonomy.semanticDescendantContracts["mutation-implementation-case-v1"], fixture = taxonomy.semanticDescendantContracts["mutation-fixture-bundle-v1"];
   if (!implementation || "contractKind" in implementation || implementation.realizedNodeCount !== 2 || implementation.exclusiveAlternatives.length !== 0 || implementation.pathBudgetReserve.bytes !== 11) problems.push("semanticDescendantContracts.mutation-implementation-case-v1 must encode two nodes and the derived 11-byte reserve.");
@@ -5416,7 +5408,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
 
 /** 🏗️ Verifies known Nx identities and required tracked outputs against live workspace metadata. */
 /** 🧾️ Frozen leaf ownership and byte preimage, independent of implementation language. */
-export interface SemanticExactOwnedFileCase {
+export interface OwnerProjectionEntry {
   readonly sourcePath: string;
   readonly destinationPath: string;
   readonly ownerEvidenceId: string;
@@ -5424,13 +5416,15 @@ export interface SemanticExactOwnedFileCase {
   readonly fixedContractId: "bun-package-license" | "bun-package-readme" | null;
   readonly projectionContractId: "exact-owner-license-projection" | "exact-owner-readme-projection" | null;
   readonly referenceOwnerIds: readonly string[];
-  readonly generatorOwnerId: "assets-build" | null;
+  readonly generatorOwnerId: string | null;
   readonly preimage: Readonly<{ sha256: string; mode: string; size: number }>;
 }
 
 /** 📚️ One digest-locked owner catalog, including its concrete consumers and owner evidence. */
-export interface SemanticExactOwnedFileCatalog {
-  readonly cases: readonly SemanticExactOwnedFileCase[];
+export interface OwnerProjectionPolicy {
+  readonly schemaVersion: 1;
+  readonly kind: "owner-projection-policy";
+  readonly entries: readonly OwnerProjectionEntry[];
   readonly ownerEvidence: Readonly<Record<string, Readonly<{ kind: string; evidencePaths: readonly string[]; expectedPackageName?: string; private?: boolean }>>>;
   readonly referenceOwners: Readonly<Record<string, Readonly<{ kind: string; ownerPath: string }>>>;
   readonly generatorOwners: Readonly<Record<string, Readonly<{ ownerPath: string; target: string; currentOutputPath: string; requiredOutputPath: string }>>>;
@@ -6021,26 +6015,32 @@ function semanticOwnedSourceBasename(path: string): string {
 }
 
 //#region 🪪️Reviewed Current Owner Preimages
-/** 📐️ Parses the closed one-row current-source revision grammar without reading any path. */
-export function parseSemanticOwnedCurrentSourceRevisions(input: unknown): Readonly<Record<string, SemanticOwnedCurrentSourceRevision>> {
-  const fail = (message: string): never => { throw new Error("current-source-revision-invalid: " + message); };
+/** 📐️ Parses stable source identities in a closed current approval registry without reading any path. */
+export function parseCurrentSourceApprovals(input: unknown): Readonly<Record<string, CurrentSourceApproval>> {
+  const fail = (message: string): never => { throw new Error("current-source-approval-invalid: " + message); };
   const record = (value: unknown, keys: readonly string[], label: string): Record<string, unknown> => {
     if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join("\0") !== [...keys].sort().join("\0")) return fail(label + " fields");
     return value as Record<string, unknown>;
   };
-  const id = "testing-readme-protocol-v2-reviewed", rows = record(input, [id], "registry");
-  const row = record(rows[id], ["catalogCaseIndex", "sourcePath", "baselineCommit", "baselineBlob", "baselinePreimage", "currentPreimage", "expectationsPath", "expectationsSha256"], id);
-  const tuple = (value: unknown, label: string): SemanticOwnedCurrentSourceRevision["currentPreimage"] => {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return fail("registry fields");
+  const result: Record<string, CurrentSourceApproval> = {}, sources = new Set<string>();
+  const tuple = (value: unknown, label: string): CurrentSourceApproval["currentPreimage"] => {
     const selected = record(value, ["sha256", "size", "mode"], label);
     if (typeof selected.sha256 !== "string" || !/^[0-9a-f]{64}$/u.test(selected.sha256) || selected.mode !== "0644" || !Number.isSafeInteger(selected.size) || (selected.size as number) < 0) return fail(label + " tuple");
     return { sha256: selected.sha256, size: selected.size as number, mode: selected.mode };
   };
-  if (row.catalogCaseIndex !== 31 || typeof row.baselineCommit !== "string" || !/^[0-9a-f]{40}$/u.test(row.baselineCommit) || typeof row.baselineBlob !== "string" || !/^[0-9a-f]{40}$/u.test(row.baselineBlob)) return fail(id + " index or baseline identity");
-  if (!exactOwnerPath(row.sourcePath) || /[:*?"<>|]/u.test(row.sourcePath) || semanticOwnedSourceBasename(row.sourcePath) !== "README.md" || Buffer.from(row.sourcePath).toString("utf8") !== row.sourcePath) return fail(id + " raw source coordinate");
-  if (!exactOwnerPath(row.expectationsPath) || /[:*?"<>|]/u.test(row.expectationsPath) || !row.expectationsPath.endsWith(".json") || Buffer.from(row.expectationsPath).toString("utf8") !== row.expectationsPath || typeof row.expectationsSha256 !== "string" || !/^[0-9a-f]{64}$/u.test(row.expectationsSha256)) return fail(id + " expectation identity");
-  const baselinePreimage = tuple(row.baselinePreimage, "baseline"), currentPreimage = tuple(row.currentPreimage, "current");
-  if (baselinePreimage.sha256 === currentPreimage.sha256) return fail(id + " requires one distinct current preimage");
-  return { [id]: { catalogCaseIndex: 31, sourcePath: row.sourcePath, baselineCommit: row.baselineCommit, baselineBlob: row.baselineBlob, baselinePreimage, currentPreimage, expectationsPath: row.expectationsPath, expectationsSha256: row.expectationsSha256 } };
+  for (const [id, value] of Object.entries(input)) {
+    if (!/^[a-z][a-z0-9-]*$/u.test(id)) return fail("approval identity");
+    const row = record(value, ["sourcePath", "baselineCommit", "baselineBlob", "baselinePreimage", "currentPreimage", "approvalPath", "approvalSha256"], id);
+    if (typeof row.baselineCommit !== "string" || !/^[0-9a-f]{40}$/u.test(row.baselineCommit) || typeof row.baselineBlob !== "string" || !/^[0-9a-f]{40}$/u.test(row.baselineBlob)) return fail(id + " baseline identity");
+    if (!exactOwnerPath(row.sourcePath) || /[:*?"<>|]/u.test(row.sourcePath) || semanticOwnedSourceBasename(row.sourcePath) !== "README.md" || Buffer.from(row.sourcePath).toString("utf8") !== row.sourcePath || sources.has(row.sourcePath)) return fail(id + " duplicate or invalid source identity");
+    if (!exactOwnerPath(row.approvalPath) || /[:*?"<>|]/u.test(row.approvalPath) || !row.approvalPath.endsWith(".json") || Buffer.from(row.approvalPath).toString("utf8") !== row.approvalPath || typeof row.approvalSha256 !== "string" || !/^[0-9a-f]{64}$/u.test(row.approvalSha256)) return fail(id + " approval identity");
+    const baselinePreimage = tuple(row.baselinePreimage, "baseline"), currentPreimage = tuple(row.currentPreimage, "current");
+    if (baselinePreimage.sha256 === currentPreimage.sha256) return fail(id + " requires a distinct current preimage");
+    sources.add(row.sourcePath);
+    result[id] = { sourcePath: row.sourcePath, baselineCommit: row.baselineCommit, baselineBlob: row.baselineBlob, baselinePreimage, currentPreimage, approvalPath: row.approvalPath, approvalSha256: row.approvalSha256 };
+  }
+  return result;
 }
 
 /** 🧮️ Canonicalizes the closed revision envelope with sorted object keys and retained array order. */
@@ -6051,60 +6051,39 @@ function semanticOwnedCurrentRevisionCanonical(value: unknown): string {
 }
 
 /** 🧭️ Selects a raw owner's current preimage from exact supplied evidence without filesystem or Git access. */
-export function semanticExactOwnedFileCurrentPreimageAuthority(catalog: SemanticExactOwnedFileCatalog, contract: Pick<SemanticExactOwnedFileProjectionContract, "authorityCatalogPath" | "authorityCatalogSha256">, input: unknown, facts: Readonly<{ path: string; nodeKind: string; contentHash: string; mode: number; size: number; expectations: readonly SemanticOwnedCurrentSourceExpectation[] }>): SemanticOwnedCurrentSourcePreimageResult {
-  const empty = { catalogCaseIndex: null, preimage: null, revisionId: null, revisionDigest: null, problems: [] } as const;
-  const fail = (message: string): SemanticOwnedCurrentSourcePreimageResult => ({ ...empty, disposition: "problem", problems: ["current-source-revision-invalid: " + message] });
-  let revisions: Readonly<Record<string, SemanticOwnedCurrentSourceRevision>>;
-  try { revisions = parseSemanticOwnedCurrentSourceRevisions(input); } catch (error) { return { ...empty, disposition: "problem", problems: [error instanceof Error ? error.message : String(error)] }; }
-  if (!exactOwnerPath(contract.authorityCatalogPath) || !/^[0-9a-f]{64}$/u.test(contract.authorityCatalogSha256) || !Array.isArray(catalog.cases) || catalog.cases.length !== 40) return fail("catalog identity or census");
+export function semanticExactOwnedFileCurrentPreimageAuthority(catalog: OwnerProjectionPolicy, contract: Pick<SemanticExactOwnedFileProjectionContract, "authorityCatalogPath" | "authorityCatalogSha256">, input: unknown, facts: Readonly<{ path: string; nodeKind: string; contentHash: string; mode: number; size: number; expectations: readonly CurrentSourceApprovalSnapshot[] }>): CurrentSourceApprovalResult {
+  const empty = { sourcePath: null, preimage: null, revisionId: null, revisionDigest: null, problems: [] } as const;
+  const fail = (message: string): CurrentSourceApprovalResult => ({ ...empty, disposition: "problem", problems: ["current-source-approval-invalid: " + message] });
+  let revisions: Readonly<Record<string, CurrentSourceApproval>>;
+  try { revisions = parseCurrentSourceApprovals(input); } catch (error) { return { ...empty, disposition: "problem", problems: [error instanceof Error ? error.message : String(error)] }; }
+  if (!exactOwnerPath(contract.authorityCatalogPath) || !/^[0-9a-f]{64}$/u.test(contract.authorityCatalogSha256) || !Array.isArray(catalog.entries) || catalog.schemaVersion !== 1 || catalog.kind !== "owner-projection-policy" || Object.keys(catalog).sort().join("\0") !== "entries\0generatorOwners\0kind\0ownerEvidence\0referenceOwners\0schemaVersion") return fail("policy identity");
   if (!exactOwnerPath(facts.path) || /[:*?"<>|]/u.test(facts.path)) return fail("source coordinate");
-  const index = catalog.cases.findIndex((entry) => entry.sourcePath === facts.path);
-  if (index < 0) return { ...empty, disposition: "none" };
-  const owner = catalog.cases[index], selected = Object.entries(revisions).find(([, row]) => row.catalogCaseIndex === index);
-  const preimage = selected ? selected[1].currentPreimage : owner.preimage;
+  const owners = catalog.entries.filter(entry => entry.sourcePath === facts.path);
+  if (owners.length === 0) return Object.values(revisions).some(row => row.sourcePath === facts.path) ? fail("approved source owner is absent") : { ...empty, disposition: "none" };
+  if (owners.length !== 1) return fail("duplicate owner identity");
+  const owner = owners[0]!, selected = Object.entries(revisions).find(([, row]) => row.sourcePath === owner.sourcePath), preimage = selected ? selected[1].currentPreimage : owner.preimage;
   if (!preimage || !/^[0-9a-f]{64}$/u.test(preimage.sha256) || preimage.mode !== "0644" || !Number.isSafeInteger(preimage.size) || preimage.size < 0) return fail("selected preimage tuple");
   if (facts.nodeKind !== "file" || facts.contentHash !== preimage.sha256 || facts.mode !== Number.parseInt(preimage.mode, 8) || facts.size !== preimage.size) return fail("selected source preimage drifted");
-  if (!selected) return { ...empty, disposition: "catalog", catalogCaseIndex: index, preimage: { sha256: preimage.sha256, size: preimage.size, mode: preimage.mode } };
-  const [id, row] = selected, ownerEvidence = catalog.ownerEvidence[owner.ownerEvidenceId], referenceOwner = catalog.referenceOwners["markdown-relative-reference-adapter"];
-  if (row.sourcePath !== owner.sourcePath) return fail("declared raw source does not match its catalog row");
-  if (owner.ownerEvidenceId !== "nx-project-owner-documentation" || ownerEvidence?.kind !== "ordinary-owner-doc" || !Array.isArray(ownerEvidence.evidencePaths) || ownerEvidence.evidencePaths.some((path) => !exactOwnerPath(path)) || owner.disposition !== "owner-documentation-relocate" || owner.fixedContractId !== null || owner.generatorOwnerId !== null || owner.projectionContractId !== "exact-owner-readme-projection" || !exactOwnerPath(owner.sourcePath) || posix.basename(owner.sourcePath) !== "README.md" || !exactOwnerPath(owner.destinationPath) || owner.destinationPath !== posix.dirname(owner.sourcePath) + "/📃️readme/📝️.md" || JSON.stringify(owner.referenceOwnerIds) !== JSON.stringify(["markdown-relative-reference-adapter"]) || referenceOwner?.kind !== "reference-adapter" || referenceOwner.ownerPath !== "repo-lib normalization reference graph") return fail("revision is not the approved ordinary README owner");
+  if (!selected) return { ...empty, disposition: "catalog", sourcePath: owner.sourcePath, preimage: { ...preimage } };
+  const [id, row] = selected, ownerEvidence = catalog.ownerEvidence[owner.ownerEvidenceId];
+  if (ownerEvidence?.kind !== "ordinary-owner-doc" || !Array.isArray(ownerEvidence.evidencePaths) || ownerEvidence.evidencePaths.some(path => !exactOwnerPath(path)) || owner.disposition !== "owner-documentation-relocate" || owner.fixedContractId !== null || owner.generatorOwnerId !== null || owner.projectionContractId !== "exact-owner-readme-projection" || semanticOwnedSourceBasename(owner.sourcePath) !== "README.md" || owner.destinationPath !== posix.dirname(owner.sourcePath) + "/\u{1f4c3}\uFE0Freadme/\u{1f4dd}\uFE0F.md" || !Array.isArray(owner.referenceOwnerIds) || owner.referenceOwnerIds.some((referenceId: string) => !Object.hasOwn(catalog.referenceOwners, referenceId))) return fail("approval is not ordinary owner documentation");
   const sameTuple = (left: unknown, right: Readonly<{ sha256: string; size: number; mode: string }>): boolean => {
     if (!left || typeof left !== "object" || Array.isArray(left)) return false;
     const value = left as Record<string, unknown>;
-    return value.sha256 === right.sha256 && value.size === right.size && value.mode === right.mode;
+    return Object.keys(value).sort().join("\0") === "mode\0sha256\0size" && value.sha256 === right.sha256 && value.size === right.size && value.mode === right.mode;
   };
-  if (!sameTuple(owner.preimage, row.baselinePreimage)) return fail("catalog baseline tuple drifted");
-  if (!Array.isArray(facts.expectations) || facts.expectations.length !== 1) return fail("missing or duplicate expectation identity");
-  const evidence = facts.expectations[0];
-  if (!exactOwnerPath(evidence.path) || evidence.path !== row.expectationsPath || evidence.nodeKind !== "file" || evidence.mode !== 0o644 || !Array.isArray(evidence.ancestorNodeKinds) || evidence.ancestorNodeKinds.length !== evidence.path.split("/").length - 1 || evidence.ancestorNodeKinds.some((kind: string) => kind !== "directory") || !(evidence.bytes instanceof Uint8Array)) return fail("expectation is not an exact no-follow regular input");
+  if (!sameTuple(owner.preimage, row.baselinePreimage)) return fail("policy baseline tuple drifted");
+  if (!Array.isArray(facts.expectations) || facts.expectations.length !== 1) return fail("missing or duplicate approval identity");
+  const evidence = facts.expectations[0]!;
+  if (evidence.path !== row.approvalPath || evidence.nodeKind !== "file" || evidence.mode !== 0o644 || !Array.isArray(evidence.ancestorNodeKinds) || evidence.ancestorNodeKinds.length !== evidence.path.split("/").length - 1 || evidence.ancestorNodeKinds.some((kind: string) => kind !== "directory") || !(evidence.bytes instanceof Uint8Array)) return fail("approval is not an exact no-follow regular input");
   const bytes = Buffer.from(evidence.bytes), text = bytes.toString("utf8");
-  if (!Buffer.from(text).equals(bytes)) return fail("expectation has lossy UTF-8");
-  if (createHash("sha256").update(bytes).digest("hex") !== row.expectationsSha256) return fail("expectation bytes drifted");
-  let expectation: Record<string, unknown>;
-  try { expectation = JSON.parse(text); } catch { return fail("expectation JSON is invalid"); }
-  if (!expectation || typeof expectation !== "object" || Array.isArray(expectation)) return fail("expectation JSON is not an object");
-  const lineage = expectation.frozenAuthority as Record<string, unknown> | undefined, documents = expectation.documents as Record<string, unknown> | undefined;
-  if (expectation.schemaVersion !== 1 || expectation.contract !== "testing-readme-current-coordinates-v1" || !lineage || !documents || lineage.path !== contract.authorityCatalogPath || lineage.sha256 !== contract.authorityCatalogSha256 || lineage.row !== row.catalogCaseIndex || lineage.baselineCommit !== row.baselineCommit || lineage.baselineBlob !== row.baselineBlob || !sameTuple(lineage.preimage, row.baselinePreimage) || documents.readme !== owner.sourcePath) return fail("expectation baseline or source-owner binding drifted");
-  const envelope = {
-    kind: "exact-owner-current-source-revision-v1",
-    catalogIdentity: { path: contract.authorityCatalogPath, sha256: contract.authorityCatalogSha256 },
-    revisionId: id,
-    revision: row,
-    owner: {
-      catalogCaseIndex: index,
-      sourcePath: owner.sourcePath,
-      destinationPath: owner.destinationPath,
-      ownerEvidenceId: owner.ownerEvidenceId,
-      ownerEvidence: { kind: ownerEvidence.kind, evidencePaths: ownerEvidence.evidencePaths },
-      disposition: owner.disposition,
-      fixedContractId: owner.fixedContractId,
-      projectionContractId: owner.projectionContractId,
-      generatorOwnerId: owner.generatorOwnerId,
-      referenceOwners: owner.referenceOwnerIds.map((referenceId: string) => ({ id: referenceId, kind: catalog.referenceOwners[referenceId].kind, ownerPath: catalog.referenceOwners[referenceId].ownerPath })),
-    },
-  };
-  const revisionDigest = createHash("sha256").update(semanticOwnedCurrentRevisionCanonical(envelope)).digest("hex");
-  return { disposition: "revised", catalogCaseIndex: index, preimage: { ...row.currentPreimage }, revisionId: id, revisionDigest, problems: [] };
+  if (!Buffer.from(text).equals(bytes) || createHash("sha256").update(bytes).digest("hex") !== row.approvalSha256) return fail("approval bytes drifted");
+  let document: Record<string, unknown>;
+  try { document = JSON.parse(text); } catch { return fail("approval JSON is invalid"); }
+  const keys = (value: unknown, expected: readonly string[]): value is Record<string, unknown> => !!value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).sort().join("\0") === [...expected].sort().join("\0");
+  if (!keys(document, ["schemaVersion", "kind", "sourcePath", "policy", "baseline", "currentPreimage"]) || !keys(document.policy, ["path", "sha256"]) || !keys(document.baseline, ["commit", "blob", "preimage"]) || document.schemaVersion !== 1 || document.kind !== "current-source-approval" || document.sourcePath !== owner.sourcePath || document.policy.path !== contract.authorityCatalogPath || document.policy.sha256 !== contract.authorityCatalogSha256 || document.baseline.commit !== row.baselineCommit || document.baseline.blob !== row.baselineBlob || !sameTuple(document.baseline.preimage, row.baselinePreimage) || !sameTuple(document.currentPreimage, row.currentPreimage)) return fail("approval policy or source-owner binding drifted");
+  const envelope = { kind: "exact-owner-current-source-approval-v1", policyIdentity: { path: contract.authorityCatalogPath, sha256: contract.authorityCatalogSha256 }, revisionId: id, revision: row, owner: { sourcePath: owner.sourcePath, destinationPath: owner.destinationPath, ownerEvidenceId: owner.ownerEvidenceId, ownerEvidence, disposition: owner.disposition, fixedContractId: owner.fixedContractId, projectionContractId: owner.projectionContractId, generatorOwnerId: owner.generatorOwnerId, referenceOwners: owner.referenceOwnerIds.map((referenceId: string) => ({ id: referenceId, ...catalog.referenceOwners[referenceId] })) } };
+  return { disposition: "revised", sourcePath: owner.sourcePath, preimage: { ...row.currentPreimage }, revisionId: id, revisionDigest: createHash("sha256").update(semanticOwnedCurrentRevisionCanonical(envelope)).digest("hex"), problems: [] };
 }
 //#endregion 🪪️Reviewed Current Owner Preimages
 
@@ -6136,7 +6115,7 @@ export function parseSemanticOwnedDocumentCorrections(input: unknown): Readonly<
 }
 
 /** 🧩️ Produces exact UTF-16 edit offsets from byte-bound authored authority without modifying the frozen source. */
-export function semanticExactOwnedDocumentCorrectionAuthority(catalog: SemanticExactOwnedFileCatalog, contract: SemanticExactOwnedFileProjectionContract, facts: Readonly<{ path: string; finalPath: string; content: string; mode: number; moving: boolean }>): Readonly<{ disposition: "none" | "rewrite" | "problem"; splices: readonly Readonly<{ start: number; end: number; oldValue: string; newValue: string; correctionId: string }>[]; problems: readonly string[] }> {
+export function semanticExactOwnedDocumentCorrectionAuthority(catalog: OwnerProjectionPolicy, contract: SemanticExactOwnedFileProjectionContract, facts: Readonly<{ path: string; finalPath: string; content: string; mode: number; moving: boolean }>): Readonly<{ disposition: "none" | "rewrite" | "problem"; splices: readonly Readonly<{ start: number; end: number; oldValue: string; newValue: string; correctionId: string }>[]; problems: readonly string[] }> {
   const failure = (message: string) => ({ disposition: "problem" as const, splices: [], problems: [message] });
   let corrections: Readonly<Record<string, SemanticOwnedDocumentCorrection>>;
   try { corrections = parseSemanticOwnedDocumentCorrections(contract.authoredDocumentCorrections); } catch (error) { return failure(error instanceof Error ? error.message : String(error)); }
@@ -6144,7 +6123,7 @@ export function semanticExactOwnedDocumentCorrectionAuthority(catalog: SemanticE
   const selected = Object.entries(corrections).find(([, row]) => row.sourcePath === facts.path);
   if (!selected) return { disposition: "none", splices: [], problems: [] };
   const [id, row] = selected;
-  const owner = catalog.cases.find((entry) => entry.sourcePath === row.sourcePath);
+  const owner = catalog.entries.find((entry) => entry.sourcePath === row.sourcePath);
   if (!owner || owner.disposition !== "owner-documentation-relocate" || owner.generatorOwnerId !== null || owner.destinationPath !== row.destinationPath || facts.finalPath !== row.destinationPath || owner.preimage.sha256 !== row.preimage.sha256 || owner.preimage.mode !== row.preimage.mode || owner.preimage.size !== row.preimage.size) return failure(`Authored document ${id} does not match its frozen owner move`);
   const bytes = Buffer.from(facts.content), hash = (value: string | Buffer): string => createHash("sha256").update(value).digest("hex");
   if (hash(bytes) !== row.preimage.sha256 || bytes.byteLength !== row.preimage.size || facts.mode !== Number.parseInt(row.preimage.mode, 8)) return failure(`Authored document ${id} source preimage drifted`);
@@ -6248,74 +6227,83 @@ export function semanticOwnedInputFileSnapshot(repoRoot: string, path: string, c
 }
 
 /** 🔐️ Loads only the schema-registered catalog with exact bytes, paths, counts, and owner classifications. */
-export function semanticExactOwnedFileCatalog(repoRoot: string, taxonomy: Taxonomy, observe?: (snapshot: SemanticOwnedInputFileSnapshot) => void): SemanticExactOwnedFileCatalog | null {
-  const contract = taxonomy.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];
-  if (contract?.contractKind !== "exact-owner-path-catalog") return null;
-  const path = contract.authorityCatalogPath;
-  const state = exactOwnerRegularFile(repoRoot, path);
-  if (state === "absent") return null;
-  if (state !== "file") throw new Error("Exact owner catalog must be a regular file beneath non-symlink parents");
-  const snapshot = semanticOwnedInputFileSnapshot(repoRoot, path);
-  if (!snapshot) throw new Error("Exact owner catalog disappeared during capture: " + path);
-  if (snapshot.mode !== 0o644) throw new Error("Exact owner catalog mode drift: " + path);
-  const bytes = Buffer.from(snapshot.bytes);
-  if (createHash("sha256").update(bytes).digest("hex") !== contract.authorityCatalogSha256) throw new Error("Exact owner catalog digest drift: " + path);
-  if (!Buffer.from(bytes.toString("utf8")).equals(bytes)) throw new Error("Exact owner catalog has lossy UTF-8: " + path);
-  const value = JSON.parse(bytes.toString("utf8")) as Record<string, unknown>;
-  const object = (input: unknown): Record<string, unknown> => {
-    if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Exact owner catalog requires object records");
-    return input as Record<string, unknown>;
+export function parseOwnerProjectionPolicy(input: unknown, taxonomy: Taxonomy, contract: SemanticExactOwnedFileProjectionContract): OwnerProjectionPolicy {
+  const policyPath = (value: unknown): value is string => exactOwnerPath(value) && !/[:*?"<>|]/u.test(value) && Buffer.from(value, "utf8").toString("utf8") === value;
+  const object = (value: unknown, required: readonly string[], optional: readonly string[] = []): Record<string, any> => {
+    if (!value || typeof value !== "object" || Array.isArray(value) || required.some(key => !Object.hasOwn(value, key)) || Object.keys(value).some(key => !required.includes(key) && !optional.includes(key))) throw new Error("Owner projection policy has invalid closed fields");
+    return value as Record<string, any>;
   };
-  const ownerEvidence = object(value.ownerEvidence) as unknown as SemanticExactOwnedFileCatalog["ownerEvidence"];
-  const referenceOwners = object(value.referenceOwners) as unknown as SemanticExactOwnedFileCatalog["referenceOwners"];
-  const generatorOwners = object(value.generatorOwners) as unknown as SemanticExactOwnedFileCatalog["generatorOwners"];
-  if (value.schemaVersion !== 1 || value.cohortId !== "nested-readme-license-owner-authority" || !Array.isArray(value.cases)) throw new Error("Exact owner catalog schema is invalid");
-  for (const evidence of Object.values(ownerEvidence)) {
-    if (!(contract.ownerEvidenceKinds as readonly string[]).includes(evidence.kind) || !Array.isArray(evidence.evidencePaths) || evidence.evidencePaths.some((path) => !exactOwnerPath(path))) throw new Error("Exact owner catalog has invalid owner evidence");
+  const value = object(input, ["schemaVersion", "kind", "ownerEvidence", "referenceOwners", "generatorOwners", "entries"]);
+  if (value.schemaVersion !== 1 || value.kind !== "owner-projection-policy" || !Array.isArray(value.entries)) throw new Error("Owner projection policy identity is invalid");
+  const registry = (input: unknown): Record<string, any> => {
+    if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).some(id => !/^[a-z][a-z0-9-]*$/u.test(id))) throw new Error("Owner projection policy registry identity is invalid");
+    return input as Record<string, any>;
+  };
+  const ownerEvidence = registry(value.ownerEvidence), referenceOwners = registry(value.referenceOwners), generatorOwners = registry(value.generatorOwners);
+  for (const input of Object.values(ownerEvidence)) {
+    const evidence = object(input, ["kind", "evidencePaths"], ["expectedPackageName", "private"]);
+    if (!(contract.ownerEvidenceKinds as readonly string[]).includes(evidence.kind) || !Array.isArray(evidence.evidencePaths) || evidence.evidencePaths.some(path => !policyPath(path)) || new Set(evidence.evidencePaths).size !== evidence.evidencePaths.length || Object.hasOwn(evidence, "expectedPackageName") && (typeof evidence.expectedPackageName !== "string" || !evidence.expectedPackageName) || Object.hasOwn(evidence, "private") && typeof evidence.private !== "boolean") throw new Error("Owner projection policy evidence is invalid");
   }
-  if (JSON.stringify(Object.keys(referenceOwners).sort()) !== JSON.stringify([...contract.referenceOwnerIds].sort()) || JSON.stringify(Object.keys(generatorOwners).sort()) !== JSON.stringify([...contract.generatorOwnerIds].sort())) throw new Error("Exact owner catalog consumer registries drifted");
-  for (const [id, consumer] of Object.entries(referenceOwners)) if (typeof consumer.kind !== "string" || typeof consumer.ownerPath !== "string" || ["repo-cli-dev-docs-go", "commonmark-scratch-rust-reader", "vscode-package-ignore"].includes(id) && !exactOwnerPath(consumer.ownerPath)) throw new Error("Exact owner catalog has invalid concrete consumer: " + id);
+  if (JSON.stringify(Object.keys(referenceOwners).sort()) !== JSON.stringify([...contract.referenceOwnerIds].sort()) || JSON.stringify(Object.keys(generatorOwners).sort()) !== JSON.stringify([...contract.generatorOwnerIds].sort())) throw new Error("Owner projection policy consumer registries drifted");
+  for (const [id, input] of Object.entries(referenceOwners)) {
+    const consumer = object(input, ["kind", "ownerPath"]);
+    if (typeof consumer.kind !== "string" || !consumer.kind || typeof consumer.ownerPath !== "string" || !consumer.ownerPath || ["repo-cli-dev-docs-go", "commonmark-scratch-rust-reader", "vscode-package-ignore"].includes(id) && !policyPath(consumer.ownerPath)) throw new Error("Owner projection policy consumer is invalid: " + id);
+  }
+  for (const input of Object.values(generatorOwners)) { const generator = object(input, ["ownerPath", "target", "currentOutputPath", "requiredOutputPath"]); if (!policyPath(generator.ownerPath) || typeof generator.target !== "string" || !generator.target || !policyPath(generator.currentOutputPath) || !policyPath(generator.requiredOutputPath)) throw new Error("Owner projection policy generator is invalid"); }
   const sources = new Set<string>(), destinations = new Set<string>();
-  const counts = { fixed: 0, license: 0, projected: 0, readme: 0, referenceBindings: 0, total: value.cases.length };
-  const cases = value.cases.map((input) => {
-    const row = object(input) as unknown as SemanticExactOwnedFileCase;
+  const entries = value.entries.map(input => {
+    const row = object(input, ["sourcePath", "destinationPath", "ownerEvidenceId", "disposition", "fixedContractId", "projectionContractId", "referenceOwnerIds", "generatorOwnerId", "preimage"]) as unknown as OwnerProjectionEntry;
     const sourceBasename = typeof row.sourcePath === "string" ? semanticOwnedSourceBasename(row.sourcePath) : "";
-    if (!exactOwnerPath(row.sourcePath) || !exactOwnerPath(row.destinationPath) || !(contract.sourceBasenames as readonly string[]).includes(sourceBasename) || !contract.allowedDispositions.includes(row.disposition) || !ownerEvidence[row.ownerEvidenceId] || sources.has(row.sourcePath) || destinations.has(row.destinationPath) || Buffer.byteLength(row.destinationPath) > 240) throw new Error("Exact owner catalog has invalid or duplicate source/destination ownership");
-    const readme = sourceBasename === "README.md";
-    const kind = contract.destinationDirectoryKinds[readme ? "readme" : "license"];
-    const evidenceKind = ownerEvidence[row.ownerEvidenceId].kind;
+    if (!policyPath(row.sourcePath) || !policyPath(row.destinationPath) || !(contract.sourceBasenames as readonly string[]).includes(sourceBasename) || !contract.allowedDispositions.includes(row.disposition) || !Object.hasOwn(ownerEvidence, row.ownerEvidenceId) || sources.has(row.sourcePath) || destinations.has(row.destinationPath) || Buffer.byteLength(row.destinationPath) > 240) throw new Error("Owner projection policy has invalid or duplicate source/destination ownership");
+    const readme = sourceBasename === "README.md", kind = contract.destinationDirectoryKinds[readme ? "readme" : "license"], evidenceKind = ownerEvidence[row.ownerEvidenceId].kind;
     const expectedDisposition = evidenceKind === "package-publication" ? "fixed" : evidenceKind === "third-party-attribution" ? "attribution-relocate" : evidenceKind === "configurable-owner-license" ? "configurable-owner-license-relocate" : evidenceKind === "ticket-evidence" || evidenceKind === "ticket-scratch" ? "generated-evidence-relocate" : "owner-documentation-relocate";
     const fixed = row.disposition === "fixed";
-    if (row.disposition !== expectedDisposition || row.destinationPath !== (fixed ? row.sourcePath : dirname(row.sourcePath) + "/" + kind.directoryName + "/" + kind.filename) || row.fixedContractId !== (fixed ? readme ? "bun-package-readme" : "bun-package-license" : null) || row.projectionContractId !== (fixed ? null : readme ? "exact-owner-readme-projection" : "exact-owner-license-projection")) throw new Error("Exact owner catalog classification or semantic destination drifted: " + row.sourcePath);
-    if (!row.preimage || !/^[0-9a-f]{64}$/u.test(row.preimage.sha256) || row.preimage.mode !== "0644" || !Number.isSafeInteger(row.preimage.size) || row.preimage.size < 0 || !Array.isArray(row.referenceOwnerIds) || row.referenceOwnerIds.length === 0 || new Set(row.referenceOwnerIds).size !== row.referenceOwnerIds.length || row.referenceOwnerIds.some((id) => !referenceOwners[id])) throw new Error("Exact owner catalog leaf/reference evidence is invalid: " + row.sourcePath);
+    if (row.disposition !== expectedDisposition || row.destinationPath !== (fixed ? row.sourcePath : dirname(row.sourcePath) + "/" + kind.directoryName + "/" + kind.filename) || row.fixedContractId !== (fixed ? readme ? "bun-package-readme" : "bun-package-license" : null) || row.projectionContractId !== (fixed ? null : readme ? "exact-owner-readme-projection" : "exact-owner-license-projection")) throw new Error("Owner projection policy classification or destination drifted: " + row.sourcePath);
+    const preimage = object(row.preimage, ["sha256", "mode", "size"]);
+    if (typeof preimage.sha256 !== "string" || !/^[0-9a-f]{64}$/u.test(preimage.sha256) || preimage.mode !== "0644" || !Number.isSafeInteger(preimage.size) || preimage.size < 0 || !Array.isArray(row.referenceOwnerIds) || row.referenceOwnerIds.length === 0 || new Set(row.referenceOwnerIds).size !== row.referenceOwnerIds.length || row.referenceOwnerIds.some(id => !Object.hasOwn(referenceOwners, id))) throw new Error("Owner projection policy leaf/reference evidence is invalid: " + row.sourcePath);
     if (row.generatorOwnerId !== null) {
-      const generator = generatorOwners[row.generatorOwnerId], registered = taxonomy.generatorContracts[row.generatorOwnerId];
-      const currentOutputPath = reservedDocumentationBasename(basename(row.sourcePath)) ? row.sourcePath : row.destinationPath;
-      const retiredOutputPath = currentOutputPath === row.sourcePath ? row.destinationPath : row.sourcePath;
-      if (!generator || !registered || generator.currentOutputPath !== row.sourcePath || generator.requiredOutputPath !== row.destinationPath || generator.ownerPath !== registered.ownerPath || generator.target !== registered.target || !registered.outputRoots.some((output) => output.path === currentOutputPath) || retiredOutputPath !== currentOutputPath && registered.outputRoots.some((output) => output.path === retiredOutputPath)) throw new Error("Exact owner catalog generator registration drifted: " + row.sourcePath);
+      const generator = generatorOwners[row.generatorOwnerId], registered = taxonomy.generatorContracts[row.generatorOwnerId], currentOutputPath = reservedDocumentationBasename(basename(row.sourcePath)) ? row.sourcePath : row.destinationPath, retiredOutputPath = currentOutputPath === row.sourcePath ? row.destinationPath : row.sourcePath;
+      if (!generator || !registered || generator.currentOutputPath !== row.sourcePath || generator.requiredOutputPath !== row.destinationPath || generator.ownerPath !== registered.ownerPath || generator.target !== registered.target || !registered.outputRoots.some(output => output.path === currentOutputPath) || retiredOutputPath !== currentOutputPath && registered.outputRoots.some(output => output.path === retiredOutputPath)) throw new Error("Owner projection policy generator registration drifted: " + row.sourcePath);
     }
-    counts[readme ? "readme" : "license"]++;
-    counts[fixed ? "fixed" : "projected"]++;
-    counts.referenceBindings += row.referenceOwnerIds.length;
-    sources.add(row.sourcePath);
-    destinations.add(row.destinationPath);
+    sources.add(row.sourcePath); destinations.add(row.destinationPath);
     return row;
   });
-  if (Object.keys(counts).some((key) => counts[key as keyof typeof counts] !== contract.expectedCounts[key as keyof typeof counts])) throw new Error("Exact owner catalog census drifted");
+  return { schemaVersion: 1, kind: "owner-projection-policy", entries, ownerEvidence, referenceOwners, generatorOwners };
+}
+
+/** 📊️ Derives an owner policy inventory without prescribing a cohort size. */
+export function ownerProjectionPolicyCensus(policy: OwnerProjectionPolicy): Readonly<{ fixed: number; license: number; projected: number; readme: number; referenceBindings: number; total: number }> {
+  const counts = { fixed: 0, license: 0, projected: 0, readme: 0, referenceBindings: 0, total: policy.entries.length };
+  for (const entry of policy.entries) { counts[semanticOwnedSourceBasename(entry.sourcePath) === "README.md" ? "readme" : "license"]++; counts[entry.disposition === "fixed" ? "fixed" : "projected"]++; counts.referenceBindings += entry.referenceOwnerIds.length; }
+  return counts;
+}
+
+/** 🔐️ Captures and parses only the declared policy through exact no-follow bytes. */
+export function semanticExactOwnedFileCatalog(repoRoot: string, taxonomy: Taxonomy, observe?: (snapshot: SemanticOwnedInputFileSnapshot) => void): OwnerProjectionPolicy | null {
+  const contract = taxonomy.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];
+  if (contract?.contractKind !== "exact-owner-path-catalog") return null;
+  const path = contract.authorityCatalogPath, state = exactOwnerRegularFile(repoRoot, path);
+  if (state === "absent") return null;
+  if (state !== "file") throw new Error("Owner projection policy must be a regular file beneath non-symlink parents");
+  const snapshot = semanticOwnedInputFileSnapshot(repoRoot, path);
+  if (!snapshot || snapshot.mode !== 0o644) throw new Error("Owner projection policy disappeared or changed mode: " + path);
+  const bytes = Buffer.from(snapshot.bytes), text = bytes.toString("utf8");
+  if (createHash("sha256").update(bytes).digest("hex") !== contract.authorityCatalogSha256 || !Buffer.from(text).equals(bytes)) throw new Error("Owner projection policy digest or UTF-8 drift: " + path);
+  const policy = parseOwnerProjectionPolicy(JSON.parse(text), taxonomy, contract);
   observe?.(snapshot);
-  return { cases, ownerEvidence, referenceOwners, generatorOwners };
+  return policy;
 }
 
 /** 🧭️ Resolves an exact owner leaf from language-neutral facts; raw-source bytes authorize projection once. */
-export function semanticExactOwnedFileProjectionAuthority(catalog: SemanticExactOwnedFileCatalog, facts: Readonly<{ path: string; nodeKind: string; contentHash: string; mode: number; size: number; sourcePresent: boolean; destinationPresent: boolean; destinationPreimage?: Readonly<{ contentHash: string; mode: number; size: number }>; occupiedPaths: readonly string[] }>, current?: Readonly<{ contract: Pick<SemanticExactOwnedFileProjectionContract, "authorityCatalogPath" | "authorityCatalogSha256">; revisions: unknown; expectations: readonly SemanticOwnedCurrentSourceExpectation[] }>): Readonly<{ disposition: "none" | "fixed" | "project" | "regenerate" | "canonical" | "problem"; entry: SemanticExactOwnedFileCase | null; problems: readonly string[]; currentSource?: SemanticOwnedCurrentSourcePreimageResult }> {
-  const entry = catalog.cases.find((entry) => entry.sourcePath === facts.path || entry.destinationPath === facts.path);
+export function semanticExactOwnedFileProjectionAuthority(catalog: OwnerProjectionPolicy, facts: Readonly<{ path: string; nodeKind: string; contentHash: string; mode: number; size: number; sourcePresent: boolean; destinationPresent: boolean; destinationPreimage?: Readonly<{ contentHash: string; mode: number; size: number }>; occupiedPaths: readonly string[] }>, current?: Readonly<{ contract: Pick<SemanticExactOwnedFileProjectionContract, "authorityCatalogPath" | "authorityCatalogSha256">; revisions: unknown; expectations: readonly CurrentSourceApprovalSnapshot[] }>): Readonly<{ disposition: "none" | "fixed" | "project" | "regenerate" | "canonical" | "problem"; entry: OwnerProjectionEntry | null; problems: readonly string[]; currentSource?: CurrentSourceApprovalResult }> {
+  const entry = catalog.entries.find((entry) => entry.sourcePath === facts.path || entry.destinationPath === facts.path);
   if (!entry) return { disposition: "none", entry: null, problems: [] };
   const problems: string[] = [];
   const fixed = entry.disposition === "fixed", raw = facts.path === entry.sourcePath;
-  let preimage = entry.preimage, currentSource: SemanticOwnedCurrentSourcePreimageResult | undefined;
+  let preimage = entry.preimage, currentSource: CurrentSourceApprovalResult | undefined;
   if (current) {
     const selected = semanticExactOwnedFileCurrentPreimageAuthority(catalog, current.contract, current.revisions, { ...facts, expectations: current.expectations });
-    if (!raw || fixed || selected.disposition !== "revised" || selected.catalogCaseIndex !== catalog.cases.indexOf(entry) || !selected.preimage) problems.push(...(selected.problems.length ? selected.problems : ["Current source proof does not select this revised raw owner"]));
+    if (!raw || fixed || selected.disposition !== "revised" || selected.sourcePath !== entry.sourcePath || !selected.preimage) problems.push(...(selected.problems.length ? selected.problems : ["Current source proof does not select this revised raw owner"]));
     else { preimage = selected.preimage; currentSource = selected; }
   }
   const convergentGenerator = entry.generatorOwnerId !== null && facts.destinationPreimage?.contentHash === entry.preimage.sha256 && facts.destinationPreimage?.mode === Number.parseInt(entry.preimage.mode, 8) && facts.destinationPreimage?.size === entry.preimage.size;
@@ -6327,8 +6315,8 @@ export function semanticExactOwnedFileProjectionAuthority(catalog: SemanticExact
   return { disposition: problems.length ? "problem" : fixed ? "fixed" : raw ? entry.generatorOwnerId ? "regenerate" : "project" : "canonical", entry, problems, ...(currentSource ? { currentSource } : {}) };
 }
 
-function exactOwnerGeneratorPrestate(repoRoot: string, outputPath: string, generatorId: string, catalog: SemanticExactOwnedFileCatalog | null): boolean {
-  const entry = catalog?.cases.find((entry) => entry.generatorOwnerId === generatorId && entry.destinationPath === outputPath);
+function exactOwnerGeneratorPrestate(repoRoot: string, outputPath: string, generatorId: string, catalog: OwnerProjectionPolicy | null): boolean {
+  const entry = catalog?.entries.find((entry) => entry.generatorOwnerId === generatorId && entry.destinationPath === outputPath);
   if (!entry || exactOwnerRegularFile(repoRoot, entry.sourcePath) !== "file") return false;
   const stat = lstatSync(join(repoRoot, entry.sourcePath)), bytes = readFileSync(join(repoRoot, entry.sourcePath));
   return posixRegularFileMode(repoRoot, entry.sourcePath, stat.mode) === Number.parseInt(entry.preimage.mode, 8) && bytes.byteLength === entry.preimage.size && createHash("sha256").update(bytes).digest("hex") === entry.preimage.sha256;

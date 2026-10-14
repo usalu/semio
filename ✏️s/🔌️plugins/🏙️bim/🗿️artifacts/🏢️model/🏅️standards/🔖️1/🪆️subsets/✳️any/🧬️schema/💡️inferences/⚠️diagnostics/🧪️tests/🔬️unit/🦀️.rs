@@ -4,8 +4,8 @@ use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelIn
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const CLEAN: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/⚠️diagnostics/🏡️clean/📸️snapshot/🔣️.json");
-const DEFECTS: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json");
+const CLEAN: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/🏡️clean/📸️snapshot/🔣️.json");
+const DEFECTS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json");
 
 fn clean() -> ModelSnapshot {
     from_json_str(CLEAN, JsonMemberPolicy::Reject).expect("clean house decodes")
@@ -257,7 +257,7 @@ async fn diagnostics_determinism_default_and_gating_laws() {
     assert!(recomputed.iter().any(|row| row.code == DiagnosticCode::DegenerateStorey && row.storey.as_deref() == Some("st-far")));
 }
 
-const RAMPS: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🛝️ramp-runs/🏞️ramps/📸️snapshot/🔣️.json");
+const RAMPS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛝️ramp-runs/🏞️ramps/📸️snapshot/🔣️.json");
 
 fn ramps() -> ModelSnapshot {
     from_json_str(RAMPS, JsonMemberPolicy::Reject).expect("ramps decode")

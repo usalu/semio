@@ -1,0 +1,17 @@
+{
+  "schema": "playbook.program",
+  "id": "playbook",
+  "version": "1",
+  "title": "Onboarding Playbook",
+  "flow": {
+    "childId": "playbook-flow",
+    "target": {
+      "artifactId": "playbook-flow",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "flow"
+      }
+    }
+  }
+}

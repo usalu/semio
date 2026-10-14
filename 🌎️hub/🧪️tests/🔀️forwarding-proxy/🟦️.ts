@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 import { hubForwardedHeaders, hubForwardingProxy } from "../../🤝️integration-harness/🟦️.ts";
 import { hubImageBuildArguments, hubImageCredentialArguments, hubImageRunArguments, hubImageRunNames, hubImageSeedArguments } from "../🐳️docker-image/🟦️.ts";
 
-const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🐳️docker-image-v1/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/🐳️docker-image-v1/🔣️.json"), "utf8"));
 
 type WsOracle = { protocol: string; binaryType: string; on(event: string, listener: (...args: any[]) => void): void; send(data: Uint8Array | string): void; close(): void };
 type WsOracleConstructor = new (url: string, protocols: string[]) => WsOracle;

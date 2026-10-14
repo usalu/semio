@@ -1,0 +1,5 @@
+{
+  "schemaVersion": 1,
+  "hostPhases": ["window", "surface", "worker"],
+  "runtimeReady": "native renderer boot ready"
+}

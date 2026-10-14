@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import Ajv from "ajv";
 import deepEqual from "fast-deep-equal";
-import documentOpeningFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🛂️admission/📄️document/🔣️.json";
+import documentOpeningFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🗨️dialog-origin/🛂️admission/📄️document/🔣️.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, DocumentAttachmentLaneV1, LatestDocumentReplacementV1, parkDocumentOpeningReplacementV1, runDocumentOpeningAttemptV1, settleDocumentOpeningReplacementV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 
 describe("Shell document opening", () => {
   it("publishes direct document readiness only for the exact acknowledged mounted actor", async () => {
-    const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🧫️fixtures/🖥️mounted/🔣️.json");
+    const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🧪️tests/🧫️fixtures/🖥️mounted/🔣️.json");
     const { browserDocumentMountIsCurrentV1 } = await import("../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts");
     
     

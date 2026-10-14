@@ -17,6 +17,13 @@ if (command === "test-owner-command" && [uiOwner, "🧰️framework/🛍️produ
   repositoryEnv.SEMIO_VITEST_POLICY = JSON.stringify({ version: 1, cwd: dirname(join(root, rest[0]!)), toolPath: join(root, "node_modules/vitest/vitest.mjs"), runtime: "node", coverageRuntime: "node", cacheRoot: join(artifactRoot, "ui-vitest-cache"), coverageDirectory: join(artifactRoot, "ui-vitest-coverage"), budgetMs: 300_000 });
 }
 
+if (command === "root-cad-bindings-source") {
+  if (rest.length || !repositoryEnv.SEMIO_TEST_ARTIFACT_DIR) throw Error("Exact CAD Source selection and ticket output required");
+  const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+  await runBudgetedTestCommand(process.execPath, ["test", join(root, library, "🧪️tests/🔬️workspace-contract/🟦️.ts"), "--test-name-pattern", "CAD plain live binding examples retain exact mapping and reject escaping carriers|CAD frozen scenario bindings read exact current bytes and reject missing, duplicate, or extra identities"], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+  process.exit(0);
+}
+
 if (command === "root-corpus-port-boot-source") {
   const artifactRoot = repositoryEnv.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactRoot) throw Error("Explicit ticket output required for Surface and boot verification");
@@ -239,6 +246,117 @@ if (command === "runtime-store-corpus-source") {
   process.exit(0);
 }
 if (command === "root-resumed-corpus-tests") {
+  if (rest[0] === "--value-trial-only" && rest.length === 1) {
+    const {runBudgetedTestCommand}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+    const paths=["🧰️framework/🔨️modules/🌱️value/🧪️tests/🧭️trial-authority/🟦️.ts","🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🧪️tests/🟦️.ts","🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/📋️list/🟦️.ts"];
+    await runBudgetedTestCommand(process.execPath,["test",...paths.map(path=>join(root,path))],{cwd:root,env:repositoryEnv,budgetMs:120_000,throwOnFailure:true});
+    process.exit(0);
+  }
+  if (rest[0] === "--process-hub-extra-only" && rest.length === 1) {
+    const {runBudgetedTestCommand}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+    const {createScriptProcessEnvelope,withScriptProcessEnvelope,scriptInvocationEnvironment}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts"));
+    const envelope=createScriptProcessEnvelope({version:1,owner:"fixtures.process.hub.extra.source",maximumElapsedMilliseconds:120_000},{},Date.now());
+    const paths=["🧰️framework/🔨️modules/🏃️process/🧪️tests/🧭️fixture-placement/🟦️.ts","🧰️framework/🔨️modules/🏃️process/🧪️tests/🧭️trial-authority/🟦️.ts","🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧪️tests/🟦️.ts","🧰️framework/🔨️modules/🏃️process/🧭️routing/🧪️tests/🟦️.ts","🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🧪️tests/🟦️.ts","🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🛑️interruption/🧪️tests/🟦️.ts","🧰️framework/🔨️modules/🏃️process/⏱️budget/🧪️tests/🟦️.ts","🧰️framework/🔨️modules/🏃️process/🪓️termination/🧪️tests/🟦️.ts","🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️progress/🟦️.ts"];
+    await withScriptProcessEnvelope(envelope,async invocation=>{const options={cwd:root,env:scriptInvocationEnvironment(invocation,repositoryEnv),signal:invocation.control.signal,budgetMs:120_000,throwOnFailure:true};await runBudgetedTestCommand(process.execPath,["test",...paths.map(path=>join(root,path))],options);for(const[path,pattern]of[["🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🟦️.ts","^Cargo retains failed build"],["🌎️hub/🧪️tests/🧱️foundation-source/🟦️.ts","^(frame authentication|frame transport|allocation, readiness and finish|readiness waits|credential delivery)"],["✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📐️surface/🧪️tests/🟦️.ts","^(portable complete|independent binary64 Earcut|independent OBJ)"],["🧰️framework/📏️script-boundary/🧪️tests/🟦️.ts","^every owned command"]])await runBudgetedTestCommand(process.execPath,["test",join(root,path!),"-t",pattern!],options);await runBudgetedTestCommand(process.execPath,["test",join(root,"✏️s/🧑‍💻dev/🌊️flow/🧪️tests/🔌️port-sides/🟦️.ts")],options);});
+    process.exit(0);
+  }
+  if (rest[0] === "--process-trial-only" && rest.length === 1) {
+    const {runBudgetedTestCommand}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+    const {createScriptProcessEnvelope,withScriptProcessEnvelope,scriptInvocationEnvironment}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts"));
+    const envelope=createScriptProcessEnvelope({version:1,owner:"fixtures.process.trial.source",maximumElapsedMilliseconds:120_000},{},Date.now());
+    const paths=["🧰️framework/🔨️modules/🏃️process/🧪️tests/🧭️trial-authority/🟦️.ts","🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧪️tests/🟦️.ts","🧰️framework/🔨️modules/🏃️process/🧭️routing/🧪️tests/🟦️.ts","🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🧪️tests/🟦️.ts","🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🛑️interruption/🧪️tests/🟦️.ts"];
+    await withScriptProcessEnvelope(envelope,async invocation=>await runBudgetedTestCommand(process.execPath,["test",...paths.map(path=>join(root,path))],{cwd:root,env:scriptInvocationEnvironment(invocation,repositoryEnv),signal:invocation.control.signal,budgetMs:120_000,throwOnFailure:true}));
+    process.exit(0);
+  }
+  if (rest[0] === "--products-placement-only" && rest.length === 1) {
+    const {runBudgetedTestCommand}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+    const paths=["🧰️framework/🛍️products/🧪️tests/🧭️fixture-placement/🟦️.ts","🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🛬️decoding/🟦️.ts","🧰️framework/🛍️products/💻️os/🧪️tests/🎒️pack-wire-materialization/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🚦️control/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🧪️tests/💰️allocation/🟦️.ts"];
+    await runBudgetedTestCommand(process.execPath,["test",...paths.map(path=>join(root,path))],{cwd:root,env:repositoryEnv,budgetMs:120_000,throwOnFailure:true});
+    await runBudgetedTestCommand(process.execPath,["test",join(root,"🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔬️unit/🟦️.ts"),"-t","^exact guest snapshot transport"],{cwd:root,env:repositoryEnv,budgetMs:120_000,throwOnFailure:true});
+    const {chartSpecificationChecks}=await import(join(root,"🧰️framework/🛍️products/📓️print/🧪️tests/📜️chart-specification/🟦️.ts"));
+    for(const check of chartSpecificationChecks()){const actual=await check.subject(),independent=await check.oracle();if(JSON.stringify(actual)!==JSON.stringify(independent))throw Error("Print independent chart admission mismatch");console.log("[DEBUG] Original Print chart admission matches Ajv "+check.name);}
+    process.exit(0);
+  }
+  if (rest[0] === "--core-placement-only" && rest.length === 1) {
+    const {runBudgetedTestCommand}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+    const paths=["🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧭️fixture-placement/🟦️.ts","🧰️framework/🔨️modules/🖼️canvas/♻️retirement/🖊️stroke/🧪️tests/🟦️.ts","🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🟦️.ts","🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️number-facets/🟦️.ts","🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🔁️host-effect-invocation/🟦️.ts","🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🧪️tests/🟦️.ts","🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/⏭️continuation/🟦️.ts","🧰️framework/🔨️modules/🚪️io/🔤️base64/🧪️tests/🔬️unit/🟦️.ts"];
+    await runBudgetedTestCommand(process.execPath,["test",...paths.map(path=>join(root,path))],{cwd:root,env:repositoryEnv,budgetMs:120_000,throwOnFailure:true});
+        await runBudgetedTestCommand(process.execPath,["test",join(root,"🧰️framework/🔨️modules/🗺️surface/🧪️tests/🧩️suite/🟦️.ts"),"-t","surface (retained refusal|vector tile)"],{cwd:root,env:repositoryEnv,budgetMs:120_000,throwOnFailure:true});
+    process.exit(0);
+  }
+  if (rest[0] === "--valueasync-placement-only" && rest.length === 1) {
+    const {runBudgetedTestCommand}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+    const paths=[
+      "🧰️framework/🔨️modules/🌱️value/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️graphql/🔢️int64/🧪️tests/🟦️.ts",
+      "🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧪️tests/🟦️.ts",
+      "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🏭️factory/🧪️tests/🟦️.ts",
+      "🧰️framework/🔨️modules/🌱️value/🧬️bytes/🧪️tests/🧬️base64/🟦️.ts",
+    ];
+    await runBudgetedTestCommand(process.execPath,["test",...paths.map(path=>join(root,path))],{cwd:root,env:repositoryEnv,budgetMs:120_000,throwOnFailure:true});
+    const {createScriptProcessEnvelope,withScriptProcessEnvelope,scriptInvocationEnvironment}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts"));
+    const envelope=createScriptProcessEnvelope({version:1,owner:"fixtures.valueasync.source",maximumElapsedMilliseconds:120_000},{},Date.now());
+    await withScriptProcessEnvelope(envelope,async invocation=>{for(const stage of["worker-maintenance-check","worker-parking-check","worker-deferred-wake-check","worker-pool-use-check"])await runBudgetedTestCommand(process.execPath,[join(root,"🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/📜️script.ts"),stage],{cwd:root,env:scriptInvocationEnvironment(invocation,repositoryEnv),signal:invocation.control.signal,budgetMs:120_000,throwOnFailure:true});});
+    process.exit(0);
+  }
+  if (rest[0] === "--actor-job-placement-only" && rest.length === 1) {
+    const {runBudgetedTestCommand}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+    await runBudgetedTestCommand(process.execPath,["test",join(root,"🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧭️fixture-placement/🟦️.ts")],{cwd:root,env:repositoryEnv,budgetMs:120_000,throwOnFailure:true});
+    await runBudgetedTestCommand(process.execPath,["test",join(root,"🧰️framework/🔨️modules/🧵️job/🏃️work/🎟️grant/🧪️tests/🟦️.ts"),"-t","^retained work funding matches shared independent decimal oracle$"],{cwd:root,env:repositoryEnv,budgetMs:120_000,throwOnFailure:true});
+    const artifactRoot=repositoryEnv.SEMIO_TEST_ARTIFACT_DIR;
+    if(!artifactRoot)throw Error("Explicit ticket outputs required for Actor fixture readers");
+    const {runVitestV1}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts"));
+    const policy={version:1 as const,cwd:root,toolPath:join(root,"node_modules/vitest/vitest.mjs"),runtime:"node",coverageRuntime:"node",cacheRoot:join(artifactRoot,"actor-vitest-cache"),coverageDirectory:join(artifactRoot,"actor-vitest-coverage"),budgetMs:120_000};
+    repositoryEnv.SEMIO_VITEST_POLICY=JSON.stringify(policy);
+    await runVitestV1(policy,["--configLoader=native"],join(import.meta.dir,"../📥️actor-source/📜️script.ts"),repositoryEnv);
+    process.exit(0);
+  }
+  if (rest[0] === "--scalar-source-only" && rest.length === 1) {
+    const {runBudgetedTestCommand}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+    await runBudgetedTestCommand(process.execPath,["test",join(root,"🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🔢️scalar/🧪️tests/🧭️authority/🟦️.ts")],{cwd:root,env:repositoryEnv,budgetMs:120_000,throwOnFailure:true});
+    const artifactRoot=repositoryEnv.SEMIO_TEST_ARTIFACT_DIR;
+    if(!artifactRoot)throw Error("Explicit ticket output required for scalar source readers");
+    const {runVitestV1}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts"));
+    const policy={version:1 as const,cwd:root,toolPath:join(root,"node_modules/vitest/vitest.mjs"),runtime:"node",coverageRuntime:"node",cacheRoot:join(artifactRoot,"scalar-vitest-cache"),coverageDirectory:join(artifactRoot,"scalar-vitest-coverage"),budgetMs:120_000};
+    repositoryEnv.SEMIO_VITEST_POLICY=JSON.stringify(policy);
+    await runVitestV1(policy,["--reporter=verbose","--configLoader=native"],join(import.meta.dir,"../📥️scalar-source/📜️script.ts"),repositoryEnv);
+    process.exit(0);
+  }
+  if (rest[0] === "--pack-replica-placement-only" && rest.length === 1) {
+    const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+    await runBudgetedTestCommand(process.execPath, ["test",join(root,"🧰️framework/🔨️modules/🎒️pack/🧪️tests/🧭️fixture-placement/🟦️.ts")], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+    for (const [path,name] of [
+      ["🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🎟️insertion/🟦️.ts","testHistoryIndexInsertion"],
+      ["🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧪️tests/🟦️.ts","testOriginalConflictSource"],
+      ["🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧪️shared-map-delta-source/🟦️.ts","testSharedMapDeltaOracle"],
+      ["🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔬️retained-pack-source-laws/🟦️.ts","testRetainedPackPhysicalOwnership"],
+    ]) {
+      const reader = await import(join(root,path!));
+      await reader[name!]();
+      console.log("[DEBUG] Original Pack/Replication fixture reader completed "+name);
+    }
+    {
+      const artifactRoot = repositoryEnv.SEMIO_TEST_ARTIFACT_DIR;
+      if (!artifactRoot) throw Error("Explicit ticket outputs required for Replication fixture readers");
+      const { runVitestV1 } = await import(join(root,"🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts"));
+      const policy = {version:1 as const,cwd:join(root,"🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript"),toolPath:join(root,"node_modules/vitest/vitest.mjs"),runtime:"node",coverageRuntime:"node",cacheRoot:join(artifactRoot,"pack-replica-vitest-cache"),coverageDirectory:join(artifactRoot,"pack-replica-vitest-coverage"),budgetMs:120_000};
+      repositoryEnv.SEMIO_VITEST_POLICY=JSON.stringify(policy);
+      await runVitestV1(policy,[],"../../🧪️tests/🎚️config/🟦️.ts",repositoryEnv);
+    }
+    process.exit(0);
+  }
+  if (rest[0] === "--receipt-order-fold-only" && (rest.length === 1 || rest.length === 2 && rest[1] === "--absence-only")) {
+    const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+    const paths = [
+      "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧪️tests/🟦️.ts",
+      "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🔢️occurrence-order/🧪️tests/🟦️.ts",
+      "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🧺️set.ts",
+      "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧪️tests/🟦️.ts",
+    ];
+    await runBudgetedTestCommand(process.execPath, ["test", ...paths.map(path => join(root, path)), ...(rest[1] === "--absence-only" ? ["-t", "original receipt order fold"] : [])], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+    if (rest[1] !== "--absence-only") await runBudgetedTestCommand(process.execPath, ["test", join(root, "🧰️framework/🔨️modules/🧵️job/🏃️work/🎟️grant/🧪️tests/🟦️.ts"), "-t", "^retained work funding matches shared independent decimal oracle$"], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+    process.exit(0);
+  }
   if (rest[0] === "--boundary12-root-only" && rest.length === 1) {
     const readers = [
       ["🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎟️retained-receipt/🟦️.ts", "testFlowRetainedReceipt"],
@@ -697,6 +815,24 @@ if (command === "publication-provenance-physical-source") {
 if (command === "runtime-callsite-source") {
   const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
   await runBudgetedTestCommand(process.execPath, ["test", join(root, library, "🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts"), "-t", "runtime graph (dynamic|rust-resource-read)|runtime resource-read owners|dynamic import owners|Bun import edges|production test exclusion"], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+  process.exit(0);
+}
+if (command === "plugin-bim-components-measure") {
+  if (rest.length || !repositoryEnv.SEMIO_TEST_ARTIFACT_DIR) throw Error("Exact BIM components oracle and ticket output required");
+  const { readFileSync, mkdirSync, writeFileSync } = await import("node:fs"), { createHash } = await import("node:crypto"), { default: assert } = await import("node:assert/strict");
+  const subset = "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any";
+  const folder = join(root, subset, "🧪️tests/🧫️fixtures/🧊️gltf/🪑️components"), glb = join(folder, "🪑️components.glb"), output = join(folder, "🔬️measure/🔣️.json");
+  const { measure } = await import(join(root, subset, "🧪️tests/🧊️export-bim-1-gltf/🟦️.ts"));
+  const bytes = readFileSync(glb), table = await measure(bytes);
+  assert.equal(table.kinds.component, 12); assert.equal(table.kinds.mep, 7);
+  assert.deepEqual(readFileSync(glb), bytes);
+  const value = JSON.stringify(table, null, 2) + "\n";
+  if (existsSync(output)) assert.deepEqual(JSON.parse(readFileSync(output, "utf8")), table);
+  else { mkdirSync(dirname(output), { recursive: true }); writeFileSync(output, value, { flag: "wx" }); }
+  assert.deepEqual(JSON.parse(readFileSync(output, "utf8")), await measure(readFileSync(glb)));
+  const proof = [glb, output].map(path => { const actual = readFileSync(path); assert([...path].length <= 256 && path.length <= 256); return { path, byteLength: actual.length, sha256: createHash("sha256").update(actual).digest("hex") }; });
+  writeFileSync(join(repositoryEnv.SEMIO_TEST_ARTIFACT_DIR, "pluginfinish-bim-components-oracle-proof.json"), JSON.stringify({ producer: "original export_glb components native test", oracle: "original Three GLTFLoader measure", table, files: proof }, null, 2) + "\n");
+  console.log("[DEBUG] Actual original Three GLTFLoader components oracle " + JSON.stringify({ nodes: table.nodes, triangles: table.triangles, materials: table.materials, kinds: table.kinds, files: proof }));
   process.exit(0);
 }
 if (command === "ticket-mcp") {

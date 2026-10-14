@@ -65,7 +65,7 @@ impl NormRetainedDispositionOracle for SerdeJsonNormRetainedDispositionOracle {
 
 /// 🧪️ Pins the canonical fixture and rejects forged admission, lane, and publication claims.
 pub fn assert_fixture(variant: &str) {
-    let source = include_str!("../../../🧫️fixtures/🧫️retained-command-dispositions/🔣️.json");
+    let source = include_str!("../../../🧪️tests/🧫️fixtures/🧫️retained-command-dispositions/🔣️.json");
     let oracle = SerdeJsonNormRetainedDispositionOracle;
     let summary = oracle.summarize(source).expect("canonical Norm retained disposition fixture");
     assert_eq!(summary, NormRetainedDispositionSummary { app_count: 15, route_count: 6, retained_count: 90, batch_only_count: 0, publication_contract_count: 6 });

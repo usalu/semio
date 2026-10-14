@@ -1,6 +1,7 @@
 //! 📑️ Borrowed Document primitives count every authored collection, block and optional exact cell.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{SemioDocumentSnapshot,ValueError,ValueRefusalKind};
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_value::native_decoding::NativeDecodeControl;
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 type Result<T>=std::result::Result<T,ValueError>;

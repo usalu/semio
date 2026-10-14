@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "source": {
+    "width": 2,
+    "depth": 3,
+    "height": 4,
+    "volume": 24
+  },
+  "tolerance": 0.05,
+  "units": 1,
+  "denied": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 64,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 0,
+    "maximumDepth": 64
+  },
+  "normalDemandFields": [
+    "copyBytes",
+    "capacityBytes",
+    "releaseBytes",
+    "depth"
+  ],
+  "deniedCapacityBytes": 0,
+  "deniedReleaseBytes": 0,
+  "deniedReceiptItems": 0,
+  "deniedReceiptCopyBytes": 0,
+  "sameOriginalFamily": true,
+  "sameClaims": true,
+  "sameBody": true,
+  "physical": "sourcePlusAdmittedFrames",
+  "terminalDropBytes": 0,
+  "phaseStorage": "staticCodebook",
+  "deniedConsumedUnits": 0,
+  "receiptFields": [
+    "retained",
+    "consumedUnits"
+  ],
+  "inlineSourceReceiptItems": 1,
+  "admission": {
+    "source": "samePointerLengthAndTolerance",
+    "identity": "sameOperationAndGeneration",
+    "text": "boundedUtf8",
+    "reserve": "exactSeparateCapacityEvent",
+    "claim": "originalIndex",
+    "job": "originalIndex",
+    "cancelBodies": [
+      1,
+      3,
+      64
+    ],
+    "texts": [
+      {
+        "source": "solid-17",
+        "utf8Bytes": 8,
+        "credits": [
+          1,
+          3,
+          64
+        ]
+      },
+      {
+        "source": "face-α🧊",
+        "utf8Bytes": 11,
+        "credits": [
+          4,
+          64
+        ]
+      }
+    ],
+    "registryKey": [
+      "geometry",
+      "toleranceBits",
+      "operation",
+      "generation"
+    ],
+    "peerIdentity": {
+      "operation": 18,
+      "generation": 5
+    },
+    "peerRetainedOnSpecificCancel": true
+  },
+  "queryFunding": {
+    "sameRetainedGeometry": true,
+    "units": 1,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 0,
+    "physicalCapacityBytes": 0,
+    "physicalReleaseBytes": 0,
+    "states": [
+      "validation",
+      "reach",
+      "query",
+      "conversion",
+      "cache",
+      "output",
+      "status"
+    ]
+  },
+  "failure": {
+    "missingHandle": "missing-geometry-source",
+    "message": "original tessellation source handle is not live",
+    "kind": "invariantViolated",
+    "beforeAdmissionConsumedUnits": 0,
+    "admittedConsumedUnits": 1,
+    "primaryRetainedReceipt": "sameOriginalReceipt",
+    "boundedTextScalarsPerEvent": 1,
+    "cancelEventsPerTurn": 1
+  }
+}

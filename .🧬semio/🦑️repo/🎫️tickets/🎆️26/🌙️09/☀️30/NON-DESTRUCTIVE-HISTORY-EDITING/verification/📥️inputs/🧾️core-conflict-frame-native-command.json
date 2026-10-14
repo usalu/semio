@@ -1,0 +1,59 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/framework-os-kernel:test",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--configuration=prototype",
+    "--parallel=1",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_history_conflict_native_receive_prior_edits_envelopes_messages_and_paid_partial) | test(original_history_source_frames_native_verify_pages_before_any_range_publication) | test(original_history_transition_payload_native_preserves_all_canonical_semantic_refusals_without_cold_owners) | test(original_history_source_native_assembles_verified_fields_actual_edit_ordinals_and_paid_faults) | test(original_history_paged_index_native_4096_edits_preserve_original_pointer_ordinals_and_12_partial_extents)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "selection": [
+    "nx",
+    "run",
+    "@semio-tech/framework-os-kernel:test",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--configuration=prototype",
+    "--parallel=1",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_history_conflict_native_receive_prior_edits_envelopes_messages_and_paid_partial) | test(original_history_source_frames_native_verify_pages_before_any_range_publication) | test(original_history_transition_payload_native_preserves_all_canonical_semantic_refusals_without_cold_owners) | test(original_history_source_native_assembles_verified_fields_actual_edit_ordinals_and_paid_faults) | test(original_history_paged_index_native_4096_edits_preserve_original_pointer_ordinals_and_12_partial_extents)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
+    "transport": {
+      "maximumBytes": 536870912,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": false
+    }
+  },
+  "buildMode": "prototype"
+}

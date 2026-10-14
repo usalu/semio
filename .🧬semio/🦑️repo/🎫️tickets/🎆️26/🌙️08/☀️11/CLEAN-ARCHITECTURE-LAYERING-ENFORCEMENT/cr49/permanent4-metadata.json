@@ -1,0 +1,41 @@
+[
+  {
+    "lane": "crt49",
+    "pins": 526,
+    "bytes": 10135124,
+    "pinsSHA": "3fdeab7015d31fb49e84cda1e32c896b81ef3656839f24d32f15927e87020684",
+    "directoryURLBindings": [
+      "/Users/ueli/Documents/semio/",
+      "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/",
+      "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/",
+      "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/",
+      "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/"
+    ]
+  },
+  {
+    "lane": "cre49",
+    "pins": 528,
+    "bytes": 10143193,
+    "pinsSHA": "0d894257d8cda7c51a7a85a8b847e6fcb5db8a8b402cb7eff1068b3676475cbb",
+    "directoryURLBindings": [
+      "/Users/ueli/Documents/semio/",
+      "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/",
+      "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/",
+      "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/",
+      "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/"
+    ]
+  },
+  {
+    "lane": "crf49",
+    "pins": 537,
+    "bytes": 10179967,
+    "pinsSHA": "8a726de1d6dc3cd3bc84d565d7403eb195536eaf8d9602f73238b57f79fb2feb",
+    "directoryURLBindings": [
+      "/Users/ueli/Documents/semio/",
+      "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/",
+      "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/",
+      "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/",
+      "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/"
+    ]
+  }
+]

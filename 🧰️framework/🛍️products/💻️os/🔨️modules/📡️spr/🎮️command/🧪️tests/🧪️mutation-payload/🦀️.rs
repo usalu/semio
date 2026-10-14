@@ -95,7 +95,7 @@ impl SemanticMutation<Counter> for Unpublished {
 }
 
 fn witnesses() -> Vec<CounterMutation> {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️mutation-editability/🔣️.json")).expect("editability fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️mutation-editability/🔣️.json")).expect("editability fixture");
     fixture["cases"].as_array().expect("cases").iter().map(|case| semio_framework_pack_json::from_json_str(&case["wire"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("a counter witness")).collect()
 }
 
@@ -103,7 +103,7 @@ fn witnesses() -> Vec<CounterMutation> {
 /// input schema and cannot emit foreign steps — which the static `schema mutation-editability` gate reaches from source alone.
 #[test]
 fn every_witness_reaches_its_editability_verdict() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️mutation-editability/🔣️.json")).expect("editability fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️mutation-editability/🔣️.json")).expect("editability fixture");
     for (op, case) in witnesses().iter().zip(fixture["cases"].as_array().expect("cases")) {
         let verdict = match (Mutation::<Counter>::input_schema(op).is_some(), Mutation::<Counter>::may_emit_foreign_steps(op)) {
             (_, true) => "foreign",

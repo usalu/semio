@@ -9,11 +9,11 @@ use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::SemioGraphSnapshot;
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧change-node-kind/🔧️retypes/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧change-node-kind/🔧️retypes/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧change-node-kind/🔧️retypes/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧change-node-kind/🔧️retypes/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧change-node-kind/🔧️retypes/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧change-node-kind/🔧️retypes/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧change-node-kind/🔧️retypes/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧change-node-kind/🔧️retypes/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧change-node-kind/🔧️retypes/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧change-node-kind/🔧️retypes/🎯️outcome/🔣️.json");
 
 fn before() -> SemioGraphSnapshot {
     crate::io::text::snapshot::decode_semio_graph_snapshot_json(BEFORE).expect("change-node-kind before snapshot decodes")

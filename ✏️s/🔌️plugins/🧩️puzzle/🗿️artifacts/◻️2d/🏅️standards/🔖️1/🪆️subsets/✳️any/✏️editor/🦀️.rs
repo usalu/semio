@@ -303,7 +303,7 @@ pub fn empty_board_snapshot() -> Value {
 /// the difference of two boards. The spr is built from bytes (`store::os_store::text_format::empty_document_spr`), never from a live envelope,
 /// whose bounded retirement authority would trap the guest when dropped.
 pub fn puzzle2d_load_document_effect(document: &crate::Puzzle2dSnapshot) -> Effect {
-    let pack = <crate::Puzzle2dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let pack = <crate::Puzzle2dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("puzzle2d", crate::PUZZLE_2D_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
@@ -4613,6 +4613,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

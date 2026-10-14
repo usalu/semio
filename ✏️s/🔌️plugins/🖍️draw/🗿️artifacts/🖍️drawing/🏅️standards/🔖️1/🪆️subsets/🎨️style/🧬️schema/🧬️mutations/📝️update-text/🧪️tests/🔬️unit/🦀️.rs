@@ -2,7 +2,7 @@
 #[test]
 fn text_edits_preserve_content_size_and_history_payload() {
     use protocol::Mutation;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text/🔣️.json")).unwrap();
     let layer = crate::schema::create_drawing_text_layer(crate::schema::identity::DrawingIdentity::admit((("Text")).to_string().into()).expect("nonempty authored identity"), "Text");
     let id = crate::schema::layer_id(&layer).to_string();
     let before = crate::DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
@@ -30,11 +30,11 @@ fn text_edits_preserve_content_size_and_history_payload() {
 #[test]
 fn canonical_text_scenario_matches_diff_apply_and_inverse() {
     use protocol::Mutation;
-    let before: crate::DrawingSnapshot = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/📸️snapshot/⬅️before/🔣️.json")).unwrap();
-    let after: crate::DrawingSnapshot = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/📸️snapshot/➡️after/🔣️.json")).unwrap();
-    let mutation: crate::DrawingMutation = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/🦠️mutation/🔣️.json")).unwrap();
-    let expected: crate::DrawingDiff = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/🔺️diff/🔣️.json")).unwrap();
-    let inverse: Vec<crate::DrawingMutation> = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/↩️inverse/🔣️.json")).unwrap();
+    let before: crate::DrawingSnapshot = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let after: crate::DrawingSnapshot = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/📸️snapshot/➡️after/🔣️.json")).unwrap();
+    let mutation: crate::DrawingMutation = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/🦠️mutation/🔣️.json")).unwrap();
+    let expected: crate::DrawingDiff = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/🔺️diff/🔣️.json")).unwrap();
+    let inverse: Vec<crate::DrawingMutation> = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/↩️inverse/🔣️.json")).unwrap();
     assert_eq!(*mutation.diff(&before).diff(), expected);
     assert_eq!(protocol::apply_diff(&expected, &before).unwrap(), after);
     assert_eq!(mutation.inverse(&before).expect("valid retained mutation inverse fixture"), inverse);
@@ -43,7 +43,7 @@ fn canonical_text_scenario_matches_diff_apply_and_inverse() {
 /// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff on the committed caption scenario.
 #[semio_framework_async_macros::async_test]
 async fn inverse_sums_to_the_negative_diff() {
-    let before: crate::DrawingSnapshot = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/📸️snapshot/⬅️before/🔣️.json")).unwrap();
-    let mutation: crate::DrawingMutation = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/🦠️mutation/🔣️.json")).unwrap();
+    let before: crate::DrawingSnapshot = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let mutation: crate::DrawingMutation = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/🦠️mutation/🔣️.json")).unwrap();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
 }

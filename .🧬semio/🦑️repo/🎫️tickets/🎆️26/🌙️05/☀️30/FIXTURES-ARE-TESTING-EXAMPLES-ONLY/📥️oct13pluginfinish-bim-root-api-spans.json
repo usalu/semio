@@ -1,0 +1,21 @@
+{
+  "changes": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts",
+      "exclusive": false,
+      "beforeSha256": "8784c9797b1fd724d3d477e14157f600b602794f7e40f2477e556cbb0c1a1057",
+      "afterSha256": "a074654be23a622feb68cceb2953e3d130cf97159f217f1f231056ccbffb9f4f",
+      "spans": [
+        {
+          "before": "export { acquireCompilerCapacityLeaseV1, compilerCapacityWorkerCountV1 }",
+          "after": "export { acquireCompilerCapacityLeaseV1, compilerCapacityWorkerCountV1, scriptCompilerAdmissionControlV1, phaseCompilerAdmissionControlV1, compilerAdmissionBudgetV1 }"
+        },
+        {
+          "before": "export type { CompilerCapacityLeaseV1 }",
+          "after": "export type { CompilerCapacityLeaseV1, CompilerAdmissionControl }"
+        }
+      ]
+    }
+  ],
+  "reason": "Actual Process compiler admission implementations already exist; Library bundle imports package facade which omits required original control methods/types. No budget/default/substitute added."
+}

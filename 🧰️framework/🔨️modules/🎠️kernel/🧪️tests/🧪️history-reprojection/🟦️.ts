@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
 import { createInstance } from "i18next";
-import fixture from "../../🧫️fixtures/🧫️history-reprojection/🔣️.json";
+import fixture from "../🧫️fixtures/🧫️history-reprojection/🔣️.json";
 import schema from "../../🧬️schema/🔣️history-patch/🔣️.json";
 import { HISTORY_REPROJECTION_LABELS, historyReprojectionStatus, type HistoryReprojection } from "../../🟦️.ts";
 

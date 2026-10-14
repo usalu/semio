@@ -15,7 +15,10 @@
     "tolerance",
     "radius",
     "grid",
-    "center"
+    "center",
+    "angle",
+    "pullDirection",
+    "neutralPoint"
   ],
   "additionalProperties": false,
   "properties": {
@@ -36,7 +39,9 @@
         "snapVertices",
         "filletEdges",
         "chamferEdges",
-        "shell"
+        "shell",
+        "draft",
+        "defeature"
       ]
     },
     "amount": {
@@ -91,6 +96,25 @@
       },
       "minItems": 3,
       "maxItems": 3
+    },
+    "angle": {
+      "type": "number"
+    },
+    "pullDirection": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "neutralPoint": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
     }
   },
   "allOf": [
@@ -110,6 +134,28 @@
         "properties": {
           "amount": {
             "exclusiveMinimum": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "draft"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "pullDirection": {
+            "not": {
+              "const": [
+                0,
+                0,
+                0
+              ]
+            }
           }
         }
       }

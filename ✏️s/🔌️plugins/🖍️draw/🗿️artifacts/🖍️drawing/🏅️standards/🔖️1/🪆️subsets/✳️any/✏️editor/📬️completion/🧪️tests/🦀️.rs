@@ -3,7 +3,7 @@ use super::*;
 use semio_framework_plugin::{ArtifactToolCompletion,Effect};
 use semio_framework_value::retained_clone::RetainedCloneStep;
 
-fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn corpus()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn settle(owner:&mut dyn ErasedSnapshotRetirement)->usize{
  let mut released=0;
  for _ in 0..100000{

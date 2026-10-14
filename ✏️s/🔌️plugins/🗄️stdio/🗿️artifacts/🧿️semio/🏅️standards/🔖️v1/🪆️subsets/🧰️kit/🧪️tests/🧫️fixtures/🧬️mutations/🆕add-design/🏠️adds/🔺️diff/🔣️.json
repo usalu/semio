@@ -1,0 +1,15 @@
+{
+  "designs": {
+    "added": [
+      {
+        "index": 1,
+        "item": {
+          "id": "d2",
+          "name": "Roof",
+          "pieces": [],
+          "connections": []
+        }
+      }
+    ]
+  }
+}

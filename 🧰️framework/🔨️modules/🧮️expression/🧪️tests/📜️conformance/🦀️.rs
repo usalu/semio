@@ -7,19 +7,19 @@ fn fixture(text: &str) -> Json {
 }
 
 fn syntax() -> Json {
-    fixture(include_str!("../../🧫️fixtures/🔤️syntax/🔣️.json"))
+    fixture(include_str!("../🧫️fixtures/🔤️syntax/🔣️.json"))
 }
 
 fn kinds() -> Json {
-    fixture(include_str!("../../🧫️fixtures/📏️kinds/🔣️.json"))
+    fixture(include_str!("../🧫️fixtures/📏️kinds/🔣️.json"))
 }
 
 fn evaluation() -> Json {
-    fixture(include_str!("../../🧫️fixtures/🧮️evaluation/🔣️.json"))
+    fixture(include_str!("../🧫️fixtures/🧮️evaluation/🔣️.json"))
 }
 
 fn parameters() -> Json {
-    fixture(include_str!("../../🧫️fixtures/🕸️parameters/🔣️.json"))
+    fixture(include_str!("../🧫️fixtures/🕸️parameters/🔣️.json"))
 }
 
 fn text(v: &Json) -> &str {

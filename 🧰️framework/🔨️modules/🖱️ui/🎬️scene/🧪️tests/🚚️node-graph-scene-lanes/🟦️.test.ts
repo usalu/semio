@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 
-import fixture from "../../🧫️fixtures/🚚️node-graph-scene-lanes/🔣️.json";
+import fixture from "../🧫️fixtures/🚚️node-graph-scene-lanes/🔣️.json";
 import { NODE_GRAPH_SCENE_LANES, nodeGraphSceneFromLanes } from "../../🟦️.ts";
 
 test("node graph lanes match their language-neutral schema", () => {

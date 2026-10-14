@@ -345,7 +345,7 @@ mod quick {
         let mut original = supplied_retained_turn();
         original.operation = fixture["invalidOriginalOperation"].as_u64().unwrap();
         let budget = lane_defaults::budget_for(Lane::Interactive);
-        let grant = TurnGrant { retained: original, actor: ActorId(7), shard: ShardId(0), budget, envelopes: Vec::new() };
+        let grant = TurnGrant { actor: ActorId(7), shard: ShardId(0), budget, retained: original, envelopes: Vec::new() };
         let decision = Decision { run: vec![grant.clone()], wake_at: None };
         let mut output = Vec::with_capacity(256);
         let sentinel: Vec<u8> = serde_json::from_value(fixture["wireOutputSentinel"].clone()).unwrap();
@@ -802,11 +802,11 @@ mod quick {
     round_trip!(pack_round_trip_actor_status, ActorStatus, ActorStatus::Suspended { checkpoint: Some(vec![1, 2, 3]) });
     round_trip!(pack_round_trip_shard_id, ShardId, ShardId(3));
     round_trip!(pack_round_trip_shard_kind, ShardKind, ShardKind::WebWorker);
-    round_trip!(pack_round_trip_decision, Decision, Decision { run: vec![TurnGrant { retained: supplied_retained_turn(), actor: ActorId::new(1, 0, 0, 0).await, shard: ShardId(0), budget: lane_defaults::budget_for(Lane::Background), envelopes: vec![] }], wake_at: Some(10) });
+    round_trip!(pack_round_trip_decision, Decision, Decision { run: vec![TurnGrant { actor: ActorId::new(1, 0, 0, 0).await, shard: ShardId(0), budget: lane_defaults::budget_for(Lane::Background), retained: supplied_retained_turn(), envelopes: vec![] }], wake_at: Some(10) });
     round_trip!(
         pack_round_trip_turn_grant,
         TurnGrant,
-        TurnGrant { retained: supplied_retained_turn(), actor: ActorId::new(2, 1, 3, 0).await, shard: ShardId(1), budget: lane_defaults::budget_for(Lane::Maintenance), envelopes: vec![env(ActorId::new(2, 1, 3, 0).await, Lane::Maintenance, 1).await] }
+        TurnGrant { actor: ActorId::new(2, 1, 3, 0).await, shard: ShardId(1), budget: lane_defaults::budget_for(Lane::Maintenance), retained: supplied_retained_turn(), envelopes: vec![env(ActorId::new(2, 1, 3, 0).await, Lane::Maintenance, 1).await] }
     );
     round_trip!(pack_round_trip_scene_snapshot, SceneSnapshot, SceneSnapshot { revision: 3, committed_ms: 12, patches: vec![9, 9], node_count: 40 });
     round_trip!(pack_round_trip_shard_metrics, ShardMetrics, ShardMetrics { actors: 3, busy_ratio: 0.5, heartbeat_age_ms: 12 });

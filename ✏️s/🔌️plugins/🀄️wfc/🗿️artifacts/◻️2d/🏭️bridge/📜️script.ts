@@ -3,8 +3,8 @@
 import {resolve} from "node:path";
 import {runMutationInventoryCargoProducerCommand} from "../../../../../../🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🚪️command/🟦️.ts";
 import {readMutationInventoryExecutionPolicy} from "../../../../../../🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🟦️.ts";
-import {acquireCargoBuildLeaseV1} from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
-import {readCargoTestPolicyV1,runCargoTestsV1} from "../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import {acquireCargoBuildLeaseV1} from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import {readCargoTestPolicyV1,runCargoTestsV1} from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 const manifestPath=resolve(import.meta.dir,"../📦️packages/🦀️rust/Cargo.toml"),cwd=resolve(import.meta.dir,"..");
 if(process.argv[2]==="check"){
   if(process.argv.length!==3)throw Error("check accepts no overrides");

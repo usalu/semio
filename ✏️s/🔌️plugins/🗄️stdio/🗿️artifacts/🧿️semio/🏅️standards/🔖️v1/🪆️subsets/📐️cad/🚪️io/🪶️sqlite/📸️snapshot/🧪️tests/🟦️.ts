@@ -1,7 +1,7 @@
 /** 📐️ Nine actual CAD geometries and independent layer/block foreign-key queries. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import f from "../🧫️fixtures/🔣️.json";
+import f from "./🧫️fixtures/🔣️.json";
 import type {SemioCadSnapshot,CadEntity} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {SEMIO_CAD_SQLITE_SCHEMA,semioCadSnapshotToSqliteDatabase,semioCadSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import {binary64,exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
@@ -13,7 +13,7 @@ test("quick::Semio CAD exact IEEE words, variant ownership, limits and cancellat
 
 test("Semio CAD native construction frontier independently preserves layer joins and line ordinals",async()=>{const s:SemioCadSnapshot={schema:f.schema,layers:input.layers,blocks:[],entities:Array.from({length:f.nativeAdmission.collectionItems},(_,index)=>({handle:`line-${index}`,layer:"visible",entity:{kind:"line",a:point(-0,0),b:point(1,1)}}))};const d=Database.deserialize(await exportSqliteDatabase(await semioCadSnapshotToSqliteDatabase(s)));try{expect(d.query("SELECT count(*) AS count FROM semio_cad_line").get()).toEqual({count:f.nativeAdmission.collectionItems});expect(d.query("SELECT handle,l.name AS layer FROM semio_cad_entity e JOIN semio_cad_layer l ON e.layer_id=l.id WHERE e.ordinal=?").get(f.nativeAdmission.cancelAfter)).toEqual({handle:`line-${f.nativeAdmission.cancelAfter}`,layer:"visible"});}finally{d.close();}});
 
-import completeSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import completeSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 import{independentSqliteExtent as completeIndependentExtent}from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
 test("Semio CAD Native matched full and metadata empty independently preserve all complete cells",async()=>{
  for(const item of completeSemanticContract.cases){const source=structuredClone(item.sourceSnapshot)as unknown as SemioCadSnapshot;const hydrate=(value:unknown):unknown=>Array.isArray(value)?value.map(hydrate):value!==null&&typeof value==="object"?("bits"in value?{bits:String((value as {bits:string}).bits).length===8?Number.parseInt(String((value as {bits:string}).bits),16):BigInt("0x"+String((value as {bits:string}).bits))}:Object.fromEntries(Object.entries(value).map(([key,item])=>[key,hydrate(item)]))):value;Object.assign(source,hydrate(source));const database=await semioCadSnapshotToSqliteDatabase(source),bytes=await exportSqliteDatabase(database);expect(completeIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:completeSemanticContract.schemaBytes,tableWidths:completeSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:completeSemanticContract.schemaBytes,maxTables:14,maxColumns:25};expect(await semioCadSnapshotToSqliteDatabase(source,limits)).toEqual(database);expect(await semioCadSnapshotFromSqliteDatabase(await importSqliteDatabase(bytes),limits)).toEqual(source);

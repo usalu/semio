@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import schema from "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🔣️.json";
-import fixture from "../../🧫️fixtures/🖼️decoded-image/🔣️.json";
+import fixture from "../../../🧪️tests/🧫️fixtures/🔬️contract/🖼️decoded-image/🔣️.json";
 import { parseSemioImageSnapshot } from "../../🟦️.ts";
 import { parseRasterAssetsDelta } from "../../🔺️diff/🟦️.ts";
 

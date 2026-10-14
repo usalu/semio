@@ -71,7 +71,7 @@ fn boundary_kind(node: &XmlNode) -> &'static str {
 
 #[test]
 fn neutral_document_boundary_fixture_round_trips_all_doctype_positions() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧭️document-boundaries/🔣️.json")).expect("neutral XML document-boundary fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧭️document-boundaries/🔣️.json")).expect("neutral XML document-boundary fixture");
     for case in fixture["valid"].as_array().expect("valid cases") {
         let source = case["source"].as_str().expect("source");
         let doc = xml_document_from_text(source).unwrap_or_else(|error| panic!("{}: {error}", case["id"]));
@@ -88,7 +88,7 @@ fn neutral_document_boundary_fixture_round_trips_all_doctype_positions() {
 
 #[test]
 fn neutral_document_boundary_fixture_rejects_invalid_sources_and_authored_state() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧭️document-boundaries/🔣️.json")).expect("neutral XML document-boundary fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧭️document-boundaries/🔣️.json")).expect("neutral XML document-boundary fixture");
     for case in fixture["invalid"].as_array().expect("invalid cases") {
         let error = xml_document_from_text(case["source"].as_str().expect("source")).expect_err("invalid XML boundary source");
         assert_eq!(error, case["error"].as_str().expect("error"), "{}", case["id"]);
@@ -159,7 +159,7 @@ fn attribute_value_decode_then_encode_round_trips_control_characters() {
 /// `&#10;` character references. This is the exact real-world input that exposed the missing
 /// re-escape (see the Wave 7 ticket finding on `xml_escape_attr`). The `xml` and `svg` subsets
 /// share this codec, so this is a genuine regression case, not a synthetic one.
-const REAL_QR_CODE_SVG: &str = include_str!("../../../../../../../../../🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧫️fixtures/🔳️qr-code.svg");
+const REAL_QR_CODE_SVG: &str = include_str!("../../../../../../../../../🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🔳️qr-code.svg");
 
 // 🚫️async: E1 pure test helper (file verified I/O-free) — see R9
 fn find_xlink_href(node: &XmlNode) -> Option<&str> {

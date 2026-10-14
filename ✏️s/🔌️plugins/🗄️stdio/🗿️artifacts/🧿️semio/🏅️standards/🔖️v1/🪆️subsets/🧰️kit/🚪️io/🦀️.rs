@@ -69,8 +69,8 @@ pub mod derived_composition {
         const DIALECT: Dialect = DIALECT;
         async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <SemioKitSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <SemioKitSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <SemioKitSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).ok(),
+                IoPayload::Text(text) => <SemioKitSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).ok(),
             };
             let Some(snapshot) = decoded else {
                 return vec![semio_framework_diagnostic::Diagnostic::error("stdio.semio_kit.validate-decode-failed", semio_framework_diagnostic::TextSpan::at(1, 1), "SemioKitValidator: payload did not decode as a SemioKitSnapshot".to_string())];
@@ -191,10 +191,10 @@ pub mod derived_construction {
             Self { snapshot }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<SemioKitSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<SemioKitSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SemioKitSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<SemioKitSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::diff(&mutation, &self.snapshot);
@@ -260,14 +260,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <SemioKitSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <SemioKitSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.kit.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <SemioKitSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <SemioKitSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

@@ -1,7 +1,7 @@
 import { Database } from "bun:sqlite";
 import {deflateRawSync as independentFixedDeflate,deflateSync as independentZlib,inflateSync as independentInflate,constants as independentZlibConstants} from "node:zlib";
 import { expect, test } from "bun:test";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import { parseDeflateSnapshot } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { DEFLATE_SQLITE_SCHEMA, deflateSnapshotToSqliteDatabase, deflateSnapshotFromSqliteDatabase } from "../🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework";
@@ -75,7 +75,7 @@ test("Deflate scalar widths, ownership, budgets and cancellation remain bounded"
   await expect(deflateSnapshotToSqliteDatabase({ ...snapshot, payload: new Array<number>(2000).fill(1) }, { signal: controller.signal, onProgress: event => { if (event.completed >= 256) controller.abort(); } })).rejects.toHaveProperty("kind", "canceled");
 });
 
-import controlFixture from "../🧫️fixtures/🛬️native-control/🔣️.json";
+import controlFixture from "./🧫️fixtures/🛬️native-control/🔣️.json";
 
 import Ajv2020 from "ajv/dist/2020";
 test("Deflate neutral owned headers and dictionary retain reserved literal fields through independent SQLite",async()=>{
@@ -100,7 +100,7 @@ import {NativeDecodeControl as BudgetDecodeControl} from "../../../../../../../.
 import {SqliteAllocationControl as BudgetAllocationControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 
-import completeSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import completeSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import{independentSqliteExtent as completeIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
 test("DEFLATE complete independent cells preserve copied limits and required empty metadata",async()=>{

@@ -10,11 +10,11 @@ use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutat
 use crate::schema::{find_drawing_layer, layer_base};
 use crate::DrawingSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌓️set-layer-blend-mode/✖️normal/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌓️set-layer-blend-mode/✖️normal/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌓️set-layer-blend-mode/✖️normal/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌓️set-layer-blend-mode/✖️normal/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌓️set-layer-blend-mode/✖️normal/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌓️set-layer-blend-mode/✖️normal/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌓️set-layer-blend-mode/✖️normal/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌓️set-layer-blend-mode/✖️normal/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌓️set-layer-blend-mode/✖️normal/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌓️set-layer-blend-mode/✖️normal/🎯️outcome/🔣️.json");
 
 fn before() -> DrawingSnapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")
@@ -123,7 +123,7 @@ async fn committed_diff_applies_to_after() {
 #[test]
 fn invalid_blend_edits_are_rejected_without_changing_the_document() {
     use protocol::MutationDiff;
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../../../✳️any/🧬️schema/🧬️mutations/🧫️fixtures/🎛️field-patch/🔣️.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../../../✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🎛️field-patch/🔣️.json")).unwrap();
     let original = before();
     for case in cases.as_array().unwrap().iter().filter(|case| case["patch"]["field"] == "blendMode") {
         let mode = case["patch"]["value"].as_str().unwrap();

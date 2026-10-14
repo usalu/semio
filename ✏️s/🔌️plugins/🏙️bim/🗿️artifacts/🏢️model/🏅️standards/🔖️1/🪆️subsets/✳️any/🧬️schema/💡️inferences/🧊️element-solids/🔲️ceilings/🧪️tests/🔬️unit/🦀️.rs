@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::any::schema::inferences::model_graph::plan::s
 use crate::ModelInference;
 use protocol::Inference;
 
-const CASE: &str = include_str!("../../../../../../🧫️fixtures/💡️inferences/🧊️element-solids/🔲️ceilings-holes-slope/🔣️.json");
+const CASE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🔲️ceilings-holes-slope/🔣️.json");
 
 #[semio_framework_async_macros::async_test]
 async fn ceilings_reproduce_the_third_party_oracle_table() {
@@ -93,8 +93,8 @@ async fn ceilings_without_layers_or_type_are_absent_and_the_result_is_determinis
     assert_eq!(thickness(&snapshot, &snapshot.ceilings["c-unknown-type"]), 0.0);
 }
 
-const TAKEOFF: &str = include_str!("../../../../../../🧫️fixtures/💡️inferences/🔲️ceilings/🔲️takeoff/📸️snapshot/🔣️.json");
-const TAKEOFF_TABLE: &str = include_str!("../../../../../../🧫️fixtures/💡️inferences/🔲️ceilings/🔲️takeoff/💡️inference/🔲️ceilings/🔣️.json");
+const TAKEOFF: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔲️ceilings/🔲️takeoff/📸️snapshot/🔣️.json");
+const TAKEOFF_TABLE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔲️ceilings/🔲️takeoff/💡️inference/🔲️ceilings/🔣️.json");
 
 #[semio_framework_async_macros::async_test]
 async fn the_take_off_and_the_span_reproduce_the_shapely_oracle_table() {

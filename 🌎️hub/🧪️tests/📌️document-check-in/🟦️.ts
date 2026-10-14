@@ -18,7 +18,7 @@ import { hubSchemaExport } from "../../🤝️integration-harness/🟦️.ts";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 type Vector = { name: string; source: string; schemaValid?: boolean };
-const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📌️document-check-in-v1/🧫️fixtures/🔣️.json"), "utf8")) as {
+const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/📌️document-check-in-v1/🔣️.json"), "utf8")) as {
   valid: { requests: Vector[]; statuses: Vector[] };
   invalid: { requests: Vector[]; statuses: Vector[] };
 };

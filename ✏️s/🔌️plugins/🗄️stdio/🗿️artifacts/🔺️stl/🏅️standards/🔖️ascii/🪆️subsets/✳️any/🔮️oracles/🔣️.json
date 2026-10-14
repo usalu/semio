@@ -187,14 +187,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/📥️insert-triangle/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/📥️insert-triangle/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:815b9d630e1f992b6ba7195d3dab69879e1e670cc76a32b2e6592eaccb18f3fc",
           "bytes": 681
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/📥️insert-triangle/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/📥️insert-triangle/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:0c529a925d93712cc7fb5723aa8bc132e1992abe45593a36e56b48ca9f046e58",
           "bytes": 981
@@ -229,14 +229,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🗑️remove-triangle/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-triangle/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:815b9d630e1f992b6ba7195d3dab69879e1e670cc76a32b2e6592eaccb18f3fc",
           "bytes": 681
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🗑️remove-triangle/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-triangle/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:b01bc81a9ffd95f8d0279d50f1d6707058dc61c2dbba8f0bf13f542c59b32d26",
           "bytes": 381
@@ -271,14 +271,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🏷️set-solid-name/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-solid-name/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:815b9d630e1f992b6ba7195d3dab69879e1e670cc76a32b2e6592eaccb18f3fc",
           "bytes": 681
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🏷️set-solid-name/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-solid-name/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:a97eb26635a1f38e9c1d77f3299f9d3672a52c1e31333cc5598535d9891d1299",
           "bytes": 681
@@ -313,14 +313,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/📐️set-triangle-vertices/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/📐️set-triangle-vertices/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:815b9d630e1f992b6ba7195d3dab69879e1e670cc76a32b2e6592eaccb18f3fc",
           "bytes": 681
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/📐️set-triangle-vertices/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/📐️set-triangle-vertices/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:e3a0fc2c880ce6de294af82ceeefdfc4b7869d52d8e00fdc39875aa499b2daaf",
           "bytes": 681
@@ -355,14 +355,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🧭️set-triangle-normal/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🧭️set-triangle-normal/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:815b9d630e1f992b6ba7195d3dab69879e1e670cc76a32b2e6592eaccb18f3fc",
           "bytes": 681
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🧭️set-triangle-normal/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🧭️set-triangle-normal/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:690c99fc1303a105ac1fb6d7117dec48e6c2090af4de3dd24488bc6c8830b32a",
           "bytes": 681

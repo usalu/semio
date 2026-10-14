@@ -1,15 +1,16 @@
 //! 🎬️ The exact registered Sequence parent snapshot ownership laws.
 #[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
 mod original_owners;
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::SequenceSnapshot;
 
 #[test]
 fn sqlite_snapshot_sequence_demo_matches_the_actual_parent_native_printer(){
  let expected=crate::standards::v1::subsets::any::schema::snapshot::default_persisted_snapshot();
- assert_eq!(store::os_store::serialization::ArtifactDsl::print_dsl(&expected),include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio"));
+ assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&expected),include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio"));
 }
 
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,export_sqlite_database,import_sqlite_database}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,export_sqlite_database,import_sqlite_database}};
 use semio_framework_plugin::{PluginApp,VcsArtifactApp,EditorApp,ViewerApp,__semio_dispatch_PluginApp,plugin_app_close_prelude::*};
 semio_framework_dispatch_macros::dyn_enum_close!{
  /// 🎬️ The real Sequence editor and viewer declaration closure.
@@ -18,12 +19,12 @@ semio_framework_dispatch_macros::dyn_enum_close!{
   Viewer(VcsArtifactApp<ViewerApp<crate::viewer::sequence::SequenceViewer>,semio_s_artifact_stdio_semio::SemioMembers>),
  }
 }
-fn laws()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn laws()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn fixture()->SequenceSnapshot{semio_framework_pack_json::from_json_str(&laws()["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn database(snapshot:&SequenceSnapshot)->SqliteDatabase{original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|snapshot.to_sqlite_database(sqlite_control)).unwrap()}
 fn restore(database:&SqliteDatabase)->SequenceSnapshot{original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|SequenceSnapshot::from_sqlite_database(database, sqlite_control)).unwrap()}
 fn file(snapshot:&SequenceSnapshot)->Vec<u8>{export_sqlite_database(&database(snapshot),SqliteDatabaseLimits::default(),&mut |_|true).unwrap()}
-fn native(snapshot:&SequenceSnapshot,encoding:SnapshotEncoding)->store::io_schema::IoPayload{match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(snapshot)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(snapshot))}}
+fn native(snapshot:&SequenceSnapshot,encoding:SnapshotEncoding)->store::io_schema::IoPayload{match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(snapshot)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(snapshot))}}
 fn dialect()->semio_framework_artifact_reference::ArtifactDialect{semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.sequence.sequence".into(),standard:"1".into(),subset:"*".into()}}
 
 #[test]
@@ -91,7 +92,7 @@ async fn sqlite_snapshot_sequence_actual_declaration_mount_routes_queryable_file
  use store::io::io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot};
  semio_framework_plugin::Plugin::<SqliteApps>::builder("sequence").label("Sequence owned SQLite").version("0.0.1").package_id("semio:sequence").declare_artifact(crate::artifact::<SqliteApps>()).try_build().unwrap();
  assert!(store::os_store::codec_registry::document_codec(crate::SEQUENCE_DOCUMENT_SCHEMA).await.unwrap().unwrap().snapshot_sqlite.is_some());
- let expected=public_owner::Owned::new(fixture());for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=io_export_sqlite_snapshot(&dialect(),&*expected,encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;assert!(bytes.starts_with(b"SQLite format 3\0"));let restored=public_owner::Owned::new(io_import_sqlite_snapshot::<SequenceSnapshot>(&dialect(),&bytes,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value);assert_eq!(*restored,*expected);let edited=public_owner::verify_and_edit(&bytes,encoding);let restored=public_owner::Owned::new(io_import_sqlite_snapshot::<SequenceSnapshot>(&dialect(),&edited,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value);let mut literal=public_owner::Owned::new(fixture());let public=public_owner::corpus();let value=public["independentEdit"]["value"].as_str().unwrap();literal.schema=value.into();;assert_eq!(*restored,*literal);eprintln!("[DEBUG] sequence actual public six-field metadata / entity ownership / independent SQL edit / explicit retirement encoding={encoding:?}");}
+ let expected=public_owner::Owned::new(fixture());for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=async{let original_file_dialect=&dialect();let original_file_input=&*expected;let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;assert!(bytes.starts_with(b"SQLite format 3\0"));let restored=public_owner::Owned::new(async{let original_file_dialect=&dialect();let original_file_input=&bytes;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<SequenceSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value);assert_eq!(*restored,*expected);let edited=public_owner::verify_and_edit(&bytes,encoding);let restored=public_owner::Owned::new(async{let original_file_dialect=&dialect();let original_file_input=&edited;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<SequenceSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value);let mut literal=public_owner::Owned::new(fixture());let public=public_owner::corpus();let value=public["independentEdit"]["value"].as_str().unwrap();literal.schema=value.into();;assert_eq!(*restored,*literal);eprintln!("[DEBUG] sequence actual public six-field metadata / entity ownership / independent SQL edit / explicit retirement encoding={encoding:?}");}
 }
 
 
@@ -103,7 +104,7 @@ fn sqlite_snapshot_sequence_actual_native_declaration_exposes_relational_capabil
 
 #[test]
 fn sqlite_snapshot_sequence_neutral_json_retains_every_child_reference_field(){
- let laws:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let expected=&laws["snapshot"];
+ let laws:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let expected=&laws["snapshot"];
  let snapshot:SequenceSnapshot=semio_framework_pack_json::from_json_str(&expected.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
  assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&snapshot)).unwrap(),*expected);
  assert_eq!(snapshot.content.target.artifact_id,"artifact 世界\0");assert_eq!(snapshot.content.child_id,"child 世界\0; content");
@@ -114,18 +115,18 @@ fn sqlite_snapshot_sequence_native_child_carrier_preserves_all_owned_string_doma
  for text in["","id!kind@standard/subset%","世界\0","😀"]{
   let value=serde_json::json!({"schema":text,"content":{"childId":text,"target":{"artifactId":text,"dialect":{"artifactKind":text,"standard":text,"subset":text}}}});
   let expected:SequenceSnapshot=semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-  let pack=store::os_store::serialization::ArtifactPack::encode_pack(&expected);
-  let packed=<SequenceSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).unwrap();
+  let pack=pack::snapshot::ArtifactPack::encode_pack(&expected);
+  let packed=<SequenceSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).unwrap();
   assert_eq!(packed,expected);
-  let printed=store::os_store::serialization::ArtifactDsl::print_dsl(&expected);
-  let parsed=<SequenceSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&printed).unwrap();
+  let printed=pack::snapshot::ArtifactDsl::print_dsl(&expected);
+  let parsed=<SequenceSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).unwrap();
   assert_eq!(parsed,expected);
  }
 }
 
 #[test]
 fn sqlite_snapshot_sequence_genuine_output_admits_exact_row_and_file_frontiers(){
- use store::{os_store::serialization::ArtifactSqliteSnapshot as _,sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SnapshotEncoding,export_sqlite_database}};
+ use store::{os_store::serialization::ArtifactSqliteSnapshotHost as _,sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SnapshotEncoding,export_sqlite_database}};
  use std::{io::Write,process::{Command,Stdio}};
  let snapshot=fixture();let limits=SqliteDatabaseLimits::default();let expected=original_owners::with_sqlite_recipient(limits,&mut |_|true,|sqlite_control|snapshot.to_sqlite_database(sqlite_control)).unwrap();let rows=expected.tables.iter().map(|table|table.rows.len()).sum::<usize>();assert!(rows>0);
  let bytes=export_sqlite_database(&expected,limits,&mut |_|true).unwrap();
@@ -145,7 +146,7 @@ fn sqlite_snapshot_sequence_genuine_output_admits_exact_row_and_file_frontiers()
 #[test]
 fn sqlite_snapshot_sequence_complete_independent_sql_semantic_cell_extent(){
  use std::{io::Write,process::{Command,Stdio}};
- let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../🧬️schema/📸️snapshot/🧫️fixtures/📏️semantic-cells/🔣️.json")).unwrap();
+ let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/📏️semantic-cells/🔣️.json")).unwrap();
  for c in cases["cases"].as_array().unwrap(){let mut s=fixture();if let Some(field)=c["field"].as_str(){let value=c["text"].as_str().unwrap();for name in["schema","childId","artifactId","artifactKind","standard","subset"]{if field!="all"&&field!=name{continue}match name{"schema"=>s.schema=value.into(),"childId"=>s.content.child_id=value.into(),"artifactId"=>s.content.target.artifact_id=value.into(),"artifactKind"=>s.content.target.dialect.artifact_kind=value.into(),"standard"=>s.content.target.dialect.standard=value.into(),"subset"=>s.content.target.dialect.subset=value.into(),_=>unreachable!()}}}
   let d=database(&s);let max=c["bytes"].as_u64().unwrap()as usize;let rows=c["rows"].as_u64().unwrap()as usize;
   let script=r#"import{Database}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));const names=JSON.parse(process.env.SEMIO_SEQUENCE_EXPECTED_TABLES);if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');const actual=d.query("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").all().map(r=>r.name);if(JSON.stringify(actual)!==JSON.stringify([...names].sort()))throw Error('complete table names');let bytes=0,rows=0;for(const name of names){const actual=d.query('SELECT * FROM "'+name+'"').all();rows+=actual.length;for(const row of actual)for(const v of Object.values(row))bytes+=v===null?0:typeof v==='string'?Buffer.byteLength(v,'utf8'):v instanceof Uint8Array?v.length:8;}if(bytes!==Number(process.env.SEMIO_SEQUENCE_EXPECTED_BYTES)||rows!==Number(process.env.SEMIO_SEQUENCE_EXPECTED_ROWS))throw Error('complete physical SQL cells '+bytes+'/'+rows);d.close();"#;

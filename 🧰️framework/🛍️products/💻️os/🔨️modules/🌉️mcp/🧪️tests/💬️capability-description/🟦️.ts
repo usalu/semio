@@ -9,7 +9,7 @@ const repoRoot = resolve(import.meta.dirname, "../../../../../../..");
 
 describe("capability description law", () => {
   it("replays every fixture row with the identical (verb, problem) list", () => {
-    const rows = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../🗂️catalog/🧫️fixtures/💬️capability-description.json"), "utf8"));
+    const rows = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../🗂️catalog/🧪️tests/🧫️fixtures/💬️capability-description.json"), "utf8"));
     expect(rows.length).toBeGreaterThanOrEqual(10);
     for (const row of rows) expect(capabilityDescriptionProblems(repoRoot, row.verbs), row.name).toEqual(row.problems);
   });

@@ -5,7 +5,7 @@ async fn fixture_events() -> Vec<DirectoryEvent> {
     struct Fixture {
         events: Vec<DirectoryEvent>,
     }
-    let raw = include_str!("../../../../🧫️fixtures/📇️directory/⚡️events.json");
+    let raw = include_str!("../../../../🧪️tests/🧫️fixtures/📇️directory/⚡️events.json");
     semio_framework_pack_json::from_json_str::<Fixture>(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture decodes").events
 }
 

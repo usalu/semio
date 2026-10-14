@@ -250,18 +250,18 @@ impl MountedPreparedOperationsBytes {
 impl Drop for MountedPreparedOperationsBytes { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "mounted operation framing retains every original owner until funded transfer or close"); } }
 
 pub(crate) struct MountedKernelMutationReceiptSource<'a> {
-    document: ArtifactHandle,
-    mutation_id: &'a str,
-    invocation_id: &'a str,
-    schema: &'a str,
-    schema_separator: &'a str,
-    schema_suffix: &'a str,
-    author: &'a str,
-    dependencies: &'a [MutationId],
-    inverse: &'a [u8],
-    base_version: ArtifactVersion,
-    timestamp: HybridLogicalTimestamp,
-    undo_policy: UndoPolicy,
+    pub(crate) document: ArtifactHandle,
+    pub(crate) mutation_id: &'a str,
+    pub(crate) invocation_id: &'a str,
+    pub(crate) schema: &'a str,
+    pub(crate) schema_separator: &'a str,
+    pub(crate) schema_suffix: &'a str,
+    pub(crate) author: &'a str,
+    pub(crate) dependencies: &'a [MutationId],
+    pub(crate) inverse: &'a [u8],
+    pub(crate) base_version: ArtifactVersion,
+    pub(crate) timestamp: HybridLogicalTimestamp,
+    pub(crate) undo_policy: UndoPolicy,
 }
 
 impl MountedKernelMutationReceiptSource<'_> {

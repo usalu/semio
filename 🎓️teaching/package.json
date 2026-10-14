@@ -26,6 +26,7 @@
     "../🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
     "../🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript",
     "../🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
+    "../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript",
     "../🧰️framework/🔨️modules/🏗️mesh-engine/🏛️ownership/🎨️attributes",
     "../🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust",
     "../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/📦️packages/🟦️typescript",
@@ -124,5 +125,8 @@
   },
   "patchedDependencies": {
     "nx@23.2.0": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch"
+  },
+  "devDependencies": {
+    "@semio-tech/process": "workspace:*"
   }
 }

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔧️set-railing/🚧️non-positive-post-spacing",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️set-railing/🚧️non-positive-post-spacing/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️set-railing/🚧️non-positive-post-spacing/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️set-railing/🚧️non-positive-post-spacing/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️set-railing/🚧️non-positive-post-spacing/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️set-railing/🚧️non-positive-post-spacing/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧️set-railing/🚧️non-positive-post-spacing/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧️set-railing/🚧️non-positive-post-spacing/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧️set-railing/🚧️non-positive-post-spacing/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧️set-railing/🚧️non-positive-post-spacing/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧️set-railing/🚧️non-positive-post-spacing/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

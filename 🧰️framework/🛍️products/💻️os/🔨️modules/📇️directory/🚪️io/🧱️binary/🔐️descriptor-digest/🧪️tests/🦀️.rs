@@ -12,7 +12,7 @@ struct ArtifactAuthorityFixture {
 
 #[semio_framework_async_macros::async_test]
 async fn document_descriptor_digest_v1_matches_the_language_neutral_binary_vector() {
-    let fixture: ArtifactAuthorityFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../../🧫️fixtures/📇️directory/🛡️artifact-authority.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("artifact authority fixture decodes");
+    let fixture: ArtifactAuthorityFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/📇️directory/🛡️artifact-authority.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("artifact authority fixture decodes");
     println!("[DEBUG] descriptor canonical bytes and native authority digest admitted in explicit IO");
     assert_eq!(hex_lower(&descriptor_digest_encoding_v1(&fixture.descriptor).expect("descriptor encodes")), fixture.descriptor_encoding_hex);
     assert_eq!(descriptor_digest_v1(&fixture.descriptor).expect("descriptor hashes"), fixture.descriptor_digest_v1);
@@ -25,7 +25,7 @@ fn descriptor_digest_native_owner_is_explicit_io() {
 
 #[semio_framework_async_macros::async_test]
 async fn descriptor_metadata_refusals_precede_native_encoding() {
-    let fixture: ArtifactAuthorityFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../../🧫️fixtures/📇️directory/🛡️artifact-authority.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture: ArtifactAuthorityFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/📇️directory/🛡️artifact-authority.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut empty = fixture.descriptor.clone(); empty.space_id.clear();
     let mut zero_hash = fixture.descriptor.clone(); zero_hash.pack_schema_hash = "0".repeat(64);
     let mut uppercase = fixture.descriptor.clone(); uppercase.pack_schema_hash = "AA".repeat(32);

@@ -5,7 +5,7 @@ import Ajv from "ajv";
 /** 🧫 Checks portable contribution vectors and neutral registry ownership against Ajv. */
 export function runContributionChecks(): number {
   const load = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
-  const fixtures = load("../../🧫️fixtures/📇️contributions/🔣️.json");
+  const fixtures = load("../🧫️fixtures/📇️contributions/🔣️.json");
   const ajv = new Ajv({ strict: true });
   let checks = 0;
   for (const row of fixtures.cases) {
@@ -33,9 +33,9 @@ export function runContributionChecks(): number {
     assert.equal(row.authoredFactory === false, row.accepted);
     checks++;
   }
-  const constraint = ajv.compile(load("../../🧫️fixtures/📇️contributions/🧾️schema-input.json"));
+  const constraint = ajv.compile(load("../🧫️fixtures/📇️contributions/🧾️schema-input.json"));
   for (const row of fixtures.validationCases) {
-    const source = load("../../🧫️fixtures/📇️contributions/alpha.json");
+    const source = load("../🧫️fixtures/📇️contributions/alpha.json");
     source.representations[0].mimes = row.mimes;
     const representation = source.runtime_capabilities.find((item: { category: string }) => item.category === "representation");
     representation.claims = [...row.mimes.map((value: string) => ({ namespace: "mime", value })), ...source.representations[0].extensions.map((value: string) => ({ namespace: "extension", value }))];

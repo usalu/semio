@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import { readFileSync } from "node:fs";
 
-const fixture = JSON.parse(readFileSync(new URL("../../../../🧫️fixtures/🪶️sqlite/🔣️.json", import.meta.url), "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json", import.meta.url), "utf8"));
 const sql = readFileSync(new URL("../🗄️.sql", import.meta.url), "utf8");
 
 test("framework DAG property members have exact contiguous backing and independently ordered unique literal keys", () => {

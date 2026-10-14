@@ -3,7 +3,7 @@ mod input_decoding_fixture {
     use crate::tui::event::{mods, Event, Key, KeypadKey, MouseButton, MouseKind};
     use semio_framework_pack_json::{parse, JsonMemberPolicy, Value};
 
-    const FIXTURE: &str = include_str!("../../🧫️fixtures/⌨️input-decoding/🔣️.json");
+    const FIXTURE: &str = include_str!("../🧫️fixtures/⌨️input-decoding/🔣️.json");
 
     fn mods_suffix(bits: u8) -> String {
         [(mods::CTRL, "+ctrl"), (mods::ALT, "+alt"), (mods::SHIFT, "+shift")].iter().filter(|(bit, _)| bits & bit != 0).map(|(_, name)| *name).collect()

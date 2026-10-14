@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "initial": [
+    "a/package.json",
+    "a/main.ts",
+    "b/package.json",
+    "b/main.ts",
+    "root.json"
+  ],
+  "scope": {
+    "roots": [
+      "a"
+    ],
+    "files": [
+      "root.json"
+    ]
+  },
+  "globalIdentity": [
+    "package.json"
+  ],
+  "cases": [
+    {
+      "id": "unselected-source",
+      "events": [
+        {
+          "path": "b/main.ts",
+          "type": "update"
+        }
+      ],
+      "accept": true
+    },
+    {
+      "id": "selected-source",
+      "events": [
+        {
+          "path": "a/main.ts",
+          "type": "update"
+        }
+      ],
+      "accept": false
+    },
+    {
+      "id": "new-global-owner",
+      "events": [
+        {
+          "path": "c/package.json",
+          "type": "create"
+        }
+      ],
+      "accept": false
+    },
+    {
+      "id": "global-manifest-content",
+      "events": [
+        {
+          "path": "b/package.json",
+          "type": "update"
+        }
+      ],
+      "accept": false
+    },
+    {
+      "id": "selected-root-deletion",
+      "events": [
+        {
+          "path": "a",
+          "type": "delete"
+        }
+      ],
+      "accept": false
+    },
+    {
+      "id": "new-selected-source",
+      "events": [
+        {
+          "path": "a/new.ts",
+          "type": "create"
+        }
+      ],
+      "accept": false
+    },
+    {
+      "id": "selected-explicit-file",
+      "events": [
+        {
+          "path": "root.json",
+          "type": "update"
+        }
+      ],
+      "accept": false
+    },
+    {
+      "id": "ignored-generated-output",
+      "events": [
+        {
+          "path": "dist/package.json",
+          "type": "create"
+        }
+      ],
+      "accept": true
+    }
+  ],
+  "invalidPaths": ["/absolute", "a//b", "a/./b", "a/../b", "a:b", "a\\b", "a/", "a\u0000b"],
+  "scaling": {"owners": 100, "leaves": 200, "maximumWarmIdentityReads": 64},
+  "refusals": [
+    "overflow",
+    "unknown-event",
+    "restart",
+    "cancelled",
+    "expired",
+    "symlink"
+  ]
+}

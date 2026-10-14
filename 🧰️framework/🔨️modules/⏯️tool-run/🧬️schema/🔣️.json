@@ -897,7 +897,8 @@
         "counters",
         "reasons",
         "trace",
-        "runJob"
+        "runJob",
+        "receiving"
       ],
       "properties": {
         "mutating": {
@@ -957,6 +958,9 @@
           "description": "The composed-child slot whose owned member store a mutating run edits; absent: the document's own store.",
           "type": "string",
           "minLength": 1
+        },
+        "receiving": {
+          "$ref": "#/$defs/ToolRunReceivingLimits"
         }
       }
     },
@@ -1049,6 +1053,156 @@
         "windowId": {
           "type": "string",
           "minLength": 1
+        }
+      }
+    },
+    "ToolRunRecordReadLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumFileBytes",
+        "maximumSegmentBytes",
+        "maximumSymbols",
+        "maximumDepth",
+        "maximumItems",
+        "maximumTotalAllocationBytes",
+        "maximumSymbolUtf8Bytes",
+        "maximumSymbolScalars",
+        "maximumCursorAllocationBytes"
+      ],
+      "properties": {
+        "maximumFileBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "maximumSegmentBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "maximumSymbols": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "maximumTotalAllocationBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "maximumSymbolUtf8Bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maximumSymbolScalars": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maximumCursorAllocationBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "ToolRunReceivingLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tick",
+        "recordBody",
+        "history"
+      ],
+      "properties": {
+        "tick": {
+          "$ref": "#/$defs/ToolRunRecordReadLimits"
+        },
+        "recordBody": {
+          "$ref": "#/$defs/ToolRunRecordReadLimits"
+        },
+        "history": {
+          "$ref": "#/$defs/ToolRunHistoryReadLimits"
+        }
+      }
+    },
+    "ToolRunHistoryReadLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fileBytes",
+        "frameBodyBytes",
+        "records",
+        "maximumFields",
+        "maximumTextBytes",
+        "maximumBinaryBytes",
+        "maximumJsonBytes",
+        "maximumJsonAllocationBytes",
+        "maximumJsonItems",
+        "maximumJsonDepth"
+      ],
+      "properties": {
+        "fileBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "frameBodyBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "records": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "maximumFields": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "maximumTextBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "maximumBinaryBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "maximumJsonBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "maximumJsonAllocationBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "maximumJsonItems": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "maximumJsonDepth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
         }
       }
     }

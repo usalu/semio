@@ -54,7 +54,7 @@ import {
   type HomeGrid,
 } from "@semio-tech/quiz-react";
 import stylesheet from "../../🎯️targets/⚛️react/🎨️.css?raw";
-import grid from "../../🧫️fixtures/🏠️home-grid/🔣️.json";
+import grid from "../🧫️fixtures/🏠️home-grid/🔣️.json";
 
 interface Fixture {
   readonly breakpoints: { readonly mobileMaxPx: number; readonly tabletMaxPx: number };

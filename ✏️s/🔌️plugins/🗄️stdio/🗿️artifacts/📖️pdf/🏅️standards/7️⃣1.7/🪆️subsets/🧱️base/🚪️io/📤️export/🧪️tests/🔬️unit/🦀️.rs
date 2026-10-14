@@ -2,7 +2,7 @@ use super::*;
 use crate::standards::v1_7::subsets::base::modules::fonts::truetype::synthesize_truetype;
 
 const THESIS: &[u8] = include_bytes!("../../../../🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf");
-const REPORT_STRIP: &[u8] = include_bytes!("../../../../🧫️fixtures/📊️report-strip/📊️report-strip.pdf");
+const REPORT_STRIP: &[u8] = include_bytes!("../../../../🧪️tests/🧫️fixtures/📊️report-strip/📊️report-strip.pdf");
 
 fn typed_lanes(snapshot: &PdfSnapshot) -> PdfSnapshot {
     PdfSnapshot { objects: Vec::new(), trailer: Vec::new(), ..snapshot.clone() }
@@ -417,7 +417,7 @@ fn logical_character_codes_bind_complete_native_fragments_and_preserve_word_prec
     use crate::standards::v1_7::subsets::base::modules::content::{parse_content, print_content};
     use crate::standards::v1_7::subsets::base::modules::fonts::FontCodec;
     use std::collections::HashMap;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🔢️logical-character-codes/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔢️logical-character-codes/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let width=case["width"].as_u64().unwrap()as usize;
         let expected:Vec<u32>=case["codes"].as_array().unwrap().iter().map(|code|u32::try_from(code.as_u64().unwrap()).unwrap()).collect();
@@ -443,7 +443,7 @@ fn logical_character_codes_bind_complete_native_fragments_and_preserve_word_prec
 fn retained_text_dates_admit_owned_values_and_keep_indirect_identity() {
     use crate::standards::v1_7::subsets::base::modules::lexer::{Lexer, object_bytes};
     use semio_framework_value::FromValue;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🪪️retained-text/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪪️retained-text/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let native=case["native"].as_str().unwrap();
         let value=Lexer::new(native.as_bytes()).parse_object().unwrap();
@@ -471,7 +471,7 @@ fn retained_text_dates_admit_owned_values_and_keep_indirect_identity() {
 /// 📖️ Proves PDF 1.7 logical carriers, independent content oracles and exact protocol custody.
 #[test]
 fn owned_fixture_publication_reports_canonical_logical_carriers() {
-    use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+    use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
     logical_character_codes_bind_complete_native_fragments_and_preserve_word_precision();
     retained_text_dates_admit_owned_values_and_keep_indirect_identity();
     let snapshot = text_document(&[(300.0, 400.0, "Native PDF 1.7 receipt")]);

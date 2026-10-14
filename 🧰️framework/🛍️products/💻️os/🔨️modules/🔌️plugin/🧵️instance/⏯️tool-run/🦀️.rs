@@ -211,6 +211,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// 🧵️ Builds the run's job for `purpose`: the app's retargetable job when it builds one, else its plain job.
     fn build_tool_run_job_slot(&self, entry: &ToolRunEntry<A>, purpose: ToolRunJobPurpose) -> Result<Option<ToolRunJobSlot<A::Config>>, Fault> {
         let request = || ToolRunJobRequest::<A> {
+            receiving: &entry.definition.receiving,
             tool_id: &entry.tool_id,
             definition: &entry.definition,
             purpose,
@@ -233,9 +234,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         };
         let generation = entry.identity.generation;
         if let Some(job) = A::build_retargetable_tool_run_job(request())? {
-            return Ok(Some(ToolRunJobSlot::new(ToolRunJobHandle::Retargetable(job), purpose, generation)));
+            return Ok(Some(ToolRunJobSlot::new(ToolRunJobHandle::Retargetable(job), purpose, generation, entry.definition.receiving)));
         }
-        Ok(A::build_tool_run_job(request())?.map(|job| ToolRunJobSlot::new(ToolRunJobHandle::Plain(job), purpose, generation)))
+        Ok(A::build_tool_run_job(request())?.map(|job| ToolRunJobSlot::new(ToolRunJobHandle::Plain(job), purpose, generation, entry.definition.receiving)))
     }
 
     /// 🎚️ What the run's declared settings reads name right now. A declared window kind that is the starting
@@ -291,7 +292,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 
     /// 📮️ Hands the owed scope to the typed UI outbox once it has room; until then the flags stay set, so a
     /// queued unrelated scope never swallows a run change.
-    fn flush_tool_run_ui_dirty(&mut self) {
+    pub(crate) fn flush_tool_run_ui_dirty(&mut self) {
         if !self.tool_runs.is_ui_dirty() || self.typed_ui_outbox.len() != 0 {
             return;
         }
@@ -428,28 +429,28 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// ⏯️ One bounded driver turn (≤ `ToolRunDriver::turn_wall_us`): owed dirty scope, the generation watch of every
     /// run, retirement within the wall budget, then — while nothing retires — refold, job steps, finalize. The watch never
     /// waits behind retirement: a settings or base change reaches its run in the turn it becomes visible.
-    pub(crate) async fn drive_tool_run_turn(&mut self,grant:RetainedCloneGrant,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    pub(crate) async fn drive_tool_run_turn(&mut self,cx:&mut semio_framework_job::StepContext<'_>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+        let grant=cx.retained_grant();if cx.should_yield(){return Ok(())}
         if self.tool_runs.has_original_receipt(){return Ok(());}
         self.flush_tool_run_ui_dirty();
         self.drain_tool_run_port();
-        let started = semio_framework_job::default_now_us().unwrap_or(0);
-        let deadline = started.saturating_add(self.tool_runs.driver.turn_wall_us);
-        if self.tool_runs.entries.is_empty(){self.retire_tool_runs_until(grant)?;return Ok(());}
+        let deadline=cx.deadline_us();
+        if self.tool_runs.entries.is_empty(){self.retire_tool_runs_until(cx)?;return Ok(());}
         let index=self.tool_runs.driver_cursor%self.tool_runs.entries.len();
         let run=self.tool_runs.entries[index].slot.run;
         self.tool_runs.driver_cursor=index.saturating_add(1);
         self.tool_runs.selected=Some(index);
         self.watch_tool_run_generations();
-        if self.retire_tool_runs_until(grant)?{self.tool_runs.select_primary();return Ok(());}
-        let outcome=if self.tool_runs.select_run(run){self.drive_selected_tool_run(deadline,grant,identity).await}else{Ok(())};
+        if self.retire_tool_runs_until(cx)?{self.tool_runs.select_primary();return Ok(());}
+        let outcome=if self.tool_runs.select_run(run){self.drive_selected_tool_run(deadline,cx.retained_grant(),identity).await.map_err(semio_framework_job::OriginalTurnFailure::from)}else{Ok(())};
         self.tool_runs.select_primary();
         outcome
     }
 
     /// 🚰️ Retirement units until nothing retires, a retirement blocks or the turn deadline. `true` while owners still
     /// retire or a unit released nothing: the runs wait for the next turn instead of displacing more.
-    fn retire_tool_runs_until(&mut self,grant:RetainedCloneGrant)->Result<bool,Fault>{
-        let Some(step)=self.tool_run_retire_step(grant)?else{return Ok(false)};self.tool_runs.retain_original_receipt(grant,step.progress())?;Ok(true)
+    fn retire_tool_runs_until(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let grant=cx.retained_grant();let Some(step)=self.tool_run_retire_step(cx)?else{return Ok(false)};self.tool_runs.retain_original_receipt(grant,step.progress())?;Ok(true)
     }
 
     /// ⏯️ The selected run's share of one driver turn.
@@ -544,100 +545,36 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     /// 🦶️ Drives the current job until the turn deadline, a pause, a single step or a terminal outcome.
-    fn step_tool_run_job(&mut self, _deadline: u64,grant:RetainedCloneGrant) -> Result<(), Fault> {
-        enum SeenToolOutcome { Pending, Yield, Preview(Option<Vec<u8>>), Checkpoint(Option<Vec<u8>>), Complete, Terminal }
-        let handoff=RetirementDemand{copy_bytes:size_of::<semio_framework_job::JobOutcomeAdmission>(),depth:1,..Default::default()};
-        if grant.maximum_items<=1||!tool_grant_funds(grant,handoff){return Ok(());}
-        {
-            let Some(entry) = selected_entry_mut!(self.tool_runs) else { return Ok(()) };
-            let single = entry.slot.state == ToolRunState::Paused;
-            let (run, generation, purpose) = (entry.slot.run, entry.slot.generation, entry.job.as_ref().map(|job| job.purpose));
-            let Some(job) = entry.job.as_mut() else { return Ok(()) };
-            if job.context.is_none() {
-                let (context, ownership) = semio_framework_job::StepContextOwner::new(job.operation, job.generation, grant).map_err(FaultFrom::into_fault)?;
-                job.context = Some(context);
-                self.tool_runs.retain_original_receipt(grant, ownership)?;
-                return Ok(());
-            }
-            let now = semio_framework_job::default_now_us().unwrap_or(0);
-            let fuel = if single { 1 } else { semio_framework_job::INTERACTIVE_LANE_FUEL };
-            let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-handoff.copy_bytes,maximum_items:grant.maximum_items.saturating_sub(1),..grant};
-            let budget = semio_framework_job::StepBudget::from_duration(fuel, now, semio_framework_job::INTERACTIVE_LANE_WALL_US,child).unwrap_or(semio_framework_job::StepBudget::new(fuel, u64::MAX,child));
-            let mut verdict = None;
-            let mut ownership = RetainedCloneProgress::default();
-            let interactive: &mut dyn semio_framework_job::InteractiveJob = match &mut job.job {
-                ToolRunJobHandle::Plain(job) => job.as_mut(),
-                ToolRunJobHandle::Retargetable(job) => job.as_mut(),
-            };
-            let owner = job.context.as_ref().expect("tool job step context owner was just admitted");
-            let Some(mut context) = owner.context(budget, job.cancel.clone().expect("a live tool job slot keeps its cancellation token"), semio_framework_job::default_now_us, &mut job.preview_sequence, &mut ownership) else { return Ok(()) };
-            let stepped = semio_framework_job::drive_step(interactive, &mut context, TOOL_RUN_JOB_SITE, semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict);
-            let seen = match stepped {
-                Ok(Some(loan)) => match loan {
-                    semio_framework_job::JobOutcomeBorrow::Yield { .. } => SeenToolOutcome::Yield,
-                    semio_framework_job::JobOutcomeBorrow::PreviewReady { payload, .. } => SeenToolOutcome::Preview(job_payload_bytes(payload, TOOL_RUN_TICK_BYTES_MAX)),
-                    semio_framework_job::JobOutcomeBorrow::CheckpointReady { state, .. } => SeenToolOutcome::Checkpoint(job_payload_bytes(state, semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES)),
-                    semio_framework_job::JobOutcomeBorrow::Complete { .. } => SeenToolOutcome::Complete,
-                    semio_framework_job::JobOutcomeBorrow::Cancelled { .. } | semio_framework_job::JobOutcomeBorrow::Fault { .. } => SeenToolOutcome::Terminal,
-                },
-                Ok(None) => SeenToolOutcome::Pending,
-                Err(_) => {
-                    drop(context);
-                    self.tool_runs.retain_original_receipt(grant, ownership)?;
-                    self.fault_tool_run(run, generation);
-                    return Ok(());
-                }
-            };
-            drop(context);
-            if single && !matches!(seen, SeenToolOutcome::Yield | SeenToolOutcome::Checkpoint(_)) {
-                entry.pending_step = false;
-            }
-            match seen {
-                SeenToolOutcome::Pending | SeenToolOutcome::Yield => {}
-                SeenToolOutcome::Preview(bytes) => {
-                    let tick = bytes
-                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.tick-bytes"), "tool run tick exceeds its byte cap"))
-                        .and_then(|bytes| ToolRunTick::decode(&bytes).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.tick-decode"), format!("{error:?}"))));
-                    let receipt = match tick {
-                        Ok(tick) => entry.apply_tick(tick, &mut self.tool_runs.discarded),
-                        Err(fault) => Err(fault),
-                    };
-                    match receipt {
-                        Ok(receipt) => {
-                            if let (Some(finalize), ToolRunJobPurpose::Revalidate) = (entry.finalize.as_mut(), purpose.unwrap_or(ToolRunJobPurpose::Run)) {
-                                finalize.retracted = finalize.retracted.saturating_add(receipt.retracted);
-                            }
-                            if receipt.capped && purpose == Some(ToolRunJobPurpose::Run) {
-                                self.complete_tool_run_job(run, generation);
-                            }
-                            self.mark_tool_run_ui_dirty();
-                        }
-                        Err(_) => {
-                            self.fault_tool_run(run, generation);
-                        }
-                    }
-                }
-                SeenToolOutcome::Checkpoint(bytes) => {
-                    entry.checkpoint = bytes;
-                    entry.settle_refold();
-                }
-                SeenToolOutcome::Complete => {
-                    entry.settle_refold();
-                    match purpose {
-                        Some(ToolRunJobPurpose::Revalidate) => self.complete_tool_run_revalidation(),
-                        _ => self.complete_tool_run_job(run, generation),
-                    }
-                }
-                SeenToolOutcome::Terminal => {
-                    self.fault_tool_run(run, generation);
-                }
-            }
-            ownership.copied_items=ownership.copied_items.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original ToolRun job handoff work overflow").into_fault())?;
-            ownership.copied_bytes=ownership.copied_bytes.checked_add(handoff.copy_bytes).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original ToolRun job handoff copy overflow").into_fault())?;
-            self.tool_runs.retain_original_receipt(grant,ownership)?;
-            self.drain_tool_run_port();
-            Ok(())
+    fn step_tool_run_job(&mut self,deadline:u64,grant:RetainedCloneGrant)->Result<(),Fault>{
+        if semio_framework_job::default_now_us().is_none_or(|now|now>=deadline){return Ok(())}
+        if self.tool_runs.has_original_receipt(){return Ok(())}
+        if grant.maximum_items==0||grant.maximum_depth==0{return Ok(())}
+        let Some(entry)=selected_entry_mut!(self.tool_runs)else{return Ok(())};
+        let (run,generation)=(entry.slot.run,entry.slot.generation);let single=entry.slot.state==ToolRunState::Paused;
+        let Some(job)=entry.job.as_mut()else{return Ok(())};
+        if job.cancel.is_none(){if let Some((cancel,progress))=semio_framework_job::CancelToken::admit_root(grant).map_err(FaultFrom::into_fault)?{job.cancel=Some(cancel);self.tool_runs.retain_original_receipt(grant,progress)?}return Ok(())}
+        if job.authority.is_none(){if let Some((authority,progress))=semio_framework_job::JobPayloadAuthority::admit(job.operation,job.generation,grant).map_err(FaultFrom::into_fault)?{job.authority=Some(authority);self.tool_runs.retain_original_receipt(grant,progress)?}return Ok(())}
+        if job.original_failure.is_some(){return Ok(())}
+        if let Some(descriptor)=job.outcome.as_mut(){
+            if job.outcome_received{if !descriptor.is_acknowledged(){let step=descriptor.acknowledge(grant);self.tool_runs.retain_original_receipt(grant,step.progress())?;return Ok(())}drop(job.outcome.take());job.outcome_received=false;self.tool_runs.retain_original_receipt(grant,RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(())}
+            let kind=descriptor.kind();
+            let view=job.borrow_outcome().map_err(FaultFrom::into_fault)?;
+            match view{Some(semio_framework_job::JobOutcomeView::PreviewReady{..}|semio_framework_job::JobOutcomeView::CheckpointReady{..}|semio_framework_job::JobOutcomeView::Fault{..})=>return Ok(()),Some(semio_framework_job::JobOutcomeView::Complete{state,output,..})if state.is_some()||output.is_some()=>return Ok(()),Some(_)=>{},None=>return Ok(())}
+            job.outcome_received=true;let purpose=job.purpose;
+            self.tool_runs.retain_original_receipt(grant,RetainedCloneProgress{copied_items:1,..Default::default()})?;
+            match kind{semio_framework_job::JobOutcomeKind::Complete=>{selected_entry_mut!(self.tool_runs).unwrap().settle_refold();if purpose==ToolRunJobPurpose::Revalidate{self.complete_tool_run_revalidation()}else{self.complete_tool_run_job(run,generation)}},semio_framework_job::JobOutcomeKind::Cancelled|semio_framework_job::JobOutcomeKind::Fault=>self.fault_tool_run(run,generation),_=>{}}
+            return Ok(())
         }
+        let fuel=if single{1}else{semio_framework_job::INTERACTIVE_LANE_FUEL};let budget=semio_framework_job::StepBudget::new(fuel,deadline,grant);
+        let mut ownership=Default::default();let mut verdict=None;
+        let interactive:&mut dyn semio_framework_job::InteractiveJob=match &mut job.job{ToolRunJobHandle::Plain(job)=>job.as_mut(),ToolRunJobHandle::Retargetable(job)=>job.as_mut()};
+        let mut context=semio_framework_job::StepContext::with_payload_authority(job.operation,job.generation,budget,job.cancel.as_ref().unwrap(),semio_framework_job::default_now_us,&mut job.preview_sequence,&mut ownership,job.authority.as_ref().unwrap()).map_err(FaultFrom::into_fault)?;
+        let stepped=semio_framework_job::drive_step(interactive,&mut context,TOOL_RUN_JOB_SITE,semio_framework_job::InteractiveStage::InteractiveStep,&mut verdict).map(|loan|loan.map(semio_framework_job::JobOutcomeBorrow::into_descriptor));
+        drop(context);
+        let failed=match stepped{Ok(descriptor)=>{if single&&descriptor.as_ref().is_some_and(|descriptor|!matches!(descriptor.kind(),semio_framework_job::JobOutcomeKind::Yield|semio_framework_job::JobOutcomeKind::CheckpointReady{..})){entry.pending_step=false}job.outcome=descriptor;false},Err(original)=>{*job.original_failure=Some(original);true}};
+        self.tool_runs.retain_original_receipt(grant,ownership)?;
+        if failed{self.fault_tool_run(run,generation)}
+        Ok(())
     }
 
     /// 🏁️ A finished job's completion — and, for a READ-ONLY run, its finalization too.
@@ -1120,10 +1057,13 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
         Ok(None)
     }
-    pub(crate) fn tool_run_retire_step(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,Fault>{
-        if let Some(step)=self.tool_run_member_retire_step(grant)?{return Ok(Some(step));}
-        if let Some(step)=self.tool_run_entry_close_step(grant)?{return Ok(Some(step));}
-        self.tool_runs.retire_step(&mut self.store,grant)
+    pub(crate) fn tool_run_retire_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<RetainedCloneStep>,semio_framework_job::OriginalTurnFailure>{
+        let grant=cx.retained_grant();if cx.should_yield(){return Ok(Some(RetainedCloneStep::Progress(Default::default())))}
+        for entry in [false,true]{
+            let step=if entry{self.tool_run_entry_close_step(grant)}else{self.tool_run_member_retire_step(grant)}.map_err(|fault|semio_framework_job::OriginalTurnFailure::debit_original(fault,cx))?;
+            if let Some(step)=step{cx.consume_fuel(step.progress().copied_items as u64);cx.consume_retained(step.progress())?;return Ok(Some(step))}
+        }
+        self.tool_runs.retire_step(&mut self.store,cx)
     }
     pub(crate) fn tool_run_retirement_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if self.tool_runs.entries.iter().any(|entry|entry.member.as_ref().is_some_and(ToolRunMemberRun::is_work))||!self.tool_runs.retired_members.is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()});}
@@ -1167,9 +1107,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()})))
     }
     /// 🎟️ Forwards the original full grant and retains every unsupported cleanup frontier in place.
-    pub(crate) fn tool_run_close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{
-        if !self.tool_runs.closing{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"ToolRun close requires genuine granted entry cancellation admission").into_fault());}
-        Ok(self.tool_run_retire_step(grant)?.unwrap_or(RetainedCloneStep::Complete(Default::default())))
+    pub(crate) fn tool_run_close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,semio_framework_job::OriginalTurnFailure>{
+        if !self.tool_runs.closing{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"ToolRun close requires genuine granted entry cancellation admission").into())}
+        Ok(self.tool_run_retire_step(cx)?.unwrap_or_else(||if self.tool_runs.terminal_is_empty(){RetainedCloneStep::Complete(Default::default())}else{RetainedCloneStep::Progress(Default::default())}))
     }
 
 }

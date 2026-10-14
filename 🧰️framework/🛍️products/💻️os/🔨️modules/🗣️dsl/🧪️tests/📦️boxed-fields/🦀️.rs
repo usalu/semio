@@ -27,7 +27,7 @@ enum InlineFieldOperation {
 }
 
 fn boxed_field_vectors() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/📦️boxed-fields/🔣️.json")).expect("neutral boxed field vectors")
+    serde_json::from_str(include_str!("../🧫️fixtures/📦️boxed-fields/🔣️.json")).expect("neutral boxed field vectors")
 }
 
 #[test]

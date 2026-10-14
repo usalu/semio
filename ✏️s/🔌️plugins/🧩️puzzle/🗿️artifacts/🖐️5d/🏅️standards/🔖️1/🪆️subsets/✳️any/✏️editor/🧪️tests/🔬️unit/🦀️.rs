@@ -1455,7 +1455,7 @@ async fn kit_in_port_is_declared_on_the_app_io() {
 //#endregion 🔖️KitInPort
 
 //#region 🔖️ClipboardMaximum
-const CLIPBOARD_MAXIMUM_FIXTURE: &str = include_str!("../../../🧫️fixtures/📋️clipboard-maximum/🔣️.json");
+const CLIPBOARD_MAXIMUM_FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/📋️clipboard-maximum/🔣️.json");
 
 /// 📋️ LAW (language-neutral fixture): on the largest shipped example with every part selected, the copy fragment
 /// carries every part, the cut removes every copied part and the paste of that fragment creates every part again.
@@ -2320,7 +2320,7 @@ async fn a_chunked_pick_lands_as_one_whole_document_load_through_the_framework_s
         }
     }
     let pack = loaded.expect("the closing chunk publishes the whole-document load");
-    let document = <crate::Puzzle5dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("the load carries a puzzle 5d document");
+    let document = <crate::Puzzle5dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("the load carries a puzzle 5d document");
     assert_eq!(document.parts.len(), target.parts.len(), "the closing chunk loaded the whole document");
     close_app(&mut app);
 }

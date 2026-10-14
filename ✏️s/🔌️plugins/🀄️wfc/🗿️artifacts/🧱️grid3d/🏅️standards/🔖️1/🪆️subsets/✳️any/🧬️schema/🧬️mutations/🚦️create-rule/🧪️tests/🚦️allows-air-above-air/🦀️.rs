@@ -10,11 +10,11 @@ use crate::diff::Grid3dDiff;
 use crate::mutations::{inverse_grid3d_mutation, Grid3dMutation};
 use crate::schema::snapshot::Grid3dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚦️create-rule/🚦️allows-air-above-air/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚦️create-rule/🚦️allows-air-above-air/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚦️create-rule/🚦️allows-air-above-air/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚦️create-rule/🚦️allows-air-above-air/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚦️create-rule/🚦️allows-air-above-air/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚦️create-rule/🚦️allows-air-above-air/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚦️create-rule/🚦️allows-air-above-air/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚦️create-rule/🚦️allows-air-above-air/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚦️create-rule/🚦️allows-air-above-air/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚦️create-rule/🚦️allows-air-above-air/🎯️outcome/🔣️.json");
 
 fn before() -> Grid3dSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

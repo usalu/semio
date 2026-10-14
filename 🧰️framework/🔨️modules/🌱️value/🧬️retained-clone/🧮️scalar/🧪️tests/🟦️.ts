@@ -1,7 +1,7 @@
 import Ajv from "ajv";
 import {expect,test} from "bun:test";
 import {applyPatch} from "fast-json-patch";
-import law from "../🧫️fixtures/🔣️.json";
+import law from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 
 test("original scalar source and exact payload agree with independent codecs",()=>{

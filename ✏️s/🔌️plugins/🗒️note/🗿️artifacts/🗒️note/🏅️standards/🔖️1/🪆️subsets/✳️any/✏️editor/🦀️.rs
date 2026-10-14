@@ -102,7 +102,7 @@ fn note_app_schema_descriptor() -> semio_framework_schema_registry::AppSchemaDes
 /// before its app-owned bounded retirement authority detached every nested owner`) on the react shell's
 /// boot `setActiveExample` (ticket 26/09/17/NOTE-PLUGIN-END-TO-END).
 pub fn reset_document_effect(document: &NoteSnapshot) -> semio_framework::kernel::Effect {
-    let pack = <NoteSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let pack = <NoteSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("note", NOTE_DOCUMENT_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }

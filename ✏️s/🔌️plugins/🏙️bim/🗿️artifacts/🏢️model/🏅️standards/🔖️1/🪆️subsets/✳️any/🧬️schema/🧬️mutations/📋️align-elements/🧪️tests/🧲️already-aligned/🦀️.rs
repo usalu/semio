@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "📋️align-elements/🧲️already-aligned",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️align-elements/🧲️already-aligned/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️align-elements/🧲️already-aligned/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️align-elements/🧲️already-aligned/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️align-elements/🧲️already-aligned/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️align-elements/🧲️already-aligned/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️align-elements/🧲️already-aligned/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️align-elements/🧲️already-aligned/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️align-elements/🧲️already-aligned/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️align-elements/🧲️already-aligned/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️align-elements/🧲️already-aligned/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

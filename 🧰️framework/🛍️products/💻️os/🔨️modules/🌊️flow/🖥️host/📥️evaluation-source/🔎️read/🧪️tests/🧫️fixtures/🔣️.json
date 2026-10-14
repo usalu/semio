@@ -1,0 +1,356 @@
+{
+  "version": 1,
+  "revision": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "foreignRevision": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+  ],
+  "comparisons": [
+    {
+      "name": "same-source",
+      "left": {
+        "neurons": [
+          {
+            "id": "shape",
+            "kind": "brep.prim3d.box",
+            "params": {
+              "$schema": "list",
+              "width": {
+                "$schema": "number",
+                "value": 2
+              }
+            }
+          }
+        ],
+        "synapses": []
+      },
+      "equal": true
+    },
+    {
+      "name": "changed-parameter",
+      "left": {
+        "neurons": [
+          {
+            "id": "shape",
+            "kind": "brep.prim3d.box",
+            "params": {
+              "$schema": "list",
+              "width": {
+                "$schema": "number",
+                "value": 2
+              }
+            }
+          }
+        ],
+        "synapses": []
+      },
+      "right": {
+        "neurons": [
+          {
+            "id": "shape",
+            "kind": "brep.prim3d.box",
+            "params": {
+              "$schema": "list",
+              "width": {
+                "$schema": "number",
+                "value": 3
+              }
+            }
+          }
+        ],
+        "synapses": []
+      },
+      "equal": false
+    },
+    {
+      "name": "different-source",
+      "left": {
+        "neurons": [
+          {
+            "id": "foreign",
+            "kind": "brep.prim3d.box",
+            "params": {
+              "$schema": "list"
+            }
+          }
+        ],
+        "synapses": []
+      },
+      "right": {
+        "neurons": [
+          {
+            "id": "shape",
+            "kind": "brep.prim3d.box",
+            "params": {
+              "$schema": "list"
+            }
+          }
+        ],
+        "synapses": []
+      },
+      "equal": false
+    }
+  ],
+  "denials": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "requiredRejections": [
+    "revision",
+    "changed-source",
+    "missing-baseline",
+    "missing-widget",
+    "missing-port",
+    "incompatible-port",
+    "missing-output",
+    "failed-output"
+  ],
+  "sourceDescriptor": {
+    "kind": "neuron",
+    "id": "shape",
+    "neuronKind": "brep.prim3d.box"
+  },
+  "query": {
+    "sourceWidget": "shape",
+    "sourcePort": "solid",
+    "targetKind": "brep.measure.volume",
+    "targetPort": "geometry",
+    "output": {
+      "solid": {
+        "$schema": "geometry",
+        "handle": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "kind": "solid"
+      }
+    }
+  },
+  "queryCases": [
+    {
+      "name": "current",
+      "result": "ready"
+    },
+    {
+      "name": "revision",
+      "result": "Revision"
+    },
+    {
+      "name": "changed-source",
+      "result": "ChangedSource"
+    },
+    {
+      "name": "missing-widget",
+      "result": "MissingWidget"
+    },
+    {
+      "name": "missing-port",
+      "result": "MissingPort"
+    },
+    {
+      "name": "incompatible-port",
+      "result": "IncompatiblePort"
+    },
+    {
+      "name": "missing-output",
+      "result": "MissingOutput"
+    },
+    {
+      "name": "failed-output",
+      "result": "FailedOutput"
+    },
+    {
+      "name": "missing-baseline",
+      "result": "MissingBaseline"
+    },
+    {
+      "name": "revision-after-ready",
+      "result": "ready",
+      "admission": "Revision"
+    },
+    {
+      "name": "source-owner-after-ready",
+      "result": "ready",
+      "admission": "ChangedSource"
+    },
+    {
+      "name": "pending-after-ready",
+      "result": "ready",
+      "admission": "Pending"
+    },
+    {
+      "name": "registry-after-ready",
+      "result": "ready",
+      "admission": "Registry"
+    },
+    {
+      "name": "preview-current",
+      "result": "ready"
+    },
+    {
+      "name": "preview-revision",
+      "result": "Revision"
+    }
+  ],
+  "cancelPhases": [
+    0,
+    3,
+    5,
+    7,
+    9,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26
+  ],
+  "tessellationWire": {
+    "tolerance": 0.05,
+    "nodeHash": 17,
+    "chunk": 0,
+    "windowId": "preview.源\nwindow",
+    "windowKindId": "procedural3d.preview",
+    "authorityInContextOnly": true,
+    "keys": [
+      "handle",
+      "tolerance",
+      "nodeHash",
+      "chunk",
+      "windowId",
+      "windowKindId"
+    ]
+  },
+  "previewSourceTransfer": {
+    "denials": [
+      "items",
+      "copy",
+      "depth"
+    ],
+    "operation": 17,
+    "generation": 9,
+    "sameHandleMemory": true,
+    "returnsWholeReadOnDenial": true,
+    "sourceHeldThroughFullClose": true
+  },
+  "tickIntake": {
+    "originalSourceRequired": true,
+    "revisionRequired": true,
+    "originRequired": true,
+    "cloneBodies": [
+      1,
+      3,
+      64
+    ],
+    "phases": [
+      "source",
+      "snapshot",
+      "snapshot-close",
+      "catalogue",
+      "baseline",
+      "host",
+      "transfer"
+    ],
+    "denials": [
+      "items",
+      "copy",
+      "capacity",
+      "release",
+      "depth"
+    ],
+    "rejections": [
+      "source-owner",
+      "revision",
+      "operation",
+      "generation",
+      "catalogue"
+    ],
+    "copiesFullSnapshot": true,
+    "normalHostOnly": true,
+    "browserGeometryAuthority": "existing-inference-broker",
+    "sourceHeldOnDenial": true,
+    "sourceHeldThroughCancelClose": true,
+    "receiptDebitedOnce": true,
+    "terminalDrop": 0,
+    "closeStates": [
+      "snapshot",
+      "snapshot-close",
+      "origin",
+      "empty"
+    ],
+    "completeRequiresEmpty": true
+  }
+}

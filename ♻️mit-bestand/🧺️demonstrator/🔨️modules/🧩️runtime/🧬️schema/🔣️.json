@@ -75,7 +75,7 @@
         },
         "profiles": {
           "const": [
-            "dev",
+            "prototype",
             "release"
           ]
         },

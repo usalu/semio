@@ -38,6 +38,7 @@ use original_retirement::FlowHostPayload;
 mod evaluation_source;
 #[cfg(test)] use evaluation_source::FlowEvaluationSource;
 use evaluation_source::work::FlowEvaluationWork;
+pub use evaluation_source::read::{FlowCurrentOutput,FlowCurrentOutputRead,FlowPreviewSource,FlowPreviewSourceTransfer,FlowPreviewTessellationRequest,FlowPreviewTessellationWriter,FlowSourceRead,FlowSourceReadFailure,FlowSourceReadRequest,FlowSourceReadTarget,FlowSourceReadStep};
 #[path="📤️publication/🖼️display/🦀️.rs"]
 mod display_publication;
 use display_publication::FlowDisplayCursor;
@@ -3029,14 +3030,14 @@ impl FlowHostRetirement {
     pub fn close_phase(&self)->FlowHostClosePhase{if self.state.geometry.is_some()||self.state.source.as_ref().is_some_and(|host|host.geometry_port.is_some()){FlowHostClosePhase::Geometry}else if self.state.source.as_ref().is_some_and(|host|host.history_store.is_some()){FlowHostClosePhase::HistoryStore}else if self.state.source.is_some(){FlowHostClosePhase::Dag}else if self.state.payload.is_some(){FlowHostClosePhase::Domain}else{FlowHostClosePhase::Complete}}
     fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
         if self.terminal_is_empty(){return Ok(RetirementDemand::default())}
-        if let Some(payload)=self.state.payload.as_ref(){return Ok(if payload.terminal_is_empty(){RetirementDemand{depth:1,..Default::default()}}else{RetirementDemand{copy_bytes:payload.next_copy_byte_demand()?,capacity_bytes:payload.next_capacity_byte_demand(copy)?,release_bytes:payload.next_release_byte_demand()?,depth:payload.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"host payload close depth overflow"))?}})}
+        if let Some(payload)=self.state.payload.as_ref(){return Ok(if payload.terminal_is_empty(){RetirementDemand{depth:1,..Default::default()}}else{{let mut demand=payload.selected_demand(copy)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"host payload close depth overflow"))?;demand}})}
         if let Some(port)=self.state.geometry.as_ref(){return Ok(RetirementDemand{copy_bytes:port.next_copy_byte_demand()?,capacity_bytes:port.next_capacity_byte_demand(copy)?,release_bytes:port.next_release_byte_demand()?,depth:port.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"host geometry close depth overflow"))?})}
         let source=self.state.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"host close lost original custody"))?;
         if source.geometry_port.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
         if let Some(store)=source.history_store.as_ref(){if !store.close_owned_store_terminal_is_empty(){let mut demand=store.close_owned_demands(copy)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"host store close depth overflow"))?;return Ok(demand)}}
         Ok(RetirementDemand{depth:1,..Default::default()})
     }
-    pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+    pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{if let Some(payload)=self.state.payload.as_ref(){if !payload.terminal_is_empty(){return payload.next_copy_byte_demand()}}Ok(self.close_demands(0)?.copy_bytes)}
     pub fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.close_demands(copy)?.capacity_bytes)}
     pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
     pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
@@ -3085,7 +3086,7 @@ impl FlowHost {
     /// instead; this drains the same ladder in one uninterrupted cold pass.
     pub fn retire_cold(self) {
         let mut retirement=FlowHostRetirement::new(self);
-        while !retirement.terminal_is_empty(){let copy=retirement.next_close_copy_byte_demand().expect("cold host copy authority");let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:retirement.next_close_capacity_byte_demand(copy).expect("cold host capacity authority"),maximum_release_bytes:retirement.next_close_release_byte_demand().expect("cold host release authority"),maximum_depth:retirement.next_close_depth_demand().expect("cold host depth authority")};let step=retirement.close_step(grant).expect("cold original host close");assert!(step.progress().copied_items!=0,"cold original host close stalled");}
+        while !retirement.terminal_is_empty(){let copy=retirement.next_close_copy_byte_demand().expect("cold host copy authority");let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:retirement.next_close_capacity_byte_demand(copy).expect("cold host capacity authority"),maximum_release_bytes:retirement.next_close_release_byte_demand().expect("cold host release authority"),maximum_depth:retirement.next_close_depth_demand().expect("cold host depth authority")};let step=retirement.close_step(grant).expect("cold original host close");assert!(step.progress().copied_items!=0,"cold original host close stalled at exact demand");}
     }
 
     /// 🏠️ Runs `body` against a host built from `fixture`, then retires that host — the ONE shape a
@@ -3310,6 +3311,10 @@ pub struct FlowEvalSessionState {
     tick_display_progress:RetainedCloneProgress,
     tick_evaluation_ready:u8,
     pending_host:Option<FlowHost>,
+    pending_snapshot_copy:Option<Box<dyn semio_framework_artifact_flow_flow::retained::FlowHostSnapshotIntake>>,
+    pending_tick_snapshot:Option<FlowHostSnapshot>,
+    pending_tick_snapshot_retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<FlowHostSnapshot>>,
+    pending_tick_snapshot_origin:Option<(u64,u64)>,
     retiring_host:Option<FlowHostRetirement>,
     pending_host_cancelled:bool,
     preview_cancellation_cursor:Option<usize>,
@@ -3518,6 +3523,7 @@ struct SessionPreviewRetention {
 }
 
 enum SessionCollectionOwner {
+    TickSnapshot(FlowHostSnapshot),
     InvocationOrigins(Vec<FlowInvocationEntry>),
     LivePublication(SessionLivePublication),
     Retention(SessionPreviewRetention),
@@ -3543,6 +3549,7 @@ impl RetireOwned for SessionCollectionOwner {
     fn retirement(self)->Box<dyn RetirementCursor>{
         use semio_framework_value::retirement::{RetireOwned,shared::SharedControlledRetirement};
         match self{
+            Self::TickSnapshot(value)=>value.retirement(),
             Self::InvocationOrigins(value)=>value.retirement(),
             Self::LivePublication(value)=>value.retirement(),
             Self::Retention(value)=>value.retirement(),
@@ -3560,6 +3567,7 @@ impl RetireOwned for SessionCollectionOwner {
     fn retirement_birth_bytes(&self)->Option<usize>{
         use semio_framework_value::retirement::{RetireOwned,shared::shared_retirement_birth_bytes};
         match self{
+            Self::TickSnapshot(value)=>value.retirement_birth_bytes(),
             Self::InvocationOrigins(value)=>value.retirement_birth_bytes(),
             Self::LivePublication(value)=>value.retirement_birth_bytes(),
             Self::Retention(value)=>value.retirement_birth_bytes(),
@@ -3626,6 +3634,9 @@ impl SessionRetirement {
 }
 
 /// 🔒️ Evaluation ownership stays guarded until every collection, domain, cache, and byte frontier is empty.
+/// 🧳️ Intake failure retains the exact typed original source or identifies its same-session custody.
+pub enum FlowSnapshotIntakeFailure<R:RetireOwned+Sync>{Original{failure:semio_framework_job::OriginalTurnFailure,source:semio_framework_artifact_flow_flow::retained::FlowSnapshotCopyIntakeSource<R>},Retained{failure:semio_framework_job::OriginalTurnFailure}}
+
 pub struct FlowEvalSession {
     state: std::mem::ManuallyDrop<FlowEvalSessionState>,
 }
@@ -3716,6 +3727,10 @@ impl FlowEvalSession {
                 tick_display_progress:Default::default(),
                 tick_evaluation_ready:0,
                 pending_host:None,
+                pending_snapshot_copy:None,
+                pending_tick_snapshot:None,
+                pending_tick_snapshot_retirement:None,
+                pending_tick_snapshot_origin:None,
                 retiring_host:None,
                 pending_host_cancelled:false,
                 preview_cancellation_cursor:None,
@@ -3762,6 +3777,65 @@ impl FlowEvalSession {
 
     pub fn neural_cache(&self) -> Arc<NeuralCache> {
         self.neural_cache.as_ref().expect("live Flow evaluation session owns its neural cache").clone()
+    }
+
+    /// 🪙️ Quotes the original Store-read source and concrete copy frame before either is born.
+    pub fn tick_snapshot_intake_constructor_demands<R:RetireOwned+Sync>()->Result<RetirementDemand,ValueError>{
+        let mut demand=semio_framework_value::retained_clone::RetainedCloneSource::<FlowHostSnapshot,crate::os_store::snapshot_read::SnapshotRead<R>>::borrowed_constructor_demand::<crate::os_store::snapshot_read::SnapshotRead<R>>();demand.capacity_bytes=demand.capacity_bytes.checked_add(size_of::<semio_framework_artifact_flow_flow::retained::FlowHostSnapshotCopy<R>>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tick intake metadata overflows"))?;Ok(demand)
+    }
+    /// 🧾️ Retains the exact original Store read before normal tick snapshot copying begins.
+    pub fn begin_tick_snapshot_intake<R:RetireOwned+Sync>(&mut self,read:crate::os_store::snapshot_read::SnapshotRead<R>,project:for<'source>fn(&'source R)->&'source FlowHostSnapshot,revision:[u8;32],source_generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),FlowSnapshotIntakeFailure<R>>{
+        use semio_framework_artifact_flow_flow::retained::{FlowHostSnapshotCopy,FlowSnapshotCopyIntakeSource};
+        if self.closing||!self.tick_snapshot_intake_terminal_is_empty()||self.state.pending_host.is_some()||self.state.retiring_host.is_some(){return Err(FlowSnapshotIntakeFailure::Original{failure:ValueError::literal(ValueRefusalKind::WorkLimit,"original tick snapshot intake custody is occupied").into(),source:FlowSnapshotCopyIntakeSource::Read(read)})}
+        let birth=size_of::<FlowHostSnapshotCopy<R>>();let demand=semio_framework_value::retained_clone::RetainedCloneSource::<FlowHostSnapshot,crate::os_store::snapshot_read::SnapshotRead<R>>::borrowed_constructor_demand::<crate::os_store::snapshot_read::SnapshotRead<R>>();let grant=cx.retained_grant();let Some(capacity)=demand.capacity_bytes.checked_add(birth)else{return Err(FlowSnapshotIntakeFailure::Original{failure:ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tick intake metadata overflows").into(),source:FlowSnapshotCopyIntakeSource::Read(read)})};
+        if cx.is_cancelled()||cx.should_yield()||grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_capacity_bytes<capacity{return Err(FlowSnapshotIntakeFailure::Original{failure:ValueError::literal(ValueRefusalKind::WorkLimit,"original tick snapshot intake awaits constructor admission").into(),source:FlowSnapshotCopyIntakeSource::Read(read)})}
+        let copy=FlowHostSnapshotCopy::from_read(read,project,revision,source_generation,cx).map_err(|(failure,source)|FlowSnapshotIntakeFailure::Original{failure,source})?;
+        self.state.pending_snapshot_copy=Some(Box::new(copy));self.state.pending_tick_snapshot_origin=Some((cx.operation().0,cx.generation().0));cx.consume_retained(RetainedCloneProgress{retained_capacity_bytes:birth,..Default::default()}).map_err(|error|FlowSnapshotIntakeFailure::Retained{failure:error.into()})?;Ok(())
+    }
+    pub fn next_tick_snapshot_intake_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.state.pending_snapshot_copy.as_ref().map_or(Ok(Default::default()),|source|source.next_normal_demands(body))}
+    /// 🧵️ Advances the same read-bound copy with the initiating operation's actual remaining authority.
+    pub fn tick_snapshot_intake_step(&mut self,revision:[u8;32],cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let source=self.state.pending_snapshot_copy.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original tick snapshot read was not admitted"))?;
+        source.advance(revision,cx)?;Ok(source.complete())
+    }
+    /// 📤️ Moves only the completed owned snapshot while retaining its original read for full funded closure.
+    pub fn take_tick_snapshot_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if cx.is_cancelled()||cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}
+        if self.state.pending_tick_snapshot_origin!=Some((cx.operation().0,cx.generation().0)){cx.consume_fuel(1);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original tick transfer requires its initiating operation").into())}
+        if self.state.pending_tick_snapshot.is_some(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original completed snapshot custody is occupied").into())}
+        let source=self.state.pending_snapshot_copy.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original tick snapshot read is absent"))?;
+        if !source.complete(){return Ok(false)}
+        self.state.pending_tick_snapshot=source.take();source.begin_close();cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;Ok(true)
+    }
+    pub fn admitted_tick_snapshot(&self)->Option<&FlowHostSnapshot>{self.state.pending_tick_snapshot.as_ref()}
+    /// ♻️ Closes only the original intake source while its completed snapshot remains retained.
+    pub fn close_tick_snapshot_intake_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if self.state.pending_snapshot_copy.is_some()&&self.state.pending_tick_snapshot_origin!=Some((cx.operation().0,cx.generation().0)){if cx.should_yield(){return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked)}cx.consume_fuel(1);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original tick source close requires its initiating operation").into())}
+        let Some(source)=self.state.pending_snapshot_copy.as_mut()else{return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})};
+        source.begin_close();let d=source.next_close_demands(cx.retained_grant().maximum_copy_bytes)?;
+        if source.terminal_is_empty(){let step=semio_framework_job::close_original_retained_step(cx,d,|_|{self.state.pending_snapshot_copy=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:d.release_bytes,..Default::default()}))})?;return Ok(if self.state.pending_snapshot_copy.is_none(){match step{semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>semio_framework_job::InteractiveJobCloseStep::Complete{progress},semio_framework_job::InteractiveJobCloseStep::Blocked=>semio_framework_job::InteractiveJobCloseStep::Blocked}}else{step})}
+        semio_framework_job::close_original_retained_step(cx,d,|grant|source.close_step(grant))
+    }
+
+    /// 🛑️ Quotes closure of only this tick's original read and incomplete snapshot construction.
+    pub fn abort_tick_snapshot_intake_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+        if let Some(source)=self.state.pending_snapshot_copy.as_ref(){return source.next_close_demands(body)}
+        if let Some(source)=self.state.pending_tick_snapshot_retirement.as_ref(){return source.selected_demand(body)}
+        Ok(RetirementDemand{depth:usize::from(self.state.pending_tick_snapshot.is_some()||self.state.pending_tick_snapshot_origin.is_some()),..Default::default()})
+    }
+    /// ✅️ Snapshot intake reaches terminal only after the original read, snapshot and initiating identity close.
+    pub fn tick_snapshot_intake_terminal_is_empty(&self)->bool{self.state.pending_snapshot_copy.is_none()&&self.state.pending_tick_snapshot.is_none()&&self.state.pending_tick_snapshot_retirement.is_none()&&self.state.pending_tick_snapshot_origin.is_none()}
+    /// ♻️ Retains every partial original tick owner until its same initiating context finishes paid closure.
+    pub fn abort_tick_snapshot_intake_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_job::{InteractiveJobCloseStep,close_original_retained_step};
+        if cx.should_yield(){return Ok(InteractiveJobCloseStep::Blocked)}
+        if self.state.pending_tick_snapshot_origin.is_some_and(|origin|origin!=(cx.operation().0,cx.generation().0)){cx.consume_fuel(1);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original tick close requires its initiating operation").into())}
+        if self.state.pending_snapshot_copy.is_some(){return self.close_tick_snapshot_intake_step(cx).map(|step|match step{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})}
+        let d=self.abort_tick_snapshot_intake_demands(cx.retained_grant().maximum_copy_bytes)?;
+        if let Some(source)=self.state.pending_tick_snapshot_retirement.as_mut(){let step=close_original_retained_step(cx,d,|grant|source.step(grant))?;if source.terminal_is_empty(){self.state.pending_tick_snapshot_retirement=None}return Ok(match step{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})}
+        if self.state.pending_tick_snapshot.is_some(){return close_original_retained_step(cx,d,|_|{let source=self.state.pending_tick_snapshot.take().unwrap();self.state.pending_tick_snapshot_retirement=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(source).unwrap_or_else(|_|unreachable!()));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))})}
+        if self.state.pending_tick_snapshot_origin.is_some(){let step=close_original_retained_step(cx,d,|_|{self.state.pending_tick_snapshot_origin=None;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))})?;return Ok(if self.tick_snapshot_intake_terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})}
+        Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})
     }
 
     /// 📥️ Retains the same admitted original Host across evaluation and publication turns.
@@ -4659,7 +4733,7 @@ impl FlowEvalSession {
 
     fn owns_session_source(&self)->bool{
         let state=&*self.state;
-        state.invocation_origin_growth.is_some()||state.invocation_origins.capacity()!=0||state.pending_tick_display.is_some()||state.operator_registry.is_some()||state.neural_cache.is_some()||state.previous_snapshot.is_some()||state.previous_channels.is_some()||state.eval_json.is_some()
+        state.pending_tick_snapshot.is_some()||state.pending_tick_snapshot_retirement.is_some()||state.pending_tick_snapshot_origin.is_some()||state.invocation_origin_growth.is_some()||state.invocation_origins.capacity()!=0||state.pending_tick_display.is_some()||state.operator_registry.is_some()||state.neural_cache.is_some()||state.previous_snapshot.is_some()||state.previous_channels.is_some()||state.eval_json.is_some()
             ||state.painted_eval_json.capacity()!=0||state.converged_eval_json.capacity()!=0||state.status_json.capacity()!=0||state.extension_evaluate_fault.is_some()
             ||state.preview_retention.is_some()||!state.window_tick_latches.terminal_is_empty()||!state.live_geometry_handles.terminal_is_empty()||!state.preview_mesh_pack_by_handle.terminal_is_empty()
             ||!state.pending_tessellate_by_hash.terminal_is_empty()||!state.tessellate_handle_by_hash.terminal_is_empty()||!state.tessellate_progress_by_hash.terminal_is_empty()
@@ -4668,6 +4742,7 @@ impl FlowEvalSession {
 
     fn take_session_source(&mut self)->Option<SessionCollectionOwner>{
         let state=&mut*self.state;
+        if let Some(source)=state.pending_tick_snapshot.take(){return Some(SessionCollectionOwner::TickSnapshot(source))}
         if let Some(source)=state.invocation_origin_growth.take(){return Some(SessionCollectionOwner::InvocationOrigins(source))}
         if state.invocation_origins.capacity()!=0{return Some(SessionCollectionOwner::InvocationOrigins(std::mem::take(&mut state.invocation_origins)))}
         if let Some(value)=state.pending_tick_display.take(){return Some(SessionCollectionOwner::LivePublication(value))}
@@ -4691,6 +4766,9 @@ impl FlowEvalSession {
     }
 
     fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+        if let Some(source)=self.state.pending_snapshot_copy.as_ref(){return source.next_close_demands(copy)}
+        if let Some(source)=self.state.pending_tick_snapshot_retirement.as_ref(){return source.selected_demand(copy)}
+        if self.state.pending_tick_snapshot.is_some()||self.state.pending_tick_snapshot_origin.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
         if let Some(host)=self.state.retiring_host.as_ref(){return Ok(RetirementDemand{copy_bytes:host.next_close_copy_byte_demand()?,capacity_bytes:host.next_close_capacity_byte_demand(copy)?,release_bytes:host.next_close_release_byte_demand()?,depth:host.next_close_depth_demand()?})}
         if self.state.pending_host.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
         if let Some(port)=self.retiring_geometry_port.as_ref(){return Ok(RetirementDemand{copy_bytes:port.next_copy_byte_demand()?,capacity_bytes:port.next_capacity_byte_demand(copy)?,release_bytes:port.next_release_byte_demand()?,depth:port.next_depth_demand()?})}
@@ -4713,33 +4791,37 @@ impl FlowEvalSession {
     pub fn next_retirement_depth_demand(&self)->Result<usize,ValueError>{Ok(self.retirement.demands(0)?.depth)}
     pub fn retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.retirement.step(grant)}
 
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,ValueError>{
         use semio_framework_job::InteractiveJobCloseStep as Step;
         let empty=RetainedCloneProgress::default();
-        if !self.closing{return Step::Blocked}
-        if grant.maximum_items==0{return Step::Pending{progress:empty}}
-        let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(value)=>value,Err(error)=>return Step::Refused{kind:error.kind,progress:error.retained_progress()}};
-        if grant.maximum_depth<demand.depth{return Step::Refused{kind:ValueRefusalKind::DepthLimit,progress:Default::default()}}
+        if !self.closing{return Ok(Step::Blocked)}
+        if grant.maximum_items==0{return Ok(Step::Pending{progress:empty})}
+        let demand=self.close_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original Flow session close requires its actual cursor depth"))}
+        if let Some(source)=self.state.pending_snapshot_copy.as_mut(){if source.terminal_is_empty(){if grant.maximum_release_bytes<demand.release_bytes{return Ok(Step::Pending{progress:empty})}self.state.pending_snapshot_copy=None;return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..empty}})}source.begin_close();let step=source.close_step(grant)?;return Ok(Step::Pending{progress:step.progress()})}
+        if let Some(source)=self.state.pending_tick_snapshot_retirement.as_mut(){let step=source.step(grant)?;if source.terminal_is_empty(){self.state.pending_tick_snapshot_retirement=None}return Ok(Step::Pending{progress:step.progress()})}
+        if let Some(source)=self.state.pending_tick_snapshot.take(){self.state.pending_tick_snapshot_retirement=Some(ControlledRetirement::new(source).unwrap_or_else(|_|unreachable!()));return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}})}
+        if self.state.pending_tick_snapshot_origin.take().is_some(){return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}})}
         if let Some(host)=self.state.retiring_host.as_mut(){
             let result=host.close_step(grant).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,host.terminal_is_empty(),"Flow session original pending Host"));
             if host.terminal_is_empty(){self.state.retiring_host=None;}
-            return match result{Ok(step)=>if self.terminal_is_empty(){Step::Complete{progress:step.progress()}}else{Step::Pending{progress:step.progress()}},Err(error)=>Step::Refused{kind:error.kind,progress:error.retained_progress()}}
+            return match result{Ok(step)=>if self.terminal_is_empty(){Ok(Step::Complete{progress:step.progress()})}else{Ok(Step::Pending{progress:step.progress()})},Err(error)=>Err(error)}
         }
-        if let Some(host)=self.state.pending_host.take(){self.state.retiring_host=Some(FlowHostRetirement::new(host));return Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}}}
+        if let Some(host)=self.state.pending_host.take(){self.state.retiring_host=Some(FlowHostRetirement::new(host));return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}})}
         if let Some(port)=self.retiring_geometry_port.as_mut(){
             let result=port.close_step(grant).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,port.terminal_is_empty(),"Flow session original geometry port"));
             if port.terminal_is_empty(){self.retiring_geometry_port=None;}
-            return match result{Ok(step)=>Step::Pending{progress:step.progress()},Err(error)=>Step::Refused{kind:error.kind,progress:error.retained_progress()}}
+            return match result{Ok(step)=>Ok(Step::Pending{progress:step.progress()}),Err(error)=>Err(error)}
         }
         if !self.retirement.terminal_is_empty(){
-            return match self.retirement.step(grant){Ok(step)=>if self.terminal_is_empty(){Step::Complete{progress:step.progress()}}else{Step::Pending{progress:step.progress()}},Err(error)=>Step::Refused{kind:error.kind,progress:error.retained_progress()}}
+            return match self.retirement.step(grant){Ok(step)=>if self.terminal_is_empty(){Ok(Step::Complete{progress:step.progress()})}else{Ok(Step::Pending{progress:step.progress()})},Err(error)=>Err(error)}
         }
-        if let Some(port)=self.geometry_port.take(){self.retiring_geometry_port=Some(crate::geometry::GeometryPortRetirement::new(port));return Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}}}
+        if let Some(port)=self.geometry_port.take(){self.retiring_geometry_port=Some(crate::geometry::GeometryPortRetirement::new(port));return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}})}
         if let Some(source)=self.take_session_source(){
             self.retirement.root=Some(ControlledRetirement::new(source).unwrap_or_else(|_|unreachable!("declared original session source root supports controlled retirement")));
-            return Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}}
+            return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}})
         }
-        Step::Complete{progress:empty}
+        Ok(Step::Complete{progress:empty})
     }
 
     /// 🧊️ Pays each original close currency explicitly at the existing cold disposal boundary.
@@ -4749,12 +4831,12 @@ impl FlowEvalSession {
             if self.terminal_is_empty(){return}
             let copy=self.next_close_copy_byte_demand().expect("cold session original copy demand").max(4096);
             let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_close_capacity_byte_demand(copy).expect("cold session original capacity demand"),maximum_release_bytes:self.next_close_release_byte_demand().expect("cold session original release demand"),maximum_depth:self.next_close_depth_demand().expect("cold session original depth demand")};
-            if let semio_framework_job::InteractiveJobCloseStep::Refused{kind,..}=self.close_step(grant){panic!("cold session original owner refused: {kind:?}")}
+            self.close_step(grant).expect("cold session original owner refused");
         }
         assert!(self.terminal_is_empty(),"cold session disposal did not reach original terminal ownership");
     }
 
-    pub fn terminal_is_empty(&self)->bool{self.closing&&self.state.pending_host.is_none()&&self.state.retiring_host.is_none()&&self.geometry_port.is_none()&&self.retiring_geometry_port.is_none()&&!self.owns_session_source()&&self.retirement.terminal_is_empty()}
+    pub fn terminal_is_empty(&self)->bool{self.closing&&self.state.pending_snapshot_copy.is_none()&&self.state.pending_host.is_none()&&self.state.retiring_host.is_none()&&self.geometry_port.is_none()&&self.retiring_geometry_port.is_none()&&!self.owns_session_source()&&self.retirement.terminal_is_empty()}
 }
 
 /// 🧊 True when a base64 `pack` mesh body carries something paintable — decoded once, structurally,

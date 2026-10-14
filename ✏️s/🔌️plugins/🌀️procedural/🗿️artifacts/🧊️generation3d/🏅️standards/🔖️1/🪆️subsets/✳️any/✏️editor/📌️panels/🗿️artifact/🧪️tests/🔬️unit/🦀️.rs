@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::generation3d::modes::edit::windows::flow::{graph_outline, GENERATION_3D_PLAY_OUTLINE_NODES, GENERATION_3D_PLAY_OUTLINE_WIRES};
 use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
-const DOCUMENT_ROWS_LAW: &str = include_str!("../../🧫️fixtures/🔬️unit/🔣️.json");
+const DOCUMENT_ROWS_LAW: &str = include_str!("../🧫️fixtures/🔬️unit/🔣️.json");
 /// 🧾️ The law fixture's document tree, projected through the same retiring projection the flow
 /// window's outline law uses, so both trees are read as one renderer-neutral shape.
 fn law_document_projection() -> serde_json::Value {

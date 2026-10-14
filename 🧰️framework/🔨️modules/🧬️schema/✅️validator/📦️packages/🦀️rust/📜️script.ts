@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { resolveTestLevel } from "../../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** ✅️ `@semio-tech/schema-validator-rs` router: `bun ./📜️script.ts test`. */
 
-import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -21,7 +21,7 @@ class TestScript extends BundleScript {
 
 class NeutralOwnerScript extends BundleScript {
   async run(): Promise<void> {
-    const { runOwnedCommand } = await import("../../../../🏃️process/🎛️owned-execution/🟦️.ts");
+    const { runOwnedCommand } = await import("../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
     await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🧩️neutral-owner/🟦️.ts")], this.repoRoot, "schema-validator:neutral-owner", 120000, { env: process.env });
   }
 }

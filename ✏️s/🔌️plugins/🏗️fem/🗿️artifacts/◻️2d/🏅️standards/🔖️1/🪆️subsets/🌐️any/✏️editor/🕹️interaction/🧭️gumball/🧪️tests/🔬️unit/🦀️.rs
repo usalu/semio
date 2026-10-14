@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::fem2d::transient::FemGumballTransient;
 use crate::editor::fem2d::interaction::canvas_gesture::FEM2D_UTILITY_TRANSFORM;
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
 
 type Fem2dSnapshot = crate::Fem2dSnapshot;
 

@@ -2,7 +2,7 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import sharp from "sharp";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {RasterStackJob,type RasterStackLayer} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🗂️layers/🟦️.ts";
 test("flatten command preserves visible appearance and placement",async()=>{

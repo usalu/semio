@@ -194,7 +194,7 @@ export function testGeneration3dDocumentIoSurface(): void {
 
 /** 📏️ Qualifies neutral source-demand recipes with independent schema, UTF-8 and inverse oracles. */
 export function testGeneration3dDocumentCapacity(): number {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🎨️surface/🔣️.json", import.meta.url), "utf8")) as DocumentCapacityFixture;
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🎨️surface/🔣️.json", import.meta.url), "utf8")) as DocumentCapacityFixture;
   const capacity = fixture.documentContinuation.capacity;
   const demand = capacity.sourceDemand;
   const schema = JSON.parse(readFileSync(new URL("../../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
@@ -274,12 +274,12 @@ export function testGeneration3dIoInputContracts(): number {
 
 /** 🎨️ Prepared geometry carries the same authored channels as the independent buffer oracle. */
 export function testGeneration3dMeshSurface(): number {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🎨️surface/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🎨️surface/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validate = new Ajv({ strict: false }).compile(schema.$defs.Generation3dPreparedMesh);
   assert.equal(fixture.schema, "generation3d.mesh-surface.v1");
   assert.ok(validate(fixture.gltfExport.prepared), JSON.stringify(validate.errors));
-  const cutoffCase = JSON.parse(readFileSync(new URL("../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🖌️render/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json", import.meta.url), "utf8")).alphaCutoffCase;
+  const cutoffCase = JSON.parse(readFileSync(new URL("../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json", import.meta.url), "utf8")).alphaCutoffCase;
   const cutoffPrepared = structuredClone(fixture.gltfExport.prepared);
   cutoffPrepared.materials.paint.alphaCutoff = cutoffCase.value;
   assert.ok(validate(cutoffPrepared), JSON.stringify(validate.errors));
@@ -360,7 +360,7 @@ export function testGeneration3dMeshSurface(): number {
     }
   }
 
-  const admission = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🚧️import-admission/🔣️.json", import.meta.url), "utf8"));
+  const admission = JSON.parse(readFileSync(new URL("../🧫️fixtures/🚧️import-admission/🔣️.json", import.meta.url), "utf8"));
   const admittedSource = fixture.gltfSurfaceAuthoring.cases[0].document;
   assert.deepEqual(gltfImportAdmission(parseGltfDocument(admittedSource)), admission.expected);
   const admissionOracle = new Document(), admissionPositions = admissionOracle.createAccessor().setType("VEC3").setArray(new Float32Array(admission.expected.vertices * 3)), admissionIndices = admissionOracle.createAccessor().setType("SCALAR").setArray(new Uint16Array(admission.expected.triangles * 3));
@@ -386,7 +386,7 @@ export function testGeneration3dMeshSurface(): number {
   }
   console.log(`[DEBUG] glTF admission portable refusals=${admission.refusals.length} modes=${admission.modes.length} independentGltfTransformAndThreeCounts=true`);
 
-  const authoredImport = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔁️authored-attributes/🔣️.json", import.meta.url), "utf8")), preparedImport = fixture.gltfExport.prepared;
+  const authoredImport = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔁️authored-attributes/🔣️.json", import.meta.url), "utf8")), preparedImport = fixture.gltfExport.prepared;
   for (const row of authoredImport.cases) {
     const source = structuredClone(admittedSource);
     const extras = { semioAttributes: preparedImport.attributes, semioAttributeStreams: authoredImport.streams, semioSourceVertices: row.vertices, semioSourceCorners: row.corners, semioSourceFaces: row.faces };
@@ -513,7 +513,7 @@ export function testGeneration3dMeshSurface(): number {
 /** 🧩️ Concave faces stay editable, with area checked by the independent polygon triangulator. */
 /** 🎬️ Imported placements remain editable graph inputs; Three.js supplies the affine oracle. */
 export function testGeneration3dGltfSceneImport(): void {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🎬️scene-import/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🎬️scene-import/🔣️.json", import.meta.url), "utf8"));
   assert.equal(fixture.schema, "generation3d.gltf-scene-graph.v1");
   const hostFor = (count: number): FlowHostSnapshot => ({ schema: "flow.host_snapshot", camera: { x: binary64(0), y: binary64(0), zoom: binary64(1) }, layout: {}, widgets: Array.from({ length: count }, (_, index) => ({ kind: "neuron", id: `imported-geometry${index ? `-${index}` : ""}`, neuronKind: "brep.mesh.construct", params: {}, inputPorts: [], outputPorts: [], preview: true })), synapses: [] });
   for (const row of fixture.cases) {
@@ -564,7 +564,7 @@ export function testGeneration3dGltfSceneImport(): void {
 }
 
 export function testGeneration3dPolygonImport(): number {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🧩️polygon-import/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🧩️polygon-import/🔣️.json", import.meta.url), "utf8"));
   const view = new DataView(new ArrayBuffer(8));
   const binary64 = (value: number) => { view.setFloat64(0, value); return { bits: view.getBigUint64(0) }; };
   for (const row of fixture.cases) {
@@ -603,7 +603,7 @@ export function testGeneration3dPolygonImport(): number {
 
 /** 🔬️ Reads the actual native byte codec output with the independent glTF Transform implementation. */
 export async function verifyPreparedGltfExportOracle(path: string): Promise<void> {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🎨️surface/🔣️.json", import.meta.url), "utf8")).gltfExport;
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🎨️surface/🔣️.json", import.meta.url), "utf8")).gltfExport;
   const document = await new NodeIO().read(path), primitive = document.getRoot().listMeshes()[0].listPrimitives()[0];
   for (const [semantic, expected] of Object.entries(fixture.expanded)) assert.deepEqual(Array.from(primitive.getAttribute(semantic)!.getArray()!), expected, `native byte oracle ${semantic}`);
   assert.deepEqual(primitive.getExtras().semioAttributes, fixture.prepared.attributes);

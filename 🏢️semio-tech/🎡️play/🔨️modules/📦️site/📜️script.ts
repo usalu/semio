@@ -1,9 +1,10 @@
 #!/usr/bin/env bun
-import { buildModeEnvironment, readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { buildModeEnvironment, readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { buildViteArtifact } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
 import { prefetchPlayMapTiles } from "./🗺️map-tiles/🟦️.ts";
 import { PLAY_HOST, playRuntimeComponentIds } from "../🧩️runtime/🟦️.ts";
@@ -23,17 +24,17 @@ async function cancellable(run: (signal: AbortSignal) => Promise<void>): Promise
  * @see ../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts */
 class BuildScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw new Error("The play build accepts no arguments; SEMIO_RELEASE_GENERATION=fresh selects a cold generation");
+    if (args.length) throw new Error("The play build accepts no arguments; SEMIO_NATIVE_BUILD_GENERATION=fresh selects a cold generation");
     const root = resolve(this.root, "../.."), pipeline = JSON.parse(readFileSync(join(root, "📋️project.json"), "utf8")).targets.build.metadata.semio.release;
-    const [{ releaseGenerationKindV1, runReleaseDriverV1 }, { cargoDirectories, releasePipelinePlanV1 }, { repoCacheDirectory }, { componentDriverStagesV1 }] = await Promise.all([
-      import("../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts"),
+    const [{ nativeBuildGenerationKindV1, runNativeBuildDriverV1 }, { cargoDirectories, nativeBuildPipelinePlanV1 }, { repoCacheDirectory }, { componentDriverStagesV1 }] = await Promise.all([
+      import("../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts"),
       import("../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts"),
       import("../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts"),
       import("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts"),
     ]);
-    const { plan, jobEnvironment } = releasePipelinePlanV1(this.repoRoot, pipeline, new Set(playRuntimeComponentIds()));
+    const { plan, jobEnvironment } = nativeBuildPipelinePlanV1(this.repoRoot, pipeline, new Set(playRuntimeComponentIds()));
     await cancellable(async (signal) => {
-      await runReleaseDriverV1({ plan, cwd: this.repoRoot, cacheRoot: repoCacheDirectory(this.repoRoot), shared: cargoDirectories(this.repoRoot), generation: releaseGenerationKindV1(process.env), leaseDirectory: repoCacheDirectory(this.repoRoot, "agents", "resource-leases"), environment: process.env, signal: AbortSignal.any([signal, this.invocation.control.signal]), stages: componentDriverStagesV1(this.repoRoot), jobEnvironment });
+      await runNativeBuildDriverV1({ plan, compilerConfiguration: join(this.repoRoot,".cargo/config.toml"), cwd: this.repoRoot, cacheRoot: repoCacheDirectory(this.repoRoot), shared: cargoDirectories(this.repoRoot), generation: nativeBuildGenerationKindV1(process.env), leaseDirectory: join(this.repoRoot, ".cache/framework/leases"), environment: process.env, control: scriptCompilerAdmissionControlV1(this.invocation, "native:driver", 0), stages: componentDriverStagesV1(this.repoRoot), jobEnvironment });
     });
   }
 }
@@ -52,7 +53,7 @@ class BundleSiteScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("bundle accepts no arguments");
     const root = resolve(this.root, "../..");
-    await cancellable((signal) => buildViteArtifact({ root, workspace: this.repoRoot, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), output: join(root, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE), "site"), owner: "play:site", signal, environment: { SEMIO_BUILD_MODE: readBuildMode(process.env.SEMIO_BUILD_MODE), SEMIO_RENDERER: "react", GIS_MAP_TILE_SERVE_MODE: "bundle" }, ...(process.env.SEMIO_TICKET_DIR ? { temporaryRoot: join(process.env.SEMIO_TICKET_DIR, "🗑️generated") } : {}) }));
+    await cancellable((signal) => buildViteArtifact({ invocation: this.invocation, root, workspace: this.repoRoot, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), output: join(root, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE), "site"), owner: "play:site", signal: this.invocation.control.signal, environment: { SEMIO_BUILD_MODE: readBuildMode(process.env.SEMIO_BUILD_MODE), SEMIO_RENDERER: "react", GIS_MAP_TILE_SERVE_MODE: "bundle" }, ...(process.env.SEMIO_TICKET_DIR ? { temporaryRoot: join(process.env.SEMIO_TICKET_DIR, "🗑️generated") } : {}) }));
   }
 }
 

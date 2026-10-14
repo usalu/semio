@@ -1,0 +1,18 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "animations": [
+      {
+        "name": "bob"
+      },
+      {
+        "name": "spin"
+      }
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

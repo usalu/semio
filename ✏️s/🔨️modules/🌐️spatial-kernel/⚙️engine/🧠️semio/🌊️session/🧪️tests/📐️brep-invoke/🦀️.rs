@@ -25,7 +25,7 @@ use std::collections::BTreeMap;
 // #region 🔖️Declarations
 const CATALOG: &str = include_str!("../../🔣️.json");
 const DISPATCHER: &str = include_str!("../../🦀️.rs");
-const AFFINE_FIXTURE: &str = include_str!("../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🧫️fixtures/🔁️affine-transforms/🔣️.json");
+const AFFINE_FIXTURE: &str = include_str!("../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🧪️tests/🧫️fixtures/🔁️affine-transforms/🔣️.json");
 
 /// 🧾️ One verb as either side declares it: kernel operation, arguments `(name, type, default)` in read order, result shape.
 #[derive(Debug, PartialEq)]

@@ -134,7 +134,7 @@ fn a_model_without_zones_finishes_or_schemes_writes_none_of_it() {
 }
 
 /// 📁️ The committed zoned export: the snapshot, the IFC file written from it and the table IfcOpenShell measured from the file.
-pub const ZONED_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🏘️zoned");
+pub const ZONED_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🏘️zoned");
 
 fn pretty(model: &ModelSnapshot) -> String {
     let value: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(model)).expect("the snapshot is JSON");

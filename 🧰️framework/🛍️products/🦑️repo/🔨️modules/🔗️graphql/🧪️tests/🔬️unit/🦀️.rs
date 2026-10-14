@@ -75,7 +75,7 @@ fn records() -> RecordingContext {
 
 #[test]
 fn serves_the_committed_sdl() {
-    assert_eq!(render_sdl(&build_schema()), include_str!("../../🧫️fixtures/📜️served-schema/🔗️.graphql"));
+    assert_eq!(render_sdl(&build_schema()), include_str!("../🧫️fixtures/📜️served-schema/🔗️.graphql"));
 }
 
 #[test]

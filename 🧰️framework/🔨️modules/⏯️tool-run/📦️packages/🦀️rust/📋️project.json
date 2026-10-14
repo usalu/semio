@@ -22,6 +22,11 @@
     },
     "test-original-entities": {"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-entities"}},
     "test-original-progress": {"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-progress"}},
+    "test-original-receiving-limits": {"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-receiving-limits"}},
+    "test-original-identity-receiving": {"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-identity-receiving"}},
+    "test-original-step-receiving": {"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-step-receiving"}},
+    "test-original-native-tick": {"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-native-tick"}},
+    "test-original-entity-column": {"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-entity-column"}},
     "check": {
       "executor": "nx:run-commands",
       "options": {

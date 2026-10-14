@@ -308,7 +308,7 @@ async fn artifact_kind_id_accepts_canonical_grammar() {
 /// 🪪️ Reads the portable domain-neutral artifact corpus through the actual native parser.
 #[semio_framework_async_macros::async_test]
 async fn artifact_kind_id_follows_owner_neutral_corpus() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🚪️io/🧬️schema/🧫️fixtures/🪪️artifact-kind/🔣️.json")).expect("authored artifact-kind corpus");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🚪️io/🧪️tests/🧫️fixtures/🪪️artifact-kind/🔣️.json")).expect("authored artifact-kind corpus");
     for row in fixture["cases"].as_array().expect("portable cases") {
         let kind = row["kind"].as_str().expect("kind string");
         assert_eq!(is_canonical_artifact_kind(kind), row["parts"].is_array(), "{kind:?}");

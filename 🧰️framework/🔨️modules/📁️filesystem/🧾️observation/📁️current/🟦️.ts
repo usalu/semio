@@ -14,7 +14,7 @@ export const CURRENT_PHYSICAL_CONCURRENCY_V1=8;
 export async function mapBoundedV1<T,R>(items:readonly T[],limit:number,run:(item:T,index:number)=>Promise<R>):Promise<R[]>{
  if(!Number.isSafeInteger(limit)||limit<1)throw Error("Positive concurrency limit required");
  const results=new Array<R>(items.length);let next=0,failed=false,failure:unknown;
- const worker=async():Promise<void>=>{while(!failed&&next<items.length){const index=next++;try{results[index]=await run(items[index]!,index);}catch(error){if(!failed){failed=true;failure=error;}return;}}};
+ const worker=async():Promise<void>=>{while(!failed&&next<items.length){const index=next++;try{results[index]=await run(items[index]!,index);await Promise.resolve();}catch(error){if(!failed){failed=true;failure=error;}return;}}};
  await Promise.all(Array.from({length:Math.min(limit,items.length)},worker));
  if(failed)throw failure;
  return results;

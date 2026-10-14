@@ -5,7 +5,7 @@ import { Graph, alg } from "graphlib";
 import Ajv from "ajv/dist/2020.js";
 import { discover } from "../🟦️.ts";
 
-const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 
 test("cycle-safe discovery preserves closed physical membership and cancellation", () => {
   for (const row of fixture.cases) {

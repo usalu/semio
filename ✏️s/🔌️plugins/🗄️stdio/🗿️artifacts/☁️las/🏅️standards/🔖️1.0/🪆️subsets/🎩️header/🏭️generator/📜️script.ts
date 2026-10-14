@@ -37,7 +37,7 @@ import { currentPlatform } from "../../../../../../../../../../🧰️framework/
 const HERE = import.meta.dir;
 const ENGINE_DIR = join(HERE, "🧪️tests", "🧰️support", "📦️packages", "🦀️rust");
 const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate");
-const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
+const FIXTURES_DIR = join(HERE, "..", "🧪️tests/🧫️fixtures");
 const RECIPE = "survey-strip";
 const FIXTURE_DIRECTORY = "🛩️survey-strip";
 const FIXTURE_FILE = "☁️survey-strip.las";

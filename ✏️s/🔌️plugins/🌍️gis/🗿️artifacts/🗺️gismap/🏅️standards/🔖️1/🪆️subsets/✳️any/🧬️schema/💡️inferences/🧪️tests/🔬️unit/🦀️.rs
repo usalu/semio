@@ -70,7 +70,7 @@ use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_j
         apply_gis_map_mutation(&mut parent_after, inverse).expect("parent inverse applies");
     }
     assert_eq!(parent_after, snapshot);
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🧫️fixtures/🧩️map-create-region-group/🔣️.json")).expect("neutral Map membership corpus");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🧪️tests/🧫️fixtures/🧩️map-create-region-group/🔣️.json")).expect("neutral Map membership corpus");
     for row in fixture["membershipCases"].as_array().expect("membership cases") {
         let mut candidate = snapshot.clone();
         candidate.drawing.child_id = row["drawingChildId"].as_str().unwrap().into();

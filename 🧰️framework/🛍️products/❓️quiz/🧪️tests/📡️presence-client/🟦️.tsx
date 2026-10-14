@@ -51,7 +51,7 @@ import {
 } from "@semio-tech/quiz-react";
 import semioCursor from "../../../../🔨️modules/🖼️assets/👆️cursor/🖱️default/☀️light.svg?raw";
 import stylesheet from "../../🎯️targets/⚛️react/🎨️.css?raw";
-import vectors from "../../🧫️fixtures/📡️presence-client/🔣️.json";
+import vectors from "../🧫️fixtures/📡️presence-client/🔣️.json";
 
 //#region 🔌️FakeSockets
 /** 🔌️ A socket the test plays the proctor for: it records what the client sends and delivers what the test says. */

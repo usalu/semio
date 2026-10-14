@@ -5,7 +5,7 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 
 /// 📜️ The language-agnostic run law both surfaces answer.
-const PREVIEW_EVAL_RUN_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/⏯️preview-eval-run.json");
+const PREVIEW_EVAL_RUN_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏯️preview-eval-run.json");
 
 fn fixture() -> serde_json::Value {
     let fixture: serde_json::Value = serde_json::from_str(PREVIEW_EVAL_RUN_FIXTURE_JSON).expect("the preview evaluation run fixture parses");
@@ -223,7 +223,7 @@ fn the_lod_deflection_ladder_is_shared_and_monotone() {
 /// (`🔬️wgpu-shell-chrome-parity`) and the TypeScript `world3dComputeStatusV1` twin
 /// (`🔬️engine-contract`) answer. This law closes the third side of the triangle: that the PRODUCER
 /// actually emits a timeline of that shape, which is the half neither renderer can assert.
-const SURFACE_CONTROLS_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/🛑️surface-controls/🔣️.json");
+const SURFACE_CONTROLS_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🛑️surface-controls/🔣️.json");
 
 fn published(session: &FlowEvalSession, run: Option<&ToolRunView>) -> serde_json::Value {
     serde_json::from_str(&preview_progress_status_json_for(Some(session), run, Ok(GENERATION_3D_GEOMETRY_EXTENSION_ID.to_string()))).expect("the projection publishes json")

@@ -14,7 +14,7 @@ unsafe impl GlobalAlloc for ObservedAllocator {
 }
 #[global_allocator]static ALLOCATOR:ObservedAllocator=ObservedAllocator;
 fn observe<T>(action:impl FnOnce()->T)->(T,(usize,usize)){EVENTS.with(|events|assert!(events.replace(Some((0,0))).is_none()));let result=action();let heap=EVENTS.with(|events|events.replace(None).unwrap());(result,heap)}
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
 fn root(value:&serde_json::Value)->GenerationPlayRoot{semio_framework_pack_json::from_json_str(&value.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn quoted_grant(owner:&GenerationRootRetirement,baseline:usize)->RetainedCloneGrant{let copy=baseline.max(owner.next_copy_byte_demand().unwrap());RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()}}
 fn drain(mut owner:GenerationRootRetirement,baseline:usize)->(usize,usize,usize){
@@ -32,7 +32,7 @@ fn drain(mut owner:GenerationRootRetirement,baseline:usize)->(usize,usize,usize)
 }
 #[test]
 fn generation_root_current_physical_final_owner_and_weak_backpressure(){
- let fixture=fixture();let policy:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/♻️retirement/🔣️.json")).unwrap();
+ let fixture=fixture();let policy:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/♻️retirement/🔣️.json")).unwrap();
  for baseline in policy["baselines"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap()){
   let(root,construction)=observe(||root(&fixture["generation"]));let pointer=Arc::as_ptr(root.0.as_ref().unwrap());let weak=Arc::downgrade(root.0.as_ref().unwrap());let(copy,heap)=observe(||root.clone());assert_eq!(heap,(0,0));assert!(root.same_allocation(&copy));assert_eq!(semio_framework_pack_json::to_json_string(&root),semio_framework_pack_json::to_json_string(&copy));
   let(mut first,heap)=observe(||root.into_retirement());assert_eq!(heap,(0,0));let original=quoted_grant(&first,baseline as usize);let(step,heap)=observe(||first.close_step(original).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(Arc::as_ptr(&weak.upgrade().unwrap()),pointer);drop(weak);

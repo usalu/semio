@@ -2,7 +2,7 @@ import { test,expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { Database } from "bun:sqlite";
 const root=new URL("../",import.meta.url);
-const fixture=JSON.parse(readFileSync(new URL("🧫️fixtures/📍️declaration-query.json",root),"utf8"));
+const fixture=JSON.parse(readFileSync(new URL("🧪️tests/🧫️fixtures/📍️declaration-query.json",root),"utf8"));
 test("private child declaration capacity frontier agrees with independent SQLite ordered roster",()=>{
 
  const database=new Database(":memory:");database.run("CREATE TABLE declarations(ordinal INTEGER PRIMARY KEY,kind TEXT,standard TEXT,subset TEXT)");

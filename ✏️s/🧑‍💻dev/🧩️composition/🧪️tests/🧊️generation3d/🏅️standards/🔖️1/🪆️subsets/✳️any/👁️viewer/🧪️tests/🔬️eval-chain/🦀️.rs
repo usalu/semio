@@ -13,7 +13,7 @@ use semio_framework_plugin::{ActionMeta, PluginApp, ViewModel, ViewWindowInstanc
 
 /// ⚖️ The ONE language-agnostic addressing fixture both surfaces answer, with a third-party twin at
 /// `✏️editor/🧪️tests/🔬️tick-addressing/contract.ts`.
-const TICK_ADDRESSING_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🪟️tick-addressing.json");
+const TICK_ADDRESSING_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪟️tick-addressing.json");
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

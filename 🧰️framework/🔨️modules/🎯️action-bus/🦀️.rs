@@ -179,15 +179,15 @@ impl RetainedToolWireInput {
     pub fn next_close_capacity_byte_demand(&self,_copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
     pub fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.pages.capacity().checked_mul(size_of::<ToolWirePage>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"wire page backing extent overflow"))}
     pub fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(usize::from(self.pages.capacity()!=0))}
-    pub fn close_step(&mut self,grant:semio_framework_job::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+    pub fn close_step(&mut self,grant:semio_framework_job::RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         use semio_framework_job::{InteractiveJobCloseStep,RetainedCloneProgress};
         self.begin_close();
-        if self.terminal_is_empty(){return InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()}}
-        let bytes=match self.next_close_release_byte_demand(){Ok(bytes)=>bytes,Err(error)=>return InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};
-        if grant.maximum_items==0||bytes>grant.maximum_release_bytes{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()}}
-        if self.pages.capacity()!=0&&grant.maximum_depth==0{return InteractiveJobCloseStep::Refused{kind:semio_framework_value::ValueRefusalKind::DepthLimit,progress:RetainedCloneProgress::default()}}
+        if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()})}
+        let bytes=self.next_close_release_byte_demand()?;
+        if grant.maximum_items==0||bytes>grant.maximum_release_bytes{return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()})}
+        if self.pages.capacity()!=0&&grant.maximum_depth==0{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original wire input close exceeds caller depth"))}
         drop(std::mem::take(&mut self.pages));self.admitted_bytes=0;
-        InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:0,retained_capacity_bytes:0,released_bytes:bytes}}
+        Ok(InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:0,retained_capacity_bytes:0,released_bytes:bytes}})
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -297,57 +297,87 @@ impl ToolExecutionContract {
 }
 
 pub struct ErasedToolJob {
-    /// 🧵️ `+ Send`: an erased tool job is dispatched onto the pool, so the object type states the
-    /// thread-transfer requirement itself now that `InteractiveJob` no longer imposes `Send` on
-    /// single-threaded targets (see `semio_framework_job::JobThreadTransfer`).
-    inner: Box<dyn InteractiveJob + Send>,
+    inner: std::mem::ManuallyDrop<Option<Box<dyn InteractiveJob + Send>>>,
 }
 
 impl ErasedToolJob {
     fn new<J: InteractiveJob + Send + 'static>(job: J) -> Self {
-        Self { inner: Box::new(job) }
+        Self { inner: std::mem::ManuallyDrop::new(Some(Box::new(job))) }
     }
+
+    /// 🎒️ Receives a preborn typed job allocation without cloning or allocating another wrapper.
+    pub fn from_owned(inner: Box<dyn InteractiveJob + Send>) -> Self { Self { inner: std::mem::ManuallyDrop::new(Some(inner)) } }
+
+    /// 👁️ Borrows the exact original erased allocation while its physical owner remains retained.
+    pub fn retained_job(&self) -> Option<&(dyn InteractiveJob + Send)> { self.inner.as_deref() }
+
+    fn inner(&self) -> Result<&(dyn InteractiveJob + Send), semio_framework_value::ValueError> {
+        self.inner.as_deref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original erased job is physically retired"))
+    }
+
+    fn shell_copy_bytes() -> usize { std::mem::size_of::<Option<Box<dyn InteractiveJob + Send>>>() }
 }
 
 impl InteractiveJob for ErasedToolJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_value::ValueError> {
-        self.inner.step(cx)
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        self.inner.as_mut().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original erased job is physically retired"))?.step(cx)
     }
 
-    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>,semio_framework_value::ValueError> {
-        self.inner.borrow_outcome(descriptor)
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        self.inner()?.borrow_outcome(descriptor)
     }
 
-    fn begin_close(&mut self) {
-        self.inner.begin_close();
-    }
+    fn begin_close(&mut self) { if let Some(inner) = self.inner.as_mut() { inner.begin_close(); } }
 
-    fn close_step(&mut self, grant: semio_framework_job::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        self.inner.close_step(grant)
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        use semio_framework_job::InteractiveJobCloseStep;
+        use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::RetainedCloneProgress};
+        let Some(inner) = self.inner.as_mut() else { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }) };
+        let grant = cx.retained_grant();
+        if cx.should_yield() || grant.maximum_items == 0 { return Ok(InteractiveJobCloseStep::Pending { progress: Default::default() }) }
+        if inner.terminal_is_empty() {
+            if grant.maximum_depth == 0 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "original erased job box close exceeds caller depth").into()) }
+            let released_bytes = std::mem::size_of_val(inner.as_ref());
+            let copied_bytes = Self::shell_copy_bytes();
+            if grant.maximum_copy_bytes < copied_bytes || grant.maximum_release_bytes < released_bytes { return Ok(InteractiveJobCloseStep::Pending { progress: Default::default() }) }
+            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes, released_bytes, ..Default::default() };
+            drop(self.inner.take());
+            cx.consume_fuel(1);
+            cx.consume_retained(progress).map_err(|error| semio_framework_job::OriginalTurnFailure::from(error.with_retained_progress(progress)))?;
+            return Ok(InteractiveJobCloseStep::Complete { progress });
+        }
+        if grant.maximum_depth == 0 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "original erased job child close exceeds caller depth").into()) }
+        let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+        let step = cx.with_retained_loan(child, |same| inner.close_step(same))?;
+        let step = step.admit(child, inner.terminal_is_empty()).map_err(semio_framework_job::OriginalTurnFailure::from)?;
+        Ok(match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, step => step })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        self.inner.next_close_copy_byte_demand()
+        match self.inner.as_ref() { None => Ok(0), Some(inner) if inner.terminal_is_empty() => Ok(Self::shell_copy_bytes()), Some(inner) => inner.next_close_copy_byte_demand() }
     }
 
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
-        self.inner.next_close_capacity_byte_demand(maximum_copy_bytes)
+        match self.inner.as_ref() { None => Ok(0), Some(inner) if inner.terminal_is_empty() => Ok(0), Some(inner) => inner.next_close_capacity_byte_demand(maximum_copy_bytes) }
     }
 
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        self.inner.next_close_release_byte_demand()
+        match self.inner.as_ref() { None => Ok(0), Some(inner) if inner.terminal_is_empty() => Ok(std::mem::size_of_val(inner.as_ref())), Some(inner) => inner.next_close_release_byte_demand() }
     }
 
     fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        self.inner.next_close_depth_demand()
+        match self.inner.as_ref() { None => Ok(0), Some(inner) if inner.terminal_is_empty() => Ok(1), Some(inner) => inner.next_close_depth_demand()?.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "original erased job child depth overflow")) }
     }
 
-    fn register_close_wake(&self, waker: &std::task::Waker) -> bool {
-        self.inner.register_close_wake(waker)
-    }
+    fn register_close_wake(&self, waker: &std::task::Waker) -> bool { self.inner.as_ref().is_some_and(|inner| inner.register_close_wake(waker)) }
 
-    fn terminal_is_empty(&self) -> bool {
-        self.inner.terminal_is_empty()
+    fn terminal_is_empty(&self) -> bool { self.inner.is_none() }
+}
+
+impl Drop for ErasedToolJob {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || self.terminal_is_empty(), "original erased job dropped before paid physical Box retirement");
+        if self.terminal_is_empty() { unsafe { std::mem::ManuallyDrop::drop(&mut self.inner); } }
     }
 }
 

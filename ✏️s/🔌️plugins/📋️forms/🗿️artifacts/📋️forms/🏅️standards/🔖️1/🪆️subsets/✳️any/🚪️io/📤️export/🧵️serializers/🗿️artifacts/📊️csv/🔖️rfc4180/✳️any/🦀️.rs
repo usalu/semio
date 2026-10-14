@@ -35,7 +35,7 @@ impl Serializer<FormsSnapshot> for FormsIntoCsv {
     async fn serialize(from: &FormsSnapshot, _: &ArchiveChildren, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let records = question_grid(from).into_iter().map(|row| CsvRecord { fields: row.into_iter().map(field).collect() }).collect();
         let csv = CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records };
-        Ok(IoOutcome::clean(IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(&csv))))
+        Ok(IoOutcome::clean(IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&csv))))
     }
 }
 

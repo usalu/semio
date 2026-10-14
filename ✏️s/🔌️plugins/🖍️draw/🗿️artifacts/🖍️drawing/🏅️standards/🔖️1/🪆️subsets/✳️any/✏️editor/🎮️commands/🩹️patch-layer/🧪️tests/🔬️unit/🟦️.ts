@@ -2,9 +2,9 @@ import {existsSync as testingSchemaExists} from "node:fs";
 /** 🧪️ Shared no-op decisions agree with independent RFC 6902 application. */
 import {test,expect} from "bun:test";
 import {applyPatch,type Operation} from "fast-json-patch";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../🧫️fixtures/🔣️.json";
 import {hasLayerFieldChange,selectFieldTargets} from "../../🟦️.ts";
-import selections from "../../🧫️fixtures/🎯️selection/🔣️.json";
+import selections from "../🧫️fixtures/🎯️selection/🔣️.json";
 import {produce} from "immer";
 import type {DrawingArtifact} from "../../../../../🧬️schema/🟦️.ts";
 import type {DrawingMutation} from "../../../../../🧬️schema/🧬️mutations/🟦️.ts";

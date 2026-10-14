@@ -8,7 +8,7 @@ import { pathToFileURL } from "node:url";
 export async function testProductionBrowserArtifacts(workspace: string, output: string): Promise<void> {
   const require = createRequire(import.meta.url), directory = dirname(dirname(import.meta.dir));
   const { productionBrowserSources, productionBrowserArtifactsVitePlugin, selectProductionBrowserComponents } = await import("../../🟦️.ts");
-  const cases = JSON.parse(await readFile(join(import.meta.dir, "../../🧫️fixtures/🌐️production-browser-artifacts/🔣️.json"), "utf8"));
+  const cases = JSON.parse(await readFile(join(import.meta.dir, "../🧫️fixtures/🌐️production-browser-artifacts/🔣️.json"), "utf8"));
   const schema = JSON.parse(await readFile(join(directory, "🧬️schema/🔣️.json"), "utf8"));
   const packageRoot = join(directory, "../../📦️packages/🟦️typescript");
   const project = JSON.parse(await readFile(join(packageRoot, "📋️project.json"), "utf8"));

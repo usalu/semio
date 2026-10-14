@@ -8,7 +8,7 @@ import Ajv from "ajv";
 
 //#region ✂️BackboneDetachOracle
 export function testBackboneDetachFixture(): void {
-  const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", testSourceUrl.href), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🧫️fixtures/🔣️.json", testSourceUrl.href), "utf8"));
   assert.ok(fixture.cleanup, "Original detach examples declare independent full cleanup authority");
   const contract = JSON.parse(readFileSync(new URL("../../../../../../🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const valid = new Ajv({strict:false,allErrors:true}).compile({...contract,$ref:"#/$defs/Grant"});

@@ -1,7 +1,7 @@
 //! 🧪️ Native scalar outcomes share the exact closed Source and GraphQL oracle corpus.
 use super::{parse_int64_literal,parse_int64_variable,serialize_int64,Int64Error};
 use crate::{DslValue,Number};
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔗️graphql/🔢️int64/🔣️.json")).unwrap()}
 #[test]
 fn graphql_int64_neutral_complete_signed_words(){
  let fixture=fixture();let cases=fixture["valid"].as_array().unwrap();assert_eq!(cases.len(),9);

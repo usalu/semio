@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn credential_exchange_path_follows_the_portable_schema() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🤖️agent-credential/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🤖️agent-credential/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for vector in corpus["vectors"].as_array().unwrap() {
         assert_eq!(CredentialExchangeRequestV1::new(vector["path"].as_str().unwrap().into(), Vec::new()).is_ok(), vector["valid"].as_bool().unwrap());
     }

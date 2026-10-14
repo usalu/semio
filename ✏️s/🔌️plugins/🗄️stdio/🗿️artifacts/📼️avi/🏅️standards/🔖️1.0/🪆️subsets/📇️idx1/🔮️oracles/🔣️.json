@@ -23,14 +23,14 @@
       "files": [
         {
           "role": "expected-before-avi",
-          "path": "../🧫️fixtures/📇️set-idx1-present-applied/⬅️before.avi",
+          "path": "../🧪️tests/🧫️fixtures/📇️set-idx1-present-applied/⬅️before.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
           "bytes": 498
         },
         {
           "role": "expected-after-avi",
-          "path": "../🧫️fixtures/📇️set-idx1-present-applied/➡️after.avi",
+          "path": "../🧪️tests/🧫️fixtures/📇️set-idx1-present-applied/➡️after.avi",
           "mediaType": "video/x-msvideo",
           "sha256": "sha256:543e4812c677f9ae7f281373d49eec2c1854391a91712fde20497a7ce75fa2ef",
           "bytes": 410

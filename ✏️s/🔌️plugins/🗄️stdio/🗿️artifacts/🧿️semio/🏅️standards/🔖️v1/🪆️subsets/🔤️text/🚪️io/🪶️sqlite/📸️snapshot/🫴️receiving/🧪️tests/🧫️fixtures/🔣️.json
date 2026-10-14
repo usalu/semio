@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "originalGrant": {
+    "maximumItems": 1048576,
+    "maximumCopyBytes": 16777216,
+    "maximumCapacityBytes": 33554432,
+    "maximumReleaseBytes": 67108864,
+    "maximumDepth": 64
+  },
+  "nativeMaximumBytes": 67108864,
+  "sqlMaximumBytes": 67108864,
+  "maximumCloseTurns": 1024,
+  "literal": "actual\u0000Grüße 世界 🌠\r\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "cases": [
+    {
+      "id": "emptyDocument",
+      "snapshot": {
+        "schema": "",
+        "runs": []
+      },
+      "rows": 1
+    },
+    {
+      "id": "emptyRun",
+      "snapshot": {
+        "schema": "empty 世界",
+        "runs": [
+          {
+            "language": "",
+            "content": "",
+            "marks": []
+          }
+        ]
+      },
+      "rows": 2
+    },
+    {
+      "id": "complete",
+      "snapshot": {
+        "schema": "authored\u0000世界 🌠\r\n",
+        "runs": [
+          {
+            "language": "en\u0000GB",
+            "content": "actual\u0000Grüße 世界 🌠\r\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "marks": [
+              {
+                "kind": "bold",
+                "href": "retained\u0000nonlink"
+              },
+              {
+                "kind": "italic",
+                "href": ""
+              },
+              {
+                "kind": "code",
+                "href": "also retained 世界"
+              },
+              {
+                "kind": "link",
+                "href": "https://semio.tech/\u0000🌠"
+              }
+            ]
+          },
+          {
+            "language": "de",
+            "content": "Grüße",
+            "marks": [
+              {
+                "kind": "link",
+                "href": ""
+              }
+            ]
+          },
+          {
+            "language": "",
+            "content": "",
+            "marks": []
+          }
+        ]
+      },
+      "rows": 9
+    }
+  ],
+  "signedOffsets": [
+    0,
+    -1,
+    -1000
+  ],
+  "edits": [
+    {
+      "id": "documentId",
+      "sql": "UPDATE semio_text_document SET id=2",
+      "reconstruct": "invalid"
+    },
+    {
+      "id": "runParent",
+      "sql": "UPDATE semio_text_run SET document_id=999 WHERE ordinal=0",
+      "reconstruct": "invalid"
+    },
+    {
+      "id": "markParent",
+      "sql": "UPDATE semio_text_mark SET run_id=999 WHERE id=1",
+      "reconstruct": "invalid"
+    },
+    {
+      "id": "runGap",
+      "sql": "UPDATE semio_text_run SET ordinal=99 WHERE ordinal=0",
+      "reconstruct": "invalid"
+    },
+    {
+      "id": "markGap",
+      "sql": "UPDATE semio_text_mark SET ordinal=99 WHERE id=1",
+      "reconstruct": "invalid"
+    },
+    {
+      "id": "markKind",
+      "sql": "UPDATE semio_text_mark SET kind='unknown' WHERE id=1",
+      "reconstruct": "invalid"
+    },
+    {
+      "id": "languageType",
+      "sql": "UPDATE semio_text_run SET language=X'00' WHERE ordinal=0",
+      "reconstruct": "invalid"
+    },
+    {
+      "id": "hrefType",
+      "sql": "UPDATE semio_text_mark SET href=X'00' WHERE id=1",
+      "reconstruct": "invalid"
+    },
+    {
+      "id": "schema",
+      "sql": "UPDATE semio_text_document SET schema='changed 世界'",
+      "reconstruct": "different"
+    },
+    {
+      "id": "language",
+      "sql": "UPDATE semio_text_run SET language='changed' WHERE ordinal=0",
+      "reconstruct": "different"
+    },
+    {
+      "id": "content",
+      "sql": "UPDATE semio_text_run SET content='changed' WHERE ordinal=0",
+      "reconstruct": "different"
+    },
+    {
+      "id": "href",
+      "sql": "UPDATE semio_text_mark SET href='changed' WHERE id=1",
+      "reconstruct": "different"
+    },
+    {
+      "id": "kind",
+      "sql": "UPDATE semio_text_mark SET kind='link' WHERE id=1",
+      "reconstruct": "different"
+    },
+    {
+      "id": "emptyMarks",
+      "sql": "DELETE FROM semio_text_mark WHERE run_id=1",
+      "reconstruct": "different"
+    }
+  ]
+}
+

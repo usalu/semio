@@ -211,7 +211,7 @@ async fn a_contributed_module_reaches_the_filter_bar_and_then_the_pool_rows() {
         .effects
         .into_iter()
         .find_map(|effect| match effect {
-            semio_framework::kernel::Effect::LoadDocument { pack, .. } => Some(<CurationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("restocked document")),
+            semio_framework::kernel::Effect::LoadDocument { pack, .. } => Some(<CurationSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("restocked document")),
             _ => None,
         })
         .expect("restocking publishes a document load");
@@ -263,7 +263,7 @@ async fn dispatching_set_contributions_installs_the_module_into_the_live_catalog
         .await
         .into_iter()
         .find_map(|effect| match effect {
-            semio_framework::kernel::Effect::LoadDocument { pack, .. } => Some(<CurationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("restocked document")),
+            semio_framework::kernel::Effect::LoadDocument { pack, .. } => Some(<CurationSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("restocked document")),
             _ => None,
         })
         .expect("restocking publishes a document load");
@@ -284,7 +284,7 @@ async fn the_restock_button_publishes_a_merged_catalogue_document() {
         .await
         .into_iter()
         .find_map(|effect| match effect {
-            semio_framework::kernel::Effect::LoadDocument { pack, .. } => Some(<CurationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("restocked document")),
+            semio_framework::kernel::Effect::LoadDocument { pack, .. } => Some(<CurationSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("restocked document")),
             _ => None,
         })
         .expect("restocking publishes a document load");

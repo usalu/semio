@@ -1,0 +1,12 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "228d4d620ba22f29804fed7d5c606355b5974c5a253b802c14029d0a76f84307",
+      "afterSha256": "f569adfe95c0841e73382f68a51bfa162daa3e9b485a74ab2ef83811f8d319d0",
+      "exclusive": false,
+      "scope": "Bind actual discovered shared collections and URI resolution to owner/tests/fixtures; preserve exact file/symlink/traversal/schema/asset constraints"
+    }
+  ]
+}

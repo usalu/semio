@@ -4,11 +4,11 @@ use ui_wgpu::wgpu::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileSte
 use ui_wgpu::wgpu::tree::{UiDocumentTree, UiTree};
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🎬️presented-media-slots/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🎬️presented-media-slots/🔣️.json")).unwrap()
 }
 
 fn props() -> serde_json::Value {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎬️media-transport-reservation/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎬️media-transport-reservation/🔣️.json")).unwrap();
     fixture["cases"][0]["props"].clone()
 }
 

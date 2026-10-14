@@ -13,7 +13,8 @@
   },
   "devDependencies": {
     "typescript": "^5.9.3",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.17",
+    "@semio-tech/framework": "workspace:*"
   },
   "bundleKind": "library",
   "exports": {

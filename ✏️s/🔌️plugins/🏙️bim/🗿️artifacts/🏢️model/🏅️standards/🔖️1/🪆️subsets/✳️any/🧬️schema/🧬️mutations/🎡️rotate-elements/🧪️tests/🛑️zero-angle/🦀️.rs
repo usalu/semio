@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🎡️rotate-elements/🛑️zero-angle",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎡️rotate-elements/🛑️zero-angle/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎡️rotate-elements/🛑️zero-angle/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎡️rotate-elements/🛑️zero-angle/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎡️rotate-elements/🛑️zero-angle/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎡️rotate-elements/🛑️zero-angle/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎡️rotate-elements/🛑️zero-angle/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎡️rotate-elements/🛑️zero-angle/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎡️rotate-elements/🛑️zero-angle/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎡️rotate-elements/🛑️zero-angle/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎡️rotate-elements/🛑️zero-angle/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

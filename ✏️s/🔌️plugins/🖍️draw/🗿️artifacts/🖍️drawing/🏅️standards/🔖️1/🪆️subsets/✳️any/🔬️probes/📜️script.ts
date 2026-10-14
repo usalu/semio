@@ -90,10 +90,10 @@ function main(argv: readonly string[]): number {
   // relative to THIS SCRIPT'S OWN directory, never to the process's cwd — a recorded
   // `generator.command` is replayed by the harness from an unspecified cwd, and a relative
   // `--out ../🧫️fixtures` resolved against that cwd silently lands nowhere (mirrors
-  // `…✳️document/🏭️generator/📜️script.ts`'s own `SEMIO_FIXTURE_OUT ?? --out ?? join(import.meta.dir, "..", "🧫️fixtures")` order).
+  // `…✳️document/🏭️generator/📜️script.ts`'s own `SEMIO_FIXTURE_OUT ?? --out ?? join(import.meta.dir, "../🧪️tests/🧫️fixtures")` order).
   const args = [...rest];
   if ((probe === "fixtures" || probe === "gate-inputs") && !args.includes("--out")) {
-    const fallback = probe === "fixtures" ? join(import.meta.dir, "..", "🧫️fixtures") : join(import.meta.dir, "📖️reader", "📦️packages", "🦀️rust", "target", "gate-inputs");
+    const fallback = probe === "fixtures" ? join(import.meta.dir, "../🧪️tests/🧫️fixtures") : join(import.meta.dir, "📖️reader", "📦️packages", "🦀️rust", "target", "gate-inputs");
     args.push("--out", process.env.SEMIO_FIXTURE_OUT ?? fallback);
   }
 

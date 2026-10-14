@@ -1,0 +1,5 @@
+{
+ "contract":"semio.actor.kernel-original-call-supplier.v1","exportsPerInput":1,"epochOwner":"canonical-kernel","receiptBeforeNext":true,"canonicalEventUntilIdle":true,"replayEventAfterMoreWork":false,"mixedExportOwnership":"each-original-export-retained","frameSource":"required-original-budget-field",
+ "operation":99241,"generation":7,"firstEpoch":19,"original":[9,64,65536,262144,64],
+ "returns":[{"epoch":19,"export":"admit","spent":[1,0,80,0],"moreWork":true},{"epoch":20,"export":"admit","spent":[1,0,112,0],"moreWork":true},{"epoch":21,"export":"poll","spent":[1,7,0,0],"moreWork":true},{"epoch":22,"export":"poll","spent":[1,11,0,0],"moreWork":false},{"epoch":23,"export":"job-step","spent":[1,0,0,97],"moreWork":false}]
+}

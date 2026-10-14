@@ -1,0 +1,211 @@
+{
+  "bodies": {
+    "baseline": "# Owned document\n",
+    "current": "# Current owned document\n"
+  },
+  "owners": [
+    "owner/README.md",
+    "second/README.md"
+  ],
+  "policyCases": [
+    {
+      "id": "one-owner",
+      "rows": 1,
+      "accepted": true
+    },
+    {
+      "id": "two-owners",
+      "rows": 2,
+      "accepted": true
+    },
+    {
+      "id": "empty-policy",
+      "rows": 0,
+      "accepted": true
+    },
+    {
+      "id": "trial-field-rejected",
+      "rows": 1,
+      "extra": "sourceCensus",
+      "accepted": false
+    },
+    {
+      "id": "old-cases-rejected",
+      "rows": 1,
+      "oldCases": true,
+      "accepted": false
+    },
+    {
+      "id": "row-observation-rejected",
+      "rows": 1,
+      "entryExtra": "collision",
+      "accepted": false
+    },
+    {
+      "id": "duplicate-source",
+      "rows": 2,
+      "duplicate": true,
+      "accepted": false
+    },
+    {
+      "id": "windows-drive-coordinate",
+      "rows": 1,
+      "prefix": "C:/",
+      "accepted": false
+    }
+  ],
+  "approvalCases": [
+    {
+      "id": "first-stable-owner",
+      "owner": 0,
+      "accepted": true
+    },
+    {
+      "id": "reordered-owner",
+      "owner": 0,
+      "reverse": true,
+      "accepted": true
+    },
+    {
+      "id": "second-stable-owner",
+      "owner": 1,
+      "accepted": true
+    },
+    {
+      "id": "duplicate-stable-approval",
+      "owner": 0,
+      "duplicate": true,
+      "accepted": false
+    },
+    {
+      "id": "stale-source",
+      "owner": 0,
+      "sourceDrift": true,
+      "accepted": false
+    },
+    {
+      "id": "symbolic-approval",
+      "owner": 0,
+      "nodeKind": "symlink",
+      "accepted": false
+    },
+    {
+      "id": "symbolic-parent",
+      "owner": 0,
+      "parentKind": "symlink",
+      "accepted": false
+    },
+    {
+      "id": "approval-digest-drift",
+      "owner": 0,
+      "digestDrift": true,
+      "accepted": false
+    },
+    {
+      "id": "policy-binding-drift",
+      "owner": 0,
+      "policyDrift": true,
+      "accepted": false
+    },
+    {
+      "id": "legacy-ordinal-rejected",
+      "owner": 0,
+      "ordinal": true,
+      "accepted": false
+    },
+    {
+      "id": "dangling-approved-owner",
+      "owner": 0,
+      "missingOwner": true,
+      "accepted": false,
+      "disposition": "problem"
+    }
+  ],
+  "retiredSentinelAuthority": {
+    "kind": "serialized-path-sentinel",
+    "catalogPath": "test-cases.json",
+    "catalogContentHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "caseId": "windows-con",
+    "serializedInputPath": "evidence/CON.ts",
+    "expectedViolationCode": "windows-reserved-name",
+    "authorityDigest": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "projectionCases": [
+    {
+      "id": "ordinary-owner",
+      "owner": "ordinary",
+      "expected": "project"
+    },
+    {
+      "id": "publisher-literal",
+      "owner": "fixed",
+      "expected": "fixed"
+    },
+    {
+      "id": "canonical-owner",
+      "owner": "ordinary",
+      "canonical": true,
+      "expected": "canonical"
+    },
+    {
+      "id": "unregistered",
+      "owner": "ordinary",
+      "unregistered": true,
+      "expected": "none"
+    },
+    {
+      "id": "wrong-node",
+      "owner": "ordinary",
+      "nodeKind": "symlink",
+      "expected": "problem"
+    },
+    {
+      "id": "preimage-hash-drift",
+      "owner": "ordinary",
+      "hashDrift": true,
+      "expected": "problem"
+    },
+    {
+      "id": "preimage-size-drift",
+      "owner": "ordinary",
+      "sizeDrift": true,
+      "expected": "problem"
+    },
+    {
+      "id": "preimage-mode-drift",
+      "owner": "ordinary",
+      "modeDrift": true,
+      "expected": "problem"
+    },
+    {
+      "id": "raw-and-destination",
+      "owner": "ordinary",
+      "destination": true,
+      "expected": "problem"
+    },
+    {
+      "id": "folded-destination-collision",
+      "owner": "ordinary",
+      "collision": true,
+      "expected": "problem"
+    },
+    {
+      "id": "generator-owner",
+      "owner": "generated",
+      "expected": "regenerate"
+    },
+    {
+      "id": "generator-convergence",
+      "owner": "generated",
+      "destination": true,
+      "convergent": true,
+      "expected": "regenerate"
+    },
+    {
+      "id": "generator-nonconvergence",
+      "owner": "generated",
+      "destination": true,
+      "expected": "problem"
+    }
+  ]
+}

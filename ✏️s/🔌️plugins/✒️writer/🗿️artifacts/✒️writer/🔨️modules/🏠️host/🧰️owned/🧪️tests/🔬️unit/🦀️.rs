@@ -245,11 +245,11 @@ fn hub_tail_envelope(value: &serde_json::Value) -> protocol::MutationEnvelope {
 /// The reloaded envelope must carry every folded operation.
 #[semio_framework_async_macros::async_test]
 async fn a_document_folded_from_the_hub_tail_reloads_again() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🔁️hub-tail-after-check-in/🔣️.json")).expect("hub tail fixture decodes");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔁️hub-tail-after-check-in/🔣️.json")).expect("hub tail fixture decodes");
     let document_id = fixture["documentId"].as_str().expect("hub tail document id");
     let tail = fixture["envelopes"].as_array().expect("hub tail envelopes");
     assert_eq!(tail.len(), 17, "the captured tail: four edits, a Check In, eleven two-author edits, a second Check In");
-    let current: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🔁️hub-tail-after-check-in/🧭️current-checkpoints/🔣️.json")).expect("closed current checkpoint semantics");
+    let current: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔁️hub-tail-after-check-in/🧭️current-checkpoints/🔣️.json")).expect("closed current checkpoint semantics");
     let current_rows = current["checkpoints"].as_array().expect("current checkpoint rows");
     assert_eq!(current_rows.len(), 2);
     for row in current_rows {

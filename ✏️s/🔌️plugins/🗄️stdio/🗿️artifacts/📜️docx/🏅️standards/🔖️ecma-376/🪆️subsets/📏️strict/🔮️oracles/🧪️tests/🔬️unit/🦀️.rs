@@ -2,7 +2,7 @@
 use super::*;
 
 /// 🧫️ The real committed package this subset's case runs on, read where the artifact keeps it.
-const FIXTURE: &[u8] = include_bytes!("../../../🧫️fixtures/📜️example-readme.docx");
+const FIXTURE: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/📜️example-readme.docx");
 
 fn json_object(pairs: Vec<(&str, Json)>) -> Json {
     Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())

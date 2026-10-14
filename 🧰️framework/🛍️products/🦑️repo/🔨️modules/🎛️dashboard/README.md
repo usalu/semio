@@ -296,19 +296,19 @@ One `🥒️.feature` per case under `🧪️tests/` with an adapter per impleme
 `🧪️test` harness; the recorded no-oracle decisions live in `🔮️oracles/🔣️.json`.
 
 `🌳️command-tree-projection` pins the projection of a frozen workspace. `🎮️registry` runs the frozen
-workspace `🧫️fixtures/🎮️registry/🏗️workspace.json` through the `semio` binary (`commands --json`,
+workspace `./🧪️tests/🧫️fixtures/🎮️registry/🏗️workspace.json` through the `semio` binary (`commands --json`,
 `commands --check`, `run --dry-run`) and compares every result with an independent TypeScript resolver
 written from the declaration rules, validates declarations and outputs with Ajv against the registry schema,
 and checks the XXH3 vectors of the graph-reuse decision against Bun's own hash:
 `bun nx run @semio-tech/repo-dashboard-rs:test` builds the debug binary and runs it. The scenarios of
-`🧫️fixtures/🎮️registry/🥒️.feature` are mapped to Rust tests of `🎮️registry`.
+`./🧪️tests/🧫️fixtures/🎮️registry/🥒️.feature` are mapped to Rust tests of `🎮️registry`.
 
 `🌀️control-plane` defines language-neutral lifecycle scenarios and protocol vectors. The owned
 Rust codec and the existing Ajv library validate the same vectors. The quick suite runs actual
 Bun PTYs, Nx server/build/test targets, output replay, cancellation, restart, process-tree
 termination, singleton enforcement and reattachment: `bun nx run @semio-tech/repo-dashboard-rs:test -- quick`.
 
-`🧊️execution` pins the native launch vectors of `🧫️fixtures/🧊️execution`, the Nx scheduling of
+`🧊️execution` pins the native launch vectors of `./🧪️tests/🧫️fixtures/🧊️execution`, the Nx scheduling of
 `run` and `install`, the immutable installation that keeps a running executable's bytes while
 a new build is published, and the source digest that decides whether an installation is stale (the fixture names the
 files that must and must not change it): `bun ./📜️script.ts test execution` in `📦️packages/🦀️rust`.

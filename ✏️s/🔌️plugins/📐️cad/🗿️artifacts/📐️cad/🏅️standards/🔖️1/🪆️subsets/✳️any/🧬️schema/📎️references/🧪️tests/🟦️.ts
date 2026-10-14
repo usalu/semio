@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import Parser from "web-tree-sitter";
 const root = resolve(import.meta.dir, "../../..");
 
-const corpus: { files: string[]; mountedFiles: string[]; broken: string; brokenVisibility: string } = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🔣️.json"), "utf8"));
+const corpus: { files: string[]; mountedFiles: string[]; broken: string; brokenVisibility: string } = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../🧪️tests/🧫️fixtures/📎️references/🔣️.json"), "utf8"));
 test("CAD unmounted owner input is a closed neutral four-file corpus", () => {
   
   

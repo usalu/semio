@@ -12,7 +12,7 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🎚️config/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🗂️catalog/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🗂️catalog/🧫️fixtures/*.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🗂️catalog/🧪️tests/🧫️fixtures/*.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/💬️capability-description/🟦️.ts"
     ]
   },

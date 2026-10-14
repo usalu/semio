@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
 import schema from "../../🔣️.json";
-import fixture from "../../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json";
+import fixture from "../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json";
 
 const validate = new Ajv({ strict: false, allErrors: true }).compile(schema);
 
@@ -60,6 +60,20 @@ test("native paint intent re-evaluates every neutral sample witness without a fr
 
 import {applyPatch as independentPatch} from "fast-json-patch";
 import replacementSchema from "../../../🧬️mutations/🔄️replace-image/🧬️schema/🔣️.json";
+import type {PngMutation} from "../../../🧬️mutations/🟦️.ts";
+test("declared PNG diff mutations agree with neutral RFC6902 and native codec witnesses",async()=>{
+ for(const row of fixture.diffMutationCases){
+  const source=parsePngSnapshot(fixture.cases.find(candidate=>candidate.name===row.source)!.snapshot);
+  const expected=independentPatch(structuredClone(source),[{op:"replace",path:row.patch.path,value:row.patch.value}],true,false).newDocument;
+  const actual=await applyPngMutation(source,row.mutation as PngMutation);
+  expect(actual,row.name).toEqual(expected);expect(validate(actual),row.name).toBe(true);
+  const decoded=IndependentPng.sync.read(Buffer.from(await encodePngSnapshot(actual)),{skipRescale:true}),oracle=IndependentPng.sync.read(Buffer.from(await encodePngSnapshot(expected)),{skipRescale:true});
+  expect(Array.from(decoded.data),row.name).toEqual(Array.from(oracle.data));expect(decoded.gamma,row.name).toBe(oracle.gamma);
+  expect(source).toEqual(parsePngSnapshot(fixture.cases.find(candidate=>candidate.name===row.source)!.snapshot));
+  await expect(applyPngMutation(source,row.mutation as PngMutation,{progress:()=>false})).rejects.toThrow("cancelled");
+  console.log(`[DEBUG] PNG declared diff mutation=${row.name} matches independent patch and codec`);
+ }
+});
 test("native PNG image replacement and inverse retain the exact sixteen-bit samples",async()=>{
  const validator=new Ajv({strict:false,allErrors:true}).addSchema(schema).compile(replacementSchema);
  const base=parsePngSnapshot(fixture.cases[0]!.snapshot);
@@ -93,7 +107,7 @@ test("native PNG metadata diffs agree with literal neutral targets and RFC6902",
 import {readFileSync as readPublicationFixture} from "node:fs";
 import {applyPatch as patchPublicationGrant} from "fast-json-patch";
 test("original image publication close grants preserve physical backing independently",()=>{
- const fixture=JSON.parse(readPublicationFixture(new URL("../../../../✏️editor/🧬️publication/🧫️fixtures/🔣️.json",import.meta.url),"utf8")),law=fixture.retirement;
+ const fixture=JSON.parse(readPublicationFixture(new URL("../../../../✏️editor/🧬️publication/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8")),law=fixture.retirement;
  const backing=Buffer.alloc(law.physicalBytes),grant={items:1,copy:law.copyBytes,capacity:law.capacityBytes,release:backing.byteLength,depth:law.depth};
  for(const field of ["items","release","depth"]){const denied=patchPublicationGrant(structuredClone(grant),[{op:"replace",path:`/${field}`,value:0}],true).newDocument;expect(denied.items===0||denied.release<backing.byteLength||denied.depth===0).toBe(true);expect(backing.byteLength).toBe(law.physicalBytes);}
  expect(grant.copy).toBe(3);expect(grant.release).toBe(65536);expect(law.scratchEmptyRetainsCapacity).toBe(true);expect(law.terminalChildReceipt).toBe("Progress");expect(law.terminalOwnerReceipt).toBe("Complete");

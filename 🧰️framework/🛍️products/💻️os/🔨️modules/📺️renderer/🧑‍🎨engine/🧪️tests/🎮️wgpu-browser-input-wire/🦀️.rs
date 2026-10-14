@@ -11,8 +11,8 @@ use super::{accessibility_address_within_credits, stateless_dispatch, BrowserBat
 use serde_json::Value;
 use ui_render::{AccessibilityEvent, DispatchEvent, ImeEvent, PointerButton, PointerKind};
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🎮️wgpu-browser-input-wire/🔣️.json");
-const ACCESSIBILITY_FIXTURE: &str = include_str!("../../🧫️fixtures/♿️wgpu-accessibility-interaction/🔣️.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/🎮️wgpu-browser-input-wire/🔣️.json");
+const ACCESSIBILITY_FIXTURE: &str = include_str!("../🧫️fixtures/♿️wgpu-accessibility-interaction/🔣️.json");
 
 fn rows() -> Vec<Value> {
     let fixture: Value = serde_json::from_str(FIXTURE).expect("browser input wire fixture parses");

@@ -402,7 +402,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const silentWatch = () => () => {};
 
     it("opens and closes exactly its owner's watch streams without a product route dependency", async () => {
-      const { default: fixture } = await import("../../🔨️modules/🎠️kernel/🧫️fixtures/📡️source-watch.json");
+      const { default: fixture } = await import("../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/📡️source-watch.json");
       const { default: schema } = await import("../../🔨️modules/🎠️kernel/🧬️schema/🔣️.json");
       const { default: Ajv } = await import("ajv");
       

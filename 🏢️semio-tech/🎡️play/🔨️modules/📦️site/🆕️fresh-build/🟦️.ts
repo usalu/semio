@@ -20,9 +20,9 @@ export function playFreshBuildArgs(resources: PlayFreshResources): readonly stri
   return ["run", PLAY_FRESH_BUILD_TARGET, "--skip-nx-cache", "--skip-remote-cache", `--parallel=${playFreshParallel(resources)}`, "--output-style=stream"];
 }
 
-/** 🆕️ The environment of that invocation: release mode, a cold driver generation (`SEMIO_RELEASE_GENERATION=fresh`), no daemon and no cache reads. */
+/** 🆕️ The environment of that invocation: release mode, a cold driver generation (`SEMIO_NATIVE_BUILD_GENERATION=fresh`), no daemon and no cache reads. */
 export function playFreshBuildEnvironment(): Readonly<Record<string, string>> {
-  return { SEMIO_BUILD_MODE: "release", SEMIO_RELEASE_GENERATION: "fresh", NX_DAEMON: "false", NX_SKIP_NX_CACHE: "true", NX_SKIP_REMOTE_CACHE: "true", NX_TUI: "false" };
+  return { SEMIO_BUILD_MODE: "release", SEMIO_NATIVE_BUILD_GENERATION: "fresh", NX_DAEMON: "false", NX_SKIP_NX_CACHE: "true", NX_SKIP_REMOTE_CACHE: "true", NX_TUI: "false" };
 }
 
 /** 🌐️ Places Vite state within an explicitly selected invocation cache. */

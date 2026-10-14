@@ -1,0 +1,71 @@
+{
+  "format": "semio.registry.plugin-root-ownership/v1",
+  "cases": [
+    {
+      "id": "required-only",
+      "files": [
+        "🦀️.rs",
+        "🎮️commands/🦀️.rs"
+      ],
+      "expected": []
+    },
+    {
+      "id": "optional-module-marker",
+      "files": [
+        "🦀️.rs",
+        "🎮️commands/🦀️.rs",
+        "🔨️modules/📌️.empty.md"
+      ],
+      "expected": []
+    },
+    {
+      "id": "optional-module-component",
+      "files": [
+        "🦀️.rs",
+        "🎮️commands/🦀️.rs",
+        "🔨️modules/🦀️.rs"
+      ],
+      "expected": []
+    },
+    {
+      "id": "missing-root",
+      "files": [
+        "🎮️commands/🦀️.rs"
+      ],
+      "expected": [
+        "missing:🦀️.rs"
+      ]
+    },
+    {
+      "id": "missing-command-root",
+      "files": [
+        "🦀️.rs",
+        "🔨️modules/🦀️.rs"
+      ],
+      "expected": [
+        "missing:🎮️commands/🦀️.rs"
+      ]
+    },
+    {
+      "id": "empty-command-marker",
+      "files": [
+        "🦀️.rs",
+        "🎮️commands/📌️.empty.md"
+      ],
+      "expected": [
+        "missing:🎮️commands/🦀️.rs"
+      ]
+    },
+    {
+      "id": "redundant-nested-contract",
+      "files": [
+        "🦀️.rs",
+        "🎮️commands/🦀️.rs",
+        "🔌️plugin/🦀️.rs"
+      ],
+      "expected": [
+        "nested-contract"
+      ]
+    }
+  ]
+}

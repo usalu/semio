@@ -1,0 +1,73 @@
+{
+  "name": "repo-private-cache",
+  "root": ".",
+  "targets": {
+    "kernel-retirement": {
+      "executor": "nx:run-commands", "cache": false, "outputs": [], "dependsOn": [],
+      "options": {"command": "bun ./📜️script.ts execute kernel-retirement prototype", "forwardAllArgs": false},
+      "configurations": {"prototype": {}, "release": {"command":"bun ./📜️script.ts execute kernel-retirement release"}}
+    },
+    "prepared-refusal": {
+      "executor": "nx:run-commands", "cache": false, "outputs": [], "dependsOn": [],
+      "options": {"command": "bun ./📜️script.ts execute prepared-refusal prototype", "forwardAllArgs": false},
+      "configurations": {"prototype": {}, "release": {"command":"bun ./📜️script.ts execute prepared-refusal release"}}
+    },
+    "world-resources": {
+      "executor": "nx:run-commands", "cache": false, "outputs": [], "dependsOn": [],
+      "options": {"command": "bun ./📜️script.ts execute world-resources prototype", "forwardAllArgs": false},
+      "configurations": {"prototype": {}, "release": {"command":"bun ./📜️script.ts execute world-resources release"}}
+    },
+    "renderer-unit": {
+      "executor": "nx:run-commands", "cache": false, "outputs": [], "dependsOn": [],
+      "options": {"command": "bun ./📜️script.ts execute renderer-unit prototype", "forwardAllArgs": false},
+      "configurations": {"prototype": {}, "release": {"command":"bun ./📜️script.ts execute renderer-unit release"}}
+    },
+    "camera-source": {
+      "executor": "nx:run-commands", "cache": false, "outputs": [], "dependsOn": [],
+      "options": {"command": "bun ./📜️script.ts execute camera-source prototype", "forwardAllArgs": false},
+      "configurations": {"prototype": {}, "release": {"command":"bun ./📜️script.ts execute camera-source release"}}
+    },
+    "selected-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {"command": "bun ./📜️script.ts execute selected-test prototype", "forwardAllArgs": false},
+      "configurations": {"prototype": {}, "release": {"command":"bun ./📜️script.ts execute selected-test release"}}
+    },
+    "sdk-snapshot": {
+      "executor": "nx:run-commands", "cache": false, "outputs": [], "dependsOn": [],
+      "options": {"command": "bun ./📜️script.ts execute sdk-snapshot prototype", "forwardAllArgs": false},
+      "configurations": {"prototype": {}, "release": {"command":"bun ./📜️script.ts execute sdk-snapshot release"}}
+    },
+    "pruning": {
+      "executor": "nx:run-commands", "cache": false, "outputs": [], "dependsOn": [],
+      "options": {"command": "bun ./📜️script.ts execute pruning prototype", "forwardAllArgs": false},
+      "configurations": {"prototype": {}, "release": {"command":"bun ./📜️script.ts execute pruning release"}}
+    },
+    "daemon-journal": {
+      "executor": "nx:run-commands", "cache": false, "outputs": [], "dependsOn": [],
+      "options": {"command": "bun ./📜️script.ts execute daemon-journal prototype", "forwardAllArgs": false},
+      "configurations": {"prototype": {}, "release": {"command":"bun ./📜️script.ts execute daemon-journal release"}}
+    },
+    "daemon-journal-workspace": {
+      "executor": "nx:run-commands", "cache": false, "outputs": [], "dependsOn": [],
+      "options": {"command": "bun ./📜️script.ts execute daemon-journal-workspace prototype", "forwardAllArgs": false},
+      "configurations": {"prototype": {}, "release": {"command":"bun ./📜️script.ts execute daemon-journal-workspace release"}}
+    },
+    "reclaim": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ../private-reclaim/📜️script.ts tertiary",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {}
+      }
+    }
+  }
+}

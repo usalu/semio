@@ -218,7 +218,7 @@ async fn command_ids_are_unique_and_cover_every_row() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎮️command-roster/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎮️command-roster/🔣️.json")).unwrap();
     let expected: Vec<&str> = fixture["toolIds"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect();
     assert_eq!(ids, expected, "the artifact command roster matches the language-neutral oracle");
 }
@@ -233,7 +233,7 @@ async fn every_command_round_trips_text_and_binary() {
 /// 🧷️ Pins the current binary ordinal and text of the divergent leave-surface command.
 #[semio_framework_async_macros::async_test]
 async fn leave_surface_text_and_binary_match_the_command_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎮️command-roster/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎮️command-roster/🔣️.json")).unwrap();
     let hex = |command: &Block3dCommand| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
     assert_eq!(protocol::OpText::print_op(&Block3dCommand::LeaveSurface(leave_surface::LeaveSurface {})), fixture["leaveSurface"]["text"].as_str().unwrap());
     assert_eq!(hex(&Block3dCommand::LeaveSurface(leave_surface::LeaveSurface {})), fixture["leaveSurface"]["binaryHex"].as_str().unwrap());
@@ -272,7 +272,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     // that resolved roster — not the raw `WindowKindDefinition::actions` field — which decides what a
     // window can dispatch.
     let definition = create_block3d_app();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎮️command-roster/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎮️command-roster/🔣️.json")).unwrap();
     assert_eq!(serde_json::to_value(&definition.breadcrumb).unwrap(), fixture["document"]);
     let world_window = definition.window_kinds.iter().find(|window| window.id == world::BLOCK3D_WINDOW_WORLD).expect("world window declared");
     let world_actions = semio_framework::window_kind_actions(&definition, world_window);

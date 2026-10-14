@@ -1,0 +1,7 @@
+# PDF1.4 Original Receiving Scope
+
+Fresh read-only inspection confirms two snapshot fields (schema and ordered pages), each page width/height/text, and two SQL tables with widths2/10. Exact binary64 bit/class companions preserve all signed-zero/NaN/nonfinite state. Snapshot/PageDoc already derive RetireOwned. Cold P/R owns Projection/parser/sorted rows/DecodedValue page buffers and rejects nonpositive page IDs despite no positive DDL constraint; TypeScript reconstruction has the same incorrect positivity rule.
+
+Actual base Host has no original receiving P/R or validators. Its cold subset policy delegates registered a/x conformance beyond wildcard base. Both registered callbacks allocate diagnostic Vec, message strings, FaultCode and scope. X additionally clones the first page and formats dynamic dimensions. Complete four-hook custody cannot safely replace this with wildcard-only rejection or cold conformance delegation while claiming all current dialect behavior preserved.
+
+No PDF producer/fixture/script changes made. This lane selects Semio Text next for the requested compact full receiving exercise, subject to fresh actual retirement inspection. PDF remains an explicit future scope requiring schema-first legal signed page IDs/float corpus and original paid diagnostic construction preserving a/x warning order/content, as well as static page/metadata/frame custody. No tests/builds or runtime claims from this read-only audit.

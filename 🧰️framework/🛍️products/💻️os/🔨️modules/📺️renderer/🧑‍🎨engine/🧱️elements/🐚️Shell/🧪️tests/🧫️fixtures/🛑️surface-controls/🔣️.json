@@ -1,0 +1,536 @@
+{
+  "note": "🛑️ The per-surface overlay control the shell offers on top of a live engine surface: the World3d compute CANCEL, read out of the scene's own `statusJson` cancel contract (`cancellable` + `cancelAction` + the string/number `cancelArgs` the control dispatches the action with, e.g. a tool run's `{runId, generation}`). Framing the flow graph is an app-declared action (`zoomToFlow`), not shell chrome. Language-neutral: the Rust law answers it through `world3d_cancel_affordance`/`surface_overlay_controls_for`, the TypeScript twin through `world3dComputeStatusV1` (`🔨️modules/🖱️ui/🎬️scene/🟦️.ts`). Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
+  "controlHeightPx": 22.4,
+  "surfaceControlMinimum": {
+    "widthControlHeights": 4,
+    "heightControlHeights": 2
+  },
+  "cancelContract": [
+    {
+      "id": "a-cancellable-status-naming-an-action-offers-the-control",
+      "statusJson": "{\"computing\":true,\"phase\":\"meshingFaces\",\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\",\"progress\":{\"unitsDone\":3,\"unitsTotal\":8}}",
+      "expected": {
+        "cancellable": true,
+        "cancelAction": "cancelPreviewEval",
+        "cancelArgs": {}
+      }
+    },
+    {
+      "id": "a-tool-run-abort-names-the-run-it-stops",
+      "statusJson": "{\"computing\":true,\"phase\":\"meshingFaces\",\"cancellable\":true,\"cancelAction\":\"toolRunAbort\",\"cancelArgs\":{\"runId\":\"7\",\"generation\":2}}",
+      "expected": {
+        "cancellable": true,
+        "cancelAction": "toolRunAbort",
+        "cancelArgs": {
+          "runId": "7",
+          "generation": 2
+        }
+      }
+    },
+    {
+      "id": "hostile-cancel-args-keep-only-scalar-values",
+      "statusJson": "{\"computing\":true,\"cancellable\":true,\"cancelAction\":\"toolRunAbort\",\"cancelArgs\":{\"runId\":\"7\",\"generation\":1,\"nested\":{\"x\":1},\"list\":[1],\"flag\":true,\"nan\":null}}",
+      "expected": {
+        "cancellable": true,
+        "cancelAction": "toolRunAbort",
+        "cancelArgs": {
+          "runId": "7",
+          "generation": 1
+        }
+      }
+    },
+    {
+      "id": "a-cancellable-status-naming-no-action-offers-nothing",
+      "statusJson": "{\"computing\":true,\"phase\":\"meshingFaces\",\"cancellable\":true,\"cancelAction\":\"\"}",
+      "expected": {
+        "cancellable": false,
+        "cancelAction": "",
+        "cancelArgs": {}
+      }
+    },
+    {
+      "id": "a-producer-that-cannot-be-stopped-offers-nothing",
+      "statusJson": "{\"computing\":true,\"phase\":\"meshingFaces\",\"cancellable\":false,\"cancelAction\":\"cancelPreviewEval\"}",
+      "expected": {
+        "cancellable": false,
+        "cancelAction": "cancelPreviewEval",
+        "cancelArgs": {}
+      }
+    },
+    {
+      "id": "an-absent-cancellable-flag-offers-nothing",
+      "statusJson": "{\"computing\":true,\"phase\":\"meshingFaces\",\"cancelAction\":\"cancelPreviewEval\"}",
+      "expected": {
+        "cancellable": false,
+        "cancelAction": "cancelPreviewEval",
+        "cancelArgs": {}
+      }
+    },
+    {
+      "id": "a-hostile-cancellable-type-offers-nothing",
+      "statusJson": "{\"computing\":true,\"cancellable\":\"true\",\"cancelAction\":\"cancelPreviewEval\"}",
+      "expected": {
+        "cancellable": false,
+        "cancelAction": "cancelPreviewEval",
+        "cancelArgs": {}
+      }
+    },
+    {
+      "id": "malformed-json-degrades-to-the-neutral-status",
+      "statusJson": "{not json",
+      "expected": {
+        "cancellable": false,
+        "cancelAction": "",
+        "cancelArgs": {}
+      }
+    },
+    {
+      "id": "a-non-object-status-degrades-to-the-neutral-status",
+      "statusJson": "[1,2,3]",
+      "expected": {
+        "cancellable": false,
+        "cancelAction": "",
+        "cancelArgs": {}
+      }
+    },
+    {
+      "id": "an-empty-status-degrades-to-the-neutral-status",
+      "statusJson": "",
+      "expected": {
+        "cancellable": false,
+        "cancelAction": "",
+        "cancelArgs": {}
+      }
+    },
+    {
+      "id": "no-status-at-all-offers-nothing",
+      "statusJson": null,
+      "expected": {
+        "cancellable": false,
+        "cancelAction": "",
+        "cancelArgs": {}
+      }
+    }
+  ],
+  "surfaceControls": [
+    {
+      "id": "a-live-graph-pane-offers-no-shell-overlay",
+      "graphs": [
+        {
+          "surfaceId": "window:procedural-view-flow",
+          "bounds": [
+            0,
+            40,
+            480,
+            320
+          ]
+        }
+      ],
+      "worlds": [],
+      "expected": []
+    },
+    {
+      "id": "a-computing-preview-offers-cancel",
+      "graphs": [
+        {
+          "surfaceId": "window:procedural-view-flow",
+          "bounds": [
+            0,
+            40,
+            480,
+            320
+          ]
+        }
+      ],
+      "worlds": [
+        {
+          "surfaceId": "window:procedural-view-preview",
+          "bounds": [
+            480,
+            40,
+            480,
+            320
+          ],
+          "statusJson": "{\"computing\":true,\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\"}"
+        }
+      ],
+      "expected": [
+        "shell.world3d.cancel::window:procedural-view-preview"
+      ]
+    },
+    {
+      "id": "a-settled-preview-offers-no-cancel",
+      "graphs": [],
+      "worlds": [
+        {
+          "surfaceId": "window:procedural-view-preview",
+          "bounds": [
+            480,
+            40,
+            480,
+            320
+          ],
+          "statusJson": "{\"computing\":false,\"phase\":\"idle\",\"cancellable\":false,\"cancelAction\":\"\"}"
+        }
+      ],
+      "expected": []
+    },
+    {
+      "id": "a-preview-with-no-status-offers-no-cancel",
+      "graphs": [],
+      "worlds": [
+        {
+          "surfaceId": "window:procedural-view-preview",
+          "bounds": [
+            480,
+            40,
+            480,
+            320
+          ],
+          "statusJson": null
+        }
+      ],
+      "expected": []
+    },
+    {
+      "id": "a-pane-too-small-to-carry-a-control-offers-none",
+      "graphs": [
+        {
+          "surfaceId": "window:procedural-view-flow",
+          "bounds": [
+            0,
+            40,
+            24,
+            12
+          ]
+        }
+      ],
+      "worlds": [
+        {
+          "surfaceId": "window:procedural-view-preview",
+          "bounds": [
+            24,
+            40,
+            24,
+            12
+          ],
+          "statusJson": "{\"computing\":true,\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\"}"
+        }
+      ],
+      "expected": []
+    }
+  ],
+  "statusPaneNote": "⏳️ The PROGRESS half of the same status contract, beyond the cancel affordance above: what a World3d surface's compute-status pane says while an evaluation resolves. `visible` is React's own `WorldComputeStatusPane` gate (`computing || cancellable || phase === \"cancelled\"`) — a settled producer annotates nothing. `phaseLabel` is the producer's own `{en, de}` pair and is honoured only when BOTH tongues carry text; a renderer with no pair falls back to its own bilingual `common.loading`, never to the other language. `progressText` is `unitsDone/unitsTotal (percent%)` and is null for an indeterminate producer, whose bar paints a bare track rather than a lie. The Rust law answers through `world3d_compute_status`/`world3d_status_pill_for`, the TypeScript twin through `world3dComputeStatusV1`.",
+  "statusPane": [
+    {
+      "id": "a-meshing-producer-shows-its-own-phase-and-how-far-it-has-got",
+      "statusJson": "{\"computing\":true,\"phase\":\"meshingFaces\",\"phaseLabel\":{\"en\":\"Meshing faces\",\"de\":\"Flächen werden vernetzt\"},\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\",\"progress\":{\"unitsDone\":3,\"unitsTotal\":8,\"facesDone\":12,\"facesTotal\":32,\"inFlight\":2}}",
+      "expected": {
+        "visible": true,
+        "computing": true,
+        "phase": "meshingFaces",
+        "phaseLabel": {
+          "en": "Meshing faces",
+          "de": "Flächen werden vernetzt"
+        },
+        "unitsDone": 3,
+        "unitsTotal": 8,
+        "facesDone": 12,
+        "facesTotal": 32,
+        "inFlight": 2,
+        "ratio": 0.375,
+        "progressText": "3/8 (38%)"
+      }
+    },
+    {
+      "id": "an-indeterminate-producer-shows-a-phase-and-no-count",
+      "statusJson": "{\"computing\":true,\"phase\":\"computing\",\"phaseLabel\":{\"en\":\"Computing\",\"de\":\"Berechnen\"},\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\"}",
+      "expected": {
+        "visible": true,
+        "computing": true,
+        "phase": "computing",
+        "phaseLabel": {
+          "en": "Computing",
+          "de": "Berechnen"
+        },
+        "unitsDone": 0,
+        "unitsTotal": 0,
+        "facesDone": 0,
+        "facesTotal": 0,
+        "inFlight": 0,
+        "ratio": 1,
+        "progressText": null
+      }
+    },
+    {
+      "id": "a-producer-that-declares-its-own-ratio-is-believed-over-the-counts",
+      "statusJson": "{\"computing\":true,\"phase\":\"stitching\",\"phaseLabel\":{\"en\":\"Stitching shells\",\"de\":\"Schalen werden vernäht\"},\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\",\"progress\":{\"unitsDone\":3,\"unitsTotal\":8,\"ratio\":0.5}}",
+      "expected": {
+        "visible": true,
+        "computing": true,
+        "phase": "stitching",
+        "phaseLabel": {
+          "en": "Stitching shells",
+          "de": "Schalen werden vernäht"
+        },
+        "unitsDone": 3,
+        "unitsTotal": 8,
+        "facesDone": 0,
+        "facesTotal": 0,
+        "inFlight": 0,
+        "ratio": 0.5,
+        "progressText": "3/8 (50%)"
+      }
+    },
+    {
+      "id": "a-ratio-outside-the-unit-interval-is-clamped-never-painted-past-the-track",
+      "statusJson": "{\"computing\":true,\"phase\":\"meshingFaces\",\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\",\"progress\":{\"unitsDone\":2,\"unitsTotal\":4,\"ratio\":2.5}}",
+      "expected": {
+        "visible": true,
+        "computing": true,
+        "phase": "meshingFaces",
+        "phaseLabel": null,
+        "unitsDone": 2,
+        "unitsTotal": 4,
+        "facesDone": 0,
+        "facesTotal": 0,
+        "inFlight": 0,
+        "ratio": 1,
+        "progressText": "2/4 (100%)"
+      }
+    },
+    {
+      "id": "a-count-past-its-own-total-is-clamped-to-the-total",
+      "statusJson": "{\"computing\":true,\"phase\":\"meshingFaces\",\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\",\"progress\":{\"unitsDone\":19,\"unitsTotal\":4}}",
+      "expected": {
+        "visible": true,
+        "computing": true,
+        "phase": "meshingFaces",
+        "phaseLabel": null,
+        "unitsDone": 4,
+        "unitsTotal": 4,
+        "facesDone": 0,
+        "facesTotal": 0,
+        "inFlight": 0,
+        "ratio": 1,
+        "progressText": "4/4 (100%)"
+      }
+    },
+    {
+      "id": "a-half-translated-phase-label-is-no-label-at-all",
+      "statusJson": "{\"computing\":true,\"phase\":\"meshingFaces\",\"phaseLabel\":{\"en\":\"Meshing faces\",\"de\":\"\"},\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\",\"progress\":{\"unitsDone\":1,\"unitsTotal\":2}}",
+      "expected": {
+        "visible": true,
+        "computing": true,
+        "phase": "meshingFaces",
+        "phaseLabel": null,
+        "unitsDone": 1,
+        "unitsTotal": 2,
+        "facesDone": 0,
+        "facesTotal": 0,
+        "inFlight": 0,
+        "ratio": 0.5,
+        "progressText": "1/2 (50%)"
+      }
+    },
+    {
+      "id": "a-cancelled-producer-still-says-so-after-it-stopped",
+      "statusJson": "{\"computing\":false,\"phase\":\"cancelled\",\"phaseLabel\":{\"en\":\"Cancelled\",\"de\":\"Abgebrochen\"},\"cancellable\":false,\"cancelAction\":\"\"}",
+      "expected": {
+        "visible": true,
+        "computing": false,
+        "phase": "cancelled",
+        "phaseLabel": {
+          "en": "Cancelled",
+          "de": "Abgebrochen"
+        },
+        "unitsDone": 0,
+        "unitsTotal": 0,
+        "facesDone": 0,
+        "facesTotal": 0,
+        "inFlight": 0,
+        "ratio": 1,
+        "progressText": null
+      }
+    },
+    {
+      "id": "a-settled-producer-annotates-nothing-at-all",
+      "statusJson": "{\"computing\":false,\"phase\":\"idle\",\"phaseLabel\":{\"en\":\"Idle\",\"de\":\"Bereit\"},\"cancellable\":false,\"cancelAction\":\"\"}",
+      "expected": {
+        "visible": false,
+        "computing": false,
+        "phase": "idle",
+        "phaseLabel": {
+          "en": "Idle",
+          "de": "Bereit"
+        },
+        "unitsDone": 0,
+        "unitsTotal": 0,
+        "facesDone": 0,
+        "facesTotal": 0,
+        "inFlight": 0,
+        "ratio": 1,
+        "progressText": null
+      }
+    },
+    {
+      "id": "no-status-at-all-annotates-nothing",
+      "statusJson": null,
+      "expected": {
+        "visible": false,
+        "computing": false,
+        "phase": "idle",
+        "phaseLabel": null,
+        "unitsDone": 0,
+        "unitsTotal": 0,
+        "facesDone": 0,
+        "facesTotal": 0,
+        "inFlight": 0,
+        "ratio": 1,
+        "progressText": null
+      }
+    },
+    {
+      "id": "malformed-json-annotates-nothing-instead-of-blanking-the-viewport",
+      "statusJson": "{not json",
+      "expected": {
+        "visible": false,
+        "computing": false,
+        "phase": "idle",
+        "phaseLabel": null,
+        "unitsDone": 0,
+        "unitsTotal": 0,
+        "facesDone": 0,
+        "facesTotal": 0,
+        "inFlight": 0,
+        "ratio": 1,
+        "progressText": null
+      }
+    },
+    {
+      "id": "hostile-progress-types-degrade-to-zero-counts",
+      "statusJson": "{\"computing\":true,\"phase\":\"meshingFaces\",\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\",\"progress\":{\"unitsDone\":\"3\",\"unitsTotal\":-8,\"facesDone\":null,\"inFlight\":true}}",
+      "expected": {
+        "visible": true,
+        "computing": true,
+        "phase": "meshingFaces",
+        "phaseLabel": null,
+        "unitsDone": 0,
+        "unitsTotal": 0,
+        "facesDone": 0,
+        "facesTotal": 0,
+        "inFlight": 0,
+        "ratio": 1,
+        "progressText": null
+      }
+    }
+  ],
+  "progressTimelineNote": "⏳️⛓️ ONE long preview evaluation, frame by frame, as the producer publishes it and as a surface must be able to show it. The law is the TIMELINE, not the row: at least four consecutive frames are non-idle, their ratio never decreases, the last frame is settled again, and every non-idle frame both paints a pill and offers the cancel the producer names. A run that publishes `idle` throughout satisfies every single-row assertion and is exactly the defect this section exists to fail — on both renderers the whole of a 23 s evaluation published `phase:\"idle\" inFlight:0 ratio:1.0` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-progress-visibility-2026-09-14.md`). Language-neutral: the Rust law answers it through `world3d_compute_status`/`world3d_status_pill_for`, the TypeScript twin through `world3dComputeStatusV1` (`🔨️modules/🖱️ui/🎬️scene/🟦️.ts`), and the generation3d producer law proves its own projection emits exactly this shape.",
+  "progressTimeline": {
+    "minimumNonIdleFrames": 4,
+    "evaluation": [
+      {
+        "id": "00-settled-before-the-gesture",
+        "statusJson": "{\"computing\": false, \"phase\": \"idle\", \"phaseLabel\": {\"en\": \"Idle\", \"de\": \"Bereit\"}, \"progress\": {\"unitsDone\": 0, \"unitsTotal\": 0, \"facesDone\": 0, \"facesTotal\": 0, \"inFlight\": 0, \"ratio\": 1.0}, \"cancellable\": false, \"cancelAction\": \"\"}",
+        "expected": {
+          "visible": false,
+          "phase": "idle",
+          "ratio": 1.0,
+          "progressText": null
+        }
+      },
+      {
+        "id": "01-the-chain-is-armed-and-has-published-nothing-yet",
+        "statusJson": "{\"computing\": true, \"phase\": \"computing\", \"phaseLabel\": {\"en\": \"Computing\", \"de\": \"Berechnen\"}, \"progress\": {\"unitsDone\": 0, \"unitsTotal\": 0, \"facesDone\": 0, \"facesTotal\": 0, \"inFlight\": 1, \"ratio\": 0.0}, \"cancellable\": true, \"cancelAction\": \"toolRunAbort\", \"cancelArgs\": {\"runId\": \"1\", \"generation\": 0}}",
+        "expected": {
+          "visible": true,
+          "phase": "computing",
+          "ratio": 0.0,
+          "progressText": null
+        }
+      },
+      {
+        "id": "02-the-first-node-settled",
+        "statusJson": "{\"computing\": true, \"phase\": \"computing\", \"phaseLabel\": {\"en\": \"Computing\", \"de\": \"Berechnen\"}, \"progress\": {\"unitsDone\": 1, \"unitsTotal\": 4, \"facesDone\": 0, \"facesTotal\": 0, \"inFlight\": 1, \"ratio\": 0.25}, \"cancellable\": true, \"cancelAction\": \"toolRunAbort\", \"cancelArgs\": {\"runId\": \"1\", \"generation\": 0}}",
+        "expected": {
+          "visible": true,
+          "phase": "computing",
+          "ratio": 0.25,
+          "progressText": "1/4 (25%)"
+        }
+      },
+      {
+        "id": "03-a-budgeted-operator-names-its-own-phase",
+        "statusJson": "{\"computing\": true, \"phase\": \"stitching\", \"phaseLabel\": {\"en\": \"Stitching shells\", \"de\": \"Schalen werden vernäht\"}, \"progress\": {\"unitsDone\": 2, \"unitsTotal\": 4, \"facesDone\": 0, \"facesTotal\": 0, \"inFlight\": 1, \"ratio\": 0.5}, \"cancellable\": true, \"cancelAction\": \"toolRunAbort\", \"cancelArgs\": {\"runId\": \"1\", \"generation\": 0}}",
+        "expected": {
+          "visible": true,
+          "phase": "stitching",
+          "ratio": 0.5,
+          "progressText": "2/4 (50%)"
+        }
+      },
+      {
+        "id": "04-the-tessellation-ledger-takes-over",
+        "statusJson": "{\"computing\": true, \"phase\": \"meshingFaces\", \"phaseLabel\": {\"en\": \"Meshing faces\", \"de\": \"Flächen werden vernetzt\"}, \"progress\": {\"unitsDone\": 3, \"unitsTotal\": 4, \"facesDone\": 0, \"facesTotal\": 0, \"inFlight\": 1, \"ratio\": 0.75}, \"cancellable\": true, \"cancelAction\": \"toolRunAbort\", \"cancelArgs\": {\"runId\": \"1\", \"generation\": 0}}",
+        "expected": {
+          "visible": true,
+          "phase": "meshingFaces",
+          "ratio": 0.75,
+          "progressText": "3/4 (75%)"
+        }
+      },
+      {
+        "id": "05-settled",
+        "statusJson": "{\"computing\": false, \"phase\": \"idle\", \"phaseLabel\": {\"en\": \"Idle\", \"de\": \"Bereit\"}, \"progress\": {\"unitsDone\": 0, \"unitsTotal\": 0, \"facesDone\": 0, \"facesTotal\": 0, \"inFlight\": 0, \"ratio\": 1.0}, \"cancellable\": false, \"cancelAction\": \"\"}",
+        "expected": {
+          "visible": false,
+          "phase": "idle",
+          "ratio": 1.0,
+          "progressText": null
+        }
+      }
+    ],
+    "cancelled": [
+      {
+        "id": "00-settled-before-the-gesture",
+        "statusJson": "{\"computing\": false, \"phase\": \"idle\", \"phaseLabel\": {\"en\": \"Idle\", \"de\": \"Bereit\"}, \"progress\": {\"unitsDone\": 0, \"unitsTotal\": 0, \"facesDone\": 0, \"facesTotal\": 0, \"inFlight\": 0, \"ratio\": 1.0}, \"cancellable\": false, \"cancelAction\": \"\"}",
+        "expected": {
+          "visible": false,
+          "phase": "idle",
+          "ratio": 1.0,
+          "progressText": null
+        }
+      },
+      {
+        "id": "01-computing",
+        "statusJson": "{\"computing\": true, \"phase\": \"computing\", \"phaseLabel\": {\"en\": \"Computing\", \"de\": \"Berechnen\"}, \"progress\": {\"unitsDone\": 1, \"unitsTotal\": 4, \"facesDone\": 0, \"facesTotal\": 0, \"inFlight\": 1, \"ratio\": 0.25}, \"cancellable\": true, \"cancelAction\": \"toolRunAbort\", \"cancelArgs\": {\"runId\": \"1\", \"generation\": 0}}",
+        "expected": {
+          "visible": true,
+          "phase": "computing",
+          "ratio": 0.25,
+          "progressText": "1/4 (25%)"
+        }
+      },
+      {
+        "id": "02-cancel-lands-mid-way",
+        "statusJson": "{\"computing\": false, \"phase\": \"cancelled\", \"phaseLabel\": {\"en\": \"Cancelled\", \"de\": \"Abgebrochen\"}, \"progress\": {\"unitsDone\": 1, \"unitsTotal\": 4, \"facesDone\": 0, \"facesTotal\": 0, \"inFlight\": 0, \"ratio\": 0.25}, \"cancellable\": false, \"cancelAction\": \"\"}",
+        "expected": {
+          "visible": true,
+          "phase": "cancelled",
+          "ratio": 0.25,
+          "progressText": "1/4 (25%)"
+        }
+      },
+      {
+        "id": "03-quiescent-after-the-cancel",
+        "statusJson": "{\"computing\": false, \"phase\": \"idle\", \"phaseLabel\": {\"en\": \"Idle\", \"de\": \"Bereit\"}, \"progress\": {\"unitsDone\": 0, \"unitsTotal\": 0, \"facesDone\": 0, \"facesTotal\": 0, \"inFlight\": 0, \"ratio\": 1.0}, \"cancellable\": false, \"cancelAction\": \"\"}",
+        "expected": {
+          "visible": false,
+          "phase": "idle",
+          "ratio": 1.0,
+          "progressText": null
+        }
+      }
+    ]
+  }
+}

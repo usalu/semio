@@ -5,7 +5,7 @@ use semio_s_artifact_stdio_txt::TxtSnapshot;
 pub fn register() {}
 
 pub fn deserialize(from: &TxtSnapshot) -> Result<Wfc3dSnapshot, semio_framework_diagnostic::TextError> {
-    <Wfc3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&from.to_body())
+    <Wfc3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&from.to_body())
 }
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<Wfc3dSnapshot, semio_framework_diagnostic::TextError> {

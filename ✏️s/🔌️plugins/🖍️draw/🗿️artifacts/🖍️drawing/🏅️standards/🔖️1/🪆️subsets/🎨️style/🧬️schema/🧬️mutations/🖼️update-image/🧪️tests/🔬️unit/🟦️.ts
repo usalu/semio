@@ -1,7 +1,7 @@
 import {describe,it,expect} from "bun:test";
 import Ajv from "ajv";
 import {produce} from "immer";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖼️update-image/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import {applyImageEdit} from "../../🦠️mutation/🟦️.ts";
 describe("image authored facet",()=>{it("matches shared fixtures and third-party schema admission",()=>{

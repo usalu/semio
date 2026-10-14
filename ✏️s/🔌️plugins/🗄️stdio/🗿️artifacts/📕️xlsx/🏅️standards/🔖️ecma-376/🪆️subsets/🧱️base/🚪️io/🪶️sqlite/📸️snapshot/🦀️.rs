@@ -1,9 +1,10 @@
 //! 📕️ Complete XLSX OPC entities and typed multi-document XML graph.
 
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::*;
 use semio_framework_os_kernel::{
     sqlite_snapshot::{SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase, ValueError, ValueRefusalKind},
-    os_store::serialization::ArtifactSqliteSnapshot,
+    os_store::serialization::ArtifactSqliteSnapshotHost,
 };
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlSnapshot;
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::XmlSqliteTables;
@@ -63,7 +64,7 @@ impl Drop for Parts {
     }
 }
 
-impl ArtifactSqliteSnapshot for XlsxSnapshot {
+impl ArtifactSqliteSnapshotHost for XlsxSnapshot {
     fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, _database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(store::io_schema::IoError::from_value_error)?;
         if dialect.artifact_kind != "s.stdio.xlsx" || dialect.standard != "ecma-376" {
@@ -95,17 +96,22 @@ impl ArtifactSqliteSnapshot for XlsxSnapshot {
         native::preflight(self, encoding, control)
     }
 
-    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+    
 
     fn retire_sqlite_snapshot(self) {
         drop(Parts(self.xml_parts));
     }
 
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
+    
+
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for XlsxSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
         backing::projection::project(self, control)
     }
-
-    fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
         backing::reconstruction::reconstruct(database, control)
     }
 }

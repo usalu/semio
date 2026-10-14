@@ -39,3 +39,7 @@ impl Tree for MeshData {
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+#[path="📥️decode/🦀️.rs"]
+mod decode;
+pub use decode::{MeshCanonicalDecoder,MeshCanonicalIntakeSource};

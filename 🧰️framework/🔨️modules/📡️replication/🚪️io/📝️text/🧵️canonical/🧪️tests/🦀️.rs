@@ -10,7 +10,7 @@ fn grant(demand:RetirementDemand)->RetainedCloneGrant {
 }
 #[test]
 fn persistent_protocol_canonical_fields_preserve_original_projection_pointers_and_granted_heap() {
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let expected=row["expected"].as_str().unwrap().as_bytes();
   let mut pauses:Vec<Option<usize>>=fixture["pauses"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize)).collect();pauses.push(None);

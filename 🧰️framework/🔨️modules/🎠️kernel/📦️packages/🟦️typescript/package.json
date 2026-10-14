@@ -9,15 +9,20 @@
     ".": "./🟦️.ts"
   },
   "dependencies": {
-    "@semio-tech/framework-actor": "workspace:*"
+    "@semio-tech/framework-actor": "workspace:*",
+    "@semio-tech/schema-validator-ts": "workspace:*"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/framework-kernel:test",
-    "test-localized-label": "nx run @semio-tech/framework-kernel:test-localized-label"
+    "test-localized-label": "nx run @semio-tech/framework-kernel:test-localized-label",
+    "test-receipt-port": "nx run @semio-tech/framework-kernel:test-receipt-port"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.17",
+    "@semio-tech/process": "workspace:*",
+    "ajv": "8.20.0",
+    "iconv-lite": "0.6.3"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

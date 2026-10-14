@@ -17,7 +17,7 @@ interface ProgramFixture {
 
 function programs(): ProgramFixture {
   const here = dirname(fileURLToPath(import.meta.url));
-  return JSON.parse(readFileSync(join(here, "../../../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🎞️video-render-program/🔣️.json"), "utf8")) as ProgramFixture;
+  return JSON.parse(readFileSync(join(here, "../../../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🎞️video-render-program/🔣️.json"), "utf8")) as ProgramFixture;
 }
 
 class RecordingPath {

@@ -24,7 +24,7 @@ fn refusal(operation: &str) -> ValueError {
 
 #[test]
 fn sqlite_refusal_producers_retain_language_neutral_owned_authorities() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let rows = corpus["cases"].as_array().unwrap();
     assert_eq!(rows.len(), 13);
     for row in rows {

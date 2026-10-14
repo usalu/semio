@@ -20,10 +20,10 @@ export function testCanonicalEditFixtures(): void {
   ajv.addSchema(contract).addSchema(models);
   const exported = (name: string) => ajv.getSchema(`${models.$id}#/$defs/${name}`)!;
 
-  const reader = read("./🧫️fixtures/📖️canonical-reader.json");
-  const sealer = read("./🧫️fixtures/🔏️canonical-edit-sealer.json");
-  const borrowed = read("./🧫️fixtures/🗺️canonical-borrowed-map.json");
-  const progress = read("./🧫️fixtures/🚧️canonical-error-progress.json");
+  const reader = read("./🧪️tests/🧫️fixtures/📖️canonical-reader.json");
+  const sealer = read("./🧪️tests/🧫️fixtures/🔏️canonical-edit-sealer.json");
+  const borrowed = read("./🧪️tests/🧫️fixtures/🗺️canonical-borrowed-map.json");
+  const progress = read("./🧪️tests/🧫️fixtures/🚧️canonical-error-progress.json");
   assert(exported("CanonicalEditSealerEdit")(sealer.edit), "sealer edit payload");
   assert(exported("CanonicalBorrowedMapEdit")(borrowed.edit), "borrowed map edit payload");
 
@@ -74,7 +74,7 @@ export function testCanonicalEditFixtures(): void {
 
   assert.equal(exported("CanonicalBorrowedMapEdit")({ ...borrowed.edit, forwards: [{ Replace: { text: "", nested: [], enabled: true, amount: 0 } }] }), false, "borrowed mutation vocabulary refuses a scalar replacement");
 
-  const chains = read("./🧫️fixtures/🔗️edit-digest-chains.json");
+  const chains = read("./🧪️tests/🧫️fixtures/🔗️edit-digest-chains.json");
   const u64 = (value: number) => { const bytes = Buffer.alloc(8); bytes.writeBigUInt64BE(BigInt(value)); return bytes; };
   const record = (domain: string, parts: Buffer[]) => {
     const hash = createHash("sha256").update("semio.artifact.cursor.v2").update(u64(Buffer.byteLength(domain))).update(domain);

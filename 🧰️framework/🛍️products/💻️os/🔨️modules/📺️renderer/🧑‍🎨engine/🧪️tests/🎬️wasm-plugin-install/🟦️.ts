@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import { createLazyPluginInstallDoor, type LazyPluginInstallPhase } from "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️lazy-install/🟦️.ts";
 import { WGPU_DYNAMIC_EXTENSION_INSTALL_GLOBAL, WGPU_DYNAMIC_EXTENSION_RETIRE_GLOBAL, admitWgpuDynamicExtension, installWgpuDynamicExtensionDoor } from "../../🎯️targets/🧊️wgpu/🧩️dynamic-extension/🟦️.ts";
-import extensionFixture from "../../../../🔌️plugin/🏪️store/📥️installation/🧫️fixtures/🔣️.json";
+import extensionFixture from "../../../../🔌️plugin/🏪️store/📥️installation/🧪️tests/🧫️fixtures/🔣️.json";
 
 type Deferred = { readonly promise: Promise<unknown>; resolve: (value: unknown) => void; reject: (error: Error) => void };
 

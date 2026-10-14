@@ -1,0 +1,69 @@
+{
+  "exclusive": false,
+  "rows": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "89cb2f4e93a97b839c33d1c3078acf35d3fa2a13e1199993e0b006cf0124857e",
+      "afterSha256": "c9a3722a2b4bae0cd9cf5e15efe128c4ddc4faf431d07459c34688e37eb26fd3"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/project.json",
+      "beforeSha256": "b87eb045de4b5492c06981d257cc078ee36730adca4cfb58e53fb59ccadbc733",
+      "afterSha256": "fcc085080f81bbce42016753480c4025f92724db2a11d1455d3c81b25c45c292"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "beforeSha256": "5e528b5662a7cf05742d554cd87a8c523bd08d84a46836e8424b2661d52153ce",
+      "afterSha256": "a37e1c5125ec0c4f8778e08f5143fe6ab54c7a5cf4feecbb2d29b820df230cc1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🔏️path-emoji-statutes/🔣️.json",
+      "beforeSha256": "936e738710f839afc3f81cce7b37140bb0890f15b1a98c401568e1c338b9f5a9",
+      "afterSha256": "5eb8a54790bd47298e63c0e511dfa810b93ea1090224bb9cc3ad4c598462cffd",
+      "reason": "Exact synthetic paths and picomatch shapes gain true tests segment; all14originalvalid/refusal decisions and semanticdomains unchanged.",
+      "spans": [
+        {
+          "before": "{\n    \"owner\": \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any\",\n    \"id\": \"create-camera-applied\",\n    \"pathShapes\": [\n      \"*/🧫️fixtures/*/*.gltf\",\n      \"*/🧫️fixtures/*/*/*.gltf\"\n    ],\n    \"cases\": [\n      {\n        \"id\": \"handpicked-pair\",\n        \"paths\": [\n          \"../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/⬅️before.gltf\",\n          \"../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/➡️after.gltf\"\n        ],\n        \"valid\": true\n      },\n      {\n        \"id\": \"domain-pair\",\n        \"paths\": [\n          \"../../💎️material/🧫️fixtures/🎨️texture/🌱️create/⬅️before.gltf\",\n          \"../../💎️material/🧫️fixtures/🎨️texture/🌱️create/➡️after.gltf\"\n        ],\n        \"valid\": true\n      },\n      {\n        \"id\": \"alternate-domain-pair\",\n        \"paths\": [\n          \"../../🕸️mesh/🧫️fixtures/🔤️attributes/🔗️bind/🕰️input.gltf\",\n          \"../../🕸️mesh/🧫️fixtures/🔤️attributes/🔗️bind/🎯️output.gltf\"\n        ],\n        \"valid\": true\n      },\n      {\n        \"id\": \"too-many-domains\",\n        \"paths\": [\n          \"../../💎️material/🧫️fixtures/🎨️texture/🖼️image/🌱️create/⬅️before.gltf\",\n          \"../../💎️material/🧫️fixtures/🎨️texture/🖼️image/🌱️create/➡️after.gltf\"\n        ],\n        \"valid\": false\n      },\n      {\n        \"id\": \"cross-domain-pair\",\n        \"paths\": [\n          \"../../💎️material/🧫️fixtures/🎨️texture/🌱️create/⬅️before.gltf\",\n          \"../../💎️material/🧫️fixtures/🖼️image/🌱️create/➡️after.gltf\"\n        ],\n        \"valid\": false\n      },\n      {\n        \"id\": \"erased-domain\",\n        \"paths\": [\n          \"../../💎️material/🧫️fixtures/🌱️create/⬅️before.gltf\",\n          \"../../💎️material/🧫️fixtures/🌱️create/➡️after.gltf\"\n        ],\n        \"valid\": false\n      },\n      {\n        \"id\": \"alternate-pair\",\n        \"paths\": [\n          \"../../🎥️camera/🧫️fixtures/🎥️perspective/🕰️input.gltf\",\n          \"../../🎥️camera/🧫️fixtures/🎥️perspective/🎯️output.gltf\"\n        ],\n        \"valid\": true\n      },\n      {\n        \"id\": \"missing-after\",\n        \"paths\": [\n          \"../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/⬅️before.gltf\"\n        ],\n        \"valid\": false\n      },\n      {\n        \"id\": \"outside-subsets\",\n        \"paths\": [\n          \"../../../escape.gltf\",\n          \"../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/➡️after.gltf\"\n        ],\n        \"valid\": false\n      },\n      {\n        \"id\": \"absolute-path\",\n        \"paths\": [\n          \"/escape.gltf\",\n          \"../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/➡️after.gltf\"\n        ],\n        \"valid\": false\n      },\n      {\n        \"id\": \"mixed-fixture-owners\",\n        \"paths\": [\n          \"../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/⬅️before.gltf\",\n          \"../../🎥️camera/🧫️fixtures/🗑️delete-camera-applied/➡️after.gltf\"\n        ],\n        \"valid\": false\n      },\n      {\n        \"id\": \"same-output\",\n        \"paths\": [\n          \"../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/⬅️before.gltf\",\n          \"../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/⬅️before.gltf\"\n        ],\n        \"valid\": false\n      },\n      {\n        \"id\": \"wrong-media-extension\",\n        \"paths\": [\n          \"../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/⬅️before.json\",\n          \"../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/➡️after.gltf\"\n        ],\n        \"valid\": false\n      },\n      {\n        \"id\": \"non-fixture-target\",\n        \"paths\": [\n          \"../../🎥️camera/🧬️schema/🌱️create-camera-applied/⬅️before.gltf\",\n          \"../../🎥️camera/🧬️schema/🌱️create-camera-applied/➡️after.gltf\"\n        ],\n        \"valid\": false\n      }\n    ],\n    \"contextualOperations\": [\n      \"add\",\n      \"bind\",\n      \"change\",\n      \"create\",\n      \"delete\",\n      \"move\",\n      \"remove\",\n      \"reorder\",\n      \"unbind\"\n    ]\n  }",
+          "after": "{\n    \"owner\": \"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any\",\n    \"id\": \"create-camera-applied\",\n    \"pathShapes\": [\n      \"*/🧪️tests/🧫️fixtures/*/*.gltf\",\n      \"*/🧪️tests/🧫️fixtures/*/*/*.gltf\"\n    ],\n    \"cases\": [\n      {\n        \"id\": \"handpicked-pair\",\n        \"paths\": [\n          \"../../🎥️camera/🧪️tests/🧫️fixtures/🌱️create-camera-applied/⬅️before.gltf\",\n          \"../../🎥️camera/🧪️tests/🧫️fixtures/🌱️create-camera-applied/➡️after.gltf\"\n        ],\n        \"valid\": true\n      },\n      {\n        \"id\": \"domain-pair\",\n        \"paths\": [\n          \"../../💎️material/🧪️tests/🧫️fixtures/🎨️texture/🌱️create/⬅️before.gltf\",\n          \"../../💎️material/🧪️tests/🧫️fixtures/🎨️texture/🌱️create/➡️after.gltf\"\n        ],\n        \"valid\": true\n      },\n      {\n        \"id\": \"alternate-domain-pair\",\n        \"paths\": [\n          \"../../🕸️mesh/🧪️tests/🧫️fixtures/🔤️attributes/🔗️bind/🕰️input.gltf\",\n          \"../../🕸️mesh/🧪️tests/🧫️fixtures/🔤️attributes/🔗️bind/🎯️output.gltf\"\n        ],\n        \"valid\": true\n      },\n      {\n        \"id\": \"too-many-domains\",\n        \"paths\": [\n          \"../../💎️material/🧪️tests/🧫️fixtures/🎨️texture/🖼️image/🌱️create/⬅️before.gltf\",\n          \"../../💎️material/🧪️tests/🧫️fixtures/🎨️texture/🖼️image/🌱️create/➡️after.gltf\"\n        ],\n        \"valid\": false\n      },\n      {\n        \"id\": \"cross-domain-pair\",\n        \"paths\": [\n          \"../../💎️material/🧪️tests/🧫️fixtures/🎨️texture/🌱️create/⬅️before.gltf\",\n          \"../../💎️material/🧪️tests/🧫️fixtures/🖼️image/🌱️create/➡️after.gltf\"\n        ],\n        \"valid\": false\n      },\n      {\n        \"id\": \"erased-domain\",\n        \"paths\": [\n          \"../../💎️material/🧪️tests/🧫️fixtures/🌱️create/⬅️before.gltf\",\n          \"../../💎️material/🧪️tests/🧫️fixtures/🌱️create/➡️after.gltf\"\n        ],\n        \"valid\": false\n      },\n      {\n        \"id\": \"alternate-pair\",\n        \"paths\": [\n          \"../../🎥️camera/🧪️tests/🧫️fixtures/🎥️perspective/🕰️input.gltf\",\n          \"../../🎥️camera/🧪️tests/🧫️fixtures/🎥️perspective/🎯️output.gltf\"\n        ],\n        \"valid\": true\n      },\n      {\n        \"id\": \"missing-after\",\n        \"paths\": [\n          \"../../🎥️camera/🧪️tests/🧫️fixtures/🌱️create-camera-applied/⬅️before.gltf\"\n        ],\n        \"valid\": false\n      },\n      {\n        \"id\": \"outside-subsets\",\n        \"paths\": [\n          \"../../../escape.gltf\",\n          \"../../🎥️camera/🧪️tests/🧫️fixtures/🌱️create-camera-applied/➡️after.gltf\"\n        ],\n        \"valid\": false\n      },\n      {\n        \"id\": \"absolute-path\",\n        \"paths\": [\n          \"/escape.gltf\",\n          \"../../🎥️camera/🧪️tests/🧫️fixtures/🌱️create-camera-applied/➡️after.gltf\"\n        ],\n        \"valid\": false\n      },\n      {\n        \"id\": \"mixed-fixture-owners\",\n        \"paths\": [\n          \"../../🎥️camera/🧪️tests/🧫️fixtures/🌱️create-camera-applied/⬅️before.gltf\",\n          \"../../🎥️camera/🧪️tests/🧫️fixtures/🗑️delete-camera-applied/➡️after.gltf\"\n        ],\n        \"valid\": false\n      },\n      {\n        \"id\": \"same-output\",\n        \"paths\": [\n          \"../../🎥️camera/🧪️tests/🧫️fixtures/🌱️create-camera-applied/⬅️before.gltf\",\n          \"../../🎥️camera/🧪️tests/🧫️fixtures/🌱️create-camera-applied/⬅️before.gltf\"\n        ],\n        \"valid\": false\n      },\n      {\n        \"id\": \"wrong-media-extension\",\n        \"paths\": [\n          \"../../🎥️camera/🧪️tests/🧫️fixtures/🌱️create-camera-applied/⬅️before.json\",\n          \"../../🎥️camera/🧪️tests/🧫️fixtures/🌱️create-camera-applied/➡️after.gltf\"\n        ],\n        \"valid\": false\n      },\n      {\n        \"id\": \"non-fixture-target\",\n        \"paths\": [\n          \"../../🎥️camera/🧬️schema/🌱️create-camera-applied/⬅️before.gltf\",\n          \"../../🎥️camera/🧬️schema/🌱️create-camera-applied/➡️after.gltf\"\n        ],\n        \"valid\": false\n      }\n    ],\n    \"contextualOperations\": [\n      \"add\",\n      \"bind\",\n      \"change\",\n      \"create\",\n      \"delete\",\n      \"move\",\n      \"remove\",\n      \"reorder\",\n      \"unbind\"\n    ]\n  }"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔏️path-emoji-statutes/🟦️.ts",
+      "beforeSha256": "2251d09ee3955e26a63581ad0c58c857c58698264fdefa6c19249aef48da2e2c",
+      "afterSha256": "dd1c92ddfae8a725e6e94404539a8a79fb0d5e79c073e2b5b775fc57cce07cdd",
+      "reason": "Current TSVpositive payload is realdomain data; substituted Rootwholetrial schemaVersion/gltf/assets checks are unrelated. Restore genuine per-payload Ajvpositive+negative checks; retainallaggregate/native-camelcase/descriptororacles.",
+      "spans": [
+        {
+          "before": "expect(row.positive[\"schemaVersion\"]).toEqual(1);expect(row.positive[\"gltfFixtureCoordinates\"][\"pathShapes\"]).toEqual([\"*/🧫️fixtures/*/*.gltf\",\"*/🧫️fixtures/*/*/*.gltf\"]);expect(row.positive[\"assetDocumentation\"][\"generatorId\"]).toEqual(\"assets-build\");expect(row.positive[\"assetDocumentation\"][\"outputPath\"]).toEqual(\"🧰️framework/🔨️modules/🖼️assets/README.md\");",
+          "after": "const validate=ajv.compile(schema);expect(validate(row.positive),row.directory).toBe(true);expect(validate(row.negative),row.directory).toBe(false);"
+        }
+      ]
+    }
+  ],
+  "config": {
+    "name": "⚖️fixture-cad-bindings🦑️source",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun ${workspaceFolder}/node_modules/nx/dist/bin/nx.js run ticket-fixture-verification:root-cad-bindings-source --skip-nx-cache --outputStyle=static",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.0088203
+    },
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/root-cad-source-nx",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/root-cad-source-cache",
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+    }
+  },
+  "target": {
+    "executor": "nx:run-commands",
+    "cache": false,
+    "options": {
+      "command": "bun ./📜️script.ts root-cad-bindings-source"
+    }
+  }
+}

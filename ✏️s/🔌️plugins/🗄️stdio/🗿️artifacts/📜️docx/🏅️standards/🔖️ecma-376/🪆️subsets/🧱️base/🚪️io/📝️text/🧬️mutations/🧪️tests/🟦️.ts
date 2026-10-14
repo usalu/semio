@@ -8,7 +8,7 @@ import {parseXmlDocumentJson} from "../../../../../../../../../📰️xml/🏅�
 /** 🧪️ Neutral SetPart content and native framing agree with independent schema and UTF-8 oracles. */
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import vectors from "../../../../🧬️schema/🧬️mutations/📦set-part/🧫️fixtures/🔣️.json";
+import vectors from "../../../../🧪️tests/🧫️fixtures/🧬️mutations/📦set-part/🔣️.json";
 import schema from "../../../../🧬️schema/🧬️mutations/📦set-part/🧬️schema/🔣️.json";
 import xmlSchema from "../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json";
 import {parseDocxSetPart} from "../../../../🧬️schema/🧬️mutations/📦set-part/🟦️.ts";

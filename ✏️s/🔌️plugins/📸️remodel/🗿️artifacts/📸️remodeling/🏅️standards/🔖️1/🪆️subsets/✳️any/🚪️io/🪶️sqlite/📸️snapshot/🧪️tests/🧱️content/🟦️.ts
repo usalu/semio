@@ -1,6 +1,6 @@
 /** 🧬️ Checks independently authored content fields against their physical words. */
 import {expect,test} from "bun:test";
-import content from "../../🧫️fixtures/🧱️content/🔣️.json";
+import content from "../🧫️fixtures/🧱️content/🔣️.json";
 type Chunk={ordinal:number;field:string;fieldTag:number|null;elementType:string;values:number[]|string;floatBits:number[]|null;sourceOctets:number[];elementCount:number};
 
 test("Remodeling content witnesses obey strict independent field and word laws",()=>{

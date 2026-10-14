@@ -1,7 +1,7 @@
 import {test,expect} from "bun:test";
-import vectors from "../../🧫️fixtures/🔣️rfc4648-base64-vectors.json";
-import urlVectors from "../../🧫️fixtures/🔣️rfc4648-base64url-vectors.json";
-import controlled from "../../🧫️fixtures/🎛️controlled/🔣️.json";
+import vectors from "../🧫️fixtures/🔣️rfc4648-base64-vectors.json";
+import urlVectors from "../🧫️fixtures/🔣️rfc4648-base64url-vectors.json";
+import controlled from "../🧫️fixtures/🎛️controlled/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import Ajv from "ajv";
 import {base64StandardDecode,base64StandardEncode,base64StandardDecodeControlled,base64StandardEncodeControlled,base64UrlDecode,base64UrlEncode,decodeBase64Quad,Base64DecodeError,Base64DecodeCursor,type Base64DecodeParts,type Base64Progress} from "../../🟦️.ts";

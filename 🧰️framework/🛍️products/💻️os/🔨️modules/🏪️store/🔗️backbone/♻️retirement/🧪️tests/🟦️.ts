@@ -3,7 +3,7 @@ import { Database } from "bun:sqlite";
 import { readFileSync } from "node:fs";
 
 test("backbone retirement preserves original ordered owners and exact physical release", () => {
-  const law = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const law = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const database = new Database(":memory:");
   try {
     database.exec("CREATE TABLE rows(position INTEGER, kind TEXT)");
@@ -21,7 +21,7 @@ test("backbone retirement preserves original ordered owners and exact physical r
 });
 
 test("backbone constructor admits its exact native frame before moving the original queue", () => {
-  const law = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const law = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const database = new Database(":memory:");
   try {
     const admitted = database.query<{ accepted: number }, number[]>("SELECT (?1 > 0 AND ?2 > 0 AND ?3 >= ?4) AS accepted");
@@ -33,7 +33,7 @@ test("backbone constructor admits its exact native frame before moving the origi
 });
 
 test("installed backbone admission retains empty allocated queues under the caller's full grant", () => {
-  const law = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const law = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const database = new Database(":memory:");
   try {
     const retained = database.query<{ retained: number }, number[]>("SELECT (?1 > 0 OR ?2 > 0) AS retained");

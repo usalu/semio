@@ -29,7 +29,7 @@ function probeClone(value: Taxonomy): ProbeTaxonomy {
 const libraryRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(libraryRoot, "../../../../..");
 const ticketRoot = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🏺️historical-package-owner-identity/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🏺️historical-package-owner-identity/🔣️.json"), "utf8"));
 const goldenPath = join(libraryRoot, vector.historicalDocument.libraryRelativePath);
 const goldenBytes = readFileSync(goldenPath);
 const golden = JSON.parse(goldenBytes.toString());
@@ -148,7 +148,7 @@ test("a frozen package-owner census naming moved Draw files stays byte-identical
   const write = (path: string, bytes: string | Buffer) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), bytes); };
   const git = (args: string[]) => { const run = Bun.spawnSync(["git", ...args], { cwd: root, stdout: "pipe", stderr: "pipe" }); if (run.exitCode) throw new Error(run.stderr.toString()); return run.stdout.toString().trim(); };
   const base = probeClone(loadCatalogTaxonomy());
-  const { commandBundle, members } = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/🖍️draw-source-scenario/🔣️.json"), "utf8")) as { commandBundle: { directoryKinds: Taxonomy["semanticDirectoryKinds"]; descendantContract: Taxonomy["semanticDescendantContracts"][string] }; members: readonly { path: string; content: string }[] };
+  const { commandBundle, members } = JSON.parse(readFileSync(join(libraryRoot, "🧪️tests/🧫️fixtures/🖍️draw-source-scenario/🔣️.json"), "utf8")) as { commandBundle: { directoryKinds: Taxonomy["semanticDirectoryKinds"]; descendantContract: Taxonomy["semanticDescendantContracts"][string] }; members: readonly { path: string; content: string }[] };
   const taxonomy: ProbeTaxonomy = { ...base, semanticDirectoryKinds: { ...base.semanticDirectoryKinds, ...commandBundle.directoryKinds }, semanticDescendantContracts: { ...base.semanticDescendantContracts, "draw-editor-command-bundle-v1": commandBundle.descendantContract } };
   const schemaPath = golden.taxonomy.path;
   const historyPath = relative(repoRoot, goldenPath).replaceAll("\\", "/");
@@ -204,7 +204,7 @@ test("a frozen package-owner census naming moved Draw files stays byte-identical
 //#endregion Tests
 
 describe("Energy historical source coordinates", () => {
-  const input = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🏺️historical-package-owner-identity/🧬️energy-source-coordinates/🔣️.json"), "utf8"));
+  const input = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🏺️historical-package-owner-identity/🧬️energy-source-coordinates/🔣️.json"), "utf8"));
   const expected = Object.fromEntries(input.documents.map((row: { id: string; registration: FrozenCoordinateEvidenceContract; energy: { declaration: FrozenCoordinateEvidenceContract["coordinates"][number] }[] }) => [row.id, { ...row.registration, coordinates: [...row.registration.coordinates, ...row.energy.map((entry) => entry.declaration)] }])) as Record<string, FrozenCoordinateEvidenceContract>;
   const schema = loadCatalogTaxonomy();
   const contracts = Object.fromEntries(Object.keys(expected).map((id) => [id, schema.frozenCoordinateEvidenceContracts[id]!]));

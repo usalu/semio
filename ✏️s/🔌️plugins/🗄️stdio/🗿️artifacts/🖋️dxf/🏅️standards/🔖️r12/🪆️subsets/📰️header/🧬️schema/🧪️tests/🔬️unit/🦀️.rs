@@ -9,11 +9,11 @@ async fn empty_snapshot_matches_schema() {
 #[semio_framework_async_macros::async_test]
 async fn codec_round_trip() {
     let snap = empty_dxf_snapshot();
-    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snap);
-    let parsed = <DxfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = pack::snapshot::ArtifactDsl::print_dsl(&snap);
+    let parsed = <DxfSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(parsed.schema, snap.schema);
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
-    let decoded = <DxfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&snap);
+    let decoded = <DxfSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
 }
 
@@ -77,7 +77,7 @@ mod conformance_laws {
     async fn grammar_conformance_law() {
         let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_r12::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
-        let text = store::os_store::serialization::ArtifactDsl::print_dsl(&demo_dxf_snapshot());
+        let text = pack::snapshot::ArtifactDsl::print_dsl(&demo_dxf_snapshot());
         let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
         let reconstructed = format!("{}\n{body}", envelope.envelope_id());
         assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
@@ -106,7 +106,7 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
         let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v_r12::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
-        let packed = store::os_store::serialization::ArtifactPack::encode_pack(&demo_dxf_snapshot());
+        let packed = pack::snapshot::ArtifactPack::encode_pack(&demo_dxf_snapshot());
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
         let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
@@ -132,18 +132,18 @@ mod conformance_laws {
         const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
 
         let demo = demo_dxf_snapshot();
-        let canonical=store::os_store::serialization::ArtifactDsl::print_dsl(&demo);
+        let canonical=pack::snapshot::ArtifactDsl::print_dsl(&demo);
         assert_eq!(canonical,FIXTURE_DSL,"shipped owned DXF DSL must match canonical fields: {canonical}");
-        let canonical_pack=store::os_store::serialization::ArtifactPack::encode_pack(&demo);
+        let canonical_pack=pack::snapshot::ArtifactPack::encode_pack(&demo);
         assert_eq!(canonical_pack,FIXTURE_PACK,"canonical owned DXF pack bytes: {}",canonical_pack.iter().map(|byte|format!("{byte:02x}")).collect::<String>());
 
-        let parsed = <DxfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        let parsed = <DxfSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_dxf_snapshot()");
-        assert_eq!(store::os_store::serialization::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_dxf_snapshot()) drifted from the shipped .dsl.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_dxf_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-        let decoded = <DxfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+        let decoded = <DxfSnapshot as pack::snapshot::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_dxf_snapshot()");
-        assert_eq!(store::os_store::serialization::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_dxf_snapshot()) drifted from the shipped .pack.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_dxf_snapshot()) drifted from the shipped .pack.semio fixture");
     }
 }
 //#endregion 🔖️ConformanceLaws
@@ -154,7 +154,7 @@ mod conformance_laws {
 #[test]
 fn dxf_entity_wire_is_byte_identical_to_the_neutral_fixture() {
     use crate::schema::snapshot::DxfEntity;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️entity-wire/🔣️.json")).expect("neutral entity wire fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️entity-wire/🔣️.json")).expect("neutral entity wire fixture");
     for case in fixture["cases"].as_array().expect("entity wire cases") {
         let wire = case["wire"].as_str().expect("wire text");
         let entity: DxfEntity = semio_framework_pack_json::from_json_str(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{} decodes: {error:?}", case["id"]));

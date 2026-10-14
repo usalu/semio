@@ -32,7 +32,7 @@ mod action;
 mod builder;
 #[path = "🧩️component/🦀️.rs"]
 mod component;
-/// 🧪️ Loads and asserts against `🧫️fixtures/🧪️conformance/` — entirely `#[cfg(test)]` inside, so it
+/// 🧪️ Loads and asserts against `🧪️tests/🧫️fixtures/🧪️conformance` — entirely `#[cfg(test)]` inside, so it
 /// mounts unconditionally here without affecting the wasm check targets (see the file's own header).
 #[cfg(test)]
 #[path = "🧪️tests/🔬️conformance-unit/🦀️.rs"]

@@ -4,9 +4,9 @@ use super::*;
 mod observed;
 #[test]
 fn sqlite_snapshot_wav_relational_owned_requests_match_actual_allocator(){
- let plan:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/💰️backing/🔬️requests/🔣️.json")).unwrap();
+ let plan:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/💰️backing/🔬️requests/🔣️.json")).unwrap();
  assert_eq!(plan["phases"],serde_json::json!(["projectSnapshot","reconstructSnapshot"]));
- let words:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔢️float32.json")).unwrap();
+ let words:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔢️float32.json")).unwrap();
  let floats=words["ieee754Binary32Bits"].as_array().unwrap().iter().map(|value|f32::from_bits(value.as_u64().unwrap()as u32)).collect();
  for snapshot in[fixture(),WavSnapshot{data:WavData::Float32(floats),..fixture()}]{
   let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).unwrap();

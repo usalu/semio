@@ -13,8 +13,8 @@ export function demonstratorRuntimeComponentIds(): string[] {
 }
 
 /** 🎪️ Selects only immutable component, browser-support and font outputs for the Demonstrator. */
-export function demonstratorRuntimeAssetSources(workspace: string, profile: "dev" | "release"): readonly BrowserArtifactSource[] {
-  if (!["dev", "release"].includes(profile)) throw new Error(`Unknown Demonstrator profile: ${profile}`);
+export function demonstratorRuntimeAssetSources(workspace: string, profile: "prototype" | "release"): readonly BrowserArtifactSource[] {
+  if (!["prototype", "release"].includes(profile)) throw new Error(`Unknown Demonstrator profile: ${profile}`);
   const moduleRoot = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
   const components = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS], catalog = new Map(components.map(row => [row.pluginId, row]));
   const ids = demonstratorRuntimeComponentIds(), pluginRoute = MODULE_PLUGIN_ROUTE.slice(1);

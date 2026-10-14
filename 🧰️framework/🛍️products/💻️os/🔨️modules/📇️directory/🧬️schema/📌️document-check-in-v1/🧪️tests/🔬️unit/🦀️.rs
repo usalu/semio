@@ -5,7 +5,7 @@ use super::*;
 /// progress laws — the JSON Schema accepts them, which the Ajv oracle in `🌎️hub/🧪️tests` asserts).
 #[test]
 fn document_check_in_v1_matches_language_neutral_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("check-in corpus");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📌️document-check-in-v1/🔣️.json")).expect("check-in corpus");
     for vector in fixture["valid"]["requests"].as_array().unwrap() {
         let source = vector["source"].as_str().unwrap();
         let request = DocumentCheckInV1::parse_canonical_json(source).unwrap_or_else(|| panic!("valid request {} refused", vector["name"]));

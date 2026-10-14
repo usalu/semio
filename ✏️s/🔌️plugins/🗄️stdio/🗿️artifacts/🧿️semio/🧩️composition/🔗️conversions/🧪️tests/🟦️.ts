@@ -7,7 +7,7 @@ import { admitSemioConversionsV1, renderCatalogV1, renderConversionDependenciesV
 /** 🧪️ Compares conversion authority admission and rendering with an independent schema oracle, and the committed authority with the crates the leaves actually name. */
 export function runSemioConversionDefinitionChecks(): number {
   const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
-  const corpus = read("../🧫️fixtures/🔣️.json");
+  const corpus = read("🧫️fixtures/🔣️.json");
   assert.equal(new Set(corpus.cases.map((row: { id: string }) => row.id)).size, corpus.cases.length);
   for (const vector of corpus.cases) {
     const accepted = vector.exports.every((value: { package: string; identity: string }) => vector.packages.includes(value.package) && /^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)+$/.test(value.identity)) && new Set(vector.exports.map((value: { package: string }) => value.package)).size === vector.exports.length && new Set(vector.exports.map((value: { identity: string }) => value.identity)).size === vector.exports.length;

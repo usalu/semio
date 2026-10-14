@@ -23,5 +23,8 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "framework/product/os/module/plugin/window-kits"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "devDependencies": {
+    "@semio-tech/process": "workspace:*"
+  }
 }

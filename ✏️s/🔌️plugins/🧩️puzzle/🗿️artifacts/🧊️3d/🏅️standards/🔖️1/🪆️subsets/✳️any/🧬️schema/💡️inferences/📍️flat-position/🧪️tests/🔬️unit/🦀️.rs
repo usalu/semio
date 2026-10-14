@@ -101,7 +101,7 @@ async fn disabled_cache_matches_pure_recompute() {
 /// 🧪️ Native serde independently checks the neutral logical dependency projection.
 #[semio_framework_async_macros::async_test]
 async fn typed_dependency_matches_neutral_serde_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔑️dependency/🔣.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/📍️flat-position/🔑️dependency/🔣.json")).unwrap();
     let snapshot = chain_snapshot();
     let plane = Puzzle3dFlatPlane::dep_input(&snapshot, &"root".into(), &[]);
     let center = Puzzle3dFlatCenter::dep_input(&snapshot, &"mid".into(), &[]);

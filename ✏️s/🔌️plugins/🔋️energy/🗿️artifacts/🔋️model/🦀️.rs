@@ -531,7 +531,7 @@ pub fn energy_snapshot_with_state(schema: impl Into<String>, model: &Model, refe
 /// Answers only for the slot/child pairs the snapshot itself declares (same shape as
 /// `genesis_gis_map_child_pack`).
 pub fn energy_genesis_child_pack(snapshot: &EnergyModelSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     if slot == "structure" && child_id == snapshot.structure.child_id {
         return Some(<semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot as ArtifactPack>::encode_pack(&energy_structure_from_model(&snapshot.model)));
     }
@@ -607,7 +607,7 @@ pub fn energy_snapshot_with_links(model: &Model, links: &EnergyModelLinkSlots) -
 /// `🔱️trinity`'s; a freshly minted, edit-free envelope makes the spr encode infallible.
 pub fn energy_model_load_document_effect(document_id: &str, model: &Model, links: &EnergyModelLinkSlots) -> semio_framework_plugin::kernel::Effect {
     let snapshot = energy_snapshot_with_links(model, links);
-    let pack = <EnergyModelSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
+    let pack = <EnergyModelSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
     let envelope = store::os_store::document_materialize::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, document_id, snapshot, None).into_owners();
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::print_document_spr(&envelope)).expect("energy model document spr encode is infallible for a fresh, edit-free envelope");
     semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr }

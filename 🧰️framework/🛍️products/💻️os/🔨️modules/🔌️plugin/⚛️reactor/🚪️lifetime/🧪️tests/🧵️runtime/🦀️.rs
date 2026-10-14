@@ -64,7 +64,7 @@ async fn reactor_native_lifecycle_finish(runtime: &crate::plugin_runtime::Plugin
 #[semio_framework_async_macros::async_test]
 async fn reactor_native_lifecycle_retains_exact_close_until_ack() {
     use semio_framework::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleReceipt as Receipt, Event};
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️production.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️production.json")).unwrap();
     let instance = fixture["open"]["instance_id"].as_u64().unwrap() as u32;
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
@@ -200,7 +200,7 @@ async fn reactor_output_fault_returns_real_patch_and_preserves_other_lifecycle_a
 /// 🪪️ Native opening admits an explicit actor and refuses missing or empty authority.
 #[semio_framework_async_macros::async_test]
 async fn reactor_native_open_preserves_the_neutral_actor_authority() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../🏪️store/🧫️fixtures/🧫️actor-genesis/🔣️.json")).expect("neutral actor/genesis fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../🏪️store/🧪️tests/🧫️fixtures/🧫️actor-genesis/🔣️.json")).expect("neutral actor/genesis fixture");
     let actor = fixture["actors"]["opened"].as_str().expect("opened actor");
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.expect("production declarations"));

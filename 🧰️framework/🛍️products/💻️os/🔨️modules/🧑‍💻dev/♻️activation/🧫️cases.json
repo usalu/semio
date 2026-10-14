@@ -1,6 +1,6 @@
 {
   "variant": "note",
-  "profile": "dev",
+  "profile": "prototype",
   "cycles": [
     {
       "now": 100,

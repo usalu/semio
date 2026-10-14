@@ -4,7 +4,7 @@ import { resolveFrameworkOsCatalogConfigurationV1 } from "../../../../📺️ren
 import { prepareWgpuPluginModules, assertWgpuPluginPlan } from "../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️plugin-modules/🟦️.ts";
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
-import fixture from "../../🧫️fixtures/🧩️composition/🔣️.json";
+import fixture from "../🧫️fixtures/🧩️composition/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import { admitPluginCatalogV1, pluginCatalogV1, type PluginCatalogAdmissionV1 } from "../../🟦️.ts";
 import { artifactKindActivationOwner, resolvePlaygroundBoot, resolvePluginHostConfig, extensionRegistryFromCatalog } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
@@ -98,8 +98,8 @@ describe("real React catalog configuration laws", () => {
 });
 
 test("the actual WGPU serve process receives caller-owned composition authority", () => {
-  const requested = { port: 6550, variant: "custom", renderer: "wgpu" as const, profile: "dev" as const, hubUrl: null, logPath: "fixture.log", compositionConfigPath: "fixtures/independent-composition.ts" };
-  expect(devServeCommandV1(requested).args).toEqual(["serve", "custom", "dev", "--port", "6550", "--composition", requested.compositionConfigPath]);
+  const requested = { port: 6550, variant: "custom", renderer: "wgpu" as const, profile: "prototype" as const, hubUrl: null, logPath: "fixture.log", compositionConfigPath: "fixtures/independent-composition.ts" };
+  expect(devServeCommandV1(requested).args).toEqual(["serve", "custom", "prototype", "--port", "6550", "--composition", requested.compositionConfigPath]);
 });
 
 
@@ -126,7 +126,7 @@ test("actual injected catalog scope preserves all original export and diagnostic
 }, 300000);
 
 import publicationSchema from "../../../../🧑‍💻dev/🎮️playground-session/🧬️schema/🔣️.json";
-import publicationCases from "../../../../🧑‍💻dev/🎮️playground-session/🧫️fixtures/🔣️.json";
+import publicationCases from "../../../../🧑‍💻dev/🎮️playground-session/🧪️tests/🧫️fixtures/🔣️.json";
 import { parsePlaygroundSessionPublicationRequestV1 } from "../../../../🧑‍💻dev/🎮️playground-session/🧬️schema/🟦️.ts";
 const publicationOracle = new Ajv({ strict: false }).compile(publicationSchema);
 for (const row of publicationCases.cases) test(`explicit session publication ${row.id}`, () => {
@@ -137,7 +137,7 @@ for (const row of publicationCases.cases) test(`explicit session publication ${r
 
  test("owned preview literal argv retains exact bytes through actual spawn", async () => {
   const { generatorPreviewScriptArguments, generatorPreviewExecution } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts");
-  const source = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧫️fixtures/🔣️.json"), policy = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧬️schema/🔣️.json");
+  const source = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧪️tests/🧫️fixtures/🔣️.json"), policy = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧬️schema/🔣️.json");
   const oracle = new Ajv({ strict: false }).compile(policy.default), { default: parseArgv } = await import("yargs-parser"), { spawnSync } = await import("node:child_process");
   for (const row of source.default.cases) {
     expect(oracle(row.arguments)).toBe(row.valid);
@@ -157,7 +157,7 @@ for (const row of publicationCases.cases) test(`explicit session publication ${r
 
  test("preview shell metadata has a finite literal grammar with an independent lexer", async () => {
   const { parseGeneratorPreviewLiteralCommandV1 } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🟦️.ts");
-  const { default: source } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧫️fixtures/🔣️.json"), { default: lexicalPolicy } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧬️schema/🔣️literal-command.json"), { default: split } = await import("string-argv");
+  const { default: source } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧪️tests/🧫️fixtures/🔣️.json"), { default: lexicalPolicy } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧬️schema/🔣️literal-command.json"), { default: split } = await import("string-argv");
   const lexical = new Ajv({ strict: false }).compile(lexicalPolicy);
   for (const row of source.literalCommands) {
     if (!row.valid) { expect(() => parseGeneratorPreviewLiteralCommandV1(row.command)).toThrow(); continue; }
@@ -169,7 +169,7 @@ for (const row of publicationCases.cases) test(`explicit session publication ${r
  });
 
  test("declared preview progress preserves strict artifact output and bounded first-party event custody", async () => {
-  const progress = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🟦️.ts"), { default: source } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🧫️fixtures/🔣️.json"), { default: policy } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🧬️schema/🔣️.json"), { default: eventPolicy } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🧬️schema/🔣️event.json"), jsonc = await import("jsonc-parser");
+  const progress = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🟦️.ts"), { default: source } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🧪️tests/🧫️fixtures/🔣️.json"), { default: policy } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🧬️schema/🔣️.json"), { default: eventPolicy } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🧬️schema/🔣️event.json"), jsonc = await import("jsonc-parser");
   const oracle = new Ajv({ strict: false }).compile(policy), eventOracle = new Ajv({ strict: false }).compile(eventPolicy), controller = new AbortController(), started = performance.now(), control = { cancelled: () => controller.signal.aborted, remainingMs: () => 30000 - (performance.now() - started) };
   expect(oracle(source.policy)).toBe(true);
   const admitted = progress.parseGeneratorPreviewProgressPolicyV1(source.policy);

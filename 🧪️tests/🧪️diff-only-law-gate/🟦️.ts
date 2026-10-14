@@ -1,4 +1,4 @@
-/** 📐️ Diff-only mutation law gate: rules R8–R16 of `verify mutation-outcome-law` report exactly the planted violations of `🧫️fixtures/🧫️diff-only-law-gate` (file, line, rule, design code) and stay silent on its compliant controls — per file, through the real git-inventory rule entry points, and for R15 over planted leaf trees. The TypeScript scanner re-derives the token-level rules (R8, R9, R10, R16) independently of the gate's patterns. */
+/** 📐️ Diff-only mutation law gate: rules R8–R16 of `verify mutation-outcome-law` report exactly the planted violations of `🧪️tests/🧫️fixtures/🧫️diff-only-law-gate` (file, line, rule, design code) and stay silent on its compliant controls — per file, through the real git-inventory rule entry points, and for R15 over planted leaf trees. The TypeScript scanner re-derives the token-level rules (R8, R9, R10, R16) independently of the gate's patterns. */
 import { expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -24,7 +24,7 @@ type Tree = { id: string; description: string; files: Record<string, string[]>; 
 type Vectors = { contract: string; codes: Record<Rule, string>; cases: Case[]; leafTrees: Tree[] };
 
 const root = resolve(import.meta.dir, "../..");
-const vectors = JSON.parse(readFileSync(join(root, "🧫️fixtures/🧫️diff-only-law-gate/🔣️.json"), "utf8")) as Vectors;
+const vectors = JSON.parse(readFileSync(join(root, "🧪️tests/🧫️fixtures/🧫️diff-only-law-gate/🔣️.json"), "utf8")) as Vectors;
 const SUMMARY = /^(?<path>.+):(?<line>\d+) (?<rule>R\d+):(?<code>[A-Z0-9-]+) .+ \(`.*`\)$/u;
 const FILE_RULES = [
   [policyLeafMutableBaseBreaches, "R8"],

@@ -2,7 +2,7 @@ use super::*;
 
 /// 🧫️ The language-agnostic fixture both twins answer (`🟦️.ts` beside `🦀️.rs` reads the same file).
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("raster video fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("raster video fixture")
 }
 
 fn hex(bytes: &[u8]) -> String {

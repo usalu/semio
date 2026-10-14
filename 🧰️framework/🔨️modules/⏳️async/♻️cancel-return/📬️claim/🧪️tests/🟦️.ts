@@ -3,7 +3,7 @@ import {readFileSync} from "node:fs";
 import {join} from "node:path";
 import Ajv from "ajv";
 import jsonPatch from "fast-json-patch";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {PublicationClaimReturn} from "../🟦️.ts";
 test("original publication permit moves to its pre-admitted slot before the claim bit clears",()=>{

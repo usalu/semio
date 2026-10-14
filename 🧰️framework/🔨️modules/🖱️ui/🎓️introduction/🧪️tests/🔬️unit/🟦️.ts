@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv/dist/2020";
-import corpus from "../../🧫️fixtures/🔣️.json";
+import corpus from "../🧫️fixtures/🔣️.json";
 import { shouldStartIntroduction } from "../../🟦️.ts";
 
 describe("neutral introduction eligibility", () => {

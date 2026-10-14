@@ -1,0 +1,9 @@
+\documentclass{article}
+\usepackage{semio-viz-charts-dashboard}
+\begin{document}
+\SemioVizProbeOn
+\SemioVizProbeBegin{charts-kpi-gauge}{radial-gauge}
+\begin{VizProbeCanvas}[80][40]
+\SemioVizRunFamily{gauge}[data=demo-kpi,mode=radial]
+\end{VizProbeCanvas}
+\end{document}

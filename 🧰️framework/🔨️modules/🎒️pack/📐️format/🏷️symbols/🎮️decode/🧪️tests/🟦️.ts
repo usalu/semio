@@ -7,7 +7,7 @@ import {applyPatch} from "fast-json-patch";
 
 test("retained inline symbols preserve original wire indices and independent canonical UTF8",()=>{
   const owner=resolve(import.meta.dir,"..");
-  const law=JSON.parse(readFileSync(resolve(owner,"🧫️fixtures/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
   const database=new Database(":memory:");
   try{
     database.exec("CREATE TABLE symbols (ordinal INTEGER PRIMARY KEY, value BLOB NOT NULL)");

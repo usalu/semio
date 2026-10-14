@@ -1,9 +1,10 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {BufferGeometry,Float32BufferAttribute} from "three";
-import law from "../../🧫️fixtures/🛠️modeling/🎟️owners.json";
+import {mergeVertices} from "three/addons/utils/BufferGeometryUtils.js";
+import law from "../🧫️fixtures/🛠️modeling/🎟️owners.json";
 import schema from "../../🧬️schema/🛠️modeling/🎟️owners.json";
-import cases from "../../🧫️fixtures/🛠️modeling/🔣️.json";
+import cases from "../🧫️fixtures/🛠️modeling/🔣️.json";
 import {applyPatch} from "fast-json-patch";
 
 test("original orientation initializes each source face with independently patched empty adjacency and flags",()=>{
@@ -77,4 +78,39 @@ test("original orientation incidence preserves every independently patched edge 
     const output=policy.outputs[name as keyof typeof policy.outputs];expect(keys).toEqual(output.keys);expect([...rows].map(([key,owners])=>[JSON.parse(key),owners]).sort((a,b)=>a[0][0]-b[0][0]||a[0][1]-b[0][1])).toEqual(output.owners);expect(new Uint32Array(2).byteLength).toBe(policy.keyCopyBytes);expect(new BigUint64Array(2).byteLength).toBe(policy.ownerCopyBytes);
     if(name==="snapshotClosedPreparation"){for(const owners of rows.values()){expect(owners.length).toBe(2);expect(owners[0][1]).not.toBe(owners[1][1]);}}
   }
+});
+
+
+test("original orientation adjacency retains independently patched reciprocal face neighbors in source encounter order",()=>{
+  const validate=new Ajv({strict:true}).compile(schema),policy=law.orientationAdjacency;expect(validate(law)).toBe(true);expect(validate({...law,orientationAdjacency:{...policy,neighborCopyBytes:0}})).toBe(false);
+  for(const name of policy.sources){const source=law[name as "snapshotPreparation"|"snapshotClosedPreparation"],incidence=law.orientationIncidence.outputs[name as keyof typeof law.orientationIncidence.outputs],rows=new Map(incidence.owners.map(([key,owners])=>[JSON.stringify(key),owners])),output={adjacency:source.faces.map(()=>[] as [number,boolean][])};
+    for(const key of incidence.keys){const owners=rows.get(JSON.stringify(key))!;if(owners.length!==2)continue;const[[a,af],[b,bf]]=owners;applyPatch(output,[{op:"add",path:`/adjacency/${a}/-`,value:[b,af===bf]},{op:"add",path:`/adjacency/${b}/-`,value:[a,af===bf]}]);}
+    expect(output.adjacency).toEqual(policy.outputs[name as keyof typeof policy.outputs]);expect(new BigUint64Array(2).byteLength).toBe(policy.neighborCopyBytes);for(const[face,neighbors]of output.adjacency.entries()){for(const[neighbor,flip]of neighbors){expect(output.adjacency[neighbor].some(([source,relative])=>source===face&&relative===flip)).toBe(true);}}
+  }
+});
+
+
+test("original orientation component traversal preserves independently patched visits and winding parity",()=>{
+ const validate=new Ajv({strict:true}).compile(schema);expect(validate(law)).toBe(true);const policy=law.orientationComponents;expect(validate({...law,orientationComponents:{...policy,neighborCopyBytes:0}})).toBe(false);
+ for(const name of policy.sources){const adjacency=policy.adjacency[name as keyof typeof policy.adjacency],flags={oriented:adjacency.map(()=>false),flipped:adjacency.map(()=>false)};const visited=new Set<number>();
+  for(let root=0;root<adjacency.length;root++){if(visited.has(root))continue;const pending=[root];visited.add(root);applyPatch(flags,[{op:"replace",path:`/oriented/${root}`,value:true}]);while(pending.length){const face=pending.pop()!;for(const [neighbor,relative]of adjacency[face]){if(visited.has(neighbor as number))continue;visited.add(neighbor as number);applyPatch(flags,[{op:"replace",path:`/oriented/${neighbor}`,value:true},{op:"replace",path:`/flipped/${neighbor}`,value:flags.flipped[face]!==relative}]);pending.push(neighbor as number);}}}
+  const expected=policy.outputs[name as keyof typeof policy.outputs];expect(flags.oriented).toEqual(expected.oriented);expect(flags.flipped).toEqual(expected.flipped);expect(flags.flipped.filter(Boolean).length).toBe(expected.flipCount);
+  if(name==="snapshotMisorientedPreparation"){const source=law.snapshotMisorientedPreparation;source.faces.forEach((original,index)=>{const face=flags.flipped[index]?[...original].reverse():original,geometry=new BufferGeometry().setAttribute("position",new Float32BufferAttribute(face.slice(0,3).flatMap(vertex=>source.positions[vertex]),3));geometry.computeVertexNormals();expect(Array.from(geometry.getAttribute("normal").array.slice(0,3)).map(value=>value===0?0:value)).toEqual(policy.correctedNormal);geometry.dispose();});}}
+ expect(new BigUint64Array(1).byteLength+new Uint8Array(1).byteLength).toBe(policy.rootCopyBytes);expect(new BigUint64Array(1).byteLength+new Uint8Array(2).byteLength).toBe(policy.neighborCopyBytes);
+});
+
+
+test("original orientation corners agree with independently patched winding and geometric normals",()=>{
+ const validate=new Ajv({strict:true}).compile(schema),policy=law.orientationCorners;expect(validate(law)).toBe(true);expect(validate({...law,orientationCorners:{...policy,swapCopyBytes:0}})).toBe(false);expect(new Uint32Array(2).byteLength).toBe(policy.swapCopyBytes);
+ for(const name of policy.sources){const source=law[name as keyof typeof law] as typeof law.snapshotPreparation,flags=law.orientationComponents.outputs[name as keyof typeof law.orientationComponents.outputs].flipped,output={faces:source.faces.map(face=>[...face])};let copied=0;
+  output.faces.forEach((face,index)=>{if(!flags[index])return;for(let corner=0;corner<Math.floor(face.length/2);corner++){const opposite=face.length-1-corner,a=face[corner],b=face[opposite];applyPatch(output,[{op:"replace",path:`/faces/${index}/${corner}`,value:b},{op:"replace",path:`/faces/${index}/${opposite}`,value:a}]);copied+=new Uint32Array(2).byteLength;}});
+  expect(output).toEqual({faces:policy.outputs[name as keyof typeof policy.outputs].faces});expect(copied).toBe(policy.outputs[name as keyof typeof policy.outputs].copyBytes);
+  if(name==="snapshotMisorientedPreparation"){for(const face of output.faces){const geometry=new BufferGeometry().setAttribute("position",new Float32BufferAttribute(face.slice(0,3).flatMap(vertex=>source.positions[vertex]),3));geometry.computeVertexNormals();expect(Array.from(geometry.getAttribute("normal").array.slice(0,3)).map(value=>value===0?0:value)).toEqual(law.orientationComponents.correctedNormal);geometry.dispose();}}
+ }
+});
+
+
+test("original reconstruction membership agrees with independent ordered source sets",()=>{
+ const validate=new Ajv({strict:true}).compile(schema),policy=law.reconstructionMembership;expect(validate(law)).toBe(true);expect(validate({...law,reconstructionMembership:{...policy,parentFrames:0}})).toBe(false);
+ for(const name of policy.sources){const source=law[name as keyof typeof law] as typeof law.snapshotPreparation,original=new BufferGeometry().setAttribute("position",new Float32BufferAttribute(source.faces.flat().flatMap(vertex=>source.positions[vertex]),3)),merged=mergeVertices(original),positions=merged.getAttribute("position"),members=Array.from({length:positions.count},(_,index)=>source.positions.findIndex(point=>point[0]===positions.getX(index)&&point[1]===positions.getY(index)&&point[2]===positions.getZ(index))).sort((a,b)=>a-b);expect(members).toEqual(policy.members[name as keyof typeof policy.members]);expect([...new Set(source.faces.flat())].sort((a,b)=>a-b)).toEqual(members);merged.dispose();original.dispose();}
 });

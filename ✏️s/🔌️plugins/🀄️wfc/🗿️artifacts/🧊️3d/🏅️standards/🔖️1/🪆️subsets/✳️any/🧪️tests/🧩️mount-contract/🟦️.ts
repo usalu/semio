@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import contract from "../../🧫️fixtures/🧩️mount-contract/🔣️.json";
+import contract from "../🧫️fixtures/🧩️mount-contract/🔣️.json";
 
 const SURFACE = /^(?<kind>[a-z0-9.]+)@(?<standard>[^/]+)\/(?<subset>[^#]+)#(?<role>editor|viewer)$/u;
 

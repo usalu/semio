@@ -85,7 +85,7 @@ async fn merge_preserves_self_and_offsets_others_labels() {
 fn original_reach_set_owns_exact_physical_membership() {
     use crate::test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../📸️representation/🕸️topology/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../📸️representation/🕸️topology/🧪️tests/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
     let mut body=Body::new();let mut rec=history::OpRecorder::new();let solid=make_box(&mut body,1.,1.,1.,&mut rec).unwrap();let orphan=make_vertex(&mut body,Pnt3::new(9.,9.,9.),Tol::DEFAULT,&mut rec);
     for copy in law["copyGrants"].as_array().unwrap() {
         let (keep,source)=observe(||body.reachable_from(&[EntityRef::Solid(solid)]));
@@ -109,7 +109,7 @@ fn original_reach_set_owns_exact_physical_membership() {
 fn original_reachability_turns_preserve_source_and_actual_physical_receipts() {
     use crate::test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../📸️representation/🕸️topology/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../📸️representation/🕸️topology/🧪️tests/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
     let mut body=Body::new();let mut rec=history::OpRecorder::new();let solid=make_box(&mut body,1.,1.,1.,&mut rec).unwrap();let original=body.entity_counts();
     for cancel in std::iter::once(None).chain(law["incremental"]["cancelTurns"].as_array().unwrap().iter().map(|turn|Some(turn.as_u64().unwrap() as usize))) {
         let (mut job,heap)=observe(||ReachabilityJob::new());assert_eq!(heap,(0,0));let (accepted,heap)=observe(||job.begin_root(EntityRef::Solid(solid)));accepted.unwrap();assert_eq!(heap,(0,0));

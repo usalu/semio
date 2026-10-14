@@ -76,9 +76,9 @@ fn verdict(observation: &Value) -> Result<&'static str, ()> {
 
 #[test]
 fn complete_portable_mounted_turn_corpus() {
-    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("authored portable mounted fixture");
+    let fixture: Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("authored portable mounted fixture");
     let vectors = fixture["vectors"].as_array().expect("complete vectors");
-    assert_eq!(vectors.len(), 28);
+    assert_eq!(vectors.len(), 29);
     let mut results = Vec::with_capacity(vectors.len());
     for vector in vectors {
         let actual = verdict(&vector["observation"]).expect("valid portable observation");
@@ -92,7 +92,7 @@ fn complete_portable_mounted_turn_corpus() {
     assert!(path.to_string_lossy().encode_utf16().count() <= 256, "result path must fit Windows");
     std::fs::create_dir_all(path.parent().expect("result parent")).expect("owned result directory");
     std::fs::write(path, serde_json::to_vec(&results).expect("bounded native verdicts")).expect("owned native result output");
-    println!("[DEBUG] Actual mounted turn: all27 original observations plus actual initial store generation0 and eight malformed identities/grants/clocks executed against original StepContext");
+    println!("[DEBUG] Actual mounted turn: all29 observations including actual initial store generation0 and same canceled original close and eight malformed identities/grants/clocks executed against original StepContext");
 }
 
 #[test]
@@ -115,7 +115,7 @@ fn cumulative_receipts_share_original_context_fuel_and_physical_authority() {
 
 #[test]
 fn explicit_phase_policy_corpus_preserves_legitimate_empty_authority() {
-    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let policies = fixture["policies"].as_array().unwrap();
     assert_eq!(policies.len(), 4);
     for vector in policies {
@@ -133,7 +133,7 @@ fn explicit_phase_policy_corpus_preserves_legitimate_empty_authority() {
 
 #[test]
 fn nested_job_receipts_preserve_original_scheduling_debit() {
-    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let vectors = fixture["nestedJobs"].as_array().unwrap();
     assert_eq!(vectors.len(), 8);
     let mut results = Vec::with_capacity(vectors.len());
@@ -172,7 +172,7 @@ fn context_receipt(value: &Value) -> RetainedCloneProgress {
 
 #[test]
 fn mounted_original_context_receipts_preserve_every_independent_axis() {
-    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🧾️context/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("🧫️fixtures/🧾️context/🔣️.json")).unwrap();
     let identity = MountedOwnerIdentityV1 { instance_id: 7, operation: OperationId(1u64 << 62), generation: Generation(9) };
     CLOCK.with(|clock| clock.set(Some(10)));
     let mut results = Vec::new();
@@ -232,14 +232,14 @@ fn mounted_original_context_receipts_preserve_every_independent_axis() {
 
 #[test]
 fn original_mounted_turn_debits_actual_context_receipt_once_and_keeps_fuel_independent(){
-    let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["contextReceipt"];let grant=law["grant"].grant().unwrap();CLOCK.with(|clock|clock.set(Some(10)));let identity=MountedOwnerIdentityV1{instance_id:7,operation:OperationId(99117),generation:Generation(13)};let policy=MountedOwnerPolicyV1{preparation:grant,maintenance:grant,close:grant};let mut sequence=0;let mut actual=RetainedCloneProgress::default();let mut context=StepContext::new(identity.operation,identity.generation,StepBudget::new(law.word("fuel").unwrap() as u64,100,grant),CancelToken::root_now(),now_us,&mut sequence,&mut actual);let mut turn=MountedOwnerTurnV1::admit(7,identity,MountedOwnerPhaseV1::Preparation,policy,&mut context).unwrap().unwrap();let mut source=Vec::<u8>::new();let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||source.reserve_exact(64));assert_eq!(source.capacity(),64);assert_eq!((heap.requested_bytes,heap.released_bytes),(64,0));let pointer=source.as_ptr();let birth=RetainedCloneProgress{copied_items:1,retained_capacity_bytes:64,..Default::default()};turn.record(birth,false,false).unwrap();assert_eq!(turn.context().retained_progress(),birth);
+    let fixture:Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["contextReceipt"];let grant=law["grant"].grant().unwrap();CLOCK.with(|clock|clock.set(Some(10)));let identity=MountedOwnerIdentityV1{instance_id:7,operation:OperationId(99117),generation:Generation(13)};let policy=MountedOwnerPolicyV1{preparation:grant,maintenance:grant,close:grant};let mut sequence=0;let mut actual=RetainedCloneProgress::default();let mut context=StepContext::new(identity.operation,identity.generation,StepBudget::new(law.word("fuel").unwrap() as u64,100,grant),CancelToken::root_now(),now_us,&mut sequence,&mut actual);let mut turn=MountedOwnerTurnV1::admit(7,identity,MountedOwnerPhaseV1::Preparation,policy,&mut context).unwrap().unwrap();let mut source=Vec::<u8>::new();let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||source.reserve_exact(64));assert_eq!(source.capacity(),64);assert_eq!((heap.requested_bytes,heap.released_bytes),(64,0));let pointer=source.as_ptr();let birth=RetainedCloneProgress{copied_items:1,retained_capacity_bytes:64,..Default::default()};turn.record(birth,false,false).unwrap();assert_eq!(turn.context().retained_progress(),birth);
     let receipt=RetainedCloneProgress{copied_items:1,copied_bytes:law["source"].as_str().unwrap().len(),..Default::default()};turn.advance_job(|context,incoming|{assert_eq!(incoming,context.retained_grant());source.extend_from_slice(law["source"].as_str().unwrap().as_bytes());context.consume_fuel(law.word("childFuel").unwrap() as u64);context.consume_retained(receipt)?;Ok(MountedOwnerJobReceiptV1{progress:receipt,complete:false,terminal_is_empty:false})}).unwrap();assert_eq!(source.as_ptr(),pointer);assert_eq!(turn.context().retained_progress(),birth.checked_add(receipt).unwrap());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,64));let release=RetainedCloneProgress{copied_items:1,released_bytes:64,..Default::default()};turn.record(release,true,true).unwrap();assert_eq!(turn.grant(),law["remaining"].grant().unwrap());assert_eq!(turn.context().retained_grant(),turn.grant());assert_eq!(turn.context().fuel_remaining(),law.word("remainingFuel").unwrap() as u64);assert_eq!(turn.progress(),turn.context().retained_progress());eprintln!("[DEBUG] original mounted same context born64/copy23/free64 accepted once, original source pointer unchanged, child fuel5 independent from one physical item");
 }
 
 #[test]
 fn original_actor_capture_uses_full_grant_and_retains_cancellation_custody(){
  use semio_framework_value::retirement::controlled::ControlledRetirement;
- let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🎭️actor/🔣️.json")).unwrap();
+ let fixture:Value=serde_json::from_str(include_str!("🧫️fixtures/🎭️actor/🔣️.json")).unwrap();
  let amounts=fixture["nativeGrant"].as_array().unwrap();let amount=|n:usize|usize::try_from(amounts[n].as_u64().unwrap()).unwrap();
  let grant=RetainedCloneGrant{maximum_items:amount(0),maximum_copy_bytes:amount(1),maximum_capacity_bytes:amount(2),maximum_release_bytes:amount(3),maximum_depth:amount(4)};
  let mut observations=Vec::new();
@@ -295,6 +295,38 @@ fn original_mounted_nested_failure_receives_actual_context_delta_once() {
   drop(turn);drop(context);assert_eq!(external,actual);let(_,closed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(source));assert_eq!(closed.released_bytes,64);
  }
  println!("[DEBUG] Actual nested failure and false Complete preserved original64 context debit in mounted recipient once; same source pointer, fuel6, denial0/0, release64");
+}
+
+#[test]
+fn original_mounted_lifecycle_adopts_same_caller_receipt_once() {
+    let fixture: Value = serde_json::from_str(include_str!("🧫️fixtures/🧾️context/🔣️.json")).unwrap();
+    let grant = fixture["vectors"][0]["context"].grant().unwrap();
+    let identity = MountedOwnerIdentityV1 { instance_id: 7, operation: OperationId(71), generation: Generation(3) };
+    CLOCK.with(|clock| clock.set(Some(10)));
+    for vector in fixture["nestedJobs"].as_array().unwrap() {
+        let receipt = context_receipt(&vector["receipt"]);
+        let mut recipient = RetainedCloneProgress::default();
+        let mut sequence = 0;
+        let mut context = StepContext::new(identity.operation, identity.generation, StepBudget::new(4, 100, grant), CancelToken::root_now(), now_us, &mut sequence, &mut recipient);
+        let policy = MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant };
+        let mut turn = MountedOwnerTurnV1::admit(7, identity, MountedOwnerPhaseV1::Maintenance, policy, &mut context).unwrap().unwrap();
+        let debit = vector["debit"].as_str().unwrap();
+        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| turn.advance_lifecycle(|original, incoming| {
+            assert_eq!((original.operation(), original.generation()), (identity.operation, identity.generation));
+            assert_eq!(incoming, grant);
+            if debit == "child" || debit == "partial" {
+                let actual = if debit == "child" { receipt } else { RetainedCloneProgress { retained_capacity_bytes: 0, ..receipt } };
+                original.consume_fuel(1);
+                original.consume_retained(actual)?;
+            }
+            Ok::<_,ValueError>(semio_framework_value::RetainedCloneStep::Progress(receipt))
+        }));
+        assert_eq!(result.is_ok(), debit == "child", "{}", vector["id"]);
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        assert_eq!(turn.progress(), turn.context().retained_progress());
+        assert_eq!(turn.context().fuel_remaining(), if debit == "child" || debit == "partial" { 3 } else { 4 });
+    }
+    eprintln!("[DEBUG] original mounted lifecycle op71/gen3 adopts same caller receipt once, independent four currencies and CPU, missing/partial/foreign debit refused, System0");
 }
 
 #[test]

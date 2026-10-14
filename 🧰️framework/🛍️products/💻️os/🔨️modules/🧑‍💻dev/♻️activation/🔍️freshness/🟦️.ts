@@ -2,7 +2,7 @@ import { COMPONENT_MODULE_DIRECTORIES } from "../../../🔌️plugin/📇️regi
 /** 🧩️ Semantic activation freshness owner. */
 
 import { resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, mapBoundedV1, stagedModuleMtime, writeStagedSourceContentHash } from "../../../🔌️plugin/🏗️build/🔍️freshness/🟦️.ts";
-import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, nextActivationReceipt, playgroundSessionOutputPath, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type PreparedComponentFacts, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, activationSourceFreshnessKey, developmentRuntimeRoot, nextActivationReceipt, playgroundSessionOutputPath, builtPluginModulesRootIn, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type PreparedComponentFacts, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 
@@ -51,6 +51,7 @@ export function stagedComponentFacts(moduleRoot: string, pluginId: string): Prep
 export async function collectStagedModuleFacts(options: {
   readonly moduleRoot: string;
   readonly installRoot: string;
+  readonly freshnessRoot?: string;
   readonly receipt?: { readonly plugins: readonly { readonly pluginId: string; readonly artifactSha256: string; readonly sourceContentSha256?: string }[] };
   readonly components: readonly DeployedRegistryEntryV1[];
   readonly signal?: AbortSignal;
@@ -70,7 +71,7 @@ export async function collectStagedModuleFacts(options: {
     const stagedAtMs = stagedModuleMtime(moduleDirectory);
     const hashes = await resolveBootSourceContentHashes({
       sourceRoot,
-      moduleDirectory,
+      moduleDirectory: options.freshnessRoot ? join(options.freshnessRoot, activationSourceFreshnessKey(target.pluginId)) : moduleDirectory,
       receiptSourceContentSha256: receiptSource,
       signal: options.signal,
     });
@@ -92,7 +93,7 @@ export async function collectStagedModuleFacts(options: {
 /** 📣️ Prints one `[stale]` line per component whose served bytes are behind, each naming the exact
  * Nx target that fixes it. Called at serve start and again on every activation-receipt change, so a
  * restage that lands while the server runs retires its own warning. */
-export function reportStagedModuleFreshness(variant: string, renderer: "react" | "wgpu", profile: "dev" | "release", facts: readonly StagedModuleFacts[]): readonly StagedModuleVerdict[] {
+export function reportStagedModuleFreshness(variant: string, renderer: "react" | "wgpu", profile: "prototype" | "release", facts: readonly StagedModuleFacts[]): readonly StagedModuleVerdict[] {
   const verdicts = facts.map(stagedModuleVerdict);
   const lines = stagedModuleReportLines(verdicts, `bun nx run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`);
   for (const line of lines) console.warn(line);
@@ -102,13 +103,14 @@ export function reportStagedModuleFreshness(variant: string, renderer: "react" |
 
 /** 🔎️ Serve-start freshness pass over the one staging root — never throws: a dev server that
  * refuses to start over a stale module is worse than one that says which module is stale. */
-async function reportServeStagedModuleFreshness(variant: string, renderer: "react" | "wgpu", profile: "dev" | "release", runtime: string, receipt?: { readonly plugins: readonly { readonly pluginId: string; readonly artifactSha256: string }[] }): Promise<void> {
+async function reportServeStagedModuleFreshness(variant: string, renderer: "react" | "wgpu", profile: "prototype" | "release", runtime: string, receipt?: { readonly plugins: readonly { readonly pluginId: string; readonly artifactSha256: string }[] }): Promise<void> {
   try {
     const selected = new Set(filterProjectedPluginRegistry(readGeneratedCatalogProjection(), resolveCatalogFilterPluginId(variant)).map((entry) => entry.pluginId));
     const components = readGeneratedCatalogProjection().entries.filter((entry) => selected.has(entry.pluginId));
     reportStagedModuleFreshness(variant, renderer, profile, await collectStagedModuleFacts({
-      moduleRoot: pluginModulesRoot(),
+      moduleRoot: builtPluginModulesRootIn(repoRoot, profile),
       installRoot: join(runtime, "extensions"),
+      freshnessRoot: join(runtime, "🔖️"),
       receipt,
       components,
     }));

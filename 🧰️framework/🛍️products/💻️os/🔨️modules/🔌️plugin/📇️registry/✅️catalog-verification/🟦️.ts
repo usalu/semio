@@ -1,11 +1,11 @@
-import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { createHash } from "node:crypto";
 import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { closeSync, existsSync, fstatSync, lstatSync, openSync, readdirSync, readFileSync, readSync, realpathSync, statSync } from "node:fs";
 import { isAbsolute, dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { getWorkspaceRoot, runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { APP_CHANNEL_VERSION, decodePackValue, encodePackValue, packValueToExactJson } from "../../../../🟦️.ts";
 import type { PackValue } from "../../../../🟦️.ts";
 import { declaredComponentKind } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
@@ -912,7 +912,7 @@ export async function registrySchemaValidator(exportId: string): Promise<SchemaV
 
 /** 🧫️ Independent AJV/Kahn closure oracle over neutral data; never reads a live factory or production descriptor. */
 export async function nativeCatalogSelectionOracleV1(): Promise<void> {
-  const fixtureRoot = join(import.meta.dir, "..", "🧫️fixtures/📦️native-catalog-selection");
+  const fixtureRoot = join(import.meta.dir, "..", "🧪️tests/🧫️fixtures/📦️native-catalog-selection");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
   const validateInput = await registrySchemaValidator("NativeCatalogSelectionInputV1");
   const validate = (value: any): boolean => validateInput({ packages: value.packages, profiles: value.profiles, availableProviders: value.availableProviders });

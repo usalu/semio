@@ -27,11 +27,11 @@ fn spec(ctx: &Context) -> Result<RasterSpec, String> {
 
 fn committed_source(ctx: &Context) -> Result<Option<&'static [u8]>, String> {
     Ok(match ctx.doc_json()?.str("fixture").as_str() {
-        "precision-16bit-gray" => Some(include_bytes!("../../../../../../🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png")),
-        "indexed-2bit-duplicate-palette" => Some(include_bytes!("../../../../../../🧫️fixtures/🧬️canonical-source/indexed-2bit-duplicate-palette.png")),
-        "rgba8-multi-idat-private" => Some(include_bytes!("../../../../../../🧫️fixtures/🧬️canonical-source/rgba8-multi-idat-private.png")),
-        "rgba8-adam7" => Some(include_bytes!("../../../../../../🧫️fixtures/🧬️canonical-source/rgba8-adam7.png")),
-        "grayscale-1bit" => Some(include_bytes!("../../../../../../🧫️fixtures/🧬️canonical-source/grayscale-1bit.png")),
+        "precision-16bit-gray" => Some(include_bytes!("../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png")),
+        "indexed-2bit-duplicate-palette" => Some(include_bytes!("../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/indexed-2bit-duplicate-palette.png")),
+        "rgba8-multi-idat-private" => Some(include_bytes!("../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/rgba8-multi-idat-private.png")),
+        "rgba8-adam7" => Some(include_bytes!("../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/rgba8-adam7.png")),
+        "grayscale-1bit" => Some(include_bytes!("../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/grayscale-1bit.png")),
         "" => None,
         fixture => return Err(format!("unknown PNG fixture {fixture:?}")),
     })

@@ -41,6 +41,7 @@ use crate::app_views::InteractionHoverState;
 use crate::app_views::PresencePeersView;
 use crate::app_views::PresenceView;
 use crate::bounded_ownership::PluginLifecycleStep;
+use crate::bounded_ownership::PluginLifecycleFailure;
 use crate::child_view::ChildContentView;
 use crate::history_view::HistoryView;
 use crate::media_contract::ArtifactDownloadOutput;
@@ -190,8 +191,8 @@ pub trait ArtifactInstanceOperationOwner: std::any::Any + Send {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
     /// 📏️ Exact per-axis grant the owner's next maintenance or close turn needs.
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
-    fn maintenance_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault>;
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault>;
+    fn maintenance_step(&mut self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>;
+    fn close_step(&mut self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -206,11 +207,11 @@ impl ArtifactInstanceOperationOwner for EmptyArtifactInstanceOperationOwner {
         Ok(RetirementDemand::default())
     }
 
-    fn maintenance_step(&mut self, _grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn maintenance_step(&mut self,_cx:&mut StepContext<'_>,_loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
         Ok(PluginLifecycleStep::Complete(Default::default()))
     }
 
-    fn close_step(&mut self, _grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn close_step(&mut self,_cx:&mut StepContext<'_>,_loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
         Ok(PluginLifecycleStep::Complete(Default::default()))
     }
 
@@ -219,13 +220,57 @@ impl ArtifactInstanceOperationOwner for EmptyArtifactInstanceOperationOwner {
     }
 }
 
-/// 🔮️ The derived-state sessions of one mounted instance, by name: the single owner of every inference session an app keeps for that instance. A session is any `Send` value the app
-/// creates on first use; the instance owns it, so it lives exactly as long as the instance and is dropped by the close ladder (`CloseRung::InstanceOwner`), never by a process global.
-#[derive(Default)]
-struct InstanceInferenceSessions {
-    sessions: BTreeMap<&'static str, Box<dyn std::any::Any + Send>>,
-    closed: bool,
+/// 🧬️ Mandatory concrete session retirement retains original typed custody until full paid close.
+trait OriginalInferenceSessionOwner:Send {
+ fn original_mut(&mut self)->Option<&mut dyn std::any::Any>;
+ fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
+ fn close_step(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,ValueError>;
+ fn terminal_is_empty(&self)->bool;
 }
+struct OriginalInferenceSession<T:semio_framework_value::retirement::RetireOwned>{body:semio_framework_value::retirement::controlled::ControlledRetirement<T>}
+impl<T:semio_framework_value::retirement::RetireOwned> OriginalInferenceSessionOwner for OriginalInferenceSession<T>{
+ fn original_mut(&mut self)->Option<&mut dyn std::any::Any>{self.body.original_mut().map(|value|value as &mut dyn std::any::Any)}
+ fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.body.selected_demand(body)}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,ValueError>{self.body.step(grant)}
+ fn terminal_is_empty(&self)->bool{self.body.terminal_is_empty()}
+}
+/// 🔮️ Original mounted sessions carry their mandatory typed close producer beside the same value.
+#[derive(Default)]
+pub(crate) struct InstanceInferenceSessions {
+ sessions:Vec<(&'static str,Box<dyn OriginalInferenceSessionOwner>)>,
+ closed:bool,
+ closing:bool,
+}
+impl InstanceInferenceSessions {
+ pub(crate) fn terminal_is_empty(&self)->bool{self.closed&&self.sessions.is_empty()&&self.sessions.capacity()==0}
+ pub(crate) fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+  if let Some((_,session))=self.sessions.last(){return if session.terminal_is_empty(){Ok(RetirementDemand{release_bytes:std::mem::size_of_val(session.as_ref()),depth:1,..Default::default()})}else{session.retirement_demands(body)}}
+  Ok(RetirementDemand{release_bytes:self.sessions.capacity().checked_mul(std::mem::size_of::<(&'static str,Box<dyn OriginalInferenceSessionOwner>)>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inference session vector extent overflow"))?,depth:usize::from(!self.terminal_is_empty()),..Default::default()})
+ }
+ /// 🎟️ Advances only the same original data retirement after all independent currencies admit it.
+ pub(crate) fn close_granted(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,ValueError>{
+  use semio_framework_value::RetainedCloneStep;let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
+  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+  if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()))}
+  self.closing=true;
+  if let Some((_,session))=self.sessions.last_mut(){
+   if session.terminal_is_empty(){let bytes=std::mem::size_of_val(session.as_ref());drop(self.sessions.pop());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}))}
+   return session.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()))
+  }
+  let bytes=self.sessions.capacity()*std::mem::size_of::<(&'static str,Box<dyn OriginalInferenceSessionOwner>)>();
+  if bytes!=0{drop(std::mem::take(&mut self.sessions));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}))}
+  self.closed=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))
+ }
+ pub(crate) fn close_step(&mut self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
+  let demand=self.retirement_demands(loan.maximum_copy_bytes)?;
+  crate::bounded_ownership::original_lifecycle_step(cx,loan,demand,|_,grant|{let step=self.close_granted(grant)?;let terminal=self.terminal_is_empty();Ok((match step{semio_framework_value::RetainedCloneStep::Complete(progress)=>PluginLifecycleStep::Complete(progress),semio_framework_value::RetainedCloneStep::Progress(progress)=>PluginLifecycleStep::Progress(progress)},terminal))})
+ }
+
+}
+/// 📏️ Quotes the original shared container without reconstructing its mounted Handle.
+pub(crate) fn original_inference_close_demands(original:&std::sync::Arc<std::sync::Mutex<InstanceInferenceSessions>>,body:usize)->Result<RetirementDemand,ValueError>{match original.try_lock(){Ok(sessions)=>sessions.retirement_demands(body),Err(std::sync::TryLockError::WouldBlock)=>Ok(Default::default()),Err(std::sync::TryLockError::Poisoned(_))=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inferred session owner is poisoned"))}}
+/// 🎟️ Closes the same shared inference owner with the actual original context.
+pub(crate) fn original_inference_close_step(original:&std::sync::Arc<std::sync::Mutex<InstanceInferenceSessions>>,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{match original.try_lock(){Ok(mut sessions)=>sessions.close_step(cx,loan),Err(std::sync::TryLockError::WouldBlock)=>Ok(PluginLifecycleStep::Blocked{reason:"original inferred session remains borrowed"}),Err(std::sync::TryLockError::Poisoned(_))=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inferred session owner is poisoned").into())}}
 
 /// 🧳️ Cloneable capability for one concrete app instance's retained operation owner and its inference sessions.
 #[derive(Clone)]
@@ -244,26 +289,25 @@ impl ArtifactInstanceOperationOwnerHandle {
     }
 
     /// 🔮️ Runs `apply` on the instance's session `name`, creating it with `init` on first use; refused once the close ladder dropped the sessions.
-    pub fn with_inference_session<T: std::any::Any + Send, R>(&self, name: &'static str, init: impl FnOnce() -> T, apply: impl FnOnce(&mut T) -> Result<R, Fault>) -> Result<R, Fault> {
+    pub fn with_inference_session<T: semio_framework_value::retirement::RetireOwned, R>(&self, name: &'static str, init: impl FnOnce() -> T, apply: impl FnOnce(&mut T) -> Result<R, Fault>) -> Result<R, Fault> {
+        if !T::controlled_retirement_supported(){return Err(Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.instance-inference-retirement"),"mounted inference session requires its defining controlled retirement producer"))}
         let mut sessions = self.inference.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if sessions.closed {
+        if sessions.closed || sessions.closing {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.instance-inference-closed"), "app-instance inference sessions were already closed"));
         }
-        let session = sessions.sessions.entry(name).or_insert_with(|| Box::new(init()));
-        let session = session.downcast_mut::<T>().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.instance-inference-type"), "app-instance inference session type does not match its name"))?;
+        let index=match sessions.sessions.iter().position(|(known,_)|*known==name){Some(index)=>index,None=>{let body=semio_framework_value::retirement::controlled::ControlledRetirement::new(init()).unwrap_or_else(|_|panic!("mounted inference session must declare its typed retirement"));sessions.sessions.push((name,Box::new(OriginalInferenceSession{body})));sessions.sessions.len()-1}};
+        let session = sessions.sessions[index].1.original_mut().and_then(|value|value.downcast_mut::<T>()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.instance-inference-type"), "app-instance inference session type does not match its name"))?;
         apply(session)
     }
 
-    fn inference_is_empty(&self) -> bool {
-        self.inference.lock().unwrap_or_else(std::sync::PoisonError::into_inner).sessions.is_empty()
+    pub(crate) fn inference_is_empty(&self) -> bool {
+        self.inference.try_lock().is_ok_and(|sessions|sessions.terminal_is_empty())
     }
 
-    /// 🧹️ Drops every inference session with the instance; later session requests are refused.
-    pub(crate) fn close_inference(&self) {
-        let mut sessions = self.inference.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        sessions.closed = true;
-        sessions.sessions.clear();
-    }
+    /// 📏️ Borrows the original concrete session close producer under its existing Arc.
+    pub(crate) fn inference_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{original_inference_close_demands(&self.inference,body)}
+    /// 🎟️ Advances one actual caller-funded step of the same original session owner.
+    pub(crate) fn close_inference_step(&self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{original_inference_close_step(&self.inference,cx,loan)}
 
     pub fn with_mut<T: std::any::Any, R>(&self, apply: impl FnOnce(&mut T) -> Result<R, Fault>) -> Result<R, Fault> {
         let mut owner = self.inner.try_lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.instance-owner-busy"), "app-instance operation owner is busy or poisoned"))?;
@@ -283,25 +327,25 @@ impl ArtifactInstanceOperationOwnerHandle {
 
     pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         match self.inner.try_lock() {
-            Ok(owner) => owner.retirement_demands(body),
+            Ok(owner) => if owner.terminal_is_empty(){self.inference_retirement_demands(body)}else{owner.retirement_demands(body)},
             Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Busy) => Ok(RetirementDemand::default()),
             Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned) => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "app-instance operation owner is poisoned")),
         }
     }
 
-    pub(crate) fn maintenance_step(&self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    pub(crate) fn maintenance_step(&self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
         match self.inner.try_lock() {
-            Ok(mut owner) => owner.maintenance_step(grant),
+            Ok(mut owner) => {let grant=crate::bounded_ownership::original_lifecycle_grant(cx,loan);let demand=owner.retirement_demands(grant.maximum_copy_bytes)?;crate::bounded_ownership::original_lifecycle_step(cx,loan,demand,|cx,grant|owner.maintenance_step(cx,grant).map(|step|(step,true)))},
             Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Busy) => Ok(PluginLifecycleStep::Progress(Default::default())),
-            Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned) => Err(Self::instance_owner_poisoned_fault()),
+            Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned) => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"app-instance operation owner is poisoned").into()),
         }
     }
 
-    pub(crate) fn close_step(&self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    pub(crate) fn close_step(&self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
         match self.inner.try_lock() {
-            Ok(mut owner) => owner.close_step(grant),
+            Ok(mut owner) => {if owner.terminal_is_empty(){drop(owner);return self.close_inference_step(cx,loan)}let grant=crate::bounded_ownership::original_lifecycle_grant(cx,loan);let demand=owner.retirement_demands(grant.maximum_copy_bytes)?;crate::bounded_ownership::original_lifecycle_step(cx,loan,demand,|cx,grant|{let step=owner.close_step(cx,grant)?;let terminal=owner.terminal_is_empty();Ok((match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step},terminal))})},
             Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Busy) => Ok(PluginLifecycleStep::Progress(Default::default())),
-            Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned) => Err(Self::instance_owner_poisoned_fault()),
+            Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned) => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"app-instance operation owner is poisoned").into()),
         }
     }
 
@@ -320,14 +364,16 @@ impl ArtifactInstanceOperationOwnerHandle {
 }
 
 /// 🔗️ One original command alias keeps final instance payload custody until each physical backing closes.
-pub struct ArtifactInstanceOperationOwnerAliasRetirement {
-    original: semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerAliasRetirementV1<dyn ArtifactInstanceOperationOwner>,
+pub struct ArtifactInstanceOperationOwnerAliasRetirement{
+    original:semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerAliasRetirementV1<dyn ArtifactInstanceOperationOwner>,
+    inference:ManuallyDrop<Option<std::sync::Arc<std::sync::Mutex<InstanceInferenceSessions>>>>,
+    inference_owned:ManuallyDrop<Option<std::sync::Mutex<InstanceInferenceSessions>>>,
 }
 
 impl ArtifactInstanceOperationOwnerAliasRetirement {
     /// 📥️ Moves the caller's exact existing handle into an inline frontier without a new lease or frame.
     pub fn new(source: ArtifactInstanceOperationOwnerHandle) -> Self {
-        Self { original: semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerAliasRetirementV1::new(source.inner) }
+        Self{original:semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerAliasRetirementV1::new(source.inner),inference:ManuallyDrop::new(Some(source.inference)),inference_owned:ManuallyDrop::new(None)}
     }
     /// 📏️ Initial custody transfer needs one item and depth while all heap currencies remain zero.
     pub fn constructor_demands() -> RetirementDemand {
@@ -342,28 +388,52 @@ impl ArtifactInstanceOperationOwnerAliasRetirement {
                 return Ok(demand);
             }
         }
-        Ok(self.original.demands())
+        if !self.original.terminal_is_empty(){return Ok(self.original.demands())}
+        if let Some(original)=self.inference_owned.as_ref(){let sessions=original.try_lock().map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inferred alias retains its source"))?;return if sessions.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{sessions.retirement_demands(copy)}}
+        self.alias_return_demands(copy)
+    }
+    /// 🔗️ Quotes only the original alias or terminal box shell without authorizing active payload work.
+    pub fn alias_return_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+        if !self.original.terminal_is_empty(){return Ok(self.original.demands())}
+        if self.inference.is_some(){return Ok(RetirementDemand{release_bytes:semio_framework_value::shared_retirement_allocation_bytes::<std::sync::Mutex<InstanceInferenceSessions>>(),depth:1,..Default::default()})}
+        if let Some(original)=self.inference_owned.as_ref(){let sessions=original.try_lock().map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inferred alias retains its exclusive source"))?;return if sessions.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{sessions.retirement_demands(copy)}}
+        Ok(Default::default())
+    }
+    /// 📤️ Atomically returns the actual alias and retains any final original inferred payload.
+    pub fn alias_return_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+        let demand=self.alias_return_demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()))}
+        if !self.original.terminal_is_empty(){return self.original.step(grant,ArtifactInstanceOperationOwner::terminal_is_empty).map(|step|RetainedCloneStep::Progress(step.progress()))}
+        if let Some(original)=self.inference.as_ref(){if std::sync::Arc::weak_count(original)!=0{return Ok(RetainedCloneStep::Progress(Default::default()))}let released=if let Some(value)=std::sync::Arc::into_inner(self.inference.take().unwrap()){*self.inference_owned=Some(value);demand.release_bytes}else{0};return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()}))}
+        if let Some(original)=self.inference_owned.as_mut(){let sessions=original.get_mut().map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inferred alias source is poisoned"))?;if !sessions.terminal_is_empty(){return sessions.close_granted(grant).map(|step|RetainedCloneStep::Progress(step.progress()))}drop(self.inference_owned.take());return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))}
+        Ok(RetainedCloneStep::Complete(Default::default()))
     }
     /// 🧾️ Closes shared backing, exact final owner and dynamic box in separate funded turns.
-    pub fn step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
-        let demand=self.demands(grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;
+    pub fn step(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,PluginLifecycleFailure>{
+        let demand=self.demands(grant.maximum_copy_bytes)?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth {
             return Ok(RetainedCloneStep::Progress(Default::default()));
         }
         if let Some(owner)=self.original.unique_mut() {
             if !owner.terminal_is_empty() {
                 let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-                let step=owner.close_step(child)?;
+                let step=owner.close_step(cx,child)?;
                 let progress=step.progress().unwrap_or_default();
                 let outcome=if matches!(step,PluginLifecycleStep::Complete(_)){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)};
-                let accepted=semio_framework_value::retained_clone::admit_retained_clone_close(child,outcome,owner.terminal_is_empty(),"original instance alias final payload").map_err(ValueError::into_fault)?;
+                let accepted=semio_framework_value::retained_clone::admit_retained_clone_close(child,outcome,owner.terminal_is_empty(),"original instance alias final payload")?;
                 return Ok(RetainedCloneStep::Progress(accepted.progress()));
             }
         }
-        self.original.step(grant,ArtifactInstanceOperationOwner::terminal_is_empty).map_err(ValueError::into_fault)
+        self.alias_return_step(grant).map_err(PluginLifecycleFailure::from)
     }
     /// 🏁️ The original alias, final concrete payload and its dynamic box shell are all physically gone.
-    pub fn terminal_is_empty(&self) -> bool { self.original.terminal_is_empty() }
+    pub fn terminal_is_empty(&self)->bool{self.original.terminal_is_empty()&&self.inference.is_none()&&self.inference_owned.is_none()}
+}
+impl Drop for ArtifactInstanceOperationOwnerAliasRetirement{
+    fn drop(&mut self){
+        assert!(std::thread::panicking()||self.terminal_is_empty(),"original instance alias abandoned inferred owner custody");
+        if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.inference);ManuallyDrop::drop(&mut self.inference_owned);}}
+    }
 }
 
 #[derive(Clone)]
@@ -388,7 +458,7 @@ pub struct ArtifactToolPublicContract {
     pub(crate) tool_id: String,
     pub(crate) schema_id: String,
     pub(crate) max_raw_wire_bytes: usize,
-    publication_lanes: &'static [ArtifactToolPublicationLane],
+    pub(crate) publication_lanes: &'static [ArtifactToolPublicationLane],
 }
 
 /// 🧰️ Compiler-bound registration context passed only to `ArtifactApp`'s explicit hook.
@@ -727,7 +797,7 @@ impl<A: ArtifactApp> ArtifactToolCompletion<A> {
     }
 
     #[cfg(test)]
-    fn with_busy_test_lock<R>(&self, test: impl FnOnce() -> R) -> R {
+    pub(crate) fn with_busy_test_lock<R>(&self, test: impl FnOnce() -> R) -> R {
         let _guard = self.inner.lock().expect("completion test lock");
         test()
     }
@@ -745,7 +815,7 @@ impl<A: ArtifactApp> ArtifactToolCompletion<A> {
         self.inner.try_lock().map(|mut value| value.take()).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.tool-completion-busy"), "tool completion authority is busy or poisoned"))
     }
 
-    fn take_emit(&self) -> Result<Option<ArtifactToolEmission<A>>, Fault> {
+    pub(crate) fn take_emit(&self) -> Result<Option<ArtifactToolEmission<A>>, Fault> {
         match self.take()? {
             Some(ArtifactToolCompletionValue::Emit(emit, ephemeral)) => Ok(Some((emit.map_err(ArtifactCompletionFault::into_fault), ephemeral))),
             Some(ArtifactToolCompletionValue::Download(_, _)) => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.unexpected-download-output"), "reserved clipboard/import route completed with a segmented download")),
@@ -789,7 +859,7 @@ pub struct ArtifactOwnedToolJobContext<A: ArtifactApp> {
     gesture: GestureCapture<A::Mutation>,
 }
 
-fn artifact_owned_tool_job_context_identity_digest(
+pub(crate) fn artifact_owned_tool_job_context_identity_digest(
     app_instance_id: u32,
     view_state: Option<&ViewModel>,
     canonical_base_revision: [u8; 32],
@@ -1075,7 +1145,7 @@ impl ArtifactReservedToolJob {
 }
 
 impl semio_framework_job::InteractiveJob for ArtifactReservedToolJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         match self.state.try_lock() {
             Ok(mut state) => match state.inner.as_mut() {
                 Some(inner) => {
@@ -1083,10 +1153,10 @@ impl semio_framework_job::InteractiveJob for ArtifactReservedToolJob {
                     drop(state);
                     unsafe { (&mut *inner).step(cx) }
                 }
-                None => JobOutcomeBorrow::admit_cancelled(cx),
+                None => JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
             },
-            Err(std::sync::TryLockError::WouldBlock) => JobOutcomeBorrow::admit_yield(cx),
-            Err(std::sync::TryLockError::Poisoned(_)) => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "reserved job authority is poisoned")),
+            Err(std::sync::TryLockError::WouldBlock) => JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
+            Err(std::sync::TryLockError::Poisoned(_)) => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "reserved job authority is poisoned").into()),
         }
     }
 
@@ -1109,27 +1179,14 @@ impl semio_framework_job::InteractiveJob for ArtifactReservedToolJob {
         ArtifactReservedToolJob::begin_close(self);
     }
 
-    fn close_step(&mut self, grant:RetainedCloneGrant) -> InteractiveJobCloseStep {
-        use semio_framework_job::InteractiveJobCloseStep;
-        let mut state=match self.state.try_lock(){Ok(state)=>state,Err(std::sync::TryLockError::Poisoned(state))=>state.into_inner(),Err(_)=>return InteractiveJobCloseStep::Blocked};
-        let Some(inner)=state.inner.as_mut()else{
-            if state.operation.is_some(){
-                let bytes=size_of::<semio_framework_job::Operation>();
-                if grant.maximum_items==0||grant.maximum_copy_bytes<bytes{return InteractiveJobCloseStep::Pending{progress:Default::default()};}
-                if grant.maximum_depth==0{return InteractiveJobCloseStep::Refused{kind:semio_framework_value::ValueRefusalKind::DepthLimit,progress:Default::default()};}
-                state.operation.take();return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}};
-            }
-            return InteractiveJobCloseStep::Complete{progress:Default::default()};
-        };
-        if semio_framework_job::InteractiveJob::terminal_is_empty(&**inner){
-            let bytes=size_of_val(&**inner);
-            if grant.maximum_items==0||grant.maximum_release_bytes<bytes||grant.maximum_depth==0{return InteractiveJobCloseStep::Pending{progress:Default::default()};}
-            drop(state.inner.take());
-            return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}};
-        }
-        let step=semio_framework_job::InteractiveJob::close_step(&mut**inner,grant);
-        if matches!(step,InteractiveJobCloseStep::Complete{..})&&!semio_framework_job::InteractiveJob::terminal_is_empty(&**inner){return InteractiveJobCloseStep::Refused{kind:semio_framework_value::ValueRefusalKind::InvalidValue,progress:step.progress()};}
-        match step{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step}
+    fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_job::InteractiveJobCloseStep as Step;
+        if cx.should_yield(){return Ok(Step::Pending{progress:Default::default()})}let grant=cx.retained_grant();
+        let mut state=match self.state.try_lock(){Ok(state)=>state,Err(std::sync::TryLockError::Poisoned(state))=>state.into_inner(),Err(_)=>return Ok(Step::Blocked)};
+        let Some(inner)=state.inner.as_mut()else{if state.operation.is_none(){return Ok(Step::Complete{progress:Default::default()})}let demand=RetirementDemand{copy_bytes:size_of::<semio_framework_job::Operation>(),depth:1,..Default::default()};return semio_framework_job::close_original_retained_step(cx,demand,|_|{state.operation.take();Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))})};
+        if semio_framework_job::InteractiveJob::terminal_is_empty(&**inner){let demand=RetirementDemand{release_bytes:size_of_val(&**inner),depth:1,..Default::default()};return semio_framework_job::close_original_retained_step(cx,demand,|_|{drop(state.inner.take());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))})}
+        let step=semio_framework_job::InteractiveJob::close_step(&mut**inner,cx)?.admit(grant,semio_framework_job::InteractiveJob::terminal_is_empty(&**inner))?;
+        Ok(match step{Step::Complete{progress}=>Step::Pending{progress},step=>step})
     }
 
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{self.close_demand(0,0)}
@@ -1191,11 +1248,8 @@ pub(crate) fn receive_step(cx: &mut StepContext<'_>, step: Result<RetainedCloneS
 }
 
 /// 🔁️ Maps one paid close receipt onto the job close protocol; completion is the job's own terminal witness.
-pub(crate) fn close_result(step: Result<RetainedCloneStep, ValueError>) -> InteractiveJobCloseStep {
-    match step {
-        Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-        Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
-    }
+pub(crate) fn close_result(step:Result<RetainedCloneStep,ValueError>)->Result<InteractiveJobCloseStep,ValueError>{
+    step.map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()})
 }
 
 impl ReservedJobOutcomes {
@@ -1336,3 +1390,7 @@ impl Default for BoundedFaultText {
 pub fn reducer_fault_of_detail(detail: &[u8]) -> Option<Fault> {
     semio_framework_diagnostic::try_decode_fault_bytes(detail)
 }
+
+#[cfg(test)]
+#[path="🧪️inference-close/🦀️.rs"]
+mod original_inference_close_tests;

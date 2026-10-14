@@ -5,12 +5,12 @@ use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use std::collections::BTreeSet;
 use target::{OutsideBoundary, SurfaceClass};
 
-const ROOM: &str = include_str!("../../../../../🧫️fixtures/🚪️energy/🏠️room/📸️snapshot/🔣️.json");
-const PAIR: &str = include_str!("../../../../../🧫️fixtures/🚪️energy/🏘️pair/📸️snapshot/🔣️.json");
-const STACK: &str = include_str!("../../../../../🧫️fixtures/🚪️energy/🧱️stack/📸️snapshot/🔣️.json");
+const ROOM: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🚪️energy/🏠️room/📸️snapshot/🔣️.json");
+const PAIR: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🚪️energy/🏘️pair/📸️snapshot/🔣️.json");
+const STACK: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🚪️energy/🧱️stack/📸️snapshot/🔣️.json");
 
 /// 📁️ The directory of the committed energy exports (the model as JSON and as `.energy` text) that the jsonschema, shapely and numpy oracle reads.
-pub const DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🚪️energy");
+pub const DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🚪️energy");
 
 fn decoded(text: &str) -> ModelSnapshot {
     from_json_str(text, JsonMemberPolicy::Reject).expect("the committed case decodes")

@@ -127,6 +127,7 @@ struct UiWindow {
     layout_session_generation: Option<u64>,
     layout_closing: bool,
     layout_retirement_refusal: Option<UiWorkerRetirementRefusal>,
+    layout_close_failure:Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_job::OriginalTurnFailure>>,
     layout_preview: Option<MountedLayoutResult>,
     glyph_preview: Option<RetainedGlyphPreview>,
     lane: SurfaceLane,
@@ -158,6 +159,10 @@ struct UiWindow {
 }
 
 impl UiWindow {
+    fn retain_layout_close_failure(&mut self,stage:&'static str,failure:semio_framework_job::OriginalTurnFailure)->UiWorkerRetirementRefusal{
+        let refusal=UiWorkerRetirementRefusal{stage,kind:failure.primary_value().map_or(semio_framework_value::ValueRefusalKind::InvariantViolated,|error|error.kind),progress:failure.primary.retained_progress()};
+        self.layout_close_failure=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(failure).unwrap_or_else(|_|unreachable!("original paired failure defines whole controlled closure")));self.layout_retirement_refusal=Some(refusal);refusal
+    }
     fn new(window_id: &str) -> Self {
         Self {
             closing: None,
@@ -186,6 +191,7 @@ impl UiWindow {
             layout_session_generation: None,
             layout_closing: false,
             layout_retirement_refusal: None,
+            layout_close_failure:None,
             layout_preview: None,
             glyph_preview: None,
             lane: SurfaceLane::UserVisible,
@@ -501,28 +507,11 @@ pub enum UiSurfaceCloseStep {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct UiWorkerRetirementRefusal { pub stage: &'static str, pub kind: semio_framework_value::ValueRefusalKind, pub progress:semio_framework_value::RetainedCloneProgress }
 
-fn close_layout_worker_session(session: &mut semio_framework_job::MountedWorkerJobSession<MountedLayoutJob>, grant: semio_framework_job::RetainedCloneGrant) -> Result<Option<semio_framework_value::RetainedCloneProgress>, semio_framework_value::ValueError> {
-    use semio_framework_job::{WorkerJobDemandError, WorkerJobCloseStep};
-    use semio_framework_value::ValueRefusalKind;
-    if session.poll() == semio_framework_job::WorkerJobPoll::CheckedOut {
-        let step = session.close_step(grant);
-        return match step {
-            WorkerJobCloseStep::Pending { progress } if progress.fits(grant) => Ok(Some(progress)),
-            WorkerJobCloseStep::Refused { kind, progress } => Err(semio_framework_value::ValueError::literal(kind, "UI original worker retirement refused").with_retained_progress(progress)),
-            _ => Err(semio_framework_value::ValueError::literal(ValueRefusalKind::InvariantViolated, "UI original worker retirement receipt invariant violated").with_retained_progress(step.progress())),
-        };
-    }
-    session.begin_close();
-    let demand = match session.retirement_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(WorkerJobDemandError::Contention(_)) => return Ok(None), Err(WorkerJobDemandError::Refused(error)) => return Err(error) };
-    if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes || demand.depth > grant.maximum_depth { return Ok(Some(Default::default())); }
-    let step = session.close_step(grant);
-    match step {
-        WorkerJobCloseStep::Pending { progress } if progress.fits(grant) => Ok(Some(progress)),
-        WorkerJobCloseStep::Complete { progress } if progress.fits(grant) && session.terminal_is_empty() => Ok(Some(progress)),
-        WorkerJobCloseStep::Blocked => Ok(None),
-        WorkerJobCloseStep::Refused { kind, progress } => Err(semio_framework_value::ValueError::literal(kind, "UI original worker retirement refused").with_retained_progress(progress)),
-        _ => Err(semio_framework_value::ValueError::literal(ValueRefusalKind::InvariantViolated, "UI original worker retirement receipt invariant violated").with_retained_progress(step.progress())),
-    }
+fn close_layout_worker_session(session:&mut semio_framework_job::MountedWorkerJobSession<MountedLayoutJob>,cx:&mut StepContext<'_>)->Result<Option<semio_framework_value::RetainedCloneProgress>,semio_framework_job::OriginalTurnFailure>{
+ use semio_framework_job::{WorkerJobDemandError,WorkerJobCloseStep};
+ let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0{return Ok(Some(Default::default()))}
+ if session.poll()!=semio_framework_job::WorkerJobPoll::CheckedOut{session.begin_close();let demand=match session.retirement_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(WorkerJobDemandError::Contention(_))=>return Ok(None),Err(WorkerJobDemandError::Refused(error))=>return Err(error.into())};if demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes||demand.depth>grant.maximum_depth{return Ok(Some(Default::default()))}}
+ let step=session.close_step(cx)?;match step{WorkerJobCloseStep::Pending{progress}if progress.fits(grant)=>Ok(Some(progress)),WorkerJobCloseStep::Complete{progress}if progress.fits(grant)&&session.terminal_is_empty()=>Ok(Some(progress)),WorkerJobCloseStep::Blocked=>Ok(None),step=>Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"UI original worker retirement receipt invariant violated").with_retained_progress(step.progress()).into())}
 }
 
 /// 🚪️ Keeps original pending parameters until session admission or paid cancellation retirement.
@@ -1047,7 +1036,7 @@ impl UiSurfaceRegistry {
 
     fn remove_terminal(&mut self, token: UiSurfaceToken) -> bool {
         let Some(window) = self.get_token(token) else { return true };
-        if window.closing != Some(UiSurfaceClosePhase::Complete) {
+        if window.closing != Some(UiSurfaceClosePhase::Complete)||window.layout_close_failure.is_some(){
             return false;
         }
         self.slots[token.slot as usize] = None;
@@ -1539,6 +1528,11 @@ impl Ui {
     /// 🔭️ Observes a retained worker refusal without advancing or releasing its owner.
     pub fn layout_retirement_refusal(&self, window_id: &str) -> Option<UiWorkerRetirementRefusal> { self.windows.get(window_id).and_then(|window| window.layout_retirement_refusal) }
 
+    /// 🧳️ Lends the complete original worker refusal independently of its compact UI notice.
+    pub fn layout_retirement_failure(&self,window_id:&str)->Option<&semio_framework_job::OriginalTurnFailure>{let window=self.windows.get(window_id)?;window.layout_close_failure.as_ref().and_then(|owner|owner.original()).or_else(||window.layout_session.as_ref()?.checked_out_failure())}
+    /// ⏳️ The same worker failure remains owned while its funded frontier is closing.
+    pub fn layout_retirement_failure_pending(&self,window_id:&str)->bool{self.windows.get(window_id).is_some_and(|window|window.layout_close_failure.is_some()||window.layout_session.as_ref().is_some_and(|session|session.checked_out_failure().is_some()))}
+
     /// 🛑️ Latches retirement before topology removal and refuses further surface admission.
     pub fn begin_surface_close(&mut self, token: UiSurfaceToken) -> bool {
         let Some(window) = self.windows.get_token_mut(token) else { return false };
@@ -1550,9 +1544,13 @@ impl Ui {
     }
 
     /// 🧵️ Drives the sole close owner through input, jobs, paint, documents, and registry release.
-    pub fn close_surface_one(&mut self, token: UiSurfaceToken) -> UiSurfaceCloseStep {
+    pub fn close_surface_one(&mut self,token:UiSurfaceToken,cx:&mut StepContext<'_>)->Result<UiSurfaceCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if cx.should_yield(){return Ok(UiSurfaceCloseStep::Pending)}
+        if let Some(window)=self.windows.get_token_mut(token){if let Some(failure)=window.layout_close_failure.as_mut(){let demand=failure.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|failure.step(grant))?;if failure.terminal_is_empty(){window.layout_close_failure=None;window.layout_retirement_refusal=None;}return Ok(UiSurfaceCloseStep::Pending)}}
+        Ok((||{
         let Some(window) = self.windows.get_token_mut(token) else { return UiSurfaceCloseStep::Complete };
         let Some(phase) = window.closing else { return UiSurfaceCloseStep::Pending };
+        if window.layout_retirement_refusal.is_some_and(|refusal|refusal.stage=="Layout.WorkerRefusal")&&window.layout_session.as_ref().is_some_and(|session|session.checked_out_failure().is_some()){window.layout_retirement_refusal=None;}
         if let Some(refusal) = window.layout_retirement_refusal {
             if !matches!(refusal.stage, "Layout.Admission" | "Layout.CloseAdmission") { return UiSurfaceCloseStep::Refused(refusal); }
             if !window.layout_admission.terminal_is_empty() {
@@ -1602,9 +1600,9 @@ impl Ui {
             }
             UiSurfaceClosePhase::LayoutSession => {
                 if let Some(session) = window.layout_session.as_mut() {
-                    let admitted = match close_layout_worker_session(session, ui_contract::UI_WORKER_RETIREMENT_POLICY) {
+                    let admitted = match close_layout_worker_session(session,cx) {
                         Ok(progress) => progress.is_some(),
-                        Err(error) => { let refusal = UiWorkerRetirementRefusal { stage: "Layout.CloseSession", kind:error.kind,progress:error.retained_progress() }; window.layout_retirement_refusal = Some(refusal); return UiSurfaceCloseStep::Refused(refusal); }
+                        Err(error)=>{let refusal=window.retain_layout_close_failure("Layout.CloseSession",error);return UiSurfaceCloseStep::Refused(refusal)}
                     };
                     if admitted && session.terminal_is_empty() {
                         window.layout_session = None;
@@ -1617,13 +1615,8 @@ impl Ui {
             UiSurfaceClosePhase::LayoutJob => {
                 if let Some(job) = window.layout_job.as_mut() {
                     job.begin_close();
-                    let grant = ui_contract::UI_WORKER_RETIREMENT_POLICY;
-                    let step = semio_framework_job::InteractiveJob::close_step(job, grant).admit(grant, job.terminal_is_empty());
-                    if let semio_framework_job::InteractiveJobCloseStep::Refused { kind, progress } = step {
-                        let refusal = UiWorkerRetirementRefusal { stage: "Layout.CloseUnsubmitted", kind, progress };
-                        window.layout_retirement_refusal = Some(refusal);
-                        return UiSurfaceCloseStep::Refused(refusal);
-                    }
+                    let grant=cx.retained_grant();
+                    let step=match semio_framework_job::InteractiveJob::close_step(job,cx).and_then(|step|step.admit(grant,job.terminal_is_empty()).map_err(semio_framework_job::OriginalTurnFailure::from)){Ok(step)=>step,Err(failure)=>{let refusal=window.retain_layout_close_failure("Layout.CloseUnsubmitted",failure);return UiSurfaceCloseStep::Refused(refusal)}};
                     if matches!(step, semio_framework_job::InteractiveJobCloseStep::Complete { .. }) {
                         window.layout_job = None;
                     }
@@ -1752,6 +1745,7 @@ impl Ui {
             window.closing = Some(next);
         }
         UiSurfaceCloseStep::Pending
+        })())
     }
 
     fn window_mut(&mut self, window_id: &str) -> Option<&mut UiWindow> {
@@ -2337,9 +2331,9 @@ impl Ui {
                         return UiLayoutStep::Refused { window_id, lane, refusal };
                     }
                 }
-                let admitted = match {let step=close_layout_worker_session(session,cx.retained_grant());consume_layout_retirement(cx,step)} {
+                let admitted = match close_layout_worker_session(session,cx).map(|progress|progress.is_some()) {
                         Ok(admitted) => admitted,
-                        Err(error) => { let refusal = UiWorkerRetirementRefusal { stage: "Layout.CloseSession", kind:error.kind,progress:error.retained_progress() }; window.layout_retirement_refusal = Some(refusal); return UiLayoutStep::Refused { window_id, lane, refusal }; }
+                        Err(error)=>{let refusal=window.retain_layout_close_failure("Layout.CloseSession",error);return UiLayoutStep::Refused{window_id,lane,refusal}}
                     };
                 if admitted && session.terminal_is_empty() {
                     window.layout_session = None;
@@ -2350,8 +2344,8 @@ impl Ui {
                 return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.CloseSession", nodes: 1, glyphs: 0 };
             }
             if session.poll() == semio_framework_job::WorkerJobPoll::CheckedOut {
-                if let Some(error) = session.checked_out_error() {
-                    let refusal = UiWorkerRetirementRefusal { stage: "Layout.WorkerRefusal", kind: error.kind, progress: error.retained_progress() };
+                if let Some(failure) = session.checked_out_failure() {
+                    let refusal=UiWorkerRetirementRefusal{stage:"Layout.WorkerRefusal",kind:failure.primary_value().map_or(semio_framework_value::ValueRefusalKind::InvariantViolated,|error|error.kind),progress:failure.primary.retained_progress()};
                     window.layout_retirement_refusal = Some(refusal);
                     session.begin_close();
                     window.layout_closing = true;
@@ -2429,18 +2423,7 @@ impl Ui {
                     return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.CloseAdmission", nodes: 1, glyphs: 0 };
                 }
                 let grant = cx.retained_grant();
-                let step = semio_framework_job::InteractiveJob::close_step(job, grant).admit(grant, job.terminal_is_empty());
-                let progress = step.progress();
-                if let Err(error) = cx.consume_retained(progress) {
-                    let refusal = UiWorkerRetirementRefusal { stage: "Layout.CloseUnadmitted", kind: error.kind, progress: error.retained_progress() };
-                    window.layout_retirement_refusal = Some(refusal);
-                    return UiLayoutStep::Refused { window_id, lane, refusal };
-                }
-                if let semio_framework_job::InteractiveJobCloseStep::Refused { kind, progress } = step {
-                    let refusal = UiWorkerRetirementRefusal { stage: "Layout.CloseUnadmitted", kind, progress };
-                    window.layout_retirement_refusal = Some(refusal);
-                    return UiLayoutStep::Refused { window_id, lane, refusal };
-                }
+                let step=match semio_framework_job::InteractiveJob::close_step(job,cx).and_then(|step|step.admit(grant,job.terminal_is_empty()).map_err(semio_framework_job::OriginalTurnFailure::from)){Ok(step)=>step,Err(failure)=>{let refusal=window.retain_layout_close_failure("Layout.CloseUnadmitted",failure);return UiLayoutStep::Refused{window_id,lane,refusal}}};
                 if matches!(step, semio_framework_job::InteractiveJobCloseStep::Complete { .. }) {
                     window.layout_job = None;
                     window.layout_closing = false;

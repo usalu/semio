@@ -83,12 +83,12 @@ use crate::standards::v1::subsets::any::schema::mutations::scale_object::mutatio
 use crate::standards::v1::subsets::any::schema::mutations::scale_selection::mutation::{scale_selection, ScaleSelection};
 use crate::standards::v1::subsets::any::schema::mutations::scale_target_volume::mutation::{scale_target_volume, ScaleTargetVolume};
 
-impl store::os_store::serialization::ArtifactDsl for Puzzle3dPlaySnapshot {
+impl pack::snapshot::ArtifactDsl for Puzzle3dPlaySnapshot {
     const EXTENSION: &'static str = "puzzle3d-play";
 
-    fn envelope_id() -> &'static str { <Puzzle3dSnapshot as store::os_store::serialization::ArtifactDsl>::envelope_id() }
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> { <Puzzle3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map(Self::from_typed) }
-    fn print_dsl(&self) -> String { <Puzzle3dSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(self.typed()) }
+    fn envelope_id() -> &'static str { <Puzzle3dSnapshot as pack::snapshot::ArtifactDsl>::envelope_id() }
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> { <Puzzle3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map(Self::from_typed) }
+    fn print_dsl(&self) -> String { <Puzzle3dSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(self.typed()) }
 }
 }
 #[cfg(test)] pub use mutations_codec::*;

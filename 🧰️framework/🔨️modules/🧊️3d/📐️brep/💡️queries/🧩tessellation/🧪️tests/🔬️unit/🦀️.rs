@@ -343,7 +343,7 @@ fn small_retirement_grant<T:semio_framework_value::retirement::RetireOwned>(owne
 
 #[test]
 fn tessellation_cancel_handoff_and_small_grants_cover_every_actual_system_allocation() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();
     let mut body = Body::new();
     let solid = build_unit_box(&mut body, &mut OpRecorder::new());
     let (mut job, constructor) = observe_tessellation_system(|| TessellationJob::new(0.1));
@@ -375,7 +375,7 @@ fn tessellation_cancel_handoff_and_small_grants_cover_every_actual_system_alloca
 #[test]
 fn original_native_family_handoff_retains_all_system_owners_until_grants() {
     use semio_framework_3d_brep_engine::Brep;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();
     let mut family=Brep::new();
     family.box_prim_sync(1.0,1.0,1.0).unwrap();
     let (mut retirement,handoff)=observe_tessellation_system(||family.detach_retirement());
@@ -399,7 +399,7 @@ fn original_native_family_handoff_retains_all_system_owners_until_grants() {
 fn original_native_family_typed_owner_covers_nurbs_wire_aliases_and_compound() {
     use semio_framework_3d_brep_engine::Brep;
     use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();let cases=&fixture["nativeFamily"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();let cases=&fixture["nativeFamily"];
     for converted in cases["convertToNurbs"].as_array().unwrap() {
         let converted=converted.as_bool().unwrap();
         let (family,source)=observe_tessellation_system(|| {
@@ -427,7 +427,7 @@ fn original_native_family_typed_owner_covers_nurbs_wire_aliases_and_compound() {
 #[test]
 fn original_live_index_extraction_preserves_row_pointers_without_heap_work() {
     use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();let rows=&fixture["liveRows"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();let rows=&fixture["liveRows"];
     let ((mut index,mut extracted),source)=observe_tessellation_system(|| {
         let index:HistoryFoldIndex<String,Vec<u8>>=rows["keys"].as_array().unwrap().iter().map(|key|(key.as_str().unwrap().to_owned(),vec![0;rows["payloadBytes"].as_u64().unwrap() as usize])).collect();
         (index,Vec::with_capacity(rows["removedKeys"].as_array().unwrap().len()))
@@ -452,7 +452,7 @@ fn original_live_index_extraction_preserves_row_pointers_without_heap_work() {
 #[test]
 fn original_body_arenas_retire_by_exact_physical_full_grants() {
     use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();
     let ((body,vertex),source)=observe_tessellation_system(|| {
         let mut body=Body::new();build_unit_box(&mut body,&mut OpRecorder::new());
         let vertex=body.vertices.ids().next().unwrap();
@@ -483,7 +483,7 @@ fn original_body_arenas_retire_by_exact_physical_full_grants() {
 #[test]
 fn original_whole_tessellation_typed_owner_matches_each_physical_full_grant() {
     use semio_framework_value::{retained_clone::RetainedCloneGrant, retirement::controlled::ControlledRetirement};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();
     let mut body = Body::new();
     let solid = build_unit_box(&mut body, &mut OpRecorder::new());
     let (mut job, source) = observe_tessellation_system(|| {
@@ -535,7 +535,7 @@ fn original_whole_tessellation_typed_owner_matches_each_physical_full_grant() {
 #[test]
 fn tessellation_cancel_preserves_original_allocations_until_retirement_grants() {
     use std::sync::atomic::Ordering::SeqCst;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();
     let mut body=Body::new();let mut rec=OpRecorder::new();let solid=build_unit_box(&mut body,&mut rec);
     let mut job=TessellationJob::new(0.1);
     while job.transfer.position.is_empty() { assert!(matches!(job.step(&body,TessellationInput::Solid(solid),1).unwrap(),TessellationStep::Working(_))); }
@@ -568,7 +568,7 @@ fn tessellation_cancel_preserves_original_allocations_until_retirement_grants() 
 
 #[test]
 fn tessellation_cold_admission_does_not_collect_original_topology_before_a_grant() {
-    let fixture: serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();
     let mut body=Body::new();let mut rec=OpRecorder::new();let solid=build_unit_box(&mut body,&mut rec);
     let mut job=TessellationJob::new(0.1);
     assert_eq!(job.edge_order.len(),fixture["cold"]["initialEdges"].as_u64().unwrap() as usize);
@@ -593,7 +593,7 @@ fn tessellation_cold_admission_does_not_collect_original_topology_before_a_grant
 fn original_validation_scratch_retains_all_physical_buffers_until_full_grants() {
     use crate::validation::BodyValidationJob;
     use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();let laws=&fixture["validationScratch"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();let laws=&fixture["validationScratch"];
     let mut body=Body::new();build_unit_box(&mut body,&mut OpRecorder::new());
     let (mut job,constructor)=observe_tessellation_system(||BodyValidationJob::new(&body));assert_eq!(constructor,(laws["constructorCapacityBytes"].as_u64().unwrap() as usize,laws["constructorReleaseBytes"].as_u64().unwrap() as usize));
     let (_,source)=observe_tessellation_system(||job.step(&body,laws["warmTurns"].as_u64().unwrap() as usize));assert!(source.0-source.1>=laws["minimumRetainedBytes"].as_u64().unwrap() as usize);
@@ -611,7 +611,7 @@ fn original_validation_scratch_retains_all_physical_buffers_until_full_grants() 
 fn original_mesh_import_cancel_retains_original_buffers_before_full_grants() {
     use semio_framework_3d_brep_engine::MeshImportCursor;
     use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();let laws=&fixture["meshImport"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();let laws=&fixture["meshImport"];
     let ((mut body,mut cursor),source)=observe_tessellation_system(||{let positions=laws["positions"].as_array().unwrap().iter().map(|n|n.as_f64().unwrap() as f32).collect();let indices=laws["indices"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap() as u32).collect();let mut body=Body::new();let mut cursor=MeshImportCursor::new(positions,Vec::new(),indices,0.1).unwrap();cursor.step(&mut body,laws["warmTurns"].as_u64().unwrap() as usize).unwrap();(body,cursor)});
     let (_,cancel)=observe_tessellation_system(||cursor.cancel());assert_eq!(cancel,(0,0));
     let transition=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:8,maximum_depth:1};

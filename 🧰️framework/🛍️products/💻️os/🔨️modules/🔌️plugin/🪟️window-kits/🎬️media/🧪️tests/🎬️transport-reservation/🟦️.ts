@@ -1,7 +1,7 @@
 /** 🎬️ The WGPU media reservation consumes the canonical host contract before projecting status. */
 import { describe, expect, test } from "bun:test";
 import Ajv2020 from "ajv/dist/2020";
-import fixture from "../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎬️media-transport-reservation/🔣️.json";
+import fixture from "../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎬️media-transport-reservation/🔣️.json";
 import { parseMediaTransportProps } from "../../🟦️";
 import contract from "../../🧬️contract/🔣️.json";
 

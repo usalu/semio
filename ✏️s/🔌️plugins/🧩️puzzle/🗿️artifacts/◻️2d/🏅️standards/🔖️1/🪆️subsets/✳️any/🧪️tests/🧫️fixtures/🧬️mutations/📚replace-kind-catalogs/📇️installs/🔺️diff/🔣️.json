@@ -1,0 +1,27 @@
+{
+  "artifact": null,
+  "camera": null,
+  "edges": null,
+  "meta": {
+    "kindCatalogs": {
+      "edges": [],
+      "handles": [
+        {
+          "color": "#3366ff",
+          "compatibleWith": [
+            "handle-kind-b"
+          ],
+          "defaultWireKind": "wire-kind-a",
+          "description": "Alpha port",
+          "icon": "circle",
+          "id": "handle-kind-a"
+        }
+      ],
+      "nodes": [],
+      "wires": []
+    }
+  },
+  "nodes": null,
+  "schema": null,
+  "targetRegions": null
+}

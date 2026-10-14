@@ -11,7 +11,7 @@ export type NativeModuleSource = { readonly pluginId: string; readonly wasm: str
 
 /** 📂️ Isolates a completed native runtime by variant and compilation profile. */
 export function nativeRuntimeDirectory(packageRoot: string, variant: string, profile: string): string {
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant) || !["dev", "release"].includes(profile)) throw new Error("Select a native runtime variant and dev/release profile");
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant) || !["prototype", "release"].includes(profile)) throw new Error("Select a native runtime variant and prototype/release profile");
   return join(packageRoot, "dist/runtime/native", profile, variant);
 }
 

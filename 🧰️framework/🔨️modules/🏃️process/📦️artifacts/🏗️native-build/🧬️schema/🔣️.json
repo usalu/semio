@@ -45,6 +45,11 @@
         "prototype",
         "release"
       ]
+    },
+    "compilerConfiguration": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
     }
   },
   "$id": "https://semio.tech/framework/process/native-build/policy/v1"

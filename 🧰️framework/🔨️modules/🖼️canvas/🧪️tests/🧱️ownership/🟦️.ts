@@ -18,14 +18,14 @@ test("canvas definitions have a General owner independent of Infinite",()=>{
 });
 test("the original draw list corpus follows the variable production command contract",()=>{
  const validate=new Ajv({strict:true,allErrors:true}).compile(schema);
- const input=readFileSync(resolve(owner,"🧫️fixtures/🎬️draw-list/📐️expected-draw-list.json"),"utf8"),value=JSON.parse(input);
+ const input=readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/🎬️draw-list/📐️expected-draw-list.json"),"utf8"),value=JSON.parse(input);
  expect(validate(value)).toBe(true);expect(value).toEqual(JSON5.parse(input));
  expect(validate({version:1,truncated:false,commands:[]})).toBe(true);
  for(const value of [{version:2,truncated:false,commands:[]},{version:1,truncated:false,commands:[["po",0]]},{version:1,truncated:false,commands:[["f",0,[256,0,0,0],[1,0,0,1,0,0],["r",0,0,1,1]]]},{version:1,truncated:false,commands:[["pc",0,[1,0,0,1,0],["r",0,0,1,1]]]}])expect(validate(value)).toBe(false);
 });
 
 test("theme fields follow owned color bytes and independent schema oracles",()=>{
- const input=readFileSync(resolve(owner,"🧫️fixtures/🎨️theme-color-fields/🔣️.json"),"utf8"),fixture=JSON.parse(input),oracle=new Ajv({strict:true,allErrors:true}).compile(themeSchema);
+ const input=readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/🎨️theme-color-fields/🔣️.json"),"utf8"),fixture=JSON.parse(input),oracle=new Ajv({strict:true,allErrors:true}).compile(themeSchema);
  expect(fixture).toEqual(JSON5.parse(input));expect(fixture.modelSchema).toBe(themeSchema.$id);
  for(const row of fixture.cases){expect(validateJsonSchemaSubset(themeSchema,row.fields)).toEqual([]);expect(oracle(row.fields)).toBe(true);}
  for(const fields of [{paint:[1,2,3]},{paint:[1,2,3,4,5]},{paint:[-1,0,0,0]},{paint:[0,0,0,256]},{paint:[0,0,0,0.5]},{paint:null}]){expect(validateJsonSchemaSubset(themeSchema,fields).length>0).toBe(true);expect(oracle(fields)).toBe(false);}

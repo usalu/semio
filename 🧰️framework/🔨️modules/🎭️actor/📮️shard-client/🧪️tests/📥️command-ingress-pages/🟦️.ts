@@ -42,7 +42,7 @@ export async function registerCommandIngressPageTests(
   const { describe, it, expect } = vitest;
   const { ACTOR_BYTE_PAGE_BYTES, createShardCommandIngressPages, SHARD_COMMAND_MAXIMUM_PAGES } = dependencies;
   const { readFileSync } = await import("node:fs");
-  const fixture = JSON.parse(readFileSync(new URL("../../📡️replication/📡️wire/🎮️command/📥️ingress/🧫️fixtures/📄️pages/🔣️.json", testSource.url), "utf8")) as CommandIngressPagesFixture;
+  const fixture = JSON.parse(readFileSync(new URL("../../📡️replication/📡️wire/🎮️command/📥️ingress/🧪️tests/🧫️fixtures/📄️pages/🔣️.json", testSource.url), "utf8")) as CommandIngressPagesFixture;
 
   describe("command ingress pages", () => {
     it("derives its page authority from the guest linear-memory budget", () => {

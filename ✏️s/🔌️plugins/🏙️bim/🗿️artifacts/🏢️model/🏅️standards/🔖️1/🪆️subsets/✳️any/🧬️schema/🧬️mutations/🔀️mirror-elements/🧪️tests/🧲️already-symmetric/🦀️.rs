@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔀️mirror-elements/🧲️already-symmetric",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/🧲️already-symmetric/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/🧲️already-symmetric/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/🧲️already-symmetric/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/🧲️already-symmetric/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/🧲️already-symmetric/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/🧲️already-symmetric/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/🧲️already-symmetric/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/🧲️already-symmetric/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/🧲️already-symmetric/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/🧲️already-symmetric/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

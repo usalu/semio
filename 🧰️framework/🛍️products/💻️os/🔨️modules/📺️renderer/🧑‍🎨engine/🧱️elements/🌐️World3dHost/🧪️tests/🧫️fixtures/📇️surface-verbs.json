@@ -1,0 +1,46 @@
+{
+  "schema": "framework.world3d.surface-verbs/v1",
+  "$comment": "📇️ A World3d surface may only mint a verb its WINDOW KIND declares. The declaration has exactly one source — the app manifest's `window_kind_action_refs`, which `build_definition` resolves into `WindowKindDefinition.actions` — and the renderer reads it rather than guessing from the role, the mode or the surface id. The gumball is therefore not a property of World3d: it is the affordance of a window kind that declares at least one of the three verbs a gumball handle commits as.",
+  "rule": {
+    "id": "world3dOffersTransformGumball",
+    "statement": "A surface offers a transform gumball iff its window kind declares translateSelection, rotateSelection or scaleSelection; a handle is offered iff its own verb is declared; a surface with no declaration offers nothing.",
+    "handleVerbs": { "translate": "translateSelection", "rotate": "rotateSelection", "scale": "scaleSelection" },
+    "rust": "♾️infinite/🌍️world/🦀️.rs::world3d_offers_transform_gumball",
+    "publisher": "🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs::ShellState::sync_world3d_declared_actions",
+    "ticket": "26/09/09/PROCEDURAL-3D-END-TO-END"
+  },
+  "cases": [
+    {
+      "name": "the-procedural-editor-preview-owns-the-transform-verbs",
+      "why": "The edit session's preview window kind declares all three, so its gumball is real and every handle may commit.",
+      "windowKindId": "procedural-preview",
+      "declaredActionIds": ["setCamera", "translateSelection", "rotateSelection", "scaleSelection", "interactionSelect", "interactionHover"],
+      "offersGumball": true,
+      "offeredHandleVerbs": ["translateSelection", "rotateSelection", "scaleSelection"]
+    },
+    {
+      "name": "the-procedural-viewer-preview-owns-none-of-them",
+      "why": "The live defect. `procedural-view-preview` declares only export and the camera verbs, and a shift-drag on the gumball published translateSelection into it — measured verbatim on 6118 as `handle_action promise failed: window kind procedural-view-preview does not own action translateSelection` (📓️wgpu-end-to-end-verification-2026-09-14.md §5.2).",
+      "windowKindId": "procedural-view-preview",
+      "declaredActionIds": ["exportDocument", "setCamera", "interactionSelect", "interactionHover"],
+      "offersGumball": false,
+      "offeredHandleVerbs": []
+    },
+    {
+      "name": "a-rotate-only-window-offers-only-rotate-handles",
+      "why": "The rule is per HANDLE, not per surface: a window kind that declares one verb must not mint the other two.",
+      "windowKindId": "rotate-only-preview",
+      "declaredActionIds": ["setCamera", "rotateSelection"],
+      "offersGumball": true,
+      "offeredHandleVerbs": ["rotateSelection"]
+    },
+    {
+      "name": "an-undeclared-surface-offers-nothing",
+      "why": "Empty means `no window kind has declared anything for this surface yet` — the state a surface is in for the frame between its creation and the shell's next engine-surface sync. It must offer nothing rather than everything.",
+      "windowKindId": "generation3d-generate-preview",
+      "declaredActionIds": [],
+      "offersGumball": false,
+      "offeredHandleVerbs": []
+    }
+  ]
+}

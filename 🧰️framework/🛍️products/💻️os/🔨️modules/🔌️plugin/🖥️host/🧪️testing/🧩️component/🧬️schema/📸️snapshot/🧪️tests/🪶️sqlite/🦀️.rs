@@ -1,19 +1,19 @@
 //! 🧫️ The published Host Count owner requires its own semantic SQLite capability.
 use crate::{Snapshot,Mutation};
 use semio_framework_os_kernel as store;
-use store::{os_store::serialization::ArtifactDsl,os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack};
 use store::sqlite_snapshot::*;
 use semio_framework_value::ValueRefusalKind;
 const KIND:&str="fixture.neutral-host-fixture.counter";
 const SQL:&str=include_str!("../../🪶️sqlite/🗄️.sql");
-fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap()}
+fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🪶️sqlite/🔣️.json")).unwrap()}
 fn counts()->Vec<i32>{corpus()["counts"].as_array().unwrap().iter().map(|value|i32::try_from(value.as_i64().unwrap()).unwrap()).collect()}
 fn dialect()->semio_framework_artifact_reference::ArtifactDialect{semio_framework_artifact_reference::ArtifactDialect{artifact_kind:KIND.into(),standard:"1".into(),subset:"*".into()}}
 fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{
  store::bare_artifact_codec::<Snapshot,Mutation>(KIND).snapshot_sqlite.expect("the actual published Count owner must opt its bare native codec into semantic SQLite")
 }
 fn original_native_grant()->semio_framework_value::RetainedCloneGrant{
- let request:semio_framework_plugin::sqlite_wire::SnapshotInput=serde_json::from_str(include_str!("../../../../../../../🧬️schema/🪶️sqlite/🧫️fixtures/🔣️.json")).unwrap();request.native.native().unwrap()
+ let request:semio_framework_plugin::sqlite_wire::SnapshotInput=serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();request.native.native().unwrap()
 }
 fn export_native(codec:&store::os_store::serialization::ArtifactSqliteSnapshotCodec,schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,payload:&store::io::IoPayload,sql:&mut SqliteSnapshotControl<'_>)->semio_framework::io_schema::IoResult<SqliteDatabase>{
  let grant=original_native_grant();let mut observe=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut observe);let mut owner=store::io::control::NativeSnapshotDecodeOwner::new(&mut native,grant);(codec.export)(schema,dialect,payload,sql,&mut owner)
@@ -121,7 +121,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
  use semio_framework_plugin::{plugin_runtime,sqlite_wire::{SnapshotInput,SnapshotLimits,SnapshotFileResult,SnapshotPayloadResult}};
  let coordinate=dialect().to_coordinate();
  assert_eq!(plugin_runtime::plugin_snapshot_sqlite_schema(&coordinate).unwrap(),SQL);
- let neutral:SnapshotInput=serde_json::from_str(include_str!("../../../../../../../🧬️schema/🪶️sqlite/🧫️fixtures/🔣️.json")).unwrap();
+ let neutral:SnapshotInput=serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();
  let grant=neutral.native.native().unwrap();let limits=neutral.limits.native().unwrap();
  for count in counts(){let source=Snapshot{count};for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
   let mut receive=|_|true;let mut publish=|_|true;let mut progress=|_|true;

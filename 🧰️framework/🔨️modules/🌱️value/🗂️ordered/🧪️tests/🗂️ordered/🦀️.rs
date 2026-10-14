@@ -40,7 +40,7 @@ impl crate::retirement::RetirementCursor for MixedReceiptPayload {
 #[test]
 fn original_ordered_typed_owner_preserves_mixed_physical_receipt() {
     use crate::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneProgress};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../♻️retirement/🧫️fixtures/📦️full-receipt/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../♻️retirement/🧪️tests/🧫️fixtures/📦️full-receipt/🔣️.json")).unwrap();
     let source_capacity=fixture["sourceCapacityBytes"].as_u64().unwrap()as usize;let replacement_capacity=fixture["replacementCapacityBytes"].as_u64().unwrap()as usize;
     for maximum_copy_bytes in fixture["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){
         let((source,pointer),(born,freed))=crate::observe_retirement_allocations(||{let mut bytes=Vec::with_capacity(source_capacity);bytes.push(fixture["payloadByte"].as_u64().unwrap()as u8);let pointer=bytes.as_ptr();(OrderedMap::from([(fixture["key"].as_str().unwrap().to_owned(),MixedReceiptPayload {source:Some(bytes),replacement:None,replacement_capacity,complete:false})]),pointer)});
@@ -67,7 +67,7 @@ fn original_ordered_typed_owner_preserves_mixed_physical_receipt() {
 #[test]
 fn original_controlled_retirement_exposes_simultaneous_physical_demands() {
     use crate::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneProgress};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../♻️retirement/🧫️fixtures/📦️full-receipt/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../♻️retirement/🧪️tests/🧫️fixtures/📦️full-receipt/🔣️.json")).unwrap();
     let expected=&fixture["expectedMixedDemand"];let source_capacity=expected["releaseBytes"].as_u64().unwrap()as usize;let replacement_capacity=expected["capacityBytes"].as_u64().unwrap()as usize;
     let(source,(born,freed))=crate::observe_retirement_allocations(||{let mut source=Vec::with_capacity(source_capacity);source.push(7);MixedReceiptPayload {source:Some(source),replacement:None,replacement_capacity,complete:false}});assert_eq!((born,freed),(source_capacity,0));
     let pointer=source.source.as_ref().unwrap().as_ptr();let(mut owner,allocation)=crate::observe_retirement_allocations(||ControlledRetirement::new(source).unwrap_or_else(|_|panic!("original controlled payload authority")));assert_eq!(allocation,(0,0));assert_eq!(owner.original().unwrap().source.as_ref().unwrap().as_ptr(),pointer);
@@ -86,7 +86,7 @@ fn original_controlled_retirement_exposes_simultaneous_physical_demands() {
 #[test]
 fn original_ordered_deque_declares_physical_handoff_demand() {
     use crate::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneProgress};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../♻️retirement/🧫️fixtures/📦️full-receipt/🔣️.json")).unwrap();let row=&fixture["deque"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../♻️retirement/🧪️tests/🧫️fixtures/📦️full-receipt/🔣️.json")).unwrap();let row=&fixture["deque"];
     for copy in fixture["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){
         let((source,pointer),(born,freed))=crate::observe_retirement_allocations(||{let mut source=std::collections::VecDeque::with_capacity(row["containerCapacity"].as_u64().unwrap()as usize);for value in row["source"].as_array().unwrap(){let mut text=String::with_capacity(row["payloadCapacity"].as_u64().unwrap()as usize);text.push_str(value.as_str().unwrap());source.push_back(text);}let pointer=source.as_slices().0.as_ptr();(OrderedMap::from([("deque".to_owned(),source)]),pointer)});assert_eq!(freed,0);let source_bytes=born;assert_eq!(serde_json::to_string(source.get("deque").unwrap()).unwrap(),row["canonicalSource"].as_str().unwrap());
         let(mut owner,heap)=crate::observe_retirement_allocations(||ControlledRetirement::new(source).unwrap_or_else(|_|panic!("original ordered deque supports controlled retirement")));assert_eq!(heap,(0,0));assert_eq!(owner.original().unwrap().get("deque").unwrap().as_slices().0.as_ptr(),pointer);
@@ -106,7 +106,7 @@ fn original_ordered_deque_declares_physical_handoff_demand() {
 #[test]
 fn ordered_partial_mutations_compose_typed_retirement_at_every_neutral_cancel_frontier() {
     use crate::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneProgress};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🩹️update/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🩹️update/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap(){for maximum_copy_bytes in fixture["grants"].as_array().unwrap().iter().map(|grant|grant.as_u64().unwrap()as usize){for cut in fixture["cancelAfterSteps"].as_array().unwrap().iter().map(|cut|cut.as_u64().unwrap()as usize){
         for operation in row["operations"].as_array().unwrap(){
             let((map,mut cursor),(birth,free))=crate::observe_retirement_allocations(||{
@@ -128,7 +128,7 @@ fn ordered_partial_mutations_compose_typed_retirement_at_every_neutral_cancel_fr
 #[test]
 fn ordered_mutations_admit_exact_births_and_preserve_obsolete_roots_until_close() {
     use crate::retained_clone::{RetainedCloneProgress,RetainedCloneStep};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🩹️update/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🩹️update/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap(){for maximum_copy_bytes in fixture["grants"].as_array().unwrap().iter().map(|grant|grant.as_u64().unwrap()as usize){
         let initial:Vec<(String,i64)>=row["initial"].as_array().unwrap().iter().map(|entry|(entry[0].as_str().unwrap().to_owned(),entry[1].as_i64().unwrap())).collect();
         let mut oracle:BTreeMap<_,_>=initial.iter().cloned().collect();let mut map:OrderedMap<_>=initial.into_iter().collect();let mut total_birth=0;let mut turns=0;
@@ -153,7 +153,7 @@ fn ordered_mutations_admit_exact_births_and_preserve_obsolete_roots_until_close(
 #[test]
 fn ordered_retirement_composes_real_generic_owner_under_independent_category_grants() {
     use crate::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneProgress,RetainedCloneStep}};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../♻️retirement/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap(){for maximum_copy_bytes in fixture["grants"].as_array().unwrap().iter().map(|grant|grant.as_u64().unwrap()as usize){
         let mut key=String::with_capacity(row["keyCapacity"].as_u64().unwrap()as usize);key.push_str(row["key"].as_str().unwrap());
         let mut value=String::with_capacity(row["valueCapacity"].as_u64().unwrap()as usize);value.push_str(row["value"].as_str().unwrap());let payload_bytes=key.capacity()+value.capacity();
@@ -190,7 +190,7 @@ fn ordered_shared_input_preserves_unique_pointer_and_refuses_foreign_alias_custo
 
 #[test]
 fn ordered_retirement_physical_receipts_match_actual_allocator_and_whole_grants() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../♻️retirement/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         for maximum_bytes in fixture["grants"].as_array().unwrap().iter().map(|grant|grant.as_u64().unwrap()as usize) {
             let mut key=String::with_capacity(row["keyCapacity"].as_u64().unwrap()as usize);key.push_str(row["key"].as_str().unwrap());
@@ -312,7 +312,7 @@ fn check_tree<V>(root: &Root<V>) -> (usize, usize) {
 //#region ⚖️Oracle
 #[test]
 fn fixture_operations_match_btree_map_under_every_actual_grant() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️ordered-map.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️ordered-map.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         for maximum_bytes in fixture["grants"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize) {
             let grant = Grant { maximum_items: 1, maximum_bytes }; let mut map = OrderedMap::new(); let mut oracle = BTreeMap::new();
@@ -373,7 +373,7 @@ fn cold_serde_preserves_duplicate_semantics_and_retires_failed_partial_roots() {
 //#region 🔎️Lookup
 #[test]
 fn lookup_matches_oracle_with_exact_long_key_comparison_bytes() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️ordered-map.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️ordered-map.json")).unwrap();
     for maximum_bytes in [1, 64, 4096] {
         for row in fixture["lookupCases"].as_array().unwrap() {
             let grant = Grant { maximum_items: 1, maximum_bytes }; let mut map = OrderedMap::new();
@@ -411,7 +411,7 @@ impl Drop for Payload { fn drop(&mut self) { self.0.fetch_add(1, AtomicOrdering:
 
 #[test]
 fn cancellation_never_clones_payload_or_drops_final_value_inside_a_step() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️ordered-map.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️ordered-map.json")).unwrap();
     for cancel in fixture["cancelAfterSteps"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize) {
         let drops = Arc::new(AtomicUsize::new(0)); let mut map = OrderedMap::new(); map.insert("🌊".repeat(2048) + "a", Payload(Arc::clone(&drops)));
         let mut cursor = map.begin_set("🌊".repeat(2048) + "b", Payload(Arc::clone(&drops)));
@@ -456,7 +456,7 @@ fn removed_payload_handoff_preserves_exact_last_owner() {
 /// 🔒️ Deliberate contract violations retain their tiny test allocations instead of invoking recursive payload destruction.
 #[test]
 fn live_owner_drop_guards_never_destroy_payloads() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️ordered-map.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️ordered-map.json")).unwrap();
     assert_eq!(fixture["ownership"]["terminalOwners"], 0);
     for kind in 0..fixture["ownership"]["liveOwners"].as_array().unwrap().len() {
         let drops = Arc::new(AtomicUsize::new(0)); let mut map = OrderedMap::new(); map.insert("key".into(), Payload(Arc::clone(&drops)));
@@ -540,7 +540,7 @@ fn ordered_physical_retirement_uses_inline_frontier_and_charges_the_key_payload_
 #[test]
 fn shared_release_is_empty_or_transfers_the_exact_final_frontier() {
     assert!(OrderedMap::<Payload>::new().retire().is_empty());
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/👥️shared-owner/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/👥️shared-owner/🔣️.json")).unwrap();
     for maximum_bytes in [1, 64, 4096] {
         let drops = Arc::new(AtomicUsize::new(0));
         let key = fixture["key"]["text"].as_str().unwrap().repeat(fixture["key"]["repetitions"].as_u64().unwrap() as usize);

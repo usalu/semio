@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Applied Tool Patch Receipt",
+  "type": "object",
+  "required": ["version", "files"],
+  "properties": {
+    "version": { "const": 1 },
+    "files": { "type": "object", "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{64}$" } }
+  },
+  "additionalProperties": false
+}

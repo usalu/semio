@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn sqlite_snapshot_ifc2x3_inline_root_and_mvd_consumers_follow_concrete_backing_roles(){
-    let vector:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/💰️backing/🔣️.json")).unwrap();
+    let vector:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/💰️backing/🔣️.json")).unwrap();
     assert_eq!(vector["inlineRoot"],"noBackingRequest");assert_eq!(vector["nativeRoles"]["owned"],"maxAllocationBytes");
     let mut progress=|_|true;let mut native=NativeDecodeControl::new(0,&mut progress);
     let frame=Frame{schema:String::new(),file_description:Vec::new(),file_name:Vec::new(),file_schema:Vec::new(),instances:Vec::new(),values:Vec::new(),edm:None};

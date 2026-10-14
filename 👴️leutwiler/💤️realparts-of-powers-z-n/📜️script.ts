@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 💤️ `@leutwiler/realparts-of-powers-z-n` task router: `bun ./📜️script.ts <deps|build|test> [lean|📯️notes|🏆️proof]`. */
-import { BundleScript, ScriptRouter } from "../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { build, prepareDependencies, verifyAxioms } from "./🟦️.ts";
 
 class DepsScript extends BundleScript {

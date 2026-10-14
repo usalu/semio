@@ -1,7 +1,7 @@
 /** 🛡️ Neutral I-JSON guards retain arbitrary syntax while admitting exact named meaning. */
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
-import fixture from "../../../../🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json";
+import fixture from "../../../../🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json";
 import type {JsonSnapshot,JsonValue} from "../../../../🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
 import {jsonSnapshotToSqliteDatabase,jsonSnapshotFromSqliteDatabase} from "../../../../🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
 import {validateIJsonSnapshotSqliteDialect} from "../../../🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";

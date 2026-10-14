@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://framework.filesystem.observation/LiveFilesystemJournalV1",
+  "title": "Live Filesystem Journal V1",
+  "$ref": "#/$defs/Witness",
+  "$defs": {
+    "Path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^(?!.*(?:^|/)\\.{1,2}(?:/|$))[^:/\\\\\\u0000]+(?:/[^:/\\\\\\u0000]+)*$"
+    },
+    "Scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "roots",
+        "files"
+      ],
+      "properties": {
+        "roots": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Path"
+          }
+        },
+        "files": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Path"
+          }
+        }
+      }
+    },
+    "Membership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "paths",
+        "sha256"
+      ],
+      "properties": {
+        "paths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Path"
+          }
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "Change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "type"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/Path"
+        },
+        "type": {
+          "enum": [
+            "create",
+            "update",
+            "delete"
+          ]
+        }
+      }
+    },
+    "Witness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "epoch",
+        "sequence",
+        "globalIdentity",
+        "selectedMembership",
+        "changes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "epoch": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Latest witnessed mutation affecting global identity or the requested selection; unrelated source changes do not advance this scope's boundary."
+        },
+        "globalIdentity": {
+          "$ref": "#/$defs/Membership"
+        },
+        "selectedMembership": {
+          "$ref": "#/$defs/Membership"
+        },
+        "changes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Change"
+          }
+        }
+      }
+    }
+  }
+}

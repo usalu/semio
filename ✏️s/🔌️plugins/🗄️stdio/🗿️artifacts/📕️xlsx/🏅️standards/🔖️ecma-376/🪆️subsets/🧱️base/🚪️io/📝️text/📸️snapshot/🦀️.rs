@@ -12,7 +12,7 @@ pub type XlsxSnapshotText = String;
 use crate::XlsxSnapshot;
 use crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::decode_text;
 
-impl store::os_store::serialization::ArtifactDsl for XlsxSnapshot {
+impl pack::snapshot::ArtifactDsl for XlsxSnapshot {
     const EXTENSION: &'static str = "xlsx";
     fn envelope_id() -> &'static str {
         "stdio.xlsx"

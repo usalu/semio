@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "generalOwner": "🧰️framework/🧪️tests/🧱️fixture-ownership/🟦️.ts",
+  "generalLaw": "shared pixel lock vectors match the independent hierarchy oracle",
+  "generalLawSha256": "45204a2a9de00199d55736a082c1908a2ad5a954c229085dcedd79b2df8b11d9",
+  "generalInputs": [
+    {
+      "path": "🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json",
+      "sha256": "b5b42b3694a9a58d4d957a994d594db7e85b9c2cb5beb602b65a662d75e727b0"
+    }
+  ],
+  "productRoots": [
+    "🧰️framework/🛍️products",
+    "✏️s",
+    "🌎️hub",
+    "🏢️semio-tech",
+    "♻️mit-bestand"
+  ],
+  "moved": [
+    {
+      "law": "the lease corpus binds both peers to one framework contract witness",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🔏️document-execution-target-lease-v1/🟦️.ts",
+      "target": "@semio-tech/framework-os-kernel:test-directory-lease-fixture",
+      "script": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "project": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+      "command": "test-directory-lease-fixture",
+      "sha256": "d953369f67a64f52822a6fbb726a4d7ee5c2982928b59da8896fcf63367b816d",
+      "inputs": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json",
+          "sha256": "0e6d9d1c6a6108d8093f3efcd7f01a1eb803bc17e163758732270408be10735a"
+        }
+      ]
+    },
+    {
+      "law": "approval intents are closed under the framework-owned contract",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/✅️approval-request/🟦️.ts",
+      "target": "@semio-tech/framework-os-mcp:test-approval-request-fixture",
+      "script": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/📜️script.ts",
+      "project": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/📋️project.json",
+      "command": "test-approval-request-fixture",
+      "sha256": "f2223e49b477f2e4412d2bd43bb3c2de9aa3acf1cb3d00ff6de0755da6655fae",
+      "inputs": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧬️schema/✅️approval-request/🔣️.json",
+          "sha256": "220d724ca996ad2c924c6894ad7b597c2dbdcb20f505ff0614a90a744ad22aa2"
+        }
+      ]
+    },
+    {
+      "law": "slider descriptors require authored labels across schema and native contracts",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🏷️slider-labels/🟦️.ts",
+      "target": "@semio-tech/framework-flow-flow-rs:test-slider-labels-fixture",
+      "script": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📜️script.ts",
+      "project": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📋️project.json",
+      "command": "verify slider-labels-fixture",
+      "sha256": "0e375411dde9f1d14e2e603ef7a4399f4bae069ecb78cfea074c94f4293ab21b",
+      "inputs": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️.json",
+          "sha256": "a1aced2f8d4697e9015ae2e5cd84bbb9ce5d93cbc5188a2b55a0dc8ecfab0edb"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🧫️fixtures/🏷️slider-labels.json",
+          "sha256": "eb17ebd4fdba85f4eb302c07590b7457853eda06b46b07e420c1f629c4ee5f1d"
+        }
+      ]
+    }
+  ],
+  "directoryKinds": [
+    {
+      "id": "repository-fixture-law-ownership",
+      "emoji": "🧱️",
+      "member": "🧱️fixture-law-ownership",
+      "parents": [
+        "tests",
+        "fixtures",
+        "schema"
+      ]
+    },
+    {
+      "id": "directory-lease-fixture-test",
+      "emoji": "🔏️",
+      "member": "🔏️document-execution-target-lease-v1",
+      "parents": [
+        "tests"
+      ]
+    },
+    {
+      "id": "mcp-approval-fixture-test",
+      "emoji": "✅️",
+      "member": "✅️approval-request",
+      "parents": [
+        "tests"
+      ]
+    },
+    {
+      "id": "flow-slider-labels-fixture-test",
+      "emoji": "🏷️",
+      "member": "🏷️slider-labels",
+      "parents": [
+        "tests"
+      ]
+    }
+  ]
+}

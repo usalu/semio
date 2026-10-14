@@ -9,7 +9,7 @@ type Fixture = {
   lifecycle: string[];
 };
 
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as Fixture;
 
 const digest = (bytes: Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
 const subtleDigest = async (bytes: Uint8Array): Promise<string> => Buffer.from(await webcrypto.subtle.digest("SHA-256", bytes)).toString("hex");

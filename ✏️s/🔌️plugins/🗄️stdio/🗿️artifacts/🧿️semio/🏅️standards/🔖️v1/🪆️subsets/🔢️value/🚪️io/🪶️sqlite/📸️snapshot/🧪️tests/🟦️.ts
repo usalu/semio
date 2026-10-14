@@ -1,7 +1,7 @@
 /** 🔢️ Native value syntax, owned collections and referential graph cycles. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import f from "../🧫️fixtures/🔣️.json";
+import f from "./🧫️fixtures/🔣️.json";
 import type {SemioValue,SemioValueSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {SEMIO_VALUE_SQLITE_SCHEMA,semioValueSnapshotToSqliteDatabase,semioValueSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
@@ -12,7 +12,7 @@ test("quick::Semio value remaining aggregate budget and cancellation precede lar
 
 test("quick::Semio value native construction frontier matches independent typed entry rows",async()=>{const s:SemioValueSnapshot={schema:f.schema,root:{kind:"list",items:Array.from({length:f.nativeAdmission.collectionItems},()=>({kind:"map",entries:[{key:f.duplicateKey,value:{kind:"bytes",value:[0,255]}}]}))},nodes:[]};const d=Database.deserialize(await exportSqliteDatabase(await semioValueSnapshotToSqliteDatabase(s)));try{expect(d.query("SELECT count(*) AS count FROM semio_value_list_element").get()).toEqual({count:f.nativeAdmission.collectionItems});expect(d.query("SELECT count(*) AS count FROM semio_value_map_entry WHERE member_key=?").get(f.duplicateKey)).toEqual({count:f.nativeAdmission.collectionItems});expect(d.query("SELECT hex(bytes_value) AS bytes FROM semio_value_value WHERE kind='bytes' LIMIT 1").get()).toEqual({bytes:"00FF"});}finally{d.close();}},30000);
 
-import completeSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import completeSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 import{independentSqliteExtent as completeIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
 test("Semio Value Native matched full and metadata empty independently preserve all complete cells",async()=>{
  for(const item of completeSemanticContract.cases){const source=structuredClone(item.sourceSnapshot)as SemioValueSnapshot;const database=await semioValueSnapshotToSqliteDatabase(source),bytes=await exportSqliteDatabase(database);expect(completeIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:completeSemanticContract.schemaBytes,tableWidths:completeSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:completeSemanticContract.schemaBytes,maxTables:5,maxColumns:8};expect(await semioValueSnapshotToSqliteDatabase(source,limits)).toEqual(database);expect(await semioValueSnapshotFromSqliteDatabase(await importSqliteDatabase(bytes),limits)).toEqual(source);

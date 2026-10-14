@@ -1,0 +1,63 @@
+{
+  "owner": "originalFrameworkReservedJob",
+  "payloadBytes": 8193,
+  "backingBytes": 16384,
+  "grant": {
+    "items": 1,
+    "copyBytes": 4096,
+    "capacityBytes": 0,
+    "releaseBytes": 16384,
+    "depth": 1
+  },
+  "turns": [
+    {
+      "copiedItems": 1,
+      "copiedBytes": 4096,
+      "capacityBytes": 0,
+      "releaseBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 4096,
+      "capacityBytes": 0,
+      "releaseBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 1,
+      "capacityBytes": 0,
+      "releaseBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "capacityBytes": 0,
+      "releaseBytes": 16384
+    }
+  ],
+  "zeroItems": "sameOwnerEmptyReceipt",
+  "shortCopy": "samePayloadEmptyReceipt",
+  "shortRelease": "sameBackingEmptyReceipt",
+  "zeroDepth": "sameOwnerDepthLimit",
+  "terminal": "wholeBackingReleasedThenEmptyComplete",
+  "caller": {
+    "operation": 98932,
+    "generation": 17,
+    "clock": 1000,
+    "deadline": 1500,
+    "fuel": 1,
+    "source": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 4096,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 65536,
+      "maximumDepth": 64
+    }
+  },
+  "admission": {
+    "control": "originalStepContext",
+    "sameCancellationNode": true,
+    "wholeFailure": true,
+    "recipient": "originalRecipient"
+  }
+}

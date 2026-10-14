@@ -530,7 +530,7 @@ fn interzone_partner(boundary: OutsideBoundary) -> Option<EntityId> {
 /// so its spr encode is infallible.
 fn load_document_effect(model: &crate::model::Model) -> semio_framework_plugin::kernel::Effect {
     let snapshot = crate::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None);
-    let pack = <EnergyModelSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
+    let pack = <EnergyModelSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
     let envelope = store::os_store::document_materialize::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, "model", snapshot, None).into_owners();
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::print_document_spr(&envelope)).expect("energy model document spr encode is infallible for a fresh, edit-free envelope");
     semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr }
@@ -1629,6 +1629,7 @@ impl ArtifactEditor for EnergyModelEditor {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

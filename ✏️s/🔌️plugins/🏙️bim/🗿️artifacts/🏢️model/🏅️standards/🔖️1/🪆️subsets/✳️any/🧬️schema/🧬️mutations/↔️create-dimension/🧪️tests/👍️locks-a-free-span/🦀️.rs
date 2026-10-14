@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "↔️create-dimension/👍️locks-a-free-span",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️create-dimension/👍️locks-a-free-span/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️create-dimension/👍️locks-a-free-span/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️create-dimension/👍️locks-a-free-span/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️create-dimension/👍️locks-a-free-span/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️create-dimension/👍️locks-a-free-span/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↔️create-dimension/👍️locks-a-free-span/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↔️create-dimension/👍️locks-a-free-span/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↔️create-dimension/👍️locks-a-free-span/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↔️create-dimension/👍️locks-a-free-span/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↔️create-dimension/👍️locks-a-free-span/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

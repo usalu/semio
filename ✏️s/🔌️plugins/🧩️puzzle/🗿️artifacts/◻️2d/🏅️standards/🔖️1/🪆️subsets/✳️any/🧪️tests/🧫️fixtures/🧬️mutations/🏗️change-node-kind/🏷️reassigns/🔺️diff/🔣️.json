@@ -1,0 +1,21 @@
+{
+  "artifact": null,
+  "camera": null,
+  "edges": null,
+  "meta": null,
+  "nodes": {
+    "inserted": [],
+    "modified": [
+      {
+        "id": "node-a",
+        "patch": {
+          "nodeKind": "node-kind-c"
+        }
+      }
+    ],
+    "moved": [],
+    "removed": []
+  },
+  "schema": null,
+  "targetRegions": null
+}

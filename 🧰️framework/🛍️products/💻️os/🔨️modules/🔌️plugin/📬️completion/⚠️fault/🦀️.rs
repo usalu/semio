@@ -35,7 +35,7 @@ mod tests{
  use super::*;
  #[test]
  fn completion_fault_moves_original_without_heap_birth_and_matches_shared_json(){
-  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
   for row in fixture["cases"].as_array().unwrap(){
    let mut original=Fault::new(FaultOrigin::App,semio_framework_diagnostic::FaultCode::new(row["code"].as_str().unwrap()),row["message"].as_str().unwrap());original.retryable=row["retryable"].as_bool().unwrap();original.params=Some(Box::new(semio_framework_diagnostic::FaultParams(vec![("path".into(),"drawing/clipboard".into()),("detail".into(),"original diagnostic parameter".into())])));original.scope.module=Some("draw".into());let message=original.message.as_ptr();let scope=(&*original.scope)as*const _;
    let(carrier,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ArtifactCompletionFault::new(original));assert_eq!((event.requested_bytes,event.released_bytes),(0,0));

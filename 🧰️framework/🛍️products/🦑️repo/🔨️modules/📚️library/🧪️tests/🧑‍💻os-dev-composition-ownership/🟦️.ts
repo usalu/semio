@@ -147,7 +147,7 @@ describe("OS development composition ownership", () => {
     const target = project.targets?.[registration.target];
     expect(target?.options?.command).toBe("bun ./📜️script.ts test os-dev-composition-ownership");
     const contractPaths = new Set([
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧑‍💻os-dev-composition-ownership/🔣️.json",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧑‍💻os-dev-composition-ownership/🔣️.json",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧑‍💻os-dev-composition-ownership/🟦️.ts",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
       fixture.routerPath,

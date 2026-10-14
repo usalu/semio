@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import {Graph,alg} from "graphlib";
 import {applyPatch,type Operation} from "fast-json-patch";
 import engineContract from "../../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 
 test("original budgeted evaluation boundary corpus agrees with Graphlib and JSONPatch",()=>{
  const domain=new Ajv({strict:true,allErrors:true});domain.addSchema(engineContract);const validateValue=domain.compile({$ref:engineContract.$id+"#/$defs/Value"});

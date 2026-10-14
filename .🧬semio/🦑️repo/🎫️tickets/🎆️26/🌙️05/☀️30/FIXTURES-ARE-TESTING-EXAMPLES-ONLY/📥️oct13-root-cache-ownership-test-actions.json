@@ -1,0 +1,17 @@
+{
+  "exclusive": false,
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/📐️test-layout/🔣️.json",
+      "operation": "updated",
+      "beforeSha256": "497d31e84176c0a2aa7d37934f64c3166533ec0ec40d5d6d3eddf6bd4258e1f0",
+      "afterSha256": "c5d3e51c028696306a420b28c334fd9aaa6e2afd156992f077575ce95f26e5ca"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/📐️test-layout/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "7b5c1a5d8ea778350535b147234f4d9c97da025d03f8cdfc223ff7785c8610e5",
+      "afterSha256": "8615022771ada882ce89e394abf4ae8a7432e2b78eee1af08aea1b95b72a2669"
+    }
+  ]
+}

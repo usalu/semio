@@ -1,0 +1,9 @@
+{
+  "schema": "semio.flow.retained-session-close/v1",
+  "browser": { "requestBurst": 32, "terminalBeforeClose": false, "terminalAfterClose": true, "terminalOnClosingPoll": true, "yieldsToEvents": true, "pendingClosePolls": 4 },
+  "close": { "domainSteps": 3, "maximumTurns": 4096, "byteCredits": [1, 64, 4096], "retainedBeforePoll": 1, "retainedAfterTerminal": 0 },
+  "ordering": ["session-closed", "operation-retired", "domain-close-started", "domain-retired", "session-released"],
+  "rejectedPolls": ["zero-credit", "interrupted", "expired"],
+  "duplicateClose": "closed",
+  "staleClose": "rejected"
+}

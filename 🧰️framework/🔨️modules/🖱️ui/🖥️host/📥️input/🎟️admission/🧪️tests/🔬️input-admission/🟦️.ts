@@ -52,7 +52,7 @@ type InputAdmissionFixture = {
 };
 
 export function testInputAdmissionFixture(): void {
-  const fixture: InputAdmissionFixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture: InputAdmissionFixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   
   const value = JSON.parse(readFileSync(new URL("../../../../../../🌱️value/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   

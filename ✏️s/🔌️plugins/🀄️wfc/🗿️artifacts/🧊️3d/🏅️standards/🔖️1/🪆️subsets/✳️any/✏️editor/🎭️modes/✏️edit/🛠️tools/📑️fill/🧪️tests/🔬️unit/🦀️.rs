@@ -9,7 +9,7 @@ use semio_framework_plugin::ToolRunJobPort;
 use semio_framework_tool_run::{ToolRunId, ToolRunTick};
 use std::sync::Arc;
 
-const PARTIAL_VECTOR: &str = include_str!("../../🧫️fixtures/🎞️partial-tick.json");
+const PARTIAL_VECTOR: &str = include_str!("../🧫️fixtures/🎞️partial-tick.json");
 
 fn identity() -> ToolRunIdentity {
     ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [7; 32])

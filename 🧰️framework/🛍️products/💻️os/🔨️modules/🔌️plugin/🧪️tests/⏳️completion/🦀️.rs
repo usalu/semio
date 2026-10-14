@@ -525,8 +525,9 @@ impl<const RETAINED: bool, const TOOLS: u8> ArtifactOwnedToolJobFactory for Test
 fn checkpoint_restart_transient_close_retains_the_exact_store_until_granted() {
     use semio_framework_trace::observe_heap_allocations_on_this_thread;
     use semio_framework_value::retained_clone::RetainedCloneGrant;
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/⏳️completion/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/⏳️completion/🔣️.json")).unwrap();
     let law = &fixture["transientClose"];
+    let grant: RetainedCloneGrant = serde_json::from_value(law["originalGrant"].clone()).unwrap();
     let ((mut owner, mut close), original_heap) = observe_heap_allocations_on_this_thread(|| (
         store::TransientStore::<PublicationTransient, PublicationTransientMutation>::new(PublicationTransient { revision: law["sourceRevision"].as_u64().unwrap() }),
         TestApp::<true>::build_transient_store_disposer().expect("actual owned transient issuer"),
@@ -540,15 +541,16 @@ fn checkpoint_restart_transient_close_retains_the_exact_store_until_granted() {
     let mut releases = 0usize;
     let mut complete = false;
     for _ in 0..65_536 {
-        let grant = crate::app::retirement_self_grant(|body| close.retirement_demands(&owner, body), 7).unwrap();
+        let demand = close.retirement_demands(&owner, grant.maximum_copy_bytes).unwrap();
+        assert!(grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth,"original transient caller must fund the exact quoted close frontier");
         for axis in law["deniedAxes"].as_array().unwrap() {
             let mut denied = grant;
             let positive = match axis.as_str().unwrap() {
                 "items" => { denied.maximum_items = 0; true },
-                "copy" => { denied.maximum_copy_bytes = 0; grant.maximum_copy_bytes > 0 },
-                "capacity" => { denied.maximum_capacity_bytes = 0; grant.maximum_capacity_bytes > 0 },
-                "release" => { denied.maximum_release_bytes = 0; grant.maximum_release_bytes > 0 },
-                "depth" => { denied.maximum_depth = 0; grant.maximum_depth > 0 },
+                "copy" => { denied.maximum_copy_bytes = 0; demand.copy_bytes > 0 },
+                "capacity" => { denied.maximum_capacity_bytes = 0; demand.capacity_bytes > 0 },
+                "release" => { denied.maximum_release_bytes = 0; demand.release_bytes > 0 },
+                "depth" => { denied.maximum_depth = 0; demand.depth > 0 },
                 _ => panic!("declared independent grant axis"),
             };
             if !positive { continue; }

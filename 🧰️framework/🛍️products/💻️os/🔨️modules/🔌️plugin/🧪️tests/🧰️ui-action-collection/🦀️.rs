@@ -43,7 +43,7 @@ mod tests {
 
     #[test]
     fn language_neutral_action_collections_agree_with_json_pointer_oracle() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧰️ui-action-collection/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧰️ui-action-collection/🔣️.json")).unwrap();
         for case in fixture["cases"].as_array().unwrap() {
             let expected: BTreeSet<String> = serde_json::from_value(case["expected"].clone()).unwrap();
             let oracle: BTreeSet<String> = case["pointers"].as_array().unwrap().iter().map(|pointer| case["document"].pointer(pointer.as_str().unwrap()).unwrap().as_str().unwrap().to_owned()).collect();

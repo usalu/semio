@@ -12,7 +12,7 @@ use semio_s_artifact_stdio_bmp::{apply_mutation, BmpMutation, BmpSnapshot};
 
 #[test]
 fn publication_preparation_publishes_the_post_snapshot_and_a_restoring_inverse() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).expect("fixture is JSON");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).expect("fixture is JSON");
     let row = &fixture["cases"][0];
     let base: BmpSnapshot = from_json_str(&row["snapshot"].to_string(), JsonMemberPolicy::Reject).expect("fixture snapshot decodes");
     let mut edited_json = row["snapshot"].clone();
@@ -35,7 +35,7 @@ fn publication_preparation_publishes_the_post_snapshot_and_a_restoring_inverse()
 }
 
 fn direct_bitmap(width: u32, height: u32) -> BmpSnapshot {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).expect("fixture is JSON");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).expect("fixture is JSON");
     let mut json = fixture["cases"][0]["snapshot"].clone();
     json["image"]["width"] = serde_json::json!(width);
     json["image"]["height"] = serde_json::json!(height);

@@ -1,0 +1,53 @@
+{
+  "arguments": [
+    "--version"
+  ],
+  "unrelatedSources": [
+    {
+      "path": "📜️script.ts",
+      "content": "throw new Error('Unrelated application source must not execute during Nx bootstrap');\n"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "content": "deliberately invalid application taxonomy\n"
+    }
+  ],
+  "expectedExit": 0,
+  "eagerSources": [
+    "🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/⏱️budget/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/📜️ticket.json",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+    "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️caller/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🔣️policy.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎚️mode/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📥️admission/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🌿️environment/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/🎚️mode/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/👁️observation/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📦️payload/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟦️.ts"
+  ]
+}

@@ -12,14 +12,15 @@ pub struct ShardResourceBudget {
     pub mailbox_len: u16,
     pub max_effects: u32,
     pub max_patch_bytes: u32,
+    pub max_frames:u32,
 }
 impl ShardResourceBudget {
     pub fn from_original(budget: &semio_framework_actor::Budget) -> Self {
-        Self { fuel: budget.fuel, wall_ms: budget.wall_ms, memory_bytes: budget.memory_bytes, ui_nodes: budget.ui_nodes, mailbox_len: budget.mailbox_len, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes }
+        Self { fuel: budget.fuel, wall_ms: budget.wall_ms, memory_bytes: budget.memory_bytes, ui_nodes: budget.ui_nodes, mailbox_len: budget.mailbox_len, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes,max_frames:budget.max_frames }
     }
     pub fn apply(self, budget: &mut semio_framework_actor::Budget) {
         budget.fuel = self.fuel; budget.wall_ms = self.wall_ms; budget.memory_bytes = self.memory_bytes;
-        budget.ui_nodes = self.ui_nodes; budget.mailbox_len = self.mailbox_len; budget.max_effects = self.max_effects; budget.max_patch_bytes = self.max_patch_bytes;
+        budget.ui_nodes = self.ui_nodes; budget.mailbox_len = self.mailbox_len; budget.max_effects = self.max_effects; budget.max_patch_bytes = self.max_patch_bytes;budget.max_frames=self.max_frames;
     }
 }
 

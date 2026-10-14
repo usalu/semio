@@ -124,7 +124,7 @@ pub(crate) mod context {
         let mut archive = app.document_load_archive(&files)?;
         let parent = semio_framework_artifact_reference::ArtifactRef { artifact_id: app.document_identity().expect("live parent identity"), dialect: crate::WIRES_DIALECT.into() };
         let owner = store::OwnerRef { parent: parent.clone(), slot: crate::WIRES_CONTENT_SLOT.into(), child_id: handle.child_id.clone() };
-        let child_pack = store::os_store::serialization::ArtifactPack::encode_pack(&content);
+        let child_pack = pack::snapshot::ArtifactPack::encode_pack(&content);
         let envelope_pack = store::os_store::text_format::genesis_member_envelope_pack("stdio.semio", &handle.target, &owner, &child_pack).await.expect("full fixture child envelope");
         archive.members.push(protocol::OwnedDocumentMemberPackEntry {
             ordinal: 0,
@@ -174,7 +174,7 @@ use super::*;
 use crate::editor::wires::unit_tests::context::{metabolism_app, new_app, render};
 use serde_json::Value;
 
-const RETAINED_ROUTES: &str = include_str!("../../🧫️fixtures/🛣️retained-command-routes.json");
+const RETAINED_ROUTES: &str = include_str!("../🧫️fixtures/🛣️retained-command-routes.json");
 
 #[test]
 fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
@@ -449,8 +449,8 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
 
 #[semio_framework_async_macros::async_test]
 async fn reset_document_ownership_wires_preserves_pack_with_an_edit_free_history() {
-    use store::os_store::serialization::ArtifactPack;
-    let expected: Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️reset-document.json")).unwrap();
+    use pack::snapshot::ArtifactPack;
+    let expected: Value = serde_json::from_str(include_str!("../🧫️fixtures/♻️reset-document.json")).unwrap();
     let source = crate::empty_wires_snapshot();
     let before = serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&source)).unwrap();
     let Effect::LoadDocument { pack, spr } = reset_wires_document_effect(&source) else {

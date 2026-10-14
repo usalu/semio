@@ -286,7 +286,7 @@ impl RetainedCloneCursor<ReleaseProbe> for ReleaseProbeCursor {
 fn paged_native_typed_field_close_exposes_exact_scaffold_demand() {
     use crate::value::observe_retirement_allocations;
     let _guard=RELEASE_PROBE_LOCK.lock().unwrap();
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/📏️release-authority/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📏️release-authority/🔣️.json")).unwrap();
     let source=super::super::RetainedCloneSource::from_owner(ReleaseProbe(fixture["inputByte"].as_u64().unwrap() as u8));
     let (mut cursor,allocation)=observe_retirement_allocations(super::super::RetainedFieldCursor::<ReleaseProbe>::default);
     assert_eq!(allocation,(0,0));
@@ -317,7 +317,7 @@ fn paged_native_typed_field_close_exposes_exact_scaffold_demand() {
 #[test]
 fn retained_paged_list_release_authority_is_distinct_from_copy_and_admits_exact_physical_extent() {
     let _guard=RELEASE_PROBE_LOCK.lock().unwrap();
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/📏️release-authority/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📏️release-authority/🔣️.json")).unwrap();
     let source=super::super::RetainedCloneSource::from_owner(ReleaseProbe(fixture["inputByte"].as_u64().unwrap() as u8));
     let mut cursor=super::super::RetainedFieldCursor::<ReleaseProbe>::default();
     let grant=RetainedCloneGrant { maximum_items:2, maximum_copy_bytes:64, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:64 };
@@ -436,7 +436,7 @@ struct GrantFixture {
 }
 
 fn fixture() -> Fixture {
-    serde_json::from_str(include_str!("../../🧫️fixtures/📦️copy/🔣️.json")).expect("paged list retained fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/📦️copy/🔣️.json")).expect("paged list retained fixture")
 }
 
 fn source(fixture: &Fixture) -> PagedList<String, 1024> {

@@ -1,6 +1,7 @@
 //! 🎚️ Typed operator inputs and source text are editable through the document's event history: a committed field is ONE
 //! absolute `change-widget-input` leaf (design §19), so a history edit changes exactly that typed value.
 
+use crate::standards::v1::subsets::any::io::text::value::{widget_input_literal, widget_input_of_literal, widget_input_of_literal_as};
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{change_widget_input, WidgetInputValue};
 use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
@@ -32,7 +33,7 @@ pub(crate) fn edit_collection_value(types: &[String], current: Option<&semio_fra
     let schema = current.and_then(|value| value.get("0")).and_then(|value| value.get("$schema")).and_then(semio_framework_value::DslValue::as_str).or_else(|| types.first().map(String::as_str)).ok_or("Select a supported collection type")?;
     if !types.iter().any(|kind| kind == schema) { return Err("Collection item type does not match its port".into()); }
     let mut items = match current {
-        Some(value) => WidgetInputValue::of_literal_as(value, schema).and_then(|value| value.items()).ok_or("Input must be a contiguous homogeneous list")?,
+        Some(value) => widget_input_of_literal_as(value, schema).and_then(|value| value.items()).ok_or("Input must be a contiguous homogeneous list")?,
         None => WidgetInputValue::collection(schema, Vec::new()).and_then(|value| value.items()).ok_or("Unsupported collection type")?,
     };
     let index = payload.index.ok_or("Choose a list item")? as usize;
@@ -42,14 +43,14 @@ pub(crate) fn edit_collection_value(types: &[String], current: Option<&semio_fra
     if operation != "set" && payload.component.is_some() { return Err("Only editing an item has a coordinate".into()); }
     match operation {
         "set" if index < items.len() => {
-            let edited = edit_input_value(types, Some(&items[index].literal()), &payload.value, payload.component.as_deref())?;
-            items[index] = WidgetInputValue::of_literal(&edited).ok_or("Unsupported item type")?;
+            let edited = edit_input_value(types, Some(&widget_input_literal(&items[index])), &payload.value, payload.component.as_deref())?;
+            items[index] = widget_input_of_literal(&edited).ok_or("Unsupported item type")?;
         }
         "add" if index <= items.len() => {
             let value = match schema {
                 "number" => WidgetInputValue::Number(0.0), "text" => WidgetInputValue::Text(String::new()), "boolean" => WidgetInputValue::Boolean(false), "point" => WidgetInputValue::Point([0.0; 3]), "vector" => WidgetInputValue::Vector([0.0; 3]), _ => return Err("Unsupported collection type".into()),
             };
-            let value = if payload.value.is_empty() { value } else { WidgetInputValue::of_literal(&edit_input_value(types, Some(&value.literal()), &payload.value, None)?).ok_or("Unsupported item type")? };
+            let value = if payload.value.is_empty() { value } else { widget_input_of_literal(&edit_input_value(types, Some(&widget_input_literal(&value)), &payload.value, None)?).ok_or("Unsupported item type")? };
             items.insert(index, value);
         }
         "remove" if index < items.len() && payload.value.is_empty() => { items.remove(index); }
@@ -108,12 +109,12 @@ pub(crate) fn input_leaf(host_snapshot: &FlowHostSnapshot, payload: &SetWidgetIn
     let current = stored.clone().or_else(|| port.default.as_ref().map(|value| value.to_value()));
     if port.cardinality.is_collection() {
         let input = edit_collection_value(&port.item_types, current.as_ref(), payload, &port.cardinality)?;
-        return Ok((stored.as_ref() != Some(&input.literal())).then(|| change_widget_input(&payload.widget_id, &payload.channel, input)));
+        return Ok((stored.as_ref() != Some(&widget_input_literal(&input))).then(|| change_widget_input(&payload.widget_id, &payload.channel, input)));
     }
     if payload.index.is_some() || payload.destination.is_some() || payload.operation.as_deref().is_some_and(|operation| operation != "set") { return Err("Scalar input has no list operation".into()); }
     let edited = edit_input_value(&port.value_types, current.as_ref(), &payload.value, payload.component.as_deref())?;
-    let input = WidgetInputValue::of_literal(&edited).ok_or("Unsupported input schema")?;
-    Ok((stored.as_ref().and_then(WidgetInputValue::of_literal).as_ref() != Some(&input)).then(|| change_widget_input(&payload.widget_id, &payload.channel, input)))
+    let input = widget_input_of_literal(&edited).ok_or("Unsupported input schema")?;
+    Ok((stored.as_ref().and_then(widget_input_of_literal).as_ref() != Some(&input)).then(|| change_widget_input(&payload.widget_id, &payload.channel, input)))
 }
 
 /// 🥽️ Resolves the canonical Construct input or its connected text source without changing graph ownership.

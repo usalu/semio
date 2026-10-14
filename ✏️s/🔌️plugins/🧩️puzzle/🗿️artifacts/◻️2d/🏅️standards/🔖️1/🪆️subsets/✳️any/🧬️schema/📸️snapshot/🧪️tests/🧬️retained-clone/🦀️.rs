@@ -45,8 +45,8 @@ fn settle_snapshot<T: RetireOwned>(snapshot: T, bytes: usize) {
 
 #[test]
 fn history_edit_puzzle2d_retained_snapshot_clone_preserves_native_ownership_and_cancellation() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️retained-clone/🔣️.json")).unwrap();
-    let original: serde_json::Value = serde_json::from_str(include_str!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧬️retained-clone/🔣️.json")).unwrap();
+    let original: serde_json::Value = serde_json::from_str(include_str!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let controls = &corpus["control"];
     let grant = RetainedCloneGrant {
         maximum_items: controls["maximumItems"].as_u64().unwrap() as usize,
@@ -109,7 +109,7 @@ fn history_edit_puzzle2d_retained_snapshot_clone_preserves_native_ownership_and_
 fn history_edit_puzzle2d_borrowed_mutations_clone_every_authored_leaf_with_exact_retirement() {
     use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations");
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️retained-clone/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧬️retained-clone/🔣️.json")).unwrap();
     let controls = &corpus["control"];
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: controls["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: controls["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_depth: 64, maximum_release_bytes: controls["maximumReleaseBytes"].as_u64().unwrap() as usize };
     let mut kinds = std::collections::BTreeSet::new();

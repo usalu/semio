@@ -81,7 +81,7 @@ fn node_graph_scene_highlighted_round_trips_and_omits_when_empty() {
 //#region 🚚️World3dSceneLanes
 /// 🚚️ The ONE language-neutral declaration both this crate and `🧰️framework/🔨️modules/🔺️mesh/🟦️.ts`
 /// are pinned against — see `World3dSceneLane`'s docstring.
-const WORLD3D_SCENE_LANE_CONTRACT: &str = include_str!("../../🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json");
+const WORLD3D_SCENE_LANE_CONTRACT: &str = include_str!("../🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json");
 
 fn world3d_lane_contract() -> Value {
     serde_json::from_str(WORLD3D_SCENE_LANE_CONTRACT).expect("world-3d lane contract parses")
@@ -269,7 +269,7 @@ fn a_scene_without_lanes_still_publishes_its_whole_doc() {
 
 #[test]
 fn text_editor_buffer_lanes_preserve_complete_unicode_documents() {
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚚️text-editor-lanes/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🚚️text-editor-lanes/🔣️.json")).unwrap();
     assert_eq!(fixture["schema"], TextEditorScene::SCHEMA);
     assert_eq!(fixture["laneKey"], TEXT_EDITOR_BUFFER_LANE_KEY);
     for case in fixture["cases"].as_array().unwrap() {
@@ -322,7 +322,7 @@ fn world3d_tool_run_trace_rides_its_own_optional_lane_and_merges_back() {
 
 //#region 🚚️Canvas2dSceneLanes
 /// 🚚️ The canvas-2d twin of [`WORLD3D_SCENE_LANE_CONTRACT`].
-const CANVAS2D_SCENE_LANE_CONTRACT: &str = include_str!("../../🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json");
+const CANVAS2D_SCENE_LANE_CONTRACT: &str = include_str!("../🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json");
 
 fn canvas2d_lane_contract() -> Value {
     serde_json::from_str(CANVAS2D_SCENE_LANE_CONTRACT).expect("canvas-2d lane contract parses")
@@ -380,7 +380,7 @@ fn canvas2d_scene_splits_into_the_declared_lanes_and_merges_back() {
 
 //#region 🚚️Board2dSceneLanes
 /// 🚚️ The board-2d twin of [`CANVAS2D_SCENE_LANE_CONTRACT`].
-const BOARD2D_SCENE_LANE_CONTRACT: &str = include_str!("../../🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json");
+const BOARD2D_SCENE_LANE_CONTRACT: &str = include_str!("../🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json");
 
 fn board2d_lane_contract() -> Value {
     serde_json::from_str(BOARD2D_SCENE_LANE_CONTRACT).expect("board-2d lane contract parses")
@@ -444,7 +444,7 @@ fn board2d_scene_splits_into_the_declared_lanes_and_merges_back() {
 
 //#region 🚚️TiledMapSceneLanes
 /// 🚚️ The tiled-map twin of [`BOARD2D_SCENE_LANE_CONTRACT`].
-const TILEDMAP_SCENE_LANE_CONTRACT: &str = include_str!("../../🧫️fixtures/🚚️tiledmap-scene-lanes/🔣️.json");
+const TILEDMAP_SCENE_LANE_CONTRACT: &str = include_str!("../🧫️fixtures/🚚️tiledmap-scene-lanes/🔣️.json");
 
 fn tiledmap_lane_contract() -> Value {
     serde_json::from_str(TILEDMAP_SCENE_LANE_CONTRACT).expect("tiled-map lane contract parses")
@@ -553,7 +553,7 @@ fn ink_canvas_document_payload_is_document_json_on_both_encoders() {
 
 //#region 🚚️Paint2dSceneLanes
 /// 🚚️ The paint-2d twin of [`CANVAS2D_SCENE_LANE_CONTRACT`].
-const PAINT2D_SCENE_LANE_CONTRACT: &str = include_str!("../../🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json");
+const PAINT2D_SCENE_LANE_CONTRACT: &str = include_str!("../🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json");
 
 fn paint2d_lane_contract() -> Value {
     serde_json::from_str(PAINT2D_SCENE_LANE_CONTRACT).expect("paint-2d lane contract parses")
@@ -650,7 +650,7 @@ fn paint2d_spine_stays_inside_the_fixed_surface_doc_for_an_oversized_document() 
 /// 📊️ Large table carriers preserve all records while their scene header remains bounded.
 #[test]
 fn table_lanes_preserve_complete_unicode_documents() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚚️table-lanes/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚚️table-lanes/🔣️.json")).unwrap();
     let rows: Vec<_> = (0..fixture["rowCount"].as_u64().unwrap()).map(|index| {
         let mut row = fixture["row"].clone();
         row["id"] = index.to_string().into();
@@ -683,7 +683,7 @@ fn paint2d_absent_pixel_selection_emits_no_coverage_lane(){
 
 #[test]
 fn node_graph_lanes_pin_the_neutral_contract_and_restore_oversized_documents() {
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚚️node-graph-scene-lanes/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🚚️node-graph-scene-lanes/🔣️.json")).unwrap();
     let definitions = fixture["lanes"].as_array().unwrap();
     assert_eq!(definitions.len(), NodeGraphSceneLane::ALL.len());
     for (lane, definition) in NodeGraphSceneLane::ALL.into_iter().zip(definitions) {

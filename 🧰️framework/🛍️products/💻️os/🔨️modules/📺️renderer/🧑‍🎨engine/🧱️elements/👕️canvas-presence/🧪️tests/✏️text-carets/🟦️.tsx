@@ -7,7 +7,7 @@ import { createElement } from "react";
 import { cleanup, render } from "@semio-tech/ui-react/test";
 import { TextPeerCaretsOverlayV1 } from "../../🟦️.tsx";
 import { clearArtifactPresenceRosterV1, publishArtifactPresenceRosterV1, publishLocalPresenceActorV1 } from "../../🟦️.ts";
-import fixture from "../../🧫️fixtures/✏️text-carets/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/✏️text-carets/🔣️.json" with { type: "json" };
 
 afterEach(() => {
   clearArtifactPresenceRosterV1("local");

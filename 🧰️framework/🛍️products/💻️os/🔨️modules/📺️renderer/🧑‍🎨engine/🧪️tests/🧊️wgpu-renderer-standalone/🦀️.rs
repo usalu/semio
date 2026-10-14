@@ -23,7 +23,7 @@ fn realize_fault_remains_scheduled_until_the_aborted_cursor_is_terminal() {
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[test]
 fn native_socket_probe_codec_encodes_the_fixture_shape_and_agrees_with_the_third_party_serializer() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧊️wgpu-native-socket-probe-codec/🔣️.json")).expect("language-neutral codec fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧊️wgpu-native-socket-probe-codec/🔣️.json")).expect("language-neutral codec fixture parses");
     let probe = &fixture["nativeSocketProbeCodec"];
     let value = probe["value"].as_str().expect("fixture value is a string").to_string();
     let snapshot = NativeSocketProbeSnapshot(value.clone());
@@ -52,7 +52,7 @@ fn native_socket_probe_codec_encodes_the_fixture_shape_and_agrees_with_the_third
 #[cfg(test)]
 #[test]
 fn glb_outline_accumulator_matches_the_neutral_three_geometry_contract() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎨️world3d-glb-outline/🔣️.json")).expect("GLB outline fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎨️world3d-glb-outline/🔣️.json")).expect("GLB outline fixture");
     let identity: GlbMatrix = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]];
     let compare_point = |left: &[f32; 3], right: &[f32; 3]| left.iter().zip(right).find_map(|(left, right)| (left != right).then(|| left.total_cmp(right))).unwrap_or(std::cmp::Ordering::Equal);
     for record in fixture["cases"].as_array().expect("outline cases") {

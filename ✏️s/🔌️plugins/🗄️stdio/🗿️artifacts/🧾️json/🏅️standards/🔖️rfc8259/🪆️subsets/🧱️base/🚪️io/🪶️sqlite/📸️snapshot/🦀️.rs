@@ -1,7 +1,8 @@
 //! 🧾️ Handcrafted RFC8259 value/member/element relations for JSON artifact snapshots only.
 
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonMember, JsonSnapshot, JsonValue};
-use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use std::collections::{BTreeMap, BTreeSet};
 
 enum Parent<'a> { Root, Member(i64, usize, &'a str), Element(i64, usize) }
@@ -31,7 +32,14 @@ fn measure(snapshot: &JsonSnapshot, control: &mut SqliteSnapshotControl<'_>) -> 
 }
 
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
-impl ArtifactSqliteSnapshot for JsonSnapshot {
+#[path="🫴️receiving/🦀️.rs"]
+mod receiving;
+impl ArtifactSqliteSnapshotHost for JsonSnapshot {
+    fn to_sqlite_database_receiving(&self,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<SqliteDatabase,ValueError>{receiving::project_receiving(self,control,owner)}
+    fn from_sqlite_database_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->Result<Self,ValueError>{receiving::reconstruct_receiving(database,control,owner)}
+    fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->store::io_schema::IoResult<()>{receiving::validate_decoding(self,dialect,database,control,owner)}
+    fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->store::io_schema::IoResult<()>{receiving::validate_encoding(self,dialect,database,control,owner)}
+
     fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::encode(self,encoding,control,native_owner)}
     fn retire_sqlite_snapshot(self) { crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::retire(self); }
     fn preflight_sqlite_snapshot_encoding(&self, _encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
@@ -50,9 +58,15 @@ impl ArtifactSqliteSnapshot for JsonSnapshot {
         crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::decode(payload,control,native_control)
     }
 
-    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+    
 
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
+    
+
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for JsonSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
         (|| -> Result<_, ValueError> {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0)?; let total = measure(self, control)?;
         let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
@@ -82,8 +96,7 @@ impl ArtifactSqliteSnapshot for JsonSnapshot {
     
         })()
     }
-
-    fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
         (|| -> Result<_, ValueError> {
         control.check_database(database, SqliteSnapshotPhase::ReconstructSnapshot)?;
         validate_sqlite_database_schema(database, Self::SQLITE_SCHEMA, control.limits())?;
@@ -150,3 +163,7 @@ impl ArtifactSqliteSnapshot for JsonSnapshot {
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
 
+
+#[cfg(test)]
+#[path="🫴️receiving/🧪️tests/🦀️.rs"]
+mod original_receiving_tests;

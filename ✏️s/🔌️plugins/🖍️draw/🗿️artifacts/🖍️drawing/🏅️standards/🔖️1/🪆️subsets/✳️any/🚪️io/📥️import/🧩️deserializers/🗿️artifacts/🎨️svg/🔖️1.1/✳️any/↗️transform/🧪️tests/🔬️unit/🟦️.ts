@@ -3,7 +3,7 @@ import {expect,test} from "bun:test";
 import {DOMParser} from "@xmldom/xmldom";
 import {SVGLoader} from "three/addons/loaders/SVGLoader.js";
 import Ajv from "ajv";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import {parseEditableSvgTransform} from "../../🟦️.ts";
 import {readFileSync} from "node:fs";

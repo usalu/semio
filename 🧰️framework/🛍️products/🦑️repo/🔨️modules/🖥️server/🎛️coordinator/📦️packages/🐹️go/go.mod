@@ -10,3 +10,7 @@ require (
 replace github.com/usalu/semio/repo/events => ../../../../📡️events/📦️packages/🐹️go
 
 replace github.com/usalu/semio/repo/languages => ../../../../🗣️languages/📦️packages/🐹️go
+
+require github.com/usalu/semio/framework/filesystem/durability v0.0.0
+
+replace github.com/usalu/semio/framework/filesystem/durability => ../../../../../../../🔨️modules/📁️filesystem/🛡️durability/📦️packages/🐹️go

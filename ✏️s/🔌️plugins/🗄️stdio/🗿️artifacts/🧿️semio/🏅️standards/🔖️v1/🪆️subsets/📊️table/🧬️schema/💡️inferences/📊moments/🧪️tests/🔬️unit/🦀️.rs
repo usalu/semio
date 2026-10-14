@@ -97,7 +97,7 @@ async fn changing_an_unrelated_column_does_not_miss() {
 #[test]
 fn owned_dependency_matches_neutral_fixture_and_serde_oracle() {
     use store::InferredField;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🌱️owned-dependency/🔣️.json")).expect("neutral dependency");
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/📊moments/🌱️owned-dependency/🔣️.json")).expect("neutral dependency");
     let values:Vec<f64>=serde_json::from_value(fixture["values"].clone()).unwrap(); let snapshot=SemioTableSnapshot{columns:vec![SemioTableColumn{name:"score".into(),kind:SemioTableCellKind::Float}],rows:values.iter().map(|value|SemioTableRow{cells:vec![SemioValue::Float{lexeme:value.to_string()}]}).collect(),..Default::default()};
     let dependency=ColumnMoments::dep_input(&snapshot,&"score".into(),&[]);
     let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&dependency)).expect("owned dependency output");

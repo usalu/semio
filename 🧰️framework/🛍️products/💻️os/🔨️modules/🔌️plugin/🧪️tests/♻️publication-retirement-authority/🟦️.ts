@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 
 /** ♻️ Third-party twin of the publication-retirement fixture: every lane declares the same retirement law, and only window-transient forgives a rejected authority. */
 export function testPublicationRetirementAuthorityOracle(): void {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/♻️publication-retirement-authority/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/♻️publication-retirement-authority/🔣️.json", import.meta.url), "utf8"));
   assert.equal(fixture.schema, "framework.plugin.publication-retirement-authority.v1");
   assert.equal(fixture.law.incompleteRetirementTurnIsOk, true);
   assert.equal(fixture.law.rejectionSurfacesOnceAtTheTerminalTurn, true);

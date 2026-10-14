@@ -1,0 +1,102 @@
+[
+  {
+    "id": "swap-success",
+    "action": "swap",
+    "outcome": "success",
+    "original": {
+      "recipient": 1,
+      "cursor": 2,
+      "operation": 71,
+      "generation": 3,
+      "payload": 4,
+      "clock": 5,
+      "deadline": 12345
+    },
+    "replacement": {
+      "recipient": 9,
+      "cursor": 10,
+      "operation": 72,
+      "generation": 3,
+      "payload": 11,
+      "clock": 5,
+      "deadline": 23456
+    },
+    "primary": null,
+    "receiptRefusal": null
+  },
+  {
+    "id": "swap-existing-pair",
+    "action": "swap",
+    "outcome": "failure",
+    "original": {
+      "recipient": 1,
+      "cursor": 2,
+      "operation": 71,
+      "generation": 3,
+      "payload": 4,
+      "clock": 5,
+      "deadline": 12345
+    },
+    "replacement": {
+      "recipient": 9,
+      "cursor": 10,
+      "operation": 72,
+      "generation": 3,
+      "payload": 11,
+      "clock": 5,
+      "deadline": 23456
+    },
+    "primary": "Original semantic source 源🌊",
+    "receiptRefusal": "Original receipt source 源🌊"
+  },
+  {
+    "id": "swap-unwind",
+    "action": "swap",
+    "outcome": "unwind",
+    "original": {
+      "recipient": 1,
+      "cursor": 2,
+      "operation": 71,
+      "generation": 3,
+      "payload": 4,
+      "clock": 5,
+      "deadline": 12345
+    },
+    "replacement": {
+      "recipient": 9,
+      "cursor": 10,
+      "operation": 72,
+      "generation": 3,
+      "payload": 11,
+      "clock": 5,
+      "deadline": 23456
+    },
+    "primary": null,
+    "receiptRefusal": null
+  },
+  {
+    "id": "replace-success",
+    "action": "replace",
+    "outcome": "success",
+    "original": {
+      "recipient": 1,
+      "cursor": 2,
+      "operation": 71,
+      "generation": 3,
+      "payload": 4,
+      "clock": 5,
+      "deadline": 12345
+    },
+    "replacement": {
+      "recipient": 9,
+      "cursor": 10,
+      "operation": 72,
+      "generation": 3,
+      "payload": 11,
+      "clock": 5,
+      "deadline": 23456
+    },
+    "primary": null,
+    "receiptRefusal": null
+  }
+]

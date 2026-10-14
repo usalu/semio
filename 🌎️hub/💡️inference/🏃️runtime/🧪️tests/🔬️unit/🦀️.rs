@@ -3,11 +3,11 @@ use crate::inference::schema::{InferenceIdentityV1 as Identity, INPUT_MAX_BYTES,
 use std::future::Future;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture")
 }
 
 fn ledger_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/🗺️gis-inference-job-v1/🔣️.json")).expect("ledger fixture")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🗺️gis-inference-job-v1/🔣️.json")).expect("ledger fixture")
 }
 
 fn identity() -> Identity {
@@ -26,7 +26,7 @@ fn input(identity: &Identity) -> InferencePrivateBytesV1 {
 }
 
 fn canonical_map_pack() -> InferencePrivateBytesV1 {
-    use directory::os_store::serialization::ArtifactPack as _;
+    use pack::snapshot::ArtifactPack as _;
     let descriptor = ledger_fixture()["input"].as_str().expect("literal Map descriptor").to_owned();
     let snapshot = semio_s_artifact_gis_gismap::schema::gis_map_document_from_descriptor_json(&descriptor);
     InferencePrivateBytesV1::new(snapshot.encode_pack(), INPUT_MAX_BYTES).expect("bounded canonical Map pack")
@@ -537,9 +537,9 @@ async fn gis_map_approval_fails_closed_without_a_composition_transaction_and_nev
 async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_checkpoint_before_ledger_apply() {
     let watchdog = RuntimeLawHangWatchdogV1::arm("gis_map_approval_committed_event_reaches_actor_frontier_and_public_checkpoint_before_ledger_apply", std::time::Duration::from_secs(600));
     let (identity, base) = canonical_identity_and_base();
-    let undo_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/↩️gis-map-approval-undo-v1/🔣️.json")).expect("durable undo fixture");
+    let undo_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/↩️gis-map-approval-undo-v1/🔣️.json")).expect("durable undo fixture");
     let undo_contract = &undo_fixture["genesisFirstUndo"];
-    let genesis_snapshot = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::os_store::serialization::ArtifactPack>::decode_pack(base.pack.as_slice()).expect("exact initial Map snapshot");
+    let genesis_snapshot = <semio_s_artifact_gis_gismap::GisMapSnapshot as pack::snapshot::ArtifactPack>::decode_pack(base.pack.as_slice()).expect("exact initial Map snapshot");
     let owner = reader(&identity);
     let ledger = ledger();
     let accepted = ledger.accept(&identity, &base.pack, 1_000).expect("accepted job");
@@ -724,7 +724,7 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
     let original = CanonicalInferenceCommandV1::decode(target.original_command.as_slice()).expect("retained original command");
     let inverses = semio_framework_pack_json::from_json_str::<Vec<semio_s_artifact_gis_gismap::mutations::GisMapMutation>>(std::str::from_utf8(original.inverse_payload()).expect("canonical inverse text"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("canonical inverse mutations");
     assert_eq!(inverses.len(), 1, "the retained approval owns one exact parent inverse");
-    let current = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::os_store::serialization::ArtifactPack>::decode_pack(after_base.pack.as_slice()).expect("approved Map snapshot");
+    let current = <semio_s_artifact_gis_gismap::GisMapSnapshot as pack::snapshot::ArtifactPack>::decode_pack(after_base.pack.as_slice()).expect("approved Map snapshot");
     let mut before = current.clone();
     semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation(&mut before, &inverses[0]).expect("server inverse applies to the exact current Map");
     use directory::Inference as _;
@@ -1016,7 +1016,7 @@ fn gis_map_proposal_fixture_pins_the_exact_frozen_comparison_limits_and_error_vo
     assert_eq!(limits["requestMaxBytes"], super::super::schema::REQUEST_MAX_BYTES as u64);
     assert_eq!(limits["inputMaxBytes"], INPUT_MAX_BYTES as u64);
     let default_map = {
-        use directory::os_store::serialization::ArtifactPack as _;
+        use pack::snapshot::ArtifactPack as _;
         semio_s_artifact_gis_gismap::schema::default_document().encode_pack()
     };
     assert!(InferencePrivateBytesV1::new(default_map.clone(), INPUT_MAX_BYTES).is_ok(), "the map the hub creates by default ({} B) must be inferable within inputMaxBytes", default_map.len());

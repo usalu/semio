@@ -1,6 +1,6 @@
 use crate::{Atom,ColdOwner,Dictionary};
 use semio_framework_value::{DslValue,FromValue,ToValue,NativeDecodeControl,NativeEncodeControl,native_decoding::NativeDecodeProgress,native_encoding::NativeEncodeProgress};
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🚦️owned-controls.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🚦️owned-controls.json")).unwrap()}
 
 fn input_grant(owner:&crate::retirement::RetainedDictionaryInput,copy:usize,closing:bool)->crate::RetainedCloneGrant {
     crate::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,
@@ -97,7 +97,7 @@ fn owned_neural_constructor_failures_retire_completed_dictionary_frontiers() {
         #[serde(default, rename = "neurons")] _neurons: Vec<OracleNeuron>,
         #[serde(default, rename = "synapses")] _synapses: Vec<OracleSynapse>,
     }
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛬️construction.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛬️construction.json")).unwrap();
     for case in corpus["cases"].as_array().unwrap() {
         let payload = case["payload"].clone();
         if case["oracle"] == "integer" {
@@ -127,7 +127,7 @@ fn owned_neural_constructor_failures_retire_completed_dictionary_frontiers() {
 
 #[test]
 fn owned_neural_controlled_dictionary_keeps_refusal_categories_at_partial_boundaries() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛬️construction.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛬️construction.json")).unwrap();
     let kinds = &corpus["controlledRefusals"];
     let input = DslValue::Object(vec![("owned".into(), DslValue::String("literal".into()))]);
     let mut cancel = |_| false;

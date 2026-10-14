@@ -11,7 +11,7 @@ fn camera_diff(oracle: &serde_json::Value, key: &str) -> (Generation3dDiff, semi
 /// ➕️ Absorb keeps the incoming value of a scalar field, composes row deltas, and the absorbed diff applies exactly like its parts.
 #[test]
 fn diff_absorb_prefers_incoming_camera_and_preserves_other_rows() {
-    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧲️absorb/🔣️.json")).unwrap();
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🧲️absorb/🔣️.json")).unwrap();
     let base = Generation3dSnapshotRead::new(default_generation3d_snapshot());
     let (first_camera, _) = camera_diff(&oracle, "firstCamera");
     let (incoming_camera, incoming) = camera_diff(&oracle, "incomingCamera");
@@ -51,28 +51,28 @@ fn row_deltas_coalesce_and_invert() {
 //#region 🗺️TouchedRegions
 /// 🧬️ Every committed quintet of the mutation vocabulary: its kind, its before-snapshot and its mutation payload.
 const QUINTETS: [(&str, &str, &str); 22] = [
-    ("create-widget", include_str!("../../../../🧫️fixtures/🧬️mutations/🌱️create-widget/📝️inserts/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/🌱️create-widget/📝️inserts/🦠️mutation/🔣️.json")),
-    ("update-widget", include_str!("../../../../🧫️fixtures/🧬️mutations/🩹update-widget/🎚️retunes/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/🩹update-widget/🎚️retunes/🦠️mutation/🔣️.json")),
-    ("delete-widget", include_str!("../../../../🧫️fixtures/🧬️mutations/❌delete-widget/🚫️removes/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/❌delete-widget/🚫️removes/🦠️mutation/🔣️.json")),
-    ("connect-synapse", include_str!("../../../../🧫️fixtures/🧬️mutations/🔗️connect-synapse/🔌️wires/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/🔗️connect-synapse/🔌️wires/🦠️mutation/🔣️.json")),
-    ("update-synapse", include_str!("../../../../🧫️fixtures/🧬️mutations/🔄️update-synapse/📡️repoints/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/🔄️update-synapse/📡️repoints/🦠️mutation/🔣️.json")),
-    ("disconnect-synapse", include_str!("../../../../🧫️fixtures/🧬️mutations/✂️disconnect-synapse/✂️cuts/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/✂️disconnect-synapse/✂️cuts/🦠️mutation/🔣️.json")),
-    ("move-widget", include_str!("../../../../🧫️fixtures/🧬️mutations/📍️move-widget/📍️repositions/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/📍️move-widget/📍️repositions/🦠️mutation/🔣️.json")),
-    ("delete-widget-position", include_str!("../../../../🧫️fixtures/🧬️mutations/🧹️delete-widget-position/🧹️unpins/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/🧹️delete-widget-position/🧹️unpins/🦠️mutation/🔣️.json")),
-    ("update-camera", include_str!("../../../../🧫️fixtures/🧬️mutations/📷️update-camera/🔍️frames/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/📷️update-camera/🔍️frames/🦠️mutation/🔣️.json")),
-    ("change-schema", include_str!("../../../../🧫️fixtures/🧬️mutations/🔤️change-schema/🏷️restamps/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/🔤️change-schema/🏷️restamps/🦠️mutation/🔣️.json")),
-    ("create-generation", include_str!("../../../../🧫️fixtures/🧬️mutations/➕create-generation/🌱️appends/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/➕create-generation/🌱️appends/🦠️mutation/🔣️.json")),
-    ("delete-generation", include_str!("../../../../🧫️fixtures/🧬️mutations/🗑️delete-generation/🚫️removes/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/🗑️delete-generation/🚫️removes/🦠️mutation/🔣️.json")),
-    ("rename-generation", include_str!("../../../../🧫️fixtures/🧬️mutations/🏷️rename-generation/🏷️retitles/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/🏷️rename-generation/🏷️retitles/🦠️mutation/🔣️.json")),
-    ("change-generation-value", include_str!("../../../../🧫️fixtures/🧬️mutations/🔧️change-generation-value/🏢️raises/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/🔧️change-generation-value/🏢️raises/🦠️mutation/🔣️.json")),
-    ("change-slider-value", include_str!("../../../../🧫️fixtures/🧬️mutations/🎚️change-slider-value/🎚️sets/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/🎚️change-slider-value/🎚️sets/🦠️mutation/🔣️.json")),
-    ("drag-transforms", include_str!("../../../../🧫️fixtures/🧬️mutations/✋️drag-transforms/✋️drags/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/✋️drag-transforms/✋️drags/🦠️mutation/🔣️.json")),
-    ("rotate-transforms", include_str!("../../../../🧫️fixtures/🧬️mutations/🔃️rotate-transforms/🔃️turns/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/🔃️rotate-transforms/🔃️turns/🦠️mutation/🔣️.json")),
-    ("scale-transforms", include_str!("../../../../🧫️fixtures/🧬️mutations/📏️scale-transforms/📏️scales/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/📏️scale-transforms/📏️scales/🦠️mutation/🔣️.json")),
-    ("move-nodes", include_str!("../../../../🧫️fixtures/🧬️mutations/🚚️move-nodes/🚚️shifts/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/🚚️move-nodes/🚚️shifts/🦠️mutation/🔣️.json")),
-    ("change-widget-input", include_str!("../../../../🧫️fixtures/🧬️mutations/🎛️change-widget-input/🎛️sets/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/🎛️change-widget-input/🎛️sets/🦠️mutation/🔣️.json")),
-    ("select-generation", include_str!("../../../../🧫️fixtures/🧬️mutations/👆️select-generation/👆️picks/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/👆️select-generation/👆️picks/🦠️mutation/🔣️.json")),
-    ("change-generation-preview", include_str!("../../../../🧫️fixtures/🧬️mutations/📝️change-generation-preview/📝️retexts/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧫️fixtures/🧬️mutations/📝️change-generation-preview/📝️retexts/🦠️mutation/🔣️.json"))
+    ("create-widget", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱️create-widget/📝️inserts/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱️create-widget/📝️inserts/🦠️mutation/🔣️.json")),
+    ("update-widget", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹update-widget/🎚️retunes/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹update-widget/🎚️retunes/🦠️mutation/🔣️.json")),
+    ("delete-widget", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/❌delete-widget/🚫️removes/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/❌delete-widget/🚫️removes/🦠️mutation/🔣️.json")),
+    ("connect-synapse", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗️connect-synapse/🔌️wires/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗️connect-synapse/🔌️wires/🦠️mutation/🔣️.json")),
+    ("update-synapse", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️update-synapse/📡️repoints/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️update-synapse/📡️repoints/🦠️mutation/🔣️.json")),
+    ("disconnect-synapse", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️disconnect-synapse/✂️cuts/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️disconnect-synapse/✂️cuts/🦠️mutation/🔣️.json")),
+    ("move-widget", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️move-widget/📍️repositions/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️move-widget/📍️repositions/🦠️mutation/🔣️.json")),
+    ("delete-widget-position", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️delete-widget-position/🧹️unpins/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️delete-widget-position/🧹️unpins/🦠️mutation/🔣️.json")),
+    ("update-camera", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📷️update-camera/🔍️frames/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📷️update-camera/🔍️frames/🦠️mutation/🔣️.json")),
+    ("change-schema", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔤️change-schema/🏷️restamps/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔤️change-schema/🏷️restamps/🦠️mutation/🔣️.json")),
+    ("create-generation", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕create-generation/🌱️appends/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕create-generation/🌱️appends/🦠️mutation/🔣️.json")),
+    ("delete-generation", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-generation/🚫️removes/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-generation/🚫️removes/🦠️mutation/🔣️.json")),
+    ("rename-generation", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-generation/🏷️retitles/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-generation/🏷️retitles/🦠️mutation/🔣️.json")),
+    ("change-generation-value", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧️change-generation-value/🏢️raises/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧️change-generation-value/🏢️raises/🦠️mutation/🔣️.json")),
+    ("change-slider-value", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change-slider-value/🎚️sets/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change-slider-value/🎚️sets/🦠️mutation/🔣️.json")),
+    ("drag-transforms", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-transforms/✋️drags/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-transforms/✋️drags/🦠️mutation/🔣️.json")),
+    ("rotate-transforms", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔃️rotate-transforms/🔃️turns/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔃️rotate-transforms/🔃️turns/🦠️mutation/🔣️.json")),
+    ("scale-transforms", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📏️scale-transforms/📏️scales/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📏️scale-transforms/📏️scales/🦠️mutation/🔣️.json")),
+    ("move-nodes", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🚚️shifts/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🚚️shifts/🦠️mutation/🔣️.json")),
+    ("change-widget-input", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-widget-input/🎛️sets/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-widget-input/🎛️sets/🦠️mutation/🔣️.json")),
+    ("select-generation", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/👆️select-generation/👆️picks/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/👆️select-generation/👆️picks/🦠️mutation/🔣️.json")),
+    ("change-generation-preview", include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️change-generation-preview/📝️retexts/📸️snapshot/⬅️before/🔣️.json"), include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️change-generation-preview/📝️retexts/🦠️mutation/🔣️.json"))
 ];
 
 /// 🔎️ The regions where two snapshots differ, walked on their JSON forms by id — a second route to the answer

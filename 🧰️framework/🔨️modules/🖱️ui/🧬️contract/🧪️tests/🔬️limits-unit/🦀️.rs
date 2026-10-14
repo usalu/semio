@@ -167,11 +167,11 @@ fn abandoned_patch_owner_moves_to_incremental_handback_and_reopens_capacity() {
 }
 
 /// 🧪️ Language-agnostic twin law: the Rust intake budget carries exactly the numbers
-/// `🧵️retained/🧫️fixtures/📥️intake/🔣️.json` declares, so the TypeScript twin
+/// `🧵️retained/🧪️tests/🧫️fixtures/📥️intake/🔣️.json` declares, so the TypeScript twin
 /// (`RETAINED_UI_INTAKE_STEPS_PER_NODE`, `retainedUiIntakeStepCeiling`) cannot drift away from it.
 #[test]
 fn retained_ui_intake_budget_matches_the_shared_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧵️retained/🧫️fixtures/📥️intake/🔣️.json")).expect("intake fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧵️retained/🧪️tests/🧫️fixtures/📥️intake/🔣️.json")).expect("intake fixture parses");
     let budget = fixture.get("budget").expect("fixture declares budget");
     assert_eq!(budget["stepsPerNode"].as_u64(), Some(RETAINED_UI_INTAKE_STEPS_PER_NODE as u64));
     assert_eq!(budget["sliceSteps"].as_u64(), Some(RETAINED_UI_INTAKE_SLICE_STEPS as u64));

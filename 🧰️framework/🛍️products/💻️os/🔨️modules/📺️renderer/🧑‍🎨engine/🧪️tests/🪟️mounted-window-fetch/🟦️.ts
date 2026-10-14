@@ -9,13 +9,13 @@
  * `🔨️modules/🎠️kernel/🟦️.ts`, beside the other `UiDirtyScope` predicates both shells share.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import fixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🪟️mounted-window-fetch.json" with { type: "json" };
+import fixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🪟️mounted-window-fetch.json" with { type: "json" };
 import { partitionRefreshWindowInstancesV1, windowLayoutWindowIdsV1 } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 
 
 import React, { act, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import debtFixture from "../../🧱️elements/🏛️ShellHost/🪟️mounted-window-refresh/🧫️fixtures/🔣️.json";
+import debtFixture from "../../🧱️elements/🏛️ShellHost/🪟️mounted-window-refresh/🧪️tests/🧫️fixtures/🔣️.json";
 import { retireSkippedWindowBodies } from "../../🧱️elements/🏛️ShellHost/🪟️mounted-window-refresh/🟦️.ts";
 
 beforeEach(() => { vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true); });

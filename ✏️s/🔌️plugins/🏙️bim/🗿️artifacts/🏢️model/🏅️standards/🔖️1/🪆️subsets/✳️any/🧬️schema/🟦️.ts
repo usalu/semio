@@ -115,6 +115,14 @@ export interface ModelArtifact {
   properties?: Record<string, PropertySet>;
   /** @state artifact */
   classifications?: Record<string, ClassificationSet>;
+  option_groups?: Record<string, OptionGroup>;
+  design_options?: Record<string, DesignOption>;
+  worksets?: Record<string, Workset>;
+  element_options?: Record<string, ElementMembership>;
+  element_worksets?: Record<string, ElementMembership>;
+  supports?: Record<string, StructuralSupport>;
+  load_cases?: Record<string, LoadCase>;
+  loads?: Record<string, StructuralLoad>;
 }
 
 export type PropertyKind = "Text" | "Real" | "Integer" | "Boolean" | "Length" | "Area" | "Volume" | "Angle";
@@ -971,3 +979,9 @@ export interface Restraints { x: boolean; y: boolean; z: boolean; rx: boolean; r
 export interface StructuralSupport { name: string; member: string; location: StructuralLocation; offset: Point3; restraints: Restraints; }
 export interface LoadCase { name: string; category: string; factor: number; }
 export interface StructuralLoad { name: string; load_case: string; member: string; location: StructuralLocation; force: Point3; moment: Point3; }
+
+/** 🧭️ Authored design-option and workset membership records. */
+export interface OptionGroup {name:string;}
+export interface DesignOption {group:string;name:string;primary:boolean;}
+export interface Workset {name:string;default_visible:boolean;}
+export interface ElementMembership {target:string;}

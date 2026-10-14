@@ -1,0 +1,574 @@
+{
+  "changes": [
+    {
+      "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🔌️service-composition/🦀️.rs",
+      "before": "8c1aa854606838b15229e7a057b878db953851c53cb51641c2519a42cbae8f1d",
+      "after": "615509779994e6e5404bdf5e696f2bb4038f3e2558ebacbae7b114595e05994b",
+      "edits": [
+        {
+          "start": 376,
+          "end": 425,
+          "from": "../../🧫️fixtures/🔌️service-composition/🔣️.json",
+          "to": "../🧫️fixtures/🔌️service-composition/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/📐️step-session/🦀️.rs",
+      "before": "e67e49fcf19edb860d66adce1bbd5d0103dc9a590e4abfbb0f9449fd0b3264b4",
+      "after": "bacef29cd8c3d7c4b845742196016d22aec0bbd9bfe3df7aad07a1bbffb01e8b",
+      "edits": [
+        {
+          "start": 312,
+          "end": 354,
+          "from": "../../🧫️fixtures/📐️step-session/🔣️.json",
+          "to": "../🧫️fixtures/📐️step-session/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/📐️step-session/🟦️.ts",
+      "before": "c9ddd346b4db5a2992449469fd7d32b0e564b20caef0510dea1959a454c8583f",
+      "after": "53b76ca08207424c2aa7b1498441ab937ae24fdf85d09b358bd275c1b3c87a0e",
+      "edits": [
+        {
+          "start": 176,
+          "end": 218,
+          "from": "../../🧫️fixtures/📐️step-session/🔣️.json",
+          "to": "../🧫️fixtures/📐️step-session/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🌊️flow/🧪️tests/🔌️port-sides/🟦️.ts",
+      "before": "45d29f37ee32530af43856a2d7798b86576cecd67c8e18d5bd55f41602ba85fa",
+      "after": "e8f42c94f43a1fdc1cea371bee8e6067057420043969008caa5d22b1cfe186ad",
+      "edits": [
+        {
+          "start": 180,
+          "end": 220,
+          "from": "../../🧫️fixtures/🔌️port-sides/🔣️.json",
+          "to": "../🧫️fixtures/🔌️port-sides/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🌊️flow/🧪️tests/🌿️catalogue/🦀️.rs",
+      "before": "30951231a6c3f606633b28b7871d0177da7f3186da64894059b71adf2543187a",
+      "after": "c2ef882aad5f12001effcfffe27876c6a4a88bc7ec50522d7f9c8013211be998",
+      "edits": [
+        {
+          "start": 21516,
+          "end": 21566,
+          "from": "../../🧫️fixtures/🌐️geometry-composition/🔣️.json",
+          "to": "../🧫️fixtures/🌐️geometry-composition/🔣️.json"
+        },
+        {
+          "start": 379,
+          "end": 419,
+          "from": "../../🧫️fixtures/🔌️port-sides/🔣️.json",
+          "to": "../🧫️fixtures/🔌️port-sides/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/📦️pcg-wire/🟦️.ts",
+      "before": "dc723496308b251b3b9d862cbcb6c4128e5b3e41b280d2532189c744dd5229a7",
+      "after": "b9f2facc555089cf5104bc710015bc5f01f9c9cc1436401b84efbf0a27b693a3",
+      "edits": [
+        {
+          "start": 164,
+          "end": 202,
+          "from": "../../🧫️fixtures/📦️pcg-wire/🔣️.json",
+          "to": "../🧫️fixtures/📦️pcg-wire/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/⛽️publication-grant/🟦️.ts",
+      "before": "776eb6e05b53ef3d87006dc2c978ed9a7f1a23e061d202655efb6e86ef2e38ba",
+      "after": "42756dae5ef7cd3e634be034d55eeea19a0b4c5da51566cf4d799114c9dcf009",
+      "edits": [
+        {
+          "start": 226,
+          "end": 272,
+          "from": "../../🧫️fixtures/⛽️publication-grant/🔣️.json",
+          "to": "../🧫️fixtures/⛽️publication-grant/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "60811e672026c8eca15c62eeb18d58c9d70349ba73a98fb516e364db61e2d001",
+      "after": "b3e40677ba08247dc6792af217ed84757326ad7ab72dbaf434c4dc781987f31b",
+      "edits": [
+        {
+          "start": 90631,
+          "end": 90669,
+          "from": "../../🧫️fixtures/📦️pcg-wire/🔣️.json",
+          "to": "../🧫️fixtures/📦️pcg-wire/🔣️.json"
+        },
+        {
+          "start": 86897,
+          "end": 86935,
+          "from": "../../🧫️fixtures/📦️pcg-wire/🔣️.json",
+          "to": "../🧫️fixtures/📦️pcg-wire/🔣️.json"
+        },
+        {
+          "start": 81144,
+          "end": 81182,
+          "from": "../../🧫️fixtures/📦️pcg-wire/🔣️.json",
+          "to": "../🧫️fixtures/📦️pcg-wire/🔣️.json"
+        },
+        {
+          "start": 76162,
+          "end": 76200,
+          "from": "../../🧫️fixtures/📦️pcg-wire/🔣️.json",
+          "to": "../🧫️fixtures/📦️pcg-wire/🔣️.json"
+        },
+        {
+          "start": 72801,
+          "end": 72844,
+          "from": "../../🧫️fixtures/🔢️scalar-owners/🔣️.json",
+          "to": "../🧫️fixtures/🔢️scalar-owners/🔣️.json"
+        },
+        {
+          "start": 70311,
+          "end": 70354,
+          "from": "../../🧫️fixtures/🔢️scalar-owners/🔣️.json",
+          "to": "../🧫️fixtures/🔢️scalar-owners/🔣️.json"
+        },
+        {
+          "start": 68200,
+          "end": 68243,
+          "from": "../../🧫️fixtures/🔢️scalar-owners/🔣️.json",
+          "to": "../🧫️fixtures/🔢️scalar-owners/🔣️.json"
+        },
+        {
+          "start": 65531,
+          "end": 65577,
+          "from": "../../🧫️fixtures/⛽️publication-grant/🔣️.json",
+          "to": "../🧫️fixtures/⛽️publication-grant/🔣️.json"
+        },
+        {
+          "start": 60446,
+          "end": 60484,
+          "from": "../../🧫️fixtures/📦️pcg-wire/🔣️.json",
+          "to": "../🧫️fixtures/📦️pcg-wire/🔣️.json"
+        },
+        {
+          "start": 56587,
+          "end": 56625,
+          "from": "../../🧫️fixtures/📦️pcg-wire/🔣️.json",
+          "to": "../🧫️fixtures/📦️pcg-wire/🔣️.json"
+        },
+        {
+          "start": 53616,
+          "end": 53654,
+          "from": "../../🧫️fixtures/📦️pcg-wire/🔣️.json",
+          "to": "../🧫️fixtures/📦️pcg-wire/🔣️.json"
+        },
+        {
+          "start": 51810,
+          "end": 51856,
+          "from": "../../🧫️fixtures/⛽️publication-grant/🔣️.json",
+          "to": "../🧫️fixtures/⛽️publication-grant/🔣️.json"
+        },
+        {
+          "start": 36869,
+          "end": 36914,
+          "from": "../../🧫️fixtures/📦️numerical-pages/🔣️.json",
+          "to": "../🧫️fixtures/📦️numerical-pages/🔣️.json"
+        },
+        {
+          "start": 31799,
+          "end": 31844,
+          "from": "../../🧫️fixtures/📦️numerical-pages/🔣️.json",
+          "to": "../🧫️fixtures/📦️numerical-pages/🔣️.json"
+        },
+        {
+          "start": 24643,
+          "end": 24688,
+          "from": "../../🧫️fixtures/📦️numerical-pages/🔣️.json",
+          "to": "../🧫️fixtures/📦️numerical-pages/🔣️.json"
+        },
+        {
+          "start": 21519,
+          "end": 21564,
+          "from": "../../🧫️fixtures/📦️numerical-pages/🔣️.json",
+          "to": "../🧫️fixtures/📦️numerical-pages/🔣️.json"
+        },
+        {
+          "start": 18902,
+          "end": 18947,
+          "from": "../../🧫️fixtures/📦️numerical-pages/🔣️.json",
+          "to": "../🧫️fixtures/📦️numerical-pages/🔣️.json"
+        },
+        {
+          "start": 13713,
+          "end": 13758,
+          "from": "../../🧫️fixtures/📦️numerical-pages/🔣️.json",
+          "to": "../🧫️fixtures/📦️numerical-pages/🔣️.json"
+        },
+        {
+          "start": 11397,
+          "end": 11442,
+          "from": "../../🧫️fixtures/📦️numerical-pages/🔣️.json",
+          "to": "../🧫️fixtures/📦️numerical-pages/🔣️.json"
+        },
+        {
+          "start": 8800,
+          "end": 8845,
+          "from": "../../🧫️fixtures/📦️numerical-pages/🔣️.json",
+          "to": "../🧫️fixtures/📦️numerical-pages/🔣️.json"
+        },
+        {
+          "start": 6224,
+          "end": 6269,
+          "from": "../../🧫️fixtures/📦️numerical-pages/🔣️.json",
+          "to": "../🧫️fixtures/📦️numerical-pages/🔣️.json"
+        },
+        {
+          "start": 1883,
+          "end": 1928,
+          "from": "../../🧫️fixtures/📦️numerical-pages/🔣️.json",
+          "to": "../🧫️fixtures/📦️numerical-pages/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/📚️paged-csr/🟦️.ts",
+      "before": "8cae547958a6e39fb4b4f64b96d5c7b8d00c8eae3c2a9bdf21cf2dab558167ce",
+      "after": "10444f37dec6f32c6c96a2c5db6c94cd38d157f98b5295ffe5d432bf1945db0e",
+      "edits": [
+        {
+          "start": 144,
+          "end": 183,
+          "from": "../../🧫️fixtures/📚️paged-csr/🔣️.json",
+          "to": "../🧫️fixtures/📚️paged-csr/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/📦️numerical-pages/🟦️.ts",
+      "before": "87955d963be35fda12b19c6d0b01172da75430886442a52d576b7a06199142e7",
+      "after": "87dc9dc292331246b4a2ab8429282435106d016f300d2c399e6afa1e1851317b",
+      "edits": [
+        {
+          "start": 129,
+          "end": 174,
+          "from": "../../🧫️fixtures/📦️numerical-pages/🔣️.json",
+          "to": "../🧫️fixtures/📦️numerical-pages/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🔢️scalar-owners/🟦️.ts",
+      "before": "bf19c39fb8b446060729392f4a0184a96d82718a51f22672bd9b05975e50b395",
+      "after": "16125af73a3b65d22821d5a3b17287fb6370a4c1c18a65ba59065a9da8977f0d",
+      "edits": [
+        {
+          "start": 164,
+          "end": 207,
+          "from": "../../🧫️fixtures/🔢️scalar-owners/🔣️.json",
+          "to": "../🧫️fixtures/🔢️scalar-owners/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/🧪️tests/🧱️mounted-stiffness/🟦️.ts",
+      "before": "5b278cbbd8c1f76bf6fa8c5f4a34127af1749dceabf2eda692b73588555dd6ff",
+      "after": "852c6435a0722a5ab7f3011b919e7b4ccc390c79f8e2c746bd5bb76a6be27b23",
+      "edits": [
+        {
+          "start": 164,
+          "end": 211,
+          "from": "../../🧫️fixtures/🧱️mounted-stiffness/🔣️.json",
+          "to": "../🧫️fixtures/🧱️mounted-stiffness/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "7dab710cbe3a29ee41a30eb6d42a4a50b2808680df04985f0f918aa64ea9935c",
+      "after": "e7ccc6b73e37dc531a12e6f1363fddff78cd64d33b7a8478227d800b9250634a",
+      "edits": [
+        {
+          "start": 563,
+          "end": 610,
+          "from": "../../🧫️fixtures/🧱️mounted-stiffness/🔣️.json",
+          "to": "../🧫️fixtures/🧱️mounted-stiffness/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📐️surface/🧪️tests/🦀️.rs",
+      "before": "150252bc5f6e58a132d0a100f250a5bd811d1ae1fc306b7d6177fd65939dfcb8",
+      "after": "7299dadda8f311e8b6b5ae2ad54e275e3286224a6b4cf4b6ae27d902bafd8c1f",
+      "edits": [
+        {
+          "start": 295,
+          "end": 318,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📐️surface/🧪️tests/🟦️.ts",
+      "before": "43ae5487146be8c77f15662df6a4fe46f9d7a7886add9842db675bfedf7cb122",
+      "after": "a66f5edec14bd0d2c0002b617b5ee7c065fe26f9025e86155ce0ec1d0fd822c2",
+      "edits": [
+        {
+          "start": 576,
+          "end": 599,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "0a648c0dc2648bcd334808dac9ebd5f73e88c761dc40774d154fe5f09afae8f3",
+      "after": "0c7f9d8acddb9310c584409b9e02d94184cca9abbb506ee7481bf05fee1469bf",
+      "edits": [
+        {
+          "start": 14736,
+          "end": 14780,
+          "from": "../../🧫️fixtures/🕸️edge-authority/🔣️.json",
+          "to": "../🧫️fixtures/🕸️edge-authority/🔣️.json"
+        },
+        {
+          "start": 5943,
+          "end": 5991,
+          "from": "../../🧫️fixtures/📦️preparation-owners/🔣️.json",
+          "to": "../🧫️fixtures/📦️preparation-owners/🔣️.json"
+        },
+        {
+          "start": 615,
+          "end": 663,
+          "from": "../../🧫️fixtures/📦️preparation-owners/🔣️.json",
+          "to": "../🧫️fixtures/📦️preparation-owners/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🧪️tests/📦️preparation-owners/🟦️.ts",
+      "before": "bf6ea9e87de83ea1f7c343af084a3aca0f25ae35c7d6932d1ba0847ae68ee979",
+      "after": "5c415ac110a56e25c19d9276ecb177df70669d6a4034adfebf9143373d98f5e4",
+      "edits": [
+        {
+          "start": 129,
+          "end": 177,
+          "from": "../../🧫️fixtures/📦️preparation-owners/🔣️.json",
+          "to": "../🧫️fixtures/📦️preparation-owners/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🧪️tests/🕸️edge-authority/🟦️.ts",
+      "before": "ec67c2dee993f859bee3cbdaf1731c83559e131b91619acb120d371f1e47c7f0",
+      "after": "53021122370932a6444a68c2ecb4a7254b6005b2af61a12429a2aff01cfd7464",
+      "edits": [
+        {
+          "start": 129,
+          "end": 173,
+          "from": "../../🧫️fixtures/🕸️edge-authority/🔣️.json",
+          "to": "../🧫️fixtures/🕸️edge-authority/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📐️surface/🧪️tests/🔬️neutral/🟦️.ts",
+      "before": "356291e1de99266263f3f975349357e4adcfe84469c6511de96d3957fbe4afed",
+      "after": "055412139338afe1988b604006709993357a8a1981de9bc1414c282b6ac7dd73",
+      "edits": [
+        {
+          "start": 390,
+          "end": 416,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/🔀️merge-refusal/🟦️.ts",
+      "before": "624dec912e778607fa1f568ffed089b3c2bb9c5f7deeeb8a0bf7c11e3225cf3a",
+      "after": "ff0f6b0632a9588e8884e9ef7756a27081dc1e97fe9aa19a01925f267c1c4bc8",
+      "edits": [
+        {
+          "start": 164,
+          "end": 207,
+          "from": "../../🧫️fixtures/🔀️merge-refusal/🔣️.json",
+          "to": "../🧫️fixtures/🔀️merge-refusal/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "012e1a7210a8bbfaccb8d45c4e7b780d71ed52baf71b8b24bcbb019a60f88163",
+      "after": "239ce3472a99a9f3ec5f438651c2a3a7d500428f59f0d4fe09ec5740b56c1d7d",
+      "edits": [
+        {
+          "start": 24948,
+          "end": 25000,
+          "from": "../../../🔢️sparse/🧫️fixtures/📚️paged-csr/🔣️.json",
+          "to": "../../../🔢️sparse/🧪️tests/🧫️fixtures/📚️paged-csr/🔣️.json"
+        },
+        {
+          "start": 17370,
+          "end": 17413,
+          "from": "../../🧫️fixtures/🔀️merge-refusal/🔣️.json",
+          "to": "../🧫️fixtures/🔀️merge-refusal/🔣️.json"
+        },
+        {
+          "start": 4196,
+          "end": 4241,
+          "from": "../../🧫️fixtures/📦️physical-owners/🔣️.json",
+          "to": "../🧫️fixtures/📦️physical-owners/🔣️.json"
+        },
+        {
+          "start": 1806,
+          "end": 1845,
+          "from": "../../🧫️fixtures/⛽️step-grant/🔣️.json",
+          "to": "../🧫️fixtures/⛽️step-grant/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/⛽️step-grant/🟦️.ts",
+      "before": "1754f2d3a9ad8a835a2038a4018e2e6c7ee2a6a8111df25d934ef74e03515ec1",
+      "after": "e2e4c4daf27f965b959b1c64260362585623dff96fdf8ac8197c544c813ba555",
+      "edits": [
+        {
+          "start": 164,
+          "end": 203,
+          "from": "../../🧫️fixtures/⛽️step-grant/🔣️.json",
+          "to": "../🧫️fixtures/⛽️step-grant/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/📦️physical-owners/🟦️.ts",
+      "before": "b82fee6d2680c39d5995e2b58b574bc629f7cac17d17e1f95f1df631bef8d65b",
+      "after": "007b806c46023cb035961d6d697fc5cc3450df0af6b8c93fd221232b0c62b4ec",
+      "edits": [
+        {
+          "start": 164,
+          "end": 209,
+          "from": "../../🧫️fixtures/📦️physical-owners/🔣️.json",
+          "to": "../🧫️fixtures/📦️physical-owners/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🦀️.rs",
+      "before": "cdae382edefa366ddf83cc2c806329daf03140a88963e1c4a41307550e35068a",
+      "after": "e7f0be47e6e126949acce1a452dbbac8d8b1d62e24421bee3003e1d35b778b64",
+      "edits": [
+        {
+          "start": 121891,
+          "end": 121925,
+          "from": "🧫️fixtures/🧹️retirement/🔣️.json",
+          "to": "./🧪️tests/🧫️fixtures/🧹️retirement/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧪️tests/🌐️browser/🟦️.ts",
+      "before": "86ffa6304dd139e4a547247f857a68bbc6cb953defd232e23087c6ce097ac6e8",
+      "after": "4613d1aec5a4e06c443761c94396bf98aecc08af865cef42df13cd04ade615b4",
+      "edits": [
+        {
+          "start": 314,
+          "end": 354,
+          "from": "../../🧫️fixtures/🧹️retirement/🔣️.json",
+          "to": "../🧫️fixtures/🧹️retirement/🔣️.json"
+        },
+        {
+          "start": 164,
+          "end": 210,
+          "from": "../../🧫️fixtures/🏷️session-lifetime/🔣️.json",
+          "to": "../🧫️fixtures/🏷️session-lifetime/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧪️tests/🎒️mesh-session/🦀️.rs",
+      "before": "74f1f7f9f550fe7f08b66fc945a4392e3744ae314e5415f6dbab56a1239f53bd",
+      "after": "2b1dcf20ab7be706985a7f2669b19eaf1df06ffff091c0ec43bfebc6a940bebc",
+      "edits": [
+        {
+          "start": 5573,
+          "end": 5613,
+          "from": "../../🧫️fixtures/🧹️retirement/🔣️.json",
+          "to": "../🧫️fixtures/🧹️retirement/🔣️.json"
+        },
+        {
+          "start": 327,
+          "end": 367,
+          "from": "../../🧫️fixtures/🧊️validation/🔣️.json",
+          "to": "../🧫️fixtures/🧊️validation/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧪️tests/🏷️session-lifetime/🦀️.rs",
+      "before": "a23f3ae30eb32a10a647121db67e4ed4e509d6984ab9f634e33bca14a1b5407e",
+      "after": "da99153c53cee059251c4a65986b92acea530543f271b85f9c87e8c0f3942bed",
+      "edits": [
+        {
+          "start": 14174,
+          "end": 14214,
+          "from": "../../🧫️fixtures/🧹️retirement/🔣️.json",
+          "to": "../🧫️fixtures/🧹️retirement/🔣️.json"
+        },
+        {
+          "start": 11109,
+          "end": 11149,
+          "from": "../../🧫️fixtures/🧹️retirement/🔣️.json",
+          "to": "../🧫️fixtures/🧹️retirement/🔣️.json"
+        },
+        {
+          "start": 5088,
+          "end": 5128,
+          "from": "../../🧫️fixtures/🧹️retirement/🔣️.json",
+          "to": "../🧫️fixtures/🧹️retirement/🔣️.json"
+        },
+        {
+          "start": 1508,
+          "end": 1554,
+          "from": "../../🧫️fixtures/🏷️session-lifetime/🔣️.json",
+          "to": "../🧫️fixtures/🏷️session-lifetime/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧪️tests/⏱️tessellation/🦀️.rs",
+      "before": "6d9851916f3be583e3b27495ae9abc28886bc64b1d5bb2e202041e1a3193a11d",
+      "after": "8441b6262fdb24dbd792a5104f638e2099942851eaee1030e99a25ba9a503854",
+      "edits": [
+        {
+          "start": 275,
+          "end": 322,
+          "from": "../../🧫️fixtures/⏱️tessellation/🎟️owners.json",
+          "to": "../🧫️fixtures/⏱️tessellation/🎟️owners.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧪️tests/⏱️tessellation/🟦️.ts",
+      "before": "10871e9d24cd112545bcbbb2c44a2457291b526514e455436c3428a83f93686e",
+      "after": "4c42acd99e2a09145f5ead6cf351c8d087e102cfb2fa1edf8013ce6b9424ed09",
+      "edits": [
+        {
+          "start": 113,
+          "end": 160,
+          "from": "../../🧫️fixtures/⏱️tessellation/🎟️owners.json",
+          "to": "../🧫️fixtures/⏱️tessellation/🎟️owners.json"
+        }
+      ]
+    }
+  ],
+  "missing": []
+}

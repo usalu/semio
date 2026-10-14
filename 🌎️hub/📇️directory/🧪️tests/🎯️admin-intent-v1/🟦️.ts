@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
 
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🎯️admin-intent-v1/🔣️.json", import.meta.url), "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🎯️admin-intent-v1/🔣️.json", import.meta.url), "utf8"));
 const module = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
 const ajv = new Ajv({ strict: true, allErrors: true });
 ajv.addSchema(module);

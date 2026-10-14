@@ -1,0 +1,5 @@
+{
+  "mutation": "renameProcess",
+  "id": "process-a",
+  "newName": "Renamed Process A"
+}

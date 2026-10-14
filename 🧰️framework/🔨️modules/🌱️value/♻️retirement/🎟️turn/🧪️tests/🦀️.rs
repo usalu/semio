@@ -5,7 +5,7 @@ use std::sync::Arc;
 fn demands(queue:&RetirementQueue,body:usize)->RetirementDemand{RetirementDemand{copy_bytes:queue.next_copy_byte_demand().unwrap(),capacity_bytes:queue.next_capacity_byte_demand(body).unwrap(),release_bytes:queue.next_release_byte_demand().unwrap(),depth:queue.next_depth_demand().unwrap()}}
 #[test]
 fn retirement_turn_original_queue_preserves_full_grants_all_physical_currencies_and_paused_custody(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for empty in [false,true]{for body in law["copyBudgets"].as_array().unwrap(){for cut in law["cancellationCuts"].as_array().unwrap(){
   let capacity=law[if empty{"emptyCapacity"}else{"originalCapacity"}].as_u64().unwrap()as usize;let mut text=String::with_capacity(capacity);if !empty{text.push_str(&law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap()as usize));}let mut original=Some(text);let factory:Arc<dyn ArtifactOwnedValueRetirementFactory<String>>=Arc::new(OwnedValueRetirementFactory::<String>::default());let held=capacity+arc_bytes::<OwnedValueRetirementFactory<String>>();let mut queue=RetirementQueue::default();let mut births=0;let mut releases=0;
   while !queue.has_reserved_slot(){let reserve=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:queue.next_reserve_capacity_byte_demand().unwrap(),maximum_depth:1,..Default::default()};let(p,heap)=observe_retirement_allocations(||queue.reserve_step(reserve).unwrap());assert_eq!((p.retained_capacity_bytes,p.released_bytes),heap);assert_eq!(p.copied_items,1);births+=heap.0;releases+=heap.1;}

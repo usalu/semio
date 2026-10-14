@@ -1,0 +1,28 @@
+{
+  "schema": null,
+  "id": null,
+  "title": null,
+  "layers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "canvas",
+        "patch": {
+          "name": null,
+          "visible": null,
+          "opacity": null,
+          "blendMode": null,
+          "transformX": null,
+          "transformY": null,
+          "width": 256,
+          "height": 128,
+          "adjustmentKind": null,
+          "locked": null
+        }
+      }
+    ]
+  },
+  "assets": null
+}

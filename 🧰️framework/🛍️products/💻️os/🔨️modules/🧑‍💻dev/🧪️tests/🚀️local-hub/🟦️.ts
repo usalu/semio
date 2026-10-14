@@ -44,7 +44,7 @@ import {
   type DevServeSpawnRequestV1,
   type DevServeStatusV1,
 } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
-import fixture from "../../🧫️fixtures/🚀️local-hub.json" with { type: "json" };
+import fixture from "../🧫️fixtures/🚀️local-hub.json" with { type: "json" };
 import schema from "../../🧬️schema/🔣️.json" with { type: "json" };
 
 const MODULE = fileURLToPath(new URL("../../🚀️local-hub/🏃️execution/🟦️.ts", import.meta.url));

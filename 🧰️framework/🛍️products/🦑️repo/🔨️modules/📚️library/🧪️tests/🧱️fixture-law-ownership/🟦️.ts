@@ -6,8 +6,8 @@ import { dirname, join } from "node:path";
 import { spawnSync } from "node:child_process";
 import Ajv from "ajv";
 import ts from "typescript";
-import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import corpus from "../../🧫️fixtures/🧱️fixture-law-ownership/🔣️.json";
+import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import corpus from "../🧫️fixtures/🧱️fixture-law-ownership/🔣️.json";
 
 
 const root = findWorkspaceRoot(import.meta.dir);

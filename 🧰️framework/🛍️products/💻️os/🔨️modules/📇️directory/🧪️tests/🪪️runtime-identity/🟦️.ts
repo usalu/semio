@@ -7,7 +7,7 @@ import _ from "lodash";
 
 //#region 🪪️RuntimeIdentityOracle
 export function testDirectoryRuntimeIdentityFixture(): void {
-  const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", testSourceUrl.href), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🧫️fixtures/🔣️.json", testSourceUrl.href), "utf8"));
   const owners: Record<string, object> = { original: { workers: 2 }, "foreign-equal-workers": { workers: 2 } };
   for (const row of fixture.identity) {
     assert.equal(Object.is(owners[row.left], owners[row.right]), row.same);

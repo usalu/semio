@@ -4,7 +4,7 @@ use super::tests::DemoSnapshot;
 use super::fixture_mutations::demo::{AddN, DemoMutation};
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("neutral clamping fixture")
+    serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("neutral clamping fixture")
 }
 
 fn messages(row: &serde_json::Value) -> Vec<crate::os_spr::MutationMessage> {

@@ -1,4 +1,4 @@
-/** 🗃️ Record store laws over `../🧫️fixtures/🔣️.json`: every scenario and a random operation sequence over two concurrent store handles
+/** 🗃️ Record store laws over `./🧫️fixtures/🔣️.json`: every scenario and a random operation sequence over two concurrent store handles
  * agree with an in-memory model, every published index satisfies `../🧬️schema/🔣️.json` (Ajv), and the packs on disk are exactly the
  * indexed ones (fast-glob). Damaged bytes must read as a miss, never as a wrong value. */
 import { expect, test } from "bun:test";
@@ -10,7 +10,7 @@ import fg from "fast-glob";
 import { moduleSourceClosureDigest, openRecordStore, recordKey, type RecordStore } from "../🟦️.ts";
 
 type Operation = { op: "put" | "get" | "flush" | "reopen" | "crash" | "corrupt" | "retain"; store: string; key?: string; value?: string; expect?: string | null };
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🔣️.json"), "utf8")) as { schemaVersion: number; scenarios: { id: string; operations: Operation[] }[] };
+const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "./🧫️fixtures/🔣️.json"), "utf8")) as { schemaVersion: number; scenarios: { id: string; operations: Operation[] }[] };
 const validate = new Ajv({ strict: false, allErrors: true }).compile(JSON.parse(readFileSync(resolve(import.meta.dir, "../🧬️schema/🔣️.json"), "utf8")));
 const artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir());
 mkdirSync(artifacts, { recursive: true });

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🧯️delete-zone/🗃️counted-by-an-area-scheme",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧯️delete-zone/🗃️counted-by-an-area-scheme/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧯️delete-zone/🗃️counted-by-an-area-scheme/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧯️delete-zone/🗃️counted-by-an-area-scheme/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧯️delete-zone/🗃️counted-by-an-area-scheme/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧯️delete-zone/🗃️counted-by-an-area-scheme/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧯️delete-zone/🗃️counted-by-an-area-scheme/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧯️delete-zone/🗃️counted-by-an-area-scheme/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧯️delete-zone/🗃️counted-by-an-area-scheme/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧯️delete-zone/🗃️counted-by-an-area-scheme/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧯️delete-zone/🗃️counted-by-an-area-scheme/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

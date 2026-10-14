@@ -1,5 +1,5 @@
 /** 🧫️ Handcrafted DWG typed boundary fixture shared by component and complete snapshot laws. */
-import fixture from "../../../🧫️fixtures/📄️document/🔣️.json";
+import fixture from "../../🧫️fixtures/📄️document/🔣️.json";
 import { type DwgDocumentState } from "../../../📄️document/🟦️.ts";
 
 const input:DwgDocumentState={

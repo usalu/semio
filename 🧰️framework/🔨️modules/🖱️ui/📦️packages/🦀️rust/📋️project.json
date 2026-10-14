@@ -51,14 +51,14 @@
         "sharedGlobals",
         "default",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧭️native-command/**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🧭️native-command/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️native-command/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🧭️native-command/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧪️testing/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/⏱️budget/**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
@@ -74,9 +74,9 @@
       "inputs": [
         "production",
         "^production",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
       ]
     },
     "test-wgpu-engine": {
@@ -88,9 +88,9 @@
       "inputs": [
         "production",
         "^production",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
       ]
     },
     "check-wgpu-engine-wasm": {
@@ -131,9 +131,9 @@
       "inputs": [
         "production",
         "^production",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
       ]
     },
     "test-feature-ownership": {
@@ -145,7 +145,7 @@
         "sharedGlobals",
         "default",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧊️feature-ownership/**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🧊️feature-ownership/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧊️feature-ownership/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🧊️feature-ownership/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/Cargo.toml",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/Cargo.toml"
@@ -164,9 +164,9 @@
         "sharedGlobals",
         "default",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎚️ring-press/**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎚️ring-press/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎚️ring-press/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎚️ring-press/**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️retained-control-commit/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️retained-control-commit/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️retained-control-commit/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎛️retained-control-commit/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx"
@@ -186,7 +186,7 @@
         "default",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/📦️prepared-close/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/📦️prepared-close/**/*"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/📦️prepared-close/**/*"
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",

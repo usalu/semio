@@ -23,7 +23,7 @@ fn close(cursor: &mut Puzzle2dLookupCursor) {
 
 #[test]
 fn history_edit_puzzle2d_native_lookup_follows_sqlite_first_match_and_exact_alias_closure() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🔎️lookup/🔣️.json")).unwrap();
     let controls = &corpus["control"];
     let text = |value: &serde_json::Value| {
         let value = value.as_str().unwrap();

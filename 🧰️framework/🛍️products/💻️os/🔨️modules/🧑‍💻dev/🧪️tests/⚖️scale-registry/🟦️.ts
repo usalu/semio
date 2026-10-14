@@ -1,7 +1,7 @@
 /** 🧪️ Verifies deterministic synthetic testing registries against independent graph topology. */
 import { expect, test } from "vitest";
 import { DirectedGraph } from "graphology";
-import examples from "../../../../🧪️testing/⚖️scale/🧫️fixtures/📇️registry/🔣️.json";
+import examples from "../../../../🧪️testing/⚖️scale/🧪️tests/🧫️fixtures/📇️registry/🔣️.json";
 import { renderScaleFixtureArtifacts } from "../../../../🧪️testing/⚖️scale/📽️projection/🟦️.ts";
 
 for (const example of examples) test(example.name, () => {

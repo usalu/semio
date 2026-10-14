@@ -3,7 +3,7 @@ import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync,existsSync} from "node:fs";
 test("original tool snapshot alias batches use genuine admitted retirement and preserve refused originals",()=>{
- const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+ const fixture=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
  const db=new Database(":memory:");db.exec("CREATE TABLE owners(ordinal INTEGER PRIMARY KEY, phase TEXT)");
  for(const count of fixture.counts)for(const pause of fixture.pauses){
   db.exec("DELETE FROM owners");for(let ordinal=0;ordinal<count;ordinal++)db.query("INSERT INTO owners VALUES(?,?)").run(ordinal,"original");

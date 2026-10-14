@@ -1,0 +1,269 @@
+{
+  "document": {
+    "schema": "note.document",
+    "id": "note-a",
+    "title": "Notes",
+    "blocks": [
+      {
+        "kind": "text",
+        "id": "text-a",
+        "name": "Image",
+        "x": 1,
+        "y": 2,
+        "width": 80,
+        "height": 40,
+        "rotation": 0,
+        "visible": true,
+        "locked": false,
+        "content": {
+          "handle": {
+            "childId": "text-child",
+            "target": {
+              "artifactId": "linked-a",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "text"
+              }
+            }
+          },
+          "paragraphs": [
+            {
+              "runs": [
+                {
+                  "text": "Note content"
+                }
+              ]
+            }
+          ]
+        },
+        "fontSize": 16,
+        "fontWeight": "normal",
+        "align": "left"
+      },
+      {
+        "kind": "image",
+        "id": "image-a",
+        "name": "Image",
+        "x": 1,
+        "y": 2,
+        "width": 80,
+        "height": 40,
+        "rotation": 0,
+        "visible": true,
+        "locked": false,
+        "imageKey": "image-a"
+      },
+      {
+        "kind": "table",
+        "id": "table-a",
+        "name": "Image",
+        "x": 1,
+        "y": 2,
+        "width": 80,
+        "height": 40,
+        "rotation": 0,
+        "visible": true,
+        "locked": false,
+        "columns": [
+          "A"
+        ],
+        "rows": [
+          [
+            {
+              "content": "Cell"
+            }
+          ]
+        ]
+      },
+      {
+        "kind": "math",
+        "id": "math-a",
+        "name": "Image",
+        "x": 1,
+        "y": 2,
+        "width": 80,
+        "height": 40,
+        "rotation": 0,
+        "visible": true,
+        "locked": false,
+        "tex": "x^2",
+        "displayMode": true
+      },
+      {
+        "kind": "stroke",
+        "id": "stroke-a",
+        "name": "Image",
+        "x": 1,
+        "y": 2,
+        "width": 80,
+        "height": 40,
+        "rotation": 0,
+        "visible": true,
+        "locked": false,
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "strokeWidth": 2,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "kind": "group",
+        "id": "group-a",
+        "name": "Image",
+        "x": 1,
+        "y": 2,
+        "width": 80,
+        "height": 40,
+        "rotation": 0,
+        "visible": true,
+        "locked": false,
+        "children": []
+      }
+    ],
+    "gridVisible": true,
+    "gridSpacing": 32,
+    "gridSubdivisions": 4,
+    "gridOpacity": 0.35,
+    "snapEnabled": false,
+    "snapGridSpacing": 8,
+    "pencilWidth": 3,
+    "eraserRadius": 12,
+    "assets": {
+      "image-a": {
+        "mime": "image/png",
+        "data": "AQ==",
+        "width": 1,
+        "height": 1
+      }
+    },
+    "linkedArtifact": {
+      "target": {
+        "artifactId": "linked-a",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "text"
+        }
+      },
+      "pin": {
+        "kind": "head"
+      },
+      "role": "reference"
+    }
+  },
+  "invalidFields": {
+    "cameraX": 1,
+    "selectedBlockIds": [],
+    "engagementInput": "draft",
+    "locale": "de",
+    "hoveredBlockId": "a"
+  },
+  "invalidBlocks": [
+    {
+      "kind": "unknown"
+    },
+    {
+      "kind": "image",
+      "id": "image-a",
+      "name": "Image",
+      "x": 1,
+      "y": 2,
+      "width": 80,
+      "height": 40,
+      "rotation": 0,
+      "visible": true,
+      "locked": false,
+      "imageKey": 42
+    },
+    {
+      "kind": "text",
+      "id": "image-a",
+      "name": "Image",
+      "x": 1,
+      "y": 2,
+      "width": 80,
+      "height": 40,
+      "rotation": 0,
+      "visible": true,
+      "locked": false,
+      "content": {
+        "childId": "text-child",
+        "target": {
+          "artifactId": "linked-a",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "text"
+          }
+        }
+      },
+      "fontSize": 16,
+      "fontWeight": "normal",
+      "align": "left"
+    }
+  ],
+  "validDiffs": [
+    {
+      "linkedArtifact": {
+        "target": {
+          "artifactId": "linked-a",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "text"
+          }
+        },
+        "pin": {
+          "kind": "head"
+        },
+        "role": "reference"
+      }
+    },
+    {
+      "linkedArtifact": null
+    },
+    {
+      "blocks": {
+        "added": [
+          {
+            "parentId": null,
+            "index": 0,
+            "block": {
+              "kind": "image",
+              "id": "image-a",
+              "name": "Image",
+              "x": 1,
+              "y": 2,
+              "width": 80,
+              "height": 40,
+              "rotation": 0,
+              "visible": true,
+              "locked": false,
+              "imageKey": "image-a"
+            }
+          }
+        ],
+        "removed": [],
+        "patched": [],
+        "reordered": null
+      }
+    }
+  ],
+  "committed": {
+    "snapshots": 66,
+    "diffs": 33
+  }
+}

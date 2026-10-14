@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🧰️create-property-template/📉️default-breaks-the-range",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧰️create-property-template/📉️default-breaks-the-range/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧰️create-property-template/📉️default-breaks-the-range/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧰️create-property-template/📉️default-breaks-the-range/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧰️create-property-template/📉️default-breaks-the-range/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧰️create-property-template/📉️default-breaks-the-range/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧰️create-property-template/📉️default-breaks-the-range/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧰️create-property-template/📉️default-breaks-the-range/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧰️create-property-template/📉️default-breaks-the-range/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧰️create-property-template/📉️default-breaks-the-range/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧰️create-property-template/📉️default-breaks-the-range/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn native_codec_identity_matches_structural_graph_and_independent_blake3() {
-    let spec = <GltfSnapshot as store::os_store::serialization::ArtifactPack>::record_spec().expect("GLTF typed pack record");
+    let spec = <GltfSnapshot as pack::snapshot::ArtifactPack>::record_spec().expect("GLTF typed pack record");
     let graph = store::os_pack::PackSchemaGraph::of(&spec);
     let bytes = graph.canonical_bytes();
     let independent = *blake3::hash(&bytes).as_bytes();
@@ -17,7 +17,7 @@ fn native_codec_identity_matches_structural_graph_and_independent_blake3() {
 
 #[test]
 fn owned_semantic_identity_policy_matches_independent_serde_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📜️definition/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📜️definition/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let mut source: serde_json::Value = serde_json::from_str(ARTIFACT_DEFINITION_SCHEMA).unwrap();
         let identity = row["identity"].as_str().unwrap();

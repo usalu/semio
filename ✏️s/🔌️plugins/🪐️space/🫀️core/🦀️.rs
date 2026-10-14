@@ -47,7 +47,7 @@ const OS_BOOT_STUDIO_ID: &str = "default";
 /// holds only the `WorkflowSnapshot` payload (`DEMO_STUDIO_DSL`); the envelope metadata
 /// (schema/id/name, freshly-minted history) is built via `create_backbone_document`.
 pub async fn parse_demo_space_document() -> OsWorkflowArtifactDocument {
-    let initial_snapshot = <WorkflowSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(DEMO_STUDIO_DSL).expect("bundled example/✏️demo.s is valid WorkflowSnapshot DSL text");
+    let initial_snapshot = <WorkflowSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(DEMO_STUDIO_DSL).expect("bundled example/✏️demo.s is valid WorkflowSnapshot DSL text");
     create_backbone_document(S_WORKFLOW_SCHEMA, DEMO_STUDIO_ID, DEMO_STUDIO_NAME, initial_snapshot)
 }
 

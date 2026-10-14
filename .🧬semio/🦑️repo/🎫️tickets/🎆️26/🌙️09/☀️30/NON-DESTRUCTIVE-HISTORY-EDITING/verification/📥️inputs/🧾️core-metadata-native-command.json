@@ -1,0 +1,59 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/framework-os-kernel:test",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--configuration=prototype",
+    "--parallel=1",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_history_metadata_native_paged_fields_preserve_same_policy_receipts_and_paid_partial_custody) | test(original_history_message_native_targets_keep_partial_receiving_and_physical_receipts) | test(original_history_operation_native_fields_preserve_paid_partial_and_ready_receiving) | test(original_history_origin_json_native_borrows_funded_grammar_and_same_original_control) | test(original_history_transition_native_pages_preserve_all_fields_same_ledger_and_paid_partial_custody) | test(original_history_edit_native_pages_assemble_all_fields_operations_inverse_meta_and_paid_custody) | test(original_history_identity_records_native_receive_document_viewer_composition_and_paid_partial)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "selection": [
+    "nx",
+    "run",
+    "@semio-tech/framework-os-kernel:test",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--configuration=prototype",
+    "--parallel=1",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_history_metadata_native_paged_fields_preserve_same_policy_receipts_and_paid_partial_custody) | test(original_history_message_native_targets_keep_partial_receiving_and_physical_receipts) | test(original_history_operation_native_fields_preserve_paid_partial_and_ready_receiving) | test(original_history_origin_json_native_borrows_funded_grammar_and_same_original_control) | test(original_history_transition_native_pages_preserve_all_fields_same_ledger_and_paid_partial_custody) | test(original_history_edit_native_pages_assemble_all_fields_operations_inverse_meta_and_paid_custody) | test(original_history_identity_records_native_receive_document_viewer_composition_and_paid_partial)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
+    "transport": {
+      "maximumBytes": 536870912,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": false
+    }
+  },
+  "buildMode": "prototype"
+}

@@ -1,13 +1,17 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
-/** 🧭️ `@semio-tech/repo-coordinator-go` router: `bun ./📜️script.ts build|test|run`. */
+import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+/** 🧭️ `@semio-tech/repo-coordinator-go` router: `bun ./📜️script.ts build|test|dev`. */
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { goCoverageArgs, goLevelTestArgs, runCmd, runCmdStatus, runRepositoryTestCommand } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { goCoverageArgs, goLevelTestArgs, runCanonicalGoBuild, runRepositoryTestCommand } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { daemonBudgetMs } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const PACKAGE_DIR = import.meta.dir;
 const BINARY_DIR = join(PACKAGE_DIR, "📦️main");
@@ -15,7 +19,7 @@ const BINARY = process.platform === "win32" ? "semio-repo-coordinator.exe" : "se
 
 /** 🗃️ The coordinator binary is build output, so it lives in the marked repository cache and never in the tree. */
 export function coordinatorBinaryPath(repoRoot: string): string {
-  const path = join(repoRoot, ".🧬semio", "🦑️repo", "⚡️cache", "🗃️bin", BINARY);
+  const path = join(repoRoot, ".🧬semio", "🦑️repo", "⚡️cache", "🗃️bin", readBuildMode(process.env.SEMIO_BUILD_MODE ?? "prototype"), "coordinator", BINARY);
   mkdirSync(dirname(path), { recursive: true });
   return path;
 }
@@ -26,8 +30,8 @@ export function coordinatorGoEnvironment(repoRoot: string): NodeJS.ProcessEnv {
 }
 
 class BuildScript extends BundleScript {
-  run(): void {
-    runCmd("go", ["build", "-o", coordinatorBinaryPath(this.repoRoot), "."], { cwd: BINARY_DIR, env: coordinatorGoEnvironment(this.repoRoot), budgetMs: buildBudgetMs() });
+  async run(): Promise<void> {
+    await runCanonicalGoBuild(BINARY_DIR, ["-o", coordinatorBinaryPath(this.repoRoot), "."], { control: scriptCompilerAdmissionControlV1(this.invocation, "go:build", 0),  env: coordinatorGoEnvironment(this.repoRoot), budgetMs: buildBudgetMs(),  });
   }
 }
 
@@ -38,15 +42,14 @@ class TestScript extends BundleScript {
   }
 }
 
-/** ▶️ Builds then execs the coordinator, which reads `COMPOSE_SERVER_ADDR`/`COMPOSE_SERVER_DB`/`COMPOSE_SERVER_TOKEN`. */
-class RunScript extends BundleScript {
-  run(): void {
+/** ▶️ Serves the coordinator artifact completed by the owning Nx build dependency. */
+class DevScript extends BundleScript {
+  async run(): Promise<void> {
     const binary = coordinatorBinaryPath(this.repoRoot);
-    runCmd("go", ["build", "-o", binary, "."], { cwd: BINARY_DIR, env: coordinatorGoEnvironment(this.repoRoot), budgetMs: buildBudgetMs() });
-    process.exit(runCmdStatus(binary, [], { cwd: this.repoRoot, env: coordinatorGoEnvironment(this.repoRoot) }));
+    await runOwnedCommand(binary, [], this.repoRoot, "repo-coordinator:serve", daemonBudgetMs(), { env: coordinatorGoEnvironment(this.repoRoot), signal: this.invocation.control.signal });
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("run", RunScript);
+const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("dev", DevScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

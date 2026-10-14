@@ -1,6 +1,6 @@
 /** 🔌️ Concrete catalogue handle spelling laws share the implementation-owned fixture with Rust. */
 import { describe, it, expect } from "bun:test";
-import portSidesFixture from "../../🧫️fixtures/🔌️port-sides/🔣️.json";
+import portSidesFixture from "../🧫️fixtures/🔌️port-sides/🔣️.json";
 //#region 🔌️PortSideTwin
 /** 🔌️ The renderer half of the catalogue port-side law. A wire endpoint has exactly ONE public name
  * here — `${nodeId}@${portId}`, the string `🕸️NodeGraph/🟦️.tsx` builds for every hit target — so an

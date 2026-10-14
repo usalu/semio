@@ -41,7 +41,7 @@ impl FieldProjectionSource for Node {
     }
 }
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 fn expected(value:&str) -> Vec<u8> { value.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect() }
 fn grant(capacity:usize,release:usize) -> RetainedCloneGrant { RetainedCloneGrant { maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:64 } }
 fn close(cursor:&mut BorrowedProjectedPackCursor) {
@@ -110,7 +110,7 @@ fn intrinsic_node(node:&serde_json::Value)->DslValue {
 
 #[test]
 fn borrowed_projected_pack_cursor_intrinsic_order_duplicates_and_exact_grants() {
-    let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🌱️intrinsic/🔣️.json")).unwrap();
+    let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🌱️intrinsic/🔣️.json")).unwrap();
     for row in corpus["cases"].as_array().unwrap() {
         let source=intrinsic_node(&row["node"]);let field=row["fieldId"].as_u64().unwrap()as u16;let bytes=expected(row["expectedHex"].as_str().unwrap());
         for copy in corpus["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize) {
@@ -136,7 +136,7 @@ fn borrowed_projected_pack_cursor_intrinsic_order_duplicates_and_exact_grants() 
 
 #[test]
 fn borrowed_pack_failure_preserves_real_comparison_and_original_symbol_backing() {
-    let rows:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⚠️failure/🔣️.json")).unwrap();
+    let rows:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/⚠️failure/🔣️.json")).unwrap();
     let p=&rows["policy"];
     let policy=RetainedCloneGrant { maximum_items:p["maximumItems"].as_u64().unwrap()as usize, maximum_copy_bytes:p["maximumCopyBytes"].as_u64().unwrap()as usize, maximum_capacity_bytes:p["maximumCapacityBytes"].as_u64().unwrap()as usize, maximum_release_bytes:p["maximumReleaseBytes"].as_u64().unwrap()as usize, maximum_depth:p["maximumDepth"].as_u64().unwrap()as usize };
     let source=DslValue::String(rows["examples"][0]["text"].as_str().unwrap().into());
@@ -170,7 +170,7 @@ fn borrowed_pack_failure_preserves_real_comparison_and_original_symbol_backing()
 
 #[test]
 fn borrowed_pack_flat_intrinsic_uses_only_original_actual_depth_and_receipts(){
-    let rows:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⚠️failure/🔣️.json")).unwrap();
+    let rows:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/⚠️failure/🔣️.json")).unwrap();
     let row=&rows["depthProbe"];let source=DslValue::Bool(row["source"].as_bool().unwrap());let field=row["fieldId"].as_u64().unwrap()as u16;
     let p=&rows["policy"];let policy=RetainedCloneGrant{maximum_items:p["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:p["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:p["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:p["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:row["maximumDepth"].as_u64().unwrap()as usize};
     let mut cursor=BorrowedProjectedPackCursor::default();let mut output=[0;64];let mut actual=Vec::new();

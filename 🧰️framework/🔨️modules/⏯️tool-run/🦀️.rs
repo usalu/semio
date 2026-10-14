@@ -18,6 +18,21 @@ use std::collections::{HashMap, VecDeque};
 use std::sync::OnceLock;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::LocalizedLabel;
+#[path="🎞️tick/🛬️receive/🎟️limits/🦀️.rs"]
+mod receiving_limits;
+pub use receiving_limits::{ToolRunRecordReadLimits,ToolRunHistoryReadLimits,ToolRunReceivingLimits};
+#[path="🎞️tick/🛬️receive/🪪️identity/🦀️.rs"]
+mod identity_receiving;
+pub use identity_receiving::ToolRunIdentityReceiving;
+#[path="🎞️tick/🛬️receive/📝️step/🦀️.rs"]
+mod step_receiving;
+pub use step_receiving::ToolRunStepReceiving;
+#[path="🎞️tick/🛬️receive/🏗️native/🦀️.rs"]
+mod native_tick_preparation;
+pub use native_tick_preparation::{ToolRunNativeTickPreparation,ToolRunReceivedTick,ToolRunReceivedTickSource,ToolRunReceivedProgress,ToolRunReceivedTracePage};
+#[path="🎞️tick/🛬️receive/🔢️entities/🦀️.rs"]
+mod entity_column_receiving;
+pub use entity_column_receiving::ToolRunEntityColumnReceiving;
 
 #[path="👥️entities/🦀️.rs"]
 pub mod entities;
@@ -1976,6 +1991,7 @@ pub fn tool_run_pointer_value<'a>(document: &'a semio_framework_value::DslValue,
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolRunDefinition {
+    pub receiving: ToolRunReceivingLimits,
     pub mutating: bool,
     pub rebase: ToolRunRebasePolicy,
     pub reconfigure: ToolRunReconfigurePolicy,
@@ -2006,6 +2022,7 @@ pub struct ToolRunDefinition {
 /// 🚫️ Why a `ToolRunDefinition` violates the contract.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum ToolRunDefinitionError {
+    InvalidReceivingLimits,
     NoStages,
     TooManyStages,
     TooManyCounters,
@@ -2022,6 +2039,7 @@ pub enum ToolRunDefinitionError {
 impl std::fmt::Display for ToolRunDefinitionError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::InvalidReceivingLimits => formatter.write_str("toolRun.definition.invalidReceivingLimits"),
             Self::NoStages => formatter.write_str("toolRun.definition.noStages"),
             Self::TooManyStages => formatter.write_str("toolRun.definition.tooManyStages"),
             Self::TooManyCounters => formatter.write_str("toolRun.definition.tooManyCounters"),
@@ -2043,6 +2061,7 @@ impl ToolRunDefinition {
     /// ✅️ Checks stage, counter and reason tables against the contract limits, and that a member target names a slot of a
     /// mutating run.
     pub fn validate(&self) -> Result<(), ToolRunDefinitionError> {
+        self.receiving.validate().map_err(|_|ToolRunDefinitionError::InvalidReceivingLimits)?;
         if self.stages.is_empty() {
             return Err(ToolRunDefinitionError::NoStages);
         }

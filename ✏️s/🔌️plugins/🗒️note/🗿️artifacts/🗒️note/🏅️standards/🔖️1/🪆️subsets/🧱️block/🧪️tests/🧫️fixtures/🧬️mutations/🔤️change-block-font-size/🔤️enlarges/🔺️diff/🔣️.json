@@ -1,0 +1,44 @@
+{
+  "schema": null,
+  "id": null,
+  "title": null,
+  "blocks": {
+    "rows": [
+      {
+        "row": "patch",
+        "id": "blk-text",
+        "patch": {
+          "name": null,
+          "x": null,
+          "y": null,
+          "width": null,
+          "height": null,
+          "rotation": null,
+          "visible": null,
+          "locked": null,
+          "content": null,
+          "fontSize": 24.0,
+          "fontWeight": null,
+          "align": null,
+          "imageKey": null,
+          "table": null,
+          "tex": null,
+          "displayMode": null,
+          "points": null,
+          "strokeWidth": null,
+          "color": null
+        }
+      }
+    ]
+  },
+  "gridVisible": null,
+  "gridSpacing": null,
+  "gridSubdivisions": null,
+  "gridOpacity": null,
+  "snapEnabled": null,
+  "snapGridSpacing": null,
+  "pencilWidth": null,
+  "eraserRadius": null,
+  "assets": null,
+  "linkedArtifact": null
+}

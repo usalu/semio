@@ -84,6 +84,6 @@ fn debug_print_normalized_example() {
             declared.retire_cold();
         }
     }
-    eprintln!("[DEBUG] BEGIN demo\n{}\n[DEBUG] END demo", semio_framework_os_kernel::os_store::serialization::ArtifactDsl::print_dsl(&example));
+    eprintln!("[DEBUG] BEGIN demo\n{}\n[DEBUG] END demo", pack::snapshot::ArtifactDsl::print_dsl(&example));
     example.retire_cold();
 }

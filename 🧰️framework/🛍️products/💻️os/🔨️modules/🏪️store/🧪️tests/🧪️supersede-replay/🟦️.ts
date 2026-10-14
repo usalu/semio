@@ -26,7 +26,7 @@ const saturate = (value: number) => Math.min(2147483647, Math.max(-2147483648, v
 const missing: Message = { level: "error", code: "mutation.target-missing" };
 
 test("retained clone alternating grants keep one combined native byte allowance", () => {
-  const law = read("../../🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json");
+  const law = read("../../🧬️snapshot-clone/🧪️tests/🧫️fixtures/📦️lifecycle/🔣️.json");
   expect(law.grant.alternateCapacityPayloadAndRelease).toBe(true);
   for (const axis of ["capacity", "payload", "release"] as const) {
     const source = {capacity:0,payload:0,release:0};
@@ -94,7 +94,7 @@ test("cold history fixtures declare finite caller identity admission", () => {
 });
 
 test("🎟️ semantic preparation validates independent physical currencies", () => {
-  const law = read("../../🔁️replay/🎮️operation/🧫️fixtures/🔣️.json").turnReceipts;
+  const law = read("../../🔁️replay/🎮️operation/🧪️tests/🧫️fixtures/🔣️.json").turnReceipts;
   const database = new Database(":memory:");
   try {
     const query = database.query<{ accepted: number }, number[]>("SELECT (?1 <= 1 AND ?2 <= ?3 AND ?4 <= ?5 AND ?6 <= ?7 AND ?2 + ?4 <= ?8) AS accepted");
@@ -157,7 +157,7 @@ test("📨️ copied diagnostic closure admits each actual backing release", () 
 });
 
 test("🎮️ cooperative semantic preparation matches independent JSON Patch before refusal policy", () => {
-  const law = read("../../🔁️replay/🎮️operation/🧫️fixtures/🔣️.json");
+  const law = read("../../🔁️replay/🎮️operation/🧪️tests/🧫️fixtures/🔣️.json");
   const capacity = BigInt(law.capacityRelease.emptySlots) * BigInt(law.capacityRelease.slotBytes);
   expect(capacity <= BigInt(law.capacityRelease.bodyBytes)).toBe(law.capacityRelease.ordinaryGrantAccepted);
   expect(capacity <= capacity).toBe(law.capacityRelease.exactGrantAccepted);

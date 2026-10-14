@@ -1,7 +1,7 @@
 use super::*;
 use super::super::mesh_support::harness as h;
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🔣️.json");
+const FIXTURE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🔀️mesh-convert/🔣️.json");
 
 #[test]
 fn the_compute_table_and_the_fixture_cover_exactly_the_catalogue_kinds() {

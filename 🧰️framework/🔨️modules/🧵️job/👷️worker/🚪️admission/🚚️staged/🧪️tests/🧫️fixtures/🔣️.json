@@ -1,0 +1,208 @@
+{
+  "contract": "framework.job.original-staged-prebirth.v1",
+  "source": "original-initialized-slot-with-paid-presence",
+  "policy": [
+    1,
+    4096,
+    65536,
+    262144,
+    64
+  ],
+  "layout": {
+    "sourceBytes": 8192,
+    "cursorBytes": 0,
+    "sourcePresenceBytes": 0,
+    "destinationPresenceBytes": 0,
+    "paramsBytes": 0,
+    "birthCopyBytes": 26,
+    "birthCapacityBytes": 16848,
+    "handoffHeaderBytes": 0
+  },
+  "cases": [
+    {
+      "name": "funded",
+      "grant": [
+        1,
+        4096,
+        65536,
+        262144,
+        64
+      ],
+      "cancelled": false,
+      "clock": 1,
+      "identity": true,
+      "open": true
+    },
+    {
+      "name": "zero-items",
+      "grant": [
+        0,
+        4096,
+        65536,
+        262144,
+        64
+      ],
+      "cancelled": false,
+      "clock": 1,
+      "identity": true,
+      "open": false
+    },
+    {
+      "name": "zero-copy",
+      "grant": [
+        1,
+        0,
+        65536,
+        262144,
+        64
+      ],
+      "cancelled": false,
+      "clock": 1,
+      "identity": true,
+      "open": false
+    },
+    {
+      "name": "short-birth-capacity",
+      "grant": [
+        1,
+        4096,
+        16847,
+        262144,
+        64
+      ],
+      "cancelled": false,
+      "clock": 1,
+      "identity": true,
+      "open": false
+    },
+    {
+      "name": "zero-depth",
+      "grant": [
+        1,
+        4096,
+        65536,
+        262144,
+        0
+      ],
+      "cancelled": false,
+      "clock": 1,
+      "identity": true,
+      "open": false
+    },
+    {
+      "name": "cancelled",
+      "grant": [
+        1,
+        4096,
+        65536,
+        262144,
+        64
+      ],
+      "cancelled": true,
+      "clock": 1,
+      "identity": true,
+      "open": false
+    },
+    {
+      "name": "missing-clock",
+      "grant": [
+        1,
+        4096,
+        65536,
+        262144,
+        64
+      ],
+      "cancelled": false,
+      "clock": null,
+      "identity": true,
+      "open": false
+    },
+    {
+      "name": "different-operation",
+      "grant": [
+        1,
+        4096,
+        65536,
+        262144,
+        64
+      ],
+      "cancelled": false,
+      "clock": 1,
+      "identity": false,
+      "open": false
+    },
+    {
+      "name": "zero-release",
+      "grant": [
+        1,
+        4096,
+        65536,
+        0,
+        64
+      ],
+      "cancelled": false,
+      "clock": 1,
+      "identity": true,
+      "open": true
+    }
+  ],
+  "ranges": [
+    4096,
+    4096
+  ],
+  "sourcePresent": [
+    true,
+    true,
+    true,
+    false
+  ],
+  "abandonAfter": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "dropAllocations": 0,
+  "sourceDroppedOnAbandonment": false,
+  "preparationRanges": [
+    4096,
+    4096
+  ],
+  "preparationPresenceBytes": 0,
+  "sourcePreparationCapacityBytes": 0,
+  "sourceHeader": {
+    "presenceBytes": 0,
+    "operationBytes": 0,
+    "generationBytes": 0,
+    "copiedBytes": 0
+  },
+  "finalCloseStageBytes": 0,
+  "failedPreparation": [
+    {
+      "name": "under-copy",
+      "maximumCopyBytes": 0,
+      "targetWrites": 0,
+      "cursorWrites": 0,
+      "receipt": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "sourcePresent": false
+    },
+    {
+      "name": "post-write-refusal",
+      "maximumCopyBytes": 4096,
+      "targetWrites": 1,
+      "cursorWrites": 0,
+      "receipt": [
+        1,
+        1,
+        0,
+        0
+      ],
+      "sourcePresent": false
+    }
+  ]
+}

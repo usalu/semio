@@ -1,0 +1,880 @@
+{
+  "exclusive": false,
+  "actions": [
+    {
+      "path": "📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "e9cb047b0fef1e74c564f3d176bc60641c893cfb7933f322d7d49b38f9b490b6",
+      "afterSha256": "bb0d6e02a1a38baaaf78db7be9d631cd2b6becc457a21e7e07f391ff615cf3e0",
+      "correctedOwnAmbiguousBareEdits": 3
+    },
+    {
+      "path": "🏢️semio-tech/🎡️play/🧪️tests/🧪️playpanedefaults/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "d8d328b527434de6e2283df4b1db80415350b3b1bbc9de38634726beffff8186",
+      "afterSha256": "e84efe417338380924628d6f258ee39243ad72e37a86a4b0605d6c5426e74f0a",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": ".cursor/plans/pluralize_kind_folders_26a96337.plan.md",
+      "operation": "updated",
+      "beforeSha256": "0202adc0ea8c10645dc48c9d1b5f94e3c1667e655a3f5bb40d5be63ae72a9f21",
+      "afterSha256": "f8844f909c2582ef56b4c01a4ebbc8c55ab2c3f20d3b1a05060ec06345b3776f",
+      "correctedOwnAmbiguousBareEdits": 3
+    },
+    {
+      "path": ".cursor/plans/semio_format_and_examples_6b665da9.plan.md",
+      "operation": "updated",
+      "beforeSha256": "b7d7f09b06da0f9185af74e7582c4ed102dccabc3ccbe4e0668cbf825c06b3c9",
+      "afterSha256": "7bf6142d3e05bbbec30fa0603ad42aecf7ed869b6135d7ff910dd8a353d5772b",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🎓️teaching/🛂️proctor/README.md",
+      "operation": "updated",
+      "beforeSha256": "caf6625ff816b964f7a56939588dffe0104705006026edd4c93747dbedc4565b",
+      "afterSha256": "6c1ce14a2f690047dcba577b344e34715057480b72c31efc85c55c748f9f2b87",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "c5caf3fc90c3f9ebbf36fbd687c67a92e8f11a1f12d293f37eaff3c0899f5236",
+      "afterSha256": "8f8bc3c77087420334eaabcd21570b92709aba000b69868bd615ff787cd9d720",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📁fixture-placement/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "8817ac881d696ec77f11f86cae4bf57e854cc503ac111ac1158c08c0f3b319af",
+      "afterSha256": "24d89795110a5fbbb7370ceb4fed35d4b68a15766ca7825aed8097f1df02b591",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "39099eafd27e9e3df6f36c0579c6b2c2f8bc65576f629a620e24a64cc5a780b0",
+      "afterSha256": "787f236de666097f2d92eb43e184f356ac4d5812852724944442bd5e989e28e4",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "f73aa76297e9852977f8206a5714ce3c44e76316f07cd96ce5e22243178a6d7b",
+      "afterSha256": "639338e7acf85d834a9433006b14f2d112831e4df493837b3db0f8dc23f09356",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧮️expression/🧪️tests/📜️conformance/🐍️.py",
+      "operation": "updated",
+      "beforeSha256": "5b9861dbee679c8227ca51d258e5afa1ebbf37ce652d4a1c43c5b225d3df8c59",
+      "afterSha256": "4df4c92020b69140fbdf1d4cee6e3d8fccdaa203d66ec1884dcbd20e8e56a82e",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "2088d0c1642b40854e35a190acda10fa0d1b2163650aa834eaf601258f1ba352",
+      "afterSha256": "10b33b8ce6f4dee490f9e0c81cbe8b35eddb9231c941787c31d4d007a59a891a",
+      "correctedOwnAmbiguousBareEdits": 4
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "a60268f45f569bb9ba03fc6eedde0cdf5f4bab5e355b468b666f5df46ecd26b2",
+      "afterSha256": "0e91671c47ec95caf431f4bd3ce7855c6e9b8425f08a4b6bf5dd9805feecc1d2",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "3d437867cf4012509d7e8fe56e5a78c4a0d4be5aeee3159fa6854b45e926fbbf",
+      "afterSha256": "ac66138604ed08f1ea74718a0c99a760b0108060bb83260f8a6756433ae67e9d",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "f6426bb4b56bea5bb7746de1d4a9e9f8be9065312173ebd7b55d6e02df2ca5a8",
+      "afterSha256": "a4893732c6ba0d53b3926b643ec65a2088c1aeef2ea95bf1a105841e2418f86d",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🕸️web-mercator-tile-oracle/🐍️.py",
+      "operation": "updated",
+      "beforeSha256": "0303ec3babb47e0e6cbfaeaec0a5cbfafb8131b0ae1e806c7c04ce8625db5651",
+      "afterSha256": "1d4da72fcc4cfe1d56793fc986b38137a0fc11fc4c987f78178f503379ef3145",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "745af4f3c0d3713ee3a94d4a8f4d6a0e47bfd314ce3c8710b5c49db8f1fa76eb",
+      "afterSha256": "82a765fcf526acdbc7b7191d315634ab97e901dd332cfbfff32f66b0d1659689",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗺️surface/🧪️tests/🗺️tiled-map-mercator-oracle/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "469bfc49ca123c598943b6c088f0b9454588603f8230dc3f621a25b827e63f6d",
+      "afterSha256": "7de63c575d0ddf76ac24b337d97693efee83afb3b97b1bba0e945fa334113319",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎯️goals/📦️packages/🦀️rust/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "5f5cf312b44800561375a755fa2b4e84c13b886f60b51dced46dbf968d32a364",
+      "afterSha256": "1cfd84cbe647b09bef3b9ae50e558aba9df1b7230ceafbea1737967143559c1d",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🔬️_test.go",
+      "operation": "updated",
+      "beforeSha256": "e67b9f424bae83eb5587e0a8cc8a1977d74935bd161599c4beb2b7f6d30f3079",
+      "afterSha256": "9457d835cf96ddadad4bb19921c9484b5ea7aeb7a8754e0171b6e9e36e2eeeb1",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️history-transition/🐍️.py",
+      "operation": "updated",
+      "beforeSha256": "41313d9820745914f3fa2041ea516fd2658eadfdb4201da6dae23f445a3a83b9",
+      "afterSha256": "ea1f1cde7c6a8c219540e4baf6f2f67e0f22a98b0e13863199f7fe3ca9a14e1c",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧪️tests/🚦️test-dispatch/🐹️.go",
+      "operation": "updated",
+      "beforeSha256": "e947743dcd7a7a7bcbedc9debf02dfc8d2139fe9a4942d40982af26a9c4ca1b6",
+      "afterSha256": "069976260c82ce4f349ceb6385000b080fe0836fa9faf9a398f3479f5b7c3a30",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧪️tests/🤝️g1-contract/🐹️.go",
+      "operation": "updated",
+      "beforeSha256": "7a06af6377d266f0d74bce2d2ed962fbe2eb0f51fc6d3ee0c6876e51a013a92b",
+      "afterSha256": "558ada215e56667df6c5a92848a6e70ed1768882b7891c2096aaa02be138356f",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧪️tests/🤝️protocol-contract/🐹️.go",
+      "operation": "updated",
+      "beforeSha256": "6a919558085bfc2665bba3364b3a28d09df4f96c556d20fea98379e9777c2e47",
+      "afterSha256": "45b14f8625236ab9e1e73b44d3ad4d155b5a423a5595d8a9f77104e62a31c183",
+      "correctedOwnAmbiguousBareEdits": 3
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "198c821613a64993f40654c26fbeb96b45e9ab0131e32ccc5acc2cf302d04cef",
+      "afterSha256": "ef0495ebd7988649795938ee6ada8750a261b74e659da9aab4eb866f73a70617",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️mutation-inputs/🐍️.py",
+      "operation": "updated",
+      "beforeSha256": "3b917b1172f636ccef81c42a6d61702ac591b323471bebd0a1ddc7e4dee83f52",
+      "afterSha256": "7ccb1a6e50cf6d834df68e5aab4d8e50568edfd7f154641f95cb11d4337e093a",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📡️events/📦️packages/🐹️go/🔬️_test.go",
+      "operation": "updated",
+      "beforeSha256": "bc47b222eec45e3e2ad0eda41ec69f1e3b360f1af5f523a7600afd4ebf98a4ec",
+      "afterSha256": "d081f92bc5cb7e95ed9b2e5216ae63ac91fbc599a1c81249ec52ffb95266afcf",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/📋️orchestration/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "90c93515900c42f7a3074d2bd289f5b07f402fdec7b677af59bebf4123100ad5",
+      "afterSha256": "1707a4f319aad23e1fa6d738862024dd49f09d47f8f2254107f0c8ac01ff4630",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧪️tests/🗄️g3-event-store/🐹️.go",
+      "operation": "updated",
+      "beforeSha256": "eeb4f1d7ebb74345e3181cf5d2307701515f3a74ee20b2f953b25d23cf1783c7",
+      "afterSha256": "281896fcf5510827f85753104d44360e95adf0fd90a86a22968ab006ca03f2be",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧪️tests/🧬️schema-contract/🐹️.go",
+      "operation": "updated",
+      "beforeSha256": "d9ddf2be3138393a7a621ce99b4c6eed0a124e08d5f3f8dfc617f583d4ab1937",
+      "afterSha256": "039d8229be3f4346d2fe25e20453860a500954504414808f201bdb2eb0723d79",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📡️events/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "67ae043967cd58c5a771b4aacd147f45043cb3890ebc45fbb19f9b77ef8283e3",
+      "afterSha256": "a210a667d5157f8628f68845f0bc102a035eb0095b2daf5bcb56f315c96a904e",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️policy/🧹️domain/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "303a5ca0adde11a7f3be11dfa2611052a62d3e692034dde0739b60b66c0c5010",
+      "afterSha256": "174a30a422bb59858c82e2a7469d9171521aee832481e94cd457059736bd007f",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️mutation-history-gates/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "de5155440257ffa6db1c5ed15c280f892598a8596005d61f023da3cc8f651cdc",
+      "afterSha256": "854c410ee3cd1984a88c9eb5ed344873f2d4d42d982c7072bd31ed2e1e9825f1",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "5490f74a06edda7e95017b3b4084d169b51f2fa0133b567c465f6c0921627995",
+      "afterSha256": "08abfccfd02eac3fd4202826d41742caa9ad55f8003391dea1d2b04f084f5638",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "operation": "updated",
+      "beforeSha256": "7ebb9dbdf6157258cc6dfb8b5626ded4b2bfd9ceeddfedcb13cea17f21b64043",
+      "afterSha256": "f56b10ee18abef802c8cb84e2cdac5b727c292373d2771672bcca1b3fe7a142d",
+      "correctedOwnAmbiguousBareEdits": 3
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "4f1a82251c529f3862f9d467b08edb21eb460952c554d9d46de0a7f3d9313db5",
+      "afterSha256": "4af70fd838abdd9fdadfb9915fd645f5971d9ef9dcd06f3c8ffb24c8a382d264",
+      "correctedOwnAmbiguousBareEdits": 4
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🧪️tests/🧮️source-census/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "25f895e39474b7e1ab470488c06a82979319b1a6812e36c5634c59be89368ad9",
+      "afterSha256": "670d1c73463f959ecd71b5077d73719fb731e42faf9419b1ba15acd78d45b66e",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🧪️tests/🎯️goal-gate/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "967fa6939203ae1049ee81cee7a7b4b0259013c57b3b16777242377d8c1abbc2",
+      "afterSha256": "363d4b2b20f7f41ed00a2be7be3b675b6fc06e84531bb9bc8a670d3b071e6894",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/📦️packages/🐹️go/🔬️_test.go",
+      "operation": "updated",
+      "beforeSha256": "615c597bbe310236c5cf368ab18b8c76f250c0f71e80ad69cddb45ad71bbdbe4",
+      "afterSha256": "75175185efa0d5640697188345231fbcd8597893fa8c3ce9e6d6ab84419851dc",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚪️io/🏛️architecture/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "3e9bab691eef746e6f46cf5f8e42e5b11c7eaf655f6c87e59a8b005a5f8eea84",
+      "afterSha256": "940adaad11dcd18707d6d89cecb5b0cdf47edc69002d6781ee73e037dd611fc8",
+      "correctedOwnAmbiguousBareEdits": 3
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "d6e59b1a854f3b162567e367508c684cd5cab76f6d0bd1592ebeb4f8cf03ec74",
+      "afterSha256": "fca92734b6f53cff2379fb0bac6e45129019317e16fd108d2a4baebb04ba78fc",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "3002a9db7eb7b9465e8e266786ec50ed27ca81d63d05cbfa4ebad0e901b88b7c",
+      "afterSha256": "fa9c5fb512b07384c3a6f6a3ca7550f6c7bb317cbc0a893fe54b5aa8192feff1",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/🔮️oracles/🔣️.json",
+      "operation": "updated",
+      "beforeSha256": "87a5fefc4a347082778343787961c4d7bcb482d0eb243f402473ae88a54a2c57",
+      "afterSha256": "021c77f87544af88ba7168372ff8a039f0410f4e4154c7532fcb011138cd14ce",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/🧪️scope-closure/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "904886492e281f42ab45bd341ea497761b5af36ebc0729b267d3f028c6717bee",
+      "afterSha256": "973fdd99bef9cf89b45d5a5ab07344919a3ac7d7e0d49d9119b3823a06294b90",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🏛️abstraction/⚖️law/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "5e9144ecafdfd60d0edc8aac67ac5b7740fe40d27e5e0cd493d50b63fb701634",
+      "afterSha256": "bff3c55ad1e7306fa38bf673455799b40329f7f2fac5922a920fd948c519121a",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧪️tests/🔬️dependency-truth/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "80e4d4e2f0908ba6d6680fb58dadff589e82c913d87f9fe8ce8b5901cbf9820f",
+      "afterSha256": "6f31e468ad7c5f2fb3382e926acbced8700191030d7ea06160bd23e31b68ad44",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-artifact-schema-law-source/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "c52301f08727cc7fdfcf3dca2cd2033845f6b35029de130ad0760908110f4bc7",
+      "afterSha256": "58031b9a93c36fb5b5f3dc73e53583e9b52de2f41a6fb63cd8af1a4a9148a63d",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗿️artifact/🔍️owner-discovery/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "43824e36e46f06974ef3d5b7c69a8c4a05e44f6a46a0c5eb29b1c1813833d68c",
+      "afterSha256": "137a22839662e58202709a80fef3ce693921bfb9947d35fd40fe57ac5deb53ca",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🧬️schema/🔣️.json",
+      "operation": "updated",
+      "beforeSha256": "5bbee3ad2248444a573bda0654807fbf6b6ccbdb467479521899caa9f07259f2",
+      "afterSha256": "6dc41ba0fcebb76f3f67f718b8be2d34afdf6ad261d1ee5cde977ed64cf5093f",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🔣️policy.json",
+      "operation": "updated",
+      "beforeSha256": "aaafe60c9d496d6cc3c8b1cc4d96ab862e797ad6ffc28741314d7851ca563edd",
+      "afterSha256": "abc18179a0ae9292731d9cfd7a32271284e69da7feec17232a4c1ad42cd5c43d",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🧪️tests/🏙️aec-oracles/🐍️.py",
+      "operation": "updated",
+      "beforeSha256": "1ab7736feae9f12d1195a2b71ae46d2b63073869fa754ad0dd21c47a887dd20f",
+      "afterSha256": "84c30cfc46fe91b2336e8abeeb02e6c555bcb6d2c31e2ce96a49fb5516e0f73a",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/🧪️tests/🦴️skeleton-oracles/🐍️.py",
+      "operation": "updated",
+      "beforeSha256": "ff9c327d50854a0e9018d4a48dbfc2ecf17229a31b2338b68dcb08735c2657c9",
+      "afterSha256": "abfaff1c7e02552f1da4f1ffdd3769565ac510de5504728c66c4bd1a41e23f91",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎚️build-mode/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "79a3cbf5aa89a3051a1ed49d77b99d098a7f1cd1a46802617304649b92e04db0",
+      "afterSha256": "6257bae70a06a791a712b222c2be130332ed9ffdcd1a5dd6f37e9a93eb70bc44",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "927564dc5d2e57a2857cd8cb7c56dcf4f6e57d20a59cf5172566e0af3443b998",
+      "afterSha256": "04fed623d06a5afff298062f871fd59f95c8c1d5778b76be75913c5ac794e3a2",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "ce3b5df0b301e3d7021023e1687a851b173b825f1e43fc0777ccf669ea57a6a8",
+      "afterSha256": "981de69f22ae44143093608930b6b58726810fe1bbd825e5f51263966396896e",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔏️path-emoji-statutes/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "d7cc05679b39b4ae9185edd11cf52fefbefaae1fb2523ea039208bf3bd0f3073",
+      "afterSha256": "eb36acb8e5ef21f7264724fd00707aa16e2fc6609d6c8866dd5b624ee5911167",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🏠️nx-workspace-root-file-reference/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "e1b50acb3b6e1fdc3ed244b6d86d9cf4aff68d4389271161b5a740a15c10b6e3",
+      "afterSha256": "95b13eceb144bdcfac70dc375f8090e4549649978ab946104d57b0d66ab373aa",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "f88bf13e083ead9b07614110177e30faac243f7a37459c75d01d53b75ec9b36b",
+      "afterSha256": "39053186d49d8ae775ffc822b15f87a8159ef90555e61e7a02557f815ee3fc73",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "1c8ce965d00b40ee0f4c0d7752636096a2260cbfdc3b20be6ad31a503306361f",
+      "afterSha256": "ebe3b9cb01ac1f736537acaa2c87021c54b9972de2ca6d72380e90ba0387e9fc",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "53919398dc15cbeb6256ad25c8c49ab0c5c26a579f8b3af9cc7c96b2ed0ca001",
+      "afterSha256": "0528e635fb25155c6d9bb63b34e5549c4fd772ae51872c616fed15d05d43f923",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "b2bba6e3fc52f49412cbf247f1b64b60a2814719296eab0680062721fce72fcc",
+      "afterSha256": "d7fdecc1a375aaa87077aef747d9d8e657873cf95aa0a670ad407478608043b0",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "69e828ab87755a4b354ac6f26a753f1cb795b4910bb69a0af68b5d06414b9998",
+      "afterSha256": "5437377f211bd82c28235e8e054a09498bb292596b3b54f90f4b82808929e46d",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "b31683de7083b3aaf2a2686f604aef49563eaeb65258ff8205875b3b754a2114",
+      "afterSha256": "e2480c4bd3e49108247d553eaee1ea617795ff6c1195b196f6d25da4e40cf9f6",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "25d154fb731ebb4aa6c3dabf7e58c0bee1fbc955cf9c06bc0b24bc82809e06e7",
+      "afterSha256": "1809a9622add8b25e260b63728ca73b574c58277f6ae9e1dfc48d774e1783e48",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "fd9ea4d5b1db13a0a177cbf23cb2a346932579124c6afb8ccc9ad25f8cafb5cd",
+      "afterSha256": "b487f1c91c2e35a10e11bd3e778bfdf443253f798dc0e4fefdcc64aaa9ad44e6",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "ec8101f61d978871c1abca16b32ca08c7f037e4edefe935d9d1eff7a6af87f3b",
+      "afterSha256": "481fc9c7743fd57fb9328111daf020af57b6ae55aa01d8c3a59326d1a1a78a44",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "dfe6c0e24a5845718b600112e4ff4d2623a87cfee9f25308dc24f2e1113cb70f",
+      "afterSha256": "b728a267d9989aad951f94698b77ff0c543765f79eb4e3e2a5e8d8f477ae60d0",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "c1abeceae50b19b539b511c99980251a516f605a6151de4450ddacac14feb8ca",
+      "afterSha256": "06f214d65b81190e3402782ac19f0b370390ad418d2ae57f21407b89ac582766",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "5fc8816d6b8095146bbf7ec9d7b130f654d95c3970d816869946844cb72bac4e",
+      "afterSha256": "e87b035a7bee3b6ae6fcb56caa26dbae9aeea971c0f454062c1124db6e4b2f60",
+      "correctedOwnAmbiguousBareEdits": 3
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "6a27276ca35d80998a56c4ec17b2b9431ac53f5864e53b9b7385f8e276c62ece",
+      "afterSha256": "44a6ca242a6ac133441ad7e3bfcb78030e59b4ddc4256d167467132186da9118",
+      "correctedOwnAmbiguousBareEdits": 3
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "6175d63f10607019cf7785304c627317a1f05bbd96aa7aa279b3160f8585933f",
+      "afterSha256": "92a974e9bb900f336ddf21618f3daa24a12736637cad6a89357382d9683337a0",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧪️mutation-payload/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "e174f3feec36358d11f07b915ef85e2a6ec9b70174596dd9a7b7b08fde30030d",
+      "afterSha256": "85022b27c51f8c81c9e8b2d13af9e080aae85b1060e8ffcbff73adbd7cf858d0",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "71ddae81f040ea1ed51a4d82e87c11c647743bdad0660ce1be07375fc967fd9c",
+      "afterSha256": "cbc2ef7e4dc4085ec67e74a762a1dec41170fcd7e129f15203ca048581ea602d",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🔐️writer/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "9d59ff3f1d053e944485fb8ac8f66f08d1e535eaee800d10b53689f3c8130161",
+      "afterSha256": "682cdc1d9cdafaca291fa6ec3cdeacae87234887b665eff17c5634f20bd2f97b",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔁️round-trip/🛡️authority/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "7379c54ca7d0fd1d02fd4bc53a5d805502a592c964955747b1894cf7f3e5b61b",
+      "afterSha256": "ceb52c8d65e29b29eeba8a5a387ae3b78cdd0e1c392d295e5a5559a4cca25647",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "6ec48fd5ad0e31c7898eb957a89b25358604b61592daf9302f529b990952c644",
+      "afterSha256": "c265f911fd7a8f897a9350212f6d486b8c1a62ce3367e60c0bf7c9ad87707340",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml",
+      "operation": "updated",
+      "beforeSha256": "52345e5bf8442ce66ee33c6db1c028d2c84b1b3085e19e7f6d2318db2bd62333",
+      "afterSha256": "9f711eab1f7387562c8e48f2f5facddddb1f65c9cd45b954299c8af7261a9342",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests/🧩️geometry/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "0918ae04ef3dd9aefff49f1dd95f17bcaad3cffe737ac77e42fcb4487b1804f5",
+      "afterSha256": "2f496122d1b661dfef7a6f3e0a30a132be3532f0b89db9c946cadf312e5f9443",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "3e47ccb15894a63143f9b8752d01f1ee94bc6298292a89133ef4c10f8cd9d3df",
+      "afterSha256": "88530d920638417858a296d57d527c6b6a9b2657df81156086a71f9f56bf6574",
+      "correctedOwnAmbiguousBareEdits": 3
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/README.md",
+      "operation": "updated",
+      "beforeSha256": "bb15a6df9dc6cc842451c01e06b92ddff12aa5317e76f62cebb2159d7d8d0569",
+      "afterSha256": "1f9e4dae665666748a820b19b5536efa79e63071ab985e0438944e399580c161",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "60dd4b6eaf30b00053802bb015e267aff62c85136161c4ec94c7805a05a0e8cb",
+      "afterSha256": "1db6e84560dd07bc77eaf15e75a1571d4217d15d26762dcbe0bb4385ac6946d9",
+      "correctedOwnAmbiguousBareEdits": 3
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🗿️artifact/🧪️tests/🔬️quick/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "ddd86837906cf23de0af3854a9f8f3f287a034d5dce4c1110f0ca2991f14196a",
+      "afterSha256": "fc689da18a00d8c65b17bdc57d5033774e47e618d64fa2777b97ceb165aab1cb",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🚪️io-procedural-3d-1/🐍️.py",
+      "operation": "updated",
+      "beforeSha256": "5dec83a9d30eef5432546383b8d354a39c0b2073fdd2e73194943c8c35711917",
+      "afterSha256": "e1ef9105b0849b0934c379cafc14a9b50957073c817fdf6d7d27071b922c0837",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📐️example-geometry-3d-1/🐍️.py",
+      "operation": "updated",
+      "beforeSha256": "b2747d5aeb06cd91782b803bebe4c0d0c62b7e854848720ab8b8219e811e0e60",
+      "afterSha256": "01bd0b676206a66b2aa85f2e58482cec6d0c25eee7f1e2fd4e69aa30b72dc0d5",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "a1ccd5c7bfff2def80186ce0d881c1c01bea80fb1843bbdecaf2d19633fb8813",
+      "afterSha256": "8696c67d2b0834ca2c93a490e47226f94673cde5ed0f4453ebbe47536bdb8bfb",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/🏃️execution/🐍️.py",
+      "operation": "updated",
+      "beforeSha256": "986d869e6afa2704db1758da71404c7868fcfcc2fd1b4ef0c7d21284f52c2793",
+      "afterSha256": "5494780753e408ad73ba205d44c7b140a29869f38371da554ab5bbc36b3d0729",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🪪️mandatory-mutation-descriptor/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "91978533cb54fed38a58a535a216f5f09c10a154bba2db1356bc5dc2c52310c7",
+      "afterSha256": "c5fa0922809462a7dd23fd481898c54c769bfdb42e47064c4a1f6731bedd48e6",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "404bb842b955ab1e51bcea47ea7ef5fb903204504e21ea7b27c186464aaeff8f",
+      "afterSha256": "35ff1e3a312a818f43150445f36267b1dee2fe9e2843fcaf3451d2e9a4850f6b",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏛️bestest/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "7063c34895ef8241ab29efac7a607b6b94ac36162fc5959850f2387b19426471",
+      "afterSha256": "70aa44a123d3d1f9bd14936215bfa3a308698d8984ef080493228d2fb6e8d26d",
+      "correctedOwnAmbiguousBareEdits": 3
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "f042287897c307847957daa88a434a8880527a340b226476fa71175fe68a1722",
+      "afterSha256": "2521bfd6a0861fe87eb156f52714bde13dcfd88c17bf21d0865c91a104aebad3",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-transaction/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "1a64c073451af3db87b135bd7186bcf51f62812e6c77cc05cc090386ed14e93b",
+      "afterSha256": "b7d1c44ea205b0624dcf719782d1d18edb7fb74ed3f348c1836147ee058ee248",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "7a14d59cab3825a4fe06bf66cb04fc3b044d7671e5ab833797d4d4338a0b099c",
+      "afterSha256": "7689a75b74817b39534fbd30e05b9ff10b4f3d05da7125dd8999390e893fb915",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "5d88e93657ffca3aff10ac0843cd9f97da8c89e218a305374b8ce262886b5130",
+      "afterSha256": "ea2cb0308d15ef9e4c952b84d7c30cc1f2350fea29902ded1aaa8a5f92130755",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "4366ca3900aea7e4bed0742d463c7b6c385d261cfeb130beb9608acab2f624ee",
+      "afterSha256": "aedb8c26f424c5d5caa842b564f3a5be03a499421b8ca4f881bdd87208627684",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "be8d2e8c14f42bb0ea46c2799174bbbd6ccda6fc9145a4207bab973b19d5e2d8",
+      "afterSha256": "fb8f78748f9eb22c3842287e50a2308ed900a0d80189e97be39f9484d51969aa",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "6ef19add2fbdfc5219b0ab6de9519a04cfc1f13f253a0db45536319a268cf07f",
+      "afterSha256": "7fc7048ddd4fff6b67747f58b8896bf2cd2d45befdbcacca890e8fdd3cc8d5ac",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "a0f52a6611b81640dc4bc31de04a4ab787842c43be248fde9b1ee5c5295be5a3",
+      "afterSha256": "75999aeed9dd8bed77be62cccd2cfdf1b747b097dacfbecb5f816dd785d065e7",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧪️tests/📁fixture-placement/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "7de80ca81d5ec3d32610dd04cc71f1d58245d5a9cd4a6e3910f42cd80b2fbb28",
+      "afterSha256": "e695d9855897f2b41979c0311748932a33770c743a246e5cef1e774edd623e49",
+      "correctedOwnAmbiguousBareEdits": 4
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📜️document/🧬️schema/🧬️mutations/🏷️rename-note/🧪️tests/🏷️retitles/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "cb24c09e10f182becdf33fe349ebcf33a11e3959c710d60e298343139e7ecc9c",
+      "afterSha256": "3935b9ad89094a97e23bb46602df3f08613cf01d642d27f3e7673033d87e52a4",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "7e98eb476f27e522d1087242613e0584ef47a4474c9f78488008def90bb878fe",
+      "afterSha256": "e0505c0f38e7fff7e837dfd240f301b47703cf0f0c76da34473719d50979172f",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "7a37ddb3536268bc4c3b6d9f2c15e21731858efb36e5d7d1d2cff8be0446e7fa",
+      "afterSha256": "8d81630d6dc0b7b0faab87fa27d9af4498355f8af10705949cdbe1d7e9f7f3b5",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "3297a9c33462603e531de8101fa0262d31ac44811f16f6f5d89585d944e4bd64",
+      "afterSha256": "8631630bf812401ff6c1e69e9bfceb2fd0e9bf0a9d8c3f31edf90e2929ece607",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "474a0803769c91c496c23e41cb57288669308d1fb825af6c45062da24d8cca17",
+      "afterSha256": "7a0c962ccafcade4c6e08e031e3c67a4be5c8a054a40dc9fd44be46ce6659caa",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "e9ad904231a9bd9a243cbccaa73231ea627ebf8298cf2a28c9e3f3ef4016694b",
+      "afterSha256": "fa0c9864ad44aae1c7734f179d0ac449eaa15d54de146872777ec60d86b3e1aa",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "c6f393fb713116bfa73398406068f7cb4a7871899692f63edc5212ab3b4ab64c",
+      "afterSha256": "5214a5b7583b87fc3f26e68ed2cde83bcc4be0117f53ce36586e3a5f1dd93abe",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "156673ee4d9e3a104921ff9a973ab7efe32e4b1e020adeab0bab618c8e1ce957",
+      "afterSha256": "e8596e28062b9213a974399fb51547a77ce6ad658837af51e34595ca9281a164",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "59fb85c8159a7e67d7182009b05e4eb2aebb91365a4ec282ea24461a3d47a410",
+      "afterSha256": "925e7b91c4e0e7e99c43a0e21f65337ed269ee002f5751d90e2e7a2c6df33b87",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🔬️probes/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "8cd0cb5921931488446d92949c2f776c98fef1cd65a72efc125c3deb60cb75eb",
+      "afterSha256": "9b8301c8b26a6856872c64023eb43bffbabc8f37ca7522f5ac7eec25a3ecf12f",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧪️board-tools/🐍️.py",
+      "operation": "updated",
+      "beforeSha256": "e0913f53b87311fe3c804c12777c479263bba6998131600af918bbdc48e040f6",
+      "afterSha256": "bcbec91982f42fb1304e3188719904bb7c4280950bb953c8fe78d1c0747428e8",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧪️select-tool-history/🐍️.py",
+      "operation": "updated",
+      "beforeSha256": "07da2d486bd8d5735d808d006c1623190f9758d6cc0c4bc105d225f5460c9381",
+      "afterSha256": "cb9cac30dd39b13d26335215b55cb2ff90d794180967101db13227d801462ec5",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧪️history-edit-runtime/🐍️.py",
+      "operation": "updated",
+      "beforeSha256": "b4b29eefae1ad9c574985bac4130ff3a71cc090ed98ab2a452c52aba49e9ed02",
+      "afterSha256": "0a4bf285630c768001e92b9b18bcf64daed346200c07fe85a60f0567205ec0f9",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "efa05ff55a4d745ac7dde37c5f1bb9d267c90154dde5f3aeab4534ac23941f11",
+      "afterSha256": "a40d5ad289a05c23cc2bc7038d4c765651bb4014f3a26aaa6738b6e330a674b6",
+      "correctedOwnAmbiguousBareEdits": 3
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌐️third-party-puzzle-2d-1/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "10a13d05f64138d839755f8b3a699b90052f663f531eda9e6dd12c76ac4061ee",
+      "afterSha256": "26c150f4f9247c45bd21ea446db65df0a1f8c07b36447d9a20ab0517fad0f8a2",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "5b37bcdff2a9d7954db7a3d8f83a9890dd6c508dadf98f1a7119b31c8c854816",
+      "afterSha256": "1bd0254f27326d2b016fe5c4f1806bdb34d69f2da6f9c0fd6475d9e57cb852bf",
+      "correctedOwnAmbiguousBareEdits": 3
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "3947f6ba1be6a50aefe4fe9d8153ae26ee4906851837641843a010ffa0dbf1f9",
+      "afterSha256": "67bbd66d3b62ae21351f3eac5e6deb3d28d60973104b73f7759b59cba44afc99",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mutate-wfc2d-1/🐍️.py",
+      "operation": "updated",
+      "beforeSha256": "8bb6183fd908639f398b6b67c9c5c9765792552394fb93dea1fe7b966dce5ca4",
+      "afterSha256": "2772b48a6996f5d72ed0178c448c9f4010579600e3e804fe30353c1a8750002f",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mount-contract/🐍️.py",
+      "operation": "updated",
+      "beforeSha256": "925ba586b20ff03800c8463003418f5b061071edf2d1cb6a85a11d2fc5ae0636",
+      "afterSha256": "31ae4060f87daaa70ade496eb4913e8ed6a96e334a49976c3da15756a9660638",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mutate-bitmap-1/🐍️.py",
+      "operation": "updated",
+      "beforeSha256": "4d27f2763ac12c0d1f79ca837bde947dcfc78a92e6846483e0ac8b2abe6b0198",
+      "afterSha256": "5b1f8b41a15574732c3955eb0030589fe06555b3f6df7de55e7a11d4366e5546",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🕸️third-party-puzzle-2d-1/🐍️.py",
+      "operation": "updated",
+      "beforeSha256": "d863311109c7cfe38397f11b242d5f4321146254c6564d77b27f939eed20f6d5",
+      "afterSha256": "1ef87e9ed352e1a5b41da2b496e9e416143ad49a2ce5e325dbea5be4daf6fa4f",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "7dddac43e9f960e7bf2e61d5c5edef79b40378fd2578f5b0a3dd9404388abef5",
+      "afterSha256": "c3befc350e78ab5969da31fcd1894a2315c7eb3e5d15243e9bcd0b10dfdb2c4d",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mutate-wfc-grid3d-1/🐍️.py",
+      "operation": "updated",
+      "beforeSha256": "cc64780e4f4274ccb616b61b8cb7f7f6c8e3cf54c6072949620820acda491a1b",
+      "afterSha256": "6ba315633292effec4ec97302f3e6d730360c1634c06a41dd7ceb73d6bbe0c38",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mount-contract/🐍️.py",
+      "operation": "updated",
+      "beforeSha256": "b3f35bd29e42f65c955cc6d33902ac8e3023d5fef938c10a65a333e1ef37997d",
+      "afterSha256": "ed19cffbe761aca7a37c893e80cc3901763f316414fd0fcc13f8512e4cfbdd5e",
+      "correctedOwnAmbiguousBareEdits": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
+      "operation": "updated",
+      "beforeSha256": "95c68a7bb7f227d0d00d35b89eaa7f31195cd4cb19694eb01664784206709608",
+      "afterSha256": "6a69acdd53e9035cfe192d3a4e6143ad34cef117c481c5da1f34354a6afe07b8",
+      "correctedOwnAmbiguousBareEdits": 2
+    },
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🧪️tests/🔬️unit/🦀️.rs",
+      "operation": "updated",
+      "beforeSha256": "16b055cf914e5149d808852cee7d2ba8c9851b756b50937753e93023e68169fc",
+      "afterSha256": "da8aae29d2c526d8fe43fa9a2ec9bd6b0a1147d85e7aaa389dd58f55196fdc8e",
+      "correctedOwnAmbiguousBareEdits": 1
+    }
+  ],
+  "peerObservations": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️tests/🧭️fixture-placement/🟦️.ts",
+      "observation": "peer-already-corrected-bare-markers-no-write"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎚️build-mode/🟦️.ts",
+      "observation": "peer-source-edits-preserved-only-own-bare-literal-inverted"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧪️tests/📁fixture-placement/🟦️.ts",
+      "observation": "peer-source-edits-preserved-only-own-bare-literal-inverted"
+    }
+  ]
+}

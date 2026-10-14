@@ -1,0 +1,101 @@
+{
+  "format": "semio.generation3d.interaction-scope",
+  "version": 1,
+  "note": "What each of the six framework-reserved interaction verbs repaints in the procedural 3d editor and viewer. Nothing here is hand-written per window: the framework DERIVES the scope from the app's own declarations (`interaction_declared_refresh_scope` over `WindowKindDefinition.interactions`), and this table is what that derivation must answer. `windowBodies` is the body of every window kind that declares the `graph` domain, in declaration order; `panelBodies` is every declared panel leaf body (framework tabs included) and is empty for every verb that moves no selection, because a panel row that chased the pointer would flicker rather than inform. `publishes` names the bodies whose render consumes the interaction marks — a verb may never narrow below the ones that publish ITS lane, which is the assertion that keeps the derivation honest as windows are added.",
+  "domain": "graph",
+  "undeclaredDomain": "mesh",
+  "roles": [
+    {
+      "id": "editor",
+      "declaredWindowBodies": ["procedural.play.main", "procedural.play.preview", "procedural.play.generations", "procedural.play.generate-form", "procedural.play.generate-preview"],
+      "declaredPanelBodies": ["procedural.play.artifact", "procedural.play.catalogue", "procedural.play.inspection", "framework.body.history", "framework.body.toolRun"],
+      "publishesHover": ["procedural.play.main", "procedural.play.preview", "procedural.play.generate-preview"],
+      "publishesSelection": ["procedural.play.main", "procedural.play.preview", "procedural.play.generate-preview", "procedural.play.inspection"],
+      "quiet": ["procedural.play.generations", "procedural.play.generate-form", "procedural.play.artifact", "procedural.play.catalogue"],
+      "verbs": [
+        {
+          "verb": "interactionHover",
+          "windowBodies": ["procedural.play.main", "procedural.play.preview", "procedural.play.generate-preview"],
+          "panelBodies": [],
+          "measures": false
+        },
+        {
+          "verb": "interactionSelect",
+          "windowBodies": ["procedural.play.main", "procedural.play.preview", "procedural.play.generate-preview"],
+          "panelBodies": ["procedural.play.artifact", "procedural.play.catalogue", "procedural.play.inspection", "framework.body.history", "framework.body.toolRun"],
+          "measures": true
+        },
+        {
+          "verb": "clearSelection",
+          "windowBodies": ["procedural.play.main", "procedural.play.preview", "procedural.play.generate-preview"],
+          "panelBodies": ["procedural.play.artifact", "procedural.play.catalogue", "procedural.play.inspection", "framework.body.history", "framework.body.toolRun"],
+          "measures": true
+        },
+        {
+          "verb": "selectAll",
+          "windowBodies": ["procedural.play.main", "procedural.play.preview", "procedural.play.generate-preview"],
+          "panelBodies": ["procedural.play.artifact", "procedural.play.catalogue", "procedural.play.inspection", "framework.body.history", "framework.body.toolRun"],
+          "measures": true
+        },
+        {
+          "verb": "setSelectionMode",
+          "windowBodies": ["procedural.play.main", "procedural.play.preview", "procedural.play.generate-preview"],
+          "panelBodies": [],
+          "measures": true
+        },
+        {
+          "verb": "setInteractionGranularity",
+          "windowBodies": ["procedural.play.main", "procedural.play.preview", "procedural.play.generate-preview"],
+          "panelBodies": [],
+          "measures": true
+        }
+      ]
+    },
+    {
+      "id": "viewer",
+      "declaredWindowBodies": ["procedural.view.preview"],
+      "declaredPanelBodies": ["framework.body.history", "framework.body.toolRun"],
+      "publishesHover": ["procedural.view.preview"],
+      "publishesSelection": ["procedural.view.preview"],
+      "quiet": [],
+      "verbs": [
+        {
+          "verb": "interactionHover",
+          "windowBodies": ["procedural.view.preview"],
+          "panelBodies": [],
+          "measures": false
+        },
+        {
+          "verb": "interactionSelect",
+          "windowBodies": ["procedural.view.preview"],
+          "panelBodies": ["framework.body.history", "framework.body.toolRun"],
+          "measures": true
+        },
+        {
+          "verb": "clearSelection",
+          "windowBodies": ["procedural.view.preview"],
+          "panelBodies": ["framework.body.history", "framework.body.toolRun"],
+          "measures": true
+        },
+        {
+          "verb": "selectAll",
+          "windowBodies": ["procedural.view.preview"],
+          "panelBodies": ["framework.body.history", "framework.body.toolRun"],
+          "measures": true
+        },
+        {
+          "verb": "setSelectionMode",
+          "windowBodies": ["procedural.view.preview"],
+          "panelBodies": [],
+          "measures": true
+        },
+        {
+          "verb": "setInteractionGranularity",
+          "windowBodies": ["procedural.view.preview"],
+          "panelBodies": [],
+          "measures": true
+        }
+      ]
+    }
+  ]
+}

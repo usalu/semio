@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn fill_all_objects_preparation_requires_real_geometry() {
-    let scene_snapshot: serde_json::Value = serde_json::from_str(include_str!("../../../../../../⏳️precompute/🪣️fill/🧫️fixtures/🎞️fill-run.json")).expect("fill law");
+    let scene_snapshot: serde_json::Value = serde_json::from_str(include_str!("../../../../../../⏳️precompute/🪣️fill/🧪️tests/🧫️fixtures/🎞️fill-run.json")).expect("fill law");
     for case in scene_snapshot["laws"]["allObjects"]["preparedGeometry"].as_array().expect("mesh cases") {
         let url = case["url"].as_str().expect("url");
         if case["registered"].as_bool().expect("registered") {

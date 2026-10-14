@@ -20,7 +20,7 @@ async fn dag_document_vcs_replays_node_operations() {
     let mut store = create_dag_store("dag", empty_dag_document(), opened_dag_test_actor()).await.expect("store");
     crate::os_store::test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 })], transaction: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("projection").nodes.len(), 1);
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🪪️demo-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪪️demo-ownership/🔣️.json")).unwrap();
     assert_eq!(serde_json::to_value(store.local_actor_id()).unwrap(), fixture["openedActor"]);
     assert_eq!(semio_framework_pack_json::to_json_string(store.local_actor_id()), serde_json::to_string(&fixture["openedActor"]).unwrap());
     assert_eq!(store.envelope().vcs.edits.last().unwrap().actor.as_deref(), fixture["openedActor"].as_str());
@@ -230,7 +230,7 @@ fn dag_document_dsl_round_trips_the_demo_fixture() {
 #[test]
 fn bundled_demo_fixture_is_canonical() {
     let actual = crate::DAG_DEMO_TEXT;
-    let expected = <DagSnapshot as crate::os_store::serialization::ArtifactDsl>::print_dsl(&default_dag_document());
+    let expected = <DagSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&default_dag_document());
     assert_eq!(actual, expected, "bundled demo fixture must stay in canonical owned DSL form");
 }
 
@@ -348,7 +348,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 /// 🪪️ The framework-owned demo preserves its neutral graph identities through the first-party codec.
 #[test]
 fn dag_demo_ownership_matches_neutral_graph_identity() {
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🪪️demo-ownership/🔣️.json")).unwrap();
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪪️demo-ownership/🔣️.json")).unwrap();
     let document = default_dag_document();
     let encoded: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&document)).unwrap();
     assert_eq!(encoded["schema"], expected["schema"]);

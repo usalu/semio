@@ -1,20 +1,20 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 🧩️ Checks the neutral host fixture; its shipped component comes from the inferred `component` target. */
 import {readFileSync} from "node:fs";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import {join} from "node:path";
 import { runCargo, runRepositoryCargoTests } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import {runBudgetedTestCommand} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {runBudgetedTestCommand} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 class SqliteSource extends BundleScript {async run(segments:string[]){if(segments.length)throw Error("test-snapshot-sqlite-source accepts no arguments");await runBudgetedTestCommand(process.execPath,["test","--timeout","60000",join(import.meta.dir,"../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:300000,throwOnFailure:true});}}
 class SqliteNative extends BundleScript {async run(segments:string[]){if(segments.length)throw Error("test-snapshot-sqlite-native accepts no arguments");await runRepositoryCargoTests(["semio-framework-plugin-host-test-component"], this.repoRoot, this.invocation.control, ["--lib","sqlite_snapshot_host_count_","--no-fail-fast"]);}}
 class SqliteReleaseNative extends BundleScript {async run(segments:string[]){if(segments.length)throw Error("test-snapshot-sqlite-release-native accepts no arguments");await runRepositoryCargoTests(["semio-framework-plugin-host-test-component"], this.repoRoot, this.invocation.control, ["--lib","sqlite_retained_host_count_erased_requests_diagnostics_and_full_release","--no-fail-fast"]);}}
 class Check extends BundleScript {async run(){
   const schema=JSON.parse(readFileSync(join(import.meta.dir,"../../🧬️schema/📸️snapshot/🔣️.json"),"utf8"));
-  const law=JSON.parse(readFileSync(join(import.meta.dir,"../../🧫️fixtures/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(import.meta.dir,"../../🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
   const validate=new Ajv({strict:true}).addKeyword({keyword:"x-semio-state",schemaType:"string"}).compile(schema);
   for(const vector of law.wireVectors)assert(validate(vector));
   for(const vector of [{count:0,foreign:true},{count:0.5},{}])assert(!validate(vector));

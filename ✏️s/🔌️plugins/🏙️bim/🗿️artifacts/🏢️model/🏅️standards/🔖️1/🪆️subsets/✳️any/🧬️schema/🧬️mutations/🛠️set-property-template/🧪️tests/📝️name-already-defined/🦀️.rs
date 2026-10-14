@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🛠️set-property-template/📝️name-already-defined",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛠️set-property-template/📝️name-already-defined/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛠️set-property-template/📝️name-already-defined/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛠️set-property-template/📝️name-already-defined/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛠️set-property-template/📝️name-already-defined/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛠️set-property-template/📝️name-already-defined/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛠️set-property-template/📝️name-already-defined/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛠️set-property-template/📝️name-already-defined/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛠️set-property-template/📝️name-already-defined/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛠️set-property-template/📝️name-already-defined/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛠️set-property-template/📝️name-already-defined/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

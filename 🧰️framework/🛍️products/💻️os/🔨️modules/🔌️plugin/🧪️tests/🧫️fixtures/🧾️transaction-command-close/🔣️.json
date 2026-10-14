@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 2,
+  "layoutPolicy": "command-value-layout-excludes-allocator-overhead",
+  "callerGrant": [
+    1,
+    4096,
+    65536,
+    262144,
+    64
+  ],
+  "cases": [
+    {
+      "id": "before-begin-close",
+      "beginClose": false,
+      "command": "increment",
+      "completion": "empty",
+      "advance": "none",
+      "probe": {
+        "items": 1,
+        "axis": "exact-quote"
+      },
+      "expected": {
+        "step": "blocked",
+        "command": "retained",
+        "completion": "retained",
+        "releasedBytes": "zero"
+      }
+    },
+    {
+      "id": "zero-items",
+      "beginClose": true,
+      "command": "increment",
+      "completion": "empty",
+      "advance": "none",
+      "probe": {
+        "items": 0,
+        "axis": "exact-quote"
+      },
+      "expected": {
+        "step": "pending",
+        "command": "retained",
+        "completion": "retained",
+        "releasedBytes": "zero"
+      }
+    },
+    {
+      "id": "short-depth",
+      "beginClose": true,
+      "command": "streamed-increment",
+      "completion": "empty",
+      "advance": "none",
+      "probe": {
+        "items": 1,
+        "axis": "depth-minus-one"
+      },
+      "expected": {
+        "step": "refused",
+        "command": "retained",
+        "completion": "retained",
+        "releasedBytes": "zero"
+      }
+    },
+    {
+      "id": "short-release",
+      "beginClose": true,
+      "command": "increment",
+      "completion": "empty",
+      "advance": "until-release-quote",
+      "probe": {
+        "items": 1,
+        "axis": "release-minus-one"
+      },
+      "expected": {
+        "step": "pending",
+        "command": "framed",
+        "completion": "retained",
+        "releasedBytes": "zero"
+      }
+    },
+    {
+      "id": "exact-external-completion",
+      "beginClose": true,
+      "command": "increment-and-notify",
+      "completion": "pending-external",
+      "advance": "until-command-released",
+      "probe": null,
+      "expected": {
+        "step": "pending",
+        "command": "released",
+        "completion": "retained",
+        "releasedBytes": "command-layout-at-least"
+      }
+    },
+    {
+      "id": "exact-pending-completion",
+      "beginClose": true,
+      "command": "increment",
+      "completion": "pending-owner",
+      "advance": "until-command-released",
+      "probe": null,
+      "expected": {
+        "step": "pending",
+        "command": "released",
+        "completion": "retained",
+        "releasedBytes": "command-layout-at-least"
+      }
+    }
+  ]
+}

@@ -2,9 +2,9 @@
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
-import fixture from"../../🧫️fixtures/🎞️intrinsic-media/🔣️.json";
+import fixture from"../../🧪️tests/🧫️fixtures/🎞️intrinsic-media/🔣️.json";
 import schema from"../../🧬️schema/🔣️.json";
-import depthFixture from"../../🧫️fixtures/🎞️intrinsic-media/🌲️depth/🔣️.json";
+import depthFixture from"../../🧪️tests/🧫️fixtures/🎞️intrinsic-media/🌲️depth/🔣️.json";
 type Literal={kind:string;value?:unknown};
 
 test("closed intrinsic media corpus survives independent SQLite file materialization",()=>{

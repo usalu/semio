@@ -2,7 +2,7 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 
 import {DRAW_SQLITE_SCHEMA,drawSnapshotToSqliteDatabase,drawSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import {binary64,parseBinary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";

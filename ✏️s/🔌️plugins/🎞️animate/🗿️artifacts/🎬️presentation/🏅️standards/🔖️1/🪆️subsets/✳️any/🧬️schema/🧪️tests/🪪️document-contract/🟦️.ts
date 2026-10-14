@@ -11,7 +11,7 @@ import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
 import { parsePresentationArtifact } from "../../🟦️.ts";
 import { parsePresentationSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parsePresentationDiff } from "../../🔺️diff/🟦️.ts";
-import vectors from "../../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
+import vectors from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document-contract/🔣️.json" with { type: "json" };
 
 /** 🪆️ Compares first-party parsers with Ajv and every committed Presentation mutation document. */
 export function testPresentationDocumentContractOracle(): void {
@@ -22,7 +22,7 @@ export function testPresentationDocumentContractOracle(): void {
     diff: { schema: diffSchema, parse: parsePresentationDiff },
     validDocuments: [{ input: vectors.document, output: vectors.document }],
     invalidDocuments: vectors.invalidDocuments, invalidDiffs: vectors.invalidDiffs,
-    mutationRoots: [join(import.meta.dir, "../../../🧫️fixtures/🧬️mutations")],
+    mutationRoots: [join(import.meta.dir, "../../../🧪️tests/🧫️fixtures/🧬️mutations")],
     committed: { snapshots: 18, diffs: 5 },
   });
   assert.deepEqual(parsePresentationDiff(vectors.diff), vectors.diff);

@@ -24,7 +24,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readdirSync, readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
-      const fixturesDir = join(dirname(fileURLToPath(source.url)), "..", "🧫️fixtures");
+      const fixturesDir = join(dirname(fileURLToPath(source.url)), "..", "🧪️tests/🧫️fixtures");
       const files = readdirSync(fixturesDir).filter((name) => name.endsWith(".json"));
       expect(files.length).toBeGreaterThan(0);
       for (const file of files) {

@@ -393,7 +393,7 @@ mod const_authored_unit_schema_tests{
         const DEGREE:Option<&UnitSpec>=unit_by_symbol("°");
         const LENGTH:Option<&UnitSpec>=unit_by_symbol("m");
         const REFUSED:Option<&UnitSpec>=unit_by_symbol("°\u{200d}");
-        let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🏷️const-units/🔣️.json")).unwrap();
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🏷️const-units/🔣️.json")).unwrap();
         let symbols=fixture["symbols"].as_array().unwrap();assert_eq!(UNITS.len(),symbols.len());
         for(index,symbol)in symbols.iter().enumerate(){assert_eq!(UNITS[index].symbol,symbol.as_str().unwrap());}
         assert!(std::ptr::eq(DEGREE.unwrap(),&UNITS[11]));assert!(std::ptr::eq(LENGTH.unwrap(),&UNITS[0]));assert!(REFUSED.is_none());assert!(!std::ptr::eq(unit_by_symbol("deg").unwrap(),DEGREE.unwrap()));

@@ -9,7 +9,7 @@ use semio_framework_value::NativeDecodeControl;
 
 #[test]
 fn os_controlled_numeric_token_bounds_preserve_distinct_work_and_value_refusals() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🗣️dsl/🧬️schema/🧫️fixtures/🔢️number-refusal/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🗣️dsl/🧪️tests/🧫️fixtures/🔢️number-refusal/🔣️.json")).unwrap();
     let spec = semio_framework_dsl_record::RecordSpec::new(Some("measure"), semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(1, "value", Shape::Float)]);
     for row in corpus["cases"].as_array().unwrap() {
         let fragment = row["fragment"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap() as usize);

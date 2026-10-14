@@ -4,15 +4,15 @@ use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{comp
 use crate::{Entry, ModelDiff, StoreyPatch, TopConstraint, WallPatch};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const HOUSE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
-const JOINS: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json");
+const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
+const JOINS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json");
 
 const CASES: [(&str, &str); 5] = [
-    ("l-miter-equal", include_str!("../../../../../🧫️fixtures/💡️inferences/🧱️wall-layout/📐️l-miter-equal/🔣️.json")),
-    ("t-butt", include_str!("../../../../../🧫️fixtures/💡️inferences/🧱️wall-layout/🔱️t-butt/🔣️.json")),
-    ("x-cross", include_str!("../../../../../🧫️fixtures/💡️inferences/🧱️wall-layout/❌️x-cross/🔣️.json")),
-    ("location-lines", include_str!("../../../../../🧫️fixtures/💡️inferences/🧱️wall-layout/📏️location-lines/🔣️.json")),
-    ("arc-tangent", include_str!("../../../../../🧫️fixtures/💡️inferences/🧱️wall-layout/🌀️arc-tangent/🔣️.json")),
+    ("l-miter-equal", include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧱️wall-layout/📐️l-miter-equal/🔣️.json")),
+    ("t-butt", include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧱️wall-layout/🔱️t-butt/🔣️.json")),
+    ("x-cross", include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧱️wall-layout/❌️x-cross/🔣️.json")),
+    ("location-lines", include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧱️wall-layout/📏️location-lines/🔣️.json")),
+    ("arc-tangent", include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧱️wall-layout/🌀️arc-tangent/🔣️.json")),
 ];
 
 fn decode(text: &str) -> ModelSnapshot {

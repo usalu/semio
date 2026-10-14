@@ -66,7 +66,7 @@ struct SupersededInput {
 
 /// 📜️ The fixture every law here walks.
 fn fixture() -> Fixture {
-    let fixture: Fixture = serde_json::from_str(include_str!("../../🧫️fixtures/⚔️concurrent-write/🔣️.json")).expect("concurrent write fixture");
+    let fixture: Fixture = serde_json::from_str(include_str!("../🧫️fixtures/⚔️concurrent-write/🔣️.json")).expect("concurrent write fixture");
     assert_eq!(fixture.schema, "semio.db.concurrent-write/v1");
     fixture
 }

@@ -1,3 +1,5 @@
+import { RemoteOriginalBootstrapOwner, type OriginalBootstrapResponse } from "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/📮️port/🟦️.ts";
+import {componentPackageReceiptSource} from "../../../../../🔌️plugin/📥️receipt/🟦️.ts";
 import { mediaTransportPort } from "../../../🎬️media/📡️channel/🟦️.ts";
 import type { MediaTransportPort } from "../../../🎬️media/🚚️lifecycle/🟦️.ts";
 // #region 🧲️Header
@@ -185,10 +187,19 @@ function routeShardPorts(): void {
 
 //#region 🔖️PooledSingletons
 let pooledRuntime: PooledActorRuntime | null = null;
+let originalWorkOwner: RemoteOriginalBootstrapOwner | undefined;
+function frameOriginalWorkOwner(): RemoteOriginalBootstrapOwner {
+  if (originalWorkOwner) return originalWorkOwner;
+  const owner = new RemoteOriginalBootstrapOwner(request => self.postMessage(request));
+  self.addEventListener("message", (event: MessageEvent<OriginalBootstrapResponse>) => { if (event.data?.kind === "original-stock-result") owner.receiveResponse(event.data); });
+  originalWorkOwner = owner;
+  return owner;
+}
 function getShardClient(): ShardClient {
   pooledRuntime ??= createPooledActorRuntime({
     createWorker: (shardIndex: number) => new MainThreadShardWorker(shardIndex),
     residentLedger: rendererResidentLedger(),
+    originalWorkStock: frameOriginalWorkOwner(),
     // [TRACE] temporary watchdog widening — measures whether the edit-mode `procedural.play.main`
     // render turn is a HANG or a long-but-finite build. On THIS target the shard is a
     // `MainThreadShardWorker`, so a compute-bound guest turn blocks the very progress ticker the
@@ -1271,7 +1282,7 @@ export function wgpuEphemeralSnapshot(ephemeral: { readonly presence: readonly n
  * one instance. */
 export async function loadPluginModule(pluginId: string, moduleUrl: string, signal: AbortSignal | undefined, admittedDescriptor: import("@semio-tech/framework").PluginPackageDescriptor | undefined, consumedTopics: readonly string[]): Promise<WgpuPluginHandle> {
   signal?.throwIfAborted();
-  const { manifest, packageId, componentSha256 } = admittedDescriptor ?? await fetchPackageDescriptor(pluginId, moduleUrl, signal);
+  const { manifest, packageId, componentSha256 } = admittedDescriptor ?? await fetchPackageDescriptor(pluginId, moduleUrl, componentPackageReceiptSource, signal);
   signal?.throwIfAborted();
   if (manifest.pluginId !== pluginId) throw new Error(`plugin.descriptor-identity-mismatch: ${pluginId}`);
   contributionManifests.set(pluginId, manifest);

@@ -1,0 +1,1549 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️artifact-admission-and-completion-oracles/🟦️.ts",
+    "before": "a99767f98107a75de1418b01f85d338f52ab3a76686b48084ead451d2fb8f83c",
+    "after": "5bc1b63c88ee6c77ea6e09406b0eb7068390f4fa1466d712f999fd80367304ec",
+    "edits": [
+      {
+        "start": 4129,
+        "end": 4168,
+        "from": "../../🧫️fixtures/⏳️completion/🔣️.json",
+        "to": "../🧫️fixtures/⏳️completion/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧮️program-matrix/🟦️.ts",
+    "before": "72676ea55d6acfda140a4acdb147c3beda97b24d51a7d86e6f776f3f7973d539",
+    "after": "3969b3b04d4d49236df48b1a57f0394e913233837e663df5e393fe7d6b0961e1",
+    "edits": [
+      {
+        "start": 3634,
+        "end": 3674,
+        "from": "../../🧫️fixtures/🧮️program-matrix.json",
+        "to": "../🧫️fixtures/🧮️program-matrix.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts",
+    "before": "00bc5f081f80089d945013662f31d5358826d81781fb4e5e4e1bc4b12fa60010",
+    "after": "6f88c103dfefe0417ea20f15d94329d537caad6ab41378a7f8e3bfb1ac64d071",
+    "edits": [
+      {
+        "start": 7450,
+        "end": 7503,
+        "from": "../../🧫️fixtures/♻️bounded-value-retirement/🔣️.json",
+        "to": "../🧫️fixtures/♻️bounded-value-retirement/🔣️.json"
+      },
+      {
+        "start": 6084,
+        "end": 6133,
+        "from": "../../🧫️fixtures/🧬️owned-schema-record/🔣️.json",
+        "to": "../🧫️fixtures/🧬️owned-schema-record/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/🟦️.ts",
+    "before": "ee82d25f760bb8cc5e714ecdc3d8353580a79a7447ad8218aeb9bb2940e56d1f",
+    "after": "011474e7936e31b47d15a0f2e4a0089dcefcd9efdf0c557475c08a56fd7fdf0e",
+    "edits": [
+      {
+        "start": 105039,
+        "end": 105084,
+        "from": "../../🧫️fixtures/📖️api-publication/🔣️.json",
+        "to": "../🧫️fixtures/📖️api-publication/🔣️.json"
+      },
+      {
+        "start": 96965,
+        "end": 97009,
+        "from": "../../🧫️fixtures/🧫️command-boundaries.json",
+        "to": "../🧫️fixtures/🧫️command-boundaries.json"
+      },
+      {
+        "start": 94691,
+        "end": 94733,
+        "from": "../../🧫️fixtures/🔁️font-publication.json",
+        "to": "../🧫️fixtures/🔁️font-publication.json"
+      },
+      {
+        "start": 86923,
+        "end": 86963,
+        "from": "../../🧫️fixtures/🖌️kind-paint/🔣️.json",
+        "to": "../🧫️fixtures/🖌️kind-paint/🔣️.json"
+      },
+      {
+        "start": 86763,
+        "end": 86802,
+        "from": "../../🧫️fixtures/🔓️api-freshness.json",
+        "to": "../🧫️fixtures/🔓️api-freshness.json"
+      },
+      {
+        "start": 86645,
+        "end": 86685,
+        "from": "../../🧫️fixtures/🧫️merge-contract.json",
+        "to": "../🧫️fixtures/🧫️merge-contract.json"
+      },
+      {
+        "start": 86524,
+        "end": 86565,
+        "from": "../../🧫️fixtures/🧫️pdf-consumption.json",
+        "to": "../🧫️fixtures/🧫️pdf-consumption.json"
+      },
+      {
+        "start": 84859,
+        "end": 84900,
+        "from": "../../🧫️fixtures/🧫️pdf-consumption.json",
+        "to": "../🧫️fixtures/🧫️pdf-consumption.json"
+      },
+      {
+        "start": 82267,
+        "end": 82301,
+        "from": "../../🧫️fixtures/🖨️macro-staging",
+        "to": "../🧫️fixtures/🖨️macro-staging"
+      },
+      {
+        "start": 77481,
+        "end": 77515,
+        "from": "../../🧫️fixtures/🖨️macro-staging",
+        "to": "../🧫️fixtures/🖨️macro-staging"
+      },
+      {
+        "start": 58481,
+        "end": 58512,
+        "from": "../../🧫️fixtures/🖌️kind-paint",
+        "to": "../🧫️fixtures/🖌️kind-paint"
+      },
+      {
+        "start": 57064,
+        "end": 57104,
+        "from": "../../🧫️fixtures/🖌️kind-paint/🔣️.json",
+        "to": "../🧫️fixtures/🖌️kind-paint/🔣️.json"
+      },
+      {
+        "start": 34534,
+        "end": 34573,
+        "from": "../../🧫️fixtures/🔓️api-freshness.json",
+        "to": "../🧫️fixtures/🔓️api-freshness.json"
+      },
+      {
+        "start": 30848,
+        "end": 30887,
+        "from": "../../🧫️fixtures/🔓️api-freshness.json",
+        "to": "../🧫️fixtures/🔓️api-freshness.json"
+      },
+      {
+        "start": 28855,
+        "end": 28894,
+        "from": "../../🧫️fixtures/🔓️api-freshness.json",
+        "to": "../🧫️fixtures/🔓️api-freshness.json"
+      },
+      {
+        "start": 25000,
+        "end": 25039,
+        "from": "../../🧫️fixtures/🔓️api-freshness.json",
+        "to": "../🧫️fixtures/🔓️api-freshness.json"
+      },
+      {
+        "start": 24577,
+        "end": 24616,
+        "from": "../../🧫️fixtures/🔓️api-freshness.json",
+        "to": "../🧫️fixtures/🔓️api-freshness.json"
+      },
+      {
+        "start": 13847,
+        "end": 13886,
+        "from": "../../🧫️fixtures/🔓️api-freshness.json",
+        "to": "../🧫️fixtures/🔓️api-freshness.json"
+      },
+      {
+        "start": 13546,
+        "end": 13585,
+        "from": "../../🧫️fixtures/🔓️api-freshness.json",
+        "to": "../🧫️fixtures/🔓️api-freshness.json"
+      },
+      {
+        "start": 5936,
+        "end": 5976,
+        "from": "../../🧫️fixtures/🧫️merge-contract.json",
+        "to": "../🧫️fixtures/🧫️merge-contract.json"
+      },
+      {
+        "start": 4347,
+        "end": 4391,
+        "from": "../../🧫️fixtures/🗺️gallery-identities.json",
+        "to": "../🧫️fixtures/🗺️gallery-identities.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️publication/🧪️tests/🟦️.ts",
+    "before": "cd4ce8a40fe1ccf229186a1161cc1942ccd55159e4fa44c2c8f39fc8061537fa",
+    "after": "9354f48592e87a61a5b24ba8af8e0641196f043cc57b83170db58550e9ec6a81",
+    "edits": [
+      {
+        "start": 13732,
+        "end": 13755,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 799,
+        "end": 822,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🗂️schema-document-index/🟦️.ts",
+    "before": "9313ed923ce8a63b2a151510de1681b9151f60bc2ccfc410141d1e208e0bc6b9",
+    "after": "5d33f95a624d08b0cdeedcfa8dd8d999a81c27a9759099e3684d85e00f529abc",
+    "edits": [
+      {
+        "start": 442,
+        "end": 485,
+        "from": "../../🧫️fixtures/🧬️schema-search/🔣️.json",
+        "to": "../🧫️fixtures/🧬️schema-search/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🪪️mandatory-mutation-descriptor/🟦️.ts",
+    "before": "769586f490d8439b3270b388a27ba656fc00d06a7a4936ea7593e2a63f39f5ab",
+    "after": "889e9183b326b87665773607ddedc8f44feb67aa8e3b5837288ff6d967f23ad4",
+    "edits": [
+      {
+        "start": 456,
+        "end": 499,
+        "from": "../../🧫️fixtures/🧬️schema-search/🔣️.json",
+        "to": "../🧫️fixtures/🧬️schema-search/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧲️engine-surface-retention/🟦️.ts",
+    "before": "c4267c8f45d1901d102e77dd22bd35eeb0cb70503b75dfb607549bbaf31ebc99",
+    "after": "d3e1d3e039a6910c722cfa0c67348443ac2154334a16409755cffbd186aff867",
+    "edits": [
+      {
+        "start": 6838,
+        "end": 6878,
+        "from": "../../🧫️fixtures/🪪️scene-pointer-owner",
+        "to": "../🧫️fixtures/🪪️scene-pointer-owner"
+      },
+      {
+        "start": 4273,
+        "end": 4322,
+        "from": "../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json",
+        "to": "../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json"
+      },
+      {
+        "start": 1122,
+        "end": 1171,
+        "from": "../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json",
+        "to": "../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "before": "be8ce68068698e34c26feb9e28404e171dc254d65f24db4481a96813b213607c",
+    "after": "8aba3824c280cdc81a93fff6e2db7d7e7d8addd897b471d10aeac0075e49d59b",
+    "edits": [
+      {
+        "start": 278,
+        "end": 326,
+        "from": "../../🧫️fixtures/🧹️session-retirement/🔣️.json",
+        "to": "../🧫️fixtures/🧹️session-retirement/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts",
+    "before": "f75bfbddb9fa96c42a2f5d6210256aa693308a948deafd7416946a8644e43230",
+    "after": "9ae773d01b9d5a313859dd4bc34edc5af31217d0310697014b9fffd4351f336a",
+    "edits": [
+      {
+        "start": 16645,
+        "end": 16674,
+        "from": "🧫️fixtures/input-wallet.json",
+        "to": "🧪️tests/🧫️fixtures/input-wallet.json"
+      },
+      {
+        "start": 15314,
+        "end": 15347,
+        "from": "🧫️fixtures/🛂️receiving/🔣️.json",
+        "to": "🧪️tests/🧫️fixtures/🛂️receiving/🔣️.json"
+      },
+      {
+        "start": 14289,
+        "end": 14324,
+        "from": "../../🧫️fixtures/📥️input/🔣️.json",
+        "to": "../../../../🧪️tests/🧫️fixtures/🪶️sqlite/📥️input/🔣️.json"
+      },
+      {
+        "start": 11685,
+        "end": 11720,
+        "from": "../../🧫️fixtures/📥️input/🔣️.json",
+        "to": "../../../../🧪️tests/🧫️fixtures/🪶️sqlite/📥️input/🔣️.json"
+      },
+      {
+        "start": 8467,
+        "end": 8505,
+        "from": "../../🧫️fixtures/📨️metadata/🔣️.json",
+        "to": "../../../../🧪️tests/🧫️fixtures/🪶️sqlite/📨️metadata/🔣️.json"
+      },
+      {
+        "start": 7101,
+        "end": 7128,
+        "from": "🧫️fixtures/♻️host/🔣️.json",
+        "to": "🧪️tests/🧫️fixtures/♻️host/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+    "before": "b647553b7ee843c662b9b378dff5a0c0aac7276e4bc455ed36e3c2feac6ea895",
+    "after": "b449b87b6f0edd94b27dfe1caea5250acb830205abb0442ca0af64173b2d75a4",
+    "edits": [
+      {
+        "start": 44513,
+        "end": 44536,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 42599,
+        "end": 42622,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 39915,
+        "end": 39938,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 37296,
+        "end": 37319,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 33846,
+        "end": 33869,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 26581,
+        "end": 26604,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 24998,
+        "end": 25021,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 23344,
+        "end": 23367,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 2587,
+        "end": 2610,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 1748,
+        "end": 1771,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 312,
+        "end": 335,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "before": "ca427f6b0f2cc0ecfd60523e44f008ed9a7e0f07dae548fa33af6f56dba8bc7d",
+    "after": "77f576d2a7fa24d768a10a88cdd76aa8aebd9ab4dbed96ae4df898f7ccf48095",
+    "edits": [
+      {
+        "start": 8323,
+        "end": 8370,
+        "from": "../../🧫️fixtures/🧮️evaluation-owners/🔣️.json",
+        "to": "../🧫️fixtures/🧮️evaluation-owners/🔣️.json"
+      },
+      {
+        "start": 7012,
+        "end": 7058,
+        "from": "../../🧫️fixtures/🗃️cache-retirement/🔣️.json",
+        "to": "../🧫️fixtures/🗃️cache-retirement/🔣️.json"
+      },
+      {
+        "start": 6089,
+        "end": 6131,
+        "from": "../../🧫️fixtures/🔣️value-retirement.json",
+        "to": "../🧫️fixtures/🔣️value-retirement.json"
+      },
+      {
+        "start": 5033,
+        "end": 5075,
+        "from": "../../🧫️fixtures/📏️owned-demand/🔣️.json",
+        "to": "../🧫️fixtures/📏️owned-demand/🔣️.json"
+      },
+      {
+        "start": 2991,
+        "end": 3034,
+        "from": "../../🧫️fixtures/🧬️finite-fields/🔣️.json",
+        "to": "../🧫️fixtures/🧬️finite-fields/🔣️.json"
+      },
+      {
+        "start": 827,
+        "end": 869,
+        "from": "../../🧫️fixtures/🎮️typed-owners/🔣️.json",
+        "to": "../🧫️fixtures/🎮️typed-owners/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/📃️policy/⚛️actor/🧪️tests/🟦️.ts",
+    "before": "c24132ca0256e728c38a649300c0651a7e0425448c61ca4654e48ba02aee89ff",
+    "after": "75317892f300a8eb99fae7081cb5cc8d8d9758872a2c5d13f1e3c89af537d247",
+    "edits": [
+      {
+        "start": 389,
+        "end": 412,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "before": "d7ef6644fd419bcdcbd2da27d396ad940e39195c4cbbc2919d88e2c0d50fd3d7",
+    "after": "1809a9622add8b25e260b63728ca73b574c58277f6ae9e1dfc48d774e1783e48",
+    "edits": [
+      {
+        "start": 21750,
+        "end": 21764,
+        "from": "../🧫️fixtures",
+        "to": "🧫️fixtures"
+      },
+      {
+        "start": 21589,
+        "end": 21603,
+        "from": "../🧫️fixtures",
+        "to": "🧫️fixtures"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/↩️return/🧪️tests/🟦️.ts",
+    "before": "d5f4e655dd8fe06cd73a5a1752d8c34d1c2913b33399099e7cdb3f7660d72d80",
+    "after": "8c847f595b74c7afca44979d7ffe200224d51f36dcedc2283565ddd486762993",
+    "edits": [
+      {
+        "start": 269,
+        "end": 292,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/📓️print/🚪️io/🧪️tests/🏛️ownership/🟦️.ts",
+    "before": "e123c594db1cf33c57bb4b9e69ba34618708cbfd30ece379ee19de749b608327",
+    "after": "a1d3c15d68074eda01aeed2d7dd11c4246da07b3cb1129e398dba08b0851e06e",
+    "edits": [
+      {
+        "start": 377,
+        "end": 416,
+        "from": "../../🧫️fixtures/🏛️ownership/🔣️.json",
+        "to": "../🧫️fixtures/🏛️ownership/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧪️tests/🟦️.ts",
+    "before": "57a926bed95da859f8db04019de4552489240e8228fa87c1bc1353e3f8e8d1ad",
+    "after": "7eee52cbcbe8ba6565813a5f36ac015d463238fe8748582a24b75dc3ea071db0",
+    "edits": [
+      {
+        "start": 18235,
+        "end": 18267,
+        "from": "../🧫️fixtures/🔗️alias/🔣️.json",
+        "to": "🧫️fixtures/🔗️alias/🔣️.json"
+      },
+      {
+        "start": 17087,
+        "end": 17120,
+        "from": "../🧫️fixtures/⚠️receipt/🔣️.json",
+        "to": "🧫️fixtures/⚠️receipt/🔣️.json"
+      },
+      {
+        "start": 15341,
+        "end": 15374,
+        "from": "../🧫️fixtures/⚠️receipt/🔣️.json",
+        "to": "🧫️fixtures/⚠️receipt/🔣️.json"
+      },
+      {
+        "start": 13080,
+        "end": 13112,
+        "from": "../🧫️fixtures/🎭️actor/🔣️.json",
+        "to": "🧫️fixtures/🎭️actor/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎞️media-owner-context/🟦️.ts",
+    "before": "978668eb8aa1247eef1630d23465f422b26ce3a97863e07f7f0f04c9a10e1d3f",
+    "after": "7614db2cfac66e1e3a2ce91ce5eafcdcb5b9cb57b9d807f753e3d202ecae4ac7",
+    "edits": [
+      {
+        "start": 289,
+        "end": 334,
+        "from": "../../🧫️fixtures/🎞️media-owner-context.json",
+        "to": "../🧫️fixtures/🎞️media-owner-context.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌲️fixture-projection/🟦️.ts",
+    "before": "210be4cfeba3ab44094ed7421a79ee638639ebca56855e763fce75b307173ff3",
+    "after": "6a7117d314ffbe4ef41b677cac3c0daa2cb743ff05bc494fbda0e46b1491670a",
+    "edits": [
+      {
+        "start": 363,
+        "end": 411,
+        "from": "../../🧫️fixtures/🌲️fixture-projection/🔣️.json",
+        "to": "../🧫️fixtures/🌲️fixture-projection/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🤝️cooperative-pump/🟦️.ts",
+    "before": "899a4b0232b6c4586b814819437a4e3c4b626a9b77267dc0e32d525c6f0f7e8d",
+    "after": "7fe5b49f9435e4f1153414f554e469f096974d4ea83a07804f67b7299e158cd3",
+    "edits": [
+      {
+        "start": 745,
+        "end": 791,
+        "from": "../../🧫️fixtures/🤝️cooperative-pump/🔣️.json",
+        "to": "../🧫️fixtures/🤝️cooperative-pump/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🤖️agent-lane-preview/🟦️.ts",
+    "before": "f18b81d2ce8ff3c0f935257110375c143e77f4b503159031f0d52696735145e3",
+    "after": "7532217247cf84d043b666b9c95006c59b9deb76656a90ba88078bcc91052633",
+    "edits": [
+      {
+        "start": 8123,
+        "end": 8168,
+        "from": "../../🧫️fixtures/🤖️agent-lane-carriage.json",
+        "to": "../🧫️fixtures/🤖️agent-lane-carriage.json"
+      },
+      {
+        "start": 3604,
+        "end": 3657,
+        "from": "../../🧫️fixtures/🤖️agent-lane-preview-verdicts.json",
+        "to": "../🧫️fixtures/🤖️agent-lane-preview-verdicts.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🕸️native-optimization/🟦️.ts",
+    "before": "659c8997a77f881c20747585c7c8040e59625a14ea950f46207feb11efe3bd66",
+    "after": "f56aec3c99e4c1da76c6c94110513339be867d1c8d6070e0cf8d828b807e2ec7",
+    "edits": [
+      {
+        "start": 477,
+        "end": 526,
+        "from": "../../🧫️fixtures/🕸️native-optimization/🔣️.json",
+        "to": "../🧫️fixtures/🕸️native-optimization/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/⚖️declared-verb-verdicts/🟦️.ts",
+    "before": "ca7c07ca2a373870dcf91eb854c91e3af95258a785958177358eae4ad01a6537",
+    "after": "34d55d7275b9cdd160e1ae99219144a72deb78319a0ac3de4c50e8a6c9757695",
+    "edits": [
+      {
+        "start": 7819,
+        "end": 7870,
+        "from": "../../🧫️fixtures/🎮️declared-bridge-arguments.json",
+        "to": "../🧫️fixtures/🎮️declared-bridge-arguments.json"
+      },
+      {
+        "start": 7170,
+        "end": 7217,
+        "from": "../../🧫️fixtures/⚖️declared-verb-verdicts.json",
+        "to": "../🧫️fixtures/⚖️declared-verb-verdicts.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🚫️empty-state/🟦️.ts",
+    "before": "fe768f871820ab615b2e4aee7d68f5db19d065ad0476d45f72f2b6e542a14d27",
+    "after": "e3b3ed8eefe3d5c59cc62e4771ddc21dee7582a3271ed5d75fc8aa451b5de5ba",
+    "edits": [
+      {
+        "start": 587,
+        "end": 628,
+        "from": "../../🧫️fixtures/🚫️empty-state/🔣️.json",
+        "to": "../🧫️fixtures/🚫️empty-state/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/♻️publication-retirement-authority/🟦️.ts",
+    "before": "da4b71e0f23ed7953bfdab65c46b4d27a74b7a9436ccc305918bbf396e4a2202",
+    "after": "58430610112d29b1209212e111c36938fa7b4be4bd50a24648437dcd170819f5",
+    "edits": [
+      {
+        "start": 368,
+        "end": 429,
+        "from": "../../🧫️fixtures/♻️publication-retirement-authority/🔣️.json",
+        "to": "../🧫️fixtures/♻️publication-retirement-authority/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🥾️boot-budget/🟦️.ts",
+    "before": "0387c8e0eb0b4a23b81232daf71d49f479385d23a32579345dce53484192d134",
+    "after": "a5d90fea7f6f52704951ed8ea1a6ec3709df19eb14020aad89f126c9b09fefad",
+    "edits": [
+      {
+        "start": 4773,
+        "end": 4810,
+        "from": "../../🧫️fixtures/🥾️boot-budget.json",
+        "to": "../🧫️fixtures/🥾️boot-budget.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/♨️hot-update/🟦️.ts",
+    "before": "8b81d4440bf283f378c1f2f0241a06bb731b67e2fecce46c2e7a7070724a83a8",
+    "after": "bf6ee9049662b3eb9cb3aaa9fd52dd3394875f5104f2091fb98fb0e1128e1390",
+    "edits": [
+      {
+        "start": 3001,
+        "end": 3036,
+        "from": "../../🧫️fixtures/♨️hot-update.json",
+        "to": "../🧫️fixtures/♨️hot-update.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/♻️snapshot-read-retirement/🟦️.ts",
+    "before": "98a5782cc1ce9b8bb43421843fdce7c79d9d01283f4ba2bf9f558083b62248d1",
+    "after": "cb6bedcd1f8db24f6bed2e5cc6a24b6d5c7e7a62c672f41f255ea7e199132f5a",
+    "edits": [
+      {
+        "start": 342,
+        "end": 395,
+        "from": "../../🧫️fixtures/♻️snapshot-read-retirement/🔣️.json",
+        "to": "../🧫️fixtures/♻️snapshot-read-retirement/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/♻️ownership/🟦️.ts",
+    "before": "d5d2efdd54fa955ba06943d52e8f23fa665b75126fe68537de2ec0dc363bd2a9",
+    "after": "55bfcd32fd3eb9cc4a6f853907210944cd4436943e6ecd99c39ce736c79bb9f5",
+    "edits": [
+      {
+        "start": 761,
+        "end": 791,
+        "from": "../../🧫️fixtures/🎟️work.json",
+        "to": "../🧫️fixtures/🎟️work.json"
+      },
+      {
+        "start": 240,
+        "end": 278,
+        "from": "../../🧫️fixtures/♻️ownership/🔣️.json",
+        "to": "../🧫️fixtures/♻️ownership/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧪️tests/🟦️.ts",
+    "before": "66edfb33d060bde1a3a26d29476fbbd82dd56e1399206b9d657a8178d9cb987e",
+    "after": "1843904b4728c3d087f2b7c41d215b65573b230d74bf501f3e64f472295188ef",
+    "edits": [
+      {
+        "start": 579,
+        "end": 602,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎟️retained-receipt/🟦️.ts",
+    "before": "e664622175633bb467ca249f9929280b7f8c2770182c5ce7fe0b95112cf396ae",
+    "after": "43c1df0c426c05d91a9560e43273a0611c4f8a522aa064651400d8d14f905b1f",
+    "edits": [
+      {
+        "start": 801,
+        "end": 847,
+        "from": "../../🧫️fixtures/🎟️retained-receipt/🔣️.json",
+        "to": "../🧫️fixtures/🎟️retained-receipt/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📔️registry/🧪️tests/🪪️manifest-admission/🟦️.ts",
+    "before": "bf8044b078d231338983f6230ac64a95811301401734ba63158d09b2c0aaa4c4",
+    "after": "72a1132e4ba94c000b399600388c0a850bfbfcf7a818580ecfc8ce25ecb49b2c",
+    "edits": [
+      {
+        "start": 813,
+        "end": 857,
+        "from": "../../🧫️fixtures/🔣️manifest-admission.json",
+        "to": "../🧫️fixtures/🔣️manifest-admission.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️context/🧪️tests/🟦️.ts",
+    "before": "ec5e288e168daa9f8b154a4c10876260b8f4964c89ebd60d53029df492fe67b7",
+    "after": "09ca76c2a60fdf041506a9aa32939ba5faf80964d7425a9ab41fbce40d3fd6f1",
+    "edits": [
+      {
+        "start": 340,
+        "end": 363,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧪️tests/🟦️.ts",
+    "before": "1a6925245f437077cc1db2b6f674ca99f418dd0ba5ea8c8c0593d80c23224d75",
+    "after": "b1acfc8d148e3789efe5d6031c2fa1c846a233c00b5f2ed81754318c223843c1",
+    "edits": [
+      {
+        "start": 893,
+        "end": 916,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🧪️tests/🟦️.ts",
+    "before": "bef220103ead0a07db2e6792e1ee63a0cb02cbf12701e4224eb187a0bfbf4093",
+    "after": "baa85e3123eb0b186e2bd989511420bb0821f4500900fef70653d1f55d10c85e",
+    "edits": [
+      {
+        "start": 1806,
+        "end": 1829,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 411,
+        "end": 434,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/♻️publication/🧪️tests/🟦️.ts",
+    "before": "2154bd3b31a38c2963f0c8b34c0c670fdd33407d9e7931e92c1aba6aa2dbbe81",
+    "after": "a87d2e285dc696dee5aebb231255fec85e7e25b45f5bf011423877848edc46f6",
+    "edits": [
+      {
+        "start": 430,
+        "end": 453,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/🧪️tests/🟦️.ts",
+    "before": "988ce55c849005e5bb77d916b11ef4d0b0ed64304c50a3df4e86505556e707af",
+    "after": "218c419c79f847741a784aa7ce19d295c473db45f5b95e1a2f7e34dbd3cf5e66",
+    "edits": [
+      {
+        "start": 3902,
+        "end": 3925,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 2141,
+        "end": 2164,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 429,
+        "end": 452,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧪️tests/🧾️document-authority/🟦️.ts",
+    "before": "3563bdcc519b289efdce59a81e07347b6ad440828e9d524e94a606c6318af3bd",
+    "after": "dd89e7e4532855b6fb66c01b5cf20736bbb53ee75d15e303d3f9a5369bfcdcba",
+    "edits": [
+      {
+        "start": 343,
+        "end": 391,
+        "from": "../../🧫️fixtures/🧾️document-authority/🔣️.json",
+        "to": "../🧫️fixtures/🧾️document-authority/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/♻️retirement/🧪️tests/🟦️.ts",
+    "before": "2e9b1fad1e9b910a4e1fcc8c8df1ba75eab562e7a88155d1f1e05ad9577e88b1",
+    "after": "046b441b207b6b8e85a996b10049153c6bea1c91164ac159584514f8129651f2",
+    "edits": [
+      {
+        "start": 304,
+        "end": 327,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts",
+    "before": "7b0011743916eafd7683b24f0714c452f3f0f80f006dc9493be9a95a376b5cbf",
+    "after": "97ea169993201d74c75f5e8a439ba663e71132aa8dcdd6f9f9c59a7d8dd0634e",
+    "edits": [
+      {
+        "start": 426,
+        "end": 449,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️tests/🌊️actor-import/🟦️.ts",
+    "before": "546017a07c2f578b4dc2027bab9b308e415cad59506acb08fb61141d0a8cdb5e",
+    "after": "64458befff66f43b986c8aae189a1f76bdca925a97132327916b203b80605972",
+    "edits": [
+      {
+        "start": 838,
+        "end": 871,
+        "from": "../../🧫️fixtures/🌊️actor-import",
+        "to": "../🧫️fixtures/🌊️actor-import"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️tests/🌐️wasi-activation/🟦️.ts",
+    "before": "8ae541e96d27774e78a2ae4a8f732dfde04a63ab9b5006678746bc2e701697f8",
+    "after": "ef2f6a01a3c8dcae118c3d92290cffd6a2e2bf50e079ece93eed93821aaa0a71",
+    "edits": [
+      {
+        "start": 385,
+        "end": 421,
+        "from": "../../🧫️fixtures/🌐️wasi-activation",
+        "to": "../🧫️fixtures/🌐️wasi-activation"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️local-hub/🧪️tests/🔬️contract/🟦️.ts",
+    "before": "ab1779cba5c5e15d9954171925388e7287b9dae07cfb268e7df9b33ba09a37e7",
+    "after": "5ac541dc60798f5e1e38fa1f71bc7bcec9e20844f58488a9ad0c1ac1864bb04d",
+    "edits": [
+      {
+        "start": 588,
+        "end": 614,
+        "from": "../../🧫️fixtures/🔣️.json",
+        "to": "../🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📥️source/🧪️tests/🟦️.ts",
+    "before": "39d1037fbeaf3c2ac7fd9f91cb98b4f44a970504b5ff8c942364f319a55d476a",
+    "after": "a52bddaa705bb6a39a425ea0edd8ef75fb92f9052af985a8e1e8387a52eb6a79",
+    "edits": [
+      {
+        "start": 610,
+        "end": 633,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/⏱️interaction-latency/🧮️reducers/🟦️.ts",
+    "before": "96c00eee54f4045d7825a1fc0b0667df4521aeaf6445d5db074e06030753f528",
+    "after": "397bd7ffd2f54aa9a25662773090f91eb9c4556bf42e5edd281023ca62555e59",
+    "edits": [
+      {
+        "start": 293,
+        "end": 340,
+        "from": "../../../🧫️fixtures/⏱️interaction-latency.json",
+        "to": "../../🧫️fixtures/⏱️interaction-latency.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/💤️idle-budget/🧮️reducers/🟦️.ts",
+    "before": "b0b87ccd51e87cc0d3159d87eb3a0a3bfd8f9ca42dcd70fe764a85bdbddb68f1",
+    "after": "1a347dc021eb3abb6bfedf71126a421df85cf4a32b8565b8c83a3144321a7e3e",
+    "edits": [
+      {
+        "start": 1300,
+        "end": 1340,
+        "from": "../../../🧫️fixtures/💤️idle-budget.json",
+        "to": "../../🧫️fixtures/💤️idle-budget.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️tests/🎟️preparation-birth/🟦️.ts",
+    "before": "ca7b60c0843dccff4f1a81c466b15a1a8b524775cfd1dfb7735adf92a7ee30e8",
+    "after": "d66176e9c31074cdfd395ed867061011589fa53f1a1960acaf594ce43b49b6e5",
+    "edits": [
+      {
+        "start": 263,
+        "end": 310,
+        "from": "../../🧫️fixtures/🎟️preparation-birth/🔣️.json",
+        "to": "../🧫️fixtures/🎟️preparation-birth/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🪞️projection/🧪️tests/🟦️.ts",
+    "before": "e00327857948e13b50db9217008c70db69219098667d7653da0a90a63ab4203c",
+    "after": "dfb7e27b6e5e945c74bda4f829735a6e363e4ceb90607d30bd276378d94d7373",
+    "edits": [
+      {
+        "start": 359,
+        "end": 382,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧪️tests/🎟️source-authority/🟦️.ts",
+    "before": "ed039ba414d3d3afcb2b3b15987d0b802d6d8c6cde82a33700a9bc7e4237ac63",
+    "after": "fedfa62de837b3ced725e4db13ee5fdfd557d6093c0feb343f5deb876a0d34a4",
+    "edits": [
+      {
+        "start": 259,
+        "end": 305,
+        "from": "../../🧫️fixtures/🎟️source-authority/🔣️.json",
+        "to": "../🧫️fixtures/🎟️source-authority/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🛑️cancel/🧪️tests/🟦️.ts",
+    "before": "93184bc7765e708a9a1ecd1e852364a84f71c7ce8e915b89fe10f4e1e728e175",
+    "after": "3f5044f4e32ba4eecbccd20da0eaa5cce1296041bacf241c0d57dc6b82209e48",
+    "edits": [
+      {
+        "start": 278,
+        "end": 301,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/♻️retirement/🧪️tests/🟦️.ts",
+    "before": "f09da9663aefdb2495037074513905b023d8b20d9a6d873c1251f33843c48419",
+    "after": "a5ceb53deb5a1d0bb33b223e6219fb65c338e2b2f4dadbdc86d6799d7b31bdb8",
+    "edits": [
+      {
+        "start": 2291,
+        "end": 2314,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 1533,
+        "end": 1556,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 265,
+        "end": 288,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🟦️.ts",
+    "before": "f08ed1a22c415594f778f1bd610cb4d145aa57804b764707371c6e4a98ead3b0",
+    "after": "4e138e8b754588f0f08cb88b67cdb74199acf731bacd6b1669c09a52ecb9ce64",
+    "edits": [
+      {
+        "start": 7638,
+        "end": 7661,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 6308,
+        "end": 6331,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 5062,
+        "end": 5085,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 3457,
+        "end": 3480,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 1797,
+        "end": 1820,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 421,
+        "end": 444,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/♻️close/🧪️tests/🟦️.ts",
+    "before": "341a6e3cbef00733a7484915012369c08a1e0f9e9beaed5ebce044092c694935",
+    "after": "7f72ce93d3f62b9c8dfbe33841ff3b52872287a58078bc67df56520bea90b0f4",
+    "edits": [
+      {
+        "start": 426,
+        "end": 449,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧷️assembly/⏳️lifetime/🧪️tests/🟦️.ts",
+    "before": "9719c4ab3d401fa98ab1d91ce8afba81e269b5e0995d4327c571199dd02c88d8",
+    "after": "a4e77f7e70e7615872fd6837ffe6ed7d4d2bf65a628f7cc7743a43c9194fa91d",
+    "edits": [
+      {
+        "start": 701,
+        "end": 738,
+        "from": "../🧫️fixtures/🧾️original-api/🦀️.rs",
+        "to": "🧫️fixtures/🧾️original-api/🦀️.rs"
+      },
+      {
+        "start": 589,
+        "end": 632,
+        "from": "../🧫️fixtures/🧪️registry-providers/🦀️.rs",
+        "to": "🧫️fixtures/🧪️registry-providers/🦀️.rs"
+      },
+      {
+        "start": 260,
+        "end": 283,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/📤️macro-exports/🟦️.ts",
+    "before": "885f5e830fdbacbd54fbc5fa9f77f7d54f4a46e55f42fe5c639694dec0883557",
+    "after": "6e91eb5e2dd822c8d85c6d0e46f85d43ecc5ec1fda9858050ac7e0c0398a9b54",
+    "edits": [
+      {
+        "start": 242,
+        "end": 285,
+        "from": "../../🧫️fixtures/📤️macro-exports/🔣️.json",
+        "to": "../🧫️fixtures/📤️macro-exports/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🛂️mutation-source-authority/🟦️.ts",
+    "before": "463dfc1e86e9a7e1385770b3824f95905fcade95b14afe9f6adc9b70ac151095",
+    "after": "960325e1d49bd7f39d545788cdeb0417bee4acd1343ae68ac4d1bef42dfedf92",
+    "edits": [
+      {
+        "start": 1695,
+        "end": 1810,
+        "from": "../../../../../../../🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+        "to": "../../../../../../../🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
+      },
+      {
+        "start": 509,
+        "end": 564,
+        "from": "../../🧫️fixtures/🛂️mutation-source-authority/🔣️.json",
+        "to": "../🧫️fixtures/🛂️mutation-source-authority/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖼️reference-image-decode/🟦️.ts",
+    "before": "e06896b966ed65f4a7821122b91c9678fb24429842c4752964df0aa9a57cef33",
+    "after": "2df13e82cb511fd3f57e6b7a22bfa5b63177adcac1d6fd0e6ce2bb279877bc6c",
+    "edits": [
+      {
+        "start": 379,
+        "end": 431,
+        "from": "../../🧫️fixtures/🖼️reference-image-decode/🔣️.json",
+        "to": "../🧫️fixtures/🖼️reference-image-decode/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧊️wgpu-browser-boot-cache-inputs/🟦️.ts",
+    "before": "6e24c0e48d6073a70d078083e6d04daaa25f8f56d90e7924a259f3ae0068c701",
+    "after": "6319c7678ee9b0897d0341ea1910efd26677464d4abf79b7f62d33018669c8e6",
+    "edits": [
+      {
+        "start": 634,
+        "end": 694,
+        "from": "../../🧫️fixtures/🧊️wgpu-browser-boot-cache-inputs/🔣️.json",
+        "to": "../🧫️fixtures/🧊️wgpu-browser-boot-cache-inputs/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧪️tests/🔬️contract/🟦️.ts",
+    "before": "2ac7b5124e9990eb78e3c47efa237d7ac016ec667c4b5fe723ce19dbc3d40fef",
+    "after": "c089a25b67bfdd82312b6a992d3f4d9549271df1d11c58f68b3cb86418dfad5d",
+    "edits": [
+      {
+        "start": 637,
+        "end": 663,
+        "from": "../../🧫️fixtures/🔣️.json",
+        "to": "../🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️host-source/🟦️.ts",
+    "before": "405a6aa0b7a4af39efc3bb7230c1740b776236563172195e3b067c32f0fd2df2",
+    "after": "235b4956901149e38f15b8f10d47b9ebc662f879854cfcdaa56c7a242c01d12d",
+    "edits": [
+      {
+        "start": 395,
+        "end": 436,
+        "from": "../../🧫️fixtures/🎟️host-source/🔣️.json",
+        "to": "../🧫️fixtures/🎟️host-source/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/📮️port/🎟️admission/🧪️tests/🟦️.ts",
+    "before": "ce897c461ce4e52f85f7d1427a45d6961418fad78751bd7c663714f44d5898b9",
+    "after": "9959c271eeb22378d51b0060c8c1960e3013ebc26502159a63e8b3feec55fd0a",
+    "edits": [
+      {
+        "start": 345,
+        "end": 368,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/👷️job/🎟️receiving/🧪️tests/🟦️.ts",
+    "before": "be46d541373d6f61f961dae69436fe147a344ab9cb00ea03573bf2dcec0c166a",
+    "after": "cacadb94b7922809c17ca85e3547248a9e5cb7bb4abd5bad8d062224f07fdee9",
+    "edits": [
+      {
+        "start": 357,
+        "end": 380,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🎟️receipt/🧪️tests/🟦️.ts",
+    "before": "8b1d2f47a2e3c5b3c9e67fc82c5dd101343da1a104cc2692fdb85314e2feaa9b",
+    "after": "fd514d379e60a66e9f00334f71b0c71eef24552aa05525f42c45b74896001538",
+    "edits": [
+      {
+        "start": 387,
+        "end": 410,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧵️executor/♻️wake/🧪️tests/🟦️.ts",
+    "before": "47ad65d353b53655c5a9163f26ce339d2a31a48944d7a177be68f40eeb758af6",
+    "after": "c420ff0669abd156fa0b02d9f9c95d4a80935d0c26b08ad89f85435977a4c3b3",
+    "edits": [
+      {
+        "start": 423,
+        "end": 446,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🟦️.ts",
+    "before": "c7a160ab99ff958800f6f9142d81002d0a2bc326547b2c021dafc4f4abde5b91",
+    "after": "e9dff34ec9f8f57dc9613a02a6702b34174d938368d048d522b232ace8158740",
+    "edits": [
+      {
+        "start": 5852,
+        "end": 5880,
+        "from": "../🧫️fixtures/📦️batch.json",
+        "to": "🧫️fixtures/📦️batch.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/📃️policy/🧪️tests/🟦️.ts",
+    "before": "a15340fb033762fea7e851032564e6e2d24d33d967d7c59a8d3e5ef143d72423",
+    "after": "499730a8fb61fb33262a3fc23c7fdbe3affcabfa77a19ba92186b9f29325b659",
+    "edits": [
+      {
+        "start": 3214,
+        "end": 3237,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 2198,
+        "end": 2221,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 388,
+        "end": 411,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🫧️transient/🧪️tests/🪟️retained-window-input/🟦️.ts",
+    "before": "2efd016cda3de7b36d9a9a156c25605dd6a56fa201f7b7790ac86499dfac3c66",
+    "after": "0d8b0f474eb1fc85b73b38e4bcd594c8fef167f1731690411ae3a549b69e8167",
+    "edits": [
+      {
+        "start": 313,
+        "end": 364,
+        "from": "../../🧫️fixtures/🪟️retained-window-input/🔣️.json",
+        "to": "../🧫️fixtures/🪟️retained-window-input/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts",
+    "before": "75964a19f48a1ce72ec738465417942fc32cd5a198f65d191024a9cb2a77246c",
+    "after": "9498ba2c6fab352535d909153252c1647463dda9f6e8d7f49682ba6f7d117ade",
+    "edits": [
+      {
+        "start": 432,
+        "end": 455,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔌️components/🧪️tests/🌐️production-browser-artifacts/🟦️.ts",
+    "before": "e8023a669e3d3057e4825793d4f9af2238cec972b6338cafe44943a03b6eb1b8",
+    "after": "3d5c24789e0aa738dc864db7b33ee531a339119399a8cb79476944221606dd82",
+    "edits": [
+      {
+        "start": 763,
+        "end": 821,
+        "from": "../../🧫️fixtures/🌐️production-browser-artifacts/🔣️.json",
+        "to": "../🧫️fixtures/🌐️production-browser-artifacts/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️graph/🤝️group/🧪️tests/🟦️.ts",
+    "before": "f81273ff7696c021ca2f76869f19628c4acefceb19bd22b2dfc44eab470f7aa1",
+    "after": "c21dfd422db2feaba029ede767db68005fe1575425298e769d53601b72b22153",
+    "edits": [
+      {
+        "start": 7684,
+        "end": 7707,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 6955,
+        "end": 6978,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 5198,
+        "end": 5221,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 2360,
+        "end": 2383,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 337,
+        "end": 360,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🎟️admission/🧪️tests/🟦️.ts",
+    "before": "39e6e5c4d899f709df5fcc673ac8a0ab70edeb846de796f414526af18d24e789",
+    "after": "9197091a7ce45d097b6f335e301f3932b59695f278fcc2c4a18a7dc14a452dcb",
+    "edits": [
+      {
+        "start": 6178,
+        "end": 6201,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 3688,
+        "end": 3711,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 1639,
+        "end": 1662,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      },
+      {
+        "start": 419,
+        "end": 442,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🌱️birth/🧪️tests/🟦️.ts",
+    "before": "17a95cdaa331cc95f670a3caf46fa31dc521feca49a9464170cafcdd1471fe1f",
+    "after": "ac1bfdd494b684688bb23a8a7cc6fbd1a24b0e797bdf8d0635b90fd7293d53e5",
+    "edits": [
+      {
+        "start": 267,
+        "end": 290,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🧪️tests/🔬️unit/🟦️.ts",
+    "before": "d9c6c98af71dc3e5c93882cdcd5c4721ce4fac63d7a5201052cfa7113e4eefb0",
+    "after": "6a1d73211a4b1bf39d953631a6b96476287da7b1a7b331b03f9dedcaca8a5689",
+    "edits": [
+      {
+        "start": 5249,
+        "end": 5280,
+        "from": "../../🧫️fixtures/🔐️projection",
+        "to": "../🧫️fixtures/🔐️projection"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🧩️pair/🧪️tests/🧪️canonical-pair-oracle/🟦️.ts",
+    "before": "62477c8a81c6c0bc1fdfa2e678558435a6e03114aa79dc600addad50f07572ef",
+    "after": "43e4aaa25db53ee5091466c6665cfe2ab7e500ec63851c2810326fbad9c2ae4e",
+    "edits": [
+      {
+        "start": 695,
+        "end": 721,
+        "from": "../../🧫️fixtures/🔣️.json",
+        "to": "../🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧵️worker-cell/🧪️tests/🟦️.ts",
+    "before": "23edb961201a2dd048b90cd78b03e9d7fc533a1232d68c2263469e96e20ea9e4",
+    "after": "31a87e259e64fe213223ae8229724d6d51e1b467dd2d40499248b91770ca1cd6",
+    "edits": [
+      {
+        "start": 687,
+        "end": 710,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🌐️browser-acceptance/📜️script.ts",
+    "before": "9db9977827cfa4ef12ee695625d8716eb050c986c6aade3d683fb46f219c28b4",
+    "after": "144c51dcda6dd01f6802d96e2e21c69b07f27586c9a3a49eabdca72718e434f2",
+    "edits": [
+      {
+        "start": 1648,
+        "end": 1696,
+        "from": "../../🧫️fixtures/🌐️browser-acceptance/🔣️.json",
+        "to": "../🧫️fixtures/🌐️browser-acceptance/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "before": "835f93061324cca0189c95374ce0b7aeed0d3071f44842794c91e3f8d222e690",
+    "after": "44a6ca242a6ac133441ad7e3bfcb78030e59b4ddc4256d167467132186da9118",
+    "edits": [
+      {
+        "start": 691,
+        "end": 705,
+        "from": "../🧫️fixtures",
+        "to": "🧫️fixtures"
+      },
+      {
+        "start": 492,
+        "end": 506,
+        "from": "../🧫️fixtures",
+        "to": "🧫️fixtures"
+      },
+      {
+        "start": 330,
+        "end": 344,
+        "from": "../🧫️fixtures",
+        "to": "🧫️fixtures"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "before": "cc20cdcf7af19ed7f2e9b574cdcc1e683f01acbb26e3f712a2e4536d1897087a",
+    "after": "e87b035a7bee3b6ae6fcb56caa26dbae9aeea971c0f454062c1124db6e4b2f60",
+    "edits": [
+      {
+        "start": 653,
+        "end": 667,
+        "from": "../🧫️fixtures",
+        "to": "🧫️fixtures"
+      },
+      {
+        "start": 492,
+        "end": 506,
+        "from": "../🧫️fixtures",
+        "to": "🧫️fixtures"
+      },
+      {
+        "start": 330,
+        "end": 344,
+        "from": "../🧫️fixtures",
+        "to": "🧫️fixtures"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🧪️tests/📇️catalog/🟦️.ts",
+    "before": "36542ceb7ffb8365eac0f5df3e49d57a99f70f3e506b4cf769ea13a6e1e2d0c0",
+    "after": "984b42e22e4d0e1091c760d620494f46ec799159ffd900608d8330329b740f0c",
+    "edits": [
+      {
+        "start": 1139,
+        "end": 1161,
+        "from": "./🧫️fixtures/🔣️.json",
+        "to": "../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/⌨️native-entrypoint/📇️catalog/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "before": "07f72fc55250a01a95528c5c3d6af62cb881ed7d0e531af54e0f6d30e8151f20",
+    "after": "22ac2fb9183a2e04a80e12200d63119fac614a87551aaef9f29cb23d5524d0ad",
+    "edits": [
+      {
+        "start": 18470,
+        "end": 18511,
+        "from": "../🧫️fixtures/📏️semantic-cells/🔣️.json",
+        "to": "🧫️fixtures/📏️semantic-cells/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "before": "9112d63caa674c5e75b45797f63b1e9bb19326fc22fb2393c08544d17c2ebaf0",
+    "after": "165c392308df7a18bddc00ed4c929ad146dca39ab0d18ab00eff919f9f759e19",
+    "edits": [
+      {
+        "start": 12314,
+        "end": 12355,
+        "from": "../🧫️fixtures/📏️semantic-cells/🔣️.json",
+        "to": "🧫️fixtures/📏️semantic-cells/🔣️.json"
+      },
+      {
+        "start": 2346,
+        "end": 2377,
+        "from": "../🧫️fixtures/🎞️wire/🔣️.json",
+        "to": "🧫️fixtures/🎞️wire/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/💰️release/🟦️.ts",
+    "before": "436eae37010ebde9db077f5266dc6a0dc213423143cdb5d868c7948a716a9825",
+    "after": "934ef24e95092144bb3b8364002a670345b2c29b8a1180a1256965deca720339",
+    "edits": [
+      {
+        "start": 369,
+        "end": 410,
+        "from": "🧫️fixtures/🪶️sqlite/💰️release/🔣️.json",
+        "to": "../../🧪️tests/🧫️fixtures/📸️snapshot/🪶️sqlite/💰️release/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🗿️artifacts/🚫️snapshot-refusal/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "before": "e47ac7929b8d05c3d0d1a3c48f925ff299bd7c3b18c8ccb70178a445dc150101",
+    "after": "7379f32999a023e9e88db2846f44a2134e8f5f7aa8766f15ed32b09ca09c1080",
+    "edits": [
+      {
+        "start": 933,
+        "end": 956,
+        "from": "../🧫️fixtures/🔣️.json",
+        "to": "🧫️fixtures/🔣️.json"
+      }
+    ]
+  }
+]

@@ -103,7 +103,7 @@ fn class_edits_move_the_authoritative_main_part() {
 #[test]
 fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
     use protocol::{OpText, OpBinary};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧬️mutations/✒️insert-vml-part/🧾️owned-document/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️insert-vml-part/🧾️owned-document/🔣️.json")).unwrap();
     let path = fixture["path"].as_str().unwrap().to_string();
     let document: XmlDocument = semio_framework_pack_json::from_json_str(&fixture["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mutation = XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone(), index: None, override_index: None });

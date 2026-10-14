@@ -1,10 +1,10 @@
 use {crate::schema::SemioObjectArtifact, crate::schema::diff::SemioObjectDiff, crate::schema::snapshot::SemioObjectSnapshot};
 use protocol::{DiffBinary,DiffText};
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 #[semio_framework_async_macros::async_test]
 async fn stdio_document_contract_object_round_trips_exact_children() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document-contract/🔣️.json")).expect("neutral Object vectors");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪪️document-contract/🔣️.json")).expect("neutral Object vectors");
     for case in fixture["snapshotCases"].as_array().expect("snapshot vectors") {
         let input = &case["input"];
         let text = input.to_string();

@@ -268,7 +268,7 @@ pub(crate) fn parse_mesh_snapshot_body(body: &str) -> Result<SemioMeshSnapshot, 
 
 /// 🎁 Real structured text/binary codecs — replaces the old hex-dump-of-`serde_json` shortcut.
 /// Wrapped in the repo-wide `store::semio_format` envelope, unchanged.
-impl store::os_store::serialization::ArtifactDsl for SemioMeshSnapshot {
+impl pack::snapshot::ArtifactDsl for SemioMeshSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIOMESH_DOCUMENT_SCHEMA
@@ -284,7 +284,7 @@ impl store::os_store::serialization::ArtifactDsl for SemioMeshSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_mesh_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -316,13 +316,13 @@ pub fn decode_semio_mesh_snapshot_json(text: &str) -> Result<SemioMeshSnapshot, 
 /// 📝 Parse mesh subset DSL text into a `SemioMeshSnapshot`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_mesh_dsl(text: &str) -> Result<SemioMeshSnapshot, semio_framework_diagnostic::TextError> {
-    <SemioMeshSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <SemioMeshSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 📝 Render a `SemioMeshSnapshot` as mesh subset DSL text.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_mesh_dsl(snapshot: &SemioMeshSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
+    pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

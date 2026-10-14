@@ -60,11 +60,14 @@ fn reconstruct(record:Map,control:&mut semio_framework_value::NativeDecodeContro
 }
 pub(crate) fn ordinary(record:Map)->Result<GisMapSnapshot,ValueError>{let mut callback=|_:semio_framework_value::native_decoding::NativeDecodeProgress|true;let mut control=semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut callback);reconstruct(record,&mut control)}
 
-impl store::os_store::serialization::ArtifactPack for GisMapSnapshot{
- fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())}
+impl pack::snapshot::ArtifactPack for GisMapSnapshot{
+ 
  fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Map::__dsl_spec())}
- fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{let raw=store::pack_rt::encode_document(&Map::__dsl_spec(),&Map::from_snapshot(self).__dsl_to_record(),options)?;let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|e| store::PackError::from(e.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&raw))}
- fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,raw)=store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::from(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "GIS map native Pack identity differs")))}let(record,_)=store::pack_rt::decode_document(&raw,&Map::__dsl_spec(),options)?;ordinary(Map::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)?).map_err(store::PackError::from)}
+ fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{let raw=store::pack_rt::encode_document(&Map::__dsl_spec(),&Map::from_snapshot(self).__dsl_to_record(),options)?;let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|e| store::PackError::from(e.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&raw))}
+ fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,raw)=store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::from(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "GIS map native Pack identity differs")))}let(record,_)=store::pack_rt::decode_document(&raw,&Map::__dsl_spec(),options)?;ordinary(Map::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)?).map_err(store::PackError::from)}
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for GisMapSnapshot {
+fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())}
 }
 
 

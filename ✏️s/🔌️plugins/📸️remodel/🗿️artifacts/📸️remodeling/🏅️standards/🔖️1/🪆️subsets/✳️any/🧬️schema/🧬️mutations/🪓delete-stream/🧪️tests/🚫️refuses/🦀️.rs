@@ -10,10 +10,10 @@
 use crate::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
 use crate::{RemodelingDiff, RemodelingSnapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-stream/🚫️refuses/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-stream/🚫️refuses/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-stream/🚫️refuses/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-stream/🚫️refuses/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪓delete-stream/🚫️refuses/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪓delete-stream/🚫️refuses/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪓delete-stream/🚫️refuses/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪓delete-stream/🚫️refuses/🎯️outcome/🔣️.json");
 
 fn before() -> RemodelingSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
@@ -65,7 +65,7 @@ async fn declared_refusal_holds() {
 /// repository's own statement that there is no delta to commit, not a forgotten file.
 #[semio_framework_async_macros::async_test]
 async fn no_diff_is_committed() {
-    assert!(include_str!("../../../../../🧫️fixtures/🧬️mutations/🪓delete-stream/🚫️refuses/🔺️diff/🚫️.absent").is_empty(), "delete-stream/refuses-to-3c20ff: the absent-diff marker must stay empty");
+    assert!(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪓delete-stream/🚫️refuses/🔺️diff/🚫️.absent").is_empty(), "delete-stream/refuses-to-3c20ff: the absent-diff marker must stay empty");
 }
 
 /// ↩️ Applying the verb and then EVERY step of its own computed inverse restores the committed

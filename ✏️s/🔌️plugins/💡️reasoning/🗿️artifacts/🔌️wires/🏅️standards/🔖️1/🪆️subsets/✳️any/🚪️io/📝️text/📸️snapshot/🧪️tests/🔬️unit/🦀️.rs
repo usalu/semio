@@ -23,9 +23,9 @@ async fn dsl_round_trip_metabolism_parent() {
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law_carries_the_parent_and_the_child_carries_the_board() {
     let document = crate::standards::v1::subsets::any::io::text::snapshot::metabolism_wires_example_snapshot().expect("valid metabolism parent");
-    let back = <WiresSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&<WiresSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&document)).expect("parse");
+    let back = <WiresSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&<WiresSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&document)).expect("parse");
     assert_eq!((back.wires_snapshot, back.meta, back.content), (document.wires_snapshot.clone(), document.meta.clone(), document.content.clone()));
-    let content = <crate::SemioGraphSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::CONTENT_TEXT).expect("demo board parses");
+    let content = <crate::SemioGraphSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::CONTENT_TEXT).expect("demo board parses");
     assert_eq!((content.nodes.len(), content.edges.len()), (7, 9));
-    assert_eq!(<crate::SemioGraphSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&content), crate::examples::demo::CONTENT_TEXT, "the committed board asset is the canonical print");
+    assert_eq!(<crate::SemioGraphSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&content), crate::examples::demo::CONTENT_TEXT, "the committed board asset is the canonical print");
 }

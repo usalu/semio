@@ -23,7 +23,7 @@ const root = resolve(import.meta.dir, "../../../../../../../.."), owner = "🧰�
 
 /** 🏛️ Admits public neutral ownership, declared bounds, dependency authority and native law mounts. */
 export async function inspectPagedCommandIngressOwnership(repository: string, read: Reader = path => readFileSync(join(repository, path), "utf8")): Promise<{ types: number; constants: number; laws: number; closure: number }> {
-  const fixture = JSON.parse(read(`${owner}/🧫️fixtures/🔣️.json`)) as Fixture;
+  const fixture = JSON.parse(read(`${owner}/🧪️tests/🧫️fixtures/🔣️.json`)) as Fixture;
   await Parser.init();
   const parser = new Parser();
   parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json", repository)), "out/tree-sitter-rust.wasm")));
@@ -119,11 +119,11 @@ export async function inspectPagedCommandIngressOwnership(repository: string, re
 
 test("the complete paged command owner and original native laws admit only their canonical neutral authority", async () => {
   const result = await inspectPagedCommandIngressOwnership(root);
-  expect(result).toEqual({ types: 14, constants: 5, laws: 4, closure: JSON.parse(readFileSync(join(root, owner, "🧫️fixtures/🔣️.json"), "utf8")).closure.length });
+  expect(result).toEqual({ types: 14, constants: 5, laws: 4, closure: JSON.parse(readFileSync(join(root, owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")).closure.length });
 });
 
 test("closed ownership corpus rejects duplicate, omitted and hostile source authority", () => {
-  const fixture = JSON.parse(readFileSync(join(root, owner, "🧫️fixtures/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(root, owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
   const changes = [(value: any) => value.exports.types.push(value.exports.types[0]), (value: any) => value.exports.types.pop(), (value: any) => value.exports.constants.reverse(), (value: any) => value.laws.pop(), (value: any) => value.owner = "os/channel", (value: any) => value.paths.neutralTests = value.owner, (value: any) => value.extra = true];
   for (const change of changes) { const hostile = structuredClone(fixture); change(hostile); }
 });
@@ -140,7 +140,7 @@ test("canonical package membership and executable routes retain the complete nat
     expect(project.targets[gate].cache).toBe(false);
     const inputs = project.targets[gate].inputs as string[];
     expect(inputs).toContain(`{workspaceRoot}/${owner}/**/*`);
-    expect(inputs).toContain("{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧫️fixtures/📄️pages/🔣️.json");
+    expect(inputs).toContain("{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧪️tests/🧫️fixtures/📄️pages/🔣️.json");
     expect(inputs).toContain("{workspaceRoot}/Cargo.toml");
     expect(inputs).toContain("{workspaceRoot}/package.json");
     expect(inputs.filter(value => value.includes("🛍️products/") || value.includes("🔨️modules/🎠️kernel/") || value.includes("🧰️framework/📦️packages/"))).toEqual([]);
@@ -151,7 +151,7 @@ test("canonical package membership and executable routes retain the complete nat
 });
 
 test("schema-authored source witnesses admit private evolution and reject public ownership failures", async () => {
-  const fixture = JSON.parse(readFileSync(join(root, owner, "🧫️fixtures/🔣️.json"), "utf8")) as Fixture;
+  const fixture = JSON.parse(readFileSync(join(root, owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")) as Fixture;
   for (const row of fixture.sourceCases) {
     const changes = new Map<string, string>(), componentPath = `${owner}/🦀️.rs`, component = readFileSync(join(root, componentPath), "utf8");
     if (row.id === "private-extension") changes.set(componentPath, component + "\nfn ownership_private_extension(value: usize) -> usize { value }\n");

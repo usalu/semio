@@ -5,15 +5,15 @@ import { resolve, join, dirname, isAbsolute } from "node:path";
 import { spawnSync } from "node:child_process";
 import * as toml from "@iarna/toml";
 import { applyPatch, getValueByPointer } from "fast-json-patch";
-import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../..");
 const owner = "🧰️framework/🔨️modules/🌱️value";
-const fixture = JSON.parse(readFileSync(join(root, owner, "🧫️fixtures/🧩️neutral-owner/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(root, owner, "🧪️tests/🧫️fixtures/🧩️neutral-owner/🔣️.json"), "utf8"));
 const validValue = new Ajv({strict:false}).compile(JSON.parse(readFileSync(join(root, owner, "🧬️schema/🔣️.json"), "utf8")));
 test("ordered map clone quotes preserve independent original and interrupted candidates", () => {
   const path = join(root, owner, "🧬️retained-clone/🗺️ordered-map");
-  const law = JSON.parse(readFileSync(join(path, "🧫️fixtures/🎟️clone/🔣️.json"), "utf8"));
+  const law = JSON.parse(readFileSync(join(path, "🧪️tests/🧫️fixtures/🎟️clone/🔣️.json"), "utf8"));
   const validate = new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(path, "🧬️schema/🎟️clone/🔣️.json"), "utf8")));
   expect(validate(law)).toBe(true);
   for (const row of law.cases) {
@@ -31,7 +31,7 @@ test("ordered map clone quotes preserve independent original and interrupted can
   console.log("[DEBUG] Ordered map clone neutral corpus matches independent RFC6902 outputs and interruption custody");
 });
 test("original shared clone preserves independent original values and cancellation",()=>{
- const path=join(root,owner,"🧬️retained-clone/🔗️shared"),law=JSON.parse(readFileSync(join(path,"🧫️fixtures/🔣️.json"),"utf8"));
+ const path=join(root,owner,"🧬️retained-clone/🔗️shared"),law=JSON.parse(readFileSync(join(path,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
  expect(new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(path,"🧬️schema/🔣️.json"),"utf8")))(law)).toBe(true);
  for(const text of law.texts){for(const order of law.closeOrders){
   const original={source:{text},output:{text}};
@@ -43,7 +43,7 @@ test("original shared clone preserves independent original values and cancellati
  console.log("[DEBUG] Original shared clone independent RFC6902 original/output close and cancellation values verified");
 });
 test("typed read leases preserve independent sparse visitation and payload outputs", () => {
-  const path = join(root, owner, "🔗️read"), law = JSON.parse(readFileSync(join(path,"🧫️fixtures/🔣️.json"),"utf8"));
+  const path = join(root, owner, "🔗️read"), law = JSON.parse(readFileSync(join(path,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
   for (const row of law.cases) {
     const returned = new Set(row.returned), owners = Array.from({length:row.issued},(_,index)=>index);
     let cursor = row.cursor;
@@ -62,7 +62,7 @@ test("typed read leases preserve independent sparse visitation and payload outpu
   console.log("[DEBUG] Typed read sparse visitation and independent JSON Patch payload outputs verified");
 });
 test("erased read portable source pin law preserves independent payload authority", () => {
-  const path = join(root, owner, "🔗️read"), law = JSON.parse(readFileSync(join(path,"🧫️fixtures/🔣️.json"),"utf8"));
+  const path = join(root, owner, "🔗️read"), law = JSON.parse(readFileSync(join(path,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
   for(const copy of law.workBytes){
     expect(copy).toBeGreaterThan(0);
     const original={root:law.erasedSource.text,source:law.erasedSource.text,read:true,authority:true};
@@ -89,7 +89,7 @@ test("borrowed clone authority follows independent JSON Patch", () => {
 });
 test("paged native ownership follows semantic JSON and independent UTF-8 ordering", () => {
   const local = join(root, owner, "📦️paged");
-  const law = JSON.parse(readFileSync(join(local, "🧫️fixtures/🎮️native-owner/🔣️.json"), "utf8"));
+  const law = JSON.parse(readFileSync(join(local, "🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"), "utf8"));
   const prefix = law.prefix.repeat(law.prefixRepeat);
   expect(new TextEncoder().encode(prefix).length).toBeGreaterThan(law.bodyBytes);
   const object = Object.fromEntries(law.objectEntries.map((row: {suffix:string,value:number}) => [prefix + row.suffix, row.value]));
@@ -173,7 +173,7 @@ test("actual value derives build and execute with product trees absent", async (
 
 test("retirement source capacity agrees with independent decimal arithmetic",async()=>{
   const Decimal=(await import("decimal.js")).default.clone({precision:100});
-  const local=join(root,owner,"♻️retirement"),fixture=JSON.parse(readFileSync(join(local,"🧫️fixtures/🔣️.json"),"utf8"));
+  const local=join(root,owner,"♻️retirement"),fixture=JSON.parse(readFileSync(join(local,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
   const cases=fixture.capacityAdmission.cases;expect(cases.length).toBe(12);expect(new Set(cases.map((row:any)=>row.id)).size).toBe(12);
   expect(new TextEncoder().encode(fixture.capacityAdmission.source).length).toBe(fixture.capacityAdmission.sourceBytes);
   const observations=[];
@@ -193,7 +193,7 @@ test("retirement source capacity agrees with independent decimal arithmetic",asy
 });
 
 test("owned projected fields preserve native value paths and exact alias closure",()=>{
- const law=JSON.parse(readFileSync(join(root,owner,"📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json"),"utf8")).ownedProjection;
+ const law=JSON.parse(readFileSync(join(root,owner,"📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"),"utf8")).ownedProjection;
  expect(validValue(law.input)).toBe(true);const before=JSON.stringify(law.input);
  for(const row of law.paths){const own=row.pointer.split("/").slice(1).reduce((value:any,key:string)=>value[key],law.input);expect(own).toBe(getValueByPointer(law.input,row.pointer));expect(own).toBe(row.value);}
  let aliases=["parent","child"];for(const action of law.closeSequence){if(action==="parent"||action==="child"){const index=aliases.indexOf(action);aliases=applyPatch({aliases},[{op:"remove",path:"/aliases/"+index}],true,false).newDocument.aliases;}if(action==="complete")expect(aliases).toEqual([]);}
@@ -204,11 +204,11 @@ test("owned projected fields preserve native value paths and exact alias closure
 
 test("owned source birth funds original custody before allocation", () => {
   const source=join(root,owner,"🧬️retained-clone/🔗️source");
-  const law=JSON.parse(readFileSync(join(source,"🧫️fixtures/🎟️owned-birth/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(source,"🧪️tests/🧫️fixtures/🎟️owned-birth/🔣️.json"),"utf8"));
   expect(new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(source,"🧬️schema/🎟️owned-birth/🔣️.json"),"utf8")))(law)).toBe(true);
   const original={owner:law.owner,authority:law.authority,allocated:false};
   for(const refusal of law.refusals){
-    const demand={items:law.birth.items,copy:law.birth.sourceAliasCopies,capacity:law.ownerCapacity+law.authorityCapacity,depth:law.birth.depth};
+    const demand={items:law.birth.items,copy:law.birth.copyBytes,capacity:law.ownerCapacity+law.authorityCapacity,depth:law.birth.depth};
     const grant=applyPatch(demand,[{op:"replace",path:`/${refusal.currency}`,value:demand[refusal.currency as keyof typeof demand]-refusal.shortBy}],true,false).newDocument;
     expect(grant[refusal.currency as keyof typeof demand]).toBeLessThan(demand[refusal.currency as keyof typeof demand]);
     const refused=applyPatch(original,[],true,false).newDocument;expect(refused).toEqual(original);
@@ -223,7 +223,7 @@ test("owned source birth funds original custody before allocation", () => {
 });
 
 test("funded read ownership keeps sparse returned roots independently of live readers", () => {
-  const law=JSON.parse(readFileSync(join(root,owner,"🔗️read/🧫️fixtures/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(root,owner,"🔗️read/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
   for(const row of law.cases){
     let slots=Array.from({length:law.capacity},()=>({root:null as number|null,issued:false}));
     for(let slot=0;slot<row.issued;slot++)slots=applyPatch(slots,[{op:"replace",path:`/${slot}/root`,value:slot},{op:"replace",path:`/${slot}/issued`,value:true}],true,false).newDocument;
@@ -246,11 +246,11 @@ test("funded read ownership keeps sparse returned roots independently of live re
 });
 
 test("retained clone close depth preserves an unfunded original birth", () => {
-  const law=JSON.parse(readFileSync(join(root,owner,"🧬️retained-clone/🧫️fixtures/🪜️close-demands/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(root,owner,"🧬️retained-clone/🧪️tests/🧫️fixtures/🪜️close-demands/🔣️.json"),"utf8"));
   const original={owner:law.owner,retiring:false,closing:false};
   const closing=applyPatch(original,[{op:"replace",path:"/closing",value:true}],true,false).newDocument;
   expect(law.idleDepth).toBe(0);expect(law.pendingBirthDepth).toBe(1);
-  const scaffold=JSON.parse(readFileSync(join(root,owner,"🧬️retained-clone/🧫️fixtures/📏️release-authority/🔣️.json"),"utf8"));
+  const scaffold=JSON.parse(readFileSync(join(root,owner,"🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority/🔣️.json"),"utf8"));
   expect(scaffold.physicalScaffoldDepth).toBe(1);
   const deniedScaffold=applyPatch({backing:scaffold.physicalCursorBytes},[],true,false).newDocument;expect(deniedScaffold.backing).toBe(scaffold.physicalCursorBytes);
   const closedScaffold=applyPatch(deniedScaffold,[{op:"replace",path:"/backing",value:0}],true,false).newDocument;expect(closedScaffold.backing).toBe(0);
@@ -264,7 +264,7 @@ test("retained clone close depth preserves an unfunded original birth", () => {
 });
 
 test("recursive structural depth counts field and box owners independently", () => {
-  const directory=join(root,owner,"🧬️retained-clone/🧫️fixtures/🌳️structural-depth");
+  const directory=join(root,owner,"🧬️retained-clone/🧪️tests/🧫️fixtures/🌳️structural-depth");
   const law=JSON.parse(readFileSync(join(directory,"🔣️.json"),"utf8"));
   for(const row of law.cases){
     let chain={text:"leaf",next:null} as {text:string,next:unknown};
@@ -282,7 +282,7 @@ test("recursive structural depth counts field and box owners independently", () 
 });
 
 test("read closure order retains the original typed payload until its exact last alias closes", () => {
-  const law=JSON.parse(readFileSync(join(root,owner,"🔗️read/🧫️fixtures/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(join(root,owner,"🔗️read/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
   for(const order of law.closeOrders){
     let state={authority:true,read:true,original:"last-reader λ🙂",released:false};
     if(order==="authority-first"){state=applyPatch(state,[{op:"replace",path:"/authority",value:false}],true,false).newDocument;expect(state.read).toBe(true);expect(JSON.parse(JSON.stringify(state.original))).toBe("last-reader λ🙂");expect(state.released).toBe(false);}
@@ -291,4 +291,15 @@ test("read closure order retains the original typed payload until its exact last
     expect(state.authority||state.read).toBe(false);state=applyPatch(state,[{op:"replace",path:"/released",value:true}],true,false).newDocument;expect(state.released).toBe(true);
   }
   console.log("[DEBUG] Independent AJV and RFC6902 close-order oracle preserves the original last-reader payload");
+});
+
+test("original shared source and projection header events agree with zero-copy schema and independent aliases",()=>{
+ const source=join(root,owner,"🧬️retained-clone/🔗️source");const law=JSON.parse(readFileSync(join(source,"🧪️tests/🧫️fixtures/🎟️header.json"),"utf8"));const schema=JSON.parse(readFileSync(join(source,"🧬️schema/🎟️header.json"),"utf8"));const validate=new Ajv({strict:true}).compile(schema);expect(validate(law)).toBe(true);expect(validate({...law,headerAdmission:{...law.headerAdmission,copyBytes:1}})).toBe(false);
+ for(const kind of law.sourceKinds){let value={kind,owner:law.owner,authority:law.authority,aliases:["source"]};value=applyPatch(value,[{op:"add",path:"/aliases/-",value:"projection"},{op:"add",path:"/aliases/-",value:"child"}],true,false).newDocument;expect(value.aliases).toEqual(["source","projection","child"]);for(const expected of [2,1,0]){value=applyPatch(value,[{op:"remove",path:"/aliases/"+(value.aliases.length-1)}],true,false).newDocument;expect(value.aliases.length).toBe(expected);expect(value.owner).toBe(law.owner);expect(value.authority).toBe(law.authority);}}
+ expect(law.headerAdmission.copyBytes).toBe(0);expect(law.capacity).toBe("actualSharedHeadersAndLeaseBacking");
+});
+
+test("original shared source typed body retains neutral raw Float32 atoms and independent move identity",()=>{
+ const law=JSON.parse(readFileSync(new URL("../../🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🎟️header.json",import.meta.url),"utf8"));const payload=law.typedPayload;expect(payload.rawArrayBytes).toBe(12);expect(payload.rawElementBytes).toBe(4);expect(payload.selectedSpillCopyBytes).toBe(0);expect(payload.closeBodies).toEqual([0,1,3,64]);
+ for(const row of payload.values){const bytes=new DataView(new ArrayBuffer(payload.rawArrayBytes));row.forEach((value:number,index:number)=>bytes.setFloat32(index*payload.rawElementBytes,value,true));expect(row.map((_:number,index:number)=>bytes.getFloat32(index*payload.rawElementBytes,true))).toEqual(row);const original={source:row};const moved=applyPatch(original,[{op:"move",from:"/source",path:"/retained"}],true,false).newDocument;expect(moved.retained).toEqual(row);expect(applyPatch(moved,[{op:"remove",path:"/retained"}],true,false).newDocument).toEqual({});}
 });

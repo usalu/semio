@@ -272,7 +272,7 @@ fn las_native_receipt_binds_canonical_graph_and_independent_blake3() {
         }
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️publication/🧫️fixtures/🧬️trusted-stdio-catalog/🔣️.json"))).unwrap();
-    let spec = <semio_s_artifact_stdio_las::LasSnapshot as semio_framework_os_kernel::os_store::serialization::ArtifactPack>::record_spec().unwrap();
+    let spec = <semio_s_artifact_stdio_las::LasSnapshot as pack::snapshot::ArtifactPack>::record_spec().unwrap();
     let graph = semio_framework_os_kernel::os_pack::PackSchemaGraph::of(&spec);
     let json: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&graph.to_json())).unwrap();
     let records = json.as_array().unwrap();
@@ -326,9 +326,9 @@ async fn text_document_codecs_compile_their_neutral_fixture_through_the_linked_r
         let (again, _) = (codec.compile_dsl)(&printed.dsl, &printed.ops).await.unwrap_or_else(|error| panic!("{id}: {error:?}"));
         assert_eq!(again.pack, files.pack, "{id}: the mirror compiles back to the identical pack");
         let snapshot = match kind {
-            "s.stdio.txt" => neutral(<semio_s_artifact_stdio_txt::TxtSnapshot as semio_framework_os_kernel::os_store::serialization::ArtifactPack>::decode_pack(&files.pack).unwrap()),
-            "s.stdio.tsv" => neutral(<semio_s_artifact_stdio_tsv::TsvSnapshot as semio_framework_os_kernel::os_store::serialization::ArtifactPack>::decode_pack(&files.pack).unwrap()),
-            "s.stdio.html" => neutral(<semio_s_artifact_stdio_html::HtmlSnapshot as semio_framework_os_kernel::os_store::serialization::ArtifactPack>::decode_pack(&files.pack).unwrap()),
+            "s.stdio.txt" => neutral(<semio_s_artifact_stdio_txt::TxtSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&files.pack).unwrap()),
+            "s.stdio.tsv" => neutral(<semio_s_artifact_stdio_tsv::TsvSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&files.pack).unwrap()),
+            "s.stdio.html" => neutral(<semio_s_artifact_stdio_html::HtmlSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&files.pack).unwrap()),
             other => panic!("{id}: {other} is outside the text codec fixture"),
         };
         assert_eq!(snapshot, case["snapshot"], "{id}");

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🛤️create-railing/🧳️adds-a-railing-hosted-by-a-ramp",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛤️create-railing/🧳️adds-a-railing-hosted-by-a-ramp/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛤️create-railing/🧳️adds-a-railing-hosted-by-a-ramp/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛤️create-railing/🧳️adds-a-railing-hosted-by-a-ramp/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛤️create-railing/🧳️adds-a-railing-hosted-by-a-ramp/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛤️create-railing/🧳️adds-a-railing-hosted-by-a-ramp/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛤️create-railing/🧳️adds-a-railing-hosted-by-a-ramp/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛤️create-railing/🧳️adds-a-railing-hosted-by-a-ramp/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛤️create-railing/🧳️adds-a-railing-hosted-by-a-ramp/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛤️create-railing/🧳️adds-a-railing-hosted-by-a-ramp/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛤️create-railing/🧳️adds-a-railing-hosted-by-a-ramp/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

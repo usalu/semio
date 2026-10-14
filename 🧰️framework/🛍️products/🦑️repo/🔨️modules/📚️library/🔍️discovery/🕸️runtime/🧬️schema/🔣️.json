@@ -501,7 +501,7 @@
         },
         "profile": {
           "enum": [
-            "dev",
+            "prototype",
             "release"
           ]
         },

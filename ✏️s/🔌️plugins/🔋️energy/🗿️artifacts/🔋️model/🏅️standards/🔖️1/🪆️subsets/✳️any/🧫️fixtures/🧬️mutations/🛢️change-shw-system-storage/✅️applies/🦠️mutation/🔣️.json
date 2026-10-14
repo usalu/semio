@@ -1,5 +1,0 @@
-{
-  "mutation": "changeShwSystemStorageVolume",
-  "id": 400,
-  "newStorageVolumeM3": 0.2
-}

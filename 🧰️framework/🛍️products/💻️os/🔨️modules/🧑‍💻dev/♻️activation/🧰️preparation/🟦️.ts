@@ -1,9 +1,10 @@
-import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🧩️ Semantic activation preparation owner. */
 
 import { newestComponentSourceMtime, stagedModuleMtime } from "../../../🔌️plugin/🏗️build/🔍️freshness/🟦️.ts";
-import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, healthyPreparedComponents, nextActivationReceipt, playgroundSessionOutputPath, pluginModulesRoot, preparedComponentReportLines, preparedComponentVerdict, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type PreparedComponentFacts, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, healthyPreparedComponents, nextActivationReceipt, playgroundSessionOutputPath, builtPluginModulesRootIn, preparedComponentReportLines, preparedComponentVerdict, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type PreparedComponentFacts, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
 
 import { FONT_ASSET, validateFontAsset } from "../../../../../../🔨️modules/🖼️canvas/🔤️fonts/🟦️.ts";
 
@@ -14,8 +15,8 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from "node:pat
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import {
   ensurePreview2ShimVendorAt,
@@ -48,11 +49,11 @@ import { buildComponentClosureV1, playgroundComponentClosureV1 } from "../../../
 class PreparationScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const [variant, renderer, profile] = args;
-    if (args.length !== 3 || !["react", "wgpu"].includes(renderer) || !["dev", "release"].includes(profile) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("prepare <variant> react|wgpu <dev|release>");
+    if (args.length !== 3 || !["react", "wgpu"].includes(renderer) || !["prototype", "release"].includes(profile) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("prepare <variant> react|wgpu <prototype|release>");
     const playground = playgroundCatalog.find((row) => row.variant === variant);
     if (!playground) throw new Error(`Missing generated playground ${variant}`);
-    await buildComponentClosureV1(repoRoot, playgroundComponentClosureV1(variant, "boot"), { signal: this.invocation.control.signal });
-    const moduleRoot = pluginModulesRoot(), registry = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry");
+    await buildComponentClosureV1(repoRoot, playgroundComponentClosureV1(variant, "boot"), { control: scriptCompilerAdmissionControlV1(this.invocation, "native:driver", 0) });
+    const moduleRoot = builtPluginModulesRootIn(repoRoot, profile), registry = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry");
     const session = (await import(pathToFileURL(join(registry, "dist/sessions", variant, "🎮️playground-session", "🟦️.ts")).href)).PLAYGROUND_SESSION;
     if (session.variant !== variant || session.registryPluginId !== playground.pluginId) throw new Error("Prepared session identity mismatch");
     const verdicts = session.plugins.map((plugin: { readonly pluginId: string }) => preparedComponentVerdict(stagedComponentFacts(moduleRoot, plugin.pluginId)));

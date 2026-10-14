@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
 import fc from "fast-check";
 import { assign, createMachine, initialTransition, transition, type AnyMachineSnapshot } from "xstate";
-import lifecycle from "../../🧫️fixtures/🧫️lifecycle-law/🔣️.json";
+import lifecycle from "../🧫️fixtures/🧫️lifecycle-law/🔣️.json";
 import { replayReportBlocksFinalize, type InputReplacement } from "@semio-tech/framework-replication";
 import schema from "../../🧬️schema/🔣️.json";
 import replaySchema from "../../../📡️replication/⚔️conflict/🧬️schema/🔣️replay-report/🔣️.json";

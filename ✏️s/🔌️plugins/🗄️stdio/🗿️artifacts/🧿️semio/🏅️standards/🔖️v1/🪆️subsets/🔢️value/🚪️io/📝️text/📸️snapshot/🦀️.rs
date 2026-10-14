@@ -49,7 +49,7 @@ pub(crate) fn dec_semio_value_snapshot(s: &str) -> Result<SemioValueSnapshot, St
 /// passed straight to `wrap_binary`, no distinct "binary JsonValue" layout) — the PACK bytes are
 /// the SAME real compact text this facet's DSL emits, wrapped in the semio envelope. No
 /// `serde_json` anywhere in this impl block.
-impl store::os_store::serialization::ArtifactDsl for SemioValueSnapshot {
+impl pack::snapshot::ArtifactDsl for SemioValueSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIOVALUE_DOCUMENT_SCHEMA
@@ -65,7 +65,7 @@ impl store::os_store::serialization::ArtifactDsl for SemioValueSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = enc_semio_value_snapshot(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -89,20 +89,20 @@ pub fn decode_semio_value_snapshot_json(text: &str) -> Result<SemioValueSnapshot
 }
 
 /// 📝️ Parses `stdio.semio.value` DSL text into a [`SemioValueSnapshot`] — a named pass-through of
-/// this snapshot's own `store::os_store::serialization::ArtifactDsl` impl above, whose trait and error type are both
+/// this snapshot's own `pack::snapshot::ArtifactDsl` impl above, whose trait and error type are both
 /// unnameable outside this crate, so `🔢️mutate-semio-value`'s `identity-round-trip` scenario reaches
 /// the real committed artifact (`../../../../✉️base/📚️examples/🕸️graph/🖼️assets/🗣️.dsl.semio`)
 /// through this instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_value_dsl(text: &str) -> Result<SemioValueSnapshot, String> {
-    <SemioValueSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <SemioValueSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
 /// 📝️ Renders a [`SemioValueSnapshot`] back as `stdio.semio.value` DSL text — the inverse of
 /// [`parse_semio_value_dsl`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_value_dsl(snapshot: &SemioValueSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
+    pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

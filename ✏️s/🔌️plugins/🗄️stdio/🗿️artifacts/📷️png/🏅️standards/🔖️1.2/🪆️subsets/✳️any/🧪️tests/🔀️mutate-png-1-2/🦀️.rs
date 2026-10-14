@@ -21,7 +21,7 @@ use semio_repo_test_host::law;
 use semio_repo_test_host::Json;
 use semio_s_artifact_stdio_png_test_oracle::standards::v1_2::subsets::any::{oracle_encode_owned, project_png_owned, owned_png_revision};
 
-fn owned_vectors() -> Result<Json, String> { semio_repo_test_host::parse_json(include_str!("../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")) }
+fn owned_vectors() -> Result<Json, String> { semio_repo_test_host::parse_json(include_str!("../🧫️fixtures/🧬️owned-native-samples/🔣️.json")) }
 fn painted_vector(row: &Json) -> Result<Json, String> {
     let mut snapshot = row.get("snapshot").ok_or("neutral PNG snapshot missing")?.clone();
     let Json::Object(fields) = &mut snapshot else { return Err("neutral PNG snapshot object missing".into()) };

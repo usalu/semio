@@ -1,8 +1,9 @@
 //! 🖋️ DXF header, table, block, entity and typed group-code relations.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v_r12::subsets::any::schema::snapshot::*;
 use crate::standards::v_r12::subsets::any::io::text::snapshot as snapshot_text;
-use store::os_store::serialization::ArtifactSqliteSnapshot;
+use store::os_store::serialization::ArtifactSqliteSnapshotHost;
 use store::sqlite_snapshot::{self, SqliteDatabase as Db, SqliteValue as V, SqliteSnapshotControl as Control, SqliteSnapshotPhase as Phase, artifact::{Cell as C}};
 use std::collections::{BTreeMap, BTreeSet};
 #[path="🔢️number/🦀️.rs"]
@@ -112,13 +113,13 @@ fn reconstruct_sqlite_database(db: &Db, control: &mut Control<'_>) -> Result<Sel
     }
 }
 
-impl ArtifactSqliteSnapshot for DxfSnapshot {
+impl ArtifactSqliteSnapshotHost for DxfSnapshot {
     fn encode_sqlite_snapshot_native(&self,encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{(|| -> Result<(),ValueError>{
         control.checkpoint(Phase::EncodeNative,0,0)?;native_rows(self,control)?;let mut out=Projection::forecast(control,Phase::EncodeNative)?;self.write_sqlite_rows(&mut out)?;out.finish_forecast()?;
-        Ok(())})()?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|native|snapshot_text::to_record_controlled(self,native),control,native_owner)
+        Ok(())})()?;store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|native|snapshot_text::to_record_controlled(self,native),control,native_owner)
     }
     fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
-        let value:Self=store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|record,output,native,_body|{*output=Some(snapshot_text::from_record_controlled(record,native)?);Ok(())},control,native_control)?;let mut out=Projection::forecast(control,Phase::DecodeNative)?;value.write_sqlite_rows(&mut out)?;out.finish_forecast()?;Ok(value)
+        let value:Self=store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|record,output,native,_body|{*output=Some(snapshot_text::from_record_controlled(record,native)?);Ok(())},control,native_control)?;let mut out=Projection::forecast(control,Phase::DecodeNative)?;value.write_sqlite_rows(&mut out)?;out.finish_forecast()?;Ok(value)
     }
 
     fn preflight_sqlite_snapshot_encoding(&self, encoding: sqlite_snapshot::SnapshotEncoding, control: &mut Control<'_>) -> Result<(),ValueError> {self.preflight_sqlite_encoding(encoding,control)}
@@ -128,11 +129,16 @@ impl ArtifactSqliteSnapshot for DxfSnapshot {
         let row=database.table("dxf_document")?.single_row()?;if row.rowid!=1||row.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"snapshot document identity differs from semantic projection"));}
         control.checkpoint(Phase::ProjectSnapshot,1,1)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics:Vec::new()})
     })().map_err(|error|semio_framework_os_kernel::io_schema::IoError::from_value_error(error))}
-    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+    
 
-    fn to_sqlite_database(&self, control: &mut Control<'_>) -> Result<Db,ValueError> {self.project_sqlite_database(control)}
+    
 
-    fn from_sqlite_database(db: &Db, control: &mut Control<'_>) -> Result<Self,ValueError> {Self::reconstruct_sqlite_database(db,control)}
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for DxfSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut Control<'_>) -> Result<Db,ValueError> {self.project_sqlite_database(control)}
+fn from_sqlite_database(db: &Db, control: &mut Control<'_>) -> Result<Self,ValueError> {Self::reconstruct_sqlite_database(db,control)}
 }
 
 fn i32_at(row:Row<'_>, column: usize) -> Result<i32, ValueError> { i32::try_from(row.integer(column)?).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"DXF integer exceeds i32")) }
@@ -223,7 +229,7 @@ impl<'a, 'c, 'p> Reader<'a, 'c, 'p> {
 mod tests {
     #[test]
     fn sqlite_snapshot_dxf_controlled_output_retains_complete_state_and_interior_admission(){
-        let plan:serde_json::Value=serde_json::from_str(include_str!("../../📝️text/📸️snapshot/🧫️fixtures/🛫️encoding/🔣️.json")).unwrap();let mut snapshot=fixture();snapshot.schema=plan["unit"].as_str().unwrap().repeat(plan["repetitions"].as_u64().unwrap() as usize);let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
+        let plan:serde_json::Value=serde_json::from_str(include_str!("../../📝️text/📸️snapshot/🧪️tests/🧫️fixtures/🛫️encoding/🔣️.json")).unwrap();let mut snapshot=fixture();snapshot.schema=plan["unit"].as_str().unwrap().repeat(plan["repetitions"].as_u64().unwrap() as usize);let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
         for encoding in [sqlite_snapshot::SnapshotEncoding::Binary,sqlite_snapshot::SnapshotEncoding::Text]{
             let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut Control::new(&mut |_|true,limits), native_owner)).unwrap();assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| DxfSnapshot::decode_sqlite_snapshot_native(&payload,&mut Control::new(&mut |_|true,limits), native_owner)).unwrap(),snapshot);
             let mut reached=false;let result=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut Control::new(&mut |event|{if event.phase==Phase::EncodeNative&&event.total==snapshot.schema.len()&&event.completed>=plan["cancelAfter"].as_u64().unwrap() as usize&&event.completed<event.total{reached=true;false}else{true}},limits), native_owner));assert!(reached);assert!(result.is_err());
@@ -232,7 +238,7 @@ mod tests {
     }
     #[test]
     fn sqlite_snapshot_dxf_controlled_native_owner_preserves_full_fixture_and_stops_inside_text(){
-        use store::{os_store::serialization::ArtifactDsl,os_store::serialization::ArtifactPack};use semio_framework_os_kernel::io::IoPayload;
+        use store::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack};use semio_framework_os_kernel::io::IoPayload;
         let mut snapshot=fixture();snapshot.schema="DXF 世界\0".repeat(16384);let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
         for payload in [IoPayload::Binary(snapshot.encode_pack()),IoPayload::Text(snapshot.print_dsl())]{
             assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| DxfSnapshot::decode_sqlite_snapshot_native(&payload,&mut Control::new(&mut |_|true,limits), native_owner)).unwrap(),snapshot);
@@ -244,16 +250,16 @@ mod tests {
 
     #[test]
     fn sqlite_snapshot_dxf_owned_guard_checks_exact_identity_and_projection(){
-        let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🎯️dialect.json")).unwrap();let snapshot=fixture();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let database=snapshot.to_sqlite_database(&mut Control::new(&mut |_|true,limits)).unwrap();let dialect=|value:&serde_json::Value|semio_framework_artifact_reference::ArtifactDialect{artifact_kind:value["artifactKind"].as_str().unwrap().into(),standard:value["standard"].as_str().unwrap().into(),subset:value["subset"].as_str().unwrap().into()};let valid=dialect(&plan["valid"]);assert!(snapshot.validate_sqlite_snapshot_subset(&valid,&database,&mut Control::new(&mut |_|true,limits)).unwrap().diagnostics.is_empty());for invalid in plan["invalid"].as_array().unwrap(){assert!(snapshot.validate_sqlite_snapshot_subset(&dialect(invalid),&database,&mut Control::new(&mut |_|true,limits)).is_err());}let mut mismatched=database.clone();mismatched.table_mut("dxf_document").unwrap().rows[0].values[1]=V::Text("other.schema".into());assert!(snapshot.validate_sqlite_snapshot_subset(&valid,&mismatched,&mut Control::new(&mut |_|true,limits)).is_err());assert!(snapshot.validate_sqlite_snapshot_subset(&valid,&database,&mut Control::new(&mut |_|false,limits)).is_err());
+        let plan:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🎯️dialect.json")).unwrap();let snapshot=fixture();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let database=snapshot.to_sqlite_database(&mut Control::new(&mut |_|true,limits)).unwrap();let dialect=|value:&serde_json::Value|semio_framework_artifact_reference::ArtifactDialect{artifact_kind:value["artifactKind"].as_str().unwrap().into(),standard:value["standard"].as_str().unwrap().into(),subset:value["subset"].as_str().unwrap().into()};let valid=dialect(&plan["valid"]);assert!(snapshot.validate_sqlite_snapshot_subset(&valid,&database,&mut Control::new(&mut |_|true,limits)).unwrap().diagnostics.is_empty());for invalid in plan["invalid"].as_array().unwrap(){assert!(snapshot.validate_sqlite_snapshot_subset(&dialect(invalid),&database,&mut Control::new(&mut |_|true,limits)).is_err());}let mut mismatched=database.clone();mismatched.table_mut("dxf_document").unwrap().rows[0].values[1]=V::Text("other.schema".into());assert!(snapshot.validate_sqlite_snapshot_subset(&valid,&mismatched,&mut Control::new(&mut |_|true,limits)).is_err());assert!(snapshot.validate_sqlite_snapshot_subset(&valid,&database,&mut Control::new(&mut |_|false,limits)).is_err());
     }
     use crate::standards::v_r12::subsets::any::io::sqlite::snapshot::*;
-    use store::os_store::serialization::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshotHost;
 use semio_framework_value::FromValue;
-    fn fixture() -> DxfSnapshot { DxfSnapshot::from_value(serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()).unwrap() }
+    fn fixture() -> DxfSnapshot { DxfSnapshot::from_value(serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔣️.json")).unwrap()).unwrap() }
 
     #[test]
     fn sqlite_snapshot_dxf_preserves_ieee_entity_geometry_and_group_values(){
-        use std::{io::Write,process::{Command,Stdio}};let cases:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔢️ieee.json")).unwrap();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
+        use std::{io::Write,process::{Command,Stdio}};let cases:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔢️ieee.json")).unwrap();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
         for case in cases["binary64"].as_array().unwrap(){let bits=u64::from_str_radix(case["bits"].as_str().unwrap(),16).unwrap();let value=f64::from_bits(bits);let mut snapshot=fixture();snapshot.header_vars.push(DxfHeaderVar{name:"$IEEE".into(),group_code:40,value:DxfValue::Double{value},extra_group_codes:vec![(10,DxfValue::Point{value:[value;3]})]});snapshot.blocks[0].base_point=[value;3];let DxfEntity::Circle(DxfCircle {radius,center,..})=&mut snapshot.entities[1]else{panic!("circle");};*radius=value;*center=[value;3];let DxfEntity::Polyline(DxfPolyline {vertices,..})=&mut snapshot.entities[3]else{panic!("polyline");};vertices[0].bulge=value;let db=snapshot.to_sqlite_database(&mut Control::new(&mut |_|true,limits)).unwrap();let file=sqlite_snapshot::export_sqlite_database(&db,limits,&mut |_|true).unwrap();let loaded=sqlite_snapshot::import_sqlite_database(&file,limits,&mut |_|true).unwrap();let restored=DxfSnapshot::from_sqlite_database(&loaded,&mut Control::new(&mut |_|true,limits)).unwrap();let DxfValue::Double{value}=restored.header_vars.last().unwrap().value else{panic!("double");};assert_eq!(value.to_bits(),bits);let DxfValue::Point{value}=restored.header_vars.last().unwrap().extra_group_codes[0].1 else{panic!("point");};assert!(value.iter().all(|value|value.to_bits()==bits));assert!(restored.blocks[0].base_point.iter().all(|value|value.to_bits()==bits));let DxfEntity::Circle(DxfCircle {radius,center,..})=&restored.entities[1]else{panic!("circle");};assert_eq!(radius.to_bits(),bits);assert!(center.iter().all(|value|value.to_bits()==bits));let DxfEntity::Polyline(DxfPolyline {vertices,..})=&restored.entities[3]else{panic!("polyline");};assert_eq!(vertices[0].bulge.to_bits(),bits);
             let script="import {Database} from 'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');await Bun.write(Bun.stdout,JSON.stringify(db.query(\"SELECT CAST(double_value_bits AS TEXT) AS bits,double_value_class AS class,double_value IS NULL AS nullQuery FROM dxf_header WHERE name='$IEEE'\").get()));db.close();";let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&file).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let actual:serde_json::Value=serde_json::from_slice(&output.stdout).unwrap();assert_eq!(actual["bits"].as_str().unwrap(),(bits as i64).to_string());assert_eq!(actual["class"],case["class"]);assert_eq!(actual["nullQuery"].as_i64().unwrap(),i64::from(case["class"]=="nan"));}
     }
@@ -263,11 +269,11 @@ use semio_framework_value::FromValue;
         use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};
         crate::register_sqlite_test_declaration();
         let dialect=ArtifactDialect{artifact_kind:"s.stdio.dxf".into(),standard:"r12".into(),subset:"*".into()};let mut snapshot=fixture();snapshot.schema="complete-owned-DXF-schema".into();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let mut phases=Vec::new();
-        let file=io_export_sqlite_snapshot(&dialect,&snapshot,sqlite_snapshot::SnapshotEncoding::Binary,limits,&mut |event|{phases.push(event.phase);true}).await.unwrap().value;assert_eq!(io_import_sqlite_snapshot::<DxfSnapshot>(&dialect,&file,limits,&mut |event|{phases.push(event.phase);true}).await.unwrap().value,snapshot);assert!(!phases.iter().any(|phase|matches!(phase,Phase::EncodeNative|Phase::DecodeNative)));
+        let file=async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=sqlite_snapshot::SnapshotEncoding::Binary;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |event|{phases.push(event.phase);true};semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;assert_eq!(async{let original_file_dialect=&dialect;let original_file_input=&file;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |event|{phases.push(event.phase);true};semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<DxfSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value,snapshot);assert!(!phases.iter().any(|phase|matches!(phase,Phase::EncodeNative|Phase::DecodeNative)));
     }
     async fn erased_snapshot(snapshot:&DxfSnapshot,encoding:sqlite_snapshot::SnapshotEncoding)->DxfSnapshot{
         use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::IoPayload,semio_framework_os_kernel::io::io_mechanism::io_route};
-        use store::{os_store::serialization::ArtifactDsl,os_store::serialization::ArtifactPack};
+        use store::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack};
         crate::register_sqlite_test_declaration();
         let dialect=ArtifactDialect{artifact_kind:"s.stdio.dxf".into(),standard:"r12".into(),subset:"*".into()};
         let sqlite:ArtifactDialect=semio_framework_os_kernel::io_schema::SQLITE_SNAPSHOT.into();
@@ -284,7 +290,7 @@ use semio_framework_value::FromValue;
     async fn sqlite_snapshot_dxf_actual_erased_text_preserves_complete_owned_model(){assert_eq!(erased_snapshot(&fixture(),sqlite_snapshot::SnapshotEncoding::Text).await,fixture());}
     #[semio_framework_async_macros::async_test]
     async fn sqlite_snapshot_dxf_actual_erased_routes_preserve_exact_ieee_geometry_and_group_values(){
-        let cases:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔢️ieee.json")).unwrap();
+        let cases:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔢️ieee.json")).unwrap();
         for encoding in [sqlite_snapshot::SnapshotEncoding::Binary,sqlite_snapshot::SnapshotEncoding::Text]{for case in cases["binary64"].as_array().unwrap(){
             let bits=u64::from_str_radix(case["bits"].as_str().unwrap(),16).unwrap();let value=f64::from_bits(bits);let mut snapshot=fixture();
             snapshot.header_vars.push(DxfHeaderVar{name:"$IEEE".into(),group_code:40,value:DxfValue::Double{value},extra_group_codes:vec![(10,DxfValue::Point{value:[value;3]}),(160,DxfValue::Int{value:i64::MIN})]});

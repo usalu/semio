@@ -36,7 +36,7 @@ fn set_cell_requires_its_full_address_and_accepts_an_empty_value() {
 
 #[test]
 fn set_cell_matches_the_language_neutral_renderer_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/✏️set-cell/🔣️.json")).expect("EPW cell fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/✏️set-cell/🔣️.json")).expect("EPW cell fixture");
     for case in fixture["cases"].as_array().expect("fixture cases") {
         let args: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(&case["args"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed fixture args");
         let command = <EpwEditor as ArtifactEditor>::command_from_action("set-cell", Some(&args)).expect("fixture command");

@@ -6,7 +6,7 @@ import { WORKSPACE_ROOT } from "../../../../../../📜️script.ts";
 /** 🧪️ Executes tool job cooperative maintenance policy assertions. */
 export function toolJobCooperativeMaintenanceSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🔨️modules/⏳️async/🤝️cooperative");
-  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
   const weights = new Map([["Maintenance", 1], ["Background", 2], ["UserVisible", 4], ["Io", 4], ["Timer", 3], ["Interactive", 8]]);
   const seen = new Set<string>();
   for (const law of fixture.cases) {

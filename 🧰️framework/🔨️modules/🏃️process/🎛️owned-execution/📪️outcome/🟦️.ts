@@ -1,4 +1,4 @@
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 📪️ Preserves the actual operating-system terminal status and signal. */
 export type OwnedCommandOutcome = Readonly<{ version: 1; status: number | null; signal: string | null }>;

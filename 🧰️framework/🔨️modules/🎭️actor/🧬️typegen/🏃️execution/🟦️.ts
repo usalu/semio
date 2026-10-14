@@ -1,9 +1,9 @@
-import { buildBudgetMs } from "../../../🏃️process/⏱️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
-import { BundleScript } from "../../../🏃️process/🧭️routing/🟦️.ts";
-import { seedGeneratedFile } from "../../../🏃️process/📦️artifacts/🗂️files/🟦️.ts";
+import { BundleScript } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { seedGeneratedFile } from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 import { actorTypegenPlan, actorTypegenTarget } from "../📋️plan/🟦️.ts";
 import { publishActorTypegen } from "../📤️publication/🟦️.ts";
 

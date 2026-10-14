@@ -158,7 +158,7 @@ fn register_writer_controller_law_on(mode: DbIoExecutorMode, pool: Arc<WorkerPoo
 async fn wal_writer_mounted_controller_fences_at_signal_and_wakes_outside_registry_without_tasks() {
     let _owner = fixture_owner();
     let before = ledger_witness();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let row = &fixture["controllerBinding"];
     assert!(DB_IO_WRITER_STATIC_BACKING_BYTES <= row["maximumStaticBytes"].as_u64().unwrap());
     assert_eq!(DB_IO_PROCESS_WITH_WRITER_BACKING_BYTES, DB_IO_PROCESS_BYTES + DB_IO_WRITER_STATIC_BACKING_BYTES);
@@ -360,7 +360,7 @@ async fn wal_writer_mounted_controller_rerequests_after_async_executor_handback(
 async fn wal_writer_mounted_controller_coalesced_fault_does_not_strand_healthy_release() {
     let _owner = fixture_owner();
     let before = ledger_witness();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let (control, _) = register_writer_controller_law(DbIoExecutorMode::BlockingLane);
     let document = DbIoText::try_from_str("coalesced-fault").unwrap();
     let other = DbIoText::try_from_str("coalesced-healthy").unwrap();
@@ -389,7 +389,7 @@ async fn wal_writer_mounted_controller_coalesced_fault_does_not_strand_healthy_r
 async fn wal_writer_mounted_controller_outer_panic_faults_waiters_once_and_stops() {
     let _owner = fixture_owner();
     let before = ledger_witness();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let expected = &fixture["controllerFaults"]["outerPanic"];
     let turns = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let control =
@@ -633,7 +633,7 @@ fn fault_category_oracle(error: &DbError) -> FaultCategoryOracle {
 
 fn fault_fixture_error_for_task(task: &DbIoTask) -> DbError {
     let DbIoTask::PayloadGet { hash, .. } = task else { return DbError::Internal("fault taxonomy fixture received the wrong task".to_string()) };
-    let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
+    let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
     fixture.fault_categories.get(usize::from(hash.0[0])).copied().map(fault_fixture_error).unwrap_or_else(|| DbError::Internal("fault taxonomy fixture discriminator is out of range".to_string()))
 }
 
@@ -964,7 +964,7 @@ async fn db_io_blocking_fault_preserves_exact_category_scalars_and_retires() {
     }
     let _owner = fixture_owner();
     let before = ledger_witness();
-    let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
+    let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
     let pool = db_io_test_pool();
     let control = register_db_io_backend(DbIoBackendKind::Memory, Box::new(BlockingFaultTaxonomyLawExecutor { terminal: false }), pool.clone()).unwrap();
 
@@ -1006,7 +1006,7 @@ async fn db_io_blocking_fault_preserves_exact_category_scalars_and_retires() {
 async fn db_io_async_native_fault_preserves_exact_category_scalars_and_retires() {
     let _owner = fixture_owner();
     let before = ledger_witness();
-    let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
+    let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
     let pool = db_io_test_pool();
     let control = register_db_io_backend(DbIoBackendKind::Postgres, Box::new(AsyncFaultTaxonomyLawExecutor { terminal: false }), pool.clone()).unwrap();
 
@@ -1206,7 +1206,7 @@ async fn db_io_output_task_yield_cancel_abandon_and_close_retire_exactly_once() 
 async fn sqlite_payload_roundtrip_obeys_the_neutral_page_lifecycle_fixture() {
     let _owner = fixture_owner();
     let before = ledger_witness();
-    let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
+    let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
     let storage = db_storage_sqlite::SqliteStorage::open_in_memory(db_io_test_pool()).await.unwrap();
 
     for length in fixture.lengths {
@@ -1703,7 +1703,7 @@ async fn db_io_real_queued_callback_rejects_a_reused_task_slot_aba() {
 #[semio_framework_async_macros::async_test]
 async fn db_io_saturated_task_retry_wakes_parked_caller_without_unrelated_ingress() {
     let _owner = fixture_owner();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧮️memory-backing/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧮️memory-backing/🔣️.json")).unwrap();
     assert_eq!(u64::from(DB_IO_RETRY_LIMIT), fixture["retry"]["maximumAttempts"].as_u64().unwrap());
     assert_eq!(DB_IO_RETRY_DELAY_MS, fixture["retry"]["timerDelayMs"].as_u64().unwrap());
     let before = ledger_witness();
@@ -1903,7 +1903,7 @@ async fn db_io_all_five_backend_controls_require_explicit_terminal_close_witness
 async fn db_io_lost_result_lease_retains_every_page_and_final_handback() {
     let _owner = fixture_owner();
     let before = ledger_witness();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let pool = db_io_test_pool();
     let counter = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let control = register_db_io_backend(DbIoBackendKind::Memory, Box::new(BlockingOutputLifecycleLawExecutor { terminal: false, success_steps: counter.clone(), cancel_steps: counter.clone(), abandon_steps: counter }), pool.clone()).unwrap();
@@ -1931,7 +1931,7 @@ async fn db_io_lost_result_lease_retains_every_page_and_final_handback() {
 
 #[test]
 fn db_io_maintenance_rotates_ready_and_faulted_classes_without_starvation() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let row = &fixture["maintenanceFairness"];
     assert_eq!(DB_IO_MAINTENANCE_CLASSES, row["classes"].as_array().unwrap().len());
     for (name, faults) in [("continuouslyReady", false), ("firstClassFaults", true)] {
@@ -2031,7 +2031,7 @@ async fn db_io_lost_backend_retains_exact_owner_under_rejected_registry_pressure
     let _owner = fixture_owner();
     while db_io_lost_owner_close_step().unwrap() {}
     let before = ledger_witness();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let row = &fixture["backendPressure"];
     assert_eq!(DB_IO_BACKEND_CONTROLS, row["capacity"].as_u64().unwrap() as usize);
     let pressure = DB_IO_RETIREMENT_PRESSURE_FAULT.swap(false, std::sync::atomic::Ordering::AcqRel);
@@ -2093,7 +2093,7 @@ fn db_io_lost_page_handle_resumes_the_same_retirement_cursor() {
 #[semio_framework_async_macros::async_test]
 async fn db_io_memory_backend_heap_tables_have_exact_preflight_credit_and_terminal_return() {
     let _owner = fixture_owner();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧮️memory-backing/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧮️memory-backing/🔣️.json")).unwrap();
     let inline = size_of::<MemoryDbIoExecutor>() as u64;
     assert!(inline <= fixture["maximumInlineBytes"].as_u64().unwrap(), "fixed backend tables must not occupy the caller stack");
     let before = ledger_witness();
@@ -2199,7 +2199,7 @@ async fn db_io_retained_page_results_survive_same_task_slot_reuse_and_return_exa
         return;
     }
     let _owner = fixture_owner();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧮️memory-backing/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧮️memory-backing/🔣️.json")).unwrap();
     const RETAINED_PAGE_RESULTS: usize = 44;
     assert_eq!(fixture["retainedPageResults"].as_u64().unwrap() as usize, RETAINED_PAGE_RESULTS);
     assert_eq!(fixture["sameSlotReuseBeforeOldResultClose"], true);
@@ -2430,7 +2430,7 @@ async fn db_io_real_storage_open_drop_retires_queued_backend_and_allows_reopen()
         return;
     }
     let _owner = fixture_owner();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔐️backend-pool-use/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔐️backend-pool-use/🔣️.json")).unwrap();
     for row in fixture["opening"].as_array().unwrap().iter().filter(|row| row["cause"] == "queued-drop") {
         let before = ledger_witness();
         let slots_before = lock(db_io_backend_registry()).free_len;
@@ -2475,7 +2475,7 @@ async fn db_io_real_storage_open_fault_drop_retires_registered_backend_without_r
         return;
     }
     let _owner = fixture_owner();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔐️backend-pool-use/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔐️backend-pool-use/🔣️.json")).unwrap();
     for row in fixture["opening"].as_array().unwrap().iter().filter(|row| row["cause"] == "path-type-conflict") {
         let before = ledger_witness();
         let slots_before = lock(db_io_backend_registry()).free_len;
@@ -2513,7 +2513,7 @@ async fn db_io_real_storage_open_fault_drop_retires_registered_backend_without_r
 #[semio_framework_async_macros::async_test]
 async fn db_io_registered_backend_use_blocks_pool_shutdown_until_terminal_close() {
     let _owner = fixture_owner();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔐️backend-pool-use/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔐️backend-pool-use/🔣️.json")).unwrap();
     assert_eq!(fixture["version"], 1);
     assert_eq!(fixture["cases"].as_array().unwrap().len(), 9);
     let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
@@ -2530,7 +2530,7 @@ async fn db_io_backend_registration_saturation_returns_exact_executor_before_poo
         return;
     }
     let _owner = fixture_owner();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔐️backend-pool-use/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔐️backend-pool-use/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == "all-retirement-tiers-full-return-exact-executor").unwrap();
     let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
     let lost_owner_sentinels = LostOwnerPressureLawSlots::reserve();
@@ -2690,7 +2690,7 @@ async fn release_leased(permits: impl IntoIterator<Item = WalWriterPermit>) {
 async fn wal_writer_parked_writers_are_reclaimed_least_recently_parked_first_and_held_ones_never() {
     let _owner = fixture_owner();
     let before = ledger_witness();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let lease = &fixture["lease"];
     let slots = |key: &str| lease[key].as_array().unwrap().iter().map(|slot| slot.as_u64().unwrap() as usize).collect::<Vec<_>>();
     let (control, _) = register_writer_controller_law(DbIoExecutorMode::BlockingLane);

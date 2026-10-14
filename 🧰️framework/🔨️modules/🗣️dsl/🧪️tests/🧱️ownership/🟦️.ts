@@ -16,7 +16,7 @@ type Corpus = Readonly<{
   lexicalCases: readonly Readonly<{id: string; text: string; tokens: Readonly<{kind: string; text: string; start: number; end: number}>[]}>[];
 }>;
 const owner = resolve(import.meta.dir, "../.."), root = resolve(owner, "../../.."), read = (path: string): string => readFileSync(resolve(root, path), "utf8");
-const corpus = JSON.parse(readFileSync(resolve(owner, "🧫️fixtures/🧱️ownership/🔣️.json"), "utf8")) as Corpus;
+const corpus = JSON.parse(readFileSync(resolve(owner, "🧪️tests/🧫️fixtures/🧱️ownership/🔣️.json"), "utf8")) as Corpus;
 test("the language-neutral ownership schema refuses implicit composition and extra authority", () => {
   for (const [field, value] of [["fragments", "builtin"], ["macroMatchers", "automatic"], ["unknownFragment", "ignore"], ["defaultFamilyKnowledge", "general-owner"], ["formatClassification", "general-owner"], ["publicCompatibilityForwards", true]] as const) {
     const mutant = structuredClone(corpus) as { composition: Record<string, unknown> };
@@ -30,7 +30,7 @@ test("the language-neutral ownership schema refuses implicit composition and ext
 });
 
 test("independent named-reference resolution validates explicit fragment selection and missing-reference refusals", () => {
-  const rows = JSON.parse(readFileSync(resolve(owner, "🧫️fixtures/🧩️selection/🔣️.json"), "utf8")) as readonly Readonly<{ id: string; uses: readonly string[]; selectedFragments: readonly string[]; expectedMissing: string[] }>[];
+  const rows = JSON.parse(readFileSync(resolve(owner, "🧪️tests/🧫️fixtures/🧩️selection/🔣️.json"), "utf8")) as readonly Readonly<{ id: string; uses: readonly string[]; selectedFragments: readonly string[]; expectedMissing: string[] }>[];
   for (const row of rows) {
     const definitions = Object.fromEntries(row.selectedFragments.map(id => [id, { type: "object" }])), missing: string[] = [];
     for (const id of row.uses) {
@@ -76,7 +76,7 @@ test("the existing independent lexer produces the declared significant token and
 });
 
 test("canonical diagnostic projections preserve the shared language-neutral fault schema and Serde oracle", () => {
-  const fixture = JSON.parse(read("🧰️framework/🔨️modules/⚠️diagnostic/🧫️fixtures/🧯️fault/🔣️.json"));
+  const fixture = JSON.parse(read("🧰️framework/🔨️modules/⚠️diagnostic/🧪️tests/🧫️fixtures/🧯️fault/🔣️.json"));
   for (const row of fixture.cases) {
     expect(JSON5.parse(JSON.stringify(row.expected))).toEqual(row.expected);
     expect(parseJsonDocument(JSON.stringify(row.expected))).toEqual(row.expected);

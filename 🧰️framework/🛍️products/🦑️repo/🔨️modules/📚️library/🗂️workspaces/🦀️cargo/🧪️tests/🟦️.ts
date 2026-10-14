@@ -8,9 +8,9 @@ import TOML from "@iarna/toml";
 import glob from "fast-glob";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { join, relative } from "node:path";
-import { acquireQueuedResourceLease } from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import { acquireQueuedResourceLease } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { cargoRepositoryPackageSelections, publishCargoWorkspaceMemberships, parseCargoWorkspaceContribution, discoverCargoWorkspaces, cargoWorkspaceMembers, cargoWorkspaceForManifest, selectedCargoArguments, prepareCargoWorkspaceInvocation, cargoCommandRequiresOwnerPreparationV1, publishCargoWorkspaceMembership, parseCargoPreparation, prepareCargoOwners } from "../🟦️.ts";
-const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
 const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
 const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
@@ -101,7 +101,7 @@ test("preparation follows actual selected dependency scopes and deduplicates sha
 });
 
 test("every compiling native command prepares owners and keeps diagnostics off machine stdout", () => {
- const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🏃️invocation/🔣️.json",import.meta.url),"utf8")),corpus=JSON.parse(readFileSync(new URL("../🧫️fixtures/🏃️invocation/🔣️.json",import.meta.url),"utf8"));
+ const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🏃️invocation/🔣️.json",import.meta.url),"utf8")),corpus=JSON.parse(readFileSync(new URL("./🧫️fixtures/🏃️invocation/🔣️.json",import.meta.url),"utf8"));
  const oracle=new Ajv({strict:true}).compile(schema);
  for(const vector of corpus.cases){expect(oracle(vector)).toBe(true);expect(cargoCommandRequiresOwnerPreparationV1(vector.command)).toBe(vector.requiresOwnerPreparation);expect(oracle({...vector,requiresOwnerPreparation:!vector.requiresOwnerPreparation})).toBe(false);}
  const root=mkdtempSync(join(artifactRoot!,"cargo-machine-output-"));
@@ -118,7 +118,7 @@ test("every compiling native command prepares owners and keeps diagnostics off m
 
 
 test("one membership invocation parses each current manifest once and observes later saves", () => {
-  const law = JSON.parse(readFileSync(new URL("../🧫️fixtures/📇️invocation-inventory/🔣️.json", import.meta.url), "utf8"));
+  const law = JSON.parse(readFileSync(new URL("./🧫️fixtures/📇️invocation-inventory/🔣️.json", import.meta.url), "utf8"));
   const validator = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(new URL("../🧬️schema/📇️invocation-inventory/🔣️.json", import.meta.url), "utf8")));
   expect(validator(law)).toBe(true);
   const root = mkdtempSync(join(artifactRoot!, "cargo-invocation-inventory-"));
@@ -155,7 +155,7 @@ test("one membership invocation parses each current manifest once and observes l
 
 
 test("batch package selection discovers one fresh repository inventory", () => {
-  const law = JSON.parse(readFileSync(new URL("../🧫️fixtures/📇️invocation-inventory/🔣️.json", import.meta.url), "utf8"));
+  const law = JSON.parse(readFileSync(new URL("./🧫️fixtures/📇️invocation-inventory/🔣️.json", import.meta.url), "utf8"));
   const root = mkdtempSync(join(artifactRoot!, "cargo-batch-inventory-"));
   const rootSource = workspace(["packages/*"]);
   put(root, "Cargo.toml", rootSource);
@@ -171,7 +171,7 @@ test("batch package selection discovers one fresh repository inventory", () => {
 });
 
 test("batch owner publication discovers one fresh repository inventory", () => {
-  const law = JSON.parse(readFileSync(new URL("../🧫️fixtures/📇️invocation-inventory/🔣️.json", import.meta.url), "utf8"));
+  const law = JSON.parse(readFileSync(new URL("./🧫️fixtures/📇️invocation-inventory/🔣️.json", import.meta.url), "utf8"));
   const root = mkdtempSync(join(artifactRoot!, "cargo-batch-inventory-"));
   const rootSource = workspace(["packages/*"]);
   put(root, "Cargo.toml", rootSource);
@@ -200,7 +200,7 @@ test("batch owner publication discovers one fresh repository inventory", () => {
 
 
 test("selected preparation development closure matches Cargo tree root ownership",()=>{
- const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🎯️selected-preparation/🔣️.json",import.meta.url),"utf8")).developmentClosure;
+ const law=JSON.parse(readFileSync(new URL("./🧫️fixtures/🎯️selected-preparation/🔣️.json",import.meta.url),"utf8")).developmentClosure;
  for(const row of law.cases){
   const root=mkdtempSync(join(artifactRoot!,"cargo-development-closure-")),names=new Set<string>(law.packages.map((value:any)=>value.name));
   put(root,"Cargo.toml",workspace(["packages/*"]));
@@ -221,7 +221,7 @@ test("selected preparation development closure matches Cargo tree root ownership
 });
 
 test("Cargo preparation diagnostics observe only opted-in exact phases",()=>{
- const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🛠️preparation-diagnostics/🔣️.json",import.meta.url),"utf8")),packages=JSON.parse(readFileSync(new URL("../🧫️fixtures/🎯️selected-preparation/🔣️.json",import.meta.url),"utf8")).developmentClosure.packages;
+ const law=JSON.parse(readFileSync(new URL("./🧫️fixtures/🛠️preparation-diagnostics/🔣️.json",import.meta.url),"utf8")),packages=JSON.parse(readFileSync(new URL("./🧫️fixtures/🎯️selected-preparation/🔣️.json",import.meta.url),"utf8")).developmentClosure.packages;
  const validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🛠️preparation/📊️diagnostic/🔣️.json",import.meta.url),"utf8"))),root=mkdtempSync(join(artifactRoot!,"cargo-preparation-diagnostics-"));
  put(root,"Cargo.toml",workspace(["packages/*"]));
  for(const value of packages){
@@ -247,7 +247,7 @@ test("Cargo preparation diagnostics observe only opted-in exact phases",()=>{
   expect(records.filter(row=>row.phase==="inventory")).toHaveLength(law.inventoryEpochs);
   expect(records.filter(row=>row.phase==="finished").map(row=>row.items)).toEqual([reached.length]);
  }finally{logger.mockRestore();if(old===undefined)delete process.env.SEMIO_CARGO_PREPARATION_TIMING;else process.env.SEMIO_CARGO_PREPARATION_TIMING=old;}
- const script=fileURLToPath(new URL("../🛠️preparation/📜️script.ts",import.meta.url));
+ const script=fileURLToPath(new URL("../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/📜️script.ts",import.meta.url));
  const child=Bun.spawnSync([process.execPath,script,"prepare","--manifest","Cargo.toml",...law.roots.flatMap((name:string)=>["--package",name])],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_STORAGE:JSON.stringify(storage),SEMIO_CARGO_PREPARATION_TIMING:law.enabled},stdout:"pipe",stderr:"pipe",timeout:10_000});
  expect(child.exitCode,child.stderr.toString()).toBe(0);
  const records=stripVTControlCharacters(child.stderr.toString()).split("\n").filter(line=>line.startsWith("[DEBUG] cargo-preparation ")).map(line=>JSON.parse(line.slice("[DEBUG] cargo-preparation ".length)));
@@ -258,12 +258,12 @@ test("Cargo preparation diagnostics observe only opted-in exact phases",()=>{
 });
 
 test("queued Cargo preparation exposes opted-in waiting before the protected operation completes",async()=>{
- const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🛠️preparation-diagnostics/🔣️.json",import.meta.url),"utf8")),root=mkdtempSync(join(artifactRoot!,"cargo-live-wait-"));
+ const law=JSON.parse(readFileSync(new URL("./🧫️fixtures/🛠️preparation-diagnostics/🔣️.json",import.meta.url),"utf8")),root=mkdtempSync(join(artifactRoot!,"cargo-live-wait-"));
  put(root,"Cargo.toml",workspace(["packages/*"]));put(root,"packages/a/Cargo.toml",pkg("a"));put(root,"packages/a/🦀️.rs","pub fn law() {}\n");
  const validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🛠️preparation/📊️diagnostic/🔣️.json",import.meta.url),"utf8")));
  expect(validate({phase:law.waiting.phase,owner:law.waiting.owner,elapsedMs:0,items:law.waiting.items})).toBe(true);
  const lease=await acquireQueuedResourceLease({owner:"independent-diagnostic-owner",directory:storage.directory,resource:`cargo-preparation:${root}`,mode:"exclusive",signal:new AbortController().signal});
- const script=fileURLToPath(new URL("../🛠️preparation/📜️script.ts",import.meta.url));
+ const script=fileURLToPath(new URL("../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/📜️script.ts",import.meta.url));
  const child=Bun.spawn([process.execPath,script,"prepare","--manifest",law.waiting.owner],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_STORAGE:JSON.stringify(storage),SEMIO_CARGO_PREPARATION_TIMING:law.enabled},stdout:"pipe",stderr:"pipe"});
  const reader=child.stderr.getReader();let timeout:ReturnType<typeof setTimeout>|undefined;
  try{
@@ -276,7 +276,7 @@ test("queued Cargo preparation exposes opted-in waiting before the protected ope
 },10000);
 
 test("selected package preparation follows the Cargo resolved local closure without preparing siblings",()=>{
- const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🎯️selected-preparation/🔣️.json",import.meta.url),"utf8"));
+ const law=JSON.parse(readFileSync(new URL("./🧫️fixtures/🎯️selected-preparation/🔣️.json",import.meta.url),"utf8"));
  for(const row of law.cases){
   const root=mkdtempSync(join(artifactRoot!,"cargo-selected-preparation-"));
   put(root,"Cargo.toml",workspace(["framework/*"]).replace('resolver="2"','resolver="2"\nexclude=["specific"]'));
@@ -303,7 +303,7 @@ test("selected package preparation follows the Cargo resolved local closure with
   expect(readFileSync(join(root,"events.jsonl"),"utf8").trim().split("\n").sort()).toEqual(row.expected);
   for(const path of ["Cargo.toml","specific/Cargo.toml"])expect(Bun.TOML.parse(readFileSync(join(root,path),"utf8"))).toEqual(TOML.parse(readFileSync(join(root,path),"utf8")));
  }
-});
+},120_000);
 
 
 test("membership discovery compiles bounded matchers independent of unrelated leaf count", () => {

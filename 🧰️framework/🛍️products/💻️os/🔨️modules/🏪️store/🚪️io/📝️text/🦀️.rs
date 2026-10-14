@@ -2,6 +2,7 @@
 //! the mirror files the codecs and the folder backbones write.
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
+use pack::snapshot::{ArtifactDsl,ArtifactPack};
 use crate::os_vcs::io::binary::genesis::{AdmittedArtifactGenesis, ArtifactGenesisCodec};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use crate::os_spr::command::ArtifactMessageSource;
@@ -19,7 +20,7 @@ use crate::os_vcs::{
 };
 use super::store_schema::{ArtifactCursor, ArtifactEnvelope, ArtifactEnvelopeOwners, HistoryLane};
 use super::artifact_child_owner_schema::OwnerRef;
-use super::serialization::{ArtifactDsl, ArtifactPack, ArtifactPackFiles, ArtifactSqliteSnapshot, encode_document_pack_bytes};
+use super::serialization::{ ArtifactPackFiles, ArtifactSqliteSnapshotHost, encode_document_pack_bytes};
 #[cfg(target_arch = "wasm32")]
 use super::serialization::{ArtifactCodecApplyFuture};
 use semio_framework_diagnostic::TextError;
@@ -977,7 +978,7 @@ where
             validate_persisted_message(message, Some(operation_count)).await?;
         }
     }
-    let mut edits = Vec::with_capacity(envelope.vcs.edits.len());
+    let mut edits = crate::os_spr::history::HistoryEdits::empty();
     for edit in envelope.vcs.edits.iter().filter(|edit| envelope.holds_committed_edit(&edit.id)) {
         edits.push(history_edit_from_edit::<Mutation>(edit, message_ledger.get(edit.id.as_str()).copied().unwrap_or(&[]), envelope.lanes.get(&edit.id).copied()).await?);
     }

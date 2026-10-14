@@ -1,6 +1,7 @@
 import { CargoMetadataCaptureBudget } from "./⏱️budget/🟦️.ts";
-import { startNativeProgress } from "../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import {repositoryCargoPreparationStorageV1, discoverCargoWorkspaces, prepareCargoWorkspaceInvocation } from "../../../../🗂️workspaces/🦀️cargo/🟦️.ts";
+import { startNativeProgress } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { discoverCargoWorkspaces, prepareCargoWorkspaceInvocation } from "../../../../🗂️workspaces/🦀️cargo/🟦️.ts";
+import {repositoryCargoPreparationStorageV1} from "../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 

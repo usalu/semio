@@ -10,7 +10,7 @@ import { driverDisplayLabel } from "../../🧱️elements/🛠️ShellHelpers/�
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const frameworkRoot = join(engineRoot, "..", "..", "..", "..", "..");
-const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "🚗️driver-editor", "🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "🚗️driver-editor", "🔣️.json"), "utf8"));
 
 type Driver = Record<string, string>;
 type State = { selected: string; drivers: Record<string, Driver>; draft: Driver | null; saveLabel: string };

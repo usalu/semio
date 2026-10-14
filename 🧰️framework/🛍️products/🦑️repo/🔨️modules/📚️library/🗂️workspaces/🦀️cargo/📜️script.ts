@@ -1,14 +1,13 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join, relative, isAbsolute } from "node:path";
 import { existsSync, lstatSync, readFileSync } from "node:fs";
 import { runtimeInputAdmissionV1 } from "../../🕸️dependencies/🧩️runtime/🟨️.mjs";
-import { Script, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { Script, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCommand } from "../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import { getWorkspaceRoot } from "../🟦️.ts";
 import { publishCargoWorkspaceMemberships, cargoRepositoryPackages } from "./🟦️.ts";
-import {PreparationScript,SynchronizeScript} from "./🛠️preparation/📜️script.ts";
 
 /** 📣️ Checks or publishes current native owner membership through its authored regular-manifest recipe. */
 class MembersScript extends Script {
@@ -66,4 +65,4 @@ class CapabilityContractScript extends Script {
     console.log(`cargo capability contract: ${runCargoCapabilityContributionChecks() + runCargoCapabilityPhysicalChecks()} laws`);
   }
 }
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => new ScriptRouter(getWorkspaceRoot()).register("capability-contract-check", CapabilityContractScript).register("runtime-contract-check",RuntimeContractScript).register("runtime-input-check",RuntimeInputScript).register("bun-contract-check",BunContractScript).register("members", MembersScript).register("prepare",PreparationScript).register("synchronize",SynchronizeScript).register("contract-check", ContractScript).register("queued-contract-check", QueuedContractScript).register("native-input-check", NativeInputScript).run(process.argv.slice(2), original));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => new ScriptRouter(getWorkspaceRoot()).register("capability-contract-check", CapabilityContractScript).register("runtime-contract-check",RuntimeContractScript).register("runtime-input-check",RuntimeInputScript).register("bun-contract-check",BunContractScript).register("members", MembersScript).register("contract-check", ContractScript).register("queued-contract-check", QueuedContractScript).register("native-input-check", NativeInputScript).run(process.argv.slice(2), original));

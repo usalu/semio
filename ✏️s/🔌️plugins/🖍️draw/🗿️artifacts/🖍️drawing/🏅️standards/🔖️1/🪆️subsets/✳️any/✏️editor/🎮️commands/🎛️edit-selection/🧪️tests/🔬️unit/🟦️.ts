@@ -3,9 +3,9 @@ import { test, expect } from "bun:test";
 import { Box2, Vector2, EllipseCurve } from "three";
 import { produce } from "immer";
 import Ajv from "ajv";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
-import conversions from "../../🧫️fixtures/🛤️to-path/🔣️.json";
+import conversions from "../🧫️fixtures/🛤️to-path/🔣️.json";
 import {arcGeometry,arcPoint} from "../../../../../🧬️schema/🧮️geometry/🟦️.ts";
 import { shapePath } from "../../../../../🧬️schema/🧮️geometry/🔀️conversion/🟦️.ts";
 
@@ -71,14 +71,14 @@ test("selection fixture outcomes agree with Three.js and Immer", () => {
 
 
 test("repeated layer creation retains every requested instance with Immer", async () => {
-  const fixture = await Bun.file(new URL("../../../➕️add-layer/🧫️fixtures/🔣️.json", import.meta.url)).json();
+  const fixture = await Bun.file(new URL("../../../➕️add-layer/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
   let layers: { id: string; kind: string }[] = [];
   for (const kind of fixture.kinds) for (let ordinal = 0; ordinal < fixture.repetitions; ordinal++) layers = produce(layers, draft => { draft.push({ id: `${kind}:${ordinal}`, kind }); });
   expect(layers.length).toBe(30);
   expect(new Set(layers.map(layer => layer.id)).size).toBe(30);
 });
 
-import nudges from "../../../🕹️nudge-selection/🧫️fixtures/🔣️.json";
+import nudges from "../../../🕹️nudge-selection/🧪️tests/🧫️fixtures/🔣️.json";
 import nudgeSchema from "../../../🕹️nudge-selection/🧬️schema/🔣️.json";
 import nudgeBindingsSchema from "../../../🕹️nudge-selection/🧬️schema/⌨️bindings/🔣️.json";
 test("canvas nudge shortcuts have explicit argument-free input contracts",async()=>{
@@ -94,7 +94,7 @@ test("canvas nudge shortcuts have explicit argument-free input contracts",async(
   }
 });
 
-import arrangements from "../../../../../🧬️schema/🧮️geometry/📏️arrangement/🧫️fixtures/🔣️.json";
+import arrangements from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/📏️arrangement/🔣️.json";
 import arrangementSchema from "../../../../../🧬️schema/🧮️geometry/📏️arrangement/🧬️schema/🔣️.json";
 import {arrange} from "../../../../../🧬️schema/🧮️geometry/📏️arrangement/🟦️.ts";
 
@@ -122,7 +122,7 @@ test("world arrangement matches neutral outcomes and independent Three.js boxes"
   for(const bounds of [[[0,0,Infinity,1],[1,0,1,1]],[[0,0,1,1]],[[0,0,1,1],[1e308,0,1e308,1]]]) expect(arrange(bounds,"alignLeft")).toBeNull();
 });
 
-import nestedArrangements from "../../🧫️fixtures/🌍️arrangement/🔣️.json";
+import nestedArrangements from "../🧫️fixtures/🌍️arrangement/🔣️.json";
 import {Matrix3} from "three";
 import {translate} from "../../../../../🧬️schema/🧮️geometry/↔️translation/🟦️.ts";
 
@@ -163,7 +163,7 @@ test("nested arrangement fixtures agree with independent Three.js world bounds a
   }
 });
 
-import stackCases from "../../🗂️stack/🧫️fixtures/🔣️.json";
+import stackCases from "../../🗂️stack/🧪️tests/🧫️fixtures/🔣️.json";
 import {stackMoves} from "../../🗂️stack/🟦️.ts";
 
 test("layer stack steps preserve blocks and boundaries against an Immer oracle",()=>{
@@ -182,7 +182,7 @@ test("layer stack steps preserve blocks and boundaries against an Immer oracle",
   expect(stackMoves(["a"],["a"],"unknown")).toBeNull();
 });
 
-import ungroupCases from "../../🧩️ungroup/🧫️fixtures/🔣️.json";
+import ungroupCases from "../../🧩️ungroup/🧪️tests/🧫️fixtures/🔣️.json";
 import {ungroup} from "../../🧩️ungroup/🟦️.ts";
 import {drawingTransformToMatrix} from "../../../../../🧬️schema/🧮️geometry/↗️affine/🟦️.ts";
 

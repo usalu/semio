@@ -1,0 +1,30 @@
+{
+  "schema": null,
+  "seed": null,
+  "input": {
+    "size": null,
+    "writes": []
+  },
+  "palette": {
+    "removed": [],
+    "inserted": [],
+    "recolored": []
+  },
+  "output": null,
+  "model": null,
+  "pinned": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 0,
+        "row": {
+          "x": 0,
+          "y": 0,
+          "color": 1
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  }
+}

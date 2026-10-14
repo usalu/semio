@@ -115,14 +115,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🌈️set-photometric-interpretation/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🌈️set-photometric-interpretation/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:52f76121b317b6b683e9275153eb7783fae944e3af6879003db59991a56d4712",
           "bytes": 2254
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🌈️set-photometric-interpretation/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🌈️set-photometric-interpretation/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:aaad68e8539293e351e4522284fdfd127450e765cc88055dc027711adadb1855",
           "bytes": 2254
@@ -156,14 +156,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🔢️set-bits-per-sample/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🔢️set-bits-per-sample/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:52f76121b317b6b683e9275153eb7783fae944e3af6879003db59991a56d4712",
           "bytes": 2254
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🔢️set-bits-per-sample/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🔢️set-bits-per-sample/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:e47c677ae123b3526c5fd1ca46557ee8de294a0fe81fd1f700b1f5392df2ada5",
           "bytes": 2255

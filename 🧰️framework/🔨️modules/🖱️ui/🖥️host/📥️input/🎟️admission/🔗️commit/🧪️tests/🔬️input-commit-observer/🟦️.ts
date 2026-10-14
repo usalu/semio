@@ -70,7 +70,7 @@ type InputCommitObserverFixture = {
 
 export function testInputCommitObserverFixture(): void {
   testSingleEnqueuePublicationFixture();
-  const fixture: InputCommitObserverFixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture: InputCommitObserverFixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   
   
   

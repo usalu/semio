@@ -1,6 +1,6 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "../../../🧪️tests/🧫️fixtures/🏅️conformance/🔣️.json";
 import schema from "../🧮️facts/🔣️.json";
 import {checkJpgBaselineFacts} from "../🟦️.ts";
 import type {JpgBaselineFacts} from "../🧮️facts/🟦️.ts";

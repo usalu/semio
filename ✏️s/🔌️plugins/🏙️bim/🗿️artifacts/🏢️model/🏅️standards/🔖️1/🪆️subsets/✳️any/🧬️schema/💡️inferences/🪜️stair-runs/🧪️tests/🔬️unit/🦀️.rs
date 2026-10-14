@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds,
 use crate::{ModelMutation, TopConstraint};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const HOUSE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
+const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
 
 fn close(left: f64, right: f64) -> bool {
     (left - right).abs() <= 1e-9 * right.abs().max(1.0)
@@ -151,8 +151,8 @@ async fn a_stair_on_a_missing_storey_is_not_planned() {
     assert!(compute_stair_runs(&snapshot).is_empty());
 }
 
-const FLIGHTS: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🪜️stair-runs/🪜️flights/📸️snapshot/🔣️.json");
-const FLIGHTS_TABLE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🪜️stair-runs/🪜️flights/💡️inference/🪜️stair-runs/🔣️.json");
+const FLIGHTS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪜️stair-runs/🪜️flights/📸️snapshot/🔣️.json");
+const FLIGHTS_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪜️stair-runs/🪜️flights/💡️inference/🪜️stair-runs/🔣️.json");
 
 #[semio_framework_async_macros::async_test]
 async fn the_subject_reproduces_the_third_party_oracle_table() {

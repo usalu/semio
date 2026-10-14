@@ -2,7 +2,7 @@ import Ajv2020 from "ajv/dist/2020";
 import React from "react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
-import fixture from "../../🧫️fixtures/✏️editable-text/🔣️.json";
+import fixture from "../🧫️fixtures/✏️editable-text/🔣️.json";
 import schema from "../../🧬️schema/✏️editable-text/🔣️.json";
 import { reconcileTableEditableText, TableEditableTextCell, tableEditableTextAction, type TableCellRecord } from "../../🟦️.tsx";
 

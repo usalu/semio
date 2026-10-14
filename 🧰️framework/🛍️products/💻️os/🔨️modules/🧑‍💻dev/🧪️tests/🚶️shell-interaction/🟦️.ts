@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import authored from "../../⚖️parity/🧫️fixtures/🚶️shell-interaction/🔣️.json";
+import authored from "../../⚖️parity/🧪️tests/🧫️fixtures/🚶️shell-interaction/🔣️.json";
 import { parseShellInteractionJourney, runShellInteractionJourney, shellInteractionDifferences } from "../../🧪️testing/🚶️journey/🟦️.ts";
 
 describe("permanent physical shell journey", () => {

@@ -4,7 +4,7 @@ import {dirname,join,resolve} from "node:path";
 import TOML from "@iarna/toml";
 import {cargoNextestConfiguration} from "../../🟦️.ts";
 import {repositoryCargoTestPolicyV1} from "../../../../🟦️.ts";
-import fixture from "../../🧫️fixtures/🏎️nextest-configuration/🔣️.json";
+import fixture from "../🧫️fixtures/🏎️nextest-configuration/🔣️.json";
 
 test("native test profiles belong to their selected workspace or repository configuration",()=>{
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("SEMIO_TEST_ARTIFACT_DIR is required");mkdirSync(output,{recursive:true});

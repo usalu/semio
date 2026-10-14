@@ -1,0 +1,36 @@
+{
+  "tokens": {
+    "base": "--base",
+    "panel": "--panel",
+    "foreground": "--foreground",
+    "muted": "--muted",
+    "mutedForeground": "--muted-foreground",
+    "accent": "--accent",
+    "accentForeground": "--accent-foreground",
+    "activeBase": "--active-base",
+    "activeForeground": "--active-foreground",
+    "activeHover": "--active-hover",
+    "hoverInteractiveFill": "--hover-interactive-fill",
+    "borderNormal": "--border-normal-color",
+    "borderEmphasized": "--border-emphasized-color",
+    "borderElement": "--border-element-color"
+  },
+  "custom": {
+    "light": {
+      "activeForeground": {
+        "hex": "#102030"
+      },
+      "activeBase": {
+        "hex": "#ddeeff"
+      }
+    },
+    "dark": {
+      "activeForeground": {
+        "hex": "#405060"
+      },
+      "activeBase": {
+        "hex": "#aabbcc"
+      }
+    }
+  }
+}

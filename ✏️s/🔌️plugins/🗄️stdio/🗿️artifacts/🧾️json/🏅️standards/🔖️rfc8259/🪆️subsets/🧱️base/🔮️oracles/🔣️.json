@@ -176,14 +176,14 @@
       "files": [
         {
           "role": "input-json",
-          "path": "../🧫️fixtures/📥️insert-array-element/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/📥️insert-array-element/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:bfd9b2ff6609a3e91299554eb174b21b31cc7673abfff11c7dd4ceb91c0c2d0c",
           "bytes": 115
         },
         {
           "role": "expected-json",
-          "path": "../🧫️fixtures/📥️insert-array-element/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/📥️insert-array-element/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:db93130b9870664908129bce8eac0ccf1413921ac64d281a7db27b29e3e3b5c2",
           "bytes": 131
@@ -226,14 +226,14 @@
       "files": [
         {
           "role": "input-json",
-          "path": "../🧫️fixtures/📤️remove-array-element/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/📤️remove-array-element/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:bfd9b2ff6609a3e91299554eb174b21b31cc7673abfff11c7dd4ceb91c0c2d0c",
           "bytes": 115
         },
         {
           "role": "expected-json",
-          "path": "../🧫️fixtures/📤️remove-array-element/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/📤️remove-array-element/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:69abd6c46ca730b26516399af2d3430ce707d1b9563379ab96dcf4f87531024b",
           "bytes": 106
@@ -276,14 +276,14 @@
       "files": [
         {
           "role": "input-json",
-          "path": "../🧫️fixtures/🗑️remove-member/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-member/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:bfd9b2ff6609a3e91299554eb174b21b31cc7673abfff11c7dd4ceb91c0c2d0c",
           "bytes": 115
         },
         {
           "role": "expected-json",
-          "path": "../🧫️fixtures/🗑️remove-member/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-member/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:7caa7259948ca2fb833ac34c99c3470367b2befb3515bde0d149741548ef83c9",
           "bytes": 101
@@ -326,14 +326,14 @@
       "files": [
         {
           "role": "input-json",
-          "path": "../🧫️fixtures/✏️set-member/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/✏️set-member/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:bfd9b2ff6609a3e91299554eb174b21b31cc7673abfff11c7dd4ceb91c0c2d0c",
           "bytes": 115
         },
         {
           "role": "expected-json",
-          "path": "../🧫️fixtures/✏️set-member/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/✏️set-member/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:8928bdf69db98b8b0e834c5947859b8c10b1c30714d1869fcd9d24430705ae7d",
           "bytes": 123
@@ -376,14 +376,14 @@
       "files": [
         {
           "role": "input-json",
-          "path": "../🧫️fixtures/🔢️set-scalar/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🔢️set-scalar/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:bfd9b2ff6609a3e91299554eb174b21b31cc7673abfff11c7dd4ceb91c0c2d0c",
           "bytes": 115
         },
         {
           "role": "expected-json",
-          "path": "../🧫️fixtures/🔢️set-scalar/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🔢️set-scalar/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:12e414bac445e43bb968401b717f178bc851c4c450ffec376de71eafd45408d1",
           "bytes": 116

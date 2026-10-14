@@ -8,7 +8,7 @@ import { Database } from "bun:sqlite";
 const owner = resolve(import.meta.dir, "../../..");
 
 test("erased controlled retirement preserves the neutral independent-grant contract", () => {
-  const law = JSON.parse(readFileSync(join(owner, "♻️retirement/🧫️fixtures/🎮️erased-controlled/🔣️.json"), "utf8"));
+  const law = JSON.parse(readFileSync(join(owner, "♻️retirement/🧪️tests/🧫️fixtures/🎮️erased-controlled/🔣️.json"), "utf8"));
   const text = new TextDecoder("utf-8", { fatal: true }).decode(new TextEncoder().encode(law.text));
   expect(text).toBe(law.text);
   expect(JSON.parse(JSON.stringify({ text }))).toEqual({ text });
@@ -24,7 +24,7 @@ const validValue = new Ajv({strict:false}).compile(JSON.parse(readFileSync(join(
 console.log("[DEBUG] controlled retirement independent Value schema compiled");
 
 test("controlled paged retirement conserves independently admitted native tree owners", () => {
-  const law = JSON.parse(readFileSync(join(owner, "📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json"), "utf8")).controlledRetirement;
+  const law = JSON.parse(readFileSync(join(owner, "📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"), "utf8")).controlledRetirement;
   let value: unknown = null;
   for (let index = 0; index < law.depth; index++) value = {label:law.label,children:[value]};
   console.log("[DEBUG] controlled retirement neutral tree constructed", law.depth);
@@ -34,8 +34,8 @@ test("controlled paged retirement conserves independently admitted native tree o
     const owners = {tree:structuredClone(value),pause};
     expect(applyPatch(owners,[{op:"remove",path:"/tree"}],true,false).newDocument).toEqual({pause});
   }
-  const close = JSON.parse(readFileSync(join(owner, "📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json"), "utf8")).cloneClose;
-  const corpus = JSON.parse(readFileSync(join(owner, "📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json"), "utf8"));
+  const close = JSON.parse(readFileSync(join(owner, "📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"), "utf8")).cloneClose;
+  const corpus = JSON.parse(readFileSync(join(owner, "📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"), "utf8"));
   const label = corpus.prefix.repeat(close.textRepeat);
   const record = {tree:value,optional:[label,close.optionalValues],objects:{[label]:close.objectValue}};
   expect(validValue(record)).toBe(true);
@@ -50,7 +50,7 @@ test("controlled paged retirement conserves independently admitted native tree o
 
 
 test("controlled paged retirement closes appended UTF8 without unadmitted scaffold births",()=>{
- const corpus=JSON.parse(readFileSync(join(owner,"📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json"),"utf8"));const law=corpus.appendClose,text=corpus.prefix.repeat(corpus.prefixRepeat),value=law.destinationPrefix+text;
+ const corpus=JSON.parse(readFileSync(join(owner,"📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"),"utf8"));const law=corpus.appendClose,text=corpus.prefix.repeat(corpus.prefixRepeat),value=law.destinationPrefix+text;
  expect(validValue(value)).toBe(true);expect(new TextDecoder("utf-8",{fatal:true}).decode(new TextEncoder().encode(value))).toBe(value);expect(JSON.parse(JSON.stringify(value))).toBe(value);
  for(const pause of law.cancelAt)expect(applyPatch({destination:value,pending:text,pause},[{op:"remove",path:"/pending"}],true,false).newDocument).toEqual({destination:value,pause});
  expect(law.constructorAllocationBytes).toBe(0);expect(law.maximumBytes).toBe(4096);expect(law.zeroGrantInert).toBe(true);
@@ -59,7 +59,7 @@ test("controlled paged retirement closes appended UTF8 without unadmitted scaffo
 });
 
 test("controlled paged retirement exposes separate append birth and release demand",()=>{
- const corpus=JSON.parse(readFileSync(join(owner,"📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json"),"utf8"));const law=corpus.appendClose.demand;
+ const corpus=JSON.parse(readFileSync(join(owner,"📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json"),"utf8"));const law=corpus.appendClose.demand;
  const database=new Database(":memory:");
  try{
   database.exec("CREATE TABLE grants (bytes INTEGER PRIMARY KEY)");law.grants.forEach((bytes:number)=>database.query("INSERT INTO grants VALUES (?)").run(bytes));
@@ -74,7 +74,7 @@ test("controlled paged retirement exposes separate append birth and release dema
 });
 
 test("controlled paged retirement exposes typed child metadata and exact scaffold demand",()=>{
- const path=join(owner,"🧬️retained-clone/🧫️fixtures/📏️release-authority"),corpus=JSON.parse(readFileSync(join(path,"🔣️.json"),"utf8"));
+ const path=join(owner,"🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority"),corpus=JSON.parse(readFileSync(join(path,"🔣️.json"),"utf8"));
  const law=corpus.closeDemand,database=new Database(":memory:");
  try{
   database.exec("CREATE TABLE ownership (phase TEXT PRIMARY KEY,capacity INTEGER,release INTEGER)");
@@ -91,7 +91,7 @@ test("controlled paged retirement exposes typed child metadata and exact scaffol
 });
 
 test("controlled paged retirement observes retained scalar and UTF8 leaf birth demand",()=>{
- const path=join(owner,"🧬️retained-clone/🧫️fixtures/📏️release-authority"),corpus=JSON.parse(readFileSync(join(path,"🔣️.json"),"utf8")),law=corpus.leafCloseDemand;
+ const path=join(owner,"🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority"),corpus=JSON.parse(readFileSync(join(path,"🔣️.json"),"utf8")),law=corpus.leafCloseDemand;
  
  for(const value of [law.scalar,law.text]){
   expect(validValue(value)).toBe(true);
@@ -114,7 +114,7 @@ test("controlled paged retirement observes retained scalar and UTF8 leaf birth d
 });
 
 test("controlled paged retirement observes one native paged and derived close frontier",()=>{
- const path=join(owner,"🧬️retained-clone/🧫️fixtures/📏️release-authority"),corpus=JSON.parse(readFileSync(join(path,"🔣️.json"),"utf8")),law=corpus.compositeCloseDemand;
+ const path=join(owner,"🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority"),corpus=JSON.parse(readFileSync(join(path,"🔣️.json"),"utf8")),law=corpus.compositeCloseDemand;
  expect(validValue(law.value)).toBe(true);
  const database=new Database(":memory:");try{
   database.exec("CREATE TABLE fields(ordinal INTEGER PRIMARY KEY,name TEXT)");law.fields.forEach((name:string,ordinal:number)=>database.query("INSERT INTO fields VALUES(?,?)").run(ordinal,name));
@@ -131,7 +131,7 @@ test("controlled paged retirement observes one native paged and derived close fr
 });
 
 test("controlled retirement keeps logical UTF8 and ordered scalar work distinct from physical releases",()=>{
- const path=join(owner,"♻️retirement/🧫️fixtures/⚖️physical-work"),law=JSON.parse(readFileSync(join(path,"🔣️.json"),"utf8"));
+ const path=join(owner,"♻️retirement/🧪️tests/🧫️fixtures/⚖️physical-work"),law=JSON.parse(readFileSync(join(path,"🔣️.json"),"utf8"));
  
  for(const row of law.cases){
   expect(JSON.parse(JSON.stringify(row.value))).toEqual(row.value);
@@ -144,7 +144,7 @@ test("controlled retirement keeps logical UTF8 and ordered scalar work distinct 
 });
 
 test("controlled paged retirement exposes the next independent payload work demand",()=>{
- const path=join(owner,"♻️retirement/🧫️fixtures/📏️copy-demand"),law=JSON.parse(readFileSync(join(path,"🔣️.json"),"utf8"));
+ const path=join(owner,"♻️retirement/🧪️tests/🧫️fixtures/📏️copy-demand"),law=JSON.parse(readFileSync(join(path,"🔣️.json"),"utf8"));
  
  const database=new Database(":memory:");try{
   database.exec("CREATE TABLE grants(bytes INTEGER PRIMARY KEY)");law.grants.forEach((bytes:number)=>database.query("INSERT INTO grants VALUES(?)").run(bytes));
@@ -162,7 +162,7 @@ test("controlled paged retirement exposes the next independent payload work dema
 });
 
 test("controlled paged retirement preserves copy demand through native clone close frontiers",()=>{
- const path=join(owner,"♻️retirement/🧫️fixtures/📏️copy-demand"),law=JSON.parse(readFileSync(join(path,"🔣️.json"),"utf8"));
+ const path=join(owner,"♻️retirement/🧪️tests/🧫️fixtures/📏️copy-demand"),law=JSON.parse(readFileSync(join(path,"🔣️.json"),"utf8"));
  
  const database=new Database(":memory:");try{
   database.exec("CREATE TABLE frontier(ordinal INTEGER PRIMARY KEY,kind TEXT,work INTEGER,backing INTEGER)");
@@ -183,7 +183,7 @@ test("controlled paged retirement preserves copy demand through native clone clo
 
 
 test("cold shared retirement keeps logical work separate from exact physical backing",()=>{
- const path=join(owner,"♻️retirement/🧫️fixtures/📏️shared-physical"),law=JSON.parse(readFileSync(join(path,"🔣️.json"),"utf8"));
+ const path=join(owner,"♻️retirement/🧪️tests/🧫️fixtures/📏️shared-physical"),law=JSON.parse(readFileSync(join(path,"🔣️.json"),"utf8"));
  
  for(const row of law.cases){const bytes=new TextEncoder().encode(row.text);expect(Buffer.byteLength(row.text,"utf8")).toBe(bytes.byteLength);expect(bytes.byteLength<=row.capacity).toBe(true);for(const work of law.workBytes){let remaining=bytes.byteLength,turns=0;while(remaining){remaining-=Math.min(remaining,work);turns++;}expect(turns<=law.maximumTurns).toBe(true);const owner={capacity:row.capacity,text:row.text};expect(applyPatch(owner,[{op:"remove",path:"/text"}],true,false).newDocument).toEqual({capacity:row.capacity});}}
  expect(Math.ceil(law.buffer.bytes/law.buffer.workBytes)+4).toBe(law.buffer.maximumTurns);
@@ -192,7 +192,7 @@ test("cold shared retirement keeps logical work separate from exact physical bac
 });
 
 test("original controlled reservation failure saves actual retained allocation before error",()=>{
- const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️reservation.json",import.meta.url),"utf8"));const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🔣️reservation.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
+ const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️reservation.json",import.meta.url),"utf8"));const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🔣️reservation.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
  const original=Buffer.from(law.original,"utf8");const pointer=original.buffer;
  const before={source:law.original,capacity:0,released:0,receipt:0};const actual=128*law.allocatorMultiplier;
  const retained=applyPatch(before,[{op:"replace",path:"/capacity",value:actual},{op:"replace",path:"/receipt",value:actual}],true,false).newDocument;
@@ -202,8 +202,24 @@ test("original controlled reservation failure saves actual retained allocation b
 });
 
 test("original controlled root transfer preserves the same source under its incoming narrow wallet",()=>{
- const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/📥️root/🔣️.json",import.meta.url),"utf8"));const schema=JSON.parse(readFileSync(new URL("../🧬️schema/📥️root/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
+ const law=JSON.parse(readFileSync(new URL("🧫️fixtures/📥️root/🔣️.json",import.meta.url),"utf8"));const schema=JSON.parse(readFileSync(new URL("../🧬️schema/📥️root/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
  const db=new Database(":memory:");try{db.run("CREATE TABLE policy(copy INTEGER)");for(const copy of law.copyPolicies)db.query("INSERT INTO policy VALUES(?)").run(copy);expect(db.query("SELECT copy FROM policy WHERE copy>=0 ORDER BY copy").all()).toEqual(law.copyPolicies.map((copy:number)=>({copy})));}finally{db.close();}
  expect(applyPatch({original:law.source},[{op:"move",from:"/original",path:"/retained"}],true,false).newDocument).toEqual({retained:law.source});
  const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");expect(source).toContain("if self.value.is_some() { return Ok(0); }");const root=source.slice(source.indexOf("let cursor = self.value.take().unwrap().retirement();"),source.indexOf("let index = self.cursors.len() - 1;"));expect(root).toContain("copied_bytes: 0");expect(source).not.toContain("if grant.maximum_copy_bytes < self.next_copy_byte_demand()?");expect(source).toContain("if work && body_bytes < minimum_work_bytes && (birth==0 || !self.cursors.get(index).unwrap().allows_admitted_narrow_work())");
+});
+
+
+test("original controlled selected constructor quote preserves future UInt128 atoms and independent source values",()=>{
+ const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🎯️selected/🔣️.json",import.meta.url),"utf8")),schema=JSON.parse(readFileSync(new URL("../🧬️schema/🎯️selected/🔣️.json",import.meta.url),"utf8"));const validate=new Ajv({strict:true}).compile(schema);expect(validate(law)).toBe(true);expect(validate({...law,futureAtomBytes:0})).toBe(false);expect(validate({...law,selectedChildCopyBytes:16})).toBe(false);
+ for(const text of law.source){const value=BigInt(text),bytes=new DataView(new ArrayBuffer(law.futureAtomBytes));bytes.setBigUint64(0,value&((1n<<64n)-1n),true);bytes.setBigUint64(8,value>>64n,true);expect((bytes.getBigUint64(0,true)+(bytes.getBigUint64(8,true)<<64n)).toString()).toBe(text);const moved=applyPatch({original:text},[{op:"move",from:"/original",path:"/child"}],true,false).newDocument;expect(moved).toEqual({child:text});expect(applyPatch(moved,[{op:"remove",path:"/child"}],true,false).newDocument).toEqual({});}
+ expect(law.copyGrants).toEqual([1,3,64]);expect(law.quoteHeap).toEqual([0,0]);
+ if(law.frontierBacking){expect(law.frontierBacking).toBe("sameOriginalReserveOneEvent");const db=new Database(":memory:");db.run("CREATE TABLE backing(event TEXT PRIMARY KEY, quoted INTEGER NOT NULL, reserved INTEGER NOT NULL CHECK (quoted=reserved))");db.run("INSERT INTO backing VALUES ('original-full-page',4096,4096)");expect(()=>db.run("INSERT INTO backing VALUES ('partial-quote',16,4096)")).toThrow();db.close();}
+});
+
+
+test("original controlled selected array leaf preserves future Float32 atoms and independent source values",()=>{
+ const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🎯️array/🔣️.json",import.meta.url),"utf8")),schema=JSON.parse(readFileSync(new URL("../🧬️schema/🎯️array/🔣️.json",import.meta.url),"utf8"));const validate=new Ajv({strict:true}).compile(schema);expect(validate(law)).toBe(true);expect(validate({...law,futureElementBytes:0})).toBe(false);expect(validate({...law,selectedChildCopyBytes:4})).toBe(false);
+ for(const row of law.source){const bytes=new DataView(new ArrayBuffer(law.futureArrayBytes));row.forEach((value:number,index:number)=>bytes.setFloat32(index*law.futureElementBytes,value,true));expect(row.map((_:number,index:number)=>bytes.getFloat32(index*law.futureElementBytes,true))).toEqual(row);let original={array:[...row],leaves:[]};for(let index=row.length-1;index>=0;index--){original=applyPatch(original,[{op:"move",from:`/array/${index}`,path:"/leaves/-"}],true,false).newDocument;}expect(original.array).toEqual([]);expect(original.leaves).toEqual([...row].reverse());}
+ expect(law.copyGrants).toEqual([1,3,64]);expect(law.quoteHeap).toEqual([0,0]);
+ if(law.frontierBacking){expect(law.frontierBacking).toBe("sameOriginalReserveOneEvent");const db=new Database(":memory:");db.run("CREATE TABLE backing(event TEXT PRIMARY KEY, quoted INTEGER NOT NULL, reserved INTEGER NOT NULL CHECK (quoted=reserved))");db.run("INSERT INTO backing VALUES ('original-full-page',4096,4096)");expect(()=>db.run("INSERT INTO backing VALUES ('partial-quote',16,4096)")).toThrow();db.close();}
 });

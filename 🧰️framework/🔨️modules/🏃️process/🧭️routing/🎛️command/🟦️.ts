@@ -1,6 +1,6 @@
 import {readFileSync,mkdirSync,mkdtempSync,writeFileSync,rmSync} from "node:fs";
 import {isAbsolute,join} from "node:path";
-import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {captureOwnedProcess,type OwnedProcessCaptureResult} from "../../📥️capture/🟦️.ts";
 import {checkScriptInvocation,type ScriptInvocation} from "../📥️invocation/🟦️.ts";
 import {readProcessOwnerContextV1,type ProcessOwnerContextV1} from "../../📋️context/🟦️.ts";

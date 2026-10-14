@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "📋️align-elements/✅️aligns-walls-to-a-line",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️align-elements/✅️aligns-walls-to-a-line/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️align-elements/✅️aligns-walls-to-a-line/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️align-elements/✅️aligns-walls-to-a-line/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️align-elements/✅️aligns-walls-to-a-line/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/📋️align-elements/✅️aligns-walls-to-a-line/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️align-elements/✅️aligns-walls-to-a-line/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️align-elements/✅️aligns-walls-to-a-line/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️align-elements/✅️aligns-walls-to-a-line/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️align-elements/✅️aligns-walls-to-a-line/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️align-elements/✅️aligns-walls-to-a-line/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

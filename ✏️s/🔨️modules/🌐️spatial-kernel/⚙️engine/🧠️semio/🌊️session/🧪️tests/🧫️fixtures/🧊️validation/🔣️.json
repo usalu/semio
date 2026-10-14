@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "box": {"width": 1, "depth": 1, "height": 1},
+  "tolerance": 0.1,
+  "probeUnits": 0,
+  "turnUnits": 1,
+  "initialTurns": 4,
+  "phase": "validating",
+  "expected": {"triangles": 12, "area": 6, "volume": 1}
+}

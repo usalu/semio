@@ -10,7 +10,7 @@ fn mesh_preparation_refuses_logical_fill_before_mutating_pending_input() {
         )
     }
 
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️preparation-owners/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️preparation-owners/🔣️.json")).unwrap();
     let mut observations = Vec::new();
     for row in corpus["fillCases"].as_array().unwrap() {
         let operation = mesh_operation();
@@ -96,7 +96,7 @@ fn mesh_preparation_owns_each_reservation_and_preserves_lookup_on_handoff() {
         )).unwrap_or(([0; 3], [0; 3], [0; 3]))
     }
 
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️preparation-owners/🔣️.json")).expect("neutral preparation cases");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️preparation-owners/🔣️.json")).expect("neutral preparation cases");
     let mut observations = Vec::new();
     for row in corpus["cases"].as_array().expect("cases") {
         let operation = mesh_operation();
@@ -228,7 +228,7 @@ fn mesh_preparation_cancellation_closes_each_partial_owner_under_exact_grants() 
 
 #[test]
 fn mesh_edge_authority_uses_completed_faces_and_closes_exact_backing() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🕸️edge-authority/🔣️.json")).expect("neutral edge authority cases");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🕸️edge-authority/🔣️.json")).expect("neutral edge authority cases");
     for row in corpus["cases"].as_array().expect("cases") {
         let operation = mesh_operation();
         let points = square(1.0);

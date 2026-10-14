@@ -49,18 +49,18 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "change-exaggeration" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/🎯️outcome/🔣️.json"),
+            before: include_str!("../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/🔺️diff/🔣️.json"),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🎚️change-exaggeration/⛰️raises/🎯️outcome/🔣️.json"),
         },
         "change-imported-features" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports/🎯️outcome/🔣️.json"),
+            before: include_str!("../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports/🔺️diff/🔣️.json"),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-gisterrain-1: no committed specification vector is registered for kind {other:?}"),
     }
@@ -243,7 +243,7 @@ mod subject {
     /// The CARRIER identity is Rust-only and asserted here in role, on the artifact's own committed
     /// example: `law::round_trip_preserves` for the semantic half, and `law::carrier_is_exact` for
     /// the byte half — deliberately the fixpoint law rather than the wave's no-pass-through
-    /// tripwire, because `store::os_store::serialization::ArtifactDsl` documents canonical `print_dsl` output as a `parse_dsl`
+    /// tripwire, because `pack::snapshot::ArtifactDsl` documents canonical `print_dsl` output as a `parse_dsl`
     /// fixpoint, so byte identity of the SECOND printing is the correct answer and anything else is
     /// the defect. The pack decoding is a separate binary codec, so agreeing on one snapshot cannot
     /// be reached by carrying text bytes across.

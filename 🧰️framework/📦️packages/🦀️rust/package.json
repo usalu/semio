@@ -10,5 +10,8 @@
     "test-snapshot-receiving-native": "nx run @semio-tech/framework-rs:test-snapshot-receiving-native",
     "test-directory-discovery": "nx run @semio-tech/framework-rs:test-directory-discovery",
     "test-command-ingress-consumer": "nx run @semio-tech/framework-rs:test-command-ingress-consumer"
+  },
+  "devDependencies": {
+    "@semio-tech/process": "workspace:*"
   }
 }

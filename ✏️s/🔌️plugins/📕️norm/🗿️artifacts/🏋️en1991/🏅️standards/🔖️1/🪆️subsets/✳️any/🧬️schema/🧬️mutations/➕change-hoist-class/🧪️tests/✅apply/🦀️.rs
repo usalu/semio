@@ -5,11 +5,11 @@
 /// 🪝 The committed `change-hoist-class` vector holds the specification-vector law.
 const VECTOR: super::Vector = super::Vector {
         kind: "change-hoist-class",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/➕change-hoist-class/✅apply/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/➕change-hoist-class/✅apply/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/➕change-hoist-class/✅apply/📸️snapshot/➡️after/🔣️.json"),
-        diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/➕change-hoist-class/✅apply/🔺️diff/🔣️.json"),
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/➕change-hoist-class/✅apply/🎯️outcome/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕change-hoist-class/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕change-hoist-class/✅apply/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕change-hoist-class/✅apply/📸️snapshot/➡️after/🔣️.json"),
+        diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕change-hoist-class/✅apply/🔺️diff/🔣️.json"),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕change-hoist-class/✅apply/🎯️outcome/🔣️.json"),
 };
 
 #[test]

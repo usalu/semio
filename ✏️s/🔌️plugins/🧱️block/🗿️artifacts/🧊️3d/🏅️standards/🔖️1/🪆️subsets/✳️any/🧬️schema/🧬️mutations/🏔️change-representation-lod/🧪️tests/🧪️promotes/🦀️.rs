@@ -10,11 +10,11 @@ use crate::standards::v1::subsets::any::schema::mutations::inverse_block3d_mutat
 
 use crate::Block3dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏔️change-representation-lod/🧪️promotes/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏔️change-representation-lod/🧪️promotes/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏔️change-representation-lod/🧪️promotes/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏔️change-representation-lod/🧪️promotes/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏔️change-representation-lod/🧪️promotes/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏔️change-representation-lod/🧪️promotes/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏔️change-representation-lod/🧪️promotes/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏔️change-representation-lod/🧪️promotes/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏔️change-representation-lod/🧪️promotes/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏔️change-representation-lod/🧪️promotes/🎯️outcome/🔣️.json");
 
 fn before() -> Block3dSnapshot {
     crate::validate_vortex_kind_catalog(&[

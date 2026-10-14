@@ -405,7 +405,7 @@ mod tests {
     use super::*;
     #[test]
     fn paid_row_index_neutral_explicit_signed_identity_preserves_sqlite_zero_and_negative_surrogates(){
-        let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🗂️paid-row-index/🔣️.json")).unwrap();
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🗂️paid-row-index/🔣️.json")).unwrap();
         let mut db=neutral_paid_row_index_database();db.tables[0].rows=fixture["signedIdentity"]["rows"].as_array().unwrap().iter().map(|row|SqliteRow{rowid:row["id"].as_i64().unwrap(),values:vec![SqliteValue::Integer(row["id"].as_i64().unwrap()),SqliteValue::Integer(row["owner"].as_i64().unwrap()),SqliteValue::Integer(row["ordinal"].as_i64().unwrap()),SqliteValue::Text(row["literal"].as_str().unwrap().into()),row["parent"].as_i64().map(SqliteValue::Integer).unwrap_or(SqliteValue::Null)]}).collect();
         let mut callback=|_|true;let limits=super::super::SqliteDatabaseLimits::default();let mut control=SqliteSnapshotControl::new(&mut callback,limits);
         assert!(RowIndex::new(&mut RowIndexStorage::empty(),&db,"neutral_row",5,&[],&mut control,"positive row required").is_err());assert!(RowIndex::new_with_identity(&mut RowIndexStorage::empty(),&db,"neutral_row",5,&[],RowIdentity::Positive,&mut control,"positive row required").is_err());
@@ -418,7 +418,7 @@ mod tests {
     }
 
     fn neutral_paid_row_index_database()->SqliteDatabase{
-        let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🗂️paid-row-index/🔣️.json")).unwrap();
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🗂️paid-row-index/🔣️.json")).unwrap();
         let rows=fixture["rows"].as_array().unwrap().iter().map(|row|SqliteRow{rowid:row["id"].as_i64().unwrap(),values:vec![SqliteValue::Integer(row["id"].as_i64().unwrap()),SqliteValue::Integer(row["owner"].as_i64().unwrap()),SqliteValue::Integer(row["ordinal"].as_i64().unwrap()),SqliteValue::Text(row["literal"].as_str().unwrap().into()),row["parent"].as_i64().map(SqliteValue::Integer).unwrap_or(SqliteValue::Null)]}).collect();
         SqliteDatabase{tables:vec![super::super::SqliteTable{name:fixture["table"].as_str().unwrap().into(),sql:fixture["schema"].as_str().unwrap().into(),rows}]}
     }
@@ -473,7 +473,7 @@ mod tests {
     }
     #[test]
     fn native_file_forecast_separates_exact_semantic_cells_and_preserves_file_refusals(){
-        let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📏️file-bound/🔣️.json")).unwrap();
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/📏️file-bound/🔣️.json")).unwrap();
         let limits=super::super::SqliteDatabaseLimits{max_value_bytes:fixture["maxSemanticBytes"].as_u64().unwrap()as usize,max_file_bytes:fixture["maxFileBytes"].as_u64().unwrap()as usize,..super::super::SqliteDatabaseLimits::default()};
         let mut accepted=|_|true;let mut control=SqliteSnapshotControl::new(&mut accepted,limits);let mut bound=NativeEncodingBound::file_only(&mut control).unwrap();
         for chunk in fixture["chunks"].as_array().unwrap(){bound.add(chunk.as_u64().unwrap()as usize).unwrap();}
@@ -538,7 +538,7 @@ mod ieee_tests {
     fn authored_ieee_integer_queries_reject_rounding_against_independent_sqlite(){
         use std::io::Write;
         use std::process::{Command,Stdio};
-        let input=include_str!("../🔢️ieee754/🧫️fixtures/🎯️integer-query.json");
+        let input=include_str!("../🔢️ieee754/🧪️tests/🧫️fixtures/🎯️integer-query.json");
         let script="import{Database}from'bun:sqlite';const{cases}=await Bun.stdin.json(),db=new Database(':memory:',{safeIntegers:true}),view=new DataView(new ArrayBuffer(8));db.run('CREATE TABLE exact_integer(id INTEGER PRIMARY KEY,value)');for(const[i,c]of cases.entries()){const value=BigInt(c.integer);db.run('INSERT INTO exact_integer VALUES(?,?)',[i+1,value]);if(db.query('SELECT value FROM exact_integer WHERE id=?').get(i+1).value!==value)throw Error('integer identity');view.setBigUint64(0,BigInt('0x'+c.binary64Bits));if((BigInt(view.getFloat64(0))===value)!==c.accept64)throw Error('binary64 oracle');view.setUint32(0,parseInt(c.binary32Bits,16));if((BigInt(view.getFloat32(0))===value)!==c.accept32)throw Error('binary32 oracle');}db.close();await Bun.write(Bun.stdout,String(cases.length));";
         let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
         child.stdin.take().unwrap().write_all(input.as_bytes()).unwrap();

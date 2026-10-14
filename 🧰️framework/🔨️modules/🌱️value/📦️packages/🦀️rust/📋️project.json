@@ -15,6 +15,14 @@
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-native-literal-refusal-source",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
       }
     },
     "test-native-literal-refusal-native": {
@@ -24,6 +32,15 @@
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test long --lib original_native_refusal_ --success-output immediate -- --nocapture",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "native",
+            "scope": "test"
+          }
+        }
       }
     },
     "test-native-recipient-source": {
@@ -32,6 +49,14 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-native-recipient-source"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
       }
     },
     "test-native-recipient": {
@@ -40,6 +65,15 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-native-recipient"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "native",
+            "scope": "test"
+          }
+        }
       }
     },
     "test-ordered-retirement-source": {
@@ -51,6 +85,14 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-ordered-retirement-source"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
       }
     },
     "test": {
@@ -61,7 +103,16 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "native",
+            "scope": "test"
+          }
+        }
+      }
     },
     "test-controlled-construction": {
       "executor": "nx:run-commands",
@@ -71,7 +122,16 @@
         "command": "bun ./📜️script.ts test-controlled-construction",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "native",
+            "scope": "test"
+          }
+        }
+      }
     },
     "test-controlled-encoding": {
       "executor": "nx:run-commands",
@@ -81,7 +141,16 @@
         "command": "bun ./📜️script.ts test-controlled-encoding",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "native",
+            "scope": "test"
+          }
+        }
+      }
     },
     "test-portable": {
       "executor": "nx:run-commands",
@@ -95,6 +164,14 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test portable"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
       }
     },
     "test-type-ownership": {
@@ -108,6 +185,14 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-type-ownership"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
       }
     },
     "test-decode-ownership": {
@@ -121,6 +206,14 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-decode-ownership"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
       }
     },
     "test-refusal-codec": {
@@ -134,6 +227,14 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-refusal-codec"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
       }
     },
     "test-refusal-portable": {
@@ -147,6 +248,14 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-refusal-portable"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
       }
     },
     "test-graphql-int64-source": {
@@ -160,6 +269,14 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-graphql-int64-source"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
       }
     },
     "test-shared-factory-retirement": {
@@ -168,6 +285,50 @@
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-shared-factory-retirement"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-forward-deque-retirement": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "native",
+            "scope": "test"
+          }
+        }
+      },
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test long --lib retirement_forward_deque_keeps_original_source_and_exact_physical_backing --success-output immediate -- --nocapture",
+        "forwardAllArgs": false
+      }
+    },
+    "test-retirement-receiver": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "native",
+            "scope": "test"
+          }
+        }
+      },
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test long --lib --success-output immediate -- --nocapture",
+        "forwardAllArgs": false
       }
     }
   }

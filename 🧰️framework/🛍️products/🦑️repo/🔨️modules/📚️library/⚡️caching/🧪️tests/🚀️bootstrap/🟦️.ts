@@ -5,7 +5,7 @@ import { dirname, join, relative, resolve } from "node:path";
 
 /** 🚀️ Compares the public bootstrap with pinned native Nx while unrelated sources are invalid. */
 export async function testNxBootstrap(workspace: string, output: string): Promise<void> {
-  const require = createRequire(join(workspace, "package.json")), vectorsRoot = resolve(import.meta.dirname, "../../🧫️fixtures/nx-bootstrap");
+  const require = createRequire(join(workspace, "package.json")), vectorsRoot = resolve(import.meta.dirname, "../🧫️fixtures/nx-bootstrap");
   const fixture = JSON.parse(readFileSync(join(vectorsRoot, "🔣️.json"), "utf8"));
   const root = mkdtempSync(join(output, "nx-bootstrap-"));
   writeFileSync(join(root, "package.json"), JSON.stringify({ name: "workspace", private: true }));

@@ -30,5 +30,8 @@
   "nx": {
     "name": "@semio-tech/puzzle-plugin",
     "includedScripts": []
+  },
+  "devDependencies": {
+    "@semio-tech/process": "workspace:*"
   }
 }

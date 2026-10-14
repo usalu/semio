@@ -144,7 +144,8 @@ impl ArtifactCommandWork<ViewerApp<Grid2dViewer>> for Grid2dViewCommandWork {
     /// envelope an `Effect::LoadDocument` carries. Declaring and accepting the verb is still what
     /// removes the shell's boot-time `undeclared-action` refusal; switching examples is an editor
     /// gesture.
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Grid2dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Grid2dViewer>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Grid2dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Grid2dViewer>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("wfc-grid2d-view-retained-work-repeated"));
         }
@@ -158,6 +159,9 @@ impl ArtifactCommandWork<ViewerApp<Grid2dViewer>> for Grid2dViewCommandWork {
             }
         }
         Ok(ArtifactCommandWorkStep::Complete(Emit::default()))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -311,6 +315,7 @@ impl ArtifactViewer for Grid2dViewer {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

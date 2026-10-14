@@ -6,7 +6,7 @@ import glob from "fast-glob";
 import { loadDependencyDirectionPolicy } from "../🟦️.ts";
 
 const owner = resolve(import.meta.dir, ".."), library = resolve(owner, "../../.."), repo = resolve(library, "../../../../..");
-const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")) as { cases: { id: string; mutation: string; accept: boolean }[]; freshness: { id: string; initialLocator: string; nextLocator: string; initialPlugins: string[]; nextPlugins: string[]; otherRootPlugins: string[]; owner: string; nextRole: string; nextExports: string[]; nextBannedStem: string } };
+const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")) as { cases: { id: string; mutation: string; accept: boolean }[]; freshness: { id: string; initialLocator: string; nextLocator: string; initialPlugins: string[]; nextPlugins: string[]; otherRootPlugins: string[]; owner: string; nextRole: string; nextExports: string[]; nextBannedStem: string } };
 const output = process.env.SEMIO_TEST_ARTIFACT_DIR!;
 if (!output) throw Error("Caller-owned SEMIO_TEST_ARTIFACT_DIR is required");
 mkdirSync(output, { recursive: true });

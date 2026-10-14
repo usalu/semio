@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 
 import { applyPatch, type Operation } from "fast-json-patch";
-import corpus from "../../../🧫️fixtures/🔣️.json" with { type: "json" };
+import corpus from "../../../🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 
 export function testRetainedPackPhysicalOwnership(): void {
   assert(corpus.physicalOwnership.pageItemMinimumBytes > corpus.admission.pageBytes);

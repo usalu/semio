@@ -5,7 +5,7 @@ fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_item
 #[test]
 fn tool_original_alias_batch_preserves_original_admission_and_exact_heap_cleanup(){
     type P=PagedUtf8<{usize::MAX}>;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let root=Arc::new(P::from("original🧩".repeat(4096)));
     let factory:Arc<dyn ArtifactOwnedValueRetirementFactory<P>>=Arc::new(OwnedValueRetirementFactory::<P>::default());
     for count in fixture["counts"].as_array().unwrap(){for pause in fixture["pauses"].as_array().unwrap(){

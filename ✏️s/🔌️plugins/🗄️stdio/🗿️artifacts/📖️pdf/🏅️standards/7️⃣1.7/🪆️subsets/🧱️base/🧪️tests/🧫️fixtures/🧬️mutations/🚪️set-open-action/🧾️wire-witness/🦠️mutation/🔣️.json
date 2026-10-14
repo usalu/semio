@@ -1,0 +1,11 @@
+{
+  "mutation": "setOpenAction",
+  "action": {
+    "kind": "action",
+    "action": {
+      "kind": {
+        "kind": "movie"
+      }
+    }
+  }
+}

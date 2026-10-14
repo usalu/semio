@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { lstatSync, mkdirSync, writeFileSync, existsSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import {observePhysicalFileV1,readPhysicalFileV1,type PhysicalFileClaimV1,type FileObservationControlV1} from "../../../🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
-import {decodeCargoProvenanceV1,encodeCargoProvenanceV1,type CargoProvenanceV1} from "../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+import {decodeCargoProvenanceV1,encodeCargoProvenanceV1,type CargoProvenanceV1} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 
 export type TrustedCatalogByteClaimV1 = Readonly<{relativePath:string;sha256:string;byteLength:number}>;
 export type ActorProducerV1 = Readonly<{schema:"semio.os.closed-browser-actor-producer/v1";actor:TrustedCatalogByteClaimV1;component:TrustedCatalogByteClaimV1;descriptor:TrustedCatalogByteClaimV1;policyCanonical:string;policySha256:string;runtime:PhysicalFileClaimV1;compiler:PhysicalFileClaimV1;inputs:readonly Readonly<{logicalPath:string;path:string;sha256:string;byteLength:number}>[]}>;

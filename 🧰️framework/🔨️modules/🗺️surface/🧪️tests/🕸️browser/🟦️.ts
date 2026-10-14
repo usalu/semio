@@ -3,7 +3,7 @@ import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import {pathToFileURL as fileUrl} from "node:url";
 import ts from "typescript";
-import corpus from "../../🧫️fixtures/🔌️ownership/🔣️.json";
+import corpus from "../🧫️fixtures/🔌️ownership/🔣️.json";
 
 test("General Surface generated browser owners initialize without Specific graph exports",async()=>{
  const owner=resolve(import.meta.dir,"../../📦️packages/🦀️rust/🕸️bindings");

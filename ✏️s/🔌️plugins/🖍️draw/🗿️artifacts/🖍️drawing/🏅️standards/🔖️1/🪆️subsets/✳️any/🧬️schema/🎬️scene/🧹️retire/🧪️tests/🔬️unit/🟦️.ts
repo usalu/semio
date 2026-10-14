@@ -2,8 +2,8 @@ const neutral=(value:any):any=>value instanceof Uint8Array?Array.from(value):Arr
 /** 🧹️ Shared retirement counts and independent JSON ownership census. */
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
-import cases from "../../🧫️fixtures/🔣️.json";
-import sources from "../../../📋️prepare/🧫️fixtures/🔣️.json";
+import cases from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🧹️retire/🔣️.json";
+import sources from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import {DocumentSceneJob,type DocumentScenePlan} from "../../../📋️prepare/🟦️.ts";
 import {ScenePlanCloseJob} from "../../🟦️.ts";

@@ -3,7 +3,7 @@
  * carry exactly its rows. */
 import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
-import fixture from "../../🧫️fixtures/🧫️history-notices/🔣️.json";
+import fixture from "../🧫️fixtures/🧫️history-notices/🔣️.json";
 import schema from "../../🧬️schema/🔣️history-notices/🔣️.json";
 import { HISTORY_NOTICE_LABELS, historyNotice } from "../../🟦️.ts";
 

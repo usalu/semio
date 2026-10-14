@@ -18,16 +18,16 @@ const KINDS: &[&str] = &["attach-local-folder", "detach-local-folder"];
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "attach-local-folder" => (
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📎️attach-local-folder/🧫️fixtures/📎️remembers-the-folder-beside-another-document/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📎️attach-local-folder/🧫️fixtures/📎️remembers-the-folder-beside-another-document/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📎️attach-local-folder/🧫️fixtures/📎️remembers-the-folder-beside-another-document/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/📎️attach-local-folder/🧫️fixtures/📎️remembers-the-folder-beside-another-document/🎯️outcome/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/🎯️outcome/🔣️.json"),
         ),
         "detach-local-folder" => (
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/✂️detach-local-folder/🧫️fixtures/✂️forgets-the-folder-and-keeps-its-sibling/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/✂️detach-local-folder/🧫️fixtures/✂️forgets-the-folder-and-keeps-its-sibling/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/✂️detach-local-folder/🧫️fixtures/✂️forgets-the-folder-and-keeps-its-sibling/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../../../../🎚️config/🧬️schema/🧬️mutations/✂️detach-local-folder/🧫️fixtures/✂️forgets-the-folder-and-keeps-its-sibling/🎯️outcome/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/✂️detach-local-folder/✂️forgets-the-folder-and-keeps-its-sibling/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/✂️detach-local-folder/✂️forgets-the-folder-and-keeps-its-sibling/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/✂️detach-local-folder/✂️forgets-the-folder-and-keeps-its-sibling/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/✂️detach-local-folder/✂️forgets-the-folder-and-keeps-its-sibling/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-os-config-local-folders: no specification vector registered for kind {other:?}"),
     }

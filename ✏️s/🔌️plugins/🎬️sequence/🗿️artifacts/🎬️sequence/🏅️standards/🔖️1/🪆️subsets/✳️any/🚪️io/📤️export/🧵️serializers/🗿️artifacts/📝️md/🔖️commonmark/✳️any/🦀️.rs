@@ -19,6 +19,6 @@ impl Serializer<SequenceSnapshot> for SequenceIntoMd {
         let fixture = from.try_to_host_snapshot().map_err(|error| IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner, format!("SequenceIntoMd: {error}"))))?;
         let literal = semio_framework_pack_json::to_json_string(&fixture);
         let md = MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::CodeBlock { info: Some("json".into()), literal }] };
-        Ok(IoOutcome::clean(IoPayload::Binary(<MdSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&md))))
+        Ok(IoOutcome::clean(IoPayload::Binary(<MdSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&md))))
     }
 }

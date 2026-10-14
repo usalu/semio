@@ -3,7 +3,7 @@ import {readFileSync,existsSync} from "node:fs";
 import {join} from "node:path";
 import Ajv from "ajv";
 const base=join(import.meta.dir,"..");
-const fixture=JSON.parse(readFileSync(join(base,"🧫️fixtures/🔣️.json"),"utf8"));
+const fixture=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
 const elementSchema=JSON.parse(readFileSync(join(base,"../../../..","🧬️schema/🧬️mutations/🧱insert-element/🧬️schema/🔣️.json"),"utf8"));
 test("neutral Model element wire preserves UTF8 hex, tuple order and properties",()=>{
   const snapshotSchema=JSON.parse(readFileSync(join(base,"../../../..","🧬️schema/📸️snapshot/🔣️.json"),"utf8"));

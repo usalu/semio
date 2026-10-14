@@ -1,0 +1,1143 @@
+{
+  "version": 1,
+  "qualification": "Whole actual selected build-mode target/aggregate dispatcher import closure plus whole original and new owning tests, strong physical source snapshot; external test/system libraries separately recorded; not whole actual graph acceptance",
+  "claims": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🧬️schema/🔣️.json",
+      "bytes": 619,
+      "sha256": "3570198a28e8f2f34c7fef6ed316ab3c7b8da04112298997bafcc4871c535d8c",
+      "inode": 324468106,
+      "mtimeMs": 1791588506168.4849
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🟦️.ts",
+      "bytes": 1785,
+      "sha256": "1b04c6fd409d3030d0a2194bfdd6d826f9a751420f425930000fd11c6f4b32fb",
+      "inode": 324509130,
+      "mtimeMs": 1791590035547.2908
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📤️stdout.json",
+      "bytes": 165,
+      "sha256": "98da81ef2a1bc61081ceb5a4e27c74959068c51531d1971bc22423db08b1fa8b",
+      "inode": 324543363,
+      "mtimeMs": 1791591962890.036
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📬️output.json",
+      "bytes": 452,
+      "sha256": "826b1f70f7b7c6bf1b5fa99b24211b8fd0039537d8b8d4880dbe6d1f8b9b1828",
+      "inode": 324589880,
+      "mtimeMs": 1791594411537.5874
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "bytes": 9045,
+      "sha256": "0e85d70f2e6bea7824b2c3880ec13259c3d04051d2aaf480652c6de4706843e7",
+      "inode": 306866045,
+      "mtimeMs": 1791910227422.7979
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 745,
+      "sha256": "55ef2a9eb4f38fb41da28b1f53fbb0459b1ad7e4361a91c46e94809d9e9251d4",
+      "inode": 329368314,
+      "mtimeMs": 1791902904039.4893
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "bytes": 3109,
+      "sha256": "285965db48b715b30b6ba36df07e08ab8f8a6b6a909251ac2a7a39de6b8d0893",
+      "inode": 329368316,
+      "mtimeMs": 1791916576695.8342
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧬️schema/🔣️.json",
+      "bytes": 203,
+      "sha256": "80a098a1f51e60abf051c3caa03204bf9ff15576657c95587dc8b13b0806c450",
+      "inode": 329368312,
+      "mtimeMs": 1791902904031.8857
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts",
+      "bytes": 1294,
+      "sha256": "c8f0f798b06cfb69c736060f76735c42ad49d5c0f99473ad93738adfbd347ff2",
+      "inode": 329368404,
+      "mtimeMs": 1791903004774.0374
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧬️schema/🔣️.json",
+      "bytes": 958,
+      "sha256": "5d1d93e3acc6b52b5f4617f08356a1755f91eb7023b444ea0cedb2c77ff24826",
+      "inode": 329471964,
+      "mtimeMs": 1791911555957.688
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts",
+      "bytes": 6933,
+      "sha256": "5bbc834adbf2563e3d9aa5d4b6f4072b90efc3c35d30df015b5647481b393803",
+      "inode": 329471965,
+      "mtimeMs": 1791916574027.619
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️context/🧬️schema/🔣️.json",
+      "bytes": 574,
+      "sha256": "e86f36ed0f45528699d995d69b3d693441f42e50399a32f229f9ef8558db52eb",
+      "inode": 306866057,
+      "mtimeMs": 1791131248991.0195
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️context/🟦️.ts",
+      "bytes": 1509,
+      "sha256": "36d34b44e71f78dfea3ccbce3541a8214ffd5800fd72533fbf417602fc447731",
+      "inode": 301454337,
+      "mtimeMs": 1791907717483.2764
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+      "bytes": 12610,
+      "sha256": "3c5b59b477d154eedafe95380157e4a13760d8c371790f5d39731233ae7c3aed",
+      "inode": 324724278,
+      "mtimeMs": 1791914184506.0308
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "bytes": 9419,
+      "sha256": "8999069bddf62c64285eef1dd0125f9cc081ebfa0991125ba714582e2f899751",
+      "inode": 324724279,
+      "mtimeMs": 1791914184503.7722
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/📋️policy/🧬️schema/🔣️.json",
+      "bytes": 349,
+      "sha256": "522246923cb5d7d684320efafe0813ed947a8bfe8903b5fe337d862403bb02ce",
+      "inode": 324673873,
+      "mtimeMs": 1791597569034.9797
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+      "bytes": 6555,
+      "sha256": "c0c3d346323fbf3d263bda1a16cfe83d43072fcfb0326998d8f2c205b918546d",
+      "inode": 301546322,
+      "mtimeMs": 1791907717489.2346
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧬️schema/🔣️.json",
+      "bytes": 1428,
+      "sha256": "83b42eb377e9bf502868910b4ae13d330791df8dd6505bba236883cd42a21df6",
+      "inode": 323539984,
+      "mtimeMs": 1791903036753.5247
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧬️schema/🔣️.json",
+      "bytes": 849,
+      "sha256": "4b34b34dbc6ca28c07aa5f51067b3d9f37e759b1daaa38212207115abcea0943",
+      "inode": 298941672,
+      "mtimeMs": 1791903036749.3984
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts",
+      "bytes": 3538,
+      "sha256": "ce90d0ebfc69b8dc4536b4b60f9070e42b0e68e969bdf3a3dab46572b3306294",
+      "inode": 298949029,
+      "mtimeMs": 1791905275048.5352
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧬️schema/🔣️.json",
+      "bytes": 1167,
+      "sha256": "15ece30f9b609e494197751e63206bf94ceb395a2f0953f4a82b9267ba370082",
+      "inode": 301484259,
+      "mtimeMs": 1791914319109.6833
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧬️schema/🧾️unit-evidence/🔣️.json",
+      "bytes": 1898,
+      "sha256": "d481abbedd780e70bcaf2248457745afb67968f150abd8a57984fe9c1ebf4b1b",
+      "inode": 324052476,
+      "mtimeMs": 1791903036755.5225
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts",
+      "bytes": 34171,
+      "sha256": "ea59ee7eab30058e3d2a332df8c7d329917f7ee50936099f3632a9a83890ae54",
+      "inode": 327056637,
+      "mtimeMs": 1791903036757.289
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "bytes": 59336,
+      "sha256": "2c5221808914181055b7838ea83b14c93ee6309143d01f585ce5496738fb977a",
+      "inode": 327056639,
+      "mtimeMs": 1791916574028.1584
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧪️tests/🟦️.ts",
+      "bytes": 8836,
+      "sha256": "07cad56828b0a701635e48671fdeaa0e586d065431b310cee61d7bd12f73cebd",
+      "inode": 306823949,
+      "mtimeMs": 1791912536484.8066
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+      "bytes": 8570,
+      "sha256": "92f4a6cc19c42df333cbc6d0fd9f94ee72b6fa9efa97688cdf554fc3abc65dc2",
+      "inode": 311200105,
+      "mtimeMs": 1791284792586.636
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🧪️tests/🟦️.ts",
+      "bytes": 5709,
+      "sha256": "27585ffbb5ab0776c16b0845f9f30054c351ee6247e0591e35781681d38577b1",
+      "inode": 311200107,
+      "mtimeMs": 1791912536485.351
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/📜️ticket.json",
+      "bytes": 816,
+      "sha256": "0650efa35efab42488bf55d156901c607574bc17829c9d6b85bcfac08c205737",
+      "inode": 323783032,
+      "mtimeMs": 1791912196429.06
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+      "bytes": 17636,
+      "sha256": "e87dd472764029cab2cd972ea44e85d559f75e9dd307391236a7e7e21951ba35",
+      "inode": 301415421,
+      "mtimeMs": 1791916107196.2659
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts",
+      "bytes": 3826,
+      "sha256": "5f7c306eca4755e6dfeaeab67155b3460f5414119abe16aa72151b7423669834",
+      "inode": 301273613,
+      "mtimeMs": 1790860617948.274
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts",
+      "bytes": 3310,
+      "sha256": "4e911792e3bfc923e9e73821897b39cbfecb4d2b9c8d46010760b1d4f02b3eaa",
+      "inode": 301342991,
+      "mtimeMs": 1790863152253.497
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧬️schema/🔣️.json",
+      "bytes": 2530,
+      "sha256": "dee7390ba15e6161f3c5dcd9b7f554708d565c0f00464b45dfdd4eb1256072a6",
+      "inode": 301366572,
+      "mtimeMs": 1791486492903.8623
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+      "bytes": 15127,
+      "sha256": "bcee82db019a65f6d2faff5788c3d090e99548066574fc9e4e6b000342400628",
+      "inode": 324724280,
+      "mtimeMs": 1791907717547.5476
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🧬️schema/🔣️.json",
+      "bytes": 968,
+      "sha256": "f4cdd5081b7fc27c1825c417c0028a78f61d953e4c868a6e0d14f3a851f62ae1",
+      "inode": 301428620,
+      "mtimeMs": 1790866853940.1772
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts",
+      "bytes": 3209,
+      "sha256": "4c11689f509c604d1ee74c24cd53a8715af59e8f5c765fd381d1f81d6b36ecfb",
+      "inode": 301434435,
+      "mtimeMs": 1791907717548.9094
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🧬️schema/🔣️.json",
+      "bytes": 2743,
+      "sha256": "8c471617a97171a04ed37393c1bb4c1f883ede01d0daeeed6bcfdb365e678bd1",
+      "inode": 320648845,
+      "mtimeMs": 1791449242531.9324
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🟦️.ts",
+      "bytes": 7214,
+      "sha256": "3452d83de202e62db986844c9a25b1be43a0deb5019217b3a1017feee79574a0",
+      "inode": 320651215,
+      "mtimeMs": 1791907838414.6694
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/📋️policy/🧬️schema/🔣️.json",
+      "bytes": 1087,
+      "sha256": "4e7fe2c2a53a7d8f327a50f095813bffc7e3114f87c5a2b39ce3bf51a6c4508b",
+      "inode": 320649155,
+      "mtimeMs": 1791448773639.8562
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/📥️request/🧬️schema/🔣️.json",
+      "bytes": 936,
+      "sha256": "b87876ef5b0600726e7af67ec7a8f93da1be418e6ffee7b1da16820642fa47ea",
+      "inode": 320648842,
+      "mtimeMs": 1791448588815.5432
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts",
+      "bytes": 6691,
+      "sha256": "f8949f6b3867a1e8c1f7d420c2b5b124c7e4b47c82786682c3d0c0b9417d1618",
+      "inode": 320651176,
+      "mtimeMs": 1791907717551.844
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json",
+      "bytes": 1247,
+      "sha256": "b4d0746aea2f3daff5a49bc7623b2c5d6c37f9341c13330b2ed8d0c9373fb2a2",
+      "inode": 324302808,
+      "mtimeMs": 1791584724461.811
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "bytes": 5487,
+      "sha256": "1d6f9b53a41185a13eb14e47aac38b0db5eb23205b4bb4dc5a5449f5fb71e1f9",
+      "inode": 324302810,
+      "mtimeMs": 1791907717553.4382
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+      "bytes": 550,
+      "sha256": "85c7b282907bd607fe78181c5c038eedc06be45950890b922b78e3aa185c5ac0",
+      "inode": 324286802,
+      "mtimeMs": 1791584724461.3083
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+      "bytes": 3997,
+      "sha256": "e3908e58ac6b5f04b0723ce91f97d41eb0ee2a9d60a3cf794a64501d61fd9ed3",
+      "inode": 324298041,
+      "mtimeMs": 1791907717554.563
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+      "bytes": 1339,
+      "sha256": "06200b3f26dcea04f4d16c00fd2a4a4d89366918e4c23c597cf90eaafef57446",
+      "inode": 301272911,
+      "mtimeMs": 1791563138440.9934
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "bytes": 5477,
+      "sha256": "283c76fdb8b0da19a0506b010a0fd44d33287a20cf7297abc3deebb2427c8eea",
+      "inode": 301272910,
+      "mtimeMs": 1791565613802.0652
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+      "bytes": 2971,
+      "sha256": "3df81b9a89a5c5e56bb37ecf579c0684dca29beacc50035fa6bfcfe75cb9c7ff",
+      "inode": 301314509,
+      "mtimeMs": 1790858359798.16
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts",
+      "bytes": 14380,
+      "sha256": "c0d50b5a1a42534bfbf3710182fabf3ec0dd1e539ed94de18be75df155ce7234",
+      "inode": 327056638,
+      "mtimeMs": 1791878825057.8323
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🟦️.ts",
+      "bytes": 5395,
+      "sha256": "a596f25cdba8c0a311b2120d6b70aa519ef31d6159ee192d6b3389c0c93bec70",
+      "inode": 321587935,
+      "mtimeMs": 1791472281747.68
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "bytes": 149,
+      "sha256": "22f68a1cdabdcdb7d2f6d1fad86341816ab5d0e9c79ea21fcfa0c1dd10da8aec",
+      "inode": 329519559,
+      "mtimeMs": 1791907118631.0168
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+      "bytes": 12503,
+      "sha256": "1521f2e9d07141acf1477a563693a05b44896ebdfa47d1b5b7ba24add6886ac0",
+      "inode": 301240099,
+      "mtimeMs": 1791900863033.6443
+    },
+    {
+      "path": "bun.lock",
+      "bytes": 537260,
+      "sha256": "82793c9ad08bf63ed3f8a654f10761f637303755c6cad71f8577157a9e3d3dde",
+      "inode": 329622618,
+      "mtimeMs": 1791908602494.0483
+    },
+    {
+      "path": "nx.json",
+      "bytes": 3187,
+      "sha256": "c6355fa7262ec4550788a4e76d33b64d13f0de83d6cdaa09dc2a182c0691f6fb",
+      "inode": 306839411,
+      "mtimeMs": 1791907998557.8848
+    },
+    {
+      "path": "package.json",
+      "bytes": 13133,
+      "sha256": "5658405bba43d07a93f62e3bcde0e1e673eb02409eb38331f029fb519bd2851b",
+      "inode": 323505639,
+      "mtimeMs": 1791908527077.9558
+    }
+  ],
+  "edges": [
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "./🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "../🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "specifier": "./🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "specifier": "./🎛️owned-execution/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "specifier": "./🧪️testing/🎚️budget/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "specifier": "./🧭️routing/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "specifier": "./🧭️routing/🚪️entrypoint/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "specifier": "./🧭️routing/🎛️command/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "specifier": "./🧭️routing/🎛️command/⚙️configuration/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "specifier": "./📦️artifacts/📤️publication/🧪️tests/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧪️tests/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "specifier": "./📦️artifacts/🗂️files/🧪️tests/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🧪️tests/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧪️tests/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧪️tests/🟦️.ts",
+      "specifier": "../../../🔒️leases/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+      "specifier": "./🧬️schema/📜️ticket.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/📜️ticket.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+      "specifier": "../../🔒️leases/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🟦️.ts",
+      "specifier": "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🟦️.ts",
+      "specifier": "../../../🏗️build/🎚️mode/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🟦️.ts",
+      "specifier": "../../../🧪️testing/🎚️budget/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🟦️.ts",
+      "specifier": "./🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts",
+      "specifier": "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts",
+      "specifier": "../../📥️capture/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts",
+      "specifier": "../📥️invocation/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts",
+      "specifier": "../../📋️context/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📋️context/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts",
+      "specifier": "../../🧪️testing/🦀️cargo/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts",
+      "specifier": "../../🧪️testing/🧪️vitest/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts",
+      "specifier": "../../📦️artifacts/🏗️native-build/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts",
+      "specifier": "./📥️request/🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/📥️request/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts",
+      "specifier": "./📋️policy/🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/📋️policy/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "../../🏗️build/🎟️capacity/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "../📤️publication/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "../../🪓️termination/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "../../🎛️owned-execution/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "../../../📁️filesystem/🧾️observation/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "../../../📁️filesystem/🧾️observation/📁️current/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "./🧾️receipt/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "./🧾️receipt/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "../../🏗️build/🎚️mode/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "./🔒️lease/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "./🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "./📥️resources/🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "./🧬️schema/🧾️unit-evidence/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧬️schema/🧾️unit-evidence/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts",
+      "specifier": "../../../🔒️leases/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts",
+      "specifier": "./🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts",
+      "specifier": "../../../../📁️filesystem/🧾️observation/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "specifier": "../🪓️termination/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "specifier": "./📪️outcome/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "specifier": "./🧬️schema/📤️stdout.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📤️stdout.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "specifier": "./🧬️schema/📬️output.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📬️output.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "specifier": "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "specifier": "./📪️outcome/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🟦️.ts",
+      "specifier": "./🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts",
+      "specifier": "../../🔒️leases/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts",
+      "specifier": "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts",
+      "specifier": "../../🧭️routing/📥️invocation/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts",
+      "specifier": "./🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+      "specifier": "./🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+      "specifier": "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts",
+      "specifier": "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts",
+      "specifier": "../🎚️budget/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts",
+      "specifier": "../🎛️execution/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts",
+      "specifier": "./🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts",
+      "specifier": "../../🪓️termination/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+      "specifier": "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+      "specifier": "../🎚️budget/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+      "specifier": "../🎛️execution/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+      "specifier": "../../🎛️owned-execution/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+      "specifier": "../../📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+      "specifier": "./🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📋️context/🟦️.ts",
+      "specifier": "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📋️context/🟦️.ts",
+      "specifier": "./🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/📋️context/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+      "specifier": "../🪓️termination/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+      "specifier": "../🧭️routing/📥️invocation/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+      "specifier": "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+      "specifier": "./📋️policy/🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/📥️capture/📋️policy/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+      "specifier": "../📥️invocation/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "specifier": "./📥️invocation/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "specifier": "./📥️invocation/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "specifier": "./🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "specifier": "../🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "specifier": "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts"
+    }
+  ],
+  "external": [
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "bun:test"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "ajv"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧪️tests/🟦️.ts",
+      "specifier": "typescript"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "specifier": "node:path"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🧪️tests/🟦️.ts",
+      "specifier": "node:assert/strict"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🧪️tests/🟦️.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🧪️tests/🟦️.ts",
+      "specifier": "node:module"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🧪️tests/🟦️.ts",
+      "specifier": "node:path"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🧪️tests/🟦️.ts",
+      "specifier": "node:url"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🧪️tests/🟦️.ts",
+      "specifier": "node:child_process"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🧪️tests/🟦️.ts",
+      "specifier": "fast-glob"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🧪️tests/🟦️.ts",
+      "specifier": "esbuild"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧪️tests/🟦️.ts",
+      "specifier": "node:assert/strict"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧪️tests/🟦️.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧪️tests/🟦️.ts",
+      "specifier": "node:fs/promises"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧪️tests/🟦️.ts",
+      "specifier": "bun:test"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧪️tests/🟦️.ts",
+      "specifier": "node:path"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧪️tests/🟦️.ts",
+      "specifier": "node:module"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+      "specifier": "node:crypto"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+      "specifier": "node:path"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+      "specifier": "node:timers/promises"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+      "specifier": "node:sqlite"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+      "specifier": "node:crypto"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+      "specifier": "node:fs/promises"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+      "specifier": "node:timers/promises"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+      "specifier": "node:path"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🟦️.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🟦️.ts",
+      "specifier": "node:path"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🟦️.ts",
+      "specifier": "node:os"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts",
+      "specifier": "node:path"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "node:path"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "node:url"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "node:child_process"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "node:crypto"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "node:os"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "node:readline"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "specifier": "node:fs/promises"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts",
+      "specifier": "node:crypto"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts",
+      "specifier": "node:path"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts",
+      "specifier": "node:crypto"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts",
+      "specifier": "node:os"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts",
+      "specifier": "node:path"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🟦️.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🟦️.ts",
+      "specifier": "node:fs/promises"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🟦️.ts",
+      "specifier": "node:crypto"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🟦️.ts",
+      "specifier": "node:path"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts",
+      "specifier": "node:fs/promises"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts",
+      "specifier": "node:crypto"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts",
+      "specifier": "node:path"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "specifier": "node:string_decoder"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "specifier": "node:child_process"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "specifier": "node:stream"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+      "specifier": "node:child_process"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts",
+      "specifier": "node:crypto"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts",
+      "specifier": "node:os"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts",
+      "specifier": "node:timers/promises"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts",
+      "specifier": "node:path"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts",
+      "specifier": "node:child_process"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+      "specifier": "node:path"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+      "specifier": "node:string_decoder"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📋️context/🟦️.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📋️context/🟦️.ts",
+      "specifier": "node:path"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+      "specifier": "node:child_process"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "specifier": "node:fs"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "specifier": "node:path"
+    }
+  ]
+}

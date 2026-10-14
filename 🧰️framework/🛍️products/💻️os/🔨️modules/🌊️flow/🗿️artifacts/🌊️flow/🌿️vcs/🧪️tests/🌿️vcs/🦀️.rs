@@ -6,18 +6,18 @@ use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 
 //#region 🧪️FixtureOwnership
-fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("neutral Flow cases") }
+fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("neutral Flow cases") }
 /// 🧾️ The committed wire witness of each roster row: the Rust `ToValue` of one aggregate operation, in roster order.
 const WITNESSES: [&str; 9] = [
-    include_str!("../../🧫️fixtures/🧬️mutations/➕️add-widget/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/🗑️remove-widget/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/↔️move-widget/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/🩹change-widget/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/🔗️add-synapse/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/✂️remove-synapse/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/🔀️move-synapse/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/🔄change-synapse/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../../🧫️fixtures/🧬️mutations/📐️change-layout/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/➕️add-widget/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/🗑️remove-widget/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/↔️move-widget/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/🩹change-widget/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/🔗️add-synapse/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/✂️remove-synapse/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/🔀️move-synapse/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/🔄change-synapse/🧾️wire-witness/🦠️mutation/🔣️.json"),
+    include_str!("../🧫️fixtures/🧬️mutations/📐️change-layout/🧾️wire-witness/🦠️mutation/🔣️.json"),
 ];
 fn witness(index: usize) -> serde_json::Value { serde_json::from_str(WITNESSES[index]).expect("committed Flow wire witness") }
 fn positive(index: usize) -> serde_json::Value {
@@ -292,7 +292,7 @@ fn actual_nested_first_party_shapes() {
 
 #[test]
 fn diff_json_contract_matches_third_party_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🔺️diff/🧫️fixtures/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔺️diff/🔣️.json")).unwrap();
     for row in vectors["valid"].as_array().unwrap() {
         let diff = FlowDiff::from_value(semio_framework_value::DslValue::from(&row["value"])).unwrap_or_else(|error| panic!("{}: {error}", row["name"]));
         assert_eq!(third_party_json(&diff), row["value"]);
@@ -321,8 +321,8 @@ fn flow_opens_as_an_owned_member_through_its_own_pack_codec() {
         "a flow member must open through PackMemberSnapshotOpen"
     );
     let snapshot = base();
-    let encoded = crate::os_store::serialization::ArtifactPack::encode_pack(&snapshot);
-    let decoded = <FlowHostSnapshot as crate::os_store::serialization::ArtifactPack>::decode_pack(&encoded).expect("the member opener's whole-pack decode");
+    let encoded = pack::snapshot::ArtifactPack::encode_pack(&snapshot);
+    let decoded = <FlowHostSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&encoded).expect("the member opener's whole-pack decode");
     assert_eq!(decoded, snapshot, "the opener's decode round-trips the exact member snapshot");
     let mut cursor = semio_framework_value::retirement::RetireOwned::retirement(decoded);
     let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: 0, maximum_release_bytes: 4_096, maximum_depth: 4_096 };

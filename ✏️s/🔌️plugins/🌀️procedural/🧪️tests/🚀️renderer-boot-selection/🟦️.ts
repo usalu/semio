@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { parseSurfaceAppId, resolvePlaygroundBoot, type PluginCatalog } from "@semio-tech/framework";
 import { resolveBootPrimaryAppV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔀️surface-switch/🟦️.ts";
-import corpus from "../../🧫️fixtures/🚀️renderer-boot-selection/🔣️.json";
+import corpus from "../🧫️fixtures/🚀️renderer-boot-selection/🔣️.json";
 
 test("procedural owns its dependency ordered renderer boot declaration", () => {
   const catalog: PluginCatalog = {

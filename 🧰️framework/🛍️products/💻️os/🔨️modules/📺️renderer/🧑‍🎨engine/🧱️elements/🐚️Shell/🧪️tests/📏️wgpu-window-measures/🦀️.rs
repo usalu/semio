@@ -11,7 +11,7 @@ use super::*;
 use crate::program_bridge::window_measures_section_tests::{fixture, measures_section_document};
 
 fn tree_parity_fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/🌳️window-measures-tree-parity/🔣️.json")).expect("window measure tree parity fixture")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🌳️window-measures-tree-parity/🔣️.json")).expect("window measure tree parity fixture")
 }
 
 #[test]

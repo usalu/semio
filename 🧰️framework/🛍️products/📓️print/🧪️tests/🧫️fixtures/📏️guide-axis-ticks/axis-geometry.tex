@@ -1,0 +1,25 @@
+% 🧪 Probe fixture of case guide-axis-ticks, scenario axis-geometry.
+% A bottom axis and its grid on an 80x40 frame with pad 8: the geometry the renderer emits through
+% \semio_viz_probe_geometry:nn while it draws, so the assertion is on the drawing itself.
+\documentclass{article}
+\usepackage{semio-viz-guide}
+\ExplSyntaxOn
+\NewDocumentEnvironment { ProbeFrame } { }
+  {
+    \bool_set_true:N \l_semio_viz_in_figure_bool
+    \fp_set:Nn \l_semio_viz_width_fp { 80 }
+    \fp_set:Nn \l_semio_viz_height_fp { 40 }
+    \fp_set:Nn \l_semio_viz_pad_fp { 8 }
+    \begin{tikzpicture}[ x=1mm , y=1mm ]
+  }
+  { \end{tikzpicture} \bool_set_false:N \l_semio_viz_in_figure_bool }
+\ExplSyntaxOff
+\begin{document}
+\SemioVizProbeBegin{guide-axis-ticks}{axis-geometry}
+\SemioVizProbeOn
+\SemioVizScale{x}{linear}{0,10}{8,78}
+\SemioVizScale{y}{linear}{0,10}{8,38}
+\begin{ProbeFrame}
+\SemioVizAxis[scale=x,orient=bottom,ticks=5,grid=true,labels=false]
+\end{ProbeFrame}
+\end{document}

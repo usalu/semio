@@ -1,0 +1,22 @@
+{
+  "artifact": null,
+  "attractions": null,
+  "domain": null,
+  "meta": null,
+  "objects": {
+    "inserted": [],
+    "modified": [
+      {
+        "id": "object-a",
+        "patch": {
+          "meshUrl": "mesh://alpha-lod2"
+        }
+      }
+    ],
+    "moved": [],
+    "removed": []
+  },
+  "references": null,
+  "schema": null,
+  "targetVolumes": null
+}

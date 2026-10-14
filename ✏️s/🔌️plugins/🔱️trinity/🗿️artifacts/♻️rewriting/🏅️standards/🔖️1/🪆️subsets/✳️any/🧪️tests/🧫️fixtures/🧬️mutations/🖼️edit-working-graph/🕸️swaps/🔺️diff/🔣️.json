@@ -1,0 +1,24 @@
+{
+  "workingGraph": {
+    "schema": null,
+    "name": null,
+    "manifest": null,
+    "camera": null,
+    "content": {
+      "childId": "rewriting-capsule-shaft-c",
+      "target": {
+        "artifactId": "rewriting-capsule-shaft-c",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "graph"
+        }
+      }
+    },
+    "query": null
+  },
+  "lhs": null,
+  "rhs": null,
+  "parameterBindings": null,
+  "ruleLayout": null
+}

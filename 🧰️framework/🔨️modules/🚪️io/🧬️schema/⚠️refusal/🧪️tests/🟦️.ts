@@ -11,15 +11,15 @@ import type {IntrinsicValue} from "../../../../🌱️value/🧬️schema/🌳�
 import {binary64,binary64Value} from "../../../../🌱️value/🔢️ieee754/🟦️.ts";
 
 
-import copyCases from "../🧫️fixtures/🧵️stress/🔣️.json";
+import copyCases from "../../../🧪️tests/🧫️fixtures/⚠️refusal/🧵️stress/🔣️.json";
 
 
-import cases from "../🧫️fixtures/🔣️.json";
-import wireCases from "../🧫️fixtures/🔁️wire/🔣️.json";
+import cases from "../../../🧪️tests/🧫️fixtures/⚠️refusal/🔣️.json";
+import wireCases from "../../../🧪️tests/🧫️fixtures/⚠️refusal/🔁️wire/🔣️.json";
 
 
 
-import diagnosticCases from "../../../../⚠️diagnostic/🧫️fixtures/🎛️controlled/🔣️.json";
+import diagnosticCases from "../../../../⚠️diagnostic/🧪️tests/🧫️fixtures/🎛️controlled/🔣️.json";
 const kinds:ValueRefusalKind[]=["invalidValue","canceled","ownershipLimit","allocationFailed","workLimit","depthLimit","unsupportedOwner","invariantViolated"];
 function intrinsic(value:unknown):IntrinsicValue {
  if(value===null)return{kind:"null"};

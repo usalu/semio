@@ -2,7 +2,7 @@
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
 import MarkdownIt from "markdown-it";
-import corpus from "../../🧫️fixtures/✂️splice-source/🔣️.json";
+import corpus from "../🧫️fixtures/✂️splice-source/🔣️.json";
 import schema from "../../🧬️schema/🧬️mutations/✂️splice-source/🧬️schema/🔣️.json";
 
 type Splice = { readonly offset: number; readonly delete: number; readonly insert: string };

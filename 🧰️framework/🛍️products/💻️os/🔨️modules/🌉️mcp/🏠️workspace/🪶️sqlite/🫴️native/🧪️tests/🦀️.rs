@@ -2,8 +2,8 @@
 use super::*;
 use std::cell::Cell;
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress};
-use store::{os_store::serialization::ArtifactSqliteSnapshot as _,os_store::serialization::ArtifactDsl as _};
-fn contract()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost as _,pack::snapshot::ArtifactDsl as _};
+fn contract()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn grant(value:&serde_json::Value)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:value["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:value["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:value["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:value["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:value["maximumDepth"].as_u64().unwrap()as usize}}
 fn close_decode(native:&mut NativeDecodeControl<'_>,law:&serde_json::Value){let closing=grant(&law["closeGrant"]);for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){if !native.has_retirement_owner(){return}let step=native.close_retirement_recipient(closing).unwrap();assert!(step.progress().fits(closing));}panic!("Probe original decode recipient did not reach terminal")}
 fn close_encode(native:&mut NativeEncodeControl<'_>,law:&serde_json::Value){let closing=grant(&law["closeGrant"]);for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){if !native.has_retirement_owner(){return}let step=native.close_retirement_recipient(closing).unwrap();assert!(step.progress().fits(closing));}panic!("Probe original encode recipient did not reach terminal")}
@@ -11,7 +11,7 @@ fn close_encode(native:&mut NativeEncodeControl<'_>,law:&serde_json::Value){let 
 #[test]
 fn probe_sqlite_original_native_io_roundtrips_both_encodings(){
  let law=contract();let incoming=grant(&law["bodyGrant"]);let maximum=law["nativeMaximumBytes"].as_u64().unwrap()as usize;
- let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+ let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for sample in cases["cases"].as_array().unwrap(){for encoding in [SnapshotEncoding::Text,SnapshotEncoding::Binary]{
   let wire=sample["wire"].as_str().unwrap();let oracle:serde_json::Value=serde_json::from_str(wire).unwrap();
   let payload=match encoding{SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(wire.to_string()),SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(wire.as_bytes().to_vec())};

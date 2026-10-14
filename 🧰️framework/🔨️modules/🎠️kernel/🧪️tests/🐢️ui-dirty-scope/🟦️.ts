@@ -79,7 +79,7 @@ interface ScopeFixture {
 }
 
 function loadFixture(): ScopeFixture {
-  return JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🐢️ui-dirty-scope/🔣️.json"), "utf8")) as ScopeFixture;
+  return JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/🐢️ui-dirty-scope/🔣️.json"), "utf8")) as ScopeFixture;
 }
 
 /** 🔍️ `lodash.union` recomputes first-seen-order-no-duplicates; anything else is our bug, not the fixture's. */

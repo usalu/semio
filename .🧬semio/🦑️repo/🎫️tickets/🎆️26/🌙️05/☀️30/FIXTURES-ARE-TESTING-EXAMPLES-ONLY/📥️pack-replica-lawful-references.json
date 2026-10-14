@@ -1,0 +1,86 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧪️tests/🟦️.ts",
+    "beforeSha256": "62a9ab3436c2f8d06e3b33941bc9c472d74b5d818fac41e85ab432855cce85bf",
+    "afterSha256": "b9e498c38db0a5074325acd4bab15164d45362d59a832785286b744ee74debf0",
+    "reason": "preserve pre-existing lawful test-owned fixture reference"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🟦️.ts",
+    "beforeSha256": "559d0e1be26d210e2650350679cccdcc1ae550d01ba31a1079f59ce43fda373b",
+    "afterSha256": "fc346fddd1efd1ddbf2c7adc399cd3694d0d98854a4f0b9b385925480ff32c5b",
+    "reason": "preserve pre-existing lawful test-owned fixture reference"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🫳️preflight/🦀️.rs",
+    "beforeSha256": "12b5024308176f5bb2d2746a2de7cdc8c2258478791906f69f7e39f8e37e5d4c",
+    "afterSha256": "c0660a875cc607492fa5a35a2c2a2815a722c8fc6c74e892e9fecf4175615571",
+    "reason": "preserve pre-existing lawful test-owned fixture reference"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🫳️preflight/🟦️.ts",
+    "beforeSha256": "e8300b86bbd85c44a386c80d1a9bffe3925d9f89f6080e50b93adc7794830d02",
+    "afterSha256": "1e5b063e585e4a202019f9d42d020f64812ce38b5720ecf7415a5c388ea3abc4",
+    "reason": "preserve pre-existing lawful test-owned fixture reference"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/📦️operation-pages/🦀️.rs",
+    "beforeSha256": "3eba95fa01fdac97a23ecc00c5e35d1ae37f6e01d4c7a575de98c7a02e9001b3",
+    "afterSha256": "3a33765aa5be66a94cdc72823cff9cba2c36d2c28f2ff848667f9192211b0887",
+    "reason": "preserve pre-existing lawful test-owned fixture reference"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🟦️.ts",
+    "beforeSha256": "670a07c65c23f9f6281630697ba83906c6fa6143b9141fbad9c7d21e83765d16",
+    "afterSha256": "26b0cd937f0b036b7ca940bf1fc5a157bb5e25df8864595198211db44a551220",
+    "reason": "preserve pre-existing lawful test-owned fixture reference"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔣️absolute-varint/🦀️.rs",
+    "beforeSha256": "0785974028473ce06489c7528205cad5b7c8d1be97fafe829783cebac9cecbee",
+    "afterSha256": "f90d9b68ff20e4d25cf9161a2b96a497674a8eeed08217570229018d261ce023",
+    "reason": "preserve pre-existing lawful test-owned fixture reference"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔣️absolute-varint/🟦️.ts",
+    "beforeSha256": "e798987b7813a7c3c7648a09034427272f56b7d7adc349cc1bd3f8d36f34d44c",
+    "afterSha256": "1db7fd58db0af2da61e56fe047b377e2ec25a9a77a7e173372ab664049e6849f",
+    "reason": "preserve pre-existing lawful test-owned fixture reference"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🟦️.ts",
+    "beforeSha256": "5e5378dbdf71a5e1c8097bffb01fb3b4ef9a9dfc1550026d340937ae02d9cf66",
+    "afterSha256": "bf60182a04f9671c41033d67f3f0e619c29f60f4facea0e7cda134c04f7a21e1",
+    "reason": "preserve pre-existing lawful test-owned fixture reference"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal/🧪️tests/🟦️.ts",
+    "beforeSha256": "a4c0cefc026a957a7208ed4405519634aea2df5a45fa48abe596fd8b5afb6255",
+    "afterSha256": "ebeedb9dc7632fc24a8852edf3f5faa868f0613675a89c31887c753c7832e08b",
+    "reason": "preserve pre-existing lawful test-owned fixture reference"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🧪️tests/🟦️.ts",
+    "beforeSha256": "629c66bd679af7b7768dfbf94eef0ab60b26ad7ab2d0ba7b78bcd4b291811f22",
+    "afterSha256": "fdd91d1fd4f531ba411a4b4d2b3aff563ac903230f51cb13bffc97c3e0bde402",
+    "reason": "preserve pre-existing lawful test-owned fixture reference"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧪️tests/🟦️.ts",
+    "beforeSha256": "cedaeb499824ba76d5bf148fb5e5bbe7a04a4d9c158a506a77667da4c6c1aecc",
+    "afterSha256": "1bbe1858657fa10e62eccf507ab9be982f9336bda0f9897d53dfa45d214e1ad4",
+    "reason": "preserve pre-existing lawful test-owned fixture reference"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧾️transaction/🎟️admission/🧪️tests/🟦️.ts",
+    "beforeSha256": "ad8c5612c3c86f5625c2c20c76ca5b812cae30ae05ddcc17bd1bc986407311c6",
+    "afterSha256": "5498bd75e9d1e117b4774d522fbccedd0599f313b1398b40727ad8e76d8473b0",
+    "reason": "preserve pre-existing lawful test-owned fixture reference"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/🧪️tests/🟦️.ts",
+    "beforeSha256": "5d42d06b3f4b6336229835f5f7a5a53c3dc5cc7de0593f08ec4880a86f7c591d",
+    "afterSha256": "29aa8b4999dc15ce167be5452aeadaf994bab99c0b894149ee969fd4f9d146ca",
+    "reason": "preserve pre-existing lawful test-owned fixture reference"
+  }
+]

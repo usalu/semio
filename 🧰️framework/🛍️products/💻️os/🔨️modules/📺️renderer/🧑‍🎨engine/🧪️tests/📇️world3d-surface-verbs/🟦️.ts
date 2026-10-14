@@ -22,7 +22,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
-const fixturePath = resolve(suiteRoot, "../../🧱️elements/🌐️World3dHost/🧫️fixtures/📇️surface-verbs.json");
+const fixturePath = resolve(suiteRoot, "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/📇️surface-verbs.json");
 
 type HandleFamily = "translate" | "rotate" | "scale";
 type Case = {

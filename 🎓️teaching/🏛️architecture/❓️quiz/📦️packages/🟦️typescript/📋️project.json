@@ -84,7 +84,10 @@
         }
       },
       "executor": "nx:run-commands",
-      "dependsOn": ["@semio-tech/assets:build", "@semio-tech/ui-styling-tokens:generate"],
+      "dependsOn": [
+        "@semio-tech/assets:build",
+        "@semio-tech/ui-styling-tokens:generate"
+      ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts dev",
@@ -112,7 +115,10 @@
         }
       },
       "executor": "nx:run-commands",
-      "dependsOn": ["@semio-tech/assets:build", "@semio-tech/ui-styling-tokens:generate"],
+      "dependsOn": [
+        "@semio-tech/assets:build",
+        "@semio-tech/ui-styling-tokens:generate"
+      ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts dev-site",
@@ -130,25 +136,40 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "dependsOn": ["@semio-tech/assets:build", "@semio-tech/ui-styling-tokens:generate"],
+      "dependsOn": [
+        "@semio-tech/assets:build",
+        "@semio-tech/ui-styling-tokens:generate"
+      ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
       },
       "cache": true,
-      "inputs": ["default", { "env": "PROCTOR_URL" }],
-      "outputs": ["{projectRoot}/dist"]
+      "inputs": [
+        "default",
+        {
+          "env": "PROCTOR_URL"
+        }
+      ],
+      "outputs": [
+        "{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}"
+      ]
     },
     "publish": {
       "executor": "nx:run-commands",
-      "dependsOn": ["@semio-tech/assets:build", "@semio-tech/ui-styling-tokens:generate"],
+      "dependsOn": [
+        "@semio-tech/assets:build",
+        "@semio-tech/ui-styling-tokens:generate"
+      ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts publish"
       },
       "cache": false,
-      "outputs": ["{projectRoot}/dist/pages"]
+      "outputs": [
+        "{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
@@ -162,7 +183,10 @@
     },
     "test-e2e": {
       "executor": "nx:run-commands",
-      "dependsOn": ["@semio-tech/assets:build", "@semio-tech/ui-styling-tokens:generate"],
+      "dependsOn": [
+        "@semio-tech/assets:build",
+        "@semio-tech/ui-styling-tokens:generate"
+      ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test-e2e",
@@ -217,7 +241,9 @@
     },
     "docker-image-publish": {
       "executor": "nx:run-commands",
-      "dependsOn": ["docker-image-build"],
+      "dependsOn": [
+        "docker-image-build"
+      ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts docker-image-publish",
@@ -242,11 +268,16 @@
         "forwardAllArgs": true
       },
       "cache": false,
-      "outputs": ["{projectRoot}/dist/proctor"]
+      "outputs": [
+        "{projectRoot}/dist/proctor"
+      ]
     },
     "deploy-check": {
       "executor": "nx:run-commands",
-      "dependsOn": ["@semio-tech/assets:build", "@semio-tech/ui-styling-tokens:generate"],
+      "dependsOn": [
+        "@semio-tech/assets:build",
+        "@semio-tech/ui-styling-tokens:generate"
+      ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts deploy-check",

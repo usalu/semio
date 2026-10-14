@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import laws from "../../🧫️fixtures/🔢️wgpu-u64-seam/🔣️.json";
+import laws from "../🧫️fixtures/🔢️wgpu-u64-seam/🔣️.json";
 
 const engineRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const rustText = readFileSync(join(engineRoot, laws.rustSource), "utf8");

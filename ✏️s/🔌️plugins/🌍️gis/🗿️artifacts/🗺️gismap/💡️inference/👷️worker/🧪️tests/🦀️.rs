@@ -182,7 +182,7 @@ fn inference_driver_ignores_an_answer_for_another_job() {
 }
 //#endregion 💡️InferencePortLaws
 
-fn recovery_fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
+fn recovery_fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
 
 fn recovery_value(value: &serde_json::Value) -> DslValue {
     let text=serde_json::to_string(value).unwrap();

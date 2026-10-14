@@ -297,14 +297,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/🔖️set-conformance-attribute-applied/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🔖️set-conformance-attribute-applied/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:a0f9a19b621291fe8751afbe99fa539dffd779576f29f64f2097b0a234815d22",
           "bytes": 28104
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/🔖️set-conformance-attribute-applied/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🔖️set-conformance-attribute-applied/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:3b63eb97ab845946f5f10dc77886b7ba471cde19c83d445c858b699a6a526bec",
           "bytes": 28115
@@ -339,14 +339,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/🏷️remove-conformance-attribute-applied/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🏷️remove-conformance-attribute-applied/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:3b63eb97ab845946f5f10dc77886b7ba471cde19c83d445c858b699a6a526bec",
           "bytes": 28115
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/🏷️remove-conformance-attribute-applied/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🏷️remove-conformance-attribute-applied/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:a0f9a19b621291fe8751afbe99fa539dffd779576f29f64f2097b0a234815d22",
           "bytes": 28104
@@ -381,14 +381,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/🏛️set-main-namespace-applied/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🏛️set-main-namespace-applied/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:a0f9a19b621291fe8751afbe99fa539dffd779576f29f64f2097b0a234815d22",
           "bytes": 28104
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/🏛️set-main-namespace-applied/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🏛️set-main-namespace-applied/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:444cc7a75ba9a6c0ad41030e0e3120722307875e664f371eb54131e015e11cd5",
           "bytes": 28115
@@ -423,14 +423,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/🔗️set-relationship-base-applied/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🔗️set-relationship-base-applied/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:a0f9a19b621291fe8751afbe99fa539dffd779576f29f64f2097b0a234815d22",
           "bytes": 28104
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/🔗️set-relationship-base-applied/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🔗️set-relationship-base-applied/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:efef531489c2cca52b9e30f576fd4578362ee7eaa30c48c54ff40df9d57e378b",
           "bytes": 28114
@@ -465,14 +465,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/🎨️set-drawing-namespace-applied/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🎨️set-drawing-namespace-applied/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:a0f9a19b621291fe8751afbe99fa539dffd779576f29f64f2097b0a234815d22",
           "bytes": 28104
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/🎨️set-drawing-namespace-applied/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🎨️set-drawing-namespace-applied/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:d6834da4eb8509a125964349d4dd4f9e3e13331f9051173d283095d5f3f3b9be",
           "bytes": 28116
@@ -507,14 +507,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/🖼️insert-vml-part-applied/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🖼️insert-vml-part-applied/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:a0f9a19b621291fe8751afbe99fa539dffd779576f29f64f2097b0a234815d22",
           "bytes": 28104
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/🖼️insert-vml-part-applied/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🖼️insert-vml-part-applied/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:2410c960eeb7373f20d454cf2950158a42f8327edeb3df8a4ff302c40b44dbba",
           "bytes": 28395
@@ -549,14 +549,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/🗑️remove-vml-part-applied/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-vml-part-applied/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:2410c960eeb7373f20d454cf2950158a42f8327edeb3df8a4ff302c40b44dbba",
           "bytes": 28395
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/🗑️remove-vml-part-applied/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-vml-part-applied/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:a0f9a19b621291fe8751afbe99fa539dffd779576f29f64f2097b0a234815d22",
           "bytes": 28104
@@ -591,14 +591,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/🔀️insert-alternate-content-applied/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🔀️insert-alternate-content-applied/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:a0f9a19b621291fe8751afbe99fa539dffd779576f29f64f2097b0a234815d22",
           "bytes": 28104
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/🔀️insert-alternate-content-applied/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🔀️insert-alternate-content-applied/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:db9fb9f1a481a8879b1dfb8d7527fa782a7a2055a18dbd898643481c3c76cca4",
           "bytes": 28187
@@ -633,14 +633,14 @@
       "files": [
         {
           "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/🚫️remove-alternate-content-applied/⬅️before.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🚫️remove-alternate-content-applied/⬅️before.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:db9fb9f1a481a8879b1dfb8d7527fa782a7a2055a18dbd898643481c3c76cca4",
           "bytes": 28187
         },
         {
           "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/🚫️remove-alternate-content-applied/➡️after.pptx",
+          "path": "../🧪️tests/🧫️fixtures/🚫️remove-alternate-content-applied/➡️after.pptx",
           "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "sha256": "sha256:a0f9a19b621291fe8751afbe99fa539dffd779576f29f64f2097b0a234815d22",
           "bytes": 28104

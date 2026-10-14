@@ -14,7 +14,7 @@ use crate::viewer_domain::viewer_laws::context::{self, app};
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::PluginApp;
 
-const PREVIEW_CANCEL_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🛑️preview-cancel.json");
+const PREVIEW_CANCEL_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🛑️preview-cancel.json");
 const VIEWER_SURFACE_ID: &str = "viewer";
 const GEOMETRY_EXTENSION_PLUGIN_ID: &str = "flow-extension-brep";
 

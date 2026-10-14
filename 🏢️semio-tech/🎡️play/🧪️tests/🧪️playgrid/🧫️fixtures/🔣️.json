@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "locks": {
+    "terminology": "native",
+    "themeId": "semio"
+  },
+  "languages": [
+    "en",
+    "de"
+  ],
+  "cases": [
+    {
+      "stored": "de",
+      "requested": [
+        "en-US"
+      ],
+      "expected": "de"
+    },
+    {
+      "stored": null,
+      "requested": [
+        "de-DE",
+        "en-GB"
+      ],
+      "expected": "de"
+    },
+    {
+      "stored": "fr",
+      "requested": [
+        "fr-FR",
+        "en-US"
+      ],
+      "expected": "en"
+    },
+    {
+      "stored": null,
+      "requested": [
+        "fr-FR"
+      ],
+      "expected": null
+    },
+    {
+      "stored": null,
+      "requested": [],
+      "expected": null
+    }
+  ]
+}

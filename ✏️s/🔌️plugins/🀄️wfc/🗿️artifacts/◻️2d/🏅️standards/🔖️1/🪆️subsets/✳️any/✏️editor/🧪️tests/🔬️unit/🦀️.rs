@@ -160,7 +160,7 @@ fn the_host_render_path_paints_bitmap_tiles_as_pixels() {
 //#region 🕹️GraphGestures
 /// 🔗️ The shared node-graph record contract (`🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows`), as JSON.
 fn node_graph_rows_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json"))).expect("the node-graph row fixture is JSON")
+    serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json"))).expect("the node-graph row fixture is JSON")
 }
 
 fn graph_edit(rows: serde_json::Value) -> Result<semio_framework_plugin::Emit<crate::Wfc2dMutation, crate::editor::wfc2d::config::Wfc2dConfigMutation>, semio_framework_plugin::Fault> {

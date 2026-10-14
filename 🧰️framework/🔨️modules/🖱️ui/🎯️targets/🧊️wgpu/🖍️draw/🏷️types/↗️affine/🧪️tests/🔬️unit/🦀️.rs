@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn authored_glyph_and_image_corners_retain_their_affine_axes() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/↗️affine/🔣️.json")).unwrap();
     for sample in fixture["cases"].as_array().unwrap() {
         let rect=std::array::from_fn(|index|sample["rect"][index].as_f64().unwrap() as f32);
         let matrix=std::array::from_fn(|index|sample["matrix"][index].as_f64().unwrap() as f32);

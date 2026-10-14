@@ -1,0 +1,17 @@
+{
+  "schema": null,
+  "id": null,
+  "title": null,
+  "layers": {
+    "removed": [
+      {
+        "id": "frame",
+        "index": 1
+      }
+    ],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "assets": null
+}

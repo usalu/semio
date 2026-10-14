@@ -30,7 +30,7 @@ export async function registerRetryableLifecycleDeadlineTests(
 
   describe("RetryableLifecycleTurnDeadline", () => {
     it("classifies every host-fixture case identically in the generated worker and never traps an eligible one", async () => {
-      const { default: fixture } = await import("../../🖥️host/🔁️lifecycle/🧫️fixtures/🔣️.json");
+      const { default: fixture } = await import("../../🖥️host/🔁️lifecycle/🧪️tests/🧫️fixtures/🔣️.json");
       const vm = await import("node:vm");
       const { shardWorkerSource } = await import("../../🌐️browser-bundle/🏗️materialization/🟦️.ts");
       const posted: Record<string, unknown>[] = [];

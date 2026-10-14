@@ -3,7 +3,7 @@ import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv2020 from"ajv/dist/2020.js";
 import{transferWindowRefresh,windowRefreshDemand,type WindowRefreshGrant,type WindowRefreshQueue,type WindowRefreshProgress}from"../🟦️.ts";
-import law from"../🧫️fixtures/🔣️.json";
+import law from"./🧫️fixtures/🔣️.json";
 import schema from"../🧬️schema/🔣️.json";
 test("window refresh retains original address and displaced snapshot across every denied currency",()=>{
  expect(new Ajv2020({strict:true}).compile(schema)(law)).toBe(true);

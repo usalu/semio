@@ -7,7 +7,7 @@ mod app_builder_tests {
     /// 🧭️ Executes neutral owner placements through the actual action disposition join and independent serde projection.
     #[semio_framework_async_macros::async_test]
     async fn shared_framework_action_descriptor_owner_laws_execute_production_join() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../🔨️modules/🧵️job/🧫️fixtures/⚖️shared-framework-action-routes-law.json"))).expect("plain neutral descriptor laws");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/⚖️shared-framework-action-routes-law.json"))).expect("plain neutral descriptor laws");
         let base = App::builder(canonical_test_app_id("shared-actions").await, LocalizedLabel::data("Shared actions")).await.document(["semio", "shared-actions"]).mode("edit", LocalizedLabel::data("Edit"), "pencil").await.window_kind("main", LocalizedLabel::data("Main"), "shared.main", SurfaceKind::Canvas2d, IconName::AppWindow).await.default_layout(create_default_layout(&["main".into()], "row", None, None)).await.build_definition();
         let laws = fixture["descriptorLaws"].as_array().expect("descriptor laws");
         for law in laws {
@@ -446,7 +446,7 @@ mod app_builder_tests {
     #[semio_framework_async_macros::async_test]
     async fn declaring_a_tool_run_injects_the_reserved_actions_and_their_chords_without_stealing_escape() {
         use semio_framework::{JobKindId, ToolDefinition, ToolRef, ToolRunDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunTraceKind, TOOL_RUN_ACTION_IDS};
-        let run = ToolRunDefinition {
+        let run = ToolRunDefinition { receiving: semio_framework_tool_run::ToolRunReceivingLimits::REPORTS,
             mutating: true,
             rebase: ToolRunRebasePolicy::Revalidate,
             reconfigure: ToolRunReconfigurePolicy::Resume,

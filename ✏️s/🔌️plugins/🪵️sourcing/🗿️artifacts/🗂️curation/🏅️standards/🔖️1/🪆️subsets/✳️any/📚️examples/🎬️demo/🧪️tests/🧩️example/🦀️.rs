@@ -9,7 +9,7 @@ async fn primary_asset_is_nonempty() {
 async fn inference_determinism_law() {
     use protocol::Inference;
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
-    let snapshot = <crate::CurationSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
+    let snapshot = <crate::CurationSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
     let inference = crate::standards::v1::subsets::any::schema::inferences::CurationInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::CurationInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
@@ -27,7 +27,7 @@ async fn inference_default_law() {
 async fn entries_census_the_demo_fixtures_stock_catalog() {
     use protocol::Inference;
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
-    let snapshot = <crate::CurationSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
+    let snapshot = <crate::CurationSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
     let inference = crate::standards::v1::subsets::any::schema::inferences::CurationInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inference.entries.stock_count, snapshot.stock_extra.len() as u32);
     assert_eq!(inference.entries.entry_count, snapshot.curated.len() as u32);

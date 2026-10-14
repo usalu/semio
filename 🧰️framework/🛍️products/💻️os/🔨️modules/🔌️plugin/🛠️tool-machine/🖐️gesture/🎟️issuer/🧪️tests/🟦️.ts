@@ -2,7 +2,7 @@ import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🔣️.json";
 import {gestureIssuanceReady} from "../🟦️.ts";
 const oracle=new Ajv().compile(schema);

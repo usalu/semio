@@ -1,0 +1,36 @@
+{
+  "owner": "original mutation",
+  "ownerCapacity": 64,
+  "authority": "original publication authority",
+  "authorityCapacity": 96,
+  "sharedAuthorityRetainsAlias": true,
+  "closeOrders": [
+    "sourceFirst",
+    "projectionFirst"
+  ],
+  "birth": {
+    "items": 1,
+    "depth": 1,
+    "sourceAliasCopies": 1,
+    "releaseBytes": 0,
+    "copyBytes": 0
+  },
+  "refusals": [
+    {
+      "currency": "items",
+      "shortBy": 1,
+      "kind": "WorkLimit"
+    },
+    {
+      "currency": "capacity",
+      "shortBy": 1,
+      "kind": "OwnershipLimit"
+    },
+    {
+      "currency": "depth",
+      "shortBy": 1,
+      "kind": "DepthLimit"
+    }
+  ],
+  "maximumTurns": 256
+}

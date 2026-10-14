@@ -1,0 +1,83 @@
+{
+  "version": 3,
+  "pageBytes": 4096,
+  "stepGrant": {
+    "maximum_items": 8,
+    "maximum_copy_bytes": 4096,
+    "maximum_capacity_bytes": 8192,
+    "maximum_release_bytes": 4096,
+    "maximum_depth": 4
+  },
+  "wordBytes": [
+    4,
+    8
+  ],
+  "copyGrants": [
+    0,
+    1,
+    64,
+    4096
+  ],
+  "denied": [
+    "items",
+    "release",
+    "depth"
+  ],
+  "completedInput": {
+    "wireHex": "040506",
+    "capacityBytes": 64,
+    "retainedAfterCompletion": true,
+    "releasedAfterClose": 64
+  },
+  "shortClose": {
+    "wireHex": "2a00000000000000",
+    "logicalBytes": 8,
+    "minimumPages": 1,
+    "copiedItems": 1,
+    "copiedBytes": 0,
+    "retainedCapacityBytes": 0,
+    "releasedBytes": "actualCapacityTimesPageStride",
+    "terminalReceipt": "Complete"
+  },
+  "cases": [
+    {
+      "id": "empty",
+      "declared": 0,
+      "admitted": 0,
+      "sealed": false
+    },
+    {
+      "id": "reserved-empty",
+      "declared": 16384,
+      "admitted": 0,
+      "sealed": false
+    },
+    {
+      "id": "partial-before-seal",
+      "declared": 16384,
+      "admitted": 8193,
+      "sealed": false
+    },
+    {
+      "id": "sealed-partial-page",
+      "declared": 8193,
+      "admitted": 8193,
+      "sealed": true
+    },
+    {
+      "id": "sealed-full-pages",
+      "declared": 16384,
+      "admitted": 16384,
+      "sealed": true
+    }
+  ],
+  "scopeGrant": {
+    "maximum_items": 64,
+    "maximum_copy_bytes": 65536,
+    "maximum_capacity_bytes": 65536,
+    "maximum_release_bytes": 65536,
+    "maximum_depth": 16
+  },
+  "scopeFuel": 64,
+  "scopeDeadlineUs": 660000000
+}

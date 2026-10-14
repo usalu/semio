@@ -181,7 +181,7 @@ async fn a_fifty_thousand_edit_document_streams_to_a_fresh_replica_within_one_fr
 
 #[semio_framework_async_macros::async_test]
 async fn sync_replay_ignores_neutral_aborted_command_snapshot_and_cas() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧪️tests/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == "aborted-commands-snapshot-cas-have-no-effects").unwrap();
     let document = ArtifactId::from("committed-sync");
     let storage = db_wal::tests::committed_fixture_storage(row, &document).await;

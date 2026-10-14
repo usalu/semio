@@ -1,3 +1,4 @@
+import { rendererOriginalWorkStock } from "../../../🧵️work/🟦️.ts";
 import { admitPluginCatalogV1, type PluginCatalogRowsV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 /** 🪆️ Owns one independently rooted browser renderer and its frame Worker lifetime. */
 export type WgpuBrowserHostOptions = {
@@ -308,6 +309,7 @@ async function createWgpuBrowserHost(root: HTMLElement, options: WgpuBrowserHost
     } | undefined;
     let mediaOverlay: ReturnType<typeof createBrowserMediaOverlay> | undefined;
     const transport = new BrowserFrameTransport({
+        originalWorkStock: rendererOriginalWorkStock(),
         worker,
         boot: { catalog: options.catalog, bindingsModuleUrl: options.rendererModuleUrl ?? RENDERER_MODULE_URL, bindingsWasmUrl: options.rendererWasmUrl ?? RENDERER_WASM_URL, canvas: offscreen, width, height, dpr, plugins, pluginRegistrySelection: options.pluginRegistrySelection, locale: options.locale, introductionSuppressed: introductionSuppressed(options.suppressAutoIntroduction === true), descriptor, appearance: hostAppearance(), platform: hostPlatform(), storage: hostStorage() },
         requestAnimationFrame: (callback) => window.requestAnimationFrame(callback),

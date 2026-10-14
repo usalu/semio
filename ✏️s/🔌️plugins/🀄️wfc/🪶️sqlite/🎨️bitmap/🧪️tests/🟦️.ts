@@ -1,7 +1,7 @@
 /** 🎨️ Closed neutral pixel ownership checked by independent SQLite and binary codecs. */
 import {expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 type Case=typeof fixture.cases[number];
 type Bitmap={width:number;height:number;palette:readonly unknown[];pixels:string};

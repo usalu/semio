@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { Buffer } from "node:buffer";
 
-import fixture from "../../../🧩️composition/📨️emission/🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "../../../🧩️composition/📨️emission/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 
 
 export function testOwnedChildEmissionRefusalOracle(): void {

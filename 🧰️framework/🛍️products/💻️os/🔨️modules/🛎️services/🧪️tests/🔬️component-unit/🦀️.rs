@@ -1,6 +1,6 @@
 use super::*;
 
-fn fixture_compute_grant()->semio_framework_job::RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧮️compute-retained/🔣️.json")).unwrap();serde_json::from_value(law["callerGrant"].clone()).unwrap()}
+fn fixture_compute_grant()->semio_framework_job::RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧮️compute-retained/🔣️.json")).unwrap();serde_json::from_value(law["callerGrant"].clone()).unwrap()}
 
 
 struct OriginalComputeRecipient { original: semio_framework_job::RetainedCloneGrant, progress: semio_framework_job::RetainedCloneProgress }
@@ -14,16 +14,24 @@ impl ComputeRetainedRecipient for OriginalComputeRecipient {
  }
 }
 
+
+fn close_original_compute<J:InteractiveJob+'static>(completion:&mut ComputeJobCompletion<J>,ctx:&OperationContext,deadline:u64,sequence:&mut u64,authority:&semio_framework_job::JobPayloadAuthority,receipt:&mut OriginalComputeRecipient)->semio_framework_job::WorkerJobCloseStep{
+    let grant=receipt.remaining_grant().unwrap();let mut progress=Default::default();
+    let mut cx=semio_framework_job::StepContext::with_payload_authority(semio_framework_job::OperationId(ctx.trace.0),semio_framework_job::Generation(u64::from(ctx.generation)),semio_framework_job::StepBudget::new(1,deadline,grant),&ctx.cancel,semio_framework_job::default_now_us,sequence,&mut progress,authority).unwrap();
+    let step=completion.close_step(&mut cx).unwrap();assert_eq!(step.progress(),cx.retained_progress());drop(cx);receipt.record_progress(progress).unwrap();step
+}
+
 async fn receive_original_compute_job<J:InteractiveJob+'static>(pool:&ComputePool,runtime:&TokioHostRuntime,scope:&ScopeHandle,ctx:&OperationContext,original:J)->Result<(),ComputeError>{
     use semio_framework_job::{BatchJobParams,Generation,OperationId,RetainedCloneProgress,StepBudget,WorkerJobAdmissionContext};
     let grant=fixture_compute_grant();let mut receipt=OriginalComputeRecipient{original:grant,progress:RetainedCloneProgress::default()};let mut admission=RetainedCloneProgress::default();let mut job=Some(original);let mut params:Option<BatchJobParams>=None;
+    let mut close_sequence=0;let mut close_authority=semio_framework_job::JobPayloadAuthority::admit(OperationId(ctx.trace.0),Generation(u64::from(ctx.generation)),grant).unwrap().unwrap().0;
     let deadline=ctx.deadline_ms.map_or(u64::MAX,|deadline|deadline.saturating_sub(runtime.pool.now_ms()).saturating_mul(1000).saturating_add(semio_framework_job::default_now_us().unwrap()));
     let mut control=WorkerJobAdmissionContext::new(OperationId(ctx.trace.0),Generation(u64::from(ctx.generation)),StepBudget::new(1,deadline,grant),semio_framework_job::default_now_us,&mut admission).unwrap();
     assert!(ComputePool::prepare_job_params(ctx,grant,semio_framework_job::default_now_us,&mut params,&mut control,&mut receipt).unwrap());
     let mut completion=None;assert!(pool.run_job(runtime,scope,ctx,grant,&mut job,&mut params,&mut control,&mut receipt,&mut completion,|outcome|assert!(outcome.is_terminal())).await.unwrap(),"original supplied fixture authority admits unchanged source");let completion=completion.as_mut().unwrap();
     drop(control);assert!(job.is_none()&&params.is_none());assert!(admission.retained_capacity_bytes>0);let result=completion.result().clone();
-    while !completion.terminal_is_empty(){let step=completion.close_step(&ctx.cancel,receipt.remaining_grant().unwrap()).unwrap();assert!(step.progress().fits(grant));receipt.record_progress(step.progress()).unwrap();if step.progress()==Default::default(){sleep_ms(runtime,1).await;}}
-    assert!(receipt.progress.released_bytes>=admission.retained_capacity_bytes);drop(completion);result
+    while !completion.terminal_is_empty(){let step=close_original_compute(completion,ctx,deadline,&mut close_sequence,&close_authority,&mut receipt);assert!(step.progress().fits(grant));if step.progress()==Default::default(){sleep_ms(runtime,1).await;}}
+    assert!(receipt.progress.released_bytes>=admission.retained_capacity_bytes);drop(completion);assert!(close_authority.close_step(grant).unwrap().progress().fits(grant));assert!(close_authority.terminal_is_empty());result
 }
 use semio_framework_async::TraceId;
 use std::pin::Pin;
@@ -180,16 +188,16 @@ struct CountingComputeJob {
 }
 
 impl InteractiveJob for CountingComputeJob {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if cx.is_cancelled() {
             if self.entered {
                 self.current.as_ref().expect("compute current counter").fetch_sub(1, Ordering::SeqCst);
                 self.entered = false;
             }
-            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into);
         }
         if cx.should_yield() {
-            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
+            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into);
         }
         if !self.entered {
             let now = self.current.as_ref().expect("compute current counter").fetch_add(1, Ordering::SeqCst) + 1;
@@ -199,11 +207,11 @@ impl InteractiveJob for CountingComputeJob {
         cx.consume_fuel(1);
         if self.remaining_steps > 0 {
             self.remaining_steps -= 1;
-            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
+            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into);
         }
         self.current.as_ref().expect("compute current counter").fetch_sub(1, Ordering::SeqCst);
         self.entered = false;
-        semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None)
+        semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None).map_err(Into::into)
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -227,24 +235,18 @@ impl InteractiveJob for CountingComputeJob {
     }
     fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(if self.terminal_is_empty() { 0 } else { 1 }) }
 
-    fn close_step(&mut self, grant: semio_framework_job::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Refused{kind:semio_framework_value::ValueRefusalKind::WorkLimit,progress:Default::default()};
-        }
-        self.begin_close();
-        if self.entered {
-            self.current.as_ref().expect("compute current counter").fetch_sub(1, Ordering::SeqCst);
-            self.entered = false;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_job::RetainedCloneProgress { copied_items: 1, ..Default::default() } };
-        }
-        let release = self.next_close_release_byte_demand().unwrap();
-        if grant.maximum_release_bytes < release { return semio_framework_job::InteractiveJobCloseStep::Refused{kind:semio_framework_value::ValueRefusalKind::WorkLimit,progress:Default::default()} }
-        if self.current.is_some() { drop(self.current.take()); }
-        else if self.observed_max.is_some() { drop(self.observed_max.take()); }
-        else { return semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }; }
-        semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_job::RetainedCloneProgress { copied_items: 1, released_bytes: release, ..Default::default() } }
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        let demand=semio_framework_value::RetirementDemand{release_bytes:self.next_close_release_byte_demand()?,depth:usize::from(!self.terminal_is_empty()),..Default::default()};
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|_|{
+            self.begin_close();
+            if self.entered{self.current.as_ref().unwrap().fetch_sub(1,Ordering::SeqCst);self.entered=false;}
+            else if self.current.is_some(){drop(self.current.take());}
+            else if self.observed_max.is_some(){drop(self.observed_max.take());}
+            else{return Ok(semio_framework_job::RetainedCloneStep::Complete(Default::default()))}
+            Ok(semio_framework_job::RetainedCloneStep::Progress(semio_framework_job::RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))
+        })?;
+        Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
-
     fn terminal_is_empty(&self) -> bool {
         self.closing && !self.entered && self.current.is_none() && self.observed_max.is_none()
     }
@@ -255,12 +257,12 @@ struct NeverCompleteComputeJob {
 }
 
 impl InteractiveJob for NeverCompleteComputeJob {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if cx.is_cancelled() {
-            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into);
         }
         cx.consume_fuel(1);
-        semio_framework_job::JobOutcomeBorrow::admit_yield(cx)
+        semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -279,8 +281,10 @@ impl InteractiveJob for NeverCompleteComputeJob {
     fn next_close_capacity_byte_demand(&self, _body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
     fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
-    fn close_step(&mut self, _grant: semio_framework_job::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
+        let step=semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{depth:1,..Default::default()},|_|{self.begin_close();Ok(semio_framework_job::RetainedCloneStep::Complete(semio_framework_job::RetainedCloneProgress{copied_items:1,..Default::default()}))})?;
+        Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -358,11 +362,12 @@ async fn compute_original_admission_refusal_retains_source_addresses_without_nat
 async fn cancelled_compute_driver_preserves_the_original_caller_completion_slot(){
     use semio_framework_job::{Generation,OperationId,RetainedCloneProgress,StepBudget,WorkerJobAdmissionContext};
     let runtime=TokioHostRuntime::with_pool(test_pool(1));let pool=ComputePool::with_pool(1,test_pool(1));let scope=runtime.open_scope(ScopeOwner::Service("compute-original-driver"),None).await;let ctx=test_ctx(81300,scope.cancel.clone()).await;let grant=fixture_compute_grant();let mut job=Some(NeverCompleteComputeJob{closing:false});let mut params=None;let mut admission=RetainedCloneProgress::default();let mut receipt=OriginalComputeRecipient{original:grant,progress:RetainedCloneProgress::default()};let mut completion=None;
+    let mut close_sequence=0;let mut close_authority=semio_framework_job::JobPayloadAuthority::admit(OperationId(ctx.trace.0),Generation(u64::from(ctx.generation)),grant).unwrap().unwrap().0;
     let mut control=WorkerJobAdmissionContext::new(OperationId(ctx.trace.0),Generation(u64::from(ctx.generation)),StepBudget::new(1,u64::MAX,grant),semio_framework_job::default_now_us,&mut admission).unwrap();assert!(ComputePool::prepare_job_params(&ctx,grant,semio_framework_job::default_now_us,&mut params,&mut control,&mut receipt).unwrap());
     {let mut driver=std::pin::pin!(pool.run_job(&runtime,&scope,&ctx,grant,&mut job,&mut params,&mut control,&mut receipt,&mut completion,|_|panic!("nonterminal original job cannot publish completion")));assert!(matches!(driver.as_mut().poll(&mut Context::from_waker(std::task::Waker::noop())),Poll::Pending));}
     drop(control);assert!(job.is_none()&&params.is_none());assert!(completion.is_some());let original=completion.as_ref().unwrap()as*const _;ctx.cancel.cancel().await;
-    while !completion.as_ref().unwrap().terminal_is_empty(){assert_eq!(completion.as_ref().unwrap()as*const _,original);let step=completion.as_mut().unwrap().close_step(&ctx.cancel,receipt.remaining_grant().unwrap()).unwrap();assert!(step.progress().fits(grant));receipt.record_progress(step.progress()).unwrap();if step.progress()==Default::default(){sleep_ms(&runtime,1).await;}}
-    assert!(receipt.progress.released_bytes>=admission.retained_capacity_bytes);drop(completion);
+    while !completion.as_ref().unwrap().terminal_is_empty(){assert_eq!(completion.as_ref().unwrap()as*const _,original);let step=close_original_compute(completion.as_mut().unwrap(),&ctx,u64::MAX,&mut close_sequence,&close_authority,&mut receipt);assert!(step.progress().fits(grant));if step.progress()==Default::default(){sleep_ms(&runtime,1).await;}}
+    assert!(receipt.progress.released_bytes>=admission.retained_capacity_bytes);drop(completion);assert!(close_authority.close_step(grant).unwrap().progress().fits(grant));assert!(close_authority.terminal_is_empty());
 }
 
 /// 🌀️ A self-contained cooperative yield with no tokio `rt`-feature dependency (this crate no
@@ -1304,7 +1309,7 @@ async fn http_pool_dropping_a_body_mid_stream_frees_the_outstanding_slot_and_dro
 /// 🪢 An abandoned pending body read retains its actor credit until the physical reader terminates.
 #[semio_framework_async_macros::async_test]
 async fn http_pool_abandoned_pending_body_read_retires_its_actor_credit_after_reader_terminal() {
-    let contract: serde_json::Value = serde_json::from_str(include_str!("../../../📺️renderer/🧑‍🎨engine/🧫️fixtures/📄️native-asset-response/🔣️.json")).expect("native asset response contract");
+    let contract: serde_json::Value = serde_json::from_str(include_str!("../../../📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/📄️native-asset-response/🔣️.json")).expect("native asset response contract");
     let expected = &contract["transportCancellation"]["abandonedBodyRead"];
     let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind abandoned body listener");
     let addr = listener.local_addr().expect("abandoned body listener address");

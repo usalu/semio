@@ -93,13 +93,17 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for BoundedFirstStepCommandWork<A> {
         step_demands::<A>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("puzzle-command-bounded-work-repeated"));
         }
         let emit = (self.reducer)(input.command, input.snapshot, input.config, input.interaction, input.hover, input.context.and_then(|context| context.view_state.as_ref()))?;
         self.consumed = true;
         Ok(ArtifactCommandWorkStep::Complete(emit))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
@@ -132,12 +136,16 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for NoopPuzzleCommandWork<A> {
         step_demands::<A>(size_of::<Self>())
     }
 
-    fn step(&mut self, _input: &ArtifactCommandInputs<'_, A>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, Fault> {
+    fn step(&mut self, _input: &ArtifactCommandInputs<'_, A>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("puzzle-command-noop-repeated"));
         }
         self.consumed = true;
         Ok(ArtifactCommandWorkStep::Complete(Emit::default()))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {

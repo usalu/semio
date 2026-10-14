@@ -4,7 +4,7 @@ import { join, resolve } from "node:path";
 import { createRequire } from "node:module";
 
 test("Vitest execution requires owner tool/cache policy and preserves exact budgets", async () => {
-  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧫️fixtures/🔣️.json"),"utf8")), schema=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧬️schema/🔣️.json"),"utf8")), validate=new (createRequire(import.meta.url)("ajv").default)({strict:true}).compile(schema),api=await import("../🟦️.ts");
+  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8")), schema=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧬️schema/🔣️.json"),"utf8")), validate=new (createRequire(import.meta.url)("ajv").default)({strict:true}).compile(schema),api=await import("../🟦️.ts");
   expect(validate(fixture.policy)).toBe(true);
   for(const key of ["cwd","toolPath","cacheRoot","coverageDirectory"])fixture.policy[key]=resolve(fixture.policy[key]);
   fixture.expected[0]=fixture.policy.toolPath;fixture.expected[3]=resolve(fixture.expected[3]);fixture.coverage[3]=`--coverage.reportsDirectory=${fixture.policy.coverageDirectory}`;

@@ -35,7 +35,7 @@ struct CommandIngressPagesRefusal {
 }
 
 fn command_ingress_pages_fixture() -> CommandIngressPagesFixture {
-    serde_json::from_str(include_str!("../../🧫️fixtures/📄️pages/🔣️.json")).expect("📥️command-ingress-pages fixture parses")
+    serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/📄️pages/🔣️.json")).expect("📥️command-ingress-pages fixture parses")
 }
 
 /// 🧱️ A deterministic command body — every byte a function of its offset, so a reassembly that

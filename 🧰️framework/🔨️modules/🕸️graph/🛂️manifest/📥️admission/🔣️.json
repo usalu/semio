@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "excludedDirectoryNames": [
+    "node_modules"
+  ]
+}

@@ -19,8 +19,8 @@ const read = (...path: string[]) => JSON.parse(readFileSync(join(trace, ...path)
 
 describe("structured trace record schema", () => {
   const schema = read("📝️record", "🧬️schema", "🔣️.json");
-  const vectors = read("📝️record", "🧫️fixtures", "🔣️.json") as { valid: Array<{ record: unknown; line: string }>; invalid: string[] };
-  const vocabulary = read("🧫️fixtures", "🛰️span-vocabulary", "🔣️.json") as { events: string[]; outcomes: Array<{ name: string }> };
+  const vectors = read("📝️record", "🧪️tests/🧫️fixtures", "🔣️.json") as { valid: Array<{ record: unknown; line: string }>; invalid: string[] };
+  const vocabulary = read("🧪️tests/🧫️fixtures", "🛰️span-vocabulary", "🔣️.json") as { events: string[]; outcomes: Array<{ name: string }> };
   const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
 
   it("admits every rendered vector and reads it back as its record", () => {

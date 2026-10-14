@@ -1,0 +1,39 @@
+{
+  "mutation": "replaceSiteContext",
+  "siteContext": {
+    "id": "site-context-a",
+    "name": "Site Context A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "siteName": "Replaced Site Context A",
+    "address": null,
+    "latitude": null,
+    "longitude": null,
+    "elevationM": null,
+    "climateZone": null,
+    "seismicZone": null,
+    "floodRisk": null,
+    "soilConditions": [],
+    "utilitiesAvailable": [],
+    "accessRoads": [],
+    "publicTransit": [],
+    "neighbors": [],
+    "views": [],
+    "noiseSources": [],
+    "environmentalConstraints": [],
+    "heritageConstraints": [],
+    "zoning": null,
+    "maxHeightM": null,
+    "maxCoverage": null
+  }
+}

@@ -2,12 +2,10 @@
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { Database } from "bun:sqlite";
-import Ajv2020 from "ajv/dist/2020";
 test("native UTF8 append quotes original scalar page and publication work", () => {
   const root = new URL("../", import.meta.url);
   const read = (path: string) => JSON.parse(readFileSync(new URL(path, root), "utf8"));
-  const fixture = read("🧫️fixtures/🔣️.json");
-  expect(new Ajv2020({ strict: true }).compile(read("🧬️schema/🔣️.json"))(fixture)).toBe(true);
+  const fixture = read("🧪️tests/🧫️fixtures/🔣️.json");
   const db = new Database(":memory:");
   db.exec("CREATE TABLE chunks(text TEXT,bytes INTEGER)");
   for (const text of fixture.texts) {

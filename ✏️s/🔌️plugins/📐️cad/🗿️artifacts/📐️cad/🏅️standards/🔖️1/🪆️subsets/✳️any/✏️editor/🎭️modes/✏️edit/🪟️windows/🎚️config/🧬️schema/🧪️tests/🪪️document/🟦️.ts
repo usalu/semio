@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import Ajv from "ajv";
 import { applyPatch, type Operation } from "fast-json-patch";
 import schema from "../../🔣️.json" with { type: "json" };
-import fixture from "../../🧫️fixtures/🪪️document/🔣️.json" with { type: "json" };
+import fixture from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json" with { type: "json" };
 import { parseCadWorldWindowConfig } from "../../🟦️.ts";
 
 export function testCadWorldWindowConfigContract(): void {

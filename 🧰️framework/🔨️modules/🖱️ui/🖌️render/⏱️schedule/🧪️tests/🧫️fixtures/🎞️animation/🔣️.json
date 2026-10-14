@@ -1,0 +1,189 @@
+{
+  "periodUs": 3200000,
+  "shaderPeriodsUs": [
+    1600000,
+    3200000
+  ],
+  "samples": [
+    {
+      "id": "clock-unavailable",
+      "nowUs": null,
+      "phaseUs": 0
+    },
+    {
+      "id": "start",
+      "nowUs": 0,
+      "phaseUs": 0
+    },
+    {
+      "id": "one-frame",
+      "nowUs": 16000,
+      "phaseUs": 16000
+    },
+    {
+      "id": "loading-period",
+      "nowUs": 1600000,
+      "phaseUs": 1600000
+    },
+    {
+      "id": "last-microsecond",
+      "nowUs": 3199999,
+      "phaseUs": 3199999
+    },
+    {
+      "id": "common-period",
+      "nowUs": 3200000,
+      "phaseUs": 0
+    },
+    {
+      "id": "next-frame-after-wrap",
+      "nowUs": 3216000,
+      "phaseUs": 16000
+    },
+    {
+      "id": "one-year",
+      "nowUs": 31536000123456,
+      "phaseUs": 123456
+    },
+    {
+      "id": "long-clock",
+      "nowUs": 1790000000000000,
+      "phaseUs": 0
+    },
+    {
+      "id": "long-clock-next-frame",
+      "nowUs": 1790000000016000,
+      "phaseUs": 16000
+    }
+  ],
+  "primitives": [
+    {
+      "id": "static",
+      "draw": [
+        0,
+        8
+      ],
+      "overlay": [],
+      "active": false
+    },
+    {
+      "id": "loading",
+      "draw": [
+        6
+      ],
+      "overlay": [],
+      "active": true
+    },
+    {
+      "id": "waiting",
+      "draw": [
+        7
+      ],
+      "overlay": [],
+      "active": true
+    },
+    {
+      "id": "introducing",
+      "draw": [
+        9
+      ],
+      "overlay": [],
+      "active": true
+    },
+    {
+      "id": "overlay-introduction",
+      "draw": [
+        0
+      ],
+      "overlay": [
+        9
+      ],
+      "active": true
+    },
+    {
+      "id": "finished-overlay",
+      "draw": [
+        0
+      ],
+      "overlay": [
+        8
+      ],
+      "active": false
+    }
+  ],
+  "activity": [
+    {
+      "kind": "tick",
+      "atMs": 0,
+      "nextMs": null,
+      "wake": false
+    },
+    {
+      "kind": "present",
+      "active": true,
+      "atMs": 0,
+      "nextMs": 16.666666666666668,
+      "wake": false
+    },
+    {
+      "kind": "tick",
+      "atMs": 8,
+      "nextMs": 16.666666666666668,
+      "wake": false
+    },
+    {
+      "kind": "discard",
+      "active": false,
+      "atMs": 10,
+      "nextMs": 16.666666666666668,
+      "wake": false
+    },
+    {
+      "kind": "tick",
+      "atMs": 17,
+      "nextMs": 33.66666666666667,
+      "wake": true
+    },
+    {
+      "kind": "discard",
+      "active": false,
+      "atMs": 20,
+      "nextMs": 33.66666666666667,
+      "wake": false
+    },
+    {
+      "kind": "present",
+      "active": true,
+      "atMs": 25,
+      "nextMs": 33.66666666666667,
+      "wake": false
+    },
+    {
+      "kind": "present",
+      "active": false,
+      "atMs": 30,
+      "nextMs": null,
+      "wake": false
+    },
+    {
+      "kind": "discard",
+      "active": true,
+      "atMs": 40,
+      "nextMs": null,
+      "wake": false
+    },
+    {
+      "kind": "present",
+      "active": true,
+      "atMs": 50,
+      "nextMs": 66.66666666666667,
+      "wake": false
+    },
+    {
+      "kind": "tick",
+      "atMs": 1000,
+      "nextMs": 1016.6666666666666,
+      "wake": true
+    }
+  ]
+}

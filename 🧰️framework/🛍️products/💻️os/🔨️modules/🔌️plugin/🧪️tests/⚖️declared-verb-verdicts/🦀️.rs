@@ -7,7 +7,7 @@ mod declared_verb_verdict_tests {
     #[test]
     fn declared_bridge_required_arguments_match_neutral_schemas() {
         use semio_framework::{ActionArgDef, ActionArgOption, DslValue};
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎮️declared-bridge-arguments.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎮️declared-bridge-arguments.json")).unwrap();
         let policies: serde_json::Value = serde_json::from_str(include_str!("../../🧪️testing/⚖️declared-verb-verdicts/🧬️schema/🔣️.json")).unwrap();
         for case in fixture["cases"].as_array().unwrap() {
             let args = case["args"].as_array().unwrap().iter().map(|argument| {
@@ -38,10 +38,10 @@ mod declared_verb_verdict_tests {
     fn outcome(value: &serde_json::Value) -> DeclaredVerbOutcome {
         let text = |value: &serde_json::Value, key: &str| value[key].as_str().expect("fixture outcome text").to_string();
         if let Some(refusal) = value.get("unreachable") {
-            return DeclaredVerbOutcome::Unreachable { code: text(refusal, "code"), detail: text(refusal, "detail") };
+            return DeclaredVerbOutcome::Unreachable { code: text(refusal, "code"), detail: text(refusal, "detail"),failure:None };
         }
         if let Some(refusal) = value.get("refused") {
-            return DeclaredVerbOutcome::Refused { code: text(refusal, "code"), detail: text(refusal, "detail") };
+            return DeclaredVerbOutcome::Refused { code: text(refusal, "code"), detail: text(refusal, "detail"),failure:None };
         }
         let settled = &value["settled"];
         let flag = |key: &str| settled[key].as_bool().expect("fixture outcome flag");
@@ -116,7 +116,7 @@ mod declared_verb_verdict_tests {
     /// ⚖️ The Rust verdict answers every case of the language-agnostic fixture exactly as written.
     #[test]
     fn declared_verb_verdicts_match_the_language_agnostic_fixture() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⚖️declared-verb-verdicts.json")).expect("declared-verb verdict fixture parses");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⚖️declared-verb-verdicts.json")).expect("declared-verb verdict fixture parses");
         let cases = fixture["cases"].as_array().expect("fixture cases");
         assert!(cases.len() >= 31, "the fixture keeps every rule's positive and negative case");
         for case in cases {

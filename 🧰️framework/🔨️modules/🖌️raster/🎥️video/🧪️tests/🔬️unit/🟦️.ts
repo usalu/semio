@@ -40,7 +40,7 @@ interface VideoFixture {
 }
 
 function loadFixture(): VideoFixture {
-  return JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🔣️.json"), "utf8")) as VideoFixture;
+  return JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/🔣️.json"), "utf8")) as VideoFixture;
 }
 
 function picture(testCase: VideoCase, run: VideoCase["runs"][number]): Uint8Array {

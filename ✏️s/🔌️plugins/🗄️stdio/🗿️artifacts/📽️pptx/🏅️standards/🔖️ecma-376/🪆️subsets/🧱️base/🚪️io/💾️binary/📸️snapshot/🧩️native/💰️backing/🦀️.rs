@@ -1,7 +1,7 @@
 //! 💰️ PPTX complete literal native fields settle one persistent backing stage.
 use super::*;
 use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
-use semio_framework_os_kernel::os_store::serialization::ArtifactSqliteSnapshot;
+use semio_framework_os_kernel::os_store::serialization::ArtifactSqliteSnapshotHost;
 use semio_framework_value::{DecodedValue, NativeDecodeControl, NativeEncodeControl, ValueError, ValueRefusalKind};
 fn retire(value: PptxSnapshot) {
     value.retire_sqlite_snapshot();

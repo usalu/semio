@@ -30,7 +30,7 @@ impl Deserializer<DagSnapshot> for JsonIntoDag {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "JsonIntoDag: expected a binary json payload".to_string())));
         };
-        let json = <JsonSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("JsonIntoDag: json decode failed: {error}"))))?;
+        let json = <JsonSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("JsonIntoDag: json decode failed: {error}"))))?;
         let snapshot = deserialize(&json).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("JsonIntoDag: {error}"))))?;
         Ok(IoOutcome::clean(snapshot))
     }

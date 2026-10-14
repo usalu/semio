@@ -14,5 +14,8 @@
     "test-directory-checkpoint-pair-native": "bun nx run @semio-tech/framework-os-kernel:test-directory-checkpoint-pair-native",
     "test-directory-descriptor-digest-source": "bun nx run @semio-tech/framework-os-kernel:test-directory-descriptor-digest-source",
     "test-directory-descriptor-digest-native": "bun nx run @semio-tech/framework-os-kernel:test-directory-descriptor-digest-native"
+  },
+  "devDependencies": {
+    "@semio-tech/process": "workspace:*"
   }
 }

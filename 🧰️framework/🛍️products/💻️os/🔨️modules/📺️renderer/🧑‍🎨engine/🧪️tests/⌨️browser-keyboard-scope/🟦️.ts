@@ -8,7 +8,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { wireBrowserKeyboard, wireBrowserFullscreen, type BrowserKeyboardEvent } from "../../🎯️targets/🧊️wgpu/🎮️input-wire/🟦️.ts";
 import { createAccessibilityMirror, WGPU_ACCESSIBILITY_MIRROR_ID } from "../../🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts";
-import fixture from "../../🧫️fixtures/⌨️browser-keyboard-scope/🔣️.json";
+import fixture from "../🧫️fixtures/⌨️browser-keyboard-scope/🔣️.json";
 
 const cleanups: (() => void)[] = [];
 Object.defineProperty(document, "fullscreenElement", { configurable: true, get: () => null });

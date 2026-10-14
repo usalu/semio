@@ -1,9 +1,10 @@
 //! 🧪️ Independent byte-index edits and full raw-word owner equality share the closed corpus.
 #[path = "../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
 mod original_owners;
-use semio_framework_os_kernel::{os_store::serialization::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::*};
+use pack::snapshot::ArtifactSqliteSnapshot as _;
+use semio_framework_os_kernel::{pack::snapshot::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::*};
 use std::{io::Write,process::{Command,Stdio}};
-pub fn verify<S:ArtifactPack+ArtifactSqliteSnapshot>(source:&S,edited:Option<&S>,prefix:&str,case:&serde_json::Value){
+pub fn verify<S:ArtifactPack+ArtifactSqliteSnapshotHost>(source:&S,edited:Option<&S>,prefix:&str,case:&serde_json::Value){
  let expected=source.encode_pack();
  let database=original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|source.to_sqlite_database(sqlite_control)).unwrap();
  let restored=original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|S::from_sqlite_database(&database, sqlite_control)).unwrap();

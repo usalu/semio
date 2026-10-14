@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/kernel/descriptor-text-policy/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "maximumBytes", "maximumCodeUnits"],
+  "properties": {
+    "version": { "const": 1 },
+    "maximumBytes": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "maximumCodeUnits": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
+  },
+  "$defs": {
+    "PluginDescriptorTextPolicy": {
+      "const": { "version": 1, "maximumBytes": 67108864, "maximumCodeUnits": 16777216 }
+    }
+  }
+}

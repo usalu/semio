@@ -188,14 +188,14 @@
       "files": [
         {
           "role": "expected-before-ifc",
-          "path": "../🧫️fixtures/🧮️set-analysis-model-applied/⬅️before.ifc",
+          "path": "../🧪️tests/🧫️fixtures/🧮️set-analysis-model-applied/⬅️before.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:b1efd56bbddb4dfc8356743c1f6c5e26b31a299755a323cd9b07df1a4c42d322",
           "bytes": 188636
         },
         {
           "role": "expected-after-ifc",
-          "path": "../🧫️fixtures/🧮️set-analysis-model-applied/➡️after.ifc",
+          "path": "../🧪️tests/🧫️fixtures/🧮️set-analysis-model-applied/➡️after.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:e358c8ec8bbda4415c04fd36abd63e4d45dbc0df2f59c5f9cd53d1bd905d9694",
           "bytes": 188631
@@ -238,14 +238,14 @@
       "files": [
         {
           "role": "expected-before-ifc",
-          "path": "../🧫️fixtures/👥️set-group-assignment-applied/⬅️before.ifc",
+          "path": "../🧪️tests/🧫️fixtures/👥️set-group-assignment-applied/⬅️before.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:b1efd56bbddb4dfc8356743c1f6c5e26b31a299755a323cd9b07df1a4c42d322",
           "bytes": 188636
         },
         {
           "role": "expected-after-ifc",
-          "path": "../🧫️fixtures/👥️set-group-assignment-applied/➡️after.ifc",
+          "path": "../🧪️tests/🧫️fixtures/👥️set-group-assignment-applied/➡️after.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:fbf7aa48da7f4cf2f92e60485187e84998510bd9281ef7a5c7d491d4b917253d",
           "bytes": 188661
@@ -288,14 +288,14 @@
       "files": [
         {
           "role": "expected-before-ifc",
-          "path": "../🧫️fixtures/🏋️set-load-group-applied/⬅️before.ifc",
+          "path": "../🧪️tests/🧫️fixtures/🏋️set-load-group-applied/⬅️before.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:b1efd56bbddb4dfc8356743c1f6c5e26b31a299755a323cd9b07df1a4c42d322",
           "bytes": 188636
         },
         {
           "role": "expected-after-ifc",
-          "path": "../🧫️fixtures/🏋️set-load-group-applied/➡️after.ifc",
+          "path": "../🧪️tests/🧫️fixtures/🏋️set-load-group-applied/➡️after.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:8ba7e11527970997f428638751df3466ef46c183cc5d941a6dd545e46e36fdcd",
           "bytes": 188643
@@ -338,14 +338,14 @@
       "files": [
         {
           "role": "expected-before-ifc",
-          "path": "../🧫️fixtures/👁️set-view-definition-applied/⬅️before.ifc",
+          "path": "../🧪️tests/🧫️fixtures/👁️set-view-definition-applied/⬅️before.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:b1efd56bbddb4dfc8356743c1f6c5e26b31a299755a323cd9b07df1a4c42d322",
           "bytes": 188636
         },
         {
           "role": "expected-after-ifc",
-          "path": "../🧫️fixtures/👁️set-view-definition-applied/➡️after.ifc",
+          "path": "../🧪️tests/🧫️fixtures/👁️set-view-definition-applied/➡️after.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:b1efd56bbddb4dfc8356743c1f6c5e26b31a299755a323cd9b07df1a4c42d322",
           "bytes": 188636

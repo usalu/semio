@@ -1,11 +1,11 @@
 /** 🧪️ Shared Drawing node frames agree with independent JSON schema and exact typed capture. */
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
-import shapes from "../🧫️fixtures/🧬️shape.json";
+import fixture from "../../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧩️component/🌳️nodes/🧾️original/🔣️.json";
+import shapes from "../../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧩️component/🌳️nodes/🧾️original/🧬️shape.json";
 import schema from "../../../../🔣️.json";
 import {parseDrawNode,parseDrawStyle,parseDrawCanvas,parseDrawLayer,parseSemioDrawingSnapshot} from "../../../../🟦️.ts";
-import defaults from "../🧫️fixtures/🌱️defaults.json";
+import defaults from "../../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧩️component/🌳️nodes/🧾️original/🌱️defaults.json";
 import {binary64,binary64Value} from "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import {existsSync,readFileSync} from "node:fs";
 import {join} from "node:path";

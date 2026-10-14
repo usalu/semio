@@ -16,12 +16,12 @@ pub const ISO16757_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️as
 
 /// 📖️ Parses `.iso16757` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Iso16757Snapshot, semio_framework_diagnostic::TextError> {
-    <Iso16757Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <Iso16757Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.iso16757` DSL text.
 pub fn print_dsl(document: &Iso16757Snapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(document)
+    pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
 #[cfg(test)]
@@ -64,7 +64,7 @@ pub fn decode_iso16757_snapshot_json(text: &str) -> Result<Iso16757Snapshot, Str
 /// async runtime to drive one.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_iso16757_dsl(text: &str) -> Result<Iso16757Snapshot, String> {
-    <Iso16757Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+    <Iso16757Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
 
 /// 🖨️ Prints a [`Iso16757Snapshot`] back to its canonical `.dsl.semio` body. Canonical is the operative
@@ -72,7 +72,7 @@ pub fn decode_iso16757_dsl(text: &str) -> Result<Iso16757Snapshot, String> {
 /// scenario asserts byte-exactness rather than the no-byte-pass-through inequality.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_iso16757_dsl(snapshot: &Iso16757Snapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
+    pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

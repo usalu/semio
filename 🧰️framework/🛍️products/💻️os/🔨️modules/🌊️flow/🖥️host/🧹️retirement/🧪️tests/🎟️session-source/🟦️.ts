@@ -1,6 +1,6 @@
 import {expect,test} from "bun:test";
 import {applyPatch} from "fast-json-patch";
-import fixture from "../../🧫️fixtures/🎟️session-source/🔣️.json";
+import fixture from "../🧫️fixtures/🎟️session-source/🔣️.json";
 
 test("original session custody examples preserve owners and independent UTF8 bytes",()=>{
  const retained=applyPatch([...fixture.retention.handles],fixture.retention.handles.flatMap((handle,index)=>fixture.retention.roster.includes(handle)?[]:[{op:"remove" as const,path:`/${index}`}]).reverse(),true).newDocument;

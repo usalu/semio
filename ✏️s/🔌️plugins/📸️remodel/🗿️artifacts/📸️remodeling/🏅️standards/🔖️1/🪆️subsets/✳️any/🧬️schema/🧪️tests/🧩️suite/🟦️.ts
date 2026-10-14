@@ -29,7 +29,7 @@ import { remodelingSnapshotFromDslText } from "../../../🚪️io/📥️import/
 const here = dirname(fileURLToPath(import.meta.url));
 const subset = join(here, "../../..");
 const mutationsRoot = join(subset, "🧬️schema/🧬️mutations");
-const vectorsRoot = join(subset, "🧫️fixtures/🧬️mutations");
+const vectorsRoot = join(subset, "🧪️tests/🧫️fixtures/🧬️mutations");
 
 interface Outcome {
   status: "applied" | "no-op" | "rejected";
@@ -177,7 +177,7 @@ describe.each(VECTORS.map((vector) => [`${vector.slug}/${vector.caseName}`, vect
 });
 
 describe("commit-reconstruction shared vector", () => {
-  const fixtures = join(subset, "🧫️fixtures/🏁️commit-reconstruction");
+  const fixtures = join(subset, "🧪️tests/🧫️fixtures/🏁️commit-reconstruction");
 
   /** 🏁️ The feature file's shared commit vector: a sparse cloud naming durable content the document
    *  does not store, committed as the refusal its own guard raises. All three documents are schema-valid

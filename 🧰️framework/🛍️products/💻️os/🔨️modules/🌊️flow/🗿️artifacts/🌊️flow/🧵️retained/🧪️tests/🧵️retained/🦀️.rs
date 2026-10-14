@@ -21,7 +21,7 @@ fn drain(mut owner:FlowRetirement,copy:usize)->Receipt {
 }
 #[test]
 fn flow_retirement_typed_serde_oracle_and_exact_bytes_survive_worker_transfer() {
-    let fixture=semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture=semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for copy in [1,4096] {
         let value:FlowHostSnapshot=semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(fixture.get("hostSnapshot").unwrap())).unwrap();
         let oracle:FlowHostSnapshot=semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&value)).unwrap();assert_eq!(value,oracle);
@@ -62,13 +62,13 @@ fn flow_physical_retirement_every_direct_string_and_vec_releases_actual_capacity
 }
 #[test]
 fn flow_physical_retirement_frontier_requires_exact_admission_and_releases_metadata_last() {
-    let fixture=semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let (snapshot,born,freed)=observe(||semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(fixture.get("hostSnapshot").unwrap())).unwrap());let original=born-freed;let mut owner=FlowRetirement::from_owner(FlowOwner::HostSnapshot(snapshot));let demand=owner.next_capacity_byte_demand(1).unwrap();assert!(demand>0);
+    let fixture=semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let (snapshot,born,freed)=observe(||semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(fixture.get("hostSnapshot").unwrap())).unwrap());let original=born-freed;let mut owner=FlowRetirement::from_owner(FlowOwner::HostSnapshot(snapshot));let demand=owner.next_capacity_byte_demand(1).unwrap();assert!(demand>0);
     let paid=grant(&owner,1);for capacity in [0,demand-1]{let (step,a,r)=observe(||owner.step(RetainedCloneGrant {maximum_capacity_bytes:capacity,..paid}).unwrap());assert_eq!(step.progress().copied_items,0);assert_eq!((a,r),(0,0));}
     let receipt=drain(owner,1);assert_eq!(receipt.released,original+receipt.born);assert!(receipt.last_release>0,"the cursor frontier metadata has a final exact physical release");
 }
 #[test]
 fn flow_physical_retirement_multi_root_ingress_records_fault_without_admission_then_admits_exactly() {
-    let fixture=semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let contract=fixture.get("physicalRetirement").unwrap().get("multiRootIngress").unwrap();let first_capacity=contract.get("firstCapacityBytes").unwrap().as_u64().unwrap()as usize;let second_capacity=contract.get("secondCapacityBytes").unwrap().as_u64().unwrap()as usize;
+    let fixture=semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let contract=fixture.get("physicalRetirement").unwrap().get("multiRootIngress").unwrap();let first_capacity=contract.get("firstCapacityBytes").unwrap().as_u64().unwrap()as usize;let second_capacity=contract.get("secondCapacityBytes").unwrap().as_u64().unwrap()as usize;
     let mut first=Vec::with_capacity(first_capacity);first.push(1);let mut second=Vec::with_capacity(second_capacity);second.push(2);let pointer=second.as_ptr();let original=first.capacity()+second.capacity();let mut owner=FlowRetirement::from_owner(FlowOwner::Bytes(first));let (second,a,r)=observe(||owner.push(FlowOwner::Bytes(second)).err().unwrap());assert_eq!((a,r),(0,0));let FlowOwner::Bytes(second)=second else{unreachable!()};assert_eq!(second.as_ptr(),pointer);
     let capacity=owner.next_push_capacity_byte_demand().unwrap();for maximum in [0,capacity-1]{let (step,a,r)=observe(||owner.reserve_push(RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:maximum,maximum_release_bytes:0,maximum_depth:1}).unwrap());assert_eq!(step.copied_items,0);assert_eq!((a,r),(0,0));}
     let (reservation,a,r)=observe(||owner.reserve_push(RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:1}).unwrap());assert_eq!((reservation.retained_capacity_bytes,reservation.released_bytes),(a,r));let admitted=a;

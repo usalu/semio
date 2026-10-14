@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "\u2696\ufe0ftest\ud83e\udd91\ufe0frepo\ud83d\udce5\ufe0foriginal-command-control",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-original-command-control --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/cr12/permanent",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/cr12/permanent",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "{\"version\":1,\"policy\":{\"version\":1,\"owner\":\"\u2696\ufe0ftest\ud83e\udd91\ufe0frepo\ud83d\udce5\ufe0foriginal-command-control\",\"maximumElapsedMilliseconds\":0},\"deadlineEpochMilliseconds\":null,\"capabilities\":{\"artifactDirectory\":\"${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/cr12/permanent\",\"process\":{\"childMilliseconds\":60000,\"outputBytes\":67108864,\"outputLines\":65536}}}"
+      },
+      "presentation": {
+        "group": "4_test",
+        "order": 903.14
+      }
+    }
+  ],
+  "retireNames": []
+}

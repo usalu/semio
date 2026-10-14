@@ -9,5 +9,8 @@
   },
   "scripts": {
     "verify-remodel-window-ownership": "bun nx run @semio-tech/remodel-remodeling-rs:verify-remodel-window-ownership"
+  },
+  "devDependencies": {
+    "@semio-tech/framework": "workspace:*"
   }
 }

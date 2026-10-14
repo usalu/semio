@@ -8,7 +8,7 @@
       "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧬️schema/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🔨️modules/**/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧪️tests/**/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧫️fixtures/**/*"
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧪️tests/🧫️fixtures/**/*"
     ]
   },
   "targets": {

@@ -4,7 +4,7 @@
 
 use super::*;
 
-const CONTEXT_MENU_SELECTION_JSON: &str = include_str!("../🧫️fixtures/🔣️.json");
+const CONTEXT_MENU_SELECTION_JSON: &str = include_str!("🧫️fixtures/🔣️.json");
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(CONTEXT_MENU_SELECTION_JSON).expect("the context-menu selection fixture")

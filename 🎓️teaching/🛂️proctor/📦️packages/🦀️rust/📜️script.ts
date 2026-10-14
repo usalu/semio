@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🛂️ `teaching-proctor` task router: `bun ./📜️script.ts <build [args…]|test [fundamental|quick|long|exhaustive] [args…]|dev|check [catalog]|rebuild|health|backup [directory/|file|-]|restore <file|->|erase (--handle <handle>|--tag <tag>|--learner <id>) [--dry-run]|prune --older-than <age> [--dry-run]|capacity [--learners n] [--compression n] [--report file] [--executable proctor] [--hall-only]>`.
  *
  * Every verb but `build`, `test` and `capacity` builds the binary and runs a private copy of it
@@ -22,8 +23,8 @@ import { resolveTestLevel } from "../../../../🧰️framework/🔨️modules/�
  *
  * @see ../../README.md — the operator guide and every environment variable
  */
-import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runCmd } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { runRepositoryCargoTests } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts";
 
@@ -34,7 +35,7 @@ import { PROCTOR_PACKAGE, TEACHING_WORKSPACE, proctorBackupTarget, proctorCatalo
 /** 🏗️ Builds the crate's cargo artifacts (`--release` for a deployment). */
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await buildRepositoryCargoArtifacts(`${this.root}/Cargo.toml`, segments, this.repoRoot);
+    await buildRepositoryCargoArtifacts(`${this.root}/Cargo.toml`, segments, this.repoRoot, { control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0) });
   }
 }
 

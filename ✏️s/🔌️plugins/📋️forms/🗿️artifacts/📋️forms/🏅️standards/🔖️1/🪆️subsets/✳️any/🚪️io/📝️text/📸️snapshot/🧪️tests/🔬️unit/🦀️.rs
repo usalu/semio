@@ -7,8 +7,8 @@ async fn snapshot_dsl_round_trips_with_composed_children() {
     let steps = vec![FormStep { id: "s1".into(), title: "Step".into(), description: None, blocks: Vec::new() }];
     let (structure, results) = forms_children_from_steps(&steps);
     let snapshot = FormsSnapshot { schema: FORMS_DOCUMENT_SCHEMA.into(), id: "forms".into(), version: "1".into(), title: Some("T".into()), definition: Default::default(), responses: Vec::new(), structure, results };
-    let printed = store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
-    let parsed = <FormsSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&printed).expect("parses");
+    let printed = pack::snapshot::ArtifactDsl::print_dsl(&snapshot);
+    let parsed = <FormsSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).expect("parses");
     assert_eq!(parsed, snapshot);
 }
 

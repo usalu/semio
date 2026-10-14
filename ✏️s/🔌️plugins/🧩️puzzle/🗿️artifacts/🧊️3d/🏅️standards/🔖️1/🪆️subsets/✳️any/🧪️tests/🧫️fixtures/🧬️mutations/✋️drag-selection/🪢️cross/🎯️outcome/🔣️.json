@@ -1,0 +1,14 @@
+{
+  "messages": [
+    {
+      "code": "mutation.cascade",
+      "level": "info",
+      "target": [
+        "object-d",
+        "attraction-ab",
+        "attraction-bc"
+      ]
+    }
+  ],
+  "status": "applied"
+}

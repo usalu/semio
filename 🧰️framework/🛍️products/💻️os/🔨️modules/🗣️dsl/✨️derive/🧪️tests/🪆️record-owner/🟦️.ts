@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname,join } from "node:path";
 
 import Parser from "web-tree-sitter";
-import fixture from "../../🧫️fixtures/🪆️record-owner/🔣️.json";
+import fixture from "../🧫️fixtures/🪆️record-owner/🔣️.json";
 
 const owner = join(import.meta.dir, "../..");
 assert.equal(new Set(fixture.functions.map(row=>row.name)).size,3);

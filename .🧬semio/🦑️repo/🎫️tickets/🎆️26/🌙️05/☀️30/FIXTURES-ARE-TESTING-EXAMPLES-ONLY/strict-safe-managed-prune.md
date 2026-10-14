@@ -1,0 +1,11 @@
+# Safe Managed Cache Prune API: Read-Only Review
+
+No prune/scan API executed and no files deleted. Read-only df observation at inspection: filesystem available3.8GiB; active peer Nx typed-snapshot native command PIDs18042/18043. This is current observation, not the earlier <200MiB estimate. Do not classify managed units inactive from total disk space or a momentary rustc absence.
+
+Safe narrow existing branch: `repo:cache-prune -- --stale-incremental-only --profile <actual admitted Cargo profile> [--dry-run]`. Existing launch command around99664 selects debug under prototype and passes original inherited invocation. Do not guess profile; use actual producer profile/build lease identity.
+
+compactCargoIncrementalSessionsV1:200-211 first checks original ResourceLeaseControl, acquires exclusive cache-prune resource then exact acquireCargoBuildLeaseV1 for resolved buildDirectory/profile. It scans only incremental sessions, keeps newest finalized session plus every -working session, then prunes only superseded finalized sessions matching explicit profile and crate with no working session. Each unit/check/delete uses original control; finally compiler lease and prune lease release. With peer same-profile build active, it must wait for exclusive compiler admission rather than deleting active outputs. Dry-run still participates in admission.
+
+Generic CachePruneScript branch :57-82 only has cache-prune lease, age/storage guards and unit plan; its own docstring explicitly says age guard is not active-build lock. Wrapper workspace-cleanup refuses cache-prune if active build seen/read process table unavailable. Do not bypass wrapper and invoke broad generic pruning during peer builds. The narrow profile branch has stronger compiler ownership and is the appropriate admitted API candidate.
+
+Required reviewed proposal: Root records actual profile and original invocation, calls existing narrow target dry-run when authorized/safe, examines managed planned superseded sessions, then invokes same admitted branch. No recursive rm of shared Cargo output roots, no delete manifests/receipt inputs or currently active generation units. Audit provides API evidence only; reclaimable bytes were not measured.

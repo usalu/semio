@@ -54,7 +54,7 @@ pub(crate) struct ActiveMediaExport {
     pub(crate) lease: ToolCancellationLease,
     pub(crate) checkpoint_available: bool,
     pub(crate) applied_progress: u64,
-    close_stage: ActiveMediaExportCloseStage,
+    pub(crate) close_stage: ActiveMediaExportCloseStage,
 }
 
 impl ActiveMediaExport {

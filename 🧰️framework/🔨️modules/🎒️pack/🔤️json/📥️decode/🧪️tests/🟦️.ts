@@ -7,7 +7,7 @@ import ts from "typescript";
 
 const root = resolve(import.meta.dir, "..");
 const contract = JSON.parse(readFileSync(resolve(root, "🔣️.json"), "utf8"));
-const fixture = JSON.parse(readFileSync(resolve(root, "🧫️fixtures/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(root, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
 const operation = () => ({ maximumBytes: 1000000, maximumNodes: 10000, maximumDepth: 256, chunk: 128, cancelled: () => false, progress: (_: unknown) => {}, yield: async () => { await new Promise<void>(resolve => setTimeout(resolve, 0)); } });
 async function api() { const owner = await import(resolve(root, "🟦️.ts")); expect(typeof owner.decodeJsonSyntax).toBe("function"); return owner; }
 

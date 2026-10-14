@@ -9,7 +9,7 @@ use super::*;
 use serde_json::{json, Value};
 use std::cell::RefCell;
 
-const GESTURE_DRIVE_LAW: &str = include_str!("../../🧫️fixtures/🧫️gesture-drive-law/🔣️.json");
+const GESTURE_DRIVE_LAW: &str = include_str!("../🧫️fixtures/🧫️gesture-drive-law/🔣️.json");
 
 thread_local! {
     static ABORTED: RefCell<Vec<ToolAbortReason>> = const { RefCell::new(Vec::new()) };

@@ -127,8 +127,8 @@ impl From<Snapshot> for LasSnapshot {
 
 
 
-impl store::os_store::serialization::ArtifactPack for LasSnapshot {
-    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec()) }
+impl pack::snapshot::ArtifactPack for LasSnapshot {
+    
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let snapshot = Snapshot::from(self);
         let inner = store::pack_rt::encode_document(&Snapshot::__dsl_spec(), &snapshot.__dsl_to_record(), options)?;
@@ -142,4 +142,7 @@ impl store::os_store::serialization::ArtifactPack for LasSnapshot {
         Snapshot::__dsl_from_record(&record).map(Into::into).map_err(store::os_store::serialization::text_error_to_pack_error)
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(Snapshot::__dsl_spec()) }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for LasSnapshot {
+fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec()) }
 }

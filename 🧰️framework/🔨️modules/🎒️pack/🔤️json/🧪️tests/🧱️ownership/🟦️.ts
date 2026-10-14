@@ -9,14 +9,14 @@ import { JsonMemberPolicy } from "../../🧩️members/🟦️.ts";
 const owner = resolve(import.meta.dir, "../.."), read = (path: string): string => readFileSync(resolve(owner, path), "utf8");
 
 test("controlled JSON retirement retains neutral independent grants and original syntax", () => {
-  const fixture = JSON.parse(read("🧫️fixtures/🎮️retirement/🔣️.json"));
+  const fixture = JSON.parse(read("🧪️tests/🧫️fixtures/🎮️retirement/🔣️.json"));
   const errors: ParseError[] = [], tree = parseTree(fixture.source, errors, {disallowComments: true, allowTrailingComma: false});
   expect(errors).toEqual([]);
   expect(getNodeValue(tree!)).toEqual(JSON.parse(fixture.source));
 });
 
 test("completed JSON frame conserves original admission with independently parsed retained output",()=>{
-  const fixture=JSON.parse(read("🧫️fixtures/📦️completed-frame/🔣️.json"));
+  const fixture=JSON.parse(read("🧪️tests/🧫️fixtures/📦️completed-frame/🔣️.json"));
   const errors:ParseError[]=[],tree=parseTree(fixture.source,errors,{disallowComments:true,allowTrailingComma:false});expect(errors).toEqual([]);expect(getNodeValue(tree!)).toEqual(JSON.parse(fixture.source));
 });
 
@@ -54,7 +54,7 @@ test("all public JSON source readers require an explicit decoded-member policy",
 });
 
 test("independent JSON syntax authority validates every decoded-name duplicate and UTF8 byte offset", () => {
-  const fixture = JSON.parse(read("🧫️fixtures/🧩️members/🔣️.json")) as {cases: {id: string; text: string; duplicate: null | {name: string; offset: number}}[]};
+  const fixture = JSON.parse(read("🧪️tests/🧫️fixtures/🧩️members/🔣️.json")) as {cases: {id: string; text: string; duplicate: null | {name: string; offset: number}}[]};
   for (const row of fixture.cases) {
     const errors: ParseError[] = [], tree = parseTree(row.text, errors, {disallowComments: true, allowTrailingComma: false})!;
     expect(errors, row.id).toEqual([]);
@@ -77,7 +77,7 @@ test("independent JSON syntax authority validates every decoded-name duplicate a
 
 
 test("independent JSON member ownership corpus retains first positions and final descendant values", () => {
-  const fixture = JSON.parse(read("🧫️fixtures/🧩️members/🔣️.json")) as {ownership: {text: string; keys: string[]}};
+  const fixture = JSON.parse(read("🧪️tests/🧫️fixtures/🧩️members/🔣️.json")) as {ownership: {text: string; keys: string[]}};
   const errors: ParseError[] = [], tree = parseTree(fixture.ownership.text, errors, {disallowComments: true, allowTrailingComma: false})!;
   expect(errors).toEqual([]);
   const reference = getNodeValue(tree) as Record<string, unknown>;
@@ -91,7 +91,7 @@ test("independent JSON member ownership corpus retains first positions and final
 
 
 test("independent JSON parser validates retained admission large candidates", () => {
-  const fixture=JSON.parse(read("🧫️fixtures/🚦️owned-controls.json")) as {retainedAdmission:{textUnit:string;textRepeats:number;collectionItems:number;phases:string[]}};
+  const fixture=JSON.parse(read("🧪️tests/🧫️fixtures/🚦️owned-controls.json")) as {retainedAdmission:{textUnit:string;textRepeats:number;collectionItems:number;phases:string[]}};
   const law=fixture.retainedAdmission,label=law.textUnit.repeat(law.textRepeats);
   for(const source of [JSON.stringify(label),JSON.stringify(Array.from({length:law.collectionItems},(_,index)=>({index,label:index%128===0?label:""})))]){
     const errors:ParseError[]=[],tree=parseTree(source,errors,{disallowComments:true,allowTrailingComma:false})!;
@@ -102,7 +102,7 @@ test("independent JSON parser validates retained admission large candidates", ()
 
 
 test("neutral borrowed-read fixture retains original Source syntax and independent jsonc-parser lexemes", async () => {
-  const fixture = JSON.parse(read("🧫️fixtures/🫳️read-source.json")) as {source: string; duplicate: string; invalidUtf8: number[]; largeStringBytes: number; decodeAllocationBytes: number; stepUnits: number};
+  const fixture = JSON.parse(read("🧪️tests/🧫️fixtures/🫳️read-source.json")) as {source: string; duplicate: string; invalidUtf8: number[]; largeStringBytes: number; decodeAllocationBytes: number; stepUnits: number};
   const {decodeJsonSyntax} = await import("../../📥️decode/🟦️.ts");
   const operation = () => ({maximumBytes: fixture.decodeAllocationBytes, maximumNodes: 4096, maximumDepth: 128, chunk: 256, cancelled: () => false, progress: (_: unknown) => {}, yield: async () => {}});
   const syntax = (node: Node, text: string): Awaited<ReturnType<typeof decodeJsonSyntax>> => {
@@ -124,7 +124,7 @@ test("neutral borrowed-read fixture retains original Source syntax and independe
 
 
 test("original normal JSON frontiers require independent physical admission", () => {
-  const fixture = JSON.parse(read("🧫️fixtures/🎟️normal/🔣️.json"));
+  const fixture = JSON.parse(read("🧪️tests/🧫️fixtures/🎟️normal/🔣️.json"));
   for (const source of fixture.sources) {
     const errors: ParseError[] = [], tree = parseTree(source, errors, {disallowComments: true, allowTrailingComma: false});
     expect(errors).toEqual([]);

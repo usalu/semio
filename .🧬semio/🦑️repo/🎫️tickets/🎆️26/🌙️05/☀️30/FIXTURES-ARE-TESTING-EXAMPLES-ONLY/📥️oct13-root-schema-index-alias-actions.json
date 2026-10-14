@@ -1,0 +1,7 @@
+{
+  "exclusive": false,
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+  "beforeSha256": "20490f95ff9a9d9c0e46bdf06380a6dc55d2cd2d63839243fdec18be2b62218c",
+  "afterSha256": "301ee798d8a61c247333d2db2789b22373c3f8c195c427e49d8917794d24bd8f",
+  "reason": "Fail closed on every recognized testing example collection before schema read; direct module names remain production owners"
+}

@@ -5,7 +5,7 @@ import { testCacheRoot, testCacheDir, markOutputDir, readOutputMarker, planExecu
 import { materializeRustHost } from "../../🖥️host/🏗️materialization/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧾️artifact-root-source/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🧾️artifact-root-source/🔣️.json"), "utf8"));
 const callerRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
 if (!callerRoot) throw Error("Artifact-root laws require caller-owned SEMIO_TEST_ARTIFACT_DIR");
 const outputs = resolve(callerRoot, "artifact-root-source");

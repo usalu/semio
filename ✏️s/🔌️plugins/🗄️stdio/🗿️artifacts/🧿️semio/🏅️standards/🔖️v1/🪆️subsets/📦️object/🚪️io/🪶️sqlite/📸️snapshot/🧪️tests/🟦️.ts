@@ -1,7 +1,7 @@
 /** 📦️ Exact object placement and persisted native child-reference boundaries. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import f from "../🧫️fixtures/🔣️.json";
+import f from "./🧫️fixtures/🔣️.json";
 import type {SemioObjectSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {parseSemioObjectSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {SEMIO_OBJECT_SQLITE_SCHEMA,semioObjectSnapshotToSqliteDatabase,semioObjectSnapshotFromSqliteDatabase} from "../🟦️.ts";
@@ -13,7 +13,7 @@ test("Semio object shared exact geometry parser, child identity, optional presen
 
 test("Semio object distinct local child aliases preserve independent target identities",async()=>{for(const alias of f.distinctAliases){const s=structuredClone(input);s.mesh={childId:alias.childId,target:{artifactId:alias.artifactId,dialect:{artifactKind:"s.stdio.semio",standard:"v1",subset:"mesh"}}};expect(parseSemioObjectSnapshot(s)).toEqual(s);const db=Database.deserialize(await exportSqliteDatabase(await semioObjectSnapshotToSqliteDatabase(s)));try{expect(db.query("SELECT child_id,artifact_id FROM semio_object_mesh_child JOIN semio_object_reference ON target_reference_id=semio_object_reference.id").get()).toEqual({child_id:alias.childId,artifact_id:alias.artifactId});expect(await semioObjectSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).toEqual(s);}finally{db.close();}}});
 
-import completeSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import completeSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 import{independentSqliteExtent as completeIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
 test("Semio Object matched Native exact words and optional-child emptiness preserve complete cells",async()=>{
  for(const item of completeSemanticContract.cases){const source=structuredClone(input);if(item.empty){delete source.brep;delete source.mesh;delete source.properties;}if(item.word!==null)source.transform.translation.x={bits:BigInt("0x"+item.word)};const database=await semioObjectSnapshotToSqliteDatabase(source),bytes=await exportSqliteDatabase(database);expect(completeIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:completeSemanticContract.schemaBytes,tableWidths:completeSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:completeSemanticContract.schemaBytes,maxTables:5,maxColumns:32};expect(await semioObjectSnapshotToSqliteDatabase(source,limits)).toEqual(database);expect(await semioObjectSnapshotFromSqliteDatabase(await importSqliteDatabase(bytes),limits)).toEqual(source);

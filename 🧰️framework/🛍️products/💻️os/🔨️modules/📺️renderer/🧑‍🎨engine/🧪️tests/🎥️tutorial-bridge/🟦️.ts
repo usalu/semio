@@ -1,14 +1,14 @@
 
 import { Matrix3, Vector2 } from "three";
 import { dagWorldToScreen } from "../../🧱️elements/🕸️NodeGraph/🟦️.tsx";
-import graphFixture from "../../🧱️elements/⚙️EngineCanvas/🧫️fixtures/🕸️wgpu-node-graph/🔣️.json" with { type: "json" };
+import graphFixture from "../../🧱️elements/⚙️EngineCanvas/🧪️tests/🧫️fixtures/🕸️wgpu-node-graph/🔣️.json" with { type: "json" };
 import { applyPatch } from "fast-json-patch";
 import { describe, expect, it, vi } from "vitest";
 import { ANCHORS, composeTutorialUi, createTutorialClock } from "@semio-tech/ui-react";
 import { createMemoryStoragePort, type TutorialDefinition, type TutorialUiChange, type TutorialUiSnapshot } from "@semio-tech/framework";
 import { createLocalInteractionStoreV1, initialShellState, shellReducer, type LocalInteractionStoreV1, type ShellAction } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import { applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, captureTutorialUiSnapshot, type TutorialUiBridgeContext } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
-import fixture from "../../🧫️fixtures/🎥️tutorial-bridge/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/🎥️tutorial-bridge/🔣️.json" with { type: "json" };
 
 const project = (snapshot: TutorialUiSnapshot) => ({
   focusedWindowId: snapshot.focusedWindowId,
@@ -110,7 +110,7 @@ describe("tutorial bridge parity", () => {
   });
 
   it("applies and captures every neutral field, including closing command search", () => {
-    let state = initialShellState({ plugins: [], storage: createMemoryStoragePort() });
+    let state = initialShellState({ locale: "en", plugins: [], storage: createMemoryStoragePort() });
     const dispatch = (action: ShellAction) => {
       state = shellReducer(state, action);
     };
@@ -144,7 +144,7 @@ describe("tutorial bridge parity", () => {
     ], true, false).newDocument;
     expect({ ...patched, commandPanelOpen: false }).toEqual(fixture.afterDeltas);
 
-    let state = initialShellState({ plugins: [], storage: createMemoryStoragePort() });
+    let state = initialShellState({ locale: "en", plugins: [], storage: createMemoryStoragePort() });
     const dispatch = (action: ShellAction) => {
       state = shellReducer(state, action);
     };

@@ -236,7 +236,7 @@ impl InferredField<DagSnapshot> for OwnedWeightSum {
 }
 #[semio_framework_async_macros::async_test]
 async fn inference_owned_dependency_values_match_neutral_and_serde_oracle(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🌱️owned-dependencies/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🌱️owned-dependencies/🔣️.json")).unwrap();
     let snapshot=base_snapshot().await;
     let dependency=OwnedWeightSum::dep_input(&snapshot,&"leaf_a".into(),&[]);
     assert_eq!(serde_json::to_value(&dependency).unwrap(),fixture["dependency"]);
@@ -322,7 +322,7 @@ impl InferredField<SlowSnapshot> for SlowWeightSum {
 }
 
 fn stepped_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🪜️stepped-driver/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🪜️stepped-driver/🔣️.json")).unwrap()
 }
 
 fn expected_values(fixture: &serde_json::Value) -> BTreeMap<String, i64> {
@@ -485,7 +485,7 @@ async fn a_parent_named_before_it_is_computed_is_a_loud_error_not_a_dropped_pare
 //#endregion 🧪️PlanContract
 
 //#region 🧪️TypedCache
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 struct Opaque(Arc<Vec<i64>>);
 
 struct OpaqueSum;
@@ -745,7 +745,7 @@ fn sorted_keys(delta: &FieldDelta<String, i64>) -> Vec<String> {
 }
 
 fn diff_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔄️diff-update/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🔄️diff-update/🔣️.json")).unwrap()
 }
 
 fn count_of(row: &serde_json::Value, name: &str) -> usize {

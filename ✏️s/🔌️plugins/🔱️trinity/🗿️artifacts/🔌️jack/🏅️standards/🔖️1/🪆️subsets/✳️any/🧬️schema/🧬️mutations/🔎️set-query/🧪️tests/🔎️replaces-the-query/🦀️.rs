@@ -8,11 +8,11 @@ use crate::standards::v1::subsets::any::schema::diff::JackDiff;
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation, JackSnapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔎️set-query/🔎️replaces-the-query/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔎️set-query/🔎️replaces-the-query/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔎️set-query/🔎️replaces-the-query/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔎️set-query/🔎️replaces-the-query/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔎️set-query/🔎️replaces-the-query/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔎️set-query/🔎️replaces-the-query/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔎️set-query/🔎️replaces-the-query/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔎️set-query/🔎️replaces-the-query/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔎️set-query/🔎️replaces-the-query/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔎️set-query/🔎️replaces-the-query/🎯️outcome/🔣️.json");
 
 fn before() -> JackSnapshot {
     crate::standards::v1::subsets::any::io::text::snapshot::decode_jack_snapshot_json(BEFORE).expect("before snapshot decodes")

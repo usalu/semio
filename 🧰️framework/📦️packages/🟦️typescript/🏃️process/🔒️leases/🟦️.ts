@@ -1,2 +1,2 @@
-export { acquireQueuedResourceLease, acquireResourceLease, withResourceLeases } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-export type { ResourceAccess, LeaseWait, LeaseOptions, ResourceLease, QueuedLeaseOptions } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+export { acquireQueuedResourceLease, acquireResourceLease, withResourceLeases, checkResourceLeaseControl, requireMaterializedPathV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+export type { ResourceAccess, LeaseWait, LeaseOptions, ResourceLease, QueuedLeaseOptions, ResourceLeaseControl } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";

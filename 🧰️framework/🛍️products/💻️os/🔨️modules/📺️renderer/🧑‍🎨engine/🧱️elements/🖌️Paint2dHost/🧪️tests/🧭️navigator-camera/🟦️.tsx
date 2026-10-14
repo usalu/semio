@@ -6,7 +6,7 @@ import { uiI18n } from "@semio-tech/ui-react";
 import { Matrix3, Vector3 } from "three";
 import { afterEach, expect, it, vi } from "vitest";
 import { Paint2dHost } from "../../🟦️.tsx";
-import fixture from "../../🧫️fixtures/🧭️navigator-camera/🔣️.json";
+import fixture from "../🧫️fixtures/🧭️navigator-camera/🔣️.json";
 
 vi.mock("../../../🪪️WasmSessionLoader/🟦️.tsx", async (load) => ({ ...await load<Record<string, unknown>>(), createRasterSession: () => new Promise(() => {}) }));
 

@@ -1,10 +1,10 @@
 //! 🧫️ Native stroke alpha vectors and preparation interruption.
 use super::*;
 use semio_framework_pixels::coverage::{CoverageInput,CoverageJob,CoverageRule};
-fn fixtures()->serde_json::Value {serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn fixtures()->serde_json::Value {serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 #[test]
 fn stroke_retirement_transfers_complete_paint_and_drains_each_private_owner_under_grants(){
- let cases:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();let rows=fixtures();
+ let cases:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();let rows=fixtures();
  for case in cases.as_array().unwrap(){let base=rows.as_array().unwrap().iter().find(|row|row["name"]==case["source"]).unwrap();for grant in [1,7,4096]{let mut source=input(base);if let Some(repeat)=case["repeat"].as_u64(){source.contours=vec![source.contours[0].clone();usize::try_from(repeat).unwrap()];}let stop=case["stop"].as_str().unwrap();if stop=="failure"{source.contours[0].points[0][0]=1000000001.0;}let mut job=StrokeOutlineJob::new(source.clone()).unwrap();
   if stop=="preparing"{job.advance(1).unwrap();}else if stop!="fresh"{let mut reached=false;for _ in 0..200000{match job.advance(1){Err(_)if stop=="failure"=>{reached=true;break;},Err(error)=>panic!("{error:?}"),Ok(_)=>{}}let at=match stop{"source"=>job.stage==Stage::Source,"offset"=>job.stage==Stage::Offset,"walk"=>job.stage==Stage::Walk,"finish"=>job.stage==Stage::Finish,"outline"=>job.stage==Stage::Outline,"queue"|"cancelled"=>!job.queue.is_empty(),"round"=>job.round.is_some(),"done"=>job.stage==Stage::Done,"failure"=>false,_=>panic!("unknown stroke checkpoint")};if at{reached=true;break;}}assert!(reached,"{}",case["name"]);}
   let external=case["publishedBeforeCancel"].as_bool().unwrap_or(false).then(||job.result().unwrap().to_vec());if stop=="cancelled"||external.is_some()||case["cancelBeforeTransfer"].as_bool().unwrap_or(false){job.cancel();}let published=case["output"].as_bool().unwrap();let expected_work=case["work"]["native"].as_u64().unwrap();assert_eq!((10+job.input.contours.len()+job.sources.len()+job.runs.len()+if published{0}else{job.polygons.len()}+job.queue.len())as u64,expected_work,"{}",case["name"]);

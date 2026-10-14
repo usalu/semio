@@ -1,0 +1,17 @@
+{
+  "RotateSelection": {
+    "angle": 0.5,
+    "axis": [
+      0.0,
+      1.0,
+      0.0
+    ],
+    "objectId": "obj-ghost",
+    "pivot": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "vertexIds": []
+  }
+}

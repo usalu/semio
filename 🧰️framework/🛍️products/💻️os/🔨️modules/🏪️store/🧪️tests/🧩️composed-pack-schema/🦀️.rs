@@ -33,7 +33,7 @@ struct ComposedRenamedChild {
 }
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🧩️composed-pack-schema/🔣️.json")).expect("composed pack schema fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🧩️composed-pack-schema/🔣️.json")).expect("composed pack schema fixture")
 }
 
 fn hex(bytes: &[u8]) -> String {

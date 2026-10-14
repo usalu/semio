@@ -4,7 +4,7 @@ use {semio_s_artifact_stdio_semio_value::schema::mutations::{SemioValueMutation,
 
 #[test]
 fn original_semio_mutation_frames_match_shared_value_paths(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let path=row["path"].as_array().unwrap().iter().map(|part|match part["kind"].as_str().unwrap(){"key"=>SemioValuePathSegment::Key{key:part["key"].as_str().unwrap().into()},"index"=>SemioValuePathSegment::Index{index:usize::try_from(part["index"].as_u64().unwrap()).unwrap()},_=>panic!("shared path kind")}).collect();
   let original=SemioValueMutation::SetValue(SetValue{path,value:SemioValue::Null});let bytes=original.encode_op().unwrap();

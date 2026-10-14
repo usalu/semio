@@ -1,0 +1,31 @@
+{
+  "schema": null,
+  "id": null,
+  "streams": {
+    "rows": [
+      {
+        "row": "insert",
+        "entity": {
+          "id": "orbit-tertiary",
+          "name": "Orbit Tertiary",
+          "kind": "image-sequence",
+          "cameraId": "orbit-cam-tertiary",
+          "syncOffsetMs": {
+            "bits": "4054000000000000"
+          },
+          "fpsHint": {
+            "bits": "4000000000000000"
+          },
+          "frames": [],
+          "source": null
+        }
+      }
+    ]
+  },
+  "assets": null,
+  "durableArtifacts": null,
+  "calibration": null,
+  "params": null,
+  "gcps": null,
+  "results": null
+}

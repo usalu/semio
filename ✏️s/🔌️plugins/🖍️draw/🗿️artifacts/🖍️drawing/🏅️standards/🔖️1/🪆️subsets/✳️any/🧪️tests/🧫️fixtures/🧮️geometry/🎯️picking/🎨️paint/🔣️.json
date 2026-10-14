@@ -1,0 +1,1279 @@
+[
+  {
+    "name": "butt-rejects-end-extension",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          90,
+          10
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        8.5,
+        10.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 8,
+        "cap": "butt",
+        "join": "miter",
+        "dash": []
+      }
+    },
+    "expected": false,
+    "bounds": [
+      10,
+      6,
+      90,
+      14
+    ]
+  },
+  {
+    "name": "round-accepts-end-extension",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          90,
+          10
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        8.5,
+        10.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 8,
+        "cap": "round",
+        "join": "miter",
+        "dash": []
+      }
+    },
+    "expected": true
+  },
+  {
+    "name": "square-accepts-corner",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          90,
+          10
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        7.5,
+        13.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 8,
+        "cap": "square",
+        "join": "miter",
+        "dash": []
+      }
+    },
+    "expected": true,
+    "bounds": [
+      6,
+      6,
+      94,
+      14
+    ]
+  },
+  {
+    "name": "round-rejects-square-corner",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          90,
+          10
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        7.5,
+        13.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 8,
+        "cap": "round",
+        "join": "miter",
+        "dash": []
+      }
+    },
+    "expected": false
+  },
+  {
+    "name": "dash-paint",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          90,
+          10
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        15.5,
+        10.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 8,
+        "cap": "butt",
+        "join": "miter",
+        "dash": [
+          10,
+          10
+        ]
+      }
+    },
+    "expected": true
+  },
+  {
+    "name": "dash-gap",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          90,
+          10
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        25.5,
+        10.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 8,
+        "cap": "butt",
+        "join": "miter",
+        "dash": [
+          10,
+          10
+        ]
+      }
+    },
+    "expected": false
+  },
+  {
+    "name": "dash-round-cap",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          90,
+          10
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        22.5,
+        10.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 8,
+        "cap": "round",
+        "join": "miter",
+        "dash": [
+          10,
+          10
+        ]
+      }
+    },
+    "expected": true
+  },
+  {
+    "name": "anisotropic-outside",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          20
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          30,
+          20
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        60.5,
+        27.5
+      ],
+      "transform": [
+        4,
+        0,
+        0,
+        0.25,
+        0,
+        20
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 8,
+        "cap": "butt",
+        "join": "miter",
+        "dash": []
+      }
+    },
+    "expected": false,
+    "bounds": [
+      40,
+      24,
+      120,
+      26
+    ]
+  },
+  {
+    "name": "anisotropic-inside",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          20
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          30,
+          20
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        60.5,
+        25.5
+      ],
+      "transform": [
+        4,
+        0,
+        0,
+        0.25,
+        0,
+        20
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 8,
+        "cap": "butt",
+        "join": "miter",
+        "dash": []
+      }
+    },
+    "expected": true,
+    "bounds": [
+      40,
+      24,
+      120,
+      26
+    ]
+  },
+  {
+    "name": "reflected-painted-stroke",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          90,
+          10
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        50.5,
+        30.5
+      ],
+      "transform": [
+        2,
+        0,
+        0,
+        -1,
+        0,
+        40
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 8,
+        "cap": "butt",
+        "join": "miter",
+        "dash": []
+      }
+    },
+    "expected": true
+  },
+  {
+    "name": "miter-apex",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          20,
+          40
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          80,
+          40
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        50.5,
+        3.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 12,
+        "cap": "butt",
+        "join": "miter",
+        "dash": []
+      }
+    },
+    "expected": true
+  },
+  {
+    "name": "bevel-apex",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          20,
+          40
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          80,
+          40
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        50.5,
+        3.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 12,
+        "cap": "butt",
+        "join": "bevel",
+        "dash": []
+      }
+    },
+    "expected": false
+  },
+  {
+    "name": "round-apex",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          20,
+          40
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          80,
+          40
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        50.5,
+        3.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 12,
+        "cap": "butt",
+        "join": "round",
+        "dash": []
+      }
+    },
+    "expected": false
+  },
+  {
+    "name": "evenodd-hole",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          80,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          80,
+          80
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          80
+        ]
+      },
+      {
+        "kind": "close"
+      },
+      {
+        "kind": "move",
+        "to": [
+          30,
+          30
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          60,
+          30
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          60,
+          60
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          30,
+          60
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "query": {
+      "point": [
+        40.5,
+        40.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "evenodd",
+      "stroke": null
+    },
+    "expected": false,
+    "bounds": [
+      10,
+      10,
+      80,
+      80
+    ]
+  },
+  {
+    "name": "nonzero-overlapping-fill",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          80,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          80,
+          80
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          80
+        ]
+      },
+      {
+        "kind": "close"
+      },
+      {
+        "kind": "move",
+        "to": [
+          30,
+          30
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          60,
+          30
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          60,
+          60
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          30,
+          60
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "query": {
+      "point": [
+        40.5,
+        40.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "nonzero",
+      "stroke": null
+    },
+    "expected": true,
+    "bounds": [
+      10,
+      10,
+      80,
+      80
+    ]
+  },
+  {
+    "name": "world-tolerance-across-dash-gap",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          90,
+          10
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        24.5,
+        10.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 5,
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 8,
+        "cap": "butt",
+        "join": "miter",
+        "dash": [
+          10,
+          10
+        ]
+      }
+    },
+    "expected": true
+  },
+  {
+    "name": "open-fill-closes",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          70,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          40,
+          60
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        30.5,
+        20.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "nonzero",
+      "stroke": null
+    },
+    "expected": true
+  },
+  {
+    "name": "open-stroke-does-not-close",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          70,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          40,
+          60
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        20.5,
+        27.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 8,
+        "cap": "butt",
+        "join": "miter",
+        "dash": []
+      }
+    },
+    "expected": false
+  },
+  {
+    "name": "cubic-fill-inside",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          10,
+          100
+        ],
+        "ctrl2": [
+          90,
+          100
+        ],
+        "to": [
+          90,
+          10
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        50.5,
+        60.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "nonzero",
+      "stroke": null
+    },
+    "expected": true
+  },
+  {
+    "name": "cubic-fill-outside",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          10,
+          100
+        ],
+        "ctrl2": [
+          90,
+          100
+        ],
+        "to": [
+          90,
+          10
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        50.5,
+        85.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "nonzero",
+      "stroke": null
+    },
+    "expected": false
+  },
+  {
+    "name": "cubic-stroke-apex",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          10,
+          100
+        ],
+        "ctrl2": [
+          90,
+          100
+        ],
+        "to": [
+          90,
+          10
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        50.5,
+        78.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 8,
+        "cap": "butt",
+        "join": "miter",
+        "dash": []
+      }
+    },
+    "expected": true
+  },
+  {
+    "name": "cubic-stroke-outside",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          10,
+          100
+        ],
+        "ctrl2": [
+          90,
+          100
+        ],
+        "to": [
+          90,
+          10
+        ]
+      }
+    ],
+    "query": {
+      "point": [
+        50.5,
+        85.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 8,
+        "cap": "butt",
+        "join": "miter",
+        "dash": []
+      }
+    },
+    "expected": false
+  },
+  {
+    "name": "ellipse-arc-fill",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          20,
+          30
+        ]
+      },
+      {
+        "kind": "arc",
+        "rx": 30,
+        "ry": 20,
+        "rotation": 0,
+        "largeArc": false,
+        "sweep": true,
+        "to": [
+          80,
+          30
+        ]
+      },
+      {
+        "kind": "arc",
+        "rx": 30,
+        "ry": 20,
+        "rotation": 0,
+        "largeArc": false,
+        "sweep": true,
+        "to": [
+          20,
+          30
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "query": {
+      "point": [
+        50.5,
+        30.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "nonzero",
+      "stroke": null
+    },
+    "expected": true
+  },
+  {
+    "name": "ellipse-arc-hollow-stroke",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          20,
+          30
+        ]
+      },
+      {
+        "kind": "arc",
+        "rx": 30,
+        "ry": 20,
+        "rotation": 0,
+        "largeArc": false,
+        "sweep": true,
+        "to": [
+          80,
+          30
+        ]
+      },
+      {
+        "kind": "arc",
+        "rx": 30,
+        "ry": 20,
+        "rotation": 0,
+        "largeArc": false,
+        "sweep": true,
+        "to": [
+          20,
+          30
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "query": {
+      "point": [
+        50.5,
+        30.5
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 8,
+        "cap": "butt",
+        "join": "miter",
+        "dash": []
+      }
+    },
+    "expected": false
+  }
+]

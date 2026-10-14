@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import law from "../../🧫️fixtures/⏳️wgpu-directory-http-deadline/🔣️.json";
+import law from "../🧫️fixtures/⏳️wgpu-directory-http-deadline/🔣️.json";
 import { WGPU_DIRECTORY_HTTP_TIMEOUT_MS, createWgpuPageHostIo } from "../../🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts";
 
 afterEach(() => {

@@ -31,8 +31,8 @@ type PresentationFixture = {
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🆚️diff-view-produced-surface/🔣️.json"), "utf8")) as Fixture;
-const presentation = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🆚️diff-view-presentation/🔣️.json"), "utf8")) as PresentationFixture;
+const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🆚️diff-view-produced-surface/🔣️.json"), "utf8")) as Fixture;
+const presentation = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🆚️diff-view-presentation/🔣️.json"), "utf8")) as PresentationFixture;
 const presentationSchema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🆚️diff-view-presentation/🔣️.json"), "utf8"));
 
 function thirdPartyLines(): ExpectedLine[] {

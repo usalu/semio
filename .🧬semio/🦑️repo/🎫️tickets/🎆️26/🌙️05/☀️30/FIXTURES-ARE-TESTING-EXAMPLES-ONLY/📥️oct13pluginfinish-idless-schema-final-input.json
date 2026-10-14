@@ -1,0 +1,958 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖱️selection/🧬️schema/🔣️.json",
+    "properties": [
+      "domainId",
+      "targets",
+      "merge",
+      "method"
+    ],
+    "required": [
+      "domainId",
+      "targets",
+      "merge",
+      "method"
+    ],
+    "title": "Raster Layer Selection Request"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️set-pixel-selection/🧬️schema/🔣️.json",
+    "properties": [
+      "selection",
+      "expectedImageKey"
+    ],
+    "required": null,
+    "title": "SetPixelSelection"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥞️flatten-layers/🧬️schema/🔣️.json",
+    "properties": [
+      "name"
+    ],
+    "required": [
+      "name"
+    ],
+    "title": "Flatten Raster Layers"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🫳️merge-down/🧬️schema/🔣️.json",
+    "properties": [
+      "layerId"
+    ],
+    "required": [
+      "layerId"
+    ],
+    "title": "Merge Raster Layer Down"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪣️fill-region/🧬️schema/🔣️.json",
+    "properties": [
+      "layerId",
+      "x",
+      "y"
+    ],
+    "required": [
+      "layerId",
+      "x",
+      "y"
+    ],
+    "title": "Fill Region"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️set-paint-target/🧬️schema/🔣️.json",
+    "properties": [
+      "value"
+    ],
+    "required": [
+      "value"
+    ],
+    "title": "SetPaintTarget"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌊️set-fill-tolerance/🧬️schema/🔣️.json",
+    "properties": [
+      "value"
+    ],
+    "required": [
+      "value"
+    ],
+    "title": "SetFillTolerance"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️set-mask-value/🧬️schema/🔣️.json",
+    "properties": [
+      "value"
+    ],
+    "required": [
+      "value"
+    ],
+    "title": "SetMaskValue"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️set-brush-hardness/🧬️schema/🔣️.json",
+    "properties": [
+      "value"
+    ],
+    "required": [
+      "value"
+    ],
+    "title": "Set Brush Hardness"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️paint-stroke/🧬️schema/🔣️.json",
+    "properties": [
+      "layerId",
+      "tool",
+      "xs",
+      "ys",
+      "phase",
+      "reason",
+      "gesture"
+    ],
+    "required": [
+      "layerId",
+      "tool",
+      "xs",
+      "ys"
+    ],
+    "title": "Paint Stroke"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌈️apply-filter/🧬️schema/🔣️.json",
+    "properties": [
+      "layerId",
+      "filter",
+      "amount"
+    ],
+    "required": [
+      "layerId",
+      "filter",
+      "amount"
+    ],
+    "title": "Apply Filter"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-png/🧬️schema/🔣️.json",
+    "properties": [],
+    "required": null,
+    "title": "Export PNG"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🫗️fill-selection/🧬️schema/🔣️.json",
+    "properties": [
+      "layerId"
+    ],
+    "required": [
+      "layerId"
+    ],
+    "title": "Fill Selection"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-brush-color/🧬️schema/🔣️.json",
+    "properties": [
+      "value"
+    ],
+    "required": [
+      "value"
+    ],
+    "title": "Set Brush Color"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️transform-image/🧬️schema/🔣️.json",
+    "properties": [
+      "layerId",
+      "operation",
+      "x",
+      "y",
+      "width",
+      "height",
+      "bilinear"
+    ],
+    "required": [
+      "layerId",
+      "operation",
+      "x",
+      "y",
+      "width",
+      "height",
+      "bilinear"
+    ],
+    "title": "Transform Image"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️move-layer/🧬️schema/🔣️.json",
+    "properties": [
+      "layerId",
+      "targetRowId",
+      "dropPosition"
+    ],
+    "required": [
+      "layerId",
+      "targetRowId",
+      "dropPosition"
+    ],
+    "title": "Move Layer"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📤️export/🧬️schema/🔣️.json",
+    "properties": [
+      "stage",
+      "en",
+      "de",
+      "completedUnits"
+    ],
+    "required": [
+      "stage",
+      "en",
+      "de",
+      "completedUnits"
+    ],
+    "title": "Raster Image Export Progress"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️retirement/🧬️schema/🔣️.json",
+    "properties": [
+      "schema",
+      "commands",
+      "nested",
+      "copies",
+      "cancelAfter",
+      "originalHeadersCopyBytes",
+      "terminalDropBytes"
+    ],
+    "required": [
+      "schema",
+      "commands",
+      "nested",
+      "copies",
+      "cancelAfter",
+      "originalHeadersCopyBytes",
+      "terminalDropBytes"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/♻️retirement/📸️snapshot/🧬️schema/🔣️.json",
+    "properties": [
+      "schema",
+      "snapshotFields",
+      "childFields",
+      "sceneFields",
+      "ownedFields",
+      "sourceFields",
+      "originalHeadersCopyBytes",
+      "localRootSameArc",
+      "localTypeMismatchReturnsOriginal",
+      "sceneDropSkippedOnTransfer",
+      "copies",
+      "terminalDropBytes",
+      "presenceFields",
+      "cameraFields",
+      "presenceHandoffCopyBytes"
+    ],
+    "required": [
+      "schema",
+      "snapshotFields",
+      "childFields",
+      "sceneFields",
+      "ownedFields",
+      "sourceFields",
+      "originalHeadersCopyBytes",
+      "localRootSameArc",
+      "localTypeMismatchReturnsOriginal",
+      "sceneDropSkippedOnTransfer",
+      "copies",
+      "terminalDropBytes",
+      "presenceFields",
+      "cameraFields",
+      "presenceHandoffCopyBytes"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧬️schema/🧭️component-transform/🔣️.json",
+    "properties": [
+      "mode",
+      "selection",
+      "operation",
+      "vector",
+      "angle",
+      "pivot"
+    ],
+    "required": [
+      "mode",
+      "selection",
+      "operation",
+      "vector",
+      "angle",
+      "pivot"
+    ],
+    "title": "Mesh Component Transform"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧩️composition/🧬️schema/📤️native-export/🔣️.json",
+    "properties": [
+      "descriptorCodecId",
+      "factory"
+    ],
+    "required": [
+      "descriptorCodecId",
+      "factory"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/💾️binary/📸️snapshot/🧬️schema/🧾️original/🔣️.json",
+    "properties": [
+      "schema",
+      "policy",
+      "stops",
+      "workGrants",
+      "denials",
+      "terminal"
+    ],
+    "required": [
+      "schema",
+      "policy",
+      "stops",
+      "workGrants",
+      "denials",
+      "terminal"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/📬️preparation/🧬️schema/🔣️.json",
+    "properties": [
+      "ownerBytes",
+      "ownerItems",
+      "ownerDepth",
+      "turnBytes",
+      "refusedTextBytes",
+      "recognizedMutations"
+    ],
+    "required": [
+      "ownerBytes",
+      "ownerItems",
+      "ownerDepth",
+      "turnBytes",
+      "refusedTextBytes",
+      "recognizedMutations"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🧬️schema/🔣️.json",
+    "properties": [
+      "format",
+      "owner",
+      "nativeMaximumBytes",
+      "bodyGrant",
+      "closeGrant",
+      "maximumCloseTurns",
+      "quoteCancelCheckpoint",
+      "source",
+      "cancelAt",
+      "terminalDropBytes"
+    ],
+    "required": [
+      "format",
+      "owner",
+      "nativeMaximumBytes",
+      "bodyGrant",
+      "closeGrant",
+      "maximumCloseTurns",
+      "quoteCancelCheckpoint",
+      "source",
+      "cancelAt",
+      "terminalDropBytes"
+    ],
+    "title": "CSV Original Typed Receiving Policy"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🧬️schema/🎟️original.json",
+    "properties": [
+      "format",
+      "custody",
+      "nativeMaximumBytes",
+      "bodyGrant",
+      "closeGrant",
+      "deniedCloseGrant",
+      "maximumCloseTurns",
+      "observerContinuation"
+    ],
+    "required": [
+      "format",
+      "custody",
+      "nativeMaximumBytes",
+      "bodyGrant",
+      "closeGrant",
+      "deniedCloseGrant",
+      "maximumCloseTurns",
+      "observerContinuation"
+    ],
+    "title": "Original Tabular Native Caller Policy"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🧬️schema/🎟️original.json",
+    "properties": [
+      "format",
+      "custody",
+      "nativeMaximumBytes",
+      "bodyGrant",
+      "closeGrant",
+      "deniedCloseGrant",
+      "maximumCloseTurns",
+      "observerContinuation"
+    ],
+    "required": [
+      "format",
+      "custody",
+      "nativeMaximumBytes",
+      "bodyGrant",
+      "closeGrant",
+      "deniedCloseGrant",
+      "maximumCloseTurns",
+      "observerContinuation"
+    ],
+    "title": "Original Tabular Native Caller Policy"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🫀️core/📄️documents/🧬️schema/🔣️.json",
+    "properties": [],
+    "required": null,
+    "title": "Space Document Source Preparation"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🫀️core/🧬️schema/🔣️.json",
+    "properties": [
+      "schema",
+      "sharedPackage",
+      "artifacts",
+      "sharedSources",
+      "specificIndexOwner",
+      "foreignLocks"
+    ],
+    "required": [
+      "schema",
+      "sharedPackage",
+      "artifacts",
+      "sharedSources",
+      "specificIndexOwner",
+      "foreignLocks"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏭️bridge/🧬️schema/🔣️.json",
+    "properties": [
+      "artifact",
+      "producedBy",
+      "refusedArtifacts",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "required": [
+      "artifact",
+      "producedBy",
+      "refusedArtifacts",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏭️bridge/🧬️schema/🔣️.json",
+    "properties": [
+      "artifact",
+      "producedBy",
+      "refusedArtifacts",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "required": [
+      "artifact",
+      "producedBy",
+      "refusedArtifacts",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧭️transforms/🧬️schema/🔣️.json",
+    "properties": [
+      "axis",
+      "angle"
+    ],
+    "required": [
+      "axis",
+      "angle"
+    ],
+    "title": "Axis-Angle Rotation"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧬️schema/🔣️.json",
+    "properties": [
+      "operation",
+      "amount",
+      "cuts",
+      "dx",
+      "dy",
+      "dz",
+      "width",
+      "segments",
+      "mergeMode",
+      "tolerance",
+      "radius",
+      "grid",
+      "center"
+    ],
+    "required": [
+      "operation",
+      "amount",
+      "cuts",
+      "dx",
+      "dy",
+      "dz",
+      "width",
+      "segments",
+      "mergeMode",
+      "tolerance",
+      "radius",
+      "grid",
+      "center"
+    ],
+    "title": "Edit Selected Geometry Components"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧬️schema/🔣️.json",
+    "properties": [
+      "widgetId",
+      "channel",
+      "value",
+      "component",
+      "operation",
+      "index",
+      "destination",
+      "facet",
+      "path"
+    ],
+    "required": [
+      "widgetId",
+      "channel",
+      "value"
+    ],
+    "title": "Set Widget Input"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧬️schema/🔣️.json",
+    "properties": [
+      "kind",
+      "neuronKind",
+      "format",
+      "action",
+      "x",
+      "y",
+      "sourceWidget",
+      "sourcePort",
+      "targetPort",
+      "sourceRevision"
+    ],
+    "required": [
+      "kind"
+    ],
+    "title": "Generation3d Widget Creation"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/🧬️schema/🔣️.json",
+    "properties": [
+      "start",
+      "end"
+    ],
+    "required": [
+      "start",
+      "end"
+    ],
+    "title": "Knife Cut Selected Mesh Face"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧬️schema/🔣️.json",
+    "properties": [],
+    "required": null,
+    "title": "Procedural Component Target"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏭️bridge/🧬️schema/🔣️.json",
+    "properties": [
+      "refusedArtifacts",
+      "artifact",
+      "producedBy",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "required": [
+      "artifact",
+      "producedBy",
+      "refusedArtifacts",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏭️bridge/🧬️schema/🔣️.json",
+    "properties": [
+      "refusedArtifacts",
+      "artifact",
+      "producedBy",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "required": [
+      "artifact",
+      "producedBy",
+      "refusedArtifacts",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏭️bridge/🧬️schema/🔣️.json",
+    "properties": [
+      "refusedArtifacts",
+      "artifact",
+      "producedBy",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "required": [
+      "artifact",
+      "producedBy",
+      "refusedArtifacts",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏭️bridge/🧬️schema/🔣️.json",
+    "properties": [
+      "refusedArtifacts",
+      "artifact",
+      "producedBy",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "required": [
+      "artifact",
+      "producedBy",
+      "refusedArtifacts",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏭️bridge/🧬️schema/🔣️.json",
+    "properties": [
+      "refusedArtifacts",
+      "artifact",
+      "producedBy",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "required": [
+      "artifact",
+      "producedBy",
+      "refusedArtifacts",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️set-option-group/🧬️schema/🔣️.json",
+    "properties": [
+      "id",
+      "name"
+    ],
+    "required": [
+      "id"
+    ],
+    "title": "SetOptionGroup"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️delete-option-group/🧬️schema/🔣️.json",
+    "properties": [
+      "id"
+    ],
+    "required": [
+      "id"
+    ],
+    "title": "DeleteOptionGroup"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️set-element-workset/🧬️schema/🔣️.json",
+    "properties": [
+      "id",
+      "workset"
+    ],
+    "required": [
+      "id",
+      "workset"
+    ],
+    "title": "SetElementWorkset"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️set-workset/🧬️schema/🔣️.json",
+    "properties": [
+      "id",
+      "name",
+      "default_visible"
+    ],
+    "required": [
+      "id"
+    ],
+    "title": "SetWorkset"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️delete-workset/🧬️schema/🔣️.json",
+    "properties": [
+      "id"
+    ],
+    "required": [
+      "id"
+    ],
+    "title": "DeleteWorkset"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️set-design-option/🧬️schema/🔣️.json",
+    "properties": [
+      "id",
+      "group",
+      "name",
+      "primary"
+    ],
+    "required": [
+      "id"
+    ],
+    "title": "SetDesignOption"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️create-design-option/🧬️schema/🔣️.json",
+    "properties": [
+      "id",
+      "design_option"
+    ],
+    "required": [
+      "id",
+      "design_option"
+    ],
+    "title": "CreateDesignOption"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️create-option-group/🧬️schema/🔣️.json",
+    "properties": [
+      "id",
+      "option_group"
+    ],
+    "required": [
+      "id",
+      "option_group"
+    ],
+    "title": "CreateOptionGroup"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️set-element-option/🧬️schema/🔣️.json",
+    "properties": [
+      "id",
+      "option"
+    ],
+    "required": [
+      "id",
+      "option"
+    ],
+    "title": "SetElementOption"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️delete-design-option/🧬️schema/🔣️.json",
+    "properties": [
+      "id"
+    ],
+    "required": [
+      "id"
+    ],
+    "title": "DeleteDesignOption"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️create-workset/🧬️schema/🔣️.json",
+    "properties": [
+      "id",
+      "workset"
+    ],
+    "required": [
+      "id",
+      "workset"
+    ],
+    "title": "CreateWorkset"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪪️identity/🔣️.json",
+    "properties": [
+      "key"
+    ],
+    "required": [
+      "key"
+    ],
+    "title": "DrawingIdentity"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎯️query/🧬️schema/🔣️.json",
+    "properties": [],
+    "required": null,
+    "title": "Prepared Scene Picking"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔷️shape/✏️coordinates/🧬️schema/🔣️.json",
+    "properties": [
+      "field",
+      "index",
+      "value"
+    ],
+    "required": [
+      "field",
+      "value"
+    ],
+    "title": "Authored Shape Coordinate"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🎯️points/🧬️schema/🖱️picking/🔣️.json",
+    "properties": [
+      "current",
+      "hit",
+      "mode"
+    ],
+    "required": [
+      "current",
+      "hit",
+      "mode"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔀️combine-boolean/🧬️schema/🔣️.json",
+    "properties": [
+      "operation",
+      "ids"
+    ],
+    "required": [
+      "operation",
+      "ids"
+    ],
+    "title": "Combine Drawing Selection"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection/🧬️schema/🔣️.json",
+    "properties": [],
+    "required": null,
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection/🧬️schema/⌨️bindings/🔣️.json",
+    "properties": [],
+    "required": null,
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/.venv/lib/python3.12/site-packages/jsonschema_specifications/schemas/draft4/metaschema.json",
+    "properties": [
+      "id",
+      "$schema",
+      "title",
+      "description",
+      "default",
+      "multipleOf",
+      "maximum",
+      "exclusiveMaximum",
+      "minimum",
+      "exclusiveMinimum",
+      "maxLength",
+      "minLength",
+      "pattern",
+      "additionalItems",
+      "items",
+      "maxItems",
+      "minItems",
+      "uniqueItems",
+      "maxProperties",
+      "minProperties",
+      "required",
+      "additionalProperties",
+      "definitions",
+      "properties",
+      "patternProperties",
+      "dependencies",
+      "enum",
+      "type",
+      "format",
+      "allOf",
+      "anyOf",
+      "oneOf",
+      "not"
+    ],
+    "required": null,
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/.venv/lib/python3.12/site-packages/jsonschema_specifications/schemas/draft3/metaschema.json",
+    "properties": [
+      "type",
+      "properties",
+      "patternProperties",
+      "additionalProperties",
+      "items",
+      "additionalItems",
+      "required",
+      "dependencies",
+      "minimum",
+      "maximum",
+      "exclusiveMinimum",
+      "exclusiveMaximum",
+      "minItems",
+      "maxItems",
+      "uniqueItems",
+      "pattern",
+      "minLength",
+      "maxLength",
+      "enum",
+      "default",
+      "title",
+      "description",
+      "format",
+      "divisibleBy",
+      "disallow",
+      "extends",
+      "id",
+      "$ref",
+      "$schema"
+    ],
+    "required": null,
+    "title": null
+  }
+]

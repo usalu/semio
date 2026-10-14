@@ -20,6 +20,11 @@ use semio_framework_3d_brep_representation::surface::Surface;
 use semio_framework_3d_brep_representation::topology::{Body, ReachSet};
 use semio_framework_3d_brep_representation::vector::Pnt3;
 
+type ValidationFindings = semio_framework_value::value::list::PagedList<ValidationIssue,{usize::MAX}>;
+trait ValidationIssueSink { fn push_issue(&mut self, issue:ValidationIssue); }
+impl ValidationIssueSink for Vec<ValidationIssue> { fn push_issue(&mut self, issue:ValidationIssue){self.push(issue);} }
+impl ValidationIssueSink for ValidationFindings { fn push_issue(&mut self, issue:ValidationIssue){self.push(issue);} }
+
 #[cfg(test)]
 std::thread_local! { static LOOP_PROBES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
 #[cfg(test)]
@@ -33,19 +38,19 @@ std::thread_local! { static SAME_PARAMETER_SAMPLES: std::cell::Cell<usize> = con
 
 // #region 🔖️Topology
 
-fn check_loop_pair(body: &Body, loop_id: LoopId, ring: &[CoedgeId], index: usize, issues: &mut Vec<ValidationIssue>) {
+fn check_loop_pair(body: &Body, loop_id: LoopId, ring: &[CoedgeId], index: usize, issues: &mut impl ValidationIssueSink) {
     #[cfg(test)]
     LOOP_PROBES.with(|probes| probes.set(probes.get() + 1));
     let next = (index + 1) % ring.len();
     let Some((_, end_a)) = body.coedge_endpoints(ring[index]) else { return; };
     let Some((start_b, _)) = body.coedge_endpoints(ring[next]) else { return; };
     if end_a != start_b {
-        issues.push(ValidationIssue { entity: format!("loop-{}", loop_id.raw_index()), code: "loop-not-closed", message: format!("coedge {index} ends at a different vertex than coedge {next} starts at") });
+        issues.push_issue(ValidationIssue { entity: format!("loop-{}", loop_id.raw_index()), code: "loop-not-closed", message: format!("coedge {index} ends at a different vertex than coedge {next} starts at") });
     }
     let coedge_a = body.coedges.get(ring[index]).unwrap();
     let coedge_b = body.coedges.get(ring[next]).unwrap();
     if coedge_a.next != ring[next] || coedge_b.prev != ring[index] {
-        issues.push(ValidationIssue { entity: format!("loop-{}", loop_id.raw_index()), code: "next-prev-mismatch", message: format!("coedge {index}'s next/prev pointers are not symmetric with its ring neighbor") });
+        issues.push_issue(ValidationIssue { entity: format!("loop-{}", loop_id.raw_index()), code: "next-prev-mismatch", message: format!("coedge {index}'s next/prev pointers are not symmetric with its ring neighbor") });
     }
 }
 
@@ -53,11 +58,11 @@ fn check_loop_pair(body: &Body, loop_id: LoopId, ring: &[CoedgeId], index: usize
 
 // #region 🔖️Geometry
 
-fn check_tolerance_pair(finer: String, finer_tol: semio_framework_3d_brep_representation::tolerance::Tol, coarser: String, coarser_tol: semio_framework_3d_brep_representation::tolerance::Tol, issues: &mut Vec<ValidationIssue>) {
+fn check_tolerance_pair(finer: String, finer_tol: semio_framework_3d_brep_representation::tolerance::Tol, coarser: String, coarser_tol: semio_framework_3d_brep_representation::tolerance::Tol, issues: &mut impl ValidationIssueSink) {
     #[cfg(test)]
     TOLERANCE_PROBES.with(|probes| probes.set(probes.get() + 1));
     if let Some((finer, coarser)) = semio_framework_3d_brep_representation::tolerance::check_containment(&finer, finer_tol, &coarser, coarser_tol) {
-        issues.push(ValidationIssue { entity: finer.clone(), code: "tolerance-containment-violated", message: format!("{finer}'s tolerance exceeds its containing {coarser}'s") });
+        issues.push_issue(ValidationIssue { entity: finer.clone(), code: "tolerance-containment-violated", message: format!("{finer}'s tolerance exceeds its containing {coarser}'s") });
     }
 }
 
@@ -65,11 +70,11 @@ fn check_tolerance_pair(finer: String, finer_tol: semio_framework_3d_brep_repres
 /// not verify a coedge without one, so a missing p-curve is an ERROR here, not a skip (audit
 /// §6.12: "missing p-curves are skipped rather than rejected or repaired").
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn check_missing_pcurve(coedge_id: CoedgeId, coedge: &semio_framework_3d_brep_representation::topology::Coedge, issues: &mut Vec<ValidationIssue>) {
+fn check_missing_pcurve(coedge_id: CoedgeId, coedge: &semio_framework_3d_brep_representation::topology::Coedge, issues: &mut impl ValidationIssueSink) {
     #[cfg(test)]
     PCURVE_PROBES.with(|probes| probes.set(probes.get() + 1));
     if coedge.pcurve.is_none() {
-        issues.push(ValidationIssue { entity: format!("coedge-{}", coedge_id.raw_index()), code: "missing-pcurve", message: "coedge has no p-curve — every coedge must carry one for trim/same-parameter validation".to_string() });
+        issues.push_issue(ValidationIssue { entity: format!("coedge-{}", coedge_id.raw_index()), code: "missing-pcurve", message: "coedge has no p-curve — every coedge must carry one for trim/same-parameter validation".to_string() });
     }
 }
 
@@ -115,7 +120,7 @@ pub(crate) fn is_point_edge(body: &Body, edge_id: EdgeId) -> bool {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn check_shell_closure_and_orientation(body: &Body, issues: &mut Vec<ValidationIssue>) {
+fn check_shell_closure_and_orientation(body: &Body, issues: &mut impl ValidationIssueSink) {
     for (shell_id, shell) in body.shells.iter() {
         let mut edge_uses: std::collections::HashMap<EdgeId, Vec<bool>> = std::collections::HashMap::new();
         for &face in &shell.faces {
@@ -137,7 +142,7 @@ fn check_shell_closure_and_orientation(body: &Body, issues: &mut Vec<ValidationI
                 continue;
             }
             if uses.len() != 2 {
-                issues.push(ValidationIssue {
+                issues.push_issue(ValidationIssue {
                     entity: format!("shell-{}-edge-{}", shell_id.raw_index(), edge_id.raw_index()),
                     code: "shell-not-closed",
                     message: format!("edge is used {} time(s) within this shell (a closed shell needs exactly 2)", uses.len()),
@@ -145,7 +150,7 @@ fn check_shell_closure_and_orientation(body: &Body, issues: &mut Vec<ValidationI
                 continue;
             }
             if uses[0] == uses[1] {
-                issues.push(ValidationIssue {
+                issues.push_issue(ValidationIssue {
                     entity: format!("shell-{}-edge-{}", shell_id.raw_index(), edge_id.raw_index()),
                     code: "orientation-inconsistent",
                     message: "both faces sharing this edge traverse it in the same direction — adjacent face orientations disagree".to_string(),
@@ -164,21 +169,21 @@ fn check_shell_closure_and_orientation(body: &Body, issues: &mut Vec<ValidationI
 /// every profile edge its cap traversed forward (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`,
 /// `📓️sweep-kernel-2026-09-09.md`), and what let a watertight extrusion tessellate inside out.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn check_face_loop_winding(body: &Body, issues: &mut Vec<ValidationIssue>) {
+fn check_face_loop_winding(body: &Body, issues: &mut impl ValidationIssueSink) {
     const PROBE_TOL: f64 = 1e-3;
     for (face_id, face) in body.faces.iter() {
         let Some(surface) = body.surfaces.get(face.surface) else { continue };
         if let Some(outer) = face.outer {
             if let Ok(area) = mass_properties::loop_uv_signed_area(body, outer, surface, PROBE_TOL) {
                 if area < 0.0 {
-                    issues.push(ValidationIssue { entity: format!("face-{}", face_id.raw_index()), code: "outer-loop-winding-inverted", message: format!("outer loop's (u, v) signed area is negative ({area}) — the loop is clockwise in its own surface, so the face trims to the COMPLEMENT of its region") });
+                    issues.push_issue(ValidationIssue { entity: format!("face-{}", face_id.raw_index()), code: "outer-loop-winding-inverted", message: format!("outer loop's (u, v) signed area is negative ({area}) — the loop is clockwise in its own surface, so the face trims to the COMPLEMENT of its region") });
                 }
             }
         }
         for &inner in &face.inners {
             if let Ok(area) = mass_properties::loop_uv_signed_area(body, inner, surface, PROBE_TOL) {
                 if area > 0.0 {
-                    issues.push(ValidationIssue { entity: format!("face-{}-loop-{}", face_id.raw_index(), inner.raw_index()), code: "hole-loop-winding-inverted", message: format!("hole loop's (u, v) signed area is positive ({area}) — a hole must run counter to its outer loop") });
+                    issues.push_issue(ValidationIssue { entity: format!("face-{}-loop-{}", face_id.raw_index(), inner.raw_index()), code: "hole-loop-winding-inverted", message: format!("hole loop's (u, v) signed area is positive ({area}) — a hole must run counter to its outer loop") });
                 }
             }
         }
@@ -250,7 +255,7 @@ fn shared_vertex_positions(body: &Body, a: FaceId, b: FaceId) -> Vec<Pnt3> {
 /// self-intersection is not fully checked"). Samples sitting on a vertex both faces share are
 /// exempt: that contact is the shared topology itself, not an intersection.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn check_self_intersection_probe(body: &Body, issues: &mut Vec<ValidationIssue>) {
+fn check_self_intersection_probe(body: &Body, issues: &mut impl ValidationIssueSink) {
     const PROBE_TOL: f64 = 1e-6;
     for (solid_id, _) in body.solids.iter() {
         let faces = body.solid_faces(solid_id);
@@ -273,7 +278,7 @@ fn check_self_intersection_probe(body: &Body, issues: &mut Vec<ValidationIssue>)
                     }
                 }
                 if best < PROBE_TOL {
-                    issues.push(ValidationIssue {
+                    issues.push_issue(ValidationIssue {
                         entity: format!("face-{}-face-{}", fa.raw_index(), fb.raw_index()),
                         code: "warning-possible-self-intersection",
                         message: format!("non-adjacent faces {fa} and {fb} come within {best} of each other away from any shared edge"),
@@ -460,9 +465,10 @@ impl FaceCoedgeCursor {
 /// Remaining geometric phases still invoke whole checks or whole-face quadrature; their units
 /// describe scheduling progress and do not establish a strict interactive work ceiling.
 pub struct BodyValidationJob {
+    source_body:usize,
     phase: BodyValidationPhase,
-    issues: Vec<ValidationIssue>,
-    shells: Vec<ShellVolumeUnit>,
+    issues: ValidationFindings,
+    shells: semio_framework_value::value::list::PagedList<ShellVolumeUnit,{usize::MAX}>,
     shell_cursor: usize,
     shell_face_cursor: usize,
     edges: Vec<EdgeId>,
@@ -482,6 +488,10 @@ pub struct BodyValidationJob {
     ring: Vec<CoedgeId>,
     ring_next: Option<CoedgeId>,
     ring_probe: usize,
+    loop_findings:[Option<retained_loop::LoopFinding>;2],
+    loop_finding_cursor:usize,
+    loop_output:Option<ValidationIssue>,
+    loop_text_stage:u8,
     valence_edge_slot: usize,
     valence_edge: Option<EdgeId>,
     valence_coedge_slot: usize,
@@ -503,12 +513,17 @@ pub struct BodyValidationJob {
 semio_framework_value::artifact_retire_leaf!(BodyValidationPhase);
 semio_framework_value::artifact_retire_struct!(ShellVolumeUnit {solid,shell,outer,faces,total});
 semio_framework_value::artifact_retire_struct!(FaceCoedgeCursor {face_slot,face,loop_slot,start,next,visited});
-semio_framework_value::artifact_retire_struct!(BodyValidationJob {phase,issues,shells,shell_cursor,shell_face_cursor,edges,edge_cursor,faces,face_cursor,units_done,units_total,planning_stage,planning_slot,planning_solid,planning_shell,planning_face,live_coedges,loop_slot,loop_id,ring,ring_next,ring_probe,valence_edge_slot,valence_edge,valence_coedge_slot,valence_uses,pcurve_slot,tolerance_stage,tolerance_edge_cursor,tolerance_vertex,tolerance_faces,same_faces,same_pair,same_stage,same_cursor,same_pass,same_samples,same_midpoints});
+semio_framework_value::artifact_retire_struct!(BodyValidationJob {source_body,phase,issues,shells,shell_cursor,shell_face_cursor,edges,edge_cursor,faces,face_cursor,units_done,units_total,planning_stage,planning_slot,planning_solid,planning_shell,planning_face,live_coedges,loop_slot,loop_id,ring,ring_next,ring_probe,loop_findings,loop_finding_cursor,loop_output,loop_text_stage,valence_edge_slot,valence_edge,valence_coedge_slot,valence_uses,pcurve_slot,tolerance_stage,tolerance_edge_cursor,tolerance_vertex,tolerance_faces,same_faces,same_pair,same_stage,same_cursor,same_pass,same_samples,same_midpoints});
+
+#[path="🎟️planning/🦀️.rs"]
+mod retained_planning;
+#[path="🎟️loop/🦀️.rs"]
+mod retained_loop;
 
 impl BodyValidationJob {
     /// 🧊 Admits an empty original frontier; topology is borrowed only inside funded steps.
-    pub fn new(_body: &Body) -> Self {
-        Self { phase: BodyValidationPhase::CollectingTopology, issues: Vec::new(), shells: Vec::new(), shell_cursor: 0, shell_face_cursor: 0, edges: Vec::new(), edge_cursor: 0, faces: Vec::new(), face_cursor: 0, units_done: 0, units_total: 1, planning_stage: 0, planning_slot: 0, planning_solid: None, planning_shell: 0, planning_face: None, live_coedges: 0, loop_slot: 0, loop_id: None, ring: Vec::new(), ring_next: None, ring_probe: 0, valence_edge_slot: 0, valence_edge: None, valence_coedge_slot: 0, valence_uses: 0, pcurve_slot: 0, tolerance_stage: 0, tolerance_edge_cursor: 0, tolerance_vertex: 0, tolerance_faces: FaceCoedgeCursor::default(), same_faces: FaceCoedgeCursor::default(), same_pair: None, same_stage: 0, same_cursor: 0, same_pass: 0, same_samples: Vec::new(), same_midpoints: Vec::new() }
+    pub fn new(body: &Body) -> Self {
+        Self { source_body:body as *const Body as usize, phase: BodyValidationPhase::CollectingTopology, issues: Default::default(), shells: Default::default(), shell_cursor: 0, shell_face_cursor: 0, edges: Vec::new(), edge_cursor: 0, faces: Vec::new(), face_cursor: 0, units_done: 0, units_total: 1, planning_stage: 0, planning_slot: 0, planning_solid: None, planning_shell: 0, planning_face: None, live_coedges: 0, loop_slot: 0, loop_id: None, ring: Vec::new(), ring_next: None, ring_probe: 0, loop_findings:[None,None],loop_finding_cursor:0,loop_output:None,loop_text_stage:0,valence_edge_slot: 0, valence_edge: None, valence_coedge_slot: 0, valence_uses: 0, pcurve_slot: 0, tolerance_stage: 0, tolerance_edge_cursor: 0, tolerance_vertex: 0, tolerance_faces: FaceCoedgeCursor::default(), same_faces: FaceCoedgeCursor::default(), same_pair: None, same_stage: 0, same_cursor: 0, same_pass: 0, same_samples: Vec::new(), same_midpoints: Vec::new() }
     }
 
     /// 📈 Constant-time funded work progress, including cold planning turns.
@@ -534,7 +549,7 @@ impl BodyValidationJob {
             self.valence_coedge_slot += 1;
         } else {
             let valence = self.valence_uses;
-            if valence > 2 { self.issues.push(ValidationIssue { entity: format!("edge-{}", edge.raw_index()), code: "non-manifold-edge", message: format!("edge is used by {valence} coedges (2-manifold shapes use at most 2)") }); }
+            if valence > 2 { self.issues.push_issue(ValidationIssue { entity: format!("edge-{}", edge.raw_index()), code: "non-manifold-edge", message: format!("edge is used by {valence} coedges (2-manifold shapes use at most 2)") }); }
             self.valence_edge = None;
         }
     }
@@ -602,7 +617,7 @@ impl BodyValidationJob {
             _ => {
                 if let Some(&(worst_s, worst_dev)) = self.same_samples.iter().max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal)) {
                     if worst_dev > edge.tol.value() {
-                        self.issues.push(ValidationIssue { entity: format!("coedge-{}", coedge_id.raw_index()), code: "same-parameter-violated", message: format!("pcurve and 3D curve disagree by {worst_dev} at s={worst_s} (tol {}; face-{} edge-{} prange {:?} range {:?})", edge.tol.value(), face_id.raw_index(), coedge.edge.raw_index(), coedge.prange, edge.range) });
+                        self.issues.push_issue(ValidationIssue { entity: format!("coedge-{}", coedge_id.raw_index()), code: "same-parameter-violated", message: format!("pcurve and 3D curve disagree by {worst_dev} at s={worst_s} (tol {}; face-{} edge-{} prange {:?} range {:?})", edge.tol.value(), face_id.raw_index(), coedge.edge.raw_index(), coedge.prange, edge.range) });
                     }
                 }
                 self.same_pair = None;
@@ -710,7 +725,7 @@ impl BodyValidationJob {
     /// 🩺️ Every finding so far. Only final once [`Self::is_complete`] answers true.
     // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn into_issues(self) -> Vec<ValidationIssue> {
-        self.issues
+        self.issues.into_iter().collect()
     }
 
     /// ♾️ Runs every remaining unit in one call — the unbudgeted façade [`validate_body`] is.
@@ -769,7 +784,7 @@ impl BodyValidationJob {
                         continue;
                     }
                     if let Some(issue) = degenerate_edge_issue(body, self.edges[self.edge_cursor]) {
-                        self.issues.push(issue);
+                        self.issues.push_issue(issue);
                     }
                     self.edge_cursor += 1;
                 }
@@ -779,7 +794,7 @@ impl BodyValidationJob {
                         continue;
                     }
                     if let Some(issue) = sliver_face_issue(body, self.faces[self.face_cursor]) {
-                        self.issues.push(issue);
+                        self.issues.push_issue(issue);
                     }
                     self.face_cursor += 1;
                 }
@@ -794,7 +809,7 @@ impl BodyValidationJob {
     }
 
     // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-    fn cheap(&mut self, body: &Body, check: fn(&Body, &mut Vec<ValidationIssue>), next: BodyValidationPhase) {
+    fn cheap(&mut self, body: &Body, check: fn(&Body, &mut ValidationFindings), next: BodyValidationPhase) {
         check(body, &mut self.issues);
         self.phase = next;
     }
@@ -811,14 +826,14 @@ impl BodyValidationJob {
             };
             let solid = self.shells[index].solid;
             if outer_v < 0.0 {
-                self.issues.push(ValidationIssue { entity: format!("solid-{}", solid.raw_index()), code: "shell-orientation-inward", message: format!("outer shell's signed volume is negative ({outer_v}); face normals appear to point inward") });
+                self.issues.push_issue(ValidationIssue { entity: format!("solid-{}", solid.raw_index()), code: "shell-orientation-inward", message: format!("outer shell's signed volume is negative ({outer_v}); face normals appear to point inward") });
             }
             index += 1;
             while index < self.shells.len() && !self.shells[index].outer {
                 if let Some(void_v) = self.shells[index].total {
                     if outer_v.signum() == void_v.signum() {
                         let void_shell = self.shells[index].shell;
-                        self.issues.push(ValidationIssue {
+                        self.issues.push_issue(ValidationIssue {
                             entity: format!("solid-{}-void-shell-{}", solid.raw_index(), void_shell.raw_index()),
                             code: "void-shell-not-inverted",
                             message: "void (inner) shell's signed volume has the same sign as the outer shell — it should be inverted relative to the solid's exterior".to_string(),

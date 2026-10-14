@@ -5,7 +5,7 @@
  * 26/09/23 C10 09:4x: a re-announced, already accepted operation made the hub refuse the writer's typing). */
 export async function registerOutboundAnnouncementTests(vitest: NonNullable<ImportMeta["vitest"]>): Promise<void> {
   const { describe, it, expect } = vitest;
-  const { default: fixture } = await import("../../🔨️modules/🏪️store/🧫️fixtures/📤️outbound-announcement/🔣️.json");
+  const { default: fixture } = await import("../../🔨️modules/🏪️store/🧪️tests/🧫️fixtures/📤️outbound-announcement/🔣️.json");
   type Expect = { announcedOperations: number; announcedTransitions: number; edits: number; tailOperations: number; observed: string | null };
   type Edit = { operations: number };
 

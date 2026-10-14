@@ -1,5 +1,5 @@
 #[cfg(test)] use crate::tool_contract::ArtifactToolPublicationLane;
-async fn test_mounted_original_owned_publication<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static>(app: &mut VcsArtifactApp<A, M>, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: ActionMeta, parent_touched: bool, observe: impl Fn(&VcsArtifactApp<A, M>) -> Vec<bool>) -> (Vec<KernelMutation>, UndoGroup, u64) {
+pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static>(app: &mut VcsArtifactApp<A, M>, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: ActionMeta, parent_touched: bool, observe: impl Fn(&VcsArtifactApp<A, M>) -> Vec<bool>) -> (Vec<KernelMutation>, UndoGroup, u64) {
     let revision = app.store.content_revision_now();
     let command_count = app.command_log.len();
         let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(app.store.generation_now()), 17);
@@ -56,7 +56,9 @@ async fn test_mounted_original_owned_publication<A: ArtifactApp, M: SpaceMember 
     assert!(mounted.owned_child_group.is_none(), "actual private group registry closes before the mounted original owner");
     let mut retired = false;
     for _ in 0..100000 {
-        let grant = crate::bounded_ownership::retirement_self_grant(|body| mounted.retirement_demands(body), 262144).unwrap();
+        let grant = app.mounted_policy.close;
+        let demand = mounted.retirement_demands(grant.maximum_copy_bytes).unwrap();
+        assert!(grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth,"original mounted caller policy must fund its quoted close frontier");
         if matches!(mounted.retirement_step(grant).unwrap(), crate::bounded_ownership::PluginLifecycleStep::Complete(_)) { retired=true; break; }
     }
     assert!(retired, "mounted original owner reaches its complete terminal retirement");

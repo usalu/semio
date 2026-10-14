@@ -1,15 +1,27 @@
 //! 🪶️ Authored semantic SQLite and actual controlled native owner capability.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_rfc1950::subsets::any::schema::snapshot::{DeflateSnapshot,DeflateLevelHint};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,ValueError,ValueRefusalKind,artifact::RowWriter}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,ValueError,ValueRefusalKind,artifact::RowWriter}};
 #[path="💰️backing/🦀️.rs"] mod backing;
-impl ArtifactSqliteSnapshot for DeflateSnapshot{
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{backing::project(self,control)}
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{backing::reconstruct(database,control)}
+#[path="🫴️receiving/🦀️.rs"] mod receiving;
+impl ArtifactSqliteSnapshotHost for DeflateSnapshot{
+ fn to_sqlite_database_receiving(&self,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner<'_,'_>)->Result<SqliteDatabase,ValueError>{receiving::project_receiving(Some(self),None,control,owner)}
+ fn from_sqlite_database_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner<'_,'_>)->Result<Self,ValueError>{receiving::reconstruct_receiving(None,Some(database),control,owner)}
+ fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner<'_,'_>)->store::io_schema::IoResult<()>{(||{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!="s.stdio.deflate"||dialect.standard!="rfc1950"||dialect.subset!="*"{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Deflate owned SQLite dialect differs"))}receiving::validate_decoding(Some(self),Some(database),control,owner)})().map(|()|store::io_schema::IoOutcome::clean(())).map_err(|error|store::io_schema::IoError::from_value_error(error.with_retained_progress(owner.progress())))}
+ fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner<'_,'_>)->store::io_schema::IoResult<()>{(||{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,0)?;if dialect.artifact_kind!="s.stdio.deflate"||dialect.standard!="rfc1950"||dialect.subset!="*"{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Deflate owned SQLite dialect differs"))}receiving::validate_encoding(Some(self),Some(database),control,owner)})().map(|()|store::io_schema::IoOutcome::clean(())).map_err(|error|store::io_schema::IoError::from_value_error(error.with_retained_progress(owner.progress())))}
+ fn validate_sqlite_snapshot_subset(&self,_dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,_control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{Err(store::io_schema::IoError::from_value_error(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"Deflate subset validation requires supplied directional owner")))}
+ 
+ 
+ 
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native::decode(payload,control,native_control.native())}
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{native::encode(self,encoding,control,native_owner)}
  fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{native::preflight(self,encoding,control)}
  fn retire_sqlite_snapshot(self){<Self as semio_framework_value::FromValue>::retire_decoded(self)}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for DeflateSnapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{backing::project(self,control)}
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{backing::reconstruct(database,control)}
 }
 
 /// 🧮️ Checks the actual authored relational metadata without allocating its SQL recipe.

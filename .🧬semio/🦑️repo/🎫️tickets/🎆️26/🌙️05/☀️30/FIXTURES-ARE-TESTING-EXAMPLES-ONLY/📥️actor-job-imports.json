@@ -1,0 +1,67 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️owner/🧪️tests/🟦️.ts",
+    "beforeSha256": "76066f8f2e8b81f695a7c3966d511dd45ab91742a857e4c711365cc0703dd39a",
+    "afterSha256": "415cc2360dbf1d5efd22563305d8941187c53fa342caa43783bae44247c4abe2",
+    "edits": [
+      {
+        "start": 272,
+        "end": 292,
+        "from": "🧫️fixtures/🔣️.json",
+        "to": "./🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/🏃️work/🎟️grant/🧪️tests/🟦️.ts",
+    "beforeSha256": "685dd56a1eb1690a32ac8c0ee5c69517fff92faa7e517d61fbe63613884183cc",
+    "afterSha256": "2fb1e0f21418f8cd97fc1fff91d522169857209d1d1cdfd926ef68c819654916",
+    "edits": [
+      {
+        "start": 130,
+        "end": 150,
+        "from": "🧫️fixtures/🔣️.json",
+        "to": "./🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/♻️session-return/🧪️tests/🟦️.ts",
+    "beforeSha256": "15ca7ece15364c2e02107c4d9d03306e8602bb36af3d1d0c04fa587bab422e7d",
+    "afterSha256": "2791d7598d59b55c309140024c9dc45a8aeba161657a39bb7d2ba0a9bca79f67",
+    "edits": [
+      {
+        "start": 236,
+        "end": 256,
+        "from": "🧫️fixtures/🔣️.json",
+        "to": "./🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/🧪️tests/🟦️.ts",
+    "beforeSha256": "4f195cac784c9a637d778b9f260722b7f3348799e83ce0257e7d31699a8ba2c9",
+    "afterSha256": "8e0391500f71b14032e5b081dfe2805dd5e49dfb1c0595c834fa6ef8b3d7d93f",
+    "edits": [
+      {
+        "start": 407,
+        "end": 427,
+        "from": "🧫️fixtures/🔣️.json",
+        "to": "./🧫️fixtures/🔣️.json"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🫴️receiving/🧪️tests/🟦️.ts",
+    "beforeSha256": "0894d54af5a72486024298026a105384811628ad886f1b15167f94b75c28d976",
+    "afterSha256": "4fed0c296cd1e7fe8b3e6fc5caf71d849e876aa192c5873834b83bdd333c9eff",
+    "edits": [
+      {
+        "start": 441,
+        "end": 461,
+        "from": "🧫️fixtures/🔣️.json",
+        "to": "./🧫️fixtures/🔣️.json"
+      }
+    ]
+  }
+]

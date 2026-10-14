@@ -7,11 +7,11 @@ import { describe, expect, it, vi } from "vitest";
 import { TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_OVERSCAN_ROWS, TREE_WINDOW_PATH_SEPARATOR, TREE_WINDOW_ROWS_MAX, Tree, TreeCheckbox, TreeItem, TreeSection, capTreeWindowRequests, treeRowHeightPx, treeWindowPathOf, treeWindowRequestsForViewport, treeWindowRowAriaAttributes, treeWindowVisibleRowsForViewport, type TreeDataSection, type TreeDataWindow, type TreeWindowContainerMeasure, type TreeWindowVisibleRows } from "../../🟦️.tsx";
 import type { TreeWindowRowExtent } from "@semio-tech/framework";
 import { uiDataLabel } from "../../../🎗️UiLabel/🟦️.tsx";
-import rowExtentFixture from "../../../../🧫️fixtures/🌳️tree-window-row-extent/🔣️.json";
-import disclosureCases from "../../🧫️fixtures/♿️disclosure/🔣️.json";
-import actionCases from "../../🧫️fixtures/♿️actions/🔣️.json";
-import focusCases from "../../🧫️fixtures/♿️focus-retention/🔣️.json";
-import disabledActionCases from "../../../../🧫️fixtures/♿️disabled-row-action/🔣️.json";
+import rowExtentFixture from "../../../../🧪️tests/🧫️fixtures/🌳️tree-window-row-extent/🔣️.json";
+import disclosureCases from "../🧫️fixtures/♿️disclosure/🔣️.json";
+import actionCases from "../🧫️fixtures/♿️actions/🔣️.json";
+import focusCases from "../🧫️fixtures/♿️focus-retention/🔣️.json";
+import disabledActionCases from "../../../../🧪️tests/🧫️fixtures/♿️disabled-row-action/🔣️.json";
 // #endregion 🔌️Adapters
 
 describe("Disabled row action focus", () => {

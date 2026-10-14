@@ -30,7 +30,7 @@ import { testBuiltTreeRetirementFixture } from "../../../../../🧬️contract/�
 
 export function testRuntimeTreeRetirement(): void {
   const read = (path: string) => readFileSync(new URL(path, new URL("../..", import.meta.url)), "utf8");
-  const fixture: RuntimeTreeRetirementFixture = JSON.parse(read("./🧫️fixtures/🔣️.json"));
+  const fixture: RuntimeTreeRetirementFixture = JSON.parse(read("./🧪️tests/🧫️fixtures/🔣️.json"));
   let active: Uint8Array | undefined;
   let handback: Uint8Array | undefined;
   let source: Uint8Array | undefined = Buffer.from("a");

@@ -12,7 +12,7 @@ pub struct BitmapIntoTxt;
 
 /// 🖨️ Typed encode of `BitmapSnapshot` into its native `.wfcbitmap` DSL text.
 pub fn serialize(from: &BitmapSnapshot) -> String {
-    <BitmapSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(from)
+    <BitmapSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(from)
 }
 
 impl Serializer<BitmapSnapshot> for BitmapIntoTxt {

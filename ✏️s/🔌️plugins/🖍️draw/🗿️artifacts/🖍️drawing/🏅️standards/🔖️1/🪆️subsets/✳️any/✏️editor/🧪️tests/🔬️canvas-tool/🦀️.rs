@@ -4,7 +4,7 @@ use super::*;
 
 #[test]
 fn nested_curve_selection_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️selection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️selection/🔣️.json")).unwrap();
     let segments: Vec<PathSegment> = serde_json::from_value(fixture["segments"].clone()).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mut path = filled_path("Curve", segments.clone());
@@ -397,7 +397,7 @@ fn point_selection_reaches_the_painted_path_behind_a_concave_frame() {
 
 #[test]
 fn primitive_picking_uses_painted_contours() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️schema/🧮️geometry/🎯️picking/🧫️fixtures/🔷️shapes/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🔷️shapes/🔣️.json")).unwrap();
     for sample in fixture.as_array().unwrap() {
         let kind=sample["kind"].as_str().unwrap();
         let mut shape=crate::DrawingShapeBody {base:crate::schema::default_layer_base(crate::schema::identity::DrawingIdentity::admit((("shape")).to_string().into()).expect("nonempty authored identity"), "shape"),shape_kind:kind.into(),rect:None,ellipse:None,circle:None,line:None,polygon:None};
@@ -423,7 +423,7 @@ fn primitive_picking_uses_painted_contours() {
 
 #[test]
 fn compound_path_picking_uses_the_authored_fill_rule() {
-    let rows:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️schema/🎨️fill/🌀️rule/🧫️fixtures/🔣️.json")).unwrap();
+    let rows:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🎨️fill/🌀️rule/🔣️.json")).unwrap();
     for row in rows.as_array().unwrap() {
         let segments=crate::standards::v1::subsets::any::io::import::deserializers::artifacts::svg::v1_1::any::path::parse_editable_svg_path(row["path"].as_str().unwrap()).unwrap();
         let mut layer=filled_path("Compound",segments);
@@ -467,7 +467,7 @@ fn empty_node_press_starts_marquee_without_changing_point_selection() {
 
 #[test]
 fn node_publication_uses_merged_point_targets_and_actual_json_byte_limit() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎯️point-publication/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎯️point-publication/🔣️.json")).unwrap();
     let ids:Vec<String>=serde_json::from_value(fixture["ids"].clone()).unwrap();
     let document=DrawingSnapshot::default();
     let mut cursor=TracePointerJob::new_marquee(&document,[0.0,0.0],[1.0,1.0],false);

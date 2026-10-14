@@ -5,7 +5,7 @@ import { parseTileProxyAssetSpecV1, TILE_PROXY_TRANSPORT_LIMITS_V1 } from "../�
 
 const authority = resolve(import.meta.dir, "..");
 const schema = JSON.parse(readFileSync(resolve(authority, "🧬️schema/🔣️.json"), "utf8"));
-const corpus = JSON.parse(readFileSync(resolve(authority, "🧫️fixtures/🔣️.json"), "utf8"));
+const corpus = JSON.parse(readFileSync(resolve(authority, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
 
 describe("owner-neutral tile proxy contract", () => {
   it("matches the portable schema, finite transport limits and independent Ajv admission", async () => {

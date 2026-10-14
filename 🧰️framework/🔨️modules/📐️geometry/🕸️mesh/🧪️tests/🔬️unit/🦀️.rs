@@ -2,7 +2,7 @@ use super::*;
 use serde_json::Value;
 
 fn fixtures() -> Value {
-    serde_json::from_str(include_str!("../../../🧫️fixtures/🕸️mesh/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🕸️mesh/🔣️.json")).unwrap()
 }
 
 fn pt(v: &Value) -> Point {

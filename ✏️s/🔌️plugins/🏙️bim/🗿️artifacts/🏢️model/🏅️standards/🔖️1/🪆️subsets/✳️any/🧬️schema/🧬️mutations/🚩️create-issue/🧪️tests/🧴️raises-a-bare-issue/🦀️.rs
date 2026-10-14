@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🚩️create-issue/🧴️raises-a-bare-issue",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚩️create-issue/🧴️raises-a-bare-issue/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚩️create-issue/🧴️raises-a-bare-issue/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚩️create-issue/🧴️raises-a-bare-issue/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚩️create-issue/🧴️raises-a-bare-issue/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚩️create-issue/🧴️raises-a-bare-issue/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚩️create-issue/🧴️raises-a-bare-issue/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚩️create-issue/🧴️raises-a-bare-issue/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚩️create-issue/🧴️raises-a-bare-issue/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚩️create-issue/🧴️raises-a-bare-issue/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚩️create-issue/🧴️raises-a-bare-issue/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

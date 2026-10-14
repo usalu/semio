@@ -3,7 +3,7 @@ use dsl::os_pack as pack;
 use protocol::{Mutation, OpBinary, OpText};
 #[test]
 fn forms_configuration_contract_vectors_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️mutation-contracts.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔁️mutation-contracts.json")).unwrap();
     let base: FormsConfig = semio_framework_pack_json::from_json_str(&vectors["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(<FormsConfigMutation as Mutation<FormsConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().unwrap().len());
     for vector in vectors["cases"].as_array().unwrap() {

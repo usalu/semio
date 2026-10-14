@@ -7,7 +7,7 @@ import { spawnSync } from "node:child_process";
 /** 🚦️ Runs the real baseline executor and compares workflow outputs with its schema-valid JSON and native Git commit. */
 export async function testCiBaselineCommand(workspace: string, output: string): Promise<void> {
   const require = createRequire(import.meta.url), lodash = require("lodash"), ajv = new (require("ajv"))();
-  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🚦️baseline-command/🔣️.json"), "utf8")), root = resolve(import.meta.dir, "../.."), script = join(root, "📜️script.ts");
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🚦️baseline-command/🔣️.json"), "utf8")), root = resolve(import.meta.dir, "../.."), script = join(root, "📜️script.ts");
   const project = JSON.parse(readFileSync(join(root, "../📋️project.json"), "utf8")), target = project.targets[fixture.target];
   assert.equal(project.name, fixture.project); assert.equal(target.cache, false); assert.deepEqual(target.outputs, []); assert.equal(target.options.command, fixture.command);
   const bundle = await require("esbuild").build({ entryPoints: [script], absWorkingDir: workspace, bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });

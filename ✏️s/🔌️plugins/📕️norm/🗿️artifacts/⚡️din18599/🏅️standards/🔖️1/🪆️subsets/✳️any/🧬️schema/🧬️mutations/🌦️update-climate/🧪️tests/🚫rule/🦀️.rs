@@ -1,11 +1,11 @@
 //! 🧪️ Fixture `🌦️update-climate/🚫rule`.
 use crate::{Din18599Diff, Din18599Mutation, Din18599Snapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌦️update-climate/🚫rule/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌦️update-climate/🚫rule/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌦️update-climate/🚫rule/🦠️mutation/🔣️.json");
-const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌦️update-climate/🚫rule/🔺️diff/🚫️.absent");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌦️update-climate/🚫rule/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌦️update-climate/🚫rule/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌦️update-climate/🚫rule/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌦️update-climate/🚫rule/🦠️mutation/🔣️.json");
+const DIFF_ABSENT: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌦️update-climate/🚫rule/🔺️diff/🚫️.absent");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌦️update-climate/🚫rule/🎯️outcome/🔣️.json");
 
 fn before() -> Din18599Snapshot { serde_json::from_str(BEFORE).unwrap() }
 fn expected_after() -> Din18599Snapshot { serde_json::from_str(AFTER).unwrap() }

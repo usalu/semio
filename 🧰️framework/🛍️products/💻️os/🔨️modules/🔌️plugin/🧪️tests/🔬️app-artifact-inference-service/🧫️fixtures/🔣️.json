@@ -1,0 +1,14 @@
+{
+  "operation": 17,
+  "generation": 9,
+  "deadlineUs": 12345,
+  "clockUs": 12000,
+  "fuel": 10000,
+  "stock": [
+    10000,
+    262144,
+    262144,
+    262144,
+    128
+  ]
+}

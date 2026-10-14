@@ -1,10 +1,11 @@
 //! 🫴️ Original semantic recipients preserve every admitted SQL and DSL birth across refusals.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
-use store::{os_store::serialization::ArtifactSqliteSnapshot as _,os_store::serialization::ArtifactDsl as _};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost as _,pack::snapshot::ArtifactDsl as _};
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress};
 use std::cell::Cell;
-fn contract()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
-fn cases()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()}
+fn contract()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+fn cases()->serde_json::Value{serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn grant(value:&serde_json::Value)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:value["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:value["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:value["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:value["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:value["maximumDepth"].as_u64().unwrap()as usize}}
 fn database(rows:&serde_json::Value)->SqliteDatabase{SqliteDatabase{tables:vec![store::sqlite_snapshot::SqliteTable{name:"probe_node".to_string(),sql:super::super::ProbeSnapshot::SQLITE_SCHEMA.trim().trim_end_matches(';').to_string(),rows:rows.as_array().unwrap().iter().map(|row|SqliteRow{rowid:row[0].as_i64().unwrap(),values:row.as_array().unwrap().iter().map(|cell|if cell.is_null(){SqliteValue::Null}else if let Some(integer)=cell.as_i64(){SqliteValue::Integer(integer)}else{SqliteValue::Text(cell.as_str().unwrap().to_string())}).collect()}).collect()}]}}
 fn same_rows(database:&SqliteDatabase,rows:&serde_json::Value){let actual=database.tables[0].rows.iter().map(|row|row.values.iter().map(|cell|match cell{SqliteValue::Null=>serde_json::Value::Null,SqliteValue::Integer(value)=>serde_json::json!(value),SqliteValue::Text(value)=>serde_json::json!(value),_=>panic!("Probe declared scalar")}).collect::<Vec<_>>()).collect::<Vec<_>>();assert_eq!(serde_json::json!(actual),*rows);}

@@ -14,7 +14,7 @@ type PersistenceEvent = { readonly publish: null } | { readonly absent: null } |
 type Case = { readonly id: string; readonly events: readonly PersistenceEvent[]; readonly writes: readonly number[] };
 type Settler = { readonly promise: Promise<void>; readonly resolve: () => void; readonly reject: (error: Error) => void };
 
-const fixtures = new URL("../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🧫️fixtures/🧫️folder-archive-persistence/", import.meta.url);
+const fixtures = new URL("../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🧪️tests/🧫️fixtures/🧫️folder-archive-persistence", import.meta.url);
 const corpus = JSON.parse(readFileSync(new URL("🔣️.json", fixtures), "utf8")) as { readonly cases: readonly Case[] };
 
 /** 🎛️ A promise this law settles itself. */

@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout};
 use crate::ModelMutation;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🥞️set-wall-type-of/✅️retypes-the-wall/📸️snapshot/⬅️before/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🥞️set-wall-type-of/✅️retypes-the-wall/📸️snapshot/⬅️before/🔣️.json");
 
 #[semio_framework_async_macros::async_test]
 async fn a_thinner_type_thins_the_wall_and_its_volume() {

@@ -1,4 +1,4 @@
-import { buildBudgetMs, cmdBudgetMs, daemonBudgetMs, orchestratorBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { buildBudgetMs, cmdBudgetMs, daemonBudgetMs, orchestratorBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { expect, test } from "bun:test";
 import { readFileSync, mkdtempSync } from "node:fs";
 import { join } from "node:path";
@@ -7,10 +7,10 @@ import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
 import { defaultBudgetMs, workspaceScriptExists } from "../../🏃️process/🟦️.ts";
 
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/⏱️process-budgets/🔣️.json", import.meta.url), "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/⏱️process-budgets/🔣️.json", import.meta.url), "utf8"));
 
-const budgetPath = fileURLToPath(new URL("../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts", import.meta.url));
-const processInvocationPath = fileURLToPath(new URL("../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts", import.meta.url));
+const budgetPath = fileURLToPath(new URL("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts", import.meta.url));
+const processInvocationPath = fileURLToPath(new URL("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts", import.meta.url));
 const libraryPath = fileURLToPath(new URL("../../📦️packages/🟦️typescript/🟦️.ts", import.meta.url));
 /** 🧵️ The Execa 1.x completion oracle, typed at its CommonJS boundary. */
 type ExecaOracle = (file: string, args: readonly string[], options: { readonly env?: NodeJS.ProcessEnv; readonly timeout?: number; readonly reject?: boolean }) => Promise<{ readonly code: number | null; readonly stdout: string; readonly stderr: string; readonly timedOut: boolean }>;
@@ -18,7 +18,7 @@ const execa: ExecaOracle = createRequire(import.meta.url)("execa");
 const budgetKeys = ["SEMIO_BUILD_BUDGET_MS", "SEMIO_CMD_BUDGET_MS", "SEMIO_ORCHESTRATOR_BUDGET_MS", "SEMIO_DAEMON_BUDGET_MS"];
 
 test("owned snapshot Cargo feature admission remains separate from the ordinary artifact suite",async()=>{
- const corpus=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🪶️snapshot-test-selection/🔣️.json",import.meta.url),"utf8"));
+ const corpus=JSON.parse(readFileSync(new URL("../🧫️fixtures/🪶️snapshot-test-selection/🔣️.json",import.meta.url),"utf8"));
  const artifactRoot=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifactRoot)throw Error("SEMIO_TEST_ARTIFACT_DIR must name the ticket generated directory");
  const root=fileURLToPath(new URL("../../../../../../../",import.meta.url)),runner=fileURLToPath(new URL("../../⚡️caching/📦️artifacts/🦀️rust/🟦️.ts",import.meta.url));
  for(const row of corpus.cases){const output=mkdtempSync(join(artifactRoot,"snapshot-features-"));
@@ -30,7 +30,7 @@ test("owned snapshot Cargo feature admission remains separate from the ordinary 
 },30000);
 
 test("owned snapshot source groups retain exact coverage and finite per-group budgets",async()=>{
- const corpus=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🪶️snapshot-test-groups/🔣️.json",import.meta.url),"utf8"));
+ const corpus=JSON.parse(readFileSync(new URL("../🧫️fixtures/🪶️snapshot-test-groups/🔣️.json",import.meta.url),"utf8"));
  
  const {Database}=await import("bun:sqlite"),db=new Database(":memory:");db.exec("CREATE TABLE owned_source(name TEXT PRIMARY KEY, ordinal INTEGER NOT NULL)");for(const [index,name] of corpus.sources.entries())db.query("INSERT INTO owned_source VALUES (?,?)").run(name,index);expect(db.query("SELECT name FROM owned_source ORDER BY ordinal").all().map((row:any)=>row.name)).toEqual(corpus.sources);db.close();
  const root=fileURLToPath(new URL("../../../../../../../",import.meta.url)),runner=fileURLToPath(new URL("../../⚡️caching/📦️artifacts/🦀️rust/🟦️.ts",import.meta.url));
@@ -169,7 +169,7 @@ test("process runner reaches workspace scripts before same-named bins", async ()
 });
 
 test("process budgets bind nested native workspace profiles to the repository config",async()=>{
-  const corpus=JSON.parse(readFileSync(new URL("../../🧫️fixtures/⏱️process-budgets/native-profile.json",import.meta.url),"utf8"));
+  const corpus=JSON.parse(readFileSync(new URL("../🧫️fixtures/⏱️process-budgets/native-profile.json",import.meta.url),"utf8"));
   
   expect(corpus["schemaVersion"]).toEqual(1);expect(corpus["configPath"]).toEqual(".config/nextest.toml");expect(corpus["periods"]["fundamental"]).toEqual("15s");expect(corpus["periods"]["quick"]).toEqual("300s");expect(corpus["periods"]["long"]).toEqual("900s");expect(corpus["periods"]["exhaustive"]).toEqual("1800s");expect(corpus["nativePackage"]["name"]).toEqual("semio-s-artifact-stdio-mp4");expect(corpus["nativePackage"]["workspace"]).toEqual("✏️s");expect(corpus["nativePackage"]["manifest"]).toEqual("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🦀️rust/Cargo.toml");
   for(const coverage of corpus.coverage){
@@ -185,7 +185,7 @@ test("process budgets bind nested native workspace profiles to the repository co
 },30000);
 
 test("process native profiles belong to each physical Cargo workspace",async()=>{
-  const corpus=JSON.parse(readFileSync(new URL("../../🧫️fixtures/⏱️process-budgets/native-profile.json",import.meta.url),"utf8"));
+  const corpus=JSON.parse(readFileSync(new URL("../🧫️fixtures/⏱️process-budgets/native-profile.json",import.meta.url),"utf8"));
   const {getWorkspaceRoot}=await import(libraryPath);const root=getWorkspaceRoot();
   const toml=createRequire(import.meta.url)("toml") as {parse:(source:string)=>any};
   const{discoverCargoWorkspaces,cargoWorkspaceMembers}=await import("../../🗂️workspaces/🦀️cargo/🟦️.ts");

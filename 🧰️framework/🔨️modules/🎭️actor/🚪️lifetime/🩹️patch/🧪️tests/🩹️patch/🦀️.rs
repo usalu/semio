@@ -2,7 +2,7 @@
 use super::*;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
 
 fn unhex(value: &str) -> Vec<u8> {
@@ -49,7 +49,7 @@ async fn actor_ui_patch_receipt_outer_field_preserves_order_and_rejects_partial_
     for row in fixture["vectors"].as_array().unwrap() {
         let receipt: ActorUiPatchReceipt = serde_json::from_value(row["value"].clone()).unwrap();
         let turn = crate::TurnResult {
-            retained_receipt: serde_json::from_str(include_str!("../../../../🎟️retained-turn/🧫️fixtures/🔣️.json")).unwrap(),
+            retained_receipt: serde_json::from_str(include_str!("../../../../🎟️retained-turn/🧪️tests/🧫️fixtures/🔣️.json")).unwrap(),
             ui_patches: vec![91],
             effects: vec![],
             command_ingress: vec![],
@@ -70,7 +70,7 @@ async fn actor_ui_patch_receipt_outer_field_preserves_order_and_rejects_partial_
         expected.extend_from_slice(&[0; 26]);
         assert_eq!(bytes, expected);
         assert_eq!(crate::TurnResult::pack_decode(&bytes, &mut 0).await.unwrap(), turn);
-        for invalid in [crate::TurnResult { ui_patch_receipt: None, ..turn.clone() }, crate::TurnResult { retained_receipt: serde_json::from_str(include_str!("../../../../🎟️retained-turn/🧫️fixtures/🔣️.json")).unwrap(), ui_patches: vec![], ..turn.clone() }] {
+        for invalid in [crate::TurnResult { ui_patch_receipt: None, ..turn.clone() }, crate::TurnResult { retained_receipt: serde_json::from_str(include_str!("../../../../🎟️retained-turn/🧪️tests/🧫️fixtures/🔣️.json")).unwrap(), ui_patches: vec![], ..turn.clone() }] {
             let mut untouched = vec![73, 74];
             assert!(invalid.pack_encode(&mut untouched).await.is_err());
             assert_eq!(untouched, [73, 74]);

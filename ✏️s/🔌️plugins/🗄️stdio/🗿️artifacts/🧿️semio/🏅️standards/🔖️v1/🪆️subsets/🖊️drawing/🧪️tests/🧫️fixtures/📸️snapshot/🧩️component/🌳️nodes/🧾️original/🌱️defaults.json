@@ -1,0 +1,373 @@
+{
+  "defaults": [
+    {
+      "name": "empty group",
+      "input": {
+        "kind": "group",
+        "transform": {
+          "translation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        }
+      },
+      "expected": {
+        "kind": "group",
+        "transform": {
+          "translation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "children": []
+      }
+    },
+    {
+      "name": "empty document",
+      "input": {
+        "schema": "stdio.semio.drawing",
+        "canvas": {
+          "width": 800,
+          "height": 600
+        }
+      },
+      "expected": {
+        "schema": "stdio.semio.drawing",
+        "canvas": {
+          "width": 800,
+          "height": 600
+        },
+        "styles": [],
+        "layers": []
+      }
+    },
+    {
+      "name": "authored layers",
+      "input": {
+        "schema": "stdio.semio.drawing",
+        "canvas": {
+          "width": 800,
+          "height": 600
+        },
+        "styles": [
+          {
+            "name": "Ink α"
+          }
+        ],
+        "layers": [
+          {
+            "id": "background",
+            "name": "Hintergrund",
+            "visible": false,
+            "root": {
+              "kind": "group",
+              "transform": {
+                "translation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "w": 1
+                },
+                "scale": {
+                  "x": 1,
+                  "y": 1,
+                  "z": 1
+                }
+              },
+              "children": []
+            }
+          },
+          {
+            "id": "foreground",
+            "name": "Foreground",
+            "visible": true,
+            "root": {
+              "kind": "group",
+              "transform": {
+                "translation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "w": 1
+                },
+                "scale": {
+                  "x": 1,
+                  "y": 1,
+                  "z": 1
+                }
+              },
+              "children": [
+                {
+                  "kind": "path",
+                  "segments": [
+                    {
+                      "kind": "moveTo",
+                      "to": {
+                        "x": 1,
+                        "y": 2
+                      }
+                    },
+                    {
+                      "kind": "lineTo",
+                      "to": {
+                        "x": 30,
+                        "y": 20
+                      }
+                    },
+                    {
+                      "kind": "close"
+                    }
+                  ],
+                  "style": "Ink α"
+                },
+                {
+                  "kind": "text",
+                  "value": "Layers · Ebenen 日本語",
+                  "at": {
+                    "x": 5,
+                    "y": 10
+                  },
+                  "style": "Ink α"
+                },
+                {
+                  "kind": "image",
+                  "at": {
+                    "x": 4,
+                    "y": 7
+                  },
+                  "width": 32,
+                  "height": 24,
+                  "mime": "image/png",
+                  "bytes": [
+                    0,
+                    1,
+                    127,
+                    128,
+                    254,
+                    255
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "schema": "stdio.semio.drawing",
+        "canvas": {
+          "width": 800,
+          "height": 600
+        },
+        "styles": [
+          {
+            "name": "Ink α"
+          }
+        ],
+        "layers": [
+          {
+            "id": "background",
+            "name": "Hintergrund",
+            "visible": false,
+            "root": {
+              "kind": "group",
+              "transform": {
+                "translation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "w": 1
+                },
+                "scale": {
+                  "x": 1,
+                  "y": 1,
+                  "z": 1
+                }
+              },
+              "children": []
+            }
+          },
+          {
+            "id": "foreground",
+            "name": "Foreground",
+            "visible": true,
+            "root": {
+              "kind": "group",
+              "transform": {
+                "translation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "w": 1
+                },
+                "scale": {
+                  "x": 1,
+                  "y": 1,
+                  "z": 1
+                }
+              },
+              "children": [
+                {
+                  "kind": "path",
+                  "segments": [
+                    {
+                      "kind": "moveTo",
+                      "to": {
+                        "x": 1,
+                        "y": 2
+                      }
+                    },
+                    {
+                      "kind": "lineTo",
+                      "to": {
+                        "x": 30,
+                        "y": 20
+                      }
+                    },
+                    {
+                      "kind": "close"
+                    }
+                  ],
+                  "style": "Ink α"
+                },
+                {
+                  "kind": "text",
+                  "value": "Layers · Ebenen 日本語",
+                  "at": {
+                    "x": 5,
+                    "y": 10
+                  },
+                  "style": "Ink α"
+                },
+                {
+                  "kind": "image",
+                  "at": {
+                    "x": 4,
+                    "y": 7
+                  },
+                  "width": 32,
+                  "height": 24,
+                  "mime": "image/png",
+                  "bytes": [
+                    0,
+                    1,
+                    127,
+                    128,
+                    254,
+                    255
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "malformed": [
+    {
+      "kind": "style",
+      "input": {
+        "name": "accent",
+        "children": []
+      }
+    },
+    {
+      "kind": "canvas",
+      "input": {
+        "width": 800,
+        "height": 600,
+        "style": "accent"
+      }
+    },
+    {
+      "kind": "layer",
+      "input": {
+        "id": "foreground",
+        "name": "Foreground",
+        "visible": true,
+        "root": {
+          "kind": "group",
+          "transform": {
+            "translation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        "children": []
+      }
+    },
+    {
+      "kind": "snapshot",
+      "input": {
+        "schema": "stdio.semio.drawing",
+        "canvas": {
+          "width": 800,
+          "height": 600
+        },
+        "children": []
+      }
+    }
+  ],
+  "longText": {
+    "repeat": 20000,
+    "text": "A🌍",
+    "minimumCheckpointBytes": 65536
+  }
+}

@@ -5,7 +5,7 @@ use semio_repo_test_host::law::feature_rows;
 /// 🧫️ The real committed package `📜️mutate-docx-ecma-376` runs on — the WordprocessingML document
 /// derived once from this repository's own `README.md`: 414 top-level body blocks, a real 37-row
 /// `w:tbl`, seven declared styles and seven OPC parts.
-const FIXTURE: &[u8] = include_bytes!("../../../🧫️fixtures/📜️example-readme.docx");
+const FIXTURE: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/📜️example-readme.docx");
 
 /// 🪢️ The four kinds that write the package plumbing (`[Content_Types].xml`, the `*.rels` parts). The jszip judge compares the typed body/styles and the other parts
 /// only, so these are proven by the cases below -- explicit specs on the real package, read back through [`project_docx_ecma_376`]'s `plumbing` member -- and by the

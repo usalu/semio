@@ -13,12 +13,12 @@ pub const DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬
 
 /// 📖️ Parses DIN EN 16798 DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Din16798Snapshot, semio_framework_diagnostic::TextError> {
-    <Din16798Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <Din16798Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.din16798` DSL text.
 pub fn print_dsl(document: &Din16798Snapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(document)
+    pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -49,11 +49,11 @@ pub fn decode_din16798_snapshot_json(text: &str) -> Result<Din16798Snapshot, Str
 }
 
 pub fn decode_din16798_dsl(text: &str) -> Result<Din16798Snapshot, String> {
-    <Din16798Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+    <Din16798Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
 
 pub fn encode_din16798_dsl(snapshot: &Din16798Snapshot) -> String {
-    <Din16798Snapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(snapshot)
+    <Din16798Snapshot as pack::snapshot::ArtifactDsl>::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

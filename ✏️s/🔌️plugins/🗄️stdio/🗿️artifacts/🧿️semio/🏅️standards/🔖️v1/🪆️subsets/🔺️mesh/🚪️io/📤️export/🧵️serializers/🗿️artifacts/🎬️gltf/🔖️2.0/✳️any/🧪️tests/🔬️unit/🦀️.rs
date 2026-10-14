@@ -54,7 +54,7 @@ async fn empty_positions_is_a_hard_error_not_a_fabricated_accessor() {
 
 #[semio_framework_async_macros::async_test]
 async fn material_texture_refs_resolve_actual_image_sources_and_refuse_dangling_ids() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧬️schema/📸️snapshot/🧫️fixtures/🎨️material-textures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🎨️material-textures/🔣️.json")).unwrap();
     let source = GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document: semio_framework_pack_json::from_json_str(&fixture["gltf"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), buffers: Vec::new(), source_form: GltfSourceForm::Json };
     let imported = ::semio_framework_async::poll::resolve_ready(SemioMeshFromGltf::deserialize(&source)).unwrap();
     assert_eq!(imported.materials[0].base_color_texture.as_deref(), fixture["bindings"]["baseColorTexture"].as_str());

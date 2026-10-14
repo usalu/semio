@@ -1,0 +1,16 @@
+{
+  "ChangeImportedFeatures": {
+    "newImportedMap": {
+      "positions": [
+        {
+          "id": "pos-harbor",
+          "lat": 53.5,
+          "lon": 10.0
+        }
+      ],
+      "routes": [],
+      "regions": [],
+      "properties": []
+    }
+  }
+}

@@ -6,8 +6,8 @@ fn generation3d_config_default_matches_the_former_runtime_defaults() {
     let config = Generation3dConfig::default();
     assert_eq!(config.show_mode, "shaded");
     assert_eq!(config.sun(), semio_framework_plugin::WorldSunConfig::default());
-    let pack = <Generation3dConfig as store::os_store::serialization::ArtifactPack>::encode_pack_with(&config, &store::PackEncodeOptions::default()).expect("the app default must be pack-encodable before the registry constructs its store");
-    assert_eq!(<Generation3dConfig as store::os_store::serialization::ArtifactPack>::decode_pack_with(&pack, &store::PackDecodeOptions::default()).expect("the app default pack must decode"), config);
+    let pack = <Generation3dConfig as pack::snapshot::ArtifactPack>::encode_pack_with(&config, &store::PackEncodeOptions::default()).expect("the app default must be pack-encodable before the registry constructs its store");
+    assert_eq!(<Generation3dConfig as pack::snapshot::ArtifactPack>::decode_pack_with(&pack, &store::PackDecodeOptions::default()).expect("the app default pack must decode"), config);
 }
 
 fn config_round_trip(base: &Generation3dConfig, operation: &Generation3dConfigMutation) -> Generation3dConfig {

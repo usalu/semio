@@ -6,7 +6,7 @@ use semio_framework_value::{DslValue,NativeDecodeControl,NativeEncodeControl,ret
 #[global_allocator]
 static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 
-fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../../♻️retirement/🧫️fixtures/🔣️.json")).unwrap()}
+fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/♻️retirement/🔣️.json")).unwrap()}
 fn spec()->RecordSpec{RecordSpec::new(None,RecordLayout::Inline,vec![FieldSpec::new(0,"text",Shape::Text)])}
 fn producer()->RecordSpecProducer{RecordSpecProducer{ordinary:spec,decoding:|_:&mut NativeDecodeControl<'_>|Ok(spec()),encoding:|_:&mut NativeEncodeControl<'_>|Ok(spec())}}
 fn record(text:&str)->RecordValue{RecordValue{fields:[(0,FieldValue::Text(text.to_owned()))].into_iter().collect()}}

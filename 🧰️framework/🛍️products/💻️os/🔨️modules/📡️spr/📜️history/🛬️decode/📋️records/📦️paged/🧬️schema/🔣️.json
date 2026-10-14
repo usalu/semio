@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.history.original-paged-edit-index.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "grant",
+    "control",
+    "records",
+    "prefix",
+    "cancelAt",
+    "expected",
+    "maximumRetirementTurns"
+  ],
+  "properties": {
+    "grant": {
+      "const": {
+        "items": 1,
+        "copyBytes": 2,
+        "capacityBytes": 65536,
+        "releaseBytes": 262144,
+        "depth": 64
+      }
+    },
+    "control": {
+      "const": {
+        "maximumAllocationBytes": 8388608
+      }
+    },
+    "records": {
+      "const": 4096
+    },
+    "prefix": {
+      "const": "edit-"
+    },
+    "cancelAt": {
+      "const": [
+        0,
+        1,
+        7,
+        17,
+        255,
+        256,
+        257,
+        1023,
+        1024,
+        1025,
+        2049,
+        4096
+      ]
+    },
+    "expected": {
+      "const": {
+        "sameOriginalPointers": true,
+        "borrowedOrdinals": true,
+        "noFlatten": true,
+        "heapConserved": true,
+        "terminalEmpty": true
+      }
+    },
+    "maximumRetirementTurns": {
+      "const": 2097152
+    }
+  }
+}

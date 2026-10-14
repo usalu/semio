@@ -19,7 +19,7 @@ static LABEL:OnceLock<String>=OnceLock::new();
 static ORDINARY_CALLS:AtomicUsize=AtomicUsize::new(0);
 static RECURSIVE_ORDINARY_CALLS:AtomicUsize=AtomicUsize::new(0);
 
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🏭️producer/🔣️.json")).unwrap()}
 fn label()->&'static str{LABEL.get_or_init(||{let data=fixture();data["copy"]["seed"].as_str().unwrap().repeat(data["copy"]["repeatCount"].as_u64().unwrap()as usize)})}
 fn leaf()->RecordSpec{semio_framework_dsl_record::RecordSpec::new(None,semio_framework_dsl_record::RecordLayout::Inline,vec![FieldSpec::new(0,"value",Shape::Float)])}
 fn leaf_controlled<C:NativeSchemaControl>(control:&mut C)->Result<RecordSpec,semio_framework_value::ValueError>{control.scoped_stage(|control|{control.begin_stage(1)?;let mut fields=control.allocate_vec(1)?;fields.push(semio_framework_dsl_record::producer::field(0,"value",semio_framework_dsl_record::Shape::Float,control)?);control.step()?;semio_framework_dsl_record::producer::record(None,semio_framework_dsl_record::RecordLayout::Inline,fields,control)})}

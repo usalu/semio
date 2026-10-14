@@ -939,6 +939,8 @@ interface ui {
 interface pure {
   log: func(level: string, message: string);
   now-ms: func() -> s64;
+  /// ⏱️ Reads the actual original caller clock during a checked job loan.
+  operation-clock-us: func() -> option<u64>;
   trace-span: func(name: string);
   /// 🎟️ Begins only a receiving operation already owned by the caller's original authority.
   operation-begin: async func() -> result<u64, u32>;
@@ -1170,6 +1172,7 @@ interface reactor {
   record actor-call-refusal {
     input: retained-turn-input,
     spent: retained-progress,
+    work-units-spent: u64,
     failure: actor-call-failure,
   }
   record actor-context-close-call {
@@ -1182,7 +1185,7 @@ interface reactor {
   record budget {
     retained: retained-turn-input,
     fuel: u64,
-    deadline-ms: u32,
+    deadline-us: u64,
     max-effects: u32,
     max-patch-bytes: u32,
     max-frames: u32,
@@ -1431,19 +1434,55 @@ interface host-async {
 /// `describe.wit`'s `describe()` payload instead of a callable export.
 interface jobs {
   use types.{plugin-error};
+  use reactor.{retained-turn-input, retained-progress, actor-call-failure};
 
   record job-budget {
+    input: retained-turn-input,
     fuel: u64,
-    deadline-ms: u32,
+    deadline-us: u64,
+    cancelled: bool,
   }
-  variant job-step {
-    running(option<list<u8>>),
-    done(list<u8>),
-    failed(list<u8>),
+
+  record job-source {
+    job: u64,
+    kind: string,
+    input: option<list<u8>>,
+    checkpoint: option<list<u8>>,
   }
-  start-job: async func(job: u64, kind: string, input: list<u8>) -> result<_, plugin-error>;
-  step-job: async func(job: u64, budget: job-budget) -> result<job-step, plugin-error>;
-  cancel-job: async func(job: u64);
+  enum job-output-state { running, done, failed }
+  record job-outcome { job: u64, operation: u64, generation: u64, state: job-output-state, byte-length: u64 }
+  record job-output-chunk { offset: u64, bytes: option<list<u8>>, output-closed: bool }
+  record job-output-call { input: retained-turn-input, spent: retained-progress, work-units-spent: u64, chunk: option<job-output-chunk>, source-closed: bool, refusal: option<actor-call-failure> }
+  record job-output-ack-call { input: retained-turn-input, spent: retained-progress, work-units-spent: u64, acknowledged: bool, source-closed: bool, refusal: option<actor-call-failure> }
+  record job-start-call {
+    input: retained-turn-input,
+    spent: retained-progress,
+    work-units-spent: u64,
+    admitted: bool,
+    returned-source: option<job-source>,
+    refusal: option<actor-call-failure>,
+  }
+  record job-step-call {
+    input: retained-turn-input,
+    spent: retained-progress,
+    work-units-spent: u64,
+    outcome: option<job-outcome>,
+    source-closed: bool,
+    refusal: option<actor-call-failure>,
+  }
+  record job-cancel-call {
+    input: retained-turn-input,
+    spent: retained-progress,
+    work-units-spent: u64,
+    admitted: bool,
+    refusal: option<actor-call-failure>,
+  }
+  start-job: async func(source: option<job-source>, budget: job-budget) -> job-start-call;
+  step-job: async func(job: u64, budget: job-budget) -> job-step-call;
+  read-job-output: async func(job: u64, budget: job-budget) -> job-output-call;
+  acknowledge-job-output: async func(job: u64, budget: job-budget) -> job-output-ack-call;
+  cancel-job: async func(job: u64, budget: job-budget) -> job-cancel-call;
+  close-jobs: async func(budget: job-budget) -> job-cancel-call;
   /// 🧵 Takes one sealed operation-owned download segment. Every `some` is at most 4,096
   /// bytes; the first `none` is the terminal observation and releases the operation authority.
   take-segmented-download-chunk: async func(instance-id: u32, operation-id: u64) -> result<option<list<u8>>, plugin-error>;

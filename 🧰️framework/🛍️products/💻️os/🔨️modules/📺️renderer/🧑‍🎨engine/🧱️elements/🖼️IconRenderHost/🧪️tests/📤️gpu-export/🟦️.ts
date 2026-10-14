@@ -8,7 +8,7 @@ import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 
 const host = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const fixture = JSON.parse(readFileSync(resolve(host, "🧫️fixtures/📤️gpu-export/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(host, "🧪️tests/🧫️fixtures/📤️gpu-export/🔣️.json"), "utf8"));
 
 describe("🖼️ Icon GPU PNG export", () => {
   

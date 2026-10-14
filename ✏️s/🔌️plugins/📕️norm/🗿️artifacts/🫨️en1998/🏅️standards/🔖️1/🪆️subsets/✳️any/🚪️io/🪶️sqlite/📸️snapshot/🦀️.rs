@@ -1,8 +1,9 @@
 //! 🫨️ Complete handwritten seismic site, building and parts-two-through-six relational ownership.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::En1998Snapshot;
 use crate::{DeSeismicZone,DeGroundCombo,En1998Site,En1998Building,En1998System,En1998Storey,En1998Member,En1998VariableAction,En1998Bridge,En1998Assessment,En1998Silo,En1998Tank,En1998Foundation,En1998RetainingWall,En1998Tower};
 use std::collections::BTreeMap;
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,NativeEncodingBound,RowWriter,reconstruct_text}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,NativeEncodingBound,RowWriter,reconstruct_text}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 
@@ -53,13 +54,13 @@ impl En1998Snapshot {
     }
     fn admit_sqlite_values(&self, control: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase) -> Result<(), ValueError> { let mut out = RowWriter::borrowed(control, phase)?; self.write_sqlite_rows(&mut out)?; out.finish_borrowed() }
 }
-impl ArtifactSqliteSnapshot for En1998Snapshot{
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self, ValueError>{let snapshot=store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {Self::__dsl_from_record_controlled(record, native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;snapshot.admit_sqlite_values(control,SqliteSnapshotPhase::DecodeNative)?;Ok(snapshot)}
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+impl ArtifactSqliteSnapshotHost for En1998Snapshot{
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self, ValueError>{let snapshot=store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {Self::__dsl_from_record_controlled(record, native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;snapshot.admit_sqlite_values(control,SqliteSnapshotPhase::DecodeNative)?;Ok(snapshot)}
+ 
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload, ValueError>{
   control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;let add=|count:usize,size:usize|count.checked_add(size).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "Native semantic row count overflow"));let mut rows=2usize;for size in[self.buildings.len(),self.bridges.len(),self.assessments.len(),self.silos.len(),self.tanks.len(),self.foundations.len(),self.retaining_walls.len(),self.towers.len()]{rows=add(rows,size)?}control.check_rows(rows)?;for(index,building)in self.buildings.iter().enumerate(){for size in[building.systems.len(),building.storeys.len(),building.members.len()]{rows=add(rows,size)?}control.check_rows(rows)?;for(index,storey)in building.storeys.iter().enumerate(){rows=add(rows,storey.variables.len())?;control.check_rows(rows)?;if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,building.storeys.len())?}}if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,self.buildings.len())?}}for(index,bridge)in self.bridges.iter().enumerate(){rows=add(rows,bridge.variables.len())?;control.check_rows(rows)?;if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,self.bridges.len())?}}for(index,tower)in self.towers.iter().enumerate(){rows=add(rows,tower.variables.len())?;control.check_rows(rows)?;if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,self.towers.len())?}}
   self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;
-  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
 
  fn preflight_sqlite_snapshot_encoding(&self,_:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(), ValueError>{
@@ -70,8 +71,13 @@ impl ArtifactSqliteSnapshot for En1998Snapshot{
   for a in &self.silos{bound.add(16384)?;for text in [&a.id,&a.content_category]{bound.repeated(text.len(),24)?;}}for a in &self.tanks{bound.add(16384)?;for text in [&a.id,&a.content_category]{bound.repeated(text.len(),24)?;}}for a in &self.foundations{bound.add(16384)?;for text in [&a.id,&a.supported_building_id]{bound.repeated(text.len(),24)?;}}for a in &self.retaining_walls{bound.add(16384)?;bound.repeated(a.id.len(),24)?;}for a in &self.towers{bound.add(16384)?;bound.repeated(a.id.len(),24)?;bound_variables(&mut bound,&a.variables)?;}bound.finish()
  }
 
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> { let mut out = RowWriter::new(Self::SQLITE_SCHEMA, control)?; self.write_sqlite_rows(&mut out)?; out.finish() }
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{
+    
+ 
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for En1998Snapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> { let mut out = RowWriter::new(Self::SQLITE_SCHEMA, control)?; self.write_sqlite_rows(&mut out)?; out.finish() }
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{
   validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
   let documents=entities(database,"en1998_document",2,&[],control)?;let sites=entities(database,"en1998_site",8,SITE,control)?;if documents.len()!=1||!documents.contains_key(&1)||sites.len()!=1||!sites.contains_key(&1)||sites[&1].integer(1)?!=1{return Err(invalid("EN1998 requires one document and one mandatory site"));}let d=documents[&1];let s=sites[&1];
   let b_rows=entities(database,"en1998_building",18,BUILDING,control)?;let system_rows=entities(database,"en1998_system",12,SYSTEM,control)?;let storey_rows=entities(database,"en1998_storey",16,STOREY,control)?;let sv_rows=entities(database,"en1998_storey_variable",6,VARIABLE,control)?;let member_rows=entities(database,"en1998_member",12,MEMBER,control)?;let bridge_rows=entities(database,"en1998_bridge",10,BRIDGE,control)?;let bv_rows=entities(database,"en1998_bridge_variable",6,VARIABLE,control)?;let assessment_rows=entities(database,"en1998_assessment",9,ASSESSMENT,control)?;let silo_rows=entities(database,"en1998_silo",13,SILO,control)?;let tank_rows=entities(database,"en1998_tank",11,TANK,control)?;let foundation_rows=entities(database,"en1998_foundation",10,FOUNDATION,control)?;let wall_rows=entities(database,"en1998_retaining_wall",9,WALL,control)?;let tower_rows=entities(database,"en1998_tower",10,TOWER,control)?;let tv_rows=entities(database,"en1998_tower_variable",6,VARIABLE,control)?;
@@ -93,7 +99,7 @@ impl ArtifactSqliteSnapshot for En1998Snapshot{
   control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(snapshot)
  }
 }
-pub fn sqlite_codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1998Snapshot as ArtifactSqliteSnapshot>::sqlite_codec()}
+pub fn sqlite_codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1998Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec()}
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]

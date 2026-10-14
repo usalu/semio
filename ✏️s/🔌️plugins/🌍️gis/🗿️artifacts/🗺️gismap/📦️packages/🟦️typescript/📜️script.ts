@@ -1,15 +1,15 @@
 #!/usr/bin/env bun
-import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️laws/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🌍 GIS Map inference, history and acknowledged-view conformance command owner. */
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { getWorkspaceRoot, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import {resolve} from "node:path";
-import {runOwnedCommand} from "./../../../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {runOwnedCommand} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 //#region 💡️InferencePortCheck
 /** 💡️ One rendered phase of the host-owned inference port, restated independently of production. */
 type OraclePreview = { schema: "semio.hub.gis-map-inference-preview/v1"; jobId: string; proposalHash: string; regionId: string; ring: readonly [readonly [number, number], readonly [number, number], readonly [number, number], readonly [number, number], readonly [number, number]] };
@@ -195,7 +195,7 @@ async function ownedExport(repoRoot: string, scope: keyof typeof OWNED_SCHEMA_MO
 /** 🧪️ Validates the private approval-history contract against AJV, an independent reducer, the
  * Shell arbitration function, and source hostiles for authority retirement and reissue. */
 async function proveGisMapApprovalHistory(repoRoot: string): Promise<Record<string, number>> {
-  const root = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference", "🧫️fixtures", "↩️gis-map-approval-history-v1");
+  const root = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/↩️gis-map-approval-history-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as Readonly<{ cases: readonly ApprovalHistoryFixtureRow[]; ordinaryHistory: Readonly<Record<string, string>> }>;
   
   
@@ -248,7 +248,7 @@ async function proveGisMapApprovalHistory(repoRoot: string): Promise<Record<stri
  * against the hub's own `🗳️gis-map-proposal-approval-v1` lifecycles and limits plus the `🖥️shell`
  * cross-language twin. It never runs a real hub, a model, or a renderer. */
 async function proveGisMapInferencePortFixture(repoRoot: string): Promise<Record<string, number>> {
-  const root = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference", "🧫️fixtures", "💡️gis-map-inference-port-v1");
+  const root = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/💡️gis-map-inference-port-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as OracleCorpus;
   
   
@@ -437,7 +437,7 @@ class GisMapInferencePortCheckScript extends BundleScript {
 //#endregion 💡️InferencePortCheck
 //#region 🗺️GisMapPeerRebootstrapCheck
 async function proveGisMapPeerRebootstrap(repoRoot: string): Promise<number> {
-  const fixtureRoot = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/🗺️gis-map-peer-rebootstrap-v1");
+  const fixtureRoot = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/🗺️gis-map-peer-rebootstrap-v1");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
   
   
@@ -497,7 +497,7 @@ async function proveGisMapPeerRebootstrap(repoRoot: string): Promise<number> {
 //#endregion 🗺️GisMapPeerRebootstrapCheck
 
 async function proveMountedGisMapProbe(repoRoot: string): Promise<number> {
-  const fixtureRoot = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧫️fixtures/🔬️mounted-gis-map-probe-v1");
+  const fixtureRoot = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/🔬️mounted-gis-map-probe-v1");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
   const validateSource = await ownedExport(repoRoot, "renderer", "MountedGisMapProbeSourceV1");
   const validateProbe = await ownedExport(repoRoot, "renderer", "MountedGisMapProbeV1");

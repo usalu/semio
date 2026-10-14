@@ -199,7 +199,7 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation2dInst
     /// 🧹️ A LIVE session owns nothing retirable — `FlowEvalSession::close_step` answers `Blocked`
     /// until `begin_close`, and reporting that from the live maintenance ladder spent the runtime's
     /// zero-progress credit every idle turn (26/09/09/PROCEDURAL-3D-END-TO-END, close-ladder lane).
-    fn maintenance_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
         use semio_framework_plugin::PluginLifecycleStep;
         use semio_framework_value::retained_clone::RetainedCloneProgress;
         if !self.closing {
@@ -213,11 +213,10 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation2dInst
         let (progress, finished) = if session.terminal_is_empty() {
             (RetainedCloneProgress { copied_items: 1, ..Default::default() }, true)
         } else {
-            match session.close_step(grant) {
+            match session.close_step(grant)? {
                 semio_framework_job::InteractiveJobCloseStep::Pending { progress } => (progress, false),
                 semio_framework_job::InteractiveJobCloseStep::Complete { progress } => (progress, true),
                 semio_framework_job::InteractiveJobCloseStep::Blocked => return Ok(PluginLifecycleStep::Blocked { reason: "Generation2d evaluation session awaits its exact close grant" }),
-                semio_framework_job::InteractiveJobCloseStep::Refused { .. } => return Err(Fault::from("generation2d-eval-session-close-refused")),
             }
         };
         if finished && session.terminal_is_empty() {
@@ -226,13 +225,13 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation2dInst
         Ok(if self.terminal_is_empty() { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) })
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
         self.closing = true;
         self.run_link.wake();
         for session in [self.eval_session.as_mut(), self.generation_session.as_mut()].into_iter().flatten() {
             session.begin_close();
         }
-        self.maintenance_step(grant)
+        self.maintenance_step(cx,grant)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -450,7 +449,8 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dSession
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("generation2d-session-command-work-repeated"));
         }
@@ -463,6 +463,9 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dSession
             Ok(emit)
         })?;
         Ok(ArtifactCommandWorkStep::Complete(emit))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -504,7 +507,8 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dFlowEva
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("generation2d-flow-eval-work-repeated"));
         }
@@ -522,6 +526,9 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dFlowEva
         }
         let (emit, transient) = hop?;
         Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { transient, ..Default::default() } })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -623,7 +630,8 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dGenerat
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("generation2d-generation-command-work-repeated"));
         }
@@ -638,6 +646,9 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dGenerat
             self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained))?;
         }
         Ok(ArtifactCommandWorkStep::Complete(emit))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -778,7 +789,8 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dContrib
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("generation2d-contributions-work-repeated"));
         }
@@ -800,6 +812,9 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dContrib
             Ok(emit)
         })?;
         Ok(ArtifactCommandWorkStep::Complete(emit))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -1740,6 +1755,7 @@ impl ArtifactEditor for Generation2dPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,
@@ -2008,7 +2024,7 @@ impl ArtifactEditor for Generation2dPlayApp {
                 Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "2d.drawing".into(), json: layers_json } })
             }
             "artifact:out" => {
-                let bytes = store::os_store::serialization::ArtifactPack::encode_pack(doc.snapshot);
+                let bytes = pack::snapshot::ArtifactPack::encode_pack(doc.snapshot);
                 Ok(semio_framework_plugin::Media {
                     media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Flow },
                     payload: semio_framework_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
@@ -2350,7 +2366,7 @@ fn generation2d_render_body(
 /// never a mutation row. `store::os_store::text_format::empty_document_spr` (never a minted `create_document_envelope`) keeps the guest off the
 /// `terminal shell reached Drop before its app-owned bounded retirement authority detached` trap on this path.
 pub fn reset_generation2d_document_effect(document: &Generation2dSnapshot) -> Effect {
-    let pack = <Generation2dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let pack = <Generation2dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("generation2d", GENERATION_2D_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }

@@ -1,11 +1,11 @@
 //! 🧪️ Fixture `📐️change-net-floor-area-m2/✅apply`.
 use crate::{Din18599Diff, Din18599Mutation, Din18599Snapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️change-net-floor-area-m2/✅apply/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️change-net-floor-area-m2/✅apply/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️change-net-floor-area-m2/✅apply/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️change-net-floor-area-m2/✅apply/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️change-net-floor-area-m2/✅apply/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️change-net-floor-area-m2/✅apply/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️change-net-floor-area-m2/✅apply/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️change-net-floor-area-m2/✅apply/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️change-net-floor-area-m2/✅apply/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️change-net-floor-area-m2/✅apply/🎯️outcome/🔣️.json");
 
 fn before() -> Din18599Snapshot { serde_json::from_str(BEFORE).unwrap() }
 fn expected_after() -> Din18599Snapshot { serde_json::from_str(AFTER).unwrap() }

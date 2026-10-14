@@ -2,7 +2,7 @@
 /** 🖱️ Owns repository UI censuses and root Storybook composition. */
 import { readFileSync, readdirSync } from "node:fs";
 import { join as systemJoin } from "node:path";
-import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { devToolingEnv, runCmd, defineLint, getWorkspaceRoot, dependencyBoundaryBreachesForBundleDir, type BundleLinter } from "../📦️packages/🟦️typescript/🟦️.ts";
 import { runRepoScriptMain } from "../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 

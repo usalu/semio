@@ -11,12 +11,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `En1999Snapshot` to its binary pack form.
 pub fn encode(document: &En1999Snapshot) -> Vec<u8> {
-    store::os_store::serialization::ArtifactPack::encode_pack(document)
+    pack::snapshot::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `En1999Snapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<En1999Snapshot, PackError> {
-    <En1999Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)
+    <En1999Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -34,10 +34,10 @@ use crate::document::AnnexChoice;
 use framework_schema::ArtifactSchema;
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 pub fn decode_en1999_pack(bytes: &[u8]) -> Result<En1999Snapshot, String> {
-    <En1999Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
+    <En1999Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
 }
 pub fn encode_en1999_pack(snapshot: &En1999Snapshot) -> Vec<u8> {
-    store::os_store::serialization::ArtifactPack::encode_pack(snapshot)
+    pack::snapshot::ArtifactPack::encode_pack(snapshot)
 }
 }
 pub use native_snapshot_codec::*;

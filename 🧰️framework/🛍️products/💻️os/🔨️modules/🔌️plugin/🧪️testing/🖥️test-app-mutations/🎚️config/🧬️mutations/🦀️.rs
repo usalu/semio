@@ -1,12 +1,12 @@
 #[path = "📝️change-test-config/🦀️.rs"]
 pub mod change_test_config_selection;
-use change_test_config_selection::ChangeTestConfigSelection;
+pub(crate) use change_test_config_selection::ChangeTestConfigSelection;
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, dsl::Mutations, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = store)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot=super::TestConfig,diff=super::TestConfigDiff,schema="plugin.testkit.config")]
-enum TestConfigMutation {
+pub(crate) enum TestConfigMutation {
     ChangeTestConfigSelection(ChangeTestConfigSelection),
 }
 impl semio_framework_value::retirement::RetireOwned for TestConfigMutation {

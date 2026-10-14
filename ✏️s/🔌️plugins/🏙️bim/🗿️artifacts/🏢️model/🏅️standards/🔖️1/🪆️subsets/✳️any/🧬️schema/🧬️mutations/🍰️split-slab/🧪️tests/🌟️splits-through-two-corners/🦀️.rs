@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🍰️split-slab/🌟️splits-through-two-corners",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🍰️split-slab/🌟️splits-through-two-corners/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🍰️split-slab/🌟️splits-through-two-corners/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🍰️split-slab/🌟️splits-through-two-corners/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🍰️split-slab/🌟️splits-through-two-corners/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🍰️split-slab/🌟️splits-through-two-corners/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🍰️split-slab/🌟️splits-through-two-corners/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🍰️split-slab/🌟️splits-through-two-corners/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🍰️split-slab/🌟️splits-through-two-corners/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🍰️split-slab/🌟️splits-through-two-corners/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🍰️split-slab/🌟️splits-through-two-corners/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

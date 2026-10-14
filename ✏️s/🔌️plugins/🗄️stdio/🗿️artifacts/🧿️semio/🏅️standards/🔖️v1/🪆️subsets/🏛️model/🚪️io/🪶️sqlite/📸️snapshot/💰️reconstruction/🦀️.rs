@@ -1,6 +1,7 @@
 //! 🏛️ Original model reconstruction retains hierarchy, property variants and all scalar workspaces.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{SemioModelSnapshot,SpatialNode,SpatialKind,SemioModelElement,ElementClass,GeometryRef,PropertySet,Property,PsetValue,ModelRelation,RelationKind,identity,optional_integer,float_columns,restore_placement};
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve,heap_sort}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve,heap_sort}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[derive(semio_framework_value::RetireOwned)]
 struct Prefix{snapshot:Option<SemioModelSnapshot>,validation:SchemaValidationStorage,indices:[RowIndexStorage;8],orders:[Vec<usize>;5],unique:[Vec<usize>;2],parents:Vec<(Option<usize>,u8)>}

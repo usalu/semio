@@ -7,7 +7,7 @@ import mapSchema from "../../../../../../../../../../../../🧰️framework/🔨
 import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
 import { parseRewritingDiff } from "../../🔺️diff/🟦️.ts";
 import valueSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json" with { type: "json" };
-import vectors from "../../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
+import vectors from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document-contract/🔣️.json" with { type: "json" };
 import artifactSchema from "../../🔣️.json" with { type: "json" };
 import snapshotSchema from "../../📸️snapshot/🔣️.json" with { type: "json" };
 import { parseRewritingArtifact } from "../../🟦️.ts";
@@ -19,7 +19,7 @@ import {rewritingToJsonValue} from "../../../🚪️io/📤️export/🧵️seri
 /** 🪪️ Checks nested dynamic values, exact layout records and rejection of window-owned fields. */
 export function testRewritingDocumentContractOracle(): void {
   const ajv = semioSchemaAjvV1({ allErrors: true });
-  const specification = JSON.parse(readFileSync(new URL("../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🌳️typed/🔣️.json", import.meta.url), "utf8"));
+  const specification = JSON.parse(readFileSync(new URL("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🌳️typed/🔣️.json", import.meta.url), "utf8"));
   const specificationOwner = new URL("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts", import.meta.url);
   for (const path of specification.schemaDocuments) ajv.addSchema(JSON.parse(readFileSync(new URL(path, specificationOwner), "utf8")));
   for (const schema of [valueSchema, mapSchema, propertySchema, artifactSchema]) if (!ajv.getSchema(schema.$id)) ajv.addSchema(schema);
@@ -45,7 +45,7 @@ export function testRewritingDocumentContractOracle(): void {
     }
   }
   const validateDiff = ajv.compile(diffSchema);
-  const mutations = join(import.meta.dir, "../../../🧫️fixtures/🧬️mutations");
+  const mutations = join(import.meta.dir, "../../../🧪️tests/🧫️fixtures/🧬️mutations");
   const paths = readdirSync(mutations, { recursive: true }).map((path) => String(path).replaceAll("\\", "/")).filter((path) => path.endsWith("/🔺️diff/🔣️.json"));
   assert.ok(paths.length > 0, "Rewriting document contract must validate committed mutation diffs");
   for (const path of paths) {

@@ -1,0 +1,15 @@
+{
+  "exclusive": false,
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️case-fixtures/🟦️.ts",
+      "operation": "created",
+      "afterSha256": "88b235385c4f711a5fcf8f16304018991abb46717a6dc63e9a5076fe5a9adea3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️case-fixtures/🔣️.json",
+      "operation": "created",
+      "afterSha256": "0d15a88ce26dd80baad239c1db7d4ac3077a32c1058b6ac3168c1dc911587298"
+    }
+  ]
+}

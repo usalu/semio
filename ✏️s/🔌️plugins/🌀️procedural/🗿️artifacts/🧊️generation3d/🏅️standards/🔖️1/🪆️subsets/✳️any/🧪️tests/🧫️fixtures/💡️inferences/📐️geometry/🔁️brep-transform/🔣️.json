@@ -1,0 +1,1211 @@
+{
+  "description": "Language-agnostic laws of the brep.transform widgets. Shape outputs state the analytic kind, volume, area and bounds of the moved shape and, for the box motions, the row-major 4x4 matrix that maps the pinned input tessellation (inputMeshes.shape) onto the pinned output tessellation; the TypeScript oracle applies the matrix with three's Matrix4 and compares the welded corner sets. Patterns of disjoint or overlapping solids fuse into one solid.",
+  "tolerance": 1e-06,
+  "meshTolerance": 1e-06,
+  "deflection": 0.05,
+  "cases": [
+    {
+      "name": "translate a box",
+      "kind": "brep.transform.translate",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "offset": [
+          1,
+          2,
+          3
+        ]
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 8,
+          "area": 24,
+          "bbox": [
+            [
+              1,
+              2,
+              3
+            ],
+            [
+              3,
+              4,
+              5
+            ]
+          ],
+          "matrix": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            2,
+            0,
+            0,
+            1,
+            3,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "pinInputs": true
+    },
+    {
+      "name": "rotate a quarter turn about the world origin",
+      "kind": "brep.transform.rotate",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "angle": 1.5707963267948966
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 8,
+          "area": 24,
+          "bbox": [
+            [
+              -2,
+              0,
+              0
+            ],
+            [
+              0,
+              2,
+              2
+            ]
+          ],
+          "matrix": [
+            0,
+            -1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "pinInputs": true
+    },
+    {
+      "name": "rotate about a point keeps the box in place for a quarter turn about its centre",
+      "kind": "brep.transform.rotateAbout",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "origin": [
+          1,
+          1,
+          0
+        ],
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "angle": 1.5707963267948966
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 8,
+          "area": 24,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ],
+          "matrix": [
+            0,
+            -1,
+            0,
+            2,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "pinInputs": true
+    },
+    {
+      "name": "rotate about a point by an eighth turn widens the bounds",
+      "kind": "brep.transform.rotateAbout",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "origin": [
+          1,
+          1,
+          0
+        ],
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "angle": 0.7853981633974483
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 8,
+          "area": 24,
+          "bbox": [
+            [
+              -0.41421356237309515,
+              -0.41421356237309515,
+              0
+            ],
+            [
+              2.414213562373095,
+              2.414213562373095,
+              2
+            ]
+          ],
+          "matrix": [
+            0.707106781,
+            -0.707106781,
+            0,
+            1.0,
+            0.707106781,
+            0.707106781,
+            0,
+            -0.414213562,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "pinInputs": true
+    },
+    {
+      "name": "scale each axis about the origin",
+      "kind": "brep.transform.scale",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "factor": [
+          2,
+          1,
+          0.5
+        ],
+        "center": [
+          0,
+          0,
+          0
+        ]
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 8,
+          "area": 28,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              4,
+              2,
+              1
+            ]
+          ],
+          "matrix": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0.5,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "pinInputs": true
+    },
+    {
+      "name": "scale uniformly about the centre",
+      "kind": "brep.transform.scale",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "factor": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "center": [
+          1,
+          1,
+          1
+        ]
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 27,
+          "area": 54,
+          "bbox": [
+            [
+              -0.5,
+              -0.5,
+              -0.5
+            ],
+            [
+              2.5,
+              2.5,
+              2.5
+            ]
+          ],
+          "matrix": [
+            1.5,
+            0,
+            0,
+            -0.5,
+            0,
+            1.5,
+            0,
+            -0.5,
+            0,
+            0,
+            1.5,
+            -0.5,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "pinInputs": true
+    },
+    {
+      "name": "a negative factor reflects but the volume stays positive",
+      "kind": "brep.transform.scale",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "factor": [
+          -1,
+          1,
+          1
+        ],
+        "center": [
+          1,
+          1,
+          1
+        ]
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 8,
+          "area": 24,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ],
+          "matrix": [
+            -1,
+            0,
+            0,
+            2,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "pinInputs": true
+    },
+    {
+      "name": "mirror across the YZ plane",
+      "kind": "brep.transform.mirror",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "plane": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ]
+        }
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 8,
+          "area": 24,
+          "bbox": [
+            [
+              -2,
+              0,
+              0
+            ],
+            [
+              0,
+              2,
+              2
+            ]
+          ],
+          "matrix": [
+            -1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "pinInputs": true
+    },
+    {
+      "name": "mirror across a plane through the middle maps the box to itself",
+      "kind": "brep.transform.mirror",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "plane": {
+          "origin": [
+            1,
+            0,
+            0
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ]
+        }
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 8,
+          "area": 24,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ],
+          "matrix": [
+            -1,
+            0,
+            0,
+            2,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "pinInputs": true
+    },
+    {
+      "name": "copy is the same geometry",
+      "kind": "brep.transform.copy",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        }
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 8,
+          "area": 24,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ],
+          "matrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "pinInputs": true
+    },
+    {
+      "name": "translate a face",
+      "kind": "brep.transform.translate",
+      "inputs": {
+        "shape": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [
+              2,
+              2,
+              2
+            ]
+          },
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        "offset": [
+          1,
+          0,
+          0
+        ]
+      },
+      "outputs": {
+        "shape": {
+          "kind": "face",
+          "area": 4.0,
+          "bbox": [
+            [
+              1,
+              0,
+              2
+            ],
+            [
+              3,
+              2,
+              2
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "translate a wire",
+      "kind": "brep.transform.translate",
+      "inputs": {
+        "shape": {
+          "recipe": "rectangleWire",
+          "width": 2,
+          "height": 1
+        },
+        "offset": [
+          1,
+          0,
+          0
+        ]
+      },
+      "outputs": {
+        "shape": {
+          "kind": "wire",
+          "bbox": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              3,
+              1,
+              0
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "translate a curve",
+      "kind": "brep.transform.translate",
+      "inputs": {
+        "shape": {
+          "recipe": "circle",
+          "center": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "radius": 1
+        },
+        "offset": [
+          0,
+          0,
+          1
+        ]
+      },
+      "outputs": {
+        "shape": {
+          "kind": "curve"
+        }
+      }
+    },
+    {
+      "name": "translate a surface",
+      "kind": "brep.transform.translate",
+      "inputs": {
+        "shape": {
+          "recipe": "plane",
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        "offset": [
+          0,
+          0,
+          1
+        ]
+      },
+      "outputs": {
+        "shape": {
+          "kind": "surface"
+        }
+      }
+    },
+    {
+      "name": "translate a vertex",
+      "kind": "brep.transform.translate",
+      "inputs": {
+        "shape": {
+          "recipe": "vertex",
+          "point": [
+            1,
+            1,
+            1
+          ]
+        },
+        "offset": [
+          1,
+          2,
+          3
+        ]
+      },
+      "outputs": {
+        "shape": {
+          "kind": "vertex",
+          "vertices": 1
+        }
+      }
+    },
+    {
+      "name": "translate every solid of a compound",
+      "kind": "brep.transform.translate",
+      "inputs": {
+        "shape": {
+          "recipe": "compound",
+          "of": [
+            {
+              "recipe": "box",
+              "size": [
+                2,
+                2,
+                2
+              ]
+            },
+            {
+              "recipe": "translate",
+              "of": {
+                "recipe": "box",
+                "size": [
+                  2,
+                  2,
+                  2
+                ]
+              },
+              "by": [
+                3,
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "offset": [
+          0,
+          1,
+          0
+        ]
+      },
+      "outputs": {
+        "shape": {
+          "kind": "compound",
+          "solids": 2,
+          "volume": 16.0,
+          "area": 48.0,
+          "bbox": [
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              5,
+              3,
+              2
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "linear pattern of three cubes",
+      "kind": "brep.transform.linearPattern",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            1,
+            1,
+            1
+          ]
+        },
+        "direction": [
+          2,
+          0,
+          0
+        ],
+        "spacing": 2,
+        "count": 3
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 3,
+          "area": 18,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              5,
+              1,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "linear pattern of one is the shape itself",
+      "kind": "brep.transform.linearPattern",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            1,
+            1,
+            1
+          ]
+        },
+        "direction": [
+          1,
+          0,
+          0
+        ],
+        "spacing": 2,
+        "count": 1
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 1,
+          "area": 6,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "overlapping linear copies fuse",
+      "kind": "brep.transform.linearPattern",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            1,
+            1,
+            1
+          ]
+        },
+        "direction": [
+          1,
+          0,
+          0
+        ],
+        "spacing": 0.5,
+        "count": 2
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 1.5,
+          "area": 8,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1.5,
+              1,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "circular pattern of four cubes",
+      "kind": "brep.transform.circularPattern",
+      "inputs": {
+        "shape": {
+          "recipe": "translate",
+          "of": {
+            "recipe": "box",
+            "size": [
+              1,
+              1,
+              1
+            ]
+          },
+          "by": [
+            2,
+            0,
+            0
+          ]
+        },
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "count": 4
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 4,
+          "area": 24,
+          "bbox": [
+            [
+              -3,
+              -3,
+              0
+            ],
+            [
+              3,
+              3,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "grid pattern of two by two cubes",
+      "kind": "brep.transform.gridPattern",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            1,
+            1,
+            1
+          ]
+        },
+        "dirX": [
+          1,
+          0,
+          0
+        ],
+        "dirY": [
+          0,
+          1,
+          0
+        ],
+        "spacingX": 2,
+        "spacingY": 2,
+        "countX": 2,
+        "countY": 2
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 4,
+          "area": 24,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              3,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "rotate about the zero axis is a kernel fault",
+      "kind": "brep.transform.rotate",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "axis": [
+          0,
+          0,
+          0
+        ],
+        "angle": 1
+      },
+      "fault": {
+        "code": "generation3d.geometry.kernel"
+      }
+    },
+    {
+      "name": "scale by a zero factor is a kernel fault",
+      "kind": "brep.transform.scale",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "factor": [
+          1,
+          0,
+          1
+        ],
+        "center": [
+          0,
+          0,
+          0
+        ]
+      },
+      "fault": {
+        "code": "generation3d.geometry.kernel"
+      }
+    },
+    {
+      "name": "mirror with a zero normal is a kernel fault",
+      "kind": "brep.transform.mirror",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "plane": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "fault": {
+        "code": "generation3d.geometry.kernel"
+      }
+    },
+    {
+      "name": "a pattern along the zero vector is refused at the port",
+      "kind": "brep.transform.linearPattern",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            1,
+            1,
+            1
+          ]
+        },
+        "direction": [
+          0,
+          0,
+          0
+        ],
+        "spacing": 2,
+        "count": 3
+      },
+      "fault": {
+        "code": "generation3d.geometry.vector-zero",
+        "port": "direction"
+      }
+    },
+    {
+      "name": "a circular pattern about the zero axis is refused at the port",
+      "kind": "brep.transform.circularPattern",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            1,
+            1,
+            1
+          ]
+        },
+        "axis": [
+          0,
+          0,
+          0
+        ],
+        "count": 3
+      },
+      "fault": {
+        "code": "generation3d.geometry.vector-zero",
+        "port": "axis"
+      }
+    },
+    {
+      "name": "a pattern with a zero count is refused at the port",
+      "kind": "brep.transform.gridPattern",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            1,
+            1,
+            1
+          ]
+        },
+        "dirX": [
+          1,
+          0,
+          0
+        ],
+        "dirY": [
+          0,
+          1,
+          0
+        ],
+        "spacingX": 2,
+        "spacingY": 2,
+        "countX": 0,
+        "countY": 2
+      },
+      "fault": {
+        "code": "generation3d.geometry.input-range",
+        "port": "countX"
+      }
+    }
+  ]
+}

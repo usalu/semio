@@ -97,7 +97,7 @@ fn typed<M: DeserializeOwned>(value: &serde_json::Value) -> M { serde_json::from
 
 #[test]
 fn standard_collection_clones_equal_clone_and_serde_oracles_per_fixture_row() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture["schema"], "framework.value.retained-clone.std-collections.v1");
     for row in fixture["cases"].as_array().unwrap() {
         let value = &row["value"];

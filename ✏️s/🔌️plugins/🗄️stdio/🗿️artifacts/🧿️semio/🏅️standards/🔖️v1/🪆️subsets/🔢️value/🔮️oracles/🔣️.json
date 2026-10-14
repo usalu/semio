@@ -244,14 +244,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/➕️insert-list-item-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-list-item-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:8c968dc5efb0cbcd9120abeeee6414ae76b94d5bbaf5b6c01be51ebf9bf68ee0",
           "bytes": 2726790
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/➕️insert-list-item-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-list-item-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:c0ba44bdb75f022b7ea165b70d89508b3d2754ce5d1c723c89555d6b8d81ae8e",
           "bytes": 3519324
@@ -294,14 +294,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/➖️remove-list-item-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-list-item-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:8c968dc5efb0cbcd9120abeeee6414ae76b94d5bbaf5b6c01be51ebf9bf68ee0",
           "bytes": 2726790
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/➖️remove-list-item-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-list-item-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:bb8379405cb1b07e025e2647e8e62abaa3bf85ebf7da57bb360f3fba48cb34b0",
           "bytes": 2627488
@@ -344,14 +344,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/✖️remove-map-entry-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/✖️remove-map-entry-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:8c968dc5efb0cbcd9120abeeee6414ae76b94d5bbaf5b6c01be51ebf9bf68ee0",
           "bytes": 2726790
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/✖️remove-map-entry-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/✖️remove-map-entry-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:c4fe18b7af4dc67b26de9c5b66b9e9b561e252b89eac860ac54a3915a46922f5",
           "bytes": 2726668
@@ -394,14 +394,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/✂️remove-node-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/✂️remove-node-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:8c968dc5efb0cbcd9120abeeee6414ae76b94d5bbaf5b6c01be51ebf9bf68ee0",
           "bytes": 2726790
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/✂️remove-node-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/✂️remove-node-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:1abc32dd95abdf93c56f20d8acdc99282b7d40c3193b80565bacd84047e39021",
           "bytes": 2715418
@@ -444,14 +444,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🗝️set-map-entry-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🗝️set-map-entry-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:8c968dc5efb0cbcd9120abeeee6414ae76b94d5bbaf5b6c01be51ebf9bf68ee0",
           "bytes": 2726790
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🗝️set-map-entry-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🗝️set-map-entry-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:177ff6364a794872ff803a6bd75245345cd109e344de1114c156242c93f3407a",
           "bytes": 2726927
@@ -494,14 +494,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🧷️set-node-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🧷️set-node-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:8c968dc5efb0cbcd9120abeeee6414ae76b94d5bbaf5b6c01be51ebf9bf68ee0",
           "bytes": 2726790
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🧷️set-node-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🧷️set-node-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:c53a865118dcc855267f0de59ab4fdda0efcd54b9a28720d234d71ec3f028ac6",
           "bytes": 2736475
@@ -544,14 +544,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🔁️set-value-applied/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🔁️set-value-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:8c968dc5efb0cbcd9120abeeee6414ae76b94d5bbaf5b6c01be51ebf9bf68ee0",
           "bytes": 2726790
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🔁️set-value-applied/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🔁️set-value-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:e2af189ef630a29867a64f51d846455409976cbadc69b30cbdb566ff0251f604",
           "bytes": 2726792

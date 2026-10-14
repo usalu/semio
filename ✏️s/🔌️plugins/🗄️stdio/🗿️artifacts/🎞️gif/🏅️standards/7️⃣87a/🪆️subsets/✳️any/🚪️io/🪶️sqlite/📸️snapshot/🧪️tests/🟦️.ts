@@ -1,7 +1,7 @@
-import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
+import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
 const canceledKind=refusalFixture.cases.find(item=>item.id==="canceled-projection")!.expectedKind;
 import { Database } from "bun:sqlite";
-import owned from "../../../../../../../../🧫️fixtures/🪶️sqlite/🫳️ownership/🔣️.json";
+import owned from "../../../../../../../../🧪️tests/🧫️fixtures/🪶️sqlite/🫳️ownership/🔣️.json";
 
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
@@ -14,7 +14,7 @@ test("GIF87 literal dimensions and intrinsic index sequence preserve independent
   expect(db.query("SELECT ordinal,color_index FROM gif87_pixel WHERE image_id=1 ORDER BY ordinal").all()).toEqual(owned.indices.map((color_index,ordinal)=>({ordinal,color_index})));
  }finally{db.close();}
 });
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import type { GifSnapshot } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { GIF87_SQLITE_SCHEMA, gifSnapshotToSqliteDatabase, gifSnapshotFromSqliteDatabase } from "../🟦️.ts";

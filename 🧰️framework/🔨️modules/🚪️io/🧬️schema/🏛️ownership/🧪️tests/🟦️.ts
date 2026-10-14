@@ -8,7 +8,7 @@ import Parser from "web-tree-sitter";
 import {parseArtifactRef} from "../../../../🧬️schema/🗿️artifact-reference/🟦️.ts";
 import vocabulary from "../../🔣️.json";
 import references from "../../../../🧬️schema/🗿️artifact-reference/🔣️.json";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "../../../🧪️tests/🧫️fixtures/🏛️ownership/🔣️.json";
 const owner=resolve(import.meta.dir,"../..");
 const pkg=join(owner,"📦️packages/🦀️rust");
 const sorted=(value:object)=>Object.fromEntries(Object.entries(value).sort(([a],[b])=>a.localeCompare(b)));

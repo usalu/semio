@@ -4,7 +4,7 @@ use semio_framework_value::{NativeDecodeControl,NativeEncodeControl};
 use semio_framework_value::{native_decoding::NativeDecodeProgress, native_encoding::NativeEncodeProgress};
 use serde_json::{json, Value};
 
-fn fixture() -> Value { serde_json::from_str(include_str!("../../🧫️fixtures/🎛️metadata/🔣️.json")).unwrap() }
+fn fixture() -> Value { serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🎛️metadata/🔣️.json")).unwrap() }
 fn producers() -> [RecordSpecProducer; 11] {
     [dwg_xrecord_value_spec_producer(), dwg_table_control_entry_spec_producer(), table_control_body_spec_producer(), dwg_complex_color_value_spec_producer(), table_record_body_spec_producer(), dwg_evaluation_variant_spec_producer(), dwg_evaluation_expression_value_spec_producer(), dwg_visual_style_property_spec_producer::<u32>(), dwg_constraint_node_spec_producer(), dwg_entity_body_spec_producer(), dwg_logical_object_body_spec_producer()]
 }

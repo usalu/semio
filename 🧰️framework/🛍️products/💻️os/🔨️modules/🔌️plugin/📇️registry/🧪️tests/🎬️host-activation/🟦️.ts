@@ -25,7 +25,7 @@ describe("host variant Nx fan-out", () => {
       crate("alpha", "alpha", "");
       crate("beta", "beta", "");
       const targets = cacheInternals.playgroundPreparationTargets(["hub/Cargo.toml", "alpha/Cargo.toml", "beta/Cargo.toml"], fixture, "owner");
-      for (const profile of ["dev", "release"]) {
+      for (const profile of ["prototype", "release"]) {
         for (const renderer of ["react", "wgpu"] as const) {
           const prepare = targets[`prepare-hub-${renderer}-${profile}`];
           expect(prepare, `prepare-hub-${renderer}-${profile}`).toBeDefined();

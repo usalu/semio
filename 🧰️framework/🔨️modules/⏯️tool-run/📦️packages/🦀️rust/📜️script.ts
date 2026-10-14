@@ -1,16 +1,16 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
-import { buildBudgetMs } from "../../../🏃️process/⏱️budget/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { buildBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { resolve } from "node:path";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { testLevelBudgetMs, resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { testLevelBudgetMs, resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** ⏯️ `@semio-tech/framework-tool-run-rs` router: `bun ./📜️script.ts <test|check>` — TS conformance (ajv/xstate/fast-check) plus Rust fixture tests, and native plus `wasm32-wasip2` type checks. */
 import { join } from "node:path";
 
-import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import { advanceScriptInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { advanceScriptInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const PACKAGE = "semio-framework-tool-run";
 
@@ -55,6 +55,41 @@ class OriginalEntitiesTestScript extends BundleScript {
   if(args[0]!=="source")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:[PACKAGE],cwd:this.root,extraArgs:["--lib","original_tool_run_entity_edit","--","--nocapture"]},readCargoTestPolicyV1(process.env));
  }
 }
+/** 📏️ Verifies required captured receiving bounds against the neutral oracle and exact native law. */
+class OriginalReceivingLimitsTestScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length)throw Error("Expected test-original-receiving-limits");
+  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:[PACKAGE],cwd:this.root,extraArgs:["--lib","original_tool_run_receiving_limits_preserve_every_required_captured_bound","--","--nocapture"]},readCargoTestPolicyV1(process.env));
+ }
+}
+/** 🪪️ Executes only the original typed identity source/token/native interruption law. */
+class OriginalIdentityReceivingTestScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length)throw Error("Expected test-original-identity-receiving");
+  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:[PACKAGE],cwd:this.root,extraArgs:["--lib","original_typed_identity_receiving_preserves_paid_tokens_and_every_native_interruption","--","--nocapture"]},readCargoTestPolicyV1(process.env));
+ }
+}
+/** 📝️ Executes the original typed step source/token/native argument interruption law. */
+class OriginalStepReceivingTestScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length)throw Error("Expected test-original-step-receiving");
+  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:[PACKAGE],cwd:this.root,extraArgs:["--lib","-E","test(original_typed_identity_receiving_preserves_paid_tokens_and_every_native_interruption) | test(original_typed_step_receiving_preserves_final_native_arguments_and_every_interruption)","--","--nocapture"]},readCargoTestPolicyV1(process.env));
+ }
+}
+/** 🏗️ Executes direct final native Tick field preparation and every paid interruption prefix. */
+class OriginalNativeTickTestScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length)throw Error("Expected test-original-native-tick");
+  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:[PACKAGE],cwd:this.root,extraArgs:["--lib","-E","test(original_native_tick_preparation_preserves_final_frame_and_every_initialized_prefix) | test(original_native_trace_column_reservation_keeps_all4096_ops_without_payload_moves)","--","--nocapture"]},readCargoTestPolicyV1(process.env));
+ }
+}
+/** 🔢️ Executes the original source-bound final entity-column token and closure law. */
+class OriginalEntityColumnTestScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length)throw Error("Expected test-original-entity-column");
+  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:[PACKAGE],cwd:this.root,extraArgs:["--lib","original_native_tick_entity_column_","--","--nocapture"]},readCargoTestPolicyV1(process.env));
+ }
+}
 class CheckScript extends BundleScript {
   async run(): Promise<void> {
     await runOwnedCommand("cargo", ["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", PACKAGE], this.repoRoot, "tool:owner", buildBudgetMs(), {env: process.env});
@@ -62,6 +97,6 @@ class CheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-original-progress", OriginalProgressTestScript).register("test-original-entities",OriginalEntitiesTestScript).register("test-source", SourceScript).register("check", CheckScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-original-progress", OriginalProgressTestScript).register("test-original-entities",OriginalEntitiesTestScript).register("test-original-receiving-limits",OriginalReceivingLimitsTestScript).register("test-original-identity-receiving",OriginalIdentityReceivingTestScript).register("test-original-step-receiving",OriginalStepReceivingTestScript).register("test-original-native-tick",OriginalNativeTickTestScript).register("test-original-entity-column",OriginalEntityColumnTestScript).register("test-source", SourceScript).register("check", CheckScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

@@ -6,7 +6,7 @@ const GIS_SCHEMA_MODULE = "🌎️hub/🧩️compositions/🌍️gis/🧬️sche
 
 /** 🌐️ Validates the literal bounded proposal independently of the native package. */
 export async function proveGisControlledProposal(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub/🧩️compositions/🌍️gis/🧫️fixtures/💡️inference-control");
+  const root = join(repoRoot, "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🧫️fixtures/💡️inference-control");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   
   

@@ -105,7 +105,7 @@ async fn a_streamed_gesture_is_one_transaction_and_one_undo_step() {
 /// preview — and the next gesture opens fresh and publishes exactly once.
 #[semio_framework_async_macros::async_test]
 async fn an_aborted_gesture_leaves_zero_trace_and_a_fresh_gesture_publishes_once() {
-    let surface_behavior: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🎬️surface-behavior/🔣️.json"))).expect("shared surface behavior fixture");
+    let surface_behavior: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🎬️surface-behavior/🔣️.json"))).expect("shared surface behavior fixture");
     let law = surface_behavior["cases"].as_array().unwrap().iter().find(|entry| entry["id"] == "note-ink-canvas").expect("Note surface behavior");
     assert_eq!(law["terminalPolicy"], "cancelled-action-discards-draft");
     assert_eq!(law["publishedOnCancel"], json!([{ "action": "inkApplyEvents", "phase": "abort", "cancelled": null }]));

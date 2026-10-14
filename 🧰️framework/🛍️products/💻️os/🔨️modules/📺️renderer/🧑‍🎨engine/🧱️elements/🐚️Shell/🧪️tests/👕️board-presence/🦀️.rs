@@ -10,7 +10,7 @@ use serde_json::Value;
 use store_sync::PresenceViewKind;
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/👕️canvas-presence/🔣️.json")).expect("canvas presence fixture")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/👕️canvas-presence/🔣️.json")).expect("canvas presence fixture")
 }
 
 fn rect(value: &Value) -> Rect {

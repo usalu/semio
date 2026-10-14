@@ -1,4 +1,4 @@
-pub(crate) const KEYBOARD_REACHABILITY_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/⌨️keyboard-reachability.json");
+pub(crate) const KEYBOARD_REACHABILITY_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⌨️keyboard-reachability.json");
 use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::mesh_bridge::{generation3d_document_from_mesh, generation3d_mesh_from_document, merge_meshes};
 
 pub(crate) mod context {
@@ -599,7 +599,7 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
 /// 🧫️ The language-agnostic law both implementations drive — see the fixture's own `note`, and the
 /// TypeScript twin at `🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts`.
 fn document_io_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🚪️io/🗿️artifact-surface.json")).expect("the artifact-surface fixture is valid json")
+    serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🚪️io/🗿️artifact-surface.json")).expect("the artifact-surface fixture is valid json")
 }
 
 fn fixture_rows(value: &serde_json::Value, key: &str) -> Vec<serde_json::Value> {
@@ -1232,7 +1232,7 @@ fn preview_payload_from_evaluated_fixture(host_snapshot: &semio_framework_artifa
 fn geometry_media_export_uses_the_supplied_instance_owner_and_refuses_closed_authority() {
     let _serial = test_serial();
     use semio_framework_plugin::{ArtifactEditor, MediaClass, MediaForm, MediaPayload, TransientView};
-    let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧫️fixtures/🔣️.json")).expect("the language-neutral mesh corpus");
+    let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🧫️fixtures/🔣️.json")).expect("the language-neutral mesh corpus");
     let fixture = fixtures["meshes"].as_array().unwrap().iter().find(|case| case["name"] == "unit-tetrahedron").expect("the independent tetrahedron fixture");
     let source = semio_framework_plugin::MeshData {
         positions: fixture["mesh"]["vertices"].as_array().unwrap().iter().flat_map(|vertex| vertex.as_array().unwrap().iter().map(|coordinate| coordinate.as_f64().unwrap() as f32)).collect(),
@@ -1373,7 +1373,7 @@ fn document_from_mesh_rejects_empty_or_invalid_geometry() {
 #[test]
 fn mesh_import_preserves_fixture_coordinates_in_an_editable_graph() {
     let _serial = test_serial();
-    let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧫️fixtures/🔣️.json")).unwrap();
+    let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixtures["meshes"].as_array().unwrap() {
         let source = &case["mesh"];
         if source["faces"].as_array().unwrap().iter().any(|face| face.as_array().unwrap().len() != 3) { continue; }
@@ -1431,7 +1431,7 @@ fn generation3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs() {
 #[test]
 fn rectangle_wire_preview_emits_edge_only_mesh() {
     let _serial = test_serial();
-    let projection = <Generation3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::snapshot::GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("rectangle wire example");
+    let projection = <Generation3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::snapshot::GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("rectangle wire example");
     let config = Generation3dConfig::default();
     let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.host_snapshot, &config);
     let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes");
@@ -2584,7 +2584,7 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
 /// `🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts`.
 #[semio_framework_async_macros::async_test]
 async fn an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_install_clears_it() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/💥️extension-evaluate-fault.json")).expect("the evaluate-fault fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/💥️extension-evaluate-fault.json")).expect("the evaluate-fault fixture parses");
     let extension_id = fixture["extensionId"].as_str().expect("extensionId").to_string();
     let address = || Ok::<String, semio_framework_os_flow::FlowExtensionAddressMiss>(extension_id.clone());
     let mut owner = Generation3dInstanceOperationOwner::new();
@@ -2696,7 +2696,7 @@ fn staged_argument_actions_declare_no_trailing_ellipsis() {
 #[test]
 fn mesh_gumball_splices_typed_transforms_and_preserves_analysis_consumers() {
     let _serial = test_serial();
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["gumball"].as_array().unwrap() {
         let snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
         semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| {
@@ -2735,7 +2735,7 @@ fn mesh_selection_fixture_snapshot(operation: &str) -> Generation3dSnapshot {
 #[test]
 fn mesh_component_edits_insert_typed_widgets_and_update_downstream_analysis() {
     let _serial = test_serial();
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["valid"].as_array().unwrap() {
         let operation = case["name"].as_str().unwrap();
         let snapshot = mesh_selection_fixture_snapshot(operation);
@@ -2778,7 +2778,7 @@ fn mesh_component_edits_insert_typed_widgets_and_update_downstream_analysis() {
 fn mesh_component_gumball_pins_the_complete_component_set() {
     let _serial = test_serial();
     let snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
-    let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️transforms/🧫️fixtures/🧷️gesture/🔣️.json")).unwrap();
+    let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️transforms/🧪️tests/🧫️fixtures/🧷️gesture/🔣️.json")).unwrap();
     for case in fixtures["cases"].as_array().unwrap() {
         let pinned: Vec<String> = serde_json::from_value(case["pinned"].clone()).unwrap();
         let selected: Vec<String> = serde_json::from_value(case["selected"].clone()).unwrap();
@@ -2900,7 +2900,7 @@ fn mesh_component_gumball_projects_a_topology_pivot_and_live_dispatch() {
 async fn mesh_component_edit_undo_redo_restores_geometry_and_analysis_connections() {
     let _serial = test_serial();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
-    let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧫️fixtures/🔣️.json")).unwrap();
+    let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixtures["valid"].as_array().unwrap() {
         let operation = case["name"].as_str().unwrap();
         let granularity = case["granularity"].as_str().unwrap();
@@ -2974,7 +2974,7 @@ async fn mesh_component_edit_undo_redo_restores_geometry_and_analysis_connection
 async fn mesh_quick_actions_execute_through_the_registered_preview_app() {
     let _serial = test_serial();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
-    let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧫️fixtures/🔣️.json")).unwrap();
+    let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixtures["valid"].as_array().unwrap() {
         let operation = case["name"].as_str().unwrap();
         let granularity = case["granularity"].as_str().unwrap();
@@ -3200,7 +3200,7 @@ async fn mesh_brep_measurement_outputs_are_selected_read_only_in_every_locale() 
     use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host;
     let _serial = test_serial();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let publication = &fixture["measurementPublication"];
     let mut app = app().await;
     let mut snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
@@ -3252,7 +3252,7 @@ async fn mesh_brep_live_scoped_selection_edits_the_evaluated_solid_and_restores_
     use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue;
     let _serial = test_serial();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let publication = &fixture["measurementPublication"];
     let live = &fixture["liveAnalyticPublication"];
     let source = live["source"].as_str().unwrap();

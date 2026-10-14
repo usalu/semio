@@ -1,0 +1,18 @@
+{
+  "mutation": "createBlock",
+  "block": {
+    "kind": "image",
+    "id": "blk-photo",
+    "name": "Photo",
+    "x": 620.0,
+    "y": 0.0,
+    "width": 200.0,
+    "height": 140.0,
+    "rotation": 0.0,
+    "visible": true,
+    "locked": false,
+    "imageKey": "asset-logo"
+  },
+  "parentId": null,
+  "index": 2
+}

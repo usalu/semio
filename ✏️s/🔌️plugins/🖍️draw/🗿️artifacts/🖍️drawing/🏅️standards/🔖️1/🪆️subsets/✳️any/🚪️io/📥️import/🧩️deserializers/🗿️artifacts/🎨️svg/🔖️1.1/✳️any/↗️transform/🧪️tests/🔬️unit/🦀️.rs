@@ -1,7 +1,7 @@
 //! 🧪️ Shared SVG transform fixtures retain editable matrices and reject malformed input.
 #[test]
 fn svg_transform_fixtures_retain_editable_affines() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture.as_array().unwrap() {
         let result=super::parse_editable_svg_transform(case["source"].as_str().unwrap());
         if case["matrix"].is_null() {assert!(result.is_err(),"{}",case["name"]);continue;}

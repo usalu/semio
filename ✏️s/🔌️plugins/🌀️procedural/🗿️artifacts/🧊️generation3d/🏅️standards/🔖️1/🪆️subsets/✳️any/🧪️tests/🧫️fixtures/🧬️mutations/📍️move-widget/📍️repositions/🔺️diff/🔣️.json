@@ -1,0 +1,22 @@
+{
+  "schema": null,
+  "camera": null,
+  "widgets": null,
+  "synapses": null,
+  "layout": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "node-a",
+        "layout": {
+          "x": 6.25,
+          "y": -3.5
+        }
+      }
+    ]
+  },
+  "generations": null,
+  "selectedGeneration": null,
+  "previewText": null
+}

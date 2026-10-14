@@ -21,7 +21,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const engineRoot = join(import.meta.dir, "..", "..");
-const law = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "♻️hot-swap-session-handover", "🔣️.json"), "utf8"));
+const law = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "♻️hot-swap-session-handover", "🔣️.json"), "utf8"));
 
 type Step = "retire-session" | "destroy-instance" | "swap-module" | "establish-session" | "present-canvas";
 type Outcome = { presentationsOverRetiredInstance: number; boardMounts: number; endsPresented: boolean; endsOnInstance: number | null };

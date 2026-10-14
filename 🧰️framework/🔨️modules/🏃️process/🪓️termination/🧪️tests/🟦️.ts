@@ -20,7 +20,7 @@ type Fixture = Readonly<{
 }>;
 
 const ownerRoot = resolve(import.meta.dir, "..");
-const fixture = JSON.parse(readFileSync(join(ownerRoot, "🧫️fixtures/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(join(ownerRoot, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")) as Fixture;
 const SPAWNER = `const { spawn } = require("node:child_process");
 const { appendFileSync } = require("node:fs");
 const [depth, breadth, pidFile] = process.argv.slice(2);

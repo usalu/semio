@@ -1,0 +1,28 @@
+{
+  "declaredOutcome": "no-op",
+  "kind": "delete-solid",
+  "hasExpected": true,
+  "solids": 1,
+  "shells": 1,
+  "faces": 6,
+  "edges": 12,
+  "vertices": 8,
+  "boundingBox": {
+    "xMin": -1e-7,
+    "xMax": 5.0000001,
+    "yMin": -1e-7,
+    "yMax": 5.0000001,
+    "zMin": -1e-7,
+    "zMax": 5.0000001
+  },
+  "boundingBoxDiagonal": 8.660254384254548,
+  "volume": 124.99999999999997,
+  "area": 150,
+  "validSolid": true,
+  "eulerCharacteristic": 2,
+  "genus": 0,
+  "measuredFrom": "expected.step, re-imported",
+  "tessellationTolerance": 0.0002598076315276365,
+  "meshVertexCount": 24,
+  "meshTriangleCount": 12
+}

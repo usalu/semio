@@ -1,7 +1,7 @@
 /** 💰️ Whole physical TIFF operations retain prior debt and exact cumulative grants. */
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
-import native from "../../../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json";
+import native from "../../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json";
 import {parseTiffSnapshot} from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {SqliteOperation} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import {tiffSnapshotToSqliteFile,tiffSnapshotFromSqliteFile} from "../../🟦️.ts";

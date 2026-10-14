@@ -1,6 +1,6 @@
 use super::*;
 
-const FIXTURE: &str = include_str!("../../../🧫️fixtures/🎮️registry/🏗️workspace.json");
+const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/🎮️registry/🏗️workspace.json");
 
 fn materialise(name: &str) -> PathBuf { materialise_text(name, FIXTURE) }
 
@@ -398,7 +398,7 @@ fn a_build_starts_from_the_published_graph_only_while_the_manifests_still_hash_t
 
 #[test]
 fn every_scenario_of_the_registry_feature_is_proved_by_a_test_of_this_file() {
-    let feature = include_str!("../../../🧫️fixtures/🎮️registry/🥒️.feature");
+    let feature = include_str!("../../../🧪️tests/🧫️fixtures/🎮️registry/🥒️.feature");
     let source = include_str!("🦀️.rs");
     let proofs: &[(&str, &[&str])] = &[
         ("A developer starts a declared command from the dashboard", &["a_ready_port_comes_from_the_declaration_or_the_resolved_environment_and_is_exported", "global_axes_select_tools_by_verb_and_nx_flags_do_not_reach_them", "a_target_resolves_axes_then_parameters_then_extra_arguments_after_the_double_dash"]),

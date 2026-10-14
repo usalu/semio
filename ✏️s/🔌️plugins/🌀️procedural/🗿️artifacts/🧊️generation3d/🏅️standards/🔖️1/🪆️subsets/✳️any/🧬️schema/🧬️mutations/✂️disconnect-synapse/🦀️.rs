@@ -6,8 +6,7 @@ use crate::Generation3dSnapshot;
 //#region 🔖️DisconnectSynapse
 /// ✂️ Severs the synapse edge with `id`; diff/inverse leaves capture the full removed edge from
 /// `base` so undo is a real `connect-synapse`.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct DisconnectSynapse {
     pub id: String,

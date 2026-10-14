@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
-import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {completeCargoPreparationObservationV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts";
-import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts";
-import { terminateOwnedChildTree } from "../../../../../🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts";
+import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { terminateOwnedChildTree } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 /** 🗄️ `@semio-tech/stdio-plugin` router: `bun ./📜️script.ts test`. */
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -13,12 +13,12 @@ import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { decodePackValue, encodePackValue } from "../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
-import { devToolingEnv, resolveWorkspaceBin, runCmd, runRepositoryExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { devToolingEnv, resolveWorkspaceBin, runCmd, runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { runRepositoryCargoTests, runRepositoryTestCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {repositoryCargoPreparationStorageV1, prepareCargoWorkspaceInvocation } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
-import { acquireCargoBuildLeaseV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
+import { acquireCargoBuildLeaseV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { pluginModulesRootIn } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
@@ -310,7 +310,7 @@ async function verifyIndependentOracles(rawPath: string, descriptorPackPath: str
 }
 
 async function runCatalogRootContractTests(root: string, repoRoot: string): Promise<void> {
-  const fixtureRoot = join(root, "../..", "🧫️fixtures", "🌳️catalog-root");
+  const fixtureRoot = join(root, "../..", "🧪️tests/🧫️fixtures", "🌳️catalog-root");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as {
     packageId: string;
     vectors: { raw: string; core: string; distinct: boolean }[];
@@ -445,7 +445,7 @@ class FlowRetainedDecodeScript extends BundleScript {
     const { default: assert } = await import("node:assert/strict");
     const leb = await import("@webassemblyjs/leb128");
     const base = join(this.repoRoot, ARTIFACT_OWNER, "🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/💾️binary/📸️snapshot");
-    const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     assert.deepEqual(fixture.limits, { nodes: 256, edges: 512, paramsPerNode: 64, stringBytes: 4096, totalStringBytes: 1048576 });
     const header = Buffer.concat([Buffer.from([137,83,69,77,13,10,26,10,24,0,0,0]), Buffer.from("stdio.semio.flow.pack v1")]);
     const decode = (hex: string): unknown => {
@@ -503,7 +503,7 @@ class FlowRetainedDecodeScript extends BundleScript {
     for (const row of fixture.valid) { assert.deepEqual(decode(row.hex), row.snapshot, row.id); assert.equal(encode(row.snapshot).toString("hex"), row.hex, row.id); }
     for (const row of fixture.invalid) assert.throws(() => decode(row.hex), (error: Error) => error.message === row.reason, row.id);
     console.log(`Flow retained decoder independent oracle: ${fixture.valid.length} exact wire snapshots, ${fixture.invalid.length} hostile denials; third-party LEB128 agrees`);
-    const lifecycle = JSON.parse(readFileSync(join(base, "🧫️fixtures/♻️lifecycle/🔣️.json"), "utf8"));
+    const lifecycle = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/♻️lifecycle/🔣️.json"), "utf8"));
     assert.equal(new Set(lifecycle.admission.map((row: any) => row.id)).size, 5);
     for (const row of lifecycle.admission) {
       const reason = row.state === "closing" || row.state === "retired" ? "stale" : row.state === "unadmitted" ? "unsealed" : row.subset !== "flow" ? "identity" : null;
@@ -528,7 +528,7 @@ class FlowRetainedDecodeScript extends BundleScript {
     assert(source.includes("semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures"));
     assert(source.includes("semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes"), "retained Flow lifecycle native law is absent");
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: PACKAGE_NAME, target: { kind: "test", name: "flow_retained_decode" }, laws: ["semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures", "semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes"] }] });
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: PACKAGE_NAME, target: { kind: "test", name: "flow_retained_decode" }, laws: ["semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures", "semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes"] }] });
     assert.equal(receipts[0]!.assertions, 2);
   }
 }
@@ -653,7 +653,7 @@ class SubsetDirectoryWiringScript extends BundleScript {
     const [mode, artifact, subset] = segments;
     if ((mode !== "generate" && mode !== "check") || artifact !== "semio" || subset !== "mesh") throw new Error("subset-directory-wiring expects generate|check semio mesh");
     const { default: assert } = await import("node:assert/strict");
-    const fixtureRoot = join(import.meta.dir, "../../🧫️fixtures/🧭️wiring/🗂️subset-directory-wiring");
+    const fixtureRoot = join(import.meta.dir, "../../🧪️tests/🧫️fixtures/🧭️wiring/🗂️subset-directory-wiring");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as SubsetDirectoryFixture;
     assert.equal(fixture.cases.length, 4);
     assert.equal(new Set(fixture.cases.map((row) => row.id)).size, fixture.cases.length);
@@ -709,7 +709,7 @@ function readScannedText(path: string): string | undefined {
 /** 🖊️ Checks codec ownership against an independent JSON Schema oracle and the framework source tree. */
 async function runDwgArtifactOwnership(root: string, repoRoot: string): Promise<void> {
   const { default: assert } = await import("node:assert/strict");
-  const fixtureRoot = join(root, "../../🧫️fixtures/🖊️dwg-artifact-ownership");
+  const fixtureRoot = join(root, "../../🧪️tests/🧫️fixtures/🖊️dwg-artifact-ownership");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as { cases: { path: string; allowed: boolean }[]; forbiddenFrameworkPatterns: string[] };
   const validate = await compileStdioScopeExport(join(root, "../.."), "StdioDwgArtifactOwnership");
   const ownsCodec = (path: string): boolean => {
@@ -765,7 +765,7 @@ class HomeIoSurfaceScript extends BundleScript {
     const mode = segments[0] ?? "source";
     if (mode !== "source" && mode !== "native") throw new Error("home-io-surface expects source|native");
     const { default: assert } = await import("node:assert/strict");
-    const fixtureRoot = join(this.root, "../../🧫️fixtures/🏠️home-io-surface");
+    const fixtureRoot = join(this.root, "../../🧪️tests/🧫️fixtures/🏠️home-io-surface");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as HomeIoSurfaceFixture;
     const manifest = readFileSync(join(this.root, "Cargo.toml"), "utf8");
     const { parse: parseToml } = await import("@iarna/toml");
@@ -864,7 +864,7 @@ class HomeIoSurfaceScript extends BundleScript {
 async function testEditorCatalogContract(packageRoot: string): Promise<void> {
   const root = resolve(packageRoot, "../..");
   prepareStdioComposition(resolve(root, "../../.."), root);
-  const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/✏️editor-catalog/🔣️.json"), "utf8")) as { editorCount: number; formatCount: number; editorApps: string[]; actions: { id: string }[]; deployedComponents: { id: string; package: string; path: string; role: string; componentKind: string }[] };
+  const fixture = JSON.parse(readFileSync(join(root, "🧪️tests/🧫️fixtures/✏️editor-catalog/🔣️.json"), "utf8")) as { editorCount: number; formatCount: number; editorApps: string[]; actions: { id: string }[]; deployedComponents: { id: string; package: string; path: string; role: string; componentKind: string }[] };
   const { parse: parseToml } = await import("@iarna/toml");
   for (const row of fixture.deployedComponents) {
     const path = resolve(root, "../../..", row.path);
@@ -1256,7 +1256,7 @@ class SnapshotSqliteTestScript extends BundleScript {
       return;
     }
     if (segments[0] === "catalog" || segments[0] === "catalog-contract") {
-      const directory = resolve(this.root, "../../🧫️fixtures/✏️editor-catalog/🪶️sqlite");
+      const directory = resolve(this.root, "../../🧪️tests/🧫️fixtures/✏️editor-catalog/🪶️sqlite");
       const law = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8"));
       const { default: assert } = await import("node:assert/strict");
       assert.deepEqual(law, { format: 1, schemaVersion: 1, minimumDomainTables: 1, integrity: [{ integrity_check: "ok" }], foreignKeys: [], nativeEncodings: ["binary", "text"] });

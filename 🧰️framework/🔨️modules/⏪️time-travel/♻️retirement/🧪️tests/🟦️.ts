@@ -7,8 +7,8 @@ import {createMachine,initialTransition,transition,assign} from "xstate";
 import * as timeTravel from "../../🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
 import replaySchema from "../../../📡️replication/⚔️conflict/🧬️schema/🔣️replay-report/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
-import lifecycle from "../../🧫️fixtures/🧫️lifecycle-law/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+import lifecycle from "../../🧪️tests/🧫️fixtures/🧫️lifecycle-law/🔣️.json";
 import custodySchema from "../🧬️schema/🔣️.json";
 test("original Discard metadata frontiers quote and receipt every native header",()=>{
  expect(new Ajv().compile(custodySchema)(fixture)).toBe(true);const db=new Database(":memory:");try{db.exec("CREATE TABLE headers(phase TEXT,field TEXT)");for(const row of fixture.discardHeaderCustody)for(const field of row.headers)db.query("INSERT INTO headers VALUES(?,?)").run(row.phase,field);expect(db.query("SELECT field FROM headers WHERE phase='validated' ORDER BY rowid").all()).toEqual([{field:"bound"},{field:"plannedStage"},{field:"phase"}]);expect(db.query("SELECT count(*) AS headers FROM headers WHERE phase='pendingCommitted'").get()).toEqual({headers:5});}finally{db.close()}

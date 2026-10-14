@@ -1,0 +1,143 @@
+{
+  "grant": {
+    "items": 1,
+    "copyBytes": 2,
+    "capacityBytes": 65536,
+    "releaseBytes": 262144,
+    "depth": 64
+  },
+  "limits": {
+    "fileBytes": 67108864,
+    "frameBodyBytes": 1048576,
+    "records": 8192,
+    "maximumFields": 128,
+    "maximumTextBytes": 1048576,
+    "maximumBinaryBytes": 1048576,
+    "maximumJsonBytes": 1048576,
+    "maximumJsonAllocationBytes": 8388608,
+    "maximumJsonItems": 65536,
+    "maximumJsonDepth": 64
+  },
+  "control": {
+    "maximumAllocationBytes": 8388608
+  },
+  "source": {
+    "operation": 43,
+    "generation": 7,
+    "pageBytes": 3,
+    "prefixHex": "aa",
+    "suffixHex": "bb"
+  },
+  "headerHex": "895350520d0a1a0a0100000001000000010000006fdee5cf0000000000000000",
+  "records": [
+    {
+      "kind": 3,
+      "flags": 2,
+      "payloadHex": "0100020b666c6f772d6d656d62657210737464696f2e73656d696f2e666c6f77"
+    },
+    {
+      "kind": 1,
+      "flags": 2,
+      "payloadHex": "0101000101"
+    },
+    {
+      "kind": 4,
+      "flags": 2,
+      "payloadHex": "02100002653100017400010201aa00000000"
+    },
+    {
+      "kind": 4,
+      "flags": 2,
+      "payloadHex": "021100026532000175030000010201bb00000100"
+    },
+    {
+      "kind": 65,
+      "flags": 0,
+      "payloadHex": "010300017000017300016300016b000173000175"
+    },
+    {
+      "kind": 69,
+      "flags": 0,
+      "payloadHex": "010300046c696e6500026370"
+    },
+    {
+      "kind": 126,
+      "flags": 0,
+      "payloadHex": "0304f1"
+    }
+  ],
+  "expected": {
+    "docId": "flow-member",
+    "schema": "stdio.semio.flow",
+    "editIds": [
+      "e1",
+      "e2"
+    ],
+    "actors": [
+      null,
+      "e1"
+    ],
+    "binaryOpsHex": [
+      "aa",
+      "bb"
+    ],
+    "baseVersions": [
+      0,
+      1
+    ],
+    "viewerLine": "line",
+    "viewerCheckpoint": "cp",
+    "owner": [
+      "p",
+      "s",
+      "c"
+    ],
+    "dialect": [
+      "k",
+      "s",
+      "u"
+    ],
+    "auxiliaryEditIdCopies": 0,
+    "committedSequence": 1
+  },
+  "nativeTrials": {
+    "cases": [
+      {
+        "kind": "complete",
+        "accept": true
+      },
+      {
+        "kind": "duplicate-edit",
+        "accept": false
+      },
+      {
+        "kind": "malformed-transition",
+        "accept": false
+      },
+      {
+        "kind": "replace-viewer-composition",
+        "accept": true
+      }
+    ],
+    "cancelAt": [
+      0,
+      1,
+      7,
+      17,
+      97,
+      100000
+    ],
+    "transition": {
+      "id": "tr1",
+      "actor": "owner",
+      "hlt": [
+        1,
+        2,
+        3
+      ],
+      "canonicalPayloadCase": "revert-one",
+      "malformedPayloadCase": "trailing-bytes"
+    },
+    "conflictSource": "semio.history.original-conflict-receiving.v1"
+  }
+}

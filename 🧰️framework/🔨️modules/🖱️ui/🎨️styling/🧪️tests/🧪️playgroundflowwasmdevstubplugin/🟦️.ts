@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync 
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { meshAssetTransportUrl, resolveMeshAsset } from "../../../../🖼️assets/🥽️mesh/🟦️.ts";
-import { testCacheDirectoryV1 } from "../../../../🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
+import { testCacheDirectoryV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
 
 const temporaryRoot = testCacheDirectoryV1(process.env, "asset-transport");
 mkdirSync(temporaryRoot, { recursive: true });

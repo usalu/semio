@@ -1,7 +1,7 @@
 /** 🧫️ Forms semantic schema is independently queryable and declared on its actual snapshot owner. */
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
-import fixture from"../🧫️fixtures/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
 import * as snapshot from"../🟦️.ts";
 import{answerError}from"../../../../🧬️schema/✅️validation/🟦️.ts";
 import{prepareResponse}from"../../../../🧬️schema/📨️response/🟦️.ts";
@@ -92,7 +92,7 @@ test("Framework intrinsic owner preserves unsigned words, NaN identity and dupli
 });
 
 import Ajv from "ajv";
-import requestContract from "../🧫️fixtures/💰️backing/🔬️requests/🔣️.json";
+import requestContract from "./🧫️fixtures/💰️backing/🔬️requests/🔣️.json";
 
 test("Forms concrete ownership contract retains all literal IEEE words and independently queryable domains",async()=>{
  expect(requestContract["fieldOrder"]).toEqual(["schema","id","version","title","definition","responses","structure","results"]);expect(requestContract["tableCount"]).toEqual(30);expect(requestContract["phases"]).toEqual(["projectSnapshot","reconstructSnapshot"]);expect(requestContract["requestExtent"]).toEqual("fullConcreteRequests");expect(requestContract["reallocation"]).toEqual("completeReplacement");expect(requestContract["exactReplay"]).toEqual(true);expect(requestContract["denial"]).toEqual("oneByteBelowObserved");expect(requestContract["retirementRefund"]).toEqual(false);expect(requestContract["refusalKind"]).toEqual("ownershipLimit");expect(requestContract["zeroOwnershipBytes"]).toEqual(0);expect(requestContract["ieeeWords"]).toEqual(["fff0000000000123","0000000000000000","8000000000000000","0000000000000001","3ff0000000000000","7fefffffffffffff","7ff0000000000000","fff0000000000000"]);expect(requestContract["intrinsicKinds"]).toEqual(["null","boolean","unsigned","signed","float","text","bytes","array","object"]);
@@ -109,8 +109,8 @@ test("Forms concrete ownership contract retains all literal IEEE words and indep
  }finally{oracle.close();}
 });
 
-import preflightContract from "../🧫️fixtures/📏️preflight/🔣️.json";
-import whitespaceContract from "../🧫️fixtures/📏️preflight/🔤️whitespace/🔣️.json";
+import preflightContract from "./🧫️fixtures/📏️preflight/🔣️.json";
+import whitespaceContract from "./🧫️fixtures/📏️preflight/🔤️whitespace/🔣️.json";
 
 test("Forms borrowed whitespace kind completes bounded UTF-8 census before semantic refusal",()=>{
  expect(whitespaceContract["kindUnit"]).toEqual("  \t");expect(whitespaceContract["repeat"]).toEqual(40000);expect(whitespaceContract["utf8Bytes"]).toEqual(200000);expect(whitespaceContract["unicodeScalars"]).toEqual(120000);expect(whitespaceContract["cancelAfterBytes"]).toEqual(65536);expect(whitespaceContract["phase"]).toEqual("encodeNative");expect(whitespaceContract["encodings"]).toEqual(["binary","text"]);expect(whitespaceContract["cancellationKind"]).toEqual("canceled");expect(whitespaceContract["completedValidationKind"]).toEqual("invalidValue");expect(whitespaceContract["ownedScanBytes"]).toEqual(0);expect(whitespaceContract["validationAfterCensus"]).toEqual(true);

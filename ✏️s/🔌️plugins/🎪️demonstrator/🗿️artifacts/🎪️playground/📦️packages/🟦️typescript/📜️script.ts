@@ -1,10 +1,12 @@
 #!/usr/bin/env bun
+import {receiveScriptProcessInvocation} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 /** 🎪️ Playground public persisted owner and strict Source consumer router. */
 import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts";
 import { runRepositoryCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 if (process.argv[2] === "verify" && process.argv[3] === "snapshot-sqlite-source") {
+ await receiveScriptProcessInvocation(process.env,async original=>{
   const repo = resolve(import.meta.dir, "../../../../../../.."), files: string[] = [], pending = [resolve(import.meta.dir, "../../🏅️standards")];
   while (pending.length) {
     const directory = pending.pop()!;
@@ -14,6 +16,8 @@ if (process.argv[2] === "verify" && process.argv[3] === "snapshot-sqlite-source"
       else if (entry.isFile() && entry.name.endsWith(".ts")) files.push(path);
     }
   }
-  await runRepositoryCommand(process.execPath, ["x", "tsc", ...files, "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck"], repo, "playground:published-source-consumers", 120000);
+  await runRepositoryCommand(original,process.execPath,["x", "tsc", ...files, "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck"],repo,"playground:published-source-consumers",{version:1,maximumElapsedMilliseconds:120000,output:{maximumBytes:134217728,maximumLines:65536}});
   console.log(`[playground] checked published consumers=${files.length}`);
+
+ });
 } else await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/demonstrator-playground", { suites: ["🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

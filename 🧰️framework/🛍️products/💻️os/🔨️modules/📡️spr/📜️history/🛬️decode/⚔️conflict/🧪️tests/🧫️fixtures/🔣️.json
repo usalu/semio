@@ -1,0 +1,85 @@
+{
+  "grant": {
+    "items": 1,
+    "copyBytes": 2,
+    "capacityBytes": 65536,
+    "releaseBytes": 262144,
+    "depth": 64
+  },
+  "limits": {
+    "fileBytes": 67108864,
+    "frameBodyBytes": 1048576,
+    "records": 8192,
+    "maximumFields": 128,
+    "maximumTextBytes": 1048576,
+    "maximumBinaryBytes": 1048576,
+    "maximumJsonBytes": 1048576,
+    "maximumJsonAllocationBytes": 8388608,
+    "maximumJsonItems": 65536,
+    "maximumJsonDepth": 64
+  },
+  "control": {
+    "maximumAllocationBytes": 8388608
+  },
+  "source": {
+    "operation": 43,
+    "generation": 7,
+    "pageBytes": 3,
+    "prefixHex": "aa",
+    "suffixHex": "bb"
+  },
+  "priorEditIds": [
+    "prior-original"
+  ],
+  "conflicts": [
+    {
+      "wireHex": "00026330010000010203000000",
+      "expected": {
+        "id": "c0",
+        "kind": 1,
+        "status": 0,
+        "actors": [],
+        "hlt": [
+          1,
+          2,
+          3
+        ],
+        "editIds": [],
+        "envelopesHex": [],
+        "messages": []
+      }
+    },
+    {
+      "wireHex": "0002633100020100076f776e6572c3a90307090103000202aabb030001ff0100000178000000",
+      "expected": {
+        "id": "c1",
+        "kind": 0,
+        "status": 2,
+        "actors": [
+          "owneré"
+        ],
+        "hlt": [
+          3,
+          7,
+          9
+        ],
+        "editIds": [
+          "prior-original"
+        ],
+        "envelopesHex": [
+          "aabb",
+          "0001ff"
+        ],
+        "messages": [
+          {
+            "level": 0,
+            "code": "x",
+            "message": "",
+            "target": [],
+            "opIndex": null
+          }
+        ]
+      }
+    }
+  ]
+}

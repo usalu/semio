@@ -1,0 +1,13 @@
+{
+  "mutation": "changeNodeMorphWeights",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "node": 0,
+      "weights": [
+        0.5,
+        0.25
+      ]
+    }
+  }
+}

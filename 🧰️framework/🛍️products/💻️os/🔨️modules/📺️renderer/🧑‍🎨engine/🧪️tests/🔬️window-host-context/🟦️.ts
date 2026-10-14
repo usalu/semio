@@ -8,7 +8,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
 import { leftoverInspectionPanelHash, leftoverInspectionRefreshScope, windowHostContextBindings } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
-import fixture from "../../🧫️fixtures/🔬️window-host-context/🔣️.json";
+import fixture from "../🧫️fixtures/🔬️window-host-context/🔣️.json";
 
 type Binding = { readonly surface: { readonly instance: number; readonly surface: string }; readonly bodyKey: string; readonly windowKey: string };
 

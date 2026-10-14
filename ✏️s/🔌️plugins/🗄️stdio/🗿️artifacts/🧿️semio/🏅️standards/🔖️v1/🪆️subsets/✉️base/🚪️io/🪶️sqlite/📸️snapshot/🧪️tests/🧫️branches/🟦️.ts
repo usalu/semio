@@ -1,7 +1,7 @@
 /** ✉️ Explicit authored union branch inputs and independent SQLite laws. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import f from "../../🧫️fixtures/🔣️.json";
+import f from "../🧫️fixtures/🔣️.json";
 import type {SemioSubsetSnapshot,SemioSnapshot} from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {semioSnapshotToSqliteDatabase,semioSnapshotFromSqliteDatabase} from "../../🟦️.ts";
 import {binary64,exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";

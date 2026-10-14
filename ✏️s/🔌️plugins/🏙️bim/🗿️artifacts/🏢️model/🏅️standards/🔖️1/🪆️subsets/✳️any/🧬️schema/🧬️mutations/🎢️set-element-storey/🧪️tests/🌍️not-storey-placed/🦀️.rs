@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🎢️set-element-storey/🌍️not-storey-placed",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎢️set-element-storey/🌍️not-storey-placed/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎢️set-element-storey/🌍️not-storey-placed/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎢️set-element-storey/🌍️not-storey-placed/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎢️set-element-storey/🌍️not-storey-placed/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🎢️set-element-storey/🌍️not-storey-placed/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎢️set-element-storey/🌍️not-storey-placed/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎢️set-element-storey/🌍️not-storey-placed/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎢️set-element-storey/🌍️not-storey-placed/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎢️set-element-storey/🌍️not-storey-placed/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎢️set-element-storey/🌍️not-storey-placed/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

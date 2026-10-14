@@ -1,4 +1,4 @@
-import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
+import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
 const canceledKind=refusalFixture.cases.find(item=>item.id==="canceled-projection")!.expectedKind;
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
@@ -7,7 +7,7 @@ import {buildSchema,graphqlSync} from "graphql";
 import schema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import artifactSchema from "../../../../🧬️schema/🔣️.json";
 import diffSchema from "../../../../🧬️schema/🔺️diff/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import type {Mp3Snapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {parseMp3Snapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {parseMp3Diff} from "../../../../🧬️schema/🔺️diff/🟦️.ts";
@@ -35,7 +35,7 @@ test("MP3 independent GraphQL returns typed metadata content",async()=>{
 });
 
 import Ajv2020 from "ajv/dist/2020.js";
-import controls from "../🧫️fixtures/🎛️control.json";
+import controls from "./🧫️fixtures/🎛️control.json";
 
 import {independentSqliteExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
 test("MP3 complete literal and optional tag extents agree with independent SQLite at copied limits",async()=>{

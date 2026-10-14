@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 type Package = { pluginId: string; componentPackageId: string; outputName: string; linkedCodecRegistry: string | null; linkedCodecRegistryPresent: boolean; descriptor: Record<string, unknown> };
 type Case = { id: string; profileId: string; packages: Package[]; findings: string[] };
 type Findings = (profileId: string, packages: readonly Package[]) => readonly string[];
-const fixture = JSON.parse(readFileSync(new URL("../../🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🛫️catalog-selection-preflight/🔣️.json", import.meta.url), "utf8")) as { schema: string; cases: Case[] };
+const fixture = JSON.parse(readFileSync(new URL("../../🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🛫️catalog-selection-preflight/🔣️.json", import.meta.url), "utf8")) as { schema: string; cases: Case[] };
 
 /** 🧬️ The exact `trustedBootstrapSelectionFindingsV1` (and the `trustedBootstrapDescriptorKindsV1` it reads kinds through) of the
  * hub's `📜️script.ts`, lifted out of its source and transpiled here: importing the script would load Bun-only modules the Vitest

@@ -392,7 +392,7 @@ fn compact_slider_edit_uses_the_unscoped_input_font_while_its_resting_readout_st
 
 #[test]
 fn slider_paints_the_shared_rail_range_thumb_and_numeric_readout() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎚️slider-presentation/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎚️slider-presentation/🔣️.json")).unwrap();
     let case = law["cases"].as_array().unwrap().iter().find(|case| case["id"] == "fractional-middle").unwrap();
     let rect = |value: &serde_json::Value| [value[0].as_f64().unwrap() as f32, value[1].as_f64().unwrap() as f32, value[2].as_f64().unwrap() as f32, value[3].as_f64().unwrap() as f32];
     let node =
@@ -529,7 +529,7 @@ fn painting_an_open_select_popup_emits_more_instances_than_a_closed_one_and_high
 
 #[test]
 fn retained_select_popup_is_viewport_clamped_scrolled_and_glass_foreground() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).expect("retained Select/overlay raster fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).expect("retained Select/overlay raster fixture");
     assert_eq!(fixture["schema"].as_str(), Some("semio.ui.retained-select-overlay-raster.v1"));
     let select_fixture = &fixture["select"];
     let item_count = usize::try_from(select_fixture["itemCount"].as_u64().expect("item count")).expect("item count fits");
@@ -908,7 +908,7 @@ fn painting_a_focused_input_shows_the_live_edit_buffer_text_not_the_stale_declar
 
 #[test]
 fn retained_input_paints_a_caret_only_while_the_accepted_cadence_is_visible() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/⌨️caret-cadence/🧫️fixtures/🔣️.json")).expect("caret cadence fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/⌨️caret-cadence/🧪️tests/🧫️fixtures/🔣️.json")).expect("caret cadence fixture");
     assert_eq!(fixture["halfPeriodMs"].as_u64(), Some(500));
     let (mut tree, root, theme, mut atlas) = setup(&input("in", "hello"));
     let node = tree.node_mut(root).expect("retained input");
@@ -1278,7 +1278,7 @@ fn progress(completed: f64, total: Option<f64>) -> UiProgressNode {
 /// and the same fraction sizes its fill.
 #[test]
 fn a_progress_bar_fills_the_fraction_the_shared_fixture_declares() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧫️fixtures/📶️progress.json")).expect("📶️ the progress fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧪️tests/🧫️fixtures/📶️progress.json")).expect("📶️ the progress fixture parses");
     let theme = Theme::default();
     let bounds = Rect::new(10.0, 20.0, 300.0, 40.0);
     for case in fixture["cases"].as_array().expect("progress cases") {
@@ -1417,7 +1417,7 @@ fn a_decoded_image_paints_a_raster_quad_instead_of_the_placeholder() {
 
 #[test]
 fn a_decoded_overlay_image_keeps_its_upload_identity_in_the_overlay_raster_lane() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).expect("retained Select/overlay raster fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).expect("retained Select/overlay raster fixture");
     let image = &fixture["image"];
     let width = u32::try_from(image["decodedWidth"].as_u64().expect("decoded width")).expect("decoded width fits");
     let height = u32::try_from(image["decodedHeight"].as_u64().expect("decoded height")).expect("decoded height fits");
@@ -1609,7 +1609,7 @@ fn a_celebrating_element_paints_a_different_ring_as_the_clock_advances_while_an_
 
 #[test]
 fn section_and_field_chrome_paint_only_inside_their_measured_bands() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📐️section-field-presentation/🔣️.json")).expect("section field fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📐️section-field-presentation/🔣️.json")).expect("section field fixture");
     let number = |path: &[&str]| path.iter().fold(&fixture, |value, key| &value[*key]).as_f64().expect("fixture number") as f32;
     let text_value = |path: &[&str]| path.iter().fold(&fixture, |value, key| &value[*key]).as_str().expect("fixture text");
     let control = || UiNode::Button(UiButtonNode { id: Some("geometry.control".into()), icon_id: IconName::CircleDot, label: Label::data("Control"), action: action(), style: None, presence: UiPresence::default(), menu: None });
@@ -1660,7 +1660,7 @@ fn section_and_field_chrome_paint_only_inside_their_measured_bands() {
 
 #[test]
 fn number_stepper_catalog_icons_match_chromiums_measured_content_boxes() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️stepper-presentation/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪜️stepper-presentation/🔣️.json")).unwrap();
     let geometry = law["geometry"].as_array().unwrap().iter().find(|case| case["id"] == law["icons"]["case"]).unwrap();
     let rect = |value: &serde_json::Value| Rect::new(value[0].as_f64().unwrap() as f32, value[1].as_f64().unwrap() as f32, value[2].as_f64().unwrap() as f32, value[3].as_f64().unwrap() as f32);
     let theme = Theme { stroke_hairline: geometry["border"].as_f64().unwrap() as f32, ..Theme::default() };

@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { type TaxonomyViolation, verifyTaxonomy, verifyTaxonomyScopes } from "../../🟦️.ts";
 
 const repoRoot = fileURLToPath(new URL("../../../../../../../../", import.meta.url)).replace(/\/$/u, "");
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🧫️multi-scope-verification/🔣️.json", import.meta.url), "utf8")) as { readonly scopes: readonly string[]; readonly moving: readonly string[] };
+const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🧫️multi-scope-verification/🔣️.json", import.meta.url), "utf8")) as { readonly scopes: readonly string[]; readonly moving: readonly string[] };
 const scopes = [...fixture.scopes, ...(process.env.SEMIO_TEST_LEVEL === "exhaustive" ? fixture.moving : [])];
 const stable = (violations: readonly TaxonomyViolation[]): TaxonomyViolation[] => violations.map((violation) => (violation.code === "generator-preview-invalid" ? { ...violation, message: violation.message.replace(/: status=.*$/su, "") } : violation));
 

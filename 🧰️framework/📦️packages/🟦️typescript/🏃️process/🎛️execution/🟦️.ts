@@ -1,2 +1,2 @@
-export { runOwnedCommand, startNativeProgress, OwnedCommandFailure, readOwnedCommandOutcome, captureOwnedProcess, terminateOwnedChildTree, terminateOwnedProcessTree } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+export { captureOwnedCommandV1, runOwnedCommand, startNativeProgress, OwnedCommandFailure, readOwnedCommandOutcome, captureOwnedProcess, terminateOwnedChildTree, terminateOwnedProcessTree } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 export type { OwnedCommandOptions, OwnedCommandOutcome, OwnedProcessCaptureOptions, OwnedProcessCaptureResult, OwnedChildHandle } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";

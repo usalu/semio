@@ -2,7 +2,7 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn md_into_writer_uses_the_markdown_text_as_document_text() {
-    let outcome = MdIntoWriter::deserialize(&IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(&MdSnapshot::from_text("hello world")))).await.expect("deserialize");
+    let outcome = MdIntoWriter::deserialize(&IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&MdSnapshot::from_text("hello world")))).await.expect("deserialize");
     assert_eq!(crate::writer_text(&outcome.value), "hello world");
     assert_eq!(outcome.value.language_id, "plain");
 }

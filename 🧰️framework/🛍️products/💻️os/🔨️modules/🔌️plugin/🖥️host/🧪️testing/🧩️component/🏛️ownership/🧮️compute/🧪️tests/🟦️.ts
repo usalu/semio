@@ -3,5 +3,5 @@ import {readFileSync} from "node:fs";
 import {resolve,join} from "node:path";
 import {registerComputeConsumerTests} from "../../../../../../../../../../🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️host/🟦️.ts";
 import {type ComputeConsumerDescriptor} from "../../../../../../../../../../🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🟦️.ts";
-import descriptor from "../🧫️fixtures/🔣️.json";
+import descriptor from "./🧫️fixtures/🔣️.json";
 const root=resolve(import.meta.dir,"../../../../../../../../../../..");

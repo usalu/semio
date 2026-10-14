@@ -42,3 +42,7 @@ web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
 
 [dev-dependencies]
 semio-framework-trace = { workspace = true }
+
+[[test]]
+name="original_scene_retirement"
+path="../../♻️retirement/🎬️scene/🧪️tests/🦀️.rs"

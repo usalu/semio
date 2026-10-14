@@ -1,0 +1,25 @@
+{
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "mesh": 0
+        }
+      }
+    ]
+  },
+  "meshes": {
+    "removed": [
+      1
+    ],
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "name": "deck"
+        }
+      }
+    ]
+  }
+}

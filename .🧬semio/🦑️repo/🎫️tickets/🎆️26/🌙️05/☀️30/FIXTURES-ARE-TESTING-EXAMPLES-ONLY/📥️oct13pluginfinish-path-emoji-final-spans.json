@@ -1,0 +1,16 @@
+{
+  "changes": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔏️path-emoji-statutes/🟦️.ts",
+      "exclusive": false,
+      "beforeSha256": "dd1c92ddfae8a725e6e94404539a8a79fb0d5e79c073e2b5b775fc57cce07cdd",
+      "afterSha256": "d41b135c4bbc61379b5b6dc8f2ab32dc6231893835695abd2a8570e448a890f0",
+      "spans": [
+        {
+          "before": "expect(fixture[\"gltfFixtureCoordinates\"][\"pathShapes\"]).toEqual([\"*/🧫️fixtures/*/*.gltf\",\"*/🧫️fixtures/*/*/*.gltf\"])",
+          "after": "expect(fixture[\"gltfFixtureCoordinates\"][\"pathShapes\"]).toEqual([\"*/🧪️tests/🧫️fixtures/*/*.gltf\",\"*/🧪️tests/🧫️fixtures/*/*/*.gltf\"])"
+        }
+      ]
+    }
+  ]
+}

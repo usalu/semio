@@ -3,7 +3,7 @@
 
 use crate::mutations::{change_seed, create_tile, delete_tile, inverse_grid3d_mutation, mask_cell, pin_cell, unmask_cell, unpin_cell};
 use crate::schema::snapshot::{Grid3dCell, Grid3dPinnedCell, Grid3dSnapshot, Grid3dTile};
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 
 #[test]
 fn a_mounted_sequence_of_edits_lands_on_a_document_that_still_round_trips() {

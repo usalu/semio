@@ -5,7 +5,7 @@
 use super::*;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🧫️history-edit-actions/🔣️.json")).expect("history-edit-actions fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🧫️history-edit-actions/🔣️.json")).expect("history-edit-actions fixture")
 }
 
 fn arg_schema_kind(schema: &ArgSchema) -> &'static str {
@@ -96,7 +96,7 @@ fn the_finalize_dialog_submits_an_alternative_offers_a_destructive_overwrite_and
 
 #[test]
 fn the_finalize_dialog_is_the_renderer_dialog_choices_fixture_without_a_literal_default_name() {
-    let renderer: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️dialog-choices/🔣️.json")).expect("dialog-choices fixture");
+    let renderer: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️dialog-choices/🔣️.json")).expect("dialog-choices fixture");
     let mut expected: DialogDefinition = serde_json::from_value(renderer["dialog"].clone()).expect("fixture dialog");
     for arg in &mut expected.args {
         arg.default = None;

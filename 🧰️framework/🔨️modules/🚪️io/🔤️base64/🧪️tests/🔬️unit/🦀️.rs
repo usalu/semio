@@ -5,7 +5,7 @@ use super::*;
 /// language can be checked against the same table.
 #[test]
 fn matches_rfc4648_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️rfc4648-base64-vectors.json")).expect("fixture JSON");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️rfc4648-base64-vectors.json")).expect("fixture JSON");
     for case in fixture["cases"].as_array().expect("cases array") {
         let input = case["input_utf8"].as_str().expect("input_utf8");
         let expected = case["encoded"].as_str().expect("encoded");
@@ -66,7 +66,7 @@ fn matches_third_party_base64_oracle() {
 /// 🔗️ RFC 4648 §10 vectors re-spelled for §5 base64url without padding, plus URL-alphabet rows.
 #[test]
 fn matches_rfc4648_base64url_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️rfc4648-base64url-vectors.json")).expect("fixture JSON");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️rfc4648-base64url-vectors.json")).expect("fixture JSON");
     for case in fixture["cases"].as_array().expect("cases array") {
         let bytes = case["input_hex"].as_str().map(|hex| (0..hex.len()).step_by(2).map(|index| u8::from_str_radix(&hex[index..index + 2], 16).expect("hex")).collect::<Vec<u8>>()).expect("input_hex");
         let expected = case["encoded"].as_str().expect("encoded");
@@ -106,7 +106,7 @@ fn quartets_match_third_party_and_refuse_noncanonical_groups(){
 }
 
 fn controlled_corpus() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🎛️controlled/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🎛️controlled/🔣️.json")).unwrap()
 }
 
 fn controlled_bytes(length: usize, corpus: &serde_json::Value) -> Vec<u8> {

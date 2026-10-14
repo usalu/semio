@@ -8,7 +8,8 @@
     "stages",
     "ledgerStages",
     "ledgerLeaseWords",
-    "metadataCopyBytes"
+    "metadataCopyBytes",
+    "initialization"
   ],
   "properties": {
     "policy": {
@@ -72,6 +73,59 @@
     },
     "metadataCopyBytes": {
       "const": 0
+    },
+    "initialization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bindingCount",
+        "bindingsPerTurn",
+        "turns",
+        "copiedBytes",
+        "policy"
+      ],
+      "properties": {
+        "bindingCount": {
+          "const": 256
+        },
+        "bindingsPerTurn": {
+          "const": 16
+        },
+        "turns": {
+          "const": 16
+        },
+        "copiedBytes": {
+          "const": 0
+        },
+        "policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "items",
+            "copy",
+            "capacity",
+            "release",
+            "depth"
+          ],
+          "properties": {
+            "items": {
+              "const": 1
+            },
+            "copy": {
+              "const": 0
+            },
+            "capacity": {
+              "const": 0
+            },
+            "release": {
+              "const": 0
+            },
+            "depth": {
+              "const": 64
+            }
+          }
+        }
+      }
     }
   }
 }

@@ -92,7 +92,7 @@ mod geojson_io {
     use serde_json::Value;
     use std::str::FromStr;
 
-    const VECTORS: &str = include_str!("../../../🧫️fixtures/🌍️geojson-io/🔣️.json");
+    const VECTORS: &str = include_str!("../../../🧪️tests/🧫️fixtures/🌍️geojson-io/🔣️.json");
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn features(value: &Value) -> Vec<MapFeature> {
@@ -182,7 +182,7 @@ mod geojson_io {
 #[test]
 fn gis_diff_native_round_trip_matches_owned_json_oracle() {
     use protocol::{DiffBinary,DiffText};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🚪️diff-native-ownership/🔣️.json")).expect("authored fixture");
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🚪️diff-native-ownership/🔣️.json")).expect("authored fixture");
     let diff:crate::GisMapDiff=semio_framework_pack_json::from_json_str(&fixture["diff"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned diff");
     let text=diff.print_diff();
     let oracle:serde_json::Value=serde_json::from_str(&text).expect("independent JSON parser");

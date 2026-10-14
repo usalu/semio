@@ -1,9 +1,12 @@
 //! 🪶️ Explicit TXT entities and controlled external UTF-8 carriers.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_utf_8::subsets::any::schema::snapshot::{LineEnding, TxtSnapshot};
-use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell, Projection, Reconstruction, ordered_row_refs}, validate_sqlite_database_schema, SnapshotEncoding, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase}, os_store::serialization::ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell, Projection, Reconstruction, ordered_row_refs}, validate_sqlite_database_schema, SnapshotEncoding, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use semio_framework_value::{native_decoding::{NativeDecodeControl, NativeDecodeProgress},NativeEncodeControl};
 #[path="🛫️encoding/🦀️.rs"]
 mod original_encoding;
+#[path="🫴️receiving/🦀️.rs"]
+mod receiving;
 
 fn native_length(snapshot: &TxtSnapshot, control: &mut SqliteSnapshotControl<'_>,mut native:Option<&mut NativeEncodeControl<'_>>) -> Result<usize, ValueError> {
     if let Some(native)=native.as_deref_mut(){native.checkpoint()?;}
@@ -33,57 +36,18 @@ fn count_lines(content: &str, ending: LineEnding, native: &mut NativeDecodeContr
 }
 
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
-impl ArtifactSqliteSnapshot for TxtSnapshot {
-    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
-
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
-        (|| -> Result<_, ValueError> {
-        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, self.lines.len())?;
-        let rows = self.lines.len().checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "text entity count overflow"))?;
-        control.check_rows(rows)?;
-        let ending = match self.line_ending { LineEnding::Lf => "lf", LineEnding::CrLf => "crlf" };
-        let mut bytes = self.schema.len().checked_add(16 + ending.len()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "text value size overflow"))?;
-        for (ordinal, line) in self.lines.iter().enumerate() {
-            if ordinal % 256 == 0 { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, ordinal, self.lines.len())?; }
-            bytes = bytes.checked_add(24).and_then(|count| count.checked_add(line.len())).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "text value size overflow"))?;
-        }
-        control.check_value_bytes(bytes)?;
-        let mut projection = Projection::new(Self::SQLITE_SCHEMA, control)?;
-        let root = projection.insert("text_document", &[Cell::Text(&self.schema), Cell::Integer(i64::from(self.trailing_newline)), Cell::Text(ending)])?;
-        for (ordinal, line) in self.lines.iter().enumerate() {
-            projection.insert("text_line", &[Cell::Integer(root), Cell::Integer(i64::try_from(ordinal).map_err(|_| ValueError::new(ValueRefusalKind::WorkLimit, "text ordinal overflow"))?), Cell::Text(line)])?;
-            if ordinal % 256 == 0 { projection.checkpoint_total(rows)?; }
-        }
-        projection.checkpoint_total(rows)?;
-        projection.finish()
+impl ArtifactSqliteSnapshotHost for TxtSnapshot {
     
-        })()
-    }
 
-    fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
-        (|| -> Result<_, ValueError> {
-        validate_sqlite_database_schema(database, Self::SQLITE_SCHEMA, control.limits())?;
-        control.check_database(database, SqliteSnapshotPhase::ReconstructSnapshot)?;
-        let document = database.table("text_document")?.single_row()?;
-        let root = document.integer(0)?;
-        if root <= 0 || document.rowid != root || document.values.len() != 4 { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "invalid text document identity or width")); }
-        let trailing_newline = match document.integer(2)? { 0 => false, 1 => true, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue, "text trailing newline must be boolean")) };
-        let line_ending = match document.text(3)? { "lf" => LineEnding::Lf, "crlf" => LineEnding::CrLf, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue, "unknown text line ending")) };
-        let rows = ordered_row_refs(database.table("text_line")?, 2, control)?;
-        let mut restore = Reconstruction::new(control)?;
-        let schema = restore.text(document.text(1)?)?;
-        let mut lines = Vec::new();
-        lines.try_reserve_exact(rows.len()).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "text line allocation failed"))?;
-        for row in rows {
-            if row.rowid <= 0 || row.integer(0)? != row.rowid || row.integer(1)? != root || row.values.len() != 4 { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "invalid text line identity, relationship or width")); }
-            lines.push(restore.text(row.text(3)?)?);
-            restore.checkpoint()?;
-        }
-        restore.checkpoint()?;
-        Ok(Self { schema, lines, trailing_newline, line_ending })
+    fn to_sqlite_database_receiving(&self,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<SqliteDatabase,ValueError>{receiving::project_receiving(self,control,owner)}
+    fn from_sqlite_database_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->Result<Self,ValueError>{receiving::reconstruct_receiving(database,control,owner)}
+    fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->store::io_schema::IoResult<()>{let progress=owner.progress();receiving::validate_subset(dialect,control,SqliteSnapshotPhase::ProjectSnapshot,progress,||owner.native().checkpoint())}
+    fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->store::io_schema::IoResult<()>{let progress=owner.progress();receiving::validate_subset(dialect,control,SqliteSnapshotPhase::ReconstructSnapshot,progress,||owner.native().checkpoint())}
+
+
     
-        })()
-    }
+
+    
 
     fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError>{
         let limits=control.limits();control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;
@@ -115,6 +79,56 @@ impl ArtifactSqliteSnapshot for TxtSnapshot {
         validate_sqlite_database_schema(database, Self::SQLITE_SCHEMA, control.limits()).map_err(IoError::from_value_error)?;
         control.check_database(database, SqliteSnapshotPhase::ProjectSnapshot).map_err(IoError::from_value_error)?;
         Ok(store::io_schema::IoOutcome::clean(()))
+    }
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for TxtSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
+        (|| -> Result<_, ValueError> {
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, self.lines.len())?;
+        let rows = self.lines.len().checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "text entity count overflow"))?;
+        control.check_rows(rows)?;
+        let ending = match self.line_ending { LineEnding::Lf => "lf", LineEnding::CrLf => "crlf" };
+        let mut bytes = self.schema.len().checked_add(16 + ending.len()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "text value size overflow"))?;
+        for (ordinal, line) in self.lines.iter().enumerate() {
+            if ordinal % 256 == 0 { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, ordinal, self.lines.len())?; }
+            bytes = bytes.checked_add(24).and_then(|count| count.checked_add(line.len())).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "text value size overflow"))?;
+        }
+        control.check_value_bytes(bytes)?;
+        let mut projection = Projection::new(Self::SQLITE_SCHEMA, control)?;
+        let root = projection.insert("text_document", &[Cell::Text(&self.schema), Cell::Integer(i64::from(self.trailing_newline)), Cell::Text(ending)])?;
+        for (ordinal, line) in self.lines.iter().enumerate() {
+            projection.insert("text_line", &[Cell::Integer(root), Cell::Integer(i64::try_from(ordinal).map_err(|_| ValueError::new(ValueRefusalKind::WorkLimit, "text ordinal overflow"))?), Cell::Text(line)])?;
+            if ordinal % 256 == 0 { projection.checkpoint_total(rows)?; }
+        }
+        projection.checkpoint_total(rows)?;
+        projection.finish()
+    
+        })()
+    }
+fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+        (|| -> Result<_, ValueError> {
+        validate_sqlite_database_schema(database, Self::SQLITE_SCHEMA, control.limits())?;
+        control.check_database(database, SqliteSnapshotPhase::ReconstructSnapshot)?;
+        let document = database.table("text_document")?.single_row()?;
+        let root = document.integer(0)?;
+        if root <= 0 || document.rowid != root || document.values.len() != 4 { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "invalid text document identity or width")); }
+        let trailing_newline = match document.integer(2)? { 0 => false, 1 => true, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue, "text trailing newline must be boolean")) };
+        let line_ending = match document.text(3)? { "lf" => LineEnding::Lf, "crlf" => LineEnding::CrLf, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue, "unknown text line ending")) };
+        let rows = ordered_row_refs(database.table("text_line")?, 2, control)?;
+        let mut restore = Reconstruction::new(control)?;
+        let schema = restore.text(document.text(1)?)?;
+        let mut lines = Vec::new();
+        lines.try_reserve_exact(rows.len()).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "text line allocation failed"))?;
+        for row in rows {
+            if row.rowid <= 0 || row.integer(0)? != row.rowid || row.integer(1)? != root || row.values.len() != 4 { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "invalid text line identity, relationship or width")); }
+            lines.push(restore.text(row.text(3)?)?);
+            restore.checkpoint()?;
+        }
+        restore.checkpoint()?;
+        Ok(Self { schema, lines, trailing_newline, line_ending })
+    
+        })()
     }
 }
 

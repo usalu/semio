@@ -1,7 +1,7 @@
 //! 🧪️ Original carrier allocation boundary agrees with independent protobuf framing.
 use super::*;
 use std::{sync::atomic::{AtomicUsize,Ordering},io::Write,process::{Command,Stdio}};
-fn neutral()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn neutral()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn grant()->semio_framework_value::RetainedCloneGrant{serde_json::from_value(neutral()["partialReceiving"]["receivingGrant"].clone()).unwrap()}
 fn decode_wire(bytes:&[u8],control:&mut NativeDecodeControl<'_>,grant:semio_framework_value::RetainedCloneGrant)->Result<DocumentArchivePack,ValueError>{decode_document_archive_bytes_controlled(bytes,&mut crate::os_store::NativeSnapshotDecodeOwner::new(control,grant))}
 

@@ -228,7 +228,7 @@ mod tests {
 
     #[test]
     fn neutral_recognizer_fixture_matches_the_typescript_authority() {
-        let fixture: Fixture = serde_json::from_str(include_str!("🧫️fixtures/🤏️recognizer.json")).expect("recognizer fixture");
+        let fixture: Fixture = serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🤏️recognizer.json")).expect("recognizer fixture");
         for case in fixture.recognizer {
             let mut recognizer = GestureRecognizer::default();
             for (event, expected) in case.events.into_iter().zip(case.verdicts) {

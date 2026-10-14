@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn imported_image_semantics_are_reversible() {
  use protocol::Mutation as _;
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
  let operation=semio_framework_plugin::AppOperationContext {app_instance_id:1,parent_document_id:"images".into(),operation_id:2,generation:1,canonical_base_revision:[0;32],authoring_seed:"images".into()};
  for row in fixture["cases"].as_array().unwrap() {
   let snapshot=DrawingSnapshot::default();let original=snapshot.clone();let asset:DrawingImageAsset=serde_json::from_value(row["expected"].clone()).unwrap();
@@ -16,5 +16,5 @@ fn imported_image_semantics_are_reversible() {
 #[test]
 fn image_creation_requests_supported_encoded_input() {
  let effect=request().effects.pop().unwrap();let Effect::RequestFileOpen {accept,read_as,import_action,multiple,..}=effect else{unreachable!()};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();assert_eq!(accept,fixture["accept"].as_str().unwrap());assert_eq!(import_action,fixture["action"].as_str().unwrap());assert_eq!(read_as.as_deref(),Some("dataUrl"));assert!(!multiple);
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();assert_eq!(accept,fixture["accept"].as_str().unwrap());assert_eq!(import_action,fixture["action"].as_str().unwrap());assert_eq!(read_as.as_deref(),Some("dataUrl"));assert!(!multiple);
 }

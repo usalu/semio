@@ -663,7 +663,7 @@ fn adversarial_feature_match_and_track_worker_steps_stay_fuel_bounded() {
 #[test]
 #[ignore = "diagnostic stage trace: minutes of dense stereo, run explicitly"]
 fn debug_probe_synthetic_orbit() {
-    let scene = <crate::RemodelingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
+    let scene = <crate::RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
     let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
     let mut engine = ReconstructionEngine::new(&params);
     for (index, (_, bytes)) in crate::examples::synthetic_orbit::FRAMES.iter().enumerate() {
@@ -747,7 +747,7 @@ fn diagnose_synthetic_orbit_geometry() {
             Se3 { r: rotation, t: scale3(rotation.act(centre), -1.0) }
         })
         .collect();
-    let scene = <crate::RemodelingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
+    let scene = <crate::RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
     let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
     let mut engine = ReconstructionEngine::new(&params);
     let mut intrinsics = None;
@@ -1016,7 +1016,7 @@ fn diagnose_synthetic_orbit_dense_against_truth() {
         format!("n={} p10 {:.3} median {:.3} p90 {:.3}", values.len(), q(0.1), q(0.5), q(0.9))
     };
 
-    let scene = <crate::RemodelingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
+    let scene = <crate::RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
     let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
     eprintln!("[DENSE] params dense={:?} voxel={} trunc={} dense_source_views={} max_dense_cameras={}", params.dense, params.tsdf_voxel_size, params.tsdf_truncation, params.dense_source_views, params.max_dense_cameras);
     let mut engine = ReconstructionEngine::new(&params);
@@ -1370,7 +1370,7 @@ fn diagnose_dense_replay() {
     let recovered: Vec<[f64; 3]> = reconstruction.cameras.iter().map(|(_, pose)| pose.0.inverse().t).collect();
     let targets: Vec<[f64; 3]> = reconstruction.cameras.iter().map(|(frame, _)| truth_centres[*frame]).collect();
     let sim = crate::lie::umeyama(&recovered, &targets, true).expect("Sim(3) over camera centres");
-    let scene = <crate::RemodelingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
+    let scene = <crate::RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
     let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
     let mut extrema_min = [f64::INFINITY; 3];
     let mut extrema_max = [f64::NEG_INFINITY; 3];

@@ -136,7 +136,7 @@ async fn gumball_flags_are_model_window_config() {
 /// streamed gesture is ONE edit, an aborted one leaves zero trace, a gesture that never moved publishes nothing.
 #[semio_framework_async_macros::async_test]
 async fn the_world3d_gumball_live_protocol_lands_as_its_guest_edits() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧫️fixtures/🛠️gumball-live-protocol.json"))).expect("the protocol fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🛠️gumball-live-protocol.json"))).expect("the protocol fixture parses");
     let cases = fixture["cases"].as_array().expect("cases");
     let mut consumed = 0;
     for case in cases.iter().filter(|case| case.get("guest").is_some()) {

@@ -411,7 +411,7 @@ async fn box_minus_cylinder_blind_bore_removes_the_bore_volume() {
 /// 🧪️ Preserves coincident boundary occupancy across aligned and opposed outward orientations.
 #[test]
 fn coincident_face_boundary_selection_agrees_with_the_neutral_law() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/coincident-boundary/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/coincident-boundary/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let op = match row["operation"].as_str().unwrap() { "union" => BooleanOp::Unite, "intersection" => BooleanOp::Intersect, "difference" => BooleanOp::Cut, _ => unreachable!() };
         assert_eq!(keep_coincident_boundary(op, row["aligned"].as_bool().unwrap()), row["retainsBoundary"].as_bool().unwrap(), "neutral coincident boundary: {row}");
@@ -434,7 +434,7 @@ fn coincident_face_boundary_selection_agrees_with_the_neutral_law() {
 /// 🧪️ Retains one closed shared seam when a cylindrical bore is refilled by its matching tool.
 #[semio_framework_async_macros::async_test]
 async fn coincident_bore_refill_retains_a_closed_owned_seam() {
-    let row: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/coincident-seam/🔣️.json")).unwrap();
+    let row: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/coincident-seam/🔣️.json")).unwrap();
     let mut body = Body::new();
     let mut rec = OpRecorder::new();
     let dims = row["stock"].as_array().unwrap();

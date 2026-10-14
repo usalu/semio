@@ -1,3 +1,4 @@
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
 use crate::__semio_dispatch_PluginApp;
 use crate::surface_contract::{ArtifactEditor, ArtifactViewer, Editor, ViewEmit, Viewer};
@@ -180,9 +181,14 @@ fn routed_inference_is_frozen_into_the_plugin_roster_without_a_sync_service() {
     assert!(artifact_inference_service(metadata.artifact_kind, metadata.inference_schema).expect("global service lookup").is_none(), "route must not manufacture a synchronous service facade");
 }
 
-impl store::os_store::serialization::ArtifactSqliteSnapshot for NoConfig {
-    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
-    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
+impl store::os_store::serialization::ArtifactSqliteSnapshotHost for NoConfig {
+    
+    
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for NoConfig {
+const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
         use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotPhase, SqliteValue};
         control.check_rows(1)?;
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
@@ -191,7 +197,7 @@ impl store::os_store::serialization::ArtifactSqliteSnapshot for NoConfig {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
         Ok(database)
     }
-    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
         let rows = &database.table("empty_artifact_state")?.rows;
         if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 || rows[0].values.len() != 1 {

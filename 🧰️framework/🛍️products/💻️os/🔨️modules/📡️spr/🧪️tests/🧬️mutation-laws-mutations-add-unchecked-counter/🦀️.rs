@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn direct_fixture_contract() {
-    super::super::super::tests::assert_leaf::<AddUncheckedCounter>(2, CounterMutation::AddUncheckedCounter, include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/🐛️add-unchecked-counter/🔣️.json"), include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/🐛️add-unchecked-counter/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    super::super::super::tests::assert_leaf::<AddUncheckedCounter>(2, CounterMutation::AddUncheckedCounter, include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/🐛️add-unchecked-counter/🔣️.json"), include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/🐛️add-unchecked-counter/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }
 
 /// ➕️ The deliberately incorrect command re-issues itself as its own inverse: the sum law catches that it does not restore.

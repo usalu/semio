@@ -11,7 +11,7 @@ import {semioSchemaAjvV1} from "../../../../../../../../../../../../../🧰️fr
 type Json = null | boolean | number | string | Json[] | {[key: string]: Json};
 const TRANSPORT = "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport";
 const LEAVES = new URL("../../", import.meta.url);
-const FIXTURES = new URL("../../../../🧫️fixtures/🧬️mutations/", import.meta.url);
+const FIXTURES = new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations", import.meta.url);
 const VALUE = new URL("../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json", import.meta.url);
 const read = (url: URL): Json => JSON.parse(readFileSync(url, "utf8"));
 const folders = (root: URL) => readdirSync(root, {withFileTypes: true}).filter((entry) => entry.isDirectory()).map((entry) => entry.name);

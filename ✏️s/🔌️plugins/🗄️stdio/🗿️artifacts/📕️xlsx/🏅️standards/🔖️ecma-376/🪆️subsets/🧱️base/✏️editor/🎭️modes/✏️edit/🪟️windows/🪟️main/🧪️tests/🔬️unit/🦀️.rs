@@ -25,7 +25,7 @@ async fn definition_declares_a_table_window() {
 #[semio_framework_async_macros::async_test]
 async fn neutral_sparse_blank_and_formula_cases_render_as_real_editable_grids() {
     use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧫️fixtures/📊️sheet-grid/🔣️.json")).expect("third-party JSON parser reads neutral grid fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/📊️sheet-grid/🔣️.json")).expect("third-party JSON parser reads neutral grid fixture");
     for case in fixture["cases"].as_array().unwrap() {
         let cells = case["cells"]
             .as_array()

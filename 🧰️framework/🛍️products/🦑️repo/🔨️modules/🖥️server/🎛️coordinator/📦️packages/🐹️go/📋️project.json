@@ -4,7 +4,9 @@
   "targets": {
     "build": {
       "cache": true,
-      "outputs": [],
+      "outputs": [
+        "{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🗃️bin/{options.env.SEMIO_BUILD_MODE}/coordinator"
+      ],
       "options": {
         "command": "bun ./📜️script.ts build"
       }

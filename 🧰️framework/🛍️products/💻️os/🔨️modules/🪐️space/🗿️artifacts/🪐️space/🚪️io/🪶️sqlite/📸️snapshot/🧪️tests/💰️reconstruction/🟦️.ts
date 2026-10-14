@@ -6,10 +6,10 @@ import {join} from "node:path";
 import {importSqliteDatabase} from "../../../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 test("full owned SQL reconstruction has a closed exact allocation contract and independent literal bytes",async()=>{
  const base=fileURLToPath(new URL("../../",import.meta.url));
- const path=join(base,"🧫️fixtures/💰️reconstruction/🔣️.json");
+ const path=join(base,"🧪️tests/🧫️fixtures/💰️reconstruction/🔣️.json");
  expect(existsSync(path)).toBe(true);
  const f=JSON.parse(readFileSync(path,"utf8"));
- const sql=readFileSync(join(base,"🗄️.sql"),"utf8"),corpus=JSON.parse(readFileSync(join(base,"🧫️fixtures/🔣️.json"),"utf8"));
+ const sql=readFileSync(join(base,"🗄️.sql"),"utf8"),corpus=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
  const text=f.textUnit.repeat(f.repeat),db=new Database(":memory:");
  try{
   db.exec("PRAGMA foreign_keys=ON");db.exec(sql);db.exec("PRAGMA application_id=1397576526; PRAGMA user_version=1");

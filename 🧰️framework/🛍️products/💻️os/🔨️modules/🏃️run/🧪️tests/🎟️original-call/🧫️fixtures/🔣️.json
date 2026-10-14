@@ -1,0 +1,8 @@
+{
+  "input": [8, 51, 65536, 262144, 64],
+  "spent": [2, 11, 96, 97],
+  "remaining": [6, 40, 65440, 262047, 64],
+  "order": ["receiveOriginalCall", "inspectTypedCall", "continueOrReport"],
+  "failure": "wholeKernelErrorAndOriginalFixedCall",
+  "semanticCompletion": "separateOriginalInput"
+}

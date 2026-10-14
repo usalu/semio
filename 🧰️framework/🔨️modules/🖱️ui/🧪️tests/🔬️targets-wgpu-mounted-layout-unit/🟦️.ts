@@ -8,6 +8,23 @@ import Ajv from "ajv";
 import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/🟦️.ts";
 import law from "./🧫️fixtures/🫴️receiving.json";
 import grant from "../../../🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json";
+import originalCloseSchema from "./🧬️schema/🧵️original-close.json";
+import originalClose from "./🧫️fixtures/🧵️original-close.json";
+
+test("original UI close keeps both causes and one actual initiating context",()=>{
+ const validate=new Ajv({strict:true}).compile(originalCloseSchema);expect(validate(originalClose)).toBe(true);for(const key of ["wholePrimary","wholeReceiptRefusal","sameSourcePointers","originalContext","debitOnce"]){expect(validate({...originalClose,[key]:false})).toBe(false);}expect(validate({...originalClose,terminalDrop:1})).toBe(false);
+ const primary={message:"original UI source 源",cause:{message:"nested whole Fault"}},receipt={message:"original distinct receipt refusal"};const oracle=JSON.parse(Buffer.from(JSON.stringify({primary,receipt,identity:[originalClose.operation,originalClose.generation],deadline:originalClose.deadline})).toString("utf8"));expect(oracle.primary).toEqual(primary);expect(oracle.receipt).toEqual(receipt);expect(oracle.identity).toEqual([17,9]);expect(oracle.deadline).toBe(12345);console.log("[DEBUG] Original UI close strict Ajv and independent JSON UTF8 oracle retain complete distinct causes and explicit initiating identity; native/runtime qualification remains separate");
+});
+
+test("actual worker close and frame consumers parse with mandatory original context",async()=>{
+ await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(resolve(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",process.cwd())),"out/tree-sitter-rust.wasm")));const rows=[
+  ["🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs",["close_layout_worker_session","close_surface_one"]],
+  ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs",["close_ui_document_one"]],
+  ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs",["render_chrome_step"]],
+  ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",["frame_before_input_step"]]
+ ]as const;
+ try{for(const[path,names]of rows){const ast=parser.parse(readFileSync(resolve(process.cwd(),path),"utf8"))!;const found:Parser.SyntaxNode[]=[];const visit=(node:Parser.SyntaxNode):void=>{if(node.type==="function_item"&&names.some(name=>node.childForFieldName("name")?.text===name))found.push(node);for(const child of node.namedChildren)visit(child);};visit(ast.rootNode);expect(found).toHaveLength(names.length);for(const node of found){expect(node.hasError()).toBe(false);expect(node.childForFieldName("parameters")!.text).toContain("StepContext");}ast.delete();}}finally{parser.delete();}console.log("[DEBUG] Independent TreeSitter accepts the actual original-context worker/surface/interpreter/chrome/frame functions; source syntax is separate from native System and GPU acceptance");
+});
 
 test("mounted receiving declares the original policy and exact ownership obligations",()=>{
 expect(testingSchemaExists(new URL("./🧬️schema/🫴️receiving.json",import.meta.url))).toBe(false); const oracle=new Ajv({strict:true}).addSchema(grant).compile({$ref:grant.$id+"#/$defs/Grant"});

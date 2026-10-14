@@ -41,7 +41,7 @@ async fn committed_facet_files_parse() {
 async fn grammar_conformance_law() {
     let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
     let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
-    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::demo_gltf_snapshot());
+    let text = pack::snapshot::ArtifactDsl::print_dsl(&semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::demo_gltf_snapshot());
     let (_, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
     for input in [text.as_str(), body] {
         assert!(recognizer.recognize(input).expect("recognize"), "grammar did not recognize current owned snapshot:\n{input}");
@@ -94,7 +94,7 @@ async fn diff_grammar_conformance_law() {
 #[semio_framework_async_macros::async_test]
 async fn protocol_walk_law() {
     let pack_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
-    let packed = store::os_store::serialization::ArtifactPack::encode_pack(&semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::demo_gltf_snapshot());
+    let packed = pack::snapshot::ArtifactPack::encode_pack(&semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::demo_gltf_snapshot());
     let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
     let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
     assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
@@ -128,14 +128,14 @@ async fn fixture_honesty_law() {
 
     let demo = semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::demo_gltf_snapshot();
 
-    let parsed = <GltfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+    let parsed = <GltfSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
     assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_gltf_snapshot()");
-    assert_eq!(store::os_store::serialization::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_gltf_snapshot()) drifted from the shipped .dsl.semio fixture");
+    assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_gltf_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-    let decoded = <GltfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+    let decoded = <GltfSnapshot as pack::snapshot::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
     assert_eq!(decoded.schema, demo.schema, "shipped .pack.semio fixture does not decode back to demo_gltf_snapshot()'s schema");
     assert_eq!(decoded.document, demo.document, "shipped .pack.semio fixture does not decode back to demo_gltf_snapshot()'s document");
     assert_eq!(decoded.buffers, demo.buffers, "shipped .pack.semio fixture does not decode back to demo_gltf_snapshot()'s buffers");
     assert_eq!(decoded.source_form, demo.source_form, "owned pack must preserve source form");
-    assert_eq!(store::os_store::serialization::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_gltf_snapshot()) drifted from the shipped .pack.semio fixture");
+    assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_gltf_snapshot()) drifted from the shipped .pack.semio fixture");
 }

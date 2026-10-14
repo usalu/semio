@@ -9,7 +9,7 @@ import { BoxGeometry, Vector3 } from "three";
 /** 🪪️ Validates portable channel declarations against the packaged owning manifest. */
 export function channelIdentityOracle(directory: string): number {
   const root = resolve(directory, "../..");
-  const fixture = JSON.parse(readFileSync(resolve(root, "🧫️fixtures/🪪️channels/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(resolve(root, "🧪️tests/🧫️fixtures/🪪️channels/🔣️.json"), "utf8"));
   const bundle = JSON.parse(readFileSync(resolve(root, "🔣️.json"), "utf8"));
   const contributions = [...bundle.contributions.topicContributions, ...bundle.manifest.topicContributions];
   const manifests = contributions.filter((entry: { payload: { manifestJson?: string } }) => entry.payload.manifestJson).map((entry: { payload: { manifestJson: string } }) => JSON.parse(entry.payload.manifestJson));
@@ -29,7 +29,7 @@ export function channelIdentityOracle(directory: string): number {
 }
 
 export function brepExtensionRetirementOracle(directory: string): number {
-  const fixtures = resolve(directory, "../../🧫️fixtures/🚪️retirement");
+  const fixtures = resolve(directory, "../../🧪️tests/🧫️fixtures/🚪️retirement");
   const fixture = JSON.parse(readFileSync(resolve(fixtures, "🔣️.json"), "utf8"));
   const input = JSON.parse(fixture.evaluate.inputJson);
   for (const axis of ["width", "depth", "height"]) assert.deepEqual(input[axis], { $schema: "number", value: 1 });
@@ -46,7 +46,7 @@ export function brepExtensionRetirementOracle(directory: string): number {
 /** 📐️ The third-party JSON schema oracle validates the same inference payload and dependency laws. */
 export function geometryInferenceOracle(directory: string): number {
   const root = resolve(directory, "../../💡️inferences/📐️geometry");
-  const fixture = JSON.parse(readFileSync(resolve(root, "🧫️fixtures/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(resolve(root, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
   const ajv = new Ajv2020({ strict: true }).addKeyword("x-semio-reads");
   const request = ajv.compile(JSON.parse(readFileSync(resolve(root, "📥️request.json"), "utf8")));
   const result = ajv.compile(JSON.parse(readFileSync(resolve(root, "📤️result.json"), "utf8")));

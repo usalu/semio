@@ -5,7 +5,7 @@ import { type SnapshotEditEvent, type SnapshotValue } from "../../🟦️";
 import { prepareSnapshotPatch, applySnapshotPatch, inverseSnapshotPatch, inverseSnapshotPatches, parseSnapshotPatch, snapshotSchemaLocation, type SnapshotPatch } from "../🟦️";
 import { semioSchemaAjvV1 } from "../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
-const fixture = await Bun.file(new URL("../🧫️fixtures/🔣️.json", import.meta.url)).json() as {
+const fixture = await Bun.file(new URL("🧫️fixtures/🔣️.json", import.meta.url)).json() as {
   base: SnapshotValue;
   positionedInsertions: { key: string; index: number; keys: string[] }[];
   invalidPositions: number[];

@@ -15,7 +15,7 @@ use crate::editor_domain::editor_laws::serial_execution;
 use semio_framework_plugin::{PluginApp, ViewModel, ViewWindowInstance};
 
 //#region 📌️Fixture
-const MODE_PANEL_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/📌️mode-panel-publication.json");
+const MODE_PANEL_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📌️mode-panel-publication.json");
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

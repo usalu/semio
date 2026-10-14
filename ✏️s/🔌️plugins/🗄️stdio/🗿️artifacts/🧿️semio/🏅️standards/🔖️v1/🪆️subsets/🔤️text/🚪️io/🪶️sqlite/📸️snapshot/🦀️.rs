@@ -1,15 +1,18 @@
 //! 🔤️ Ordered Semio text runs and inline marks as their own relational entities.
 
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 
 use crate::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot};
-use semio_framework_os_kernel::{sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase}, os_store::serialization::ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use store::sqlite_snapshot::{SqliteDatabaseLimits,artifact::{RowWriter,Cell}};
 #[path="💰️reconstruction/🦀️.rs"]
 mod reconstruction;
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
+#[path="🫴️receiving/🦀️.rs"]
+mod receiving;
 
 /// 🫳️ Visits each complete authored text row using the same owned or borrowed writer.
 pub fn visit_rows(snapshot:&SemioTextSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
@@ -33,7 +36,11 @@ fn integer(value: usize) -> Result<i64,ValueError> { i64::try_from(value).map_er
 fn kind(value: SemioTextMarkKind) -> &'static str { match value { SemioTextMarkKind::Bold => "bold", SemioTextMarkKind::Italic => "italic", SemioTextMarkKind::Code => "code", SemioTextMarkKind::Link => "link" } }
 fn identity(row: &SqliteRow, columns: usize) -> Result<(),ValueError> { if row.values.len() != columns || row.integer(0)? != row.rowid { Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio text row identity or column count is invalid")) } else { Ok(()) } }
 
-impl ArtifactSqliteSnapshot for SemioTextSnapshot {
+impl ArtifactSqliteSnapshotHost for SemioTextSnapshot {
+fn to_sqlite_database_receiving(&self,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_,'_>)->Result<SqliteDatabase,ValueError>{receiving::project_receiving(self,control,owner)}
+fn from_sqlite_database_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_,'_>)->Result<Self,ValueError>{receiving::reconstruct_receiving(database,control,owner)}
+fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{let result=(||{if dialect.artifact_kind!="s.stdio.semio"||dialect.standard!="v1"||(dialect.subset!="*"&&dialect.subset!="text"){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Semio text owned SQLite dialect differs"))}receiving::validate_decoding(self,database,control,owner).map(semio_framework_os_kernel::io_schema::IoOutcome::clean)})();result.map_err(|error|semio_framework_os_kernel::io_schema::IoError::from_value_error(error.with_retained_progress(owner.progress())))}
+fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_,'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{let result=(||{if dialect.artifact_kind!="s.stdio.semio"||dialect.standard!="v1"||(dialect.subset!="*"&&dialect.subset!="text"){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Semio text owned SQLite dialect differs"))}receiving::validate_encoding(self,database,control,owner).map(semio_framework_os_kernel::io_schema::IoOutcome::clean)})();result.map_err(|error|semio_framework_os_kernel::io_schema::IoError::from_value_error(error.with_retained_progress(owner.progress())))}
 fn retire_sqlite_snapshot(self){drop(semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
 fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native_decoding::decode(payload,control,native_control.native())}
@@ -46,9 +53,14 @@ let row=database.table("semio_text_document")?.single_row()?;
 if row.rowid!=1||row.integer(0)?!=1||row.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned document identity differs from projected semantic fields"));}
 control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))})();result.map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
 
-    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {self.project_sqlite_database(control)}
-    fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {let result=(||->Result<Self,ValueError>{ semantic::layout(control.limits())?;Self::reconstruct_sqlite_database(database, control, Self::SQLITE_SCHEMA) })();result}
+    
+    
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for SemioTextSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {self.project_sqlite_database(control)}
+fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {let result=(||->Result<Self,ValueError>{ semantic::layout(control.limits())?;Self::reconstruct_sqlite_database(database, control, Self::SQLITE_SCHEMA) })();result}
 }
 
 impl SemioTextSnapshot {

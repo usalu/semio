@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.job.original-retained-loan.inputs",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "original",
+      "received",
+      "requested"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "original": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json#/$defs/Grant"
+      },
+      "received": {
+        "$ref": "semio.original-retained-progress"
+      },
+      "requested": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json#/$defs/Grant"
+      }
+    }
+  }
+}

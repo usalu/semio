@@ -7,7 +7,7 @@ import Ajv from "ajv/dist/2020.js";
 type RowCase = Readonly<{ id: string; row: Readonly<Record<string, unknown>> }>;
 type Cases = Readonly<{ accepted: readonly RowCase[]; refused: readonly RowCase[] }>;
 const owner = resolve(import.meta.dir, "../.."), read = (path: string): unknown => JSON.parse(readFileSync(resolve(owner, path), "utf8"));
-const cases = (): Cases => read("🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json") as Cases;
+const cases = (): Cases => read("🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json") as Cases;
 const validator = () => new Ajv({ strict: true, allErrors: true }).compile(read("🧬️schema/🔣️node-graph-edit-rows/🔣️.json") as object);
 
 test("the neutral corpus retains every original accepted and refused row", () => {

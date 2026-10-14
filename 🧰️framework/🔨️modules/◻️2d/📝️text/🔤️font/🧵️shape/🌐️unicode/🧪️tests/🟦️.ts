@@ -6,7 +6,7 @@ import Ajv from "ajv";
 import {FontReader} from "../../../🟦️.ts";
 import {UnicodeDataAdmissionJob,UnicodePropertyCursor,UnicodeMappingCursor,unicodeSourceUrl} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import provenance from "../📦️data/🔣️provenance.json";
 const bidi=createRequire(import.meta.url)("bidi-js")()as{getBidiCharTypeName(text:string):string};
 const bytes=async()=>new Uint8Array(await Bun.file(unicodeSourceUrl).arrayBuffer());

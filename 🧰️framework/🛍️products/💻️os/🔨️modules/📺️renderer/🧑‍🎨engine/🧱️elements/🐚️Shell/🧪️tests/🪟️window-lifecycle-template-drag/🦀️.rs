@@ -5,12 +5,12 @@ use crate::dock::DockNode;
 use serde_json::Value;
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/🪟️window-lifecycle-template-drag/🔣️.json")).expect("window lifecycle fixture")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪟️window-lifecycle-template-drag/🔣️.json")).expect("window lifecycle fixture")
 }
 
 #[test]
 fn an_emptied_dock_paints_the_localized_notice_without_registering_window_hits() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🪟️empty-dock-notice/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧪️tests/🧫️fixtures/🪟️empty-dock-notice/🔣️.json")).unwrap();
     for locale in fixture["locales"].as_array().unwrap() {
         for viewport in fixture["viewports"].as_array().unwrap() {
             let mut shell = shell();

@@ -5,10 +5,11 @@ import { dirname, join, resolve } from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
+import {setImmediate} from "node:timers/promises";
 
 /** 🔒️ Keeps Trunk's build/serve Cargo invocation on the committed dependency lock. */
 export async function testTrunkLockfile(workspace: string, native = false): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔒️trunk-lockfile/🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔒️trunk-lockfile/🔣️.json"), "utf8"));
   const workspaceProject = JSON.parse(readFileSync(join(workspace, "📋️project.json"), "utf8")), tooling = workspaceProject.targets[fixture.tooling.target];
   assert.ok(tooling, "Trunk acquisition must have an explicit Nx prerequisite");
   assert.equal(tooling.cache, false);
@@ -22,11 +23,13 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
   assert.ok(!closure.includes(join(workspace, "📜️script.ts")), "Native preparation must not load the root application router");
   assert.ok(closure.every(path => !path.includes("/🔍️discovery/") && !path.includes("/🎮️playground/")), "Native setup must not load application taxonomy");
   const temporary = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "native-dependencies-"));
+  const started=performance.now(),progress:string[]=[];
+  const invocationFor=(signal:AbortSignal)=>({policy:{version:1 as const,owner:"trunk-lock-original-fixture",maximumElapsedMilliseconds:fixture.originalNativeControl.maximumElapsedMilliseconds},capabilities:{version:1 as const,repositoryRoot:temporary,artifactDirectory:join(temporary,"target"),command:{kind:"native-owner-command" as const,manifest:"Cargo.toml",workingDirectory:".",program:process.execPath,arguments:["trunk"]},...fixture.originalNativeControl.native},control:{signal,remainingMilliseconds:()=>fixture.originalNativeControl.maximumElapsedMilliseconds-(performance.now()-started),async publish(event:unknown){progress.push(JSON.stringify(event));await setImmediate();},async yieldContinuation(){progress.push("yield");await setImmediate();}}});
   try {
     writeFileSync(join(temporary, "Cargo.lock"), `[[package]]\nname = "wasm-bindgen"\nversion = "${fixture.tooling.bindgenVersion}"\n`);
     for (const row of fixture.tooling.cases) {
       const commands: string[][] = [];
-      await prepareDependencies("trunk", temporary, new AbortController().signal,{version:1,directory:workspace}, async (command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean) => {
+      await prepareDependencies("trunk", temporary, invocationFor(new AbortController().signal),{version:1,directory:workspace}, async (command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean) => {
         assert.equal(cwd, temporary); assert.equal(signal.aborted, false);
         if (capture) return command === "trunk" ? row.version : command === "wasm-bindgen" ? row.bindgen : row.targets;
         commands.push([command, ...args]); return "";
@@ -34,10 +37,11 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
       assert.deepEqual(commands, row.commands, "Preparation must be pinned and avoid reinstalling ready tooling");
     }
     const controller = new AbortController(), failure = new Error("Cancelled dependency probe"), calls: string[][] = [];
-    await assert.rejects(prepareDependencies("trunk", temporary, controller.signal,{version:1,directory:workspace}, async (command: string, args: string[]) => {
+    await assert.rejects(prepareDependencies("trunk", temporary, invocationFor(controller.signal),{version:1,directory:workspace}, async (command: string, args: string[]) => {
       calls.push([command, ...args]); controller.abort(failure); throw failure;
     }), error => error === failure);
     assert.deepEqual(calls, [["trunk", "--version"]], "Cancelling a probe must never start an installation");
+    assert.ok(progress.length>0);assert.ok(progress.includes("yield"));console.log("[DEBUG] original Trunk preparation progress "+progress.length);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
   for (const config of fixture.configs) {
     const path = config.compiler, compiler = readFileSync(join(workspace, path), "utf8"), syntax = ts.createSourceFile(path, compiler, ts.ScriptTarget.Latest, true);
@@ -85,7 +89,7 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
 
 /** 🔬️ Proves stale-lock rejection before compilation, including subsequent native watch rebuilds. */
 export async function testNativeTrunkLockfile(workspace: string, generated: string): Promise<void> {
-  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔒️trunk-lockfile/🔣️.json"), "utf8")), root = mkdtempSync(join(generated, "trunk-lockfile-"));
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔒️trunk-lockfile/🔣️.json"), "utf8")), root = mkdtempSync(join(generated, "trunk-lockfile-"));
   const hook = fixture.hook;
   const args = [resolve(import.meta.dir, "../../🦀️cargo/📜️script.ts"), ...hook.command_arguments, join(root, "Cargo.toml")];
   for (const [path, contents] of Object.entries(fixture.probe.files)) writeFileSync(join(root, path), contents as string);

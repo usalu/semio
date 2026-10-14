@@ -1,18 +1,18 @@
 #!/usr/bin/env bun
+import { acquireCompilerCapacityLeaseV1, scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1, type CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { availableParallelism, homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
-import { Script, ScriptRouter, findWorkspaceRoot, scriptInvocationBudget } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
-import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
-import { readProcessOwnerContextV1 } from "../../../../../../🔨️modules/🏃️process/📋️context/🟦️.ts";
-import { acquireQueuedResourceLease } from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import { acquireNativeCapacityLeaseV1 } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
+import { Script, ScriptRouter, findWorkspaceRoot, scriptInvocationBudget } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { readProcessOwnerContextV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/🟦️.ts";
+import { acquireQueuedResourceLease } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { devToolingEnv } from "../../🏃️process/🌿️environment/🟦️.ts";
 
 const runProbe = (command: string, args: string[], options: {env?: NodeJS.ProcessEnv} = {}) => spawnSync(command,args,{encoding:"utf8",...options});
@@ -22,7 +22,7 @@ function queryVisualStudio2026InstallPath(): string | undefined {
  if (process.platform !== "win32") return undefined;
  const vswhere = join(process.env["ProgramFiles(x86)"] ?? "C:\\Program Files (x86)", "Microsoft Visual Studio", "Installer", "vswhere.exe");
  if (!existsSync(vswhere)) return undefined;
- const result = runProbe(vswhere, ["-latest", "-version", "[18.0,19.0)", "-products", "*", "-requires", "Microsoft.VisualStudio.Component.VC.Tools.x86.x64", "-property", "installationPath"]);
+ const result = runProbe(vswhere, ["-latest", "-version", "[18.0,19.0)", "-products", "*", "-requires", process.arch === "arm64" ? "Microsoft.VisualStudio.Component.VC.Tools.ARM64" : "Microsoft.VisualStudio.Component.VC.Tools.x86.x64", "-property", "installationPath"]);
  return result.status === 0 ? result.stdout.trim() || undefined : undefined;
 }
 //#region 🔖️CppScript
@@ -45,44 +45,44 @@ export class CppScript extends Script {
     if (process.platform === "win32") this.ensureWindowsMsvc();
   }
 
-  private async withCompilerState(preset: string, action: (environment: NodeJS.ProcessEnv, signal: AbortSignal) => Promise<void>): Promise<void> {
+  private async withCompilerState(preset: string, action: (environment: NodeJS.ProcessEnv, signal: AbortSignal, control:CompilerAdmissionControl) => Promise<void>): Promise<void> {
     const compiler = process.env.CXX ?? (process.platform === "win32" ? "cl" : "c++");
     const compilerIdentity = process.platform === "win32" ? queryVisualStudio2026InstallPath() : runProbe(compiler, ["--version"]).stdout;
     const toolchain = createHash("sha256").update(JSON.stringify([runProbe(this.resolveTool("cmake"), ["--version"]).stdout, compiler, compilerIdentity, process.env.CC, process.env.CMAKE_TOOLCHAIN_FILE, process.env.CMAKE_TOOLCHAIN_FILE ? readFileSync(resolve(this.root, process.env.CMAKE_TOOLCHAIN_FILE)) : null])).digest("hex").slice(0, 12);
     const directory = join(readProcessOwnerContextV1(process.env,this.root).cacheRoot, "cmake", preset, `${process.arch}-${toolchain}`);
     const leases = readProcessOwnerContextV1(process.env,this.root).leaseDirectory;
-    const controller = new AbortController(), cancel = () => controller.abort();
-    process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
-    let capacity: Awaited<ReturnType<typeof acquireNativeCapacityLeaseV1>> | undefined;
+    const control = scriptCompilerAdmissionControlV1(this.invocation, "cpp:compile", buildBudgetMs()), signal = control.signal;
+    let capacity: Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>> | undefined;
     try {
-      capacity = await acquireNativeCapacityLeaseV1({ directory: leases, signal: controller.signal, onWait: ({ elapsedMs }) => console.log(`[cpp] Waiting for native capacity: ${elapsedMs}ms`) });
-      const lease = await acquireQueuedResourceLease({directory: leases, resource: `cmake:${directory}`, mode: "exclusive", owner: randomUUID(), signal: controller.signal});
+      capacity = await acquireCompilerCapacityLeaseV1({ directory: leases, control });
+      const lease = await acquireQueuedResourceLease({directory: leases, resource: `cmake:${directory}`, mode: "exclusive", owner: randomUUID(), signal, control});
       try {
         this.purgeStaleCmakeCache(preset, directory);
-        await action({...this.cppEnv(), SEMIO_CMAKE_BINARY_DIR: directory, SEMIO_NATIVE_CAPACITY_HELD: "true"}, controller.signal);
+        await action({...this.cppEnv(), SEMIO_CMAKE_BINARY_DIR: directory, SEMIO_COMPILER_CAPACITY_HELD: "true", SEMIO_COMPILER_PARALLELISM: String(capacity.parallelism), CMAKE_BUILD_PARALLEL_LEVEL: String(capacity.parallelism), CTEST_PARALLEL_LEVEL: String(capacity.parallelism)}, control.signal,control);
       } finally { lease.release(); }
-    } finally { capacity?.release(); process.off("SIGINT", cancel); process.off("SIGTERM", cancel); }
+    } finally { capacity?.release(); }
   }
 
   private async runConfigure(preset: string): Promise<void> {
-    await this.withCompilerState(preset, (env, signal) => runOwnedCommand(this.resolveTool("cmake"), ["--preset", preset], this.root, "cpp:configure", scriptInvocationBudget(this.invocation,buildBudgetMs()), { env, signal }));
+    await this.withCompilerState(preset, (env, signal,control) => runOwnedCommand(this.resolveTool("cmake"), ["--preset", preset], this.root, "cpp:configure", compilerAdmissionBudgetV1(control), { env, signal }));
   }
 
   private async runBuild(preset: string): Promise<void> {
-    await this.withCompilerState(preset, async (env, signal) => {
-      await runOwnedCommand(this.resolveTool("cmake"), ["--preset", preset], this.root, "cpp:configure", scriptInvocationBudget(this.invocation,buildBudgetMs()), { env, signal });
-      await runOwnedCommand(this.resolveTool("cmake"), ["--build", "--preset", preset], this.root, "cpp:build", scriptInvocationBudget(this.invocation,buildBudgetMs()), { env, signal });
+    await this.withCompilerState(preset, async (env, signal,control) => {
+      await runOwnedCommand(this.resolveTool("cmake"), ["--preset", preset], this.root, "cpp:configure", compilerAdmissionBudgetV1(control), { env, signal });
+      await runOwnedCommand(this.resolveTool("cmake"), ["--build", "--preset", preset], this.root, "cpp:build", compilerAdmissionBudgetV1(control), { env, signal });
     });
   }
 
   private async runTest(preset: string): Promise<void> {
-    await this.withCompilerState(preset, (env, signal) => runOwnedCommand(this.resolveTool("ctest"), ["--preset", preset], this.root, "cpp:test", scriptInvocationBudget(this.invocation,buildBudgetMs()), { env, signal }));
+    await this.withCompilerState(preset, (env, signal,control) => runOwnedCommand(this.resolveTool("ctest"), ["--preset", preset], this.root, "cpp:test", compilerAdmissionBudgetV1(control), { env, signal }));
   }
 
   private async ensureTool(command: string, uvTool: string): Promise<void> {
+    const control = scriptCompilerAdmissionControlV1(this.invocation, "cpp:tool", buildBudgetMs());
     if (this.hasTool(command)) return;
     if (this.hasTool("uv")) {
-      await runOwnedCommand(this.resolveTool("uv"), ["tool", "install", "--upgrade", uvTool], this.root, "cpp:tool", scriptInvocationBudget(this.invocation,buildBudgetMs()), { signal:this.invocation.control.signal });
+      await runOwnedCommand(this.resolveTool("uv"), ["tool", "install", "--upgrade", uvTool], this.root, "cpp:tool", compilerAdmissionBudgetV1(control), { signal:this.invocation.control.signal });
       if (this.hasTool(command)) return;
     }
     console.error(`[cpp] ${command} is required. Run the native bootstrap or rebuild the devcontainer.`);
@@ -107,6 +107,7 @@ export class CppScript extends Script {
     return {
       ...devToolingEnv(),
       CMAKE_BUILD_PARALLEL_LEVEL: String(availableParallelism()),
+      SEMIO_CMAKE_ARCHITECTURE: process.arch === "arm64" ? "ARM64" : process.arch === "ia32" ? "Win32" : "x64",
       CTEST_PARALLEL_LEVEL: String(availableParallelism()),
     };
   }

@@ -2,7 +2,7 @@ import {expect,test} from "bun:test";
 import {readFileSync} from "node:fs";
 import {Database} from "bun:sqlite";
 import ts from "typescript";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 
 const readsProduct=(source:string)=>source.includes("/🛍️products/");
 const compilerReadsProduct=(source:string)=>{
@@ -18,7 +18,7 @@ test("General diagnostic laws remain independent of product sources",()=>{
 });
 
 test("General diagnostic propagation uses one neutral authored field",()=>{
- const law=JSON.parse(readFileSync(new URL("../../🧫️fixtures/⚠️kind/🔣️.json",import.meta.url),"utf8"));
+ const law=JSON.parse(readFileSync(new URL("../../🧪️tests/🧫️fixtures/⚠️kind/🔣️.json",import.meta.url),"utf8"));
  const db=new Database(":memory:");try{expect(db.query("SELECT count(*) AS n FROM json_each(?) WHERE key=?").get(JSON.stringify(law),fixture.parentPropagationField)).toEqual({n:1});}finally{db.close();}
  expect(Object.hasOwn(law,fixture.parentPropagationField)).toBe(true);
  expect(Object.keys(law).filter(key=>key.startsWith("parent"))).toEqual([fixture.parentPropagationField]);

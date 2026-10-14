@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 🧭️ Routes OS development commands to their semantic owners. */
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** 🔬️ Checks neutral development process and local-session contracts against independent oracles. */
 class CanonicalArchitectureScript extends BundleScript {
@@ -36,11 +36,11 @@ class SourceWatchCheckScript extends BundleScript {
 
 /** 🔐️ Runs the permanent complete publication and lease custody laws in an owned cancellable worker. */
 class PublicationCheckScript extends BundleScript{
- async run(segments:string[]):Promise<void>{if(segments.length)throw Error("publication-check accepts no arguments");const {runOwnedCommand}=await import("../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"),{cmdBudgetMs}=await import("../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts"),{join}=await import("node:path"),{readProcessOwnerContextV1}=await import("../../../../../../🔨️modules/🏃️process/📋️context/🟦️.ts"),context=readProcessOwnerContextV1(process.env,process.cwd());await runOwnedCommand(process.execPath,[join(this.root,"📜️script.ts"),"publication-worker"],this.repoRoot,"publication-law",cmdBudgetMs(),{env:{...process.env,SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify({...context,cwd:this.repoRoot})}});}
+ async run(segments:string[]):Promise<void>{if(segments.length)throw Error("publication-check accepts no arguments");const {runOwnedCommand}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"),{cmdBudgetMs}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts"),{join}=await import("node:path"),{readProcessOwnerContextV1}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/🟦️.ts"),context=readProcessOwnerContextV1(process.env,process.cwd());await runOwnedCommand(process.execPath,[join(this.root,"📜️script.ts"),"publication-worker"],this.repoRoot,"publication-law",cmdBudgetMs(),{env:{...process.env,SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify({...context,cwd:this.repoRoot})}});}
 }
 /** 🧪️ Executes every original publication law and portable lease custody case with declared artifact ownership. */
 class PublicationWorkerScript extends BundleScript{
- async run(segments:string[]):Promise<void>{if(segments.length)throw Error("publication-worker accepts no arguments");const {readProcessOwnerContextV1,processCacheDirectoryV1}=await import("../../../../../../🔨️modules/🏃️process/📋️context/🟦️.ts"),{mkdir}=await import("node:fs/promises"),context=readProcessOwnerContextV1(process.env,process.cwd()),artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR??processCacheDirectoryV1(context,"publication-law");await mkdir(artifacts,{recursive:true});process.env.SEMIO_TEST_ARTIFACT_DIR=artifacts;const {testProtectedActorPublicationV1}=await import("../../🔎️verification/🧾️publication/🧪️tests/🟦️.ts");await testProtectedActorPublicationV1(this.repoRoot);}
+ async run(segments:string[]):Promise<void>{if(segments.length)throw Error("publication-worker accepts no arguments");const {readProcessOwnerContextV1,processCacheDirectoryV1}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/🟦️.ts"),{mkdir}=await import("node:fs/promises"),context=readProcessOwnerContextV1(process.env,process.cwd()),artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR??processCacheDirectoryV1(context,"publication-law");await mkdir(artifacts,{recursive:true});process.env.SEMIO_TEST_ARTIFACT_DIR=artifacts;const {testProtectedActorPublicationV1}=await import("../../🔎️verification/🧾️publication/🧪️tests/🟦️.ts");await testProtectedActorPublicationV1(this.repoRoot);}
 }
 
 /** 🎮️ Publishes the General owner's explicit catalog-free session instance. */

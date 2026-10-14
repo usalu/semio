@@ -1,0 +1,158 @@
+{
+  "locales": [
+    "en",
+    "de"
+  ],
+  "commands": [
+    {
+      "address": {
+        "owner": "os",
+        "commandId": "os.resetDock"
+      },
+      "key": "os:os.resetDock",
+      "category": "layout",
+      "labels": {
+        "en": "Reset Dock",
+        "de": "Dock Zurücksetzen"
+      },
+      "args": []
+    },
+    {
+      "address": {
+        "owner": {
+          "plugin": {
+            "pluginId": "fixture.plugin"
+          }
+        },
+        "commandId": "ping"
+      },
+      "key": "plugin:fixture.plugin:ping",
+      "category": "layout",
+      "labels": {
+        "en": "Plugin Ping",
+        "de": "Plugin Aufrufen"
+      },
+      "args": []
+    },
+    {
+      "address": {
+        "owner": {
+          "app": {
+            "pluginId": "fixture.plugin",
+            "appId": "fixture.app"
+          }
+        },
+        "commandId": "ping"
+      },
+      "key": "app:fixture.plugin:fixture.app:ping",
+      "category": "layout",
+      "labels": {
+        "en": "App Ping",
+        "de": "App Aufrufen"
+      },
+      "args": []
+    },
+    {
+      "address": {
+        "owner": {
+          "mode": {
+            "pluginId": "fixture.plugin",
+            "appId": "fixture.app",
+            "modeId": "fixture.mode"
+          }
+        },
+        "commandId": "ping"
+      },
+      "key": "mode:fixture.plugin:fixture.app:fixture.mode:ping",
+      "category": "layout",
+      "labels": {
+        "en": "Mode Ping",
+        "de": "Modus Aufrufen"
+      },
+      "args": []
+    },
+    {
+      "address": {
+        "owner": "os",
+        "commandId": "os.setThemeId"
+      },
+      "key": "os:os.setThemeId",
+      "category": "appearance",
+      "labels": {
+        "en": "Set Theme",
+        "de": "Thema Festlegen"
+      },
+      "args": [
+        {
+          "id": "themeId",
+          "labels": {
+            "en": "Theme",
+            "de": "Thema"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "address": {
+        "owner": "os",
+        "commandId": "os.setAppearance"
+      },
+      "key": "os:os.setAppearance",
+      "category": "appearance",
+      "labels": {
+        "en": "Set Appearance",
+        "de": "Darstellung Festlegen"
+      },
+      "args": [
+        {
+          "id": "appearance",
+          "labels": {
+            "en": "Appearance",
+            "de": "Darstellung"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "address": {
+        "owner": "os",
+        "commandId": "os.setDriver"
+      },
+      "key": "os:os.setDriver",
+      "category": "general",
+      "labels": {
+        "en": "Set Driver",
+        "de": "Treiber Festlegen"
+      },
+      "args": [
+        {
+          "id": "driver",
+          "labels": {
+            "en": "Driver",
+            "de": "Treiber"
+          },
+          "required": true
+        }
+      ]
+    }
+  ],
+  "zeroArgumentKeys": [
+    "os:os.resetDock",
+    "plugin:fixture.plugin:ping",
+    "app:fixture.plugin:fixture.app:ping",
+    "mode:fixture.plugin:fixture.app:fixture.mode:ping"
+  ],
+  "expandKey": "os:os.setThemeId",
+  "singletonKey": "os:os.setDriver",
+  "staged": {
+    "themeId": "semio"
+  },
+  "rowRole": "treeitem",
+  "formActions": [
+    "execute",
+    "reset"
+  ],
+  "formDefaultOpen": false
+}

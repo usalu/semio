@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "file": "app/core.ts",
+      "source": "import type {Grant} from \"../process/types.ts\"; export {validate} from \"../validator/core.ts\"; if(import.meta.vitest){ const tests=await import(\"../test/helper.ts\"); }",
+      "all": [
+        "../process/types.ts",
+        "../validator/core.ts",
+        "../test/helper.ts"
+      ],
+      "production": [
+        "../process/types.ts",
+        "../validator/core.ts"
+      ]
+    },
+    {
+      "file": "validator/📜️script.ts",
+      "source": "import {run} from \"../process/core.ts\";",
+      "all": [
+        "../process/core.ts"
+      ],
+      "production": []
+    },
+    {
+      "file": "app/🧪️tests/🟦️.ts",
+      "source": "import {run} from \"../../process/core.ts\";",
+      "all": [
+        "../../process/core.ts"
+      ],
+      "production": []
+    },
+    {
+      "file": "app/types.d.ts",
+      "source": "export type Grant=import(\"../process/types.ts\").Grant;",
+      "all": [
+        "../process/types.ts"
+      ],
+      "production": [
+        "../process/types.ts"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "schema": "stdio.semio",
+  "subsets": [
+    "brep",
+    "mesh",
+    "model",
+    "value",
+    "document",
+    "cad",
+    "drawing",
+    "image",
+    "video",
+    "audio",
+    "animation",
+    "presentation",
+    "flow",
+    "text",
+    "table",
+    "graph",
+    "object",
+    "kit"
+  ],
+  "query": "SELECT schema,subset FROM semio_base_document",
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "*"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.json",
+      "standard": "v1",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v2",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "unknown"
+    }
+  ],
+  "ownedScalarWords": {
+    "binary32": 2139095041,
+    "binary64": "9218868437227405313",
+    "unsigned64": "18446744073709551615"
+  },
+  "reconstructionRetirement": {
+    "depth": 8192,
+    "stackBytes": 65536,
+    "schemaBytes": 100000
+  },
+  "controlledRefusals": {
+    "malformedRecord": {
+      "source": "[a]",
+      "kind": "invalidValue"
+    },
+    "cancellation": {
+      "source": "1.25",
+      "kind": "canceled"
+    },
+    "rowAdmission": {
+      "maxRows": 1,
+      "entities": 2,
+      "kind": "ownershipLimit"
+    },
+    "arithmeticOverflow": {
+      "kind": "workLimit"
+    },
+    "nestedValue": {
+      "depth": 65,
+      "kind": "depthLimit"
+    },
+    "projectionRowAdmission": {
+      "maxRows": 1,
+      "kind": "workLimit"
+    }
+  },
+  "nativeAdmission": {
+    "schema": "semio.admission.雪\u0000",
+    "largeSchemaUnit": "雪\u0000",
+    "largeSchemaRepeats": 40000,
+    "repeatedOperations": 2,
+    "refusalKinds": {
+      "backing": "ownershipLimit",
+      "cancellation": "canceled",
+      "afterAllocation": "invalidValue"
+    }
+  }
+}

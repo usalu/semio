@@ -1,0 +1,24 @@
+{
+  "artifact": null,
+  "camera": null,
+  "edges": null,
+  "meta": {
+    "kindCompatibility": {
+      "inserted": [],
+      "modified": [],
+      "moved": [],
+      "removed": [
+        {
+          "id": {
+            "source": "handle-kind-b",
+            "target": "handle-kind-c"
+          },
+          "index": 1
+        }
+      ]
+    }
+  },
+  "nodes": null,
+  "schema": null,
+  "targetRegions": null
+}

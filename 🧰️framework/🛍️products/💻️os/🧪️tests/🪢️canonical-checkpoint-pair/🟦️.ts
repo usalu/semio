@@ -16,7 +16,7 @@ import {
 import { admitCheckpointSelectionV1, CANONICAL_CHECKPOINT_PAIR_HEADER_MAX_BYTES, CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES, CANONICAL_CHECKPOINT_PAIR_MAX_RECORDS, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1, CANONICAL_CHECKPOINT_PAIR_RECORD_BYTES, decodeCanonicalCheckpointPairV1 } from "../../🔨️modules/📇️directory/🚪️io/🧱️binary/🪢️checkpoint-pair/🟦️.ts";
 
 const here = (path: string) => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8"));
-const fixture = here("../../🧫️fixtures/📇️directory/🪢️canonical-checkpoint-pair-v1.json");
+const fixture = here("../🧫️fixtures/📇️directory/🪢️canonical-checkpoint-pair-v1.json");
 const schema = here("../../🧬️schema/🪢️canonical-checkpoint-pair-v1/🔣️.json");
 const hexBytes = (value: string) => Uint8Array.from(value.match(/../gu) ?? [], (pair) => Number.parseInt(pair, 16));
 const sha256 = (...parts: Uint8Array[]) => parts.reduce((hash, part) => hash.update(part), createHash("sha256")).digest("hex");
@@ -89,7 +89,7 @@ describe("🪢️ canonical checkpoint pair", () => {
 
 
 it("canonical checkpoint pair framing has an explicit IO owner", () => {
-  const owner = here("../../🧫️fixtures/📇️directory/🪢️checkpoint-pair-io-owner-v1.json");
+  const owner = here("../🧫️fixtures/📇️directory/🪢️checkpoint-pair-io-owner-v1.json");
   const directory = new URL("../../🔨️modules/📇️directory/", import.meta.url);
   const semanticRust = readFileSync(new URL("🧬️schema/🪢️canonical-checkpoint-pair-v1/🦀️.rs", directory), "utf8");
   const semanticTs = readFileSync(new URL("🧬️schema/🟦️.ts", directory), "utf8");

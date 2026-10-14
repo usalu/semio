@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🪆️set-family/🛑️leaves-profile-while-used",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪆️set-family/🛑️leaves-profile-while-used/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪆️set-family/🛑️leaves-profile-while-used/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪆️set-family/🛑️leaves-profile-while-used/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪆️set-family/🛑️leaves-profile-while-used/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪆️set-family/🛑️leaves-profile-while-used/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪆️set-family/🛑️leaves-profile-while-used/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪆️set-family/🛑️leaves-profile-while-used/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪆️set-family/🛑️leaves-profile-while-used/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪆️set-family/🛑️leaves-profile-while-used/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪆️set-family/🛑️leaves-profile-while-used/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

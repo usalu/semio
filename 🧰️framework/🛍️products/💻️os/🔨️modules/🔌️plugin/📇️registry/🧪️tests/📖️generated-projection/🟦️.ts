@@ -1,5 +1,4 @@
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, test } from "vitest";
 import { isHostPlaygroundFilter } from "../../🟦️.ts";
@@ -10,13 +9,14 @@ import type { PlaygroundEntry } from "../../🎮️playground/🔎️discovery/�
 import { emitRustArtifacts } from "../../📽️projection/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
-const vector = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧫️fixtures", "📖️generated-projection.json"), "utf8")) as {
+const vector = JSON.parse(readFileSync(join(import.meta.dirname, "../🧫️fixtures", "📖️generated-projection.json"), "utf8")) as {
   entries: DeployedRegistryEntryV1[];
   readonly playgrounds: PlaygroundEntry[];
   readonly expectations: { readonly filter: string | null; readonly host: boolean; readonly pluginIds: string[] }[];
 };
 vector.entries = vector.entries.map(parseDeployedRegistryEntryV1);
-const generatedDir = mkdtempSync(join(tmpdir(), "semio-generated-projection-"));
+const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Projection test artifact directory required");
+const generatedDir = mkdtempSync(join(output, "projection-"));
 mkdirSync(generatedDir, { recursive: true });
 writeFileSync(join(generatedDir, "🔌️plugins.json"), `${JSON.stringify(vector.entries, null, 2)}\n`);
 writeFileSync(join(generatedDir, "🎠️playgrounds.json"), `${JSON.stringify(vector.playgrounds, null, 2)}\n`);
@@ -40,7 +40,7 @@ function closureOracle(entries: readonly DeployedRegistryEntryV1[], playgrounds:
 
 describe("generated catalog projection", () => {
   test("session filtering preserves recursively consumed contributions", () => {
-    const fixture = JSON.parse(readFileSync(join(import.meta.dirname, "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/runtime-components/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(import.meta.dirname, "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧫️fixtures/runtime-components/🔣️.json"), "utf8"));
     for (const row of fixture.cases.filter((row: { roots: string[] }) => row.roots.length === 1)) {
       expect(resolveRegistryPluginIdsForFilter(row.roots[0], fixture.components, []), row.name).toEqual(row.expected);
     }
@@ -80,7 +80,7 @@ describe("generated catalog projection", () => {
   });
 
   test("rejects a projection that is not a row array", () => {
-    const broken = mkdtempSync(join(tmpdir(), "semio-generated-projection-broken-"));
+    const broken = mkdtempSync(join(output, "semio-generated-projection-broken-"));
     writeFileSync(join(broken, "🔌️plugins.json"), "{}\n");
     writeFileSync(join(broken, "🎠️playgrounds.json"), "[]\n");
     expect(() => readGeneratedCatalogProjection(broken)).toThrow(/not a projected row array/u);
@@ -96,7 +96,9 @@ describe("registry rust artifacts projection", () => {
     try {
       const note = { pluginId: "note", cratePath: "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust", wasmOut: "semio_hub_note_component.wasm" };
       const body = emitRustArtifacts([note], getWorkspaceRoot());
-      expect(body).toContain('pub const PLUGIN_COMPONENT_DIRECTORY: &str = "dist/components/release";');
+      expect(body).toContain('pub fn plugin_component_directory(mode: &str)');
+      expect(body).toContain('"prototype" => Ok("dist/components/prototype")');
+      expect(body).toContain('"release" => Ok("dist/components/release")');
       expect(body).toContain('("note", "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust", "semio_hub_note_component.wasm"),');
       expect(body).not.toContain("cache/cargo/target");
       expect(body).not.toContain("semio-private-uplift-must-not-land-in-catalog");

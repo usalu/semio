@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { resolve, join } from "node:path";
 import ts from "typescript";
 import schema from "../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 const cases=()=>fixture.cases.map(row=>{const value=structuredClone(fixture.evidence);for(const change of row.changes){let parent:Record<string|number,unknown>=value;for(const part of change.path.slice(0,-1))parent=parent[part] as Record<string|number,unknown>;parent[change.path.at(-1)!]=change.value;}return{...row,value};});
 const authority=()=>{const controller=new AbortController(),started=performance.now(),progress:unknown[]=[];return{controller,progress,control:{maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>controller.signal.aborted,remainingMs:()=>60000-(performance.now()-started),onProgress:(event:unknown)=>{progress.push(event);}}};};

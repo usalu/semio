@@ -1,6 +1,7 @@
 //! 🕸️ Exact persisted Workflow ownership through sixteen handcrafted relational tables.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::{WorkflowSnapshot,Workflow,WorkflowNode,WorkflowEdge,WorkflowMediaPort,MediaContract,WorkflowParameter,WorkflowParameterBinding,WorkflowInput,WorkflowInputBinding,WorkflowOutputBinding};
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema_controlled,artifact::{Projection,Cell,FloatColumn,insert_ieee754,read_binary64,ieee754_is_null}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema_controlled,artifact::{Projection,Cell,FloatColumn,insert_ieee754,read_binary64,ieee754_is_null}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 
 const NODE_GEOMETRY:&[FloatColumn]=&[FloatColumn::Binary64(10),FloatColumn::Binary64(11),FloatColumn::Binary64(12),FloatColumn::Binary64(13)];
@@ -30,18 +31,23 @@ fn native_rows(record:&semio_framework_dsl_record::RecordValue,maximum:usize,nat
  native.scoped_stage(|native|->Result<_,ValueError>{native.begin_stage(nodes.len())?;for node in nodes{let node=native_record(node)?;count=add(add(count,native_list(node.get(11))?.len())?,native_list(node.get(12))?.len())?;if count>maximum{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"Workflow native snapshot exceeds semantic row limit"))}native.step()?}Ok(())})?;
  native.scoped_stage(|native|->Result<_,ValueError>{native.begin_stage(parameters.len())?;for(kind,parameter)in parameters{if kind=="categorical"{count=add(count,native_list(parameter.get(3))?.len())?;if count>maximum{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"Workflow native snapshot exceeds semantic row limit"))}}native.step()?}Ok(())})?;Ok(())});result
 }
-impl ArtifactSqliteSnapshot for WorkflowSnapshot{
+impl ArtifactSqliteSnapshotHost for WorkflowSnapshot{
  fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{owner.native().checkpoint().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;self.validate_sqlite_snapshot_subset(dialect,database,control)}
  fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_,'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{owner.native().checkpoint().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;self.validate_sqlite_snapshot_subset(dialect,database,control)}
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+ 
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError>{
-  control.check_rows(2)?;control.check_value_bytes(24)?;let maximum=control.limits().max_rows;let value_maximum=control.limits().max_value_bytes;store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {native_rows(record,maximum,native)?;cells::borrowed(record,native,value_maximum)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_owner)
+  control.check_rows(2)?;control.check_value_bytes(24)?;let maximum=control.limits().max_rows;let value_maximum=control.limits().max_value_bytes;store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {native_rows(record,maximum,native)?;cells::borrowed(record,native,value_maximum)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_owner)
  }
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->Result<store::io_schema::IoPayload,ValueError>{
-  workload(self,control,SqliteSnapshotPhase::EncodeNative)?;cells::typed(self,control,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
+  workload(self,control,SqliteSnapshotPhase::EncodeNative)?;cells::typed(self,control,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
  fn preflight_sqlite_snapshot_encoding(&self,_:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{workload(self,control,SqliteSnapshotPhase::EncodeNative)?;cells::typed(self,control,SqliteSnapshotPhase::EncodeNative)}
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
+ 
+ 
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for WorkflowSnapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
   let count=workload(self,control,SqliteSnapshotPhase::ProjectSnapshot)?;let mut out=Projection::new(Self::SQLITE_SCHEMA,control)?;out.insert_key("workflow_document",1,&[Cell::Text(&self.schema)])?;let graph=out.insert("workflow_graph",&[Cell::Integer(1),Cell::Text(&self.graph.schema)])?;
   for(index,node)in self.graph.nodes.iter().enumerate(){
    let id=insert_ieee754(&mut out,"workflow_node",&[Cell::Integer(graph),Cell::Integer(ordinal(index)?),Cell::Text(&node.id),Cell::Text(&node.plugin_id),Cell::Text(&node.app_id),Cell::Text(&node.label),Cell::Text(&node.yields),Cell::Text(&node.artifact_ref),Cell::Text(&node.config_ref),Cell::Real(node.x),Cell::Real(node.y),Cell::Real(node.width),Cell::Real(node.height)],NODE_GEOMETRY)?;
@@ -66,7 +72,7 @@ impl ArtifactSqliteSnapshot for WorkflowSnapshot{
   for(index,value)in self.input_bindings.iter().enumerate(){out.insert("workflow_input_binding",&[Cell::Integer(1),Cell::Integer(ordinal(index)?),Cell::Text(&value.input_id),Cell::Text(&value.node_id),Cell::Text(&value.port_id)])?;if(index+1)%256==0{out.checkpoint_total(count)?}}
   for(index,value)in self.output_bindings.iter().enumerate(){out.insert("workflow_output_binding",&[Cell::Integer(1),Cell::Integer(ordinal(index)?),Cell::Text(&value.node_id),Cell::Text(&value.port_id),Cell::Text(&value.path_template)])?;if(index+1)%256==0{out.checkpoint_total(count)?}}out.checkpoint_total(count)?;out.finish()
  }
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
   validate_sqlite_database_schema_controlled(database,Self::SQLITE_SCHEMA,SqliteSnapshotPhase::ReconstructSnapshot,control)?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
   let documents=&database.table("workflow_document")?.rows;let graphs=&database.table("workflow_graph")?.rows;if documents.len()!=1||documents[0].rowid!=1||documents[0].values.len()!=2||documents[0].integer(0)?!=1||graphs.len()!=1{return Err(crate::workflow_invalid("Workflow requires exactly one document and graph"))}entity(&graphs[0],3)?;if graphs[0].integer(1)?!=1{return Err(crate::workflow_invalid("Workflow graph has an unknown document"))}
   let count=database.tables.iter().try_fold(0usize,|n,table|add(n,table.rows.len()))?;

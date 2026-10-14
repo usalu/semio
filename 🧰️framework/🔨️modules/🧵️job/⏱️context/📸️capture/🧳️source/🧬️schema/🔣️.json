@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.dev/job/original-parent-source-loan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "parentOwnsPaidRoots",
+    "childOwnsStrongLoan",
+    "borrowActualIncomingTurn",
+    "noFreshRoot",
+    "noFreshLedger",
+    "exactRecipient",
+    "separatePhysicalSourceClose",
+    "operation",
+    "generation",
+    "clock",
+    "fuel",
+    "deadline",
+    "grant",
+    "cuts",
+    "aliasReceipt",
+    "postedBefore",
+    "postedAfter",
+    "callbackReceipt"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "parentOwnsPaidRoots": {
+      "const": true
+    },
+    "childOwnsStrongLoan": {
+      "const": true
+    },
+    "borrowActualIncomingTurn": {
+      "const": true
+    },
+    "noFreshRoot": {
+      "const": true
+    },
+    "noFreshLedger": {
+      "const": true
+    },
+    "exactRecipient": {
+      "const": true
+    },
+    "separatePhysicalSourceClose": {
+      "const": true
+    },
+    "operation": {
+      "const": 99273
+    },
+    "generation": {
+      "const": 23
+    },
+    "clock": {
+      "const": 1000
+    },
+    "fuel": {
+      "const": 4
+    },
+    "deadline": {
+      "const": 1500
+    },
+    "grant": {
+      "const": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 262144,
+        "maximumDepth": 64
+      }
+    },
+    "cuts": {
+      "const": [
+        0,
+        1,
+        2
+      ]
+    },
+    "aliasReceipt": {
+      "const": {
+        "copiedItems": 1,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
+    "postedBefore": {
+      "const": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
+    "postedAfter": {
+      "const": {
+        "copiedItems": 1,
+        "copiedBytes": 7,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
+    "callbackReceipt": {
+      "const": {
+        "copiedItems": 1,
+        "copiedBytes": 7,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    }
+  }
+}

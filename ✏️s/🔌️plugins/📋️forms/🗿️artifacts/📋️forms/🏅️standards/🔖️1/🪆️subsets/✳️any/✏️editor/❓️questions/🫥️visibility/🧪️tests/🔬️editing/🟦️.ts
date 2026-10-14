@@ -2,7 +2,7 @@ import {parseFormsJsonCondition,formsConditionJson,parseFormsJsonValue} from "..
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import { applyPatch, compare } from "fast-json-patch";
-import fixtures from "../../🧫️fixtures/🔣️.json";
+import fixtures from "../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import { patchCondition } from "../../🟦️.ts";
 import type { FormExpr } from "../../../../../🧬️schema/🧬️mutations/🟦️.ts";

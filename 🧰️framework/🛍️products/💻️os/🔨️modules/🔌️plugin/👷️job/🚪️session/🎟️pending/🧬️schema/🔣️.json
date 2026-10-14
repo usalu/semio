@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "initial",
+    "events",
+    "ownedSourceRetainedUntilAdmission",
+    "sameOperation",
+    "sameGeneration",
+    "aliasReceipt",
+    "deniedHeapBytes",
+    "bodyCredits",
+    "terminalDropBytes",
+    "clock",
+    "cancel",
+    "refilledPolicyLoop"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "initial": {
+      "const": "pendingSource"
+    },
+    "events": {
+      "const": [
+        "deniedAlias",
+        "originalAlias",
+        "deniedAdmission",
+        "originalAdmission",
+        "cancel",
+        "paidClose"
+      ]
+    },
+    "ownedSourceRetainedUntilAdmission": {
+      "const": true
+    },
+    "sameOperation": {
+      "const": 17
+    },
+    "sameGeneration": {
+      "const": 9
+    },
+    "aliasReceipt": {
+      "const": {
+        "copiedItems": 1,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
+    "deniedHeapBytes": {
+      "const": 0
+    },
+    "bodyCredits": {
+      "const": [
+        0,
+        1,
+        3,
+        64
+      ]
+    },
+    "terminalDropBytes": {
+      "const": 0
+    },
+    "clock": {
+      "const": "originalCaller"
+    },
+    "cancel": {
+      "const": "originalCaller"
+    },
+    "refilledPolicyLoop": {
+      "const": false
+    }
+  }
+}

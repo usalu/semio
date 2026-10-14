@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 export function runBmpSourceHexFixtureChecks(): number {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔤️native-source-hex/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔤️native-source-hex/🔣️.json", import.meta.url), "utf8"));
   
   
   

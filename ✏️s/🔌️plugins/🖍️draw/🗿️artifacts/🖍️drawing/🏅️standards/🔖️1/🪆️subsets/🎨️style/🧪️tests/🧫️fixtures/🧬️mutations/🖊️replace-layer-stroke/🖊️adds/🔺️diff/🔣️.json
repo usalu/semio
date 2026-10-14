@@ -1,0 +1,51 @@
+{
+  "schema": null,
+  "id": null,
+  "title": null,
+  "layers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "shape-a",
+        "patch": {
+          "visible": null,
+          "locked": null,
+          "name": null,
+          "opacity": null,
+          "blendMode": null,
+          "booleanOperation": null,
+          "pathSegments": null,
+          "textContent": null,
+          "textSize": null,
+          "fillRule": null,
+          "transform": null,
+          "fill": null,
+          "stroke": {
+            "value": {
+              "color": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "width": 2,
+              "cap": "round",
+              "join": "bevel",
+              "dash": [
+                4,
+                2
+              ]
+            }
+          },
+          "traceParams": null,
+          "layer": null,
+          "fontFamily": "anta"
+        }
+      }
+    ]
+  },
+  "assets": null,
+  "artboard": null
+}

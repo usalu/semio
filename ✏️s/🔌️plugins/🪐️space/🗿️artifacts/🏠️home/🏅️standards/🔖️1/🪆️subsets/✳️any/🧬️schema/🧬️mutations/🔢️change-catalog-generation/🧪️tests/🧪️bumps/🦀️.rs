@@ -8,11 +8,11 @@ use crate::standards::v1::subsets::any::schema::diff::SHomeDiff;
 use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/🎯️outcome/🔣️.json");
 
 fn decode_value<T: semio_framework_value::FromValue>(text: &str) -> T {
     let json = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture JSON decodes");

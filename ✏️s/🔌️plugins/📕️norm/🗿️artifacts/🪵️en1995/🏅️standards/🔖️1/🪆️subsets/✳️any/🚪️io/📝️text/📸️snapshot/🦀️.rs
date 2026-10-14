@@ -8,19 +8,19 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::En1995Snapshot;
 
-/// 🗄️ The glulam-footbridge example fixture in `en1995`'s DSL (`store::os_store::serialization::ArtifactDsl`): a DE-annex EN 1995-2
+/// 🗄️ The glulam-footbridge example fixture in `en1995`'s DSL (`pack::snapshot::ArtifactDsl`): a DE-annex EN 1995-2
 /// glulam pedestrian footbridge girder (role `bridge`, service class 2, Annex A fatigue and Annex B comfort inputs,
 /// no connections) — distinct from `En1995Snapshot::default()`'s floor beam so the bridge branches are exercised.
 pub const EN1995_GLULAM_FOOTBRIDGE_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🌉️glulam-footbridge/🌉️glulam-footbridge/🗣️.dsl.semio");
 
 /// 📖️ Parses `.en1995` DSL text into a `En1995Snapshot`.
 pub fn parse_dsl(text: &str) -> Result<En1995Snapshot, semio_framework_diagnostic::TextError> {
-    <En1995Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <En1995Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `En1995Snapshot` back to `.en1995` DSL text.
 pub fn print_dsl(document: &En1995Snapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(document)
+    pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -53,11 +53,11 @@ pub fn decode_en1995_snapshot_json(text: &str) -> Result<En1995Snapshot, String>
 }
 
 pub fn decode_en1995_dsl(text: &str) -> Result<En1995Snapshot, String> {
-    <En1995Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+    <En1995Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
 
 pub fn encode_en1995_dsl(snapshot: &En1995Snapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
+    pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

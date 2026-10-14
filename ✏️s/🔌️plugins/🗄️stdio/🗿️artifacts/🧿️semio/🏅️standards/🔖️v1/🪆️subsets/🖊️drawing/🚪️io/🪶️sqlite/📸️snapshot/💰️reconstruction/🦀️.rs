@@ -1,4 +1,5 @@
 //! 💰️ Original Drawing fields and scalar relational frontiers survive every cancellation boundary.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
 use semio_framework_os_kernel::sqlite_snapshot::{transfer,artifact::{reconstruct_text_into,reconstruct_blob_into}};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::workspace;
@@ -34,7 +35,7 @@ pub(super)fn reconstruct(db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'
 fn reconstruct_into(prefix:&mut Prefix,db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,schema:&str)->Result<(),ValueError>{
  control.check_database(db,SqliteSnapshotPhase::ReconstructSnapshot)?;
  transfer::validate_database_into(&mut prefix.validation,db,schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;
- transfer::validate_component_into(&mut prefix.validation,db,<SemioDrawingSnapshot as ArtifactSqliteSnapshot>::SQLITE_SCHEMA,SqliteSnapshotPhase::ReconstructSnapshot,control)?;
+ transfer::validate_component_into(&mut prefix.validation,db,<SemioDrawingSnapshot as ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA,SqliteSnapshotPhase::ReconstructSnapshot,control)?;
  let Prefix{snapshot,validation:_,rows:storage,styles,layers,names,links,built,pending}=prefix;
  let snapshot=snapshot.as_mut().expect("original Drawing snapshot");let mut rows=indexed::Rows::new(db,storage,control)?;
  if rows.len("semio_drawing_document")?!=1{return Err(invalid("drawing document must be a singleton"))}let doc=rows.take("semio_drawing_document",1)?;

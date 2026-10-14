@@ -52,7 +52,7 @@ export async function verifyPrintPipelineQuick(): Promise<void> {
   verifyPrintToolchainManifest();
   await verifyPrintFontStaging();
   verifyPrintMacroStaging();
-  const galleryIdentities = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🗺️gallery-identities.json"), "utf8")) as Record<string, string>;
+  const galleryIdentities = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🗺️gallery-identities.json"), "utf8")) as Record<string, string>;
   assert.deepEqual(Object.fromEntries(visualizationTemplates().map(({ id, texPath }) => [id, basename(texPath)])), galleryIdentities);
   assert.equal(new Set(Object.values(galleryIdentities).map((name) => name.split("viz-")[0]!.replaceAll("\uFE0F", ""))).size, 81);
   const stylesheet = renderPrintLatexTokenStylesheet(loadPrintDesignTokens());
@@ -73,7 +73,7 @@ export async function verifyPrintPipelineQuick(): Promise<void> {
   assert.throws(() => deriveDarkPrintTexSource("\\documentclass[theme=dark]{article}"));
   assert.throws(() => deriveDarkPrintTexSource("\\documentclass{article}"));
 
-  const contract = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧫️merge-contract.json"), "utf8"));
+  const contract = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧫️merge-contract.json"), "utf8"));
   const templates = registeredPrintTemplates();
   for (const template of [...templates, ...visualizationTemplates()]) {
     const source = readFileSync(join(productRoot, template.texPath), "utf8");
@@ -163,9 +163,9 @@ export async function verifyPrintPipelineQuick(): Promise<void> {
 /** 🔓️ Rejects copied stale API metadata against the generator and independent AJV equality. */
 export function verifyPrintApiFreshness(): void {
   verifyPrintApiTitleContracts();
-  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔓️api-freshness.json"), "utf8")) as { readonly cases: readonly { readonly id: string; readonly path?: readonly (string | number)[]; readonly value?: unknown; readonly suffix?: string; readonly fresh: boolean }[] };
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔓️api-freshness.json"), "utf8")) as { readonly cases: readonly { readonly id: string; readonly path?: readonly (string | number)[]; readonly value?: unknown; readonly suffix?: string; readonly fresh: boolean }[] };
  
-  const printed = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔓️api-freshness.json"), "utf8")).printed as { required: Record<string, string[]>; scopeBindings: Record<string, string>; cases: { id: string; tables: { name: string; rows: string[]; groupedRows?: string[][]; nestedRows?: string[]; otherCells?: string[]; prose?: string[]; comments?: string[] }[]; missing: string[] }[] };
+  const printed = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔓️api-freshness.json"), "utf8")).printed as { required: Record<string, string[]>; scopeBindings: Record<string, string>; cases: { id: string; tables: { name: string; rows: string[]; groupedRows?: string[][]; nestedRows?: string[]; otherCells?: string[]; prose?: string[]; comments?: string[] }[]; missing: string[] }[] };
   verifyPrintApiScopeCases(printed);
   const expected = vizGeneratedFiles().find(file => file.path.endsWith("/🔣️viz-api.json"))!.content;
   const require = createRequire(import.meta.url), validate = new (require("ajv").default)({ strict: false }).compile({ const: expected });
@@ -256,10 +256,10 @@ export function verifyPrintApiFreshness(): void {
     if (!vector.allowed) assert.equal(policyTables[vector.table]?.includes(vector.key) ?? false, false, vector.table + ":" + vector.key + ": printed source policy");
   }
   console.log("[DEBUG] Placement/force/network scoped control policy compared with AJV PASS");
-  const contracts = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔓️api-freshness.json"), "utf8")).printed.nativeContracts;
+  const contracts = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔓️api-freshness.json"), "utf8")).printed.nativeContracts;
   const families = JSON.parse(vizGeneratedFiles().find(file => file.path.endsWith("/🔣️viz-api.json"))!.content).families;
   const schemaFamilies = JSON.parse(readFileSync(join(productRoot, "🧬️schema/🔣️.json"), "utf8"))["x-semio-family-options"], grammarFindings: string[] = [];
-  const neutral = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔓️api-freshness.json"), "utf8")).printed;
+  const neutral = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔓️api-freshness.json"), "utf8")).printed;
   for (const vector of neutral.absentDescriptors) {
     const family = families.find((candidate: any) => candidate.name === vector.family);
     assert.ok(family && schemaFamilies[vector.family], vector.family + ": absence contract requires both actual owners");
@@ -304,7 +304,7 @@ export function verifyPrintApiFreshness(): void {
 
 /** 🌍️ Binds visible reference captions to neutral locales while preserving scoped row identities. */
 function verifyPrintApiTitleContracts(): void {
-  const visual = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔓️api-freshness.json"), "utf8")).printed.visual;
+  const visual = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔓️api-freshness.json"), "utf8")).printed.visual;
   const source = readFileSync(join(productRoot, "🧾️template/📊️viz-api/🔓️viz-api.tex"), "utf8");
   const titles = [...source.matchAll(/\\ApiTitleDefine\{([^}]+)\}\{([^}]+)\}\{([^}]+)\}/g)].map(match => match.slice(1));
   const tokens = new MarkdownIt().parse("| Scope | English | German |\n| --- | --- | --- |\n" + visual.titles.map((row: string[]) => "| " + row.join(" | ") + " |").join("\n"), {});
@@ -322,7 +322,7 @@ function verifyPrintApiTitleContracts(): void {
 /** 📖️ Compiles the actual document-local title apparatus in both explicitly selected languages. */
 export async function verifyPrintApiTitleRendering(): Promise<void> {
   const source = readFileSync(join(productRoot, "🧾️template/📊️viz-api/🔓️viz-api.tex"), "utf8");
-  const visual = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔓️api-freshness.json"), "utf8")).printed.visual;
+  const visual = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔓️api-freshness.json"), "utf8")).printed.visual;
   const apparatus = source.slice(source.indexOf("%region 🔖️Apparatus"), source.indexOf("%endregion 🔖️Apparatus"));
   mkdirSync(outputRoot, { recursive: true });
   const root = mkdtempSync(join(outputRoot, ".api-title-"));
@@ -362,7 +362,7 @@ export async function verifyPrintApiTitleRendering(): Promise<void> {
 
 /** 🪟️ Measures actual gallery content against its effective PGF frame without changing that frame. */
 export async function verifyPrintGalleryCarrier(beforePdfPath?: string): Promise<void> {
-  const control = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔓️api-freshness.json"), "utf8")).printed.galleryCarrier;
+  const control = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔓️api-freshness.json"), "utf8")).printed.galleryCarrier;
   const { extent } = await import("d3-array"), { OPS, Util } = await import("pdfjs-dist/legacy/build/pdf.mjs");
   
   
@@ -541,7 +541,7 @@ export async function readPrintKindPaint(pdf: Awaited<ReturnType<typeof openPrin
 
 /** 🏷️ Requires exact authored leaf ownership and source-backed graphic or typographic chart-body ink. */
 export async function verifyPrintGalleryPaintOwnership(path: string, leaves: readonly { leafId: string; slug: string }[]): Promise<PrintKindPaint[]> {
-  const contract = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🖌️kind-paint/🔣️.json"), "utf8")), pdf = await openPrintPdf(path);
+  const contract = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🖌️kind-paint/🔣️.json"), "utf8")), pdf = await openPrintPdf(path);
   try {
     const actual = await readPrintKindPaint(pdf); assertPrintKindPaintOwnership(path, leaves, actual, contract);
     return actual;
@@ -557,7 +557,7 @@ function assertPrintKindPaintOwnership(path: string, leaves: readonly { leafId: 
 
 /** 🧫️ Compiles positive and negative marked-body controls against independent PDF.js and D3. */
 export async function verifyPrintKindPaintFixtures(): Promise<void> {
-  const root = join(import.meta.dir, "../../🧫️fixtures/🖌️kind-paint"),contract = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")),{ extent } = await import("d3-array");
+  const root = join(import.meta.dir, "../🧫️fixtures/🖌️kind-paint"),contract = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")),{ extent } = await import("d3-array");
   
   for (const entry of contract.glyphKinds) { assert.equal(loadVizCatalog().kinds.find(kind => kind.slug === entry.slug)?.family, entry.family, entry.slug); assert.ok(readFileSync(join(latexRoot, entry.source), "utf8").includes(entry.definition), entry.slug + ": source-backed glyph painter"); }
   const work = mkdtempSync(join(outputRoot, ".kind-paint-"));
@@ -721,7 +721,7 @@ function verifyPrintApiScopeCases(printed: any): void {
 
 /** 📥️ Verifies canonical macro materialization and pre-mutation collision rejection. */
 export function verifyPrintMacroStaging(): void {
-  const fixtureRoot = join(import.meta.dir, "../../🧫️fixtures/🖨️macro-staging");
+  const fixtureRoot = join(import.meta.dir, "../🧫️fixtures/🖨️macro-staging");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as {
     readonly entries: readonly string[];
     readonly inputs: Readonly<Record<string, string>>;
@@ -779,7 +779,7 @@ export function verifyPrintMacroStaging(): void {
 /** 🧪️ Compiles the semantic graph owner twice through the production stage and independently reads its PDF. */
 export async function verifyPrintMacroStagingNative(): Promise<void> {
   mkdirSync(outputRoot, { recursive: true });
-  const root = mkdtempSync(join(outputRoot, ".macro-staging-native-")), sourceRoot = join(import.meta.dir, "../../🧫️fixtures/🖨️macro-staging");
+  const root = mkdtempSync(join(outputRoot, ".macro-staging-native-")), sourceRoot = join(import.meta.dir, "../🧫️fixtures/🖨️macro-staging");
   try {
     const outputs = [join(root, "first"), join(root, "second")];
     for (const [index, output] of outputs.entries()) await publishPrintArtifact({ id: `graph-macro-native-${index + 1}`, sourceRoot, texPath: "🧪️control.tex", sources: ["🧪️control.tex"], output, owner: `@semio-tech/print:test-macro-staging-${index + 1}`, dark: false });
@@ -818,7 +818,7 @@ async function openPrintPdf(path: string) {
 
 /** 🧩️ Checks a neutral glyph policy and an optional actual missing-glyph compiler counterexample. */
 async function verifyPrintPdfGlyphPolicy(): Promise<void> {
-  const policy = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧫️pdf-consumption.json"), "utf8")).glyphPolicy as { accepted: string[]; rejectedCodePoints: number[] };
+  const policy = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧫️pdf-consumption.json"), "utf8")).glyphPolicy as { accepted: string[]; rejectedCodePoints: number[] };
   const before = process.env.SEMIO_PRINT_GLYPH_REGRESSION_PDF;
   if (before) {
     const pdf = await openPrintPdf(before);
@@ -840,10 +840,10 @@ async function verifyPrintPdfGlyphPolicy(): Promise<void> {
 
 /** 📖️ Consumes each restored document through the independent PDF.js page and text reader. */
 async function verifyPrintPdfs(templates: readonly { id: string; texPath: string }[], collection: "templates" | "visualizations"): Promise<void> {
-  const expected = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧫️pdf-consumption.json"), "utf8"));
-  const contract = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧫️merge-contract.json"), "utf8"));
-  const visual = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔓️api-freshness.json"), "utf8")).printed.visual;
-  const painted: any[] = [], paintContract = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🖌️kind-paint/🔣️.json"), "utf8"));
+  const expected = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧫️pdf-consumption.json"), "utf8"));
+  const contract = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧫️merge-contract.json"), "utf8"));
+  const visual = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔓️api-freshness.json"), "utf8")).printed.visual;
+  const painted: any[] = [], paintContract = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🖌️kind-paint/🔣️.json"), "utf8"));
   let count = 0;
   for (const template of templates) for (const name of Object.values(printTemplatePdfNames(template.texPath))) {
     const pdf = await openPrintPdf(join(printDocumentOutputDirectory(template.id), name));
@@ -934,7 +934,7 @@ export async function verifyPrintFontStaging(output = outputRoot): Promise<void>
       const key = GlobalFonts.registerFromPath(path, "nx-font-fixture-" + row.family);
       assert.ok(key, row.family); GlobalFonts.remove(key);
     }
-    const repeated = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔁️font-publication.json"), "utf8"));
+    const repeated = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔁️font-publication.json"), "utf8"));
     const identity = () => catalog.map((row: any) => { const stat = statSync(join(staged, row.texFilename), { bigint: true }); return [stat.ino.toString(), stat.birthtimeNs.toString()]; });
     const original = identity(), registrations = catalog.map((row: any) => GlobalFonts.registerFromPath(join(staged, row.texFilename), "nx-live-font-fixture-" + row.family));
     try {
@@ -961,7 +961,7 @@ function assertPrintCommandSourceInputs(actual: readonly string[], expected: rea
 /** 🪶️ Independently resolves production imports without loading generators or repository tests. */
 export async function verifyPrintCommandBoundaries(): Promise<void> {
   const { build } = await import("esbuild");
-  const contract = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧫️command-boundaries.json"), "utf8"));
+  const contract = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧫️command-boundaries.json"), "utf8"));
   const graphs = await Promise.all((contract.entries as string[]).map(async (entry: string, index: number) => {
     const result = await build({ absWorkingDir: workspaceRoot, entryPoints: [join(productRoot, entry)], platform: "node", format: "esm", bundle: true, packages: "external", external: ["bun"], write: false, metafile: true, logLevel: "silent" });
     mkdirSync(outputRoot, { recursive: true });
@@ -1000,7 +1000,7 @@ export async function verifyPrintDocumentCatalog(): Promise<void> {
   assert.deepEqual(api.printLibrarySources(), catalog.librarySources);
   assert.deepEqual(api.printLibrarySources(), ["🖋️latex", "🔨️modules/🕸️graph/📐️.tex"]);
   const plugin = await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"));
-  const gallery = JSON.parse(readFileSync(join(root, product, "🎮️commands/🧪️print-pipeline-verification/🧫️fixtures/🗺️gallery-identities.json"), "utf8"));
+  const gallery = JSON.parse(readFileSync(join(root, product, "🎮️commands/🧪️print-pipeline-verification/🧪️tests/🧫️fixtures/🗺️gallery-identities.json"), "utf8"));
   const documents = api.printDocuments();
   assert.equal(documents.length, 88);
   assert.deepEqual(documents.filter((row: any) => row.collection === "visualizations").map((row: any) => row.id).sort(), Object.keys(gallery).sort());
@@ -1058,14 +1058,14 @@ export async function verifyPrintApiPublication(): Promise<void> {
   const { createHash } = await import("node:crypto");
   const canvas = createRequire(join(workspaceRoot, "node_modules/pdfjs-dist/legacy/build/pdf.mjs"))("@napi-rs/canvas") as typeof import("@napi-rs/canvas");
   Object.assign(globalThis, { DOMMatrix: canvas.DOMMatrix, Path2D: canvas.Path2D, ImageData: canvas.ImageData });
-  const contract = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/📖️api-publication/🔣️.json"), "utf8"));
+  const contract = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/📖️api-publication/🔣️.json"), "utf8"));
   
   
   const control = contract.vectors as { languages: ("en" | "de")[]; themes: ("light" | "dark")[]; minimumCaptionGapPt: number; boundsTolerancePt: number; renderScale: number; headings: { en: string; de: string }[]; forbiddenContents: string[]; defaultSamples: { table: string; key: string; expected: boolean }[] };
   assert.equal(new Set(control.defaultSamples.map(sample => sample.table)).size, 51);
   const root = join(outputRoot, "api-publication");
   mkdirSync(root, { recursive: true });
-  const paths = ["🧾️template/📊️viz-api/🔓️viz-api.tex", "🧬️schema/🔣️.json", "🖼️assets/🔣️viz-api.json", "🎮️commands/🧪️print-pipeline-verification/🧫️fixtures/🔓️api-freshness.json", "🎮️commands/🧪️print-pipeline-verification/🧫️fixtures/📖️api-publication/🔣️.json"];
+  const paths = ["🧾️template/📊️viz-api/🔓️viz-api.tex", "🧬️schema/🔣️.json", "🖼️assets/🔣️viz-api.json", "🎮️commands/🧪️print-pipeline-verification/🧪️tests/🧫️fixtures/🔓️api-freshness.json", "🎮️commands/🧪️print-pipeline-verification/🧪️tests/🧫️fixtures/📖️api-publication/🔣️.json"];
   const digest = (path: string) => createHash("sha256").update(readFileSync(path)).digest("hex");
   const bindings = Object.fromEntries(paths.map(path => [path, digest(join(productRoot, path))]));
   for (const name of readdirSync(latexRoot).filter(name => /\.(?:sty|cls)$/.test(name))) bindings[`🖋️latex/${name}`] = digest(join(latexRoot, name));

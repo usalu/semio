@@ -1,7 +1,7 @@
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import {formatBinary64Literal,parseBinary64Literal,formatBinary32Literal,parseBinary32Literal} from "../🟦️.ts";
 test("IEEE payload word corpus agrees with the independent schema oracle",()=>{const oracle=new Ajv();});
 test("IEEE payload binary64 literals preserve all words independently of numeric NaN",()=>{for(const hex of corpus.binary64Bits){const word={bits:BigInt("0x"+hex)};const literal=formatBinary64Literal(word);expect(parseBinary64Literal(literal)).toEqual(word);const nan=(word.bits&0x7ff0000000000000n)===0x7ff0000000000000n&&(word.bits&0xfffffffffffffn)!==0n;if(nan)expect(literal).toBe(corpus.binary64NanPrefix+hex);for(const invalid of corpus.invalid64)expect(()=>parseBinary64Literal(invalid)).toThrow()}});

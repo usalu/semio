@@ -40,7 +40,6 @@
       "{projectRoot}/**/*.rs",
       "{projectRoot}/Cargo.toml",
       "{workspaceRoot}/Cargo.toml",
-      "{workspaceRoot}/Cargo.lock",
       "{workspaceRoot}/.cargo/config.toml",
       "{workspaceRoot}/rust-toolchain.toml"
     ],
@@ -111,6 +110,5 @@
     }
   ],
   "cacheDirectory": ".🧬semio/🦑️repo/⚡️cache/nx",
-  "maxCacheSize": "200GB",
   "analytics": false
 }

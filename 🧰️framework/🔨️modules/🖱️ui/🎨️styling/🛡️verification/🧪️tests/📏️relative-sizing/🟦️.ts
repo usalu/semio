@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 
 import { compile } from "tailwindcss";
 import { chromium } from "playwright";
-import corpus from "../../🧫️fixtures/📏️relative-sizing/🔣️.json";
+import corpus from "../🧫️fixtures/📏️relative-sizing/🔣️.json";
 
 const utilities = [
   ["w", "width"], ["h", "height"], ["min-w", "minWidth"], ["max-w", "maxWidth"],

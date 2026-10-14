@@ -37,7 +37,7 @@ fn async_actor_poll_awaits_exchange_and_render_work() {
 /// 🧫️ The shared drain contract both twins read. The TS half lives in
 /// `📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧫️fixtures/command-ingress-drain.json`.
 fn drain_contract() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧫️fixtures/command-ingress-drain.json")).expect("drain contract parses")
+    serde_json::from_str(include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/command-ingress-drain.json")).expect("drain contract parses")
 }
 
 fn cursor(page_index: u32, page_count: u32) -> semio_framework::kernel::CommandPageCursor {

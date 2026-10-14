@@ -12,7 +12,7 @@ fn drain<T:RetireOwned>(value:T)->(usize,usize){
 }
 #[test]
 fn original_gesture_issuer_matches_neutral_admission_and_exact_allocator(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){let units=|name:&str|row[name].as_u64().unwrap()as usize;let birth=RetainedCloneGrant{maximum_items:units("birthItems"),maximum_capacity_bytes:units("birthHeaderUnits")*SealedShared::<GestureSlot<()>>::birth_bytes(),maximum_depth:units("birthDepth"),..Default::default()};let handoff=RetainedCloneGrant{maximum_items:units("aliasItems"),maximum_copy_bytes:units("aliasHandleUnits")*size_of::<SealedShared<GestureSlot<()>>>(),maximum_depth:units("aliasDepth"),..Default::default()};
   let(prepared,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||reserve_live::<()>(row["available"].as_bool().unwrap(),birth,handoff));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(prepared.is_ok(),row["expected"]=="admitted");
   let Ok(prepared)=prepared else{continue};let(slot,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||GestureSlot::<()>::of("pane-a".into(),"document-revision".into(),None,Some("previous-press".into())));let held=heap.requested_bytes-heap.released_bytes;let((original,capture),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||issue_live(prepared,slot,17,handoff));assert_eq!((heap.requested_bytes,heap.released_bytes),(SealedShared::<GestureSlot<()>>::birth_bytes(),0));let mut born=heap.requested_bytes;assert_eq!(original.slot.identity(),capture.get()as*const GestureSlot<()>as usize);let(extra,released)=drain((original,capture));born+=extra;assert_eq!(held+born,released);eprintln!("[DEBUG] Original gesture issuer original={held} born={born} released={released} finalDrop=0");
@@ -20,7 +20,7 @@ fn original_gesture_issuer_matches_neutral_admission_and_exact_allocator(){
 }
 #[test]
 fn original_gesture_issuer_cancellation_keeps_original_decision_and_live_alias(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cancellationCases"].as_array().unwrap(){for order in[false,true]{
   let birth=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:SealedShared::<GestureSlot<()>>::birth_bytes(),maximum_depth:1,..Default::default()};
   let handoff=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<SealedShared<GestureSlot<()>>>(),maximum_depth:1,..Default::default()};

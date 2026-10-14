@@ -2,7 +2,7 @@
 @comparison-independent-model-and-third-party-text-width
 Feature: Route terminal pointer events to the right control
   The terminal engine owns hover, capture, click counting, the focus tree, splitters and tab drags. The table
-  `🧫️fixtures/🖱️pointer-routing/🔣️.json` declares a two-stack dashboard scene, its painted chrome rows, the
+  `🧪️tests/🧫️fixtures/🖱️pointer-routing/🔣️.json` declares a two-stack dashboard scene, its painted chrome rows, the
   geometry of every chip and control, and the signals each pointer sequence must produce.
 
   Three readers share that table and nothing else. The Rust engine adapter replays every case. The vitest oracle in

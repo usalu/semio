@@ -4,7 +4,7 @@ import {test,expect} from "bun:test";
 import Ajv from "ajv/dist/2020.js";
 import draft7 from "ajv/dist/refs/json-schema-draft-07.json" with {type:"json"};
 import sharp from "sharp";
-import rows from "../../🧫️fixtures/🔣️.json";
+import rows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🔀️booleans/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import prepSchema from "../../../📋️prepare/🧬️schema/🔣️.json";
 import rasterSchema from "../../../📷️raster/🧬️schema/🔣️.json";
@@ -19,7 +19,7 @@ import {RasterSceneJob} from "../../../📷️raster/🟦️.ts";
 import {DocumentBooleanJob,resolveDocumentBooleans,type DocumentBooleanInput,type DocumentBooleanProgress} from "../../🟦️.ts";
 import documentTraceSchema from "../../../🔍️trace/🧬️schema/🔣️.json";
 import bitmapTraceSchema from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🔍️trace/🧬️schema/🔣️.json";
-import traceRows from "../../../🔍️trace/🧫️fixtures/🔣️.json";
+import traceRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🔍️trace/🔣️.json";
 const ajv=new Ajv({strict:true}).addMetaSchema(draft7);for(const s of [pathSchema,imageSchema,rasterSchema,prepSchema,flatSchema,regionSchema,curveSchema,bitmapTraceSchema,documentTraceSchema])ajv.addSchema(s);const valid=ajv.compile(schema),validProgress=ajv.compile({$ref:schema.$id+"#/definitions/progress"}),validResult=ajv.compile({$ref:schema.$id+"#/definitions/result"});
 function lift(v:any):any{return typeof v==="number"?binary64(v):Array.isArray(v)?v.map(lift):v&&typeof v==="object"?Object.fromEntries(Object.entries(v).map(([k,v])=>[k,lift(v)])):v;}
 function input(row:typeof rows[number]):DocumentBooleanInput{const job=new DocumentSceneJob({...row.document,layers:lift(row.document.layers)} as any,row.preparation);while(!job.advance(4096).done){}return{plan:job.result(),limits:row.limits};}
@@ -65,7 +65,7 @@ test("document pipeline cancels real algorithm work and does not publish after c
 });
 
 /** 🧹️ Complete results own their mutable metadata; failed graphs keep private retirement state. */
-import retirementRows from "../../🧫️fixtures/🧹️retirement/🔣️.json";
+import retirementRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🔀️booleans/🧹️retirement/🔣️.json";
 import {ScenePlanCloseJob} from "../../../🧹️retire/🟦️.ts";
 const retirementValid=ajv.compile({$ref:schema.$id+"#/definitions/retirementProgress"});
 test("document Boolean retirement composes actual children and keeps source and completed plans independent",()=>{

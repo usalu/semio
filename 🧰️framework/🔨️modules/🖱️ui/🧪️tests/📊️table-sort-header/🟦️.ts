@@ -2,10 +2,10 @@
  * only the active column announces `aria-sort`. The wgpu table target answers to the same transitions
  * (`🎞️Scenes/🧪️tests/🔬️wgpu-table`).
  *
- * 🧫️ Read from `🖱️ui/🧫️fixtures/📊️table-sort-header/🔣️.json`.
+ * 🧫️ Read from `🖱️ui/🧪️tests/🧫️fixtures/📊️table-sort-header/🔣️.json`.
  */
 import { describe, expect, it } from "vitest";
-import fixture from "../../🧫️fixtures/📊️table-sort-header/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/📊️table-sort-header/🔣️.json" with { type: "json" };
 import { tableSortAriaV1, tableSortNextDirectionV1, type SortDirection } from "../../🧱️elements/📊️Table/🟦️.tsx";
 
 describe("🔀️ table sort header", () => {

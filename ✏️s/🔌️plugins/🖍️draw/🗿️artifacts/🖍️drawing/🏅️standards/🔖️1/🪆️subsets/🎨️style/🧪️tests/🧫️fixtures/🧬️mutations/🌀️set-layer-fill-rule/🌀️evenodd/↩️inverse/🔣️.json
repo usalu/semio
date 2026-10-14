@@ -1,0 +1,7 @@
+[
+  {
+    "mutation": "setLayerFillRule",
+    "layerId": "shape-a",
+    "fillRule": "evenodd"
+  }
+]

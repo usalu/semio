@@ -42,7 +42,7 @@ for (const source of flowEditorSources) {
 //#endregion 🗣️Terminology
 
 //#region 🧒️ChildAddWidget
-const childAddWidget = await Bun.file(new URL("../../🧫️fixtures/🧒️child-add-widget/🔣️.json", import.meta.url)).json();
+const childAddWidget = await Bun.file(new URL("../🧫️fixtures/🧒️child-add-widget/🔣️.json", import.meta.url)).json();
 
 
 assert.equal(childAddWidget.parentContent.childId, childAddWidget.parentContent.target.artifactId);
@@ -72,7 +72,7 @@ assert(addWidgetSource.includes("SemioFlowMutation::InsertNode"), "addWidget mus
 assert(!addWidgetSource.includes("host_operations(doc.snapshot"), "addWidget must not route content through the parent FlowDiff");
 //#endregion 🧒️ChildAddWidget
 
-const treeProjection = await Bun.file(new URL("../../🧫️fixtures/🖼️tree-projection/🔣️.json", import.meta.url)).json();
+const treeProjection = await Bun.file(new URL("../🧫️fixtures/🖼️tree-projection/🔣️.json", import.meta.url)).json();
 
 
 assert.equal(new Set(treeProjection.cases.map((row: any) => row.id)).size, 4);
@@ -98,7 +98,7 @@ assert(treeFixtureSource.includes("pub fn project_and_retire_fixture_tree("), "s
 assert(treeFixtureSource.includes("FIXTURE_TREE_MAX_NODES * (semio_framework_ui_contract::UI_BUILT_CHILDREN_MAX + 1)"), "retirement must cover every retained page, including unobserved rejected descendants");
 
 //#region 🔎️ActualHostWire
-const hostWire = await Bun.file(new URL("../../🧫️fixtures/📡️host-wire/🔣️.json", import.meta.url)).json();
+const hostWire = await Bun.file(new URL("../🧫️fixtures/📡️host-wire/🔣️.json", import.meta.url)).json();
 
 
 const hostCommandSource = await Bun.file(new URL("../../🦀️.rs", import.meta.url)).text();
@@ -115,7 +115,7 @@ for (const row of hostWire.cases) {
 
 
 //#region 🎚️ParameterIntent
-const parameter = await Bun.file(new URL("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🧫️fixtures/🔣️.json", import.meta.url)).json();
+const parameter = await Bun.file(new URL("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
 const parameterSchema = await Bun.file(new URL("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🧬️schema/🔣️.json", import.meta.url)).json();
 const parameterAjv = new Ajv({ strict: true, allErrors: true });
 parameterAjv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
@@ -139,7 +139,7 @@ for (const grant of parameter.retirement.grants.filter((value: number) => value 
 //#endregion 🎚️ParameterIntent
 
 //#region 🔣️Contract
-const fixture = await Bun.file(new URL("../../🧫️fixtures/🧫️grant-frontier/🔣️.json", import.meta.url)).json();
+const fixture = await Bun.file(new URL("../🧫️fixtures/🧫️grant-frontier/🔣️.json", import.meta.url)).json();
 
 function semantic(value: typeof fixture): boolean {
   return new Set(value.cases.map((row: any) => row.id)).size === value.cases.length
@@ -178,7 +178,7 @@ for (const row of fixture.cases) {
 }
 //#endregion ⚖️IndependentByteOracle
 //#region 🏷️AuthoredSliderLabels
-const labels = await Bun.file(new URL("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🧫️fixtures/🏷️slider-labels.json", import.meta.url)).json();
+const labels = await Bun.file(new URL("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🧫️fixtures/📸️snapshot/🏷️slider-labels.json", import.meta.url)).json();
 
 
 for (const row of labels.cases) {
@@ -192,7 +192,7 @@ assert.match(artifactSource, /InputSlider\s*\{\s*id: String,\s*label: String,/);
 assert.match(artifactSource, /Widget::InputSlider \{ label, \.\. \} => \(label\.clone\(\), label\.clone\(\)/);
 //#endregion 🏷️AuthoredSliderLabels
 //#region ↩️DeleteCascadeOracle
-const cascade = await Bun.file(new URL("../../🧫️fixtures/🧹️delete-cascade/🔣️.json", import.meta.url)).json();
+const cascade = await Bun.file(new URL("../🧫️fixtures/🧹️delete-cascade/🔣️.json", import.meta.url)).json();
 
 
 const cascadeBase = structuredClone(cascade.scene);
@@ -215,7 +215,7 @@ assert.deepEqual(byId(appended), byId(applyPatches(cascadePost, oracleInverse)))
 
 //#endregion ↩️DeleteCascadeOracle
 //#region 🪪️ContentIdentityOracle
-const identity = await Bun.file(new URL("../../🧫️fixtures/🪪️content-identity/🔣️.json", import.meta.url)).json();
+const identity = await Bun.file(new URL("../🧫️fixtures/🪪️content-identity/🔣️.json", import.meta.url)).json();
 
 
 assert.equal(new Set(identity.cases.map((row: any) => row.id)).size, 5);
@@ -232,7 +232,7 @@ for (const widget of ["input-slider id=slider", "neuron id=add", "output-preview
 
 //#endregion 🪪️ContentIdentityOracle
 //#region 🧹️StoreOwnerOracle
-const storeOwners = await Bun.file(new URL("../../🧫️fixtures/🏪️store-owners/🔣️.json", import.meta.url)).json();
+const storeOwners = await Bun.file(new URL("../🧫️fixtures/🏪️store-owners/🔣️.json", import.meta.url)).json();
 
 
 assert.equal(new Set(storeOwners.cases.map((row: any) => row.lane)).size, 3);
@@ -254,7 +254,7 @@ for (const lane of ["document", "config", "draft"]) {
 }
 //#endregion 🧹️StoreOwnerOracle
 //#region 👥️PresenceOwnerOracle
-const presenceOwners = await Bun.file(new URL("../../🧫️fixtures/👥️presence-owners/🔣️.json", import.meta.url)).json();
+const presenceOwners = await Bun.file(new URL("../🧫️fixtures/👥️presence-owners/🔣️.json", import.meta.url)).json();
 
 
 for (const row of presenceOwners.cases) {
@@ -272,7 +272,7 @@ for (const hook of ["build_presence_local_root_retirement_factory", "build_prese
 }
 //#endregion 👥️PresenceOwnerOracle
 //#region 🫧️TransientOwnerOracle
-const transientOwners = await Bun.file(new URL("../../🧫️fixtures/🫧️transient-owners/🔣️.json", import.meta.url)).json();
+const transientOwners = await Bun.file(new URL("../🧫️fixtures/🫧️transient-owners/🔣️.json", import.meta.url)).json();
 
 
 for (const [index, row] of transientOwners.trace.entries()) {
@@ -293,7 +293,7 @@ assert(documentOwnerSource.includes("pub fn store_owners("), "the domain declare
 assert(editorOwnerSource.includes("crate::retirement::store_owners(grant)"), "the editor must use the same domain catalog as viewers");
 //#endregion 🗃️SharedDocumentOwnerAuthority
 //#region 👁️ViewerOwnerAuthority
-const viewerOwners = await Bun.file(new URL("../../../👁️viewer/🧫️fixtures/🧹️owners/🔣️.json", import.meta.url)).json();
+const viewerOwners = await Bun.file(new URL("../../../👁️viewer/🧪️tests/🧫️fixtures/🧹️owners/🔣️.json", import.meta.url)).json();
 
 
 
@@ -335,7 +335,7 @@ assert(flowSurfaceTestSource.includes("async fn flow_actual_surface_factories_cl
  * `interactive-job.catalog-authority` on every host that instantiates the flow editor
  * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
  */
-const interactiveJob = await Bun.file(new URL("../../🧫️fixtures/🧮️interactive-job/🔣️.json", import.meta.url)).json();
+const interactiveJob = await Bun.file(new URL("../🧫️fixtures/🧮️interactive-job/🔣️.json", import.meta.url)).json();
 const editorSource = await Bun.file(new URL("../../🦀️.rs", import.meta.url)).text();
 const classifiedRows = [...editorSource.matchAll(/\.action_interactive_job\("([A-Za-z0-9]+)",\s*semio_framework_plugin::InteractiveJobClassification::([A-Za-z]+)\)/g)];
 const classified = new Map(classifiedRows.map((row) => [row[1], row[2]]));

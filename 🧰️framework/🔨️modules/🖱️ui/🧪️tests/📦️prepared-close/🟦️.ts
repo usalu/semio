@@ -1,7 +1,7 @@
 /** 🛡️ Independent RFC6902 and physical Buffer authority for denied original prepared pages. */
 import {test,expect} from "bun:test";
 import {applyPatch} from "fast-json-patch";
-import fixture from "../../🧫️fixtures/📦️prepared-close/🔣️.json" with {type:"json"};
+import fixture from "../🧫️fixtures/📦️prepared-close/🔣️.json" with {type:"json"};
 import physical from "../♻️physical-job-close/🧫️fixtures/🔣️.json" with {type:"json"};
 test("original physical fixture agrees with independent Buffer extents",()=>{
  const atlas=physical.prepared.atlas;

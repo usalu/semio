@@ -1,0 +1,11 @@
+{
+  "mutation": "changeDocumentExtraData",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "data": {
+        "exportedBy": "semio"
+      }
+    }
+  }
+}

@@ -1,0 +1,151 @@
+{
+  "contracts": [
+    {
+      "id": "source",
+      "value": {
+        "version": 1,
+        "kind": "source"
+      },
+      "valid": true
+    },
+    {
+      "id": "native",
+      "value": {
+        "version": 1,
+        "kind": "native",
+        "scope": "production"
+      },
+      "valid": true
+    },
+    {
+      "id": "unknown-kind",
+      "value": {
+        "version": 1,
+        "kind": "other"
+      },
+      "valid": false
+    },
+    {
+      "id": "wrong-version",
+      "value": {
+        "version": 2,
+        "kind": "source"
+      },
+      "valid": false
+    },
+    {
+      "id": "extra-property",
+      "value": {
+        "version": 1,
+        "kind": "source",
+        "native": false
+      },
+      "valid": false
+    },
+    {
+      "id": "missing-kind",
+      "value": {
+        "version": 1
+      },
+      "valid": false
+    },
+    {
+      "id": "null",
+      "value": null,
+      "valid": false
+    },
+    {
+      "id": "native-test",
+      "value": {
+        "version": 1,
+        "kind": "native",
+        "scope": "test"
+      },
+      "valid": true
+    },
+    {
+      "id": "orchestration",
+      "value": {
+        "version": 1,
+        "kind": "orchestration"
+      },
+      "valid": true
+    },
+    {
+      "id": "native-missing-scope",
+      "value": {
+        "version": 1,
+        "kind": "native"
+      },
+      "valid": false
+    },
+    {
+      "id": "source-native-scope",
+      "value": {
+        "version": 1,
+        "kind": "source",
+        "scope": "test"
+      },
+      "valid": false
+    },
+    {
+      "id": "native-unknown-scope",
+      "value": {
+        "version": 1,
+        "kind": "native",
+        "scope": "all"
+      },
+      "valid": false
+    }
+  ],
+  "preparationControls": [
+    {
+      "id": "complete",
+      "value": {
+        "version": 1,
+        "maximumElapsedMilliseconds": 120000
+      },
+      "valid": true
+    },
+    {
+      "id": "fractional",
+      "value": {
+        "version": 1,
+        "maximumElapsedMilliseconds": 0.5
+      },
+      "valid": true
+    },
+    {
+      "id": "ordinary-without-setup-bound",
+      "value": {
+        "version": 1,
+        "maximumElapsedMilliseconds": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "wider-than-receiver",
+      "value": {
+        "version": 1,
+        "maximumElapsedMilliseconds": 120001
+      },
+      "valid": false
+    },
+    {
+      "id": "missing-budget",
+      "value": {
+        "version": 1
+      },
+      "valid": false
+    },
+    {
+      "id": "invented-control",
+      "value": {
+        "version": 1,
+        "maximumElapsedMilliseconds": 120000,
+        "signal": false
+      },
+      "valid": false
+    }
+  ]
+}

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🏤️set-curtain-wall-type/✨️swaps-the-mullions",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/✨️swaps-the-mullions/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/✨️swaps-the-mullions/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/✨️swaps-the-mullions/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/✨️swaps-the-mullions/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/✨️swaps-the-mullions/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/✨️swaps-the-mullions/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/✨️swaps-the-mullions/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/✨️swaps-the-mullions/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/✨️swaps-the-mullions/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏤️set-curtain-wall-type/✨️swaps-the-mullions/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

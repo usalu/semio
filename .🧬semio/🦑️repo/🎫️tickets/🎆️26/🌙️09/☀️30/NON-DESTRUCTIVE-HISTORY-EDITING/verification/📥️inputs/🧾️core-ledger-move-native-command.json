@@ -1,0 +1,59 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/value-rs:test",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--configuration=prototype",
+    "--parallel=1",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_decode_ledger_local_pause_resume_preserves_receipt_and_new_callback) | test(original_decode_ledger_local_recipient_detach_bind_preserves_lineage_and_refusal) | test(original_decode_ledger_forwarded_pause_resume_detach_rebind_preserves_original_ports) | test(original_decode_forwarded_recipient_move_preserves_consuming_lineage_and_foreign_refusal)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "selection": [
+    "nx",
+    "run",
+    "@semio-tech/value-rs:test",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--configuration=prototype",
+    "--parallel=1",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_decode_ledger_local_pause_resume_preserves_receipt_and_new_callback) | test(original_decode_ledger_local_recipient_detach_bind_preserves_lineage_and_refusal) | test(original_decode_ledger_forwarded_pause_resume_detach_rebind_preserves_original_ports) | test(original_decode_forwarded_recipient_move_preserves_consuming_lineage_and_foreign_refusal)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
+    "transport": {
+      "maximumBytes": 536870912,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": false
+    }
+  },
+  "buildMode": "prototype"
+}

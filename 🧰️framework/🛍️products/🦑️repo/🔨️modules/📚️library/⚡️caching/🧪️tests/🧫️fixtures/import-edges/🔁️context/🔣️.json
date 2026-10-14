@@ -1,0 +1,559 @@
+{
+  "version": 1,
+  "imports": [
+    {
+      "id": "static-relative",
+      "path": "case.ts",
+      "source": "import {value} from './leaf.ts'; export const result=value;",
+      "imports": [
+        "./leaf.ts"
+      ]
+    },
+    {
+      "id": "scoped-side-effect",
+      "path": "case.ts",
+      "source": "import '@semio/example/feature';",
+      "imports": [
+        "@semio/example/feature"
+      ]
+    },
+    {
+      "id": "bare-reexport",
+      "path": "case.ts",
+      "source": "export {value} from 'example';",
+      "imports": [
+        "example"
+      ]
+    },
+    {
+      "id": "dynamic-literal",
+      "path": "case.ts",
+      "source": "export const load=()=>import('./leaf.ts');",
+      "imports": [
+        "./leaf.ts"
+      ]
+    },
+    {
+      "id": "require-literal",
+      "path": "case.cjs",
+      "source": "module.exports=require('example');",
+      "imports": [
+        "example"
+      ]
+    },
+    {
+      "id": "import-equals",
+      "path": "case.cts",
+      "source": "import value = require('example'); export const result=value;",
+      "imports": [
+        "example"
+      ]
+    },
+    {
+      "id": "type-import",
+      "path": "case.ts",
+      "source": "import type {Value} from 'erased'; export const value=1;",
+      "imports": []
+    },
+    {
+      "id": "named-type-import",
+      "path": "case.ts",
+      "source": "import {type Value} from 'erased'; export const value=1;",
+      "imports": []
+    },
+    {
+      "id": "type-export",
+      "path": "case.ts",
+      "source": "export type {Value} from 'erased';",
+      "imports": []
+    },
+    {
+      "id": "named-type-export",
+      "path": "case.ts",
+      "source": "export {type Value} from 'erased';",
+      "imports": []
+    },
+    {
+      "id": "mixed-import",
+      "path": "case.ts",
+      "source": "import {type Value,value} from 'example'; export const result=value;",
+      "imports": [
+        "example"
+      ]
+    },
+    {
+      "id": "mixed-export",
+      "path": "case.ts",
+      "source": "export {type Value,value} from 'example';",
+      "imports": [
+        "example"
+      ]
+    },
+    {
+      "id": "import-type-expression",
+      "path": "case.ts",
+      "source": "export type Value=import('erased').Value;",
+      "imports": []
+    },
+    {
+      "id": "declaration",
+      "path": "case.d.ts",
+      "source": "import {Value} from 'erased'; export declare const value:Value;",
+      "imports": []
+    },
+    {
+      "id": "comments-and-strings",
+      "path": "case.ts",
+      "source": "// import 'commented';\n/* export {x} from 'commented'; */\nexport const fake=\"import 'quoted'; require('quoted')\";",
+      "imports": []
+    },
+    {
+      "id": "nonliteral",
+      "path": "case.ts",
+      "source": "export const load=(name:string)=>import(name); export const resolve=(name:string)=>require(name);",
+      "imports": []
+    },
+    {
+      "id": "builtin",
+      "path": "case.ts",
+      "source": "import {readFileSync} from 'node:fs'; export const read=readFileSync;",
+      "imports": [
+        "node:fs"
+      ]
+    },
+    {
+      "id": "json",
+      "path": "case.json",
+      "source": "{\"text\":\"import 'quoted';\"}",
+      "imports": []
+    }
+  ],
+  "contexts": [
+    {
+      "id": "same-content-moved",
+      "source": "import '../target/leaf.ts';",
+      "phases": [
+        {
+          "file": "alpha/src/index.ts",
+          "projects": {
+            "caller": "alpha/src",
+            "alpha": "alpha/target",
+            "beta": "beta/target"
+          },
+          "packages": {},
+          "locked": {},
+          "targets": [
+            "alpha"
+          ]
+        },
+        {
+          "file": "beta/src/index.ts",
+          "projects": {
+            "caller": "beta/src",
+            "alpha": "alpha/target",
+            "beta": "beta/target"
+          },
+          "packages": {},
+          "locked": {},
+          "targets": [
+            "beta"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "provider-name-change",
+      "source": "import '../target/leaf.ts';",
+      "phases": [
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller",
+            "old": "target"
+          },
+          "packages": {},
+          "locked": {},
+          "targets": [
+            "old"
+          ]
+        },
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller",
+            "next": "target"
+          },
+          "packages": {},
+          "locked": {},
+          "targets": [
+            "next"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "nested-owner-change",
+      "source": "import '../target/nested/leaf.ts';",
+      "phases": [
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller",
+            "broad": "target"
+          },
+          "packages": {},
+          "locked": {},
+          "targets": [
+            "broad"
+          ]
+        },
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller",
+            "broad": "target",
+            "nested": "target/nested"
+          },
+          "packages": {},
+          "locked": {},
+          "targets": [
+            "nested"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "project-root-swap",
+      "source": "import '../target/leaf.ts';",
+      "phases": [
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller",
+            "first": "target",
+            "second": "spare"
+          },
+          "packages": {},
+          "locked": {},
+          "targets": [
+            "first"
+          ]
+        },
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller",
+            "first": "spare",
+            "second": "target"
+          },
+          "packages": {},
+          "locked": {},
+          "targets": [
+            "second"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "workspace-package-alias-change",
+      "source": "import '__semio_import_fixture__/feature';",
+      "phases": [
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller",
+            "first": "first",
+            "second": "second"
+          },
+          "packages": {
+            "__semio_import_fixture__": "first"
+          },
+          "locked": {},
+          "targets": [
+            "first"
+          ]
+        },
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller",
+            "first": "first",
+            "second": "second"
+          },
+          "packages": {
+            "__semio_import_fixture__": "second"
+          },
+          "locked": {},
+          "targets": [
+            "second"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lock-version-change",
+      "source": "import 'semio-import-fixture-lock';",
+      "phases": [
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller"
+          },
+          "packages": {},
+          "locked": {
+            "semio-import-fixture-lock": "1.0.0"
+          },
+          "targets": [
+            "npm:semio-import-fixture-lock@1.0.0"
+          ]
+        },
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller"
+          },
+          "packages": {},
+          "locked": {
+            "semio-import-fixture-lock": "2.0.0"
+          },
+          "targets": [
+            "npm:semio-import-fixture-lock@2.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "removed-provider",
+      "source": "import '../target/leaf.ts';",
+      "phases": [
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller",
+            "provider": "target"
+          },
+          "packages": {},
+          "locked": {},
+          "targets": [
+            "provider"
+          ]
+        },
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller"
+          },
+          "packages": {},
+          "locked": {},
+          "targets": []
+        }
+      ]
+    },
+    {
+      "id": "fake-import-targets",
+      "source": "// import 'fake';\n/* export {value} from 'fake'; */\nexport const quote=\"import 'fake'; require('fake')\"; import type {Value} from 'fake'; export {type Value} from 'fake'; import '../target/leaf.ts';",
+      "phases": [
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller",
+            "provider": "target",
+            "fake": "fake"
+          },
+          "packages": {
+            "fake": "fake"
+          },
+          "locked": {},
+          "targets": [
+            "provider"
+          ]
+        },
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller",
+            "next": "target",
+            "fake": "fake"
+          },
+          "packages": {
+            "fake": "fake"
+          },
+          "locked": {},
+          "targets": [
+            "next"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "old-resolved-cache-isolation",
+      "source": "import '../target/leaf.ts';",
+      "phases": [
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller",
+            "provider": "target"
+          },
+          "packages": {},
+          "locked": {},
+          "targets": [
+            "provider"
+          ]
+        },
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller",
+            "provider": "target"
+          },
+          "packages": {},
+          "locked": {},
+          "targets": [
+            "provider"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "runtime-package-core-collision",
+      "source": "import \"node:fs\"; import \"fs\"; import \"ws\"; import \"undici\"; import \"test\"; import \"sqlite\";",
+      "phases": [
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller",
+            "coreAlias": "provider"
+          },
+          "packages": {
+            "fs": "coreAlias"
+          },
+          "locked": {
+            "fs": "1.0.0",
+            "ws": "8.0.0",
+            "undici": "7.0.0",
+            "test": "1.0.0",
+            "sqlite": "1.0.0"
+          },
+          "targets": [
+            "npm:sqlite@1.0.0",
+            "npm:test@1.0.0",
+            "npm:undici@7.0.0",
+            "npm:ws@8.0.0"
+          ]
+        },
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller",
+            "coreAlias": "provider"
+          },
+          "packages": {
+            "fs": "coreAlias"
+          },
+          "locked": {
+            "fs": "2.0.0",
+            "ws": "9.0.0",
+            "undici": "8.0.0",
+            "test": "2.0.0",
+            "sqlite": "2.0.0"
+          },
+          "targets": [
+            "npm:sqlite@2.0.0",
+            "npm:test@2.0.0",
+            "npm:undici@8.0.0",
+            "npm:ws@9.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "runtime-core-identity",
+      "source": "import \"node:fs\"; import \"fs\";",
+      "phases": [
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller",
+            "coreAlias": "provider"
+          },
+          "packages": {
+            "fs": "coreAlias"
+          },
+          "locked": {
+            "fs": "1.0.0"
+          },
+          "targets": []
+        },
+        {
+          "file": "caller/index.ts",
+          "projects": {
+            "caller": "caller",
+            "coreAlias": "provider"
+          },
+          "packages": {
+            "fs": "coreAlias"
+          },
+          "locked": {
+            "fs": "2.0.0"
+          },
+          "targets": []
+        }
+      ]
+    }
+  ],
+  "repository": {
+    "owner": "@semio-tech/framework-process",
+    "sources": [
+      "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🟦️.ts"
+    ]
+  },
+  "graphAuthority": {
+    "module": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+    "export": "dependencyResolutionAuthority"
+  },
+  "lockScopes": [
+    {
+      "id": "source-scoped-lock-with-stable-external-nodes",
+      "file": "caller/index.ts",
+      "source": "import 'semio-import-fixture-lock';",
+      "before": "{\n  \"lockfileVersion\": 3,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"scope-fixture\"\n    },\n    \"caller\": {\n      \"name\": \"caller\"\n    }\n  },\n  \"packages\": {\n    \"caller\": [\n      \"caller@workspace:caller\"\n    ],\n    \"semio-import-fixture-lock\": [\n      \"semio-import-fixture-lock@2.0.0\",\n      \"\",\n      {}\n    ],\n    \"caller/semio-import-fixture-lock\": [\n      \"semio-import-fixture-lock@1.0.0\",\n      \"\",\n      {}\n    ]\n  }\n}",
+      "after": "{\n  \"lockfileVersion\": 3,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"scope-fixture\"\n    },\n    \"caller\": {\n      \"name\": \"caller\"\n    }\n  },\n  \"packages\": {\n    \"caller\": [\n      \"caller@workspace:spare\"\n    ],\n    \"semio-import-fixture-lock\": [\n      \"semio-import-fixture-lock@2.0.0\",\n      \"\",\n      {}\n    ],\n    \"caller/semio-import-fixture-lock\": [\n      \"semio-import-fixture-lock@1.0.0\",\n      \"\",\n      {}\n    ]\n  }\n}",
+      "beforeTarget": "npm:caller/semio-import-fixture-lock",
+      "afterTarget": "npm:semio-import-fixture-lock"
+    }
+  ],
+  "authorityInputs": [
+    {
+      "id": "immutable-tool-recipe-manifest",
+      "files": {
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json": "{\"dependencies\":{\"nx\":\"23.2.0\"},\"semio\":{\"toolPatches\":{\"nx@23.2.0\":\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch\"}}}",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/bun.lock": "first-lock",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch": "first-owned-patch"
+      },
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
+      "after": "{\"dependencies\":{\"nx\":\"23.3.0\"},\"semio\":{\"toolPatches\":{\"nx@23.2.0\":\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch\"}}}"
+    },
+    {
+      "id": "immutable-tool-recipe-lock",
+      "files": {
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json": "{\"dependencies\":{\"nx\":\"23.2.0\"},\"semio\":{\"toolPatches\":{\"nx@23.2.0\":\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch\"}}}",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/bun.lock": "first-lock",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch": "first-owned-patch"
+      },
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/bun.lock",
+      "after": "next-lock"
+    },
+    {
+      "id": "immutable-tool-owned-patch",
+      "files": {
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json": "{\"dependencies\":{\"nx\":\"23.2.0\"},\"semio\":{\"toolPatches\":{\"nx@23.2.0\":\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch\"}}}",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/bun.lock": "first-lock",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch": "first-owned-patch"
+      },
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch",
+      "after": "next-owned-patch"
+    }
+  ]
+}

@@ -123,7 +123,7 @@ async fn text_descriptor_recognizes_every_printer_variant() {
 
 #[semio_framework_async_macros::async_test]
 async fn mutations_reject_states_that_cannot_round_trip_through_riff() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧭️serialization-boundaries/🔣️.json")).expect("serialization boundary fixture is JSON");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧭️serialization-boundaries/🔣️.json")).expect("serialization boundary fixture is JSON");
     let invalid_even_pad = fixture["invalidEvenPadByte"].as_u64().expect("invalidEvenPadByte") as u8;
     let overflow_ext = fixture["overflowFmtExtensionBytes"].as_u64().expect("overflowFmtExtensionBytes") as usize;
     let valid_fourcc = fixture["validFourcc"].as_str().expect("validFourcc");

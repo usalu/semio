@@ -1,0 +1,11 @@
+# Text And Kernel Law Gate Readiness
+
+Fresh source-only review, no build/run. Parent supplies Text Source3/79 and Kernel Source8/209 qualification; Text90438/Kernel43616 stopped at documented library dependency floors, so neither newly reviewed law is runtime-qualified here.
+
+No direct stale canonical InteractiveJob step/close call, removed Refused match or bare-grant Job close signature exists in the five authored Text receiving laws, the eighth Kernel export grant law or the shared SnapshotFileCaller helper. Their close calls target original Native retirement recipients or ControlledRetirement physical owners, whose supplied-grant APIs are distinct from InteractiveJob and must remain such.
+
+Text laws reside in Semio v1 Text SQLite `🫴️receiving/🧪️tests/🦀️.rs`, mounted by receiving producer71; source trait module mounts that producer. Five names have semio_text_original_receiving_ prefix, including real typed-file async law63. Imports of ArtifactSqliteSnapshot, Host, Native owner types, Trace HeapWitness and async macro correspond to actual first-party APIs inspected. The file law uses actual Plugin declaration registration and original async loan helpers, not a Store read fixture; therefore no local Store/Job close caller needs migration in that law.
+
+Kernel file law lives in OS `🚪️io/📸️typed-snapshot/🧪️tests/🦀️.rs`; actual SpaceHistory snapshot tests705–706 mount it using six-parent relative path. The eighth export law uses the real Store snapshot_read/into_erased/try_into_typed/issuer witness and original recipient close APIs; no direct InteractiveJob dependency at its helper boundary. Actual Store test_support plain_test_store12699 and close_plain_test_store12711 have generic Clone/ToValue/FromValue/ArtifactPack/ArtifactStoreSnapshot bounds, and close_owned_unscheduled invocation; they do not expose a stale StepContext signature in this inspected wrapper. Their deeper library dependencies still require actual compilation.
+
+No concrete mismounted path/import/signature defect found in these selected law spans. The current action-bus compilation floor belongs to changed dependent library owners and cannot be claimed resolved by source inspection of this corpus. An owning compilation may still discover unrelated libtest errors outside selected function filters because Cargo compiles the whole libtest binary.

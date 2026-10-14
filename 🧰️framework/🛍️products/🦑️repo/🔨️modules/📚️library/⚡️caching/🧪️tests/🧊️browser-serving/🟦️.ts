@@ -2,21 +2,20 @@ import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
+import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** 🧊️ Serves completed profile artifacts under native Vite and compares native public-file delivery. */
-export async function testWgpuBrowserServing(workspace: string, output: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧊️browser-serving/🔣️.json"), "utf8"));
+export async function testWgpuBrowserServing(workspace: string, output: string, invocation:ScriptInvocation): Promise<void> {
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧊️browser-serving/🔣️.json"), "utf8"));
   const engine = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu");
   const implementation = join(engine, "🌐️server/🟦️.ts"), template = join(engine, "🌐️server/🌐️.html");
   assert.ok(!readFileSync(template, "utf8").includes("data-trunk"), "Browser serving must never invoke Trunk's compiler pipeline");
-  const ts = require("typescript"), source = ts.createSourceFile("bootstrap.ts", readFileSync(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
-  const declaration = source.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "resolveNxInvocation");
-  const resolveInvocation = new Function("process", ts.transpileModule(declaration.getText(source), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText.replace("export ", "") + "; return resolveNxInvocation;")({ env: {} });
+  const {resolveNxInvocation:resolveInvocation}=await import("../../🚀️bootstrap/📜️script.ts");
   for (const profile of fixture.profiles) for (const command of ["prepare", "activate", "serve", "dev"]) {
-    const target = `@semio-tech/framework-os-dev:${command}-sample-wgpu-${profile}`, invocation = resolveInvocation(["run", target]);
-    assert.equal(invocation.env.SEMIO_RENDERER, "wgpu");
-    assert.equal(invocation.env.SEMIO_BUILD_MODE, profile === "release" ? "release" : "prototype");
-    assert.equal(invocation.watch, command === "dev" ? `@semio-tech/framework-os-dev:activate-sample-wgpu-${profile}` : undefined);
+    const target = `@semio-tech/framework-os-dev:${command}-sample-wgpu-${profile}`, selection = resolveInvocation(["run", target],{});
+    assert.equal(selection.env.SEMIO_RENDERER, "wgpu");
+    assert.equal(selection.env.SEMIO_BUILD_MODE, profile);
+    assert.equal(selection.watch, command === "dev" ? `@semio-tech/framework-os-dev:activate-sample-wgpu-${profile}` : undefined);
   }
   const { serveVite } = await import("../../🌐️vite/🟦️.ts");
   const { createServer } = require("vite"), WebSocket = require("ws");
@@ -38,7 +37,7 @@ export async function testWgpuBrowserServing(workspace: string, output: string):
       const controller = new AbortController();
       let ready!: (url: string) => void;
       const readiness = new Promise<string>(resolve => ready = resolve);
-      const running = serveVite({ root: app, config, configLoader: "native", host: "127.0.0.1", port: 0, signal: controller.signal, ready });
+      const running = serveVite({ invocation,root: app, config, configLoader: "native", host: "127.0.0.1", port: 0, signal: controller.signal, ready });
       const url = await Promise.race([readiness, running.then(() => { throw new Error("Server ended before readiness"); })]);
       const oracle = await createServer({ configFile: false, root: app, publicDir: publicRoot, server: { host: "127.0.0.1", port: 0, strictPort: true }, optimizeDeps: { noDiscovery: true } });
       let socket: any;
@@ -56,7 +55,7 @@ export async function testWgpuBrowserServing(workspace: string, output: string):
         assert.equal(wasmResponse.headers.get("content-type"), "application/wasm");
         assert.ok((await WebAssembly.instantiate(await wasmResponse.arrayBuffer())).instance);
         assert.equal((await fetch(new URL(fixture.missing, url))).status, 404);
-        await assert.rejects(() => serveVite({ root: app, config, configLoader: "native", host: "127.0.0.1", port: Number(new URL(url).port), signal: new AbortController().signal, ready: () => assert.fail("Foreign port reused") }), /in use|EADDRINUSE/i);
+        await assert.rejects(() => serveVite({ invocation,root: app, config, configLoader: "native", host: "127.0.0.1", port: Number(new URL(url).port), signal: new AbortController().signal, ready: () => assert.fail("Foreign port reused") }), /in use|EADDRINUSE/i);
         socket = new WebSocket(url.replace("http:", "ws:"), "vite-hmr");
         await new Promise<void>((resolve, reject) => { socket.once("open", resolve); socket.once("error", reject); });
         const reloaded = new Promise<void>((resolve, reject) => {

@@ -1,7 +1,7 @@
 //! ✏️ Schema-erased, typed snapshot editing shared by every stdio artifact editor.
 
 use crate::{kernel, value_derive};
-use kernel::{os_store::serialization::ArtifactDsl, Mutation, MutationDiff, OpBinary};
+use kernel::{pack::snapshot::ArtifactDsl, Mutation, MutationDiff, OpBinary};
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactRetainedWorkCapacity, BoundedArtifactCommandWork};
 use semio_framework_plugin::ActionArgDef;
@@ -1195,6 +1195,7 @@ pub fn build_bounded_native_edit_tool_job<E: BoundedNativeEditingEditor>(request
         ArtifactRetainedCommandInputs {
             command: *request.command,
             snapshot: request.snapshot,
+            snapshot_read: request.snapshot_read,
             config: request.config,
             history: request.history,
             interaction_state: request.interaction_state,
@@ -1412,6 +1413,7 @@ pub fn build_snapshot_edit_tool_job<E: SnapshotEditingEditor>(request: ArtifactO
         ArtifactRetainedCommandInputs {
             command: *request.command,
             snapshot: request.snapshot,
+            snapshot_read: request.snapshot_read,
             config: request.config,
             history: request.history,
             interaction_state: request.interaction_state,

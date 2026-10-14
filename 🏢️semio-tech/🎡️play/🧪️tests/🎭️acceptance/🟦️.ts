@@ -16,9 +16,18 @@
 // #region 🔌️Adapters
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { PNG } from "pngjs";
+import generation3dWorkflow from "./🧫️fixtures/🧊️generation3d/🔣️.json";
 
 import { expect, test, type Page } from "../../🔨️modules/🧪️e2e/📦️release/🎭️fixture/🟦️.ts";
 // #endregion 🔌️Adapters
+
+/** 🖼️ Compares the same interior pixel coordinates using the independent PNG decoder. */
+function changedInteriorPixels(before:Buffer,after:Buffer):number{
+ const a=PNG.sync.read(before),b=PNG.sync.read(after);expect([b.width,b.height]).toEqual([a.width,a.height]);const inset=Math.max(1,Math.floor(Math.min(a.width,a.height)/4));let changed=0;
+ for(let y=inset;y<a.height-inset;y++)for(let x=inset;x<a.width-inset;x++){const index=(y*a.width+x)*4;if(a.data[index]!==b.data[index]||a.data[index+1]!==b.data[index+1]||a.data[index+2]!==b.data[index+2])changed++;}
+ return changed;
+}
 
 //#region 🪪️PlayPanes
 type PlayPane = { readonly variant: string; readonly label: string; readonly example?: string; readonly exampleLabel?: string };
@@ -114,7 +123,7 @@ type PaintWitness = { readonly painted: boolean; readonly detail: string };
 /** 🔬️ Asks every window of the pane, in its OWN terms, whether it painted — evaluated inside the
  * page so one round trip answers for the whole pane (≈20 ms).
  *
- * Pixels cannot answer this. An element screenshot is the PAGE screenshot clipped to the element box, so
+ * Pixels alone cannot answer this. An element screenshot is the PAGE screenshot clipped to the element box, so
  * the window chrome that overlaps a full-bleed viewport (header, gutters, overlays) lands inside the crop
  * and a blank `raster` composite censuses 118–316 distinct colours; and a `drawImage` readback of the live
  * canvas returns transparent for every WebGPU surface in this host (`raster`'s composite reports
@@ -123,7 +132,8 @@ type PaintWitness = { readonly painted: boolean; readonly detail: string };
  * So each window is asked what it retains:
  * — a 3D world window publishes its retained geometry on its own surface element
  *   (`data-meshes-json` / `data-instances-json`, written by `🌐️World3dHost`) — it must hold at least one
- *   mesh or instance;
+ *   mesh or instance, a draw receipt from its current mounted geometry and varying interior
+ *   pixels in a physical canvas screenshot;
  * — a raster window publishes its layer forest and every texture's decoded extent on its own surface
  *   element (`data-layers-json` / `data-assets-json`, written by `🖌️Paint2dHost`) — it must hold at
  *   least one VISIBLE layer whose image asset is at least `minimumEdge` pixels a side, which is what
@@ -161,7 +171,7 @@ async function readPaintWitnesses(page: Page, variant: string): Promise<readonly
       const surface = element.getAttribute("data-surface-id") ?? "(unnamed)";
       const meshes = element.getAttribute("data-meshes-json"), instances = element.getAttribute("data-instances-json");
       if (meshes !== null || instances !== null) {
-        return { surface, kind: "world3d", painted: size(meshes) + size(instances) > 0, detail: `${size(meshes)} meshes, ${size(instances)} instances` };
+        return { surface, kind: "world3d", painted: area(element) > 0 && size(meshes) + size(instances) > 0 && (id !== "generation3d" || [...element.querySelectorAll<HTMLCanvasElement>("canvas")].some(canvas => canvas.dataset.worldGeometryRevision === (element as HTMLElement).dataset.worldGeometryRevision && Number(canvas.dataset.worldGeometryVertices) > 0)), detail: `${size(meshes)} meshes, ${size(instances)} instances; drawn geometry=${[...element.querySelectorAll<HTMLCanvasElement>("canvas")].map(canvas => canvas.dataset.worldGeometryDrawn ?? "none").join(",")}` };
       }
       const layersJson = element.getAttribute("data-layers-json"), assetsJson = element.getAttribute("data-assets-json");
       if (layersJson !== null || assetsJson !== null || element.classList.contains("semio-paint-2d-canvas-surface")) {
@@ -185,14 +195,28 @@ async function readPaintWitnesses(page: Page, variant: string): Promise<readonly
 /** 🖼️ Polls {@link readPaintWitnesses} until some window paints or the deadline passes, and renders
  * the verdict of every window so a failure names the exact empty one. */
 async function paintWitness(page: Page, variant: string): Promise<PaintWitness> {
+  const qualifies = (witness: WindowWitness) => witness.painted && (variant !== "generation3d" || witness.kind === "world3d");
   const deadline = Date.now() + PAINT_WITNESS_DEADLINE_MS;
   let witnesses = await readPaintWitnesses(page, variant);
-  while (!witnesses.some((witness) => witness.painted) && Date.now() < deadline) {
+  while (!witnesses.some(qualifies) && Date.now() < deadline) {
     await page.waitForTimeout(PAINT_WITNESS_POLL_MS);
     witnesses = await readPaintWitnesses(page, variant);
   }
+  for (const witness of witnesses) {
+    if (variant !== "generation3d" || witness.kind !== "world3d" || !witness.painted) continue;
+    const canvas = page.locator(`[data-layered-pane="${variant}"] [data-surface-id="${witness.surface}"] canvas`).first();
+    const image = PNG.sync.read(await canvas.screenshot());
+    const colors = new Set<number>();
+    const inset = Math.max(1, Math.floor(Math.min(image.width, image.height) / 4));
+    for (let y = inset; y < image.height - inset; y += 2) for (let x = inset; x < image.width - inset; x += 2) {
+      const index = (y * image.width + x) * 4;
+      colors.add((image.data[index]! << 16) | (image.data[index + 1]! << 8) | image.data[index + 2]!);
+    }
+    expect(colors.size, `${variant}: actual GPU geometry draw must produce varying interior canvas pixels`).toBeGreaterThanOrEqual(generation3dWorkflow.gpu.minimumInteriorColors);
+    console.log(`[DEBUG] ${variant} GPU draw and physical interior canvas witness: ${colors.size} colors`);
+  }
   const detail = witnesses.length === 0 ? "the pane mounted no window at all" : witnesses.map((witness) => `${witness.surface} [${witness.kind}] ${witness.painted ? "paints" : "EMPTY"} — ${witness.detail}`).join("; ");
-  return { painted: witnesses.some((witness) => witness.painted), detail };
+  return { painted: witnesses.some(qualifies), detail };
 }
 //#endregion 🖼️VisibleContent
 
@@ -276,6 +300,7 @@ async function exerciseSurfaceRoundTrip(page: Page, pane: PlayPane): Promise<voi
 }
 
 test.describe("semio-tech play", () => {
+  test.use({locale:"en-US"});
   test("lists one overview card per app", async ({ page }) => {
     const errors = collectErrors(page);
     const fallbackAssets = collectSpaFallbackAssets(page);
@@ -290,6 +315,148 @@ test.describe("semio-tech play", () => {
     expect(errors.consoleErrors).toEqual([]);
     expect(errors.resourceErrors).toEqual([]);
     expect(fallbackAssets, "assets answered by the SPA fallback").toEqual([]);
+  });
+
+  for (const language of generation3dWorkflow.locales) test.describe(`3d ${language.browser}`, () => {
+  test.use({locale:language.browser});
+  test("edit", async ({page},testInfo) => {
+    test.setTimeout(TEST_TIMEOUT_MS);
+    const errors = collectErrors(page);
+    const variant = generation3dWorkflow.pane;
+    const pane = playPanes().find(pane => pane.variant === variant)!;
+    await page.goto(`./#${variant}`);
+    expect(await waitForPaneShellOutcome(page, variant)).toBe("ready");
+    await dismissPaneIntroduction(page, pane);
+    const graph = page.locator(`[data-layered-pane="${variant}"] ${generation3dWorkflow.graph}`).first();
+    await expect(graph).toBeVisible();
+    const host = JSON.parse((await graph.getAttribute("data-host-snapshot-json"))!) as {widgets: {kind:string;id:string;value?:number;max?:number;min?:number}[];synapses:{from:string;to:string;toPort:string}[]};
+    const slider = host.widgets.find(widget => widget.kind === "inputSlider" && typeof widget.value === "number" && typeof widget.max === "number" && widget.value + generation3dWorkflow.increment <= widget.max);
+    expect(slider, "curated generator must expose a real editable geometry parameter").toBeDefined();
+    await graph.focus();
+    for (let step = 0; step <= host.widgets.length; step++) {
+      if ((await graph.getAttribute("data-diagram-focused-node")) === slider!.id) break;
+      await graph.press(generation3dWorkflow.focusKey);
+    }
+    await expect(graph).toHaveAttribute("data-diagram-focused-node", slider!.id);
+    await graph.press(generation3dWorkflow.selectKey);
+    const input = page.locator(`[data-layered-pane="${variant}"] [data-ui-node-key="${generation3dWorkflow.controlKey}"]`);
+    await expect(input).toBeVisible();
+    await expect(input).toHaveAttribute("aria-label", language.valueLabel);
+    await expect(input).toHaveValue(String(slider!.value));
+    const world = page.locator(`[data-layered-pane="${variant}"] [data-meshes-json]`).first();
+    const beforeMeshes = await world.getAttribute("data-meshes-json");
+    expect((await paintWitness(page,variant)).painted).toBe(true);
+    const canvas=world.locator("canvas").first();
+    const beforePixels=await canvas.screenshot({path:testInfo.outputPath("before.png")});
+    const changed = slider!.value! + generation3dWorkflow.increment;
+    await input.fill(String(changed));
+    await input.press(generation3dWorkflow.commitKey);
+    const currentValue = async () => JSON.parse((await graph.getAttribute("data-host-snapshot-json"))!).widgets.find((widget:{id:string})=>widget.id===slider!.id).value;
+    await expect.poll(currentValue).toBe(changed);
+    await expect.poll(()=>world.getAttribute("data-meshes-json")).not.toBe(beforeMeshes);
+    expect((await paintWitness(page, variant)).painted).toBe(true);
+    const changedPixels=await canvas.screenshot({path:testInfo.outputPath("edit.png")});
+    expect(changedInteriorPixels(beforePixels,changedPixels),"the committed geometry edit must change physical interior canvas pixels").toBeGreaterThanOrEqual(generation3dWorkflow.gpu.minimumChangedInteriorPixels);
+    await graph.focus();
+    await graph.press(generation3dWorkflow.history.undo);
+    await expect.poll(currentValue).toBe(slider!.value);
+    await expect.poll(()=>world.getAttribute("data-meshes-json")).toBe(beforeMeshes);
+    expect((await paintWitness(page,variant)).painted).toBe(true);
+    const undoPixels=await canvas.screenshot({path:testInfo.outputPath("undo.png")});
+    expect(changedInteriorPixels(changedPixels,undoPixels),"undo must visibly restore geometry").toBeGreaterThanOrEqual(generation3dWorkflow.gpu.minimumChangedInteriorPixels);
+    await graph.press(generation3dWorkflow.history.redo);
+    await expect.poll(currentValue).toBe(changed);
+    expect((await paintWitness(page, variant)).painted).toBe(true);
+    const redoPixels=await canvas.screenshot({path:testInfo.outputPath("redo.png")});
+    expect(changedInteriorPixels(undoPixels,redoPixels),"redo must visibly repeat the edit").toBeGreaterThanOrEqual(generation3dWorkflow.gpu.minimumChangedInteriorPixels);
+    const connection = host.synapses.find(wire => wire.from === slider!.id && host.widgets.some(widget => widget.id === wire.to && widget.kind === "neuron"));
+    expect(connection, "selected geometry parameter must expose its actual connected operator").toBeDefined();
+    await graph.focus();
+    for (let step = 0; step <= host.widgets.length; step++) {
+      if ((await graph.getAttribute("data-diagram-focused-node")) === connection!.to) break;
+      await graph.press(generation3dWorkflow.focusKey);
+    }
+    await expect(graph).toHaveAttribute("data-diagram-focused-node", connection!.to);
+    await graph.press(generation3dWorkflow.selectKey);
+    const source = page.locator(`[data-layered-pane="${variant}"] [data-ui-node-key="${generation3dWorkflow.sourceNavigation.inputPrefix}${connection!.toPort}${generation3dWorkflow.sourceNavigation.controlSuffix}"]`);
+    await expect(source).toBeVisible();
+    const beforeInspection = JSON.parse((await graph.getAttribute("data-host-snapshot-json"))!);
+    await source.click();
+    await expect.poll(async()=>JSON.parse((await graph.getAttribute("data-selection-json"))!)[generation3dWorkflow.sourceNavigation.selectionField]).toEqual([slider!.id]);
+    await expect(input).toBeVisible();
+    await expect(input).toHaveValue(String(changed));
+    const afterInspection = JSON.parse((await graph.getAttribute("data-host-snapshot-json"))!);
+    for (const field of generation3dWorkflow.sourceNavigation.documentUnchanged) expect(afterInspection[field]).toEqual(beforeInspection[field]);
+    console.log(`[DEBUG] generation3d ${language.browser} actual keyboard selected ${slider!.id}; inspector ${slider!.value}→${changed}; current GPU redraw; exact undo and redo`);
+    errors.stop();
+    expect(errors.pageErrors).toEqual([]);
+    expect(errors.consoleErrors).toEqual([]);
+    expect(errors.refusedInputs).toEqual([]);
+  });
+
+  test("analyze",async({page})=>{
+    test.setTimeout(TEST_TIMEOUT_MS);const errors=collectErrors(page),variant=generation3dWorkflow.pane,pane=playPanes().find(pane=>pane.variant===variant)!;
+    await page.goto(`./#${variant}`);expect(await waitForPaneShellOutcome(page,variant)).toBe("ready");await dismissPaneIntroduction(page,pane);expect((await paintWitness(page,variant)).painted).toBe(true);
+    const graph=page.locator(`[data-layered-pane="${variant}"] ${generation3dWorkflow.graph}`).first();
+    const snapshot=async()=>JSON.parse((await graph.getAttribute("data-host-snapshot-json"))!) as {widgets:{id:string;kind:string;neuronKind?:string}[];synapses:{from:string;to:string;toPort:string}[]};
+    const before=await snapshot();let sourceId:string|undefined;let button=page.locator(`[data-layered-pane="${variant}"] [data-ui-node-key$="${generation3dWorkflow.analysis.buttonSuffix}"]`).first();
+    await graph.focus();for(let step=0;step<=before.widgets.length;step++){await graph.press(generation3dWorkflow.focusKey);await graph.press(generation3dWorkflow.selectKey);if(await button.isVisible()){sourceId=(await graph.getAttribute("data-diagram-focused-node"))!;break;}}
+    expect(sourceId,"curated actual inference must offer a compatible successful shape output").toBeDefined();await expect(button).toBeEnabled();await button.click();
+    await expect.poll(async()=>{const current=await snapshot();return current.widgets.length;}).toBe(before.widgets.length+1);
+    const created=await snapshot(),added=created.widgets.filter(widget=>!before.widgets.some(original=>original.id===widget.id));expect(added).toHaveLength(1);expect(added[0]!.neuronKind).toBe(generation3dWorkflow.analysis.operator);
+    const wires=created.synapses.filter(wire=>!before.synapses.some(original=>JSON.stringify(original)===JSON.stringify(wire)));expect(wires).toHaveLength(1);expect(wires[0]).toMatchObject({from:sourceId,to:added[0]!.id,toPort:generation3dWorkflow.analysis.targetPort});
+    for(const original of before.widgets)expect(created.widgets.find(widget=>widget.id===original.id)).toEqual(original);for(const original of before.synapses)expect(created.synapses).toContainEqual(original);
+    await graph.focus();for(let step=0;step<=created.widgets.length;step++){if((await graph.getAttribute("data-diagram-focused-node"))===added[0]!.id)break;await graph.press(generation3dWorkflow.focusKey);}await expect(graph).toHaveAttribute("data-diagram-focused-node",added[0]!.id);await graph.press(generation3dWorkflow.selectKey);
+    const volume=page.locator(`[data-layered-pane="${variant}"] [data-ui-node-key="${generation3dWorkflow.analysis.outputKey}"]`);await expect(volume).toBeVisible();const actualVolume=async()=>{const text=await volume.textContent();if(text===null||/(stale|pending|error|veraltet|Fehler)/i.test(text))return null;const match=text.match(/:\s*(-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)/i);return match?Number(match[1]):null;};await expect.poll(actualVolume).not.toBeNull();const measured=await actualVolume();expect(Number.isFinite(measured)).toBe(true);expect(measured!).toBeGreaterThanOrEqual(generation3dWorkflow.analysis.minimumVolume);
+    await graph.focus();await graph.press(generation3dWorkflow.history.undo);await expect.poll(snapshot).toEqual(before);await graph.press(generation3dWorkflow.history.redo);await expect.poll(snapshot).toEqual(created);
+    console.log(`[DEBUG] generation3d ${language.browser} actual current shape ${sourceId} → ${added[0]!.id} volume=${measured} inference; exactly one created widget/wire; existing graph preserved; exact one undo/redo`);
+    errors.stop();expect(errors.pageErrors).toEqual([]);expect(errors.consoleErrors).toEqual([]);expect(errors.refusedInputs).toEqual([]);expect(errors.resourceErrors).toEqual([]);
+  });
+
+
+  test("cancel",async({page})=>{
+    test.setTimeout(TEST_TIMEOUT_MS);
+    const errors=collectErrors(page),variant=generation3dWorkflow.pane,pane=playPanes().find(pane=>pane.variant===variant)!,law=generation3dWorkflow.cancel;
+    await page.goto(`./#${variant}`);expect(await waitForPaneShellOutcome(page,variant)).toBe("ready");await dismissPaneIntroduction(page,pane);expect((await paintWitness(page,variant)).painted).toBe(true);
+    const scope=page.locator(`[data-layered-pane="${variant}"]`),graph=scope.locator(generation3dWorkflow.graph).first();
+    const snapshot=async()=>JSON.parse((await graph.getAttribute("data-host-snapshot-json"))!) as {widgets:{neuronKind?:string}[];synapses:unknown[]};
+    await scope.locator(`[id="${law.examplePicker}"]`).click();await page.getByRole("option",{name:language.cancelExampleLabel,exact:true}).click();
+    await expect.poll(async()=>(await snapshot()).widgets.some(widget=>widget.neuronKind===law.sourceOperator)).toBe(true);
+    const status=scope.locator('[data-slot="world-compute-status"][aria-busy="true"]').first();
+    const button=status.getByRole("button",{name:language.cancelLabel,exact:true});
+    let identity="",started=0,firstDone=0,latestDone=0,observations=0;
+    await expect.poll(async()=>{
+      if(!await button.isVisible())return false;
+      const [run,generation,done,total]=await Promise.all([button.getAttribute("data-cancel-run-id"),button.getAttribute("data-cancel-generation"),status.getAttribute("data-compute-units-done"),status.getAttribute("data-compute-units-total")]);
+      if(run===null||generation===null||done===null||total===null||! /^[1-9]\d*$/.test(run)||BigInt(run)>0xffffffffffffffffn||! /^\d+$/.test(generation)||Number(generation)>0xffffffff)return false;
+      const next=`${run}:${generation}`,completed=Number(done),extent=Number(total);
+      if(!Number.isSafeInteger(completed)||!Number.isSafeInteger(extent)||completed<0||extent<=completed)return false;
+      if(next!==identity){identity=next;started=Date.now();firstDone=completed;observations=0;}latestDone=completed;observations++;
+      return observations>=law.minimumObservations&&completed>firstDone&&Date.now()-started>=law.minimumElapsedMilliseconds;
+    },{timeout:SHELL_READY_TIMEOUT_MS,intervals:[50,100,150]}).toBe(true);
+    const [run,generation]=identity.split(":");await expect(button).toHaveAttribute("data-cancel-action",law.action);await expect(button).toHaveAttribute("data-cancel-run-id",run!);await expect(button).toHaveAttribute("data-cancel-generation",generation!);
+    const before=await snapshot();await button.click();
+    const terminal=scope.locator(`[data-slot="world-compute-status"][data-compute-phase="${law.terminalPhase}"]`).first();await expect(terminal).toBeVisible();await expect(terminal).not.toHaveAttribute("aria-busy","true");await expect(terminal.locator('[data-slot="world-compute-cancel"]')).toHaveCount(0);
+    const after=await snapshot();for(const field of law.documentUnchanged)expect(after[field as keyof typeof after]).toEqual(before[field as keyof typeof before]);
+    console.log(`[DEBUG] generation3d ${language.browser} actual ${law.example} work ${run}/${generation} advanced ${firstDone}→${latestDone} over ${Date.now()-started}ms; localized DOM cancel reached ${law.terminalPhase}; graph preserved`);
+    errors.stop();expect(errors.pageErrors).toEqual([]);expect(errors.consoleErrors).toEqual([]);expect(errors.refusedInputs).toEqual([]);expect(errors.resourceErrors).toEqual([]);
+  });
+
+  });
+
+  test.describe("language", () => {
+    test.use({locale:"fr-FR"});
+    test("choose", async ({page}) => {
+      test.setTimeout(TEST_TIMEOUT_MS);
+      await page.goto("./#generation3d");
+      await expect(page.locator('[data-slot="play-language-choice"]')).toBeVisible();
+      await expect(page.getByRole("button", {name:"English", exact:true})).toBeVisible();
+      await page.getByRole("button", {name:"Deutsch", exact:true}).click();
+      expect(await waitForPaneShellOutcome(page, "generation3d")).toBe("ready");
+      await expect(page.locator('[data-slot="play-language-choice"]')).toHaveCount(0);
+      await expect(page.locator("html")).toHaveAttribute("lang", "de");
+      console.log("[DEBUG] unsupported browser locale required explicit Deutsch choice before actual generation3d shell boot");
+    });
   });
 
   for (const pane of playPanes()) {

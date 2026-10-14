@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "profiles": [
-    "dev",
+    "prototype",
     "release"
   ],
   "variants": [
@@ -35,8 +35,8 @@
     "profile": "release"
   },
   "development": {
-    "activationTarget": "@semio-tech/mit-bestand-demonstrator:activate-lanes-dev",
-    "watchTarget": "@semio-tech/mit-bestand-demonstrator:activate-dev",
+    "activationTarget": "@semio-tech/mit-bestand-demonstrator:activate-lanes-prototype",
+    "watchTarget": "@semio-tech/mit-bestand-demonstrator:activate-prototype",
     "port": 6029
   },
   "e2e": {

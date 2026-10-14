@@ -10,6 +10,6 @@ use crate::CadSnapshot;
 pub fn register() {}
 
 pub fn serialize_text(from: &CadSnapshot) -> Result<String, store::PackError> {
-    Ok(<CadSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(from))
+    Ok(<CadSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(from))
 }
 //#endregion Serialize

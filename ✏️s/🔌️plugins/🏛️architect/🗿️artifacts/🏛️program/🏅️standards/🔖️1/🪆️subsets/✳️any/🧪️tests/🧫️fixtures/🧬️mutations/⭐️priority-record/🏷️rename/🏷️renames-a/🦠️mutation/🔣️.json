@@ -1,0 +1,5 @@
+{
+  "mutation": "renamePriorityRecord",
+  "id": "priority-record-a",
+  "newName": "Renamed Priority Record A"
+}

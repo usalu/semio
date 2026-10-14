@@ -1,0 +1,32 @@
+{
+  "materials": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "pbrMetallicRoughness": {
+            "baseColorTexture": {
+              "index": 1
+            }
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {}
+      }
+    ],
+    "added": [
+      {
+        "index": 1,
+        "item": {
+          "name": "albedo"
+        }
+      }
+    ]
+  }
+}

@@ -5,7 +5,7 @@ import glob from "fast-glob";
 import {mkdtempSync,mkdirSync,readFileSync,writeFileSync,existsSync,realpathSync,renameSync} from "node:fs";
 import {join} from "node:path";
 import {parseBunWorkspaceDeclaration,discoverBunWorkspaces,bunWorkspacePackages,bunWorkspaceNativePatterns} from "../🟦️.ts";
-const corpus=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8")),validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8")));
+const corpus=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")),validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8")));
 const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw new Error("SEMIO_TEST_ARTIFACT_DIR is required");mkdirSync(output,{recursive:true});
 const put=(root:string,path:string,value:any):void=>{mkdirSync(join(root,path,".."),{recursive:true});writeFileSync(join(root,path),JSON.stringify(value));};
 /** 🧪️ Constructs an independent example below an empty native parent workspace boundary. */

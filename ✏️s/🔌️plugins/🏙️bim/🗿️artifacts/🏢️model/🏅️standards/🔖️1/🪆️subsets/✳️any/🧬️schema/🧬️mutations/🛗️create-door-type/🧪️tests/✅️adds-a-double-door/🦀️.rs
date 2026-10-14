@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🛗️create-door-type/✅️adds-a-double-door",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛗️create-door-type/✅️adds-a-double-door/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛗️create-door-type/✅️adds-a-double-door/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛗️create-door-type/✅️adds-a-double-door/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛗️create-door-type/✅️adds-a-double-door/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛗️create-door-type/✅️adds-a-double-door/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛗️create-door-type/✅️adds-a-double-door/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛗️create-door-type/✅️adds-a-double-door/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛗️create-door-type/✅️adds-a-double-door/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛗️create-door-type/✅️adds-a-double-door/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛗️create-door-type/✅️adds-a-double-door/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

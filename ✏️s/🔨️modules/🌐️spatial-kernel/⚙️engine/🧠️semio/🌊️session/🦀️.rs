@@ -580,9 +580,17 @@ pub enum TessellationStepOutcome {
 /// ⏱️ Retained resumable tessellations keyed by `(handle, tolerance bits)`. Bounded: a new job past
 /// the ceiling evicts the least recently stepped one rather than growing without limit.
 const TESSELLATION_JOB_CAPACITY: usize = 32;
+type TessellationJobKey=(String,u64,u64,u64);
 
 struct RetainedTessellation {
+    identity:semio_framework_os_flow::geometry::GeometryWorkIdentity,
+    source:usize,
+    length:usize,
+    source_units:usize,
+    geometry:Option<GeometryHandle>,
+    admission_claim:String,
     validation_units:usize,
+    validation:Option<semio_framework_3d_brep_queries::validation::BodyValidationJob>,
     validated:bool,
     job:TessellationJob,
     last_step:u64,
@@ -590,19 +598,22 @@ struct RetainedTessellation {
     output:Option<semio_framework_3d_brep_representation::contract::MeshTransfer>,
     previous_mesh:Option<CachedMesh>,
 }
-semio_framework_value::artifact_retire_struct!(RetainedTessellation {validation_units,validated,job,last_step,retired,output,previous_mesh});
+semio_framework_value::artifact_retire_struct!(RetainedTessellation {identity,source,length,source_units,geometry,admission_claim,validation_units,validation,validated,job,last_step,retired,output,previous_mesh});
 #[derive(Default)]
 struct TessellationJobRegistry {
-    jobs:HistoryFoldIndex<(String,u64),RetainedTessellation>,
+    admission:Option<TessellationAdmission>,
+    admission_closing:Option<ControlledRetirement<TessellationAdmission>>,
+    source_cancellation:Option<tessellation_admission::TessellationSourceCancellation>,
+    jobs:HistoryFoldIndex<TessellationJobKey,RetainedTessellation>,
     clock:u64,
     retire_slot:usize,
-    closing:Option<ControlledRetirement<((String,u64),RetainedTessellation)>>,
+    closing:Option<ControlledRetirement<(TessellationJobKey,RetainedTessellation)>>,
     cancellation:Option<TessellationCancellation>,
 }
 #[derive(Clone,Copy)]
 struct TessellationCancellation {slot:usize}
 semio_framework_value::artifact_retire_leaf!(TessellationCancellation);
-semio_framework_value::artifact_retire_struct!(TessellationJobRegistry {jobs,clock,retire_slot,closing,cancellation});
+semio_framework_value::artifact_retire_struct!(TessellationJobRegistry {admission,admission_closing,source_cancellation,jobs,clock,retire_slot,closing,cancellation});
 struct CachedMesh {mesh:semio_framework::MeshData,valid:bool}
 semio_framework_value::artifact_retire_struct!(CachedMesh {mesh,valid});
 #[derive(Default)]
@@ -624,6 +635,9 @@ type FamilyRetirement=ControlledRetirement<(Brep,MeshCache,FamilyClaims)>;
 #[path="♻️retention/🦀️.rs"]
 mod retained_membership;
 use retained_membership::SessionRetention;
+#[path="🧭️admission/🦀️.rs"]
+mod tessellation_admission;
+use tessellation_admission::TessellationAdmission;
 
 
 
@@ -1006,7 +1020,8 @@ impl Session {
     /// 🔗️ Captures this exact authority for a supplied operator or retained composition reader.
     pub fn capture(&self) -> SessionCapture { SessionCapture::owned(self.clone()) }
     /// 🔌️ Supplies one separately admitted retained-job authority over this kernel family.
-    pub fn port(&self) -> Box<dyn semio_framework_os_flow::geometry::GeometryPort> {
+    pub fn port(&self) -> Box<dyn semio_framework_os_flow::geometry::GeometryPort> {Box::new(self.admitted_port())}
+    fn admitted_port(&self)->SessionPort{
         let mut claims = self.state.claims.try_lock().expect("geometry claims");
         let authority = self.state.next_authority.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let closed = self.is_closed();
@@ -1016,7 +1031,7 @@ impl Session {
             claims: self.state.claims.clone(), next_authority: self.state.next_authority.clone(), authority,
             closed: std::sync::atomic::AtomicBool::new(closed), jobs:RetainedOwnerGate::new(controlled(TessellationJobRegistry::default())), retirement:self.state.retirement.clone(),
         }) };
-        Box::new(SessionPort {authority:SessionCapture::owned(authority),anchor:self.capture(),retaining:RetainedOwnerGate::new(None),retain_receipt:Default::default(),cancel_receipt:Default::default()})
+        SessionPort {authority:SessionCapture::owned(authority),anchor:self.capture(),retaining:RetainedOwnerGate::new(None),retain_receipt:Default::default(),cancel_receipt:Default::default()}
     }
     /// 🚪️ Seals this original authority without extracting claims, jobs or family resources.
     pub fn begin_close(&self) {self.state.begin_close();}
@@ -1119,14 +1134,16 @@ pub fn begin_cancel(&self)->Result<(),ValueError>{
     let mut owner=self.tessellation_jobs().try_lock().map_err(|_|ownership_busy())?;let registry=owner.original_mut().ok_or_else(ownership_busy)?;
     if registry.cancellation.is_none(){registry.cancellation=Some(TessellationCancellation {slot:0});}Ok(())
 }
-pub fn cancel_terminal_is_empty(&self)->bool{self.tessellation_jobs().try_lock().is_ok_and(|owner|owner.original().is_some_and(|registry|registry.cancellation.is_none()&&registry.closing.is_none())||owner.terminal_is_empty())}
+pub fn cancel_terminal_is_empty(&self)->bool{self.tessellation_jobs().try_lock().is_ok_and(|owner|owner.original().is_some_and(|registry|registry.cancellation.is_none()&&registry.closing.is_none()&&registry.admission_closing.is_none())||owner.terminal_is_empty())}
 fn cancellation_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
     let owner=self.tessellation_jobs().try_lock().map_err(|_|ownership_busy())?;let registry=owner.original().ok_or_else(ownership_busy)?;
     Self::cancellation_registry_demands(registry,copy)
 }
 fn cancellation_registry_demands(registry:&TessellationJobRegistry,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
-    if let Some(closing)=&registry.closing{return Ok(semio_framework_value::RetirementDemand {copy_bytes:closing.next_copy_byte_demand()?,capacity_bytes:closing.next_capacity_byte_demand(copy)?,release_bytes:closing.next_release_byte_demand()?,depth:closing.next_depth_demand()?});}
+    if let Some(closing)=&registry.admission_closing{return closing.selected_demand(copy);}
+    if let Some(closing)=&registry.closing{return closing.selected_demand(copy);}
     let Some(cancellation)=&registry.cancellation else{return Ok(Default::default());};
+    if registry.admission.is_some(){return Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()});}
     Ok(semio_framework_value::RetirementDemand {depth:registry.jobs.next_extract_slot_depth_demand(cancellation.slot)?.max(1),..Default::default()})
 }
 pub fn next_cancel_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.cancellation_demands(0)?.copy_bytes)}
@@ -1139,10 +1156,12 @@ pub fn cancel_step(&self,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProg
 }
 fn cancel_step_retained(&self,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->Result<RetainedCloneStep,ValueError>{
     let mut owner=self.tessellation_jobs().try_lock().map_err(|_|ownership_busy())?;let registry=owner.original_mut().ok_or_else(ownership_busy)?;
+    if let Some(closing)=&mut registry.admission_closing{let result=closing.step(grant);*receipt=closing.step_progress();let step=result?;if closing.terminal_is_empty(){registry.admission_closing=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
     if let Some(closing)=&mut registry.closing{let result=closing.step(grant);*receipt=closing.step_progress();let step=result?;if closing.terminal_is_empty(){registry.closing=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
     let demand=Self::cancellation_registry_demands(registry,grant.maximum_copy_bytes)?;
     if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(ownership_progress());}
     let Some(cancellation)=&mut registry.cancellation else{return Ok(RetainedCloneStep::Complete(Default::default()));};
+    if let Some(mut original)=registry.admission.take(){original.cancelled=true;match ControlledRetirement::new(original){Ok(closing)=>registry.admission_closing=Some(closing),Err((error,original))=>{registry.admission=Some(original);return Err(error);}}return Ok(ownership_advance());}
     if cancellation.slot>=registry.jobs.slot_count(){registry.cancellation=None;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress {copied_items:1,..Default::default()}));}
     let slot=cancellation.slot;cancellation.slot+=1;
     if let Some((_,retained))=registry.jobs.slot_entry_mut(slot){retained.job.cancel();retained.retired=true;}
@@ -1188,7 +1207,7 @@ fn retire_tessellations_cold(&self)->Result<(),String> {
 pub fn tessellation_progress(&self,handle:&str,tolerance:f64)->Option<(usize,usize,&'static str)> {
     let owner=self.tessellation_jobs().try_lock().ok()?;
     let registry=owner.original()?;
-    let retained=registry.jobs.get(&(handle.to_string(),tolerance.to_bits()))?;
+    let retained=registry.jobs.iter().filter(|(key,_)|key.0==handle&&key.1==tolerance.to_bits()).max_by_key(|(_,row)|row.last_step).map(|(_,row)|row)?;
     if retained.retired {return None;}
     let progress=retained.job.progress();
     Some((progress.units_done.saturating_add(if retained.validated {retained.validation_units}else {0}),progress.units_total.saturating_add(retained.validation_units),if retained.validated {progress.phase.tag()}else {"validating"}))
@@ -1196,7 +1215,7 @@ pub fn tessellation_progress(&self,handle:&str,tolerance:f64)->Option<(usize,usi
 fn with_cached_mesh_at_or_finer<R>(&self, handle: &str, tolerance: f64, read: impl FnOnce(&semio_framework::MeshData) -> R) -> Option<R> {
     if self.is_closed() { return None; }
     let cache = self.mesh_cache().try_lock().ok()?;
-    if let Some(exact) = cache.get(&(handle.to_string(), tolerance.to_bits())) {
+    if let Some(exact) = cache.iter().find(|(key,_)|key.0==handle&&key.1==tolerance.to_bits()).map(|(_,mesh)|mesh) {
         if exact.valid {return Some(read(&exact.mesh));}
     }
     let mut best: Option<(f64, &semio_framework::MeshData)> = None;
@@ -1223,6 +1242,9 @@ pub fn cached_mesh_at_or_finer(&self, handle: &str, tolerance: f64) -> Option<se
 pub fn cached_mesh_payload_bytes(&self, handle: &str, tolerance: f64) -> usize {
     self.with_cached_mesh_at_or_finer(handle, tolerance, mesh_payload_bytes).unwrap_or(0)
 }
+fn tessellation_work_units(&self,identity:semio_framework_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64)->usize {
+    self.tessellation_jobs().try_lock().ok().and_then(|owner|owner.original().and_then(|registry|registry.jobs.iter().find(|(key,_)|key.0==handle&&key.1==tolerance.to_bits()&&key.2==identity.operation&&key.3==identity.generation).map(|(_,row)|row.source_units+row.job.progress().units_done+if row.validated{row.validation_units}else{0}))).unwrap_or(0)
+}
 pub fn tessellate_step(&self, handle: &str, tolerance: f64, budget: usize) -> TessellationStepOutcome {
     if self.is_closed() { return TessellationStepOutcome::Failed { message: "geometry.session-closed".into() }; }
     let mut claims = self.state.claims.try_lock().expect("geometry claims");
@@ -1231,7 +1253,7 @@ pub fn tessellate_step(&self, handle: &str, tolerance: f64, budget: usize) -> Te
     if let Some(mesh) = self.cached_mesh_at_or_finer(handle, tolerance) {
         return TessellationStepOutcome::Ready { units_total: 0, faces_total: 0, mesh };
     }
-    let key = (handle.to_string(), tolerance.to_bits());
+    let key = (handle.to_string(), tolerance.to_bits(),0,0);
     let Ok(guard) = self.kernel().try_lock() else {
         return TessellationStepOutcome::Failed { message: "brep kernel owner busy".to_string() };
     };
@@ -1249,45 +1271,48 @@ pub fn tessellate_step(&self, handle: &str, tolerance: f64, budget: usize) -> Te
         if registry.jobs.len()>=TESSELLATION_JOB_CAPACITY {return TessellationStepOutcome::Failed {message:"tessellation retirement admission is required before another retained job".into()};}
         let clock = registry.clock;
         let validation_units=usize::from(matches!(guard.kind_sync(&geometry),Ok(GeometryKind::Solid|GeometryKind::Shell|GeometryKind::Compound)));
-        registry.jobs.insert(key.clone(),RetainedTessellation {validation_units,validated:validation_units==0,job,last_step:clock,retired:false,output:None,previous_mesh:None});
+        registry.jobs.insert(key.clone(),RetainedTessellation {identity:semio_framework_os_flow::geometry::GeometryWorkIdentity{operation:0,generation:0},source:0,length:0,source_units:0,geometry:None,admission_claim:String::new(),validation_units,validation:(validation_units!=0).then(||semio_framework_3d_brep_queries::validation::BodyValidationJob::new(guard.tessellation_body())),validated:validation_units==0,job,last_step:clock,retired:false,output:None,previous_mesh:None});
     }
-    registry.clock += 1;
-    let clock = registry.clock;
-    let Some(retained) = registry.jobs.get_mut(&key) else {
-        return TessellationStepOutcome::Failed { message: "tessellation job vanished between admission and step".to_string() };
-    };
-    retained.last_step = clock;
+    registry.clock += 1;let clock=registry.clock;
+    let retained=registry.jobs.get_mut(&key).expect("original admitted tessellation row");retained.last_step=clock;
+    let outcome=self.step_tessellation_row(&guard,&key,retained,Some(&geometry),budget);
+    if !matches!(outcome,TessellationStepOutcome::Working{..}){registry.retire_slot=0;}
+    outcome
+}
+fn step_tessellation_row(&self,guard:&Brep,key:&TessellationJobKey,retained:&mut RetainedTessellation,geometry:Option<&GeometryHandle>,budget:usize)->TessellationStepOutcome{
+    let Some(geometry)=geometry.or(retained.geometry.as_ref())else{return TessellationStepOutcome::Failed{message:"original tessellation row has no retained geometry source".into()};};
     let mut remaining=budget;
     if !retained.validated {
-        if remaining==0 {return TessellationStepOutcome::Working {units_done:0,units_total:retained.job.progress().units_total.saturating_add(1),faces_done:0,faces_total:0,phase:"validating"};}
-        if let Err(issues)=guard.validate_gate_sync(&geometry) {
-            retained.job.cancel();retained.retired=true;registry.retire_slot=0;
+        if remaining==0 {return TessellationStepOutcome::Working {units_done:retained.source_units,units_total:retained.job.progress().units_total.saturating_add(retained.source_units).saturating_add(1),faces_done:0,faces_total:0,phase:"validating"};}
+        if let Err(issues)=guard.validate_gate_sync(geometry) {
+            retained.job.cancel();retained.retired=true;
             return TessellationStepOutcome::Invalid {issues:issues.into_iter().map(|issue|PreviewDiagnostic {entity:issue.entity,code:issue.code.to_string(),message:issue.message}).collect()};
         }
         retained.validated=true;remaining-=1;
     }
     let validation_units=retained.validation_units;
-    let step = guard.step_tessellation_job_sync(&geometry,&mut retained.job,remaining);
+    let step = guard.step_tessellation_job_sync(geometry,&mut retained.job,remaining);
     match step {
         Err(error) => {
-            retained.job.cancel();retained.retired=true;registry.retire_slot=0;
+            retained.job.cancel();retained.retired=true;
             TessellationStepOutcome::Failed { message: error.to_string() }
         }
-        Ok(TessellationStep::Working(progress)) => TessellationStepOutcome::Working { units_done:progress.units_done.saturating_add(validation_units),units_total:progress.units_total.saturating_add(validation_units), faces_done: progress.faces_done, faces_total: progress.faces_total, phase: progress.phase.tag() },
+        Ok(TessellationStep::Working(progress)) => TessellationStepOutcome::Working { units_done:progress.units_done.saturating_add(validation_units).saturating_add(retained.source_units),units_total:progress.units_total.saturating_add(validation_units).saturating_add(retained.source_units), faces_done: progress.faces_done, faces_total: progress.faces_total, phase: progress.phase.tag() },
         Ok(TessellationStep::Cancelled(_)) => {
-            retained.job.cancel();retained.retired=true;registry.retire_slot=0;
+            retained.job.cancel();retained.retired=true;
             TessellationStepOutcome::Cancelled
         }
         Ok(TessellationStep::Done(progress)) => {
-            retained.retired=true;registry.retire_slot=0;
+            retained.retired=true;
             let Some((transfer,_report))=retained.job.take_mesh() else {return TessellationStepOutcome::Failed {message:"finished tessellation job produced no mesh".into()};};
             retained.output=Some(transfer);
             let mesh=match semio_framework_3d_brep_engine::mesh_data_from_mesh_transfer(retained.output.as_ref().unwrap()) {Ok(mesh)=>mesh,Err(error)=>return TessellationStepOutcome::Failed {message:error.to_string()}};
-            if let Ok(mut cache)=self.mesh_cache().try_lock() {retained.previous_mesh=cache.insert(key,CachedMesh {mesh:mesh.clone(),valid:true});}
-            TessellationStepOutcome::Ready { mesh, units_total:progress.units_total.saturating_add(validation_units),faces_total:progress.faces_total }
+            if let Ok(mut cache)=self.mesh_cache().try_lock() {retained.previous_mesh=cache.insert((key.0.clone(),key.1),CachedMesh {mesh:mesh.clone(),valid:true});}
+            TessellationStepOutcome::Ready { mesh, units_total:progress.units_total.saturating_add(validation_units).saturating_add(retained.source_units),faces_total:progress.faces_total }
         }
     }
 }
+
 pub fn tessellate_geometry(&self, handle: &str, tolerance: f64) -> Result<semio_framework::MeshData, String> {
     self.retire_tessellations_cold()?;
     loop {
@@ -1647,30 +1672,10 @@ impl semio_framework_os_flow::geometry::GeometryPort for SessionPort {
     fn next_retain_depth_demand(&self)->Result<usize,ValueError>{self.retained_demand(0).map(|demand|demand.depth)}
     fn retain_step_progress(&self)->RetainedCloneProgress{self.retain_receipt}
     fn retain_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.retain_receipt=Default::default();let Some(owner)=self.retaining.get_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()));};let result=owner.step(self.authority.session.as_ref().ok_or_else(ownership_busy)?,grant);self.retain_receipt=owner.normal_step_progress();let step=result?;if owner.terminal_is_empty(){*self.retaining.get_mut()=None;Ok(RetainedCloneStep::Complete(step.progress()))}else{Ok(RetainedCloneStep::Progress(step.progress()))}}
-    fn next_tessellate_copy_byte_demand(&self,handle:&str,tolerance:f64)->Result<usize,ValueError>{Ok(self.authority.session.as_ref().map_or(0,|session|session.cached_mesh_payload_bytes(handle,tolerance)))}
-    fn next_tessellate_capacity_byte_demand(&self,handle:&str,tolerance:f64,_copy:usize)->Result<usize,ValueError>{Ok(self.authority.session.as_ref().map_or(0,|session|session.cached_mesh_payload_bytes(handle,tolerance)))}
-    fn next_tessellate_release_byte_demand(&self,_handle:&str,_tolerance:f64)->Result<usize,ValueError>{Ok(0)}
-    fn next_tessellate_depth_demand(&self,_handle:&str,_tolerance:f64)->Result<usize,ValueError>{Ok(1)}
-    fn tessellate_step(&self,handle:&str,tolerance:f64,units:usize,grant:RetainedCloneGrant)->Result<(semio_framework_os_flow::geometry::GeometryStep,RetainedCloneProgress),ValueError> {
-        use semio_framework_os_flow::geometry::GeometryStep;
-        let awaiting=||(GeometryStep::Working {units_done:0,units_total:0,phase:"awaiting-grant".into()},RetainedCloneProgress::default());
-        let Some(authority)=self.authority.session.as_ref() else {return Ok((GeometryStep::Failed("geometry session is closed".into()),RetainedCloneProgress::default()))};
-        if grant.maximum_items==0||grant.maximum_depth==0 {return Ok(awaiting());}
-        let fits=|bytes:usize|bytes<=grant.maximum_copy_bytes&&bytes<=grant.maximum_capacity_bytes;
-        if !fits(authority.cached_mesh_payload_bytes(handle,tolerance)) {return Ok(awaiting());}
-        let step=match authority.tessellate_step(handle,tolerance,units) {
-            TessellationStepOutcome::Working {units_done,units_total,phase,..}=>GeometryStep::Working {units_done,units_total,phase:phase.into()},
-            TessellationStepOutcome::Ready {mesh,..}=>{
-                let bytes=mesh_payload_bytes(&mesh);
-                if !fits(bytes) {return Ok(awaiting());}
-                return Ok((GeometryStep::Ready(mesh),RetainedCloneProgress {copied_items:1,copied_bytes:bytes,retained_capacity_bytes:bytes,released_bytes:0}));
-            }
-            TessellationStepOutcome::Cancelled=>GeometryStep::Cancelled,
-            TessellationStepOutcome::Failed {message}=>GeometryStep::Failed(message),
-            TessellationStepOutcome::Invalid {issues}=>GeometryStep::Failed(issues.into_iter().map(|issue|issue.message).collect::<Vec<_>>().join("; ")),
-        };
-        Ok((step,RetainedCloneProgress {copied_items:1,..Default::default()}))
-    }
+    fn tessellation_demands(&self,identity:semio_framework_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.authority.session.as_ref().ok_or_else(ownership_busy)?.tessellation_demands(identity,handle,tolerance,copy)}
+    fn tessellate_step(&self,identity:semio_framework_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,grant:RetainedCloneGrant)->Result<(semio_framework_os_flow::geometry::GeometryStep,semio_framework_os_flow::geometry::GeometryWorkProgress),semio_framework_os_flow::geometry::GeometryWorkFailure>{self.authority.session.as_ref().ok_or_else(ownership_busy).map_err(|primary|semio_framework_os_flow::geometry::GeometryWorkFailure::new(primary,0))?.tessellate_step_funded(identity,handle,tolerance,units,grant)}
+    fn cancel_tessellation_demands(&self,identity:semio_framework_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.authority.session.as_ref().ok_or_else(ownership_busy)?.cancel_tessellation_demands(identity,handle,tolerance,copy)}
+    fn cancel_tessellation_step(&self,identity:semio_framework_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,grant:RetainedCloneGrant)->Result<(RetainedCloneStep,semio_framework_os_flow::geometry::GeometryWorkProgress),semio_framework_os_flow::geometry::GeometryWorkFailure>{self.authority.session.as_ref().ok_or_else(ownership_busy).map_err(|primary|semio_framework_os_flow::geometry::GeometryWorkFailure::new(primary,0))?.cancel_tessellation_step(identity,handle,tolerance,units,grant)}
     fn dispose(&self,handle:&str)->Result<(),String> {self.authority.session.as_ref().ok_or("geometry session is closed")?.dispose_geometry(handle)}
     fn begin_cancel(&mut self)->Result<(),ValueError>{self.authority.session.as_ref().ok_or_else(ownership_busy)?.begin_cancel()?;if let Some(owner)=self.retaining.get_mut(){owner.cancel();}Ok(())}
     fn cancel_terminal_is_empty(&self)->bool{self.retain_terminal_is_empty()&&self.authority.session.as_ref().is_none_or(Session::cancel_terminal_is_empty)}
@@ -1727,9 +1732,9 @@ mod browser {
 #[cfg(test)]
 #[test]
 fn retired_analytic_mesh_metadata_obeys_exact_byte_grants() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
     let grants=&fixture["retirement"];let count=grants["labels"].as_u64().unwrap() as usize;let label_bytes=grants["labelBytes"].as_u64().unwrap() as usize;
-    let mesh=semio_framework::MeshData {component_references:HistoryFoldIndex::from_iter([(String::from("face"),vec!["x".repeat(label_bytes);count])]),..Default::default()};
+    let mesh=semio_framework::MeshData {component_references:semio_framework_mesh_engine::ComponentReferenceTable::from_entries(vec![(String::from("face"),vec!["x".repeat(label_bytes);count])]),..Default::default()};
     let mut owner=controlled(mesh);let mut released=0;let mut turns=0;
     while !owner.terminal_is_empty() {
         let copy=owner.next_copy_byte_demand().unwrap();let release=owner.next_release_byte_demand().unwrap();let depth=owner.next_depth_demand().unwrap();
@@ -1758,7 +1763,7 @@ mod physical_session_custody {
     pub(super) fn observe<T>(work:impl FnOnce()->T)->(T,(usize,usize)) {EVENTS.with(|events|events.set((true,0,0)));let value=work();let counts=EVENTS.with(|events|{let(_,born,freed)=events.replace((false,0,0));(born,freed)});(value,counts)}
     #[test]
     fn original_session_capture_keeps_same_allocation_until_full_typed_grants() {
-        let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("./🧪️tests/🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
         let row=&fixture["box"];let custody=&fixture["physicalCustody"];
         let (mut capture,factory)=observe(|| {
             let source=Session::new();let handle=source.with_kernel(|kernel|kernel.box_prim_sync(row["width"].as_f64().unwrap(),row["depth"].as_f64().unwrap(),row["height"].as_f64().unwrap()).map_err(|error|map_kernel_error(&error))).unwrap();
@@ -1792,3 +1797,7 @@ mod physical_session_custody {
         println!("[DEBUG] Original Session actualWeakPin=true warmedPartialMesh=true retainedSource={retained} admittedBirth={born} physicalRelease={freed} repeatedEightByteRefusals={refusals} turns={turns} separateFinalShell={final_shell}");
     }
 }
+
+#[cfg(test)]
+#[path="🧪️tests/⏱️tessellation/🦀️.rs"]
+mod original_tessellation_authority_tests;

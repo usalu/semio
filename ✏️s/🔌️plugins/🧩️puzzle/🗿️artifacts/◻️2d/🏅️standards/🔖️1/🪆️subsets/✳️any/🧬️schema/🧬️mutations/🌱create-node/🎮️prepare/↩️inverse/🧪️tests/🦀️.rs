@@ -56,7 +56,7 @@ fn retire(inverse: PagedList<Puzzle2dMutation, {usize::MAX}>) {
 #[test]
 fn history_edit_puzzle2d_owned_create_inverse_preserves_unconditional_literal_intent_and_controlled_cancellation() {
     assert!(size_of::<Puzzle2dCreateNodeInverseCursor>() <= 4096);
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-node/🎮️prepare/🔣️.json")).unwrap();
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap(); match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let mut count = 0;
     for case in corpus["cases"].as_array().unwrap() {

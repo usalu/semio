@@ -3,10 +3,10 @@ import {Database} from "bun:sqlite";
 import {existsSync} from "node:fs";
 import {resolve} from "node:path";
 import {createRequire} from "node:module";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "../🧪️tests/🧫️fixtures/🔣️.json";
 import contract from "../../../../../../🌱️value/♻️retirement/🧬️contract/🧬️schema/🔣️.json";
 import ordered from "../../../../../../🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json";
-import originalLimits from "../../../../🧫️fixtures/🫳️read-limits.json";
+import originalLimits from "../../../../🧪️tests/🧫️fixtures/🫳️read-limits.json";
 
 test("complete source container limits match an independent relational JSON tree",()=>{
   expect(existsSync(resolve(import.meta.dir,"../🧬️schema/🔣️.json"))).toBe(false);

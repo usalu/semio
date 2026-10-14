@@ -1,3 +1,4 @@
+import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
 import type { HistoryPatch, PluginRegistryEntry, UiNodeRecord } from "@semio-tech/framework";
 import type { LocalInteractionCapture } from "@semio-tech/framework-replication";
 import type { AppChannelClient } from "@semio-tech/framework-os";
@@ -35,7 +36,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
   const { testState, leftoverShellInvocationFrames, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, forgetInstanceForRecovery, onPluginInstancesLost, PLUGIN_ACTOR_INSTANCE_LOST_FAULT, rememberInstanceForRecovery, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isPluginInstanceRetiredV1, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SURFACE_RENDER_FAULT, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation } = dependencies;
   const { describe, expect, it, vi } = vitest;
   it("validates independent job completion ownership and latest render authority", async () => {
-    const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/🏁️job-completion-ownership/🔣️.json");
+    const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🏁️job-completion-ownership/🔣️.json");
     for (const row of fixture.cases) {
       const owners = new Map<string, number>();
       const current = new Map<number, string>();
@@ -237,7 +238,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
   });
   describe("reserved refresh sections", () => {
     it("mounts one retained surface per requested section, keyed by the neutral fixture's reserved body key, carrying the unnarrowed view", async () => {
-      const { default: reserved } = await import("../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🔬️ui-refresh-section/🔣️.json");
+      const { default: reserved } = await import("../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🔬️ui-refresh-section/🔣️.json");
       const viewState = {
         locale: "de",
         terminology: "reuse",
@@ -258,7 +259,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     });
 
     it("projects a section's chunked text carrier back into the shell's own measures map", async () => {
-      const { default: reserved } = await import("../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🔬️ui-refresh-section/🔣️.json");
+      const { default: reserved } = await import("../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🔬️ui-refresh-section/🔣️.json");
       const measures = { "puzzle3d-main-top": [{ kind: "slider", id: "puzzle3d-fill-count", value: 12, min: 1, max: 64, step: 1, onChange: { controller: "fill", action: "setCount" } }] };
       const payload = JSON.stringify(measures);
       const chunks = [payload.slice(0, 17), payload.slice(17)];
@@ -292,7 +293,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     });
 
     it("reassembles a PACKED carrier leaf — value plus every sorted dataAttributes slice — against the neutral paged-text-carrier fixture", async () => {
-      const { default: carrier } = await import("../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🔬️paged-text-carrier/🔣️.json");
+      const { default: carrier } = await import("../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🔬️paged-text-carrier/🔣️.json");
       expect(carrier.slices.join("")).toBe(carrier.payload);
       expect(carrier.payload.length).toBe(carrier.payloadBytes);
       expect(carrier.payloadBytes).toBeGreaterThan(carrier.textMaxBytes);
@@ -316,7 +317,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     });
 
     it("raises a typed fault naming the reserved section and its producer when a carrier's payload is not valid JSON", async () => {
-      const { default: carrier } = await import("../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🔬️paged-text-carrier/🔣️.json");
+      const { default: carrier } = await import("../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🔬️paged-text-carrier/🔣️.json");
       const { surface } = applyUiPatchToRetained(null, {
         surface: carrier.rootKey, revision: 1, baseRevision: 0,
         ops: [
@@ -339,14 +340,14 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     });
   });
   it("RendererResidentComposition never replaces a closing composition ledger", async () => {
-      const { execFileSync } = await import("node:child_process"); const { fileURLToPath, pathToFileURL } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const { default: fixture } = await import("../../💾️resident/🧫️fixtures/🔣️.json"); const moduleUrl = pathToFileURL(resolve(dirname(fileURLToPath(source.url)), "../../💾️resident/🟦️.ts")).href;
+      const { execFileSync } = await import("node:child_process"); const { fileURLToPath, pathToFileURL } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const { default: fixture } = await import("../../💾️resident/🧪️tests/🧫️fixtures/🔣️.json"); const moduleUrl = pathToFileURL(resolve(dirname(fileURLToPath(source.url)), "../../💾️resident/🟦️.ts")).href;
       const childSource = `const { rendererResidentLedger } = await import(process.argv[1]); const first = rendererResidentLedger(); first.beginClose(); const result = first.closeStep({maxItems:1,maxBytes:256}); const second = rendererResidentLedger(); const admission = second.prepareAdmission({},'data',{maxItems:1,maxBytes:296}); process.stdout.write(JSON.stringify({same:first===second,terminal:first.terminalIsEmpty(),result:result.kind,admission:admission.kind}));`;
       const actual = JSON.parse(execFileSync("node", ["--experimental-transform-types", "--input-type=module", "--eval", childSource, moduleUrl], { encoding: "utf8", timeout: 10000 }));
       expect(actual).toEqual({ same: !fixture.replacesClosingLedger, terminal: true, result: "complete", admission: "rejected" });
     });
   
     it("RendererResidentComposition shares one exact ledger and preserves both consumers' charges", async () => {
-      const { rendererResidentLedger } = await import("../../💾️resident/🟦️.ts"); const { default: fixture } = await import("../../💾️resident/🧫️fixtures/🔣️.json");
+      const { rendererResidentLedger } = await import("../../💾️resident/🟦️.ts"); const { default: fixture } = await import("../../💾️resident/🧪️tests/🧫️fixtures/🔣️.json");
       const { default: rendererModule } = await import("../../../🧬️schema/🔣️.json"); const { default: resident } = await import("../../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
       expect(new Ajv({ strict: true }).addSchema(resident).addSchema(rendererModule).getSchema(`${rendererModule.$id}#/$defs/RendererResidentPolicyV1`)!(fixture.capacity)).toBe(true);
       const react = rendererResidentLedger(); const wgpu = rendererResidentLedger(); expect(react === wgpu).toBe(fixture.sameLedger); expect(react.capacity).toEqual(fixture.capacity);
@@ -374,7 +375,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
   
       it("preserves nested UTF-8 payloads and exact u64 ids in both renderer decoders", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json");
+        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json");
         const { wireEffectToFriendly: sharedDecode } = await import("../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts");
         const requestJson = JSON.stringify({ ...fixture.request, label: "Hölzer 日本語" });
         for (const id of fixture.requestIds) {
@@ -389,7 +390,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
 
     describe("icon export wire decoding", () => {
       it("preserves every packed export item in both renderer doors and rejects malformed envelopes", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🖼️IconRenderHost/🧫️fixtures/📡️export-wire/🔣️.json");
+        const { default: fixture } = await import("../../🧱️elements/🖼️IconRenderHost/🧪️tests/🧫️fixtures/📡️export-wire/🔣️.json");
         const { default: schema } = await import("../../🧱️elements/🖼️IconRenderHost/🧬️schema/📡️export-wire/🔣️.json");
         const { default: Ajv2020 } = await import("ajv/dist/2020");
             const { wireEffectToFriendly: sharedDecode } = await import("../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts");
@@ -407,7 +408,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
 
     describe("host effect address decoding", () => {
       it("reads every request-carrying effect out of its nested WIT params record", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/🎯️host-effect-address.json");
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/🎯️host-effect-address.json");
         const nested = (tag: string, req: number, params: Record<string, unknown>) => ({ tag, val: { req, params } });
         const { req: dispatchReq, ...dispatchParams } = fixture.dispatchAction;
         expect(wireEffectToFriendly(nested("dispatch-action", dispatchReq, dispatchParams))).toEqual({ dispatchAction: { req: dispatchReq, action: fixture.dispatchAction.action, args: undefined, delayMs: fixture.dispatchAction.delayMs } });
@@ -420,13 +421,13 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
 
       it("drops a dispatch-action whose action id never survived the boundary", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/🎯️host-effect-address.json");
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/🎯️host-effect-address.json");
         expect(wireEffectToFriendly({ tag: "dispatch-action", val: { ...fixture.dispatchAction } })).toBeNull();
         expect(wireEffectToFriendly({ tag: "dispatch-action", val: { req: fixture.dispatchAction.req, params: { action: "", delayMs: 0 } } })).toBeNull();
       });
 
       it("refuses an unaddressed invocation with a typed renderer fault naming its window kind", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/🎯️host-effect-address.json");
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/🎯️host-effect-address.json");
         const address = { pluginId: "procedural", appId: fixture.spawnPluginInstance.appId, windowKindId: fixture.windowKindId, actionId: "" };
         let thrown: unknown;
         try {
@@ -520,7 +521,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       }
   
       it("settles the exact completion and returns frames and host effects", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json");
+        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json");
         const { encodeAppFrame } = await import("@semio-tech/framework-os");
         const bytes = (value: unknown) => Array.from(encodePackValue(value));
         let instance = 0;
@@ -550,7 +551,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       // plugin-authored isolated job was started zero times and stepped zero times, silently. That is
       // what left puzzle 3d's fill planning frozen at zero in the browser.
       it("publishes isolated job completion without requiring another user command", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/🏁️job-completion-publication/🔣️.json");
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/🏁️job-completion-publication/🔣️.json");
                 for (const row of fixture.cases) {
           let instance = 0;
           const submitted: ShardEventEnvelope[][] = [];
@@ -597,7 +598,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
 
       it("starts an isolated job, steps it to its terminal and feeds job-completed back into the actor", async () => {
         const { encodeAppFrame } = await import("@semio-tech/framework-os");
-        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json");
+        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json");
         const bytes = (value: unknown) => Array.from(encodePackValue(value));
         const started: Array<{ job: bigint; kind: string; input: readonly number[] }> = [];
         const stepped: bigint[] = [];
@@ -642,7 +643,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       // only from the guest.
       it("bounds a job per slice and never ends one the guest is still running", async () => {
         const { encodeAppFrame } = await import("@semio-tech/framework-os");
-        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json");
+        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json");
         const bytes = (value: unknown) => Array.from(encodePackValue(value));
         const legacyHostLifetimeCap = 1 << 16;
         const slicesBeforeTerminal = legacyHostLifetimeCap + 1_024;
@@ -690,7 +691,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       // as the job's `job-completed` failure, and the row leaves with the drive.
       it("lists a driven job in the task-manager ledger and routes a cancel to the guest's own cancel-job", async () => {
         const { encodeAppFrame } = await import("@semio-tech/framework-os");
-        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json");
+        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json");
         const bytes = (value: unknown) => Array.from(encodePackValue(value));
         resetSpawnedJobsForTestsV1();
         const cancelled: bigint[] = [];
@@ -736,7 +737,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
 
       it("reconciles failed actual actor bindings without giving a successor stale control", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧪️tests/🧫️fixtures/🔣️.json");
         const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts");
         for (const row of fixture.bindingRetirement) {
           const commands: string[] = [];
@@ -811,7 +812,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
   
       it("awaits actual actor handle disposal until its exact document retirement settles", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧪️tests/🧫️fixtures/🔣️.json");
         const { default: deepEqual } = await import("fast-deep-equal");
         const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts");
         let release!: () => void, entered!: () => void;
@@ -849,7 +850,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
 
       it("awaits actual actor pending creation without opening an orphan after disposal", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧪️tests/🧫️fixtures/🔣️.json");
         const { default: deepEqual } = await import("fast-deep-equal");
         for (const row of fixture.disposal.opening) {
           let release!: () => void, entered!: () => void, target = "";
@@ -893,7 +894,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
 
       it("rejects a framed completion fault without swallowing its structured fields", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json");
+        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json");
         const { encodeAppFrame } = await import("@semio-tech/framework-os");
         let instance = 0;
         await withRequester(async () => ({ uiPatches: [], effects: [{ tag: "send-message", val: { target: { tag: "shell", val: String(instance) }, payload: Array.from(encodeAppFrame({ Error: { in_reply_to: null, fault: Array.from(encodePackValue(fixture.fault)), report: [] } })) } }], nextWake: null, status: { tag: "idle" } }), async (handle, opened) => {
@@ -903,7 +904,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
   
       it("does not publish a late completion after its originating instance is destroyed", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json");
+        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json");
         const entered = Promise.withResolvers<void>();
         const result = Promise.withResolvers<WireTurnResult>();
         let turns = 0;
@@ -925,7 +926,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
   
       it("captures activation before queued completion and rejects a same-name replacement before dispatch", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json");
+        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json");
         let dispatched = 0;
         await withRequester(async () => { dispatched += 1; return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } }; }, async (handle, instance, activation) => {
           const entered = Promise.withResolvers<void>();
@@ -946,7 +947,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
   
       it("refuses publication after in-flight activation replacement without running a new continuation", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json");
+        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json");
         const entered = Promise.withResolvers<void>();
         const release = Promise.withResolvers<WireTurnResult>();
         let dispatched = 0;
@@ -965,7 +966,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
   
       it("keeps the original activation lease through every completion continuation", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json");
+        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json");
         const entered = Promise.withResolvers<void>();
         const release = Promise.withResolvers<WireTurnResult>();
         let dispatched = 0;
@@ -988,7 +989,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
   
       it("rejects a completion captured before evaluation when that activation is later replaced", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json");
+        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json");
         let dispatched = 0;
         await withRequester(async () => { dispatched += 1; return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } }; }, async (handle, instance, activation) => {
           const completion = handle.captureExtensionCompletion!(instance, BigInt(fixture.requestId));
@@ -1000,7 +1001,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
   
       it("claims one completion submission per captured request", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json");
+        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json");
         let dispatched = 0;
         await withRequester(async () => { dispatched += 1; return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } }; }, async (handle, instance) => {
           const completion = handle.captureExtensionCompletion!(instance, BigInt(fixture.requestId));
@@ -1035,14 +1036,14 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
   
     describe("instance-open retained UI lifecycle", () => {
       it("preserves document effects returned by a refresh even before any surface is retained", async () => {
-        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🔣️.json");
         const response = retainedUiRefreshResponse(7, { viewState: {} }, new Map(), [{ tag: "load-document", val: { docPack: fixture.effects.loadDocument.pack, spr: fixture.effects.loadDocument.spr } }]);
         expect(response.requestedEffects).toEqual([{ loadDocument: fixture.effects.loadDocument }]);
       });
   
       it("reports a refresh fault frame instead of returning an unchanged surface", async () => {
         const { encodeAppFrame } = await import("@semio-tech/framework-os");
-        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🔣️.json");
         const payload = encodeAppFrame({ Error: { in_reply_to: null, fault: Array.from(encodeFaultBytes(fixture.wire.fault)), report: [] } });
         expect(() => retainedUiRefreshResponse(7, { viewState: {} }, new Map(), [{ tag: "send-message", val: { target: { tag: "shell", val: "7" }, payload } }])).toThrow(fixture.wire.fault);
       });
@@ -1054,7 +1055,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
        * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The report stays loud; the turn keeps its effects. */
       it("scopes a surface-render fault to its surface and keeps the same turn's other effects", async () => {
         const { encodeAppFrame } = await import("@semio-tech/framework-os");
-        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🔣️.json");
         const payload = encodeAppFrame({ Error: { in_reply_to: null, fault: Array.from(encodeFaultBytes(SURFACE_RENDER_FAULT)), report: [] } });
         const reported = vi.spyOn(console, "error").mockImplementation(() => {});
         try {
@@ -1070,7 +1071,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
 
       it("refreshes window and panel surfaces from the language-agnostic ownership cases", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/🔄️surface-refresh.json");
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/🔄️surface-refresh.json");
         for (const testCase of fixture.cases) {
           const bodyKeys = uiRefreshBodyKeys(testCase.request);
           expect(bodyKeys, testCase.name).toEqual(testCase.bodyKeys);
@@ -1657,7 +1658,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
 
     describe("PluginRuntime documentPack/transaction wire adapter", () => {
       it("keeps the exact channel subscribed through refused close and releases only that channel after retry", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/🔒️channel-close.json");
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/🔒️channel-close.json");
         const { produce } = await import("immer");
         const returned: number[] = [];
         let subscriptions = 0;
@@ -1685,7 +1686,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
   
       it("settles an old channel close without removing a replacement using the same numeric instance", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/🔒️channel-close.json");
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/🔒️channel-close.json");
         const returned: number[] = [];
         let subscriptions = 0;
         const closes: Array<() => void> = [];
@@ -1777,7 +1778,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         const { decodeAppCommand } = await import("@semio-tech/framework-os");
         const { readFile } = await import("node:fs/promises");
         const { URL: FileURL } = await import("node:url");
-        const fixture = JSON.parse(await readFile(new FileURL("../../../../../🔨️modules/📡️spr/🧵️channel/🧫️fixtures/🎬️media-export-wire/🔣️.json", source.url), "utf8"));
+        const fixture = JSON.parse(await readFile(new FileURL("../../../../📡️spr/🧵️channel/🧪️tests/🧫️fixtures/🎬️media-export-wire/🔣️.json", source.url), "utf8"));
         const authority = { app_instance_id: fixture.handle.appInstanceId, parent_document_id: fixture.handle.parentDocumentId, operation_id: BigInt(fixture.handle.operationId), base_revision: BigInt(fixture.handle.baseRevision), generation: BigInt(fixture.handle.generation) };
         const status = { handle: authority, state: "running" as const, applied_progress: 2n, checkpoint_available: true, mime_type: "audio/mpeg", total_bytes: 3n, detail: "" };
         const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
@@ -2000,12 +2001,12 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       }
   
       it("schedules captured lifecycle work through the original owner after operation revocation", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/⏱️lifecycle-scheduler.json");
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️lifecycle-scheduler.json");
         const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
         const { OwnedUiInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
         const sent: Array<{ kind: string; requestId: string; events?: readonly ShardEventEnvelope[] }> = [];
         const worker: ShardWorkerLike = { onmessage: null, onerror: null, postMessage(message) { sent.push(message as typeof sent[number]); }, terminate() {} };
-        const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
+        const client = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
         async function answer<T>(pending: Promise<T>, value: unknown): Promise<T> { await flushMicrotasks(8); const message = sent.at(-1)!; worker.onmessage!({ data: { kind: "result", requestId: message.requestId, ok: true, value } }); return pending; }
         await answer(client.activate(fixture.actor, "/fixture.js", [], DEFAULT_SHARD_BUDGET), undefined);
         const owner = client.captureInstanceLifecycle(fixture.actor, fixture.instance);
@@ -2041,13 +2042,13 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
   
       it("schedules captured lifecycle UI ACKs with their exact private source and successful submission receipt", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/⏱️lifecycle-scheduler.json");
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️lifecycle-scheduler.json");
         const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
         const { encodeActorUiPatchReceipt } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts");
         const { OwnedUiInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
         const sent: Array<{ kind: string; requestId: string; events?: readonly ShardEventEnvelope[] }> = [];
         const worker: ShardWorkerLike = { onmessage: null, onerror: null, postMessage(message) { sent.push(message as typeof sent[number]); }, terminate() {} };
-        const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
+        const client = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
         async function answer<T>(pending: Promise<T>, value: unknown): Promise<T> { await flushMicrotasks(8); worker.onmessage!({ data: { kind: "result", requestId: sent.at(-1)!.requestId, ok: true, value } }); return pending; }
         const plain = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
         const actorId = `${fixture.actor}-ui-ack`;
@@ -2093,7 +2094,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
 
       it("composes the production plugin runtime with one real UI owner through exact patch ACK and retirement", async () => {
         const { default: equal } = await import("fast-deep-equal");
-        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/⏱️lifecycle-scheduler.json");
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️lifecycle-scheduler.json");
         const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
         const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
         const sent: Array<{ readonly kind: string; readonly events: readonly string[] }> = [];
@@ -2136,7 +2137,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           },
           terminate() {},
         };
-        const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
+        const client = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
         testState.sharedShardClient = client;
         testState.sharedActivationRegistry = { registerManifest: () => {}, activate: async (_plugin: string, actorId: string) => client.activate(actorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET), touch: () => {}, cancel: (actorId: string) => client.dispose(actorId) } as unknown as ActivationRegistry;
         globalThis.fetch = stubFetch(async () => new Response(JSON.stringify({ manifest: { pluginId: "owned-ui", apps: [] } }), { headers: { "content-type": "application/json" } }));
@@ -2232,7 +2233,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
               queueMicrotask(() => worker.onmessage?.({ data: { kind: "result", requestId: message.requestId, ok: true, value } }));
             },
           };
-          const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
+          const client = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
           testState.sharedShardClient = client;
           testState.sharedActivationRegistry = { registerManifest: () => {}, activate: async (_plugin: string, actorId: string) => client.activate(actorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET), touch: () => {}, cancel: (actorId: string) => client.dispose(actorId) } as unknown as ActivationRegistry;
           globalThis.fetch = stubFetch(async () => new Response(JSON.stringify({ manifest: { pluginId: "ingress-census", apps: [] } }), { headers: { "content-type": "application/json" } }));
@@ -2262,7 +2263,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
 
 
       it("retries actual actor retirement with the original witness after final acknowledgement failure", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧪️tests/🧫️fixtures/🔣️.json");
         const { default: equal } = await import("fast-deep-equal");
         const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
         const { OwnedUiInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
@@ -2303,7 +2304,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
               queueMicrotask(() => worker.onmessage?.({ data: { kind: "result", requestId: message.requestId, ok: true, value } }));
             },
           };
-          const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
+          const client = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
           const captured = vi.spyOn(client, "captureInstanceLifecycle");
           const witnesses = vi.spyOn(OwnedUiInstance.prototype, "takeRetirementWitness");
           testState.sharedShardClient = client;
@@ -2338,7 +2339,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
 
       it("schedules captured lifecycle without silent eviction when either ingress fills the actor queue", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/⏱️lifecycle-scheduler.json");
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️lifecycle-scheduler.json");
         expect(fixture.mailbox.capacity).toBe(PLUGIN_TURN_MAILBOX_CAPACITY);
         for (const incoming of fixture.mailbox.overflow) {
           const actorId = `${fixture.actor}-capacity-${incoming}`;
@@ -2365,11 +2366,11 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         const { Buffer } = await import("node:buffer");
         const { default: Ajv } = await import("ajv");
         const { default: equal } = await import("fast-deep-equal");
-        const { default: settlement } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/📬️typed-operation-settlement.json");
+        const { default: settlement } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/📬️typed-operation-settlement.json");
         const { default: rendererModule } = await import("../../../🧬️schema/🔣️.json");
         const schema = { $ref: `${rendererModule.$id}#/$defs/PluginRuntimeTypedOperationSettlementV1` };
         expect(new Ajv({ strict: true }).addSchema(rendererModule).compile(schema)(settlement)).toBe(true);
-        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🔣️.json");
         const token = Buffer.alloc(25);
         token.writeUInt32LE(fixture.wire.receiver, 0);
         token.writeBigUInt64LE(BigInt(fixture.wire.operation), 4);
@@ -2399,7 +2400,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
   
       it("retires every result page one turn carried in a single acknowledgement crossing", async () => {
         const { Buffer } = await import("node:buffer");
-        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🔣️.json");
         const operations = 4;
         const tokenBytes = (operation: number): Buffer => {
           const token = Buffer.alloc(25);
@@ -2433,8 +2434,8 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       it("does not replay already acknowledged ingress publications during settlement", async () => {
         const { Buffer } = await import("node:buffer");
         const { default: equal } = await import("fast-deep-equal");
-        const { default: settlement } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/📬️typed-operation-settlement.json");
-        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧫️fixtures/🔣️.json");
+        const { default: settlement } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/📬️typed-operation-settlement.json");
+        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🔣️.json");
         const results: WireTurnResult[] = fixture.wire.lanes.map((lane, sequence) => {
           const header = Buffer.alloc(30);
           header.writeUInt32LE(fixture.wire.receiver, 0);
@@ -2461,7 +2462,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
   
       it("validates fixed result page authority and preserves document and download effects", async () => {
         const { Buffer } = await import("node:buffer");
-        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🔣️.json");
         const wire = (lane: number, text: string, receiver = fixture.wire.receiver): WireVariant => {
           const body = Buffer.alloc(30);
           body.writeUInt32LE(fixture.wire.receiver, 0);
@@ -2507,7 +2508,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
   
       it("routes a foreign typed-operation fault page to its own call and never to the observing call", async () => {
         const { Buffer } = await import("node:buffer");
-        const { default: routing } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/📬️typed-operation-routing.json");
+        const { default: routing } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/📬️typed-operation-routing.json");
         expect([TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_UNATTRIBUTED_FAULT, TYPED_OPERATION_PARK_EVICTION_FAULT]).toEqual([routing.capacity, routing.unattributedCode, routing.evictionCode]);
         const page = (operation: string, sequence: number, lane: number, text: string) => {
           const body = Buffer.alloc(30);
@@ -2544,7 +2545,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
 
       it("bounds parked typed-operation faults at a fixed capacity and surfaces the evicted oldest", async () => {
-        const { default: routing } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/📬️typed-operation-routing.json");
+        const { default: routing } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/📬️typed-operation-routing.json");
         const reported: { code: string; message: string }[] = [];
         const router = new TypedOperationRouter((code: string, message: string) => reported.push({ code, message }));
         const owner = router.open("owner");
@@ -2568,7 +2569,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
 
       it("keeps the command reply when publication supplies only an unsolicited UI scope", async () => {
-        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🔣️.json");
         const bytes = (value: unknown) => Array.from(encodePackValue(value));
         const frames = [
           { Invocation: { in_reply_to: 1, output: bytes({ operationId: fixture.wire.operation }), diagnostics: bytes([]), ui_scope: bytes({ kind: "none" }), history_patch: [], messages: [], mutations: [], inverse_group: [] } },
@@ -2660,7 +2661,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
 
       it("acknowledges each retained surface before requesting the next bounded publication", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/🔄️surface-refresh.json");
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/🔄️surface-refresh.json");
         const surfaces = fixture.acknowledgement.surfaces;
         const submitted: string[][] = [];
         await withFakeShardClient(
@@ -2689,7 +2690,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
   
       it("rejects an idle actor that did not publish a requested surface instead of retaining a loading placeholder", async () => {
-        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/🔄️surface-refresh.json");
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/🔄️surface-refresh.json");
         const { instance, requested, published, missing } = fixture.quiescent;
         await expect(settlePluginTurn(
           "idle-missing-surface#1",
@@ -3437,7 +3438,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
 
   it("bounds one command's drain by a ceiling derived from its own page count, never by a chosen number", async () => {
     const { commandIngressContinuationCeilingV1 } = dependencies;
-    const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/command-ingress-drain.json");
+    const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/command-ingress-drain.json");
     for (const row of fixture.ceilings) {
       expect(commandIngressContinuationCeilingV1(row.pages), row.id).toBe(row.ceiling);
       expect(commandIngressContinuationCeilingV1(row.pages), `${row.id} is the derivation, not a literal`).toBe(Math.max(1, row.pages) * fixture.turnsPerPage * fixture.continuationBatchSize);
@@ -3447,7 +3448,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
 
   it("calls a command unowned on the FIRST idle turn instead of spending a whole ceiling on it", async () => {
     const { commandIngressUnownedV1, commandIngressContinuationCeilingV1 } = dependencies;
-    const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/command-ingress-drain.json");
+    const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/command-ingress-drain.json");
     for (const row of fixture.unowned) {
       expect(commandIngressUnownedV1(row.ingress ?? undefined, row.actor ?? undefined), row.id).toBe(row.unowned);
     }
@@ -3540,7 +3541,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
 
   it("keeps reserved command ingress Interactive ahead of catalog Background and stamps a reply when none arrives", async () => {
     const { commandIngressLaneForActionV1, commandIngressNeedsReplyStampV1 } = dependencies;
-    const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/command-ingress-lane.json");
+    const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/command-ingress-lane.json");
     for (const row of fixture.lanes) {
       expect(commandIngressLaneForActionV1(row.actionId), row.actionId).toBe(row.lane);
     }
@@ -3551,7 +3552,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
 
 
   it("packs completion-result.fault the same way the guest decodes it", async () => {
-    const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧫️fixtures/extension-result-fault-pack.json");
+    const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/extension-result-fault-pack.json");
     const packed = encodePackValue(fixture.fault);
     expect(() => JSON.parse(new TextDecoder().decode(packed))).toThrow();
     const decoded = decodePackValue(packed) as { code: string; message: string };
@@ -3590,13 +3591,13 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     });
 
     it("names a foreign surface owner and a busy one apart, and answers whether a patch is still open", async () => {
-      const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/⏱️lifecycle-scheduler.json");
+      const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️lifecycle-scheduler.json");
       const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
       const { encodeActorUiPatchReceipt } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts");
       const { OwnedUiInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
       const sent: Array<{ kind: string; requestId: string; events?: readonly ShardEventEnvelope[] }> = [];
       const worker: ShardWorkerLike = { onmessage: null, onerror: null, postMessage(message) { sent.push(message as typeof sent[number]); }, terminate() {} };
-      const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
+      const client = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
       async function answer<T>(pending: Promise<T>, value: unknown): Promise<T> { await flushMicrotasks(8); worker.onmessage!({ data: { kind: "result", requestId: sent.at(-1)!.requestId, ok: true, value } }); return pending; }
       const plain = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
       const actorId = `${fixture.actor}-intake-rounds`;
@@ -3648,7 +3649,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     });
 
     it("installs a turn page that names one surface twice, in order, and leaves no surface wedged", async () => {
-      const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/⏱️lifecycle-scheduler.json");
+      const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️lifecycle-scheduler.json");
       const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
       const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
       const plain = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
@@ -3705,7 +3706,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         },
         terminate() {},
       };
-      const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
+      const client = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
       testState.sharedShardClient = client;
       testState.sharedActivationRegistry = { registerManifest: () => {}, activate: async (_plugin: string, actorId: string) => client.activate(actorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET), touch: () => {}, cancel: (actorId: string) => client.dispose(actorId) } as unknown as ActivationRegistry;
       globalThis.fetch = stubFetch(async () => new Response(JSON.stringify({ manifest: { pluginId: "intake-rounds", apps: [] } }), { headers: { "content-type": "application/json" } }));

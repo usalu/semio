@@ -14,7 +14,7 @@ type FrameRow = { readonly name: string; readonly spec: WorldProjectionSpec; rea
 type FrameLifecycleRow = { readonly name: string; readonly viewportOwned: boolean; readonly cameraNavigating: boolean; readonly hasProjectionSeed: boolean; readonly lockContentFrame: boolean; readonly projectionFrame: "content" | "preserveCamera"; readonly expectedMounted: boolean };
 type Fixture = { readonly renderParity: { readonly viewport: { readonly width: number; readonly height: number; readonly near: number; readonly far: number; readonly zoom: number }; readonly matrixCases: readonly MatrixRow[]; readonly orientationCases: readonly OrientationRow[]; readonly frameCases: readonly FrameRow[]; readonly frameLifecycleCases: readonly FrameLifecycleRow[]; readonly curvilinearCases: readonly CurvilinearRow[] } };
 
-const fixture = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../../🔨️modules/🖱️ui/🪟️viewport/🧫️fixtures/📐️projection/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../../🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🧫️fixtures/📐️projection/🔣️.json"), "utf8")) as Fixture;
 const close = (actual: number, expected: number, label: string) => assert.ok(Math.abs(actual - expected) <= 1e-12, `${label}: ${actual} != ${expected}`);
 
 describe("projection render parity", () => {

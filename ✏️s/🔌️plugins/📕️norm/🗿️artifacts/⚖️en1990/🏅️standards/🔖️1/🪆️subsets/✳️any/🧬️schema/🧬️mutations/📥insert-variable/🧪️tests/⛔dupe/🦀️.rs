@@ -7,10 +7,10 @@
 fn insert_variable_dupe() {
     super::assert_vector(super::Vector {
         kind: "insert-variable",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/📥insert-variable/⛔dupe/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/📥insert-variable/⛔dupe/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/📥insert-variable/⛔dupe/📸️snapshot/➡️after/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥insert-variable/⛔dupe/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥insert-variable/⛔dupe/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥insert-variable/⛔dupe/📸️snapshot/➡️after/🔣️.json"),
         diff: None,
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/📥insert-variable/⛔dupe/🎯️outcome/🔣️.json"),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥insert-variable/⛔dupe/🎯️outcome/🔣️.json"),
     });
 }

@@ -6,7 +6,7 @@ import {join} from "node:path";
 import {fileURLToPath} from "node:url";
 const root=fileURLToPath(new URL("../../",import.meta.url));
 const read=(path:string)=>JSON.parse(readFileSync(join(root,path),"utf8"));
-const corpus=()=>read("🧫️fixtures/🪶️workspace-lease/🔣️.json");
+const corpus=()=>read("🧪️tests/🧫️fixtures/🪶️workspace-lease/🔣️.json");
 test("closed real Count lease contract selects complete native encodings and eight distinct compiled refusal owners",()=>{
  const fixture = corpus();
  expect(fixture.counts).toEqual([-2147483648,-1,0,1,2147483647]);

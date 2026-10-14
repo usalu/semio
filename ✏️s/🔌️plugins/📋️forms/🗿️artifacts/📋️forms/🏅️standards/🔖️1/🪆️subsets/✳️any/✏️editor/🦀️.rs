@@ -1043,6 +1043,7 @@ impl ArtifactEditor for FormsPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,
@@ -1172,7 +1173,7 @@ impl ArtifactEditor for FormsPlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, FormsSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
             "artifact:out" => {
-                let bytes = store::os_store::serialization::ArtifactPack::encode_pack(doc.snapshot);
+                let bytes = pack::snapshot::ArtifactPack::encode_pack(doc.snapshot);
                 Ok(semio_framework_plugin::Media {
                     media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
                     payload: MediaPayload::Structured { schema: FORMS_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) },

@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
-import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
-import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { TestScript } from "../../🧪️tests/🎛️controlled/🟦️.ts";
-import { advanceScriptInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import { advanceScriptInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** ⚠️ Executes the complete original diagnostic and span laws. */
 class NativeScript extends BundleScript {
@@ -31,7 +31,7 @@ class TextErrorPortableScript extends BundleScript {
 class SourceScript extends BundleScript {
  async run(args: string[]): Promise<void> {
   if (args.length) throw Error("Expected test-source");
-  const tests = ["🧾️retained/🧪️tests/🟦️.ts", "🚧️text-error/🧪️tests/🟦️.ts", "🧾️retained/🏛️ownership/🧪️tests/🟦️.ts"].map(path => resolve(this.root, "../..", path));
+  const tests = ["🧾️retained/🧪️tests/🟦️.ts", "🚧️text-error/🧪️tests/🟦️.ts", "🧾️retained/🏛️ownership/🧪️tests/🟦️.ts", "📤️wire/👣️cursor/🧪️tests/🟦️.ts"].map(path => resolve(this.root, "../..", path));
   const options = { signal: this.invocation.control.signal, onProgress: () => advanceScriptInvocation(this.invocation, "test-source", "running") };
   await advanceScriptInvocation(this.invocation, "test-source", "running");
   await runOwnedCommand(process.execPath, [resolve(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--noUncheckedIndexedAccess", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...tests], this.repoRoot, "diagnostic:retained:types", scriptInvocationBudget(this.invocation, 30000), options);

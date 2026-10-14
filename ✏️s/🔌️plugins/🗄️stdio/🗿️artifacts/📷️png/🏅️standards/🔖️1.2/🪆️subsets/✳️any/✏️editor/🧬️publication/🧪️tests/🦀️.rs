@@ -27,7 +27,7 @@ fn close(cursor:&mut PngPublicationCursor){
 
 #[test]
 fn retained_png_publication_prepares_authored_intent_and_validates_with_fuel() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mut snapshot=PngSnapshot::default();snapshot.image.width=case["width"].as_u64().unwrap()as u32;snapshot.image.height=case["height"].as_u64().unwrap()as u32;
         let original:Vec<u16>=case["base"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u16).collect();snapshot.image.samples=original.repeat((snapshot.image.width*snapshot.image.height)as usize);
@@ -59,7 +59,7 @@ fn retained_png_publication_cancellation_releases_mutation_projection_lease() {
 #[test]
 fn retained_png_publication_canonical_reader_preserves_neutral_owned_fields() {
     use semio_framework_value::FromValue;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let grant=encoding_grant(1,17);
     for case in fixture["cases"].as_array().unwrap() {
         let snapshot=PngSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(case["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
@@ -80,7 +80,7 @@ fn retained_png_publication_canonical_reader_preserves_neutral_owned_fields() {
 fn retained_png_publication_canonical_diff_preserves_neutral_owned_fields() {
     use semio_framework_value::FromValue;
     use crate::schema::diff::PngDiff;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let grant=encoding_grant(1,17);
     for case in fixture["cases"].as_array().unwrap() {
         let snapshot=PngSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(case["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
@@ -103,7 +103,7 @@ fn retained_png_publication_canonical_diff_preserves_neutral_owned_fields() {
 fn retained_png_publication_replays_neutral_intent_profiles() {
     use semio_framework_value::FromValue;
     use crate::schema::snapshot::PngNativeProfile;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let snapshot=PngSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(row["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
         let p=&row["paint"];let region=PngRegion{x:p["x"].as_u64().unwrap()as u32,y:p["y"].as_u64().unwrap()as u32,width:p["width"].as_u64().unwrap()as u32,height:p["height"].as_u64().unwrap()as u32};
@@ -123,7 +123,7 @@ fn retained_png_publication_replays_neutral_intent_profiles() {
 #[test]
 fn retained_png_publication_metadata_intents_match_neutral_targets() {
     use semio_framework_value::FromValue;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let value=|row:&serde_json::Value|semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(row.to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     for row in fixture["metadataEdits"].as_array().unwrap() {
         let snapshot=PngSnapshot::from_value(value(&row["snapshot"])).unwrap();
@@ -151,7 +151,7 @@ fn retained_png_publication_metadata_intents_match_neutral_targets() {
 fn retained_png_publication_replacement_and_inverse_use_bounded_typed_image_owners(){
     use protocol::Mutation;
     use semio_framework_value::FromValue;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_depth:64,maximum_release_bytes:4096};
     for row in fixture["cases"].as_array().unwrap().iter(){
         let target=PngSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(row["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();

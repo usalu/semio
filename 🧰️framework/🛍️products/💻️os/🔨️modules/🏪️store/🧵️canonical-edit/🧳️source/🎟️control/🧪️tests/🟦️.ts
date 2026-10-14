@@ -6,7 +6,7 @@ import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/�
 import grantSchema from "../../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
 const root=new URL("../",import.meta.url);
 const read=(path:string)=>JSON.parse(readFileSync(new URL(path,root),"utf8"));
-const schema=read("🧬️schema/🔣️.json"),law=read("🧫️fixtures/🔣️.json");
+const schema=read("🧬️schema/🔣️.json"),law=read("🧪️tests/🧫️fixtures/🔣️.json");
 test("original canonical control schema agrees with independent Ajv without a metadata default",()=>{
  const resolved={...schema,$defs:{Grant:grantSchema}};
  const independent=new Ajv({strict:true}).addSchema(grantSchema,"urn:semio:retained-clone-grant:v1").compile(schema);

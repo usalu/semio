@@ -610,13 +610,13 @@ impl DrawList {
         if let Some(clip)=self.clip_stack.last(){return if !clip.scissors.is_empty(){Ok(0)}else{bytes(&clip.scissors)}}
         if self.scene_passes.capacity()!=0{return bytes(&self.scene_passes)}if self.layers.capacity()!=0{return bytes(&self.layers)}if self.glass_regions.capacity()!=0{return bytes(&self.glass_regions)}if self.scissor_stack.capacity()!=0{return bytes(&self.scissor_stack)}if self.clip_stack.capacity()!=0{return bytes(&self.clip_stack)}if self.glass_content_stack.capacity()!=0{return bytes(&self.glass_content_stack)}Ok(0)
     }
-    pub fn retire_granted(&mut self,grant:semio_framework_job::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+    pub fn retire_granted(&mut self,grant:semio_framework_job::RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         use semio_framework_job::{InteractiveJobCloseStep as Step,RetainedCloneProgress};
-        let empty=RetainedCloneProgress::default();if self.retirement_is_empty(){return Step::Complete{progress:empty}}if grant.maximum_items==0{return Step::Pending{progress:empty}}
-        let bytes=match self.next_retirement_release_byte_demand(){Ok(bytes)=>bytes,Err(error)=>return Step::Refused { kind: error.kind, progress: error.retained_progress() }};
-        if bytes>grant.maximum_release_bytes{return Step::Pending{progress:empty}}if grant.maximum_depth==0{return Step::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() }}
+        let empty=RetainedCloneProgress::default();if self.retirement_is_empty(){return Ok(Step::Complete{progress:empty})}if grant.maximum_items==0{return Ok(Step::Pending{progress:empty})}
+        let bytes=self.next_retirement_release_byte_demand()?;
+        if bytes>grant.maximum_release_bytes{return Ok(Step::Pending{progress:empty})}if grant.maximum_depth==0{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original draw close requires depth"))}
         let complete=self.retire_step();let progress=RetainedCloneProgress{copied_items:1,copied_bytes:0,retained_capacity_bytes:0,released_bytes:bytes};
-        if complete{Step::Complete{progress}}else{Step::Pending{progress}}
+        Ok(if complete{Step::Complete{progress}}else{Step::Pending{progress}})
     }
 
     pub fn retire_step(&mut self) -> bool {

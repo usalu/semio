@@ -5,9 +5,9 @@
 use crate::examples::{tower_stack, two_room_corridor, wall_roof_facade_strip};
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
 use crate::{Wfc3dSnapshot, WFC3D_DIALECT};
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 
-const CONTRACT: &str = include_str!("../../🧫️fixtures/🧩️mount-contract/🔣️.json");
+const CONTRACT: &str = include_str!("../🧫️fixtures/🧩️mount-contract/🔣️.json");
 
 fn contract() -> serde_json::Value {
     serde_json::from_str(CONTRACT).expect("the committed mount contract decodes")

@@ -210,7 +210,7 @@ fn json_i_json_retained_contract() -> ToolExecutionContract {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn json_i_json_example_snapshot(example_id: &str) -> JsonSnapshot {
     if example_id == crate::standards::v_rfc8259::subsets::i_json::examples::demo::ID {
-        <JsonSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::standards::v_rfc8259::subsets::i_json::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+        <JsonSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::standards::v_rfc8259::subsets::i_json::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         JsonSnapshot::default()
     }
@@ -435,6 +435,7 @@ impl ArtifactEditor for JsonIJsonEditor {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

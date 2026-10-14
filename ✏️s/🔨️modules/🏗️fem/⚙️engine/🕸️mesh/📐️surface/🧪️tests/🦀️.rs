@@ -6,7 +6,7 @@ use std::time::{Duration, Instant};
 
 #[test]
 fn complete_portable_region_surface_corpus() {
-    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("./🧫️fixtures/🔣️.json")).unwrap();
     let rows = fixture["vectors"].as_array().unwrap();
     assert_eq!(rows.len(), 9);
     let started = Instant::now();

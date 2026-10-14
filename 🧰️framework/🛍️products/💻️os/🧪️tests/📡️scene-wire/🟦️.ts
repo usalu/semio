@@ -1,6 +1,6 @@
 import {expect,test} from "bun:test";
-import corpus from "../../../../🔨️modules/🗺️surface/🕸️node-graph/📡️scene/🧫️fixtures/🔣️.json";
-import wire from "../../../../🔨️modules/🗺️surface/🕸️node-graph/📡️scene/🧫️fixtures/📦️body/🔣️.json";
+import corpus from "../../../../🔨️modules/🗺️surface/🕸️node-graph/📡️scene/🧪️tests/🧫️fixtures/🔣️.json";
+import wire from "../../../../🔨️modules/🗺️surface/🕸️node-graph/📡️scene/🧪️tests/🧫️fixtures/📦️body/🔣️.json";
 import {encodePackValue,decodePackValue,packValueToExactJson,packValueToBase64} from "../../🟦️.ts";
 
 test("the actual OS browser producer emits explicit Body vectors for the scene and every embedded slot",()=>{

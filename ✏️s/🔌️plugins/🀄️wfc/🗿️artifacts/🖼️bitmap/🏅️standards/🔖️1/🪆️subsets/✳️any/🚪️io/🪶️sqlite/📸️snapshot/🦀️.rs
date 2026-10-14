@@ -1,6 +1,7 @@
 //! 🖼️ Authored overlapping-model bitmap fields and ordered problem entities.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::{BitmapSnapshot,BitmapInput,BitmapOutputSpec,BitmapOverlappingModel,BitmapColor,BitmapPinnedPixel};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteValue,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Cell,RowWriter,Reconstruction,NativeEncodingBound}}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteValue,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Cell,RowWriter,Reconstruction,NativeEncodingBound}}};
 use std::collections::BTreeSet;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
@@ -22,11 +23,18 @@ impl BitmapSnapshot{
  Ok(())
  }
 }
-impl ArtifactSqliteSnapshot for BitmapSnapshot{
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+impl ArtifactSqliteSnapshotHost for BitmapSnapshot{
+ 
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{crate::standards::v1::subsets::any::io::text::snapshot::decode_sqlite_snapshot_native(payload,c,native_control)}
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{crate::standards::v1::subsets::any::io::text::snapshot::encode_sqlite_snapshot_native(self,encoding,c,native_owner)}
- fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let mut p=RowWriter::new(Self::SQLITE_SCHEMA,c)?;self.write_sqlite_rows(&mut p)?;p.finish()}
+ 
+
+ fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{let mut b=NativeEncodingBound::new(c)?;b.add(4096)?;b.check_rows(4usize.checked_add(self.input.palette.len()).and_then(|n|n.checked_add(self.pinned.len())).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"bitmap native entity overflow"))?)?;b.repeated(self.schema.len(),16)?;b.repeated(self.input.pixels.len(),16)?;for _ in &self.input.palette{b.add(512)?;}for _ in &self.pinned{b.add(512)?;}b.finish()}
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{let io=semio_framework_os_kernel::io_schema::IoError::from_value_error;c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(io)?;if dialect.artifact_kind!="s.wfc.bitmap"||dialect.standard!="1"||dialect.subset!="*"{return Err(io(invalid("bitmap dialect differs from its owned wildcard")))}if one(d,"wfc_bitmap_document",3).map_err(io)?.text(1).map_err(io)?!=self.schema{return Err(io(invalid("bitmap projected schema differs")))}c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(io)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for BitmapSnapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let mut p=RowWriter::new(Self::SQLITE_SCHEMA,c)?;self.write_sqlite_rows(&mut p)?;p.finish()}
 fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
  validate_sqlite_database_schema(d,Self::SQLITE_SCHEMA,c.limits())?;c.check_database(d,SqliteSnapshotPhase::ReconstructSnapshot)?;
  let document=one(d,"wfc_bitmap_document",3)?;let seed=document.text(2)?.parse::<u64>().map_err(|_|invalid("bitmap seed exceeds unsigned64"))?;if seed.to_string()!=document.text(2)?{return Err(invalid("bitmap seed requires canonical decimal"))}
@@ -38,8 +46,6 @@ fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Res
  for _ in 0..10{owned.scalar()?;}owned.checkpoint()?;
  Ok(Self{schema,seed,input:BitmapInput{width:unsigned(input,1)?,height:unsigned(input,2)?,palette,pixels},output:BitmapOutputSpec{width:unsigned(output,1)?,height:unsigned(output,2)?,periodic:boolean(output,3)?},model:BitmapOverlappingModel{pattern_size:unsigned(model,1)?,symmetry:unsigned(model,2)?,periodic_input:boolean(model,3)?,ground},pinned})
  }
- fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{let mut b=NativeEncodingBound::new(c)?;b.add(4096)?;b.check_rows(4usize.checked_add(self.input.palette.len()).and_then(|n|n.checked_add(self.pinned.len())).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"bitmap native entity overflow"))?)?;b.repeated(self.schema.len(),16)?;b.repeated(self.input.pixels.len(),16)?;for _ in &self.input.palette{b.add(512)?;}for _ in &self.pinned{b.add(512)?;}b.finish()}
- fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{let io=semio_framework_os_kernel::io_schema::IoError::from_value_error;c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(io)?;if dialect.artifact_kind!="s.wfc.bitmap"||dialect.standard!="1"||dialect.subset!="*"{return Err(io(invalid("bitmap dialect differs from its owned wildcard")))}if one(d,"wfc_bitmap_document",3).map_err(io)?.text(1).map_err(io)?!=self.schema{return Err(io(invalid("bitmap projected schema differs")))}c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(io)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))}
 }
 
 #[cfg(test)]

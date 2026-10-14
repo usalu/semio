@@ -1,0 +1,28 @@
+{
+  "brush": {
+    "color": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "hardness": 0.5,
+    "opacity": 1.0,
+    "size": 1.5
+  },
+  "layerId": "paint",
+  "mutation": "paintStroke",
+  "points": [
+    {
+      "x": 1.0,
+      "y": 1.0
+    },
+    {
+      "x": 4.0,
+      "y": 2.0
+    }
+  ],
+  "selection": null,
+  "target": "mask",
+  "tool": "brush"
+}

@@ -16,7 +16,7 @@ const CHILD_TARGET: &str = "SEMIO_WAL_WRITER_FENCE_CHILD_TARGET";
 const CHILD_SENTINEL: &str = "SEMIO_WAL_WRITER_FENCE_CHILD_SENTINEL";
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🌐️remote-guard/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixtures/🌐️remote-guard/🔣️.json")).unwrap()
 }
 
 async fn pages(bytes: &[u8]) -> DbIoPages {

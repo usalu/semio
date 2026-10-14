@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schemas/flow/preview-tessellation/complete/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "done",
+    "cancellable",
+    "phase",
+    "unitsDone",
+    "unitsTotal",
+    "nodeHash",
+    "windowId",
+    "windowKindId",
+    "handle",
+    "tolerance",
+    "mesh"
+  ],
+  "properties": {
+    "done": {
+      "const": true
+    },
+    "cancellable": {
+      "const": false
+    },
+    "phase": {
+      "const": "complete"
+    },
+    "unitsDone": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "unitsTotal": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "nodeHash": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "windowId": {
+      "type": "string"
+    },
+    "windowKindId": {
+      "type": "string"
+    },
+    "handle": {
+      "type": "string"
+    },
+    "tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "mesh": {
+      "$ref": "https://semio.tech/schemas/mesh/canonical/v1"
+    }
+  }
+}

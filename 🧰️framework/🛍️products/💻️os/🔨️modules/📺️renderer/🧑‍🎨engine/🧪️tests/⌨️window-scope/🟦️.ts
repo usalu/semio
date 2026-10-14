@@ -57,7 +57,7 @@ type Fixture = {
   };
 };
 
-const fixturePath = resolve(dirname(fileURLToPath(import.meta.url)), "../../🧱️elements/🏛️ShellHost/🧫️fixtures/⌨️window-scope/🔣️.json");
+const fixturePath = resolve(dirname(fileURLToPath(import.meta.url)), "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/⌨️window-scope/🔣️.json");
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Fixture;
 
 

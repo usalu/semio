@@ -1,4 +1,5 @@
 //! 🧩️ Original document block fields and scalar forest traversal stay in their caller workspace.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
 use semio_framework_os_kernel::sqlite_snapshot::{transfer,artifact::{RowIndexStorage,reconstruct_text_into,reconstruct_blob_into}};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::workspace;
@@ -107,7 +108,7 @@ impl Prefix{fn empty()->Self{Self{snapshot:Some(SemioDocumentSnapshot{schema:Str
 /// 🫙️ Admits the original complete document workspace before any relational materialization.
 pub(super)fn reconstruct(db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,schema:&str)->Result<SemioDocumentSnapshot,ValueError>{workspace::reconstruct_projected(control,Prefix::empty,|prefix,control|reconstruct_into(prefix,db,control,schema),|prefix|prefix.snapshot.take().expect("complete Document snapshot"))}
 fn reconstruct_into(prefix:&mut Prefix,db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,schema:&str)->Result<(),ValueError>{
- control.check_database(db,SqliteSnapshotPhase::ReconstructSnapshot)?;transfer::validate_database_into(&mut prefix.validation,db,schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;transfer::validate_component_into(&mut prefix.validation,db,<SemioDocumentSnapshot as ArtifactSqliteSnapshot>::SQLITE_SCHEMA,SqliteSnapshotPhase::ReconstructSnapshot,control)?;
+ control.check_database(db,SqliteSnapshotPhase::ReconstructSnapshot)?;transfer::validate_database_into(&mut prefix.validation,db,schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;transfer::validate_component_into(&mut prefix.validation,db,<SemioDocumentSnapshot as ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA,SqliteSnapshotPhase::ReconstructSnapshot,control)?;
  let Prefix{snapshot,validation:_,styles:style_storage,images:image_storage,style_order,image_order,style_names,image_names,parents,blocks}=prefix;
  let snapshot=snapshot.as_mut().unwrap();let doc=single_float_row(db,"semio_document_document")?;identity(doc,3)?;if doc.rowid!=1{return Err(doc_invalid("invalid document identity"))}
  let styles=details(style_storage,db,"semio_document_style",6,control)?;let images=details(image_storage,db,"semio_document_image",6,control)?;

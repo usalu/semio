@@ -13,7 +13,7 @@ type Backfill = Readonly<{ attached: Readonly<Record<string, readonly string[]>>
 type Case = Readonly<{ id: string; histories: readonly History[]; logged: readonly string[]; parentTransactions: Readonly<Record<string, string>>; expected: Backfill }>;
 type Fixture = Readonly<{ cases: readonly Case[] }>;
 
-const FIXTURE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧫️composed-child-history";
+const FIXTURE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🧫️composed-child-history";
 
 /** 🏷️ Uses declared intent or the first leaf with the remaining operation count, then printed operation or edit id. */
 function rowLabel(history: History): Label {

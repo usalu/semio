@@ -5,7 +5,7 @@ import { setImmediate } from "node:timers/promises";
 
 import { test, expect } from "bun:test";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import policySchema from "../📋️policy/🧬️schema/🔣️.json";
 import { captureOwnedProcess } from "../🟦️.ts";
 import { type ScriptInvocation } from "../../🧭️routing/📥️invocation/🟦️.ts";

@@ -4,7 +4,7 @@ import type { UiNodeRecord } from "@semio-tech/framework";
 import Ajv from "ajv";
 import deepEqual from "fast-deep-equal";
 import { mountedGisMapProbeV1 } from "../../🪟️presentation/🟦️.tsx";
-import mountedGisMapProbeFixture from "../../🧫️fixtures/🔬️mounted-gis-map-probe-v1/🔣️.json";
+import mountedGisMapProbeFixture from "../🧫️fixtures/🔬️mounted-gis-map-probe-v1/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 const deepEqualOracle = deepEqual;
 const ownerExport = (name: string) => new Ajv({ strict: true }).compile({ $defs: schema.$defs, $ref: `#/$defs/${name}` });

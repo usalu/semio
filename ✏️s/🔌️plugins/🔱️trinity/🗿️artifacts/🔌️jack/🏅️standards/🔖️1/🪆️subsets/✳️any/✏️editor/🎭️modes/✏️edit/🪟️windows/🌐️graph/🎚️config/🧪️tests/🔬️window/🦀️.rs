@@ -6,7 +6,7 @@ use semio_framework_plugin::WindowConfigOwner;
 
 #[test]
 fn jack_graph_window_config_mutations_match_the_independent_patch_trace() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
     let base: JackGraphWindowConfig = semio_framework_pack_json::from_json_str(&fixture["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut windows = std::collections::BTreeMap::from([(fixture["leftWindowId"].as_str().unwrap().to_string(), base.clone()), (fixture["rightWindowId"].as_str().unwrap().to_string(), base)]);
     for row in fixture["cases"].as_array().unwrap() {
@@ -48,7 +48,7 @@ fn jack_graph_window_config_command_uses_the_trusted_concrete_window() {
 /// ➕️ Every committed window-config mutation's concrete inverse rows sum to the negative of its diff (law L3).
 #[semio_framework_async_macros::async_test]
 async fn jack_graph_window_config_inverses_sum_to_the_negative_diff() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
     let base: JackGraphWindowConfig = semio_framework_pack_json::from_json_str(&fixture["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut windows = std::collections::BTreeMap::from([(fixture["leftWindowId"].as_str().unwrap().to_string(), base.clone()), (fixture["rightWindowId"].as_str().unwrap().to_string(), base)]);
     for row in fixture["cases"].as_array().unwrap() {

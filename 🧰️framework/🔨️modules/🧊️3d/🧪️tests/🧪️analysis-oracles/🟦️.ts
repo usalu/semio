@@ -113,7 +113,7 @@ export async function registerAnalysisOracleTests(vitest: Vitest, source: TestSo
 
   describe("3d analysis oracles", () => {
     it("three and manifold-3d measure the mesh quality fixtures exactly like the closed forms", () => {
-      const fixture = read(source, "./🥽️mesh/🧫️fixtures/🔎️quality/🔣️.json");
+      const fixture = read(source, "./🥽️mesh/🧪️tests/🧫️fixtures/🔎️quality/🔣️.json");
       for (const entry of fixture.cases) {
         const expected = entry.expected;
         const soup = fan(entry.positions, entry.faces);
@@ -149,7 +149,7 @@ export async function registerAnalysisOracleTests(vitest: Vitest, source: TestSo
     });
 
     it("three triangulations and manifold-3d solids reproduce the closed-form primitive mass properties", () => {
-      const fixture = read(source, "./📐️brep/🧫️fixtures/🔎️analysis/🔣️.json");
+      const fixture = read(source, "./📐️brep/🧪️tests/🧫️fixtures/🔎️analysis/🔣️.json");
       const resolution = 256;
       for (const entry of fixture.primitives) {
         const expected = entry.expected;
@@ -187,7 +187,7 @@ export async function registerAnalysisOracleTests(vitest: Vitest, source: TestSo
     });
 
     it("finite-difference curvature of the parametrisations agrees with the fixture's closed forms", () => {
-      const fixture = read(source, "./📐️brep/🧫️fixtures/🔎️analysis/🔣️.json");
+      const fixture = read(source, "./📐️brep/🧪️tests/🧫️fixtures/🔎️analysis/🔣️.json");
       const surfaces: Record<string, (s: Record<string, number>) => (u: number, v: number) => Vec3Like> = {
         sphere: (s) => (u, v) => [s.radius! * Math.cos(v) * Math.cos(u), s.radius! * Math.cos(v) * Math.sin(u), s.radius! * Math.sin(v)],
         cylinder: (s) => (u, v) => [s.radius! * Math.cos(u), s.radius! * Math.sin(u), v],
@@ -211,7 +211,7 @@ export async function registerAnalysisOracleTests(vitest: Vitest, source: TestSo
     });
 
     it("three's Box3 and Sphere distances agree with the fixture's solid and point distances", () => {
-      const fixture = read(source, "./📐️brep/🧫️fixtures/🔎️analysis/🔣️.json");
+      const fixture = read(source, "./📐️brep/🧪️tests/🧫️fixtures/🔎️analysis/🔣️.json");
       const placed = (entry: { box: Vec; offset: Vec }) => new Box3(new Vector3(...entry.offset), new Vector3(...entry.offset).add(new Vector3(...entry.box)));
       for (const entry of fixture.distances) {
         const a = placed(entry.a);

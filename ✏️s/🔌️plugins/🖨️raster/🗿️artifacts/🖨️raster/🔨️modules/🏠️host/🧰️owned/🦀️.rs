@@ -5,7 +5,7 @@ use crate::{RasterAssetChild, RasterLayerNode, RasterOwnedMap, RasterOwnedMapIns
 use protocol::{Mutation, OpBinary};
 use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 fn decode_raster_snapshot_pack(bytes: &[u8]) -> Result<RasterSnapshot, ()> {
-    <RasterSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|_| ())
+    <RasterSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|_| ())
 }
 
 fn decode_raster_mutation_pack(bytes: &[u8]) -> Result<RasterMutation, ()> {

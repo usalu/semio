@@ -34,7 +34,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     return render(createElement(UiNodeView, { store, id: root, context: { store, onAction: () => {}, onIntent } }));
   }
 
-  const { default: historyViewportFixture } = await import("../../../../../../🔌️plugin/🧫️fixtures/history-panel-command-window/🔣️.json");
+  const { default: historyViewportFixture } = await import("../../../../../../🔌️plugin/🧪️tests/🧫️fixtures/history-panel-command-window/🔣️.json");
 
   it("uses the authored history scroll layout as its Tree viewport", () => {
     const root = node(0, "history", { type: "tree" }, [1]);
@@ -530,9 +530,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { readFileSync } = await import("node:fs");
   const { dirname, join } = await import("node:path");
   const { fileURLToPath } = await import("node:url");
-  const servedFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🪟️tree-window-served.json"), "utf8"));
+  const servedFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🪟️tree-window-served.json"), "utf8"));
 
-  const requestsFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧫️fixtures/🪟️window-requests/🔣️.json"), "utf8"));
+  const requestsFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧪️tests/🧫️fixtures/🪟️window-requests/🔣️.json"), "utf8"));
   const { TREE_WINDOW_OVERSCAN_ROWS, treeWindowRequestsForViewport, treeWindowVisibleRowsForViewport } = await import("@semio-tech/ui-react");
 
   describe("🪟️ the neutral viewport vectors both hosts answer (WG11 P5)", () => {

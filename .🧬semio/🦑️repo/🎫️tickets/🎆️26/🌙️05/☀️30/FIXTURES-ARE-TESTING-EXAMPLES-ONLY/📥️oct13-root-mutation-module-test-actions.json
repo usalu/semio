@@ -1,0 +1,17 @@
+{
+  "exclusive": false,
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔭️mutation-fixture-placement/🟦️.ts",
+      "operation": "updated",
+      "beforeSha256": "99ad9d28b43cd0071c802275ac6df009c354c939704b64dfb57e06a0a337b20c",
+      "afterSha256": "4cb77018170e633bfeecc800e2a80bc7ff56b1238eedb1a3fdbcc3788a3e6daf"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🔭️mutation-fixture-placement/🔣️.json",
+      "operation": "updated",
+      "beforeSha256": "0641a6ff34fb4c3a86cf31b062ce2d934c3d191f2ebf9beb8efeedfd13196671",
+      "afterSha256": "aaa5f7e8f78218a29ed6953b92644e4133f6ec1d722804a2e65b593b2874008f"
+    }
+  ]
+}

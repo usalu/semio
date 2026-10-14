@@ -4,7 +4,7 @@ use semio_repo_test_host::Json;
 
 #[test]
 fn semantic_golden_entities_match_the_independent_dxf_reader() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖊️semantic/🔣️.json")).expect("declared semantic cases");
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🖊️semantic/🔣️.json")).expect("declared semantic cases");
     for case in cases.as_array().expect("closed case array") {
         let bytes = case["input"].as_str().expect("declared DXF input").as_bytes();
         if let Some(prefix) = case["errorPrefix"].as_str() {

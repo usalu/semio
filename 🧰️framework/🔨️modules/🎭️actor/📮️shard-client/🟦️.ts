@@ -1,3 +1,5 @@
+import { OriginalBootstrapOwner } from "../🎟️retained-turn/🏛️bootstrap/🟦️.ts";
+import type { OriginalOperationAdmission, OriginalOperationReceipt } from "../🎟️retained-turn/🟦️.ts";
 import { SHARD_LIVENESS_POLICY } from "./🫀️liveness/🟦️.ts";
 /** 🧵️ `ShardClient` — the web `ShardTransport` (design-runtime.md §1 `ShardTransport` /
  * §3 "Web shard"): a bounded pool of `🟨️shard-worker.js` Web Workers multiplexed by `actorId`,
@@ -72,6 +74,7 @@ export interface ShardBudget {
   readonly mailboxLen: number;
   readonly maxEffects: number;
   readonly maxPatchBytes: number;
+  readonly maxFrames: number;
 }
 
 /** ⚖️ Stand-in for `semio_framework_actor::JobBudget` (design-abi.md `jobs::job-budget`). `fuel` is
@@ -197,7 +200,7 @@ export interface ShardMetricsSample {
  * mailbox_len: 1024, max_effects: 512, max_patch_bytes: 2_097_152 }`. {@link GrantedBudgetTracker}
  * falls back to this so a budget-less `Envelope` arriving before any `Grant` for its actor never
  * invents its own number — the same floor `ShardLoop::granted_budget` falls back to natively. */
-export const MAINTENANCE_LANE_DEFAULT_BUDGET: ShardBudget = { fuel: 80_000_000, wallMs: 200, memoryBytes: 256 * 1024 * 1024, uiNodes: 4_000, mailboxLen: 1024, maxEffects: 512, maxPatchBytes: 2_097_152 };
+export const MAINTENANCE_LANE_DEFAULT_BUDGET: ShardBudget = { fuel: 80_000_000, wallMs: 200, memoryBytes: 256 * 1024 * 1024, uiNodes: 4_000, mailboxLen: 1024, maxEffects: 512, maxPatchBytes: 2_097_152, maxFrames: 8 };
 
 /** ⚖️ Rust `Origin` mirror (`🎭️actor/🦀️.rs`) — who sent a {@link ShardEnvelope}. `window`
  * stays a plain `number` (the generated mirror's own `WindowId`), matching this file's existing
@@ -376,7 +379,7 @@ export type CreateShardWorker = (shardIndex: number) => ShardWorkerLike;
 
 //#region 📨️WireMessages
 type OutboundMessage =
-  | { readonly kind: "activate"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly moduleUrl: string; readonly caps: readonly ShardCapabilityGrant[]; readonly budget: ShardBudget; readonly assets: readonly ShardAsset[] }
+  | { readonly kind: "activate"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly originalAdmission: OriginalOperationAdmission; readonly moduleUrl: string; readonly caps: readonly ShardCapabilityGrant[]; readonly budget: ShardBudget; readonly assets: readonly ShardAsset[] }
   | { readonly kind: "turn"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly events: readonly ShardEventEnvelope[]; readonly commandPage?: ShardCommandIngressPage; readonly budget: ShardBudget; readonly postedAtEpochMs?: number }
   | { readonly kind: "startJob"; readonly requestId: string; readonly actorId: string; readonly job: bigint; readonly jobKind: string; readonly input: Uint8Array }
   | { readonly kind: "stepJob"; readonly requestId: string; readonly actorId: string; readonly job: bigint; readonly budget: ShardJobBudget }
@@ -456,6 +459,9 @@ function publishShardWorkerTurnSpans(timings: ShardWorkerTurnTimings, answeredAt
 export type ShardCarriedBeat = { readonly turnSeq: number; readonly phase: string | null };
 
 type InboundMessage =
+  | { readonly kind: "original-turn-receipt"; readonly actorId: string; readonly activationGeneration: bigint; readonly receipt: OriginalOperationReceipt }
+  | { readonly kind: "original-producer-held"; readonly actorId: string; readonly activationGeneration: bigint; readonly operation: bigint; readonly generation: bigint; readonly refusal: unknown }
+  | { readonly kind: "original-source-close"; readonly actorId: string; readonly activationGeneration: bigint; readonly operation: bigint; readonly generation: bigint; readonly sourceClosed: boolean }
   | { readonly kind: "result"; readonly requestId: string; readonly ok: true; readonly value: unknown; readonly timings?: ShardWorkerTurnTimings; readonly beat?: ShardCarriedBeat }
   | { readonly kind: "result"; readonly requestId: string; readonly ok: false; readonly error: string; readonly stack?: string; readonly type?: string; readonly framesBytes?: number; readonly retryableLifecycle?: boolean; readonly beat?: ShardCarriedBeat }
   /** 🫀️ `phase` names the generated worker's await boundary this beat was emitted at
@@ -792,7 +798,7 @@ class CapturedShardActivation implements ShardActorActivationLease {
   }
 }
 
-type ShardActivation = { readonly slot: ShardSlot; readonly actorId: string; readonly generation: bigint; available: boolean; activated: boolean; teardownPosted: boolean; operationsAllowed: boolean; operationGeneration: bigint; lastGuestLifetime: bigint; lastReturnSequence: bigint; returned: CapturedReturn | null; instance: ShardInstanceOwner | null; close: ShardInstanceOwner | null };
+type ShardActivation = { readonly originalAdmission: OriginalOperationAdmission; readonly slot: ShardSlot; readonly actorId: string; readonly generation: bigint; available: boolean; activated: boolean; teardownPosted: boolean; operationsAllowed: boolean; operationGeneration: bigint; lastGuestLifetime: bigint; lastReturnSequence: bigint; returned: CapturedReturn | null; instance: ShardInstanceOwner | null; close: ShardInstanceOwner | null };
 type PendingHostEffect = { readonly activation: ShardActivation; readonly controller: AbortController; readonly requestId: string; previous: PendingHostEffect | null; next: PendingHostEffect | null };
 type HostEffectLedger = { readonly activation: ShardActivation; readonly requests: Map<string, PendingHostEffect>; head: PendingHostEffect | null; tail: PendingHostEffect | null };
 type ShardInstancePhase = "opening" | "captured" | "open" | "closing" | "accepted" | "retired" | "complete";
@@ -946,6 +952,7 @@ export class OwnedNativeUiPatchSubmissionReceipt {
 //#endregion 🩹️NativePatchAuthority
 
 export interface ShardClientOptions {
+  readonly originalWorkStock: OriginalBootstrapOwner;
   readonly residentLedger: OwnedResidentLedger;
   /** Fixed pool size — design-runtime.md §1 `ShardTable`: web `min(hardwareConcurrency-1, 4)`. Caller
    * computes the number; this class only ever spawns exactly this many workers. */
@@ -1054,7 +1061,12 @@ export class ShardClient {
   private activationGeneration = 0n;
   private watchdogHandle: ReturnType<typeof setInterval> | null = null;
 
+  readonly #originalWorkStock: OriginalBootstrapOwner;
+  readonly #originalClosures = new Map<bigint, ShardActivation>();
+  readonly #originalReturns = new Map<bigint, Promise<void>>();
   constructor(options: ShardClientOptions) {
+    if (!(options.originalWorkStock instanceof OriginalBootstrapOwner)) throw new Error("original-bootstrap.invalid-owner");
+    this.#originalWorkStock = options.originalWorkStock;
     try { Reflect.apply(residentCapacity(), options.residentLedger, []); } catch { throw new Error("actor-resident.invalid-ledger"); }
     this.#residentLedger = options.residentLedger;
     if (options.shardCount < 1) throw new Error("ShardClient requires shardCount >= 1");
@@ -1477,6 +1489,23 @@ export class ShardClient {
       if (activation) this.handleInboundFrame(activation, message.frame);
       return;
     }
+    if (message.kind === "original-turn-receipt" || message.kind === "original-producer-held") {
+      const operation = message.kind === "original-turn-receipt" ? message.receipt.input.operation : message.operation;
+      const generation = message.kind === "original-turn-receipt" ? message.receipt.input.generation : message.generation;
+      const original = this.#originalClosures.get(operation) ?? this.actorActivations.get(message.actorId);
+      if (!original || original.slot !== slot || original.actorId !== message.actorId || original.generation !== message.activationGeneration || original.originalAdmission.operation !== operation || original.originalAdmission.generation !== generation) return;
+      const before = this.#originalReturns.get(operation) ?? Promise.resolve();
+      const returned = before.then(() => message.kind === "original-turn-receipt" ? this.#originalWorkStock.receive(original.originalAdmission, message.receipt) : this.#originalWorkStock.hold(original.originalAdmission, message.refusal));
+      this.#originalReturns.set(operation, returned);
+      void returned.catch(refusal => slot.worker.postMessage({ kind: "original-root-refusal", actorId: original.actorId, activationGeneration: original.generation, refusal }));
+      return;
+    }
+    if (message.kind === "original-source-close") {
+      const original = this.#originalClosures.get(message.operation);
+      if (!original || original.slot !== slot || original.actorId !== message.actorId || original.generation !== message.activationGeneration || original.originalAdmission.generation !== message.generation || message.sourceClosed !== true) return;
+      void (this.#originalReturns.get(message.operation) ?? Promise.resolve()).then(() => this.#originalWorkStock.returnClosed(original.originalAdmission, true)).then(() => { this.#originalClosures.delete(message.operation); this.#originalReturns.delete(message.operation); }).catch(() => {});
+      return;
+    }
     const entry = this.pending.get(message.requestId);
     if (!entry || entry.slot !== slot || this.shards[slot.index] !== slot) return;
     if (message.kind === "result" && message.ok && message.timings) publishShardWorkerTurnSpans(message.timings, answeredAtEpochMs, entry.actorId);
@@ -1633,11 +1662,12 @@ export class ShardClient {
     const requestId = this.nextRequestId();
     const generation = this.activationGeneration + 1n;
     const slot = this.assignShard(actorId);
-    const activation: ShardActivation = { slot, actorId, generation, available: true, activated: false, teardownPosted: false, operationsAllowed: true, operationGeneration: 0n, lastGuestLifetime: 0n, lastReturnSequence: 0n, returned: null, instance: null, close: null };
+    const originalAdmission = await this.#originalWorkStock.admit();
+    const activation: ShardActivation = { originalAdmission, slot, actorId, generation, available: true, activated: false, teardownPosted: false, operationsAllowed: true, operationGeneration: 0n, lastGuestLifetime: 0n, lastReturnSequence: 0n, returned: null, instance: null, close: null };
     this.activationGeneration = generation;
     this.actorActivations.set(actorId, activation);
     this.actorsPastFirstTurn.delete(actorId);
-    await this.send<void>(slot, { kind: "activate", requestId, actorId, activationGeneration: generation, moduleUrl, caps, budget, assets }, requestId);
+    await this.send<void>(slot, { kind: "activate", requestId, actorId, activationGeneration: generation, originalAdmission, moduleUrl, caps, budget, assets }, requestId);
     activation.activated = true;
   }
 
@@ -2254,6 +2284,7 @@ export class ShardClient {
     const { actorId, slot } = activation;
     if (!activation.available || !slot.available || this.shards[slot.index] !== slot) throw new Error("actor-close.worker-lost");
     activation.operationsAllowed = false;
+    this.#originalClosures.set(activation.originalAdmission.operation, activation);
     slot.worker.postMessage({ kind: "dispose", actorId, activationGeneration: activation.generation } satisfies OutboundMessage);
     activation.teardownPosted = true;
     activation.available = false;

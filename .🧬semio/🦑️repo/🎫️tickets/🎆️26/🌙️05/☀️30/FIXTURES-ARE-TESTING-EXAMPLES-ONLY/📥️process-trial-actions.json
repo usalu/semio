@@ -1,0 +1,55 @@
+{
+  "schemas": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧬️schema/🔣️.json",
+      "sha256": "5df7279d90fa3d3d69fd2e50a280cf1d23dc1af259a17ea1b8758dd969077def"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/📥️loading/🧬️schema/🔣️.json",
+      "sha256": "be65963de37014c5f503dd55eefceaf048229d4cde1b1a61e37f9571b11b4f0c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🧬️schema/🔣️.json",
+      "sha256": "fc323e40cdd5d916dc901856987f64260575bbcd76ca46b6257dcd668eabbae1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🛑️interruption/🧬️schema/🔣️.json",
+      "sha256": "83ebf1e464e77f661ffad5b00401133505a4268578679a066b868a4556c227f0"
+    }
+  ],
+  "readers": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🧪️tests/🟦️.ts",
+      "before": "6278d04a7f7c3919abc6c40c8216638357581a113b5ddffc5522eb6f3b80b169",
+      "after": "9bc9216850e64671dc4e0772cecdd2fb6dedb4f45d22609f75baff6ecec572e6",
+      "removed": [
+        "import Ajv from \"ajv\";",
+        "import schema from \"../🧬️schema/🔣️.json\";",
+        "import { validateJsonSchemaSubset } from \"../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts\";",
+        "  expect(new Ajv({ strict: true }).compile(schema)(corpus)).toBe(true);",
+        "  expect(validateJsonSchemaSubset(schema, corpus)).toEqual([]);"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🛑️interruption/🧪️tests/🟦️.ts",
+      "before": "5f249da3908589135c8c273c4469e365cf7166a2e01a898a5d489e9c912d9f4e",
+      "after": "3ec1c347694fe7d3688fb7b7d1ee6c7f14f0de254490f8ba100f71c91210a78f",
+      "removed": [
+        "import Ajv from \"ajv\";",
+        "import schema from \"../🧬️schema/🔣️.json\";",
+        "import { validateJsonSchemaSubset } from \"../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts\";",
+        "    expect(new Ajv({ strict: true }).compile(schema)(corpus)).toBe(true);",
+        "    expect(validateJsonSchemaSubset(schema, corpus)).toEqual([]);"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🧪️tests/🟦️.ts",
+      "before": "e4604cb57738fd4c41cc94770d7151cee591ea1206e56e3dc7e775510e924267",
+      "after": "a0ce706942345e292ba4cb6b1434698b8356eb9de9a20818d36aff5f9618b597",
+      "removed": [
+        "import loadingSchema from \"../📥️invocation/📥️loading/🧬️schema/🔣️.json\";",
+        "  expect(new Ajv({ strict: true }).compile(loadingSchema)(row)).toBe(true);"
+      ]
+    }
+  ]
+}

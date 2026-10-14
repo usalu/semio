@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🪧️place-elements/✅️sets-absolute-placements",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪧️place-elements/✅️sets-absolute-placements/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪧️place-elements/✅️sets-absolute-placements/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪧️place-elements/✅️sets-absolute-placements/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪧️place-elements/✅️sets-absolute-placements/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🪧️place-elements/✅️sets-absolute-placements/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪧️place-elements/✅️sets-absolute-placements/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪧️place-elements/✅️sets-absolute-placements/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪧️place-elements/✅️sets-absolute-placements/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪧️place-elements/✅️sets-absolute-placements/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪧️place-elements/✅️sets-absolute-placements/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

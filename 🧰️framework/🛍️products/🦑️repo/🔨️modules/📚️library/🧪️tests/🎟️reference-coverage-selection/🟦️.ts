@@ -9,7 +9,7 @@ import ts from "typescript";
 type Token = Readonly<{ id: string; adapter: string; start: number; end: number; value: string; rewriteKind?: string; physicalInterpretation?: string; physicalTargets?: readonly string[]; unsupportedReason?: string }>;
 type Scenario = Readonly<{ id: string; supported: readonly string[]; unsupported: readonly string[]; retained: readonly string[] }>;
 const library = resolve(import.meta.dir, "../.."), root = resolve(library, "../../../../..");
-const inputBytes = readFileSync(join(import.meta.dir, "../../🧫️fixtures/🎟️reference-coverage-selection/🔣️.json")), vector = JSON.parse(inputBytes.toString("utf8"));
+const inputBytes = readFileSync(join(import.meta.dir, "../🧫️fixtures/🎟️reference-coverage-selection/🔣️.json")), vector = JSON.parse(inputBytes.toString("utf8"));
 const normalizerPath = join(library, "🧹️normalization/🟦️.ts"), normalizerBytes = readFileSync(normalizerPath);
 const tree = ts.createSourceFile(normalizerPath, normalizerBytes.toString("utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 const declaration = (name: string): string => {

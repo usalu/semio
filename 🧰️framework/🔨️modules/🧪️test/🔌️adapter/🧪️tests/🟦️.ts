@@ -7,7 +7,7 @@ import { semioSchemaAjvV1 } from "../../../🧬️schema/🔮️oracles/✅️va
 import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/🟦️.ts";
 import { parseFeature } from "../../🥒️gherkin/🟦️.ts";
 import type { AdapterContext, TestAdapter } from "../🟦️.ts";
-import fixture from "../../🧫️fixtures/🔌️adapter-ownership/🔣️.json" with { type: "json" };
+import fixture from "../../🧪️tests/🧫️fixtures/🔌️adapter-ownership/🔣️.json" with { type: "json" };
 import protocol from "../../🧬️schema/🔣️.json" with { type: "json" };
 const root = resolve(import.meta.dir, "../../../../..");
 const scenarioSchema = { $defs: protocol.$defs, $ref: "#/$defs/Scenario" };

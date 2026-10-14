@@ -12,8 +12,6 @@ use std::pin::Pin;
 use std::sync::Arc;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 
-#[path="🧬️preparation/♻️custody/🦀️.rs"]
-mod preparation_custody;
 #[path="🧬️preparation/🔁️replace/🦀️.rs"]
 mod replace_edit;
 pub use replace_edit::{WindowConfigReplaceCursor,WindowConfigReplaceEdit,WindowConfigReplaceMutation};
@@ -39,7 +37,7 @@ pub trait WindowConfigOwner: Send + Sync + 'static {
     const WINDOW_KIND_ID: &'static str;
     const SCHEMA: &'static str;
     const MAXIMUM_PUBLICATION_BYTES: usize;
-    type State: semio_framework_value::retained_clone::RetainedClone + Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::ConfigRecord + store::os_store::serialization::ArtifactPack + semio_framework_dsl_record::DslField + semio_framework_value::retirement::RetireOwned + 'static;
+    type State: semio_framework_value::retained_clone::RetainedClone + Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::ConfigRecord + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_dsl_record::DslField + semio_framework_value::retirement::RetireOwned + 'static;
     type Mutation: protocol::Mutation<Self::State> + store::ArtifactCanonicalJsonTree + PartialEq + Send + Sync + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + 'static;
 
     type Edit: store::snapshot_clone_preparation::RetainedCloneEdit<Self::State,Self::Mutation>;
@@ -125,7 +123,7 @@ impl WindowConfigMutation {
         Self::from_issued(window_id,O::WINDOW_KIND_ID,mutation,O::build_mutation_retirement_factory())
     }
 
-    fn from_issued<T:Clone+Send+'static>(window_id:impl Into<String>,window_kind_id:&'static str,mutation:T,factory:Arc<dyn store::ArtifactOwnedValueRetirementFactory<T>>)->Self{Self{window_id:window_id.into(),window_kind_id,mutation:Box::new(FactoryBoxedValue{original:Box::new(mutation),factory})}}
+    pub(crate) fn from_issued<T:Clone+Send+'static>(window_id:impl Into<String>,window_kind_id:&'static str,mutation:T,factory:Arc<dyn store::ArtifactOwnedValueRetirementFactory<T>>)->Self{Self{window_id:window_id.into(),window_kind_id,mutation:Box::new(FactoryBoxedValue{original:Box::new(mutation),factory})}}
 
     pub fn window_id(&self) -> &str {
         &self.window_id
@@ -136,7 +134,7 @@ impl WindowConfigMutation {
     }
 }
 
-impl super::window_mutation::WindowRefreshSnapshot for WindowConfigSnapshot{fn swap_address(&mut self,other:&mut Self){std::mem::swap(&mut self.window_id,&mut other.window_id);}}
+impl super::window_mutation::refresh::WindowRefreshSnapshot for WindowConfigSnapshot{fn swap_address(&mut self,other:&mut Self){std::mem::swap(&mut self.window_id,&mut other.window_id);}}
 impl WindowConfigSnapshot{pub fn try_duplicate(&self)->Result<Self,ValueError>{Ok(Self{window_id:self.window_id.clone(),window_kind_id:self.window_kind_id,generation:self.generation,revision:self.revision,snapshot:self.snapshot.try_duplicate()?})}}
 /// 📖️ Immutable snapshot of one exact window-owned config partition.
 #[derive(semio_framework_value::RetireOwned)]
@@ -481,7 +479,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         result
     }
 
-    fn refresh_demands(&self,authority:&WindowConfigAuthority,_body:usize)->Result<RetirementDemand,ValueError>{super::window_mutation::refresh_demands(&authority.pending_snapshot,&authority.retired_snapshots)}
+    fn refresh_demands(&self,authority:&WindowConfigAuthority,_body:usize)->Result<RetirementDemand,ValueError>{super::window_mutation::refresh::refresh_demands(&authority.pending_snapshot,&authority.retired_snapshots)}
     fn refresh(&mut self,authority:&mut WindowConfigAuthority,grant:RetainedCloneGrant)->Result<super::window_mutation::WindowAuthorityRefreshStep,Fault>{
         let demand=self.refresh_demands(authority,grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;
         if grant.maximum_depth<demand.depth{return Err(Fault::new(FaultOrigin::Framework,FaultCode::new("window-config.depth"),"window config refresh exceeds its admitted depth"));}
@@ -492,7 +490,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
             authority.pending_snapshot=Some(WindowConfigSnapshot{window_id:String::new(),window_kind_id:O::WINDOW_KIND_ID,generation:partition.store.generation(),revision:partition.store.content_revision_now(),snapshot});
             return Ok(super::window_mutation::WindowAuthorityRefreshStep::Pending(RetainedCloneProgress{copied_items:1,..Default::default()}));
         }
-        let step=super::window_mutation::refresh_transfer(&mut authority.snapshot,&mut authority.pending_snapshot,&mut authority.retired_snapshots,grant).map_err(ValueError::into_fault)?;
+        let step=super::window_mutation::refresh::refresh_transfer(&mut authority.snapshot,&mut authority.pending_snapshot,&mut authority.retired_snapshots,grant).map_err(ValueError::into_fault)?;
         if matches!(step,super::window_mutation::WindowAuthorityRefreshStep::Ready(_)){authority.generation=authority.snapshot.generation;authority.revision=authority.snapshot.revision;}
         Ok(step)
     }

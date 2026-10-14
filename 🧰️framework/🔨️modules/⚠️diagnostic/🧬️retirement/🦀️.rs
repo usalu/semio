@@ -10,7 +10,7 @@ impl semio_framework_value::retirement::RetireOwned for crate::FaultCode {
 semio_framework_value::artifact_retire_leaf!(crate::FaultOrigin, crate::TextSpan);
 semio_framework_value::artifact_retire_struct!(crate::ExpectedSet { tokens, keywords, keys });
 semio_framework_value::artifact_retire_struct!(crate::FaultScope { plugin_id, app_id, instance_id, module, body_key });
-semio_framework_value::artifact_retire_struct!(crate::FaultCause { message, code });
+semio_framework_value::artifact_retire_struct!(crate::FaultCause { message, code, retained_progress });
 semio_framework_value::artifact_retire_struct!(crate::Diagnostic { code, severity, span, message, expected, scope });
 impl semio_framework_value::retirement::RetireOwned for crate::FaultParams {
     fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
@@ -19,4 +19,6 @@ impl semio_framework_value::retirement::RetireOwned for crate::FaultParams {
     fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.0)}
     fn controlled_retirement_supported()->bool{<Vec<(String,String)> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }
-semio_framework_value::artifact_retire_struct!(crate::Fault { retained_progress, origin, code, severity, message, scope, span, causes, params, retryable });
+semio_framework_value::artifact_retire_struct!(crate::Fault { retained_progress, origin, code, severity, message, scope, span, source, causes, params, retryable });
+
+semio_framework_value::artifact_retire_struct!(crate::FaultSource { offset, byte, depth });

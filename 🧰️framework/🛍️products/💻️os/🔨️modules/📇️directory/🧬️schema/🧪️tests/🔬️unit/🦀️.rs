@@ -17,7 +17,7 @@ fn intrinsic_bytes_are_refused_by_the_directory_json_event_mirror() {
 
 #[test]
 fn directory_session_authority_v1_matches_neutral_corpus_and_binding_goldens() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🪪️session-authority-v1/🔣️.json")).expect("session authority fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪪️session-authority-v1/🔣️.json")).expect("session authority fixture");
     for row in fixture["rows"].as_array().expect("rows") {
         let parsed = serde_json::from_value::<DirectorySessionAuthorityV1>(row["value"].clone()).ok().filter(DirectorySessionAuthorityV1::validate);
         assert_eq!(parsed.is_some(), row["accepted"].as_bool().expect("accepted"), "{}", row["id"]);
@@ -109,7 +109,7 @@ struct DirectoryCommandReceiptFixture {
 
 #[semio_framework_async_macros::async_test]
 async fn directory_command_receipt_v1_matches_language_neutral_vectors_and_rejects_hostiles() {
-    let fixture: DirectoryCommandReceiptFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/🧾️command-receipt-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("command-receipt fixture decodes");
+    let fixture: DirectoryCommandReceiptFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📇️directory/🧾️command-receipt-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("command-receipt fixture decodes");
     let request_of = |name: &str| -> DirectoryCommandRequestV1 {
         let vector = fixture.requests.iter().find(|request| request.name == name).expect("request vector");
         DirectoryCommandRequestV1::new(vector.request_id.clone(), vector.command.clone())
@@ -164,7 +164,7 @@ async fn directory_command_receipt_v1_matches_language_neutral_vectors_and_rejec
 
 #[semio_framework_async_macros::async_test]
 async fn directory_event_page_v1_matches_language_neutral_receipt_and_rejects_hostiles() {
-    let fixture: DirectoryEventPageFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/📃️event-page-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("event-page fixture decodes");
+    let fixture: DirectoryEventPageFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📇️directory/📃️event-page-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("event-page fixture decodes");
     assert_eq!(fixture.valid.canonical_unsigned_json(), fixture.canonical_unsigned);
     assert_eq!(semio_framework_hash::sha256_hex(fixture.canonical_unsigned.as_bytes()), fixture.expected_receipt_sha256);
     assert_eq!(fixture.valid.validate(), Ok(()));
@@ -263,7 +263,7 @@ struct DescriptorFixture {
 
 #[semio_framework_async_macros::async_test]
 async fn document_descriptor_matches_the_language_neutral_fixture() {
-    let fixture: DescriptorFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/🪪️document-descriptor.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("descriptor fixture decodes");
+    let fixture: DescriptorFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📇️directory/🪪️document-descriptor.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("descriptor fixture decodes");
     assert_eq!(semio_framework_pack_json::to_json_string(&fixture.valid), fixture.canonical);
 }
 
@@ -280,8 +280,8 @@ struct DocumentOpenPlanFixture {
 
 #[test]
 fn document_authority_json_integer_tokens_never_coerce() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🌱️value/🔁️codec/🧫️fixtures/🔣️.json")).expect("neutral exact integer corpus");
-    let fixture: DocumentOpenPlanFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🌱️value/🔁️codec/🧪️tests/🧫️fixtures/🔣️.json")).expect("neutral exact integer corpus");
+    let fixture: DocumentOpenPlanFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let intent_json = semio_framework_pack_json::to_json_string(&fixture.intent);
     assert!(intent_json.contains("\"version\":1"));
     for row in corpus["raw"].as_array().unwrap() {
@@ -318,7 +318,7 @@ fn document_authority_json_integer_tokens_never_coerce() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_open_plan_v1_matches_language_neutral_fixture() {
-    let fixture: DocumentOpenPlanFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture decodes");
+    let fixture: DocumentOpenPlanFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture decodes");
     assert_eq!(hex_lower(&descriptor_digest_v1(&fixture.descriptor).expect("descriptor hashes").0), fixture.descriptor_digest_v1);
     assert_eq!(fixture.intent.validate(), Ok(()));
     assert_eq!(fixture.valid_plan.validate(fixture.now_ms), Ok(()));
@@ -384,7 +384,7 @@ async fn document_open_plan_v1_matches_language_neutral_fixture() {
 
 #[test]
 fn user_preference_record_v1_matches_the_shared_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎚️user-preference-record/🔣️.json")).expect("user preference record fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🎚️user-preference-record/🔣️.json")).expect("user preference record fixture");
     let rows = fixture["rows"].as_array().expect("rows");
     assert!(rows.len() >= 15);
     for row in rows {
@@ -412,7 +412,7 @@ fn user_preference_record_v1_matches_the_shared_fixture() {
 /// package, component digest, semantic descriptor digest and component byte length.
 #[test]
 fn a_lease_package_is_admitted_only_with_its_binding_shipped_receipt() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
     let cases = corpus["componentReceiptCases"].as_array().expect("receipt cases");
     assert_eq!(cases.len(), 9);
     for row in cases {

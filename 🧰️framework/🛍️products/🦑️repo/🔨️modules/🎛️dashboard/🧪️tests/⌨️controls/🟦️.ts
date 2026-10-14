@@ -6,7 +6,7 @@ const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta
 const keymap = read("../../⚙️preferences/⌨️keymap/🔣️.json");
 const keymapSchema = read("../../🧬️schema/⚙️preferences/⌨️keymap/🔣️.json");
 const preferenceSchema = read("../../🧬️schema/⚙️preferences/🔣️.json");
-const vectors = read("../../🧫️fixtures/⌨️keymap/🔣️.json");
+const vectors = read("../🧫️fixtures/⌨️keymap/🔣️.json");
 
 type Pressed = { name?: string; sequence: string; ctrl: boolean; meta: boolean; shift: boolean };
 type Binding = { scope: string; action: string; keys: string[] };

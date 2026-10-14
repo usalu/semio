@@ -1,3 +1,9 @@
+import {readBuildMode,type BuildMode} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import {compilerAdmissionBudgetV1,type CompilerAdmissionControl} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {runOwnedCommand} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import installationSchema from "./🧬️schema/🔣️.json";
+export type DashboardExecutionOptions={readonly mode:BuildMode;readonly control:CompilerAdmissionControl};
 /** 🚀️ Starts an installed immutable Rust dashboard without graph discovery or executable hashing. */
 import { existsSync, readFileSync, writeFileSync, renameSync, mkdirSync } from "node:fs";
 import { readdir, stat } from "node:fs/promises";
@@ -6,7 +12,7 @@ import { dirname, basename, join, relative, resolve, isAbsolute } from "node:pat
 import { spawn } from "node:child_process";
 
 const cache=(root:string)=>join(root,".🧬semio/🦑️repo/⚡️cache");
-const manifest=(root:string)=>join(cache(root),"🎛️dashboard/installed.json");
+const manifest=(root:string,mode:BuildMode)=>join(cache(root),"🎛️dashboard",readBuildMode(mode),"installed.json");
 const slashes=(path:string)=>path.replaceAll("\\","/");
 
 /** 📦️ The crate directory of the dashboard executable; its sources live in the sibling modules of `🎛️dashboard`. */
@@ -17,17 +23,17 @@ export type DashboardSources={readonly roots:readonly string[];readonly digest:s
 
 const skippedDirectories=new Set(["target","node_modules","dist","build",".git","🗑️generated","🧪️tests","🧫️fixtures","coverage","__pycache__","storybook-static","temp"]);
 const skippedFiles=/\.(?:tsx?|mts|mjs|js|py|log|md|feature|tsv|tsbuildinfo)$/;
-const workspaceFiles=["Cargo.toml","Cargo.lock","rust-toolchain.toml"];
+const workspaceFiles=["Cargo.toml","Cargo.lock","rust-toolchain.toml",".cargo/config.toml"];
 
 /** 🔎️ Whether an installation record exists; a present but invalid record is rebuilt by the next launch. */
-export function dashboardInstalled(root:string):boolean { return existsSync(manifest(root)); }
+export function dashboardInstalled(root:string,mode:BuildMode):boolean { return existsSync(manifest(root,mode)); }
 
 /** 📍️ Resolves one small installation record; launch never reads the executable contents. */
-export function installedDashboard(root:string):string {
-  const file=manifest(root);
+export function installedDashboard(root:string,mode:BuildMode):string {
+  const file=manifest(root,mode);
   if(!existsSync(file))throw new Error("Dashboard is not installed. Run bun run dashboard:install once, then start bun run dashboard.");
   const value=JSON.parse(readFileSync(file,"utf8")),name=process.platform==="win32"?"semio.exe":"semio";
-  if(value.version!==2||value.platform!==process.platform||typeof value.path!=="string"||!new RegExp(`^\\.🧬semio/🦑️repo/⚡️cache/tools/dashboard-cli/[a-f0-9]{64}/${name.replace(".","\\.")}$`).test(value.path))throw new Error("Invalid dashboard installation record; run bun run dashboard:install.");
+  if(validateJsonSchemaSubset(installationSchema,value).length||value.mode!==mode||value.platform!==process.platform||!new RegExp(`^\\.🧬semio/🦑️repo/⚡️cache/tools/dashboard-cli/${mode}/[a-f0-9]{64}/${name.replace(".","\\.")}$`).test(value.path))throw new Error("Invalid dashboard installation record; run bun run dashboard:install.");
   const executable=resolve(root,value.path);
   if(!existsSync(executable))throw new Error("Installed dashboard executable is missing; run bun run dashboard:install.");
   return executable;
@@ -113,12 +119,12 @@ export async function captureDashboardSources(packageRoot:string,workspace:strin
 }
 
 /** ⏳️ Why the installed executable no longer matches the sources, or nothing while it is current. */
-export async function staleDashboard(root:string):Promise<string|undefined> {
-  if(!dashboardInstalled(root))return "it is not installed";
+export async function staleDashboard(root:string,mode:BuildMode):Promise<string|undefined> {
+  if(!dashboardInstalled(root,mode))return "it is not installed";
   let record;
-  try { record=JSON.parse(readFileSync(manifest(root),"utf8")); } catch { return "the installation record is unreadable"; }
+  try { record=JSON.parse(readFileSync(manifest(root,mode),"utf8")); } catch { return "the installation record is unreadable"; }
   const sources=record?.sources;
-  if(record?.version!==2||!Array.isArray(sources?.roots)||typeof sources?.digest!=="string")return "the installation record does not name its sources";
+  if(validateJsonSchemaSubset(installationSchema,record).length||record.mode!==mode||!Array.isArray(sources?.roots)||typeof sources?.digest!=="string")return "the installation record does not name its sources";
   const current=await digestDashboardSources(root,sources.roots);
   if(current===sources.digest)return;
   const before=Number.parseInt(sources.digest),after=Number.parseInt(current);
@@ -126,21 +132,22 @@ export async function staleDashboard(root:string):Promise<string|undefined> {
 }
 
 /** 🧊️ Publishes immutable executable bytes and one atomic native installation record. */
-export async function installDashboard(packageRoot:string,root:string,sources?:DashboardSources):Promise<string> {
-  const {pinExecutableArtifact}=await import("../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts");
-  const controller=new AbortController(),cancel=()=>controller.abort();
-  process.once("SIGINT",cancel);process.once("SIGTERM",cancel);
+export async function installDashboard(packageRoot:string,root:string,options:DashboardExecutionOptions,sources?:DashboardSources):Promise<string> {
+  const mode=readBuildMode(options.mode),control=options.control,budget=compilerAdmissionBudgetV1(control),controller=new AbortController(),signal=AbortSignal.any([control.signal,controller.signal]);
+  const expiry=budget?setTimeout(()=>controller.abort(Error("Original dashboard installation deadline exhausted")),budget):undefined;
+  const {pinExecutableArtifact}=await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts");
   try {
-    const recorded=sources??await captureDashboardSources(packageRoot,root);
+    const recorded=sources??await captureDashboardSources(packageRoot,root);compilerAdmissionBudgetV1(control);signal.throwIfAborted();if(validateJsonSchemaSubset(installationSchema.properties.sources,recorded).length)throw Error("Dashboard installation source ownership refused");
     const name=process.platform==="win32"?"semio.exe":"semio";
-    const executable=await pinExecutableArtifact(resolve(packageRoot,"dist/build",name),join(cache(root),"tools/dashboard-cli"),"dashboard-installation",{signal:controller.signal,leaseDirectory:join(cache(root),"agents/resource-leases"),onWait:({elapsedMs})=>console.log(`[dashboard] Installing executable (${elapsedMs}ms); Ctrl+C cancels`)});
+    const executable=await pinExecutableArtifact(resolve(packageRoot,"dist/build",mode,name),join(cache(root),"tools/dashboard-cli",mode),`dashboard-installation:${mode}`,{signal,leaseDirectory:join(root,".cache/framework/leases"),onWait:async progress=>{compilerAdmissionBudgetV1(control);await control.publish(progress);await control.yieldContinuation();}});
+    compilerAdmissionBudgetV1(control);signal.throwIfAborted();
     const path=slashes(relative(root,executable));
     if(isAbsolute(path)||path.startsWith("../"))throw new Error("Dashboard installation must stay inside the workspace");
-    const target=manifest(root),temporary=`${target}.${process.pid}.tmp`;
+    const target=manifest(root,mode),temporary=`${target}.${process.pid}.tmp`;
     mkdirSync(resolve(target,".."),{recursive:true});
-    writeFileSync(temporary,JSON.stringify({version:2,platform:process.platform,path,sources:recorded})+"\n");
+    writeFileSync(temporary,JSON.stringify({version:2,platform:process.platform,mode,path,sources:recorded})+"\n");
     renameSync(temporary,target);return executable;
-  } finally {process.removeListener("SIGINT",cancel);process.removeListener("SIGTERM",cancel);}
+  } finally {if(expiry)clearTimeout(expiry);}
 }
 
 /** 🧭️ Recognizes native installed-tool launches while retaining Nx for authoring tasks. */
@@ -161,22 +168,19 @@ export function mayRunStale(args:readonly string[]):boolean {
 }
 
 /** 🔨️ Rebuilds and reinstalls through the package script with inherited output; Ctrl+C cancels the build. */
-async function rebuildDashboard(reason:string):Promise<void> {
-  console.log(`[dashboard] Rebuilding because ${reason}; Ctrl+C cancels`);
-  const code=await new Promise<number>((accept,reject)=>{
-    const child=spawn(process.execPath,[join(dashboardPackageRoot,"📜️script.ts"),"build"],{cwd:dashboardPackageRoot,env:process.env,stdio:"inherit",windowsHide:true});
-    child.once("error",reject);child.once("close",(status,signal)=>accept(status??(signal==="SIGINT"?130:1)));
-  });
-  if(code!==0)throw new Error(`Dashboard rebuild failed (exit ${code}); fix the build, then run bun run dashboard:install.`);
+async function rebuildDashboard(reason:string,options:DashboardExecutionOptions):Promise<void> {
+  console.log(`[dashboard] Rebuilding ${options.mode} because ${reason}`);
+  await runOwnedCommand(process.execPath,[join(dashboardPackageRoot,"📜️script.ts"),"build"],dashboardPackageRoot,"dashboard:rebuild",compilerAdmissionBudgetV1(options.control),{env:{...process.env,SEMIO_BUILD_MODE:options.mode},signal:options.control.signal});
 }
 
-/** ▶️ Hands the terminal to the native binary after proving it matches the sources; no setup, graph or discovery precedes it. */
-export async function launchDashboard(root:string,args:readonly string[]):Promise<number> {
-  const reason=mayRunStale(args)?undefined:await staleDashboard(root);
-  if(reason)await rebuildDashboard(reason);
-  const executable=installedDashboard(root);
-  return await new Promise<number>((accept,reject)=>{
-    const child=spawn(executable,args,{cwd:root,env:process.env,stdio:"inherit",windowsHide:true});
-    child.once("error",reject);child.once("close",(code,signal)=>accept(code??(signal==="SIGINT"?130:1)));
-  });
+/** ▶️ Hands the terminal to the selected immutable binary under original cancellation and deadline. */
+export async function launchDashboard(root:string,args:readonly string[],options:DashboardExecutionOptions):Promise<number> {
+  const mode=readBuildMode(options.mode),control=options.control;compilerAdmissionBudgetV1(control);
+  const reason=mayRunStale(args)?undefined:await staleDashboard(root,mode);compilerAdmissionBudgetV1(control);
+  if(reason)await rebuildDashboard(reason,options);
+  const executable=installedDashboard(root,mode),controller=new AbortController(),signal=AbortSignal.any([control.signal,controller.signal]),budget=compilerAdmissionBudgetV1(control),expiry=budget?setTimeout(()=>controller.abort(Error("Original dashboard launch deadline exhausted")),budget):undefined;
+  try{return await new Promise<number>((accept,reject)=>{
+    const child=spawn(executable,args,{cwd:root,env:{...process.env,SEMIO_BUILD_MODE:mode},signal,stdio:"inherit",windowsHide:true});
+    child.once("error",reject);child.once("close",(code,closedSignal)=>accept(code??(closedSignal==="SIGINT"?130:1)));
+  });}finally{if(expiry)clearTimeout(expiry);}
 }

@@ -1,4 +1,4 @@
-/** ⏱️ Taxonomy scaling laws over `../../🧫️fixtures/⏱️taxonomy-scaling-laws/🔣️.json`: every linear-time replacement agrees exactly with the
+/** ⏱️ Taxonomy scaling laws over `../🧫️fixtures/⏱️taxonomy-scaling-laws/🔣️.json`: every linear-time replacement agrees exactly with the
  * quadratic original it replaced. Oracles: Buffer byte order for `utf8Compare`; picomatch (third-party glob) for the fixed-contract literal-leaf
  * prefilter; the original `/^\s*\[[^\]]+\]:\s*(\S+)/gmu` regex for link reference definitions; naive rescans for edits and subtrees. */
 import { expect, test } from "bun:test";

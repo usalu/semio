@@ -7,7 +7,7 @@ import {createFlowBrowserRuntime} from "../../🌐️browser/🏃️runtime/🟨
 /** 🎟️ Exercises the real browser transport with independently supplied ownership currencies. */
 export async function testFlowRetainedGrant():Promise<void>{
  const schema=JSON.parse(readFileSync(new URL("../../../../../../../🔨️modules/🌉️abi/🧬️schema/🔣️.json",import.meta.url),"utf8"));
- const fixture=JSON.parse(readFileSync(new URL("../../../../../../../🔨️modules/🌉️abi/🧫️fixtures/🎟️retained-grant/🔣️.json",import.meta.url),"utf8"));
+ const fixture=JSON.parse(readFileSync(new URL("../../../../../../../🔨️modules/🌉️abi/🧪️tests/🧫️fixtures/🎟️retained-grant/🔣️.json",import.meta.url),"utf8"));
  const ajv=new Ajv({strict:true,allErrors:true});ajv.addKeyword({keyword:"x-semio-binary",valid:true});ajv.addSchema(schema);
  const validate=ajv.compile({$ref:schema.$id+"#/definitions/AbiWorkBudget"});
  let assertions=0;

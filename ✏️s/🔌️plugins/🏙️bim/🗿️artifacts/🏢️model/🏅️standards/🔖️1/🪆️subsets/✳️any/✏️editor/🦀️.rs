@@ -561,7 +561,8 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for BimCommandWork {
         (!self.completed && command.command_id() == self.tool_id).then(|| bim_bounded_extent(command)).flatten()
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BimModelApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<BimModelApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BimModelApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<BimModelApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.completed || input.command.command_id() != self.tool_id {
             return Err(Fault::from("bim-command-work-terminal"));
         }
@@ -582,6 +583,9 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for BimCommandWork {
             _ => Vec::new(),
         };
         Ok(if ctx.presence_out.is_empty() && window_transient.is_empty() { ArtifactCommandWorkStep::Complete(emit) } else { ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { presence: ctx.presence_out, transient: Vec::new(), window_transient } } })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -909,6 +913,7 @@ impl ArtifactEditor for BimModelApp {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,
@@ -977,7 +982,7 @@ impl ArtifactEditor for BimModelApp {
         Ok(semio_framework_value::RetirementDemand::default())
     }
 
-    fn mounted_job_maintenance_step(_instance_id: u32, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+    fn mounted_job_maintenance_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
         Ok(semio_framework_plugin::PluginLifecycleStep::Complete(semio_framework_value::retained_clone::RetainedCloneProgress::default()))
     }
 

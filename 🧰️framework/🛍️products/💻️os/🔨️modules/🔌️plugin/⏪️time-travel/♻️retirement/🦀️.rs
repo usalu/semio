@@ -47,14 +47,14 @@ impl<A:ArtifactApp> TimeTravelLedger<A> {
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
 #[cfg(test)]
-use tests::assert_session_original;
+pub(crate) use tests::assert_session_original;
 #[cfg(test)]
-use tests::assert_pending_command_original;
+pub(crate) use tests::assert_pending_command_original;
 #[cfg(test)]
-use tests::assert_discard_publication_original;
+pub(crate) use tests::assert_discard_publication_original;
 #[cfg(test)]
-use tests::native_original_actor_grant;
-impl<P,Mu> TimeTravelStoreState<P,Mu> where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack+Send+Sync+'static,Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+::protocol::Mutation<P>+OpBinary+OpText+Send+'static {
+pub(crate) use tests::native_original_actor_grant;
+impl<P,Mu> TimeTravelStoreState<P,Mu> where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot+Send+Sync+'static,Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+::protocol::Mutation<P>+OpBinary+OpText+Send+'static {
  pub(crate) fn original_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(demand)=self.discard_effects_retirement_demands(body)?{return Ok(demand)}
   if let Some(owner)=self.snapshot_close.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body);}

@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "⚖️test🌱️value♻️retirement-native-receiver",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/value-rs:test-retirement-receiver --skip-nx-cache --configuration=prototype",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/v",
+        "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/v",
+        "CARGO_NET_OFFLINE": "false",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "{\"version\":1,\"policy\":{\"version\":1,\"owner\":\"⚖️test🌱️value♻️retirement-native-receiver\",\"maximumElapsedMilliseconds\":0},\"deadlineEpochMilliseconds\":null,\"capabilities\":{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"nx\",\"run\",\"@semio-tech/value-rs:test-retirement-receiver\",\"--skip-nx-cache\",\"--configuration=prototype\"],\"selection\":[\"nx\",\"run\",\"@semio-tech/value-rs:test-retirement-receiver\",\"--skip-nx-cache\",\"--configuration=prototype\"],\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/v\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":1000000},\"child\":{\"maximumElapsedMilliseconds\":3600000},\"network\":{\"offline\":false}}}}"
+      },
+      "presentation": {
+        "group": "4_test",
+        "order": 903.17
+      }
+    }
+  ],
+  "retireNames": []
+}

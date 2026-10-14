@@ -2,7 +2,7 @@ use crate::{JpgSnapshot,JpgDiff,JpgMutation};
 use crate::schema::snapshot::{JfifDensityUnits,JfifThumbnail,JpgSegment};
 use crate::schema::mutations::*;
 use protocol::{DiffAlgebra,Mutation,MutationDiff};
-fn fixture()->JpgSnapshot{semio_framework_pack_json::from_json_str(include_str!("../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
+fn fixture()->JpgSnapshot{semio_framework_pack_json::from_json_str(include_str!("../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 #[test]
 fn semantic_content_intents_apply_inverse_and_compose_without_native_authority(){
  let base=fixture();

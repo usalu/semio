@@ -1,0 +1,29 @@
+{
+  "materials": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "pbrMetallicRoughness": {
+            "baseColorTexture": {
+              "index": 0
+            }
+          }
+        }
+      }
+    ]
+  },
+  "textures": {
+    "removed": [
+      1
+    ],
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "name": "normal"
+        }
+      }
+    ]
+  }
+}

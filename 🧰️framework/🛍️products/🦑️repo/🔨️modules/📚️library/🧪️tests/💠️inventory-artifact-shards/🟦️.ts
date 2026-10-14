@@ -18,7 +18,7 @@ const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const ticketRoot = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE/🗑️generated/sol-root-taxonomy-workflow-extraction/inventory-artifact-shards");
 mkdirSync(ticketRoot, { recursive: true });
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/💠️inventory-artifact-shards/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/💠️inventory-artifact-shards/🔣️.json"), "utf8"));
 type Violation = { path: string; code: string; severity: "error" | "warning"; message: string };
 const byteCompare = (left: string, right: string) => Buffer.compare(Buffer.from(left), Buffer.from(right));
 const sha = (value: string | Uint8Array) => createHash("sha256").update(value).digest("hex");

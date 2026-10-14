@@ -4,7 +4,7 @@ import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
 import*as snapshot from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import{parseProcess3dArtifact}from"../../../../🧬️schema/🟦️.ts";
-import corpus from"../🧫️fixtures/🔣️.json";
+import corpus from"./🧫️fixtures/🔣️.json";
 import sql from"../🗄️.sql"with{type:"text"};
 test("Process3d actual Snapshot authority owns complete relational projection",()=>{expect(Object.hasOwn(snapshot,"process3dSnapshotToSqliteDatabase")).toBe(true);expect(Object.hasOwn(snapshot,"process3dSnapshotFromSqliteDatabase")).toBe(true)});
 test("Process3d actual Artifact parser retains independent literal Child addresses",()=>{const pose={position:[{bits:0n},{bits:0n},{bits:0n}],axis:[{bits:0n},{bits:0n},{bits:4607182418800017408n}],angle:{bits:0n}};const child={childId:"",target:{artifactId:"target\0!@/😀",dialect:{artifactKind:"s.stdio.semio",standard:"v1",subset:"brep"}}};const value={workshop:{machines:[]},stockId:corpus.rootStock.id,stockLabel:corpus.rootStock.label,stockPose:pose,stockPayload:{id:corpus.payloadStock.id,label:corpus.payloadStock.label,solid:{kind:"reference",referenceId:corpus.literal},pose},stockSolid:child,steps:{...child,target:{...child.target,dialect:{...child.target.dialect,subset:"flow"}}},stepPayloads:[],toolSolids:[child]};const actual=parseProcess3dArtifact(value);expect(actual.stockId).toBe(corpus.rootStock.id);expect(actual.stockPayload.id).toBe(corpus.payloadStock.id);expect(actual.stockSolid).toEqual(child)});
@@ -24,7 +24,7 @@ import "./🚦️public/🟦️.ts";
 
 
 test("Process3d native semantic census closed contract agrees with complete independent SQL values",async()=>{
- const file=Bun.file(new URL("../🧫️fixtures/🧮️census/🔣️.json",import.meta.url));expect(await file.exists()).toBe(true);
+ const file=Bun.file(new URL("./🧫️fixtures/🧮️census/🔣️.json",import.meta.url));expect(await file.exists()).toBe(true);
  const contract=await file.json();
  expect(contract["version"]).toEqual(1);expect(contract["owner"]).toEqual("process3d");expect(contract["valueBudget"]).toEqual("cumulativeSqlStorageClasses");expect(contract["allocationBudget"]).toEqual("independentOwnedRequests");expect(contract["scalarBytes"]).toEqual(8);expect(contract["encodings"]).toEqual(["binary","text"]);expect(contract["directions"]).toEqual(["decodeNative","encodeNative"]);expect(contract["grants"]).toEqual(["exact","minusOne","zero"]);expect(contract.owner).toBe("process3d");
  expect(contract.encodings).toEqual(["binary","text"]);expect(contract.directions).toEqual(["decodeNative","encodeNative"]);expect(contract.grants).toEqual(["exact","minusOne","zero"]);

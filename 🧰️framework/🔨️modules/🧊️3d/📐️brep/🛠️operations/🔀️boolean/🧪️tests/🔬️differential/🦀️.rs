@@ -129,7 +129,7 @@ fn run_case(entry: &Value, tolerance: &Value) -> Result<String, String> {
 /// watertight result whose tessellation agrees too. `KB1_ONLY` narrows the run to ids containing that text.
 #[test]
 fn boolean_differential_matrix_matches_manifold_oracle() {
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/differential-matrix/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/differential-matrix/🔣️.json")).unwrap();
     let only = std::env::var("KB1_ONLY").ok();
     let cases: Vec<&Value> = fixture["cases"].as_array().unwrap().iter().filter(|c| only.as_ref().is_none_or(|text| c["id"].as_str().unwrap().contains(text.as_str()))).collect();
     let threads = std::env::var("KB1_THREADS").ok().and_then(|t| t.parse().ok()).unwrap_or(4usize);
@@ -171,7 +171,7 @@ fn boolean_differential_matrix_matches_manifold_oracle() {
 #[test]
 fn debug_face_tessellation() {
     let Ok(only) = std::env::var("KB1_FACES") else { return };
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/differential-matrix/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/differential-matrix/🔣️.json")).unwrap();
     let entry = fixture["cases"].as_array().unwrap().iter().find(|c| c["id"] == only.as_str()).unwrap().clone();
     std::thread::Builder::new().stack_size(64 << 20).spawn(move || {
         let mut body = Body::new();

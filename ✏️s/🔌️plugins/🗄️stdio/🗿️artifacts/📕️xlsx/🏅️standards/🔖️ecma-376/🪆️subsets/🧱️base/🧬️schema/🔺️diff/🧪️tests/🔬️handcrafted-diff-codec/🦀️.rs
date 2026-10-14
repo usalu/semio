@@ -24,7 +24,7 @@ async fn diff_codec_text_binary_roundtrip_law() {
 fn archive_comment_only_diff_preserves_exact_text() {
     use protocol::{MutationDiff, OpBinary, OpText};
 use semio_framework_value::ToValue;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🎒️zip/📦️opc/🧫️fixtures/💬️archive-comment/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🎒️zip/📦️opc/🧪️tests/🧫️fixtures/💬️archive-comment/🔣️.json")).unwrap();
     let mut before = XlsxSnapshot::default();
     before.opc.comment = fixture["before"].as_str().unwrap().into();
     let mut after = before.clone();

@@ -1,0 +1,12 @@
+{
+  "mutation": "insertRetainingWall",
+  "index": 1,
+  "wall": {
+    "id": "rw-2",
+    "heightM": 6.0,
+    "phiDeg": 32.0,
+    "soilGamma": 18000.0,
+    "r": 1.5,
+    "hRdNPerM": 250000.0
+  }
+}

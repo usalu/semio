@@ -95,7 +95,7 @@ async fn a_deferred_remote_supersession_adopts_what_an_undeferred_one_adopts() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️supersede-replay/🔣️.json")).expect("corpus parses");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️supersede-replay/🔣️.json")).expect("corpus parses");
     let hex = |text: &str| text.as_bytes().chunks(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("ascii hex"), 16).expect("hex pair")).collect::<Vec<u8>>();
     let mut deferred_cases = 0;
     for case in corpus["cases"].as_array().expect("cases") {
@@ -581,7 +581,7 @@ async fn operation_capped_reprojection_preserves_structural_deadlines_and_exact_
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📏️reprojection-operation-authority.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️reprojection-operation-authority.json")).unwrap();
     let count = law["mutationCount"].as_u64().unwrap() as usize;
     let (author, _) = authored("operation-authority", Some(0), (0..count).map(|_| vec![add(1)]).collect(), &mut identity).await;
     let make = || EditReplay::new(ReplayMode::Report, Arc::new(DemoSnapshot { n: Some(0) }), author.applied_edit_ids.iter().cloned().collect(), 0, "demo/v1", Default::default(), &author.envelope.vcs.edits).unwrap();

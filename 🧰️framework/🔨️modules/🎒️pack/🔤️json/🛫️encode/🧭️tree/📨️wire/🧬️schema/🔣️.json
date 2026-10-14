@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "original",
+    "phases",
+    "copyCeilings",
+    "scalarInspectBytes",
+    "sourceHeaderCopyBytes",
+    "sameOriginalSource",
+    "terminalDropBytes",
+    "output"
+  ],
+  "properties": {
+    "original": {
+      "const": {
+        "id": 17,
+        "name": "source 源 é",
+        "values": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    "phases": {
+      "const": [
+        "measure",
+        "allocate",
+        "initialize",
+        "encode",
+        "sourceClose",
+        "handoff"
+      ]
+    },
+    "copyCeilings": {
+      "const": [
+        0,
+        1,
+        3,
+        64
+      ]
+    },
+    "scalarInspectBytes": {
+      "const": 64
+    },
+    "sourceHeaderCopyBytes": {
+      "const": 0
+    },
+    "sameOriginalSource": {
+      "const": true
+    },
+    "terminalDropBytes": {
+      "const": 0
+    },
+    "output": {
+      "const": "{\"id\":17,\"name\":\"source 源 é\",\"values\":[1,2,3]}"
+    }
+  }
+}

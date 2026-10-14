@@ -7,8 +7,8 @@ use semio_framework_geometry::Point;
 use serde_json::Value;
 use std::f64::consts::TAU;
 
-const CASES: &str = include_str!("../../../../../🧫️fixtures/🧙️modify/🔣️.json");
-const JOINS: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json");
+const CASES: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧙️modify/🔣️.json");
+const JOINS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json");
 
 fn cases() -> Value {
     serde_json::from_str(CASES).expect("the committed cases are JSON")

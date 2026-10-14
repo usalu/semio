@@ -15,7 +15,7 @@ type RendererHierarchy = { readonly key: string; readonly label: string; readonl
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
 const fixture = JSON.parse(
-  readFileSync(resolve(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️fixtures/🪟️collection-tree-shape/🔣️.json"), "utf8"),
+  readFileSync(resolve(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️tests/🧫️fixtures/🪟️collection-tree-shape/🔣️.json"), "utf8"),
 ) as { readonly collectionKey: string; readonly rendererHierarchy: RendererHierarchy };
 const layout = { kind: "leaf", width: "hug", height: "hug" } as const;
 const style = { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" } as const;

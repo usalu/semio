@@ -80,7 +80,7 @@ async fn declared_pdf_serializer_entry_answers_a_pdf_for_the_native_pack() {
     let entry = io().entries.iter().find(|entry| entry.into.artifact_kind == "s.stdio.pdf").expect("the pdf serializer row is declared");
     let mut doc = default_drawing_document("hop", None);
     doc.layers.push(create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Rect")).to_string().into()).expect("nonempty authored identity"), "Rect"));
-    let result: IoResult<IoPayload> = (entry.run)(&IoPayload::Binary(<DrawingSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&doc)));
+    let result: IoResult<IoPayload> = (entry.run)(&IoPayload::Binary(<DrawingSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&doc)));
     let outcome = result.expect("the pdf hop runs");
     let IoPayload::Binary(bytes) = &outcome.value else { panic!("pdf is a binary payload") };
     assert!(bytes.starts_with(b"%PDF-1.4\n"), "{:?}", &bytes[..16]);

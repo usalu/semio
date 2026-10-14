@@ -11,7 +11,7 @@ fn sqlite_guest_refusal_origin(dialect: &semio_framework_artifact_reference::Art
         "invariantViolated" => ValueRefusalKind::InvariantViolated,
         _ => panic!("unregistered intrinsic refusal fixture"),
     };
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️schema/🪶️sqlite/⚠️refusal/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/⚠️refusal/🔣️.json")).unwrap();
     let diagnostic = &fixture["diagnostic"];
     semio_framework::io_schema::IoError {
         cause: ValueError::new(kind, fixture["message"].as_str().unwrap()),
@@ -40,12 +40,13 @@ fn sqlite_guest_assert_refusal(rejection: &crate::sqlite_wire::SnapshotRejection
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_guest_refusal_runtime_export_import_preserves_all_eight_causes() {
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
     use semio_framework_os_kernel::io::io_mechanism::{attach_sqlite_snapshot_metadata, NativeSnapshotRegistration};
     use semio_framework_os_kernel::io::{ArtifactAssemblyRegistryPlan, commit_artifact_assembly_registry_plan};
     use store::sqlite_snapshot::{SnapshotEncoding, SqliteDatabase, SqliteDatabaseLimits, SqliteSnapshotControl, export_sqlite_database};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️schema/🪶️sqlite/⚠️refusal/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/⚠️refusal/🔣️.json")).unwrap();
     let mut registrations = Vec::new();
     let mut codecs = Vec::new();
     let mut document_bindings = Vec::new();
@@ -60,6 +61,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             snapshot_type: original.snapshot_type,
             export: sqlite_guest_refusal_export,
             import: sqlite_guest_refusal_import,
+            export_file:None,
+            import_file:None,
         });
         document_bindings.push(semio_framework_os_kernel::io::ArtifactCodecBinding::from_codec(semio_framework_os_kernel::io::ArtifactCodecBindingChannel::DirectNative, "testkit", Some(dialect.artifact_kind.clone()), Vec::new(), Some(dialect.clone()), None, &codec));
         codecs.push(codec.clone());
@@ -73,7 +76,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let expected = sqlite_guest_refusal_origin(&dialect);
         for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
             let limits = SqliteDatabaseLimits::default();
-            let neutral:crate::sqlite_wire::SnapshotInput=serde_json::from_str(include_str!("../../../🧬️schema/🪶️sqlite/🧫️fixtures/🔣️.json")).unwrap();
+            let neutral:crate::sqlite_wire::SnapshotInput=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();
             let grant=neutral.native.native().unwrap();
             let mut receive=|_|true;let mut publish=|_|true;let mut progress=|_|true;
             let mut decoder=semio_framework_value::NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut receive);
@@ -86,7 +89,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let exported = crate::plugin_runtime::plugin_snapshot_sqlite_export(&mut crate::sqlite_wire::SnapshotInputOwner{wire:Some(input),dialect:None,route:None,payload:None,hop:None},&mut native,&mut snapshot).await.unwrap();
             let crate::sqlite_wire::SnapshotFileResult::Rejected(rejection) = exported else { panic!("refused provider exported a file") };
             sqlite_guest_assert_refusal(&rejection, &expected);
-            let mut database = SqliteDatabase::from_schema(<Std1AnySnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::SQLITE_SCHEMA).unwrap();
+            let mut database = SqliteDatabase::from_schema(<Std1AnySnapshot as pack::snapshot::ArtifactSqliteSnapshot>::SQLITE_SCHEMA).unwrap();
             let mut progress = |_| true;
             let mut control = SqliteSnapshotControl::new(&mut progress, limits);
             attach_sqlite_snapshot_metadata(&mut database, &dialect, encoding, &mut control).unwrap();

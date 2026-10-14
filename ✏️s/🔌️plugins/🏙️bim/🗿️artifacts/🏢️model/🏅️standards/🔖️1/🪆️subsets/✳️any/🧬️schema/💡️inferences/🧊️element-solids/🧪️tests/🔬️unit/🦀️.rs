@@ -140,7 +140,7 @@ async fn five_hundred_walls_are_tessellated_within_a_generous_bound() {
 /// 🧫️ A case with more triangles than this commits no meshes (a finely tessellated arc would weigh half a megabyte); its measures are checked against the closed forms only.
 const MESH_LIMIT: usize = 2000;
 
-const FIXTURES_ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/💡️inferences/🧊️element-solids");
+const FIXTURES_ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids");
 
 fn welded_row(solid: &ElementSolid) -> serde_json::Value {
     let mesh = solid.mesh().welded();

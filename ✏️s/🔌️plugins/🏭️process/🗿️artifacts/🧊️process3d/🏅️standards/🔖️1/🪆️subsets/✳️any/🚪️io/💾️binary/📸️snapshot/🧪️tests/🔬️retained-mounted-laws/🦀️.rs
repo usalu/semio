@@ -119,7 +119,7 @@ fn derived_pack_identity_and_text_pack_equivalence() {
 #[test]
 fn mounted_session_round_trips_the_derived_pack_one_grant_at_a_time() {
     let expected = complete_snapshot();
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&expected);
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&expected);
     let mut session = ingest(&bytes);
     let mut grants = 0;
     while !grant(&mut session) {
@@ -134,7 +134,7 @@ fn mounted_session_round_trips_the_derived_pack_one_grant_at_a_time() {
 
 #[test]
 fn foreign_header_is_rejected_before_semantic_allocation() {
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&complete_snapshot());
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&complete_snapshot());
     let mut session = process3d_mounted_pack_session(bytes.len(), 8_192).expect("process3d hostile header preflight");
     admit(&mut session, bytes[0]);
     assert!(!session.semantic_allocated());
@@ -145,7 +145,7 @@ fn foreign_header_is_rejected_before_semantic_allocation() {
 
 #[test]
 fn every_interrupted_grant_closes_into_exact_retirement() {
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&complete_snapshot());
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&complete_snapshot());
     let mut total = 0;
     {
         let mut session = ingest(&bytes);

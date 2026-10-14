@@ -29,6 +29,7 @@ component-guest-async = []
 artifact-app-testing = []
 
 [dependencies]
+semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-plugin-mounted-owner = { path = "../../🏇️mounted-owner/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
@@ -109,6 +110,7 @@ wit-bindgen = { version = "0.57.1", default-features = false, features = ["macro
 semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 
 [dev-dependencies]
+semio-framework-job = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job", features = ["testkit"] }
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🚪️ Test-only `entrypoint`: `one_framework_reserved_route_fits_a_bounded_thread_stack` drives one

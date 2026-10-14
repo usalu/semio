@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Archive Status Observation Without Work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "operation",
+    "states",
+    "observations",
+    "maintenanceCalls",
+    "eventCount",
+    "wallAuthorityCreated",
+    "sourceChanged",
+    "receipt"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "operation": {
+      "const": 91
+    },
+    "states": {
+      "const": [
+        "pending",
+        "running"
+      ]
+    },
+    "observations": {
+      "const": 8
+    },
+    "maintenanceCalls": {
+      "const": 0
+    },
+    "eventCount": {
+      "const": 0
+    },
+    "wallAuthorityCreated": {
+      "const": false
+    },
+    "sourceChanged": {
+      "const": false
+    },
+    "receipt": {
+      "const": {
+        "items": 0,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0
+      }
+    }
+  }
+}

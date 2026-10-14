@@ -100,10 +100,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<JsonSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<JsonSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<JsonSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<JsonSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::apply_mutation(&mut self.snapshot, &mutation);
@@ -147,8 +147,8 @@ pub mod derived_analysis {
 
         fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
             match source {
-                AnalyzeSource::Text(text) => if <JsonSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).is_ok() { semio_framework_plugin::io::Confidence::High } else { semio_framework_plugin::io::Confidence::Low },
-                AnalyzeSource::Binary(bytes) => if <JsonSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).is_ok() { semio_framework_plugin::io::Confidence::High } else { semio_framework_plugin::io::Confidence::Low },
+                AnalyzeSource::Text(text) => if <JsonSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).is_ok() { semio_framework_plugin::io::Confidence::High } else { semio_framework_plugin::io::Confidence::Low },
+                AnalyzeSource::Binary(bytes) => if <JsonSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).is_ok() { semio_framework_plugin::io::Confidence::High } else { semio_framework_plugin::io::Confidence::Low },
             }
         }
 
@@ -158,14 +158,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <JsonSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <JsonSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <JsonSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <JsonSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

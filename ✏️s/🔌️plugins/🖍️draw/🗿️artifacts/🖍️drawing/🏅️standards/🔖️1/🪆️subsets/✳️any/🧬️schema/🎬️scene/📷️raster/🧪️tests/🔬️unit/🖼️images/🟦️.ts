@@ -1,7 +1,7 @@
 /** 🖼️ Filtered image scenes agree with neutral pixels and independent filtering references. */
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
-import cases from "../../../🧫️fixtures/🖼️images/🔣️.json";
+import cases from "../../../../../../🧪️tests/🧫️fixtures/🎬️scene/📷️raster/🖼️images/🔣️.json";
 import schema from "../../../🧬️schema/🔣️.json";
 import pathSchema from "../../../../../🧮️geometry/📷️raster/🧬️schema/🔣️.json";
 import {RasterSceneJob,rasterizeScene,type RasterSceneInput} from "../../../🟦️.ts";

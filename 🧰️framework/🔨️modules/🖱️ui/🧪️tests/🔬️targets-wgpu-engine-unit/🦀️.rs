@@ -319,7 +319,7 @@ fn held_pointer_capture_transfers_to_the_accepted_candidate_and_releases_once() 
 
 #[test]
 fn window_clock_keeps_a_noop_candidate_sealed_and_invalidates_it_once_when_hold_repeat_changes_state() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⌨️number-stepper-editing/🔣️.json")).expect("number stepper fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⌨️number-stepper-editing/🔣️.json")).expect("number stepper fixture");
     let hold = &fixture["hold"];
     let window_id = "clock-held-stepper";
     let generation = 1;
@@ -420,7 +420,7 @@ fn a_late_hidden_visibility_ack_cannot_suspend_a_reused_surface_id() {
 
 #[test]
 fn accepted_input_caret_starts_solid_blinks_resets_and_cancels_from_the_shared_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/⌨️caret-cadence/🧫️fixtures/🔣️.json")).expect("caret cadence fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/⌨️caret-cadence/🧪️tests/🧫️fixtures/🔣️.json")).expect("caret cadence fixture");
     let half_period = fixture["halfPeriodMs"].as_f64().expect("half period") / 1_000.0;
     assert_eq!(half_period, crate::wgpu::events::CARET_BLINK_SECONDS);
     for (case_index, case) in fixture["cases"].as_array().expect("caret cases").iter().enumerate() {
@@ -505,7 +505,7 @@ fn scene_caret_requires_exact_accepted_surface_and_document_identity() {
 
 #[test]
 fn accepted_control_tooltip_reveals_after_dwell_paints_in_overlay_and_dismisses_immediately() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/💡️retained-control-tooltip/🔣️.json")).expect("retained tooltip fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/💡️retained-control-tooltip/🔣️.json")).expect("retained tooltip fixture");
     let window_id = "retained-tooltip";
     let generation = 1;
     let label = fixture["text"]["label"].as_str().expect("tooltip label");
@@ -587,7 +587,7 @@ fn accepted_control_tooltip_reveals_after_dwell_paints_in_overlay_and_dismisses_
 
 #[test]
 fn tooltip_keeps_accepted_text_across_candidate_discard_and_retires_after_replacement() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/💡️retained-control-tooltip/🔣️.json")).expect("retained tooltip fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/💡️retained-control-tooltip/🔣️.json")).expect("retained tooltip fixture");
     let window_id = "accepted-tooltip-text";
     let label = fixture["text"]["label"].as_str().expect("tooltip label");
     let shortcut = fixture["text"]["shortcut"].as_str().expect("tooltip shortcut");
@@ -656,7 +656,7 @@ fn drive_layout(ui: &mut Ui, window_id: &str, width: f32, height: f32, atlas: &m
 }
 
 fn accessibility_document() -> UiDocumentTree {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧫️fixtures/♿️accessibility-projection.json")).expect("accessibility projection fixture parses");
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧪️tests/🧫️fixtures/♿️accessibility-projection.json")).expect("accessibility projection fixture parses");
     let source = &law["document"];
     let nodes = source["nodes"].as_array().expect("fixture nodes");
     let header = UiDocumentLeaseHeader {
@@ -732,7 +732,7 @@ fn publish_blur_commit_input_document(ui: &mut Ui, window_id: &str) {
 }
 
 fn select_accessibility_law() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/♿️retained-select-accessibility/🔣️.json")).expect("retained Select accessibility fixture parses")
+    serde_json::from_str(include_str!("../🧫️fixtures/♿️retained-select-accessibility/🔣️.json")).expect("retained Select accessibility fixture parses")
 }
 
 fn publish_select_accessibility_document(ui: &mut Ui, law: &serde_json::Value) {
@@ -785,7 +785,7 @@ fn publish_select_accessibility_document(ui: &mut Ui, law: &serde_json::Value) {
 }
 
 fn puzzle3d_settings_law() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/⚙️puzzle3d-settings-document/🔣️.json")).expect("Puzzle3D Settings fixture parses")
+    serde_json::from_str(include_str!("../🧫️fixtures/⚙️puzzle3d-settings-document/🔣️.json")).expect("Puzzle3D Settings fixture parses")
 }
 
 fn puzzle3d_settings_document(law: &serde_json::Value) -> UiDocumentTree {
@@ -929,7 +929,7 @@ fn puzzle3d_settings_document_completes_retained_paint() {
 #[test]
 fn puzzle3d_settings_stepper_commits_on_press_and_release_only_retires_capture() {
     let law = puzzle3d_settings_law();
-    let gestures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️stepper-pointer-commit/🔣️.json")).expect("stepper pointer fixture");
+    let gestures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪜️stepper-pointer-commit/🔣️.json")).expect("stepper pointer fixture");
     for gesture in gestures["cases"].as_array().expect("gesture cases") {
         let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
         let window_id = law["document"]["surface"].as_str().expect("surface");
@@ -995,6 +995,7 @@ fn accessibility_dispatch_uses_current_window_generation_and_node_identity() {
 }
 
 fn close_surface_to_terminal(ui: &mut Ui, token: UiSurfaceToken) {
+    let mut sequence=0;let cancel=semio_framework_job::root_cancel_token();
     let id = ui.windows.id(token).unwrap().clone();
     let generation = ui.surface_generation(id.as_ref()).unwrap();
     let tree = ui.tree(id.as_ref()).unwrap();
@@ -1009,7 +1010,8 @@ fn close_surface_to_terminal(ui: &mut Ui, token: UiSurfaceToken) {
     }
     assert!(ui.begin_surface_close(token));
     for _ in 0..262_144 {
-        match ui.close_surface_one(token) {
+        let mut receipt=Default::default();let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(17),semio_framework_job::Generation(9),semio_framework_job::StepBudget::new(1,12345,ui_contract::UI_WORKER_RETIREMENT_POLICY),cancel.clone(),||Some(1),&mut sequence,&mut receipt);
+        match ui.close_surface_one(token,&mut cx).unwrap() {
             UiSurfaceCloseStep::Pending => {}
             UiSurfaceCloseStep::Refused(refusal) => panic!("original surface close refused: {refusal:?}"),
             UiSurfaceCloseStep::RetiredScene(retired) => {
@@ -1031,7 +1033,7 @@ fn close_surface_to_terminal(ui: &mut Ui, token: UiSurfaceToken) {
 
 #[test]
 fn closed_surface_token_and_document_epoch_cannot_alias_a_same_id_successor() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
     let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let window_id = "surface-close-same-id";
     publish_accessibility_document(&mut ui, window_id);
@@ -1046,7 +1048,8 @@ fn closed_surface_token_and_document_epoch_cannot_alias_a_same_id_successor() {
     assert!(generation > old_generation);
     assert_eq!(law["sameIdSuccessor"]["rejectPreviousIdentity"], true);
     assert!(!ui.begin_surface_close(old_token));
-    assert!(matches!(ui.close_surface_one(old_token), UiSurfaceCloseStep::Complete));
+    let mut receipt=Default::default();let mut sequence=0;let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(17),semio_framework_job::Generation(9),semio_framework_job::StepBudget::new(1,12345,ui_contract::UI_WORKER_RETIREMENT_POLICY),semio_framework_job::root_cancel_token(),||Some(1),&mut sequence,&mut receipt);
+    assert!(matches!(ui.close_surface_one(old_token,&mut cx).unwrap(), UiSurfaceCloseStep::Complete));
     assert_eq!(ui.surface_token(window_id), Some(token));
     assert_eq!(law["sameIdSuccessor"]["preserveSuccessor"], true);
     assert!(ui.dispatch_accessibility_event(window_id, old_generation, 2, "#width", AccessibilityUiEvent::Activate).is_none());
@@ -1056,7 +1059,7 @@ fn closed_surface_token_and_document_epoch_cannot_alias_a_same_id_successor() {
 
 #[test]
 fn surface_close_releases_queued_layout_capacity_for_every_sequential_window() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
     let count = law["sequentialMounts"].as_u64().unwrap() as usize;
     let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     for index in 0..count {
@@ -1074,7 +1077,7 @@ fn surface_close_releases_queued_layout_capacity_for_every_sequential_window() {
 
 #[test]
 fn surface_close_silently_discards_a_focused_blur_commit() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
     let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let id = "silent-input-unmount";
     publish_blur_commit_input_document(&mut ui, id);
@@ -1812,7 +1815,7 @@ fn frame_into_step_publishes_one_atomic_candidate_only_when_ready() {
 
 #[test]
 fn retained_frame_progress_ignores_unchanged_scene_backpressure_and_observes_external_work() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧱️retained-frame-progress/🔣️.json")).expect("retained frame fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧱️retained-frame-progress/🔣️.json")).expect("retained frame fixture");
     assert_eq!(fixture["sceneBackpressure"]["externalCompleted"], serde_json::json!([0, 0, 1]));
     let body = Rect::new(0.0, 0.0, 240.0, 160.0);
     let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
@@ -1847,7 +1850,7 @@ fn retained_frame_progress_ignores_unchanged_scene_backpressure_and_observes_ext
 
 #[test]
 fn same_size_moved_viewport_discards_the_old_origin_candidate_before_atomic_publication() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧱️retained-frame-progress/🔣️.json")).expect("retained frame fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧱️retained-frame-progress/🔣️.json")).expect("retained frame fixture");
     let rect = |value: &serde_json::Value| {
         let values = value.as_array().expect("fixture rect");
         Rect::new(values[0].as_f64().unwrap() as f32, values[1].as_f64().unwrap() as f32, values[2].as_f64().unwrap() as f32, values[3].as_f64().unwrap() as f32)
@@ -2263,7 +2266,7 @@ fn golden_select() {
 
 #[test]
 fn checkbox_checked_state_does_not_paint_a_selection_outline() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧫️fixtures/♿️retained-toggle-semantics/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧪️tests/🧫️fixtures/♿️retained-toggle-semantics/🔣️.json")).unwrap();
     let paint = &fixture["checkboxPaint"];
     let width = paint["availableWidth"].as_f64().unwrap() as f32;
     let height = paint["availableHeight"].as_f64().unwrap() as f32;
@@ -2387,7 +2390,7 @@ fn golden_tree() {
 /// 🌳️ Clickable identity rows preserve the label pixels painted by their owning Tree.
 #[test]
 fn retained_tree_action_rows_do_not_overpaint_their_labels() {
-    let samples: serde_json::Value = serde_json::from_str(include_str!("../../🧱️elements/🌳️Tree/🧫️fixtures/♿️actions/🔣️.json")).unwrap();
+    let samples: serde_json::Value = serde_json::from_str(include_str!("../../🧱️elements/🌳️Tree/🧪️tests/🧫️fixtures/♿️actions/🔣️.json")).unwrap();
     for sample in samples.as_array().unwrap() {
         let label = sample["label"].as_str().unwrap();
         let item = UiTreeItemNode {
@@ -3101,7 +3104,7 @@ fn draw_text_overlay_on_writes_to_the_overlay_channel_not_the_main_one() {
 /// `RUST_MIN_STACK`, so the repo runner's 128 MiB floor cannot hide a re-inflated frame here.
 #[test]
 fn ui_surface_slot_table_is_heap_first_and_fits_a_bounded_thread_stack() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
     let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
         .as_array()
         .expect("🧱️ the budget lists its tables")
@@ -3157,7 +3160,7 @@ fn surface_content_height_measures_the_document_not_the_viewport_it_was_given() 
 /// 🌲️ Compact content keeps its intrinsic extent when presentation swaps its accepted tree.
 #[test]
 fn compact_tree_content_height_survives_presentation_and_viewport_changes() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌳️compact-tree-intrinsic/🔣️.json")).expect("compact tree height fixture");
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌳️compact-tree-intrinsic/🔣️.json")).expect("compact tree height fixture");
     let surface = law["surface"].as_str().unwrap();
     let nodes = law["nodes"].as_array().unwrap();
     let mut document = UiDocumentTree::new(UiDocumentLeaseHeader { generation: 1, surface: SurfaceId::try_from(surface).unwrap(), revision: UiRevision(1), root: UiNodeId(1), layout_epoch: 0, node_count: nodes.len() }).unwrap();
@@ -3196,7 +3199,7 @@ fn compact_tree_content_height_survives_presentation_and_viewport_changes() {
 /// 🧾️ A discarded layout cannot lend its height witness to the still-presented document.
 #[test]
 fn intrinsic_content_height_cannot_leak_from_a_discarded_candidate() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌳️compact-tree-intrinsic/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌳️compact-tree-intrinsic/🔣️.json")).unwrap();
     let surface = law["surface"].as_str().unwrap();
     let sequence = law["publicationSequence"].as_array().unwrap();
     let document = |generation: u64, presentation: &str| {
@@ -3235,7 +3238,7 @@ fn intrinsic_content_height_cannot_leak_from_a_discarded_candidate() {
 
 #[test]
 fn retained_input_discard_projects_the_shared_draft_law_and_schedules_paint() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🚦️input-draft-disposition/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🚦️input-draft-disposition/🔣️.json")).unwrap();
     for (index, law) in corpus["cases"].as_array().unwrap().iter().enumerate() {
         let window = format!("retained-draft-{index}");
         let records = serde_json::json!([
@@ -3301,4 +3304,15 @@ fn original_layout_admission_params_cancel_and_full_error_close_with_system_rece
   let mut root=semio_framework_async::CancelTokenRetirement::from_token(root);for _ in 0..1000{if root.terminal_is_empty(){break}let(step,born,free)=measured(||root.close_step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!((born,free),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=born;releases+=free;}assert!(root.terminal_is_empty());assert_eq!(root_born+owned+births,releases);assert_eq!(measured(||drop(root)),((),0,0));
   eprintln!("[DEBUG] Original layout params/cancel/full-error copy={copy} samePointer=true physicalReceipts=true terminalDrop=0");
  }
+}
+
+/// 🧳️ The real window keeps both failed worker sources through denied and fully funded original close.
+#[test]
+fn original_ui_worker_close_retains_whole_failure_and_original_cx(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🔬️targets-wgpu-mounted-layout-unit/🧫️fixtures/🧵️original-close.json")).unwrap();
+ for copy in law["copyGrants"].as_array().unwrap(){let mut ui=Ui::new(semio_framework_ui_locale::Locale::En);let id="original-worker-failure";let token=ui.try_admit_surface(id).unwrap();assert!(ui.begin_surface_close(token));let((failure,pointers),birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let primary=semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original UI worker cause 源");let receipt=semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"original separate UI receipt 源");let pointers=(primary.message.as_ptr(),receipt.message.as_ptr());(semio_framework_job::OriginalTurnFailure{primary:primary.into(),receipt_refusal:Some(receipt),context_refusal:None},pointers)});
+  let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ui.windows.get_token_mut(token).unwrap().retain_layout_close_failure("Layout.CloseSession",failure));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let grant=semio_framework_job::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy.as_u64().unwrap()as usize,maximum_capacity_bytes:262144,maximum_release_bytes:262144,maximum_depth:128};let mut sequence=0;let cancel=semio_framework_job::root_cancel_token();
+  for denial in law["denials"].as_array().unwrap(){let denial=denial.as_str().unwrap();let mut receipt=Default::default();let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(17),semio_framework_job::Generation(9),semio_framework_job::StepBudget::new(if denial=="work"{0}else{1},if denial=="deadline"{0}else{12345},semio_framework_job::RetainedCloneGrant{maximum_items:usize::from(denial!="items"),..grant}),cancel.clone(),||Some(1),&mut sequence,&mut receipt);let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ui.close_surface_one(token,&mut cx));assert!(matches!(result.unwrap(),UiSurfaceCloseStep::Pending));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),Default::default());let original=ui.layout_retirement_failure(id).unwrap();assert_eq!((original.primary_value().unwrap().message.as_ptr(),original.receipt_refusal.as_ref().unwrap().message.as_ptr()),pointers);}
+  let(mut born,mut freed)=(birth.requested_bytes,birth.released_bytes);for turn in 0..100000{if !ui.layout_retirement_failure_pending(id){break}let mut receipt=Default::default();let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(17),semio_framework_job::Generation(9),semio_framework_job::StepBudget::new(1,12345,grant),cancel.clone(),||Some(1),&mut sequence,&mut receipt);let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ui.close_surface_one(token,&mut cx));assert!(matches!(result.unwrap(),UiSurfaceCloseStep::Pending));assert_eq!((heap.requested_bytes,heap.released_bytes),(cx.retained_progress().retained_capacity_bytes,cx.retained_progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;assert!(turn<99999)}assert_eq!(born,freed);assert!(!ui.layout_retirement_failure_pending(id));assert!(ui.layout_retirement_refusal(id).is_none());close_surface_to_terminal(&mut ui,token);
+ }eprintln!("[DEBUG] UI original worker wholePair=true samePointers=true deniedSystem0=true sameOriginalContext=true copies1_3_64=true debitOnce=true fullConservation=true");
 }

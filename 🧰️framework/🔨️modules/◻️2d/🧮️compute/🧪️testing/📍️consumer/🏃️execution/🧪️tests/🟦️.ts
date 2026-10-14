@@ -4,9 +4,9 @@ import {resolve} from "node:path";
 import {writeFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";
 import fixture from "./🧫️fixtures/🎚️level/🔣️.json";
-import {createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import {createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 const frames:{command:string,args:string[],budgetMs:number,cwd:string,throwOnFailure?:boolean,level?:string,coverage?:string}[]=[];
-mock.module(resolve(import.meta.dir,"../../../../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts"),()=>({runBudgetedTestCommand:async(command:string,args:string[],options:{budgetMs:number,cwd:string,throwOnFailure?:boolean,env:NodeJS.ProcessEnv})=>{frames.push({command,args:[...args],budgetMs:options.budgetMs,cwd:options.cwd,throwOnFailure:options.throwOnFailure,level:options.env.SEMIO_TEST_LEVEL,coverage:options.env.SEMIO_COVERAGE});}}));
+mock.module(resolve(import.meta.dir,"../../../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts"),()=>({runBudgetedTestCommand:async(command:string,args:string[],options:{budgetMs:number,cwd:string,throwOnFailure?:boolean,env:NodeJS.ProcessEnv})=>{frames.push({command,args:[...args],budgetMs:options.budgetMs,cwd:options.cwd,throwOnFailure:options.throwOnFailure,level:options.env.SEMIO_TEST_LEVEL,coverage:options.env.SEMIO_COVERAGE});}}));
 const {ComputeOwnershipTestScript}=await import("../🟦️.ts");
 class Witness extends ComputeOwnershipTestScript{readonly source="./🧪️tests/🟦️.ts";}
 const root=resolve(import.meta.dir,"../../../../../../../..");

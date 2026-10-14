@@ -1,0 +1,581 @@
+{
+  "version": 1,
+  "owners": [
+    "🧰️framework/🔨️modules/🎭️actor",
+    "🧰️framework/🔨️modules/🧵️job"
+  ],
+  "roots": [
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🫴️receiving/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🫴️receiving/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📤️return/🌿️framing/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📤️return/🌿️framing/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🌿️framing/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🌿️framing/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/📥️inbox/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/📥️inbox/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📤️return/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📃️page/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📃️page/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🎠️activation-reservation/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🎠️activation-reservation/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🚪️retirement/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🚪️retirement/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧯️fault/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧯️fault/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🚪️retirement/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🚪️retirement/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📨️inbound/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📨️inbound/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/♻️session-return/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/♻️session-return/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/🎟️context/🛑️cancel/🤝️alias/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/🎟️context/🛑️cancel/🤝️alias/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️turn/🤝️receipt/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️turn/🤝️receipt/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️turn/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️turn/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🏗️preparation/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🏗️preparation/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🚚️staged/🎟️metadata/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🚚️staged/🎟️metadata/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🚚️staged/📦️destination/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🚚️staged/📦️destination/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🚚️staged/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🚚️staged/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/🏃️work/🎟️grant/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/🏃️work/🎟️grant/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️owner/⚠️failure/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️owner/⚠️failure/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️owner/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️owner/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📬️outcome/⚠️fault-binding/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/📬️outcome/⚠️fault-binding/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📏️extent/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📏️extent/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📖️source/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📖️source/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🤝️acknowledgement/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🤝️acknowledgement/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/🔭️preview/🎟️drive/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/🔭️preview/🎟️drive/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/♻️retirement/🔔️wake/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/♻️retirement/🔔️wake/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/♻️retirement/👷️authority/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/♻️retirement/👷️authority/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🧪️tests/🧫️fixtures"
+    }
+  ],
+  "entries": [
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🫴️receiving/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "40e576307da17b2f3e3731dc7ab69df6eb61f57e924d05033275f59023d7da14"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "920fe5353a8a67618592be475e0d8be5155470fda1a5e64009dc0da19f8ec273"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "1438371ba7abe616114798022c54c44b6e8880ee4dca761aa9dd57f3b008736e"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "86e26c34bc0f80f8ed02c100b7e40fedb7045e84c9222a5ce19bdb31af109441"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📤️return/🌿️framing/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📤️return/🌿️framing/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "ab7e908a44fa04375d16b9a5163d62980c6e7166a04601c99c0a44adf42ed5d5"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🌿️framing/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🌿️framing/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "84ff8520d09ef8c3d3a1194bd00da7bd62f172e8cf8667d3f4987279f1ff9211"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/📥️inbox/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/📥️inbox/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "6b0d7e36181a287e915bc5990849089879c0145b0c3597aa7f8e53ec094ad0d4"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "c30b1e67bc188c09d239657ba2f7a8b438cf6bbe18e2ae185f88504780405587"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "8fc4c2e72150744658ec8fe6f0a60497f0e9dc419ba1df806ce2d37662ec802b"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "e344e5c60674f1670d40e465a5a7b2468be7e914c640f7bbfc7aa4a1456d2a09"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📤️return/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "ed2c9f97b5abdb39963969d13684e68701ea705d03adc1f7823ac0c25c3aa1e7"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📃️page/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📃️page/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "a6398f9680b44ffca75890d84db3216a36405dbe1a0952ad9952db5da514e62b"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🎠️activation-reservation/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🎠️activation-reservation/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "a0fe249e31b49902a1fe8b696a2a635c3d6771ce880381985c9e3067d0653249"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "9409048737966a72c03f90211a0a9bab2c9a6855c584b5ff8b572cbdde33b786"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "2bf58edaf45e4891a695771ef86c3bd442e0062dd8f34dcf4181c63e8758227b"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "7795cee0ed9a3a2dea22f0883d9326e89c3abff6b383bc4e4c8be9a6af98e257"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "9f21bd7e7468a091b24c6a03e1f5661a849156b883185fa18450f05d4b5b12e3"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🚪️retirement/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🚪️retirement/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "bd0d34eaad3d1c5bfd625ea87dba56305274bf39fe5b67e55c6419a6f737b895"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "e9acdf785300bcbfef3325a0e80b97f9bbc6c2b8f703f129f1d4c56158eb3085"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧯️fault/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧯️fault/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "45fc4a27d7722cb8d878a97b1b7a81696e514561f8fa552f2d6883e76073d360"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "0d5537911a8182d0b880225ba6dbcf7d6ddd035392ea786e164b556e28eae575"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🚪️retirement/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🚪️retirement/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "ec4d460294db141872eb995b57f2659854d0f3f767ad0de8dc62cb79ec2d477f"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "69b8029194e89ba34647d23f857a5bc85e3921648a1d8fb74caf7317db26020d"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "9d12241934dae1cda521b386a5fec19493bf1af27cd846f66609d566d3a8d293"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📨️inbound/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📨️inbound/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "3a16e12cfdfbf37e7665679eac0a4ab04b42dc530e28bb597ad72f9953de3f5c"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "e404947d2a2734ee6efc8fccf78dfdada02daf25cb3e86349263e77450b3a6e7"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "43824f2e8afa27301d9b3b1788c78305c5e713f76204d0737cd61293cc1816e6"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "ce82c8db277ade09ffcd0776907912f64c737a8f1f8400f8650d56d8243d4590"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "825c3faa970e088b72d8fac526a0adcfaaf8c26e5eac059efd4e7795db413802"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "061f4946af776a69a3098b6292fd10f990759f978117a0aaf9a1d90cab50c63a"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "0d7caed7c43964bd5177ed5872b560f898b00aaa98ba5d4688e460cf748be08c"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🧫️fixtures/🎁️effect-params-nesting/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🎁️effect-params-nesting/🔣️.json",
+      "sha256": "06fe76c5fd661e92e7044e8b5b880f6771bfe560df500d06fe474102109422be"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🧫️fixtures/📨️effect-wire-routes/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/📨️effect-wire-routes/🔣️.json",
+      "sha256": "4b6761c650f258acbd8a1b3976fe2e8e914f408d96050e3b4b9d8203e874b2ea"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/🧫️fixtures/🕹️reserved-verb-answer/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🕹️reserved-verb-answer/🔣️.json",
+      "sha256": "0538f6560d11ef89403be1bfde91509c83ff22b5aefeb00576124fc4e6cc9892"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/♻️session-return/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/♻️session-return/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "79bcb012b9c7221c4af7a8a89f7813f5784bfa6ff835090dd1440991317ffee1"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "f592b98db6a899ea58eb3c7f9ccd8a08f339e95947c5a01d4e5aebef6c40d523"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/🎟️context/🛑️cancel/🤝️alias/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/🎟️context/🛑️cancel/🤝️alias/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "0aad063fce46791d074e528ecc931a87dc6eeb14a8bf605ff0ee6a803307d220"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️turn/🤝️receipt/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️turn/🤝️receipt/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "9bb60cd2acd3b88b98f8731aef27b6346f7739e5d8e12ba771e50b9d28384cd1"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️turn/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️turn/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "63afcc7e187e3f3ffce7634930708551f9d5e96cf946a625a722dfbb5fa0ce0e"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🏗️preparation/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🏗️preparation/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "755ac30983fd6be9f057f3ef105ee0122c694ce02e565640087521d8e73671b0"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🚚️staged/🎟️metadata/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🚚️staged/🎟️metadata/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "132a447e852fa8d9303d38874e0c2aa7484a9af635000bc6fa52d44f93732b5a"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🚚️staged/📦️destination/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🚚️staged/📦️destination/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "d9b0ce4538c66a8fbe44a6bdeb9408b119b632f5053bd34963ec27195d22103a"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🚚️staged/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🚚️staged/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "908cd3677e76ce80360908458664f10bc03d60201863bbced09fafe3abbbe25b"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "cc6ce1b6efbdbe45f420c1a62f9904767daadfe251cc2496fd0fbffcdad5d6f4"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/🏃️work/🎟️grant/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/🏃️work/🎟️grant/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "607d5478b2aa605544f94e39050f8d638be4628ae1b572b6fb4296e34853c199"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️owner/⚠️failure/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️owner/⚠️failure/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "d5fdf4c66c956d3a14f399bf1d19abf665f408fab65c5c6272a11264976caacf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️owner/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️owner/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "3ab59f35f482d14213aa0705d60d7f052491cee187dd21d52e5d09a547131e3e"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📬️outcome/⚠️fault-binding/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/📬️outcome/⚠️fault-binding/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "ef0639152d850057e32c9739a00bcde5f229223892e6d33bb03236b13b5b8c4e"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "cccd4fcda26655c43967e06471a765afa795f3fd28ebde35e03ad867a6a383f5"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📏️extent/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📏️extent/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "56c98fa0779c204ef3463ba66f345d264def4917207dd7bbe98e3a385c7ecb58"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "1ae59c5b6f43092b5ac5026eb7649f8118b1e39ad7d1e1b80713bef85584dc5d"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📖️source/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📖️source/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "7fe7ddc8a0c331fa1c7e6364eb10786bcf4e3813e5f5831ac1321f84a5122e0c"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "7c5afaeb0aebc17caabf668dbec5522ebb37b56af1fb19e8c5dc94b595ad364b"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "e45f8013836f273cd1d0c240414d8651b300db9c302b67698a74b48089d5f71a"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🤝️acknowledgement/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🤝️acknowledgement/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "9a03eb2a131b2104dbbe35cb0adfe223530ae7aa1488b14d6383453cffbb6794"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "b4abdddc3187ca5fe741ef35a88d49fbde2f64c8146c798d9567e53bf48058ab"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/🧫️fixtures/📦️physical-close/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📦️physical-close/🔣️.json",
+      "sha256": "9538d29a5d638e4325b11e12cfc98125f06c9f5806a6c6baea7e86c89310bdab"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/🧫️fixtures/⚖️shared-framework-action-routes-law.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/⚖️shared-framework-action-routes-law.json",
+      "sha256": "92a9febb9c49feeb9a11175482d894b923fd914fc481cac67b506ffc3d038f16"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/🧫️fixtures/🪜️clock-stride-law.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/🪜️clock-stride-law.json",
+      "sha256": "db1b67bc2beffffcab05bde39cdb8f20fa41572e19837bde38138cf87550d67d"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/🧫️fixtures/♻️mounted-close/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/♻️mounted-close/🔣️.json",
+      "sha256": "818500ff69efa36bcfcefb4961580c32ad2602476ebd1b286b09004b2d95c071"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/🧫️fixtures/📇️fixed-operation-registry-law.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📇️fixed-operation-registry-law.json",
+      "sha256": "6ac782871977e99ed3d0ff35b2c9130eef359833905fc0bed6e82e35de1dc474"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/🔭️preview/🎟️drive/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/🔭️preview/🎟️drive/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "6ea69d221db9ce443f886bc42296c7ad1811804ae27d302bd075a9d208b33dca"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "5c4dea58451bb1a934f706ba840cd656ad1ab8f0c0d3f4a24a9d9ab502846a42"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/♻️retirement/🔔️wake/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/♻️retirement/🔔️wake/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "e19f93987855a3506f007eb2777b0c12c339047989408dd5d0f3bc2c8f20586d"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/♻️retirement/👷️authority/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/♻️retirement/👷️authority/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "6d884185a7e0abaafd775f04e40c5acab4c4ae6a9b4dc2bd0a0dcef2bdeef7a3"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "7b54b113c51303edb813c9fb89d781b3a70c86e190b48bd30b90016acac8b820"
+    }
+  ]
+}

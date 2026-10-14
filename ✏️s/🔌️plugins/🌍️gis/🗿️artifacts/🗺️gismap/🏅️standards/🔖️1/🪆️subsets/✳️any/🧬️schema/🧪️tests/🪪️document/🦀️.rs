@@ -1,11 +1,11 @@
 //! 🧪️ Map codecs and mutations preserve exact durable child identities.
 use crate::{GisMapSnapshot, MapFeature};
 use crate::schema::{GisMapArtifact, diff::{GisMapDiff, GisMapFeaturesDelta}};
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 #[test]
 fn map_document_contract_preserves_all_children_and_dynamic_feature_payloads() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).unwrap();
     let artifact: GisMapArtifact = semio_framework_pack_json::from_json_str(&fixture["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let snapshot: GisMapSnapshot = semio_framework_pack_json::from_json_str(&fixture["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(artifact.to_snapshot(), snapshot);

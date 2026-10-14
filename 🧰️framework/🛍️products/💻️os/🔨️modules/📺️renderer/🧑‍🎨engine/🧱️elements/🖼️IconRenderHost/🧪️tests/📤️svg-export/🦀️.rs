@@ -6,7 +6,7 @@ use ui_wgpu::wgpu::{
 };
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/📤️svg-export/🔣️.json")).expect("SVG export fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/📤️svg-export/🔣️.json")).expect("SVG export fixture")
 }
 
 fn fixture_vec3(value: &serde_json::Value) -> Vec<[f32; 3]> {

@@ -1,8 +1,8 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import {dwgSnapshotFixture as snapshot} from "🧰️support/🟦️.ts";
-import fixture from "../🧫️fixtures/🎭️bodies/🔣️.json";
-import encodingFixture from "../🧫️fixtures/📏️encoding.json";
+import fixture from "./🧫️fixtures/🎭️bodies/🔣️.json";
+import encodingFixture from "./🧫️fixtures/📏️encoding.json";
 import {dwgSnapshotToSqliteDatabase,dwgSnapshotFromSqliteDatabase,dwgSnapshotValidateSqliteSubset} from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 

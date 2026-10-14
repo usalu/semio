@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "payload",
+    "operation",
+    "generation",
+    "deadlineUs",
+    "copies",
+    "denials",
+    "stock",
+    "fuel",
+    "alias"
+  ],
+  "properties": {
+    "payload": {
+      "const": "same inference 源"
+    },
+    "operation": {
+      "const": 71
+    },
+    "generation": {
+      "const": 3
+    },
+    "deadlineUs": {
+      "const": 12345
+    },
+    "copies": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "denials": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "items",
+          "copy",
+          "capacity",
+          "release",
+          "depth",
+          "work",
+          "deadline"
+        ]
+      },
+      "minItems": 7,
+      "maxItems": 7,
+      "uniqueItems": true
+    },
+    "stock": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "fuel": {
+      "const": 10000
+    },
+    "alias": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copyBytes",
+        "nonfinalReleasesBytes",
+        "denials",
+        "samePeerPayload",
+        "finalArcRetainsPayload",
+        "terminalDropBytes"
+      ],
+      "properties": {
+        "copyBytes": {
+          "const": 0
+        },
+        "nonfinalReleasesBytes": {
+          "const": 0
+        },
+        "denials": {
+          "const": [
+            "items",
+            "release",
+            "depth"
+          ]
+        },
+        "samePeerPayload": {
+          "const": true
+        },
+        "finalArcRetainsPayload": {
+          "const": true
+        },
+        "terminalDropBytes": {
+          "const": 0
+        }
+      }
+    }
+  }
+}

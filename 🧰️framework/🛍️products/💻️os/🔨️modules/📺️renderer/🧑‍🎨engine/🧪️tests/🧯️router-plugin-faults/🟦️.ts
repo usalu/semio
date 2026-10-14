@@ -8,7 +8,7 @@ import { AppRouter, type AppRouterManifest } from "@semio-tech/framework";
 import { describe, expect, it } from "vitest";
 import { shellCatalogProbePlugins } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
 
-import routerFaultFixture from "../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json";
+import routerFaultFixture from "../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json";
 
 describe("shell catalog probe router faults", () => {
   

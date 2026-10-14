@@ -1,0 +1,45 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "exec",
+    "--projects=workspace",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--parallel=1",
+    "--",
+    "bun",
+    "test",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧾️metadata/🧪️tests/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️transition/🧪️tests/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧵️edit/🧪️tests/🟦️.ts"
+  ],
+  "selection": [
+    "nx",
+    "exec",
+    "--projects=workspace",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--parallel=1",
+    "--",
+    "bun",
+    "test",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧾️metadata/🧪️tests/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️transition/🧪️tests/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧵️edit/🧪️tests/🟦️.ts"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
+    "transport": {
+      "maximumBytes": 536870912,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": false
+    }
+  },
+  "buildMode": "prototype"
+}

@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
-import { typecheckProject } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️typescript/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { typecheckProject } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** ❓️ `@teaching/architecture-quiz` task router: `bun ./📜️script.ts <dev|dev-site|build|test [quick|long|exhaustive]|test-e2e [dev] [rehearsal] [--serial] [--keep] [--proctor <executable>] [Playwright arguments…]|typecheck|check|publish|docker-image-build [--tag <tag>] [--jobs <n>]|docker-image-check [--tag <tag>] [--port <n>] [--keep]|docker-image-publish [--tag <tag>]|docker-stack-check [--tag <tag>] [--http-port <n>] [--https-port <n>] [--keep]|docker-stack-bundle [--tag <tag>] [--out <directory>]|deploy-check [--tag <tag>] [--jobs <n>]>`. */
-import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { playgroundDevPortString, playgroundPortEnv } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
 import { runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { runViteBunxDev, runViteBuild, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts";
@@ -30,8 +30,8 @@ class DevSiteScript extends BundleScript {
   }
 }
 class BuildScript extends BundleScript {
-  run(segments: string[]): void {
-    runViteBuild(this.root, segments, VITE_CONFIG);
+  async run(segments: string[]): Promise<void> {
+    await runViteBuild(this.invocation, this.root, segments, VITE_CONFIG);
   }
 }
 class TestScript extends BundleScript {
@@ -52,7 +52,7 @@ class TestEndToEndScript extends BundleScript {
  * spec, and this router against the compiler (`tsconfig.json`). */
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await typecheckProject({ workspace: this.repoRoot, cwd: this.root, project: "tsconfig.json", owner: "architecture-quiz:typescript", args: segments, timeoutMs: 120_000, execution: { signal: this.invocation.control.signal } });
+    await typecheckProject({ workspace: this.repoRoot, stateRoot: join(this.repoRoot, ".🧬semio/🦑️repo/⚡️cache"), invocation: this.invocation, cwd: this.root, project: "tsconfig.json", owner: "architecture-quiz:typescript", args: segments, timeoutMs: 120_000, execution: { signal: this.invocation.control.signal } });
   }
 }
 class CheckScript extends BundleScript {
@@ -61,8 +61,8 @@ class CheckScript extends BundleScript {
   }
 }
 class PublishScript extends BundleScript {
-  run(): void {
-    publishQuizSite(this.root, () => runViteBuild(this.root, [], VITE_CONFIG));
+  async run(): Promise<void> {
+    await publishQuizSite(this.root, () => runViteBuild(this.invocation, this.root, [], VITE_CONFIG));
   }
 }
 class DockerImageBuildScript extends BundleScript {
@@ -94,7 +94,7 @@ class DockerStackBundleScript extends BundleScript {
 }
 class DeployCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await checkQuizDeployment(this.repoRoot, this.root, () => runViteBuild(this.root, [], VITE_CONFIG), segments);
+    await checkQuizDeployment(this.repoRoot, this.root, () => runViteBuild(this.invocation, this.root, [], VITE_CONFIG), segments);
   }
 }
 

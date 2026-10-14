@@ -71,3 +71,5 @@ impl ActorUiPatchReceipt {
     }
 }
 //#endregion 🩹️IssuedPatchReceipt
+
+semio_framework_value::artifact_retire_leaf!(ActorUiPatchReceipt);

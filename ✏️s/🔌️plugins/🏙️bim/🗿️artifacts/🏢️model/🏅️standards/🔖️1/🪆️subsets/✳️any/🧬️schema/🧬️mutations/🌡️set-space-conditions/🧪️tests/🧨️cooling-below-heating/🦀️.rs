@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🌡️set-space-conditions/🧨️cooling-below-heating",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌡️set-space-conditions/🧨️cooling-below-heating/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌡️set-space-conditions/🧨️cooling-below-heating/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌡️set-space-conditions/🧨️cooling-below-heating/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌡️set-space-conditions/🧨️cooling-below-heating/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🌡️set-space-conditions/🧨️cooling-below-heating/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌡️set-space-conditions/🧨️cooling-below-heating/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌡️set-space-conditions/🧨️cooling-below-heating/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌡️set-space-conditions/🧨️cooling-below-heating/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌡️set-space-conditions/🧨️cooling-below-heating/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌡️set-space-conditions/🧨️cooling-below-heating/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

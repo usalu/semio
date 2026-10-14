@@ -2,7 +2,7 @@ import fc from "fast-check";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
-/** ✏️ Runs the language-agnostic supersede fold steps (`🔗️causal/🧫️fixtures/🧫️supersede-fold`) through the TypeScript
+/** ✏️ Runs the language-agnostic supersede fold steps (`🔗️causal/🧪️tests/🧫️fixtures/🧫️supersede-fold`) through the TypeScript
  * fold twin — the same expectations the Rust `fold_history` meets — after validating them against their schema (Ajv),
  * and checks with fast-check that the resolved supersessions do not depend on the order the events arrive in. */
 export async function registerSupersedeFoldTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "foldSupersessions">, source: TestSource): Promise<void> {
@@ -40,7 +40,7 @@ export async function registerSupersedeFoldTests(vitest: NonNullable<ImportMeta[
     const { dirname, join } = await import("node:path");
     const { fileURLToPath } = await import("node:url");
     const root = dirname(fileURLToPath(source.url));
-    const fixture = await readFile(join(root, "🔗️causal/🧫️fixtures/🧫️supersede-fold/🔣️.json"), "utf8");
+    const fixture = await readFile(join(root, "🔗️causal/🧪️tests/🧫️fixtures/🧫️supersede-fold/🔣️.json"), "utf8");
     return { fixture: JSON.parse(fixture) as Json };
   }
 

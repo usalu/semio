@@ -19,7 +19,7 @@ impl Deserializer<VcsSnapshot> for CsvIntoVcs {
         let IoPayload::Binary(bytes) = payload else {
             return Err(error("expected a binary csv payload".into()));
         };
-        let csv = <CsvSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|e| error(e.to_string()))?;
+        let csv = <CsvSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|e| error(e.to_string()))?;
         let row = |at: usize| csv.records.get(at).map(|record| record.fields.iter().map(|field| field.value.clone()).collect::<Vec<_>>()).ok_or_else(|| error(format!("the table has no row {at}")));
         Ok(IoOutcome::clean(vcs_from_record(&row(0)?, &row(1)?).map_err(error)?))
     }

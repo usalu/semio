@@ -89,7 +89,7 @@ fn ifc4_any_editor_example_snapshot(example_id: &str) -> Result<IfcSnapshot, Fau
     if example_id != crate::examples::ifc4_demo::ID {
         return Err(Fault::new(semio_framework_diagnostic::FaultOrigin::App, semio_framework_value::ValueRefusalKind::InvalidValue.as_str(), "unknown IFC4 example"));
     }
-    <IfcSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::ifc4_demo::PRIMARY_TEXT).map_err(|error| {
+    <IfcSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::ifc4_demo::PRIMARY_TEXT).map_err(|error| {
         let mut fault = Fault::new(semio_framework_diagnostic::FaultOrigin::App, error.kind.as_str(), error.message);
         fault.span = Some(error.span);
         fault
@@ -235,6 +235,7 @@ impl ArtifactEditor for Ifc4AnyEditor {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
-import { TEST_LEVEL_BUDGET_MS } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { TEST_LEVEL_BUDGET_MS } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { PACKAGE_TEST_BUDGET_MS, packageTestBudgetMs } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/⏱️test-level-budgets/🔣️.json", import.meta.url), "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/⏱️test-level-budgets/🔣️.json", import.meta.url), "utf8"));
 
-const levels = JSON.parse(readFileSync(new URL("../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🧫️fixtures/🔣️.json", import.meta.url), "utf8")).levels;
+const levels = fixture.levels;
 
 /** 🧼️ Schema-first test-level budgets stay synchronized with [[TEST_LEVEL_BUDGET_MS]] and package overrides. */
 test("test-level budgets fixture matches schema and TS levels", () => {

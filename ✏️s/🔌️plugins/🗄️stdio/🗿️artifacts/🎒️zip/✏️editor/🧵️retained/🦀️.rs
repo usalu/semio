@@ -164,7 +164,8 @@ where
         Some(2)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<E>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<E>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<E>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<E>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.restored && input.context.is_none() {
             return Err(fault("stdio.zip.checkpoint-context", "resuming archive work requires the captured canonical context"));
         }
@@ -177,6 +178,9 @@ where
             Some(emit) => Ok(ArtifactCommandWorkStep::Complete(emit)),
             None => Ok(ArtifactCommandWorkStep::Replay { stage: "zip-resolve-entry", preview: r#"{"en":"Checking archive entries","de":"Archiveinträge werden geprüft"}"#.as_bytes() }),
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn work_demands(&self, input: &ArtifactCommandInputs<'_, EditorApp<E>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {

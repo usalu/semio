@@ -3,7 +3,7 @@ import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import {readFileSync} from "node:fs";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "../🧪️tests/🧫️fixtures/🔣️.json";
 import schema from "../../../🧬️schema/🔣️.json";
 test("native MutationApplyError retirement conserves every original message and target allocation",()=>{
  const validate=new Ajv({strict:true}).compile({...schema,$ref:"#/$defs/MutationApplyError"}),db=new Database(":memory:");db.exec("CREATE TABLE owners(ordinal INTEGER PRIMARY KEY,capacity INTEGER,live INTEGER)");

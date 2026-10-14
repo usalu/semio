@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔭️set-view/🧮️filters-by-phase",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔭️set-view/🧮️filters-by-phase/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔭️set-view/🧮️filters-by-phase/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔭️set-view/🧮️filters-by-phase/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔭️set-view/🧮️filters-by-phase/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔭️set-view/🧮️filters-by-phase/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔭️set-view/🧮️filters-by-phase/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔭️set-view/🧮️filters-by-phase/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔭️set-view/🧮️filters-by-phase/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔭️set-view/🧮️filters-by-phase/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔭️set-view/🧮️filters-by-phase/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

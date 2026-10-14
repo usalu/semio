@@ -3,7 +3,7 @@ use crate::standards::v1::subsets::any::io::binary::snapshot as pack;
 use crate::standards::v1::subsets::any::io::text::snapshot as text;
 use semio_framework_pack_json::{from_json_str, to_json_string, JsonMemberPolicy};
 
-const HOUSE: &str = include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
+const HOUSE: &str = include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
 
 fn house() -> ModelSnapshot {
     from_json_str(HOUSE, JsonMemberPolicy::Reject).expect("house decodes")

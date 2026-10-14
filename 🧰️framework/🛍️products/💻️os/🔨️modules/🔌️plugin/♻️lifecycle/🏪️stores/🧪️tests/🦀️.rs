@@ -18,7 +18,7 @@ impl ArtifactOwnedDisposer<String> for OriginalDisposer {
 
 #[test]
 fn original_disposer_frame_has_its_own_physical_release(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();assert_eq!(corpus["stages"].as_array().unwrap().len(),ORIGINAL_STORE_LANES.len());
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();assert_eq!(corpus["stages"].as_array().unwrap().len(),ORIGINAL_STORE_LANES.len());
  for denied in corpus["cases"].as_array().unwrap().iter().filter(|row|!row["advanced"].as_bool().unwrap()){let axis=denied["name"].as_str().unwrap();assert!(axis.starts_with("deny-"));}
  let mut source=String::with_capacity(257);source.push_str("Original German ä and English Draw presence");let original_pointer=source.as_ptr();let body_capacity=source.capacity();
  let mut disposer:ArtifactDisposal<String>=Some(Box::new(OriginalDisposer{body:None,started:false}));let bytes=std::mem::size_of::<OriginalDisposer>();let demand=original_disposal_demands(&disposer,&source,7).unwrap();
@@ -30,7 +30,7 @@ fn original_disposer_frame_has_its_own_physical_release(){
 
 #[test]
 fn original_transient_detach_allocates_no_replacement_and_retires_exact_frames(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();assert_eq!(corpus["detach"]["allocated"],0);assert_eq!(corpus["detach"]["released"],0);
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();assert_eq!(corpus["detach"]["allocated"],0);assert_eq!(corpus["detach"]["released"],0);
  let ((mut store,mut disposer),birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let store=store::TransientStore::<crate::NoTransient,crate::NoTransientMutation>::default();let disposer:ArtifactDisposal<_>=Some(crate::no_transient_store_disposer());(store,disposer)});
  let original=store.current_root();let pointer=std::sync::Arc::as_ptr(&original);drop(original);let demand=original_disposal_demands(&disposer,&store,7).unwrap();assert_eq!(demand.capacity_bytes,0);assert_eq!(demand.release_bytes,0);
  for denied in [RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:demand.copy_bytes,maximum_depth:demand.depth,..Default::default()},RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes-1,maximum_depth:demand.depth,..Default::default()},RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_depth:0,..Default::default()}]{let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original_disposal_step(&mut disposer,&mut store,denied));assert!(!result.unwrap().1);assert!(!store.detached_terminal_is_empty());let alias=store.current_root();assert_eq!(std::sync::Arc::as_ptr(&alias),pointer);drop(alias);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}

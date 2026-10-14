@@ -1,0 +1,12 @@
+{
+  "mutation": "createShapeModel",
+  "childId": "cad-shape-2",
+  "target": {
+    "artifactId": "cad-shape-2",
+    "dialect": {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "model"
+    }
+  }
+}

@@ -9,7 +9,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { CurrentPhysicalOwnerV1, mapBoundedV1, type CurrentPhysicalPortV1 } from "../../../../../📁️filesystem/🧾️observation/📁️current/🟦️.ts";
-import { CargoProvenanceSessionV1, sharedProvenanceCustodyV1, writeCompletedCargoInvocationProvenanceV1 } from "../../🟦️.ts";
+import { CargoProvenanceSessionV1, portProvenanceCustodyV1, sharedProvenanceCustodyV1, writeCompletedCargoInvocationProvenanceV1 } from "../../🟦️.ts";
 import {
   CARGO_PROVENANCE_PHYSICAL_BUDGET_V1,
   CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1,
@@ -27,7 +27,7 @@ import {
   type CargoProvenanceV1,
 } from "../🟦️.ts";
 
-const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
 const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR;
 if (!artifacts) throw Error("Caller-owned SEMIO_TEST_ARTIFACT_DIR is required");
@@ -109,6 +109,41 @@ test("the physical control is finite, owner-validated and bounded by the caller'
   expect(cargoProvenancePhysicalControlV1({ cancelled: () => false, onProgress: () => undefined }).remainingMs()).toBeGreaterThan(CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.deadlineMs - 5000);
   expect(() => new CurrentPhysicalOwnerV1(artifacts, control)).not.toThrow();
   expect(CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1).toBeLessThanOrEqual(128 * 1024 * 1024);
+});
+
+test("provenance publication refuses original expiry when awaited recheck returns", async () => {
+  const law = fixture.publicationDeadline, root = mkdtempSync(join(artifacts!, "e-")), manifest = join(root, "Cargo.toml"), receipt = join(root, "receipt.json");
+  writeFileSync(manifest, law.manifest);
+  const reference = new Ajv({ strict: true }).compile({ type: "number", maximum: 0 });
+  expect(reference(law.remainingAfterRecheck)).toBe(true);
+  const started = performance.now();
+  let expired = false;
+  const owner = new CurrentPhysicalOwnerV1(root, cargoProvenancePhysicalControlV1({ cancelled: () => false, remainingMs: () => expired ? law.remainingAfterRecheck : law.initialMilliseconds - (performance.now() - started), onProgress: () => undefined }));
+  expect(await owner.digest(manifest)).toBe(Buffer.from(nobleSha256(Buffer.from(law.manifest))).toString("hex"));
+  const port: CurrentPhysicalPortV1 = { control: owner.control, read: path => owner.read(path), digest: path => owner.digest(path), measure: path => owner.measure(path), directoryEntries: path => owner.directoryEntries(path), checkpoint: () => owner.checkpoint(), recheck: async () => { await owner.recheck(); expired = true; } };
+  const session = new CargoProvenanceSessionV1(portProvenanceCustodyV1(port));
+  try {
+    await session.write(receipt, { manifest, cwd: root, command: "check", args: [], buildDirectory: null, builtAtMs: Date.now(), status: 0, cancelled: false, units: [], buildScripts: [] }, new Map(), root);
+    await expect(session.close()).rejects.toThrow(new RegExp(law.expectedError, "u"));
+    expect(existsSync(receipt)).toBe(law.expectedPublished);
+  } finally { await session.discard(); }
+  console.log("[DEBUG] Awaited provenance recheck cannot renew expired original publication authority; noble SHA-256 oracle agrees");
+});
+
+test("exact-boundary provenance receipts keep every temporary materialized path inside the same portable cap", async () => {
+  const law = fixture.publicationPaths, root = mkdtempSync(join(artifacts!, "b-")), manifest = join(root, "Cargo.toml"), receipt = join(root, "r".repeat(law.maximumUnits - root.length - 1));
+  const validate = new Ajv({ strict: true }).compile({ type: "array", maxItems: law.maximumUnits, items: { type: "string", maxLength: 1 } });
+  expect(receipt.length).toBe(law.maximumUnits);
+  expect(validate(receipt.split(""))).toBe(true);
+  writeFileSync(manifest, law.manifest);
+  const observed = new Set<string>(), started = performance.now();
+  const physical = new CurrentPhysicalOwnerV1(root, cargoProvenancePhysicalControlV1({ cancelled: () => false, remainingMs: () => 30000 - (performance.now() - started), onProgress: () => { for (const file of readdirSync(root).filter(name => name.endsWith(".tmp"))) observed.add(join(root, file)); } }));
+  await writeCompletedCargoInvocationProvenanceV1(receipt, { manifest, cwd: root, command: "check", args: [], buildDirectory: null, builtAtMs: Date.now(), status: 0, cancelled: false, units: [], buildScripts: [] }, new Map(), root, physical);
+  expect(observed.size).toBeGreaterThan(0);
+  for (const path of observed) expect(validate(path.split("")), `Temporary path has ${path.length} UTF-16 units`).toBe(true);
+  expect(existsSync(receipt)).toBe(law.expectedPublished);
+  expect(readdirSync(root).filter(name => name.endsWith(".tmp"))).toEqual([]);
+  console.log("[DEBUG] Exact 256-unit receipt and all observed temporary paths agree with independent Ajv UTF-16 array oracle");
 });
 
 test("the progress sink admits one row per interval exactly like lodash throttle", () => {

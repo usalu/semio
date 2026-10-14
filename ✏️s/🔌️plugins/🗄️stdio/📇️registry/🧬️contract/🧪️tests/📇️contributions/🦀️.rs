@@ -1,9 +1,9 @@
 use super::*;
 use crate::registry::ContributionRegistry;
 
-const ALPHA: &str = include_str!("../../🧫️fixtures/📇️contributions/alpha.json");
-const BRAVO: &str = include_str!("../../🧫️fixtures/📇️contributions/bravo.json");
-const CHARLIE: &str = include_str!("../../🧫️fixtures/📇️contributions/charlie.json");
+const ALPHA: &str = include_str!("../🧫️fixtures/📇️contributions/alpha.json");
+const BRAVO: &str = include_str!("../🧫️fixtures/📇️contributions/bravo.json");
+const CHARLIE: &str = include_str!("../🧫️fixtures/📇️contributions/charlie.json");
 
 fn contribution(identity: &'static str) -> ArtifactContribution {
     fn definition(schema: &'static str) -> Result<ArtifactDefinition, PluginAssemblyError> {
@@ -23,7 +23,7 @@ fn contribution(identity: &'static str) -> ArtifactContribution {
 
 #[test]
 fn authored_removal_vectors_match_independent_serde_dependency_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📇️contributions/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📇️contributions/🔣️.json")).unwrap();
     for row in vectors["cases"].as_array().unwrap() {
         let selected: Vec<_> = row["selected"]
             .as_array()
@@ -81,13 +81,13 @@ fn contribution_registration_and_outputs_fail_closed() {
 
 #[test]
 fn portable_registration_and_receipt_vectors_preserve_owned_claims() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📇️contributions/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📇️contributions/🔣️.json")).unwrap();
     for row in vectors["registrationCases"].as_array().unwrap() {
         let mut second = contribution(if row["second"] == "alpha" { "alpha" } else { "bravo" });
         second.schema = match row["second"].as_str().unwrap() {
-            "bravo-directory" => include_str!("../../🧫️fixtures/📇️contributions/bravo-directory.json"),
-            "bravo-mime" => include_str!("../../🧫️fixtures/📇️contributions/bravo-mime.json"),
-            "bravo-extension" => include_str!("../../🧫️fixtures/📇️contributions/bravo-extension.json"),
+            "bravo-directory" => include_str!("../🧫️fixtures/📇️contributions/bravo-directory.json"),
+            "bravo-mime" => include_str!("../🧫️fixtures/📇️contributions/bravo-mime.json"),
+            "bravo-extension" => include_str!("../🧫️fixtures/📇️contributions/bravo-extension.json"),
             _ => second.schema,
         };
         let first = contribution("alpha");
@@ -116,7 +116,7 @@ fn portable_registration_and_receipt_vectors_preserve_owned_claims() {
 
 #[test]
 fn authored_definition_constraints_match_independent_serde_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📇️contributions/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📇️contributions/🔣️.json")).unwrap();
     for row in vectors["validationCases"].as_array().unwrap() {
         let mut source: serde_json::Value = serde_json::from_str(ALPHA).unwrap();
         source["representations"][0]["mimes"] = row["mimes"].clone();
@@ -133,7 +133,7 @@ fn authored_definition_constraints_match_independent_serde_oracle() {
         representation["descriptor"] = descriptor.into();
         let mut selected = contribution("alpha");
         selected.schema = Box::leak(serde_json::to_string(&source).unwrap().into_boxed_str());
-        selected.definition_constraint = row["constraint"].as_bool().unwrap().then_some(include_str!("../../🧫️fixtures/📇️contributions/🧾️schema-input.json"));
+        selected.definition_constraint = row["constraint"].as_bool().unwrap().then_some(include_str!("../🧫️fixtures/📇️contributions/🧾️schema-input.json"));
         let expected = !row["constraint"].as_bool().unwrap() || source["representations"].as_array().unwrap().iter().all(|item| item["mimes"].as_array().unwrap().is_empty());
         assert_eq!(expected, row["accepted"].as_bool().unwrap());
         let result = ContributionRegistry::new(vec![selected]);

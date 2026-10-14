@@ -1,7 +1,7 @@
 //! 🪟️ Bounded, localized typed snapshot details shared by stdio artifact editors.
 
 use super::{snapshot_edit_actions, INSERT_SNAPSHOT_VALUE_ACTION_ID, MOVE_SNAPSHOT_VALUE_ACTION_ID, REMOVE_SNAPSHOT_VALUE_ACTION_ID, RENAME_SNAPSHOT_KEY_ACTION_ID, REPLACE_SNAPSHOT_SOURCE_ACTION_ID, SET_SNAPSHOT_VALUE_ACTION_ID};
-use crate::kernel::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
 use semio_framework_value::{DslValue, Number, ToValue, ValueShape};
 use semio_framework_plugin::app::{TextDraftView, TextView, TextWindowKit, TreeWindowKit, WindowKit};
 use semio_framework_plugin::plugin_app_close_prelude as ui;

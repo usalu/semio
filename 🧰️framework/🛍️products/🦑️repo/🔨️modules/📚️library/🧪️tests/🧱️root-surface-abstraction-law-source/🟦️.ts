@@ -47,7 +47,7 @@ interface SourceOwnershipFixture {
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const libraryRoot = resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
-const fixture: SourceOwnershipFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️root-surface-abstraction-law-source/🔣️.json"), "utf8"));
+const fixture: SourceOwnershipFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🧱️root-surface-abstraction-law-source/🔣️.json"), "utf8"));
 
 
 function tsIsNamed(statement: ts.Statement): statement is ts.FunctionDeclaration | ts.TypeAliasDeclaration | ts.InterfaceDeclaration | ts.ClassDeclaration {

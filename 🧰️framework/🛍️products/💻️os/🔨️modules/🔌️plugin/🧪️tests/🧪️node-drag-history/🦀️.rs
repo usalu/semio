@@ -18,7 +18,7 @@ pub fn node_drag_transaction_rows(patch: &semio_framework::kernel::HistoryPatch)
 /// edit otherwise.
 pub async fn assert_node_drag_edits_replay_like_a_fresh_fold<P, Mu>(guest: &str, schema: &str, base: &P, log: &[Mu], edits: &[(usize, Mu)], fold: impl Fn(&mut P, &Mu))
 where
-    P: Clone + PartialEq + std::fmt::Debug + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    P: Clone + PartialEq + std::fmt::Debug + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
 {
     let fresh = |leaves: &[Mu]| {

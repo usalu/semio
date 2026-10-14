@@ -148,7 +148,7 @@ fn z_rot4_is_four_distinct_quarter_turns_returning_to_identity() {
 
 #[test]
 fn custom_half_turn_groups_match_neutral_offset_vectors() {
-    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔀️topology-contracts/🔣️.json")).unwrap();
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔀️topology-contracts/🔣️.json")).unwrap();
     let input2d: (i32, i32) = serde_json::from_value(oracle["halfTurn2d"]["input"].clone()).unwrap();
     let planar = SymmetryGroup2d::Custom(vec![Transform2d::Identity, Transform2d::Rot180]).elements();
     let output2d: Vec<_> = planar.iter().map(|t| t.apply_offset(input2d)).collect();

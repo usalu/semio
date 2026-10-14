@@ -1,8 +1,9 @@
 //! 🪶️ Explicit persisted aluminium entities, owned relationships and binary64 scalar words.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::{En1999Snapshot,AluminiumMaterial,PlateElement,AluminiumSection,MemberAction,AluminiumMember,SupportCondition,BoltGroup,WeldGroup,AluminiumConnection,FireScenario,FatigueDetail,ColdFormedSheet,AluminiumShell};
 use crate::document::AnnexChoice;
 use std::collections::BTreeMap;
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,RowWriter,reconstruct_text,NativeEncodingBound}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,RowWriter,reconstruct_text,NativeEncodingBound}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 
@@ -31,7 +32,7 @@ fn ordered<'a>(rows:impl IntoIterator<Item=FloatRow<'a>>,parent:i64,c:&mut Sqlit
 fn text(r:FloatRow<'_>,i:usize,c:&mut SqliteSnapshotControl<'_>)->Result<String, ValueError>{reconstruct_text(c,r.text(i)?)}
 fn read_actions(rows:Vec<FloatRow<'_>>,parent:i64,c:&mut SqliteSnapshotControl<'_>)->Result<Vec<MemberAction>, ValueError>{let mut out=Vec::new();for r in ordered(rows,parent,c)?{checkpoint(c,out.len(),0)?;out.push(MemberAction{id:text(r,3,c)?,kind:text(r,4,c)?,category:text(r,5,c)?,source:text(r,6,c)?,g_k_line:r.real(7)?,q_k_line:r.real(8)?,n_k:r.real(9)?,v_y_k:r.real(10)?,v_z_k:r.real(11)?,m_y_k:r.real(12)?,m_z_k:r.real(13)?});}Ok(out)}
 /// 🪝️ Explicit optional native-codec capability owned by EN1999's derived record.
-pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1999Snapshot as ArtifactSqliteSnapshot>::sqlite_codec()}
+pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1999Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec()}
 
 impl En1999Snapshot {
     fn write_sqlite_rows(&self, out: &mut RowWriter<'_,'_>) -> Result<(), ValueError> {
@@ -48,9 +49,9 @@ impl En1999Snapshot {
     }
     fn admit_sqlite_values(&self, control: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase) -> Result<(), ValueError> {semio_s_artifact_norm_contract::sqlite_native::schema(En1999Snapshot::SQLITE_SCHEMA,16,28,control)?; let mut out = RowWriter::borrowed(control, phase)?; self.write_sqlite_rows(&mut out)?; out.finish_borrowed() }
 }
-impl ArtifactSqliteSnapshot for En1999Snapshot{
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admission::admit(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
+impl ArtifactSqliteSnapshotHost for En1999Snapshot{
+ 
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admission::admit(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
 
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload, ValueError>{
   let mut rows=1usize;let mut visited=0usize;c.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;
@@ -59,11 +60,30 @@ impl ArtifactSqliteSnapshot for En1999Snapshot{
   for v in &self.sections{add(v.elements.len())?;}for v in &self.members{add(v.actions.len())?;}for v in &self.connections{add(v.actions.len())?;add(2)?;}for v in &self.cold_formed{add(v.actions.len())?;}for v in &self.shells{add(v.actions.len())?;}
   c.checkpoint(SqliteSnapshotPhase::EncodeNative,0,rows)?;
   self.admit_sqlite_values(c,SqliteSnapshotPhase::EncodeNative)?;
-  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)
  }
 
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> { let mut out = RowWriter::new(Self::SQLITE_SCHEMA, control)?; self.write_sqlite_rows(&mut out)?; out.finish() }
- fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{
+    
+ 
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.norm.en1999"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(invalid("EN1999 owned dialect differs")));}c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(store::io_schema::IoError::from_value_error)?;Ok(store::io_schema::IoOutcome::clean(()))}
+ fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(), ValueError>{self.admit_sqlite_values(c,SqliteSnapshotPhase::EncodeNative)?;
+  let mut b=NativeEncodingBound::file_only(c)?;let mut rows=1;admit_rows(&mut b,&mut rows,self.materials.len())?;admit_rows(&mut b,&mut rows,self.sections.len())?;admit_rows(&mut b,&mut rows,self.members.len())?;admit_rows(&mut b,&mut rows,self.connections.len().checked_mul(3).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "EN1999 connection row overflow"))?)?;admit_rows(&mut b,&mut rows,self.fire_scenarios.len())?;admit_rows(&mut b,&mut rows,self.fatigue_details.len())?;admit_rows(&mut b,&mut rows,self.cold_formed.len())?;admit_rows(&mut b,&mut rows,self.shells.len())?;
+  for s in &self.sections{admit_rows(&mut b,&mut rows,s.elements.len())?;}for m in &self.members{admit_rows(&mut b,&mut rows,m.actions.len())?;}for v in &self.connections{admit_rows(&mut b,&mut rows,v.actions.len())?;}for s in &self.cold_formed{admit_rows(&mut b,&mut rows,s.actions.len())?;}for s in &self.shells{admit_rows(&mut b,&mut rows,s.actions.len())?;}b.add(16384)?;
+  for m in &self.materials{b.add(2048)?;for v in [&m.id,&m.designation]{b.repeated(v.len(),24)?;}}
+  for s in &self.sections{b.add(16384)?;for v in [&s.id,&s.kind]{b.repeated(v.len(),24)?;}for p in &s.elements{b.add(8192)?;b.repeated(p.id.len(),24)?;}}
+  for m in &self.members{b.add(16384)?;for v in [&m.id,&m.section_id,&m.material_id]{b.repeated(v.len(),24)?;}bound_actions(&m.actions,&mut b)?;}
+  for v in &self.connections{b.add(32768)?;for t in [&v.id,&v.member_id,&v.material_id,&v.kind,&v.bolts.material,&v.welds.filler_alloy]{b.repeated(t.len(),24)?;}bound_actions(&v.actions,&mut b)?;}
+  for f in &self.fire_scenarios{b.add(8192)?;for t in [&f.id,&f.member_id]{b.repeated(t.len(),24)?;}}
+  for f in &self.fatigue_details{b.add(16384)?;for t in [&f.id,&f.member_id,&f.detail_category]{b.repeated(t.len(),24)?;}}
+  for s in &self.cold_formed{b.add(12288)?;for t in [&s.id,&s.material_id]{b.repeated(t.len(),24)?;}bound_actions(&s.actions,&mut b)?;}
+  for s in &self.shells{b.add(12288)?;for t in [&s.id,&s.material_id]{b.repeated(t.len(),24)?;}bound_actions(&s.actions,&mut b)?;}
+  b.finish()
+ }
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for En1999Snapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> { let mut out = RowWriter::new(Self::SQLITE_SCHEMA, control)?; self.write_sqlite_rows(&mut out)?; out.finish() }
+fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{
   validate_sqlite_database_schema(d,Self::SQLITE_SCHEMA,c.limits())?;c.check_database(d,SqliteSnapshotPhase::ReconstructSnapshot)?;let docs=entities(d,"en1999_document",2,&[],c)?;if docs.len()!=1||!docs.contains_key(&1){return Err(invalid("EN1999 requires one identity-1 document"));}let doc=docs[&1];
   let material_rows=entities(d,"en1999_material",5,&[],c)?;let section_rows=entities(d,"en1999_section",10,SECTION,c)?;let member_rows=entities(d,"en1999_member",14,MEMBER,c)?;let connection_rows=entities(d,"en1999_connection",7,&[],c)?;let sheet_rows=entities(d,"en1999_cold_formed_sheet",9,SHEET,c)?;let shell_rows=entities(d,"en1999_shell",8,SHELL,c)?;
   let mut plates=groups(entities(d,"en1999_plate_element",9,PLATE,c)?,&section_rows,c)?;let mut member_actions=groups(entities(d,"en1999_member_action",14,ACTION,c)?,&member_rows,c)?;let mut connection_actions=groups(entities(d,"en1999_connection_action",14,ACTION,c)?,&connection_rows,c)?;let mut sheet_actions=groups(entities(d,"en1999_sheet_action",14,ACTION,c)?,&sheet_rows,c)?;let mut shell_actions=groups(entities(d,"en1999_shell_action",14,ACTION,c)?,&shell_rows,c)?;let mut bolt_rows=entities(d,"en1999_bolt_group",9,BOLTS,c)?;let mut weld_rows=entities(d,"en1999_weld_group",6,WELDS,c)?;
@@ -78,20 +98,6 @@ impl ArtifactSqliteSnapshot for En1999Snapshot{
   for r in ordered(sheet_rows.into_values(),1,c)?{checkpoint(c,cold_formed.len(),0)?;cold_formed.push(ColdFormedSheet{id:text(r,3,c)?,material_id:text(r,4,c)?,thickness:r.real(5)?,width:r.real(6)?,span:r.real(7)?,welded:read_flag(r,8)?,actions:read_actions(sheet_actions.remove(&r.rowid).unwrap_or_default(),r.rowid,c)?});}
   for r in ordered(shell_rows.into_values(),1,c)?{checkpoint(c,shells.len(),0)?;shells.push(AluminiumShell{id:text(r,3,c)?,material_id:text(r,4,c)?,radius:r.real(5)?,thickness:r.real(6)?,length:r.real(7)?,actions:read_actions(shell_actions.remove(&r.rowid).unwrap_or_default(),r.rowid,c)?});}
   c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(Self{annex:read_annex(doc.text(1)?)?,materials,sections,members,connections,fire_scenarios,fatigue_details,cold_formed,shells})
- }
- fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.norm.en1999"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(invalid("EN1999 owned dialect differs")));}c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(store::io_schema::IoError::from_value_error)?;Ok(store::io_schema::IoOutcome::clean(()))}
- fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(), ValueError>{self.admit_sqlite_values(c,SqliteSnapshotPhase::EncodeNative)?;
-  let mut b=NativeEncodingBound::file_only(c)?;let mut rows=1;admit_rows(&mut b,&mut rows,self.materials.len())?;admit_rows(&mut b,&mut rows,self.sections.len())?;admit_rows(&mut b,&mut rows,self.members.len())?;admit_rows(&mut b,&mut rows,self.connections.len().checked_mul(3).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "EN1999 connection row overflow"))?)?;admit_rows(&mut b,&mut rows,self.fire_scenarios.len())?;admit_rows(&mut b,&mut rows,self.fatigue_details.len())?;admit_rows(&mut b,&mut rows,self.cold_formed.len())?;admit_rows(&mut b,&mut rows,self.shells.len())?;
-  for s in &self.sections{admit_rows(&mut b,&mut rows,s.elements.len())?;}for m in &self.members{admit_rows(&mut b,&mut rows,m.actions.len())?;}for v in &self.connections{admit_rows(&mut b,&mut rows,v.actions.len())?;}for s in &self.cold_formed{admit_rows(&mut b,&mut rows,s.actions.len())?;}for s in &self.shells{admit_rows(&mut b,&mut rows,s.actions.len())?;}b.add(16384)?;
-  for m in &self.materials{b.add(2048)?;for v in [&m.id,&m.designation]{b.repeated(v.len(),24)?;}}
-  for s in &self.sections{b.add(16384)?;for v in [&s.id,&s.kind]{b.repeated(v.len(),24)?;}for p in &s.elements{b.add(8192)?;b.repeated(p.id.len(),24)?;}}
-  for m in &self.members{b.add(16384)?;for v in [&m.id,&m.section_id,&m.material_id]{b.repeated(v.len(),24)?;}bound_actions(&m.actions,&mut b)?;}
-  for v in &self.connections{b.add(32768)?;for t in [&v.id,&v.member_id,&v.material_id,&v.kind,&v.bolts.material,&v.welds.filler_alloy]{b.repeated(t.len(),24)?;}bound_actions(&v.actions,&mut b)?;}
-  for f in &self.fire_scenarios{b.add(8192)?;for t in [&f.id,&f.member_id]{b.repeated(t.len(),24)?;}}
-  for f in &self.fatigue_details{b.add(16384)?;for t in [&f.id,&f.member_id,&f.detail_category]{b.repeated(t.len(),24)?;}}
-  for s in &self.cold_formed{b.add(12288)?;for t in [&s.id,&s.material_id]{b.repeated(t.len(),24)?;}bound_actions(&s.actions,&mut b)?;}
-  for s in &self.shells{b.add(12288)?;for t in [&s.id,&s.material_id]{b.repeated(t.len(),24)?;}bound_actions(&s.actions,&mut b)?;}
-  b.finish()
  }
 }
 fn bound_actions(values:&[MemberAction],b:&mut NativeEncodingBound<'_,'_>)->Result<(), ValueError>{for a in values{b.add(16384)?;for t in [&a.id,&a.kind,&a.category,&a.source]{b.repeated(t.len(),24)?;}}Ok(())}

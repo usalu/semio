@@ -7,7 +7,7 @@ import {build} from "esbuild";
 import {cacheInternals} from "../../../../🟨️.mjs";
 
 type PathVector={id:string;prefix:string;segment:string;count:number;suffix:string;utf16:number;admitted:boolean};
-const caching=resolve(import.meta.dir,"../../.."),fixture=JSON.parse(readFileSync(join(caching,"🧫️fixtures/📁️source-facts/🔣️.json"),"utf8")) as {version:number;paths:PathVector[]};
+const caching=resolve(import.meta.dir,"../../.."),fixture=JSON.parse(readFileSync(join(caching,"🧪️tests/🧫️fixtures/📁️source-facts/🔣️.json"),"utf8")) as {version:number;paths:PathVector[]};
 const schema=JSON.parse(readFileSync(join(caching,"🧬️schema/📁️source-facts/🔣️.json"),"utf8"));
 
 test("source-fact path corpus satisfies the independent strict schema oracle",()=>{

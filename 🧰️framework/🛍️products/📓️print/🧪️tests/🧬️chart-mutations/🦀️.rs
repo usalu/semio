@@ -3,7 +3,7 @@ use crate::io::text::inferences::ChartTextOutput;
 
 #[test]
 fn semantic_chart_inference_owns_values_and_io_owns_native_text(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🚪️inference-native-ownership/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🚪️inference-native-ownership/🔣️.json")).unwrap();
     let source=ChartSnapshot::from_value(DslValue::from(&fixture["snapshot"])).unwrap();
     let inference=crate::ChartInference::infer(&source).unwrap();
     assert!(inference.complete);assert_eq!(inference.chart.as_ref(),Some(&source));
@@ -21,7 +21,7 @@ use protocol::{Mutation,MutationDiff,DiffAlgebra,Inference};
 
 #[test]
 fn io_value_declarations_preserve_neutral_omission_null_and_unicode(){
- let neutral:serde_json::Value=serde_json::from_str(include_str!("../../🚪️io/🧫️fixtures/🏛️ownership/🔣️.json")).unwrap();
+ let neutral:serde_json::Value=serde_json::from_str(include_str!("../../🚪️io/🧪️tests/🧫️fixtures/🏛️ownership/🔣️.json")).unwrap();
  for row in neutral["cases"].as_array().unwrap(){let input=DslValue::from(&row["value"]);let output=match row["kind"].as_str().unwrap(){"mutation"=>ChangeChartValue::from_value(input).unwrap().to_value(),"edit"=>ChartEdit::from_value(input).unwrap().to_value(),"diff"=>ChartDiff::from_value(input).unwrap().to_value(),_=>unreachable!()};assert_eq!(serde_json::Value::from(output),row["value"]);}
  for row in neutral["refused"].as_array().unwrap(){let input=DslValue::from(&row["value"]);assert!(match row["kind"].as_str().unwrap(){"mutation"=>ChangeChartValue::from_value(input).is_err(),"edit"=>ChartEdit::from_value(input).is_err(),_=>unreachable!()});}
  eprintln!("[DEBUG] Print original native IO value declarations preserve seven neutral null/omission/unicode vectors and four refusals; independent Serde agrees");
@@ -29,12 +29,12 @@ fn io_value_declarations_preserve_neutral_omission_null_and_unicode(){
 
 #[test]
 fn semantic_chart_validation_borrows_authored_fields(){
- let neutral:serde_json::Value=serde_json::from_str(include_str!("../../🚪️io/🧫️fixtures/🏛️ownership/🔣️.json")).unwrap();
+ let neutral:serde_json::Value=serde_json::from_str(include_str!("../../🚪️io/🧪️tests/🧫️fixtures/🏛️ownership/🔣️.json")).unwrap();
  for row in neutral["validation"].as_array().unwrap(){let snapshot=ChartSnapshot{chart:DslValue::from(&row["chart"])};let before=serde_json::Value::from(&snapshot.chart);assert_eq!(crate::inferences::validate_chart(&snapshot).is_ok(),row["valid"].as_bool().unwrap(),"{row}");assert_eq!(serde_json::Value::from(&snapshot.chart),before);}
  eprintln!("[DEBUG] Print semantic validation borrowed seven neutral authored chart fields without changing input; independent Serde agrees");
 }
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixtures/🧬️chart-mutations/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🧬️chart-mutations/🔣️.json")).unwrap() }
 fn snapshot() -> ChartSnapshot { ChartSnapshot::from_value(DslValue::from(fixture()["snapshot"].clone())).unwrap() }
 
 #[test]
@@ -145,7 +145,7 @@ fn shared_result_schema_accepts_valid_and_invalid_native_outputs(){
 
 #[test]
 fn css_paints_preserve_named_rgb_hsl_and_fractional_alpha(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧬️chart-mutations/🎨️paint.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧬️chart-mutations/🎨️paint.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap(){let paint=inferences::paint::parse(case["input"].as_str().unwrap()).unwrap();assert_eq!(paint.hex,case["hex"].as_str().unwrap());assert!((paint.alpha-case["alpha"].as_f64().unwrap()).abs()<1e-12);if paint.alpha<1.0{assert!(paint.declaration().contains("\\SemioVizPaintAlpha"));}}
     for input in fixture["invalid"].as_array().unwrap(){assert!(inferences::paint::parse(input.as_str().unwrap()).is_err());}
     let contract:serde_json::Value=serde_json::from_str(include_str!("../../🧬️schema/📸️snapshot/📊️chart/🎨️color/🔣️.json")).unwrap();
@@ -197,7 +197,7 @@ fn every_catalogue_kind_is_reachable_through_snapshot_inference() {
 #[test]
 fn native_chart_source_can_be_compiled_by_the_print_toolchain(){
     let Some(path)=std::env::var_os("PRINT_NATIVE_CHART_TIKZ") else{return;};
-    let authored=include_str!("../../🧫️fixtures/🧬️chart-mutations/📊️native-grammar.json");
+    let authored=include_str!("../🧫️fixtures/🧬️chart-mutations/📊️native-grammar.json");
     let snapshot=semio_framework_pack_json::from_json_str::<ChartSnapshot>(authored,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let inference=ChartTextOutput::render(&snapshot).unwrap();
     assert!(inference.diagnostics.is_empty(),"{:?}",inference.diagnostics);
@@ -218,7 +218,7 @@ fn canonical_customization_emits_neutral_mutation_vectors(){
 }
 #[test]
 fn typed_rows_preserve_null_strings_booleans_and_color_fallback_alpha(){
-    let snapshot=semio_framework_pack_json::from_json_str::<ChartSnapshot>(include_str!("../../🧫️fixtures/🧬️chart-mutations/📊️native-grammar.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let snapshot=semio_framework_pack_json::from_json_str::<ChartSnapshot>(include_str!("../🧫️fixtures/🧬️chart-mutations/📊️native-grammar.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let inference=ChartTextOutput::render(&snapshot).unwrap();
     assert!(inference.diagnostics.is_empty(),"{:?}",inference.diagnostics);
     assert!(inference.tikz.contains("{\\SemioVizNull{}}"));
@@ -235,7 +235,7 @@ mod sqlite_snapshot_tests;
 fn paged_chart_original_operation_keeps_exact_variants_policy_and_source_owner(){
     use protocol::os_spr::operation_bytes::{OwnedOperationBytes,OperationBytePreparation,OperationByteMeasurement,OperationByteCloseStep};
     use semio_framework_value::{NativeEncodeControl,NativeDecodeControl,Number};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧬️chart-mutations/📦️operation-pages.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧬️chart-mutations/📦️operation-pages.json")).unwrap();
     let payload=fixture["word"].as_str().unwrap().repeat(fixture["payloadBytes"].as_u64().unwrap()as usize);
     let operation=ChangeChartValue{path:serde_json::from_value(fixture["path"].clone()).unwrap(),value:Some(DslValue::Array(vec![DslValue::String(payload),DslValue::uint(u64::MAX),DslValue::int(i64::MIN),DslValue::float(-0.0)]))};
     let expected=protocol::OpBinary::encode_op(&operation).unwrap();
@@ -360,7 +360,7 @@ fn canonical_scientific_construction_window_vectors(){
 #[test]
 fn chart_diff_text_and_binary_preserve_owned_edits() {
     use protocol::{DiffText,DiffBinary};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔺️diff-wire/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔺️diff-wire/🔣️.json")).unwrap();
     for expected in fixture["cases"].as_array().unwrap() {
         let diff = ChartDiff::from_value(DslValue::from(expected.clone())).unwrap();
         let text = diff.print_diff();

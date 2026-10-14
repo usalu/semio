@@ -21,7 +21,7 @@ test("prepared child identity release uses the neutral physical admission corpus
 });
 
 test("editor and viewer adapters retain the selected original mutation batch admission", () => {
-  const group = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../🏪️store/🧩️composition/📬️publication/🤝️group/🧫️fixtures/📚️history-cases/🔣️.json"), "utf8"));
+  const group = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../🏪️store/🧩️composition/📬️publication/🤝️group/🧪️tests/🧫️fixtures/📚️history-cases/🔣️.json"), "utf8"));
   const lengths = [];
   for (const row of group.cases) {
     const original = Array.from({ length: row.historyEntries }, (_, value) => ({ value }));
@@ -42,7 +42,7 @@ test("editor and viewer adapters retain the selected original mutation batch adm
 /** 🔗️ Independent SQLite identity joins prove the exact known root, page, or entry retainer. */
 test("prepared child mixed views select only the exact frontier owner without allocation", async () => {
   const { Database } = await import("bun:sqlite");
-  const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "🧫️fixtures/🔗️retained-alias/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "🧪️tests/🧫️fixtures/🔗️retained-alias/🔣️.json"), "utf8"));
 
   
   const db = new Database(":memory:");

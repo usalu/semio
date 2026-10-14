@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "variants": [
+    [
+      "bitmap-info",
+      11
+    ],
+    [
+      "wave-format",
+      7
+    ],
+    [
+      "raw",
+      1
+    ]
+  ],
+  "maximumBytes": 1048576,
+  "tinyBytes": 1
+}

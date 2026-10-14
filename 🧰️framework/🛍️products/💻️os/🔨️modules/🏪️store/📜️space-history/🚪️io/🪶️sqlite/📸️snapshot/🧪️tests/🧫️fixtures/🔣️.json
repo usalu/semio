@@ -1,0 +1,896 @@
+{
+  "schema": "space-history.sqlite-fixture/v1",
+  "dialect": "os.space.history@1/*",
+  "cancelAt": 256,
+  "identityOffset": 1000,
+  "interiorControl": {
+    "textUnit": "日本𐀀",
+    "repeat": 32768,
+    "utf8Bytes": 327680,
+    "ceilingNumerator": 3,
+    "ceilingDenominator": 2
+  },
+  "nativeSnapshot": {
+    "checkpoints": [
+      {
+        "id": "duplicate",
+        "parentId": "unknown\u0000",
+        "message": "世界",
+        "authors": [
+          {
+            "id": "a",
+            "name": "",
+            "avatar": null
+          },
+          {
+            "id": "a",
+            "name": "二",
+            "avatar": ""
+          }
+        ],
+        "timestamp": {
+          "actor": 0,
+          "physical_ms": 0,
+          "logical": 0
+        },
+        "members": [
+          {
+            "documentId": "independent\u0000",
+            "checkpointId": "unresolved",
+            "alternativeId": ""
+          },
+          {
+            "documentId": "independent\u0000",
+            "checkpointId": "",
+            "alternativeId": "missing"
+          }
+        ]
+      },
+      {
+        "id": "duplicate",
+        "message": "",
+        "authors": [],
+        "timestamp": {
+          "actor": 0,
+          "physical_ms": 0,
+          "logical": 0
+        },
+        "members": []
+      }
+    ],
+    "alternatives": [
+      {
+        "id": "z",
+        "name": "first in typed order",
+        "checkpointIds": [
+          "unknown",
+          "unknown",
+          ""
+        ]
+      },
+      {
+        "id": "a",
+        "name": "",
+        "checkpointIds": []
+      }
+    ],
+    "activeAlternativeId": "not an existing id\u0000"
+  },
+  "clocks": [
+    {
+      "actor": "18446744073709551615",
+      "physicalMs": "9007199254740993",
+      "logical": "18446744073709551615"
+    },
+    {
+      "actor": "0",
+      "physicalMs": "18446744073709551615",
+      "logical": "1"
+    }
+  ],
+  "rows": {
+    "space_history_document": [
+      [
+        1,
+        "not an existing id\u0000"
+      ]
+    ],
+    "space_history_checkpoint": [
+      [
+        1,
+        1,
+        0,
+        "duplicate",
+        "unknown\u0000",
+        "世界"
+      ],
+      [
+        2,
+        1,
+        1,
+        "duplicate",
+        null,
+        ""
+      ]
+    ],
+    "space_history_timestamp": [
+      [
+        1,
+        4294967295,
+        4294967295,
+        2097152,
+        1,
+        4294967295,
+        4294967295
+      ],
+      [
+        2,
+        0,
+        0,
+        4294967295,
+        4294967295,
+        0,
+        1
+      ]
+    ],
+    "space_history_author": [
+      [
+        1,
+        1,
+        0,
+        "a",
+        "",
+        null
+      ],
+      [
+        2,
+        1,
+        1,
+        "a",
+        "二",
+        ""
+      ]
+    ],
+    "space_history_member_pin": [
+      [
+        1,
+        1,
+        0,
+        "independent\u0000",
+        "unresolved",
+        ""
+      ],
+      [
+        2,
+        1,
+        1,
+        "independent\u0000",
+        "",
+        "missing"
+      ]
+    ],
+    "space_history_alternative": [
+      [
+        1,
+        1,
+        0,
+        "z",
+        "first in typed order"
+      ],
+      [
+        2,
+        1,
+        1,
+        "a",
+        ""
+      ]
+    ],
+    "space_history_alternative_checkpoint": [
+      [
+        1,
+        1,
+        0,
+        "unknown"
+      ],
+      [
+        2,
+        1,
+        1,
+        "unknown"
+      ],
+      [
+        3,
+        1,
+        2,
+        ""
+      ]
+    ]
+  },
+  "edit": {
+    "table": "space_history_checkpoint",
+    "column": "message",
+    "value": "edited checkpoint 日本"
+  },
+  "rowsTotal": 14,
+  "nativeRetention": {
+    "ceilingNumerator": 3,
+    "ceilingDenominator": 2
+  },
+  "directionalValidation": {
+    "version": 1,
+    "directions": [
+      "decoding",
+      "encoding"
+    ],
+    "indexCounts": {
+      "ids": 7,
+      "ordered": 5
+    },
+    "textChunkBytes": 256,
+    "nativeMaximumBytes": 67108864,
+    "sqlMaximumAllocationBytes": 67108864,
+    "maximumCloseTurns": 65536,
+    "signedOffsets": [
+      -1,
+      -1000
+    ],
+    "tables": [
+      [
+        "space_history_document",
+        2
+      ],
+      [
+        "space_history_checkpoint",
+        6
+      ],
+      [
+        "space_history_timestamp",
+        7
+      ],
+      [
+        "space_history_author",
+        6
+      ],
+      [
+        "space_history_member_pin",
+        6
+      ],
+      [
+        "space_history_alternative",
+        5
+      ],
+      [
+        "space_history_alternative_checkpoint",
+        4
+      ]
+    ],
+    "priorProgress": {
+      "copiedItems": 3,
+      "copiedBytes": 17,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    },
+    "edits": [
+      {
+        "id": "space_history_document.cell1",
+        "operation": "cell",
+        "table": "space_history_document",
+        "row": 0,
+        "column": 1,
+        "value": "different\u0000語",
+        "accepted": false
+      },
+      {
+        "id": "space_history_checkpoint.cell3",
+        "operation": "cell",
+        "table": "space_history_checkpoint",
+        "row": 0,
+        "column": 3,
+        "value": "different\u0000語",
+        "accepted": false
+      },
+      {
+        "id": "space_history_checkpoint.cell4",
+        "operation": "cell",
+        "table": "space_history_checkpoint",
+        "row": 0,
+        "column": 4,
+        "value": "different\u0000語",
+        "accepted": false
+      },
+      {
+        "id": "space_history_checkpoint.cell5",
+        "operation": "cell",
+        "table": "space_history_checkpoint",
+        "row": 0,
+        "column": 5,
+        "value": "different\u0000語",
+        "accepted": false
+      },
+      {
+        "id": "space_history_author.cell3",
+        "operation": "cell",
+        "table": "space_history_author",
+        "row": 0,
+        "column": 3,
+        "value": "different\u0000語",
+        "accepted": false
+      },
+      {
+        "id": "space_history_author.cell4",
+        "operation": "cell",
+        "table": "space_history_author",
+        "row": 0,
+        "column": 4,
+        "value": "different\u0000語",
+        "accepted": false
+      },
+      {
+        "id": "space_history_author.cell5",
+        "operation": "cell",
+        "table": "space_history_author",
+        "row": 0,
+        "column": 5,
+        "value": "different\u0000語",
+        "accepted": false
+      },
+      {
+        "id": "space_history_member_pin.cell3",
+        "operation": "cell",
+        "table": "space_history_member_pin",
+        "row": 0,
+        "column": 3,
+        "value": "different\u0000語",
+        "accepted": false
+      },
+      {
+        "id": "space_history_member_pin.cell4",
+        "operation": "cell",
+        "table": "space_history_member_pin",
+        "row": 0,
+        "column": 4,
+        "value": "different\u0000語",
+        "accepted": false
+      },
+      {
+        "id": "space_history_member_pin.cell5",
+        "operation": "cell",
+        "table": "space_history_member_pin",
+        "row": 0,
+        "column": 5,
+        "value": "different\u0000語",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative.cell3",
+        "operation": "cell",
+        "table": "space_history_alternative",
+        "row": 0,
+        "column": 3,
+        "value": "different\u0000語",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative.cell4",
+        "operation": "cell",
+        "table": "space_history_alternative",
+        "row": 0,
+        "column": 4,
+        "value": "different\u0000語",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative_checkpoint.cell3",
+        "operation": "cell",
+        "table": "space_history_alternative_checkpoint",
+        "row": 0,
+        "column": 3,
+        "value": "different\u0000語",
+        "accepted": false
+      },
+      {
+        "id": "null-empty-avatar",
+        "operation": "cell",
+        "table": "space_history_author",
+        "row": 0,
+        "column": 5,
+        "value": "",
+        "accepted": false
+      },
+      {
+        "id": "empty-null-avatar",
+        "operation": "cell",
+        "table": "space_history_author",
+        "row": 1,
+        "column": 5,
+        "value": null,
+        "accepted": false
+      },
+      {
+        "id": "null-empty-parent",
+        "operation": "cell",
+        "table": "space_history_checkpoint",
+        "row": 1,
+        "column": 4,
+        "value": "",
+        "accepted": false
+      },
+      {
+        "id": "clock-word1",
+        "operation": "cell",
+        "table": "space_history_timestamp",
+        "row": 0,
+        "column": 1,
+        "value": 4294967296,
+        "accepted": false
+      },
+      {
+        "id": "clock-word2",
+        "operation": "cell",
+        "table": "space_history_timestamp",
+        "row": 0,
+        "column": 2,
+        "value": 4294967296,
+        "accepted": false
+      },
+      {
+        "id": "clock-word3",
+        "operation": "cell",
+        "table": "space_history_timestamp",
+        "row": 0,
+        "column": 3,
+        "value": 4294967296,
+        "accepted": false
+      },
+      {
+        "id": "clock-word4",
+        "operation": "cell",
+        "table": "space_history_timestamp",
+        "row": 0,
+        "column": 4,
+        "value": 4294967296,
+        "accepted": false
+      },
+      {
+        "id": "clock-word5",
+        "operation": "cell",
+        "table": "space_history_timestamp",
+        "row": 0,
+        "column": 5,
+        "value": 4294967296,
+        "accepted": false
+      },
+      {
+        "id": "clock-word6",
+        "operation": "cell",
+        "table": "space_history_timestamp",
+        "row": 0,
+        "column": 6,
+        "value": 4294967296,
+        "accepted": false
+      },
+      {
+        "id": "space_history_document.duplicate-id",
+        "operation": "duplicate-id",
+        "table": "space_history_document",
+        "accepted": false
+      },
+      {
+        "id": "space_history_document.id-mismatch",
+        "operation": "id-mismatch",
+        "table": "space_history_document",
+        "accepted": false
+      },
+      {
+        "id": "space_history_document.missing-row",
+        "operation": "missing-row",
+        "table": "space_history_document",
+        "accepted": false
+      },
+      {
+        "id": "space_history_document.extra-row",
+        "operation": "extra-row",
+        "table": "space_history_document",
+        "accepted": false
+      },
+      {
+        "id": "space_history_document.missing-column",
+        "operation": "missing-column",
+        "table": "space_history_document",
+        "accepted": false
+      },
+      {
+        "id": "space_history_document.extra-column",
+        "operation": "extra-column",
+        "table": "space_history_document",
+        "accepted": false
+      },
+      {
+        "id": "space_history_checkpoint.duplicate-id",
+        "operation": "duplicate-id",
+        "table": "space_history_checkpoint",
+        "accepted": false
+      },
+      {
+        "id": "space_history_checkpoint.id-mismatch",
+        "operation": "id-mismatch",
+        "table": "space_history_checkpoint",
+        "accepted": false
+      },
+      {
+        "id": "space_history_checkpoint.missing-row",
+        "operation": "missing-row",
+        "table": "space_history_checkpoint",
+        "accepted": false
+      },
+      {
+        "id": "space_history_checkpoint.extra-row",
+        "operation": "extra-row",
+        "table": "space_history_checkpoint",
+        "accepted": false
+      },
+      {
+        "id": "space_history_checkpoint.missing-column",
+        "operation": "missing-column",
+        "table": "space_history_checkpoint",
+        "accepted": false
+      },
+      {
+        "id": "space_history_checkpoint.extra-column",
+        "operation": "extra-column",
+        "table": "space_history_checkpoint",
+        "accepted": false
+      },
+      {
+        "id": "space_history_timestamp.duplicate-id",
+        "operation": "duplicate-id",
+        "table": "space_history_timestamp",
+        "accepted": false
+      },
+      {
+        "id": "space_history_timestamp.id-mismatch",
+        "operation": "id-mismatch",
+        "table": "space_history_timestamp",
+        "accepted": false
+      },
+      {
+        "id": "space_history_timestamp.missing-row",
+        "operation": "missing-row",
+        "table": "space_history_timestamp",
+        "accepted": false
+      },
+      {
+        "id": "space_history_timestamp.extra-row",
+        "operation": "extra-row",
+        "table": "space_history_timestamp",
+        "accepted": false
+      },
+      {
+        "id": "space_history_timestamp.missing-column",
+        "operation": "missing-column",
+        "table": "space_history_timestamp",
+        "accepted": false
+      },
+      {
+        "id": "space_history_timestamp.extra-column",
+        "operation": "extra-column",
+        "table": "space_history_timestamp",
+        "accepted": false
+      },
+      {
+        "id": "space_history_author.duplicate-id",
+        "operation": "duplicate-id",
+        "table": "space_history_author",
+        "accepted": false
+      },
+      {
+        "id": "space_history_author.id-mismatch",
+        "operation": "id-mismatch",
+        "table": "space_history_author",
+        "accepted": false
+      },
+      {
+        "id": "space_history_author.missing-row",
+        "operation": "missing-row",
+        "table": "space_history_author",
+        "accepted": false
+      },
+      {
+        "id": "space_history_author.extra-row",
+        "operation": "extra-row",
+        "table": "space_history_author",
+        "accepted": false
+      },
+      {
+        "id": "space_history_author.missing-column",
+        "operation": "missing-column",
+        "table": "space_history_author",
+        "accepted": false
+      },
+      {
+        "id": "space_history_author.extra-column",
+        "operation": "extra-column",
+        "table": "space_history_author",
+        "accepted": false
+      },
+      {
+        "id": "space_history_member_pin.duplicate-id",
+        "operation": "duplicate-id",
+        "table": "space_history_member_pin",
+        "accepted": false
+      },
+      {
+        "id": "space_history_member_pin.id-mismatch",
+        "operation": "id-mismatch",
+        "table": "space_history_member_pin",
+        "accepted": false
+      },
+      {
+        "id": "space_history_member_pin.missing-row",
+        "operation": "missing-row",
+        "table": "space_history_member_pin",
+        "accepted": false
+      },
+      {
+        "id": "space_history_member_pin.extra-row",
+        "operation": "extra-row",
+        "table": "space_history_member_pin",
+        "accepted": false
+      },
+      {
+        "id": "space_history_member_pin.missing-column",
+        "operation": "missing-column",
+        "table": "space_history_member_pin",
+        "accepted": false
+      },
+      {
+        "id": "space_history_member_pin.extra-column",
+        "operation": "extra-column",
+        "table": "space_history_member_pin",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative.duplicate-id",
+        "operation": "duplicate-id",
+        "table": "space_history_alternative",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative.id-mismatch",
+        "operation": "id-mismatch",
+        "table": "space_history_alternative",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative.missing-row",
+        "operation": "missing-row",
+        "table": "space_history_alternative",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative.extra-row",
+        "operation": "extra-row",
+        "table": "space_history_alternative",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative.missing-column",
+        "operation": "missing-column",
+        "table": "space_history_alternative",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative.extra-column",
+        "operation": "extra-column",
+        "table": "space_history_alternative",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative_checkpoint.duplicate-id",
+        "operation": "duplicate-id",
+        "table": "space_history_alternative_checkpoint",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative_checkpoint.id-mismatch",
+        "operation": "id-mismatch",
+        "table": "space_history_alternative_checkpoint",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative_checkpoint.missing-row",
+        "operation": "missing-row",
+        "table": "space_history_alternative_checkpoint",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative_checkpoint.extra-row",
+        "operation": "extra-row",
+        "table": "space_history_alternative_checkpoint",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative_checkpoint.missing-column",
+        "operation": "missing-column",
+        "table": "space_history_alternative_checkpoint",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative_checkpoint.extra-column",
+        "operation": "extra-column",
+        "table": "space_history_alternative_checkpoint",
+        "accepted": false
+      },
+      {
+        "id": "space_history_checkpoint.orphan-parent",
+        "operation": "orphan-parent",
+        "table": "space_history_checkpoint",
+        "accepted": false
+      },
+      {
+        "id": "space_history_checkpoint.duplicate-ordinal",
+        "operation": "duplicate-ordinal",
+        "table": "space_history_checkpoint",
+        "accepted": false
+      },
+      {
+        "id": "space_history_checkpoint.gapped-ordinal",
+        "operation": "gapped-ordinal",
+        "table": "space_history_checkpoint",
+        "accepted": false
+      },
+      {
+        "id": "space_history_author.orphan-parent",
+        "operation": "orphan-parent",
+        "table": "space_history_author",
+        "accepted": false
+      },
+      {
+        "id": "space_history_author.duplicate-ordinal",
+        "operation": "duplicate-ordinal",
+        "table": "space_history_author",
+        "accepted": false
+      },
+      {
+        "id": "space_history_author.gapped-ordinal",
+        "operation": "gapped-ordinal",
+        "table": "space_history_author",
+        "accepted": false
+      },
+      {
+        "id": "space_history_member_pin.orphan-parent",
+        "operation": "orphan-parent",
+        "table": "space_history_member_pin",
+        "accepted": false
+      },
+      {
+        "id": "space_history_member_pin.duplicate-ordinal",
+        "operation": "duplicate-ordinal",
+        "table": "space_history_member_pin",
+        "accepted": false
+      },
+      {
+        "id": "space_history_member_pin.gapped-ordinal",
+        "operation": "gapped-ordinal",
+        "table": "space_history_member_pin",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative.orphan-parent",
+        "operation": "orphan-parent",
+        "table": "space_history_alternative",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative.duplicate-ordinal",
+        "operation": "duplicate-ordinal",
+        "table": "space_history_alternative",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative.gapped-ordinal",
+        "operation": "gapped-ordinal",
+        "table": "space_history_alternative",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative_checkpoint.orphan-parent",
+        "operation": "orphan-parent",
+        "table": "space_history_alternative_checkpoint",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative_checkpoint.duplicate-ordinal",
+        "operation": "duplicate-ordinal",
+        "table": "space_history_alternative_checkpoint",
+        "accepted": false
+      },
+      {
+        "id": "space_history_alternative_checkpoint.gapped-ordinal",
+        "operation": "gapped-ordinal",
+        "table": "space_history_alternative_checkpoint",
+        "accepted": false
+      },
+      {
+        "id": "missing-table",
+        "operation": "missing-table",
+        "table": "space_history_timestamp",
+        "accepted": false
+      },
+      {
+        "id": "extra-table",
+        "operation": "extra-table",
+        "table": "space_history_timestamp",
+        "accepted": false
+      },
+      {
+        "id": "clock-mismatch1",
+        "operation": "cell",
+        "table": "space_history_timestamp",
+        "row": 0,
+        "column": 1,
+        "value": 0,
+        "accepted": false
+      },
+      {
+        "id": "clock-mismatch2",
+        "operation": "cell",
+        "table": "space_history_timestamp",
+        "row": 0,
+        "column": 2,
+        "value": 0,
+        "accepted": false
+      },
+      {
+        "id": "clock-mismatch3",
+        "operation": "cell",
+        "table": "space_history_timestamp",
+        "row": 0,
+        "column": 3,
+        "value": 0,
+        "accepted": false
+      },
+      {
+        "id": "clock-mismatch4",
+        "operation": "cell",
+        "table": "space_history_timestamp",
+        "row": 0,
+        "column": 4,
+        "value": 0,
+        "accepted": false
+      },
+      {
+        "id": "clock-mismatch5",
+        "operation": "cell",
+        "table": "space_history_timestamp",
+        "row": 0,
+        "column": 5,
+        "value": 0,
+        "accepted": false
+      },
+      {
+        "id": "clock-mismatch6",
+        "operation": "cell",
+        "table": "space_history_timestamp",
+        "row": 0,
+        "column": 6,
+        "value": 0,
+        "accepted": false
+      }
+    ],
+    "expectedMismatchKind": "invalidValue",
+    "expectedMismatchMessage": "space history semantic state differs",
+    "expectedAuthorityMessage": "space history subset validation requires supplied directional owner",
+    "trueNul": {
+      "table": "space_history_checkpoint",
+      "row": 0,
+      "column": 5,
+      "value": "borrowed \u0000語\r\nexact"
+    },
+    "causes": {
+      "sql": "relational SQLite transfer cancelled",
+      "decoding": "native decoding canceled",
+      "encoding": "native encoding canceled"
+    }
+  }
+}

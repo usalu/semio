@@ -1,0 +1,6 @@
+{
+  "ChangeMaterialMetallic": {
+    "id": "mat-a",
+    "new_metallic": 1.0
+  }
+}

@@ -19,7 +19,7 @@ impl Deserializer<SequenceSnapshot> for MdIntoSequence {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, "MdIntoSequence: expected a binary md payload".to_string())));
         };
-        let md = <MdSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError::from_value_error(match error.into_value_error() { Ok(error) => error.under("MdIntoSequence"), Err(error) => ValueError::new(ValueRefusalKind::InvariantViolated, format!("MdIntoSequence: in-memory decode reported a transport failure: {error}")) }))?;
+        let md = <MdSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError::from_value_error(match error.into_value_error() { Ok(error) => error.under("MdIntoSequence"), Err(error) => ValueError::new(ValueRefusalKind::InvariantViolated, format!("MdIntoSequence: in-memory decode reported a transport failure: {error}")) }))?;
         let literal = match md.blocks.as_slice() {
             [MdBlock::CodeBlock { info: Some(info), literal }] if info == "json" => literal,
             _ => return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, "MdIntoSequence: expected one json code block"))),

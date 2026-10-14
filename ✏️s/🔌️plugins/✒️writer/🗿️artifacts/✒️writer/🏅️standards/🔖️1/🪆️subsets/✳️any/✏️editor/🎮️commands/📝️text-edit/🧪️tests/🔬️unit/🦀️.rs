@@ -16,7 +16,7 @@ fn loaded_document(result: &semio_framework_plugin::InvocationResult) -> WriterS
     let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("expected a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
-    <WriterSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack")
+    <WriterSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack")
 }
 
 /// ⌨️ One whole-text `textEdit` delivery of the main window's typing run.

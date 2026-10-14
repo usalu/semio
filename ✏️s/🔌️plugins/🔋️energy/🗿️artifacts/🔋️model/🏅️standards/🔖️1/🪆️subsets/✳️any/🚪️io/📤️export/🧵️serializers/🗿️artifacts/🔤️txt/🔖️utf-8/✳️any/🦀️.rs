@@ -5,5 +5,5 @@ use crate::EnergyModelSnapshot;
 pub fn register() {}
 
 pub fn serialize_bytes(from: &EnergyModelSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
-    Ok(<EnergyModelSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(from).into_bytes())
+    Ok(<EnergyModelSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(from).into_bytes())
 }

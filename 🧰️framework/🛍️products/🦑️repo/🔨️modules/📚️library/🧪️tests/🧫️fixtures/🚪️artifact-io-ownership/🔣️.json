@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "contractId": "artifact-io-ownership-v1",
+  "accepted": [
+    "🧬️schema/📸️snapshot",
+    "🧬️schema/🔺️diff",
+    "🧬️schema/🧬️mutations/➕️add-node",
+    "🧬️schema/💡️inferences/📦️bounds",
+    "🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄️txt",
+    "🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️txt",
+    "🚪️io/📝️text/📸️snapshot",
+    "🚪️io/📝️text/🔺️diff",
+    "🚪️io/📝️text/🧬️mutations",
+    "🚪️io/📝️text/🧬️mutations/➕️add-node",
+    "🚪️io/📝️text/💡️inferences",
+    "🚪️io/📝️text/💡️inferences/📦️bounds",
+    "🚪️io/💾️binary/📸️snapshot",
+    "🚪️io/💾️binary/🔺️diff",
+    "🚪️io/💾️binary/🧬️mutations",
+    "🚪️io/💾️binary/🧬️mutations/➕️add-node",
+    "🚪️io/💾️binary/💡️inferences",
+    "🚪️io/💾️binary/💡️inferences/📦️bounds",
+    "🚪️io/🪶️sqlite/📸️snapshot"
+  ],
+  "rejected": [
+    "🧬️schema/📸️snapshot/📝️text",
+    "🧬️schema/🔺️diff/💾️binary",
+    "🧬️schema/🧬️mutations/💾️binary",
+    "🧬️schema/💡️inferences/📝️text",
+    "🧬️schema/🧬️mutations/➕️add-node/💾️binary",
+    "🚪️io/📸️snapshot/📝️text",
+    "🚪️io/🧬️mutations/💾️binary",
+    "🚪️io/📝️text/🧬️mutations/💾️binary",
+    "🚪️io/📝️text/📸️snapshot/📖️dsl",
+    "🧬️schema/📸️snapshot/🪶️sqlite"
+  ]
+}

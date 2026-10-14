@@ -12,3 +12,7 @@ mod native_io;
 pub use component::*;
 pub use file_watcher::*;
 pub use native_io::*;
+
+#[cfg(test)]
+#[global_allocator]
+static ORIGINAL_SERVICES_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

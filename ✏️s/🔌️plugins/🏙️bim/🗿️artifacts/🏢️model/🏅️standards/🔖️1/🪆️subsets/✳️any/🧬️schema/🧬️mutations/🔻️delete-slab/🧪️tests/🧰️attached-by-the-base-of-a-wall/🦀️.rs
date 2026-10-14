@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔻️delete-slab/🧰️attached-by-the-base-of-a-wall",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔻️delete-slab/🧰️attached-by-the-base-of-a-wall/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔻️delete-slab/🧰️attached-by-the-base-of-a-wall/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔻️delete-slab/🧰️attached-by-the-base-of-a-wall/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔻️delete-slab/🧰️attached-by-the-base-of-a-wall/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔻️delete-slab/🧰️attached-by-the-base-of-a-wall/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔻️delete-slab/🧰️attached-by-the-base-of-a-wall/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔻️delete-slab/🧰️attached-by-the-base-of-a-wall/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔻️delete-slab/🧰️attached-by-the-base-of-a-wall/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔻️delete-slab/🧰️attached-by-the-base-of-a-wall/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔻️delete-slab/🧰️attached-by-the-base-of-a-wall/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

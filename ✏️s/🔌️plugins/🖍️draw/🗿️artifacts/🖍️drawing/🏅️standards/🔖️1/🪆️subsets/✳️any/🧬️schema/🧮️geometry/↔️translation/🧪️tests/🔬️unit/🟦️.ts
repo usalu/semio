@@ -2,7 +2,7 @@
 import {expect,test} from "bun:test";
 import {Matrix3,Vector3} from "three";
 import {translate,selectionRoots} from "../../🟦️.ts";
-import cases from "../../🧫️fixtures/🔣️.json";
+import cases from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/↔️translation/🔣️.json";
 test("world dragging preserves local scale and rotation under nested transforms",()=>{
   for(const entry of cases){
     const result=translate(entry.transform,entry.parent,entry.delta);
@@ -16,7 +16,7 @@ test("world dragging preserves local scale and rotation under nested transforms"
   }
 });
 
-import selectionCases from "../../🧫️fixtures/🗂️selection/🔣️.json";
+import selectionCases from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/↔️translation/🗂️selection/🔣️.json";
 import {produce} from "immer";
 test("selection movement updates selected ancestors exactly once",()=>{
   for(const entry of selectionCases) {

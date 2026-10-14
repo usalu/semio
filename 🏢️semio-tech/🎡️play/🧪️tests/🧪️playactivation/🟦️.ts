@@ -13,7 +13,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const lane = (name: string, plugins: readonly (readonly [string, string, number])[], receiptMtimeMs?: number) => ({
     lane: name,
     ...(receiptMtimeMs === undefined ? {} : { receiptMtimeMs }),
-    receipt: { schema: "semio.dev.activation/v1", variant: name, profile: "dev", plugins: plugins.map(([pluginId, seed, rebuiltAt]) => ({ pluginId, artifactSha256: sha(seed), rebuiltAt })) },
+    receipt: { schema: "semio.dev.activation/v1", variant: name, profile: "prototype", plugins: plugins.map(([pluginId, seed, rebuiltAt]) => ({ pluginId, artifactSha256: sha(seed), rebuiltAt })) },
   });
 
   /** 💿️ The staged artifact the merge reads off disk, as a fixture: one sha per component, exactly
@@ -36,8 +36,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const project = JSON.parse(readFileSync(join(repoRoot, "🏢️semio-tech/🎡️play/📋️project.json"), "utf8"));
       const lanes = [...playActivationLanes()].sort();
       const from = (target: string, pattern: RegExp) => project.targets[target].dependsOn.flatMap((entry: string) => pattern.exec(entry)?.[1] ?? []).sort();
-      expect(from("activate-dev", /^@semio-tech\/framework-os-dev:activate-(.+)-react-dev$/)).toEqual(lanes);
-      expect(from("prepare-dev", /^@semio-tech\/framework-os-dev:prepare-(.+)-react-dev$/)).toEqual(lanes);
+      expect(from("activate-prototype", /^@semio-tech\/framework-os-dev:activate-(.+)-react-prototype$/)).toEqual(lanes);
+      expect(from("prepare-prototype", /^@semio-tech\/framework-os-dev:prepare-(.+)-react-prototype$/)).toEqual(lanes);
       expect(from("catalog-release", /^@semio-tech\/framework-os-dev:prepare-(.+)-react-release$/)).toEqual(lanes);
     });
   });
@@ -110,7 +110,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("refuses a release receipt", () => {
       const release = lane("energy", [["energy", "d", 7]]);
-      expect(() => mergePlayActivationReceipts([{ ...release, receipt: { ...release.receipt, profile: "release" } }], ["energy"], "energy")).toThrow(/not a dev activation: release/);
+      expect(() => mergePlayActivationReceipts([{ ...release, receipt: { ...release.receipt, profile: "release" } }], ["energy"], "energy")).toThrow(/not a prototype activation: release/);
     });
   });
 

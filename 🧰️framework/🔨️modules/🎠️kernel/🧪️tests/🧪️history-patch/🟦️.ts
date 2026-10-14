@@ -6,7 +6,7 @@
  */
 import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
-import fixture from "../../🧫️fixtures/🧫️history-patch/🔣️.json";
+import fixture from "../🧫️fixtures/🧫️history-patch/🔣️.json";
 import schema from "../../🧬️schema/🔣️history-patch/🔣️.json";
 import { historyEntryKey, type HistoryPatch } from "../../🟦️.ts";
 

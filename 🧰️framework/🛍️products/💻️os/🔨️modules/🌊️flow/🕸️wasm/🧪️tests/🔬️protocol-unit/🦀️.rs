@@ -2,10 +2,10 @@
 use super::*;
 use semio_framework::abi::AbiOperation;
 
-const FLOW_ABI_LEDGER: &str = include_str!("../../🧫️fixtures/📒️ledger/📊️.tsv");
-const FLOW_ABI_LIMITS: &str = include_str!("../../🧫️fixtures/📐️limits.tsv");
-const FLOW_ABI_TRACE: &str = include_str!("../../🧫️fixtures/👣️trace/📊️.tsv");
-const FLOW_VCS_PRODUCTION_LEDGER: &str = include_str!("../../🧫️fixtures/📊️.tsv");
+const FLOW_ABI_LEDGER: &str = include_str!("../🧫️fixtures/📒️ledger/📊️.tsv");
+const FLOW_ABI_LIMITS: &str = include_str!("../🧫️fixtures/📐️limits.tsv");
+const FLOW_ABI_TRACE: &str = include_str!("../🧫️fixtures/👣️trace/📊️.tsv");
+const FLOW_VCS_PRODUCTION_LEDGER: &str = include_str!("../🧫️fixtures/📊️.tsv");
 
 #[derive(Default)]
 struct MockDomain {
@@ -146,7 +146,7 @@ fn every_request_is_a_cancellable_progress_checkpoint_preview_feature() {
 /// 🧾️ The actual Bridge retains a failed normal child's receipt for its poll and clears the next poll.
 #[test]
 fn original_flow_bridge_preserves_normal_failed_receipt_before_reply() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎟️retained-receipt/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎟️retained-receipt/🔣️.json")).unwrap();
     let row = &fixture["normalFailure"];
     let p = &row["progress"];
     let expected = RetainedCloneProgress { copied_items: p["copiedItems"].as_u64().unwrap() as usize, copied_bytes: p["copiedBytes"].as_u64().unwrap() as usize, retained_capacity_bytes: p["retainedCapacityBytes"].as_u64().unwrap() as usize, released_bytes: p["releasedBytes"].as_u64().unwrap() as usize };
@@ -173,7 +173,7 @@ fn original_flow_bridge_preserves_normal_failed_receipt_before_reply() {
 fn original_flow_failure_retains_and_closes_complete_value_cause() {
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     use semio_framework_value::{ValueError, ValueRefusalKind, RetainedCloneGrant, retirement::controlled::ControlledRetirement};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎟️retained-receipt/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎟️retained-receipt/🔣️.json")).unwrap();
     let law = &fixture["failureCauses"];
     let text = law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize);
     assert_eq!(text.len(), law["utf8Bytes"].as_u64().unwrap() as usize);
@@ -277,7 +277,7 @@ fn stale_duplicate_controls_and_idempotent_close_do_not_leak() {
 
 #[test]
 fn session_close_retains_domain_until_child_and_exact_terminal_owners_retire() {
-    let text = include_str!("../../🧫️fixtures/🧹️session-close/🔣️.json");
+    let text = include_str!("../🧫️fixtures/🧹️session-close/🔣️.json");
     let fixture = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let independent: serde_json::Value = serde_json::from_str(text).unwrap();
     let close = fixture.get("close").unwrap();
@@ -442,7 +442,7 @@ fn session_close_cancels_an_unacknowledged_page_and_retires_its_exact_bytes() {
 
 #[test]
 fn session_close_receipt_retries_a_colliding_event_slot_and_preserves_sibling() {
-    let text = include_str!("../../🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json");
+    let text = include_str!("../🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json");
     let fixture = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let independent: serde_json::Value = serde_json::from_str(text).unwrap();
     let code = fixture.get("receipt").unwrap().get("event").unwrap().as_u64().unwrap() as u16;

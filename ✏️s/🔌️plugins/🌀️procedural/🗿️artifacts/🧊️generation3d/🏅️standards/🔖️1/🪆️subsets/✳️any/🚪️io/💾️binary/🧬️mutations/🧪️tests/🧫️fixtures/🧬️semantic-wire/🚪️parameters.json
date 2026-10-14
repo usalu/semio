@@ -1,0 +1,398 @@
+{
+  "cases": [
+    {
+      "name": "number",
+      "schema": "number",
+      "literal": {
+        "$schema": "number",
+        "value": 2.5
+      },
+      "output": {
+        "type": "number",
+        "value": 2.5
+      }
+    },
+    {
+      "name": "numberList",
+      "schema": "number",
+      "literal": {
+        "$schema": "list",
+        "0": {
+          "$schema": "number",
+          "value": 2.5
+        }
+      },
+      "output": {
+        "type": "numberList",
+        "value": [
+          2.5
+        ]
+      }
+    },
+    {
+      "name": "numberEmpty",
+      "schema": "number",
+      "literal": {
+        "$schema": "list"
+      },
+      "output": {
+        "type": "numberList",
+        "value": []
+      }
+    },
+    {
+      "name": "text",
+      "schema": "text",
+      "literal": {
+        "$schema": "text",
+        "value": "Größe"
+      },
+      "output": {
+        "type": "text",
+        "value": "Größe"
+      }
+    },
+    {
+      "name": "textList",
+      "schema": "text",
+      "literal": {
+        "$schema": "list",
+        "0": {
+          "$schema": "text",
+          "value": "Größe"
+        }
+      },
+      "output": {
+        "type": "textList",
+        "value": [
+          "Größe"
+        ]
+      }
+    },
+    {
+      "name": "textEmpty",
+      "schema": "text",
+      "literal": {
+        "$schema": "list"
+      },
+      "output": {
+        "type": "textList",
+        "value": []
+      }
+    },
+    {
+      "name": "boolean",
+      "schema": "boolean",
+      "literal": {
+        "$schema": "boolean",
+        "value": false
+      },
+      "output": {
+        "type": "boolean",
+        "value": false
+      }
+    },
+    {
+      "name": "booleanList",
+      "schema": "boolean",
+      "literal": {
+        "$schema": "list",
+        "0": {
+          "$schema": "boolean",
+          "value": false
+        }
+      },
+      "output": {
+        "type": "booleanList",
+        "value": [
+          false
+        ]
+      }
+    },
+    {
+      "name": "booleanEmpty",
+      "schema": "boolean",
+      "literal": {
+        "$schema": "list"
+      },
+      "output": {
+        "type": "booleanList",
+        "value": []
+      }
+    },
+    {
+      "name": "point",
+      "schema": "point",
+      "literal": {
+        "$schema": "point",
+        "x": 1,
+        "y": 2,
+        "z": 3
+      },
+      "output": {
+        "type": "point",
+        "value": [
+          1.0,
+          2.0,
+          3.0
+        ]
+      }
+    },
+    {
+      "name": "pointList",
+      "schema": "point",
+      "literal": {
+        "$schema": "list",
+        "0": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        }
+      },
+      "output": {
+        "type": "pointList",
+        "value": [
+          [
+            1.0,
+            2.0,
+            3.0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "pointEmpty",
+      "schema": "point",
+      "literal": {
+        "$schema": "list"
+      },
+      "output": {
+        "type": "pointList",
+        "value": []
+      }
+    },
+    {
+      "name": "vector",
+      "schema": "vector",
+      "literal": {
+        "$schema": "vector",
+        "x": 4,
+        "y": 5,
+        "z": 6
+      },
+      "output": {
+        "type": "vector",
+        "value": [
+          4.0,
+          5.0,
+          6.0
+        ]
+      }
+    },
+    {
+      "name": "vectorList",
+      "schema": "vector",
+      "literal": {
+        "$schema": "list",
+        "0": {
+          "$schema": "vector",
+          "x": 4,
+          "y": 5,
+          "z": 6
+        }
+      },
+      "output": {
+        "type": "vectorList",
+        "value": [
+          [
+            4.0,
+            5.0,
+            6.0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "vectorEmpty",
+      "schema": "vector",
+      "literal": {
+        "$schema": "list"
+      },
+      "output": {
+        "type": "vectorList",
+        "value": []
+      }
+    },
+    {
+      "name": "plane",
+      "schema": "plane",
+      "literal": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        }
+      },
+      "output": {
+        "type": "plane",
+        "value": {
+          "origin": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "normal": [
+            0.0,
+            0.0,
+            1.0
+          ]
+        }
+      }
+    },
+    {
+      "name": "booleanAsNumber",
+      "schema": "number",
+      "literal": {
+        "$schema": "number",
+        "value": true
+      },
+      "output": null
+    },
+    {
+      "name": "numberAsBoolean",
+      "schema": "boolean",
+      "literal": {
+        "$schema": "boolean",
+        "value": 1
+      },
+      "output": null
+    },
+    {
+      "name": "booleanAxis",
+      "schema": "point",
+      "literal": {
+        "$schema": "point",
+        "x": true,
+        "y": 0,
+        "z": 0
+      },
+      "output": null
+    },
+    {
+      "name": "gap",
+      "schema": "number",
+      "literal": {
+        "$schema": "list",
+        "1": {
+          "$schema": "number",
+          "value": 1
+        }
+      },
+      "output": null
+    },
+    {
+      "name": "leadingZero",
+      "schema": "number",
+      "literal": {
+        "$schema": "list",
+        "00": {
+          "$schema": "number",
+          "value": 1
+        }
+      },
+      "output": null
+    },
+    {
+      "name": "mixed",
+      "schema": "number",
+      "literal": {
+        "$schema": "list",
+        "0": {
+          "$schema": "text",
+          "value": "1"
+        }
+      },
+      "output": null
+    },
+    {
+      "name": "forged",
+      "schema": "mesh",
+      "literal": {
+        "$schema": "mesh",
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "output": null
+    },
+    {
+      "name": "scalarOwnType",
+      "schema": "text",
+      "literal": {
+        "$schema": "number",
+        "value": 3
+      },
+      "output": {
+        "type": "number",
+        "value": 3.0
+      }
+    },
+    {
+      "name": "ignoredScalarField",
+      "schema": "boolean",
+      "literal": {
+        "$schema": "boolean",
+        "value": true,
+        "label": "keep authored metadata"
+      },
+      "output": {
+        "type": "boolean",
+        "value": true
+      }
+    }
+  ],
+  "dependencies": [
+    {
+      "type": "parameters",
+      "value": {
+        "width": {
+          "$schema": "number",
+          "value": 2.5
+        }
+      },
+      "literal": {
+        "width": {
+          "$schema": "number",
+          "value": 2.5
+        }
+      }
+    },
+    {
+      "type": "number",
+      "value": 2.5,
+      "literal": {
+        "value": 2.5
+      }
+    },
+    {
+      "type": "text",
+      "value": "Größe",
+      "literal": {
+        "value": "Größe"
+      }
+    },
+    {
+      "type": "absent",
+      "literal": null
+    }
+  ]
+}

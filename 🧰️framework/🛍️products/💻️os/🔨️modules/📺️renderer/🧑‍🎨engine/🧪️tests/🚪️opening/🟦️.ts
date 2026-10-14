@@ -2,14 +2,14 @@
 
 import { type ValidateFunction } from "ajv";
 import { applyPatch } from "fast-json-patch";
-import openingScopeFixture from "../../🧱️elements/🏛️ShellHost/🧭️opening/🧫️fixtures/📍️scope/🔣️.json";
+import openingScopeFixture from "../../🧱️elements/🏛️ShellHost/🧭️opening/🧪️tests/🧫️fixtures/📍️scope/🔣️.json";
 import { AppRouter, type AppRouterManifest, type OpeningPreferences } from "@semio-tech/framework";
 import { resolveArtifactOpeningRelay, type DirectoryEvent } from "@semio-tech/framework-os";
 import { describe, expect, it } from "vitest";
 import { resolveDocumentOpeningBindings, resolveDocumentOpeningTarget, sharedDocumentOpeningRoleV1, sharedDocumentRoleSwitchRefusedV1 } from "../../🧱️elements/🏛️ShellHost/🧭️opening/🟦️.ts";
-import openPlanFixture from "../../../../../🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json";
+import openPlanFixture from "../../../../../🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
-import artifactOpeningFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🚪️open-artifact/🔣️.json";
+import artifactOpeningFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🚪️open-artifact/🔣️.json";
 import { semioSchemaAjvV1 } from "../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 const ownedExports = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(rendererSchema);

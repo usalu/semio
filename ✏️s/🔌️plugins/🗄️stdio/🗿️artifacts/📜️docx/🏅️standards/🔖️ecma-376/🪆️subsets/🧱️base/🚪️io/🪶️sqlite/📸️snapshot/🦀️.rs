@@ -1,9 +1,10 @@
 //! 📕️ Complete DOCX OPC entities and typed multi-document XML graph.
 
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::*;
 use semio_framework_os_kernel::{
     sqlite_snapshot::{SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase, ValueError, ValueRefusalKind},
-    os_store::serialization::ArtifactSqliteSnapshot,
+    os_store::serialization::ArtifactSqliteSnapshotHost,
 };
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlSnapshot;
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::XmlSqliteTables;
@@ -52,7 +53,7 @@ impl Drop for Documents {
 
 struct Parts(Vec<DocxXmlPart>);
 
-impl ArtifactSqliteSnapshot for DocxSnapshot {
+impl ArtifactSqliteSnapshotHost for DocxSnapshot {
     fn encode_sqlite_snapshot_native(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
         crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::encode(self, encoding, control,native_owner)
     }
@@ -77,7 +78,7 @@ impl ArtifactSqliteSnapshot for DocxSnapshot {
         }
     }
 
-    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+    
 
     fn retire_sqlite_snapshot(self) {
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
@@ -87,11 +88,16 @@ impl ArtifactSqliteSnapshot for DocxSnapshot {
         }
     }
 
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
+    
+
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for DocxSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
         backing::projection::project(self, control)
     }
-
-    fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
         backing::reconstruction::reconstruct(database, control)
     }
 }

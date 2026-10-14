@@ -2,7 +2,7 @@ import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import {existsSync,readFileSync} from "node:fs";
 import {resolve} from "node:path";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🔣️.json";
 
 test("Puzzle2d optional text diagnostics expose borrowed raw ID fragments and exact severity",()=>{
  const db=new Database(":memory:");db.exec("CREATE TABLE target(ordinal INTEGER PRIMARY KEY,id TEXT,value TEXT)");

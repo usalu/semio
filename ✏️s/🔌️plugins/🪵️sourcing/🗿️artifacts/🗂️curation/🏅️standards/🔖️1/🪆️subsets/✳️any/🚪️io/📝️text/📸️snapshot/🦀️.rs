@@ -22,12 +22,12 @@ curated [object-id:REF count:UINT] {
 
 /// 📖️ Parses `.curation` DSL text into a `CurationSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<CurationSnapshot, semio_framework_diagnostic::TextError> {
-    <CurationSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <CurationSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `CurationSnapshot` back to `.curation` DSL text.
 pub fn print_dsl(document: &CurationSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(document)
+    pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -36,7 +36,7 @@ pub fn print_dsl(document: &CurationSnapshot) -> String {
 mod tests;
 //#endregion 🧪️Tests
 
-impl store::os_store::serialization::ArtifactDsl for CurationSnapshot {
+impl pack::snapshot::ArtifactDsl for CurationSnapshot {
     const EXTENSION: &'static str = "curation";
     fn envelope_id() -> &'static str { "curation.curation" }
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -255,7 +255,7 @@ pub fn installable_contributions(contributions_json: &str, maximum_bytes: usize)
 /// never inline content, in the persisted DSL text itself.
 pub fn default_document() -> CurationSnapshot {
     crate::validate_catalog_payload(&demo_stock());
-    <CurationSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::DEMO_STOCK_TEXT).expect("authored demo stock must match the curation schema")
+    <CurationSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::DEMO_STOCK_TEXT).expect("authored demo stock must match the curation schema")
 }
 
 /// 📄️ The empty-curation example, parsed once from
@@ -263,7 +263,7 @@ pub fn default_document() -> CurationSnapshot {
 /// same content-addressed empty-catalog handle `CurationSnapshot::default()` mints.
 pub fn empty_document() -> CurationSnapshot {
     crate::validate_catalog_payload(&[]);
-    <CurationSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::EMPTY_CURATION_TEXT).expect("authored empty curation must match the curation schema")
+    <CurationSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::EMPTY_CURATION_TEXT).expect("authored empty curation must match the curation schema")
 }
 }
 pub use snapshot_codec::*;

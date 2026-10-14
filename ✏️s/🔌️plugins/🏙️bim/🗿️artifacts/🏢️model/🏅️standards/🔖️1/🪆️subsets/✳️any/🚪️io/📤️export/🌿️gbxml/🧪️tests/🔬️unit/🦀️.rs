@@ -3,9 +3,9 @@ use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::Env
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
 
-const BOX: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🌡️energy-envelope/🏠️box/📸️snapshot/🔣️.json");
-const ZONING: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🌡️energy-envelope/🏘️zoning/📸️snapshot/🔣️.json");
-const STACK: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🌡️energy-envelope/🧱️stack/📸️snapshot/🔣️.json");
+const BOX: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🌡️energy-envelope/🏠️box/📸️snapshot/🔣️.json");
+const ZONING: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🌡️energy-envelope/🏘️zoning/📸️snapshot/🔣️.json");
+const STACK: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🌡️energy-envelope/🧱️stack/📸️snapshot/🔣️.json");
 
 fn load(text: &str) -> ModelSnapshot {
     from_json_str(text, JsonMemberPolicy::Reject).expect("the committed fixture decodes")
@@ -180,8 +180,8 @@ fn the_table_starts_with_the_counts_of_the_plan() {
     assert!(table.starts_with("{\"counts\":{\"campuses\":1,\"buildings\":1,\"storeys\":1,\"spaces\":1,\"zones\":1,\"surfaces\":6,\"openings\":2"), "{}", &table[..120.min(table.len())]);
 }
 
-const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🌿️gbxml");
-const HOUSE: &str = include_str!("../../../../../🧫️fixtures/🌿️gbxml/🏠️house/📸️snapshot/🔣️.json");
+const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🌿️gbxml");
+const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🌿️gbxml/🏠️house/📸️snapshot/🔣️.json");
 
 #[test]
 fn the_committed_files_are_the_current_export() {

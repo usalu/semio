@@ -5,7 +5,7 @@ import {ShapeUtils,Vector2,Line3,Vector3,CubicBezierCurve,Matrix3} from "three";
 import {PathHitCursor} from "../../🟦️.ts";
 import type {PathGeometrySegment} from "../../../../🟦️.ts";
 import type {Matrix,Point} from "../../../🟦️.ts";
-import cases from "../../🧫️fixtures/🔣️.json";
+import cases from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🔣️.json";
 for(const sample of cases)test(`painted path hit: ${sample.name}`,()=>{
   const cursor=new PathHitCursor(sample.point as Point,sample.matrix as Matrix,sample.radius,.001);
   let steps=0;while(!cursor.step(sample.segments as PathGeometrySegment[])){expect(++steps).toBeLessThan(100000);}
@@ -42,7 +42,7 @@ test("curve picking yields with bounded storage and refuses unresolved geometry"
   expect(cursor.maximumDepth).toBeLessThanOrEqual(33);
 });
 
-import shapes from "../../🧫️fixtures/🔷️shapes/🔣️.json";
+import shapes from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🔷️shapes/🔣️.json";
 import {shapeSegment} from "../../../🔀️conversion/🟦️.ts";
 for(const sample of shapes)test(`primitive picking: ${sample.name}`,()=>{
   const cursor=new PathHitCursor(sample.point as Point,sample.matrix as Matrix,sample.radius,.001);

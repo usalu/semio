@@ -1,10 +1,10 @@
 import artifactReferenceSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
-import distinctChild from "../🧫️fixtures/🪆️distinct/🔣️.json";
+import distinctChild from "./🧫️fixtures/🪆️distinct/🔣️.json";
 
 import{expect,test}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
-import fixture from"../🧫️fixtures/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
 
 import nativeSchema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import artifactSchema from"../../../../🧬️schema/🔣️.json";
@@ -44,7 +44,7 @@ test("Curation local Kit child aliases retain distinct literal target identities
 test("Curation distinct logical child and addressed target have valid full physical SQLite ownership",async()=>{expect(distinctChild["childId"]).toEqual("logical-child\u0000世界");expect(distinctChild["artifactId"]).toEqual("addressed-artifact\u0000Ä");expect(distinctChild["dialect"]["artifactKind"]).toEqual("s.stdio.semio");expect(distinctChild["dialect"]["standard"]).toEqual("v1");expect(distinctChild["dialect"]["subset"]).toEqual("kit");expect(distinctChild.childId).not.toBe(distinctChild.artifactId);const expected=snapshot();expected.catalog.childId=distinctChild.childId;expected.catalog.target.artifactId=distinctChild.artifactId;expected.catalog.target.dialect={...distinctChild.dialect};const data=await bytes(expected),db=Database.deserialize(data,{safeIntegers:true});try{expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(db.query("SELECT child_id,artifact_id,artifact_kind,standard,subset FROM curation_catalog").all()).toEqual([{child_id:distinctChild.childId,artifact_id:distinctChild.artifactId,artifact_kind:distinctChild.dialect.artifactKind,standard:distinctChild.dialect.standard,subset:distinctChild.dialect.subset}]);expect(await restore(new Uint8Array(db.serialize()))).toEqual(expected)}finally{db.close()}});
 
 test("Curation declared owner corpus pins complete authored SQL tables independently",async()=>{
- const {default:law}=await import("../🧫️fixtures/🧩️declaration/🔣️.json");
+ const {default:law}=await import("./🧫️fixtures/🧩️declaration/🔣️.json");
  
  const {default:Ajv}=await import("ajv");
  
@@ -54,7 +54,7 @@ test("Curation declared owner corpus pins complete authored SQL tables independe
 });
 
 test("Curation complete SQL cell extent admits equality and refuses one byte short independently of backing",async()=>{
- const {default:law}=await import("../🧫️fixtures/📏️semantic-cells/🔣️.json");
+ const {default:law}=await import("./🧫️fixtures/📏️semantic-cells/🔣️.json");
  for(const row of law.cases){const expected=snapshot();for(const extra of expected.stockExtra){const g=extra.geometry;if(row.width===32&&g.kind==="mesh"){g.positions=g.positions.map(()=>({bits:parseInt(row.hex!,16)}));g.normals=g.normals.map(()=>({bits:parseInt(row.hex!,16)}));}else if(row.width===64&&g.kind!=="mesh"){const value={bits:BigInt("0x"+row.hex)};if(g.kind==="glb")g.extent=value;else{g.width=value;g.depth=value;if(g.kind==="slab")g.thickness=value;else{g.height=value;if(g.kind==="frame")g.profile=value;}}}}
  const database=await own.curationSnapshotToSqliteDatabase(expected),db=Database.deserialize(await exportSqliteDatabase(database),{safeIntegers:true});try{expect(db.query("PRAGMA integrity_check").all()).toEqual([{integrity_check:"ok"}]);expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);const tables=db.query("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").all() as {name:string}[];expect(tables.length).toBe(law.tableCount);let extent=0,count=0;for(const {name}of tables){const rows=db.query('SELECT * FROM "'+name+'"').all() as Record<string,unknown>[];count+=rows.length;for(const values of rows)for(const value of Object.values(values))extent+=value===null?0:typeof value==="string"?Buffer.byteLength(value,"utf8"):8;}expect(count).toBe(law.rowCount);expect(extent).toBe(row.bytes);console.log("[DEBUG] Curation exact semantic cell boundary "+row.id+" all14tables=true rows="+count+" bytes="+extent);
  await expect(own.curationSnapshotToSqliteDatabase(expected,{maxValueBytes:row.bytes})).resolves.toBeDefined();await expect(own.curationSnapshotToSqliteDatabase(expected,{maxValueBytes:row.bytes-1})).rejects.toThrow();await expect(own.curationSnapshotFromSqliteDatabase(database,{maxValueBytes:row.bytes})).resolves.toEqual(expected);await expect(own.curationSnapshotFromSqliteDatabase(database,{maxValueBytes:row.bytes-1})).rejects.toThrow();}finally{db.close();}}

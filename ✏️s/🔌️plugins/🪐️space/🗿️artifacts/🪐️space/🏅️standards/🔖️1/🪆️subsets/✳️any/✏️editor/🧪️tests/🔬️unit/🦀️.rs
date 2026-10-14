@@ -33,7 +33,7 @@ pub(crate) mod context {
     pub async fn new_app_with_artifact() -> (SpaceIndexApp, String) {
         use crate::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow, empty_space_index_snapshot};
         use semio_framework_plugin::PluginApp;
-        use store::os_store::serialization::ArtifactDsl;
+        use pack::snapshot::ArtifactDsl;
         let mut app = new_app().await;
         let id = "artifact-1".to_string();
         let mut snapshot = empty_space_index_snapshot("space-1");
@@ -59,7 +59,7 @@ pub(crate) mod context {
             ArtifactHash, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceVisibility, DocumentDescriptor, DocumentFrontier, DocumentIndexEntryV1, DocumentOwner, DocumentScope, Hlc,
         };
         use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_plugin::PluginApp};
-        use store::os_store::serialization::ArtifactDsl;
+        use pack::snapshot::ArtifactDsl;
     
         let mut app = new_app().await;
         let id = "artifact-0123456789abcdef0123456789abcdef".to_string();

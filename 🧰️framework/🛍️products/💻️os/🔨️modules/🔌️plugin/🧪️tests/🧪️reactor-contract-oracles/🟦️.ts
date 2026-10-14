@@ -48,7 +48,7 @@ type BackboneBatchFixture = { readonly cases: readonly unknown[]; readonly reten
 
 /** 🪪️ Validates neutral admission laws with independent AJV predicates and pins the real reducer. */
 export function guestLifecycleOracle(): number {
-  const fixture = JSON.parse(readFileSync(new URL("../../⚛️reactor/🚪️lifetime/🧫️fixtures/🧵️production.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../../⚛️reactor/🚪️lifetime/🧪️tests/🧫️fixtures/🧵️production.json", import.meta.url), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
   const admit = ajv.compile({ type: "object", required: ["exact", "live", "capacity"], properties: { exact: { const: true }, live: { const: true }, capacity: { const: true } } });
   for (const row of fixture.cases) {
@@ -67,7 +67,7 @@ export function guestLifecycleOracle(): number {
 
 /** 🧾️ Cross-checks exact issued patch acknowledgement against independent AJV constants. */
 export function issuedPatchOracle(): number {
-  const fixture = JSON.parse(readFileSync(new URL("../../⚛️reactor/📨️pending/🧫️fixtures/🩹️receipt.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../../⚛️reactor/📨️pending/🧪️tests/🧫️fixtures/🩹️receipt.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../⚛️reactor/📨️pending/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
   ajv.addSchema(schema);
@@ -88,7 +88,7 @@ export function issuedPatchOracle(): number {
 
 
 export async function coldDocumentPairIngressOracle(repoRoot: string): Promise<number> {
-  const fixture = JSON.parse(readFileSync(new URL("../../⚛️reactor/📥️cold-pair/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../../⚛️reactor/📥️cold-pair/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const pattern = (length: number, row: { multiplier: number; addend: number }) => Uint8Array.from({ length }, (_, index) => (index * row.multiplier + row.addend) & 255);
   const pack = pattern(fixture.exact.packLength, fixture.exact.packPattern);
   const spr = pattern(fixture.exact.sprLength, fixture.exact.sprPattern);
@@ -99,7 +99,7 @@ export async function coldDocumentPairIngressOracle(repoRoot: string): Promise<n
   }
   const kernel = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🎠️kernel/📥️cold-pair/🦀️.rs"), "utf8");
   const ingress = readFileSync(new URL("../../⚛️reactor/📥️cold-pair/🦀️.rs", import.meta.url), "utf8");
-  const actorFixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧫️fixtures/🔣️.json"), "utf8"));
+  const actorFixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
   const actorSchema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧬️schema/🔣️.json"), "utf8"));
   const validateActorStatus = new Ajv({ strict: true, allErrors: true }).compile(actorSchema);
   const actorRows = actorFixture as ActorColdPairFixture;
@@ -114,7 +114,7 @@ export async function coldDocumentPairIngressOracle(repoRoot: string): Promise<n
 
 
 export function documentBackboneBindingOracle(repoRoot: string): number {
-  const fixture = JSON.parse(readFileSync(new URL("../../📡️backbone/🔗️binding/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../../📡️backbone/🔗️binding/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../📡️backbone/🔗️binding/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/DocumentBackboneBindingV1" });
   const reduce = (row: BackboneBindingRow) => {
@@ -143,7 +143,7 @@ export function documentBackboneBindingOracle(repoRoot: string): number {
   }
   for (const row of fixture.hostile) assert.equal(validate(row.value), false, row.id);
   const binding = readFileSync(new URL("../../📡️backbone/🔗️binding/🦀️.rs", import.meta.url), "utf8");
-  const batchFixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json"), "utf8"));
+  const batchFixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json"), "utf8"));
   const store = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"), "utf8");
   const causal = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️.rs"), "utf8");
   const sync = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs"), "utf8");

@@ -1,8 +1,9 @@
 //! 🫴️ Original TSV receiving laws witness actual raw-grid destinations and original cancellation.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
 #[test]
 fn sqlite_snapshot_tsv_receiving_original_subset_validation_uses_both_original_controls(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🛂️validation/🧫️fixtures/🔣️.json")).unwrap();let source=snapshot(&policy()["cases"][0]);let database=input(&source);let pointers=(source.schema.as_ptr(),database.tables.as_ptr());let incoming=grant(&law["grant"]);
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🛂️validation/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let source=snapshot(&policy()["cases"][0]);let database=input(&source);let pointers=(source.schema.as_ptr(),database.tables.as_ptr());let incoming=grant(&law["grant"]);
  macro_rules! direction{
   ($native:ident,$owner:ident,$method:ident)=>{
    for case in law["cases"].as_array().unwrap(){
@@ -18,11 +19,11 @@ fn sqlite_snapshot_tsv_receiving_original_subset_validation_uses_both_original_c
  direction!(NativeEncodeControl,NativeSnapshotEncodeOwner,validate_sqlite_snapshot_subset_encoding);
  eprintln!("[DEBUG] TSV original subset receiving validation matches eight neutral directional cases with exact borrowed pointers, original native and SQL cancellation, zero physical allocation/release and literal unsupported policy");
 }
-use store::os_store::serialization::ArtifactSqliteSnapshot as _;
+use store::os_store::serialization::ArtifactSqliteSnapshotHost as _;
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use std::{cell::Cell,sync::atomic::{AtomicUsize,Ordering}};
-fn policy()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn policy()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn grant(value:&serde_json::Value)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:value["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:value["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:value["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:value["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:value["maximumDepth"].as_u64().unwrap()as usize}}
 fn snapshot(value:&serde_json::Value)->TsvSnapshot{TsvSnapshot{schema:value["schema"].as_str().unwrap().into(),records:value["records"].as_array().unwrap().iter().map(|row|row.as_array().unwrap().iter().map(|text|text.as_str().unwrap().into()).collect()).collect(),trailing_newline:value["trailingNewline"].as_bool().unwrap(),line_ending:match value["lineEnding"].as_str().unwrap(){"lf"=>LineEnding::Lf,"crlf"=>LineEnding::Crlf,_=>unreachable!()}}}
 fn wide(law:&serde_json::Value)->TsvSnapshot{TsvSnapshot{schema:"literal-λ🙂".into(),records:vec![vec![],vec![law["stringUnit"].as_str().unwrap().repeat(law["stringRepetitions"].as_u64().unwrap()as usize),"tail".into()],vec![]],trailing_newline:true,line_ending:LineEnding::Crlf}}

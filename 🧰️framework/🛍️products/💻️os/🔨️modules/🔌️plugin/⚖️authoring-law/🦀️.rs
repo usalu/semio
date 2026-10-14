@@ -18,7 +18,7 @@ pub struct StoreAuthoringLaw<P> {
 /// 🧹️ Drives one store's owned close to its terminal-empty witness under independently quoted per-axis grants.
 fn close_store<P, M>(store: &mut ArtifactStore<P, M>)
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::os_store::serialization::ArtifactPack + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + protocol::Mutation<P> + protocol::OpBinary + protocol::OpText + Send + 'static,
 {
     if store.close_owned_terminal_is_empty() { return; }

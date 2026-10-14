@@ -1,4 +1,5 @@
-import { atTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { phaseCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { pathEmojiStatuteFindings } from "../../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
 import { COMPONENT_MODULE_DIRECTORIES } from "../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import * as Vitest from "vitest";
@@ -127,7 +128,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const validate = stagingAjv.getSchema(`${document.$id}#/$defs/TestBrowserHostStagingV1`)!;
       const validateMaterialization = stagingAjv.getSchema(`${document.$id}#/$defs/TestBrowserGisMaterializationV1`)!;
       
-      const provenanceFixture = JSON.parse(readFileSync(join(contractRoot, "🧫️fixtures/🧬️selected-gis-byte-provenance-v1/🔣️.json"), "utf8"));
+      const provenanceFixture = JSON.parse(readFileSync(join(contractRoot, "🧪️tests/🧫️fixtures/🧬️selected-gis-byte-provenance-v1/🔣️.json"), "utf8"));
       expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
       
       expect(parseTestBrowserHostStagingReceiptV1(fixture)).toEqual(fixture);
@@ -142,7 +143,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       // 🔒️ `buildPluginCargo` now always builds into the ONE shared, fine-grain-locked `cargoTargetDirectory`
       // (no private per-caller target dirs) — this asserts the ticket-owned COPY step that still makes the
       // fresh Space artifact eligible for `ownedTestBrowserHostInput`'s bounded-regular-file check survives.
-      expect(scriptSource).toContain("const builtSpace = await buildPluginCargo(space);");
+      expect(scriptSource).toContain("const builtSpace = await buildPluginCargo(space, input.control);");
       expect(scriptSource).toContain('const stagedSpacePath = join(artifactRoot, "browser-host-wasi-target", basename(builtSpace.artifact));');
       expect(scriptSource).toContain("writeFileSync(stagedSpacePath, readFileSync(builtSpace.artifact), { mode: 0o600 });");
       const materializerStart = scriptSource.indexOf("async function materializeTestBrowserPluginV1(");
@@ -550,7 +551,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     itLong("stages canonical command-page bytes unchanged and leaves poll carrying no page", async () => {
       const { execFileSync } = await import("node:child_process");
       const { createShardCommandIngressPages } = await import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts");
-      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📃️page/🧫️fixtures/🔣️.json"), "utf8"));
+      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📃️page/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
       const vectors = fixture.vectors.filter((row: { length: number }) => row.length !== 0);
       const inputs = vectors.map((row: { length: number }, index: number) => {
         const command = Uint8Array.from({ length: row.length }, (_, byte) => (byte * fixture.bytePattern.multiplier + fixture.bytePattern.addend) % fixture.bytePattern.modulus);
@@ -584,7 +585,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     itLong("maps issued UI patch receipts and exact ACK or rejection through the generated bridge", async () => {
       const { execFileSync } = await import("node:child_process");
-      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧫️fixtures/🔣️.json"), "utf8"));
+      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
       const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
         import { SourceTextModule, createContext } from "node:vm";
         import { readFileSync } from "node:fs";
@@ -649,7 +650,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     itLong("maps canonical lifecycle requests and receipts through the real generated bridge", async () => {
       const { execFileSync } = await import("node:child_process");
-      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json"), "utf8"));
+      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
       const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
         import { SourceTextModule, createContext } from "node:vm";
         import { readFileSync } from "node:fs";
@@ -760,7 +761,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     itLong("keeps generated host imports and replies isolated across same-package activations", async () => {
       const { execFileSync } = await import("node:child_process");
       const { default: Ajv } = await import("ajv");
-      const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures");
+      const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures");
       const fixture = JSON.parse(readFileSync(join(fixtureRoot, "⚡️host-activation.json"), "utf8")) as { activations: Array<{ actorId: string; generation: string; value: string }> };
       const component = rewriteJcoComponentAssetUrls(`import { storageRead, emit } from "./${PLUGIN_HOST_SHIM_FILE}";
 export const reactor = { channelVersion: () => ${ (await import("../../../../🟦️.ts")).APP_CHANNEL_VERSION }, poll: async (events) => { emit(events[0].val); return { value: await storageRead(events[0].val), uiPatches: [], commandIngress: { kind: 0 } }; } };
@@ -835,7 +836,7 @@ export const describe = {};`);
 
     itLong("forwards lifecycle through the captured scheduled turn and rejects the removed side message", async () => {
       const { execFileSync } = await import("node:child_process");
-      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json"), "utf8")) as { vectors: Array<{ value: { kind: string }; hex: string }> };
+      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json"), "utf8")) as { vectors: Array<{ value: { kind: string }; hex: string }> };
       const request = fixture.vectors.find((row) => row.value.kind === "close")!;
       const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
         import { SourceTextModule, createContext } from "node:vm";
@@ -889,7 +890,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
     itLong("executes independent Wasm memories from one cached explicit factory module", async () => {
       const { execFileSync } = await import("node:child_process");
       const { default: Ajv } = await import("ajv");
-      const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures");
+      const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures");
       const fixture = JSON.parse(readFileSync(join(root, "🏗️component-instantiation.json"), "utf8"));
       const oracle = new Ajv({ strict: true });
       expect(oracle.validate(JSON.parse(readFileSync(join(root, "../🧬️schema/🏗️component-instantiation/🔣️.json"), "utf8")), fixture)).toBe(true);
@@ -947,7 +948,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
 
     itLong("preserves direct descriptor and job results and lifts large turn results indirectly", async () => {
       const { execFileSync } = await import("node:child_process");
-      const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/⏳️async-results.json");
+      const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/⏳️async-results.json");
       const generated = execFileSync("node", ["--input-type=module", "--eval", `
         import { parse, transpile } from "@bytecodealliance/jco";
         import { readFileSync } from "node:fs";
@@ -970,7 +971,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
 
   describe("rewritePreview2ShimImportSource", () => {
     itLong("rebases exact declared vendor URLs while preserving the public route", async () => {
-      const ts = await import("typescript"), fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🪞️vendor.json"), "utf8"));
+      const ts = await import("typescript"), fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🪞️vendor.json"), "utf8"));
       const printer = ts.createPrinter();
       for (const row of fixture.cases) {
         const actual = rewritePreview2ShimImportSource(row.input, fixture.prefix);
@@ -1148,7 +1149,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
 
     itLong("emits runtime URL assets but no dead in-source-test assets in production", async () => {
       const ts = await import("typescript"), { execFileSync } = await import("node:child_process");
-      const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🧹️production-tests.json");
+      const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🧹️production-tests.json");
       const pluginSource = ts.createSourceFile("🟦️.ts", readFileSync(join(dirname(fileURLToPath(source.url)), "../../🔌️vite-plugins/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
       const node = pluginSource.statements.find((item) => ts.isFunctionDeclaration(item) && item.name?.text === "semioProductionTestBoundaryVitePlugin");
       const emitted = node ? ts.transpileModule(node.getText(pluginSource).replace("export function", "function"), { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText : "";
@@ -1179,7 +1180,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
 
     itLong("validates neutral read-only build inspection records against an independent digest oracle", async () => {
       const { default: Ajv } = await import("ajv");
-      const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures");
+      const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures");
       const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔎️build-inspection.json"), "utf8"));
       const validate = await devContractModule("BuildInspectionV1");
       expect(validate(fixture.expected)).toBe(true);
@@ -1192,7 +1193,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
 
     it.runIf(Boolean(process.env.SEMIO_BUILD_INSPECTION_OUTPUT))("inspects the actual production Rollup output without writing or replacing distribution bytes", async () => {
       const { execFile } = await import("node:child_process"), { default: Ajv } = await import("ajv"), { writeFileSync } = await import("node:fs");
-      const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures");
+      const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures");
       const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔎️build-inspection.json"), "utf8"));
       const boundary = JSON.parse(readFileSync(join(fixtureRoot, "🧹️production-tests.json"), "utf8"));
       const outputPath = resolve(process.env.SEMIO_BUILD_INSPECTION_OUTPUT!);
@@ -1254,7 +1255,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
 
     itLong("excludes test-only Node imports from production output while preserving runtime and test-mode branches", async () => {
       const ts = await import("typescript"), { execFileSync } = await import("node:child_process");
-      const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🧹️production-tests.json");
+      const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🧹️production-tests.json");
       const fixture = JSON.parse(readFileSync(fixturePath, "utf8"));
       const config = ts.createSourceFile("🟦️.ts", readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
       let definition: string | undefined;
@@ -1286,7 +1287,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
     itLong("routes encoded OS installation requests through the actual adapter handler and registers its stream route", async () => {
       const ts = await import("typescript"), { EventEmitter } = await import("node:events");
       const { URL: OracleURL } = await import("whatwg-url");
-      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
+      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
       const handlers = new Map<string, Function>(), watched: string[] = [];
       const routes: string[] = [];
       const environment = {
@@ -1337,7 +1338,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       const emitted = ts.transpileModule(sourceFunctions.join("\n"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
       const staticDirVitePlugin = new Function("exports", "resolve", "relative", "isAbsolute", "existsSync", "statSync", "createReadStream", "mkdirSync", "cpSync", "process", emitted + "\nreturn exports.staticDirVitePlugin;")({}, resolve, relative, isAbsolute, existsSync, statSync, createReadStream, mkdirSync, cpSync, process);
       const { loadCatalogTaxonomy, fixedFilenameContractIdsForPath } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts");
-      const taxonomy = loadCatalogTaxonomy(), fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🪞️vendor.json"), "utf8"));
+      const taxonomy = loadCatalogTaxonomy(), fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🪞️vendor.json"), "utf8"));
       const vendorRoot = join(pluginOutRoot, fixture.vendorPath), urls = new Map<string, string>();
       expect(readdirSync(vendorRoot).filter((name) => name !== ".nx-artifact.json").sort()).toEqual(fixture.vendorFiles);
       for (const filename of fixture.vendorFiles) {
@@ -1511,7 +1512,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
         materialized.push(target.pluginId);
       };
       let shardWorkerPublishCount = 0;
-      const { failedPluginIds } = await buildPluginCatalog(targets, cargoFn, materializeFn, 3, () => {
+      const { failedPluginIds } = await buildPluginCatalog(targets, phaseCompilerAdmissionControlV1(new AbortController().signal, 120000, () => undefined, () => new Promise(done => setImmediate(done))), cargoFn, materializeFn, 3, () => {
         shardWorkerPublishCount++;
       }, 3);
       expect(failedPluginIds).toEqual([]);
@@ -1534,7 +1535,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
         if (target.pluginId === "materialize-fails") throw new Error("boom");
         materialized.push(target.pluginId);
       };
-      const { failedPluginIds } = await buildPluginCatalog(targets, cargoFn, materializeFn, 4, () => {});
+      const { failedPluginIds } = await buildPluginCatalog(targets, phaseCompilerAdmissionControlV1(new AbortController().signal, 120000, () => undefined, () => new Promise(done => setImmediate(done))), cargoFn, materializeFn, 4, () => {});
       expect(new Set(failedPluginIds)).toEqual(new Set(["cargo-fails", "materialize-fails"]));
       expect(materialized).toEqual(["ok"]);
     });
@@ -1632,7 +1633,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
 
     it("preserves an unexpected public output tree and accepts its absence", async () => {
       const { webcrypto } = await import("node:crypto");
-      const specimen = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🛡️deployment-preservation.json"), "utf8")).stalePublicOutput;
+      const specimen = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🛡️deployment-preservation.json"), "utf8")).stalePublicOutput;
       const directory = join(root, specimen.directory), file = join(directory, specimen.filename);
       expect(() => assertNoStalePublicPluginOutputs(directory)).not.toThrow();
       mkdirSync(directory, { recursive: true });
@@ -1643,7 +1644,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
 
     it("preserves every neutral hostile specimen byte for byte", async () => {
       const { webcrypto } = await import("node:crypto");
-      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🛡️deployment-preservation.json"), "utf8"));
+      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🛡️deployment-preservation.json"), "utf8"));
       for (const row of fixture.cases) {
         const parent = join(root, row.name), dir = join(parent, "📝️flow-extension-text");
         mkdirSync(dir, { recursive: true });
@@ -1816,7 +1817,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
 
   //#region 🔖️CatalogSmoke-tests
   describe("catalog smoke aggregation", () => {
-    const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🔬️catalog-smoke.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🔬️catalog-smoke.json"), "utf8"));
 
     it("folds program outcomes and install statuses into the committed language-agnostic report", () => {
       const report = summarizeCatalogSmoke(fixture.input);

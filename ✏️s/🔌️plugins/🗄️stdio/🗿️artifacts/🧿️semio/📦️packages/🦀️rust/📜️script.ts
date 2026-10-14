@@ -1,15 +1,26 @@
 #!/usr/bin/env bun
 import {completeCargoPreparationObservationV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts";
 /** 📦️ semio Rust artifact package router. */
-import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
+import { runArtifactRustPackageMain, runArtifactRustTests } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import { retainedExtrusionOracle } from "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/📦️extrude-orientation/🟦️.ts";
-import { BundleScript } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runCmd, runCargo } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { prepareSemioConversionDefinitionV1 } from "../../🧩️composition/🔗️conversions/🟦️.ts";
 import { runCargoCapabilityContributionChecks } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧩️capabilities/🧪️tests/🟦️.ts";
 import { runSemioConversionDefinitionChecks } from "../../🧩️composition/🔗️conversions/🧪️tests/🟦️.ts";
+import {scriptInvocationBudget} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {runBudgetedTestCommand} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+
+/** 🔤️ Qualifies complete Text field witnesses under the original caller invocation. */
+class TextReceivingSource extends BundleScript{
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("original Text receiving accepts no arguments");const source=resolve(this.root,"../../🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🟦️.ts");const execute=(args:string[])=>runBudgetedTestCommand(process.execPath,args,{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal,throwOnFailure:true});await execute([Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source]);await execute(["test",source]);}
+}
+/** 🦀️ Executes genuine original complete Text receiving in its actual owning package. */
+class TextReceivingNative extends TextReceivingSource{
+ async run(args:string[]):Promise<void>{await super.run(args);await runArtifactRustTests("semio-s-artifact-stdio-semio-text",this.repoRoot,["--lib","semio_text_original_receiving_","--no-fail-fast"],this.invocation.control);}
+}
 
 class CompositionScript extends BundleScript {
 run(segments: string[]): void {
@@ -58,7 +69,7 @@ throw new Error('Unknown owned verification '+segments.join(' '));
 const familyRoot = resolve(import.meta.dir, "../..");
 const familyPackages = (Bun.TOML.parse(readFileSync(join(familyRoot, "Cargo.toml"), "utf8")) as { workspace: { members: string[] } }).workspace.members.map((member) => (Bun.TOML.parse(readFileSync(join(familyRoot, member, "Cargo.toml"), "utf8")) as { package: { name: string } }).package.name);
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-semio", { packages: familyPackages, ...{ twins: [{ name: "retained-extrusion", run: retainedExtrusionOracle }, { name: "conversion-contributions", run: runCargoCapabilityContributionChecks }] }, commands: { verify: OwnedVerifyScript, composition: CompositionScript }, snapshotSqliteTestBudgetMs: 120000, snapshotSqliteTests: [
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-semio", { packages: familyPackages, ...{ twins: [{ name: "retained-extrusion", run: retainedExtrusionOracle }, { name: "conversion-contributions", run: runCargoCapabilityContributionChecks }] }, commands: { verify: OwnedVerifyScript, composition: CompositionScript, "test-text-receiving-source":TextReceivingSource, "test-text-receiving-native":TextReceivingNative }, snapshotSqliteTestBudgetMs: 120000, snapshotSqliteTests: [
 "../../🧪️tests/🪶️sqlite/🛬️native/🟦️.ts",
 "../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
 "../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🔺️geometry/🟦️.ts",

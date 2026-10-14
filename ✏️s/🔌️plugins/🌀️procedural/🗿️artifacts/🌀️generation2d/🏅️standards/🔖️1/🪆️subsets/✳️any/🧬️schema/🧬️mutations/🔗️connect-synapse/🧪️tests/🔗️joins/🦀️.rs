@@ -14,11 +14,11 @@ use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRe
 use crate::Generation2dSnapshot;
 use crate::central_apply::{apply_generation2d_mutation};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗️connect-synapse/🔗️joins/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗️connect-synapse/🔗️joins/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗️connect-synapse/🔗️joins/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗️connect-synapse/🔗️joins/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔗️connect-synapse/🔗️joins/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗️connect-synapse/🔗️joins/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗️connect-synapse/🔗️joins/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗️connect-synapse/🔗️joins/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗️connect-synapse/🔗️joins/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗️connect-synapse/🔗️joins/🎯️outcome/🔣️.json");
 
 fn before() -> Generation2dSnapshotRead {
     Generation2dSnapshotRead::new(semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes"))

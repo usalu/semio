@@ -63,7 +63,7 @@ fn test_profile_has_tighter_limits_than_prod() {
 /// shutdown/poisoning are terminal.
 #[test]
 fn worker_submit_retry_follows_the_declared_decision_table() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️worker-submit-retry/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔁️worker-submit-retry/🔣️.json")).unwrap();
     let limit = u8::try_from(fixture["limit"].as_u64().unwrap()).unwrap();
     let rows = fixture["rows"].as_array().unwrap();
     for row in rows {

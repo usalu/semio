@@ -17,7 +17,7 @@ pub use crate::os_spr::format::{FrameCursor, RecordFrame, RecoveryMode, Recovery
 pub use crate::os_spr::format::retained::RetainedSprLimits;
 pub use crate::os_spr::history::{
     decode_history, encode_history, frontier_delta, parse_ops_text, print_ops_text, AlternativeHead, DecodeOptions, EncodeOptions, FrontierComparison, FrontierSummary, HistoryAppender, HistoryComposition, HistoryConflict, HistoryEdit, HistoryLog, HistoryMessage, HistoryOpMeta,
-    HistoryReader, HistoryTransitionRecord, OpPayload, RetainedHistoryDecode, RetainedHistoryDecodeStep, REC_COMPOSITION, REC_TRANSITION,
+    HistoryEdits, HistoryReader, HistoryTransitionRecord, OpPayload, RetainedHistoryDecode, RetainedHistoryDecodeStep, REC_COMPOSITION, REC_TRANSITION,
 };
 #[cfg(not(target_arch = "wasm32"))]
 pub use crate::os_spr::io::{compact, recover_file, CompactOptions, HistoryFile, KeepSnapshots, ResumeState, TailFollower};

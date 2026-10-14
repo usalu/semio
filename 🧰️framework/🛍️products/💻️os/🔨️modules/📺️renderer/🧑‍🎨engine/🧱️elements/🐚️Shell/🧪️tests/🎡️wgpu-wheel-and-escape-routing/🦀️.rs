@@ -15,7 +15,7 @@ use infinite_world::world::World3dState;
 use semio_framework::manifest::Keybinding;
 
 const WGPU_RENDERER_SOURCE: &str = include_str!("../../../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
-const WORLD_JOURNAL_SEQUENCES: &str = include_str!("../../../🌐️World3dHost/🧫️fixtures/📜️journal-sequences.json");
+const WORLD_JOURNAL_SEQUENCES: &str = include_str!("../../../🌐️World3dHost/🧪️tests/🧫️fixtures/📜️journal-sequences.json");
 
 /// 🪟️ The pane geometry of the parity journey's own perspective window, and the point the probe aims
 /// at it (`🐍️parity-interact-probe.mjs`'s `surfacePoint`: 70 % across, 45 % down).

@@ -1,0 +1,38 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/📤️effect/🧬️schema/🔣️.json",
+    "beforeSha256": "a8ac322f15c678eebe5cc3d1c3abfccf1f430440bca9356351b0b5a701271b2b"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🫙️prefix/🧮️projection.json",
+    "beforeSha256": "4f3032053663ca9aa0ef8a94801bc52f4c849d9fc851510ad208c3281cb94144"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🎛️control/🔣️.json",
+    "beforeSha256": "cc91649fa896c15b88e925380a0c6d0555228e4d92a207f4958eab74c4db5210"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️canonical/🧬️schema/🔣️.json",
+    "beforeSha256": "315828921632df39909557c05e054dbbe3c47620b93664cb8a3fd0960a15a32d"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧬️schema/🕰️history/🔣️.json",
+    "beforeSha256": "67c95aa072774b9b9a23b9668a84b240c544afb0a53f7a38dca1e756341ea556"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🫙️prefix/🌳️forest.json",
+    "beforeSha256": "5e6d7b21b65f6289dacde39e1f8c44a421c2c26ea07949fc5cea9cda51711b5e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🫙️prefix/🔣️.json",
+    "beforeSha256": "d458eb1e54032266d8b58ac7fcf988aa7c28e850b285335dc735c16ea56f5f79"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🫙️prefix/✉️envelope.json",
+    "beforeSha256": "0293cfecbb6028e47e6445aef65bf0c126fbc4fcbbea0e89df301b32e054dc3a"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🫙️prefix/🛫️encoding.json",
+    "beforeSha256": "e4fe673c89fd384869910414b3daa3c69c5e91ea0fb1be4a692ff7a89531f46d"
+  }
+]

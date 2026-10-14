@@ -30,7 +30,7 @@ fn decode(kind:&str,value:&DslValue,control:&mut NativeDecodeControl<'_>)->Resul
 
 #[test]
 fn part21_original_decoder_returns_every_success_and_cancelled_prefix_to_actual_recipient(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let wire=semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&row["value"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
   let kind=row["kind"].as_str().unwrap();let calls=Cell::new(0);let mut allow=|_|{calls.set(calls.get()+1);true};let mut recipient=NativeDecodeRetirementRecipient::new();let mut control=NativeDecodeControl::new(1048576,&mut allow);control.install_retirement_recipient(&mut recipient).unwrap();
@@ -47,7 +47,7 @@ fn part21_original_decoder_returns_every_success_and_cancelled_prefix_to_actual_
 
 #[test]
 fn part21_rejected_nested_child_preserves_owned_parent_text_and_siblings(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  let mut row=fixture["cases"][0]["value"].clone();row["values"][1]["value"]["coefficient"]=serde_json::json!(1);
  let wire=semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&row.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());let mut allow=|_|true;let mut recipient=NativeDecodeRetirementRecipient::new();let mut control=NativeDecodeControl::new(1048576,&mut allow);control.install_retirement_recipient(&mut recipient).unwrap();
  let(result,heap)=observe_heap_allocations_on_this_thread(||Part21Value::from_value_controlled(&wire,&mut control));assert_eq!(result.err().unwrap().kind,ValueRefusalKind::InvalidValue);assert!(heap.requested_bytes>0);assert_eq!(heap.released_bytes,0);assert_eq!(control.owned_bytes(),heap.requested_bytes);drop(control);let(c,r)=drain(&mut recipient);assert_eq!(r,heap.requested_bytes+c);
@@ -56,7 +56,7 @@ fn part21_rejected_nested_child_preserves_owned_parent_text_and_siblings(){
 
 #[test]
 fn part21_cohort_retirement_releases_original_capacity_without_literal_byte_credit(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🚦️sqlite-cohort/🔣️.json")).unwrap();let row=&fixture["retirementCase"];
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🚦️sqlite-cohort/🔣️.json")).unwrap();let row=&fixture["retirementCase"];
  let original=Part21Instance{id:row["id"].as_str().unwrap().parse().unwrap(),entities:vec![(row["name"].as_str().unwrap().into(),vec![Part21Value::Typed{name:row["typedName"].as_str().unwrap().into(),items:vec![Part21Value::Str(row["value"].as_str().unwrap().into())]}])]};
  let literal=row["name"].as_str().unwrap().len()+row["typedName"].as_str().unwrap().len()+row["value"].as_str().unwrap().len();assert_eq!(literal,row["expectedTextBytes"].as_u64().unwrap()as usize);
  let name=original.entities[0].0.capacity();let Part21Value::Typed{name:typed,items}= &original.entities[0].1[0]else{panic!("typed fixture")};let Part21Value::Str(text)=&items[0]else{panic!("text fixture")};

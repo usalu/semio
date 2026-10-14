@@ -1,0 +1,640 @@
+{
+  "fixes": [
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧪️tests/📜️chart-specification/🟦️.ts",
+      "before": "c4bedde0367063ea6719e93ab986fad24aa87358b233935848ca40c646ee8751",
+      "after": "391be8de8dfb1522e66a457d4df544dcf3fbf970a64fcf5c0bcd0314e9cd61be",
+      "edits": [
+        {
+          "start": 504,
+          "end": 535,
+          "from": "./🧪️tests/🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🟦️.ts",
+      "before": "430c1243f299f96f8f60b9ac43dbd25b5c4843d15fc8d183eddd03fee3319a4f",
+      "after": "193bdcae9bc9ae2499c3511980438486d07b22fdc5fcd07a6a4ab4249c84c6cc",
+      "edits": [
+        {
+          "start": 349,
+          "end": 390,
+          "from": "../../🧫️fixtures/🧩️composition/🔣️.json",
+          "to": "../🧫️fixtures/🧩️composition/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🚦️control/🧪️tests/🟦️.ts",
+      "before": "0e02c84d1bd8f6fa6a0d92e99db7cee258a346136305dc0c9e76bcfc7d9489d8",
+      "after": "0c3b5bd1353617528a07e7b8bc6f4691fcc357e62ec581d923d1c74d1f7268f6",
+      "edits": [
+        {
+          "start": 98,
+          "end": 130,
+          "from": "../🧪️tests/🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧪️tests/🟦️.ts",
+      "before": "5b42f8f42d6704393d8968037910c765873a25010662d9e02bf40f81e4949c49",
+      "after": "6d76e41c5e23f82e584edcedc4f5f2a035a53aaf66a09c988663783b8e04a115",
+      "edits": [
+        {
+          "start": 302,
+          "end": 325,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts",
+      "before": "4a68cd29c299afee438a33f884ca263b985a0122e231df55b2a2d8c47e7299e7",
+      "after": "00bc5f081f80089d945013662f31d5358826d81781fb4e5e4e1bc4b12fa60010",
+      "edits": [
+        {
+          "start": 347,
+          "end": 391,
+          "from": "../../🧫️fixtures/📢️member-publication.json",
+          "to": "../🧫️fixtures/📢️member-publication.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/♻️retirement/🧪️tests/🟦️.ts",
+      "before": "f91467d9c0ba908a73b281c812b09277ab5196f3e41c1bf343a218e53e9ab683",
+      "after": "1975be2bde9baad0fb300df2c3869eb2f1e85afd79244952ca15d589fa6d4cd4",
+      "edits": [
+        {
+          "start": 264,
+          "end": 287,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🟦️.ts",
+      "before": "23f9e96d4ded317e2919b0660fe964791d6e64796856fb9c424405e8cc7e9279",
+      "after": "d31324f788ad1e6f57cfe65cd8f9adb2f0942e7b697d4a05fb58cdeec86f41d1",
+      "edits": [
+        {
+          "start": 108,
+          "end": 139,
+          "from": "./🧪️tests/🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/🟦️.ts",
+      "before": "ae4d3b0480fd40e653f1bdeae8ea1fafd48265c4695811fb9dcfa4c5a8bae74b",
+      "after": "3bd5f15bf42c501c39ff3a42d39a9a8599775d35dfc76b1f6221bc15c687174a",
+      "edits": [
+        {
+          "start": 108,
+          "end": 139,
+          "from": "./🧪️tests/🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🏪️stores/🧪️tests/🟦️.ts",
+      "before": "400c82e9c7ce8bde5a4f29337a03a5435117f989bfbfb856a37fa1bce6798b4e",
+      "after": "6a47947b43efcbb7c89db523a255aef0b1af60711f8d226bfebf57eb9fa25597",
+      "edits": [
+        {
+          "start": 323,
+          "end": 346,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧩️composition/🟦️.ts",
+      "before": "a6abe616ab453f8e1ef166277e95ad2b2184bf63da8b6d0657b975b65892d717",
+      "after": "52cb775a8881455efff8f5ed43381812a447a41e908e59485a97527e7e493522",
+      "edits": [
+        {
+          "start": 500,
+          "end": 541,
+          "from": "../../🧫️fixtures/🧩️composition/🔣️.json",
+          "to": "../🧫️fixtures/🧩️composition/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🧪️tests/🟦️.ts",
+      "before": "d9f23ab06a77e2f26666d66d2cbdc0c701f17f30f92699702392682bd6699793",
+      "after": "bd4c0b05f7591c4bd23b9e23ced45520acae7268cadb5a4e1ff2a61c36e712be",
+      "edits": [
+        {
+          "start": 763,
+          "end": 793,
+          "from": "../🧫️fixtures/coordinate.json",
+          "to": "./🧫️fixtures/coordinate.json"
+        },
+        {
+          "start": 626,
+          "end": 662,
+          "from": "../🧫️fixtures/guest-input-slot.json",
+          "to": "./🧫️fixtures/guest-input-slot.json"
+        },
+        {
+          "start": 455,
+          "end": 478,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/👥️scoped-presence/🟦️.tsx",
+      "before": "74d9510d0e20ba3332214c02d731f9bc4877c269952c87f2b4c4cf5e2e12a8e5",
+      "after": "94fae62f4ae9254f80aac3a9cb962e54440aaa279519099998e35ceaeb314126",
+      "edits": [
+        {
+          "start": 1151,
+          "end": 1242,
+          "from": "../../../../../../../🔨️modules/📡️replication/🧫️fixtures/💓️presence-liveness-v1/🔣️.json",
+          "to": "../../../../../../../🔨️modules/📡️replication/🧪️tests/🧫️fixtures/💓️presence-liveness-v1/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎥️tutorial-bridge/🟦️.ts",
+      "before": "ee9bb3b171ab15b21cb21466658402f2fbd8a4c4873abe6770133ab16c3c412a",
+      "after": "ab2104ba3810816826f636ea45b6b096bd489c9ae7c98a830641d18350e5764e",
+      "edits": [
+        {
+          "start": 938,
+          "end": 983,
+          "from": "../../🧫️fixtures/🎥️tutorial-bridge/🔣️.json",
+          "to": "../🧫️fixtures/🎥️tutorial-bridge/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧭️current-contracts/🟦️.ts",
+      "before": "a0fd172126f328594521bd55d06fb555da86fd2df646fbec4e99fc111e2c7944",
+      "after": "558cfb67f8f812e8f65e33884c0eea6045fc820c44d59b640286082eaf656b64",
+      "edits": [
+        {
+          "start": 526,
+          "end": 557,
+          "from": "./🧪️tests/🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️action-argument-gate/🟦️.ts",
+      "before": "a5ae19c815b9078528d9db32eb5c611590ea7303d729aafd715eaf1c349473b0",
+      "after": "7b2ff9a8289e9fd3feff2e7949b92995e586dcb9d5dab25994edc413ecf8d3ea",
+      "edits": [
+        {
+          "start": 549,
+          "end": 580,
+          "from": "./🧪️tests/🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-mount/🟦️.ts",
+      "before": "024966a87fbcf68324f66907d4c3b6ce2c6f49f8c972bc0788fcac76a1e62999",
+      "after": "4e64756d7ef069aae4199093963b2b25904c9360a9d8acf9c1e5b86c08548006",
+      "edits": [
+        {
+          "start": 1677,
+          "end": 1726,
+          "from": "../../🧫️fixtures/⏳️owned-service-status/🔣️.json",
+          "to": "../🧫️fixtures/⏳️owned-service-status/🔣️.json"
+        },
+        {
+          "start": 1596,
+          "end": 1640,
+          "from": "../../🧫️fixtures/🎬️boot-execution/🔣️.json",
+          "to": "../🧫️fixtures/🎬️boot-execution/🔣️.json"
+        },
+        {
+          "start": 1344,
+          "end": 1388,
+          "from": "../../🧫️fixtures/🪆️embedded-mount/🔣️.json",
+          "to": "../🧫️fixtures/🪆️embedded-mount/🔣️.json"
+        },
+        {
+          "start": 1198,
+          "end": 1242,
+          "from": "../../🧫️fixtures/🧩️plugin-modules/🔣️.json",
+          "to": "../🧫️fixtures/🧩️plugin-modules/🔣️.json"
+        },
+        {
+          "start": 602,
+          "end": 649,
+          "from": "../../🧫️fixtures/🎓️host-introduction/🔣️.json",
+          "to": "../🧫️fixtures/🎓️host-introduction/🔣️.json"
+        },
+        {
+          "start": 319,
+          "end": 362,
+          "from": "../../🧫️fixtures/⏳️boot-lifecycle/🔣️.json",
+          "to": "../🧫️fixtures/⏳️boot-lifecycle/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️editable-controls/🟦️.tsx",
+      "before": "870871098a28984dc7b2cd4e948ebe8135cb73f0de34d819cd0fd9d639ab8f25",
+      "after": "8f842afe3d47137e8d854a425b73563f7fe4350114c96ae2f312c6c50abb8c50",
+      "edits": [
+        {
+          "start": 38961,
+          "end": 39014,
+          "from": "../../🧫️fixtures/🚦️input-draft-disposition/🔣️.json",
+          "to": "../🧫️fixtures/🚦️input-draft-disposition/🔣️.json"
+        },
+        {
+          "start": 961,
+          "end": 1003,
+          "from": "../../🧫️fixtures/↔️input-commits/🔣️.json",
+          "to": "../🧫️fixtures/↔️input-commits/🔣️.json"
+        },
+        {
+          "start": 707,
+          "end": 749,
+          "from": "../../🧫️fixtures/🪟️input-window/🔣️.json",
+          "to": "../🧫️fixtures/🪟️input-window/🔣️.json"
+        },
+        {
+          "start": 416,
+          "end": 462,
+          "from": "../../🧫️fixtures/♿️editable-controls/🔣️.json",
+          "to": "../🧫️fixtures/♿️editable-controls/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧩️package-integration/🟦️.ts",
+      "before": "7c1bbada005be9f064064f093f5b93f570e12de1f5bd34522a88b9ed60cd3d60",
+      "after": "495848051ceb8b817e6dc04327aacccc1934ab26f60afda3020e892ef90e1994",
+      "edits": [
+        {
+          "start": 1430,
+          "end": 1485,
+          "from": "../../🧫️fixtures/🔬️wgpu-shell-boot-selection/🔣️.json",
+          "to": "../🧫️fixtures/🔬️wgpu-shell-boot-selection/🔣️.json"
+        },
+        {
+          "start": 826,
+          "end": 884,
+          "from": "../../🧫️fixtures/🧊️wgpu-browser-entry-authority/🔣️.json",
+          "to": "../🧫️fixtures/🧊️wgpu-browser-entry-authority/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖼️wgpu-raster-witness/🟦️.ts",
+      "before": "e7264f4e428da74e8bfab9c8c4e01e6edab93449901bd398046a440aab6cda0a",
+      "after": "36358a5652aaac84e129c0fa0c52cdc2491cae3aca86e1451c26e850a20a7fd1",
+      "edits": [
+        {
+          "start": 1001,
+          "end": 1050,
+          "from": "../../🧫️fixtures/🖼️wgpu-raster-witness/🔣️.json",
+          "to": "../🧫️fixtures/🖼️wgpu-raster-witness/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⌨️os-command-shortcuts/🟦️.ts",
+      "before": "eefcf4b352e723a888bab02fb13ab366839ca201a594e24f3be177fd0768ee49",
+      "after": "7e145ee9e67415bbd68d3e4fc293df03d907ba1c1ff2a4df4c98e03dbdfe628e",
+      "edits": [
+        {
+          "start": 413,
+          "end": 463,
+          "from": "../../🧫️fixtures/⌨️control-key-ownership/🔣️.json",
+          "to": "../🧫️fixtures/⌨️control-key-ownership/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/🧱️binary/🔐️descriptor-digest/🧪️tests/🟦️.ts",
+      "before": "8fb5f9c228eed8498ee34d6e5fca8a09cf4e9a5210ac48b8e71565fba65bc52a",
+      "after": "d2f2a5839c09eaa49adb4d004e9d58867c2da827c9ea597f4f4abf01fc58d598",
+      "edits": [
+        {
+          "start": 606,
+          "end": 629,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/🪪️metadata/🧪️tests/🔬️unit/🟦️.ts",
+      "before": "f8837a7c4d75f6438f151ce69def9f8abcbd22060bf00d3cd1ded047a5f43596",
+      "after": "fc33b0b228084594c1218b4e2a698fdc4ef32106bed55442af02c11fd2a4da2e",
+      "edits": [
+        {
+          "start": 246,
+          "end": 272,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📨️emission/🌱️genesis/🧪️tests/🟦️.ts",
+      "before": "99c941bbde2a8017d6bfb426cdd402346ba224d917ad5c509b1c657b54d016ba",
+      "after": "7df7f49528297351c2d31449329f7d3dbc9da8f06e497366d0289298f369d406",
+      "edits": [
+        {
+          "start": 287,
+          "end": 310,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🪟️mounted/♻️frontier/🧪️tests/🟦️.ts",
+      "before": "8e580032271768febf2fef82f6337f2055d86146f6a1528f7dfc685c9f9673fc",
+      "after": "62b4711243846dd517e38a7404b3adf4816a160814cfd850d1d600a36fa2409b",
+      "edits": [
+        {
+          "start": 192,
+          "end": 215,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🪪️admission/🟦️.ts",
+      "before": "281dc79b6dcfc681f9f4c94a82098f044a43f2fb3ddaa23e18e5c2a5dd24b144",
+      "after": "cb9d62f2c22c9a117eae94e97ef20e6d5aa683a29ea02c0a4d237313ce8b7600",
+      "edits": [
+        {
+          "start": 224,
+          "end": 255,
+          "from": "./🧪️tests/🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/🧪️tests/🔎️array-controls/🟦️.ts",
+      "before": "e6f7573bcc839c4db9cae85d4487eef8f8e2e673280d4573b186f4fe6ed14809",
+      "after": "9d0a41fc438ef3ae03688fb670daaa6c31de9fb9f3f4f9d8561eb7ea751104a8",
+      "edits": [
+        {
+          "start": 221,
+          "end": 252,
+          "from": "./🧪️tests/🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts",
+      "before": "6b219fd45519e284975d24d5d25f407ec87dc5204364a779b2f9e4668933efd7",
+      "after": "f75bfbddb9fa96c42a2f5d6210256aa693308a948deafd7416946a8644e43230",
+      "edits": [
+        {
+          "start": 349,
+          "end": 375,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../../../../🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json"
+        },
+        {
+          "start": 258,
+          "end": 281,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "../../../../🧪️tests/🧫️fixtures/🪶️sqlite/⚠️refusal/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🧪️tests/💰️allocation/🟦️.ts",
+      "before": "3652c1f05c37652b4da9cf71f96cc8031552aeef63a9531a8964dc711efaef80",
+      "after": "95b516da5eb11465ecb40bc244ba5ab161ec902b03276fb8f6dd77fc96386fa9",
+      "edits": [
+        {
+          "start": 7138,
+          "end": 7227,
+          "from": "../../../../../../../../🔨️modules/🎒️pack/⚠️error/🧫️fixtures/🧭️cause/📡️codec/🔣️.json",
+          "to": "../../../../../../../../🔨️modules/🎒️pack/⚠️error/🧪️tests/🧫️fixtures/🧭️cause/📡️codec/🔣️.json"
+        },
+        {
+          "start": 228,
+          "end": 259,
+          "from": "./🧪️tests/🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎚️UiPreferences/🧪️tests/🌐️preference-lane/🟦️.ts",
+      "before": "a08181dac183d11fbc7822148613b2411d660f4a52707d14f7b3ba5673652983",
+      "after": "9dfd7ea420d2d152d250c2c9ffa2193739289e631ef4c264adf1d4ae0305649b",
+      "edits": [
+        {
+          "start": 1172,
+          "end": 1217,
+          "from": "../../🧫️fixtures/🌐️preference-lane/🔣️.json",
+          "to": "../🧫️fixtures/🌐️preference-lane/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️origin/🔣️json/🧪️tests/🟦️.ts",
+      "before": "68517c53a76dd1bf979a252afab38233593117aac83a99cfa132eead9738b778",
+      "after": "6c4a620e85c4feaa61004c8ee735baf33220f5a3d5ec493a0931cbc62ff574b5",
+      "edits": [
+        {
+          "start": 194,
+          "end": 217,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🟦️.ts",
+      "before": "7a8661fe8478d6e54e6065a7e98f04ccb5970d2fec0b8d319f0083872b5dc67a",
+      "after": "1a8d3f30af79cab7fc16a6a7a7e18f90726c5088ff387f993ccf6eaeb0182779",
+      "edits": [
+        {
+          "start": 100,
+          "end": 126,
+          "from": "../../🧫️fixtures/🔣️.json",
+          "to": "../🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "before": "8462c031e730da274b5792aa67ff6a92a999a837be15176a12b0858a23f99ee3",
+      "after": "d7ef6644fd419bcdcbd2da27d396ad940e39195c4cbbc2919d88e2c0d50fd3d7",
+      "edits": [
+        {
+          "start": 479,
+          "end": 511,
+          "from": "../🧫️fixtures/🫴️grant/🔣️.json",
+          "to": "./🧫️fixtures/🫴️grant/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧪️tests/🟦️.ts",
+      "before": "9c929f9262bcc00a85ce97f52e8443299569653bb06cda06d1193616f03ba7e5",
+      "after": "ec3f2b02b235cd8e8c3ab8a5baa2ab6868570ca9798d93933b3fa6a72a1b4278",
+      "edits": [
+        {
+          "start": 149,
+          "end": 172,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧭️TiledMapHost/🧪️tests/🧩️component/🟦️.ts",
+      "before": "1a29b96f27f74d738275965bc9985274866eb7e003608996984f3624cb08a24c",
+      "after": "5b73d65aa354bfa620ef5fa4e1e379241671edec75520cc78341ba201e3d0971",
+      "edits": [
+        {
+          "start": 998,
+          "end": 1035,
+          "from": "../../🧫️fixtures/🔁️repaint/🔣️.json",
+          "to": "../🧫️fixtures/🔁️repaint/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🧪️tests/🖱️input-contract/🟦️.tsx",
+      "before": "7992729388b2c68e26ab75c1e55888bb40c02095287b78608f419a8e14fa7be4",
+      "after": "775e87e0bd54efa4d4b96a05440eb031061adacb5d6bce4124a47307791ad5bc",
+      "edits": [
+        {
+          "start": 605,
+          "end": 649,
+          "from": "../../🧫️fixtures/🖱️input-contract/🔣️.json",
+          "to": "../🧫️fixtures/🖱️input-contract/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧩️component/🟦️.tsx",
+      "before": "36bbe9d00b87529e7f5c0c919b6543ac620d8bdc26b0c26d8cdf5bbf78c904b4",
+      "after": "98e7a69c98a73edc7ab626bbb165f4ea08511ad1a82eb69ed60d1303d9891a56",
+      "edits": [
+        {
+          "start": 1326,
+          "end": 1365,
+          "from": "../../🧫️fixtures/⏳️compute-locale.json",
+          "to": "../🧫️fixtures/⏳️compute-locale.json"
+        },
+        {
+          "start": 1222,
+          "end": 1267,
+          "from": "../../🧫️fixtures/⏯️tool-run-trace-mount.json",
+          "to": "../🧫️fixtures/⏯️tool-run-trace-mount.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔄️ShellSync/🧪️tests/🧩️component/🟦️.tsx",
+      "before": "f7ea40de66e53e1b279270e43634cacec7c59e516c0dee2c795385ef6091c8c5",
+      "after": "da47b413262f344224737e521c6285737321d0b419204de296755aacb2014366",
+      "edits": [
+        {
+          "start": 1273,
+          "end": 1317,
+          "from": "../../🧫️fixtures/🎯️sync-attach-target.json",
+          "to": "../🧫️fixtures/🎯️sync-attach-target.json"
+        },
+        {
+          "start": 1195,
+          "end": 1243,
+          "from": "../../🧫️fixtures/📶️hub-connection-summary.json",
+          "to": "../🧫️fixtures/📶️hub-connection-summary.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧪️tests/🧪️command-rejection/🟦️.ts",
+      "before": "9b5f0b1091226bb3075dd5e3aa4195737caeaa5dbc9bf2949c955f772399d4c7",
+      "after": "a7be1e4aba4daa4bd31a4602a2ee20e61186b07c87fffd89fa7b436db4b2dbdf",
+      "edits": [
+        {
+          "start": 1190,
+          "end": 1236,
+          "from": "../../🧫️fixtures/🧫️time-travel-band/🔣️.json",
+          "to": "../🧫️fixtures/🧫️time-travel-band/🔣️.json"
+        },
+        {
+          "start": 1116,
+          "end": 1163,
+          "from": "../../🧫️fixtures/🧫️command-rejection/🔣️.json",
+          "to": "../🧫️fixtures/🧫️command-rejection/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🚪️public/🧩️ownership/🟦️.ts",
+      "before": "597832da933d2e216d69f8613db475ed44d4c2a27cf2b6df3db974ff6427365f",
+      "after": "93c80c41674b91b4051039e99c43606a47fb9adb398c28cb2ec477e7a951ba85",
+      "edits": [
+        {
+          "start": 240,
+          "end": 271,
+          "from": "./🧪️tests/🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🧭️ownership/🟦️.ts",
+      "before": "2f5aea3cb878291bcb822c7238f254589ee9b7d8e2349df95378755cd4684a7f",
+      "after": "105b33ce1fb739feda5da004c4dfb1c553177eb93e5b40169c601db8846dda6d",
+      "edits": [
+        {
+          "start": 232,
+          "end": 263,
+          "from": "./🧪️tests/🧫️fixtures/🔣️.json",
+          "to": "./🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🪶️sqlite/🧪️tests/🟦️.ts",
+      "before": "3ec2add06c658ea08da2a48c29bce98250e1142bc9697ab0c02fc260b23917ee",
+      "after": "1491d5832880bd11a28ec0fdd71f42f5c3ebe926795ecdb2463e3a70b6521d59",
+      "edits": [
+        {
+          "start": 313,
+          "end": 348,
+          "from": "../🧫️fixtures/🪪️identity/🔣️.json",
+          "to": "../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🧊️renderer/🪶️sqlite/🪪️identity/🔣️.json"
+        },
+        {
+          "start": 258,
+          "end": 281,
+          "from": "../🧫️fixtures/🔣️.json",
+          "to": "../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🧊️renderer/🪶️sqlite/🔣️.json"
+        }
+      ]
+    }
+  ],
+  "missing": []
+}

@@ -40,6 +40,124 @@
           "pattern": "^[a-z0-9][a-z0-9-]*$"
         }
       }
+    },
+    "NativeHostOwnerFactsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package",
+        "project",
+        "binaries",
+        "targets",
+        "modes"
+      ],
+      "properties": {
+        "package": {
+          "type": "string"
+        },
+        "project": {
+          "type": "string"
+        },
+        "binaries": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "modes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "prototype",
+                "release"
+              ]
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "NativeHostSourceFactsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package",
+        "project",
+        "binaries",
+        "targets",
+        "modes",
+        "outputs"
+      ],
+      "properties": {
+        "package": {
+          "type": "string"
+        },
+        "project": {
+          "type": "string"
+        },
+        "binaries": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "modes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "prototype",
+                "release"
+              ]
+            },
+            "uniqueItems": true
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "prototype",
+              "release"
+            ],
+            "properties": {
+              "prototype": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "release": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "$ref": "#/$defs/NativeHostV1"

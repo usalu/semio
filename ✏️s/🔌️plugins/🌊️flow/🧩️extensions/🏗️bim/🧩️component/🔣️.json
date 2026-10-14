@@ -68,10 +68,5 @@
         }
       }
     ]
-  },
-  "hashes": {
-    "wasmSha256": "ea87027932a0aaea77a829ba9a09b9c828ea8ea4d8be7daa60e9bc09a9a22e0b",
-    "coreWasmSha256": "e5b2b4221df4b23a6d2bb2267e6dea91a35b3bd9e81faf6675c290fbda7e68eb",
-    "descriptorSha256": "ef91f43ccd8741c4823b9d1a52eb979a1dcaa7f75bea33c0b406689ea87a5363"
   }
 }

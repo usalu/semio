@@ -1,3 +1,4 @@
+import { fixtureOriginalWorkStock } from "../../../🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
 type TestSource = { readonly directory: string; readonly url: string };
 type KernelTestModule = typeof import("../../🟦️.ts");
 type IoSchemaTestModule = typeof import("../../../🚪️io/🧬️schema/🟦️.ts");
@@ -96,7 +97,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFile } = await import("node:fs/promises");
       const { dirname, join } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
-      const fixture = JSON.parse(await readFile(join(dirname(fileURLToPath(source.url)), "🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json"), "utf8")) as Fixture;
+      const fixture = JSON.parse(await readFile(join(dirname(fileURLToPath(source.url)), "🧪️tests/🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json"), "utf8")) as Fixture;
       const router = AppRouter.build(fixture.manifests);
       for (const owner of fixture.expectedOwners) expect(router.ownerPluginId(owner.artifactKind), owner.artifactKind).toBe(owner.pluginId);
       for (const route of fixture.expectedRoutes) expect(router.entriesFor(route.dialect, route.role), `${dialectCoordinate(route.dialect)}#${route.role}`).toEqual(route.entries);
@@ -145,7 +146,7 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
   }
 
   function fakeShardClient(shardCount = 1): ShardClient {
-    return new ShardClient({ residentLedger: fixtureResidentLedger(), shardCount, createWorker: () => createAutoReplyWorker() });
+    return new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: fixtureResidentLedger(), shardCount, createWorker: () => createAutoReplyWorker() });
   }
 
   function fixtureResidentLedger(): OwnedResidentLedger { return new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }); }
@@ -362,7 +363,7 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
         if (msg.kind === "activate" && msg.actorId) sentCaps.set(msg.actorId, msg.caps ?? []);
         originalPostMessage(message);
       };
-      const client = new ShardClient({ residentLedger: fixtureResidentLedger(), shardCount: 1, createWorker: () => worker });
+      const client = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: fixtureResidentLedger(), shardCount: 1, createWorker: () => worker });
       const registry = new ActivationRegistry({ shardClient: client, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
       registry.registerCatalog(catalogWithOneExtension());
       const grant = (id: string): ShardCapabilityGrant => ({ id, token: "t", scope: "s", expiresMs: null });
@@ -424,7 +425,7 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
   describe("ActivationRegistry.handleShardLost / restoreActors", () => {
     it("is a valid ShardClientOptions.onShardLost value", () => {
       let registry!: ActivationRegistry;
-      const shardClient = new ShardClient({
+      const shardClient = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(),
         residentLedger: fixtureResidentLedger(),
         shardCount: 1,
         createWorker: () => createAutoReplyWorker(),
@@ -435,7 +436,7 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("restores exactly the actors that were on the lost shard, leaving an actor on a different shard untouched", async () => {
-      const shardClient = new ShardClient({ residentLedger: fixtureResidentLedger(), shardCount: 2, exclusiveShardCount: 0, createWorker: () => createAutoReplyWorker() });
+      const shardClient = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: fixtureResidentLedger(), shardCount: 2, exclusiveShardCount: 0, createWorker: () => createAutoReplyWorker() });
       const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
       registry.registerManifest({ pluginId: "p1", moduleUrl: "https://x/p1.js", caps: [] });
 
@@ -460,7 +461,7 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   describe("ActivationRegistry restore ordering", () => {
     it("a restored actor does not receive turns that were queued before the restore, but does receive turns queued after", async () => {
-      const shardClient = new ShardClient({ residentLedger: fixtureResidentLedger(), shardCount: 1, createWorker: () => createAutoReplyWorker() });
+      const shardClient = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: fixtureResidentLedger(), shardCount: 1, createWorker: () => createAutoReplyWorker() });
       const delivered: string[] = [];
       const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [], onTurnResult: () => delivered.push("delivered") });
       registry.registerManifest({ pluginId: "p1", moduleUrl: "https://x/p1.js", caps: [] });

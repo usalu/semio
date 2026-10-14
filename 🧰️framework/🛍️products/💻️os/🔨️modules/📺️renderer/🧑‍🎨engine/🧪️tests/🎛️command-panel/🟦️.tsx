@@ -7,7 +7,7 @@ import { actionSemanticsForKind } from "@semio-tech/framework";
 import { Tree } from "@semio-tech/ui-react";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { buildCommandCategoryTree, commandAddressKey, type ResolvedCommand } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
-import fixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🎛️command-panel/🔣️.json";
+import fixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🎛️command-panel/🔣️.json";
 
 beforeEach(() => { vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} }); });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });

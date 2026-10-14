@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 /** 📦️ Validates neutral authored assembly vectors with independent schema and TOML readers. */
 export function runAssemblyChecks(): number {
   const load = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
-  const fixture = load("../../🧫️fixtures/📦️assembly/🔣️.json");
+  const fixture = load("../🧫️fixtures/📦️assembly/🔣️.json");
   assert.equal(new Set(fixture.cases.map((row: { id: string }) => row.id)).size, fixture.cases.length);
   let checks = 1;
   for (const row of fixture.cases) {

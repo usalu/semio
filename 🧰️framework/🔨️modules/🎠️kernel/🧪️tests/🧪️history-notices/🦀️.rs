@@ -4,7 +4,7 @@
 
 use super::*;
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/🧫️history-notices/🔣️.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/🧫️history-notices/🔣️.json");
 
 #[test]
 fn the_notices_mirror_the_fixture_in_both_locales() {

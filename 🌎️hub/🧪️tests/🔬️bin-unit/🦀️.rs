@@ -466,7 +466,7 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
     assert_eq!(receipt_pairs, expected_pairs, "every descriptor kind/schema pair has its exact executable owner receipt");
     assert_eq!(manifest.artifact_kinds.iter().map(|kind| kind.id.as_str()).collect::<std::collections::BTreeSet<_>>(), receipts.iter().map(|receipt| receipt.artifact_kind.as_str()).collect(), "every descriptor artifact kind has executable owner coverage");
     assert_eq!(manifest.artifact_kinds.len(), receipts.iter().map(|receipt| receipt.artifact_kind.as_str()).collect::<std::collections::BTreeSet<_>>().len(), "descriptor artifact kinds are unique");
-    let pair_fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️compositions/🗄️stdio/📇️catalog/🧫️fixtures/📇️native-catalog-surface/🧪️receipt-pairs.json")).expect("neutral receipt pair corpus");
+    let pair_fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️compositions/🗄️stdio/📇️catalog/🧪️tests/🧫️fixtures/📇️native-catalog-surface/🧪️receipt-pairs.json")).expect("neutral receipt pair corpus");
     let expected = pair_fixture["pairs"].as_array().unwrap().iter().map(|pair| (pair[0].as_str().unwrap().to_owned(), pair[1].as_str().unwrap().to_owned())).collect::<std::collections::BTreeSet<_>>();
     let kinds = pair_fixture["kinds"].as_array().unwrap().iter().map(|kind| kind.as_str().unwrap().to_owned()).collect::<std::collections::BTreeSet<_>>();
     for row in pair_fixture["cases"].as_array().unwrap() {
@@ -1331,7 +1331,7 @@ async fn check_in_fixture(label: &str) -> CheckInFixture {
     state.verified_catalog = Some(profile.catalog().clone());
     state.openable_catalog = Some(profile.catalog().clone());
     let document = db_artifact_id(&scope);
-    let pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::os_store::serialization::ArtifactPack>::encode_pack(&semio_s_artifact_gis_gismap::GisMapSnapshot::default());
+    let pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::encode_pack(&semio_s_artifact_gis_gismap::GisMapSnapshot::default());
     let spr = directory::os_store::text_format::empty_document_spr(&document.0, &descriptor.artifact_schema).await;
     descriptor.bootstrap_snapshot_hash = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(&pack));
     let session = state.directory.authenticate_session(&SessionCapability::parse(&author.token).expect("check-in author capability")).await.expect("check-in author session read").expect("check-in author session");
@@ -1512,7 +1512,7 @@ async fn check_in_process_fixture_emits_verified_gis_ledger_and_catalog() {
     });
     std::fs::write(stage.join("fixture.json"), serde_json::to_vec_pretty(&fixture).expect("encode process fixture")).expect("write process fixture receipt");
     std::fs::rename(&stage, &destination).expect("publish process fixture atomically");
-    let dependency_fixture: serde_json::Value = serde_json::from_str(include_str!("../../🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).expect("compiled dependency fixture");
+    let dependency_fixture: serde_json::Value = serde_json::from_str(include_str!("../../🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).expect("compiled dependency fixture");
     let expected_files: std::collections::BTreeSet<_> = ["publicationFiles", "publicationDirectories"].iter().flat_map(|key| dependency_fixture[*key].as_array().unwrap().iter()).map(|name| name.as_str().unwrap().to_owned()).collect();
     let retained_generation = destination.join("data/trusted-catalog/generations").join(generation_id);
     let actual_files: std::collections::BTreeSet<_> = std::fs::read_dir(&retained_generation).unwrap().map(|entry| entry.unwrap().file_name().into_string().unwrap()).collect();
@@ -1559,7 +1559,7 @@ async fn check_in_fixture_gis_ledger_edit(schema: &str) -> Vec<MutationEnvelope>
 
 #[test]
 fn mutation_message_payload_matches_language_neutral_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚧️hub-boundaries/🔣️.json")).expect("valid hub boundary fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚧️hub-boundaries/🔣️.json")).expect("valid hub boundary fixture");
     let messages = vec![protocol::MutationMessage::warning("mutation.clamped", "height clamped").at(["node", "height"]).at_op(2), protocol::MutationMessage::info("mutation.cascade", "dependent value updated")];
     let encoded = encode_messages(&messages);
     let parsed: serde_json::Value = serde_json::from_slice(&encoded).expect("first-party message bytes are valid JSON");
@@ -1709,7 +1709,7 @@ fn dechunk_http_body(raw: &[u8]) -> Vec<u8> {
 /// bootstrap source is one fixture `route`, so a new route cannot ship without its hostile vectors.
 #[test]
 fn the_hostile_input_fixture_covers_every_registered_route() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚧️hostile-input-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚧️hostile-input-v1/🔣️.json")).unwrap();
     let covered: std::collections::BTreeSet<&str> = fixture["routes"].as_array().unwrap().iter().map(|row| row["route"].as_str().unwrap()).collect();
     let source = include_str!("../../🏗️bootstrap/🦀️.rs");
     let registered: std::collections::BTreeSet<String> = source
@@ -1732,7 +1732,7 @@ fn the_hostile_input_fixture_covers_every_registered_route() {
 #[test]
 fn every_route_answers_hostile_input_with_a_typed_signed_refusal() {
     run_socket_test(|| async {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚧️hostile-input-v1/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚧️hostile-input-v1/🔣️.json")).unwrap();
         let state = test_state().await;
         let session = issue_test_session(&state, "hostile-input@example.com").await;
         let addr = spawn_server(state.clone()).await;
@@ -1830,7 +1830,7 @@ fn every_route_answers_hostile_input_with_a_typed_signed_refusal() {
 #[test]
 fn credential_optional_routes_refuse_a_revoked_or_forged_session_instead_of_answering_anonymously() {
     run_socket_test(|| async {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🚧️refusal/🧫️fixtures/🪪️credential-refusal-v1/🔣️.json")).expect("credential refusal fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🚧️refusal/🧪️tests/🧫️fixtures/🪪️credential-refusal-v1/🔣️.json")).expect("credential refusal fixture");
         let answer = &fixture["answer"];
         let state = test_state().await;
         let session = issue_test_session(&state, "optional-caller@example.com").await;
@@ -1869,7 +1869,7 @@ fn credential_optional_routes_refuse_a_revoked_or_forged_session_instead_of_answ
 /// client resends instead of discarding the batch; a permanent refusal carries no such message.
 #[test]
 fn a_transiently_refused_batch_names_the_declared_resend_code_and_a_permanent_one_does_not() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🚧️refusal/🧫️fixtures/⏳️transient-apply-refusal-v1/🔣️.json")).expect("transient refusal fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🚧️refusal/🧪️tests/🧫️fixtures/⏳️transient-apply-refusal-v1/🔣️.json")).expect("transient refusal fixture");
     let answer = &fixture["answer"];
     for cause in fixture["causes"].as_array().expect("causes") {
         let reason = cause["reason"].as_str().expect("reason");
@@ -2213,7 +2213,7 @@ async fn gis_map_applied_checkpoint_notifies_two_peers_with_one_exact_rebootstra
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 #[tokio::test]
 async fn gis_map_proposal_routes_fail_closed_without_a_trusted_map_binding() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture");
     let unavailable = fixture["errors"].as_array().expect("error vocabulary").iter().find(|row| row["name"] == "no-binding").expect("no-binding row");
     let state = test_state().await;
     assert!(state.inference_runtime.is_none(), "production today has no trusted GIS Map profile");
@@ -2284,7 +2284,7 @@ async fn gis_map_inference_fixture(author_email: &str, spectator_email: &str) ->
     upsert_member_for_test(&state, &space_id, spectator_email, DirectorySpaceRole::Spectator).await;
     let document_id = artifact_document_id_for_test("gis-map-inference");
     let selection = profile.binding().selection();
-    let genesis_pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::os_store::serialization::ArtifactPack>::encode_pack(&semio_s_artifact_gis_gismap::GisMapSnapshot::default());
+    let genesis_pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::encode_pack(&semio_s_artifact_gis_gismap::GisMapSnapshot::default());
     let genesis_spr = b"gis-map-genesis-spr";
     let descriptor = os_directory::DocumentDescriptor {
         space_id: space_id.clone(),
@@ -2300,7 +2300,7 @@ async fn gis_map_inference_fixture(author_email: &str, spectator_email: &str) ->
     let authenticated = state.directory.authenticate_session(&SessionCapability::parse(&author.token).expect("GIS Map author capability")).await.expect("GIS Map author session read").expect("GIS Map author session");
     let actor = ArtifactCreationActorV1 { user_id: author.user_id.clone(), session_id: authenticated.id, authorization_generation: authenticated.authorization_generation };
     let genesis = publish_genesis_checkpoint_for_test(&state, actor, profile.catalog().generation_id().to_string(), selection.parent_dialect.clone(), descriptor, &genesis_pack, genesis_spr).await;
-    let snapshot_pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::os_store::serialization::ArtifactPack>::encode_pack(&gis_map_test_snapshot());
+    let snapshot_pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&gis_map_test_snapshot());
     publish_gis_checkpoint_for_test(&state, &space_id, &document_id, &snapshot_pack, &genesis).await;
     (GisMapInferenceFixture { state, profile, space_id, document_id, snapshot_pack, ledger_path }, author, spectator)
 }
@@ -2370,7 +2370,7 @@ async fn wait_for_inference_state(addr: SocketAddr, space_id: &str, document_id:
 
 #[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
 fn proposal_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture")
 }
 
 #[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
@@ -2672,7 +2672,7 @@ async fn gis_map_approval_is_idempotent_across_duplicate_requests_and_restart() 
 
 #[tokio::test]
 async fn admin_page_routes_follow_declared_html_without_alias_files() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚧️hub-boundaries/🔣️.json")).expect("hub boundary fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚧️hub-boundaries/🔣️.json")).expect("hub boundary fixture");
     let contract = &fixture["adminPageRoutes"];
     let state = test_state().await;
     tokio::fs::create_dir_all(&state.admin_dir).await.expect("admin fixture directory");
@@ -2708,7 +2708,7 @@ async fn admin_page_routes_follow_declared_html_without_alias_files() {
 
 #[tokio::test]
 async fn extension_module_routes_accept_encoded_unicode_http_paths() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚧️hub-boundaries/🔣️.json")).expect("hub boundary fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚧️hub-boundaries/🔣️.json")).expect("hub boundary fixture");
     let contract = &fixture["extensionModuleRoutes"];
     let state = test_state().await;
     let extension_id = contract["extensionId"].as_str().expect("extension ID");
@@ -3100,7 +3100,7 @@ struct DocumentOpenPlanLedgerFixture {
 /// key; the same plan without a browser actor, or with a genesis checkpoint, answers `None` (the tail from the start).
 #[test]
 fn a_frontierless_hello_resumes_at_the_checkpoint_its_client_seeds_from() {
-    let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
+    let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
     let mut plan = document_open_plan_test_authority(&fixture);
     let db_id = db_artifact_id(&plan.scope);
     assert_eq!(plan_seeded_hello_frontier(Some(&plan), &db_id), None, "a plan without a browser actor keeps the whole tail");
@@ -3311,7 +3311,7 @@ async fn issue_and_exchange_document_open_plan_for_test(state: &HubState, token:
 
 #[test]
 fn document_open_plan_ledger_is_digest_only_bounded_single_use_revalidated_and_restart_scoped() {
-    let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
+    let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
     let authority = document_open_plan_test_authority(&fixture);
     for (field, value) in [("artifactKind", String::new()), ("artifactKind", " s.foreign.document".to_owned()), ("standard", String::new()), ("subset", String::new()), ("standard", "\u{85}".to_owned()), ("subset", " * ".to_owned()), ("standard", "🌊".repeat(65))] {
         let mut hostile = authority.clone();
@@ -3434,7 +3434,7 @@ fn document_open_plan_ledger_is_digest_only_bounded_single_use_revalidated_and_r
 
 #[test]
 fn document_open_plan_receipt_exchange_admits_one_exact_bounded_secret_free_socket_grant() {
-    let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
+    let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
     let authority = document_open_plan_test_authority(&fixture);
     let plans = Arc::new(DocumentOpenPlanLedgerV1::default());
     let sockets = Arc::new(SocketGrantLedgerV1::default());
@@ -3587,7 +3587,7 @@ async fn execution_target_asset_routes_revalidate_scope_role_descriptor_and_cata
     assert_eq!(descriptor_body.status, 200);
     assert_eq!(descriptor_body.body, TEST_EXECUTION_TARGET_DESCRIPTOR_BYTES);
 
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("closed actor neutral corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("closed actor neutral corpus");
     let mut closed_selection = state.openable_catalog.as_ref().unwrap().resolve_document_open(&descriptor, Some("surface.test.editor"), true).unwrap();
     closed_selection.surface.renderer_target = os_directory::DocumentOpenRendererTargetV1::Wasm;
     let mut actor_json = corpus["plan"]["browserActor"].clone();
@@ -3679,7 +3679,7 @@ async fn execution_target_asset_routes_revalidate_scope_role_descriptor_and_cata
 
 #[tokio::test]
 async fn execution_target_selection_final_fence_matches_neutral_races() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️execution-target-relay-v1/🔣️.json")).expect("execution-target relay fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️execution-target-relay-v1/🔣️.json")).expect("execution-target relay fixture");
     for vector in fixture["fences"].as_array().expect("neutral fences") {
         let mut state = test_state().await;
         let token = seed_author_token(&state).await;
@@ -3892,7 +3892,7 @@ async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_c
     assert_eq!(serde_json::from_str::<serde_json::Value>(&unavailable_text).expect("unavailable JSON")["code"], "catalog-unavailable");
     assert!(!unavailable_text.contains("fixture"));
 
-    let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open fixture");
+    let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open fixture");
     let mut capacity_authority = document_open_plan_authority_for_session(&state, &fixture, &token, scope.clone()).await;
     capacity_authority.catalog.generation_id = state.openable_catalog.as_ref().expect("catalog").generation_id().into();
     capacity_authority.package = state.openable_catalog.as_ref().expect("catalog").resolve_document_open(&descriptor, Some("surface.test.editor"), true).expect("selection").package;
@@ -4005,7 +4005,7 @@ async fn document_open_plan_socket_consume_revalidates_surface_descriptor_catalo
 async fn document_open_plan_exchange_route_is_authenticated_exact_hostile_and_single_use() {
     let _watchdog = LawHangWatchdogV1::arm("document_open_plan_exchange_route_is_authenticated_exact_hostile_and_single_use");
     let mut state = test_state().await;
-    let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
+    let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
     let token = seed_author_token(&state).await;
     let document_id = artifact_document_id_for_test("open-plan-route");
     let document_id = document_id.as_str();
@@ -4144,7 +4144,7 @@ async fn document_open_plan_admin_revocation_invalidates_session_and_share_bindi
     let watchdog = LawHangWatchdogV1::arm("document_open_plan_admin_revocation_invalidates_session_and_share_bindings");
     watchdog.at("hub state open");
     let mut state = test_state().await;
-    let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
+    let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
     let admin_headers = authorize_test_admin(&mut state, "open-plan-admin@example.com").await;
     let mut principal = authenticate_admin_principal(&state, &admin_headers, Some(loopback_peer().0)).await.expect("verified open-plan administrator principal");
     principal.correlation_id = "open-plan-admin-revocation".into();
@@ -4416,7 +4416,7 @@ impl SupersedeAuthor {
         let (mut socket, _) = connect_async(document_socket_request(url, token)).await.expect("document socket");
         socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("hello");
         while !matches!(next_command_frame(&mut socket, "until session").await, ServerFrame::Session { .. }) {}
-        let pack = <GisMapSnapshot as directory::os_store::serialization::ArtifactPack>::encode_pack(&GisMapSnapshot::default());
+        let pack = <GisMapSnapshot as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::encode_pack(&GisMapSnapshot::default());
         let spr = directory::os_store::text_format::empty_document_spr(document, GIS_MAP_SCHEMA).await;
         let parsed = directory::os_store::text_format::parse_document_pack::<GisMapSnapshot, GisMapMutation>(&pack, &spr).await.expect("genesis pair parses");
         let mut replica = SupersedeReplica::new(parsed.into_envelope(), directory::ActorId(actor.clone())).await.expect("replica");
@@ -4687,7 +4687,7 @@ fn socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live(
         legacy.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("initial socket hello");
         assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Commands { origin, .. } if origin.0 == HUB_CATCH_UP_ORIGIN && origin.0 != legacy_receipt.actor_id), "a joiner behind the head is caught up before Session, never under its own actor");
-        let echo_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/document-echo-suppression-v1/🔣️.json")).expect("echo suppression fixture");
+        let echo_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧫️fixtures/document-echo-suppression-v1/🔣️.json")).expect("echo suppression fixture");
         assert_eq!(echo_fixture["hubCatchUpOrigin"].as_str(), Some(HUB_CATCH_UP_ORIGIN), "the hub's catch-up origin is the fixture's declared one");
         assert_eq!(include_str!("../../🏗️bootstrap/🦀️.rs").matches("ActorId(HUB_CATCH_UP_ORIGIN.into())").count(), 2, "the hello tail and the FrontierAdvertise catch-up both carry the declared catch-up origin");
         assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Session { .. }));
@@ -5066,7 +5066,7 @@ fn assert_recovery_denied(response: RawHttpResponse, expected: &serde_json::Valu
 #[test]
 fn admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen() {
     run_socket_test(|| async {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛂️admin-presence-target-recovery-v1/🔣️.json")).expect("admin recovery fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛂️admin-presence-target-recovery-v1/🔣️.json")).expect("admin recovery fixture");
         let expected = &fixture["expected"];
         let scope = DocumentScope::new(fixture["scope"]["spaceId"].as_str().unwrap(), fixture["scope"]["documentId"].as_str().unwrap());
         let dir = tempdir("admin-presence-target-recovery");
@@ -5209,7 +5209,7 @@ fn admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen() 
 
 #[test]
 fn admin_intent_binding_wire_matrix_is_exact_sorted_and_self_deduplicated() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏛️admin-directory-authority-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🏛️admin-directory-authority-v1/🔣️.json")).unwrap();
     let principal = AdminPrincipalV1 {
         user_id: "admin".into(),
         auth_session_id: "admin-session".into(),
@@ -5243,7 +5243,7 @@ fn admin_intent_binding_wire_matrix_is_exact_sorted_and_self_deduplicated() {
 #[test]
 fn admin_short_effects_retain_principal_until_their_actual_side_effect() {
     run_socket_test(|| async {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏛️admin-directory-authority-v1/🔣️.json")).expect("admin short effect fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🏛️admin-directory-authority-v1/🔣️.json")).expect("admin short effect fixture");
         let root = tempdir("admin-short-authority");
         std::fs::create_dir_all(&root).expect("physical directory parent");
         let path = root.join("directory.sqlite");
@@ -5335,7 +5335,7 @@ fn admin_short_effects_retain_principal_until_their_actual_side_effect() {
 #[test]
 fn admin_directory_commands_hold_exact_principal_without_confusing_space_role() {
     run_socket_test(|| async {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏛️admin-directory-authority-v1/🔣️.json")).expect("admin authority fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🏛️admin-directory-authority-v1/🔣️.json")).expect("admin authority fixture");
         let mut state = tokio::time::timeout(TEST_STATE_OPEN_HANG_GUARD, test_state()).await.expect("admin authority state open deadline");
         let gate = Arc::new(TestLiveGate::default());
         state.live_gate = Some(gate.clone());
@@ -5435,7 +5435,7 @@ fn admin_directory_commands_hold_exact_principal_without_confusing_space_role() 
 
 #[test]
 fn directory_global_message_bindings_decode_wire_without_indexing_unrelated_memberships() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌐️directory-message-authority-v1/🔣️.json")).expect("message authority fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌐️directory-message-authority-v1/🔣️.json")).expect("message authority fixture");
     let ledger = SocketGrantLedgerV1::default();
     let capability = SocketGrantCapability::mint().expect("global capability");
     let audience = SocketAudienceV1::Directory { auth_session_id: "session".into(), authorization_generation: 1 };
@@ -5473,7 +5473,7 @@ fn directory_global_message_bindings_decode_wire_without_indexing_unrelated_memb
 /// removal — and each frame borrows no space authority (it is addressed to its reader alone).
 #[test]
 fn a_membership_event_naming_the_reader_owes_it_exactly_the_fixture_access_change() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔑️access-changed-v1/🔣️.json")).expect("access-changed fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔑️access-changed-v1/🔣️.json")).expect("access-changed fixture");
     let reader = fixture["readerUserId"].as_str().expect("fixture reader");
     for row in fixture["cases"].as_array().expect("fixture cases") {
         let message: DirectoryStreamMessage = semio_framework_pack_json::from_json_str(&row["message"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("fixture message {}: {error:?}", row["id"]));
@@ -5549,7 +5549,7 @@ fn a_member_of_a_deleted_space_is_told_its_access_was_revoked() {
 #[test]
 fn directory_global_socket_delivery_and_revocation_share_one_transient_authority_order() {
     run_socket_test(|| async {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌐️directory-message-authority-v1/🔣️.json")).expect("message authority fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌐️directory-message-authority-v1/🔣️.json")).expect("message authority fixture");
         let mut state = tokio::time::timeout(TEST_STATE_OPEN_HANG_GUARD, test_state()).await.expect("global directory state open deadline");
         let gate = Arc::new(TestLiveGate::default());
         gate.socket_directory_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
@@ -6259,7 +6259,7 @@ fn presence_hex_bytes(hex: &str) -> Vec<u8> {
 }
 
 fn presence_normalization_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🪪️presence-normalization-v1/🔣️.json")).expect("presence normalization fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🪪️presence-normalization-v1/🔣️.json")).expect("presence normalization fixture")
 }
 
 fn test_presence_slot(live: &str, user_id: Option<&str>, now: tokio::time::Instant) -> PresenceLeaseSlot {
@@ -6612,7 +6612,7 @@ fn presence_join_replays_the_settled_roster_and_close_removes_exactly_one_row() 
 /// roster row.
 #[tokio::test]
 async fn presence_liveness_contract_matches_the_shared_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧰️framework/🔨️modules/📡️replication/🧫️fixtures/💓️presence-liveness-v1/🔣️.json")).expect("presence liveness fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/💓️presence-liveness-v1/🔣️.json")).expect("presence liveness fixture");
     assert_eq!(fixture["schema"], "semio.presence.liveness/v1");
     let constants = &fixture["constants"];
     let heartbeat = constants["heartbeatIntervalMs"].as_u64().expect("heartbeat interval");
@@ -6679,7 +6679,7 @@ async fn a_peer_beat_reaches_the_document_roster_and_the_directory_projection_on
 
 #[tokio::test]
 async fn presence_lease_enforces_shared_roster_bounds_and_actor_order() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/👥️presence-lease-v1/🔣️.json")).expect("presence lease fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/👥️presence-lease-v1/🔣️.json")).expect("presence lease fixture");
     assert_eq!(fixture["limits"]["ttlMs"].as_u64(), Some(PRESENCE_LEASE_TTL_MS));
     assert_eq!(fixture["limits"]["maximumItems"].as_u64(), Some(PRESENCE_ROSTER_MAXIMUM_ITEMS as u64));
     assert_eq!(fixture["limits"]["maximumEntryBytes"].as_u64(), Some(PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES as u64));
@@ -6823,7 +6823,7 @@ fn parse_directory_command_receipt_for_test(response: &RawHttpResponse, request_
 
 #[tokio::test]
 async fn directory_command_authority_revalidates_after_durable_revocation_before_fence() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🛡️command-authority-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧪️tests/🧫️fixtures/🛡️command-authority-v1/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap().iter().filter(|row| row["appended"] == 0) {
         let mut state = tokio::time::timeout(TEST_STATE_OPEN_HANG_GUARD, test_state()).await.expect("authority state open deadline");
         let owner = issue_test_session(&state, "authority-owner@example.com").await;
@@ -6872,7 +6872,7 @@ async fn directory_command_authority_revalidates_after_durable_revocation_before
 
 #[tokio::test]
 async fn directory_command_authority_holds_admitted_command_until_receipt_before_demotion() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🛡️command-authority-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧪️tests/🧫️fixtures/🛡️command-authority-v1/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["appended"] == 1).unwrap();
     let mut state = test_state().await;
     let owner = issue_test_session(&state, "authority-owner@example.com").await;
@@ -6917,7 +6917,7 @@ async fn directory_command_authority_holds_admitted_command_until_receipt_before
 
 #[tokio::test]
 async fn directory_command_authority_invite_revocation_requires_the_exact_owned_space() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🛡️command-authority-v1/🔣️.json")).expect("authority fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧪️tests/🧫️fixtures/🛡️command-authority-v1/🔣️.json")).expect("authority fixture");
     let state = test_state().await;
     let caller = issue_test_session(&state, "invite-scope-owner@example.test").await;
     let other = issue_test_session(&state, "invite-scope-other@example.test").await;
@@ -6949,7 +6949,7 @@ async fn directory_command_authority_invite_revocation_requires_the_exact_owned_
 /// 🎟️ Uses real space commands and HTTP redemption to preserve archive reads without restoring authorship.
 #[tokio::test]
 async fn directory_invite_redemption_obeys_current_space_state_and_readonly_replay() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).expect("invite state fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧪️tests/🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).expect("invite state fixture");
     let state = tokio::time::timeout(TEST_STATE_OPEN_HANG_GUARD, test_state()).await.expect("invite state open deadline");
     let owner = issue_test_session(&state, "invite-state-owner@example.test").await;
     let addr = spawn_server(state.clone()).await;
@@ -7036,7 +7036,7 @@ async fn directory_invite_redemption_obeys_current_space_state_and_readonly_repl
 /// 🧭️ Scope selection accepts only the exact stored secret and existing authenticated subject.
 #[tokio::test]
 async fn directory_invite_redemption_scope_hint_is_capability_bound() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧪️tests/🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
     let state = tokio::time::timeout(TEST_STATE_OPEN_HANG_GUARD, test_state()).await.expect("invite hint state deadline");
     let owner = issue_test_session(&state, "invite-hint-owner@example.test").await;
     let caller = issue_test_session(&state, "invite-hint-caller@example.test").await;
@@ -7073,7 +7073,7 @@ async fn directory_invite_redemption_scope_hint_is_capability_bound() {
 /// 🔒️ A paused redemption cannot spend the identity captured before a durable revocation.
 #[tokio::test]
 async fn directory_invite_redemption_revalidates_after_hint_before_fence() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧪️tests/🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
     let mut state = tokio::time::timeout(TEST_STATE_OPEN_HANG_GUARD, test_state()).await.expect("invite race state deadline");
     let owner = issue_test_session(&state, "invite-race-owner@example.test").await;
     let gate = Arc::new(TestLiveGate::default());
@@ -7112,7 +7112,7 @@ async fn directory_invite_redemption_revalidates_after_hint_before_fence() {
 /// 🧱️ All session and space keys stay owned through one irreversible invitation event.
 #[tokio::test]
 async fn directory_invite_redemption_admitted_fence_precedes_archive() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧪️tests/🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
     let row = fixture["authorityRaces"].as_array().unwrap().iter().find(|row| row["appended"] == 1).unwrap();
     let mut state = tokio::time::timeout(TEST_STATE_OPEN_HANG_GUARD, test_state()).await.expect("invite order state deadline");
     let owner = issue_test_session(&state, "invite-order-owner@example.test").await;
@@ -7163,7 +7163,7 @@ async fn directory_invite_redemption_admitted_fence_precedes_archive() {
 
 #[tokio::test]
 async fn directory_command_authority_demotion_invalidates_only_affected_scope_once() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🛡️command-authority-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧪️tests/🧫️fixtures/🛡️command-authority-v1/🔣️.json")).unwrap();
     let shared = SocketGrantLedgerV1::default();
     let capacity = &fixture["capacity"];
     assert_eq!(capacity["subjectLimit"].as_u64().unwrap() as usize, SOCKET_GRANT_BINDING_PENDING_CAPACITY);
@@ -7179,7 +7179,7 @@ async fn directory_command_authority_demotion_invalidates_only_affected_scope_on
     let space = create_space_for_test(&state, &owner.user_id, "Authority Bindings", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
     let other = create_space_for_test(&state, &author.user_id, "Other Bindings", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
     upsert_member_for_test(&state, &space, "authority-author@example.com", DirectorySpaceRole::Author).await;
-    let plan_fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
+    let plan_fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
     let plan = Arc::new(document_open_plan_test_authority(&plan_fixture));
     let issue_pending = |audience: &SocketAudienceV1, actor_id: String, subject: SocketSubjectV1| -> String {
         if matches!(audience, SocketAudienceV1::Document(_)) {
@@ -8284,7 +8284,7 @@ fn an_agent_session_holds_at_most_its_delegations_audience_in_its_delegations_sp
 #[test]
 fn a_vigilant_hub_refuses_a_same_target_write_authored_without_observing_the_other_authors_latest() {
     run_socket_test(|| async {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⚔️vigilant-concurrent-edit-v1/🔣️.json")).expect("vigilant fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⚔️vigilant-concurrent-edit-v1/🔣️.json")).expect("vigilant fixture");
         for (index, row) in fixture["rows"].as_array().expect("rows").iter().enumerate() {
             let name = row["name"].as_str().expect("name");
             let mut state = test_state().await;
@@ -8841,7 +8841,7 @@ mod quick {
 
     #[tokio::test]
     async fn retained_short_admin_request_drop_duplicate_cancel_and_secret_lifecycle_is_exact() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🏛️retained-short-admin/🔣️.json")).expect("retained short administrator fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧪️tests/🧫️fixtures/🏛️retained-short-admin/🔣️.json")).expect("retained short administrator fixture");
         assert_eq!(fixture["cases"].as_array().expect("retained cases").len(), 15);
         let root = tempdir("retained-short-admin");
         std::fs::create_dir_all(&root).expect("retained administrator root");
@@ -9735,7 +9735,7 @@ mod long {
 
     #[tokio::test]
     async fn document_socket_grants_are_credential_bound_secret_free_oldest_first_and_single_consume() {
-        let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
+        let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
         let plan = Arc::new(document_open_plan_test_authority(&fixture));
         let ledger = SocketGrantLedgerV1::default();
         let audience = SocketAudienceV1::Document(DocumentScope::new("space-a", "document-a"));

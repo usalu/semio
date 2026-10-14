@@ -41,7 +41,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
 #[semio_framework_async_macros::async_test]
 async fn pack_schema_identity_is_the_derived_record_spec() {
-    let spec = <WriterSnapshot as store::os_store::serialization::ArtifactPack>::record_spec().expect("writer snapshot declares its record spec");
+    let spec = <WriterSnapshot as pack::snapshot::ArtifactPack>::record_spec().expect("writer snapshot declares its record spec");
     let hash = store::os_pack::schema_hash(&spec);
     assert_ne!(hash, [0u8; 32]);
     assert_eq!(hash, store::os_pack::schema_hash(&WriterSnapshot::__dsl_spec()));

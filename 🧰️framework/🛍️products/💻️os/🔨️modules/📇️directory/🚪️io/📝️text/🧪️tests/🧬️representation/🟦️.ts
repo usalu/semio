@@ -19,7 +19,7 @@ const accepts = (run: () => unknown) => { try { return run() !== null; } catch {
 const sha = (source: string) => createHash("sha256").update(source).digest("hex");
 
 test("event page keeps the neutral canonical receipt and refuses padding and duplicates", async () => {
-  const fixture = read(resolve(os, "🧫️fixtures/📇️directory/📃️event-page-v1.json"));
+  const fixture = read(resolve(os, "🧪️tests/🧫️fixtures/📇️directory/📃️event-page-v1.json"));
   expect(validator("DirectoryEventPageV1")(fixture.valid)).toBe(true);
   expect(sha(fixture.canonicalUnsigned)).toBe(fixture.expectedReceiptSha256);
   const source = JSON.stringify(fixture.valid);
@@ -30,7 +30,7 @@ test("event page keeps the neutral canonical receipt and refuses padding and dup
 });
 
 test("command request and receipt retain all neutral digests and refusal cases", async () => {
-  const fixture = read(resolve(os, "🧫️fixtures/📇️directory/🧾️command-receipt-v1.json"));
+  const fixture = read(resolve(os, "🧪️tests/🧫️fixtures/📇️directory/🧾️command-receipt-v1.json"));
   const requests = new Map<string, ReturnType<typeof wire.parseDirectoryCommandRequestV1>>();
   const requestCheck = validator("DirectoryCommandRequestV1"), receiptCheck = validator("DirectoryCommandReceiptV1");
   for (const row of fixture.requests) {
@@ -53,7 +53,7 @@ test("command request and receipt retain all neutral digests and refusal cases",
 });
 
 test("session authority retains the independent schema and exact wire grammar", () => {
-  const fixture = read(resolve(directory, "🧫️fixtures/🪪️session-authority-v1/🔣️.json"));
+  const fixture = read(resolve(directory, "🧪️tests/🧫️fixtures/🪪️session-authority-v1/🔣️.json"));
   const schema = read(resolve(directory, "🧬️schema/🪪️session-authority-v1/🧬️.schema.json"));
   const check = semioSchemaAjvV1({ strict: true, allErrors: true }).compile(schema);
   for (const row of fixture.rows) {
@@ -65,7 +65,7 @@ test("session authority retains the independent schema and exact wire grammar", 
 });
 
 test("artifact creation uses the existing neutral request status and catalogue vectors", () => {
-  const fixture = read(resolve(directory, "🧫️fixtures/🌱️space-artifact-creation-v1/🔣️.json"));
+  const fixture = read(resolve(directory, "🧪️tests/🧫️fixtures/🌱️space-artifact-creation-v1/🔣️.json"));
   const lanes = [["requests", creation.parseSpaceArtifactCreateJsonV1], ["statuses", creation.parseSpaceArtifactCreationStatusJsonV1], ["catalogs", creation.parseSpaceArtifactCreationCatalogJsonV1]] as const;
   const check = validator("SpaceArtifactCreationV1");
   let cases = 0;
@@ -87,7 +87,7 @@ test("artifact creation uses the existing neutral request status and catalogue v
 });
 
 test("check-in wire and direct typed projection preserve the neutral corpus against Ajv", () => {
-  const fixture = read(resolve(directory, "🧬️schema/📌️document-check-in-v1/🧫️fixtures/🔣️.json"));
+  const fixture = read(resolve(directory, "🧪️tests/🧫️fixtures/📌️document-check-in-v1/🔣️.json"));
   const requestCheck = validator("DocumentCheckInV1"), statusCheck = validator("DocumentCheckInStatusV1");
   for (const row of fixture.valid.requests) {
     const value = checkin.parseDocumentCheckInV1(row.source);

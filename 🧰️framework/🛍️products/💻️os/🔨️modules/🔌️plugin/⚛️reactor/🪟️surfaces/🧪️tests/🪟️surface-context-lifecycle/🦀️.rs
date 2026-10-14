@@ -4,7 +4,7 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn surface_context_retains_host_preferences_and_window_identity() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
     let view: semio_framework::ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
     let mut contexts = SurfaceContexts::default();
     let mut oracle = serde_json::Map::new();
@@ -124,7 +124,7 @@ fn reserved_section_surfaces_keep_the_unnarrowed_view_and_outlive_their_windows(
 /// only the synthetic name is gone. Ticket 26/09/02/PUZZLE-3D-END-TO-END.
 #[semio_framework_async_macros::async_test]
 async fn default_window_surface_has_host_context_and_the_synthetic_name_is_refused() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
     let view: semio_framework::ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
     let default = &fixture["defaultWindowSurface"];
     let mut contexts = SurfaceContexts::default();
@@ -149,7 +149,7 @@ async fn default_window_surface_has_host_context_and_the_synthetic_name_is_refus
 /// 26/09/02/PUZZLE-3D-END-TO-END wave B56.
 #[semio_framework_async_macros::async_test]
 async fn background_surfaces_name_every_window_then_fall_back_to_panels() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
     let view: semio_framework::ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
     let mut contexts = SurfaceContexts::default();
     let windows: Vec<String> = view.window_instances.iter().map(|window| format!("7:{}", window.id)).collect();
@@ -170,7 +170,7 @@ async fn background_surfaces_name_every_window_then_fall_back_to_panels() {
 /// panels beside them (the peer's inspector stayed stale while `background_surfaces` named windows only).
 #[semio_framework_async_macros::async_test]
 async fn document_surfaces_name_every_window_and_every_panel() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
     let view: semio_framework::ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
     let mut contexts = SurfaceContexts::default();
     let mut expected: Vec<String> = view.window_instances.iter().map(|window| format!("7:{}", window.id)).collect();

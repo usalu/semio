@@ -713,7 +713,7 @@ async fn export_media_document_out_round_trips_through_pack() {
     let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
     assert_eq!(schema, crate::LAYOUT_DOCUMENT_SCHEMA);
     let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64 pack");
-    let decoded = <LayoutSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode pack");
+    let decoded = <LayoutSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode pack");
     assert_eq!(decoded, document);
 }
 
@@ -754,7 +754,7 @@ async fn layout_io_declares_fields_in_and_layout_out_ports() {
 
 #[test]
 fn canvas_catalogue_actions_consume_the_neutral_renderer_envelope() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧫️fixtures/🛍️canvas-catalogue/🔣️.json" )).expect("neutral catalogue actions");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️fixtures/🛍️canvas-catalogue/🔣️.json" )).expect("neutral catalogue actions");
     for case in fixture["cases"].as_array().unwrap() {
         let args: semio_framework_value::DslValue = case["args"].clone().into();
         let result = LayoutPlayApp::command_from_action(case["action"].as_str().unwrap(), Some(&args));
@@ -778,7 +778,7 @@ async fn canvas_catalogue_retained_actions_preview_and_create_in_the_addressed_w
     use blueprint::config::LayoutBlueprintWindowConfigOwner;
     use blueprint::transient::LayoutBlueprintWindowTransientOwner;
     use semio_framework_plugin::{ActionMeta, ViewModel, ViewWindowInstance, WindowConfigOwner};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧫️fixtures/🛍️canvas-catalogue/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️fixtures/🛍️canvas-catalogue/🔣️.json")).unwrap();
     let view = ViewModel {
         window_instances: ["catalogue-left", "catalogue-right"].map(|id| ViewWindowInstance { id: id.into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }).into(),
         ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)

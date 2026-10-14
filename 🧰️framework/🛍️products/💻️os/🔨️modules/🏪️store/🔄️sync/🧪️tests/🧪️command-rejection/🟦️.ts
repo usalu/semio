@@ -29,7 +29,7 @@ export async function registerCommandRejectionTests(
   },
 ): Promise<void> {
   const { describe, it, expect } = vitest;
-  const { default: corpus } = await import("../../../🧫️fixtures/🧫️command-rejection/🔣️.json");
+  const { default: corpus } = await import("../../../🧪️tests/🧫️fixtures/🧫️command-rejection/🔣️.json");
   const { default: schema } = await import("../../🧬️schema/🔣️command-rejection/🔣️.json");
   const { default: historyPatch } = await import("../../../../../../../🔨️modules/🎠️kernel/🧬️schema/🔣️history-patch/🔣️.json");
   const fixture = corpus as unknown as Fixture;

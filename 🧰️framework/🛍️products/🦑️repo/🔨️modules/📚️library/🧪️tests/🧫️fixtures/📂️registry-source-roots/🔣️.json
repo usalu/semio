@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "accepted": [
+    {
+      "id": "hub-explicit-root",
+      "manifest": "[package.metadata.semio]\nrole = \"hub\"\n\n[package.metadata.semio.sources]\nartifacts = [\"../../../🗿️artifacts\"]\n",
+      "expected": {
+        "artifacts": [
+          "../../../🗿️artifacts"
+        ]
+      }
+    },
+    {
+      "id": "plugin-explicit-root",
+      "manifest": "[package.metadata.semio]\nrole = \"plugin\"\n\n[package.metadata.semio.sources]\nartifacts = [\"../../../🗿️artifacts\"]\n",
+      "expected": {
+        "artifacts": [
+          "../../../🗿️artifacts"
+        ]
+      }
+    },
+    {
+      "id": "artifact-explicit-root",
+      "manifest": "[package.metadata.semio]\nrole = \"artifact\"\n\n[package.metadata.semio.sources]\nartifacts = [\"../../../🗿️artifacts\"]\n",
+      "expected": {
+        "artifacts": [
+          "../../../🗿️artifacts"
+        ]
+      }
+    },
+    {
+      "id": "test-explicit-root",
+      "manifest": "[package.metadata.semio]\nrole = \"test\"\n\n[package.metadata.semio.sources]\nartifacts = [\"../../../🗿️artifacts\"]\n",
+      "expected": {
+        "artifacts": [
+          "../../../🗿️artifacts"
+        ]
+      }
+    },
+    {
+      "id": "library-explicit-root",
+      "manifest": "[package.metadata.semio]\nrole = \"library\"\n\n[package.metadata.semio.sources]\nartifacts = [\"../../../🗿️artifacts\"]\n",
+      "expected": {
+        "artifacts": [
+          "../../../🗿️artifacts"
+        ]
+      }
+    },
+    {
+      "id": "empty-root-contribution",
+      "manifest": "[package.metadata.semio.sources]\nartifacts = []\n",
+      "expected": {
+        "artifacts": []
+      }
+    }
+  ],
+  "rejected": [
+    {
+      "id": "absolute",
+      "manifest": "[package.metadata.semio.sources]\nartifacts = [\"/outside\"]\n"
+    },
+    {
+      "id": "windows-drive",
+      "manifest": "[package.metadata.semio.sources]\nartifacts = [\"C:/outside\"]\n"
+    },
+    {
+      "id": "empty",
+      "manifest": "[package.metadata.semio.sources]\nartifacts = [\"\"]\n"
+    },
+    {
+      "id": "dot-segment",
+      "manifest": "[package.metadata.semio.sources]\nartifacts = [\".././artifacts\"]\n"
+    },
+    {
+      "id": "trailing-slash",
+      "manifest": "[package.metadata.semio.sources]\nartifacts = [\"../artifacts/\"]\n"
+    },
+    {
+      "id": "duplicate",
+      "manifest": "[package.metadata.semio.sources]\nartifacts = [\"../artifacts\", \"../artifacts\"]\n"
+    },
+    {
+      "id": "non-string",
+      "manifest": "[package.metadata.semio.sources]\nartifacts = [1]\n"
+    },
+    {
+      "id": "backslash",
+      "manifest": "[package.metadata.semio.sources]\nartifacts = [\"..\\\\artifacts\"]\n"
+    },
+    {
+      "id": "excessive",
+      "manifest": "[package.metadata.semio.sources]\nartifacts = [\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"]\n"
+    },
+    {
+      "id": "unknown-field",
+      "manifest": "[package.metadata.semio.sources]\nartifacts = []\nother = \"x\"\n"
+    },
+    {
+      "id": "missing-list",
+      "manifest": "[package.metadata.semio.sources]\n"
+    },
+    {
+      "id": "duplicate-table",
+      "manifest": "[package.metadata.semio.sources]\nartifacts = []\n[package.metadata.semio.sources]\nartifacts = []\n"
+    }
+  ],
+  "resolution": [
+    {
+      "id": "workspace-root",
+      "crate": "owner/📦️packages/🦀️rust",
+      "declared": "../../🗿️artifacts",
+      "expected": "owner/🗿️artifacts"
+    },
+    {
+      "id": "outward-artifacts",
+      "crate": "hub/composition/📦️packages/🦀️rust",
+      "declared": "../../../artifacts",
+      "expected": "hub/artifacts"
+    }
+  ]
+}

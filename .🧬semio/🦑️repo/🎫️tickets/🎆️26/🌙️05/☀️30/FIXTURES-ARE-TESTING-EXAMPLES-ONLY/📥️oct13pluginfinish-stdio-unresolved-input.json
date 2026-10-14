@@ -1,0 +1,1047 @@
+[
+  {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+    "literal": "🌎️hub/🧩️compositions/🗄️stdio/📇️catalog/🧫️fixtures/🧾️claim-authority",
+    "index": 296714
+  },
+  {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+    "literal": "🌎️hub/🧩️compositions/🗄️stdio/📇️catalog/🧫️fixtures/📇️native-catalog-surface",
+    "index": 296823
+  },
+  {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+    "literal": "🌎️hub/🧩️compositions/🗄️stdio/📇️catalog/🧫️fixtures/📇️native-catalog-surface",
+    "index": 331847
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 5120
+  },
+  {
+    "path": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+    "literal": "../../🧩️compositions/🗄️stdio/📇️catalog/🧫️fixtures/📇️native-catalog-surface/🧪️receipt-pairs.json",
+    "index": 33324
+  },
+  {
+    "path": "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "../../../../../🌎️hub/🧩️compositions/🗄️stdio/📇️catalog/🧫️fixtures/📇️native-catalog-surface/🧪️receipt-pairs.json",
+    "index": 14310
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json",
+    "index": 27
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust/📋️project.json",
+    "literal": "{projectRoot}/../../🧫️fixtures/**/*",
+    "index": 556
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧪️tests/🧪️fixture-corpus/🦀️.rs",
+    "literal": "🧫️fixtures/🧬️mutations",
+    "index": 1542
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧫️fixtures/🏃️command-ownership/🔣️.json",
+    "index": 1799
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧫️fixtures/🏃️command-ownership/🔣️.json",
+    "index": 3957
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧫️fixtures/📦️artifact-package/🔣️.json",
+    "index": 4040
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧫️fixtures/🏃️command-ownership/🔣️.json",
+    "index": 6424
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧫️fixtures/📦️artifact-package/🔣️.json",
+    "index": 6507
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 77354
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧫️fixtures/🔣️.json",
+    "index": 1140
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧫️fixtures/🔣️.json",
+    "index": 4274
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/⌨️set-raw-text-applied/📸️snapshot/➡️after/🌐️.html",
+    "index": 2919
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/⌨️set-raw-text-applied/📸️snapshot/⬅️before/🌐️.html",
+    "index": 3078
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/✍️set-text-applied/📸️snapshot/➡️after/🌐️.html",
+    "index": 3238
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/✍️set-text-applied/📸️snapshot/⬅️before/🌐️.html",
+    "index": 3393
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➕️insert-node-applied/📸️snapshot/➡️after/🌐️.html",
+    "index": 3549
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➕️insert-node-applied/📸️snapshot/⬅️before/🌐️.html",
+    "index": 3707
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➖️remove-node-applied/📸️snapshot/➡️after/🌐️.html",
+    "index": 3866
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➖️remove-node-applied/📸️snapshot/⬅️before/🌐️.html",
+    "index": 4024
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🏷️set-element-name-applied/📸️snapshot/➡️after/🌐️.html",
+    "index": 4183
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🏷️set-element-name-applied/📸️snapshot/⬅️before/🌐️.html",
+    "index": 4346
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/💬️set-comment-applied/📸️snapshot/➡️after/🌐️.html",
+    "index": 4510
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/💬️set-comment-applied/📸️snapshot/⬅️before/🌐️.html",
+    "index": 4668
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/📜️set-doctype-applied/📸️snapshot/➡️after/🌐️.html",
+    "index": 4827
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/📜️set-doctype-applied/📸️snapshot/⬅️before/🌐️.html",
+    "index": 4985
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🔖️set-attribute-applied/📸️snapshot/➡️after/🌐️.html",
+    "index": 5144
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🔖️set-attribute-applied/📸️snapshot/⬅️before/🌐️.html",
+    "index": 5304
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 8738
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 2512
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/⌨️set-raw-text-applied/📸️snapshot/➡️after/🌐️.html",
+    "index": 13529
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/⌨️set-raw-text-applied/📸️snapshot/⬅️before/🌐️.html",
+    "index": 13688
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/✍️set-text-applied/📸️snapshot/➡️after/🌐️.html",
+    "index": 13848
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/✍️set-text-applied/📸️snapshot/⬅️before/🌐️.html",
+    "index": 14003
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➕️insert-node-applied/📸️snapshot/➡️after/🌐️.html",
+    "index": 14159
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➕️insert-node-applied/📸️snapshot/⬅️before/🌐️.html",
+    "index": 14317
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➖️remove-node-applied/📸️snapshot/➡️after/🌐️.html",
+    "index": 14476
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/➖️remove-node-applied/📸️snapshot/⬅️before/🌐️.html",
+    "index": 14634
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🏷️set-element-name-applied/📸️snapshot/➡️after/🌐️.html",
+    "index": 14793
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🏷️set-element-name-applied/📸️snapshot/⬅️before/🌐️.html",
+    "index": 14956
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/💬️set-comment-applied/📸️snapshot/➡️after/🌐️.html",
+    "index": 15120
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/💬️set-comment-applied/📸️snapshot/⬅️before/🌐️.html",
+    "index": 15278
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/📜️set-doctype-applied/📸️snapshot/➡️after/🌐️.html",
+    "index": 15437
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/📜️set-doctype-applied/📸️snapshot/⬅️before/🌐️.html",
+    "index": 15595
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🔖️set-attribute-applied/📸️snapshot/➡️after/🌐️.html",
+    "index": 15754
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json",
+    "literal": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧫️fixtures/🔖️set-attribute-applied/📸️snapshot/⬅️before/🌐️.html",
+    "index": 15914
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json",
+    "index": 4318
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json",
+    "index": 28
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 2971
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 13304
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 14317
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json",
+    "index": 28
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧩️application/🔮️oracles/🔣️.json",
+    "literal": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🧫️fixtures/📖️reader/🦀️.rs",
+    "index": 6340
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 8997
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 9095
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 9163
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json",
+    "index": 28
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json",
+    "index": 28
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "literal": "🧫️fixtures/🧬️history-edits/version-info/🦠️mutation/🔣️.json",
+    "index": 794
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🏗️grammar/🟦️.ts",
+    "literal": "🧫️fixtures/🏗️grammar/🔣️.json",
+    "index": 325
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "literal": "🧫️fixtures/🪶️sqlite/🟦️.ts",
+    "index": 10028
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "literal": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🧫️fixtures/📖️reader/🦀️.rs",
+    "index": 13867
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 8204
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "literal": "s own broader claim overstates: the per-frame interlace flag IS publicly readable, via `Decoder::next_frame_info` before pixel decoding — see `🏭️generator/🧫️fixtures/📖️reader/🦀️.rs`",
+    "index": 4633
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "literal": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🧫️fixtures/📖️reader/🦀️.rs",
+    "index": 32940
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "literal": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🧫️fixtures/📖️reader/🦀️.rs",
+    "index": 34831
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "literal": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🧫️fixtures/📖️reader/🦀️.rs",
+    "index": 36698
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "literal": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🧫️fixtures/📖️reader/🦀️.rs",
+    "index": 38602
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "literal": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🧫️fixtures/📖️reader/🦀️.rs",
+    "index": 40524
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "literal": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🧫️fixtures/📖️reader/🦀️.rs",
+    "index": 42324
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "literal": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🧫️fixtures/📖️reader/🦀️.rs",
+    "index": 44125
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "literal": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🧫️fixtures/📖️reader/🦀️.rs",
+    "index": 45964
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "literal": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🧫️fixtures/📖️reader/🦀️.rs",
+    "index": 47822
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔮️oracles/🔣️.json",
+    "literal": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🧫️fixtures/📖️reader/🦀️.rs",
+    "index": 49688
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json",
+    "index": 28
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 8885
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🎛️graphic-control/🔮️oracles/🔣️.json",
+    "literal": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🧫️fixtures/📖️reader/🦀️.rs",
+    "index": 2839
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🎛️graphic-control/🔮️oracles/🔣️.json",
+    "literal": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🧫️fixtures/📖️reader/🦀️.rs",
+    "index": 4677
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🎛️graphic-control/🔮️oracles/🔣️.json",
+    "literal": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🧫️fixtures/📖️reader/🦀️.rs",
+    "index": 6545
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🎛️graphic-control/🔮️oracles/🔣️.json",
+    "literal": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🧫️fixtures/📖️reader/🦀️.rs",
+    "index": 8403
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json",
+    "index": 27
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧫️fixtures/🔣️.json",
+    "index": 8578
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🦀️rust/📜️script.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 1619
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "literal": "🧫️fixtures/🧬️history-edits/title/🦠️mutation/🔣️.json",
+    "index": 1364
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🔮️oracles/🦀️.rs",
+    "literal": "s own shape (see `../../../../🧫️fixtures/…` derivation note in this artifact",
+    "index": 941
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 9212
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "literal": "🧫️fixtures/🪶️sqlite/🔣️.json",
+    "index": 16917
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🧪️tests/🧫️fixtures/🎯️integer-query.json",
+    "index": 274
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "literal": "/../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🧫️fixtures/🎯️integer-query.json",
+    "index": 913
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🏭️generator/🔁️codec/🏗️generate/🦀️.rs",
+    "literal": "../../🧫️fixtures",
+    "index": 1051
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 3236
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${fixtureDirectory}/${BEFORE_FILE}`, mediaType: ",
+    "index": 6673
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${fixtureDirectory}/${AFTER_FILE}`, mediaType: ",
+    "index": 6864
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 12230
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json",
+    "index": 28
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/🔁️codec/🏗️generate/🦀️.rs",
+    "literal": "../../🧫️fixtures",
+    "index": 1065
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 3186
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${directory}/${BEFORE_FILENAME}`, mediaType: ",
+    "index": 6703
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${directory}/${AFTER_FILENAME}`, mediaType: ",
+    "index": 6895
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json",
+    "index": 28
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/✏️set-line/🧪️tests/🔣️transport/🟦️.ts",
+    "literal": "./🧫️fixtures/🔣️.json",
+    "index": 203
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json",
+    "index": 28
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧪️tests/🔬️unit/🟦️.test.ts",
+    "literal": "../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔁️codec/🧭️path/🧪️tests/🧫️fixtures/🔣️.json",
+    "index": 10605
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️bytes/🧪️tests/🧬️base64/🧫️fixtures/🔣️.json",
+    "index": 268
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🏭️generator/🔁️codec/🏗️generate/🦀️.rs",
+    "literal": "../../🧫️fixtures",
+    "index": 943
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧫️fixtures/🔣️.json",
+    "index": 1140
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 3182
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${directory}/${BEFORE_FILENAME}`, mediaType: ",
+    "index": 6557
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${directory}/${AFTER_FILENAME}`, mediaType: ",
+    "index": 6749
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc",
+    "index": 989
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧫️fixtures/🔣️.json",
+    "index": 14879
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc",
+    "index": 1271
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "/🧫️fixtures/🧬️history-snapshots/📋️rename-file/",
+    "index": 14816
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/🔁️codec/🏗️generate/🦀️.rs",
+    "literal": "../../🧫️fixtures",
+    "index": 1660
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 3249
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${directory}/${BEFORE_FILENAME}`, mediaType: ",
+    "index": 7093
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${directory}/${AFTER_FILENAME}`, mediaType: ",
+    "index": 7285
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 11197
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🔮️oracles/🔣️.json",
+    "literal": "s own expected DXF with an independent dxf 0.6 projection (../🏭️generator/🧫️fixtures/📦️packages/🦀️rust",
+    "index": 41114
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 7432
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/🧪️tests/🔬️fixture-derivation/🦀️.rs",
+    "literal": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🧫️fixtures/🖼️abbau-aufbau-masterarbeit-grundriss.tiff",
+    "index": 1676
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🔮️oracles/🔣️.json",
+    "literal": "s own production `step::engine::part21` writer) is read back through a FRESH `ruststep::ast::Exchange::from_str` call before `semantic-ifc-v1` compares it. FIXTURE CAVEAT, recorded rather than hidden: this repository contains NO real IFC2X3 StructuralAnalysisView document -- grepping the FULL 21 MB real source for `IFCSTRUCTURAL*` returns zero matches -- so the committed input `🧫️fixtures/🏗️wellness-center-sama-structural-seed.ifc` is the real 3464-entity export with its view definition re-stamped and exactly three seeded structural entities appended (derivation script: `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/ifc-2x3-mvd-subsets/🐍️derive-structural-seed.py`, both files committed and auditable). STRONGER REFERENCE EVALUATED AND NOT ADOPTED: `ifcopenshell` 0.8.4 (Python) reads AND writes IFC and would make a genuine `@mode-differential` possible; it installed and imported successfully here and the Python oracle host has landed (precedent: `🗿️artifacts/📄️pdf/🧪️tests/extract-text-pdf-1-4/🐍️component.py`). It was NOT adopted because putting a Python distribution on a generated host",
+    "index": 2672
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/🔁️codec/🏗️generate/🦀️.rs",
+    "literal": "../../🧫️fixtures",
+    "index": 1529
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 3226
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${directory}/${BEFORE_FILENAME}`, mediaType: ",
+    "index": 7198
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${directory}/${AFTER_FILENAME}`, mediaType: ",
+    "index": 7390
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🏭️generator/🔁️codec/🏗️generate/🦀️.rs",
+    "literal": "../../🧫️fixtures",
+    "index": 1550
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 3237
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${directory}/${BEFORE_FILENAME}`, mediaType: ",
+    "index": 6944
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${directory}/${AFTER_FILENAME}`, mediaType: ",
+    "index": 7136
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 11048
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 8265
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/🔁️codec/🏗️generate/🦀️.rs",
+    "literal": "../../🧫️fixtures",
+    "index": 1865
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 3226
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${directory}/${BEFORE_FILENAME}`, mediaType: ",
+    "index": 7768
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${directory}/${AFTER_FILENAME}`, mediaType: ",
+    "index": 7960
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 12017
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json",
+    "index": 105
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 23226
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json",
+    "index": 27
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${ASSET_DIRECTORY}/${ASSET_FILE}`, mediaType: ",
+    "index": 8697
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️history-inputs",
+    "index": 658
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️history-inputs/restore-entities/🦠️mutation/🔣️.json",
+    "index": 3367
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️history-inputs",
+    "index": 6245
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️history-inputs",
+    "index": 7031
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧪️tests/🎛️history-inputs/🟦️.ts",
+    "literal": "🧫️fixtures/🎛️history-inputs",
+    "index": 7119
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🔮️oracles/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "🧫️fixtures/🎛️history-inputs",
+    "index": 897
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🧪️tests/🔣️transport/🟦️.ts",
+    "literal": "./🧫️fixtures/🔣️.json",
+    "index": 203
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "../../🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🧫️fixtures/🎛️history-inputs",
+    "index": 431
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 25093
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "../../🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧫️fixtures/🎛️history-inputs",
+    "index": 431
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🖼️images/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 347
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "../../🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧫️fixtures/🎛️history-inputs",
+    "index": 431
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "../../🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🧫️fixtures/🎛️history-inputs",
+    "index": 431
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/🔁️codec/🏗️generate/🦀️.rs",
+    "literal": "../../🧫️fixtures",
+    "index": 1644
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 3232
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${directory}/${BEFORE_FILENAME}`, mediaType: ",
+    "index": 7052
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${directory}/${AFTER_FILENAME}`, mediaType: ",
+    "index": 7244
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 11156
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "../../🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🧫️fixtures/🎛️history-inputs",
+    "index": 431
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🏭️generator/🔁️codec/🏗️generate/🦀️.rs",
+    "literal": "../../🧫️fixtures",
+    "index": 1530
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 3223
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${directory}/${BEFORE_FILENAME}`, mediaType: ",
+    "index": 7207
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${directory}/${AFTER_FILENAME}`, mediaType: ",
+    "index": 7399
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "../../🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🧫️fixtures/🎛️history-inputs",
+    "index": 431
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json",
+    "index": 28
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "../../../../🧬️schema/🧬️mutations/🧫️fixtures/🩹️structured/🔣️.json",
+    "index": 7993
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🔮️oracles/🔣️.json",
+    "literal": "s own `🧫️fixtures/`, and the envelope region of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`. It imports nothing from and transliterates nothing of the Rust it judges, and it needs no host package, which is why `package` is empty. The protocol description stops at the repeated `spatial`/`elements`/`relations` records and names only their shape; that shape was turned into a reader and a writer by taking the field order from the DSL grammar and every enum ordinal from the order that grammar declares its alternatives in, and the derivation is PINNED by the implementation re-encoding the committed `../../✉️base/📚️examples/🏢️building/🖼️assets/🎒️.pack.semio` byte for byte. IfcOpenShell 0.8.4 IS used, but for what it is authoritative about: reading the real committed Nakagin Capsule Tower IFC 4 model once, to derive the 3-spatial-node, 181-element, 362-relation artifact the case mutates.\\n\\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-model-mutate`",
+    "index": 1969
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/💾️binary/🧬️mutations/🫳️borrowed/🧪️tests/🟦️.ts",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 230
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/✏️editor/📬️preparation/🦀️.rs",
+    "literal": "/../../../../../../../../📇️registry/🧬️contract/✏️editing/🧫️fixtures/🧵️retained-native/🔣️.json",
+    "index": 6060
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "literal": "/../../🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧩️component.json",
+    "index": 20074
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/🪶️sqlite/🛬️native/🟦️.ts",
+    "literal": "./🧫️fixtures/🔣️.json",
+    "index": 222
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/🪶️sqlite/🛬️native/🦀️.rs",
+    "literal": "🧫️fixtures/🔣️.json",
+    "index": 595
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "../🧫️fixtures/close-frontiers/🔣️.json",
+    "index": 14048
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 25552
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 28767
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 29003
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 29813
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 2631
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 7604
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/📝️text/📸️snapshot/🔣️json/🧪️tests/🔣️transport/🟦️.ts",
+    "literal": "./🧫️fixtures/🔣️.json",
+    "index": 203
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 3835
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 4407
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🔮️oracles/🔣️.json",
+    "literal": "s own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Document(...)} shape. Reuses 📑️document/🧫️fixtures/insert-image",
+    "index": 49604
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🔮️oracles/🔣️.json",
+    "literal": "s own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Cad(...)} shape. Wraps 📐️cad/🧫️fixtures/🗂️add-layer-applied",
+    "index": 52169
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🔮️oracles/🔣️.json",
+    "literal": "s own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Brep(...)} shape. Wraps 🧊️brep/🧫️fixtures/create-vertex-applied",
+    "index": 54707
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🔮️oracles/🔣️.json",
+    "literal": "s own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Mesh(...)} shape. Wraps 🔺️mesh/🧫️fixtures/🎨️create-material-applied",
+    "index": 57253
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🔮️oracles/🔣️.json",
+    "literal": "s own SemioSnapshot{schema, subset: SemioSubsetSnapshot::Drawing(...)} shape. Wraps 🖊️drawing/🧫️fixtures/create-layer-applied",
+    "index": 59817
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts",
+    "literal": "🔗️link/🧫️fixtures/♻️retirement/🔣️.json",
+    "index": 11170
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🦀️.rs",
+    "literal": "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧪️tests/🧫️fixtures/♻️retirement/🔣️.json",
+    "index": 9674
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "../../../../../✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧵️hex-utf8/🔣️.json",
+    "index": 6403
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "literal": "../../../../../✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧵️hex-utf8/🔣️.json",
+    "index": 29059
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "literal": "../../../../../✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧵️hex-utf8/🔣️.json",
+    "index": 5444
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "literal": "../../../../../✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧵️hex-utf8/🔣️.json",
+    "index": 28531
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🔬️probes/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 3855
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🪟️bmp/🔖️v3/✳️any/🧪️tests/🔬️unit/🦀️.rs",
+    "literal": "/../../../../../../../../../🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb8-duplicate-palette.bmp",
+    "index": 1222
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/✏️editor/📬️preparation/🦀️.rs",
+    "literal": "/../../../../../../../../📇️registry/🧬️contract/✏️editing/🧫️fixtures/🧵️retained-native/🔣️.json",
+    "index": 4666
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🔮️oracles/🔣️.json",
+    "literal": "s own `🧫️fixtures/`, and the envelope region of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`. It imports nothing from and transliterates nothing of the Rust it judges, and it needs no host package, which is why `package` is empty. The protocol description stops at the repeated `nodes`/`edges` records and names only their shape; that shape was turned into a reader and a writer by taking the field order from the DSL grammar, and the derivation is PINNED by the implementation re-encoding the committed `../../✉️base/📚️examples/🌊️pipeline/🖼️assets/🎒️.pack.semio` byte for byte. The earlier `semio-flow-mutation-semantics` no-oracle decision this entry replaces declined json-rust as a weak reference — a generic JSON DOM supplies no knowledge of nodes, edges, ports or params, so every one of the thirteen semantics would still have been hand-written on top of it. That judgement stands; what changed is that a second implementation of the VOCABULARY now exists, in another language, and the two are compared scenario for scenario. The artifact the case mutates is likewise real rather than synthetic: a 180-node, 179-edge connection network derived once from the committed Nakagin Capsule Tower IFC 4 model with IfcOpenShell 0.8.4.\\n\\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-flow-mutate`",
+    "index": 1605
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${fixtureDirectory}/${EXPECTED_STEP_FILENAME}`, mediaType: ",
+    "index": 25432
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${fixtureDirectory}/${EXPECTED_MESH_FILENAME}`, mediaType: ",
+    "index": 27054
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+    "literal": ", path: `../🧫️fixtures/${fixtureDirectory}/${EXPECTED_METRICS_FILENAME}`, mediaType: ",
+    "index": 29276
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 38621
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 49091
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+    "literal": "🧫️fixtures",
+    "index": 50592
+  }
+]

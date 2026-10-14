@@ -110,7 +110,7 @@ let mut snapshot_decoding_progress=|_|snapshot_original_live.get();let mut snaps
 let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snapshot_encoding_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut snapshot_encoding_native=semio_framework_value::NativeEncodeControl::new(snapshot_native_maximum,&mut snapshot_encoding_progress);snapshot_encoding_native.install_retirement_recipient(&mut snapshot_encoding_recipient).unwrap();let mut snapshot_encoding_owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut snapshot_encoding_native,snapshot_caller_grant);
 
     let source = AllocationRecord { literal: literal() };
-    let neutral:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🌱️value/⚠️refusal/🧫️fixtures/🔣️.json")).unwrap();
+    let neutral:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🌱️value/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let kinds=[ValueRefusalKind::InvalidValue,ValueRefusalKind::Canceled,ValueRefusalKind::OwnershipLimit,ValueRefusalKind::AllocationFailed,ValueRefusalKind::WorkLimit,ValueRefusalKind::DepthLimit,ValueRefusalKind::UnsupportedOwner,ValueRefusalKind::InvariantViolated,ValueRefusalKind::InvalidValue];
     let cases:Vec<_>=neutral["cases"].as_array().unwrap().iter().filter(|case|case["operation"]=="construct").collect();
     assert_eq!(cases.len(),kinds.len());

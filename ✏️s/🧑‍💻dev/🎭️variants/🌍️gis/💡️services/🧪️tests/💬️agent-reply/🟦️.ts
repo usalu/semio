@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { findWorkspaceRoot } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 💬️ The agent's own voice, end to end, with nothing mocked on either side — ticket
  * `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice AC1, audit `📓️g19-ai-user-experience-audit.md`
  * gap 1. A real `semio-os-mcp` stdio gateway launched exactly as `.mcp.json` launches it, a real

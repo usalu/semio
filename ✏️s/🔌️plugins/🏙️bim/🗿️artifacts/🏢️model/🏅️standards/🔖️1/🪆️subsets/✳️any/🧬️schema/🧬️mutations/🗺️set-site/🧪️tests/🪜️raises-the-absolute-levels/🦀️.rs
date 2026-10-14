@@ -7,11 +7,11 @@ use protocol::Mutation;
 
 const CASE: Case = Case {
     dir: "🗺️set-site/✅️moves-the-site",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗺️set-site/✅️moves-the-site/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗺️set-site/✅️moves-the-site/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗺️set-site/✅️moves-the-site/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗺️set-site/✅️moves-the-site/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🗺️set-site/✅️moves-the-site/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗺️set-site/✅️moves-the-site/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗺️set-site/✅️moves-the-site/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗺️set-site/✅️moves-the-site/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗺️set-site/✅️moves-the-site/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗺️set-site/✅️moves-the-site/🎯️outcome/🔣️.json"),
 };
 
 fn close(left: f64, right: f64) -> bool {

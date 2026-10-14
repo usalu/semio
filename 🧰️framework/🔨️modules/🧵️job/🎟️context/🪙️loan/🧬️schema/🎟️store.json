@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 4,
+  "maxItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "operation",
+      "generation",
+      "fuel",
+      "deadlineUs",
+      "clockUs",
+      "grant"
+    ],
+    "properties": {
+      "operation": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "generation": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "fuel": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "deadlineUs": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "clockUs": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "grant": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json#/$defs/Grant"
+      },
+      "id": {
+        "enum": [
+          "failed-field",
+          "wallet-cleanup",
+          "rejected-setup",
+          "interactive-envelope"
+        ]
+      }
+    }
+  }
+}

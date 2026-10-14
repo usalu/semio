@@ -95,7 +95,7 @@ const STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_CONTRACTS: &[ArtifactToolPublicationCon
     ArtifactToolPublicationContract { tool_id: main::SELECT_IFD_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Config] },
 ];
 fn tiff_any_editor_example_snapshot(example_id: &str) -> TiffSnapshot {
-    if example_id == crate::examples::demo::ID { <TiffSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default() } else { TiffSnapshot::default() }
+    if example_id == crate::examples::demo::ID { <TiffSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default() } else { TiffSnapshot::default() }
 }
 fn tiff_any_editor_command_id(command: &TiffAnyEditCommand) -> &'static str {
     if let TiffAnyEditCommand::EditSnapshot { event } = command { return event.action_id(); }
@@ -239,7 +239,7 @@ impl ArtifactEditor for TiffAnyEditor {
             if tiff_any_editor_command_id(&request.command) != request.tool_id { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-tiff-paint-region-tool-mismatch")); }
             let operation = AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed.clone(), retained: request.retained };
             let payload = ArtifactRetainedCommandPayload::new(
-                ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion },
+                ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, snapshot_read:request.snapshot_read, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion },
                 tiff_any_editor_command_id,
                 paint_region::MAXIMUM_RAW_BYTES,
                 paint_region::CAPACITY.work_items(),
@@ -255,7 +255,7 @@ impl ArtifactEditor for TiffAnyEditor {
             main::SELECT_IFD_ACTION_ID => main::SELECT_IFD_ACTION_ID,
             _ => unreachable!("filtered above"),
         };
-        let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, tiff_any_editor_command_id, STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, Box::new(BoundedArtifactCommandWork::new(action_id, tiff_any_editor_retained_reduce, tiff_any_editor_retained_extent)));
+        let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, snapshot_read:request.snapshot_read, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, tiff_any_editor_command_id, STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, Box::new(BoundedArtifactCommandWork::new(action_id, tiff_any_editor_retained_reduce, tiff_any_editor_retained_extent)));
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {

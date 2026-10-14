@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn local_interaction_language_neutral_restore_parity() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let before: LocalInteractionState = from_json(row["before"].clone());
         let current: LocalInteractionIdentity = from_json(row["current"].clone());

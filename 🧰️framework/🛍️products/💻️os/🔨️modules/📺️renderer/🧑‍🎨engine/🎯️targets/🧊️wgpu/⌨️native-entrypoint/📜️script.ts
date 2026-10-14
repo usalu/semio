@@ -1,15 +1,15 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readGeneratedCatalogProjection } from "../../../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import { createAssetHttpServerV1 } from "../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../../../🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
 import {playgroundNativeHostArtifactV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟦️.ts";
-import { pinExecutableArtifact } from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts";
+import { pinExecutableArtifact } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts";
 import { once } from "node:events";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import type { Server } from "node:http";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
-import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {repositoryCargoPreparationStorageV1, runTool } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts";
 import { getWorkspaceRoot } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 
@@ -31,7 +31,7 @@ export function nativeRunnerEnvironment(source: NodeJS.ProcessEnv): NodeJS.Proce
 async function nativeExecutable(executable: string, cwd: string, signal: AbortSignal): Promise<string> {
   if(!isAbsolute(executable))return executable;
   const workspace=resolve(cwd),cache=join(workspace,".🧬semio/🦑️repo/⚡️cache");
-  return pinExecutableArtifact(resolve(executable),join(cache,"tools/native-executables",basename(executable)),"native-execution",{signal,leaseDirectory:join(cache,"agents/resource-leases"),onWait:({elapsedMs})=>console.log(`[native] Waiting for executable publication (${elapsedMs}ms); Ctrl+C cancels`)});
+  return pinExecutableArtifact(resolve(executable),join(cache,"tools/native-executables",basename(executable)),"native-execution",{signal,leaseDirectory:join(workspace,".cache/framework/leases"),onWait:({elapsedMs})=>console.log(`[native] Waiting for executable publication (${elapsedMs}ms); Ctrl+C cancels`)});
 }
 
 /** 🏃️ Keeps the owning JavaScript event loop responsive while the native child runs. */
@@ -66,7 +66,7 @@ const BOOT_AXIS_FLAGS = ["--app", "--role", "--mode", "--example", "--brand", "-
 
 /** 🎛️ Rejects undeclared profiles and variants before reading completed artifacts, and admits the
  * boot axes as `--flag value` pairs so one invocation can open the document a url opens. */
-function selection(args: string[], smoke = false): { variant: string; profile: "dev" | "release"; axes: string[] } {
+function selection(args: string[], smoke = false): { variant: string; profile: "prototype" | "release"; axes: string[] } {
   const [variant, profile, ...rest] = args;
   nativeRuntimeDirectory(".", variant, profile);
   const axes: string[] = [];
@@ -76,7 +76,7 @@ function selection(args: string[], smoke = false): { variant: string; profile: "
     if (!(BOOT_AXIS_FLAGS as readonly string[]).includes(flag) || rest[index + 1] === undefined) throw new Error(`Native runtime accepts a variant, profile, optional --smoke and ${BOOT_AXIS_FLAGS.join("/")} value pairs`);
     axes.push(flag, rest[++index]!);
   }
-  return { variant, profile: profile as "dev" | "release", axes };
+  return { variant, profile: profile as "prototype" | "release", axes };
 }
 
 /** 🖥️ Runs completed native artifacts without compiling or invoking another Nx graph. */
@@ -104,11 +104,11 @@ class RunScript extends BundleScript {
 /** 🌉 Runs the exact caller-declared MCP producer with its authored service inventory. */
 class McpScript extends BundleScript {
   async run([variant,profile,transport,...args]:string[]):Promise<void> {
-    if(!["dev","release"].includes(profile) || !["stdio","http"].includes(transport))throw new Error("MCP owner selection requires a variant, exact profile and transport");
+    if(!["prototype","release"].includes(profile) || !["stdio","http"].includes(transport))throw new Error("MCP owner selection requires a variant, exact profile and transport");
     const catalog=JSON.parse(readFileSync(join(this.repoRoot,registryPath,"🤖️generated/🎠️playgrounds.json"),"utf8"));
     const row=catalog.find((entry:{variant:string})=>entry.variant===variant);
     if(!row?.mcpHost)throw new Error(`Playground does not declare an MCP producer: ${variant}`);
-    const binary=playgroundNativeHostArtifactV1(this.repoRoot,row.mcpHost,profile as "dev"|"release");
+    const binary=playgroundNativeHostArtifactV1(this.repoRoot,row.mcpHost,profile as "prototype"|"release");
     if(!binary || !existsSync(binary))throw new Error("Missing Nx MCP owner artifact");
     const controller=new AbortController(),cancel=()=>controller.abort();
     process.once("SIGINT",cancel);process.once("SIGTERM",cancel);

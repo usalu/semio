@@ -488,7 +488,7 @@ pub(crate) fn parse_brep_snapshot_body(body: &str) -> Result<SemioBrepSnapshot, 
 /// 🎁 Real structured text/binary codecs (brep wave — off the old hex-dump-of-`serde_json`
 /// shortcut, following the flow pilot's proven template). Wrapped in the repo-wide
 /// `store::semio_format` envelope, unchanged.
-impl store::os_store::serialization::ArtifactDsl for SemioBrepSnapshot {
+impl pack::snapshot::ArtifactDsl for SemioBrepSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIOBREP_DOCUMENT_SCHEMA
@@ -504,7 +504,7 @@ impl store::os_store::serialization::ArtifactDsl for SemioBrepSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_brep_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -532,19 +532,19 @@ pub fn decode_semio_brep_snapshot_json(text: &str) -> Result<SemioBrepSnapshot, 
 }
 
 /// 📥️ Parses this subset's own committed `.dsl.semio` text into a real [`SemioBrepSnapshot`] — a
-/// thin wrapper over `store::os_store::serialization::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
+/// thin wrapper over `pack::snapshot::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
 /// crate's private `store` extern-crate item (the `🧊️mutate-semio-brep` test adapter, whose
 /// `identity-round-trip` scenario reads the REAL committed `📚️examples/🧊️solid` artifact) can still
 /// drive the same codec production does. Same shape and same rationale as `🌊️flow`'s own bridge.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_brep_dsl(text: &str) -> Result<SemioBrepSnapshot, String> {
-    <SemioBrepSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <SemioBrepSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
-/// 📤️ The `store::os_store::serialization::ArtifactDsl::print_dsl` inverse of [`parse_semio_brep_dsl`] — same rationale.
+/// 📤️ The `pack::snapshot::ArtifactDsl::print_dsl` inverse of [`parse_semio_brep_dsl`] — same rationale.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_brep_dsl(snapshot: &SemioBrepSnapshot) -> String {
-    <SemioBrepSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(snapshot)
+    <SemioBrepSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

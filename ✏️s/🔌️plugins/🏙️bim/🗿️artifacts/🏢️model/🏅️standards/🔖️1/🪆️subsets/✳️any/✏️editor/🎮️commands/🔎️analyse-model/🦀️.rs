@@ -51,7 +51,8 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for AnalyseWork {
         (self.analysis.is_none() && command.command_id() == self.tool_id).then_some(1)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BimModelApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<BimModelApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BimModelApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<BimModelApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if !matches!(input.command, BimCommand::AnalyseModel(_)) {
             return Err(Fault::from("bim-analyse-work-mismatch"));
         }
@@ -66,6 +67,9 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for AnalyseWork {
         }
         cx.set_stage("bim-analyse");
         Ok(ArtifactCommandWorkStep::Progress { stage: "bim-analyse", preview: PREVIEW })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 

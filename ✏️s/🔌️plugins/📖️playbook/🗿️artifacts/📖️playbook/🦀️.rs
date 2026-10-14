@@ -220,7 +220,7 @@ pub fn playbook_genesis_flow(child_id: &str) -> Option<SemioFlowSnapshot> {
 /// 🧩️ The genesis pack of `snapshot`'s `flow` child ([`playbook_genesis_flow`]) for a whole-document load whose archive carries
 /// no such member.
 pub fn genesis_playbook_child_pack(snapshot: &PlaybookSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     if slot != PLAYBOOK_FLOW_SLOT || child_id != snapshot.flow.child_id {
         return None;
     }

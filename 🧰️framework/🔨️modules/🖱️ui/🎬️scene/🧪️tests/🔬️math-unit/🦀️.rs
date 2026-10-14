@@ -16,7 +16,7 @@ fn authority_begin(authority:&mut Mesh3dAuthority,generation:u64,revision:u64,sc
 #[test]
 fn mesh3d_constructor_pages_and_directory_require_exact_physical_grants() {
     use protocol::value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../📐️math/♻️retirement/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../📐️math/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     use std::io::Write;
     let mut oracle=std::process::Command::new("bun").args(["-e","const x=JSON.parse(await Bun.stdin.text());console.log(JSON.stringify(x.fixture.copyGrants.map(work=>({work,pageBytes:x.pageBytes,directoryBytes:x.directoryBytes}))));"]).stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped()).spawn().unwrap();
     oracle.stdin.take().unwrap().write_all(serde_json::json!({"fixture":fixture,"pageBytes":MESH3D_PAGE_BYTES,"directoryBytes":MESH3D_OWNER_PAGE_CAPACITY*std::mem::size_of::<Option<Mesh3dPage>>()}).to_string().as_bytes()).unwrap();
@@ -77,7 +77,7 @@ fn mesh3d_retained_owner_gate_matches_system_exclusion_without_heap_birth() {
 
 #[test]
 fn mesh3d_original_component_backings_and_cancelled_hash_index_close_with_exact_receipts() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../📐️math/♻️retirement/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../📐️math/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["sourceTables"].as_array().unwrap(){for work in fixture["copyGrants"].as_array().unwrap(){let work=work.as_u64().unwrap()as usize;
         let mut table=reference_fixture(row.clone());let original=table.original_capacity_bytes().unwrap();let pointers=table.iter().map(|(_,labels)|labels.iter().map(|label|label.as_ptr()).collect::<Vec<_>>()).collect::<Vec<_>>();
         let grant=ownership_test_grant(0,mesh3d_begin_capacity_byte_demand(),0,1);let(answer,heap)=observe_retirement_allocations(||mesh_test_attempt(||mesh3d_begin(900,1000,Mesh3dSchema::triangle_mesh(3,3),grant)));let(token,receipt)=answer.unwrap();assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));let mut born=heap.0;let mut physical=heap.1;
@@ -93,7 +93,7 @@ fn mesh3d_original_component_backings_and_cancelled_hash_index_close_with_exact_
 /// 🎯️ The existing paged mesh owner retains original labels without cloning or narrowing.
 #[test]
 fn mesh3d_original_component_references_and_source_are_exact_and_retired() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
     let source = ComponentSource3d::new(fixture["source"]["handle"].as_str().unwrap(), fixture["source"]["revision"].as_str().unwrap()).unwrap();
     assert_eq!(source.handle(), fixture["source"]["handle"].as_str().unwrap());
     assert_eq!(source.revision(), fixture["source"]["revision"].as_str().unwrap());
@@ -160,7 +160,7 @@ fn close_component_admission_test_mesh(lease: Mesh3dLease) {
 
 #[test]
 fn mesh3d_original_component_admission_marks_duplicate_and_invalid_u64_groups_ineligible() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
     let law = &fixture["admission"];
     let mut original:ComponentReferenceTable=reference_fixture(law["references"].clone());
     let lease = component_admission_test_publish(&mut original).unwrap();
@@ -182,7 +182,7 @@ fn mesh3d_original_component_admission_marks_duplicate_and_invalid_u64_groups_in
 
 #[test]
 fn mesh3d_original_component_admission_refuses_oversized_owned_source_and_retires_it() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
     let bytes = fixture["admission"]["oversizedSource"]["labelBytes"].as_u64().unwrap() as usize;
     let mut original = ComponentReferenceTable::from_entries(vec![("face".into(), vec!["7".repeat(bytes)])]);
     assert!(semio_framework_pack_json::from_dsl_value(&protocol::value::ToValue::to_value(&original)).to_string().len() > MESH3D_OWNER_BYTE_CAPACITY);
@@ -195,7 +195,7 @@ fn mesh3d_original_component_admission_refuses_oversized_owned_source_and_retire
 
 #[test]
 fn mesh3d_original_zero_index_wire_and_point_domains_preserve_independent_buffers() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
     for row in fixture["zeroIndex"]["accepted"].as_array().unwrap() {
         let positions: Vec<[f32; 3]> = serde_json::from_value(row["positions"].clone()).unwrap();
         let vertex_ids: Vec<u32> = serde_json::from_value(row["vertexIds"].clone()).unwrap();
@@ -226,7 +226,7 @@ fn mesh3d_original_zero_index_wire_and_point_domains_preserve_independent_buffer
 
 #[test]
 fn mesh3d_original_component_admission_reserves_aggregate_authority_metadata_credit() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
     let law = &fixture["admission"]["authorityBudget"];
     let page_bytes = law["pageBytes"].as_u64().unwrap() as usize;
     assert_eq!(page_bytes, MESH3D_PAGE_BYTES);
@@ -254,7 +254,7 @@ fn mesh3d_original_component_admission_reserves_aggregate_authority_metadata_cre
 
 #[test]
 fn mesh3d_original_component_admission_refuses_sentinel_only_point_at_complete_seal() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
     let sentinel = fixture["zeroIndex"]["vertexSentinel"].as_u64().unwrap() as u32;
     let mut answers = Vec::new();
     for row in fixture["zeroIndex"]["sentinelCases"].as_array().unwrap() {
@@ -292,7 +292,7 @@ fn component_admission_local_writer(authority: &mut Mesh3dAuthority) -> Mesh3dWr
 
 #[test]
 fn mesh3d_original_component_admission_freezes_grants_and_cancels_its_owned_index() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
     let law = &fixture["admission"];
     let mut authority = Mesh3dAuthority::new();
     let token = component_admission_local_writer(&mut authority);
@@ -326,7 +326,7 @@ fn mesh3d_original_component_admission_freezes_grants_and_cancels_its_owned_inde
 
 #[test]
 fn mesh3d_original_component_admission_retires_typed_scratch_before_publication() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
     let law = &fixture["admission"];
     let mut original:ComponentReferenceTable=reference_fixture(law["references"].clone());
     let expected = original.iter().map(|(_,labels)| labels.iter().filter_map(|label| serde_json::from_str::<u64>(label).ok().filter(|value| *value > 0 && value.to_string() == *label)).collect::<BTreeSet<_>>().len()).sum::<usize>();
@@ -1350,7 +1350,7 @@ fn gumball_project_ray_onto_axis_measures_signed_offset() {
 
 #[test]
 fn original_ray_segment_projection_clips_depth_with_independent_three_witnesses() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let law = &fixture["gumball"]["projectedSegmentCases"];
     let vector = |row: &serde_json::Value| vec3_new_m(row[0].as_f64().unwrap() as f32, row[1].as_f64().unwrap() as f32, row[2].as_f64().unwrap() as f32);
     let width = law["viewport"][0].as_f64().unwrap() as f32;
@@ -1369,7 +1369,7 @@ fn original_ray_segment_projection_clips_depth_with_independent_three_witnesses(
 
 #[test]
 fn original_ray_segment_closest_points_match_independent_three_witnesses() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let vector = |row: &serde_json::Value| vec3_new_m(row[0].as_f64().unwrap() as f32, row[1].as_f64().unwrap() as f32, row[2].as_f64().unwrap() as f32);
     for row in fixture["gumball"]["raySegmentClosestCases"].as_array().unwrap() {
         let closest = ray_segment_closest(vector(&row["origin"]), vector(&row["direction"]), vector(&row["a"]), vector(&row["b"])).unwrap();
@@ -1467,7 +1467,7 @@ fn grid_placement_anchor_uses_orbit_xy_and_datum_z() {
 /// 📍️ Rectangle and lasso selection skip sampled vertices in the original paged mesh.
 #[test]
 fn screen_select_original_vertices_skips_surface_samples() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️vertex-selection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️vertex-selection/🔣️.json")).unwrap();
     let mut data = LegacyMeshOracleData::triangle();
     data.positions = serde_json::from_value(fixture["positions"].clone()).unwrap();
     data.normals = vec![[0.0,0.0,1.0]; data.positions.len()];
@@ -1492,7 +1492,7 @@ fn screen_select_original_vertices_skips_surface_samples() {
 /// 🎯️ Original ray-to-segment distances retain finite endpoints and the forward ray domain.
 #[test]
 fn ray_segment_distance_matches_neutral_three_cases() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     for row in fixture["gumball"]["raySegmentCases"].as_array().unwrap() {
         let vector = |key: &str| vec3_new_m(row[key][0].as_f64().unwrap() as f32, row[key][1].as_f64().unwrap() as f32, row[key][2].as_f64().unwrap() as f32);
         let distance = ray_segment_distance(vector("origin"), vector("direction").normalize_m(), vector("a"), vector("b")).expect("nondegenerate original segment");
@@ -1521,7 +1521,7 @@ static OBSERVED_ALLOCATOR:ObservedAllocator=ObservedAllocator;
 
 #[test]
 fn mesh3d_owner_contention_is_an_explicit_temporary_refusal(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../📐️math/🚦️ownership/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../📐️math/🚦️ownership/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture["ownerBusy"],"Busy");assert_eq!(fixture["semanticClosing"],"Closing");
     let authority=mesh_test_attempt(||mesh3d_authority().try_lock().map_err(|_|Mesh3dFault::Busy)).expect("bounded test owner admitted");
     let grant=ownership_test_grant(0,fixture["retry"]["constructorCapacityBytes"].as_u64().unwrap() as usize,0,1);
@@ -1543,7 +1543,7 @@ fn mesh_test_attempt<T>(operation:impl FnMut()->Result<T,Mesh3dFault>)->Result<T
 }
 #[test]
 fn mesh3d_original_busy_caller_has_finite_attempt_deadline_and_cancellation(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../📐️math/🚦️ownership/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../📐️math/🚦️ownership/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture["retry"]["maximumAttempts"],4096);assert_eq!(fixture["retry"]["maximumDurationMs"],5000);
     let mut calls=0;
     let cancel=std::sync::atomic::AtomicBool::new(false);

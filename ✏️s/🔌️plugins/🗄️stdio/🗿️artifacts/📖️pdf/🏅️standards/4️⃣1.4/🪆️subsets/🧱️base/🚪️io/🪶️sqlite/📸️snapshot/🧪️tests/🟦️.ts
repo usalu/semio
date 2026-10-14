@@ -6,7 +6,7 @@ import { PDF14_SQLITE_SCHEMA, pdf14SnapshotToSqliteDatabase, pdf14SnapshotFromSq
 import { exportSqliteDatabase, importSqliteDatabase } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 test("PDF1.4 complete concrete backing contract keeps all page words and literal text", async () => {
-  const plan = await Bun.file(new URL("../🧫️fixtures/🔢ieee.json", import.meta.url)).json();
+  const plan = await Bun.file(new URL("🧫️fixtures/🔢ieee.json", import.meta.url)).json();
   expect(plan.backing).toEqual({ authority: "completeSystemAllocatorRequests", phases: ["projectSnapshot", "reconstructSnapshot"], ceilings: ["zero", "exact", "oneBelow", "cumulative"], cancellation: ["start", "materializedInterior"], diagnosticOwnership: "actualCapacity", retirementRefund: false });
   const { default: Ajv } = await import("ajv/dist/2020");
   
@@ -30,7 +30,7 @@ test("PDF1.4 complete concrete backing contract keeps all page words and literal
 
 test("PDF1.4 native-neutral fixture is complete and independently editable", async () => {
   expect(PDF14_SQLITE_SCHEMA).toBe(await Bun.file(new URL("../🗄️.sql", import.meta.url)).text());
-  const snapshot = parsePdfSnapshot(await Bun.file(new URL("../🧫️fixtures/🔣️.json", import.meta.url)).json());
+  const snapshot = parsePdfSnapshot(await Bun.file(new URL("🧫️fixtures/🔣️.json", import.meta.url)).json());
   const bytes = await exportSqliteDatabase(await pdf14SnapshotToSqliteDatabase(snapshot));
   const sql = Database.deserialize(bytes);
   expect(sql.query("PRAGMA integrity_check").get()).toEqual({ integrity_check: "ok" });
@@ -45,7 +45,7 @@ test("PDF1.4 native-neutral fixture is complete and independently editable", asy
 });
 
 test("PDF1.4 preserves every neutral IEEE word without numeric canonicalization", async () => {
-  const cases = await Bun.file(new URL("../🧫️fixtures/🔢ieee.json", import.meta.url)).json();
+  const cases = await Bun.file(new URL("🧫️fixtures/🔢ieee.json", import.meta.url)).json();
   for (const item of cases.binary64) {
     const scalar = { bits: BigInt(`0x${item.bits}`) };
     const snapshot = { schema: "pdf14.custom-schema", pages: [{ width: scalar, height: scalar, text: item.bits }] };
@@ -58,7 +58,7 @@ test("PDF1.4 preserves every neutral IEEE word without numeric canonicalization"
 });
 
 test("PDF1.4 rejects noncontiguous pages, weakened schema and bounded cancellation", async () => {
-  const snapshot = parsePdfSnapshot(await Bun.file(new URL("../🧫️fixtures/🔣️.json", import.meta.url)).json());
+  const snapshot = parsePdfSnapshot(await Bun.file(new URL("🧫️fixtures/🔣️.json", import.meta.url)).json());
   await expect(pdf14SnapshotToSqliteDatabase(snapshot, { maxRows: 1 })).rejects.toThrow();
   await expect(pdf14SnapshotToSqliteDatabase(snapshot, { maxValueBytes: 1 })).rejects.toThrow();
   const controller = new AbortController(); controller.abort();

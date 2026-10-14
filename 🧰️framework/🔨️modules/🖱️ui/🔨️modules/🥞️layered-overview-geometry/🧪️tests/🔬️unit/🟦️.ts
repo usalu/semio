@@ -3,7 +3,7 @@ import { easeCubicInOut, easeCubicOut } from "d3-ease";
 import * as clippingModule from "polygon-clipping";
 import { MathUtils } from "three";
 import { describe, expect, it } from "vitest";
-import fixture from "../../../../🧫️fixtures/🥞️layered-overview/🔣️.json" with { type: "json" };
+import fixture from "../../../../🧪️tests/🧫️fixtures/🥞️layered-overview/🔣️.json" with { type: "json" };
 import {
   LAYERED_DECELERATION,
   LAYERED_FOLLOW_FRAME_MS,
@@ -106,7 +106,7 @@ function expectVeil(veil: LayeredVeil, scenario: VeilScenario): void {
 const never = (value: number | null): number => value ?? Number.POSITIVE_INFINITY;
 const lifecycleOf = (given: Partial<Record<keyof LayeredLifecycle, number>>): LayeredLifecycle => resolveLifecycle(given);
 
-/** 🥞️ The layered overview's pure geometry and lifecycle policy, read from `🧫️fixtures/🥞️layered-overview/🔣️.json` (whose swipe vectors the
+/** 🥞️ The layered overview's pure geometry and lifecycle policy, read from `🧪️tests/🧫️fixtures/🥞️layered-overview/🔣️.json` (whose swipe vectors the
  * ticket's independent Python twin computed) and judged against `polygon-clipping` (veil area), `d3-ease` (glide and settle easing) and three.js
  * (the follow's damping and the fling's travel). */
 describe("🥞️ layered overview geometry", () => {

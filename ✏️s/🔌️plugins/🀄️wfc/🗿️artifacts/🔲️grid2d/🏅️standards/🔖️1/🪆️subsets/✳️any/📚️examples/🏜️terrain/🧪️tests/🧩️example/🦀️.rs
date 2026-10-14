@@ -35,7 +35,7 @@ fn grass_never_touches_water_in_either_canonical_direction() {
 fn the_example_source_prints_the_document_it_states() {
     let source = source();
     assert_eq!(source.id(), ID);
-    let parsed = <Grid2dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&source.document()).expect("the printed example parses back");
+    let parsed = <Grid2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&source.document()).expect("the printed example parses back");
     assert_eq!(parsed, document());
 }
 

@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** 🎡️ semio-tech play brands — one English, native-terminology shell brand per app pane plus the landing introduction. */
+/** 🎡️ semio-tech play brands — one native-terminology shell brand per app pane plus the landing introduction. */
 // #endregion 🧲️Header
 
 import type { IntroductionDefinition, ShellBrand, ShellLocale, ShellTerminology } from "@semio-tech/framework";
@@ -8,8 +8,15 @@ import { PLAY_GROUPS, PLAY_HOST, PLAY_RUNTIME_PANES } from "./🔨️modules/�
 export { PLAY_HOST };
 
 //#region 🏷️PlayShared
-/** 🇬🇧️ Play is English-locked — the single source the landing page's boot-time `initUiLocaleSync` and every pane brand read. */
-export const PLAY_LOCALE: ShellLocale = "en";
+/** 🌐️ User storage or browser language supplies the locale; an absent supported source requires choice. */
+export function resolvePlayLocale(stored: string | null, requested: readonly string[]): ShellLocale | null {
+  if (stored === "en" || stored === "de") return stored;
+  for (const source of requested) {
+    const language = source.toLowerCase().split("-")[0];
+    if (language === "en" || language === "de") return language;
+  }
+  return null;
+}
 
 /** 🗣️ Play shows every app in its own native vocabulary, never a partner re-skin. */
 export const PLAY_TERMINOLOGY: ShellTerminology = "native";
@@ -18,7 +25,7 @@ export const PLAY_TERMINOLOGY: ShellTerminology = "native";
 export const SEMIO_TECH_PLAY_LOGO_SVG = `<svg viewBox="0 0 350 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="semio"><path d="M270.589 28.413a175 175 0 0151.24 241.804A175 175 0 0180.155 322.07 175 175 0 0127.691 80.528a175 175 0 01241.408-53.076" fill="#001117"/><path d="M76.25 271.933l35-35.808V118.75h-35z" fill="#fa9500" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"/><g fill="#ff344f" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M76.25 113.75h155.563l37.66-37.5H76.25zM236.263 273.75l-.013-155.606 37.5-37.62V273.75z"/></g><g fill="#34d1bf" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M160.467 273.75h70.783v-37.5h-34.169zM160.468 193.75h70.782v-37.5h-34.169z"/></g></svg>`;
 
 /** 🎓️ Landing introduction, shown on the overview only (never inside a pane shell). */
-export const SEMIO_TECH_PLAY_INTRODUCTION: IntroductionDefinition = {
+const PLAY_INTRODUCTION_EN: IntroductionDefinition = {
   title: "Welcome to semio Play",
   steps: [
     {
@@ -59,6 +66,16 @@ export const SEMIO_TECH_PLAY_INTRODUCTION: IntroductionDefinition = {
     },
   ],
 };
+/** 🎓️ The landing introduction uses the same explicitly supplied locale as its shell chrome. */
+export function playIntroduction(locale: ShellLocale): IntroductionDefinition {
+  if (locale === "en") return PLAY_INTRODUCTION_EN;
+  const steps = [
+    ["Willkommen bei semio Play", `Play vereint alle semio Apps in einem Raster — ${PLAY_RUNTIME_PANES.length} Apps in ${PLAY_GROUPS.length} Gruppen, von CAD und prozeduraler Modellierung bis Strukturanalyse, Baunormen und Notizen.\n\nJeder Bereich führt die echte App mit einem eigenen Dokument direkt im Browser aus.`],
+    ["Eine App finden", "Bewegen Sie die Maus durch das Raster. Zeigen Sie auf eine Karte, um ihre App zu sehen. Klicken Sie, um sie im Vollbild zu öffnen. Mit Escape oder Übersicht kehren Sie zurück."],
+    ["Früher Prototyp", "Play wird aktiv entwickelt. Einige Apps sind noch unvollständig. Laden Sie die Seite neu, falls etwas nicht mehr reagiert."],
+  ];
+  return {...PLAY_INTRODUCTION_EN, title:steps[0]![0]!, steps:PLAY_INTRODUCTION_EN.steps.map((step,index)=>({...step,title:steps[index]![0]!,body:steps[index]![1]!}))};
+}
 //#endregion 🏷️PlayShared
 
 //#region 🎡️PlayPanes
@@ -76,7 +93,7 @@ export type PlayPaneSpec = {
   readonly example?: string;
 };
 
-/** 🏷️ The shell brand one pane boots with — English, native terminology, ephemeral so a refresh
+/** 🏷️ The shell brand one pane boots with — native terminology, ephemeral so a refresh
  * always starts clean, and the catalog's curated example as the boot default so the grid opens every app
  * on real content instead of `exampleOptions[0]`. Exactly how the demonstrator's brands carry
  * `defaults.exampleId`: a DEFAULT, never a lock, so the pane's own example picker stays usable. */
@@ -87,7 +104,7 @@ export function playPaneBrand(variant: string, label: string, exampleId?: string
     windowTitle: `semio · ${label}`,
     ...(short === label ? {} : { shortWindowTitle: `semio · ${short}` }),
     logoSvg: SEMIO_TECH_PLAY_LOGO_SVG,
-    locks: { locale: PLAY_LOCALE, terminology: PLAY_TERMINOLOGY, themeId: "semio" },
+    locks: { terminology: PLAY_TERMINOLOGY, themeId: "semio" },
     ...(exampleId ? { defaults: { exampleId } } : {}),
     ephemeral: true,
   };
@@ -108,5 +125,5 @@ export const PLAY_PANES: readonly PlayPaneSpec[] = PLAY_RUNTIME_PANES.map(pane =
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️playgrid/🟦️.ts");
-  await registerTests1(import.meta.vitest, { PLAY_PANES, PLAY_LOCALE, PLAY_TERMINOLOGY });
+  await registerTests1(import.meta.vitest, { PLAY_PANES, resolvePlayLocale, PLAY_TERMINOLOGY });
 }

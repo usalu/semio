@@ -6,7 +6,7 @@
  * @see ../../🧬️schema/🔣️.json */
 import { describe, expect, test } from "bun:test";
 import { Validator } from "jsonschema";
-import corpus from "../../🧫️fixtures/🧫️mutation-inputs/🔣️.json" with { type: "json" };
+import corpus from "../🧫️fixtures/🧫️mutation-inputs/🔣️.json" with { type: "json" };
 import glossaryDocument from "../../🔣️input-labels.json" with { type: "json" };
 import manifestSchema from "../../🧬️schema/🔣️.json" with { type: "json" };
 import { parseInputLabelGlossary, parseInputUi } from "../../🧬️schema/🟦️.ts";

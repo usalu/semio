@@ -9,11 +9,11 @@ use crate::standards::v1::subsets::geometry::schema::mutations::set_point_positi
 use crate::{EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_value::ToValue;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️move-points/🧪️translates/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️move-points/🧪️translates/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️move-points/🧪️translates/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️move-points/🧪️translates/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️move-points/🧪️translates/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️move-points/🧪️translates/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️move-points/🧪️translates/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️move-points/🧪️translates/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️move-points/🧪️translates/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️move-points/🧪️translates/🎯️outcome/🔣️.json");
 
 fn snapshot(text: &str) -> EquationSnapshot {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes")

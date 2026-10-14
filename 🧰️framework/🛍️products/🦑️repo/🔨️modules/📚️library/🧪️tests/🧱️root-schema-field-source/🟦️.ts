@@ -45,7 +45,7 @@ interface SourceOwnershipFixture {
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const libraryRoot = resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
-const fixture: SourceOwnershipFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️root-schema-field-source/🔣️.json"), "utf8"));
+const fixture: SourceOwnershipFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🧱️root-schema-field-source/🔣️.json"), "utf8"));
 
 const namedDeclarations = (path: string): string[] => {
   const source = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);

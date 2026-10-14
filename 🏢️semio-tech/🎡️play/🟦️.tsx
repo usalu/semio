@@ -15,6 +15,7 @@ import {
   initUiLocaleSync,
   nearSquareGrid,
   readStoredUiChromeAppearance,
+  readStoredUiChromeLocale,
   readStoredUiChromeLayout,
   readStoredUiDriver,
   registerUiTranslationBundles,
@@ -28,12 +29,12 @@ import {
   type LayeredDirection,
   type LayeredPane,
 } from "@semio-tech/ui-react";
-import { createBrowserStoragePort, resolvePlaygroundBoot } from "@semio-tech/framework";
+import { createBrowserStoragePort, resolvePlaygroundBoot, type ShellLocale } from "@semio-tech/framework";
 import { composeSpecificOsCatalogV1 } from "../../✏️s/🧑‍💻dev/🧩️catalog/🟦️.ts";
 import { FrameworkOsShell, resolveShellLocks, resolveShellDefaults } from "@semio-tech/framework-renderer-react";
 import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-2d";
 import { PlayCard } from "./⚛️play-card.tsx";
-import { PLAY_LOCALE, PLAY_PANES, SEMIO_TECH_PLAY_INTRODUCTION, SEMIO_TECH_PLAY_LOGO_SVG, type PlayPaneSpec } from "./🪧️brand.ts";
+import { resolvePlayLocale, PLAY_PANES, playIntroduction, SEMIO_TECH_PLAY_LOGO_SVG, type PlayPaneSpec } from "./🪧️brand.ts";
 import "./🎨️globals.css";
 
 // 🎡️ Page-owning (single React root, no `ShellScope` of its own) — plain browser storage is correct;
@@ -41,15 +42,14 @@ import "./🎨️globals.css";
 const playStorage = createBrowserStoragePort();
 
 bootstrapElementsSurfaceChromeDocument(readStoredUiChromeAppearance(playStorage));
-initUiLocaleSync(PLAY_LOCALE);
+const requestedLocale = resolvePlayLocale(readStoredUiChromeLocale(playStorage), typeof navigator === "undefined" ? [] : navigator.languages);
+if (requestedLocale) initUiLocaleSync(requestedLocale);
 
 /** 📱️ Touch phones swipe through the same grid one app at a time instead of seeing every card at once. */
 const PLAY_SWIPE_MEDIA_QUERY = `${UI_MOBILE_MEDIA_QUERY} and (hover: none) and (pointer: coarse)`;
 
 //#region 🌐️PlayLandingLabels
-/** 🌐️ The landing's own chrome strings. Play locks its shells to {@link PLAY_LOCALE}, but chrome
- * never carries a default language: every key is registered for English AND German, and the page reads
- * them through `useLabel` like any other shell — so the same landing serves a German lock unchanged. */
+/** 🌐️ Landing chrome resolves English and German through the explicit user locale. */
 export const playLandingUiLabel = registerUiTranslationBundles({
   en: {
     translation: {
@@ -104,13 +104,14 @@ const PLAY_LIFECYCLE = { budget: 4, warmStartMs: 4_000, warmIntervalMs: 35_000, 
 const PLAY_INSETS = { top: "calc(var(--size-workbench) * 1.5)" } as const;
 
 /** 🎡️ One app's live shell on its own storage namespace; its own tour only while it is opened. */
-function PlayShell({ pane, opened }: { readonly pane: PlayPaneSpec; readonly opened: boolean }) {
+function PlayShell({ pane, opened, locale }: { readonly pane: PlayPaneSpec; readonly opened: boolean; readonly locale: ShellLocale }) {
   const catalog = useMemo(() => composeSpecificOsCatalogV1(window.location.href, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).catalog, []);
   const boot = useMemo(() => resolvePlaygroundBoot(catalog, pane.variant), [catalog, pane.variant]);
   const locks = useMemo(() => resolveShellLocks(pane.brand.locks), [pane.brand]);
   const defaults = useMemo(() => resolveShellDefaults(pane.brand, undefined), [pane.brand]);
   return (
     <FrameworkOsShell catalog={catalog}
+      initialLocale={locale}
       pluginFilter={pane.variant}
       plugins={boot.plugins}
       surfaceSessionFactories={PUZZLE_BOARD_SESSION_FACTORIES}
@@ -127,7 +128,6 @@ function PlayShell({ pane, opened }: { readonly pane: PlayPaneSpec; readonly ope
 
 const playPaneShortLabel = (pane: (typeof PLAY_PANES)[number]): string => pane.brand.shortWindowTitle?.replace(/^semio · /u, "") ?? pane.label;
 
-const PLAY_PAGES: readonly LayeredPane[] = PLAY_PANES.map((pane) => ({ id: pane.id, label: pane.label, shortLabel: playPaneShortLabel(pane), icon: pane.icon, capturePoster: capturePosterFromCanvases, render: ({ opened }) => <PlayShell pane={pane} opened={opened} /> }));
 const PLAY_SPECS = new Map(PLAY_PANES.map((pane) => [pane.id, pane]));
 
 /** 🃏️ An app's card, in its own cell of the card grid (when swiping, the overview centres it on its page itself). */
@@ -144,7 +144,8 @@ function renderPlayCard(page: LayeredPane, state: LayeredCardState) {
 //#endregion 🎡️PlayPages
 
 //#region 🎡️PlayLanding
-function PlayLanding() {
+function PlayLanding({locale}: {readonly locale: ShellLocale}) {
+  const pages: readonly LayeredPane[] = useMemo(() => PLAY_PANES.map(pane => ({id:pane.id,label:pane.label,shortLabel:playPaneShortLabel(pane),icon:pane.icon,capturePoster:capturePosterFromCanvases,render:({opened}:{opened:boolean})=><PlayShell pane={pane} opened={opened} locale={locale}/> })), [locale]);
   const viewportMobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
   const swipe = useMediaQuery(PLAY_SWIPE_MEDIA_QUERY);
   const surfaceChrome = useMemo(() => {
@@ -180,7 +181,7 @@ function PlayLanding() {
     opened ? null : (
       <>
         {introductionDismissed ? null : (
-          <UIIntroduction introduction={SEMIO_TECH_PLAY_INTRODUCTION} stepIndex={introductionStep} completedInteractionIndices={[]} onStepIndexChange={setIntroductionStep} onDismiss={() => setIntroductionDismissed(true)} />
+          <UIIntroduction introduction={playIntroduction(locale)} stepIndex={introductionStep} completedInteractionIndices={[]} onStepIndexChange={setIntroductionStep} onDismiss={() => setIntroductionDismissed(true)} />
         )}
         {revealed ? null : (
           <div className="pointer-events-none absolute inset-x-0 top-0 z-40">
@@ -213,7 +214,7 @@ function PlayLanding() {
 
   return (
     <LayeredOverview
-      panes={PLAY_PAGES}
+      panes={pages}
       cells={PLAY_CELLS}
       renderCard={renderPlayCard}
       overlayClassName="grid items-center pb-double pt-[calc(var(--size-workbench)*1.5)]"
@@ -229,4 +230,16 @@ function PlayLanding() {
 }
 //#endregion 🎡️PlayLanding
 
-mountUiRoot(document.getElementById("root")!, <PlayLanding />);
+/** 🗣️ An absent supported user source renders an accessible bilingual choice before any app boots. */
+function PlayBoot() {
+  const [locale, setLocale] = useState<ShellLocale | null>(requestedLocale);
+  if (locale) return <PlayLanding locale={locale}/>;
+  const choose = (language: ShellLocale) => {initUiLocaleSync(language);setLocale(language);};
+  return <main className="flex min-h-screen flex-col items-center justify-center gap-single" data-slot="play-language-choice" aria-labelledby="play-language-title">
+    <h1 id="play-language-title"><span lang="en">Choose your language</span> / <span lang="de">Sprache auswählen</span></h1>
+    <button type="button" lang="en" onClick={()=>choose("en")}>English</button>
+    <button type="button" lang="de" onClick={()=>choose("de")}>Deutsch</button>
+  </main>;
+}
+
+mountUiRoot(document.getElementById("root")!, <PlayBoot />);

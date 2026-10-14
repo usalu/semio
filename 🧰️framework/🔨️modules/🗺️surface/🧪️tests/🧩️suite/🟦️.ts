@@ -2,13 +2,13 @@ import { expect, test } from "bun:test";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import ts from "typescript";
-import fixture from "../../🧫️fixtures/📇️bindings.json";
-import ports from "../../🧫️fixtures/🔌️ports/🔣️.json";
+import fixture from "../🧫️fixtures/📇️bindings.json";
+import ports from "../🧫️fixtures/🔌️ports/🔣️.json";
 import { parse as parseToml } from "@iarna/toml";
 import { createHash } from "node:crypto";
 import { parse as parseProtobuf } from "protobufjs";
-import tileCorpus from "../../🗺️tiled-map/🧫️fixtures/🗺️vector-tiles/🔣️.json";
-import ownership from "../../🧫️fixtures/🔌️ownership/🔣️.json";
+import tileCorpus from "../../🗺️tiled-map/🧪️tests/🧫️fixtures/🗺️vector-tiles/🔣️.json";
+import ownership from "../🧫️fixtures/🔌️ownership/🔣️.json";
 
 type CargoManifest = {package: {name: string}; lib?: {name?: string}; dependencies: Record<string, {path?: string}>};
 type TileInventory = {layers: {name: string; extent: number; features: {type: number}[]}[]};
@@ -31,7 +31,7 @@ test("surface vector tile fixtures belong to their owner and agree with independ
   const owner = resolve(import.meta.dir, "../../🗺️tiled-map");
   const type = parseProtobuf(readFileSync(join(owner, "🧬️schema/🛰️.proto"), "utf8")).root.lookupType("surface.vector_tile.Tile");
   for (const row of tileCorpus.tiles) {
-    const bytes = readFileSync(join(owner, "🧫️fixtures/🗺️vector-tiles", row.file));
+    const bytes = readFileSync(join(owner, "🧪️tests/🧫️fixtures/🗺️vector-tiles", row.file));
     expect(bytes.length).toBe(row.bytes);
     expect(createHash("sha256").update(bytes).digest("hex")).toBe(row.sha256);
     const tile = type.toObject(type.decode(bytes), {defaults: true, arrays: true}) as TileInventory;

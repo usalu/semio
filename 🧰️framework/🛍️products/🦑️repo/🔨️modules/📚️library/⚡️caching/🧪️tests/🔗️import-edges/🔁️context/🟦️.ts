@@ -12,7 +12,7 @@ type Phase = { file: string; projects: Record<string, string>; packages: Record<
 type Vector = { id: string; source: string; phases: Phase[] };
 type ModuleProvider = { moduleSourceImports(path: string, source: string): readonly string[]; commandSourceImports(path: string, source: string): readonly string[] };
 const caching = resolve(import.meta.dir, "../../.."), require = createRequire(import.meta.url);
-const fixture = JSON.parse(readFileSync(join(caching, "🧫️fixtures/import-edges/🔁️context/🔣️.json"), "utf8")) as { version: number; imports: { id: string; path: string; source: string; imports: string[] }[]; contexts: Vector[] };
+const fixture = JSON.parse(readFileSync(join(caching, "🧪️tests/🧫️fixtures/import-edges/🔁️context/🔣️.json"), "utf8")) as { version: number; imports: { id: string; path: string; source: string; imports: string[] }[]; contexts: Vector[] };
 
 /** 🔍️ Obtains runtime strings from independent esbuild resolution and TypeScript emission/scanning. */
 async function oracle(path: string, source: string): Promise<string[]> {

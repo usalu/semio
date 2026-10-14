@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 
 import { meshPaintSealCurrent, nextSceneRasterEpoch, SceneRasterPool, SceneRasterUploadAuthority, sceneRasterUploadRows, type SceneRasterIdentity } from "../../💾️scene-raster-ownership/🟦️.ts";
-const fixture = JSON.parse(readFileSync(new URL("../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json", import.meta.url), "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json", import.meta.url), "utf8"));
 
 function identity(seed: string, width = 1, height = 1): SceneRasterIdentity {
   return {

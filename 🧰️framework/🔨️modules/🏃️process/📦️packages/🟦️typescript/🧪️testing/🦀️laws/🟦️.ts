@@ -1,2 +1,2 @@
-export { generatedOutputHasLiveLease, exactExecutableFingerprint, runExactCargoLaws, ExactCargoLawError } from "../../../../🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-export type { ExactCargoLawGroup, ExactCargoLawStage, ExactCargoLawPort, ExactCargoLawOptions, ExactCargoLawReceipt } from "../../../../🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+export { configuredExactCargoLawPolicyV1, readExactCargoLawPolicyV1, generatedOutputHasLiveLease, exactExecutableFingerprint, runExactCargoLaws, ExactCargoLawError } from "../../../../🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+export type { ExactCargoLawPolicyV1, ExactCargoLawGroup, ExactCargoLawStage, ExactCargoLawPort, ExactCargoLawOptions, ExactCargoLawReceipt } from "../../../../🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";

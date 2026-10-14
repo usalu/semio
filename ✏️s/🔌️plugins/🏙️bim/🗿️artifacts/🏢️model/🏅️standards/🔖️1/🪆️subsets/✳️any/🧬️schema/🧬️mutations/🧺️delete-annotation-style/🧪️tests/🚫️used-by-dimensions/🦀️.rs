@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🧺️delete-annotation-style/🚫️used-by-dimensions",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧺️delete-annotation-style/🚫️used-by-dimensions/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧺️delete-annotation-style/🚫️used-by-dimensions/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧺️delete-annotation-style/🚫️used-by-dimensions/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧺️delete-annotation-style/🚫️used-by-dimensions/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧺️delete-annotation-style/🚫️used-by-dimensions/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧺️delete-annotation-style/🚫️used-by-dimensions/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧺️delete-annotation-style/🚫️used-by-dimensions/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧺️delete-annotation-style/🚫️used-by-dimensions/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧺️delete-annotation-style/🚫️used-by-dimensions/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧺️delete-annotation-style/🚫️used-by-dimensions/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

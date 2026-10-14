@@ -1,7 +1,7 @@
 /** 🖼️ Native image frame bytes, nullable ICC and duplicate metadata laws. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import f from "../🧫️fixtures/🔣️.json";
+import f from "./🧫️fixtures/🔣️.json";
 import type {SemioImageSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {SEMIO_IMAGE_SQLITE_SCHEMA,semioImageSnapshotToSqliteDatabase,semioImageSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
@@ -14,7 +14,7 @@ test("Semio image controlled native corpus independently preserves octets and co
 
 
 test("Semio image complete and intermediate RGBA8 owners have independently editable ordered channel entities",async()=>{
- const neutral=await Bun.file(new URL("../🧫️fixtures/🎨️samples/🔣️.json",import.meta.url)).json();
+ const neutral=await Bun.file(new URL("🧫️fixtures/🎨️samples/🔣️.json",import.meta.url)).json();
  
  const {default:Ajv}=await import("ajv");expect(neutral["role"]).toEqual("orderedRgba8SampleEntities");expect(neutral["cases"]).toEqual([{"name":"complete","snapshot":{"schema":"image samples\u0000世界","width":2,"height":1,"colorspace":"indexed","bitDepth":255,"icc":[],"metadata":[{"key":"same","value":"NUL\u0000Ä"},{"key":"same","value":""}],"frames":[{"delayMs":4294967295,"rgba8":[0,1,127,255,9,10,11,12]}]}},{"name":"empty","snapshot":{"schema":"image samples\u0000世界","width":2,"height":1,"colorspace":"indexed","bitDepth":255,"icc":[],"metadata":[{"key":"same","value":"NUL\u0000Ä"},{"key":"same","value":""}],"frames":[{"delayMs":4294967295,"rgba8":[]}]}},{"name":"partial","snapshot":{"schema":"image samples\u0000世界","width":2,"height":1,"colorspace":"indexed","bitDepth":255,"icc":[],"metadata":[{"key":"same","value":"NUL\u0000Ä"},{"key":"same","value":""}],"frames":[{"delayMs":4294967295,"rgba8":[0,127,255]}]}},{"name":"overflow","snapshot":{"schema":"image samples\u0000世界","width":2,"height":1,"colorspace":"indexed","bitDepth":255,"icc":[],"metadata":[{"key":"same","value":"NUL\u0000Ä"},{"key":"same","value":""}],"frames":[{"delayMs":4294967295,"rgba8":[0,1,2,3,4,5,6,7,255]}]}}]);expect(neutral["query"]).toEqual("SELECT ordinal,channel,sample FROM semio_image_sample ORDER BY frame_id,ordinal");expect(neutral["edit"]).toEqual({"ordinal":2,"sample":42});
  for(const item of neutral.cases){
@@ -34,7 +34,7 @@ test("Semio image complete and intermediate RGBA8 owners have independently edit
 
 });
 
-import completeSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import completeSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 import{independentSqliteExtent as completeIndependentExtent}from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
 test("Semio Image Native matched full and metadata empty independently preserve all complete cells",async()=>{
  for(const item of completeSemanticContract.cases){const source=structuredClone(item.sourceSnapshot)as unknown as SemioImageSnapshot;;const database=await semioImageSnapshotToSqliteDatabase(source),bytes=await exportSqliteDatabase(database);expect(completeIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:completeSemanticContract.schemaBytes,tableWidths:completeSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:completeSemanticContract.schemaBytes,maxTables:4,maxColumns:7};expect(await semioImageSnapshotToSqliteDatabase(source,limits)).toEqual(database);expect(await semioImageSnapshotFromSqliteDatabase(await importSqliteDatabase(bytes),limits)).toEqual(source);

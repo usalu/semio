@@ -5,7 +5,7 @@ import Ajv2020 from "ajv/dist/2020";
 import { useEffect, useState, type ReactNode } from "react";
 import { I18nextProvider } from "react-i18next";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import fixture from "../../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
 import { UIFind, UIFindProvider, UISearch, useUIFind } from "../../🟦️.tsx";
 import { buildOsCommands } from "../../../🛠️ShellHelpers/🟦️.tsx";
 

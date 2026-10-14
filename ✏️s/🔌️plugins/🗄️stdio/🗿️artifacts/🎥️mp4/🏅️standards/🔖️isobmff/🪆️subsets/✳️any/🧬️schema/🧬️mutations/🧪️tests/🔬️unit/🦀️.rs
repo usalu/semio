@@ -140,7 +140,7 @@ async fn kinds_const_matches_enum_variants_in_declaration_order() {
 
 #[semio_framework_async_macros::async_test]
 async fn exact_fixture_no_mutation_inverse_and_set_movie_binary_codec_preserve_source() {
-    let bytes = include_bytes!("../../../../🧫️fixtures/🎬️.mp4").to_vec();
+    let bytes = include_bytes!("../../../../🧪️tests/🧫️fixtures/🎬️.mp4").to_vec();
     let base = crate::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
 
     let mut unchanged = base.clone();

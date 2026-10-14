@@ -119,7 +119,7 @@ mod windows_input_tests {
 
     #[test]
     fn native_control_space_delivers_the_nul_key_once() {
-        let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/⌨️input-decoding/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/⌨️input-decoding/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         for vector in fixture["consoleControls"].as_array().unwrap() {
             let records: Vec<_> = vector["records"].as_array().unwrap().iter().map(|value| {
                 let mut record = key_record(value["unit"].as_u64().unwrap() as u16, value["down"].as_bool().unwrap(), 1);
@@ -136,7 +136,7 @@ mod windows_input_tests {
     }
     #[test]
     fn committed_alt_code_text_is_delivered_once() {
-        let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/⌨️input-decoding/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/⌨️input-decoding/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         for vector in fixture["consoleCommits"].as_array().unwrap() {
             let records: Vec<_> = vector["records"].as_array().unwrap().iter().map(|value| {
                 let mut record = key_record(value["unit"].as_u64().unwrap() as u16, value["down"].as_bool().unwrap(), 1);

@@ -7,7 +7,7 @@ import { chromium } from "playwright";
 import { describe, expect, it } from "vitest";
 const engine = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const world = resolve(engine, "../../♾️infinite/🌍️world");
-const fixture = JSON.parse(readFileSync(resolve(world, "🧫️fixtures/📤️asset-cancellation/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(world, "🧪️tests/🧫️fixtures/📤️asset-cancellation/🔣️.json"), "utf8"));
 
 describe("🛑️ Exact asset request cancellation", () => {
   

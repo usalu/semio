@@ -4,7 +4,7 @@
 
 use super::*;
 
-const CORPUS: &str = include_str!("../../🧫️fixtures/🧫️gumball-dispatch/🔣️.json");
+const CORPUS: &str = include_str!("../🧫️fixtures/🧫️gumball-dispatch/🔣️.json");
 
 /// 🏷️ A handle's corpus name (`moveX`, …).
 fn handle_name(kind: GumballHandle) -> &'static str {

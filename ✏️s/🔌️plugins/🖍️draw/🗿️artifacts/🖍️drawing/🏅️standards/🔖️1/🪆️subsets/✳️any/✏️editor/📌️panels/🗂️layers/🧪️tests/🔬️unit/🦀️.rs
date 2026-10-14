@@ -98,7 +98,7 @@ fn domain_bound_rows_carry_granularity_and_one_tree_binding() {
 
 #[test]
 fn creation_choices_match_language_neutral_contract() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/➕️creation/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/➕️creation/🔣️.json")).unwrap();
     for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {
         let document=DrawingSnapshot::default();
         let kinds=layers_rows(&document,labels).into_iter().filter_map(|row|match row {LayersRow::Add(_,_,_,kind)=>Some(kind),_=>None}).collect::<Vec<_>>();

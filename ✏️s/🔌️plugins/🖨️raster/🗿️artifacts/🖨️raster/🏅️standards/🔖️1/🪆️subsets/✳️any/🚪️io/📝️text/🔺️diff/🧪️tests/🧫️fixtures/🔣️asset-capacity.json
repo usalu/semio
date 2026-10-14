@@ -1,0 +1,29 @@
+{
+  "capacity": 64,
+  "cases": [
+    {
+      "count": 0,
+      "accepted": true
+    },
+    {
+      "count": 1,
+      "accepted": true
+    },
+    {
+      "count": 8,
+      "accepted": true
+    },
+    {
+      "count": 9,
+      "accepted": true
+    },
+    {
+      "count": 64,
+      "accepted": true
+    },
+    {
+      "count": 65,
+      "accepted": false
+    }
+  ]
+}

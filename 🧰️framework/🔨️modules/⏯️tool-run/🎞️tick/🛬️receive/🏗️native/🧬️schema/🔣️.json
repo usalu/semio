@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "grant",
+    "headerFields",
+    "identityWidths",
+    "traceMaximum",
+    "interruptAfter",
+    "sequence"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.tool-run.original-native-tick-preparation.v1"
+    },
+    "grant": {
+      "const": [
+        1,
+        17,
+        65536,
+        262144,
+        64
+      ]
+    },
+    "headerFields": {
+      "const": [
+        "steps",
+        "trace",
+        "appendOps",
+        "appendEntities",
+        "payload",
+        "progress",
+        "retractTo",
+        "sequence",
+        "revision"
+      ]
+    },
+    "identityWidths": {
+      "const": [
+        4,
+        8,
+        4,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "traceMaximum": {
+      "const": 4096
+    },
+    "interruptAfter": {
+      "const": [
+        0,
+        1,
+        2,
+        4,
+        8,
+        9,
+        10,
+        12,
+        17,
+        32,
+        44,
+        45,
+        46,
+        47,
+        1000
+      ]
+    },
+    "sequence": {
+      "const": 0
+    }
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Paged History Transition Custody",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "grant",
+    "limits",
+    "source",
+    "transitions",
+    "control"
+  ],
+  "properties": {
+    "grant": {
+      "const": {
+        "items": 1,
+        "copyBytes": 2,
+        "capacityBytes": 65536,
+        "releaseBytes": 262144,
+        "depth": 64
+      }
+    },
+    "limits": {
+      "const": {
+        "fileBytes": 67108864,
+        "frameBodyBytes": 1048576,
+        "records": 8192,
+        "maximumFields": 128,
+        "maximumTextBytes": 1048576,
+        "maximumBinaryBytes": 1048576,
+        "maximumJsonBytes": 1048576,
+        "maximumJsonAllocationBytes": 8388608,
+        "maximumJsonItems": 65536,
+        "maximumJsonDepth": 64
+      }
+    },
+    "source": {
+      "const": {
+        "operation": 43,
+        "generation": 7,
+        "pageBytes": 3,
+        "prefixHex": "aa",
+        "suffixHex": "bb"
+      }
+    },
+    "transitions": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "wireHex",
+          "id",
+          "actor",
+          "hlt",
+          "dependencies",
+          "payloadHex",
+          "observed"
+        ],
+        "properties": {
+          "wireHex": {
+            "type": "string",
+            "pattern": "^[0-9a-f]+$"
+          },
+          "id": {
+            "type": "string"
+          },
+          "actor": {
+            "type": "string"
+          },
+          "hlt": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "payloadHex": {
+            "type": "string",
+            "pattern": "^[0-9a-f]*$"
+          },
+          "observed": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumAllocationBytes"
+      ],
+      "properties": {
+        "maximumAllocationBytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

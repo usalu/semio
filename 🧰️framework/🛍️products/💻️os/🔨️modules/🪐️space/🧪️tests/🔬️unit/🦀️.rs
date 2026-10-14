@@ -3,7 +3,7 @@ use super::*;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 use protocol::Mutation as _;
 use protocol::MutationDiff as _;
-use store::{os_store::serialization::ArtifactDsl, BlobStore};
+use store::{pack::snapshot::ArtifactDsl, BlobStore};
 
 //#region 🧸️Fixtures
 fn demo_user(id: &str, role: SpaceRole) -> SpaceUser {
@@ -83,8 +83,8 @@ fn collection_envelope_id_is_two_dot_segments() {
     let id = <CollectionSnapshot as ArtifactDsl>::envelope_id();
     assert_eq!(id, "os.collection");
     assert_eq!(id.split('.').count(), 2, "SemioEnvelope::from_envelope_id requires plugin.artifact");
-    let pack = store::os_store::serialization::ArtifactPack::encode_pack(&empty_collection_snapshot("test"));
-    let decoded = <CollectionSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("decode");
+    let pack = pack::snapshot::ArtifactPack::encode_pack(&empty_collection_snapshot("test"));
+    let decoded = <CollectionSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("decode");
     assert_eq!(decoded.name, "test");
 }
 
@@ -93,8 +93,8 @@ fn space_envelope_id_is_two_dot_segments() {
     let id = <SpaceSnapshot as ArtifactDsl>::envelope_id();
     assert_eq!(id, "os.space");
     assert_eq!(id.split('.').count(), 2, "SemioEnvelope::from_envelope_id requires plugin.artifact");
-    let pack = store::os_store::serialization::ArtifactPack::encode_pack(&empty_space_snapshot("test", SpaceKind::Atelier, SpaceVisibility::Private));
-    let decoded = <SpaceSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("decode");
+    let pack = pack::snapshot::ArtifactPack::encode_pack(&empty_space_snapshot("test", SpaceKind::Atelier, SpaceVisibility::Private));
+    let decoded = <SpaceSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("decode");
     assert_eq!(decoded.name, "test");
 }
 

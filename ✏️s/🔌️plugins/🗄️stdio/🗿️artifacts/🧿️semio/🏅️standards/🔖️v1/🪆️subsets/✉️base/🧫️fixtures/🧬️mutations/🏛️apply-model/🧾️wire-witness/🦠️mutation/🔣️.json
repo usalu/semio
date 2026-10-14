@@ -1,9 +1,0 @@
-{
-  "mutation": "applyModel",
-  "payload": {
-    "mutation": {
-      "mutation": "removeRelation",
-      "id": "rel-1"
-    }
-  }
-}

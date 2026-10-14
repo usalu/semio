@@ -1,0 +1,651 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.nx.selected-graph-custody/v1",
+  "$defs": {
+    "ScopeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "tasks",
+        "roots",
+        "files"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "minItems": 1,
+          "maxItems": 2000,
+          "uniqueItems": true
+        },
+        "roots": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\:\\u0000]+$"
+          },
+          "uniqueItems": true
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\:\\u0000]+$"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "JournalWitnessV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "epoch",
+        "sequence",
+        "globalIdentity",
+        "selectedMembership",
+        "changes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "epoch": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Latest mutation relevant to global identity or this selected scope; unrelated source mutations do not advance this witness."
+        },
+        "globalIdentity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "paths",
+            "sha256"
+          ],
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024,
+                "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\:\\u0000]+$"
+              },
+              "uniqueItems": true
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "selectedMembership": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "paths",
+            "sha256"
+          ],
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024,
+                "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\:\\u0000]+$"
+              },
+              "uniqueItems": true
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "changes": {
+          "type": "array",
+          "maxItems": 65536,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "type"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024,
+                "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\:\\u0000]+$"
+              },
+              "type": {
+                "enum": [
+                  "create",
+                  "update",
+                  "delete"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "SourceReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "scope",
+        "journal",
+        "files",
+        "ancestry"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "scope": {
+          "$ref": "#/$defs/ScopeV1"
+        },
+        "journal": {
+          "$ref": "#/$defs/JournalWitnessV1"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256",
+              "device",
+              "inode"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024,
+                "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\:\\u0000]+$"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "device": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "inode": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            }
+          },
+          "maxItems": 131072
+        },
+        "ancestry": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "device",
+              "inode"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "maxLength": 1024
+              },
+              "device": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "inode": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              }
+            }
+          },
+          "maxItems": 131072
+        }
+      }
+    },
+    "PublisherReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "pid",
+        "startedAt",
+        "toolingIdentity",
+        "journal",
+        "graph",
+        "receipts",
+        "root",
+        "rootDirectory",
+        "environmentIdentity"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "startedAt": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "toolingIdentity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "journal": {
+          "$ref": "#/$defs/JournalWitnessV1"
+        },
+        "graph": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "project-graph.json",
+            "file-map.json"
+          ],
+          "properties": {
+            "project-graph.json": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "minItems": 5,
+              "maxItems": 5
+            },
+            "file-map.json": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "minItems": 5,
+              "maxItems": 5
+            }
+          }
+        },
+        "receipts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "emoji-project-json.publication.json",
+            "test-cases.publication.json"
+          ],
+          "properties": {
+            "emoji-project-json.publication.json": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "test-cases.publication.json": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "rootDirectory": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "device",
+            "inode"
+          ],
+          "properties": {
+            "device": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            },
+            "inode": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            }
+          }
+        },
+        "environmentIdentity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Original SDK graph-dependent environment; task controls and graph proof transport do not define source resolution."
+        }
+      }
+    },
+    "TaskSelectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project",
+        "target",
+        "configuration",
+        "excludeTaskDependencies"
+      ],
+      "properties": {
+        "project": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "configuration": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "excludeTaskDependencies": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ReuseReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "toolingIdentity",
+        "publisherSha256",
+        "graph",
+        "source",
+        "environmentIdentity"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "toolingIdentity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "publisherSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "graph": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "project-graph.json",
+            "file-map.json"
+          ],
+          "properties": {
+            "project-graph.json": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "minItems": 5,
+              "maxItems": 5
+            },
+            "file-map.json": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "minItems": 5,
+              "maxItems": 5
+            }
+          }
+        },
+        "source": {
+          "$ref": "#/$defs/SourceReceiptV1"
+        },
+        "environmentIdentity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Original SDK graph-dependent environment; task controls and graph proof transport do not define source resolution."
+        }
+      }
+    },
+    "HandoffV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "file",
+        "sha256"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "file": {
+          "type": "string",
+          "maxLength": 100,
+          "pattern": "^semio-selected-source-[0-9]+-[a-f0-9-]{36}\\.json$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "ObservationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "path",
+        "fact"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "file",
+            "exists",
+            "stat",
+            "lstat",
+            "readdir",
+            "realpath",
+            "realpathNative",
+            "resolve"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fact": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "error"
+              ],
+              "properties": {
+                "error": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "size",
+                "mtimeMs",
+                "ctimeMs",
+                "ino",
+                "sha256"
+              ],
+              "properties": {
+                "size": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "mtimeMs": {
+                  "type": "number"
+                },
+                "ctimeMs": {
+                  "type": "number"
+                },
+                "ino": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "InferencePublicationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "revision",
+        "pid",
+        "startedAt",
+        "completedAt",
+        "inference",
+        "observations"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "startedAt": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "completedAt": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ObservationV1"
+          }
+        },
+        "inference": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "digest",
+              "authorityObservations",
+              "observations"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "authorityObservations": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/ObservationV1"
+                }
+              },
+              "observations": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/ObservationV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "GraphDemandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "requests",
+        "computing",
+        "callbacks",
+        "sockets"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "requests": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "computing": {
+          "type": "boolean"
+        },
+        "callbacks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sockets": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "$ref": "#/$defs/ScopeV1"
+}

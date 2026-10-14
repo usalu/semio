@@ -3,7 +3,7 @@ use serde_json::Value as Json;
 
 #[test]
 fn pptx_transform_wire_vectors_match_independent_serde_signed64() {
-    let corpus: Json = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: Json = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧭️transform/🔣️.json")).unwrap();
     let rows = corpus["vectors"].as_array().unwrap();
     assert_eq!(rows.len(), 16);
     for row in rows {

@@ -23,7 +23,7 @@ use semio_framework_plugin::PluginApp;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
-const SLIDER_VALUES_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🎚️slider-values.json");
+const SLIDER_VALUES_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎚️slider-values.json");
 
 //#region 📇️Fixture
 #[derive(Debug, Deserialize)]

@@ -7,7 +7,7 @@ import { UI_NUMBER_PRECISION_MAX, uiNumberDisplay, uiNumberDisplayText } from ".
  * renderer, so the role is IMPLIED by the component. React reaches that implication for free — each
  * component view renders an HTML element whose tag already carries the role — while a renderer with
  * no DOM has to say it out loud. This module is where the implication is written down for the
- * TypeScript side, answering the same `🧫️fixtures/♿️accessibility-projection.json` rows the Rust
+ * TypeScript side, answering the same `🧪️tests/🧫️fixtures/♿️accessibility-projection.json` rows the Rust
  * `accessibility_role`/`accessibility_projection_node` laws answer, so neither side can drift into a
  * role vocabulary of its own.
  *

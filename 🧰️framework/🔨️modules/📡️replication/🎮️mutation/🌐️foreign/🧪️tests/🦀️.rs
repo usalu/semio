@@ -16,7 +16,7 @@ fn close(owner:&mut dyn ErasedSnapshotRetirement,grant:RetainedCloneGrant)->usiz
 }
 #[test]
 fn original_foreign_output_preserves_immutable_policy_and_every_cancelled_backing(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let grant=policy(&law);
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let grant=policy(&law);
  for row in law["cases"].as_array().unwrap(){let original=original(row);let source=ForeignStepSource::borrowed(&original);let identity=source.identity();
   let(result,born,freed)=observe(||ForeignStepCopy::admit(source,RetainedCloneGrant::default()));assert_eq!((born,freed),(0,0));let(_,returned)=result.err().unwrap();assert_eq!(returned.identity(),identity);
   for cut in 0..48{let((mut cursor,ingress),born,freed)=observe(||ForeignStepCopy::admit(source,grant).ok().unwrap());assert_eq!((born,freed),(0,0));assert!(ingress.fits(grant));let mut allocated=0;let mut copied=0;
@@ -40,7 +40,7 @@ fn original_foreign_output_preserves_immutable_policy_and_every_cancelled_backin
 
 #[test]
 fn original_foreign_collection_keeps_each_refused_row_and_real_backing_receipt(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let grant=policy(&serde_json::json!({"grant":law["collectionGrant"]}));
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let grant=policy(&serde_json::json!({"grant":law["collectionGrant"]}));
  for count in 0..=law["cases"].as_array().unwrap().len(){
   let(mut owner,born,freed)=observe(ForeignStepsOwner::empty);assert_eq!((born,freed),(0,0));let mut live=0;
   for row in law["cases"].as_array().unwrap().iter().take(count){
@@ -61,7 +61,7 @@ fn original_foreign_collection_keeps_each_refused_row_and_real_backing_receipt()
 
 #[test]
 fn original_indexed_foreign_preparation_retains_every_cancelled_partial_and_sequence_receipt(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let grant=policy(&serde_json::json!({"grant":law["collectionGrant"]}));
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let grant=policy(&serde_json::json!({"grant":law["collectionGrant"]}));
  let originals:Vec<_>=law["cases"].as_array().unwrap().iter().map(original).collect();let identities:Vec<_>=originals.iter().map(|v|ForeignStepSource::borrowed(v).identity()).collect();
  for cut in 0..120{
   let(mut cursor,born,freed)=observe(ForeignStepsPreparation::empty);assert_eq!((born,freed),(0,0));let mut live=0;
@@ -83,7 +83,7 @@ fn original_indexed_foreign_preparation_retains_every_cancelled_partial_and_sequ
 
 #[test]
 fn original_foreign_source_boundaries_preserve_paid_rows_and_every_cancel_cut(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let grant=policy(&serde_json::json!({"grant":law["collectionGrant"]}));
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let grant=policy(&serde_json::json!({"grant":law["collectionGrant"]}));
  let batches:Vec<Vec<ForeignStep>>=law["sourceBatches"].as_array().unwrap().iter().map(|batch|batch["rows"].as_array().unwrap().iter().map(|id|original(law["cases"].as_array().unwrap().iter().find(|row|row["id"]==*id).unwrap())).collect()).collect();
  let expected:Vec<ForeignStep>=batches.iter().flat_map(|batch|batch.iter().cloned()).collect();
  let identities:Vec<Vec<_>>=batches.iter().map(|batch|batch.iter().map(|row|ForeignStepSource::borrowed(row).identity()).collect()).collect();

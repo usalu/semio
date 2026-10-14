@@ -1,6 +1,7 @@
 //! 🧫️ Forms exact owner capability precedes semantic and independently edited SQLite I/O.
 #[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
 mod original_owners;
+use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::*;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot as sqlite;
 #[path="💰️backing/🦀️.rs"]
@@ -8,13 +9,13 @@ mod backing;
 
 #[test]
 fn sqlite_snapshot_forms_declared_native_owner_has_semantic_sqlite_capability(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  assert_eq!(fixture["schema"],crate::FORMS_DOCUMENT_SCHEMA);
- assert!(<FormsSnapshot as store::os_store::serialization::ArtifactPack>::sqlite_snapshot_codec().is_some(),"the actual owning Forms native declaration must expose its semantic SQLite snapshot codec");
+ assert!(<FormsSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().is_some(),"the actual owning Forms native declaration must expose its semantic SQLite snapshot codec");
 }
 
 
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn string(value:&serde_json::Value,key:&str)->String{value[key].as_str().unwrap().into()}
 fn primitive(value:&serde_json::Value)->semio_framework_value::DslValue{
  match value["kind"].as_str().unwrap(){
@@ -75,7 +76,7 @@ fn sqlite_snapshot_forms_independent_relational_cycles_and_duplicate_metadata_re
 }
 #[test]
 fn sqlite_snapshot_forms_actual_erased_native_import_requires_owned_output(){
- use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};let value=specimen();let expected=database(&value);let codec=<FormsSnapshot as store::os_store::serialization::ArtifactPack>::sqlite_snapshot_codec().unwrap();let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.forms.forms".into(),standard:"1".into(),subset:"*".into()};
+ use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};let value=specimen();let expected=database(&value);let codec=<FormsSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().unwrap();let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.forms.forms".into(),standard:"1".into(),subset:"*".into()};
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,Default::default());let payload=original_owners::with_encoding(|native_owner|(codec.import)(crate::FORMS_DOCUMENT_SCHEMA,&dialect, &mut Some(expected.clone()),encoding,&mut control, native_owner)).expect("actual owned native output");let mut control=SqliteSnapshotControl::new(&mut callback,Default::default());let restored=original_owners::with_decoding(|native_owner|(codec.export)(crate::FORMS_DOCUMENT_SCHEMA,&dialect,&payload.value,&mut control, native_owner)).expect("actual owned native input");assert_eq!(restored.value,expected);}
 }
 
@@ -89,7 +90,7 @@ fn sqlite_snapshot_forms_flat_native_deep_both_real_erased_directions(){
 }
 #[test]
 fn sqlite_snapshot_forms_controlled_flat_row_admission_and_unicode_output(){
- use store::os_store::serialization::ArtifactSqliteSnapshot;use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase};
+ use store::os_store::serialization::ArtifactSqliteSnapshotHost;use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase};
  let value=specimen();let record=crate::standards::v1::subsets::any::io::binary::snapshot::pack::record(&value).unwrap();let mut callback=|_:semio_framework_value::native_decoding::NativeDecodeProgress|true;let mut c=semio_framework_value::NativeDecodeControl::new(0,&mut callback);assert!(crate::standards::v1::subsets::any::io::binary::snapshot::pack::reconstruct_record_controlled(&record,&mut c,5).unwrap_err().kind==semio_framework_value::ValueRefusalKind::WorkLimit);assert_eq!(c.owned_bytes(),0,"the complete borrowed semantic forecast precedes typed field copies");
  let mut callback=|_|true;assert!(original_owners::with_encoding(|native_owner|value.encode_sqlite_snapshot_native(SnapshotEncoding::Text,&mut SqliteSnapshotControl::new(&mut callback,store::sqlite_snapshot::SqliteDatabaseLimits{max_rows:5,..Default::default()}), native_owner)).unwrap_err().kind==semio_framework_value::ValueRefusalKind::WorkLimit);
  let f=fixture();let mut value=specimen();value.title=Some(f["unicodeText"].as_str().unwrap().repeat(f["unicodeRepeat"].as_u64().unwrap()as usize));let total=value.title.as_ref().unwrap().len();let mut observed=false;let mut callback=|p:store::sqlite_snapshot::SqliteSnapshotProgress|{if p.phase==SqliteSnapshotPhase::EncodeNative&&p.total==total&&p.completed>=65536{observed=true;false}else{true}};let mut control=SqliteSnapshotControl::new(&mut callback,Default::default());assert!(original_owners::with_encoding(|native_owner|value.encode_sqlite_snapshot_native(SnapshotEncoding::Text,&mut control, native_owner)).unwrap_err().kind==semio_framework_value::ValueRefusalKind::Canceled);assert!(observed);
@@ -99,5 +100,5 @@ async fn sqlite_snapshot_forms_actual_declared_registry_and_public_typed_file(){
  use semio_framework_os_kernel::io::io_mechanism::{NativeSnapshotRegistration,register_native_snapshots_in_assembly,native_snapshot_sqlite_schema,io_export_sqlite_snapshot,io_import_sqlite_snapshot};
  use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits,export_sqlite_database};
  let declaration=crate::standards::v1::subsets::any::io::io();let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.forms.forms".into(),standard:"1".into(),subset:"*".into()};let registration=NativeSnapshotRegistration::from_capability(dialect.clone(),declaration.native.codec).expect("actual declared native codec capability");let assembly=semio_framework_schema_registry::assembly::begin().unwrap();register_native_snapshots_in_assembly(&assembly,&[registration]).unwrap();drop(assembly);assert_eq!(native_snapshot_sqlite_schema(&dialect).unwrap(),sqlite::SQL);
- let value=specimen();let limits=SqliteDatabaseLimits::default();let bytes=io_export_sqlite_snapshot(&dialect,&value,SnapshotEncoding::Text,limits,&mut |_|true).await.unwrap().value;let parsed=store::sqlite_snapshot::import_sqlite_database(&bytes,limits,&mut |_|true).unwrap();let edited=oracle_sql(&parsed,"UPDATE forms_document SET title='Independent SQLite 世界';");let bytes=export_sqlite_database(&edited,limits,&mut |_|true).unwrap();let restored=Owned(Some(io_import_sqlite_snapshot::<FormsSnapshot>(&dialect,&bytes,limits,&mut |_|true).await.unwrap().value));assert_eq!(restored.0.as_ref().unwrap().title.as_deref(),Some("Independent SQLite 世界"));let mut expected=database(&value);expected.table_mut("forms_document").unwrap().rows[0].values[4]=store::sqlite_snapshot::SqliteValue::Text("Independent SQLite 世界".into());assert_eq!(database(restored.0.as_ref().unwrap()),expected);
+ let value=specimen();let limits=SqliteDatabaseLimits::default();let bytes=async{let original_file_dialect=&dialect;let original_file_input=&value;let original_file_encoding=SnapshotEncoding::Text;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;let parsed=store::sqlite_snapshot::import_sqlite_database(&bytes,limits,&mut |_|true).unwrap();let edited=oracle_sql(&parsed,"UPDATE forms_document SET title='Independent SQLite 世界';");let bytes=export_sqlite_database(&edited,limits,&mut |_|true).unwrap();let restored=Owned(Some(async{let original_file_dialect=&dialect;let original_file_input=&bytes;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<FormsSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value));assert_eq!(restored.0.as_ref().unwrap().title.as_deref(),Some("Independent SQLite 世界"));let mut expected=database(&value);expected.table_mut("forms_document").unwrap().rows[0].values[4]=store::sqlite_snapshot::SqliteValue::Text("Independent SQLite 世界".into());assert_eq!(database(restored.0.as_ref().unwrap()),expected);
 }

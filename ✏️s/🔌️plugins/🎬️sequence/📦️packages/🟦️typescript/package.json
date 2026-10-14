@@ -12,7 +12,8 @@
   "dependencies": {},
   "devDependencies": {
     "@semio-tech/sequence-sequence": "workspace:*",
-    "ajv": "8.20.0"
+    "ajv": "8.20.0",
+    "@semio-tech/framework": "workspace:*"
   },
   "author": {
     "name": "Ueli Saluz",

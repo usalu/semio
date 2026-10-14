@@ -19,11 +19,12 @@ export interface NativeHostOwnerFactsV1 {
   readonly project: string;
   readonly binaries: readonly string[];
   readonly targets: readonly string[];
+  readonly modes: Readonly<Record<string, readonly ("prototype" | "release")[]>>;
 }
 
 /** 📦️ Actual publication directories read from the owned Nx target. */
 export interface NativeHostSourceFactsV1 extends NativeHostOwnerFactsV1 {
-  readonly outputs: Readonly<Record<string, readonly string[] | undefined>>;
+  readonly outputs: Readonly<Record<string, Readonly<Record<"prototype" | "release", readonly string[] | undefined>>>>;
 }
 
 /** 🔏️ Admits the exact declaration against the selected owner. */
@@ -33,6 +34,6 @@ export function parsePlaygroundNativeHostV1(block: string, fieldName?: "nativeHo
 /** 🧾️ Reads validated Cargo and Nx source facts. */
 export function nativeHostSourceFactsV1(cratePath: string, view: NativeHostSourceViewV1): NativeHostSourceFactsV1;
 /** 🚀️ Resolves a declared platform executable from its actual publication directory. */
-export function nativeHostArtifactPathV1(host: PlaygroundNativeHostV1, profile: "dev" | "release", facts: NativeHostSourceFactsV1, platform: string): string;
+export function nativeHostArtifactPathV1(host: PlaygroundNativeHostV1, profile: "prototype" | "release", facts: NativeHostSourceFactsV1, platform: string): string;
 /** 🧵️ Returns the exact selected producer input closure. */
 export function declaredPlaygroundHostInputPathsV1(manifest: string, view: NativeHostSourceViewV1): string[];

@@ -21,8 +21,8 @@ import { randomUUID } from "node:crypto";
 import { chmodSync, closeSync, copyFileSync, existsSync, mkdirSync, openSync, readdirSync, renameSync, rmSync } from "node:fs";
 import { constants } from "node:os";
 import { basename, dirname, join, resolve, sep } from "node:path";
-import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts";
-import { startNativeProgress } from "../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { startNativeProgress } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
 /** 📦️ The crate that holds the binary. */
 export const PROCTOR_PACKAGE = "teaching-proctor";

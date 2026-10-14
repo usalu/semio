@@ -16,7 +16,7 @@ async fn inference_determinism_law() {
     use crate::standards::v87a::subsets::any::schema::inferences::GifInference;
     use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
     use protocol::Inference;
-    let snapshot = <GifSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
+    let snapshot = <GifSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
     assert_eq!(GifInference::infer(&snapshot).expect("valid materialized inference fixture"), GifInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 

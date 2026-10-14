@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const owner=resolve(import.meta.dir,"..");
-const law=JSON.parse(readFileSync(resolve(owner,"🧫️fixtures/🔣️.json"),"utf8"));
+const law=JSON.parse(readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
 
 test("original dynamic value clone preserves independent arbitrary variants",()=>{
   for(const row of law.cases){

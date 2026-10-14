@@ -11,8 +11,8 @@ async fn typed_snapshot_round_trips_through_native_text_and_external_part21() {
     assert_eq!(snapshot.entities.len(), 2);
     assert_eq!(snapshot.entities[0].id, 1);
     assert_eq!(snapshot.entities[0].name, "CARTESIAN_POINT");
-    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
-    let reparsed = <StepSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("reparse");
+    let text = pack::snapshot::ArtifactDsl::print_dsl(&snapshot);
+    let reparsed = <StepSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("reparse");
     assert_eq!(snapshot, reparsed, "typed round trip must be lossless");
     let exchange=semio_s_artifact_stdio_contract::part21::write_part21(&snapshot.to_part21_document());
     assert_eq!(StepSnapshot::from_part21_document(&semio_s_artifact_stdio_contract::part21::parse_part21(&exchange).unwrap()),snapshot);
@@ -30,7 +30,7 @@ async fn typed_value_wrapper_round_trips() {
         }
         other => panic!("expected TypedValue, got {other:?}"),
     }
-    let reparsed = <StepSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot)).unwrap();
+    let reparsed = <StepSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&pack::snapshot::ArtifactDsl::print_dsl(&snapshot)).unwrap();
     assert_eq!(snapshot, reparsed);
 }
 
@@ -42,15 +42,15 @@ async fn complex_instance_keeps_every_type() {
     assert_eq!(entity.name, "IFCQUANTITYAREA");
     assert_eq!(entity.complex.len(), 1);
     assert_eq!(entity.complex[0].name, "IFCPHYSICALSIMPLEQUANTITY");
-    let reparsed = <StepSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot)).unwrap();
+    let reparsed = <StepSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&pack::snapshot::ArtifactDsl::print_dsl(&snapshot)).unwrap();
     assert_eq!(snapshot, reparsed);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn pack_codec_round_trip() {
     let snapshot = StepSnapshot::from_part21_document(&semio_s_artifact_stdio_contract::part21::parse_part21(FIXTURE).expect("external Part21 fixture"));
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snapshot);
-    let decoded = <StepSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&snapshot);
+    let decoded = <StepSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snapshot);
 }
 
@@ -59,15 +59,15 @@ async fn pack_codec_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law_decode_encode_is_stable() {
     let snapshot = StepSnapshot::from_part21_document(&semio_s_artifact_stdio_contract::part21::parse_part21(FIXTURE).expect("external Part21 fixture"));
-    let text_once = store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
-    let reparsed = <StepSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text_once).expect("reparse");
-    let text_twice = store::os_store::serialization::ArtifactDsl::print_dsl(&reparsed);
+    let text_once = pack::snapshot::ArtifactDsl::print_dsl(&snapshot);
+    let reparsed = <StepSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text_once).expect("reparse");
+    let text_twice = pack::snapshot::ArtifactDsl::print_dsl(&reparsed);
     assert_eq!(text_once, text_twice, "print_dsl must be stable across a decode/encode cycle");
     assert_eq!(snapshot, reparsed);
 
-    let bytes_once = store::os_store::serialization::ArtifactPack::encode_pack(&snapshot);
-    let decoded = <StepSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes_once).expect("decode");
-    let bytes_twice = store::os_store::serialization::ArtifactPack::encode_pack(&decoded);
+    let bytes_once = pack::snapshot::ArtifactPack::encode_pack(&snapshot);
+    let decoded = <StepSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes_once).expect("decode");
+    let bytes_twice = pack::snapshot::ArtifactPack::encode_pack(&decoded);
     assert_eq!(bytes_once, bytes_twice, "encode_pack must be stable across a decode/encode cycle");
 }
 

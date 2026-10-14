@@ -2,7 +2,7 @@
 import { expect, test } from "bun:test";
 import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import schema from "../../../../../🔀️transform/🧬️schema/🧬️mutations/📐️scale-layers/🧬️schema/🔣️.json";
-import mutation from "../../../../../🔀️transform/🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/🦠️mutation/🔣️.json";
+import mutation from "../../../../../🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/🦠️mutation/🔣️.json";
 import { parseScaleLayers } from "../../../../../🔀️transform/🧬️schema/🧬️mutations/📐️scale-layers/🦠️mutation/🟦️.ts";
 
 test("the schema and the parser admit exactly the same scaleLayers records", () => {

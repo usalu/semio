@@ -5,7 +5,7 @@ import {dirname,join} from "node:path";
 
 /** 🧭️ Joins both path implementations and actual discovery/projection to the portable authority. */
 export async function provePlaygroundCompositionV1(root:string,output:string,receivers:boolean):Promise<void>{
- const require=createRequire(join(root,"package.json")),Ajv=require("ajv"),TOML=require("@iarna/toml"),directory=join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧩️composition"),schema=JSON.parse(readFileSync(join(directory,"🧬️schema/🔣️.json"),"utf8")),fixture=JSON.parse(readFileSync(join(directory,"🧫️fixtures/🔣️.json"),"utf8"));
+ const require=createRequire(join(root,"package.json")),Ajv=require("ajv"),TOML=require("@iarna/toml"),directory=join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧩️composition"),schema=JSON.parse(readFileSync(join(directory,"🧬️schema/🔣️.json"),"utf8")),fixture=JSON.parse(readFileSync(join(directory,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
  const validate=new Ajv({strict:true}).addKeyword({keyword:"x-semio-nfc",type:"string",schemaType:"boolean",validate:(enabled:boolean,value:string)=>!enabled||value===value.normalize("NFC")}).compile(schema);
  for(const row of fixture.cases)assert.equal(validate(row.input),row.accepted,row.id+": AJV");
  const implementations=await Promise.all([import(join(directory,"🟦️.ts")),import(join(directory,"🟨️.mjs"))]);
@@ -26,7 +26,7 @@ export async function provePlaygroundCompositionV1(root:string,output:string,rec
   put(path,"export default {};");put("future/owner/🦀️.rs","");put("future/owner/Cargo.toml",'[package]\nname = "future"\nversion = "0.1.0"\nedition = "2021"\n[lib]\npath = "🦀️.rs"\n[package.metadata.component]\npackage = "semio:future"\n[package.metadata.semio]\ncomponent-kind = "plugin"\n[[package.metadata.semio.playground]]\nvariant = "future"\nports = { react = 6061, wgpu = 6161 }\ncompositionConfigPath = '+JSON.stringify(path));
   const {cacheInternals}=await import(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"));await cacheInternals.playgroundSessionTargets([],workspace);
   const targets=cacheInternals.playgroundPreparationTargets(["future/owner/Cargo.toml"],workspace,owner);
-  for(const profile of ["dev","release"])for(const operation of ["serve","dev"]){
+  for(const profile of ["prototype","release"])for(const operation of ["serve","dev"]){
    const target=targets[operation+"-future-wgpu-"+profile];assert.equal(target.options.command,'bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve future '+profile+' --port 6161');assert.deepEqual(target.options.env,{SEMIO_WGPU_COMPOSITION_PATH:path});
    assert.deepEqual(target.dependsOn,["activate-future-wgpu-"+profile]);assert.equal(target.cache,false);assert.equal(target.continuous,true);
   }

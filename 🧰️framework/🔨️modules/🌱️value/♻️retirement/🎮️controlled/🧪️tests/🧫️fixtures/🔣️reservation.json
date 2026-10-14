@@ -1,0 +1,17 @@
+{
+  "schema": "original-controlled-failed-reservation.v1",
+  "original": "controlled-original-雪",
+  "allocatorMultiplier": 2,
+  "expected": {
+    "sameOriginal": true,
+    "error": "invariantViolated",
+    "copiedItems": 1,
+    "releasedBytes": 0,
+    "receipt": "actual-retained-allocation",
+    "terminalHeap": [
+      0,
+      0
+    ],
+    "admissionReceipt": "same-actual-receipt"
+  }
+}

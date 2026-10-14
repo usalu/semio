@@ -1,8 +1,9 @@
 //! 🏭️ Complete authored manufacturer catalogue relational ownership.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::Vdi3805Snapshot;
 use crate::{AccessoryLink,CompositionLink,CatalogueProduct,ManufacturerCatalog,ManufacturerFile,BuildingSystemNumber,ProductIdentity,NativeRecord,RecordFamilyId,SheetId,EditionId,EditionProfileChoice,ExtensionBag,Configuration,SheetAttributes,ValveHeatingAttributes,RadiatorAttributes,PumpHeatingAttributes,HeatGeneratorAttributes,GenericAttributes,GenericAttribute,CatalogIndex,CatalogIndexEntry,ParametricGeometry,BoundingBox,ConnectionPoint,CharacteristicCurve,CurvePoint,VdiUnit,VdiQuantityKind,SecurityLimits,LocalizedText};
 use std::collections::BTreeMap;
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteValue,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,NativeEncodingBound,RowWriter,reconstruct_text}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteValue,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,NativeEncodingBound,RowWriter,reconstruct_text}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 
@@ -87,22 +88,27 @@ fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)-
  for(position,c)in siblings(&curveg,1).iter().enumerate(){checkpoint(control,position,curves.len())?;let key=reconstruct_text(control,c.text(2)?)?;let mut axes=BTreeMap::new();for(position,u)in siblings(&unitg,c.rowid).iter().enumerate(){checkpoint(control,position,units.len())?;let axis=unsigned(*u,2,1)?;if axes.insert(axis,VdiUnit{symbol:reconstruct_text(control,u.text(3)?)?,kind:read_quantity(u.text(4)?)?,delta:boolean(*u,5)?,si_factor:u.real(6)?}).is_some(){return Err(invalid("VDI3805 duplicate curve axis"));}}if axes.len()!=2||!axes.contains_key(&0)||!axes.contains_key(&1){return Err(invalid("VDI3805 requires both curve units"));}let mut point=Vec::new();for p in siblings(&pointg,c.rowid){checkpoint(control,point.len(),points.len())?;point.push(CurvePoint{x:p.real(3)?,y:p.real(4)?});}if snapshot.curves.insert(key,CharacteristicCurve{id:reconstruct_text(control,c.text(3)?)?,x_unit:axes.remove(&0).unwrap(),y_unit:axes.remove(&1).unwrap(),points:point}).is_some(){return Err(invalid("VDI3805 duplicate curve key"));}}
  control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(snapshot)
 }
-impl ArtifactSqliteSnapshot for Vdi3805Snapshot{
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admission::admit(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
+impl ArtifactSqliteSnapshotHost for Vdi3805Snapshot{
+ 
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admission::admit(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload, ValueError>{
   control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;let add=|count:usize,size:usize|count.checked_add(size).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "Native semantic row count overflow"));let mut rows=5usize;for size in[self.catalog.extensions.fields.len(),self.catalog.file.extensions.fields.len(),self.edition_profile.len(),self.index.entries.len(),self.geometry.len(),self.curves.len().checked_mul(3).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "VDI3805 curve row count overflow"))?,self.catalog.products.len().checked_mul(3).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "VDI3805 product row count overflow"))?]{rows=add(rows,size)?}control.check_rows(rows)?;
 for(index,product)in self.catalog.products.iter().enumerate(){for size in[product.title.len(),product.records.len(),product.configuration.function_refs.len(),product.accessories.len(),product.components.len(),product.extensions.fields.len()]{rows=add(rows,size)?}if let SheetAttributes::Generic(attributes)=&product.configuration.attributes{rows=add(rows,attributes.entries.len())?}control.check_rows(rows)?;for(index,record)in product.records.iter().enumerate(){rows=add(add(rows,record.fields.len())?,record.extensions.fields.len())?;control.check_rows(rows)?;if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,product.records.len())?}}if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,self.catalog.products.len())?}}
 for(index,entry)in self.index.entries.iter().enumerate(){rows=add(rows,entry.tags.len())?;control.check_rows(rows)?;if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,self.index.entries.len())?}}for(index,geometry)in self.geometry.values().enumerate(){rows=add(add(rows,geometry.connections.len())?,geometry.parameters.len())?;control.check_rows(rows)?;if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,self.geometry.len())?}}for(index,curve)in self.curves.values().enumerate(){rows=add(rows,curve.points.len())?;control.check_rows(rows)?;if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,self.curves.len())?}}
   admit_sqlite_values(self,control,SqliteSnapshotPhase::EncodeNative)?;
-  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
 
  fn preflight_sqlite_snapshot_encoding(&self,_:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(), ValueError>{admit_sqlite_values(self,control,SqliteSnapshotPhase::EncodeNative)?;native_bound(self,control)}
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase, ValueError>{project(self,control)}
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{reconstruct(database,control)}
+ 
+ 
 }
-pub fn sqlite_codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<Vdi3805Snapshot as ArtifactSqliteSnapshot>::sqlite_codec()}
+impl pack::snapshot::ArtifactSqliteSnapshot for Vdi3805Snapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase, ValueError>{project(self,control)}
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{reconstruct(database,control)}
+}
+pub fn sqlite_codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<Vdi3805Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec()}
 
 #[path="🛂️admission/🦀️.rs"]
 pub(in crate::standards::v1::subsets::any)mod admission;

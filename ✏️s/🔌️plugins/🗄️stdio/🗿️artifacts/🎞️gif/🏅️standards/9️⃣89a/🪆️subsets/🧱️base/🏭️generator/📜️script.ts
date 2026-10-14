@@ -51,10 +51,10 @@ const HERE = import.meta.dir;
 const ENGINE_DIR = join(HERE, "🧪️tests", "🧰️support", "📦️packages", "🦀️rust");
 const ENGINE_MANIFEST = join(ENGINE_DIR, "Cargo.toml");
 const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate");
-const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
-const APPLICATION_FIXTURES_DIR = join(HERE, "..", "..", "🧩️application", "🧫️fixtures");
-const COMMENT_FIXTURES_DIR = join(HERE, "..", "..", "💬️comment", "🧫️fixtures");
-const GRAPHIC_CONTROL_FIXTURES_DIR = join(HERE, "..", "..", "🎛️graphic-control", "🧫️fixtures");
+const FIXTURES_DIR = join(HERE, "..", "🧪️tests/🧫️fixtures");
+const APPLICATION_FIXTURES_DIR = join(HERE, "..", "..", "🧩️application", "🧪️tests/🧫️fixtures");
+const COMMENT_FIXTURES_DIR = join(HERE, "..", "..", "💬️comment", "🧪️tests/🧫️fixtures");
+const GRAPHIC_CONTROL_FIXTURES_DIR = join(HERE, "..", "..", "🎛️graphic-control", "🧪️tests/🧫️fixtures");
 const RECIPE = "pattern-strip";
 const FIXTURE_DIRECTORY = "📼️pattern-strip";
 const FIXTURE_FILE = "🎬️pattern-strip.gif";
@@ -409,7 +409,7 @@ print(kind + ': written')
   // reports `Aspect = N`. The only authored step is one line of that text description — fixture
   // authoring, which the goal statement admits, with giflib doing every byte of the encoding.
   if (command === "aspect" || command === "aspect-manifests") {
-    const seedDir = join(import.meta.dir, "..", "🧫️fixtures");
+    const seedDir = join(import.meta.dir, "..", "🧪️tests/🧫️fixtures");
     const seedKind = readdirSync(seedDir).find((name) => existsSync(join(seedDir, name, BEFORE_FILE)));
     if (!seedKind) throw new Error(`no committed ${BEFORE_FILE} to seed the aspect pair from`);
     const seed = join(seedDir, seedKind, BEFORE_FILE);

@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-pack = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-schema-state = { workspace = true }
 semio-framework-schema-composition = { workspace = true }
 semio-framework-2d = { workspace = true }
@@ -34,6 +35,7 @@ semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 
 [dev-dependencies]
+semio-framework-trace = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }

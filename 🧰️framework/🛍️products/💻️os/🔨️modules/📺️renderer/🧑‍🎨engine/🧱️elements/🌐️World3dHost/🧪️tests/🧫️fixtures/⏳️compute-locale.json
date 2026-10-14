@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "status": {
+    "computing": true,
+    "phase": "evaluating",
+    "phaseLabel": {
+      "en": "Evaluating geometry",
+      "de": "Geometrie wird ausgewertet"
+    },
+    "progress": {
+      "unitsDone": 3,
+      "unitsTotal": 10
+    },
+    "cancellable": true,
+    "cancelAction": "toolRunAbort",
+    "cancelArgs": {
+      "runId": "4294967297",
+      "generation": 7
+    }
+  },
+  "locales": [
+    {
+      "locale": "en",
+      "phase": "Evaluating geometry",
+      "cancel": "Cancel"
+    },
+    {
+      "locale": "de-DE",
+      "phase": "Geometrie wird ausgewertet",
+      "cancel": "Abbrechen"
+    }
+  ],
+  "absentLocales": [
+    null,
+    "fr"
+  ],
+  "progress": "3/10 (30%)",
+  "dispatch": {
+    "controllerId": "trace-app",
+    "args": {
+      "surfaceId": "trace-window",
+      "windowId": "trace-window:1"
+    }
+  },
+  "cancelIdentity": {
+    "runId": "4294967297",
+    "generation": 7
+  }
+}

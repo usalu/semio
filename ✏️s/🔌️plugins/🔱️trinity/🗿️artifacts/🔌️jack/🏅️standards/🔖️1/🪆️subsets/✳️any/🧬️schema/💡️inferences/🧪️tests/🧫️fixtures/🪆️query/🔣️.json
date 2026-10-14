@@ -1,0 +1,201 @@
+{
+  "contract": "jack-retained-graph-query-v1",
+  "identity": {
+    "childId": "child/世界",
+    "target": {
+      "artifactId": "graph/α",
+      "dialect": {
+        "artifactKind": "s.example.graph",
+        "standard": "7",
+        "subset": "directed"
+      }
+    }
+  },
+  "cases": [
+    {
+      "name": "empty",
+      "nodes": [],
+      "edges": [],
+      "topology": {
+        "topoOrder": [],
+        "depth": {},
+        "cycleFree": true,
+        "nodeCount": 0
+      },
+      "positions": {}
+    },
+    {
+      "name": "chain and disconnected identity",
+      "nodes": [
+        "isolated",
+        "c",
+        "a",
+        "b"
+      ],
+      "edges": [
+        {
+          "id": "e2",
+          "source": "b",
+          "target": "c",
+          "u": 3,
+          "v": -2
+        },
+        {
+          "id": "e1",
+          "source": "a",
+          "target": "b",
+          "u": 2,
+          "v": 4
+        }
+      ],
+      "topology": {
+        "topoOrder": [
+          "a",
+          "isolated",
+          "b",
+          "c"
+        ],
+        "depth": {
+          "a": 0,
+          "isolated": 0,
+          "b": 1,
+          "c": 2
+        },
+        "cycleFree": true,
+        "nodeCount": 4
+      },
+      "positions": {
+        "a": {
+          "u": 0,
+          "v": 0
+        },
+        "b": {
+          "u": 2,
+          "v": 4
+        },
+        "c": {
+          "u": 5,
+          "v": 2
+        },
+        "isolated": {
+          "u": 0,
+          "v": 0
+        }
+      }
+    },
+    {
+      "name": "parallel edges and prototype names",
+      "nodes": [
+        "世界",
+        "__proto__",
+        "constructor"
+      ],
+      "edges": [
+        {
+          "id": "z",
+          "source": "__proto__",
+          "target": "constructor",
+          "u": 99,
+          "v": 99
+        },
+        {
+          "id": "a",
+          "source": "__proto__",
+          "target": "constructor",
+          "u": 2,
+          "v": -1
+        },
+        {
+          "id": "b",
+          "source": "constructor",
+          "target": "世界",
+          "u": 4,
+          "v": 3
+        }
+      ],
+      "topology": {
+        "topoOrder": [
+          "__proto__",
+          "constructor",
+          "世界"
+        ],
+        "depth": {
+          "__proto__": 0,
+          "constructor": 1,
+          "世界": 2
+        },
+        "cycleFree": true,
+        "nodeCount": 3
+      },
+      "positions": {
+        "__proto__": {
+          "u": 0,
+          "v": 0
+        },
+        "constructor": {
+          "u": 2,
+          "v": -1
+        },
+        "世界": {
+          "u": 6,
+          "v": 2
+        }
+      }
+    },
+    {
+      "name": "cyclic component keeps blocked depths absent",
+      "nodes": [
+        "b",
+        "a",
+        "root"
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": "a",
+          "target": "b",
+          "u": 1,
+          "v": 2
+        },
+        {
+          "id": "e2",
+          "source": "b",
+          "target": "a",
+          "u": 3,
+          "v": 4
+        },
+        {
+          "id": "e0",
+          "source": "root",
+          "target": "a",
+          "u": 5,
+          "v": 6
+        }
+      ],
+      "topology": {
+        "topoOrder": [
+          "root"
+        ],
+        "depth": {
+          "root": 0
+        },
+        "cycleFree": false,
+        "nodeCount": 3
+      },
+      "positions": {
+        "a": {
+          "u": 0,
+          "v": 0
+        },
+        "b": {
+          "u": 1,
+          "v": 2
+        },
+        "root": {
+          "u": 0,
+          "v": 0
+        }
+      }
+    }
+  ]
+}

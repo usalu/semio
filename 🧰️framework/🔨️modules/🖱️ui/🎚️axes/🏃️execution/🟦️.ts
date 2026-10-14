@@ -1,6 +1,6 @@
-import { cmdBudgetMs } from "../../../🏃️process/⏱️budget/🟦️.ts";
-import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
-import { BundleScript } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { cmdBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { BundleScript } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readUiAxes } from "../📥️source/🟦️.ts";
 import { uiAxesPreview, uiAxesTargets } from "../📋️plan/🟦️.ts";
 import { publishUiAxes, staleUiAxesTargets } from "../📤️publication/🟦️.ts";

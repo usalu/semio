@@ -3,9 +3,9 @@ import { existsSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "no
 import { resolve } from "node:path";
 import Ajv from "ajv";
 import exitSchema from "../🧬️schema/📪️exit.json";
-import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8"));
 
 test("terminates a bounded owned descendant process", async () => {
   const owner = resolve(import.meta.dir, "../🟦️.ts");
@@ -88,7 +88,7 @@ test("progress remains observable until explicitly stopped", async () => {
 
 test("owned timeout and stop drain descendant-created groups and inherited pipes", async () => {
   const { spawn, spawnSync } = await import("node:child_process"), { default: treeKill } = await import("tree-kill");
-  const corpus = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🌳️ownership/🔣️.json"), "utf8"));
+  const corpus = JSON.parse(readFileSync(resolve(import.meta.dir, "🧫️fixtures/🌳️ownership/🔣️.json"), "utf8"));
   const { runOwnedCommand } = await import("../🟦️.ts");
   const root = mkdtempSync(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!, "owned-groups-"));
   const alive = (pid: number): boolean => {
@@ -144,7 +144,7 @@ test("owned timeout and stop drain descendant-created groups and inherited pipes
 
 
 test("original owned child close preserves exact status signal and drained output", async () => {
-  const corpus=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧫️fixtures/📪️exit.json"),"utf8")),rows=corpus.cases;
+  const corpus=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/📪️exit.json"),"utf8")),rows=corpus.cases;
   expect(new Ajv({strict:true}).compile(exitSchema)(corpus)).toBe(true);
   expect(validateJsonSchemaSubset(exitSchema,corpus)).toEqual([]);
   const {spawnSync}=await import("node:child_process"),{runOwnedCommand}=await import("../🟦️.ts");

@@ -16,7 +16,7 @@ impl DeflateEncodeControl for RefusalControl{
 
 #[test]
 fn deflate_controlled_retains_every_refusal_kind_and_owns_internal_causes(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧫️fixtures/⚠️refusal/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/⚠️refusal/🔣️.json")).unwrap();
  for row in fixture["callbacks"].as_array().unwrap(){
   let error=ValueError::new(refusal_kind(row["kind"].as_str().unwrap()),row["message"].as_str().unwrap().to_owned());let pointer=error.message.as_ptr();
   let mode=if row["mode"]=="admit"{"admit"}else{"checkpoint"};let mut control=RefusalControl{mode,error:Some(error),checkpoints:0,admissions:0};
@@ -40,7 +40,7 @@ fn deflate_controlled_retains_every_refusal_kind_and_owns_internal_causes(){
 
 #[test]
 fn deflate_controlled_retained_allocation_errors_retain_the_owned_kind(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧫️fixtures/⚠️refusal/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/⚠️refusal/🔣️.json")).unwrap();
  for row in fixture["retained"].as_array().unwrap(){
   let requested=row["requestedBytes"].as_u64().unwrap() as usize;let mut history=RetainedInflateHistory::new(requested,requested).unwrap();
   if row["id"]=="allocator-refused"{DENY_ALLOCATION_SIZE.store(requested,std::sync::atomic::Ordering::Relaxed);}else{history.bytes=std::mem::ManuallyDrop::new(Vec::with_capacity(row["allocatedBytes"].as_u64().unwrap() as usize));}

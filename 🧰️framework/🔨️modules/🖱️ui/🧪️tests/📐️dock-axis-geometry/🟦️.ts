@@ -1,7 +1,7 @@
 /** 📐️ Language-neutral dock axis geometry oracle. */
 import { describe, expect, test } from "bun:test";
 
-import fixture from "../../🧫️fixtures/📐️dock-axis-geometry/🔣️.json";
+import fixture from "../🧫️fixtures/📐️dock-axis-geometry/🔣️.json";
 import { applyAxisResizeDelta } from "../../🧱️elements/🎨️Canvas/🟦️";
 
 type Rect = { x: number; y: number; width: number; height: number };

@@ -21,7 +21,7 @@ async fn full_catalog_describe_retains_finite_wall_and_fuel_bounds() {
 /// 🪪️ The static kind-identity law over the language-neutral fixture (`🧫️fixtures/🪪️kind-identity`).
 #[semio_framework_async_macros::async_test]
 async fn kind_identity_law_matches_the_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️kind-identity/🔣️.json")).expect("kind-identity fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️kind-identity/🔣️.json")).expect("kind-identity fixture");
     for case in fixture["cases"].as_array().expect("cases") {
         let apps: Vec<KindIdentityApp<'_>> = case["apps"]
             .as_array()
@@ -232,7 +232,7 @@ fn reversed_members(value: semio_framework_value::DslValue) -> semio_framework_v
 /// in UTF-8 key-byte order at every depth, with either order policy of the value encoder underneath.
 #[semio_framework_async_macros::async_test]
 async fn a_descriptor_pack_is_canonical_whatever_order_its_members_were_authored_in() {
-    let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧫️canonical-descriptor-pack/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("canonical descriptor pack fixture");
+    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🧫️canonical-descriptor-pack/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("canonical descriptor pack fixture");
     let cases = fixture.get("cases").and_then(|cases| cases.as_array()).expect("cases");
     assert!(!cases.is_empty());
     for case in cases {

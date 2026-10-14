@@ -1,9 +1,10 @@
 //! 📑️ Authored document blocks, typed collections, formatting, styles and images.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow,RowIndex};
 use crate::schema::snapshot::{SemioDocumentSnapshot, DocBlock, DocStyle, DocImage, DocRun, DocListItem, DocTableRow, DocTableCell};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,Reconstruction},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter,Reconstruction},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 /// 📚️ Explicit table names for the actual DocBlock types shared by document and presentation.
 #[derive(Clone,Copy)]
 pub struct DocSqliteTables{pub collection:&'static str,pub member:&'static str,pub block:&'static str,pub paragraph:&'static str,pub heading:&'static str,pub run:&'static str,pub list:&'static str,pub list_item:&'static str,pub table:&'static str,pub table_row:&'static str,pub table_cell:&'static str,pub code:&'static str,pub quote:&'static str,pub image_block:&'static str,pub page_break:&'static str}
@@ -74,7 +75,7 @@ fn doc_invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusa
 mod reconstruction;
 pub use reconstruction::{BlockReconstructionStorage,reconstruct_block_collections_into};
 
-impl ArtifactSqliteSnapshot for SemioDocumentSnapshot{
+impl ArtifactSqliteSnapshotHost for SemioDocumentSnapshot{
 fn retire_sqlite_snapshot(self){drop(semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 
 fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
@@ -89,6 +90,11 @@ let row=database.table("semio_document_document")?.single_row()?;
 if row.rowid!=1||row.integer(0)?!=1||row.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned document identity differs from projected semantic fields"));}
 control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))})();result.map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
 
+
+
+
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for SemioDocumentSnapshot {
 const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
 fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.project_sqlite_database(control)}
 fn from_sqlite_database(db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError> {let result=(||->Result<Self,ValueError>{ semantic::layout(control.limits())?;Self::reconstruct_sqlite_database(db, control, Self::SQLITE_SCHEMA) })();result}

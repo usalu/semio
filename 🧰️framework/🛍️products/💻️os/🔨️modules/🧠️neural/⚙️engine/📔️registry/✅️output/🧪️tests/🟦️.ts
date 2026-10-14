@@ -1,6 +1,6 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 
 test("original finished output contract agrees with strict Ajv independent cardinality and schema rules",()=>{
  const ajv=new Ajv({strict:true,allErrors:true});

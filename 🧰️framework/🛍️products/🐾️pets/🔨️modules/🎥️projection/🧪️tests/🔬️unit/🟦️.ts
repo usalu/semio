@@ -38,7 +38,7 @@ const SPOT = 550;
 
 /** 🧫️ One committed fixture of the product. */
 function fixture<T>(name: string): T {
-  return JSON.parse(readFileSync(resolve(HERE, "../../../../🧫️fixtures", name, "🔣️.json"), "utf8")) as T;
+  return JSON.parse(readFileSync(resolve(HERE, "../../../../🧪️tests/🧫️fixtures", name, "🔣️.json"), "utf8")) as T;
 }
 
 type Company = { readonly name: string; readonly menagerie: Menagerie; readonly walker: Slug; readonly other: Slug };

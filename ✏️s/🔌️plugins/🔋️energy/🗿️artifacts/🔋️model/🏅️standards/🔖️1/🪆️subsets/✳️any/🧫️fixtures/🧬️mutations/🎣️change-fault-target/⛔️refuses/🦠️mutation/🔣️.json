@@ -1,5 +1,0 @@
-{
-  "mutation": "changeFaultTargetEquipment",
-  "id": 440,
-  "newTargetEquipmentId": 999
-}

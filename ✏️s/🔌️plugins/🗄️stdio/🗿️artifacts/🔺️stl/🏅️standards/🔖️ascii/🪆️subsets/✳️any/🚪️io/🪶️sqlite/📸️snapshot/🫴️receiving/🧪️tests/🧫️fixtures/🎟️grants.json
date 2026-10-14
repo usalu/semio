@@ -1,0 +1,23 @@
+{
+  "body": {
+    "maximumItems": 1000000,
+    "maximumCopyBytes": 16777216,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 32
+  },
+  "close": {
+    "maximumItems": 4096,
+    "maximumCopyBytes": 1048576,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 32
+  },
+  "denied": {
+    "maximumItems": 0,
+    "maximumCopyBytes": 0,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 0,
+    "maximumDepth": 0
+  }
+}

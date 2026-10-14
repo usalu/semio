@@ -1,0 +1,26 @@
+{
+  "cases": [
+    { "name": "a plain line", "ready": { "port": 6061, "path": "/admin" }, "chunks": ["Local: http://localhost:6061\r\n"], "url": "http://localhost:6061/admin" },
+    { "name": "the loopback address", "ready": { "port": 6061, "path": "" }, "chunks": ["listening on http://127.0.0.1:6061\r\n"], "url": "http://127.0.0.1:6061" },
+    { "name": "the wildcard address", "ready": { "port": 6061, "path": "/" }, "chunks": ["listening on http://0.0.0.0:6061\r\n"], "url": "http://0.0.0.0:6061/" },
+    { "name": "a port drawn in bold", "ready": { "port": 5173, "path": "/admin" }, "chunks": ["  \u001b[32m➜\u001b[39m  \u001b[1mLocal\u001b[22m:   \u001b[36mhttp://localhost:\u001b[1m5173\u001b[22m/\u001b[39m\r\n"], "url": "http://localhost:5173/admin" },
+    { "name": "the printed address replaces match and path", "ready": { "port": 6061, "path": "/admin", "printed": true }, "chunks": ["Local: http://localhost:6061/admin/index.html\r\n"], "url": "http://localhost:6061/admin/index.html" },
+    { "name": "the printed address ends at whitespace", "ready": { "port": 5173, "path": "", "printed": true }, "chunks": ["  Local:   \u001b[36mhttp://localhost:\u001b[1m5173\u001b[22m/app\u001b[39m (press h)\r\n"], "url": "http://localhost:5173/app" },
+    { "name": "an address split over chunks", "ready": { "port": 6061, "path": "/x" }, "chunks": ["Listening on http://loc", "alhost:60", "61/ now\r\n"], "url": "http://localhost:6061/x" },
+    { "name": "a printed address split over chunks", "ready": { "port": 6061, "path": "", "printed": true }, "chunks": ["http://localhost:6061/a", "bc", "d\r\n"], "url": "http://localhost:6061/abcd" },
+    { "name": "a longer port is another port", "ready": { "port": 6061, "path": "" }, "chunks": ["http://localhost:60610\r\n"], "url": null },
+    { "name": "a port that grows in the next chunk is another port", "ready": { "port": 6061, "path": "" }, "chunks": ["http://localhost:6061", "0\r\n"], "url": null },
+    { "name": "another port", "ready": { "port": 6061, "path": "" }, "chunks": ["http://localhost:3000\r\n"], "url": null },
+    { "name": "a shorter port is another port", "ready": { "port": 6061, "path": "" }, "chunks": ["http://localhost:606\r\n"], "url": null },
+    { "name": "https is not announced", "ready": { "port": 6061, "path": "" }, "chunks": ["https://localhost:6061\r\n"], "url": null },
+    { "name": "other hosts are not local", "ready": { "port": 6061, "path": "" }, "chunks": ["http://example.com:6061 http://127.0.0.2:6061 http://sub.localhost:6061\r\n"], "url": null },
+    { "name": "capital letters are another address", "ready": { "port": 6061, "path": "" }, "chunks": ["HTTP://LOCALHOST:6061\r\n"], "url": null },
+    { "name": "the end of the output decides a port", "ready": { "port": 6061, "path": "/z" }, "chunks": ["ready http://127.0.0.1:6061"], "url": "http://127.0.0.1:6061/z" },
+    { "name": "the first announcement wins", "ready": { "port": 6061, "path": "" }, "chunks": ["http://localhost:1\r\n", "http://localhost:6061\r\n", "http://127.0.0.1:6061\r\n"], "url": "http://localhost:6061" },
+    { "name": "a redrawn line", "ready": { "port": 6061, "path": "/" }, "chunks": ["progress 10%\rprogress 90%\rhttp://localhost:6061\r\n"], "url": "http://localhost:6061/" },
+    { "name": "a hyperlink and its text", "ready": { "port": 6061, "path": "" }, "chunks": ["\u001b]8;;http://localhost:6061/\u001b\\http://localhost:6061/\u001b]8;;\u001b\\\r\n"], "url": "http://localhost:6061" },
+    { "name": "console cursor control around the line", "ready": { "port": 6061, "path": "" }, "chunks": ["\u001b[?25l\u001b[2J\u001b[H  Local: http://localhost:6061\u001b[K\r\n\u001b[?25h"], "url": "http://localhost:6061" },
+    { "name": "text before the scheme", "ready": { "port": 6061, "path": "" }, "chunks": ["xhttp://localhost:6061\r\n"], "url": "http://localhost:6061" },
+    { "name": "a tab ends the line", "ready": { "port": 6061, "path": "", "printed": true }, "chunks": ["http://localhost:6061/a\tmore\r\n"], "url": "http://localhost:6061/a" }
+  ]
+}

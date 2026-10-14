@@ -6,7 +6,7 @@ import picomatch from "picomatch";
 import { loadCatalogTaxonomy, validateTaxonomy } from "../../🔍️discovery/🟦️.ts";
 
 const owner = resolve(import.meta.dir, "../..");
-const vector = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🖼️runtime-taxonomy-asset-paths/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🖼️runtime-taxonomy-asset-paths/🔣️.json"), "utf8"));
 
 
 test("runtime taxonomy inputs are owned production assets", () => {
@@ -28,10 +28,10 @@ test("runtime taxonomy inputs are owned production assets", () => {
       problem: (value: string) => value.includes("semanticOwnedFileProjectionContracts") && value.includes("authorityCatalogPath"),
     },
     {
-      label: "currentSourceRevisions.testing-readme-protocol-v2-reviewed",
-      set: (taxonomy: any, path: string) => { taxonomy.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"].currentSourceRevisions["testing-readme-protocol-v2-reviewed"].expectationsPath = path; },
+      label: "currentSourceRevisions.testing-readme-owner-current",
+      set: (taxonomy: any, path: string) => { taxonomy.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"].currentSourceRevisions["testing-readme-owner-current"].approvalPath = path; },
       invalidId: "asset-lookalike",
-      problem: (value: string) => value.includes("currentSourceRevisions.testing-readme-protocol-v2-reviewed.expectationsPath"),
+      problem: (value: string) => value.includes("currentSourceRevisions.testing-readme-owner-current.approvalPath"),
     },
   ];
   const oracle = picomatch(`**/${baseline.exampleAssetsDirName}/**`);

@@ -3,7 +3,7 @@ import artifactReferenceSchema from "../../../../../../🔨️modules/🧬️sch
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import Ajv from "ajv";
-import fixture from "../../🧫️fixtures/🪪️artifact-addressing/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/🪪️artifact-addressing/🔣️.json" with { type: "json" };
 import ioSchema from "../../../../../../🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
 import linkSchema from "../../🔗️link/🧬️schema/🔣️.json" with { type: "json" };
 import blobSchema from "../../📦️blob/🧬️schema/🔣️.json" with { type: "json" };

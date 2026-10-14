@@ -1,5 +1,5 @@
 /** 🎟️ The TypeScript half of the shared resident-refresh-budget law — same fixture as the Rust twin
- * (`🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🔄️refresh/🧫️fixtures/🔣️.json`, Rust twin
+ * (`🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🔄️refresh/🧪️tests/🧫️fixtures/🔣️.json`, Rust twin
  * `…/🎟️resident/🔄️refresh/🧪️tests/🔄️refresh/🦀️.rs`).
  *
  * 🏁️ What this encodes: the retained-UI resident aggregate is ONE fixed, process-wide ledger, and a
@@ -62,7 +62,7 @@ type Fixture = {
 };
 
 const here = dirname(fileURLToPath(import.meta.url));
-const fixturePath = resolve(here, "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🎟️resident/🔄️refresh/🧫️fixtures/🔣️.json");
+const fixturePath = resolve(here, "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🎟️resident/🔄️refresh/🧪️tests/🧫️fixtures/🔣️.json");
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Fixture;
 //#endregion 🧫️Fixture
 

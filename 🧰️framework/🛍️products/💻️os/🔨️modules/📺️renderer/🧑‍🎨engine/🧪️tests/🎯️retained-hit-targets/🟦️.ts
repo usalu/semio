@@ -50,7 +50,7 @@ type FixtureCase = {
   readonly probes: readonly FixtureProbe[];
 };
 
-const law = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/🎯️retained-hit-targets/🔣️.json"), "utf8")) as {
+const law = JSON.parse(readFileSync(resolve(uiRoot, "🧪️tests/🧫️fixtures/🎯️retained-hit-targets/🔣️.json"), "utf8")) as {
   readonly metrics: { readonly rowHeightPx: number };
   readonly cases: readonly FixtureCase[];
   readonly frameCycle: FixtureCycle;

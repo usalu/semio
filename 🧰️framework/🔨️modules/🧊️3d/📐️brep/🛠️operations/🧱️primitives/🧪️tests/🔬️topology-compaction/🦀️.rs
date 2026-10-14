@@ -6,7 +6,7 @@ fn original_body_compaction_turns_own_all_physical_effects() {
     use {crate::primitives::make_box, semio_framework_3d_brep_representation::topology::history};
     use crate::test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../📸️representation/🕸️topology/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../📸️representation/🕸️topology/🧪️tests/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
     for cancel in std::iter::once(None).chain(law["compaction"]["cancelTurns"].as_array().unwrap().iter().map(|turn|Some(turn.as_u64().unwrap()as usize))) {
         let ((mut body,solid,discard),source)=observe(||{let mut body=Body::new();let mut rec=history::OpRecorder::new();let solid=make_box(&mut body,1.,1.,1.,&mut rec).unwrap();let discard=make_box(&mut body,2.,2.,2.,&mut rec).unwrap();(body,solid,discard)});
         let(keep,membership)=observe(||body.reachable_from(&[EntityRef::Solid(solid)]));let kept=keep.solids.get(&solid).copied().unwrap();

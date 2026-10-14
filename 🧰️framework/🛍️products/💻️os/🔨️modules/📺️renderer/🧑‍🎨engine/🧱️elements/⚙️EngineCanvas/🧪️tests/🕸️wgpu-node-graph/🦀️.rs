@@ -13,7 +13,7 @@ use super::*;
 use semio_framework_os_kernel::Viewport2d;
 use ui_wgpu::wgpu::{InputState, NodeGraphInteractionDomain, NodeGraphScene, SurfaceKind, UiPresence};
 
-const NODE_GRAPH_SCENE_FIXTURE: &str = include_str!("../../🧫️fixtures/🕸️wgpu-node-graph/🔣️.json");
+const NODE_GRAPH_SCENE_FIXTURE: &str = include_str!("../🧫️fixtures/🕸️wgpu-node-graph/🔣️.json");
 
 pub(super) fn hexagonal_mushroom_column_fixture_json() -> String {
     let value: Value = serde_json::from_str(NODE_GRAPH_SCENE_FIXTURE).expect("committed generation3d flow fixture parses");

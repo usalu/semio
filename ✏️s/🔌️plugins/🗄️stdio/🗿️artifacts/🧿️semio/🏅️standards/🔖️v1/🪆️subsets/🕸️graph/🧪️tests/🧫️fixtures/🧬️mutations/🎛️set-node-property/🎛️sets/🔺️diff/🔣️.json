@@ -1,0 +1,24 @@
+{
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "properties": {
+            "modified": [
+              {
+                "index": 1,
+                "diff": {
+                  "value": {
+                    "kind": "str",
+                    "value": "blue"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

@@ -151,7 +151,7 @@ import Ajv from "ajv";
 import { DEMONSTRATOR_SHELL_BRANDS, DEMONSTRATOR_FOOTER_ITEMS } from "../../🪧️brand.ts";
 import { shellFooterNavbarItem } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellFooter/🟦️.tsx";
 import schema from "../../../../🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json";
-import fixture from "../../../../🧰️framework/🔨️modules/🛂️manifest/🧫️fixtures/🏛️shell-footer/🔣️.json";
+import fixture from "../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🏛️shell-footer/🔣️.json";
 import type { ShellFooterItem, ShellLocale } from "@semio-tech/framework";
 
 it("renders schema-owned neutral credits and validates every concrete owner contribution", () => {

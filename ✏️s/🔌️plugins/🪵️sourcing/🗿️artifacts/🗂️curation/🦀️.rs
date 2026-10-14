@@ -254,7 +254,7 @@ pub fn genesis_catalog_pack(document: &CurationSnapshot, slot: &str, child_id: &
         return None;
     }
     let stock = stock_of(document);
-    (catalog_child_handle(&stock).child_id == child_id).then(|| <SemioKitSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&catalog_snapshot_from_stock(&stock)))
+    (catalog_child_handle(&stock).child_id == child_id).then(|| <SemioKitSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&catalog_snapshot_from_stock(&stock)))
 }
 
 /// 🧬️ The bounded projection of the curation's composed `catalog` handle, as both surfaces hand it to

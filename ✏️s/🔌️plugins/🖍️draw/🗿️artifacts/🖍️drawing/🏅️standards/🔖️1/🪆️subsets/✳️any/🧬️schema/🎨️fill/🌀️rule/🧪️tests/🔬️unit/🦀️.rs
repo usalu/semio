@@ -2,10 +2,10 @@
 use super::*;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 #[test]
 fn authored_fill_rules_survive_pack_and_reach_paint_picking_and_export() {
-    let rows:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let rows:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🎨️fill/🌀️rule/🔣️.json")).unwrap();
     for row in rows.as_array().unwrap() {
         let rule=FillRule::parse(row["rule"].as_str().unwrap()).unwrap();
         assert_eq!(FillRule::from_value(rule.to_value()).unwrap(),rule);

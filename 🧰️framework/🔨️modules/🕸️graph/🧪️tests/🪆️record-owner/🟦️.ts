@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import { dirname,join,resolve } from "node:path";
 import Parser from "web-tree-sitter";
-import fixture from "../../🧫️fixtures/🪆️record-owner/🔣️.json";
+import fixture from "../🧫️fixtures/🪆️record-owner/🔣️.json";
 
 const owner=resolve(import.meta.dir,"../.."), dependencyLoader=createRequire(join(owner,"📦️packages/🦀️rust/Cargo.toml"));
 

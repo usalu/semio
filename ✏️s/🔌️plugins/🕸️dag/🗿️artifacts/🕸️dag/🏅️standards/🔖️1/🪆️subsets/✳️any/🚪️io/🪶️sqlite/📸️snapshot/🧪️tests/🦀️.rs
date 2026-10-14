@@ -1,12 +1,14 @@
 //! 🕸️ Actual two-field DAG parent baselines before semantic SQLite opt-in.
 #[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
 mod original_owners;
+use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::*;
 use semio_framework_value::{FromValue, ToValue};
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 fn laws() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()
 }
 fn full(index: usize) -> DagSnapshot {
     let l = laws();
@@ -138,7 +140,7 @@ fn sqlite_snapshot_dag_actual_erased_binary_text_keeps_all_literal_child_columns
 #[test]
 fn sqlite_snapshot_dag_actual_semantic_rows_admit_exact_count_and_cancel_all_copy_phases() {
     use store::sqlite_snapshot::*;
-    use store::os_store::serialization::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshotHost;
     let value = Owned::new(full(0));
     let exact = SqliteDatabaseLimits { max_rows: 2, ..Default::default() };
     let short = SqliteDatabaseLimits { max_rows: 1, ..Default::default() };
@@ -175,7 +177,7 @@ fn sqlite_snapshot_dag_actual_semantic_rows_admit_exact_count_and_cancel_all_cop
 #[test]
 fn sqlite_snapshot_dag_owned_relationship_and_dialect_edits_are_rejected() {
     use store::sqlite_snapshot::*;
-    use store::os_store::serialization::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshotHost;
     let value = Owned::new(full(2));
     let database = original_owners::with_sqlite_recipient(Default::default(),&mut |_| true,|sqlite_control|value.to_sqlite_database(sqlite_control)).unwrap();
     for change in 0..4 {
@@ -197,7 +199,7 @@ fn sqlite_snapshot_dag_owned_relationship_and_dialect_edits_are_rejected() {
 fn sqlite_snapshot_dag_independent_sqlite_edits_reconstruct_literal_parent() {
     use std::io::Write;
     use store::sqlite_snapshot::*;
-    use store::os_store::serialization::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshotHost;
     let expected = Owned::new(full(2));
     let database = original_owners::with_sqlite_recipient(Default::default(),&mut |_| true,|sqlite_control|expected.to_sqlite_database(sqlite_control)).unwrap();
     let bytes = export_sqlite_database(&database, Default::default(), &mut |_| true).unwrap();
@@ -231,7 +233,7 @@ mod public_owned {
         use store::io_schema::{IoPayload,IoFidelity,SQLITE_SNAPSHOT};
         use store::sqlite_snapshot::{SqliteDatabaseLimits,SnapshotEncoding};
         use std::{io::Write,process::{Command,Stdio}};
-        let contract=serde_json::from_str::<serde_json::Value>(include_str!("../🧫️fixtures/🚦️public/🔣️.json")).unwrap();
+        let contract=serde_json::from_str::<serde_json::Value>(include_str!("🧫️fixtures/🚦️public/🔣️.json")).unwrap();
         let _plugin=semio_framework_plugin::Plugin::<DagSqliteApps>::builder("dag").label("DAG owning SQLite").version("0.1.0").package_id("semio:dag").declare_artifact(crate::artifact::<DagSqliteApps>()).try_build().unwrap();
         let dialect=ArtifactDialect{artifact_kind:"s.dag.dag".into(),standard:"1".into(),subset:"*".into()};
         let sqlite=ArtifactDialect::from(SQLITE_SNAPSHOT);
@@ -241,13 +243,13 @@ mod public_owned {
         let expected=Owned::new(full(2));
         let limits=SqliteDatabaseLimits::default();
         for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text] {
-            let file=io_export_sqlite_snapshot(&dialect,&*expected,encoding,limits,&mut |_|true).await.unwrap().value;
+            let file=async{let original_file_dialect=&dialect;let original_file_input=&*expected;let original_file_encoding=encoding;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
             let script=r#"import{Database}from'bun:sqlite';const c=JSON.parse(process.argv[1]);const d=Database.deserialize(await Bun.stdin.bytes());if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');const names=d.query("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").all().map(r=>r.name);if(JSON.stringify(names)!==JSON.stringify(['dag_content_child','dag_document','semio_snapshot']))throw Error('exactTables');for(const[name,columns]of Object.entries({...c.domainTables,semio_snapshot:c.publicMetadata.columns})){if(JSON.stringify(d.query('PRAGMA table_info('+name+')').all().map(r=>r.name))!==JSON.stringify(columns))throw Error('columns:'+name);}const roots=d.query('SELECT * FROM dag_document').all(),children=d.query('SELECT * FROM dag_content_child').all(),metadata=d.query('SELECT * FROM semio_snapshot').all();if(roots.length!==1||children.length!==1||metadata.length!==1)throw Error('rows');const doc=roots[0],child=children[0],m=metadata[0],target=c.before.content.target;if(doc.schema!==c.before.schema||child.document_id!==doc.id||child.child_id!==c.before.content.childId||child.artifact_id!==target.artifactId||child.artifact_kind!==target.dialect.artifactKind||child.standard!==target.dialect.standard||child.subset!==target.dialect.subset)throw Error('completeOwner');if(JSON.stringify([m.id,m.schema_version,m.artifact_kind,m.standard,m.subset])!==JSON.stringify(c.publicMetadata.identity)||m.native_encoding!==process.argv[2])throw Error('metadata');d.exec(c.editSql);await Bun.write(Bun.stdout,d.serialize());d.close();"#;
             let mut child=Command::new("bun").args(["--eval",script,&contract.to_string(),encoding.as_str()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
             child.stdin.take().unwrap().write_all(&file).unwrap();
             let edited_file=child.wait_with_output().unwrap();assert!(edited_file.status.success(),"{}",String::from_utf8_lossy(&edited_file.stderr));
             let mut edited=full(2);edited.content.child_id="independent child".into();edited.content.target.artifact_id="independent target".into();let edited=Owned::new(edited);
-            let restored=Owned::new(io_import_sqlite_snapshot::<DagSnapshot>(&dialect,&edited_file.stdout,limits,&mut |_|true).await.unwrap().value);assert_full(&restored,&edited);
+            let restored=Owned::new(async{let original_file_dialect=&dialect;let original_file_input=&edited_file.stdout;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<DagSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value);assert_full(&restored,&edited);
             let native=match encoding{SnapshotEncoding::Binary=>IoPayload::Binary(expected.encode_pack()),SnapshotEncoding::Text=>IoPayload::Text(expected.print_dsl())};
             let route_file=io_run_with_snapshot_control(&export,native,limits,&mut |_|true).await.unwrap().value;
             let IoPayload::Binary(route_bytes)=route_file else { panic!("actual SQLite export route must return a physical file") };

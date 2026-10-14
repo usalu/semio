@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn generic_emission_matches_every_neutral_mode_under_independent_syntax_parsing() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧩️composition/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/✨️derive/🧩️composition/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let mode = row["mode"].as_str().unwrap();
         let declaration: DeriveInput = syn::parse_str(row["declaration"].as_str().unwrap_or_else(||if matches!(mode, "Scalar" | "Variants") { "enum Example { First, Second }" } else { "struct Example { name: String }" })).unwrap();
@@ -31,7 +31,7 @@ fn generic_emission_matches_every_neutral_mode_under_independent_syntax_parsing(
 
 #[test]
 fn required_inline_statement_emission_preserves_the_authored_native_owner() {
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🏷️required-inline/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/✨️derive/🏷️required-inline/🔣️.json")).unwrap();
  for row in fixture["fieldKinds"].as_array().unwrap(){
   let declaration:DeriveInput=syn::parse_str(&format!("struct Required {{ #[dsl(statements)] statement: {} }}",row["type"].as_str().unwrap())).unwrap();
   let fields=match &declaration.data{Data::Struct(value)=>&value.fields,_=>unreachable!()};

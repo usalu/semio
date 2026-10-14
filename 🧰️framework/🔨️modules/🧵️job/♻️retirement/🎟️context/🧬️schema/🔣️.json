@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.job.original-close-context",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "operation",
+    "generation",
+    "deadlineUs",
+    "nowUs",
+    "copyGrants",
+    "workUnits",
+    "denied",
+    "protocol",
+    "receipt"
+  ],
+  "properties": {
+    "schema": {
+      "const": "job.original-close-context.v1"
+    },
+    "operation": {
+      "const": 71
+    },
+    "generation": {
+      "const": 3
+    },
+    "deadlineUs": {
+      "const": 12345
+    },
+    "nowUs": {
+      "const": 1
+    },
+    "copyGrants": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "workUnits": {
+      "const": [
+        0,
+        1,
+        2
+      ]
+    },
+    "denied": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth",
+        "work",
+        "deadline"
+      ]
+    },
+    "protocol": {
+      "const": "same-borrowed-caller-cx"
+    },
+    "receipt": {
+      "const": "consume-original-effects-once-preserve-both-causes"
+    }
+  }
+}

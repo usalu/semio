@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.nx/SdkSnapshotCloneV1",
+  "title": "SDK Snapshot Clone V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "files",
+    "directories",
+    "links",
+    "bytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "files": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "directories": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "links": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "bytes": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "$defs": {
+    "Policy": {
+      "const": {
+        "concurrency": 64,
+        "maximumEntries": 200000,
+        "maximumPath": 256,
+        "copyOnWrite": true
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "digest",
+        "patches"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "patches": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "version",
+              "files"
+            ],
+            "properties": {
+              "version": {
+                "const": 1
+              },
+              "files": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

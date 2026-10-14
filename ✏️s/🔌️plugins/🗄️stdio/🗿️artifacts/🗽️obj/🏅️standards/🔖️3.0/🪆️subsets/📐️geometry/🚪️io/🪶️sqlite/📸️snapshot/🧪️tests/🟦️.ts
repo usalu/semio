@@ -1,15 +1,15 @@
-import refusalCorpus from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
+import refusalCorpus from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
 const canceledKind=refusalCorpus.cases.find(c=>c.id==="canceled-projection")!.expectedKind;
 import {binary64,binary32,binary64Value,binary32Value,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🧫️ Shared OBJ geometry and membership fixture with independent SQL edits. */
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
-import fixture from "../🧫️fixtures/🔣️.json";
-import ieee from "../🧫️fixtures/🔢️ieee754/🔣️.json";
-import sourceIndices from "../🧫️fixtures/🔗️source-indices.json";
-import surrogateIndices from "../🧫️fixtures/🔗️surrogate-indices.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+import ieee from "./🧫️fixtures/🔢️ieee754/🔣️.json";
+import sourceIndices from "./🧫️fixtures/🔗️source-indices.json";
+import surrogateIndices from "./🧫️fixtures/🔗️surrogate-indices.json";
 import {objSnapshotValidateSqliteSubset}from"../🟦️.ts";
-import integerFixture from "../🧫️fixtures/🧮️int64/🔣️.json";
+import integerFixture from "./🧫️fixtures/🧮️int64/🔣️.json";
 import { objSnapshotToSqliteDatabase, objSnapshotFromSqliteDatabase, OBJ_SQLITE_SCHEMA } from "../🟦️.ts";
 import type { ObjSnapshot } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { parseObjArtifact,parseObjGroup,parseObjObject,parseObjUsemtlRange,parseObjSmoothingRange,parseObjFaceVertex,parseObjUnknownStatement as parseArtifactStatement } from "../../../../🧬️schema/🟦️.ts";
@@ -203,7 +203,7 @@ test("OBJ complete state mismatch and cancellation refuse",async()=>{
 });
 
 import NormSemanticAjv from "ajv/dist/2020.js";
-import normSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {objSnapshotToSqliteDatabase as normSemanticProject,objSnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
 import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

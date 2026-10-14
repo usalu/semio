@@ -145,6 +145,7 @@ wgpu = { version = "29.0.4", default-features = false, features = ["std", "metal
 arboard = { version = "3", optional = true }
 
 [dev-dependencies]
+semio-framework-job = { path = "../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-trace = { workspace = true }
 taffy = { version = "0.9", default-features = false, features = ["std", "flexbox", "taffy_tree"] }
 semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
@@ -159,3 +160,8 @@ unicode-segmentation = "1.13.2"
 # 🧪️ Keeps `#[test] async fn` bodies' literal `async` while expanding to a sync harness — see the
 # crate's own doc comment. Dev-only: `--lib` never links it, only `--tests`/`--all-targets` do.
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+
+[[test]]
+name = "original_prepared_raster_refusal"
+path = "../../🎯️targets/🧊️wgpu/🎟️prepared/♻️refusal/🧪️tests/🦀️.rs"
+required-features = ["wgpu-engine"]

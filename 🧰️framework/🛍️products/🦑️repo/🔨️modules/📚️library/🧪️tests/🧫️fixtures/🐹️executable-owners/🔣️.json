@@ -1,0 +1,43 @@
+{
+  "modes": [
+    "prototype",
+    "release"
+  ],
+  "owners": [
+    {
+      "owner": "client",
+      "binary": "client",
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🐹️go/📦️main"
+    },
+    {
+      "owner": "repo",
+      "binary": "repo",
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp"
+    },
+    {
+      "owner": "coordinator",
+      "binary": "semio-repo-coordinator",
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go/📦️main"
+    }
+  ],
+  "cliArgs": [
+    "--help"
+  ],
+  "cliText": "Usage",
+  "initialize": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2024-11-05",
+      "capabilities": {},
+      "clientInfo": {
+        "name": "native-build-acceptance",
+        "version": "1"
+      }
+    }
+  },
+  "protocol": "2024-11-05",
+  "serverName": "repo",
+  "health": "ok"
+}

@@ -11,7 +11,7 @@ use crate::wgpu::Label;
 use serde_json::Value;
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🪗️retained-section-collapse/🔣️.json")).expect("retained Section fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🪗️retained-section-collapse/🔣️.json")).expect("retained Section fixture")
 }
 
 struct EmptySceneHost;

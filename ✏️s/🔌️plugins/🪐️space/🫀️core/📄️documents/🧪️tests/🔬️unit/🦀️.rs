@@ -14,7 +14,7 @@ fn source(text: &str, format: SpaceDocumentFormat) -> SpaceDocumentSource {
 
 #[test]
 fn typed_source_formats_match_the_language_neutral_vectors_and_independent_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for vector in vectors["vectors"].as_array().unwrap() {
         let row = &vector["source"];
         let format = row["format"].as_str().unwrap().parse::<SpaceDocumentFormat>().unwrap();
@@ -27,7 +27,7 @@ fn typed_source_formats_match_the_language_neutral_vectors_and_independent_json_
 
 #[test]
 fn hostile_sources_fail_closed_without_dropping_any_original_category() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for vector in vectors["invalid"].as_array().unwrap() {
         let inputs = vector["sources"].as_array().unwrap().iter().map(|row| {
             let format = row["format"].as_str().unwrap().parse::<SpaceDocumentFormat>()?;

@@ -18,6 +18,6 @@ pub fn deserialize(from: &BinarySnapshot) -> Result<DeflateSnapshot, store::Pack
 /// Decode a Binary pack then zlib-compress.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<DeflateSnapshot, store::PackError> {
-    deserialize(&<BinarySnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?)
+    deserialize(&<BinarySnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?)
 }
 //#endregion Codec

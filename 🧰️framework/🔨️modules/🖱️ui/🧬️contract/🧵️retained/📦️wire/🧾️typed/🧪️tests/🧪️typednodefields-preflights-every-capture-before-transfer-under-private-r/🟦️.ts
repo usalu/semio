@@ -7,9 +7,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { Builder, OwnedUiPayload, RetainedUiTypedCursor, activity, ownPayload, readers, saturationProbe } = dependencies;
 
   const { it, expect } = vitest;
-      const { default: fixture } = await import("../../../🧫️fixtures/🏷️fields/🔣️.json");
-  const { default: rowExtentFixture } = await import("../../../../../../🧫️fixtures/🌳️tree-window-row-extent/🔣️.json");
-  const { default: typedFixture } = await import("../../../🧫️fixtures/🧾️typed/🔣️.json");
+      const { default: fixture } = await import("../../../🧪️tests/🧫️fixtures/🏷️fields/🔣️.json");
+  const { default: rowExtentFixture } = await import("../../../../../../🧪️tests/🧫️fixtures/🌳️tree-window-row-extent/🔣️.json");
+  const { default: typedFixture } = await import("../../../🧪️tests/🧫️fixtures/🧾️typed/🔣️.json");
 
   function prepared<P extends Profile>(kind: P, value: unknown): OwnedUiPayloadOf<RetainedUiTypedValues[P]> {
     const builder = new Builder();

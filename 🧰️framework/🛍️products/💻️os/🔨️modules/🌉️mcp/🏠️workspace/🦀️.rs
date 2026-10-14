@@ -83,15 +83,14 @@ pub struct PluginRegistryEntry {
     /// `_languageNeutralityComment`, restated in `📓️status.md`'s E1-describe entry: "descriptors
     /// live at the plugin/extension owner root ... siblings of `📦️packages`").
     pub owner_root: PathBuf,
-    /// 📦️ The component crate path relative to the repo root (`cratePath`): its `dist/components` holds the shipped
-    /// `wasm-release` bytes its `🧾️receipt.json` names, which the committed semantic descriptor describes.
+    /// 📦️ The component crate path relative to the repo root, resolved with the exact build mode.
     pub crate_path: PathBuf,
     pub wasm_out: String,
 }
 
-/// 🎯️ A component's one shipped deliverable directory relative to its crate root: the `wasm-release` bytes the describe
-/// stage verified against the committed semantic descriptor (ticket 26/09/23 wave A2).
-const PLUGIN_COMPONENT_DIRECTORY: &str = "dist/components";
+mod component_artifacts {
+    include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🔌️plugin/📇️registry/🤖️generated/🗿️artifacts/🦀️.rs"));
+}
 
 /// 🧭️ Locates the repo root — identical algorithm to `🏃️run/🏗️bootstrap/🦀️.rs::find_repo_root` (walk up from
 /// this crate's own `CARGO_MANIFEST_DIR` for `nx.json`, `SEMIO_REPO_ROOT` override first) so a direct
@@ -143,7 +142,8 @@ pub fn find_plugin_entry<'a>(entries: &'a [PluginRegistryEntry], plugin_id: &str
 /// 🗺️ Resolves one plugin's shipped component under its crate's `dist/components` — the same path as
 /// `🏃️run/🏗️bootstrap/🦀️.rs::resolve_plugin_paths` and the TypeScript preflight in `🌉️mcp/🟦️.ts`.
 pub fn resolve_plugin_wasm_path(repo_root: &Path, entry: &PluginRegistryEntry) -> Result<PathBuf, GatewayError> {
-    let path = repo_root.join(&entry.crate_path).join(PLUGIN_COMPONENT_DIRECTORY).join(&entry.wasm_out);
+    let directory = component_artifacts::plugin_component_directory(env!("SEMIO_BUILD_MODE")).map_err(|message| GatewayError::new(GatewayErrorCode::Internal, message))?;
+    let path = repo_root.join(&entry.crate_path).join(directory).join(&entry.wasm_out);
     if path.is_file() {
         return Ok(path);
     }
@@ -198,7 +198,7 @@ mod probe_json;
 #[path = "🪶️sqlite/🦀️.rs"]
 mod probe_sqlite;
 
-impl store::os_store::serialization::ArtifactDsl for ProbeSnapshot {
+impl pack::snapshot::ArtifactDsl for ProbeSnapshot {
     const EXTENSION: &'static str = "probe";
 
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -217,11 +217,9 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for ProbeSnap
     }
 }
 
-impl store::os_store::serialization::ArtifactPack for ProbeSnapshot {
+impl pack::snapshot::ArtifactPack for ProbeSnapshot {
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())
-    }
+    
 
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         probe_json::print(&self.0).map(String::into_bytes).map_err(store::PackError::from)
@@ -234,6 +232,11 @@ impl store::os_store::serialization::ArtifactPack for ProbeSnapshot {
 
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(probe_record_spec())
+    }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for ProbeSnapshot {
+fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())
     }
 }
 
@@ -3287,7 +3290,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         schema: artifact_schema.to_string(),
         extension: "semio",
         native_identity: store::os_store::serialization::ArtifactNativeSnapshotIdentity::Guest { plugin_id: plugin_id.to_string(), package_hash: compiled.package_hash, schema: artifact_schema.to_string() },
-        snapshot_sqlite: Some(store::os_store::serialization::ArtifactSqliteSnapshotCodec { schema: std::borrow::Cow::Owned(sqlite_schema), snapshot_type: None, export: guest_sqlite_export, import: guest_sqlite_import }),
+        snapshot_sqlite: Some(store::os_store::serialization::ArtifactSqliteSnapshotCodec { schema: std::borrow::Cow::Owned(sqlite_schema), snapshot_type: None, export: guest_sqlite_export, import: guest_sqlite_import,export_file:None,import_file:None }),
         pack_schema_hash,
         compile_dsl: guest_compile_dsl,
         print_mirror: guest_print_mirror,

@@ -3,7 +3,7 @@
  * as the oracle: a held lane is reported after the contract's bound, a settle clears the report, a cancel rejects the held
  * turn and releases the lane, and a queued turn is never reported while it waits. */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import fixture from "../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/⏱️command-stall.json" with { type: "json" };
+import fixture from "../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️command-stall.json" with { type: "json" };
 import { COMMAND_STALL_CONTRACT_V1, CommandCancelledErrorV1, commandStallBandTextV1, commandStallCancelTextV1, commandStallHeldSecondsV1, createCommandStallWatchV1 } from "../../🧱️elements/🔌️PluginRuntime/⏱️command-stall/🟦️.ts";
 import { serializePerActor } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 

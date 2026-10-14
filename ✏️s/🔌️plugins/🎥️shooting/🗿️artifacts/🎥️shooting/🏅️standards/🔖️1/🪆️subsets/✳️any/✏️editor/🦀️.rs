@@ -729,6 +729,7 @@ impl ArtifactEditor for ShootingPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,
@@ -807,7 +808,7 @@ impl ArtifactEditor for ShootingPlayApp {
             "photos:out" => shooting_photo_media(doc.snapshot),
             "artifact:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
-                let bytes = store::os_store::serialization::ArtifactPack::encode_pack(doc.snapshot);
+                let bytes = pack::snapshot::ArtifactPack::encode_pack(doc.snapshot);
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
@@ -824,7 +825,7 @@ impl ArtifactEditor for ShootingPlayApp {
             return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
         };
         let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-        let snapshot = <ShootingSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let snapshot = <ShootingSnapshot as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
         Ok(Emit { effects: vec![reset_document_effect(&snapshot)], ..Default::default() })
     }
 
@@ -921,7 +922,7 @@ impl ArtifactEditor for ShootingPlayApp {
 /// for `scene` — `store::os_store::text_format::empty_document_spr`, never a minted `create_document_envelope` (an envelope
 /// dropped without its bounded retirement authority traps the guest on Drop).
 pub fn reset_document_effect(scene: &ShootingSnapshot) -> semio_framework_plugin::Effect {
-    let pack = <ShootingSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(scene);
+    let pack = <ShootingSnapshot as pack::snapshot::ArtifactPack>::encode_pack(scene);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("shooting", SHOOTING_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }

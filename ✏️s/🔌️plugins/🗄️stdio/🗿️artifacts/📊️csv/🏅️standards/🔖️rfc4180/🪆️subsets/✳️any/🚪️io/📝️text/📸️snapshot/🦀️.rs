@@ -16,7 +16,7 @@ use crate::standards::v_rfc4180::subsets::any::schema::snapshot::*;
 use crate::STDIO_CSV_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
-impl store::os_store::serialization::ArtifactDsl for CsvSnapshot{
+impl pack::snapshot::ArtifactDsl for CsvSnapshot{
  const EXTENSION:&'static str="csv";
  fn envelope_id()->&'static str{"stdio.csv"}
  fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|error|semio_framework_diagnostic::TextError::from_value_error(error.into_value_error(),semio_framework_diagnostic::TextSpan::at(1,1)))?;if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"CSV logical Text envelope mismatch",semio_framework_diagnostic::TextSpan::at(1,1)))}Self::__dsl_from_record(&semio_framework_dsl_record::parse_exact(body,&Self::__dsl_spec(),&Default::default())?)}
@@ -145,7 +145,7 @@ use crate::STDIO_CSV_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
 /// 📥️ Reads authored CSV files or the declared logical Text document.
-pub fn read_csv_source_text(text:&str)->Result<CsvSnapshot,semio_framework_diagnostic::TextError>{if text.starts_with("semio "){<CsvSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)}else{Ok(decode_csv_with(text,true))}}
+pub fn read_csv_source_text(text:&str)->Result<CsvSnapshot,semio_framework_diagnostic::TextError>{if text.starts_with("semio "){<CsvSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)}else{Ok(decode_csv_with(text,true))}}
 }
 pub use snapshot_wire2_codec::*;
 
@@ -165,7 +165,7 @@ pub fn empty_csv_snapshot() -> CsvSnapshot {
 /// of truth `🗣️.dsl.semio` is genuinely `print_dsl` of (P2-P1 `fixture_honesty_law`),
 /// same pattern as `note::semio_example_snapshot`.
 pub fn demo_csv_snapshot() -> CsvSnapshot {
-    <CsvSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_csv_snapshot())
+    <CsvSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_csv_snapshot())
 }
 }
 pub use snapshot_wire3_codec::*;

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "📑️set-sheet/🧳️cuts-a-custom-paper",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/📑️set-sheet/🧳️cuts-a-custom-paper/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/📑️set-sheet/🧳️cuts-a-custom-paper/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/📑️set-sheet/🧳️cuts-a-custom-paper/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/📑️set-sheet/🧳️cuts-a-custom-paper/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/📑️set-sheet/🧳️cuts-a-custom-paper/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📑️set-sheet/🧳️cuts-a-custom-paper/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📑️set-sheet/🧳️cuts-a-custom-paper/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📑️set-sheet/🧳️cuts-a-custom-paper/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📑️set-sheet/🧳️cuts-a-custom-paper/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📑️set-sheet/🧳️cuts-a-custom-paper/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

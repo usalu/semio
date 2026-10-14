@@ -2,7 +2,7 @@
 import {expect,test} from "bun:test";
 import {Matrix3,Vector2} from "three";
 import {handleMatrix,handlePoints,hitHandle} from "../../🟦️.ts";
-import cases from "../../🧫️fixtures/🔣️.json";
+import cases from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎛️handles/🔣️.json";
 for (const sample of cases) test(`transform handle: ${sample.name}`,()=>{
   const actual=handleMatrix(sample.handle,sample.bounds as [number,number,number,number],sample.start as [number,number],sample.end as [number,number],sample.constrained,sample.centered)!;
   actual.forEach((value,index)=>expect(value).toBeCloseTo(sample.matrix[index]!,12));

@@ -1,6 +1,7 @@
 //! ✏️ Every catalog editor declares, parses, and replays the complete editing contract.
 
-use semio_framework_os_kernel::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack, Mutation, MutationDiff, OpBinary, OpText};
+use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use semio_framework_os_kernel::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack, Mutation, MutationDiff, OpBinary, OpText};
 use semio_framework_value::{DslValue, ToValue};
 use semio_framework_plugin::app::EditorSurfaceApp;
 use semio_framework_plugin::{artifact_app_laws, AppActionRegistry, AppDefinition, ArtifactEditor, EditorApp, InteractiveJobClassification, PluginApp};
@@ -32,7 +33,7 @@ fn stdio_packages_assembled() {
 }
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/✏️editor-catalog/🔣️.json")).expect("neutral editor acceptance fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/✏️editor-catalog/🔣️.json")).expect("neutral editor acceptance fixture")
 }
 
 fn snapshot_json<S: ToValue>(snapshot: &S) -> serde_json::Value {
@@ -219,7 +220,7 @@ fn neutral_catalog_requires_each_edit_operation_once() {
 fn independent_sqlite_catalog_file(bytes: &[u8], native: &semio_framework::ArtifactDialect, encoding: &str) {
     use std::io::Write;
     use std::process::{Command, Stdio};
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/✏️editor-catalog/🪶️sqlite/🔣️.json")).expect("neutral physical SQLite contract");
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/✏️editor-catalog/🪶️sqlite/🔣️.json")).expect("neutral physical SQLite contract");
     let script = r#"import{Database}from'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));try{console.log(JSON.stringify({integrity:db.query('PRAGMA integrity_check').all(),foreignKeys:db.query('PRAGMA foreign_key_check').all(),metadata:db.query('SELECT artifact_kind,standard,subset,schema_version,native_encoding FROM semio_snapshot ORDER BY id').all(),domainTables:db.query("SELECT name FROM sqlite_schema WHERE type='table' AND name NOT IN ('semio_snapshot','sqlite_sequence') ORDER BY name").all()}));}finally{db.close();}"#;
     let mut child = Command::new("bun").args(["-e", script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().expect("independent SQLite reader");
     child.stdin.take().unwrap().write_all(bytes).expect("physical exported file sent to independent reader");

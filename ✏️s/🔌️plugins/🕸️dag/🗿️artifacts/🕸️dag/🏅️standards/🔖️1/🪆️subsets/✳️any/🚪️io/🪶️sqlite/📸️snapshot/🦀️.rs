@@ -1,4 +1,5 @@
 //! 🕸️ Explicit DAG relational parent and literal Graph child relationship.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::DagSnapshot;
 use crate::DagContentChild;
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -26,9 +27,45 @@ fn singleton<'a>(d: &'a SqliteDatabase, name: &str, width: usize) -> Result<&'a 
 fn valid(snapshot: &DagSnapshot) -> Result<(), ValueError> {
     snapshot.validate().map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))
 }
-impl store::os_store::serialization::ArtifactSqliteSnapshot for DagSnapshot {
-    const SQLITE_SCHEMA: &'static str = SQL;
-    fn to_sqlite_database(&self, c: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
+impl store::os_store::serialization::ArtifactSqliteSnapshotHost for DagSnapshot {
+    
+    
+    
+    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
+        admit(c, SqliteSnapshotPhase::DecodeNative)?;
+        store::decode_sqlite_snapshot_record_native(
+            payload,
+            <Self as pack::snapshot::ArtifactDsl>::envelope_id(),
+            Self::__dsl_spec_producer(),
+            |record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
+                let value = Self::__dsl_from_record_controlled(record, native)?;
+                let guard = semio_framework_value::DecodedValue::new(value, <Self as semio_framework_value::FromValue>::retire_decoded);
+                guard.get().validate().map_err(|message|ValueError::new(ValueRefusalKind::InvalidValue,message))?;
+                Ok(guard.take())
+            })(); *snapshot_output = Some(constructed?); Ok(()) },
+            c,
+        native_control)
+    }
+    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
+        admit(c, SqliteSnapshotPhase::EncodeNative)?;
+        valid(self)?;
+        store::encode_sqlite_snapshot_record_native(encoding, <Self as pack::snapshot::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), c,native_owner)
+    }
+    fn retire_sqlite_snapshot(self) {
+        <Self as semio_framework_value::FromValue>::retire_decoded(self)
+    }
+    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, _d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
+        c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 2).map_err(store::io_schema::IoError::from_value_error)?;
+        if dialect.artifact_kind != "s.dag.dag" || dialect.standard != "1" || dialect.subset != "*" {
+            return Err(store::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner, "DAG SQLite dialect mismatch")));
+        }
+        valid(self).map_err(store::io_schema::IoError::from_value_error)?;
+        Ok(store::io_schema::IoOutcome::clean(()))
+    }
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for DagSnapshot {
+const SQLITE_SCHEMA: &'static str = SQL;
+fn to_sqlite_database(&self, c: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
         admit(c, SqliteSnapshotPhase::ProjectSnapshot)?;
         valid(self)?;
         let mut out = Projection::new(SQL, c)?;
@@ -39,7 +76,7 @@ impl store::os_store::serialization::ArtifactSqliteSnapshot for DagSnapshot {
         out.checkpoint_total(2)?;
         out.finish()
     }
-    fn from_sqlite_database(d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+fn from_sqlite_database(d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
         admit(c, SqliteSnapshotPhase::ReconstructSnapshot)?;
         store::sqlite_snapshot::validate_sqlite_database_schema(d, SQL, c.limits())?;
         c.check_database(d, SqliteSnapshotPhase::ReconstructSnapshot)?;
@@ -57,37 +94,6 @@ impl store::os_store::serialization::ArtifactSqliteSnapshot for DagSnapshot {
         let value = semio_framework_value::DecodedValue::new(Self { schema, content }, <Self as semio_framework_value::FromValue>::retire_decoded);
         valid(value.get())?;
         Ok(value.take())
-    }
-    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
-        admit(c, SqliteSnapshotPhase::DecodeNative)?;
-        store::decode_sqlite_snapshot_record_native(
-            payload,
-            <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),
-            Self::__dsl_spec_producer(),
-            |record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
-                let value = Self::__dsl_from_record_controlled(record, native)?;
-                let guard = semio_framework_value::DecodedValue::new(value, <Self as semio_framework_value::FromValue>::retire_decoded);
-                guard.get().validate().map_err(|message|ValueError::new(ValueRefusalKind::InvalidValue,message))?;
-                Ok(guard.take())
-            })(); *snapshot_output = Some(constructed?); Ok(()) },
-            c,
-        native_control)
-    }
-    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
-        admit(c, SqliteSnapshotPhase::EncodeNative)?;
-        valid(self)?;
-        store::encode_sqlite_snapshot_record_native(encoding, <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), c,native_owner)
-    }
-    fn retire_sqlite_snapshot(self) {
-        <Self as semio_framework_value::FromValue>::retire_decoded(self)
-    }
-    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, _d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
-        c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 2).map_err(store::io_schema::IoError::from_value_error)?;
-        if dialect.artifact_kind != "s.dag.dag" || dialect.standard != "1" || dialect.subset != "*" {
-            return Err(store::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner, "DAG SQLite dialect mismatch")));
-        }
-        valid(self).map_err(store::io_schema::IoError::from_value_error)?;
-        Ok(store::io_schema::IoOutcome::clean(()))
     }
 }
 

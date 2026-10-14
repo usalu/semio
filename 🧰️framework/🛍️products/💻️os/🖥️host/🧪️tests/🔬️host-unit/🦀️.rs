@@ -486,7 +486,7 @@ mod tests {
     #[test]
     fn workflow_host_preserves_the_opened_actor_context() {
         test_identity!(identity);
-        let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧾️actor-context/🔣️.json")).expect("neutral actor fixture");
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧾️actor-context/🔣️.json")).expect("neutral actor fixture");
         for case in fixture["cases"].as_array().expect("cases") {
             let actor=protocol::ActorId(case["actor"].as_str().expect("actor").into());
             let reopened_actor=protocol::ActorId(case["reopenActor"].as_str().expect("reopened actor").into());

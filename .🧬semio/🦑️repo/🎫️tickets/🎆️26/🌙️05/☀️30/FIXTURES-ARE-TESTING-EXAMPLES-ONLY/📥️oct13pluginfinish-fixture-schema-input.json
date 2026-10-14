@@ -1,0 +1,84 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️tests/🧫️fixtures/🔗️external-all-of/✉️envelope/🧾️schema-input.json",
+    "id": "https://example.test/envelope.json",
+    "schema": "http://json-schema.org/draft-07/schema#",
+    "title": null,
+    "keys": [
+      "$schema",
+      "$id",
+      "type",
+      "required",
+      "properties",
+      "definitions"
+    ],
+    "properties": [
+      "schema",
+      "subset"
+    ],
+    "required": [
+      "schema",
+      "subset"
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️tests/🧫️fixtures/🔗️external-all-of/🏛️model/🧾️schema-input.json",
+    "id": "https://example.test/model.json",
+    "schema": "http://json-schema.org/draft-07/schema#",
+    "title": null,
+    "keys": [
+      "$schema",
+      "$id",
+      "type",
+      "required",
+      "properties"
+    ],
+    "properties": [
+      "schema",
+      "spatial"
+    ],
+    "required": [
+      "schema",
+      "spatial"
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️tests/🧫️fixtures/🔗️external-all-of/📝️text/🧾️schema-input.json",
+    "id": "https://example.test/text.json",
+    "schema": "http://json-schema.org/draft-07/schema#",
+    "title": null,
+    "keys": [
+      "$schema",
+      "$id",
+      "type",
+      "required",
+      "properties"
+    ],
+    "properties": [
+      "schema",
+      "runs"
+    ],
+    "required": [
+      "schema",
+      "runs"
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧪️tests/🧫️fixtures/📇️contributions/🧾️schema-input.json",
+    "id": null,
+    "schema": "http://json-schema.org/draft-07/schema#",
+    "title": null,
+    "keys": [
+      "$schema",
+      "type",
+      "required",
+      "properties"
+    ],
+    "properties": [
+      "representations"
+    ],
+    "required": [
+      "representations"
+    ]
+  }
+]

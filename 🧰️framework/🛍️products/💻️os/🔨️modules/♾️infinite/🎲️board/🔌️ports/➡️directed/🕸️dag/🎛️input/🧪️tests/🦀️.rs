@@ -1,7 +1,7 @@
 use super::*;
 use serde_json::Value;
 use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneStep},retirement::{admit_owned_retirement,owned_retirement_birth_bytes},FromValue};
-fn fixture()->Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn grant(fixture:&Value)->RetainedCloneGrant{serde_json::from_value(fixture["retainedGrant"].clone()).unwrap()}
 fn host(fixture:&Value)->DagHost{
  let nodes=fixture["nodes"].as_array().unwrap().iter().map(|id|DagNodeSpec::computation(id.as_str().unwrap().into(),"Node","N","emoji:🔷️".into(),fixture["ports"]["inputs"].as_array().unwrap().iter().map(|id|IoPortSpec{id:id.as_str().unwrap().into(),..Default::default()}).collect(),fixture["ports"]["outputs"].as_array().unwrap().iter().map(|id|IoPortSpec{id:id.as_str().unwrap().into(),..Default::default()}).collect(),false,false,0.0,0.0,160.0,56.0)).collect();

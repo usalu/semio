@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/go-build/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "mode",
+    "cwd",
+    "captureDirectory",
+    "leaseDirectory",
+    "budgetMs"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "mode": {
+      "enum": [
+        "prototype",
+        "release"
+      ]
+    },
+    "cwd": {
+      "type": "string",
+      "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+    },
+    "captureDirectory": {
+      "type": "string",
+      "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+    },
+    "leaseDirectory": {
+      "type": "string",
+      "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+    },
+    "budgetMs": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 86400000
+    }
+  }
+}

@@ -3,7 +3,7 @@ import Ajv2020 from "ajv/dist/2020.js";
 import { describe, expect, it } from "vitest";
 import { parityVerdict } from "../../⚖️parity/✅️verdict/🟦️.ts";
 import type { ParityPlaygroundReport } from "../../⚖️parity/🏗️structure/🟦️.ts";
-import fixture from "../../⚖️parity/🧫️fixtures/✅️verdict/🔣️.json";
+import fixture from "../../⚖️parity/🧪️tests/🧫️fixtures/✅️verdict/🔣️.json";
 import schema from "../../⚖️parity/🧬️schema/✅️verdict/🔣️.json";
 
 describe("complete renderer parity evidence", () => {

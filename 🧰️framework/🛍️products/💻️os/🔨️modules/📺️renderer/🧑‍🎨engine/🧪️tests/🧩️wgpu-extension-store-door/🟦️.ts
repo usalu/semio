@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import fixture from "../../../../🔌️plugin/🏪️store/📥️installation/🧫️fixtures/🔣️.json";
+import fixture from "../../../../🔌️plugin/🏪️store/📥️installation/🧪️tests/🧫️fixtures/🔣️.json";
 import { createWgpuPageHostIo } from "../../🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts";
 
 const answer = async (request: unknown): Promise<Record<string, unknown>> => JSON.parse(await createWgpuPageHostIo()(JSON.stringify(request), null)) as Record<string, unknown>;

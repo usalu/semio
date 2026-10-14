@@ -12,7 +12,7 @@ async fn inference_determinism_law() {
     use protocol::Inference;
 
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
-    let snapshot = <LayoutSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).expect("demo asset parses as a layout snapshot");
+    let snapshot = <LayoutSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("demo asset parses as a layout snapshot");
     let inference = LayoutInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inference, LayoutInference::infer(&snapshot).expect("valid materialized inference fixture"));
 

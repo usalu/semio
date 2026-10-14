@@ -116,7 +116,7 @@ test("dashboard-selected owner tests allocate their output without manual enviro
 
 
 test("native caller capability corpus agrees with independent strict Ajv", async () => {
-  const schema = (await import("../../📥️invocation/🧬️schema/🔣️.json")).default, corpus = (await import("../../📥️invocation/🧫️fixtures/🔣️.json")).default;
+  const schema = (await import("../../📥️invocation/🧬️schema/🔣️.json")).default, corpus = (await import("../../📥️invocation/🧪️tests/🧫️fixtures/🔣️.json")).default;
   const admits = new Ajv({ strict: true }).compile(schema);
   for (const row of corpus.cases) { expect(admits(row.value), row.id).toBe(row.accepted); expect(validateJsonSchemaSubset(schema, row.value).length === 0, row.id).toBe(row.accepted); }
 });

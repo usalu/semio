@@ -1,0 +1,14 @@
+{
+  "contract": "original-tick-entity-column/v1",
+  "wireField": 7,
+  "scalarBytes": 8,
+  "grant": [1, 17, 65536, 262144, 64],
+  "sameFinalColumn": true,
+  "includesSourceAllocation": true,
+  "allocationCeiling": {"maximumTotalAllocationBytes": 25144, "maximumCursorAllocationBytes": 24576, "sourceBytes": 24576, "frameBytes": 568},
+  "cases": [
+    {"hex": "", "entities": [], "interruptAfter": [0]},
+    {"hex": "2a00000000000000", "entities": [42], "interruptAfter": [0, 1, 7, 8]},
+    {"hex": "2a000000000000001300000000000000", "entities": [42, 19], "interruptAfter": [0, 1, 7, 8, 9, 15, 16]}
+  ]
+}

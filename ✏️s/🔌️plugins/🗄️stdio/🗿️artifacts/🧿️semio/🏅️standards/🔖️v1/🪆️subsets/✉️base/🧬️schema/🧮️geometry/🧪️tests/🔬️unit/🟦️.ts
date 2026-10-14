@@ -7,7 +7,7 @@ import {point3Fixture,point2Fixture,uvFixture,rgbaFixture,quaternionFixture,tran
 /** 🧫️ Shared geometry admission agrees with an independent JSON Schema validator. */
 export function testSemioGeometryContract(): void {
   const schema = JSON.parse(readFileSync(new URL("../../🔣️.json", import.meta.url), "utf8"));
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/🧮️geometry/🔣️.json", import.meta.url), "utf8"));
   const ajv = semioSchemaAjvV1({ allErrors: true });
   ajv.addSchema(schema);
   for (const entry of fixture.cases as { type: string; input: unknown; valid: boolean }[]) {

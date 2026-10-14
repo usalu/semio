@@ -15,7 +15,7 @@ import { mutationRoot, prepareMutationFixtureRoot, mutationFixtureRoot } from ".
 
 describe("direct mutation ownership", () => {
   test("prepares AST-safe direct mutation scaffolds before one guarded publication", () => {
-    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🏗️mutation-scaffolding/🔣️.json"), "utf8")) as { schemaVersion: number; mutationRoot: string; name: string; attributedAggregate: string; malformedAggregate: string; ambiguousAggregate: string; wrongMountAggregate: string; privateMountAggregate: string; wrongVariantAggregate: string; scopedAggregate: string; unrelatedDocAggregate: string; nestedAggregateDecoy: string; nestedAggregateScopes: string; unmatchedAggregate: string; unprovenScopeAggregate: string; unprovenMountAggregate: string };
+    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🏗️mutation-scaffolding/🔣️.json"), "utf8")) as { schemaVersion: number; mutationRoot: string; name: string; attributedAggregate: string; malformedAggregate: string; ambiguousAggregate: string; wrongMountAggregate: string; privateMountAggregate: string; wrongVariantAggregate: string; scopedAggregate: string; unrelatedDocAggregate: string; nestedAggregateDecoy: string; nestedAggregateScopes: string; unmatchedAggregate: string; unprovenScopeAggregate: string; unprovenMountAggregate: string };
     
     const root = mutationFixtureRoot("semio-mutation-scaffold-transaction-");
     const snapshot = (): string => fastGlob.sync("**/*", { cwd: root, onlyFiles: true, followSymbolicLinks: false }).sort().map((path) => `${path}\0${readFileSync(join(root, path), "utf8")}`).join("\0");
@@ -117,7 +117,7 @@ describe("direct mutation ownership", () => {
       mkdirSync(join(root, dirname(relative)), { recursive: true });
       copyFileSync(join(getWorkspaceRoot(), relative), join(root, relative));
     }
-    const fixturePath = join(import.meta.dir, "../../🧫️fixtures/📋️mutation-inventory/🧪️consumers/🔣️.json");
+    const fixturePath = join(import.meta.dir, "../🧫️fixtures/📋️mutation-inventory/🧪️consumers/🔣️.json");
     const inventorySchemaPath = join(import.meta.dir, "../../🧬️schema/📋️mutation-inventory/🔣️.json");
     const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { schemaVersion: number; assignmentLedger: unknown; files: readonly { path: string; content: string }[] };
     const taxonomy = loadTaxonomy();
@@ -177,7 +177,7 @@ describe("direct mutation ownership", () => {
   }, 30_000);
 
   test("proves direct leaf reachability through exact public canonical mounts and wrapped types", () => {
-    const fixturePath = join(import.meta.dir, "../../🧫️fixtures/📡️mutation-reachability/🔣️.json");
+    const fixturePath = join(import.meta.dir, "../🧫️fixtures/📡️mutation-reachability/🔣️.json");
     
     const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { cases: readonly { name: string; source: string; leafSource?: string; extraFiles?: readonly { path: string; source: string }[]; accepted: boolean; nativeAccepted?: true }[] };
     
@@ -211,7 +211,7 @@ describe("direct mutation ownership", () => {
     } finally { if (!artifactRoot) rmSync(root, { recursive: true, force: true }); }  }, 60000);
 
   test("projects the actual wrapped mutation declaration origin through public aliases only", () => {
-    const fixturePath = join(import.meta.dir, "../../🧫️fixtures/🧬️mutation-type-origin/🔣️.json");
+    const fixturePath = join(import.meta.dir, "../🧫️fixtures/🧬️mutation-type-origin/🔣️.json");
     
     const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { schemaVersion: 1; mutationRoot: string; leaf: string; rustFilename: "🦀️.rs"; cases: readonly { id: string; mutationRoot?: string; leaf?: string; rustFilename?: string; virtualFilesystem?: true; repoRoot?: string; repositoryRootSymlink?: true; repositoryAncestorSymlink?: true; rootSource: string; leafSource: string; extraFiles?: readonly { path: string; source: string }[]; links?: readonly { path: string; target: string }[]; compileAccepted: boolean; expected: { sourcePath: string; declarationName: string; modulePath: string[] } | null }[] };
     

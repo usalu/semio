@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "sourceBytes",
+    "retainedBytes",
+    "key",
+    "grant",
+    "expected"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "sourceBytes": {
+      "const": 32769
+    },
+    "retainedBytes": {
+      "const": 8193
+    },
+    "key": {
+      "const": "raster 🎟️ отказ"
+    },
+    "grant": {
+      "const": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 1048576,
+        "maximumReleaseBytes": 1048576,
+        "maximumDepth": 128
+      }
+    },
+    "expected": {
+      "const": {
+        "admissionAllocation": 0,
+        "deniedRelease": 0,
+        "terminalEmpty": true,
+        "releasedBytes": 40987
+      }
+    }
+  }
+}

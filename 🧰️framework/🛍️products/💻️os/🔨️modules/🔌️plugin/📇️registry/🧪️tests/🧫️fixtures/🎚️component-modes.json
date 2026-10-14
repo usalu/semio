@@ -1,0 +1,10 @@
+{
+  "owner": "component-owner",
+  "file": "component.wasm",
+  "modes": [
+    { "mode": "prototype", "directory": "dist/components/prototype" },
+    { "mode": "release", "directory": "dist/components/release" }
+  ],
+  "rejected": ["dev", "ship", "", "Release"],
+  "originalEnvironment": "SEMIO_BUILD_MODE"
+}

@@ -2,7 +2,7 @@ import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 const root = new URL("../", import.meta.url);
-const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", root), "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("🧪️tests/🧫️fixtures/🔣️.json", root), "utf8"));
 
 function integer(value: number) { const bytes: number[] = []; do { const byte=value%128;value=Math.floor(value/128);bytes.push(byte|(value?128:0)); } while(value);return Buffer.from(bytes); }
 function operation(text: string) { return Buffer.concat([Buffer.from([1,7]),Buffer.from(JSON.stringify(text))]); }

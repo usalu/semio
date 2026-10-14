@@ -1,7 +1,7 @@
 import{expect,test}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
-import fixture from"../🧫️fixtures/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
 
 import nativeSchema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import type * as schema from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
@@ -25,7 +25,7 @@ for(const[index,sql]of fixture.malformedSql.entries())test("Run independent malf
 test("Run every status and trigger branch retains present empty and absent finished time",async()=>{for(const status of fixture.statuses){for(const trigger of fixture.triggers){for(const finishedAt of[undefined,"","\0😀"]){const expected=snapshot();expected.status=status as schema.RunStatus;expected.trigger=trigger as schema.RunTrigger;if(finishedAt===undefined)delete expected.finishedAt;else expected.finishedAt=finishedAt;expect(await restore(await bytes(expected))).toEqual(expected)}}}});
 test("Run exact known row admission accepts equality and refuses one below",async()=>{const expected=snapshot(),db=await ports.runSnapshotToSqliteDatabase(expected),count=db.tables.reduce((sum,table)=>sum+table.rows.length,0);expect(count).toBe(13);await expect(ports.runSnapshotToSqliteDatabase(expected,{maxRows:count})).resolves.toBeDefined();await expect(ports.runSnapshotToSqliteDatabase(expected,{maxRows:count-1})).rejects.toThrow();await expect(ports.runSnapshotFromSqliteDatabase(db,{maxRows:count-1})).rejects.toThrow()});
 for(const phase of["projectSnapshot","reconstructSnapshot"]as const)test("Run caller cancellation interrupts known ordered ownership in "+phase,async()=>{const expected=snapshot();expected.parameterValues=Array.from({length:fixture.control.collectionLength},()=>({parameterId:"",value:""}));const db=await ports.runSnapshotToSqliteDatabase(expected),controller=new AbortController();let reached=false;const options:ArtifactSqliteOptions={signal:controller.signal,onProgress:event=>{if(event.phase===phase&&event.completed>=256&&event.completed<event.total){reached=true;controller.abort()}}};await expect(phase==="projectSnapshot"?ports.runSnapshotToSqliteDatabase(expected,options):ports.runSnapshotFromSqliteDatabase(db,options)).rejects.toHaveProperty("kind","canceled");expect(reached).toBe(true);const initial=new AbortController();initial.abort();await expect(phase==="projectSnapshot"?ports.runSnapshotToSqliteDatabase(snapshot(),{signal:initial.signal}):ports.runSnapshotFromSqliteDatabase(db,{signal:initial.signal})).rejects.toHaveProperty("kind","canceled")});
-import ordinalBacking from "../🧫️fixtures/💰️backing/🔢️ordinals/🔣️.json";
+import ordinalBacking from "./🧫️fixtures/💰️backing/🔢️ordinals/🔣️.json";
 
 test("Run small cells retain complete table and ordinal backing with cumulative prior debt",async()=>{
  const expected=snapshot();expected.parameterValues=Array.from({length:fixture.control.collectionLength},()=>({parameterId:"",value:""}));
@@ -43,7 +43,7 @@ test("Run small cells retain complete table and ordinal backing with cumulative 
 });
 test("Run requested file and value ceilings refuse oversized ownership",async()=>{const expected=snapshot(),db=await ports.runSnapshotToSqliteDatabase(expected);await expect(exportSqliteDatabase(db,{maxFileBytes:fixture.control.tinyFileBytes})).rejects.toThrow();await expect(ports.runSnapshotFromSqliteDatabase(db,{maxValueBytes:1})).rejects.toThrow();expected.logs[0]!.message="😀".repeat(fixture.control.largeCharacters);await expect(ports.runSnapshotToSqliteDatabase(expected,{maxValueBytes:fixture.control.maxOwnedBytes})).rejects.toThrow()});
 for(const phase of["projectSnapshot","reconstructSnapshot"]as const)test("Run long Unicode measurement cancels inside its known code-unit frontier in "+phase,async()=>{const expected=snapshot(),text="😀".repeat(fixture.control.largeCharacters);expect(Buffer.byteLength(text,"utf8")).toBe(text.length*2);expected.logs[0]!.message=text;const database=await ports.runSnapshotToSqliteDatabase(expected),controller=new AbortController();let reached=false;const options:ArtifactSqliteOptions={signal:controller.signal,onProgress:event=>{if(event.phase===phase&&event.total===text.length&&event.completed>=fixture.control.cancelAfterBytes/2&&event.completed<event.total){reached=true;controller.abort()}}};await expect(phase==="projectSnapshot"?ports.runSnapshotToSqliteDatabase(expected,options):ports.runSnapshotFromSqliteDatabase(database,options)).rejects.toHaveProperty("kind","canceled");expect(reached).toBe(true)});
-import requestSettlement from "../🧫️fixtures/💰️backing/🔬️requests/🔣️.json";
+import requestSettlement from "./🧫️fixtures/💰️backing/🔬️requests/🔣️.json";
 
 test('Run full concrete request contract retains all literal field and IEEE owners in physical SQLite', async () => {
   
@@ -79,7 +79,7 @@ for (const phase of ['projectSnapshot', 'reconstructSnapshot'] as const) test('R
   expect(result).toEqual(phase === 'projectSnapshot' ? database : expected);
 });
 
-import boundedFrontiers from "../🧫️fixtures/🎛️frontiers/🔣️.json";
+import boundedFrontiers from "./🧫️fixtures/🎛️frontiers/🔣️.json";
 
 function boundedSnapshot(role:string):Snapshot {
  const value=snapshot(),node=value.nodeRecords[0]!;value.parameterValues=[];value.logs=[];value.nodeRecords=[node];node.inputFingerprints=[];node.outputFingerprints=[];node.outputs=[];
@@ -112,7 +112,7 @@ for(const role of boundedFrontiers.roles)test('Run later borrowed child frontier
  expect(armed).toBe(true);expect(reads).toBeGreaterThan(0);expect(reads).toBeLessThanOrEqual(boundedFrontiers.maxReadsBetweenControls);
 });
 
-import intrinsicRefusals from "../🧫️fixtures/⚠️refusals/🔣️.json";
+import intrinsicRefusals from "./🧫️fixtures/⚠️refusals/🔣️.json";
 
 function replaceLiteral(value:Record<string,unknown>,path:readonly(string|number)[],replacement:unknown):void {
  let parent=value;for(const key of path.slice(0,-1))parent=parent[key]as Record<string,unknown>;parent[path.at(-1)!]=replacement;
@@ -126,7 +126,7 @@ for(const refusal of intrinsicRefusals.cases)test('Run intrinsic validation pres
 });
 
 test("Run complete independent SQL cell extent preserves both trigger branches and exact IEEE words",async()=>{
- const cases=await Bun.file(new URL("../🧫️fixtures/📏️semantic-cells/🔣️.json",import.meta.url)).json();
+ const cases=await Bun.file(new URL("🧫️fixtures/📏️semantic-cells/🔣️.json",import.meta.url)).json();
  for(const item of cases.cases){const expected=snapshot();if(/^[0-9a-f]{16}$/.test(item.name)){for(const node of expected.nodeRecords)node.durationMs={bits:BigInt("0x"+item.name)}}else if(item.name!=="base"){const[kind,finished]=item.name.split("-");expected.trigger=structuredClone(fixture.triggers.find(trigger=>trigger.kind===kind))as schema.RunTrigger;if(finished==="absent")delete expected.finishedAt;else expected.finishedAt=finished==="empty"?"":"\0\u{1f600}";}
   const database=await ports.runSnapshotToSqliteDatabase(expected),db=Database.deserialize(await exportSqliteDatabase(database),{safeIntegers:true});try{expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);const names=db.query<{name:string},[]>("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").all(),tables=names.map(({name})=>{const rows=db.query<Record<string,null|string|number|bigint>,[]>('SELECT * FROM "'+name+'" ORDER BY id').all();let bytes=0;for(const row of rows)for(const value of Object.values(row))bytes+=value===null?0:typeof value==="string"?Buffer.byteLength(value):8;return{table:name,rows:rows.length,bytes}});expect(tables).toEqual(item.tables);expect(tables.length).toBe(cases.tables);expect(tables.reduce((n,table)=>n+table.rows,0)).toBe(cases.rows);expect(tables.reduce((n,table)=>n+table.bytes,0)).toBe(item.bytes);}finally{db.close()}
   await expect(ports.runSnapshotToSqliteDatabase(expected,{maxValueBytes:item.bytes})).resolves.toEqual(database);await expect(ports.runSnapshotToSqliteDatabase(expected,{maxValueBytes:item.bytes-1})).rejects.toThrow();await expect(ports.runSnapshotFromSqliteDatabase(database,{maxValueBytes:item.bytes})).resolves.toEqual(expected);await expect(ports.runSnapshotFromSqliteDatabase(database,{maxValueBytes:item.bytes-1})).rejects.toThrow();console.log("[DEBUG] Run complete SQL cell frontier case="+item.name+" bytes="+item.bytes+" tables=7 rows=13");

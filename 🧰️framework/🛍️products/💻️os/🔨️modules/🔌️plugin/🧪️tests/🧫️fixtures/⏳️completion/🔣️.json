@@ -1,0 +1,260 @@
+{
+  "version": 1,
+  "registration": {
+    "attempts": 2,
+    "registeredEntries": 1,
+    "diagnostics": 1,
+    "diagnosticCode": "test.subset-macro.ok"
+  },
+  "checkpoint": {
+    "instance": 507,
+    "parkedRequests": 1,
+    "tasksAfterCancel": 0,
+    "requestsAfterCancel": 0,
+    "restartValue": 7,
+    "completionFaultCode": "plugin.request-registry",
+    "completionFaultMessage": "request already consumed or unknown"
+  },
+  "restartAuthority": {
+    "tool": "applyCountFromTask",
+    "generatedToolIds": [
+      "compositeEdit",
+      "applyCountFromTask"
+    ],
+    "defaultProofs": 2,
+    "retainedProofs": 1,
+    "distinctConcreteOwners": true,
+    "artifactPublications": 1,
+    "uiPublications": 1,
+    "uiScopes": 1,
+    "terminalReceipts": 1,
+    "operationCompletions": 1,
+    "closeItems": 1,
+    "closeBodyBytes": 4096
+  },
+  "transientClose": {
+    "originalGrant": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 7,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 262144,
+      "maximumDepth": 64
+    },
+    "initiallyTerminal": false,
+    "sourceRevision": 9,
+    "deniedAxes": [
+      "items",
+      "copy",
+      "capacity",
+      "release",
+      "depth"
+    ],
+    "foreignTerminal": false,
+    "expected": {
+      "terminal": true,
+      "detachesWithoutReplacement": true
+    }
+  },
+  "ownerReturningRejection": {
+    "schema": "semio.plugin.artifact-tool-completion-rejection/v1",
+    "noImplicitRetry": true,
+    "cases": [
+      {
+        "id": "accepted",
+        "cell": "empty",
+        "busy": false,
+        "outcome": "accepted",
+        "finalCell": "submitted",
+        "submittedOwnerReturned": false
+      },
+      {
+        "id": "duplicate",
+        "cell": "existing",
+        "busy": false,
+        "outcome": "rejected",
+        "finalCell": "existing",
+        "submittedOwnerReturned": true
+      },
+      {
+        "id": "busy",
+        "cell": "empty",
+        "busy": true,
+        "outcome": "rejected",
+        "finalCell": "empty",
+        "submittedOwnerReturned": true
+      }
+    ],
+    "callers": [
+      {
+        "family": "puzzle",
+        "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs",
+        "terminalGuard": "ArtifactRetainedCommandPhase::Fault =>",
+        "legacyLossToken": "completion.complete(Ok(emit), EphemeralEmit::default()).is_err()",
+        "incrementalClose": "self.close_one_original(same,loan)?",
+        "retainedPhysicalOwners": [
+          "self.ephemeral = Some(rejected.ephemeral)",
+          "self.reducer_fault(rejected.fault)",
+          "&& self.emit.is_none()",
+          "&& self.ephemeral.is_none()",
+          "&& self.fault_retirement.is_none()"
+        ],
+        "sourceStart": "impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {",
+        "sourceEnd": "//#endregion 🧵️Job",
+        "completion": "completion.complete(Ok(emit), ephemeral)",
+        "retainedOwner": "self.emit = rejected.emit.ok();",
+        "bindings": [
+          {
+            "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+            "tokens": [
+              "type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<Puzzle3dPlayApp>>;",
+              "ArtifactRetainedCommandJob::from_wire(payload, input)"
+            ]
+          },
+          {
+            "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs",
+            "tokens": [
+              "self.advance_original(cx)",
+              "emit.close_child_one(child)",
+              "fn close_one_original(&mut self,cx:&mut StepContext"
+            ]
+          }
+        ]
+      },
+      {
+        "family": "draw",
+        "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        "terminalGuard": "if self.pending_completion_rejection.is_some()",
+        "legacyLossToken": "payload.completion.complete(emit, semio_framework_plugin::EphemeralEmit::default()).is_err()",
+        "incrementalClose": "emit.close_child_one(grant)",
+        "retainedPhysicalOwners": [
+          "self.pending_completion_rejection.is_none()",
+          "self.payload.is_none()",
+          "self.raw_input.is_none()",
+          "self.decoder.is_none()",
+          "self.outcomes.terminal_is_empty()"
+        ],
+        "sourceStart": "struct DrawingGestureOperationJob {",
+        "sourceEnd": "struct DrawingGestureOperationJobFactory {",
+        "completion": "payload.completion.complete(Ok(emit), ephemeral)",
+        "retainedOwner": "self.pending_completion_rejection = Some(rejected)",
+        "bindings": []
+      },
+      {
+        "family": "writer",
+        "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs",
+        "terminalGuard": "ArtifactRetainedCommandPhase::Fault =>",
+        "legacyLossToken": "completion.complete(Ok(emit), EphemeralEmit::default()).is_err()",
+        "incrementalClose": "self.close_one_original(same,loan)?",
+        "retainedPhysicalOwners": [
+          "self.ephemeral = Some(rejected.ephemeral)",
+          "self.reducer_fault(rejected.fault)",
+          "&& self.emit.is_none()",
+          "&& self.ephemeral.is_none()",
+          "&& self.fault_retirement.is_none()"
+        ],
+        "sourceStart": "impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {",
+        "sourceEnd": "//#endregion 🧵️Job",
+        "completion": "completion.complete(Ok(emit), ephemeral)",
+        "retainedOwner": "self.emit = rejected.emit.ok();",
+        "bindings": [
+          {
+            "source": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+            "tokens": [
+              "type Job = ArtifactRetainedCommandJob<EditorApp<WriterPlayApp>>;",
+              "ArtifactRetainedCommandJob::from_wire(payload, input)"
+            ]
+          },
+          {
+            "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs",
+            "tokens": [
+              "self.advance_original(cx)",
+              "emit.close_child_one(child)",
+              "fn close_one_original(&mut self,cx:&mut StepContext"
+            ]
+          }
+        ]
+      }
+    ],
+    "reservedCallers": [
+      {
+        "family": "puzzle5d-copy",
+        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        "sourceStart": "struct Puzzle5dClipboardJob {",
+        "sourceEnd": "enum Puzzle5dPasteStage {",
+        "terminalGuard": "if self.rejection.is_some()",
+        "retainedOwner": "self.rejection = Some(rejected)",
+        "incrementalClose": "crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, grant)",
+        "legacyLossToken": "if let Err(error) = completion.complete",
+        "bindings": [],
+        "completion": "completion.complete(",
+        "retainedPhysicalOwners": [
+          "self.outbox.terminal_is_empty()",
+          "self.owners.is_empty()",
+          "rejection: self.rejection.take()"
+        ]
+      },
+      {
+        "family": "puzzle5d-cut",
+        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        "sourceStart": "struct Puzzle5dClipboardJob {",
+        "sourceEnd": "enum Puzzle5dPasteStage {",
+        "terminalGuard": "if self.rejection.is_some()",
+        "retainedOwner": "self.rejection = Some(rejected)",
+        "incrementalClose": "crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, grant)",
+        "legacyLossToken": "if let Err(error) = completion.complete",
+        "bindings": [],
+        "completion": "completion.complete(",
+        "retainedPhysicalOwners": [
+          "self.outbox.terminal_is_empty()",
+          "self.owners.is_empty()",
+          "rejection: self.rejection.take()"
+        ]
+      },
+      {
+        "family": "puzzle5d-paste",
+        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        "sourceStart": "\nstruct Puzzle5dPasteJob {",
+        "sourceEnd": "\nenum Puzzle5dImportStage {",
+        "terminalGuard": "puzzle5d paste completion remains rejected",
+        "retainedOwner": "self.pending_completion_rejection = Some(rejected)",
+        "incrementalClose": "crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, grant)",
+        "legacyLossToken": "if let Err(error) = completion.complete",
+        "bindings": [],
+        "completion": "completion.complete(",
+        "retainedPhysicalOwners": [
+          "self.outbox.terminal_is_empty()",
+          "self.owners.is_empty()",
+          "pending_completion_rejection: self.pending_completion_rejection.take()"
+        ]
+      },
+      {
+        "family": "puzzle5d-import",
+        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        "sourceStart": "\nstruct Puzzle5dImportJob {",
+        "sourceEnd": "\n//#endregion 🧵️ReservedJobs",
+        "terminalGuard": "puzzle5d import completion remains rejected",
+        "retainedOwner": "self.pending_completion_rejection = Some(rejected)",
+        "incrementalClose": "crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, grant)",
+        "legacyLossToken": "if let Err(error) = completion.complete",
+        "bindings": [],
+        "completion": "completion.complete(",
+        "retainedPhysicalOwners": [
+          "self.outbox.terminal_is_empty()",
+          "self.owners.is_empty()",
+          "pending_completion_rejection: self.pending_completion_rejection.take()"
+        ]
+      }
+    ]
+  },
+  "execution": [
+    "await-registration-before-observation",
+    "await-validator-before-diagnostics",
+    "await-executor-before-checkpoint",
+    "await-request-retirement-before-observation"
+  ],
+  "scope": {
+    "nativeFixture": true,
+    "retainedProductionRegistration": false,
+    "guestCheckpointRuntime": false
+  }
+}

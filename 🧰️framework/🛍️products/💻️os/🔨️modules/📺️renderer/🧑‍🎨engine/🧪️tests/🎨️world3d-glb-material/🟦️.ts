@@ -23,7 +23,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const fixtureRoot = resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎨️world3d-glb-material");
+const fixtureRoot = resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎨️world3d-glb-material");
 const fixture = JSON.parse(readFileSync(resolve(fixtureRoot, "🔣️.json"), "utf8"));
 const sideNames = new Map<Side, string>([[FrontSide, "FrontSide"], [DoubleSide, "DoubleSide"]]);
 const wrapNames = new Map<Wrapping, string>([[ClampToEdgeWrapping, "ClampToEdgeWrapping"], [MirroredRepeatWrapping, "MirroredRepeatWrapping"]]);

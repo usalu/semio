@@ -7,7 +7,7 @@ import Ajv from "ajv";
 export async function testCredentialProtocolSourceV1(root: string): Promise<void> {
   const general = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🤖️agent-credential");
   
-  const corpus = JSON.parse(readFileSync(join(general, "🧫️fixtures/🔣️.json"), "utf8"));
+  const corpus = JSON.parse(readFileSync(join(general, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(general, "🧬️schema/🔣️.json"), "utf8"));
   const request = new Ajv({ strict: true }).compile(schema);
   for (const vector of corpus.vectors) assert.equal(request({ path: vector.path, bodyBytes: 0 }), vector.valid);
@@ -19,7 +19,7 @@ export async function testCredentialProtocolSourceV1(root: string): Promise<void
   const remote = readFileSync(join(general, "../🏠️workspace/🔗️remote/🦀️.rs"), "utf8");
   assert.ok(!remote.includes("/auth/agent-sessions"));
   const authSchema = JSON.parse(readFileSync(join(root, "🌎️hub/🔐️auth/🧬️schema/🔣️.json"), "utf8"));
-  const fixture = JSON.parse(readFileSync(join(root, "🌎️hub/🔐️auth/🔌️client/🧫️fixtures/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(root, "🌎️hub/🔐️auth/🔌️client/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
   const validator = new Ajv({ strict: false }); validator.addSchema(authSchema);
   for (const [field, definition] of [["credential", "AgentCredentialFileV1"], ["request", "AgentSessionRequestV1"], ["grant", "AgentSessionMintResponseV1"]]) assert.ok(validator.getSchema(`${authSchema.$id}#/$defs/${definition}`)!(fixture[field]));
   for (const [document, vectors, definition] of [["credential", "credentialVectors", "AgentCredentialFileV1"], ["grant", "grantVectors", "AgentSessionMintResponseV1"]]) {

@@ -1,0 +1,86 @@
+{
+  "type": "object",
+  "required": [
+    "source",
+    "grant",
+    "limits",
+    "priorEditIds",
+    "metadata",
+    "control"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "source": {
+      "const": {
+        "operation": 43,
+        "generation": 7,
+        "pageBytes": 3,
+        "prefixHex": "aa",
+        "suffixHex": "bb"
+      }
+    },
+    "grant": {
+      "const": {
+        "items": 1,
+        "copyBytes": 2,
+        "capacityBytes": 65536,
+        "releaseBytes": 262144,
+        "depth": 64
+      }
+    },
+    "limits": {
+      "const": {
+        "fileBytes": 67108864,
+        "frameBodyBytes": 1048576,
+        "records": 8192,
+        "maximumFields": 128,
+        "maximumTextBytes": 1048576,
+        "maximumBinaryBytes": 1048576,
+        "maximumJsonBytes": 1048576,
+        "maximumJsonAllocationBytes": 8388608,
+        "maximumJsonItems": 65536,
+        "maximumJsonDepth": 64
+      }
+    },
+    "priorEditIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "metadata": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "wireHex",
+          "expected"
+        ],
+        "properties": {
+          "wireHex": {
+            "type": "string",
+            "pattern": "^([0-9a-f]{2})+$"
+          },
+          "expected": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumAllocationBytes"
+      ],
+      "properties": {
+        "maximumAllocationBytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

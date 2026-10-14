@@ -433,7 +433,7 @@ fn native_asset_handoff_cancellation_returns_the_closing_request_and_preserves_i
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn unavailable_native_asset_isolated_to_its_exact_world_owner() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️native-asset-response/🔣️.json")).expect("native asset contract");
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📄️native-asset-response/🔣️.json")).expect("native asset contract");
     let expected = &law["failureIsolation"]["native"];
     let runtime = runtime_with_component_worlds();
     let fetch = runtime.take_renderer_asset_step().expect("World A request");
@@ -468,7 +468,7 @@ fn unavailable_native_asset_isolated_to_its_exact_world_owner() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn a_stalled_native_component_body_is_aborted_before_its_sibling_enters_the_single_fetch_lane() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️native-asset-response/🔣️.json")).expect("native asset contract");
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📄️native-asset-response/🔣️.json")).expect("native asset contract");
     let transport = &law["transportCancellation"];
     let observation_deadline = std::time::Duration::from_millis(transport["observationDeadlineMs"].as_u64().expect("observation deadline"));
     let cleanup_deadline = std::time::Duration::from_millis(transport["cleanupDeadlineMs"].as_u64().expect("cleanup deadline"));
@@ -529,7 +529,7 @@ fn a_stalled_native_component_body_is_aborted_before_its_sibling_enters_the_sing
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn a_withheld_native_component_head_is_cancelled_before_its_sibling_enters_the_single_fetch_lane() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️native-asset-response/🔣️.json")).expect("native asset contract");
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📄️native-asset-response/🔣️.json")).expect("native asset contract");
     let transport = &law["transportCancellation"];
     let observation_deadline = std::time::Duration::from_millis(transport["observationDeadlineMs"].as_u64().expect("observation deadline"));
     let cleanup_deadline = std::time::Duration::from_millis(transport["cleanupDeadlineMs"].as_u64().expect("cleanup deadline"));
@@ -591,7 +591,7 @@ fn a_withheld_native_component_head_is_cancelled_before_its_sibling_enters_the_s
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn a_cancelled_local_component_page_is_retained_for_bounded_handback_without_response_publication() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️native-asset-response/🔣️.json")).expect("native asset contract");
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📄️native-asset-response/🔣️.json")).expect("native asset contract");
     let local = &law["localPageCancellation"];
     let page_bytes = local["pageBytes"].as_u64().expect("local page bytes") as usize;
     let path = std::env::temp_dir().join(format!("semio-native-component-page-{}.bin", std::process::id()));

@@ -8,7 +8,7 @@ import emojiRegex from "emoji-regex";
 import { parseInstallationDirectoryV1, installationDirectoryEmoji, installationDirectoryCollision } from "../🟦️.ts";
 
 const owner = resolve(import.meta.dir, "..");
-const corpus = JSON.parse(readFileSync(resolve(owner, "🧫️fixtures/🔣️.json"), "utf8"));
+const corpus = JSON.parse(readFileSync(resolve(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(resolve(owner, "🧬️schema/🔣️.json"), "utf8"));
 const ajv = new Ajv({ strict: true }).addSchema(schema);
 const validate = ajv.getSchema(schema.$id)!;

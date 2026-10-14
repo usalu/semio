@@ -1,0 +1,16 @@
+//! 🎰️ Original fixed slot pages allocate and release under explicit physical grants.
+pub struct OriginalFixedSlotPages<T, const PAGE:usize, const PAGES:usize>{pages:std::mem::ManuallyDrop<[Option<Box<[Option<T>;PAGE]>>;PAGES]>}
+impl<T,const PAGE:usize,const PAGES:usize> OriginalFixedSlotPages<T,PAGE,PAGES>{
+ pub fn new()->Self{Self{pages:std::mem::ManuallyDrop::new(std::array::from_fn(|_|None))}}
+ pub fn prepared(&self)->bool{self.pages.iter().all(Option::is_some)}
+ pub fn empty(&self)->bool{self.pages.iter().all(Option::is_none)}
+ pub fn birth_bytes(&self)->usize{if self.prepared(){0}else{std::mem::size_of::<[Option<T>;PAGE]>()}}
+ pub fn release_bytes(&self)->usize{self.pages.iter().find_map(|page|page.as_ref().map(|page|std::mem::size_of_val(page.as_ref()))).unwrap_or(0)}
+ pub fn birth(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{let bytes=self.birth_bytes();if bytes==0||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<bytes{return Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default()))}let page=self.pages.iter_mut().find(|page|page.is_none()).expect("original slot page admission");*page=Some(crate::boxed_fixed_slots(||None));Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()}))}
+ pub fn release(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{let bytes=self.release_bytes();if bytes==0||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<bytes{return Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default()))}let page=self.pages.iter_mut().find(|page|page.is_some()).expect("original slot page release");if page.as_ref().unwrap().iter().any(Option::is_some){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original slot page still retains payload custody"))}drop(page.take());Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}))}
+ pub fn iter(&self)->impl Iterator<Item=&Option<T>>{self.pages.iter().filter_map(Option::as_ref).flat_map(|page|page.iter())}
+}
+impl<T,const PAGE:usize,const PAGES:usize> std::ops::Index<usize> for OriginalFixedSlotPages<T,PAGE,PAGES>{type Output=Option<T>;fn index(&self,index:usize)->&Self::Output{&self.pages[index/PAGE].as_ref().expect("original slot page remains owned")[index%PAGE]}}
+impl<T,const PAGE:usize,const PAGES:usize> std::ops::IndexMut<usize> for OriginalFixedSlotPages<T,PAGE,PAGES>{fn index_mut(&mut self,index:usize)->&mut Self::Output{&mut self.pages[index/PAGE].as_mut().expect("original slot page remains owned")[index%PAGE]}}
+impl<T,const PAGE:usize,const PAGES:usize> Drop for OriginalFixedSlotPages<T,PAGE,PAGES>{fn drop(&mut self){assert!(std::thread::panicking()||self.empty(),"original slot pages dropped before paid close");if self.empty(){unsafe{std::mem::ManuallyDrop::drop(&mut self.pages)}}}}
+

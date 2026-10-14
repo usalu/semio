@@ -1,0 +1,25 @@
+{
+  "buildDirectory": "/compiler",
+  "vectors": [
+    {
+      "directory": "/compiler/semio-cargo-observations/invocation",
+      "accepted": true
+    },
+    {
+      "directory": "/compiler/semio-cargo-observations",
+      "accepted": false
+    },
+    {
+      "directory": "/compiler/debug/invocation",
+      "accepted": false
+    },
+    {
+      "directory": "/foreign/invocation",
+      "accepted": false
+    },
+    {
+      "directory": "relative",
+      "accepted": false
+    }
+  ]
+}

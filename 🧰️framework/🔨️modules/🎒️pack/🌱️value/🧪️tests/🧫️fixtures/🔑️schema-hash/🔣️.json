@@ -1,0 +1,111 @@
+{
+  "schema": "semio.pack.schema-hash/v1",
+  "shapeTags": {
+    "bool": 1, "int": 2, "uint": 3, "float": 4, "text": 5, "bytes64": 6, "enum": 7, "tuple": 8, "list": 9, "record": 10,
+    "block": 11, "statements": 12, "map": 13, "value": 14, "table": 15, "wire": 16, "quantity": 17, "angle": 18, "ref": 19,
+    "coord": 20, "dir": 21, "dim": 22, "range": 23, "count": 24, "expr": 25, "embed": 26, "embedFrom": 27
+  },
+  "cases": [
+    {
+      "name": "flat",
+      "graph": [
+        [
+          { "id": 1, "key": "a", "optional": false, "flatten": false, "shape": { "kind": "int" } },
+          { "id": 2, "key": "b", "optional": false, "flatten": false, "shape": { "kind": "text" } }
+        ]
+      ],
+      "canonicalHex": "010201016100020201620005",
+      "schemaHash": "4860bedfea4c697fdaf0cd31df2d94a83c9b439c63d514adea119a2c6ea43cca"
+    },
+    {
+      "name": "nested",
+      "graph": [
+        [
+          { "id": 0, "key": "inner", "optional": false, "flatten": false, "shape": { "kind": "record", "record": 1 } },
+          { "id": 1, "key": "items", "optional": false, "flatten": false, "shape": { "kind": "list", "item": { "kind": "record", "record": 1 } } },
+          { "id": 2, "key": "maybe", "optional": true, "flatten": false, "shape": { "kind": "record", "record": 2 } }
+        ],
+        [
+          { "id": 0, "key": "x", "optional": false, "flatten": false, "shape": { "kind": "float" } }
+        ],
+        [
+          { "id": 0, "key": "mode", "optional": false, "flatten": false, "shape": { "kind": "enum", "variants": [[0, "alpha"], [1, "beta"]] } }
+        ]
+      ],
+      "canonicalHex": "03030005696e6e6572000a0101056974656d7300090a0102056d61796265010a020100017800040100046d6f64650007020005616c706861010462657461",
+      "schemaHash": "5d2802f0950b90d3d49da0c4875a26ebe730acc2f5cb7d896e13108634359f2d"
+    },
+    {
+      "name": "nested-inner-field-changed",
+      "graph": [
+        [
+          { "id": 0, "key": "inner", "optional": false, "flatten": false, "shape": { "kind": "record", "record": 1 } },
+          { "id": 1, "key": "items", "optional": false, "flatten": false, "shape": { "kind": "list", "item": { "kind": "record", "record": 1 } } },
+          { "id": 2, "key": "maybe", "optional": true, "flatten": false, "shape": { "kind": "record", "record": 2 } }
+        ],
+        [
+          { "id": 0, "key": "x", "optional": false, "flatten": false, "shape": { "kind": "int" } }
+        ],
+        [
+          { "id": 0, "key": "mode", "optional": false, "flatten": false, "shape": { "kind": "enum", "variants": [[0, "alpha"], [1, "beta"]] } }
+        ]
+      ],
+      "canonicalHex": "03030005696e6e6572000a0101056974656d7300090a0102056d61796265010a020100017800020100046d6f64650007020005616c706861010462657461",
+      "schemaHash": "4ac2587f0ee9ecb1fd635fe062ee160e19501f5798f36696d5599d1fd0658d01"
+    },
+    {
+      "name": "recursive",
+      "graph": [
+        [
+          { "id": 0, "key": "name", "optional": false, "flatten": false, "shape": { "kind": "text" } },
+          { "id": 1, "key": "children", "optional": false, "flatten": false, "shape": { "kind": "list", "item": { "kind": "record", "record": 0 } } },
+          { "id": 2, "key": "alias", "optional": true, "flatten": false, "shape": { "kind": "record", "record": 0 } }
+        ]
+      ],
+      "canonicalHex": "010300046e616d65000501086368696c6472656e00090a000205616c696173010a00",
+      "schemaHash": "1e22e66a57c1629f03f10380e88509a78313102d4099774d8a7b97f4e451fc88"
+    },
+    {
+      "name": "every-shape",
+      "graph": [
+        [
+          { "id": 1, "key": "flag", "optional": false, "flatten": false, "shape": { "kind": "bool" } },
+          { "id": 2, "key": "count", "optional": false, "flatten": false, "shape": { "kind": "uint" } },
+          { "id": 3, "key": "blob", "optional": true, "flatten": false, "shape": { "kind": "bytes64" } },
+          { "id": 4, "key": "point", "optional": false, "flatten": false, "shape": { "kind": "tuple", "item": { "kind": "float" }, "len": 3 } },
+          { "id": 5, "key": "pair", "optional": false, "flatten": false, "shape": { "kind": "tuple", "item": { "kind": "int" }, "len": null } },
+          { "id": 6, "key": "body", "optional": false, "flatten": false, "shape": { "kind": "block", "item": { "kind": "text" } } },
+          { "id": 7, "key": "steps", "optional": false, "flatten": false, "shape": { "kind": "statements", "variants": [["move", 1], ["wait", 2]] } },
+          { "id": 8, "key": "tags", "optional": false, "flatten": false, "shape": { "kind": "map", "item": { "kind": "text" } } },
+          { "id": 9, "key": "any", "optional": false, "flatten": false, "shape": { "kind": "value" } },
+          { "id": 10, "key": "rows", "optional": false, "flatten": false, "shape": { "kind": "table", "record": 3 } },
+          { "id": 11, "key": "edge", "optional": false, "flatten": false, "shape": { "kind": "wire" } },
+          { "id": 12, "key": "force", "optional": false, "flatten": false, "shape": { "kind": "quantity", "unit": "GPa" } },
+          { "id": 13, "key": "turn", "optional": false, "flatten": false, "shape": { "kind": "angle", "unit": "deg" } },
+          { "id": 14, "key": "material", "optional": false, "flatten": false, "shape": { "kind": "ref", "entity": "material" } },
+          { "id": 15, "key": "at", "optional": false, "flatten": false, "shape": { "kind": "coord", "dims": 2 } },
+          { "id": 16, "key": "axis", "optional": false, "flatten": false, "shape": { "kind": "dir" } },
+          { "id": 17, "key": "size", "optional": false, "flatten": false, "shape": { "kind": "dim", "dims": 3 } },
+          { "id": 18, "key": "span", "optional": false, "flatten": false, "shape": { "kind": "range" } },
+          { "id": 19, "key": "times", "optional": false, "flatten": false, "shape": { "kind": "count" } },
+          { "id": 20, "key": "formula", "optional": false, "flatten": false, "shape": { "kind": "expr" } },
+          { "id": 21, "key": "code", "optional": false, "flatten": false, "shape": { "kind": "embed", "lang": "jack" } },
+          { "id": 22, "key": "script", "optional": false, "flatten": false, "shape": { "kind": "embedFrom", "key": "lang" } },
+          { "id": 23, "key": "origin", "optional": false, "flatten": true, "shape": { "kind": "record", "record": 3 } }
+        ],
+        [
+          { "id": 0, "key": "to", "optional": false, "flatten": false, "shape": { "kind": "coord", "dims": 3 } }
+        ],
+        [
+          { "id": 0, "key": "ms", "optional": false, "flatten": false, "shape": { "kind": "uint" } }
+        ],
+        [
+          { "id": 0, "key": "x", "optional": false, "flatten": false, "shape": { "kind": "float" } },
+          { "id": 1, "key": "y", "optional": false, "flatten": false, "shape": { "kind": "float" } }
+        ]
+      ],
+      "canonicalHex": "04170104666c616700010205636f756e7400030304626c6f6201060405706f696e740008040103050470616972000802000604626f6479000b0507057374657073000c02046d6f766501047761697402080474616773000d050903616e79000e0a04726f7773000f030b046564676500100c05666f7263650011034750610d047475726e0012036465670e086d6174657269616c0013086d6174657269616c0f0261740014021004617869730015110473697a6500160312047370616e0017130574696d657300181407666f726d756c6100191504636f6465001a046a61636b1606736372697074001b046c616e6717066f726967696e020a03010002746f0014030100026d7300030200017800040101790004",
+      "schemaHash": "a32c09db2485709ac70940e316229eb412896a00fe16776937b0ef04755c1295"
+    }
+  ]
+}

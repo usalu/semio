@@ -16,7 +16,7 @@
 use super::tests::with_world_step_context;
 use super::*;
 
-const SURFACE_VERBS: &str = include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧫️fixtures/📇️surface-verbs.json");
+const SURFACE_VERBS: &str = include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/📇️surface-verbs.json");
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(SURFACE_VERBS).expect("surface verbs fixture parses")

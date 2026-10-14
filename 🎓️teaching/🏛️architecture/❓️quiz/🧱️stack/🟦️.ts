@@ -25,7 +25,7 @@ import type { AddressInfo } from "node:net";
 import { dirname, extname, join, resolve, sep } from "node:path";
 import { decodeServerInstanceDefinition } from "@semio-tech/framework-server";
 import { WIRE_VERSION } from "@semio-tech/quiz";
-import { terminateOwnedChildTree } from "../../../../🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts";
+import { terminateOwnedChildTree } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { disagreement, type ProctorContract } from "../../../../🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/🛂️proctor/🟦️.ts";
 import { LAUNCHER_SIGNALS, PROCTOR_STOP_GRACE_MS, buildProctor, developmentDataSettled, launchProctor, proctorDevelopmentEnvironment, proctorOrigin, proctorReady, proctorSourceChanged, proctorSourceDirectories, type ProctorProcess } from "../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
 

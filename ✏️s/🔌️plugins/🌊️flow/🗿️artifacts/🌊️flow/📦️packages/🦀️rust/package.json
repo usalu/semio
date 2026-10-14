@@ -9,5 +9,8 @@
   },
   "scripts": {
     "verify-flow-window-ownership": "bun nx run @semio-tech/flow-flow-rs:verify-flow-window-ownership"
+  },
+  "devDependencies": {
+    "@semio-tech/framework": "workspace:*"
   }
 }

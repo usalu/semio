@@ -35,12 +35,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 #[semio_framework_async_macros::async_test]
 async fn background_drawing_and_referenced_model_round_trip_through_text_and_binary() {
     let snapshot = sample_with_composition();
-    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
-    let from_text = <LayoutSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse round-tripped text");
+    let text = pack::snapshot::ArtifactDsl::print_dsl(&snapshot);
+    let from_text = <LayoutSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse round-tripped text");
     assert_eq!(from_text, snapshot);
 
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snapshot);
-    let from_binary = <LayoutSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode round-tripped binary");
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&snapshot);
+    let from_binary = <LayoutSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode round-tripped binary");
     assert_eq!(from_binary, snapshot);
 }
 
@@ -49,8 +49,8 @@ async fn absent_composition_slots_round_trip_as_none() {
     let mut snapshot = sample_with_composition();
     snapshot.background_drawing = None;
     snapshot.referenced_model = None;
-    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
-    assert_eq!(<LayoutSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse"), snapshot);
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snapshot);
-    assert_eq!(<LayoutSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode"), snapshot);
+    let text = pack::snapshot::ArtifactDsl::print_dsl(&snapshot);
+    assert_eq!(<LayoutSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse"), snapshot);
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&snapshot);
+    assert_eq!(<LayoutSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode"), snapshot);
 }

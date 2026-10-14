@@ -1,15 +1,16 @@
 #!/usr/bin/env bun
-import { typecheckProject } from "../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️typescript/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { TEST_LEVEL_BUDGET_MS, resolveTestLevel } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { resolve as compilerStatePath } from "node:path";
+import { typecheckProject } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { TEST_LEVEL_BUDGET_MS, resolveTestLevel } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🖥️ `@semio-tech/framework-os` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { getWorkspaceRoot, runBunx, runVitest } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { runOwnedCommand } from "../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import {advanceScriptInvocation,scriptInvocationBudget} from "../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import { runOwnedCommand } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {advanceScriptInvocation,scriptInvocationBudget} from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runWgpuPackageGenerator } from "../../🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️publication/🟦️.ts";
 
 /** 🧱️ Replays pure service admission and explicit wire ownership with strict source and independent runtime witnesses. */
@@ -122,7 +123,7 @@ async function ownedExport(repoRoot: string, scope: keyof typeof OWNED_SCHEMA_MO
 //#region 🪪️DocumentOpeningAttemptCheck
 /** 🪪️ Proves one Shell opening attempt owns every asynchronous outer worker lifecycle frame. */
 async function proveDocumentOpeningAttempt(repoRoot: string): Promise<number> {
-  const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory");
+  const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory");
   const fixture = JSON.parse(readFileSync(join(root, "🧵️document-opening-attempt-v1.json"), "utf8"));
   const deepEqual = (await import("fast-deep-equal")).default;
   const observed = fixture.cases.map((row: Record<string, unknown>) => {
@@ -220,7 +221,7 @@ class MutationVerbVocabularyCheckScript extends BundleScript {
 
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await typecheckProject({ workspace: this.repoRoot, cwd: this.root, project: "../../tsconfig.json", owner: "os:typescript", args: segments, timeoutMs: 120_000, execution: { signal: this.invocation.control.signal } });
+    await typecheckProject({ workspace: this.repoRoot, stateRoot: compilerStatePath(this.repoRoot, ".cache", "framework"), leaseDirectory: compilerStatePath(this.repoRoot, ".cache", "framework", "leases"), invocation: this.invocation, cwd: this.root, project: "../../tsconfig.json", owner: "os:typescript", args: segments, timeoutMs: 120_000 });
   }
 }
 

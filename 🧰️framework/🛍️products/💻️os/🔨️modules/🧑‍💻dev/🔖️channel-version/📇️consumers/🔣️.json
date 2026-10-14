@@ -28,7 +28,7 @@
       "occurrences": 1
     },
     {
-      "path": "🔨️modules/🌉️mcp/🏠️workspace/🧫️fixtures/🔐️hub-live-catalog/🔣️.json",
+      "path": "🔨️modules/🌉️mcp/🏠️workspace/🧪️tests/🧫️fixtures/🔐️hub-live-catalog/🔣️.json",
       "occurrences": 3,
       "hostileValues": [
         13
@@ -44,7 +44,7 @@
       "occurrences": 3
     },
     {
-      "path": "🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json",
+      "path": "🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧪️tests/🧫️fixtures/🔣️.json",
       "occurrences": 8
     },
     {
@@ -56,7 +56,7 @@
       "occurrences": 1
     },
     {
-      "path": "🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/🧬️catalog-publication/🔣️.json",
+      "path": "🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧫️fixtures/🧬️catalog-publication/🔣️.json",
       "occurrences": 3,
       "hostileValues": [
         22,
@@ -65,7 +65,7 @@
       "hostileOccurrences": 2
     },
     {
-      "path": "🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🧫️fixtures/🔣️.json",
+      "path": "🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🧪️tests/🧫️fixtures/🔣️.json",
       "occurrences": 1
     },
     {
@@ -77,29 +77,29 @@
       "hostileOccurrences": 1
     },
     {
-      "path": "🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🧫️fixtures/🔣️.json",
+      "path": "🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🧪️tests/🧫️fixtures/🔣️.json",
       "occurrences": 1
     },
     {
-      "path": "🔨️modules/🔌️plugin/🖨️describe/🧫️fixtures/🧊️fresh-staging/🔣️.json",
+      "path": "🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🧫️fixtures/🧊️fresh-staging/🔣️.json",
       "occurrences": 1
     },
     {
-      "path": "🔨️modules/🧑‍💻dev/🧫️fixtures/🚀️local-hub.json",
+      "path": "🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🚀️local-hub.json",
       "occurrences": 6
     },
     {
-      "path": "🧫️fixtures/📇️directory/🌐️browser-document-open-v1.json",
+      "path": "🧪️tests/🧫️fixtures/📇️directory/🌐️browser-document-open-v1.json",
       "occurrences": 2,
       "derived": "the document-open catalog encoding and plan digests"
     },
     {
-      "path": "🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json",
+      "path": "🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json",
       "occurrences": 3,
       "derived": "the plan catalog expectedHex and its generation id"
     },
     {
-      "path": "🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json",
+      "path": "🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json",
       "occurrences": 3,
       "derived": "the lease's catalog generation and its Pack-encoded descriptorHex"
     },
@@ -113,7 +113,7 @@
       "hostileOccurrences": 2
     },
     {
-      "path": "🔨️modules/🌉️mcp/💡️inference/🧫️fixtures/🧩️neutral-descriptors/🔣️.json",
+      "path": "🔨️modules/🌉️mcp/💡️inference/🧪️tests/🧫️fixtures/🧩️neutral-descriptors/🔣️.json",
       "occurrences": 4
     },
     {
@@ -122,16 +122,16 @@
       "arbitrary": true
     },
     {
-      "path": "🔨️modules/🔌️plugin/🖨️describe/🧫️fixtures/🧾️fresh-source-epoch/🔣️.json",
+      "path": "🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🧫️fixtures/🧾️fresh-source-epoch/🔣️.json",
       "occurrences": 1,
       "arbitrary": true
     },
     {
-      "path": "🔨️modules/📡️spr/🧵️channel/🧫️fixtures/🪪️document-identity-wire/🔣️.json",
+      "path": "🔨️modules/📡️spr/🧵️channel/🧪️tests/🧫️fixtures/🪪️document-identity-wire/🔣️.json",
       "occurrences": 1
     },
     {
-      "path": "🔨️modules/📡️spr/🧵️channel/🧫️fixtures/🎬️media-export-wire/🔣️.json",
+      "path": "🔨️modules/📡️spr/🧵️channel/🧪️tests/🧫️fixtures/🎬️media-export-wire/🔣️.json",
       "occurrences": 1
     },
     {

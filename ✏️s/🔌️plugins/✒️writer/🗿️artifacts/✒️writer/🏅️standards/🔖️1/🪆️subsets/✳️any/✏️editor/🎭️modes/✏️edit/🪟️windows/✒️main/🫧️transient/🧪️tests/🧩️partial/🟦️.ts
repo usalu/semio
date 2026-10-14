@@ -7,7 +7,7 @@ import type { WriterMainWindowTransient } from "../../🧬️schema/🟦️.ts";
 
 /** 🧵️ Checks the native construction vectors against schema and independent JSON Patch. */
 export function testWriterPartialConstructionOracle(): void {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🧩️partial/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🧩️partial/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const mutationSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/🧬️mutations/🔣️.json", import.meta.url), "utf8"));
   const ajv = semioSchemaAjvV1({ allErrors: true });

@@ -1,0 +1,50 @@
+{
+  "slot": "tiles",
+  "kind": "s.stdio.semio",
+  "many": true,
+  "tiles": [
+    {
+      "id": "inline\u0000引用😀",
+      "media": {
+        "kind": "mesh",
+        "positions": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "indices": [
+          0,
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "id": "child引用😀",
+      "media": {
+        "kind": "meshChild",
+        "childId": "mesh-child\u0000引用😀",
+        "artifactId": "mesh-artifact引用😀",
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "mesh"
+      }
+    }
+  ],
+  "expected": [
+    [
+      "tiles",
+      "mesh-child\u0000引用😀",
+      "mesh-artifact引用😀",
+      "s.stdio.semio",
+      "v1",
+      "mesh"
+    ]
+  ]
+}

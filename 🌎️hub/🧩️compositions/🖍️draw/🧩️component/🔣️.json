@@ -9737,10 +9737,5 @@
       "sizeBytes": 5136791,
       "sha256": "07fbf31c0b9912a4b3cd54b21e48bf6a956f4f8d1adf55d8a98fc7e8496f7f91"
     }
-  ],
-  "hashes": {
-    "wasmSha256": "05b3c9c391389d68d8962aa0ff41c2d90c9ed6e17d9203a519b78a6242e2cb6f",
-    "coreWasmSha256": "5bd536db66de40d37c94cf993e73894e8ead10afb2bbe3d977e1984d6d6c612f",
-    "descriptorSha256": "eea9036e3f99af85470e650ea653a4fa8929dea18bf23be548483f1f6df4c3d4"
-  }
+  ]
 }

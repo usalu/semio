@@ -18,7 +18,7 @@ import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
 import { parseRetainedCloneGrant } from "../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts";
 import grantSchema from "../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
-import laws from "../../🧫️fixtures/🖌️wgpu-document-owner-move/🔣️.json";
+import laws from "../🧫️fixtures/🖌️wgpu-document-owner-move/🔣️.json";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const engineRoot = resolve(suiteRoot, "../..");

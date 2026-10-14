@@ -9,7 +9,7 @@ fn close(actual:CompositeAffine,expected:CompositeAffine) {
 
 #[test]
 fn neutral_frames_preserve_world_placement_and_round_trip() {
-    let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let input=&row["input"];
         let source=affine(&input["source"]);let target=affine(&input["target"]);let transform=affine(&input["transform"]);
@@ -27,7 +27,7 @@ fn neutral_frames_preserve_world_placement_and_round_trip() {
 #[test]
 fn frame_changes_reject_unsafe_geometry() {
     let identity=[1.0,0.0,0.0,1.0,0.0,0.0];
-    let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let invalid=fixture["invalid"].as_array().unwrap().iter().map(affine).chain([
         [f64::INFINITY,0.0,0.0,1.0,0.0,0.0], [1.0,0.0,0.0,1.0,f64::NAN,0.0]
     ]);
@@ -41,7 +41,7 @@ fn frame_changes_reject_unsafe_geometry() {
 
 #[test]
 fn affine_controls_match_neutral_matrices_and_preserve_reflections() {
-    let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🎛️components.json")).unwrap();
+    let fixture:Value=serde_json::from_str(include_str!("🧫️fixtures/🎛️components.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let t=&row["input"];
         let controls=AffineControls {x:t["x"].as_f64().unwrap(),y:t["y"].as_f64().unwrap(),scale_x:t["scaleX"].as_f64().unwrap(),scale_y:t["scaleY"].as_f64().unwrap(),rotation:t["rotation"].as_f64().unwrap(),shear_x:t["shearX"].as_f64().unwrap()};
@@ -49,7 +49,7 @@ fn affine_controls_match_neutral_matrices_and_preserve_reflections() {
         let components=decompose(result).unwrap();assert!(components.scale_x>0.0);
         close(compose(components).unwrap(),result);
     }
-    let frames:Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let frames:Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for row in frames["cases"].as_array().unwrap() {
         let matrix=affine(&row["expected"]);close(compose(decompose(matrix).unwrap()).unwrap(),matrix);
     }
@@ -61,6 +61,6 @@ fn affine_controls_reject_nonfinite_and_singular_inputs() {
     for bad in [AffineControls {x:f64::NAN,..good},AffineControls {y:f64::INFINITY,..good},AffineControls {scale_x:0.0,..good},AffineControls {scale_y:1e-13,..good},AffineControls {rotation:f64::NAN,..good},AffineControls {shear_x:f64::INFINITY,..good}] {
         assert!(compose(bad).is_err());
     }
-    let frames:Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let frames:Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for row in frames["invalid"].as_array().unwrap() {assert!(decompose(affine(row)).is_err());}
 }

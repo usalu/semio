@@ -3,7 +3,7 @@ use serde_json::{json, Value};
 
 #[test]
 fn portable_coordinates_match_original_production_descriptor_oracle() {
-    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let coordinates = fixture["coordinates"].as_array().unwrap();
     assert_eq!(coordinates.len(), CONTRIBUTIONS.len());
     let descriptors: &[&[protocol::MutationLeafDescriptor]] = &[<semio_s_artifact_wfc_bitmap::editor::bitmap::transient::BitmapTransientMutation as Mutation<semio_s_artifact_wfc_bitmap::editor::bitmap::transient::BitmapTransient>>::DESCRIPTORS,<semio_s_artifact_wfc_bitmap::standards::v1::subsets::any::schema::mutations::BitmapMutation as Mutation<semio_s_artifact_wfc_bitmap::standards::v1::subsets::any::schema::snapshot::BitmapSnapshot>>::DESCRIPTORS];
@@ -35,7 +35,7 @@ fn portable_coordinates_match_original_production_descriptor_oracle() {
 
 #[test]
 fn child_refuses_sibling_coordinate_and_retains_progress_cancellation() {
-    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let siblings = fixture["refusedArtifacts"].as_array().unwrap();
     assert_eq!(siblings.len(), 4);
     let mut args = vec!["list-mutations".into(),siblings[0].as_str().unwrap().into(),"1".into(),"any".into(),"--maximum-units".into(),"10000000".into(),"--maximum-owned-bytes".into(),"1048576".into(),"--budget-ms".into(),"60000".into()];

@@ -3,17 +3,17 @@ use protocol::{Mutation, OpBinary, OpText};
 
 #[test]
 fn fem3d_window_config_model_matches_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🧫️fixtures/🪪️document-contract/🔣️.json")).expect("FEM window fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️contract/🪪️document-contract/🔣️.json")).expect("FEM window fixture");
     let base: Fem3dModelWindowConfig = semio_framework_pack_json::from_json_str(&fixture["valid"][0].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral FEM window config");
     let mutation = Fem3dModelWindowConfigMutation::Update(Fem3dModelWindowConfigUpdate { patch: Box::new(Fem3dModelWindowConfigPatch::replacing(&base)) });
     let after = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("FEM window diff");
     assert_eq!(after, base);
     assert_eq!(Fem3dModelWindowConfigMutation::parse_op(&mutation.print_op()).expect("FEM text mutation"), mutation);
     assert_eq!(Fem3dModelWindowConfigMutation::decode_op(&mutation.encode_op().expect("FEM binary mutation")).expect("FEM decoded mutation"), mutation);
-    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&base);
-    assert_eq!(<Fem3dModelWindowConfig as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("FEM window text"), base);
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&base);
-    assert_eq!(<Fem3dModelWindowConfig as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("FEM window pack"), base);
+    let text = pack::snapshot::ArtifactDsl::print_dsl(&base);
+    assert_eq!(<Fem3dModelWindowConfig as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("FEM window text"), base);
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&base);
+    assert_eq!(<Fem3dModelWindowConfig as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("FEM window pack"), base);
     let mut admitted_invalid = Vec::new();
     for row in fixture["invalid"].as_array().expect("neutral invalid cases") {
         let kind = row["kind"].as_str().expect("neutral invalid case kind");

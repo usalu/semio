@@ -299,7 +299,7 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🏷️set-version-info/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-version-info/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:2dec9304cb4af440889748bbf64da4f6fd3603202cb6df830276265aae789d92",
           "bytes": 11015

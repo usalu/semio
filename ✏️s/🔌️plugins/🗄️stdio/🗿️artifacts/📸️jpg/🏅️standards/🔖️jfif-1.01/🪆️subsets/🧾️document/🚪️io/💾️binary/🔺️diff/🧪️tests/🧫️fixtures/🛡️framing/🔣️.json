@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "reject": [
+    {
+      "name": "retired native flags",
+      "bytes": [
+        1,
+        0,
+        2
+      ]
+    },
+    {
+      "name": "thumbnail presence outside its domain",
+      "bytes": [
+        1,
+        128,
+        0,
+        2
+      ]
+    },
+    {
+      "name": "density unit outside its domain",
+      "bytes": [
+        1,
+        16,
+        0,
+        3
+      ]
+    },
+    {
+      "name": "nonminimal width varint",
+      "bytes": [
+        1,
+        1,
+        0,
+        128,
+        0
+      ]
+    },
+    {
+      "name": "collection count beyond payload extent",
+      "bytes": [
+        1,
+        0,
+        1,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        1
+      ]
+    },
+    {
+      "name": "trailing byte after empty diff",
+      "bytes": [
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "u32 dimension overflow",
+      "bytes": [
+        1,
+        1,
+        0,
+        128,
+        128,
+        128,
+        128,
+        16
+      ]
+    }
+  ]
+}

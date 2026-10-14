@@ -7,7 +7,7 @@
 use super::*;
 use std::collections::{HashMap, HashSet};
 
-const COMPOSED_CHILD_HISTORY_FIXTURE_JSON: &str = include_str!("../../🧫️fixtures/🧫️composed-child-history/🔣️.json");
+const COMPOSED_CHILD_HISTORY_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/🧫️composed-child-history/🔣️.json");
 
 fn text(value: &Value) -> &str {
     value.as_str().unwrap_or_else(|| panic!("fixture text expected, got {value}"))

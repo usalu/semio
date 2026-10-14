@@ -3,9 +3,9 @@ const neutral=(value:any):any=>value instanceof Uint8Array?Array.from(value):Arr
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import schema from "../../🧬️schema/🔣️.json";
-import cases from "../../🧫️fixtures/🔣️.json";
+import cases from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🪪️identity/🔣️.json";
 import {sceneIdentityMatches} from "../../🟦️.ts";
-import admissionCases from "../../🚦️admission/🧫️fixtures/🔣️.json";
+import admissionCases from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🪪️identity/🚦️admission/🔣️.json";
 import admissionSchema from "../../🚦️admission/🧬️schema/🔣️.json";
 import {sceneAdmission,type SceneAdmission} from "../../🚦️admission/🟦️.ts";
 test("query admission borrows only the exact complete live source and distinguishes pending failure and stale owners",()=>{
@@ -19,7 +19,7 @@ test("query admission borrows only the exact complete live source and distinguis
 });
 test("mounted geometry requires every source identity field",()=>{const validate=new Ajv({strict:true}).compile(schema);for(const row of cases){expect(validate(row.captured)).toBe(true);expect(validate(row.live)).toBe(true);expect(sceneIdentityMatches(row.captured,row.live)).toBe(row.matches);expect(JSON.stringify(row.captured)===JSON.stringify(row.live)).toBe(row.matches);expect(BigInt(row.captured.base)===BigInt(row.live.base)&&BigInt(row.captured.generation)===BigInt(row.live.generation)&&row.captured.instance===row.live.instance&&row.captured.revision.every((byte,index)=>byte===row.live.revision[index])).toBe(row.matches);}});
 
-import invalids from "../../🧫️fixtures/⚠️invalid/🔣️.json";
+import invalids from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🪪️identity/⚠️invalid/🔣️.json";
 import type {SceneIdentity} from "../../🟦️.ts";
 test("source authority refuses numeric lanes, noncanonical decimals and invalid identity widths",()=>{
  const validate=new Ajv({strict:true}).compile(schema);for(const row of invalids){const value={...cases[0]!.captured,...row.patch}as unknown as SceneIdentity;expect(validate(neutral(value)),row.name).toBe(false);expect(sceneIdentityMatches(value,value),row.name).toBe(false);expect(sceneIdentityMatches(value,cases[0]!.captured),row.name).toBe(false);expect(sceneIdentityMatches(cases[0]!.captured,value),row.name).toBe(false);}

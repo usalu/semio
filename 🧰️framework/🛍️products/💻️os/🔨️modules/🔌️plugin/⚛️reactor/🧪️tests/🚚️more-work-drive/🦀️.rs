@@ -16,13 +16,13 @@ fn tree(text: &str) -> ComponentTree {
 }
 
 fn contract() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🚚️more-work-drive.json")).expect("more-work drive contract fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🚚️more-work-drive.json")).expect("more-work drive contract fixture")
 }
 
 #[test]
 fn late_ui_owners_arm_turns_until_their_credits_return_without_waiting_for_live_siblings() {
     use ui_contract::{Buildable, HasBase, HasChildren};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️late-ui-retirement.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/♻️late-ui-retirement.json")).unwrap();
     let limit = fixture["maximumTurns"].as_u64().unwrap() as usize;
     for case in fixture["cases"].as_array().unwrap() {
         for _ in 0..limit {

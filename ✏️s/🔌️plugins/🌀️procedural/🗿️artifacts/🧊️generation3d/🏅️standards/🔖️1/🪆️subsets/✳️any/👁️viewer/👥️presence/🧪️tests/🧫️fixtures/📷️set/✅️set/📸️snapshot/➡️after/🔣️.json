@@ -1,0 +1,16 @@
+{
+  "previewCamera": {
+    "position": [
+      2.0,
+      -8.0,
+      3.0
+    ],
+    "target": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "fov": 35.0
+  },
+  "showMode": "shaded"
+}

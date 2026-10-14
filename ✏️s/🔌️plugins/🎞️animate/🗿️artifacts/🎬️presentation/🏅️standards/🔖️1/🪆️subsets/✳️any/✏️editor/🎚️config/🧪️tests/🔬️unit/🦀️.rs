@@ -9,16 +9,16 @@ fn presentation_config_default_matches_the_existing_runtime_defaults() {
 #[test]
 fn presentation_config_dsl_round_trips() {
     let config = PresentationConfig { engagement_input: "2x2".into() };
-    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&config);
-    let parsed = <PresentationConfig as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("config dsl round trip");
+    let text = pack::snapshot::ArtifactDsl::print_dsl(&config);
+    let parsed = <PresentationConfig as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("config dsl round trip");
     assert_eq!(parsed, config);
 }
 
 #[test]
 fn presentation_config_pack_round_trips() {
     let config = PresentationConfig { engagement_input: "add".into() };
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&config);
-    let decoded = <PresentationConfig as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("config pack round trip");
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&config);
+    let decoded = <PresentationConfig as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("config pack round trip");
     assert_eq!(decoded, config);
 }
 

@@ -105,6 +105,22 @@
         "command": "bun ./📜️script.ts test parity",
         "forwardAllArgs": true
       }
+    },
+    "test-complete-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-complete-sqlite-source"
+      }
+    },
+    "test-complete-sqlite-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-complete-sqlite-native"
+      }
     }
   }
 }

@@ -5,7 +5,7 @@ use protocol::Mutation;
 #[test]
 fn mask_link_changes_preserve_nested_composite_pixels_and_exact_undo() {
     use crate::standards::v1::subsets::any::schema::{raster_image_test_snapshot,snapshot::retire_raster_snapshot};
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     for owner in ["paint","group"] {
         let mut document=raster_image_test_snapshot();
         let mask=serde_json::json!({"enabled":true,"linked":true,"invert":false,"width":4,"height":4,"imageKey":"semio-emblem","transform":{"x":0.0,"y":0.0,"a":1.0,"b":1.0,"c":-1.0,"d":1.0}});
@@ -74,7 +74,7 @@ fn inspector_mask_controls_emit_semantic_changes_and_restore_history() {
 
 #[test]
 fn property_commands_enforce_neutral_protection_capabilities() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let id=case["id"].as_str().unwrap();

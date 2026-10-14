@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { writeGeneratedFileIfChanged } from "../../../🏃️process/📦️artifacts/🗂️files/🟦️.ts";
+import { writeGeneratedFileIfChanged } from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 import type { UiAxesTarget } from "../📋️plan/🟦️.ts";
 
 /** 🔎️ Returns every missing or byte-stale UI axes projection. */

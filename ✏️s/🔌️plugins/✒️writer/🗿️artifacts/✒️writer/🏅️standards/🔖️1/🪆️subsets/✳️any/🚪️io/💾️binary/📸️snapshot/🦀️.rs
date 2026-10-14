@@ -1,5 +1,5 @@
 //! 📦️ Writer artifact — binary document surface + laws (constitutional: pack). Owns the
-//! `store::os_store::serialization::ArtifactPack` impl for `WriterSnapshot`, encoded through its derived `dsl::DslRecord` spec.
+//! `pack::snapshot::ArtifactPack` impl for `WriterSnapshot`, encoded through its derived `dsl::DslRecord` spec.
 
 use crate::WriterSnapshot;
 use store::PackError;
@@ -13,17 +13,17 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#region 🔖️ArtifactPack
 /// 📦️ Derived-record pack: the `dsl::DslRecord` spec of `WriterSnapshot` (composed `document` child
 /// included) is both the byte layout and the `record_spec()` pack-schema identity.
-impl store::os_store::serialization::ArtifactPack for WriterSnapshot {
-    fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())}
+impl pack::snapshot::ArtifactPack for WriterSnapshot {
+    
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| PackError::from(e.into_value_error()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+        if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         let mut snapshot = Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)?;
@@ -34,16 +34,19 @@ impl store::os_store::serialization::ArtifactPack for WriterSnapshot {
         Some(Self::__dsl_spec())
     }
 }
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for WriterSnapshot {
+fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())}
+}
 //#endregion 🔖️ArtifactPack
 
 /// 📦️ Encodes a `WriterSnapshot` to its binary pack form.
 pub fn encode(projection: &WriterSnapshot) -> Vec<u8> {
-    store::os_store::serialization::ArtifactPack::encode_pack(projection)
+    pack::snapshot::ArtifactPack::encode_pack(projection)
 }
 
 /// 📖️ Decodes a `WriterSnapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<WriterSnapshot, PackError> {
-    <WriterSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)
+    <WriterSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -57,7 +60,7 @@ mod tests;
 mod semio_protocol_conformance;
 
 /// 🫴️ Declares this owner’s actual controlled native record factories.
-impl store::ArtifactNativeSnapshot for WriterSnapshot {
- fn decode_native_snapshot(payload:store::NativeSnapshotInput<'_>,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{store::decode_native_snapshot_record(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|Self::__dsl_from_record_controlled(record,native),control)}
- fn encode_native_snapshot(&self,encoding:store::NativeSnapshotEncoding,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{store::encode_native_snapshot_record(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)}
+impl pack::snapshot::ArtifactNativeSnapshot for WriterSnapshot {
+ fn decode_native_snapshot(payload:pack::snapshot::NativeSnapshotInput<'_>,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{store::decode_native_snapshot_record(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|Self::__dsl_from_record_controlled(record,native),control)}
+ fn encode_native_snapshot(&self,encoding:pack::snapshot::NativeSnapshotEncoding,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{store::encode_native_snapshot_record(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)}
 }

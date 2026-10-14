@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 /** 📦️ Block 3D TypeScript artifact package router. */
 import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts";
-import {BundleScript} from "./../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import {BundleScript} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import {resolve} from "node:path";
-import {runOwnedCommand} from "./../../../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {runOwnedCommand} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 /** 🧪️ Runs the artifact-owned original physical transport corpus with cancellation and progress. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {

@@ -1,4 +1,4 @@
-import { acquireCargoBuildLeaseV1 } from "../../../../../🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
+import { acquireCargoBuildLeaseV1 } from "../../../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { test,expect } from "bun:test";
 import { Database } from "bun:sqlite";
 import { readFile, mkdir } from "node:fs/promises";
@@ -6,7 +6,7 @@ import { createRequire } from "node:module";
 import { join,isAbsolute } from "node:path";
 import { setImmediate } from "node:timers/promises";
 import { runMutationInventoryProcess,readMutationInventoryCapture,readMutationInventoryExecutionPolicy,MutationInventoryProcessWorkspace,MutationInventoryProcessError,mutationInventoryPolicyArguments,admitMutationInventoryProducerArguments } from "../🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
+import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 const require=createRequire(import.meta.url),Ajv=require("ajv"),execa=require("execa"),validate=new Ajv({strict:false}).compile(schema);
 const output=process.env.SEMIO_TEST_ARTIFACT_DIR;

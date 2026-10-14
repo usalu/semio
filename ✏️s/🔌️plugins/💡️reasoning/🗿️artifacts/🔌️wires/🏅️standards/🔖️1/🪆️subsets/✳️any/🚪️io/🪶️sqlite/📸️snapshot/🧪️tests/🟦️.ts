@@ -3,7 +3,7 @@ import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import{exportSqliteDatabase,importSqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import type{WiresValue}from"../../../../🧬️schema/🌱️value/🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
+import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {parseWiresSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 const schema=await Bun.file(new URL("../🗄️.sql",import.meta.url)).text();
 function snapshot():import("../../../../🧬️schema/📸️snapshot/🟦️.ts").WiresSnapshot{return{content:fixture.content,wiresSnapshot:{kind:"object",members:[
@@ -75,7 +75,7 @@ test("Wires admits reconstruction lookup ownership before materializing independ
 
 
 test("Wires native semantic census closed contract agrees with complete independent SQL values",async()=>{
- const file=Bun.file(new URL("../🧫️fixtures/🧮️census/🔣️.json",import.meta.url));expect(await file.exists()).toBe(true);
+ const file=Bun.file(new URL("./🧫️fixtures/🧮️census/🔣️.json",import.meta.url));expect(await file.exists()).toBe(true);
  const contract=await file.json();
  expect(contract["version"]).toEqual(1);expect(contract["owner"]).toEqual("wires");expect(contract["valueBudget"]).toEqual("cumulativeSqlStorageClasses");expect(contract["allocationBudget"]).toEqual("independentOwnedRequests");expect(contract["scalarBytes"]).toEqual(8);expect(contract["encodings"]).toEqual(["binary","text"]);expect(contract["directions"]).toEqual(["decodeNative","encodeNative"]);expect(contract["grants"]).toEqual(["exact","minusOne","zero"]);expect(contract.owner).toBe("wires");
  expect(contract.encodings).toEqual(["binary","text"]);expect(contract.directions).toEqual(["decodeNative","encodeNative"]);expect(contract.grants).toEqual(["exact","minusOne","zero"]);

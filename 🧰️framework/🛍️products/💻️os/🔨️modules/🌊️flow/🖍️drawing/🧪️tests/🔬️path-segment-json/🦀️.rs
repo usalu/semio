@@ -2,7 +2,7 @@ use super::*;
 use semio_framework_2d::PathSegment;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("path segment JSON fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("path segment JSON fixture")
 }
 
 #[test]

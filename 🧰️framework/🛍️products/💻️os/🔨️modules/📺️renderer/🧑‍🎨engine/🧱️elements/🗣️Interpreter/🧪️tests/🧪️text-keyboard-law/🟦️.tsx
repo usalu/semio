@@ -7,7 +7,7 @@
  * `@testing-library/user-event`, whose own model of a browser types the line break a multi-line Enter means and none into a
  * single-line field. A segmented select renders as a radio group that dispatches the picked value. */
 import userEvent from "@testing-library/user-event";
-import textControls from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🧫️text-controls/🔣️.json";
+import textControls from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🧫️text-controls/🔣️.json";
 import { uiTextInputKey, type TextInputKey, type TextInputKeyAction } from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
 
 type TestSource = { readonly url: string };

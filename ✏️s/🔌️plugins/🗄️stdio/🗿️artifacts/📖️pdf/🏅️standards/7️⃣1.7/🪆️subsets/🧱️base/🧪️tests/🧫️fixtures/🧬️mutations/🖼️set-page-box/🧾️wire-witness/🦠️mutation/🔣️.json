@@ -1,0 +1,11 @@
+{
+  "mutation": "setPageBox",
+  "index": 0,
+  "kind": "crop",
+  "rect": [
+    0,
+    0,
+    0,
+    0
+  ]
+}

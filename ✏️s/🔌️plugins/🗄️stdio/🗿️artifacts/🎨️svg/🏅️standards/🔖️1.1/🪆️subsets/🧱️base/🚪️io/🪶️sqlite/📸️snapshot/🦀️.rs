@@ -1,8 +1,9 @@
 //! 🎨️ SVG's explicit relational vocabulary over its native typed SvgDocument fields.
 
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
 use crate::schema::snapshot::{SvgDocument, SvgNode};
-use semio_framework_os_kernel::{sqlite_snapshot::{SqliteDatabase, SqliteSnapshotControl}, os_store::serialization::ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{SqliteDatabase, SqliteSnapshotControl}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::{project_xml_document, reconstruct_xml_document, XmlSqliteTables};
 
 const TABLES: XmlSqliteTables = XmlSqliteTables {
@@ -13,7 +14,7 @@ const TABLES: XmlSqliteTables = XmlSqliteTables {
 
 fn validate_root(doc: &SvgDocument) -> Result<(), ValueError> { doc.validate_attribute_owners().map_err(|detail|ValueError::new(ValueRefusalKind::InvalidValue,detail))?;match &doc.root { Some(SvgNode::Element { name, .. }) if name == "svg" || name.ends_with(":svg") => Ok(()), _ => Err(ValueError::new(ValueRefusalKind::InvalidValue,"SVG snapshot requires an svg root element")) } }
 
-impl ArtifactSqliteSnapshot for SvgSnapshot {
+impl ArtifactSqliteSnapshotHost for SvgSnapshot {
     fn decode_sqlite_snapshot_native(payload:&semio_framework_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
         native_owner.receive::<Self,Self>(|slot,native_control,body|{
             let mut owner=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(native::decode(payload,control,native_control)?,|value:Self|crate::schema::snapshot::retire_svg_document(value.doc));
@@ -35,12 +36,17 @@ impl ArtifactSqliteSnapshot for SvgSnapshot {
         let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),"tiny"=>crate::standards::v1_1::subsets::tiny::io::check_svg_tiny_conformance_controlled(self,control).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?,"basic"=>crate::standards::v1_1::subsets::basic::io::check_svg_basic_conformance_controlled(self,control).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?,_=>return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"SVG named subset has no owned semantic validator")))};Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
     }
 
-    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> {
+    
+    
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for SvgSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> {
          validate_root(&self.doc)?; let mut native=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(native::project_document(&self.doc,control)?,semio_s_artifact_stdio_xml::schema::snapshot::ownership::retire_xml_document);project_xml_document(&self.schema, native.as_mut(), Self::SQLITE_SCHEMA, TABLES, control) 
         
     }
-    fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self,ValueError> {
+fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self,ValueError> {
          let (schema, doc) = reconstruct_xml_document(database, Self::SQLITE_SCHEMA, TABLES, control)?; let doc=native::admit_document(doc,control)?;let mut owner=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(Self{schema,doc},|value:Self|crate::schema::snapshot::retire_svg_document(value.doc));validate_root(&owner.as_mut().doc)?;Ok(owner.take())
         
     }

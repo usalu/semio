@@ -2,7 +2,7 @@
  use super::{TiffSnapshot,ValueError,ValueRefusalKind,SqliteSnapshotControl,SqliteSnapshotPhase,RowWriter};
  use semio_framework_value::{DslValue as D,NativeDecodeControl};
  use semio_framework_dsl_record::{RecordValue,FieldValue as F};
- use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot as _,sqlite_snapshot::SqliteDatabaseLimits};
+ use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost as _,sqlite_snapshot::SqliteDatabaseLimits};
  type Result<T>=std::result::Result<T,ValueError>;
  const TABLES:[(&str,usize);17]=[("tiff_ascii_value",4),("tiff_byte_value",4),("tiff_block",8),("tiff_sample",5),("tiff_document",2),("tiff_double_value",5),("tiff_float_value",6),("tiff_ifd",3),("tiff_long_value",4),("tiff_rational_value",5),("tiff_short_value",4),("tiff_signed_byte_value",4),("tiff_signed_long_value",4),("tiff_signed_rational_value",5),("tiff_signed_short_value",4),("tiff_tag",5),("tiff_undefined_value",4)];
  fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"TIFF native value differs from authored role")}
@@ -23,3 +23,4 @@
  fn ifd(&mut self,value:&D)->Result<()>{let entries=object(value)?;self.row(24)?;for block in array(required(entries,"blocks",self.native)?)?{let block=object(block)?;for key in ["x","y","width","height","channels"]{unsigned(required(block,key,self.native)?,u64::from(u32::MAX))?;}self.row(64)?;for sample in array(required(block,"samples",self.native)?)?{let sample=object(sample)?;unsigned(required(sample,"lo",self.native)?,u64::from(u32::MAX))?;unsigned(required(sample,"hi",self.native)?,u64::from(u32::MAX))?;self.row(40)?;}}for entry in array(required(entries,"entries",self.native)?)?{let entry=object(entry)?;unsigned(required(entry,"tag",self.native)?,u64::from(u16::MAX))?;self.row(40)?;let values=required(entry,"values",self.native)?;self.values(values)?;}Ok(())}}
  pub(super) fn borrowed(record:&RecordValue,limits:SqliteDatabaseLimits,native:&mut NativeDecodeControl<'_>)->Result<()>{extent(limits)?;native.scoped_stage(|native|{native.begin_stage(0)?;if record.fields.len()!=2||record.fields.keys().any(|id|!(1..=2).contains(id)){return Err(invalid())}let schema=match record.get(1){Some(F::Text(schema))=>{native.borrow_text(schema.as_bytes())?;schema},_=>return Err(invalid())};let ifds=match record.get(2){Some(F::Value(value))=>array(value)?,_=>return Err(invalid())};let mut census=Census{native,limits,rows:0,bytes:0};census.row(add(8,schema.len())?)?;for ifd in ifds{census.ifd(ifd)?;}census.native.checkpoint()})}
  
+use pack::snapshot::ArtifactSqliteSnapshot as _;

@@ -46,7 +46,7 @@ fn retain_group_owner(retirements: &mut ArtifactStoreDisplacedRetirements, reser
 
 impl<P, Mu> ArtifactStore<P, Mu>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mu: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     pub(super) fn stage_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {

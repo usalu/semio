@@ -14,7 +14,7 @@ const revision = (hex: string): number[] => [...bytes(hex)];
 
 export function testDurableOwnedGroupDecisionFixture(): void {
   const owner = testFileUrlToPath(new URL(".", testSourceUrl));
-  const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
   
   
   assert.equal(fixture.version, 1);

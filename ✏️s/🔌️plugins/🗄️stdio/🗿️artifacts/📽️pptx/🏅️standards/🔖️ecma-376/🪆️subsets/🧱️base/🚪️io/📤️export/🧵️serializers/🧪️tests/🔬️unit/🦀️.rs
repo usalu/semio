@@ -5,7 +5,7 @@ use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapsh
 use std::io::{Cursor, Read};
 
 fn literal_export_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../../🧫️fixtures/🔤️literal-xml-export/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🔤️literal-xml-export/🔣️.json")).unwrap()
 }
 
 fn literal_export_snapshot(fixture: &serde_json::Value) -> PptxSnapshot {

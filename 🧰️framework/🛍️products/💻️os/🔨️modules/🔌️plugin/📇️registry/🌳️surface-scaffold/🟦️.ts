@@ -2,7 +2,7 @@ import { existsSync, lstatSync, realpathSync } from "node:fs";
 import { isAbsolute, join, relative, sep } from "node:path";
 import type { ArtifactScaffoldLeaf, ArtifactScaffoldOptions, ArtifactScaffoldResult } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { authorArtifactScaffold } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { TAXONOMY, primaryFilenameForKind } from "../🔎️discovery/🟦️.ts";
 import { SCHEMA_FACET_DIR, listDirs } from "../🗿️taxonomy-validation/🟦️.ts";
 

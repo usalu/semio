@@ -304,7 +304,7 @@ async function contentDigest(bytes: Uint8Array | string): Promise<string> {
  *  NOT to this fixture directory. Emitting bare `<recipe>/<file>` paths therefore made every digest
  *  resolve to a non-existent `🔮️oracles/<recipe>/<file>` and read as 369 mismatches. The sibling BRep
  *  corpus already uses this prefix; matching it is what makes the two corpora verifiable the same way. */
-const FIXTURE_PATH_PREFIX = "../🧫️fixtures";
+const FIXTURE_PATH_PREFIX = "../🧪️tests/🧫️fixtures";
 
 function write(path: string, body: string): void {
   mkdirSync(dirname(path), { recursive: true });
@@ -473,7 +473,7 @@ async function generateOne(t: NonNullable<typeof toolkit>, recipe: Recipe, outDi
 function carrier(): number {
   const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
   if (build.status !== 0) return build.status ?? 1;
-  return spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
+  return spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧪️tests/🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
 }
 //#endregion 🧩️Carrier
 
@@ -491,7 +491,7 @@ async function main(argv: readonly string[]): Promise<number> {
     console.error(`[generator] no recipe matches ${JSON.stringify(only)} — known: ${RECIPES.map((recipe) => recipe.id).join(", ")}`);
     return 1;
   }
-  const outDir = process.env.SEMIO_FIXTURE_OUT ?? value("--out") ?? join(import.meta.dir, "..", "🧫️fixtures");
+  const outDir = process.env.SEMIO_FIXTURE_OUT ?? value("--out") ?? join(import.meta.dir, "..", "🧪️tests/🧫️fixtures");
 
   if (command === "manifests" || command === "generate") {
     const t = await manifold3d();

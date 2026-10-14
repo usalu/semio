@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "owner": "originalStoreSnapshotRead",
+  "retirement": "originalTypedRead",
+  "sourceGeneration": "actualIssuer",
+  "sourceRevision": "actualIssuer",
+  "sameBusinessIdentity": true,
+  "transferReceipt": [
+    1,
+    0,
+    0,
+    0
+  ],
+  "deniedReceipt": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "denials": [
+    "fuel",
+    "deadline",
+    "cancel",
+    "items",
+    "depth",
+    "staleRevision",
+    "staleGeneration",
+    "wrongOperation",
+    "wrongGeneration",
+    "borrowedDonor"
+  ],
+  "replacementSnapshot": false,
+  "terminalDropBytes": 0
+}

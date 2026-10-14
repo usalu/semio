@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "tests": [
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📥️capture/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/📥️original-control/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📤️fractional/🟦️.ts"
+  ],
+  "bindings": [
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧫️fixtures/📨️managed-output.json",
+    "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📥️capture/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📋️policy/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/📥️capture/📋️policy/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+    "nx.json",
+    "package.json",
+    "bun.lock",
+    "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json"
+  ],
+  "controls": {
+    "testLevel": "long",
+    "bunTimeoutMilliseconds": 60000,
+    "maximumUnits": 8388608,
+    "maximumOwnedBytes": 67108864,
+    "maximumDepth": 64,
+    "nativeBudgetMilliseconds": 120000,
+    "phaseBudgetMilliseconds": 600000,
+    "maximumOutputBytes": 67108864
+  },
+  "command": [
+    "nx",
+    "run",
+    "@semio-tech/repo-lib:test-original-command-control",
+    "--skip-nx-cache"
+  ]
+}

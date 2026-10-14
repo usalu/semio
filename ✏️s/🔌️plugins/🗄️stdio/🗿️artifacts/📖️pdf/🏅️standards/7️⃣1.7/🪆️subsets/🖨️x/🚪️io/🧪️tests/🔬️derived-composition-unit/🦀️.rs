@@ -46,7 +46,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn missing_output_intent_fails_compose() {
         let snapshot = PdfSnapshot::default();
-        let bytes = <PdfSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
+        let bytes = <PdfSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let err = PdfXComposerComposition::compose(&sources).expect_err("a document with no OutputIntent must not stamp x");
         assert!(err.diagnostics.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::x::io::CODE_OUTPUT_INTENT), "got {:?}", err.diagnostics);
@@ -55,8 +55,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn subset_validator_recheck_runs_the_same_check() {
         let snapshot = PdfXBuilder::new("sRGB IEC61966-2.1").add_page(crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage::new(50.0, 50.0)).build().unwrap();
-        let bytes = <PdfSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
-        assert_eq!(<PdfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).unwrap(), snapshot);
+        let bytes = <PdfSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
+        assert_eq!(<PdfSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).unwrap(), snapshot);
         let diagnostics = PdfXValidator::validate(&IoPayload::Binary(bytes)).await;
         assert_eq!(diagnostics, crate::standards::v1_7::subsets::x::io::check_x_conformance(&snapshot));
     }

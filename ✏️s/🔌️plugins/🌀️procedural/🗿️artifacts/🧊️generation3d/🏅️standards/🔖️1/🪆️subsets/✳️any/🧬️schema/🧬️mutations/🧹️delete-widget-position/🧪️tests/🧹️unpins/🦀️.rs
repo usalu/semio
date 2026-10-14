@@ -14,11 +14,11 @@ use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRe
 use crate::Generation3dSnapshot;
 use crate::central_apply::{apply_generation3d_mutation};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️delete-widget-position/🧹️unpins/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️delete-widget-position/🧹️unpins/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️delete-widget-position/🧹️unpins/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️delete-widget-position/🧹️unpins/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️delete-widget-position/🧹️unpins/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️delete-widget-position/🧹️unpins/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️delete-widget-position/🧹️unpins/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️delete-widget-position/🧹️unpins/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️delete-widget-position/🧹️unpins/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️delete-widget-position/🧹️unpins/🎯️outcome/🔣️.json");
 
 fn before() -> Generation3dSnapshotRead {
     Generation3dSnapshotRead::new(semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes"))

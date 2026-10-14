@@ -1,6 +1,7 @@
 //! 🎧️ Borrowed WAV roles admit exact relational sample, octet and chunk-order cells before ownership.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{invalid,work,ownership,numeric_class,UnsignedWord,WavSnapshot};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_dsl_record::{DslField,RecordValue as R,FieldValue as F};
 use semio_framework_value::{ValueError,NativeDecodeControl as N};
 type Result<T>=std::result::Result<T,ValueError>;

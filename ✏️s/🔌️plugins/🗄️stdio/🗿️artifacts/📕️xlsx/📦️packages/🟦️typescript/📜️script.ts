@@ -5,10 +5,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
-await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-xlsx",{suites:["🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});
+await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-xlsx",{ bundleRuntime: "bun",suites:["🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});
 
 if ((process.argv[2] ?? "test") === "test") {
-  const root = resolve(import.meta.dir, "../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧫️fixtures/🪟️viewer-cell-window");
+  const root = resolve(import.meta.dir, "../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🪟️viewer-cell-window");
   const fixture = JSON.parse(readFileSync(resolve(root, "🔣️.json"), "utf8"));
   assert.equal(fixture.expectedKeys.length, fixture.rows);
   assert.equal(fixture.expectedCells.length, fixture.rows);

@@ -2,8 +2,8 @@ import artifactReferenceSchema from "../../../../../../../../../../../../../🧰
 import{expect,test}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
-import fixture from"../🧫️fixtures/🔣️.json";
-import mediaPricing from"../🧫️fixtures/🎞️media-pricing.json";
+import fixture from"./🧫️fixtures/🔣️.json";
+import mediaPricing from"./🧫️fixtures/🎞️media-pricing.json";
 import {applyPatch} from "fast-json-patch";
 
 test("CAD retained media source pricing preserves exact UTF-8 bytes and ordered lifecycle nodes",async()=>{
@@ -105,7 +105,7 @@ test("CAD intrinsic geometry media preserves the declared file payload through i
  const policy=(fixture as unknown as {intrinsicGeometry?:unknown}).intrinsicGeometry;
  expect(policy).toEqual({accepted:["structuredText","intrinsicText","intrinsicBytes"],refused:["intrinsicNull","addressedBinary"],childPublication:"insertElement",childSlot:"shapeModel",geometryOwner:"persistedArtifact",geometrySlot:"breps",geometrySubset:"brep",parentOperation:"createBrep",atomicChildren:2,positionCount:6,analyticVertexCount:6,triangleCount:2,bounds:[[0,0,0],[3,3,2]]});
  const {OBJLoader}=await import("three/examples/jsm/loaders/OBJLoader.js");
- const text=await Bun.file(new URL("../../../../../../../../../../../🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧫️fixtures/📦️set-object-applied/⬅️before.obj",import.meta.url)).text();
+ const text=await Bun.file(new URL("../../../../../../../../../../../🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧪️tests/🧫️fixtures/📦️set-object-applied/⬅️before.obj",import.meta.url)).text();
  const bytes=Buffer.from(text,"utf8");
  expect(new TextDecoder("utf-8",{fatal:true}).decode(bytes)).toBe(text);
  const positions:number[]=[];
@@ -117,7 +117,7 @@ test("CAD intrinsic geometry media preserves the declared file payload through i
  expect([0,1,2].map(axis=>[Math.min(...positions.filter((_,index)=>index%3===axis)),Math.max(...positions.filter((_,index)=>index%3===axis))])).toEqual([[0,3],[0,3],[0,2]]);
 });
 
-for (const row of (await import("../🧫️fixtures/🧵️paged-text.json")).default.cases) test("CAD paged UTF-8 census SQLite oracle " + row.id, () => {
+for (const row of (await import("./🧫️fixtures/🧵️paged-text.json")).default.cases) test("CAD paged UTF-8 census SQLite oracle " + row.id, () => {
  const text = row.segments.join("").repeat(row.repeat), database = new Database(":memory:");
  try { const result = database.query("SELECT length(CAST(? AS BLOB)) AS bytes").get(text) as {bytes:number}; expect(result.bytes).toBe(row.textBytes); expect(new TextEncoder().encode(text).length).toBe(result.bytes); console.log(`[DEBUG] CAD paged UTF-8 SQLite oracle ${row.id} bytes=${result.bytes}`); }
  finally { database.close(); }

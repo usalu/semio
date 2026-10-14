@@ -1,0 +1,7 @@
+{
+  "CreateColumn": {
+    "name": "area",
+    "kind": "float",
+    "index": 1
+  }
+}

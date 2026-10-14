@@ -5,7 +5,7 @@ use super::{UiRefreshSection, UI_REFRESH_SECTION_BODY_KEYS, UI_REFRESH_SECTION_K
 
 #[semio_framework_async_macros::async_test]
 async fn reserved_section_identities_match_the_neutral_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️ui-refresh-section/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️ui-refresh-section/🔣️.json")).unwrap();
     let sections = fixture["sections"].as_array().unwrap();
     assert_eq!(sections.len(), UiRefreshSection::ALL.len());
     for (section, declared) in UiRefreshSection::ALL.into_iter().zip(sections) {

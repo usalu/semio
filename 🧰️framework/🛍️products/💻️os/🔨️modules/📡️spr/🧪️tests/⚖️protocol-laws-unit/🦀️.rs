@@ -484,6 +484,18 @@ async fn generated_set_mutations_satisfy_the_inverse_sum_law() {
 /// mutation per changed field, `absorb` is later-slot-wins, and the wire round trips in text and binary.
 #[test]
 fn generated_diffs_are_sparse_and_the_wire_round_trips() {
+    let corpus: serde_json::Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../🔨️modules/🏪️store/🚪️io/🧪️tests/🧫️fixtures/🎚️field-set/🔣️.json"))).unwrap();
+    for row in corpus["vectors"].as_array().unwrap(){
+        let mutation=ProbeConfigSet::parse_op(row["text"].as_str().unwrap()).unwrap();
+        assert_eq!(mutation.print_op(),row["text"].as_str().unwrap());
+        assert_eq!(serde_json::Value::from(semio_framework_value::ToValue::to_value(&mutation)),row["value"]);
+        let bytes=mutation.encode_op().unwrap();
+        assert_eq!(bytes,crate::os_pack::pack_rt::encode_json_value(&row["value"]));
+        assert_ne!(bytes,serde_json::to_vec(&row["value"]).unwrap());
+        assert_eq!(ProbeConfigSet::decode_op(&bytes).unwrap(),mutation);
+    }
+    eprintln!("[DEBUG] authored field-set text and structured Pack bytes preserve schema vectors against serde_json value and text oracles");
+
     use crate::os_spr::{apply_diff, DiffAlgebra, Mutation, MutationDiff, OpBinary, OpText};
     let base = probe_config();
     let set = ProbeConfigSet::SetCount(9);
@@ -891,3 +903,9 @@ async fn golden_hash_hex_is_deterministic_and_hex_encoded() {
     assert!(a.chars().all(|c| c.is_ascii_hexdigit()));
 }
 //#endregion 🔖️Golden
+
+#[path="🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+mod field_set_text_io;
+
+#[path="🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+mod field_set_binary_io;

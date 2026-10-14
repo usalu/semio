@@ -1,0 +1,1275 @@
+{
+  "version": 1,
+  "policies": [
+    {
+      "target": "setup",
+      "cache": false,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "publish",
+      "cache": false,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "update",
+      "cache": false,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "clean-test",
+      "cache": false,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "format",
+      "cache": false,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "deploy",
+      "cache": false,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "bench",
+      "cache": false,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "dev",
+      "cache": false,
+      "continuous": true,
+      "disabledCache": false
+    },
+    {
+      "target": "serve",
+      "cache": false,
+      "continuous": true,
+      "disabledCache": false
+    },
+    {
+      "target": "watch",
+      "cache": false,
+      "continuous": true,
+      "disabledCache": false
+    },
+    {
+      "target": "dev-storybook",
+      "cache": false,
+      "continuous": true,
+      "disabledCache": false
+    },
+    {
+      "target": "test-watch",
+      "cache": false,
+      "continuous": true,
+      "disabledCache": false
+    },
+    {
+      "target": "test",
+      "cache": true,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "lint",
+      "cache": true,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "build",
+      "cache": true,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "generate",
+      "cache": true,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "verify",
+      "cache": true,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "format-check",
+      "cache": true,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "schema-check",
+      "cache": true,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "cpp-build",
+      "cache": true,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "generator-inputs",
+      "cache": true,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "forms-document-contract",
+      "cache": true,
+      "continuous": false,
+      "disabledCache": false
+    },
+    {
+      "target": "catalog-smoke",
+      "cache": true,
+      "continuous": false,
+      "command": "bun ./📜️script.ts verify catalog",
+      "disabledCache": false
+    },
+    {
+      "target": "collab-e2e",
+      "cache": false,
+      "continuous": false,
+      "command": "bun ./📜️script.ts verify collab",
+      "disabledCache": false
+    },
+    {
+      "target": "artifact-field-parity-report",
+      "cache": true,
+      "continuous": false,
+      "command": "bun ./📜️script.ts verify artifact-field-parity report",
+      "disabledCache": false
+    },
+    {
+      "target": "verify-taxonomy-report",
+      "cache": true,
+      "continuous": false,
+      "command": "bun ./📜️script.ts verify taxonomy report",
+      "disabledCache": false
+    },
+    {
+      "target": "build-report",
+      "cache": true,
+      "continuous": false,
+      "command": "bun ./📜️script.ts build report",
+      "disabledCache": false
+    },
+    {
+      "target": "reset-document-ownership",
+      "cache": true,
+      "continuous": false,
+      "command": "bun ./📜️script.ts verify reset-document-ownership",
+      "disabledCache": false
+    },
+    {
+      "target": "verify-dependencies-freeze-write-baseline",
+      "cache": true,
+      "continuous": false,
+      "command": "bun ./📜️script.ts verify dependencies write-baseline",
+      "disabledCache": false
+    },
+    {
+      "target": "hub-live-catalog-check",
+      "cache": true,
+      "continuous": false,
+      "command": "bun ./📜️script.ts hub-live-catalog-check",
+      "disabledCache": false
+    },
+    {
+      "target": "admin-live-journey-check",
+      "cache": false,
+      "continuous": false,
+      "command": "bun ./📜️script.ts admin-live-journey-check",
+      "disabledCache": false
+    },
+    {
+      "target": "cache-report",
+      "cache": false,
+      "continuous": false,
+      "command": "bun ./📜️script.ts cache-report",
+      "disabledCache": false
+    },
+    {
+      "target": "portable-inspection",
+      "command": "bun ./📜️script.ts verify portable",
+      "cache": true,
+      "disabledCache": false,
+      "continuous": false
+    }
+  ],
+  "pluginGraph": {
+    "leaf": {
+      "directory": "leaf",
+      "name": "leaf",
+      "script": "export {};\n",
+      "testCommand": "bun ./📜️script.ts test",
+      "cachedTarget": "test"
+    },
+    "workspaceRoot": {
+      "name": "workspace-root-probe",
+      "script": "export {};\n",
+      "targets": [
+        "test",
+        "lint",
+        "build",
+        "generate",
+        "verify",
+        "format-check",
+        "format",
+        "setup",
+        "publish",
+        "dev",
+        "serve",
+        "watch",
+        "generator-inputs"
+      ]
+    }
+  },
+  "wasm": [
+    {
+      "project": "@semio-tech/framework-editor-rs",
+      "output": "{projectRoot}/pkg"
+    },
+    {
+      "project": "@semio-tech/framework-actor-rs",
+      "output": "{projectRoot}/pkg"
+    },
+    {
+      "project": "@semio-tech/framework-surface-rs",
+      "output": "{projectRoot}/🕸️bindings"
+    },
+    {
+      "project": "@semio-tech/framework-os-host-rs",
+      "output": "{projectRoot}/pkg"
+    },
+    {
+      "project": "@semio-tech/trinity-jack-lsp",
+      "output": "{projectRoot}/pkg"
+    },
+    {
+      "project": "@semio-tech/puzzle-plugin",
+      "output": "{projectRoot}/pkg"
+    },
+    {
+      "project": "semio-framework-os-flow-core",
+      "output": "{projectRoot}/../../🕸️bindings"
+    }
+  ],
+  "go": {
+    "manifest": "module semio.test/client\n\ngo 1.25\n\nrequire (\n semio.test/library v0.0.0\n example.com/remote v1.0.0\n)\nreplace (\n semio.test/library => ../library\n)\n",
+    "module": "semio.test/client",
+    "requires": [
+      "semio.test/library",
+      "example.com/remote"
+    ],
+    "replacements": [
+      {
+        "module": "semio.test/library",
+        "path": "../library"
+      }
+    ]
+  },
+  "rust": {
+    "entry": "src/lib.rs",
+    "files": {
+      "src/lib.rs": "// mod decoy;\n/* #[path=\"absent.rs\"] mod ignored; */\n#[path = \"../domain/shared.rs\"] mod shared;\nmod child;\n#[path=\".\"] mod inline { #[path=\"../domain/other.rs\"] mod other; }\npub fn content() -> usize { shared::VALUE + child::VALUE }\n",
+      "src/child.rs": "pub const VALUE: usize = include_str!(\"data.txt\").len();\n",
+      "src/data.txt": "bytes\n",
+      "domain/shared.rs": "pub const VALUE: usize = 42;\n",
+      "domain/other.rs": "pub const TEXT: &str = r#\"mod false_module;\"#;\n",
+      "unrelated/ignored.rs": "compile_error!(\"unrelated\");\n"
+    },
+    "inputs": [
+      "domain/other.rs",
+      "domain/shared.rs",
+      "src/child.rs",
+      "src/data.txt",
+      "src/lib.rs"
+    ]
+  },
+  "lifecycle": {
+    "setupDependencies": [
+      "deps-js-all",
+      "deps-python",
+      "deps-cargo",
+      "deps-go",
+      "deps-dotnet",
+      "deps-cpp",
+      "deps-browsers",
+      "deps-wasm",
+      "deps-tools"
+    ],
+    "prepareDependencies": [
+      "@semio-tech/framework-schema:generate",
+      "@semio-tech/ui-styling-tokens:generate",
+      "@semio-tech/assets:build",
+      "@semio-tech/framework-graph:generate",
+      "@semio-tech/plugin-registry:generate"
+    ]
+  },
+  "generators": [
+    "flow-graph-catalog",
+    "graph-catalog",
+    "plugin-registry",
+    "repo-entity-kinds",
+    "schema-entity-catalog",
+    "styling-tokens"
+  ],
+  "validationPrerequisite": {
+    "target": "@semio-tech/plugin-registry:generate",
+    "prerequisite": "repo:generator-inputs"
+  },
+  "bootstrap": {
+    "dotnetProject": "@semio-tech/repo-test-dotnet",
+    "dotnetPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🔷️dotnet",
+    "compile": "../../🖥️host/🔷️.cs",
+    "pythonMembers": [],
+    "stylingProject": "@semio-tech/ui-styling-py",
+    "stylingGenerator": "@semio-tech/ui-styling-tokens:generate",
+    "pythonDependencies": [
+      "@semio-tech/ui-styling-py:deps",
+      "@semio-tech/energy-oracle-py:deps"
+    ]
+  },
+  "entrypoints": [
+    {
+      "project": "@semio-tech/flow-plugin",
+      "target": "component",
+      "prerequisite": "@semio-tech/flow-plugin:graph-generate"
+    },
+    {
+      "project": "@semio-tech/repo-coordinator",
+      "target": "dev",
+      "prerequisite": "build"
+    },
+    {
+      "project": "@semio-tech/repo-coordinator",
+      "target": "start",
+      "prerequisite": "build"
+    },
+    {
+      "project": "@semio-tech/assets",
+      "target": "logo",
+      "prerequisite": "generate-logo"
+    }
+  ],
+  "cancellation": {
+    "target": "@semio-tech/repo-coordinator:dev",
+    "signal": "SIGTERM",
+    "maxShutdownMs": 5000
+  },
+  "platformEnvironment": {
+    "project": "@semio-tech/framework-os-dev",
+    "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/📤️publication/🟦️.ts",
+    "keys": [
+      "SDKROOT",
+      "DEVELOPER_DIR"
+    ],
+    "platforms": [
+      "darwin",
+      "linux",
+      "win32"
+    ]
+  },
+  "nativeBinaries": [
+    {
+      "project": "@semio-tech/framework-os-mcp-rs",
+      "target": "build",
+      "output": "{projectRoot}/dist/build/prototype",
+      "configuration": "prototype"
+    },
+    {
+      "project": "@semio-tech/framework-renderer-wgpu",
+      "target": "native-build",
+      "output": "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/native-prototype",
+      "configuration": "prototype"
+    },
+    {
+      "project": "@semio-tech/framework-renderer-wgpu",
+      "target": "native-build",
+      "output": "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/native-release",
+      "configuration": "release"
+    }
+  ],
+  "svgExport": {
+    "inputName": "🧪️ animation # source.svg",
+    "width": 16,
+    "height": 16,
+    "fps": 2,
+    "durationSeconds": 1,
+    "expectedFrames": 2
+  },
+  "watchCancellation": {
+    "signal": "SIGTERM",
+    "shutdownMilliseconds": 8000,
+    "childIgnoresSignal": true
+  },
+  "components": [
+    {
+      "project": "@semio-tech/framework-os-scale-fixture",
+      "target": "build-wasm",
+      "output": "{projectRoot}/dist/component",
+      "filename": "semio_framework_os_scale_fixture.wasm",
+      "schemaInput": "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/**/*.wit",
+      "magic": [
+        0,
+        97,
+        115,
+        109,
+        13,
+        0,
+        1,
+        0
+      ],
+      "consumerProject": "@semio-tech/framework-plugin-host",
+      "consumerTarget": "ui-patch-marshalling-native-check"
+    }
+  ],
+  "benchmarkRenderers": [
+    "native",
+    "react",
+    "wgpu"
+  ],
+  "rustDiscoveryCache": {
+    "limitBytes": 4096,
+    "entry": "src/lib.rs",
+    "revisions": [
+      {
+        "source": "#[path=\"../domain/first.rs\"] mod chosen;\npub use chosen::VALUE;\n",
+        "inputs": [
+          "domain/first.rs",
+          "src/lib.rs"
+        ]
+      },
+      {
+        "source": "#[path=\"../domain/other.rs\"] mod chosen;\npub use chosen::VALUE;\n",
+        "inputs": [
+          "domain/other.rs",
+          "src/lib.rs"
+        ]
+      }
+    ],
+    "files": {
+      "domain/first.rs": "pub const VALUE: usize = 1;\n",
+      "domain/other.rs": "pub const VALUE: usize = 2;\n"
+    }
+  },
+  "materialization": {
+    "project": "@semio-tech/framework-plugin-web",
+    "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript",
+    "support": "support",
+    "modules": "dist/🔌️plugin-modules",
+    "cancellation": {
+      "shutdownMilliseconds": 4500,
+      "maximumDiagnosticCharacters": 70000
+    },
+    "source": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+    "removedTargets": [
+      "describe",
+      "materialize"
+    ],
+    "supportCache": false,
+    "canonicalModules": "dist/{options.env.SEMIO_BUILD_MODE}/🔌️plugin-modules"
+  },
+  "playgroundSessions": {
+    "project": "@semio-tech/plugin-registry",
+    "variants": [
+      "note",
+      "s"
+    ],
+    "prerequisite": "generate",
+    "descriptorInputs": [
+      "🛂️.descriptor.semio",
+      "🔣️.json"
+    ]
+  },
+  "fontAssets": {
+    "project": "semio-framework-os-infinite",
+    "toolProject": "semio-framework-canvas-font-assets",
+    "tool": "build",
+    "producer": "fonts",
+    "toolOutput": "{projectRoot}/dist/build",
+    "output": "{projectRoot}/dist/fonts"
+  },
+  "engineOutputs": [
+    {
+      "project": "@semio-tech/framework-surface-rs",
+      "directory": "🕸️bindings",
+      "outputs": [
+        "{projectRoot}/🕸️bindings"
+      ]
+    },
+    {
+      "project": "semio-framework-os-flow-core",
+      "directory": "🕸️bindings",
+      "outputs": [
+        "{projectRoot}/../../🕸️bindings",
+        "{projectRoot}/../../../📦️packages/🦀️rust/🕸️bindings"
+      ]
+    }
+  ],
+  "playgroundPreparation": {
+    "project": "@semio-tech/framework-os-dev",
+    "renderer": "react",
+    "profiles": [
+      "dev",
+      "release"
+    ],
+    "fonts": "semio-framework-os-infinite:fonts"
+  },
+  "socketFrames": {
+    "messages": [
+      {
+        "root": "🧰️framework/🛍️products/💻️os/📋️project.json",
+        "name": "semio"
+      },
+      {
+        "name": "🧩️puzzle",
+        "source": "Grüße 日本語"
+      },
+      {
+        "result": true
+      }
+    ],
+    "chunkSizes": [
+      1,
+      2,
+      3,
+      7,
+      64,
+      65536
+    ]
+  },
+  "wasmProfiles": [
+    {
+      "profile": "dev",
+      "pack": [
+        "--dev"
+      ],
+      "cargo": [
+        "--profile",
+        "dev"
+      ]
+    },
+    {
+      "profile": "release",
+      "pack": [
+        "--release"
+      ],
+      "cargo": [
+        "--profile",
+        "release"
+      ]
+    },
+    {
+      "profile": "wasm-release",
+      "pack": [
+        "--profile",
+        "wasm-release"
+      ],
+      "cargo": [
+        "--profile",
+        "wasm-release"
+      ]
+    }
+  ],
+  "daemonEnvironment": {
+    "NX_VERBOSE_LOGGING": "false",
+    "NX_PERF_LOGGING": "false",
+    "NX_NATIVE_LOGGING": "nx=warn"
+  },
+  "daemonLog": {
+    "limit": 65536,
+    "size": 131072,
+    "marker": "NATIVE_DAEMON_TAIL_MARKER"
+  },
+  "daemonTaskEnvironment": {
+    "SEMIO_TICKET_DIR": "fixture-ticket",
+    "SEMIO_PRINT_OUTPUT_DIR": "fixture-report-output",
+    "SEMIO_BUILD_MODE": "fixture-mode",
+    "SEMIO_PLUGIN": "fixture-plugin",
+    "SEMIO_RENDERER": "fixture-renderer",
+    "CODEX_SESSION_ID": "fixture-session",
+    "NX_PROJECT_NAME": "fixture-project",
+    "NX_FILE_CHANGES": "fixture/source.ts"
+  },
+  "releaseOrchestrators": [
+    {
+      "project": "workspace",
+      "target": "release",
+      "prerequisites": [
+        "workspace:deps-wasm-opt"
+      ],
+      "jobs": [
+        "describe-tool",
+        "font-assets",
+        "fonts",
+        "support"
+      ]
+    },
+    {
+      "project": "@semio-tech/semio-tech-play",
+      "target": "build",
+      "prerequisites": [
+        "workspace:deps-wasm-opt",
+        "@semio-tech/plugin-registry:generate"
+      ],
+      "jobs": [
+        "describe-tool",
+        "font-assets",
+        "fonts",
+        "support",
+        "flow-wasm",
+        "surface-wasm",
+        "puzzle-wasm",
+        "map-tiles",
+        "bundle",
+        "pages"
+      ]
+    }
+  ],
+  "closurePreparation": {
+    "prerequisites": [
+      "@semio-tech/os-plugin-describe-rs:build",
+      "workspace:deps-wasm-opt"
+    ],
+    "modules": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/🔌️plugin-modules"
+  },
+  "componentTarget": {
+    "target": "component",
+    "command": "component --manifest",
+    "dependsOn": [
+      "@semio-tech/os-plugin-describe-rs:build",
+      "@semio-tech/framework-plugin-web:support",
+      "workspace:deps-wasm-opt"
+    ],
+    "output": "{projectRoot}/dist/components/{options.env.SEMIO_BUILD_MODE}"
+  },
+  "schedulerSelections": [
+    {
+      "args": [
+        "run",
+        "owner:build"
+      ],
+      "hostParallelism": 4,
+      "expectedArgs": [
+        "run",
+        "owner:build"
+      ],
+      "expectedParallel": 4
+    },
+    {
+      "args": [
+        "run-many",
+        "--targets=build",
+        "--parallel",
+        "1"
+      ],
+      "hostParallelism": 4,
+      "expectedArgs": [
+        "run-many",
+        "--targets=build",
+        "--parallel",
+        "1"
+      ],
+      "expectedParallel": 1
+    },
+    {
+      "args": [
+        "affected",
+        "--target=build",
+        "--parallel=2"
+      ],
+      "hostParallelism": 4,
+      "expectedArgs": [
+        "affected",
+        "--target=build",
+        "--parallel=2"
+      ],
+      "expectedParallel": 2
+    },
+    {
+      "args": [
+        "run",
+        "owner:build",
+        "--",
+        "--parallel=1"
+      ],
+      "hostParallelism": 4,
+      "expectedArgs": [
+        "run",
+        "owner:build",
+        "--",
+        "--parallel=1"
+      ],
+      "expectedParallel": 4
+    },
+    {
+      "args": [
+        "graph"
+      ],
+      "hostParallelism": 4,
+      "expectedArgs": [
+        "graph"
+      ],
+      "expectedParallel": 4
+    },
+    {
+      "args": [
+        "run",
+        "owner:build"
+      ],
+      "hostParallelism": 4,
+      "environment": {
+        "NX_PARALLEL": "3"
+      },
+      "expectedArgs": [
+        "run",
+        "owner:build"
+      ],
+      "expectedParallel": 3
+    }
+  ],
+  "buildModes": [
+    {
+      "args": [
+        "run",
+        "fixture:build"
+      ],
+      "mode": "prototype",
+      "expectedArgs": [
+        "run",
+        "fixture:build"
+      ]
+    },
+    {
+      "args": [
+        "run",
+        "fixture:test-original-source",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ],
+      "mode": "prototype",
+      "expectedArgs": [
+        "run",
+        "fixture:test-original-source",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ]
+    },
+    {
+      "args": [
+        "run",
+        "fixture:build:release"
+      ],
+      "mode": "release",
+      "expectedArgs": [
+        "run",
+        "fixture:build:release"
+      ]
+    },
+    {
+      "args": [
+        "run-many",
+        "--targets=build,wasm",
+        "-c",
+        "release"
+      ],
+      "mode": "release",
+      "expectedArgs": [
+        "run-many",
+        "--targets=build,wasm",
+        "-c",
+        "release"
+      ]
+    },
+    {
+      "args": [
+        "affected",
+        "--target=build"
+      ],
+      "environment": {
+        "SEMIO_BUILD_MODE": "release"
+      },
+      "mode": "release",
+      "expectedArgs": [
+        "affected",
+        "--target=build"
+      ]
+    },
+    {
+      "args": [
+        "run",
+        "fixture:native-build-release"
+      ],
+      "mode": "release",
+      "expectedArgs": [
+        "run",
+        "fixture:native-build-release"
+      ]
+    },
+    {
+      "args": [
+        "run",
+        "fixture:prepare-dev"
+      ],
+      "mode": "prototype",
+      "expectedArgs": [
+        "run",
+        "fixture:prepare-dev"
+      ]
+    },
+    {
+      "args": [
+        "run",
+        "fixture:build",
+        "-c",
+        "dev"
+      ],
+      "error": true
+    },
+    {
+      "args": [
+        "run",
+        "fixture:build",
+        "--configuration=ship"
+      ],
+      "error": true
+    },
+    {
+      "args": [
+        "run",
+        "fixture:build",
+        "-c",
+        "prototype",
+        "-c",
+        "release"
+      ],
+      "error": true
+    },
+    {
+      "args": [
+        "run",
+        "fixture:prepare-dev",
+        "-c",
+        "release"
+      ],
+      "error": true
+    },
+    {
+      "args": [
+        "run",
+        "fixture:build",
+        "--",
+        "--release"
+      ],
+      "error": true
+    }
+  ],
+  "nativeSourceOwnership": {
+    "project": "@semio-tech/framework-io-base64-rs",
+    "compilerWorkingDirectory": "🧰️framework",
+    "depInfo": ".🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture/prototype/build/semio-framework-io-base64/8181798e5a1466ff/out/semio_framework_io_base64-8181798e5a1466ff.d",
+    "files": [
+      "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/Cargo.toml",
+      "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/🦀️.rs"
+    ]
+  },
+  "toolingPatchReceipt": {
+    "before": "first\nold\nlast\n",
+    "after": "first\nnew\nlast\n",
+    "patch": "diff --git a/main.js b/main.js\n--- a/main.js\n+++ b/main.js\n@@ -1,3 +1,3 @@\n first\n-old\n+new\n last\n"
+  },
+  "toolingIdentity": {
+    "environment": {
+      "platform": "darwin",
+      "architecture": "arm64",
+      "libc": ""
+    },
+    "files": {
+      "package.json": "{}",
+      "bun.lock": "frozen",
+      "nx.patch": "patch bytes"
+    }
+  },
+  "taskPlanCompaction": {
+    "plans": {
+      "owner:build:prototype": [
+        "env:SEMIO_BUILD_MODE",
+        "glob:owner/**/*"
+      ],
+      "owner:build:release": [
+        "env:SEMIO_BUILD_MODE",
+        "glob:owner/**/*"
+      ],
+      "leaf:build:prototype": [
+        "env:SEMIO_BUILD_MODE",
+        "glob:leaf/**/*"
+      ]
+    },
+    "instructions": [
+      "env:SEMIO_BUILD_MODE",
+      "glob:leaf/**/*",
+      "glob:owner/**/*"
+    ]
+  },
+  "missingCargoLock": {
+    "manifest": "[workspace]\n[package]\nname = \"selected\"\nversion = \"1.0.0\"\n",
+    "digestInput": "missing\u0000Cargo.lock"
+  },
+  "testOwnerModeOutputs": {
+    "scope": "owner/test",
+    "children": [
+      "results",
+      "reports",
+      "diffs"
+    ],
+    "prefix": ".🧬semio/🦑️repo/⚡️cache/tests/tasks/owner/test"
+  },
+  "sourceInputCompaction": {
+    "root": "owner",
+    "inputs": [
+      "{workspaceRoot}/owner/main.ts",
+      "{workspaceRoot}/owner/🧪️tests/main.ts",
+      "!{projectRoot}/**/🧪️tests/**/*",
+      "!{workspaceRoot}/**/!(🔨️modules)/{🧫️fixtures,🧫️examples}/**/*"
+    ],
+    "expected": [
+      "owner/main.ts"
+    ],
+    "expectedNegations": 0
+  },
+  "commandDependencyOracle": {
+    "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+    "dynamicExternalDependencies": [],
+    "sameGraphPasses": 2,
+    "expectedMemoizedClosures": 1
+  },
+  "collectionAdmission": {
+    "collections": {
+      "names": [
+        "🧪️tests/🧫️fixtures",
+        "🧫️examples",
+        "🧪️fixtures",
+        "🧪️examples"
+      ],
+      "moduleMember": "🔨️modules"
+    },
+    "indexed": [
+      "domain/🔨️modules/known/🟦️.ts"
+    ],
+    "untracked": [
+      "new/🔨️modules/new/🟦️.ts"
+    ],
+    "files": {
+      "domain/🔨️modules/🧪️tests/🧫️fixtures/owner/📋️project.json": "{}",
+      "new/🔨️modules/🧪️tests/🧫️fixtures/owner/package.json": "{}",
+      "new/🔨️modules/🧪️tests/🧫️fixtures/owner/ignored/Cargo.toml": "[package]",
+      "new/🔨️modules/🧪️tests/🧫️fixtures/owner/dist/📋️project.json": "{}",
+      "new/🔨️modules/🧪️tests/🧫️fixtures/owner/🧫️examples/package.json": "{}"
+    },
+    "expected": [
+      "domain/🔨️modules/🧪️tests/🧫️fixtures/owner/📋️project.json",
+      "new/🔨️modules/🧪️tests/🧫️fixtures/owner/ignored/Cargo.toml",
+      "new/🔨️modules/🧪️tests/🧫️fixtures/owner/package.json"
+    ],
+    "additional": {
+      "path": "new/🔨️modules/🧪️tests/🧫️fixtures/late/📋️project.json",
+      "content": "{}"
+    }
+  },
+  "collectionCustody": {
+    "directory": "owner/temporary",
+    "manifest": "owner/temporary/Cargo.toml",
+    "manifestContent": "[package]\nname=\"original\"\nversion=\"0.1.0\"\n",
+    "cases": [
+      {
+        "id": "unchanged-real",
+        "mutation": "keep",
+        "admitted": true,
+        "accepted": true
+      },
+      {
+        "id": "removed-unadmitted",
+        "mutation": "remove",
+        "admitted": false,
+        "accepted": true
+      },
+      {
+        "id": "removed-admitted",
+        "mutation": "remove",
+        "admitted": true,
+        "accepted": false
+      },
+      {
+        "id": "replaced-real",
+        "mutation": "replace",
+        "admitted": false,
+        "accepted": false
+      },
+      {
+        "id": "replaced-symlink",
+        "mutation": "symlink",
+        "admitted": false,
+        "accepted": false
+      }
+    ]
+  },
+  "inputIdentity": {
+    "root": "owner/package",
+    "inputs": [
+      "{projectRoot}/dist/**/*",
+      "{workspaceRoot}/owner/package/dist/**/*",
+      "!{projectRoot}/dist/**/*",
+      "!{workspaceRoot}/owner/package/dist/**/*",
+      "{projectRoot}/src/**/*",
+      "{projectRoot}/src/**/*",
+      {
+        "env": "SEMIO_BUILD_MODE"
+      },
+      {
+        "env": "SEMIO_BUILD_MODE"
+      }
+    ],
+    "expected": [
+      "{projectRoot}/dist/**/*",
+      "!{projectRoot}/dist/**/*",
+      "{projectRoot}/src/**/*",
+      {
+        "env": "SEMIO_BUILD_MODE"
+      }
+    ]
+  },
+  "cargoLockClosure": {
+    "packages": [
+      {
+        "name": "owner",
+        "version": "1.0.0",
+        "dependencies": [
+          "local",
+          "shared 1.0.0"
+        ]
+      },
+      {
+        "name": "local",
+        "version": "1.0.0",
+        "dependencies": [
+          "shared 2.0.0"
+        ]
+      },
+      {
+        "name": "shared",
+        "version": "1.0.0",
+        "source": "registry+test",
+        "checksum": "one"
+      },
+      {
+        "name": "shared",
+        "version": "2.0.0",
+        "source": "registry+test",
+        "checksum": "two"
+      },
+      {
+        "name": "unrelated",
+        "version": "1.0.0",
+        "dependencies": []
+      }
+    ],
+    "roots": [
+      {
+        "name": "owner",
+        "version": "1.0.0"
+      }
+    ],
+    "expected": [
+      "local@1.0.0",
+      "owner@1.0.0",
+      "shared@1.0.0 (registry+test)",
+      "shared@2.0.0 (registry+test)"
+    ]
+  },
+  "toolingInstall": {
+    "recipe": {
+      "name": "@semio-tech/original-tools",
+      "private": true,
+      "packageManager": "bun@1.3.14",
+      "dependencies": {
+        "nx": "23.2.0"
+      },
+      "devDependencies": {
+        "@semio-tech/process": "workspace:*"
+      },
+      "semio": {
+        "toolPatches": {
+          "nx@23.2.0": "owned.patch"
+        }
+      }
+    },
+    "expected": {
+      "name": "@semio-tech/original-tools",
+      "private": true,
+      "packageManager": "bun@1.3.14",
+      "dependencies": {
+        "nx": "23.2.0"
+      },
+      "patchedDependencies": {
+        "nx@23.2.0": "owned.patch"
+      }
+    }
+  },
+  "sourceDigest": {
+    "files": {
+      "owner/a.ts": "export const value = \"🧬️\";\n",
+      "owner/b.json": "{\"version\":1}\n"
+    },
+    "paths": [
+      "owner/a.ts",
+      "owner/b.json",
+      "owner/missing.ts"
+    ]
+  },
+  "cacheCustody": {
+    "initial": "first",
+    "during": "second",
+    "expectedExecutions": 2
+  },
+  "outputInputScope": {
+    "root": "owner/package",
+    "sources": [
+      "{projectRoot}/src/**/*",
+      "{workspaceRoot}/owner/build/**/*"
+    ],
+    "cases": [
+      {
+        "output": "owner/package/dist/site",
+        "overlap": false
+      },
+      {
+        "output": "owner/build/generated.js",
+        "overlap": true
+      },
+      {
+        "output": "other/dist/site",
+        "overlap": false
+      },
+      {
+        "output": "owner/package/src/generated.json",
+        "overlap": true
+      }
+    ]
+  },
+  "sharedInputGroups": {
+    "first": [
+      "{projectRoot}/one",
+      "{projectRoot}/two",
+      {
+        "env": "MODE"
+      },
+      {
+        "runtime": "node --version"
+      },
+      "{projectRoot}/only-a"
+    ],
+    "second": [
+      "{projectRoot}/one",
+      "{projectRoot}/two",
+      {
+        "env": "MODE"
+      },
+      {
+        "runtime": "node --version"
+      },
+      "{projectRoot}/only-b"
+    ]
+  },
+  "manifestInputOwnership": {
+    "project": "semio-hub-gis-component",
+    "target": "check",
+    "maximumInputs": 20
+  },
+  "cacheBudgets": [
+    {
+      "availableBytes": 0,
+      "expected": "1"
+    },
+    {
+      "availableBytes": 1073741824,
+      "expected": "268435456"
+    },
+    {
+      "availableBytes": 107374182400,
+      "expected": "4294967296"
+    },
+    {
+      "availableBytes": 1,
+      "override": "12MB",
+      "expected": "12MB"
+    }
+  ],
+  "goSourceOwnership": {
+    "project": "@semio-tech/repo-coordinator-go",
+    "dependency": "@semio-tech/framework-filesystem-durability-go",
+    "module": "github.com/usalu/semio/framework/filesystem/durability",
+    "files": [
+      "go.mod",
+      "🐹️_unix.go",
+      "🐹️_windows.go"
+    ]
+  },
+  "ownerCommandClosure": {
+    "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/📥️owner-command/📜️script.ts",
+    "maximumFiles": 100,
+    "excludedSegments": [
+      "/🖱️ui/",
+      "/🧪️tests/"
+    ],
+    "arguments": [
+      "--cwd",
+      "owner",
+      "--",
+      "bun",
+      "./📜️script.ts",
+      "build"
+    ],
+    "forwardedArguments": [
+      "space value",
+      "\"quoted\"",
+      "$literal",
+      "C:\\source\\🟦️.ts",
+      "--"
+    ],
+    "policy": {
+      "version": 1,
+      "owner": "nx-owner-worker-original",
+      "maximumElapsedMilliseconds": 30000
+    },
+    "capabilities": {
+      "request": "original-worker-fixture",
+      "resources": {
+        "maximumBytes": 4096,
+        "workerCount": 2
+      }
+    }
+  },
+  "nativeCommandClosure": {
+    "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts",
+    "excludedSegments": [
+      "/🖱️ui/",
+      "/🧪️tests/"
+    ]
+  }
+}

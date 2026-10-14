@@ -8,10 +8,10 @@ import { createContinuousGestureLane } from "../../🎬️scene/🟦️.ts";
 const ui = resolve(import.meta.dir, "../.."), root = resolve(ui, "../..");
 const renderer = join(root, "🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine");
 const read = (path: string): string => readFileSync(path, "utf8");
-const fixture = JSON.parse(read(join(ui, "🧫️fixtures/🎛️retained-control-commit/🔣️.json"))) as { cases: Case[] };
+const fixture = JSON.parse(read(join(ui, "🧪️tests/🧫️fixtures/🎛️retained-control-commit/🔣️.json"))) as { cases: Case[] };
 type Case = { name: string; node: { kind: string }; expected: { press?: "open" | "released" } | null };
 type Lifecycle = { id: string; values: number[]; terminal: "pointerup" | "pointercancel"; expected: (number | string)[][] };
-const lifecycle = JSON.parse(read(join(ui, "🧫️fixtures/🎚️ring-press/🔣️.json"))) as { cases: Lifecycle[] };
+const lifecycle = JSON.parse(read(join(ui, "🧪️tests/🧫️fixtures/🎚️ring-press/🔣️.json"))) as { cases: Lifecycle[] };
 
 function declaration(source: string, name: string): string {
   const file = ts.createSourceFile("reference.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);

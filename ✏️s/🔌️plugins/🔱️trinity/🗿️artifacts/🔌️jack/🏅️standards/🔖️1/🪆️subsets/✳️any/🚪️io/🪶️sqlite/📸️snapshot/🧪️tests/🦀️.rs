@@ -1,11 +1,13 @@
 //! 🔌️ Authentic Jack parent Native baselines, before semantic provider opt-in.
 #[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
 mod original_owners;
+use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::*;
 use semio_framework_value::{FromValue, ToValue, ValueType};
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 fn laws() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()
 }
 fn words() -> Vec<u64> {
     laws()["binary64Bits"].as_array().unwrap().iter().map(|v| u64::from_str_radix(v.as_str().unwrap(), 16).unwrap()).collect()
@@ -223,7 +225,7 @@ fn independent_jack_file(bytes: &[u8], edit: &str) -> Vec<u8> {
 #[test]
 fn sqlite_snapshot_jack_all13_tables_and153_rows_survive_independent_edits() {
     use store::sqlite_snapshot::*;
-    use store::os_store::serialization::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshotHost;
     for word in words() {
         let expected = Owned::new(full(word, 0));
         let mut cb = |_| true;
@@ -247,7 +249,7 @@ fn sqlite_snapshot_jack_all13_tables_and153_rows_survive_independent_edits() {
 #[test]
 fn sqlite_snapshot_jack_independently_malformed_semantic_entities_are_refused() {
     use store::sqlite_snapshot::*;
-    use store::os_store::serialization::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshotHost;
     let mut cb = |_| true;
     let mut control = SqliteSnapshotControl::new(&mut cb, Default::default());
     let v = Owned::new(full(0, 0));
@@ -264,7 +266,7 @@ fn sqlite_snapshot_jack_independently_malformed_semantic_entities_are_refused() 
 #[test]
 fn sqlite_snapshot_jack_exact_row_admission_and_all_four_real_interior_copy_phases() {
     use store::sqlite_snapshot::*;
-    use store::os_store::serialization::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshotHost;
     let value = Owned::new(full(0, 0));
     let mut cb = |_| true;
     let exact = SqliteDatabaseLimits { max_rows: 153, ..Default::default() };
@@ -313,16 +315,16 @@ fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder("trinity").l
 async fn sqlite_snapshot_jack_populated_actual_app_public_both_forms(){
 use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};
 register();let dialect=ArtifactDialect{artifact_kind:"s.trinity.jack".into(),standard:"1".into(),subset:"*".into()};let sqlite=ArtifactDialect::from(SQLITE_SNAPSHOT);for route in[io_route(&dialect,&sqlite,1).await.unwrap().value,io_route(&sqlite,&dialect,1).await.unwrap().value]{assert_eq!(route.hops.len(),1);assert_eq!(route.fidelity,IoFidelity::Exact);}
-for word in words(){let expected=Owned::new(full(word,1));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=io_export_sqlite_snapshot(&dialect,&*expected,encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;let actual=Owned::new(io_import_sqlite_snapshot::<JackSnapshot>(&dialect,&bytes,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value);assert_full(&actual,&expected,word);assert_eq!((&*actual).encode_pack(),(&*expected).encode_pack());assert_eq!((&*actual).print_dsl(),(&*expected).print_dsl());}}
+for word in words(){let expected=Owned::new(full(word,1));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=async{let original_file_dialect=&dialect;let original_file_input=&*expected;let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;let actual=Owned::new(async{let original_file_dialect=&dialect;let original_file_input=&bytes;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<JackSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value);assert_full(&actual,&expected,word);assert_eq!((&*actual).encode_pack(),(&*expected).encode_pack());assert_eq!((&*actual).print_dsl(),(&*expected).print_dsl());}}
 eprintln!("[DEBUG] jack actual app public both forms preserve complete owner and words");
 }
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_jack_populated_public_independent_edit_retirement(){
 use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot};use std::{io::Write,process::{Command,Stdio}};
 register();let dialect=ArtifactDialect{artifact_kind:"s.trinity.jack".into(),standard:"1".into(),subset:"*".into()};
-for word in words(){let expected=Owned::new(full(word,1));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=io_export_sqlite_snapshot(&dialect,&*expected,encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;
+for word in words(){let expected=Owned::new(full(word,1));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=async{let original_file_dialect=&dialect;let original_file_input=&*expected;let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
 let script=r#"import{Database}from'bun:sqlite';const d=Database.deserialize(await Bun.stdin.bytes(),{safeIntegers:true});if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');if(d.query('SELECT COUNT(*) AS n FROM sqlite_schema WHERE type=\'table\'').get().n!==14n)throw Error('table census');const m=d.query('SELECT * FROM semio_snapshot').get();if(JSON.stringify(Object.keys(m))!==JSON.stringify(['id','artifact_kind','standard','subset','schema_version','native_encoding'])||m.id!==1n||m.schema_version!==1n)throw Error('completePublicMetadata');if(m.artifact_kind!=='s.trinity.jack'||m.standard!=='1'||m.subset!=='*'||m.native_encoding!==process.argv[1])throw Error('metadata');d.query('UPDATE jack_document SET query=? WHERE id=1').run('independent 日本\u0000');await Bun.write(Bun.stdout,d.serialize());d.close();"#;
-let mut child=Command::new("bun").args(["--eval",script,encoding.as_str(),&(laws()).to_string()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let out=child.wait_with_output().unwrap();assert!(out.status.success(),"{}",String::from_utf8_lossy(&out.stderr));let actual=Owned::new(io_import_sqlite_snapshot::<JackSnapshot>(&dialect,&out.stdout,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value);let mut literal=full(word,1);literal.query="independent 日本\0".into();let literal=Owned::new(literal);assert_full(&actual,&literal,word);assert_eq!((&*actual).encode_pack(),(&*literal).encode_pack());assert_eq!((&*actual).print_dsl(),(&*literal).print_dsl());}}
+let mut child=Command::new("bun").args(["--eval",script,encoding.as_str(),&(laws()).to_string()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let out=child.wait_with_output().unwrap();assert!(out.status.success(),"{}",String::from_utf8_lossy(&out.stderr));let actual=Owned::new(async{let original_file_dialect=&dialect;let original_file_input=&out.stdout;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<JackSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value);let mut literal=full(word,1);literal.query="independent 日本\0".into();let literal=Owned::new(literal);assert_full(&actual,&literal,word);assert_eq!((&*actual).encode_pack(),(&*literal).encode_pack());assert_eq!((&*actual).print_dsl(),(&*literal).print_dsl());}}
 eprintln!("[DEBUG] jack independent public SQL edit complete owner and retirement");
 }
 }

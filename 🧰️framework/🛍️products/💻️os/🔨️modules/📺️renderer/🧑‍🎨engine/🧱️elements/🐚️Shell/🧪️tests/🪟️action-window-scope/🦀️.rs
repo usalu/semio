@@ -15,7 +15,7 @@ use super::{scope_action_to_window, ActionDescriptor, DslValue};
 use serde_json::Value;
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/🪟️action-window-scope/🔣️.json")).expect("action window scope fixture parses")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪟️action-window-scope/🔣️.json")).expect("action window scope fixture parses")
 }
 
 fn pairs(value: &Value) -> Vec<(String, String)> {

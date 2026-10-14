@@ -1,7 +1,7 @@
 use super::*;
 use crate::schema::scene_preparation::DocumentSceneContent;
 use serde_json::Value;
-fn rows()->Vec<Value>{serde_json::from_str(include_str!("../../../../🧬️schema/🎬️scene/📋️prepare/🧫️fixtures/🎬️vector/🔣️.json")).unwrap()}
+fn rows()->Vec<Value>{serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🎬️vector/🔣️.json")).unwrap()}
 fn install(render:AppRenderOperationContext,read:store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>)->(usize,u64){let effects=reconcile_source(render,||Ok(read));match effects.last().unwrap(){Effect::SpawnJob{job,input,..}=>(usize::from(u16::from_le_bytes(input[1..3].try_into().unwrap())),*job),_=>panic!("the production reconciliation must spawn the prepared geometry job")}}
 
 fn drive(job:&mut dyn BoundedJob)->bool{for _ in 0..1000000{match job.step(JobBudget{fuel:1,deadline_ms:8}){JobStep::Running(_)=>{},JobStep::Done(_)=>return true,JobStep::Failed(_)=>return false}}panic!("mounted geometry did not settle")}
@@ -13,7 +13,7 @@ fn render(source:&store::ArtifactStore<DrawingSnapshot,crate::op::DrawingMutatio
 #[semio_framework_async_macros::async_test]
 async fn mounted_painted_query_borrows_resolved_source_and_retires_after_real_replacement(){
  use crate::schema::geometry::picking::paint::PaintedPathHitJob;
- let checks:Vec<Value>=serde_json::from_str(include_str!("../../../../🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🧫️fixtures/🎬️resolved/🔣️.json")).unwrap();
+ let checks:Vec<Value>=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🎨️paint/🎬️resolved/🔣️.json")).unwrap();
  for check in checks{for grant in [1,7,4096]{
   let row=rows().into_iter().find(|row|row["name"]==check["source"]).unwrap();let mut source=source(&row).await;let first=render(&source,710021,u64::from_le_bytes(source.content_revision()[..8].try_into().unwrap()));let captured=identity(first);let read=source.snapshot_read().unwrap();assert!(prepare(first,read.get()));let(slot,id)=install(first,read);let mut worker=factory(id,&input(slot,captured,id),None).unwrap();
   let mut pending=0;loop{let status=with_query(captured,|status,plan|{assert!(plan.is_none(),"waiting must not borrow unfinished producer geometry");status});assert_eq!(status,SceneAdmissionStatus::Pending);pending+=1;match worker.step(JobBudget{fuel:1,deadline_ms:8}){JobStep::Running(_)=>{},JobStep::Done(_)=>break,JobStep::Failed(error)=>panic!("real geometry producer failed: {}",String::from_utf8_lossy(&error))}assert!(pending<1000000);}
@@ -77,7 +77,7 @@ async fn mounted_vector_geometry_real_edit_replaces_only_complete_live_geometry(
 #[semio_framework_async_macros::async_test]
 async fn mounted_painted_scene_holds_actual_source_until_complete_cache_publication(){
  use crate::schema::scene_paint::{scene::PreparedPaint,PreparedRegionQueryJob};
- let checks:Vec<Value>=serde_json::from_str(include_str!("../../../../🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🧫️fixtures/🎬️resolved/🔣️.json")).unwrap();
+ let checks:Vec<Value>=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🎨️paint/🎬️resolved/🔣️.json")).unwrap();
  for check in checks{for grant in [1,7,4096]{let row=rows().into_iter().find(|r|r["name"]==check["source"]).unwrap();let mut source=source(&row).await;let first=render(&source,710031,u64::from_le_bytes(source.content_revision()[..8].try_into().unwrap()));let captured=identity(first);let read=source.snapshot_read().unwrap();assert!(prepare(first,read.get()));let(slot,id)=install(first,read);let shell=MOUNTED.with(|r|r.borrow().shells[slot].clone());let mut worker=factory(id,&input(slot,captured,id),None).unwrap();let(mut cache_units,mut done)=(0,false);for _ in 0..2000000{let cache_active=shell.borrow().as_ref().unwrap().cache.is_some();if cache_active{cache_units+=1;let owner=shell.borrow();let state=owner.as_ref().unwrap();assert!(state.visual.is_none());assert!(state.cleanup.is_none());assert!(state.producer.as_ref().unwrap().snapshot_authority_matches(captured.generation,captured.revision));with_query(captured,|status,scene|{assert_eq!(status,SceneAdmissionStatus::Pending);assert!(scene.is_none());});}match worker.step(JobBudget{fuel:1,deadline_ms:8}){JobStep::Running(_)=>{},JobStep::Done(_)=>{done=true;break;},JobStep::Failed(e)=>panic!("{}",String::from_utf8_lossy(&e))}}assert!(done&&cache_units>1);drop(worker);with_query(captured,|status,scene|{assert_eq!(status,SceneAdmissionStatus::Ready);let borrowed=scene.unwrap();let scene=borrowed.scene;assert_eq!(scene.plan.nodes.len(),scene.geometry.len());let index=scene.plan.nodes.iter().position(|n|n.id=="result").unwrap();let PreparedPaint::Path(regions)=&scene.geometry[index].paint else{panic!("actual cached path required")};let stamp=borrowed.stamp(index).unwrap();let point=serde_json::from_value(check["point"].clone()).unwrap();let mut query=PreparedRegionQueryJob::new(stamp,point,0.0,scene.flatness).unwrap();while !query.advance(regions,stamp,grant).unwrap().done{}assert_eq!(query.result(stamp).unwrap(),check["expected"].as_bool().unwrap());});finish(first.app_instance_id,&mut source);eprintln!("[DEBUG] Actual mounted painted scene {} grant={grant} source_held_cache_units={cache_units} atomic_complete_cache_query=true source_and_scene_terminal_empty=true",check["source"]);}}
 }
 #[semio_framework_async_macros::async_test]
@@ -89,7 +89,7 @@ async fn mounted_painted_scene_refuses_real_edit_during_cache_and_retires_before
 #[semio_framework_async_macros::async_test]
 async fn mounted_cache_cursor_survives_short_borrows_and_refuses_same_source_replacement_build(){
  use crate::schema::scene_paint::{scene::PreparedPaint,PreparedRegionQueryJob};
- let checks:Vec<serde_json::Value>=serde_json::from_str(include_str!("../../../../🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🧫️fixtures/🎬️resolved/🔣️.json")).unwrap();
+ let checks:Vec<serde_json::Value>=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🎨️paint/🎬️resolved/🔣️.json")).unwrap();
  for check in checks{for grant in [1,7,4096]{
   let row=rows().into_iter().find(|r|r["name"]==check["source"]).unwrap();let mut source=source(&row).await;let first=render(&source,710033,u64::from_le_bytes(source.content_revision()[..8].try_into().unwrap()));let captured=identity(first);let read=source.snapshot_read().unwrap();assert!(prepare(first,read.get()));let(slot,id)=install(first,read);let mut worker=factory(id,&input(slot,captured,id),None).unwrap();assert!(drive(worker.as_mut()));drop(worker);
   let (stamp,pointer)=with_query(captured,|status,borrowed|{assert_eq!(status,SceneAdmissionStatus::Ready);let borrowed=borrowed.unwrap();let index=borrowed.scene.plan.nodes.iter().position(|n|n.id=="result").unwrap();let PreparedPaint::Path(regions)=&borrowed.scene.geometry[index].paint else{panic!("real cache path required")};(borrowed.stamp(index).unwrap(),regions.fill.as_ptr())});
@@ -107,7 +107,7 @@ async fn mounted_cache_cursor_survives_short_borrows_and_refuses_same_source_rep
 #[semio_framework_async_macros::async_test]
 async fn mounted_pointer_gestures_borrow_real_cache_and_refuse_rebuilt_scene_before_publication(){
  use super::super::canvas_pointer_down::TracePointerJob;
- let checks:Vec<Value>=serde_json::from_str(include_str!("../../../../🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎯️query/🧫️fixtures/🔣️.json")).unwrap();
+ let checks:Vec<Value>=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/📋️prepare/🎯️query/🔣️.json")).unwrap();
  for check in checks.iter().filter(|check|check["query"]["kind"]=="point"){
   let row=rows().into_iter().find(|row|row["name"]==check["source"]).unwrap();let mut source=source(&row).await;let first=render(&source,710035,u64::from_le_bytes(source.content_revision()[..8].try_into().unwrap()));let captured=identity(first);
   let read=source.snapshot_read().unwrap();assert!(prepare(first,read.get()));let(slot,id)=install(first,read);let mut worker=factory(id,&input(slot,captured,id),None).unwrap();assert!(drive(worker.as_mut()));drop(worker);

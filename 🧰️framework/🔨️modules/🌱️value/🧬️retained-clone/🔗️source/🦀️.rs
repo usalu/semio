@@ -14,6 +14,7 @@ impl<A:RetireOwned+Sync,B:RetireOwned> ErasedSnapshotRetirement for SourcePayloa
  fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if !self.source.terminal_is_empty(){self.source.next_capacity_byte_demand(body)}else{self.authority.next_capacity_byte_demand(body)}}
  fn next_release_byte_demand(&self)->Result<usize,ValueError>{if !self.source.terminal_is_empty(){self.source.next_release_byte_demand()}else{self.authority.next_release_byte_demand()}}
  fn next_depth_demand(&self)->Result<usize,ValueError>{if !self.source.terminal_is_empty(){self.source.next_depth_demand()}else{self.authority.next_depth_demand()}}
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{if !self.source.terminal_is_empty(){self.source.selected_demand(body)}else{self.authority.selected_demand(body)}}
 }
 struct LeaseRetirement(RetainedCloneLeaseOwner);
 impl RetirementCursor for LeaseRetirement {
@@ -21,7 +22,9 @@ impl RetirementCursor for LeaseRetirement {
         match crate::close_factory_ticket(&mut self.0.payload,grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}
     }
     fn terminal_is_empty(&self)->bool {self.0.payload.is_none()}
-    fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.0.payload.as_ref().map_or(Ok(0),|owner|Ok(crate::factory_ticket_demands(owner,0)?.copy_bytes))}
+    fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.0.payload.as_ref().map_or(Ok(0),|owner|owner.next_copy_byte_demand())}
+    fn next_selected_work_byte_demand(&self,body:usize)->Result<usize,ValueError> {self.0.payload.as_ref().map_or(Ok(0),|owner|Ok(crate::factory_ticket_demands(owner,body)?.copy_bytes))}
+    fn allows_admitted_narrow_work(&self)->bool {self.0.payload.is_some()}
     fn next_birth_bytes(&self,body:usize)->Option<usize> {self.0.payload.as_ref().map_or(Some(0),|owner|crate::factory_ticket_demands(owner,body).ok().map(|demand|demand.capacity_bytes))}
     fn next_close_byte_demand(&self)->Option<usize> {self.0.payload.as_ref().map_or(Some(0),|owner|crate::factory_ticket_demands(owner,0).ok().map(|demand|demand.release_bytes))}
     fn next_depth_demand(&self)->Result<usize,ValueError> {self.0.payload.as_ref().map_or(Ok(0),|owner|Ok(crate::factory_ticket_demands(owner,0)?.depth))}
@@ -47,7 +50,7 @@ fn constructor_capacity<A:RetireOwned+Sync,B:RetireOwned>()->usize{SealedShared:
 
 impl<T:Sync+'static,A:RetireOwned+Sync> RetainedCloneSource<T,A>{
  /// 📐️ Measures the alias copy that hands the original authority to its projection lease.
- pub fn constructor_copy_bytes()->usize{size_of::<SealedShared<A>>()}
+ pub fn constructor_copy_bytes()->usize{0}
  /// 📐️ Measures both shared headers and the lease payload scaffold before anything is allocated.
  pub fn constructor_capacity_bytes<B:RetireOwned>()->usize{constructor_capacity::<A,B>()}
  pub fn constructor_demand<B:RetireOwned>()->RetainedCloneBirthDemand{RetainedCloneBirthDemand{capacity_bytes:Self::constructor_capacity_bytes::<B>(),depth:1}}
@@ -56,7 +59,7 @@ impl<T:Sync+'static,A:RetireOwned+Sync> RetainedCloneSource<T,A>{
  pub fn owned_constructor_demand<B:RetireOwned>()->RetainedCloneBirthDemand{Self::constructor_demand::<B>()}
  /// 📐️ Measures the constructor that borrows a projection from an original authority of another type.
  pub fn borrowed_constructor_capacity_bytes<X:RetireOwned+Sync>()->usize{constructor_capacity::<X,()>()}
- pub fn borrowed_constructor_copy_bytes<X:RetireOwned+Sync>()->usize{size_of::<SealedShared<X>>()}
+ pub fn borrowed_constructor_copy_bytes<X:RetireOwned+Sync>()->usize{0}
  pub fn borrowed_constructor_demand<X:RetireOwned+Sync>()->RetainedCloneBirthDemand{RetainedCloneBirthDemand{capacity_bytes:Self::borrowed_constructor_capacity_bytes::<X>(),depth:1}}
  fn admit_with<B:RetireOwned,F>(authority:A,extra:B,project:F,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,A,B)> where F:for<'source>FnOnce(&'source A)->&'source T{
   if !A::controlled_retirement_supported()||!B::controlled_retirement_supported(){return Err((ValueError::literal(ValueRefusalKind::UnsupportedOwner,"source or authority has no controlled typed retirement"),authority,extra));}
@@ -82,10 +85,14 @@ impl<T:Sync+'static,A:RetireOwned+Sync> RetainedCloneSource<T,A>{
   Ok(RetainedCloneRef{value:unsafe{self.value.as_ref()},lease,projection:binding.projection})
  }
  pub fn project_owned<U:?Sized+Sync,F>(&self,discriminator:usize,project:F,grant:RetainedCloneGrant)->Result<(RetainedOwnedProjection<U>,RetainedCloneProgress),ValueError> where F:for<'source>FnOnce(&'source T)->&'source U{unsafe{RetainedOwnedProjection::from_source(self.try_borrow()?.project(discriminator,project),grant)}}
+ /// 🪪️ Borrows the retained initiating authority for paid source freshness validation.
+ pub fn original_authority(&self)->Option<&A>{self.owner.as_ref().map(|owner|owner.get())}
  pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.next_copy_byte_demand()}else if self.owner.is_some(){Ok(0)}else{RetainedCloneBinding::copy_demand(&self.lease)}}
  pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.next_capacity_byte_demand(body)}else if self.owner.is_some(){Ok(0)}else{RetainedCloneBinding::capacity_demand(&self.lease,body)}}
  pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.next_release_byte_demand()}else if self.owner.is_some(){Ok(0)}else{RetainedCloneBinding::release_demand(&self.lease)}}
  pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.next_depth_demand()}else if self.owner.is_some(){Ok(1)}else{RetainedCloneBinding::depth_demand(&self.lease)}}
+ /// 🎯️ Quotes the same original header, child spill or body event selected by the caller's actual copy currency.
+ pub fn next_close_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.selected_demand(body)}else if self.owner.is_some(){Ok(crate::RetirementDemand{depth:1,..Default::default()})}else{RetainedCloneBinding::close_demand(&self.lease,body)}}
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
@@ -113,6 +120,8 @@ impl<T:Sync+'static,A:RetireOwned+Sync> RetirementCursor for SourceRetirement<T,
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.0.close_step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}}
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.0.next_close_copy_byte_demand()}
+ fn next_selected_work_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.0.next_close_demand(body)?.copy_bytes)}
+ fn allows_admitted_narrow_work(&self)->bool{!self.0.terminal_is_empty()}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.0.next_close_capacity_byte_demand(body).ok()}
  fn next_close_byte_demand(&self)->Option<usize>{self.0.next_close_release_byte_demand().ok()}
  fn next_depth_demand(&self)->Result<usize,ValueError>{self.0.next_close_depth_demand()}

@@ -1,18 +1,20 @@
 import { componentGroup, parseComponentTarget, selectedAnalyticLabels } from "../../🎯️selection/🟦️.ts";
 
 /** 🎛️ User parameters retained as absolute inputs on one mesh operation. */
-export interface MeshSelectionEdit { operation: string; amount: number; cuts: number; dx: number; dy: number; dz: number; width: number; segments: number; mergeMode: string; tolerance: number; radius: number; grid: number; center: number[] }
+export interface MeshSelectionEdit { operation: string; amount: number; cuts: number; dx: number; dy: number; dz: number; width: number; segments: number; mergeMode: string; tolerance: number; radius: number; grid: number; center: number[]; angle:number; pullDirection:number[]; neutralPoint:number[] }
 
 /** 🥽️ Validates a selected component set and resolves the typed graph inputs. */
 export function meshSelectionInputs(ids: readonly string[], payload: MeshSelectionEdit): Record<string, number | string | number[]> {
   const operation = payload.operation;
   const vertices = ["moveVertices", "dissolveVertices", "mergeVertices", "moveProportional", "snapVertices"];
   const edges = ["loopCut", "bevel", "dissolveEdges", "filletEdges", "chamferEdges"];
-  const analytic = ["filletEdges", "chamferEdges", "shell"].includes(operation);
-  if (!["extrude", "inset", "subdivide", "flip", "deleteFaces", "shell", ...vertices, ...edges].includes(operation)) throw new Error("Unknown mesh operation");
+  const analytic = ["filletEdges", "chamferEdges", "shell","draft","defeature"].includes(operation);
+  if (!["extrude", "inset", "subdivide", "flip", "deleteFaces", "shell","draft","defeature", ...vertices, ...edges].includes(operation)) throw new Error("Unknown mesh operation");
   const granularity = vertices.includes(operation) ? "vertex" : edges.includes(operation) ? "edge" : "face";
   const group = componentGroup(ids), target = parseComponentTarget(ids[0])!;
   if (group.granularity !== granularity || !analytic && target.index !== 0) throw new Error("Select matching components of a single mesh");
+  if(!Array.isArray(payload.pullDirection)||payload.pullDirection.length!==3||!Array.isArray(payload.neutralPoint)||payload.neutralPoint.length!==3||[payload.angle,...payload.pullDirection,...payload.neutralPoint].some(value=>!Number.isFinite(value)))throw new Error("Draft point and angle values must be finite");
+  if(operation==="draft"&&payload.pullDirection.every(value=>value===0))throw new Error("Draft pull direction must be nonzero");
   if (!Array.isArray(payload.center) || payload.center.length !== 3 || [payload.amount, payload.dx, payload.dy, payload.dz, payload.width, payload.tolerance, payload.radius, payload.grid, ...payload.center].some(value => !Number.isFinite(value))) throw new Error("Mesh edit values must be finite");
   if (["inset", "chamferEdges", "shell"].includes(operation) && payload.amount <= 0) throw new Error("Inset amount must be positive");
   if (!Number.isInteger(payload.cuts) || payload.cuts < 1 || payload.cuts > 256) throw new Error("Cuts must be an integer from 1 to 256");
@@ -21,6 +23,8 @@ export function meshSelectionInputs(ids: readonly string[], payload: MeshSelecti
   if (payload.tolerance < 0 || !["first", "center", "distance"].includes(payload.mergeMode)) throw new Error("Merge mode must be first, center, or distance with nonnegative tolerance");
   if (analytic) {
     const labels = selectedAnalyticLabels(ids);
+    if(operation==="draft")return {faceLabels:JSON.stringify(labels),angle:payload.angle,pullDirection:[...payload.pullDirection],neutralPoint:[...payload.neutralPoint]};
+    if(operation==="defeature")return {faceLabels:JSON.stringify(labels)};
     return operation === "filletEdges" ? { edgeLabels: JSON.stringify(labels), radius: payload.radius } : operation === "chamferEdges" ? { edgeLabels: JSON.stringify(labels), distance: payload.amount } : { faceLabels: JSON.stringify(labels), thickness: payload.amount };
   }
   if (target.analytic) throw new Error("Analytic components require a B-Rep operation");

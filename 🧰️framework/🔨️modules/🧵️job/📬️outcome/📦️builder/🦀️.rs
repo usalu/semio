@@ -16,6 +16,7 @@ impl JobPayloadAuthority{
 impl Drop for JobPayloadAuthority{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original payload authority reached Drop before separate paid ledger closure");}}
 
 /// 🧱️ Enclosing job admission owns this storage; bounded turns initialize its original fields.
+const JOB_PAYLOAD_BINDINGS_PER_INITIALIZATION_TURN:usize=16;
 pub struct RetainedPayloadBuilder{original:MaybeUninit<RetainedJobPayload>,stream:JobPayloadStream,initialized:usize,ready:bool,sealed:bool}
 impl RetainedPayloadBuilder{
  pub fn new(stream:JobPayloadStream)->Self{Self{original:MaybeUninit::uninit(),stream,initialized:0,ready:false,sealed:false}}
@@ -27,8 +28,20 @@ impl RetainedPayloadBuilder{
  pub fn terminal_is_empty(&self)->bool{!self.ready&&self.initialized==0}
  fn permits(cx:&StepContext<'_>,demand:RetirementDemand)->bool{let grant=cx.retained_grant();grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
  pub fn initialization_demand(&self)->RetirementDemand{if self.ready{return Default::default()}RetirementDemand{depth:1,..Default::default()}}
- /// 🎛️ Initializes the original bindings one bounded page per item: a page covers as many empty bindings as the granted copy credit prices (one binding without credit), and the scalar header joins the turn that finishes the last page.
- pub fn advance_initialization(&mut self,cx:&mut StepContext<'_>)->Result<bool,ValueError>{if self.ready{return Ok(true)}let demand=self.initialization_demand();if !Self::permits(cx,demand){return Ok(false)}let binding=size_of::<Option<JobPayloadPage>>();let header=size_of::<RetainedJobPayload>()-JOB_PAYLOAD_OPERATION_PAGES*binding;let copy=cx.retained_grant().maximum_copy_bytes;let priced=copy/binding;let pages=(JOB_PAYLOAD_OPERATION_PAGES-self.initialized).min(priced.max(1));let target=self.original.as_mut_ptr();for index in self.initialized..self.initialized+pages{unsafe{std::ptr::addr_of_mut!((*target).pages).cast::<Option<JobPayloadPage>>().add(index).write(None);}}self.initialized+=pages;let mut copied_bytes=if priced>0{pages*binding}else{0};if self.initialized==JOB_PAYLOAD_OPERATION_PAGES&&(copy>=copied_bytes+header||pages==0){unsafe{std::ptr::addr_of_mut!((*target).stream).write(self.stream);std::ptr::addr_of_mut!((*target).page_count).write(0);std::ptr::addr_of_mut!((*target).length).write(0);std::ptr::addr_of_mut!((*target).ledger).write(ManuallyDrop::new(None));}if copy>=copied_bytes+header{copied_bytes+=header;}self.ready=true;self.sealed=false;}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()})?;Ok(self.ready)}
+ /// 🎛️ Initializes a fixed group of empty native bindings without copying any input bytes.
+ pub fn advance_initialization(&mut self,cx:&mut StepContext<'_>)->Result<bool,ValueError>{
+  if self.ready{return Ok(true)}
+  let demand=self.initialization_demand();if !Self::permits(cx,demand){return Ok(false)}
+  let end=self.initialized.saturating_add(JOB_PAYLOAD_BINDINGS_PER_INITIALIZATION_TURN).min(JOB_PAYLOAD_OPERATION_PAGES);
+  let target=self.original.as_mut_ptr();
+  for index in self.initialized..end{unsafe{std::ptr::addr_of_mut!((*target).pages).cast::<Option<JobPayloadPage>>().add(index).write(None);}}
+  self.initialized=end;
+  if self.initialized==JOB_PAYLOAD_OPERATION_PAGES{
+   unsafe{std::ptr::addr_of_mut!((*target).stream).write(self.stream);std::ptr::addr_of_mut!((*target).page_count).write(0);std::ptr::addr_of_mut!((*target).length).write(0);std::ptr::addr_of_mut!((*target).ledger).write(ManuallyDrop::new(None));}
+   self.ready=true;self.sealed=false;
+  }
+  cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;Ok(self.ready)
+ }
  fn append_metadata(&self)->Result<(bool,usize),ValueError>{let Some(payload)=self.original()else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original payload bindings are not initialized"))};if self.sealed{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original published payload cannot append"))}let new=payload.page_count==0||payload.pages[payload.page_count-1].as_ref().is_some_and(|page|page.length==page.source.allocated_capacity_bytes());Ok((new,0))}
  pub fn append_demand(&self,grant:RetainedCloneGrant)->Result<RetirementDemand,ValueError>{let(new,_)=self.append_metadata()?;Ok(RetirementDemand{copy_bytes:usize::from(!new),capacity_bytes:if new{JOB_PAYLOAD_PAGE_BYTES.min(grant.maximum_capacity_bytes).max(1)}else{0},depth:1,..Default::default()})}
  /// ✍️ Admits one actual native page extent or copies one original source slice on distinct turns.

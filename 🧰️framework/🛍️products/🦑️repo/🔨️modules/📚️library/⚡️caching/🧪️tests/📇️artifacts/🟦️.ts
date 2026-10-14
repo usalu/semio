@@ -5,7 +5,7 @@ import { createRequire } from "node:module";
 
 /** 🌳️ Checks indexed ownership collisions against Python's pairwise oracle and a linear normalization budget. */
 export async function testArtifactOverlapIndex(workspace: string): Promise<void> {
-  const fixture = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../🧫️fixtures/artifact-registry/🔣️.json"), "utf8")).overlapIndex;
+  const fixture = JSON.parse(readFileSync(resolve(import.meta.dirname, "../🧫️fixtures/artifact-registry/🔣️.json"), "utf8")).overlapIndex;
   const { createArtifactRegistry } = await import("../../📦️artifacts/📇️registry/🟦️.ts");
   const declarations = fixture.nested.map((path: string, index: number) => ({ owner: `owner-${index}:build`, path: `${fixture.directory}/${path}` }));
   const python = Bun.which("python3") ?? Bun.which("python"); assert.ok(python);
@@ -27,7 +27,7 @@ export async function testArtifactOverlapIndex(workspace: string): Promise<void>
 /** 📇️ Verifies artifact ownership and retained-byte accounting against JSON Schema and native Python. */
 export async function testArtifactRegistry(workspace: string, output: string): Promise<void> {
   const require = createRequire(join(workspace, "package.json")), validate = require("jsonschema").validate;
-  const fixtureRoot = resolve(import.meta.dirname, "../../🧫️fixtures/artifact-registry"), fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+  const fixtureRoot = resolve(import.meta.dirname, "../🧫️fixtures/artifact-registry"), fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
   await testArtifactOverlapIndex(workspace);
   const { createArtifactRegistry, measureArtifactRegistry } = await import("../../📦️artifacts/📇️registry/🟦️.ts");
   const registry = createArtifactRegistry(fixture.declarations);

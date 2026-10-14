@@ -1,0 +1,7 @@
+{
+  "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🚨️transaction-sentinel-cases/🔣️.json",
+  "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🚨️transaction-sentinel-cases/🔣️.json",
+  "sha256": "c67b436abca4b9005efce6023f74bd900de5e88187ee9eb3c4328c2397bd081b",
+  "size": 3664,
+  "testpath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚨️transaction-sentinel-policy/🟦️.ts"
+}

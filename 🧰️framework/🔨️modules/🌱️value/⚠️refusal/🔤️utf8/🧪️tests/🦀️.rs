@@ -2,7 +2,7 @@ use super::super::{ValueError, ValueRefusalKind};
 
 #[test]
 fn standard_utf8_refusals_preserve_owned_kind_display_and_decoder_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let rows = fixture["cases"].as_array().unwrap();
     for row in rows {
         let bytes: Vec<u8> = row["bytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();

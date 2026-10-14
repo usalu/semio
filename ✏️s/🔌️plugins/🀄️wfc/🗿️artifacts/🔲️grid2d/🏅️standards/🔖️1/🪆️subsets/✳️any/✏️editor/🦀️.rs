@@ -309,7 +309,8 @@ impl ArtifactCommandWork<EditorApp<Grid2dEditor>> for Grid2dCommandWork {
         GRID2D_TOOL_IDS.contains(&grid2d_command_id(command)).then_some(1)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Grid2dEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Grid2dEditor>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Grid2dEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Grid2dEditor>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("wfc-grid2d-retained-work-repeated"));
         }
@@ -321,6 +322,9 @@ impl ArtifactCommandWork<EditorApp<Grid2dEditor>> for Grid2dCommandWork {
         let cfg = ConfigView { snapshot: input.config, window: input.context.and_then(|context| context.window_config.as_ref()) };
         let view_state = input.context.and_then(|context| context.view_state.as_ref());
         Ok(ArtifactCommandWorkStep::Complete(Grid2dEditor::dispatch(input.command, &doc, &cfg, view_state)?))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -454,7 +458,7 @@ pub fn example_document(example_id: &str) -> Option<Grid2dSnapshot> {
 /// document swap is deliberately NOT a `Grid2dMutation` — it carries no inverse and belongs in no
 /// undo ladder — so it rides `Effect::LoadDocument` and leaves the history exactly as it was.
 pub fn reset_document_effect(document: &Grid2dSnapshot) -> semio_framework::kernel::Effect {
-    let pack = <Grid2dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let pack = <Grid2dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("wfc-grid2d", WFC_GRID2D_DOCUMENT_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
@@ -739,6 +743,7 @@ impl ArtifactEditor for Grid2dEditor {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

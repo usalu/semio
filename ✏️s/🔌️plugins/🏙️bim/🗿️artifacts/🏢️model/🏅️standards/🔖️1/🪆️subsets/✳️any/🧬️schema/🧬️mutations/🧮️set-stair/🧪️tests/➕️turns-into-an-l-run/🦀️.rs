@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🧮️set-stair/➕️turns-into-an-l-run",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️set-stair/➕️turns-into-an-l-run/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️set-stair/➕️turns-into-an-l-run/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️set-stair/➕️turns-into-an-l-run/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️set-stair/➕️turns-into-an-l-run/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️set-stair/➕️turns-into-an-l-run/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧮️set-stair/➕️turns-into-an-l-run/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧮️set-stair/➕️turns-into-an-l-run/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧮️set-stair/➕️turns-into-an-l-run/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧮️set-stair/➕️turns-into-an-l-run/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧮️set-stair/➕️turns-into-an-l-run/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

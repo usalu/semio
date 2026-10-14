@@ -55,7 +55,7 @@ fn bare_action_id_grammar_violation_is_flagged() {
 #[test]
 fn eval_harness_measures_top1_and_top3_accuracy_deterministically() {
     let catalog = compiled();
-    let cases = source_builders::eval_cases(include_str!("../../../🧫️fixtures/🧠️conformance/🔣️.json"));
+    let cases = source_builders::eval_cases(include_str!("../../../🧪️tests/🧫️fixtures/🧠️conformance/🔣️.json"));
     let first = run_eval(&catalog, &cases);
     let second = run_eval(&catalog, &cases);
     assert_eq!(first, second, "eval must be fully deterministic");

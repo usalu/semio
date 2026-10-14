@@ -1,0 +1,227 @@
+{
+  "contract": "framework.job.original-session-prebirth.v1",
+  "original": "same-job-and-parameters-until-parent-admission",
+  "layout": {
+    "authorityCapacity": 192,
+    "ledgerCapacity": 128,
+    "faultCapacity": 16384,
+    "sessionCapacity": 104,
+    "retirementCapacity": 40,
+    "jobCopy": 0,
+    "paramsCopy": 0,
+    "metadataCopy": 0,
+    "faultCopy": 26
+  },
+  "cases": [
+    {
+      "name": "funded",
+      "grant": [
+        1,
+        4096,
+        65536,
+        262144,
+        64
+      ],
+      "cancelled": false,
+      "entryUs": 1,
+      "sameIdentity": true,
+      "admitted": true,
+      "receipt": [
+        1,
+        26,
+        16848,
+        0
+      ],
+      "originalSourcesRetained": false
+    },
+    {
+      "name": "zero-items",
+      "grant": [
+        0,
+        4096,
+        65536,
+        262144,
+        64
+      ],
+      "cancelled": false,
+      "entryUs": 1,
+      "sameIdentity": true,
+      "admitted": false,
+      "receipt": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "originalSourcesRetained": true
+    },
+    {
+      "name": "zero-copy",
+      "grant": [
+        1,
+        0,
+        65536,
+        262144,
+        64
+      ],
+      "cancelled": false,
+      "entryUs": 1,
+      "sameIdentity": true,
+      "admitted": false,
+      "receipt": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "originalSourcesRetained": true
+    },
+    {
+      "name": "short-copy",
+      "grant": [
+        1,
+        25,
+        65536,
+        262144,
+        64
+      ],
+      "cancelled": false,
+      "entryUs": 1,
+      "sameIdentity": true,
+      "admitted": false,
+      "receipt": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "originalSourcesRetained": true
+    },
+    {
+      "name": "short-capacity",
+      "grant": [
+        1,
+        4096,
+        16847,
+        262144,
+        64
+      ],
+      "cancelled": false,
+      "entryUs": 1,
+      "sameIdentity": true,
+      "admitted": false,
+      "receipt": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "originalSourcesRetained": true
+    },
+    {
+      "name": "zero-release",
+      "grant": [
+        1,
+        4096,
+        65536,
+        0,
+        64
+      ],
+      "cancelled": false,
+      "entryUs": 1,
+      "sameIdentity": true,
+      "admitted": true,
+      "receipt": [
+        1,
+        26,
+        16848,
+        0
+      ],
+      "originalSourcesRetained": false
+    },
+    {
+      "name": "zero-depth",
+      "grant": [
+        1,
+        4096,
+        65536,
+        262144,
+        0
+      ],
+      "cancelled": false,
+      "entryUs": 1,
+      "sameIdentity": true,
+      "admitted": false,
+      "receipt": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "originalSourcesRetained": true
+    },
+    {
+      "name": "cancelled",
+      "grant": [
+        1,
+        4096,
+        65536,
+        262144,
+        64
+      ],
+      "cancelled": true,
+      "entryUs": 1,
+      "sameIdentity": true,
+      "admitted": false,
+      "receipt": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "originalSourcesRetained": true
+    },
+    {
+      "name": "missing-clock",
+      "grant": [
+        1,
+        4096,
+        65536,
+        262144,
+        64
+      ],
+      "cancelled": false,
+      "entryUs": null,
+      "sameIdentity": true,
+      "admitted": false,
+      "receipt": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "originalSourcesRetained": true
+    },
+    {
+      "name": "different-operation",
+      "grant": [
+        1,
+        4096,
+        65536,
+        262144,
+        64
+      ],
+      "cancelled": false,
+      "entryUs": 1,
+      "sameIdentity": false,
+      "admitted": false,
+      "receipt": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "originalSourcesRetained": true
+    }
+  ]
+}

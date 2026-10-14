@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
-import { stageArtifacts, type ArtifactPublicationOptions } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts";
+import { stageArtifacts, type ArtifactPublicationOptions } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts";
 
 function retiredCargoOwner(owner: string, root: string): boolean {
   const split = owner.indexOf(":browser:");

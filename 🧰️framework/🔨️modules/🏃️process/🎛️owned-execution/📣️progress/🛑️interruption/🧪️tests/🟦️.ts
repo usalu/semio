@@ -1,8 +1,5 @@
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
-import corpus from "../🧫️fixtures/🔣️.json";
-import schema from "../🧬️schema/🔣️.json";
-import { validateJsonSchemaSubset } from "../../../../../🧬️schema/✅️validator/🟦️.ts";
+import corpus from "./🧫️fixtures/🔣️.json";
 import { runOwnedCommand } from "../../../🟦️.ts";
 
 const childCode = `console.log("[DEBUG] interruption child PID "+process.pid);setTimeout(()=>console.log("[DEBUG] interruption child complete"),${corpus.childMilliseconds});`;
@@ -16,8 +13,6 @@ for (const row of corpus.cases) test(row.id, async () => {
   let publications = 0, published = false, childPid = 0, childCompleted = false;
   const oracle = Bun.spawn(["node", "--eval", oracleCode, JSON.stringify(corpus), JSON.stringify(row), childCode], { stdout: "pipe", stderr: "pipe" });
   try {
-    expect(new Ajv({ strict: true }).compile(schema)(corpus)).toBe(true);
-    expect(validateJsonSchemaSubset(schema, corpus)).toEqual([]);
     const phaseCeiling = row.interruption === "deadline" ? corpus.interruptionMilliseconds : corpus.callerCeilingMilliseconds;
     let terminal = "completed", failure = "";
     try {

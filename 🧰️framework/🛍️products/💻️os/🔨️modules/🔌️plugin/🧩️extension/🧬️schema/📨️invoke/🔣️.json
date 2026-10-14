@@ -15,7 +15,11 @@
     "admissionCases",
     "registryGrant",
     "executionGrant",
-    "lookupCases"
+    "lookupCases",
+    "bodyFailure",
+    "cancelledJobReply",
+    "jobWorkDenials",
+    "jobCloseWork"
   ],
   "properties": {
     "text": {
@@ -107,7 +111,17 @@
         "factoryOriginalDemands",
         "prebornKindRegistry",
         "boundedKindLookup",
-        "compactKindDirectory"
+        "compactKindDirectory",
+        "originalJobCancellation",
+        "ownedJobContextFence",
+        "wholeJobBodyFailure",
+        "singleOriginalJobBudget",
+        "sameCancelledContextReply",
+        "outerJobWorkDenial",
+        "failedOwnerCancellationSignal",
+        "paidJobCloseWork",
+        "paidFailureWork",
+        "selectedJobCloseDemand"
       ],
       "properties": {
         "sameOriginalRequest": {
@@ -153,6 +167,36 @@
           "const": true
         },
         "compactKindDirectory": {
+          "const": true
+        },
+        "originalJobCancellation": {
+          "const": true
+        },
+        "ownedJobContextFence": {
+          "const": true
+        },
+        "wholeJobBodyFailure": {
+          "const": true
+        },
+        "singleOriginalJobBudget": {
+          "const": true
+        },
+        "sameCancelledContextReply": {
+          "const": true
+        },
+        "outerJobWorkDenial": {
+          "const": true
+        },
+        "failedOwnerCancellationSignal": {
+          "const": true
+        },
+        "paidJobCloseWork": {
+          "const": true
+        },
+        "paidFailureWork": {
+          "const": true
+        },
+        "selectedJobCloseDemand": {
           "const": true
         }
       }
@@ -242,6 +286,80 @@
             ]
           }
         }
+      }
+    },
+    "bodyFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "job",
+        "kind",
+        "code",
+        "custody",
+        "message"
+      ],
+      "properties": {
+        "job": {
+          "const": 9004
+        },
+        "kind": {
+          "const": "test.fixed-original"
+        },
+        "code": {
+          "const": "unsupportedOwner"
+        },
+        "custody": {
+          "const": [
+            "body-failed",
+            "body-closed",
+            "source-closed",
+            "failure-published"
+          ]
+        },
+        "message": {
+          "const": "original fixture body failed"
+        }
+      }
+    },
+    "cancelledJobReply": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "const": "canceled"
+        },
+        "message": {
+          "const": "original job was canceled"
+        }
+      }
+    },
+    "jobWorkDenials": {
+      "const": [
+        {
+          "fuel": 0,
+          "deadline": 2,
+          "now": 1
+        },
+        {
+          "fuel": 1024,
+          "deadline": 1,
+          "now": 1
+        }
+      ]
+    },
+    "jobCloseWork": {
+      "const": {
+        "fuel": 1,
+        "sourceBytes": 1799,
+        "copyGrants": [
+          1,
+          3,
+          64
+        ]
       }
     }
   }

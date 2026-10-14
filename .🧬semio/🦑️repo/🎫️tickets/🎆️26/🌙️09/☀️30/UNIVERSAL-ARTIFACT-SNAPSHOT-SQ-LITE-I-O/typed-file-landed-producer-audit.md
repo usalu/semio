@@ -1,0 +1,23 @@
+# Landed Typed File Producer Audit
+
+Read-only inspection of current OS io_mechanism source; no compilation/runtime execution. Source guard must include private TypedSnapshotExportFrame/ImportFrame, TypedFileSettlement, typed_file_validation and typed_file_work, not start solely at public function bodies. Actual registry validator borrows provider TypeId/schema and returns unit, no codec clone or coordinate formatting.
+
+## Concrete Priced-Mutation Order Issue
+
+Both functions assign `frame.validation=Some(snapshot.validate_...())` before the following typed_file_work payment for IoResult<()> header. Both assign `frame.result=Some(inner_operation_result)` before the following typed_file_work for IoResult<Vec/P> header. These are actual installed-slot mutations before their stated header authority admission. If that later work denies original items/copy, the field is retained (good custody) but accepted header mutation occurred before its price check/record. Move header admission/record ahead of the corresponding assignment or use a retained transfer function that settles the exact accepted mutation on refusal; no need to expose temporary owned diagnostic/error result outside the frame.
+
+Likewise export `frame.metadata.database=Some(receivingDB)` and import `frame.snapshot=Some(receivingP)` receive published nested outputs into parent slots without a visible parent Option transfer/header work adjacent before assignment. Child receive publication already prices its own Option output; inspect whether that is intentionally the same transfer or add distinct parent-header work. Do not count it twice without identifying the actual move seam. Current physical database→metadata assignment and final outcome value/diagnostic/result transfers do have explicit work before take/replace.
+
+## Custody and Borrow Arrangement
+
+The result stays in frame.result before settlement and post-body enable; fatal diagnostic path retains actual diagnostic Vec in IoError, warning diagnostic path transfers it into IoOutcome under explicit work. Outer native receive publishes IoResult as an owned output only after original scratch retirement and publication callback. Outer map_err mutates cause progress to final cumulative original native.progress, preserving diagnostic storage. If outer close/publication fails, semantic diagnostic result remains in frame/output under recipient and outer return carries literal original close/SQL cause; no diagnostics are dropped by that replacement.
+
+RefCell scope is coherent: post_body=false callback returns without borrowing while binder holds SQL RefMut; binder drops borrowed before finish_body; finish_body's temporary borrow ends before post_body=true; owner close/publication then borrows SQL at the next event. No definite closure lifetime/reentrant RefCell compile problem was found by source review. Lower physical APIs and SnapshotMetadataFrame are now mounted; their individual original ownership contracts remain High's validation obligation.
+
+TypedFileSettlement residual equation includes body Port SQL receipts and extra original receive frame/retirement charges, avoids raw-delta double billing, and runs before output take. Error-only residual preserves recipient custody. It sets cause anew on every post-body refusal; synchronous native failure stops that scoped path, so no repeated event replacing a first cause was demonstrated here. Original native short-circuit avoids SQL callback invocation and keeps the native literal cause unless actual residual accounting itself denies.
+
+## Evidence Limits and Source Requirements
+
+Public signatures now supplied SQL control plus directional original owner, P RetireOwned and no raw payload encode/decode. They use genuine receiving P/R, directional validation, paid receiving schema/metadata and lower physical frames. No old cold schema/subset helper remains in the visible new bodies. Valid Source guards should reject cold `to_sqlite_database(` / `from_sqlite_database(` and run_as_original_caller within this full producer slice, require borrowed registry unit checks, actual Physical frames/receiving_into, in-frame diagnostics/results and finish_body before final take. Actual helper call names are stronger source registration evidence than absence of formatting alone.
+
+Remaining Native obligations: legal TXT four-field collisions; warning/fatal diagnostic owned output; original first body/header grant denial; physical prefix/refused metadata; original callback vs SQL cause; early wrong typed registry lookup with prior receipt; successful and inner-IoError publication refusal; actual full System conservation. Native qualification remains none in this audit.

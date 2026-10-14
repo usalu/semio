@@ -2,7 +2,7 @@
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
 import "./💰️allocation/🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import type { JsonSnapshot, JsonValue } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { parseJsonSnapshot } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { jsonSnapshotToSqliteDatabase, jsonSnapshotFromSqliteDatabase, JSON_SQLITE_SCHEMA } from "../🟦️.ts";

@@ -1,9 +1,10 @@
 //! 🏛️ Explicit concrete entities, ordered reinforcement and exact binary64 state.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::En1992Snapshot;
 #[path="📏️cells/🦀️.rs"]mod semantic_cells;
 use crate::{ConcreteGrade,ReinforcementGrade,PrestressSteel,RcMember,BarLayer,Stirrups,PunchingSpec,PrestressSpec,FireSpec,LoadCaseActions,Anchor,MemberKind,SupportCondition,ExposureClass,DuctilityClass,FireRating,TightnessClass,document::AnnexChoice};
 use std::collections::BTreeMap;
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,RowWriter,reconstruct_text}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,RowWriter,reconstruct_text}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 
@@ -46,7 +47,7 @@ fn read_tightness(a:Option<&str>)->Result<Option<TightnessClass>, ValueError>{ma
 fn insert_action(p:&mut RowWriter<'_,'_>,table:&str,parent:i64,n:usize,a:&LoadCaseActions)->Result<(), ValueError>{p.insert_float(table,&[Cell::Integer(parent),ordinal(n)?,Cell::Text(&a.id),Cell::Text(&a.kind),Cell::Text(&a.category),Cell::Text(&a.source),Cell::Real(a.g_k_line),Cell::Real(a.q_k_line),Cell::Real(a.point_force),Cell::Real(a.m_k),Cell::Real(a.n_k),Cell::Real(a.v_k),Cell::Real(a.t_k),Cell::Real(a.v_k_punch)],ACTION)?;Ok(())}
 fn read_action(a:FloatRow<'_>,c:&mut SqliteSnapshotControl<'_>)->Result<LoadCaseActions, ValueError>{Ok(LoadCaseActions{id:text(a,3,c)?,kind:text(a,4,c)?,category:text(a,5,c)?,source:text(a,6,c)?,g_k_line:a.real(7)?,q_k_line:a.real(8)?,point_force:a.real(9)?,m_k:a.real(10)?,n_k:a.real(11)?,v_k:a.real(12)?,t_k:a.real(13)?,v_k_punch:a.real(14)?})}
 /// 🪪️ Optional relational capability of the concrete artifact owner.
-pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1992Snapshot as ArtifactSqliteSnapshot>::sqlite_codec()}
+pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1992Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec()}
 fn visit_rows(s:&En1992Snapshot,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
   p.insert_key_float("en1992_document",1,&[Cell::Text(annex(s.annex)),Cell::Text(&s.title),Cell::Real(s.design_working_life_years),Cell::Real(s.delta_c_dev),Cell::Text(&s.cement_type)],DOCUMENT)?;
   for(n,v)in s.concrete_grades.iter().enumerate(){p.insert_float("en1992_concrete_grade",&[Cell::Integer(1),ordinal(n)?,Cell::Text(&v.id),Cell::Text(&v.name),Cell::Real(v.f_ck)],CONCRETE)?;}
@@ -64,12 +65,19 @@ fn visit_rows(s:&En1992Snapshot,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  Ok(())
 }
 fn admit(s:&En1992Snapshot,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic_cells::extent(c.limits())?;let mut p=RowWriter::borrowed(c,SqliteSnapshotPhase::ProjectSnapshot)?;visit_rows(s,&mut p)?;p.finish_borrowed()}
-impl ArtifactSqliteSnapshot for En1992Snapshot{
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=c.limits();semantic_cells::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, n,_body| { let constructed: Result<_, ValueError> = (|| {semantic_cells::admit_record(record,limits,n)?;Self::__dsl_from_record_controlled(record,n)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{admit(self,c)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|n|self.__dsl_to_record_controlled(n),c,native_owner)}
- fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic_cells::extent(c.limits())?;let mut p=RowWriter::new(Self::SQLITE_SCHEMA,c)?;visit_rows(self,&mut p)?;p.finish()}
- fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{
+impl ArtifactSqliteSnapshotHost for En1992Snapshot{
+ 
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=c.limits();semantic_cells::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, n,_body| { let constructed: Result<_, ValueError> = (|| {semantic_cells::admit_record(record,limits,n)?;Self::__dsl_from_record_controlled(record,n)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{admit(self,c)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|n|self.__dsl_to_record_controlled(n),c,native_owner)}
+ 
+ 
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.norm.en1992"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(invalid("EN1992 owned dialect differs")));}c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(store::io_schema::IoError::from_value_error)?;Ok(store::io_schema::IoOutcome::clean(()))}
+ fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{admit(self,c)}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for En1992Snapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic_cells::extent(c.limits())?;let mut p=RowWriter::new(Self::SQLITE_SCHEMA,c)?;visit_rows(self,&mut p)?;p.finish()}
+fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{
   c.check_database(d,SqliteSnapshotPhase::ReconstructSnapshot)?;validate_sqlite_database_schema(d,Self::SQLITE_SCHEMA,c.limits())?;
   let documents=entities(d,"en1992_document",6,DOCUMENT,c)?;if documents.len()!=1||!documents.contains_key(&1){return Err(invalid("EN1992 requires one identity-1 document"));}let r=documents[&1];
   let member_rows=entities(d,"en1992_member",29,MEMBER,c)?;let anchor_rows=entities(d,"en1992_anchor",12,ANCHOR,c)?;
@@ -90,8 +98,6 @@ impl ArtifactSqliteSnapshot for En1992Snapshot{
   let mut anchors=Vec::new();for v in ordered(anchor_rows.into_values(),1,c)?{let mut actions=Vec::new();for a in ordered(anchor_actions.remove(&v.rowid).unwrap_or_default(),v.rowid,c)?{actions.push(read_action(a,c)?);}anchors.push(Anchor{id:text(v,3,c)?,h_ef:v.real(4)?,cracked:boolean(v,5)?,f_uk:v.real(6)?,f_yk:v.real(7)?,a_s:v.real(8)?,d:v.real(9)?,c1:v.real(10)?,f_ck:v.real(11)?,actions});}
   let result=Self{annex:read_annex(r.text(1)?)?,title:text(r,2,c)?,design_working_life_years:r.real(3)?,delta_c_dev:r.real(4)?,cement_type:text(r,5,c)?,concrete_grades,reinforcement_grades,prestress_steels,members,anchors};c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(result)
  }
- fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.norm.en1992"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(invalid("EN1992 owned dialect differs")));}c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(store::io_schema::IoError::from_value_error)?;Ok(store::io_schema::IoOutcome::clean(()))}
- fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{admit(self,c)}
 }
 
 #[cfg(test)]

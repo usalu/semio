@@ -7,7 +7,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { fitCanvasFrame } from "../../../../../../../🔨️modules/🖱️ui/🎬️scene/📷️framing/🟦️.ts";
 const root = resolve(dirname(fileURLToPath(import.meta.url)),"../../../../../../../🔨️modules/🖱️ui/🎬️scene/📷️framing");
-const fixture = JSON.parse(readFileSync(resolve(root,"🧫️fixtures/🔣️.json"),"utf8"));
+const fixture = JSON.parse(readFileSync(resolve(root,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
 const validate = new Ajv().compile(JSON.parse(readFileSync(resolve(root,"🧬️schema/🔣️.json"),"utf8")));
 for (const test of fixture.cases) it(`frames ${test.name}`, () => {
   expect(validate(test.request)).toBe(test.name !== "negative-padding");

@@ -17,6 +17,7 @@ const scopes = new AsyncLocalStorage();
 const recordScopes = new AsyncLocalStorage();
 const recordStores = new Map();
 const usedInference = new Map();
+const originalInferencePublications = new Map();
 const loadObservations = new Map();
 let loadSealed = false;
 
@@ -227,6 +228,7 @@ export async function observeInference({ cachePath, key }, compute) {
     const text = fs.readFileSync(cachePath, "utf8"), split = text.indexOf("\n"), header = JSON.parse(text.slice(0, split));
     if (header.digest === digest && Array.isArray(header.observations) && current(header.observations)) {
       usedInference.set(cachePath, createHash("sha256").update(text.slice(0, split)).digest("hex"));
+      originalInferencePublications.set(cachePath, {path:cachePath,digest,authorityObservations:header.authorityObservations,observations:header.observations});
       return JSON.parse(text.slice(split + 1));
     }
     for (const { kind, path, fact } of Array.isArray(header.observations) ? header.observations : []) if (kind === "file" && typeof fact?.sha256 === "string") hints.set(path, fact);
@@ -238,11 +240,13 @@ export async function observeInference({ cachePath, key }, compute) {
   records.flush();
   if (records.stats.records > 2 * records.stats.accessed) records.retainAccessed();
   const rows = [...loadObservations.values(), ...observations.values()];
+  originalInferencePublications.delete(cachePath);
+  if (jsonImage(result) !== undefined) originalInferencePublications.set(cachePath, {path:cachePath,digest,authorityObservations:[...loadObservations.values()],observations:rows});
   const racy = rows.some(({ kind, fact }) => kind === "file" && typeof fact === "object" && fact !== null && (fact.mtimeMs >= started - RACY_MS || fact.ctimeMs >= started - RACY_MS));
   usedInference.set(cachePath, null);
   if (!racy && jsonExact(result) && current(rows)) {
     fs.mkdirSync(dirname(cachePath), { recursive: true });
-    const temporary = `${cachePath}.${process.pid}.${started}.tmp`, header = JSON.stringify({ digest, observations: rows });
+    const temporary = `${cachePath}.${process.pid}.${started}.tmp`, header = JSON.stringify({ digest, authorityObservations: [...loadObservations.values()], observations: rows });
     fs.writeFileSync(temporary, `${header}\n${JSON.stringify(result)}`);
     fs.renameSync(temporary, cachePath);
     usedInference.set(cachePath, createHash("sha256").update(header).digest("hex"));
@@ -267,11 +271,32 @@ export async function observeDependencies({ receiptPath }, compute) {
   const rows = [...observations.values()], inference = [...usedInference].filter(([path]) => dirname(path) === dirname(receiptPath)).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
   const racy = rows.some(({ kind, fact }) => kind === "file" && typeof fact === "object" && fact !== null && (fact.mtimeMs >= started - RACY_MS || fact.ctimeMs >= started - RACY_MS));
   fs.mkdirSync(dirname(receiptPath), { recursive: true });
+  const publicationPath=receiptPath.replace(/\.receipt\.json$/u,".publication.json"),originalInference=[...originalInferencePublications.values()].filter(value=>dirname(value.path)===dirname(receiptPath)).sort((left,right)=>Buffer.compare(Buffer.from(left.path),Buffer.from(right.path)));
+  if(publicationPath===receiptPath)throw Error("Original inference receipt must have an owned publication path");
+  if(originalInference.length&&jsonImage(result)!==undefined){const temporary=publicationPath+"."+process.pid+"."+started+".tmp";fs.writeFileSync(temporary,JSON.stringify({version:1,revision:OBSERVATION_REVISION,pid:process.pid,startedAt:started,completedAt:Date.now(),inference:originalInference,observations:rows}));fs.renameSync(temporary,publicationPath);}else fs.rmSync(publicationPath,{force:true});
   if (racy || inference.length === 0 || inference.some(([, digest]) => digest === null) || !current(rows)) { fs.rmSync(receiptPath, { force: true }); return result; }
   const temporary = `${receiptPath}.${process.pid}.${started}.tmp`;
   fs.writeFileSync(temporary, JSON.stringify({ format: 1, revision: OBSERVATION_REVISION, pid: process.pid, completedAt: Date.now(), inference, observations: rows }));
   fs.renameSync(temporary, receiptPath);
   return result;
+}
+
+/** 📥️ Captures freshly computed source facts and refuses a preparation whose inputs changed before receipt. */
+export async function captureSourcePreparationV1(compute, control) {
+  const observations = new Map(), value = await scopes.run(observations, compute), original = [...observations.values()];
+  return {value,original,received:await receiveSourcePreparationV1(original,control)};
+}
+
+/** 🔐️ Rechecks and records every original source fingerprint under the same preparation control. */
+export async function receiveSourcePreparationV1(original,control){
+  const received=[];
+  for(const row of original){
+    control.check();if(received.length%128===0)await control.advance("source-fingerprints");
+    const next={kind:row.kind,path:row.path,fact:facts[row.kind](row.path)};
+    if(JSON.stringify(row.fact)!==JSON.stringify(next.fact))throw Error(`Original source preparation inputs changed: ${row.kind}:${row.path}`);
+    received.push(next);
+  }
+  return received;
 }
 
 /** 📜️ The header line of a persisted inference record (its digest and observations), read without the result that follows it. */

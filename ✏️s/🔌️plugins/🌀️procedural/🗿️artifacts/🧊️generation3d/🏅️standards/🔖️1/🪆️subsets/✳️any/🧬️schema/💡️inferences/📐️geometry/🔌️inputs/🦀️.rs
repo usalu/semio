@@ -3,11 +3,12 @@
 
 use super::value::{shape_kind, GeometryValue, PlaneValue, SelectionKind, SelectionValue, WidgetEvaluation, WidgetFault};
 use crate::standards::v1::subsets::any::schema::catalogue::{Kind, Port, PortType, SelectionComponent};
-use semio_framework_artifact_flow_flow::neural::Dictionary;
+use semio_framework_artifact_flow_flow::neural::{Dictionary, Value as NeuralValue};
+use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{neural_number, neural_boolean};
 use semio_framework_artifact_flow_flow::SynapseSpec;
 use semio_framework_3d_brep_engine::ShapeValue;
 use semio_framework_3d::mesh::HalfedgeMesh;
-use semio_framework_value::{DslValue, ToValue};
+use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
@@ -170,9 +171,17 @@ fn axes_of_default(value: &DslValue) -> Option<[f64; 3]> {
     Some([items[0].as_f64()?, items[1].as_f64()?, items[2].as_f64()?])
 }
 
-fn axes_of_literal(literal: &DslValue, schema: &str) -> Option<[f64; 3]> {
-    (literal.get("$schema")?.as_str()? == schema).then_some(())?;
-    Some([literal.get("x")?.as_f64()?, literal.get("y")?.as_f64()?, literal.get("z")?.as_f64()?])
+fn axes_of_literal(value: &NeuralValue, schema: &str) -> Option<[f64; 3]> {
+    let literal = value.as_dictionary()?;
+    (literal.schema()? == schema).then_some(())?;
+    Some([neural_number(literal.get("x")?)?, neural_number(literal.get("y")?)?, neural_number(literal.get("z")?)?])
+}
+
+fn native_id(value: &NeuralValue) -> Option<u64> {
+    match value.as_atom()?.as_str() {
+        Some(text) => text.parse().ok(),
+        None => neural_number(value).filter(|number| *number >= 0.0 && number.fract() == 0.0 && *number <= u64::MAX as f64).map(|number| number as u64),
+    }
 }
 
 fn id_of(value: &DslValue) -> Option<u64> {
@@ -203,35 +212,35 @@ fn element_default(port_type: PortType, value: &DslValue) -> Option<GeometryValu
     })
 }
 
-fn element_literal(port_type: PortType, literal: &DslValue) -> Option<GeometryValue> {
-    let schema = literal.get("$schema")?.as_str()?;
-    let value = literal.get("value");
+fn element_literal(port_type: PortType, value: &NeuralValue) -> Option<GeometryValue> {
+    let literal = value.as_dictionary()?;
+    let schema = literal.schema()?;
+    let scalar = literal.get("value");
     Some(match (port_type, schema) {
-        (PortType::Number | PortType::Length | PortType::Angle, "number") => GeometryValue::Number(value?.as_f64()?),
+        (PortType::Number | PortType::Length | PortType::Angle, "number") => GeometryValue::Number(neural_number(scalar?)?),
         (PortType::Integer, "number") => {
-            let number = value?.as_f64().filter(|number| number.fract() == 0.0)?;
+            let number = neural_number(scalar?).filter(|number| number.fract() == 0.0)?;
             GeometryValue::Integer(number as i64)
         }
-        (PortType::Boolean, "boolean") => GeometryValue::Boolean(value?.as_bool()?),
-        (PortType::Text | PortType::Enum, "text") => GeometryValue::Text(value?.as_str()?.to_string()),
-        (PortType::Vector, "vector") => GeometryValue::Vector(axes_of_literal(literal, "vector")?),
-        (PortType::Point, "point") => GeometryValue::Point(axes_of_literal(literal, "point")?),
+        (PortType::Boolean, "boolean") => GeometryValue::Boolean(neural_boolean(scalar?)?),
+        (PortType::Text | PortType::Enum, "text") => GeometryValue::Text(scalar?.as_atom()?.as_str()?.to_string()),
+        (PortType::Vector, "vector") => GeometryValue::Vector(axes_of_literal(value, "vector")?),
+        (PortType::Point, "point") => GeometryValue::Point(axes_of_literal(value, "point")?),
         (PortType::Plane, "plane") => GeometryValue::Plane(PlaneValue { origin: axes_of_literal(literal.get("origin")?, "point")?, normal: axes_of_literal(literal.get("normal")?, "vector")? }),
-        (PortType::Any, "number") => GeometryValue::Number(value?.as_f64()?),
-        (PortType::Any, "boolean") => GeometryValue::Boolean(value?.as_bool()?),
-        (PortType::Any, "text") => GeometryValue::Text(value?.as_str()?.to_string()),
-        (PortType::Any, "vector") => GeometryValue::Vector(axes_of_literal(literal, "vector")?),
-        (PortType::Any, "point") => GeometryValue::Point(axes_of_literal(literal, "point")?),
+        (PortType::Any, "number") => GeometryValue::Number(neural_number(scalar?)?),
+        (PortType::Any, "boolean") => GeometryValue::Boolean(neural_boolean(scalar?)?),
+        (PortType::Any, "text") => GeometryValue::Text(scalar?.as_atom()?.as_str()?.to_string()),
+        (PortType::Any, "vector") => GeometryValue::Vector(axes_of_literal(value, "vector")?),
+        (PortType::Any, "point") => GeometryValue::Point(axes_of_literal(value, "point")?),
         _ => return None,
     })
 }
 
-fn literal_items(literal: &DslValue) -> Option<Vec<&DslValue>> {
-    (literal.get("$schema")?.as_str()? == "list").then_some(())?;
+fn literal_items(value: &NeuralValue) -> Option<Vec<&NeuralValue>> {
+    let literal = value.as_dictionary()?;
+    (literal.schema()? == "list").then_some(())?;
     let mut items = Vec::new();
-    while let Some(item) = literal.get(&items.len().to_string()) {
-        items.push(item);
-    }
+    while let Some(item) = literal.get(&items.len().to_string()) { items.push(item); }
     Some(items)
 }
 
@@ -255,9 +264,9 @@ fn decode_default(port: &Port, default: &DslValue, selection: Option<SelectionKi
     element_default(port.port_type, default)
 }
 
-fn decode_literal(port: &Port, literal: &DslValue, selection: Option<SelectionKind>) -> Option<GeometryValue> {
+fn decode_literal(port: &Port, literal: &NeuralValue, selection: Option<SelectionKind>) -> Option<GeometryValue> {
     if let Some(component) = selection {
-        let ids = literal_items(literal)?.into_iter().map(|item| if item.get("$schema")?.as_str()? == "number" { item.get("value").and_then(id_of) } else { None }).collect::<Option<Vec<_>>>()?;
+        let ids = literal_items(literal)?.into_iter().map(|item| if item.as_dictionary()?.schema()? == "number" { item.as_dictionary()?.get("value").and_then(native_id) } else { None }).collect::<Option<Vec<_>>>()?;
         return Some(GeometryValue::Selection(SelectionValue { component, ids }));
     }
     if counted(port) {
@@ -466,7 +475,7 @@ pub fn resolve_inputs(kind: &Kind, widget: &str, params: &Dictionary, wires: &[&
             let value = if !incoming.is_empty() {
                 Some(connected_value(port, &incoming, parent)?)
             } else if let Some(stored) = params.get(&port.name) {
-                Some(decode_literal(port, &stored.to_value(), component).ok_or_else(|| literal_fault(port))?)
+                Some(decode_literal(port, stored, component).ok_or_else(|| literal_fault(port))?)
             } else if let Some(default) = &port.default {
                 Some(decode_default(port, default, component).ok_or_else(|| literal_fault(port))?)
             } else {

@@ -1,0 +1,113 @@
+{
+  "grant": {
+    "items": 1,
+    "copyBytes": 2,
+    "capacityBytes": 65536,
+    "releaseBytes": 262144,
+    "depth": 64
+  },
+  "limits": {
+    "fileBytes": 67108864,
+    "frameBodyBytes": 1048576,
+    "records": 8192,
+    "maximumFields": 128,
+    "maximumTextBytes": 1048576,
+    "maximumBinaryBytes": 1048576,
+    "maximumJsonBytes": 1048576,
+    "maximumJsonAllocationBytes": 8388608,
+    "maximumJsonItems": 65536,
+    "maximumJsonDepth": 64
+  },
+  "source": {
+    "operation": 43,
+    "generation": 7,
+    "pageBytes": 3,
+    "prefixHex": "aa",
+    "suffixHex": "bb"
+  },
+  "records": [
+    {
+      "kind": "document",
+      "wireHex": "010003646f630007736368c3a96d61",
+      "expected": {
+        "docId": "doc",
+        "schema": "schéma"
+      }
+    },
+    {
+      "kind": "viewer",
+      "wireHex": "0100",
+      "expected": {
+        "line": null,
+        "checkpoint": null
+      }
+    },
+    {
+      "kind": "viewer",
+      "wireHex": "01010002c3a9",
+      "expected": {
+        "line": "é",
+        "checkpoint": null
+      }
+    },
+    {
+      "kind": "viewer",
+      "wireHex": "010300046c696e6500026370",
+      "expected": {
+        "line": "line",
+        "checkpoint": "cp"
+      }
+    },
+    {
+      "kind": "composition",
+      "wireHex": "0100",
+      "expected": {
+        "owner": null,
+        "dialect": null
+      }
+    },
+    {
+      "kind": "composition",
+      "wireHex": "0101000170000173000163",
+      "expected": {
+        "owner": [
+          "p",
+          "s",
+          "c"
+        ],
+        "dialect": null
+      }
+    },
+    {
+      "kind": "composition",
+      "wireHex": "010200016b000173000175",
+      "expected": {
+        "owner": null,
+        "dialect": [
+          "k",
+          "s",
+          "u"
+        ]
+      }
+    },
+    {
+      "kind": "composition",
+      "wireHex": "010300017000017300016300016b000173000175",
+      "expected": {
+        "owner": [
+          "p",
+          "s",
+          "c"
+        ],
+        "dialect": [
+          "k",
+          "s",
+          "u"
+        ]
+      }
+    }
+  ],
+  "control": {
+    "maximumAllocationBytes": 8388608
+  }
+}

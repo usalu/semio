@@ -3,7 +3,7 @@ use super::{discover, DiscoveryEntry};
 
 #[test]
 fn cycle_safe_discovery_matches_closed_graph_corpus() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("discovery corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("discovery corpus");
     for case in corpus["cases"].as_array().expect("cases") {
         let nodes = &case["nodes"];
         let result = discover(

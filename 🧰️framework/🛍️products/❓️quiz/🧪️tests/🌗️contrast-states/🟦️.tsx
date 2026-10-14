@@ -19,7 +19,7 @@ import { EMPTY_PRESENCE_VIEW, PresenceOverlay, paintStyle, peerInk, type PeerCur
 import stylesheet from "../../🎯️targets/⚛️react/🎨️.css?raw";
 import palette from "../../../../🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css?raw";
 import chrome from "../../../../🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css?raw";
-import states from "../../🧫️fixtures/🌗️contrast-states/🔣️.json";
+import states from "../🧫️fixtures/🌗️contrast-states/🔣️.json";
 
 extend([a11y]);
 

@@ -1,0 +1,2 @@
+export { acquireCompilerCapacityLeaseV1, compilerCapacityWorkerCountV1, scriptCompilerAdmissionControlV1, phaseCompilerAdmissionControlV1, compilerAdmissionBudgetV1, requestedCompilerAdmissionControlV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+export type { CompilerCapacityLeaseV1, CompilerAdmissionControl } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";

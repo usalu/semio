@@ -7,10 +7,10 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.png", "stdio.svg"]
 }
 pub fn layout_to_wire(from: &LayoutSnapshot) -> Vec<u8> {
-    store::os_store::serialization::ArtifactPack::encode_pack(from)
+    pack::snapshot::ArtifactPack::encode_pack(from)
 }
 pub fn layout_from_wire(bytes: &[u8]) -> Result<LayoutSnapshot, store::PackError> {
-    <LayoutSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)
+    <LayoutSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
@@ -251,14 +251,14 @@ pub fn compose_svg_from_drawing(drawing: &SemioDrawingSnapshot) -> Result<String
         format_standard: SVG_FORMAT_STANDARD.to_string(),
         format_subset: "*".to_string(),
     };
-    let bytes = <SemioDrawingSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(drawing);
+    let bytes = <SemioDrawingSnapshot as pack::snapshot::ArtifactPack>::encode_pack(drawing);
     let source = ErasedComposeSource { dialect: DRAWING_DIALECT, payload: IoPayload::Binary(bytes) };
     let composed = ::semio_framework_async::poll::resolve_ready(io_dispatch(&key, std::slice::from_ref(&source))).map_err(|e| format!("layout->semio/drawing->svg: {}", e.message))?;
     let svg_bytes = match composed.payload {
         IoPayload::Binary(bytes) => bytes,
         IoPayload::Text(text) => text.into_bytes(),
     };
-    let svg = <SvgSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&svg_bytes).map_err(|e| format!("layout->semio/drawing->svg decode: {e:?}"))?;
+    let svg = <SvgSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&svg_bytes).map_err(|e| format!("layout->semio/drawing->svg decode: {e:?}"))?;
     write_svg_xml(&svg.doc).map_err(|e| format!("layout->semio/drawing->svg write: {e}"))
 }
 
@@ -600,10 +600,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<LayoutSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<LayoutSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<LayoutSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<LayoutSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
@@ -654,14 +654,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <LayoutSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <LayoutSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <LayoutSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <LayoutSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

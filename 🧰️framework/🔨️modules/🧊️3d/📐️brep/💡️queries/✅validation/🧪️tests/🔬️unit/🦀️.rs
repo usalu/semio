@@ -431,3 +431,62 @@ fn validation_same_parameter_spends_only_the_original_granted_geometry_sample() 
     assert!(job.run_to_completion(&body).is_empty());
     eprintln!("[DEBUG] original validation same-parameter samples={samples} maximumPerTurn={maximum}");
 }
+
+#[test]
+fn original_validation_planning_quotes_actual_backing_before_entity_copy() {
+    use crate::test_support::observe_tessellation_system as observe;
+    use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧊️cold-planning/🔣️.json")).unwrap();let law=&fixture["retainedPlanning"];
+    assert_eq!(std::mem::size_of::<EdgeId>(),law["entityCopyBytes"].as_u64().unwrap()as usize);
+    for count in law["sourceTetrahedra"].as_array().unwrap(){let count=count.as_u64().unwrap()as usize;
+    for stop in law["cancelStops"].as_array().unwrap(){
+        let mut body=Body::new();let mut rec=OpRecorder::new();for _ in 0..count{build_tetrahedron(&mut body,&mut rec);}
+        let original=body.edges.slot_at(0).unwrap().1 as *const _;
+        let(mut job,heap)=observe(||BodyValidationJob::new(&body));assert_eq!(heap,(0,0));let(mut born,mut freed,mut turns,mut denials,mut reserves,mut copies)=(0,0,0,0,0,0);
+        let other=Body::new();let(result,heap)=observe(||job.planning_demands(&other));assert!(result.is_err());assert_eq!(heap,(0,0));
+        while job.phase==BodyValidationPhase::CollectingTopology&&stop.as_u64().is_none_or(|stop|turns<stop as usize){
+            let(demand,heap)=observe(||job.planning_demands(&body).unwrap());assert_eq!(heap,(0,0));
+            let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+            let(result,heap)=observe(||job.step_planning_funded(&body,0,grant).unwrap());assert_eq!(result,(Default::default(),0));assert_eq!(heap,(0,0));
+            for body_bytes in law["bodyBytes"].as_array().unwrap(){let body_bytes=body_bytes.as_u64().unwrap()as usize;if body_bytes<demand.copy_bytes{let(result,heap)=observe(||job.step_planning_funded(&body,1,RetainedCloneGrant{maximum_copy_bytes:body_bytes,..grant}).unwrap());assert_eq!(result,(Default::default(),0));assert_eq!(heap,(0,0));denials+=1;}}
+            for axis in 0..5{
+                let amount=match axis{0=>1,1=>demand.copy_bytes,2=>demand.capacity_bytes,3=>demand.release_bytes,_=>demand.depth};if amount==0{continue;}
+                let mut denied=grant;match axis{0=>denied.maximum_items=0,1=>denied.maximum_copy_bytes-=1,2=>denied.maximum_capacity_bytes-=1,3=>denied.maximum_release_bytes-=1,_=>denied.maximum_depth-=1};
+                let before=(job.units_done,job.planning_stage,job.planning_slot,job.edges.len(),job.faces.len(),job.shells.len());
+                let(result,heap)=observe(||job.step_planning_funded(&body,1,denied).unwrap());assert_eq!(result,(Default::default(),0));assert_eq!(heap,(0,0));assert_eq!(before,(job.units_done,job.planning_stage,job.planning_slot,job.edges.len(),job.faces.len(),job.shells.len()));denials+=1;
+            }
+            let((receipt,units),heap)=observe(||job.step_planning_funded(&body,1,grant).unwrap());assert!(receipt.fits(grant));assert_eq!(units,1);assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;reserves+=usize::from(heap.0!=0);copies+=usize::from(receipt.copied_bytes!=0);assert_eq!(body.edges.slot_at(0).unwrap().1 as *const _,original);turns+=1;assert!(turns<10000);
+        }
+        if stop.is_null(){assert_eq!(job.edges.len(),fixture["expected"]["edges"].as_u64().unwrap()as usize*count);assert_eq!(job.faces.len(),fixture["expected"]["faces"].as_u64().unwrap()as usize*count);assert_eq!(job.shells.len(),count);assert!(job.edges.iter().copied().eq(body.edges.iter().map(|(id,_)|id)));assert!(job.faces.iter().copied().eq(body.faces.iter().map(|(id,_)|id)));for shell in job.shells.iter(){assert_eq!(shell.faces,body.shells.get(shell.shell).unwrap().faces);}assert!(reserves>0&&copies>0);}
+        let edge_pointer=job.edges.as_ptr();let(mut closing,heap)=observe(||ControlledRetirement::new(job).unwrap_or_else(|_|panic!("original validation planning close")));assert_eq!(heap,(0,0));assert_eq!(closing.original().unwrap().edges.as_ptr(),edge_pointer);
+        while !closing.terminal_is_empty(){let copy=closing.next_copy_byte_demand().unwrap();let demand=closing.selected_demand(copy).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(step,heap)=observe(||closing.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;}
+        let(_,heap)=observe(||drop(closing));assert_eq!(heap,(0,0));assert_eq!(born,freed);eprintln!("[DEBUG] Original validation planning sourceTetrahedra={count} stop={stop} sourcePointer=true turns={turns} deniedAxes={denials} reserves={reserves} copies={copies} born={born} released={freed} terminalDrop=0");
+    }
+    }
+}
+
+
+#[test]
+fn original_validation_loop_frontier_quotes_source_and_diagnostic_events(){
+    use crate::test_support::observe_tessellation_system as observe;
+    use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧊️cold-planning/🔣️.json")).unwrap();let law=&fixture["retainedLoops"];
+    for count in law["sourceTetrahedra"].as_array().unwrap(){let count=count.as_u64().unwrap()as usize;for broken in [false,true]{for stop in law["cancelStops"].as_array().unwrap(){
+        let mut body=Body::new();let mut rec=OpRecorder::new();for _ in 0..count{build_tetrahedron(&mut body,&mut rec);}
+        if broken{let first=body.loops.slot_at(0).unwrap().1.first;let next=body.coedges.get(first).unwrap().next;body.coedges.get_mut(next).unwrap().prev=next;}
+        let source=&body as*const _;let mut job=BodyValidationJob::new(&body);let(mut born,mut freed)=(0,0);
+        while job.phase==BodyValidationPhase::CollectingTopology{let demand=job.funded_demands(&body).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let((receipt,_),heap)=observe(||job.step_funded(&body,1,grant).unwrap());assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;}
+        let(mut turns,mut denies,mut backing,mut texts)=(0,0,0,0);
+        while job.phase==BodyValidationPhase::LoopRings&&stop.as_u64().is_none_or(|stop|turns<stop as usize){
+            let(demand,heap)=observe(||job.funded_demands(&body).unwrap());assert_eq!(heap,(0,0));let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+            let before=(job.progress(),job.loop_slot,job.ring.as_ptr(),job.ring.len(),job.ring_probe,job.loop_finding_cursor,job.issues.len());
+            for axis in 0..5{let amount=match axis{0=>1,1=>demand.copy_bytes,2=>demand.capacity_bytes,3=>demand.release_bytes,_=>demand.depth};if amount==0{continue}let mut denied=grant;match axis{0=>denied.maximum_items=0,1=>denied.maximum_copy_bytes-=1,2=>denied.maximum_capacity_bytes-=1,3=>denied.maximum_release_bytes-=1,_=>denied.maximum_depth-=1};let(result,heap)=observe(||job.step_funded(&body,1,denied).unwrap());assert_eq!(result,(Default::default(),0));assert_eq!(heap,(0,0));assert_eq!(before,(job.progress(),job.loop_slot,job.ring.as_ptr(),job.ring.len(),job.ring_probe,job.loop_finding_cursor,job.issues.len()));denies+=1;}
+            let(result,heap)=observe(||job.step_funded(&body,0,grant).unwrap());assert_eq!(result,(Default::default(),0));assert_eq!(heap,(0,0));
+            let((receipt,units),heap)=observe(||job.step_funded(&body,1,grant).unwrap());assert_eq!(units,1);assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;backing+=usize::from(heap.0!=0);texts+=usize::from(receipt.copied_bytes==1);turns+=1;assert!(turns<100000);assert_eq!(&body as*const _,source);
+        }
+        if stop.is_null(){assert_eq!(job.phase,BodyValidationPhase::EdgeValence);assert!(backing>0);if broken{let finding=job.issues.iter().next().unwrap();assert_eq!(job.issues.len(),1);assert_eq!(finding.entity,law["brokenNeighbor"]["entity"]);assert_eq!(finding.code,law["brokenNeighbor"]["code"]);assert_eq!(finding.message,law["brokenNeighbor"]["message"]);assert!(texts>0);}else{assert!(job.issues.is_empty());}}
+        let pointer=job.ring.as_ptr();let(mut close,heap)=observe(||ControlledRetirement::new(job).unwrap_or_else(|_|panic!("original loop custody")));assert_eq!(heap,(0,0));assert_eq!(close.original().unwrap().ring.as_ptr(),pointer);
+        while !close.terminal_is_empty(){let copy=close.next_copy_byte_demand().unwrap();let demand=close.selected_demand(copy).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(step,heap)=observe(||close.step(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;}
+        let(_,heap)=observe(||drop(close));assert_eq!(heap,(0,0));assert_eq!(born,freed);eprintln!("[DEBUG] Original validation loops sourceTetrahedra={count} broken={broken} stop={stop} turns={turns} denials={denies} backingEvents={backing} textEvents={texts} born={born} released={freed} terminalDrop=0");
+    }}}
+}

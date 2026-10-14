@@ -6,7 +6,7 @@
 use super::{admit_remote_envelopes, note_authored_envelopes};
 use crate::os_spr::{ActorId, ArtifactId, MutationEnvelope, MutationId};
 
-const FIXTURE: &str = include_str!("../../../🧫️fixtures/document-echo-suppression-v1/🔣️.json");
+const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/document-echo-suppression-v1/🔣️.json");
 
 fn envelope(value: &serde_json::Value) -> MutationEnvelope {
     MutationEnvelope {

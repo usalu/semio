@@ -163,7 +163,7 @@ impl HistoryLogGen {
         let doc_id = next_ident(&mut rng, "doc", 0, profile.adversarial).await;
         let schema = next_ident(&mut rng, "schema", 0, profile.adversarial).await;
 
-        let mut edits: Vec<crate::os_spr::HistoryEdit> = Vec::with_capacity(profile.edit_count);
+        let mut edits = crate::os_spr::HistoryEdits::empty();
         for i in 0..profile.edit_count {
             let id = next_ident(&mut rng, "edit", i, profile.adversarial).await;
             let started_at = next_timestamp(&mut rng, profile.adversarial).await;
@@ -185,7 +185,7 @@ impl HistoryLogGen {
             let mut index = 0usize;
             while boundary < edits.len() {
                 let end = (boundary + profile.checkpoint_every).min(edits.len());
-                let mutation_ids = edits[boundary..end].iter().flat_map(|edit| (0..edit.ops.len()).map(|op| crate::os_spr::MutationId(format!("{}#{op}", edit.id)))).collect();
+                let mutation_ids = edits.iter().skip(boundary).take(end-boundary).flat_map(|edit| (0..edit.ops.len()).map(|op| crate::os_spr::MutationId(format!("{}#{op}", edit.id)))).collect();
                 let author_count = rng.next_range(3).await as usize;
                 let mut authors = Vec::with_capacity(author_count);
                 for a in 0..author_count {

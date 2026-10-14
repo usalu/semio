@@ -298,7 +298,7 @@ fn the_palette_ranking_bounds_and_orders_the_way_react_does() {
 
 #[test]
 fn fuzzy_normalization_matches_the_neutral_nfkd_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔎️ShellSearch/🧫️fixtures/🔣️.json")).expect("neutral palette fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔎️ShellSearch/🧪️tests/🧫️fixtures/🔣️.json")).expect("neutral palette fixture");
     for row in fixture["normalization"]["cases"].as_array().expect("normalization cases") {
         let value = row["value"].as_str().expect("normalization value");
         let expected = row["expected"].as_str().expect("normalization expected");
@@ -309,7 +309,7 @@ fn fuzzy_normalization_matches_the_neutral_nfkd_oracle() {
 
 #[test]
 fn built_in_command_labels_match_the_neutral_react_locale_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔎️ShellSearch/🧫️fixtures/🔣️.json")).expect("neutral palette fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔎️ShellSearch/🧪️tests/🧫️fixtures/🔣️.json")).expect("neutral palette fixture");
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for row in fixture["producer"]["localizedCommands"].as_array().expect("localized command rows") {
         let command_id = row["id"].as_str().expect("localized command id");
@@ -409,7 +409,7 @@ fn os_arg_commands_are_single_staged_rows() {
 fn picking_an_arg_carrying_command_opens_its_form() {
     let mut shell = palette_shell();
     shell.sync_dock_tabs();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔎️ShellSearch/🧫️fixtures/🔣️.json")).expect("neutral palette fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔎️ShellSearch/🧪️tests/🧫️fixtures/🔣️.json")).expect("neutral palette fixture");
     let staged = &fixture["producer"]["stagedCommand"];
     let surface = staged["categorySurfaceId"].as_str().expect("category surface id");
     let initial = shell.publish_shell_panel_document(surface).expect("initial Command category publication").expect("Command category owns a retained document");
@@ -556,7 +556,7 @@ fn find_publishes_filters_and_activates_with_a_physical_row_click() {
 }
 
 fn fixture_staged_palette_id() -> String {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔎️ShellSearch/🧫️fixtures/🔣️.json")).expect("neutral palette fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔎️ShellSearch/🧪️tests/🧫️fixtures/🔣️.json")).expect("neutral palette fixture");
     fixture["producer"]["stagedCommand"]["id"].as_str().expect("staged palette id").to_string()
 }
 
@@ -653,7 +653,7 @@ fn the_palette_rows_follow_the_react_declaration_order() {
     let home = items.iter().find(|item| item.id == "studio.home").expect("home row");
     assert_eq!(home.group, "Navigation");
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔎️ShellSearch/🧫️fixtures/🔣️.json")).expect("neutral palette fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔎️ShellSearch/🧪️tests/🧫️fixtures/🔣️.json")).expect("neutral palette fixture");
     let staged = &fixture["producer"]["stagedCommand"];
     let staged_id = staged["id"].as_str().expect("staged fixture id");
     let staged_row = items.iter().find(|item| item.id == staged_id).expect("native producer publishes the fixture's canonical React id");

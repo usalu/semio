@@ -43,7 +43,7 @@ const OUT_OF_BOUNDS: Readonly<Record<string, Record<string, unknown>>> = {
 export function assertGeneration3dSemanticWire(): number {
   const root = resolve(import.meta.dir, "../..");
   const read = (path: string) => JSON.parse(readFileSync(resolve(root, path), "utf8"));
-  const corpus: { cases: { keyword: string; tag: number; source: string; mutation: Record<string, unknown> }[] } = read("🧫️fixtures/🧬️semantic-wire/🔣️.json");
+  const corpus: { cases: { keyword: string; tag: number; source: string; mutation: Record<string, unknown> }[] } = read("./🧪️tests/🧫️fixtures/🧬️semantic-wire/🔣️.json");
   const ajv = new Ajv({ strict: true, allErrors: true }).addKeyword({ keyword: "x-semio-ui", metaSchema: { type: "object" } }).addKeyword({ keyword: "x-semio-invariant", metaSchema: { type: "array", items: { type: "object" } } }).addKeyword({ keyword: "x-semio-inverse-rows", metaSchema: { type: "object" } });
   assert.equal(corpus.cases.length, 16);
   const tags = new Map([...readFileSync(resolve(root, "📡️.protocol.semio"), "utf8").matchAll(/^record (\S+) tag=(\d+)$/gm)].map(match => [match[1], Number(match[2])]));
@@ -77,7 +77,7 @@ export function assertGeneration3dSemanticWire(): number {
   assert.equal(new Set(corpus.cases.map((row) => row.keyword)).size, 6);
   assert.equal(new Set(corpus.cases.map((row) => row.tag)).size, 6);
   assert.deepEqual([...new Set(corpus.cases.filter((row) => row.keyword === "change-widget-input").map((row) => row.mutation.type))], ["number", "text", "boolean", "point", "vector", "plane", "numberList", "textList", "booleanList", "pointList", "vectorList"], "every widget-input type has a vector");
-  const admission: { schemas: Record<string, object>; cases: { kind: string; name: string; input: unknown; output?: unknown; reject?: boolean }[] } = read("🧫️fixtures/🧬️semantic-wire/🚪️admission.json");
+  const admission: { schemas: Record<string, object>; cases: { kind: string; name: string; input: unknown; output?: unknown; reject?: boolean }[] } = read("./🧪️tests/🧫️fixtures/🧬️semantic-wire/🚪️admission.json");
   const projectionAjv = new Ajv({ strict: true, allErrors: true, removeAdditional: true }).addKeyword({ keyword: "x-semio-derived", metaSchema: { type: "boolean" } });
   const inferenceSchema = JSON.parse(readFileSync(resolve(root, "../../../🧬️schema/💡️inferences/🔣️.json"), "utf8"));
   const projectionSchemas = { ...admission.schemas, inference: inferenceSchema };
@@ -93,7 +93,46 @@ export function assertGeneration3dSemanticWire(): number {
     }
     checks += row.reject ? 2 : 3;
   }
+  const parameters: { dependencies: {type: string; value?: unknown; literal: unknown}[]; cases: { name: string; schema: string; literal: Record<string, unknown>; output: unknown }[] } = read("./🧪️tests/🧫️fixtures/🧬️semantic-wire/🚪️parameters.json");
+  const literalSchemas: Record<string, object> = Object.fromEntries(["number", "text", "boolean", "point", "vector"].map(kind => [kind, {
+    type: "object", required: ["$schema", ...(kind === "point" || kind === "vector" ? ["x", "y", "z"] : ["value"])],
+    properties: { $schema: { const: kind }, ...(kind === "point" || kind === "vector" ? Object.fromEntries(["x", "y", "z"].map(axis => [axis, { type: "number" }])) : { value: { type: kind === "text" ? "string" : kind } }) },
+  }]));
+  literalSchemas.plane = { type: "object", required: ["$schema", "origin", "normal"], properties: { $schema: { const: "plane" }, origin: literalSchemas.point, normal: literalSchemas.vector } };
+  const literalValidators = Object.fromEntries(Object.entries(literalSchemas).map(([kind, schema]) => [kind, ajv.compile(schema)]));
+  const independentLiteral = (literal: Record<string, unknown>, schema: string): unknown => {
+    if (literal.$schema === "list") {
+      const names = Object.keys(literal).filter(key => key !== "$schema");
+      if (names.length > 1024 || names.some((key, ordinal) => key !== String(ordinal))) return null;
+      const values = names.map(key => independentLiteral(literal[key] as Record<string, unknown>, schema));
+      if (schema === "plane" || !literalValidators[schema] || values.some(value => value === null || (value as {type: string}).type !== schema)) return null;
+      return { type: `${schema}List`, value: values.map(value => (value as { value: unknown }).value) };
+    }
+    const actualSchema = typeof literal.$schema === "string" ? literal.$schema : "";
+    if (!literalValidators[actualSchema]?.(literal)) return null;
+    schema = actualSchema;
+    const value = schema === "point" || schema === "vector" ? [literal.x, literal.y, literal.z] : schema === "plane" ? { origin: [((literal.origin as Record<string, unknown>).x), ((literal.origin as Record<string, unknown>).y), ((literal.origin as Record<string, unknown>).z)], normal: [((literal.normal as Record<string, unknown>).x), ((literal.normal as Record<string, unknown>).y), ((literal.normal as Record<string, unknown>).z)] } : literal.value;
+    return { type: schema, value };
+  };
+  for (const row of parameters.cases) {
+    assert.deepEqual(independentLiteral(row.literal, row.schema), row.output, `${row.name}: independent native literal witness`);
+    checks += 1;
+  }
+  for (const row of parameters.dependencies) {
+    const schema = row.type === "parameters" ? { type: "object" } : row.type === "absent" ? { type: "null" } : { type: "object", required: ["value"], properties: { value: { type: row.type === "text" ? "string" : "number" } }, additionalProperties: false };
+    assert(ajv.compile(schema)(row.literal), `${row.type}: independent dependency literal schema`);
+    assert.deepEqual(row.literal, row.type === "parameters" ? row.value : row.type === "absent" ? null : { value: row.value }, `${row.type}: independent dependency literal projection`);
+    checks += 2;
+  }
   const semanticRoot = resolve(root, "../../../🧬️schema");
+  for (const relative of ["🧬️mutations/🦀️.rs", "🧬️mutations/🎛️change-widget-input/🦀️.rs", "🦀️.rs", "💡️inferences/📐️geometry/🔌️inputs/🦀️.rs", "💡️inferences/📐️geometry/🦀️.rs"]) {
+    const source = readFileSync(resolve(semanticRoot, relative), "utf8");
+    assert(!/\b(?:ToValue::to_value|FromValue>::from_value|\.to_value\(\))/.test(source), `${relative} crosses a portable representation in native semantics`);
+    checks += 1;
+  }
+  const replaySource = readFileSync(resolve(semanticRoot, "../../../../../🔨️modules/🏠️host/🦀️.rs"), "utf8");
+  assert(!replaySource.includes("ToValue::to_value(widget)"), "native retained transform replay crosses a portable widget representation");
+  checks += 1;
   const visit = (directory: string, rustOwnership = true): void => {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
       const path = resolve(directory, entry.name);
@@ -106,14 +145,15 @@ export function assertGeneration3dSemanticWire(): number {
       }
       if (rustOwnership && entry.isFile() && entry.name === "🦀️.rs") {
         const source = readFileSync(path, "utf8");
-        assert(!/#\[derive\([^\]]*\b(?:ToValue|FromValue)\b/.test(source), `${path} owns a value representation derive`);
+        assert(!/#\[derive\([^\]]*\b(?:ToValue|FromValue|CanonicalJsonTree)\b/.test(source), `${path} owns a value representation derive`);
         assert(!source.includes("fn gumball_widget_json"), `${path} owns the gumball representation helper`);
         assert(!/protocol::list_delta![\s\S]*?values_only/.test(source), `${path} expands a hidden list codec`);
-        checks += 3;
+        assert(!/\bArtifactCanonicalJsonTree\b|fn canonical_tree_/.test(source), `${path} owns a canonical JSON representation implementation`);
+        checks += 4;
       }
     }
   };
   visit(semanticRoot);
-  for (const facet of ["👁️viewer/🎚️config", "✏️editor/🎚️config", "✏️editor/👥️presence", "✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🫧️transient"]) visit(resolve(semanticRoot, "..", facet, "🧬️schema"), false);
+  for (const facet of ["👁️viewer/🎚️config", "✏️editor/🎚️config", "✏️editor/👥️presence", "✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🫧️transient"]) visit(resolve(semanticRoot, "..", facet, "🧬️schema"));
   return checks + 8;
 }

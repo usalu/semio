@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn exports_match_shared_vectors_and_independent_csv() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for test in fixture["cases"].as_array().unwrap() {
         let responses: Vec<FormsResponse> = semio_framework_pack_json::from_json_str(&test["responses"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let expected: Vec<Vec<String>> = serde_json::from_value(test["rows"].clone()).unwrap();

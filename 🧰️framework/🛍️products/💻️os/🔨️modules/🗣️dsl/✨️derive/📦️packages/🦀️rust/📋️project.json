@@ -74,7 +74,7 @@
       "inputs": [
         "production",
         "^production",
-        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
       ]
     },
     "test-exports-source": {
@@ -87,7 +87,7 @@
       "inputs": [
         "production",
         "^production",
-        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
       ]
     },
     "test-exports": {
@@ -100,7 +100,7 @@
       "inputs": [
         "production",
         "^production",
-        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
       ]
     },
     "test": {
@@ -113,7 +113,7 @@
       "inputs": [
         "production",
         "^production",
-        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
       ]
     }
   }

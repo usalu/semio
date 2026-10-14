@@ -20,7 +20,7 @@ type DockStack = { key: string; rect: Rect; tabs: DockTab[] };
 type Camera = { windowId: string; value: any };
 type Snapshot = { controls: Control[]; windows: string[]; stacks: DockStack[]; indicator: Rect | null; dragging: boolean; cameras: Camera[]; generation: number };
 
-const fixturePath = join(import.meta.dir, "../../🧫️fixtures/🌐️browser-acceptance/🔣️.json");
+const fixturePath = join(import.meta.dir, "../🧫️fixtures/🌐️browser-acceptance/🔣️.json");
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as {
   version: number;
   target: { plugin: string; urls: Record<Renderer, string>; viewport: { width: number; height: number }; minimumWindows: number; minimumStacks: number; tabsPerSelectedStack: number; dragThresholdPx: number };

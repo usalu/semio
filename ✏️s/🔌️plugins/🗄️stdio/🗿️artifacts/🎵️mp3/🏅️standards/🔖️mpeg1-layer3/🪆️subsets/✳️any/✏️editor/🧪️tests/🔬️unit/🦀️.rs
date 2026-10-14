@@ -32,7 +32,7 @@ async fn playback_export_route_is_registered_cancellable_and_fully_retired() {
 #[semio_framework_async_macros::async_test]
 async fn playback_export_route_streams_the_real_fixture_with_exact_mime_and_bytes() {
     use semio_framework_plugin::{app::ArtifactMediaExportPoll, PluginApp};
-    let source = include_bytes!("../../../🧫️fixtures/🔊️.mp3");
+    let source = include_bytes!("../../../🧪️tests/🧫️fixtures/🔊️.mp3");
     let snapshot = crate::standards::mpeg1_layer3::subsets::any::io::decode_mp3(source).expect("real MP3 fixture decodes");
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<Mp3Editor>, _>(async { semio_framework_plugin::App { definition: create_mp3_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&snapshot, STDIO_MP3_DOCUMENT_SCHEMA) else {
@@ -79,7 +79,7 @@ semio_framework_plugin::history_edit_acceptance_law!("stdio", super::Mp3Editor, 
 async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history() {
     use semio_framework_plugin::plugin_app_close_prelude::{MediaArtifact, MediaArtifactDescriptor};
     use semio_framework_plugin::{artifact_app_laws, EditorApp, MediaWireFormat, PluginApp, NATURAL_FILE_PORT};
-    let source = include_bytes!("../../../🧫️fixtures/🔊️.mp3");
+    let source = include_bytes!("../../../🧪️tests/🧫️fixtures/🔊️.mp3");
     let codec = <Mp3Editor as ArtifactEditor>::natural_file_codec().expect("paired natural codec");
     assert_eq!((codec.format_kind, codec.extension, codec.media_type, codec.binary), ("s.stdio.mp3@mpeg1-layer3", ".mp3", "audio/mpeg", true));
     let artifact = MediaArtifact {

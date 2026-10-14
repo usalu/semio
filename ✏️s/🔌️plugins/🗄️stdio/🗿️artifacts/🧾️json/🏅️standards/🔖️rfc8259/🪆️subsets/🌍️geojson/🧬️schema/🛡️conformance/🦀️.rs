@@ -69,7 +69,7 @@ use super::*;
 
 #[test]
 fn neutral_number_lexemes_match_authored_vectors_and_serde_json() {
-let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔢️number-lexemes/🔣️.json")).expect("authored number vectors");
+let corpus:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🛡️conformance/🔢️number-lexemes/🔣️.json")).expect("authored number vectors");
 for case in corpus["cases"].as_array().expect("number cases") {
 let lexeme=case["lexeme"].as_str().expect("number lexeme");
 let expected=case["valid"].as_bool().expect("lexeme validity");

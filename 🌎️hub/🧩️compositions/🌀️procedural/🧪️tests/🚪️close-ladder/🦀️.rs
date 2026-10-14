@@ -146,7 +146,7 @@ fn generation2d_instance_close_reaches_retired() {
 
 /// ⚖️ The language-agnostic close-cost fixture — shared by this law and by the shell-side twin, so
 /// the ceiling a close must respect is authored once instead of hard-coded per implementation.
-const CLOSE_COST_FIXTURE: &str = include_str!("../../🧫️fixtures/🚪️close-ladder/🔣️.json");
+const CLOSE_COST_FIXTURE: &str = include_str!("../🧫️fixtures/🚪️close-ladder/🔣️.json");
 
 /// 📚️ The bundled generation3d examples, in the order a long editor session picks them — each load
 /// retains another document, another history frame and another tessellation generation.

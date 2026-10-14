@@ -1,11 +1,12 @@
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_v3::subsets::any::io::sqlite::snapshot::*;
 use semio_framework_os_kernel::{
     sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue},
-    os_store::serialization::ArtifactSqliteSnapshot,
+    os_store::serialization::ArtifactSqliteSnapshotHost,
 };
 
 fn fixture() -> BmpSnapshot {
-    semio_framework_pack_json::from_json_str(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
+    semio_framework_pack_json::from_json_str(include_str!("🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
 }
 
 #[test]
@@ -42,9 +43,9 @@ async fn sqlite_snapshot_typed_file_round_trip_preserves_owned_gap_samples_and_t
     let dialect = ArtifactDialect { artifact_kind: "s.stdio.bmp".into(), standard: "v3".into(), subset: "*".into() };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let snapshot = fixture();
-        let file = io_export_sqlite_snapshot(&dialect, &snapshot, encoding, Default::default(), &mut |_| true).await.unwrap().value;
+        let file = async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=encoding;let original_file_limits=Default::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
         assert_eq!(&file[..16], b"SQLite format 3\0");
-        let restored = io_import_sqlite_snapshot::<BmpSnapshot>(&dialect, &file, Default::default(), &mut |_| true).await.unwrap().value;
+        let restored = async{let original_file_dialect=&dialect;let original_file_input=&file;let original_file_limits=Default::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<BmpSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value;
         assert_eq!(restored, snapshot);
     }
 }

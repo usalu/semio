@@ -60,7 +60,7 @@ import {
   type Task,
 } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
-const FIXTURES = resolve(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures");
+const FIXTURES = resolve(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures");
 const TOLERANCE = 1e-12;
 const STRUCTURAL = new Set(["type-invalid", "required", "property-unknown", "value-invalid", "slug-invalid", "length-invalid", "integer-invalid", "below-minimum", "items-too-few", "properties-too-few", "duplicate-path"]);
 

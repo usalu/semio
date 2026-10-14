@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "↔️create-dimension/➕️chains-an-opening-centre",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️create-dimension/➕️chains-an-opening-centre/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️create-dimension/➕️chains-an-opening-centre/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️create-dimension/➕️chains-an-opening-centre/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️create-dimension/➕️chains-an-opening-centre/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/↔️create-dimension/➕️chains-an-opening-centre/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↔️create-dimension/➕️chains-an-opening-centre/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↔️create-dimension/➕️chains-an-opening-centre/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↔️create-dimension/➕️chains-an-opening-centre/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↔️create-dimension/➕️chains-an-opening-centre/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/↔️create-dimension/➕️chains-an-opening-centre/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

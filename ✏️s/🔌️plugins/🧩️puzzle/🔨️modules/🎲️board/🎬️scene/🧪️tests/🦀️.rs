@@ -39,7 +39,7 @@ fn output(value: &DslValue) -> serde_json::Value {
 #[test]
 fn puzzle_scene_projection_matches_language_neutral_cases_and_sqlite_oracle() {
     use std::{io::Write, process::{Command, Stdio}};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let mut results = Vec::new();
     for case in fixture["cases"].as_array().unwrap() {
         let value = input(&case["input"]);
@@ -66,7 +66,7 @@ fn puzzle_scene_projection_matches_language_neutral_cases_and_sqlite_oracle() {
 
 #[test]
 fn puzzle_scene_projection_retains_partial_owners_at_every_cancellation_boundary() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap().iter().filter(|case| case["accepted"] == true) {
         let value = input(&case["input"]);
         let mode = if case["mode"] == "normal" { Mode::Normal } else { Mode::Ported };

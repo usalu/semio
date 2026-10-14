@@ -100,7 +100,7 @@ const STAGES = sampled(40, 400, 4000);
 
 /** 🧫️ One committed fixture of the product. */
 function fixture<T>(name: string): T {
-  return JSON.parse(readFileSync(resolve(HERE, "../../../../🧫️fixtures", name, "🔣️.json"), "utf8")) as T;
+  return JSON.parse(readFileSync(resolve(HERE, "../../../../🧪️tests/🧫️fixtures", name, "🔣️.json"), "utf8")) as T;
 }
 
 type Named = Feeling & { readonly id: string };

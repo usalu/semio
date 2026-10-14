@@ -83,6 +83,7 @@ exclude = [
     "**/🏅️standards/**",
     "**/👽️guest/**",
     "**/🔮️oracles/**",
+    "🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust",
     "🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🔮️oracles/📦️package-boundary-classification/📦️packages/🦀️rust",
 ]
@@ -307,23 +308,10 @@ opt-level = 3
 [profile.dev.package.semio-framework-hash]
 opt-level = 3
 
-[profile.prototype]
-inherits = "dev"
-opt-level = 0
-lto = false
-codegen-units = 256
-incremental = true
-
+# 🎚️ Shared native optimizer policy lives in .cargo/config.toml; this owner opts into path trimming.
 [profile.release]
-opt-level = 3
-lto = "thin"
-codegen-units = 1
-strip = "debuginfo"
-incremental = false
 trim-paths = "object"
 
-# 🪶️ The ONE shipped component profile (ticket 26/09/23 wave A2); its rationale and measurements live beside the same
-# definition in the repository root `Cargo.toml`.
 [profile.wasm-release]
 inherits = "release"
 opt-level = "s"

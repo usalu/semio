@@ -1,0 +1,19 @@
+{
+  "blocks": [],
+  "entities": [],
+  "layers": [
+    {
+      "colorIndex": 7,
+      "lineType": "CONTINUOUS",
+      "name": "walls",
+      "visible": true
+    },
+    {
+      "colorIndex": 3,
+      "lineType": "DASHED",
+      "name": "dimensions",
+      "visible": true
+    }
+  ],
+  "schema": "stdio.semio.cad"
+}

@@ -7,7 +7,7 @@ import { dwgProjectVisualStyle,dwgReconstructVisualStyle } from "../../🖌️st
 import { dwgProjectMaterial,dwgReconstructMaterial,dwgProjectMline,dwgReconstructMline } from "../../🖌️styles/🧱️material/🟦️.ts";
 import { dwgProjectTableStyle,dwgReconstructTableStyle } from "../../🖌️styles/🗃️table/🟦️.ts";
 import { dwgProjectMLeader,dwgReconstructMLeader } from "../../🖌️styles/↗️mleader/🟦️.ts";
-import fixture from "../../🧫️fixtures/🎭️bodies/🔣️.json";
+import fixture from "../🧫️fixtures/🎭️bodies/🔣️.json";
 import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
 import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import { dwgMaterialFixture as material,dwgMlineFixture as mline,dwgVisualFixture as visual,dwgTableStyleFixture as table,dwgMLeaderFixture as leader } from "../🧰️support/🖌️styles/🟦️.ts";

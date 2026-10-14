@@ -6,7 +6,7 @@ import ts from "typescript";
 
 const root = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔎️json-reference-owner-lookup/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔎️json-reference-owner-lookup/🔣️.json"), "utf8"));
 const text = readFileSync(join(root, library, "🧹️normalization/🟦️.ts"), "utf8");
 const syntax = ts.createSourceFile("./🟦️.ts", text, ts.ScriptTarget.Latest, true);
 type Token = { adapter: string; structuredLocation: string; start: number; end: number; value: string; [name: string]: unknown };
@@ -41,7 +41,7 @@ function jsoncOracle(content: string, adapter: string): Token[] {
 
 /** 🧾️ Uses the TypeScript JSON AST as a second independent source-coordinate oracle. */
 function typescriptOracle(content: string, adapter: string): Token[] {
-  const document = ts.parseJsonText("../../🧫️fixtures/🔎️json-reference-owner-lookup/🔣️.json", content), rows: Token[] = [];
+  const document = ts.parseJsonText("../🧫️fixtures/🔎️json-reference-owner-lookup/🔣️.json", content), rows: Token[] = [];
   const visit = (node: ts.Node, parent?: ts.Node): void => {
     if (ts.isStringLiteral(node)) {
       const start = node.getStart(document) + 1, end = node.getEnd() - 1;

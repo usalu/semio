@@ -9,17 +9,17 @@ fn assert_workflow_manual_binding<T:semio_framework_dsl_record::DslField+Partial
 }
 #[test]
 fn sqlite_snapshot_workflow_media_contract_binds_literal_values_under_both_native_controls(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
  for expected in fixture["contracts"].as_array().unwrap(){let value:MediaContract=semio_framework_pack_json::from_json_str(&serde_json::to_string(expected).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&value)).unwrap(),*expected);assert_workflow_manual_binding(&value,maximum,tiny);}
 }
 #[test]
 fn sqlite_snapshot_workflow_media_port_binds_literal_values_under_both_native_controls(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
  let value:WorkflowMediaPort=semio_framework_pack_json::from_json_str(&serde_json::to_string(&fixture["port"]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&value)).unwrap(),fixture["port"]);assert_workflow_manual_binding(&value,maximum,tiny);
 }
 #[test]
 fn sqlite_snapshot_workflow_input_binds_literal_values_and_cancels_owned_utf8(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
  let value:WorkflowInput=semio_framework_pack_json::from_json_str(&serde_json::to_string(&fixture["input"]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&value)).unwrap(),fixture["input"]);assert_workflow_manual_binding(&value,maximum,tiny);
  let text="😀".repeat(fixture["largeCharacters"].as_u64().unwrap()as usize);let value=WorkflowInput{id:text.clone(),kind_id:text.clone(),selector:text.clone(),required:true,multiplicity:PortMultiplicity::One};let raw=<WorkflowInput as semio_framework_dsl_record::DslField>::to_value(&value);let threshold=fixture["cancelAfterBytes"].as_u64().unwrap()as usize;
  let mut observed=false;let mut cancel=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{if event.total==text.len()&&event.completed>=threshold{observed=true;false}else{true}};assert!(value.to_value_controlled(&mut semio_framework_value::NativeEncodeControl::new(maximum,&mut cancel)).is_err());assert!(observed);
@@ -28,7 +28,7 @@ fn sqlite_snapshot_workflow_input_binds_literal_values_and_cancels_owned_utf8(){
 use protocol::MutationDiff;
 #[test]
 fn sqlite_snapshot_workflow_manual_metadata_preserves_neutral_fields_and_enum_labels_under_both_controls(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🏭️schema/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🏭️schema/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
  for index in 0..3{
   let mut admitted=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(maximum,&mut admitted);let shape=match index{0=><MediaContract as semio_framework_dsl_record::DslField>::shape_controlled(&mut encoding),1=><WorkflowMediaPort as semio_framework_dsl_record::DslField>::shape_controlled(&mut encoding),_=><WorkflowInput as semio_framework_dsl_record::DslField>::shape_controlled(&mut encoding)}.unwrap();let semio_framework_dsl_record::Shape::Record(producer)=shape else{panic!("declared workflow record")};let encoded=producer.encode(&mut encoding).unwrap();let exact=encoding.owned_bytes();
   let mut admitted=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(maximum,&mut admitted);let decoded=producer.decode(&mut decoding).unwrap();
@@ -41,24 +41,24 @@ fn sqlite_snapshot_workflow_manual_metadata_preserves_neutral_fields_and_enum_la
 #[test]
 fn committed_wire_witnesses_are_the_canonical_wire() {
     for witness in [
-        include_str!("../../🧫️fixtures/🧬️mutations/➕️add-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutations/🗑️remove-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutations/🔗connect-ports/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutations/✂️disconnect-edge/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutations/↔️move-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutations/✏️rename-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutations/🧩add-parameter/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutations/🧹remove-parameter/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutations/🩹change-parameter/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutations/🔒bind-parameter-field/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutations/🔓unbind-parameter-field/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutations/🔄update-node-ports/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutations/📥add-input/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutations/🚮remove-input/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutations/🔌bind-input/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutations/🚪unbind-input/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutations/📤bind-output/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutations/⛔️unbind-output/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/➕️add-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/🗑️remove-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/🔗connect-ports/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/✂️disconnect-edge/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/↔️move-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/✏️rename-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/🧩add-parameter/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/🧹remove-parameter/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/🩹change-parameter/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/🔒bind-parameter-field/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/🔓unbind-parameter-field/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/🔄update-node-ports/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/📥add-input/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/🚮remove-input/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/🔌bind-input/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/🚪unbind-input/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/📤bind-output/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/⛔️unbind-output/🧾️wire-witness/🦠️mutation/🔣️.json"),
     ] {
         store::os_store::test_support::assert_wire_witness::<WorkflowMutation>(witness);
     }
@@ -402,7 +402,7 @@ async fn validate_workflow_snapshot_flags_unresolved_bindings() {
 
 #[semio_framework_async_macros::async_test]
 async fn independent_package_fixture_matches_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️package-contract/📜️cases.json")).expect("language-neutral fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️package-contract/📜️cases.json")).expect("language-neutral fixture");
     assert_eq!(fixture["package"], env!("CARGO_PKG_NAME"));
     let document = empty_workflow_snapshot().await;
     let json = semio_framework_pack_json::to_json_string(&document);
@@ -443,7 +443,7 @@ async fn move_nodes_is_relative_and_inverts_to_one_absolute_row() {
 
 #[test]
 fn sqlite_snapshot_workflow_borrowed_metadata_matches_the_neutral_manual_schema(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🏭️schema/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🏭️schema/🔣️.json")).unwrap();
  for(index,record)in[<MediaContract as semio_framework_dsl_record::BorrowedDslRecord>::RECORD,<WorkflowMediaPort as semio_framework_dsl_record::BorrowedDslRecord>::RECORD,<WorkflowInput as semio_framework_dsl_record::BorrowedDslRecord>::RECORD].iter().enumerate(){
   let fields:Vec<_>=record.fields.iter().map(|field|serde_json::json!([field.id,field.key,field.optional])).collect();assert_eq!(serde_json::json!(fields),fixture["records"][index]["fields"]);
   let labels:Vec<_>=record.fields.iter().filter_map(|field|match field.shape{semio_framework_dsl_record::BorrowedShape::Enum(labels)=>Some(serde_json::json!([field.id,labels])),_=>None}).collect();assert_eq!(serde_json::json!(labels),fixture["records"][index]["enums"]);

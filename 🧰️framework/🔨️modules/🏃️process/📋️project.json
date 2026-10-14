@@ -6,13 +6,20 @@
       "cache": true,
       "dependsOn": [],
       "inputs": [
-        "{projectRoot}/🏗️build/🎚️mode/**/*",
-        "{projectRoot}/📜️script.ts"
+        "{projectRoot}/🏗️build/🎚️mode/**/*"
       ],
       "outputs": [],
       "options": {
-        "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test build-mode"
+        "cwd": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode",
+        "command": "bun ./📜️script.ts test"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
       }
     },
     "test-routing": {
@@ -232,8 +239,16 @@
       ],
       "outputs": [],
       "options": {
-        "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test wasm-build"
+        "cwd": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build",
+        "command": "bun ./📜️script.ts test"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
       }
     },
     "test-command-owner": {
@@ -313,6 +328,114 @@
         "cwd": "🧰️framework/🔨️modules/🏃️process",
         "command": "bun ./📜️script.ts test managed-build-mode"
       }
+    },
+    "test-go-build-mode": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test go-build-mode"
+      }
+    },
+    "test-compiler-state": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/🏗️build/**/*",
+        "{projectRoot}/📜️script.ts"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test compiler-state"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-cargo-build-lease": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test cargo-build-lease"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-native-artifact-publication": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test native-artifact-publication"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          },
+          "orchestrator": true
+        }
+      }
+    },
+    "test-native-queued-cancellation": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test native-queued-cancellation"
+      }
+    },
+    "test-compiler-capacity": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test compiler-capacity"
+      }
+    },
+    "test-cargo-profile-policy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test cargo-profile-policy"
+      },
+      "cache": false
     }
   },
   "tags": [

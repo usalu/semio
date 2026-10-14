@@ -1,0 +1,5 @@
+{
+  "mutation": "removeGcpObservation",
+  "id": "gcp-roof-vent",
+  "observationIndex": 0
+}

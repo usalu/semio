@@ -1,0 +1,9 @@
+{
+  "_comment": "🧲️ Cross-language golden wire vectors of the document-archive merge (CHANNEL_VERSION 22, design §22.22). `MergeDocumentArchive` (tag 43) carries `seq` and the archive in exactly the `LoadDocumentArchive` (tag 32) encoding, so the two commands differ in their tag byte alone; the load status frame (tag 27) states `ahead` as one varint after `total` and before `fault`. Rust proves them in protocol_channel's document_archive_merge_matches_shared_cross_language_json_vectors; TypeScript encodes and decodes the same bytes in 🧪️backbone-envelope-io.",
+  "seq": 7,
+  "archive": { "parent_pack": [1, 2], "parent_spr": [3], "members": [] },
+  "LoadDocumentArchive": "2007020102010300",
+  "MergeDocumentArchive": "2b07020102010300",
+  "status": { "in_reply_to": 9, "operation": 7, "state": "ready", "completed": 5, "total": 5, "ahead": 3, "fault": [] },
+  "DocumentArchiveLoad": "1b09070205050300"
+}

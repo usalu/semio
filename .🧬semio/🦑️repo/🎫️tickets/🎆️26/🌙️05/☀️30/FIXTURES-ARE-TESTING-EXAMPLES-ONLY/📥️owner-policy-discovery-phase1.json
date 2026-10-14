@@ -1,0 +1,16 @@
+{
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+  "before": "4af70fd838abdd9fdadfb9915fd645f5971d9ef9dcd06f3c8ffb24c8a382d264",
+  "after": "4ba9ce4c7389cb338231dae3efa0c653948434311e8241bffb45c45e1d689699",
+  "functions": [
+    "semanticExactOwnedFileCurrentPreimageAuthority",
+    "parseSemanticOwnedCurrentSourceRevisions"
+  ],
+  "names": {
+    "SemanticOwnedCurrentSourceRevision": "CurrentSourceApproval",
+    "SemanticOwnedCurrentSourceExpectation": "CurrentSourceApprovalSnapshot",
+    "SemanticOwnedCurrentSourcePreimageResult": "CurrentSourceApprovalResult",
+    "SemanticExactOwnedFileCase": "OwnerProjectionEntry",
+    "SemanticExactOwnedFileCatalog": "OwnerProjectionPolicy"
+  }
+}

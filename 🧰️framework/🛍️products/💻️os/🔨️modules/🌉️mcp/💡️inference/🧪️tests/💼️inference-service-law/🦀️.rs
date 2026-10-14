@@ -6,7 +6,7 @@ use super::*;
 use crate::ui::JobRegistry;
 
 fn law() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/💼️inference-service-law.json")).expect("inference service law fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/💼️inference-service-law.json")).expect("inference service law fixture")
 }
 
 /// 🧬️ `name` rooted over exactly the component `$defs` it reaches, so a sibling definition's

@@ -235,7 +235,7 @@ impl Default for Puzzle2dConfig {
     }
 }
 
-impl store::os_store::serialization::ArtifactDsl for Puzzle2dConfig {
+impl pack::snapshot::ArtifactDsl for Puzzle2dConfig {
     const EXTENSION: &'static str = "puzzle2dcfg";
 
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -247,7 +247,7 @@ impl store::os_store::serialization::ArtifactDsl for Puzzle2dConfig {
     }
 }
 
-impl store::os_store::serialization::ArtifactPack for Puzzle2dConfig {
+impl pack::snapshot::ArtifactPack for Puzzle2dConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         semio_framework_value::ToValue::to_value(self).encode_pack_with(options)
     }
@@ -256,6 +256,9 @@ impl store::os_store::serialization::ArtifactPack for Puzzle2dConfig {
         let value = semio_framework_value::DslValue::decode_pack_with(bytes, options)?;
         semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::from(error))
     }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Puzzle2dConfig {
+
 }
 
 impl store::ConfigRecord for Puzzle2dConfig {}

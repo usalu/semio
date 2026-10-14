@@ -129,7 +129,7 @@ pub const VCS_APP_ID: &str = "s.vcs.vcs@1/*#editor";
 /// store shell whose `Drop` asserts its bounded retirement authority detached every nested owner
 /// first, so building the effect that way panics (ticket 26/09/18, B1a fix #7).
 pub fn vcs_example_document_effect() -> semio_framework_plugin::Effect {
-    let pack = <VcsSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&crate::examples::demo::snapshot());
+    let pack = <VcsSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&crate::examples::demo::snapshot());
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(VCS_APP_ID, VCS_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
@@ -430,7 +430,8 @@ impl ArtifactCommandWork<EditorApp<VcsPlayApp>> for VcsEditCommandWork {
         vcs_edit_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<VcsPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<VcsPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<VcsPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<VcsPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
         let replaying = self.steps < self.replay_target;
         match self.advance(command, snapshot)? {
@@ -448,6 +449,9 @@ impl ArtifactCommandWork<EditorApp<VcsPlayApp>> for VcsEditCommandWork {
                 }
             }
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn checkpoint_byte(&self, index: usize) -> Option<u8> {
@@ -923,6 +927,7 @@ impl ArtifactEditor for VcsPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

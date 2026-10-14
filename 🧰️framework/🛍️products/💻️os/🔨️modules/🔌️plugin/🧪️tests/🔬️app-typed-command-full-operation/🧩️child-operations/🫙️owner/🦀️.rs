@@ -70,7 +70,7 @@ impl PagedChildLabels for PagedList<ChildLabelOwner,CAPACITY>{fn len(&self)->usi
 pub struct PagedChildOwner{metadata:[Text;4],pub operations:PagedList<OwnedOperationBytes,CAPACITY>,labels:PagedList<ChildLabelOwner,CAPACITY>,partial_source:Option<OwnedOperationBytes>,partial_label:Option<ChildLabelOwner>,pending_schema:Option<Text>,pending_schema_is_retired:bool,operation_count:usize,label_count:usize}
 impl PagedChildOwner{pub fn empty()->Self{Self{metadata:std::array::from_fn(|_|Text::empty()),operations:PagedList::empty(),labels:PagedList::empty(),partial_source:None,partial_label:None,pending_schema:None,pending_schema_is_retired:false,operation_count:0,label_count:0}}
     #[cfg(test)]
-    fn retained_partial_source(&self)->Option<&OwnedOperationBytes>{self.partial_source.as_ref()}
+    pub(crate) fn retained_partial_source(&self)->Option<&OwnedOperationBytes>{self.partial_source.as_ref()}
     pub fn allocated_bytes(&self)->usize{self.pending_schema.as_ref().map(Text::allocated_bytes).unwrap_or(0)+self.metadata.iter().map(Text::allocated_bytes).sum::<usize>()+self.operations.allocated_bytes()+self.operations.iter().map(OwnedOperationBytes::allocated_bytes).sum::<usize>()+self.labels.allocated_bytes()+self.labels.iter().flat_map(|label|label.cells.iter().flatten()).map(Text::allocated_bytes).sum::<usize>()+self.partial_source.as_ref().map(OwnedOperationBytes::allocated_bytes).unwrap_or(0)+self.partial_label.as_ref().map(|label|label.cells.iter().flatten().map(Text::allocated_bytes).sum::<usize>()).unwrap_or(0)}
 }
 impl PagedChildOwner{

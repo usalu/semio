@@ -85,7 +85,7 @@ async fn row_metrics_are_the_css_line_box_plus_py_single_not_a_control_height() 
 
 #[semio_framework_async_macros::async_test]
 async fn the_popup_outer_box_keeps_reacts_minimum_border_and_two_permanent_scroll_bands() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🔽️select-popup-geometry/🔣️.json")).expect("Select popup geometry fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔽️select-popup-geometry/🔣️.json")).expect("Select popup geometry fixture");
     let theme = Theme::light();
     let trigger = Rect::new(40.0, 100.0, fixture["triggerWidth"].as_f64().expect("trigger width") as f32, theme.control_height);
     let popup = select_popup_geometry(trigger, fixture["optionCount"].as_u64().expect("option count") as usize, &theme, fixture["cases"][0]["viewportHeight"].as_f64().expect("viewport height") as f32, 0.0, 0.0);

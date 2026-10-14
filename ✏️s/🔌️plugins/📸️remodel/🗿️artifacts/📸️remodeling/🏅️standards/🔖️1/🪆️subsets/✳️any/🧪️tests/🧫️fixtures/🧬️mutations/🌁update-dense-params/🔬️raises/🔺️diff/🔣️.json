@@ -1,0 +1,28 @@
+{
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": null,
+  "durableArtifacts": null,
+  "calibration": null,
+  "params": {
+    "ingest": null,
+    "feature": null,
+    "matching": null,
+    "sfm": null,
+    "dense": {
+      "resolution": "high",
+      "windowRadiusPx": 5,
+      "minViewConsistency": 4,
+      "confidenceThreshold": {
+        "bits": "3f400000"
+      },
+      "maxPoints": 250000
+    },
+    "mesh": null,
+    "motion": null,
+    "geo": null
+  },
+  "gcps": null,
+  "results": null
+}

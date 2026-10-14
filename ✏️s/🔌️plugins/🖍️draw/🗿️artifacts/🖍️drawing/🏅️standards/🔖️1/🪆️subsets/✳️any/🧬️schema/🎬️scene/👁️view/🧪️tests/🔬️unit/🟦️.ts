@@ -2,10 +2,10 @@
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {Matrix3,Vector2,Box2,CubicBezierCurve} from "three";
-import cases from "../../🧫️fixtures/🔣️.json";
+import cases from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/👁️view/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
-import rows from "../../../📋️prepare/🧫️fixtures/🎬️vector/🔣️.json";
-import traceRows from "../../../🔍️trace/🧫️fixtures/🔣️.json";
+import rows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🎬️vector/🔣️.json";
+import traceRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🔍️trace/🔣️.json";
 import {DocumentVectorJob,DocumentSceneJob} from "../../../📋️prepare/🟦️.ts";
 import {preparedSceneNodes,preparedSceneSelected} from "../../🟦️.ts";
 import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
@@ -14,10 +14,10 @@ const limits={maxWork:10000000,trace:traceRows[0]!.limits,booleans:{tolerance:.0
 test("completed vector geometry is borrowed by canvas projection with exact shared records",()=>{const validate=new Ajv({strict:true}).compile(schema);for(const sample of cases){const row=rows.find(row=>row.name===sample.name)!;const job=new DocumentVectorJob({...row.document,layers:lift(row.document.layers)} as never,row.limits,limits);while(!job.advance(7).done){}const moved=job.intoRetirement();while(!moved.job.advance(7).done){}const plan=moved.output!,records=preparedSceneNodes(plan);expect(validate(records)).toBe(true);expect(records).toEqual(sample.expected);for(const record of records){const node=plan.nodes.find(node=>node.id===record.id)!;expect(record.groups).toBe(node.groups);if(node.content.kind==="path"){expect(record.segments).toBe(node.content.segments);expect(record.fill).toBe(node.content.fill??undefined);expect(record.stroke).toBe(node.content.stroke??undefined);}}}console.log("[DEBUG] Complete canvas projections preserved six neutral record sets and borrowed actual geometry and paint owners");});
 test("prepared group previews apply one affine transform to actual descendant geometry",()=>{const row=rows.find(row=>row.name==="group full affine")!;const job=new DocumentVectorJob({...row.document,layers:lift(row.document.layers)} as never,row.limits,limits);while(!job.advance(7).done){}const plan=job.result();const ids=[plan.nodes.find(n=>n.content.kind==="group")!.id],matrix:[number,number,number,number,number,number]=[1,.2,.3,2,7,11];const before=preparedSceneNodes(plan),after=preparedSceneNodes(plan,[ids,matrix]);for(let i=0;i<before.length;i++){const a=before[i]!,b=after[i]!;expect(preparedSceneSelected(plan,ids,a.id)).toBe(true);const m=new Matrix3().set(...[matrix[0],matrix[2],matrix[4],matrix[1],matrix[3],matrix[5],0,0,1]as[number,number,number,number,number,number,number,number,number]);const t=a.transform;const n=new Matrix3().set(t[0],t[2],t[4],t[1],t[3],t[5],0,0,1);m.multiply(n);expect(b.transform).toEqual([m.elements[0],m.elements[1],m.elements[3],m.elements[4],m.elements[6],m.elements[7]]);expect(b.segments).toBe(a.segments);}console.log("[DEBUG] Prepared group previews matched independent Three affine products and preserved path ownership");});
 
-import invalids from "../../🧫️fixtures/⚠️invalid/🔣️.json";
+import invalids from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/👁️view/⚠️invalid/🔣️.json";
 test("canvas refuses invalid asset and unresolved algorithm owners explicitly",()=>{for(const row of invalids){const source=rows.find(sample=>sample.name===row.source)!;const document={...source.document,layers:lift(source.document.layers)} as never;const job=row.action==="prepare-only"?new DocumentSceneJob(document,source.limits):new DocumentVectorJob(document,source.limits,limits);while(!job.advance(7).done){}const plan=job.result();if(row.action==="remove-assets")plan.assets=[];expect(()=>preparedSceneNodes(plan)).toThrow(new RegExp(row.error,"i"));}console.log("[DEBUG] Canvas rejected missing actual assets and unresolved algorithms before rendering");});
 
-import boundCases from "../../🧫️fixtures/📐️bounds/🔣️.json";
+import boundCases from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/👁️view/📐️bounds/🔣️.json";
 import {preparedSceneNodeBounds,preparedSceneBounds,type PreparedSceneNode} from "../../🟦️.ts";
 test("completed geometry bounds match shared stroke, image, text and curve cases",()=>{
  const ajv=new Ajv({strict:true});const validate=ajv.compile(schema);
@@ -33,7 +33,7 @@ test("completed geometry bounds match shared stroke, image, text and curve cases
  console.log("[DEBUG] Completed picture bounds matched neutral fixtures, independent Three geometry and affine stroke envelopes");
 });
 
-import selectionBoundCases from "../../🧫️fixtures/📐️selection/🔣️.json";
+import selectionBoundCases from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/👁️view/📐️selection/🔣️.json";
 
 import {preparedSceneSelectionBounds} from "../../🟦️.ts";
 test("actual prepared selection handles exclude locked roots and invisible geometry while retaining locked children of selected groups",()=>{

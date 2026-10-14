@@ -1,17 +1,17 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { testLevelBudgetMs, resolveTestLevel } from "../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { testLevelBudgetMs, resolveTestLevel } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🦀️ `@semio-tech/framework` task router: `bun ./📜️script.ts test|generate|check|lint`. */
-import { runCargoTestsV1, runCargoLintV1, readCargoTestPolicyV1 } from "../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import {runBudgetedTestCommand} from "../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts";
-import {runVitestV1,readVitestPolicyV1} from "../../🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
-import {captureOwnedProcess} from "../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
-import {startNativeProgress} from "../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { runCargoTestsV1, runCargoLintV1, readCargoTestPolicyV1 } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import {runBudgetedTestCommand} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import {runVitestV1,readVitestPolicyV1} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
+import {captureOwnedProcess} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {startNativeProgress} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { seedGeneratedFile } from "../../🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts";
+import { seedGeneratedFile } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 import { basename, join, relative, resolve, isAbsolute } from "node:path";
 
 /** 🔐️ Selects a policy only for an explicitly declared owning package manifest. */
@@ -169,7 +169,7 @@ class SnapshotReceivingSourceScript extends BundleScript{
  private childBudget():number{const remaining=this.invocation.control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original receiving source deadline exhausted");return remaining===null?0:Math.floor(remaining);}
  async run(args:string[]):Promise<void>{
   if(args.length)throw Error("Expected test-snapshot-receiving-source");
-  const {runOwnedCommand}=await import("../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts");const tests=["🛫️snapshot/🧪️tests/🟦️.ts","🧪️tests/nested-io.ts"].map(test=>resolve(this.root,"../../🔨️modules/🚪️io/⏱️control",test));
+  const {runOwnedCommand}=await import("../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");const tests=["🛫️snapshot/🧪️tests/🟦️.ts","🧪️tests/nested-io.ts"].map(test=>resolve(this.root,"../../🔨️modules/🚪️io/⏱️control",test));
   await runOwnedCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",...tests],this.repoRoot,"framework:snapshot:receiving:types",this.childBudget(),{signal:this.invocation.control.signal});
   await runOwnedCommand(process.execPath,["test",...tests],this.repoRoot,"framework:snapshot:receiving:source",this.childBudget(),{signal:this.invocation.control.signal});
  }
@@ -249,7 +249,7 @@ class CheckScript extends BundleScript {
 class CommandIngressConsumerScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw Error("test-command-ingress-consumer accepts no arguments");
-  const {runBudgetedTestCommand}=await import("../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"),{testLevelBudgetMs}=await import("../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts"),source=resolve(this.root,"../../🔨️modules/🎠️kernel/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts");
+  const {runBudgetedTestCommand}=await import("../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts"),{testLevelBudgetMs}=await import("../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts"),source=resolve(this.root,"../../🔨️modules/🎠️kernel/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts");
   await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
   await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
  }
@@ -268,7 +268,7 @@ class DirectoryDiscoveryScript extends BundleScript {
 class SourceProjectionScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw Error("test-source-projection accepts no arguments");
-  const {runBudgetedTestCommand}=await import("../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"),{testLevelBudgetMs}=await import("../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts");
+  const {runBudgetedTestCommand}=await import("../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts"),{testLevelBudgetMs}=await import("../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts");
   const source=resolve(this.root,"../../🔨️modules/📁️filesystem/📷️snapshot/🧪️tests/🟦️.ts");
   await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
  }

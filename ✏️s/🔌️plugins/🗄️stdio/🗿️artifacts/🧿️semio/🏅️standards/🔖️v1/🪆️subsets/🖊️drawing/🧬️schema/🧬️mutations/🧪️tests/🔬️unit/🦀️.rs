@@ -232,7 +232,7 @@ fn kinds_match_the_enum_and_the_catalog() {
 #[test]
 fn drawing_geometry_is_owned_by_schema_and_matches_tiny_skia() {
     use crate::schema::geometry::{compose_affine, transform_point};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧫️fixtures/📐️intrinsic-geometry/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📐️intrinsic-geometry/🔣️.json")).unwrap();
     let matrix=|key:&str|-> [f64;6]{std::array::from_fn(|at|fixture[key][at].as_f64().unwrap())};
     let (outer,inner)=(matrix("outer"),matrix("inner"));
     let actual=compose_affine(&outer,&inner);

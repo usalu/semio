@@ -2,7 +2,7 @@ use super::*;
 use crate::value::observe_retirement_allocations as observe;
 #[test]
 fn shared_unique_original_arc_retires_despite_weak_aliases_and_credits_actual_frame(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){for copy in fixture["copyGrants"].as_array().unwrap(){
   let value=row["value"].as_u64().unwrap();let (source,birth)=observe(||Arc::new(value));assert_eq!(birth,(arc_bytes::<u64>(),0));let pointer=Arc::as_ptr(&source);
   let mut weak:Vec<_>=(0..row["weakAliases"].as_u64().unwrap()).map(|_|Arc::downgrade(&source)).collect();

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "⚖️create-rule/🧵️adds-a-ramp-slope",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️create-rule/🧵️adds-a-ramp-slope/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️create-rule/🧵️adds-a-ramp-slope/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️create-rule/🧵️adds-a-ramp-slope/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️create-rule/🧵️adds-a-ramp-slope/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/⚖️create-rule/🧵️adds-a-ramp-slope/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚖️create-rule/🧵️adds-a-ramp-slope/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚖️create-rule/🧵️adds-a-ramp-slope/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚖️create-rule/🧵️adds-a-ramp-slope/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚖️create-rule/🧵️adds-a-ramp-slope/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚖️create-rule/🧵️adds-a-ramp-slope/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

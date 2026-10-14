@@ -55,7 +55,7 @@ async fn import_mesh_file_emits_a_load_document_effect() {
     let emit = import_mesh_file::handle(&import_mesh_file::ImportMeshFile { name: "quad.obj".into(), payload: obj.into() }, &doc, &cfg, &mut ctx).expect("import");
     assert!(emit.artifact_mutations.is_empty());
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("a LoadDocument effect") else { panic!("expected LoadDocument") };
-    let loaded = <LowpolySnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("loaded document decodes");
+    let loaded = <LowpolySnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("loaded document decodes");
     assert_eq!(loaded.objects.len(), 1);
     assert_eq!(loaded.objects[0].name, "Quad");
     assert_eq!(faces(&loaded), 1);

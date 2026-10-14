@@ -4,11 +4,11 @@ use super::*;
 use serde_json::Value;
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/⚙️settings-general-layout/🔣️.json")).expect("settings layout fixture")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/⚙️settings-general-layout/🔣️.json")).expect("settings layout fixture")
 }
 
 fn locale_refresh_fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/🌐️settings-locale-panel-refresh/🔣️.json")).expect("locale panel refresh fixture")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🌐️settings-locale-panel-refresh/🔣️.json")).expect("locale panel refresh fixture")
 }
 
 fn control_identity(control: &UiControlNode) -> (&str, &str) {

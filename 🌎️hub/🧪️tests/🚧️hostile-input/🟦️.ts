@@ -22,7 +22,7 @@ import { describe, expect, it } from "vitest";
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 const hubRoot = join(repoRoot, "🌎️hub");
 const read = (...parts: string[]) => JSON.parse(readFileSync(join(...parts), "utf8"));
-const fixture = read(hubRoot, "🧫️fixtures", "🚧️hostile-input-v1", "🔣️.json");
+const fixture = read(hubRoot, "🧪️tests/🧫️fixtures", "🚧️hostile-input-v1", "🔣️.json");
 const refusal = read(hubRoot, "🚧️refusal", "🧬️schema", "🔣️.json");
 
 /** 🧪️ Compiles one `$defs` entry of a schema module with the module as its own root, so `#/$defs/…` refs resolve. */
@@ -76,7 +76,7 @@ describe("hub hostile-input oracle", () => {
   });
 
   it("the credential refusal every credential-optional route answers is a valid HubCredentialRefusalV1, and no near miss is", () => {
-    const credential = read(hubRoot, "🚧️refusal", "🧫️fixtures", "🪪️credential-refusal-v1", "🔣️.json");
+    const credential = read(hubRoot, "🚧️refusal", "🧪️tests/🧫️fixtures", "🪪️credential-refusal-v1", "🔣️.json");
     const validate = compileDef(refusal, "HubCredentialRefusalV1");
     expect(validate(credential.answer.body), JSON.stringify(validate.errors)).toBe(true);
     expect(credential.answer.body.message).toEqual(refusal.$defs.HubCredentialRefusalMessageV1.const);
@@ -90,7 +90,7 @@ describe("hub hostile-input oracle", () => {
   });
 
   it("a transiently refused batch's message is a valid HubTransientApplyRefusalMessageV1 for every cause, and no near miss is", () => {
-    const transient = read(hubRoot, "🚧️refusal", "🧫️fixtures", "⏳️transient-apply-refusal-v1", "🔣️.json");
+    const transient = read(hubRoot, "🚧️refusal", "🧪️tests/🧫️fixtures", "⏳️transient-apply-refusal-v1", "🔣️.json");
     const validate = compileDef(refusal, "HubTransientApplyRefusalMessageV1");
     expect(transient.answer.code).toBe(refusal.$defs.HubTransientApplyRefusalCodeV1.const);
     expect(transient.causes.length).toBeGreaterThanOrEqual(2);
@@ -104,7 +104,7 @@ describe("hub hostile-input oracle", () => {
   });
 
   it("a batch the hub can never admit carries a valid HubBatchLimitRefusalMessageV1 for every cause, never the transient code, and no near miss is valid", () => {
-    const refusals = read(hubRoot, "🚧️refusal", "🧫️fixtures", "⏳️transient-apply-refusal-v1", "🔣️.json");
+    const refusals = read(hubRoot, "🚧️refusal", "🧪️tests/🧫️fixtures", "⏳️transient-apply-refusal-v1", "🔣️.json");
     const validate = compileDef(refusal, "HubBatchLimitRefusalMessageV1");
     const transient = compileDef(refusal, "HubTransientApplyRefusalMessageV1");
     expect(refusals.batchLimitAnswer.code).toBe(refusal.$defs.HubBatchLimitRefusalCodeV1.const);
@@ -121,7 +121,7 @@ describe("hub hostile-input oracle", () => {
 
   it("a rate-limited request's body is a valid RateLimitRefusalV1 for every non-auth rate class and every stream class, and no near miss is", () => {
     const auth = read(hubRoot, "🔐️auth", "🧬️schema", "🔣️.json");
-    const refusals = read(hubRoot, "🔐️auth", "🧫️fixtures", "🚦️rate-limit-refusal-v1", "🔣️.json");
+    const refusals = read(hubRoot, "🔐️auth", "🧪️tests/🧫️fixtures", "🚦️rate-limit-refusal-v1", "🔣️.json");
     const validate = compileDef(auth, "RateLimitRefusalV1");
     expect(new Set(refusals.valid.map((body: any) => body.class))).toEqual(new Set([...auth.$defs.AuthRateLimitClassV1.enum.filter((name: string) => name !== "auth"), ...auth.$defs.AuthStreamLimitClassV1.enum]));
     for (const body of refusals.valid) expect(validate(body), JSON.stringify(validate.errors)).toBe(true);

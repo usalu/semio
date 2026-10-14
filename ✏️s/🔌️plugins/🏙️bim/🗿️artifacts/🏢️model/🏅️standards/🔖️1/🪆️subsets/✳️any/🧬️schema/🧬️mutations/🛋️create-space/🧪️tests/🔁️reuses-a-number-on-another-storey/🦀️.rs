@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🛋️create-space/🔁️reuses-a-number-on-another-storey",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛋️create-space/🔁️reuses-a-number-on-another-storey/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛋️create-space/🔁️reuses-a-number-on-another-storey/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛋️create-space/🔁️reuses-a-number-on-another-storey/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛋️create-space/🔁️reuses-a-number-on-another-storey/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛋️create-space/🔁️reuses-a-number-on-another-storey/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛋️create-space/🔁️reuses-a-number-on-another-storey/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛋️create-space/🔁️reuses-a-number-on-another-storey/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛋️create-space/🔁️reuses-a-number-on-another-storey/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛋️create-space/🔁️reuses-a-number-on-another-storey/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛋️create-space/🔁️reuses-a-number-on-another-storey/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

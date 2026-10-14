@@ -1,7 +1,7 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { installTextEditorCaretCadenceV1, TEXT_EDITOR_CARET_BLINK_MS } from "../../🧱️elements/✏️TextEditor/🟦️.tsx";
-import fixture from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/⌨️caret-cadence/🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/⌨️caret-cadence/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 
 afterEach(() => {
   vi.useRealTimers();

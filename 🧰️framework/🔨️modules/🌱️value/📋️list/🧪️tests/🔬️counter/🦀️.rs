@@ -24,7 +24,7 @@ impl PageAllocation for Overallocated {
 
 #[test]
 fn retained_fixed_list_pages_counter_rejects_actual_signed_limit_and_preserves_release_owner() {
-    let data: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let data: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let multiplier = data["counter"]["allocatorMultiplier"].as_u64().unwrap() as usize;
     for payload in [false, true] {
         let mut list = PagedList::<u64, 1>::default();
@@ -58,7 +58,7 @@ fn retained_fixed_list_pages_counter_rejects_actual_signed_limit_and_preserves_r
 
 #[test]
 fn retained_fixed_list_pages_counter_keeps_actual_failed_allocation_until_release() {
-    let data: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let data: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let mut list = PagedList::<u64, 1>::default();
     let requested = list.next_allocation_bytes().unwrap();
     let error = list.reserve_page_using::<Overallocated>(requested).unwrap_err();
@@ -89,7 +89,7 @@ fn retained_fixed_list_pages_counter_keeps_actual_failed_allocation_until_releas
 
 #[test]
 fn retained_fixed_list_depth_quotes_original_tail_and_whole_release_frontiers() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let count=fixture["ordered"]["count"].as_u64().unwrap()as usize;
     let tail=fixture["ordered"]["emptyTailRelease"]["tailItems"].as_u64().unwrap()as usize;
     let earlier=fixture["ordered"]["emptyTailRelease"]["earlierLiveItems"].as_u64().unwrap()as usize;
@@ -120,9 +120,9 @@ fn retained_fixed_list_depth_quotes_original_tail_and_whole_release_frontiers() 
 
 #[test]
 fn retained_fixed_list_reservation_copy_quotes_actual_original_metadata_and_heap(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️reservation.json")).unwrap();let count=fixture["count"].as_u64().unwrap()as usize;let layout=fixture["layouts"].as_array().unwrap().iter().find(|row|row["pointerBits"].as_u64().unwrap()==usize::BITS as u64).unwrap();assert_eq!(size_of::<Page<u64>>(),layout["pageBytes"].as_u64().unwrap()as usize);assert_eq!(size_of::<Vec<Page<u64>>>(),layout["headerBytes"].as_u64().unwrap()as usize);
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️reservation.json")).unwrap();let count=fixture["count"].as_u64().unwrap()as usize;let layout=fixture["layouts"].as_array().unwrap().iter().find(|row|row["pointerBits"].as_u64().unwrap()==usize::BITS as u64).unwrap();assert_eq!(size_of::<Page<u64>>(),layout["pageBytes"].as_u64().unwrap()as usize);assert_eq!(size_of::<Vec<Page<u64>>>(),layout["headerBytes"].as_u64().unwrap()as usize);
  let mut owner=PagedList::<u64,600>::with_payload_page_bytes(fixture["payloadBytes"].as_u64().unwrap()as usize).unwrap();let mut oracle=std::collections::VecDeque::new();let(mut born,mut promotions,mut metadata,mut payload)=(0,0,0,0);
- for value in 0..count as u64{while !owner.has_reserved_slot(){let copy=owner.next_reserve_copy_byte_demand().unwrap();let capacity=owner.next_allocation_bytes().unwrap();let before=(owner.len(),owner.capacity(),owner.allocated_bytes());let before_pointer=owner.root.as_ptr();let grant=crate::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:1};for axis in fixture["deniedAxes"].as_array().unwrap(){let mut denied=grant;match axis.as_str().unwrap(){"items"=>denied.maximum_items=0,"copyBytes"=>denied.maximum_copy_bytes-=1,"capacityBytes"=>denied.maximum_capacity_bytes-=1,_=>denied.maximum_depth=0};let(result,physical)=crate::observe_retirement_allocations(||owner.reserve_one_funded(denied).unwrap());assert_eq!(result,Default::default());assert_eq!(physical,(0,0));assert_eq!((owner.len(),owner.capacity(),owner.allocated_bytes()),before);assert_eq!(owner.root.as_ptr(),before_pointer);}let(result,physical)=crate::observe_retirement_allocations(||owner.reserve_one_funded(grant).unwrap());assert_eq!(physical,(capacity,0));assert_eq!(result.retained_capacity_bytes,capacity);assert_eq!(result.copied_bytes,copy);assert!(result.fits(grant));born+=physical.0;if copy==size_of::<Vec<u64>>()+3*size_of::<usize>(){payload+=1;}else if copy==size_of::<Page<u64>>()+size_of::<Vec<Page<u64>>>()+size_of::<usize>(){metadata+=1;}else{assert_eq!(copy,size_of::<Page<u64>>()+3*size_of::<Vec<Page<u64>>>()+size_of::<usize>());promotions+=1;}assert_eq!(result.copied_items,1);}
+ for value in 0..count as u64{while !owner.has_reserved_slot(){let copy=owner.next_reserve_copy_byte_demand().unwrap();assert_eq!(copy,0);let promotion=PagedList::<u64,600>::page_height(owner.capacity()/owner.page_items())>owner.height();let capacity=owner.next_allocation_bytes().unwrap();let before=(owner.len(),owner.capacity(),owner.allocated_bytes());let before_pointer=owner.root.as_ptr();let grant=crate::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:17,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};for axis in fixture["deniedAxes"].as_array().unwrap(){let mut denied=grant;match axis.as_str().unwrap(){"items"=>denied.maximum_items=0,"capacityBytes"=>denied.maximum_capacity_bytes=capacity-1,_=>denied.maximum_depth=0};let(result,physical)=crate::observe_retirement_allocations(||owner.reserve_one_funded(denied).unwrap());assert_eq!(result,Default::default());assert_eq!(physical,(0,0));assert_eq!((owner.len(),owner.capacity(),owner.allocated_bytes()),before);assert_eq!(owner.root.as_ptr(),before_pointer);}let(result,physical)=crate::observe_retirement_allocations(||owner.reserve_one_funded(grant).unwrap());assert_eq!(physical,(capacity,0));assert_eq!(result.retained_capacity_bytes,capacity);assert_eq!(result.copied_bytes,copy);assert!(result.fits(grant));born+=physical.0;if promotion{promotions+=1;}else if capacity==fixture["payloadBytes"].as_u64().unwrap()as usize{payload+=1;}else{metadata+=1;}assert_eq!(result.copied_items,1);}
   assert_eq!(owner.next_reserve_copy_byte_demand().unwrap(),0);owner.push_reserved(value).unwrap();oracle.push_back(value);
  }
  assert!(metadata>0&&payload>0);assert_eq!(promotions,fixture["promotionPages"].as_array().unwrap().len());assert_eq!(owner.iter().copied().collect::<Vec<_>>(),oracle.iter().copied().collect::<Vec<_>>());while !oracle.is_empty(){assert_eq!(owner.pop(),oracle.pop_back());}let mut released=0;while !owner.terminal_is_empty(){let exact=owner.next_release_allocation_bytes().unwrap();let(result,physical)=crate::observe_retirement_allocations(||owner.release_empty_page(exact).unwrap());assert_eq!(physical,(0,result.released_allocation_bytes));released+=physical.1;}assert_eq!(born,released);

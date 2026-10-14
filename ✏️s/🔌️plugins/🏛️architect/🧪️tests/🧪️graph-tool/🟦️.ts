@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 import Ajv from "ajv/dist/2020";
 import { UndirectedGraph } from "graphology";
 import schema from "../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧬️schema/🔣️node-graph-edit-rows/🔣️.json";
-import fixture from "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🛠️graph-tool/🔣️.json";
+import fixture from "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🛠️graph-tool/🔣️.json";
 
 type GraphOperation = { operation: string; sourceNodeId: string; targetNodeId: string; synapseId: string; nodeIds: string[]; synapseIds: string[] };
 const validate = new Ajv({ strict: false }).compile(schema);

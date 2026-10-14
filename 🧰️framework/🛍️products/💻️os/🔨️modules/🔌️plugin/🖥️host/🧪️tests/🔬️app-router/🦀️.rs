@@ -181,7 +181,7 @@ async fn unregister_plugin_drops_its_surfaces_but_keeps_its_ownership_claim() {
 async fn plugin_fault_isolation_matches_the_shared_fixture() {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json")).expect("app router plugin fault fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json")).expect("app router plugin fault fixture");
     let text = |value: &serde_json::Value, key: &str| value[key].as_str().expect("fixture string").to_string();
     let fixture_dialect = |value: &serde_json::Value| semio_framework_artifact_reference::ArtifactDialect { artifact_kind: text(value, "artifactKind"), standard: text(value, "standard"), subset: text(value, "subset") };
     let router = AppRouter::new();

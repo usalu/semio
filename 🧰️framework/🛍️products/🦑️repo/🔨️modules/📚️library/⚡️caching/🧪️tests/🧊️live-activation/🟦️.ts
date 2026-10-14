@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 
 /** 🧊️ Runs the actual preparation/activation commands with controlled publishers under native Nx. */
 export async function testWgpuLiveActivation(workspace: string, output: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧊️live-activation/🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧊️live-activation/🔣️.json"), "utf8"));
   const activationModule = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts");
   const { developmentRuntimeRoot } = await import(activationModule);
   const namespaces = fixture.renderers.flatMap((renderer: string) => fixture.profiles.flatMap((profile: string) => fixture.variants.map((variant: string) => ({ renderer, profile, variant }))));
@@ -15,14 +15,14 @@ export async function testWgpuLiveActivation(workspace: string, output: string):
   assert.throws(() => developmentRuntimeRoot(output, fixture.variant, fixture.profile, "unknown"), /renderer/i);
   const root = mkdtempSync(join(output, "wgpu-live-")), owner = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript";
   const put = (path: string, text: string) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), text); };
-  const project = (path: string, name: string) => put(join(path, "📋️project.json"), JSON.stringify({ name, targets: { wasm: {}, "wasm-release": {} } }));
+  const project = (path: string, name: string) => put(join(path, "📋️project.json"), JSON.stringify({ name, targets: { wasm: {configurations:{prototype:{env:{SEMIO_BUILD_MODE:"prototype"}},release:{env:{SEMIO_BUILD_MODE:"release"}}}} } }));
   for (const [path, name] of [["🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", "surface"], ["🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust", "editor"], ["🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust", "flow"], ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript", "renderer"]]) project(path!, name!);
   put(join(owner, "package.json"), JSON.stringify({ name: fixture.project, private: true }));
   put("component/Cargo.toml", `[package]\nname = "sample"\nversion = "0.1.0"\n[package.metadata.component]\npackage = "semio:${fixture.plugin}"\n[package.metadata.semio]\nrole = "plugin"\n[[package.metadata.semio.playground]]\nvariant = "${fixture.variant}"\n`);
   const { cacheInternals } = await import("../../../🟨️.mjs");
   const targets = cacheInternals.playgroundPreparationTargets(["component/Cargo.toml"], root, owner);
-  for (const profile of ["dev", "release"]) assert.ok(targets[`prepare-${fixture.variant}-wgpu-${profile}`].dependsOn.includes(`renderer:${profile === "release" ? "wasm-release" : "wasm"}`), "The renderer prerequisite must select the matching compilation profile");
-  for (const profile of ["dev", "release"]) for (const command of ["serve", "dev"]) {
+  for (const profile of ["prototype", "release"]) assert.ok(targets[`prepare-${fixture.variant}-wgpu-${profile}`].dependsOn.includes(`renderer:wasm`), "The renderer prerequisite must select the matching compilation profile");
+  for (const profile of ["prototype", "release"]) for (const command of ["serve", "dev"]) {
     const target = targets[`${command}-${fixture.variant}-wgpu-${profile}`];
     assert.equal(target.options.command, `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${fixture.variant} ${profile}`, "The server must consume the completed profile through its narrow leaf");
     assert.deepEqual(target.dependsOn, [`activate-${fixture.variant}-wgpu-${profile}`]);
@@ -59,7 +59,7 @@ import { appendFileSync, createReadStream, existsSync, mkdirSync, mkdtempSync, r
 import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, nextActivationReceipt, publishActivationReceipt, readActivationReceipt } from ${JSON.stringify(activationModule)};
+import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, activationSourceFreshnessDirectory, nextActivationReceipt, publishActivationReceipt, readActivationReceipt } from ${JSON.stringify(activationModule)};
 import { artifactFiles } from ${JSON.stringify(join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts"))};
 import { stageRepositoryArtifacts } from ${JSON.stringify(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts"))};
 const fixture = ${JSON.stringify(fixture)}, repoRoot = process.cwd();
@@ -68,7 +68,7 @@ const FONT_ASSET = "fonts.bin", MODULE_BRIDGE_FILE = "bridge.js", PREVIEW2_VENDO
 const EXTENSION_INSTALL_META = "install.json", MODULE_PLUGIN_ROUTE = "/plugins", MODULE_EXTENSION_ROUTE = "/extensions", rewritePreview2ShimImportSource = (text) => text;
 const put = (path, value) => { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, value); };
 const count = (name) => appendFileSync(join(repoRoot, ".counts"), name + "\\n");
-const pluginModulesRoot = () => moduleRoot, moduleDirectoryName = (id) => id;
+const builtPluginModulesRootIn = () => moduleRoot, moduleDirectoryName = (id) => id;
 const playgroundCatalog = fixture.variants.map(variant => ({ variant, pluginId: fixture.plugin })), validateFontAsset = () => 1;
 const readGeneratedCatalogProjection = () => ({ entries: [{ pluginId: fixture.plugin, role: "extension" }] });
 class BundleScript { constructor(root) { this.root = root; } }
@@ -77,7 +77,7 @@ if (operation === "materialize") {
   for (const profile of fixture.profiles) {
     const moduleRoot = join(repoRoot, "modules", profile);
     put(join(moduleRoot, fixture.plugin, MODULE_BRIDGE_FILE), fixture.payload + " " + profile);
-    put(join(moduleRoot, fixture.plugin, "../../🧫️fixtures/🧊️live-activation/🔣️.json"), JSON.stringify({ manifest: { pluginId: fixture.plugin } }));
+    put(join(moduleRoot, fixture.plugin, "../🧫️fixtures/🧊️live-activation/🔣️.json"), JSON.stringify({ manifest: { pluginId: fixture.plugin } }));
     for (const path of [join(fixture.plugin, ".nx-artifact.json"), join(PREVIEW2_VENDOR_RELATIVE, ".nx-artifact.json"), join(MODULE_SHARD_DIRECTORY, SHARD_WORKER_FILE)]) put(join(moduleRoot, path), "{}");
   }
   for (const variant of fixture.variants) put(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", variant, "🎮️playground-session/🟦️.ts"), "export const PLAYGROUND_SESSION = " + JSON.stringify({ variant, registryPluginId: fixture.plugin, plugins: [{ pluginId: fixture.plugin }] }));

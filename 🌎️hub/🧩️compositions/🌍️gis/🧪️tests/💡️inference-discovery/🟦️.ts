@@ -1,10 +1,10 @@
-import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { deepStrictEqual } from "node:assert";
 import Ajv from "ajv";
-import { runRepositoryExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** 🧬️ One compiled export of the GIS plugin's own module contract (`🌎️hub/🧩️compositions/🌍️gis/🧬️schema/🔣️.json`).
  * The GIS scope owns these shapes; this crate is a reader, never a second declaration site. */
@@ -20,7 +20,7 @@ function gisContract(repoRoot: string, exportId: string) {
 /** 🗺️ Independently validates the committed GIS roster without granting execution authority. */
 export class InferenceDiscoveryOracleScript extends BundleScript {
   run(): void {
-    const identityRoot = join(this.repoRoot, "🌎️hub", "🧩️compositions", "🌍️gis", "🧫️fixtures", "🪪️artifact-identity");
+    const identityRoot = join(this.repoRoot, "🌎️hub", "🧩️compositions", "🌍️gis", "🧪️tests/🧫️fixtures", "🪪️artifact-identity");
     const identity = JSON.parse(readFileSync(join(identityRoot, "🔣️.json"), "utf8"));
     
     
@@ -39,7 +39,7 @@ export class InferenceDiscoveryOracleScript extends BundleScript {
       
     }
     console.log(`gis-artifact-identity-oracle: canonical=${kinds.size} hostile=${identity.hostileKinds.length}; native assembly still requires Rust law`);
-    const controlRoot = join(this.repoRoot, "🌎️hub", "🧩️compositions", "🌍️gis", "🧫️fixtures", "💡️inference-control");
+    const controlRoot = join(this.repoRoot, "🌎️hub", "🧩️compositions", "🌍️gis", "🧪️tests/🧫️fixtures", "💡️inference-control");
     const control = JSON.parse(readFileSync(join(controlRoot, "🔣️.json"), "utf8"));
     
     
@@ -134,7 +134,7 @@ export class InferenceDiscoveryOracleScript extends BundleScript {
 export class InferenceDiscoveryCheckScript extends BundleScript {
   async run(): Promise<void> {
     await new InferenceDiscoveryOracleScript(this.root,this.repoRoot,this.invocation).run();
-    await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, lawMilliseconds: 60_000 }, cwd:this.repoRoot, artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR, groups:[
+    await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, lawMilliseconds: 60_000 }, cwd:this.repoRoot, artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR, groups:[
         {package:"semio-s-artifact-gis-gismap",target:{kind:"lib"},cargoArgs:["--features","mcp-service"],laws:["inference_mcp::tests::installed_gis_descriptor_discovery_uses_the_registered_tool_without_granting_execution"]},
         {package:"semio-hub-gis",target:{kind:"lib"},laws:["surface_tests::gis_component_assembly_declares_exact_package_identity_before_descriptor_emission"]},
         {package:"semio-hub-gis",target:{kind:"test",name:"native_codecs"},laws:["gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline_trace"]}

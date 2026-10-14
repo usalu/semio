@@ -1,0 +1,20 @@
+{
+  "snapshot": {
+    "chart": {
+      "width": 20,
+      "height": 20,
+      "language": "en",
+      "layers": []
+    }
+  },
+  "semanticKeys": [
+    "chart",
+    "complete",
+    "diagnostics"
+  ],
+  "nativeKeys": [
+    "complete",
+    "diagnostics",
+    "tikz"
+  ]
+}

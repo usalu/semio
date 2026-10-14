@@ -70,7 +70,7 @@ async fn changing_an_earlier_pose_changes_the_dep_input_of_a_later_key_indirectl
 /// 🧪️ Native serde independently checks the neutral logical dependency projection.
 #[semio_framework_async_macros::async_test]
 async fn typed_dependency_matches_neutral_serde_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔑️dependency/🔣.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔄relative-pose/🔑️dependency/🔣.json")).unwrap();
     let snapshot = two_pose_snapshot();
     let key = fixture["key"].as_str().unwrap().to_owned();
     let dependency = RemodelingRelativeCameraPose::dep_input(&snapshot, &key, &[]);

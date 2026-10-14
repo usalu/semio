@@ -1,3 +1,4 @@
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
 use crate::standards::v1_1::subsets::base::io::text::snapshot::*;
 use crate::standards::v1_1::subsets::base::io::text::snapshot::attributes::parse_style_decls;
@@ -14,7 +15,7 @@ use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDeclaration, XmlQuote};
 use crate::schema::snapshot::{SvgNode};
 
 fn assert_owned_literal_roundtrip(snapshot:&SvgSnapshot){
-    use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding}};
+    use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding}};
     let text=crate::standards::v1_1::subsets::base::io::text::snapshot::encode_snapshot(snapshot);
     assert_eq!(crate::standards::v1_1::subsets::base::io::text::snapshot::decode_snapshot(&text).expect("literal structured text state"),*snapshot);
     let mut binary=Vec::new();
@@ -52,7 +53,7 @@ async fn owned_snapshot_codecs_preserve_literal_boundaries_and_builder_refuses_e
 
 #[semio_framework_async_macros::async_test]
 async fn owned_snapshot_codecs_preserve_literal_declarations_and_external_ingress_refuses() {
-    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧫️fixtures/🧭️document-boundaries/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral XML document-boundary fixture");
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🧭️document-boundaries/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral XML document-boundary fixture");
     for case in fixture["invalidAuthored"].as_array().expect("invalid authored cases").iter().skip(2) {
         let mut invalid = crate::schema::empty_svg_snapshot();
         invalid.doc.root = Some(SvgNode::Element { name: "svg".into(), attrs: Vec::new(), children: vec![SvgNode::Text { text: case["rootText"].as_str().expect("root text").into() }] });
@@ -140,11 +141,11 @@ async fn schema_facets_reject_source_and_raw_doctype_shadow_state() {
 #[semio_framework_async_macros::async_test]
 async fn artifact_dsl_routes_native_svg_by_its_semio_envelope() {
     const NATIVE: &str = r#"<svg xmlns="http://www.w3.org/2000/svg"/>"#;
-    let imported = <SvgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(NATIVE).expect("envelope-less native markup is imported, not refused");
+    let imported = <SvgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(NATIVE).expect("envelope-less native markup is imported, not refused");
     assert_eq!(imported, SvgSnapshot::import_utf8(NATIVE.as_bytes()).expect("import_utf8 of the same markup"), "the envelope-less branch IS the lossless native import");
 
-    let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<SvgSnapshot as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-    assert!(<SvgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&store::semio_format::wrap_text(&envelope, NATIVE)).is_err(), "native svg markup under a semio preamble is not this artifact's structured state DSL");
+    let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<SvgSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+    assert!(<SvgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&store::semio_format::wrap_text(&envelope, NATIVE)).is_err(), "native svg markup under a semio preamble is not this artifact's structured state DSL");
 }
 
 //#region PathGrammar

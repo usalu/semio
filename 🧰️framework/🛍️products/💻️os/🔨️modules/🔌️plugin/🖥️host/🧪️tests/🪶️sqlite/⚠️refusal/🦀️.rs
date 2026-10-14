@@ -6,7 +6,7 @@ use super::{wit_snapshot_rejection,observe_sqlite_guest};
 async fn sqlite_snapshot_guest_refusal_host_preserves_causes_diagnostics_and_actual_vm_cancellation() {
     use actor_bindings::exports::semio::framework::codec::{SnapshotRejection, ValueRefusalKind as Wire};
     use semio_framework_value::ValueRefusalKind as Native;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧬️schema/🪶️sqlite/⚠️refusal/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪶️sqlite/⚠️refusal/🔣️.json")).unwrap();
     let diagnostic = &fixture["diagnostic"];
     let diagnostics = vec![semio_framework::Diagnostic {
         code: semio_framework::FaultCode::new(diagnostic["code"].as_str().unwrap()),

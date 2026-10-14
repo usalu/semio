@@ -10,11 +10,11 @@ use crate::apply_puzzle5d_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚚️drag-selection3d/🧱️repeated-targets/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚚️drag-selection3d/🧱️repeated-targets/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚚️drag-selection3d/🧱️repeated-targets/🦠️mutation/🔣️.json");
-const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚚️drag-selection3d/🧱️repeated-targets/🔺️diff/🚫️.absent");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚚️drag-selection3d/🧱️repeated-targets/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️drag-selection3d/🧱️repeated-targets/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️drag-selection3d/🧱️repeated-targets/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️drag-selection3d/🧱️repeated-targets/🦠️mutation/🔣️.json");
+const DIFF_ABSENT: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️drag-selection3d/🧱️repeated-targets/🔺️diff/🚫️.absent");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️drag-selection3d/🧱️repeated-targets/🎯️outcome/🔣️.json");
 
 fn before() -> Puzzle5dSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

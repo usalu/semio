@@ -194,7 +194,7 @@ fn dialog_open_blocks_other_chrome_owned_click_handlers() {
 }
 
 fn dialog_choices_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🧫️dialog-choices/🔣️.json")).expect("dialog-choices fixture")
+    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🧫️dialog-choices/🔣️.json")).expect("dialog-choices fixture")
 }
 
 fn dialog_choices_request(locale: Locale) -> (serde_json::Value, ChromeDialogRequest) {

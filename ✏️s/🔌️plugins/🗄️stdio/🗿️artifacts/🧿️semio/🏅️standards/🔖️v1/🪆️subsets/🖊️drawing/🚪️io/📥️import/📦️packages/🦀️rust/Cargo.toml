@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-pack = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record = { workspace = true }

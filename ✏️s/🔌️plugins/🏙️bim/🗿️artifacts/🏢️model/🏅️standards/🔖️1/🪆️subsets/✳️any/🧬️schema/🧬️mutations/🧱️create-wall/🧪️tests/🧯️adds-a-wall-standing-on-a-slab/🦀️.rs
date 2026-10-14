@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🧱️create-wall/🧯️adds-a-wall-standing-on-a-slab",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱️create-wall/🧯️adds-a-wall-standing-on-a-slab/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱️create-wall/🧯️adds-a-wall-standing-on-a-slab/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱️create-wall/🧯️adds-a-wall-standing-on-a-slab/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱️create-wall/🧯️adds-a-wall-standing-on-a-slab/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱️create-wall/🧯️adds-a-wall-standing-on-a-slab/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧱️create-wall/🧯️adds-a-wall-standing-on-a-slab/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧱️create-wall/🧯️adds-a-wall-standing-on-a-slab/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧱️create-wall/🧯️adds-a-wall-standing-on-a-slab/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧱️create-wall/🧯️adds-a-wall-standing-on-a-slab/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧱️create-wall/🧯️adds-a-wall-standing-on-a-slab/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

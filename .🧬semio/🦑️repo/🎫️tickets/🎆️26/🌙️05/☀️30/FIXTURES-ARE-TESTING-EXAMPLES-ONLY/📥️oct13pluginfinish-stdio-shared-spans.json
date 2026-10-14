@@ -1,0 +1,58 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "beforeSha256": "bd53176ccaaaada3dcd9acfeb24902958e14b408eaa013914d602762a9e7f07a",
+    "indexKind": "unicode-codepoints",
+    "edits": [
+      {
+        "start": 883467,
+        "end": 883605,
+        "before": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "after": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "role": "direct-physical-reader-coordinate"
+      },
+      {
+        "start": 883253,
+        "end": 883391,
+        "before": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "after": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "role": "direct-physical-reader-coordinate"
+      },
+      {
+        "start": 883039,
+        "end": 883177,
+        "before": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "after": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "role": "direct-physical-reader-coordinate"
+      },
+      {
+        "start": 882825,
+        "end": 882963,
+        "before": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "after": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "role": "direct-physical-reader-coordinate"
+      },
+      {
+        "start": 882611,
+        "end": 882749,
+        "before": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "after": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "role": "direct-physical-reader-coordinate"
+      },
+      {
+        "start": 882397,
+        "end": 882535,
+        "before": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "after": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "role": "direct-physical-reader-coordinate"
+      },
+      {
+        "start": 882183,
+        "end": 882321,
+        "before": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "after": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "role": "direct-physical-reader-coordinate"
+      }
+    ]
+  }
+]

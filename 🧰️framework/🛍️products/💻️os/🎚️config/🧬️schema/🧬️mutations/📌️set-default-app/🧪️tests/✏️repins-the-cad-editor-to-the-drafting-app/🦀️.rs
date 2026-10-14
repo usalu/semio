@@ -14,11 +14,11 @@
 use super::super::super::{OpeningDiff, OpeningPreferences};
 use super::super::OpeningConfigMutation;
 
-const BEFORE: &str = include_str!("../../🧫️fixtures/✏️repins-the-cad-editor-to-the-drafting-app/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../🧫️fixtures/✏️repins-the-cad-editor-to-the-drafting-app/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../🧫️fixtures/✏️repins-the-cad-editor-to-the-drafting-app/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../🧫️fixtures/✏️repins-the-cad-editor-to-the-drafting-app/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../🧫️fixtures/✏️repins-the-cad-editor-to-the-drafting-app/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📌️set-default-app/✏️repins-the-cad-editor-to-the-drafting-app/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📌️set-default-app/✏️repins-the-cad-editor-to-the-drafting-app/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📌️set-default-app/✏️repins-the-cad-editor-to-the-drafting-app/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📌️set-default-app/✏️repins-the-cad-editor-to-the-drafting-app/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📌️set-default-app/✏️repins-the-cad-editor-to-the-drafting-app/🎯️outcome/🔣️.json");
 
 fn before() -> OpeningPreferences {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before opening preferences decode")

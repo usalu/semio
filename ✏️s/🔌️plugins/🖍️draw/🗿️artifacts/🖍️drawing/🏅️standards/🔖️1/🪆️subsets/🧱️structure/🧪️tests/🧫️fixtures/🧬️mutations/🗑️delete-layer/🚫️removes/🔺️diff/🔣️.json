@@ -1,0 +1,18 @@
+{
+  "schema": null,
+  "id": null,
+  "title": null,
+  "layers": {
+    "removed": [
+      {
+        "id": "group-a",
+        "index": 1
+      }
+    ],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "assets": null,
+  "artboard": null
+}

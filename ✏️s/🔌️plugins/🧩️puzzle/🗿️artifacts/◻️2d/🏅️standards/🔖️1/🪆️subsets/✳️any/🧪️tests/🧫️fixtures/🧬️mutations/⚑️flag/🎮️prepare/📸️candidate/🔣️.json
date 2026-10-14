@@ -1,0 +1,337 @@
+{
+  "format": 1,
+  "cases": [
+    {
+      "id": "node-locked/set",
+      "after": [
+        {
+          "id": "a",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "node-locked/clear",
+      "after": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ]
+    },
+    {
+      "id": "node-locked/false-is-authored",
+      "after": [
+        {
+          "id": "a",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "node-locked/same-null",
+      "after": null
+    },
+    {
+      "id": "node-locked/same-false",
+      "after": null
+    },
+    {
+      "id": "node-locked/missing",
+      "after": null
+    },
+    {
+      "id": "node-locked/first-duplicate",
+      "after": [
+        {
+          "id": "a",
+          "value": true
+        },
+        {
+          "id": "a",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "node-locked/empty",
+      "after": [
+        {
+          "id": "",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "node-locked/nul-unicode",
+      "after": [
+        {
+          "id": "Größe\u0000幅",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "node-locked/large-prefix",
+      "after": [
+        {
+          "id": "$large:a",
+          "value": true
+        },
+        {
+          "id": "$large:b",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "node-visible/set",
+      "after": [
+        {
+          "id": "a",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "node-visible/clear",
+      "after": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ]
+    },
+    {
+      "id": "node-visible/false-is-authored",
+      "after": [
+        {
+          "id": "a",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "node-visible/same-null",
+      "after": null
+    },
+    {
+      "id": "node-visible/same-false",
+      "after": null
+    },
+    {
+      "id": "node-visible/missing",
+      "after": null
+    },
+    {
+      "id": "node-visible/first-duplicate",
+      "after": [
+        {
+          "id": "a",
+          "value": true
+        },
+        {
+          "id": "a",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "node-visible/empty",
+      "after": [
+        {
+          "id": "",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "node-visible/nul-unicode",
+      "after": [
+        {
+          "id": "Größe\u0000幅",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "node-visible/large-prefix",
+      "after": [
+        {
+          "id": "$large:a",
+          "value": true
+        },
+        {
+          "id": "$large:b",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "edge-locked/set",
+      "after": [
+        {
+          "id": "a",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "edge-locked/clear",
+      "after": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ]
+    },
+    {
+      "id": "edge-locked/false-is-authored",
+      "after": [
+        {
+          "id": "a",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "edge-locked/same-null",
+      "after": null
+    },
+    {
+      "id": "edge-locked/same-false",
+      "after": null
+    },
+    {
+      "id": "edge-locked/missing",
+      "after": null
+    },
+    {
+      "id": "edge-locked/first-duplicate",
+      "after": [
+        {
+          "id": "a",
+          "value": true
+        },
+        {
+          "id": "a",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "edge-locked/empty",
+      "after": [
+        {
+          "id": "",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "edge-locked/nul-unicode",
+      "after": [
+        {
+          "id": "Größe\u0000幅",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "edge-locked/large-prefix",
+      "after": [
+        {
+          "id": "$large:a",
+          "value": true
+        },
+        {
+          "id": "$large:b",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "edge-visible/set",
+      "after": [
+        {
+          "id": "a",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "edge-visible/clear",
+      "after": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ]
+    },
+    {
+      "id": "edge-visible/false-is-authored",
+      "after": [
+        {
+          "id": "a",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "edge-visible/same-null",
+      "after": null
+    },
+    {
+      "id": "edge-visible/same-false",
+      "after": null
+    },
+    {
+      "id": "edge-visible/missing",
+      "after": null
+    },
+    {
+      "id": "edge-visible/first-duplicate",
+      "after": [
+        {
+          "id": "a",
+          "value": true
+        },
+        {
+          "id": "a",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "edge-visible/empty",
+      "after": [
+        {
+          "id": "",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "edge-visible/nul-unicode",
+      "after": [
+        {
+          "id": "Größe\u0000幅",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "edge-visible/large-prefix",
+      "after": [
+        {
+          "id": "$large:a",
+          "value": true
+        },
+        {
+          "id": "$large:b",
+          "value": false
+        }
+      ]
+    }
+  ]
+}

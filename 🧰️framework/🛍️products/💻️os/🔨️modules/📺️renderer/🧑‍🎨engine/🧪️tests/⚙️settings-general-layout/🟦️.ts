@@ -16,9 +16,9 @@ import { Tree } from "../../../../../../../🔨️modules/🖱️ui/🧱️eleme
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const frameworkRoot = join(engineRoot, "..", "..", "..", "..", "..");
-const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "⚙️settings-general-layout", "🔣️.json"), "utf8"));
-const stepperEditingFixture = JSON.parse(readFileSync(join(frameworkRoot, "🔨️modules", "🖱️ui", "🧫️fixtures", "⌨️number-stepper-editing", "🔣️.json"), "utf8"));
-const sliderEditingFixture = JSON.parse(readFileSync(join(frameworkRoot, "🔨️modules", "🖱️ui", "🧫️fixtures", "⌨️slider-readout-editing", "🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "⚙️settings-general-layout", "🔣️.json"), "utf8"));
+const stepperEditingFixture = JSON.parse(readFileSync(join(frameworkRoot, "🔨️modules", "🖱️ui", "🧪️tests/🧫️fixtures", "⌨️number-stepper-editing", "🔣️.json"), "utf8"));
+const sliderEditingFixture = JSON.parse(readFileSync(join(frameworkRoot, "🔨️modules", "🖱️ui", "🧪️tests/🧫️fixtures", "⌨️slider-readout-editing", "🔣️.json"), "utf8"));
 
 const bottomGeometry = ({ panel, tabRows, rowHeight, contentInset }: typeof fixture.bottomPanel) => {
   const barHeight = tabRows * rowHeight;

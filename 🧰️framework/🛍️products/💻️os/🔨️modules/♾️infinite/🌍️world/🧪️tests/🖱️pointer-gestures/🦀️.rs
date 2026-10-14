@@ -17,7 +17,7 @@
 use super::tests::{mesh_oracle_from_buffers, publish_oracle_mesh, take_actions, with_world_step_context};
 use super::*;
 
-const POINTER_GESTURES: &str = include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧫️fixtures/🖱️pointer-gestures.json");
+const POINTER_GESTURES: &str = include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🖱️pointer-gestures.json");
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(POINTER_GESTURES).expect("pointer gesture fixture parses")

@@ -16,7 +16,7 @@ fn original(value:&serde_json::Value)->PropertyValue {
 
 #[test]
 fn graph_cold_property_retirement_drains_original_nested_owners_on_a_finite_stack() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/♻️cold-properties/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/♻️cold-properties/🔣️.json")).unwrap();
     let mut nodes=0;
     for value in fixture["values"].as_array().unwrap(){
         let value=original(value);let mut pending=vec![&value];

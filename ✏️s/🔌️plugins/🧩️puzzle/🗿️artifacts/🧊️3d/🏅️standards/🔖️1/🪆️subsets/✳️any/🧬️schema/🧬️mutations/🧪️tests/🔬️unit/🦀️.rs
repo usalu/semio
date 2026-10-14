@@ -349,13 +349,13 @@ fn kinds_match_the_enum_and_the_catalog() {
 
 #[test]
 fn play_snapshot_pack_shares_the_typed_record_identity_and_round_trips() {
-    let spec = <crate::Puzzle3dPlaySnapshot as store::os_store::serialization::ArtifactPack>::record_spec().expect("play snapshot declares its record spec");
+    let spec = <crate::Puzzle3dPlaySnapshot as pack::snapshot::ArtifactPack>::record_spec().expect("play snapshot declares its record spec");
     assert_eq!(store::os_pack::schema_hash(&spec), store::os_pack::schema_hash(&Puzzle3dSnapshot::__dsl_spec()));
     assert_ne!(store::os_pack::schema_hash(&spec), [0u8; 32]);
     let play = crate::Puzzle3dPlaySnapshot::from_typed(Puzzle3dSnapshot::default());
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&play);
-    assert_eq!(bytes, store::os_store::serialization::ArtifactPack::encode_pack(play.typed()));
-    assert_eq!(<crate::Puzzle3dPlaySnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode play pack"), play);
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&play);
+    assert_eq!(bytes, pack::snapshot::ArtifactPack::encode_pack(play.typed()));
+    assert_eq!(<crate::Puzzle3dPlaySnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode play pack"), play);
 }
 
 /// 📍️ LAW (design wave-2 ruling): deleting or disconnecting a MIDDLE row restores it at its original position, and the
@@ -387,7 +387,7 @@ async fn middle_row_removals_restore_their_position() {
 /// 🧫️ Language-neutral roots retain typed mutation authority and match Serde's admitted values.
 #[test]
 fn puzzle3d_typed_mutation_fixture_and_refusal_law() {
-    let fixture: serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📸️typed-mutation/🔣️.json")).expect("neutral fixture");
+    let fixture: serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📸️typed-mutation/🔣️.json")).expect("neutral fixture");
     for case in fixture["cases"].as_array().expect("cases") {
         let before: Puzzle3dSnapshot=semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&case["before"])).expect("base admits");
         let after: Puzzle3dSnapshot=semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&case["after"])).expect("result admits");
@@ -422,7 +422,7 @@ fn puzzle3d_typed_mutation_fixture_and_refusal_law() {
 #[test]
 fn puzzle3d_native_float_typed_mutation_fixture() {
     use crate::standards::v1::subsets::any::schema::diff::Puzzle3dObjectPatch;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🔺️diff/🧫️fixtures/🔢️native-fields/🔣️.json")).expect("neutral words");
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🔢️native-fields/🔣️.json")).expect("neutral words");
     for case in fixture["cases"].as_array().expect("cases") {
         let words:Vec<u64>=case["words"].as_array().expect("words").iter().map(|word|word.as_str().expect("decimal word").parse().expect("unsigned word")).collect();
         let value=semio_framework_value::DslValue::object([("origin".into(),semio_framework_value::DslValue::Array(words.iter().map(|word|semio_framework_value::DslValue::float(f64::from_bits(*word))).collect()))]);

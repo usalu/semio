@@ -4,7 +4,7 @@ use std::error::Error;
 
 #[test]
 fn owned_editor_errors_preserve_kind_message_and_cause() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("Editor error fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("Editor error fixture");
     for row in fixture["cases"].as_array().expect("cases") {
         let (kind, name) = match row["kind"].as_str().expect("kind") {
             "json" => (EditorErrorKind::Json, "json"),

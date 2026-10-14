@@ -47,7 +47,7 @@ type Vectors = {
   readonly ends: readonly { readonly id: string; readonly emitter: Emission; readonly since: number; readonly until: number | null; readonly keys: readonly number[]; readonly expected: number | null }[];
 };
 
-const VECTORS = JSON.parse(readFileSync(new URL("../../../../🧫️fixtures/✨️particle-motion/🔣️.json", import.meta.url), "utf8")) as Vectors;
+const VECTORS = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/✨️particle-motion/🔣️.json", import.meta.url), "utf8")) as Vectors;
 const SOURCE = readFileSync(new URL("../../🟦️.ts", import.meta.url), "utf8");
 const SEED = 20261003;
 const ORIGIN = { x: 412.5, y: 233.25 };

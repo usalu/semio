@@ -1,0 +1,131 @@
+{
+  "contract": "intrinsic-media-wire-v1",
+  "fieldId": 1,
+  "binary64Words": [
+    "0000000000000000",
+    "8000000000000000",
+    "3ff8000000000000",
+    "0000000000000001",
+    "7fefffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000001",
+    "fff800000000002a"
+  ],
+  "value": {
+    "kind": "object",
+    "value": [
+      {
+        "key": "z",
+        "value": {
+          "kind": "array",
+          "value": [
+            {
+              "kind": "null"
+            },
+            {
+              "kind": "bool",
+              "value": true
+            },
+            {
+              "kind": "uint",
+              "value": "18446744073709551615"
+            },
+            {
+              "kind": "int",
+              "value": "-9223372036854775808"
+            },
+            {
+              "kind": "float",
+              "value": "0000000000000000"
+            },
+            {
+              "kind": "float",
+              "value": "8000000000000000"
+            },
+            {
+              "kind": "float",
+              "value": "3ff8000000000000"
+            },
+            {
+              "kind": "float",
+              "value": "0000000000000001"
+            },
+            {
+              "kind": "float",
+              "value": "7fefffffffffffff"
+            },
+            {
+              "kind": "float",
+              "value": "7ff0000000000000"
+            },
+            {
+              "kind": "float",
+              "value": "fff0000000000000"
+            },
+            {
+              "kind": "float",
+              "value": "7ff8000000000001"
+            },
+            {
+              "kind": "float",
+              "value": "fff800000000002a"
+            },
+            {
+              "kind": "string",
+              "value": "\u0000literal ä é 🗺️"
+            },
+            {
+              "kind": "bytes",
+              "value": "00ff807f0a00"
+            },
+            {
+              "kind": "array",
+              "value": []
+            },
+            {
+              "kind": "object",
+              "value": []
+            }
+          ]
+        }
+      },
+      {
+        "key": "a",
+        "value": {
+          "kind": "string",
+          "value": "first"
+        }
+      },
+      {
+        "key": "z",
+        "value": {
+          "kind": "string",
+          "value": "duplicate"
+        }
+      },
+      {
+        "key": "\u0000ä",
+        "value": {
+          "kind": "object",
+          "value": [
+            {
+              "key": "second",
+              "value": {
+                "kind": "bool",
+                "value": false
+              }
+            },
+            {
+              "key": "first",
+              "value": {
+                "kind": "uint",
+                "value": "0"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

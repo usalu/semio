@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🛷️move-opening/➕️rehosts-to-another-wall",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛷️move-opening/➕️rehosts-to-another-wall/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛷️move-opening/➕️rehosts-to-another-wall/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛷️move-opening/➕️rehosts-to-another-wall/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛷️move-opening/➕️rehosts-to-another-wall/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛷️move-opening/➕️rehosts-to-another-wall/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛷️move-opening/➕️rehosts-to-another-wall/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛷️move-opening/➕️rehosts-to-another-wall/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛷️move-opening/➕️rehosts-to-another-wall/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛷️move-opening/➕️rehosts-to-another-wall/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛷️move-opening/➕️rehosts-to-another-wall/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

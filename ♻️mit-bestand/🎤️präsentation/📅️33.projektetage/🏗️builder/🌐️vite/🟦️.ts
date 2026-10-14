@@ -1,3 +1,6 @@
+import { viteCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
+import { readBuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { semioViteBuild } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🎚️mode/🟦️.ts";
 // #region 🔌️Adapters
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
@@ -13,6 +16,7 @@ const repoRoot = resolve(bundleRoot, "../../../../..");
 
 export default defineConfig({
   root: bundleRoot,
+  cacheDir: viteCacheDirectory(resolve(repoRoot, ".🧬semio/🦑️repo/⚡️cache/vite/projektetage"), process.env, import.meta.url),
   base: "./",
   publicDir: resolve(bundleRoot, "../../🌐️public"),
   plugins: [
@@ -28,7 +32,7 @@ export default defineConfig({
     tailwindcss(),
     react(),
   ],
-  build: playgroundStaticSiteBuildOptions(),
+  build: playgroundStaticSiteBuildOptions({ ...semioViteBuild(), outDir: resolve(bundleRoot, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE)) }),
   define: { "import.meta.vitest": "undefined" },
   server: {
     fs: { allow: [repoRoot] },

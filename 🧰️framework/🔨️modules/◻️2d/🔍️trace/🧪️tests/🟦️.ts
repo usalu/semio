@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import sharp from "sharp";
 import polygonClipping from "polygon-clipping";
 import schema from "../🧬️schema/🔣️.json";
-import fixtures from "../🧫️fixtures/🔣️.json";
+import fixtures from "./🧫️fixtures/🔣️.json";
 import {BitmapTraceJob,traceBitmap,type BitmapTraceInput,type BitmapTraceProgress} from "../🟦️.ts";
 import {pathSegmentsToSvgD,type PathSegment,type Vec2} from "../../🟦️.ts";
 const ajv=new Ajv({strict:true}),inputValid=ajv.compile(schema),outputValid=ajv.compile({$ref:schema.$id+"#/definitions/result"}),progressValid=ajv.compile({$ref:schema.$id+"#/definitions/progress"});
@@ -68,7 +68,7 @@ test("async tracing yields and rejects aborts before final publication",async()=
 });
 
 /** 🧹️ Interrupts real trace states and compares cleanup to an independent JSON inventory. */
-import retirementRows from "../🧫️fixtures/🧹️retirement/🔣️.json";
+import retirementRows from "./🧫️fixtures/🧹️retirement/🔣️.json";
 const retirementValid=ajv.compile({$ref:schema.$id+"#/definitions/retirementProgress"});
 test("trace retirement transfers masks and drains every actual phase under exact grants",()=>{
  for(const row of retirementRows)for(const grant of [1,7,4096]){

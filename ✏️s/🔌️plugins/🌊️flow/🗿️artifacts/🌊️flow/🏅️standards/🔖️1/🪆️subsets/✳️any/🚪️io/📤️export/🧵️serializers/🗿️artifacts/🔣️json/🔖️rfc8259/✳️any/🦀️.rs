@@ -10,5 +10,5 @@ pub fn serialize(from: &FlowSnapshot) -> Result<JsonSnapshot, store::PackError> 
 }
 
 pub fn serialize_text(from: &FlowSnapshot) -> Result<String, store::PackError> {
-    Ok(<FlowSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(from))
+    Ok(<FlowSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(from))
 }

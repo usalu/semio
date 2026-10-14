@@ -1,0 +1,16 @@
+{
+  "scene": 0,
+  "scenes": {
+    "removed": [
+      1
+    ],
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "name": "b"
+        }
+      }
+    ]
+  }
+}

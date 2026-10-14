@@ -2,7 +2,7 @@ use super::*;
 use crate::app_surface::{FemLoopMode, FemResultsAnimation, FemWaveform, ANIMATION_TICK_SECONDS};
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 use std::collections::BTreeMap;
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 fn settings(loop_mode: FemLoopMode) -> FemResultsAnimation {
     FemResultsAnimation { phase: 0.0, playing: true, speed: 0.5, loop_mode, waveform: FemWaveform::Ramp, reverse: false }
@@ -75,7 +75,7 @@ fn parking_round_trips_through_the_transport_settings() {
 #[test]
 fn clock_publication_and_retirement_obey_tiny_grants() {
     use semio_framework_plugin::WindowTransientOwner;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️codec/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️codec/🔣️.json")).unwrap();
     let owners = Fem2dResultsWindowTransientOwner::build_owners();
     for row in fixture["cases"].as_array().unwrap() {
         let before: FemResultsWindowTransient = serde_json::from_value(row["before"].clone()).unwrap();
@@ -107,7 +107,7 @@ fn clock_publication_and_retirement_obey_tiny_grants() {
 
 #[test]
 fn clock_partition_matches_language_neutral_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️clock/🔣️.json")).expect("fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️clock/🔣️.json")).expect("fixture");
     let mut typed = BTreeMap::<String, FemResultsWindowTransient>::new();
     let mut oracle = serde_json::Map::new();
     for step in fixture["steps"].as_array().expect("steps") {
@@ -127,7 +127,7 @@ fn clock_partition_matches_language_neutral_json_oracle() {
 
 #[test]
 fn clock_codecs_and_inverse_match_neutral_vectors() {
-    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️codec/🔣️.json")).unwrap();
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️codec/🔣️.json")).unwrap();
     for row in oracle["cases"].as_array().unwrap() {
         let before: FemResultsWindowTransient = semio_framework_pack_json::from_json_str(&row["before"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let expected: FemResultsWindowTransient = semio_framework_pack_json::from_json_str(&row["after"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

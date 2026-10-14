@@ -706,34 +706,40 @@ impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
         Ok(self.close_demands(0)?.depth)
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if cx.should_yield(){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked)}
+        if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
+        let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{(
+            ||->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
         self.closing = true;
-        let refused = |error: semio_framework_value::ValueError| InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() };
+        let refused = |error: semio_framework_value::ValueError| Err(error);
         let demand = match self.close_demands(grant.maximum_copy_bytes) {
             Ok(demand) => demand,
-            Err(error) => return refused(error),
+            Err(error) => return Err(error),
         };
         if demand == Default::default() {
-            return InteractiveJobCloseStep::Complete { progress: Default::default() };
+            return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() });
         }
         if grant.maximum_depth < demand.depth {
-            return refused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "preview evaluation run close exceeds its admitted depth"));
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "preview evaluation run close exceeds its admitted depth"));
         }
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
-            return InteractiveJobCloseStep::Pending { progress: Default::default() };
+            return Ok(InteractiveJobCloseStep::Pending { progress: Default::default() });
         }
         let item = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         if !self.publication.terminal_is_empty() {
             let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
             return match self.publication.close_step(child) {
-                Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
+                Ok(step) => Ok(InteractiveJobCloseStep::Pending { progress: step.progress() }),
                 Err(error) => refused(error),
             };
         }
         if self.delivered {
             self.delivered = false;
-            return InteractiveJobCloseStep::Pending { progress: item };
+            return Ok(InteractiveJobCloseStep::Pending { progress: item });
         }
         if !self.released {
             let (port, identity) = (self.port.clone(), self.identity);
@@ -756,16 +762,19 @@ impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
                 Ok(())
             });
             return match released {
-                Err(fault) if fault.code.0 == "interactive-job.instance-owner-busy" => InteractiveJobCloseStep::Pending { progress: Default::default() },
+                Err(fault) if fault.code.0 == "interactive-job.instance-owner-busy" => Ok(InteractiveJobCloseStep::Pending { progress: Default::default() }),
                 _ => {
                     self.released = true;
-                    InteractiveJobCloseStep::Pending { progress: item }
+                    Ok(InteractiveJobCloseStep::Pending { progress: item })
                 }
             };
         }
         let released_bytes = std::mem::take(&mut self.source).capacity();
-        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } }
+        Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } })
+    })().map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()))})?;
+        Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
+
 
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.released && self.publication.terminal_is_empty() && !self.delivered && self.source.capacity() == 0

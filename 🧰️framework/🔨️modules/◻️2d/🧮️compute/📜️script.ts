@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
-import { BundleScript, ScriptRouter } from "../../🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import { runBudgetedTestCommand } from "../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
-import { testLevelBudgetMs } from "../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { runOwnedCommand } from "../../🏃️process/🎛️owned-execution/🟦️.ts";
-import { cmdBudgetMs } from "../../🏃️process/⏱️budget/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runBudgetedTestCommand } from "../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import { testLevelBudgetMs } from "../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { runOwnedCommand } from "../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { cmdBudgetMs } from "../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {

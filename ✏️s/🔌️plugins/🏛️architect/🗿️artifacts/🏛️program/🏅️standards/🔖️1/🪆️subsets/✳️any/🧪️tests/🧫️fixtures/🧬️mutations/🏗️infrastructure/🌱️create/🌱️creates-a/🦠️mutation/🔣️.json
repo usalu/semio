@@ -1,0 +1,40 @@
+{
+  "mutation": "createInfrastructureRequirement",
+  "infrastructureRequirement": {
+    "id": "infrastructure-requirement-a",
+    "name": "Infrastructure Requirement A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "system": "",
+    "category": "",
+    "capacity": {
+      "unit": ""
+    },
+    "redundancy": null,
+    "distribution": [],
+    "entryPoints": [],
+    "utilitySource": null,
+    "standbyPower": false,
+    "monitoring": [],
+    "maintenanceAccess": [],
+    "standards": [],
+    "elementIds": [],
+    "peakDemand": null,
+    "diversityFactor": null,
+    "futureExpansion": [],
+    "interfaceRequirements": [],
+    "commissioning": [],
+    "lifecycleCost": null,
+    "ownerId": null
+  }
+}

@@ -5,7 +5,7 @@
 use super::*;
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/⌨️native-keyboard-ring/🔣️.json")).expect("keyboard ring fixture")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/⌨️native-keyboard-ring/🔣️.json")).expect("keyboard ring fixture")
 }
 
 /// 🖼️ One frame's chrome hits: the previous frame's registry retired first, exactly as `FrameBuildPhase::InputFrame` does.

@@ -1,8 +1,9 @@
 //! 🔢️ Typed Semio value primitives, structural ownership and referential graph nodes.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 use crate::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot, sqlite_snapshot::{artifact::{Cell, RowWriter, reconstruct_text, reconstruct_blob}, SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotControl, SqliteSnapshotPhase}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::{artifact::{Cell, RowWriter, reconstruct_text, reconstruct_blob}, SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotControl, SqliteSnapshotPhase}};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned;
 
 fn number(value: usize) -> Result<i64,ValueError> { i64::try_from(value).map_err(|error|ValueError::new(ValueRefusalKind::WorkLimit,error.to_string())) }
@@ -102,7 +103,7 @@ fn value_push<T>(frontier:&mut Vec<T>,value:T,control:&mut SqliteSnapshotControl
  if frontier.len()==frontier.capacity(){let count=frontier.capacity().max(1).checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio value frontier backing overflow"))?;let mut replacement=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(count,control)?;for(index,item)in frontier.drain(..).enumerate(){replacement.push(item);if index%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,index,0)?;}}*frontier=replacement;}frontier.push(value);Ok(())
 }
 
-impl ArtifactSqliteSnapshot for SemioValueSnapshot {
+impl ArtifactSqliteSnapshotHost for SemioValueSnapshot {
 fn retire_sqlite_snapshot(self){drop(Owned::new(self));}
 
 fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
@@ -117,9 +118,14 @@ let row=database.table("semio_value_document")?.single_row()?;
 if row.rowid!=1||row.integer(0)?!=1||row.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned document identity differs from projected semantic fields"));}
 control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))})();result.map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
 
-    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> {self.project_sqlite_database(control)}
-    fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self,ValueError> {let result=(||->Result<Self,ValueError>{ semantic::layout(control.limits())?;Self::reconstruct_sqlite_database(database, control, Self::SQLITE_SCHEMA) })();result}
+    
+    
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for SemioValueSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> {self.project_sqlite_database(control)}
+fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self,ValueError> {let result=(||->Result<Self,ValueError>{ semantic::layout(control.limits())?;Self::reconstruct_sqlite_database(database, control, Self::SQLITE_SCHEMA) })();result}
 }
 
 impl SemioValueSnapshot {

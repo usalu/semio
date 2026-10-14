@@ -72,7 +72,7 @@ import {
 } from "@semio-tech/quiz-react";
 import palette from "../../../../🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css?raw";
 import stylesheet from "../../🎯️targets/⚛️react/🎨️.css?raw";
-import vectors from "../../🧫️fixtures/💭️crowd-client/🔣️.json";
+import vectors from "../🧫️fixtures/💭️crowd-client/🔣️.json";
 
 extend([a11y]);
 

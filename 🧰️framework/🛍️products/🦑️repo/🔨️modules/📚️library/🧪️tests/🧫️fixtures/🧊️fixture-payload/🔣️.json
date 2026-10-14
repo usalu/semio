@@ -1,0 +1,40 @@
+{
+  "observedPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧊️fixture-payload/🔣️.json",
+  "paths": [
+    {
+      "id": "shared",
+      "path": "owner/🧪️tests/🧫️fixtures/🔣️.json",
+      "opaque": true
+    },
+    {
+      "id": "private",
+      "path": "owner/🧪️tests/🧪️case/🧫️fixtures/input.txt",
+      "opaque": true
+    },
+    {
+      "id": "nested",
+      "path": "owner/🧪️tests/🧫️fixtures/pkg/Source.ts",
+      "opaque": true
+    },
+    {
+      "id": "adapter",
+      "path": "owner/🧪️tests/🧪️case/🟦️.ts",
+      "opaque": false
+    },
+    {
+      "id": "owner-assets",
+      "path": "owner/🖼️assets/🔣️.json",
+      "opaque": false
+    },
+    {
+      "id": "runtime-owner",
+      "path": "framework/🔨️modules/🧪️test/Source.ts",
+      "opaque": false
+    },
+    {
+      "id": "lookalike",
+      "path": "owner/🧪️tests/🧫️fixtures-copy/Source.ts",
+      "opaque": false
+    }
+  ]
+}

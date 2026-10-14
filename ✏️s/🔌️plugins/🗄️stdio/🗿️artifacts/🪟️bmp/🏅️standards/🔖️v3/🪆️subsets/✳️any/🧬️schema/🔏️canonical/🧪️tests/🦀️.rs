@@ -33,7 +33,7 @@ fn verify_cancel<T:store::ArtifactCanonicalJson+RetireOwned+Sync>(value:T) {
 
 #[test]
 fn schema_owned_bmp_canonical_sealing_preserves_neutral_snapshot_and_diff() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap(){
         let expected=case["snapshot"].clone();
         let snapshot=BmpSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(expected.to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
@@ -48,7 +48,7 @@ fn schema_owned_bmp_canonical_sealing_preserves_neutral_snapshot_and_diff() {
 #[test]
 fn schema_owned_bmp_replacement_diff_and_inverse_preserve_neutral_native_words(){
     use protocol::Mutation;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let base=BmpSnapshot::default();
     for case in fixture["cases"].as_array().unwrap().iter().chain(fixture["replacementCases"].as_array().unwrap().iter()){
         let target=BmpSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(case["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();

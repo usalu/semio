@@ -43,7 +43,7 @@ const select = (law: Law, row: Law["selection"][number]): { expect?: Record<stri
 
 export function proveInferenceServiceLaw(repoRoot: string): { ajv: number; selection: number; proposals: number; lifecycles: number } {
   const schema = JSON.parse(readFileSync(resolve(repoRoot, INFERENCE_ROOT, "🧬️schema/🔣️.json"), "utf8")) as { $defs: Record<string, unknown> };
-  const law = JSON.parse(readFileSync(resolve(repoRoot, INFERENCE_ROOT, "🧫️fixtures/💼️inference-service-law.json"), "utf8")) as Law;
+  const law = JSON.parse(readFileSync(resolve(repoRoot, INFERENCE_ROOT, "🧪️tests/🧫️fixtures/💼️inference-service-law.json"), "utf8")) as Law;
   const ajv = new Ajv({ strict: false, allErrors: true });
   ajv.addSchema({ $id: "inference-component", $defs: schema.$defs });
   const jobState = ajv.compile({ $ref: "inference-component#/$defs/InferenceJobStateV1" });

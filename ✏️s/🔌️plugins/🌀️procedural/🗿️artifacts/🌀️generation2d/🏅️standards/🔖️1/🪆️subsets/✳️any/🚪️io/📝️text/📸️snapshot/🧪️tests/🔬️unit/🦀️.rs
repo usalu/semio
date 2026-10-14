@@ -1,6 +1,6 @@
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 use semio_framework_os_kernel::os_store::test_support;
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
 
 //#region 🔖️DslTests
 #[test]

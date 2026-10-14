@@ -1,8 +1,0 @@
-import vectors from '../🧫️fixtures/🔣️.json' with { type: 'json' };
-import { inferGltfHandles } from '../🟦️.ts';
-import type { GltfTsGeometryContext } from '../../../🔨️geometry-core/🟦️.ts';
-
-for (const vector of vectors.vectors) {
-  const result = inferGltfHandles(vector.context as GltfTsGeometryContext);
-  if ((result.value ?? null) !== vector.value || result.availability !== vector.availability) throw new Error(vector.name);
-}

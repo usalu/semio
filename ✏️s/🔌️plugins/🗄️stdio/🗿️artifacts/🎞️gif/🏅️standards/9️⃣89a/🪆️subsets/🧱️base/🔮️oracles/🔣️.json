@@ -821,7 +821,7 @@
       "files": [
         {
           "role": "primary-gif",
-          "path": "../🧫️fixtures/📼️pattern-strip/🎬️pattern-strip.gif",
+          "path": "../🧪️tests/🧫️fixtures/📼️pattern-strip/🎬️pattern-strip.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:ae96b804070350e7ef5811f905ffe45e82ca287acac3da421c65e1dbb24b99a4",
           "bytes": 223
@@ -859,14 +859,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/⏸️no-mutation-no-op/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/⏸️no-mutation-no-op/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
           "bytes": 149
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/⏸️no-mutation-no-op/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/⏸️no-mutation-no-op/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
           "bytes": 149
@@ -909,14 +909,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/🖥️set-screen-size-applied/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/🖥️set-screen-size-applied/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
           "bytes": 149
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/🖥️set-screen-size-applied/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/🖥️set-screen-size-applied/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:a0b80e21a27cf11ab9f3d783a0940784b611b3e89290ab6d019fdf611a30ff0f",
           "bytes": 149
@@ -959,14 +959,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/🌈️set-global-color-table-applied/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/🌈️set-global-color-table-applied/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
           "bytes": 149
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/🌈️set-global-color-table-applied/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/🌈️set-global-color-table-applied/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:38208a5d322b8818aed6dedeffdc17f412711dd9e2bbb5d061b949e8f45de456",
           "bytes": 137
@@ -1009,14 +1009,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/🖌️set-background-color-index-applied/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/🖌️set-background-color-index-applied/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
           "bytes": 149
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/🖌️set-background-color-index-applied/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/🖌️set-background-color-index-applied/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:af446ea77b2f2ddb56b6e7e5e35a38a7bf8d6d3108a70b401b95c5c64839e984",
           "bytes": 149
@@ -1059,14 +1059,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/➕️insert-frame-applied/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-frame-applied/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
           "bytes": 149
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/➕️insert-frame-applied/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-frame-applied/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:b17655722ddcec419d1324837a4a761c2c1b1630829d779604d48e86f2ef3cd1",
           "bytes": 175
@@ -1109,14 +1109,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/➖️remove-frame-applied/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-frame-applied/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
           "bytes": 149
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/➖️remove-frame-applied/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-frame-applied/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:a17acaf365848c7e3c1c7ebec2b546949801da186bc20781f4fb7b9a4497fe58",
           "bytes": 111
@@ -1159,14 +1159,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/🔀️move-frame-applied/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/🔀️move-frame-applied/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
           "bytes": 149
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/🔀️move-frame-applied/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/🔀️move-frame-applied/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:401431fe75d91f46aa5032cf7d6a440d7b9c33688db38f33a9a5b696159ef76b",
           "bytes": 149
@@ -1209,14 +1209,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/📐️set-frame-geometry-applied/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/📐️set-frame-geometry-applied/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
           "bytes": 149
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/📐️set-frame-geometry-applied/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/📐️set-frame-geometry-applied/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:954bc1886b939bd49e02144d71581f127fb68345b543ac0ebc1bdcbc3695ac65",
           "bytes": 149
@@ -1259,14 +1259,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/🧱️set-frame-pixels-applied/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/🧱️set-frame-pixels-applied/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
           "bytes": 149
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/🧱️set-frame-pixels-applied/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/🧱️set-frame-pixels-applied/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:0265c74726ef974c77c455f8b421e4806124040a778115c24a3390eb6df756ea",
           "bytes": 149
@@ -1309,14 +1309,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/🪜️set-frame-interlace-applied/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/🪜️set-frame-interlace-applied/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
           "bytes": 149
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/🪜️set-frame-interlace-applied/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/🪜️set-frame-interlace-applied/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:aa253cbea65eb895a7ae58645bf7eff3d74c8937e11155fff0b8f58efe3e0f1e",
           "bytes": 149
@@ -1359,14 +1359,14 @@
       "files": [
         {
           "role": "expected-before-gif",
-          "path": "../🧫️fixtures/⚖️set-pixel-aspect-ratio/⬅️before.gif",
+          "path": "../🧪️tests/🧫️fixtures/⚖️set-pixel-aspect-ratio/⬅️before.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:efe00c64713a454215e09159d78a10522765338b8b0bf36d8e2361f6d009066c",
           "bytes": 101
         },
         {
           "role": "expected-after-gif",
-          "path": "../🧫️fixtures/⚖️set-pixel-aspect-ratio/➡️after.gif",
+          "path": "../🧪️tests/🧫️fixtures/⚖️set-pixel-aspect-ratio/➡️after.gif",
           "mediaType": "image/gif",
           "sha256": "sha256:e43ea7d60def8d4f2a558f8e266e5e042fe673264352f07906c746831a2adcd3",
           "bytes": 101

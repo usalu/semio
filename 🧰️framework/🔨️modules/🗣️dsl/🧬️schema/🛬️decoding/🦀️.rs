@@ -297,7 +297,7 @@ mod continuation_tests {
 
     #[test]
     fn original_native_quoted_scanner_retains_unicode_grants_and_exact_source_identity() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();
         retained_text_unescape_laws(&fixture);
         let semantic = fixture["textUnit"].as_str().unwrap().repeat(fixture["textRepeats"].as_u64().unwrap() as usize);
         let source = serde_json::to_string(&semantic).unwrap();

@@ -10,7 +10,7 @@
  * the same pane fraction reads `candidates=180 containing=14 hit=e80dc9d0-… boxes=["97x88@392,349", …]`.
  */
 import { describe, expect, it } from "vitest";
-import fixture from "../../🧱️elements/🌐️World3dHost/🧫️fixtures/🎯️pick-bounds.json" with { type: "json" };
+import fixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🎯️pick-bounds.json" with { type: "json" };
 import { hoveredInteractionTargetV1, mergeWorldSelectionWithLeftoverV1, resolveClickInstanceIdFromProjected, world3dInstanceLocalCorners } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 
 type Corner = readonly [number, number, number];

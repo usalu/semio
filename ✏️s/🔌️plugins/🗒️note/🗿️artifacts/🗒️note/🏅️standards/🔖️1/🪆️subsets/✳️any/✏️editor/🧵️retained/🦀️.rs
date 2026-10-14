@@ -225,7 +225,8 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
         Some(self.units.len())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<NotePlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<NotePlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<NotePlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<NotePlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command: _command, snapshot, config, history, interaction: _interaction, hover: _hover, context, operation } = *input;
         if self.complete || self.cursor >= self.units.len() {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("note.retained.repeated"), "Note retained work was stepped after completion"));
@@ -281,6 +282,9 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
         } else {
             Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: std::mem::take(&mut self.ephemeral) })
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn checkpoint_byte(&self, index: usize) -> Option<u8> {
@@ -469,6 +473,7 @@ pub fn build(request: ArtifactOwnedToolJobRequest<EditorApp<NotePlayApp>>) -> Re
         semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
             command: *request.command,
             snapshot: request.snapshot,
+            snapshot_read: request.snapshot_read,
             config: request.config,
             history: request.history,
             interaction_state: request.interaction_state,

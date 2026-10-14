@@ -10,13 +10,13 @@ fn semantic_identity_is_owned_by_this_leaf() {
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
-    let (before, after) = support::snapshots(include_bytes!("../../../../../🧫️fixtures/🎚️remove-ext-g-state/⬅️before.pdf"), include_bytes!("../../../../../🧫️fixtures/🎚️remove-ext-g-state/➡️after.pdf"));
+    let (before, after) = support::snapshots(include_bytes!("../../../../../🧪️tests/🧫️fixtures/🎚️remove-ext-g-state/⬅️before.pdf"), include_bytes!("../../../../../🧪️tests/🧫️fixtures/🎚️remove-ext-g-state/➡️after.pdf"));
     assert_mutation_inverse_sum_law(&PdfMutation::RemoveExtGState(RemoveExtGState { id: support::removed(&before.ext_g_states, &after.ext_g_states).id }), &before).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_restores_a_middle_row() {
-    let (mut base, after) = support::snapshots(include_bytes!("../../../../../🧫️fixtures/🎚️remove-ext-g-state/⬅️before.pdf"), include_bytes!("../../../../../🧫️fixtures/🎚️remove-ext-g-state/➡️after.pdf"));
+    let (mut base, after) = support::snapshots(include_bytes!("../../../../../🧪️tests/🧫️fixtures/🎚️remove-ext-g-state/⬅️before.pdf"), include_bytes!("../../../../../🧪️tests/🧫️fixtures/🎚️remove-ext-g-state/➡️after.pdf"));
     let target = support::removed(&base.ext_g_states, &after.ext_g_states);
     let mut first = target.clone();
     first.id = "first".to_string();

@@ -263,7 +263,7 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation3dInst
     /// 🧹️ A LIVE session owns nothing retirable — `FlowEvalSession::close_step` answers `Blocked`
     /// until `begin_close`, and reporting that from the live maintenance ladder spent the runtime's
     /// zero-progress credit every idle turn (26/09/09/PROCEDURAL-3D-END-TO-END, close-ladder lane).
-    fn maintenance_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
         use semio_framework_plugin::PluginLifecycleStep;
         use semio_framework_value::retained_clone::RetainedCloneProgress;
         if !self.closing {
@@ -276,19 +276,15 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation3dInst
             if self.geometry.terminal_is_empty() {
                 return Ok(PluginLifecycleStep::Complete(Default::default()));
             }
-            return Ok(match self.geometry.retire_cold() {
-                Ok(()) => PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }),
-                Err(_) => PluginLifecycleStep::Progress(Default::default()),
-            });
+            return Ok(PluginLifecycleStep::Blocked { reason: "Generation3d geometry engine requires its retained close producer" });
         };
         let (progress, finished) = if session.terminal_is_empty() {
             (RetainedCloneProgress { copied_items: 1, ..Default::default() }, true)
         } else {
-            match session.close_step(grant) {
+            match session.close_step(grant)? {
                 semio_framework_job::InteractiveJobCloseStep::Pending { progress } => (progress, false),
                 semio_framework_job::InteractiveJobCloseStep::Complete { progress } => (progress, true),
                 semio_framework_job::InteractiveJobCloseStep::Blocked => return Ok(PluginLifecycleStep::Blocked { reason: "Generation3d evaluation session awaits its exact close grant" }),
-                semio_framework_job::InteractiveJobCloseStep::Refused { .. } => return Err(Fault::from("generation3d-eval-session-close-refused")),
             }
         };
         if finished && session.terminal_is_empty() {
@@ -297,12 +293,12 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation3dInst
         Ok(if self.terminal_is_empty() { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) })
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
         self.closing = true;
         if let Some(session) = self.eval_session.as_mut() {
             session.begin_close();
         }
-        self.maintenance_step(grant)
+        self.maintenance_step(cx,grant)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -402,13 +398,13 @@ pub fn generation3d_render_body(
         artifact_panel::GENERATION_3D_PLAY_BODY_ARTIFACT => artifact_panel::render(document, config, session, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, artifact_panel::GENERATION_3D_PLAY_BODY_ARTIFACT)),
         catalogue_panel::GENERATION_3D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, catalogue_panel::GENERATION_3D_PLAY_BODY_CATALOGUE)),
         inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION => {
-            let evaluation = preview_eval_text.unwrap_or_else(|| session.eval_json());
+            let evaluation = session.eval_json();
             let selected = marks.graph_selection_ids();
             let export_widget = selected.first().filter(|id| document.host_snapshot.widgets.iter().any(|widget| matches!(widget, semio_framework_artifact_flow_flow::Widget::OutputExport { id: target, .. } if target == *id)));
             let exported = match export_widget { Some(widget) => export_meshes_from_session(document, config, session, Some(widget.as_str())), None => Ok(Vec::new()) };
             let export_ready = exported.is_ok();
             let meshes = exported.unwrap_or_default();
-            inspection_panel::render(&document.host_snapshot, &marks.graph_selection_ids(), labels, &semio_framework_plugin::TreeWindows::for_body(view_state, inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION), view_state.locale, view_state.terminology, &meshes, evaluation, session.status_json(), export_ready)
+            inspection_panel::render(&document.host_snapshot, &marks.graph_selection_ids(), labels, &semio_framework_plugin::TreeWindows::for_body(view_state, inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION), view_state.locale, view_state.terminology, &meshes, evaluation, session.status_json(), export_ready,marks.source_revision.as_deref())
         },
         _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
     }?;
@@ -643,7 +639,8 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.closing || self.complete {
             return Err(Fault::from("generation3d-preview-work-is-terminal"));
         }
@@ -673,6 +670,9 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
             return self.complete();
         }
         Err(Fault::from("generation3d-preview-work-is-terminal"))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) {
@@ -682,36 +682,42 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
         }
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if cx.should_yield(){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked)}
+        if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
+        let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{(
+            ||->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         use semio_framework_job::InteractiveJobCloseStep;
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
-        let refused = |error: semio_framework_value::ValueError| InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() };
+        let refused = |error: semio_framework_value::ValueError| Err(error);
         let idle = RetainedCloneProgress::default();
         let one = RetainedCloneProgress { copied_items: 1, ..idle };
         if !self.closing {
-            return InteractiveJobCloseStep::Blocked;
+            return Ok(InteractiveJobCloseStep::Blocked);
         }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-            return InteractiveJobCloseStep::Pending { progress: idle };
+            return Ok(InteractiveJobCloseStep::Pending { progress: idle });
         }
         if let Some(session) = self.session.as_mut() {
             if session.terminal_is_empty() {
                 self.session.take();
-                return InteractiveJobCloseStep::Pending { progress: one };
+                return Ok(InteractiveJobCloseStep::Pending { progress: one });
             }
             return session.close_step(grant);
         }
         if let Some(host) = self.host.take() {
             self.host_retirement = Some(semio_framework_os_flow::FlowHostRetirement::new(host));
-            return InteractiveJobCloseStep::Pending { progress: one };
+            return Ok(InteractiveJobCloseStep::Pending { progress: one });
         }
         if let Some(retirement) = self.host_retirement.as_mut() {
             if retirement.terminal_is_empty() {
                 self.host_retirement = None;
-                return InteractiveJobCloseStep::Pending { progress: one };
+                return Ok(InteractiveJobCloseStep::Pending { progress: one });
             }
             return match retirement.close_step(grant) {
-                Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
+                Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => Ok(InteractiveJobCloseStep::Pending { progress }),
                 Err(error) => refused(error),
             };
         }
@@ -719,7 +725,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
             return match semio_framework_value::retirement::controlled::ControlledRetirement::new(emit) {
                 Ok(owner) => {
                     self.emit_retirement = Some(owner);
-                    InteractiveJobCloseStep::Pending { progress: one }
+                    Ok(InteractiveJobCloseStep::Pending { progress: one })
                 }
                 Err((error, emit)) => {
                     self.emit = Some(emit);
@@ -733,12 +739,15 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
                 self.emit_retirement = None;
             }
             return match step {
-                Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
+                Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => Ok(InteractiveJobCloseStep::Pending { progress }),
                 Err(error) => refused(error),
             };
         }
-        InteractiveJobCloseStep::Complete { progress: idle }
+        Ok(InteractiveJobCloseStep::Complete { progress: idle })
+    })().map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()))})?;
+        Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
+
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
         Ok(self.close_demands(0)?.copy_bytes)
@@ -831,7 +840,8 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.complete || self.closing { return Err(Fault::from("generation3d-flow-eval-window-work-terminal")); }
         let turn_started_us = semio_framework_job::default_now_us();
         let (payload_window_id, payload_window_kind_id) = generation3d_flow_eval_window_address(input.command).ok_or_else(|| Fault::from("generation3d-flow-eval-window-command-mismatch"))?;
@@ -871,13 +881,15 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
             emit,
             ephemeral: EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient },
         })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) { self.closing = true; }
 
-    fn close_step(&mut self, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        if self.closing { semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() } } else { semio_framework_job::InteractiveJobCloseStep::Blocked }
-    }
+    fn close_step(&mut self,_cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{Ok(if self.closing { semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() } } else { semio_framework_job::InteractiveJobCloseStep::Blocked })}
+
 
     fn terminal_is_empty(&self) -> bool { self.closing }
 }
@@ -1045,11 +1057,14 @@ struct Generation3dSessionCommandWork {
     tool_id: &'static str,
     instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
     consumed: bool,
+    source_read:Option<semio_framework_os_flow::FlowSourceRead>,
+    source_read_ready:bool,
+    closing:bool,
 }
 
 impl Generation3dSessionCommandWork {
     fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
-        Self { tool_id, instance_owner, consumed: false }
+        Self { tool_id, instance_owner, consumed: false,source_read:None,source_read_ready:false,closing:false }
     }
 }
 
@@ -1068,7 +1083,8 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
         generation3d_bounded_extent(command, snapshot, interaction)
     }
 
-    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn work_demands(&self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if let Generation3dCommand::AddWidget(payload)=input.command{if payload.source_widget.is_some(){return match self.source_read.as_ref(){Some(source)if !self.source_read_ready=>source.next_demands(&input.snapshot.host_snapshot,maximum_copy_bytes),Some(source)=>{let read=source.next_demands(&input.snapshot.host_snapshot,maximum_copy_bytes)?;let command=command_work_step_demands::<EditorApp<Generation3dPlayApp>>(size_of::<Self>())?;Ok(semio_framework_value::RetirementDemand{copy_bytes:read.copy_bytes.saturating_add(command.copy_bytes),capacity_bytes:read.capacity_bytes.saturating_add(command.capacity_bytes),release_bytes:read.release_bytes.saturating_add(command.release_bytes),depth:read.depth.max(command.depth)})},None=>Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<semio_framework_os_flow::FlowSourceRead>(),depth:1,..Default::default()})}}}
         command_work_step_demands::<EditorApp<Generation3dPlayApp>>(size_of::<Self>())
     }
 
@@ -1076,10 +1092,41 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
-        if self.consumed {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
+        if self.consumed||self.closing {
             return Err(Fault::from("generation3d-session-command-work-repeated"));
         }
+        if let Generation3dCommand::AddWidget(payload)=input.command{if let Some(request)=payload.source_request()?{
+            if self.source_read.is_none(){let grant=_cx.retained_grant();let bytes=size_of::<semio_framework_os_flow::FlowSourceRead>();if _cx.is_cancelled()||_cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(ArtifactCommandWorkStep::Replay{stage:"generation3d-analysis-source",preview:r#"{"en":"Checking current geometry","de":"Aktuelle Geometrie wird geprüft"}"#.as_bytes()})}self.source_read=Some(semio_framework_os_flow::FlowSourceRead::new(payload.source_revision_bytes()?));_cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}).map_err(Fault::from)?;return Ok(ArtifactCommandWorkStep::Progress{stage:"generation3d-analysis-source",preview:r#"{"en":"Checking current geometry","de":"Aktuelle Geometrie wird geprüft"}"#.as_bytes()})}
+            let read=self.source_read.as_mut().unwrap();
+            if !self.source_read_ready{
+                let step=self.instance_owner.with_mut::<Generation3dInstanceOperationOwner,_>(|owner|owner.with_session_and_gumball(|session,_|read.step(&input.snapshot.host_snapshot,input.operation.canonical_base_revision,session,&request,_cx).map_err(Fault::from)))???;
+                let preview=r#"{"en":"Checking current geometry","de":"Aktuelle Geometrie wird geprüft"}"#.as_bytes();
+                return match step{
+                    semio_framework_os_flow::FlowSourceReadStep::Working=>Ok(if read.step_progress()==Default::default(){ArtifactCommandWorkStep::Replay{stage:"generation3d-analysis-source",preview}}else{ArtifactCommandWorkStep::Progress{stage:"generation3d-analysis-source",preview}}),
+                    semio_framework_os_flow::FlowSourceReadStep::Refused(reason)=>Err(add_widget::source_fault(reason)),
+                    semio_framework_os_flow::FlowSourceReadStep::Ready=>{self.source_read_ready=true;Ok(ArtifactCommandWorkStep::Progress{stage:"generation3d-analysis-source",preview})},
+                };
+            }
+            let windows=generation3d_preview_windows(input.context.and_then(|context|context.view_state.as_ref()));
+            let servable=flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
+            let result=self.instance_owner.with_mut::<Generation3dInstanceOperationOwner,_>(|owner|{
+                let step=owner.with_session_and_gumball(|session,_|read.admit_current_output(&input.snapshot.host_snapshot,input.operation.canonical_base_revision,session,&request,_cx).map_err(Fault::from))??;
+                match step{
+                    semio_framework_os_flow::FlowCurrentOutputRead::Working=>Ok(ArtifactCommandWorkStep::Replay{stage:"generation3d-analysis-source",preview:r#"{"en":"Checking current geometry","de":"Aktuelle Geometrie wird geprüft"}"#.as_bytes()}),
+                    semio_framework_os_flow::FlowCurrentOutputRead::Refused(reason)=>Err(add_widget::source_fault(reason)),
+                    semio_framework_os_flow::FlowCurrentOutputRead::Ready(source)=>{
+                        let doc=ArtifactView::with_operation(input.snapshot,input.history,input.operation.clone());
+                        let mut emit=add_widget::create_connected(payload,&doc,&source)?;
+                        owner.owe_attached_previews_for_mutations(&windows,servable,&mut emit,input.operation.retained)?;
+                        Ok(ArtifactCommandWorkStep::Complete(emit))
+                    },
+                }
+            })??;
+            self.consumed=matches!(result,ArtifactCommandWorkStep::Complete(_));
+            return Ok(result);
+        }}
         self.consumed = true;
         // 🩹️ Every gesture on this route that MOVED THE DOCUMENT owes the attached previews a fresh
         // evaluation — `patchFlowWidgets`, `addWidget`, `removeWidget`, `nodeGraphEdit`,
@@ -1093,6 +1140,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
             let gestures = owner.gumball.revision();
             let mut emit = if matches!(input.command, Generation3dCommand::Reorganize(_)) {
                 reorganize::apply(input.snapshot, _cx)?
+
             } else {
                 owner.with_session_and_gumball(|session, gumball| generation3d_retained_reduce(input.command, input.snapshot, input.config, input.history, input.interaction, input.hover, input.context, input.operation, session, gumball))??
             };
@@ -1104,7 +1152,26 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
             Ok(emit)
         })?;
         Ok(ArtifactCommandWorkStep::Complete(emit))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
+    fn begin_close(&mut self){self.closing=true;if let Some(read)=self.source_read.as_mut(){read.begin_close();}}
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if cx.should_yield(){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked)}
+        if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
+        let demand=self.source_read.as_ref().map(|read|read.next_close_demands(cx.retained_grant().maximum_copy_bytes)).transpose()?.unwrap_or_default();
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{(
+            ||->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{use semio_framework_job::InteractiveJobCloseStep;if let Some(read)=self.source_read.as_mut(){match read.close_step(grant){Ok(step)if read.terminal_is_empty()=>Ok(InteractiveJobCloseStep::Complete{progress:step.progress()}),Ok(step)=>Ok(InteractiveJobCloseStep::Pending{progress:step.progress()}),Err(error)=>return Err(error)}}else{Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}})().map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()))})?;
+        Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
+    }
+
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.source_read.as_ref().map(|read|read.next_close_demands(0)).transpose()?.unwrap_or_default().copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.source_read.as_ref().map(|read|read.next_close_demands(copy)).transpose()?.unwrap_or_default().capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.source_read.as_ref().map(|read|read.next_close_demands(0)).transpose()?.unwrap_or_default().release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.source_read.as_ref().map(|read|read.next_close_demands(0)).transpose()?.unwrap_or_default().depth)}
+    fn terminal_is_empty(&self)->bool{self.source_read.as_ref().is_none_or(|read|read.terminal_is_empty())}
 }
 
 struct Generation3dBoundedCommandJobFactory {
@@ -1365,7 +1432,7 @@ impl Generation3dDocumentIoWork {
     fn owns_retirement_source(&self)->bool{self.projection.is_some()||self.projected.is_some()||self.writer.is_some()||self.text.is_some()||self.envelope.is_some()||self.candidate.is_some()}
     fn retirement_demands(&self,copy:usize)->Result<semio_framework_value::retained_clone::RetainedCloneGrant,semio_framework_value::ValueError>{
         use semio_framework_value::retained_clone::RetainedCloneGrant;
-        if let Some(owner)=self.retirement.as_ref(){return Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:owner.next_copy_byte_demand()?,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy)?,maximum_release_bytes:owner.next_release_byte_demand()?,maximum_depth:owner.next_depth_demand()?})}
+        if let Some(owner)=self.retirement.as_ref(){let d=owner.selected_demand(copy)?;return Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth})}
         if !self.owns_retirement_source(){return Ok(RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0})}
         let frontier=semio_framework_value::list::PagedList::<Box<dyn semio_framework_value::retirement::RetirementCursor>,{usize::MAX}>::default();
         Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:frontier.next_capacity_allocation_bytes(1).map_err(semio_framework_value::ValueError::from)?.unwrap_or(0),maximum_release_bytes:0,maximum_depth:1})
@@ -1475,7 +1542,8 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed || self.closing { return Err(Fault::from("generation3d-document-io-work-repeated")); }
         if matches!(input.command,Generation3dCommand::ExportDocument(payload) if payload.format=="txt"){return self.text_step(input,cx)}
         self.consumed = true;
@@ -1504,15 +1572,24 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
             _ => return Err(Fault::from("generation3d-document-io-route-rejected")),
         };
         Ok(ArtifactCommandWorkStep::Complete(emit))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self){self.closing=true;}
 
-    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if cx.should_yield(){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked)}
+        if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
+        let demand={let d=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;semio_framework_value::RetirementDemand{copy_bytes:d.maximum_copy_bytes,capacity_bytes:d.maximum_capacity_bytes,release_bytes:d.maximum_release_bytes,depth:d.maximum_depth}};
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{(
+            ||->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         use semio_framework_job::InteractiveJobCloseStep;
         use semio_framework_value::retained_clone::{RetainedCloneProgress,RetainedCloneStep};
-        if !self.closing{return InteractiveJobCloseStep::Blocked}
-        if grant.maximum_items==0{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()}}
+        if !self.closing{return Ok(InteractiveJobCloseStep::Blocked)}
+        if grant.maximum_items==0{return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()})}
         if self.retirement.is_none(){
             let source=if let Some(value)=self.projection.take(){Some(Generation3dDocumentRetirement::Projection(value))}
             else if let Some(value)=self.projected.take(){Some(Generation3dDocumentRetirement::Projected(value))}
@@ -1520,15 +1597,18 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
             else if let Some(value)=self.text.take(){Some(Generation3dDocumentRetirement::Text(value))}
             else if let Some(value)=self.envelope.take(){Some(Generation3dDocumentRetirement::Envelope(value))}
             else{self.candidate.take().map(Generation3dDocumentRetirement::Export)};
-            if let Some(value)=source{if let Err(error)=self.park_retirement(value){return InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}}
-            else{self.encoding.take();return InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()}}
+            if let Some(value)=source{if let Err(error)=self.park_retirement(value){return Err(error)}}
+            else{self.encoding.take();return Ok(InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()})}
         }
         match self.retirement.as_mut().unwrap().step(grant){
-            Ok(RetainedCloneStep::Complete(progress))=>{self.retirement.take();InteractiveJobCloseStep::Pending{progress}},
-            Ok(RetainedCloneStep::Progress(progress))=>InteractiveJobCloseStep::Pending{progress},
-            Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()},
+            Ok(RetainedCloneStep::Complete(progress))=>{self.retirement.take();Ok(InteractiveJobCloseStep::Pending{progress})},
+            Ok(RetainedCloneStep::Progress(progress))=>Ok(InteractiveJobCloseStep::Pending{progress}),
+            Err(error)=>Err(error),
         }
+    })().map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()))})?;
+        Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
+
     fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.retirement_demands(0).map(|grant|grant.maximum_copy_bytes)}
     fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{self.retirement_demands(copy).map(|grant|grant.maximum_capacity_bytes)}
     fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.retirement_demands(0).map(|grant|grant.maximum_release_bytes)}
@@ -1730,7 +1810,8 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dContrib
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("generation3d-contributions-work-repeated"));
         }
@@ -1754,6 +1835,9 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dContrib
             Ok(())
         })?;
         Ok(ArtifactCommandWorkStep::Complete(emit))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -2099,7 +2183,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// preview evaluation's and the document-level ones.
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         static NOTICES: std::sync::LazyLock<Vec<(&'static str, LocalizedLabel)>> = std::sync::LazyLock::new(|| {
-            transform_commands::gumball_fault_notices().iter().chain(crate::preview_eval::preview_eval_fault_notices()).chain(crate::generation3d_document_fault_notices()).cloned().collect()
+            transform_commands::gumball_fault_notices().iter().chain(add_widget::source_fault_notices()).chain(crate::preview_eval::preview_eval_fault_notices()).chain(crate::generation3d_document_fault_notices()).cloned().collect()
         });
         NOTICES.as_slice()
     }
@@ -2178,6 +2262,7 @@ impl ArtifactEditor for Generation3dPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,
@@ -2231,7 +2316,7 @@ impl ArtifactEditor for Generation3dPlayApp {
             return Err(MediaError::NotImplemented);
         }
         let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
-        let bytes = store::os_store::serialization::ArtifactPack::encode_pack(doc.snapshot);
+        let bytes = pack::snapshot::ArtifactPack::encode_pack(doc.snapshot);
         Ok(semio_framework_plugin::Media { media_type, payload: semio_framework_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
     }
 
@@ -2305,7 +2390,7 @@ impl ArtifactEditor for Generation3dPlayApp {
             }
             "deleteSelection" => Ok(Generation3dCommand::DeleteSelection(delete_selection::DeleteSelection {})),
             "removeWidget" => Ok(Generation3dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: str_arg(&["widgetId", "widget_id", "id"]).unwrap_or_default() })),
-            "addWidget" => Ok(Generation3dCommand::AddWidget(add_widget::AddWidget { kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()), neuron_kind: str_arg(&["neuronKind"]), format: str_arg(&["format"]), action: str_arg(&["action"]), x: f64_arg(&["x"]), y: f64_arg(&["y"]) })),
+            "addWidget" => Ok(Generation3dCommand::AddWidget(add_widget::AddWidget { kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()), neuron_kind: str_arg(&["neuronKind"]), format: str_arg(&["format"]), action: str_arg(&["action"]), x: f64_arg(&["x"]), y: f64_arg(&["y"]),source_widget:str_arg(&["sourceWidget"]),source_port:str_arg(&["sourcePort"]),target_port:str_arg(&["targetPort"]),source_revision:str_arg(&["sourceRevision"]) })),
             "setWidgetInput" => {
                 let mesh_source = str_arg(&["facet"]).as_deref() == Some("meshSource");
                 let index = |key: &str| -> Result<Option<u32>, Fault> {
@@ -2363,11 +2448,12 @@ impl ArtifactEditor for Generation3dPlayApp {
                         center
                     }
                 };
+                let point=|key:&str,default:[f64;3]|->Result<[f64;3],Fault>{let Some(value)=args.get(key)else{return Ok(default)};let values=value.as_array().filter(|values|values.len()==3).ok_or_else(||Fault::from("Point inputs require three coordinates"))?;let mut point=[0.0;3];for axis in 0..3{point[axis]=values[axis].as_f64().filter(|value|value.is_finite()).ok_or_else(||Fault::from("Point inputs must be finite"))?;}Ok(point)};
                 Ok(Generation3dCommand::EditMeshSelection(edit_mesh_selection::EditMeshSelection {
                     operation: text("operation", "extrude")?, amount: number("amount", 0.1)?, cuts: integer("cuts", 256.0)?,
                     dx: number("dx", 0.0)?, dy: number("dy", 0.0)?, dz: number("dz", 0.0)?,
                     width: number("width", 0.1)?, segments: integer("segments", 64.0)?, merge_mode: text("mergeMode", "center")?,
-                    tolerance: number("tolerance", 0.0001)?, radius: number("radius", 1.0)?, grid: number("grid", 1.0)?, center,
+                    tolerance: number("tolerance", 0.0001)?, radius: number("radius", 1.0)?, grid: number("grid", 1.0)?, center,angle:number("angle",0.1)?,pull_direction:point("pullDirection",[0.0,0.0,1.0])?,neutral_point:point("neutralPoint",[0.0;3])?,
                 }))
             }
             "knifeMeshSelection" => {
@@ -2922,6 +3008,11 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
                     ActionArgOption::new("mergeVertices", LocalizedLabel::native("Merge Vertices", "Eckpunkte zusammenführen")),
                     ActionArgOption::new("moveProportional", LocalizedLabel::native("Move Proportionally", "Proportional verschieben")),
                     ActionArgOption::new("snapVertices", LocalizedLabel::native("Snap Vertices to Grid", "Eckpunkte am Raster ausrichten")),
+                    ActionArgOption::new("filletEdges",LocalizedLabel::native("Fillet B-Rep Edges","B-Rep-Kanten verrunden")),
+                    ActionArgOption::new("chamferEdges",LocalizedLabel::native("Chamfer B-Rep Edges","B-Rep-Kanten fasen")),
+                    ActionArgOption::new("shell",LocalizedLabel::native("Shell B-Rep Faces","B-Rep-Flächen aushöhlen")),
+                    ActionArgOption::new("draft",LocalizedLabel::native("Draft B-Rep Faces","B-Rep-Flächen mit Formschräge versehen")),
+                    ActionArgOption::new("defeature",LocalizedLabel::native("Remove B-Rep Features","B-Rep-Formelemente entfernen")),
                 ]).required().default_value(&"extrude"),
                 ActionArgDef::number("amount", LocalizedLabel::native("Distance / Inset", "Abstand / Einzug")).default_value(&0.1),
                 ActionArgDef { schema: semio_framework::ArgSchema::number(Some(1.0), Some(256.0), Some(1.0), true), ..ActionArgDef::number("cuts", LocalizedLabel::native("Loop Cuts", "Schleifenschnitte")).default_value(&1) },
@@ -2939,6 +3030,9 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
                 ActionArgDef::number("radius", LocalizedLabel::native("Proportional Radius", "Proportionaler Radius")).default_value(&1.0),
                 ActionArgDef::number("grid", LocalizedLabel::native("Grid Spacing", "Rasterabstand")).default_value(&1.0),
                 ActionArgDef::vector("center", LocalizedLabel::native("Proportional Center", "Proportionaler Mittelpunkt"), 3).default_value(&[0.0, 0.0, 0.0]),
+                ActionArgDef::number("angle",LocalizedLabel::native("Draft Angle (rad)","Formschrägenwinkel (rad)")).default_value(&0.1),
+                ActionArgDef::vector("pullDirection",LocalizedLabel::native("Pull Direction","Entformungsrichtung"),3).default_value(&[0.0,0.0,1.0]),
+                ActionArgDef::vector("neutralPoint",LocalizedLabel::native("Neutral Point","Neutralpunkt"),3).default_value(&[0.0,0.0,0.0]),
             ])
             .action_args("knifeMeshSelection", vec![
                 ActionArgDef::vector("start", LocalizedLabel::native("Cut Start", "Schnittanfang"), 3).required().default_value(&[0.0, -1.0, 0.0]),
@@ -3628,7 +3722,7 @@ mod work_capacity;
 /// never a mutation row. `store::os_store::text_format::empty_document_spr` (never a minted `create_document_envelope`) keeps the guest off the
 /// `terminal shell reached Drop before its app-owned bounded retirement authority detached` trap on this path.
 pub fn reset_generation3d_document_effect(document: &Generation3dSnapshot) -> Effect {
-    let pack = <Generation3dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let pack = <Generation3dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("generation3d", GENERATION_3D_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }

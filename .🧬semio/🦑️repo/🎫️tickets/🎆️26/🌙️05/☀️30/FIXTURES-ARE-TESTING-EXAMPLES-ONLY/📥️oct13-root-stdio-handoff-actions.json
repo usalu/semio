@@ -1,0 +1,11 @@
+{
+  "exclusive": false,
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "operation": "updated",
+      "beforeSha256": "e4355e3e3d42a9ceeccef17f1087b05604a75ae4e902289c0e9c47cb324ad4dd",
+      "afterSha256": "699273a28a5209b0c8c771d00c975aa7af4a250eb3ff2b73b961995b8319fd6a"
+    }
+  ]
+}

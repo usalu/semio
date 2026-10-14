@@ -5,16 +5,16 @@ pub mod set_count;
 pub mod set_label;
 #[path = "🧒️set-slot-children/🦀️.rs"]
 pub mod set_slot_children;
-use set_count::SetCount;
-use set_label::SetLabel;
-use set_slot_children::SetSlotChildren;
+pub(crate) use set_count::SetCount;
+pub(crate) use set_label::SetLabel;
+pub(crate) use set_slot_children::SetSlotChildren;
 
 #[derive(Clone, semio_framework_value::CanonicalJsonTree, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value_derive::RetireOwned, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot=super::TestSnapshot,diff=super::TestDiff,schema="plugin.testkit.document")]
-enum TestMutation {
+pub(crate) enum TestMutation {
     SetCount(SetCount),
     SetLabel(SetLabel),
     SetSlotChildren(SetSlotChildren),
@@ -60,7 +60,7 @@ mod tests;
 
 impl TestMutation{
     /// 🎒️ Captures this original variant in caller-retained canonical scratch.
-    fn retained_pack_operation(&self)->semio_framework_os_kernel::os_pack::record::BorrowedProjectedPackOperation<semio_framework_dsl_record::native_encoding::VariantProjection<'_,Self>>{
+    pub(crate) fn retained_pack_operation(&self)->semio_framework_os_kernel::os_pack::record::BorrowedProjectedPackOperation<semio_framework_dsl_record::native_encoding::VariantProjection<'_,Self>>{
         semio_framework_os_kernel::os_pack::record::BorrowedProjectedPackOperation::from_variant(self)
     }
 }

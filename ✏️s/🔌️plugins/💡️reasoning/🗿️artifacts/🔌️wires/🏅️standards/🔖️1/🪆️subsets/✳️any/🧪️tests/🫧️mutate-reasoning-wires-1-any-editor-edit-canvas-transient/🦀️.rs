@@ -14,11 +14,11 @@ use semio_repo_test_host::law::vector::Vector;
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-drag" => Vector {
-            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🧫️fixtures/🖱️set-drag/✅️set-drag/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🧫️fixtures/🖱️set-drag/✅️set-drag/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🧫️fixtures/🖱️set-drag/✅️set-drag/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🧫️fixtures/🖱️set-drag/✅️set-drag/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🧫️fixtures/🖱️set-drag/✅️set-drag/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🧪️tests/🧫️fixtures/🖱️set-drag/✅️set-drag/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🧪️tests/🧫️fixtures/🖱️set-drag/✅️set-drag/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🧪️tests/🧫️fixtures/🖱️set-drag/✅️set-drag/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🧪️tests/🧫️fixtures/🖱️set-drag/✅️set-drag/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🧪️tests/🧫️fixtures/🖱️set-drag/✅️set-drag/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),

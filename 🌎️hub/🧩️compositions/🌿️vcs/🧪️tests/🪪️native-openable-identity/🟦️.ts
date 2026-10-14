@@ -1,15 +1,15 @@
-import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { runRepositoryExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 
 export class NativeOpenableIdentityCheckScript extends BundleScript {
   async run(): Promise<void> {
     const owner = join(this.root, "..", "..");
-    const fixtureRoot = join(owner, "🧫️fixtures/🪪️native-openable-identity/🧬️v1");
+    const fixtureRoot = join(owner, "🧪️tests/🧫️fixtures/🪪️native-openable-identity/🧬️v1");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     const module = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
     const { default: Ajv } = await import("ajv");
@@ -36,7 +36,7 @@ export class NativeOpenableIdentityCheckScript extends BundleScript {
     const manifest = readFileSync(join(this.root, "Cargo.toml"), "utf8");
     if (!root.includes('.package_id("semio:vcs")') || !manifest.includes('package = "semio:vcs"') || artifact.includes('"vcs.document"')) throw new Error("VCS guest package/artifact authority is not canonical");
     if (process.argv.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-hub-vcs", target: { kind: "test", name: "native_openable_identity" }, laws: ["vcs_guest_descriptor_has_one_canonical_native_openable_identity"] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) { console.log(`vcs-native-openable-identity ${event.stage}: artifacts=${event.artifactDir}`); } });
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-hub-vcs", target: { kind: "test", name: "native_openable_identity" }, laws: ["vcs_guest_descriptor_has_one_canonical_native_openable_identity"] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) { console.log(`vcs-native-openable-identity ${event.stage}: artifacts=${event.artifactDir}`); } });
     console.log(`vcs-native-openable-identity-laws: ${JSON.stringify(receipts)}`);
   }
 }

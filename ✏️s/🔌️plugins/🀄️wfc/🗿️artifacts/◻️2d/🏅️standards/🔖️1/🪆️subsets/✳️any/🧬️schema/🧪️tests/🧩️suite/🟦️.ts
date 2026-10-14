@@ -12,7 +12,7 @@ import { fixtureSnapshot, fixtureDiff, fixtureMutation } from "./🧰️support/
 import { applyWfc2dMutation, wfc2dDiff, wfc2dInverse, WFC_2D_MUTATION_KINDS, type Wfc2dMessage } from "../../🧬️mutations/🟦️.ts";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
-const fixtures = join(here, "..", "..", "..", "🧫️fixtures", "🧬️mutations");
+const fixtures = join(here, "../../../🧪️tests/🧫️fixtures/🧬️mutations");
 
 const read = <T,>(...parts: readonly string[]): T => JSON.parse(readFileSync(join(fixtures, ...parts), "utf8")) as T;
 const directories = (...parts: readonly string[]): readonly string[] =>

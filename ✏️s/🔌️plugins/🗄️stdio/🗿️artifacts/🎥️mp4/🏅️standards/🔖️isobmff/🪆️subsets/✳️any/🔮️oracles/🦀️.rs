@@ -500,7 +500,7 @@ mod tests {
 
     #[test]
     fn independent_reader_accepts_the_exact_playback_fixture() {
-        let projection = project_mp4_mutation(include_bytes!("../🧫️fixtures/🎬️.mp4")).expect("mp4 0.14 independently parses the playback bytes");
+        let projection = project_mp4_mutation(include_bytes!("../🧪️tests/🧫️fixtures/🎬️.mp4")).expect("mp4 0.14 independently parses the playback bytes");
         assert_eq!(projection.str("majorBrand"), "isom");
         assert!(projection.get("tracks").is_some(), "independent projection includes typed tracks");
     }

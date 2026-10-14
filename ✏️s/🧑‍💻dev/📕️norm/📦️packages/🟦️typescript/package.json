@@ -13,5 +13,8 @@
   "semio": {
     "role": "test",
     "id": "@semio-tech/s-norm-composition-tests"
+  },
+  "devDependencies": {
+    "@semio-tech/process": "workspace:*"
   }
 }

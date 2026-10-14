@@ -190,7 +190,7 @@ pub enum LayoutRunStop {
 /// 📜️ The `ToolRunDefinition` every consumer declares for its layout tool: mutating, `rebase: restart` (a changed
 /// node set invalidates the graph), `reconfigure: resume` (settings continue from the last checkpoint), entity trace.
 pub fn layout_run_definition(run_job: JobKindId) -> ToolRunDefinition {
-    ToolRunDefinition {
+    ToolRunDefinition { receiving: semio_framework_tool_run::ToolRunReceivingLimits::REPORTS,
         mutating: true,
         rebase: ToolRunRebasePolicy::Restart,
         reconfigure: ToolRunReconfigurePolicy::Resume,

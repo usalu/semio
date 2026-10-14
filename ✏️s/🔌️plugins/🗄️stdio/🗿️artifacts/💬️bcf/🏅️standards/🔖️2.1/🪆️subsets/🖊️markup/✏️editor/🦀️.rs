@@ -105,7 +105,7 @@ const BCF_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
 
 fn bcf_example_snapshot(example_id: &str) -> BcfSnapshot {
     if example_id == crate::examples::demo::ID {
-        <BcfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+        <BcfSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         BcfSnapshot::default()
     }
@@ -299,6 +299,7 @@ impl ArtifactEditor for BcfAnyEditor {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

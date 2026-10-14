@@ -1,4 +1,4 @@
-//! 🧪️ Peer-overlay derivation against `🧫️fixtures/👕️peer-overlay-v1/🔣️.json`.
+//! 🧪️ Peer-overlay derivation against `🧪️tests/🧫️fixtures/👕️peer-overlay-v1/🔣️.json`.
 
 use super::*;
 use crate::{PresenceDomain, PresenceInteraction, PresencePeer, PresenceViewKind, PresenceWindowView};

@@ -13,7 +13,7 @@ fn region(value: &Value) -> RasterRegion {
 
 #[test]
 fn raster_region_fixtures_match_independent_patch_and_inverse() {
-    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let pixels: Vec<u8> = serde_json::from_value(row["pixels"].clone()).unwrap();
         let limits = RasterRegionLimits { maximum_raster_bytes: 1024, maximum_patch_bytes: row["patchBytes"].as_u64().unwrap() as usize, maximum_patches: 8 };
@@ -50,7 +50,7 @@ fn raster_region_fixtures_match_independent_patch_and_inverse() {
 
 #[test]
 fn raster_region_refusal_fixtures_are_atomic() {
-    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["rejected"].as_array().unwrap() {
         let result = RasterRegionPlan::new(
             row["width"].as_u64().unwrap() as u32,
@@ -65,7 +65,7 @@ fn raster_region_refusal_fixtures_are_atomic() {
 
 #[test]
 fn raster_region_plan_owns_checked_geometry_after_caller_edits() {
-    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let contract = &fixture["planOwnership"];
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == contract["case"]).unwrap();
     let pixels: Vec<u8> = serde_json::from_value(row["pixels"].clone()).unwrap();

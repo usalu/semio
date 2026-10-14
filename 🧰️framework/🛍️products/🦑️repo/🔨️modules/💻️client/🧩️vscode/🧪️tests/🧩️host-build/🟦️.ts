@@ -7,7 +7,7 @@ import { extensionBuildConfig } from "../../🏗️builder/🟦️.ts";
 
 /** 🧩️ Compares CommonJS host bundles with esbuild and native Node while excluding framework test registration. */
 export async function testExtensionHostBuild(generated: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧩️host-build/🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧩️host-build/🔣️.json"), "utf8"));
   const root = mkdtempSync(join(generated, "extension-host-build-")), config = extensionBuildConfig(root, "entry.ts", "out", "extension.cjs", false);
   assert.deepEqual(config.define, fixture.define);
   for (const [id, expected] of fixture.externals) assert.equal(config.build.rollupOptions.external(id), expected, id);

@@ -29,7 +29,7 @@ function recordingHost(answer: (command: string, args: readonly string[]) => Par
  * create / complete / set calls on a checkout with a submodule, duplicate-free `safe.directory`, Claude auth storage on a real temporary home, the idempotent shell hook, a start run
  * that never issues a destructive command, and every extension-install outcome through a recording host. */
 export async function testDevcontainerLifecycle(workspace: string, generated: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔁️lifecycle/🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔁️lifecycle/🔣️.json"), "utf8"));
   const { XMLParser } = require("fast-xml-parser"), lodash = require("lodash");
   const document = new XMLParser({ ignoreAttributes: false }).parse(EMOJI_FONTCONFIG).fontconfig;
   const aliases = Object.fromEntries(document.alias.map((alias: { family: string; prefer: { family: string[] } }) => [alias.family, alias.prefer.family]));

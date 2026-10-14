@@ -5,11 +5,11 @@
 /// ➖ The committed `remove-accidental-cases` vector holds the specification-vector law.
 const VECTOR: super::Vector = super::Vector {
         kind: "remove-accidental-cases",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️remove-accidental-cases/✅apply/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️remove-accidental-cases/✅apply/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️remove-accidental-cases/✅apply/📸️snapshot/➡️after/🔣️.json"),
-        diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️remove-accidental-cases/✅apply/🔺️diff/🔣️.json"),
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️remove-accidental-cases/✅apply/🎯️outcome/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️remove-accidental-cases/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️remove-accidental-cases/✅apply/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️remove-accidental-cases/✅apply/📸️snapshot/➡️after/🔣️.json"),
+        diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️remove-accidental-cases/✅apply/🔺️diff/🔣️.json"),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️remove-accidental-cases/✅apply/🎯️outcome/🔣️.json"),
 };
 
 #[test]

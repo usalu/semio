@@ -1,4 +1,5 @@
 //! 📇️ Authored ISO catalogue, dictionary and CSG entity projection.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::Iso16757Snapshot;
 use crate::{Names,CatalogueUnit,CatalogueValue,NullState,part_1,part_2,part_4,part_5};
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,artifact::{Cell,FloatColumn,RowWriter as Projection}};
@@ -136,22 +137,27 @@ fn reconstruct(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Iso16
  reader.finish()?;c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;build.0.take().ok_or_else(|| invalid("ISO missing completed owner"))
 }
 /// 🪪️ Exact optional capability authored by the catalogue owner.
-pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<Iso16757Snapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec()}
+pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<Iso16757Snapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec()}
 #[path="📏️cells/🦀️.rs"]mod semantic_cells;
-impl store::os_store::serialization::ArtifactSqliteSnapshot for Iso16757Snapshot{
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=c.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic_cells::admit_record(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
+impl store::os_store::serialization::ArtifactSqliteSnapshotHost for Iso16757Snapshot{
+ 
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=c.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic_cells::admit_record(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
 
  fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload, ValueError>{
   admit_typed(self,c,SqliteSnapshotPhase::EncodeNative)?;
-  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)
  }
 
- fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase, ValueError>{project(self,c)}
- fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{reconstruct(d,c)}
+ 
+ 
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.norm.iso16757"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(invalid("ISO16757 exact owned dialect differs")));}c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(store::io_schema::IoError::from_value_error)?;Ok(store::io_schema::IoOutcome::clean(()))}
  fn retire_sqlite_snapshot(self){retire_snapshot(self);}
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:store::sqlite_snapshot::SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(), ValueError>{admit_typed(self,c,SqliteSnapshotPhase::EncodeNative)}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for Iso16757Snapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase, ValueError>{project(self,c)}
+fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{reconstruct(d,c)}
 }
 
 #[cfg(test)]

@@ -7,7 +7,7 @@
 use super::*;
 use serde_json::Value;
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/⌨️text-input/🔣️.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/⌨️text-input/🔣️.json");
 
 /// 🔤️ The fixture's `word-runs` tokenizer: every maximal run of ASCII letters, digits and `_` is one `ident` token.
 fn word_run_tokens(text: &str) -> String {

@@ -28,7 +28,7 @@ const THROTTLED_TIMER_FLOOR_MS = 1_000;
 /** 📏️ Hops in the chained re-arm the regression law drives. */
 const CHAIN_HOPS = 10;
 
-const suite = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🔣️.json"), "utf8")) as ContinuationSuite;
+const suite = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/🔣️.json"), "utf8")) as ContinuationSuite;
 const faults: string[] = [];
 
 for (const testCase of suite.cases) {

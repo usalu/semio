@@ -5,11 +5,11 @@ import { CubicBezierCurve, QuadraticBezierCurve, LineCurve, EllipseCurve, Vector
 import { produce } from "immer";
 import { editPath, dragPathPoint, type PathEdit } from "../../🟦️.ts";
 import { arcGeometry, arcPoint, segmentBounds, type Point, type Matrix } from "../../../🟦️.ts";
-import boundsFixture from "../../../🧫️fixtures/🔄️arc-bounds/🔣️.json";
+import boundsFixture from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/🔄️arc-bounds/🔣️.json";
 import type { PathGeometrySegment } from "../../../../🟦️.ts";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
-import algorithms from "../../🧫️fixtures/🎛️algorithms/🔣️.json";
+import algorithms from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🎛️algorithms/🔣️.json";
 import {PathSimplifyJob} from "../../📉️simplify/🟦️.ts";
 import {Line3,Vector3} from "three";
 
@@ -203,7 +203,7 @@ test("arc extrema agree with shared fixtures and an independent ellipse", () => 
   }
  });
 
-import drags from "../../🧫️fixtures/🖱️drag/🔣️.json";
+import drags from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🖱️drag/🔣️.json";
 test("node pointer deltas stay correct through affine ancestors without snapping to the press",()=>{
   for(const sample of drags){
     const segment=sample.segment as PathGeometrySegment,point=sample.point as "anchor"|"control1"|"control2";
@@ -236,7 +236,7 @@ test("gesture position previews copy at most the edited segment and its adjacent
   expect(()=>patchPathPoint({kind:"line",to:[0,0]},undefined,"control1",[0,0])).toThrow();
 });
 
-import pointHits from "../../🧫️fixtures/🎯️point-hit/🔣️.json";
+import pointHits from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🎯️point-hit/🔣️.json";
 import { pathPointHit } from "../../🟦️.ts";
 test("node picking names the nearest visible point with deterministic anchor priority",()=>{
   for(const row of pointHits) {
@@ -252,7 +252,7 @@ test("node picking names the nearest visible point with deterministic anchor pri
   }
 });
 
-import translationFixture from "../../🧫️fixtures/↔️points/🔣️.json";
+import translationFixture from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/↔️points/🔣️.json";
 
 test("multi-point translation is atomic, order-independent and agrees with Three vectors", () => {
   const validate=new Ajv({strict:true}).compile(schema);
@@ -283,7 +283,7 @@ test("multi-point translation rejects empty selection, invalid indices and nonfi
   expect(source).toEqual([{kind:"move",to:[0,0]}]);
 });
 
-import worldTranslationFixture from "../../🧫️fixtures/🌍️translation/🔣️.json";
+import worldTranslationFixture from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🌍️translation/🔣️.json";
 import { translateWorldPathPoints } from "../../🟦️.ts";
 
 test("world point nudges ignore translation and honor the complete affine basis",()=>{

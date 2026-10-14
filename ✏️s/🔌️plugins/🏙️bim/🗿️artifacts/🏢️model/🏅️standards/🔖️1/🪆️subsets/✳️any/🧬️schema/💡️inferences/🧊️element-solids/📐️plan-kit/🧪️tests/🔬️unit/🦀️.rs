@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::any::schema::inferences::element_solids::comp
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
 use crate::{Entry, MaterialPatch, ModelDiff, ModelSnapshot, StoreyPatch};
 
-const COLUMNS: &str = include_str!("../../../../../../🧫️fixtures/💡️inferences/🧊️element-solids/🏛️columns-profiles/🔣️.json");
+const COLUMNS: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🏛️columns-profiles/🔣️.json");
 
 #[test]
 fn a_stack_lists_the_depths_of_every_layer_below_the_top() {
@@ -29,12 +29,12 @@ fn layer_thicknesses_clamp_negative_values_to_zero() {
 }
 
 const CASES: [&str; 6] = [
-    include_str!("../../../../../../🧫️fixtures/💡️inferences/🧊️element-solids/🏛️columns-profiles/🔣️.json"),
-    include_str!("../../../../../../🧫️fixtures/💡️inferences/🧊️element-solids/➖️beams-profiles/🔣️.json"),
-    include_str!("../../../../../../🧫️fixtures/💡️inferences/🧊️element-solids/⬜️slabs-holes-slope/🔣️.json"),
-    include_str!("../../../../../../🧫️fixtures/💡️inferences/🧊️element-solids/🏔️roofs-shapes/🔣️.json"),
-    include_str!("../../../../../../🧫️fixtures/💡️inferences/🧊️element-solids/🪜️stairs-flights/🔣️.json"),
-    include_str!("../../../../../../🧫️fixtures/💡️inferences/🧊️element-solids/🛤️railings-posts/🔣️.json"),
+    include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🏛️columns-profiles/🔣️.json"),
+    include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/➖️beams-profiles/🔣️.json"),
+    include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/⬜️slabs-holes-slope/🔣️.json"),
+    include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🏔️roofs-shapes/🔣️.json"),
+    include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🪜️stairs-flights/🔣️.json"),
+    include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🛤️railings-posts/🔣️.json"),
 ];
 
 #[semio_framework_async_macros::async_test]

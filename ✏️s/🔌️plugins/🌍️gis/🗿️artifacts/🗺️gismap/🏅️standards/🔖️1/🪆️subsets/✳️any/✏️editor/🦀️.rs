@@ -70,7 +70,7 @@ use semio_framework_plugin::WindowMeasure;
 use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 use serde_json::Value;
 use std::collections::HashMap;
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
@@ -1008,6 +1008,7 @@ impl ArtifactEditor for Gis2dPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,
@@ -1107,7 +1108,7 @@ impl ArtifactEditor for Gis2dPlayApp {
                     return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let snapshot = <GisMapSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let snapshot = <GisMapSnapshot as ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 Ok(semio_framework_plugin::app::document_load_emit(&snapshot, Self::DOCUMENT_SCHEMA))
             }
             _ => Err(MediaError::NotImplemented),

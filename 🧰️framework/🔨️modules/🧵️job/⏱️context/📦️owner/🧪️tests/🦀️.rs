@@ -3,7 +3,7 @@ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 
 #[test]
 fn retained_step_context_owner_turns_use_original_ledger_without_heap_birth() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let extent = StepContextOwner::birth_bytes();
     for row in fixture["cases"].as_array().unwrap() {
         let operation = OperationId(row["operation"].as_u64().unwrap());

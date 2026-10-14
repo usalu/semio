@@ -5,7 +5,7 @@ import Ajv from "ajv/dist/2020";
 import {spawnSync} from "node:child_process";
 import {parseArtifactPreparedOperationOutput,parseArtifactPreparedOperations} from "../📦️output/🧬️schema/🟦️.ts";
 const base = join(import.meta.dir, "..");
-const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
 test("borrowed operation wire neutral UTF8/ordered JSON and bounded chunk oracle", () => {
   for (const row of fixture.cases) {
     const bytes = Buffer.concat([Buffer.from(row.header), Buffer.from(JSON.stringify(row.body))]);
@@ -62,7 +62,7 @@ test("retained canonical Pack operation reports distinct copied, capacity and re
 
 test("original operation output uses independent dense-octet and retained-owner authority",()=>{
   const schema=JSON.parse(readFileSync(join(base,"📦️output/🧬️schema/🔣️.json"),"utf8"));
-  const rows=JSON.parse(readFileSync(join(base,"📦️output/🧫️fixtures/🔣️.json"),"utf8"));
+  const rows=JSON.parse(readFileSync(join(base,"📦️output/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
   const admit=new Ajv({strict:true}).compile(schema);
   for(const row of rows.examples){expect(admit(row.bytes)).toBe(true);expect(parseArtifactPreparedOperationOutput(row.bytes)).toBe(row.bytes);const bytes=Array.from({length:row.repeat??1},()=>row.bytes).flat();expect(Buffer.from(bytes)).toEqual(Buffer.from(row.text.repeat(row.repeat??1)));expect(bytes).toEqual([...new TextEncoder().encode(row.text.repeat(row.repeat??1))]);}
   for(const value of [[256],[-1],[1.5],[null],{}]){expect(admit(value)).toBe(false);expect(()=>parseArtifactPreparedOperationOutput(value)).toThrow();}
@@ -97,14 +97,14 @@ test("original text operation admits its real frontier under supplied parent dep
 });
 
 test("original proposal contiguous octets preserve independent payload and funded ownership",()=>{
- const rows=JSON.parse(readFileSync(join(base,"📦️output/🧫️fixtures/🔣️.json"),"utf8"));const contract=JSON.parse(readFileSync(join(base,"📦️output/🧬️schema/🔣️.json"),"utf8"));const admit=new Ajv({strict:true}).compile(contract);
+ const rows=JSON.parse(readFileSync(join(base,"📦️output/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));const contract=JSON.parse(readFileSync(join(base,"📦️output/🧬️schema/🔣️.json"),"utf8"));const admit=new Ajv({strict:true}).compile(contract);
  for(const row of rows.examples){const bytes=Array.from({length:row.repeat??1},()=>row.bytes).flat();expect(admit(bytes)).toBe(true);expect(parseArtifactPreparedOperationOutput(bytes)).toBe(bytes);expect(Buffer.from(bytes)).toEqual(Buffer.from(new TextEncoder().encode(row.text.repeat(row.repeat??1))));}
  const source=readFileSync(join(base,"📦️output/🦀️.rs"),"utf8");for(const method of ["pub fn prepare_contiguous","pub fn take_contiguous","contiguous:ManuallyDrop<Option<Vec<u8>>>","grant.maximum_capacity_bytes<capacity","self.bytes.allocated_bytes().checked_add(capacity)","self.contiguous_complete=true","self.close_paged_one(grant)"])expect(source).toContain(method);
  expect(source).not.toMatch(/\.collect::<Vec|\.to_vec\(|unwrap_or_default\(/);const parsed=spawnSync("rustfmt",["--edition","2021","--emit","stdout","--config","skip_children=true",join(base,"📦️output/🦀️.rs")],{stdio:["ignore","ignore","pipe"],timeout:5000});expect(parsed.status).toBe(0);const native=spawnSync("rustfmt",["--edition","2021","--emit","stdout","--config","skip_children=true",join(base,"🧪️tests/🦀️.rs")],{stdio:["ignore","ignore","pipe"],timeout:5000});expect(native.status).toBe(0);
 });
 
 test("original proposal operation collection admits real octet rows and funded handoff",()=>{
- const rows=JSON.parse(readFileSync(join(base,"📦️output/🧫️fixtures/🔣️.json"),"utf8"));const contract=JSON.parse(readFileSync(join(base,"📦️output/🧬️schema/🔣️.json"),"utf8"));const admit=new Ajv({strict:true}).addSchema(contract).compile({$ref:contract.$id+"#/$defs/ArtifactPreparedOperations"});
+ const rows=JSON.parse(readFileSync(join(base,"📦️output/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));const contract=JSON.parse(readFileSync(join(base,"📦️output/🧬️schema/🔣️.json"),"utf8"));const admit=new Ajv({strict:true}).addSchema(contract).compile({$ref:contract.$id+"#/$defs/ArtifactPreparedOperations"});
  for(const row of rows.operationRows){expect(admit(row.values)).toBe(true);expect(parseArtifactPreparedOperations(row.values)).toBe(row.values);expect(JSON.parse(JSON.stringify(row.values))).toEqual(row.expected);for(let index=0;index<row.values.length;index++)expect(Buffer.from(row.values[index])).toEqual(Buffer.from(row.expected[index]));}
  for(const value of [new Array(1),[[256]],[[null]],[{}],{}]){expect(admit(value)).toBe(false);expect(()=>parseArtifactPreparedOperations(value)).toThrow();}
  const path=join(base,"📦️output/📋️operations/🦀️.rs");expect(existsSync(path)).toBe(true);const source=readFileSync(path,"utf8");for(const marker of ["pub struct ArtifactPreparedOperationsOwner","pub fn append_original","pub fn prepare_handoff","pub fn take_prepared","ManuallyDrop<PagedList<Option<Vec<u8>>","grant.maximum_capacity_bytes<capacity","self.values.get_mut(self.transferred)","row.take()","fn close_step"])expect(source).toContain(marker);expect(source).not.toMatch(/\.clone\(|\.to_vec\(|\.collect::<Vec|unwrap_or_default\(/);

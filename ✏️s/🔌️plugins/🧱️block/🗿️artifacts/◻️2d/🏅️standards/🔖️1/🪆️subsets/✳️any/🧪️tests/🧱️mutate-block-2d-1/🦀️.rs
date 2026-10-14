@@ -15,7 +15,7 @@
 //! this adapter now drives it.
 //!
 //! **What is NOT asserted here, and why.** The `.dsl.semio` carrier law. This subset's
-//! `store::os_store::serialization::ArtifactDsl` impl is handwritten `async` (`📸️snapshot/🦀️.rs`), and the generated
+//! `pack::snapshot::ArtifactDsl` impl is handwritten `async` (`📸️snapshot/🦀️.rs`), and the generated
 //! test host is synchronous, so `parse_dsl`/`print_dsl` are unreachable from a case adapter without
 //! an async bridge this conversion did not add. `identity-round-trip` therefore exercises the JSON
 //! codec on the real derived document and says so; the carrier gap is reported, not papered over.
@@ -216,7 +216,7 @@ mod subject {
     /// 🔁️ The real derived node kind through this subset's own JSON codec, reached through the
     /// bridge's `base` member with a payload that names the meta description the document ALREADY
     /// holds, so nothing is applied. The `.dsl.semio` carrier law is NOT asserted here: this subset's
-    /// `store::os_store::serialization::ArtifactDsl` impl is handwritten `async` and the generated test host is synchronous,
+    /// `pack::snapshot::ArtifactDsl` impl is handwritten `async` and the generated test host is synchronous,
     /// so its `parse_dsl`/`print_dsl` are unreachable from a case adapter. That gap is stated in this
     /// file's module docstring and in the feature, not papered over.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {

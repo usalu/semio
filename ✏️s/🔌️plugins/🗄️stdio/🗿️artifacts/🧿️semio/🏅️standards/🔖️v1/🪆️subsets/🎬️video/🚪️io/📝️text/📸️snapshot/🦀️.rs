@@ -1,7 +1,7 @@
 //! 📝️ Text representation grammar surface for `stdio.semio.video` (snapshot): real structured DSL
 //! body — `schema=<hex>` then `streams=[<stream>,...]`, every leaf its own hex/bracket-encoded
 //! token (video wave, replacing the old envelope-header-plus-hex(JSON) scaffold) — actual
-//! parse/print lives on `SemioVideoSnapshot`'s `store::os_store::serialization::ArtifactDsl` impl in the facet root
+//! parse/print lives on `SemioVideoSnapshot`'s `pack::snapshot::ArtifactDsl` impl in the facet root
 //! `🦀️.rs`; this leaf carries the normative grammar description.
 
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -154,7 +154,7 @@ pub(crate) fn parse_video_snapshot_body(body: &str) -> Result<SemioVideoSnapshot
 /// 🎁 Real structured text/binary codecs (video wave — off the old hex-dump-of-`serde_json`
 /// shortcut, following flow's/mesh's/image's proven pattern). Wrapped in the repo-wide
 /// `store::semio_format` envelope, unchanged.
-impl store::os_store::serialization::ArtifactDsl for SemioVideoSnapshot {
+impl pack::snapshot::ArtifactDsl for SemioVideoSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA
@@ -170,26 +170,26 @@ impl store::os_store::serialization::ArtifactDsl for SemioVideoSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_video_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
-/// 📝️ Free-function face of [`SemioVideoSnapshot`]'s own `store::os_store::serialization::ArtifactDsl` text codec. `ArtifactDsl` is
+/// 📝️ Free-function face of [`SemioVideoSnapshot`]'s own `pack::snapshot::ArtifactDsl` text codec. `ArtifactDsl` is
 /// declared by the os-kernel, which is an INTERNAL dependency of this plugin (aliased `store` in
 /// `🦀️.rs`) and is therefore not nameable by a consumer that links only this crate — a
 /// generated test host being the concrete case. The codec itself is the subset's, so its entry
 /// point belongs here rather than behind a trait the caller cannot import.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_video_dsl(text: &str) -> Result<SemioVideoSnapshot, String> {
-    <SemioVideoSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())
+    <SemioVideoSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())
 }
 
-/// 📝️ Free-function face of [`SemioVideoSnapshot`]'s own `store::os_store::serialization::ArtifactDsl` printer — see
+/// 📝️ Free-function face of [`SemioVideoSnapshot`]'s own `pack::snapshot::ArtifactDsl` printer — see
 /// [`parse_semio_video_dsl`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_video_dsl(snapshot: &SemioVideoSnapshot) -> String {
-    <SemioVideoSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(snapshot)
+    <SemioVideoSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

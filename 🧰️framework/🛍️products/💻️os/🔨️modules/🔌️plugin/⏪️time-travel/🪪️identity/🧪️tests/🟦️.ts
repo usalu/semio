@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import schema from "../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 test("original history commit preserves the mandatory same caller identity recipient",()=>{
  const validate=new Ajv({strict:true}).compile(schema);expect(validate(fixture)).toBe(true);expect(validate({...fixture,newAuthority:true})).toBe(false);expect(validate({...fixture,extra:true})).toBe(false);
  const db=new Database(":memory:");try{db.exec("CREATE TABLE recipient(route TEXT,authority TEXT,receipt TEXT)");for(const route of fixture.routes)db.query("INSERT INTO recipient VALUES(?,?,?)").run(route,fixture.authority,fixture.receipt);expect(db.query("SELECT count(DISTINCT authority) AS authorities,count(DISTINCT receipt) AS receipts,count(*) AS routes FROM recipient").get()).toEqual({authorities:1,receipts:1,routes:3});}finally{db.close();}

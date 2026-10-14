@@ -9,8 +9,7 @@ use semio_framework_artifact_flow_flow::Widget;
 //#region 🔖️UpdateWidget
 /// 🔁 The widget's own id (via [`crate::widget_id`]) addresses the target
 /// — no separate `id` field, since `Widget` already carries its identity.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct UpdateWidget {
     pub widget: Widget,

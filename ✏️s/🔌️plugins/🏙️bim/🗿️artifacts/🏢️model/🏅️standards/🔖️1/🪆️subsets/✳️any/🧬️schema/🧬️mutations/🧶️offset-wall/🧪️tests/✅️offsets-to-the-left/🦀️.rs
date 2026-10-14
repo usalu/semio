@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🧶️offset-wall/✅️offsets-to-the-left",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧶️offset-wall/✅️offsets-to-the-left/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧶️offset-wall/✅️offsets-to-the-left/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧶️offset-wall/✅️offsets-to-the-left/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧶️offset-wall/✅️offsets-to-the-left/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧶️offset-wall/✅️offsets-to-the-left/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧶️offset-wall/✅️offsets-to-the-left/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧶️offset-wall/✅️offsets-to-the-left/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧶️offset-wall/✅️offsets-to-the-left/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧶️offset-wall/✅️offsets-to-the-left/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧶️offset-wall/✅️offsets-to-the-left/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

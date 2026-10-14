@@ -6,7 +6,7 @@ import { chromium } from "playwright";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAccessibilityMirror } from "../../../../🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts";
 import { TableHost } from "../../🟦️.tsx";
-import fixture from "../../🧫️fixtures/🔘️button-accessibility/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/🔘️button-accessibility/🔣️.json" with { type: "json" };
 
 afterEach(() => {
   cleanup();

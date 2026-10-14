@@ -3,7 +3,7 @@ use crate::editor::fem2d::commands::set_active_example::SetActiveExample;
 use crate::editor::fem2d::unit_tests::context::{dispatch, fem2d_app};
 use crate::editor::fem2d::Fem2dCommand;
 use crate::load_id;
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
 
 fn demo() -> Fem2dSnapshot {
     Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).expect("the bundled demo fixture parses")

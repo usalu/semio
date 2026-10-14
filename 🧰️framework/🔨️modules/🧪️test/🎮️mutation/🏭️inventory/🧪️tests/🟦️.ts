@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import {sqliteInventory} from "./🔮️oracle/🟦️.ts";
 import {createRequire} from "node:module";
 import {readFileSync} from "node:fs";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import wireSchema from "../../../🧬️schema/🔣️.json";
 import policySchema from "../🧬️schema/🎛️policy/🔣️.json";
 const require=createRequire(import.meta.url),Ajv=require("ajv/dist/2020");

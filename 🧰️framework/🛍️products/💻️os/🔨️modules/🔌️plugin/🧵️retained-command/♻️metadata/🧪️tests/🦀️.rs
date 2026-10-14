@@ -22,7 +22,7 @@ fn drain<T:RetireOwned+Clone+PartialEq+std::fmt::Debug>(value:T,source_bytes:usi
 }
 #[test]
 fn retained_command_metadata_preserves_original_history_and_physical_authority(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let text=row["text"].as_str().unwrap();let rows=row["rows"].as_u64().unwrap()as usize;
   let(operation,allocation)=observe(||AppOperationContext{app_instance_id:1,parent_document_id:text.into(),operation_id:42,generation:7,canonical_base_revision:[3;32],retained:RetainedCloneGrant::default(),authoring_seed:text.into()});drain(operation,allocation.requested_bytes-allocation.released_bytes);

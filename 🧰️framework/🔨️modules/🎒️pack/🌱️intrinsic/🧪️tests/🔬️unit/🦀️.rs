@@ -5,7 +5,7 @@ use semio_framework_value::{DslValue, NativeDecodeControl};
 const FIELD_ID: u16 = 1;
 use serde_json::Value;
 
-fn fixture() -> Value { serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> Value { serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 fn value(row: &Value) -> DslValue {
     if row["kind"] == "bytes" { DslValue::Bytes(row["expected"].as_array().unwrap().iter().map(|byte| byte.as_u64().unwrap() as u8).collect()) } else { DslValue::from(&row["expected"]) }
 }

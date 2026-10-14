@@ -1,0 +1,117 @@
+[
+  {
+    "id": "narrow",
+    "original": {
+      "maximumItems": 32,
+      "maximumCopyBytes": 1024,
+      "maximumCapacityBytes": 2048,
+      "maximumReleaseBytes": 4096,
+      "maximumDepth": 16
+    },
+    "received": {
+      "copiedItems": 3,
+      "copiedBytes": 29,
+      "retainedCapacityBytes": 31,
+      "releasedBytes": 37
+    },
+    "requested": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 64,
+      "maximumCapacityBytes": 128,
+      "maximumReleaseBytes": 256,
+      "maximumDepth": 4
+    }
+  },
+  {
+    "id": "remaining",
+    "original": {
+      "maximumItems": 32,
+      "maximumCopyBytes": 1024,
+      "maximumCapacityBytes": 2048,
+      "maximumReleaseBytes": 4096,
+      "maximumDepth": 16
+    },
+    "received": {
+      "copiedItems": 31,
+      "copiedBytes": 1000,
+      "retainedCapacityBytes": 2040,
+      "releasedBytes": 4000
+    },
+    "requested": {
+      "maximumItems": 64,
+      "maximumCopyBytes": 2048,
+      "maximumCapacityBytes": 4096,
+      "maximumReleaseBytes": 8192,
+      "maximumDepth": 32
+    }
+  },
+  {
+    "id": "zero",
+    "original": {
+      "maximumItems": 32,
+      "maximumCopyBytes": 1024,
+      "maximumCapacityBytes": 2048,
+      "maximumReleaseBytes": 4096,
+      "maximumDepth": 16
+    },
+    "received": {
+      "copiedItems": 3,
+      "copiedBytes": 29,
+      "retainedCapacityBytes": 31,
+      "releasedBytes": 37
+    },
+    "requested": {
+      "maximumItems": 0,
+      "maximumCopyBytes": 0,
+      "maximumCapacityBytes": 0,
+      "maximumReleaseBytes": 0,
+      "maximumDepth": 0
+    }
+  },
+  {
+    "id": "overdraw",
+    "original": {
+      "maximumItems": 32,
+      "maximumCopyBytes": 1024,
+      "maximumCapacityBytes": 2048,
+      "maximumReleaseBytes": 4096,
+      "maximumDepth": 16
+    },
+    "received": {
+      "copiedItems": 33,
+      "copiedBytes": 29,
+      "retainedCapacityBytes": 31,
+      "releasedBytes": 37
+    },
+    "requested": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 64,
+      "maximumCapacityBytes": 128,
+      "maximumReleaseBytes": 256,
+      "maximumDepth": 4
+    }
+  },
+  {
+    "id": "portable-top",
+    "original": {
+      "maximumItems": 4294967295,
+      "maximumCopyBytes": 4294967295,
+      "maximumCapacityBytes": 4294967295,
+      "maximumReleaseBytes": 4294967295,
+      "maximumDepth": 64
+    },
+    "received": {
+      "copiedItems": 4294967294,
+      "copiedBytes": 4294967294,
+      "retainedCapacityBytes": 4294967294,
+      "releasedBytes": 4294967294
+    },
+    "requested": {
+      "maximumItems": 4294967295,
+      "maximumCopyBytes": 4294967295,
+      "maximumCapacityBytes": 4294967295,
+      "maximumReleaseBytes": 4294967295,
+      "maximumDepth": 128
+    }
+  }
+]

@@ -1,7 +1,7 @@
 /** ➗️ Language-neutral expression entities are verified through independent SQLite edits. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import type {EquationSnapshot,EquationNode} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {equationSnapshotToSqliteDatabase,equationSnapshotFromSqliteDatabase,validateEquationSnapshotSqliteDialect} from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

@@ -6,7 +6,7 @@ fn semantic_question_controls_match_the_language_neutral_vectors() {
         window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "try-a".into(), window_kind_id: FORMS_PLAY_WINDOW_TRY.into() }],
         ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️controls.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️controls.json")).unwrap();
     for vector in vectors["cases"].as_array().unwrap() {
         let question = &vector["question"];
         let question = crate::editor::forms::questions::question_shell(question["id"].as_str().unwrap().into(), question["label"].as_str().unwrap().into(), question["kind"].as_str().unwrap().into());

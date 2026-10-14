@@ -1,6 +1,6 @@
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
-import fixture from"../🧫️fixtures/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
 import{wfc2dSnapshotToSqliteDatabase,wfc2dSnapshotFromSqliteDatabase,WFC2D_SQLITE_SCHEMA}from"../🟦️.ts";
 import type{Wfc2dSnapshot,Wfc2dTileMedia,Wfc2dPathSegment}from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
@@ -28,7 +28,7 @@ test("wfc2d canonical per-pixel edits and complete intermediate literal states",
 
 import AjvRaster from "ajv";
 import {PNG} from "pngjs";
-import raster from "../../../../🧫️fixtures/🎨️raster/🔣️.json";
+import raster from "../../../../🧪️tests/🧫️fixtures/🎨️raster/🔣️.json";
 
 test("wfc2d raster clamps palette components and retains transparent unknown indices",()=>{
  

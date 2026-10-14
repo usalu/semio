@@ -2,7 +2,7 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
-import { testCacheDirectoryV1 } from "../../../../../🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
+import { testCacheDirectoryV1 } from "../../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
 
 const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 // #endregion 🔌️Adapters

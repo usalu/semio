@@ -238,11 +238,11 @@ const REFERENCE_ENVELOPE: &[(&str, f64, f64, f64, f64)] = &[
 ];
 
 fn weather_fixture() -> Option<String> {
-    std::fs::read_to_string(subset_root().join("🧫️fixtures").join("🌦️denver-tmy").join("🌦️.epw")).ok()
+    std::fs::read_to_string(subset_root().join("🧪️tests").join("🧫️fixtures").join("🌦️denver-tmy").join("🌦️.epw")).ok()
 }
 
 fn energyplus_reference(case: &str) -> Option<semio_framework_pack_json::Value> {
-    let text = std::fs::read_to_string(subset_root().join("🧫️fixtures").join(format!("🏛️bestest-{case}")).join("🔮️energyplus.json")).ok()?;
+    let text = std::fs::read_to_string(subset_root().join("🧪️tests").join("🧫️fixtures").join(format!("🏛️bestest-{case}")).join("🔮️energyplus.json")).ok()?;
     semio_framework_pack_json::parse(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()
 }
 
@@ -330,7 +330,7 @@ fn subset_root() -> std::path::PathBuf {
 }
 
 fn fixture_path(case: &str) -> std::path::PathBuf {
-    subset_root().join("🧫️fixtures").join(format!("🏛️bestest-{case}")).join("🔋️model.json")
+    subset_root().join("🧪️tests").join("🧫️fixtures").join(format!("🏛️bestest-{case}")).join("🔋️model.json")
 }
 
 fn example_asset_path(directory: &str) -> std::path::PathBuf {
@@ -340,7 +340,7 @@ fn example_asset_path(directory: &str) -> std::path::PathBuf {
 fn example_dsl(case: &str) -> String {
     let built = model(case).unwrap_or_else(|| panic!("case {case} must build"));
     let snapshot = crate::energy_snapshot_with_state(crate::ENERGY_MODEL_DOCUMENT_SCHEMA, &built, None);
-    <crate::EnergyModelSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot)
+    <crate::EnergyModelSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snapshot)
 }
 
 /// 🧫️ THE generator. Deliberately inert unless `SEMIO_ENERGY_BESTEST_REGENERATE` is set, so a

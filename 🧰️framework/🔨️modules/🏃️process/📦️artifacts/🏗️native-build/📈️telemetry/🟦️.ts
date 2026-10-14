@@ -3,7 +3,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } fr
 import { cpus, freemem, totalmem } from "node:os";
 import { dirname, join } from "node:path";
 import { promisify } from "node:util";
-import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import type { UnitRecordV1 } from "../🎟️admission/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 

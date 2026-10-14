@@ -1,0 +1,12 @@
+{
+  "mutation": "addGcpObservation",
+  "id": "gcp-absent",
+  "observation": {
+    "streamId": "orbit-primary",
+    "frameIndex": 0,
+    "pixel": [
+      10.0,
+      20.0
+    ]
+  }
+}

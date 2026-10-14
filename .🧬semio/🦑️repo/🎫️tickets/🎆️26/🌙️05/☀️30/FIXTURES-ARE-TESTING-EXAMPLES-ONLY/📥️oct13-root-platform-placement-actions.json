@@ -1,0 +1,428 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/⚖️phase-output-drain/🔣️.json",
+      "action": "moved",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/⚖️phase-output-drain/🔣️.json",
+      "beforeSha256": "5deaf8f41d8cde565504e7eb578f3ba19ad4314339acaddded7db8f3ac4d8d3f",
+      "afterSha256": "5deaf8f41d8cde565504e7eb578f3ba19ad4314339acaddded7db8f3ac4d8d3f",
+      "exclusive": false,
+      "scope": "Existing test-platform examples move under their actual testing collection"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🌐️html-source-pair/🔣️.json",
+      "action": "moved",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🌐️html-source-pair/🔣️.json",
+      "beforeSha256": "4d2e5aa7223a3585b2a2a3860b81605126d984e964ee6091d6d7ed88a6e36b6b",
+      "afterSha256": "4d2e5aa7223a3585b2a2a3860b81605126d984e964ee6091d6d7ed88a6e36b6b",
+      "exclusive": false,
+      "scope": "Existing test-platform examples move under their actual testing collection"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/📐️test-layout/🔣️.json",
+      "action": "moved",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/📐️test-layout/🔣️.json",
+      "beforeSha256": "e7f4687c865de7412b0ca9f2c3290ea401af0219cdb3bd328e2d917ec59353c1",
+      "afterSha256": "e7f4687c865de7412b0ca9f2c3290ea401af0219cdb3bd328e2d917ec59353c1",
+      "exclusive": false,
+      "scope": "Existing test-platform examples move under their actual testing collection"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/📡️protocol-vector.txt",
+      "action": "moved",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/📡️protocol-vector.txt",
+      "beforeSha256": "7087e4e006b72ee5b808b9f622732600640725fab7574fd3d892edbf933b4a13",
+      "afterSha256": "7087e4e006b72ee5b808b9f622732600640725fab7574fd3d892edbf933b4a13",
+      "exclusive": false,
+      "scope": "Existing test-platform examples move under their actual testing collection"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🚷️discovery-boundaries/🔣️.json",
+      "action": "moved",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🚷️discovery-boundaries/🔣️.json",
+      "beforeSha256": "67f4054cbd9b6d54b1f3f17695b9fcb9dc3a54cc6888e75f1235a40dcf71a78a",
+      "afterSha256": "67f4054cbd9b6d54b1f3f17695b9fcb9dc3a54cc6888e75f1235a40dcf71a78a",
+      "exclusive": false,
+      "scope": "Existing test-platform examples move under their actual testing collection"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧫️fault-notices-gate/🔣️.json",
+      "action": "moved",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️fault-notices-gate/🔣️.json",
+      "beforeSha256": "08c441c0ece703b84d1c2778b45815ec267ae7a07a7e5c5615e13e606326f73a",
+      "afterSha256": "08c441c0ece703b84d1c2778b45815ec267ae7a07a7e5c5615e13e606326f73a",
+      "exclusive": false,
+      "scope": "Existing test-platform examples move under their actual testing collection"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧫️mutation-caps/🔣️.json",
+      "action": "moved",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️mutation-caps/🔣️.json",
+      "beforeSha256": "88427755269e511767928465a66f705defd22ae002895ea0e88e08e13c0e2765",
+      "afterSha256": "88427755269e511767928465a66f705defd22ae002895ea0e88e08e13c0e2765",
+      "exclusive": false,
+      "scope": "Existing test-platform examples move under their actual testing collection"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧫️mutation-input-declarations/🔣️.json",
+      "action": "moved",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️mutation-input-declarations/🔣️.json",
+      "beforeSha256": "d2cd90bfa007343585cf9891b6b50200f6cbdf66e9ed3c8a685192cc27d0af48",
+      "afterSha256": "d2cd90bfa007343585cf9891b6b50200f6cbdf66e9ed3c8a685192cc27d0af48",
+      "exclusive": false,
+      "scope": "Existing test-platform examples move under their actual testing collection"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧫️mutation-labels/🔣️.json",
+      "action": "moved",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️mutation-labels/🔣️.json",
+      "beforeSha256": "870447ee3dcdc055d9c435e18b1cdb5ea6cac37527a913d61cd7ade1134541e3",
+      "afterSha256": "870447ee3dcdc055d9c435e18b1cdb5ea6cac37527a913d61cd7ade1134541e3",
+      "exclusive": false,
+      "scope": "Existing test-platform examples move under their actual testing collection"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧫️mutation-payload-parity/🔣️.json",
+      "action": "moved",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️mutation-payload-parity/🔣️.json",
+      "beforeSha256": "9bff50884fdeabdd19ac23f79683d773194ebb1975ea4b9c5b9f0e60f476dff6",
+      "afterSha256": "9bff50884fdeabdd19ac23f79683d773194ebb1975ea4b9c5b9f0e60f476dff6",
+      "exclusive": false,
+      "scope": "Existing test-platform examples move under their actual testing collection"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧬️mutation-fixtures/🔣️.json",
+      "action": "moved",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧬️mutation-fixtures/🔣️.json",
+      "beforeSha256": "dc8a4b250e2bd3c700731763a7a60ceacfd0c1b7f5cc286d3be3e629daeffb24",
+      "afterSha256": "dc8a4b250e2bd3c700731763a7a60ceacfd0c1b7f5cc286d3be3e629daeffb24",
+      "exclusive": false,
+      "scope": "Existing test-platform examples move under their actual testing collection"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧬️schema-invariants/🔣️.json",
+      "action": "moved",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧬️schema-invariants/🔣️.json",
+      "beforeSha256": "f7a37ee086fa390dd5df2f3328b511e5368b9301ba816e355b363ddad3771619",
+      "afterSha256": "f7a37ee086fa390dd5df2f3328b511e5368b9301ba816e355b363ddad3771619",
+      "exclusive": false,
+      "scope": "Existing test-platform examples move under their actual testing collection"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧭️contribution-directory-ownership/🔣️.json",
+      "action": "moved",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧭️contribution-directory-ownership/🔣️.json",
+      "beforeSha256": "f20674b1278cd93691b34c06fa1b094c0bf91c396aab2fe1e8dcf8aa2a67e4fa",
+      "afterSha256": "f20674b1278cd93691b34c06fa1b094c0bf91c396aab2fe1e8dcf8aa2a67e4fa",
+      "exclusive": false,
+      "scope": "Existing test-platform examples move under their actual testing collection"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧭️fixture-resolution/🔣️.json",
+      "action": "moved",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧭️fixture-resolution/🔣️.json",
+      "beforeSha256": "20de1831a6dfe2726306ca755653a14bb550ff45200c6380e0744979882ab4a8",
+      "afterSha256": "20de1831a6dfe2726306ca755653a14bb550ff45200c6380e0744979882ab4a8",
+      "exclusive": false,
+      "scope": "Existing test-platform examples move under their actual testing collection"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧱️command-composition-source/🐍️.py",
+      "action": "moved",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧱️command-composition-source/🐍️.py",
+      "beforeSha256": "7107d7996189fac4bbf345e401adb694d2016190698ec533b94ffa481b9a83f0",
+      "afterSha256": "7107d7996189fac4bbf345e401adb694d2016190698ec533b94ffa481b9a83f0",
+      "exclusive": false,
+      "scope": "Existing test-platform examples move under their actual testing collection"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧱️command-composition-source/🔣️.json",
+      "action": "moved",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧱️command-composition-source/🔣️.json",
+      "beforeSha256": "d12a92669952da668718b6e2bf1d84a26b2c3d90baf1266eb74e5e0c9b4a0cce",
+      "afterSha256": "d12a92669952da668718b6e2bf1d84a26b2c3d90baf1266eb74e5e0c9b4a0cce",
+      "exclusive": false,
+      "scope": "Existing test-platform examples move under their actual testing collection"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧾️artifact-root-source/🔣️.json",
+      "action": "moved",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧾️artifact-root-source/🔣️.json",
+      "beforeSha256": "05741233d5c101127675263bf6b70d098e8ac6dac5a666aad3dc634cf3c324c3",
+      "afterSha256": "05741233d5c101127675263bf6b70d098e8ac6dac5a666aad3dc634cf3c324c3",
+      "exclusive": false,
+      "scope": "Existing test-platform examples move under their actual testing collection"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/README.md",
+      "action": "updated",
+      "beforeSha256": "3f556afa5fc3945c89f69858f9b8d1c001337f4f81973425bc731313af01c4b7",
+      "afterSha256": "ae1f57ebc83a3ebe6d9ca02b57055ac7706db1b13b84d1294bb473cf48eb8d5d",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
+      "action": "updated",
+      "beforeSha256": "55228503f388ded4227c8f321b6373a7f92af5d723e41c12404f76a51f82e1c2",
+      "afterSha256": "9bc8139aeff1018c16c6db74014e2ae1925eafbcbcf8a4cb9e7c9a4a8d59ed4b",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🔮️oracles/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "d08b66e77ce9110718d2597fa7a04b395eb893db0ce22e4064463790d44e4386",
+      "afterSha256": "dfa15705fb24dfccd881a63b22c472262b6c896f18dca3e75f7c30a52d9d9b04",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "f569adfe95c0841e73382f68a51bfa162daa3e9b485a74ab2ef83811f8d319d0",
+      "afterSha256": "4d769c4dfae44039dd2496b6abe884e7fa12ad91589558127a2fda152d4fc74d",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/📐️test-layout/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "fbba5d279b403f8265a39152c297bd5d212122dea045daf0f963c6a3633240a6",
+      "afterSha256": "1ab1e97ffbc30b188203b495dfb23f52dbeed42dca15db4ded01135bc5d12836",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🚷️discovery-boundaries/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "cc3f26815196b946d409078c140c12eca3a35518b37c21e95ad33f5a44c4d10b",
+      "afterSha256": "e6c68bf252546a79db6638565f7cfb3745106528b7d82c67547f563ded9b56fc",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️fault-notices-gate/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "41d2e75f6202c9b40dce9a5b2c9b7dbbaf36b8556097c053dc72d02da4179729",
+      "afterSha256": "cfbbe6977c3e9977b8fce69f67513a104c309b4d2efb1bb42c2212c756a0252c",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️mutation-caps/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "12cf679e0815ab55667eb67b4a0d078341e8d4986c0c7b63f60cf4ca6ee66a58",
+      "afterSha256": "9974c13546a76dbefc178318d06a15847271282d620913d64be1f92297b8714e",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️mutation-history-gates/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "c7030fdb263df46916f16b25a5c9130c83efc3840f32ade4cf8d32ddd7c688b0",
+      "afterSha256": "854c410ee3cd1984a88c9eb5ed344873f2d4d42d982c7072bd31ed2e1e9825f1",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️mutation-input-declarations/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "3decbdc3146dc864afed6acd471798285bcbf42f10b6a96e84ba51a0898a0cc9",
+      "afterSha256": "64075fd42d59310c75232be33a59281bb2c491208c008be0f649f17fcdc74e4b",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️mutation-payload-parity/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "75a000b635b4443a7fed7c8ade9084e5668c5806ff1e5a27b0e9dd53789b46d8",
+      "afterSha256": "1e68cac1e7cb5275dc252831f72cf36afa8bc2465b841fc8f62f9732b8e70281",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️test-platform/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "5b62e505bad40a1442db485c030eacf7ebd845c9ea459521ab8a8da59df8267c",
+      "afterSha256": "8ab36fd699c731289cee969f899afd27cca38242bf4a4f074c9641d0e0b61dd4",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧬️mutation-fixtures/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "94d186d57d72fa836b571b07a4afbbc1091ba71ba657b9588bc65d4cd2b26e89",
+      "afterSha256": "fa5ca2db51ae236084a1800501d1a557fa6c5576fa48cc7ed143e4c28d357120",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧬️schema-invariants/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "dbf88874170405ca2c3019311ca0686f39212f927f514f5c5bf12ef61f57c429",
+      "afterSha256": "a7f066a2d1d9f47fa64fb96ac1e1cffdfddb3417f21c82d294af682114e88b1a",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧭️fixture-resolution/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "7426be1c54ff9a8b8f66e276e5969927bb84e32c08564ecf040c2a75dc7388a4",
+      "afterSha256": "c16e42949afe6f0218f0e0e7507358d49eec35f885dbc2bf9d543e5dd3ad9834",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧱️command-composition-source/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "022a156f03998cf28681131363337f82f3e2ca75510a9705a9ad3a2b2e12b28f",
+      "afterSha256": "1fbb63029e9c370433999eaf41e8d4aae5e6eb2c83795750ccc934d520a155e6",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧾️artifact-root-source/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "352d847d726f4a1603686350cd0d6b143d6e880a5c05160dfa5ac6dfcb5be890",
+      "afterSha256": "36ec4637e973dc66ad568e9add8d8027a8918254225cf0f05ea48a2f7e327fc7",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/📐️test-layout/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "e7f4687c865de7412b0ca9f2c3290ea401af0219cdb3bd328e2d917ec59353c1",
+      "afterSha256": "7d7a63a3547160b0be92fc105238327747b4d72744549e4f69f4932a63eb5d61",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️fault-notices-gate/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "08c441c0ece703b84d1c2778b45815ec267ae7a07a7e5c5615e13e606326f73a",
+      "afterSha256": "87daeac6d116233a8a09fefb2d9b32001e6fe6c0e9bec80b9074dc3195e48cf6",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧬️mutation-fixtures/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "dc8a4b250e2bd3c700731763a7a60ceacfd0c1b7f5cc286d3be3e629daeffb24",
+      "afterSha256": "a93f09e32b6e8c225d640b0e74d097d609401e86c69cccc36006f85232af8197",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧬️schema-invariants/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "f7a37ee086fa390dd5df2f3328b511e5368b9301ba816e355b363ddad3771619",
+      "afterSha256": "5f46ba71e2e52eee7db1df0445775baf5a0e6bce2254dfcf527056273f52e6b9",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧭️fixture-resolution/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "20de1831a6dfe2726306ca755653a14bb550ff45200c6380e0744979882ab4a8",
+      "afterSha256": "f15b2746eae1383eafd8adfabc40e03c9053947015b84299a378739c8ead3692",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧱️command-composition-source/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "d12a92669952da668718b6e2bf1d84a26b2c3d90baf1266eb74e5e0c9b4a0cce",
+      "afterSha256": "95d5b1741294c8f325a5d7ab707ffadc59671f38eee94adf03432515515dadee",
+      "exclusive": false,
+      "scope": "Rebind actual test-platform imports/readers and cache inputs after physical fixture relocation"
+    }
+  ],
+  "moves": [
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/⚖️phase-output-drain/🔣️.json",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/⚖️phase-output-drain/🔣️.json",
+      "sha256": "5deaf8f41d8cde565504e7eb578f3ba19ad4314339acaddded7db8f3ac4d8d3f"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🌐️html-source-pair/🔣️.json",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🌐️html-source-pair/🔣️.json",
+      "sha256": "4d2e5aa7223a3585b2a2a3860b81605126d984e964ee6091d6d7ed88a6e36b6b"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/📐️test-layout/🔣️.json",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/📐️test-layout/🔣️.json",
+      "sha256": "e7f4687c865de7412b0ca9f2c3290ea401af0219cdb3bd328e2d917ec59353c1"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/📡️protocol-vector.txt",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/📡️protocol-vector.txt",
+      "sha256": "7087e4e006b72ee5b808b9f622732600640725fab7574fd3d892edbf933b4a13"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🚷️discovery-boundaries/🔣️.json",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🚷️discovery-boundaries/🔣️.json",
+      "sha256": "67f4054cbd9b6d54b1f3f17695b9fcb9dc3a54cc6888e75f1235a40dcf71a78a"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧫️fault-notices-gate/🔣️.json",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️fault-notices-gate/🔣️.json",
+      "sha256": "08c441c0ece703b84d1c2778b45815ec267ae7a07a7e5c5615e13e606326f73a"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧫️mutation-caps/🔣️.json",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️mutation-caps/🔣️.json",
+      "sha256": "88427755269e511767928465a66f705defd22ae002895ea0e88e08e13c0e2765"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧫️mutation-input-declarations/🔣️.json",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️mutation-input-declarations/🔣️.json",
+      "sha256": "d2cd90bfa007343585cf9891b6b50200f6cbdf66e9ed3c8a685192cc27d0af48"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧫️mutation-labels/🔣️.json",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️mutation-labels/🔣️.json",
+      "sha256": "870447ee3dcdc055d9c435e18b1cdb5ea6cac37527a913d61cd7ade1134541e3"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧫️mutation-payload-parity/🔣️.json",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️mutation-payload-parity/🔣️.json",
+      "sha256": "9bff50884fdeabdd19ac23f79683d773194ebb1975ea4b9c5b9f0e60f476dff6"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧬️mutation-fixtures/🔣️.json",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧬️mutation-fixtures/🔣️.json",
+      "sha256": "dc8a4b250e2bd3c700731763a7a60ceacfd0c1b7f5cc286d3be3e629daeffb24"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧬️schema-invariants/🔣️.json",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧬️schema-invariants/🔣️.json",
+      "sha256": "f7a37ee086fa390dd5df2f3328b511e5368b9301ba816e355b363ddad3771619"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧭️contribution-directory-ownership/🔣️.json",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧭️contribution-directory-ownership/🔣️.json",
+      "sha256": "f20674b1278cd93691b34c06fa1b094c0bf91c396aab2fe1e8dcf8aa2a67e4fa"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧭️fixture-resolution/🔣️.json",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧭️fixture-resolution/🔣️.json",
+      "sha256": "20de1831a6dfe2726306ca755653a14bb550ff45200c6380e0744979882ab4a8"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧱️command-composition-source/🐍️.py",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧱️command-composition-source/🐍️.py",
+      "sha256": "7107d7996189fac4bbf345e401adb694d2016190698ec533b94ffa481b9a83f0"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧱️command-composition-source/🔣️.json",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧱️command-composition-source/🔣️.json",
+      "sha256": "d12a92669952da668718b6e2bf1d84a26b2c3d90baf1266eb74e5e0c9b4a0cce"
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧾️artifact-root-source/🔣️.json",
+      "destination": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧾️artifact-root-source/🔣️.json",
+      "sha256": "05741233d5c101127675263bf6b70d098e8ac6dac5a666aad3dc634cf3c324c3"
+    }
+  ]
+}

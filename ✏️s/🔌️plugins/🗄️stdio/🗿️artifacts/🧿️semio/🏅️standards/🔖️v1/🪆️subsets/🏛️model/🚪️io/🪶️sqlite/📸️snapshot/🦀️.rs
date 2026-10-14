@@ -1,11 +1,12 @@
 //! 🏛️ Spatial hierarchy, physical elements, geometry identities and typed property relationships.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn, FloatRow as SqliteRow};
 use crate::schema::snapshot::{SemioModelSnapshot, SpatialNode, SpatialKind, SemioModelElement, ElementClass, GeometryRef, PropertySet, Property, PsetValue, ModelRelation, RelationKind};
 use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioTransform, SemioPoint3, SemioQuaternion};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 /// 🔍️ Resolves a paid literal Model identity with bounded text comparisons.
@@ -86,7 +87,7 @@ fn model_checkpoint(control:&mut SqliteSnapshotControl<'_>,completed:usize,total
 fn class(value:&ElementClass)->(&'static str,Option<&str>){match value{ElementClass::Wall=>("wall",None),ElementClass::Slab=>("slab",None),ElementClass::Column=>("column",None),ElementClass::Beam=>("beam",None),ElementClass::Door=>("door",None),ElementClass::Window=>("window",None),ElementClass::Roof=>("roof",None),ElementClass::Stair=>("stair",None),ElementClass::Furniture=>("furniture",None),ElementClass::Other{name}=>("other",Some(name))}}
 fn relation(value:&RelationKind)->(&'static str,Option<&str>){match value{RelationKind::Aggregates=>("aggregates",None),RelationKind::ContainedIn=>("contained_in",None),RelationKind::ConnectsTo=>("connects_to",None),RelationKind::FillsVoid=>("fills_void",None),RelationKind::VoidsElement=>("voids_element",None),RelationKind::Other{label}=>("other",Some(label))}}
 fn restore_placement(row:SqliteRow<'_>)->Result<SemioTransform,ValueError>{Ok(SemioTransform{translation:SemioPoint3{x:row.real(1)?,y:row.real(2)?,z:row.real(3)?},rotation:SemioQuaternion{x:row.real(4)?,y:row.real(5)?,z:row.real(6)?,w:row.real(7)?},scale:SemioPoint3{x:row.real(8)?,y:row.real(9)?,z:row.real(10)?}})}
-impl ArtifactSqliteSnapshot for SemioModelSnapshot{
+impl ArtifactSqliteSnapshotHost for SemioModelSnapshot{
 fn retire_sqlite_snapshot(self){drop(native::Owned::new(self));}
 fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
 
@@ -100,6 +101,11 @@ let row=database.table("semio_model_document")?.single_row()?;
 if row.rowid!=1||row.integer(0)?!=1||row.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned document identity differs from projected semantic fields"));}
 control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))})().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
 
+
+
+
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for SemioModelSnapshot {
 const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
 fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.project_sqlite_database(control)}
 fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError> {semantic::layout(control.limits())?;Self::reconstruct_sqlite_database(database, control, Self::SQLITE_SCHEMA)}

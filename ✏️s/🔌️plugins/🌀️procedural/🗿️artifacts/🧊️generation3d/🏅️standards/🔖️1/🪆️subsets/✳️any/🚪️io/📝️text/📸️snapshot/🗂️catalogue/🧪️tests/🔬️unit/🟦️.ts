@@ -18,7 +18,7 @@ type Fixture = {
 };
 
 const folder = new URL("../../../../../../🧬️schema/🗂️catalogue/", import.meta.url);
-const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", folder), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(new URL("../../🧪️tests/🧫️fixtures/🗂️catalogue/🔣️.json", folder), "utf8")) as Fixture;
 const metaSchema = JSON.parse(readFileSync(new URL("🔣️.json", folder), "utf8"));
 const validate = new Ajv({ allErrors: true, strict: true, strictRequired: false }).compile(metaSchema);
 const categoryFileNames = readdirSync(folder).filter(name => name.startsWith("🔣️") && name !== "🔣️.json" && name.endsWith(".json")).sort();
@@ -112,7 +112,7 @@ test("a duplicate kind id is refused when building a catalogue", () => {
 });
 
 test("an admitted catalogue owns its kind definitions independently of the native bundle", () => {
-  const context = JSON.parse(readFileSync(new URL("🧫️fixtures/🧩️admitted-context/🔣️.json", folder), "utf8")) as { kind: string; quality: CatalogueQuality; builtinQuality: CatalogueQuality; duplicateIdentityRefused: boolean };
+  const context = JSON.parse(readFileSync(new URL("../../🧪️tests/🧫️fixtures/🗂️catalogue/🧩️admitted-context/🔣️.json", folder), "utf8")) as { kind: string; quality: CatalogueQuality; builtinQuality: CatalogueQuality; duplicateIdentityRefused: boolean };
   const files = structuredClone(CATALOGUE_CATEGORY_FILES) as CatalogueCategoryFile[];
   const kind = files.flatMap(file => file.kinds).find(kind => kind.id === context.kind)!;
   (kind as { quality: CatalogueQuality }).quality = context.quality;

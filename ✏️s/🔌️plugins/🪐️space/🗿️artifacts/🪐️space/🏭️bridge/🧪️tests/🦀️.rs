@@ -3,7 +3,7 @@ use serde_json::{json, Value};
 
 #[test]
 fn portable_coordinate_matches_complete_original_production_descriptor_oracle() {
-    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture["coordinates"].as_array().unwrap().len(), CONTRIBUTIONS.len());
     let descriptors = <semio_s_artifact_space_space::standards::v1::subsets::any::schema::mutations::SSpaceMutation as Mutation<semio_s_artifact_space_space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot>>::DESCRIPTORS;
     let coordinate = &CONTRIBUTIONS[0].coordinate;
@@ -26,7 +26,7 @@ fn portable_coordinate_matches_complete_original_production_descriptor_oracle() 
 
 #[test]
 fn child_refuses_actual_sibling_and_retains_progress_cancellation() {
-    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let sibling = fixture["refusedArtifacts"][0].as_str().unwrap();
     assert_eq!(inventory_for_command(PRODUCED_BY, CONTRIBUTIONS, &arguments(sibling), &mut |_| Ok(())).unwrap_err(), MutationInventoryError::Coordinate);
     let mut callbacks = 0;

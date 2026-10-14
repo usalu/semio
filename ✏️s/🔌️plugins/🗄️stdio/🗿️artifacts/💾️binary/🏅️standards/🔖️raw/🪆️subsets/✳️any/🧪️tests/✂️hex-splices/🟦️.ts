@@ -1,8 +1,8 @@
-/** 🧪️ Third-party and independent oracle of the hex-window splice corpus (`🧫️fixtures/✂️hex-splices`): ajv validates the corpus rows against their schema, and the bytes each row means are rebuilt TWO independent ways — applying the digit ranges to the hex text and decoding it, and applying the listed byte ranges to the bytes — which must agree. The Rust editor law replays the same corpus through `binary_text_emit`. */
+/** 🧪️ Third-party and independent oracle of the hex-window splice corpus (`🧫️fixtures/✂️hex-splices`): Ajv validates actual byte-range mutation inputs, and the bytes each row means are rebuilt TWO independent ways — applying the digit ranges to the hex text and decoding it, and applying the listed byte ranges to the bytes — which must agree. The Rust editor law replays the same corpus through `binary_text_emit`. */
 import { describe, expect, test } from "bun:test";
-import Ajv from "ajv";
-import corpus from "../../🧫️fixtures/✂️hex-splices/🔣️.json";
-import schema from "../../🧬️schema/🔣️hex-splices/🔣️.json";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import corpus from "../🧫️fixtures/✂️hex-splices/🔣️.json";
+import schema from "../../🧬️schema/🧬️mutations/✂️replace-byte-range/🧬️schema/🔣️.json";
 
 type Range = { readonly offset: number; readonly delete: number; readonly insert: string };
 type Leaf = { readonly offset: number; readonly removeLen: number; readonly insert: string };
@@ -42,9 +42,9 @@ function applyLeaves(before: readonly number[], leaves: readonly Leaf[]): number
 }
 
 describe("hex-window splices (ajv + two independent decodings)", () => {
-  test("the corpus rows conform to their schema (ajv)", () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-    for (const row of corpus.cases) expect(validate(row), `${row.id}: ${JSON.stringify(validate.errors)}`).toBe(true);
+  test("actual byte-range mutation inputs conform to their domain schema (Ajv)", () => {
+    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).compile(schema);
+    for (const row of corpus.cases) for (const leaf of row.leaves ?? []) expect(validate({ mutation: "replaceByteRange", offset: leaf.offset, remove_len: leaf.removeLen, insert: bytes(leaf.insert) }), `${row.id}: ${JSON.stringify(validate.errors)}`).toBe(true);
   });
 
   for (const row of corpus.cases) {

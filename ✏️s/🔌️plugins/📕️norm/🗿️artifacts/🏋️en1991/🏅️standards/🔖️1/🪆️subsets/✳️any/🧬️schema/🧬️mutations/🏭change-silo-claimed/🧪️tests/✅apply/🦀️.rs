@@ -5,11 +5,11 @@
 /// 🚫 The committed `change-silo-claimed` vector holds the specification-vector law.
 const VECTOR: super::Vector = super::Vector {
         kind: "change-silo-claimed",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏭change-silo-claimed/✅apply/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏭change-silo-claimed/✅apply/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏭change-silo-claimed/✅apply/📸️snapshot/➡️after/🔣️.json"),
-        diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏭change-silo-claimed/✅apply/🔺️diff/🔣️.json"),
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏭change-silo-claimed/✅apply/🎯️outcome/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏭change-silo-claimed/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏭change-silo-claimed/✅apply/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏭change-silo-claimed/✅apply/📸️snapshot/➡️after/🔣️.json"),
+        diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏭change-silo-claimed/✅apply/🔺️diff/🔣️.json"),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏭change-silo-claimed/✅apply/🎯️outcome/🔣️.json"),
 };
 
 #[test]

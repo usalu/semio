@@ -5,11 +5,11 @@
 /// ➕ The committed `insert-self-weight-elements` vector holds the specification-vector law.
 const VECTOR: super::Vector = super::Vector {
         kind: "insert-self-weight-elements",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️insert-self-weight-elements/✅apply/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️insert-self-weight-elements/✅apply/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️insert-self-weight-elements/✅apply/📸️snapshot/➡️after/🔣️.json"),
-        diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️insert-self-weight-elements/✅apply/🔺️diff/🔣️.json"),
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️insert-self-weight-elements/✅apply/🎯️outcome/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-self-weight-elements/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-self-weight-elements/✅apply/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-self-weight-elements/✅apply/📸️snapshot/➡️after/🔣️.json"),
+        diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-self-weight-elements/✅apply/🔺️diff/🔣️.json"),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-self-weight-elements/✅apply/🎯️outcome/🔣️.json"),
 };
 
 #[test]

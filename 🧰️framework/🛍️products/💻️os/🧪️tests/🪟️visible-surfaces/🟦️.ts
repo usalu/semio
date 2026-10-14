@@ -6,11 +6,11 @@
 import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
 import { UI_REFRESH_SECTIONS } from "../../../../🔨️modules/🛂️manifest/🟦️.ts";
-import neutral from "../../../../🔨️modules/🛂️manifest/🧫️fixtures/🔬️ui-refresh-section/🔣️.json" with { type: "json" };
+import neutral from "../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🔬️ui-refresh-section/🔣️.json" with { type: "json" };
 import { BROWSER_ACTOR_VISIBLE_SURFACES_V1, browserActorVisibleSurfacesV1, type BrowserActorVisibleTurnV1 } from "../../🔨️modules/🏪️store/👷️worker/🪟️visible-surfaces/🟦️.ts";
 import schema from "../../🔨️modules/🏪️store/👷️worker/🪟️visible-surfaces/🧬️schema/🔣️.json" with { type: "json" };
 
-import examples from "../../🔨️modules/🏪️store/👷️worker/🪟️visible-surfaces/🧫️fixtures/🔣️.json" with { type: "json" };
+import examples from "../../🔨️modules/🏪️store/👷️worker/🪟️visible-surfaces/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 
 const contract = BROWSER_ACTOR_VISIBLE_SURFACES_V1;
 const turns = Object.keys(contract.turns) as BrowserActorVisibleTurnV1[];

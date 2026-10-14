@@ -18,7 +18,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { SheetClassificationTask, SheetMatchingTask, SheetSortingTask } from "@semio-tech/quiz";
 import { ClassificationTaskView, MatchingTaskView, Records, SortingTaskView, TABLE, plotFold, quizText } from "@semio-tech/quiz-react";
 import stylesheet from "../../🎯️targets/⚛️react/🎨️.css?raw";
-import vectors from "../../🧫️fixtures/📐️adaptive-layout/🔣️.json";
+import vectors from "../🧫️fixtures/📐️adaptive-layout/🔣️.json";
 
 interface Fixture {
   readonly rooms: Readonly<Record<string, string>>;

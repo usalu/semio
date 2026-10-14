@@ -1,0 +1,8 @@
+{
+  "schema": "test.details-envelope",
+  "subset": {
+    "subset": "model",
+    "schema": "s.model",
+    "spatial": [{ "id": "site-1", "kind": "building" }]
+  }
+}

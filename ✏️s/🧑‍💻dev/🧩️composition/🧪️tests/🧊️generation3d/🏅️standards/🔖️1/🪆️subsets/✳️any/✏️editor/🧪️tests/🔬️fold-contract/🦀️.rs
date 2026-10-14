@@ -123,7 +123,7 @@ fn debug_print_normalized_examples() {
                 declared.retire_cold();
             }
         }
-        eprintln!("[DEBUG] BEGIN {example_id}\n{}\n[DEBUG] END {example_id}", store::os_store::serialization::ArtifactDsl::print_dsl(&*read));
+        eprintln!("[DEBUG] BEGIN {example_id}\n{}\n[DEBUG] END {example_id}", pack::snapshot::ArtifactDsl::print_dsl(&*read));
     }
 }
 

@@ -44528,7 +44528,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 20
+    "appChannelVersion": 23
   },
   "quotas": {},
   "contributions": {
@@ -46368,10 +46368,5 @@
         ]
       }
     ]
-  },
-  "hashes": {
-    "wasmSha256": "aa15e9d362c0df7c0e38bbbc168479a5dbda7e057a4bb76364820b181cd0de04",
-    "coreWasmSha256": "08c237dac9ba0787074c230e93969717c4bde1187f6fab34c93ba1fea11fdc0c",
-    "descriptorSha256": "b5a75445530c9a0cf1e44704e42738545cd1dd24e575c1e455876e02c11db37a"
   }
 }

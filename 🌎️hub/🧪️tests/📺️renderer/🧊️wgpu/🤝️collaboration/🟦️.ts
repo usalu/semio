@@ -1295,7 +1295,7 @@ async function freeLoopbackPort(): Promise<number> {
  * answers, started on that port otherwise), or — flag omitted — one started on a free loopback port (the wgpu release serve of
  * the journey's variant, the React `s` dev serve); only what this run started is stopped at its end. A serve that cannot be had
  * is a missing precondition (`blocked`). */
-async function provisionServe(options: HubCollaborationOptionsV1, url: string | null, shell: Readonly<{ variant: string; renderer: "wgpu" | "react"; profile: "release" | "dev" }>, cleanups: (() => Promise<void>)[]): Promise<string> {
+async function provisionServe(options: HubCollaborationOptionsV1, url: string | null, shell: Readonly<{ variant: string; renderer: "wgpu" | "react"; profile: "release" | "prototype" }>, cleanups: (() => Promise<void>)[]): Promise<string> {
   const port = url ? devServePortV1(url) : await freeLoopbackPort();
   const fixture = await ensureDevServe({ repoRoot: options.repoRoot, port, variant: shell.variant, renderer: shell.renderer, profile: shell.profile, hubUrl: options.hub, locale: options.locale, signal: options.signal, onProgress: (_status, line) => console.log(line) }).catch((error: unknown) => {
     throw new HubCollaborationBlocked(`${shell.renderer} serve on port ${port}: ${error instanceof Error ? error.message : String(error)}`);
@@ -1332,7 +1332,7 @@ export async function runHubCollaboration(options: HubCollaborationOptionsV1): P
     const serving: HubCollaborationOptionsV1 = {
       ...options,
       wgpuServe: kind.wgpu ? await provisionServe(options, options.wgpuServe, { variant: kind.variant, renderer: "wgpu", profile: "release" }, cleanups) : null,
-      reactServe: kind.react ? await provisionServe(options, options.reactServe, { variant: "s", renderer: "react", profile: "dev" }, cleanups) : null,
+      reactServe: kind.react ? await provisionServe(options, options.reactServe, { variant: "s", renderer: "react", profile: "prototype" }, cleanups) : null,
     };
     const token = await hubProbeSignIn(options.hub, options.humans[0].email, options.humans[0].password, "wgpucollab");
     if (!kind.native) {

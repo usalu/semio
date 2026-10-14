@@ -3,7 +3,7 @@ use std::cell::Cell;
 
 #[test]
 fn json_failed_original_frontier_retains_only_actual_dsl_effects(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⚠️frontier.json")).unwrap();let policy:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let preparation=grant(&policy["preparationGrant"]);let closing=grant(&policy["closeGrant"]);let maximum_turns=law["maximumTurns"].as_u64().unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/⚠️frontier.json")).unwrap();let policy:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let preparation=grant(&policy["preparationGrant"]);let closing=grant(&policy["closeGrant"]);let maximum_turns=law["maximumTurns"].as_u64().unwrap();
     for row in law["refusals"].as_array().unwrap(){
         let allocation=row["kind"]=="allocationPort";let source=law["sources"][if allocation{0}else{3}].as_str().unwrap();let mut cursor=JsonGrammarCursor::<DslValue>::new(JsonMemberPolicy::Reject);let refused=std::sync::atomic::AtomicBool::new(false);let mut accepted=|_|true;
         let mut allocation_port=|_:semio_framework_value::native_decoding::NativeDecodeAllocation|if refused.load(std::sync::atomic::Ordering::Relaxed){Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"original JSON allocation port refused"))}else{Ok(())};let mut control=semio_framework_value::NativeDecodeControl::new_forwarded(1<<20,&mut accepted,&mut allocation_port);let mut prepared=false;
@@ -19,7 +19,7 @@ fn json_failed_original_frontier_retains_only_actual_dsl_effects(){
 
 #[test]
 fn json_dsl_original_receipt_conserves_prefix_backing_release_and_depth(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⚠️frontier.json")).unwrap();let closing=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:256};let maximum_turns=law["maximumTurns"].as_u64().unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/⚠️frontier.json")).unwrap();let closing=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:256};let maximum_turns=law["maximumTurns"].as_u64().unwrap();
     let source=law["sources"][3].as_str().unwrap();let mut cursor=JsonGrammarCursor::<DslValue>::new(JsonMemberPolicy::Reject);let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new_retained(&mut accepted);let incoming=RetainedCloneGrant{maximum_items:32,..closing};
     let(result,born,released)=test_allocation::observe_backing(||cursor.step(source,32,&mut control,incoming));assert!(matches!(result,Err(JsonError::TrailingData(_))));let receipt=cursor.normal_step_progress();assert_eq!(receipt,RetainedCloneProgress{copied_items:law["cumulativeCopiedItems"].as_u64().unwrap()as usize,copied_bytes:4,retained_capacity_bytes:4,released_bytes:0});assert_eq!((born,released),(receipt.retained_capacity_bytes,receipt.released_bytes));let Some(DslValue::String(prefix))=&cursor.result else{unreachable!()};assert_eq!(prefix,"😀");close(JsonSourceCursor::from_grammar(source,cursor),closing,maximum_turns);
     for source in law["sources"].as_array().unwrap().iter().take(3){
@@ -37,7 +37,7 @@ fn json_dsl_original_receipt_conserves_prefix_backing_release_and_depth(){
 
 #[test]
 fn json_original_error_retirement_keeps_actual_duplicate_name_and_native_diagnostic(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⚠️frontier.json")).unwrap();let source=law["sources"][2].as_str().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:256};let maximum_turns=law["maximumTurns"].as_u64().unwrap();let mut parser=JsonGrammarCursor::<DslValue>::new(JsonMemberPolicy::Reject);let mut accepted=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new_retained(&mut accepted);let mut pointer=None;
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/⚠️frontier.json")).unwrap();let source=law["sources"][2].as_str().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:256};let maximum_turns=law["maximumTurns"].as_u64().unwrap();let mut parser=JsonGrammarCursor::<DslValue>::new(JsonMemberPolicy::Reject);let mut accepted=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new_retained(&mut accepted);let mut pointer=None;
     for _ in 0..maximum_turns{if let Some(frame)=parser.frames.last().filter(|frame|frame.state==6&&frame.entries.len()==1&&frame.compare==frame.key.as_ref().unwrap().len()){pointer=frame.key.as_ref().map(|name|name.as_ptr());break;}assert!(parser.step(source,1,&mut native,grant).unwrap().is_none());}
     let pointer=pointer.unwrap();let(result,born,released)=test_allocation::observe_backing(||parser.step(source,1,&mut native,grant));assert_eq!((born,released),(0,0));let error=result.unwrap_err();let JsonError::DuplicateMember{name,..}=&error else{unreachable!()};assert_eq!(name.as_ptr(),pointer);assert_eq!(name,serde_json::from_str::<serde_json::Value>(source).unwrap().as_object().unwrap().keys().next().unwrap());let held=name.capacity();close(JsonSourceCursor::from_grammar(source,parser),grant,maximum_turns);
     let diagnostics=[(error,held),(JsonError::Native(ValueError::new(ValueRefusalKind::InvalidValue,source)),source.len()),(JsonError::UnexpectedEof,0),(JsonError::InvalidUtf8,0),(JsonError::UnexpectedByte{found:b'x',offset:7},0),(JsonError::InvalidEscape(3),0),(JsonError::MaxDepthExceeded(1),0)];
@@ -55,7 +55,7 @@ fn close<S:JsonReadSource+Copy,V:JsonParsedValue>(cursor:JsonSourceCursor<S,V>,g
 
 #[test]
 fn json_refusal_receipt_preserves_actual_work_before_cancellation(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let text=fixture["source"].as_str().unwrap();let limits=&fixture["limits"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let text=fixture["source"].as_str().unwrap();let limits=&fixture["limits"];
     let limits=JsonReadLimits{maximum_bytes:limits["maximumBytes"].as_u64().unwrap(),maximum_allocation_bytes:limits["maximumAllocationBytes"].as_u64().unwrap()as usize,maximum_depth:limits["maximumDepth"].as_u64().unwrap()as usize,maximum_items:limits["maximumItems"].as_u64().unwrap()};
     let preparation=grant(&fixture["preparationGrant"]);let closing=grant(&fixture["closeGrant"]);let maximum_turns=fixture["maximumTurns"].as_u64().unwrap();
     for row in fixture["cases"].as_array().unwrap(){

@@ -12,7 +12,7 @@ import interpreterSource from "../../🧱️elements/🗣️Interpreter/🎯️t
 import shellSource from "../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs?raw";
 import rendererSource from "../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs?raw";
 import winitSource from "../../🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs?raw";
-import fixture from "../../🧫️fixtures/🛑️scene-pointer-cancellation/🔣️.json";
+import fixture from "../🧫️fixtures/🛑️scene-pointer-cancellation/🔣️.json";
 
 type Owner = Readonly<{ surfaceId: string; generation: number; pointerId: number }>;
 

@@ -1,11 +1,12 @@
 //! 📐️ CAD layers, block ownership and nine independently typed entity geometries.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn, FloatRow as SqliteRow};
 use crate::schema::snapshot::{SemioCadSnapshot, CadLayer, CadBlock, CadEntityRecord, CadEntity};
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 /// 🪪️ Builds a paid name frontier in authored ordinal order with bounded comparisons.
@@ -60,7 +61,7 @@ fn optional_integer(row:SqliteRow<'_>,index:usize)->Result<Option<i64>,ValueErro
 fn cad_invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 /// 📐️ Restores only the declared binary64 point words.
 fn point(row:SqliteRow<'_>,x:usize)->Result<SemioPoint2,ValueError>{Ok(SemioPoint2{x:row.real(x)?,y:row.real(x+1)?})}
-impl ArtifactSqliteSnapshot for SemioCadSnapshot{
+impl ArtifactSqliteSnapshotHost for SemioCadSnapshot{
 fn retire_sqlite_snapshot(self){drop(semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
 
@@ -74,6 +75,11 @@ let row=database.table("semio_cad_document")?.single_row()?;
 if row.rowid!=1||row.integer(0)?!=1||row.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned document identity differs from projected semantic fields"));}
 control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))})();result.map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
 
+
+
+
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for SemioCadSnapshot {
 const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
 fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.project_sqlite_database(control)}
 fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError> {let result=(||->Result<Self,ValueError>{ semantic::layout(control.limits())?;Self::reconstruct_sqlite_database(database, control, Self::SQLITE_SCHEMA) })();result}

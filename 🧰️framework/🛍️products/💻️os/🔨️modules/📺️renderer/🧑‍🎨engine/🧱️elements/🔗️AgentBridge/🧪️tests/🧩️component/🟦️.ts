@@ -353,7 +353,7 @@ describe("bridgeProtocols", () => {
 type FixtureRow = { readonly direction: "shell_to_gateway" | "gateway_to_shell"; readonly variant: string; readonly frame: unknown; readonly hex: string };
 
 function loadFixtures(): readonly FixtureRow[] {
-  const path = join(here, "..", "..", "..", "..", "..", "..", "🌉️mcp", "🧵️bridge", "🧫️fixtures", "📨️frames.json");
+  const path = join(here, "..", "..", "..", "..", "..", "..", "🌉️mcp", "🧵️bridge", "🧪️tests/🧫️fixtures", "📨️frames.json");
   return JSON.parse(readFileSync(path, "utf8")) as FixtureRow[];
 }
 
@@ -461,7 +461,7 @@ describe("buildShellStateFrame", () => {
 describe("AgentBridge inference state parity", () => {
   it("starts from the neutral Shell state and applies the exact inference port command", async () => {
     const { default: equal } = await import("fast-deep-equal");
-    const fixture = JSON.parse(readFileSync(join(here, "../../../../../../🖥️shell/🧫️fixtures/💡️set-document-inference-port.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(here, "../../../../../../🖥️shell/🧪️tests/🧫️fixtures/💡️set-document-inference-port.json"), "utf8"));
     const state = createDefaultShellState();
     expect(equal(state, fixture.state)).toBe(true);
     expect(state).toEqual(fixture.state);
@@ -648,7 +648,7 @@ describe("useAgentBridge agentReply", () => {
 /** 🪦️ Replays `🌉️mcp/🛡️policy/🧫️fixtures/🪦️approval-withdrawal.json`'s `retiredAffordances` through the
  * real hook over a fake socket: the same frames the gateway sends end every approval as pending,
  * resolved or withdrawn-with-its-reason, and a withdrawn one leaves nothing waiting. */
-const withdrawalLaw = JSON.parse(readFileSync(join(here, "../../../../../../🌉️mcp/🛡️policy/🧫️fixtures/🪦️approval-withdrawal.json"), "utf8")) as {
+const withdrawalLaw = JSON.parse(readFileSync(join(here, "../../../../../../🌉️mcp/🛡️policy/🧪️tests/🧫️fixtures/🪦️approval-withdrawal.json"), "utf8")) as {
   readonly retiredAffordances: readonly { readonly name: string; readonly frames: readonly Record<string, string>[]; readonly state: string; readonly withdrawal: string | null; readonly pending: number }[];
 };
 
@@ -700,7 +700,7 @@ describe("useAgentBridge approval withdrawal", () => {
  * own headless interpreter. Two banks, one fixture file: these laws read the same
  * `🐚️channel/🧫️fixtures/🗿️app-payloads.json` the Rust side's own tests assert against, so a drift in
  * either codec is red here AND there, never a dropped mutation at runtime. */
-const appPayloadFixtures = JSON.parse(readFileSync(join(here, "../../../../../../🌉️mcp/🐚️channel/🧫️fixtures/🗿️app-payloads.json"), "utf8")) as readonly {
+const appPayloadFixtures = JSON.parse(readFileSync(join(here, "../../../../../../🌉️mcp/🐚️channel/🧪️tests/🧫️fixtures/🗿️app-payloads.json"), "utf8")) as readonly {
   readonly direction: "gateway_to_shell" | "shell_to_gateway";
   readonly kind: string;
   readonly payload: Record<string, unknown>;

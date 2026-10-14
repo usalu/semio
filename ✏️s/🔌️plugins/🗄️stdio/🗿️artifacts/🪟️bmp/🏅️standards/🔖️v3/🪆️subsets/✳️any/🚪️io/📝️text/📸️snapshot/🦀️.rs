@@ -14,7 +14,7 @@ mod pack_codec {
 use crate::standards::v_v3::subsets::any::schema::snapshot::BmpSnapshot;
 use crate::store;
 
-impl store::os_store::serialization::ArtifactDsl for BmpSnapshot{
+impl pack::snapshot::ArtifactDsl for BmpSnapshot{
  const EXTENSION:&'static str="bmp";
  fn envelope_id()->&'static str{"stdio.bmp"}
  fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|error|semio_framework_diagnostic::TextError::from_value_error(error.into_value_error(),semio_framework_diagnostic::TextSpan::at(1,1)))?;if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"BMP logical Text envelope mismatch",semio_framework_diagnostic::TextSpan::at(1,1)))}let snapshot=Self::__dsl_from_record(&semio_framework_dsl_record::parse_exact(body,&Self::__dsl_spec(),&semio_framework_dsl_record::ParseOptions::default())?)?;snapshot.validate().map_err(|error|semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error,semio_framework_diagnostic::TextSpan::at(1,1)))?;Ok(snapshot)}

@@ -5,7 +5,7 @@ import { WORKSPACE_ROOT, toolJobProofs, toolJobProofCatalogFailures, toolJobStat
 /** 🧪️ Runs strict language-neutral cross-file factory laws and hostile module substitutions. */
 export function toolJobOwnerFactoryResolutionSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command");
-  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🏭️owner-factory-resolution.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🏭️owner-factory-resolution.json"), "utf8"));
   
   
   const compilerProof = toolJobProofs(new Map([[fixture.ownerFile, fixture.ownerSource]]));

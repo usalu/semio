@@ -1,0 +1,12 @@
+{
+  "mutation": "patchData",
+  "index": 2,
+  "removeCount": 1,
+  "data": {
+    "kind": "pcm16",
+    "value": [
+      1200,
+      -1200
+    ]
+  }
+}

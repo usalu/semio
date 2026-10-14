@@ -1,0 +1,19 @@
+{
+  "source": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/README.md",
+    "sha256": "eee6c989f9adf1e317d3389a07a18b7ce85367a5cd19dbe3b69ed0ebd2516f86",
+    "size": 15146,
+    "mode": "0644"
+  },
+  "authorization": "Explicit Root deliberate README topology change; 📥️oct13-root-readme-topology-actions.json",
+  "approval": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🪪️current-source-approval/🔣️.json",
+    "before": "d19e4dfa2ce71305f2c676c443c33b4e283b978dcad05f0dbb1b244309e51064",
+    "after": "126f209116d9fb65d0d9481682487c8562e934527caa52efad81a20a2094a130"
+  },
+  "taxonomy": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "before": "1001b2dfc82ad10dcc03b868eeec4cc7a06feaa7346d5a74001008efb62342ec",
+    "after": "5c1a7855f5d9acbc57003c7923c23a85bef4c57d9c78cbc650c1e6de505d36cc"
+  }
+}

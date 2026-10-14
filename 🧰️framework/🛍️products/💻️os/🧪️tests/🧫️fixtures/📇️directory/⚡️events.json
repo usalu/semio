@@ -1,0 +1,330 @@
+{
+  "_comment": "📇️ Golden fixture (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS, contract C1) — one atelier (created then deleted) and one studio (created, renamed, made public, an invite redeemed, a member removed, then archived per the decider law: every current author demoted to spectator before space.archived). Decoded by both the Rust and TypeScript fold twins; both must produce byte-identical DirectoryReadModel projections, and re-folding the same sequence a second time must be a no-op (idempotent replay).",
+  "events": [
+    {
+      "seq": 1,
+      "id": "018f6b1a-6e40-7c31-9d21-000000000001",
+      "hlc": {
+        "physicalMs": 1755331200000,
+        "logical": 0
+      },
+      "actor": {
+        "kind": "system",
+        "id": "system"
+      },
+      "userId": "u-amara",
+      "body": {
+        "kind": "user.created",
+        "userId": "u-amara",
+        "email": "amara@semio.dev",
+        "displayName": "Amara Voss"
+      },
+      "recordedAtMs": 1755331200000
+    },
+    {
+      "seq": 2,
+      "id": "018f6b1a-6e40-7c31-9d21-000000000002",
+      "hlc": {
+        "physicalMs": 1755331201000,
+        "logical": 0
+      },
+      "actor": {
+        "kind": "system",
+        "id": "system"
+      },
+      "userId": "u-noor",
+      "body": {
+        "kind": "user.created",
+        "userId": "u-noor",
+        "email": "noor@semio.dev",
+        "displayName": "Noor Iqbal"
+      },
+      "recordedAtMs": 1755331201000
+    },
+    {
+      "seq": 3,
+      "id": "018f6b1a-6e40-7c31-9d21-000000000003",
+      "hlc": {
+        "physicalMs": 1755331202000,
+        "logical": 0
+      },
+      "actor": {
+        "kind": "system",
+        "id": "system"
+      },
+      "userId": "u-devon",
+      "body": {
+        "kind": "user.created",
+        "userId": "u-devon",
+        "email": "devon@semio.dev",
+        "displayName": "Devon Cole"
+      },
+      "recordedAtMs": 1755331202000
+    },
+    {
+      "seq": 4,
+      "id": "018f6b1a-6e40-7c31-9d21-000000000004",
+      "hlc": {
+        "physicalMs": 1755331203000,
+        "logical": 0
+      },
+      "actor": {
+        "kind": "user",
+        "id": "user:u-amara#s1"
+      },
+      "spaceId": "sp-atelier-amara",
+      "body": {
+        "kind": "space.created",
+        "spaceId": "sp-atelier-amara",
+        "name": "Amara's Atelier",
+        "spaceKind": "atelier",
+        "visibility": "private",
+        "ownerUserId": "u-amara"
+      },
+      "recordedAtMs": 1755331203000
+    },
+    {
+      "seq": 5,
+      "id": "018f6b1a-6e40-7c31-9d21-000000000005",
+      "hlc": {
+        "physicalMs": 1755331204000,
+        "logical": 0
+      },
+      "actor": {
+        "kind": "user",
+        "id": "user:u-amara#s1"
+      },
+      "spaceId": "sp-atelier-amara",
+      "userId": "u-amara",
+      "body": {
+        "kind": "member.upserted",
+        "spaceId": "sp-atelier-amara",
+        "userId": "u-amara",
+        "role": "author"
+      },
+      "recordedAtMs": 1755331204000
+    },
+    {
+      "seq": 6,
+      "id": "018f6b1a-6e40-7c31-9d21-000000000006",
+      "hlc": {
+        "physicalMs": 1755331205000,
+        "logical": 0
+      },
+      "actor": {
+        "kind": "user",
+        "id": "user:u-amara#s1"
+      },
+      "spaceId": "sp-studio-fabrication",
+      "body": {
+        "kind": "space.created",
+        "spaceId": "sp-studio-fabrication",
+        "name": "Fab Studio",
+        "spaceKind": "studio",
+        "visibility": "private",
+        "ownerUserId": "u-amara"
+      },
+      "recordedAtMs": 1755331205000
+    },
+    {
+      "seq": 7,
+      "id": "018f6b1a-6e40-7c31-9d21-000000000007",
+      "hlc": {
+        "physicalMs": 1755331206000,
+        "logical": 0
+      },
+      "actor": {
+        "kind": "user",
+        "id": "user:u-amara#s1"
+      },
+      "spaceId": "sp-studio-fabrication",
+      "userId": "u-amara",
+      "body": {
+        "kind": "member.upserted",
+        "spaceId": "sp-studio-fabrication",
+        "userId": "u-amara",
+        "role": "author"
+      },
+      "recordedAtMs": 1755331206000
+    },
+    {
+      "seq": 8,
+      "id": "018f6b1a-6e40-7c31-9d21-000000000008",
+      "hlc": {
+        "physicalMs": 1755331207000,
+        "logical": 0
+      },
+      "actor": {
+        "kind": "user",
+        "id": "user:u-amara#s1"
+      },
+      "spaceId": "sp-studio-fabrication",
+      "userId": "u-noor",
+      "body": {
+        "kind": "member.upserted",
+        "spaceId": "sp-studio-fabrication",
+        "userId": "u-noor",
+        "role": "author"
+      },
+      "recordedAtMs": 1755331207000
+    },
+    {
+      "seq": 9,
+      "id": "018f6b1a-6e40-7c31-9d21-000000000009",
+      "hlc": {
+        "physicalMs": 1755331208000,
+        "logical": 0
+      },
+      "actor": {
+        "kind": "user",
+        "id": "user:u-amara#s1"
+      },
+      "spaceId": "sp-studio-fabrication",
+      "body": {
+        "kind": "space.renamed",
+        "spaceId": "sp-studio-fabrication",
+        "name": "Fabrication Studio"
+      },
+      "recordedAtMs": 1755331208000
+    },
+    {
+      "seq": 10,
+      "id": "018f6b1a-6e40-7c31-9d21-000000000010",
+      "hlc": {
+        "physicalMs": 1755331209000,
+        "logical": 0
+      },
+      "actor": {
+        "kind": "user",
+        "id": "user:u-amara#s1"
+      },
+      "spaceId": "sp-studio-fabrication",
+      "body": {
+        "kind": "space.visibility-changed",
+        "spaceId": "sp-studio-fabrication",
+        "visibility": "public"
+      },
+      "recordedAtMs": 1755331209000
+    },
+    {
+      "seq": 11,
+      "id": "018f6b1a-6e40-7c31-9d21-000000000011",
+      "hlc": {
+        "physicalMs": 1755331210000,
+        "logical": 0
+      },
+      "actor": {
+        "kind": "user",
+        "id": "user:u-devon#s1"
+      },
+      "spaceId": "sp-studio-fabrication",
+      "userId": "u-devon",
+      "body": {
+        "kind": "invite.redeemed",
+        "spaceId": "sp-studio-fabrication",
+        "userId": "u-devon",
+        "inviteId": "inv-1",
+        "role": "author"
+      },
+      "recordedAtMs": 1755331210000
+    },
+    {
+      "seq": 12,
+      "id": "018f6b1a-6e40-7c31-9d21-000000000012",
+      "hlc": {
+        "physicalMs": 1755331211000,
+        "logical": 0
+      },
+      "actor": {
+        "kind": "user",
+        "id": "user:u-amara#s1"
+      },
+      "spaceId": "sp-studio-fabrication",
+      "userId": "u-noor",
+      "body": {
+        "kind": "member.removed",
+        "spaceId": "sp-studio-fabrication",
+        "userId": "u-noor"
+      },
+      "recordedAtMs": 1755331211000
+    },
+    {
+      "seq": 13,
+      "id": "018f6b1a-6e40-7c31-9d21-000000000013",
+      "hlc": {
+        "physicalMs": 1755331212000,
+        "logical": 0
+      },
+      "actor": {
+        "kind": "user",
+        "id": "user:u-amara#s1"
+      },
+      "spaceId": "sp-atelier-amara",
+      "body": {
+        "kind": "space.deleted",
+        "spaceId": "sp-atelier-amara"
+      },
+      "recordedAtMs": 1755331212000
+    },
+    {
+      "seq": 14,
+      "id": "018f6b1a-6e40-7c31-9d21-000000000014",
+      "hlc": {
+        "physicalMs": 1755331213000,
+        "logical": 0
+      },
+      "actor": {
+        "kind": "user",
+        "id": "user:u-amara#s1"
+      },
+      "spaceId": "sp-studio-fabrication",
+      "userId": "u-amara",
+      "body": {
+        "kind": "member.upserted",
+        "spaceId": "sp-studio-fabrication",
+        "userId": "u-amara",
+        "role": "spectator"
+      },
+      "recordedAtMs": 1755331213000
+    },
+    {
+      "seq": 15,
+      "id": "018f6b1a-6e40-7c31-9d21-000000000015",
+      "hlc": {
+        "physicalMs": 1755331214000,
+        "logical": 0
+      },
+      "actor": {
+        "kind": "user",
+        "id": "user:u-amara#s1"
+      },
+      "spaceId": "sp-studio-fabrication",
+      "userId": "u-devon",
+      "body": {
+        "kind": "member.upserted",
+        "spaceId": "sp-studio-fabrication",
+        "userId": "u-devon",
+        "role": "spectator"
+      },
+      "recordedAtMs": 1755331214000
+    },
+    {
+      "seq": 16,
+      "id": "018f6b1a-6e40-7c31-9d21-000000000016",
+      "hlc": {
+        "physicalMs": 1755331215000,
+        "logical": 0
+      },
+      "actor": {
+        "kind": "user",
+        "id": "user:u-amara#s1"
+      },
+      "spaceId": "sp-studio-fabrication",
+      "body": {
+        "kind": "space.archived",
+        "spaceId": "sp-studio-fabrication"
+      },
+      "recordedAtMs": 1755331215000
+    }
+  ]
+}

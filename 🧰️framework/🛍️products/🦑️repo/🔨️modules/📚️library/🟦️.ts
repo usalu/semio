@@ -1,19 +1,28 @@
-import { type ScriptControl } from "../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import {packageTestBudgetMs,PACKAGE_TEST_BUDGET_MS} from "./🏃️process/🦀️cargo/⏱️budget/🟦️.ts";
+export {packageTestBudgetMs,PACKAGE_TEST_BUDGET_MS};
+import {nextestArtifactLocation,repositoryCargoTestPolicyV1} from "./🏃️process/🦀️cargo/🔣️policy/🟦️.ts";
+export {nextestArtifactLocation,repositoryCargoTestPolicyV1};
+import {resolveWasmBindgenBin,wasmBuildEnvironment,wasmPackEnvironment,repositoryWasmBuildPolicyV1,buildRepositoryWasmWebV1} from "./🏃️process/🕸️wasm/🔣️policy/🟦️.ts";
+export {resolveWasmBindgenBin,wasmBuildEnvironment,wasmPackEnvironment,repositoryWasmBuildPolicyV1,buildRepositoryWasmWebV1};
+import {coverageDir,coverageSlug,repositoryProcessOwnerContextV1,repositoryVitestPolicyV1,type CoverageKind} from "./🏃️process/📋️context/🔣️policy/🟦️.ts";
+export {coverageDir,coverageSlug,repositoryProcessOwnerContextV1,repositoryVitestPolicyV1};
+export type {CoverageKind};
+import { scriptCompilerAdmissionControlV1, requestedCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { readBuildMode } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { type ScriptControl } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { safeGitEnv, gitSpawnEnv } from "./🏃️process/🌿️environment/🌳️git/🟦️.ts";
 export { safeGitEnv, gitSpawnEnv };
 import { SEMIO_ROOT_DIR, REPO_META_DIR_NAME, getSemioRoot, getRepoMetaDir } from "./🗂️workspaces/🧬️metadata/🟦️.ts";
 export { SEMIO_ROOT_DIR, REPO_META_DIR_NAME, getSemioRoot, getRepoMetaDir };
-import { runOwnedCommand } from "../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import {captureOwnedProcess} from "../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
-import { buildWasmWebV1, type WasmPackWebBuildOptions, type WasmBuildPolicyV1 } from "../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
-import { runExactCargoLaws, readExactCargoLawPolicyV1, exactExecutableFingerprint, type ExactCargoLawOptions, type ExactCargoLawPort, type ExactCargoLawReceipt } from "../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import type { ProcessOwnerContextV1 } from "../../../../🔨️modules/🏃️process/📋️context/🟦️.ts";
-import { runVitestV1, vitestArgumentsV1, type VitestPolicyV1 } from "../../../../🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
-import { type CargoTestPolicyV1, runCargoTestsV1 } from "../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { runBudgetedTestCommand } from "../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts";
-import { BUILD_BUDGET_MS, CMD_BUDGET_MS, buildBudgetMs, cmdBudgetMs, daemonBudgetMs, orchestratorBudgetMs } from "../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
-import { terminateOwnedProcessTree } from "../../../../🔨️modules/🏃️process/🪓️termination/🟦️.ts";
-import { TEST_LEVELS, TEST_LEVEL_BUDGET_MS, type TestLevel, activeTestLevel, atTestLevel, isTestLevel, resolveTestLevel, testLevelAtLeast, testLevelBudgetMs, testLevelBudgetSeconds, testLevelRank } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { runOwnedCommand } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { buildWasmWebV1, type WasmPackWebBuildOptions, type WasmBuildPolicyV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import type { ProcessOwnerContextV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/🟦️.ts";
+import { runVitestV1, vitestArgumentsV1, type VitestPolicyV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
+import { type CargoTestPolicyV1, runCargoTestsV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { runBudgetedTestCommand } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import { BUILD_BUDGET_MS, CMD_BUDGET_MS, buildBudgetMs, cmdBudgetMs, daemonBudgetMs, orchestratorBudgetMs } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { terminateOwnedProcessTree } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { TEST_LEVELS, TEST_LEVEL_BUDGET_MS, type TestLevel, activeTestLevel, atTestLevel, isTestLevel, resolveTestLevel, testLevelAtLeast, testLevelBudgetMs, testLevelBudgetSeconds, testLevelRank } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 //#region 🧲️Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 // AGPL-3.0 — @semio-tech/repo-lib/js: bundle scripts, policy runner, linters, dependency-boundary lint.
@@ -22,7 +31,6 @@ import { TEST_LEVELS, TEST_LEVEL_BUDGET_MS, type TestLevel, activeTestLevel, atT
 //#region 🔌️Adapters
 import { devToolingEnv, repoToolCacheEnv, semioNxParallel, semioNxParallelFlag } from "./🏃️process/🌿️environment/🟦️.ts";
 export { devToolingEnv, repoToolCacheEnv, semioNxParallel, semioNxParallelFlag };
-import { ephemeralBox } from "@semio-tech/framework";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { type Dirent, chmodSync, closeSync, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readSync, realpathSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
 import { availableParallelism, tmpdir } from "node:os";
@@ -40,7 +48,8 @@ import { canonicalFilenameForKind, fixedContractFilename, loadCatalogTaxonomy, l
 
 import { loadFrameworkOsPlaygroundCatalog } from "./🎮️playground/🟦️.ts";
 import { getWorkspaceRoot } from "./🗂️workspaces/🟦️.ts";
-import {repositoryCargoPreparationStorageV1, cargoRepositoryPackages, cargoRepositoryPackageSelections, cargoWorkspaceForManifest, cargoNextestConfiguration, selectedCargoArguments, prepareCargoWorkspaceInvocation, cargoWorkspacePreparationInvocationV1 } from "./🗂️workspaces/🦀️cargo/🟦️.ts";
+import { cargoRepositoryPackages, cargoRepositoryPackageSelections, cargoWorkspaceForManifest, cargoNextestConfiguration, selectedCargoArguments, prepareCargoWorkspaceInvocation } from "./🗂️workspaces/🦀️cargo/🟦️.ts";
+import {repositoryCargoPreparationStorageV1} from "./⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { budgetTimeoutHint, cargoProfileDir, defaultBudgetMs, daemonBudgetOpts, orchestratorBudgetOpts, resolveWorkspaceBin, runCmd, runCmdStatus, runNodeBin, runNodeBinStatus, semioBuildMode, semioReleaseEnv, tryRun, type RunCmdOpts, type SemioBuildMode } from "./🏃️process/🟦️.ts";
 
 export const HUB_DATA_DIR_NAME = "🌐hub";
@@ -119,28 +128,28 @@ export function fixtureItemsOf<T = Record<string, unknown>>(node: unknown): read
   return [];
 }
 
-function defaultCliBin(root: string): string {
+function defaultCliBin(root: string, mode: SemioBuildMode): string {
   const win = process.platform === "win32";
-  return join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client", win ? "client.exe" : "client");
+  return join(root, ".🧬semio/🦑️repo/⚡️cache/🗃️bin", mode, "client", win ? "client.exe" : "client");
 }
 
-export function resolveCliBin(root = getWorkspaceRoot()): string {
+export function resolveCliBin(root = getWorkspaceRoot(), mode: SemioBuildMode = readBuildMode(process.env.SEMIO_BUILD_MODE ?? "prototype")): string {
   const fromEnv = process.env.REPO_CLI_BIN?.trim();
   if (fromEnv) return resolve(fromEnv);
-  return defaultCliBin(root);
+  return defaultCliBin(root, readBuildMode(mode));
 }
 
 /** 🗃️ The MCP server is build output, so it lives in the marked repository cache and never in the tree. */
-function defaultMcpBin(root: string): string {
+function defaultMcpBin(root: string, mode: SemioBuildMode): string {
   const win = process.platform === "win32";
-  return join(root, ".🧬semio", "🦑️repo", "⚡️cache", "🗃️bin", win ? "repo.exe" : "repo");
+  return join(root, ".🧬semio", "🦑️repo", "⚡️cache", "🗃️bin", mode, "repo", win ? "repo.exe" : "repo");
 }
 
 /** 🔌️Resolves the native repo MCP binary without colliding with the repo CLI executable. */
-export function resolveMcpBin(root = getWorkspaceRoot()): string {
+export function resolveMcpBin(root = getWorkspaceRoot(), mode: SemioBuildMode = readBuildMode(process.env.SEMIO_BUILD_MODE ?? "prototype")): string {
   const fromEnv = process.env.REPO_MCP_BIN?.trim();
   if (fromEnv) return resolve(fromEnv);
-  return defaultMcpBin(root);
+  return defaultMcpBin(root, readBuildMode(mode));
 }
 
 /** 📡️Runs repo client with `--json` and returns parsed GraphQL payload (`data` object). */
@@ -879,10 +888,10 @@ export async function dispatchPolicyArgv(segments: string[], scriptUrl: string):
 
 //#region 🔖️bundle-script
 //#region 🔖️Script
-import { Script, BundleScript, ScriptRouter, findWorkspaceRoot, type ScriptCommand } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { readScriptPolicy, checkScriptInvocation, advanceScriptInvocation, scriptInvocationBudget, type ScriptInvocation } from "../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
-import { SCRIPT_PROCESS_INVOCATION_ENV, createScriptProcessEnvelope, receiveScriptProcessInvocation, withScriptProcessEnvelope } from "../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { runScriptMain } from "../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { Script, BundleScript, ScriptRouter, findWorkspaceRoot, type ScriptCommand } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { readScriptPolicy, checkScriptInvocation, advanceScriptInvocation, scriptInvocationBudget, type ScriptInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { SCRIPT_PROCESS_INVOCATION_ENV, createScriptProcessEnvelope, receiveScriptProcessInvocation, withScriptProcessEnvelope } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 export { ownedScriptRoutes, resolveOwnedScriptRoute, dispatchOwnedScriptRoute, type OwnedScriptRoute } from "./🏃️process/🧭️routing/🧩️contributions/🟦️.ts";
 
 export { runRepoScriptMain, type RunRepoScriptMainOptions } from "./🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -928,71 +937,14 @@ export function dispatchSubcommand(segments: string[], handlers: Record<string, 
 
 
 /** ⏱️Per-package quick/long/exhaustive floors for plugin crates whose suites exceed the level default. */
-export const PACKAGE_TEST_BUDGET_MS: Record<string, Partial<Record<TestLevel, number>>> = {
-  "semio-hub-writer": { quick: 600_000 },
-  "semio-hub-mathematical": { quick: 1_800_000 },
-  "semio-hub-wfc": { quick: 1_800_000 },
-  "semio-hub-procedural": { quick: 1_200_000 },
-  "semio-hub-flow": { quick: 1_200_000 },
-  "semio-hub-gis": { quick: 900_000 },
-  "semio-hub-vcs": { quick: 600_000 },
-  "semio-hub-animate": { quick: 900_000 },
-  "semio-hub-shooting": { quick: 600_000 },
-  "semio-hub-demonstrator": { quick: 1_200_000 },
-  "semio-hub-sequence": { quick: 600_000 },
-  "semio-hub-fem": { quick: 1_800_000 },
-  "semio-hub-architect": { quick: 1_800_000 },
-  "semio-hub-bim": { quick: 1_800_000 },
-  "semio-hub-process": { quick: 1_200_000 },
-  "semio-hub-lowpoly": { quick: 900_000 },
-  "semio-hub-reasoning": { quick: 600_000 },
-  "semio-hub-forms": { quick: 600_000 },
-  "semio-hub-layout": { quick: 600_000 },
-  "semio-hub-cad": { quick: 1_200_000 },
-  "semio-hub-norm": { quick: 1_800_000 },
-  "semio-hub-playbook": { quick: 600_000 },
-  "semio-hub-imperative": { quick: 600_000 },
-  "semio-hub-remodel": { quick: 600_000 },
-  "semio-hub-energy": { quick: 600_000 },
-  "semio-hub-trinity": { quick: 600_000 },
-  "semio-hub-dag": { quick: 600_000 },
-  "semio-hub-draw": { quick: 900_000 },
-  "semio-hub-raster": { quick: 600_000 },
-  "semio-s-plugin-stdio": { quick: 1_800_000 },
-  "semio-hub-note": { quick: 600_000 },
-  "semio-hub-puzzle": { quick: 1_200_000 },
-  "semio-hub-block": { quick: 1_200_000 },
-  "semio-hub-space": { quick: 1_200_000 },
-  "semio-hub-sourcing": { quick: 600_000 },
-  "semio-s-plugin-cad-aec-building": { quick: 600_000 },
-  "semio-s-plugin-cad-aec-energy": { quick: 600_000 },
-  "semio-s-plugin-cad-aec-structure": { quick: 600_000 },
-  "semio-s-plugin-cad-spatial-shape": { quick: 600_000 },
-  "semio-s-plugin-imperative-control": { quick: 600_000 },
-  "semio-s-plugin-imperative-effect": { quick: 600_000 },
-  "semio-s-plugin-imperative-logic": { quick: 600_000 },
-  "semio-s-plugin-imperative-math": { quick: 600_000 },
-  "semio-s-plugin-imperative-text": { quick: 600_000 },
-  "semio-s-plugin-playbook-procedural": { quick: 600_000 },
-  "semio-s-plugin-sourcing-beams": { quick: 600_000 },
-  "semio-s-plugin-sourcing-slabs": { quick: 600_000 },
-  "semio-s-plugin-sourcing-windows": { quick: 600_000 },
-};
+
 
 function levelsAbove(level: TestLevel): readonly TestLevel[] {
   return TEST_LEVELS.slice(TEST_LEVELS.indexOf(level) + 1);
 }
 
 /** ⏱️Wall-clock budget for one or more cargo packages at a level — max of level default and [[PACKAGE_TEST_BUDGET_MS]] floors; `SEMIO_TEST_BUDGET_MS` still wins. */
-export function packageTestBudgetMs(packages: readonly string[], level: TestLevel = activeTestLevel(), environment:Readonly<Record<string,string|undefined>>=process.env): number {
-  if (environment.SEMIO_TEST_BUDGET_MS !== undefined) return Number(environment.SEMIO_TEST_BUDGET_MS);
-  let budget = TEST_LEVEL_BUDGET_MS[level];
-  for (const pkg of packages) {
-    const floor = PACKAGE_TEST_BUDGET_MS[pkg]?.[level];
-    if (floor !== undefined) budget = Math.max(budget, floor);
-  }
-  return budget;
-}
+
 
 /** ⏱️Cumulative `go test` args for the active level: per-level `-timeout`, keeps `-short` through `quick`, adds `-skip` for `Test<Level>`-prefixed tests above it. */
 export function goLevelTestArgs(level: TestLevel = activeTestLevel()): string[] {
@@ -1158,19 +1110,17 @@ export async function runCanonicalGoTests(moduleRoot: string, args: string[], op
 }
 
 /** 🏗️Builds domain-owned Go sources through the same standard-toolchain projection used by tests. */
-export function runCanonicalGoBuild(moduleRoot: string, args: string[], opts: { env?: NodeJS.ProcessEnv; budgetMs?: number } = {}): void {
-  const plan = canonicalGoPlan(moduleRoot);
-  const temporary = mkdtempSync(join(tmpdir(), "semio-go-build-"));
-  const overlay = join(temporary, "overlay.json");
-  const cleanup = (): void => rmSync(temporary, { recursive: true, force: true });
-  writeFileSync(overlay, `${JSON.stringify({ Replace: plan.replacements }, null, 2)}\n`);
-  process.once("exit", cleanup);
+export async function runCanonicalGoBuild(moduleRoot: string, args: string[], opts: { control: CompilerAdmissionControl; env?: NodeJS.ProcessEnv; budgetMs?: number }): Promise<void> {
+  const control = requestedCompilerAdmissionControlV1(opts.control, opts.budgetMs ?? buildBudgetMs());
+  const mode = readBuildMode((opts.env ?? process.env).SEMIO_BUILD_MODE), root = getWorkspaceRoot(), environment = repoToolCacheEnv(root, opts.env ?? process.env), plan = canonicalGoPlan(moduleRoot);
+  const captureDirectory = environment.SEMIO_TEST_ARTIFACT_DIR ? resolve(environment.SEMIO_TEST_ARTIFACT_DIR) : resolve(moduleRoot,"dist");
+  mkdirSync(captureDirectory,{recursive:true});
+  const temporary = mkdtempSync(join(captureDirectory,"go-overlay-")), overlay = join(temporary,"overlay.json");
+  writeFileSync(overlay, JSON.stringify({Replace:plan.replacements}));
   try {
-    runCmd("go", ["build", `-overlay=${overlay}`, ...args], { cwd: moduleRoot, env: opts.env, budgetMs: opts.budgetMs });
-  } finally {
-    process.off("exit", cleanup);
-    cleanup();
-  }
+    const { buildGoArtifactsV1 } = await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🐹️go-build/🟦️.ts");
+    await buildGoArtifactsV1([`-overlay=${overlay}`,...args],{version:1,mode,cwd:resolve(moduleRoot),captureDirectory,leaseDirectory:join(root,".cache","framework","leases"),budgetMs:opts.budgetMs??buildBudgetMs()},{environment,control});
+  } finally { rmSync(temporary,{recursive:true,force:true}); }
 }
 
 /** ⏱️Vitest per-test/hook/teardown timeouts (ms) for the active level budget. */
@@ -1408,19 +1358,11 @@ export function resolveCargoPackageNames(packages: string[], cwd: string): strin
 //#region 🦀️NextestExecutionFilters
 /** 🧪️ Keeps runtime selection on the metadata execution command and build selection on the warm build. */
 /** 📁️ Selects a caller-owned artifact root without embedding any task identity in permanent tooling. */
-export function nextestArtifactLocation(cwd: string, env: NodeJS.ProcessEnv = process.env): { directory: string; retain: boolean } {
-  const explicit = env.SEMIO_TEST_ARTIFACT_DIR?.trim();
-  return explicit ? { directory: resolve(cwd, explicit), retain: true } : { directory: tmpdir(), retain: false };
-}
+
 //#endregion 🦀️NextestExecutionFilters
 
 /** 🔐️ Authors repository-native execution policy for one selected manifest. */
-export function repositoryCargoTestPolicyV1(manifestPath:string,cwd:string,env:Readonly<Record<string,string|undefined>>=process.env):CargoTestPolicyV1 {
-  const repository=getWorkspaceRoot(), path=resolve(repository,manifestPath), relativePath=relative(repository,path).split(sep).join("/"), scope=cargoWorkspaceForManifest(repository,relativePath), cargo=Bun.TOML.parse(readFileSync(path,"utf8")) as {package?:{name?:string}};
-  if(!cargo.package?.name)throw Error(`Cargo test policy requires a package manifest: ${manifestPath}`);
-  const level=isTestLevel(env.SEMIO_TEST_LEVEL)?env.SEMIO_TEST_LEVEL:activeTestLevel(), configPath=cargoNextestConfiguration(repository,scope.directory), artifact=nextestArtifactLocation(cwd,env);
-  return {version:1,manifestPath:path,targetDirectory:cargoTargetDirectory(repository,env),buildDirectory:cargoDirectories(repository,env).build,leaseDirectory:repoCacheDirectory(repository,"agents","resource-leases"),nextest:cargoNextestAvailable(),configPath,level,assertionBudgets:Object.fromEntries(TEST_LEVELS.map(value=>[value,packageTestBudgetMs([cargo.package!.name!],value,env)])) as Record<TestLevel,number>,buildBudgetMs:buildBudgetMs(env),assertionThreads:Math.max(1,availableParallelism()-Math.max(1,Math.ceil(availableParallelism()/4))),artifactDirectory:artifact.directory,retainArtifacts:artifact.retain,coverageEnabled:env.SEMIO_COVERAGE==="1",coveragePath:join(coverageDir(repository,"rust"),`${coverageSlug(cargo.package.name)}.lcov`),rustMinStack:env.RUST_MIN_STACK??"134217728"};
-}
+
 
 /** 🦀️ Composes selected repository workspace preparation with explicit neutral Cargo execution. */
 export async function runRepositoryCargoTests(packages:string[],cwd:string,control:ScriptControl,extraArgs:string[]=[],env:Readonly<Record<string,string|undefined>>=process.env):Promise<void>{
@@ -1438,10 +1380,7 @@ export async function runRepositoryCargoTests(packages:string[],cwd:string,contr
   }
 }
 
-function cargoNextestAvailable(): boolean {
-  const result = spawnSync("cargo", ["nextest", "--version"], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-  return result.status === 0;
-}
+
 
 export interface RunProbeResult {
   status: number | null;
@@ -1532,34 +1471,7 @@ export function runProbe(cmd: string, args: string[], opts: RunCmdOpts = {}): Ru
 
 /** 🦀️ One explicit Cargo package/target and nonempty exact law selection. */
 /** 🦀️ Composes exact native execution with the repository's admitted manifest and compiler storage policy. */
-export async function runRepositoryExactCargoLaws(options: Omit<ExactCargoLawOptions, "manifestPaths" | "cargoTargetDir"> & { manifestPath?: string }, port?: ExactCargoLawPort): Promise<readonly ExactCargoLawReceipt[]> {
-  readExactCargoLawPolicyV1(options.policy);
-  checkScriptInvocation(options.invocation);
-  await advanceScriptInvocation(options.invocation, "repository:exact-cargo-selection", "loading");
-  const root = getWorkspaceRoot(), environment = options.env ?? process.env;
-  const artifactDirectory = options.artifactDir ?? environment.SEMIO_TEST_ARTIFACT_DIR;
-  if (!artifactDirectory || !isAbsolute(artifactDirectory) || !isGeneratedPath(artifactDirectory)) throw new Error("Repository exact Cargo laws require generated artifact storage");
-  const selected = options.manifestPath ? [] : cargoRepositoryPackageSelections(root, options.groups.map(group => group.package));
-  const manifestPaths = Object.fromEntries(options.groups.map((group, index) => [group.package, options.manifestPath ?? join(root, selected[index]!.manifest)]));
-  const preparedPort: ExactCargoLawPort = port ?? {
-    fingerprint: exactExecutableFingerprint,
-    probe: async (command, args, capture) => {
-      if (command === "cargo") {
-        if (capture.invocation !== options.invocation) throw Error("Exact original Cargo preparation invocation required");
-        const started = performance.now();
-        await advanceScriptInvocation(options.invocation, "repository:exact-cargo-preparation", "running");
-        const request = cargoWorkspacePreparationInvocationV1(repositoryCargoPreparationStorageV1(root), root, args, capture.cwd, capture.env);
-        if (request) await runOwnedCommand(request.command, [...request.args], request.cwd, "cargo:selected-preparation", scriptInvocationBudget(options.invocation, capture.budgetMs), { env: request.environment, stdout: "stderr", output: { maximumBytes: capture.maxOutputBytes, maximumLines: capture.maxOutputBytes }, signal: options.invocation.control.signal, onProgress: async line => { await advanceScriptInvocation(options.invocation, "repository:exact-cargo-preparation", "running"); process.stderr.write(line + "\n"); } });
-        checkScriptInvocation(options.invocation);
-        const remaining = capture.budgetMs === 0 ? 0 : capture.budgetMs - (performance.now() - started);
-        if (capture.budgetMs > 0 && remaining <= 0) throw Error("Exact Cargo phase authority exhausted during preparation");
-        return await captureOwnedProcess(command, args, { ...capture, budgetMs: scriptInvocationBudget(options.invocation, Math.floor(remaining)) });
-      }
-      return await captureOwnedProcess(command, args, capture);
-    },
-  };
-  return await runExactCargoLaws({ ...options, manifestPaths, cargoTargetDir: cargoTargetDirectory(root, environment) }, preparedPort);
-}
+export {runRepositoryExactCargoLaws,readRepositoryCargoPreparationPolicyV1,configuredRepositoryCargoPreparationPolicyV1,type RepositoryCargoPreparationPolicyV1,type RepositoryExactCargoLawPort,type RepositoryExactCargoLawOptions} from "./🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 
 export interface SpawnDaemonHandle {
   child: ChildProcess;
@@ -1612,19 +1524,13 @@ export function coverageEnabled(): boolean {
   return process.env.SEMIO_COVERAGE === "1";
 }
 
-export type CoverageKind = "js" | "rust" | "go" | "py" | "dotnet";
+
 
 /** 📊️Per-toolchain lcov output directory under `.🧬semio/🦑️repo/📊️metrics/coverage`, created on demand. */
-export function coverageDir(repoRoot: string, kind: CoverageKind): string {
-  const dir = join(getRepoMetaDir(repoRoot), "📊️metrics", "coverage", kind);
-  mkdirSync(dir, { recursive: true });
-  return dir;
-}
+
 
 /** 📊️Filesystem-safe unique slug for a project's coverage output filename (mirrors the path-slugging idiom used for nx cache keys). */
-export function coverageSlug(bundleRoot: string): string {
-  return bundleRoot.replace(/[^a-zA-Z0-9_-]+/g, "_");
-}
+
 
 /**
  * 📊️Central, authoritative exclusion list applied at repo-wide aggregation — generated code, vendored/emitted
@@ -1944,11 +1850,13 @@ export function runViteDev(bundleRoot: string, segments: string[], opts: { confi
   spawnBun(["run", "vite", "--config", opts.config, "--host", host, "--port", port, ...segments], bundleRoot, env);
 }
 
-/** ▶️Vite production build. */
-export function runViteBuild(bundleRoot: string, segments: string[], config: string): void {
-  runCmd(process.execPath, [viteCliEntry(bundleRoot), "build", "--config", config, "--configLoader", "bundle", ...segments], { cwd: bundleRoot, env: devToolingEnv() });
+/** 🌐️ Builds a mode-owned site under shared compiler admission and complete artifact publication. */
+export async function runViteBuild(invocation: ScriptInvocation, bundleRoot: string, segments: string[], config: string): Promise<void> {
+  checkScriptInvocation(invocation);
+  const [{ resolveConfig }, { buildViteArtifact }, { readBuildMode }] = await Promise.all([import("vite"), import("./⚡️caching/🌐️vite/🟦️.ts"), import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts")]);
+  const mode = readBuildMode(process.env.SEMIO_BUILD_MODE), configFile = resolve(bundleRoot, config), resolved = await resolveConfig({ root: bundleRoot, configFile, configLoader: "native", mode }, "build", mode);
+  await buildViteArtifact({ invocation, root: bundleRoot, workspace: getWorkspaceRoot(), config: configFile, output: resolve(resolved.root, resolved.build.outDir), owner: `vite:${relative(getWorkspaceRoot(), bundleRoot)}:${mode}`, mode, args: segments, signal: invocation.control.signal, timeoutMs: scriptInvocationBudget(invocation, buildBudgetMs()), environment: devToolingEnv(), ...(process.env.SEMIO_TICKET_DIR ? { temporaryRoot: join(process.env.SEMIO_TICKET_DIR, "🗑️generated") } : {}) });
 }
-
 /**
  * ▶️Vitest run in bundle directory, under the [[runRepositoryTestCommand]] wall-clock budget. Appends v8 lcov coverage
  * flags when [[coverageEnabled]]. Invokes the workspace's own `node_modules/vitest/vitest.mjs` directly rather
@@ -1970,15 +1878,9 @@ export function runViteBuild(bundleRoot: string, segments: string[], config: str
  * never collected the kernel's in-source suites. Resolving here keeps the relative literals at the call
  * sites and makes the launched cwd authoritative again. */
 /** 📋️ Supplies actual Repo storage policy to an explicitly selected executable owner. */
-export function repositoryProcessOwnerContextV1(cwd:string):ProcessOwnerContextV1{
-  const repository=findWorkspaceRoot(cwd);
-  return {version:1,cwd:resolve(cwd),cacheRoot:repoCacheDirectory(repository),leaseDirectory:repoCacheDirectory(repository,"agents","resource-leases")};
-}
 
-export function repositoryVitestPolicyV1(bundleRoot:string,env:Readonly<Record<string,string|undefined>>=process.env):VitestPolicyV1{
-  const repository=findWorkspaceRoot(bundleRoot);
-  return {version:1,cwd:resolve(bundleRoot),toolPath:join(repository,"node_modules","vitest","vitest.mjs"),runtime:"node",coverageRuntime:"node",cacheRoot:repoCacheDirectory(repository,"vite"),coverageDirectory:join(coverageDir(repository,"js"),coverageSlug(bundleRoot)),budgetMs:Number(env.SEMIO_TEST_BUDGET_MS??TEST_LEVEL_BUDGET_MS[isTestLevel(env.SEMIO_TEST_LEVEL)?env.SEMIO_TEST_LEVEL:"fundamental"])};
-}
+
+
 
 export function vitestRunArguments(bundleRoot: string, segments: string[], config: string, collectingCoverage = coverageEnabled()): string[] {
   return vitestArgumentsV1(repositoryVitestPolicyV1(bundleRoot),segments,config,collectingCoverage);
@@ -2193,7 +2095,7 @@ export function runViteBunxDev(
     if (existsSync(viteCache)) rmSync(viteCache, { recursive: true, force: true });
   }
   const wantStrictPort = opts.strictPort ?? true;
-  const viteArgs = ["vite", "--config", opts.config, "--host", host, "--port", String(port)];
+  const viteArgs = ["vite", "--mode", readBuildMode(spawnEnv.SEMIO_BUILD_MODE), "--config", opts.config, "--host", host, "--port", String(port)];
   if (wantStrictPort && !segments.includes("--strictPort") && !segments.includes("--no-strictPort")) {
     viteArgs.push("--strictPort");
   }
@@ -2213,50 +2115,18 @@ export function runCargo(args: string[], cwd: string, env: NodeJS.ProcessEnv = p
 
 
 /** 📦️ Resolves an explicitly provisioned binding generator on every supported host. */
-export function resolveWasmBindgenBin(repoRoot = getWorkspaceRoot(), env: NodeJS.ProcessEnv = process.env): string {
-  const version = wasmBindgenVersion(readFileSync(join(repoRoot, "Cargo.lock"), "utf8"));
-  if (env.WASM_BINDGEN_VERSION && env.WASM_BINDGEN_VERSION !== version) throw new Error("WASM_BINDGEN_VERSION disagrees with Cargo.lock");
-  const runtime = (globalThis as { readonly Bun?: unknown }).Bun;
-  const which = typeof runtime === "object" && runtime !== null ? (runtime as { readonly which?: unknown }).which : undefined;
-  if (!env.SEMIO_WASM_BINDGEN_BIN && typeof which !== "function") throw new Error("wasm-bindgen resolution requires Bun.which.");
-  const command = env.SEMIO_WASM_BINDGEN_BIN
-    ? resolve(repoRoot, env.SEMIO_WASM_BINDGEN_BIN)
-    : (which as (name: string, options: { readonly PATH?: string }) => string | null)("wasm-bindgen", { PATH: env.PATH });
-  if (!command) throw new Error("Run bun nx run workspace:deps-wasm to provision wasm-bindgen");
-  const probe = runProbe(command, ["--version"], { env });
-  if (probe.status !== 0 || probe.stdout.trim() !== `wasm-bindgen ${version}`) throw new Error(`wasm-bindgen ${version} is required; run bun nx run workspace:deps-wasm`);
-  return command;
-}
+
 
 /** 🏗️ Shares the browser compiler environment across crates; Cargo's own config governs where it writes, no private default. */
-export function wasmBuildEnvironment(repoRoot: string, env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
-  return { ...env };
-}
+
 
 /** 🧭️ Makes wasm-pack resolve the selected optimizer while preserving the pinned binding generator. */
-export function wasmPackEnvironment(repoRoot: string, bindgen: string, env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
-  const optimizer = env.SEMIO_WASM_OPT_BIN ? resolve(repoRoot, env.SEMIO_WASM_OPT_BIN) : preparedBinaryen(repoRoot);
-  if (optimizer && basename(optimizer) !== (process.platform === "win32" ? "wasm-opt.exe" : "wasm-opt")) throw new Error("SEMIO_WASM_OPT_BIN must name a wasm-opt executable");
-  const environment = { ...env, PATH: [dirname(bindgen), ...(optimizer ? [dirname(optimizer)] : []), env.PATH].filter(Boolean).join(process.platform === "win32" ? ";" : ":") };
-  if (optimizer) {
-    const selected = Bun.which("wasm-opt", { PATH: environment.PATH });
-    if (!selected || realpathSync(selected) !== realpathSync(optimizer)) throw new Error("Selected wasm-opt is missing or shadowed by another tool");
-  }
-  return environment;
-}
+
 
 /** 🧭️ Authors selected repository tools and compiler storage for one browser source owner. */
-export function repositoryWasmBuildPolicyV1(cwd: string): WasmBuildPolicyV1 {
-  const root = getWorkspaceRoot(), bindgen = resolveWasmBindgenBin(root), environment = wasmPackEnvironment(root, bindgen, process.env), local = resolveWorkspaceBin("wasm-pack", cwd);
-  const cargo = Bun.TOML.parse(readFileSync(join(cwd, "Cargo.toml"), "utf8")) as { package?: { name?: string } };
-  if (!cargo.package?.name) throw Error("WASM source owner requires an authored Cargo package name");
-  return { version: 1, cwd: resolve(cwd), mode: semioBuildMode(), artifactDirectory: process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(process.env.SEMIO_TEST_ARTIFACT_DIR) : join(cwd, "dist"), buildDirectory: cargoDirectories(root).build, leaseDirectory: repoCacheDirectory(root,"agents","resource-leases"), budgetMs: buildBudgetMs(), packageName: cargo.package.name, searchPath: environment.PATH ?? "", bindgen: { command: bindgen, args: [] }, wasmPack: local ? { command: process.execPath, args: [local] } : { command: "wasm-pack", args: [] } };
-}
+
 /** 🦀️ Composes actual repository source preparation with neutral browser compiler execution. */
-export async function buildRepositoryWasmWebV1(options: WasmPackWebBuildOptions): Promise<void> {
-  prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(getWorkspaceRoot()),getWorkspaceRoot(),["build", "--manifest-path", join(options.componentDir, "Cargo.toml")],options.componentDir,process.env);
-  await buildWasmWebV1(options, repositoryWasmBuildPolicyV1(options.rsDir));
-}
+
 
 function parseCargoTomlStringArray(block: string, key: string): string[] {
   const match = block.match(new RegExp(`^${key}\\s*=\\s*\\[([^\\]]*)\\]`, "m"));
@@ -2310,14 +2180,14 @@ export function parseExtensionCargoManifest(
 
 /** 📦 Packs the SHIPPED `wasm-release` component of one extension component crate — built, staged and verified against its committed
  * semantic descriptor by the one component stage — into a runtime-installable `.sxt` beside that crate (`dist/<id>.sxt`). */
-export async function runExtensionComponentPackage(opts: { readonly componentDir: string; readonly repoRoot?: string; readonly logPrefix?: string }): Promise<string> {
+export async function runExtensionComponentPackage(opts: { readonly control: CompilerAdmissionControl; readonly componentDir: string; readonly repoRoot?: string; readonly logPrefix?: string }): Promise<string> {
   const repoRoot = opts.repoRoot ?? getWorkspaceRoot();
   const componentDir = resolve(opts.componentDir);
   const manifestPath = join(componentDir, "Cargo.toml");
   const parsed = parseExtensionCargoManifest(manifestPath, repoRoot);
   const logPrefix = opts.logPrefix ?? parsed.componentPackageId;
   const { componentStageTargetV1, stageComponentV1 } = await import("../../../💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts");
-  const staged = await stageComponentV1(repoRoot, componentStageTargetV1(repoRoot, manifestPath), "wasm-release", "verify");
+  const staged = await stageComponentV1(repoRoot, componentStageTargetV1(repoRoot, manifestPath), "wasm-release", "verify", opts.control);
   const componentWasm = new Uint8Array(readFileSync(staged.deliverable.wasm));
   const { packExtensionPackage } = await import("../../../💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts");
   const manifest = {

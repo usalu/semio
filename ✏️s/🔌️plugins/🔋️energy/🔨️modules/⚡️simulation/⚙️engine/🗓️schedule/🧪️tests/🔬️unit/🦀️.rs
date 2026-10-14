@@ -15,7 +15,7 @@ fn daily_schedule_respects_limits() {
 
 #[test]
 fn weekly_value_reads_sunday_first_slots() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/weekly-day-slots/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/weekly-day-slots/🔣️.json")).unwrap();
     let hour = fixture["hour"].as_u64().unwrap() as u8;
     let mut daily = Vec::new();
     let mut ids = [ScheduleId(0); 7];

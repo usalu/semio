@@ -5,7 +5,7 @@ import Ajv from "ajv";
 /** 🎼️ Independent schema and JSON oracle for all owned typed sample representations. */
 export function runWavTypedChunkChecks(): number {
   const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
-  const corpus = read("../../🧫️fixtures/🎼️typed-chunks/🔣️.json");
+  const corpus = read("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🎼️typed-chunks/🔣️.json");
   const valid = new Ajv({ strict: true }).addKeyword({ keyword: "x-semio-state", schemaType: "string", valid: true }).compile(read("../../🔣️.json"));
   for (const vector of corpus.cases) {
     assert.equal(valid(vector.snapshot), true, JSON.stringify(valid.errors));

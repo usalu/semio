@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 import Ajv from 'ajv';
 import artifactSchema from "../../../../🧬️schema/🔣️.json";
 import * as io from "../../../🟦️.ts";
-import laws from "../🧫️fixtures/🔣️.json";
+import laws from "./🧫️fixtures/🔣️.json";
 import * as artifact from "../../../../🧬️schema/🟦️.ts";
 import * as snapshot from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 
@@ -105,7 +105,7 @@ test('SQLite Puzzle3d consistently renumbered surrogate identities preserve the 
  try{db.exec('PRAGMA foreign_keys=OFF');for(const table of relational.tables)db.exec('UPDATE "'+table.name+'" SET id=id+1000');for(const [table,column] of links)db.exec('UPDATE "'+table+'" SET "'+column+'"="'+column+'"+1000');expect(db.query('PRAGMA integrity_check').values()).toEqual([['ok']]);expect(db.query('PRAGMA foreign_key_check').values()).toEqual([]);expect(await restore(await importSqliteDatabase(db.serialize()))).toEqual(expected)}finally{db.close()}
 });
 for(let batch=0;batch<12;batch++)test('SQLite Puzzle3d actual declared neutral snapshot assets batch '+batch,async()=>{
- const root=new URL('../../../../🧫️fixtures/',import.meta.url),validate=new Ajv({strict:false}).compile(artifactSchema),{project,restore}=providers();let index=0,count=0;
+ const root=new URL("../../../../🧪️tests/🧫️fixtures",import.meta.url),validate=new Ajv({strict:false}).compile(artifactSchema),{project,restore}=providers();let index=0,count=0;
  for await(const path of new Bun.Glob('**/📸️snapshot/**/🔣️.json').scan({cwd:fileURLToPath(root)})){if(index++%12!==batch)continue;const source=await Bun.file(new URL(path,root)).text();expect(validate(JSON.parse(source))).toBe(true);const value=io.puzzle3dSnapshotFromJsonText(source),db=await project(value);expect(await restore(db)).toEqual(value);expect(io.puzzle3dSnapshotFromJsonText(io.puzzle3dSnapshotToJsonText(value))).toEqual(value);count++}
  expect(count).toBeGreaterThan(0);
 });

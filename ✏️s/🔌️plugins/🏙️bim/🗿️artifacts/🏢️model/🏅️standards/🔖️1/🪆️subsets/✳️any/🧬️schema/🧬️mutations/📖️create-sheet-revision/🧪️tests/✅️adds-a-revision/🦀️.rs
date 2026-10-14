@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "📖️create-sheet-revision/✅️adds-a-revision",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/📖️create-sheet-revision/✅️adds-a-revision/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/📖️create-sheet-revision/✅️adds-a-revision/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/📖️create-sheet-revision/✅️adds-a-revision/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/📖️create-sheet-revision/✅️adds-a-revision/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/📖️create-sheet-revision/✅️adds-a-revision/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📖️create-sheet-revision/✅️adds-a-revision/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📖️create-sheet-revision/✅️adds-a-revision/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📖️create-sheet-revision/✅️adds-a-revision/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📖️create-sheet-revision/✅️adds-a-revision/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📖️create-sheet-revision/✅️adds-a-revision/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

@@ -1,4 +1,5 @@
 //! 🏔️ Complete GIS reconstruction pays actual indexes, output containers and iterative frames.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{GisTerrainSnapshot, ImportedMap, ImportedProperty, SCALAR};
 use semio_framework_value::{DslValue, NativeDecodeControl, Number, ValueError, ValueRefusalKind};
 use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, artifact::FloatRow};
@@ -112,7 +113,7 @@ fn snapshot(database: &SqliteDatabase, owner: &mut Owner<'_, '_>) -> Result<GisT
 }
 
 pub(super) fn reconstruct(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<GisTerrainSnapshot, ValueError> {
- store::sqlite_snapshot::validate_sqlite_database_schema_controlled(database, <GisTerrainSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::SQLITE_SCHEMA, SqliteSnapshotPhase::ReconstructSnapshot, control)?;
+ store::sqlite_snapshot::validate_sqlite_database_schema_controlled(database, <GisTerrainSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA, SqliteSnapshotPhase::ReconstructSnapshot, control)?;
  control.check_database(database, SqliteSnapshotPhase::ReconstructSnapshot)?;
  let maximum = control.reconstruction_remaining_bytes()?; let mut semantic = 0usize;
  let result = control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |remaining, progress,allocation|{

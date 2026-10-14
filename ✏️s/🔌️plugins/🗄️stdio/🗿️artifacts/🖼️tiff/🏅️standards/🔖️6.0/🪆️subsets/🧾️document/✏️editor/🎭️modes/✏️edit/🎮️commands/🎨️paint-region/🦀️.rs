@@ -128,7 +128,8 @@ impl ArtifactCommandWork<EditorApp<TiffAnyEditor>> for PaintRegionWork {
         Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<TiffMutation>(), depth: 1, ..Default::default() })
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<TiffAnyEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<TiffAnyEditor>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<TiffAnyEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<TiffAnyEditor>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.closing || self.complete { return Err(fault("stdio.tiff.paint-region.work-closed", "Paint region work is already closed")); }
         let TiffAnyEditCommand::PaintRegion(command) = input.command else { return Err(fault("stdio.tiff.paint-region.route-mismatch", "Paint work received another command")); };
         let ifd_index = selected_ifd(input.config, input.snapshot).ok_or_else(|| fault("stdio.tiff.paint-region.no-page", "TIFF document has no selectable image page"))?;
@@ -156,6 +157,9 @@ impl ArtifactCommandWork<EditorApp<TiffAnyEditor>> for PaintRegionWork {
         });
         self.complete = true;
         Ok(ArtifactCommandWorkStep::Complete(Emit::mutations(vec![mutation])))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) { self.closing = true; }

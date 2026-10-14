@@ -60,7 +60,7 @@ fn close(mut cursor: ScalarRecordWireWitness<FlowCommand>, root: &Arc<FlowComman
 //#region 🧪️Laws
 #[test]
 fn host_wire_witness_matches_real_opbinary_for_all_six_routes() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/📡️host-wire/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📡️host-wire/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let root = Arc::new(command(row));
         let bytes = protocol::OpBinary::encode_op(root.as_ref()).unwrap();

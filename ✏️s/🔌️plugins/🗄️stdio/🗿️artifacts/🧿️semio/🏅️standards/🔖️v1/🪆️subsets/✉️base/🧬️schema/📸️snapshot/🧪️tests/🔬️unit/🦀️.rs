@@ -4,16 +4,16 @@ use super::*;
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_default_subset() {
     let snap = SemioSnapshot::default();
-    let bytes = <SemioSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_text_round_trips_default_subset() {
     let snap = SemioSnapshot::default();
-    let text = <SemioSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
-    let back = <SemioSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snap);
+    let back = <SemioSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back);
 }
 
@@ -23,10 +23,10 @@ async fn dsl_text_round_trips_default_subset() {
 #[semio_framework_async_macros::async_test]
 async fn pack_and_dsl_round_trip_the_demo_snapshot() {
     let snap = demo_semio_snapshot();
-    let bytes = <SemioSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
-    assert_eq!(<SemioSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode"), snap);
-    let text = <SemioSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
-    assert_eq!(<SemioSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse"), snap);
+    let bytes = <SemioSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
+    assert_eq!(<SemioSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode"), snap);
+    let text = <SemioSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snap);
+    assert_eq!(<SemioSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse"), snap);
 }
 
 /// 🧪️ Every one of the 18 subset tags real-round-trips through both facets — proves the
@@ -56,9 +56,9 @@ async fn all_eighteen_subset_tags_round_trip_text_and_binary() {
     ];
     for subset in subsets {
         let snap = SemioSnapshot { schema: STDIO_SEMIO_DOCUMENT_SCHEMA.into(), subset };
-        let text = <SemioSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
-        assert_eq!(<SemioSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).unwrap_or_else(|e| panic!("parse_dsl failed for {:?}: {e}", subset_tag(&snap.subset))), snap);
-        let bytes = <SemioSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
-        assert_eq!(<SemioSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).unwrap_or_else(|e| panic!("decode_pack failed for {:?}: {e}", subset_tag(&snap.subset))), snap);
+        let text = <SemioSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snap);
+        assert_eq!(<SemioSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).unwrap_or_else(|e| panic!("parse_dsl failed for {:?}: {e}", subset_tag(&snap.subset))), snap);
+        let bytes = <SemioSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
+        assert_eq!(<SemioSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).unwrap_or_else(|e| panic!("decode_pack failed for {:?}: {e}", subset_tag(&snap.subset))), snap);
     }
 }

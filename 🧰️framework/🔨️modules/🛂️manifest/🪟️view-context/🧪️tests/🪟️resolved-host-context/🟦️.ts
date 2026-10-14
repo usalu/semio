@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import Ajv from "ajv";
 import { parseResolvedPluginViewState, VIEW_CONTEXT_LONG_STRING_CHARS, VIEW_CONTEXT_LONG_STRING_FIELDS } from "../../../🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
-import fixture from "../../🧫️fixtures/🪟️resolved-host-context/🔣️.json";
+import fixture from "../🧫️fixtures/🪟️resolved-host-context/🔣️.json";
 
 export function testResolvedHostContext(): void {
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);

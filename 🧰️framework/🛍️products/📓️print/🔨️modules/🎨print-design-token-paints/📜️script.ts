@@ -1,7 +1,7 @@
-import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join, relative } from "node:path";
-import { writeGeneratedFileIfChanged } from "../../../../🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { writeGeneratedFileIfChanged } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { renderPrintLatexTokenStylesheet } from "./🟦️.ts";
 
 class GenerateScript extends BundleScript {

@@ -4,7 +4,7 @@ import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import Ajv2020 from "ajv/dist/2020";
 import Ajv from "ajv";
-const vectors=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+const vectors=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
 test("tool original custody vectors satisfy their neutral schema",()=>{const validate=new Ajv2020({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8")));expect(validate(vectors)).toBe(true);});
 /** 🎟️ Independent transaction ownership survives zero and one-below retirement grants. */
 test("tool member emission forwards original mutation and cause retirement grants",()=>{
@@ -68,7 +68,7 @@ test("tool job outcomes retain originals between independently granted closure t
 
 /** 📭️ Native ToolRun integration preserves the shared neutral in-place outcome header law. */
 test("tool outcome slot retains original metadata until separately granted presence removal",()=>{
- const root=new URL('../../../../../../../🔨️modules/🧵️job/♻️retirement/📄️payload/',import.meta.url);const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",root),"utf8"));expect(new Ajv({strict:true}).compile(JSON.parse(readFileSync(new URL("🧬️schema/🔣️.json",root),"utf8")))(law)).toBe(true);
+ const root=new URL('../../../../../../../🔨️modules/🧵️job/♻️retirement/📄️payload/',import.meta.url);const law=JSON.parse(readFileSync(new URL("🧪️tests/🧫️fixtures/🔣️.json",root),"utf8"));expect(new Ajv({strict:true}).compile(JSON.parse(readFileSync(new URL("🧬️schema/🔣️.json",root),"utf8")))(law)).toBe(true);
  const db=new Database(":memory:");try{db.exec("CREATE TABLE outcomes(variant TEXT,pages INTEGER,grant INTEGER,present INTEGER)");for(const variant of law.variants)for(const pages of law.pages)for(const grant of [0,law.slotPresenceBytes])db.query("INSERT INTO outcomes VALUES(?,?,?,?)").run(variant,pages,grant,Number(grant<law.slotPresenceBytes));expect(db.query("SELECT COUNT(*) AS n FROM outcomes WHERE grant=0 AND present=1").get()).toEqual({n:18});expect(db.query("SELECT COUNT(*) AS n FROM outcomes WHERE grant=1 AND present=0").get()).toEqual({n:18});}finally{db.close();}
  console.log("[DEBUG] SQLite18 ToolRun original outcome headers survive zero-grant and retire in place at shared neutral presence1, without an8256-byte Option move");const native=readFileSync(new URL("../../../⏯️tool-run/🦀️.rs",import.meta.url),"utf8");expect(native).toContain("pending_job_outcome: semio_framework_job::JobOutcomeSlot");expect(native).not.toContain("pending_job_outcome: Option<semio_framework_job::StepOutcome>");
 });

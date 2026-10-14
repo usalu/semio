@@ -1,7 +1,8 @@
 //! 🎬️ Individually handwritten figure, tile geometry and composed child relational ownership.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::PresentationSnapshot;
 use crate::{FigureTileSource,FigureTileDraft,FigureTileFrame};
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Projection,Cell,NativeEncodingBound,FloatColumn,insert_key_ieee754,insert_ieee754,read_binary64,ieee754_is_null}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Projection,Cell,NativeEncodingBound,FloatColumn,insert_key_ieee754,insert_ieee754,read_binary64,ieee754_is_null}}};
 use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
 
@@ -12,14 +13,14 @@ fn frame(row:&SqliteRow,start:usize,columns:&[FloatColumn])->Result<FigureTileFr
 fn project_child<S>(out:&mut Projection<'_,'_>,slot:&str,child:&store::os_store::artifact_child::ArtifactChild<S>)->Result<(),ValueError>{let t=&child.target;out.insert("presentation_child",&[Cell::Integer(1),Cell::Text(slot),Cell::Text(&child.child_id),Cell::Text(&t.artifact_id),Cell::Text(&t.dialect.artifact_kind),Cell::Text(&t.dialect.standard),Cell::Text(&t.dialect.subset)])?;Ok(())}
 fn restore_child<S>(row:&SqliteRow,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<store::os_store::artifact_child::ArtifactChild<S>,ValueError>{native.scoped_stage(|native|{native.begin_stage(5)?;let child_id=native.copy_text(row.text(3)?)?;native.step()?;let artifact_id=native.copy_text(row.text(4)?)?;native.step()?;let artifact_kind=native.copy_text(row.text(5)?)?;native.step()?;let standard=native.copy_text(row.text(6)?)?;native.step()?;let subset=native.copy_text(row.text(7)?)?;native.step()?;Ok(store::os_store::artifact_child::ArtifactChild::new(child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind,standard,subset}}))})}
 fn bound_child<S>(bound:&mut NativeEncodingBound<'_,'_>,child:&store::os_store::artifact_child::ArtifactChild<S>)->Result<(),ValueError>{let t=&child.target;for text in[&child.child_id,&t.artifact_id,&t.dialect.artifact_kind,&t.dialect.standard,&t.dialect.subset]{bound.repeated(text.len(),24)?}Ok(())}
-impl ArtifactSqliteSnapshot for PresentationSnapshot{
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+impl ArtifactSqliteSnapshotHost for PresentationSnapshot{
+ 
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
-  semantic_owned(self,control.limits().max_value_bytes,&mut SemanticCheck(control))?;control.check_rows(self.tiles.len().checked_add(4).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Presentation row count overflow"))?)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
+  semantic_owned(self,control.limits().max_value_bytes,&mut SemanticCheck(control))?;control.check_rows(self.tiles.len().checked_add(4).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Presentation row count overflow"))?)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
   control.check_rows(4)?;let maximum=control.limits().max_rows;let maximum_bytes=control.limits().max_value_bytes;
-  store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
+  store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
    let count=match record.get(2){Some(semio_framework_dsl_record::FieldValue::List(values))=>values.len(),None|Some(semio_framework_dsl_record::FieldValue::Absent)=>0,_=>return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("Presentation tiles require a literal list").to_string()))};
    if count.checked_add(4).filter(|count|*count<=maximum).is_none(){return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("Presentation native snapshot exceeds row limit").to_string()))}
    semantic_borrowed(record,maximum_bytes,native)?;Self::__dsl_from_record_controlled(record,native)
@@ -31,14 +32,19 @@ impl ArtifactSqliteSnapshot for PresentationSnapshot{
   for tile in &self.tiles{bound.add(1024)?;bound.repeated(tile.id.len(),24)?;bound.repeated(tile.name.len(),24)?}
   bound_child(&mut bound,&self.presentation)?;bound_child(&mut bound,&self.animation)?;bound.finish()
  }
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
+ 
+ 
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for PresentationSnapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
   control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;control.check_rows(self.tiles.len().checked_add(4).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Presentation row count overflow"))?)?;let mut out=Projection::new(Self::SQLITE_SCHEMA,control)?;
   out.insert_key("presentation_document",1,&[Cell::Text(&self.schema)])?;let source=&self.source;let f=&source.frame;
   insert_key_ieee754(&mut out,"presentation_source",1,&[Cell::Integer(1),Cell::Text(&source.src),Cell::Text(&source.kind),Cell::Real(f.x),Cell::Real(f.y),Cell::Real(f.width),Cell::Real(f.height),source.source_aspect.map_or(Cell::Null,Cell::Real),source.pdf_page.map_or(Cell::Null,|v|Cell::Integer(i64::from(v)))],SOURCE)?;
   for(ordinal,tile)in self.tiles.iter().enumerate(){let f=&tile.crop;insert_ieee754(&mut out,"presentation_tile",&[Cell::Integer(1),Cell::Integer(i64::try_from(ordinal).map_err(|e|invalid(e.to_string()))?),Cell::Text(&tile.id),Cell::Text(&tile.name),Cell::Real(f.x),Cell::Real(f.y),Cell::Real(f.width),Cell::Real(f.height)],TILE)?;}
   project_child(&mut out,"presentation",&self.presentation)?;project_child(&mut out,"animation",&self.animation)?;out.finish()
  }
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
   validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
   let documents=&database.table("presentation_document")?.rows;let sources=&database.table("presentation_source")?.rows;let rows=&database.table("presentation_tile")?.rows;let children=&database.table("presentation_child")?.rows;
   if documents.len()!=1||documents[0].rowid!=1||documents[0].values.len()!=2||documents[0].integer(0)?!=1||sources.len()!=1||sources[0].rowid!=1||children.len()!=2{return Err(invalid("Presentation requires one document, one source and its two child slots"))}

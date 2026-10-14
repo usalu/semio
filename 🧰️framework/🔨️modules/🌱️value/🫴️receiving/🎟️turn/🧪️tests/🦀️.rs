@@ -6,7 +6,7 @@ macro_rules! turn_authority_law{
  ($name:ident,$control:ident)=>{
  #[test]
  fn $name(){
-  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
   for row in fixture["cases"].as_array().unwrap(){
    let id=row["id"].as_str().unwrap();let callbacks=Cell::new(0);let mut observer=|_|{callbacks.set(callbacks.get()+1);true};
    let initial=amount(&row["initialMaximumBytes"]);let owned=amount(&row["ownedBytes"]);

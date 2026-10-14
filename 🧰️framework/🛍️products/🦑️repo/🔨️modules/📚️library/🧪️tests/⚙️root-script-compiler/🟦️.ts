@@ -12,7 +12,7 @@ const root = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const defaultArtifactRoot = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE/🗑️generated/sol-root-schema-field-extraction/root-script-compiler");
 const artifactRoot = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR ?? defaultArtifactRoot);
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/⚙️root-script-compiler/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/⚙️root-script-compiler/🔣️.json"), "utf8"));
 const text = readFileSync(join(root, "📜️script.ts"), "utf8");
 const source = ts.createSourceFile("📜️script.ts", text, ts.ScriptTarget.Latest, true);
 const functions = source.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && !!node.body);

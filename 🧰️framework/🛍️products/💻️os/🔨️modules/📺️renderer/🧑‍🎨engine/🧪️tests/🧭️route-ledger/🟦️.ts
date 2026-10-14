@@ -8,7 +8,7 @@
 import { describe, expect, it } from "vitest";
 import { assign, createActor, setup } from "xstate";
 import { createShellRouteLedgerV1 } from "../../🧱️elements/🏛️ShellHost/🧭️route-ledger/🟦️.ts";
-import corpus from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🧭️route-ledger/🔣️.json";
+import corpus from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🧭️route-ledger/🔣️.json";
 import shellSource from "../../🧱️elements/🏛️ShellHost/🟦️.tsx?raw";
 // #endregion 🔌️Adapters
 

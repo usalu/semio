@@ -1,0 +1,200 @@
+{
+  "cases": [
+    {
+      "name": "semanticOnly",
+      "primary": {
+        "kind": "unsupportedOwner",
+        "message": "Original semantic source 源🌊",
+        "retainedProgress": {
+          "copiedItems": 1,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      },
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 64,
+        "maximumReleaseBytes": 64,
+        "maximumDepth": 8
+      },
+      "expectedReceiptKind": null
+    },
+    {
+      "name": "receiptRefused",
+      "primary": {
+        "kind": "allocationFailed",
+        "message": "Whole primary source survives receipt refusal 源🌊",
+        "retainedProgress": {
+          "copiedItems": 2,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      },
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 64,
+        "maximumReleaseBytes": 64,
+        "maximumDepth": 8
+      },
+      "expectedReceiptKind": "invariantViolated"
+    }
+  ],
+  "closeGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 64,
+    "maximumCapacityBytes": 262144,
+    "maximumReleaseBytes": 262144,
+    "maximumDepth": 128
+  },
+  "copyGrants": [
+    1,
+    3,
+    64
+  ],
+  "wire": {
+    "primary": {
+      "kind": "unsupportedOwner",
+      "message": "semantic 源🌊",
+      "retainedProgress": {
+        "copiedItems": 2,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 5,
+        "releasedBytes": 7
+      }
+    },
+    "receiptRefusal": {
+      "kind": "invariantViolated",
+      "message": "receipt 源🌊",
+      "retainedProgress": {
+        "copiedItems": 11,
+        "copiedBytes": 13,
+        "retainedCapacityBytes": 17,
+        "releasedBytes": 19
+      }
+    }
+  },
+  "faultWire": {
+    "primary": {
+      "origin": "app",
+      "code": "shape.operation-refused",
+      "severity": "warning",
+      "message": "Original topology diagnostic 源🌊",
+      "scope": {
+        "appId": "generation3d",
+        "module": "brep"
+      },
+      "retryable": true,
+      "retainedProgress": {
+        "copiedItems": 2,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 5,
+        "releasedBytes": 7
+      },
+      "span": {
+        "line": 3,
+        "column": 5,
+        "length": 7
+      },
+      "params": {
+        "operation": "cut",
+        "selection": "face:71"
+      },
+      "causes": [
+        {
+          "message": "Original child diagnostic 源🌊",
+          "code": "geometry.non-manifold",
+          "retainedProgress": {
+            "copiedItems": 11,
+            "copiedBytes": 13,
+            "retainedCapacityBytes": 17,
+            "releasedBytes": 19
+          }
+        }
+      ],
+      "source": {
+        "offset": 31,
+        "byte": 93,
+        "depth": 7
+      }
+    },
+    "receiptRefusal": {
+      "kind": "invariantViolated",
+      "message": "receipt 源🌊",
+      "retainedProgress": {
+        "copiedItems": 11,
+        "copiedBytes": 13,
+        "retainedCapacityBytes": 17,
+        "releasedBytes": 19
+      }
+    }
+  },
+  "contextWire": {
+    "primary": {
+      "origin": "app",
+      "code": "shape.operation-refused",
+      "severity": "warning",
+      "message": "Original topology diagnostic 源🌊",
+      "scope": {
+        "appId": "generation3d",
+        "module": "brep"
+      },
+      "retryable": true,
+      "retainedProgress": {
+        "copiedItems": 2,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 5,
+        "releasedBytes": 7
+      },
+      "span": {
+        "line": 3,
+        "column": 5,
+        "length": 7
+      },
+      "params": {
+        "operation": "cut",
+        "selection": "face:71"
+      },
+      "causes": [
+        {
+          "message": "Original child diagnostic 源🌊",
+          "code": "geometry.non-manifold",
+          "retainedProgress": {
+            "copiedItems": 11,
+            "copiedBytes": 13,
+            "retainedCapacityBytes": 17,
+            "releasedBytes": 19
+          }
+        }
+      ],
+      "source": {
+        "offset": 31,
+        "byte": 93,
+        "depth": 7
+      }
+    },
+    "receiptRefusal": {
+      "kind": "invariantViolated",
+      "message": "receipt 源🌊",
+      "retainedProgress": {
+        "copiedItems": 11,
+        "copiedBytes": 13,
+        "retainedCapacityBytes": 17,
+        "releasedBytes": 19
+      }
+    },
+    "contextRefusal": {
+      "kind": "workLimit",
+      "message": "original context refusal 源",
+      "retainedProgress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    }
+  }
+}

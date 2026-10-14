@@ -5,17 +5,17 @@ const ENTRY_FIELDS: usize = ENTRY_LABELS + 2;
 
 #[derive(Clone, Copy)]
 pub(crate) struct MountedCommandEntrySource<'a> {
-    action_id: &'a str,
-    label: Option<&'a LocalizedLabel>,
-    captured_millis: i64,
-    kind: ActionKind,
-    count: u32,
-    parent_touched: bool,
-    child_edit_count: usize,
+    pub(crate) action_id: &'a str,
+    pub(crate) label: Option<&'a LocalizedLabel>,
+    pub(crate) captured_millis: i64,
+    pub(crate) kind: ActionKind,
+    pub(crate) count: u32,
+    pub(crate) parent_touched: bool,
+    pub(crate) child_edit_count: usize,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum MountedCommandEntryRefusal { Timestamp, Stale, Closed }
+pub(crate) enum MountedCommandEntryRefusal { Timestamp, Stale, Closed }
 
 impl<'a> MountedCommandEntrySource<'a> {
     fn text(&self, index: usize) -> &'a str {

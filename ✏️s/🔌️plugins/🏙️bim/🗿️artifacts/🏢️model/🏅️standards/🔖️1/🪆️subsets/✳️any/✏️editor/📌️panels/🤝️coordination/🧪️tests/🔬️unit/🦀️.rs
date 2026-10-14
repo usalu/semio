@@ -8,7 +8,7 @@ use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_plugin::ViewModel;
 use semio_framework_ui_locale::{Locale, Terminology};
 
-const FRAME: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🧨️clash-sets/🏢️frame/📸️snapshot/🔣️.json");
+const FRAME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧨️clash-sets/🏢️frame/📸️snapshot/🔣️.json");
 
 fn frame() -> (ModelSnapshot, ModelInference) {
     let snapshot: ModelSnapshot = from_json_str(FRAME, JsonMemberPolicy::Reject).expect("the committed frame decodes");

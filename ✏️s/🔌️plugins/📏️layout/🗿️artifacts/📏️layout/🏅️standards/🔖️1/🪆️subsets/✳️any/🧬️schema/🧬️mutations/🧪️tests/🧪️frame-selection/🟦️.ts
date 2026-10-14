@@ -11,7 +11,7 @@ import { parseDragFrames, parseRotateFrames, parseScaleFrames } from "../../🟦
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 const mutations = join(here, "../..");
-const fixtures = join(here, "../../../../🧫️fixtures/🧬️mutations");
+const fixtures = join(here, "../../../../🧪️tests/🧫️fixtures/🧬️mutations");
 const leaves = [
   { directory: "✋️drag-frames", variant: "DragFrames", parse: parseDragFrames },
   { directory: "🔃️rotate-frames", variant: "RotateFrames", parse: parseRotateFrames },

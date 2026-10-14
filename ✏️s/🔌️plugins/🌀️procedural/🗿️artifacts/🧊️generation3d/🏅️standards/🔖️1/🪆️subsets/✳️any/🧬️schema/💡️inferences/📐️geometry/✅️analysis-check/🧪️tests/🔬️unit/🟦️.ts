@@ -6,7 +6,7 @@ import { bodyOf, Manifold, manifoldOf, Mesh, trianglesOfManifold, volumetric, ty
 
 type Case = FixtureCase & { oracleTolerance?: number };
 type Fixture = { tolerance: number; oracleTolerance: number; cases: Case[] };
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(new URL("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/✅️analysis-check/🔣️.json", import.meta.url), "utf8")) as Fixture;
 const prefix = "generation3d.geometry.";
 const fault = (code: string, port: string): OracleResult => ({ fault: { code: prefix + code, port } });
 const triple = (value: unknown): Vector3 => new Vector3(...(value as [number, number, number]));

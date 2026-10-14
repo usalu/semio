@@ -52,7 +52,7 @@ fn idiom_hooks_canonicalize_and_classify_through_the_dsl_registry_seam() {
 fn run_dag_fixture_query() {
     block_on_test(async {
         // 🩹️ Was `include_str!` of the dag technology's example fixture; that technology migrated its
-        // fixture to a handcrafted DSL (`store::os_store::serialization::ArtifactDsl`) — inlined the same dag-fixture JSON this
+        // fixture to a handcrafted DSL (`pack::snapshot::ArtifactDsl`) — inlined the same dag-fixture JSON this
         // test actually parses (`from_dag_host_snapshot_json`), decoupled from its document format.
         let fixture = r#"{
   "schema": "dag.host_snapshot",
@@ -204,7 +204,7 @@ fn parse_labeled_directed_and_undirected_edges_use_double_dash_connector() {
 fn run_port_filtered_query() {
     block_on_test(async {
         // 🩹️ Was `include_str!` of the dag technology's example fixture; that technology migrated its
-        // fixture to a handcrafted DSL (`store::os_store::serialization::ArtifactDsl`) — inlined the same dag-fixture JSON this
+        // fixture to a handcrafted DSL (`pack::snapshot::ArtifactDsl`) — inlined the same dag-fixture JSON this
         // test actually parses (`from_dag_host_snapshot_json`), decoupled from its document format.
         let fixture = r#"{
   "schema": "dag.host_snapshot",
@@ -468,7 +468,7 @@ fn from_object_snapshot_json_passes_through_existing_nodes() {
 
 #[test]
 fn explicit_manifest_consumption_follows_portable_owner_corpus() {
-    let corpus = semio_framework_pack_json::parse(include_str!("../../../🛂️manifest/🧫️fixtures/🧩️consumption/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let corpus = semio_framework_pack_json::parse(include_str!("../../../🛂️manifest/🧪️tests/🧫️fixtures/🧩️consumption/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in corpus["cases"].as_array().unwrap() {
         let manifest = if row["manifest"].is_null() { None } else { Some(<crate::manifest::Manifest as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&row["manifest"])).unwrap()) };
         let actual = BoardQueryableGraph::from_host_snapshot_json(&semio_framework_pack_json::to_string(&row["snapshot"]), manifest);

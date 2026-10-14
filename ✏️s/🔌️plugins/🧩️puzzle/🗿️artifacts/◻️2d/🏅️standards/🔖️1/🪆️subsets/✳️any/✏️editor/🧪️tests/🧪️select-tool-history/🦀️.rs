@@ -23,7 +23,7 @@ use semio_framework::kernel::{HistoryEntry, HistoryTimeTravel, HistoryTimeTravel
 use semio_framework::{ActionArgControl, ArgSchema, NumberScale, SnapSource};
 use semio_framework_plugin::{ActionMeta, PluginApp, ViewModel, FRAMEWORK_HISTORY_BODY_KEY};
 
-const SELECT_TOOL_HISTORY_CORPUS: &str = include_str!("../../🧫️fixtures/🧫️select-tool-history/🔣️.json");
+const SELECT_TOOL_HISTORY_CORPUS: &str = include_str!("../🧫️fixtures/🧫️select-tool-history/🔣️.json");
 
 /// 🧫️ The corpus, its schema tag checked.
 pub(super) fn corpus() -> Value {

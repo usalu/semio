@@ -3,11 +3,11 @@
     {
       "input": [
         "run",
-        "@semio-tech/mit-bestand-demonstrator:prepare-dev"
+        "@semio-tech/mit-bestand-demonstrator:prepare-prototype"
       ],
       "args": [
         "run",
-        "@semio-tech/mit-bestand-demonstrator:prepare-dev"
+        "@semio-tech/mit-bestand-demonstrator:prepare-prototype"
       ],
       "env": {
         "SEMIO_BUILD_MODE": "prototype",
@@ -57,7 +57,7 @@
         "SEMIO_BUILD_MODE": "prototype",
         "SEMIO_RENDERER": "react"
       },
-      "watch": "@semio-tech/mit-bestand-demonstrator:activate-dev"
+      "watch": "@semio-tech/mit-bestand-demonstrator:activate-prototype"
     },
     {
       "input": [
@@ -76,11 +76,11 @@
     {
       "input": [
         "run",
-        "@semio-tech/mit-bestand-demonstrator:activate-dev"
+        "@semio-tech/mit-bestand-demonstrator:activate-prototype"
       ],
       "args": [
         "run",
-        "@semio-tech/mit-bestand-demonstrator:activate-dev"
+        "@semio-tech/mit-bestand-demonstrator:activate-prototype"
       ],
       "env": {
         "SEMIO_BUILD_MODE": "prototype",
@@ -149,7 +149,7 @@
   "invalid": [
     [
       "run",
-      "@semio-tech/mit-bestand-demonstrator:prepare-dev",
+      "@semio-tech/mit-bestand-demonstrator:prepare-prototype",
       "--",
       "--release"
     ],

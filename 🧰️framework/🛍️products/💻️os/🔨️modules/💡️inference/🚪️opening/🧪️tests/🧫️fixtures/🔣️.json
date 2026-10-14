@@ -1,0 +1,76 @@
+{
+  "closed": {
+    "kind": "inference-port-closed",
+    "operationEpoch": 21,
+    "scope": {
+      "spaceId": "space-a",
+      "documentId": "document-a"
+    },
+    "owner": "neutral",
+    "serviceId": "neutral.service"
+  },
+  "request": {
+    "kind": "service-operation",
+    "operationEpoch": 21,
+    "owner": "neutral",
+    "serviceId": "neutral.service",
+    "action": "open",
+    "payload": {
+      "scope": {
+        "spaceId": "space-a",
+        "documentId": "document-a"
+      }
+    }
+  },
+  "opened": {
+    "kind": "inference-port-opened",
+    "operationEpoch": 21,
+    "scope": {
+      "spaceId": "space-a",
+      "documentId": "document-a"
+    },
+    "outcome": "opened",
+    "code": null,
+    "owner": "neutral",
+    "serviceId": "neutral.service"
+  },
+  "refused": {
+    "kind": "inference-port-opened",
+    "operationEpoch": 21,
+    "scope": {
+      "spaceId": "space-a",
+      "documentId": "document-a"
+    },
+    "outcome": "refused",
+    "code": "inference.capacity",
+    "owner": "neutral",
+    "serviceId": "neutral.service"
+  },
+  "authorityRefused": {
+    "kind": "inference-port-opened",
+    "operationEpoch": 21,
+    "scope": {
+      "spaceId": "space-a",
+      "documentId": "document-a"
+    },
+    "outcome": "refused",
+    "code": "inference.denied",
+    "owner": "neutral",
+    "serviceId": "neutral.service"
+  },
+  "indeterminate": {
+    "kind": "inference-port-opened",
+    "operationEpoch": 21,
+    "scope": {
+      "spaceId": "space-a",
+      "documentId": "document-a"
+    },
+    "outcome": "indeterminate",
+    "code": "inference.transport",
+    "owner": "neutral",
+    "serviceId": "neutral.service"
+  },
+  "routes": [
+    "service-operation"
+  ]
+}

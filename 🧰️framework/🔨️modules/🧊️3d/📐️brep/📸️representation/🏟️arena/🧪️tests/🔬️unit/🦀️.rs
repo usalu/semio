@@ -9,7 +9,7 @@ mod admitted_growth;
 fn original_arena_growth_preserves_borrowed_original_slot_addresses(){
     use crate::test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../🕸️topology/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();let row=&law["arenaGrowth"];
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../../🕸️topology/🧪️tests/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();let row=&law["arenaGrowth"];
     let mut store=Store::<u64,TestId>::new();let mut originals:[Option<(TestId,*const u64)>;1337]=[None;1337];let(mut born,mut freed)=(0,0);
     for slot in 0..row["slots"].as_u64().unwrap() as usize{let(id,heap)=observe(||store.insert(slot as u64));born+=heap.0;freed+=heap.1;originals[slot]=Some((id,store.get(id).unwrap() as *const u64));for (id,pointer) in originals[..slot].iter().flatten(){assert_eq!(store.get(*id).unwrap() as *const u64,*pointer,"original arena growth at slot {slot} moved a prior original slot; actualSystem={heap:?}");}}
     let mut owner=ControlledRetirement::new(store).unwrap_or_else(|_|panic!("original arena growth requires typed closure"));let mut turns=0;
@@ -21,7 +21,7 @@ fn original_arena_growth_preserves_borrowed_original_slot_addresses(){
 fn original_arena_removal_reuses_same_slots_without_backing_effects(){
     use crate::test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../🕸️topology/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();let row=&law["arenaRemoval"];
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../../🕸️topology/🧪️tests/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();let row=&law["arenaRemoval"];
     for copy in [1,3,64]{
         let((mut store,mut ids),source)=observe(||{let mut store=Store::<u64,TestId>::new();let ids:[TestId;64]=std::array::from_fn(|slot|store.insert(slot as u64));(store,ids)});let original=&store.slots[0] as *const _;let(mut born,mut freed)=(source.0,source.1);
         let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};

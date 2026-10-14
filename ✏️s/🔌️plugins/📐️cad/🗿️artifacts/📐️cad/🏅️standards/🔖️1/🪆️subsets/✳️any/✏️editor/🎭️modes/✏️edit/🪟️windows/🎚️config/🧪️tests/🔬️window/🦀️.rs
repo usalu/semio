@@ -15,7 +15,7 @@ fn block_on_cad_window_ownership<F: std::future::Future>(future: F) -> F::Output
 
 #[test]
 fn cad_document_contract_world_window_config_matches_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🧫️fixtures/🪪️document/🔣️.json")).expect("CAD world-window fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("CAD world-window fixture");
     let base: CadWorldWindowConfig = semio_framework_pack_json::from_json_str(&fixture["valid"][0].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral config");
     assert_eq!(base, CadWorldWindowConfig::default());
     let mut next = base.clone();
@@ -30,10 +30,10 @@ fn cad_document_contract_world_window_config_matches_neutral_fixture_and_codecs(
     assert_eq!(restored, base);
     assert_eq!(CadWorldWindowConfigMutation::parse_op(&mutation.print_op()).expect("text mutation"), mutation);
     assert_eq!(CadWorldWindowConfigMutation::decode_op(&mutation.encode_op().expect("binary mutation")).expect("decoded mutation"), mutation);
-    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&next);
-    assert_eq!(<CadWorldWindowConfig as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("window config text"), next);
-    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&next);
-    assert_eq!(<CadWorldWindowConfig as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("window config pack"), next);
+    let text = pack::snapshot::ArtifactDsl::print_dsl(&next);
+    assert_eq!(<CadWorldWindowConfig as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("window config text"), next);
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&next);
+    assert_eq!(<CadWorldWindowConfig as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("window config pack"), next);
 }
 
 #[test]
@@ -144,7 +144,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                     Ok(())
                 }
 
-                let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🧫️fixtures/🪪️document/🔣️.json")).expect("CAD window fixture");
+                let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("CAD window fixture");
                 let expected = &fixture["ownership"];
                 let left_id = expected["leftId"].as_str().expect("left id");
                 let right_id = expected["rightId"].as_str().expect("right id");

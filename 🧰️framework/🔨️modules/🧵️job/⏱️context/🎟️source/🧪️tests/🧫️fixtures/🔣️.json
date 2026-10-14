@@ -1,0 +1,7 @@
+{
+ "contract":"semio.job.original-parent-caller-source.v1","operation":99241,"generation":7,"moveRootsBeforeBorrow":true,
+ "roots":["already-paid-cancel","already-paid-payload-authority"],"parentAllocationQuote":"first-party-sealed-shared-birth-bytes","loanBirth":{"items":1,"copy":0,"capacity":0},"loanReturn":"paid-nonlast-strong-return-to-live-parent","parentWaitsForLoans":true,
+ "actualTurnBudget":"required-real-supplier-input","clockIsAuthority":false,"deadlineFrozen":false,"weak":false,"coldRoot":false,"terminalDropBytes":0,"originalGrant":[9,64,65536,262144,64],
+ "incoming":[{"fuel":4,"deadline":100000,"clock":"actual-first-supplier-clock"},{"fuel":1,"deadline":200000,"clock":"actual-next-supplier-clock"},{"fuel":0,"deadline":250000,"clock":"actual-next-supplier-clock"}],
+ "loans":[{"parentStrong":1,"childStrong":0,"phase":"parent-rooted"},{"parentStrong":1,"childStrong":1,"phase":"child-received"},{"parentStrong":1,"childStrong":1,"phase":"cancelled-return-denied"},{"parentStrong":1,"childStrong":0,"phase":"child-paid-return"},{"parentStrong":0,"childStrong":0,"phase":"parent-paid-root-close"}]
+}

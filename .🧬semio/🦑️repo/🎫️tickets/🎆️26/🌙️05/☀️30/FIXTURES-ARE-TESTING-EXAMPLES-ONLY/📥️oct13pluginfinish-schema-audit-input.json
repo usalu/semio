@@ -1,0 +1,78 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🔣️hex-splices/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/stdio/binary/raw/any/hex-splices-corpus/schema.json",
+    "title": "BinaryHexSplicesCorpusRow",
+    "description": "",
+    "keys": [
+      "$schema",
+      "$id",
+      "title",
+      "type",
+      "additionalProperties",
+      "required",
+      "properties"
+    ],
+    "definitions": []
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/wfc/grid3d/1/any/mutations/schema.json",
+    "title": "Grid3dMutation",
+    "description": "The semantic mutation vocabulary, internally tagged by its variant name — exactly the shape the committed fixture quintets carry.",
+    "keys": [
+      "$schema",
+      "$id",
+      "title",
+      "description",
+      "oneOf"
+    ],
+    "definitions": []
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧬️schema/🔣️.json",
+    "id": "https://semio.tech/s/draw/scene/text-fixtures",
+    "title": "Authoritative Glyph Scene Fixtures",
+    "description": "",
+    "keys": [
+      "$schema",
+      "$id",
+      "title",
+      "type",
+      "minItems",
+      "definitions",
+      "items"
+    ],
+    "definitions": []
+  },
+  {
+    "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutations.json",
+    "title": "LowpolyMutation",
+    "description": "Twenty-one-variant mutation dispatch envelope — real facet mirror of the Rust `LowpolyMutation` enum (`dsl::Mutations`-derived). serde's default externally-tagged representation: exactly one key, the PascalCase Rust variant name, whose value is that variant's payload — confirmed against every mutati",
+    "keys": [
+      "$schema",
+      "$id",
+      "title",
+      "description",
+      "oneOf"
+    ],
+    "definitions": []
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-water-system/🧬️schema/🔣️.json",
+    "id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-water-system-fixture-count/schema.json",
+    "title": "ChangeWaterSystemFixtureCount",
+    "description": "",
+    "keys": [
+      "$schema",
+      "$id",
+      "title",
+      "type",
+      "additionalProperties",
+      "required",
+      "properties"
+    ],
+    "definitions": []
+  }
+]

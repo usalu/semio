@@ -1,0 +1,10 @@
+{
+  "mutation": "addStreamFrame",
+  "id": "stream-a",
+  "frame": {
+    "index": 2,
+    "timestampMs": 80.0,
+    "assetId": "asset-a"
+  },
+  "kind": "video"
+}

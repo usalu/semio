@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🧱️retained-frame-progress/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧱️retained-frame-progress/🔣️.json"), "utf8"));
 
 describe("🧱️ retained frame progress and origin", () => {
   it("retains the accepted viewport publication policy", () => {

@@ -5,7 +5,7 @@ import { resolve, join } from "node:path";
 import { createHash } from "node:crypto";
 
 const caching = resolve(import.meta.dir, "../../.."), workspace = process.cwd();
-const fixture = JSON.parse(readFileSync(join(caching, "🧫️fixtures/import-edges/🔁️context/🔣️.json"), "utf8")) as { repository: { owner: string; sources: string[] } };
+const fixture = JSON.parse(readFileSync(join(caching, "🧪️tests/🧫️fixtures/import-edges/🔁️context/🔣️.json"), "utf8")) as { repository: { owner: string; sources: string[] } };
 type Edge = { source: string; target: string; type: string; sourceFile?: string };
 type File = { file: string; hash: string; deps?: (string | string[])[] };
 

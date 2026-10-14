@@ -17,7 +17,7 @@ use super::*;
 use serde_json::Value;
 
 fn law() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔗️wire-edit/🔣️.json")).expect("wire edit fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🔗️wire-edit/🔣️.json")).expect("wire edit fixture")
 }
 
 fn ports(value: &Value, key: &str) -> Vec<IoPortSpec> {

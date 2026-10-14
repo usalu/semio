@@ -1,0 +1,21 @@
+{
+  "source": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+    "before": "a6e313b06e019922533fc9bae4666b38b7a6737a45b87bb6b89b61c3c96c12cf",
+    "after": "d0d9de06592d9dea5dc757f182fe3452c565b2fa3e2af5e9945e62ae8df7dce0",
+    "removed": "Full fixture schema reader, Ajv compile and whole-fixture assertions only"
+  },
+  "schema": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔣️cad-draw-live-bindings/🔣️.json",
+    "sha256": "e8c6e887f399794661b02d5d60a8066efcd03f748b2953eeb841ced4e339f945",
+    "size": 1694
+  },
+  "fixture": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧫️cad-draw-live-bindings/🔣️.json",
+    "sha256": "8e0e3afcede1496ad3cfc0360286b84b804c97b83aa8c25b3602c7045bd364dd",
+    "size": 62405,
+    "unchanged": true
+  },
+  "pattern": "CAD plain live binding examples retain exact mapping and reject escaping carriers|CAD frozen scenario bindings read exact current bytes and reject missing, duplicate, or extra identities",
+  "runtimeCaller": "No CAD-live-binding reader outside tests was found in actual Source; no substitute runtime DTO or approval is introduced"
+}

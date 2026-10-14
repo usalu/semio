@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "trees": [
+    {
+      "id": "ticket-important",
+      "root": "ticket/📌️important",
+      "paths": [
+        { "path": "ticket/📌️important/📝️.md", "bytes": "" }
+      ],
+      "expectRemoval": true
+    },
+    {
+      "id": "diff-absent",
+      "root": "case/🔺️diff",
+      "paths": [
+        { "path": "case/🔺️diff/🚫️.absent", "bytes": "" }
+      ],
+      "expectRemoval": false
+    },
+    {
+      "id": "scaffolded-empty-facet",
+      "root": "facet/☑️options",
+      "paths": [
+        { "path": "facet/☑️options/📌️.empty.md", "bytes": "# Empty\n" }
+      ],
+      "expectRemoval": false
+    },
+    {
+      "id": "zero-empty-facet",
+      "root": "facet/🎚️config",
+      "paths": [
+        { "path": "facet/🎚️config/📌️.empty.md", "bytes": "" }
+      ],
+      "expectRemoval": true
+    }
+  ]
+}

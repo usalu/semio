@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🏧️set-curtain-wall-grid/✨️sets-both-directions",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏧️set-curtain-wall-grid/✨️sets-both-directions/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏧️set-curtain-wall-grid/✨️sets-both-directions/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏧️set-curtain-wall-grid/✨️sets-both-directions/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏧️set-curtain-wall-grid/✨️sets-both-directions/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏧️set-curtain-wall-grid/✨️sets-both-directions/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏧️set-curtain-wall-grid/✨️sets-both-directions/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏧️set-curtain-wall-grid/✨️sets-both-directions/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏧️set-curtain-wall-grid/✨️sets-both-directions/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏧️set-curtain-wall-grid/✨️sets-both-directions/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏧️set-curtain-wall-grid/✨️sets-both-directions/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

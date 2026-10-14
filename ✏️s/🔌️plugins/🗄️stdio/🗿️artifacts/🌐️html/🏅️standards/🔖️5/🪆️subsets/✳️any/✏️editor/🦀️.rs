@@ -119,7 +119,7 @@ fn html_retained_contract() -> ToolExecutionContract {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn html_example_snapshot(example_id: &str) -> HtmlSnapshot {
     if example_id == crate::examples::demo::ID {
-        <HtmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+        <HtmlSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         HtmlSnapshot::default()
     }
@@ -162,7 +162,7 @@ fn html_retained_extent(_command: &HtmlEditCommand, _snapshot: &HtmlSnapshot, _i
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn html_emit(command: &HtmlEditCommand) -> Result<Emit<HtmlMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        HtmlEditCommand::LoadText { text } => match <HtmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
+        HtmlEditCommand::LoadText { text } => match <HtmlSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
             Ok(next) => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&next, STDIO_HTML_DOCUMENT_SCHEMA)], ..Default::default() }),
             Err(error) => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.html.invalid-text"), error.to_string())),
         },
@@ -320,6 +320,7 @@ impl ArtifactEditor for HtmlEditor {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

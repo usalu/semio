@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {produce} from "immer";
 import schema from "../../🧬️schema/🔣️.json";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔷️shape-coordinate/🔣️.json";
 import {applyShapeCoordinate} from "../../🦠️mutation/🟦️.ts";
 import {shapeCoordinate,type ShapeCoordinateField} from "../../../../../../✳️any/🧬️schema/🔷️shape/✏️coordinates/🟦️.ts";
 import type {DrawingArtifact,DrawingLayerNode} from "../../../../../../✳️any/🧬️schema/🟦️.ts";

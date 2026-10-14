@@ -1,8 +1,0 @@
-{
-  "status": "rejected",
-  "code": "mutation.target-missing",
-  "path": [
-    "Zone Mean Air Temperature",
-    "ZONE ONE"
-  ]
-}

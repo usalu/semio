@@ -2,8 +2,8 @@ import {expect, test} from "bun:test";
 import Ajv from "ajv/dist/2020.js";
 import {getNodeValue, parseTree, type ParseError} from "jsonc-parser";
 import contract from "../🧬️schema/🔣️.json";
-import corpus from "../🧫️fixtures/🔣️.json";
-import wire from "../🧫️fixtures/📦️body/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
+import wire from "./🧫️fixtures/📦️body/🔣️.json";
 import viewport from "../../../../🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json";
 import {readIntrinsicBody} from "../../../../🎒️pack/🌱️value/🧪️tests/🫳️preflight/🔮️pack/🟦️.ts";
 

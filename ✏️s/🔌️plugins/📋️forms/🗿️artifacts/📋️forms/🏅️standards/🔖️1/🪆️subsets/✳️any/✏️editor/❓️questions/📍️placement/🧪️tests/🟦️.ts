@@ -2,11 +2,11 @@ import {parseFormsJsonDefinition,parseFormsJsonQuestion,formsDefinitionJson,form
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import { applyPatch, type Operation } from "fast-json-patch";
-import vectors from "../🧫️fixtures/🔣️.json";
+import vectors from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import definitionSchema from "../../../../🧬️schema/📝️definition/🔣️.json";
 import { createQuestionEvent, questionInsertIndex } from "../🟦️.ts";
-import drops from "../🧫️fixtures/🔣️drop.json";
+import drops from "./🧫️fixtures/🔣️drop.json";
 import dropSchema from "../🧬️schema/🔣️drop.json";
 import type { FormsDefinition } from "../../../../🧬️schema/📝️definition/🟦️.ts";
 

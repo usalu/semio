@@ -3,7 +3,7 @@ import {Database} from "bun:sqlite";
 import {applyPatch} from "fast-json-patch";
 import {existsSync,readFileSync} from "node:fs";
 import {resolve} from "node:path";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔤️text/↩️inverse/🔣️.json";
 
 test("Puzzle2d optional text inverse restores original first-owner values and paged cancellation",()=>{
  const db=new Database(":memory:");db.exec("CREATE TABLE target(ordinal INTEGER PRIMARY KEY,id TEXT,value TEXT)");

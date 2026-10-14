@@ -5,11 +5,11 @@
 /// 📏 The committed `change-mixed-terrain-distance` vector holds the specification-vector law.
 const VECTOR: super::Vector = super::Vector {
         kind: "change-mixed-terrain-distance",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/📏change-mixed-terrain-distance/✅apply/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/📏change-mixed-terrain-distance/✅apply/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/📏change-mixed-terrain-distance/✅apply/📸️snapshot/➡️after/🔣️.json"),
-        diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/📏change-mixed-terrain-distance/✅apply/🔺️diff/🔣️.json"),
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/📏change-mixed-terrain-distance/✅apply/🎯️outcome/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📏change-mixed-terrain-distance/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📏change-mixed-terrain-distance/✅apply/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📏change-mixed-terrain-distance/✅apply/📸️snapshot/➡️after/🔣️.json"),
+        diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📏change-mixed-terrain-distance/✅apply/🔺️diff/🔣️.json"),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📏change-mixed-terrain-distance/✅apply/🎯️outcome/🔣️.json"),
 };
 
 #[test]

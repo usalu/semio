@@ -1,0 +1,959 @@
+{
+ "schema": "semio.os-dev.boot-budget/v1",
+ "description": "Boot budget of the served s React shell (verify boot): payload per resource kind of one cold boot in a fresh browser context and the warm reload's transfer are always judged; serve first answer, cold first contentful paint / ready beacon / all catalog plugins loaded / long tasks and warm ready are judged only while the 1-minute load stays at or below loadCeilingPerCore x cores. Vectors: law inputs with the expected kinds, payload and verdict computed by the independent Python oracle wp-f3/f3-boot-budget-oracle.py (ticket 26/09/23 F3).",
+ "budget": {
+  "loadCeilingPerCore": 1.0,
+  "serve": {
+   "maxReadyMs": 15000
+  },
+  "cold": {
+   "maxFcpMs": 10000,
+   "maxReadyMs": 15000,
+   "maxPluginsLoadedMs": 20000,
+   "maxLongTaskMs": 2000
+  },
+  "warm": {
+   "maxReadyMs": 5000,
+   "maxTransferMB": 1
+  },
+  "payload": {
+   "module": {
+    "maxCount": 500,
+    "maxDecodedMB": 44
+   },
+   "json": {
+    "maxCount": 130,
+    "maxDecodedMB": 19
+   },
+   "font": {
+    "maxCount": 20,
+    "maxDecodedMB": 9.5
+   },
+   "style": {
+    "maxCount": 12,
+    "maxDecodedMB": 1
+   },
+   "wasm": {
+    "maxCount": 4,
+    "maxDecodedMB": 8
+   },
+   "other": {
+    "maxCount": 40,
+    "maxDecodedMB": 4
+   }
+  }
+ },
+ "vectors": [
+  {
+   "name": "quiet machine within budget",
+   "resources": [
+    {
+     "url": "http://127.0.0.1:6700/@fs/Users/x/%F0%9F%A7%B1%EF%B8%8Felements/%F0%9F%8F%9B%EF%B8%8FShellHost/%F0%9F%9F%A6%EF%B8%8F.tsx",
+     "initiatorType": "script",
+     "transferSize": 2200000,
+     "decodedBodySize": 2200000
+    },
+    {
+     "url": "http://127.0.0.1:6700/node_modules/.vite/deps/three-stdlib.js?v=1a2b",
+     "initiatorType": "script",
+     "transferSize": 4700000,
+     "decodedBodySize": 4700000
+    },
+    {
+     "url": "http://127.0.0.1:6700/@id/virtual:semio-boot",
+     "initiatorType": "script",
+     "transferSize": 1000,
+     "decodedBodySize": 1000
+    },
+    {
+     "url": "http://127.0.0.1:6700/plugins/%F0%9F%97%84%EF%B8%8Fstdio/%F0%9F%94%A3%EF%B8%8F.json",
+     "initiatorType": "fetch",
+     "transferSize": 1780000,
+     "decodedBodySize": 1780000
+    },
+    {
+     "url": "http://127.0.0.1:6700/plugins/note/descriptor.json?t=5",
+     "initiatorType": "fetch",
+     "transferSize": 0,
+     "decodedBodySize": 640000
+    },
+    {
+     "url": "http://127.0.0.1:6700/@fs/Users/x/%F0%9F%A7%AB%EF%B8%8Ffixtures/%F0%9F%94%A3%EF%B8%8F.json?import",
+     "initiatorType": "script",
+     "transferSize": 12000,
+     "decodedBodySize": 12000
+    },
+    {
+     "url": "http://127.0.0.1:6700/cursors/pointer.svg",
+     "initiatorType": "css",
+     "transferSize": 700,
+     "decodedBodySize": 700
+    },
+    {
+     "url": "http://127.0.0.1:6700/%F0%9F%AA%9E%EF%B8%8Fvendor/%F0%9F%94%A4%EF%B8%8Fguestslim-typst-fonts.bin",
+     "initiatorType": "fetch",
+     "transferSize": 8760000,
+     "decodedBodySize": 8760000
+    },
+    {
+     "url": "http://127.0.0.1:6700/fonts/inter.woff2",
+     "initiatorType": "css",
+     "transferSize": 90000,
+     "decodedBodySize": 90000
+    },
+    {
+     "url": "http://127.0.0.1:6700/src/app.css",
+     "initiatorType": "link",
+     "transferSize": 300,
+     "decodedBodySize": 1040000
+    },
+    {
+     "url": "http://127.0.0.1:6700/styles/theme",
+     "initiatorType": "css",
+     "transferSize": 20000,
+     "decodedBodySize": 20000
+    },
+    {
+     "url": "http://127.0.0.1:6700/pkg/semio_guest_bg.wasm",
+     "initiatorType": "fetch",
+     "transferSize": 3000000,
+     "decodedBodySize": 3000000
+    },
+    {
+     "url": "http://127.0.0.1:6700/_semio/hub/status",
+     "initiatorType": "fetch",
+     "transferSize": 400,
+     "decodedBodySize": 400
+    },
+    {
+     "url": "http://127.0.0.1:6700/icons/app.png",
+     "initiatorType": "img",
+     "transferSize": 5000,
+     "decodedBodySize": 5000
+    }
+   ],
+   "expectedKinds": [
+    "module",
+    "module",
+    "module",
+    "json",
+    "json",
+    "module",
+    "other",
+    "font",
+    "font",
+    "style",
+    "other",
+    "wasm",
+    "other",
+    "other"
+   ],
+   "expectedPayload": {
+    "module": {
+     "count": 4,
+     "transferMB": 6.59,
+     "decodedMB": 6.59
+    },
+    "json": {
+     "count": 2,
+     "transferMB": 1.7,
+     "decodedMB": 2.31
+    },
+    "font": {
+     "count": 2,
+     "transferMB": 8.44,
+     "decodedMB": 8.44
+    },
+    "style": {
+     "count": 1,
+     "transferMB": 0.0,
+     "decodedMB": 0.99
+    },
+    "wasm": {
+     "count": 1,
+     "transferMB": 2.86,
+     "decodedMB": 2.86
+    },
+    "other": {
+     "count": 4,
+     "transferMB": 0.02,
+     "decodedMB": 0.02
+    }
+   },
+   "measurement": {
+    "load": 3.2,
+    "cores": 10,
+    "serveReadyMs": 3782,
+    "cold": {
+     "ttfbMs": 40,
+     "fcpMs": 6188,
+     "readyMs": 8717,
+     "pluginsLoadedMs": 8480,
+     "plugins": {
+      "total": 60,
+      "loaded": 60
+     },
+     "longTaskMs": 393,
+     "longTasks": 1,
+     "payload": {
+      "module": {
+       "count": 462,
+       "transferMB": 40.3,
+       "decodedMB": 40.27
+      },
+      "json": {
+       "count": 120,
+       "transferMB": 17.64,
+       "decodedMB": 17.61
+      },
+      "font": {
+       "count": 16,
+       "transferMB": 9.34,
+       "decodedMB": 9.34
+      },
+      "style": {
+       "count": 3,
+       "transferMB": 0.36,
+       "decodedMB": 0.36
+      },
+      "wasm": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      },
+      "other": {
+       "count": 8,
+       "transferMB": 0.01,
+       "decodedMB": 0.01
+      }
+     }
+    },
+    "warm": {
+     "ttfbMs": 40,
+     "fcpMs": 1024,
+     "readyMs": 2721,
+     "pluginsLoadedMs": 2308,
+     "plugins": {
+      "total": 60,
+      "loaded": 60
+     },
+     "longTaskMs": 215,
+     "longTasks": 1,
+     "payload": {
+      "module": {
+       "count": 462,
+       "transferMB": 0.11,
+       "decodedMB": 40.27
+      },
+      "json": {
+       "count": 120,
+       "transferMB": 0.03,
+       "decodedMB": 17.61
+      },
+      "font": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      },
+      "style": {
+       "count": 3,
+       "transferMB": 0.01,
+       "decodedMB": 0.36
+      },
+      "wasm": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      },
+      "other": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      }
+     }
+    }
+   },
+   "expectedVerdict": {
+    "status": "pass",
+    "timingJudged": true,
+    "violations": []
+   }
+  },
+  {
+   "name": "saturated machine: timings over but not judged",
+   "resources": [
+    {
+     "url": "http://127.0.0.1:6700/@fs/Users/x/%F0%9F%A7%B1%EF%B8%8Felements/%F0%9F%8F%9B%EF%B8%8FShellHost/%F0%9F%9F%A6%EF%B8%8F.tsx",
+     "initiatorType": "script",
+     "transferSize": 2200000,
+     "decodedBodySize": 2200000
+    },
+    {
+     "url": "http://127.0.0.1:6700/node_modules/.vite/deps/three-stdlib.js?v=1a2b",
+     "initiatorType": "script",
+     "transferSize": 4700000,
+     "decodedBodySize": 4700000
+    },
+    {
+     "url": "http://127.0.0.1:6700/@id/virtual:semio-boot",
+     "initiatorType": "script",
+     "transferSize": 1000,
+     "decodedBodySize": 1000
+    },
+    {
+     "url": "http://127.0.0.1:6700/plugins/%F0%9F%97%84%EF%B8%8Fstdio/%F0%9F%94%A3%EF%B8%8F.json",
+     "initiatorType": "fetch",
+     "transferSize": 1780000,
+     "decodedBodySize": 1780000
+    }
+   ],
+   "expectedKinds": [
+    "module",
+    "module",
+    "module",
+    "json"
+   ],
+   "expectedPayload": {
+    "module": {
+     "count": 3,
+     "transferMB": 6.58,
+     "decodedMB": 6.58
+    },
+    "json": {
+     "count": 1,
+     "transferMB": 1.7,
+     "decodedMB": 1.7
+    },
+    "font": {
+     "count": 0,
+     "transferMB": 0.0,
+     "decodedMB": 0.0
+    },
+    "style": {
+     "count": 0,
+     "transferMB": 0.0,
+     "decodedMB": 0.0
+    },
+    "wasm": {
+     "count": 0,
+     "transferMB": 0.0,
+     "decodedMB": 0.0
+    },
+    "other": {
+     "count": 0,
+     "transferMB": 0.0,
+     "decodedMB": 0.0
+    }
+   },
+   "measurement": {
+    "load": 45.6,
+    "cores": 10,
+    "serveReadyMs": 65000,
+    "cold": {
+     "ttfbMs": 40,
+     "fcpMs": 44600,
+     "readyMs": 44000,
+     "pluginsLoadedMs": 50700,
+     "plugins": {
+      "total": 60,
+      "loaded": 60
+     },
+     "longTaskMs": 4000,
+     "longTasks": 1,
+     "payload": {
+      "module": {
+       "count": 462,
+       "transferMB": 40.3,
+       "decodedMB": 40.27
+      },
+      "json": {
+       "count": 120,
+       "transferMB": 17.64,
+       "decodedMB": 17.61
+      },
+      "font": {
+       "count": 16,
+       "transferMB": 9.34,
+       "decodedMB": 9.34
+      },
+      "style": {
+       "count": 3,
+       "transferMB": 0.36,
+       "decodedMB": 0.36
+      },
+      "wasm": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      },
+      "other": {
+       "count": 8,
+       "transferMB": 0.01,
+       "decodedMB": 0.01
+      }
+     }
+    },
+    "warm": {
+     "ttfbMs": 40,
+     "fcpMs": 3000,
+     "readyMs": 9000,
+     "pluginsLoadedMs": 5400,
+     "plugins": {
+      "total": 60,
+      "loaded": 60
+     },
+     "longTaskMs": 900,
+     "longTasks": 1,
+     "payload": {
+      "module": {
+       "count": 462,
+       "transferMB": 0.11,
+       "decodedMB": 40.27
+      },
+      "json": {
+       "count": 120,
+       "transferMB": 0.03,
+       "decodedMB": 17.61
+      },
+      "font": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      },
+      "style": {
+       "count": 3,
+       "transferMB": 0.01,
+       "decodedMB": 0.36
+      },
+      "wasm": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      },
+      "other": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      }
+     }
+    }
+   },
+   "expectedVerdict": {
+    "status": "blocked",
+    "timingJudged": false,
+    "violations": []
+   }
+  },
+  {
+   "name": "quiet machine over every timing bound",
+   "resources": [
+    {
+     "url": "http://127.0.0.1:6700/@fs/Users/x/%F0%9F%A7%B1%EF%B8%8Felements/%F0%9F%8F%9B%EF%B8%8FShellHost/%F0%9F%9F%A6%EF%B8%8F.tsx",
+     "initiatorType": "script",
+     "transferSize": 2200000,
+     "decodedBodySize": 2200000
+    },
+    {
+     "url": "http://127.0.0.1:6700/node_modules/.vite/deps/three-stdlib.js?v=1a2b",
+     "initiatorType": "script",
+     "transferSize": 4700000,
+     "decodedBodySize": 4700000
+    },
+    {
+     "url": "http://127.0.0.1:6700/@id/virtual:semio-boot",
+     "initiatorType": "script",
+     "transferSize": 1000,
+     "decodedBodySize": 1000
+    },
+    {
+     "url": "http://127.0.0.1:6700/plugins/%F0%9F%97%84%EF%B8%8Fstdio/%F0%9F%94%A3%EF%B8%8F.json",
+     "initiatorType": "fetch",
+     "transferSize": 1780000,
+     "decodedBodySize": 1780000
+    }
+   ],
+   "expectedKinds": [
+    "module",
+    "module",
+    "module",
+    "json"
+   ],
+   "expectedPayload": {
+    "module": {
+     "count": 3,
+     "transferMB": 6.58,
+     "decodedMB": 6.58
+    },
+    "json": {
+     "count": 1,
+     "transferMB": 1.7,
+     "decodedMB": 1.7
+    },
+    "font": {
+     "count": 0,
+     "transferMB": 0.0,
+     "decodedMB": 0.0
+    },
+    "style": {
+     "count": 0,
+     "transferMB": 0.0,
+     "decodedMB": 0.0
+    },
+    "wasm": {
+     "count": 0,
+     "transferMB": 0.0,
+     "decodedMB": 0.0
+    },
+    "other": {
+     "count": 0,
+     "transferMB": 0.0,
+     "decodedMB": 0.0
+    }
+   },
+   "measurement": {
+    "load": 9.9,
+    "cores": 10,
+    "serveReadyMs": 15001,
+    "cold": {
+     "ttfbMs": 40,
+     "fcpMs": 10001,
+     "readyMs": 15001,
+     "pluginsLoadedMs": 20001,
+     "plugins": {
+      "total": 60,
+      "loaded": 60
+     },
+     "longTaskMs": 2001,
+     "longTasks": 1,
+     "payload": {
+      "module": {
+       "count": 462,
+       "transferMB": 40.3,
+       "decodedMB": 40.27
+      },
+      "json": {
+       "count": 120,
+       "transferMB": 17.64,
+       "decodedMB": 17.61
+      },
+      "font": {
+       "count": 16,
+       "transferMB": 9.34,
+       "decodedMB": 9.34
+      },
+      "style": {
+       "count": 3,
+       "transferMB": 0.36,
+       "decodedMB": 0.36
+      },
+      "wasm": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      },
+      "other": {
+       "count": 8,
+       "transferMB": 0.01,
+       "decodedMB": 0.01
+      }
+     }
+    },
+    "warm": {
+     "ttfbMs": 40,
+     "fcpMs": 1000,
+     "readyMs": 5001,
+     "pluginsLoadedMs": 5000,
+     "plugins": {
+      "total": 60,
+      "loaded": 60
+     },
+     "longTaskMs": 0,
+     "longTasks": 0,
+     "payload": {
+      "module": {
+       "count": 462,
+       "transferMB": 0.11,
+       "decodedMB": 40.27
+      },
+      "json": {
+       "count": 120,
+       "transferMB": 0.03,
+       "decodedMB": 17.61
+      },
+      "font": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      },
+      "style": {
+       "count": 3,
+       "transferMB": 0.01,
+       "decodedMB": 0.36
+      },
+      "wasm": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      },
+      "other": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      }
+     }
+    }
+   },
+   "expectedVerdict": {
+    "status": "fail",
+    "timingJudged": true,
+    "violations": [
+     "serve first answer 15001 ms (bound 15000 ms)",
+     "cold first contentful paint 10001 ms (bound 10000 ms)",
+     "cold ready 15001 ms (bound 15000 ms)",
+     "cold all plugins loaded 20001 ms (bound 20000 ms)",
+     "cold long tasks 2001 ms (bound 2000 ms)",
+     "warm ready 5001 ms (bound 5000 ms)"
+    ]
+   }
+  },
+  {
+   "name": "payload over budget and an uncached warm reload",
+   "resources": [
+    {
+     "url": "http://127.0.0.1:6700/@fs/Users/x/%F0%9F%A7%B1%EF%B8%8Felements/%F0%9F%8F%9B%EF%B8%8FShellHost/%F0%9F%9F%A6%EF%B8%8F.tsx",
+     "initiatorType": "script",
+     "transferSize": 2200000,
+     "decodedBodySize": 2200000
+    },
+    {
+     "url": "http://127.0.0.1:6700/node_modules/.vite/deps/three-stdlib.js?v=1a2b",
+     "initiatorType": "script",
+     "transferSize": 4700000,
+     "decodedBodySize": 4700000
+    },
+    {
+     "url": "http://127.0.0.1:6700/@id/virtual:semio-boot",
+     "initiatorType": "script",
+     "transferSize": 1000,
+     "decodedBodySize": 1000
+    },
+    {
+     "url": "http://127.0.0.1:6700/plugins/%F0%9F%97%84%EF%B8%8Fstdio/%F0%9F%94%A3%EF%B8%8F.json",
+     "initiatorType": "fetch",
+     "transferSize": 1780000,
+     "decodedBodySize": 1780000
+    }
+   ],
+   "expectedKinds": [
+    "module",
+    "module",
+    "module",
+    "json"
+   ],
+   "expectedPayload": {
+    "module": {
+     "count": 3,
+     "transferMB": 6.58,
+     "decodedMB": 6.58
+    },
+    "json": {
+     "count": 1,
+     "transferMB": 1.7,
+     "decodedMB": 1.7
+    },
+    "font": {
+     "count": 0,
+     "transferMB": 0.0,
+     "decodedMB": 0.0
+    },
+    "style": {
+     "count": 0,
+     "transferMB": 0.0,
+     "decodedMB": 0.0
+    },
+    "wasm": {
+     "count": 0,
+     "transferMB": 0.0,
+     "decodedMB": 0.0
+    },
+    "other": {
+     "count": 0,
+     "transferMB": 0.0,
+     "decodedMB": 0.0
+    }
+   },
+   "measurement": {
+    "load": 45.6,
+    "cores": 10,
+    "serveReadyMs": null,
+    "cold": {
+     "ttfbMs": 40,
+     "fcpMs": 6188,
+     "readyMs": 8717,
+     "pluginsLoadedMs": 8480,
+     "plugins": {
+      "total": 60,
+      "loaded": 60
+     },
+     "longTaskMs": 393,
+     "longTasks": 1,
+     "payload": {
+      "module": {
+       "count": 512,
+       "transferMB": 46.2,
+       "decodedMB": 46.2
+      },
+      "json": {
+       "count": 120,
+       "transferMB": 17.67,
+       "decodedMB": 17.64
+      },
+      "font": {
+       "count": 16,
+       "transferMB": 9.34,
+       "decodedMB": 9.34
+      },
+      "style": {
+       "count": 13,
+       "transferMB": 1,
+       "decodedMB": 0.99
+      },
+      "wasm": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      },
+      "other": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      }
+     }
+    },
+    "warm": {
+     "ttfbMs": 40,
+     "fcpMs": 1024,
+     "readyMs": 2721,
+     "pluginsLoadedMs": 2308,
+     "plugins": {
+      "total": 60,
+      "loaded": 60
+     },
+     "longTaskMs": 215,
+     "longTasks": 1,
+     "payload": {
+      "module": {
+       "count": 465,
+       "transferMB": 40.67,
+       "decodedMB": 40.65
+      },
+      "json": {
+       "count": 120,
+       "transferMB": 17.67,
+       "decodedMB": 17.64
+      },
+      "font": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      },
+      "style": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      },
+      "wasm": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      },
+      "other": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      }
+     }
+    }
+   },
+   "expectedVerdict": {
+    "status": "fail",
+    "timingJudged": false,
+    "violations": [
+     "module: 512 files (bound 500)",
+     "module: 46.2 MB (bound 44 MB)",
+     "style: 13 files (bound 12)",
+     "warm reload transferred 58.34 MB (bound 1 MB)"
+    ]
+   }
+  },
+  {
+   "name": "the shell never became ready",
+   "resources": [
+    {
+     "url": "http://127.0.0.1:6700/@fs/Users/x/%F0%9F%A7%B1%EF%B8%8Felements/%F0%9F%8F%9B%EF%B8%8FShellHost/%F0%9F%9F%A6%EF%B8%8F.tsx",
+     "initiatorType": "script",
+     "transferSize": 2200000,
+     "decodedBodySize": 2200000
+    },
+    {
+     "url": "http://127.0.0.1:6700/node_modules/.vite/deps/three-stdlib.js?v=1a2b",
+     "initiatorType": "script",
+     "transferSize": 4700000,
+     "decodedBodySize": 4700000
+    },
+    {
+     "url": "http://127.0.0.1:6700/@id/virtual:semio-boot",
+     "initiatorType": "script",
+     "transferSize": 1000,
+     "decodedBodySize": 1000
+    },
+    {
+     "url": "http://127.0.0.1:6700/plugins/%F0%9F%97%84%EF%B8%8Fstdio/%F0%9F%94%A3%EF%B8%8F.json",
+     "initiatorType": "fetch",
+     "transferSize": 1780000,
+     "decodedBodySize": 1780000
+    }
+   ],
+   "expectedKinds": [
+    "module",
+    "module",
+    "module",
+    "json"
+   ],
+   "expectedPayload": {
+    "module": {
+     "count": 3,
+     "transferMB": 6.58,
+     "decodedMB": 6.58
+    },
+    "json": {
+     "count": 1,
+     "transferMB": 1.7,
+     "decodedMB": 1.7
+    },
+    "font": {
+     "count": 0,
+     "transferMB": 0.0,
+     "decodedMB": 0.0
+    },
+    "style": {
+     "count": 0,
+     "transferMB": 0.0,
+     "decodedMB": 0.0
+    },
+    "wasm": {
+     "count": 0,
+     "transferMB": 0.0,
+     "decodedMB": 0.0
+    },
+    "other": {
+     "count": 0,
+     "transferMB": 0.0,
+     "decodedMB": 0.0
+    }
+   },
+   "measurement": {
+    "load": 2.0,
+    "cores": 10,
+    "serveReadyMs": null,
+    "cold": {
+     "ttfbMs": 40,
+     "fcpMs": 6188,
+     "readyMs": null,
+     "pluginsLoadedMs": null,
+     "plugins": {
+      "total": 0,
+      "loaded": 0
+     },
+     "longTaskMs": 0,
+     "longTasks": 0,
+     "payload": {
+      "module": {
+       "count": 462,
+       "transferMB": 40.3,
+       "decodedMB": 40.27
+      },
+      "json": {
+       "count": 120,
+       "transferMB": 17.64,
+       "decodedMB": 17.61
+      },
+      "font": {
+       "count": 16,
+       "transferMB": 9.34,
+       "decodedMB": 9.34
+      },
+      "style": {
+       "count": 3,
+       "transferMB": 0.36,
+       "decodedMB": 0.36
+      },
+      "wasm": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      },
+      "other": {
+       "count": 8,
+       "transferMB": 0.01,
+       "decodedMB": 0.01
+      }
+     }
+    },
+    "warm": {
+     "ttfbMs": 40,
+     "fcpMs": 1024,
+     "readyMs": 2721,
+     "pluginsLoadedMs": 2308,
+     "plugins": {
+      "total": 60,
+      "loaded": 58
+     },
+     "longTaskMs": 0,
+     "longTasks": 0,
+     "payload": {
+      "module": {
+       "count": 462,
+       "transferMB": 0.11,
+       "decodedMB": 40.27
+      },
+      "json": {
+       "count": 120,
+       "transferMB": 0.03,
+       "decodedMB": 17.61
+      },
+      "font": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      },
+      "style": {
+       "count": 3,
+       "transferMB": 0.01,
+       "decodedMB": 0.36
+      },
+      "wasm": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      },
+      "other": {
+       "count": 0,
+       "transferMB": 0,
+       "decodedMB": 0
+      }
+     }
+    }
+   },
+   "expectedVerdict": {
+    "status": "fail",
+    "timingJudged": true,
+    "violations": [
+     "cold: the shell never became ready",
+     "cold: 0/0 plugins loaded",
+     "warm: 58/60 plugins loaded"
+    ]
+   }
+  }
+ ]
+}

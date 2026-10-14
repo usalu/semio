@@ -1,0 +1,205 @@
+{
+  "cases": [
+    {
+      "id": "fresh-draw-does-not-infer-first-reference",
+      "windowId": "drawing-canvas",
+      "utilityIds": [
+        "selectMarquee",
+        "selectLasso",
+        "selectDirect"
+      ],
+      "initialUtilityId": "selectDirect",
+      "activeUtilityByWindowId": {},
+      "activeToolId": null,
+      "expected": {
+        "write": true,
+        "utilityId": "selectDirect"
+      }
+    },
+    {
+      "id": "fresh-other-app-declares-own-initial",
+      "windowId": "board",
+      "utilityIds": [
+        "inspect",
+        "move"
+      ],
+      "initialUtilityId": "move",
+      "activeUtilityByWindowId": {},
+      "activeToolId": null,
+      "expected": {
+        "write": true,
+        "utilityId": "move"
+      }
+    },
+    {
+      "id": "fresh-window-without-initial",
+      "windowId": "drawing-canvas",
+      "utilityIds": [
+        "selectMarquee",
+        "selectLasso",
+        "selectDirect"
+      ],
+      "initialUtilityId": null,
+      "activeUtilityByWindowId": {},
+      "activeToolId": null,
+      "expected": {
+        "write": true,
+        "utilityId": null
+      }
+    },
+    {
+      "id": "fresh-window-without-utilities",
+      "windowId": "drawing-canvas",
+      "utilityIds": [],
+      "initialUtilityId": null,
+      "activeUtilityByWindowId": {},
+      "activeToolId": null,
+      "expected": {
+        "write": true,
+        "utilityId": null
+      }
+    },
+    {
+      "id": "existing-arm-is-preserved",
+      "windowId": "drawing-canvas",
+      "utilityIds": [
+        "selectMarquee",
+        "selectLasso",
+        "selectDirect"
+      ],
+      "initialUtilityId": "selectDirect",
+      "activeUtilityByWindowId": {
+        "drawing-canvas": "selectLasso"
+      },
+      "activeToolId": null,
+      "expected": {
+        "write": false,
+        "utilityId": "selectLasso"
+      }
+    },
+    {
+      "id": "explicit-clear-is-preserved",
+      "windowId": "drawing-canvas",
+      "utilityIds": [
+        "selectMarquee",
+        "selectLasso",
+        "selectDirect"
+      ],
+      "initialUtilityId": "selectDirect",
+      "activeUtilityByWindowId": {
+        "drawing-canvas": null
+      },
+      "activeToolId": null,
+      "expected": {
+        "write": false,
+        "utilityId": null
+      }
+    },
+    {
+      "id": "existing-initial-is-not-rewritten",
+      "windowId": "drawing-canvas",
+      "utilityIds": [
+        "selectMarquee",
+        "selectLasso",
+        "selectDirect"
+      ],
+      "initialUtilityId": "selectDirect",
+      "activeUtilityByWindowId": {
+        "drawing-canvas": "selectDirect"
+      },
+      "activeToolId": null,
+      "expected": {
+        "write": false,
+        "utilityId": "selectDirect"
+      }
+    },
+    {
+      "id": "fresh-window-during-mode-tool-is-cleared",
+      "windowId": "drawing-canvas",
+      "utilityIds": [
+        "selectMarquee",
+        "selectLasso",
+        "selectDirect"
+      ],
+      "initialUtilityId": "selectDirect",
+      "activeUtilityByWindowId": {},
+      "activeToolId": "operation",
+      "expected": {
+        "write": true,
+        "utilityId": null
+      }
+    },
+    {
+      "id": "other-window-arm-is-independent",
+      "windowId": "drawing-canvas",
+      "utilityIds": [
+        "selectMarquee",
+        "selectLasso",
+        "selectDirect"
+      ],
+      "initialUtilityId": "selectDirect",
+      "activeUtilityByWindowId": {
+        "other-canvas": "selectMarquee"
+      },
+      "activeToolId": null,
+      "expected": {
+        "write": true,
+        "utilityId": "selectDirect"
+      }
+    },
+    {
+      "id": "other-window-clear-is-independent",
+      "windowId": "drawing-canvas",
+      "utilityIds": [
+        "selectMarquee",
+        "selectLasso",
+        "selectDirect"
+      ],
+      "initialUtilityId": "selectDirect",
+      "activeUtilityByWindowId": {
+        "other-canvas": null
+      },
+      "activeToolId": null,
+      "expected": {
+        "write": true,
+        "utilityId": "selectDirect"
+      }
+    },
+    {
+      "id": "scoped-spawned-window-is-independent",
+      "windowId": "spawned::drawing-canvas",
+      "utilityIds": [
+        "selectMarquee",
+        "selectLasso",
+        "selectDirect"
+      ],
+      "initialUtilityId": "selectDirect",
+      "activeUtilityByWindowId": {
+        "drawing-canvas": "selectLasso"
+      },
+      "activeToolId": null,
+      "expected": {
+        "write": true,
+        "utilityId": "selectDirect"
+      }
+    },
+    {
+      "id": "explicit-clear-remains-after-mode-tool-ends",
+      "windowId": "drawing-canvas",
+      "utilityIds": [
+        "selectMarquee",
+        "selectLasso",
+        "selectDirect"
+      ],
+      "initialUtilityId": "selectDirect",
+      "activeUtilityByWindowId": {
+        "drawing-canvas": null
+      },
+      "activeToolId": null,
+      "expected": {
+        "write": false,
+        "utilityId": null
+      }
+    }
+  ]
+}

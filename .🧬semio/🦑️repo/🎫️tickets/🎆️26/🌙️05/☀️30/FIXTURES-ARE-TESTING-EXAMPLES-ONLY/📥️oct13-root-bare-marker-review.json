@@ -1,0 +1,746 @@
+[
+  {
+    "path": "📜️script.ts",
+    "bad": 3,
+    "toOccurrences": 10,
+    "stable": true
+  },
+  {
+    "path": "🏢️semio-tech/🎡️play/🧪️tests/🧪️playpanedefaults/🟦️.ts",
+    "bad": 2,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": ".cursor/plans/pluralize_kind_folders_26a96337.plan.md",
+    "bad": 3,
+    "toOccurrences": 3,
+    "stable": true
+  },
+  {
+    "path": ".cursor/plans/semio_format_and_examples_6b665da9.plan.md",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🎓️teaching/🛂️proctor/README.md",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🧪️tests/🧭️fixture-placement/🟦️.ts",
+    "bad": 2,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📁fixture-placement/🟦️.ts",
+    "bad": 2,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧭️fixture-placement/🟦️.ts",
+    "bad": 2,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧮️expression/🧪️tests/📜️conformance/🐍️.py",
+    "bad": 1,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🧪️tests/🧭️fixture-placement/🟦️.ts",
+    "bad": 4,
+    "toOccurrences": 4,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 5,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧭️fixture-placement/🟦️.ts",
+    "bad": 2,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🕸️web-mercator-tile-oracle/🐍️.py",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🧭️fixture-placement/🟦️.ts",
+    "bad": 2,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🗺️surface/🧪️tests/🗺️tiled-map-mercator-oracle/🦀️.rs",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎯️goals/📦️packages/🦀️rust/🦀️.rs",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🔬️_test.go",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️history-transition/🐍️.py",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧪️tests/🚦️test-dispatch/🐹️.go",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧪️tests/🤝️g1-contract/🐹️.go",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧪️tests/🤝️protocol-contract/🐹️.go",
+    "bad": 3,
+    "toOccurrences": 3,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️mutation-inputs/🐍️.py",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📡️events/📦️packages/🐹️go/🔬️_test.go",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/📋️orchestration/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 3,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧪️tests/🗄️g3-event-store/🐹️.go",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧪️tests/🧬️schema-contract/🐹️.go",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📡️events/🧪️tests/🔬️unit/🦀️.rs",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️policy/🧹️domain/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️mutation-history-gates/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "bad": 3,
+    "toOccurrences": 17,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+    "bad": 4,
+    "toOccurrences": 5,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🧪️tests/🧮️source-census/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🧪️tests/🎯️goal-gate/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/📦️packages/🐹️go/🔬️_test.go",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚪️io/🏛️architecture/🟦️.ts",
+    "bad": 3,
+    "toOccurrences": 3,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts",
+    "bad": 2,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/🔮️oracles/🔣️.json",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/🧪️scope-closure/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 5,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🏛️abstraction/⚖️law/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🏃️process/🧪️tests/🧭️fixture-placement/🟦️.ts",
+    "bad": 4,
+    "toOccurrences": 0,
+    "stable": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧪️tests/🔬️dependency-truth/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-artifact-schema-law-source/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗿️artifact/🔍️owner-discovery/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🧬️schema/🔣️.json",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🔣️policy.json",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📐️geometry/🧪️tests/🏙️aec-oracles/🐍️.py",
+    "bad": 2,
+    "toOccurrences": 3,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📐️geometry/🧪️tests/🦴️skeleton-oracles/🐍️.py",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎚️build-mode/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧭️fixture-placement/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔏️path-emoji-statutes/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 6,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🏠️nx-workspace-root-file-reference/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
+    "bad": 2,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🏭️generator/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🔬️unit/🦀️.rs",
+    "bad": 2,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "bad": 2,
+    "toOccurrences": 17,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🏭️generator/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/📜️script.ts",
+    "bad": 2,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "bad": 3,
+    "toOccurrences": 3,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "bad": 3,
+    "toOccurrences": 3,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/📜️script.ts",
+    "bad": 2,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧪️mutation-payload/🦀️.rs",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🔐️writer/🦀️.rs",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔁️round-trip/🛡️authority/🦀️.rs",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests/🧩️geometry/🟦️.ts",
+    "bad": 2,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🏭️generator/📜️script.ts",
+    "bad": 3,
+    "toOccurrences": 3,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/README.md",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts",
+    "bad": 3,
+    "toOccurrences": 5,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🗿️artifact/🧪️tests/🔬️quick/🦀️.rs",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🚪️io-procedural-3d-1/🐍️.py",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📐️example-geometry-3d-1/🐍️.py",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/🏃️execution/🐍️.py",
+    "bad": 2,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🪪️mandatory-mutation-descriptor/🦀️.rs",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏛️bestest/🧪️tests/🔬️unit/🦀️.rs",
+    "bad": 3,
+    "toOccurrences": 3,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/🦀️.rs",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-transaction/🦀️.rs",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🦀️.rs",
+    "bad": 1,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts",
+    "bad": 2,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🏭️generator/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🏭️generator/📜️script.ts",
+    "bad": 2,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧪️tests/📁fixture-placement/🟦️.ts",
+    "bad": 4,
+    "toOccurrences": 4,
+    "stable": false
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📜️document/🧬️schema/🧬️mutations/🏷️rename-note/🧪️tests/🏷️retitles/🦀️.rs",
+    "bad": 1,
+    "toOccurrences": 6,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🧪️tests/🔬️unit/🦀️.rs",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts",
+    "bad": 2,
+    "toOccurrences": 3,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/📜️script.ts",
+    "bad": 2,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🔬️probes/📜️script.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧪️board-tools/🐍️.py",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧪️select-tool-history/🐍️.py",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧪️history-edit-runtime/🐍️.py",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts",
+    "bad": 3,
+    "toOccurrences": 4,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌐️third-party-puzzle-2d-1/🟦️.ts",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+    "bad": 3,
+    "toOccurrences": 3,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+    "bad": 2,
+    "toOccurrences": 3,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mutate-wfc2d-1/🐍️.py",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mount-contract/🐍️.py",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mutate-bitmap-1/🐍️.py",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🕸️third-party-puzzle-2d-1/🐍️.py",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts",
+    "bad": 2,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mutate-wfc-grid3d-1/🐍️.py",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mount-contract/🐍️.py",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
+    "bad": 2,
+    "toOccurrences": 2,
+    "stable": true
+  },
+  {
+    "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🧪️tests/🔬️unit/🦀️.rs",
+    "bad": 1,
+    "toOccurrences": 1,
+    "stable": true
+  }
+]

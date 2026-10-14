@@ -1,0 +1,53 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/ui-rs:test-wgpu-engine",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "long",
+    "-E",
+    "test(original_flex_grid_close_preserves_native_depth_denial_and_exact_release) | test(mounted_layout_cancel_before_and_after_owned_text_call_is_typed_and_retained)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
+    "transport": {
+      "maximumBytes": 536870912,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": false
+    }
+  },
+  "selection": [
+    "nx",
+    "run",
+    "@semio-tech/ui-rs:test-wgpu-engine",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "long",
+    "-E",
+    "test(original_flex_grid_close_preserves_native_depth_denial_and_exact_release) | test(mounted_layout_cancel_before_and_after_owned_text_call_is_typed_and_retained)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "buildMode": "prototype"
+}

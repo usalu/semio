@@ -3,7 +3,7 @@ import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {FactoryBoxedValue,type FactoryBoxedIssuer} from "../🟦️.ts";
-import fixtures from "../🧫️fixtures/🔣️.json";
+import fixtures from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 test("boxed original and installed issuer survive denied turns and factory refusal",()=>{
  expect(new Ajv({strict:true}).compile(schema)(fixtures)).toBe(true);const database=new Database(":memory:");database.run("CREATE TABLE custody(boxed INTEGER, original INTEGER, child INTEGER, issuer INTEGER)");

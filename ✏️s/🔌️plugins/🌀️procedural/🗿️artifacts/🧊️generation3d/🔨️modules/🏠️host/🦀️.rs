@@ -475,7 +475,7 @@ fn generation3d_park_flow_strings(flow: &mut semio_framework_artifact_flow_flow:
 }
 
 /// 🧮️ Replays a relative gesture into addressed operators and retains only displaced widget owners.
-fn generation3d_replay_transforms(snapshot: &mut Generation3dSnapshot, targets: &[String], kinds: &[&str], identity: bool, compose: impl Fn(&semio_framework_value::DslValue) -> Option<Vec<(&'static str, semio_framework_value::DslValue)>>) -> Result<Option<Generation3dReplayDisplaced>, &'static str> {
+fn generation3d_replay_transforms(snapshot: &mut Generation3dSnapshot, targets: &[String], kinds: &[&str], identity: bool, compose: impl Fn(&semio_framework_artifact_flow_flow::neural::Dictionary) -> Option<Vec<(&'static str, semio_framework_artifact_flow_flow::neural::Value)>>) -> Result<Option<Generation3dReplayDisplaced>, &'static str> {
     use crate::standards::v1::subsets::any::schema::mutations::{generation3d_targets_invariant,generation3d_with_params};
 
     generation3d_targets_invariant(targets)?;
@@ -485,10 +485,9 @@ fn generation3d_replay_transforms(snapshot: &mut Generation3dSnapshot, targets: 
     for id in targets {
         let Some(index) = snapshot.host_snapshot.widgets.iter().position(|entry| crate::widget_id(entry) == id) else { continue };
         let widget = &snapshot.host_snapshot.widgets[index];
-        let semio_framework_artifact_flow_flow::Widget::Neuron { neuron_kind, .. } = widget else { continue };
+        let semio_framework_artifact_flow_flow::Widget::Neuron { neuron_kind, params, .. } = widget else { continue };
         if !kinds.contains(&neuron_kind.as_str()) { continue; }
-        let params = semio_framework_value::ToValue::to_value(widget).get("params").cloned().unwrap_or(semio_framework_value::DslValue::Null);
-        if let Some(next) = compose(&params).and_then(|entries| generation3d_with_params(widget, entries)) { updates.push((index, next)); }
+        if let Some(next) = compose(params).map(|entries| generation3d_with_params(widget, entries)) { updates.push((index, next)); }
     }
     if updates.is_empty() { return Err("generation3d-replay.transform-target"); }
     if identity {
@@ -607,18 +606,18 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
             Some(Generation3dReplayDisplaced::Widget(std::mem::replace(&mut snapshot.host_snapshot.widgets[index], next)))
         }
         Generation3dMutation::DragTransforms(payload) => {
-            use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector,generation3d_vector_literal,GENERATION3D_TRANSLATE_KINDS};
+            use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector,generation3d_vector_value,GENERATION3D_TRANSLATE_KINDS};
 
             let delta = [payload.dx, payload.dy, payload.dz];
             if delta.iter().any(|value| !value.is_finite()) { return Err("generation3d-replay.drag-nonfinite"); }
             generation3d_replay_transforms(snapshot, &payload.targets, &GENERATION3D_TRANSLATE_KINDS, delta == [0.0; 3], |params| {
                 let current = generation3d_param_vector(params, "offset", [0.0; 3]);
                 let next: [f64; 3] = std::array::from_fn(|axis| current[axis] + delta[axis]);
-                next.iter().all(|value| value.is_finite()).then(|| vec![("offset", generation3d_vector_literal("vector", next))])
+                next.iter().all(|value| value.is_finite()).then(|| vec![("offset", generation3d_vector_value("vector", next))])
             })?
         }
         Generation3dMutation::RotateTransforms(payload) => {
-            use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector,generation3d_param_number,generation3d_vector_literal,generation3d_number_literal,GENERATION3D_ROTATE_KINDS};
+            use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector,generation3d_param_number,generation3d_vector_value,generation3d_number_value,GENERATION3D_ROTATE_KINDS};
 
             use crate::standards::v1::subsets::any::schema::transforms::AxisAngle;
             let axis = [payload.ax, payload.ay, payload.az];
@@ -627,18 +626,18 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
             generation3d_replay_transforms(snapshot, &payload.targets, &GENERATION3D_ROTATE_KINDS, payload.angle == 0.0, |params| {
                 let current = AxisAngle { axis: generation3d_param_vector(params, "axis", [0.0, 0.0, 1.0]), angle: generation3d_param_number(params, "angle", 0.0) };
                 let next = current.then(delta).ok()?;
-                Some(vec![("axis", generation3d_vector_literal("vector", next.axis)), ("angle", generation3d_number_literal(next.angle))])
+                Some(vec![("axis", generation3d_vector_value("vector", next.axis)), ("angle", generation3d_number_value(next.angle))])
             })?
         }
         Generation3dMutation::ScaleTransforms(payload) => {
-            use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector,generation3d_vector_literal,GENERATION3D_SCALE_KINDS};
+            use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector,generation3d_vector_value,GENERATION3D_SCALE_KINDS};
 
             use crate::standards::v1::subsets::any::schema::transforms::compose_scale;
             let factors = [payload.sx, payload.sy, payload.sz];
             if factors.iter().any(|value| !value.is_finite() || *value <= 0.0) { return Err("generation3d-replay.scale-invariant"); }
             generation3d_replay_transforms(snapshot, &payload.targets, &GENERATION3D_SCALE_KINDS, factors == [1.0; 3], |params| {
                 let next = compose_scale(generation3d_param_vector(params, "factor", [1.0; 3]), factors).ok()?;
-                Some(vec![("factor", generation3d_vector_literal("vector", next)), ("center", generation3d_vector_literal("point", [0.0; 3]))])
+                Some(vec![("factor", generation3d_vector_value("vector", next)), ("center", generation3d_vector_value("point", [0.0; 3]))])
             })?
         }
         Generation3dMutation::MoveNodes(payload) => {
@@ -3568,7 +3567,7 @@ pub fn generation3d_all_retained_mutation_fixtures_for_test() -> Vec<Generation3
         Generation3dMutation::ChangeGenerationPreview(ChangeGenerationPreview { text: Some("Retained preview \u{1F600}".into()) }),
         Generation3dMutation::ChangeGenerationPreview(ChangeGenerationPreview { text: None }),
     ];
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧫️fixtures/🧬️semantic-wire/🔣️.json")).expect("semantic wire corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🧫️fixtures/🧬️semantic-wire/🔣️.json")).expect("semantic wire corpus");
     for case in corpus["cases"].as_array().expect("semantic wire cases") {
         mutations.push(<Generation3dMutation as semio_framework_value::FromValue>::from_value(case["mutation"].clone().into()).expect("authored semantic mutation"));
     }

@@ -1,0 +1,5 @@
+{
+  "mutation": "removeGcpObservation",
+  "id": "gcp-south-pier",
+  "observationIndex": 7
+}

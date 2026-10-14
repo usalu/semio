@@ -14,7 +14,7 @@ import { roles } from "aria-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { StageEvent } from "@semio-tech/pets";
 import { FIXTURE_ELEMENTS, FLOOR, FOCUS_MARGIN, KEEPOUT_MARGIN, PET_CONTROLS, PET_KEEPOUTS, PET_PRESS_CONTROLS, PET_PROPS, PET_SURFACES, SURFACE_WIDTH, SURVEY_ATTRIBUTES, fixtureId, stageBox, surfaceId, survey, wallId, watchPointer, watchSurvey, type SurveyHost } from "@semio-tech/pets-react";
-import vectors from "../../🧫️fixtures/📡️surface-survey/🔣️.json";
+import vectors from "../🧫️fixtures/📡️surface-survey/🔣️.json";
 
 interface Box {
   readonly left: number;

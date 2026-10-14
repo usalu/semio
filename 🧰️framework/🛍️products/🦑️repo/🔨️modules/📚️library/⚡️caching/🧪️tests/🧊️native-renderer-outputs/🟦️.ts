@@ -5,26 +5,28 @@ import { dirname, join } from "node:path";
 
 /** 🧊️ Restores the production native renderer publisher's outputs with Nx and executes them against Cargo. */
 export async function testNativeRendererOutputs(workspace: string, output: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧊️native-renderer-outputs/🔣️.json"), "utf8"));
-  const rust = fixture.owner + "/📦️packages/🦀️rust", typescript = fixture.owner + "/📦️packages/🟦️typescript";
-  const project = JSON.parse(readFileSync(join(workspace, typescript, "📋️project.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧊️native-renderer-outputs/🔣️.json"), "utf8"));
+  const authoredRust = fixture.owner + "/📦️packages/🦀️rust", authoredTypescript = fixture.owner + "/📦️packages/🟦️typescript";
+  const project = JSON.parse(readFileSync(join(workspace, authoredTypescript, "📋️project.json"), "utf8"));
   assert.equal(project.name, fixture.project);
   for (const row of fixture.profiles) {
     assert.equal(project.targets[row.target].cache, true);
-    assert.deepEqual(project.targets[row.target].outputs, [`{workspaceRoot}/${rust}/${row.output}`], "Nx must restore the Rust package output consumed by the native runner");
+    assert.deepEqual(project.targets[row.target].outputs.map((path:string)=>path.replaceAll("{options.env.SEMIO_BUILD_MODE}",row.profile)), [`{workspaceRoot}/${authoredRust}/${row.output}`], "Nx must restore the Rust package output consumed by the native runner");
   }
-  const root = mkdtempSync(join(output, "native-renderer-outputs-"));
+  const root = mkdtempSync(join(output, "nr-"));
+  const rust="r",typescript="t";
   const put = (path: string, text: string) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), text); };
   const targets: Record<string, unknown> = {};
-  for (const row of fixture.profiles) targets[row.target] = {
+  for (const row of fixture.profiles) targets[row.profile] = {
     executor: "nx:run-commands", cache: true, parallelism: false,
     inputs: [`{workspaceRoot}/${rust}/Cargo.toml`, `{workspaceRoot}/${rust}/Cargo.lock`, `{workspaceRoot}/${rust}/🦀️.rs`, "{workspaceRoot}/📜️script.ts"],
-    outputs: project.targets[row.target].outputs,
-    options: { command: `bun ./📜️script.ts ${row.profile}`, cwd: "." }
+    outputs: project.targets[row.target].outputs.map((path:string)=>path.replaceAll(authoredRust,rust).replaceAll("{options.env.SEMIO_BUILD_MODE}",row.profile)),
+    options: { command: `bun ./📜️script.ts ${row.profile}`, cwd: ".",env:{SEMIO_BUILD_MODE:row.profile} }
   };
   put("package.json", JSON.stringify({ name: "native-renderer-output-fixture", private: true }));
+  put(".cargo/config.toml", `[profile.prototype]\ninherits="dev"\n[profile.release]\nopt-level=3\n`);
   put("nx.json", JSON.stringify({ useDaemonProcess: false, cacheDirectory: ".nx/cache" }));
-  put(`${typescript}/project.json`, JSON.stringify({ name: "native-renderer", targets }));
+  put(`${typescript}/project.json`, JSON.stringify({ name: "native-renderer", targets: { "native-build": { ...targets.prototype,outputs:project.targets["native-build"].outputs.map((path:string)=>path.replaceAll(authoredRust,rust)),configurations:Object.fromEntries(fixture.profiles.map((row:any)=>[row.profile,{command:`bun ./📜️script.ts ${row.profile}`,env:{SEMIO_BUILD_MODE:row.profile}}])), defaultConfiguration:"prototype" } } }));
   put(".gitignore", "node_modules\n.nx\ndist\noracle\n.runs\n");
   put(`${rust}/Cargo.toml`, `[workspace]\n[package]\nname=${JSON.stringify(fixture.crate)}\nversion="0.0.0"\nedition="2021"\n[features]\nnative-bin=[]\n[[bin]]\nname=${JSON.stringify(fixture.binary)}\npath="🦀️.rs"\nrequired-features=["native-bin"]\n`);
   put(`${rust}/Cargo.lock`, `version=4\n[[package]]\nname=${JSON.stringify(fixture.crate)}\nversion="0.0.0"\n`);
@@ -33,8 +35,9 @@ export async function testNativeRendererOutputs(workspace: string, output: strin
   put("📜️script.ts", `import { appendFileSync } from "node:fs";
 import { join } from "node:path";
 import { buildNativeRenderer } from ${JSON.stringify(join(workspace, fixture.owner, "🏗️compiler/🦀️native/📜️script.ts"))};
+import {phaseCompilerAdmissionControlV1} from ${JSON.stringify(join(workspace,"🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts"))};
 const root = process.cwd(), profile = process.argv[2];
-await buildNativeRenderer(join(root, ${JSON.stringify(rust)}), profile, root);
+await buildNativeRenderer(join(root, ${JSON.stringify(rust)}), profile, ${JSON.stringify(workspace)},phaseCompilerAdmissionControlV1(new AbortController().signal,120000,()=>undefined,()=>new Promise(done=>setImmediate(done))));
 appendFileSync(join(root, ".runs"), profile + "\\n");
 `);
   symlinkSync(join(workspace, "node_modules"), join(root, "node_modules"), process.platform === "win32" ? "junction" : "dir");
@@ -45,7 +48,7 @@ appendFileSync(join(root, ".runs"), profile + "\\n");
     assert.equal(code, 0, stdout + stderr); return stdout;
   };
   const cli = join(dirname(require.resolve("nx/package.json")), "dist/bin/nx.js");
-  const run = () => execute(["node", cli, "run-many", "--projects=native-renderer", "--targets=native-build,native-build-release", "--outputStyle=static"]);
+  const run = async () => {for(const profile of fixture.profiles)await execute(["node",cli,"run","native-renderer:native-build","--configuration="+profile.profile,"--outputStyle=static"]);};
   const runs = () => readFileSync(join(root, ".runs"), "utf8").trim().split("\n").sort();
   const binary = fixture.binary + (process.platform === "win32" ? ".exe" : "");
   const check = async (expected: string) => {
@@ -56,24 +59,24 @@ appendFileSync(join(root, ".runs"), profile + "\\n");
       assert.ok(readdirSync(join(root, rust, row.output)).includes(".nx-artifact.json"));
     }
   };
-  await run(); assert.deepEqual(runs(), ["dev", "release"]); await check(fixture.stdout);
+  await run(); assert.deepEqual(runs(), ["prototype", "release"]); await check(fixture.stdout);
   const bytes = fixture.profiles.map((row: { output: string }) => readFileSync(join(root, rust, row.output, binary)));
-  await run(); assert.deepEqual(runs(), ["dev", "release"]);
+  await run(); assert.deepEqual(runs(), ["prototype", "release"]);
   for (const row of fixture.profiles) rmSync(join(root, rust, row.output), { recursive: true });
-  await run(); assert.deepEqual(runs(), ["dev", "release"]);
+  await run(); assert.deepEqual(runs(), ["prototype", "release"]);
   for (const [index, row] of fixture.profiles.entries()) assert.deepEqual(readFileSync(join(root, rust, row.output, binary)), bytes[index]);
   await check(fixture.stdout);
   const heldProfile=fixture.profiles.find((row:{profile:string})=>row.profile===fixture.heldRun.profile);
   const ready=join(root,"held-ready"),release=join(root,"held-release"),controller=new AbortController();
   const {runNativeBinary}=await import(join(workspace,fixture.owner,"⌨️native-entrypoint/📜️script.ts"));
-  const held=runNativeBinary(join(root,rust,heldProfile.output,binary),["--hold",ready,release],env,root,controller.signal);
+  const held=runNativeBinary(join(root,rust,heldProfile.output,binary),["--hold",ready,release],env,workspace,controller.signal);
   const settled=held.then(()=>({error:undefined}),error=>({error}));
   try {
     const started=Date.now();
     while(!existsSync(ready)){assert.ok(Date.now()-started<fixture.heldRun.readyTimeoutMs,"actual native child did not report readiness");await new Promise(accept=>setTimeout(accept,10));}
     assert.equal(readFileSync(ready,"utf8"),fixture.stdout);
     put(`${rust}/🦀️.rs`, source(fixture.changedStdout));
-    await run(); assert.deepEqual(runs(), ["dev", "dev", "release", "release"]); await check(fixture.changedStdout);
+    await run(); assert.deepEqual(runs(), ["prototype", "prototype", "release", "release"]); await check(fixture.changedStdout);
     assert.equal(readFileSync(ready,"utf8"),fixture.stdout,"the already running child retains its original image");
   } finally {
     writeFileSync(release,"release\n");

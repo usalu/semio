@@ -46,7 +46,7 @@ function verdict(script: Entry[], cancelled: boolean): Verdict {
 
 /** ⚖️ The AJV twin of the Rust law `app::agent_lane_preview_tests`: every case of the language-agnostic agent-lane preview fixture answered exactly as written. */
 export function agentLanePreviewVerdictOracle(): number {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🤖️agent-lane-preview-verdicts.json", import.meta.url), "utf8")) as Fixture;
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🤖️agent-lane-preview-verdicts.json", import.meta.url), "utf8")) as Fixture;
   assert(fixture.cases.length >= 9, "the fixture keeps every verdict's case");
   for (const { name, script, cancelled, verdict: expected } of fixture.cases) {
     const derived = verdict(script, cancelled === true);
@@ -116,7 +116,7 @@ function uncarried(lanes: readonly string[], presentation: readonly string[], se
 
 /** ⚖️ The AJV twin of the Rust law `app::agent_lane_preview_tests::agent_lane_carriage_matches_the_language_agnostic_fixture`: every case of the language-agnostic carriage fixture answered exactly as written. */
 export function agentLaneCarriageOracle(): number {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🤖️agent-lane-carriage.json", import.meta.url), "utf8")) as Carriage;
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🤖️agent-lane-carriage.json", import.meta.url), "utf8")) as Carriage;
   assert(fixture.cases.length >= 15, "the fixture keeps every lane family's case");
   const selects = interactionVerb(fixture.interactionVerbs);
   assert.equal(new Set(fixture.lanes).size, fixture.lanes.length, "every lane is named once");

@@ -267,7 +267,7 @@ pub(crate) fn tile_morph_prompt_effect(deck: &PresentationSnapshot) -> Effect {
 /// `🎮️commands/📥️set-source::set_active_example` uses instead of the banned whole-snapshot mutation. The
 /// spr is a fresh, edit-free op-log — a genesis envelope with no history to encode.
 pub fn reset_presentation_document_effect(document: &PresentationSnapshot) -> Effect {
-    let pack = <PresentationSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let pack = <PresentationSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
     // 🪦️ NOT `create_document_envelope` + `print_document_spr`: an envelope is a terminal store shell
     // whose `Drop` asserts that its app-owned bounded retirement authority detached every nested
     // owner first, and nothing here ever mounts or retires it — so building this effect panicked the
@@ -1033,6 +1033,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

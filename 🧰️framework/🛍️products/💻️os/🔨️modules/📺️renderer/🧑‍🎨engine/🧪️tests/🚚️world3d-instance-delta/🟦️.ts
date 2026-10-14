@@ -9,7 +9,7 @@
  * drift alone. Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B44.
  */
 import { describe, expect, it } from "vitest";
-import fixture from "../../🧱️elements/🌐️World3dHost/🧫️fixtures/🚚️instance-delta.json" with { type: "json" };
+import fixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🚚️instance-delta.json" with { type: "json" };
 import { advanceWorldInstanceResidency, parseWorldInstanceDelta, type WorldInstanceRecord, type WorldInstanceResidencyV1 } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 
 /** 🧾️ The retained set a case starts from, built the way a cold consumer builds it: straight off the

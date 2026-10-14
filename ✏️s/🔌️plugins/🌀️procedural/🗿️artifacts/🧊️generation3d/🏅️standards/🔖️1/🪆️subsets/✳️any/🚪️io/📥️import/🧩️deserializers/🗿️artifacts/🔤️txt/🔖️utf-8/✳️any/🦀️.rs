@@ -14,7 +14,7 @@ use semio_s_artifact_stdio_txt::TxtSnapshot;
 pub fn register() {}
 
 pub fn deserialize(from: &TxtSnapshot) -> Result<Generation3dSnapshot, semio_framework_diagnostic::TextError> {
-    <Generation3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&from.to_body())
+    <Generation3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&from.to_body())
 }
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<Generation3dSnapshot, semio_framework_diagnostic::TextError> {

@@ -38,29 +38,41 @@ pub struct ProgramFault {
     pub text: String,
     #[cfg(not(target_arch = "wasm32"))]
     pub frame: Option<semio_framework_actor::pack::PackError>,
+    #[cfg(not(target_arch = "wasm32"))]
+    pub kernel:Option<semio_framework_actor::KernelError>,
+    #[cfg(not(target_arch = "wasm32"))]
+    pub actor_call:Option<semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall>,
 }
 
 impl From<String> for ProgramFault {
     fn from(text: String) -> Self {
-        Self { fault: None, text, #[cfg(not(target_arch = "wasm32"))] frame: None }
+        Self { fault: None, text, #[cfg(not(target_arch = "wasm32"))] frame: None,#[cfg(not(target_arch = "wasm32"))] kernel:None,#[cfg(not(target_arch = "wasm32"))] actor_call:None }
     }
 }
 
 impl From<&str> for ProgramFault {
     fn from(text: &str) -> Self {
-        Self { fault: None, text: text.to_string(), #[cfg(not(target_arch = "wasm32"))] frame: None }
+        Self { fault: None, text: text.to_string(), #[cfg(not(target_arch = "wasm32"))] frame: None,#[cfg(not(target_arch = "wasm32"))] kernel:None,#[cfg(not(target_arch = "wasm32"))] actor_call:None }
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl From<semio_framework_actor::pack::PackError> for ProgramFault {
-    fn from(error: semio_framework_actor::pack::PackError) -> Self { Self { fault: None, text: String::new(), frame: Some(error) } }
+    fn from(error: semio_framework_actor::pack::PackError) -> Self { Self { fault: None, text: String::new(), frame: Some(error),kernel:None,actor_call:None } }
 }
 
+#[cfg(not(target_arch="wasm32"))]
+impl From<semio_framework_actor::KernelError> for ProgramFault{fn from(error:semio_framework_actor::KernelError)->Self{Self{fault:None,text:String::new(),frame:None,kernel:Some(error),actor_call:None}}}
+#[cfg(not(target_arch="wasm32"))]
+impl From<semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall> for ProgramFault{fn from(call:semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall)->Self{Self{fault:None,text:String::new(),frame:None,kernel:None,actor_call:Some(call)}}}
 impl std::fmt::Display for ProgramFault {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(error) = &self.frame { return std::fmt::Display::fmt(error, formatter); }
+        #[cfg(not(target_arch="wasm32"))]
+        if let Some(error)=&self.kernel{return std::fmt::Display::fmt(error,formatter)}
+        #[cfg(not(target_arch="wasm32"))]
+        if let Some(call)=&self.actor_call{return write!(formatter,"original actor call {}/{}/{} {:?} after {:?}",call.input.operation,call.input.generation,call.input.epoch,call.kind,call.spent)}
         formatter.write_str(&self.text)
     }
 }
@@ -125,7 +137,7 @@ use semio_framework_value::ToValue;
     /// 🧯️ An `AppFrame::Error` as a [`ProgramFault`]: the decoded guest fault beside its full message.
     fn app_frame_program_fault(fault: &[u8], report: &[u8]) -> ProgramFault {
         let decoded = pack_rt::decode_wire_value(fault).ok().and_then(|value| <semio_framework::Fault as semio_framework_value::FromValue>::from_value(value).ok());
-        ProgramFault { fault: decoded, text: app_frame_error_message(fault, report), frame: None }
+        ProgramFault { fault: decoded, text: app_frame_error_message(fault, report), frame: None,#[cfg(not(target_arch = "wasm32"))] kernel:None,#[cfg(not(target_arch = "wasm32"))] actor_call:None }
     }
 
     /// 🧾 An `AppFrame::Error`'s full message: the generic fault summary, plus — whenever `report`

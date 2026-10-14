@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { partitionRefreshWindowInstancesV1 } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 
 const engineRoot = join(import.meta.dir, "..", "..");
-const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "🪟️window-lifecycle-template-drag", "🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "🪟️window-lifecycle-template-drag", "🔣️.json"), "utf8"));
 
 type Node = { kind: "stack"; windows: string[] } | { kind: "row" | "column"; children: Node[] };
 type Zone = { kind: "tab"; path: number[]; index: number } | { kind: "split"; path: number[]; side: "left" | "right" | "top" | "bottom" } | { kind: "rootSplit"; side: "left" | "right" | "top" | "bottom" };

@@ -3,7 +3,7 @@ export function createPluginRunnerTests(dependencies: Record<string, any>, sourc
 
   /** 🧪️ Pins exact forwarding against the neutral fixture and Node's independent separator parser. */
   function pluginTestRunnerSelfTests(): number {
-    const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🏃️runner/🔣️.json", source.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🏃️runner/🔣️.json", import.meta.url), "utf8"));
     const level = process.env.SEMIO_TEST_LEVEL,
       coverage = process.env.SEMIO_COVERAGE;
     try {

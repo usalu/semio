@@ -28,7 +28,7 @@ fn every_catalogue_row_activates_the_exact_drag_descriptor() {
 #[test]
 fn generation3d_catalogue_exports_only_its_own_codec_roster() {
     let _serial = crate::test_serial::lock();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🎮️commands/🧩️add-widget/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🎮️commands/🧩️add-widget/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let catalogue = catalogue();
     let formats = catalogue.sections.iter().flat_map(|section| &section.items).filter(|item| item.kind == "outputExport").map(|item| item.format.as_deref().unwrap()).collect::<Vec<_>>();
     let expected = fixture["exportFormats"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect::<Vec<_>>();

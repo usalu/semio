@@ -6,7 +6,7 @@ struct Captured{owner:String,metadata:String}
 
 #[test]
 fn sealed_clone_source_original_projected_authority_survives_every_alias_until_funded_close(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔐️custody.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔐️custody.json")).unwrap();
  for row in law["cases"].as_array().unwrap(){
   let(mut original,heap)=observe_retirement_allocations(||Captured{owner:row["owner"].as_str().unwrap().to_string(),metadata:row["metadata"].as_str().unwrap().to_string()});
   let original_bytes=heap.0;let owner_pointer=original.owner.as_ptr();let metadata_pointer=original.metadata.as_ptr();
@@ -47,7 +47,7 @@ fn sealed_clone_source_original_projected_authority_survives_every_alias_until_f
 fn sealed_clone_source_returns_same_original_workspace_after_all_projection_aliases_return(){
  use crate::retained_clone::RetainedCloneSourceTake;
  use crate::retirement::controlled::ControlledRetirement;
- let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔐️custody.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔐️custody.json")).unwrap();
  for row in law["cases"].as_array().unwrap(){
   let(original,heap)=observe_retirement_allocations(||Captured{owner:row["owner"].as_str().unwrap().into(),metadata:row["metadata"].as_str().unwrap().into()});let bytes=heap.0;let pointer=original.owner.as_ptr();let metadata=original.metadata.as_ptr();
   let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedCloneSource::<Captured>::constructor_copy_bytes(),maximum_capacity_bytes:RetainedCloneSource::<Captured>::constructor_capacity_bytes::<()>(),maximum_depth:1,..Default::default()};

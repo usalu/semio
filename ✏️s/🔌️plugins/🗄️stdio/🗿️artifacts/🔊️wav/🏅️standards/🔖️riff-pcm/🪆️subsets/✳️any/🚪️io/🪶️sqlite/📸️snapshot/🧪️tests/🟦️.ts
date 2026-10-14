@@ -1,10 +1,10 @@
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
-import floats from "../🧫️fixtures/🔢️float32.json";
-import indices from "../🧫️fixtures/🧭️indices.json";
-import integerQueries from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🧫️fixtures/🎯️integer-query.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+import floats from "./🧫️fixtures/🔢️float32.json";
+import indices from "./🧫️fixtures/🧭️indices.json";
+import integerQueries from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🧪️tests/🧫️fixtures/🎯️integer-query.json";
 import schema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import textSchema from "../../../📝️text/📸️snapshot/🔣️.json";
 import {buildSchema,graphqlSync} from "graphql";
@@ -72,7 +72,7 @@ test("WAV canonical float words preserve every neutral NaN payload through indep
 test("WAV independent full JSON and GraphQL facets preserve unsigned64 and binary32 words",async()=>{const document={...fixture,schema:"owned 世界\0",fmt:{...fixture.fmt,ext:new Array<number>(65536).fill(255)},fmtPadByte:255,dataPadByte:255,otherChunks:[{fourcc:"自由 🎶",data:[],padByte:255}],data:{kind:"float32",value:floats.ieee754Binary32Bits.map(bits=>({bits}))},chunkOrder:indices.unsigned64ChunkIndices.map(value=>({kind:"other",value}))};const ajv=new Ajv({strict:false});expect(ajv.validate(schema,document)).toBe(true);expect(ajv.validate(textSchema,document)).toBe(true);for(const value of ["18446744073709551616","01","-1","1.0"]){expect(ajv.validate(schema,{...document,chunkOrder:[{kind:"other",value}]})).toBe(false);}const sdl=await Bun.file(new URL("../../../../🧬️schema/📸️snapshot/🔗️.graphql",import.meta.url)).text();const graph=buildSchema("enum StateClass { ARTIFACT SESSION } directive @state(class: StateClass!) on FIELD_DEFINITION\n"+sdl+"\ntype Query { snapshot: WavSnapshot! }");const result=graphqlSync({schema:graph,source:"{ snapshot { schema fmt { audioFormat channels sampleRate byteRate blockAlign bitsPerSample ext } data { ... on WavFloat32Data { kind value { bits } } } fmtPadByte dataPadByte otherChunks { fourcc data padByte } chunkOrder { kind value } } }",rootValue:{snapshot:document},typeResolver:value=>({pcm16:"WavPcm16Data",pcm8:"WavPcm8Data",float32:"WavFloat32Data",raw:"WavRawData"})[value.kind as "pcm16"|"pcm8"|"float32"|"raw"]});expect(result.errors).toBeUndefined();expect(JSON.parse(JSON.stringify(result.data?.snapshot))).toEqual(document);});
 
 test("WAV full request contract retains independently queryable owned fields",async()=>{
- const plan=await Bun.file(new URL("../🧫️fixtures/💰️backing/🔬️requests/🔣️.json",import.meta.url)).json();
+ const plan=await Bun.file(new URL("🧫️fixtures/💰️backing/🔬️requests/🔣️.json",import.meta.url)).json();
  
  
  expect(plan["phases"]).toEqual(["projectSnapshot","reconstructSnapshot"]);expect(plan["requestExtent"]).toEqual("fullConcreteRequests");expect(plan["reallocation"]).toEqual("completeReplacement");expect(plan["exactReplay"]).toEqual(true);expect(plan["denial"]).toEqual("oneByteBelowObserved");expect(plan["retirementRefund"]).toEqual(false);expect(plan["refusalKind"]).toEqual("ownershipLimit");expect(plan["tableCount"]).toEqual(12);
@@ -91,7 +91,7 @@ test("WAV full request contract retains independently queryable owned fields",as
 });
 
 test("WAV independent row census closes the intrinsic bounded-work contract",async()=>{
- const laws=await Bun.file(new URL("../🧫️fixtures/🎛️controls.json",import.meta.url)).json();
+ const laws=await Bun.file(new URL("🧫️fixtures/🎛️controls.json",import.meta.url)).json();
  
  expect(laws["exactFixtureRows"]).toEqual(22);expect(laws["schemaLimitOffsets"]).toEqual([-1,0]);expect(laws["rowLimitOffsets"]).toEqual([-1,0]);expect(laws["rowRefusalKind"]).toEqual("workLimit");
  
@@ -110,7 +110,7 @@ test("WAV independent row census closes the intrinsic bounded-work contract",asy
  }finally{oracle.close();}
 });
 
-import frontiers from "../🧫️fixtures/🧵️frontiers/🔣️.json";
+import frontiers from "./🧫️fixtures/🧵️frontiers/🔣️.json";
 
 import {validateJsonSchemaSubset} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 function frontierSnapshot(caseKind:"samples"|"group"|"census"):WavSnapshot{const{ext,...fmt}=fixtureSnapshot().fmt;return {schema:frontiers.schema,fmt,fmtPadByte:0,dataPadByte:0,data:{kind:"pcm16",value:caseKind==="samples"?Array.from({length:frontiers.entities},(_,i)=>i+frontiers.sampleBase):[]},otherChunks:caseKind==="samples"?[]:caseKind==="group"?[{padByte:0,fourcc:frontiers.chunkGroup,data:Array.from({length:frontiers.entities},(_,i)=>i%frontiers.octetCycle)}]:Array.from({length:frontiers.entities},(_,i)=>({padByte:0,fourcc:String(i).padStart(frontiers.chunkWidth,"0"),data:[]})),chunkOrder:[]};}
@@ -136,7 +136,7 @@ test("WAV semantic and physical routes retain one explicit cumulative byte owner
  const short=new SqliteOperation({maxAllocationBytes:measured.ownedBytes+frontiers.priorDebt-1});short.allocateBytes(frontiers.priorDebt);await expect((async()=>{const bytes=await exportSqliteDatabase(await wavSnapshotToSqliteDatabase(input,short),short);return wavSnapshotFromSqliteDatabase(await importSqliteDatabase(bytes,short),short);})()).rejects.toHaveProperty("kind",frontiers.allocationRefusalKind);expect(short.ownedBytes).toBeGreaterThanOrEqual(frontiers.priorDebt);
 });
 
-import paddingPresence from "../🧫️fixtures/🎚️presence/🔣️.json";
+import paddingPresence from "./🧫️fixtures/🎚️presence/🔣️.json";
 
 test("WAV complete padding fields retain canonical zero defaults and physical owner identity",async()=>{
  expect(paddingPresence["version"]).toEqual(1);expect(paddingPresence["canonicalPads"]).toEqual({"format":0,"samples":0,"auxiliary":0});
@@ -153,7 +153,7 @@ test("WAV complete padding fields retain canonical zero defaults and physical ow
 
 /** 🎚️ Independently measures complete sample variants and optional extension relationships. */
 test("WAV complete semantic cells admit exact grants and refuse one-short limits",async()=>{
- const plan=await Bun.file(new URL("../🧫️fixtures/📏️cells/🔣️.json",import.meta.url)).json();expect(plan["tableWidths"]).toEqual([["wav_chunk_order",8],["wav_data",3],["wav_document",2],["wav_float32_sample",6],["wav_format",8],["wav_format_extension",1],["wav_format_extension_byte",4],["wav_other_chunk",5],["wav_other_chunk_byte",4],["wav_pcm16_sample",4],["wav_pcm8_sample",4],["wav_raw_data_byte",4]]);expect(plan["sampleKinds"]).toEqual(["pcm16","pcm8","float32","raw"]);expect(plan["extensionStates"]).toEqual(["absent","empty","present"]);expect(plan["formatReferences"]).toEqual(["format","samples"]);expect(plan["fullFixtureRows"]).toEqual(22);
+ const plan=await Bun.file(new URL("🧫️fixtures/📏️cells/🔣️.json",import.meta.url)).json();expect(plan["tableWidths"]).toEqual([["wav_chunk_order",8],["wav_data",3],["wav_document",2],["wav_float32_sample",6],["wav_format",8],["wav_format_extension",1],["wav_format_extension_byte",4],["wav_other_chunk",5],["wav_other_chunk_byte",4],["wav_pcm16_sample",4],["wav_pcm8_sample",4],["wav_raw_data_byte",4]]);expect(plan["sampleKinds"]).toEqual(["pcm16","pcm8","float32","raw"]);expect(plan["extensionStates"]).toEqual(["absent","empty","present"]);expect(plan["formatReferences"]).toEqual(["format","samples"]);expect(plan["fullFixtureRows"]).toEqual(22);
  const variants:WavSnapshot["data"][]=[{kind:"pcm16",value:[-32768,-1,0,1,32767]},{kind:"pcm8",value:[0,255,127]},{kind:"float32",value:floats.ieee754Binary32Bits.map(bits=>({bits}))},{kind:"raw",value:[0,255,127]}];
  expect(variants.map(v=>v.kind)).toEqual(plan.sampleKinds);
  for(const extension of plan.extensionStates as ("absent"|"empty"|"present")[])for(const data of variants){

@@ -19,7 +19,7 @@ fn assert_copy(source:&crate::RasterLayerNode,copy:&crate::RasterLayerNode) {
 
 #[test]
 fn duplicate_keeps_parent_properties_and_undo() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let mut document=empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let history=semio_framework_plugin::HistoryView::empty();let doc=ArtifactView::new(&document,&history);
     let config=RasterConfig::default();let cfg=ConfigView {snapshot:&config,window:None};

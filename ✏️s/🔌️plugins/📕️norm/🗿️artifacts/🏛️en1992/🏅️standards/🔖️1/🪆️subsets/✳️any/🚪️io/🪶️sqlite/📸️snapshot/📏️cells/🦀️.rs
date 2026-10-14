@@ -1,7 +1,8 @@
 //! 📏️ Borrowed EN1992 native roles admit every authored relational cell before typed construction.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{invalid,annex,member_kind,support,exposure,ductility,fire_rating,tightness,En1992Snapshot};
 use crate::{MemberKind,SupportCondition,ExposureClass,DuctilityClass,FireRating,TightnessClass,document::AnnexChoice};
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_dsl_record::{DslField,RecordValue as R,FieldValue as F};
 use semio_framework_value::{ValueError,ValueRefusalKind,NativeDecodeControl as N};
 type Result<T>=std::result::Result<T,ValueError>;

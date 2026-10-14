@@ -89,7 +89,7 @@ fn zlib_round_trip() {
 
 #[test]
 fn illustrator_partial_flush_materialization_matches_fixture_stream() {
-    let expected: &[u8] = include_bytes!("../../../🧫️fixtures/🎨️illustrator-partial-flush.zz");
+    let expected: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/🎨️illustrator-partial-flush.zz");
     let decoded = zlib_decompress(expected).expect("decode Illustrator stream");
     let actual = zlib_compress_illustrator(&decoded).expect("encode Illustrator stream");
     assert_eq!(actual, expected);
@@ -249,8 +249,8 @@ fn raw_deflate_round_trips_random_incompressible_data() {
 fn codec_round_trip() {
     let payload = b"pack-envelope-payload".to_vec();
     let snap = DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Default, dict_id: None, payload: payload.clone() };
-    let pack = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
-    let decoded = <DeflateSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("decode");
+    let pack = pack::snapshot::ArtifactPack::encode_pack(&snap);
+    let decoded = <DeflateSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("decode");
     assert_eq!(decoded, snap);
     assert_eq!(decoded.payload, payload);
 }

@@ -1,0 +1,8 @@
+{
+  "operation":99191,
+  "generation":17,
+  "fuel":4,
+  "deadlineUs":100000,
+  "grant":{"maximumItems":1,"maximumCopyBytes":0,"maximumCapacityBytes":65536,"maximumReleaseBytes":262144,"maximumDepth":64},
+  "captureCuts":[0,1,2]
+}

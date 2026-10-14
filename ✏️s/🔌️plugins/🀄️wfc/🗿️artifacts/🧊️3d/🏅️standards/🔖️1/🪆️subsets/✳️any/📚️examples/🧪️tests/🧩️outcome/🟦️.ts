@@ -3,9 +3,9 @@
 
 import { describe, expect, it } from "vitest";
 
-import corridor from "../../🚪️two-room-corridor/🧫️fixtures/🧩️example/🔣️.json";
-import facade from "../../🧱️wall-roof-facade-strip/🧫️fixtures/🧩️example/🔣️.json";
-import tower from "../../🗼️tower-stack/🧫️fixtures/🧩️example/🔣️.json";
+import corridor from "../../🚪️two-room-corridor/🧪️tests/🧫️fixtures/🧩️example/🔣️.json";
+import facade from "../../🧱️wall-roof-facade-strip/🧪️tests/🧫️fixtures/🧩️example/🔣️.json";
+import tower from "../../🗼️tower-stack/🧪️tests/🧫️fixtures/🧩️example/🔣️.json";
 
 const outcomes = [corridor, facade, tower];
 

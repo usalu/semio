@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn sqlite_snapshot_step_inline_root_and_typed_box_have_only_concrete_backing(){
- let vector:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/💰️backing/🔣️.json")).unwrap();
+ let vector:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/💰️backing/🔣️.json")).unwrap();
  let mut progress=|_|true;let mut control=NativeDecodeControl::new(0,&mut progress);
  let frame=Frame{schema:String::new(),description:Vec::new(),implementation_level:String::new(),file_name:String::new(),timestamp:String::new(),author:Vec::new(),organization:Vec::new(),preprocessor_version:String::new(),originating_system:String::new(),authorization:String::new(),file_schema:Vec::new(),entities:Vec::new(),values:Vec::new()};
  let result=reconstruct(frame,&mut control).expect("an inline root must not request heap backing");assert_eq!(control.owned_bytes(),0);assert_eq!(vector["typedConstruction"]["inlineRoot"],"noBackingRequest");close(result);

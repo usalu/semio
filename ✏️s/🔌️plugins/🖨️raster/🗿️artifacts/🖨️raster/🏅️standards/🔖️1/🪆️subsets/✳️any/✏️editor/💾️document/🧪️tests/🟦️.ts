@@ -3,7 +3,7 @@ import {expect,test} from "bun:test";
 
 import Ajv from "ajv";
 import sharp from "sharp";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../../../🧬️schema/🔣️.json";
 import valueSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json";
 

@@ -57,7 +57,7 @@ impl Drop for WalLawWedgeGuardV1 {
 }
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/🧾️inference-wal-proof-v1/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧾️inference-wal-proof-v1/🔣️.json")).unwrap()
 }
 
 fn decode_hex(value: &str) -> Vec<u8> {
@@ -324,7 +324,7 @@ async fn inference_wal_proof_executes_literal_committed_transaction_scope_and_ca
     protocol::encode_envelope(&envelope(&fixture), &mut bytes);
     assert_eq!(bytes, decode_hex(fixture["encodedHex"].as_str().unwrap()));
     assert_eq!(crate::inference::sha256(&bytes), fixture["commandHash"].as_str().unwrap());
-    let identifiers: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🖥️inference-server-identity-v1/🔣️.json")).unwrap();
+    let identifiers: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🖥️inference-server-identity-v1/🔣️.json")).unwrap();
     for row in identifiers["cases"].as_array().unwrap() {
         for field in ["userId", "sessionId", "spaceId", "documentId"] {
             let mut candidate = target(&fixture, &fixture["traces"][0], &durable);
@@ -466,7 +466,7 @@ pub(in crate::inference) async fn committed_fixture_witness() -> (CommittedInfer
 async fn inference_wal_proof_rejects_hash_matched_noncanonical_or_wrong_actor_commands() {
     let fixture = fixture();
     let durable = durable_fixture_record(&fixture);
-    let commands: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/✉️inference-command-v1/🔣️.json")).unwrap();
+    let commands: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/✉️inference-command-v1/🔣️.json")).unwrap();
     let trace = &fixture["traces"][0];
     let guard = WalLawWedgeGuardV1::arm("inference_wal_proof_rejects_hash_matched_noncanonical_or_wrong_actor_commands");
     let mut selected = 0;

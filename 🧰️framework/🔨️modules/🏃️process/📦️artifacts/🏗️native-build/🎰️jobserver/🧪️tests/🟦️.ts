@@ -1,14 +1,15 @@
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import { admitJobserverConfigV1, createJobserverV1, defaultJobserverStyleV1, jobserverAuthFromEnvironmentV1, jobserverMakeflagsV1, type JobserverStyleV1 } from "../🟦️.ts";
 import { schedulerBinaries } from "../../🧪️tests/🦀️cargo/🟦️.ts";
 
 const artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
+mkdirSync(artifacts, { recursive: true });
 const pool = (tokens: number) => createJobserverV1({ version: 1, tokens, style: defaultJobserverStyleV1() }, mkdtempSync(join(artifacts, "j-")));
 
 /** 🐃️ A GNU make whose fifo jobserver style is the protocol oracle (4.4 or newer), `null` when none is installed. */
@@ -87,6 +88,34 @@ test("the jobserver crate, the client Cargo and rustc embed, never holds more sl
     const all = await Promise.all(Array.from({ length: fixture.oracle.tokens }, () => jobserver.acquire(AbortSignal.timeout(1000))));
     for (const held of all) held.release();
   } finally { jobserver.close(); }
+}, 600_000);
+
+test("whole-pool reservations wait atomically, serialize successors, and return partially reserved tokens on cancellation", async () => {
+  const row = fixture.exclusive, jobs = await pool(row.tokens);
+  try {
+    const running = await jobs.acquire(), controller = new AbortController();
+    const cancelled = jobs.acquireAll(controller.signal);
+    expect(jobs.held()).toBe(row.tokens);
+    expect(jobs.tryAcquire()).toBeNull();
+    controller.abort(Error("exclusive cancelled"));
+    await expect(cancelled).rejects.toThrow("exclusive cancelled");
+    expect(jobs.held()).toBe(1);
+    const exclusive = jobs.acquireAll(), successor = jobs.acquire();
+    running.release();
+    const reserved = await exclusive;
+    expect(reserved).toHaveLength(row.tokens);
+    expect(jobs.held()).toBe(row.tokens);
+    expect(jobs.waiting()).toBe(1);
+    for (const slot of reserved) slot.release();
+    (await successor).release();
+    expect(jobs.held()).toBe(0);
+    const oracle = (await schedulerBinaries()).get("jobserver-oracle")!, slot = await jobs.acquire();
+    const result = spawnSync(oracle, [row.workers, row.holdMs, row.rounds].map(String), { env: { ...process.env, ...jobs.environment() }, encoding: "utf8" });
+    slot.release();
+    expect(result.status, result.stderr).toBe(0);
+    expect(JSON.parse(result.stdout)).toEqual({ maxConcurrent: row.maxConcurrent, acquired: (row.workers - 1) * row.rounds });
+    console.log(`[jobserver] exclusive ${row.tokens} workers; cancelled tokens restored; third-party client peak=${row.maxConcurrent}`);
+  } finally { jobs.close(); }
 }, 600_000);
 
 const make = gnuMake();

@@ -1,6 +1,6 @@
 #[test]
 fn mounted_receipt_bytes_preserve_original_backing_and_all_native_allocation_axes() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture["maximumCapacityBytes"].as_u64().unwrap() as usize, MOUNTED_RECEIPT_MAXIMUM_BYTES);
     for row in fixture["cases"].as_array().unwrap() {
         let text = row["text"].as_str().unwrap().as_bytes();
@@ -56,7 +56,7 @@ fn mounted_receipt_bytes_preserve_original_backing_and_all_native_allocation_axe
 
 #[test]
 fn mounted_receipt_bytes_cancel_every_original_growth_frontier_without_hidden_release() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for (index, frontier) in fixture["cancellationFrontiers"].as_array().unwrap().iter().enumerate() {
         let mut original = Vec::with_capacity(64); original.extend_from_slice(&[17u8; 64]);
         let mut owner = MountedReceiptBytes::from_original(original);
@@ -100,7 +100,7 @@ impl store::ArtifactCanonicalJson for MountedReceiptJsonString<'_> {
 
 #[test]
 fn mounted_receipt_prepared_operation_prestages_exact_original_payload_before_acknowledgment() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture["operationHeader"], serde_json::json!([1, 7]));
     for row in fixture["cases"].as_array().unwrap() {
         let body = MountedReceiptJsonString(row["text"].as_str().unwrap());
@@ -191,7 +191,7 @@ fn mounted_receipt_prepared_operation_cancellation_retires_only_funded_original_
 
 #[test]
 fn mounted_receipt_operation_list_retains_every_original_inverse_length_and_payload() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for hex in fixture["operationHexModes"].as_array().unwrap() {
         let hex = hex.as_bool().unwrap();
         for indices in fixture["operationLists"].as_array().unwrap() {
@@ -255,7 +255,7 @@ fn mounted_receipt_operation_list_cancels_codec_payload_and_framed_growth_fronti
 
 #[test]
 fn mounted_receipt_kernel_mutation_preserves_every_original_causal_field_before_publication() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap(); let meta = &fixture["receiptMetadata"];
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap(); let meta = &fixture["receiptMetadata"];
     for dependency_count in [0, 3] {
         let dependencies: Vec<_> = meta["dependencies"].as_array().unwrap().iter().take(dependency_count).map(|id| MutationId(id.as_str().unwrap().into())).collect();
         for row in fixture["cases"].as_array().unwrap() {
@@ -310,7 +310,7 @@ fn mounted_receipt_kernel_mutation_cancellation_retains_original_owners_under_pa
 
 #[test]
 fn mounted_receipt_child_document_handle_hashes_original_utf8_with_bounded_zero_heap_turns() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for (index, row) in fixture["cases"].as_array().unwrap().iter().enumerate() {
         let source = row["text"].as_str().unwrap();
         for copy in [1, 3, 7, 64] {

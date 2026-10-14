@@ -1,0 +1,42 @@
+{
+  "mutation": "createComplianceRecord",
+  "complianceRecord": {
+    "id": "compliance-record-a",
+    "name": "Compliance Record A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "standardRef": "",
+    "obligation": {
+      "text": ""
+    },
+    "complianceStatus": "pending",
+    "evidenceRefs": [],
+    "auditorId": null,
+    "auditDate": null,
+    "nextReview": null,
+    "affectedEntityIds": [],
+    "gapAnalysis": [],
+    "remediationPlan": [],
+    "ownerId": null,
+    "severity": "negligible",
+    "regulatoryBody": null,
+    "certificationTarget": null,
+    "waiverStatus": null,
+    "relatedRequirementIds": [],
+    "monitoringMethod": null,
+    "reportingFrequency": null,
+    "penalties": [],
+    "correctiveActions": [],
+    "artifactRefs": []
+  }
+}

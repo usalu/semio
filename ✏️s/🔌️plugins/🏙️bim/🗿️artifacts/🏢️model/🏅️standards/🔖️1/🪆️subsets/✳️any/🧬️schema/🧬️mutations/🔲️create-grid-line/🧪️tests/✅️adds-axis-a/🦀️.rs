@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔲️create-grid-line/✅️adds-axis-a",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️create-grid-line/✅️adds-axis-a/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️create-grid-line/✅️adds-axis-a/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️create-grid-line/✅️adds-axis-a/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️create-grid-line/✅️adds-axis-a/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️create-grid-line/✅️adds-axis-a/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲️create-grid-line/✅️adds-axis-a/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲️create-grid-line/✅️adds-axis-a/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲️create-grid-line/✅️adds-axis-a/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲️create-grid-line/✅️adds-axis-a/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲️create-grid-line/✅️adds-axis-a/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

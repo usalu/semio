@@ -70,13 +70,13 @@ pub(super) fn session_retained_wake_demands<J>(inner:&WorkerJobSessionInner<J>,c
 }
 struct WakeGate<'a>(&'a AtomicBool);
 impl Drop for WakeGate<'_>{fn drop(&mut self){self.0.store(false,Ordering::Release)}}
-pub(super) fn close_session_retained_wake<J>(inner:&WorkerJobSessionInner<J>,grant:RetainedCloneGrant)->Option<WorkerJobCloseStep>{
- let demand=match session_retained_wake_demands(inner,grant.maximum_copy_bytes){Ok(Some(demand))=>demand,Ok(None)=>return None,Err(error)=>return Some(WorkerJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()})};
- if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Some(WorkerJobCloseStep::Pending{progress:Default::default()})}
- if inner.wake_guard.compare_exchange(false,true,Ordering::Acquire,Ordering::Relaxed).is_err(){return Some(WorkerJobCloseStep::Blocked)}
+pub(super) fn close_session_retained_wake<J>(inner:&WorkerJobSessionInner<J>,grant:RetainedCloneGrant)->Result<Option<WorkerJobCloseStep>,ValueError>{
+ let Some(demand)=session_retained_wake_demands(inner,grant.maximum_copy_bytes)?else{return Ok(None)};
+ if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Some(WorkerJobCloseStep::Pending{progress:Default::default()}))}
+ if inner.wake_guard.compare_exchange(false,true,Ordering::Acquire,Ordering::Relaxed).is_err(){return Ok(Some(WorkerJobCloseStep::Blocked))}
  let _gate=WakeGate(&inner.wake_guard);let slot=unsafe{&mut *inner.retained_wake.get()};let original=slot.as_mut().expect("original retained wake admitted by its exclusive gate");
- if original.terminal_is_empty(){drop(slot.take());return Some(WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}})}
- Some(match original.close_step(grant){Ok(step)=>WorkerJobCloseStep::Pending{progress:step.progress()},Err(error)=>WorkerJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}})
+ if original.terminal_is_empty(){drop(slot.take());return Ok(Some(WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}}))}
+ let step=original.close_step(grant)?;Ok(Some(WorkerJobCloseStep::Pending{progress:step.progress()}))
 }
 
 #[cfg(test)]

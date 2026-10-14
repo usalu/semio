@@ -1,6 +1,6 @@
 use super::*;
 
-const FIXTURE: &str = include_str!("../../../🧫️fixtures/📊️observability-v1/🔣️.json");
+const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/📊️observability-v1/🔣️.json");
 
 /// 🧫️ The fixture's catalog progress, read field by field into the schema projection.
 #[derive(serde::Deserialize)]

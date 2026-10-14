@@ -40,7 +40,7 @@ pub fn definition(label: LocalizedLabel) -> UtilityDefinition {
 /// settings its job reads (contact tolerance and kind weights) simply restarts the search against what is now there
 /// (`restart` for both); there is nothing to revalidate.
 pub fn run_definition() -> ToolRunDefinition {
-    ToolRunDefinition {
+    ToolRunDefinition { receiving: semio_framework_tool_run::ToolRunReceivingLimits::REPORTS,
         mutating: false,
         rebase: ToolRunRebasePolicy::Restart,
         reconfigure: ToolRunReconfigurePolicy::Restart,

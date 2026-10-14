@@ -1,0 +1,19 @@
+{
+  "byteIdentical": 233,
+  "pathOnly": [
+    "🌎️hub/🧪️tests/🧫️fixtures/🧱️foundation-source/🔣️.json",
+    "🌎️hub/🧪️tests/🧫️fixtures/🧱️socket-grant-command-source/🔣️.json",
+    "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🧬️retained-gis-browser/🔣️.json",
+    "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🤝️gis-map-collaboration/🔣️.json",
+    "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🧫️fixtures/🏃️command-ownership/🔣️.json"
+  ],
+  "peerChanged": [
+    {
+      "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "bc58af6fe9cd3b3c6c7dd93587e8dfa1a6569ff38e8a3bf18c0677717b64398f",
+      "observedBefore": "bc58af6fe9cd3b3c6c7dd93587e8dfa1a6569ff38e8a3bf18c0677717b64398f",
+      "observedAfter": "01603b42c700aadb4c7255d348d0a53b124a3967dce8b1319fa50c2270b2e5bb"
+    }
+  ]
+}

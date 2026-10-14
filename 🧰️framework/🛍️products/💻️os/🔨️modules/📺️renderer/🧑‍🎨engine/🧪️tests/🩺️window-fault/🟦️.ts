@@ -6,7 +6,7 @@ import { scopeContributionsJson, type PluginManifest } from "@semio-tech/framewo
 import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
 import { classifyWindowFault, liveInstanceWindowFaultV1, WINDOW_FAULT_ATTRIBUTE, windowFaultFromError } from "../../🧱️elements/🏛️ShellHost/🩺️fault/🟦️.ts";
-import retiredInstanceFaults from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🪦️retired-instance-fault/🔣️.json";
+import retiredInstanceFaults from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🪦️retired-instance-fault/🔣️.json";
 import { isPluginInstanceRetiredV1, markPluginInstanceRetiredV1 } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import { createContributionsPublisher } from "../../🧱️elements/🛠️ShellHelpers/🧩️contributions/🟦️.ts";
 import browserSchema from "../../../../🔌️plugin/🌐️browser-bundle/🧬️schema/🔣️.json";

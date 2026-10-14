@@ -9,7 +9,7 @@ type DecodingRow = { id: string; input: string; events: string[]; oracle?: strin
 type QuantizationRow = { rgb: [number, number, number]; ansi256: number; ansi16: number };
 type Fixture = { decoding: DecodingRow[]; quantization: QuantizationRow[] };
 
-const fixture: Fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/⌨️input-decoding/🔣️.json"), "utf8"));
+const fixture: Fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/⌨️input-decoding/🔣️.json"), "utf8"));
 
 const specialNames: Record<string, string> = {
   up: "Up", down: "Down", left: "Left", right: "Right", home: "Home", end: "End", pageup: "PageUp", pagedown: "PageDown",

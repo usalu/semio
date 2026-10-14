@@ -16,7 +16,7 @@ const require = createRequire(import.meta.url);
 const Lru = require("lru-cache") as new (options: { max: number; length(value: Uint8Array): number }) => LruReference;
 const sum = require("lodash/sum") as (values: readonly number[]) => number;
 const owner = resolve(import.meta.dir, "..");
-const corpus = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")) as Corpus;
+const corpus = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")) as Corpus;
 const hex = (bytes: Uint8Array): string => Buffer.from(bytes).toString("hex");
 const keys = new Map(corpus.keys.map(key => [key.id, key]));
 const keyHashes = new Map(corpus.keys.map(key => [key.id, blake3Hex(Buffer.from(key.preimageHex, "hex"))]));

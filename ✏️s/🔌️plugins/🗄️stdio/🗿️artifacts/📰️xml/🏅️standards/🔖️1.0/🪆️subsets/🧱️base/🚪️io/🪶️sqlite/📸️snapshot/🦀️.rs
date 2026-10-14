@@ -1,7 +1,8 @@
 //! 📰️ Handcrafted XML document, node, attribute, declaration and entity relations.
 
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1_0::subsets::base::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDocument, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode, XmlQuote, XmlSnapshot};
-use semio_framework_os_kernel::{sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
 #[path="💰️backing/🦀️.rs"]
 mod backing;
 
@@ -131,7 +132,7 @@ pub fn preflight_xml_document(schema: &str, doc: &XmlDocument, encoding: semio_f
 }
 
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
-impl ArtifactSqliteSnapshot for XmlSnapshot {
+impl ArtifactSqliteSnapshotHost for XmlSnapshot {
     fn decode_sqlite_snapshot_native(payload: &semio_framework_os_kernel::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>, native_owner: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self,ValueError> {
         native_owner.receive::<Self, Self>(|slot, native, body| {
             let value = native_decoding::decode(payload, control, native)?;
@@ -153,9 +154,14 @@ impl ArtifactSqliteSnapshot for XmlSnapshot {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
     }
 
-    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> { project_xml_document(&self.schema, &self.doc, Self::SQLITE_SCHEMA, XML_SQLITE_TABLES, control) }
-    fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self,ValueError> { let (schema, doc) = reconstruct_xml_document(database, Self::SQLITE_SCHEMA, XML_SQLITE_TABLES, control)?; Ok(Self { schema, doc }) }
+    
+    
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for XmlSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> { project_xml_document(&self.schema, &self.doc, Self::SQLITE_SCHEMA, XML_SQLITE_TABLES, control) }
+fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self,ValueError> { let (schema, doc) = reconstruct_xml_document(database, Self::SQLITE_SCHEMA, XML_SQLITE_TABLES, control)?; Ok(Self { schema, doc }) }
 }
 
 #[cfg(test)]

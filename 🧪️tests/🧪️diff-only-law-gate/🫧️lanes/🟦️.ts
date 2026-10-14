@@ -5,7 +5,7 @@ import Ajv from "ajv";
 import ts from "typescript";
 import {policyDiffOnlyFileBreaches,policyInverseSumLawUntestedLeafBreaches} from "../../../📜️script.ts";
 
-const root=resolve(import.meta.dir,"../../.."),owner=join(root,"🧫️fixtures/🧫️diff-only-law-gate"),vectors=JSON.parse(readFileSync(join(owner,"🔣️.json"),"utf8")) as {codes:Record<string,string>;cases:{id:string;segments:string[];lines:string[];breaches:{line:number;rule:string}[]}[];leafTrees:{id:string;files:Record<string,string[]>;breaches:string[]}[]},fixture=JSON.parse(readFileSync(join(owner,"🫧️lanes/🔣️.json"),"utf8")) as {version:1;cases:{id:string;expected:string[]}[]},validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(owner,"🫧️lanes/🧬️schema/🔣️.json"),"utf8")));
+const root=resolve(import.meta.dir,"../../.."),owner=join(root,"🧪️tests/🧫️fixtures/🧫️diff-only-law-gate"),vectors=JSON.parse(readFileSync(join(owner,"🔣️.json"),"utf8")) as {codes:Record<string,string>;cases:{id:string;segments:string[];lines:string[];breaches:{line:number;rule:string}[]}[];leafTrees:{id:string;files:Record<string,string[]>;breaches:string[]}[]},fixture=JSON.parse(readFileSync(join(owner,"🫧️lanes/🔣️.json"),"utf8")) as {version:1;cases:{id:string;expected:string[]}[]},validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(owner,"🫧️lanes/🧬️schema/🔣️.json"),"utf8")));
 
 /** 🌳️ Derives whole-state type and restore tokens independently through the TypeScript lexical scanner. */
 function oracle(source:string):string[]{

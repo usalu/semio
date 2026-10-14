@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "failureStages": [
+    "after-staging",
+    "after-embedded-root-staging",
+    "after-moves",
+    "after-relocations",
+    "after-symlink-retargeting",
+    "after-edits",
+    "after-regenerations",
+    "before-verify"
+  ],
+  "journalStates": [
+    "prepared",
+    "staging",
+    "disposing",
+    "installing",
+    "retargeting",
+    "editing",
+    "regenerating",
+    "verifying",
+    "committed",
+    "rolling-back",
+    "rolled-back"
+  ],
+  "virtualPreimageNodes": [
+    {
+      "path": "evidence/absent",
+      "state": "absent"
+    },
+    {
+      "path": "evidence/directory",
+      "state": "directory"
+    },
+    {
+      "path": "evidence/file.txt",
+      "state": "file",
+      "contentHash": "b5f7e7d285029324d9b3acae19cc05099271454ac98bfc059a92b0581625cd51",
+      "mode": 420,
+      "size": 9
+    },
+    {
+      "path": "evidence/link",
+      "state": "symlink",
+      "contentHash": "9ecf8f3cdb71be421db2abe2a21b0f76cb76112f32a4c7226b64585c62cdba7f",
+      "mode": 511,
+      "size": 11,
+      "target": "../file.txt"
+    }
+  ]
+}

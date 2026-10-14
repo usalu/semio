@@ -1,0 +1,1012 @@
+{
+  "version": 1,
+  "owners": [
+    "🧰️framework/🔨️modules/🎒️pack",
+    "🧰️framework/🔨️modules/📡️replication"
+  ],
+  "roots": [
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🔣️string/📦️bytes/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🔣️string/📦️bytes/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧪️testing/📥️invocation/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧪️testing/📥️invocation/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/📏️depth/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/📏️depth/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧵️operation/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧵️operation/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🔤️text/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🔤️text/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🎟️storage/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🎟️storage/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🔢️occurrence-order/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🔢️occurrence-order/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🔎️scalar-witness/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🔎️scalar-witness/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧭️tooling/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧭️tooling/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🧾️source/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🧾️source/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/📐️format/🧭️producer/🗂️catalog/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/📐️format/🧭️producer/🗂️catalog/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/📐️format/🧭️producer/📥️source/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/📐️format/🧭️producer/📥️source/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/📦️bytes/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/📦️bytes/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🚪️io/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🚪️io/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🚧️apply-refusal/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🚧️apply-refusal/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🩹️update/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🩹️update/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📡️wire/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/📡️wire/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧾️source/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧾️source/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️prepared/♻️retirement/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️prepared/♻️retirement/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📋️copy/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📋️copy/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📦️accumulate/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📦️accumulate/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/✂️clamp/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/✂️clamp/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🚫️error/♻️retirement/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🚫️error/♻️retirement/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧾️transaction/🎟️admission/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧾️transaction/🎟️admission/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/♻️retirement/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/♻️retirement/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧾️wire/♻️retirement/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧾️wire/♻️retirement/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/📦️slots/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/📦️slots/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/📝️drafts/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/📝️drafts/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📐️format/🔎️verification/🧾️record/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/📐️format/🔎️verification/🧾️record/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📐️format/🔎️verification/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/📐️format/🔎️verification/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧾️source/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧾️source/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🔣️json-string/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🔣️json-string/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/⏱️timestamp/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/⏱️timestamp/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🪪️id/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🪪️id/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🧫️fixtures"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures"
+    }
+  ],
+  "entries": [
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧫️fixtures/🔁️value-projection/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧫️fixtures/🔁️value-projection/🔣️.json",
+      "sha256": "fbf518eb79854a4af74a974b05f4fc0a0b3adb367bf6a400e39e67cec71adfca"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧫️fixtures/📍️text-refusal/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧫️fixtures/📍️text-refusal/🔣️.json",
+      "sha256": "eb10f50772337dfceeb2de3138e6befe389c2ace6ab3402fdf0ffa3f717b5556"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧫️fixtures/⚠️refusal/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧫️fixtures/⚠️refusal/🔣️.json",
+      "sha256": "93532c08983e66bfbfb2cda1595e8598118b4ba5059bd66192c0beac46de9b26"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧫️fixtures/🧭️cause/📡️codec/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧫️fixtures/🧭️cause/📡️codec/🔣️.json",
+      "sha256": "58a7e1e29badf2226a8da846d3395ce6a385fcd63e1d71e0132f00f9943a26de"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧫️fixtures/🧭️cause/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧫️fixtures/🧭️cause/🔣️.json",
+      "sha256": "413b475cdb3f8b16f47282b89e8d9cd4b15b1dcdaa4c7f078076cb047aad9164"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧫️fixtures/🧭️cause/🪪️kind/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧫️fixtures/🧭️cause/🪪️kind/🔣️.json",
+      "sha256": "73733db4aef434ae4844662ba5bf3efdc1a1ea6c43f5fc574694eeeceacb525f"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧫️fixtures/🧭️cause/📋️paged/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧫️fixtures/🧭️cause/📋️paged/🔣️.json",
+      "sha256": "288e141f0714140528d9f2c42433e0534b0ff52a2aa0c979dd4c43ea97c1b72d"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧫️fixtures/🧭️cause/🔌️capture/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧫️fixtures/🧭️cause/🔌️capture/🔣️.json",
+      "sha256": "15098fde99c517b6a1e4d2e9169efc49b08e3e11510fff9526d7af6ed34afe63"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧫️fixtures/🧭️cause/🔌️capture/👥️context/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧫️fixtures/🧭️cause/🔌️capture/👥️context/🔣️.json",
+      "sha256": "86b06a136a8b2549a2a392a292c3983550dac9f7e03b45e23fb2ffa6f2eb0e8f"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧫️fixtures/🧭️cause/🔌️capture/👥️context/🎛️policy/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧫️fixtures/🧭️cause/🔌️capture/👥️context/🎛️policy/🔣️.json",
+      "sha256": "9cff2bff041f1fe22d3b953fea6c182851b2707d101851244bfc8d116561a0ff"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧫️fixtures/🧭️cause/🔌️capture/👥️context/🧾️claim/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧫️fixtures/🧭️cause/🔌️capture/👥️context/🧾️claim/🔣️.json",
+      "sha256": "3e562c1015a24ef460165e24d4c971f8b027fd35839612a8e92b0103c26844a3"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧫️fixtures/🧭️cause/🔌️capture/👥️context/💥️lifecycle/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧫️fixtures/🧭️cause/🔌️capture/👥️context/💥️lifecycle/🔣️.json",
+      "sha256": "59c28a585954c7235b146723e4e5ce148d3950706220577e5912c262c6f7c666"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧫️fixtures/🧭️cause/🔌️capture/🚦️provider/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧫️fixtures/🧭️cause/🔌️capture/🚦️provider/🔣️.json",
+      "sha256": "97ddc9a72d5dfb48ea1c41a22fa5ae75dff25118d5ecac32b492bed4bb280e1c"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🔣️string/📦️bytes/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🔣️string/📦️bytes/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "9fc561293f0d8839a0c3eb4f6e02fa8e0560cf4db2af0606491870cc1042554d"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧪️testing/📥️invocation/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧪️testing/📥️invocation/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "1e97c9aa042d8b54cae45a2602cef5d78a3b84825be2a39f58824e109c8d392f"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "30be2dfdc2e4a5e77565a8e9f8492eea1151efa90939535366b463c59ceaefa8"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧫️fixtures/⚠️frontier.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧪️tests/🧫️fixtures/⚠️frontier.json",
+      "sha256": "ff3f38d58599a82838f6e0183f1333411d9bc4d02283fce63271c8715f1059ee"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/📏️depth/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/📏️depth/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "4acf9212cd767fd515009fd2523191cf9222821f063fee94be660b2cf97be537"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "3f5d092d44d4b07525391b54f361a0619b91756b7a6aec1a3b440349b17fceb1"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧵️operation/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧵️operation/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "74ae6c30f5e203045219796785ae9bad7872464961ac810f4cf996011ed55320"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "b5b8905094a153706c30400347fcbf0473734d37f677af91a6da3c34febedc80"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "dbf5d1a142e6cd784c741037aac331551a87b040ae4e4a1e6033c531d6de95f6"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🔤️text/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🔤️text/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "b63eae05eec804804e94bb9748a60dfb36f304096245e9eb4f78dca1cb0a0d90"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧫️fixtures/🚮️absence/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🧫️fixtures/🚮️absence/🔣️.json",
+      "sha256": "3a5d34991fefab984122d70e266d85219590682e644c28314532e6f9d7a2982c"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧫️fixtures/🫳️read-limits.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🧫️fixtures/🫳️read-limits.json",
+      "sha256": "cda92b6da51902bd184c02ff42ceb52747b31f8054acda7dd1a0974e124bca83"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧫️fixtures/🎟️borrowed-retirement/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🧫️fixtures/🎟️borrowed-retirement/🔣️.json",
+      "sha256": "09a6c9e112f5ff88b7adab837013d447db1a3dc37a016a16a82e48e7f24d290f"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧫️fixtures/🫳️read-source.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🧫️fixtures/🫳️read-source.json",
+      "sha256": "54ad9038d703833b82b97c0e47624b181a0f15fe2a0ed3e4f2776abe5c00c2d5"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧫️fixtures/🎮️retirement/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🧫️fixtures/🎮️retirement/🔣️.json",
+      "sha256": "c5e65419767b1f87989bebb6d8aedd4b22e4f4196874b0fa9c89434fe8b1cd9a"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧫️fixtures/🎟️normal/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🧫️fixtures/🎟️normal/🔣️.json",
+      "sha256": "fdb4ab3f1b964793c874145901a7288419d67fb9c2d2e741c419aa707fb33713"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧫️fixtures/🫳️source-sink.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🧫️fixtures/🫳️source-sink.json",
+      "sha256": "6c0a11036c78dd3bd7fa1f0b0749065fcbf2a91f26800d10368517ee6e122482"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧫️fixtures/🧩️members/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🧫️fixtures/🧩️members/🔣️.json",
+      "sha256": "28e52974d0decdeff4514181e6f05de24c61ba35fa9f9d2fef2f03906179c1c1"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧫️fixtures/🔣️macro-values.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🧫️fixtures/🔣️macro-values.json",
+      "sha256": "d70b804c3a16894ac324766cb0dda13325f9b4cfc124bd7e191b8c841420cc70"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧫️fixtures/🚦️owned-controls.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🧫️fixtures/🚦️owned-controls.json",
+      "sha256": "78c0588a6c459f2361eba770b9378446a703550d118c1e3f78481fb196b52d8a"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧫️fixtures/📦️completed-frame/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🧫️fixtures/📦️completed-frame/🔣️.json",
+      "sha256": "bccdbc1c06ff2e31c5e282a79dd8439e81c81f89cc878f8548049bff71228f6e"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🎟️storage/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🎟️storage/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "5baccb54364671e27c04dd8bff509d4dfd8c85e4e07575a79a9773d87f5453b7"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🔢️occurrence-order/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🔢️occurrence-order/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "164b7eadbd3f7d8e5c23602a67c1526c79fd286f9d14fc411b7b8a9aef671dff"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "097047ca54f3aa30e758c56f845784bac256ef9586ef537cfc813497f587c68e"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🔎️scalar-witness/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🔎️scalar-witness/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "c300cf3e43b109a03e6cd2e5e0c560000ae3d1660e359cc8f39c3a0349fa0d8d"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧭️tooling/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧭️tooling/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "ac9027ecab5e8043186b6711674732d6cb796b44ba1633fe8bb745565ec4a9f9"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "e8de5ac688a11cfc63049e2e14475200d4d693f55ecb45b127891882d39f07cd"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧫️fixtures/⚠️failure/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🧫️fixtures/⚠️failure/🔣️.json",
+      "sha256": "43d87c645de75b3b2bf5ec5d43df0658eda3a04c737c1f0ee278a856a4adf1ee"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧫️fixtures/🌱️intrinsic/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🧫️fixtures/🌱️intrinsic/🔣️.json",
+      "sha256": "14cf2e9fada27c9ed29147d407496c1cf8b9f8807955f36fbbe97a8c18c42c1f"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🧮️wire-materialization/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🧮️wire-materialization/🔣️.json",
+      "sha256": "4eec5f5c15d3e271bf26bff41449ee6d067280759d39f9ec402722889956ad71"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🎞️intrinsic-media/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🎞️intrinsic-media/🔣️.json",
+      "sha256": "d416a71f3b9b383218b72b9be1a46b58644520702ee9548be6b953af9e6ae21a"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🎞️intrinsic-media/🌲️depth/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🎞️intrinsic-media/🌲️depth/🔣️.json",
+      "sha256": "53baa814e673bc9d8a89fbadbe297a72154a594a433bc7384ab585c7ddf4fede"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🔃️ordering/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🔃️ordering/🔣️.json",
+      "sha256": "71b412d7d09498fec1153693c8d4323ea2bb20955a47853b529a4c4a383fdb8a"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🚦️refusals/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🚦️refusals/🔣️.json",
+      "sha256": "bd18ef13e8ba2b304e944f1ef15f5f0d97cc324b9790f5cb5a50ace6398cd760"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🔑️schema-hash/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🔑️schema-hash/🔣️.json",
+      "sha256": "7b05976d468df28a0bb74cb92f61854e198b2d02df3027c21f17314cad905973"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🔑️schema-hash/💰️storage/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🔑️schema-hash/💰️storage/🔣️.json",
+      "sha256": "785c26ecd184129eb8a89ffd7ea824afa700bfbf0df74c725488af44dc6ae3c6"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🧩️ownership/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🧩️ownership/🔣️.json",
+      "sha256": "7e27925e232bc702cd0270b6b614655d8ca3bfbc4412aa186cf482734abd939f"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🧾️source/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🧾️source/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "0cb6697663d5d0892f084c5dafdec6c1f2eea3073e3d8cf34cd532a9f6e0e569"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/📐️format/🧭️producer/🗂️catalog/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/📐️format/🧭️producer/🗂️catalog/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "0cf06fe3f826d7a6e9b142e19b552c449099674bbefd2584e202094e2180a52b"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/📐️format/🧭️producer/📥️source/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/📐️format/🧭️producer/📥️source/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "69e0600fc11fe849497e1bbc9635a219668062f035ea7b5152e7df33659e9511"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/📐️format/🏷️symbols/🎮️decode/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "0af2157a4aba5c4c22d823dd8027205ab1c32f9a0fe383b9377d464dc12136a5"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "09f4469fd05d181f381f665fe184c5a038827d37d541956b3976dd60ad06c851"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🧫️fixtures/⚠️error/🪪️identity/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🧪️tests/🧫️fixtures/⚠️error/🪪️identity/🔣️.json",
+      "sha256": "9040d567686762b11a69ed67768fdd37134c63eeb4a8cb61b7307229d853c381"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "b583e643d5923b6ac2c8ee3ba2e23f1d35acab83e7ff56316e39ba9ea5f08395"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "d319cfe042a546874d14459152dfdabf2c2e749c923029c07f24fdaff3af0fb8"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/📦️bytes/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/📦️bytes/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "19aa792328811e4edd05d37fd7d55bfb21f8108b84fc31dbacb963b05f7457d7"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/📦️bytes/🧫️fixtures/🏠️child-carrier.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/📦️bytes/🧪️tests/🧫️fixtures/🏠️child-carrier.json",
+      "sha256": "e716d439605377af42e1aeffe26f1c52a826e6c019424a9caf1e9743e308dd10"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/📦️bytes/🧫️fixtures/🧭️caller-stage.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/📦️bytes/🧪️tests/🧫️fixtures/🧭️caller-stage.json",
+      "sha256": "5180530d3a1a05b813642e54e94cac2973fe15465ea9f5eee89b2a2b208b01c9"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "8e0b7d0bd2248c98c2dc8b34f0b8393dca51903ced508f13588af200e6ba541c"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🚪️io/🧫️fixtures/🏛️ownership/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🚪️io/🧪️tests/🧫️fixtures/🏛️ownership/🔣️.json",
+      "sha256": "fb64f9c4c06a99257a5482d1ed9435ffb9fd12a1820700bd4750e2f54a298601"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "d1c188585d64f239c585b1a86a741d2546b2573e751ead963ab0805c31ad239c"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "305bf9043dda28bdf75564d45697d36160d7e2cd41e4f7927b106e1bdbbfc400"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🚧️apply-refusal/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🚧️apply-refusal/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "10f6f2ba07e47288a0636882ae9ab585a623b583b112aad7cc4f10a15a7b494b"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🩹️update/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🩹️update/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "1496f4b00d75f01fc82650fac2465b9e33784caf7782608dad5b15a2105274c1"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "137a42cfb5161fa4d18711aec96a9e2d5c70d952c69d4a2f22e82e187be52ec4"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "183500c340766c262111fbdc0d8fc7a74ec69a2f1238f82aa895584283c11900"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/📃️query/🔣️.json",
+      "sha256": "2778b59d56910271c36ae81f3a8876746d3bcef6df4cc6dab6dca63d15f7162b"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json",
+      "sha256": "3f3e4169f366d2fc0a079f6404e83c885cdb415fef4b264755be2da099640abf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🔐️topology-authority/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🔐️topology-authority/🔣️.json",
+      "sha256": "cd8c0be02691c4df32dbf1630a12662854ea51c0f51ac33288ceb571f10e85e7"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/♻️retirement/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/♻️retirement/🔣️.json",
+      "sha256": "e1cbd7523bf4afbf2cbb5d0975bb702e1c17564d4e77e1560dae1deb4337c3ed"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "effb636a27c879f7963d8d2658d9989fd8ceae715ce3939a9e370788b3a8c50f"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧫️fixtures/📄️pages/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧪️tests/🧫️fixtures/📄️pages/🔣️.json",
+      "sha256": "ac37b2f7b212cc9394be352b5634dce345fde961e6eb5e79edb85a376ae1f503"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📡️wire/🧫️fixtures/🖱️typed-field-order/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/📡️wire/🧪️tests/🧫️fixtures/🖱️typed-field-order/🔣️.json",
+      "sha256": "cc27dd9088ecc1af2cc16571609c14be103d4beaaff6c05dff8b013f58daf28d"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧾️source/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧾️source/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "be4413bb099f2f1604dfdd83c875c098144cf765f727ca85ea7cbbfea7c7ee53"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "a09e2ba8c93262e762e05f8c4dbe57cf8850d70f9307da5fd9cbd00fb111b345"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️prepared/♻️retirement/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️prepared/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "62d26204a889b7af4bcc46d891add12eb51c59bbe034ec8d9ef81eaa9bcff9c5"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "37de90baed7b2b3abc72574a9b0a02970b8482ed55f747f1bed4c342cd712a22"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "c5fefdd8b4df2de61f736a76ce5447603b14d23bbe3cdf4156b70601003404fc"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📋️copy/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📋️copy/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "7e1474fb791da4caf981371d0c0e5b01c3c1a2f5c3f129b5f37381dbdd53d1ab"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📦️accumulate/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📦️accumulate/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "f9cd5b10acbbe97398b269e0cfd4247ea9206d4c4285d728435c5ae4dcc10bac"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "de62308c2b645c32f6deff2aaf1c07854b6c9ad31f7bebcb01016c04f64acc2f"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/✂️clamp/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/✂️clamp/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "c4f1bbb0bc2ed0aae0c622952a358ac2d0b45a69a3a3c3959720b7906a0cf969"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🚫️error/♻️retirement/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🚫️error/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "cece45bdc8fc4191d8340b69cca6ac8f1555c838235421275d0125294f2516ea"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧾️transaction/🎟️admission/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧾️transaction/🎟️admission/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "272e1084ff1005b5b341bc6bdc49249a27222331b003acb1e0ade039d5560f26"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "28ae2671a4a0adfd96a9412dccb76a4e017b7a29e367eb10afd9b8be168d9e44"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🤝️mutation-leaf-contract/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🤝️mutation-leaf-contract/🔣️.json",
+      "sha256": "8b63630bba5aa64c5803340963cf2e6266764f7bf4de05e9507020af5c22200b"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/⚠️value-refusals/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/⚠️value-refusals/🔣️.json",
+      "sha256": "b15c3cc031157230c818b4d4106b956a779f0bbd4a3d370b660899efe97d50cb"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🧫️transaction-ref/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🧫️transaction-ref/🔣️.json",
+      "sha256": "f7c4d1c0cbf4ae9deae64a7e8fe54900f80dd7acf6d66ae1b5ec83f68511d900"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+      "sha256": "57053e1707ec1dea51bc28d4676ce4091b63a3d53e59383d4ed5d36be2e7cb4e"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🧭️mutation-leaf-source-contract/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🧭️mutation-leaf-source-contract/🔣️.json",
+      "sha256": "3bb385214d54bcfed2084f0b9c5b2c100d69406e1d57eab179e7e332c8a2eee2"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🧫️outcome-code/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🧫️outcome-code/🔣️.json",
+      "sha256": "38e88ee73dabdf15878410a579ce8d8d644b6d9b93779364c45e1f1a901e1385"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "ffa998ba5cf5f183820c9025e9b9f4ec0e8633a078487f435d15cb31613941e1"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/♻️retirement/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "88ca2f929702e8469dc1c59f09919bab2b6f7272cb2650306ffdaa7847313ab4"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧾️wire/♻️retirement/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧾️wire/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "458f87090d1421a01de0ba38c3323db36b06fbae4ca913e66b79de6d7855228f"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/🧫️fixtures/🧫️replay-report/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/🧪️tests/🧫️fixtures/🧫️replay-report/🔣️.json",
+      "sha256": "fdc1dd0d0162898b99b5bb8263b4302a53a9e30c53af374b20e0b676bddea0b1"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "48b1f2d49cddc86f330281fe2739da40792362bc8e495f825dbb5d13116f890c"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/📦️slots/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/📦️slots/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "2249fb5cac5c3bc3fd329f75de7272897d935b39c1e43cf49025039a3fa736c7"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json",
+      "sha256": "c5e6281a6bc25c7ab712b1ddcb29668649d2950528c325258b0405772d0b4ef9"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧫️fixtures/🧫️supersede-fold/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🧫️fixtures/🧫️supersede-fold/🔣️.json",
+      "sha256": "2c0cda576119fa68bc370666cab3604c012214daba81fc50358617bb9e341cf3"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧫️fixtures/🧫️history-transition/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🧫️fixtures/🧫️history-transition/🔣️.json",
+      "sha256": "75f0f6a277eceb97a6696330f6af211f2c4ec0f252e9bc31bacf5ce4bdc814f7"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧫️fixtures/🗄️durable-collaborative-redo-v1/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🧫️fixtures/🗄️durable-collaborative-redo-v1/🔣️.json",
+      "sha256": "b414c52bb335c7d0eec9d004f8ad970552711d32b135a547adbb37211e2f6e54"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧫️fixtures/🧬️mutations/➕️causal-add/🧪️descriptor/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🧫️fixtures/🧬️mutations/➕️causal-add/🧪️descriptor/🔣️.json",
+      "sha256": "5b405b953d70cd1e405f7677bf29ed0a95e93dcf2a1a07f4cd676c67b12650ec"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "2d71c8de9a35d1f93ee4b3e72134d8e2cef202893e382421f835d545b8436b50"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧫️fixtures/🌱️entry/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🧫️fixtures/🌱️entry/🔣️.json",
+      "sha256": "1093fb7ec2fb79ac4beb820304c395a919959655ec2fa567ea667e141d5e697b"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧫️fixtures/🎟️insertion/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🧫️fixtures/🎟️insertion/🔣️.json",
+      "sha256": "26c42216c926aaf39a838756cedf669a9ac03ce33290ab31a4bdc9f386724b65"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧫️fixtures/🧺️set.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🧫️fixtures/🧺️set.json",
+      "sha256": "aa7262e9eb0cc588ec76d3c2c065c2eba9ed66e7ec1be1e36c24a1cc298c7e6a"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "19ed6c60a324795d4a99310e57592733a84aed607d0f3c751a95072c7f392607"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧫️fixtures/🔣️actor.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧪️tests/🧫️fixtures/🔣️actor.json",
+      "sha256": "e88ed0ee82550b605ddf6db9419d25ad2f64364918b17de969129da638d28e33"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "0863e4bcb14b069a1e18800217a3b3f8b30abf42ba4b897c567c92316957830d"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/📝️drafts/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/📝️drafts/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "72fcea7bde39e0c374ff9aaba7b0c283b18640328acf1963208360a840174c58"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📐️format/🔎️verification/🧾️record/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/📐️format/🔎️verification/🧾️record/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "c7b73971dcb683243ddfae8fb4c5144fea34a836ad17f440f256528dd21b4c6f"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📐️format/🔎️verification/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/📐️format/🔎️verification/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "bbb695c133a6ca4363f315e900045ebf9c0692b5db36c8fb45cb4da48e16555a"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧾️source/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧾️source/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "830e60956cc90098cc5289c52cb3c6ea60a0cd9af52b1005e7985e5deba98d03"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🔣️json-string/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🔣️json-string/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "95ae5f1ee321dbdb96fca12a81cfb6985ef1648625ca48fbf067cd582cce328f"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/⏱️timestamp/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/⏱️timestamp/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "8bae287e568fd365db5c1056fca3ee631a1172bbe62314d3d49033de57f66187"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🪪️id/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🪪️id/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "33423d1d2476d4d0557dc63436a758c464dbaf5f635cca1433db440d9db72cc4"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "93e7c67e7090272bd615bf1dc410512f9739d25b930ef709ceb0eb49a3f8d845"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧫️fixtures/🛑️byte.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🧫️fixtures/🛑️byte.json",
+      "sha256": "f3e17aa253caeb9b96f1220f04ba94cebdc42ad3469fcfdd8d33e6ddeb6d09d8"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/🚀️artifact-bootstrap/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/🚀️artifact-bootstrap/🔣️.json",
+      "sha256": "bd47e80f728218a3d1fbbec04c2fc4a1d61e2977c23468086c5e4cd21cb7c95a"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/🔀️server-ack-transformed/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/🔀️server-ack-transformed/💾️.bin",
+      "sha256": "b35ca66d32b3c5337382a6d91269fa76955067dd482072020c258885d44d6890"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/🧩️server-snapshot-chunk/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/🧩️server-snapshot-chunk/💾️.bin",
+      "sha256": "eae72f264ea6ee1fb34f25f4a57b5614c1afa6cf8ee8f75cbb87f49a47394e0f"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/👋️client-bye/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/👋️client-bye/💾️.bin",
+      "sha256": "40d88127d4d31a3891f41598eeed41174e5bc89b1eb9bbd66a8cbfc09956a3fd"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/🚨️server-error/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/🚨️server-error/💾️.bin",
+      "sha256": "5f7b89557d9129965ef600d11b01e9c9349ee4de666f70f331cd1acf52023141"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/📸️server-welcome-snapshot-inline/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/📸️server-welcome-snapshot-inline/💾️.bin",
+      "sha256": "187a8ff4ebce79920fdbf3363f848d87e4053c12f0ad0b93a6607e37a7a6c1ec"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/👁️server-preview/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/👁️server-preview/💾️.bin",
+      "sha256": "bee8e2738578240bb037d867a90e04bbf263ff6bce709ec9b44a8f64736dce40"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/🚫️legacy-client-hello-rejected/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/🚫️legacy-client-hello-rejected/💾️.bin",
+      "sha256": "73d2dd55469957f794b56a0f8da2ec5638c9411b3706c6a8ecc3fc5d0cbeb073"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/🎫️server-credit-grant/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/🎫️server-credit-grant/💾️.bin",
+      "sha256": "13dc1ba04cc8354c29e11a9860f9b678656389753c562d4b96f65a7da07dbe2b"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/📣️client-preview-publish/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/📣️client-preview-publish/💾️.bin",
+      "sha256": "083c075f4895aeb7c369398e39eb68633ea154feff23d89047df9637c0da1199"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/🪪️server-session/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/🪪️server-session/💾️.bin",
+      "sha256": "968dc23d161bc15b7987ffae4de2f500ab5fb37778560e247d017c50caf1b699"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/🙋️client-presence/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/🙋️client-presence/💾️.bin",
+      "sha256": "ee669dae6176628f6f254cf7ac6b6a0902953b5a8d7c6dc1b8f308a018112b84"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/👥️server-presence/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/👥️server-presence/💾️.bin",
+      "sha256": "77af0d50157be3daa1229ab9b8aa02f8a1087e65fedb21ffc958fb9c96e69b23"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/🔗️server-welcome-tail/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/🔗️server-welcome-tail/💾️.bin",
+      "sha256": "fc398c4c8c6be9ab5460476bc284e9571c2b31cef06efeb6a71e43bc61bc21b6"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/✅️server-ack-accepted/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/✅️server-ack-accepted/💾️.bin",
+      "sha256": "0f88100f521896d6b8ab1388640cd3ab666a8663301d6ec548de0d8bdf0d66e8"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/🚩️client-frontier-advertise/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/🚩️client-frontier-advertise/💾️.bin",
+      "sha256": "13ef64663c99fe3660fa467ae5737b8b0c545b4bbd2d1aa264824563adca127e"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/🎮️server-commands/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/🎮️server-commands/💾️.bin",
+      "sha256": "322f14e5aa4b70893345bd4ffc9422d1254454d7d085878397ba41a555f4dc4e"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/🎟️client-credit-grant/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/🎟️client-credit-grant/💾️.bin",
+      "sha256": "1871658dc7416ec87cfac880aa61d4dd53347e5099631598bc2acd7b67219645"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/🏁️server-snapshot-done/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/🏁️server-snapshot-done/💾️.bin",
+      "sha256": "95a52fbc37d8806e535830ee084bc1a566a53686be5c3b63a371f18db9fe7062"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/⛔️server-ack-rejected/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/⛔️server-ack-rejected/💾️.bin",
+      "sha256": "75382cdcd7becd56db1769d1952249e9ec6598e6ac9655bf1e65267920bbcf41"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire/🕹️client-commands/💾️.bin",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire/🕹️client-commands/💾️.bin",
+      "sha256": "b13afb0ce9a42e8f2f912f13fd941c04bcf4d221195063d492b20339a00dcd85"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/💓️presence-liveness-v1/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/💓️presence-liveness-v1/🔣️.json",
+      "sha256": "a37b43a00516efd7ad43e96caa0383fb90b106610d2936b028c0e62105fb3518"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/👥️presence-peer-codec-v1/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/👥️presence-peer-codec-v1/🔣️.json",
+      "sha256": "1cba4b169f05df719b9638900cf041b4bfc3b670fc3fd280f480d928febd77e2"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/👕️peer-overlay-v1/🔣️.json",
+      "to": "🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/👕️peer-overlay-v1/🔣️.json",
+      "sha256": "ad08e9371d00bf1f0fb28813c426488548b597ed9dbaebbdc891488a1b7ce36c"
+    }
+  ]
+}

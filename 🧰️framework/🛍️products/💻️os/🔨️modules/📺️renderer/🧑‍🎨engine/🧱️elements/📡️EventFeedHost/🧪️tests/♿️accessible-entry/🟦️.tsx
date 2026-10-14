@@ -5,7 +5,7 @@ import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAccessibilityMirror } from "../../../../🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts";
 import { EventFeedHost } from "../../🟦️.tsx";
-import fixture from "../../🧫️fixtures/♿️accessible-entry/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/♿️accessible-entry/🔣️.json" with { type: "json" };
 
 afterEach(() => {
   cleanup();

@@ -12,16 +12,16 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 /// 📖️ Parses `.dag` DSL text into a `DagSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<DagSnapshot, semio_framework_diagnostic::TextError> {
-    <DagSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <DagSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `DagSnapshot` back to `.dag` DSL text.
 pub fn print_dsl(document: &DagSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(document)
+    pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🔖️HandcraftedArtifactDsl
-impl store::os_store::serialization::ArtifactDsl for DagSnapshot {
+impl pack::snapshot::ArtifactDsl for DagSnapshot {
     const EXTENSION: &'static str = "dag";
     fn envelope_id() -> &'static str {
         "dag.dag"
@@ -75,16 +75,16 @@ pub fn decode_dag_snapshot_json(text: &str) -> Result<DagSnapshot, String> {
 }
 
 /// 📝️ Parses `.dag.dsl.semio` text into a [`DagSnapshot`] — a named, non-async pass-through of this type's own
-/// `store::os_store::serialization::ArtifactDsl` impl, whose trait and error type are both unnameable outside this crate.
+/// `pack::snapshot::ArtifactDsl` impl, whose trait and error type are both unnameable outside this crate.
 pub fn parse_dag_dsl(text: &str) -> Result<DagSnapshot, String> {
-    <DagSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+    <DagSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
 
 /// 📝️ Renders a [`DagSnapshot`] back as `.dag.dsl.semio` text — the inverse of [`parse_dag_dsl`],
 /// preamble included, which is what makes a printed document comparable to the committed one byte
 /// for byte.
 pub fn print_dag_dsl(snapshot: &DagSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
+    pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

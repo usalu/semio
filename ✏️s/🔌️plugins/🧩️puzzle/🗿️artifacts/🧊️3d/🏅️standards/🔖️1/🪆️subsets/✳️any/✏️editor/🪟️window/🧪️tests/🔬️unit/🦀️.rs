@@ -38,7 +38,7 @@ use super::*;
         // 🧮️ Four fill/distribution preferences plus `activeExampleId` (wave B26) — see the twin law in
         // `✏️editor/🧪️tests/🔬️unit/🦀️.rs`.
         assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(5));
-        let pack = store::os_store::serialization::ArtifactPack::encode_pack(&shared);
+        let pack = pack::snapshot::ArtifactPack::encode_pack(&shared);
         for forbidden in ["camera", "windowOptions", "engagementInput", "suggestionMenu", "fillCheckpoint", "fillApplyGeneration"] {
             assert!(!spr.contains(forbidden));
             assert!(!pack.windows(forbidden.len()).any(|bytes| bytes == forbidden.as_bytes()));
@@ -185,10 +185,10 @@ use super::*;
             camera: Puzzle3dCamera { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], zoom: 2.5, up: Some([0.0, 0.0, 1.0]), projection: Default::default() },
         };
         assert_ne!(original, Puzzle3dWindowConfig::default(), "the scene_snapshot must differ from the default in every field it asserts");
-        let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&original);
-        let decoded = <Puzzle3dWindowConfig as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("window config pack decodes");
+        let bytes = pack::snapshot::ArtifactPack::encode_pack(&original);
+        let decoded = <Puzzle3dWindowConfig as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("window config pack decodes");
         assert_eq!(decoded, original, "one pack round trip must preserve every persisted window option");
-        let printed = store::os_store::serialization::ArtifactDsl::print_dsl(&original);
-        let parsed = <Puzzle3dWindowConfig as store::os_store::serialization::ArtifactDsl>::parse_dsl(&printed).expect("window config text parses");
+        let printed = pack::snapshot::ArtifactDsl::print_dsl(&original);
+        let parsed = <Puzzle3dWindowConfig as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).expect("window config text parses");
         assert_eq!(parsed, original, "one text round trip must preserve every persisted window option");
     }

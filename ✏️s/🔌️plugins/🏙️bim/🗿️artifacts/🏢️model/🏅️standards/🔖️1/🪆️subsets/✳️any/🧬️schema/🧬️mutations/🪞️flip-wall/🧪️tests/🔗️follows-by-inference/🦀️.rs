@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout};
 use crate::{ModelMutation, ModelSnapshot};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪞️flip-wall/🌀️reverses-an-arc/📸️snapshot/⬅️before/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪞️flip-wall/🌀️reverses-an-arc/📸️snapshot/⬅️before/🔣️.json");
 
 fn flip(snapshot: &ModelSnapshot, id: &str) -> ModelSnapshot {
     apply_model_mutation(snapshot, &ModelMutation::FlipWall(FlipWall { id: id.into() })).expect("the flip applies")

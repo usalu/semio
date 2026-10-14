@@ -88,8 +88,8 @@ fn a_bent_ramp_writes_a_flight_per_slope_and_a_landing_per_landing_of_its_run() 
     assert_eq!(args[8].as_enum(), Some("TWO_STRAIGHT_RUN_RAMP"));
 }
 
-const SUBSET_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures");
-const RAMPS_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🛝️ramps");
+const SUBSET_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures");
+const RAMPS_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🛝️ramps");
 
 fn ramps() -> ModelSnapshot {
     let text = std::fs::read_to_string(format!("{SUBSET_DIR}/💡️inferences/🛝️ramp-runs/🏞️ramps/📸️snapshot/🔣️.json")).expect("the committed ramps model");

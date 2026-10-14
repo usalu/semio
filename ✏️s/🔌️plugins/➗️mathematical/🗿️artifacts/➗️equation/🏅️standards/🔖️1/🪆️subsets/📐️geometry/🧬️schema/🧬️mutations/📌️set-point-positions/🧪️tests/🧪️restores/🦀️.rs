@@ -8,12 +8,12 @@
 use crate::{EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_value::ToValue;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📌️set-point-positions/🧪️restores/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📌️set-point-positions/🧪️restores/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📌️set-point-positions/🧪️restores/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📌️set-point-positions/🧪️restores/🔺️diff/🔣️.json");
-const DRAG_BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️move-points/🧪️translates/📸️snapshot/⬅️before/🔣️.json");
-const DRAG_AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎯️move-points/🧪️translates/📸️snapshot/➡️after/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📌️set-point-positions/🧪️restores/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📌️set-point-positions/🧪️restores/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📌️set-point-positions/🧪️restores/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📌️set-point-positions/🧪️restores/🔺️diff/🔣️.json");
+const DRAG_BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️move-points/🧪️translates/📸️snapshot/⬅️before/🔣️.json");
+const DRAG_AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️move-points/🧪️translates/📸️snapshot/➡️after/🔣️.json");
 
 fn snapshot(text: &str) -> EquationSnapshot {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes")

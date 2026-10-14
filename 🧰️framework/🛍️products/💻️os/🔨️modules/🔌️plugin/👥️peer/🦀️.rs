@@ -181,7 +181,7 @@ mod peer_root_retirement_laws {
         let mut decoder_events = 0;
         let mut admit_decode = |_| { decoder_events += 1; true };
         let mut decode = semio_framework_value::NativeDecodeControl::new(0, &mut admit_decode);
-        let mut original = store::NativeSnapshotDecodeOwner::new(&mut decode, grant);
+        let mut original = crate::io::control::NativeSnapshotDecodeOwner::new(&mut decode, grant);
         let (value, heap) = observe(|| NoPresence::decode_presence_native(&[], &mut original).unwrap());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(original.progress(), RetainedCloneProgress { copied_items: 1, ..Default::default() });
@@ -193,7 +193,7 @@ mod peer_root_retirement_laws {
         let mut encode_events = 0;
         let mut admit_encode = |_| { encode_events += 1; true };
         let mut encode = semio_framework_value::NativeEncodeControl::new(0, &mut admit_encode);
-        let mut original = store::NativeSnapshotEncodeOwner::new(&mut encode, grant);
+        let mut original = crate::io::control::NativeSnapshotEncodeOwner::new(&mut encode, grant);
         let (bytes, heap) = observe(|| value.encode_presence_native(&mut original).unwrap());
         assert_eq!(bytes, Vec::<u8>::new());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
@@ -203,14 +203,14 @@ mod peer_root_retirement_laws {
         assert!(encode_events > 0);
         let mut reject = |_| false;
         let mut native = semio_framework_value::NativeDecodeControl::new(0, &mut reject);
-        let mut original = store::NativeSnapshotDecodeOwner::new(&mut native, grant);
+        let mut original = crate::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
         let (result, heap) = observe(|| NoPresence::decode_presence_native(&[], &mut original));
         assert!(result.is_err());
         assert_eq!(original.progress(), RetainedCloneProgress::default());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         let mut reject = |_| false;
         let mut native = semio_framework_value::NativeEncodeControl::new(0, &mut reject);
-        let mut original = store::NativeSnapshotEncodeOwner::new(&mut native, grant);
+        let mut original = crate::io::control::NativeSnapshotEncodeOwner::new(&mut native, grant);
         let (result, heap) = observe(|| value.encode_presence_native(&mut original));
         assert!(result.is_err());
         assert_eq!(original.progress(), RetainedCloneProgress::default());
@@ -218,7 +218,7 @@ mod peer_root_retirement_laws {
         for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_depth: 0, ..grant }] {
             let mut accept = |_| true;
             let mut native = semio_framework_value::NativeDecodeControl::new(0, &mut accept);
-            let mut original = store::NativeSnapshotDecodeOwner::new(&mut native, denied);
+            let mut original = crate::io::control::NativeSnapshotDecodeOwner::new(&mut native, denied);
             let (result, heap) = observe(|| NoPresence::decode_presence_native(&[], &mut original));
             assert!(result.is_err());
             assert_eq!(original.progress(), RetainedCloneProgress::default());
@@ -229,7 +229,7 @@ mod peer_root_retirement_laws {
 
     #[test]
     fn peer_metadata_projection_matches_the_complete_neutral_wire_corpus() {
-        let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔨️modules/📡️replication/🧫️fixtures/👥️presence-peer-codec-v1/🔣️.json")).unwrap();
+        let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔨️modules/📡️replication/🧪️tests/🧫️fixtures/👥️presence-peer-codec-v1/🔣️.json")).unwrap();
         let decode_hex = |text: &str| text.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect::<Vec<_>>();
         for row in corpus["cases"].as_array().unwrap() {
             let mut bytes = decode_hex(row["prefixHex"].as_str().unwrap());
@@ -367,7 +367,7 @@ pub struct PresenceRosterOutcome {
     pub fault: Option<Fault>,
 }
 
-struct PeerRosterFault {
+pub(crate) struct PeerRosterFault {
     original: ManuallyDrop<Option<Fault>>,
 }
 
@@ -391,17 +391,17 @@ impl Drop for PeerRosterFault {
 }
 
 pub(crate) struct PeerRosterCandidate<P> {
-    seq: u64,
-    generation: u64,
-    cancel: semio_framework_job::CancelToken,
-    own_color: Option<u8>,
-    now_ms: i64,
-    root: std::sync::Arc<PeerPresenceRoot>,
-    typed: store::PresencePeersCommit<P>,
+    pub(crate) seq: u64,
+    pub(crate) generation: u64,
+    pub(crate) cancel: semio_framework_job::CancelToken,
+    pub(crate) own_color: Option<u8>,
+    pub(crate) now_ms: i64,
+    pub(crate) root: std::sync::Arc<PeerPresenceRoot>,
+    pub(crate) typed: store::PresencePeersCommit<P>,
 }
 
 pub(crate) struct ValidatedPeerRosterCommit {
-    generation: u64,
+    pub(crate) generation: u64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -529,7 +529,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(PluginLifecycleStep::Progress(empty)); }
         let mut admit = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
         let mut native = semio_framework_value::NativeDecodeControl::new_retained(&mut admit);
-        let mut original = store::NativeSnapshotDecodeOwner::new(&mut native, grant);
+        let mut original = crate::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
         let turn = self.step_stage(presence_store, &mut original);
         let progress = original.progress();
         match turn {
@@ -541,7 +541,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
         }
     }
 
-    fn step_stage(&mut self, presence_store: &store::PresenceStore<A::Presence, A::PresenceMutation>, original: &mut store::NativeSnapshotDecodeOwner<'_, '_>) -> Result<PeerRosterTurn, Fault> {
+    fn step_stage(&mut self, presence_store: &store::PresenceStore<A::Presence, A::PresenceMutation>, original: &mut crate::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<PeerRosterTurn, Fault> {
         let refused = |error: ValueError| plugin_sdk_fault(error.to_string());
         match self.stage {
             PeerRosterPublicationStage::DecodeMetadata => {

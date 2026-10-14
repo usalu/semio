@@ -2,32 +2,35 @@ use super::*;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 struct ScalarJob(bool);
 impl InteractiveJob for ScalarJob{
- fn step(&mut self,_:&mut StepContext<'_>)->StepOutcome{StepOutcome::Yield}
+ fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>{JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from)}
+ fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{descriptor.yielded()}
  fn begin_close(&mut self){self.0=true;}
- fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep{if grant.maximum_items==0||grant.maximum_depth==0{return InteractiveJobCloseStep::Pending{progress:Default::default()};}self.0=true;InteractiveJobCloseStep::Complete{progress:Default::default()}}
+ fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{if self.0{return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.0=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))})}
  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
  fn next_close_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
  fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(1)}
  fn terminal_is_empty(&self)->bool{self.0}
 }
-fn source()->WorkerJobSession<ScalarJob>{
- let params=BatchJobParams{operation:OperationId(98201),generation:Generation(1),cancel:root_cancel_token(),config:BatchDriveConfig{retained:crate::retained_work::NO_RETAINED_WORK,site:"test.original-session-return",stage:InteractiveStage::InteractiveStep,fuel_per_step:1,step_budget_us:1000},now_us:default_now_us};
- WorkerJobSession::try_new(ScalarJob(false),params).unwrap_or_else(|_|panic!("original session admission"))
+fn source()->(WorkerJobSession<ScalarJob>,OriginalJobFixtureCaller){
+ let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};let mut caller=OriginalJobFixtureCaller::admit(OperationId(98201),Generation(1),grant,default_now_us,u64::MAX,1);
+ let params=BatchJobParams{operation:OperationId(98201),generation:Generation(1),cancel:caller.admit_alias(grant),config:BatchDriveConfig{retained:grant,site:"test.original-session-return",stage:InteractiveStage::InteractiveStep,fuel_per_step:1,step_budget_us:1000},now_us:default_now_us};
+ let session=admit_original_fixture_owner!(WorkerJobSession,ScalarJob(false),params).unwrap_or_else(|_|panic!("original session admission"));(session,caller)
 }
-fn close_body(session:&WorkerJobSession<ScalarJob>){
- session.begin_close();
- for _ in 0..64{if session.terminal_is_empty(){return;}let grant=session.next_close_demands(512).unwrap();session.close_step(grant);}
+fn close_body(session:&mut WorkerJobSession<ScalarJob>,caller:&mut OriginalJobFixtureCaller){
+ session.begin_close();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};
+ for _ in 0..64{if session.inner.phase()==SESSION_EMPTY{return;}if session.has_original_cancel_alias_witness(caller.cancel()).unwrap_or(false){caller.turn(grant,|cx|{let step=session.return_original_cancel_alias_step(cx.original_cancel_token(),cx.retained_grant()).map_err(|error|match error{WorkerJobDemandError::Refused(error)=>OriginalTurnFailure::from(error),WorkerJobDemandError::Contention(_)=>OriginalTurnFailure::from(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original frame alias remains checked out"))})?.unwrap();cx.consume_retained(step.progress())?;cx.consume_fuel(1);Ok(step)}).unwrap();}else{caller.turn(grant,|cx|session.close_step(cx)).unwrap();}}
  panic!("original session body did not close");
 }
+
 #[test]
 fn original_session_frame_return_has_exact_custody(){
  let _admission=worker_session_slots_shared();
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
-  let mut session=source();
-  if row["phase"]=="terminal"{close_body(&session);}
-  let held=(row["aliases"].as_u64().unwrap()>1).then(||SessionHandle::clone(&session.inner));
+  let(mut session,mut caller)=source();
+  if row["phase"]=="terminal"{close_body(&mut session,&mut caller);}
+  let held=(row["aliases"].as_u64().unwrap()>1).then(||session.inner.0.as_ref().unwrap().clone());
   let bytes=SessionHandle::<ScalarJob>::frame_bytes()+std::mem::size_of::<WorkerJobRetirementNode<ScalarJob>>();
   let granted_bytes=if row["releaseGrant"]==row["frameBytes"]{bytes}else{bytes-1};
   let grant=RetainedCloneGrant{maximum_items:1,maximum_release_bytes:granted_bytes,maximum_depth:1,..Default::default()};
@@ -48,11 +51,12 @@ fn original_session_frame_return_has_exact_custody(){
    assert_eq!(heap.released_bytes,0);
    drop(held);
    if row["waker"].as_bool().unwrap(){unsafe{(&mut*session.inner.waker.get()).take()};}
-   close_body(&session);
+   close_body(&mut session,&mut caller);
    let (result,heap)=observe(||session.return_terminal(RetainedCloneGrant{maximum_release_bytes:bytes,..grant}));
    assert_eq!(result.unwrap_or_else(|_|panic!("returned original after refusal")).released_bytes,bytes);
    assert_eq!((heap.requested_bytes,heap.released_bytes),(0,bytes));
   }
+  caller.retire(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64});
   eprintln!("[DEBUG] original session frame {} exact={bytes}",row["name"]);
  }
 }

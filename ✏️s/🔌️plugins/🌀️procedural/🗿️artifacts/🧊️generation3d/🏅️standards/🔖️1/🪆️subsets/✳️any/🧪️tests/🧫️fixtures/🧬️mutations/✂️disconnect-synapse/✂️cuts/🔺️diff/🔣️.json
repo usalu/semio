@@ -1,0 +1,20 @@
+{
+  "schema": null,
+  "camera": null,
+  "widgets": null,
+  "synapses": {
+    "removed": [
+      {
+        "id": "wire-ab",
+        "index": 0
+      }
+    ],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "layout": null,
+  "generations": null,
+  "selectedGeneration": null,
+  "previewText": null
+}

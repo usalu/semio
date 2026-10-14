@@ -7,7 +7,7 @@ export function runDefinitionChecks(): number {
   const load = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
   const validate = new Ajv({ strict: true }).compile(load("../../🧬️schema/🔣️.json"));
   let checks = 0;
-  for (const row of load("../../🧫️fixtures/📜️definition/🔣️.json").cases) {
+  for (const row of load("../🧫️fixtures/📜️definition/🔣️.json").cases) {
     const source = load("../../📜️artifact-definition.json");
     source.representations[0].mimes = row.mimes;
     assert.equal(validate(source), row.accepted);

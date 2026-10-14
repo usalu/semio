@@ -18,5 +18,5 @@ pub fn deserialize(from: &JsonSnapshot) -> Result<GltfSnapshot, semio_framework_
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize_text(text: &str) -> Result<GltfSnapshot, semio_framework_diagnostic::TextError> {
-    deserialize(&<JsonSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?)
+    deserialize(&<JsonSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?)
 }

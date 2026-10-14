@@ -1,0 +1,322 @@
+{
+  "dialect": {
+    "artifactKind": "s.stdio.txt",
+    "standard": "utf-8",
+    "subset": "*"
+  },
+  "encoding": "text",
+  "bodyGrant": {
+    "maximumItems": 65536,
+    "maximumCopyBytes": 4194304,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 4096
+  },
+  "closeGrant": {
+    "maximumItems": 4096,
+    "maximumCopyBytes": 1048576,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 4096
+  },
+  "nativeMaximumBytes": 16777216,
+  "maximumCloseTurns": 65536,
+  "cases": [
+    {
+      "id": "empty-lines",
+      "snapshot": {
+        "schema": "empty schema",
+        "lines": [],
+        "trailingNewline": false,
+        "lineEnding": "lf"
+      },
+      "raw": ""
+    },
+    {
+      "id": "one-empty-line",
+      "snapshot": {
+        "schema": "empty schema",
+        "lines": [
+          ""
+        ],
+        "trailingNewline": false,
+        "lineEnding": "lf"
+      },
+      "raw": ""
+    },
+    {
+      "id": "embedded-separator",
+      "snapshot": {
+        "schema": "literal schema",
+        "lines": [
+          "first\nsecond"
+        ],
+        "trailingNewline": false,
+        "lineEnding": "lf"
+      },
+      "raw": "first\nsecond"
+    },
+    {
+      "id": "two-separate-lines",
+      "snapshot": {
+        "schema": "literal schema",
+        "lines": [
+          "first",
+          "second"
+        ],
+        "trailingNewline": false,
+        "lineEnding": "lf"
+      },
+      "raw": "first\nsecond"
+    },
+    {
+      "id": "schema-nul-unicode",
+      "snapshot": {
+        "schema": "schema\u0000文🌠",
+        "lines": [
+          "first",
+          "second"
+        ],
+        "trailingNewline": false,
+        "lineEnding": "lf"
+      },
+      "raw": "first\nsecond"
+    },
+    {
+      "id": "empty-crlf",
+      "snapshot": {
+        "schema": "empty schema",
+        "lines": [],
+        "trailingNewline": false,
+        "lineEnding": "crLf"
+      },
+      "raw": ""
+    },
+    {
+      "id": "literal-crlf-line",
+      "snapshot": {
+        "schema": "chosen ending",
+        "lines": [
+          "a\r\nb\u0000文🌠",
+          ""
+        ],
+        "trailingNewline": true,
+        "lineEnding": "crLf"
+      },
+      "raw": "a\r\nb\u0000文🌠\r\n\r\n"
+    },
+    {
+      "id": "trailing-empty-lf",
+      "snapshot": {
+        "schema": "",
+        "lines": [
+          "",
+          ""
+        ],
+        "trailingNewline": true,
+        "lineEnding": "lf"
+      },
+      "raw": "\n\n"
+    }
+  ],
+  "collisions": [
+    [
+      "empty-lines",
+      "one-empty-line"
+    ],
+    [
+      "embedded-separator",
+      "two-separate-lines"
+    ],
+    [
+      "two-separate-lines",
+      "schema-nul-unicode"
+    ],
+    [
+      "empty-lines",
+      "empty-crlf"
+    ]
+  ],
+  "settlementAuthority": {
+    "nativePrefixBytes": 64,
+    "coldReservationBytes": 1,
+    "expectedKind": "unsupportedOwner",
+    "expectedMessage": "SQLite backing requires the original receiving allocation port"
+  },
+  "registeredFiles": {
+    "exportGrantRefusals": [
+      {
+        "axis": "items",
+        "maximum": 0,
+        "kind": "workLimit",
+        "zeroHeap": true
+      },
+      {
+        "axis": "copy",
+        "maximum": 0,
+        "kind": "ownershipLimit",
+        "zeroHeap": false
+      },
+      {
+        "axis": "capacity",
+        "maximum": 0,
+        "kind": "ownershipLimit",
+        "zeroHeap": true
+      },
+      {
+        "axis": "release",
+        "maximum": 0,
+        "kind": "ownershipLimit",
+        "zeroHeap": false
+      },
+      {
+        "axis": "depth",
+        "maximum": 0,
+        "kind": "depthLimit",
+        "zeroHeap": true
+      },
+      {
+        "axis": "depth",
+        "maximum": 1,
+        "kind": "depthLimit",
+        "zeroHeap": true
+      },
+      {
+        "axis": "native",
+        "maximum": 0,
+        "kind": "ownershipLimit",
+        "zeroHeap": true
+      }
+    ],
+    "grantRefusals": [
+      {
+        "axis": "items",
+        "maximum": 0,
+        "kind": "workLimit",
+        "zeroHeap": true
+      },
+      {
+        "axis": "copy",
+        "maximum": 0,
+        "kind": "ownershipLimit",
+        "zeroHeap": true
+      },
+      {
+        "axis": "capacity",
+        "maximum": 0,
+        "kind": "ownershipLimit",
+        "zeroHeap": true
+      },
+      {
+        "axis": "release",
+        "maximum": 0,
+        "kind": "ownershipLimit",
+        "zeroHeap": false
+      },
+      {
+        "axis": "depth",
+        "maximum": 0,
+        "kind": "depthLimit",
+        "zeroHeap": true
+      },
+      {
+        "axis": "depth",
+        "maximum": 1,
+        "kind": "depthLimit",
+        "zeroHeap": true
+      },
+      {
+        "axis": "native",
+        "maximum": 0,
+        "kind": "ownershipLimit",
+        "zeroHeap": true
+      }
+    ],
+    "identities": [
+      {
+        "id": "typed-complete",
+        "typed": true,
+        "matchingType": true,
+        "exportRead": true,
+        "importInto": true,
+        "accepted": true
+      },
+      {
+        "id": "typed-mismatch",
+        "typed": true,
+        "matchingType": false,
+        "exportRead": true,
+        "importInto": true,
+        "accepted": false
+      },
+      {
+        "id": "typed-raw-only",
+        "typed": true,
+        "matchingType": true,
+        "exportRead": false,
+        "importInto": false,
+        "accepted": true
+      },
+      {
+        "id": "guest-raw-only",
+        "typed": false,
+        "matchingType": false,
+        "exportRead": false,
+        "importInto": false,
+        "accepted": true
+      },
+      {
+        "id": "guest-full-export",
+        "typed": false,
+        "matchingType": false,
+        "exportRead": true,
+        "importInto": false,
+        "accepted": false
+      },
+      {
+        "id": "guest-full-import",
+        "typed": false,
+        "matchingType": false,
+        "exportRead": false,
+        "importInto": true,
+        "accepted": false
+      }
+    ],
+    "refusals": [
+      {
+        "id": "wrong-read",
+        "kind": "invalidValue",
+        "message": "captured snapshot has the wrong registered type"
+      },
+      {
+        "id": "wrong-destination",
+        "kind": "invalidValue",
+        "message": "snapshot file destination has the wrong registered type"
+      },
+      {
+        "id": "occupied-destination",
+        "kind": "invalidValue",
+        "message": "snapshot file destination must be empty"
+      },
+      {
+        "id": "unavailable-full-file",
+        "kind": "unsupportedOwner",
+        "message": "artifact has no complete snapshot file capability"
+      }
+    ]
+  },
+  "acceptedRetirement": {
+    "owners": [
+      "sqliteFile",
+      "sqliteDatabase",
+      "snapshot"
+    ],
+    "constructionAllocatedBytes": 0,
+    "constructionReleasedBytes": 0,
+    "deniedAllocatedBytes": 0,
+    "deniedReleasedBytes": 0,
+    "terminalAllocatedBytes": 0,
+    "terminalReleasedBytes": 0,
+    "conservation": "acceptedBacking+closeBorn=closeReleased"
+  }
+}

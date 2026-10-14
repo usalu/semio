@@ -14,7 +14,7 @@ import {
   type PresencePeerInput,
 } from "../../🟦️.ts";
 
-const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../🧫️fixtures/👕️peer-overlay-v1/🔣️.json");
+const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../🧪️tests/🧫️fixtures/👕️peer-overlay-v1/🔣️.json");
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { readonly cases: readonly any[] };
 
 describe("👕️peer-overlay-v1", () => {

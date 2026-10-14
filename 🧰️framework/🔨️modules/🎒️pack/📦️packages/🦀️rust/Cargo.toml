@@ -28,6 +28,8 @@ ureq = ["dep:ureq"]
 corruption-testing = []
 
 [dependencies]
+semio-framework-io-schema = { path = "../../../🚪️io/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-io-sqlite-snapshot = { path = "../../../🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-pack-error = { path = "../../⚠️error/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }

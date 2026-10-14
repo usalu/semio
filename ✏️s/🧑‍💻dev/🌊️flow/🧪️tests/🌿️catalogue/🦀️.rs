@@ -4,7 +4,7 @@ use semio_framework_artifact_flow_flow::*;
 use neural_engine::{Atom, Dictionary, Value as NeuralValue};
 use std::sync::{Mutex, OnceLock};
 static RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
-const PORT_SIDES_FIXTURE_JSON: &str = include_str!("../../🧫️fixtures/🔌️port-sides/🔣️.json");
+const PORT_SIDES_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/🔌️port-sides/🔣️.json");
 fn complete_fixture_registration<T>(future: impl std::future::Future<Output = T>) -> T {
     match std::pin::pin!(future).as_mut().poll(&mut std::task::Context::from_waker(std::task::Waker::noop())) {
         std::task::Poll::Ready(value) => value,
@@ -148,7 +148,7 @@ fn app_catalogue_carries_every_operator_and_palette_section() {
 fn rectangle_extrude_fixture_port_labels_follow_draw_lod() {
     let _guard = RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|error| error.into_inner());
     // 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
-    // handcrafted DSL (`crate::os_store::serialization::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
+    // handcrafted DSL (`pack::snapshot::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
     // parses (`FlowHost::parse_host_snapshot_json`), decoupled from procedural's document format.
     let json = r#"{
   "schema": "flow.host_snapshot",
@@ -238,7 +238,7 @@ fn rectangle_extrude_fixture_port_labels_follow_draw_lod() {
 fn rectangle_extrude_fixture_evaluates_solid_output() {
     let _guard = RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|error| error.into_inner());
     // 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
-    // handcrafted DSL (`crate::os_store::serialization::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
+    // handcrafted DSL (`pack::snapshot::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
     // parses (`FlowHost::parse_host_snapshot_json`), decoupled from procedural's document format.
     let json = r#"{
   "schema": "flow.host_snapshot",
@@ -314,7 +314,7 @@ fn rectangle_extrude_fixture_evaluates_solid_output() {
 #[test]
 fn hexagonal_mushroom_fixture_reports_extruded_solid_output() {
     // 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
-    // handcrafted DSL (`crate::os_store::serialization::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
+    // handcrafted DSL (`pack::snapshot::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
     // parses (`FlowHost::parse_host_snapshot_json`), decoupled from procedural's document format.
     let json = r#"{
   "schema": "flow.host_snapshot",
@@ -378,7 +378,7 @@ fn geometry_session() -> &'static semio_s_spatial_kernel_semio_session::Session 
 
 #[test]
 fn supplied_operator_registries_and_geometry_ports_keep_host_authorities_independent() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌐️geometry-composition/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌐️geometry-composition/🔣️.json")).unwrap();
     let sessions = [semio_s_spatial_kernel_semio_session::Session::new(), semio_s_spatial_kernel_semio_session::Session::new()];
     let mut handles = Vec::new();
     for (session, row) in sessions.iter().zip(fixture["boxes"].as_array().unwrap()) {

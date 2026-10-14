@@ -14,7 +14,7 @@ use super::node_graph_attach_tests::{drop_engine_surface, entity_screen_rect, fl
 use super::*;
 use ui_wgpu::wgpu::{InputState, SurfaceKind};
 
-const GESTURE_LAW: &str = include_str!("../../../../🧫️fixtures/🫳️node-graph-gestures/🔣️.json");
+const GESTURE_LAW: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🫳️node-graph-gestures/🔣️.json");
 
 fn law() -> Value {
     serde_json::from_str(GESTURE_LAW).expect("the gesture oracle parses")

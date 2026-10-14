@@ -9,10 +9,9 @@ import { expect, test } from "bun:test";
 
 import { Command } from "commander";
 import { BundleScript, ScriptRouter, readScriptPolicy, type ScriptInvocation, type ScriptProgress } from "../🟦️.ts";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import invocationSchema from "../📥️invocation/🧬️schema/🔣️.json";
-import invocationCorpus from "../📥️invocation/🧫️fixtures/🔣️.json";
-import loadingSchema from "../📥️invocation/📥️loading/🧬️schema/🔣️.json";
+import invocationCorpus from "../📥️invocation/🧪️tests/🧫️fixtures/🔣️.json";
 import Ajv from "ajv";
 
 /** 🧫️ Supplies each original routing case its real authored 15-second control and progress ledger. */
@@ -218,7 +217,6 @@ test("missing incoming authority refuses before acquiring the selected command o
 });
 
 for (const row of invocationCorpus.loadingCases) test(row.id, async () => {
-  expect(new Ajv({ strict: true }).compile(loadingSchema)(row)).toBe(true);
   const execute = async (oracle: boolean): Promise<{ trace: string[]; rejected: boolean }> => {
     const controller = new AbortController(), started = performance.now(), events: ScriptProgress[] = [], trace: string[] = [];
     const invocation: ScriptInvocation<{ trace: string[] }> = {
@@ -263,7 +261,7 @@ for (const row of invocationCorpus.loadingCases) test(row.id, async () => {
   expect(await execute(false)).toEqual(expected);
 });
 
-for (const row of (await import("../📥️invocation/🏃️process/🧫️fixtures/🔣️.json")).default.cases) test(`process-envelope:${row.id}`, async () => {
+for (const row of (await import("../📥️invocation/🏃️process/🧪️tests/🧫️fixtures/🔣️.json")).default.cases) test(`process-envelope:${row.id}`, async () => {
   const { readScriptProcessEnvelope } = await import("../📥️invocation/🏃️process/🟦️.ts");
   const schema = (await import("../📥️invocation/🏃️process/🧬️schema/🔣️.json")).default;
   const structural = new Ajv({ strict: true }).addSchema(invocationSchema).compile(schema)(row.value);
@@ -352,7 +350,7 @@ test("the complete process envelope preserves original caller capabilities by id
 });
 
 test("process policy schema references the canonical original Script owner", async () => {
-  const schema = (await import("../📥️invocation/🏃️process/🧬️schema/🔣️.json")).default, fixture = (await import("../📥️invocation/🏃️process/🧫️fixtures/🔣️.json")).default;
+  const schema = (await import("../📥️invocation/🏃️process/🧬️schema/🔣️.json")).default, fixture = (await import("../📥️invocation/🏃️process/🧪️tests/🧫️fixtures/🔣️.json")).default;
   const reference = { $ref: fixture.policyReference }, oracle = new Ajv({ strict: true }).addSchema(invocationSchema).compile({ ...schema, properties: { ...schema.properties, policy: reference } });
   expect(invocationSchema.$id).toBe(fixture.policyReference);
   for (const row of fixture.cases) expect(oracle(row.value)).toBe(new Ajv({ strict: true }).addSchema(invocationSchema).compile(schema)(row.value));
@@ -361,7 +359,7 @@ test("process policy schema references the canonical original Script owner", asy
 
 
 test("original ordinary no-deadline authority preserves cancellation and fractional finite child ceilings", async () => {
-  const api = await import("../📥️invocation/🏃️process/🟦️.ts"), shared = await import("../📥️invocation/🟦️.ts"), rows = (await import("../📥️invocation/🏃️process/🧫️fixtures/🌿️ordinary.json")).default;
+  const api = await import("../📥️invocation/🏃️process/🟦️.ts"), shared = await import("../📥️invocation/🟦️.ts"), rows = (await import("../📥️invocation/🏃️process/🧪️tests/🧫️fixtures/🌿️ordinary.json")).default;
   const wire = (await import("../📥️invocation/🏃️process/🧬️schema/🔣️.json")).default;
   const policyValidate = new Ajv({ strict: true }).compile(invocationSchema), envelopeValidate = new Ajv({ strict: true }).addSchema(invocationSchema).compile(wire);
   for (const row of rows.envelopes) {

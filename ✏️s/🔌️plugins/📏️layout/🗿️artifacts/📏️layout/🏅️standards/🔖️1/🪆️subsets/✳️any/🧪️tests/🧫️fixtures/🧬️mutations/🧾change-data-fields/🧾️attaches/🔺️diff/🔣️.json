@@ -1,0 +1,35 @@
+{
+  "schema": null,
+  "name": null,
+  "grid": null,
+  "paragraphStyles": null,
+  "characterStyles": null,
+  "stories": null,
+  "links": null,
+  "parentPages": null,
+  "spreads": null,
+  "pages": null,
+  "printTarget": null,
+  "backgroundDrawing": null,
+  "drawingTexts": [],
+  "referencedModel": null,
+  "dataFields": {
+    "presence": "created",
+    "entries": {
+      "inserted": [
+        {
+          "index": 0,
+          "row": {
+            "questionId": "client",
+            "value": {
+              "kind": "text",
+              "value": "acme"
+            }
+          }
+        }
+      ],
+      "removed": [],
+      "moved": []
+    }
+  }
+}

@@ -1,9 +1,10 @@
 //! 🪐️ Exact typed space state through handwritten relational entities and controlled native records.
 #[path="./📏️preflight/🦀️.rs"]mod preflight;
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::{SpaceSnapshot,SpaceKind,SpaceVisibility,SpaceRole,SpaceUser,CollectionRef,InstalledExtension,S_SPACE_SCHEMA};
 use semio_framework_os_kernel as store;
-use store::os_store::serialization::ArtifactSqliteSnapshot;
+use store::os_store::serialization::ArtifactSqliteSnapshotHost;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{RowWriter,Cell}};
 #[path="../../../../../🪶️sqlite/🦀️.rs"]mod fields;
 /// 🚪️ The explicitly authored native envelope-version coordinate for this builtin owner.
@@ -20,10 +21,10 @@ fn write_rows(value:&SpaceSnapshot,total:usize,p:&mut RowWriter<'_,'_>)->Result<
   for(index,row)in value.programs.iter().enumerate(){p.insert("space_program",&[Cell::Integer(document),Cell::Integer(fields::ordinal(index)?),Cell::Text(row)])?;p.checkpoint_total(total)?;}
   for(index,row)in value.extensions.iter().enumerate(){p.insert("space_extension",&[Cell::Integer(document),Cell::Integer(fields::ordinal(index)?),Cell::Text(&row.extension_id),Cell::Text(&row.version),Cell::Text(&row.source_uri),Cell::Text(&row.package_hash),Cell::Integer(i64::from(row.enabled))])?;p.checkpoint_total(total)?;}Ok(())}
 fn semantic(value:&SpaceSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{schema(control)?;let total=rows(value)?;control.check_rows(total)?;let mut p=RowWriter::borrowed(control,phase)?;write_rows(value,total,&mut p)?;p.finish_borrowed()}
-impl ArtifactSqliteSnapshot for SpaceSnapshot{
+impl ArtifactSqliteSnapshotHost for SpaceSnapshot{
  fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{owner.native().checkpoint().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;self.validate_sqlite_snapshot_subset(dialect,database,control)}
  fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_,'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{owner.native().checkpoint().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;self.validate_sqlite_snapshot_subset(dialect,database,control)}
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+ 
  fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{preflight::check(self,encoding,control)}
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->Result<store::io::IoPayload,ValueError>{
   semantic(self,SqliteSnapshotPhase::EncodeNative,control)?;
@@ -42,8 +43,19 @@ impl ArtifactSqliteSnapshot for SpaceSnapshot{
   };
   control.admit_allocation_bytes(owned)?;control.admit_reconstruction_bytes(owned)?;result
  }
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let total=rows(self)?;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,total)?;schema(control)?;control.check_rows(total)?;let mut p=RowWriter::new(Self::SQLITE_SCHEMA,control)?;write_rows(self,total,&mut p)?;p.finish()}
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+ 
+ 
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
+  (|| -> Result<store::io_schema::IoOutcome<()>,ValueError> {
+  control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!=S_SPACE_SCHEMA||dialect.standard!="1"||dialect.subset!="*"{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "space does not own this SQLite coordinate"))}let candidate=Self::from_sqlite_database(database,control)?;if self!=&candidate{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "space semantic state differs"))}Ok(store::io_schema::IoOutcome::clean(()))
+ 
+  })().map_err(store::io_schema::IoError::from_value_error)
+ }
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for SpaceSnapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let total=rows(self)?;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,total)?;schema(control)?;control.check_rows(total)?;let mut p=RowWriter::new(Self::SQLITE_SCHEMA,control)?;write_rows(self,total,&mut p)?;p.finish()}
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
   schema(control)?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;store::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,Self::SQLITE_SCHEMA,SqliteSnapshotPhase::ReconstructSnapshot,control)?;
   let doc=database.table("space_document")?.single_row()?;if doc.values.len()!=5||doc.integer(0)?!=doc.rowid{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "space document identity differs"))}
   let kind=match doc.text(3)?{"atelier"=>SpaceKind::Atelier,"studio"=>SpaceKind::Studio,"archive"=>SpaceKind::Archive,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue, "space kind is not declared"))};let visibility=match doc.text(4)?{"private"=>SpaceVisibility::Private,"public"=>SpaceVisibility::Public,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue, "space visibility is not declared"))};
@@ -53,11 +65,5 @@ impl ArtifactSqliteSnapshot for SpaceSnapshot{
   let ordered=fields::ordered(database.table("space_collection")?,doc.rowid,6,&mut native)?;let mut collections=native.allocate_vec(ordered.len())?;native.begin_stage(ordered.len())?;for row in ordered{collections.push(CollectionRef{id:fields::text(row,3,&mut native)?,name:fields::text(row,4,&mut native)?,document_id:fields::text(row,5,&mut native)?});native.step()?;}
   let ordered=fields::ordered(database.table("space_program")?,doc.rowid,4,&mut native)?;let mut programs=native.allocate_vec(ordered.len())?;native.begin_stage(ordered.len())?;for row in ordered{programs.push(fields::text(row,3,&mut native)?);native.step()?;}
   let ordered=fields::ordered(database.table("space_extension")?,doc.rowid,8,&mut native)?;let mut extensions=native.allocate_vec(ordered.len())?;native.begin_stage(ordered.len())?;for row in ordered{extensions.push(InstalledExtension{extension_id:fields::text(row,3,&mut native)?,version:fields::text(row,4,&mut native)?,source_uri:fields::text(row,5,&mut native)?,package_hash:fields::text(row,6,&mut native)?,enabled:match row.integer(7)?{0=>false,1=>true,_=>return Err(fields::invalid("space enabled must be boolean"))}});native.step()?;}native.checkpoint()?;Ok(Self{schema,name,kind,visibility,users,collections,programs,extensions})})
- }
- fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
-  (|| -> Result<store::io_schema::IoOutcome<()>,ValueError> {
-  control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!=S_SPACE_SCHEMA||dialect.standard!="1"||dialect.subset!="*"{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "space does not own this SQLite coordinate"))}let candidate=Self::from_sqlite_database(database,control)?;if self!=&candidate{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "space semantic state differs"))}Ok(store::io_schema::IoOutcome::clean(()))
- 
-  })().map_err(store::io_schema::IoError::from_value_error)
  }
 }

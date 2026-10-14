@@ -2,12 +2,12 @@ use super::*;
 use crate::{scene_lane_hash, SceneDoc, World3dSceneLane};
 use serde_json::Value;
 
-const FIXTURE: &str = include_str!("../../🧫️fixtures/📏️world3d-modelling/🔣️.json");
+const FIXTURE: &str = include_str!("../🧫️fixtures/📏️world3d-modelling/🔣️.json");
 
 #[test]
 fn original_scalar_field_retirement_keeps_every_native_owner_and_physical_receipt() {
     use semio_framework_value::{retirement::controlled::ControlledRetirement,RetainedCloneGrant};
-    let law:Value=serde_json::from_str(include_str!("../../🧫️fixtures/♻️scalar-field/🔣️.json")).unwrap();
+    let law:Value=serde_json::from_str(include_str!("../🧫️fixtures/♻️scalar-field/🔣️.json")).unwrap();
     let grant:RetainedCloneGrant=serde_json::from_value(law["grant"].clone()).unwrap();
     use crate::math::tests::observe_retirement_allocations as observe;
     for row in fixture()["valid"].as_array().unwrap().iter().filter(|row|row["def"]=="scalarField") {
@@ -39,7 +39,7 @@ fn original_projection_record_retirement_uses_exact_scalar_owner_receipts() {
     use semio_framework_value::{retirement::controlled::ControlledRetirement,RetainedCloneGrant};
     use semio_framework_ui_viewport::{Viewport3dProjectionSpec,Viewport3dProjectionFramePolicy};
     use crate::math::tests::observe_retirement_allocations as observe;
-    let law:Value=serde_json::from_str(include_str!("../../🧫️fixtures/♻️scalar-field/🔣️.json")).unwrap();
+    let law:Value=serde_json::from_str(include_str!("../🧫️fixtures/♻️scalar-field/🔣️.json")).unwrap();
     let grant:RetainedCloneGrant=serde_json::from_value(law["grant"].clone()).unwrap();
     for row in law["projections"].as_array().unwrap() {
         let original:(Viewport3dProjectionSpec,Viewport3dProjectionFramePolicy)=serde_json::from_value(row.clone()).unwrap();

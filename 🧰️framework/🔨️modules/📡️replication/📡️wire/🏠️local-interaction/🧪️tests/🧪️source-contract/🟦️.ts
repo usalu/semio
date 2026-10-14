@@ -9,7 +9,7 @@ import leb from "@webassemblyjs/leb128/lib/leb.js";
 
 //#region 🧬️Contract
 const schema = await Bun.file(new URL("../../🧬️schema/🔣️.json", import.meta.url)).json();
-const fixture = await Bun.file(new URL("../../🧫️fixtures/🏠️local-interaction/🔣️.json", import.meta.url)).json();
+const fixture = await Bun.file(new URL("../../🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json", import.meta.url)).json();
 const ajv = semioSchemaAjvV1({ allErrors: true }).addSchema(schema);
 
 
@@ -74,7 +74,7 @@ for (const mutate of [
 //#endregion 🧬️Contract
 
 //#region 🌳️RetainedRootContract
-/** 🧫️ Shape of `../../🌳️root/🧫️fixtures/🔣️.json`, the document its JSON Schema validates at load. */
+/** 🧫️ Shape of `../../🌳️root/🧪️tests/🧫️fixtures/🔣️.json`, the document its JSON Schema validates at load. */
 type RetainedRootFixture = {
   readonly version: number;
   readonly sourceCase: string;
@@ -92,7 +92,7 @@ type RetainedRootFixture = {
   readonly zeroGrantChangesOwner: boolean;
   readonly coldDecodeEarnsInteractiveCredit: boolean;
 };
-/** 🧫️ Shape of `../../🌳️root/🩹️update/🧫️fixtures/🔣️.json`, the document its JSON Schema validates at load. */
+/** 🧫️ Shape of `../../🌳️root/🩹️update/🧪️tests/🧫️fixtures/🔣️.json`, the document its JSON Schema validates at load. */
 type RetainedUpdateFixture = {
   readonly version: number;
   readonly cases: readonly string[];
@@ -109,7 +109,7 @@ type RetainedUpdateFixture = {
   readonly absentFieldsRemoveOnlyTargetDomain: boolean;
   readonly publishedCandidateUsesOriginalPayloadPointers: boolean;
 };
-/** 🧫️ Shape of `../../🧫️fixtures/♻️retirement/🔣️.json`, the document its JSON Schema validates at load. */
+/** 🧫️ Shape of `../../🧪️tests/🧫️fixtures/♻️retirement/🔣️.json`, the document its JSON Schema validates at load. */
 type RetirementFixture = {
   readonly version: number;
   readonly grants: readonly number[];
@@ -122,7 +122,7 @@ type RetirementFixture = {
   readonly zeroItemMutates: boolean;
   readonly terminalOwners: number;
 };
-/** 🧫️ Shape of `../../🧫️fixtures/📃️query/🔣️.json`, the document its JSON Schema validates at load. */
+/** 🧫️ Shape of `../../🧪️tests/🧫️fixtures/📃️query/🔣️.json`, the document its JSON Schema validates at load. */
 type QueryFixture = {
   readonly version: number;
   readonly pageBytes: number;
@@ -141,7 +141,7 @@ type QueryFixture = {
     readonly error: string;
   };
 };
-/** 🧫️ Shape of `../../🧫️fixtures/🔐️topology-authority/🔣️.json`, the document its JSON Schema validates at load. */
+/** 🧫️ Shape of `../../🧪️tests/🧫️fixtures/🔐️topology-authority/🔣️.json`, the document its JSON Schema validates at load. */
 type TopologyAuthorityFixture = {
   readonly version: number;
   readonly domain: string;
@@ -157,7 +157,7 @@ type TopologyAuthorityFixture = {
   readonly closedAuthorityReadable: boolean;
   readonly canonicalTopologyHash: boolean;
 };
-/** 🧫️ Shape of `../../📡️transport/🧫️fixtures/🔣️.json`, the document its JSON Schema validates at load. */
+/** 🧫️ Shape of `../../📡️transport/🧪️tests/🧫️fixtures/🔣️.json`, the document its JSON Schema validates at load. */
 type TransportFixture = {
   readonly version: number;
   readonly appCommandTag: number;
@@ -173,7 +173,7 @@ type TransportFixture = {
   readonly requestReuseNeedsNewGeneration: boolean;
   readonly lateAcknowledgementAfterCloseAccepted: boolean;
 };
-const rootFixture: RetainedRootFixture = await Bun.file(new URL("../../🌳️root/🧫️fixtures/🔣️.json", import.meta.url)).json();
+const rootFixture: RetainedRootFixture = await Bun.file(new URL("../../🌳️root/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
 
 const ownershipSchema=await Bun.file(new URL("../../🌳️root/♻️retirement/🧬️schema/🔣️.json",import.meta.url)).json();
 const orderedOwnershipSchema=await Bun.file(new URL("../../../../../🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json",import.meta.url)).json();
@@ -200,7 +200,7 @@ assert(rootSource.selection.private && rootSource.selection.graph.anchorId === "
 //#endregion 🌳️RetainedRootContract
 
 //#region 🩹️RetainedUpdateContract
-const updateFixture: RetainedUpdateFixture = await Bun.file(new URL("../../🌳️root/🩹️update/🧫️fixtures/🔣️.json", import.meta.url)).json();
+const updateFixture: RetainedUpdateFixture = await Bun.file(new URL("../../🌳️root/🩹️update/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
 
 
 
@@ -222,7 +222,7 @@ for (const name of updateFixture.cases) {
 
 
 //#region ♻️RetirementContract
-const retirement: RetirementFixture = await Bun.file(new URL("../../🧫️fixtures/♻️retirement/🔣️.json", import.meta.url)).json();
+const retirement: RetirementFixture = await Bun.file(new URL("../../🧪️tests/🧫️fixtures/♻️retirement/🔣️.json", import.meta.url)).json();
 
 
 for (const row of retirement.cases) {
@@ -239,7 +239,7 @@ for (const row of retirement.cases) {
   ];
   assert.equal(sumBy(strings, (value: string) => new TextEncoder().encode(value).length), row.expectedReleasedBytes);
 }
-const query: QueryFixture = await Bun.file(new URL("../../🧫️fixtures/📃️query/🔣️.json", import.meta.url)).json();
+const query: QueryFixture = await Bun.file(new URL("../../🧪️tests/🧫️fixtures/📃️query/🔣️.json", import.meta.url)).json();
 
 
 assert.equal(`{"first":${JSON.stringify(query.partialError.first)},"second":`, query.partialError.expectedPrefix);
@@ -265,7 +265,7 @@ for (const sourceCase of query.sourceCases) {
     assert.equal(streamed.digest("hex"), full);
   }
 }
-const topologyAuthority: TopologyAuthorityFixture = await Bun.file(new URL("../../🧫️fixtures/🔐️topology-authority/🔣️.json", import.meta.url)).json();
+const topologyAuthority: TopologyAuthorityFixture = await Bun.file(new URL("../../🧪️tests/🧫️fixtures/🔐️topology-authority/🔣️.json", import.meta.url)).json();
 
 
 for (const row of topologyAuthority.cases) {
@@ -274,7 +274,7 @@ for (const row of topologyAuthority.cases) {
   assert.equal(actual, row.expected);
 }
 assert.equal(new Set(topologyAuthority.cases.map((row: any) => row.expected)).size, topologyAuthority.cases.length);
-const transport: TransportFixture = await Bun.file(new URL("../../📡️transport/🧫️fixtures/🔣️.json", import.meta.url)).json();
+const transport: TransportFixture = await Bun.file(new URL("../../📡️transport/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
 const transportFixtureSchema = await Bun.file(new URL("../../📡️transport/🧬️schema/🔣️.json", import.meta.url)).json();
 
 const validateTransport = ajv.addSchema(transportFixtureSchema).compile({ $ref: `${transportFixtureSchema.$id}#/$defs/Transport` });

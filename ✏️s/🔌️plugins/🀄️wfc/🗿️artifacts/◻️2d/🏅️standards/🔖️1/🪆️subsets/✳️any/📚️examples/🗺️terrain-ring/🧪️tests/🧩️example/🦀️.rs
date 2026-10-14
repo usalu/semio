@@ -6,8 +6,8 @@ use crate::standards::v1::subsets::any::io::binary::snapshot::tile_media_png_dat
 #[test]
 fn printed_text_parses_back_to_the_authored_document() {
     let document = crate::examples::terrain_ring::document();
-    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&document);
-    let parsed: crate::Wfc2dSnapshot = <crate::Wfc2dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("the printed example parses");
+    let text = pack::snapshot::ArtifactDsl::print_dsl(&document);
+    let parsed: crate::Wfc2dSnapshot = <crate::Wfc2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("the printed example parses");
     assert_eq!(parsed, document, "the printed text is not the document it was printed from");
 }
 
@@ -62,7 +62,7 @@ fn the_terrain_ring_solves() {
 /// 🎨️ The declared palette fixture reaches the actual PNG author and checked raster view.
 #[test]
 fn raster_preserves_clamped_palette_and_unknown_index_transparency() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🎨️raster/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🎨️raster/🔣️.json")).unwrap();
     let number = |value: &serde_json::Value| u32::try_from(value.as_u64().unwrap()).unwrap();
     let indices: Vec<u8> = fixture["indices"].as_array().unwrap().iter().map(|v| u8::try_from(v.as_u64().unwrap()).unwrap()).collect();
     let palette = fixture["palette"].as_array().unwrap().iter().map(|color| crate::schema::snapshot::Wfc2dColor { r: number(&color["r"]), g: number(&color["g"]), b: number(&color["b"]), a: number(&color["a"]) }).collect();

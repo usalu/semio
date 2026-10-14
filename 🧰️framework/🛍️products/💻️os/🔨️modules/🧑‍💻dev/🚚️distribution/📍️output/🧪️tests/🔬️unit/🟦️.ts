@@ -9,7 +9,7 @@ import { playgroundReactNxOutput, playgroundReactOutputPath } from "../../🟦�
 /** 📦️ Proves authored distribution destinations with independent JSON schema and Node target producers. */
 export async function testDistributionOutputContract(workspace: string, artifacts: string): Promise<void> {
   const root = resolve(import.meta.dir, "../..");
-  const corpus = JSON.parse(readFileSync(join(root, "🧫️fixtures/🔣️.json"), "utf8"));
+  const corpus = JSON.parse(readFileSync(join(root, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
   
   const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
   mkdirSync(artifacts, { recursive: true });
@@ -49,7 +49,7 @@ export async function testDistributionOutputContract(workspace: string, artifact
         catch { return { id: v.id, valid: false }; }
       });
       process.stdout.write(JSON.stringify(result));`;
-    const nodeRows = JSON.parse(execFileSync("node", ["--input-type=module", "-e", nodeSource, join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"), join(root, "🧫️fixtures/🔣️.json")], { encoding: "utf8" }));
+    const nodeRows = JSON.parse(execFileSync("node", ["--input-type=module", "-e", nodeSource, join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"), join(root, "🧪️tests/🧫️fixtures/🔣️.json")], { encoding: "utf8" }));
     assert.deepEqual(nodeRows, corpus.cases.map((v: any) => ({ id: v.id, valid: v.valid, ...(v.valid ? { outputs: [`{workspaceRoot}/${v.path}`] } : {}) })));
     console.log(`Distribution output: ${corpus.cases.length} portable vectors, 2 owner layouts, independent Ajv/URL/Node producer passed`);
   } finally { rmSync(temporary, { recursive: true, force: true }); }

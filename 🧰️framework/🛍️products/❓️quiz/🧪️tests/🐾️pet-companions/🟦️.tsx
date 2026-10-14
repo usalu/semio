@@ -85,8 +85,8 @@ import {
   type QuizState,
   type QuizStep,
 } from "@semio-tech/quiz-react";
-import vectors from "../../../🐾️pets/🧫️fixtures/🧬️schema-conformance/🔣️.json";
-import sheets from "../../🧫️fixtures/🃏️sheet-assembly/🔣️.json";
+import vectors from "../../../🐾️pets/🧪️tests/🧫️fixtures/🧬️schema-conformance/🔣️.json";
+import sheets from "../🧫️fixtures/🃏️sheet-assembly/🔣️.json";
 
 //#region 🧫️Doubles
 const text = (en: string, de: string): Text => ({ en, de });

@@ -10,11 +10,11 @@ use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutat
 use crate::schema::{find_drawing_layer, layer_id};
 use crate::DrawingSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️create-layer/➕️appends/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️create-layer/➕️appends/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️create-layer/➕️appends/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️create-layer/➕️appends/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️create-layer/➕️appends/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️create-layer/➕️appends/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️create-layer/➕️appends/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️create-layer/➕️appends/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️create-layer/➕️appends/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️create-layer/➕️appends/🎯️outcome/🔣️.json");
 
 fn before() -> DrawingSnapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")
@@ -137,7 +137,7 @@ fn drawing_create_layer_inputs_publish_closed_choices() {
     let defs = semio_framework::mutation_input_defs(include_str!("../../🧬️schema/🔣️.json"), &|id: &str| (document.get("$id").and_then(semio_framework::DslValue::as_str) == Some(id)).then(|| document.clone())).unwrap();
     let layer = defs.iter().find(|def| def.id == "/layer").unwrap();
     let semio_framework::ArgSchema::Object { fields } = &layer.schema else { panic!("Layer input is an object") };
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎛️input-choices/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️create-layer/🎛️input-choices/🔣️.json")).unwrap();
     for row in law["fields"].as_array().unwrap() {
         let id = format!("/{}", row["id"].as_str().unwrap());
         let field = fields.iter().find(|def| def.id == id).unwrap();

@@ -481,7 +481,7 @@ fn mesh_instances_without_lines_are_valid_world_pass() {
 /// emissive-free with its cutoff disabled.
 fn world_mesh_instance_packs_policy_and_standard_material_into_one_fixed_stride() {
     let gpu = super::World3dGpuInstance::from_instance([0.0; 16], [1.0; 4], true, 0.2, 0.63, 0.27, true);
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧱️world-instance-layout/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧱️world-instance-layout/🔣️.json")).unwrap();
     assert_eq!(std::mem::size_of::<super::World3dGpuInstance>(), fixture["stride"].as_u64().unwrap() as usize);
     assert_eq!(std::mem::align_of::<super::World3dGpuInstance>(), fixture["alignment"].as_u64().unwrap() as usize);
     let offsets = [std::mem::offset_of!(super::World3dGpuInstance, model0), std::mem::offset_of!(super::World3dGpuInstance, model1), std::mem::offset_of!(super::World3dGpuInstance, model2), std::mem::offset_of!(super::World3dGpuInstance, model3), std::mem::offset_of!(super::World3dGpuInstance, color), std::mem::offset_of!(super::World3dGpuInstance, flags), std::mem::offset_of!(super::World3dGpuInstance, emissive_cutoff), std::mem::offset_of!(super::World3dGpuInstance, surface_parameters)];
@@ -549,7 +549,7 @@ fn overlay_layers_collected_separately_from_backdrop_ui() {
 
 #[test]
 fn overlay_rasters_are_collected_separately_without_changing_the_texture_identity() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).expect("retained Select/overlay raster fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).expect("retained Select/overlay raster fixture");
     let key = fixture["image"]["sharedKey"].as_str().expect("shared raster key");
     let mut draw = DrawList::default();
     draw.push_raster_quad(key, [1.0, 2.0, 3.0, 4.0], [0.0, 0.0, 1.0, 1.0], 1.0);
@@ -647,7 +647,7 @@ fn glass_alpha_and_blur_are_formula_derived_per_level() {
 /// 📻️ The image sample owns the avatar radius without changing ordinary raster geometry.
 #[test]
 fn rounded_avatar_rasters_keep_their_radius_through_the_draw_packet() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧱️elements/⚙️VirtualFileSystem/🧫️fixtures/🧾️descriptors/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧱️elements/⚙️VirtualFileSystem/🧪️tests/🧫️fixtures/🧾️descriptors/🔣️.json")).unwrap();
     let law = &fixture["avatarGeometry"];
     let rect: [f32; 4] = serde_json::from_value(law["rect"].clone()).unwrap();
     let uv: [f32; 4] = serde_json::from_value(law["uv"].clone()).unwrap();

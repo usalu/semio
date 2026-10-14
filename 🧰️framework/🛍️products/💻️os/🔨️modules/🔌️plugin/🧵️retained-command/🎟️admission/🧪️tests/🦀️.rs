@@ -2,7 +2,7 @@ use super::*;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 #[test]
 fn retained_raw_admission_has_no_failure_destructor_or_undeclared_allocation(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  let bytes=|value:&serde_json::Value|if value=="usize-max"{usize::MAX}else{value.as_u64().unwrap() as usize};
  for row in fixture["limits"].as_array().unwrap(){
   let(refusal,heap)=observe(||admit_limits(bytes(&row["maximumRawBytes"]),row["maximumWorkItems"].as_u64().unwrap() as usize));

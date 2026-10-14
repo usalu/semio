@@ -47,7 +47,7 @@ type InputRootFixture = {
 };
 
 export function testInputRootFixture(): void {
-  const fixture: InputRootFixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture: InputRootFixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   
   const value = JSON.parse(readFileSync(new URL("../../../../../../../🌱️value/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   

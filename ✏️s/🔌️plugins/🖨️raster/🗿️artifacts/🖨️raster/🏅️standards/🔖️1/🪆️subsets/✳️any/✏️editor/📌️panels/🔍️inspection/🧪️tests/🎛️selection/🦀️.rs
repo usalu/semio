@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn inspector_projects_selected_properties_and_foreground_in_both_languages() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
     let mut document: RasterDocument = semio_framework_pack_json::from_json_str(r#"{"schema":"raster.document","id":"inspection","title":"Inspection","layers":[{"kind":"pixel","id":"paint.foreground","name":"123","mask":null,"width":32,"height":32,"imageKey":null},{"kind":"pixel","id":"paint.background","name":"Background","mask":null,"width":64,"height":64,"imageKey":null}]}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
         for case in fixture["cases"].as_array().unwrap() {
@@ -48,7 +48,7 @@ fn inspector_projects_selected_properties_and_foreground_in_both_languages() {
 
 #[semio_framework_async_macros::async_test]
 async fn inspector_mask_dimensions_resolve_the_attached_image() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
     let width=fixture["maskImageExtent"]["width"].as_u64().unwrap() as u32;
     let height=fixture["maskImageExtent"]["height"].as_u64().unwrap() as u32;
     let mut encoder=semio_framework_pixels::png_encoding::PngEncodeJob::new(semio_framework_pixels::RasterImage::new(width,height)).unwrap();
@@ -88,7 +88,7 @@ fn inspector_adjustment_parameters_are_localized_bounded_commit_controls() {
 
 #[test]
 fn inspector_offers_localized_merge_only_for_supported_sibling_selection() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🎮️commands/🫳️merge-down/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🎮️commands/🫳️merge-down/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["cases"][0]["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
         for ids in [vec!["upper".to_owned()],vec!["outside".to_owned()],vec!["lower".to_owned(),"upper".to_owned()],vec![]] {
@@ -108,7 +108,7 @@ fn inspector_offers_localized_merge_only_for_supported_sibling_selection() {
 
 #[test]
 fn inspector_protection_controls_follow_the_neutral_capabilities() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for labels in [&RasterPlayLabels::NATIVE_EN,&RasterPlayLabels::NATIVE_DE] {
         for case in fixture["cases"].as_array().unwrap() {
@@ -135,8 +135,8 @@ fn inspector_protection_controls_follow_the_neutral_capabilities() {
 
 #[test]
 fn inspector_layer_actions_are_localized_and_protection_aware() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
-    let protection:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
+    let protection:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&protection["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
         for case in protection["cases"].as_array().unwrap() {

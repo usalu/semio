@@ -1,0 +1,184 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "schema",
+    "grant",
+    "metadataCopyBytes",
+    "originalIdentity",
+    "phases",
+    "cases",
+    "preparationGrant",
+    "previewSession",
+    "cancellation",
+    "closeContext"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "schema": {
+      "const": "original-native-batch-session-erasure.v1"
+    },
+    "grant": {
+      "const": [
+        1,
+        17,
+        8192,
+        65536,
+        64
+      ]
+    },
+    "metadataCopyBytes": {
+      "const": 0
+    },
+    "originalIdentity": {
+      "const": [
+        919,
+        17
+      ]
+    },
+    "phases": {
+      "const": [
+        "original",
+        "storage",
+        "bound",
+        "erased",
+        "original-close",
+        "header-release",
+        "empty"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "items",
+          "capacity",
+          "depth",
+          "identity",
+          "idle",
+          "rawReceiptAccepted",
+          "phase",
+          "sourceRetained"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "items": {
+            "type": "boolean"
+          },
+          "capacity": {
+            "type": "boolean"
+          },
+          "depth": {
+            "type": "boolean"
+          },
+          "identity": {
+            "type": "boolean"
+          },
+          "idle": {
+            "type": "boolean"
+          },
+          "rawReceiptAccepted": {
+            "type": "boolean"
+          },
+          "phase": {
+            "enum": [
+              "original",
+              "storage"
+            ]
+          },
+          "sourceRetained": {
+            "const": true
+          }
+        }
+      }
+    },
+    "preparationGrant": {
+      "const": [
+        1,
+        16384,
+        65536,
+        65536,
+        64
+      ]
+    },
+    "previewSession": {
+      "const": {
+        "sealed": true,
+        "caseCount": 5,
+        "unchanged": [
+          "nativeJob",
+          "params",
+          "payloadLedger",
+          "cancel",
+          "receipt",
+          "outcomeLoan"
+        ],
+        "metadataCopyBytes": 0
+      }
+    },
+    "cancellation": {
+      "const": {
+        "cases": [
+          {
+            "cancelled": false,
+            "deadlineOpen": true,
+            "admission": true,
+            "retirement": true
+          },
+          {
+            "cancelled": true,
+            "deadlineOpen": true,
+            "admission": false,
+            "retirement": true
+          },
+          {
+            "cancelled": false,
+            "deadlineOpen": false,
+            "admission": false,
+            "retirement": false
+          },
+          {
+            "cancelled": true,
+            "deadlineOpen": false,
+            "admission": false,
+            "retirement": false
+          }
+        ],
+        "previewCases": 5,
+        "expectedStatus": "cancelled",
+        "expectedOutcomes": 0
+      }
+    },
+    "closeContext": {
+      "const": {
+        "caller": "original",
+        "receiptOwner": "producer",
+        "receiptDebits": 1,
+        "failureOwners": [
+          "primary",
+          "receiptRefusal"
+        ],
+        "deniedEffects": [
+          "fuel",
+          "deadline",
+          "items",
+          "release",
+          "depth"
+        ],
+        "stepFailure": "whole"
+      }
+    }
+  }
+}

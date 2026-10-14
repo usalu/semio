@@ -1,3 +1,4 @@
+import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
 // @vitest-environment jsdom
 
 import { readFileSync } from "node:fs";
@@ -15,7 +16,7 @@ import { resolveWgpuBootDescriptor } from "../../🎯️targets/🧊️wgpu/🧭
 import { PanelTabBar, type PanelTabNode } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🧭️PanelTabBar/🟦️.tsx";
 import { Toggle } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔀️Toggle/🟦️.tsx";
 import { Mode, uiDataLabel, type WindowLayoutNode } from "@semio-tech/ui-react";
-import accessibilityVisibilityFixture from "../../🧫️fixtures/♿️wgpu-accessibility-visibility/🔣️.json";
+import accessibilityVisibilityFixture from "../🧫️fixtures/♿️wgpu-accessibility-visibility/🔣️.json";
 
 type ProjectionNode = {
   readonly nodeId: number;
@@ -354,7 +355,7 @@ describe("wgpu accessibility interaction contract", () => {
     const root = document.createElement("div");
     document.body.append(root);
     const worker = new AccessibilityWorker();
-    const frameTransport = new BrowserFrameTransport({
+    const frameTransport = new BrowserFrameTransport({ originalWorkStock: fixtureOriginalWorkStock(),
       worker,
       boot: {
         bindingsModuleUrl: "renderer.js",

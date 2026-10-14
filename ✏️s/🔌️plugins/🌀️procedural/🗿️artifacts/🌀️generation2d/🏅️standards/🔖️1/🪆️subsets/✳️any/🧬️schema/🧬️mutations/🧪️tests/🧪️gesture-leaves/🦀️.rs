@@ -110,8 +110,8 @@ fn gesture_leaves_label_their_rows_in_english_and_german() {
 #[test]
 fn every_wire_witness_decodes_and_round_trips_both_codecs() {
     let witnesses = [
-        (include_str!("../../../../🧫️fixtures/🧬️mutations/🎚️change-slider-value/🧾️wire-witness/🦠️mutation/🔣️.json"), "change-slider-value"),
-        (include_str!("../../../../🧫️fixtures/🧬️mutations/🚚️move-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"), "move-nodes"),
+        (include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change-slider-value/🧾️wire-witness/🦠️mutation/🔣️.json"), "change-slider-value"),
+        (include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"), "move-nodes"),
     ];
     for (witness, kind) in witnesses {
         let mutation: Generation2dMutation = semio_framework_pack_json::from_json_str(witness, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{kind} witness decodes: {error}"));

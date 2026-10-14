@@ -1,0 +1,5 @@
+# Original Paged Output Native Floor
+
+The exact registered `@semio-tech/framework-plugin:test-original-paged-output-native` current run 45727 ended naturally Nx1 before selected native assertions. Its relevant source test passed once with 130 assertions; strict TypeScript was clean. The compiler stopped in shared UI prepared input closure at `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs:2697`: `input.close_step()` lacks the mandatory `RetainedCloneGrant` argument defined at2360, and unary `!` cannot consume its `Result<bool,ValueError>`. This is a prepared-input close floor, not cancellation or a paged output assertion. No selected Entry native test ran.
+
+The generated full output is `🗑️generated/inference-2026-10-13/paged-output-native.log`. Current own heavy processes: none. Original output source pointer, System receipts, CPU/deadline/five-axis denial, exact original source ack and terminal Drop0 remain authored and unqualified. No native or browser pass is inferred from source tests or compiler acquisition.

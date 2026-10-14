@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
+import { scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { join, resolve } from "node:path";
-import { Script, ScriptRouter, findWorkspaceRoot, scriptInvocationBudget } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { runScriptMain } from "../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import { runOwnedCommand } from "../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import { readBuildMode } from "../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
-import { buildBudgetMs } from "../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { Script, ScriptRouter, findWorkspaceRoot, scriptInvocationBudget } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runOwnedCommand } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { readBuildMode } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { buildBudgetMs } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 
 /** 🏗️ Executes workspace build leaves without importing repository audits. */
 export class BuildScript extends Script {
@@ -18,7 +19,7 @@ export class BuildScript extends Script {
     if (slice === "canvas") {
       if (segments.length !== 2 || segments[1] !== "fonts") throw Error("Expected build canvas fonts");
       const cwd = join(this.repoRoot, "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust");
-      const { repositoryProcessOwnerContextV1 } = await import("../🟦️.ts");
+      const { repositoryProcessOwnerContextV1 } = await import("../🏃️process/📋️context/🔣️policy/🟦️.ts");
       const { repositoryCargoArtifactBuildPolicyV1 } = await import("../⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts");
       const { repositoryCargoPreparationStorageV1, prepareCargoWorkspaceInvocation } = await import("../🗂️workspaces/🦀️cargo/🟦️.ts");
       const { devToolingEnv } = await import("../🏃️process/🌿️environment/🟦️.ts");
@@ -31,16 +32,17 @@ export class BuildScript extends Script {
       const { assertNoOwnedStorybookMdx, assertUiStorybookDiscovery } = await import("./📖️storybook/🟦️.ts");
       assertNoOwnedStorybookMdx(this.repoRoot);
       const [{ mkdir, mkdtemp, rm }, { collectArtifactFiles }, { stageRepositoryArtifacts }, { withCompilerState }, { repoCacheDirectory }, { createRequire }] = await Promise.all([
-        import("node:fs/promises"), import("../../../../../🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts"), import("../⚡️caching/📦️artifacts/🟦️.ts"), import("../⚡️caching/🏗️state/🟦️.ts"), import("../⚡️caching/🟦️.ts"), import("node:module"),
+        import("node:fs/promises"), import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts"), import("../⚡️caching/📦️artifacts/🟦️.ts"), import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗃️state/🟦️.ts"), import("../⚡️caching/🟦️.ts"), import("node:module"),
       ]);
       const require = createRequire(join(this.repoRoot, "package.json")), output = resolve(this.repoRoot, process.env.STORYBOOK_OUTPUT_DIR ?? `dist/${mode}/storybook`);
       const temporaryRoot = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated") : repoCacheDirectory(this.repoRoot, "storybook-staging");
       await mkdir(temporaryRoot, { recursive: true });
       const temporary = await mkdtemp(join(temporaryRoot, "storybook-"));
+      const control = scriptCompilerAdmissionControlV1(this.invocation, "storybook:build", 600_000);
       try {
-        await withCompilerState({ root: repoCacheDirectory(this.repoRoot), owner: "storybook", compiler: `storybook:${require("storybook/package.json").version}:bun:${process.versions.bun}`, configuration: process.env.STORYBOOK_SCOPE ?? "", mode, signal: this.invocation.control.signal }, async directory => {
-          await runOwnedCommand(process.execPath, ["x", "storybook", "build", "-c", ".storybook", "--output-dir", temporary], this.repoRoot, "storybook:build", scriptInvocationBudget(this.invocation, buildBudgetMs()), { signal: this.invocation.control.signal, env: { ...process.env, SEMIO_VITE_CACHE_DIRECTORY: directory } });
-          await stageRepositoryArtifacts(output, `storybook:${mode}`, await collectArtifactFiles(temporary, this.invocation.control.signal), { signal: this.invocation.control.signal });
+        await withCompilerState({ root: repoCacheDirectory(this.repoRoot), owner: "storybook", compiler: `storybook:${require("storybook/package.json").version}:bun:${process.versions.bun}`, configuration: process.env.STORYBOOK_SCOPE ?? "", mode, control, leaseDirectory: join(this.repoRoot, ".cache/framework/leases"), files: [".nx-artifact.json"] }, async (directory, compilerEnvironment) => {
+          await runOwnedCommand(process.execPath, ["x", "storybook", "build", "-c", ".storybook", "--output-dir", temporary], this.repoRoot, "storybook:build", compilerAdmissionBudgetV1(control), { signal: control.signal, env: { ...compilerEnvironment, SEMIO_VITE_CACHE_DIRECTORY: directory, SEMIO_STORYBOOK_BUILD: "true" } });
+          await stageRepositoryArtifacts(output, `storybook:${mode}`, await collectArtifactFiles(temporary, control.signal), { signal: control.signal });
         });
       } finally { await rm(temporary, { recursive: true, force: true }); }
       assertUiStorybookDiscovery(this.repoRoot);

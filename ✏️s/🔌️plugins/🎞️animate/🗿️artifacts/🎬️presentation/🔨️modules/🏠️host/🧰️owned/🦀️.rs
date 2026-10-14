@@ -175,7 +175,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
             store::os_store::owned_schema_decode::OwnedSchemaHexStep::Pending => Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending),
             store::os_store::owned_schema_decode::OwnedSchemaHexStep::Complete => {
                 let bytes = authority.as_bytes().ok_or_else(|| diagnostic("presentation-envelope.snapshot-pack-missing", token.start))?;
-                let value = <PresentationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|_| diagnostic("presentation-envelope.snapshot-pack-malformed", token.start))?;
+                let value = <PresentationSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|_| diagnostic("presentation-envelope.snapshot-pack-malformed", token.start))?;
                 assert!(authority.release(), "completed Presentation snapshot pack releases its inline bytes exactly once");
                 *self.value = Some(value);
                 self.state = PresentationPackSnapshotState::Ready;

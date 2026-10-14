@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "pluginId": "future",
+  "packageId": "custom:future",
+  "componentSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "expectedFault": {"origin": "framework", "code": "plugin.descriptor-invalid"},
+  "invalidIdentities": [
+    {"version": 2},
+    {"pluginId": ""},
+    {"packageId": ""},
+    {"componentSha256": "short"},
+    {"componentSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n"},
+    {"foreign": true}
+  ],
+  "refusals": [
+    {"pluginId": "foreign"},
+    {"packageId": "custom:foreign"},
+    {"componentSha256": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"}
+  ]
+}

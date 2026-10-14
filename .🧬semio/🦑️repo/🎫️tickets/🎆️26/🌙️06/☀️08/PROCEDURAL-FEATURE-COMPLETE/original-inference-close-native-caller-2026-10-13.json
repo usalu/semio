@@ -1,0 +1,46 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/framework-plugin:test-original-inference-close-native",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--parallel=1",
+    "--configuration=prototype"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+    "transport": {
+      "maximumBytes": 134217728,
+      "maximumLines": 1000000
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": true
+    }
+  },
+  "selection": [
+    "nx",
+    "run",
+    "@semio-tech/framework-plugin:test-original-inference-close-native",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--parallel=1",
+    "--configuration=prototype"
+  ],
+  "launches": [
+    [
+      "nx",
+      "run",
+      "@semio-tech/framework-plugin:test-original-inference-close-native",
+      "--skip-nx-cache",
+      "--excludeTaskDependencies",
+      "--parallel=1",
+      "--configuration=prototype"
+    ]
+  ],
+  "buildMode": "prototype"
+}

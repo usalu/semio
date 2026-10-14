@@ -6,7 +6,7 @@ import i18next from "i18next";
 import { semioSchemaAjvV1 } from "../../../🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import toolRunSchema from "../../../⏯️tool-run/🧬️schema/🔣️.json";
 import { FRAMEWORK_FAULT_NOTICE_LABELS, faultNotice, HISTORY_NOTICE_LABELS } from "../../../🎠️kernel/🟦️.ts";
-import fixture from "../../🧫️fixtures/🧫️fault-notices/🔣️.json";
+import fixture from "../🧫️fixtures/🧫️fault-notices/🔣️.json";
 import { SHELL_LOCALES, SHELL_TERMINOLOGIES, faultNoticePlaceholders, fillFaultNotice, isFaultNoticeCode, validateFaultNotices, type FaultNoticeDefinition, type FaultNoticeError, type ShellLocale, type ShellTerminology } from "../../🟦️.ts";
 
 const MANIFEST_SCHEMA = "https://json.schemas.assets.semio-tech.com/framework/manifest/schema.json";

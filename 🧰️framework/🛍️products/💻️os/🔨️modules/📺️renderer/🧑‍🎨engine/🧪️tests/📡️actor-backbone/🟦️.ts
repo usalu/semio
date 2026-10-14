@@ -2,11 +2,11 @@ import Ajv from "ajv";
 import deepEqual from "fast-deep-equal";
 import { describe, expect, it } from "vitest";
 
-import fixture from "../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧫️fixtures/🔣️.json";
+import fixture from "../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧪️tests/🧫️fixtures/🔣️.json";
 import { ActorDocumentBindingV1, ActorDocumentMessagePortV1, decodeDocumentBackboneControlV1, documentBackboneEffectV1, encodeDocumentBackboneControlV1, requireDocumentBackboneReceiptV1 } from "../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { decodeBackboneMessage, encodeBackboneMessage, encodePackValue, packUInt, type BinaryBackboneMessage } from "@semio-tech/framework-os";
 import bindingSchema from "../../../../🔌️plugin/📡️backbone/🔗️binding/🧬️schema/🔣️.json";
-import bindingFixture from "../../../../🔌️plugin/📡️backbone/🔗️binding/🧫️fixtures/🔣️.json";
+import bindingFixture from "../../../../🔌️plugin/📡️backbone/🔗️binding/🧪️tests/🧫️fixtures/🔣️.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json";
 
 const owner = { ...fixture.owner, activationGeneration: BigInt(fixture.owner.activationGeneration) };

@@ -1,0 +1,271 @@
+{
+  "version": 1,
+  "policy": {
+    "protocol": "physical-file-progress-v1",
+    "maxEventBytes": 256,
+    "maxBytes": 8192,
+    "maxEvents": 64,
+    "maxWork": 65536,
+    "maxDurationMs": 30000,
+    "maxSourceBytes": 2097152,
+    "maxSources": 128
+  },
+  "cases": [
+    {
+      "id": "complete",
+      "events": [
+        {
+          "protocol": "physical-file-progress-v1",
+          "sourceIndex": 0,
+          "bytes": 100,
+          "totalBytes": 100,
+          "work": 1,
+          "elapsedMs": 2
+        }
+      ],
+      "valid": true
+    },
+    {
+      "id": "two-sources",
+      "events": [
+        {
+          "protocol": "physical-file-progress-v1",
+          "sourceIndex": 0,
+          "bytes": 0,
+          "totalBytes": 100,
+          "work": 1,
+          "elapsedMs": 2
+        },
+        {
+          "protocol": "physical-file-progress-v1",
+          "sourceIndex": 0,
+          "bytes": 100,
+          "totalBytes": 100,
+          "work": 2,
+          "elapsedMs": 2
+        },
+        {
+          "protocol": "physical-file-progress-v1",
+          "sourceIndex": 1,
+          "bytes": 100,
+          "totalBytes": 100,
+          "work": 3,
+          "elapsedMs": 3
+        }
+      ],
+      "valid": true
+    },
+    {
+      "id": "unknown-member",
+      "events": [
+        {
+          "protocol": "physical-file-progress-v1",
+          "sourceIndex": 0,
+          "bytes": 100,
+          "totalBytes": 100,
+          "work": 1,
+          "elapsedMs": 2,
+          "unknown": true
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "oversized-source",
+      "events": [
+        {
+          "protocol": "physical-file-progress-v1",
+          "sourceIndex": 0,
+          "bytes": 100,
+          "totalBytes": 2097153,
+          "work": 1,
+          "elapsedMs": 2
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "deadline",
+      "events": [
+        {
+          "protocol": "physical-file-progress-v1",
+          "sourceIndex": 0,
+          "bytes": 100,
+          "totalBytes": 100,
+          "work": 1,
+          "elapsedMs": 30001
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "bytes-reverse",
+      "events": [
+        {
+          "protocol": "physical-file-progress-v1",
+          "sourceIndex": 0,
+          "bytes": 100,
+          "totalBytes": 100,
+          "work": 1,
+          "elapsedMs": 2
+        },
+        {
+          "protocol": "physical-file-progress-v1",
+          "sourceIndex": 0,
+          "bytes": 0,
+          "totalBytes": 100,
+          "work": 2,
+          "elapsedMs": 2
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "work-reverse",
+      "events": [
+        {
+          "protocol": "physical-file-progress-v1",
+          "sourceIndex": 0,
+          "bytes": 100,
+          "totalBytes": 100,
+          "work": 1,
+          "elapsedMs": 2
+        },
+        {
+          "protocol": "physical-file-progress-v1",
+          "sourceIndex": 0,
+          "bytes": 100,
+          "totalBytes": 100,
+          "work": 1,
+          "elapsedMs": 2
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "missing-completion",
+      "events": [
+        {
+          "protocol": "physical-file-progress-v1",
+          "sourceIndex": 0,
+          "bytes": 0,
+          "totalBytes": 100,
+          "work": 1,
+          "elapsedMs": 2
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "over-total",
+      "events": [
+        {
+          "protocol": "physical-file-progress-v1",
+          "sourceIndex": 0,
+          "bytes": 101,
+          "totalBytes": 100,
+          "work": 1,
+          "elapsedMs": 2
+        }
+      ],
+      "valid": false
+    }
+  ],
+  "foreignStderr": [
+    "[DEBUG] arbitrary text\n",
+    "error: failure\n",
+    "[DEBUG] {broken}\n",
+    "[DEBUG] {}\n"
+  ],
+  "policyCases": [
+    {
+      "id": "zero-events",
+      "changes": {
+        "maxEvents": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "fractional-work",
+      "changes": {
+        "maxWork": 1.5
+      },
+      "valid": false
+    },
+    {
+      "id": "excess-bytes",
+      "changes": {
+        "maxBytes": 8193
+      },
+      "valid": false
+    },
+    {
+      "id": "unknown",
+      "changes": {
+        "unknown": 1
+      },
+      "valid": false
+    },
+    {
+      "id": "exact-minimum",
+      "changes": {
+        "maxEvents": 1,
+        "maxWork": 1,
+        "maxSources": 1
+      },
+      "valid": true
+    }
+  ],
+  "capacityCases": [
+    {
+      "id": "event-bytes",
+      "changes": {
+        "maxEventBytes": 1
+      },
+      "caseId": "complete",
+      "valid": false
+    },
+    {
+      "id": "stream-bytes",
+      "changes": {
+        "maxBytes": 1
+      },
+      "caseId": "complete",
+      "valid": false
+    },
+    {
+      "id": "events",
+      "changes": {
+        "maxEvents": 1
+      },
+      "caseId": "two-sources",
+      "valid": false
+    },
+    {
+      "id": "work",
+      "changes": {
+        "maxWork": 1
+      },
+      "caseId": "two-sources",
+      "valid": false
+    },
+    {
+      "id": "sources",
+      "changes": {
+        "maxSources": 1
+      },
+      "caseId": "two-sources",
+      "valid": false
+    },
+    {
+      "id": "exact-events-work-sources",
+      "changes": {
+        "maxEvents": 3,
+        "maxWork": 3,
+        "maxSources": 2
+      },
+      "caseId": "two-sources",
+      "valid": true
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "oldPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/⚖️readme-license-owner-authority/🔣️.json",
+  "oldSha256": "d619ffbcab3e4bbde761a130b2efb37d9789ea76e7a75b30f60357d4e78d570a",
+  "fixture": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/⚖️readme-license-owner-authority/🔣️.json",
+  "policyPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🏠️owner-projection-policy/🔣️.json",
+  "policySha256": "82d188a512e0051d2a9435715cd62d851911081b07294f81f64c287fe88e8333",
+  "approvalPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🪪️current-source-approval/🔣️.json",
+  "approvalSha256": "d19e4dfa2ce71305f2c676c443c33b4e283b978dcad05f0dbb1b244309e51064",
+  "sourcePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/README.md",
+  "currentPreimage": {
+    "sha256": "ae1f57ebc83a3ebe6d9ca02b57055ac7706db1b13b84d1294bb473cf48eb8d5d",
+    "size": 15109,
+    "mode": "0644"
+  },
+  "baselinePreimage": {
+    "sha256": "f35bd37e2fb97b232b310eec053d0d93b23b9561eab17f583dd4e35c8756c804",
+    "mode": "0644",
+    "size": 7205
+  },
+  "kind": "current-source-approval",
+  "taxonomyPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+  "taxonomyBefore": "f56b10ee18abef802c8cb84e2cdac5b727c292373d2771672bcca1b3fe7a142d",
+  "taxonomyAfter": "1001b2dfc82ad10dcc03b868eeec4cc7a06feaa7346d5a74001008efb62342ec",
+  "removedFields": [
+    "cohortId",
+    "opaquePrefixesNotTraversed",
+    "sourceCensus",
+    "semanticDirectoryPrecedents",
+    "fixedContracts",
+    "projectionContracts",
+    "knownPublisherBlockers",
+    "publisherVerifications",
+    "cases"
+  ],
+  "entries": 40
+}

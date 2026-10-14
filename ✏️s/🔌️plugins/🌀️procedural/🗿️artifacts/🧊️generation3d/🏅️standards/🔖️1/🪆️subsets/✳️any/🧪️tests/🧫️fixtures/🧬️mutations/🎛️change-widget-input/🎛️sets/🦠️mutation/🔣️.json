@@ -1,0 +1,7 @@
+{
+  "mutation": "changeWidgetInput",
+  "id": "extrude__extrude",
+  "channel": "distance",
+  "type": "number",
+  "value": 0.25
+}

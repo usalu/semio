@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { slash, sourceFiles } from "../../🔍️discovery/📂️source/🟦️.ts";
 import { captureArtifactContract } from "../../📦️artifacts/🏃️contract-capture/🟦️.ts";
 import { artifactPackageInventory } from "../../📦️artifacts/🧭️package-inventory/🟦️.ts";

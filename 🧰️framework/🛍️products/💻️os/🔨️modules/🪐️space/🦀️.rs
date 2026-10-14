@@ -334,7 +334,7 @@ pub fn export_collection_zip(
     read_blob: &dyn Fn(&str) -> Result<Vec<u8>, SpaceZipError>,
 ) -> Result<Vec<u8>, SpaceZipError> {
     let mut writer = semio_framework_deflate::zip_archive::ZipWriter::new();
-    writer.add("collection.collection.pack", &store::os_store::serialization::ArtifactPack::encode_pack(collection))?;
+    writer.add("collection.collection.pack", &pack::snapshot::ArtifactPack::encode_pack(collection))?;
     writer.add("collection.collection.spr", collection_spr)?;
 
     let mut entries: Vec<&CollectionEntry> = collection.entries.iter().collect();
@@ -365,7 +365,7 @@ pub fn import_collection_zip(bytes: &[u8]) -> Result<ImportedCollection, SpaceZi
     let archive = semio_framework_deflate::zip_archive::ZipArchive::parse(bytes)?;
     let collection_pack = archive.read("collection.collection.pack", MAX_COLLECTION_ENTRY_BYTES)?;
     let collection_spr = archive.read("collection.collection.spr", MAX_COLLECTION_ENTRY_BYTES)?;
-    let collection = <CollectionSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&collection_pack).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
+    let collection = <CollectionSnapshot as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::decode_pack(&collection_pack).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
 
     let mut artifacts = Vec::new();
     let mut blobs = Vec::new();
@@ -447,7 +447,7 @@ pub fn real_blob_reader<B: store::BlobStore>(blob_store: &B) -> impl Fn(&str) ->
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub async fn import_document_artifact<P, Mutation>(pack_bytes: &[u8], spr_bytes: &[u8], actor: protocol::ActorId) -> Result<store::ArtifactStore<P, Mutation>, SpaceZipError>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::os_store::serialization::ArtifactPack + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + protocol::Mutation<P> + protocol::OpBinary + protocol::OpText + Send + 'static,
 {
     let parsed = store::os_store::text_format::parse_document_pack::<P, Mutation>(pack_bytes, spr_bytes).await.map_err(|error| SpaceZipError::Pack(error.to_string()))?;

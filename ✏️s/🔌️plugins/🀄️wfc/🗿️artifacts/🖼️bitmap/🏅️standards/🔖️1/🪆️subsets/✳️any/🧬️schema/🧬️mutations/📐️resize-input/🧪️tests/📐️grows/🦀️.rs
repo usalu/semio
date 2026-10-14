@@ -9,11 +9,11 @@ use crate::diff::BitmapDiff;
 use crate::mutations::{inverse_bitmap_mutation, BitmapMutation};
 use crate::schema::snapshot::BitmapSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️resize-input/📐️grows/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️resize-input/📐️grows/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️resize-input/📐️grows/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️resize-input/📐️grows/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️resize-input/📐️grows/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️resize-input/📐️grows/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️resize-input/📐️grows/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️resize-input/📐️grows/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️resize-input/📐️grows/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️resize-input/📐️grows/🎯️outcome/🔣️.json");
 
 fn before() -> BitmapSnapshot {
     crate::standards::v1::subsets::any::io::text::bitmap_json_decode(BEFORE).expect("before snapshot decodes")

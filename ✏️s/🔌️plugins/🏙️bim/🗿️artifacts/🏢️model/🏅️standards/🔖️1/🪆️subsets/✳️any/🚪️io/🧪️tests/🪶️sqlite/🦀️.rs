@@ -23,9 +23,9 @@ fn sqlite_snapshot_bim_original_public_limits_and_cancellation(){
 use crate::{ModelSnapshot,ModelMutation,BIM_MODEL_DOCUMENT_SCHEMA,BIM_MODEL_DIALECT};
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits,SqliteSnapshotControl,export_sqlite_database,import_sqlite_database};
 use store::io_schema::IoPayload;
-fn fixture()->ModelSnapshot{let corpus:serde_json::Value=serde_json::from_str(include_str!("../../🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json")).unwrap();semio_framework_pack_json::from_json_str(&corpus["cases"][0]["snapshot"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("original all-role schema fixture binds")}
-fn payload(snapshot:&ModelSnapshot,encoding:SnapshotEncoding)->IoPayload{match encoding{SnapshotEncoding::Binary=>IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(snapshot)),SnapshotEncoding::Text=>IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(snapshot))}}
-fn decode(payload:&IoPayload)->ModelSnapshot{match payload{IoPayload::Binary(bytes)=><ModelSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).unwrap(),IoPayload::Text(text)=><ModelSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).unwrap()}}
+fn fixture()->ModelSnapshot{let corpus:serde_json::Value=serde_json::from_str(include_str!("../../🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();semio_framework_pack_json::from_json_str(&corpus["cases"][0]["snapshot"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("original all-role schema fixture binds")}
+fn payload(snapshot:&ModelSnapshot,encoding:SnapshotEncoding)->IoPayload{match encoding{SnapshotEncoding::Binary=>IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(snapshot)),SnapshotEncoding::Text=>IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(snapshot))}}
+fn decode(payload:&IoPayload)->ModelSnapshot{match payload{IoPayload::Binary(bytes)=><ModelSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).unwrap(),IoPayload::Text(text)=><ModelSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).unwrap()}}
 fn oracle(bytes:&[u8],mode:&str,word:Option<&str>)->Vec<u8>{use std::{io::Write,process::{Command,Stdio}};let mut command=Command::new("bun");command.arg(concat!(env!("CARGO_MANIFEST_DIR"),"/📜️script.ts")).arg("sqlite-oracle").arg(mode);if let Some(word)=word{command.arg(word);}let mut child=command.stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().expect("registered original Bun SQLite oracle");{let mut input=child.stdin.take().unwrap();input.write_all(bytes).expect("original physical SQLite bytes reach independent oracle");}let result=child.wait_with_output().expect("independent physical SQLite oracle finishes");assert!(result.status.success(),"Bun SQLite oracle: {}",String::from_utf8_lossy(&result.stderr));result.stdout}
 const BIT_COLUMNS:&[(&str,&[usize])]=&[
  ("bim_material",&[7,10,13,16,19,22]),
@@ -91,7 +91,7 @@ fn sqlite_snapshot_bim_original_public_io_owns_current_model(){
  let declaration=crate::standards::v1::subsets::any::io::io();
  let provider=declaration.native.codec.snapshot_sqlite.expect("original BIM public IO has no authored SQLite capability");
  assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<ModelSnapshot>()));
- let counts:serde_json::Value=serde_json::from_str(include_str!("../../🪶️sqlite/📸️snapshot/🧫️fixtures/📏️counts/🔣️.json")).unwrap();
+ let counts:serde_json::Value=serde_json::from_str(include_str!("../../🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/📏️counts/🔣️.json")).unwrap();
  let expected=fixture();
  let roles=expected.__dsl_to_record();assert_eq!(roles.fields.len(),49,"original current model fields");
  for id in 2..49{let Some(semio_framework_dsl_record::FieldValue::Map(values))=roles.get(id)else{panic!("original collection role {id} is absent")};assert!(!values.is_empty(),"current collection role {id} has no independent witness");}
@@ -156,13 +156,13 @@ fn every_word(s:&mut ModelSnapshot,word:f64){
 #[test]
 fn sqlite_snapshot_bim_exact_words_use_original_public_io(){
  let provider=crate::standards::v1::subsets::any::io::io().native.codec.snapshot_sqlite.expect("original BIM public capability");
- let laws:serde_json::Value=serde_json::from_str(include_str!("../../🪶️sqlite/📸️snapshot/🧫️fixtures/🎛️control/🔣️.json")).unwrap();let words=laws["binary64Words"].as_array().expect("neutral ordered binary64 corpus");assert_eq!(words.len(),11);
+ let laws:serde_json::Value=serde_json::from_str(include_str!("../../🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🎛️control/🔣️.json")).unwrap();let words=laws["binary64Words"].as_array().expect("neutral ordered binary64 corpus");assert_eq!(words.len(),11);
  for word in words{let word=word.as_str().expect("neutral word is hexadecimal text");assert_eq!(word.len(),16);let bits=u64::from_str_radix(word,16).expect("neutral binary64 word");
-  let mut expected=fixture();every_word(&mut expected,f64::from_bits(bits));let original=store::os_store::serialization::ArtifactPack::encode_pack(&expected);
+  let mut expected=fixture();every_word(&mut expected,f64::from_bits(bits));let original=pack::snapshot::ArtifactPack::encode_pack(&expected);
   for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let input=payload(&expected,encoding);let database=original_owners::with_decoding(|native_owner|(provider.export)(BIM_MODEL_DOCUMENT_SCHEMA,&BIM_MODEL_DIALECT,&input,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
    let populated=word_cells(&database,bits);let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();let receipt:serde_json::Value=serde_json::from_slice(&oracle(&bytes,"words",Some(word))).expect("independent word query receipt");assert_eq!(receipt["schema"],"bim.sqlite.oracle/v1");assert_eq!(receipt["mode"],"words");assert_eq!(receipt["word"],word);assert_eq!(receipt["tableCount"],93);assert_eq!(receipt["totalRows"],3972);assert_eq!(receipt["populatedWords"],populated as u64);assert_eq!(receipt["checked"],true);assert_eq!(receipt["declaredRoles"],184);assert_eq!(receipt["populatedRoles"],184);let database=import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();assert_eq!(word_cells(&database,bits),populated);
    let output=original_owners::with_encoding(|native_owner|(provider.import)(BIM_MODEL_DOCUMENT_SCHEMA,&BIM_MODEL_DIALECT, &mut Some(database),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
-   assert_eq!(store::os_store::serialization::ArtifactPack::encode_pack(&decode(&output)),original,"{bits:016x} {encoding:?}");
+   assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&decode(&output)),original,"{bits:016x} {encoding:?}");
   }
  }
  println!("[DEBUG] BIM original public IO exact words=11 encodings=2 all authored float roles and integer extrema");

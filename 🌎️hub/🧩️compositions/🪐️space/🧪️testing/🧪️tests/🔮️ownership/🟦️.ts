@@ -2,9 +2,9 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import contract from "../../🧫️fixtures/🔮️ownership/🔣️.json";
+import contract from "../🧫️fixtures/🔮️ownership/🔣️.json";
 import admissionSchema from "../../../../../../✏️s/🔌️plugins/🪐️space/🫀️core/📄️documents/🧬️schema/🔣️.json";
-import vectors from "../../../../../../✏️s/🔌️plugins/🪐️space/🫀️core/📄️documents/🧫️fixtures/🔣️.json";
+import vectors from "../../../../../../✏️s/🔌️plugins/🪐️space/🫀️core/📄️documents/🧪️tests/🧫️fixtures/🔣️.json";
 import { prepareSpaceDocumentSources } from "../../../../../../✏️s/🔌️plugins/🪐️space/🫀️core/📄️documents/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 

@@ -11,7 +11,7 @@ async fn inference_determinism_law() {
     use protocol::Inference;
 
     let text = include_str!("../../🖼️assets/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio");
-    let snapshot = <Block5dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).expect("example dsl parses");
+    let snapshot = <Block5dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("example dsl parses");
     let inference = crate::standards::v1::subsets::any::schema::inferences::Block5dInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::Block5dInference::infer(&snapshot).expect("valid materialized inference fixture"));
     assert!(inference.bounds.bounding_box.is_some(), "example has real grips, so it should have a bounding box");

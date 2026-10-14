@@ -8,7 +8,7 @@ import { exportSqliteDatabase, importSqliteDatabase, type SqliteDatabase, type S
 type FixtureValue = null | number | string | { integer: string } | { hex: string };
 type Fixture = { tables: { name: string; sql: string; rows: { rowid: string; values: FixtureValue[] }[] }[]; query: string; queryResult: unknown[] };
 type ExactIntegerStatement = { safeIntegers(value: boolean): ExactIntegerStatement; values(): SqliteValue[][] };
-const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🏛️relational/🔣️.json", import.meta.url), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🏛️relational/🔣️.json", import.meta.url), "utf8")) as Fixture;
 const target = process.env.CARGO_TARGET_DIR ?? ".🧬semio/🦑️repo/⚡️cache/cargo/target";
 const oracle = process.env.SEMIO_SQLITE_SNAPSHOT_ORACLE ?? resolve(target, "debug", `semio-io-sqlite-snapshot-oracle${process.platform === "win32" ? ".exe" : ""}`);
 

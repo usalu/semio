@@ -3,8 +3,8 @@ import { Buffer } from "node:buffer";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { applyPatch } from "fast-json-patch";
-import publicationFixture from "../../🧫️fixtures/🔣️.json" with { type: "json" };
-import fixture from "../../../../../🏪️store/🧩️composition/🚪️open/🌱️genesis/🧫️fixtures/🔣️.json" with { type: "json" };
+import publicationFixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "../../../../../🏪️store/🧩️composition/🚪️open/🌱️genesis/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 test("private child metadata admits the independent complete identity corpus", () => {
   
   for (const row of fixture.cases) {

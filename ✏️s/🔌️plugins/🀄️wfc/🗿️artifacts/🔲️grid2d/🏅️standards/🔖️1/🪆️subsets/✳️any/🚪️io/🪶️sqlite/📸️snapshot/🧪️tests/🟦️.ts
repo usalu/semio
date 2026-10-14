@@ -1,6 +1,6 @@
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
-import fixture from"../🧫️fixtures/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
 import{grid2dSnapshotToSqliteDatabase,grid2dSnapshotFromSqliteDatabase,WFC_GRID2D_SQLITE_SCHEMA}from"../🟦️.ts";
 import type{Grid2dSnapshot,WfcTileMedia2d,WfcPathSegment,WfcPoint2}from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

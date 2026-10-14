@@ -21,7 +21,7 @@ type Vector = Readonly<{
 
 const root = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
-const vector = JSON.parse(readFileSync(join(root, library, "🧫️fixtures/⚡️production-cache-input-boundary/🔣️.json"), "utf8")) as Vector;
+const vector = JSON.parse(readFileSync(join(root, library, "🧪️tests/🧫️fixtures/⚡️production-cache-input-boundary/🔣️.json"), "utf8")) as Vector;
 
 const nxJson = JSON.parse(readFileSync(join(root, "nx.json"), "utf8"));
 

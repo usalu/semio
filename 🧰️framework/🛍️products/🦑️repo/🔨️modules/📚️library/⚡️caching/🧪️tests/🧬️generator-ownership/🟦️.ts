@@ -6,7 +6,7 @@ import { relativeSourceInputs, readSourceInputContract } from "../../../🕸️d
 
 /** 🧬️ Verifies one physical producer per semantic generator output in the native Nx task graph. */
 export async function testGeneratorOwnership(workspace: string, output: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧬️generator-ownership/🔣️.json"), "utf8"));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧬️generator-ownership/🔣️.json"), "utf8"));
   const root = mkdtempSync(join(output, "generator-ownership-"));
   const put = (path: string, value: string) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), value); };
   const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
@@ -147,7 +147,7 @@ appendFileSync(join(root, ".runs"), name + "\\n");
 /** 🚪️ Verifies authored browser transport ownership against TypeScript's emitted import graph. */
 export async function testBrowserTransportOwnership(workspace: string): Promise<void> {
   const ts = (await import("typescript")).default;
-  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧬️generator-ownership/🔣️.json"), "utf8")).browserTransport;
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧬️generator-ownership/🔣️.json"), "utf8")).browserTransport;
   const taxonomy = JSON.parse(readFileSync(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8"));
   const contract = taxonomy.generatorContracts["wgpu-frame-worker"], owned = new Set(contract.packageGeneration.browserProfile.sourceModulePaths);
   for (const row of fixture.imports) {

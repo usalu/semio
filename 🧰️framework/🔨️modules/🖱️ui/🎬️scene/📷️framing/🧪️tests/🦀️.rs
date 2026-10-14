@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn canvas_framing_shared_fixtures() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let request: Canvas2dFraming = serde_json::from_value(case["request"].clone()).unwrap();
         let result = request.fit(case["viewport"][0].as_f64().unwrap(),case["viewport"][1].as_f64().unwrap());

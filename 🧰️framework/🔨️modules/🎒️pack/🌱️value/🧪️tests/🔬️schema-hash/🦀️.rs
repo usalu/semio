@@ -172,7 +172,7 @@ pub(crate) fn schema_hash_case_spec(name: &str) -> RecordSpec {
 }
 
 pub(crate) fn schema_hash_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../🌱️value/🧫️fixtures/🔑️schema-hash/🔣️.json"))).expect("schema hash fixture")
+    serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../🌱️value/🧪️tests/🧫️fixtures/🔑️schema-hash/🔣️.json"))).expect("schema hash fixture")
 }
 
 pub(crate) fn hex_of(bytes: &[u8]) -> String {

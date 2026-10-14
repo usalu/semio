@@ -1,7 +1,0 @@
-{
-  "mutation": "replace-page-text",
-  "payload": {
-    "index": 1,
-    "text": "a (line)\\with\nunicode 🧬"
-  }
-}

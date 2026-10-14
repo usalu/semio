@@ -3,7 +3,7 @@ use super::*;
 fn bounded_history_set_retains_original_keys_and_each_physical_allocation(){
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧺️set.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🧺️set.json")).unwrap();
     for copy in law["copyBytes"].as_array().unwrap(){
         let ((mut owner,mut taken),source)=observe(||{let mut owner=HistoryFoldSet::new();for key in law["clearedKeys"].as_array().unwrap(){owner.insert(key.as_str().unwrap().to_owned());}(owner,Vec::with_capacity(law["taken"].as_array().unwrap().len()+1))});
         let detached_pointer=owner.get(law["reusedKey"].as_str().unwrap()).unwrap().as_ptr();
@@ -27,7 +27,7 @@ fn bounded_history_set_retains_original_keys_and_each_physical_allocation(){
 fn check<K:Ord,V>(tree:&HistoryFoldIndex<K,V>,root:Option<usize>)->(usize,usize){let Some(root)=root else{return(0,0)};let(left,left_count)=check(tree,tree.nodes[root].left);let(right,right_count)=check(tree,tree.nodes[root].right);assert!(left.abs_diff(right)<=1);assert_eq!(tree.nodes[root].height,1+left.max(right));assert_eq!(tree.nodes[root].count,1+left_count+right_count);(1+left.max(right),1+left_count+right_count)}
 #[test]
 fn bounded_history_owned_index_matches_independent_json_and_preserves_arena_custody(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut owned=HistoryFoldIndex::<String,String>::new();
     let mut independent=serde_json::Map::new();
     for operation in law["operations"].as_array().unwrap(){
@@ -48,7 +48,7 @@ fn bounded_history_owned_index_matches_independent_json_and_preserves_arena_cust
 
 #[test]
 fn bounded_history_owned_index_tail_handoff_preserves_original_key_and_arena_after_every_balance() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut owner = HistoryFoldIndex::<String, String>::new();
     let mut oracle = std::collections::BTreeMap::<String, String>::new();
     for operation in law["operations"].as_array().unwrap() {
@@ -84,7 +84,7 @@ fn bounded_history_owned_index_tail_handoff_preserves_original_key_and_arena_aft
 fn original_fold_index_lazy_entry_preserves_source_and_full_grant_receipts(){
     use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🌱️entry/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🌱️entry/🔣️.json")).unwrap();
     for copy in law["copyGrants"].as_array().unwrap(){
         let (mut owner,source)=observe(||{let mut owner=HistoryFoldIndex::<u64,String>::new();for row in law["sourceRows"].as_array().unwrap(){let mut value=String::with_capacity(law["sourceCapacityBytes"].as_u64().unwrap() as usize);value.push_str(row[1].as_str().unwrap());owner.insert(row[0].as_u64().unwrap(),value);}owner});
         assert_eq!(source.released_bytes,0);let occupied=law["occupiedKey"].as_u64().unwrap();let pointer=owner.get(&occupied).unwrap().as_ptr();let arena=owner.nodes.backing_ptr(0).unwrap();let mut occupied_calls=0;let mut vacant_calls=0;
@@ -112,7 +112,7 @@ fn original_fold_index_lazy_entry_preserves_source_and_full_grant_receipts(){
 fn original_fold_index_admitted_insert_keeps_each_physical_page(){
  use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
  use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️insertion/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🎟️insertion/🔣️.json")).unwrap();
  for copy in law["copyGrants"].as_array().unwrap(){
   let capacity=law["sourceCapacityBytes"].as_u64().unwrap()as usize;
   let (mut owner,source)=observe(||{let mut owner=HistoryFoldIndex::<String,String>::new();for row in law["sourceRows"].as_array().unwrap(){let mut key=String::with_capacity(capacity);key.push_str(row[0].as_str().unwrap());let mut value=String::with_capacity(capacity);value.push_str(row[1].as_str().unwrap());owner.insert(key,value);}owner});
@@ -144,7 +144,7 @@ fn original_fold_index_admitted_insert_keeps_each_physical_page(){
 fn original_fold_index_reuses_each_detached_slot_without_heap_growth(){
  use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
  use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️insertion/🔣️.json")).unwrap();let reuse=&law["reuse"];
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🎟️insertion/🔣️.json")).unwrap();let reuse=&law["reuse"];
  for copy in law["copyGrants"].as_array().unwrap(){
   let (mut owner,source)=observe(||{let mut owner=HistoryFoldIndex::<u64,String>::new();for row in reuse["sourceRows"].as_array().unwrap(){let mut value=String::with_capacity(law["sourceCapacityBytes"].as_u64().unwrap()as usize);value.push_str(row[1].as_str().unwrap());owner.insert(row[0].as_u64().unwrap(),value);}owner});
   let slots=owner.slot_count();let capacity=owner.nodes.capacity();let arena=owner.nodes.backing_ptr(0).unwrap();
@@ -169,7 +169,7 @@ fn original_fold_index_reuses_each_detached_slot_without_heap_growth(){
 fn original_fold_membership_admitted_insert_keeps_each_original_key(){
  use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
  use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️insertion/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🎟️insertion/🔣️.json")).unwrap();
  for copy in law["copyGrants"].as_array().unwrap(){
   let capacity=law["sourceCapacityBytes"].as_u64().unwrap()as usize;
   let (mut set,source)=observe(||{let mut set=HistoryFoldSet::<String>::new();for row in law["sourceRows"].as_array().unwrap(){let mut key=String::with_capacity(capacity);key.push_str(row[0].as_str().unwrap());set.insert(key);}set});let original_pointer=set.first().unwrap().as_ptr();let(mut original,mut admitted,mut freed)=(source.requested_bytes-source.released_bytes,0,0);

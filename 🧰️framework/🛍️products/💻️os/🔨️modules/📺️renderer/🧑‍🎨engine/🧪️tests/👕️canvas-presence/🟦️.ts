@@ -20,7 +20,7 @@ import {
 import { puzzle2dScreenToWorld } from "../../🧱️elements/🖥️Board2dHost/🟦️.tsx";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "👕️canvas-presence", "🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "👕️canvas-presence", "🔣️.json"), "utf8"));
 
 type Rect = readonly [number, number, number, number];
 type Camera = { readonly x: number; readonly y: number; readonly zoom: number };

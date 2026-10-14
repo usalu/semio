@@ -1,0 +1,270 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧩️composition/🧬️schema/📤️native-export/🔣️.json",
+    "properties": [
+      "descriptorCodecId",
+      "factory"
+    ],
+    "required": [
+      "descriptorCodecId",
+      "factory"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/📬️preparation/🧬️schema/🔣️.json",
+    "properties": [
+      "ownerBytes",
+      "ownerItems",
+      "ownerDepth",
+      "turnBytes",
+      "refusedTextBytes",
+      "recognizedMutations"
+    ],
+    "required": [
+      "ownerBytes",
+      "ownerItems",
+      "ownerDepth",
+      "turnBytes",
+      "refusedTextBytes",
+      "recognizedMutations"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🧬️schema/🔣️.json",
+    "properties": [
+      "format",
+      "owner",
+      "nativeMaximumBytes",
+      "bodyGrant",
+      "closeGrant",
+      "maximumCloseTurns",
+      "quoteCancelCheckpoint",
+      "source",
+      "cancelAt",
+      "terminalDropBytes"
+    ],
+    "required": [
+      "format",
+      "owner",
+      "nativeMaximumBytes",
+      "bodyGrant",
+      "closeGrant",
+      "maximumCloseTurns",
+      "quoteCancelCheckpoint",
+      "source",
+      "cancelAt",
+      "terminalDropBytes"
+    ],
+    "title": "CSV Original Typed Receiving Policy"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🧬️schema/🎟️original.json",
+    "properties": [
+      "format",
+      "custody",
+      "nativeMaximumBytes",
+      "bodyGrant",
+      "closeGrant",
+      "deniedCloseGrant",
+      "maximumCloseTurns",
+      "observerContinuation"
+    ],
+    "required": [
+      "format",
+      "custody",
+      "nativeMaximumBytes",
+      "bodyGrant",
+      "closeGrant",
+      "deniedCloseGrant",
+      "maximumCloseTurns",
+      "observerContinuation"
+    ],
+    "title": "Original Tabular Native Caller Policy"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🧬️schema/🎟️original.json",
+    "properties": [
+      "format",
+      "custody",
+      "nativeMaximumBytes",
+      "bodyGrant",
+      "closeGrant",
+      "deniedCloseGrant",
+      "maximumCloseTurns",
+      "observerContinuation"
+    ],
+    "required": [
+      "format",
+      "custody",
+      "nativeMaximumBytes",
+      "bodyGrant",
+      "closeGrant",
+      "deniedCloseGrant",
+      "maximumCloseTurns",
+      "observerContinuation"
+    ],
+    "title": "Original Tabular Native Caller Policy"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🫀️core/🧬️schema/🔣️.json",
+    "properties": [
+      "schema",
+      "sharedPackage",
+      "artifacts",
+      "sharedSources",
+      "specificIndexOwner",
+      "foreignLocks"
+    ],
+    "required": [
+      "schema",
+      "sharedPackage",
+      "artifacts",
+      "sharedSources",
+      "specificIndexOwner",
+      "foreignLocks"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏭️bridge/🧬️schema/🔣️.json",
+    "properties": [
+      "artifact",
+      "producedBy",
+      "refusedArtifacts",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "required": [
+      "artifact",
+      "producedBy",
+      "refusedArtifacts",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏭️bridge/🧬️schema/🔣️.json",
+    "properties": [
+      "artifact",
+      "producedBy",
+      "refusedArtifacts",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "required": [
+      "artifact",
+      "producedBy",
+      "refusedArtifacts",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏭️bridge/🧬️schema/🔣️.json",
+    "properties": [
+      "refusedArtifacts",
+      "artifact",
+      "producedBy",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "required": [
+      "artifact",
+      "producedBy",
+      "refusedArtifacts",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏭️bridge/🧬️schema/🔣️.json",
+    "properties": [
+      "refusedArtifacts",
+      "artifact",
+      "producedBy",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "required": [
+      "artifact",
+      "producedBy",
+      "refusedArtifacts",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏭️bridge/🧬️schema/🔣️.json",
+    "properties": [
+      "refusedArtifacts",
+      "artifact",
+      "producedBy",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "required": [
+      "artifact",
+      "producedBy",
+      "refusedArtifacts",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏭️bridge/🧬️schema/🔣️.json",
+    "properties": [
+      "refusedArtifacts",
+      "artifact",
+      "producedBy",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "required": [
+      "artifact",
+      "producedBy",
+      "refusedArtifacts",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "title": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏭️bridge/🧬️schema/🔣️.json",
+    "properties": [
+      "refusedArtifacts",
+      "artifact",
+      "producedBy",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "required": [
+      "artifact",
+      "producedBy",
+      "refusedArtifacts",
+      "excludedOwnerSegments",
+      "aggregates",
+      "coordinates"
+    ],
+    "title": null
+  }
+]

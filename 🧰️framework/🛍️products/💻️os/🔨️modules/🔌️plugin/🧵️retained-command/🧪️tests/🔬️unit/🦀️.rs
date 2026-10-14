@@ -1,7 +1,7 @@
 #[cfg(test)] use crate::tool_contract::reducer_fault_of_detail;
 use super::*;
 
-const CHECKPOINT_FIXTURE_JSON: &str = include_str!("../../🧫️fixtures/📸️artifact-command-checkpoint.json");
+const CHECKPOINT_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/📸️artifact-command-checkpoint.json");
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -126,7 +126,7 @@ fn checkpoint_decode_rejects_context_workspace_and_reserved_byte_drift() {
 }
 
 //#region 🧮️WorkCapacity
-const WORK_CAPACITY_FIXTURE_JSON: &str = include_str!("../../🧫️fixtures/🧮️work-capacity.json");
+const WORK_CAPACITY_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/🧮️work-capacity.json");
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

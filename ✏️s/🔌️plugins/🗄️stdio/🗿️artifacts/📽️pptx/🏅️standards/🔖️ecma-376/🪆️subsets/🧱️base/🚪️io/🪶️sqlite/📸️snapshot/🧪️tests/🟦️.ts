@@ -10,20 +10,20 @@ import schema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import xmlSchema from "../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json";
 import { parsePptxSnapshot, type PptxSnapshot } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { PPTX_SQLITE_SCHEMA, pptxSnapshotFromSqliteDatabase, pptxSnapshotToSqliteDatabase } from "../../../../../../../../🟦️.ts";
-import authority from "../🧫️fixtures/🧭️authority/🔣️.json";
+import authority from "./🧫️fixtures/🧭️authority/🔣️.json";
 
-import fixture from "../🧫️fixtures/🔣️.json";
-import constructionFidelity from "../../../../🧫️fixtures/🏗️typed-construction-fidelity/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+import constructionFidelity from "../../../../🧪️tests/🧫️fixtures/🏗️typed-construction-fidelity/🔣️.json";
 
-import literalNative from "../../../../🧬️schema/📸️snapshot/🧫️fixtures/🧩️native-literals/🔣️.json";
+import literalNative from "../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧩️native-literals/🔣️.json";
 
 import { parseXmlDocument } from "../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
-import profiles from "../../../../🧬️schema/📸️snapshot/🧫️fixtures/🛡️profile/🔣️.json";
+import profiles from "../../../../🧪️tests/🧫️fixtures/📸️snapshot/🛡️profile/🔣️.json";
 
 import * as profileOwner from "../../../../../../../../🟦️.ts";
-import paidOwner from "../🧫️fixtures/💰️backing/🔣️.json";
+import paidOwner from "./🧫️fixtures/💰️backing/🔣️.json";
 
-import requestSettlement from "../🧫️fixtures/💰️backing/🔬️requests/🔣️.json";
+import requestSettlement from "./🧫️fixtures/💰️backing/🔬️requests/🔣️.json";
 
 import { createHash } from 'node:crypto';
 import definition from "../../../../../../../../📜️artifact-definition.json";
@@ -202,8 +202,8 @@ test('PPTX full request settlement preserves independently inspected enclosing o
     expect(await pptxSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(sql.serialize())))).toEqual(input);
   } finally { sql.close(); }
 });
-import retitlesBefore from "../../../../🧫️fixtures/🧬️history-snapshots/🏷️retitles/📸️snapshot/⬅️before/🔣️.json";
-import retitlesAfter from "../../../../🧫️fixtures/🧬️history-snapshots/🏷️retitles/📸️snapshot/➡️after/🔣️.json";
+import retitlesBefore from "../../../../🧪️tests/🧫️fixtures/🧬️history-snapshots/🏷️retitles/📸️snapshot/⬅️before/🔣️.json";
+import retitlesAfter from "../../../../🧪️tests/🧫️fixtures/🧬️history-snapshots/🏷️retitles/📸️snapshot/➡️after/🔣️.json";
 
 test('PPTX authored retitles history preserves title, picture and transform through physical SQLite', async () => {
   const ajv = new Ajv({strict: false}).addSchema(xmlSchema);
@@ -225,7 +225,7 @@ test('PPTX authored retitles history preserves title, picture and transform thro
   expect(retitlesBefore.opc).toEqual(retitlesAfter.opc);
 });
 
-import strictInitial from "../../../../🧬️schema/📸️snapshot/🧫️fixtures/🔒️strict-initial/🔣️.json";
+import strictInitial from "../../../../🧪️tests/🧫️fixtures/📸️snapshot/🔒️strict-initial/🔣️.json";
 
 
 test('PPTX strict initial contract retains nine parts and all five resolved relationship identities', () => {

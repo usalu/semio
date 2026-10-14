@@ -1,0 +1,78 @@
+{
+  "contract": "host.original-issued-grant/v1",
+  "input": {
+    "operation": 71,
+    "generation": 3,
+    "epoch": 19,
+    "grant": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 0,
+      "maximumCapacityBytes": 128,
+      "maximumReleaseBytes": 97,
+      "maximumDepth": 8
+    }
+  },
+  "missing": {
+    "sameOwner": true,
+    "heapBytes": 0,
+    "issued": false,
+    "policyMinted": false,
+    "semantics": false
+  },
+  "receiving": {
+    "sameInput": true,
+    "items": 1,
+    "copiedBytes": 0,
+    "capacityBytes": 128,
+    "releaseBytes": 97,
+    "depth": 8
+  },
+  "replayMissing": false,
+  "closeMissing": false,
+  "receiverCarrier": "IssuedShardTurn.original_input()",
+  "dispatch": {
+    "owner": "OriginalShardDispatch.decision",
+    "refusal": "InvalidRetainedTurn",
+    "originalDecisionPreserved": true,
+    "sourceEnvelopesBorrowed": true,
+    "partialWirePublished": false,
+    "nextEpochIssued": false,
+    "cursor": 0,
+    "writes": 0,
+    "heapBytes": 0,
+    "rendererCarrier": "KernelOutcome.ProgramFault.frame",
+    "originalTypedCause": true,
+    "stringified": false,
+    "inputAccessor": "TurnGrant.original_input()",
+    "shellCarrier": "ShellChromeBuildState.refused_frame_fault",
+    "surfaceCarrier": "ShellSurfaceFault.frame",
+    "shellTerminalOnFrameRefusal": true,
+    "grantWireAuthorityCount": 1,
+    "overrideCarrier": "ShardResourceBudget",
+    "overrideAuthorityAccessible": false,
+    "resourcesBefore": {
+      "fuel": 2048,
+      "wallMs": 25,
+      "memoryBytes": 67108864,
+      "uiNodes": 2048,
+      "mailboxLen": 128,
+      "maxEffects": 8,
+      "maxPatchBytes": 32768,
+      "maxFrames": 8
+    },
+    "resourcesAfter": {
+      "fuel": 64,
+      "wallMs": 3,
+      "memoryBytes": 4194304,
+      "uiNodes": 64,
+      "mailboxLen": 4,
+      "maxEffects": 1,
+      "maxPatchBytes": 64,
+      "maxFrames": 1
+    },
+    "singleAuthorityWire": {
+      "byteLength": 112,
+      "hex": "02470000000000000040000000000000000300000000004000000000004000000004000100000040000000010000004700000000000000030000000000000013000000000000000100000000000000000000000000000080000000000000006100000000000000080000000000000000"
+    }
+  }
+}

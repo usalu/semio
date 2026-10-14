@@ -11,7 +11,7 @@ fn check_denied(result:Result<RetainedCloneStep,crate::ValueError>,heap:(usize,u
 
 #[test]
 fn original_scalar_clone_requires_original_authority(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for encoded in law["values"].as_array().unwrap(){let value:u64=encoded.as_str().unwrap().parse().unwrap();for copy in law["copyGrants"].as_array().unwrap(){let copy=copy.as_u64().unwrap()as usize;for cancelled in [None,Some(0),Some(1)]{
         let demand=RetainedCloneSource::<u64>::owned_constructor_demand::<()>();let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:RetainedCloneSource::<u64>::constructor_copy_bytes(),maximum_capacity_bytes:demand.capacity_bytes,maximum_depth:demand.depth,..Default::default()};let(result,heap)=observe(||RetainedCloneSource::admit_owned(value,(),grant));let(mut source,receipt)=result.map_err(|(error,_,_)|error).unwrap();assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));let(mut born,mut freed)=heap;let original=source.borrow().get()as *const u64;
         let(mut cursor,heap)=observe(u64::retained_clone_cursor);assert_eq!(heap,(0,0));let normal=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:law["payloadBytes"].as_u64().unwrap()as usize,maximum_depth:law["depth"].as_u64().unwrap()as usize,..Default::default()};

@@ -14,7 +14,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import laws from "../../🧫️fixtures/🖼️wgpu-raster-witness/🔣️.json";
+import laws from "../🧫️fixtures/🖼️wgpu-raster-witness/🔣️.json";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const engineRoot = resolve(suiteRoot, "../..");
@@ -141,6 +141,6 @@ describe("wgpu raster operation witness lifecycle", () => {
   });
 
   it("shares its fixture with the Rust law, byte for byte", () => {
-    expect(source("rustLaw")).toContain('include_str!("../../🧫️fixtures/🖼️raster-witness-lifecycle/🔣️.json")');
+    expect(source("rustLaw")).toContain('🧪️tests/🧫️fixtures/🖼️raster-witness-lifecycle/🔣️.json")');
   });
 });

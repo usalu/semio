@@ -1,0 +1,9 @@
+{
+  "mutation": "createSkin",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "position": 0
+    }
+  }
+}

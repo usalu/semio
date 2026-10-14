@@ -2,7 +2,7 @@ use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{Retai
 use std::mem::ManuallyDrop;
 
 #[derive(Clone, Copy)]
-pub(crate) struct MountedChildGroupIdentitySource<'a> { parent: &'a str, actor: &'a str, revision: [u8; 32], instance: u32, operation: u64 }
+pub(crate) struct MountedChildGroupIdentitySource<'a> { pub(crate) parent: &'a str, pub(crate) actor: &'a str, pub(crate) revision: [u8; 32], pub(crate) instance: u32, pub(crate) operation: u64 }
 
 pub(crate) struct MountedChildGroupIdentityIssuer {
     hash: Option<semio_framework_hash::Sha256>,

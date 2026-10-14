@@ -2,8 +2,8 @@ import {test,expect} from "bun:test";
 import Ajv from "ajv/dist/2020";
 import fundingSchema from "../../../../🌱️value/🧬️retained-clone/🧬️contract/🧬️schema/🔣️.json";
 import {PNG} from "pngjs";
-import cases from "../🧫️fixtures/🔣️.json";
-import invalid from "../🧫️fixtures/⚠️invalid/🔣️.json";
+import cases from "./🧫️fixtures/🔣️.json";
+import invalid from "./🧫️fixtures/⚠️invalid/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {ImageDecodeJob,decodeImageSource,type ImageDecodeInput} from "../🟦️.ts";
 const funded={maximumItems:4096,maximumCopyBytes:536870912,maximumCapacityBytes:536870912,maximumReleaseBytes:0,maximumDepth:1};
@@ -52,8 +52,8 @@ test("source caps admit exact boundaries and cancellation covers each live phase
  console.info("[DEBUG] Exact source/binary/pixel caps and header/validation/decoding/PNG cancellation verified");
 });
 
-import funding from "../🧫️fixtures/🎟️funding.json";
-import jpegCases from "../../../📸️jpeg/📥️decode/🧫️fixtures/🔣️.json";
+import funding from "./🧫️fixtures/🎟️funding.json";
+import jpegCases from "../../../📸️jpeg/📥️decode/🧪️tests/🧫️fixtures/🔣️.json";
 import sharp from "sharp";
 test("Original PNG and JPEG composition denies independent axes and preserves cancellation custody",async()=>{
  const source=cases[0]!.input;

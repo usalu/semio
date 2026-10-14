@@ -4,7 +4,7 @@ import {join} from "node:path";
 import Ajv2020 from "ajv/dist/2020.js";
 import {applyPatch} from "fast-json-patch";
 test("original Store projection corpus preserves the exact issuer through independent patch replay",()=>{
- const fixture=JSON.parse(readFileSync(join(import.meta.dir,"../🧫️fixtures/🔣️.json"),"utf8"));
+ const fixture=JSON.parse(readFileSync(join(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));
  const schema=JSON.parse(readFileSync(join(import.meta.dir,"../🧬️schema/🔣️.json"),"utf8"));
  const valid=new Ajv2020({strict:true,allErrors:true}).compile(schema);
  expect(valid(fixture),JSON.stringify(valid.errors)).toBe(true);

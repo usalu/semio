@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { applyPatch, type Operation } from "fast-json-patch";
-import corpus from "../../🧫️fixtures/🔣️.json" with { type: "json" };
-import pageCeiling from "../../🧫️fixtures/📏️owner-page-ceiling.json" with { type: "json" };
-import releaseAuthority from "../../../🧬️retained-clone/🧫️fixtures/📏️release-authority/🔣️.json" with { type: "json" };
+import corpus from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import pageCeiling from "../🧫️fixtures/📏️owner-page-ceiling.json" with { type: "json" };
+import releaseAuthority from "../../../🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority/🔣️.json" with { type: "json" };
 import { test } from "bun:test";
 
 test("owner payload page ceiling preserves independently patched order and exact UTF-8 input", () => {
@@ -41,6 +41,11 @@ export function testPagedListOwnership(): void {
   }
 }
 
+
+test("original paged list ownership preserves JSON Patch order and signed reservation custody", () => {
+  testPagedListOwnership();
+  console.log("[DEBUG] Original PagedList JSONPatch ordered reservation and retained backing helper passed");
+});
 
 test("retained release authority keeps physical ownership distinct from copied input", () => {
   const extent = new Uint8Array(releaseAuthority.physicalCursorBytes);

@@ -11,6 +11,14 @@ impl<K,V> HistoryFoldIndexInsert<K,V>{
  pub fn return_original(&mut self,grant:RetainedCloneGrant)->Option<((K,V),RetainedCloneProgress)>{if grant.maximum_items==0||grant.maximum_depth==0{return None}self.source.take().map(|source|(source,RetainedCloneProgress{copied_items:1,..Default::default()}))}
 }
 impl<K:Ord,V> HistoryFoldIndexInsert<K,V>{
+ /// 🪙️ Quotes the same retained comparison, page admission or vacant-rank commit selected by the incoming body.
+ pub fn next_demands<W>(&self,index:&HistoryFoldIndex<K,W>,body:usize,compare:impl FnOnce(&K,&K,usize,usize)->Result<semio_framework_value::RetirementDemand,ValueError>)->Result<semio_framework_value::RetirementDemand,ValueError>{
+  use semio_framework_value::RetirementDemand;
+  if self.source.is_none(){return Ok(Default::default())}
+  if self.epoch!=Some(index.mutation_epoch){return Ok(RetirementDemand{depth:1,..Default::default()})}
+  if !self.vacant{let Some(slot)=self.next else{return Ok(RetirementDemand{depth:1,..Default::default()})};let(candidate,_)=index.nodes[slot].entry.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original insertion quote lost its live row"))?;let mut d=compare(&self.source.as_ref().unwrap().0,candidate,self.position,body)?;d.depth=d.depth.max(index.next_slot_depth_demand(slot)?);return Ok(d)}
+  Ok(RetirementDemand{capacity_bytes:self.capacity_demand(index)?,depth:self.depth_demand(index)?,..Default::default()})
+ }
  /// 🔎️ Examines one paid key chunk or admits one real backing page while retaining the whole source.
  pub fn step<W>(&mut self,index:&mut HistoryFoldIndex<K,W>,grant:RetainedCloneGrant,compare:impl FnOnce(&K,&K,usize,RetainedCloneGrant)->Result<(Option<Ordering>,usize,RetainedCloneProgress),ValueError>)->Result<(bool,RetainedCloneProgress),ValueError>{
   let empty=RetainedCloneProgress::default();if self.source.is_none(){return Ok((true,empty))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok((false,empty))}let item=RetainedCloneProgress{copied_items:1,..empty};

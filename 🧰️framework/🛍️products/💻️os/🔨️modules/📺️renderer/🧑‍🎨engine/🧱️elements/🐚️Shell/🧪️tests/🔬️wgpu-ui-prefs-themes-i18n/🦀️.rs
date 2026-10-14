@@ -57,7 +57,7 @@ fn canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript(
         events: Vec<Value>,
         expected: UiPreferences,
     }
-    let fixture: Fixture = serde_json::from_str(include_str!("../../../../🎚️UiPreferences/🧫️fixtures/🎚️canonical-os-ui-preferences/🔁️event-replay.json")).expect("shared event fixture");
+    let fixture: Fixture = serde_json::from_str(include_str!("../../../../🎚️UiPreferences/🧪️tests/🧫️fixtures/🎚️canonical-os-ui-preferences/🔁️event-replay.json")).expect("shared event fixture");
     let events = fixture.events.iter().map(|event| decode_ui_preferences_config_mutation_json(&event.to_string()).expect("canonical mutation JSON")).collect();
     let encoded = encode_ui_preferences_event_log(&UiPreferencesEventLog { version: fixture.version, events });
     let retained = decode_ui_preferences_event_log(&encoded).expect("native event-store boundary round trip");

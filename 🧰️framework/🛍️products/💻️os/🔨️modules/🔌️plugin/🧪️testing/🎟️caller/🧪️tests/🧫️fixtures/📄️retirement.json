@@ -1,0 +1,28 @@
+{
+  "blockBytes": 4096,
+  "sourceBytes": [
+    1,
+    2,
+    3
+  ],
+  "cases": [
+    {
+      "id": "zero",
+      "items": 0,
+      "releaseBytes": 0,
+      "releasedBytes": 0
+    },
+    {
+      "id": "short",
+      "items": 1,
+      "releaseBytes": 4095,
+      "releasedBytes": 0
+    },
+    {
+      "id": "exact",
+      "items": 1,
+      "releaseBytes": 4096,
+      "releasedBytes": 4096
+    }
+  ]
+}

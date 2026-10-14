@@ -7,7 +7,7 @@ use super::*;
 impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
     /// 🧪️ Borrows original completed-output ownership and refusal observations without widening production visibility.
     #[cfg(test)]
-    fn test_original_owned_emit_observation(&self,operation:u64)->Option<(usize,usize,usize,bool,bool)>{
+    pub(crate) fn test_original_owned_emit_observation(&self,operation:u64)->Option<(usize,usize,usize,bool,bool)>{
         let mounted=self.tool_operations.get(operation)?;
         let ArtifactToolCompletionValue::Emit(Ok(emit),_)=mounted.publication.as_ref()? else{return None;};
         Some((emit.artifact_mutations.len(),emit.owned_child_emits.len(),emit.owned_child_emits.as_ptr() as usize,mounted.terminal_fault.is_some(),mounted.cancellation_lease.as_ref()?.token.is_cancelled_now()))
@@ -190,8 +190,8 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
         mounted_child_group_receipt::mounted_nested_retirement_demand(owner.retirement_demands(body)?,1)
     }
     pub(crate) fn private_child_groups_terminal_is_empty(&self)->bool{self.private_child_groups.is_empty()&&self.private_child_groups.empty_backing_byte_demand()==Some(0)}
-    pub(crate) fn close_private_child_group_step(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,Fault>{
-        let demand=self.private_child_group_close_demands(grant.maximum_copy_bytes).map_err(plugin_retirement_fault)?;
+    pub(crate) fn close_private_child_group_step(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,crate::PluginLifecycleFailure>{
+        let demand=self.private_child_group_close_demands(grant.maximum_copy_bytes)?;
         if self.private_child_groups_terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()});}
         if !plugin_grant_funds(demand,grant){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});}
         let Some((_,operation))=self.private_child_groups.next_id_from(0)else{
@@ -202,16 +202,16 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
         };
         self.close_private_child_group_operation_step(operation,grant)
     }
-    pub(crate) fn close_private_child_group_operation_step(&mut self,operation:u64,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,Fault>{
+    pub(crate) fn close_private_child_group_operation_step(&mut self,operation:u64,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,crate::PluginLifecycleFailure>{
         let Some(original)=self.private_child_groups.get(operation)else{return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()});};
         let terminal=original.terminal_is_empty();
-        let demand=self.private_child_group_operation_close_demands(operation,grant.maximum_copy_bytes).map_err(plugin_retirement_fault)?;
+        let demand=self.private_child_group_operation_close_demands(operation,grant.maximum_copy_bytes)?;
         if !plugin_grant_funds(demand,grant){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});}
         if terminal{drop(self.private_child_groups.remove(operation));return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}});}
         let owner=self.private_child_groups.get_mut(operation).ok_or_else(||plugin_sdk_fault("private group changed during its exact bounded close"))?;
         let child_grant=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
         let step=owner.close_step(&mut self.store,&mut self.children,self.composition.ownership_graph_mut(),&self.child_content_root,child_grant)?;
-        Ok(step.admit(child_grant,owner.terminal_is_empty()))
+        Ok(step.admit(child_grant,owner.terminal_is_empty())?)
     }
 
 }

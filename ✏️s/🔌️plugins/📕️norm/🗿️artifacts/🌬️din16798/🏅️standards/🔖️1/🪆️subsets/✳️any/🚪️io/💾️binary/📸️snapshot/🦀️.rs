@@ -11,12 +11,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `Document` to its binary pack form.
 pub fn encode(document: &Din16798Snapshot) -> Vec<u8> {
-    store::os_store::serialization::ArtifactPack::encode_pack(document)
+    pack::snapshot::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Document` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<Din16798Snapshot, PackError> {
-    <Din16798Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)
+    <Din16798Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -35,10 +35,10 @@ use crate::{VentSystemDocument, ZoneDocument};
 use framework_schema::ArtifactSchema;
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 pub fn encode_din16798_pack(snapshot: &Din16798Snapshot) -> Vec<u8> {
-    store::os_store::serialization::ArtifactPack::encode_pack(snapshot)
+    pack::snapshot::ArtifactPack::encode_pack(snapshot)
 }
 pub fn decode_din16798_pack(bytes: &[u8]) -> Result<Din16798Snapshot, String> {
-    <Din16798Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
+    <Din16798Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
 }
 }
 pub use native_snapshot_codec::*;

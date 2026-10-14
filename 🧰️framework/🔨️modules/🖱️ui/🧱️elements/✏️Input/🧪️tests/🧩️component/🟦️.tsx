@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { Input } from "../../🟦️.tsx";
 import { Textarea } from "../../../🔤️Textarea/🟦️.tsx";
-import law from "../../🧫️fixtures/⌨️draft-lifecycle/🔣️.json";
+import law from "../🧫️fixtures/⌨️draft-lifecycle/🔣️.json";
 
 afterEach(cleanup);
 

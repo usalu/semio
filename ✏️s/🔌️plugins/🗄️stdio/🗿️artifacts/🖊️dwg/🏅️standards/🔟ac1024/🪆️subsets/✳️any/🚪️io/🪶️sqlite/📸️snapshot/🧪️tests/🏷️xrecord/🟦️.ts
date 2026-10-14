@@ -7,8 +7,8 @@ import { dwgProjectValues,dwgReconstructValues } from "../../🏷️xrecord/🟦
 import { dwgProjectColor,dwgReconstructColor } from "../../🎨️color/🟦️.ts";
 import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
-import fixture from "../../🧫️fixtures/🏷️xrecord/🔣️.json";
-import encodingFixture from "../../🧫️fixtures/📏️encoding.json";
+import fixture from "../🧫️fixtures/🏷️xrecord/🔣️.json";
+import encodingFixture from "../🧫️fixtures/📏️encoding.json";
 
 const values:DwgXRecordValue[]=[{kind:"string",groupCode:-32768,value:"same\0text"},{kind:"real",groupCode:40,value:{bits:0x7ff0000000000001n}},{kind:"boolean",groupCode:290,value:true},{kind:"integer8",groupCode:280,value:-128},{kind:"integer16",groupCode:70,value:-32768},{kind:"integer32",groupCode:90,value:-2147483648},{kind:"integer64",groupCode:160,value:-9223372036854775808n},{kind:"point3d",groupCode:10,value:[{bits:0x8000000000000000n},{bits:0xfff0000000000000n},{bits:0x7ff8123456789abcn}]},{kind:"binary",groupCode:310,octets:[0,255,17,0]},{kind:"handle",groupCode:5,value:18446744073709551615n},{kind:"objectId",groupCode:330,absoluteValue:9007199254740993n}];
 const colors:DwgComplexColor[]=[{index:65535,value:{kind:"none"}},{index:1,value:{kind:"byLayer"},name:""},{index:2,value:{kind:"byBlock"},bookName:""},{index:3,value:{kind:"byColor",red:0,green:255,blue:17},name:"RGB",bookName:"book"},{index:4,value:{kind:"byAci",index:65535}},{index:5,value:{kind:"byPen",index:255}},{index:6,value:{kind:"foreground"}},{index:7,value:{kind:"layerOff"}},{index:8,value:{kind:"layerFrozen"}}];

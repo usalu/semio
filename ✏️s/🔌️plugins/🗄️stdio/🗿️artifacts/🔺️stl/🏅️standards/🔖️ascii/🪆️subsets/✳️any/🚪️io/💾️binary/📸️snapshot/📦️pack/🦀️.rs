@@ -12,11 +12,14 @@ pub(crate) struct Snapshot{schema:String,solid_name:String,triangles:Vec<Facet>}
 impl From<&StlSnapshot> for Snapshot{fn from(value:&StlSnapshot)->Self{Self{schema:value.schema.clone(),solid_name:value.solid_name.clone(),triangles:value.triangles.iter().map(|value|Facet{normal:value.normal.into(),vertex0:value.vertices[0].into(),vertex1:value.vertices[1].into(),vertex2:value.vertices[2].into()}).collect()}}}
 impl From<Snapshot> for StlSnapshot{fn from(value:Snapshot)->Self{Self{schema:value.schema,solid_name:value.solid_name,triangles:value.triangles.into_iter().map(|value|StlTriangle{normal:value.normal.into(),vertices:[value.vertex0.into(),value.vertex1.into(),value.vertex2.into()]}).collect()}}}
 
-impl store::os_store::serialization::ArtifactPack for StlSnapshot{
- fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())}
+impl pack::snapshot::ArtifactPack for StlSnapshot{
+ 
  fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{let snapshot=Snapshot::from(self);let inner=store::pack_rt::encode_document(&Snapshot::__dsl_spec(),&snapshot.__dsl_to_record(),options)?;let envelope=store::semio_format::SemioEnvelope::from_envelope_id("stdio.stl",store::semio_format::Component::Pack,1).map_err(|error|store::PackError::from(error.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&inner))}
  fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,inner)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::from(error.into_value_error()))?;if !envelope.matches_identity("stdio.stl",store::semio_format::Component::Pack,1){return Err(store::PackError::from(ValueError::new(ValueRefusalKind::InvalidValue, "owned snapshot pack identity differs")));}let(record,_)=store::pack_rt::decode_document(&inner,&Snapshot::__dsl_spec(),options)?;Snapshot::__dsl_from_record(&record).map(Into::into).map_err(store::os_store::serialization::text_error_to_pack_error)}
  fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Snapshot::__dsl_spec())}
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for StlSnapshot {
+fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())}
 }
 
 pub(crate)fn spec()->semio_framework_dsl_record::RecordSpec{Snapshot::__dsl_spec()}

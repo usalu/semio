@@ -1,7 +1,8 @@
 //! 🧩️ Borrowed Puzzle2d native roles admit the complete authored board and catalog before ownership.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{invalid,specificity,Puzzle2dSnapshot};
 use crate::{Puzzle2dNodeAnchor,Puzzle2dCompatSpecificity};
-use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_dsl_record::{DslField,RecordValue as R,FieldValue as F};
 use semio_framework_value::{ValueError,ValueRefusalKind,NativeDecodeControl as N};
 type Result<T>=std::result::Result<T,ValueError>;

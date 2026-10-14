@@ -13,7 +13,7 @@ type PublicationCase = {
   expected: { construction: "ready" | "invalid-limits"; results: PublicationObservation[] };
 };
 type PublicationCorpus = { version: 1; tokenNodeCeiling: 4096; cases: PublicationCase[] };
-const corpus: PublicationCorpus = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🔣️.json"), "utf8"));
+const corpus: PublicationCorpus = JSON.parse(readFileSync(resolve(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8"));
 const independent = new Ajv({ strict: true });
 
 test("publication admission corpus is closed under independent schema validation", () => {

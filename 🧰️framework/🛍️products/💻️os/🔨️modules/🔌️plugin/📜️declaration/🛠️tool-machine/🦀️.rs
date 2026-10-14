@@ -18,16 +18,16 @@ use semio_framework_tool_machine::GestureTool;
 pub struct GestureSlot<M> {
     window: String,
     base_revision: String,
-    state: std::sync::Mutex<GestureSlotState<M>>,
+    pub(crate) state: std::sync::Mutex<GestureSlotState<M>>,
 }
 
 #[derive(semio_framework_value::RetireOwned)]
-struct GestureSlotState<M> {
+pub(crate) struct GestureSlotState<M> {
     admitted: Option<GestureState<M>>,
     closed: Option<String>,
     decided: Option<Option<GestureState<M>>>,
-    closing: Option<String>,
-    driven: bool,
+    pub(crate) closing: Option<String>,
+    pub(crate) driven: bool,
 }
 
 /// 📮️ What a driven slot hands the runtime at publication: the gesture it was admitted on, the gesture it decided (when it

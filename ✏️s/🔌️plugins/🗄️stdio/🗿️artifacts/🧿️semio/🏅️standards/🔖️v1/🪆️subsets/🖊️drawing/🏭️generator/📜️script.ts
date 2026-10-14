@@ -37,7 +37,7 @@ import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework
 //#region 🧭️Paths
 const here = dirname(Bun.fileURLToPath(import.meta.url));
 const subset = join(here, "..");
-const fixtures = join(subset, "🧫️fixtures");
+const fixtures = join(subset, "🧪️tests/🧫️fixtures");
 const engine = join(here, "🔁️codec", "📦️packages", "🦀️rust");
 const FIXTURES = [
   { kind: "change-stroke-color", directory: "🖌️change-stroke" },
@@ -135,7 +135,7 @@ const manifests = (): void => {
 function carrier(): number {
   const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
   if (build.status !== 0) return build.status ?? 1;
-  return spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
+  return spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧪️tests/🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
 }
 //#endregion 🧩️Carrier
 

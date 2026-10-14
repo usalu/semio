@@ -367,15 +367,15 @@ mod canonical_byte_authority {
 
     fn accepted() -> [(&'static str, &'static [u8]); 9] {
         [
-            ("direct-rgb24-padding-gap-trailer", include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp")),
-            ("indexed-rgb1-duplicate-palette", include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb1-duplicate-palette.bmp")),
-            ("indexed-rgb4-duplicate-palette", include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb4-duplicate-palette.bmp")),
-            ("indexed-rgb8-duplicate-palette", include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb8-duplicate-palette.bmp")),
-            ("direct-rgb16-555", include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb16-555.bmp")),
-            ("direct-rgb32-reserved-sample", include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb32-reserved-sample.bmp")),
-            ("direct-bitfields16-565", include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/direct-bitfields16-565.bmp")),
-            ("direct-bitfields32", include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/direct-bitfields32.bmp")),
-            ("direct-rgb24-top-down", include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-top-down.bmp")),
+            ("direct-rgb24-padding-gap-trailer", include_bytes!("../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp")),
+            ("indexed-rgb1-duplicate-palette", include_bytes!("../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb1-duplicate-palette.bmp")),
+            ("indexed-rgb4-duplicate-palette", include_bytes!("../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb4-duplicate-palette.bmp")),
+            ("indexed-rgb8-duplicate-palette", include_bytes!("../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb8-duplicate-palette.bmp")),
+            ("direct-rgb16-555", include_bytes!("../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/direct-rgb16-555.bmp")),
+            ("direct-rgb32-reserved-sample", include_bytes!("../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/direct-rgb32-reserved-sample.bmp")),
+            ("direct-bitfields16-565", include_bytes!("../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/direct-bitfields16-565.bmp")),
+            ("direct-bitfields32", include_bytes!("../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/direct-bitfields32.bmp")),
+            ("direct-rgb24-top-down", include_bytes!("../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-top-down.bmp")),
         ]
     }
 
@@ -392,7 +392,7 @@ mod canonical_byte_authority {
 
     #[test]
     fn image_decoder_reopens_neutral_opaque_rgba8_conversion() {
-        let source = include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/rgba8-opaque-direct-rgb24.bmp");
+        let source = include_bytes!("../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/rgba8-opaque-direct-rgb24.bmp");
         let decoded = image::load_from_memory(source).unwrap().to_rgba8();
         assert_eq!((decoded.width(), decoded.height()), (1, 1));
         assert_eq!(decoded.get_pixel(0, 0).0, [10, 20, 30, 255]);
@@ -400,7 +400,7 @@ mod canonical_byte_authority {
 
     #[test]
     fn image_decoder_preserves_eight_bit_duplicate_index_selection() {
-        let source = include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb8-duplicate-palette.bmp");
+        let source = include_bytes!("../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb8-duplicate-palette.bmp");
         let mut decoder = image::codecs::bmp::BmpDecoder::new(std::io::Cursor::new(source)).unwrap();
         decoder.set_indexed_color(true);
         let (width, height) = decoder.dimensions();
@@ -424,7 +424,7 @@ mod canonical_byte_authority {
     #[test]
     fn neutral_owned_samples_and_paints_match_independent_native_reader() {
         use super::oracles::{decode, encode, paint, revision, Content, OracleDoc};
-        let fixture = semio_repo_test_host::parse_json(include_str!("../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+        let fixture = semio_repo_test_host::parse_json(include_str!("../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
         let semio_repo_test_host::Json::Array(cases) = fixture.get("cases").unwrap() else { panic!("cases"); };
         for case in cases {
             let snapshot = case.get("snapshot").unwrap();

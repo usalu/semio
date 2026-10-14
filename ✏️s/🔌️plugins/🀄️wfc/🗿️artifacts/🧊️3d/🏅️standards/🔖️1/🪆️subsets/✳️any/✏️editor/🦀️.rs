@@ -562,6 +562,7 @@ impl ArtifactEditor for Wfc3dEditor {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,
@@ -813,7 +814,7 @@ pub fn example_snapshot(example_id: &str) -> Result<Wfc3dSnapshot, Fault> {
 /// different document, not an edit to this one, so it must never mint a history row (the "phantom
 /// boot edit" the sibling artifacts hit when they replayed a whole example as mutations).
 pub fn load_document_effect(document: &Wfc3dSnapshot) -> semio_framework::kernel::Effect {
-    let pack = <Wfc3dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let pack = <Wfc3dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("wfc", WFC3D_DOCUMENT_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }

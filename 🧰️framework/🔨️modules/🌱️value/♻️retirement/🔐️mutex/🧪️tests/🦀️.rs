@@ -3,7 +3,7 @@ use crate::value::observe_retirement_allocations as observe;
 
 #[test]
 fn original_mutex_owned_and_poisoned_payloads_preserve_exact_heap_custody(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  let ((),probe)=observe(||{let probe=std::sync::Mutex::new(0u8);drop(probe.lock());drop(probe);});let lock_backing=probe.0;
  for row in corpus["cases"].as_array().unwrap(){
   let original=row["owner"].as_str().unwrap().to_owned();let pointer=original.as_ptr();let bytes=original.capacity();let mutex=std::sync::Mutex::new(original);

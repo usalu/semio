@@ -21,8 +21,8 @@ fn drain(plan:DocumentScenePlan){
 }
 #[test]
 fn painted_scenes_retirement_funds_original_allocations_and_releases(){
- let sources:Vec<Value>=serde_json::from_str(include_str!("../../../📋️prepare/🧫️fixtures/🔣️.json")).unwrap();
- let contract:Value=serde_json::from_str(include_str!("../../📏️physical/🧫️fixtures/🔣️.json")).unwrap();
+ let sources:Vec<Value>=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🔣️.json")).unwrap();
+ let contract:Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🎬️scene/🧹️retire/📏️physical/🔣️.json")).unwrap();
  for row in contract["cases"].as_array().unwrap(){
   if row["source"].is_null(){drain(DocumentScenePlan::default());}
   else if row["source"]=="raster"{drain(DocumentScenePlan{assets:vec![crate::schema::scene_raster::RasterSceneAsset{id:"image".into(),image:Arc::new(semio_framework_pixels::RasterImage{width:2,height:2,pixels:vec![255;16]})}],nodes:Vec::new()});}

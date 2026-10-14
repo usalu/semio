@@ -5,7 +5,7 @@ import { fixedSlotTableFaults, inlineSlotTableBytes, type BoxedFixedSlotsBudget 
 const { readFileSync } = await import("node:fs");
 const { fileURLToPath } = await import("node:url");
 const { dirname, join } = await import("node:path");
-const budget = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json"), "utf8")) as BoxedFixedSlotsBudget;
+const budget = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json"), "utf8")) as BoxedFixedSlotsBudget;
 
 describe("🧱️ boxed fixed slot tables", () => {
   it("admits closed portable descriptors with an independent schema oracle", () => {

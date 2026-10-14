@@ -366,8 +366,7 @@ pub mod change_generation_preview {
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the generation3d document, derived per
 /// `📓️derivation-rules.md` from `Generation3dSnapshot`'s shape.
-#[derive(Clone, Debug, PartialEq, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, semio_framework_value::RetireOwned)]
 #[mutations(snapshot = Generation3dSnapshot, diff = Generation3dDiff, schema = "generation.3d")]
 pub enum Generation3dMutation {
     CreateWidget(create_widget::CreateWidget),
@@ -461,66 +460,53 @@ pub(crate) const GENERATION3D_TRANSLATE_KINDS: [&str; 3] = ["brep.xform.translat
 pub(crate) const GENERATION3D_ROTATE_KINDS: [&str; 3] = ["brep.xform.rotate", "brep.mesh.rotate", "brep.mesh.rotateComponents"];
 pub(crate) const GENERATION3D_SCALE_KINDS: [&str; 3] = ["brep.xform.scale", "brep.mesh.scale", "brep.mesh.scaleComponents"];
 
-/// 🧮️ The `x`/`y`/`z` of one vector param of a neuron's params in value form, or `fallback` where absent.
-pub(crate) fn generation3d_param_vector(params: &semio_framework_value::DslValue, key: &str, fallback: [f64; 3]) -> [f64; 3] {
-    let vector = params.get(key);
+/// 🧮️ Borrows one native vector parameter, retaining the original per-axis fallback behavior.
+pub(crate) fn generation3d_param_vector(params: &semio_framework_artifact_flow_flow::neural::Dictionary, key: &str, fallback: [f64; 3]) -> [f64; 3] {
+    let vector = params.get(key).and_then(semio_framework_artifact_flow_flow::neural::Value::as_dictionary);
     let mut axes = fallback;
     for (axis, name) in ["x", "y", "z"].iter().enumerate() {
-        if let Some(value) = vector.and_then(|vector| vector.get(name)).and_then(semio_framework_value::DslValue::as_f64) {
-            axes[axis] = value;
-        }
+        if let Some(value) = vector.and_then(|vector| vector.get(name)).and_then(change_widget_input::neural_number) { axes[axis] = value; }
     }
     axes
 }
 
-/// 🔣️ The `value` of one number param of a neuron's params in value form, or `fallback` where absent.
-pub(crate) fn generation3d_param_number(params: &semio_framework_value::DslValue, key: &str, fallback: f64) -> f64 {
-    params.get(key).and_then(|entry| entry.get("value")).and_then(semio_framework_value::DslValue::as_f64).unwrap_or(fallback)
+/// 🔣️ Borrows one native numeric parameter, or the original fallback when absent.
+pub(crate) fn generation3d_param_number(params: &semio_framework_artifact_flow_flow::neural::Dictionary, key: &str, fallback: f64) -> f64 {
+    params.get(key).and_then(semio_framework_artifact_flow_flow::neural::Value::as_dictionary).and_then(|entry| entry.get("value")).and_then(change_widget_input::neural_number).unwrap_or(fallback)
 }
 
-/// 🧩️ One typed vector literal (`{"$schema": schema, x, y, z}`) a transform operator param holds.
-pub fn generation3d_vector_literal(schema: &str, axes: [f64; 3]) -> semio_framework_value::DslValue {
-    semio_framework_value::DslValue::object([
-        ("$schema".to_string(), semio_framework_value::DslValue::String(schema.into())),
-        ("x".to_string(), semio_framework_value::DslValue::float(axes[0])),
-        ("y".to_string(), semio_framework_value::DslValue::float(axes[1])),
-        ("z".to_string(), semio_framework_value::DslValue::float(axes[2])),
-    ])
+/// 🧩️ Builds one native vector or point dictionary used by transform composition.
+pub fn generation3d_vector_value(schema: &str, axes: [f64; 3]) -> semio_framework_artifact_flow_flow::neural::Value {
+    use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value};
+    let mut dictionary = Dictionary::with_schema(schema);
+    for (axis, value) in ["x", "y", "z"].iter().zip(axes) { dictionary = dictionary.insert(*axis, Value::Atom(Atom::Decimal(value))); }
+    Value::Dictionary(dictionary)
 }
 
-/// 🔟️ One typed number literal (`{"$schema": "number", value}`) a transform operator param holds.
-pub fn generation3d_number_literal(value: f64) -> semio_framework_value::DslValue {
-    semio_framework_value::DslValue::object([("$schema".to_string(), semio_framework_value::DslValue::String("number".into())), ("value".to_string(), semio_framework_value::DslValue::float(value))])
+/// 🔟️ Builds one native number dictionary used by transform composition.
+pub fn generation3d_number_value(value: f64) -> semio_framework_artifact_flow_flow::neural::Value {
+    change_widget_input::WidgetInputValue::Number(value).neural_value()
 }
 
-/// 🪡️ `widget` with `entries` merged into its params: the one way a relative transform leaf builds an operator. `None`
-/// when a param value is not a neural value; the patch is retired cold, never dropped.
-pub(crate) fn generation3d_with_params(widget: &semio_framework_artifact_flow_flow::Widget, entries: Vec<(&str, semio_framework_value::DslValue)>) -> Option<semio_framework_artifact_flow_flow::Widget> {
-    use semio_framework_artifact_flow_flow::neural::{ColdRetire, Dictionary, Value};
+/// 🪡️ Merges native parameter entries and explicitly retires the temporary patch owner.
+pub(crate) fn generation3d_with_params(widget: &semio_framework_artifact_flow_flow::Widget, entries: Vec<(&str, semio_framework_artifact_flow_flow::neural::Value)>) -> semio_framework_artifact_flow_flow::Widget {
+    use semio_framework_artifact_flow_flow::neural::{ColdRetire, Dictionary};
     let mut patch = Dictionary::new();
-    for (key, entry) in entries {
-        match <Value as semio_framework_value::FromValue>::from_value(entry) {
-            Ok(value) => patch = patch.insert(key, value),
-            Err(_) => {
-                patch.retire_cold();
-                return None;
-            }
-        }
-    }
+    for (key, entry) in entries { patch = patch.insert(key, entry); }
     let semio_framework_artifact_flow_flow::Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, preview } = widget else {
         patch.retire_cold();
-        return Some(widget.clone());
+        return widget.clone();
     };
     let merged = params.merge(&patch);
     patch.retire_cold();
-    Some(semio_framework_artifact_flow_flow::Widget::Neuron { id: id.clone(), neuron_kind: neuron_kind.clone(), params: merged, input_ports: input_ports.clone(), output_ports: output_ports.clone(), preview: *preview })
+    semio_framework_artifact_flow_flow::Widget::Neuron { id: id.clone(), neuron_kind: neuron_kind.clone(), params: merged, input_ports: input_ports.clone(), output_ports: output_ports.clone(), preview: *preview }
 }
 
 /// 🪄️ The sparse delta of one relative gumball leaf: every target that is an operator of `kinds` gets the params
 /// `compose` derives from its BASE params, so an edited gesture re-derives the operator on whatever base it replays on.
 /// Missing targets and targets of another kind are skipped (`mutation.partial`); none left is `target-missing` (no
 /// target exists) or `target-mismatch`; an identity gesture is `mutation.no-op`.
-pub(crate) fn generation3d_transform_diff(base: &Generation3dSnapshot, targets: &[String], kinds: &[&str], identity: bool, compose: impl Fn(&semio_framework_value::DslValue) -> Option<Vec<(&'static str, semio_framework_value::DslValue)>>) -> protocol::MutationOutcome<Generation3dDiff> {
+pub(crate) fn generation3d_transform_diff(base: &Generation3dSnapshot, targets: &[String], kinds: &[&str], identity: bool, compose: impl Fn(&semio_framework_artifact_flow_flow::neural::Dictionary) -> Option<Vec<(&'static str, semio_framework_artifact_flow_flow::neural::Value)>>) -> protocol::MutationOutcome<Generation3dDiff> {
     if let Err(reason) = generation3d_targets_invariant(targets) {
         return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec());
     }
@@ -531,7 +517,7 @@ pub(crate) fn generation3d_transform_diff(base: &Generation3dSnapshot, targets: 
             continue;
         };
         let widget = &base.host_snapshot.widgets[index];
-        let semio_framework_artifact_flow_flow::Widget::Neuron { neuron_kind, .. } = widget else {
+        let semio_framework_artifact_flow_flow::Widget::Neuron { neuron_kind, params, .. } = widget else {
             mismatched.push(id.clone());
             continue;
         };
@@ -539,8 +525,7 @@ pub(crate) fn generation3d_transform_diff(base: &Generation3dSnapshot, targets: 
             mismatched.push(id.clone());
             continue;
         }
-        let params = semio_framework_value::ToValue::to_value(widget).get("params").cloned().unwrap_or(semio_framework_value::DslValue::Null);
-        match compose(&params).and_then(|entries| generation3d_with_params(widget, entries)) {
+        match compose(params).map(|entries| generation3d_with_params(widget, entries)) {
             Some(next) => composed.push((index, next)),
             None => mismatched.push(id.clone()),
         }

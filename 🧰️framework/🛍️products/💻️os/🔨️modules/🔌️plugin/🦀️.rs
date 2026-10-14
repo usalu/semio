@@ -47,7 +47,7 @@ pub mod ui_action_laws;
 //#region 📄️DeclarationFixtureMutationMount
 #[cfg(test)]
 #[path = "🧪️tests/🛰️declaration-channels/🦀️.rs"]
-mod declaration_fixture_mutations;
+pub(crate) mod declaration_fixture_mutations;
 
 #[cfg(test)]
 #[path = "🧪️tests/🤝️cooperative-pump/🦀️.rs"]
@@ -151,20 +151,20 @@ pub mod owned_abi {
 
     #[derive(Deserialize, FromValue, Serialize, ToValue)]
     pub struct StartJobInput {
-        pub job: u64,
-        pub kind: String,
-        pub input: Vec<u8>,
+        pub source: Option<semio_framework::kernel::OriginalJobSource>,
+        pub budget: semio_framework::kernel::OriginalJobBudget,
     }
 
     #[derive(Deserialize, FromValue, Serialize, ToValue)]
     pub struct StepJobInput {
         pub job: u64,
-        pub budget: crate::reactor::jobs::JobBudget,
+        pub budget: semio_framework::kernel::OriginalJobBudget,
     }
 
     #[derive(Deserialize, FromValue, Serialize, ToValue)]
     pub struct CancelJobInput {
         pub job: u64,
+        pub budget: semio_framework::kernel::OriginalJobBudget,
     }
 
     #[derive(Deserialize, FromValue, Serialize, ToValue)]
@@ -286,6 +286,7 @@ mod segmented_download_contract;
 //#region 🏛️OwnershipFacet
 #[path = "🏛️ownership/🦀️.rs"]
 pub(crate) mod bounded_ownership;
+pub use bounded_ownership::{PluginLifecycleFailure,PluginLifecyclePrimary};
 #[path="👷️job/🚪️session/🦀️.rs"]
 pub(crate) mod reserved_job_session;
 #[path = "📤️fault/🦀️.rs"]
@@ -349,7 +350,7 @@ pub(crate) mod artifact_declaration;
 pub(crate) mod artifact_identity;
 #[path = "💡️inference/🦀️.rs"]
 pub(crate) mod artifact_inference;
-pub use artifact_inference::ArtifactInferenceGatewayFailure;
+pub use artifact_inference::{ArtifactInferenceGatewayFailure,ArtifactInferenceGatewayRefusal};
 #[path = "🚪️io/🦀️.rs"]
 pub(crate) mod artifact_io;
 #[path = "📜️declaration/📇️registration/🦀️.rs"]
@@ -696,6 +697,7 @@ pub use app::{
     ArtifactInferenceDocumentBinding,
     ArtifactInferenceExecution,
     ArtifactInferenceExecutionStep,
+    ArtifactInferenceStepContext,
     ArtifactInferenceExecutionError,
     ArtifactInferenceExecutionRequest,
     ArtifactInferencePayloadContract,

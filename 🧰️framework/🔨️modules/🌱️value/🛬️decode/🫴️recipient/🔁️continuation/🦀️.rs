@@ -17,7 +17,7 @@ impl<'control> NativeDecodeControl<'control>{
  pub fn pause_with_retirement(mut self)->Result<NativeRetirementDecodeContinuation<'control>,ValueError>{if !matches!(self.allocation,allocation::Binding::Local){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"foreign decoding requires its original allocation continuation"))}let receipt=self.continuation()?;let recipient=self.retirement.take().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native decoding has no installed original retirement recipient"))?;Ok(NativeRetirementDecodeContinuation{receipt:Some(receipt),recipient})}
 }
 struct Scope<'slot,'control>{control:NativeDecodeControl<'control>,slot:&'slot mut Option<NativeDecodeContinuation>}
-impl Drop for Scope<'_, '_>{fn drop(&mut self){*self.slot=Some(NativeDecodeContinuation{receiving:self.control.receiving,maximum_bytes:self.control.maximum_bytes,owned_bytes:self.control.owned_bytes,completed:self.control.completed,total:self.control.total,stage:self.control.stage});}}
+impl Drop for Scope<'_, '_>{fn drop(&mut self){*self.slot=Some(NativeDecodeContinuation{ledger:self.control.ledger,receiving:self.control.receiving,maximum_bytes:self.control.maximum_bytes,owned_bytes:self.control.owned_bytes,completed:self.control.completed,total:self.control.total,stage:self.control.stage});}}
 impl<'recipient> NativeRetirementDecodeContinuation<'recipient>{
  /// 🧾️ Observes cumulative allocation retained across original decode and retirement hops.
  pub fn owned_bytes(&self)->usize{self.receipt.as_ref().expect("original decoder receipt exists between hops").owned_bytes}

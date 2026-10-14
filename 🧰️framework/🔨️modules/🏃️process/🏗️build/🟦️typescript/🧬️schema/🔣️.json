@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/typescript-check/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "workspace",
+    "stateRoot",
+    "cwd",
+    "project",
+    "owner",
+    "timeoutMs",
+    "leaseDirectory"
+  ],
+  "properties": {
+    "workspace": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "stateRoot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "cwd": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "project": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "timeoutMs": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "args": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "mode": {
+      "enum": [
+        "prototype",
+        "release"
+      ]
+    },
+    "leaseDirectory": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    }
+  }
+}

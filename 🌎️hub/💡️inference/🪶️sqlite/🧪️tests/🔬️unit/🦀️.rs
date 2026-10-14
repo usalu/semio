@@ -2,7 +2,7 @@ use super::*;
 use std::sync::{Arc, Barrier};
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/🗺️gis-inference-job-v1/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🗺️gis-inference-job-v1/🔣️.json")).unwrap()
 }
 
 fn selected(fixture: &serde_json::Value) -> InferenceIdentityV1 {
@@ -24,7 +24,7 @@ fn gis_inference_sqlite_ledger_executes_neutral_traces_with_private_first_termin
     let fixture = fixture();
     let selected = selected(&fixture);
     assert_eq!(selected.digest().unwrap(), fixture["identityDigest"].as_str().unwrap());
-    let identifiers: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🖥️inference-server-identity-v1/🔣️.json")).unwrap();
+    let identifiers: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🖥️inference-server-identity-v1/🔣️.json")).unwrap();
     for row in identifiers["cases"].as_array().unwrap() {
         for field in identifiers["fields"].as_array().unwrap() {
             let mut candidate = fixture["identity"].clone();
@@ -164,7 +164,7 @@ fn gis_inference_sqlite_request_identity_capacity_expiry_and_progress_are_bounde
 #[test]
 fn inference_request_reconciliation_is_existing_only_reader_bound_and_expiry_independent() {
     let fixture = fixture();
-    let reconcile: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧭️inference-job-reconcile-v1/🔣️.json")).unwrap();
+    let reconcile: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧭️inference-job-reconcile-v1/🔣️.json")).unwrap();
     let request = &reconcile["request"];
     assert!(decode_inference_job_reconcile_request_v1(&serde_json::to_vec(request).unwrap()).is_ok());
     for row in reconcile["requestCases"].as_array().unwrap() {

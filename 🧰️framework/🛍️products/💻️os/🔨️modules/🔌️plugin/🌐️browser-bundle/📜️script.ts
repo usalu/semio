@@ -1,7 +1,9 @@
-import {captureOwnedProcess} from "../../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
-import type {ScriptInvocation} from "../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
-import {SCRIPT_PROCESS_INVOCATION_ENV,createScriptProcessEnvelope,receiveScriptProcessInvocation,withScriptProcessEnvelope} from "../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { exactExecutableFingerprint } from "../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { readBuildMode } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { bundleVirtualJavaScript } from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️.ts";
+import {captureOwnedProcess} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {SCRIPT_PROCESS_INVOCATION_ENV,createScriptProcessEnvelope,receiveScriptProcessInvocation,withScriptProcessEnvelope} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { exactExecutableFingerprint } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 /** 🌐️ Build-time closure and isolation laws for browser component factories. */
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -329,6 +331,11 @@ function captureBrowserCodegenPolicyInputs(runtime: BrowserActorRuntimeSnapshot,
     { logicalPath: "repo/execution/🟦️.ts", path: resolve(import.meta.dir, "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts") },
     { logicalPath: "repo/normalization/🟦️.ts", path: resolve(import.meta.dir, "../../../../🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts") },
   ];
+  paths.push(
+    { logicalPath: "browser/🧵️compiler-worker/📜️script.ts", path: resolve(import.meta.dir, "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️bun/📜️script.ts") },
+    { logicalPath: "browser/🧵️compiler-worker/🧬️schema.json", path: resolve(import.meta.dir, "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️bun/🧬️schema/🔣️.json") },
+    { logicalPath: "browser/🧵️compiler-worker/🟦️interface.ts", path: resolve(import.meta.dir, "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️.ts") }
+  );
   const firstParty = [...runtime.values()].map(value => value.row);
   for (const { logicalPath, path } of paths) {
     const bytes = read(path,logicalPath);
@@ -338,42 +345,23 @@ function captureBrowserCodegenPolicyInputs(runtime: BrowserActorRuntimeSnapshot,
   return Object.freeze({ packages: Object.freeze(packages), parser: Object.freeze(parser), firstParty: Object.freeze(firstParty), physicalInputs:Object.freeze(physicalInputs) });
 }
 
+/** 🧵️ Transfers immutable compiler inputs while polling the caller's original cancellation port. */
+async function ownedBrowserBundleWorker(request: Parameters<typeof bundleVirtualJavaScript>[0], check: () => void, invocation?: ScriptInvocation, onLine?: (line: string) => void) {
+  check(); const controller = new AbortController(), timer = setInterval(() => { try { check(); } catch (error) { controller.abort(error); } }, 20);
+  const root = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated") : join(browserActorRepoRoot, ".🧬semio/🦑️repo/⚡️cache/bun-workers");
+  try { const run = (original: ScriptInvocation) => bundleVirtualJavaScript(request, { workspace: browserActorRepoRoot, temporaryRoot: root, invocation: original, signal: controller.signal, onLine }); const result = invocation ? await run(invocation) : await receiveScriptProcessInvocation(process.env, run); check(); return result; }
+  finally { clearInterval(timer); }
+}
+
 /** 📚️ Supplies bounded captured JS to Bun and proves every metafile input was captured exactly once. */
-async function captureBrowserCodegenSources(entrypoint: string, roots: readonly Readonly<{ name: string; path: string }>[], check: () => void, captured?: (path: string) => void): Promise<Readonly<{ source: string; inputs: readonly BrowserCodegenSourceDigest[]; physicalInputs:readonly BrowserActorPhysicalInputV1[] }>> {
+async function captureBrowserCodegenSources(entrypoint: string, roots: readonly Readonly<{ name: string; path: string }>[], check: () => void, captured?: (path: string) => void, invocation?: ScriptInvocation): Promise<Readonly<{ source: string; inputs: readonly BrowserCodegenSourceDigest[]; physicalInputs:readonly BrowserActorPhysicalInputV1[] }>> {
   check();
-  const admittedRoots = roots.map(root => ({ ...root, path: realpathSync(root.path) }));
-  const buildCwd = process.cwd();
-  const snapshots = new Map<string, Readonly<{ bytes: Uint8Array; row: BrowserCodegenSourceDigest }>>();
-  const admission = { remaining: 8 * 1024 * 1024 };
-  const result = await Bun.build({ entrypoints: [entrypoint], root: admittedRoots[0].path, target: "browser", format: "esm", splitting: false, minify: false, metafile: true, external: ["node:fs/promises"], plugins: [{ name: "semio-browser-codegen-snapshot", setup(build) {
-    build.onLoad({ filter: /.*/, namespace: "file" }, args => {
-      check();
-      if (!args.path.endsWith(".js")) throw new Error("browser actor artifact: compiler source type");
-      const path = realpathSync(args.path);
-      const root = admittedRoots.find(root => path.startsWith(root.path + sep));
-      if (!root) throw new Error("browser actor artifact: compiler source root");
-      let snapshot = snapshots.get(path);
-      if (!snapshot) {
-        if (snapshots.size >= 128) throw new Error("browser actor artifact: compiler source count");
-        const bytes = readStableBuildFile(path, 8 * 1024 * 1024, admission, check);
-        const row = Object.freeze({ logicalPath: root.name + "/" + relative(root.path, path).split(sep).join("/"), sha256: createHash("sha256").update(bytes).digest("hex"), byteLength: bytes.byteLength });
-        snapshot = Object.freeze({ bytes, row });
-        snapshots.set(path, snapshot);
-        captured?.(path);
-      }
-      return { contents: snapshot.bytes, loader: "js" };
-    });
-  } }] }).catch(cause => { check(); throw new Error("browser actor artifact: compiler source closure failed", { cause }); });
-  check();
-  if (!result.success || result.outputs.length !== 1 || !result.metafile) throw new Error("browser actor artifact: compiler source closure failed");
-  const paths = Object.keys(result.metafile.inputs).map(path => isAbsolute(path) ? path : resolve(buildCwd, path)).sort();
-  if (JSON.stringify(paths) !== JSON.stringify([...snapshots.keys()].sort())) throw new Error("browser actor artifact: compiler source coverage");
-  if (result.outputs[0].size > 8 * 1024 * 1024) throw new Error("browser actor artifact: compiler source output bound");
-  return Object.freeze({ source: await result.outputs[0].text(), physicalInputs:Object.freeze([...snapshots].map(([path,snapshot])=>({...snapshot.row,path})).sort((left,right)=>left.logicalPath<right.logicalPath?-1:left.logicalPath>right.logicalPath?1:0)), inputs: Object.freeze([...snapshots.values()].map(snapshot => snapshot.row).sort((left, right) => left.logicalPath < right.logicalPath ? -1 : left.logicalPath > right.logicalPath ? 1 : 0)) });
+  const result = await ownedBrowserBundleWorker({ version: 1, kind: "snapshot", mode: readBuildMode(process.env.SEMIO_BUILD_MODE), entrypoint, roots, observe: captured !== undefined }, check, invocation, captured ? line => { if (line.startsWith("[bun-worker] captured ")) captured(JSON.parse(line.slice("[bun-worker] captured ".length))); } : undefined);
+  return Object.freeze({ source: result.source, inputs: Object.freeze(result.inputs), physicalInputs: Object.freeze(result.physicalInputs) });
 }
 
 /** 🧬️ Closes the public browser compiler entry with its two component cores in one private build directory. */
-async function buildBrowserCodegenModule(evidence: string, check: () => void): Promise<Readonly<{ path: string; sha256: string; byteLength: number; inputs: readonly BrowserCodegenSourceDigest[]; cores: readonly BrowserCodegenSourceDigest[]; physicalInputs:readonly BrowserActorPhysicalInputV1[] }>> {
+async function buildBrowserCodegenModule(evidence: string, check: () => void, invocation?: ScriptInvocation): Promise<Readonly<{ path: string; sha256: string; byteLength: number; inputs: readonly BrowserCodegenSourceDigest[]; cores: readonly BrowserCodegenSourceDigest[]; physicalInputs:readonly BrowserActorPhysicalInputV1[] }>> {
   check();
   const entrypoint = fileURLToPath(import.meta.resolve("@bytecodealliance/jco/component"));
   const vendor = fileURLToPath(import.meta.resolve("@bytecodealliance/jco-transpile/component"));
@@ -384,7 +372,7 @@ async function buildBrowserCodegenModule(evidence: string, check: () => void): P
     { name: "@bytecodealliance/jco/dist", path: dirname(entrypoint) },
     { name: "@bytecodealliance/jco-transpile/vendor", path: dirname(vendor) },
     { name: "@bytecodealliance/preview2-shim/dist/browser", path: join(shim, "browser") },
-  ], check);
+  ], check, undefined, invocation);
   writeFileSync(join(evidence, "compiler-sources.json"), JSON.stringify(inputs), { mode: 0o600 });
   if (Buffer.byteLength(source) > 8 * 1024 * 1024) throw new Error("browser actor artifact: compiler closure bound");
   const admission = { remaining: browserActorMaximumBytes - Buffer.byteLength(source) };
@@ -402,7 +390,7 @@ function observedBrowserCodegenPolicy(executable:{sha256:string;byteLength:numbe
 }
 
 /** 🔬️ Verifies surviving original compiler/policy evidence against the complete current factory-owned input roster. */
-export async function verifyBrowserActorProducerInputsV1(observation:BrowserActorProducerInputsV1,control:BrowserActorBuildControl={}):Promise<Readonly<{inputs:readonly BrowserActorPhysicalInputV1[];importInterfaces:readonly string[]}>>{
+export async function verifyBrowserActorProducerInputsV1(observation:BrowserActorProducerInputsV1,control:BrowserActorBuildControl={},invocation?:ScriptInvocation):Promise<Readonly<{inputs:readonly BrowserActorPhysicalInputV1[];importInterfaces:readonly string[]}>>{
   const check=()=>{if(control.cancelled?.())throw Error("browser actor producer: cancelled");},denied=():never=>{throw Error("browser actor producer: original input evidence differs from current owned factory");};
   check();const [admit,admitPolicy]=await Promise.all([browserBundleValidator("BrowserActorProducerInputsV1"),browserBundleValidator("CodegenPolicyV1")]);if(!admit(observation))denied();
   const originalPolicy=JSON.parse(observation.policyCanonical);if(!admitPolicy(originalPolicy)||canonicalJson(originalPolicy)!==observation.policyCanonical||createHash("sha256").update(observation.policyCanonical).digest("hex")!==observation.policySha256)denied();
@@ -410,7 +398,7 @@ export async function verifyBrowserActorProducerInputsV1(observation:BrowserActo
   const originalCompiler=readStableBuildFile(observation.compiler.path,browserActorMaximumBytes,{remaining:browserActorMaximumBytes},check);if(originalCompiler.byteLength!==observation.compiler.byteLength||createHash("sha256").update(originalCompiler).digest("hex")!==observation.compiler.sha256)denied();
   const managerPath=join(browserActorRepoRoot,"package.json"),manager=readStableBuildFile(managerPath,1024*1024,{remaining:1024*1024},check);if(Bun.version!=="1.3.14"||JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(manager)).packageManager!=="bun@1.3.14")denied();
   const runtime=captureBrowserActorRuntime(import.meta.dir,check),{physicalInputs,...policyInputs}=captureBrowserCodegenPolicyInputs(runtime,check),scratchRoot=process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir();mkdirSync(scratchRoot,{recursive:true});const scratch=mkdtempSync(join(scratchRoot,"browser-producer-verification-"));
-  try{control.progress?.("closure",0,1);const compiler=await buildBrowserCodegenModule(scratch,check),current=observedBrowserCodegenPolicy(executable,compiler,policyInputs),inputs=[{logicalPath:"toolchain/package.json",path:managerPath,sha256:createHash("sha256").update(manager).digest("hex"),byteLength:manager.byteLength},...physicalInputs,...compiler.physicalInputs];
+  try{control.progress?.("closure",0,1);const compiler=await buildBrowserCodegenModule(scratch,check,invocation),current=observedBrowserCodegenPolicy(executable,compiler,policyInputs),inputs=[{logicalPath:"toolchain/package.json",path:managerPath,sha256:createHash("sha256").update(manager).digest("hex"),byteLength:manager.byteLength},...physicalInputs,...compiler.physicalInputs];
     const ordered=(rows:readonly BrowserActorPhysicalInputV1[])=>rows.map(row=>({...row,path:resolve(row.path)})).sort((a,b)=>a.logicalPath.localeCompare(b.logicalPath)),keys=new Set(observation.inputs.map(row=>row.logicalPath));if(keys.size!==observation.inputs.length||canonicalJson(ordered(inputs))!==canonicalJson(ordered(observation.inputs))||current.canonical!==observation.policyCanonical||compiler.sha256!==observation.compiler.sha256||compiler.byteLength!==observation.compiler.byteLength)denied();
     for(const row of observation.inputs){const bytes=readStableBuildFile(row.path,browserActorMaximumBytes,{remaining:browserActorMaximumBytes},check);if(bytes.byteLength!==row.byteLength||createHash("sha256").update(bytes).digest("hex")!==row.sha256)denied();}if(createHash("sha256").update(readFileSync(observation.compiler.path)).digest("hex")!==observation.compiler.sha256)denied();check();control.progress?.("closure",1,1);return Object.freeze({inputs:Object.freeze(inputs),importInterfaces:browserActorInterfaces});
   }finally{rmSync(scratch,{recursive:true,force:true});}
@@ -456,7 +444,7 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, invoc
     if (process.platform === "win32" && process.env.SystemRoot) environment.SystemRoot = process.env.SystemRoot;
     control.progress?.("codegen", 0, snapshot.byteLength);
     check();
-    const compiler = await buildBrowserCodegenModule(evidence, check);
+    const compiler = await buildBrowserCodegenModule(evidence, check, invocation);
     const policy = observedBrowserCodegenPolicy(executable,compiler,policyInputs);
     writeFileSync(join(evidence, "codegen-policy.json"), policy.canonical, { mode: 0o600 });
     check();
@@ -510,7 +498,7 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, invoc
     const read = (name: string, maximum: number): Uint8Array => readStableBuildFile(join(evidenceDirectory, name), maximum, admission, check);
     const source = new TextDecoder("utf-8", { fatal: true }).decode(read("browser-actor.js", 8 * 1024 * 1024));
     const cores = manifest.files.filter(name => name.endsWith(".wasm")).map(name => ({ name, bytes: read(name, browserActorMaximumBytes) }));
-    const output = await closedBrowserActorBundleFromRuntime(source, cores, { importInterfaces: manifest.importInterfaces, cancelled: control.cancelled, progress: (completed, total) => control.progress?.("closure", completed, total) }, actorRuntime);
+    const output = await closedBrowserActorBundleFromRuntime(source, cores, { importInterfaces: manifest.importInterfaces, cancelled: control.cancelled, progress: (completed, total) => control.progress?.("closure", completed, total) }, actorRuntime, invocation);
     check();
     const byteLength = Buffer.byteLength(output);
     if (byteLength > browserActorMaximumBytes) throw new Error("browser actor artifact: closed byte bound");
@@ -625,13 +613,13 @@ export function validateAsyncTaskReturnLift(source: string): number {
 }
 
 /** 🎭️ Builds one closed actor module with fresh first-party host state and an explicit owner. */
-export async function closedBrowserActorBundle(source: string, cores: readonly BrowserComponentCore[], control: BrowserComponentFactoryControl = {}): Promise<string> {
+export async function closedBrowserActorBundle(source: string, cores: readonly BrowserComponentCore[], invocation: ScriptInvocation, control: BrowserComponentFactoryControl = {}): Promise<string> {
   const check = () => { if (control.cancelled?.()) throw new Error("browser actor bundle: cancelled"); };
-  return closedBrowserActorBundleFromRuntime(source, cores, control, captureBrowserActorRuntime(import.meta.dir, check));
+  return closedBrowserActorBundleFromRuntime(source, cores, control, captureBrowserActorRuntime(import.meta.dir, check), invocation);
 }
 
 /** 🎬️ Closes the generated actor over exact retained runtime modules without reopening source paths. */
-async function closedBrowserActorBundleFromRuntime(source: string, cores: readonly BrowserComponentCore[], control: BrowserComponentFactoryControl, runtime: BrowserActorRuntimeSnapshot): Promise<string> {
+async function closedBrowserActorBundleFromRuntime(source: string, cores: readonly BrowserComponentCore[], control: BrowserComponentFactoryControl, runtime: BrowserActorRuntimeSnapshot, invocation?: ScriptInvocation): Promise<string> {
   const names = control.importInterfaces ?? [];
   const known = { "semio:framework/pure@1.0.0": "pure", "semio:framework/host-async@1.0.0": "hostAsync" };
   if (names.some(name => !Object.hasOwn(known, name) && !browserWasiInterfaces.includes(name))) throw new Error("browser actor bundle: unsupported import interface");
@@ -704,23 +692,9 @@ export async function activate(identity, port, control = {}) {
 }
 `;
   if (control.cancelled?.()) throw new Error("browser actor bundle: cancelled");
-  const loadedRuntime = new Set<string>();
-  const build = await Bun.build({ entrypoints: ["semio:closed-browser-actor"], target: "browser", format: "esm", splitting: false, minify: false, plugins: [{ name: "semio-closed-browser-actor", setup(builder) {
-    builder.onResolve({ filter: /^semio:closed-browser-actor$/ }, () => ({ path: "actor.ts", namespace: "semio-actor" }));
-    builder.onResolve({ filter: /^semio:actor-(host|wasi)$/ }, args => ({ path: args.path.slice("semio:actor-".length), namespace: "semio-runtime" }));
-    builder.onResolve({ filter: /.*/, namespace: "semio-runtime" }, () => { throw new Error("browser actor bundle: runtime import denied"); });
-    builder.onLoad({ filter: /.*/, namespace: "file" }, () => { throw new Error("browser actor bundle: runtime file denied"); });
-    builder.onLoad({ filter: /.*/, namespace: "semio-actor" }, () => ({ contents, loader: "ts" }));
-    builder.onLoad({ filter: /.*/, namespace: "semio-runtime" }, args => {
-      const captured = runtime.get(args.path);
-      if (!captured || loadedRuntime.has(args.path)) throw new Error("browser actor bundle: runtime snapshot denied");
-      loadedRuntime.add(args.path);
-      return { contents: captured.bytes, loader: "ts" };
-    });
-  } }] });
-  if (!build.success || build.outputs.length !== 1 || loadedRuntime.size !== 2) throw new Error(`browser actor bundle: build failed ${build.logs.map(log => log.message).join("; ")}`);
-  if (control.cancelled?.()) throw new Error("browser actor bundle: cancelled");
-  const output = await build.outputs[0].text();
+  const result = await ownedBrowserBundleWorker({ version: 1, kind: "actor", mode: readBuildMode(process.env.SEMIO_BUILD_MODE), contents, runtime: { host: new TextDecoder().decode(runtime.get("host")!.bytes), wasi: new TextDecoder().decode(runtime.get("wasi")!.bytes) } }, () => { if (control.cancelled?.()) throw Error("browser actor bundle: cancelled"); }, invocation);
+  if (result.loadedRuntime !== 2) throw Error("browser actor bundle: runtime snapshot coverage");
+  const output = result.source;
   const parsed = ts.createSourceFile("actor.js", output, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
   if ((parsed as unknown as { parseDiagnostics: unknown[] }).parseDiagnostics.length) throw new Error("browser actor bundle: invalid output");
   const visit = (node: ts.Node): void => {
@@ -932,7 +906,7 @@ if (import.meta.main) {
   const command = process.argv[2] ?? "runtime-check";
   assert(["runtime-check", "pending-host-close-check"].includes(command), `actor import test: unknown command ${command}`);
   const { testCanonicalActorAsyncImport } = await import("./🧪️tests/🌊️actor-import/🟦️.ts");
-  const run = (invocation: ScriptInvocation) => testCanonicalActorAsyncImport(browserActorRepoRoot, invocation, join(import.meta.dir, "dist", command), undefined, closedBrowserActorBundle, true);
+  const run = (invocation: ScriptInvocation) => testCanonicalActorAsyncImport(browserActorRepoRoot, invocation, join(import.meta.dir, "dist", command), undefined, (source, cores, control) => closedBrowserActorBundle(source, cores, invocation, control), true);
   if (process.env[SCRIPT_PROCESS_INVOCATION_ENV] !== undefined) await receiveScriptProcessInvocation(process.env, run);
   else await withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "browser-bundle", maximumElapsedMilliseconds: 0 }, {}, Date.now()), run);
 }

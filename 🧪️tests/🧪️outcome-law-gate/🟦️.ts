@@ -1,4 +1,4 @@
-/** ⚖️ Outcome-law gate law: rule 2 of `verify mutation-outcome-law` reports exactly the planted violations of `🧫️fixtures/🧫️outcome-law-gate` (position, fault, code, level as spelled) and stays silent on its canonical controls. The frozen vocabulary document is the level oracle; Ajv (outcome documents) and the TypeScript compiler (twin positions) re-derive the expected breaches independently of the gate's patterns. */
+/** ⚖️ Outcome-law gate law: rule 2 of `verify mutation-outcome-law` reports exactly the planted violations of `🧪️tests/🧫️fixtures/🧫️outcome-law-gate` (position, fault, code, level as spelled) and stays silent on its canonical controls. The frozen vocabulary document is the level oracle; Ajv (outcome documents) and the TypeScript compiler (twin positions) re-derive the expected breaches independently of the gate's patterns. */
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -18,7 +18,7 @@ type Vocabulary = { codes: { code: string; level: Level }[]; apply: { pattern: s
 
 const root = resolve(import.meta.dir, "../..");
 const read = (path: string): unknown => JSON.parse(readFileSync(join(root, path), "utf8"));
-const vectors = read("🧫️fixtures/🧫️outcome-law-gate/🔣️.json") as Vectors;
+const vectors = read("🧪️tests/🧫️fixtures/🧫️outcome-law-gate/🔣️.json") as Vectors;
 const document = read(vectors.vocabulary) as Vocabulary;
 const fixed = new Map(document.codes.map((row) => [row.code, row.level]));
 const applyPattern = new RegExp(document.apply.pattern);

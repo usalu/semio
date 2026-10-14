@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🧯️delete-zone/✅️clears-the-memberships",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧯️delete-zone/✅️clears-the-memberships/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧯️delete-zone/✅️clears-the-memberships/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧯️delete-zone/✅️clears-the-memberships/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧯️delete-zone/✅️clears-the-memberships/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧯️delete-zone/✅️clears-the-memberships/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧯️delete-zone/✅️clears-the-memberships/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧯️delete-zone/✅️clears-the-memberships/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧯️delete-zone/✅️clears-the-memberships/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧯️delete-zone/✅️clears-the-memberships/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧯️delete-zone/✅️clears-the-memberships/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

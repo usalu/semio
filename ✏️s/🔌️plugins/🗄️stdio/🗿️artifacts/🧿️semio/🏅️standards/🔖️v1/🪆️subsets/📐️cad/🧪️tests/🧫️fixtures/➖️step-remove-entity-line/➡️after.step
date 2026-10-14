@@ -1,0 +1,12 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION((''),'2;1');
+FILE_NAME('semio-cad-export','',(''),(''),'','','');
+FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));
+ENDSEC;
+DATA;
+#1=CARTESIAN_POINT('',(2.0,2.0,0.0));
+#2=AXIS2_PLACEMENT_3D('',#1,$,$);
+#3=CIRCLE('',#2,1.5);
+ENDSEC;
+END-ISO-10303-21;

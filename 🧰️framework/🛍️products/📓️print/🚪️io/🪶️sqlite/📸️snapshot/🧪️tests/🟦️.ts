@@ -5,7 +5,7 @@ import "../../../🧪️tests/🏛️ownership/🟦️.ts";
 
 import Ajv2020 from "ajv/dist/2020";
 import {sum} from "d3-array";
-import corpus from "../../../../🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json";
+import corpus from "../../../../🧪️tests/🧫️fixtures/📸️snapshot/🪶️sqlite/🔣️.json";
 
 import chartSchema from "../../../../🧬️schema/🔣️.json";
 import snapshotSchema from "../../../../🧬️schema/📸️snapshot/🔣️.json";

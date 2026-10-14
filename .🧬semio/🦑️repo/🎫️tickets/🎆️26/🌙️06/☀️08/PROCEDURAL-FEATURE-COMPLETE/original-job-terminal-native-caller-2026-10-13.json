@@ -1,0 +1,45 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/framework-plugin:test-original-job-native",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--configuration=prototype",
+    "--parallel=1"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+    "transport": {
+      "maximumBytes": 134217728,
+      "maximumLines": 1000000
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 3600000
+    },
+    "network": {
+      "offline": true
+    }
+  },
+  "selection": [
+    "nx",
+    "run",
+    "@semio-tech/framework-plugin:test-original-job-native",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--configuration=prototype",
+    "--parallel=1"
+  ],
+  "launches": [
+    [
+      "nx",
+      "run",
+      "@semio-tech/framework-plugin:test-original-job-native",
+      "--skip-nx-cache",
+      "--excludeTaskDependencies",
+      "--configuration=prototype",
+      "--parallel=1"
+    ]
+  ]
+}

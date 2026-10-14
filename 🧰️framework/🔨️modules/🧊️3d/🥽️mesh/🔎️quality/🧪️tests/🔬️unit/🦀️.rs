@@ -5,7 +5,7 @@ use parry3d::math::Point;
 use serde_json::Value;
 
 fn fixtures() -> Value {
-    serde_json::from_str(include_str!("../../../🧫️fixtures/🔎️quality/🔣️.json")).expect("mesh quality fixture parses")
+    serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔎️quality/🔣️.json")).expect("mesh quality fixture parses")
 }
 
 fn soup(case: &Value) -> (Vec<[f32; 3]>, Vec<Vec<u32>>) {

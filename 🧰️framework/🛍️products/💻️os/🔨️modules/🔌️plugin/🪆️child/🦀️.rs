@@ -5,7 +5,7 @@ use crate::child_content::mounted_child_group_receipt::MountedReceiptBytes;
 use crate::child_content::mounted_child_group_receipt_group::command::entry::MountedCommandEntrySource;
 use crate::child_content::mounted_child_group_receipt_group::command::entry::MountedCommandEntry;
 use crate::child_content::mounted_child_group_receipt_group::command::CommandAppend;
-use crate::child_content::mounted_child_group_receipt_group::command::PagedCommandLog;
+pub(crate) use crate::child_content::mounted_child_group_receipt_group::command::PagedCommandLog;
 #[cfg(test)] use crate::child_view::PreparedChildContentEntry;
 #[cfg(test)] use crate::child_view::child_content_arc_bytes;
 #[cfg(test)] use crate::child_view::ChildContentRoot;
@@ -202,7 +202,7 @@ pub(crate) struct ChildMemberEntry<M> {
     pub(crate) member: M,
 }
 
-struct ChildMemberAdmission {
+pub(crate) struct ChildMemberAdmission {
     index: usize,
     generation: u64,
     nested: bool,
@@ -507,9 +507,9 @@ impl<M> Drop for ChildMemberRegistry<M> {
 
 /// 📥️ Retains one exact recursive member identity with its admitted bounded open request.
 pub struct OwnedDocumentMemberIngress {
-    identity: ManuallyDrop<Option<(usize, ArtifactRef, store::OwnerRef)>>,
+    pub(crate) identity: ManuallyDrop<Option<(usize, ArtifactRef, store::OwnerRef)>>,
     pub(crate) request: ManuallyDrop<Option<store::MemberOpenRequest>>,
-    identity_field: u8,
+    pub(crate) identity_field: u8,
 }
 
 impl OwnedDocumentMemberIngress {
@@ -815,14 +815,14 @@ include!("../🧩️composition/📬️publication/🤝️group/🦀️.rs");
 
 mod mounted_child_group_identity { include!("../🧩️composition/📬️publication/🤝️group/🪟️mounted/🪪️identity/🦀️.rs"); }
 
-use mounted_child_group_identity::{MountedChildGroupIdentityIssuer, MountedChildGroupIdentitySource};
+pub(crate) use mounted_child_group_identity::{MountedChildGroupIdentityIssuer, MountedChildGroupIdentitySource};
 
 pub(crate) mod mounted_child_group_receipt { use super::*; include!("../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/🦀️.rs"); }
 
 
 pub(crate) mod mounted_child_group_receipt_group { use super::*; use super::mounted_child_group_receipt::*; include!("../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/🦀️.rs"); }
 
-use mounted_child_group_receipt_group::{PagedCommandLog, CommandAppend, CommandPrune};
+use mounted_child_group_receipt_group::command::CommandPrune;
 
 include!("../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🦀️.rs");
 
@@ -907,7 +907,7 @@ struct ChildContentMemberMetadata {
 
 pub(crate) struct ChildContentRetirement {
     view: ManuallyDrop<ChildContentView>,
-    pending: ManuallyDrop<Option<ChildContentEntry>>,
+    pub(crate) pending: ManuallyDrop<Option<ChildContentEntry>>,
     active: ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     active_member: ManuallyDrop<Option<ChildContentMemberMetadata>>,
     metadata_close: ManuallyDrop<Option<ControlledRetirement<ChildContentMemberMetadata>>>,

@@ -3,7 +3,7 @@
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::RewritingSnapshot;
 use semio_framework_plugin::{Emit, NoConfigMutation};
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
 
 /// 🎬️ The ids this verb answers. The navbar example picker dispatches a REGISTERED example id, and
 /// `demo` is the only example this subset registers, so that id must resolve or every navbar pick is

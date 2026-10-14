@@ -1,9 +1,9 @@
 import Ajv from "ajv";
-import cohort from "../🧫️fixtures/🚦️cohort/🔣️.json";
+import cohort from "./🧫️fixtures/🚦️cohort/🔣️.json";
 
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import type {LasSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {LAS_SQLITE_SCHEMA,lasSnapshotToSqliteDatabase,lasSnapshotFromSqliteDatabase,lasSnapshotValidateSqliteSubset} from "../🟦️.ts";
 import {binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
@@ -54,7 +54,7 @@ test("LAS controlled cohort long literal ownership cancels inside each declared 
 
 
 import NormSemanticAjv from "ajv/dist/2020.js";
-import normSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {lasSnapshotToSqliteDatabase as normSemanticProject,lasSnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
 import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

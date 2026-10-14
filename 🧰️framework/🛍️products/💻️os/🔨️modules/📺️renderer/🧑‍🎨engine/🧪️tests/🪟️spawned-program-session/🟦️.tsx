@@ -13,7 +13,7 @@ import { cleanup, render } from "@semio-tech/ui-react/test";
 import { Mode, type ModeWindowDescriptor, type WindowLayoutNode } from "@semio-tech/ui-react";
 import { afterEach, describe, expect, it } from "vitest";
 import Ajv from "ajv";
-import initialUtilityCases from "../../../../../../../🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🧫️fixtures/🔣️.json";
+import initialUtilityCases from "../../../../../../../🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🧪️tests/🧫️fixtures/🔣️.json";
 import viewContextSchema from "../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔣️.json";
 import { parseResolvedPluginViewState } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { readFileSync } from "node:fs";
@@ -44,8 +44,8 @@ import {
   type SpawnedLayoutNodeV1,
 } from "../../🧱️elements/🏛️ShellHost/🪟️spawned-program/🟦️.ts";
 import { applyUiRefreshResponseToCache, buildUiRefreshRequest, EMPTY_APP_LABELS_OVERLAY, frameworkLayoutDeclaredInstances, historyPatchShouldApplyV1, resolveFrameworkLayoutSeed, type UiRefreshCache } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
-import declaredInstancesFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🪟️declared-instances.json";
-import contributionsReceiverFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🧩️contributions-receiver.json";
+import declaredInstancesFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🪟️declared-instances.json";
+import contributionsReceiverFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🧩️contributions-receiver.json";
 import { resolveAppSurfaceSessionFactory, type AppSurfaceSessionFactory } from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 
 afterEach(cleanup);

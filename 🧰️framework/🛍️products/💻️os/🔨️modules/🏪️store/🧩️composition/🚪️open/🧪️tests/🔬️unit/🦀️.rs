@@ -15,7 +15,7 @@ pub(super) fn request_for(bytes: &[u8]) -> MemberOpenRequest {
 
 pub(super) fn request_close_policy() -> RetainedCloneGrant {
     static POLICY: std::sync::LazyLock<RetainedCloneGrant>=std::sync::LazyLock::new(||{
-        let fixture:serde_json::Value=serde_json::from_str(include_str!("../../📏️retirement/🧫️fixtures/🔣️.json")).unwrap();
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("../../📏️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
         serde_json::from_value(fixture["physicalCloseGrant"].clone()).unwrap()
     });
     *POLICY
@@ -63,7 +63,7 @@ fn request_identity_capacity(request: &MemberOpenRequest) -> usize {
 #[test]
 fn member_open_input_framing_is_canonical_scoped_and_budgeted() {
     use semio_framework_job::{StepBudget, root_cancel_token};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["framing"].as_array().unwrap() {
         let bytes: Vec<u8> = serde_json::from_value(row["bytes"].clone()).unwrap();
         for fuel in [1, 2, 13] {
@@ -141,7 +141,7 @@ fn member_open_input_framing_is_canonical_scoped_and_budgeted() {
 
 #[test]
 fn member_open_request_rejection_retains_exact_pages_and_identity() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let bytes = row["bytes"].as_u64().unwrap() as usize;
         let mut pages = OwnedSchemaDecodePages::try_with_credits(OwnedSchemaDecodeCredits { maximum_pages: bytes.max(1).div_ceil(OWNED_SCHEMA_DECODE_PAGE_BYTES), maximum_bytes: bytes.max(1) }).unwrap();
@@ -230,7 +230,7 @@ fn member_open_request_rejection_retains_exact_pages_and_identity() {
 
 #[test]
 fn member_open_request_every_report_is_same_turn_physical_release_without_new_close_allocations() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let mut mismatches = 0;
     let mut births = 0;
     for row in fixture["framing"].as_array().unwrap() {
@@ -264,7 +264,7 @@ fn member_open_request_every_report_is_same_turn_physical_release_without_new_cl
 
 #[test]
 fn member_open_request_original_identity_capacity_is_indivisible_even_when_empty() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📏️retirement/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📏️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let policy=request_close_policy();
     let setup=crate::os_store::component::tests::physical_test_close_grant();
     for row in fixture["cases"].as_array().unwrap() {
@@ -312,7 +312,7 @@ fn member_open_request_original_identity_capacity_is_indivisible_even_when_empty
 
 #[test]
 fn member_open_request_inline_pages_retire_one_item_without_physical_payload_credit() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📏️retirement/🧫️fixtures/📄️inline.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📏️retirement/🧪️tests/🧫️fixtures/📄️inline.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let length = row["inputBytes"].as_u64().unwrap() as usize;
         let bytes = vec![0x63; length];
@@ -356,7 +356,7 @@ fn member_open_request_inline_pages_retire_one_item_without_physical_payload_cre
 #[test]
 fn member_input_buffer_birth_and_retirement_preserve_actual_system_and_original_pointer(){
     use semio_framework_trace::observe_heap_allocations_on_this_thread;
-    let plain:serde_json::Value=serde_json::from_str(include_str!("../../🏭️operation/📏️birth/🧫️fixtures/🔣️.json")).unwrap();
+    let plain:serde_json::Value=serde_json::from_str(include_str!("../../🏭️operation/📏️birth/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let row=&plain["inputBuffer"];let grant=&row["policy"];
     let policy=RetainedCloneGrant{maximum_items:grant["maximumItems"].as_u64().unwrap() as usize,maximum_copy_bytes:grant["maximumCopyBytes"].as_u64().unwrap() as usize,maximum_capacity_bytes:grant["maximumCapacityBytes"].as_u64().unwrap() as usize,maximum_release_bytes:grant["maximumReleaseBytes"].as_u64().unwrap() as usize,maximum_depth:grant["maximumDepth"].as_u64().unwrap() as usize};
     let capacity=row["capacityBytes"].as_u64().unwrap() as usize;

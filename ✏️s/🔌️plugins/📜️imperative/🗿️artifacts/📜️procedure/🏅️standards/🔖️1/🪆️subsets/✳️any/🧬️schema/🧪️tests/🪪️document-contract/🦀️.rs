@@ -2,11 +2,11 @@
 
 use crate::{ProcedureDiff, ProcedureSnapshot};
 use crate::schema::ProcedureArtifact;
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 #[test]
 fn procedure_document_contract_round_trips_children_and_rejects_foreign_owners() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document-contract/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document-contract/🔣️.json")).unwrap();
     let source = fixture["document"].to_string();
     let artifact: ProcedureArtifact = semio_framework_pack_json::from_json_str(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let snapshot: ProcedureSnapshot = semio_framework_pack_json::from_json_str(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

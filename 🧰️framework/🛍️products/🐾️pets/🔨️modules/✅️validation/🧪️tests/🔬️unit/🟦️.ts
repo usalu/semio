@@ -30,7 +30,7 @@ type Node = Record<string, unknown> | unknown[];
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SCHEMA = JSON.parse(readFileSync(resolve(HERE, "../../../../🧬️schema/🔣️.json"), "utf8")) as { readonly $id: string; readonly $defs: Record<string, unknown> };
-const VECTORS = JSON.parse(readFileSync(resolve(HERE, "../../../../🧫️fixtures/🧬️schema-conformance/🔣️.json"), "utf8")) as Vectors;
+const VECTORS = JSON.parse(readFileSync(resolve(HERE, "../../../../🧪️tests/🧫️fixtures/🧬️schema-conformance/🔣️.json"), "utf8")) as Vectors;
 const AJV = new Ajv({ strict: false, allErrors: true });
 AJV.addSchema(SCHEMA);
 const JUDGES: Record<Definition, ValidateFunction> = { Species: AJV.getSchema(`${SCHEMA.$id}#/$defs/Species`)!, Menagerie: AJV.getSchema(`${SCHEMA.$id}#/$defs/Menagerie`)!, Ensemble: AJV.getSchema(`${SCHEMA.$id}#/$defs/Ensemble`)! };

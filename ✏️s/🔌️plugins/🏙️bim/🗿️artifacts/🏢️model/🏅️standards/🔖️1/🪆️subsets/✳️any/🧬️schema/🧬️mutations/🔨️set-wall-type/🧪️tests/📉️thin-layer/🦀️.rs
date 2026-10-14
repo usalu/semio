@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔨️set-wall-type/📉️thin-layer",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔨️set-wall-type/📉️thin-layer/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔨️set-wall-type/📉️thin-layer/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔨️set-wall-type/📉️thin-layer/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔨️set-wall-type/📉️thin-layer/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔨️set-wall-type/📉️thin-layer/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔨️set-wall-type/📉️thin-layer/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔨️set-wall-type/📉️thin-layer/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔨️set-wall-type/📉️thin-layer/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔨️set-wall-type/📉️thin-layer/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔨️set-wall-type/📉️thin-layer/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

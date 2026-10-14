@@ -72,8 +72,8 @@ type Descents = {
   readonly drops: readonly { readonly id: string; readonly drop: number; readonly vy: number; readonly chute: boolean; readonly expected: { readonly opened: number; readonly landed: number; readonly touch: number } }[];
 };
 
-const SWINGS = JSON.parse(readFileSync(new URL("../../../../🧫️fixtures/🪢️swing-dynamics/🔣️.json", import.meta.url), "utf8")) as Swings;
-const DESCENTS = JSON.parse(readFileSync(new URL("../../../../🧫️fixtures/🪂️parachute-descent/🔣️.json", import.meta.url), "utf8")) as Descents;
+const SWINGS = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/🪢️swing-dynamics/🔣️.json", import.meta.url), "utf8")) as Swings;
+const DESCENTS = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/🪂️parachute-descent/🔣️.json", import.meta.url), "utf8")) as Descents;
 const SOURCE = readFileSync(new URL("../../🟦️.ts", import.meta.url), "utf8");
 const ANCHOR = { x: 320, y: 120 };
 const VIEW = new DataView(new ArrayBuffer(8));

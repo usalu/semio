@@ -1,6 +1,6 @@
 /** 🧫️ Handcrafted DWG typed boundary fixture shared by component and complete snapshot laws. */
 import type { DwgTableRecordBody,DwgViewportTableRecord,DwgDimensionStyleTableRecord } from "../../../../../../🧬️schema/🟦️.ts";
-import fixture from "../../../🧫️fixtures/📇️records/🔣️.json";
+import fixture from "../../🧫️fixtures/📇️records/🔣️.json";
 
 const max=BigInt(fixture.unsignedMaximum),nan={bits:BigInt("0x"+fixture.nanBits)},zero={bits:BigInt("0x"+fixture.negativeZeroBits)},infinity={bits:BigInt("0x"+fixture.negativeInfinityBits)},finite={bits:BigInt("0x"+fixture.finiteBits)};
 const common={name:"same",xrefResolution:65535,xrefHandle:max},color={index:65535,value:{kind:"byPen" as const,index:255},name:"",bookName:undefined};

@@ -3,7 +3,7 @@ import {describe,test,expect} from "bun:test";
 import Ajv from "ajv";
 import {PNG} from "pngjs";
 import sharp from "sharp";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import {DrawingImageImportJob} from "../../🟦️.ts";
 const funded={maximumItems:4096,maximumCopyBytes:536870912,maximumCapacityBytes:536870912,maximumReleaseBytes:0,maximumDepth:1};

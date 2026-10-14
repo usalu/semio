@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🕳️create-opening/🟢️adds-a-void",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕳️create-opening/🟢️adds-a-void/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕳️create-opening/🟢️adds-a-void/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕳️create-opening/🟢️adds-a-void/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕳️create-opening/🟢️adds-a-void/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🕳️create-opening/🟢️adds-a-void/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕳️create-opening/🟢️adds-a-void/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕳️create-opening/🟢️adds-a-void/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕳️create-opening/🟢️adds-a-void/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕳️create-opening/🟢️adds-a-void/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕳️create-opening/🟢️adds-a-void/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

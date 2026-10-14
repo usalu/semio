@@ -3,7 +3,7 @@ use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds,
 use crate::{CurtainGrid, CurtainPanel, Entry, ModelDiff, StoreyPatch};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const HOUSE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
+const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
 
 fn curtain(storey: &str, top: serde_json::Value, base_offset: f64, length: f64) -> serde_json::Value {
     serde_json::json!({

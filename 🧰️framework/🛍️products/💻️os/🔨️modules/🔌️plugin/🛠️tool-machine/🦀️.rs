@@ -176,7 +176,7 @@ pub struct ToolMachineRuntime<P, M:RetireOwned+Send+'static, C = NoConfig, CM = 
     operations: Vec<(u64, ToolTag)>,
     tick: u64,
     #[cfg(any(test, feature = "artifact-app-testing"))]
-    now_ms: Option<u64>,
+    pub(crate) now_ms: Option<u64>,
 }
 
 impl<P, M:RetireOwned+Send+'static, C, CM> Default for ToolMachineRuntime<P, M, C, CM> {

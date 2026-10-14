@@ -1,7 +1,7 @@
-import {captureOwnedProcess} from "../../../../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
-import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import {captureOwnedProcess} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { fileURLToPath as testFileUrlToPath, pathToFileURL } from "node:url";
-const testSourceDirectory = testFileUrlToPath(new URL("../../🧫️fixtures/🌐️wasi-activation", import.meta.url));
+const testSourceDirectory = testFileUrlToPath(new URL("../🧫️fixtures/🌐️wasi-activation", import.meta.url));
 /** 🧭️ Qualifies isolated browser WASI resources against neutral traces and Preview2. */
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";

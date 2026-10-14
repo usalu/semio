@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
-import fixture from "../../🧫️fixtures/📚️history-cases/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/📚️history-cases/🔣️.json" with { type: "json" };
 
 test("one common decision publishes three retained member roots together", () => {
   const generated = join(process.env.SEMIO_TICKET_DIR!, "🗑️generated");
@@ -77,7 +77,7 @@ test("private prepared read cancellation returns to the exact authority before r
 });
 
 test("private child projections borrow only their exact member read authority",()=>{
- const path=resolve(import.meta.dir,"../../🧫️fixtures/🔐️projection"),law=JSON.parse(readFileSync(join(path,"🔣️.json"),"utf8"));
+ const path=resolve(import.meta.dir,"../🧫️fixtures/🔐️projection"),law=JSON.parse(readFileSync(join(path,"🔣️.json"),"utf8"));
  const database=new Database(":memory:");
  try{
   database.run("CREATE TABLE reads (id TEXT PRIMARY KEY, member TEXT NOT NULL, read_member TEXT NOT NULL, typed INTEGER NOT NULL)");

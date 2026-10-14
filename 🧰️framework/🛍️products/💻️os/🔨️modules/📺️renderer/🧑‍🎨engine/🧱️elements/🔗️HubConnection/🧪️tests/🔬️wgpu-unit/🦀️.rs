@@ -587,12 +587,12 @@ fn every_sign_in_refusal_is_a_readable_row_in_both_tongues() {
 /// 🧫️ React's language-agnostic creation-progress fixture: both locales' texts and the per-phase
 /// cases React's `ArtifactCreationProgressNotice` is held to (`🔬️artifact-creation-ready-opening`).
 fn creation_progress_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🔣️.json")).expect("artifact creation progress fixture")
+    serde_json::from_str(include_str!("../../../🏛️ShellHost/🧪️tests/🧫️fixtures/🌱️artifact-creation/🔣️.json")).expect("artifact creation progress fixture")
 }
 
 /// 🗂️ The one-kind catalog of React's catalog-authority fixture, as the hub would serve it.
 fn fixture_catalog() -> SpaceArtifactCreationCatalogV1 {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🪪️catalog-authority/🔣️.json")).expect("catalog authority fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🏛️ShellHost/🧪️tests/🧫️fixtures/🌱️artifact-creation/🪪️catalog-authority/🔣️.json")).expect("catalog authority fixture");
     let catalog = &fixture["catalog"];
     SpaceArtifactCreationCatalogV1 {
         schema: "semio.hub.space-artifact-creation-catalog/v1".into(),

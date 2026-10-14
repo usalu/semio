@@ -128,7 +128,7 @@ mod child_member_registry_tests {
     #[test]
     fn original_snapshot_return_pump_conserves_box_custody_and_each_full_receipt(){
         use semio_framework_trace::observe_heap_allocations_on_this_thread;
-        let law:serde_json::Value=serde_json::from_str(include_str!("../../⏪️time-travel/♻️retirement/🧫️fixtures/🔣️.json")).unwrap();let policy=&law["snapshotReturnGrant"];let grant=RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:policy["release"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize};
+        let law:serde_json::Value=serde_json::from_str(include_str!("../../⏪️time-travel/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let policy=&law["snapshotReturnGrant"];let grant=RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:policy["release"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize};
         for capacity in [0,8192,65536]{
             let(mut pending,heap)=observe_heap_allocations_on_this_thread(||{let mut value=String::with_capacity(capacity);value.push_str("snapshot/Original/α\0😀");Some(value)});let held=heap.requested_bytes-heap.released_bytes;let pointer=pending.as_ref().unwrap().as_ptr();let mut pump=SnapshotReadReturnPump::new();let mut births=0;let mut releases=0;let mut turns=0;
             while pending.is_some()||!pump.terminal_is_empty(){
@@ -143,7 +143,7 @@ mod child_member_registry_tests {
     #[test]
     fn original_child_member_reference_metadata_retires_each_native_field_under_full_grants(){
         use semio_framework_trace::observe_heap_allocations_on_this_thread;
-        let law:serde_json::Value=serde_json::from_str(include_str!("../../⏪️time-travel/♻️retirement/🧫️fixtures/🔣️.json")).unwrap();let policy=&law["memberCloseGrant"];let grant=RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:policy["release"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize};
+        let law:serde_json::Value=serde_json::from_str(include_str!("../../⏪️time-travel/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let policy=&law["memberCloseGrant"];let grant=RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:policy["release"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize};
         for capacity in [0,8192,65536]{
             let(original,heap)=observe_heap_allocations_on_this_thread(||{let text=|label:&str|{let mut value=String::with_capacity(capacity);value.push_str(label);value};let reference=|label:&str|ArtifactRef{artifact_id:text(label),dialect:ArtifactDialect{artifact_kind:text("kind/Art"),standard:text("standard/Norm"),subset:text("subset/Teil")}};ChildMemberMetadata{reference:reference("child/α\0😀"),owner:store::OwnerRef{parent:reference("parent/Pfad"),slot:text("slot/Kind"),child_id:text("child/Original")}}});let held=heap.requested_bytes-heap.released_bytes;let pointer=original.reference.artifact_id.as_ptr();let(mut owner,heap)=observe_heap_allocations_on_this_thread(||ChildMemberRetirement::<store::NoMembers>{entry:std::mem::ManuallyDrop::new(None),metadata:std::mem::ManuallyDrop::new(Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(original).unwrap_or_else(|_|panic!("actual original child reference metadata"))))});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut births=0;let mut releases=0;let mut turns=0;
             while !owner.terminal_is_empty(){
@@ -158,7 +158,7 @@ mod child_member_registry_tests {
     #[test]
     fn original_child_snapshot_metadata_retires_each_native_field_under_full_grants(){
         use semio_framework_trace::observe_heap_allocations_on_this_thread;
-        let law:serde_json::Value=serde_json::from_str(include_str!("../../⏪️time-travel/♻️retirement/🧫️fixtures/🔣️.json")).unwrap();let policy=&law["memberCloseGrant"];let grant=RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:policy["release"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize};
+        let law:serde_json::Value=serde_json::from_str(include_str!("../../⏪️time-travel/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let policy=&law["memberCloseGrant"];let grant=RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:policy["release"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize};
         for capacity in [0,8192,65536]{
             let mut children=ChildMemberRegistry::<store::NoMembers>::new();let retainers=ChildContentOwners::none();
             let(original,heap)=observe_heap_allocations_on_this_thread(||{let text=|label:&str|{let mut value=String::with_capacity(capacity);value.push_str(label);value};ChildContentMemberMetadata{key:MemberKey{owner:text("owner/α\0😀"),slot:text("slot/Kind"),child_id:text("child/Pfad")},artifact_id:text("artifact/Original"),dialect:ArtifactDialect{artifact_kind:text("kind/Art"),standard:text("standard/Norm"),subset:text("subset/Teil")}}});let held=heap.requested_bytes-heap.released_bytes;let pointer=original.key.owner.as_ptr();let mut owner=ChildContentRetirement::new(ChildContentView::EMPTY,false);*owner.active_member=Some(original);let mut births=0;let mut releases=0;let mut turns=0;
@@ -294,7 +294,7 @@ mod child_member_registry_tests {
     fn original_review_view_capture_and_root_alias_retire_with_exact_receipts() {
         use semio_framework_trace::observe_heap_allocations_on_this_thread;
         use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
-        let law:serde_json::Value=serde_json::from_str(include_str!("../../⏪️time-travel/♻️retirement/🧫️fixtures/🔣️.json")).unwrap();let declared=&law["reviewViewGrant"];
+        let law:serde_json::Value=serde_json::from_str(include_str!("../../⏪️time-travel/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let declared=&law["reviewViewGrant"];
         let grant=RetainedCloneGrant{maximum_items:declared["items"].as_u64().unwrap()as usize,maximum_copy_bytes:declared["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:declared["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:declared["release"].as_u64().unwrap()as usize,maximum_depth:declared["depth"].as_u64().unwrap()as usize};
         let (original,heap)=observe_heap_allocations_on_this_thread(||ChildContentView{root:Some(std::sync::Arc::new(ChildContentRoot{pages:std::array::from_fn(|_|None),len:0}))});let held=heap.requested_bytes;assert_eq!(heap.released_bytes,0);let pointer=std::sync::Arc::as_ptr(original.root.as_ref().unwrap());let base=semio_framework_time_travel::TimeTravelBase{content_revision:[7;32]};
         for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let (captured,heap)=observe_heap_allocations_on_this_thread(||time_travel::TimeTravelReviewChildren::capture(&original,base,3,denied));assert!(captured.is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(std::sync::Arc::as_ptr(original.root.as_ref().unwrap()),pointer);assert_eq!(std::sync::Arc::strong_count(original.root.as_ref().unwrap()),1)}
@@ -595,7 +595,7 @@ mod child_member_registry_tests {
 
     #[test]
     fn owned_document_member_ingress_identity_reports_actual_whole_physical_release() {
-        let grant=original_member_fixture_grant();let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🏪️store/🧩️composition/🚪️open/🏭️operation/📏️birth/🧫️fixtures/🔣️.json")).unwrap();
+        let grant=original_member_fixture_grant();let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🏪️store/🧩️composition/🚪️open/🏭️operation/📏️birth/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
         for row in fixture["cases"].as_array().unwrap(){
             let mut ingress=member_ingress(0,18,19,row["dialect"]["subset"].as_str().unwrap(),row["artifactId"].as_str().unwrap());let mut request=ingress.take_request().unwrap();
             for _ in 0..4096{let step=request.close_step(grant).unwrap();assert!(step.progress().fits(grant));if matches!(step,RetainedCloneStep::Complete(_)){break;}}assert!(request.terminal_is_empty());drop(request);
@@ -606,7 +606,7 @@ mod child_member_registry_tests {
 
     #[test]
     fn owned_document_member_ingress_identity_preserves_denied_original_capacity_even_when_empty() {
-        let grant=original_member_fixture_grant();let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🏪️store/🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🔣️.json")).unwrap();
+        let grant=original_member_fixture_grant();let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🏪️store/🧩️composition/🚪️open/📏️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
         for row in fixture["cases"].as_array().unwrap(){
             let mut ingress=member_ingress(0,18,19,"slot","child");let mut request=ingress.take_request().unwrap();for _ in 0..4096{let step=request.close_step(grant).unwrap();assert!(step.progress().fits(grant));if matches!(step,RetainedCloneStep::Complete(_)){break;}}assert!(request.terminal_is_empty());drop(request);
             let bytes=row["capacityBytes"].as_u64().unwrap()as usize;let mut original=String::with_capacity(bytes);original.push_str(row["text"].as_str().unwrap());drop(std::mem::replace(ingress.identity_string_mut().unwrap(),original));let pointer=ingress.identity_string_mut().unwrap().as_ptr();let demand=ingress.retirement_demands(grant.maximum_copy_bytes).unwrap();assert_eq!(demand.release_bytes,bytes);

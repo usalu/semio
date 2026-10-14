@@ -8,7 +8,7 @@
  * declaration a second implementation of this lane is pinned against.
  */
 import { describe, expect, it } from "vitest";
-import fixture from "../../🧱️elements/🌐️World3dHost/🧫️fixtures/🧊️mesh-residency.json" with { type: "json" };
+import fixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🧊️mesh-residency.json" with { type: "json" };
 import { advanceWorldMeshResidency, buildMeshVisuals, disposeMeshVisuals, splitJsonArrayElements, type WorldMeshResidencyV1 } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 
 /** 🧾️ The retained set a case starts from, built the way a cold consumer builds it. */

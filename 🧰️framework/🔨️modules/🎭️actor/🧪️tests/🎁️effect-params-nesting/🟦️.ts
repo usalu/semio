@@ -16,7 +16,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const here = dirname(fileURLToPath(source.url));
   const repoRoot = resolve(here, "../../../..");
   type Case = { readonly id: string; readonly effect: { readonly tag: string; readonly val?: Record<string, unknown> }; readonly friendly: unknown };
-  const fixture = JSON.parse(readFileSync(join(here, "../🧫️fixtures/🎁️effect-params-nesting/🔣️.json"), "utf8")) as {
+  const fixture = JSON.parse(readFileSync(join(here, "../🧪️tests/🧫️fixtures/🎁️effect-params-nesting/🔣️.json"), "utf8")) as {
     readonly schema: string;
     readonly nested: { readonly records: Record<string, readonly string[]> };
     readonly flat: readonly string[];

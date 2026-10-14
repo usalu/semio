@@ -6,7 +6,7 @@ use crate::examples::grid2d::pipes;
 use semio_framework_job::{Generation, InteractiveJobCloseStep, OperationId, StepBudget};
 use semio_framework_tool_run::{ToolRunId, ToolRunTick};
 
-const PARTIAL_VECTOR: &str = include_str!("../../🧫️fixtures/🎞️partial-tick.json");
+const PARTIAL_VECTOR: &str = include_str!("../🧫️fixtures/🎞️partial-tick.json");
 
 fn identity() -> ToolRunIdentity {
     ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [7; 32])

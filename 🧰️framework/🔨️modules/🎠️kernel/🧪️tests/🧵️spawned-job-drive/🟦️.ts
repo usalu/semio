@@ -76,7 +76,7 @@ interface DriveFixture {
 }
 
 function loadFixture(): DriveFixture {
-  return JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🧵️spawned-job-drive/🔣️.json"), "utf8")) as DriveFixture;
+  return JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/🧵️spawned-job-drive/🔣️.json"), "utf8")) as DriveFixture;
 }
 
 function transcript(fixture: { readonly runningPrefix?: number; readonly steps: readonly StepFixture[] }): SpawnedJobStep[] {

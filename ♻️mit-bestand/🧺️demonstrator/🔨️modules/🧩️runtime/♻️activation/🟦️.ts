@@ -16,14 +16,14 @@ import { moduleDirectoryName, componentOwnerRootV1 } from "../../../../../🧰�
 export const DEMONSTRATOR_PRIMARY_ACTIVATION_LANE = "generator";
 
 /** 📦️ Repository-relative root of the `@semio-tech/framework-os-dev` package every lane's
- * `activate-<lane>-react-dev` target writes its receipt below. */
+ * `activate-<lane>-react-prototype` target writes its receipt below. */
 const OS_DEV_PACKAGE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript";
 
 /** 🧾️ The DEMONSTRATOR-OWNED directory holding the merged receipt this product's Vite server
  * consumes. It is deliberately not one of the framework's per-variant lane directories: no single
- * `activate-<variant>-react-dev` target can ever produce the Demonstrator's cross-app union, because
+ * `activate-<variant>-react-prototype` target can ever produce the Demonstrator's cross-app union, because
  * each of them publishes exactly one playground session's plugin list. */
-export const DEMONSTRATOR_UNION_RECEIPT_DIRECTORY = "♻️mit-bestand/🧺️demonstrator/dist/♻️activation/dev";
+export const DEMONSTRATOR_UNION_RECEIPT_DIRECTORY = "♻️mit-bestand/🧺️demonstrator/dist/♻️activation/prototype";
 
 /** 🛣️ The activation lanes whose receipts together cover the Demonstrator's runtime union.
  *
@@ -49,7 +49,7 @@ export function demonstratorActivationLanes(): readonly string[] {
 
 /** 🗂️ One lane's framework-owned receipt directory. */
 export function demonstratorActivationLaneReceiptDirectory(workspace: string, lane: string): string {
-  return join(developmentRuntimeRoot(join(workspace, OS_DEV_PACKAGE_ROOT), lane, "dev", "react"), "activation");
+  return join(developmentRuntimeRoot(join(workspace, OS_DEV_PACKAGE_ROOT), lane, "prototype", "react"), "activation");
 }
 
 /** 🗂️ Every lane's receipt directory, in lane order — what the union watcher subscribes to. */
@@ -73,19 +73,19 @@ export function mergeDemonstratorActivationReceipts(lanes: readonly Demonstrator
   const rows = new Map<string, { readonly lane: string; readonly row: ActivationReceipt["plugins"][number] }>();
   for (const { lane, receipt } of lanes) {
     parseActivationReceipt(receipt);
-    if (receipt.profile !== "dev") throw new Error(`Demonstrator activation lane ${lane} is not a dev activation: ${receipt.profile}`);
+    if (receipt.profile !== "prototype") throw new Error(`Demonstrator activation lane ${lane} is not a prototype activation: ${receipt.profile}`);
     if (receipt.variant !== lane) throw new Error(`Demonstrator activation lane ${lane} carries a ${receipt.variant} receipt`);
     for (const row of receipt.plugins) {
       const previous = rows.get(row.pluginId);
       if (!previous) { rows.set(row.pluginId, { lane, row }); continue; }
-      if (previous.row.artifactSha256 !== row.artifactSha256) throw new Error(`Stale Demonstrator activation lane: ${row.pluginId} is ${previous.row.artifactSha256} in ${previous.lane} but ${row.artifactSha256} in ${lane} (run bun nx run @semio-tech/framework-os-dev:activate-${lane}-react-dev)`);
+      if (previous.row.artifactSha256 !== row.artifactSha256) throw new Error(`Stale Demonstrator activation lane: ${row.pluginId} is ${previous.row.artifactSha256} in ${previous.lane} but ${row.artifactSha256} in ${lane} (run bun nx run @semio-tech/framework-os-dev:activate-${lane}-react-prototype)`);
       if (row.rebuiltAt < previous.row.rebuiltAt) rows.set(row.pluginId, { lane, row });
     }
   }
   const expected = [...expectedPluginIds].sort(), present = [...rows.keys()].sort();
   const missing = expected.filter(id => !rows.has(id)), extra = present.filter(id => !expected.includes(id));
   if (missing.length > 0 || extra.length > 0) throw new Error(`Demonstrator activation does not contain its exact runtime union — missing: ${missing.join(", ") || "(none)"}; extra: ${extra.join(", ") || "(none)"}`);
-  return parseActivationReceipt({ schema: "semio.dev.activation/v1", variant, profile: "dev", plugins: present.map(id => ({ ...rows.get(id)!.row })) });
+  return parseActivationReceipt({ schema: "semio.dev.activation/v1", variant, profile: "prototype", plugins: present.map(id => ({ ...rows.get(id)!.row })) });
 }
 
 /** 📖️ Reads one lane's receipt, naming the exact target that produces it when it is absent. */
@@ -93,7 +93,7 @@ function readDemonstratorActivationLane(workspace: string, lane: string): Demons
   try { return { lane, receipt: readActivationReceipt(demonstratorActivationLaneReceiptDirectory(workspace, lane)) }; }
   catch (error) {
     if ((error as NodeJS.ErrnoException | undefined)?.code !== "ENOENT") throw error;
-    throw new Error(`Missing Demonstrator activation lane receipt: ${lane} (run bun nx run @semio-tech/framework-os-dev:activate-${lane}-react-dev)`);
+    throw new Error(`Missing Demonstrator activation lane receipt: ${lane} (run bun nx run @semio-tech/framework-os-dev:activate-${lane}-react-prototype)`);
   }
 }
 
@@ -110,7 +110,7 @@ export function publishDemonstratorUnionReceipt(workspace: string): { readonly r
 /** 🧾️ Requires the exact completed Demonstrator component union before starting its development host. */
 export function readDemonstratorActivation(workspace: string) {
   const { receiptDirectory, receipt, laneReceiptDirectories } = publishDemonstratorUnionReceipt(workspace);
-  const primary = developmentRuntimeRoot(join(workspace, OS_DEV_PACKAGE_ROOT), DEMONSTRATOR_PRIMARY_ACTIVATION_LANE, "dev", "react");
+  const primary = developmentRuntimeRoot(join(workspace, OS_DEV_PACKAGE_ROOT), DEMONSTRATOR_PRIMARY_ACTIVATION_LANE, "prototype", "react");
   return { receiptDirectory, extensionsDirectory: join(primary, "extensions"), receipt, laneReceiptDirectories };
 }
 //#endregion 🔖️DemonstratorUnionReceipt

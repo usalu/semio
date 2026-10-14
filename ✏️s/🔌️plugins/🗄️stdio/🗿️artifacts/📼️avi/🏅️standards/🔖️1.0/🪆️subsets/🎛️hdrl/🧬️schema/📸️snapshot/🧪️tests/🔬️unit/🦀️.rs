@@ -52,23 +52,23 @@ fn sample_snapshot() -> AviSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn typed_snapshot_pack_round_trips() {
     let snap = sample_snapshot();
-    let bytes = <AviSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
-    let back = <AviSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <AviSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
+    let back = <AviSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn typed_snapshot_dsl_round_trips() {
     let snap = sample_snapshot();
-    let text = <AviSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
-    let back = <AviSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <AviSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snap);
+    let back = <AviSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn default_snapshot_keeps_owned_state() {
     let snap = AviSnapshot { schema: STDIO_AVI_DOCUMENT_SCHEMA.into(), main_header: AviMainHeader { reserved: vec![0; 4], ..AviMainHeader::default() }, idx1_present: false, ..AviSnapshot::default() };
-    let bytes = <AviSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
-    let back = <AviSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <AviSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
+    let back = <AviSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 }

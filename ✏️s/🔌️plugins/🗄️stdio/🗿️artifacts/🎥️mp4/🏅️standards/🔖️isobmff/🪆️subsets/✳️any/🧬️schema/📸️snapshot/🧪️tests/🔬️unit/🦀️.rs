@@ -21,24 +21,24 @@ async fn sample_snapshot() -> Mp4Snapshot {
 #[semio_framework_async_macros::async_test]
 async fn json_pack_round_trips_via_real_mp4_bytes() {
     let snap = sample_snapshot().await;
-    let bytes = <Mp4Snapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
-    let back = <Mp4Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <Mp4Snapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
+    let back = <Mp4Snapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_text_round_trips_via_real_mp4_bytes() {
     let snap = sample_snapshot().await;
-    let text = <Mp4Snapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
-    let back = <Mp4Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <Mp4Snapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snap);
+    let back = <Mp4Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn default_snapshot_round_trips_through_real_codec() {
     let snap = Mp4Snapshot::default();
-    let bytes = <Mp4Snapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
-    let back = <Mp4Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <Mp4Snapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
+    let back = <Mp4Snapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 }
 
@@ -79,14 +79,14 @@ async fn logical_snapshot_and_facets_have_no_shadow_state() {
 
 #[semio_framework_async_macros::async_test]
 async fn exact_fixture_survives_pack_and_dsl_codecs() {
-    let bytes = include_bytes!("../../../../🧫️fixtures/🎬️.mp4").to_vec();
+    let bytes = include_bytes!("../../../../🧪️tests/🧫️fixtures/🎬️.mp4").to_vec();
     let snapshot = crate::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
 
-    let pack = <Mp4Snapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
-    let from_pack = <Mp4Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("decode pack");
+    let pack = <Mp4Snapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
+    let from_pack = <Mp4Snapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("decode pack");
     assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&from_pack), bytes);
 
-    let dsl = <Mp4Snapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot);
-    let from_dsl = <Mp4Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&dsl).expect("parse dsl");
+    let dsl = <Mp4Snapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snapshot);
+    let from_dsl = <Mp4Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&dsl).expect("parse dsl");
     assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&from_dsl), bytes);
 }

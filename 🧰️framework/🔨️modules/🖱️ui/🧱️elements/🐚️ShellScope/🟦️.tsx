@@ -75,7 +75,7 @@ const shellScopeAutoIdSeq = ephemeralBox("framework.modules.ui.elements.core.She
 
 /** 🐚️ Creates a fresh {@link ShellScope}. Call once per shell mount (e.g. from a lazy `useState`
  * initializer) — the scope's identity must stay stable for the shell instance's lifetime. */
-export function createShellScope(options: { readonly shellId?: string; readonly storage: StoragePort; readonly ownsPage?: boolean; readonly initialLocale?: UiLocale }): ShellScope {
+export function createShellScope(options: { readonly shellId?: string; readonly storage: StoragePort; readonly ownsPage?: boolean; readonly initialLocale: UiLocale }): ShellScope {
   const shellId = options.shellId ?? `shell-${(shellScopeAutoIdSeq.current += 1)}`;
   const rootRef: { current: HTMLElement | null } = { current: null };
   const portalLayerRef: { current: HTMLElement | null } = { current: null };
@@ -88,7 +88,7 @@ export function createShellScope(options: { readonly shellId?: string; readonly 
     query: (selector) => rootRef.current?.querySelector<HTMLElement>(selector) ?? null,
     queryAll: (selector) => (rootRef.current ? Array.from(rootRef.current.querySelectorAll<HTMLElement>(selector)) : []),
     selection: createSelectionModeStore(),
-    i18n: createShellI18nInstance(options.initialLocale ?? "en"),
+    i18n: createShellI18nInstance(options.initialLocale),
   };
 }
 

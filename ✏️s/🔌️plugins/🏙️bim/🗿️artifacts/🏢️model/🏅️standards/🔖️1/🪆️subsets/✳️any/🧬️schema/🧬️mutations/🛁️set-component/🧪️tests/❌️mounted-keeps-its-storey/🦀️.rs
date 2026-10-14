@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🛁️set-component/❌️mounted-keeps-its-storey",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛁️set-component/❌️mounted-keeps-its-storey/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛁️set-component/❌️mounted-keeps-its-storey/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛁️set-component/❌️mounted-keeps-its-storey/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛁️set-component/❌️mounted-keeps-its-storey/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🛁️set-component/❌️mounted-keeps-its-storey/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛁️set-component/❌️mounted-keeps-its-storey/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛁️set-component/❌️mounted-keeps-its-storey/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛁️set-component/❌️mounted-keeps-its-storey/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛁️set-component/❌️mounted-keeps-its-storey/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛁️set-component/❌️mounted-keeps-its-storey/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

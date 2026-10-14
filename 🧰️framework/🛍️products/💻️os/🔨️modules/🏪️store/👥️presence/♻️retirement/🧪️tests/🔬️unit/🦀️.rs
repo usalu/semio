@@ -30,12 +30,12 @@ pub(super) fn assert_fixture_descriptor<T: crate::os_spr::MutationLeaf>(descript
 /// committed JSON: it is the canonical Rust wire of the leaf.
 #[test]
 fn committed_wire_witness_is_the_canonical_wire() {
-    crate::os_store::test_support::assert_wire_witness::<ValueMutation>(include_str!("../../🧪️testing/🧬️mutations/🔢️set-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    crate::os_store::test_support::assert_wire_witness::<ValueMutation>(include_str!("../../🧪️testing/🧬️mutations/🔢️set-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }
 
 #[test]
 fn direct_presence_fixture_value_inverse() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["family"] == "presence").unwrap();
     let before = Value(serde_json::from_value(row["before"].clone()).unwrap());
     let mut wire = row["payload"].clone();
@@ -92,23 +92,19 @@ struct CapturedLocalJob {
 }
 
 impl semio_framework_job::InteractiveJob for CapturedLocalJob {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         assert_eq!(self.read.as_ref().unwrap().original().unwrap().get().0, 23);
-        semio_framework_job::JobOutcomeBorrow::admit_yield(cx)
+        semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)
     }
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> { descriptor.yielded() }
     fn begin_close(&mut self) { self.closing = true; }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        let Some(read) = self.read.as_mut() else { return semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }; };
-        match read.step(grant) {
-            Err(error) => semio_framework_job::InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
-            Ok(step) => {
-                let progress = step.progress();
-                if read.terminal_is_empty() { self.read.take(); }
-                if self.terminal_is_empty() { semio_framework_job::InteractiveJobCloseStep::Complete { progress } }
-                else { semio_framework_job::InteractiveJobCloseStep::Pending { progress } }
-            }
-        }
+    fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        let Some(read) = self.read.as_mut() else { return Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }); };
+        let copy=cx.retained_grant().maximum_copy_bytes;
+        let demand=semio_framework_value::RetirementDemand{copy_bytes:read.next_copy_byte_demand()?,capacity_bytes:read.next_capacity_byte_demand(copy)?,release_bytes:read.next_release_byte_demand()?,depth:read.next_depth_demand()?};
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|read.step(grant))?;
+        if read.terminal_is_empty(){self.read.take();}
+        Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { self.read.as_ref().map_or(Ok(0), |read| read.next_copy_byte_demand()) }
     fn next_close_capacity_byte_demand(&self, copy: usize) -> Result<usize, semio_framework_value::ValueError> { self.read.as_ref().map_or(Ok(0), |read| read.next_capacity_byte_demand(copy)) }
@@ -119,8 +115,12 @@ impl semio_framework_job::InteractiveJob for CapturedLocalJob {
 
 #[test]
 fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_remains_open() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧹️retirement.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧹️retirement.json")).unwrap();
     let law = &fixture["localCapture"];
+    let whole_cleanup_policy=&law["wholeCleanupPolicy"];
+    let cleanup_grant:RetainedCloneGrant=serde_json::from_value(whole_cleanup_policy["grant"].clone()).unwrap();
+    let cleanup_budget=semio_framework_job::StepBudget::new(whole_cleanup_policy["fuel"].as_u64().unwrap(),whole_cleanup_policy["deadlineUs"].as_u64().unwrap(),cleanup_grant);
+    assert_eq!(whole_cleanup_policy["clockUs"],1000);
     let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let factory = Arc::new(Factory(count.clone()));
     let mut owner = PresenceStore::<Value, ValueMutation>::new(Value(law["value"].as_i64().unwrap() as i32));
@@ -135,6 +135,12 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
         config: semio_framework_job::BatchDriveConfig { retained: CLOSE_GRANT, site: "presence.local.capture", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 8000 },
         now_us: semio_framework_job::default_now_us,
     };
+    let operation=params.operation;let generation=params.generation;
+    let((mut close_caller,receipt),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::StepContextOwner::new(operation,generation,cleanup_grant).unwrap());
+    assert!(receipt.fits(CLOSE_GRANT));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
+    let mut close_sequence=0;
+    let mut cleanup_receipt=RetainedCloneProgress::default();
+    let mut close_cx=close_caller.context(cleanup_budget,cancel.clone(),||Some(1000),&mut close_sequence,&mut cleanup_receipt).unwrap();
     let mut job=Some(job);let mut params=Some(params);let original=params.as_ref().unwrap();
     let now=original.now_us;let deadline=now().expect("original capture clock")+original.config.step_budget_us;
     let admission_grant=RetainedCloneGrant { maximum_copy_bytes: 1 << 20, ..CLOSE_GRANT };
@@ -170,7 +176,10 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
         if demand == law["workerPageBytes"].as_u64().unwrap() as usize {
             let phase = session.close_phase();
             let denied = RetainedCloneGrant { maximum_release_bytes: 4096, ..CLOSE_GRANT };
-            let step = session.close_step(denied);
+            let before=close_cx.retained_progress();
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close_cx.with_retained_loan(denied,|cx|session.close_step(cx)).unwrap());
+            assert_eq!(close_cx.retained_progress(),before.checked_add(step.progress()).unwrap());
+            assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
             assert!(matches!(step, semio_framework_job::WorkerJobCloseStep::Pending { .. }));
             let progress = step.progress();
             assert_eq!(serde_json::json!({"releasedItems": progress.copied_items, "releasedBytes": progress.released_bytes}), law["workerUndergrant"]);
@@ -186,9 +195,11 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
             assert!(matches!(step, RetainedCloneStep::Complete(_)));
             cancel_handbacks += 1;
         } else {
-            let step = session.close_step(CLOSE_GRANT);
+            let before=close_cx.retained_progress();
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close_cx.with_retained_loan(CLOSE_GRANT,|cx|session.close_step(cx)).unwrap());
+            assert_eq!(close_cx.retained_progress(),before.checked_add(step.progress()).unwrap());
+            assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
             assert!(step.progress().fits(CLOSE_GRANT));
-            assert!(!matches!(step, semio_framework_job::WorkerJobCloseStep::Refused { .. }));
         }
         observed_step(CLOSE_GRANT, || owner.maintenance_local_reads_step(CLOSE_GRANT));
         if session.terminal_is_empty() && owner.local_read_maintenance_is_idle() {
@@ -198,6 +209,8 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
     assert!(observed_worker_page);
     assert_eq!(session.terminal_is_empty(), law["expectedWorkerTerminal"].as_bool().unwrap());
     assert_eq!(cancel_handbacks, 1);
+    assert_eq!(close_cx.operation(),operation);assert_eq!(close_cx.generation(),generation);assert_eq!(close_cx.deadline_us(),cleanup_budget.deadline_us);assert!(close_cx.retained_progress().fits(cleanup_grant));assert!(close_cx.fuel_remaining()<=cleanup_budget.fuel);drop(close_cx);
+    for _ in 0..64{if close_caller.terminal_is_empty(){break}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close_caller.close_step(CLOSE_GRANT));assert!(step.progress().fits(CLOSE_GRANT));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}assert!(close_caller.terminal_is_empty());
     let mut original_cancel = semio_framework_async::CancelTokenRetirement::from_token(cancel);
     let mut cancel_released = 0;
     for _ in 0..64 {
@@ -225,7 +238,7 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
 
 #[test]
 fn retained_presence_local_replacements_release_shared_aliases_and_retire_exact_final_owners() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧹️retirement.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧹️retirement.json")).unwrap();
     let law = &fixture["localReplacements"];
     let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let factory = Arc::new(Factory(count.clone()));
@@ -293,7 +306,7 @@ fn peer_commit(owner: &PresenceStore<Value, ValueMutation>, peer: &serde_json::V
 
 #[test]
 fn sealed_peer_read_captures_and_returns_the_same_original_root_factory_pair(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🔗️read.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔗️read.json")).unwrap();
     let g=&law["grant"];let grant=RetainedCloneGrant{maximum_items:g["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:g["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:g["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:g["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:g["maximumDepth"].as_u64().unwrap()as usize};
     let count=Arc::new(std::sync::atomic::AtomicUsize::new(0));let factory=Arc::new(Factory(count.clone()));let mut store=PresenceStore::<Value,ValueMutation>::new(Value(0));store.install_local_retirement_factory(factory.clone()).unwrap();store.install_peer_retirement_factory(factory).unwrap();
     let mut publication=store.begin_peer_publication(CLOSE_GRANT).unwrap().0;while publication.prune_one(|_|true,CLOSE_GRANT).unwrap().0{}adopt_fixture(&mut publication,law["peer"]["actor"].as_str().unwrap().into(),Value(law["peer"]["value"].as_i64().unwrap()as i32),17,CLOSE_GRANT).unwrap();while publication.release_created_one(CLOSE_GRANT).unwrap().0{}let commit=commit_fixture(&mut publication,CLOSE_GRANT).unwrap();close_peer_root(store.publish_peer_commit(commit).ok().unwrap().unwrap());
@@ -307,7 +320,7 @@ fn sealed_peer_read_captures_and_returns_the_same_original_root_factory_pair(){
 
 #[test]
 fn original_peer_publication_refuses_before_birth_and_settles_actual_original_receipts() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🫴️publication.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🫴️publication.json")).unwrap();
     let p = &law["grant"];
     let grant = RetainedCloneGrant { maximum_items: p["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: p["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: p["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: p["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: p["maximumDepth"].as_u64().unwrap() as usize };
     for refusal in law["prebirthRefusals"].as_array().unwrap() {
@@ -386,7 +399,7 @@ fn original_peer_publication_refuses_before_birth_and_settles_actual_original_re
 
 #[test]
 fn retained_presence_peer_commit_rejects_foreign_and_stale_roots_without_losing_exact_owners() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📌️peer-commit.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📌️peer-commit.json")).unwrap();
     for law in fixture["cases"].as_array().unwrap() {
         let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let factory: Arc<dyn SnapshotRetirementFactory<Value>> = Arc::new(Factory(count.clone()));
@@ -449,7 +462,7 @@ fn retained_presence_peer_commit_rejects_foreign_and_stale_roots_without_losing_
 
 #[test]
 fn retained_presence_store_close_preserves_distinct_original_local_and_peer_factories() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧹️retirement.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧹️retirement.json")).unwrap();
     let law = &fixture["closeFactoryBinding"];
     let local = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let peer = Arc::new(std::sync::atomic::AtomicUsize::new(0));
@@ -479,7 +492,7 @@ fn retained_presence_store_close_preserves_distinct_original_local_and_peer_fact
 
 #[test]
 fn retained_presence_overlapping_rosters_retire_shared_entries_once_across_workers() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧹️retirement.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧹️retirement.json")).unwrap();
     let law = &fixture["overlap"];
     for race in [false, true] {
         let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
@@ -546,7 +559,7 @@ fn retained_presence_overlapping_rosters_retire_shared_entries_once_across_worke
 
 #[test]
 fn retained_presence_read_return_releases_alias_before_cross_worker_reclamation() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧹️retirement.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧹️retirement.json")).unwrap();
     let text = fixture["readerReturn"]["text"].as_str().unwrap();
     let expected: String = serde_json::from_value(fixture["readerReturn"]["text"].clone()).unwrap();
     assert_eq!(expected, text);
@@ -663,7 +676,7 @@ fn retained_presence_read_transfer_contention_preserves_unreturned_capability() 
 
 #[test]
 fn retained_presence_store_close_keeps_captured_readers_and_retires_nonempty_peers() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧹️retirement.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧹️retirement.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let factory = Arc::new(Factory(count.clone()));
@@ -769,7 +782,7 @@ fn retained_presence_store_close_rejects_nonempty_terminal_and_late_commit_witho
 
 #[test]
 fn original_presence_examples_supply_independent_physical_close_authority() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧹️retirement.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧹️retirement.json")).unwrap();
     assert_eq!(serde_json::json!({ "maximumItems": CLOSE_GRANT.maximum_items, "maximumCopyBytes": CLOSE_GRANT.maximum_copy_bytes, "maximumCapacityBytes": CLOSE_GRANT.maximum_capacity_bytes, "maximumReleaseBytes": CLOSE_GRANT.maximum_release_bytes, "maximumDepth": CLOSE_GRANT.maximum_depth }), fixture["physicalCloseGrant"]);
     assert_eq!(CLOSE_GRANT.maximum_copy_bytes, fixture["maximumBytes"].as_u64().unwrap() as usize);
     assert!(CLOSE_GRANT.maximum_release_bytes > fixture["localCapture"]["workerPageBytes"].as_u64().unwrap() as usize);

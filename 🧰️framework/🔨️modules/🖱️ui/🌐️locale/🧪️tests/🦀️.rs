@@ -4,7 +4,7 @@ use semio_framework_value::{DslValue, FromValue, ToValue, ValueError, NativeDeco
 use semio_framework_value::native_decoding::NativeDecodeProgress;
 use semio_framework_value::native_encoding::NativeEncodeProgress;
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("closed locale corpus") }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("closed locale corpus") }
 fn value(input: &serde_json::Value) -> DslValue {
     match input["kind"].as_str().expect("value kind") {
         "null" => DslValue::Null,

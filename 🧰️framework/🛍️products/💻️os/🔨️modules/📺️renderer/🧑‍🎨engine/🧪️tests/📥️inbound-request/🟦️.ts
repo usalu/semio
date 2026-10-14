@@ -23,8 +23,8 @@ import { EXTENSION_WORKER_LOST_FAULT, runInvokeExtensionEffect } from "../../�
 import { abortExtensionRequestsForActor, declareSurfaceCancelAction, inFlightExtensionRequestCount, isDeclaredSurfaceCancelAction } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 
-import inboundRequestFixture from "../../../../🔌️plugin/⚛️reactor/🧫️fixtures/📥️inbound-request/🔣️.json";
-import extensionInvocationWireFixture from "../../../../🌊️flow/🧩️extensions/🕸️wasm/🧫️fixtures/🔁️extension-invocation-wire/🔣️.json";
+import inboundRequestFixture from "../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/📥️inbound-request/🔣️.json";
+import extensionInvocationWireFixture from "../../../../🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🧫️fixtures/🔁️extension-invocation-wire/🔣️.json";
 
 type SubmittedEvent = { readonly kind: string; readonly payload: unknown };
 type RequestEvent = { readonly req: bigint; readonly params: { readonly origin: WireVariant; readonly capability: string; readonly payload: readonly number[] } };

@@ -1,0 +1,10 @@
+{
+  "nativeSocketProbeCodec": {
+    "value": "grant-42 ✅️ \"quoted\" / newline\nand tab\t",
+    "snapshotEncoding": "grant-42 ✅️ \"quoted\" / newline\nand tab\t",
+    "diffEncoding": "grant-42 ✅️ \"quoted\" / newline\nand tab\t",
+    "mutationEncoding": { "Set": "grant-42 ✅️ \"quoted\" / newline\nand tab\t" },
+    "rejectedSnapshotEncodings": [1, true, null, ["a"], { "Set": "x" }],
+    "rejectedMutationEncodings": [{ "Unknown": "x" }, { "Set": 1 }, { "Set": "x", "Extra": "y" }, "Set", null]
+  }
+}

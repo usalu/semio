@@ -227,7 +227,7 @@ fn xml_any_retained_contract() -> ToolExecutionContract {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn xml_any_example_snapshot(example_id: &str) -> XmlSnapshot {
     if example_id == crate::examples::demo::ID {
-        <XmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+        <XmlSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         XmlSnapshot::default()
     }
@@ -283,7 +283,7 @@ fn xml_any_emit(command: &XmlAnyEditorCommand, snapshot: &XmlSnapshot, canonical
         return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xml.stale-node-edit"), "the XML document changed while this node draft was open"));
     }
     if node_id == main::XML_ROOT_NODE_ID {
-        let next = <XmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(value).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xml.invalid-source"), error.to_string()))?;
+        let next = <XmlSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(value).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xml.invalid-source"), error.to_string()))?;
         if &next == snapshot {
             return Ok(Emit::default());
         }
@@ -448,6 +448,7 @@ impl ArtifactEditor for XmlAnyEditor {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

@@ -1,0 +1,243 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schemas/mesh/canonical/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "positions",
+    "normals",
+    "colors",
+    "indices"
+  ],
+  "properties": {
+    "positions": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "normals": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "colors": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "indices": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4294967295
+      }
+    },
+    "uvs": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "faceIds": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4294967295
+      }
+    },
+    "vertexIds": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4294967295
+      }
+    },
+    "edgePositions": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "edgeIds": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4294967295
+      }
+    },
+    "edgeUvs": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "edgeIsSeam": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "paintTextureBase64": {
+      "type": "string"
+    },
+    "attributes": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/attribute"
+      },
+      "propertyNames": {
+        "minLength": 1,
+        "maxLength": 128
+      }
+    },
+    "materials": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/value"
+      },
+      "propertyNames": {
+        "minLength": 1,
+        "maxLength": 128
+      }
+    },
+    "textures": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/texture"
+      },
+      "propertyNames": {
+        "minLength": 1,
+        "maxLength": 128
+      }
+    },
+    "componentReferences": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "maxItems": 600000
+      },
+      "propertyNames": {
+        "enum": [
+          "face",
+          "edge",
+          "vertex"
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "value": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/value"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/value"
+          }
+        }
+      ]
+    },
+    "attribute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "domain",
+        "semantic",
+        "interpolation",
+        "values"
+      ],
+      "properties": {
+        "domain": {
+          "enum": [
+            "vertex",
+            "corner",
+            "face",
+            "edge"
+          ]
+        },
+        "semantic": {
+          "enum": [
+            "normal",
+            "uv",
+            "color",
+            "material",
+            "custom"
+          ]
+        },
+        "interpolation": {
+          "enum": [
+            "linear",
+            "nearest",
+            "constant"
+          ]
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/value"
+          }
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        }
+      }
+    },
+    "texture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mime",
+        "bytes"
+      ],
+      "properties": {
+        "mime": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  }
+}

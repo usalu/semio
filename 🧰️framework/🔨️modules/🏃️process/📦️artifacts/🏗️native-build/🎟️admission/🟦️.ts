@@ -1,7 +1,9 @@
+import { compilerAdmissionBudgetV1, type CompilerAdmissionControl } from "../../../🏗️build/🎟️capacity/🟦️.ts";
+import { checkResourceLeaseControl, requireMaterializedPathV1 } from "../../../🔒️leases/🟦️.ts";
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { existsSync, rmSync } from "node:fs";
-import { mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rename, writeFile, rm } from "node:fs/promises";
 import { createServer, type Socket } from "node:net";
 import { tmpdir } from "node:os";
 import { basename, dirname, extname, join, resolve } from "node:path";
@@ -9,7 +11,7 @@ import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import { acquireQueuedResourceLease } from "../../../🔒️leases/🟦️.ts";
 import { terminateOwnedChildTree } from "../../../🪓️termination/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🎟️ The admission policy constants: reserve, prediction headroom, cold-start model and feedback thresholds. */
@@ -147,16 +149,22 @@ export async function readUnitHistoryV1(path: string): Promise<Map<string, UnitO
 }
 
 /** ✍️ Merges new observations into the store under its exclusive lease and rewrites it compacted, atomically. */
-export async function recordUnitHistoryV1(path: string, rows: readonly UnitObservationV1[], options: Readonly<{ leaseDirectory: string; signal: AbortSignal }>): Promise<void> {
+export async function recordUnitHistoryV1(path: string, rows: readonly UnitObservationV1[], options: Readonly<{ leaseDirectory: string; control: CompilerAdmissionControl }>): Promise<void> {
+  checkResourceLeaseControl(options.control);
+  path = requireMaterializedPathV1(path);
+  const temporary = requireMaterializedPathV1(`${path}.${process.pid}.${randomBytes(4).toString("hex")}.tmp`);
   for (const row of rows) admitDefinition<UnitObservationV1>("ObservationV1", row);
-  const lease = await acquireQueuedResourceLease({ directory: options.leaseDirectory, resource: JSON.stringify([ADMISSION_POLICY_V1.storeNamespace, resolve(path)]), mode: "exclusive", owner: randomBytes(16).toString("base64url"), signal: options.signal });
+  const lease = await acquireQueuedResourceLease({ directory: options.leaseDirectory, resource: JSON.stringify([ADMISSION_POLICY_V1.storeNamespace, resolve(path)]), mode: "exclusive", owner: randomBytes(16).toString("base64url"), signal: options.control.signal, control: options.control });
   try {
     const merged = compactUnitHistoryV1([...[...(await readUnitHistoryV1(path)).values()].flat(), ...rows]);
+    checkResourceLeaseControl(options.control);
     await mkdir(dirname(path), { recursive: true });
-    const temporary = `${path}.${process.pid}.${randomBytes(4).toString("hex")}.tmp`;
+    checkResourceLeaseControl(options.control);
     await writeFile(temporary, [...merged.values()].flat().sort((left, right) => left.atMs - right.atMs).map((row) => `${JSON.stringify(row)}\n`).join(""));
+    checkResourceLeaseControl(options.control);
     await rename(temporary, path);
-  } finally { lease.release(); }
+    checkResourceLeaseControl(options.control);
+  } finally { try { await rm(temporary, { force: true }); } finally { lease.release(); } }
 }
 
 const klocCache = new Map<string, Promise<number>>();
@@ -285,11 +293,13 @@ export function unitObservationsV1(units: readonly UnitRecordV1[], remainingMs: 
 }
 
 /** 🛠️ Compiles the scheduler crate (host, release) and returns its executables by name, examples included on request. */
-export async function buildSchedulerV1(options: Readonly<{ cwd: string; targetDirectory: string; buildDirectory: string; environment: Readonly<Record<string, string | undefined>>; examples?: boolean; signal: AbortSignal }>): Promise<ReadonlyMap<string, string>> {
+export async function buildSchedulerV1(options: Readonly<{ cwd: string; targetDirectory: string; buildDirectory: string; environment: Readonly<Record<string, string | undefined>>; examples?: boolean; control: CompilerAdmissionControl }>): Promise<ReadonlyMap<string, string>> {
+  const budget = compilerAdmissionBudgetV1(options.control), signal = options.control.signal;
   const manifest = fileURLToPath(new URL("./📦️packages/🦀️rust/Cargo.toml", import.meta.url));
   const child = spawn("cargo", ["build", "--locked", "--release", "--manifest-path", manifest, "--bins", ...(options.examples ? ["--examples"] : []), "--message-format=json-render-diagnostics"], { cwd: options.cwd, env: { ...options.environment, CARGO_TARGET_DIR: options.targetDirectory, CARGO_BUILD_BUILD_DIR: options.buildDirectory, RUSTC_WRAPPER: "", CARGO_BUILD_RUSTC_WRAPPER: "" }, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
   const cancel = (): void => terminateOwnedChildTree(child);
-  options.signal.addEventListener("abort", cancel, { once: true });
+  const deadline = budget === 0 ? undefined : setTimeout(cancel, budget);
+  signal.addEventListener("abort", cancel, { once: true });
   const executables = new Map<string, string>(), diagnostics: string[] = [];
   try {
     const [status] = await Promise.all([
@@ -297,8 +307,8 @@ export async function buildSchedulerV1(options: Readonly<{ cwd: string; targetDi
       (async () => { for await (const line of createInterface({ input: child.stdout!, crlfDelay: Infinity })) { try { const message = JSON.parse(line); if (message.reason === "compiler-artifact" && typeof message.executable === "string") executables.set(message.target.name, message.executable); } catch { diagnostics.push(line); } } })(),
       (async () => { for await (const line of createInterface({ input: child.stderr!, crlfDelay: Infinity })) if (diagnostics.length < 200) diagnostics.push(line); })(),
     ]);
-    options.signal.throwIfAborted();
+    checkResourceLeaseControl(options.control);
     if (status !== 0 || !executables.has("semio-build-scheduler")) throw Error(`Build scheduler compilation failed (${status}):\n${diagnostics.join("\n")}`);
     return executables;
-  } finally { options.signal.removeEventListener("abort", cancel); }
+  } finally { if (deadline) clearTimeout(deadline); signal.removeEventListener("abort", cancel); }
 }

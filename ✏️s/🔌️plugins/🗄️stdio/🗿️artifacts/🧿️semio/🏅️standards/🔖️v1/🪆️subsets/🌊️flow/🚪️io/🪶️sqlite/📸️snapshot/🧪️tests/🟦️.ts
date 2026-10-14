@@ -1,7 +1,7 @@
 /** 🌊️ Native named port graph and exact binary64 position identities. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import f from "../🧫️fixtures/🔣️.json";
+import f from "./🧫️fixtures/🔣️.json";
 import type {SemioFlowSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {SEMIO_FLOW_SQLITE_SCHEMA,semioFlowSnapshotToSqliteDatabase,semioFlowSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import {binary64,exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
@@ -11,7 +11,7 @@ test("Semio flow IEEE states, graph ownership, duplicate native identifiers and 
 
 test("Semio flow native construction frontier agrees with independent ordered rows",()=>{const db=new Database(":memory:");try{db.run("CREATE TABLE nodes(ordinal INTEGER PRIMARY KEY,native_id TEXT,label TEXT)");for(let index=0;index<f.nativeAdmission.collectionItems;index++)db.query("INSERT INTO nodes VALUES(?,?,?)").run(index,`node-${index}`,"🌠");expect(db.query("SELECT count(*) count FROM nodes").get()).toEqual({count:f.nativeAdmission.collectionItems});expect(db.query("SELECT native_id,label FROM nodes WHERE ordinal=?").get(f.nativeAdmission.cancelAfter)).toEqual({native_id:`node-${f.nativeAdmission.cancelAfter}`,label:"🌠"});}finally{db.close();}});
 
-import completeSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import completeSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 import{independentSqliteExtent as completeIndependentExtent}from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
 test("Semio Flow Native matched full and metadata empty independently preserve all complete cells",async()=>{
  for(const item of completeSemanticContract.cases){const source=structuredClone(item.sourceSnapshot)as unknown as SemioFlowSnapshot;for(const node of source.nodes){node.position.x={bits:BigInt("0x"+(node.position.x as unknown as {bits:string}).bits)};node.position.y={bits:BigInt("0x"+(node.position.y as unknown as {bits:string}).bits)};}const database=await semioFlowSnapshotToSqliteDatabase(source),bytes=await exportSqliteDatabase(database);expect(completeIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:completeSemanticContract.schemaBytes,tableWidths:completeSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:completeSemanticContract.schemaBytes,maxTables:4,maxColumns:12};expect(await semioFlowSnapshotToSqliteDatabase(source,limits)).toEqual(database);expect(await semioFlowSnapshotFromSqliteDatabase(await importSqliteDatabase(bytes),limits)).toEqual(source);

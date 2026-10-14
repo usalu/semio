@@ -4,8 +4,8 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import Parser from "web-tree-sitter";
-import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
-import input from "../📄️input/🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
+import input from "../📄️input/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 
 /** 🧾️ Independent ordered receipt oracle preserves a common group without synthesizing transactions. */
 test("private group copies exact prepared edit receipts before final staging", () => {

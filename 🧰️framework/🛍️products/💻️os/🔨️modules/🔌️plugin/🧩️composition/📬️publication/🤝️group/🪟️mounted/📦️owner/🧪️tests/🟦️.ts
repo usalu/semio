@@ -1,6 +1,6 @@
 import {expect,test} from "bun:test";
 import {applyPatch} from "fast-json-patch";
-import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
+import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 
 test("mounted private group frames retain every original owner on zero or underfunded admission",async()=>{
  

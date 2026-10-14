@@ -1,0 +1,21 @@
+import { expect, test } from "bun:test";
+import { posix } from "node:path";
+import { readFileSync } from "node:fs";
+import { minimatch } from "minimatch";
+import { loadCatalogTaxonomy } from "../../🔍️discovery/🟦️.ts";
+import { taxonomyClosedScope } from "../../🧹️normalization/🟦️.ts";
+const examples = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔭️mutation-fixture-placement/🔣️.json", import.meta.url), "utf8")) as { cases: { scope: string; holds: string[]; expected: string; moduleDir?: string }[] };
+for (const row of examples.cases) test("mutation fixture closure: " + row.scope, () => {
+  const taxonomy = loadCatalogTaxonomy();
+  const modules = row.moduleDir ?? taxonomy.schemaScopeOwnerLevels.moduleMemberDirName;
+  const source = row.scope.replace(/\/+$/u, "");
+  const policy = { ...taxonomy, schemaScopeOwnerLevels: { ...taxonomy.schemaScopeOwnerLevels, moduleMemberDirName: modules } };
+  const actual = taxonomyClosedScope(row.scope, path => row.holds.includes(path), policy);
+  const coordinates = source.split("/");
+  const prefixes = coordinates.flatMap((name, index) => name === taxonomy.testFixturesDirName && coordinates[index - 1] === taxonomy.testsDirName && coordinates[index - 2] !== modules || name === taxonomy.schemaScopeOwnerLevels.facetDirName && coordinates[index - 1] !== modules ? [coordinates.slice(0, index + 1).join("/")] : []);
+  const selected = prefixes.find(prefix => source === prefix + "/" + taxonomy.schemaScopeOwnerLevels.mutationsFacetDirName || minimatch(source, prefix + "/🧬️mutations/**", { dot: true }) || row.holds.includes(source) && source === prefix);
+  const expected = selected === undefined ? posix.normalize(source) : posix.dirname(selected.endsWith("/" + taxonomy.testFixturesDirName) ? posix.dirname(selected) : selected);
+  expect(expected).toBe(row.expected);
+  expect(actual).toBe(row.expected);
+  console.log("[DEBUG] mutation fixture closure " + JSON.stringify({ scope: row.scope, actual, oracle: expected }));
+});

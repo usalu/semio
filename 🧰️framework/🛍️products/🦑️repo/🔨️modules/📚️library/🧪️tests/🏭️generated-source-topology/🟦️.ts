@@ -9,7 +9,7 @@ type SourceCase = { readonly contractId: string; readonly previousPath: string; 
 type Fixture = { readonly schemaVersion: 1; readonly kindLeaves: Readonly<Record<string, string>>; readonly cases: readonly SourceCase[] };
 
 const repoRoot = getWorkspaceRoot();
-const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🏭️generated-source-topology/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🏭️generated-source-topology/🔣️.json"), "utf8")) as Fixture;
 
 
 describe("generated source topology", () => {

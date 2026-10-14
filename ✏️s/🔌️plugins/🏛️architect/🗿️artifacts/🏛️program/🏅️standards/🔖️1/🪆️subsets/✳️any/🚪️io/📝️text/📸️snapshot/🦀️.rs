@@ -1,6 +1,6 @@
 //! 🗣️ Architect program artifact — the textual document surface (constitutional: dsl).
 //!
-//! `ProgramSnapshot`'s `store::os_store::serialization::ArtifactDsl` impl is `#[derive(dsl::DslRecord)]`-generated on the document
+//! `ProgramSnapshot`'s `pack::snapshot::ArtifactDsl` impl is `#[derive(dsl::DslRecord)]`-generated on the document
 //! type itself (see `🦀️.rs`); this node owns the named entry points every consumer calls and
 //! the bundled `.architect` example the derive is validated against.
 
@@ -22,12 +22,12 @@ pub const ARCHITECT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/�
 
 /// 🗣️ Parses an Architect program from its textual DSL representation.
 pub fn parse(text: &str) -> Result<ProgramSnapshot, semio_framework_diagnostic::TextError> {
-    <ProgramSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <ProgramSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints an Architect program in its canonical textual DSL representation.
 pub fn print(document: &ProgramSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(document)
+    pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -50,7 +50,7 @@ use crate::standards::v1::subsets::any::schema::registers::*;
 use framework_schema::ArtifactSchema;
 
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
-impl store::os_store::serialization::ArtifactDsl for ProgramSnapshot {
+impl pack::snapshot::ArtifactDsl for ProgramSnapshot {
     const EXTENSION: &'static str = "architect";
     fn envelope_id() -> &'static str {
         "architect.program"
@@ -65,7 +65,7 @@ impl store::os_store::serialization::ArtifactDsl for ProgramSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -76,14 +76,14 @@ impl store::os_store::serialization::ArtifactDsl for ProgramSnapshot {
 /// `🗣️.dsl.semio` artifact.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn parse_program_dsl(text: &str) -> Result<ProgramSnapshot, String> {
-    <ProgramSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <ProgramSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
 /// 🖨️ Prints a [`ProgramSnapshot`] back to `.architect` DSL text under a name an external caller can reach, paired
 /// with [`parse_program_dsl`].
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn print_program_dsl(snapshot: &ProgramSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
+    pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

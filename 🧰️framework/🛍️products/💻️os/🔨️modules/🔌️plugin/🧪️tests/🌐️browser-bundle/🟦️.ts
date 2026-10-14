@@ -1,5 +1,5 @@
-import {captureOwnedProcess} from "../../../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
-import type {ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import {captureOwnedProcess} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import assert from "node:assert/strict";
 
 export function createBrowserBundleTests(dependencies: import("../../🌐️browser-bundle/📜️script.ts").BrowserBundleTestDependencies, source: { directory: string; url: string }) {
@@ -10,11 +10,11 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     testAsyncTaskReturnLift();
     await testBrowserCodegenCapsule(repoRoot, invocation);
     await testBrowserCodegenSources(repoRoot, invocation);
-    await testBrowserCodegenPolicy(repoRoot);
+    await testBrowserCodegenPolicy(repoRoot, invocation);
     await (await import("../../🌐️browser-bundle/🧪️tests/🌐️wasi-activation/🟦️.ts")).testBrowserWasiActivation(repoRoot, invocation);
     await testBrowserHostActivation();
     await testClosedBrowserActorBundle(repoRoot, invocation);
-    const fixtureRoot = join(source.directory, "🧫️fixtures/🧊️component-factory");
+    const fixtureRoot = join(source.directory, "🧪️tests/🧫️fixtures/🧊️component-factory");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     
     
@@ -98,7 +98,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
   
   /** 🔐️ Compares an immutable compiler capsule with native WebAssembly and rejects executable closure escapes. */
   async function testBrowserCodegenCapsule(repoRoot: string, invocation: ScriptInvocation): Promise<void> {
-    const root = join(source.directory, "🧫️fixtures/🔒️compiler-capsule");
+    const root = join(source.directory, "🧪️tests/🧫️fixtures/🔒️compiler-capsule");
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
     
     
@@ -138,7 +138,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
   
   /** 📸️ Compares captured compiler source semantics with Node and tests replacement after onLoad. */
   async function testBrowserCodegenSources(repoRoot: string, invocation: ScriptInvocation): Promise<void> {
-    const root = join(source.directory, "🧫️fixtures/📸️compiler-sources");
+    const root = join(source.directory, "🧪️tests/🧫️fixtures/📸️compiler-sources");
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
     
     
@@ -148,7 +148,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     const reset = () => { for (const [name, source] of Object.entries(fixture.files)) writeFileSync(join(directory, name), source as string, { mode: 0o600 }); };
     reset();
     const roots = [{ name: "fixture", path: directory }];
-    const baseline = await captureBrowserCodegenSources(join(directory, "entry.js"), roots, () => {});
+    const baseline = await captureBrowserCodegenSources(join(directory, "entry.js"), roots, () => {}, undefined, invocation);
     assert.deepEqual(baseline.inputs.map(row => row.logicalPath), fixture.inputs);
     for (const row of baseline.inputs) assert.equal(row.sha256, Buffer.from(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(fixture.files[row.logicalPath.slice(8)]))).toString("hex"));
     let replaced = 0;
@@ -156,7 +156,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
       renameSync(path, path + ".retained");
       writeFileSync(path, "throw new Error('changed compiler source executed');", { mode: 0o600 });
       replaced++;
-    });
+    }, invocation);
     assert.equal(replaced, fixture.inputs.length);
     assert.deepEqual(changed, baseline);
     const oracle = await captureOwnedProcess("node", ["--input-type=module", "-e", `
@@ -176,17 +176,17 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     reset();
     writeFileSync(join(evidence, "foreign.js"), "export const value = 900;", { mode: 0o600 });
     writeFileSync(join(directory, "entry.js"), "export { value } from '../foreign.js';", { mode: 0o600 });
-    await assert.rejects(captureBrowserCodegenSources(join(directory, "entry.js"), roots, () => {}), /compiler source/);
+    await assert.rejects(captureBrowserCodegenSources(join(directory, "entry.js"), roots, () => {}, undefined, invocation), /compiler source/);
     writeFileSync(join(directory, "value.json"), "{}", { mode: 0o600 });
     writeFileSync(join(directory, "entry.js"), "export { default } from './value.json';", { mode: 0o600 });
-    await assert.rejects(captureBrowserCodegenSources(join(directory, "entry.js"), roots, () => {}), /compiler source/);
-    await assert.rejects(captureBrowserCodegenSources(join(directory, "entry.js"), roots, () => { throw new Error("cancelled compiler source"); }), /cancelled compiler source/);
+    await assert.rejects(captureBrowserCodegenSources(join(directory, "entry.js"), roots, () => {}, undefined, invocation), /compiler source/);
+    await assert.rejects(captureBrowserCodegenSources(join(directory, "entry.js"), roots, () => { throw new Error("cancelled compiler source"); }, undefined, invocation), /cancelled compiler source/);
     console.log(`browser-compiler-sources: AJV=1 Node-oracle=1 WebCrypto=1 laws=${fixture.laws.length} inputs=${baseline.inputs.length} evidence=${evidence}`);
   }
   
   /** 🔏️ Compares policy snapshots and digests with independent canonical JSON and WebCrypto. */
-  async function testBrowserCodegenPolicy(repoRoot: string): Promise<void> {
-    const fixture = JSON.parse(readFileSync(join(source.directory, "🧫️fixtures/🔏️codegen-policy/🔣️.json"), "utf8"));
+  async function testBrowserCodegenPolicy(repoRoot: string, invocation: ScriptInvocation): Promise<void> {
+    const fixture = JSON.parse(readFileSync(join(source.directory, "🧪️tests/🧫️fixtures/🔏️codegen-policy/🔣️.json"), "utf8"));
     const validate = await browserBundleValidator("CodegenPolicyV1");
     const { default: stableStringify } = await import("fast-json-stable-stringify");
     const digest = { sha256: "a".repeat(64), byteLength: 8 };
@@ -224,7 +224,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     assert.equal(executable.byteLength, lstatSync(executable.path).size);
     assert.match(executable.sha256, /^[a-f0-9]{64}$/);
     const evidence = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "browser-codegen-policy-"));
-    const compiler = await buildBrowserCodegenModule(evidence, () => {});
+    const compiler = await buildBrowserCodegenModule(evidence, () => {}, invocation);
     const capturedInputs = structuredClone(compiler.inputs);
     writeFileSync(join(evidence, "compiler-sources.json"), "[]", { mode: 0o600 });
     assert.deepEqual(compiler.inputs, capturedInputs);
@@ -236,7 +236,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
   
   /** 🪝️ Pins the refusal that an unflattenable async result may never be bound to direct `task.return` params. */
   function testAsyncTaskReturnLift(): void {
-    const fixture = JSON.parse(readFileSync(join(source.directory, "🧫️fixtures/🪝️async-task-return/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(source.directory, "🧪️tests/🧫️fixtures/🪝️async-task-return/🔣️.json"), "utf8"));
     for (const admitted of fixture.admitted) assert.equal(validateAsyncTaskReturnLift(admitted), fixture.bindings);
     for (const denied of fixture.denied) assert.throws(() => validateAsyncTaskReturnLift(denied), /unflattenable async result requires an indirect task\.return/);
     assert.equal(validateAsyncTaskReturnLift(""), 0);
@@ -245,7 +245,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
 
   /** 📦️ Compares generated-manifest admission with the strict schema and canonical array ordering. */
   async function testBrowserActorCodegenManifest(): Promise<void> {
-    const fixture = JSON.parse(readFileSync(join(source.directory, "🧫️fixtures/📦️codegen-manifest/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(source.directory, "🧪️tests/🧫️fixtures/📦️codegen-manifest/🔣️.json"), "utf8"));
     const validate = await browserBundleValidator("CodegenManifestV1");
     const oracle = (value: typeof fixture.valid) => Boolean(validate(value)) && [value.files, value.importInterfaces].every(items => JSON.stringify(items) === JSON.stringify([...items].sort()));
     assert.equal(oracle(fixture.valid), true);
@@ -260,7 +260,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
   
   /** 🎭️ Qualifies one closed ESM with a real canonical pure import and exact actor shutdown. */
   async function testClosedBrowserActorBundle(repoRoot: string, invocation: ScriptInvocation): Promise<void> {
-    const root = join(source.directory, "🧫️fixtures/🧊️actor-factory");
+    const root = join(source.directory, "🧪️tests/🧫️fixtures/🧊️actor-factory");
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
     
     
@@ -316,7 +316,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     assert.deepEqual(browserActorImportAdmissionV1(componentBytes), { admitted: input.closed.importInterfaces, refused: [] });
     assert.deepEqual(browserActorImportAdmissionV1(Buffer.from(input.unsupported, "hex")), { admitted: [], refused: ["untrusted:remote/pure@1.0.0"] });
     assert.throws(() => browserActorImportAdmissionV1(componentBytes.subarray(0, componentBytes.byteLength - 1)), /malformed component/);
-    const nodeClosure = await closedBrowserActorBundle(input.closed.source, input.closed.cores.map((core: { name: string; hex: string }) => ({ name: core.name, bytes: Buffer.from(core.hex, "hex") })), { importInterfaces: input.closed.importInterfaces });
+    const nodeClosure = await closedBrowserActorBundle(input.closed.source, input.closed.cores.map((core: { name: string; hex: string }) => ({ name: core.name, bytes: Buffer.from(core.hex, "hex") })), invocation, { importInterfaces: input.closed.importInterfaces });
     assert.deepEqual(artifact.bytes, new TextEncoder().encode(nodeClosure));
     const runtimeRoot = join(evidence, "captured-runtime");
     for (const name of ["🌐️host/🟦️.ts", "🌐️wasi/🟦️.ts"]) {
@@ -330,10 +330,10 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
       renameSync(path, path + ".retained");
       writeFileSync(path, "throw new Error('runtime replacement executed');", { mode: 0o600 });
     }
-    const capturedClosure = await closedBrowserActorBundleFromRuntime(input.closed.source, input.closed.cores.map((core: { name: string; hex: string }) => ({ name: core.name, bytes: Buffer.from(core.hex, "hex") })), { importInterfaces: input.closed.importInterfaces }, runtimeSnapshot);
+    const capturedClosure = await closedBrowserActorBundleFromRuntime(input.closed.source, input.closed.cores.map((core: { name: string; hex: string }) => ({ name: core.name, bytes: Buffer.from(core.hex, "hex") })), { importInterfaces: input.closed.importInterfaces }, runtimeSnapshot, invocation);
     assert.equal(capturedClosure, nodeClosure);
     for (const name of ["🌐️host/🟦️.ts", "🌐️wasi/🟦️.ts"]) writeFileSync(join(runtimeRoot, name), "import './escape.ts';\n" + readFileSync(join(source.directory, name), "utf8"), { mode: 0o600 });
-    await assert.rejects(closedBrowserActorBundleFromRuntime(input.closed.source, input.closed.cores.map((core: { name: string; hex: string }) => ({ name: core.name, bytes: Buffer.from(core.hex, "hex") })), { importInterfaces: input.closed.importInterfaces }, captureBrowserActorRuntime(runtimeRoot, () => {})), /Bundle failed|runtime import denied/);
+    await assert.rejects(closedBrowserActorBundleFromRuntime(input.closed.source, input.closed.cores.map((core: { name: string; hex: string }) => ({ name: core.name, bytes: Buffer.from(core.hex, "hex") })), { importInterfaces: input.closed.importInterfaces }, captureBrowserActorRuntime(runtimeRoot, () => {}), invocation), /Bundle failed|runtime import denied/);
     const ambient = Object.fromEntries(["NODE_OPTIONS", "NODE_PATH", "BUN_OPTIONS", "BUN_PRELOAD", "PATH"].map(name => [name, process.env[name]]));
     try {
       process.env.NODE_OPTIONS = "--require=/semio-denied-ambient-preload";
@@ -421,7 +421,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
       const actors = {};
       for (const name of ["a", "b"]) {
         let clock = BigInt(fixture.starts[name]);
-        actors[name] = await module.activate({ actorId: name, activationGeneration: 1n }, { nowMs: () => ++clock, log() {}, traceSpan() {}, dispatch() { throw new Error("unexpected effect"); }, cancelEffect: () => "closed" });
+        actors[name] = await module.activate({ actorId: name, activationGeneration: 1n }, { nowMs: () => ++clock, operationClockUs: () => undefined, log() {}, traceSpan() {}, dispatch() { throw new Error("unexpected effect"); }, cancelEffect: () => "closed" });
       }
       const actual = [];
       for (const name of fixture.calls) actual.push(await actors[name].invoke(["next"], []));
@@ -444,7 +444,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
       assert.deepEqual(actors.a.progress(), fixture.lifecycle.closed);
       let reentrant, reentrantClose;
       const snapshots = [];
-      const port = { nowMs() {
+      const port = { operationClockUs: () => undefined, nowMs() {
         snapshots.push(reentrant.progress());
         reentrantClose = reentrant.close();
         snapshots.push(reentrant.progress());
@@ -483,7 +483,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
   
   /** 🧪️ Exercises actor-local host request and stream retirement against schema-owned traces. */
   async function testBrowserHostActivation(): Promise<void> {
-    const root = join(source.directory, "🧫️fixtures/🌐️host-activation");
+    const root = join(source.directory, "🧪️tests/🧫️fixtures/🌐️host-activation");
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
     
     
@@ -493,7 +493,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     assert.equal(diagnostics.length, 0, ts.formatDiagnosticsWithColorAndContext(diagnostics, { getCanonicalFileName: path => path, getCurrentDirectory: () => source.directory, getNewLine: () => "\n" }));
     const frames: import("../../🌐️browser-bundle/🌐️host/🟦️.ts").BrowserHostFrame[] = [];
     const cancellations: string[] = [];
-    const port = { dispatch: (frame: import("../../🌐️browser-bundle/🌐️host/🟦️.ts").BrowserHostFrame) => { frames.push(frame); }, cancelEffect: (id: string) => { cancellations.push(id); return "queued" as const; }, log() {}, nowMs: () => 12n, traceSpan() {} };
+    const port = { dispatch: (frame: import("../../🌐️browser-bundle/🌐️host/🟦️.ts").BrowserHostFrame) => { frames.push(frame); }, cancelEffect: (id: string) => { cancellations.push(id); return "queued" as const; }, log() {}, nowMs: () => 12n, operationClockUs: () => undefined, traceSpan() {} };
     const ok = (val: unknown) => ({ tag: "ok", val });
     const make = (index: number, signal?: AbortSignal) => createBrowserHostActivation({ actorId: fixture.actors[index].id, activationGeneration: BigInt(fixture.actors[index].generation) }, port, signal);
     const requestId = (index = frames.length - 1) => (frames[index].frame.envelope.payload.payload as { requestId: string }).requestId;

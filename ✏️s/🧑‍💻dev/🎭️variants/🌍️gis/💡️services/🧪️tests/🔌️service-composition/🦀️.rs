@@ -5,7 +5,7 @@ use semio_framework_os_kernel::os_dsl::{DslValue,json};
 
 #[test]
 fn native_composition_installs_the_real_owner_and_matches_the_portable_oracle() {
-    let fixture: serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔌️service-composition/🔣️.json")).unwrap();
+    let fixture: serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔌️service-composition/🔣️.json")).unwrap();
     let services=service_contributions_v1();
     assert_eq!(services.len(),fixture["services"].as_array().unwrap().len());
     for (service,row) in services.iter().zip(fixture["services"].as_array().unwrap()) {

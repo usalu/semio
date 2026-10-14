@@ -3,17 +3,17 @@ use semio_framework_artifact_flow_flow::Widget;
 
 #[test]
 fn shared_mesh_selection_cases_emit_typed_absolute_inputs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["valid"].as_array().unwrap().iter().chain(fixture["analytic"].as_array().unwrap()) {
         let payload: EditMeshSelection = semio_framework_pack_json::from_json_str(&case["payload"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let ids: Vec<String> = serde_json::from_value(case["ids"].clone()).unwrap();
         assert_eq!(payload.granularity(), case["granularity"].as_str().unwrap());
         let inputs = inputs(&payload, &ids).unwrap().into_iter().map(|(channel, input)| {
-            let value = match input { WidgetInputValue::Number(value) => serde_json::json!(value), WidgetInputValue::Text(value) => serde_json::json!(value), WidgetInputValue::Vector(value) => serde_json::json!(value), _ => panic!("mesh edit input") };
+            let value = match input { WidgetInputValue::Number(value) => serde_json::json!(value), WidgetInputValue::Text(value) => serde_json::json!(value), WidgetInputValue::Point(value) | WidgetInputValue::Vector(value) => serde_json::json!(value), _ => panic!("mesh edit input") };
             (channel.to_string(), value)
         }).collect::<serde_json::Map<_, _>>();
         assert_eq!(serde_json::Value::Object(inputs), case["inputs"], "{}", case["name"]);
-        if case.get("name").and_then(|name| name.as_str()).is_some_and(|name| ["filletEdges", "chamferEdges", "shell"].contains(&name)) { continue; }
+        if case.get("name").and_then(|name| name.as_str()).is_some_and(|name| ["filletEdges", "chamferEdges", "shell","draft","defeature"].contains(&name)) { continue; }
         assert!(super::inputs(&payload, &ids.iter().map(|id| id.replace("#0.", "#1.")).collect::<Vec<_>>()).is_err());
     }
     let ids: Vec<String> = serde_json::from_value(fixture["valid"][0]["ids"].clone()).unwrap();
@@ -26,12 +26,12 @@ fn shared_mesh_selection_cases_emit_typed_absolute_inputs() {
 #[test]
 fn selected_brep_edits_insert_one_scoped_branch_and_preserve_consumers() {
 
-    for (id, descriptor) in [("brep", include_str!("../../../../../../../../../../../../🌊️flow/🧩️extensions/📐️brep/🔣️.json")), ("list", include_str!("../../../../../../../../../../../../🌊️flow/🧩️extensions/📃️list/🔣️.json"))] {
+    for (id, descriptor) in [("brep", include_str!("../../../../../../../../../../../../🌊️flow/🧩️extensions/📐️brep/🧩️component/🔣️.json")), ("list", include_str!("../../../../../../../../../../../../🌊️flow/🧩️extensions/📃️list/🧩️component/🔣️.json"))] {
         let descriptor: serde_json::Value = serde_json::from_str(descriptor).unwrap();
         let manifest = descriptor["manifest"]["topicContributions"][0]["payload"]["manifestJson"].as_str().unwrap();
         semio_framework_os_flow::install_flow_extension_manifest(id, manifest).unwrap();
     }
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for case in fixtures["analyticGraph"].as_array().unwrap() {
         let snapshot = semio_framework_artifact_flow_flow::FlowHostSnapshot::default();
         let prepared = with_host(&snapshot, |host| {
@@ -41,7 +41,7 @@ fn selected_brep_edits_insert_one_scoped_branch_and_preserve_consumers() {
             let channel = case["channel"].as_str().unwrap();
             host.connect_ports(source, channel, "consumer", "brep").unwrap();
             let ids = vec![format!("{source}@{channel}#{}.{}.1~{}~9007199254740993~{}",case["index"],case["granularity"].as_str().unwrap(),"a".repeat(64),"b".repeat(64))];
-            let payload = EditMeshSelection { operation: case["operation"].as_str().unwrap().into(), ..Default::default() };
+            let payload=if let Some(payload)=case.get("payload"){semio_framework_pack_json::from_json_str(&payload.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}else{EditMeshSelection{operation:case["operation"].as_str().unwrap().into(),..Default::default()}};
             edit_rows(&payload, &host.host_snapshot, &ids).map(|(feature, rows)| (feature, rows, host.host_snapshot.clone()))
         });
         snapshot.retire_cold();
@@ -83,4 +83,10 @@ fn selected_brep_edits_insert_one_scoped_branch_and_preserve_consumers() {
             for row in rows { row.retire_cold(); }
     }
     println!("[DEBUG] Selected BRep mutation branches scalar=listLeaf labels=uint64 consumers=preserved");
+}
+
+#[test]
+fn selected_brep_face_engagements_publish_localized_registered_actions(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let selection=crate::editor::generation3d::selection::ComponentSelection{granularity:"face".into(),selected:serde_json::from_value(law["analytic"].as_array().unwrap().iter().find(|row|row["name"]=="draft").unwrap()["ids"].clone()).unwrap(),hovered:None};
+ for(is_de,language)in[(false,"en"),(true,"de")]{let engagement=crate::editor::generation3d::selection::engagement(&selection,is_de);let projected:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&engagement)).unwrap();for row in law["analyticEngagement"].as_array().unwrap(){let id=format!("procedural.brep-{}",row["operation"].as_str().unwrap());let action=projected["possibleEngagements"].as_array().unwrap().iter().find(|action|action["id"]==id).unwrap();assert_eq!(action["label"],row[language]);for(key,value)in row["args"].as_object().unwrap(){assert_eq!(action["action"]["args"][key],*value);}}}
 }

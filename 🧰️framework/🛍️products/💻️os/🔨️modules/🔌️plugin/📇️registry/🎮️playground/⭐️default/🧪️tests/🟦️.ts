@@ -5,7 +5,7 @@ import TOML from "@iarna/toml";
 import { build } from "esbuild";
 import { resolve } from "node:path";
 import schema from "../🧬️schema/🔣️.json";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import { parsePlaygroundBlock, type PlaygroundEntry } from "../../🔎️discovery/🟦️.ts";
 import { emitPlaygroundsTypeScript, renderCatalogFiles, validatePlaygroundSessions } from "../../../📽️projection/🟦️.ts";
 import { renderPlaygroundSessionTypeScript } from "../../🧭️session/🟦️.ts";

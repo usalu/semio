@@ -9,13 +9,13 @@ import { type NoteSnapshot } from "../../../../🧬️schema/📸️snapshot/�
 import {parseNoteSnapshotJson} from "../../../📝️text/📸️snapshot/🔣️json/🟦️.ts";
 
 async function fixture(): Promise<NoteSnapshot> {
-  const value = await Bun.file(new URL("../🧫️fixtures/🔣️.json", import.meta.url)).json();
+  const value = await Bun.file(new URL("./🧫️fixtures/🔣️.json", import.meta.url)).json();
   value.linkedArtifact.pin.blob.size = BigInt(value.linkedArtifact.pin.blob.size);
   return parseNoteSnapshotJson(value);
 }
 
 test("Note complete concrete backing contract retains owned diagnostics and full independent state", async () => {
-  const plan = await Bun.file(new URL("../🧫️fixtures/🔢️ieee.json", import.meta.url)).json();
+  const plan = await Bun.file(new URL("./🧫️fixtures/🔢️ieee.json", import.meta.url)).json();
   expect(plan.backing).toEqual({ authority: "completeSystemAllocatorRequests", phases: ["projectSnapshot", "reconstructSnapshot"], ceilings: ["zero", "exact", "oneBelow", "cumulative"], cancellation: ["start", "materializedInterior"], diagnosticOwnership: "actualCapacity", retirementRefund: false });
   const { default: Ajv } = await import("ajv/dist/2020");
   
@@ -56,7 +56,7 @@ test("Note preserves every authored entity and permits relational text edits", a
 });
 
 test("Note owns complete binary64 state and unsigned blob pin sizes", async () => {
-  const plan = await Bun.file(new URL("../🧫️fixtures/🔢️ieee.json", import.meta.url)).json();
+  const plan = await Bun.file(new URL("./🧫️fixtures/🔢️ieee.json", import.meta.url)).json();
   for (const item of plan.binary64) {
     const snapshot = await fixture();
     const value = { bits: BigInt(`0x${item.bits}`) };
@@ -89,7 +89,7 @@ test("Note bounds work and rejects orphaned, reordered and cyclic entities", asy
 });
 
 test("Note iteratively reconstructs the neutral deep containment fixture", async () => {
-  const plan = await Bun.file(new URL("../🧫️fixtures/🌲️deep.json", import.meta.url)).json();
+  const plan = await Bun.file(new URL("./🧫️fixtures/🌲️deep.json", import.meta.url)).json();
   const snapshot = await fixture();
   let block: NoteSnapshot["blocks"][number] = { kind: "math", id: plan.leafId, name: "leaf", x: binary64(0), y: binary64(0), width: binary64(10), height: binary64(10), rotation: binary64(0), visible: true, locked: false, tex: plan.leafText, displayMode: true };
   for (let i = 0; i < plan.depth; i++) block = { kind: "group", id: `group-${i}`, name: "group", x: binary64(0), y: binary64(0), width: binary64(10), height: binary64(10), rotation: binary64(0), visible: true, locked: false, children: [block] };
@@ -106,7 +106,7 @@ test("Note iteratively reconstructs the neutral deep containment fixture", async
 
 
 test("Note direct domain rows use their exact allowance without file metadata",async()=>{
-  const {default:Ajv}=await import("ajv/dist/2020");const plan=await Bun.file(new URL("../🧫️fixtures/🚦️control.json",import.meta.url)).json();expect(plan["longTextBytes"]).toEqual(131072);expect(plan["cancelAt"]).toEqual(65536);expect(plan["nativeValueBudget"]).toEqual(128);expect(plan["directRows"]).toEqual(1);
+  const {default:Ajv}=await import("ajv/dist/2020");const plan=await Bun.file(new URL("./🧫️fixtures/🚦️control.json",import.meta.url)).json();expect(plan["longTextBytes"]).toEqual(131072);expect(plan["cancelAt"]).toEqual(65536);expect(plan["nativeValueBudget"]).toEqual(128);expect(plan["directRows"]).toEqual(1);
   const snapshot=await fixture();snapshot.blocks=[];snapshot.assets={};snapshot.linkedArtifact=null;snapshot.title="x".repeat(plan.longTextBytes);
   const database=await noteSnapshotToSqliteDatabase(snapshot,{maxRows:plan.directRows});expect(database.tables.reduce((count,table)=>count+table.rows.length,0)).toBe(plan.directRows);expect(await noteSnapshotFromSqliteDatabase(database,{maxRows:plan.directRows})).toEqual(snapshot);
   const sql=Database.deserialize(await exportSqliteDatabase(database,{maxRows:plan.directRows}));try{expect(sql.query("SELECT COUNT(*) AS count,LENGTH(title) AS length FROM note_document").get()).toEqual({count:plan.directRows,length:plan.longTextBytes});}finally{sql.close();}

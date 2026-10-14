@@ -1282,6 +1282,7 @@ use actor_bindings::exports::semio::framework::{jobs as wit_jobs, reactor as wit
 /// asset_map }` — `limiter` is an implementation necessity (`Store::limiter` needs somewhere to
 /// read bounds from), not part of the design's literal 5-field list.
 struct ActorHostState {
+    original_job_clock:Option<fn()->Option<u64>>,
     operation_slot:operation::slot::OperationSlot,
     plugin_id: String,
     #[allow(dead_code)]
@@ -1407,6 +1408,8 @@ impl actor_bindings::semio::framework::pure::Host for ActorHostState {
         eprintln!("[actor:{}:{level}] {message}", self.plugin_id);
     }
 
+    fn operation_clock_us(&mut self)->Option<u64>{self.original_job_clock.and_then(|clock|clock())}
+
     fn now_ms(&mut self) -> i64 {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as i64)
     }
@@ -1419,6 +1422,7 @@ impl actor_bindings::semio::framework::pure::Host for ActorHostState {
 impl operation::wasmtime::OperationHostStore for ActorHostState{
  fn operation_slot(&mut self)->&mut operation::slot::OperationSlot{&mut self.operation_slot}
  fn operation_log(&mut self,level:String,message:String){actor_bindings::semio::framework::pure::Host::log(self,level,message)}
+ fn operation_clock_us(&mut self)->Option<u64>{actor_bindings::semio::framework::pure::Host::operation_clock_us(self)}
  fn operation_now_ms(&mut self)->i64{actor_bindings::semio::framework::pure::Host::now_ms(self)}
  fn operation_trace_span(&mut self,name:String){actor_bindings::semio::framework::pure::Host::trace_span(self,name)}
 }
@@ -1981,6 +1985,7 @@ impl GuestRuntime for WasmtimeRuntime {
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let (wasi, diagnostics) = guest_wasi_ctx();
         let host_state = ActorHostState {
+            original_job_clock:None,
             operation_slot:operation::slot::OperationSlot::new(),
             plugin_id: format!("actor-{}", actor.0),
             actor,
@@ -3502,7 +3507,7 @@ impl GuestRelayPublication {
     }
 
     /// ✍️ Pays one frontier of the publication (bind, append, retire the source, seal) and lends the sealed pages once.
-    fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if self.delivered {
             return Ok(None);
         }
@@ -3531,7 +3536,7 @@ impl GuestRelayPublication {
                 context.consume_fuel(1);
                 return Ok(None);
             }
-            let step = self.close_original_source(context.retained_grant())?;
+            let step = self.close_original_source(context.retained_grant()).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,context))?;
             context.consume_retained(step.progress())?;
             context.consume_fuel(1);
             return Ok(None);
@@ -3562,10 +3567,10 @@ impl GuestRelayPublication {
     }
 
     /// ♻️ Retires a delivered non-terminal publication's pages inside the next running step; true once nothing is left.
-    fn retire(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_value::ValueError> {
+    fn retire(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         if let Some(writer) = self.writer.as_mut() {
             if !writer.terminal_is_empty() {
-                let step = writer.close_step_granted(context.retained_grant())?;
+                let step = writer.close_step_granted(context.retained_grant()).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,context))?;
                 context.consume_retained(step.progress())?;
                 return Ok(false);
             }
@@ -3598,15 +3603,15 @@ impl GuestRelayPublication {
         Ok(self.original_source_demand())
     }
 
-    fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+    fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         use semio_framework_job::InteractiveJobCloseStep as S;
-        let demand=match self.retirement_demands(){Ok(demand)=>demand,Err(error)=>return S::Refused{kind:error.kind,progress:error.retained_progress()}};
-        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return S::Pending{progress:Default::default()};}
+        let demand=self.retirement_demands()?;
+        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(S::Pending{progress:Default::default()});}
         if let Some(writer)=self.writer.as_mut(){
-            if writer.terminal_is_empty(){drop(self.writer.take());return S::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}};}
-            return match writer.close_step_granted(semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}){Ok(step)=>S::Pending{progress:step.progress()},Err(error)=>S::Refused{kind:error.kind,progress:error.retained_progress()}};
+            if writer.terminal_is_empty(){drop(self.writer.take());return Ok(S::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}});}
+            return writer.close_step_granted(semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}).map(|step|S::Pending{progress:step.progress()});
         }
-        match self.close_original_source(grant){Ok(semio_framework_value::RetainedCloneStep::Progress(progress))=>S::Pending{progress},Ok(semio_framework_value::RetainedCloneStep::Complete(progress))=>S::Complete{progress},Err(error)=>S::Refused{kind:error.kind,progress:error.retained_progress()}}
+        self.close_original_source(grant).map(|step|match step{semio_framework_value::RetainedCloneStep::Progress(progress)=>S::Pending{progress},semio_framework_value::RetainedCloneStep::Complete(progress)=>S::Complete{progress}})
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -3615,6 +3620,13 @@ impl GuestRelayPublication {
 }
 
 impl Drop for GuestRelayPublication{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Host publication abandoned original writer or source backing");if self.source.is_empty()&&self.source.capacity()==0{unsafe{std::mem::ManuallyDrop::drop(&mut self.source);}}}}
+
+fn receive_relay_close(result:Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+    let step=result.map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
+    cx.consume_retained(step.progress())?;
+    if step.progress().copied_items!=0{cx.consume_fuel(1)}
+    Ok(step)
+}
 #[cfg(test)]
 #[path="♻️publication/🧪️tests/🦀️.rs"]
 mod original_publication_source_tests;
@@ -3673,11 +3685,11 @@ impl GuestColdRelayJob {
 }
 
 impl semio_framework_job::InteractiveJob for GuestColdRelayJob {
-    fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         use semio_framework_job::JobOutcomeBorrow;
         if self.publication.as_ref().is_some_and(|publication| publication.delivered) {
             if self.publication.as_ref().is_some_and(GuestRelayPublication::is_terminal) {
-                return JobOutcomeBorrow::admit_yield(context);
+                return JobOutcomeBorrow::admit_yield(context).map_err(semio_framework_job::OriginalTurnFailure::from);
             }
             let retired = self.publication.as_mut().expect("delivered guest relay publication").retire(context)?;
             if retired {
@@ -3700,21 +3712,21 @@ impl semio_framework_job::InteractiveJob for GuestColdRelayJob {
             return Ok(outcome);
         }
         if self.terminal_delivered {
-            return JobOutcomeBorrow::admit_yield(context);
+            return JobOutcomeBorrow::admit_yield(context).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         if context.is_cancelled() || self.cancel.is_cancelled_now() {
             self.cancel.cancel_now();
             if self.pending.is_none() && self.cleanup_required {
                 self.submit_cleanup();
-                return JobOutcomeBorrow::admit_yield(context);
+                return JobOutcomeBorrow::admit_yield(context).map_err(semio_framework_job::OriginalTurnFailure::from);
             }
             if self.pending.is_none() {
                 self.terminal_delivered = true;
-                return JobOutcomeBorrow::admit_cancelled(context);
+                return JobOutcomeBorrow::admit_cancelled(context).map_err(semio_framework_job::OriginalTurnFailure::from);
             }
         }
         if let Some(slot) = &self.pending {
-            let Some(completion) = slot.try_take() else { return JobOutcomeBorrow::admit_yield(context) };
+            let Some(completion) = slot.try_take() else { return JobOutcomeBorrow::admit_yield(context).map_err(semio_framework_job::OriginalTurnFailure::from) };
             self.pending = None;
             match completion {
                 GuestRelayCompletion::Started(Ok(())) => {
@@ -3749,10 +3761,10 @@ impl semio_framework_job::InteractiveJob for GuestColdRelayJob {
                 GuestRelayCompletion::Cancelled => {
                     self.cleanup_required = false;
                     self.terminal_delivered = true;
-                    return JobOutcomeBorrow::admit_cancelled(context);
+                    return JobOutcomeBorrow::admit_cancelled(context).map_err(semio_framework_job::OriginalTurnFailure::from);
                 }
             }
-            return JobOutcomeBorrow::admit_yield(context);
+            return JobOutcomeBorrow::admit_yield(context).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         if let Some((kind, input)) = self.start.take() {
             self.start_submitted = true;
@@ -3763,7 +3775,7 @@ impl semio_framework_job::InteractiveJob for GuestColdRelayJob {
         } else {
             self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Fault, b"plugin guest relay lost its start state".to_vec()));
         }
-        JobOutcomeBorrow::admit_yield(context)
+        JobOutcomeBorrow::admit_yield(context).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -3785,19 +3797,22 @@ impl semio_framework_job::InteractiveJob for GuestColdRelayJob {
         }
     }
 
-    fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::InteractiveJobCloseStep as S;
+        let grant=cx.retained_grant();
+        if cx.should_yield(){return Ok(S::Pending{progress:Default::default()})}
         if !self.closing{self.begin_close();}
         if let Some(publication)=self.publication.as_mut(){
             if publication.terminal_is_empty(){
                 let bytes=size_of::<Option<GuestRelayPublication>>();
-                if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth<1{return S::Pending{progress:Default::default()};}
-                drop(self.publication.take());return S::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}};
+                if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth<1{return Ok(S::Pending{progress:Default::default()});}
+                let progress=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};cx.consume_retained(progress)?;
+                drop(self.publication.take());cx.consume_fuel(1);return Ok(S::Pending{progress});
             }
-            if grant.maximum_depth==0{return S::Pending{progress:Default::default()};}
-            return match publication.close_step(semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}){S::Complete{progress}=>S::Pending{progress},step=>step};
+            if grant.maximum_depth==0{return Ok(S::Pending{progress:Default::default()});}
+            return receive_relay_close(publication.close_step(semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}).map(|step|match step{S::Complete{progress}=>S::Pending{progress},step=>step}),cx);
         }
-        S::Refused{kind:semio_framework_value::ValueRefusalKind::UnsupportedOwner,progress:Default::default()}
+        Err(semio_framework_job::OriginalTurnFailure::debit_original(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original Host relay native retirement is undeclared"),cx))
     }
 
     fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.original_close_demand()?.copy_bytes)}
@@ -3895,15 +3910,15 @@ impl GuestRelayLifecycleProbeJob {
 }
 
 impl semio_framework_job::InteractiveJob for GuestRelayLifecycleProbeJob {
-    fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if self.publication.is_none() {
-            let Some(output) = self.terminal_output.take() else { return semio_framework_job::JobOutcomeBorrow::admit_yield(context) };
+            let Some(output) = self.terminal_output.take() else { return semio_framework_job::JobOutcomeBorrow::admit_yield(context).map_err(semio_framework_job::OriginalTurnFailure::from) };
             self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Commit, output));
             return Ok(None);
         }
         let publication = self.publication.as_mut().expect("lifecycle probe publication was just observed");
         if publication.delivered {
-            return semio_framework_job::JobOutcomeBorrow::admit_yield(context);
+            return semio_framework_job::JobOutcomeBorrow::admit_yield(context).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         publication.step(context)
     }
@@ -3923,24 +3938,27 @@ impl semio_framework_job::InteractiveJob for GuestRelayLifecycleProbeJob {
         }
     }
 
-    fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::InteractiveJobCloseStep as S;
+        let grant=cx.retained_grant();
+        if cx.should_yield(){return Ok(S::Pending{progress:Default::default()})}
         if let Some(publication)=self.publication.as_mut(){
             if publication.terminal_is_empty(){
                 let bytes=size_of::<Option<GuestRelayPublication>>();
-                if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth<1{return S::Pending{progress:Default::default()};}
-                drop(self.publication.take());return S::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}};
+                if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth<1{return Ok(S::Pending{progress:Default::default()});}
+                let progress=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};cx.consume_retained(progress)?;
+                drop(self.publication.take());cx.consume_fuel(1);return Ok(S::Pending{progress});
             }
-            if grant.maximum_depth==0{return S::Pending{progress:Default::default()};}
-            return match publication.close_step(semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}){S::Complete{progress}=>S::Pending{progress},step=>step};
+            if grant.maximum_depth==0{return Ok(S::Pending{progress:Default::default()});}
+            return receive_relay_close(publication.close_step(semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}).map(|step|match step{S::Complete{progress}=>S::Pending{progress},step=>step}),cx);
         }
-        if self.remaining==0{return S::Refused{kind:semio_framework_value::ValueRefusalKind::UnsupportedOwner,progress:Default::default()};}
-        if !self.control.awake.load(std::sync::atomic::Ordering::Acquire){return S::Blocked;}
+        if self.remaining==0{return Err(semio_framework_job::OriginalTurnFailure::debit_original(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original Host lifecycle control retirement is undeclared"),cx))}
+        if !self.control.awake.load(std::sync::atomic::Ordering::Acquire){return Ok(S::Blocked);}
         let bytes=size_of::<usize>();
-        if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth<1{return S::Pending{progress:Default::default()};}
-        if self.control.release_permits.try_update(std::sync::atomic::Ordering::AcqRel,std::sync::atomic::Ordering::Acquire,|permits|permits.checked_sub(1)).is_err(){return S::Blocked;}
+        if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth<1{return Ok(S::Pending{progress:Default::default()});}
+        if self.control.release_permits.try_update(std::sync::atomic::Ordering::AcqRel,std::sync::atomic::Ordering::Acquire,|permits|permits.checked_sub(1)).is_err(){return Ok(S::Blocked);}
         self.remaining-=1;self.control.releases.fetch_add(1,std::sync::atomic::Ordering::SeqCst);
-        S::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}}
+        receive_relay_close(Ok(S::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}}),cx)
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{if let Some(demand)=self.publication_demand(){return Ok(demand?.copy_bytes);}if self.remaining==0{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original lifecycle control Arc, wake and output owners require native retirement"));}Ok(size_of::<usize>())}
     fn next_close_capacity_byte_demand(&self,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{if let Some(demand)=self.publication_demand(){return Ok(demand?.capacity_bytes);}self.next_close_copy_byte_demand().map(|_|0)}
@@ -3978,32 +3996,34 @@ impl<J: semio_framework_job::InteractiveJob> GuestRelayRefusedSource<J> {
         }
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::InteractiveJobCloseStep as S;
+        let grant=cx.retained_grant();
         self.begin_close();
+        if cx.should_yield(){return Ok(S::Pending{progress:Default::default()})}
         let item = semio_framework_value::RetainedCloneProgress { copied_items: 1, ..Default::default() };
         if let Some(job) = self.job.as_mut() {
             if job.terminal_is_empty() {
                 if grant.maximum_items == 0 {
-                    return S::Pending { progress: Default::default() };
+                    return Ok(S::Pending { progress: Default::default() });
                 }
-                drop(self.job.take());
-                return S::Pending { progress: item };
+                cx.consume_retained(item)?;drop(self.job.take());cx.consume_fuel(1);
+                return Ok(S::Pending { progress: item });
             }
-            let terminal = job.terminal_is_empty();
-            return match job.close_step(grant).admit(grant, terminal) {
+            let step=job.close_step(cx)?.admit(grant,job.terminal_is_empty()).map_err(semio_framework_job::OriginalTurnFailure::from)?;
+            return Ok(match step {
                 S::Complete { progress } => S::Pending { progress },
                 step => step,
-            };
+            });
         }
         if self.params.is_some() {
             if grant.maximum_items == 0 {
-                return S::Pending { progress: Default::default() };
+                return Ok(S::Pending { progress: Default::default() });
             }
-            drop(self.params.take());
-            return S::Pending { progress: item };
+            cx.consume_retained(item)?;drop(self.params.take());cx.consume_fuel(1);
+            return Ok(S::Pending { progress: item });
         }
-        S::Complete { progress: Default::default() }
+        Ok(S::Complete { progress: Default::default() })
     }
 }
 
@@ -5123,7 +5143,7 @@ impl std::fmt::Debug for PluginInstanceHandle {
 
 #[cfg(test)]
 fn test_relay_wake_authority()->GuestRelayWakeAuthority{
-    GuestRelayWakeAuthority{drive_policy:serde_json::from_value(serde_json::from_str::<serde_json::Value>(include_str!("⚡️effects/🧫️fixtures/🔣️.json")).unwrap()["driveGrant"].clone()).unwrap(),policy:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64},issuer:semio_framework_job::admit_original_thread_worker_wake,receiver:Arc::new(GuestRelayWakeReceiptLedger::new())}
+    GuestRelayWakeAuthority{drive_policy:serde_json::from_value(serde_json::from_str::<serde_json::Value>(include_str!("⚡️effects/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()["driveGrant"].clone()).unwrap(),policy:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64},issuer:semio_framework_job::admit_original_thread_worker_wake,receiver:Arc::new(GuestRelayWakeReceiptLedger::new())}
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 
-import fixture from "../../🧫️fixtures/🚚️table-lanes/🔣️.json";
+import fixture from "../🧫️fixtures/🚚️table-lanes/🔣️.json";
 import { TABLE_SCENE_LANES, tableSceneFromLanes } from "../../🟦️.ts";
 
 test("table carriers match their language-neutral schema", () => {

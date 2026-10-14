@@ -7,7 +7,7 @@ use protocol::{Inference, Mutation};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use std::collections::BTreeSet;
 
-const BUILDING: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🧮️quantities/🏗️building/📸️snapshot/🔣️.json");
+const BUILDING: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧮️quantities/🏗️building/📸️snapshot/🔣️.json");
 
 fn building() -> ModelSnapshot {
     from_json_str(BUILDING, JsonMemberPolicy::Reject).expect("the building decodes")

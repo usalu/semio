@@ -18,6 +18,6 @@ impl Serializer<VcsSnapshot> for VcsIntoCsv {
     async fn serialize(from: &VcsSnapshot, _: &ArchiveChildren, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let record = |values: Vec<String>| CsvRecord { fields: values.into_iter().map(|value| CsvField { value, quoted: false }).collect() };
         let csv = CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records: vec![record(VCS_RECORD_COLUMNS.iter().map(|c| c.to_string()).collect()), record(vcs_record(from).to_vec())] };
-        Ok(IoOutcome::clean(IoPayload::Binary(<CsvSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&csv))))
+        Ok(IoOutcome::clean(IoPayload::Binary(<CsvSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&csv))))
     }
 }

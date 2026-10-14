@@ -3,14 +3,14 @@ pub const COMPONENT_GRAMMAR_SEMIO:&str=include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH:&str=concat!(module_path!(),"::📖️.grammar.semio");
 pub const REASONING_WIRES_EXAMPLE_METABOLISM_TEXT:&str=include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 use crate::WiresSnapshot;
-impl store::os_store::serialization::ArtifactDsl for WiresSnapshot{
+impl pack::snapshot::ArtifactDsl for WiresSnapshot{
  const EXTENSION:&'static str="wires";
  fn envelope_id()->&'static str{"reasoning.wires"}
  fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|error|semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?;if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Wires Text envelope differs",semio_framework_diagnostic::TextSpan::at(1,1)))}crate::standards::v1::subsets::any::io::binary::snapshot::parse_pack_record_text(body)}
  fn print_dsl(&self)->String{let body=crate::standards::v1::subsets::any::io::binary::snapshot::print_pack_record_text(self);let envelope=store::semio_format::SemioEnvelope::from_envelope_id(Self::envelope_id(),store::semio_format::Component::Dsl,1).expect("Wires owner envelope");store::semio_format::wrap_text(&envelope,&body)}
 }
-pub fn parse_dsl(text:&str)->Result<WiresSnapshot,semio_framework_diagnostic::TextError>{<WiresSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)}
-pub fn print_dsl(snapshot:&WiresSnapshot)->String{store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)}
+pub fn parse_dsl(text:&str)->Result<WiresSnapshot,semio_framework_diagnostic::TextError>{<WiresSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)}
+pub fn print_dsl(snapshot:&WiresSnapshot)->String{pack::snapshot::ArtifactDsl::print_dsl(snapshot)}
 #[cfg(test)]
 #[path="🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
@@ -35,7 +35,7 @@ pub fn board_snapshot_json_string(fixture: &DslValue) -> String {
 /// canvas while every unit test saw the seven-node graph. The fallback is gone and the asset carries
 /// the real graph (regenerated with this crate's own `ArtifactDsl::print_dsl`).
 pub fn metabolism_wires_example_snapshot() -> protocol::MutationApplyResult<crate::WiresSnapshot> {
-    <crate::WiresSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT)
+    <crate::WiresSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT)
         .map_err(|error| protocol::MutationApplyError::new("mutation.apply.unparsable-example", format!("the committed metabolism example must parse: {error:?}")))
 }
 }

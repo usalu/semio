@@ -10,7 +10,7 @@ import glob from "fast-glob";
 import ts from "typescript";
 import { authoredPackageExportAuthority } from "../../🕸️dependencies/🧭️direction/🏗️construction/🟦️.ts";
 import { loadDependencyDirectionPolicy } from "../../🕸️dependencies/🧭️direction/🚀️bootstrap/🟦️.ts";
-import { dependencyDirectionEdges, dependencyDirectionSourceInventory, dependencyDirectionWorkspacePackages, type DependencyDirectionGraphScope } from "../../🕸️dependencies/🧭️direction/🟦️.ts";
+import { dependencyDirectionEdges, dependencyDirectionSourceInventory, dependencyDirectionWorkspacePackages, type DependencyDirectionGraphScope, type DependencyDirectionRule } from "../../🕸️dependencies/🧭️direction/🟦️.ts";
 
 type Edge = Readonly<{ id: string; target: string; reference: "relative" | "package" | "package-subpath" | "unresolved-package"; syntax: "static" | "type" | "dynamic" | "export" | "export-all" | "require"; package?: string; installation?: string }>;
 type Case = Readonly<{ id: string; from: string; comments?: readonly string[]; dependencies: readonly Edge[]; forbidden: readonly string[]; forbiddenRules?: Readonly<Record<string, readonly string[]>> }>;
@@ -21,7 +21,7 @@ const read = (path: string): unknown => JSON.parse(readFileSync(join(library, pa
 type RemovabilityCase = Readonly<{ id: string; directories: readonly string[]; manifests: Readonly<Record<string, string | object>>; expectedPackages: readonly string[]; expectedPlugins: readonly string[]; accept: boolean; members?: readonly string[]; nextManifests?: Readonly<Record<string, object>>; nextExpectedPackages?: readonly string[] }>;
 type InfrastructureCase = Readonly<{id:string;owner:string;name:string;commands:readonly string[];manifest:Record<string,unknown>;scriptSource:string;entrySourcePresent:boolean;project:{targets:Record<string,{executor:string;options:{command:string}}>};accept:boolean}>;
 type PolicyCase = Readonly<{id:string;members:readonly string[];directories:readonly string[];manifests:Readonly<Record<string,string|object>>;accept:boolean}>;
-const fixture = read("🧫️fixtures/🧱️dependency-direction/🔣️.json") as { schemaVersion: number; infrastructureCases: readonly InfrastructureCase[]; policyCases: readonly PolicyCase[]; constructionCases: readonly {id:string;packages:readonly {owner:string;name:string;exports:readonly string[];dependencyRole?:string}[];accept:boolean}[]; typeCases: readonly { id: string; declaration: string; name: string; value: unknown; accept: boolean }[]; publicExportCases: readonly { id: string; owner: string; specifier: string; accept: boolean; conditions: readonly string[]; target?: string; manifest: { name: string; exports: Record<string, unknown> }; files: Readonly<Record<string,string>> }[]; removabilityCases: readonly RemovabilityCase[]; cases: readonly Case[]; graphScope: DependencyDirectionGraphScope; resolutionCases: readonly { id: string; specifier: string; owner: string; from: string; forbidden: number; authored: boolean; accept: boolean }[]; inventoryCases: readonly { id: string; accept: boolean; sourceRole?: string; roots: readonly string[]; files: readonly string[]; links: readonly { path: string; target: string }[]; expectedSources: readonly string[] }[]; graphCases: readonly { id: string; accept: boolean }[] };
+const fixture = read("🧪️tests/🧫️fixtures/🧱️dependency-direction/🔣️.json") as { schemaVersion: number; infrastructureCases: readonly InfrastructureCase[]; policyCases: readonly PolicyCase[]; constructionCases: readonly {id:string;packages:readonly {owner:string;name:string;exports:readonly string[];dependencyRole?:string}[];accept:boolean}[]; typeCases: readonly { id: string; declaration: string; name: string; value: unknown; accept: boolean }[]; publicExportCases: readonly { id: string; owner: string; specifier: string; accept: boolean; conditions: readonly string[]; target?: string; manifest: { name: string; exports: Record<string, unknown> }; files: Readonly<Record<string,string>> }[]; removabilityCases: readonly RemovabilityCase[]; cases: readonly Case[]; graphScope: DependencyDirectionGraphScope; resolutionCases: readonly { id: string; specifier: string; owner: string; from: string; forbidden: number; authored: boolean; accept: boolean }[]; inventoryCases: readonly { id: string; accept: boolean; sourceRole?: string; roots: readonly string[]; files: readonly string[]; links: readonly { path: string; target: string }[]; expectedSources: readonly string[] }[]; graphCases: readonly { id: string; accept: boolean }[] };
 const schema = read("🧬️schema/🧱️dependency-direction/🔣️.json");
 type PolicyOwner = Readonly<{ owner: string; name: string; role?: string }>;
 const policyOwners = (fixture as typeof fixture & { policyOwners: readonly PolicyOwner[] }).policyOwners;
@@ -263,6 +263,37 @@ test("resolver graph validation rejects omissions, corrupt totals and contradict
     else expect(() => dependencyDirectionEdges(graph, rules, scope), row.id).toThrow();
   }
 });
+
+/** 🧾️ Exact portable policy receipts agree with independent parser normalization and schema equality. */
+test("resolver graph requires complete authored strict rule authority", async () => {
+  type AuthorityCase = Readonly<{ id:string;rules:readonly DependencyDirectionRule[];reportedRules:readonly Record<string,unknown>[];accept:boolean }>;
+  const rows = (fixture as typeof fixture & {ruleAuthorityCases:readonly AuthorityCase[]}).ruleAuthorityCases;
+  const validate = new Ajv({strict:true}).compile({...schema as object,$ref:"#/$defs/GraphRuleAuthorityCase"});
+  const normalize = (await import(join(repo,"node_modules/dependency-cruiser/src/main/rule-set/normalize.mjs"))).default as (rules:unknown)=>{forbidden:Record<string,unknown>[]};
+  const authority = (rule:Record<string,unknown>):Record<string,unknown> => { const result=structuredClone(rule);delete result.comment;return result; };
+  const output=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir());mkdirSync(output,{recursive:true});
+  const root=realpathSync(mkdtempSync(join(output,"rule-authority-"))),entry="neutral/entry.ts";
+  try {
+    write(root,entry,"export {};\n");
+    expect(new Set(rows.map(row=>row.id)).size).toBe(rows.length);
+    for(const row of rows) {
+      expect(validate(row),row.id+" "+JSON.stringify(validate.errors)).toBe(true);
+      const result=await cruise([entry],{baseDir:root,validate:true,ruleSet:{forbidden:row.rules.map(rule=>({...rule,severity:"error" as const,from:{path:[...rule.from.path],...(rule.from.pathNot?{pathNot:[...rule.from.pathNot]}:{})},to:{path:[...rule.to.path],...(rule.to.pathNot?{pathNot:[...rule.to.pathNot]}:{})}}))},outputType:"json"},{bustTheCache:true});
+      const graph=typeof result.output==="string"?JSON.parse(result.output):result.output;
+      expect(result.exitCode).toBe(0);expect(graph.summary.totalDependenciesCruised).toBe(0);
+      const expected=graph.summary.ruleSetUsed.forbidden.map(authority);
+      const equal=new Ajv({strict:true}).compile({type:"array",minItems:expected.length,maxItems:expected.length,uniqueItems:true,items:{anyOf:expected.map((rule:unknown)=>({const:rule}))}});
+      let accepted=false;
+      try { accepted=equal(normalize({forbidden:row.reportedRules}).forbidden.map(authority)); } catch {}
+      expect(accepted,row.id+" independent dependency-cruiser/Ajv authority verdict").toBe(row.accept);
+      const receipt={...graph,summary:{...graph.summary,ruleSetUsed:{forbidden:row.reportedRules}}};
+      const scope:DependencyDirectionGraphScope={workspaceRoots:["neutral","implementation"],workspacePackages:[],excludedPaths:[],nonFollowedPaths:[],expectedSources:[entry]};
+      if(row.accept)expect(()=>dependencyDirectionEdges(receipt,row.rules,scope),row.id).not.toThrow();
+      else expect(()=>dependencyDirectionEdges(receipt,row.rules,scope),row.id).toThrow();
+    }
+    console.log(`[DEBUG] portable rule authority cases=${rows.length}; independent oracle=dependency-cruiser normalization and Ajv equality`);
+  } finally {rmSync(root,{recursive:true,force:true});}
+},45_000);
 
 test("dependency-cruiser unresolved local terminals fail and authored aliases retain ownership", async () => {
   const output = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir());
@@ -539,20 +570,27 @@ test("plugin public SDK policy is strict for runtime and executable owners",()=>
 
 /** 📮️ Proves actual package-local semantic facets with an independent Node export resolver. */
 test("actual public package targets obey Node ownership and expose neutral Process facets", () => {
-  type PublicPackageCase=Readonly<{id:string;owner:string;name:string;subpath:string;target:string;accept:boolean}>;
+  type PublicPackageCase=Readonly<{id:string;owner:string;name:string;subpath:string;target:string;consumer?:string;accept:boolean}>;
   const rows=(fixture as typeof fixture & {actualPublicPackageCases:readonly PublicPackageCase[]}).actualPublicPackageCases;
+  const named=(fixture as typeof fixture & {actualNamedPublicCases:readonly Readonly<{id:string;path:string;names:readonly string[]}>[]}).actualNamedPublicCases;
   const validate=new Ajv({strict:true}).compile({...schema as object,$ref:"#/$defs/AuthoredPublicPackage"});
   expect(new Set(rows.map(row=>row.id)).size).toBe(rows.length);
-  const oracle=String.raw`const p=require("node:path"),m=require("node:module");const root=process.argv[1],rows=JSON.parse(process.argv[2]);process.stdout.write(JSON.stringify(rows.map(row=>{try{const target=m.createRequire(p.join(root,row.owner,"package.json")).resolve(row.name+(row.subpath==="."?"":row.subpath.slice(1)));return {id:row.id,accept:true,target};}catch(error){return {id:row.id,accept:false,error:error.code};}})));`;
+  const oracle=String.raw`const p=require("node:path"),m=require("node:module");const root=process.argv[1],rows=JSON.parse(process.argv[2]);process.stdout.write(JSON.stringify(rows.map(row=>{try{const target=m.createRequire(p.join(root,row.consumer??p.join(row.owner,"package.json"))).resolve(row.name+(row.subpath==="."?"":row.subpath.slice(1)));return {id:row.id,accept:true,target};}catch(error){return {id:row.id,accept:false,error:error.code};}})));`;
   const verdicts=JSON.parse(execFileSync("node",["--input-type=commonjs","-e",oracle,repo,JSON.stringify(rows)],{encoding:"utf8",timeout:1000,maxBuffer:16777216})) as readonly Readonly<{id:string;accept:boolean;target?:string;error?:string}>[];
   expect(verdicts.length).toBe(rows.length);
-  for(const [index,row] of rows.entries()){
+  const failures:unknown[]=[];
+  for(const [index,row] of rows.entries())try{
     const verdict=verdicts[index]!;expect(verdict.id).toBe(row.id);expect(verdict.accept,row.id+" Node public package oracle "+verdict.error).toBe(row.accept);
     if(!row.accept)continue;
     expect(verdict.target).toBe(join(repo,row.owner,row.target));
     const manifest=JSON.parse(readFileSync(join(repo,row.owner,"package.json"),"utf8"));expect(manifest.name).toBe(row.name);
     const authority=authoredPackageExportAuthority(row.owner,manifest);expect(validate({owner:row.owner,name:manifest.name,...authority}),JSON.stringify(validate.errors)).toBe(true);expect(authority.exportTargets.some(target=>target.subpath===row.subpath&&target.target===row.target)).toBe(true);
     expect(authority.exportTargets.every(target=>target.target===null||target.target.startsWith("./"))).toBe(true);
+  }catch(error){failures.push(error);}
+  for(const row of named){
+    const source=readFileSync(join(repo,row.path),"utf8"),tree=ts.createSourceFile(row.path,source,ts.ScriptTarget.Latest,true),exports=new Set(tree.statements.flatMap(statement=>ts.isExportDeclaration(statement)&&statement.exportClause&&ts.isNamedExports(statement.exportClause)?statement.exportClause.elements.map(item=>item.name.text):[]));
+    for(const name of row.names)try{expect(exports.has(name),row.id+" actual explicit first-party public named contract "+name).toBe(true);}catch(error){failures.push(error);}
   }
-  console.log(`[DEBUG] actual public package cases=${rows.length}; independent oracle=Node exports; local semantic targets exact`);
+  console.log(`[DEBUG] actual public package cases=${rows.length}; actual named cases=${named.length}; independent oracle=Node exports and TypeScript AST; failures=${failures.length}`);
+  if(failures.length)throw new AggregateError(failures,"Actual first-party public receiving and named contracts failed");
 });

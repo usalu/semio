@@ -1,4 +1,10 @@
 //#region 🧬️ComposedParentFixture
+const COMPOSITION_MAINTENANCE_GRANT:store::RetainedCloneGrant=store::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:262144,maximum_release_bytes:262144,maximum_depth:656};
+const COMPOSITION_PAGE_GRANT:store::RetainedCloneGrant=store::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:656};
+const COMPOSITION_CLEANUP_GRANT:store::RetainedCloneGrant=store::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:262144,maximum_capacity_bytes:262144,maximum_release_bytes:262144,maximum_depth:656};
+
+#[test]
+fn composition_receiving_profiles_match_authored_independent_schema_values(){let fixture:Value=serde_json::from_str(include_str!("🎟️receiving/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();for(name,grant)in[("maintenance",COMPOSITION_MAINTENANCE_GRANT),("page",COMPOSITION_PAGE_GRANT),("cleanup",COMPOSITION_CLEANUP_GRANT)]{assert_eq!(serde_json::to_value(grant).unwrap(),fixture[name])}eprintln!("[DEBUG] Native composition3 original authored5axis profiles match independent JSON source before callbacks");}
 type ParentFixtureChild = store::os_store::artifact_child::ArtifactChild<TestSnapshot>;
 
 thread_local! { static PARENT_SNAPSHOT_CLONES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
@@ -14,9 +20,14 @@ struct ComposedParentSnapshot {
 }
 
 
-impl store::os_store::serialization::ArtifactSqliteSnapshot for ComposedParentSnapshot {
-    const SQLITE_SCHEMA: &'static str = include_str!("🪴️parent.sql");
-    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
+impl store::os_store::serialization::ArtifactSqliteSnapshotHost for ComposedParentSnapshot {
+    
+    
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for ComposedParentSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("🪴️parent.sql");
+fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
         use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
         let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
@@ -26,7 +37,8 @@ impl store::os_store::serialization::ArtifactSqliteSnapshot for ComposedParentSn
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
         Ok(database)
     }
-    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
         use store::sqlite_snapshot::{SqliteValue, SqliteSnapshotPhase};
@@ -148,7 +160,7 @@ impl Mutation<ComposedParentSnapshot> for RecursiveFixtureMutation {
 }
 }
 
-impl store::os_store::serialization::ArtifactDsl for ComposedParentSnapshot {
+impl pack::snapshot::ArtifactDsl for ComposedParentSnapshot {
     const EXTENSION: &'static str = "composed-parent-test";
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
         let value = serde_json::from_str::<Value>(text).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
@@ -161,9 +173,7 @@ impl store::os_store::serialization::ArtifactDsl for ComposedParentSnapshot {
 
 impl ArtifactPack for ComposedParentSnapshot {
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())
-    }
+    
 
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         Ok(semio_framework_pack_json::to_json_string(self).into_bytes())
@@ -171,6 +181,11 @@ impl ArtifactPack for ComposedParentSnapshot {
     fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let value = serde_json::from_slice::<Value>(bytes).map_err(|error| match (u32::try_from(error.line()), u32::try_from(error.column())) { (Ok(line), Ok(column)) => store::PackError::from(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(line, column))), _ => store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, error.to_string())) })?;
         <Self as semio_framework_value::FromValue>::from_value(value.into()).map_err(|error| store::PackError::from(error))
+    }
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for ComposedParentSnapshot {
+fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())
     }
 }
 
@@ -580,9 +595,14 @@ struct RecursiveBranchSnapshot {
 }
 
 
-impl store::os_store::serialization::ArtifactSqliteSnapshot for RecursiveBranchSnapshot {
-    const SQLITE_SCHEMA: &'static str = include_str!("🌿️branch.sql");
-    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
+impl store::os_store::serialization::ArtifactSqliteSnapshotHost for RecursiveBranchSnapshot {
+    
+    
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for RecursiveBranchSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("🌿️branch.sql");
+fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
         use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
         let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
@@ -592,7 +612,7 @@ impl store::os_store::serialization::ArtifactSqliteSnapshot for RecursiveBranchS
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
         Ok(database)
     }
-    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
         use store::sqlite_snapshot::{SqliteValue, SqliteSnapshotPhase};
@@ -721,7 +741,7 @@ fn recursive_fixture_wire_schema(_mutation: &RecursiveFixtureMutation) -> Option
 /// 🌱️ Quotes the fixture catalog: the bounded retirement source plus the wire-carrying preparation authority that lets its stores author.
 fn recursive_fixture_owners_birth_demand<P>() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
     RecursiveFixtureMutation: Mutation<P>,
 {
     let base = store::os_store::document_store_owners::bounded_artifact_store_owners_birth_demand::<P, RecursiveFixtureMutation>()?;
@@ -733,7 +753,7 @@ where
 /// 🗃️ Admits the fixture catalog under `grant`: bounded retirement owners and one wire-carrying preparation factory.
 fn recursive_fixture_owners<P>(prefix: &'static str, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<P, RecursiveFixtureMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<P, RecursiveFixtureMutation>>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
     RecursiveFixtureMutation: Mutation<P>,
 {
     let preparation = store::operation_wire_preparation_factory_source_birth_demand::<P, RecursiveFixtureMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<P, RecursiveFixtureMutation, store::MutationApplyEdit<P, RecursiveFixtureMutation>>(), depth: 1 })
@@ -746,7 +766,7 @@ where
 /// 🏗️ Funds the fixture catalog from its own quotes for stores no scheduler grants.
 fn funded_recursive_fixture_owners<P>(prefix: &'static str) -> Result<store::os_store::document_store_owners::DocumentStoreOwners<P, RecursiveFixtureMutation>, semio_framework_value::ValueError>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
     RecursiveFixtureMutation: Mutation<P>,
 {
     store::os_store::document_store_owners::fund_document_store_owners(recursive_fixture_owners_birth_demand::<P>()?, |grant| recursive_fixture_owners::<P>(prefix, grant))
@@ -928,7 +948,7 @@ impl Drop for RecursiveBranchSnapshotOpen {
 
 macro_rules! recursive_fixture_snapshot {
     ($snapshot:ty, $extension:literal) => {
-        impl store::os_store::serialization::ArtifactDsl for $snapshot {
+        impl pack::snapshot::ArtifactDsl for $snapshot {
             const EXTENSION: &'static str = $extension;
             fn parse_dsl(text: &str) -> Result<Self, TextError> {
                 let value = serde_json::from_str::<Value>(text).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
@@ -946,6 +966,9 @@ macro_rules! recursive_fixture_snapshot {
                 <Self as semio_framework_value::FromValue>::from_value(value.into()).map_err(|error| store::PackError::from(error))
             }
         }
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $snapshot {
+
+}
 
         impl store::os_store::document_store_owners::MemberStoreOwner<RecursiveFixtureMutation> for $snapshot {
             type SnapshotOpen = RecursiveBranchSnapshotOpen;
@@ -962,6 +985,8 @@ macro_rules! recursive_fixture_snapshot {
 recursive_fixture_snapshot!(RecursiveBranchSnapshot, "recursive-branch-test");
 
 store::space_members! {
+    history_limits:semio_framework_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
+    maximum_history_allocation_bytes:8388608,
     pub enum RecursiveTestMembers, RecursiveTestMembersOpen {
         Branch("s.test.child", "native", "*", "semio.recursive-branch-test/v1") => (RecursiveBranchSnapshot, RecursiveFixtureMutation),
     }
@@ -992,7 +1017,7 @@ async fn assert_parent_restore_case<const HAS_CHILD: bool>(row: &Value) {
 
 #[semio_framework_async_macros::async_test]
 async fn member_factory_parent_snapshot_restore_matches_neutral_corpus() {
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🏪️store/🧩️composition/🪪️member-dialect/🧫️fixtures/🔣️.json"))).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🏪️store/🧩️composition/🪪️member-dialect/🧪️tests/🧫️fixtures/🔣️.json"))).unwrap();
     for row in fixture["publicRestoreCases"].as_array().unwrap() {
         if row["parentHasChild"].as_bool().unwrap() { assert_parent_restore_case::<true>(row).await; }
         else { assert_parent_restore_case::<false>(row).await; }
@@ -1089,12 +1114,12 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
             if cx.should_yield() {
                 return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
             }
-            let bytes = usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).min(4096);
-            let stepped = crate::app::retirement_self_grant(|body| store::os_store::snapshot_read::artifact_retirement_box_demands(self.retirement.as_ref().expect("replay retirement remains retained"), body), bytes)
-                .and_then(|grant| store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| (grant, step)));
+            let grant=cx.retained_grant();
+            let stepped = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| (grant, step));
             return match stepped {
                 Ok((grant, step)) if step.progress().fits(grant) => {
                     let progress = step.progress();
+                    cx.consume_retained(progress)?;
                     cx.consume_fuel((progress.copied_items + progress.released_bytes).max(1) as u64);
                     semio_framework_job::JobOutcomeBorrow::admit_yield(cx)
                 }
@@ -1105,8 +1130,8 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
             return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
         }
         if let Some(runtime) = self.runtime.as_mut() {
-            let bytes = usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).min(4096);
-            let settled = crate::app::retirement_self_grant(|body| runtime.initialization_retirement_demands(body), bytes).and_then(|grant| runtime.settle_current_retirement_step(grant).map(|step| (grant, step)));
+            let grant=cx.retained_grant();
+            let settled=runtime.settle_current_retirement_step(grant).and_then(|step|{cx.consume_retained(step.progress())?;Ok((grant,step))});
             match settled {
                 Ok((_, store::RetainedCloneStep::Complete(_))) => {}
                 Ok((grant, store::RetainedCloneStep::Progress(progress))) if progress.fits(grant) => {
@@ -1357,16 +1382,16 @@ async fn composed_replacement_candidate(
     crate::app::ArtifactEnvelopeDecodeOperationHandle { operation, generation }
 }
 
-/// 🎟️ One maintenance turn that self-funds exactly the app's quoted next demand, with `body` as the ordinary copy page.
+/// 🎟️ The fixture lends its authored maintenance policy without deriving authority from quotes.
 fn composed_maintenance_turn<A: PluginApp>(app: &mut A, body: usize) -> Result<crate::app::PluginLifecycleStep, Fault> {
-    let grant = crate::app::retirement_self_grant(|page| app.maintenance_retirement_demands(page), body).map_err(crate::app::plugin_retirement_fault)?;
-    app.maintenance_step(grant)
+    assert_eq!(body,COMPOSITION_MAINTENANCE_GRANT.maximum_copy_bytes);
+    app.maintenance_step(COMPOSITION_MAINTENANCE_GRANT)
 }
 
-/// 🎟️ One close turn that self-funds exactly the app's quoted next demand, with `body` as the ordinary copy page.
+/// 🎟️ The fixture's original close policy remains independent of every retirement quote.
 fn composed_close_turn<A: PluginApp>(app: &mut A, body: usize) -> Result<crate::app::PluginLifecycleStep, Fault> {
-    let grant = crate::app::retirement_self_grant(|page| app.close_retirement_demands(page), body).map_err(crate::app::plugin_retirement_fault)?;
-    let step = app.close_step(grant);
+    assert_eq!(body,COMPOSITION_MAINTENANCE_GRANT.maximum_copy_bytes);
+    let step = app.close_step(COMPOSITION_MAINTENANCE_GRANT);
     let _ = app.take_constructor_receipt();
     step
 }
@@ -1397,7 +1422,7 @@ async fn live_composed_replacement_app() -> VcsArtifactApp<ComposedParentApp, Te
 }
 
 fn recursive_replacement_vectors() -> Value {
-    serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧫️fixtures/🧩️composition/🔣️.json"))).expect("recursive replacement vectors")
+    serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🧫️fixtures/🧩️composition/🔣️.json"))).expect("recursive replacement vectors")
 }
 
 fn recursive_replacement_case<'a>(vectors: &'a Value, id: &str) -> &'a Value {
@@ -1405,8 +1430,8 @@ fn recursive_replacement_case<'a>(vectors: &'a Value, id: &str) -> &'a Value {
 }
 
 fn close_recursive_member_fixture(member: &mut RecursiveTestMembers) {
+    let grant=COMPOSITION_MAINTENANCE_GRANT;
     for _ in 0..65_536 {
-        let grant = crate::app::retirement_self_grant(|body| member.close_owned_demands(body), 4096).expect("recursive fixture member quotes its close demand");
         let step = member.close_owned_step(grant).expect("recursive fixture member closes under its exact grant");
         assert!(step.progress().fits(grant));
         if matches!(step, store::RetainedCloneStep::Complete(_)) {
@@ -1418,8 +1443,8 @@ fn close_recursive_member_fixture(member: &mut RecursiveTestMembers) {
 }
 
 fn close_recursive_parent_fixture(store: &mut store::ArtifactStore<ComposedParentSnapshot, RecursiveFixtureMutation>) {
+    let grant=COMPOSITION_MAINTENANCE_GRANT;
     for _ in 0..65_536 {
-        let grant = crate::app::retirement_self_grant(|body| store.close_owned_demands(body), 4096).expect("recursive archive parent quotes its close demand");
         let step = store.close_owned_step(grant).expect("recursive archive parent closes under its exact grant");
         assert!(step.progress().fits(grant));
         if matches!(step, store::RetainedCloneStep::Complete(_)) {
@@ -1730,7 +1755,7 @@ async fn maintenance_answers_idle_only_when_every_stage_is_idle() {
     app.publish_child_content_member(generation, "slot", "child-1").await.expect("second child content generation");
     assert!(!app.child_content_retirements.is_empty(), "a second child-content publication queues its displaced root");
     for call in 0..4_096 {
-        let grant = crate::app::retirement_self_grant(|body| app.maintenance_retirement_demands(body), 4096).expect("quoted maintenance demand");
+        let grant = COMPOSITION_MAINTENANCE_GRANT;
         match app.maintenance_step(grant).expect("bounded maintenance call") {
             crate::app::PluginLifecycleStep::Progress(progress) | crate::app::PluginLifecycleStep::Complete(progress) if progress == semio_framework_value::retained_clone::RetainedCloneProgress::default() => {
                 assert!(app.child_content_retirements.is_empty(), "maintenance answered idle on call {call} while a displaced child root was still queued");
@@ -1820,8 +1845,10 @@ async fn retained_composed_replacement_cancellation_during_open_closure_and_view
 async fn retained_composed_replacement_close_query_forwards_whole_member_page_extent() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/📏️replacement-demand/🔣️.json")).expect("closed neutral replacement demand");
     let ordinary = fixture["ordinaryGrantBytes"].as_u64().unwrap() as usize;
+    assert_eq!(ordinary,COMPOSITION_PAGE_GRANT.maximum_release_bytes);
     let extent = fixture["expectedCloseDemandBytes"].as_u64().unwrap() as usize;
     let ceiling = fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize;
+    assert_eq!(ceiling,COMPOSITION_CLEANUP_GRANT.maximum_release_bytes);
     let mut app = live_composed_replacement_app().await;
     let (handle, ingress) = retained_composed_replacement_fixture(&mut app, 799, "exact-page-close", 31).await;
     drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
@@ -1834,17 +1861,17 @@ async fn retained_composed_replacement_close_query_forwards_whole_member_page_ex
     app.cancel_artifact_store_replacement(handle).expect("cancel candidate");
     for _ in 0..100_000 {
         if app.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.state == crate::app::ActiveArtifactStoreReplacementState::RetiringRejectedMembers && active.active_member_open.as_ref().is_some_and(|open| store::MemberOpenOperation::next_release_byte_demand(open).is_ok_and(|bytes| bytes == extent))) { break; }
-        app.close_step(crate::app::plugin_page_grant(ordinary)).expect("close prior owners and bounded logical request retirement"); let _ = app.take_constructor_receipt();
+        app.close_step(COMPOSITION_PAGE_GRANT).expect("close prior owners and bounded logical request retirement"); let _ = app.take_constructor_receipt();
         semio_framework_async::yield_once().await;
     }
     let demand = app.store_replacement_jobs.get(handle.operation.0).and_then(|active| active.active_member_open.as_ref()).map(|open| store::MemberOpenOperation::next_release_byte_demand(open).expect("retained member release quote")).expect("retained member operation");
-    let denied = app.close_step(crate::app::plugin_page_grant(ordinary)).expect("physical undergrant retains owner"); let _ = app.take_constructor_receipt();
+    let denied = app.close_step(COMPOSITION_PAGE_GRANT).expect("physical undergrant retains owner"); let _ = app.take_constructor_receipt();
     let demand_after_denial = app.store_replacement_jobs.get(handle.operation.0).and_then(|active| active.active_member_open.as_ref()).map(|open| store::MemberOpenOperation::next_release_byte_demand(open).expect("denied member release quote")).expect("denied owner remains retained");
     let caller_demand = app.close_retirement_demands(ordinary).expect("caller close quote").release_bytes;
     eprintln!("[DEBUG] retained replacement neutral before cleanup request={} caller={} denied={:?}", demand_after_denial, caller_demand, denied);
     let mut terminal = false;
     for _ in 0..100_000 {
-        let step = app.close_step(crate::app::plugin_page_grant(ceiling)).expect("explicit admitted cleanup extent"); let _ = app.take_constructor_receipt();
+        let step = app.close_step(COMPOSITION_CLEANUP_GRANT).expect("explicit admitted cleanup extent"); let _ = app.take_constructor_receipt();
         if matches!(step, crate::app::PluginLifecycleStep::Complete(_)) { terminal = true; break; }
         semio_framework_async::yield_once().await;
     }
@@ -1860,6 +1887,7 @@ async fn retained_composed_replacement_close_query_forwards_whole_member_page_ex
 async fn retained_composed_replacement_terminal_store_box_requires_whole_physical_grant() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/📏️replacement-terminal/🔣️.json")).expect("closed neutral terminal frame");
     let ceiling = fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize;
+    assert_eq!(ceiling,COMPOSITION_CLEANUP_GRANT.maximum_release_bytes);
     let mut app = live_composed_replacement_app().await;
     let handle = composed_replacement_candidate(&mut app, 798, "terminal-box-close", 0).await;
     drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
@@ -1872,19 +1900,19 @@ async fn retained_composed_replacement_terminal_store_box_requires_whole_physica
                 break;
             }
         }
-        app.close_step(crate::app::plugin_page_grant(ceiling)).expect("close exact preceding candidate owners"); let _ = app.take_constructor_receipt();
+        app.close_step(COMPOSITION_CLEANUP_GRANT).expect("close exact preceding candidate owners"); let _ = app.take_constructor_receipt();
         semio_framework_async::yield_once().await;
     }
     let extent = extent.expect("terminal candidate store frame remains retained");
     assert!(extent > 0 && extent <= ceiling);
     let before_demand = app.close_retirement_demands(extent).expect("terminal frame close quote").release_bytes;
-    let (denied, denied_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(crate::app::plugin_page_grant(extent - 1)).expect("terminal frame one below")); let _ = app.take_constructor_receipt();
+    let (denied, denied_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(store::RetainedCloneGrant{maximum_release_bytes:extent-1,..COMPOSITION_CLEANUP_GRANT}).expect("terminal frame one below")); let _ = app.take_constructor_receipt();
     let retained = app.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.terminal_store_frame_bytes() == Some(extent));
     let exact_demand = app.close_retirement_demands(extent).expect("terminal frame close quote after the undergrant").release_bytes;
-    let (funded, funded_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(crate::app::plugin_page_grant(extent)).expect("terminal frame exact funding")); let _ = app.take_constructor_receipt();
+    let (funded, funded_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(store::RetainedCloneGrant{maximum_release_bytes:extent,..COMPOSITION_CLEANUP_GRANT}).expect("terminal frame exact funding")); let _ = app.take_constructor_receipt();
     let mut terminal = false;
     for _ in 0..100_000 {
-        let step = app.close_step(crate::app::plugin_page_grant(ceiling)).expect("complete separately admitted app cleanup"); let _ = app.take_constructor_receipt();
+        let step = app.close_step(COMPOSITION_CLEANUP_GRANT).expect("complete separately admitted app cleanup"); let _ = app.take_constructor_receipt();
         if matches!(step, crate::app::PluginLifecycleStep::Complete(_)) { terminal = true; break; }
         semio_framework_async::yield_once().await;
     }
@@ -2434,7 +2462,7 @@ async fn one_reactor_turn_pumps_the_envelope_decode_worker_to_its_terminal_poll(
 
 #[test]
 fn declared_child_projection_override_preserves_authored_refusal() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧩️composition/🔎️projection/🧫️fixtures/🔣️.json"))).expect("closed projection fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧩️composition/🔎️projection/🧪️tests/🧫️fixtures/🔣️.json"))).expect("closed projection fixture");
     let refusal = &fixture["overrideRefusal"];
     let snapshot = ComposedParentSnapshot { slot: None, revision: refusal["revision"].as_i64().expect("revision") as i32 };
     assert!(store::ChildRestoreProjection::from_snapshot(&snapshot).expect("structural leaf").is_empty());

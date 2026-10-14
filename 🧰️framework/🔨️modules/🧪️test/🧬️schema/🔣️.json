@@ -2899,7 +2899,7 @@
         "inline-test-body",
         "inline-self-test-declaration",
         "invalid-test-module-wiring",
-        "fixture-in-test-case",
+        "fixture-outside-tests",
         "fixture-owner-delivery-scope",
         "test-data-in-case",
         "production-fixture-dependency",

@@ -2,9 +2,9 @@ use semio_s_artifact_stdio_contract::{ArtifactAssembly, ArtifactContribution};
 use semio_s_artifact_stdio_contract::registry::ContributionRegistry;
 use semio_framework_plugin::{ArtifactDefinition, PluginAssemblyError};
 use semio_s_plugin_stdio::{AssemblyOwner, AssemblyPlan};
-const ALPHA: &str = include_str!("../../📇️registry/🧬️contract/🧫️fixtures/📇️contributions/alpha.json");
-const BRAVO: &str = include_str!("../../📇️registry/🧬️contract/🧫️fixtures/📇️contributions/bravo.json");
-const CHARLIE: &str = include_str!("../../📇️registry/🧬️contract/🧫️fixtures/📇️contributions/charlie.json");
+const ALPHA: &str = include_str!("../../📇️registry/🧬️contract/🧪️tests/🧫️fixtures/📇️contributions/alpha.json");
+const BRAVO: &str = include_str!("../../📇️registry/🧬️contract/🧪️tests/🧫️fixtures/📇️contributions/bravo.json");
+const CHARLIE: &str = include_str!("../../📇️registry/🧬️contract/🧪️tests/🧫️fixtures/📇️contributions/charlie.json");
 
 fn contribution(identity: &'static str) -> ArtifactContribution {
     fn definition(schema: &'static str) -> Result<ArtifactDefinition, PluginAssemblyError> {
@@ -24,7 +24,7 @@ fn contribution(identity: &'static str) -> ArtifactContribution {
 
 #[test]
 fn selected_assembly_remains_exact_after_owner_removal() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️assembly/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️assembly/🔣️.json")).unwrap();
     for row in vectors["cases"].as_array().unwrap() {
         let selected = row["selected"].as_array().unwrap().iter().map(|id| contribution(match id.as_str().unwrap() { "alpha" => "alpha", "bravo" => "bravo", "charlie" => "charlie", _ => unreachable!() })).collect::<Vec<_>>();
         let mut registry = ContributionRegistry::new(selected).unwrap();

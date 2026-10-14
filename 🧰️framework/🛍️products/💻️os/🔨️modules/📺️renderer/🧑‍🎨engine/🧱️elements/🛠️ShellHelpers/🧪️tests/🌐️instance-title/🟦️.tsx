@@ -8,7 +8,7 @@ import { isIconName } from "@semio-tech/assets";
 import { createWorldProjectionTemplates, decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId, worldProjectionSpecIconId, worldProjectionSpecLabel, worldProjectionTemplateApplySpec, worldProjectionTemplateSelectionId, type WorldProjectionSpec, type WorldProjectionTemplateDescriptor } from "@semio-tech/infinite-world-r3f";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { resolveFrameworkLayoutSeed, retitleWindowLayoutNode } from "../../🟦️.tsx";
-import fixture from "../../🧫️fixtures/🌐️instance-title/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/🌐️instance-title/🔣️.json" with { type: "json" };
 import { initialShellState, shellReducer, type ActiveSession } from "../../../🐚️Shell/🟦️.tsx";
 
 function leaves(node: WindowLayoutNode): Extract<WindowLayoutNode, { kind: "window" }>[] {
@@ -56,7 +56,7 @@ describe("locale-stable instance titles", () => {
       { id: fixture.windowKind, label: "Puzzle 3D" },
       { id: fixture.singleton.id, label: { native: { en: fixture.singleton.en, de: fixture.singleton.de }, reuse: { en: fixture.singleton.en, de: fixture.singleton.de } } },
     ];
-    let state = initialShellState({ plugins: [], storage: createMemoryStoragePort() });
+    let state = initialShellState({ locale: "en", plugins: [], storage: createMemoryStoragePort() });
     state = shellReducer(state, { type: "SET_SHELL_LAYOUT", value: { kind: "row", children: windowKinds.map(kind => ({ kind: "stack", children: [{ kind: "window", id: kind.id }] })) } });
     state = shellReducer(state, { type: "SET_WINDOW_TITLE", windowId: fixture.windowKind, title: fixture.explicitBaseTitle });
     for (const transition of fixture.transitions) {
@@ -67,7 +67,7 @@ describe("locale-stable instance titles", () => {
   });
 
   it("keeps chrome overrides within their session owner across updates and switches", () => {
-    let state = initialShellState({ plugins: [], storage: createMemoryStoragePort() });
+    let state = initialShellState({ locale: "en", plugins: [], storage: createMemoryStoragePort() });
     for (const owner of fixture.owners) {
       const session = { pluginId: owner.pluginId, instanceId: owner.instanceId, app: { id: owner.appId }, viewState: {} } as ActiveSession;
       state = shellReducer(state, { type: "SET_SESSION", value: session });
@@ -92,7 +92,7 @@ describe("locale-stable instance titles", () => {
       ...fixture.instances.map(instance => ({ kind: "stack" as const, size: 30, children: [{ kind: "window" as const, id: instance.id, title: uiDataLabel(instance.title) }] })),
       { kind: "stack" as const, size: 40, children: [{ kind: "window" as const, id: fixture.singleton.id, title: uiDataLabel(fixture.singleton.en) }] },
     ] };
-    let state = initialShellState({ plugins: [], storage: createMemoryStoragePort() });
+    let state = initialShellState({ locale: "en", plugins: [], storage: createMemoryStoragePort() });
     state = shellReducer(state, { type: "SET_EXTRA_WINDOW_INSTANCES", value: fixture.instances.map(instance => ({ id: instance.id, title: instance.title, windowKindId: fixture.windowKind })) });
     state = shellReducer(state, { type: "SET_SHELL_LAYOUT", value: layout });
     for (const rename of fixture.renames) {

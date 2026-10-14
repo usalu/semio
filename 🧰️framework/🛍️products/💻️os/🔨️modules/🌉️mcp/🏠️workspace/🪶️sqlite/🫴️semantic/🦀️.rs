@@ -1,4 +1,5 @@
 //! 🫴️ Paid Probe SQL buffers and semantic partials remain in the original receiving frame.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress};
 use store::NativeSnapshotBodyWallet;
@@ -51,7 +52,7 @@ fn census<P:Port>(value:&DslValue,depth:usize,count:&mut usize,port:&mut P)->Res
 fn cell<P:Port>(frame:&mut Projection,value:SqliteValue,port:&mut P,depth:usize)->Result<(),ValueError>{port.work(depth+1,size_of::<SqliteValue>())?;frame.row.values.push(value);Ok(())}
 fn text_cell<P:Port>(frame:&mut Projection,text:&str,port:&mut P,depth:usize)->Result<(),ValueError>{cell(frame,SqliteValue::Text(String::new()),port,depth)?;let Some(SqliteValue::Text(output))=frame.row.values.last_mut()else{unreachable!()};port.text(text,output,depth+1)}
 pub(super) fn project<P:Port>(source:&DslValue,frame:&mut Projection,port:&mut P)->Result<(),ValueError>{
- let mut count=0;census(source,0,&mut count,port)?;let schema=<super::super::ProbeSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::SQLITE_SCHEMA.trim().trim_end_matches(';');
+ let mut count=0;census(source,0,&mut count,port)?;let schema=<super::super::ProbeSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA.trim().trim_end_matches(';');
  if schema.len()+10>port.control(|control|control.limits()).max_schema_bytes||port.control(|control|control.limits()).max_columns<8||port.control(|control|control.limits()).max_tables<1{return Err(refusal(ValueRefusalKind::OwnershipLimit,"Probe authored SQL schema exceeds original limits"))}
  port.vector(1,&mut frame.database.tables,1)?;port.work(1,size_of::<store::sqlite_snapshot::SqliteTable>())?;frame.database.tables.push(store::sqlite_snapshot::SqliteTable{name:String::new(),sql:String::new(),rows:Vec::new()});
  let table=&mut frame.database.tables[0];port.text("probe_node",&mut table.name,1)?;port.text(schema,&mut table.sql,1)?;port.vector(count,&mut table.rows,1)?;

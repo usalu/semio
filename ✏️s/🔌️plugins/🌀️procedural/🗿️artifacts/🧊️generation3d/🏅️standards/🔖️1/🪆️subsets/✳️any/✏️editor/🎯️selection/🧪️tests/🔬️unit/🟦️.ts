@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
 import schema from "../../🧬️schema/🔣️.json";
-import fixtures from "../../🧫️fixtures/🔣️.json";
+import fixtures from "../🧫️fixtures/🔣️.json";
 import { parseComponentTarget, componentGroup, selectedMeshVertices, selectedAnalyticLabels, validateAnalyticSource } from "../../🟦️.ts";
-import topology from "../../🧫️fixtures/🥽️topology/🔣️.json";
+import topology from "../🧫️fixtures/🥽️topology/🔣️.json";
 import editSchema from "../../../🎮️commands/🥽️edit-mesh-selection/🧬️schema/🔣️.json";
 import knifeSchema from "../../../🎮️commands/🔪️knife-mesh-selection/🧬️schema/🔣️.json";
-import knifeFixtures from "../../../🎮️commands/🔪️knife-mesh-selection/🧫️fixtures/🔣️.json";
+import knifeFixtures from "../../../🎮️commands/🔪️knife-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json";
 import { knifeSelectionParameters } from "../../../🎮️commands/🔪️knife-mesh-selection/🟦️.ts";
 import { Vector3 } from "three";
 import { generation3dMeshSelectionSelfTests } from "../../../🎮️commands/🥽️edit-mesh-selection/🧪️tests/🔬️unit/🟦️.ts";

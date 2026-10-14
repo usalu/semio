@@ -1,12 +1,12 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 
 import nativeSchema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import childSchema from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json";
 import ioSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json";
-import references from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/📝️text/🗿️artifact-reference/🪆️binding/🧫️fixtures/🔣️.json";
+import references from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/📝️text/🗿️artifact-reference/🪆️binding/🧪️tests/🧫️fixtures/🔣️.json";
 import * as sqliteOwner from "../🟦️.ts";
 import referenceSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import * as owner from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
@@ -55,7 +55,7 @@ test("Sequence semantic traversal cancels initially and within large persisted t
 });
 
 
-import semanticCells from "../../../../🧬️schema/📸️snapshot/🧫️fixtures/📏️semantic-cells/🔣️.json";
+import semanticCells from "../../../../🧪️tests/🧫️fixtures/📸️snapshot/📏️semantic-cells/🔣️.json";
 
 import Ajv2020 from "ajv/dist/2020";
 test("Sequence complete independent SQL semantic cell extent",async()=>{

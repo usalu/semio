@@ -14,7 +14,7 @@ semio_framework_os_kernel::diff_text!(crate::standards::v1::subsets::any::schema
 #[test]
 fn history_edit_puzzle5d_diff_records_roundtrip_the_neutral_empty_delta() {
     use protocol::{DiffBinary, DiffText};
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     assert!(corpus["diffEmpty"].as_object().unwrap().is_empty());
     let expected = crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff::default();
     let text = expected.print_diff();
@@ -28,7 +28,7 @@ fn history_edit_puzzle5d_diff_records_roundtrip_the_neutral_empty_delta() {
 fn history_edit_puzzle5d_diff_preserves_explicit_clear_and_replacement(){
  use protocol::{DiffBinary,DiffText};
  use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🪆️optional/🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🧫️fixtures/🪆️binding/🪆️optional/🔣️.json")).unwrap();
  for invalid in corpus["invalidDocuments"].as_array().unwrap(){assert!(Puzzle5dDiff::parse_diff(invalid.as_str().unwrap()).is_err(),"invalid terminal diff: {invalid}");}
  for sample in corpus["samples"].as_array().unwrap(){
   let label=match sample["state"].as_str().unwrap(){"omitted"=>None,"clear"=>Some(None),"replace"=>Some(Some(sample["json"]["label"].as_str().unwrap().into())),_=>unreachable!()};

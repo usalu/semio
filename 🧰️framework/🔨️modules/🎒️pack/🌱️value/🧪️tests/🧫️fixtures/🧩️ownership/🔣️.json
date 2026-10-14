@@ -1,0 +1,33 @@
+{
+  "format": 1,
+  "package": "semio-framework-pack",
+  "module": "record",
+  "manifest": "../📦️packages/🦀️rust/Cargo.toml",
+  "library": {
+    "name": "pack",
+    "path": "🦀️.rs"
+  },
+  "mount": "../../🌱️value/🦀️.rs",
+  "dependencies": [
+    "semio-framework-async",
+    "semio-framework-diagnostic",
+    "semio-framework-dsl-record",
+    "semio-framework-hash",
+    "semio-framework-pack-error",
+    "semio-framework-pack-json",
+    "semio-framework-replication",
+    "semio-framework-value",
+    "ureq"
+  ],
+  "publicEntries": [
+    "encode_document",
+    "decode_document",
+    "encode_record_body",
+    "decode_record_body_exact",
+    "schema_hash"
+  ],
+  "forbiddenProviders": [
+    "semio-framework-os-kernel",
+    "semio-framework-plugin"
+  ]
+}

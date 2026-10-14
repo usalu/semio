@@ -1,0 +1,222 @@
+{
+  "schema": "semio.hub.inference-relay-fixture/v1",
+  "limits": {
+    "requestBytes": 1024,
+    "responseBytes": 16384,
+    "progressCursor": 16
+  },
+  "routes": [
+    {
+      "id": "reconcile",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/reconcile",
+      "admitted": true
+    },
+    {
+      "id": "reconcile-get",
+      "method": "GET",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/reconcile",
+      "admitted": false
+    },
+    {
+      "id": "reconcile-query",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/reconcile?requestId=11111111111111111111111111111111",
+      "admitted": false
+    },
+    {
+      "id": "submit",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs",
+      "admitted": true
+    },
+    {
+      "id": "events-first",
+      "method": "GET",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/11111111111111111111111111111111/events?after=0",
+      "admitted": true
+    },
+    {
+      "id": "events-max",
+      "method": "GET",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/11111111111111111111111111111111/events?after=16",
+      "admitted": true
+    },
+    {
+      "id": "cancel",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/11111111111111111111111111111111/cancel",
+      "admitted": true
+    },
+    {
+      "id": "approve",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/11111111111111111111111111111111/approval",
+      "admitted": true
+    },
+    {
+      "id": "undo",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/approval-undos",
+      "admitted": true
+    },
+    {
+      "id": "submit-get",
+      "method": "GET",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs",
+      "admitted": false
+    },
+    {
+      "id": "events-post",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/11111111111111111111111111111111/events?after=0",
+      "admitted": false
+    },
+    {
+      "id": "events-missing-cursor",
+      "method": "GET",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/11111111111111111111111111111111/events",
+      "admitted": false
+    },
+    {
+      "id": "events-overflow",
+      "method": "GET",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/11111111111111111111111111111111/events?after=17",
+      "admitted": false
+    },
+    {
+      "id": "events-leading-zero",
+      "method": "GET",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/11111111111111111111111111111111/events?after=00",
+      "admitted": false
+    },
+    {
+      "id": "events-duplicate",
+      "method": "GET",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/11111111111111111111111111111111/events?after=0&after=0",
+      "admitted": false
+    },
+    {
+      "id": "events-extra",
+      "method": "GET",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/11111111111111111111111111111111/events?after=0&scope=other",
+      "admitted": false
+    },
+    {
+      "id": "events-escaped-cursor",
+      "method": "GET",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/11111111111111111111111111111111/events?after=%30",
+      "admitted": false
+    },
+    {
+      "id": "cancel-get",
+      "method": "GET",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/11111111111111111111111111111111/cancel",
+      "admitted": false
+    },
+    {
+      "id": "approval-put",
+      "method": "PUT",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/11111111111111111111111111111111/approval",
+      "admitted": false
+    },
+    {
+      "id": "submit-selector",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs?provider=other",
+      "admitted": false
+    },
+    {
+      "id": "upper-job",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/cancel",
+      "admitted": false
+    },
+    {
+      "id": "short-job",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/123/cancel",
+      "admitted": false
+    },
+    {
+      "id": "unknown",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/models",
+      "admitted": false
+    },
+    {
+      "id": "child",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/child",
+      "admitted": false
+    },
+    {
+      "id": "trailing-slash",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/studio/documents/map/inference/gis-map/jobs/",
+      "admitted": false
+    },
+    {
+      "id": "colon",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/space%3Astudio/documents/map/inference/gis-map/jobs",
+      "admitted": true
+    },
+    {
+      "id": "literal-colon",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/space:studio/documents/map/inference/gis-map/jobs",
+      "admitted": false
+    },
+    {
+      "id": "encoded-unreserved",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/studi%6F/documents/map/inference/gis-map/jobs",
+      "admitted": false
+    },
+    {
+      "id": "lowercase-escape",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/space%3astudio/documents/map/inference/gis-map/jobs",
+      "admitted": false
+    },
+    {
+      "id": "encoded-slash",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/other%2Fstudio/documents/map/inference/gis-map/jobs",
+      "admitted": false
+    },
+    {
+      "id": "encoded-control",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/studio%00/documents/map/inference/gis-map/jobs",
+      "admitted": false
+    },
+    {
+      "id": "scope-overflow",
+      "method": "POST",
+      "path": "/_semio/hub/spaces/sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss/documents/map/inference/gis-map/jobs",
+      "admitted": false
+    }
+  ],
+  "responses": [
+    {
+      "id": "exact-response-bound",
+      "bytes": 16384,
+      "streamed": false,
+      "status": 200
+    },
+    {
+      "id": "declared-response-overflow",
+      "bytes": 16385,
+      "streamed": false,
+      "status": 503
+    },
+    {
+      "id": "stream-response-overflow",
+      "bytes": 16385,
+      "streamed": true,
+      "status": 503
+    }
+  ]
+}

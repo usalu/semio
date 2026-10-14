@@ -1,0 +1,9 @@
+# General Descriptor Fault Ownership 52
+
+Read-only deletion audit50 identified General Kernel descriptor admission faults attributed to specific OS. New language-neutral expectedFault extends the existing whole neutral2 corpus without removing any assertions/refusals. First54491 strict phase rejected JSON string literal typing in the added assertion; corrected String conversion, no cast or compiler relaxation. Corrected22663 physical Nx1: strict succeeded; actual2 laws entered,1pass1fail55 assertions, observed framework expected/os received. This is a genuine semantic ownership red.
+
+The actual General descriptorFault helper now owns framework origin/code/message/scope/retryability. Both existing descriptor-document faults and package binding failures use it. Malformed neutral receipt identities are classified as the same General descriptor-invalid fault, preserving original cancellation if aborted. Specific OS wire/HTTP/parser failures retain their specific source's error behavior. No fault union, Rust protocol, old signature, compatibility alias or fixture inputs were changed. Current34319 physically Nx0: strict/noUnchecked full neutral closure plus2whole/64 assertions,532ms. All prior schema/TypeScript/Ajv/identity/progress/cancellation/refusal assertions retained, six new structured fault checks added.
+
+Existing whole Specific OS receiving is rerunning after this actual change; its current handle/result will be recorded when physically closed. Full Kernel aggregate publication, descriptor streaming capacity/lifecycle and broad transitive deletion graph remain open.
+
+Actual67246 physically Nx0 after the faultchange: Specificstrict/noUnchecked, all29ComponentReceiptV1/67 assertions148ms, whole17existingNodeVitest loadercases1.74s,0fail. Originalheartbeat/Unicode/cancellation/refusal/identitycasesretained. No browser runtime or entireGeneral claim.

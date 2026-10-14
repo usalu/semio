@@ -1,0 +1,17 @@
+# Export Frame Prebirth Receipt Proof
+
+Read-only full actual receiving source, 2026-10-13. Source7265 running per parent; no runtime inference.
+
+Canonical original decode entry `🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs:78 NativeSnapshotDecodeOwner::receive_nested` passes same remaining grant/native/pending ticket into shared `🛫️snapshot/🦀️.rs:92 receive`, creates child owner from original body remaining grant and sums child progress back into body/performed receipt. It does not make a fresh native controller.
+
+Shared receive computes actual `frame_bytes=size_of<NativeSnapshotReceiving<T,O>>()`. Checks controlled factories, items>0, depth>=2, capacity>=frame_bytes and parent pending availability before construction. Consequently items0/depth0/depth1/capacity0 allocate nothing and perform no body receipt. Exact first causes: WorkLimit `snapshot receiving frame requires admitted item`; DepthLimit `snapshot receiving frame requires parent and child depth`; OwnershipLimit `snapshot receiving frame exceeds original capacity grant`.
+
+Root no-parent branch enters original `NativeDecodeControl::with_retirement_owner` (`🌱️value/🛬️decode/🦀️.rs:71`): checks original recipient available, charges wrapper bytes and checkpoints **before** reserved=true and construct. Native0 fails charge at line127 `native decoding ownership exceeds caller limit`; zero allocator/receipt, no pending owner. No reservation heap occurs. A pending-parent branch likewise charges/checkpoints before construct.
+
+Inside construct, receipt becomes copied_items1/capacity frame_bytes, original grant decrements items/capacity, then actual Box frame birth occurs. No copied bytes or release recorded. Child body depth decrements1. Export binder's first typed_file_work charges copied bytes `size_of<TypedSnapshotExportFrame>` through original body wallet Port.work. Copy0 fails wallet admit before recording that copied work, but **after outer Box birth**. Exact expected body receipt for this frontier is `(items1,copy0,capacity=actual frame_bytes,release0)`, not all-zero. Native receipt/SQL residual settlement retains/charges that original frame; no T slot or output exists yet.
+
+Shared error branch returns `Some(frame as Box<dyn ErasedSnapshotRetirement>)` to original recipient/pending, with no local drop. This proves copy0 zeroHeap=false/recipient-present prediction from source order. Do not hardcode architecture frame size in neutral fixture; Native observes real allocation and compares same actual receipt.
+
+Release0 is not checked in outer preflight or initial body work. Complete paid History P creates relational backing under nested original receiver. Its retained scratch/frame close checks actual demand release against remaining grant; final publication also records receiving frame release. Therefore successful output cannot publish with release0, but real retained capacity may exist and cleanup scaffolds may be born before refusal. OwnershipLimit/full original receipt/recipient present, zero body release is the meaningful law. Exact first message may be inner History close or outer publication; don't infer it without owning trace.
+
+New neutral export rows/Source independently model original numeric minima and copy/release postbirth expectations, while true physical proof is original Native law. Keep same captured Store pointer and same original native/SQL recipient through failed operation and separately authored zero/funded cleanup; no P/Arc clone. Current source findings corroborate prediction, not a passing runtime result.

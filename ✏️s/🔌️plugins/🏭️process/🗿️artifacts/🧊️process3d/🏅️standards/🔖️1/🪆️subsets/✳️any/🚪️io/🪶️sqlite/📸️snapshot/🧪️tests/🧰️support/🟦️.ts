@@ -2,8 +2,8 @@
 import { Database } from "bun:sqlite";
 import type { Process3dSnapshot, Process3dWorkingSolid, Process3dMeasureRecipe, StockQuantity } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { process3dSnapshotToSqliteDatabase } from "../../🟦️.ts";
-import corpus from "../../🧫️fixtures/🔣️.json";
-import cohort from "../../🧫️fixtures/🚦️public/🔣️.json";
+import corpus from "../🧫️fixtures/🔣️.json";
+import cohort from "../🧫️fixtures/🚦️public/🔣️.json";
 import sql from "../../🗄️.sql" with { type: "text" };
 import metadata from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🗄️.sql" with { type: "text" };
 

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
-import laws from "../../🧫️fixtures/🔬️wgpu-extension-dispatch/🔣️.json";
-import documentBackbone from "../../🧫️fixtures/📡️wgpu-document-backbone/🔣️.json";
-import integerView from "../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧫️fixtures/🔢️integer-carriers/🔣️.json";
+import laws from "../🧫️fixtures/🔬️wgpu-extension-dispatch/🔣️.json";
+import documentBackbone from "../🧫️fixtures/📡️wgpu-document-backbone/🔣️.json";
+import integerView from "../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧪️tests/🧫️fixtures/🔢️integer-carriers/🔣️.json";
 import viewContextSchema from "../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔣️.json";
 import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES, guestAnswerPages } from "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
 import { extensionRequestActivationReason, serializeWgpuActorCall, wgpuBackboneMessageEffect, wgpuBuildScopedContributionsPack, wgpuCommandIngressByteLength, wgpuContributionsIngressSize, wgpuGuestAnswerPages, wgpuHostAnswerCeilingBytes, wgpuSetContributionsCommand, wgpuSlimContributionsView, WGPU_ACTOR_CALL_QUEUE_CAPACITY, WGPU_CONTRIBUTIONS_SLIM_VIEW, WgpuActorCallQueueFullError } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";

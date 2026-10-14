@@ -3,7 +3,7 @@ use semio_framework_pack_json::{parse, JsonMemberPolicy};
 
 #[test]
 fn shared_introduction_cases_preserve_every_required_fact() {
-    let corpus = parse(include_str!("../../🧫️fixtures/🔣️.json"), JsonMemberPolicy::Reject).expect("closed introduction corpus");
+    let corpus = parse(include_str!("../🧫️fixtures/🔣️.json"), JsonMemberPolicy::Reject).expect("closed introduction corpus");
     let rows = corpus["cases"].as_array().expect("shared cases");
     assert_eq!(rows.len(), 130);
     for row in rows {

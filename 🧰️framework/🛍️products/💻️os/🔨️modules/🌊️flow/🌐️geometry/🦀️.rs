@@ -2,11 +2,28 @@
 pub use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 #[derive(Clone, Debug, PartialEq)]
 pub enum GeometryStep {
-    Working { units_done: usize, units_total: usize, phase: String },
+    Working { units_done: usize, units_total: usize, phase: &'static str },
     Ready(semio_framework::MeshData),
     Cancelled,
     Failed(String),
 }
+/// 🧭️ The originating operation and generation retained by one original geometry request.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub struct GeometryWorkIdentity {pub operation:u64,pub generation:u64}
+semio_framework_value::artifact_retire_leaf!(GeometryWorkIdentity);
+/// 📏️ Actual original work and retained currencies consumed by one supplied geometry turn.
+#[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]
+pub struct GeometryWorkProgress {pub retained:RetainedCloneProgress,pub consumed_units:usize}
+semio_framework_value::artifact_retire_leaf!(GeometryWorkProgress);
+/// 🪢️ The native refusal and its actual physical and CPU effects move together.
+#[derive(Debug,PartialEq,Eq)]
+pub struct GeometryWorkFailure {pub primary:ValueError,pub work:GeometryWorkProgress,pub receipt_refusal:Option<ValueError>}
+semio_framework_value::artifact_retire_struct!(GeometryWorkFailure {primary,work,receipt_refusal});
+impl GeometryWorkFailure {
+    /// 🧾️ Reads the same original retained receipt once and retains the actual admitted CPU count.
+    pub fn new(primary:ValueError,consumed_units:usize)->Self{Self{work:GeometryWorkProgress{retained:primary.retained_progress(),consumed_units},primary,receipt_refusal:None}}
+}
+
 /// 🔌️ One supplied geometry authority owns its retained jobs and handle claims until explicit close.
 pub trait GeometryPort: Send + Sync {
     fn begin_retain(&mut self, handles: Vec<String>) -> Result<(), (ValueError, Vec<String>)>;
@@ -17,11 +34,10 @@ pub trait GeometryPort: Send + Sync {
     fn next_retain_depth_demand(&self) -> Result<usize, ValueError>;
     fn retain_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
     fn retain_step_progress(&self) -> RetainedCloneProgress;
-    fn next_tessellate_copy_byte_demand(&self, handle: &str, tolerance: f64) -> Result<usize, ValueError>;
-    fn next_tessellate_capacity_byte_demand(&self, handle: &str, tolerance: f64, copy: usize) -> Result<usize, ValueError>;
-    fn next_tessellate_release_byte_demand(&self, handle: &str, tolerance: f64) -> Result<usize, ValueError>;
-    fn next_tessellate_depth_demand(&self, handle: &str, tolerance: f64) -> Result<usize, ValueError>;
-    fn tessellate_step(&self, handle: &str, tolerance: f64, units: usize, grant: RetainedCloneGrant) -> Result<(GeometryStep, RetainedCloneProgress), ValueError>;
+    fn tessellation_demands(&self, identity:GeometryWorkIdentity, handle:&str, tolerance:f64, maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,ValueError>;
+    fn tessellate_step(&self, identity:GeometryWorkIdentity, handle: &str, tolerance: f64, units: usize, grant: RetainedCloneGrant) -> Result<(GeometryStep, GeometryWorkProgress), GeometryWorkFailure>;
+    fn cancel_tessellation_demands(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,ValueError>;
+    fn cancel_tessellation_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,grant:RetainedCloneGrant)->Result<(RetainedCloneStep,GeometryWorkProgress),GeometryWorkFailure>;
     fn dispose(&self, handle: &str) -> Result<(), String>;
     fn begin_cancel(&mut self) -> Result<(), ValueError>;
     fn cancel_terminal_is_empty(&self) -> bool;

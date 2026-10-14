@@ -24,8 +24,8 @@ fn retire(owner: &mut PrivateChildMemberMetadataIssuer) {
 
 #[test]
 fn private_child_metadata_copies_all_thirty_one_original_fields_and_admits_each_whole_capacity() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏪️store/🧩️composition/🚪️open/🌱️genesis/🧫️fixtures/🔣️.json")).unwrap();
-    let publication_fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏪️store/🧩️composition/🚪️open/🌱️genesis/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let publication_fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
       for transaction in publication_fixture["transactions"].as_array().unwrap() {
         let transaction = (!transaction.is_null()).then(|| protocol::TransactionRef { id: transaction["id"].as_str().unwrap().into(), tool: transaction["tool"].as_str().unwrap().into() });
@@ -107,7 +107,7 @@ fn private_child_metadata_cancellation_retains_every_original_allocation_until_w
 
 #[test]
 fn private_parent_metadata_shares_exact_bounded_birth_copy_and_typed_transfer() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["transactions"].as_array().unwrap() {
         let transaction = (!row.is_null()).then(|| protocol::TransactionRef { id: row["id"].as_str().unwrap().into(), tool: row["tool"].as_str().unwrap().into() });
         let actor = semio_framework_value::SharedUtf8::from(fixture["actor"].as_str().unwrap());
@@ -190,7 +190,7 @@ fn private_parent_metadata_cancellation_never_frees_a_fractionally_funded_origin
 
 #[test]
 fn private_publication_metadata_preserves_group_id_independently_of_transaction() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let expected = ArtifactRef { artifact_id: "child:δ".into(), dialect: ArtifactDialect { artifact_kind: "flow".into(), standard: "1".into(), subset: "*".into() } };
     for transaction in fixture["transactions"].as_array().unwrap() {
         let transaction = (!transaction.is_null()).then(|| protocol::TransactionRef { id: transaction["id"].as_str().unwrap().into(), tool: transaction["tool"].as_str().unwrap().into() });
@@ -233,7 +233,7 @@ fn private_publication_metadata_preserves_group_id_independently_of_transaction(
 
 #[test]
 fn private_parent_metadata_carries_the_original_admitted_actor_lease_without_reconstruction() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let policy = &fixture["actorLease"]["originalGrant"];
     let original_grant = RetainedCloneGrant { maximum_items: policy["items"].as_u64().unwrap() as usize, maximum_copy_bytes: policy["copyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: policy["capacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: policy["releaseBytes"].as_u64().unwrap() as usize, maximum_depth: policy["depth"].as_u64().unwrap() as usize };
     let original_text = fixture["actor"].as_str().unwrap().to_owned();

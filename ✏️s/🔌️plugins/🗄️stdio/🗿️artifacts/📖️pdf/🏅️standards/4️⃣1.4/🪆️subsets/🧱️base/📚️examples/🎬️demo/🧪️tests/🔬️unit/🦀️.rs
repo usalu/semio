@@ -8,7 +8,7 @@ async fn demo_source_nonempty() {
 #[test]
 fn sqlite_snapshot_pdf14_demo_assets_share_the_owned_page_snapshot() {
     use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
-    use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+    use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
     let expected = PdfSnapshot { schema: crate::standards::v1_4::subsets::base::schema::STDIO_PDF_DOCUMENT_SCHEMA.into(), pages: vec![PageDoc { width: 612.0, height: 792.0, text: "Semio Demo".into() }] };
     assert_eq!(PdfSnapshot::parse_dsl(PRIMARY_TEXT).unwrap(), expected);
     let bytes = expected.encode_pack();

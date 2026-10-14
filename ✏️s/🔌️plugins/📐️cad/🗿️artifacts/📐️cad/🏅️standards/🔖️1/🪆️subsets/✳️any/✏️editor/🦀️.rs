@@ -654,7 +654,7 @@ pub fn export_spatial_json(_envelope: &CadPlayView, mode: &str, pane: Option<Cad
 /// of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log for `scene`'s own
 /// `schema`/`id` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(scene: &CadSnapshot) -> Effect {
-    let pack = <CadSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(scene);
+    let pack = <CadSnapshot as pack::snapshot::ArtifactPack>::encode_pack(scene);
     // 🪪️ An edit-free history log, never a throwaway `create_document_envelope`: an envelope dropped
     // without its bounded retirement authority traps (`terminal shell reached Drop …`). The host
     // re-stamps the log's identity with the live store's before archive hydration.
@@ -1410,7 +1410,8 @@ impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadRetainedCommandWork {
         cad_retained_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<CadPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<CadPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("cad-retained-work-repeated"));
         }
@@ -1421,6 +1422,9 @@ impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadRetainedCommandWork {
             (Some(transient), Some(view)) => ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: semio_framework_plugin::EphemeralEmit { window_transient: vec![window_transient::addressed(view, transient)?], ..Default::default() } },
             _ => ArtifactCommandWorkStep::Complete(emit),
         })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -1571,7 +1575,8 @@ impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadMediaWork {
         self.pricing_complete = checkpoint[16] == 1;
         Ok(())
     }
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<CadPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<CadPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed { return Err(Fault::from("Cad media operation was already consumed")); }
         let before = (self.priced_bytes, self.pricing_complete);
         if !self.price_step(cx)? {
@@ -1587,6 +1592,9 @@ impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadMediaWork {
         let media = self.media.as_ref().ok_or_else(|| Fault::from("Cad media input owner is absent"))?;
         let emit = CadPlayApp::import_media(&self.port, media, &doc).map_err(|error| Fault::from(error.to_string()))?;
         Ok(ArtifactCommandWorkStep::Complete(emit))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
     fn begin_close(&mut self) { self.closing = true; }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand(0)?.copy_bytes) }
@@ -2097,6 +2105,7 @@ impl ArtifactEditor for CadPlayApp {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,
@@ -2121,7 +2130,7 @@ impl ArtifactEditor for CadPlayApp {
         let operation = AppOperationContext { retained: request.retained, app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: 0, generation: 0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed };
         let work = Box::new(CadMediaWork::new(port, media, Some(request.children)));
         let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: CadCommand::ImportCadFile(import_cad_file::ImportCadFile { name: String::new(), payload: String::new() }), snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: std::sync::Arc::new(protocol::InteractionState::default()), interaction_hover: std::sync::Arc::new(Default::default()), context: None, operation, completion: request.completion },
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: CadCommand::ImportCadFile(import_cad_file::ImportCadFile { name: String::new(), payload: String::new() }), snapshot: request.snapshot, snapshot_read:request.snapshot_read, config: request.config, history: request.history, interaction_state: std::sync::Arc::new(protocol::InteractionState::default()), interaction_hover: std::sync::Arc::new(Default::default()), context: None, operation, completion: request.completion },
             CadCommand::command_id, CAD_RETAINED_RAW_BYTES, CAD_RETAINED_WORK_ITEMS, work,
         );
         Ok(Some(semio_framework_plugin::ArtifactReservedToolJob::new(CadMediaJob(ArtifactRetainedCommandJob::new(payload)))))
@@ -2152,7 +2161,7 @@ impl ArtifactEditor for CadPlayApp {
                 return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
             };
             let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-            let projection = <CadSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+            let projection = <CadSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
             return Ok(Emit { effects: vec![reset_document_effect(&projection)], ..Default::default() });
         }
         let name = match &media.media_type.form {
@@ -2178,7 +2187,7 @@ impl ArtifactEditor for CadPlayApp {
                 return Err(MediaError::NotImplemented);
             }
             let media_type = Self::io().map_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, |io| io.artifact_media_type);
-            let bytes = <CadSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(doc.snapshot);
+            let bytes = <CadSnapshot as pack::snapshot::ArtifactPack>::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
         let view = CadPlayView::of(doc.snapshot, &doc.children, CadPlayRuntime::default(), CadInteractionSnapshot::default());

@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 use semio_framework_diagnostic::Severity;
-fn fixture()->serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture()->serde_json::Value { serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 fn owners(row:&serde_json::Value)->(String,Vec<MutationMessage>,usize) {
     let mut context=String::with_capacity(row["contextCapacity"].as_u64().unwrap() as usize);context.push_str(row["context"].as_str().unwrap());
     let mut messages=Vec::with_capacity(row["rowCapacity"].as_u64().unwrap() as usize);

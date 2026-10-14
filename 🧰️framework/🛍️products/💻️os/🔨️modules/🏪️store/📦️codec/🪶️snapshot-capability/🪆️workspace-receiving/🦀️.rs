@@ -5,8 +5,9 @@
 //! editor: every allocation they admit through the control is charged to the original native control, and whatever they retain retires into the
 //! operation workspace the codec installed on the control (`export` / `import`), which is closed under the caller's grant.
 //!
-//! @see 🪶️ `ArtifactSqliteSnapshot` the trait whose receiving defaults delegate here.
-use super::{ArtifactSqliteSnapshot,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner};
+//! @see 🪶️ `ArtifactSqliteSnapshotHost` the trait whose receiving defaults delegate here.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
+use super::{ArtifactSqliteSnapshotHost,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner};
 use crate::io_schema::{IoError,IoResult};
 use crate::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl};
 use semio_framework_artifact_reference::ArtifactDialect;
@@ -28,23 +29,23 @@ macro_rules! receiving_allocation{
 }
 
 /// 🗄️ Projects the snapshot through its authored relational model under the original decode owner.
-pub fn project<P:ArtifactSqliteSnapshot>(snapshot:&P,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<SqliteDatabase,ValueError>{
+pub fn project<P:ArtifactSqliteSnapshotHost>(snapshot:&P,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<SqliteDatabase,ValueError>{
  receiving_allocation!(owner,control,|child| snapshot.to_sqlite_database(child))
 }
 
 /// 🪆️ Reconstructs the snapshot from its authored relational model under the original encode owner.
-pub fn reconstruct<P:ArtifactSqliteSnapshot>(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<P,ValueError>{
+pub fn reconstruct<P:ArtifactSqliteSnapshotHost>(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<P,ValueError>{
  receiving_allocation!(owner,control,|child| P::from_sqlite_database(database,child))
 }
 
 /// 🛡️ Applies the authored subset policy after the original decode owner observed cancellation.
-pub fn validate_decoding<P:ArtifactSqliteSnapshot>(snapshot:&P,dialect:&ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->IoResult<()>{
+pub fn validate_decoding<P:ArtifactSqliteSnapshotHost>(snapshot:&P,dialect:&ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->IoResult<()>{
  owner.native().checkpoint().map_err(IoError::from_value_error)?;
  snapshot.validate_sqlite_snapshot_subset(dialect,database,control)
 }
 
 /// 🛃️ Applies the authored subset policy after the original encode owner observed cancellation.
-pub fn validate_encoding<P:ArtifactSqliteSnapshot>(snapshot:&P,dialect:&ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->IoResult<()>{
+pub fn validate_encoding<P:ArtifactSqliteSnapshotHost>(snapshot:&P,dialect:&ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->IoResult<()>{
  owner.native().checkpoint().map_err(IoError::from_value_error)?;
  snapshot.validate_sqlite_snapshot_subset(dialect,database,control)
 }

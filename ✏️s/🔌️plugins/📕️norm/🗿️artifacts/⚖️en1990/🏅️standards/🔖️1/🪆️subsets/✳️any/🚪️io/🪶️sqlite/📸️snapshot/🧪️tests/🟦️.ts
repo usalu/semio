@@ -4,10 +4,10 @@ import {expect,test} from "bun:test";
 import {Buffer} from "node:buffer";
 import Ajv from "ajv";
 import schema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
-import controls from "../🧫️fixtures/🎛️control.json";
-import words from "../🧫️fixtures/🔢️binary64.json";
-import widths from "../🧫️fixtures/🛂️invalid-u8.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+import controls from "./🧫️fixtures/🎛️control.json";
+import words from "./🧫️fixtures/🔢️binary64.json";
+import widths from "./🧫️fixtures/🛂️invalid-u8.json";
 import * as snapshot from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { EN1990_SQLITE_SCHEMA, en1990SnapshotToSqliteDatabase, en1990SnapshotFromSqliteDatabase, type En1990SqliteSnapshot } from "../🟦️.ts";
 import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
@@ -79,7 +79,7 @@ test("EN1990 initial cancellation and large ordered member work are bounded in b
 });
 
 import NormSemanticAjv from "ajv/dist/2020.js";
-import normSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {en1990SnapshotToSqliteDatabase as normSemanticProject,en1990SnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
 import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

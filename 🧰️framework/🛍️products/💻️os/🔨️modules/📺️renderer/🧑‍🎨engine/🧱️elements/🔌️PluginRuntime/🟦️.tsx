@@ -1,3 +1,4 @@
+import { rendererOriginalWorkStock } from "../../🧵️work/🟦️.ts";
 import { mediaTransportPort } from "../../🎬️media/📡️channel/🟦️.ts";
 /// <reference types="vitest/importMeta" />
 // #region 🧲️Header
@@ -499,6 +500,7 @@ function forgetInstanceForRecovery(actorId: string): void {
  * production call (`getShardClient` never passes an override). */
 function buildShardClientOptions(createWorker: () => ShardWorkerLike = () => new Worker(shardWorkerUrl(), { type: "module" }) as unknown as ShardWorkerLike): {
   readonly residentLedger: OwnedResidentLedger;
+  readonly originalWorkStock: ReturnType<typeof rendererOriginalWorkStock>;
   readonly shardCount: number;
   readonly createWorker: () => ShardWorkerLike;
   readonly heartbeatTimeoutMs: number;
@@ -508,6 +510,7 @@ function buildShardClientOptions(createWorker: () => ShardWorkerLike = () => new
 } {
   return {
     residentLedger: rendererResidentLedger(),
+    originalWorkStock: rendererOriginalWorkStock(),
     shardCount: poolConcurrency(),
     // 🎭️ A real DOM `Worker` satisfies `ShardWorkerLike` structurally at runtime (same claim
     // `🟦️.ts`'s own doc makes) — the cast only bridges `onmessage`/`onerror`'s

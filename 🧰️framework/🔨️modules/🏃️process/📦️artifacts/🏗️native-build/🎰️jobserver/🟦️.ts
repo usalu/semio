@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { closeSync, constants, mkdirSync, openSync, readSync, rmSync, writeSync } from "node:fs";
 import { join } from "node:path";
-import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 const protocol = schema.definitions.Protocol.const;
@@ -23,6 +23,7 @@ export interface JobserverV1 {
   readonly makeflags: string;
   environment(): Record<string, string>;
   acquire(signal?: AbortSignal): Promise<JobSlotV1>;
+  acquireAll(signal?: AbortSignal): Promise<readonly JobSlotV1[]>;
   tryAcquire(): JobSlotV1 | null;
   held(): number;
   waiting(): number;
@@ -111,7 +112,7 @@ export async function createJobserverV1(value: unknown, directory: string): Prom
   const config = admitJobserverConfigV1(value);
   const channel = config.style === "fifo" ? fifoChannel(directory, config.tokens - 1) : await semaphoreChannel(config.tokens - 1);
   const makeflags = jobserverMakeflagsV1(config.tokens, channel.endpoint, config.style);
-  const queue: { accept: (slot: JobSlotV1) => void; reject: (reason: unknown) => void; signal?: AbortSignal; abort: () => void }[] = [];
+  const queue: { count: number; slots: JobSlotV1[]; accept: (slots: readonly JobSlotV1[]) => void; reject: (reason: unknown) => void; signal?: AbortSignal; abort: () => void }[] = [];
   let implicitFree = true, held = 0, closed = false, timer: ReturnType<typeof setInterval> | undefined;
   const slot = (implicit: boolean): JobSlotV1 => {
     held++;
@@ -131,32 +132,43 @@ export async function createJobserverV1(value: unknown, directory: string): Prom
   };
   const pump = (): void => {
     while (queue.length) {
-      const granted = take();
-      if (!granted) break;
-      const waiter = queue.shift()!;
+      const waiter = queue[0]!;
+      while (waiter.slots.length < waiter.count) {
+        const granted = take();
+        if (!granted) break;
+        waiter.slots.push(granted);
+      }
+      if (waiter.slots.length < waiter.count) break;
+      queue.shift();
       waiter.signal?.removeEventListener("abort", waiter.abort);
-      waiter.accept(granted);
+      waiter.accept(waiter.slots);
     }
     if (queue.length && !timer) timer = setInterval(pump, protocol.pollMs);
     if (!queue.length && timer) { clearInterval(timer); timer = undefined; }
+  };
+  const acquire = (count: number, signal?: AbortSignal): Promise<readonly JobSlotV1[]> => {
+    if (closed) return Promise.reject(Error("Jobserver closed"));
+    if (signal?.aborted) return Promise.reject(signal.reason);
+    return new Promise((accept, reject) => {
+      const waiter = { count, slots: [] as JobSlotV1[], accept, reject, signal, abort: () => {
+        const index = queue.indexOf(waiter);
+        if (index >= 0) queue.splice(index, 1);
+        for (const held of waiter.slots) held.release();
+        reject(signal!.reason);
+        pump();
+      } };
+      signal?.addEventListener("abort", waiter.abort, { once: true });
+      queue.push(waiter);
+      pump();
+    });
   };
   return {
     config,
     endpoint: channel.endpoint,
     makeflags,
     environment: () => Object.fromEntries(protocol.clientEnvironment.map((name) => [name, makeflags])),
-    acquire: (signal) => {
-      if (closed) return Promise.reject(Error("Jobserver closed"));
-      if (signal?.aborted) return Promise.reject(signal.reason);
-      const granted = queue.length ? null : take();
-      if (granted) return Promise.resolve(granted);
-      return new Promise<JobSlotV1>((accept, reject) => {
-        const waiter = { accept, reject, signal, abort: () => { const index = queue.indexOf(waiter); if (index >= 0) queue.splice(index, 1); reject(signal!.reason); pump(); } };
-        signal?.addEventListener("abort", waiter.abort, { once: true });
-        queue.push(waiter);
-        pump();
-      });
-    },
+    acquire: async (signal) => (await acquire(1, signal))[0]!,
+    acquireAll: (signal) => acquire(config.tokens, signal),
     tryAcquire: () => closed || queue.length ? null : take(),
     held: () => held,
     waiting: () => queue.length,
@@ -164,7 +176,7 @@ export async function createJobserverV1(value: unknown, directory: string): Prom
       if (closed) return;
       closed = true;
       if (timer) clearInterval(timer);
-      for (const waiter of queue.splice(0)) { waiter.signal?.removeEventListener("abort", waiter.abort); waiter.reject(Error("Jobserver closed")); }
+      for (const waiter of queue.splice(0)) { waiter.signal?.removeEventListener("abort", waiter.abort); for (const held of waiter.slots) held.release(); waiter.reject(Error("Jobserver closed")); }
       channel.close();
     },
   };

@@ -165,7 +165,7 @@ pub fn example_snapshot(example_id: &str) -> Option<Grid3dSnapshot> {
 /// to print it — such an envelope owns a bounded retirement authority whose `Drop` traps the guest
 /// (`🧊️process3d`'s own boot `setActiveExample` incident).
 pub fn reset_document_effect(document: &Grid3dSnapshot) -> semio_framework::kernel::Effect {
-    let pack = <Grid3dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let pack = <Grid3dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("grid3d", WFC_GRID3D_DOCUMENT_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
@@ -681,6 +681,7 @@ impl ArtifactEditor for Grid3dEditor {
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

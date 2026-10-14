@@ -7,7 +7,7 @@ use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testin
 use crate::ModelMutation;
 use protocol::{DiffRegions, Mutation};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🦖️delete-curtain-wall/✅️removes/📸️snapshot/⬅️before/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦖️delete-curtain-wall/✅️removes/📸️snapshot/⬅️before/🔣️.json");
 
 #[semio_framework_async_macros::async_test]
 async fn the_deletion_is_one_structural_region_and_leaves_the_wall_layouts_alone() {

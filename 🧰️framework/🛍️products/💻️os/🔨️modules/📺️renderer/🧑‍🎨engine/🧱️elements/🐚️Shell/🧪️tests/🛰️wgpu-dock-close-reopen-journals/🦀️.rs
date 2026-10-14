@@ -325,7 +325,7 @@ fn escape_with_an_empty_dock_is_the_hinted_no_op_run_19_measured() {
 /// 📜️ The shell's own journal-sequence fixture — the dock/chord twin of
 /// `🌐️World3dHost/🧫️fixtures/📜️journal-sequences.json`, whose `react` column is the measured run-19
 /// journal and whose `wgpu` column is this shell's contract.
-const JOURNAL_SEQUENCES: &str = include_str!("../../🧫️fixtures/📜️journal-sequences/🔣️.json");
+const JOURNAL_SEQUENCES: &str = include_str!("../🧫️fixtures/📜️journal-sequences/🔣️.json");
 
 /// ⚖️ LAW: every cap row's `commands` list IS what [`ShellState::shell_command_for_control`] answers
 /// for that row's control — the fixture and the mapping table cannot drift apart.

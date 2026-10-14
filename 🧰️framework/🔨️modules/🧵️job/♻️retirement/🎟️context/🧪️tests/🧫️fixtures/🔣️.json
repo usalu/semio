@@ -1,0 +1,28 @@
+{
+  "schema": "job.original-close-context.v1",
+  "operation": 71,
+  "generation": 3,
+  "deadlineUs": 12345,
+  "nowUs": 1,
+  "copyGrants": [
+    1,
+    3,
+    64
+  ],
+  "workUnits": [
+    0,
+    1,
+    2
+  ],
+  "denied": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth",
+    "work",
+    "deadline"
+  ],
+  "protocol": "same-borrowed-caller-cx",
+  "receipt": "consume-original-effects-once-preserve-both-causes"
+}

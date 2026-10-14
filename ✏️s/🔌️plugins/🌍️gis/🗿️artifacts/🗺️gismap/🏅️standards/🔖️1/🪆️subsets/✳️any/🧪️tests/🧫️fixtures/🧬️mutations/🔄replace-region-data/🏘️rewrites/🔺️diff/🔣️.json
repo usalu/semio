@@ -1,0 +1,21 @@
+{
+  "positions": null,
+  "routes": null,
+  "regions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "region-harbor-district",
+        "patch": {
+          "data": {
+            "areaKm2": 3.25,
+            "kind": "district",
+            "protectedArea": false
+          }
+        }
+      }
+    ]
+  }
+}

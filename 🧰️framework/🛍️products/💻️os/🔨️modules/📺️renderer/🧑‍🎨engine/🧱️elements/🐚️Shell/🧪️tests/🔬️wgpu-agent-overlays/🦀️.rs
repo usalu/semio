@@ -47,7 +47,7 @@ fn the_replacement_restarts_the_auto_dismiss_clock() {
 
 #[test]
 fn shell_chrome_deadlines_follow_the_shared_wall_to_monotonic_contract() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/⏰️chrome-deadline/🔣️.json")).expect("chrome deadline fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⏰️chrome-deadline/🔣️.json")).expect("chrome deadline fixture");
     assert_eq!(fixture["timing"]["tooltipDwellMs"].as_f64(), Some(CHROME_TOOLTIP_DELAY_MS));
     assert_eq!(fixture["timing"]["noticeDismissMs"].as_f64(), Some(TRANSIENT_NOTICE_AUTO_DISMISS_MS));
     for row in fixture["cases"].as_array().expect("deadline cases") {
@@ -346,7 +346,7 @@ fn the_composer_sends_on_enter_the_way_reacts_textarea_does() {
 
 #[test]
 fn the_chat_composer_projects_its_explicit_localized_accessible_name_without_using_the_placeholder() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/💬️chat-input-accessibility/🔣️.json")).expect("chat accessibility fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/💬️chat-input-accessibility/🔣️.json")).expect("chat accessibility fixture");
     for row in fixture["cases"].as_array().expect("chat cases") {
         let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         shell.locale_id = row["locale"].as_str().expect("locale").into();

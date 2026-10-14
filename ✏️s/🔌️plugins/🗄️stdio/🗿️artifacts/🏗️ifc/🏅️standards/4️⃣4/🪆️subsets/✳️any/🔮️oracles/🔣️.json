@@ -344,14 +344,14 @@
       "files": [
         {
           "role": "expected-before-ifc",
-          "path": "../🧫️fixtures/➕️insert-entity-applied/⬅️before.ifc",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-entity-applied/⬅️before.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:fbc308edaebd94a9ef7408010859c8a9e39671a24ee15c6a039c70cacf1934ab",
           "bytes": 2507576
         },
         {
           "role": "expected-after-ifc",
-          "path": "../🧫️fixtures/➕️insert-entity-applied/➡️after.ifc",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-entity-applied/➡️after.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:35cfb1157e49d0154fc862168c53458e101cdf9e5a6523a9e5e2c82d5a74a01d",
           "bytes": 2507646
@@ -394,14 +394,14 @@
       "files": [
         {
           "role": "expected-before-ifc",
-          "path": "../🧫️fixtures/🧩️insert-entity-arg-applied/⬅️before.ifc",
+          "path": "../🧪️tests/🧫️fixtures/🧩️insert-entity-arg-applied/⬅️before.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:fbc308edaebd94a9ef7408010859c8a9e39671a24ee15c6a039c70cacf1934ab",
           "bytes": 2507576
         },
         {
           "role": "expected-after-ifc",
-          "path": "../🧫️fixtures/🧩️insert-entity-arg-applied/➡️after.ifc",
+          "path": "../🧪️tests/🧫️fixtures/🧩️insert-entity-arg-applied/➡️after.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:1873b1f07d2689fa3ee2d84a65f6a3a31e5a33ef0a7d4042863216495d002cf7",
           "bytes": 2507591
@@ -444,14 +444,14 @@
       "files": [
         {
           "role": "expected-before-ifc",
-          "path": "../🧫️fixtures/➖️remove-entity-applied/⬅️before.ifc",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-entity-applied/⬅️before.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:fbc308edaebd94a9ef7408010859c8a9e39671a24ee15c6a039c70cacf1934ab",
           "bytes": 2507576
         },
         {
           "role": "expected-after-ifc",
-          "path": "../🧫️fixtures/➖️remove-entity-applied/➡️after.ifc",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-entity-applied/➡️after.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:5bea33f66faaee21ce810383409dd5a1e1d49730185620098500a3314d2443e0",
           "bytes": 2507513
@@ -494,14 +494,14 @@
       "files": [
         {
           "role": "expected-before-ifc",
-          "path": "../🧫️fixtures/🧹️remove-entity-arg-applied/⬅️before.ifc",
+          "path": "../🧪️tests/🧫️fixtures/🧹️remove-entity-arg-applied/⬅️before.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:fbc308edaebd94a9ef7408010859c8a9e39671a24ee15c6a039c70cacf1934ab",
           "bytes": 2507576
         },
         {
           "role": "expected-after-ifc",
-          "path": "../🧫️fixtures/🧹️remove-entity-arg-applied/➡️after.ifc",
+          "path": "../🧪️tests/🧫️fixtures/🧹️remove-entity-arg-applied/➡️after.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:50f4f6db9a196ea734c9c927b6869d1e4176864722341a1a8896c97b99ab3a75",
           "bytes": 2507574
@@ -544,14 +544,14 @@
       "files": [
         {
           "role": "expected-before-ifc",
-          "path": "../🧫️fixtures/🎛️set-entity-arg-applied/⬅️before.ifc",
+          "path": "../🧪️tests/🧫️fixtures/🎛️set-entity-arg-applied/⬅️before.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:fbc308edaebd94a9ef7408010859c8a9e39671a24ee15c6a039c70cacf1934ab",
           "bytes": 2507576
         },
         {
           "role": "expected-after-ifc",
-          "path": "../🧫️fixtures/🎛️set-entity-arg-applied/➡️after.ifc",
+          "path": "../🧪️tests/🧫️fixtures/🎛️set-entity-arg-applied/➡️after.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:e81cadc7dc22e698fea7c9fb2672b7f0c3c18b9585e40b98528f525f821d7e00",
           "bytes": 2507581
@@ -594,14 +594,14 @@
       "files": [
         {
           "role": "expected-before-ifc",
-          "path": "../🧫️fixtures/🏷️set-entity-name-applied/⬅️before.ifc",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-entity-name-applied/⬅️before.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:fbc308edaebd94a9ef7408010859c8a9e39671a24ee15c6a039c70cacf1934ab",
           "bytes": 2507576
         },
         {
           "role": "expected-after-ifc",
-          "path": "../🧫️fixtures/🏷️set-entity-name-applied/➡️after.ifc",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-entity-name-applied/➡️after.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:fd6096578890da2c09dab3282bc3292876a46a997e9fad39e3a9d8a23efdadce",
           "bytes": 2507584
@@ -644,14 +644,14 @@
       "files": [
         {
           "role": "expected-before-ifc",
-          "path": "../🧫️fixtures/🗒️set-file-description-applied/⬅️before.ifc",
+          "path": "../🧪️tests/🧫️fixtures/🗒️set-file-description-applied/⬅️before.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:fbc308edaebd94a9ef7408010859c8a9e39671a24ee15c6a039c70cacf1934ab",
           "bytes": 2507576
         },
         {
           "role": "expected-after-ifc",
-          "path": "../🧫️fixtures/🗒️set-file-description-applied/➡️after.ifc",
+          "path": "../🧪️tests/🧫️fixtures/🗒️set-file-description-applied/➡️after.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:67b5bf8e11b54bf62383602d306dcaa9d6c84a494fa3c55f92bd479d7d68209f",
           "bytes": 2507573
@@ -694,14 +694,14 @@
       "files": [
         {
           "role": "expected-before-ifc",
-          "path": "../🧫️fixtures/📛️set-file-name-applied/⬅️before.ifc",
+          "path": "../🧪️tests/🧫️fixtures/📛️set-file-name-applied/⬅️before.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:fbc308edaebd94a9ef7408010859c8a9e39671a24ee15c6a039c70cacf1934ab",
           "bytes": 2507576
         },
         {
           "role": "expected-after-ifc",
-          "path": "../🧫️fixtures/📛️set-file-name-applied/➡️after.ifc",
+          "path": "../🧪️tests/🧫️fixtures/📛️set-file-name-applied/➡️after.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:d1bb251c706f2c8cf76980ffb209579a9701190f93a817fda3d1fc9dac3ade30",
           "bytes": 2507543
@@ -744,14 +744,14 @@
       "files": [
         {
           "role": "expected-before-ifc",
-          "path": "../🧫️fixtures/🧬️set-file-schema-applied/⬅️before.ifc",
+          "path": "../🧪️tests/🧫️fixtures/🧬️set-file-schema-applied/⬅️before.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:fbc308edaebd94a9ef7408010859c8a9e39671a24ee15c6a039c70cacf1934ab",
           "bytes": 2507576
         },
         {
           "role": "expected-after-ifc",
-          "path": "../🧫️fixtures/🧬️set-file-schema-applied/➡️after.ifc",
+          "path": "../🧪️tests/🧫️fixtures/🧬️set-file-schema-applied/➡️after.ifc",
           "mediaType": "model/ifc",
           "sha256": "sha256:5b77bd6cfe970d15838163c485d5965f2e129e6e4f288542247f1a0acc1d3852",
           "bytes": 2507590

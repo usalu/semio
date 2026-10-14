@@ -7,7 +7,7 @@ import Ajv2020 from "ajv/dist/2020";
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 
 if (process.argv[2] === "retained-opc-check") {
-  const root = join(import.meta.dir, "../../📦️opc/🧬️retained/🧫️fixtures");
+  const root = join(import.meta.dir, "../../📦️opc/🧬️retained/🧪️tests/🧫️fixtures");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   
   

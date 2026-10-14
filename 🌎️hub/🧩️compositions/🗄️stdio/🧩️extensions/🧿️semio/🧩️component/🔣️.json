@@ -87552,10 +87552,5 @@
         "children": []
       }
     ]
-  },
-  "hashes": {
-    "wasmSha256": "86d1719be57aff41e338fe8630c05667e91c43449f5ca24cb7b5382137176401",
-    "coreWasmSha256": "cce5d5830bc938cd3627e81fa69d494dd74cd1de283ea36795451cb814d162b4",
-    "descriptorSha256": "b4632dadbc20c542af23a8c4168f5e58d6fbe12e534baa10781db4dc33fc5ca6"
   }
 }

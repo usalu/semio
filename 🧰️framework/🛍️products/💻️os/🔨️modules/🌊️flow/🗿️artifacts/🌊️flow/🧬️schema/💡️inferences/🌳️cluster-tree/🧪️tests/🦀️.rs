@@ -3,7 +3,7 @@ use super::*;
 use neural_engine::ColdRetire;
 #[test]
 fn cluster_tree_property_fixture_preserves_exact_atoms_and_matches_serde_json() {
-    let fixture = include_str!("../🧫️fixtures/🔣️.json");
+    let fixture = include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🌳️cluster-tree/🔣️.json");
     let expected: serde_json::Value = serde_json::from_str(fixture).unwrap();
     let property: PropertyValue = semio_framework_pack_json::from_json_str(fixture, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let tree = cluster_tree_from_property(&property).unwrap();
@@ -22,7 +22,7 @@ fn cluster_tree_property_fixture_preserves_exact_atoms_and_matches_serde_json() 
 
 #[test]
 fn cluster_tree_property_refuses_integer_overflow_and_repeated_keys() {
-    let fixture = include_str!("../🧫️fixtures/🔣️.json");
+    let fixture = include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🌳️cluster-tree/🔣️.json");
     let mut repeated: serde_json::Value = serde_json::from_str(fixture).unwrap();
     repeated["neurons"][0]["params"][1]["key"] = serde_json::Value::String("decimal".into());
     for invalid in [fixture.replace("9007199254740993", "9223372036854775808"), serde_json::to_string(&repeated).unwrap()] {

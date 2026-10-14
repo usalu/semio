@@ -16,7 +16,7 @@ fn retained_step(outcome:&mut StepOutcome)->(RetainedCloneStep,(usize,usize)){
 }
 #[test]
 fn job_payload_retirement_original_variants_page_and_ledger_release_match_actual_heap(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for row in law["pages"].as_array().unwrap(){for variant in law["variants"].as_array().unwrap(){for shared in [false,true]{for cut in law["cancellationCuts"].as_array().unwrap(){
         let pages=row.as_u64().unwrap()as usize;let(mut outcome,setup)=observe_retirement_allocations(||{if variant=="yield"{return(StepOutcome::Yield,None);}if variant=="cancelled"{return(StepOutcome::Cancelled,None);}let(payload,ledger)=admitted(pages,JobPayloadStream::Preview);let held=shared.then(||Arc::clone(&ledger));drop(ledger);let outcome=match variant.as_str().unwrap(){"preview"=>StepOutcome::PreviewReady(payload),"checkpoint"=>StepOutcome::CheckpointReady(Checkpoint{state:payload,applied_progress:3}),"fault"=>StepOutcome::Fault(JobFault{detail:payload}),"complete"=>StepOutcome::Complete(CommitCandidate{state:payload,output:RetainedJobPayload::empty(JobPayloadStream::CommitOutput)}),_=>unreachable!()};(outcome,held)});
         let mut released=0;let mut turns=0;let ledger_bytes=semio_framework_value::shared_retirement_allocation_bytes::<JobPayloadOperationLedger>();
@@ -38,7 +38,7 @@ fn job_payload_retirement_staged_writer_preserves_original_ledger_after_page_rel
 
 #[test]
 fn job_outcome_slot_retirement_keeps_original_header_until_separate_admitted_metadata(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let policy=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:262144,maximum_depth:64};
     for body in [32768,4096]{let policy=RetainedCloneGrant{maximum_copy_bytes:body,..policy};
     for pages in law["pages"].as_array().unwrap(){for variant in law["variants"].as_array().unwrap(){
@@ -62,7 +62,7 @@ fn job_outcome_slot_retirement_keeps_original_header_until_separate_admitted_met
 
 #[test]
 fn job_payload_retirement_original_fault_slot_closes_in_place_under_fixed_body(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let policy=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};
     for pages in law["pages"].as_array().unwrap(){let pages=pages.as_u64().unwrap()as usize;
         let(mut slot,setup)=observe_retirement_allocations(||{let(payload,ledger)=admitted(pages,JobPayloadStream::Fault);drop(ledger);JobPayloadSlot::from_payload(payload)});

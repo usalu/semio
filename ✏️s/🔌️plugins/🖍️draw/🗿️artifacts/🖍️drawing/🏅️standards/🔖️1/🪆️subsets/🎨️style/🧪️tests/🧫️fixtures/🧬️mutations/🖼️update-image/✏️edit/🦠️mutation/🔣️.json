@@ -1,0 +1,7 @@
+{
+  "mutation": "updateImage",
+  "layerId": "image",
+  "imageKey": "after",
+  "width": 64,
+  "height": 32
+}

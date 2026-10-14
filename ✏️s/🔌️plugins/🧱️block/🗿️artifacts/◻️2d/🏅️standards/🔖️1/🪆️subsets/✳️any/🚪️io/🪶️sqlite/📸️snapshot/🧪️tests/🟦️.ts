@@ -4,7 +4,7 @@ import binary64Schema from "../../../../../../../../../../../../../🧰️framew
 import {expect,test} from 'bun:test';
 import {Database} from 'bun:sqlite';
 import Ajv from 'ajv';
-import laws from "../🧫️fixtures/🔣️.json";
+import laws from "./🧫️fixtures/🔣️.json";
 import * as owner from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 function specimen(raw:string){const word={bits:BigInt('0x'+raw)},text=laws.nativeCase.literal,unresolved=Reflect.get(laws.nativeCase,'unresolvedHandleKind');const kind={id:'',name:text,label:'',variant:'',description:text,icon:'',unit:''},attributes=[{key:'',value:text,definition:''}],authors=[{id:'',name:text,email:''}],compatibility=[{id:'',source:'',target:text,bidirectional:true}],meta={description:text};return{schema:'',nodeKind:kind,presentation:{shape:'',radius:word,width:word,height:word,color:'',iconKind:''},handleKinds:[{id:'',name:text,label:'',color:'',defaultWireKind:text}],handles:[{id:'',handleKind:unresolved,angle:word,radius:word}],compatibility,attributes,authors,camera2d:{x:word,y:word,zoom:word},meta};}
@@ -13,7 +13,7 @@ function codecs(){const project=Reflect.get(ownerSqlite0,'block2dSnapshotToSqlit
 for(const raw of laws.binary64Bits)test('Block2d complete owned IEEE word '+raw,async()=>{expect(new Ajv({strict:true}).compile(binary64Schema.$defs.Binary64)({bits:raw})).toBe(true);const bytes=Buffer.from(raw,'hex');expect(new DataView(bytes.buffer,bytes.byteOffset,8).getBigUint64(0)).toBe(BigInt('0x'+raw));const value=specimen(raw);expect(owner.parseBlock2dSnapshot(value)).toEqual(value);const{project,restore}=codecs(),database=await project(value),db=Database.deserialize(await exportSqliteDatabase(database),{safeIntegers:true});try{expect(db.query('PRAGMA integrity_check').get()).toEqual({integrity_check:'ok'});expect(db.query('PRAGMA foreign_key_check').all()).toEqual([]);for(const[name,count]of Object.entries(facets.tableRowCounts))expect(db.query('SELECT COUNT(*) AS count FROM '+name).get()).toEqual({count:BigInt(count)});expect(await restore(await importSqliteDatabase(db.serialize()))).toEqual(value);db.query('UPDATE block2_meta SET description=?').run('independent\0😀');expect(await restore(await importSqliteDatabase(db.serialize()))).toEqual({...value,meta:{description:'independent\0😀'}});}finally{db.close();}});
 for(const sql of facets.malformedSql)test('Block2d exact independent malformed SQL '+sql,async()=>{const{project,restore}=codecs(),db=Database.deserialize(await exportSqliteDatabase(await project(specimen(laws.binary64Bits[5]!))));try{db.exec('PRAGMA foreign_keys=OFF');db.exec('PRAGMA ignore_check_constraints=ON');db.exec(sql);await expect(restore(await importSqliteDatabase(db.serialize()))).rejects.toThrow();}finally{db.close();}});
 
-import facets from "../🧫️fixtures/🧭️source/🔣️.json";
+import facets from "./🧫️fixtures/🧭️source/🔣️.json";
 
 function at(value:any,path:readonly(string|number)[]):any{return path.reduce((row,key)=>row[key],value);}
 function set(value:any,path:readonly(string|number)[],next:unknown):void{at(value,path.slice(0,-1))[path[path.length-1]!]=next;}

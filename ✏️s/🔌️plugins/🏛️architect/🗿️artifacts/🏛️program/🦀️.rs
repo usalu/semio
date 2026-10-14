@@ -14,7 +14,7 @@ mod art_program_demo_tests;
 extern crate semio_framework_schema as framework_schema;
 
 #[cfg(test)]
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
 
 
 #[cfg(test)]

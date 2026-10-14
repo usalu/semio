@@ -1,7 +1,7 @@
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import fixture from "../../🧫️fixtures/🏭️producer/🔣️.json";
-import output from "../../🧫️fixtures/🛫️encoding/🔣️.json";
+import fixture from "../🧫️fixtures/🏭️producer/🔣️.json";
+import output from "../🧫️fixtures/🛫️encoding/🔣️.json";
 
 test("DXF controlled output corpus has an independent exact UTF8 ownership frontier",()=>{
  const text=output.unit.repeat(output.repetitions),bytes=new TextEncoder().encode(text);const db=new Database(":memory:");try{db.run("CREATE TABLE text_field(value TEXT NOT NULL)");db.run("INSERT INTO text_field VALUES(?)",text);expect(db.query("SELECT length(CAST(value AS BLOB)) AS size FROM text_field").get()).toEqual({size:bytes.length});expect(bytes.length).toBeGreaterThan(output.cancelAfter);expect(output.cancelAfter).toBeGreaterThan(output.tinyMaximumBytes);}finally{db.close();}

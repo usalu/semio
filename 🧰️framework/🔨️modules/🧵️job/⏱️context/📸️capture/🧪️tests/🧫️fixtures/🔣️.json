@@ -1,0 +1,16 @@
+{
+  "contract":"semio.job.captured-original-caller.v1",
+  "operation":99191,
+  "generation":17,
+  "aliases":["same-original-ledger","same-original-cancel"],
+  "captureItems":2,
+  "captureCopyBytes":0,
+  "captureCapacityBytes":0,
+  "freshRoot":false,
+  "freshLedger":false,
+  "supplierIssuedFutureTurn":true,
+  "recipientBinding":"actual-original-recipient",
+  "alreadyDebitedReturn":"validate-delta-once",
+  "partialCancellation":"paid-original-alias-return",
+  "terminalDropBytes":0
+}

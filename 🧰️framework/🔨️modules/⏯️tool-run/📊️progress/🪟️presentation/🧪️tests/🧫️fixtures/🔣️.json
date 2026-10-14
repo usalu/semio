@@ -1,0 +1,1 @@
+{"fields":["toolId","progress","provenance","payload"],"aliases":3,"orders":["sourceFirst","captureFirst"],"payloadCases":["","00017fffff"],"birthDeniedAxes":["items","capacity","depth"],"captureDeniedAxes":["items","copy","depth"]}

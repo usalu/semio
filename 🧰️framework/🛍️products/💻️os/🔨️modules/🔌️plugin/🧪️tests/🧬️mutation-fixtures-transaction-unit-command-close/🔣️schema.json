@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.plugin.fixture-transaction-command-close.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "layoutPolicy",
+    "callerGrant",
+    "cases"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 2
+    },
+    "layoutPolicy": {
+      "const": "command-value-layout-excludes-allocator-overhead"
+    },
+    "callerGrant": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "prefixItems": [
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "integer",
+          "minimum": 1
+        }
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "beginClose",
+          "command",
+          "completion",
+          "advance",
+          "probe",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "before-begin-close",
+              "zero-items",
+              "short-depth",
+              "short-release",
+              "exact-external-completion",
+              "exact-pending-completion"
+            ]
+          },
+          "beginClose": {
+            "type": "boolean"
+          },
+          "command": {
+            "enum": [
+              "increment",
+              "streamed-increment",
+              "increment-and-notify"
+            ]
+          },
+          "completion": {
+            "enum": [
+              "empty",
+              "pending-owner",
+              "pending-external"
+            ]
+          },
+          "advance": {
+            "enum": [
+              "none",
+              "until-release-quote",
+              "until-command-released"
+            ]
+          },
+          "probe": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "items",
+                  "axis"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "axis": {
+                    "enum": [
+                      "exact-quote",
+                      "depth-minus-one",
+                      "release-minus-one"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "step",
+              "command",
+              "completion",
+              "releasedBytes"
+            ],
+            "properties": {
+              "step": {
+                "enum": [
+                  "blocked",
+                  "pending",
+                  "complete",
+                  "refused"
+                ]
+              },
+              "command": {
+                "enum": [
+                  "retained",
+                  "released",
+                  "framed"
+                ]
+              },
+              "completion": {
+                "const": "retained"
+              },
+              "releasedBytes": {
+                "enum": [
+                  "zero",
+                  "command-layout-at-least"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

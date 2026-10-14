@@ -21,7 +21,7 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 #[test]
 fn payload_detail_edits_publish_the_exact_requested_value() {
     register_document_schema();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧫️fixtures/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json"))).unwrap();
     let mut snapshot = JpgSnapshot::default();
     snapshot.image.pixels = vec![7, 9];
     let base: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot))).unwrap();

@@ -5,11 +5,11 @@ import { isAbsolute, join } from "node:path";
 
 
 
-const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as { contract: string; scenarios: { id: string; baselineAccepted: boolean; accepted: boolean; diagnostic: string | null }[] };
+const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as { contract: string; scenarios: { id: string; baselineAccepted: boolean; accepted: boolean; diagnostic: string | null }[] };
 const storeUrl = new URL("../../../🦀️.rs", import.meta.url);
 const source = readFileSync(storeUrl, "utf8");
-const providers = readFileSync(new URL("../🧫️fixtures/🧪️registry-providers/🦀️.rs", import.meta.url), "utf8");
-const baseline = readFileSync(new URL("../🧫️fixtures/🧾️original-api/🦀️.rs", import.meta.url), "utf8");
+const providers = readFileSync(new URL("🧫️fixtures/🧪️registry-providers/🦀️.rs", import.meta.url), "utf8");
+const baseline = readFileSync(new URL("🧫️fixtures/🧾️original-api/🦀️.rs", import.meta.url), "utf8");
 const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
 if (!output || !isAbsolute(output)) throw Error("SEMIO_TEST_ARTIFACT_DIR must name the caller-owned absolute artifact directory");
 mkdirSync(output, { recursive: true });

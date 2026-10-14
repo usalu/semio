@@ -1,0 +1,14 @@
+{
+  "package": "semio-framework-value",
+  "packageSource": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs",
+  "valueSource": "🧰️framework/🔨️modules/🌱️value/🦀️.rs",
+  "controlSource": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs",
+  "nativeSource": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🦀️.rs",
+  "packageScript": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts",
+  "packageManifest": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+  "nativeMount": "\n#[cfg(test)]\n#[path = \"🧪️tests/🦀️.rs\"]\nmod tests;\n",
+  "nativeLaws": [
+    "sqlite_snapshot_nested_native_stages_preserve_parent_and_cumulative_ownership",
+    "sqlite_snapshot_native_materialization_preserves_caller_budget_and_cancellation"
+  ]
+}

@@ -50,7 +50,7 @@ async fn zip_round_trips_every_example_as_a_real_archive() {
 /// example assets — a disagreement fails HERE as well as in `bun test`, so neither
 /// implementation can drift silently.
 const JSON_PARITY_FIXTURES: &[(&str, &str)] =
-    &[("hexagonal-cut-concrete-forest-left", include_str!("../../🧫️fixtures/⬅️hexagonal-cut-concrete-forest-left.json")), ("hexagonal-cut-concrete-forest-right", include_str!("../../🧫️fixtures/➡️hexagonal-cut-concrete-forest-right.json"))];
+    &[("hexagonal-cut-concrete-forest-left", include_str!("../🧫️fixtures/⬅️hexagonal-cut-concrete-forest-left.json")), ("hexagonal-cut-concrete-forest-right", include_str!("../🧫️fixtures/➡️hexagonal-cut-concrete-forest-right.json"))];
 
 #[semio_framework_async_macros::async_test]
 async fn json_matches_the_typescript_parity_fixture() {

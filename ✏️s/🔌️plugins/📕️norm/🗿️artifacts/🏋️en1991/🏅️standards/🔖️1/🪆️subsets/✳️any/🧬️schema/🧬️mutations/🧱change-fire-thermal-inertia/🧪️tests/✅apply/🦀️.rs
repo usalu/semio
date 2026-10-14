@@ -5,11 +5,11 @@
 /// 🧱 The committed `change-fire-thermal-inertia` vector holds the specification-vector law.
 const VECTOR: super::Vector = super::Vector {
         kind: "change-fire-thermal-inertia",
-        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱change-fire-thermal-inertia/✅apply/📸️snapshot/⬅️before/🔣️.json"),
-        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱change-fire-thermal-inertia/✅apply/🦠️mutation/🔣️.json"),
-        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱change-fire-thermal-inertia/✅apply/📸️snapshot/➡️after/🔣️.json"),
-        diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱change-fire-thermal-inertia/✅apply/🔺️diff/🔣️.json"),
-        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱change-fire-thermal-inertia/✅apply/🎯️outcome/🔣️.json"),
+        before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧱change-fire-thermal-inertia/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧱change-fire-thermal-inertia/✅apply/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧱change-fire-thermal-inertia/✅apply/📸️snapshot/➡️after/🔣️.json"),
+        diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧱change-fire-thermal-inertia/✅apply/🔺️diff/🔣️.json"),
+        outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧱change-fire-thermal-inertia/✅apply/🎯️outcome/🔣️.json"),
 };
 
 #[test]

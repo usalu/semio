@@ -60,7 +60,7 @@ async fn original_window_constructor_cancellation_preserves_carriers_and_full_ph
 
 #[test]
 fn retained_window_config_context_identity_binds_owner_generation_and_revision() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️retained-window-config/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️retained-window-config/🔣️.json")).unwrap();
     let mut digests=std::collections::BTreeSet::new();
     let mut owner=semio_framework_async::block_on(async{let envelope=store::create_config_envelope::<crate::app_views::NoConfig,crate::app_views::NoConfigMutation>("test.window-config.original","original-window-config",crate::app_views::NoConfig{},None).await;let mut store=store::ConfigStore::new(envelope,protocol::ActorId("window-test".into())).await.unwrap();store::install_unscheduled_catalog(&mut store,crate::component::no_config_store_owners()).unwrap();store});
     let mut returned_read=None;

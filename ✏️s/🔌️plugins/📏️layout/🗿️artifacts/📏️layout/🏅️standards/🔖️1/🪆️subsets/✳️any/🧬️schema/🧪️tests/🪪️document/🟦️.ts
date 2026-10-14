@@ -16,7 +16,7 @@ import {layoutArtifactFromNativeJson,layoutArtifactNativeJson} from "../../../�
 import {layoutDiffFromNativeJson,layoutDiffNativeJson} from "../../../🚪️io/📝️text/🔺️diff/🪪️native-json/🟦️.ts";
 import { parseLayoutSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseLayoutDiff } from "../../🔺️diff/🟦️.ts";
-import vectors from "../../🧫️fixtures/🪪️document/🔣️.json" with { type: "json" };
+import vectors from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json" with { type: "json" };
 
 const fields = ["schema", "name", "grid", "paragraphStyles", "characterStyles", "stories", "links", "parentPages", "spreads", "pages", "printTarget", "dataFields", "backgroundDrawing", "referencedModel"] as const;
 
@@ -41,7 +41,7 @@ export function testLayoutDocumentContractOracle(): void {
     invalidDiffs: [{ ...vectors.diff, artifact: null }, missingDrawingTexts, { ...vectors.diff, dataFields: { dictionary: vectors.document.dataFields } }, invalidEntry],
     validDocuments: [{ input: vectors.document, output: vectors.document }],
     invalidDocuments: [{ ...document, camera: { x: 0, y: 0, zoom: 1 } }, missingContent, modelAsChild],
-    mutationRoots: [fileURLToPath(new URL("../../../🧫️fixtures/🧬️mutations", import.meta.url))],
+    mutationRoots: [fileURLToPath(new URL("../../../🧪️tests/🧫️fixtures/🧬️mutations", import.meta.url))],
     committed: { snapshots: 102, diffs: 45 },
   });
   assert.deepEqual(Object.keys(artifactSchema.properties), fields);

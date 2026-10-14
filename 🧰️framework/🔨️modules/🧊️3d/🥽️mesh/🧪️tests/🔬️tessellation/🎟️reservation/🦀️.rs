@@ -5,7 +5,7 @@ use super::*;
 fn original_mesh_tessellation_reservation_receipts_preserve_all_original_buffers(){
     use crate::test_support::observe_tessellation_system as observe;
     use protocol::value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
     for copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){
         let(mut job,source)=observe(||{let positions=serde_json::from_value::<Vec<[f32;3]>>(law["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(law["faces"].clone()).unwrap();MeshTessellationJob::new(HalfedgeMesh::from_faces(&positions,&faces).unwrap())});
         let original=job.mesh.vertices.as_ptr();let(mut born,mut freed,mut turns)=(source.0,source.1,0);let mut pointers=[0usize;16];

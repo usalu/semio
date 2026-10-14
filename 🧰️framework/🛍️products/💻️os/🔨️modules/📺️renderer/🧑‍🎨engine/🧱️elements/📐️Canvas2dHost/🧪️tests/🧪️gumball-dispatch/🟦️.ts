@@ -10,7 +10,7 @@
 
 import { glMatrix, mat2d, vec2 } from "gl-matrix";
 import { describe, expect, it } from "vitest";
-import corpus from "../../🧫️fixtures/🧫️gumball-dispatch/🔣️.json" with { type: "json" };
+import corpus from "../🧫️fixtures/🧫️gumball-dispatch/🔣️.json" with { type: "json" };
 
 import {
   canvas2dGumballBegin,

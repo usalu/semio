@@ -25,7 +25,7 @@ type FixtureV1 = {
 };
 
 const repoRoot = resolve(import.meta.dir, "../../..");
-const fixture = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/🧫️fixtures/🌳️unit-census/🔣️.json"), "utf8")) as FixtureV1;
+const fixture = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/🧪️tests/🧫️fixtures/🌳️unit-census/🔣️.json"), "utf8")) as FixtureV1;
 const unification = { CARGO_UNSTABLE_FEATURE_UNIFICATION: "true", CARGO_RESOLVER_FEATURE_UNIFICATION: "package" };
 
 /** 🏷️ `name@version` of a Cargo package id (`…#name@version`, or `…/name#version` when the name equals the directory). */

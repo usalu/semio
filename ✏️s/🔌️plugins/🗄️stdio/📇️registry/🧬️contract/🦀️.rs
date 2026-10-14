@@ -1664,7 +1664,7 @@ pub fn media_duration_ms(duration_seconds: f64) -> Option<u64> {
 /// in-history mutation (no stdio subset mints a whole-snapshot edit for it), so the switch emits an
 /// `Effect::LoadDocument` carrying the example's own pack plus an edit-free `.spr` log — the shape
 /// `dag`/`reasoning.wires` already use, and the reason the route publishes on the HostOnly lane.
-pub fn load_example_effect<P: kernel::os_store::serialization::ArtifactPack>(document: &P, schema: &'static str) -> semio_framework_plugin::Effect {
+pub fn load_example_effect<P: pack::snapshot::ArtifactPack>(document: &P, schema: &'static str) -> semio_framework_plugin::Effect {
     let pack = document.encode_pack();
     let spr = ::semio_framework_async::poll::resolve_ready(kernel::os_store::text_format::empty_document_spr(schema, schema));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
@@ -1676,7 +1676,7 @@ pub fn load_example_effect<P: kernel::os_store::serialization::ArtifactPack>(doc
 pub fn import_media_as_load<E>(port: &str, media: &semio_framework_plugin::app::Media) -> Result<semio_framework_plugin::Emit<E::Mutation, E::ConfigMutation, E::DraftMutation>, semio_framework_plugin::MediaError>
 where
     E: semio_framework_plugin::ArtifactEditor,
-    E::Snapshot: kernel::os_store::serialization::ArtifactPack,
+    E::Snapshot: pack::snapshot::ArtifactPack,
 {
     use semio_framework_plugin::app::MediaPayload;
     use semio_framework_plugin::MediaError;
@@ -1694,7 +1694,7 @@ where
             return Err(MediaError::Payload(port.to_string(), "document importer only accepts a Structured (base64 pack) payload".into()));
         };
         let bytes = kernel::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-        <E::Snapshot as kernel::os_store::serialization::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?
+        <E::Snapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?
     } else {
         return Err(MediaError::NotImplemented);
     };

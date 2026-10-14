@@ -1,0 +1,30 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/♻️close/🧬️schema/🔣️.json",
+    "beforeSha256": "dd40b872b3b67bd978f0bb78592ee4b8911290882b4f800a292fe724661e4387"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🚦️controlled/🧬️schema/🔣️.json",
+    "beforeSha256": "02f187ad80e7d27484f6fe43bea930fc9db1ce229e80b81a627170e0f40ce2de"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🔣️hex-splices/🔣️.json",
+    "beforeSha256": "8a95f2ee8b9a8247f74b5ccb6f4be09aa17c10ba29402297b8bb6eedf1d90a81"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️owned/🧬️schema/🔣️.json",
+    "beforeSha256": "8b5d6b3ce01d6a35f7fcda95e847678512fea1e6731ef1a9ed08b70162994657"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧬️schema/🔣️.json",
+    "beforeSha256": "3dfc639502849e85a84f06824052b4090cbea57d5dd02117239907e8c750467d"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/📏️physical/🧬️schema/🔣️.json",
+    "beforeSha256": "ccfbf98e498876d4735ff739330dc29b2ddf8795d0a72415fc7c41f3b2b9690f"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/🧬️schema/🔣️.json",
+    "beforeSha256": "f175dd0bfd9aaff04f45de276eb9b819d28c20629c14df9f0dc7af12c7881ab3"
+  }
+]

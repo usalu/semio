@@ -1,0 +1,27 @@
+\documentclass{article}
+\usepackage{semio-viz-geo}
+\ExplSyntaxOn
+% 📤 Emits one record per graticule line: the `lon,lat;lon,lat` list flattened into a bare number clist.
+\cs_new_protected:Npn \semio_probe_line:n #1
+  {
+    \tl_set:Nn \l_tmpa_tl {#1}
+    \tl_replace_all:Nnn \l_tmpa_tl { ; } { , }
+    \use:x
+      {
+        \exp_not:N \SemioVizProbeEval { geo/graticule }
+          { \exp_not:V \l_tmpa_tl }
+      }
+  }
+\ExplSyntaxOff
+\begin{document}
+\SemioVizProbeBegin{geo-path-graticule}{graticule-lines}
+\SemioVizProbePage
+\SemioVizProbePrecision{9}
+\ExplSyntaxOn
+\clist_map_inline:nn { 20 }
+  {
+    \semio_viz_geo_graticule_lines:n { stepMinor = { #1, #1 }, precision = 30 }
+    \seq_map_inline:Nn \g_semio_viz_geo_gr_seq { \semio_probe_line:n {##1} }
+  }
+\ExplSyntaxOff
+\end{document}

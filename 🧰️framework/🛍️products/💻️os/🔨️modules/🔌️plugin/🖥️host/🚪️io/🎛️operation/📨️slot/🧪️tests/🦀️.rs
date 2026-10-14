@@ -3,7 +3,7 @@ use super::{OperationSlot,OperationRequest,OperationReply};
 use std::{sync::{Arc,atomic::{AtomicUsize,Ordering}},task::{Context,Poll,Wake,Waker}};
 struct Observer(AtomicUsize);
 impl Wake for Observer{fn wake(self:Arc<Self>){self.0.fetch_add(1,Ordering::Relaxed);}fn wake_by_ref(self:&Arc<Self>){self.0.fetch_add(1,Ordering::Relaxed);}}
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 #[test]
 fn scalar_slot_requires_a_live_original_pump_and_retains_exact_requests_until_reply(){
  let observed=Arc::new(Observer(AtomicUsize::new(0)));let waker=Waker::from(observed.clone());let mut context=Context::from_waker(&waker);let mut slot=OperationSlot::new();let mut posted=None;

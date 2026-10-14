@@ -65,7 +65,7 @@ type Vectors = {
   readonly throws: readonly { readonly id: string; readonly pusher: { readonly x: number; readonly y: number }; readonly fixture: Box; readonly unit: number; readonly expected: { readonly vx: number; readonly vy: number } }[];
 };
 
-const VECTORS = JSON.parse(readFileSync(new URL("../../../../🧫️fixtures/🪄️mischief-choice/🔣️.json", import.meta.url), "utf8")) as Vectors;
+const VECTORS = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/🪄️mischief-choice/🔣️.json", import.meta.url), "utf8")) as Vectors;
 const SOURCE = readFileSync(new URL("../../🟦️.ts", import.meta.url), "utf8");
 const SEED = 20261003;
 const QUIZZES = ["physics", "heating", "cooling", "demand"];

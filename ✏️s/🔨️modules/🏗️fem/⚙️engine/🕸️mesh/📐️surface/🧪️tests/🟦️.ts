@@ -7,7 +7,7 @@ import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { validateJsonSchemaSubset } from "../../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 
 const root=resolve(import.meta.dir,"../../../../../../.."),mesh=join(root,"✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh"),artifact=join(root,"✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d");
 type Point=readonly[number,number,number];

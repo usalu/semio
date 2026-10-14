@@ -10,7 +10,7 @@ use crate::test_app_mutation_fixture::{SetCount, SetLabel, SetSlotChildren, Test
 use semio_framework_time_travel::TimeTravelStage;
 use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
 
-const TIME_TRAVEL_FIXTURE_JSON: &str = include_str!("../../🧫️fixtures/🧫️time-travel/🔣️.json");
+const TIME_TRAVEL_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/🧫️time-travel/🔣️.json");
 
 fn fixture() -> Value {
     serde_json::from_str(TIME_TRAVEL_FIXTURE_JSON).expect("time-travel fixture parses")
@@ -164,12 +164,16 @@ fn time_travel_actor_pending_command_original_inline_custody(){
 
 #[semio_framework_async_macros::async_test]
 async fn time_travel_actor_discard_original_prepares_effects_before_atomic_publication(){
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
  let (_,maximum_identity_bytes)=original_time_travel_fixture_caller();let grant=time_travel::native_original_actor_grant();let mounted_policy=crate::MountedOwnerPolicyV1{preparation:grant,maintenance:grant,close:grant}.validate().unwrap();
  let mut observer=|_|true;
  let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
  let mut app=artifact_app_laws::new_registered_app::<ToyHistoryApp,_>(toy_manifest(),protocol::ActorId("original-discard".into()),mounted_policy,&mut identity).await;
  time_travel::assert_discard_publication_original(&mut app,||SetLabel{value:String::with_capacity(65536)}.into());
- collect_original_history_command_receipt(&mut app);close(&mut app);
+ collect_original_history_command_receipt(&mut app);close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 🎟️ Reads independent original caller ceilings before any native fixture work.
@@ -230,14 +234,14 @@ fn rejected(result: &InvocationResult) -> Option<&str> {
     result.output.get("rejected").and_then(DslValue::as_str)
 }
 
-async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> bool, mounted_policy:crate::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> bool, mounted_policy:crate::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) {
     assert_eq!(app.mounted_policy,mounted_policy);
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
     while std::time::Instant::now() < deadline {
         if done(app) {
             return;
         }
-        app.advance_typed_operation_publication(identity,mounted_policy.preparation).await.unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
+        app.advance_typed_operation_publication(identity,cx).await.unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
         collect_original_history_command_receipt(app);
         while app.take_typed_operation_ui_progress().is_some() {}
     }
@@ -263,7 +267,7 @@ fn find_node<'a>(node: &'a Value, key: &str) -> Option<&'a Value> {
 }
 
 /// ⏯️ Runs one fixture step through the real verbs (a `replay` pumps the per-turn Report replay to completion).
-async fn run_step(app: &mut ToyApp, fixture: &Value, step: &Value, mounted_policy:crate::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<InvocationResult> {
+async fn run_step(app: &mut ToyApp, fixture: &Value, step: &Value, mounted_policy:crate::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Option<InvocationResult> {
     let (name, value) = step.as_object().and_then(|step| step.iter().next()).expect("one-key step");
     Some(match name.as_str() {
         "begin" => {
@@ -279,7 +283,7 @@ async fn run_step(app: &mut ToyApp, fixture: &Value, step: &Value, mounted_polic
         "accept" => verb(app, fixture, "historyEditAccept", Vec::new(), mounted_policy, identity).await,
         "discard" => {
             let result=verb(app, fixture, "historyEditDiscard", Vec::new(), mounted_policy, identity).await;
-            if rejected(&result).is_none(){pump_until(app,"original Discard publication settles",|app| !app.time_travel.has_pending_work(), mounted_policy, identity).await;}
+            if rejected(&result).is_none(){pump_until(app,"original Discard publication settles",|app| !app.time_travel.has_pending_work(), mounted_policy, identity,cx).await;}
             result
         },
         "finalize" => verb(app, fixture, "historyEditFinalize", Vec::new(), mounted_policy, identity).await,
@@ -295,7 +299,7 @@ async fn run_step(app: &mut ToyApp, fixture: &Value, step: &Value, mounted_polic
             verb(app, fixture, "historyEditCommit", args, mounted_policy, identity).await
         }
         "replay" => {
-            pump_until(app, "replay completes", |app| app.time_travel.session().stage != TimeTravelStage::Replaying, mounted_policy, identity).await;
+            pump_until(app, "replay completes", |app| app.time_travel.session().stage != TimeTravelStage::Replaying, mounted_policy, identity,cx).await;
             return None;
         }
         other => panic!("unknown fixture step {other}"),
@@ -303,9 +307,9 @@ async fn run_step(app: &mut ToyApp, fixture: &Value, step: &Value, mounted_polic
 }
 
 /// 🧹️ Closes the instance and proves the history-edit ledger retired every owner.
-fn close(app: &mut ToyApp) {
+fn close(app: &mut ToyApp,cx:&mut semio_framework_job::StepContext<'_>) {
     collect_original_history_command_receipt(app);
-    let mounted_policy=app.mounted_policy;artifact_app_laws::close_registered_fixture_app(app,mounted_policy);
+    let mounted_policy=app.mounted_policy;artifact_app_laws::close_registered_fixture_app(app,mounted_policy,cx).expect("original history fixture paid terminal close");
     assert!(app.time_travel.terminal_is_empty(), "the history-edit ledger retires every owner on close");
 }
 //#endregion 🧰️Harness
@@ -314,6 +318,8 @@ fn close(app: &mut ToyApp) {
 /// document only changes through a commit, and pending/superseded/withdrawn rows are exactly the fixture's.
 #[semio_framework_async_macros::async_test]
 async fn every_fixture_scenario_reaches_its_status_body_and_rows() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -325,7 +331,7 @@ async fn every_fixture_scenario_reaches_its_status_body_and_rows() {
         let mut commits = false;
         for step in scenario["steps"].as_array().expect("steps") {
             commits |= step.get("commit").is_some();
-            if let Some(result) = run_step(&mut app, &fixture, step, mounted_policy, &mut identity).await {
+            if let Some(result) = run_step(&mut app, &fixture, step, mounted_policy, &mut identity,cx).await {
                 assert_eq!(rejected(&result), None, "{id}: step {step} was refused: {:?}", result.output);
             }
         }
@@ -367,14 +373,18 @@ async fn every_fixture_scenario_reaches_its_status_body_and_rows() {
         if scenario["superseded"].as_array().is_some_and(|superseded| !superseded.is_empty()) && scenario["alternative"].is_null() {
             assert!(app.store.supersessions().values().all(|supersession| supersession.scope.is_none()), "{id}: overwrite is unscoped");
         }
-        pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-        close(&mut app);
+        pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+        close(&mut app,cx);
     }
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: an overwrite leaves exactly the document a fresh store folding the edited log reaches.
 #[semio_framework_async_macros::async_test]
 async fn an_overwrite_head_equals_a_fresh_fold_of_the_edited_log() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -382,7 +392,7 @@ async fn an_overwrite_head_equals_a_fresh_fold_of_the_edited_log() {
     let scenario = fixture["scenarios"].as_array().expect("scenarios").iter().find(|scenario| text(&scenario["id"]) == "overwrite-supersedes-in-place").expect("overwrite scenario");
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     for step in scenario["steps"].as_array().expect("steps") {
-        run_step(&mut app, &fixture, step, mounted_policy, &mut identity).await;
+        run_step(&mut app, &fixture, step, mounted_policy, &mut identity,cx).await;
     }
     let mut fresh = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(text(&fixture["actor"]).into()), mounted_policy, &mut identity).await;
     for (index, op) in fixture["seed"].as_array().expect("seed").iter().enumerate() {
@@ -390,21 +400,25 @@ async fn an_overwrite_head_equals_a_fresh_fold_of_the_edited_log() {
         fresh.store.dispatch(ArtifactCommand::Apply { mutations: vec![op], transaction: None }, &mut identity).await.expect("fresh edit");
     }
     assert_eq!(app.store.snapshot().expect("edited head"), fresh.store.snapshot().expect("fresh head"));
-    close(&mut app);
-    close(&mut fresh);
+    close(&mut app,cx);
+    close(&mut fresh,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: finalizing opens the framework-injected dialog seeded with the localized default name; the injected
 /// definition names the commit and back verbs, and a viewer manifest declares neither the verbs nor the dialog.
 #[semio_framework_async_macros::async_test]
 async fn finalize_opens_the_injected_dialog_with_a_localized_default_name() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     for step in [serde_json::json!({ "begin": 1 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } }), serde_json::json!({ "accept": null }), serde_json::json!({ "replay": "clean" })] {
-        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity).await;
+        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity,cx).await;
     }
     let result = verb(&mut app, &fixture, "historyEditFinalize", Vec::new(), mounted_policy, &mut identity).await;
     let Some(Effect::OpenDialog { dialog_id, args, .. }) = result.requested_effects.first() else { panic!("finalize opens a dialog: {:?}", result.requested_effects) };
@@ -418,8 +432,10 @@ async fn finalize_opens_the_injected_dialog_with_a_localized_default_name() {
     verb(&mut app, &fixture, "historyEditBack", Vec::new(), mounted_policy, &mut identity).await;
     assert_eq!(app.time_travel.session().stage, TimeTravelStage::Reviewing, "cancel goes back to reviewing, never discards");
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-    close(&mut app);
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: while a history edit is open, artifact emits, child emits and history-lane verbs are refused with
@@ -427,13 +443,15 @@ async fn finalize_opens_the_injected_dialog_with_a_localized_default_name() {
 /// that leave the draft untouched.
 #[semio_framework_async_macros::async_test]
 async fn an_open_session_freezes_document_verbs_and_refuses_stale_or_invalid_drafts() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let refusals = &fixture["refusals"];
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
-    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity).await;
+    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity,cx).await;
     let emitted = app.dispatch_emit("setCount", Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { artifact_mutations: vec![SetCount { value: 3 }.into()], ..Default::default() }, &meta(&fixture), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     assert_eq!(emitted.err().map(|fault| fault.code), Some(FaultCode::new(text(&refusals["frozen"]))), "an artifact emit is frozen");
     for action in refusals["frozenVerbs"].as_array().expect("frozen verbs") {
@@ -456,14 +474,18 @@ async fn an_open_session_freezes_document_verbs_and_refuses_stale_or_invalid_dra
     assert!(history.to_string().contains("Verlaufsbearbeitung"), "German copy in a German shell");
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
     assert!(app.handle_action("undo", None, &meta(&fixture), &mut identity).await.is_ok(), "exit lifts the freeze");
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-    close(&mut app);
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: cancelling a running replay keeps the drafts and reviews without a report; a remote edit arriving while
 /// reviewing moves the base and replays again, and the reviewed head includes the remote edit.
 #[semio_framework_async_macros::async_test]
 async fn cancel_keeps_drafts_and_a_remote_edit_replays_again() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -472,7 +494,7 @@ async fn cancel_keeps_drafts_and_a_remote_edit_replays_again() {
     let (backbone, mut probe) = MemoryBackbone::pair("time-travel-remote", "time-travel-remote").await;
     app.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone)).await.expect("attach probe backbone");
     for step in [serde_json::json!({ "begin": 1 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } }), serde_json::json!({ "accept": null })] {
-        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity).await;
+        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity,cx).await;
     }
     let cancelled = verb(&mut app, &fixture, "historyEditCancelReplay", Vec::new(), mounted_policy, &mut identity).await;
     assert_eq!(rejected(&cancelled), None);
@@ -489,7 +511,7 @@ async fn cancel_keeps_drafts_and_a_remote_edit_replays_again() {
     let rerun = verb(&mut app, &fixture, "historyEditRerun", Vec::new(), mounted_policy, &mut identity).await;
     assert_eq!(rejected(&rerun), None);
     assert_eq!(app.time_travel.session().stage, TimeTravelStage::Replaying, "rerun replays the kept drafts");
-    run_step(&mut app, &fixture, &serde_json::json!({ "replay": "clean" }), mounted_policy, &mut identity).await;
+    run_step(&mut app, &fixture, &serde_json::json!({ "replay": "clean" }), mounted_policy, &mut identity,cx).await;
     assert_eq!(app.time_travel.status().and_then(|status| status.review), Some(semio_framework::kernel::HistoryTimeTravelReview::Ready));
     let mut remote = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("remote".into()), mounted_policy, &mut identity).await;
     let (remote_backbone, mut remote_probe) = MemoryBackbone::pair("time-travel-remote-peer", "time-travel-remote-peer").await;
@@ -502,20 +524,24 @@ async fn cancel_keeps_drafts_and_a_remote_edit_replays_again() {
     let generation = app.store.generation();
     app.tick_backbone(&mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("ingest remote edit");
     assert!(app.store.generation() > generation, "the remote edit is ingested while the session reviews");
-    pump_until(&mut app, "the moved base replays again", |app| app.time_travel.session().stage == TimeTravelStage::Reviewing && app.time_travel.session().report.is_some() && app.time_travel.session().base.content_revision == app.store.content_revision(), mounted_policy, &mut identity)
+    pump_until(&mut app, "the moved base replays again", |app| app.time_travel.session().stage == TimeTravelStage::Reviewing && app.time_travel.session().report.is_some() && app.time_travel.session().base.content_revision == app.store.content_revision(), mounted_policy, &mut identity,cx)
         .await;
     assert!(render_body(&mut app).await.contains("label=b"), "the replayed head keeps the draft");
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     drop((probe, remote_probe));
-    close(&mut app);
-    close(&mut remote);
+    close(&mut app,cx);
+    close(&mut remote,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: one committed tool transaction is one edit and one history row carrying its `TransactionRef`, labelled from
 /// its mutations when it has no description, with one editable mutation row per op.
 #[semio_framework_async_macros::async_test]
 async fn a_committed_tool_transaction_is_one_row_with_its_reference_and_mutation_rows() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -538,7 +564,9 @@ async fn a_committed_tool_transaction_is_one_row_with_its_reference_and_mutation
     let mut rendered = find_node(&history, &format!("framework.history.entry.{}", row.seq)).unwrap_or_else(|| panic!("the transaction row: {history}")).clone();
     rendered.as_object_mut().expect("a node").remove("children");
     assert!(row.op_lines.iter().all(|line| !rendered.to_string().contains(line.as_str())), "labelled mutation children replace the raw op-lines description: {rendered}");
-    close(&mut app);
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW (design §19.1): a tool that declares intent leaf kinds labels its transaction's row by the first operation of
@@ -546,6 +574,8 @@ async fn a_committed_tool_transaction_is_one_row_with_its_reference_and_mutation
 /// reload (the stamped tool id and the leaf kinds are persisted); a tool declaring none keeps the first leaf's label.
 #[semio_framework_async_macros::async_test]
 async fn a_transaction_row_reads_its_declared_intent_leaf_before_and_after_reload() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -574,8 +604,10 @@ async fn a_transaction_row_reads_its_declared_intent_leaf_before_and_after_reloa
         assert_eq!(label(&select), ("Set count to 2 (+1)".to_string(), "Anzahl auf 2 setzen (+1)".to_string()), "{who}: an undeclared tool keeps the first leaf");
     }
     for app in [&mut app, &mut reloaded, &mut repacked] {
-        close(app);
+        close(app,cx);
     }
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 🏷️ LAW (design §20.6): the runtime's catalogue route (`setActiveExample` of an app that declares none) carries no
@@ -583,6 +615,8 @@ async fn a_transaction_row_reads_its_declared_intent_leaf_before_and_after_reloa
 /// label — and its emit still loads the example.
 #[semio_framework_async_macros::async_test]
 async fn the_catalogue_route_reads_the_framework_label_never_a_hand_written_one() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -594,7 +628,9 @@ async fn the_catalogue_route_reads_the_framework_label_never_a_hand_written_one(
     assert!(result.requested_effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })), "the example is loaded: {:?}", result.requested_effects);
     let patch = app.history_patch(true).await.expect("history patch");
     assert!(patch.upserts.iter().filter(|row| row.action_id == CATALOGUE_EXAMPLE_ACTION_ID).all(|row| row.label.resolve(Terminology::Native, Locale::En) == "Load example"), "no row reads a hand-written label");
-    close(&mut app);
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 🪟️ The history body as a host shows it with history row `seq`'s mutation window open on `rows` rows from `offset`.
@@ -618,6 +654,8 @@ fn mutation_row_ids(row: &Value) -> Vec<String> {
 /// still open, a running replay; it is enabled again in the review.
 #[semio_framework_async_macros::async_test]
 async fn every_mutation_of_a_long_transaction_is_reachable_and_edit_follows_the_begin_law() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -672,12 +710,14 @@ async fn every_mutation_of_a_long_transaction_is_reachable_and_edit_follows_the_
     assert_eq!(app.time_travel.session().stage, TimeTravelStage::Replaying);
     let (action, activation) = edit_action(&render_history_window(&mut app, row.seq, 32, 8).await, &ids[37]);
     assert!(action["disabled"] == Value::Bool(true) && activation.is_null() && action["label"].as_str() == Some("Edit") && action["reason"].as_str() == Some("Not possible right now"), "a running replay disables Edit, naming why: {action}");
-    pump_until(&mut app, "the replay completes", |app| app.time_travel.session().stage != TimeTravelStage::Replaying, mounted_policy, &mut identity).await;
+    pump_until(&mut app, "the replay completes", |app| app.time_travel.session().stage != TimeTravelStage::Replaying, mounted_policy, &mut identity,cx).await;
     let (action, activation) = edit_action(&render_history_window(&mut app, row.seq, 32, 8).await, &ids[37]);
     assert!(action["disabled"] != Value::Bool(true) && activation.as_str() == Some("historyEditBegin") && action["label"].as_str() == Some("Edit"), "the review edits again: {action}");
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-    close(&mut app);
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 🌊️ LAW (design §15, transaction-scoped amend): a streamed tool transaction's ticks grow ONE edit and ONE history row
@@ -686,6 +726,8 @@ async fn every_mutation_of_a_long_transaction_is_reachable_and_edit_follows_the_
 /// naming no transaction and aborts carrying mutations break the shape rule.
 #[semio_framework_async_macros::async_test]
 async fn a_streamed_tool_transaction_is_one_row_and_its_abort_leaves_none() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -724,7 +766,9 @@ async fn a_streamed_tool_transaction_is_one_row_and_its_abort_leaves_none() {
     assert_eq!(app.dispatch_emit("select", unnamed, &meta(&fixture), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.err().map(|fault| fault.code), Some(FaultCode::new("toolTransaction.shape")));
     let carrying = ToyEmit { artifact_mutations: vec![SetCount { value: 8 }.into()], ..ToyEmit::abort_transaction(aborted) };
     assert_eq!(app.dispatch_emit("select", carrying, &meta(&fixture), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.err().map(|fault| fault.code), Some(FaultCode::new("toolTransaction.shape")));
-    close(&mut app);
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 🧭️ The pointer and coercion helpers behind `historyEditInput`: object members and array slots are addressed by
@@ -920,6 +964,8 @@ fn sourced_options_are_the_keys_of_the_previewed_document() {
 /// snaps to the factor's multiples, and a `Snapshot` pointer reads the document the open session previews.
 #[semio_framework_async_macros::async_test]
 async fn snap_sources_resolve_from_the_grid_factor_and_the_previewed_document() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -946,7 +992,7 @@ async fn snap_sources_resolve_from_the_grid_factor_and_the_previewed_document() 
     assert!(matches!(&rows[1].input.schema, semio_framework::ArgSchema::Number { snaps, snap_source: None, .. } if snaps.len() == 21 && snaps[1] == 0.5 && snaps[20] == 10.0), "a bounded radius snaps to the grid: {:?}", rows[1].input.schema);
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
-    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 3 }), mounted_policy, &mut identity).await;
+    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 3 }), mounted_policy, &mut identity,cx).await;
     let mut panel = app.time_travel.panel().expect("an editing session");
     let editor = panel.editor.as_mut().expect("the draft editor");
     let mut count = semio_framework::ArgSchema::number(Some(0.0), Some(20.0), None, false);
@@ -958,8 +1004,10 @@ async fn snap_sources_resolve_from_the_grid_factor_and_the_previewed_document() 
     let resolved = &panel.editor.as_ref().expect("the draft editor").rows[0].input.schema;
     assert!(matches!(resolved, semio_framework::ArgSchema::Number { snaps, snap_source: None, .. } if *snaps == vec![0.0, 5.0, 10.0, 15.0, 20.0]), "the previewed document's count is the grid: {resolved:?}");
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-    close(&mut app);
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 🔗️ LAW (design §16.4): the open draft's `Reference` inputs are its draft references per selection domain — what every
@@ -968,13 +1016,15 @@ async fn snap_sources_resolve_from_the_grid_factor_and_the_previewed_document() 
 /// number contribute nothing, and nothing is referenced before the session opens or once it exits.
 #[semio_framework_async_macros::async_test]
 async fn the_open_draft_references_its_reference_inputs_per_domain() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     assert!(app.time_travel.draft_references().is_empty(), "no session references nothing");
-    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity).await;
+    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity,cx).await;
     let reference = |pointer: &str, domain: Option<&str>, many: bool| semio_framework::ActionArgDef {
         schema: semio_framework::ArgSchema::Reference { kinds: Vec::new(), domain: domain.map(str::to_string), granularity: None, many, min_items: None, max_items: None, id_type: semio_framework::ReferenceIdType::String },
         ..semio_framework::ActionArgDef::number(pointer, LocalizedLabel::native(pointer, pointer))
@@ -994,8 +1044,10 @@ async fn the_open_draft_references_its_reference_inputs_per_domain() {
     assert_eq!(references.len(), 2, "only declared domains are referenced: {references:?}");
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
     assert!(app.time_travel.draft_references().is_empty(), "an exited session references nothing");
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-    close(&mut app);
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 🎨️ LAW: the draft editor renders a colour input with the UI contract's `color_input` recipe (swatch, hex text and,
@@ -1003,12 +1055,14 @@ async fn the_open_draft_references_its_reference_inputs_per_domain() {
 /// axis; a hex commit keeps the stored opacity and the slider sets it alone.
 #[semio_framework_async_macros::async_test]
 async fn colour_inputs_render_the_contract_recipe_and_vector_axes_keep_their_snaps() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
-    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity).await;
+    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity,cx).await;
     let mut offset = semio_framework::ActionArgDef::vector("/offset", LocalizedLabel::native("Offset", "Versatz"), 2);
     if let semio_framework::ArgSchema::Vector { snaps, .. } = &mut offset.schema {
         *snaps = vec![0.0, 0.5];
@@ -1030,20 +1084,24 @@ async fn colour_inputs_render_the_contract_recipe_and_vector_axes_keep_their_sna
     let (alpha_input, alpha_element) = time_travel::time_travel_input_at(&inputs, &value, "/tint/3").expect("the opacity component");
     assert_eq!(time_travel::time_travel_coerce(&alpha_input, alpha_element, &DslValue::float(0.5)).and_then(|value| value.as_f64()), Some(0.5), "the slider sets the fourth component alone");
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-    close(&mut app);
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 🧽️ LAW: a nullable input carries an accessible Clear button ("Clear <label>", en/de) that drafts `null` at the input's
 /// pointer; while the input is null the row reads as cleared; a non-nullable input has none.
 #[semio_framework_async_macros::async_test]
 async fn a_nullable_input_offers_a_clear_control_that_drafts_null() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
-    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity).await;
+    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity,cx).await;
     let scale = semio_framework::ActionArgDef { nullable: true, ..semio_framework::ActionArgDef::number("/scale", LocalizedLabel::native("Scale", "Maßstab")) };
     let width = semio_framework::ActionArgDef::number("/width", LocalizedLabel::native("Width", "Breite"));
     let editor = app.time_travel.editor_mut().expect("the draft editor");
@@ -1064,8 +1122,10 @@ async fn a_nullable_input_offers_a_clear_control_that_drafts_null() {
     assert!(cleared.to_string().contains("Clear Scale"), "Clear stays named in every locale: {cleared}");
     assert!(find_node(&history, "framework.history.editor.input.scale.row").is_some_and(|row| row.to_string().contains("Cleared (no value)")), "the row reads as cleared");
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-    close(&mut app);
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 🌲️ LAW: the band and the draft editor speak the one tree vocabulary both hosts mount — tree sections of rows, each row
@@ -1073,6 +1133,8 @@ async fn a_nullable_input_offers_a_clear_control_that_drafts_null() {
 /// control; React mounts any): no text, progress bar or group is a row's child, and a second control is a nested row.
 #[semio_framework_async_macros::async_test]
 async fn the_band_and_the_editor_rows_hold_at_most_one_single_control() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -1101,7 +1163,7 @@ async fn the_band_and_the_editor_rows_hold_at_most_one_single_control() {
     }
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
-    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity).await;
+    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity,cx).await;
     let editor = app.time_travel.editor_mut().expect("the draft editor");
     editor.inputs =
         vec![semio_framework::ActionArgDef { nullable: true, ..semio_framework::ActionArgDef::number("/scale", LocalizedLabel::native("Scale", "Maßstab")) }, semio_framework::ActionArgDef::number("/width", LocalizedLabel::native("Width", "Breite"))];
@@ -1111,14 +1173,16 @@ async fn the_band_and_the_editor_rows_hold_at_most_one_single_control() {
     assert_eq!(sections(&history), Vec::<String>::new(), "editing rows");
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
     for step in [serde_json::json!({ "begin": 1 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } }), serde_json::json!({ "accept": null }), serde_json::json!({ "replay": "clean" })] {
-        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity).await;
+        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity,cx).await;
     }
     let history = render_history(&mut app, Locale::De).await;
     assert!(find_node(&history, "framework.history.timeTravel.finalize").is_some(), "the review offers Finalize: {history}");
     assert_eq!(sections(&history), Vec::<String>::new(), "reviewing rows");
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-    close(&mut app);
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW (design §7, gap N2): while a history edit is open the body leads with the session band and the draft editor, then
@@ -1127,6 +1191,8 @@ async fn the_band_and_the_editor_rows_hold_at_most_one_single_control() {
 /// section shows.
 #[semio_framework_async_macros::async_test]
 async fn the_session_leads_the_history_body_and_the_editor_inputs_are_a_window_over_every_row() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -1136,7 +1202,7 @@ async fn the_session_leads_the_history_body_and_the_editor_inputs_are_a_window_o
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     assert_eq!(sections(&render_history(&mut app, Locale::En).await), ["framework.history.actions", "framework.history.commands"]);
-    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity).await;
+    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity,cx).await;
     let editor = app.time_travel.editor_mut().expect("the draft editor");
     editor.inputs = ["/dx", "/dy", "/dz"].map(|pointer| semio_framework::ActionArgDef::number(pointer, LocalizedLabel::native(pointer, pointer))).to_vec();
     editor.value = dsl(&serde_json::json!({ "dx": 1.0, "dy": 2.0, "dz": 3.0 }));
@@ -1148,19 +1214,23 @@ async fn the_session_leads_the_history_body_and_the_editor_inputs_are_a_window_o
         assert!(find_node(inputs, &format!("framework.history.editor.input.{pointer}.row")).is_some(), "the {pointer} row is materialised: {inputs}");
     }
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-    close(&mut app);
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 🧾️ LAW: unchanged Accept is refused through the app route, preserving the draft, preview and committed store.
 #[semio_framework_async_macros::async_test]
 async fn accepting_an_unchanged_input_retains_the_open_editor_and_preview() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
-    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity).await;
+    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity,cx).await;
     let session = app.time_travel.session().clone();
     let pending = session.pending.as_ref().expect("the open draft");
     assert!(session.unchanged(pending), "opening preserves the draft baseline: {pending:?}");
@@ -1183,16 +1253,18 @@ async fn accepting_an_unchanged_input_retains_the_open_editor_and_preview() {
     assert_eq!(render_body(&mut app).await, body);
     assert_eq!(app.store.generation(), generation);
     for (value, changed) in [(7, true), (1, false)] {
-        run_step(&mut app, &fixture, &serde_json::json!({ "input": { "path": "/value", "value": value } }), mounted_policy, &mut identity).await;
+        run_step(&mut app, &fixture, &serde_json::json!({ "input": { "path": "/value", "value": value } }), mounted_policy, &mut identity,cx).await;
         let history = render_history(&mut app, Locale::En).await;
         let accept = find_node(&history, "framework.history.editor.accept").expect("the Accept control");
         assert_eq!(accept["disabled"] == Value::Bool(true), !changed, "{accept}");
     }
     let discarded = verb(&mut app, &fixture, "historyEditDiscard", Vec::new(), mounted_policy, &mut identity).await;
     assert_eq!(rejected(&discarded), None);
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     assert!(app.time_travel.status().is_none());
-    close(&mut app);
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 🧯️ LAW: the input path fails closed — when the edited leaf's payload schema compiles no validator, a draft is refused
@@ -1200,13 +1272,15 @@ async fn accepting_an_unchanged_input_retains_the_open_editor_and_preview() {
 /// untouched; never an unvalidated payload.
 #[semio_framework_async_macros::async_test]
 async fn a_schema_without_a_validator_refuses_every_draft() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let refusals = &fixture["refusals"];
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
-    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity).await;
+    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity,cx).await;
     let generation = app.time_travel.session().generation;
     let before = app.time_travel.editor().expect("the draft editor").value.clone();
     app.time_travel.editor_mut().expect("the draft editor").refuse_validator("unresolved $ref");
@@ -1216,8 +1290,10 @@ async fn a_schema_without_a_validator_refuses_every_draft() {
     assert!(editor.refused.as_ref().is_some_and(|(path, reason)| path == "/value" && reason.contains("unresolved $ref")), "the editor names why: {:?}", editor.refused);
     assert_eq!((&editor.value, app.time_travel.session().generation, app.time_travel.session().pending.as_ref().map(|pending| app.time_travel.session().unchanged(pending))), (&before, generation, Some(true)), "the draft and session are untouched");
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-    close(&mut app);
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: replay progress reaches every host without a dispatch — a driver turn that moves the replay ships a fresh
@@ -1225,6 +1301,8 @@ async fn a_schema_without_a_validator_refuses_every_draft() {
 /// ships the reviewing status the same way.
 #[semio_framework_async_macros::async_test]
 async fn replay_progress_rides_the_unsolicited_ui_frame_with_the_session_status() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -1233,13 +1311,13 @@ async fn replay_progress_rides_the_unsolicited_ui_frame_with_the_session_status(
     apply_long_edit(&mut app, 3_000, &mut identity).await;
     app.refresh_cache().await.expect("backfill");
     for step in [serde_json::json!({ "begin": 1 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } }), serde_json::json!({ "accept": null })] {
-        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity).await;
+        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity,cx).await;
     }
     while app.take_typed_operation_ui_progress().is_some() {}
     let mut stages = Vec::new();
     let mut cursor = app.log_generation;
     for _ in 0..10_000 {
-        app.advance_typed_operation_publication(&mut identity,mounted_policy.preparation).await.expect("driver turn");
+        app.advance_typed_operation_publication(&mut identity,cx).await.expect("driver turn");
         collect_original_history_command_receipt(&mut app);
         while let Some(progress) = app.take_typed_operation_ui_progress() {
             let Some(patch) = progress.history_patch else { continue };
@@ -1258,8 +1336,10 @@ async fn replay_progress_rides_the_unsolicited_ui_frame_with_the_session_status(
     assert!(stages.contains(&semio_framework::kernel::HistoryTimeTravelStage::Replaying), "at least one progress status shipped: {stages:?}");
     assert_eq!(stages.last(), Some(&semio_framework::kernel::HistoryTimeTravelStage::Reviewing), "the completion ships the reviewing status");
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-    close(&mut app);
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: a stage change ships its session status in the turn it happens — Begin from a review bumps the generation,
@@ -1268,13 +1348,15 @@ async fn replay_progress_rides_the_unsolicited_ui_frame_with_the_session_status(
 /// still retire; a verb stamped with the published generation applies, one stamped with the previous is stale.
 #[semio_framework_async_macros::async_test]
 async fn a_stage_change_ships_its_generation_in_the_same_turn_and_a_verb_stamped_with_it_applies() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     for step in [serde_json::json!({ "begin": 1 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } }), serde_json::json!({ "accept": null }), serde_json::json!({ "replay": "clean" })] {
-        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity).await;
+        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity,cx).await;
     }
     assert_eq!(app.time_travel.session().stage, TimeTravelStage::Reviewing);
     while app.take_typed_operation_ui_progress().is_some() {}
@@ -1298,7 +1380,7 @@ async fn a_stage_change_ships_its_generation_in_the_same_turn_and_a_verb_stamped
     let deadline=std::time::Instant::now()+std::time::Duration::from_secs(30);
     let mut reviewing_progress=false;
     while std::time::Instant::now()<deadline {
-        app.advance_typed_operation_publication(&mut identity,mounted_policy.preparation).await.expect("original Discard bounded publication");
+        app.advance_typed_operation_publication(&mut identity,cx).await.expect("original Discard bounded publication");
         collect_original_history_command_receipt(&mut app);
         while let Some(progress)=app.take_typed_operation_ui_progress(){reviewing_progress|=progress.history_patch.as_ref().and_then(status)==Some((semio_framework::kernel::HistoryTimeTravelStage::Reviewing,app.time_travel.session().generation));}
         if !app.time_travel.has_pending_work(){break}
@@ -1307,8 +1389,10 @@ async fn a_stage_change_ships_its_generation_in_the_same_turn_and_a_verb_stamped
     assert_eq!(app.time_travel.session().stage, TimeTravelStage::Reviewing);
     assert!(reviewing_progress,"the actual bounded return publishes its reviewing generation");
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-    close(&mut app);
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 🌿️ LAW: the history body lists every line — the trunk (read "Main line", the original history) and the alternative a
@@ -1317,6 +1401,8 @@ async fn a_stage_change_ships_its_generation_in_the_same_turn_and_a_verb_stamped
 /// switching reprojects: the edited alternative applies its history edit, the trunk shows the original.
 #[semio_framework_async_macros::async_test]
 async fn the_alternatives_section_lists_each_alternative_and_switching_reprojects_its_history_edits() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -1355,13 +1441,17 @@ async fn the_alternatives_section_lists_each_alternative_and_switching_reproject
     history_verb(&mut app, &actor, semio_framework::SWITCH_ALTERNATIVE_ACTION_ID, Some(dsl(&serde_json::json!({ "alternativeId": variant }))), mounted_policy, &mut identity).await;
     assert_eq!(head(&app).1, "b", "switching back applies the history edit again");
     drop(probe);
-    close(&mut app);
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 📨️ LAW: opening a history edit delivers `TimeTravelFrozen` to every window of the view once (retargeting the open
 /// session delivers none), and a remote edit moving the base delivers `BaseMoved` to every window of the last roster.
 #[semio_framework_async_macros::async_test]
 async fn opening_a_history_edit_and_a_remote_edit_deliver_host_events_to_every_window() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -1381,20 +1471,24 @@ async fn opening_a_history_edit_and_a_remote_edit_deliver_host_events_to_every_w
     }
     assert_eq!(TOY_HOST_EVENTS.with(|events| std::mem::take(&mut *events.borrow_mut())), every(|window_id| HostEvent::TimeTravelFrozen { window_id }), "only opening the session freezes the windows");
     local.handle_action("historyEditExit", None, &under, &mut identity).await.expect("exit");
-    pump_until(&mut local, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
+    pump_until(&mut local, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: 9 }.into()], transaction: None }, &mut identity).await.expect("a remote edit");
     TOY_HOST_EVENTS.with(|events| events.borrow_mut().clear());
     relay(&mut remote_probe, &mut local_probe, &mut local, mounted_policy, &mut identity).await;
     assert_eq!(TOY_HOST_EVENTS.with(|events| std::mem::take(&mut *events.borrow_mut())), every(|window_id| HostEvent::BaseMoved { window_id }), "the remote edit moved the base");
     drop((local_probe, remote_probe));
-    close(&mut local);
-    close(&mut remote);
+    close(&mut local,cx);
+    close(&mut remote,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: a noted shell command keeps its label in every locale (an `{en, de}` pair), plain text stays data, a
 /// detail is appended in every locale; undo is enabled wherever its chord is, even with nothing local to undo.
 #[semio_framework_async_macros::async_test]
 async fn noted_shell_commands_keep_every_locale_and_undo_matches_its_chord() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -1415,7 +1509,9 @@ async fn noted_shell_commands_keep_every_locale_and_undo_matches_its_chord() {
     assert_eq!(row.label.resolve(Terminology::Native, Locale::En), "Export - a.png");
     assert_eq!(row.label.resolve(Terminology::Native, Locale::De), "Exportieren - a.png");
     assert!(viewer_rejects_action(semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID) && viewer_rejects_action("undo"), "a viewer rejects every history-edit verb");
-    close(&mut app);
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: a ledger whose check-in replay blocks under `MergePolicy::Normal` crosses the guest codec boundary as the
@@ -1497,20 +1593,28 @@ async fn relay(from: &mut MemoryBackbone, into: &mut MemoryBackbone, to: &mut To
 
 /// 🔀️ [`relay`], then drives `to`'s turns until the relayed change is adopted — its replay may span turns (gap N17).
 async fn relay_adopted(from: &mut MemoryBackbone, into: &mut MemoryBackbone, to: &mut ToyApp, mounted_policy:crate::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     relay(from, into, to, mounted_policy, identity).await;
-    pump_until(to, "the relayed change is adopted", |app| app.store.reprojection_progress().is_none(), mounted_policy, identity).await;
+    pump_until(to, "the relayed change is adopted", |app| app.store.reprojection_progress().is_none(), mounted_policy, identity,cx).await;
     to.refresh_cache().await.expect("the command log backfills the adopted change");
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 🏁️ Runs fixture scenario `id`, which ends in a commit, on `app`.
 async fn commit_scenario(app: &mut ToyApp, fixture: &Value, id: &str, mounted_policy:crate::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let scenario = fixture["scenarios"].as_array().expect("scenarios").iter().find(|scenario| text(&scenario["id"]) == id).unwrap_or_else(|| panic!("scenario {id}"));
     for step in scenario["steps"].as_array().expect("steps") {
-        if let Some(result) = run_step(app, fixture, step, mounted_policy, identity).await {
+        if let Some(result) = run_step(app, fixture, step, mounted_policy, identity,cx).await {
             assert_eq!(rejected(&result), None, "{id}: step {step} was refused");
         }
     }
-    pump_until(app, "the finalize retires", |app| !app.time_travel.has_pending_work(), mounted_policy, identity).await;
+    pump_until(app, "the finalize retires", |app| !app.time_travel.has_pending_work(), mounted_policy, identity,cx).await;
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ↩️ Runs a framework history verb (`undo`, `redo`, `revertToCommand`) as `actor` through its reserved admission.
@@ -1547,6 +1651,8 @@ fn head(app: &ToyApp) -> (i32, String) {
 /// scope and mutation count, its author and time — and the edited mutation reads superseded from the store alike.
 #[semio_framework_async_macros::async_test]
 async fn a_history_edit_is_its_own_row_locally_remotely_and_after_reload() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -1583,8 +1689,10 @@ async fn a_history_edit_is_its_own_row_locally_remotely_and_after_reload() {
     }
     drop((local_probe, remote_probe));
     for app in [&mut local, &mut remote, &mut reloaded, &mut repacked] {
-        close(app);
+        close(app,cx);
     }
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: undo of a finalize is a new `Supersede` restoring the previous effective input (design §2), redo re-authors
@@ -1593,6 +1701,8 @@ async fn a_history_edit_is_its_own_row_locally_remotely_and_after_reload() {
 /// another author can neither undo nor revert it.
 #[semio_framework_async_macros::async_test]
 async fn undo_and_redo_of_a_finalize_author_restoring_supersedes_on_both_replicas() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -1652,14 +1762,18 @@ async fn undo_and_redo_of_a_finalize_author_restoring_supersedes_on_both_replica
     history_verb(&mut remote, "remote", REVERT_TO_COMMAND_ACTION_ID, Some(DslValue::object([("entrySeq".to_string(), DslValue::float(original.seq as f64))])), mounted_policy, &mut identity).await;
     assert_eq!(head(&remote), (7, "b".to_string()), "another author can neither undo nor revert the history edit");
     drop((local_probe, remote_probe));
-    close(&mut local);
-    close(&mut remote);
+    close(&mut local,cx);
+    close(&mut remote,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: a history edit committed as a new alternative is undone and redone within that alternative: its rows name
 /// the alternative, the restoring supersede is scoped to it, and the alternative stays active.
 #[semio_framework_async_macros::async_test]
 async fn an_alternative_history_edit_is_undone_within_its_alternative() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -1671,7 +1785,7 @@ async fn an_alternative_history_edit_is_undone_within_its_alternative() {
     assert_eq!(english(&history_edit_rows(&mut app).await), ["History edited — alternative Variant: 1 mutation"]);
     history_verb(&mut app, &actor, "undo", None, mounted_policy, &mut identity).await;
     eprintln!("[DEBUG] Alternative history undo authoring pending={}", app.time_travel.authoring_pending());
-    pump_until(&mut app, "the alternative undo lands", |app| !app.time_travel.authoring_pending(), mounted_policy, &mut identity).await;
+    pump_until(&mut app, "the alternative undo lands", |app| !app.time_travel.authoring_pending(), mounted_policy, &mut identity,cx).await;
     assert_eq!(head(&app), (5, "a".to_string()), "the undo restores the original within the alternative");
     let rows = history_edit_rows(&mut app).await;
     assert_eq!(english(&rows), ["History edit undone — alternative Variant: 1 mutation", "History edited — alternative Variant: 1 mutation"]);
@@ -1682,10 +1796,12 @@ async fn an_alternative_history_edit_is_undone_within_its_alternative() {
     );
     assert_eq!(app.store.envelope().active_alternative_id.as_deref(), Some(variant.as_str()), "the alternative stays active");
     history_verb(&mut app, &actor, "redo", None, mounted_policy, &mut identity).await;
-    pump_until(&mut app, "the alternative redo lands", |app| !app.time_travel.authoring_pending(), mounted_policy, &mut identity).await;
+    pump_until(&mut app, "the alternative redo lands", |app| !app.time_travel.authoring_pending(), mounted_policy, &mut identity,cx).await;
     assert_eq!(head(&app), (5, "b".to_string()));
     drop(probe);
-    close(&mut app);
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 //#region 🧭️AcceptanceLaws
@@ -1702,6 +1818,8 @@ async fn select_children(app: &mut ToyApp, children: &[String], mounted_policy:c
 /// shell the toy's anonymous child reads "Kindelement anon-1".
 #[semio_framework_async_macros::async_test]
 async fn reference_chips_fall_back_to_the_document_name_then_the_kind_and_a_short_id() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -1718,14 +1836,16 @@ async fn reference_chips_fall_back_to_the_document_name_then_the_kind_and_a_shor
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     for step in [serde_json::json!({ "begin": 2 }), serde_json::json!({ "input": { "path": "/children", "value": ["anon-1!s.test.child@native/*", "child-2!s.test.child@native/*"] } })] {
-        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity).await;
+        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity,cx).await;
     }
     let history = render_history(&mut app, Locale::De).await;
     let chip = |index: usize| find_node(&history, &format!("framework.history.editor.input.children.chip.{index}.row")).and_then(|chip| chip["component"]["label"].as_str()).unwrap_or_else(|| panic!("chip {index}: {history}")).to_string();
     assert_eq!((chip(0), chip(1)), ("Kindelement anon-1".to_string(), "Kind child-2".to_string()), "the generic default where the app names nothing, the app's own label elsewhere");
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-    close(&mut app);
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 🎯️ "Use selection" reads the reference input's declared domain at its granularity: every selected id up to
@@ -1763,13 +1883,15 @@ fn selection_values_follow_the_reference_domain_granularity_count_and_id_type() 
 /// reference's tree window (gap N2), a chip's remove binding removes its item; Accept replays and the review is ready.
 #[semio_framework_async_macros::async_test]
 async fn editing_targets_through_the_selection_resolves_a_blocked_review() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     for step in [serde_json::json!({ "begin": 2 }), serde_json::json!({ "input": { "path": "/children", "value": ["not a uri"] } }), serde_json::json!({ "accept": null }), serde_json::json!({ "replay": "fatal" })] {
-        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity).await;
+        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity,cx).await;
     }
     let failing = seeded_mutation(&app, 2);
     let panel = app.time_travel.panel().expect("a blocked review");
@@ -1800,14 +1922,16 @@ async fn editing_targets_through_the_selection_resolves_a_blocked_review() {
     assert_eq!(rejected(&removed), None, "{:?}", removed.output);
     assert_eq!(drafted_children(&app), Some(DslValue::Array(children[1..].iter().map(|child| DslValue::String(child.clone())).collect())), "removing a chip drafts the list without it");
     for step in [serde_json::json!({ "accept": null }), serde_json::json!({ "replay": "clean" })] {
-        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity).await;
+        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity,cx).await;
     }
     let status = app.time_travel.status().expect("a review");
     assert_eq!((status.review, status.blocking, status.worst), (Some(semio_framework::kernel::HistoryTimeTravelReview::Ready), false, None), "edited targets resolve the review: {status:?}");
     assert!(seeded_mutation_row(&mut app, 2).await.worst.is_none(), "the edited mutation applies cleanly");
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-    close(&mut app);
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW (design §16.5, R20): an upstream edit that turns a downstream mutation into a no-op reviews `ready` (a Warning
@@ -1815,6 +1939,8 @@ async fn editing_targets_through_the_selection_resolves_a_blocked_review() {
 /// history row — on the authoring replica, after a text reload and after a pack reload, in English and German.
 #[semio_framework_async_macros::async_test]
 async fn a_warning_an_edit_introduces_stays_visible_after_finalize_and_reload() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -1828,7 +1954,7 @@ async fn a_warning_an_edit_introduces_stays_visible_after_finalize_and_reload() 
     app.refresh_cache().await.expect("the command log backfills");
     assert!(seeded_mutation_row(&mut app, 1).await.worst.is_none(), "before the edit the downstream label changes the document");
     for step in [serde_json::json!({ "begin": 0 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } }), serde_json::json!({ "accept": null }), serde_json::json!({ "replay": "clean" })] {
-        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity).await;
+        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity,cx).await;
     }
     let status = app.time_travel.status().expect("a review");
     assert_eq!((status.review, status.blocking, status.worst), (Some(semio_framework::kernel::HistoryTimeTravelReview::Ready), false, Some(semio_framework_diagnostic::Severity::Warning)), "a warning never blocks finalizing");
@@ -1838,9 +1964,9 @@ async fn a_warning_an_edit_introduces_stays_visible_after_finalize_and_reload() 
     let history = render_history(&mut app, Locale::En).await.to_string();
     assert!(history.contains("New since this edit") && history.contains("Warning: No change"), "{history}");
     for step in [serde_json::json!({ "finalize": null }), serde_json::json!({ "commit": { "choice": "overwrite" } })] {
-        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity).await;
+        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity,cx).await;
     }
-    pump_until(&mut app, "the finalize retires", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
+    pump_until(&mut app, "the finalize retires", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     let mut reloaded = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.clone().into()), mounted_policy, &mut identity).await;
     assert_eq!(reloaded.store.local_actor_id(), &protocol::ActorId(actor.clone().into()));
     artifact_app_laws::load_document_text(&mut reloaded, &app.document_text().await.expect("document text"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("text reload");
@@ -1859,8 +1985,10 @@ async fn a_warning_an_edit_introduces_stays_visible_after_finalize_and_reload() 
         }
     }
     for app in [&mut app, &mut reloaded, &mut repacked] {
-        close(app);
+        close(app,cx);
     }
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 🌿️ The history transitions `app` gained since it held `before` of them, decoded.
@@ -1872,6 +2000,8 @@ fn added_transitions(app: &ToyApp, before: usize) -> Vec<store::os_spr::HistoryT
 /// one finalize commits exactly ONE unscoped `Supersede` naming both, and the head equals a fresh fold of the edited log.
 #[semio_framework_async_macros::async_test]
 async fn several_drafts_from_a_review_finalize_as_one_overwrite_supersede() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -1893,14 +2023,18 @@ async fn several_drafts_from_a_review_finalize_as_one_overwrite_supersede() {
         fresh.store.dispatch(ArtifactCommand::Apply { mutations: vec![op], transaction: None }, &mut identity).await.expect("fresh edit");
     }
     assert_eq!(app.store.snapshot().expect("edited head"), fresh.store.snapshot().expect("fresh head"));
-    close(&mut app);
-    close(&mut fresh);
+    close(&mut app,cx);
+    close(&mut fresh,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW (design §2, §4): a new alternative is one `Branch` followed by one `Supersede` scoped to that alternative
 /// (after the checkpoint of any pending edit), and the new alternative is current.
 #[semio_framework_async_macros::async_test]
 async fn a_new_alternative_is_one_branch_then_one_scoped_supersede() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -1916,7 +2050,9 @@ async fn a_new_alternative_is_one_branch_then_one_scoped_supersede() {
         matches!(tail, [store::os_spr::HistoryTransition::Branch { .. }, store::os_spr::HistoryTransition::Supersede(supersede)] if supersede.scope.as_deref() == Some(alternative.as_str())),
         "Branch, then a Supersede scoped to the new alternative: {added:?}"
     );
-    close(&mut app);
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 /// 🧱️ One long edit applied in batches that each fit the Store's fixed displaced-owner retirement authority, drained between batches.
 async fn apply_long_edit(app: &mut ToyApp, count: i32, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
@@ -1945,6 +2081,8 @@ async fn long_replica(fixture: &Value, uri: &str, actor: &str, mounted_policy:cr
 /// store replays one operation per turn, so the seed's downstream suffix already spans several turns.
 #[semio_framework_async_macros::async_test]
 async fn a_long_remote_history_change_replays_over_turns_and_pauses_on_cancel() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -1967,7 +2105,7 @@ async fn a_long_remote_history_change_replays_over_turns_and_pauses_on_cancel() 
     assert_eq!(rejected(&cancelled), None, "{:?}", cancelled.output);
     assert!(remote.time_travel.reprojection_paused(), "the remote replay is paused");
     for _ in 0..4 {
-        remote.advance_typed_operation_publication(&mut identity,mounted_policy.preparation).await.expect("driver turn");
+        remote.advance_typed_operation_publication(&mut identity,cx).await.expect("driver turn");
         collect_original_history_command_receipt(&mut remote);
         while remote.take_typed_operation_ui_progress().is_some() {}
     }
@@ -1978,12 +2116,14 @@ async fn a_long_remote_history_change_replays_over_turns_and_pauses_on_cancel() 
     let resumed = verb(&mut remote, &fixture, "historyEditRerun", Vec::new(), mounted_policy, &mut identity).await;
     assert_eq!(rejected(&resumed), None, "{:?}", resumed.output);
     assert_eq!(rejected(&verb(&mut remote, &fixture, "historyEditRerun", Vec::new(), mounted_policy, &mut identity).await), Some("timeTravel.illegal"), "nothing is paused any more");
-    pump_until(&mut remote, "the remote change is adopted", |app| app.store.reprojection_progress().is_none(), mounted_policy, &mut identity).await;
+    pump_until(&mut remote, "the remote change is adopted", |app| app.store.reprojection_progress().is_none(), mounted_policy, &mut identity,cx).await;
     assert_eq!(head(&remote), head(&local), "the adoption equals the author's head");
     assert!(remote.reprojection_status().is_none(), "nothing waits any more");
     drop((local_probe, remote_probe));
-    close(&mut local);
-    close(&mut remote);
+    close(&mut local,cx);
+    close(&mut remote,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW (design §16.6, G9): the undo of a finalize over a long downstream history is authored resumably — the verb answers
@@ -1991,6 +2131,8 @@ async fn a_long_remote_history_change_replays_over_turns_and_pauses_on_cancel() 
 /// undo row reads like every other.
 #[semio_framework_async_macros::async_test]
 async fn the_undo_of_a_finalize_over_a_long_history_lands_through_the_driver() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -2005,12 +2147,14 @@ async fn the_undo_of_a_finalize_over_a_long_history_lands_through_the_driver() {
         let busy = verb(&mut app, &fixture, "historyEditBegin", vec![("mutationId".into(), DslValue::String(first))], mounted_policy, &mut identity).await;
         assert_eq!(rejected(&busy), Some("timeTravel.busy"), "history editing waits for the authoring");
     }
-    pump_until(&mut app, "the undo lands", |app| !app.time_travel.authoring_pending(), mounted_policy, &mut identity).await;
+    pump_until(&mut app, "the undo lands", |app| !app.time_travel.authoring_pending(), mounted_policy, &mut identity,cx).await;
     app.refresh_cache().await.expect("history refresh");
     assert_eq!(head(&app).1, "a", "the undo restores the original input");
     assert_eq!(english(&history_edit_rows(&mut app).await), ["History edit undone — overwrite: 1 mutation", "History edited — overwrite: 1 mutation"]);
     drop(probe);
-    close(&mut app);
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 /// 🔁️ A history verb as `actor`, admitted and settled, answering the fault code of a refusal (`None`: applied).
 async fn history_verb_refusal(app: &mut ToyApp, actor: &str, action: &str, mounted_policy:crate::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<String> {
@@ -2078,6 +2222,8 @@ async fn bury_edit_of(app: &mut ToyApp, author: &str, count: i32) {
 /// Cancel replay instead drops the step with zero trace: head, revision, edits, transitions and history rows as before.
 #[semio_framework_async_macros::async_test]
 async fn an_interior_undo_over_a_long_history_replays_over_turns_and_cancel_leaves_zero_trace() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -2110,7 +2256,7 @@ async fn an_interior_undo_over_a_long_history_replays_over_turns_and_cancel_leav
             assert_eq!(rejected(&cancelled), None, "{:?}", cancelled.output);
             assert!(!app.store.local_step_pending() && app.reprojection_status().is_none(), "the step is gone");
             for _ in 0..4 {
-                app.advance_typed_operation_publication(&mut identity,mounted_policy.preparation).await.expect("driver turn");
+                app.advance_typed_operation_publication(&mut identity,cx).await.expect("driver turn");
                 collect_original_history_command_receipt(&mut app);
             }
             assert_eq!(history_trace(&mut app).await, before, "a cancelled step leaves zero trace");
@@ -2118,7 +2264,7 @@ async fn an_interior_undo_over_a_long_history_replays_over_turns_and_cancel_leav
             let mut turns = 0;
             while app.store.local_step_pending() {
                 let done = app.store.reprojection_progress().map_or(0, |progress| progress.done);
-                app.advance_typed_operation_publication(&mut identity,mounted_policy.preparation).await.expect("driver turn");
+                app.advance_typed_operation_publication(&mut identity,cx).await.expect("driver turn");
                 collect_original_history_command_receipt(&mut app);
                 while app.take_typed_operation_ui_progress().is_some() {}
                 let after = app.store.reprojection_progress().map_or(u32::MAX, |progress| progress.done);
@@ -2131,9 +2277,11 @@ async fn an_interior_undo_over_a_long_history_replays_over_turns_and_cancel_leav
             let (_, _, edits, _, rows) = history_trace(&mut app).await;
             assert_eq!((edits, rows), (before.2, before.4 + 1), "the adoption records the undo row");
         }
-        close(&mut app);
+        close(&mut app,cx);
     }
-    close(&mut undeferred);
+    close(&mut undeferred,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW (decision §4 of `📓️api-stepped-document-load.md`): a pure command's document lane hydrates the HEAD snapshot of
@@ -2143,6 +2291,8 @@ async fn an_interior_undo_over_a_long_history_replays_over_turns_and_cancel_leav
 /// only load path) lifts it over real polls, landing the source head and all 240 edits.
 #[semio_framework_async_macros::async_test]
 async fn a_pure_lane_hydrates_the_head_without_history_and_history_verbs_refuse() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -2182,21 +2332,25 @@ async fn a_pure_lane_hydrates_the_head_without_history_and_history_verbs_refuse(
     PluginApp::acknowledge_document_archive_load(&mut pure, operation).expect("the terminal load is released");
     assert!(!pure.time_travel.history_unavailable() && pure.history_snapshot().await.is_ok(), "the archive load with history lifts head-only mode");
     assert_eq!((pure.store.snapshot().expect("the loaded head"), pure.store.envelope().vcs.edits.len()), (head, source.store.envelope().vcs.edits.len()), "the archive load lands the source head and its whole history (seed + 240 edits)");
-    close(&mut pure);
-    close(&mut source);
+    close(&mut pure,cx);
+    close(&mut source,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 //#endregion 🧭️AcceptanceLaws
 
 //#region 🗝️EditorKeys
 /// 🗝️ The shared band corpus whose `editorKeys` every shell's focus resolution reads (React `timeTravelFocusElementV1`).
-const TIME_TRAVEL_BAND_CORPUS_JSON: &str = include_str!("../../../📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧫️fixtures/🧫️time-travel-band/🔣️.json");
+const TIME_TRAVEL_BAND_CORPUS_JSON: &str = include_str!("../../../📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧫️time-travel-band/🔣️.json");
 
 /// ⚖️ LAW (design §16, G13): the draft editor's node keys are exactly the shared corpus's — the History panel tab the body
 /// mounts in, Accept inside its row, and per input pointer (object fields flattened) one row holding its control — so a shell's
 /// focus lands on the first input, else on Accept, whichever shell renders the body.
 #[semio_framework_async_macros::async_test]
 async fn the_draft_editor_keys_are_the_shared_corpus_keys_every_shell_focuses() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -2206,7 +2360,7 @@ async fn the_draft_editor_keys_are_the_shared_corpus_keys_every_shell_focuses() 
     let rows = keys["inputs"].as_array().expect("editor input keys");
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
-    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity).await;
+    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity,cx).await;
     let editor = app.time_travel.editor_mut().expect("the draft editor");
     editor.inputs = vec![
         semio_framework::ActionArgDef::number("/dx", LocalizedLabel::native("dx", "dx")),
@@ -2224,8 +2378,10 @@ async fn the_draft_editor_keys_are_the_shared_corpus_keys_every_shell_focuses() 
         assert!(find_node(holder, text(&row["control"])).is_some(), "{} edits through {}: {holder}", text(&row["pointer"]), text(&row["control"]));
     }
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-    close(&mut app);
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 //#endregion 🗝️EditorKeys
 
@@ -2250,6 +2406,8 @@ async fn refreshed_rows(app: &mut ToyApp) -> usize {
 /// patched view always equals a full rebuild; a history edit (a supersede transition) rebuilds the whole view.
 #[semio_framework_async_macros::async_test]
 async fn the_history_view_patches_only_the_rows_a_change_touched() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -2275,7 +2433,9 @@ async fn the_history_view_patches_only_the_rows_a_change_touched() {
     let target = app.store.mutation_ops().expect("mutation ops")[0].mutation_id.clone();
     app.store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![store::os_store::store_schema::SupersedeInput { target, replacement: Some(SetCount { value: 7 }.into()) }] }, &mut identity).await.expect("a history edit lands");
     assert!(refreshed_rows(&mut app).await >= rows, "a history edit rebuilds the whole view");
-    close(&mut app);
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW (audit W2A-11): a row whose operations past the cap carry outcomes projects its most severe one, so the row's worst
@@ -2314,6 +2474,8 @@ fn counted_clock() -> Option<u64> {
 /// them per 4 ms turn (well under the 256-operation cap), over many turns, and still lands.
 #[semio_framework_async_macros::async_test]
 async fn a_deferred_history_step_ends_its_turn_at_the_wall_deadline_not_an_operation_count() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -2328,7 +2490,7 @@ async fn a_deferred_history_step_ends_its_turn_at_the_wall_deadline_not_an_opera
     let mut turns = 0usize;
     while app.store.local_step_pending() {
         let done = app.store.reprojection_progress().map_or(0, |progress| progress.done);
-        app.advance_typed_operation_publication(&mut identity,mounted_policy.preparation).await.expect("driver turn");
+        app.advance_typed_operation_publication(&mut identity,cx).await.expect("driver turn");
         collect_original_history_command_receipt(&mut app);
         while app.take_typed_operation_ui_progress().is_some() {}
         let after = app.store.reprojection_progress().map_or(u32::MAX, |progress| progress.done);
@@ -2337,7 +2499,9 @@ async fn a_deferred_history_step_ends_its_turn_at_the_wall_deadline_not_an_opera
         assert!(turns < 1_000, "the step is adopted");
     }
     assert!(turns >= 600 / 8, "600 operations of 1 ms span many 4 ms turns ({turns})");
-    close(&mut app);
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 //#endregion ⏱️WallDeadline
 
@@ -2356,6 +2520,8 @@ fn edit_authors(app: &ToyApp) -> Vec<Option<String>> {
 ///   applied; an undo takes back the acting actor's own edit.
 #[semio_framework_async_macros::async_test]
 async fn an_opened_instance_acts_as_its_admitted_actor_across_reload_and_on_the_revert_route() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -2386,10 +2552,12 @@ async fn an_opened_instance_acts_as_its_admitted_actor_across_reload_and_on_the_
     assert_eq!(app.store.local_actor_id(), &protocol::ActorId("ada".into()), "the revert route acts as the reverting actor");
     assert!(app.store.applied_edit_ids().iter().any(|id| *id == other), "a revert never takes back another actor's edit");
     history_verb(&mut app, "grace", "undo", None, mounted_policy, &mut identity).await;
-    pump_until(&mut app, "the undo lands", |app| !app.store.local_step_pending(), mounted_policy, &mut identity).await;
+    pump_until(&mut app, "the undo lands", |app| !app.store.local_step_pending(), mounted_policy, &mut identity,cx).await;
     assert!(!app.store.applied_edit_ids().iter().any(|id| *id == other), "an undo takes back the acting actor's own edit");
-    close(&mut reader);
-    close(&mut app);
+    close(&mut reader,cx);
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW (design §22.34, the store half — red until a plain `Apply` authors as the store's actor): every route authors
@@ -2397,6 +2565,8 @@ async fn an_opened_instance_acts_as_its_admitted_actor_across_reload_and_on_the_
 /// route with one (the plain emit route) authors as its separately admitted user instance.
 #[semio_framework_async_macros::async_test]
 async fn every_route_authors_as_its_acting_actor() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -2411,10 +2581,12 @@ async fn every_route_authors_as_its_acting_actor() {
     artifact_app_laws::load_document(&mut grace, &pack, &mut identity).await.expect("Grace opens Ada's shared history");
     grace.dispatch_emit("setCount", Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::mutations(vec![SetCount { value: 2 }.into()]), &acting("grace"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the emit publishes");
     let emitted = edit_authors(&grace);
-    close(&mut app);
-    close(&mut grace);
+    close(&mut app,cx);
+    close(&mut grace,cx);
     assert_eq!(ingested, [Some("ada".to_string())], "a route without an actor of its own authors as the instance's");
     assert_eq!(emitted, [Some("ada".to_string()), Some("grace".to_string())], "the plain emit route authors as its acting actor");
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 //#endregion 🪪️ActorIdentity
 
@@ -2428,6 +2600,8 @@ const SHARED_REFERENCE_SCHEMA: &str = r#"{"type":"object","additionalProperties"
 /// as one input and the draft editor renders its control.
 #[semio_framework_async_macros::async_test]
 async fn an_input_that_references_a_shared_framework_schema_resolves_on_any_instance() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -2439,7 +2613,7 @@ async fn an_input_that_references_a_shared_framework_schema_resolves_on_any_inst
     }
     let inputs = semio_framework::mutation_input_defs(SHARED_REFERENCE_SCHEMA, &semio_framework::registered_input_schema_document).unwrap_or_else(|error| panic!("the reference resolves: {error:?}"));
     assert_eq!(inputs.len(), 1, "the referenced value is one input: {inputs:?}");
-    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity).await;
+    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity,cx).await;
     let editor = app.time_travel.editor_mut().expect("the draft editor");
     editor.inputs = inputs;
     editor.value = dsl(&serde_json::json!({ "opacity": 0.5 }));
@@ -2447,8 +2621,10 @@ async fn an_input_that_references_a_shared_framework_schema_resolves_on_any_inst
     let row = find_node(&history, "framework.history.editor.input.opacity").unwrap_or_else(|| panic!("the input's control: {history}"));
     assert!(history.to_string().contains("Deckkraft"), "the control carries the input's own label: {row}");
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-    close(&mut app);
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 //#endregion 🪣️SharedSchemaDocuments
 
@@ -2458,6 +2634,8 @@ async fn an_input_that_references_a_shared_framework_schema_resolves_on_any_inst
 /// is refused instead of silently showing every row.
 #[semio_framework_async_macros::async_test]
 async fn every_declared_history_filter_option_is_dispatched_and_echoed() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -2488,7 +2666,9 @@ async fn every_declared_history_filter_option_is_dispatched_and_echoed() {
         Err(fault) => Some(fault),
     };
     assert!(refused.is_some(), "an undeclared filter value is refused");
-    close(&mut app);
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 //#endregion 🎚️HistoryFilter
 
@@ -2536,6 +2716,8 @@ fn long_option_rows_state_their_choice_as_selected() {
 /// the draft and the remote edit — and the overwrite converges on the other replica.
 #[semio_framework_async_macros::async_test]
 async fn a_remote_edit_while_editing_keeps_the_draft_and_accept_replays_it_too() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -2545,7 +2727,7 @@ async fn a_remote_edit_while_editing_keeps_the_draft_and_accept_replays_it_too()
     let (mut remote, mut remote_probe) = replica(&fixture, "remote-while-editing-remote", "remote", false, mounted_policy, &mut identity).await;
     relay(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity).await;
     for step in [serde_json::json!({ "begin": 1 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } })] {
-        let result = run_step(&mut local, &fixture, &step, mounted_policy, &mut identity).await.expect("a verb result");
+        let result = run_step(&mut local, &fixture, &step, mounted_policy, &mut identity,cx).await.expect("a verb result");
         assert_eq!(rejected(&result), None, "{step}: {:?}", result.output);
     }
     let (target, generation) = (seeded_mutation(&local, 1), local.time_travel.session().generation);
@@ -2553,7 +2735,7 @@ async fn a_remote_edit_while_editing_keeps_the_draft_and_accept_replays_it_too()
 
     remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: 9 }.into()], transaction: None }, &mut identity).await.expect("the remote edit");
     relay_adopted(&mut remote_probe, &mut local_probe, &mut local, mounted_policy, &mut identity).await;
-    pump_until(&mut local, "the base move reaches the session", |app| app.time_travel.session().base.content_revision == app.store.content_revision(), mounted_policy, &mut identity).await;
+    pump_until(&mut local, "the base move reaches the session", |app| app.time_travel.session().base.content_revision == app.store.content_revision(), mounted_policy, &mut identity,cx).await;
     let arrived = local.store.mutation_ops().expect("applied operations").last().map(|op| op.mutation_id.0.clone()).expect("the remote operation");
     assert!(arrived != seeded_mutation(&local, 3), "the remote edit is applied in this replica's store");
 
@@ -2574,7 +2756,7 @@ async fn a_remote_edit_while_editing_keeps_the_draft_and_accept_replays_it_too()
 
     let accepted = verb(&mut local, &fixture, "historyEditAccept", Vec::new(), mounted_policy, &mut identity).await;
     assert_eq!(rejected(&accepted), None, "{:?}", accepted.output);
-    pump_until(&mut local, "the replay completes", |app| app.time_travel.session().stage != TimeTravelStage::Replaying, mounted_policy, &mut identity).await;
+    pump_until(&mut local, "the replay completes", |app| app.time_travel.session().stage != TimeTravelStage::Replaying, mounted_policy, &mut identity,cx).await;
     let status = local.time_travel.status().expect("a reviewing session");
     assert_eq!((status.review, status.blocking, status.accepted_count), (Some(semio_framework::kernel::HistoryTimeTravelReview::Ready), false, 1), "the replay over the remote edit is clean");
     assert!(render_body(&mut local).await.contains("count=9 label=c"), "the reviewed head holds the draft and the remote edit");
@@ -2586,10 +2768,12 @@ async fn a_remote_edit_while_editing_keeps_the_draft_and_accept_replays_it_too()
     assert_eq!(head(&local), (9, "c".to_string()), "the overwrite lands on the remote edit");
     relay_adopted(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity).await;
     assert_eq!(head(&remote), head(&local), "the other replica adopts the history edit");
-    pump_until(&mut local, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
+    pump_until(&mut local, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     drop((local_probe, remote_probe));
-    close(&mut local);
-    close(&mut remote);
+    close(&mut local,cx);
+    close(&mut remote,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW (design §22.24, live fault F4): the base a session watches is the content revision of its store, never the
@@ -2598,13 +2782,15 @@ async fn a_remote_edit_while_editing_keeps_the_draft_and_accept_replays_it_too()
 /// were — and an input stamped with the generation from before is accepted, not stale.
 #[semio_framework_async_macros::async_test]
 async fn a_backbone_attach_and_detach_while_editing_is_no_base_move() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     for step in [serde_json::json!({ "begin": 1 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } })] {
-        let result = run_step(&mut app, &fixture, &step, mounted_policy, &mut identity).await.expect("a verb result");
+        let result = run_step(&mut app, &fixture, &step, mounted_policy, &mut identity,cx).await.expect("a verb result");
         assert_eq!(rejected(&result), None, "{step}: {:?}", result.output);
     }
     let before = app.time_travel.session().clone();
@@ -2614,7 +2800,7 @@ async fn a_backbone_attach_and_detach_while_editing_is_no_base_move() {
     app.detach_backbone().await.expect("the backbone detaches");
     assert!(app.store.generation() > store_generation && app.store.content_revision() == revision, "the port moved the store's local generation and no event");
     for _ in 0..4 {
-        app.advance_typed_operation_publication(&mut identity,mounted_policy.preparation).await.expect("a driver turn");
+        app.advance_typed_operation_publication(&mut identity,cx).await.expect("a driver turn");
         collect_original_history_command_receipt(&mut app);
         while app.take_typed_operation_ui_progress().is_some() {}
     }
@@ -2623,9 +2809,11 @@ async fn a_backbone_attach_and_detach_while_editing_is_no_base_move() {
     assert_eq!(rejected(&typed), None, "an input stamped before the port change is accepted");
     assert!(render_body(&mut app).await.contains("count=1 label=c"), "the preview follows the draft");
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     drop(probe);
-    close(&mut app);
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW (design §22.24, store wave RB): a replay finished before a port change still commits. A backbone attaching and
@@ -2634,13 +2822,15 @@ async fn a_backbone_attach_and_detach_while_editing_is_no_base_move() {
 /// `timeTravel.stale`, the session closes with its commit.
 #[semio_framework_async_macros::async_test]
 async fn a_replay_finished_before_a_backbone_attach_and_detach_still_commits() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     for step in [serde_json::json!({ "begin": 1 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } }), serde_json::json!({ "accept": null }), serde_json::json!({ "replay": "clean" })] {
-        if let Some(result) = run_step(&mut app, &fixture, &step, mounted_policy, &mut identity).await {
+        if let Some(result) = run_step(&mut app, &fixture, &step, mounted_policy, &mut identity,cx).await {
             assert_eq!(rejected(&result), None, "{step}: {:?}", result.output);
         }
     }
@@ -2652,21 +2842,23 @@ async fn a_replay_finished_before_a_backbone_attach_and_detach_still_commits() {
     app.detach_backbone().await.expect("the backbone detaches");
     assert!(app.store.generation() > store_generation && app.store.content_revision() == revision, "the port moved the store's local generation and no event");
     for _ in 0..4 {
-        app.advance_typed_operation_publication(&mut identity,mounted_policy.preparation).await.expect("a driver turn");
+        app.advance_typed_operation_publication(&mut identity,cx).await.expect("a driver turn");
         collect_original_history_command_receipt(&mut app);
         while app.take_typed_operation_ui_progress().is_some() {}
     }
     assert_eq!(app.time_travel.session(), &before, "no base move: the review stands and no second replay started");
     for step in [serde_json::json!({ "finalize": null }), serde_json::json!({ "commit": { "choice": "overwrite" } })] {
-        let result = run_step(&mut app, &fixture, &step, mounted_policy, &mut identity).await.expect("a verb result");
+        let result = run_step(&mut app, &fixture, &step, mounted_policy, &mut identity,cx).await.expect("a verb result");
         assert_eq!(rejected(&result), None, "{step}: the replay finished before the port change still commits: {:?}", result.output);
     }
-    pump_until(&mut app, "the finalize retires", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
+    pump_until(&mut app, "the finalize retires", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     assert!(app.time_travel.status().is_none(), "the session closed with its commit: {:?}", app.time_travel.session().stage);
     assert_eq!(head(&app), (5, "b".to_string()), "the committed document is the head reviewed");
     assert!(render_body(&mut app).await.contains("count=5 label=b"), "every window shows the committed edit");
     drop(probe);
-    close(&mut app);
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 //#endregion 📡️RemoteEditWhileEditing
 
@@ -2679,6 +2871,8 @@ async fn a_replay_finished_before_a_backbone_attach_and_detach_still_commits() {
 /// document.
 #[semio_framework_async_macros::async_test]
 async fn a_session_edge_republishes_every_window_only_when_the_shown_document_swaps() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -2694,7 +2888,7 @@ async fn a_session_edge_republishes_every_window_only_when_the_shown_document_sw
     let accepted = verb(&mut app, &fixture, "historyEditAccept", Vec::new(), mounted_policy, &mut identity).await;
     assert!(rejected(&accepted).is_none() && history_only(&accepted), "an accepted draft keeps its preview while it replays: {:?}", accepted.ui_scope);
     assert!(render_body(&mut app).await.contains("count=1 label=b"), "the preview stays while the replay runs");
-    pump_until(&mut app, "the replay completes", |app| app.time_travel.session().stage != TimeTravelStage::Replaying, mounted_policy, &mut identity).await;
+    pump_until(&mut app, "the replay completes", |app| app.time_travel.session().stage != TimeTravelStage::Replaying, mounted_policy, &mut identity,cx).await;
     assert!(render_body(&mut app).await.contains("count=5 label=b"), "the review shows the replayed head");
 
     let prompted = verb(&mut app, &fixture, "historyEditFinalize", Vec::new(), mounted_policy, &mut identity).await;
@@ -2716,14 +2910,16 @@ async fn a_session_edge_republishes_every_window_only_when_the_shown_document_sw
     assert_eq!(app.time_travel.session().stage, TimeTravelStage::Replaying);
     let replaying = render_body(&mut app).await;
     assert!(replaying.contains("count=5 label=b") && !replaying.contains(text(&fixture["committedBody"])), "no window falls back to the committed document while it replays again: {replaying}");
-    pump_until(&mut app, "the replay completes", |app| app.time_travel.session().stage != TimeTravelStage::Replaying, mounted_policy, &mut identity).await;
+    pump_until(&mut app, "the replay completes", |app| app.time_travel.session().stage != TimeTravelStage::Replaying, mounted_policy, &mut identity,cx).await;
     assert!(render_body(&mut app).await.contains("count=5 label=b"), "the review shows the replayed head");
 
     let exited = verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
     assert!(rejected(&exited).is_none() && full(&exited), "leaving shows the committed document in every window: {:?}", exited.ui_scope);
     assert!(render_body(&mut app).await.contains(text(&fixture["committedBody"])));
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-    close(&mut app);
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 //#endregion 🎞️SessionEdgeScope
 
@@ -2749,6 +2945,8 @@ fn row_actions(row: &Value) -> Vec<(String, String, bool, Option<String>)> {
 /// no longer withdrawable on the wire; restoring the only accepted draft leaves history editing with zero trace.
 #[semio_framework_async_macros::async_test]
 async fn a_mutation_row_offers_withdraw_and_restore_takes_an_accepted_draft_back() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -2779,7 +2977,7 @@ async fn a_mutation_row_offers_withdraw_and_restore_takes_an_accepted_draft_back
     assert_eq!(app.time_travel.session().stage, TimeTravelStage::Replaying);
     let replaying = row_actions(&seeded_mutation_node(&mut app, 0).await);
     assert!(replaying.iter().all(|action| action.2 && action.3.as_deref() == Some("Not possible right now")), "a running replay disables Edit and Withdraw, naming why: {replaying:?}");
-    pump_until(&mut app, "the replay completes", |app| app.time_travel.session().stage != TimeTravelStage::Replaying, mounted_policy, &mut identity).await;
+    pump_until(&mut app, "the replay completes", |app| app.time_travel.session().stage != TimeTravelStage::Replaying, mounted_policy, &mut identity,cx).await;
     let status = app.time_travel.status().expect("a session is open");
     assert_eq!((status.accepted_count, status.blocking, status.next_problem.is_none()), (1, false, true), "the withdrawal replays clean");
     assert_eq!(row_actions(&seeded_mutation_node(&mut app, 3).await), vec![enabled("historyEditBegin", "Edit"), enabled("historyEditRestore", "Restore")], "an accepted draft offers Restore in Withdraw's place");
@@ -2793,8 +2991,10 @@ async fn a_mutation_row_offers_withdraw_and_restore_takes_an_accepted_draft_back
     assert_eq!(rejected(&restored), None, "{:?}", restored.output);
     assert!(app.time_travel.status().is_none(), "restoring the only accepted draft leaves history editing");
     assert_eq!((render_body(&mut app).await.contains(text(&fixture["committedBody"])), app.store.generation()), (true, generation), "zero trace: the committed document, the store untouched");
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-    close(&mut app);
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW (design §22.1, §22.20): a mutation row always names Edit and, unless it is withdrawn, Withdraw — or Restore on a
@@ -3121,6 +3321,8 @@ async fn an_inverse_refusal_is_one_mutations_fatal_that_its_row_names_and_resolv
 /// document and its revision stay what they were, and inside one that edits a draft, where the session stays what it was.
 #[semio_framework_async_macros::async_test]
 async fn hostile_history_edit_input_is_answered_never_panicked_on() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
@@ -3144,7 +3346,7 @@ async fn hostile_history_edit_input_is_answered_never_panicked_on() {
     }
 
     for step in [serde_json::json!({ "begin": 1 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } })] {
-        let result = run_step(&mut app, &fixture, &step, mounted_policy, &mut identity).await.expect("a verb result");
+        let result = run_step(&mut app, &fixture, &step, mounted_policy, &mut identity,cx).await.expect("a verb result");
         assert_eq!(rejected(&result), None, "{step}: {:?}", result.output);
     }
     let session = app.time_travel.session().clone();
@@ -3173,8 +3375,10 @@ async fn hostile_history_edit_input_is_answered_never_panicked_on() {
     }
     assert!(render_body(&mut app).await.contains("count=1 label=b"), "the draft preview stands");
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
-    close(&mut app);
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 //#endregion 🚫️RowWithdraw
 

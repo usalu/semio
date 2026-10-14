@@ -52,7 +52,7 @@ async fn pointer_down_selects_the_hit_node_inline() {
     use crate::editor::wires::commands::node_graph_viewport::NodeGraphViewport;
     use crate::editor::wires::{WIRES_INTERACTION_GRAPH, WIRES_PLAY_WINDOW_CANVAS};
     use semio_framework_plugin::{ActionMeta, ViewModel, ViewWindowInstance};
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🖱️pointer-move.json")).expect("pointer-move fixture");
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🖱️pointer-move.json")).expect("pointer-move fixture");
     let mut app = crate::editor::wires::unit_tests::context::app_with_registry().await;
     app.bind_instance_id(1).await;
     let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };

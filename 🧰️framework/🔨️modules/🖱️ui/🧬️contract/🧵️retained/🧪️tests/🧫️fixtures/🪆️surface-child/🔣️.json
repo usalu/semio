@@ -1,0 +1,8 @@
+{
+  "layers": ["lookup", "reader-retirement", "node-retirement", "binding-retirement", "patch-close"],
+  "refusals": ["blocked", "rejected"],
+  "childBytes": 4096,
+  "queueBytes": 64,
+  "leaseBytes": 512,
+  "earlyReaderClose": false
+}

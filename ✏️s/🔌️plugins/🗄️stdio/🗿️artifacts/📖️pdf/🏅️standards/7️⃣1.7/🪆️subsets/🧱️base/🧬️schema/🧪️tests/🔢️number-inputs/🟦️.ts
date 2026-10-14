@@ -4,7 +4,7 @@ import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import {mutationInputDefs} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️.ts";
 import valueSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json";
-import fixture from "./🧫️fixtures/🔣️.json";
+import fixture from "../../../🧪️tests/🧫️fixtures/🧪️tests/🔢️number-inputs/🔣️.json";
 const root=resolve(import.meta.dir,"../..");
 function bits(number:number){const data=new DataView(new ArrayBuffer(8));data.setFloat64(0,number,false);return data.getBigUint64(0,false).toString(16).padStart(16,"0");}
 test("PDF native binary64 intent controls admit canonical numeric transport",()=>{

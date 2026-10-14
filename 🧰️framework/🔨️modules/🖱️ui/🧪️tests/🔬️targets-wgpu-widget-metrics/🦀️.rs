@@ -77,7 +77,7 @@ async fn orbit_gizmo_heads_keep_diameter_when_the_viewport_moves() {
     use crate::wgpu::{Camera3d, FontAtlas, InputState};
     use std::collections::HashMap;
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧭️gizmo-tip-bounds/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧭️gizmo-tip-bounds/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let radius = orbit_view_gizmo_head_radius(row["prominent"].as_bool().unwrap(), row["hovered"].as_bool().unwrap());
         assert!((f64::from(radius) - row["radius"].as_f64().unwrap()).abs() < 0.00001);

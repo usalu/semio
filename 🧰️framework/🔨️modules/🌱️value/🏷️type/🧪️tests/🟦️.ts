@@ -5,7 +5,7 @@ import Ajv from "ajv";
 
 const owner = resolve(import.meta.dir, "..");
 const read = (path: string): string => readFileSync(resolve(owner, path), "utf8");
-const fixture = JSON.parse(read("🧫️fixtures/🔣️.json")), schema = JSON.parse(read("🧬️schema/🔣️.json"));
+const fixture = JSON.parse(read("🧪️tests/🧫️fixtures/🔣️.json")), schema = JSON.parse(read("🧬️schema/🔣️.json"));
 const ajv = new Ajv({ strict: true, allErrors: true });
 ajv.addSchema(schema);
 const typeValid = ajv.getSchema(schema.$id + "#/$defs/valueType")!;

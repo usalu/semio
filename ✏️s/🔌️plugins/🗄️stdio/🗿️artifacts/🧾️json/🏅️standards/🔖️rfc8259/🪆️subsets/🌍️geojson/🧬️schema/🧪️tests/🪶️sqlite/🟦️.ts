@@ -1,7 +1,7 @@
 /** 🌍️ Neutral GeoJSON exact profile admission and independent SQLite edits. */
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
-import fixture from "../../../🧫️fixtures/🪶️sqlite/🔣️.json";
+import fixture from "../../../🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json";
 import { validateGeoJsonSnapshotSqliteDialect } from "../../../🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
 import { jsonSnapshotToSqliteDatabase, jsonSnapshotFromSqliteDatabase } from "../../../../🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
 import type { JsonSnapshot, JsonValue } from "../../../../🧱️base/🧬️schema/📸️snapshot/🟦️.ts";

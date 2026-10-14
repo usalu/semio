@@ -1,9 +1,10 @@
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_ecma_376::subsets::base::io::sqlite::snapshot::*;
 #[path = "💰️backing/🦀️.rs"]
 mod owned_requests;
-use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
 fn fixture() -> XlsxSnapshot {
-    semio_framework_pack_json::from_json_str(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
+    semio_framework_pack_json::from_json_str(include_str!("🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
 }
 #[test]
 fn sqlite_snapshot_xlsx_all_owned_fields_and_literal_package_domains() {
@@ -144,8 +145,8 @@ async fn sqlite_snapshot_xlsx_actual_declaration_exposes_complete_typed_snapshot
     semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("XLSX SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
     let dialect = ArtifactDialect { artifact_kind: "s.stdio.xlsx".into(), standard: "ecma-376".into(), subset: "*".into() };
     let snapshot = fixture();
-    let file = io_export_sqlite_snapshot(&dialect, &snapshot, SnapshotEncoding::Binary, SqliteDatabaseLimits::default(), &mut |_| true).await.unwrap().value;
-    let restored = io_import_sqlite_snapshot::<XlsxSnapshot>(&dialect, &file, SqliteDatabaseLimits::default(), &mut |_| true).await.unwrap().value;
+    let file = async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=SnapshotEncoding::Binary;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
+    let restored = async{let original_file_dialect=&dialect;let original_file_input=&file;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<XlsxSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value;
     assert_eq!(restored, snapshot);
     restored.retire_sqlite_snapshot();
     snapshot.retire_sqlite_snapshot();
@@ -156,7 +157,7 @@ fn sqlite_snapshot_xlsx_actual_erased_native_boundaries_retain_all_owned_fields(
     let snapshot = fixture();
     let limits = SqliteDatabaseLimits::default();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.xlsx".into(), standard: "ecma-376".into(), subset: "*".into() };
-    let codec = <XlsxSnapshot as ArtifactSqliteSnapshot>::sqlite_codec();
+    let codec = <XlsxSnapshot as ArtifactSqliteSnapshotHost>::sqlite_codec();
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
         let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(crate::STDIO_XLSX_DOCUMENT_SCHEMA, &dialect, &mut Some(db), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap().value;
@@ -169,7 +170,7 @@ fn sqlite_snapshot_xlsx_actual_erased_native_boundaries_retain_all_owned_fields(
 }
 #[test]
 fn sqlite_snapshot_xlsx_deep_erased_native_input_output_are_interior_cancellable() {
-    let plan: serde_json::Value = serde_json::from_str(include_str!("../../../../🧬️schema/📸️snapshot/🧫️fixtures/🛫️native/🔣️.json")).unwrap();
+    let plan: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🛫️native/🔣️.json")).unwrap();
     std::thread::Builder::new()
         .stack_size(plan["smallStackBytes"].as_u64().unwrap() as usize)
         .spawn(move || {
@@ -191,7 +192,7 @@ fn sqlite_snapshot_xlsx_deep_erased_native_input_output_are_interior_cancellable
             let snapshot = Owner(Some(snapshot));
             let limits = SqliteDatabaseLimits::default();
             let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.xlsx".into(), standard: "ecma-376".into(), subset: "*".into() };
-            let codec = <XlsxSnapshot as ArtifactSqliteSnapshot>::sqlite_codec();
+            let codec = <XlsxSnapshot as ArtifactSqliteSnapshotHost>::sqlite_codec();
             for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
                 let db = snapshot.0.as_ref().unwrap().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
                 let expected_database = db.clone();
@@ -228,7 +229,7 @@ fn sqlite_snapshot_xlsx_deep_erased_native_input_output_are_interior_cancellable
 
 #[test]
 fn sqlite_snapshot_xlsx_opc_native_component_has_exact_literal_fields() {
-    let plan: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🎒️zip/📦️opc/🧩️native/🧫️fixtures/🔣️.json")).unwrap();
+    let plan: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🎒️zip/📦️opc/🧩️native/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let package: semio_s_artifact_stdio_zip::opc::OpcPackage = semio_framework_pack_json::from_json_str(&plan["package"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let limits = SqliteDatabaseLimits::default();
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
@@ -291,12 +292,12 @@ fn sqlite_snapshot_xlsx_owned_native_actual_file_and_entity_ceilings() {
 fn sqlite_snapshot_xlsx_public_snapshot_pack_and_text_match_controlled_literal_owners() {
     let snapshot = fixture();
     let expected = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap();
-    let bytes = <XlsxSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
-    let packed = <XlsxSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).unwrap();
+    let bytes = <XlsxSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
+    let packed = <XlsxSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).unwrap();
     assert!(packed.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap() == expected);
     packed.retire_sqlite_snapshot();
-    let text = <XlsxSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot);
-    let parsed = <XlsxSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).unwrap();
+    let text = <XlsxSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snapshot);
+    let parsed = <XlsxSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).unwrap();
     assert!(parsed.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap() == expected);
     parsed.retire_sqlite_snapshot();
     snapshot.retire_sqlite_snapshot();
@@ -305,7 +306,7 @@ fn sqlite_snapshot_xlsx_public_snapshot_pack_and_text_match_controlled_literal_o
 #[test]
 fn sqlite_snapshot_xlsx_native_grammar_describes_the_actual_owned_fields() {
     let snapshot = fixture();
-    let text = <XlsxSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot);
+    let text = <XlsxSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snapshot);
     let (envelope, body) = store::semio_format::split_text_preamble(&text).unwrap();
     let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).unwrap();
     assert!(semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros())
@@ -318,7 +319,7 @@ fn sqlite_snapshot_xlsx_native_grammar_describes_the_actual_owned_fields() {
 #[test]
 fn sqlite_snapshot_xlsx_native_protocol_describes_the_actual_owned_fields() {
     let snapshot = fixture();
-    let bytes = <XlsxSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
+    let bytes = <XlsxSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
     let (_, body) = store::semio_format::unwrap_binary(&bytes).unwrap();
     let protocol = semio_framework_dsl::parse_protocol(crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).unwrap();
     let trace = semio_framework_dsl::walk_protocol(&protocol, &body).unwrap();
@@ -328,7 +329,7 @@ fn sqlite_snapshot_xlsx_native_protocol_describes_the_actual_owned_fields() {
 
 #[test]
 fn sqlite_snapshot_xlsx_complete_literal_native_file_matches_independent_fixture() {
-    let plan: serde_json::Value = serde_json::from_str(include_str!("../../../../🧬️schema/📸️snapshot/🧫️fixtures/🧩️native-literals/🔣️.json")).unwrap();
+    let plan: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧩️native-literals/🔣️.json")).unwrap();
     let snapshot: XlsxSnapshot = semio_framework_pack_json::from_json_str(&plan["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let defaults = SqliteDatabaseLimits::default();
     let rows = plan["rows"].as_u64().unwrap() as usize;
@@ -379,19 +380,19 @@ async fn sqlite_snapshot_xlsx_exact_named_owner_declarations_preserve_warnings_a
         assert_eq!(expected[0].severity, semio_framework_diagnostic::Severity::Warning);
         let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.xlsx".into(), standard: "ecma-376".into(), subset: subset.into() };
         for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-            let outcome = io_export_sqlite_snapshot(&dialect, &snapshot, encoding, limits, &mut |_| true).await.unwrap();
+            let outcome = async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=encoding;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap();
             assert_eq!(format!("{:?}", outcome.diagnostics), format!("{:?}", expected));
-            let restored = io_import_sqlite_snapshot::<XlsxSnapshot>(&dialect, &outcome.value, limits, &mut |_| true).await.unwrap();
+            let restored = async{let original_file_dialect=&dialect;let original_file_input=&outcome.value;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<XlsxSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap();
             assert_eq!(format!("{:?}", restored.diagnostics), format!("{:?}", expected));
             assert_eq!(restored.value, snapshot);
             restored.value.retire_sqlite_snapshot();
             let foreign = semio_framework_artifact_reference::ArtifactDialect { subset: if subset == "strict" { "transitional".into() } else { "strict".into() }, ..dialect.clone() };
-            assert!(io_import_sqlite_snapshot::<XlsxSnapshot>(&foreign, &outcome.value, limits, &mut |_| true).await.is_err());
+            assert!(async{let original_file_dialect=&foreign;let original_file_input=&outcome.value;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<XlsxSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.is_err());
         }
         let part = snapshot.xml_part_mut(&main).unwrap();
         let semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { attrs, .. } = part.document.root.as_mut().unwrap() else { panic!("typed workbook root") };
         attrs.iter_mut().find(|attr| attr.name == "xmlns").unwrap().value = "invalid namespace".into();
-        assert!(io_export_sqlite_snapshot(&dialect, &snapshot, SnapshotEncoding::Binary, limits, &mut |_| true).await.is_err());
+        assert!(async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=SnapshotEncoding::Binary;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.is_err());
         snapshot.retire_sqlite_snapshot();
     }
 }
@@ -422,7 +423,7 @@ fn sqlite_snapshot_xlsx_profile_diagnostics_are_interior_cancellable_and_admitte
 
 #[test]
 fn sqlite_snapshot_xlsx_exact_profile_neutral_cases_preserve_native_policy_diagnostics() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧬️schema/📸️snapshot/🧫️fixtures/🛡️profile/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🛡️profile/🔣️.json")).unwrap();
     let limits = SqliteDatabaseLimits::default();
     for plan in fixture["cases"].as_array().unwrap() {
         let subset = plan["subset"].as_str().unwrap();
@@ -483,7 +484,7 @@ fn sqlite_snapshot_xlsx_borrowed_preflight_pays_frontiers_without_materializing_
         let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap();
         let error = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_allocation_bytes: 1, ..limits }), native_owner)).unwrap_err();
         assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::OwnershipLimit);
-        let error = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| <XlsxSnapshot as ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_allocation_bytes: 1, ..limits }), native_owner)).unwrap_err();
+        let error = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| <XlsxSnapshot as ArtifactSqliteSnapshotHost>::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_allocation_bytes: 1, ..limits }), native_owner)).unwrap_err();
         assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::OwnershipLimit);
     }
     snapshot.retire_sqlite_snapshot();

@@ -15,7 +15,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("matches the neutral EN/DE unavailable fixture while keeping the window mounted", () => {
-      const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("./🧫️fixtures/🚫️unavailable/🔣️.json", source.url)), "utf8"));
+      const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("./🧪️tests/🧫️fixtures/🚫️unavailable/🔣️.json", source.url)), "utf8"));
       for (const locale of ["en", "de"] as const) {
         const node = renderImagePreview({ availability: "unavailable" }, locale);
         expect(node.key).toBe(fixture.windowKey);

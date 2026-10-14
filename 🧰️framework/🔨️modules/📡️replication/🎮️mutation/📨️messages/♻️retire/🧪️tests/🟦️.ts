@@ -2,7 +2,7 @@
 import {expect,test} from "bun:test";
 import {readFileSync} from "node:fs";
 import {applyPatch} from "fast-json-patch";
-const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+const law=JSON.parse(readFileSync(new URL("../🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
 test("♻️ neutral message ledger retirement preserves the original and removes every owned field",()=>{
   for(const row of law.cases){
     const baseline={context:row.context,messages:row.messages};

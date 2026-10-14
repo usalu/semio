@@ -27,7 +27,7 @@ pub mod retained_command;
 
 #[cfg(all(test, feature = "component-app-assembly"))]
 fn retained_command_test_catalog() -> (&'static str, &'static str, &'static [&'static str], &'static str) {
-    ("puzzle5d", "puzzle.5d", editor::puzzle5d::PUZZLE5D_RETAINED_TOOL_IDS, include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗄️retained-jobs/🔣️.json"))
+    ("puzzle5d", "puzzle.5d", editor::puzzle5d::PUZZLE5D_RETAINED_TOOL_IDS, include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🗄️retained-jobs/🔣️.json"))
 }
 
 pub const PUZZLE_5D_SCHEMA: &str = "puzzle.5d";
@@ -1228,7 +1228,7 @@ use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, Artifac
         ("s.puzzle.puzzle5d.grammar.4", "grammar", "5d.pack", &[("grammar", "5d.pack")], None),
         ("s.puzzle.puzzle5d.grammar.5", "grammar", "5d.spr", &[("grammar", "5d.spr")], None),
         // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Puzzle5dPlayApp>>()` derives
-        // its extension claim from `<Puzzle5dPlaySnapshot as store::os_store::serialization::ArtifactDsl>::EXTENSION`
+        // its extension claim from `<Puzzle5dPlaySnapshot as pack::snapshot::ArtifactDsl>::EXTENSION`
         // (`…/🧬️mutations/🦀️.rs`, the editor's real `Snapshot` type), which is
         // `"puzzle5d-play"`, not the base `Puzzle5dSnapshot`'s `"puzzle5d"`.
         ("s.puzzle.puzzle5d.codec.document-1", "codec", "puzzle.5d:puzzle5d-play", &[("codec", "puzzle.5d"), ("codec-extension", "9:puzzle.5d:puzzle5d-play")], None),

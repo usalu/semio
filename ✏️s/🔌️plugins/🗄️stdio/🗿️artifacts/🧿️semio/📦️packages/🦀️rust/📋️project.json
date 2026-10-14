@@ -8,6 +8,36 @@
     "family:stdio"
   ],
   "targets": {
+    "test-text-receiving-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-text-receiving-source"
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
+      ]
+    },
+    "test-text-receiving-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-text-receiving-native"
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
+      ]
+    },
     "test-snapshot-sqlite": {
       "executor": "nx:run-commands",
       "options": {

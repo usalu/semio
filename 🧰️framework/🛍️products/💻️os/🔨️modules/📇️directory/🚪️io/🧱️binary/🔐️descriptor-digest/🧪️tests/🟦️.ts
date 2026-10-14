@@ -8,11 +8,11 @@ import {expect,test} from "bun:test";
 import {createHash} from "node:crypto";
 import {readFileSync} from "node:fs";
 import Ajv from "ajv";
-import owner from "../🧫️fixtures/🔣️.json";
+import owner from "./🧫️fixtures/🔣️.json";
 import {descriptorDigestEncodingV1,descriptorDigestV1} from "../🟦️.ts";
 
 const directory=new URL("../../../../",import.meta.url);
-const fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/📇️directory/🛡️artifact-authority.json",directory),"utf8")) as {descriptor:DocumentDescriptor;descriptorEncodingHex:string;descriptorDigestV1:number[]};
+const fixture=JSON.parse(readFileSync(new URL("../../🧪️tests/🧫️fixtures/📇️directory/🛡️artifact-authority.json",directory),"utf8")) as {descriptor:DocumentDescriptor;descriptorEncodingHex:string;descriptorDigestV1:number[]};
 
 test("descriptor canonical bytes and digests match independent language-neutral crypto witnesses",async()=>{
   const bytes=descriptorDigestEncodingV1(fixture.descriptor);
@@ -92,7 +92,7 @@ test("current native hash receiving imports and typed pair gates parse",async()=
 });
 
 test("typed checkpoint selection schema and pure pair gate preserve authored identity refusals",()=>{
-  const pairFixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/📇️directory/🪢️canonical-checkpoint-pair-v1.json",directory),"utf8"));
+  const pairFixture=JSON.parse(readFileSync(new URL("../../🧪️tests/🧫️fixtures/📇️directory/🪢️canonical-checkpoint-pair-v1.json",directory),"utf8"));
   const selectionSchema=JSON.parse(readFileSync(new URL("🧬️schema/🪢️canonical-checkpoint-pair-v1/🔣️.json",directory),"utf8"));
   const validate=new Ajv({strict:true}).compile(selectionSchema);
   for(const admission of pairFixture.admissions){

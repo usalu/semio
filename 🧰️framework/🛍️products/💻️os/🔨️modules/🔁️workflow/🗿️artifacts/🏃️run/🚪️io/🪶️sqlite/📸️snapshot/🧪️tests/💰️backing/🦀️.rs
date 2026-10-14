@@ -17,7 +17,7 @@ fn literal_equal(actual: &RunArtifact, expected: &RunArtifact) {
 
 #[test]
 fn sqlite_semantic_run_full_concrete_requests_preserve_every_field_and_raw_word() {
-    let plan: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/💰️backing/🔬️requests/🔣️.json")).unwrap();
+    let plan: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/💰️backing/🔬️requests/🔣️.json")).unwrap();
     assert_eq!(plan["phases"], serde_json::json!(["projectSnapshot", "reconstructSnapshot"]));
     let words = laws();
     for hex in words["binary64Words"].as_array().unwrap() {

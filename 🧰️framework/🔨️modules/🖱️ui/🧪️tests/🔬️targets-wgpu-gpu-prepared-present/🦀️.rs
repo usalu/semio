@@ -48,11 +48,11 @@ fn present_cursor_generation_and_capacity_boundaries_refuse_before_ownership() {
 
 /// ⚖️ One over-ceiling opportunity is a MEASUREMENT; only a run of
 /// `SUSTAINED_OVERRUN_QUARANTINE_STEPS` consecutive ones is terminal. Driven by the neutral fixture
-/// `🖱️ui/🧫️fixtures/🖥️prepared-gpu-opportunity/🔣️.json`, whose `coldStart` row is the measured
+/// `🖱️ui/🧪️tests/🧫️fixtures/🖥️prepared-gpu-opportunity/🔣️.json`, whose `coldStart` row is the measured
 /// first frame that used to quarantine the browser surface before it had ever presented.
 #[test]
 fn a_single_over_ceiling_gpu_opportunity_is_recorded_and_only_a_run_is_terminal() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖥️prepared-gpu-opportunity/🔣️.json")).expect("prepared gpu opportunity fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🖥️prepared-gpu-opportunity/🔣️.json")).expect("prepared gpu opportunity fixture");
     assert_eq!(fixture["ceilingUs"].as_u64(), Some(PREPARED_GPU_OPPORTUNITY_CEILING_US));
     assert_eq!(fixture["sustainedOverrunOpportunities"].as_u64(), Some(u64::from(semio_framework_job::SUSTAINED_OVERRUN_QUARANTINE_STEPS)));
     let cold = fixture["coldStart"]["elapsedUs"].as_u64().expect("cold start sample");
@@ -78,7 +78,7 @@ fn a_single_over_ceiling_gpu_opportunity_is_recorded_and_only_a_run_is_terminal(
 /// 🫧 Every authored glass page addresses one live region; an out-of-range page is stale.
 #[test]
 fn every_glass_command_page_addresses_one_live_region() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖥️prepared-gpu-opportunity/🔣️.json")).expect("prepared gpu opportunity fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🖥️prepared-gpu-opportunity/🔣️.json")).expect("prepared gpu opportunity fixture");
     for row in fixture["glassCommandPages"]["rows"].as_array().expect("glass rows") {
         let region = usize::try_from(row["region"].as_u64().expect("region")).expect("region fits");
         let len = usize::try_from(row["len"].as_u64().expect("len")).expect("len fits");
@@ -149,7 +149,7 @@ fn clip_fixture_pieces(row: &serde_json::Value, surface: crate::wgpu::draw_types
 
 #[test]
 fn prepared_gpu_color_commands_advance_one_bounded_clip_piece_at_a_time() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖥️prepared-gpu-clip-pieces/🔣️.json")).expect("neutral prepared GPU clip fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🖥️prepared-gpu-clip-pieces/🔣️.json")).expect("neutral prepared GPU clip fixture");
     let surface = crate::wgpu::draw_types::ScissorRect { x: 0, y: 0, w: fixture["surface"][0].as_u64().expect("surface width") as u32, h: fixture["surface"][1].as_u64().expect("surface height") as u32 };
     for row in fixture["cases"].as_array().expect("clip cases") {
         let expected = &row["expected"];
@@ -229,7 +229,7 @@ fn values_capacity_for_clip_law(row: &serde_json::Value) -> usize {
 
 #[test]
 fn overlapping_silhouette_pieces_are_refused_before_retained_draw_ownership() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖥️prepared-gpu-clip-pieces/🔣️.json")).expect("neutral prepared GPU clip fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🖥️prepared-gpu-clip-pieces/🔣️.json")).expect("neutral prepared GPU clip fixture");
     let row = fixture["cases"].as_array().expect("clip cases").iter().find(|row| row["id"] == "overlapping-pieces-refused-before-alpha").expect("overlap refusal case");
     let rects = row["clip"]
         .as_array()
@@ -373,7 +373,7 @@ fn every_world_color_cursor_uses_the_encoded_composite_attachment() {
         "world3d_grid_pipeline",
         "world_postprocess_pipeline",
     ];
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎨️encoded-world-pipelines/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️encoded-world-pipelines/🔣️.json")).unwrap();
     let expected: Vec<&str> = fixture["pipelines"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect();
     assert_eq!(encoded_world_pipelines.as_slice(), expected.as_slice());
     let declared: std::collections::HashSet<&str> = expected.iter().copied().collect();
@@ -445,7 +445,7 @@ fn the_world_textured_pass_is_a_blended_underlay_on_a_centred_plane() {
 fn every_successful_gpu_transition_is_measured_before_returning() {
     let _guard = guard();
     drain();
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖥️prepared-gpu-opportunity/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🖥️prepared-gpu-opportunity/🔣️.json")).unwrap();
     let mut cursor = PreparedGpuPresentCursor::begin(7, 3).unwrap();
     for transition in law["successfulTransitions"].as_array().unwrap() {
         cursor.overrun_run = transition["initialRun"].as_u64().unwrap() as u32;

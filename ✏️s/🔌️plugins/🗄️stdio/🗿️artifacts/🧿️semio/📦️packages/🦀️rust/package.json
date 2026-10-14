@@ -9,5 +9,8 @@
   },
   "scripts": {
     "verify-stdio-document-contract": "bun nx run @semio-tech/stdio-semio-rs:verify-stdio-document-contract"
+  },
+  "devDependencies": {
+    "@semio-tech/framework": "workspace:*"
   }
 }

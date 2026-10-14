@@ -1,0 +1,624 @@
+{
+  "chart": {
+    "width": 80,
+    "height": 40,
+    "language": "en",
+    "tables": [
+      {
+        "name": "values",
+        "columns": [
+          "x",
+          "y"
+        ],
+        "rows": [
+          {
+            "x": 0,
+            "y": 1
+          },
+          {
+            "x": 2,
+            "y": 3
+          }
+        ]
+      },
+      {
+        "rows": [
+          {
+            "x": null,
+            "y": 1
+          },
+          {
+            "x": "",
+            "y": 1
+          },
+          {
+            "x": true,
+            "y": 1
+          },
+          {
+            "x": false,
+            "y": 1
+          },
+          {
+            "x": "1",
+            "y": 1
+          },
+          {
+            "x": "bad",
+            "y": 1
+          }
+        ],
+        "columns": [
+          "x",
+          "y"
+        ],
+        "name": "native-typed"
+      }
+    ],
+    "scales": [
+      {
+        "name": "x",
+        "kind": "linear",
+        "domain": [
+          0,
+          2
+        ],
+        "range": [
+          0,
+          80
+        ]
+      },
+      {
+        "name": "y",
+        "kind": "linear",
+        "domain": [
+          0,
+          4
+        ],
+        "range": [
+          0,
+          40
+        ]
+      },
+      {
+        "options": {
+          "unknown": -5
+        },
+        "kind": "linear",
+        "range": [
+          0,
+          30
+        ],
+        "domain": [
+          0,
+          3
+        ],
+        "name": "native-typed-x"
+      },
+      {
+        "options": {
+          "unknown": "rgba(0, 128, 255, 0.35)"
+        },
+        "kind": "linear",
+        "range": [
+          "blue",
+          "red"
+        ],
+        "domain": [
+          0,
+          1
+        ],
+        "name": "native-typed-color"
+      }
+    ],
+    "layers": [
+      {
+        "mark": "bar",
+        "data": "values",
+        "encodings": {
+          "x": {
+            "column": "x",
+            "scale": "x"
+          },
+          "y": {
+            "column": "y",
+            "scale": "y"
+          },
+          "text": {
+            "value": "native"
+          },
+          "fill": {
+            "value": "#0088cc"
+          }
+        },
+        "options": {
+          "strokeWidth": 0.2,
+          "stroke": "#ff0000"
+        }
+      },
+      {
+        "mark": "rect",
+        "data": "values",
+        "encodings": {
+          "x": {
+            "column": "x",
+            "scale": "x"
+          },
+          "y": {
+            "column": "y",
+            "scale": "y"
+          },
+          "text": {
+            "value": "native"
+          },
+          "fill": {
+            "value": "#0088cc"
+          }
+        },
+        "options": {
+          "strokeWidth": 0.2,
+          "stroke": "#ff0000"
+        }
+      },
+      {
+        "mark": "heatmap",
+        "data": "values",
+        "encodings": {
+          "x": {
+            "column": "x",
+            "scale": "x"
+          },
+          "y": {
+            "column": "y",
+            "scale": "y"
+          },
+          "text": {
+            "value": "native"
+          },
+          "fill": {
+            "value": "#0088cc"
+          }
+        },
+        "options": {
+          "strokeWidth": 0.2,
+          "stroke": "#ff0000"
+        }
+      },
+      {
+        "mark": "point",
+        "data": "values",
+        "encodings": {
+          "x": {
+            "column": "x",
+            "scale": "x"
+          },
+          "y": {
+            "column": "y",
+            "scale": "y"
+          },
+          "text": {
+            "value": "native"
+          },
+          "fill": {
+            "value": "#0088cc"
+          }
+        },
+        "options": {
+          "strokeWidth": 0.2,
+          "stroke": "#ff0000"
+        }
+      },
+      {
+        "mark": "circle",
+        "data": "values",
+        "encodings": {
+          "x": {
+            "column": "x",
+            "scale": "x"
+          },
+          "y": {
+            "column": "y",
+            "scale": "y"
+          },
+          "text": {
+            "value": "native"
+          },
+          "fill": {
+            "value": "#0088cc"
+          }
+        },
+        "options": {
+          "strokeWidth": 0.2,
+          "stroke": "#ff0000"
+        }
+      },
+      {
+        "mark": "symbol",
+        "data": "values",
+        "encodings": {
+          "x": {
+            "column": "x",
+            "scale": "x"
+          },
+          "y": {
+            "column": "y",
+            "scale": "y"
+          },
+          "text": {
+            "value": "native"
+          },
+          "fill": {
+            "value": "#0088cc"
+          }
+        },
+        "options": {
+          "strokeWidth": 0.2,
+          "stroke": "#ff0000"
+        }
+      },
+      {
+        "mark": "line",
+        "data": "values",
+        "encodings": {
+          "x": {
+            "column": "x",
+            "scale": "x"
+          },
+          "y": {
+            "column": "y",
+            "scale": "y"
+          },
+          "text": {
+            "value": "native"
+          },
+          "fill": {
+            "value": "#0088cc"
+          }
+        },
+        "options": {
+          "strokeWidth": 0.2,
+          "stroke": "#ff0000"
+        }
+      },
+      {
+        "mark": "area",
+        "data": "values",
+        "encodings": {
+          "x": {
+            "column": "x",
+            "scale": "x"
+          },
+          "y": {
+            "column": "y",
+            "scale": "y"
+          },
+          "text": {
+            "value": "native"
+          },
+          "fill": {
+            "value": "#0088cc"
+          }
+        },
+        "options": {
+          "strokeWidth": 0.2,
+          "stroke": "#ff0000"
+        }
+      },
+      {
+        "mark": "band",
+        "data": "values",
+        "encodings": {
+          "x": {
+            "column": "x",
+            "scale": "x"
+          },
+          "y": {
+            "column": "y",
+            "scale": "y"
+          },
+          "text": {
+            "value": "native"
+          },
+          "fill": {
+            "value": "#0088cc"
+          }
+        },
+        "options": {
+          "strokeWidth": 0.2,
+          "stroke": "#ff0000"
+        }
+      },
+      {
+        "mark": "trail",
+        "data": "values",
+        "encodings": {
+          "x": {
+            "column": "x",
+            "scale": "x"
+          },
+          "y": {
+            "column": "y",
+            "scale": "y"
+          },
+          "text": {
+            "value": "native"
+          },
+          "fill": {
+            "value": "#0088cc"
+          }
+        },
+        "options": {
+          "strokeWidth": 0.2,
+          "stroke": "#ff0000"
+        }
+      },
+      {
+        "mark": "arc",
+        "data": "values",
+        "encodings": {
+          "x": {
+            "column": "x",
+            "scale": "x"
+          },
+          "y": {
+            "column": "y",
+            "scale": "y"
+          },
+          "text": {
+            "value": "native"
+          },
+          "fill": {
+            "value": "#0088cc"
+          }
+        },
+        "options": {
+          "strokeWidth": 0.2,
+          "stroke": "#ff0000"
+        }
+      },
+      {
+        "mark": "pie",
+        "data": "values",
+        "encodings": {
+          "x": {
+            "column": "x",
+            "scale": "x"
+          },
+          "y": {
+            "column": "y",
+            "scale": "y"
+          },
+          "text": {
+            "value": "native"
+          },
+          "fill": {
+            "value": "#0088cc"
+          }
+        },
+        "options": {
+          "strokeWidth": 0.2,
+          "stroke": "#ff0000"
+        }
+      },
+      {
+        "mark": "text",
+        "data": "values",
+        "encodings": {
+          "x": {
+            "column": "x",
+            "scale": "x"
+          },
+          "y": {
+            "column": "y",
+            "scale": "y"
+          },
+          "text": {
+            "value": "native"
+          },
+          "fill": {
+            "value": "#0088cc"
+          }
+        },
+        "options": {
+          "strokeWidth": 0.2,
+          "stroke": "#ff0000"
+        }
+      },
+      {
+        "mark": "rule",
+        "data": "values",
+        "encodings": {
+          "x": {
+            "column": "x",
+            "scale": "x"
+          },
+          "y": {
+            "column": "y",
+            "scale": "y"
+          },
+          "text": {
+            "value": "native"
+          },
+          "fill": {
+            "value": "#0088cc"
+          }
+        },
+        "options": {
+          "strokeWidth": 0.2,
+          "stroke": "#ff0000"
+        }
+      },
+      {
+        "mark": "link",
+        "data": "values",
+        "encodings": {
+          "x": {
+            "column": "x",
+            "scale": "x"
+          },
+          "y": {
+            "column": "y",
+            "scale": "y"
+          },
+          "text": {
+            "value": "native"
+          },
+          "fill": {
+            "value": "#0088cc"
+          }
+        },
+        "options": {
+          "strokeWidth": 0.2,
+          "stroke": "#ff0000"
+        }
+      },
+      {
+        "mark": "path",
+        "data": "values",
+        "encodings": {
+          "x": {
+            "column": "x",
+            "scale": "x"
+          },
+          "y": {
+            "column": "y",
+            "scale": "y"
+          },
+          "text": {
+            "value": "native"
+          },
+          "fill": {
+            "value": "#0088cc"
+          }
+        },
+        "options": {
+          "strokeWidth": 0.2,
+          "stroke": "#ff0000"
+        }
+      },
+      {
+        "mark": "polygon",
+        "data": "values",
+        "encodings": {
+          "x": {
+            "column": "x",
+            "scale": "x"
+          },
+          "y": {
+            "column": "y",
+            "scale": "y"
+          },
+          "text": {
+            "value": "native"
+          },
+          "fill": {
+            "value": "#0088cc"
+          }
+        },
+        "options": {
+          "strokeWidth": 0.2,
+          "stroke": "#ff0000"
+        }
+      },
+      {
+        "mark": "ribbon",
+        "data": "values",
+        "encodings": {
+          "x": {
+            "column": "x",
+            "scale": "x"
+          },
+          "y": {
+            "column": "y",
+            "scale": "y"
+          },
+          "text": {
+            "value": "native"
+          },
+          "fill": {
+            "value": "#0088cc"
+          }
+        },
+        "options": {
+          "strokeWidth": 0.2,
+          "stroke": "#ff0000"
+        }
+      },
+      {
+        "mark": "point",
+        "encodings": {
+          "x": {
+            "scale": "native-typed-x",
+            "column": "x"
+          },
+          "fill": {
+            "scale": "native-typed-color",
+            "column": "x"
+          },
+          "y": {
+            "value": 1
+          }
+        },
+        "data": "native-typed"
+      }
+    ],
+    "theme": {
+      "name": "semio",
+      "palette": [
+        "#ff0000",
+        "#0088cc"
+      ],
+      "appearance": "light"
+    },
+    "guides": [
+      {
+        "orient": "bottom",
+        "scale": "x",
+        "kind": "axis"
+      },
+      {
+        "orient": "left",
+        "scale": "y",
+        "kind": "grid"
+      }
+    ],
+    "annotations": [
+      {
+        "x": 5,
+        "y": 5,
+        "text": {
+          "en": "Native",
+          "de": "Nativ"
+        },
+        "options": {
+          "anchor": "start",
+          "fontSize": 8,
+          "fill": "#ff0000"
+        },
+        "kind": "text"
+      },
+      {
+        "y2": 6,
+        "y": 6,
+        "x": 5,
+        "kind": "line",
+        "options": {
+          "strokeWidth": 0.2,
+          "stroke": "#ff0000"
+        },
+        "x2": 20
+      }
+    ],
+    "coordinate": {
+      "kind": "cartesian",
+      "options": {
+        "axes": [
+          "x",
+          "y"
+        ],
+        "normalized": false,
+        "transpose": false
+      }
+    }
+  }
+}

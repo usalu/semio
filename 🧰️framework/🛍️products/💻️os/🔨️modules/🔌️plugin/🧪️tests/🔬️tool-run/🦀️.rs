@@ -27,7 +27,7 @@ use original_toy_emission::OriginalToyEmission;
 #[path="🚦️unit/🧪️tests/🦀️.rs"]
 mod original_toy_job_tests;
 
-const TOOL_RUN_FIXTURE_JSON: &str = include_str!("../../🧫️fixtures/⏯️tool-run/🔣️.json");
+const TOOL_RUN_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/⏯️tool-run/🔣️.json");
 
 fn fixture() -> Value {
     let fixture: Value = serde_json::from_str(TOOL_RUN_FIXTURE_JSON).expect("tool run fixture parses");
@@ -45,7 +45,7 @@ fn text(value: &Value) -> &str {
 
 //#region 🧸️ToyRunApp
 fn toy_definition(rebase: ToolRunRebasePolicy) -> ToolRunDefinition {
-    ToolRunDefinition {
+    ToolRunDefinition { receiving: semio_framework_tool_run::ToolRunReceivingLimits::REPORTS,
         mutating: true,
         rebase,
         reconfigure: ToolRunReconfigurePolicy::Resume,
@@ -116,10 +116,10 @@ impl Drop for ToyRunJob {
 fn original_toy_run_job_closes_same_writer_counts_under_fixed_full_grant(){
     use semio_framework_job::InteractiveJob;
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:262144,maximum_depth:4096};
-    for count in[0,1,8192]{let(job,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let identity=ToolRunIdentity::new(ToolRunId{app_instance_id:7,run:11},[17;32]);let mut writer=ToolRunTickWriter::new(identity);writer.payload(vec![b'x';8192]);ToyRunJob{unit:OriginalToyUnit::new(),emission:OriginalToyEmission::new(),phase:0,batch_units:0,scan:0,retraction:None,progress_source:None,counter_source:None,trace_source:None,payload_source:[0;4],payload_source_ready:false,payload_position:0,successor:None,writer_retirement:None,progress_retirement:None,purpose:ToolRunJobPurpose::Run,original:std::mem::ManuallyDrop::new(ToyRunJobOriginal{writer,provisional_counts:(0..count).collect()}),original_live:true,original_close:None,base_count:0,target:0,done:0,resumed_from:0,checkpoint_due:false,finished:false,closing:false}});let mut job=job;let mut born=heap.requested_bytes;let mut released=heap.released_bytes;let pointer=job.original.provisional_counts.as_ptr();assert_eq!(serde_json::to_value(&job.original.provisional_counts).unwrap(),serde_json::json!((0..count).collect::<Vec<_>>()));job.begin_close();let mut turns=0;
-     while !job.terminal_is_empty(){let(demand,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.original_demands(grant.maximum_copy_bytes).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut denied=vec![RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}];if demand.copy_bytes>0{denied.push(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant});}if demand.capacity_bytes>0{denied.push(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant});}if demand.release_bytes>0{denied.push(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant});}for grant in denied{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(grant));assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));if job.original_live{assert_eq!(job.original.provisional_counts.as_ptr(),pointer);}}
-      let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(grant));assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<100000);
-     }assert_eq!(born,released);let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));println!("[DEBUG] original ToyRun writer/counts count={count} turns={turns} sameNativePointer fixed5currencies physical={released} terminalDrop0");
+    let source=toy_fixture_caller_policy().0.preparation;for count in[0,1,8192]{let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(99110),semio_framework_job::Generation(1),source,semio_framework_job::default_now_us,u64::MAX,1);let(job,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let identity=ToolRunIdentity::new(ToolRunId{app_instance_id:7,run:11},[17;32]);let mut writer=ToolRunTickWriter::new(identity);writer.payload(vec![b'x';8192]);ToyRunJob{unit:OriginalToyUnit::new(),emission:OriginalToyEmission::new(),phase:0,batch_units:0,scan:0,retraction:None,progress_source:None,counter_source:None,trace_source:None,payload_source:[0;4],payload_source_ready:false,payload_position:0,successor:None,writer_retirement:None,progress_retirement:None,purpose:ToolRunJobPurpose::Run,original:std::mem::ManuallyDrop::new(ToyRunJobOriginal{writer,provisional_counts:(0..count).collect()}),original_live:true,original_close:None,base_count:0,target:0,done:0,resumed_from:0,checkpoint_due:false,finished:false,closing:false}});let mut job=job;let mut born=heap.requested_bytes;let mut released=heap.released_bytes;let pointer=job.original.provisional_counts.as_ptr();assert_eq!(serde_json::to_value(&job.original.provisional_counts).unwrap(),serde_json::json!((0..count).collect::<Vec<_>>()));job.begin_close();let mut turns=0;
+     while !job.terminal_is_empty(){let(demand,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.original_demands(grant.maximum_copy_bytes).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut denied=vec![RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}];if demand.copy_bytes>0{denied.push(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant});}if demand.capacity_bytes>0{denied.push(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant});}if demand.release_bytes>0{denied.push(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant});}for grant in denied{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(grant,|cx|job.close_step(cx)).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));if job.original_live{assert_eq!(job.original.provisional_counts.as_ptr(),pointer);}}
+      let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(grant,|cx|job.close_step(cx)).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<100000);
+     }assert_eq!(born,released);let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));caller.retire(source);println!("[DEBUG] original ToyRun writer/counts count={count} turns={turns} sameNativePointer fixed5currencies physical={released} terminalDrop0");
     }
 }
 
@@ -145,12 +145,12 @@ impl ToyRunJob {
     fn original_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(demand)=self.auxiliary_demands(body)?{return Ok(demand)}if let Some(owner)=self.original_close.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()});}return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"toy original writer depth overflow"))?});}Ok(if self.original_live{RetirementDemand{depth:1,..Default::default()}}else{Default::default()})}
 
     fn metadata(cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,ValueError>{let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;Ok(true)}
-    fn receive(cx:&mut semio_framework_job::StepContext<'_>,result:Result<semio_framework_value::RetainedCloneStep,ValueError>)->Result<bool,ValueError>{match result{Ok(step)=>{cx.consume_retained(step.progress())?;Ok(matches!(step,semio_framework_value::RetainedCloneStep::Complete(_)))},Err(original)=>{let _=cx.consume_retained(original.retained_progress());Err(original)}}}
-    fn run_step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,ValueError>{
+    fn receive(cx:&mut semio_framework_job::StepContext<'_>,result:Result<semio_framework_value::RetainedCloneStep,ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{match result{Ok(step)=>{cx.consume_retained(step.progress())?;Ok(matches!(step,semio_framework_value::RetainedCloneStep::Complete(_)))},Err(original)=>{Err(semio_framework_job::OriginalTurnFailure::debit_original(original,cx))}}}
+    fn run_step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
      let grant=cx.retained_grant();match self.phase{
       0=>{if self.purpose==ToolRunJobPurpose::Revalidate{if self.scan==self.original.provisional_counts.len(){if Self::metadata(cx)?{self.finished=true;self.phase=12;}return Ok(None)}let valid=self.original.provisional_counts[self.scan]==self.base_count.checked_add(self.scan as i32+1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original revalidation count overflow"))?;if Self::metadata(cx)?{if valid{self.scan+=1;}else{self.retraction=Some((self.scan as u32).checked_mul(2).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original revalidation index overflow"))?);self.phase=13;}}return Ok(None)}
        if self.done>self.target{let result=self.original.writer.admit_original_retraction(self.target.checked_mul(2).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original retarget extent overflow"))?,grant);let complete=Self::receive(cx,result)?;if complete&&cx.retained_progress().copied_items==0&&!Self::metadata(cx)?{return Ok(None)}if complete{self.done=self.target;}return Ok(None)}
-       if self.done==self.target{if self.original.writer.is_empty(){return semio_framework_job::JobOutcomeBorrow::admit_complete(cx,None,None)}if Self::metadata(cx)?{self.phase=1;}return Ok(None)}
+       if self.done==self.target{if self.original.writer.is_empty(){return semio_framework_job::JobOutcomeBorrow::admit_complete(cx,None,None).map_err(semio_framework_job::OriginalTurnFailure::from)}if Self::metadata(cx)?{self.phase=1;}return Ok(None)}
        let unit=self.done.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original Toy unit overflow"))?;if self.unit.advance(&mut self.original.writer,self.base_count,unit,cx)?{self.done=unit;self.batch_units+=1;if self.batch_units==64||self.done==self.target||self.original.writer.should_flush(){self.phase=1;}}}
       1=>{if Self::metadata(cx)?{self.progress_source=Some(ToolRunProgress{identity:self.original.writer.identity(),sequence:0,state:ToolRunState::Running,stage:0,completed:u64::from(self.done),total:Some(u64::from(self.target)),counters:Vec::new(),units_per_second:0.0,conflicts:0,steps:ToolRunStepRing::new()});self.counter_source=Some(ToolRunCounter{counter:0,value:u64::from(self.resumed_from)});self.phase=2;}}
       2=>{let result=ToolRunTickWriter::admit_original_progress_counter(self.progress_source.as_mut().unwrap(),&mut self.counter_source,grant);if Self::receive(cx,result)?{self.phase=3;}}
@@ -163,17 +163,17 @@ impl ToyRunJob {
       9=>{let owner=self.writer_retirement.as_mut().unwrap();if owner.terminal_is_empty(){if Self::metadata(cx)?{drop(self.writer_retirement.take());self.phase=if self.purpose==ToolRunJobPurpose::Run{10}else{12};}}else{let result=owner.step(grant);Self::receive(cx,result)?;}}
       10=>{let original=self.emission.advance_checkpoint(self.done,cx)?;if original.is_some(){self.phase=11;}return Ok(original)}
       11=>{if self.emission.close_in_context(cx)?{self.phase=0;self.batch_units=0;self.payload_position=0;self.payload_source_ready=false;}}
-      12=>return semio_framework_job::JobOutcomeBorrow::admit_complete(cx,None,None),
+      12=>return semio_framework_job::JobOutcomeBorrow::admit_complete(cx,None,None).map_err(semio_framework_job::OriginalTurnFailure::from),
       13=>{let result=self.original.writer.admit_original_retraction(self.retraction.unwrap(),grant);let done=Self::receive(cx,result)?;if done&&cx.retained_progress().copied_items==0&&!Self::metadata(cx)?{return Ok(None)}if done{self.retraction=None;self.phase=14;}}
       14=>{if Self::metadata(cx)?{if self.scan==self.original.provisional_counts.len(){self.finished=true;self.phase=5;}else{let unit=self.scan as u64+1;self.trace_source=Some(semio_framework_tool_run::ToolRunTraceOp::Upsert{key:unit,verdict:ToolRunVerdict::Danger,reason:2,subject:ToolRunTraceSubject::Entity{entity:unit}});self.phase=15;}}}
       15=>{let result=self.original.writer.admit_original_trace(&mut self.trace_source,grant);if Self::receive(cx,result)?{self.scan+=1;self.phase=14;}}
-      _=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original Toy run phase is absent")),
+      _=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original Toy run phase is absent").into()),
      }Ok(None)
     }
 }
 
 impl semio_framework_job::InteractiveJob for ToyRunJob {
-    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,ValueError>{if cx.is_cancelled(){return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx)}self.run_step(cx)}
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{if cx.is_cancelled(){return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}self.run_step(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
     fn borrow_outcome<'a>(&'a self,descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,ValueError>{self.emission.borrow_outcome(descriptor)}
 
     fn begin_close(&mut self) {
@@ -184,12 +184,16 @@ impl semio_framework_job::InteractiveJob for ToyRunJob {
     fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.original_demands(body)?.capacity_bytes)}
     fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.original_demands(0)?.release_bytes)}
     fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.original_demands(0)?.depth)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
-        let empty=Default::default();if self.terminal_is_empty(){return semio_framework_job::InteractiveJobCloseStep::Complete{progress:empty};}let demand=match self.original_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return semio_framework_job::InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};if !self.closing||(grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth){return semio_framework_job::InteractiveJobCloseStep::Pending{progress:empty};}
-        if self.auxiliary_demands(grant.maximum_copy_bytes).ok().flatten().is_some(){return match self.auxiliary_close_step(grant){Ok(step)=>semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()},Err(original)=>semio_framework_job::InteractiveJobCloseStep::Refused{kind:original.kind,progress:original.retained_progress()}};}
-        if let Some(owner)=self.original_close.as_mut(){if owner.terminal_is_empty(){drop(self.original_close.take());return semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}};}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};return match owner.step(child).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original toy writer and counts")){Ok(step)=>semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>semio_framework_job::InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};}
-        let original=unsafe{std::mem::ManuallyDrop::take(&mut self.original)};match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>{self.original_close=Some(owner);self.original_live=false;semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}}},Err((error,original))=>{self.original=std::mem::ManuallyDrop::new(original);semio_framework_job::InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}}
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        let demand=self.original_demands(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|{
+        let empty=Default::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}if !self.closing||(grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth){return Ok(RetainedCloneStep::Progress(empty));}
+        if self.auxiliary_demands(grant.maximum_copy_bytes).ok().flatten().is_some(){return match self.auxiliary_close_step(grant){Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(original)=>Err(original)};}
+        if let Some(owner)=self.original_close.as_mut(){if owner.terminal_is_empty(){drop(self.original_close.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};return match owner.step(child).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original toy writer and counts")){Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(error)=>Err(error)};}
+        let original=unsafe{std::mem::ManuallyDrop::take(&mut self.original)};match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>{self.original_close=Some(owner);self.original_live=false;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))},Err((error,original))=>{self.original=std::mem::ManuallyDrop::new(original);Err(error)}}
+    })
     }
+
     fn terminal_is_empty(&self)->bool{self.closing&&!self.original_live&&self.original_close.is_none()&&self.auxiliary_demands(0).is_ok_and(|d|d.is_none())}
 
 }
@@ -221,7 +225,7 @@ struct ToyPortJobCustody {
 }
 impl ToyPortJobCustody {
     fn new(writer:ToolRunTickWriter,port:ToolRunJobPort)->Self{Self{unit:OriginalToyUnit::new(),emission:OriginalToyEmission::new(),successor:None,entity:None,trace:None,action:None,effect:std::mem::ManuallyDrop::new(None),action_close:None,writer:std::mem::ManuallyDrop::new(writer),writer_live:true,writer_close:None,port:std::mem::ManuallyDrop::new(Some(port)),port_close:None}}
-    fn reset_writer(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,ValueError>{let grant=cx.retained_grant();if let Some(owner)=self.writer_close.as_mut(){if !owner.terminal_is_empty(){let result=owner.step(grant);ToyRunJob::receive(cx,result)?;return Ok(false)}if ToyRunJob::metadata(cx)?{drop(self.writer_close.take());return Ok(true)}return Ok(false)}if let Some(successor)=self.successor.as_ref(){let _=successor;if ToyRunJob::metadata(cx)?{let original=std::mem::replace(&mut *self.writer,self.successor.take().unwrap());match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>self.writer_close=Some(owner),Err((error,original))=>{self.successor=Some(std::mem::replace(&mut *self.writer,original));return Err(error)}}}return Ok(false)}if let Some((successor,progress))=self.writer.admit_original_successor(grant)?{cx.consume_retained(progress)?;self.successor=Some(successor);}Ok(false)}
+    fn reset_writer(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let grant=cx.retained_grant();if let Some(owner)=self.writer_close.as_mut(){if !owner.terminal_is_empty(){let result=owner.step(grant);ToyRunJob::receive(cx,result)?;return Ok(false)}if ToyRunJob::metadata(cx)?{drop(self.writer_close.take());return Ok(true)}return Ok(false)}if let Some(successor)=self.successor.as_ref(){let _=successor;if ToyRunJob::metadata(cx)?{let original=std::mem::replace(&mut *self.writer,self.successor.take().unwrap());match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>self.writer_close=Some(owner),Err((error,original))=>{self.successor=Some(std::mem::replace(&mut *self.writer,original));return Err(error.into())}}}return Ok(false)}if let Some((successor,progress))=self.writer.admit_original_successor(grant)?{cx.consume_retained(progress)?;self.successor=Some(successor);}Ok(false)}
     fn port(&self)->&ToolRunJobPort{self.port.as_ref().expect("live toy port")}
     fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         let auxiliary=if !self.unit.terminal_is_empty(){Some(self.unit.retirement_demands()?)}else if !self.emission.terminal_is_empty(){Some(self.emission.retirement_demands()?)}else if let Some(owner)=self.action_close.as_ref(){Some(ToyRunJob::retirement_demand(owner,body)?)}else if self.successor.is_some()||self.entity.is_some()||self.trace.is_some()||self.action.is_some()||self.effect.is_some(){Some(RetirementDemand{depth:1,..Default::default()})}else{None};if let Some(mut demand)=auxiliary{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original toy port auxiliary depth overflow"))?;return Ok(demand)}
@@ -232,15 +236,15 @@ impl ToyPortJobCustody {
         Ok(Default::default())
     }
     fn terminal_is_empty(&self)->bool{self.unit.terminal_is_empty()&&self.emission.terminal_is_empty()&&self.successor.is_none()&&self.entity.is_none()&&self.trace.is_none()&&self.action.is_none()&&self.effect.is_none()&&self.action_close.is_none()&&!self.writer_live&&self.writer_close.is_none()&&self.port.is_none()&&self.port_close.is_none()}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
-        let empty=Default::default();if self.terminal_is_empty(){return semio_framework_job::InteractiveJobCloseStep::Complete{progress:empty};}let demand=match self.demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(e)=>return semio_framework_job::InteractiveJobCloseStep::Refused{kind:e.kind,progress:e.retained_progress()}};if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return semio_framework_job::InteractiveJobCloseStep::Pending{progress:empty};}
-        let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};if !self.unit.terminal_is_empty()||!self.emission.terminal_is_empty(){let result=if !self.unit.terminal_is_empty(){self.unit.close_step(child)}else{self.emission.close_step(child)};return match result{Ok(step)=>semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>semio_framework_job::InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};}if self.successor.is_some(){drop(self.successor.take());return semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}};}
-        if let Some(owner)=self.action_close.as_mut(){if owner.terminal_is_empty(){drop(self.action_close.take());return semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}}}return match owner.step(child){Ok(step)=>semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>semio_framework_job::InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};}if self.effect.is_some(){match self.effect.take().unwrap(){Effect::DispatchAction{action,args:None,..}=>self.action=Some(action),original=>{*self.effect=Some(original);return semio_framework_job::InteractiveJobCloseStep::Refused{kind:semio_framework_value::ValueRefusalKind::UnsupportedOwner,progress:empty}}}return semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}};}if let Some(original)=self.action.take(){match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>self.action_close=Some(owner),Err((error,original))=>{self.action=Some(original);return semio_framework_job::InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}}return semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}};}if self.entity.take().is_some()||self.trace.take().is_some(){return semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}};}
-        if let Some(owner)=self.writer_close.as_mut(){if owner.terminal_is_empty(){drop(self.writer_close.take());return semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}};}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};return match owner.step(child).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original toy port writer")){Ok(step)=>semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()},Err(e)=>semio_framework_job::InteractiveJobCloseStep::Refused{kind:e.kind,progress:e.retained_progress()}};}
-        if self.writer_live{let original=unsafe{std::mem::ManuallyDrop::take(&mut self.writer)};return match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>{self.writer_close=Some(owner);self.writer_live=false;semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}}},Err((e,original))=>{self.writer=std::mem::ManuallyDrop::new(original);semio_framework_job::InteractiveJobCloseStep::Refused{kind:e.kind,progress:e.retained_progress()}}};}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        let empty=Default::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}let demand=match self.demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(e)=>return Err(e)};if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(empty));}
+        let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};if !self.unit.terminal_is_empty()||!self.emission.terminal_is_empty(){let result=if !self.unit.terminal_is_empty(){self.unit.close_step(child)}else{self.emission.close_step(child)};return match result{Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(error)=>Err(error)};}if self.successor.is_some(){drop(self.successor.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
+        if let Some(owner)=self.action_close.as_mut(){if owner.terminal_is_empty(){drop(self.action_close.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}return match owner.step(child){Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(error)=>Err(error)};}if self.effect.is_some(){match self.effect.take().unwrap(){Effect::DispatchAction{action,args:None,..}=>self.action=Some(action),original=>{*self.effect=Some(original);return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original Toy effect retains its missing typed retirement cursor"))}}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}if let Some(original)=self.action.take(){match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>self.action_close=Some(owner),Err((error,original))=>{self.action=Some(original);return Err(error)}}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}if self.entity.take().is_some()||self.trace.take().is_some(){return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
+        if let Some(owner)=self.writer_close.as_mut(){if owner.terminal_is_empty(){drop(self.writer_close.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};return match owner.step(child).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original toy port writer")){Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(e)=>Err(e)};}
+        if self.writer_live{let original=unsafe{std::mem::ManuallyDrop::take(&mut self.writer)};return match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>{self.writer_close=Some(owner);self.writer_live=false;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))},Err((e,original))=>{self.writer=std::mem::ManuallyDrop::new(original);Err(e)}};}
         let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-        if let Some(owner)=self.port_close.as_mut(){if owner.terminal_is_empty(){drop(self.port_close.take());return semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}};}return match owner.close_step(child).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original toy port lease")){Ok(step)=>semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()},Err(e)=>semio_framework_job::InteractiveJobCloseStep::Refused{kind:e.kind,progress:e.retained_progress()}};}
-        match ToolRunJobPort::admit_original_close(&mut self.port,child){Ok(Some((owner,progress)))=>{self.port_close=Some(owner);semio_framework_job::InteractiveJobCloseStep::Pending{progress}},Ok(None)=>semio_framework_job::InteractiveJobCloseStep::Pending{progress:empty},Err(e)=>semio_framework_job::InteractiveJobCloseStep::Refused{kind:e.kind,progress:e.retained_progress()}}
+        if let Some(owner)=self.port_close.as_mut(){if owner.terminal_is_empty(){drop(self.port_close.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}return match owner.close_step(child).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original toy port lease")){Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(e)=>Err(e)};}
+        match ToolRunJobPort::admit_original_close(&mut self.port,child){Ok(Some((owner,progress)))=>{self.port_close=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Ok(None)=>Ok(RetainedCloneStep::Progress(empty)),Err(e)=>Err(e)}
     }
 }
 impl Drop for ToyPortJobCustody{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"toy port job abandoned original writer or lease");}}
@@ -251,15 +255,15 @@ macro_rules! toy_port_job_close {
         fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.original.demands(body)?.capacity_bytes)}
         fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.original.demands(0)?.release_bytes)}
         fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.original.demands(0)?.depth)}
-        fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{if !self.closing{return semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()};}self.original.close_step(grant)}
+        fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}if self.original.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}let demand=self.original.demands(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|self.original.close_step(grant))}
         fn terminal_is_empty(&self)->bool{self.closing&&self.original.terminal_is_empty()}
     };
 }
 struct ToyCompactJob {original:ToyPortJobCustody,stage:usize,phase:u8,initial:i32,counts:[i32;3],closing:bool}
 impl semio_framework_job::InteractiveJob for ToyCompactJob{
- fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,ValueError>{
-  if cx.is_cancelled(){return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx)}if self.original.port().is_waiting(){return Ok(None)}let grant=cx.retained_grant();match self.phase{
-   0=>{if self.stage>=4{return semio_framework_job::JobOutcomeBorrow::admit_complete(cx,None,None)}if self.stage==1{let result=self.original.writer.admit_original_retraction(0,grant);let complete=ToyRunJob::receive(cx,result)?;if complete&&cx.retained_progress().copied_items==0&&!ToyRunJob::metadata(cx)?{return Ok(None)}if complete{self.phase=1;}}else if ToyRunJob::metadata(cx)?{self.phase=1;}}
+ fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
+  if cx.is_cancelled(){return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}if self.original.port().is_waiting(){return Ok(None)}let grant=cx.retained_grant();match self.phase{
+   0=>{if self.stage>=4{return semio_framework_job::JobOutcomeBorrow::admit_complete(cx,None,None).map_err(semio_framework_job::OriginalTurnFailure::from)}if self.stage==1{let result=self.original.writer.admit_original_retraction(0,grant);let complete=ToyRunJob::receive(cx,result)?;if complete&&cx.retained_progress().copied_items==0&&!ToyRunJob::metadata(cx)?{return Ok(None)}if complete{self.phase=1;}}else if ToyRunJob::metadata(cx)?{self.phase=1;}}
    1=>{let value=if self.stage==0{self.initial}else{self.counts[self.stage-1]};if self.original.unit.advance_count(&mut self.original.writer,value,cx)?{self.phase=if self.stage==0{2}else{4};}}
    2=>{if ToyRunJob::metadata(cx)?{self.original.entity=Some(1);self.phase=3;}}
    3=>{let result=self.original.writer.admit_original_entity(&mut self.original.entity,grant);if ToyRunJob::receive(cx,result)?{self.phase=4;}}
@@ -269,7 +273,7 @@ impl semio_framework_job::InteractiveJob for ToyCompactJob{
    7=>{let original=self.original.emission.advance_checkpoint(0,cx)?;if original.is_some(){self.phase=8;}return Ok(original)}
    8=>{if self.original.emission.close_in_context(cx)?{self.phase=9;}}
    9=>{if ToyRunJob::metadata(cx)?{self.stage+=1;self.phase=0;if self.stage>1{self.original.port().wait();}}}
-   _=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original compact phase absent")),
+   _=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original compact phase absent").into()),
   }Ok(None)
  }
  fn borrow_outcome<'a>(&'a self,descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,ValueError>{self.original.emission.borrow_outcome(descriptor)}
@@ -286,17 +290,17 @@ thread_local! {
 /// algorithm units live in another component.
 struct ToyWaitJob {original:ToyPortJobCustody,hops:u64,dispatched:u64,answered:u64,phase:u8,action_position:usize,closing:bool}
 impl semio_framework_job::InteractiveJob for ToyWaitJob{
- fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,ValueError>{
-  if cx.is_cancelled(){return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx)}let grant=cx.retained_grant();match self.phase{
-   0=>{if self.dispatched>self.answered{if ToyRunJob::metadata(cx)?{let answered=self.dispatched;self.original.trace=Some(semio_framework_tool_run::ToolRunTraceOp::Upsert{key:answered,verdict:ToolRunVerdict::Success,reason:1,subject:ToolRunTraceSubject::Entity{entity:answered}});self.phase=1;}}else if self.dispatched==self.hops{return semio_framework_job::JobOutcomeBorrow::admit_complete(cx,None,None)}else if ToyRunJob::metadata(cx)?{self.original.action=Some(String::new());self.action_position=0;self.phase=5;}}
+ fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
+  if cx.is_cancelled(){return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}let grant=cx.retained_grant();match self.phase{
+   0=>{if self.dispatched>self.answered{if ToyRunJob::metadata(cx)?{let answered=self.dispatched;self.original.trace=Some(semio_framework_tool_run::ToolRunTraceOp::Upsert{key:answered,verdict:ToolRunVerdict::Success,reason:1,subject:ToolRunTraceSubject::Entity{entity:answered}});self.phase=1;}}else if self.dispatched==self.hops{return semio_framework_job::JobOutcomeBorrow::admit_complete(cx,None,None).map_err(semio_framework_job::OriginalTurnFailure::from)}else if ToyRunJob::metadata(cx)?{self.original.action=Some(String::new());self.action_position=0;self.phase=5;}}
    1=>{let result=self.original.writer.admit_original_trace(&mut self.original.trace,grant);if ToyRunJob::receive(cx,result)?{self.phase=2;}}
    2=>{let original=self.original.emission.advance_preview(&self.original.writer,cx)?;if original.is_some(){self.phase=3;}return Ok(original)}
    3=>{if self.original.emission.close_in_context(cx)?{self.phase=4;}}
    4=>{if self.original.reset_writer(cx)?{self.answered=self.dispatched;self.phase=0;}}
-   5=>{const ACTION:&str="toyExternalHop";let source=self.original.action.as_mut().unwrap();if source.capacity()==0{if grant.maximum_items>0&&grant.maximum_capacity_bytes>=ACTION.len()&&grant.maximum_depth>0{source.try_reserve_exact(ACTION.len()).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original Toy action backing unavailable"))?;if source.capacity()!=ACTION.len(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original Toy action native extent changed").with_retained_progress(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:source.capacity(),..Default::default()}))}cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:source.capacity(),..Default::default()})?;}}else if self.action_position<ACTION.len(){let count=grant.maximum_copy_bytes.min(ACTION.len()-self.action_position);if grant.maximum_items>0&&count>0&&grant.maximum_depth>0{source.push_str(&ACTION[self.action_position..self.action_position+count]);self.action_position+=count;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:count,..Default::default()})?;}}else if ToyRunJob::metadata(cx)?{let request=self.dispatched.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original Toy request overflow"))?;*self.original.effect=Some(Effect::DispatchAction{req:RequestId(request),action:self.original.action.take().unwrap(),args:None,delay_ms:0});self.phase=6;}}
+   5=>{const ACTION:&str="toyExternalHop";let source=self.original.action.as_mut().unwrap();if source.capacity()==0{if grant.maximum_items>0&&grant.maximum_capacity_bytes>=ACTION.len()&&grant.maximum_depth>0{source.try_reserve_exact(ACTION.len()).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original Toy action backing unavailable"))?;if source.capacity()!=ACTION.len(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original Toy action native extent changed").with_retained_progress(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:source.capacity(),..Default::default()}).into())}cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:source.capacity(),..Default::default()})?;}}else if self.action_position<ACTION.len(){let count=grant.maximum_copy_bytes.min(ACTION.len()-self.action_position);if grant.maximum_items>0&&count>0&&grant.maximum_depth>0{source.push_str(&ACTION[self.action_position..self.action_position+count]);self.action_position+=count;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:count,..Default::default()})?;}}else if ToyRunJob::metadata(cx)?{let request=self.dispatched.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original Toy request overflow"))?;*self.original.effect=Some(Effect::DispatchAction{req:RequestId(request),action:self.original.action.take().unwrap(),args:None,delay_ms:0});self.phase=6;}}
    6=>{let result=self.original.port.as_ref().unwrap().admit_original_dispatch(&mut self.original.effect,grant);if ToyRunJob::receive(cx,result)?{self.phase=7;}}
    7=>{if ToyRunJob::metadata(cx)?{self.dispatched+=1;self.phase=0;self.original.port().wait();}}
-   _=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original wait phase absent")),
+   _=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original wait phase absent").into()),
   }Ok(None)
  }
  fn borrow_outcome<'a>(&'a self,descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,ValueError>{self.original.emission.borrow_outcome(descriptor)}
@@ -586,11 +590,11 @@ async fn toy_manifest() -> App {
     App::from_builder(builder.mode_tools("edit", tools).await).await
 }
 
-/// 🎟️ The neutral fixture declares independent ceilings before original app admission. Its MAINTENANCE grant carries the shipped interactive item batch and copy page (a tool-run unit hands its job one item and needs another for the job's own step, so the one-item native grant can never step a run) and its CLOSE grant the shipped copy page (a window partition's store catalog quotes 21 408 copy bytes for its factory tickets, which the 16 KiB native grant can never fund).
-fn toy_fixture_caller_policy()->(crate::MountedOwnerPolicyV1,usize){let law:serde_json::Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json")).unwrap();let g=&law["native"]["grant"];let grant=RetainedCloneGrant{maximum_items:number(&g[0])as usize,maximum_copy_bytes:number(&g[1])as usize,maximum_capacity_bytes:number(&g[2])as usize,maximum_release_bytes:number(&g[3])as usize,maximum_depth:number(&g[4])as usize};let interactive=crate::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance;let maintenance=RetainedCloneGrant{maximum_items:grant.maximum_items.max(interactive.maximum_items),maximum_copy_bytes:grant.maximum_copy_bytes.max(interactive.maximum_copy_bytes),..grant};let close=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.max(interactive.maximum_copy_bytes),..grant};(crate::MountedOwnerPolicyV1{preparation:grant,maintenance,close}.validate().unwrap(),number(&law["native"]["maximumIdentityBytes"])as usize)}
+/// 🎟️ Captures the unchanged explicit neutral caller policy before any app admission.
+fn toy_fixture_caller_policy()->(crate::MountedOwnerPolicyV1,usize){let law:serde_json::Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json")).unwrap();let g=&law["native"]["grant"];let grant=RetainedCloneGrant{maximum_items:number(&g[0])as usize,maximum_copy_bytes:number(&g[1])as usize,maximum_capacity_bytes:number(&g[2])as usize,maximum_release_bytes:number(&g[3])as usize,maximum_depth:number(&g[4])as usize};(crate::MountedOwnerPolicyV1{preparation:grant,maintenance:grant,close:grant}.validate().unwrap(),number(&law["native"]["maximumIdentityBytes"])as usize)}
 
-struct ToyFixtureCaller<'a>{policy:crate::MountedOwnerPolicyV1,identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'a>,receipts:Vec<artifact_app_laws::TypedOperationFixtureOwnershipReceipt>}
-impl ToyFixtureCaller<'_>{
+struct ToyFixtureCaller<'a,'context,'original>{context:&'context mut semio_framework_job::StepContext<'original>,policy:crate::MountedOwnerPolicyV1,identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'a>,receipts:Vec<artifact_app_laws::TypedOperationFixtureOwnershipReceipt>}
+impl ToyFixtureCaller<'_,'_,'_>{
     fn retain_original_receipts<P:PluginApp>(&mut self,app:&mut P){
         if let Some((kind,phase,grant,progress))=app.take_constructor_receipt(){let expected=match phase{crate::document_ingress::ArtifactStoreConstructorPhase::Preparation=>self.policy.preparation,crate::document_ingress::ArtifactStoreConstructorPhase::Close=>self.policy.close};assert_eq!(grant,expected);assert!(progress.fits(grant));assert!(grant.maximum_depth>0||progress==Default::default());self.receipts.push(artifact_app_laws::TypedOperationFixtureOwnershipReceipt::Constructor{kind,phase,grant,progress});}
         if let Some((operation,grant,progress))=app.take_typed_operation_preparation_receipt(){assert_eq!(grant,self.policy.preparation);assert!(progress.fits(grant));assert!(grant.maximum_depth>0||progress==Default::default());self.receipts.push(artifact_app_laws::TypedOperationFixtureOwnershipReceipt::Preparation{operation,grant,progress});}
@@ -599,15 +603,15 @@ impl ToyFixtureCaller<'_>{
         if let Some((grant,progress))=app.take_tool_run_receipt(){assert_eq!(grant,self.policy.maintenance);assert!(progress.fits(grant));assert!(grant.maximum_depth>0||progress==Default::default());self.receipts.push(artifact_app_laws::TypedOperationFixtureOwnershipReceipt::ToolRun{grant,progress});}
     }
 }
-async fn advance_toy<P:PluginApp>(app:&mut P,caller:&mut ToyFixtureCaller<'_>)->Result<(),Fault>{caller.retain_original_receipts(app);let result=app.advance_typed_operation_publication(&mut caller.identity,caller.policy.maintenance).await;caller.retain_original_receipts(app);result}
+async fn advance_toy<P:PluginApp>(app:&mut P,caller:&mut ToyFixtureCaller<'_,'_,'_>)->Result<(),crate::PluginLifecycleFailure>{caller.retain_original_receipts(app);let result=app.advance_typed_operation_publication(&mut caller.identity,caller.context).await;caller.retain_original_receipts(app);result}
 
-async fn toy_app(target: u64, caller:&mut ToyFixtureCaller<'_>) -> ToyApp {
+async fn toy_app(target: u64, caller:&mut ToyFixtureCaller<'_,'_,'_>) -> ToyApp {
     let mut app = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest(), protocol::ActorId(text(&fixture()["actor"]).into()), caller.policy, &mut caller.identity).await;
     set_target(&mut app, target, caller).await;
     app
 }
 
-async fn set_target(app: &mut ToyApp, target: u64, caller:&mut ToyFixtureCaller<'_>) {
+async fn set_target(app: &mut ToyApp, target: u64, caller:&mut ToyFixtureCaller<'_,'_,'_>) {
     app.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some(target.to_string()) }.into()], transaction: None }, &mut caller.identity).await.expect("toy target config applies");
 }
 
@@ -615,11 +619,11 @@ fn toy_meta() -> ActionMeta {
     artifact_app_laws::meta(text(&fixture()["actor"]))
 }
 
-async fn tool_run_action(app: &mut ToyApp, action: &str, arguments: Vec<(String, DslValue)>, caller:&mut ToyFixtureCaller<'_>) -> DslValue {
+async fn tool_run_action(app: &mut ToyApp, action: &str, arguments: Vec<(String, DslValue)>, caller:&mut ToyFixtureCaller<'_,'_,'_>) -> DslValue {
     app.handle_action(action, Some(&DslValue::Object(arguments)), &toy_meta(), &mut caller.identity).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}")).output
 }
 
-async fn run_action(app: &mut ToyApp, action: &str, caller:&mut ToyFixtureCaller<'_>) -> DslValue {
+async fn run_action(app: &mut ToyApp, action: &str, caller:&mut ToyFixtureCaller<'_,'_,'_>) -> DslValue {
     let arguments = run_arguments(app);
     tool_run_action(app, action, arguments, caller).await
 }
@@ -629,12 +633,12 @@ fn run_arguments(app: &ToyApp) -> Vec<(String, DslValue)> {
     vec![("runId".into(), DslValue::String(slot.run.to_string())), ("generation".into(), DslValue::String(slot.generation.to_string()))]
 }
 
-async fn start(app: &mut ToyApp, tool_id: &str, caller:&mut ToyFixtureCaller<'_>) {
+async fn start(app: &mut ToyApp, tool_id: &str, caller:&mut ToyFixtureCaller<'_,'_,'_>) {
     let output = tool_run_action(app, "toolRunStart", vec![("toolId".into(), DslValue::String(tool_id.into()))], caller).await;
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"), "start spawns the run job");
 }
 
-async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> bool, caller:&mut ToyFixtureCaller<'_>) {
+async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> bool, caller:&mut ToyFixtureCaller<'_,'_,'_>) {
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
     while std::time::Instant::now() < deadline {
         if done(app) {
@@ -678,19 +682,21 @@ async fn drain(probe: &mut MemoryBackbone) -> (usize, usize) {
     })
 }
 
-fn close(app: &mut ToyApp, caller:&mut ToyFixtureCaller<'_>) {
+fn close(app: &mut ToyApp, caller:&mut ToyFixtureCaller<'_,'_,'_>) {
     caller.retain_original_receipts(app);
-    artifact_app_laws::close_registered_fixture_app(app,caller.policy);
+    artifact_app_laws::close_registered_fixture_app(app,caller.policy,caller.context).expect("original tool fixture paid terminal close");
     assert!(app.tool_runs.terminal_is_empty(), "the tool run ledger retires every owner on close");
 }
 //#endregion 🧰️Harness
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_ticks_render_the_overlay_while_the_committed_document_stays_untouched() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["overlay"];
@@ -727,14 +733,18 @@ async fn tool_run_ticks_render_the_overlay_while_the_committed_document_stays_un
     pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted), &mut caller).await;
     assert!(render_text(&mut app, "main").await.contains(text(&expected["committedBodyText"])), "an aborted run renders the committed document again");
     close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_abort_leaves_store_generation_edits_command_log_and_outbox_untouched() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["abort"];
@@ -757,6 +767,8 @@ async fn tool_run_abort_leaves_store_generation_edits_command_log_and_outbox_unt
     assert_eq!(app.snapshot().expect("committed").count, 0);
     drop(probe);
     close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: a run that has not completed finalizes its PARTIAL result — the run job stops at its tick boundary and the one
@@ -764,10 +776,12 @@ async fn tool_run_abort_leaves_store_generation_edits_command_log_and_outbox_unt
 /// after it; the run ends `finalized` and the document holds exactly that many units.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_finalize_while_running_publishes_exactly_the_partial_result_computed_so_far() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["partialFinalize"];
@@ -788,14 +802,18 @@ async fn tool_run_finalize_while_running_publishes_exactly_the_partial_result_co
     assert_eq!(app.snapshot().expect("committed").count as u64, computed as u64 / ops_per_unit, "the document holds exactly the computed units");
     assert!(app.tool_runs.provisional().is_empty());
     close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_finalize_publishes_one_grouped_edit_one_mutations_batch_and_undo_removes_all() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["finalize"];
@@ -823,6 +841,8 @@ async fn tool_run_finalize_publishes_one_grouped_edit_one_mutations_batch_and_un
     assert_eq!((undone.count, undone.label.as_str()), (number(&expected["countAfterUndo"]) as i32, text(&expected["labelAfterUndo"])), "one undo removes the whole run");
     drop(probe);
     close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: a finalized run is ONE tool transaction — every op of its one edit carries the same `TransactionRef`
@@ -830,10 +850,12 @@ async fn tool_run_finalize_publishes_one_grouped_edit_one_mutations_batch_and_un
 /// tool's own declared label in every locale.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_finalize_is_one_transaction_labelled_by_its_tool_in_every_locale() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let mut app = toy_app(number(&fixture["finalize"]["units"]), &mut caller).await;
@@ -852,6 +874,8 @@ async fn tool_run_finalize_is_one_transaction_labelled_by_its_tool_in_every_loca
     assert_eq!(row.transaction.as_ref(), Some(&transaction));
     assert_eq!((row.label.resolve(Terminology::Native, Locale::En).to_string(), row.label.resolve(Terminology::Native, Locale::De).to_string()), ("Toy fill".to_string(), "Spielfüllung".to_string()));
     close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: a large finalize never piles up returned document roots — after every driver turn the document Store
@@ -859,10 +883,12 @@ async fn tool_run_finalize_is_one_transaction_labelled_by_its_tool_in_every_loca
 /// root and the base its current op reads instead of one whole document per op.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_large_finalize_reclaims_each_folded_root_before_the_next_op() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let law = &fixture["largeFinalize"];
@@ -886,14 +912,18 @@ async fn tool_run_large_finalize_reclaims_each_folded_root_before_the_next_op() 
     assert_eq!(app.store.envelope().vcs.edits.len() - edits, 1, "still exactly one grouped edit");
     assert_eq!(app.store.envelope().vcs.edits.last().expect("finalized edit").forwards.len() as u64, units * number(&fixture["opsPerUnit"]), "every provisional op landed");
     close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_remote_ingest_rebases_and_a_revalidation_conflict_returns_to_complete_with_the_next_generation() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["conflict"];
@@ -926,16 +956,20 @@ async fn tool_run_remote_ingest_rebases_and_a_revalidation_conflict_returns_to_c
     drop((probe, remote_probe));
     close(&mut app, &mut caller);
     close(&mut remote, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 🪪️ Law: the runtime mints the document, config, draft and interaction stores each with its canonical operation wire, and each authors a row through it.
 /// The fixture is deliberately leaked: its close ladder is the registered-fixture close law, not this one.
 #[semio_framework_async_macros::async_test]
 async fn the_runtime_installs_its_canonical_operation_wire_on_every_store_it_mints_and_each_authors_through_it() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let mut app = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest(), protocol::ActorId(text(&fixture()["actor"]).into()), caller.policy, &mut caller.identity).await;
     assert!(app.store.operation_wire().is_some(), "the document store mints with its semantic wire");
@@ -951,14 +985,18 @@ async fn the_runtime_installs_its_canonical_operation_wire_on_every_store_it_min
     let oracle = format!("op{}", serde_json::json!({ "setInteractionState": { "activeGranularity": {}, "activeMode": {}, "hover": {}, "selection": {} } }));
     assert_eq!(String::from_utf8(interaction_rows[0].clone()).expect("canonical JSON is text"), oracle, "the interaction wire is the independent serde_json document");
     std::mem::forget(app);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_stale_generation_and_run_actions_are_silent_no_ops_and_an_illegal_action_publishes_nothing() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let mut app = toy_app(number(&fixture["abort"]["target"]), &mut caller).await;
@@ -982,14 +1020,18 @@ async fn tool_run_stale_generation_and_run_actions_are_silent_no_ops_and_an_ille
     run_action(&mut app, "toolRunAbort", &mut caller).await;
     pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
     close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_pause_then_step_drives_exactly_one_unit_per_step() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["pauseStep"];
@@ -1018,14 +1060,18 @@ async fn tool_run_pause_then_step_drives_exactly_one_unit_per_step() {
     run_action(&mut app, "toolRunAbort", &mut caller).await;
     pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
     close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_reconfigure_resumes_from_its_checkpoint_and_a_lowered_target_retracts() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["reconfigure"];
@@ -1048,14 +1094,18 @@ async fn tool_run_reconfigure_resumes_from_its_checkpoint_and_a_lowered_target_r
     run_action(&mut app, "toolRunAbort", &mut caller).await;
     pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
     close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_freeze_policy_rejects_local_artifact_emits_with_busy() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let mut app = toy_app(number(&fixture["abort"]["target"]), &mut caller).await;
@@ -1066,6 +1116,8 @@ async fn tool_run_freeze_policy_rejects_local_artifact_emits_with_busy() {
     run_action(&mut app, "toolRunAbort", &mut caller).await;
     pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
     close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⏱️ Bench-style law: a Nakagin-sized fill (771 ticks, two ops each) appends to the overlay in O(k).
@@ -1074,10 +1126,12 @@ async fn tool_run_freeze_policy_rejects_local_artifact_emits_with_busy() {
 /// would exceed it on every late tick.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_overlay_append_per_tick_stays_below_two_milliseconds_for_nakagin_sized_ticks() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["bench"];
@@ -1116,6 +1170,8 @@ async fn tool_run_overlay_append_per_tick_stays_below_two_milliseconds_for_nakag
     run_action(&mut app, "toolRunAbort", &mut caller).await;
     pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
     close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 //#region 🔌️IntegrationSeams
@@ -1147,7 +1203,7 @@ fn cursor_after(delta: &ToolRunTraceDelta) -> ToolRunTraceCursor {
     ToolRunTraceCursor { run: delta.identity.id.run, generation: delta.identity.generation, page: delta.next }
 }
 
-async fn abort_and_close(app: &mut ToyApp, caller:&mut ToyFixtureCaller<'_>) {
+async fn abort_and_close(app: &mut ToyApp, caller:&mut ToyFixtureCaller<'_,'_,'_>) {
     run_action(app, "toolRunAbort", caller).await;
     pump_until(app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), caller).await;
     close(app, caller);
@@ -1155,10 +1211,12 @@ async fn abort_and_close(app: &mut ToyApp, caller:&mut ToyFixtureCaller<'_>) {
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_scene_render_carries_the_trace_lane_and_honours_the_echoed_cursor() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["traceLane"];
@@ -1196,14 +1254,18 @@ async fn tool_run_scene_render_carries_the_trace_lane_and_honours_the_echoed_cur
     let (_, empty) = render_world(&mut app, Some(cursor_after(&cleared))).await;
     assert!(empty.is_none(), "a cleared renderer at page 0 gets nothing");
     close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_trace_backlog_keeps_the_scene_dirty_until_the_echoed_cursor_stalls() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["traceLane"];
@@ -1236,14 +1298,18 @@ async fn tool_run_trace_backlog_keeps_the_scene_dirty_until_the_echoed_cursor_st
     }
     assert_eq!(dirty_refreshes, number(&expected["stallRefreshes"]), "a renderer that never echoes costs a bounded number of refreshes");
     abort_and_close(&mut app, &mut caller).await;
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_tick_dirty_scope_is_the_panel_plus_the_scene_windows_and_excludes_unrelated_windows() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["dirtyScope"];
@@ -1270,14 +1336,18 @@ async fn tool_run_tick_dirty_scope_is_the_panel_plus_the_scene_windows_and_exclu
     let pause = run_action(&mut app, "toolRunPause", &mut caller).await;
     assert_eq!(pause.get("toolRun").and_then(DslValue::as_str), Some("stopScheduling"));
     abort_and_close(&mut app, &mut caller).await;
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_presence_and_the_ephemeral_snapshot_follow_the_run_with_completed_never_above_total() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["presence"];
@@ -1309,14 +1379,18 @@ async fn tool_run_presence_and_the_ephemeral_snapshot_follow_the_run_with_comple
     assert!(clamped, "completed never exceeds total");
     assert_eq!((presence.state.wire_name(), presence.total), (text(&expected["complete"]), Some(number(&expected["loweredTotal"]))));
     abort_and_close(&mut app, &mut caller).await;
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_provisional_entities_ride_the_instance_records_the_producer_stamps() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["provisional"];
@@ -1328,13 +1402,17 @@ async fn tool_run_provisional_entities_ride_the_instance_records_the_producer_st
     let flagged: Vec<&str> = instances.iter().filter(|instance| instance["provisional"] == Value::Bool(true)).map(|instance| text(&instance["id"])).collect();
     assert_eq!(flagged, expected["flaggedInstances"].as_array().expect("flagged").iter().map(text).collect::<Vec<_>>(), "ArtifactView::tool_run().provisional_entities drives the provisional instance flag");
     abort_and_close(&mut app, &mut caller).await;
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 #[semio_framework_async_macros::async_test]
 async fn tool_run_job_port_hands_effects_to_the_host_and_a_waiting_job_keeps_nothing_runnable_until_woken() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["port"];
@@ -1363,6 +1441,8 @@ async fn tool_run_job_port_hands_effects_to_the_host_and_a_waiting_job_keeps_not
     pump_until(&mut app, "every hop answered", |app| app.tool_runs.state().map(ToolRunState::as_str) == Some(text(&expected["state"])), &mut caller).await;
     assert_eq!(app.tool_runs.trace().expect("trace").len() as u64, number(&expected["traceRecords"]), "one trace record per answered hop");
     abort_and_close(&mut app, &mut caller).await;
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 //#endregion 🔌️IntegrationSeams
 
@@ -1409,10 +1489,12 @@ fn every_action_arg_carrier_of_an_exact_integer_reads_the_same_identity() {
 /// `handle_action` door the shell dispatches through.
 #[semio_framework_async_macros::async_test]
 async fn a_finalize_in_the_wire_carrier_finalizes_the_run_it_names() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let carrier = text(&fixture["actionArgCarriers"]["finalizeCarrier"]);
@@ -1428,6 +1510,8 @@ async fn a_finalize_in_the_wire_carrier_finalizes_the_run_it_names() {
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"), "it begins the finalize");
     assert_eq!(app.tool_runs.state(), Some(ToolRunState::Finalizing), "and the run leaves complete");
     abort_and_close(&mut app, &mut caller).await;
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 //#endregion 🔢️ActionArgCarriers
 
@@ -1445,10 +1529,12 @@ async fn a_finalize_in_the_wire_carrier_finalizes_the_run_it_names() {
 /// ▶️ And the slot is free: the next start is admitted, with no finalize action anywhere in this test.
 #[semio_framework_async_macros::async_test]
 async fn a_read_only_run_finalizes_itself_and_frees_its_slot_for_the_next_start() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["readOnlyRun"];
@@ -1465,11 +1551,13 @@ async fn a_read_only_run_finalizes_itself_and_frees_its_slot_for_the_next_start(
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"), "and the next start really spawns a job");
     assert_eq!(expected["startsAgainWithoutAnyFinalizeAction"].as_bool(), Some(true));
     abort_and_close(&mut app, &mut caller).await;
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 //#region 🎯️RetargetAndSettings
 /// 📡️ A remote peer sets the count to `count`; `probe` forwards its mutation batch and `app` ingests it.
-async fn ingest_remote_count(app: &mut ToyApp, probe: &mut MemoryBackbone, channel: &str, count: u64, caller:&mut ToyFixtureCaller<'_>) {
+async fn ingest_remote_count(app: &mut ToyApp, probe: &mut MemoryBackbone, channel: &str, count: u64, caller:&mut ToyFixtureCaller<'_,'_,'_>) {
     let mut remote = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest(), protocol::ActorId("remote".into()), caller.policy, &mut caller.identity).await;
     let mut remote_probe = attach_probe(&mut remote, channel).await;
     assert_eq!(remote.store.local_actor_id(), &protocol::ActorId("remote".into()));
@@ -1489,10 +1577,12 @@ async fn ingest_remote_count(app: &mut ToyApp, probe: &mut MemoryBackbone, chann
 /// instead of producing ticks the ledger drops as stale.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_base_change_rebinds_the_running_job_so_ticks_never_carry_a_stale_identity() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["rebind"];
@@ -1516,16 +1606,20 @@ async fn tool_run_base_change_rebinds_the_running_job_so_ticks_never_carry_a_sta
         drop(probe);
         abort_and_close(&mut app, &mut caller).await;
     }
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: a §2.5 action that names no identity (a keyboard chord) targets the instance's live run at its
 /// generation of the dispatch; an identity argument that is stale still no-ops.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_chord_actions_without_an_identity_resolve_the_live_run_and_stale_identities_still_no_op() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["chord"];
@@ -1549,6 +1643,8 @@ async fn tool_run_chord_actions_without_an_identity_resolve_the_live_run_and_sta
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("clearTrace"));
     assert!(app.tool_runs.slot().is_none());
     close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: `settingsChanged` fires only when a value behind a declared settings pointer changes. Republishing the
@@ -1556,10 +1652,12 @@ async fn tool_run_chord_actions_without_an_identity_resolve_the_live_run_and_sta
 /// and its job — and a run that declares no settings reads is never reconfigured at all.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_settings_changed_fires_only_for_the_declared_settings_reads() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["settingsReads"];
@@ -1586,16 +1684,20 @@ async fn tool_run_settings_changed_fires_only_for_the_declared_settings_reads() 
         assert_eq!(generation, if declared { number(&expected["generationAfterChangedTarget"]) } else { 0 }, "{tool_id}: only a declared read reconfigures");
         abort_and_close(&mut app, &mut caller).await;
     }
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: a retargetable job stays resident while its run is complete and `reconfigure: resume` retargets it in
 /// place — a raise continues and a lower retracts without any rebuild — and a base change rebinds it in place.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_reconfigure_resume_retargets_a_retargetable_job_in_place() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["retarget"];
@@ -1622,16 +1724,20 @@ async fn tool_run_reconfigure_resume_retargets_a_retargetable_job_in_place() {
     assert_eq!(app.snapshot().expect("committed").count, number(&expected["remoteCount"]) as i32, "reconfigure never commits");
     drop(probe);
     abort_and_close(&mut app, &mut caller).await;
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: a retract followed by re-appends spread over several ticks keeps the previous overlay rendered until the
 /// job reaches its checkpoint; only then does the refolded overlay replace it.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_retract_keeps_the_previous_overlay_until_the_job_reaches_its_checkpoint() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["compact"];
@@ -1650,16 +1756,20 @@ async fn tool_run_retract_keeps_the_previous_overlay_until_the_job_reaches_its_c
     let body = render_text(&mut app, "main").await;
     assert!(body.contains(text(&expected["renderedAfterCheckpoint"])), "the refolded overlay replaces the previous one at the boundary: {body}");
     abort_and_close(&mut app, &mut caller).await;
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: the run's trace key allocator hands out keys above every key its ticks upserted and every key allocated
 /// before, the request carries the entity marks, and the request names the window the run was started from.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_requests_carry_trace_key_allocation_entity_marks_and_the_starting_window() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["traceKeys"];
@@ -1683,16 +1793,20 @@ async fn tool_run_requests_carry_trace_key_allocation_entity_marks_and_the_start
     assert_eq!(marks.iter().map(|(_, entity)| *entity).collect::<Vec<_>>(), (1..=number(&expected["units"])).collect::<Vec<_>>());
     assert!(marks.iter().all(|(end, _)| *end as usize <= app.tool_runs.provisional().len()));
     abort_and_close(&mut app, &mut caller).await;
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: a board-2d scene surface carries the `toolRunTrace` lane exactly like a world-3d one — the spine names
 /// the lane with its byte length and hash, and the carrier holds the whole trace delta of the run.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_board_scene_render_carries_the_trace_lane() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["boardLane"];
@@ -1713,10 +1827,12 @@ async fn tool_run_board_scene_render_carries_the_trace_lane() {
     assert!(delta.clear, "a renderer without a cursor gets clear plus the whole log");
     assert_eq!(delta.pages.iter().map(|page| page.ops.len()).sum::<usize>() as u64, number(&expected["units"]));
     abort_and_close(&mut app, &mut caller).await;
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 🪟️ Publishes `selected` into the world window config of `window_id` through the production emit path.
-async fn publish_window_selection(app: &mut ToyApp, window_id: &str, selected: u64, caller:&mut ToyFixtureCaller<'_>) {
+async fn publish_window_selection(app: &mut ToyApp, window_id: &str, selected: u64, caller:&mut ToyFixtureCaller<'_,'_,'_>) {
     let fixture = fixture();
     let mut view = window_view(window_id, None);
     view.window_instances.push(ViewWindowInstance { id: text(&fixture["windowSettingsReads"]["otherWindowId"]).to_string(), window_kind_id: text(&fixture["windowSettingsReads"]["windowKindId"]).to_string() });
@@ -1733,10 +1849,12 @@ async fn publish_window_selection(app: &mut ToyApp, window_id: &str, selected: u
 /// same kind or of an unchanged value never reconfigures, and a changed value on the starting window does.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_window_settings_reads_follow_the_starting_window_only() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["windowSettingsReads"];
@@ -1765,6 +1883,8 @@ async fn tool_run_window_settings_reads_follow_the_starting_window_only() {
     }
     assert_eq!(u64::from(app.tool_runs.slot().expect("slot").generation), number(&expected["generationAfterStartWindow"]), "a changed value on the starting window reconfigures");
     abort_and_close(&mut app, &mut caller).await;
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: a window config partition closes through the physical release its own store publishes — its resident backings (the 1 024-slot
@@ -1772,10 +1892,12 @@ async fn tool_run_window_settings_reads_follow_the_starting_window_only() {
 /// reaches the exact terminal-empty witness instead of answering `Pending { 0, 0 }` against an ordinary-page grant for ever.
 #[semio_framework_async_macros::async_test]
 async fn a_published_window_config_closes_through_its_own_published_physical_demand() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let mut app = toy_app(1, &mut caller).await;
@@ -1784,6 +1906,8 @@ async fn a_published_window_config_closes_through_its_own_published_physical_dem
         advance_toy(&mut app, &mut caller).await.expect("turn");
     }
     close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: a MOUNTED typed operation that publishes a window config keeps its published receipt while the window authority refresh
@@ -1791,10 +1915,12 @@ async fn a_published_window_config_closes_through_its_own_published_physical_dem
 /// retained receipt — it never advances the already published store again ("awaits an ACK without its retained host page").
 #[semio_framework_async_macros::async_test]
 async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_retained_receipt() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let window_id = text(&fixture["windowSettingsReads"]["startWindowId"]);
@@ -1842,7 +1968,8 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
         app.publish_mounted_typed_operation_unit(&mut mounted, grant).unwrap_or_else(|fault| panic!("every unit after the window config ACK resumes: {fault:?}"));
         mounted.publication_ownership_progress.take();
         if mounted.granted_retirement_ready() && mounted.granted_retirement_pending() {
-            let quoted = plugin_demand_grant(mounted.granted_retirement_demands(grant.maximum_copy_bytes).expect("quoted granted retirement"));
+            let _demand = mounted.granted_retirement_demands(grant.maximum_copy_bytes).expect("quoted granted retirement");
+            let quoted = grant;
             mounted.granted_retirement_step(quoted).expect("granted retirement of the acknowledged publication");
         }
         if let Some(page) = mounted.take_result_page() {
@@ -1857,11 +1984,13 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
             break;
         }
         if mounted.lease_retirement_ready() {
-            let quoted = plugin_demand_grant(mounted.lease_retirement_demands(&app.tool_cancellations, grant.maximum_copy_bytes).expect("quoted cancellation lease retirement"));
+            let _demand = mounted.lease_retirement_demands(&app.tool_cancellations, grant.maximum_copy_bytes).expect("quoted cancellation lease retirement");
+            let quoted = grant;
             mounted.lease_retirement_step(&app.tool_cancellations, quoted).expect("cancellation lease retirement");
             continue;
         }
-        let quoted = plugin_demand_grant(mounted.retirement_demands(grant.maximum_copy_bytes).expect("quoted mounted retirement"));
+        let _demand = mounted.retirement_demands(grant.maximum_copy_bytes).expect("quoted mounted retirement");
+            let quoted = grant;
         match mounted.retirement_step(quoted).expect("mounted retirement step") {
             PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) => assert!(progress.fits(quoted)),
             PluginLifecycleStep::AwaitingInput { reason } | PluginLifecycleStep::Blocked { reason } => panic!("the published window config operation retires: {reason}"),
@@ -1869,16 +1998,20 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
     }
     assert!(mounted.terminal_is_empty(), "the published window config operation retires every owner");
     close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: a tick dirties the bodies of the window kinds the run declares it renders in, next to the panel and the scene
 /// windows, and those bodies read the run's progress, step ring and latest tick payload through `ArtifactView::tool_run()`.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_reader_windows_refresh_every_tick_and_read_progress_steps_and_payload() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["readerWindows"];
@@ -1907,10 +2040,12 @@ async fn tool_run_reader_windows_refresh_every_tick_and_read_progress_steps_and_
     println!("[STATS] reader body {body}");
     assert!(body.contains(&format!("completed={} steps={} payload={payload}", view.progress.completed, view.progress.steps.len())), "the reader body renders the run state it reads: {body}");
     abort_and_close(&mut app, &mut caller).await;
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ▶️ Starts `tool_id` from window `window_id` and answers the dispatch output.
-async fn start_in_window(app: &mut ToyApp, tool_id: &str, window_id: &str, caller:&mut ToyFixtureCaller<'_>) -> DslValue {
+async fn start_in_window(app: &mut ToyApp, tool_id: &str, window_id: &str, caller:&mut ToyFixtureCaller<'_,'_,'_>) -> DslValue {
     let mut meta = toy_meta();
     meta.view_state = Some(window_view(window_id, None));
     app.handle_action("toolRunStart", Some(&DslValue::Object(vec![("toolId".into(), DslValue::String(tool_id.into()))])), &meta, &mut caller.identity).await.unwrap_or_else(|fault| panic!("start {tool_id}: {fault:?}")).output
@@ -1921,10 +2056,12 @@ async fn start_in_window(app: &mut ToyApp, tool_id: &str, window_id: &str, calle
 /// presence follows the mutating run.
 #[semio_framework_async_macros::async_test]
 async fn read_only_runs_in_two_windows_run_concurrently_and_a_second_mutating_start_is_busy() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["concurrentReadOnly"];
@@ -1969,6 +2106,8 @@ async fn read_only_runs_in_two_windows_run_concurrently_and_a_second_mutating_st
     }
     pump_until(&mut app, "every run settles", |app| app.tool_runs.views().iter().all(|view| view.state.is_terminal()) && !app.tool_runs.has_pending_work(), &mut caller).await;
     close(&mut app, &mut caller);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 🧾️ A `BuiltNode` as the host wire JSON every renderer's `BuiltNode` reads — every field spelled out.
@@ -1990,17 +2129,19 @@ fn built_node_wire(node: &BuiltNode) -> Value {
 /// 🪧️ The language-neutral panel every shell target mounts: the framework ToolRun panel `BuiltNode` of a running run
 /// (`🔌️plugin/🧫️fixtures/⏯️tool-run/🪧️panel-running.json`). React (`🛠️ShellHelpers` panel law) and wgpu (`🐚️Shell`
 /// panel law) render it and dispatch its buttons from this exact document.
-const TOOL_RUN_PANEL_RUNNING: &str = include_str!("../../🧫️fixtures/⏯️tool-run/🪧️panel-running.json");
+const TOOL_RUN_PANEL_RUNNING: &str = include_str!("../🧫️fixtures/⏯️tool-run/🪧️panel-running.json");
 
 /// ⚖️ LAW: the ToolRun panel of a running run is exactly the committed shell fixture — one run group with a polite status,
 /// a progressbar, real buttons addressing the run by id (pause and abort enabled, step disabled, finalize disabled with
 /// its description) and an empty step log and trace list. `SEMIO_TOOL_RUN_PANEL_OUT` rewrites the fixture.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_panel_of_a_running_run_is_the_shell_fixture() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let mut app = toy_app(1, &mut caller).await;
@@ -2015,6 +2156,8 @@ async fn tool_run_panel_of_a_running_run_is_the_shell_fixture() {
     assert_eq!(panel, serde_json::from_str::<Value>(TOOL_RUN_PANEL_RUNNING).expect("the panel fixture parses"), "the running panel is the shell fixture");
     app.tool_runs.port().expect("the run's port").wake();
     abort_and_close(&mut app, &mut caller).await;
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// 🔁️ Every sibling key list under `node` names each key once — the admission law a retained UI surface enforces.
@@ -2033,10 +2176,12 @@ fn assert_unique_sibling_keys(node: &Value) {
 /// makes the panel unadmittable.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_panel_lists_a_re_upserted_trace_key_once_at_its_newest_position() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["verdictRevisions"];
@@ -2060,16 +2205,20 @@ async fn tool_run_panel_lists_a_re_upserted_trace_key_once_at_its_newest_positio
     assert_eq!(rows, expected_rows, "one attempt row per trace key, newest first");
     app.tool_runs.port().expect("the run's port").wake();
     abort_and_close(&mut app, &mut caller).await;
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: while the active tool declares a run and this instance holds none of it, the panel offers a ready group
 /// whose enabled Start dispatches `toolRunStart` with the tool id; once the run exists its own group replaces it.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_panel_offers_start_for_the_active_run_tool_until_its_run_exists() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["readyGroup"];
@@ -2093,6 +2242,8 @@ async fn tool_run_panel_offers_start_for_the_active_run_tool_until_its_run_exist
     assert!(find_node(&panel, text(&expected["groupId"])).is_none(), "the run's group replaces the ready group");
     app.tool_runs.port().expect("the run's port").wake();
     abort_and_close(&mut app, &mut caller).await;
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 /// ⚖️ LAW: a TERMINAL run arms nothing. Once a run is finalized or aborted the ledger owes the driver no work
@@ -2106,10 +2257,12 @@ async fn tool_run_panel_offers_start_for_the_active_run_tool_until_its_run_exist
 /// once per ANSWER, never once per REFRESH, and a terminal run answers nothing.
 #[semio_framework_async_macros::async_test]
 async fn a_terminal_run_arms_no_further_work_however_many_turns_the_host_takes() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
     let expected = &fixture["terminalQuiet"];
@@ -2142,6 +2295,8 @@ async fn a_terminal_run_arms_no_further_work_however_many_turns_the_host_takes()
         assert_eq!(armed.len() as u64, number(&row["expected"]["effects"]), "{id}: a terminal run arms nothing, got {armed:?}");
         close(&mut app, &mut caller);
     }
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 fn expected_flag(value: &Value) -> bool {
@@ -2163,10 +2318,12 @@ fn expected_flag(value: &Value) -> bool {
 /// `sourcing.module` / `cad.computer` / `process.machines` host packs could never be retained.
 #[semio_framework_async_macros::async_test]
 async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
     let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
-    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+    let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     for (bytes, rendered) in [(2_909usize, true), (3_706, true), (4_360, true), (16_384, true), (65_536, true), (3_820, false)] {
         let mut app = toy_app(1, &mut caller).await;
@@ -2208,6 +2365,8 @@ async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
         assert!(app.close_terminal_is_empty(), "a {bytes} B retained config (rendered={rendered}) must reach terminal-empty; last step {last} after {turns} turns");
         assert_eq!(productive, turns, "every close turn released something; the pump never spends a turn on zero progress");
     }
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 //#endregion 🧹️RetainedConfigCloseCliff
 

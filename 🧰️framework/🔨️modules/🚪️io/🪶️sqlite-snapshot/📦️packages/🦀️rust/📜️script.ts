@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
-import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import { runBudgetedTestCommand } from "../../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { resolveTestLevel, testLevelBudgetMs } from "../../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { cmdBudgetMs } from "../../../../🏃️process/⏱️budget/🟦️.ts";
+import { scriptInvocationBudget, BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runBudgetedTestCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel, testLevelBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { cmdBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 
 /** ⚠️ Checks owned SQLite refusal producers against the closed schema and independent SQLite. */
 class RefusalScript extends BundleScript {
@@ -68,6 +68,18 @@ class OriginalFixedLimitsScript extends BundleScript{
  }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test-original-fixed-limits",OriginalFixedLimitsScript).register("test-ownership",OwnershipScript).register("test-operation",OperationScript).register("test-refusal", RefusalScript).register("test-native", NativeScript).register("test-receiving-schema",ReceivingSchemaScript);
+/** 🫴️ Executes original physical file custody demands before the whole typed file producer. */
+class OriginalPhysicalScript extends BundleScript{
+ async run(segments:string[]):Promise<void>{
+  const mode=segments[0];if(segments.length!==1||(mode!=="source"&&mode!=="native"))throw Error("test-original-physical requires source or native");
+  if(mode==="source"){
+   const source=resolve(this.root,"../../🔁️transfer/🫴️receiving/🧪️tests/🟦️.ts");
+   await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,15000),signal:this.invocation.control.signal,throwOnFailure:true});
+   await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,15000),signal:this.invocation.control.signal,throwOnFailure:true});
+  }else await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-io-sqlite-snapshot"],cwd:this.root,extraArgs:["--lib","sqlite_snapshot_original_physical_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env));
+ }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test-original-fixed-limits",OriginalFixedLimitsScript).register("test-original-physical",OriginalPhysicalScript).register("test-ownership",OwnershipScript).register("test-operation",OperationScript).register("test-refusal", RefusalScript).register("test-native", NativeScript).register("test-receiving-schema",ReceivingSchemaScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test-refusal" }) }));
 

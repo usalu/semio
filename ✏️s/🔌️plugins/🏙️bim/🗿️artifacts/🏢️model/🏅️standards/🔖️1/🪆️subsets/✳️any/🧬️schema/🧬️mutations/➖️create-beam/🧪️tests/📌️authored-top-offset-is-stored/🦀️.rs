@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::mutations::set_storey_height::Se
 use crate::{Axis, Beam, ModelMutation, ModelSnapshot, Point2};
 use semio_framework_pack_json::{from_json_str, to_json_string, JsonMemberPolicy};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️create-beam/✅️adds-below-the-storey-top/📸️snapshot/⬅️before/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️create-beam/✅️adds-below-the-storey-top/📸️snapshot/⬅️before/🔣️.json");
 
 #[semio_framework_async_macros::async_test]
 async fn the_authored_top_offset_is_stored_and_a_taller_storey_changes_nothing_stored() {

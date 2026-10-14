@@ -1,4 +1,4 @@
-import { buildBudgetMs } from "../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { printDocuments, printDocument, printDocumentOutputDirectory, printLibrarySources, printSourceDateEpoch } from "./📇️catalog/🟦️.ts";
 import { prepareTectonic, preparedTectonic } from "./🔧️toolchain/📜️script.ts";
 import { preparedPrintBundle } from "./📚️bundle/📜️script.ts";

@@ -176,14 +176,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/➕️insert-block/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-block/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:f92f0fdf6e45840280fbe3a1a789f35113bb958480c32caed95b5355b68bc73a",
           "bytes": 350
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/➕️insert-block/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-block/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:7584fdd214856ec897d654bbd1c5e816f625625ec36b069de589425db74b0c29",
           "bytes": 503
@@ -218,14 +218,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/➖️remove-block/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-block/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:f92f0fdf6e45840280fbe3a1a789f35113bb958480c32caed95b5355b68bc73a",
           "bytes": 350
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/➖️remove-block/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/➖️remove-block/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:1c87eabb53f2de6550894caa082894bf36febe826e81dd0c3c46b5f487c73cf6",
           "bytes": 195
@@ -260,14 +260,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🔁️replace-block/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/🔁️replace-block/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:f92f0fdf6e45840280fbe3a1a789f35113bb958480c32caed95b5355b68bc73a",
           "bytes": 350
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🔁️replace-block/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/🔁️replace-block/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:d2b300df886471fcc16a87cedceb2ba4fd9389fe39d8add5a551463678ac2913",
           "bytes": 358
@@ -302,14 +302,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/✏️set-inlines/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/✏️set-inlines/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:f92f0fdf6e45840280fbe3a1a789f35113bb958480c32caed95b5355b68bc73a",
           "bytes": 350
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/✏️set-inlines/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/✏️set-inlines/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:6ae68404336210086b681872bc3647bef37880b23d9970f2be741357aa0bfdcd",
           "bytes": 594

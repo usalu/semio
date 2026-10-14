@@ -2,7 +2,7 @@ use super::*;
 use semio_framework_job::InteractiveJob;
 
 fn relay_lifecycle_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/♻️relay-lifecycle.json")).expect("relay lifecycle fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/♻️relay-lifecycle.json")).expect("relay lifecycle fixture")
 }
 
 #[test]
@@ -99,7 +99,7 @@ async fn retained_pool_future_retries_saturation_once_and_terminalizes_shutdown(
 /// enough for the native test stack on every supported architecture.
 #[test]
 fn mounted_relay_stack_authority_matches_the_neutral_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧱️stack-authority.json")).expect("stack authority fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧱️stack-authority.json")).expect("stack authority fixture");
     let maximum = fixture["maximumInlineBytes"].as_u64().expect("maximum inline bytes") as usize;
     let registry = fixture["registries"].as_array().expect("registry rows").iter().find(|row| row["id"] == "guest-relay-mounted").expect("mounted relay row");
     assert_eq!(fixture["schemaVersion"], 1);
@@ -997,5 +997,5 @@ async fn poisoned_instance_slot_recovers_without_losing_the_mounted_route() {
 }
 
 fn test_relay_drive_policy()->semio_framework_value::RetainedCloneGrant{
- serde_json::from_value(serde_json::from_str::<serde_json::Value>(include_str!("../../⚡️effects/🧫️fixtures/🔣️.json")).unwrap()["driveGrant"].clone()).unwrap()
+ serde_json::from_value(serde_json::from_str::<serde_json::Value>(include_str!("../../⚡️effects/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()["driveGrant"].clone()).unwrap()
 }

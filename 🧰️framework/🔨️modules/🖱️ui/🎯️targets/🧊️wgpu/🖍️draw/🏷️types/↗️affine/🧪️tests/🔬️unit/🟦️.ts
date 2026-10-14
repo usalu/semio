@@ -1,6 +1,6 @@
 import {expect,test} from "bun:test";
 import {Matrix3,Vector2} from "three";
-import fixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "../../../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/↗️affine/🔣️.json";
 import {affineQuad,affineQuadPoint} from "../../🟦️.ts";
 
 test("packed glyph and image corners retain authored affine transforms",()=>{

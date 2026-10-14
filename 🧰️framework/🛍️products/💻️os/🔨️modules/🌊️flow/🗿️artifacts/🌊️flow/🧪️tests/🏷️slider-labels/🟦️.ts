@@ -9,7 +9,7 @@ const fixture = <T = Record<string, unknown>>(path: string): T => JSON.parse(rea
 
 test("slider descriptors require authored labels across schema and native contracts", () => {
   const schema = fixture<{ $defs: { FlowInputSliderDescriptorV1: object } }>("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️.json");
-  const vectors = fixture<{ cases: { widget: Record<string, unknown>; expectedDagName: string }[] }>("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🧫️fixtures/🏷️slider-labels.json");
+  const vectors = fixture<{ cases: { widget: Record<string, unknown>; expectedDagName: string }[] }>("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🧫️fixtures/📸️snapshot/🏷️slider-labels.json");
   const validate = new Ajv().compile(schema.$defs.FlowInputSliderDescriptorV1);
   for (const row of vectors.cases) {
     expect(validate(row.widget)).toBe(true);

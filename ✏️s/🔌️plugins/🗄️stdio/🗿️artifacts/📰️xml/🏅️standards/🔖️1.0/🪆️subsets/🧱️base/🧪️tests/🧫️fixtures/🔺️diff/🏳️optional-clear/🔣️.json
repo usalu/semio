@@ -1,0 +1,27 @@
+{
+  "cases": [
+    {
+      "name": "unchanged",
+      "diff": {}
+    },
+    {
+      "name": "clear declaration",
+      "diff": {
+        "declaration": null
+      }
+    },
+    {
+      "name": "clear doctype",
+      "diff": {
+        "doctype": null
+      }
+    },
+    {
+      "name": "clear both",
+      "diff": {
+        "declaration": null,
+        "doctype": null
+      }
+    }
+  ]
+}

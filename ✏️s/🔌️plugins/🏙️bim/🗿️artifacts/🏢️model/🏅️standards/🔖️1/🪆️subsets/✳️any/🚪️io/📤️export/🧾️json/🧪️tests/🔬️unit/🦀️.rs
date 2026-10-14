@@ -5,8 +5,8 @@ use crate::standards::v1::subsets::any::schema::inferences::diagnostics::Diagnos
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const DEFECTS: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json");
-const CLEAN: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/⚠️diagnostics/🏡️clean/📸️snapshot/🔣️.json");
+const DEFECTS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json");
+const CLEAN: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/🏡️clean/📸️snapshot/🔣️.json");
 
 fn inferred(text: &str) -> ModelInference {
     let snapshot: ModelSnapshot = from_json_str(text, JsonMemberPolicy::Reject).expect("fixture decodes");
@@ -74,7 +74,7 @@ fn the_serializer_targets_the_stdio_json_dialect() {
 }
 
 /// 📁️ The directory of the committed exports of the findings of the defect house: the files the python `csv` and `json` modules read back in the export case.
-const EXPORT_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📤️export");
+const EXPORT_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📤️export");
 
 #[test]
 fn the_committed_json_file_is_the_current_export_of_the_defect_house() {

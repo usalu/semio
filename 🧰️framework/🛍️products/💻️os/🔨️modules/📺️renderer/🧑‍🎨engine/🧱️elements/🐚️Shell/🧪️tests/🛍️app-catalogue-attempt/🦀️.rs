@@ -15,7 +15,7 @@ use super::claim_app_catalogue_fetch;
 use serde_json::Value;
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../🧫️fixtures/🛍️app-catalogue-attempt/🔣️.json")).expect("app catalogue attempt fixture parses")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🛍️app-catalogue-attempt/🔣️.json")).expect("app catalogue attempt fixture parses")
 }
 
 fn indices(case: &Value, key: &str) -> Vec<usize> {

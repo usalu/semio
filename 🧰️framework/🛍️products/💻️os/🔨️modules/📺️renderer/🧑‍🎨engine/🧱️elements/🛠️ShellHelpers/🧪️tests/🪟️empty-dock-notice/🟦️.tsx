@@ -9,7 +9,7 @@ import { chromium } from "playwright";
 import { act, cleanup, render } from "@semio-tech/ui-react/test";
 import { COMPOSE_WINDOW_TEMPLATE_MIME, Mode, uiI18n } from "@semio-tech/ui-react";
 import { afterEach, expect, it, vi } from "vitest";
-import fixture from "../../🧫️fixtures/🪟️empty-dock-notice/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/🪟️empty-dock-notice/🔣️.json" with { type: "json" };
 
 afterEach(async () => {
   cleanup();

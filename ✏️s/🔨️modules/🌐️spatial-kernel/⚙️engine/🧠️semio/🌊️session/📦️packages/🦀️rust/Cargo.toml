@@ -19,6 +19,7 @@ path = "🦀️.rs"
 browser-publication = []
 
 [dependencies]
+semio-framework-pack = { path = "../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-mesh-engine = { path = "../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }

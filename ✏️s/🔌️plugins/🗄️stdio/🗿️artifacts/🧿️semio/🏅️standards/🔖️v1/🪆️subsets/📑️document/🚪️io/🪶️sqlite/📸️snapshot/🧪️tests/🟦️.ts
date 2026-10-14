@@ -1,7 +1,7 @@
 /** 📑️ Actual document block syntax, typed style/image references and independent SQLite edits. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import f from "../🧫️fixtures/🔣️.json";
+import f from "./🧫️fixtures/🔣️.json";
 import type {SemioDocumentSnapshot,DocBlock,DocRun} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {SEMIO_DOCUMENT_SQLITE_SCHEMA,semioDocumentSnapshotToSqliteDatabase,semioDocumentSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import {binary64,exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
@@ -12,7 +12,7 @@ test("quick::Semio Document nullable IEEE words, single ownership, deep trees an
 
 test("Semio Document native construction frontier independently preserves empty optional language and member order",async()=>{const count=f.nativeAdmission.collectionItems,s:SemioDocumentSnapshot={schema:f.schema,styles:[],images:[],blocks:Array.from({length:count},()=>({kind:"code",language:"",text:""}))};const db=Database.deserialize(await exportSqliteDatabase(await semioDocumentSnapshotToSqliteDatabase(s)));try{expect(db.query("SELECT count(*) AS n FROM semio_document_member").get()).toEqual({n:count});expect(db.query("SELECT count(*) AS n FROM semio_document_code").get()).toEqual({n:count});expect(db.query("SELECT language,text FROM semio_document_code JOIN semio_document_member ON block_id=semio_document_code.id WHERE ordinal=?").get(f.nativeAdmission.cancelAfter)).toEqual({language:"",text:""});expect(await semioDocumentSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).toEqual(s);}finally{db.close();}});
 
-import completeSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import completeSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 import{independentSqliteExtent as completeIndependentExtent}from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
 test("Semio Document Native matched full and metadata empty independently preserve all complete cells",async()=>{
  for(const item of completeSemanticContract.cases){const source=structuredClone(item.sourceSnapshot)as unknown as SemioDocumentSnapshot;const hydrate=(value:unknown):unknown=>Array.isArray(value)?value.map(hydrate):value!==null&&typeof value==="object"?("bits"in value?{bits:String((value as {bits:string}).bits).length===8?Number.parseInt(String((value as {bits:string}).bits),16):BigInt("0x"+String((value as {bits:string}).bits))}:Object.fromEntries(Object.entries(value).map(([key,item])=>[key,hydrate(item)]))):value;Object.assign(source,hydrate(source));const database=await semioDocumentSnapshotToSqliteDatabase(source),bytes=await exportSqliteDatabase(database);expect(completeIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:completeSemanticContract.schemaBytes,tableWidths:completeSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:completeSemanticContract.schemaBytes,maxTables:18,maxColumns:13};expect(await semioDocumentSnapshotToSqliteDatabase(source,limits)).toEqual(database);expect(await semioDocumentSnapshotFromSqliteDatabase(await importSqliteDatabase(bytes),limits)).toEqual(source);

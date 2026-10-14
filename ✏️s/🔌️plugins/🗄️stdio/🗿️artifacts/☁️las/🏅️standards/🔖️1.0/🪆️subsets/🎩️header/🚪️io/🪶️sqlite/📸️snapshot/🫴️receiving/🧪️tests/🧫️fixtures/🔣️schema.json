@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "grant",
+    "nativeBytes",
+    "sqlBytes",
+    "closeTurns",
+    "tables",
+    "cases",
+    "signedSql",
+    "changes",
+    "literal"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 67108864
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 67108864
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 67108864
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 67108864
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 67108864
+        }
+      }
+    },
+    "nativeBytes": {
+      "const": 67108864
+    },
+    "sqlBytes": {
+      "const": 67108864
+    },
+    "closeTurns": {
+      "const": 65536
+    },
+    "tables": {
+      "const": [
+        [
+          "las_document",
+          2
+        ],
+        [
+          "las_header",
+          50
+        ],
+        [
+          "las_return_histogram",
+          4
+        ],
+        [
+          "las_vlr",
+          6
+        ],
+        [
+          "las_vlr_octet",
+          4
+        ],
+        [
+          "las_point",
+          21
+        ],
+        [
+          "las_point_gps",
+          4
+        ],
+        [
+          "las_point_rgb",
+          4
+        ]
+      ]
+    },
+    "cases": {
+      "const": [
+        {
+          "id": "complete",
+          "rows": 21,
+          "signed": false
+        },
+        {
+          "id": "signed",
+          "rows": 21,
+          "signed": true
+        },
+        {
+          "id": "empty",
+          "rows": 7,
+          "signed": false
+        },
+        {
+          "id": "long",
+          "rows": 21,
+          "signed": false
+        }
+      ]
+    },
+    "signedSql": {
+      "const": "UPDATE las_return_histogram SET id=1-id; UPDATE las_vlr SET id=1-id; UPDATE las_vlr_octet SET id=1-id,vlr_id=1-vlr_id; UPDATE las_point SET id=1-id; UPDATE las_point_gps SET id=1-id; UPDATE las_point_rgb SET id=1-id;"
+    },
+    "changes": {
+      "const": [
+        {
+          "sql": "UPDATE las_header SET creation_year=7;",
+          "malformed": false
+        },
+        {
+          "sql": "UPDATE las_return_histogram SET count=42 WHERE ordinal=0;",
+          "malformed": false
+        },
+        {
+          "sql": "UPDATE las_vlr SET description='changed' WHERE ordinal=0;",
+          "malformed": false
+        },
+        {
+          "sql": "UPDATE las_vlr_octet SET value=42 WHERE ordinal=0;",
+          "malformed": false
+        },
+        {
+          "sql": "UPDATE las_point SET intensity=23 WHERE ordinal=0;",
+          "malformed": false
+        },
+        {
+          "sql": "UPDATE las_point_rgb SET red=23;",
+          "malformed": false
+        },
+        {
+          "sql": "DELETE FROM las_point_gps;",
+          "malformed": false
+        },
+        {
+          "sql": "UPDATE las_point SET y_ieee754_bits=0 WHERE ordinal=0;",
+          "malformed": false
+        },
+        {
+          "sql": "UPDATE las_return_histogram SET ordinal=4 WHERE ordinal=0;",
+          "malformed": true
+        },
+        {
+          "sql": "UPDATE las_vlr SET ordinal=7 WHERE ordinal=0;",
+          "malformed": true
+        },
+        {
+          "sql": "UPDATE las_vlr_octet SET ordinal=7 WHERE ordinal=0;",
+          "malformed": true
+        },
+        {
+          "sql": "UPDATE las_point SET ordinal=7 WHERE ordinal=0;",
+          "malformed": true
+        },
+        {
+          "sql": "DELETE FROM las_return_histogram WHERE ordinal=0;",
+          "malformed": true
+        },
+        {
+          "sql": "DELETE FROM las_header;",
+          "malformed": true
+        },
+        {
+          "sql": "UPDATE las_point SET x_numeric_class='finite' WHERE ordinal=0;",
+          "malformed": true
+        }
+      ]
+    },
+    "literal": {
+      "const": "LAS 世界\u0000🌠\t\n"
+    }
+  }
+}

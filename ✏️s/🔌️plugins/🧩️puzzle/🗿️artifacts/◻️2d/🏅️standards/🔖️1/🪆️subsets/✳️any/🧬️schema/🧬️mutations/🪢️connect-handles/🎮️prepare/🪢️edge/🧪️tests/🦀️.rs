@@ -49,7 +49,7 @@ fn retire(edge: Puzzle2dEdge) {
 #[test]
 fn history_edit_puzzle2d_owned_connect_edge_assembly_preserves_native_fields_exact_words_and_granted_cancellation() {
     assert!(size_of::<Puzzle2dConnectEdgeCursor>() <= 4096);
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🪢️edge/🔣️.json")).unwrap();
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap(); match value.strip_prefix("$large:") { Some(suffix) => Text::from(format!("{}{suffix}", corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let optional = |value: &serde_json::Value| (!value.is_null()).then(|| text(value));
     let mut count = 0;

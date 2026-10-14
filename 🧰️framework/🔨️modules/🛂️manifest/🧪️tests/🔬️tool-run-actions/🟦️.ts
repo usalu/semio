@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
 import toolRunSchema from "../../../⏯️tool-run/🧬️schema/🔣️.json";
 import { TOOL_RUN_ACTIONS, TOOL_RUN_LABELS } from "../../../⏯️tool-run/🟦️.ts";
-import fixture from "../../🧫️fixtures/⏯️tool-run-actions.json";
+import fixture from "../🧫️fixtures/⏯️tool-run-actions.json";
 import schema from "../../🧬️schema/🔣️.json";
 import { appDeclaresToolRun } from "../../🟦️.ts";
 

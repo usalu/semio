@@ -8,7 +8,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { formatKeybindingShortcut, keybindingPlatformUsesMetaV1 } from "../../../../../../../🔨️modules/🖱️ui/🔨️modules/🔤️keybinding-text-interpretation/🟦️.ts";
-import fixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/⌨️keybinding-glyphs/🔣️.json" with { type: "json" };
+import fixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/⌨️keybinding-glyphs/🔣️.json" with { type: "json" };
 
 describe("⌨️ keybinding glyphs", () => {
   it("reads every Apple platform spelling as Command, and nothing else as Command", () => {

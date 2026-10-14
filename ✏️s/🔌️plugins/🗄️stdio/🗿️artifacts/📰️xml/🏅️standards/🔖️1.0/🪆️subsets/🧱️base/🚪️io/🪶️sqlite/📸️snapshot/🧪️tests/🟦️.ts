@@ -1,12 +1,12 @@
 import {parseXmlSnapshotJson} from "../../../📝️text/📸️snapshot/🔣️json/🟦️.ts";
-import refusalCorpus from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
+import refusalCorpus from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
 const canceledKind=refusalCorpus.cases.find(c=>c.id==="canceled-projection")!.expectedKind;
 /** 🧫️ Shared XML semantic corpus with independent typed SQL queries and edits. */
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
-import fixture from "../🧫️fixtures/🔣️.json";
-import ownership from "../../../../🧬️schema/📸️snapshot/🧫️fixtures/🫳️ownership/🔣️.json";
-import logical from "../../../../🧬️schema/📸️snapshot/🧫️fixtures/🫳️ownership/📸️logical/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+import ownership from "../../../../🧪️tests/🧫️fixtures/📸️snapshot/🫳️ownership/🔣️.json";
+import logical from "../../../../🧪️tests/🧫️fixtures/📸️snapshot/🫳️ownership/📸️logical/🔣️.json";
 
 import Ajv from "ajv/dist/2020";
 import AjvDraft07 from "ajv";
@@ -14,10 +14,10 @@ import snapshotSchema from "../../../../🧬️schema/📸️snapshot/🔣️.js
 import type { XmlSnapshot, XmlNode } from "../../../../../../../../🟦️.ts";
 import { xmlSnapshotToSqliteDatabase, xmlSnapshotFromSqliteDatabase, XML_SQLITE_SCHEMA } from "../../../../../../../../🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework";
-import graph from "../../../../🧬️schema/📸️snapshot/🧫️fixtures/🕸️documents/🔣️.json";
+import graph from "../../../../🧪️tests/🧫️fixtures/📸️snapshot/🕸️documents/🔣️.json";
 
 import {xmlDocumentsToSqliteDatabase,xmlDocumentsFromSqliteDatabase} from "../../../../../../../../🟦️.ts";
-import component from "../../../../🧬️schema/📸️snapshot/🧫️fixtures/🧩️native-component/🔣️.json";
+import component from "../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧩️native-component/🔣️.json";
 
 import { Buffer } from "node:buffer";
 
@@ -176,7 +176,7 @@ test("XML projection and reconstruction obey aggregate bounds and cancellation",
   expect(depth).toBe(2000);
 });
 
-import positions from "../../../../🧬️schema/📸️snapshot/🧫️fixtures/🧭️position/🔣️.json";
+import positions from "../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧭️position/🔣️.json";
 
 test("XML full unsigned64 position is an interpreted exact decimal scalar",async()=>{
  for(const invalid of positions.invalid)expect(()=>parseXmlPosition(invalid)).toThrow();
@@ -187,7 +187,7 @@ test("XML full unsigned64 position is an interpreted exact decimal scalar",async
 
 import{parseXmlSnapshot,parseXmlPosition,validateXmlDocumentWireBoundary}from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
 
-import nodeNative from "../../../../🧬️schema/📸️snapshot/🧫️fixtures/🌱️native-node/🔣️.json";
+import nodeNative from "../../../../🧪️tests/🧫️fixtures/📸️snapshot/🌱️native-node/🔣️.json";
 
 test("XML actual node native component has no synthetic document fields",async()=>{
  

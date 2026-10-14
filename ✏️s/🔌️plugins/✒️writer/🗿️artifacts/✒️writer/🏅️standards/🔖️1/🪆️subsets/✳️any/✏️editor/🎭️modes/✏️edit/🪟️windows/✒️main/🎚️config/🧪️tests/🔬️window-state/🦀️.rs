@@ -55,7 +55,7 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                     Ok((count(semio_framework_plugin::app::TypedOperationResultLane::WindowConfig), count(semio_framework_plugin::app::TypedOperationResultLane::WindowTransient)))
                 }
 
-                let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+                let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
                 let left_id = fixture["leftWindowId"].as_str().unwrap();
                 let right_id = fixture["rightWindowId"].as_str().unwrap();
                 let view = ViewModel { window_instances: [left_id, right_id].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: WriterMainWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
@@ -157,7 +157,7 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
 
 #[test]
 fn writer_window_state_mutations_are_exact_reversible_and_codec_stable() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
     let base_config: WriterMainWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let base_transient: WriterMainWindowTransient = semio_framework_pack_json::from_json_str(&fixture["baseTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let ids = [fixture["leftWindowId"].as_str().unwrap(), fixture["rightWindowId"].as_str().unwrap()];

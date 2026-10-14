@@ -3,7 +3,7 @@ import { expect, test } from "vitest";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { resolve } from "node:path";
-import fixture from "../../🧫️fixtures/⚓️alignment/🔣️.json";
+import fixture from "../🧫️fixtures/⚓️alignment/🔣️.json";
 
 test("scene text placement matches native canvas pixels", async () => {
   const bundle = await build({ entryPoints: [resolve(import.meta.dirname, "../../../🟦️.ts")], bundle: true, write: false, format: "iife", globalName: "drawing", platform: "browser", define: { "import.meta.vitest": "false" } });

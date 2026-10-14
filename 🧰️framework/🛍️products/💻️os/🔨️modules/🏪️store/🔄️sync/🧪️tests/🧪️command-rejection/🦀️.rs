@@ -7,7 +7,7 @@
 
 use super::{ArtifactEvent, CommandAckOutcome, CommandRejectionCode, CommandRejectionDetail};
 
-const FIXTURE: &str = include_str!("../../../🧫️fixtures/🧫️command-rejection/🔣️.json");
+const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/🧫️command-rejection/🔣️.json");
 const SCHEMA: &str = include_str!("../../🧬️schema/🔣️command-rejection/🔣️.json");
 
 fn fixture() -> serde_json::Value {

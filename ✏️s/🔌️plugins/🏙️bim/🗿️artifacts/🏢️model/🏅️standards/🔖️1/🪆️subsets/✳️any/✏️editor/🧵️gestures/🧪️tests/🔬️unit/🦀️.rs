@@ -281,7 +281,7 @@ async fn drawing_four_walls_placing_a_window_and_dragging_the_storey_top_re_infe
     assert!((after.storey_levels["st-first"].elevation - 3.5).abs() < 1e-9, "the storey above is lifted too");
 }
 
-const GESTURE_CASES: &str = include_str!("../../../../🧫️fixtures/🛠️gestures/🔣️.json");
+const GESTURE_CASES: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🛠️gestures/🔣️.json");
 
 fn point_of(value: &serde_json::Value) -> [f64; 2] {
     [value[0].as_f64().expect("x"), value[1].as_f64().expect("y")]

@@ -683,7 +683,7 @@ use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
 use semio_framework_tool_run::{ToolRunId, ToolRunTraceCursor, ToolRunTraceStore, TOOL_RUN_TRACE_PAGE_BYTES_MAX};
 
-const FILL_RUN_FIXTURE: &str = include_str!("../../🧫️fixtures/🎞️fill-run.json");
+const FILL_RUN_FIXTURE: &str = include_str!("../🧫️fixtures/🎞️fill-run.json");
 const FILL_RUN_BOX_SCALE: f32 = 4.0;
 
 fn fill_run_identity() -> ToolRunIdentity {

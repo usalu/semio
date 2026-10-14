@@ -1,7 +1,7 @@
 import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 const root=new URL("../",import.meta.url);
-const fixture=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",root),"utf8"));
+const fixture=JSON.parse(readFileSync(new URL("🧪️tests/🧫️fixtures/🔣️.json",root),"utf8"));
 test("preborn command entry neutral UTC and full label corpus agrees with Node Date and TextEncoder",()=>{
 
  for(const row of fixture.timestamps){expect(new Date(row.millis).toISOString()).toBe(row.iso);expect(new TextEncoder().encode(row.iso).length).toBe(24);}

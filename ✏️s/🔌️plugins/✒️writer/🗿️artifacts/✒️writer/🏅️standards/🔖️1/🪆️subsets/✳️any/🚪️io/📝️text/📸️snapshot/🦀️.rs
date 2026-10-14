@@ -1,5 +1,5 @@
 //! 📜️ Writer artifact — textual document grammar surface + laws (constitutional: dsl). Owns the
-//! REAL `store::os_store::serialization::ArtifactDsl` impl for `WriterSnapshot` (design.md §1 CORRECTION: the native codec
+//! REAL `pack::snapshot::ArtifactDsl` impl for `WriterSnapshot` (design.md §1 CORRECTION: the native codec
 //! is one bidirectional thing, unsplit, so it lives here rather than mirrored under import/export).
 
 use crate::{WriterSnapshot};
@@ -14,7 +14,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#region 🔖️HandcraftedArtifactDsl
 /// ✉️ `ArtifactDsl` over the derived spec-driven text of `WriterSnapshot::__dsl_spec()`, the same record
 /// the pack encodes — the committed `🗣️.dsl.semio` examples are authored in this format.
-impl store::os_store::serialization::ArtifactDsl for WriterSnapshot {
+impl pack::snapshot::ArtifactDsl for WriterSnapshot {
     const EXTENSION: &'static str = "writer";
     fn envelope_id() -> &'static str {
         "writer.writer"
@@ -31,13 +31,13 @@ impl store::os_store::serialization::ArtifactDsl for WriterSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 //#endregion 🔖️HandcraftedArtifactDsl
 
-/// 📄️ The `jack` example document, handcrafted in the `.writer` DSL (see `store::os_store::serialization::ArtifactDsl`) instead
+/// 📄️ The `jack` example document, handcrafted in the `.writer` DSL (see `pack::snapshot::ArtifactDsl`) instead
 /// of JSON — {@link jack_example_document}/{@link jack_example_json} are the only ways it should be
 /// consumed.
 pub const JACK_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
@@ -48,12 +48,12 @@ pub const DAG_JACK_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/�
 
 /// 📖️ Parses `.writer` DSL text into a `WriterSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<WriterSnapshot, semio_framework_diagnostic::TextError> {
-    <WriterSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
+    <WriterSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `WriterSnapshot` back to `.writer` DSL text.
 pub fn print_dsl(projection: &WriterSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(projection)
+    pack::snapshot::ArtifactDsl::print_dsl(projection)
 }
 
 //#region 🔖️ExternalBridges
@@ -62,13 +62,13 @@ pub fn print_dsl(projection: &WriterSnapshot) -> String {
 /// `✒️mutate-writer-1` test adapter that has to read the committed `🗣️.dsl.semio` artifact.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn parse_writer_dsl(text: &str) -> Result<WriterSnapshot, String> {
-    <WriterSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <WriterSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
 /// 🖨️ [`print_dsl`] under a name an external caller can reach, paired with [`parse_writer_dsl`].
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn print_writer_dsl(snapshot: &WriterSnapshot) -> String {
-    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
+    pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 //#endregion 🔖️ExternalBridges
 

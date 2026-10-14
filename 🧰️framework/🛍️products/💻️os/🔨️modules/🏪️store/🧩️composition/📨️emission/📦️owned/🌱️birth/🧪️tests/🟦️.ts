@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 test("owned publication birth preserves borrowed source until whole physical funding",()=>{
- const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧫️fixtures/🔣️.json"),"utf8"));
+ const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));
  for(const row of fixture.rows){
   const strings=[row.actor,row.group??"",row.line??"",row.transaction?.id??"",row.transaction?.tool??"",row.stampedId??""];
   const bytes=strings.reduce((sum,text)=>sum+new TextEncoder().encode(text).length,0);

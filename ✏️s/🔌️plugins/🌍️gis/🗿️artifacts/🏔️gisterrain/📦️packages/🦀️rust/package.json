@@ -10,5 +10,8 @@
   "scripts": {
     "verify-terrain-document-contract": "bun nx run @semio-tech/gis-gisterrain-rs:verify-terrain-document-contract",
     "verify-gis-terrain-window-config": "bun nx run @semio-tech/gis-gisterrain-rs:verify-gis-terrain-window-config"
+  },
+  "devDependencies": {
+    "@semio-tech/framework": "workspace:*"
   }
 }

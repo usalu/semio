@@ -18,6 +18,7 @@ role = "hub"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-tool-run = { workspace = true }
 semio-s-artifact-reasoning-wires = { workspace = true }

@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🚥️set-clash-set/🧱️drops-the-clearance",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚥️set-clash-set/🧱️drops-the-clearance/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚥️set-clash-set/🧱️drops-the-clearance/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚥️set-clash-set/🧱️drops-the-clearance/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚥️set-clash-set/🧱️drops-the-clearance/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚥️set-clash-set/🧱️drops-the-clearance/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚥️set-clash-set/🧱️drops-the-clearance/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚥️set-clash-set/🧱️drops-the-clearance/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚥️set-clash-set/🧱️drops-the-clearance/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚥️set-clash-set/🧱️drops-the-clearance/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚥️set-clash-set/🧱️drops-the-clearance/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

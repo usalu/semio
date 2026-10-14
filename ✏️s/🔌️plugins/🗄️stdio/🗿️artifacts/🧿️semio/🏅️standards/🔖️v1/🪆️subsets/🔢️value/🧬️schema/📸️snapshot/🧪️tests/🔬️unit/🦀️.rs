@@ -3,16 +3,16 @@ use super::*;
 #[semio_framework_async_macros::async_test]
 async fn json_pack_round_trips() {
     let snap = demo_semio_value_snapshot();
-    let bytes = <SemioValueSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioValueSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioValueSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioValueSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_text_round_trips() {
     let snap = demo_semio_value_snapshot();
-    let text = <SemioValueSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
-    let back = <SemioValueSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioValueSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snap);
+    let back = <SemioValueSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back);
 }
 
@@ -29,8 +29,8 @@ async fn codec_retention_law_preserves_lexemes_bytes_and_graph_shape() {
         },
         nodes: vec![SemioValueNode { id: ValueId::new("root-child"), value: SemioValue::Str { value: "leaf".into() } }],
     };
-    let bytes = <SemioValueSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioValueSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioValueSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioValueSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
     match &back.root {
         SemioValue::List { items } => {

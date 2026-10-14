@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { omit } from "lodash";
 import Ajv from "ajv/dist/2020.js";
 import { SourceProjection, SourceProjectionError } from "../🟦️.ts";
-const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 
 function oracle(row: any) {
   const seen = new Set<string>();

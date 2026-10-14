@@ -46,7 +46,7 @@ fn mounted_frame_generation_exhaustion_is_permanent_and_non_wrapping() {
 
 #[test]
 fn mounted_refused_event_preserves_the_frame_generation() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧫️fixtures/🔣️.json")).expect("shared input admission contract");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧪️tests/🧫️fixtures/🔣️.json")).expect("shared input admission contract");
     let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["name"] == "event-full").unwrap();
     let mut generation = case["frameGeneration"].as_str().unwrap().parse::<u64>().unwrap();
     let before = generation;
@@ -65,7 +65,7 @@ fn mounted_refused_event_preserves_the_frame_generation() {
 
 #[test]
 fn mounted_exhausted_metrics_preserves_the_input_and_scheduler() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧫️fixtures/🔣️.json")).expect("shared input admission contract");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧪️tests/🧫️fixtures/🔣️.json")).expect("shared input admission contract");
     let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["name"] == "metrics-frame-exhausted").unwrap();
     let mut generation = case["frameGeneration"].as_str().unwrap().parse::<u64>().unwrap();
     let mut events = ui_host::EventQueue::new();

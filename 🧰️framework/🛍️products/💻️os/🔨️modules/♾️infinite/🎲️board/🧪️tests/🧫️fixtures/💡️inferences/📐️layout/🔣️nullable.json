@@ -1,0 +1,66 @@
+{
+  "optionalSnapshot": {
+    "schema": "board.normal.undirected.v1",
+    "nodes": [
+      {
+        "id": "a",
+        "x": null,
+        "handles": null
+      }
+    ],
+    "edges": [],
+    "camera": null,
+    "meta": null
+  },
+  "optionalRedraw": {
+    "mode": "force-graph",
+    "centerX": null,
+    "forceGraph": null
+  },
+  "redrawRefusals": [
+    {
+      "mode": "force-graph",
+      "forceGraph": {
+        "iterations": null
+      }
+    },
+    {
+      "mode": "force-graph",
+      "forceGraph": {
+        "timeStep": null
+      }
+    },
+    {
+      "mode": "force-graph",
+      "forceGraph": {
+        "lockedNodeIds": null
+      }
+    },
+    {
+      "mode": "hierarchical-tree",
+      "hierarchicalTree": {
+        "direction": null
+      }
+    },
+    {
+      "mode": "hierarchical-tree",
+      "hierarchicalTree": {
+        "layerSpacing": null
+      }
+    },
+    {
+      "mode": "hierarchical-tree",
+      "hierarchicalTree": {
+        "lockedNodeIds": null
+      }
+    }
+  ],
+  "dagRefusals": [
+    {
+      "orientation": null
+    },
+    {
+      "siblingGap": null
+    }
+  ]
+}

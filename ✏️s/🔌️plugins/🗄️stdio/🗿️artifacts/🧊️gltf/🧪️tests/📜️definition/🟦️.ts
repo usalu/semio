@@ -6,7 +6,7 @@ import Ajv from "ajv";
 export function runDefinitionChecks(): number {
   const load = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
   const schema = load("../../🧬️schema/🔣️.json");
-  const fixture = load("../../🧫️fixtures/📜️definition/🔣️.json");
+  const fixture = load("../🧫️fixtures/📜️definition/🔣️.json");
   const ajv = new Ajv({ strict: true });
   const validate = ajv.compile(schema);
   for (const row of fixture.cases) {
@@ -14,7 +14,7 @@ export function runDefinitionChecks(): number {
     source[row.category][0].id = row.identity;
     assert.equal(validate(source), row.accepted, row.id);
   }
-  const byteFixture = load("../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/📝️text/💡️inferences/🧫️fixtures/🔣️.json");
+  const byteFixture = load("../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/📝️text/💡️inferences/🧪️tests/🧫️fixtures/🔣️.json");
   for (const row of byteFixture.cases) assert.equal(JSON.stringify(row.bytes), row.canonical, row.id);
   return fixture.cases.length + byteFixture.cases.length;
 }

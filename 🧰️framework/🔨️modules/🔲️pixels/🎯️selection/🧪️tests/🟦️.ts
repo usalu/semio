@@ -3,7 +3,7 @@ import { describe, test, expect } from "vitest";
 import Ajv from "ajv";
 import sharp from "sharp";
 import { parsePixelLayerSelectionV1 } from "../🟦️.ts";
-const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8")), fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8")), validate = new Ajv({ strict: false }).compile(schema);
+const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8")), fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8")), validate = new Ajv({ strict: false }).compile(schema);
 describe("canonical pixel selection", () => {
  for (const row of fixture.cases) test(row.name, async () => {
   expect(validate(row.input)).toBe(row.shapeAccepted);

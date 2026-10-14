@@ -253,7 +253,7 @@ fn csv_retained_contract() -> ToolExecutionContract {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn csv_example_snapshot(example_id: &str) -> CsvSnapshot {
     if example_id == crate::examples::demo::ID {
-        <CsvSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+        <CsvSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         CsvSnapshot::default()
     }
@@ -583,6 +583,7 @@ impl ArtifactEditor for CsvEditor {
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
                 config: request.config,
                 history: request.history,
                 interaction_state: request.interaction_state,

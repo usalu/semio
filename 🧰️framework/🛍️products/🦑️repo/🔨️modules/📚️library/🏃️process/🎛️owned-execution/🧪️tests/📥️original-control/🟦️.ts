@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {spawnSync} from "node:child_process";
 import * as receiver from "../../🟦️.ts";
-import type {ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import corpus from "./🔣️.json";
 import schema from "../../📥️invocation/🧬️schema/🔣️.json";
 type Policy={version:number;maximumElapsedMilliseconds:number;output:{maximumBytes:number;maximumLines:number}|null};

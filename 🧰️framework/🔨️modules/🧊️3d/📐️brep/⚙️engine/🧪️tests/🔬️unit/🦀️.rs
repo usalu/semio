@@ -4,7 +4,7 @@ use super::*;
 #[test]
 fn brep_selected_solid_operations_require_scoped_components_and_positive_parameters() {
     use parry3d::shape::Shape;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/✏️selected-solid-scope/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/✏️selected-solid-scope/🔣️.json")).unwrap();
     let dimensions: [f64; 3] = std::array::from_fn(|axis| fixture["box"][axis].as_f64().unwrap());
     let oracle = parry3d::shape::Cuboid::new(parry3d::math::Vector::new(dimensions[0] as f32 / 2.0, dimensions[1] as f32 / 2.0, dimensions[2] as f32 / 2.0));
     let volume = f64::from(oracle.mass_properties(1.0).mass());
@@ -42,7 +42,7 @@ fn brep_selected_solid_operations_require_scoped_components_and_positive_paramet
 #[test]
 fn brep_selected_solid_operations_match_independent_physical_volumes() {
     use parry3d::shape::Shape;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/✏️selected-solid-scope/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/✏️selected-solid-scope/🔣️.json")).unwrap();
     let dimensions: [f64; 3] = std::array::from_fn(|axis| fixture["box"][axis].as_f64().unwrap());
     let cuboid_volume = |dimensions: [f64; 3]| f64::from(parry3d::shape::Cuboid::new(parry3d::math::Vector::new(dimensions[0] as f32 / 2.0, dimensions[1] as f32 / 2.0, dimensions[2] as f32 / 2.0)).mass_properties(1.0).mass());
     let source_volume = cuboid_volume(dimensions);
@@ -84,7 +84,7 @@ fn brep_selected_solid_operations_match_independent_physical_volumes() {
 /// 🎯️ Analytic preview picks retain full labels independently of numeric renderer indices.
 #[test]
 fn brep_preview_component_picks_preserve_lossless_face_and_edge_labels() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
     let source = semio_framework_pack_json::parse(&fixture["transfer"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let transfer = <MeshTransfer as protocol::value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&source)).unwrap();
     let mesh = mesh_data_from_mesh_transfer(&transfer).unwrap();
@@ -103,7 +103,7 @@ fn brep_preview_component_picks_preserve_lossless_face_and_edge_labels() {
 /// 🪢️ Analytic wire edges keep resolvable labels and independent segment lengths.
 #[test]
 fn brep_preview_component_wire_edges_keep_resolvable_labels() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
     let row=&fixture["wire"];
     let mut kernel=Brep::new();
     let wire=kernel.rectangle_wire_sync(row["width"].as_f64().unwrap(),row["height"].as_f64().unwrap()).unwrap();
@@ -122,7 +122,7 @@ fn brep_preview_component_wire_edges_keep_resolvable_labels() {
 /// 🧩️ Every shape kind exposes only its own stable topology through the same kernel family.
 #[test]
 fn brep_deconstruction_covers_every_topological_shape_kind() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
     let mut kernel=Brep::new();
     let width=fixture["wire"]["width"].as_f64().unwrap();let height=fixture["wire"]["height"].as_f64().unwrap();
     let wire=kernel.rectangle_wire_sync(width,height).unwrap();let face=kernel.face_from_wire_sync(&wire).unwrap();
@@ -145,7 +145,7 @@ fn brep_deconstruction_covers_every_topological_shape_kind() {
 /// 📏️ Neutral profile and compound fixtures exercise the existing measurement owner.
 fn verify_topology_measurement(metric: &str) {
     use parry3d::shape::Shape;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
     let mut kernel = Brep::new();
     let width = fixture["wire"]["width"].as_f64().unwrap();
     let height = fixture["wire"]["height"].as_f64().unwrap();
@@ -194,7 +194,7 @@ fn brep_volume_measures_compound_solid_topology() { verify_topology_measurement(
 #[test]
 fn brep_closest_point_supports_profiles_and_compounds() {
     use parry3d::query::PointQuery;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
     let width = fixture["wire"]["width"].as_f64().unwrap();
     let height = fixture["wire"]["height"].as_f64().unwrap();
     let query = std::array::from_fn(|axis| fixture["closestPoint"]["query"][axis].as_f64().unwrap());
@@ -233,7 +233,7 @@ fn brep_closest_point_supports_profiles_and_compounds() {
 #[test]
 fn brep_closest_point_honors_curved_face_trims() {
     use parry3d::query::PointQuery;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
     let fixture = &fixture["curvedClosestPoint"];
     let radius = fixture["radius"].as_f64().unwrap();
     let height = fixture["height"].as_f64().unwrap();
@@ -552,7 +552,7 @@ async fn a_boolean_leaves_both_of_its_input_solids_alive_for_the_next_evaluation
 /// 🔁️ The kernel-neutral affine-transform vectors — the same rows the `brep_invoke` bridge law
 /// (`🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧪️tests/📐️brep-invoke`), the CAD `SemioBrepKernel` and OpenCascade (the
 /// third-party oracle, `✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio` suite) answer.
-const AFFINE_TRANSFORMS_FIXTURE: &str = include_str!("../../../🧫️fixtures/🔁️affine-transforms/🔣️.json");
+const AFFINE_TRANSFORMS_FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/🔁️affine-transforms/🔣️.json");
 
 /// 📐️ What the laws read off a solid: exact mass properties, the tessellation's extent, planar faces' outward normals,
 /// topology counts, and the tessellated soup's own signed volume and centroid as `parry3d` (third party) integrates them.
@@ -836,7 +836,7 @@ fn every_degenerate_affine_transform_is_refused() {
 #[test]
 fn brep_preview_component_reference_tables_refuse_missing_picking_buffers() {
     use protocol::value::FromValue;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
     for row in fixture["referenceRefusals"].as_array().unwrap() {
         let input=serde_json::json!({"componentReferences":row["references"]});
         let input=semio_framework_pack_json::parse(&input.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -849,7 +849,7 @@ fn brep_preview_component_reference_tables_refuse_missing_picking_buffers() {
 #[test]
 fn brep_preview_component_ranges_refuse_incomplete_or_overlapping_groups() {
     use protocol::value::FromValue;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
     for row in fixture["refusals"].as_array().unwrap() {
         let mut source=fixture["transfer"].clone();
         source[format!("{}_groups",row["domain"].as_str().unwrap())][row["row"].as_u64().unwrap() as usize][row["field"].as_str().unwrap()]=row["value"].clone();
@@ -862,7 +862,7 @@ fn brep_preview_component_ranges_refuse_incomplete_or_overlapping_groups() {
 /// 🎯️ Only original topology vertices are selectable in analytic preview meshes.
 #[test]
 fn brep_preview_vertices_resolve_original_topology_without_sampling_guesses() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️vertex-provenance/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️vertex-provenance/🔣️.json")).unwrap();
     let absent = fixture["unselectable"].as_u64().unwrap() as u32;
     for row in fixture["cases"].as_array().unwrap() {
         let mut kernel = Brep::new();
@@ -920,7 +920,7 @@ fn brep_preview_vertices_resolve_original_topology_without_sampling_guesses() {
 /// 🔗️ Merged preview topology resolves the same neutral exact component references.
 #[test]
 fn brep_merged_preview_preserves_original_component_ranges() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️mesh-transfer-merge/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔗️mesh-transfer-merge/🔣️.json")).unwrap();
     let wire = semio_framework_pack_json::parse(&fixture["merged"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let transfer = <MeshTransfer as protocol::value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&wire)).unwrap();
     let mesh = mesh_data_from_mesh_transfer(&transfer).unwrap();
@@ -940,7 +940,7 @@ fn brep_merged_preview_preserves_original_component_ranges() {
 /// 🚫️ Original vertex ranges obey the same neutral refusal contract before mesh publication.
 #[test]
 fn brep_original_vertex_ranges_refuse_malformed_coverage_and_labels() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️vertex-provenance/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️vertex-provenance/🔣️.json")).unwrap();
     let points = fixture["cases"][0]["points"].as_array().unwrap();
     let raw = serde_json::json!({"position":[0,0,0,1,0,0,0,1,0],"normal":[0,0,1,0,0,1,0,0,1],"index":[0,1,2],"edges":[],"points":points.iter().flat_map(|point|point.as_array().unwrap().iter().cloned()).collect::<Vec<_>>(),"face_groups":[],"edge_groups":[],"vertex_groups":points.iter().enumerate().map(|(index,_)|serde_json::json!({"start":index,"count":1,"entity_id":(index+1).to_string()})).collect::<Vec<_>>()});
     for refusal in fixture["refusals"].as_array().unwrap() {

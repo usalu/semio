@@ -1,7 +1,9 @@
 #!/usr/bin/env bun
+import { compilerCapacityWorkerCountV1, type CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { originalOperationWorkerSource } from "../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🟦️.ts";
 import { SHARD_LIVENESS_POLICY } from "../../../../../../🔨️modules/🎭️actor/📮️shard-client/🫀️liveness/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
-import { captureOwnedCommandV1 } from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { captureOwnedCommandV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 /** 🌐 Shared jco transpile + plugin web glue (dev runner + extension store).
  *
  * MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H2): `pluginWorkerSource`/`PLUGIN_WORKER_FILE`
@@ -78,8 +80,10 @@ export const SHARD_TURN_DRIVE_STEP_CEILING = 512;
 
 export type PluginWebMaterializeContext = {
   readonly repoRoot: string;
+  readonly environment?: Readonly<Record<string, string | undefined>>;
   readonly preview2VendorDir: string;
   readonly signal?: AbortSignal;
+  readonly control?: CompilerAdmissionControl;
   readonly optimize?: boolean;
   readonly wasmOptBin?: string;
   readonly cores?: number;
@@ -256,6 +260,8 @@ export function patchPreview2ShimGuestLogLineRelease(cliPath: string): void {
  */
 export function shardWorkerSource(): string {
   return `/** @generated semio shard worker (H2 — bounded pool, actorId-multiplexed) */
+import { monotonicClock } from "../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/clocks.js";
+const operationClockUs = () => monotonicClock.now() / 1000n;
 // 🩺️ SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION (1-B): raise the captured-frame
 // cap BEFORE anything else runs so a deep guest recursion's real stack survives \`error.stack\`
 // instead of being truncated to V8's 10-frame default — this worker's stack is otherwise destroyed
@@ -346,7 +352,7 @@ let inFlightRequests = 0;
 let hostInputSeq = 0;
 
 // 📨️ terra-web-shardframe: ShardFrame::Grant/Envelope support — see this file's own header doc.
-const MAINTENANCE_LANE_DEFAULT_BUDGET = { fuel: 80000000, wallMs: 200, memoryBytes: 256 * 1024 * 1024, uiNodes: 4000, mailboxLen: 1024, maxEffects: 512, maxPatchBytes: 2097152 };
+const MAINTENANCE_LANE_DEFAULT_BUDGET = { fuel: 80000000, wallMs: 200, memoryBytes: 256 * 1024 * 1024, uiNodes: 4000, mailboxLen: 1024, maxEffects: 512, maxPatchBytes: 2097152,maxFrames:8 };
 const SHARD_FRAME_LANE_ORDER = ["Interactive", "UserVisible", "Background", "Maintenance"];
 const grantedBudgets = new Map(); // actorId -> last ShardFrame::Grant budget, mirrors ShardLoop::granted_budgets
 
@@ -565,7 +571,7 @@ async function armGuestRuntimeDiagnostics() {
   return guestRuntimeDiagnostics;
 }
 
-async function loadActor(actorId, activationGeneration, moduleUrl) {
+async function loadActor(actorId, activationGeneration, moduleUrl, originalAdmission) {
   if (typeof activationGeneration !== "bigint" || activationGeneration <= lastActivationGeneration || activationGeneration > 0xffffffffffffffffn) throw new Error("actor-close.invalid-activation-generation");
   if (actors.has(actorId) || activatingActors.has(actorId)) throw new Error("actor-close.activation-already-owned");
   lastActivationGeneration = activationGeneration;
@@ -582,7 +588,7 @@ async function loadActor(actorId, activationGeneration, moduleUrl) {
     const bridge = await import(/* @vite-ignore */ moduleUrl);
     faultPhase = "instantiate";
     postBeat("module-ready");
-    const api = await bridge.createActorApi(actorId, activationGeneration);
+    const api = await bridge.createActorApi(actorId, activationGeneration, originalAdmission, operationClockUs, { receipt: receipt => self.postMessage({ kind: "original-turn-receipt", actorId, activationGeneration, receipt }), hold: refusal => self.postMessage({ kind: "original-producer-held", actorId, activationGeneration, operation: originalAdmission.operation, generation: originalAdmission.generation, refusal }) });
     faultPhase = "actor-ready";
     postBeat("actor-ready");
     const entry = { api, moduleUrl, activationGeneration, pendingAssets: [] };
@@ -605,6 +611,18 @@ function deliverEffectResult(actorId, activationGeneration, envelope) {
   const { kind, payload } = envelope.payload;
   if (kind === "effect-complete") actor.api.resolveEffect(payload.requestId, payload.value);
   else if (kind === "effect-error") actor.api.rejectEffect(payload.requestId, payload.message);
+}
+
+async function closeOriginalActor(actorId, activationGeneration) {
+  const actor = actors.get(actorId);
+  if (!actor || actor.activationGeneration !== activationGeneration || inFlightTurnActors.has(actorId)) return;
+  try {
+    const closed = await actor.api.closeOriginal();
+    if (closed.sourceClosed) { actors.delete(actorId); grantedBudgets.delete(actorId); }
+    self.postMessage({ kind: "original-source-close", actorId, activationGeneration, ...closed });
+  } catch (failure) {
+    self.postMessage({ kind: "original-source-close", actorId, activationGeneration, operation: actor.api.originalSource.operation, generation: actor.api.originalSource.generation, sourceClosed: false });
+  }
 }
 
 // 🪶️ GUESTSLIM (design-runtime.md §3): world \`actor\` exports NO \`activate\` function — activation is
@@ -666,12 +684,17 @@ self.addEventListener("message", async (event) => {
     heartbeatSabView = msg.sab ? new Int32Array(msg.sab) : null;
     return;
   }
+  if (kind === "original-root-refusal") {
+    const actor = actors.get(msg.actorId);
+    if (actor && actor.activationGeneration === msg.activationGeneration && actor.api.originalSource.nativeRefusal === undefined) actor.api.originalSource.holdNativeRefusal(msg.refusal);
+    return;
+  }
   if (kind === "dispose") {
     const actor = actors.get(msg.actorId);
     if (!actor || actor.activationGeneration !== msg.activationGeneration) return;
-    actors.delete(msg.actorId);
-    inFlightTurnActors.delete(msg.actorId);
-    grantedBudgets.delete(msg.actorId);
+    actor.disposeRequested = true;
+    if (inFlightTurnActors.has(msg.actorId)) { actor.api.originalSource.cancel(); return; }
+    await closeOriginalActor(msg.actorId, msg.activationGeneration);
     return;
   }
   // 🧪️ terra-web-bridges: an effect-complete/effect-error \`"frame"\` is a REPLY to something THIS
@@ -691,7 +714,7 @@ self.addEventListener("message", async (event) => {
   faultActorId = actorId;
   try {
     if (kind === "activate") {
-      const entry = await loadActor(actorId, msg.activationGeneration, msg.moduleUrl);
+      const entry = await loadActor(actorId, msg.activationGeneration, msg.moduleUrl, msg.originalAdmission);
       entry.pendingAssets = msg.assets ?? [];
       reply(requestId, undefined);
       return;
@@ -730,20 +753,22 @@ self.addEventListener("message", async (event) => {
           // \`shardTurnDriveSteps\`/\`shardTurnDriveBudgetMs\` — the wall the host GRANTED for this
           // crossing divided by what one turn MEASURES — never from the reactor's own 8 ms executor
           // slice, which is smaller than one whole turn and therefore admitted no further turn at all.
-          const grantWallMs = msg.budget && typeof msg.budget.wallMs === "number" ? msg.budget.wallMs : MAINTENANCE_LANE_DEFAULT_BUDGET.wallMs;
+          const originalDriveSource = actor.api.originalSource;
+          const remainingUs = originalDriveSource.deadlineUs - originalDriveSource.operationClockUs();
+          const grantWallMs = Number(remainingUs > 0n ? remainingUs : 0n) / 1000;
           // 🚚️ The WALL bounds this drive; \`DRIVE_STEP_CEILING\` is the hard backstop against an
           // unbounded loop, and \`shardTurnDriveSteps\` is the grant's derived EXPECTATION, reported so
           // the host can read what one crossing was meant to cover.
           const driveSteps = DRIVE_STEP_CEILING;
           const driveExpectedSteps = shardTurnDriveSteps(grantWallMs, GUEST_TURN_COST_MS);
-          const driveDeadline = hopEpochNow() + shardTurnDriveBudgetMs(grantWallMs, GUEST_TURN_COST_MS);
+          const driveDeadline = originalDriveSource.deadlineUs;
           const inputMark = hostInputSeq;
           let drivePolls = 0;
           let driveStopped = shardTurnStatusTag(result) === "more-work" ? (shardTurnCarriesNothing(result) ? "" : "carried") : "idle";
           while (driveStopped === "") {
             if (hostInputSeq !== inputMark) { driveStopped = "input"; break; }
             if (actors.get(actorId) !== actor || actor.activationGeneration !== msg.activationGeneration) { driveStopped = "closed"; break; }
-            if (hopEpochNow() >= driveDeadline) { driveStopped = "budget"; break; }
+            if (originalDriveSource.operationClockUs() >= driveDeadline || originalDriveSource.fuelRemaining === 0) { driveStopped = "budget"; break; }
             if (drivePolls + 1 >= driveSteps) { driveStopped = "steps"; break; }
             // 📬️ One macrotask before the next turn, so a message the host already posted is
             // DELIVERED and \`hostInputSeq\` can actually move. Without it the drive is
@@ -773,6 +798,7 @@ self.addEventListener("message", async (event) => {
           reply(requestId, result, timings, beat("turn-step"));
         } finally {
           inFlightTurnActors.delete(actorId);
+          if (actor.disposeRequested) await closeOriginalActor(actorId, actor.activationGeneration);
         }
         break;
       }
@@ -914,6 +940,7 @@ self.addEventListener("message", async (event) => {
  */
 export function pluginComponentBridgeSource(componentBase: string, wasmFileName: string): string {
   return `/** @generated semio actor jco component bridge */
+${originalOperationWorkerSource()}
 
 const ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES = ${ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES};
 const encodeActorInstanceLifecycle = ${encodeActorInstanceLifecycle.toString()};
@@ -996,7 +1023,7 @@ function uiPatchReceipt(result, activationGeneration) {
   return encodeActorUiPatchReceipt(receipt);
 }
 
-export async function createActorApi(actorId, activationGeneration) {
+export async function createActorApi(actorId, activationGeneration, originalAdmission, operationClockUs, originalReturn) {
   if (typeof activationGeneration !== "bigint" || activationGeneration <= 0n || activationGeneration > 0xffffffffffffffffn) throw new Error("actor-close.invalid-activation-generation");
   const componentUrl = new URL("./${componentBase}.js", import.meta.url);
   const rebuildVersion = new URL(import.meta.url).searchParams.get("v");
@@ -1007,13 +1034,76 @@ export async function createActorApi(actorId, activationGeneration) {
   hostUrl.search = componentUrl.search;
   const hostShim = await import(hostUrl.href);
   const { reactor, jobs, checkpoint, describe, codec } = await import(componentUrl.href);
+  hostShim.__bindOriginalClock(operationClockUs);
+  const originalSource = new OriginalOperationSource(originalAdmission, () => hostShim.operationClockUs());
+  function receiveOriginal(call, workUnitsSpent) {
+    let receipt;
+    try { receipt = originalReceiptFromWit(call, workUnitsSpent); originalSource.receive(receipt); }
+    catch (failure) { if (receipt) originalReturn.receipt(receipt); originalSource.holdNativeRefusal(call); originalReturn.hold(call); throw failure; }
+    originalReturn.receipt(receipt);
+  }
+  let contextReady = false;
+  async function receiveContext(method) {
+    const turn = originalSource.issue();
+    const call = await reactor[method](originalTurnWit(turn.input));
+    receiveOriginal(call, 0n);
+    if (unwrapOption(call.refusal) !== undefined) throw Object.assign(new Error("original-turn.context-refused"), { originalCall: call });
+    return call;
+  }
+  async function admitContext() {
+    while (!contextReady) {
+      const call = await receiveContext("admitActorContext");
+      contextReady = call.ready;
+      if (!contextReady && call.spent.copiedItems === 0n && call.spent.copiedBytes === 0n && call.spent.retainedCapacityBytes === 0n && call.spent.releasedBytes === 0n) throw Object.assign(new Error("original-turn.context-held"), { originalCall: call });
+    }
+  }
   const channelRefusal = admitGuestChannelVersion(await reactor.channelVersion(), HOST_CHANNEL);
   if (channelRefusal !== null) throw Object.assign(new Error(\`\${channelRefusal.code}: \${channelRefusal.message}\`), { fault: channelRefusal });
   return {
+    originalSource,
+    closeOriginal: async () => {
+      if (originalSource.outstanding || originalSource.nativeRefusal !== undefined || originalSource.producerRefusal !== undefined || originalSource.receiptRefusal !== undefined) throw new Error("original-turn.original-return-pending");
+      for (;;) {
+        const call = await receiveContext("closeActorContext");
+        if (call.complete) {
+          const acknowledgement = originalSource.issue();
+          if (acknowledgement.input.grant.maximumItems < 1 || acknowledgement.input.grant.maximumDepth < 1 || acknowledgement.fuel < 1) throw new Error("original-turn.source-acknowledgement-held");
+          const receipt = { input: acknowledgement.input, spent: { copiedItems: 1, copiedBytes: 0, retainedCapacityBytes: 0, releasedBytes: 0 }, workUnitsSpent: 1 };
+          originalSource.receive(receipt);
+          originalReturn.receipt(receipt);
+          originalSource.close();
+          return { operation: originalSource.operation, generation: originalSource.generation, sourceClosed: true };
+        }
+        if (call.blocked || (call.spent.copiedItems === 0n && call.spent.copiedBytes === 0n && call.spent.retainedCapacityBytes === 0n && call.spent.releasedBytes === 0n)) return { operation: originalSource.operation, generation: originalSource.generation, sourceClosed: false };
+      }
+    },
     poll: async (events, commandPage, coldPairPage, budget) => {
-      if (commandPage) await reactor.stageCommandPage(commandPage.cursor, commandPage.bytes);
-      if (coldPairPage) await reactor.stageColdPairPage(coldPairPage);
-      const result = await reactor.poll(events.map(({ kind, payload }) => lifecycleEvent(kind, payload, activationGeneration)), { fuel: BigInt(budget.fuel), deadlineMs: budget.wallMs, maxEffects: budget.maxEffects, maxPatchBytes: budget.maxPatchBytes, maxFrames: 8 });
+      await admitContext();
+      if (commandPage || coldPairPage || events.length) {
+        const original = { phase: "canonical-input", commandPage, coldPairPage, events };
+        originalSource.holdProducerRefusal(original);
+        originalReturn.hold(original);
+        throw Object.assign(new Error("original-turn.canonical-input-held"), { originalProducer: original });
+      }
+      const turn = originalSource.issue();
+      hostShim.__checkoutOriginal(turn);
+      let result;
+      try {
+        result = await reactor.poll(events.map(({ kind, payload }) => lifecycleEvent(kind, payload, activationGeneration)), { retained: originalTurnWit(turn.input), fuel: BigInt(turn.fuel), deadlineUs: turn.deadlineUs, maxEffects: budget.maxEffects, maxPatchBytes: budget.maxPatchBytes, maxFrames: budget.maxFrames });
+      } catch (failure) {
+        try {
+          if (failure && failure.input && failure.spent && typeof failure.workUnitsSpent === "bigint") receiveOriginal(failure, failure.workUnitsSpent);
+          if (originalSource.nativeRefusal === undefined) { originalSource.holdNativeRefusal(failure); originalReturn.hold(failure); }
+        } finally {
+          const raw = hostShim.__returnOriginal(turn);
+          if (raw !== undefined) { originalSource.holdProducerRefusal(raw); originalReturn.hold(raw); }
+        }
+        throw failure;
+      }
+      let raw;
+      try { receiveOriginal(result.retainedReceipt, result.fuelUsed); }
+      finally { raw = hostShim.__returnOriginal(turn); if (raw !== undefined) { originalSource.holdProducerRefusal(raw); originalReturn.hold(raw); } }
+      if (raw !== undefined) throw Object.assign(new Error("original-turn.producer-held"), { originalProducer: raw });
       return { ...result, nextWake: unwrapOption(result.nextWake) ?? null, lifecycleReceipt: lifecycleReceipt(result.lifecycleReceipt, activationGeneration), uiPatchReceipt: uiPatchReceipt(result, activationGeneration), commandIngress: normalizeCommandIngress(result.commandIngress) };
     },
     startJob: async (job, kind, input) => jobs.startJob(job, kind, input),
@@ -1219,10 +1309,10 @@ export function transpilePluginComponent(artifact: string, outDir: string, compo
   rewritePreview2ShimImports(join(outDir, `${componentBase}.js`), ctx.preview2VendorDir);
 }
 
-function spawnNodeBinAsync(args: readonly string[], cwd: string, signal?: AbortSignal): Promise<string> {
+function spawnNodeBinAsync(args: readonly string[], cwd: string, signal?: AbortSignal, environment: Readonly<Record<string, string | undefined>> = process.env, control?: CompilerAdmissionControl): Promise<string> {
   const binName = args[0]!;
   const resolved = resolveWorkspaceBin(binName, cwd);
-  return captureOwnedCommandV1("node", [resolved ?? binName, ...args.slice(1)], cwd, signal ? { signal } : {});
+  return captureOwnedCommandV1("node", [`--v8-pool-size=${compilerCapacityWorkerCountV1(environment)}`, resolved ?? binName, ...args.slice(1)], cwd, { env: { ...environment, UV_THREADPOOL_SIZE: String(compilerCapacityWorkerCountV1(environment)) }, ...(signal ? { signal } : {}), ...(control ? { control } : {}) });
 }
 
 /** 🎚️ The `wasm-opt` executable a context selects and the exact arguments every shipped core is optimized with. */
@@ -1239,7 +1329,7 @@ export function pluginCoreModuleFilesV1(outDir: string, componentBase: string): 
 /** 🪶️ Optimizes one extracted core with `wasm-opt -Oz` into `output`, on `ctx.cores` threads (Binaryen's `BINARYEN_CORES`) when the caller holds that many job slots. */
 export async function optimizePluginCoreModuleAsync(core: string, output: string, ctx: PluginWebMaterializeContext): Promise<void> {
   const tool = pluginWasmOptToolV1(ctx);
-  try { await captureOwnedCommandV1(tool.command, [core, ...tool.args, "-o", output], ctx.repoRoot, { env: { ...process.env, ...(ctx.cores === undefined ? {} : { BINARYEN_CORES: String(ctx.cores) }) }, ...(ctx.signal ? { signal: ctx.signal } : {}) }); }
+  try { await captureOwnedCommandV1(tool.command, [core, ...tool.args, "-o", output], ctx.repoRoot, { env: { ...(ctx.environment ?? process.env), ...(ctx.cores === undefined ? {} : { BINARYEN_CORES: String(ctx.cores) }) }, ...(ctx.signal ? { signal: ctx.signal } : {}), ...(ctx.control ? { control: ctx.control } : {}) }); }
   catch (cause) { ctx.signal?.throwIfAborted(); throw new Error(`wasm-opt failed for ${core}`, { cause }); }
 }
 
@@ -1258,7 +1348,7 @@ export async function optimizePluginCoreModulesAsync(outDir: string, componentBa
  * the jco version, `componentBase` and this file, so it is cached by content. */
 export async function transpilePluginComponentModulesAsync(artifact: string, outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): Promise<void> {
   try {
-    await spawnNodeBinAsync(["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️.js", "--map", "semio:framework/host-async=./🟨️.js"], ctx.repoRoot, ctx.signal);
+    await spawnNodeBinAsync(["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️.js", "--map", "semio:framework/host-async=./🟨️.js"], ctx.repoRoot, ctx.signal, ctx.environment, ctx.control);
   } catch (cause) {
     ctx.signal?.throwIfAborted();
     throw new Error(`jco transpile failed for ${artifact}`, { cause });
@@ -1304,6 +1394,20 @@ export function hostShimSource(): string {
  * this file is generated from. */
 
 //#region 🧬️pure
+let originalClock;
+export function __bindOriginalClock(clock) { if (originalClock || typeof clock !== "function") throw new Error("original-turn.clock-binding-refused"); originalClock = clock; }
+export function operationClockUs() { if (!originalClock) throw new Error("original-turn.clock-unbound"); return originalClock(); }
+let originalTurn;
+let originalProducer;
+export function __checkoutOriginal(turn) { if (originalTurn || !turn || typeof turn.deadlineUs !== "bigint") throw new Error("original-turn.checkout-refused"); originalTurn = turn; }
+export function __returnOriginal(turn) { if (originalTurn !== turn) throw new Error("original-turn.foreign-return"); originalTurn = undefined; const raw = originalProducer; originalProducer = undefined; return raw; }
+function originalCheck() { if (!originalTurn) return 6; if (originalTurn.cancelled) return 1; if (operationClockUs() >= originalTurn.deadlineUs) return 3; return 0; }
+function unsupportedProducer(phase, fields) { if (originalProducer === undefined) originalProducer = { phase, fields }; return 6; }
+export function operationBegin() { const refused = originalCheck(); if (refused) throw refused; return BigInt(originalTurn.input.grant.maximumCapacityBytes); }
+export function operationProgress(completed, total, owned) { const refused = originalCheck(); if (refused) return refused; if (completed !== 0n || total !== 0n || owned !== 0n) return unsupportedProducer("progress", { completed, total, owned }); return 0; }
+export function operationAllocation(bytes, owned, next, maximum) { const refused = originalCheck(); if (refused) return refused; if (bytes !== 0n || owned !== 0n || next !== 0n) return unsupportedProducer("allocation", { bytes, owned, next, maximum }); return maximum === BigInt(originalTurn.input.grant.maximumCapacityBytes) ? 0 : 4; }
+export function operationReserveReturn(kind, count) { const refused = originalCheck(); if (refused) return refused; return count === 0n ? 0 : unsupportedProducer("canonical-return", { kind, count }); }
+export function operationFinish(owned) { const refused = originalCheck(); if (refused) return refused; return owned === 0n ? 0 : unsupportedProducer("finish", { owned }); }
 export function log(level, message) {
   if (level === "error") console.error(\`[actor] \${message}\`);
   else console.log(\`[actor] \${message}\`);

@@ -2,7 +2,7 @@
 use semio_s_spatial_kernel_semio_session::Session;
 use parry3d::shape::Shape;
 use semio_s_artifact_stdio_step::geometry::session::geometry_session;
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixtures/📐️step-session/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/📐️step-session/🔣️.json")).unwrap() }
 fn invoke(session:&Session,method:&str,args:serde_json::Value) -> serde_json::Value { serde_json::from_str(&session.brep_invoke_json(method,&args.to_string())).unwrap() }
 fn shape(session:&Session) -> String { invoke(session,"box",fixture()["box"].clone())["handle"].as_str().unwrap().into() }
 #[test]

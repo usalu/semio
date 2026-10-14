@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔧️set-railing/🧰️post-profile-degenerate",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️set-railing/🧰️post-profile-degenerate/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️set-railing/🧰️post-profile-degenerate/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️set-railing/🧰️post-profile-degenerate/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️set-railing/🧰️post-profile-degenerate/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️set-railing/🧰️post-profile-degenerate/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧️set-railing/🧰️post-profile-degenerate/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧️set-railing/🧰️post-profile-degenerate/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧️set-railing/🧰️post-profile-degenerate/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧️set-railing/🧰️post-profile-degenerate/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧️set-railing/🧰️post-profile-degenerate/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

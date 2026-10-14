@@ -61,7 +61,7 @@ async fn merge_report_round_trips_through_to_value() {
 /// identical JSON, carries the maximum outcome level as `worst`, and blocks finalize iff an outcome is Error or Fatal.
 #[test]
 fn replay_report_fixture_decodes_round_trips_and_gates_finalize() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️replay-report/🔣️.json")).expect("replay report fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🧫️replay-report/🔣️.json")).expect("replay report fixture parses");
     assert_eq!(fixture["schema"].as_str(), Some("semio.replication.replay-report"));
     for case in fixture["cases"].as_array().expect("cases") {
         let id = case["id"].as_str().expect("case id");

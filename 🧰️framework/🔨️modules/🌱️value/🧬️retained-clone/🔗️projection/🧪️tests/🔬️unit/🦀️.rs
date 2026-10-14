@@ -10,7 +10,7 @@ struct Root { rows: PagedList<Row, {usize::MAX}> }
 
 #[test]
 fn paged_native_owned_projection_retains_root_and_closes_one_actual_alias(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();let law=&corpus["ownedProjection"];
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();let law=&corpus["ownedProjection"];
  let(root,heap)=observe_retirement_allocations(||serde_json::from_value::<Root>(law["input"].clone()).unwrap());let original=heap.0-heap.1;let pointer=root.rows.get(0).unwrap().label.chunks().next().unwrap().as_ptr();
  let birth=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedCloneSource::<Root>::constructor_copy_bytes(),maximum_capacity_bytes:RetainedCloneSource::<Root>::constructor_capacity_bytes::<()>(),maximum_depth:1,..Default::default()};
  let(result,heap)=observe_retirement_allocations(||RetainedCloneSource::admit_owned(root,(),birth));let(mut source,p)=result.unwrap_or_else(|_|panic!("original root birth"));assert_eq!(heap,(p.retained_capacity_bytes,0));let(mut born,mut freed)=(heap.0,0);let before=serde_json::to_value(source.borrow().get()).unwrap();

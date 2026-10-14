@@ -190,7 +190,7 @@ async fn incremental_cursor_yields_bounded_pages_matching_the_real_fixture() {
 /// (`♻️mit-bestand/.../🎥️bauen-mit-bestand.mp4`). Its own `strh` is 56 bytes (BUG 1: ffmpeg's
 /// AVI-1.0 muxer writes the classic form) and its `hdrl`/`strl` carry real `JUNK`/`vprp`
 /// auxiliary chunks (BUG 2) — confirmed by direct hex inspection, not assumed.
-const REAL_FFMPEG_AVI: &[u8] = include_bytes!("../../../🧫️fixtures/🎬️.avi");
+const REAL_FFMPEG_AVI: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/🎬️.avi");
 
 #[semio_framework_async_macros::async_test]
 async fn decode_avi_accepts_the_real_ffmpeg_56_byte_strh() {

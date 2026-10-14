@@ -1,6 +1,6 @@
 use super::*;
 
-const SCAN: &[u8] = include_bytes!("../../../🧫️fixtures/🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff");
+const SCAN: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff");
 
 /// 🖼️ The real scan read by the `tiff` crate sits inside the Baseline class, strip-organized.
 #[test]
@@ -44,6 +44,6 @@ fn native_baseline_neutral_profiles_match_reference_tables(){
   let expected=case.array("codes").iter().map(|code|match code{Json::String(code)=>format!("stdio.tiff.baseline.{code}"),_=>panic!("code")}).collect::<Vec<_>>();
   assert_eq!(verdict(&axes),expected,"{}",case.str("id"));
  }
- let before=read_axes(include_bytes!("../../../../🧾️document/🧫️fixtures/🎨️paint-region-applied/⬅️before.tiff")).unwrap();
+ let before=read_axes(include_bytes!("../../../../🧾️document/🧪️tests/🧫️fixtures/🎨️paint-region-applied/⬅️before.tiff")).unwrap();
  eprintln!("[DEBUG] independent native TIFF observations {}",project(&before).to_string());
 }

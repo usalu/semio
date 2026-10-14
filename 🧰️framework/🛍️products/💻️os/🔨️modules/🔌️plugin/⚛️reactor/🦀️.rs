@@ -713,7 +713,7 @@ pub(crate) fn queue_extension_invocation(instance: u32, invocation: &crate::app_
 /// `turn-result.effects` once per turn. A fixture that drives a `PluginApp` without a live
 /// `PluginRuntime` has no `poll`, so this is its only way to observe a minted
 /// `Effect::InvokeExtension` (`🔌️plugin/🦀️.rs`'s `artifact_app_laws::settle_extension_invocations`).
-fn drain_queued_effects(instance: u32) -> Vec<Effect> {
+pub(crate) fn drain_queued_effects(instance: u32) -> Vec<Effect> {
     REGISTRY.with(|registry| registry.for_instance(instance).drain())
 }
 
@@ -777,7 +777,7 @@ pub fn extension_response_args(request_json: &str, outcome: &Result<Vec<u8>, sem
 /// testable without a live `PluginRuntime`: takes the id's continuation (if any) and builds the
 /// exact `(instance, action, args)` triple the follow-up dispatch uses. `None` means the id is an
 /// ordinary parked-future request and must go to `RequestRegistry::resolve` instead.
-fn take_extension_response(req: semio_framework::kernel::RequestId, terminal: Result<Vec<u8>, semio_framework::Fault>) -> Result<(u32, String, semio_framework_value::DslValue), Result<Vec<u8>, semio_framework::Fault>> {
+pub(crate) fn take_extension_response(req: semio_framework::kernel::RequestId, terminal: Result<Vec<u8>, semio_framework::Fault>) -> Result<(u32, String, semio_framework_value::DslValue), Result<Vec<u8>, semio_framework::Fault>> {
     let Some(continuation) = REGISTRY.with(|registry| registry.take_continuation(req)) else { return Err(terminal) };
     let (instance, response_action, request_json, outcome) = continuation.into_response(terminal);
     Ok((instance, response_action, extension_response_args(&request_json, &outcome)))
@@ -1080,7 +1080,7 @@ fn step_reactor_close() -> Result<bool, semio_framework::Fault> {
 }
 
 #[cfg(test)]
-fn cancel_instance_tasks(instance: u32) {
+pub(crate) fn cancel_instance_tasks(instance: u32) {
     let mut cursor = 0;
     for _ in 0..REACTOR_TASK_SLOTS {
         let before = cursor;
@@ -1273,13 +1273,13 @@ mod wit_bridge {
         budget: crate::component::wasip2::exports::semio::framework::reactor::Budget,
         identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
         cx:&mut semio_framework_job::StepContext<'_>,
-    ) -> Result<crate::component::wasip2::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
+    ) -> Result<crate::component::wasip2::exports::semio::framework::reactor::TurnResult, semio_framework_job::OriginalTurnFailure> {
         turn::note_turn_events(events.len(), wit_events_payload_bytes(&events));
         let mut kernel_events = Vec::with_capacity(events.len());
         for event in events {
             kernel_events.push(wit_event_to_kernel(event));
         }
-        let kernel_budget = semio_framework::kernel::Budget { retained:wit_retained_input_to_kernel(budget.retained)?, fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
+        let kernel_budget = semio_framework::kernel::Budget { retained:wit_retained_input_to_kernel(budget.retained)?, fuel: budget.fuel, deadline_us: budget.deadline_us, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
         let staged = STAGED_PAGES.with(|pages| pages.try_borrow_mut().map(|mut pages| std::mem::take(&mut *pages)).map_err(|_| staging_fault("turn page staging authority busy")))?;
         turn::poll_kernel_output(runtime, kernel_events, staged.command.map(|(cursor, page)| (cursor, *page)), staged.cold_pair.map(|page| *page), kernel_budget, |result| kernel_turn_result_to_wit(result, budget), |_, prepared| prepared, identity,cx).await
     }
@@ -1803,7 +1803,7 @@ mod wit_bridge {
 /// a wasm32-wasip2 build. `pub(crate)`, `#[cfg(test)]`-gated: never part of the real API surface.
 #[cfg(test)]
 #[path = "🧪️tests/⚛️reactor-driver/🦀️.rs"]
-mod reactor_driver;
+pub(crate) mod reactor_driver;
 
 //#region 🧪️M1M2ReactorTests
 /// 🎯️👥️ M1/M2 (ticket 26/08/17 `design-unified.md`) acceptance, driven through `reactor_driver`'s
@@ -1854,3 +1854,7 @@ mod more_work_drive_tests;
 #[path = "🧪️tests/🔬️extension-continuation/🦀️.rs"]
 mod extension_continuation_tests;
 //#endregion 🧪️ExtensionContinuationTests
+
+#[cfg(test)]
+#[path="🎟️context/🌉️call/🧪️tests/🔌️registry/🦀️.rs"]
+mod original_registered_job_loan_tests;

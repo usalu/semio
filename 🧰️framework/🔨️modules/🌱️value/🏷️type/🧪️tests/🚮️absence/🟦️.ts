@@ -3,8 +3,8 @@ import { expect, test } from "bun:test";
 import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import contract from "../../🧫️fixtures/🚮️absence/🔣️.json";
-import { runOwnedCommand } from "../../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import contract from "../🧫️fixtures/🚮️absence/🔣️.json";
+import { runOwnedCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../..");
 

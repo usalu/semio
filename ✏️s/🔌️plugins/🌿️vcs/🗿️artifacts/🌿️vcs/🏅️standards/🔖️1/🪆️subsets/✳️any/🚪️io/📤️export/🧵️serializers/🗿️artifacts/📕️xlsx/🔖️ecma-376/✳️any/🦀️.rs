@@ -21,6 +21,6 @@ impl Serializer<VcsSnapshot> for VcsIntoXlsx {
         let rows = [VCS_RECORD_COLUMNS.map(String::from), vcs_record(from)];
         let cells = rows.iter().enumerate().flat_map(|(row, values)| values.iter().enumerate().filter(|(_, value)| !value.is_empty()).map(move |(col, value)| XlsxCell { row: row as u32 + 1, col: col as u32, value: XlsxCellValue::InlineString(value.clone()) })).collect();
         let snapshot = build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Vcs".into(), cells }], shared_strings: Vec::new() });
-        Ok(IoOutcome::clean(IoPayload::Binary(<XlsxSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot))))
+        Ok(IoOutcome::clean(IoPayload::Binary(<XlsxSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot))))
     }
 }

@@ -168,7 +168,7 @@ fn importing_a_snapshot_loads_the_whole_document_and_states_no_mutation() {
         _ => None,
     }).collect();
     assert_eq!(loads.len(), 1, "one whole-document load: {:?}", emit.effects);
-    let loaded = <crate::Puzzle2dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(loads[0]).expect("the loaded pack decodes");
+    let loaded = <crate::Puzzle2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(loads[0]).expect("the loaded pack decodes");
     let expected: crate::Puzzle2dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&board())).expect("board admits");
     assert_eq!(loaded, expected, "the load carries exactly the imported document");
 }

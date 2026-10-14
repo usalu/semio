@@ -1,5 +1,6 @@
 #[path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
 mod original_owners;
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText;
 use semio_framework::kernel::Budget;
 use semio_framework_plugin_host::{GuestRuntime,GuestRuntimes,WasmtimeRuntime,SharedEngineConfig,PackageRef,PackageId,PackageHash}; use semio_framework_plugin_interpreter::{OwnedRuntime,GuestCallCancellation,sqlite_wire};
@@ -13,11 +14,11 @@ fn package_ref(package:&str,bytes:&[u8])->PackageRef {PackageRef {package:Packag
 fn jit_budget()->Budget {Budget {fuel:u64::MAX,deadline_ms:120_000,max_effects:64,max_patch_bytes:1<<20,max_frames:64}}
 enum CodecSweepRuntime {Owned,Jit}
 async fn sqlite_snapshot_note_guest_law(which:CodecSweepRuntime){
-    use semio_framework_os_kernel::{os_store::serialization::ArtifactDsl,os_store::serialization::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{self,SqliteDatabaseLimits,SqliteSnapshotControl,SnapshotEncoding}};
+    use semio_framework_os_kernel::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{self,SqliteDatabaseLimits,SqliteSnapshotControl,SnapshotEncoding}};
     use semio_framework_value::FromValue;
     let root=repo_root();let source=root.join("✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json");let snapshot=crate::NoteSnapshot::from_value(serde_json::from_str(&std::fs::read_to_string(source).unwrap()).unwrap()).unwrap();
     let path=plugin_wasm();let bytes=std::fs::read(path).unwrap();let runtime=match which{CodecSweepRuntime::Owned=>GuestRuntimes::Owned(OwnedRuntime::new()),CodecSweepRuntime::Jit=>GuestRuntimes::Wasmtime(WasmtimeRuntime::new(SharedEngineConfig::default()).await.unwrap())};let compiled=runtime.compile(&package_ref("semio:note",&bytes),&bytes).await.unwrap();let budget=jit_budget();let limits=SqliteDatabaseLimits::default();let dialect="s.note.note@1/*";
-    let schema=runtime.codec_sqlite_schema(&compiled,dialect,&budget).await.unwrap();assert_eq!(schema,<crate::NoteSnapshot as ArtifactSqliteSnapshot>::SQLITE_SCHEMA);
+    let schema=runtime.codec_sqlite_schema(&compiled,dialect,&budget).await.unwrap();assert_eq!(schema,<crate::NoteSnapshot as ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA);
     for(encoding,payload)in[("binary",snapshot.encode_pack()),("text",snapshot.print_dsl().into_bytes())]{
         let cancellation=GuestCallCancellation::default();let result=runtime.codec_sqlite_export(&compiled,dialect,encoding,&payload,limits,&budget,|_,_|{},&cancellation).await.unwrap();let sqlite_wire::SnapshotFileResult::Done(file)=result else{panic!("actual Note guest rejected a complete native snapshot: {result:?}")};assert!(sqlite_wire::decode_diagnostics(&file.diagnostics).unwrap().iter().all(|value|!matches!(value.severity,semio_framework::Severity::Error|semio_framework::Severity::Fatal)));
         let mut database=sqlite_snapshot::import_sqlite_database(&file.bytes,limits,&mut |_|true).unwrap();let(detected,native_encoding)=semio_framework_os_kernel::io::io_mechanism::take_sqlite_snapshot_metadata(&mut database).unwrap();assert_eq!(detected.to_coordinate(),dialect);assert_eq!(native_encoding,SnapshotEncoding::parse(encoding).unwrap());let restored=original_owners::with_sqlite_recipient(limits,&mut |_|true,|sqlite_control|crate::NoteSnapshot::from_sqlite_database(&database, sqlite_control)).unwrap();assert_eq!(restored,snapshot);assert_eq!(database.table("note_block").unwrap().rows.len(),8);

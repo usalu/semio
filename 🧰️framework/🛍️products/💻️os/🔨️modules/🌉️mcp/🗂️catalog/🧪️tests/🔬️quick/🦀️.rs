@@ -39,7 +39,7 @@ fn cad_translate_selection_compiles_with_the_dxyz_input_schema() {
     let capability = catalog.get("cad.editor.translateSelection").expect("translateSelection present");
     assert_eq!(capability.kind, CapabilityKind::Mutation);
     let properties = capability.input_schema["properties"].as_object().expect("object schema");
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral codec fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral codec fixture parses");
     assert_eq!(capability.id.as_str(), fixture["catalog"]["capabilityId"].as_str().expect("fixture capability id"));
     assert_eq!(properties, fixture["catalog"]["properties"].as_object().expect("fixture properties"));
 }
@@ -72,7 +72,7 @@ fn duplicate_capability_id_is_rejected() {
 /// exactly the declared `(verb, problem)` list — the TypeScript twin replays the same file with AJV.
 #[test]
 fn description_problems_match_the_language_agnostic_fixture() {
-    let rows: Vec<serde_json::Value> = serde_json::from_str(include_str!("../../🧫️fixtures/💬️capability-description.json")).expect("the fixture is JSON");
+    let rows: Vec<serde_json::Value> = serde_json::from_str(include_str!("../🧫️fixtures/💬️capability-description.json")).expect("the fixture is JSON");
     assert!(rows.len() >= 10);
     for row in rows {
         let verbs: Vec<DescribedVerb> = row["verbs"]

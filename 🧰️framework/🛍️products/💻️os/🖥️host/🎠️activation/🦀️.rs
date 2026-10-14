@@ -166,6 +166,6 @@ impl NativeKernelRuntime {
 //#region 🔖️BudgetBridge
 /// ⚖️ Applies host CPU and output limits while preserving the exact issued original authority.
 pub fn actor_budget_from_turn_budget(budget: TurnBudget, original: semio_framework_plugin_host::shard::grant::ShardResourceBudget) -> semio_framework_plugin_host::shard::grant::ShardResourceBudget {
-    semio_framework_plugin_host::shard::grant::ShardResourceBudget { fuel: budget.fuel, wall_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, ..original }
+    semio_framework_plugin_host::shard::grant::ShardResourceBudget { fuel: budget.fuel, wall_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes,max_frames:budget.max_frames, ..original }
 }
 //#endregion 🔖️BudgetBridge

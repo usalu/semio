@@ -1,0 +1,6 @@
+{
+  "RemoveRegionProperty": {
+    "feature": "region-old-town",
+    "key": "label"
+  }
+}

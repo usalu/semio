@@ -3,7 +3,7 @@ import artifactReferenceSchema from "../../../../../../../../🔨️modules/🧬
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { semioSchemaAjvV1 } from "../../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
-import vectors from "../../🧫️fixtures/🔣️.json" with { type: "json" };
+import vectors from "../🧫️fixtures/🔣️.json" with { type: "json" };
 import ioSchema from "../../../../../../../../🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
 import { OwnedDocumentClosure, type OwnedDocumentClosureInput } from "../../🟦️.ts";
 import ownerSchema from "../../../../🪆️child/🏠️owner/🧬️schema/🔣️.json" with { type: "json" };

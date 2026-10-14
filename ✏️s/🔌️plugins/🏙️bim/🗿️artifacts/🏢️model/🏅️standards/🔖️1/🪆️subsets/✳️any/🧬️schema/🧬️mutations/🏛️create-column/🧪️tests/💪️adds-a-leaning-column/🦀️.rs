@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🏛️create-column/💪️adds-a-leaning-column",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏛️create-column/💪️adds-a-leaning-column/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏛️create-column/💪️adds-a-leaning-column/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏛️create-column/💪️adds-a-leaning-column/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏛️create-column/💪️adds-a-leaning-column/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🏛️create-column/💪️adds-a-leaning-column/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-column/💪️adds-a-leaning-column/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-column/💪️adds-a-leaning-column/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-column/💪️adds-a-leaning-column/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-column/💪️adds-a-leaning-column/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-column/💪️adds-a-leaning-column/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

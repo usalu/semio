@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import Ajv from "ajv";
 
 export function extensionRetirementOracle(repoRoot: string): number {
-  const directory = resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧩️extension-retirement");
+  const directory = resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🧩️extension-retirement");
   const fixture = JSON.parse(readFileSync(resolve(directory, "🔣️.json"), "utf8"));
   
   

@@ -9,5 +9,8 @@
   },
   "scripts": {
     "verify-dag-document-contract": "bun nx run @semio-tech/dag-dag-rs:verify-dag-document-contract"
+  },
+  "devDependencies": {
+    "@semio-tech/framework": "workspace:*"
   }
 }

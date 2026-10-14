@@ -5,5 +5,8 @@
   "exports": {
     ".": "./🕸️bindings/framework_surface.js",
     "./🕸️bindings/framework_surface.js": "./🕸️bindings/framework_surface.js"
+  },
+  "devDependencies": {
+    "@semio-tech/process": "workspace:*"
   }
 }

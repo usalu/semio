@@ -78,10 +78,10 @@ async fn registered_migration_runs_end_to_end_through_the_store_registry() {
     let to = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.gif".into(), standard: "89a".into(), subset: "*".into() };
 
     let snapshot_87a = real_87a_snapshot();
-    let pack_87a = <Gif87aSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot_87a);
+    let pack_87a = <Gif87aSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot_87a);
 
     let pack_89a = store::os_store::codec_registry::migrate_document(&from, &to, &pack_87a).await.expect("a registered (87a -> 89a) migration must be found and must succeed");
-    let snapshot_89a = <Gif89aSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack_89a).expect("migrated pack bytes must decode as a real 89a snapshot");
+    let snapshot_89a = <Gif89aSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack_89a).expect("migrated pack bytes must decode as a real 89a snapshot");
 
     assert_eq!(snapshot_89a.frames.len(), 1);
     assert_eq!(snapshot_89a.frames[0].indices, snapshot_87a.images[0].indices, "indices must be byte-identical end-to-end through the registry");

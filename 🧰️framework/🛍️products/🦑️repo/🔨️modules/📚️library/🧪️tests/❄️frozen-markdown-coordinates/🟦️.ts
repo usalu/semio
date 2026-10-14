@@ -9,8 +9,8 @@ import ts from "typescript";
 import * as discovery from "../../🔍️discovery/🟦️.ts";
 import * as normalization from "../../🧹️normalization/🟦️.ts";
 
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/❄️frozen-markdown-coordinates/🔣️.json"), "utf8"));
-const historical = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/❄️frozen-markdown-coordinates/🧬️energy-source-coordinates/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/❄️frozen-markdown-coordinates/🔣️.json"), "utf8"));
+const historical = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/❄️frozen-markdown-coordinates/🧬️energy-source-coordinates/🔣️.json"), "utf8"));
 const libraryRoot = resolve(import.meta.dir, "../.."), root = resolve(libraryRoot, "../../../../..");
 const sha = (bytes: Uint8Array | string): string => createHash("sha256").update(bytes).digest("hex");
 const scratch: string[] = [];

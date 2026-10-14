@@ -5,7 +5,7 @@ import { DwgProjection } from "../../🔢️number/🟦️.ts";
 import { DwgReader } from "../../🫳️reader/🟦️.ts";
 import { dwgProjectConstraints,dwgReconstructConstraints } from "../../📏️constraints/🟦️.ts";
 import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
-import fixture from "../../🧫️fixtures/🎭️bodies/🔣️.json";
+import fixture from "../🧫️fixtures/🎭️bodies/🔣️.json";
 import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import { dwgConstraintFixture as group,dwgConstraintGeometryFixture as geometry,dwgGeometricConstraintFixture as geometric } from "../🧰️support/📏️constraints/🟦️.ts";
 const max=18446744073709551615n;

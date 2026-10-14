@@ -1,6 +1,8 @@
+use pack::snapshot::ArtifactSqliteSnapshot as _;
+use pack::snapshot::{ArtifactDsl,ArtifactPack};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use super::*;
-use crate::os_store::serialization::{ArtifactDsl, ArtifactPack, ArtifactSqliteSnapshot};
+use crate::os_store::serialization::{ ArtifactSqliteSnapshotHost};
 use crate::sqlite_snapshot::{SqliteDatabase, SqliteDatabaseLimits, SqliteRow, SqliteValue, SqliteSnapshotControl, SqliteSnapshotPhase, SnapshotEncoding, artifact::NativeEncodingBound};
 
 struct RetainedSnapshot { value: i64, retired: bool }
@@ -35,6 +37,9 @@ impl ArtifactPack for RetainedSnapshot {
     fn encode_pack_with(&self, _: &PackEncodeOptions) -> Result<Vec<u8>, PackError> { if self.value == -2 { return Err(PackError::from(ValueError::new(ValueRefusalKind::InvalidValue, "owner encoder refusal"))); } Ok(self.value.to_le_bytes().to_vec()) }
     fn decode_pack_with(bytes: &[u8], _: &PackDecodeOptions) -> Result<Self, PackError> { Ok(Self { value: i64::from_le_bytes(bytes.try_into().map_err(|_| PackError::from(ValueError::new(ValueRefusalKind::InvalidValue, "expected integer word")))?), retired: false }) }
 }
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for RetainedSnapshot {
+
+}
 
 fn value_database(value: i64) -> SqliteDatabase {
     let mut database = SqliteDatabase::from_schema(RetainedSnapshot::SQLITE_SCHEMA).unwrap();
@@ -44,8 +49,8 @@ fn value_database(value: i64) -> SqliteDatabase {
 
 fn validate_retained_subset(dialect:&semio_framework_artifact_reference::ArtifactDialect,control:&mut SqliteSnapshotControl<'_>)->crate::io_schema::IoResult<()>{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(crate::io_schema::IoError::from_value_error)?;match dialect.subset.as_str(){"*"=>Ok(crate::io_schema::IoOutcome::clean(())),"reject"=>Err(crate::io_schema::IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvalidValue,"declared semantic owner refusal"))),_=>Err(crate::io_schema::IoError::from_value_error(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"retained scalar has no declared subset validator")))}}
 
-impl ArtifactSqliteSnapshot for RetainedSnapshot {
-    const SQLITE_SCHEMA: &'static str = include_str!("../🧬️schema/🗄️.sql");
+impl ArtifactSqliteSnapshotHost for RetainedSnapshot {
+    
     fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,owner:&mut crate::os_store::NativeSnapshotEncodeOwner<'_,'_>)->Result<crate::io_schema::IoPayload,ValueError>{
      owner.receive::<crate::io_schema::IoPayload,crate::io_schema::IoPayload>(|slot,native,body|{
       control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,1)?;if self.value==-2{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"owner encoder refusal"))}
@@ -80,20 +85,25 @@ impl ArtifactSqliteSnapshot for RetainedSnapshot {
     fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,native:&mut crate::os_store::NativeSnapshotDecodeOwner<'_,'_>)->crate::io_schema::IoResult<()>{native.native().checkpoint().map_err(crate::io_schema::IoError::from_value_error)?;validate_retained_subset(dialect,control)}
     fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,native:&mut crate::os_store::NativeSnapshotEncodeOwner<'_,'_>)->crate::io_schema::IoResult<()>{native.native().checkpoint().map_err(crate::io_schema::IoError::from_value_error)?;validate_retained_subset(dialect,control)}
     fn retire_sqlite_snapshot(mut self) { self.retired = true; RETIREMENTS.with(|count| count.set(count.get() + 1)); }
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?; Ok(value_database(self.value)) }
-    fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self,ValueError> { control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?; Ok(Self { value: database.table("retained_value")?.single_row()?.integer(1)?, retired: false }) }
+    
+    
     fn preflight_sqlite_snapshot_encoding(&self, _: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(),ValueError> { let mut bound = NativeEncodingBound::new(control)?; bound.add(32)?; bound.finish() }
     fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->crate::io_schema::IoResult<()>{validate_retained_subset(dialect,control)}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for RetainedSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("../🧬️schema/🗄️.sql");
+fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?; Ok(value_database(self.value)) }
+fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self,ValueError> { control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?; Ok(Self { value: database.table("retained_value")?.single_row()?.integer(1)?, retired: false }) }
 }
 
 #[test]
 fn sqlite_snapshot_codec_native_retirement_covers_success_cancellation_and_refusal() {
- let snapshot_policy:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["original"]["grant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["original"]["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
+ let snapshot_policy:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["original"]["grant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["original"]["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
 let mut snapshot_decoding_progress=|_|snapshot_original_live.get();let mut snapshot_decoding_recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut snapshot_decoding_native=semio_framework_value::NativeDecodeControl::new(snapshot_native_maximum,&mut snapshot_decoding_progress);snapshot_decoding_native.install_retirement_recipient(&mut snapshot_decoding_recipient).unwrap();let mut snapshot_decoding_owner=crate::os_store::NativeSnapshotDecodeOwner::new(&mut snapshot_decoding_native,snapshot_caller_grant);
 let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snapshot_encoding_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut snapshot_encoding_native=semio_framework_value::NativeEncodeControl::new(snapshot_native_maximum,&mut snapshot_encoding_progress);snapshot_encoding_native.install_retirement_recipient(&mut snapshot_encoding_recipient).unwrap();let mut snapshot_encoding_owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut snapshot_encoding_native,snapshot_caller_grant);
 
     use std::{io::Write, process::{Command, Stdio}};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     
     let script = "import {Database} from 'bun:sqlite';const x=JSON.parse(await Bun.stdin.text());const db=Database.deserialize(Buffer.from(x.sqlite,'base64'));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok')throw Error('integrity');if(db.query('SELECT value FROM retained_value WHERE id=1').get().value!==7)throw Error('owner value');await Bun.write(Bun.stdout,'ok');db.close();";
     let sqlite = crate::sqlite_snapshot::export_sqlite_database(&value_database(7), SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
@@ -130,9 +140,9 @@ drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owne
 
 #[test]
 fn sqlite_snapshot_codec_original_input_and_retained_result_have_exact_custody(){
- let policy:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let policy:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  let full:semio_framework_value::RetainedCloneGrant=serde_json::from_value(policy["original"]["grant"].clone()).unwrap();
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let codec=RetainedSnapshot::sqlite_codec();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let codec=RetainedSnapshot::sqlite_codec();
  let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"fixture.retained".into(),standard:"1".into(),subset:"*".into()};
  for case in fixture["custodyCases"].as_array().unwrap().iter().filter(|case|case["id"].as_str().unwrap().starts_with("import")){
   let mut input=Some(value_database(7));let pointer=input.as_ref().unwrap().tables.as_ptr();let original=std::cell::Cell::new(true);let mut observer=|_|original.get();
@@ -160,15 +170,20 @@ struct OriginalRelocation{original:Vec<RetainedSnapshot>,replacement:Vec<Retaine
 
 #[derive(semio_framework_value::RetireOwned)]
 struct DefaultReceivingSnapshot;
-impl ArtifactSqliteSnapshot for DefaultReceivingSnapshot{
- const SQLITE_SCHEMA:&'static str="";
- fn to_sqlite_database(&self,_:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"no declared direct schema"))}
- fn from_sqlite_database(_:&SqliteDatabase,_:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"no declared direct schema"))}
+impl ArtifactSqliteSnapshotHost for DefaultReceivingSnapshot{
+ 
+ 
+ 
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for DefaultReceivingSnapshot {
+const SQLITE_SCHEMA:&'static str="";
+fn to_sqlite_database(&self,_:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"no declared direct schema"))}
+fn from_sqlite_database(_:&SqliteDatabase,_:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"no declared direct schema"))}
 }
 
 #[test]
 fn sqlite_snapshot_codec_default_refusals_preserve_zero_original_authority(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["original"]["defaultRefusalGrant"].clone()).unwrap();let database=SqliteDatabase{tables:Vec::new()};let payload=crate::io_schema::IoPayload::Binary(Vec::new());let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"default.receiving".into(),standard:"1".into(),subset:"*".into()};let snapshot=DefaultReceivingSnapshot;
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["original"]["defaultRefusalGrant"].clone()).unwrap();let database=SqliteDatabase{tables:Vec::new()};let payload=crate::io_schema::IoPayload::Binary(Vec::new());let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"default.receiving".into(),standard:"1".into(),subset:"*".into()};let snapshot=DefaultReceivingSnapshot;
  for case in fixture["defaultRefusalCases"].as_array().unwrap(){
   let live=!case["nativeCancelled"].as_bool().unwrap();let mut decode_observer=|_|live;let mut encode_observer=|_|live;let mut sql_observer=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(case["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut decode_observer);let mut encode=semio_framework_value::NativeEncodeControl::new(case["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut encode_observer);let mut decoding=crate::os_store::NativeSnapshotDecodeOwner::new(&mut decode,grant);let mut encoding=crate::os_store::NativeSnapshotEncodeOwner::new(&mut encode,grant);let mut control=SqliteSnapshotControl::new(&mut sql_observer,Default::default());
   let(result,born,released)=crate::test_allocation::observe_backing(||match case["operation"].as_str().unwrap(){
@@ -181,12 +196,17 @@ fn sqlite_snapshot_codec_default_refusals_preserve_zero_original_authority(){
 
 #[derive(Debug, PartialEq, semio_framework_value::RetireOwned)]
 struct AuthoredSnapshot{value:i64}
-impl ArtifactSqliteSnapshot for AuthoredSnapshot{
- const SQLITE_SCHEMA:&'static str=RetainedSnapshot::SQLITE_SCHEMA;
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
+impl ArtifactSqliteSnapshotHost for AuthoredSnapshot{
+ 
+ 
+ 
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for AuthoredSnapshot {
+const SQLITE_SCHEMA:&'static str=RetainedSnapshot::SQLITE_SCHEMA;
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
   crate::sqlite_snapshot::artifact::project_owned(control,crate::sqlite_snapshot::artifact::ProjectionStorage::empty,|_,control|{control.admit_allocation_bytes(64)?;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)},|_|value_database(self.value))
  }
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
   crate::sqlite_snapshot::artifact::owned_workspace(control,SqliteSnapshotPhase::ReconstructSnapshot,crate::sqlite_snapshot::artifact::ProjectionStorage::empty,|_,control|{control.admit_allocation_bytes(64)?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)},|_|())?;
   Ok(Self{value:database.table("retained_value")?.single_row()?.integer(1)?})
  }
@@ -194,16 +214,21 @@ impl ArtifactSqliteSnapshot for AuthoredSnapshot{
 
 #[derive(semio_framework_value::RetireOwned)]
 struct AuthoredValidator;
-impl ArtifactSqliteSnapshot for AuthoredValidator{
- const SQLITE_SCHEMA:&'static str=RetainedSnapshot::SQLITE_SCHEMA;
- fn to_sqlite_database(&self,_:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"validator fixture has no projection"))}
- fn from_sqlite_database(_:&SqliteDatabase,_:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"validator fixture has no reconstruction"))}
+impl ArtifactSqliteSnapshotHost for AuthoredValidator{
+ 
+ 
+ 
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->crate::io_schema::IoResult<()>{validate_retained_subset(dialect,control)}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for AuthoredValidator {
+const SQLITE_SCHEMA:&'static str=RetainedSnapshot::SQLITE_SCHEMA;
+fn to_sqlite_database(&self,_:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"validator fixture has no projection"))}
+fn from_sqlite_database(_:&SqliteDatabase,_:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"validator fixture has no reconstruction"))}
 }
 
 #[test]
 fn sqlite_snapshot_codec_default_receiving_runs_authored_models_into_the_operation_workspace(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["original"]["grant"].clone()).unwrap();let maximum=fixture["original"]["nativeMaximumBytes"].as_u64().unwrap()as usize;
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["original"]["grant"].clone()).unwrap();let maximum=fixture["original"]["nativeMaximumBytes"].as_u64().unwrap()as usize;
  let mut bare_callback=|_|true;let mut bare=SqliteSnapshotControl::new(&mut bare_callback,Default::default());
  assert_eq!(AuthoredSnapshot{value:7}.to_sqlite_database(&mut bare).unwrap_err().message,"SQLite snapshot has no explicit retirement recipient","the authored model itself needs a recipient the codec's operation workspace must supply");
  for stop in[usize::MAX,0,1,2]{
@@ -224,7 +249,7 @@ fn sqlite_snapshot_codec_default_receiving_runs_authored_models_into_the_operati
 
 #[test]
 fn sqlite_snapshot_codec_default_receiving_validators_apply_the_authored_subset_policy_after_native_cancellation(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["original"]["grant"].clone()).unwrap();let maximum=fixture["original"]["nativeMaximumBytes"].as_u64().unwrap()as usize;
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["original"]["grant"].clone()).unwrap();let maximum=fixture["original"]["nativeMaximumBytes"].as_u64().unwrap()as usize;
  let database=value_database(7);
  for (subset,live,accepted) in[("*",true,true),("reject",true,false),("*",false,false)]{
   let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"default.receiving".into(),standard:"1".into(),subset:subset.into()};
@@ -241,7 +266,7 @@ fn sqlite_snapshot_codec_default_receiving_validators_apply_the_authored_subset_
 #[test]
 fn sqlite_snapshot_codec_relocation_retains_every_original_across_partial_moves(){
  use crate::sqlite_snapshot::artifact::receiving::{Port,Direction,relocate_vector};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let full:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["original"]["grant"].clone()).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let full:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["original"]["grant"].clone()).unwrap();
  for case in fixture["relocationCases"].as_array().unwrap(){
   RETIREMENTS.with(|count|count.set(0));let values=case["values"].as_array().unwrap();let mut input=Some(OriginalRelocation{original:values.iter().map(|value|RetainedSnapshot{value:value.as_i64().unwrap(),retired:false}).collect(),replacement:Vec::new()});
   let work=std::cell::Cell::new(0usize);let completed=std::cell::Cell::new(false);let mut sql_observer=|event:crate::sqlite_snapshot::SqliteSnapshotProgress|{if event.phase==SqliteSnapshotPhase::ProjectSnapshot&&event.total==0{work.set(work.get()+1);return case["refuseWorkAt"].as_u64().is_none_or(|limit|work.get()!=limit as usize)}true};let mut native_observer=|_|true;

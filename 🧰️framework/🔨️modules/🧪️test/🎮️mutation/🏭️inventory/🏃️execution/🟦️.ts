@@ -1,8 +1,8 @@
 import { spawn } from "node:child_process";
 import { lstat, mkdir, mkdtemp, open } from "node:fs/promises";
 import { dirname, isAbsolute, join, resolve } from "node:path";
-import { acquireCargoBuildLeaseV1 } from "../../../../🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
-import { terminateOwnedChildTree } from "../../../../🏃️process/🪓️termination/🟦️.ts";
+import { acquireCargoBuildLeaseV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import { terminateOwnedChildTree } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/🟦️.ts";
 import policySchema from "./🧬️schema/🔣️.json" with { type: "json" };
 

@@ -6,7 +6,7 @@ import { existsSync, readFileSync } from "node:fs";
 
 const engine = new URL("../../", import.meta.url);
 const read = (path: string) => readFileSync(new URL(path, engine), "utf8");
-const fixture = JSON.parse(read("🧫️fixtures/♻️frame-close/🔣️.json"));
+const fixture = JSON.parse(read("🧪️tests/🧫️fixtures/♻️frame-close/🔣️.json"));
 
 const grantKey = "https://semio.dev/schema/value/retained-clone/grant";
 const authoritySchema = () => new Ajv2020({ strict: true }).addMetaSchema(draft7).addSchema(JSON.parse(read("../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json")), grantKey);
@@ -107,8 +107,13 @@ test("the actual draft writer forwards the original full caller grant and receip
 test("the actual empty engine backing quotes and receipts its physical array release", () => {
   const source = read("🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
   const owner = source.slice(source.indexOf("struct FrameEnginePackets {"), source.indexOf("pub(crate) struct AppFrameBuild"));
-  for (const marker of ["slots: Option<Box<", "fn terminal_is_empty", "fn backing_retirement_demands", "grant: semio_framework_job::RetainedCloneGrant", "grant.maximum_release_bytes < demand.release_bytes", "drop(self.slots.take())", "released_bytes: demand.release_bytes"]) expect(owner.includes(marker)).toBe(true);
+  for (const marker of ["slots: [Option<Box<", "fn terminal_is_empty", "fn backing_retirement_demands", "grant: semio_framework_job::RetainedCloneGrant", "grant.maximum_release_bytes < demand.release_bytes", "drop(self.slots[index].take())", "released_bytes: demand.release_bytes"]) expect(owner.includes(marker)).toBe(true);
   expect(fixture.enginePacketBacking.slots).toBe(256);
+  expect(fixture.enginePacketBacking.pageSlots).toBe(16);
+  const database = new Database(":memory:");
+  try { expect(database.query("SELECT ?1/?2 AS pages").get(fixture.enginePacketBacking.slots, fixture.enginePacketBacking.pageSlots)).toEqual({ pages: 16 }); } finally { database.close(); }
+  expect(owner.includes("fn prepare_step")).toBe(true);
+  expect(owner.includes("slots: [const { None }; FRAME_ENGINE_PACKET_PAGES]")).toBe(true);
   const library = read("🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📚️library/🦀️.rs");
   expect(library.includes("static RENDERER_HEAP_WITNESS: semio_framework_trace::HeapWitness")).toBe(true);
 });
@@ -121,7 +126,7 @@ test("native and browser bootstrap frame authority is explicit, finite and prese
 
 test("original Scene camera storage has strict packed identities and independent SQLite ownership semantics",()=>{
  expect(existsSync(new URL("🧱️elements/🎞️Scenes/⏱️camera/🧬️schema/🔣️.json",engine))).toBe(false);
- const base="🧱️elements/🎞️Scenes/⏱️camera/",law=JSON.parse(read(base+"🧫️fixtures/🔣️.json")),validate=authoritySchema().getSchema(grantKey)!;expect(validate(law.rootGrant)).toBe(true);for(const axis of Object.keys(law.rootGrant)){const missing=structuredClone(law.rootGrant);delete missing[axis];expect(validate(missing)).toBe(false);}
+ const base="🧱️elements/🎞️Scenes/⏱️camera/",law=JSON.parse(read(base+"🧪️tests/🧫️fixtures/🔣️.json")),validate=authoritySchema().getSchema(grantKey)!;expect(validate(law.rootGrant)).toBe(true);for(const axis of Object.keys(law.rootGrant)){const missing=structuredClone(law.rootGrant);delete missing[axis];expect(validate(missing)).toBe(false);}
  const db=new Database(":memory:");try{const sql=db.query("SELECT lower(hex(CAST(?1||?2||?3||?4||?5||?6 AS BLOB))) AS hex,length(CAST(?1||?2||?3||?4||?5||?6 AS BLOB)) AS bytes");for(const row of law.cases){const o=row.owner,texts=[row.host,row.surface,o?.host??"",o?.window??"",o?.surface??"",o?.key.explicit??""];expect(sql.get(...texts)).toEqual({hex:row.packed.hex,bytes:row.packed.bytes});let offset=0;expect(texts.map(value=>{const bytes=Buffer.byteLength(value);const range=[offset,bytes];offset+=bytes;return range;})).toEqual(row.packed.ranges);}db.run("CREATE TABLE deadline(host TEXT PRIMARY KEY,at REAL,owner TEXT)");db.run("INSERT INTO deadline VALUES ('host',120,'old')");db.run("INSERT INTO deadline VALUES ('host',240,'new') ON CONFLICT(host) DO UPDATE SET at=excluded.at,owner=excluded.owner");expect(db.query("SELECT at,owner FROM deadline WHERE host='host'").get()).toEqual({at:240,owner:"new"});}finally{db.close();}
  expect(law.maximumEntries).toBe(256);expect(law.maximumIdentifierBytes).toBe(256);expect(existsSync(new URL(base+"🦀️.rs",engine))).toBe(true);const source=read("🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs");expect(source.includes("hash_map::IntoIter<String, SceneCameraDeadline>")).toBe(false);expect(source.includes("camera_storage::DirectoryOwner")).toBe(true);const owner=read(base+"🦀️.rs");for(const marker of ["RetainedCloneGrant","RetainedCloneProgress","size_of","Layout","original_body_ptr","maximum_release_bytes","maximum_capacity_bytes"])expect(owner.includes(marker)).toBe(true);
 });
@@ -129,7 +134,7 @@ test("original Scene camera storage has strict packed identities and independent
 
 test("camera exact capacity and identifier refusals agree with independent SQLite state transitions", () => {
   const base = "🧱️elements/🎞️Scenes/⏱️camera/";
-  const corpus = JSON.parse(read(base + "🧫️fixtures/🔣️.json"));
+  const corpus = JSON.parse(read(base + "🧪️tests/🧫️fixtures/🔣️.json"));
   const law = corpus.boundaries;
   const db = new Database(":memory:");
   try {

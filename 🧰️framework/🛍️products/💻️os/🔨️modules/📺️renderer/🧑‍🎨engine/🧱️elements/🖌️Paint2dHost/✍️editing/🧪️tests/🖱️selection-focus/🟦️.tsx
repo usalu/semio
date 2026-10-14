@@ -20,7 +20,7 @@ function PixelEditingOverlay(props:Omit<ComponentProps<typeof ControlledPixelEdi
   }}/>;
 }
 const editCalls=(dispatch:{mock:{calls:any[][]}})=>dispatch.mock.calls.filter(call=>["transformImage","fillSelection","maskFromSelection","paintStroke","applyFilter"].includes(call[0]));
-import fixture from "../../🧫️fixtures/🖱️selection-focus/🔣️.json";
+import fixture from "../🧫️fixtures/🖱️selection-focus/🔣️.json";
 
 vi.mock("@semio-tech/ui-react",async original=>({...await original<typeof import("@semio-tech/ui-react")>(),useTranslation:()=>({i18n:{resolvedLanguage:"en"}})}));
 vi.mock("../../../../📐️Canvas2dHost/🟦️.tsx",()=>({canvasPinchCamera:()=>({x:0,y:0,zoom:1})}));
@@ -287,7 +287,7 @@ for(const kind of ["pixel","group"])for(const sample of fixture.affineMaskTarget
 });
 
 import patch,{type Operation} from "fast-json-patch";
-import revisions from "../../../../../../../../../../🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🖌️stroke-revision/🔣️.json";
+import revisions from "../../../../../../../../../../🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🖌️stroke-revision/🔣️.json";
 for(const row of revisions.cases)test("active stroke handles target revision "+row.name,async()=>{
   vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});
   vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);

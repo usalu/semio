@@ -1,0 +1,8 @@
+{
+  "pageBytes": 4096,
+  "largeEntryBytes": 65536,
+  "replacementRepeats": 4096,
+  "cancelAfterTurns": 6,
+  "minimumCompleteTurns": 20,
+  "maximumCloseTurns": 256
+}

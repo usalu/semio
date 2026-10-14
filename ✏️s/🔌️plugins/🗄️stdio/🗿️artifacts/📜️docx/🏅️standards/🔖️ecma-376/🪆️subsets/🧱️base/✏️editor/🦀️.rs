@@ -170,7 +170,8 @@ impl ArtifactCommandWork<EditorApp<DocxEditor>> for DocxSetPageWork {
         docx_work_demand(input.command)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<DocxEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<DocxEditor>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<DocxEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<DocxEditor>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.closing || self.complete {
             return Err(Fault::from("stdio.docx.set-page.work-closed"));
         }
@@ -194,6 +195,9 @@ impl ArtifactCommandWork<EditorApp<DocxEditor>> for DocxSetPageWork {
         let copied = self.copied_text.take().ok_or_else(|| Fault::from("stdio.docx.set-page.copy-incomplete"))?;
         self.complete = true;
         Ok(ArtifactCommandWorkStep::Complete(Emit { artifact_mutations: vec![DocxMutation::SetRunText(set_run_text::SetRunText { address: address.clone(), text: copied })], ..Default::default() }))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) {

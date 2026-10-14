@@ -3,7 +3,7 @@
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::JackSnapshot;
 use semio_framework_plugin::{Emit, NoConfigMutation};
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
 
 pub(crate) fn preset_query(preset_id: &str) -> &'static str {
     match preset_id {

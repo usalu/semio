@@ -27,7 +27,7 @@ struct EncodingFixture {
 }
 
 fn fixture() -> EncodingFixture {
-    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/⬇️media-export-encoding/🔣️.json")).expect("media-export-encoding fixture JSON")
+    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/⬇️media-export-encoding/🔣️.json")).expect("media-export-encoding fixture JSON")
 }
 
 const WGPU_SHELL_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");

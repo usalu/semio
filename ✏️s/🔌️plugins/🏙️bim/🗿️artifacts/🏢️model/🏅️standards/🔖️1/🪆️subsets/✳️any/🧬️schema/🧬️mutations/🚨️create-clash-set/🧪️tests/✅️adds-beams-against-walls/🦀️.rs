@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🚨️create-clash-set/✅️adds-beams-against-walls",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚨️create-clash-set/✅️adds-beams-against-walls/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚨️create-clash-set/✅️adds-beams-against-walls/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚨️create-clash-set/✅️adds-beams-against-walls/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚨️create-clash-set/✅️adds-beams-against-walls/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🚨️create-clash-set/✅️adds-beams-against-walls/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚨️create-clash-set/✅️adds-beams-against-walls/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚨️create-clash-set/✅️adds-beams-against-walls/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚨️create-clash-set/✅️adds-beams-against-walls/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚨️create-clash-set/✅️adds-beams-against-walls/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚨️create-clash-set/✅️adds-beams-against-walls/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

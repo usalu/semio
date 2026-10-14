@@ -426,7 +426,8 @@ impl ArtifactCommandWork<EditorApp<RasterPlayApp>> for PaintStrokeWork {
         Ok(semio_framework_value::RetirementDemand { copy_bytes, capacity_bytes: samples, depth: 1, ..Default::default() })
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<RasterPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<RasterPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<RasterPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<RasterPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("raster-paint-stroke-work-repeated"));
         }
@@ -442,6 +443,9 @@ impl ArtifactCommandWork<EditorApp<RasterPlayApp>> for PaintStrokeWork {
             _ => Vec::new(),
         };
         Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { window_transient, ..Default::default() } })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 //#endregion 🧵️RetainedWork

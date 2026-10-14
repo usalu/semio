@@ -13,11 +13,11 @@ use crate::program_bridge::window_engagements_section_tests::{engagements_sectio
 use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, UtilityDefinition};
 
 fn pane_fixture() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🎬️window-actions-search-panes/🔣️.json")).expect("window actions/search pane fixture")
+    serde_json::from_str(include_str!("../🧫️fixtures/🎬️window-actions-search-panes/🔣️.json")).expect("window actions/search pane fixture")
 }
 
 fn tree_density_fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🌳️tree-row-density/🔣️.json")).expect("tree row density fixture")
+    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🌳️tree-row-density/🔣️.json")).expect("tree row density fixture")
 }
 
 /// 🎬️ puzzle3d's shape in miniature: one window kind opened as two instances, whose actions span

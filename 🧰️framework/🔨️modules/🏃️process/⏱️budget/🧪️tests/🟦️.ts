@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 
 test("execution budgets follow portable environment laws and independent native oracles", async () => {
   const owner = resolve(import.meta.dir, ".."), source = join(owner, "🟦️.ts");
-  const corpus = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
+  const corpus = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
   const require = createRequire(import.meta.url), ajv = new (require("ajv").default)();
   ajv.addSchema(schema);

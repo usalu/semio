@@ -10,11 +10,11 @@ use crate::diff::Grid3dDiff;
 use crate::mutations::{inverse_grid3d_mutation, Grid3dMutation};
 use crate::schema::snapshot::Grid3dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️resize-grid/📐️grows-the-grid-to-3x2x2/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️resize-grid/📐️grows-the-grid-to-3x2x2/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️resize-grid/📐️grows-the-grid-to-3x2x2/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️resize-grid/📐️grows-the-grid-to-3x2x2/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️resize-grid/📐️grows-the-grid-to-3x2x2/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️resize-grid/📐️grows-the-grid-to-3x2x2/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️resize-grid/📐️grows-the-grid-to-3x2x2/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️resize-grid/📐️grows-the-grid-to-3x2x2/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️resize-grid/📐️grows-the-grid-to-3x2x2/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️resize-grid/📐️grows-the-grid-to-3x2x2/🎯️outcome/🔣️.json");
 
 fn before() -> Grid3dSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

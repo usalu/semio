@@ -8,7 +8,7 @@ use serde_json::Value;
 use std::cell::Cell;
 
 fn fixtures() -> Value {
-    serde_json::from_str(include_str!("../../../🧫️fixtures/💥️collision/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/💥️collision/🔣️.json")).unwrap()
 }
 
 fn xyz(v: &Value) -> Xyz {

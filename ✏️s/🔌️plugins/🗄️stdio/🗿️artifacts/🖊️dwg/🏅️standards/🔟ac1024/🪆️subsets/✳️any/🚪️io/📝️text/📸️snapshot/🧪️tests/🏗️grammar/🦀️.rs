@@ -3,7 +3,7 @@ use crate::standards::v_ac1024::subsets::any::io::text::snapshot::*;
 /// 🏗️ The same closed corpus covers genuine zero-field records and malformed structure.
 #[semio_framework_async_macros::async_test]
 async fn dwg_grammar_shape_empty_record_matches_language_agnostic_corpus() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏗️grammar/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🏗️grammar/🔣️.json")).unwrap();
     assert_eq!(corpus["record"]["fieldCount"], 0);
     let rows = corpus["cases"].as_array().unwrap();
     assert_eq!(rows.len(), 15);

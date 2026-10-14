@@ -4,11 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 
 const CASE: Case = Case {
     dir: "🔀️mirror-elements/🌀️mirrors-an-arc-wall-and-a-curtain-wall",
-    before: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/🌀️mirrors-an-arc-wall-and-a-curtain-wall/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/🌀️mirrors-an-arc-wall-and-a-curtain-wall/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/🌀️mirrors-an-arc-wall-and-a-curtain-wall/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/🌀️mirrors-an-arc-wall-and-a-curtain-wall/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️mirror-elements/🌀️mirrors-an-arc-wall-and-a-curtain-wall/🎯️outcome/🔣️.json"),
+    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/🌀️mirrors-an-arc-wall-and-a-curtain-wall/📸️snapshot/⬅️before/🔣️.json"),
+    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/🌀️mirrors-an-arc-wall-and-a-curtain-wall/📸️snapshot/➡️after/🔣️.json"),
+    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/🌀️mirrors-an-arc-wall-and-a-curtain-wall/🦠️mutation/🔣️.json"),
+    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/🌀️mirrors-an-arc-wall-and-a-curtain-wall/🔺️diff/🔣️.json"),
+    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️mirror-elements/🌀️mirrors-an-arc-wall-and-a-curtain-wall/🎯️outcome/🔣️.json"),
 };
 
 #[semio_framework_async_macros::async_test]

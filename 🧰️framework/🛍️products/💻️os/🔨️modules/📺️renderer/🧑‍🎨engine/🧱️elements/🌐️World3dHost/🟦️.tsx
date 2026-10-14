@@ -3449,6 +3449,24 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
   /** ⚡️ Registers the instance root group for imperative mid-drag gumball live preview. */
   readonly onRootRef?: (id: string, group: Group | null) => void;
 }) {
+  const reportDraw = useMemo<ComponentProps<"mesh">["onAfterRender"]>(() => {
+    let canvas: HTMLCanvasElement | null = null;
+    let retainedRevision: string | null = null;
+    let surface: HTMLElement | null = null;
+    return (renderer, _scene, _camera, drawnGeometry) => {
+      const currentCanvas = renderer.domElement;
+      if (canvas !== currentCanvas || !surface?.isConnected) surface = currentCanvas.closest<HTMLElement>("[data-meshes-json]");
+      const revision = surface?.dataset.worldGeometryRevision ?? null;
+      if (!surface || !revision || (canvas === currentCanvas && retainedRevision === revision)) return;
+      canvas = currentCanvas;
+      retainedRevision = revision;
+      currentCanvas.dataset.worldGeometryDrawn = instance.id;
+      currentCanvas.dataset.worldGeometryMesh = instance.meshId ?? instance.id;
+      currentCanvas.dataset.worldGeometryRevision = revision;
+      currentCanvas.dataset.worldGeometryVertices = String(drawnGeometry.getAttribute("position")?.count ?? 0);
+      if (runtimeDiagnosticsEnabled()) console.debug("[DEBUG] world geometry drawn", instance.id, instance.meshId ?? instance.id, drawnGeometry.getAttribute("position")?.count ?? 0);
+    };
+  }, [instance.id, instance.meshId, geometry]);
   const rootRef = useCallback(
     (group: Group | null) => {
       onRootRef?.(instance.id, group);
@@ -3503,6 +3521,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
         <>
           {hasShadedMesh && geometry ? (
             <PaintTexturedMesh
+            onAfterRender={reportDraw}
             geometry={geometry}
             appearance={appearance}
             style={style}
@@ -3583,6 +3602,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
           {provisional && borderGeometry ? <ToolRunProvisionalOutline geometry={borderGeometry} /> : null}
           {(targets.edge || isCurveOnly || (showEdges ?? true) || (selectionMode === "mesh" && selectedComponentIds.size > 0)) && edgeGeometry ? (
             <lineSegments
+              onAfterRender={reportDraw}
               geometry={edgeGeometry}
               renderOrder={2}
               onClick={(event) => {
@@ -3637,6 +3657,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
           ) : null}
           {(targets.vertex || isPointOnly) && vertexPick ? (
             <points
+              onAfterRender={reportDraw}
               geometry={vertexPick.geometry}
               onClick={(event) => {
                 if (lockedClickClears) {
@@ -4703,8 +4724,9 @@ function WorldComputeStatusPane({
   readonly onCancel: () => void;
 }) {
   const idle = !status.computing && !status.cancellable && status.phase !== "cancelled";
-  const german = (locale ?? "en").toLowerCase().startsWith("de");
-  const phaseText = status.phaseLabel ? (german ? status.phaseLabel.de : status.phaseLabel.en) : null;
+  const language = locale?.toLowerCase().split(/[-_]/)[0];
+  const labels = language === "en" ? {loading: "Loading", cancel: "Cancel"} : language === "de" ? {loading: "Wird geladen", cancel: "Abbrechen"} : null;
+  const phaseText = status.phaseLabel && labels ? (language === "de" ? status.phaseLabel.de : status.phaseLabel.en) : null;
   const percent = status.unitsTotal > 0 ? Math.round(status.ratio * 100) : null;
   // 📢️ The live region STAYS MOUNTED while idle, rendering nothing.
   //
@@ -4726,6 +4748,7 @@ function WorldComputeStatusPane({
       </div>
     );
   }
+  if (!labels) return <div className="sr-only" data-slot="world-compute-status" data-compute-phase={status.phase} data-language-required="" role="status" aria-busy={status.computing ? "true" : undefined} />;
   return (
     <div
       className={cn("pointer-events-auto flex items-center gap-single rounded px-single py-half text-xs shadow-sm", glassClass)}
@@ -4734,19 +4757,21 @@ function WorldComputeStatusPane({
       data-compute-phase={status.phase}
       data-compute-cancellable={status.cancellable ? "" : undefined}
       data-compute-ratio={status.unitsTotal > 0 ? String(status.ratio) : undefined}
+      data-compute-units-done={status.unitsDone}
+      data-compute-units-total={status.unitsTotal}
       role="status"
       aria-busy={status.computing ? "true" : undefined}
     >
       {status.computing ? <Spinner size="small" /> : null}
-      <span data-slot="world-compute-phase">{phaseText ?? shellLabel("ui.common.loading")}</span>
+      <span data-slot="world-compute-phase">{phaseText ?? labels.loading}</span>
       {percent === null ? null : (
         <span data-slot="world-compute-progress">
           {status.unitsDone}/{status.unitsTotal} ({percent}%)
         </span>
       )}
       {status.cancellable ? (
-        <button type="button" data-slot="world-compute-cancel" data-cancel-action={status.cancelAction} className="rounded border px-half py-0 text-xs" onClick={onCancel}>
-          {shellLabel("ui.common.cancel")}
+        <button type="button" data-slot="world-compute-cancel" data-cancel-action={status.cancelAction} data-cancel-run-id={status.cancelArgs.runId} data-cancel-generation={status.cancelArgs.generation} className="rounded border px-half py-0 text-xs" onClick={onCancel}>
+          {labels.cancel}
         </button>
       ) : null}
     </div>
@@ -6422,6 +6447,8 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const sectionCapHex = useMemo(() => (modellingOptions?.section?.cap ? resolveWorld3dToneHex(modellingOptions.section.cap.tone) : undefined), [modellingOptions?.section?.cap, meshStylePalette]);
   // 🧊️ The retained mesh set advances per mesh, so a refresh that republishes an unchanged mesh keeps
   // that record's object identity and the instanced layer keeps its already-built buffers.
+  const geometryRevisionRef = useRef({source: scene?.meshesJson, instances: scene?.instancesJson, revision: 1});
+  if (geometryRevisionRef.current.source !== scene?.meshesJson || geometryRevisionRef.current.instances !== scene?.instancesJson) geometryRevisionRef.current = {source: scene?.meshesJson, instances: scene?.instancesJson, revision: geometryRevisionRef.current.revision + 1};
   const meshResidencyRef = useRef<WorldMeshResidencyV1 | null>(null);
   const meshes = useMemo(() => {
     const advanced = advanceWorldMeshResidency(meshResidencyRef.current, scene?.meshesJson ?? "[]");
@@ -8173,6 +8200,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       data-orbit-view-gizmo=""
       data-puzzle3d-fixture-drag-active={catalogueDropPreview ? "" : undefined}
       data-meshes-json={scene.meshesJson ?? undefined}
+      data-world-geometry-revision={geometryRevisionRef.current.revision}
       data-instances-json={scene.instancesJson ?? undefined}
       data-target-volumes-json={scene.targetVolumesJson ?? undefined}
       data-engagement-preview-json={scene.engagementPreviewJson ?? undefined}

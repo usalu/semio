@@ -9,6 +9,22 @@
     "family:os-kernel"
   ],
   "targets": {
+    "test-typed-snapshot-file-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-typed-snapshot-file-native"
+      }
+    },
+    "test-typed-snapshot-file-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-typed-snapshot-file-source"
+      }
+    },
     "test-original-registry-alias-custody": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -730,7 +746,7 @@
         "default",
         "^default",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🔏️document-execution-target-lease-v1/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json"
       ],
       "outputs": [],
       "options": {
@@ -873,6 +889,54 @@
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-returned-read-factory-mount"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-original-cleanup-context-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-cleanup-context-native"
+      }
+    },
+    "test-config-paged-source-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-config-paged-source source"
+      }
+    },
+    "test-config-paged-source-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-config-paged-source native"
+      }
+    },
+    "test-space-history-validation-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-space-history-validation source"
+      }
+    },
+    "test-space-history-validation-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-space-history-validation native"
       }
     }
   },

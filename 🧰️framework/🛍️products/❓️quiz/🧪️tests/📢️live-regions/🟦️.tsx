@@ -12,7 +12,7 @@ import { render } from "@testing-library/react";
 import { roles } from "aria-query";
 import { describe, expect, it } from "vitest";
 import { ConnectionStatus, QUIZ_LOCALES, TaskClock, connectionMessage, formatDuration, quizText, type QuizConnection } from "@semio-tech/quiz-react";
-import regions from "../../🧫️fixtures/📢️live-regions/🔣️.json";
+import regions from "../🧫️fixtures/📢️live-regions/🔣️.json";
 
 type Locale = (typeof QUIZ_LOCALES)[number];
 

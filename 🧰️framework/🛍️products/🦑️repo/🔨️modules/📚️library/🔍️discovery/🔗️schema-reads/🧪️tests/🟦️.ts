@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { inspectSchemaValidationReads, inspectSchemaValidationReadIndex } from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
-import examples from "../🧫️fixtures/🔣️.json";
+import examples from "./🧫️fixtures/🔣️.json";
 
 const sha = (text: string) => createHash("sha256").update(text).digest("hex");
 

@@ -1,7 +1,7 @@
 /** 🏭️ IFC2x3 exact decimal fields and EDM data remain independently queryable. */
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import f from "../🧫️fixtures/🔣️.json";
+import f from "./🧫️fixtures/🔣️.json";
 import type {Ifc2x3Snapshot,Part21Value} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import type {Ifc2x3Artifact,Ifc2x3Diff,Ifc2x3Mutation} from "@semio-tech/stdio-ifc";
 import {IFC2X3_SQLITE_SCHEMA,ifc2x3SnapshotToSqliteDatabase,ifc2x3SnapshotFromSqliteDatabase} from "../🟦️.ts";
@@ -13,7 +13,7 @@ test("IFC2x3 independent corrupt ownership decimal width and optional EDM reject
 test("IFC2x3 cancellation and budgets bound exact decimal validation and deep graphs",async()=>{const input=fixture(),database=await ifc2x3SnapshotToSqliteDatabase(input);await expect(ifc2x3SnapshotToSqliteDatabase(input,{maxRows:1})).rejects.toThrow();await expect(ifc2x3SnapshotFromSqliteDatabase(database,{maxValueBytes:1})).rejects.toThrow();input.document.instances[0]!.entities[0]!.arguments=[{kind:"real",value:{negative:false,coefficient:"1".repeat(100000),scale:4294967295}}];const cancel=new AbortController();let large=false;await expect(ifc2x3SnapshotToSqliteDatabase(input,{signal:cancel.signal,onProgress:p=>{if(p.phase==="projectSnapshot"&&p.total===100000){large=true;cancel.abort();}}})).rejects.toThrow();expect(large).toBe(true);let value:Part21Value={kind:"unset"};for(let i=0;i<1200;i++)value={kind:"list",values:[value]};input.document.instances[0]!.entities[0]!.arguments=[value];const restored=await ifc2x3SnapshotFromSqliteDatabase(await ifc2x3SnapshotToSqliteDatabase(input));let cursor=restored.document.instances[0]!.entities[0]!.arguments[0]!,depth=0;while(cursor.kind==="list"){depth++;cursor=cursor.values[0]!;}expect(depth).toBe(1200);const cycle:Part21Value={kind:"list",values:[]};cycle.values.push(cycle);input.document.instances[0]!.entities[0]!.arguments=[cycle];await expect(ifc2x3SnapshotToSqliteDatabase(input)).rejects.toThrow(/cyclic/);});
 
 import Ajv from "ajv";
-import cohort from "../../../../../../../../../../📇️registry/🧬️contract/📐️part21/🧫️fixtures/🚦️sqlite-cohort/🔣️.json";
+import cohort from "../../../../../../../../../../📇️registry/🧬️contract/📐️part21/🧪️tests/🧫️fixtures/🚦️sqlite-cohort/🔣️.json";
 
 
 test("Part21 full header and retirement-name neutral fields remain independently interpretable",async()=>{
@@ -72,7 +72,7 @@ test("IFC2x3 literal owned coefficients and independent positive SQL surrogates 
 });
 
 test("IFC2x3 native backing and semantic cell limits have closed independent roles",async()=>{
- const vector=await Bun.file(new URL("../🧫️fixtures/💰️backing/🔣️.json",import.meta.url)).json();
+ const vector=await Bun.file(new URL("🧫️fixtures/💰️backing/🔣️.json",import.meta.url)).json();
  expect(vector["forecast"]).toEqual("unpaidBorrowedBound");expect(vector["allocation"]).toEqual("fullConcreteBufferBeforeConstruction");expect(vector["retirement"]).toEqual("noCumulativeRefund");expect(vector["inlineRoot"]).toEqual("noBackingRequest");expect(vector["semanticTables"]).toEqual(12);expect(vector["limits"]["semantic"]).toEqual("maxValueBytes");expect(vector["limits"]["backing"]).toEqual("maxAllocationBytes");expect(vector["limits"]["file"]).toEqual("maxFileBytes");expect(vector["nativeRoles"]["owned"]).toEqual("maxAllocationBytes");expect(vector["nativeRoles"]["semantic"]).toEqual("maxValueBytes");expect(vector["nativeRoles"]["preflight"]).toEqual("paidFrontiersOnly");expect(vector["nativeRoles"]["decimal"]).toEqual("literalUtf8Coefficient");
  expect(vector.inlineRoot).toBe("noBackingRequest");expect(vector.nativeRoles.decimal).toBe("literalUtf8Coefficient");
  const db=new Database(":memory:");try{
@@ -110,7 +110,7 @@ test("IFC2x3 subset history snapshots have independent complete relational witne
 });
 
 test("IFC2x3 removal-result references preserve full owner through independently edited files",async()=>{
- const corpus=await Bun.file(new URL("../🧫️fixtures/🧩️intermediate/🔣️.json",import.meta.url)).json();
+ const corpus=await Bun.file(new URL("🧫️fixtures/🧩️intermediate/🔣️.json",import.meta.url)).json();
  
  const {default:Ajv}=await import("ajv");
  for(const case_ of corpus.cases){
@@ -130,7 +130,7 @@ test("IFC2x3 removal-result references preserve full owner through independently
  }
 });
 test("IFC2x3 complete positive SQL surrogates preserve literal native identities",async()=>{
- const corpus=await Bun.file(new URL("../🧫️fixtures/🧩️intermediate/🔣️.json",import.meta.url)).json(),input=fixture(),physical=Database.deserialize(await exportSqliteDatabase(await ifc2x3SnapshotToSqliteDatabase(input)));
+ const corpus=await Bun.file(new URL("🧫️fixtures/🧩️intermediate/🔣️.json",import.meta.url)).json(),input=fixture(),physical=Database.deserialize(await exportSqliteDatabase(await ifc2x3SnapshotToSqliteDatabase(input)));
  try{
   physical.exec("PRAGMA foreign_keys=OFF");
   for(const{name}of physical.query("SELECT name FROM sqlite_schema WHERE type='table'").all()as{name:string}[]){
@@ -151,7 +151,7 @@ test("IFC2x3 resolved reference witnesses agree exactly with literal native word
 });
 
 import NormSemanticAjv from "ajv/dist/2020.js";
-import normSemanticContract from "../🧫️fixtures/🎛️semantic.json";
+import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {ifc2x3SnapshotToSqliteDatabase as normSemanticProject,ifc2x3SnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
 import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

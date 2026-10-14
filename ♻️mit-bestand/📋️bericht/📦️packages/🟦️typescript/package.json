@@ -13,6 +13,7 @@
   },
   "bundleKind": "asset",
   "devDependencies": {
-    "d3-force": "3.0.0"
+    "d3-force": "3.0.0",
+    "@semio-tech/process": "workspace:*"
   }
 }

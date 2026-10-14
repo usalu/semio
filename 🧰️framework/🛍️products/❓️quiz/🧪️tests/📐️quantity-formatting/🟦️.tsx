@@ -11,7 +11,7 @@
 import { describe, expect, it } from "vitest";
 import type { Scale } from "@semio-tech/quiz";
 import { QUIZ_LOCALES, SIGNIFICANT_DIGITS, SI_PREFIXES, ceilSignificant, engineering, floorSignificant, formatCount, formatCountdown, formatDuration, formatFactor, formatNumber, formatPoints, formatQuantity, formatScore, formatTimes, parseQuantity, withMinusSign, withUnit, type QuizLocale, type Toward } from "@semio-tech/quiz-react";
-import vectors from "../../🧫️fixtures/📐️quantity-formatting/🔣️.json";
+import vectors from "../🧫️fixtures/📐️quantity-formatting/🔣️.json";
 
 interface Vector {
   readonly id: string;

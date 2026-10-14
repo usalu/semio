@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn original_json_operation_enforces_semantic_container_depth_before_empty_container_birth(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let normal=serde_json::from_value(law["normalAuthority"].clone()).unwrap();let retirement=serde_json::from_value(law["retirementAuthority"].clone()).unwrap();let turn:RetainedCloneGrant=serde_json::from_value(law["turn"].clone()).unwrap();let close_turn:RetainedCloneGrant=serde_json::from_value(law["closeTurn"].clone()).unwrap();let maximum_turns=law["maximumTurns"].as_u64().unwrap();
     for row in law["cases"].as_array().unwrap(){
         let source=row["source"].as_str().unwrap();let expected:serde_json::Value=serde_json::from_str(source).unwrap();let source_pointer=source.as_ptr();let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new_retained(&mut accepted);

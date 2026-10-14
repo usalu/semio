@@ -21,7 +21,7 @@ impl DirectoryTransport for TestTransport {
     fn issue_socket_grant(&self, _: &OperationContext, _: &str, _: &str, _: &[u8], _: u64) -> Result<HttpResponse, TransportError> { unreachable!() }
     fn open_ws(&self, _: &OperationContext, _: &str, _: &[String], _: u64) -> Result<Self::Ws, TransportError> { unreachable!() }
 }
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
 fn decode<R: FromValue>(value: &serde_json::Value) -> R { semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap() }
 fn context() -> OperationContext { OperationContext { actor: 0, generation: 0, trace: semio_framework_async::TraceId(0), lane: 0, deadline_ms: None, cancel: semio_framework_async::CancelToken::root_now(), capability: None } }
 

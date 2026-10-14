@@ -1,0 +1,28 @@
+{
+  "objects": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "obj-hull",
+        "patch": {
+          "paintLayers": null,
+          "patch": {
+            "mesh": null,
+            "meshContent": null,
+            "name": "Hull, revised",
+            "smoothShading": null,
+            "meshState": null,
+            "position": null,
+            "rotation": null,
+            "scale": null
+          },
+          "meshVertices": [],
+          "meshAttributes": []
+        }
+      }
+    ]
+  },
+  "schema": null
+}

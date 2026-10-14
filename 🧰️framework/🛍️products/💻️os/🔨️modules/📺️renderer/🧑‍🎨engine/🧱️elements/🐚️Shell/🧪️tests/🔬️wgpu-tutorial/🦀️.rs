@@ -226,7 +226,7 @@ fn gesture_point_rejects_detached_semantic_surface() {
 //#region LifecycleTests
 #[test]
 fn tutorial_deadline_self_schedules_playback_recording_convergence_and_stops_at_terminal_states() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🎥️tutorial-bridge/🔣️.json")).expect("tutorial fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🎥️tutorial-bridge/🔣️.json")).expect("tutorial fixture");
     let clock = &fixture["clock"];
     for row in clock["deadlines"].as_array().expect("deadline rows") {
         let mode = match row["mode"].as_str().expect("mode") {

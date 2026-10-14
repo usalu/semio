@@ -1,0 +1,30 @@
+{
+  "fixture": "deflate-committed",
+  "maximumAllocationBytes": 8388608,
+  "maximumFrameBytes": 1048576,
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 2,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 262144,
+    "maximumDepth": 64
+  },
+  "cuts": [
+    0,
+    1,
+    5,
+    9
+  ],
+  "maximumTurns": 2097152,
+  "expected": {
+    "sameSource": true,
+    "sameControl": true,
+    "pagedOutput": true,
+    "noGather": true,
+    "paidWindow": true,
+    "paidPartial": true,
+    "exactLength": true,
+    "noTrailing": true,
+    "metadataStackClose": true
+  }
+}

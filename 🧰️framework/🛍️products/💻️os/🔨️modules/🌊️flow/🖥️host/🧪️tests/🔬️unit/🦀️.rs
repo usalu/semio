@@ -654,7 +654,7 @@ fn counting_replay_host_of(host: &FlowHost, dispatches: &std::sync::Arc<std::syn
 fn a_superseded_registry_generation_re_dispatches_an_unchanged_tree() {
     let _serialized = crate::registry::lock_flow_extension_registry_for_test();
     crate::registry::drain_flow_extension_registry_retirements();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📔️registry/🧫️fixtures/🔣️manifest-admission.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📔️registry/🧪️tests/🧫️fixtures/🔣️manifest-admission.json")).unwrap();
     let bump = &fixture["generationBump"];
     let source = host_with_test_bridge();
     let generation = source.eval_baseline_registry_generation();
@@ -690,7 +690,7 @@ fn a_superseded_registry_generation_re_dispatches_an_unchanged_tree() {
 
 #[test]
 fn connect_ports_admits_only_declared_neutral_endpoints() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/declared-endpoints/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/declared-endpoints/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mut host = host_with_test_fixture();
         let before = host.host_snapshot.synapses.len();
@@ -982,7 +982,7 @@ fn empty_canvas_world_point(host: &FlowHost) -> (f64, f64) {
 /// 🧭️ Uses a neutral admission fixture and independent JSON reader to verify the canonical journal caller.
 #[test]
 fn snapshot_io_prerequisite_flow_gesture_journal_admits_or_restores_all_moves() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚦️journal-admission.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚦️journal-admission.json")).unwrap();
     assert_eq!(fixture["capacity"].as_u64().unwrap() as usize, dag::DAG_GRAPH_EDIT_CAPACITY);
     for case in fixture["cases"].as_array().unwrap() {
         let mut host = host_with_test_fixture();
@@ -1243,7 +1243,7 @@ fn flow_host_enables_minimap_widget_on_dag() {
 /// second. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
 ///
 /// @see `🧰️framework/🔨️modules/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json` — `surfaceRows`
-const CAMERA_FIT_FIXTURE_JSON: &str = include_str!("../../../../../../../🔨️modules/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json");
+const CAMERA_FIT_FIXTURE_JSON: &str = include_str!("../../../../../../../🔨️modules/🖼️canvas/🧪️tests/🧫️fixtures/📷️camera-fit/🔣️.json");
 
 /// 🕸️ The hexagonal mushroom column's own graph, laid out the way the shipped example lays it out —
 /// the graph whose nodes sit at negative surface x, which is what made the stale publication visible.
@@ -1448,7 +1448,7 @@ fn contributed_extension_manifest_installs_catalogue_operator() {
 fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
     let mut host = host_with_test_fixture();
     host.set_neuron_kind_infos_json(&test_kind_infos_json());
-    host.replace_host_snapshot(<FlowHostSnapshot as crate::os_store::serialization::ArtifactDsl>::parse_dsl(include_str!("../../../📚️examples/🗣️.dsl.semio")).expect("fixture"));
+    host.replace_host_snapshot(<FlowHostSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(include_str!("../../../📚️examples/🗣️.dsl.semio")).expect("fixture"));
     assert!(!host.dag.host_snapshot.edges.is_empty(), "synapses should become dag edges");
     let add = host.dag.host_snapshot.nodes.iter().find(|node| node.id == "add").expect("add node");
     assert_eq!(add.inputs().len(), 2);

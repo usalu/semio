@@ -18,7 +18,7 @@ fn close<T:RetireOwned>(original:T,held:usize,copy:usize,cut:usize){
 }
 #[test]
 fn error_retirement_value_error_preserves_borrowed_and_owned_cow_original_backing(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../🌱️value/⚠️refusal/♻️retirement/🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../🌱️value/⚠️refusal/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in law["cases"].as_array().unwrap(){for copy in law["copyGrants"].as_array().unwrap(){for cut in law["cancelCuts"].as_array().unwrap(){
   let text=row["text"].as_str().unwrap();let original=if row["ownership"]=="borrowed"{ValueError::literal(ValueRefusalKind::InvalidValue,"immutable refusal")}else{let mut message=String::with_capacity(row["capacity"].as_u64().unwrap()as usize);message.push_str(text);ValueError::new(ValueRefusalKind::InvalidValue,message)};
   assert_eq!(original.message,text);assert_eq!(original.kind.as_str(),"invalidValue");let oracle=serde_json::json!({"kind":original.kind.as_str(),"display":original.to_string()});assert_eq!(oracle["display"],text);
@@ -28,7 +28,7 @@ fn error_retirement_value_error_preserves_borrowed_and_owned_cow_original_backin
 }
 #[test]
 fn error_retirement_mutation_apply_error_preserves_original_code_prose_targets_and_empty_capacities(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in law["cases"].as_array().unwrap(){for copy in law["copyGrants"].as_array().unwrap(){for cut in law["cancelCuts"].as_array().unwrap(){
   let caps=row["capacities"].as_array().unwrap();let make=|index:usize,text:&str|{let mut value=String::with_capacity(caps[index].as_u64().unwrap()as usize);value.push_str(text);value};let mut target=Vec::with_capacity(row["targetCapacity"].as_u64().unwrap()as usize);for(index,text)in row["wire"]["target"].as_array().unwrap().iter().enumerate(){target.push(make(index+2,text.as_str().unwrap()));}
   let original=MutationApplyError{code:make(0,row["wire"]["code"].as_str().unwrap()),message:make(1,row["wire"]["message"].as_str().unwrap()),target};let wire=semio_framework_value::ToValue::to_value(&original);assert_eq!(serde_json::to_value(wire).unwrap(),row["wire"]);let held=original.code.capacity()+original.message.capacity()+original.target.capacity()*std::mem::size_of::<String>()+original.target.iter().map(String::capacity).sum::<usize>();let pointer=original.target.as_ptr();let (_,heap)=observe_retirement_allocations(||{assert!(original.retirement_birth_bytes().is_some());assert_eq!(original.target.as_ptr(),pointer);});assert_eq!(heap,(0,0));

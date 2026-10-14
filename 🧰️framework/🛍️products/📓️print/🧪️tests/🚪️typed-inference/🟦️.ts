@@ -6,7 +6,7 @@ import * as d3Polygon from "d3-polygon";
 import {inferVizLayerTable} from "../../🧬️schema/💡️inferences/🧮transform/🟦️.ts";
 import type {VizChartSpecification,VizRow} from "../../🧬️schema/📸️snapshot/📊️chart/🟦️.ts";
 import fixture from "./🔣️.json";
-import ownership from "../../🚪️io/🧫️fixtures/🏛️ownership/🔣️.json";
+import ownership from "../../🚪️io/🧪️tests/🧫️fixtures/🏛️ownership/🔣️.json";
 import Ajv from "ajv/dist/2020.js";
 import chartSchema from "../../🧬️schema/📸️snapshot/📊️chart/🔣️.json";
 import snapshotSchema from "../../🧬️schema/📸️snapshot/🔣️.json";
@@ -67,6 +67,6 @@ test("group identities compare owned scalar values without textual coercion",()=
 });
 
 test("Print original ownership examples retain no whole-trial schema authority",()=>{
- expect(existsSync(resolve(import.meta.dir,"../../🚪️io/🧫️fixtures/🏛️ownership/🧬️schema/🔣️.json"))).toBe(false);
+ expect(existsSync(resolve(import.meta.dir,"../../🚪️io/🧪️tests/🧫️fixtures/🏛️ownership/🧬️schema/🔣️.json"))).toBe(false);
  console.log("[DEBUG] Print plain ownership examples remain testing only; actual native representation/TreeSitter/D3 laws retained");
 });

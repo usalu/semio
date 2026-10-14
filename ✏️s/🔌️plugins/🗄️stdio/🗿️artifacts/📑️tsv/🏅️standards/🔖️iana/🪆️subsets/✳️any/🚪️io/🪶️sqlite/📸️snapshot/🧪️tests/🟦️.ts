@@ -1,15 +1,18 @@
+import { semioSchemaAjvV1 as originalGrantAjv } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import originalGrantSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
+const admitOriginalGrant=originalGrantAjv({strict:true}).compile(originalGrantSchema);
 import {existsSync as hasTrialSchema} from "node:fs";
 test("current whole trial declarations remain absent",()=>{expect(hasTrialSchema(new URL("../🫴️receiving/🛂️validation/🧬️schema/🔣️.json",import.meta.url))).toBe(false);expect(hasTrialSchema(new URL("../🫴️receiving/🧬️schema/🔣️.json",import.meta.url))).toBe(false);});
 /** 🧫️ Shared TSV semantic fixture and independent SQL editing interoperability. */
 import { Database } from "bun:sqlite";
-import subsetValidationPolicy from "../🫴️receiving/🛂️validation/🧫️fixtures/🔣️.json";
+import subsetValidationPolicy from "../🫴️receiving/🛂️validation/🧪️tests/🧫️fixtures/🔣️.json";
 test("TSV original receiving subset validation has a closed independent directional policy",()=>{
  const{cases}=subsetValidationPolicy;expect(subsetValidationPolicy.directions).toEqual(["decoding","encoding"]);
  const database=new Database(":memory:");try{for(const direction of subsetValidationPolicy.directions){for(const row of cases){const actual=database.query("SELECT CASE WHEN ? <> 'accepted' THEN 'canceled' WHEN ? = '*' THEN 'clean' ELSE 'unsupportedOwner' END AS kind").get(row.port,row.subset);expect(actual).toEqual({kind:row.kind});expect(direction==="decoding"||direction==="encoding").toBe(true);}}}finally{database.close();}
  expect(subsetValidationPolicy.grant).toEqual({maximumItems:0,maximumCopyBytes:0,maximumCapacityBytes:0,maximumReleaseBytes:0,maximumDepth:0});console.log("[DEBUG] TSV closed neutral eight-case receiving validation agrees with independent SQLite wildcard/refusal/cancellation policy; Native custody is checked separately");
 });
 import { expect, test } from "bun:test";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import { tsvSnapshotToSqliteDatabase, tsvSnapshotFromSqliteDatabase, TSV_SQLITE_SCHEMA } from "../🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework";
 import {parseRetainedCloneGrant} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts";
@@ -116,7 +119,7 @@ test("TSV empty records and intrinsic scalar text preserve native semantics", as
 });
 
 
-import controlFixture from "../🧫️fixtures/🛬️native-control/🔣️.json";
+import controlFixture from "./🧫️fixtures/🛬️native-control/🔣️.json";
 
 import Ajv2020 from "ajv/dist/2020";
 test("Tsv native control corpus retains complete literal owned fields independently of external format",async()=>{
@@ -144,7 +147,7 @@ test("tsv one literal Unicode field remains exact through independent SQLite sto
 });
 
 
-import backingFixture from "../🧫️fixtures/💰️backing/🔣️.json";
+import backingFixture from "./🧫️fixtures/💰️backing/🔣️.json";
 
 import {NativeDecodeControl as BackingDecodeControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
 import {SqliteAllocationControl as BackingAllocationControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
@@ -165,7 +168,7 @@ test("tsv authored relation indexes and literal octet admission have independent
 import {NativeDecodeControl as BudgetDecodeControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
 import {SqliteAllocationControl as BudgetAllocationControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
-import logicalOwnerFixture from "../🧫️fixtures/🧠️logical-owner/🔣️.json";
+import logicalOwnerFixture from "./🧫️fixtures/🧠️logical-owner/🔣️.json";
 
 import {parseTsvSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 test("TSV complete logical owner preserves empty row and document metadata in independent SQLite",async()=>{
@@ -196,9 +199,9 @@ const readExternalRows=independentTable.tsvParseRows;
 function readTSVLogicalAsset(bytes:Uint8Array){const wire=readClosedRecordPack(bytes,"stdio.tsv");return{schema:wire[0],records:wire[1],trailingNewline:wire[2],lineEnding:wire[3]===0?"lf":"crlf"};}
 test("TSV canonical producer assets retain complete owner fields and remain separate from authored raw tables",()=>{
  for(const [index,owner]of logicalOwnerFixture.snapshots.entries()){
-  const pack=readLogicalAsset(new URL("../🧫️fixtures/🧠️logical-owner/🎒️"+index+".pack.semio",import.meta.url));
+  const pack=readLogicalAsset(new URL("🧫️fixtures/🧠️logical-owner/🎒️"+index+".pack.semio",import.meta.url));
   expect(readTSVLogicalAsset(pack)).toEqual(owner);
-  const text=readLogicalAsset(new URL("../🧫️fixtures/🧠️logical-owner/🗣️"+index+".dsl.semio",import.meta.url),"utf8");
+  const text=readLogicalAsset(new URL("🧫️fixtures/🧠️logical-owner/🗣️"+index+".dsl.semio",import.meta.url),"utf8");
   expect(text.startsWith("semio stdio.tsv.dsl v1\n")).toBe(true);
   expect(text).toContain("schema=");
  }
@@ -210,7 +213,7 @@ test("TSV canonical producer assets retain complete owner fields and remain sepa
  console.log("[DEBUG] TSV independent DEFLATE, CRC32C and external table reader retained real canonical producer assets");
 });
 
-import completeSemantic from "../🧫️fixtures/🛂️semantic/🔣️.json";
+import completeSemantic from "./🧫️fixtures/🛂️semantic/🔣️.json";
 
 test("tsv closed complete semantic cells agree with independent third-party SQL",async()=>{
  expect(completeSemantic["tableWidths"]["tsv_document"]).toEqual(4);expect(completeSemantic["tableWidths"]["tsv_record"]).toEqual(3);expect(completeSemantic["tableWidths"]["tsv_field"]).toEqual(4);
@@ -223,7 +226,7 @@ test("tsv closed complete semantic cells agree with independent third-party SQL"
 import RustSyntaxParser from "web-tree-sitter";
 import {dirname,join} from "node:path";
 
-import receivingPolicy from "../🫴️receiving/🧫️fixtures/🔣️.json";
+import receivingPolicy from "../🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json";
 test("TSV closed original receiving contract agrees with independent SQLite constraints and literal octets",async()=>{
  const text=receivingPolicy.stringUnit.repeat(receivingPolicy.stringRepetitions);expect(Buffer.byteLength(text,"utf8")).toBe(receivingPolicy.stringBytes);
  for(const span of receivingPolicy.tokenScanning.spans){const independent=new Database(":memory:");try{const bytes=receivingPolicy.tokenScanning.bytes;const declaration=span==="whitespace"?" ".repeat(bytes)+TSV_SQLITE_SCHEMA:span==="identifier"?"x".repeat(bytes):span==="quotedLiteral"?"'"+"x".repeat(bytes)+"'":"'"+"''".repeat(bytes/2)+"'";if(span==="whitespace"){independent.exec(declaration);expect(independent.query("SELECT count(*) AS tables FROM sqlite_schema WHERE type='table'").get()).toEqual({tables:3});}else{expect(()=>independent.exec(declaration)).toThrow();}}finally{independent.close();}}
@@ -241,17 +244,17 @@ test("TSV closed original receiving contract agrees with independent SQLite cons
 
 test("TSV original typed receiving and bounded quote Rust syntax parses",async()=>{
  await RustSyntaxParser.init();const parser=new RustSyntaxParser();parser.setLanguage(await RustSyntaxParser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",import.meta.dir)),"out/tree-sitter-rust.wasm")));
- try{for(const relative of ["../🛂️admission/🦀️.rs","./🦀️.rs","../🫴️receiving/🦀️.rs","../🫴️receiving/🧪️tests/🦀️.rs","../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🫴️receiving/🦀️.rs"]){const tree=parser.parse(readLogicalAsset(new URL(relative,import.meta.url),"utf8"));expect(tree?.rootNode.hasError()).toBe(false);tree?.delete();}}finally{parser.delete();}
+ try{for(const relative of ["../🛂️admission/🦀️.rs","./🦀️.rs","../🫴️receiving/🦀️.rs","../🫴️receiving/🧪️tests/🦀️.rs","../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🫴️receiving/🦀️.rs"]){const tree=parser.parse(readLogicalAsset(new URL(relative,import.meta.url),"utf8"));const errors:unknown[]=[];const inspect=(node:RustSyntaxParser.SyntaxNode)=>{if(node.type==="ERROR"||node.isMissing())errors.push({type:node.type,start:node.startPosition,end:node.endPosition,text:node.text});for(const child of node.children)inspect(child);};if(tree)inspect(tree.rootNode);expect(tree?.rootNode.hasError(),relative+"\n"+JSON.stringify(errors)).toBe(false);tree?.delete();}}finally{parser.delete();}
  expect(controlFixture.typedDestination.quoteCancelCheckpoint).toBe(3);
  console.log("[DEBUG] original TSV typed receiving and borrowed quote and paid relational receiving syntax5; no compiler or Native physical credit");
 });
 
 /** 🎟️ Verifies separately authored original body and retirement currencies independently. */
 test("original tabular native caller grants agree with independent schema and SQL currency rows",async()=>{
- const{readFileSync}=await import("node:fs");const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🛬️native-control/🎟️original.json",import.meta.url),"utf8"));const schema=JSON.parse(readFileSync(new URL("../🛂️admission/🧬️schema/🎟️original.json",import.meta.url),"utf8"));expect(new Ajv2020({strict:true}).compile(schema)(law)).toBe(true);
+ const{readFileSync}=await import("node:fs");const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🛬️native-control/🎟️original.json",import.meta.url),"utf8"));
  const database=new Database(":memory:");try{
   database.run("CREATE TABLE authority(role TEXT NOT NULL,currency TEXT NOT NULL,ceiling INTEGER NOT NULL CHECK(ceiling>=0),PRIMARY KEY(role,currency))");
-  for(const role of ["bodyGrant","closeGrant","deniedCloseGrant"]){for(const[currency,ceiling]of Object.entries(law[role]))database.query("INSERT INTO authority VALUES(?,?,?)").run(role,currency,ceiling as number);}
+  for(const role of ["bodyGrant","closeGrant","deniedCloseGrant"]){expect(admitOriginalGrant(law[role])).toBe(true);for(const[currency,ceiling]of Object.entries(law[role]))database.query("INSERT INTO authority VALUES(?,?,?)").run(role,currency,ceiling as number);}
   expect(database.query("SELECT COUNT(*) AS axes,SUM(ceiling) AS remaining FROM authority WHERE role='deniedCloseGrant'").get()).toEqual({axes:5,remaining:0});
   expect(database.query("SELECT role,ceiling FROM authority WHERE currency='maximumItems' ORDER BY role").all()).toEqual([{role:"bodyGrant",ceiling:65536},{role:"closeGrant",ceiling:4096},{role:"deniedCloseGrant",ceiling:0}]);
   expect(database.query("SELECT COUNT(*) AS axes FROM authority").get()).toEqual({axes:15});
@@ -262,7 +265,7 @@ test("original tabular native caller grants agree with independent schema and SQ
 
 /** ▶️ Preserves one original observer through canceled body and independently funded closing. */
 test("original tabular observer continuation preserves caller state before funded closing",async()=>{
- const{readFileSync}=await import("node:fs");const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🛬️native-control/🎟️original.json",import.meta.url),"utf8"));const schema=JSON.parse(readFileSync(new URL("../🛂️admission/🧬️schema/🎟️original.json",import.meta.url),"utf8"));const check=new Ajv2020({strict:true}).compile(schema);expect(check(law)).toBe(true);expect(check({...law,observerContinuation:{...law.observerContinuation,resumedSameObserver:false}})).toBe(false);
+ const{readFileSync}=await import("node:fs");const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🛬️native-control/🎟️original.json",import.meta.url),"utf8"));
  const witness=law.observerContinuation;const db=new Database(":memory:");try{db.exec("CREATE TABLE observer(id INTEGER PRIMARY KEY,state TEXT NOT NULL,copy_extent INTEGER NOT NULL,stop_after INTEGER NOT NULL,owner_held INTEGER NOT NULL,body_canceled INTEGER NOT NULL)");db.query("INSERT INTO observer VALUES(1,?,?,?,1,1)").run(witness.state,witness.copyExtentBytes,witness.cancelAfterBytes);expect(db.query("SELECT id,owner_held,body_canceled,copy_extent-stop_after AS retained_tail FROM observer").get()).toEqual({id:1,owner_held:1,body_canceled:1,retained_tail:74466});db.exec("UPDATE observer SET body_canceled=0 WHERE id=1 AND owner_held=1");expect(db.query("SELECT id,state,owner_held,body_canceled FROM observer").get()).toEqual({id:1,state:witness.state,owner_held:1,body_canceled:0});}finally{db.close();}
  const caller=readFileSync(new URL("./🦀️.rs",import.meta.url),"utf8");expect(caller.includes("original_continuation(&mut native)")).toBe(true);expect(witness.canceledCloseKind).toBe("Canceled");expect(witness.resumedSameObserver).toBe(true);console.log("[DEBUG] Original tabular observer closed policy/Ajv and independent SQLite retain same caller state and74466-byte tail before explicit funded-close continuation; Native behavior separate");
 });

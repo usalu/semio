@@ -1,0 +1,9 @@
+# Job Conditional Loan Restore Readback Audit
+
+Read-only landed producer audit, 2026-10-14. No execution or Native qualification. Owner `🧰️framework/🔨️modules/🧵️job/🦀️.rs:949–957,986–995`.
+
+OriginalRetainedLoan now retains whole-context target plus fingerprint of original exclusive retained-progress/preview references, actual Arc ledger backing, operation/generation, clock function and deadline. Normal return tests fingerprint; Drop restores old ceiling only while fingerprint matches. Safe swap/replace moves those original references into the moved context and places different references in the target slot, so replacement does not receive the old grant. Unwind executes the same conditional guard. Moving the original back before return restores its own ceiling; safe callers cannot simultaneously create another context with the same exclusive references. This resolves the specific unconditional grant cross-write identified in previous audit without minting a replacement authority.
+
+Callback output is R:Copy and canonical OriginalTurnFailure. Identity refusal on successful callback cannot drop an owned output; identity refusal on existing failure moves the failure intact and attaches context_refusal only if vacant. Inline literal cause construction has no backing allocation or retained ledger debit. Existing callback primary/receipt refusal pair is not reconstructed. Moved original remains narrowed and caller owns its original recipient/cursor; replacement keeps its own grant. No Pin wrapper or DerefMut static-guarantee claim introduced.
+
+No new concrete authority-transfer or owned-result-drop defect found in this bounded landed readback. This does not prove all calling Job close paths or physical failure retirement; actual swap/replace/nested/unwind laws and facade preservation must receive their own original qualification.

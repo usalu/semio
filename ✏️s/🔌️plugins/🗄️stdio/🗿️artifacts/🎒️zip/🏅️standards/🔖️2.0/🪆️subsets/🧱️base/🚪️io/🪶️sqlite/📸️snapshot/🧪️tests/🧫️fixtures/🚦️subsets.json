@@ -1,0 +1,210 @@
+{
+  "acceptedDialects": [
+    {
+      "artifactKind": "s.stdio.zip",
+      "standard": "2.0",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.stdio.zip",
+      "standard": "2.0",
+      "subset": "iso21320"
+    }
+  ],
+  "rejectedDialects": [
+    {
+      "artifactKind": "s.stdio.zip",
+      "standard": "2.0",
+      "subset": "base"
+    },
+    {
+      "artifactKind": "s.stdio.zip",
+      "standard": "2.0",
+      "subset": "unknown"
+    },
+    {
+      "artifactKind": "s.stdio.txt",
+      "standard": "2.0",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.stdio.zip",
+      "standard": "1.0",
+      "subset": "*"
+    }
+  ],
+  "entryName": "guard.bin",
+  "cases": [
+    {
+      "id": "clean",
+      "localFlags": 0,
+      "centralFlags": 0,
+      "localVersion": 45,
+      "centralVersion": 45,
+      "diagnostics": [],
+      "compressionMethod": 8
+    },
+    {
+      "id": "localEncryption",
+      "localFlags": 1,
+      "centralFlags": 0,
+      "localVersion": 20,
+      "centralVersion": 20,
+      "diagnostics": [
+        {
+          "code": "stdio.zip.iso21320.entry-encrypted",
+          "severity": "Error"
+        }
+      ],
+      "compressionMethod": 8
+    },
+    {
+      "id": "centralEncryption",
+      "localFlags": 0,
+      "centralFlags": 1,
+      "localVersion": 20,
+      "centralVersion": 20,
+      "diagnostics": [
+        {
+          "code": "stdio.zip.iso21320.entry-encrypted",
+          "severity": "Error"
+        }
+      ],
+      "compressionMethod": 8
+    },
+    {
+      "id": "localStrong",
+      "localFlags": 64,
+      "centralFlags": 0,
+      "localVersion": 20,
+      "centralVersion": 20,
+      "diagnostics": [
+        {
+          "code": "stdio.zip.iso21320.strong-encryption-or-masked-headers",
+          "severity": "Error"
+        }
+      ],
+      "compressionMethod": 8
+    },
+    {
+      "id": "centralMasked",
+      "localFlags": 0,
+      "centralFlags": 8192,
+      "localVersion": 20,
+      "centralVersion": 20,
+      "diagnostics": [
+        {
+          "code": "stdio.zip.iso21320.strong-encryption-or-masked-headers",
+          "severity": "Error"
+        }
+      ],
+      "compressionMethod": 8
+    },
+    {
+      "id": "descriptor",
+      "localFlags": 8,
+      "centralFlags": 8,
+      "localVersion": 20,
+      "centralVersion": 20,
+      "diagnostics": [
+        {
+          "code": "stdio.zip.iso21320.data-descriptor-present",
+          "severity": "Warning"
+        }
+      ],
+      "compressionMethod": 8
+    },
+    {
+      "id": "localHighVersion",
+      "localFlags": 0,
+      "centralFlags": 0,
+      "localVersion": 46,
+      "centralVersion": 20,
+      "diagnostics": [
+        {
+          "code": "stdio.zip.iso21320.version-needed-high",
+          "severity": "Warning"
+        }
+      ],
+      "compressionMethod": 8
+    },
+    {
+      "id": "centralHighVersion",
+      "localFlags": 0,
+      "centralFlags": 0,
+      "localVersion": 20,
+      "centralVersion": 65535,
+      "diagnostics": [
+        {
+          "code": "stdio.zip.iso21320.version-needed-high",
+          "severity": "Warning"
+        }
+      ],
+      "compressionMethod": 8
+    },
+    {
+      "id": "combined",
+      "localFlags": 8257,
+      "centralFlags": 73,
+      "localVersion": 65535,
+      "centralVersion": 46,
+      "diagnostics": [
+        {
+          "code": "stdio.zip.iso21320.entry-encrypted",
+          "severity": "Error"
+        },
+        {
+          "code": "stdio.zip.iso21320.strong-encryption-or-masked-headers",
+          "severity": "Error"
+        },
+        {
+          "code": "stdio.zip.iso21320.data-descriptor-present",
+          "severity": "Warning"
+        },
+        {
+          "code": "stdio.zip.iso21320.version-needed-high",
+          "severity": "Warning"
+        }
+      ],
+      "compressionMethod": 8
+    },
+    {
+      "id": "unsupportedMethod255",
+      "localFlags": 0,
+      "centralFlags": 0,
+      "localVersion": 20,
+      "centralVersion": 20,
+      "compressionMethod": 255,
+      "diagnostics": [
+        {
+          "code": "stdio.zip.iso21320.compression-method-unsupported",
+          "severity": "Error"
+        }
+      ]
+    },
+    {
+      "id": "unsupportedMethod65535",
+      "localFlags": 0,
+      "centralFlags": 0,
+      "localVersion": 20,
+      "centralVersion": 20,
+      "compressionMethod": 65535,
+      "diagnostics": [
+        {
+          "code": "stdio.zip.iso21320.compression-method-unsupported",
+          "severity": "Error"
+        }
+      ]
+    }
+  ],
+  "methodCodes": [
+    255,
+    65535,
+    0,
+    8
+  ],
+  "invalidMethodCodes": [
+    -1,
+    65536
+  ]
+}

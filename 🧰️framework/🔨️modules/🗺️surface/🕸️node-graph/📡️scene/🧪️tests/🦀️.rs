@@ -5,8 +5,8 @@ use semio_framework_value::ValueRefusalKind;
 use pack::intrinsic::{IntrinsicFormat,RetainedIntrinsicInput};
 use semio_framework_value::{DslValue,retained_clone::RetainedCloneGrant};
 
-fn corpus()->Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
-fn wire()->Value{serde_json::from_str(include_str!("../🧫️fixtures/📦️body/🔣️.json")).unwrap()}
+fn corpus()->Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+fn wire()->Value{serde_json::from_str(include_str!("🧫️fixtures/📦️body/🔣️.json")).unwrap()}
 fn bytes(hex:&str)->Vec<u8>{hex.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect()}
 fn close(cursor:&mut SceneDecodeCursor<'_>){for _ in 0..1000000{if cursor.terminal_is_empty(){return}let copy=cursor.next_close_copy_byte_demand().unwrap().max(3);let release=cursor.next_close_release_byte_demand().unwrap();let capacity=cursor.next_close_capacity_byte_demand(copy.max(release)).unwrap();let depth=cursor.next_close_depth_demand().unwrap();cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth}).unwrap();}panic!("scene ingress did not close")}
 fn limits(maximum_owned_bytes:usize)->SceneDecodeLimits{SceneDecodeLimits{maximum_owned_bytes,maximum_depth:128,maximum_items:100000}}

@@ -1,0 +1,23 @@
+# Shared Receiving Prepublication Cancellation Plan
+
+Read-only source inspection, 2026-10-14; no compilation or dispatch. Paths relative to `/Users/ueli/Documents/semio`.
+
+LAS receiving owner `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🦀️.rs:57–61` and SemioText `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🦀️.rs:50–54` now implement the common receiving_status trait and four concrete thin calls. The local Settlement/receiver macros are absent. P uses project and moves retained projection, R uses read without source and moves retained snapshot, validators use read with source and publish unit. No changed domain operation mapping or allocating publication replacement was found in this refactor.
+
+## Two distinct publication boundaries
+
+Shared `🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs:17` currently executes finish_body -> status.take -> domain publish without an intervening checkpoint. Lower `.../⏱️control/🛫️snapshot/🦀️.rs:107–126` then stores accepted O in ControlledRetirement output and checkpoints before intermediate retirement and before final take_output. A callback refusal there retains both intermediate and accepted output, but the domain Frame status is already None and domain snapshot/projection has already moved out. This is valid ownership, yet it cannot prove refusal with the complete original Frame and Some(Ok) before domain publication.
+
+Minimal proposed boundary: after successful finish_body(owned), call the same original native.checkpoint before extracting status or calling publish. Native remains available in the existing owner.receive closure; Port/control RefCell borrow has ended. Settlement.post_body is true, so scoped observer settles actual original allocation and checkpoints the exact SQL phase; captured SQL cause is selected by refused. No new grant/context/scope is required. A cancellation there leaves F complete and statusSome(Ok), while lower receive stores it in the same actual pending retirement recipient. Preserve constructor and operation FnOnce; this is cancellation before publication, not resumable reconstruction.
+
+## Deterministic source-first fixture and physical law
+
+Declare closed neutral fields boundary=after-successful-body-before-domain-publication, directionsDecode/Encode, seedText, scratchText, acceptedText, fixed original grant/close grant, expected cancellation kind/message and publicationCalls0. The independently checked control oracle should affirm successful body/status precedes refusal and publish is never called; no arbitrary event count or long-text total heuristic.
+
+Generic test Frame contains retained scratch/output Strings and status. Construct empty; copy strings through original Port. Set a borrowed Cell/AtomicBool bodyCompleted only at successful operation return. Original SQL callback accepts events until that flag, then rejects the next post-body callback. Preconstruct expected borrowed cancellation cause outside heap observation. Publish closure records invocation in borrowed Cell and would move accepted String; verify0 calls, exact borrowed cause pointer/kind, retained progress equal owner cumulative progress, original recipient has pending owner and physical no release on canceled zero-close. Test both directions with independently seeded native/SQL baseline and baseline-relative allocation equation.
+
+For complete status evidence, first-party test Frame receiving_status can observe Some(Ok) through a borrowed nonallocating witness before paid retirement traverses it; avoid storing borrowed references in F (RetireOwned/static requirements). A first-party inline discriminant or atomic witness in the trait accessor/retirement test support is suitable. Do not inspect opaque owner through downcasting or return an owned Frame on refusal.
+
+Restore the same callback and physically close the pending recipient using remaining caller-owned finite close authority, measuring each birth/release and final conservation, terminal0 and Drop0. This retries retirement on the same receiver, not the FnOnce producer: existing APIs deliberately retain refusal custody rather than expose operation resume. A subsequent fresh receive can be tested only after pending retirement terminalizes, on the same original cumulative wallet.
+
+Separately keep the existing after-domain-publication-before-final-return cancellation law. It proves accepted O remains in lower output retirement custody during scratch close/final native checkpoint. That later boundary and earlier completeFrame/status boundary cover different guarantees and must be named accordingly. No runtime qualification follows from this plan.

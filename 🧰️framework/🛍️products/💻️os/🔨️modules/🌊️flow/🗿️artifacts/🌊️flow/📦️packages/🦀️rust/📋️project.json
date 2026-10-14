@@ -66,7 +66,7 @@
         "^default",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🏷️slider-labels/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🧫️fixtures/🏷️slider-labels.json"
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🧫️fixtures/📸️snapshot/🏷️slider-labels.json"
       ],
       "outputs": [],
       "options": {

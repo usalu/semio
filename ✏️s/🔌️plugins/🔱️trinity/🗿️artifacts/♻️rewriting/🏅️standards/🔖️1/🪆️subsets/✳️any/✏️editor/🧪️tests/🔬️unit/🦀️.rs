@@ -66,7 +66,7 @@ async fn new_app() -> RewritingTestApp {
 /// 🧫️ Loads the independently selected composed test input after creating an empty runtime app.
 async fn load_rule_fixture(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>) {
     let state = fixture_rule_state();
-    let files = store::os_store::serialization::ArtifactPackFiles { pack: store::os_store::serialization::ArtifactPack::encode_pack(&state), spr: store::os_store::text_format::empty_document_spr("rewriting", REWRITE_RULE_SCHEMA).await, ops: String::new() };
+    let files = store::os_store::serialization::ArtifactPackFiles { pack: pack::snapshot::ArtifactPack::encode_pack(&state), spr: store::os_store::text_format::empty_document_spr("rewriting", REWRITE_RULE_SCHEMA).await, ops: String::new() };
     let mut archive = PluginApp::document_load_archive(app, &files).expect("stamp test input");
     let reference = state.working_graph.content.target.clone();
     let owner = store::OwnerRef {
@@ -288,7 +288,7 @@ async fn set_active_example_loads_the_registered_demo_document() {
     let loads = receipt.effects.iter().filter(|effect| matches!(effect, semio_framework_plugin::Effect::LoadDocument { .. })).count();
     assert_eq!(loads, 1, "the registered example id produces exactly one LoadDocument effect");
     let loaded = crate::editor::rewriting::commands::set_active_example_document(crate::examples::demo::ID).expect("the demo example resolves to a document");
-    assert_eq!(loaded, store::os_store::serialization::ArtifactDsl::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo example's own dsl parses"), "the document the effect carries is the example the subset registers");
+    assert_eq!(loaded, pack::snapshot::ArtifactDsl::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo example's own dsl parses"), "the document the effect carries is the example the subset registers");
     assert_ne!(loaded, app.snapshot().unwrap(), "the effect is HOST-applied: a mounted app with no host keeps its own snapshot, which is what makes the effect the only guest-side witness");
 }
 
@@ -374,8 +374,8 @@ async fn rewriting_io_declares_graph_in_and_graph_out_ports() {
 
 #[semio_framework_async_macros::async_test]
 async fn reset_document_ownership_rewriting_preserves_pack_with_an_edit_free_history() {
-    use store::os_store::serialization::ArtifactPack;
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️reset-document.json")).unwrap();
+    use pack::snapshot::ArtifactPack;
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/♻️reset-document.json")).unwrap();
     let source = fixture_rule_state();
     let before = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&source)).unwrap();
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = reset_document_effect(&source) else { panic!("reset must load a document"); };
@@ -391,7 +391,7 @@ async fn reset_document_ownership_rewriting_preserves_pack_with_an_edit_free_his
 /// 🧸️ The live `workingGraph` member — the working graph's single truth (design §20.15), never the parent's genesis owner.
 async fn live_working(app: &RewritingTestApp) -> semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot {
     use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
-    use store::{os_store::serialization::ArtifactPack, SpaceMember};
+    use store::{pack::snapshot::ArtifactPack, SpaceMember};
     let snapshot = app.snapshot().expect("rewriting parent projection");
     let bytes = app.child_store(crate::content::WORKING_CHILD_SLOT, &snapshot.working_graph.content.child_id).await.expect("working child").document_pack_bytes().await.expect("working child pack");
     SemioGraphSnapshot::decode_pack(&bytes).expect("working child snapshot")
@@ -604,7 +604,7 @@ fn a_rule_node_drag_moves_each_clause_from_where_it_sits_and_undoes_in_one_row()
 /// `setSlider`/`insertPort` are refused (the graph has neither), and a rule side draws or cuts no wire alone.
 #[semio_framework_async_macros::async_test]
 async fn the_shared_node_graph_rows_map_to_intent_leaves() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json")).expect("node-graph-edit-rows fixture");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json")).expect("node-graph-edit-rows fixture");
     let mut app = new_app().await;
     let row = |value: &serde_json::Value| semio_framework_pack_json::parse(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("corpus row");
     for refused in corpus["refused"].as_array().expect("refused rows") {

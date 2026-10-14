@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import * as toml from "@iarna/toml";
 import * as ts from "typescript";
-import witness from "../../🧫️fixtures/🧩️ownership/🔣️.json";
+import witness from "../🧫️fixtures/🧩️ownership/🔣️.json";
 
 const root = resolve(import.meta.dir, "../../../../../..");
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");

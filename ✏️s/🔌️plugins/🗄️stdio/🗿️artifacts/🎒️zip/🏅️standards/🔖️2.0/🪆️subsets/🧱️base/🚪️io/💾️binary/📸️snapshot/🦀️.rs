@@ -10,8 +10,8 @@ use crate::standards::v2_0::subsets::base::schema::snapshot::*;
 use crate::STDIO_ZIP_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
-impl store::os_store::serialization::ArtifactPack for ZipSnapshot{
-    fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())}
+impl pack::snapshot::ArtifactPack for ZipSnapshot{
+    
     fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{
         let inner=store::pack_rt::encode_document(&Self::__dsl_spec(),&self.__dsl_to_record(),options)?;
         let envelope=store::semio_format::SemioEnvelope::from_envelope_id("stdio.zip",store::semio_format::Component::Pack,1).map_err(|e|store::PackError::from(e.into_value_error()))?;
@@ -24,5 +24,8 @@ impl store::os_store::serialization::ArtifactPack for ZipSnapshot{
         Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)
     }
     fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Self::__dsl_spec())}
+}
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for ZipSnapshot {
+fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())}
 }
 }

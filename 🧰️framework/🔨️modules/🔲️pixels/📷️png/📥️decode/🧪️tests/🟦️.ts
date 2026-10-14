@@ -1,11 +1,11 @@
-import funding from "../🧫️fixtures/🎟️funding.json";
+import funding from "./🧫️fixtures/🎟️funding.json";
 import {describe,expect,test} from "bun:test";
 import Ajv from "ajv/dist/2020";
 import fundingSchema from "../../../../🌱️value/🧬️retained-clone/🧬️contract/🧬️schema/🔣️.json";
 import {PNG} from "pngjs";
 import {deflateSync,inflateSync} from "node:zlib";
-import cases from "../🧫️fixtures/🔣️.json";
-import invalid from "../🧫️fixtures/⚠️invalid/🔣️.json";
+import cases from "./🧫️fixtures/🔣️.json";
+import invalid from "./🧫️fixtures/⚠️invalid/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {PngDecodeJob,decodePngImage,type PngDecodeInput} from "../🟦️.ts";
 const funded={maximumItems:4096,maximumCopyBytes:268435456,maximumCapacityBytes:67108864,maximumReleaseBytes:0,maximumDepth:1};

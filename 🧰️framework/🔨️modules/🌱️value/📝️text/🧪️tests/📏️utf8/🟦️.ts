@@ -1,7 +1,7 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {textUtf8ByteLength} from "../../🟦️.ts";
-import fixture from "../../🧫️fixtures/📏️utf8/🔣️.json";
+import fixture from "../🧫️fixtures/📏️utf8/🔣️.json";
 
 test("semantic Unicode text length agrees with independent UTF and SQLite engines",()=>{
   const database=new Database(":memory:");

@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn tool_ledger_empty_backing_preserves_undergrant_and_exact_original_release(){
- let vectors:serde_json::Value=serde_json::from_str(include_str!("../../../🛠️tool-machine/♻️retirement/🧫️fixtures/🔣️.json")).unwrap();
+ let vectors:serde_json::Value=serde_json::from_str(include_str!("../../../🛠️tool-machine/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let capacity=vectors["cause"]["capacity"].as_u64().unwrap()as usize;
  for capacity in[0,1,capacity]{
   let mut owner=Vec::<u64>::with_capacity(capacity);let address=owner.as_ptr();let original_capacity=owner.capacity();

@@ -1,5 +1,0 @@
-{
-  "mutation": "changeLayerOpacity",
-  "layerId": "highlight",
-  "newOpacity": 0.25
-}

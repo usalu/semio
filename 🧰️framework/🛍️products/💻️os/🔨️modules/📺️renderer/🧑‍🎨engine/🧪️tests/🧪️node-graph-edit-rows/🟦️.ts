@@ -13,14 +13,14 @@ import { flowAddWidgetArgs, nodeGraphEditRows } from "../../🧱️elements/🕸
 const engineRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const repoRoot = resolve(engineRoot, "../../../../../..");
 const toolMachineRoot = resolve(repoRoot, "🧰️framework/🔨️modules/🛠️tool-machine");
-const fixture = JSON.parse(readFileSync(resolve(toolMachineRoot, "🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json"), "utf8")) as {
+const fixture = JSON.parse(readFileSync(resolve(toolMachineRoot, "🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json"), "utf8")) as {
   readonly accepted: readonly { readonly id: string; readonly row: Record<string, unknown> }[];
   readonly refused: readonly { readonly id: string; readonly row: Record<string, unknown> }[];
 };
-const journalFixture = JSON.parse(readFileSync(resolve(engineRoot, "🧫️fixtures/🧫️node-graph-journal/🔣️.json"), "utf8")) as {
+const journalFixture = JSON.parse(readFileSync(resolve(engineRoot, "🧪️tests/🧫️fixtures/🧫️node-graph-journal/🔣️.json"), "utf8")) as {
   readonly answers: readonly { readonly id: string; readonly json: string; readonly rows: readonly Record<string, unknown>[] }[];
 };
-const flowFixture = JSON.parse(readFileSync(resolve(engineRoot, "🧫️fixtures/🧫️flow-add-widget/🔣️.json"), "utf8")) as {
+const flowFixture = JSON.parse(readFileSync(resolve(engineRoot, "🧪️tests/🧫️fixtures/🧫️flow-add-widget/🔣️.json"), "utf8")) as {
   readonly addWidget: readonly { readonly id: string; readonly descriptor: string; readonly x: number; readonly y: number; readonly args: Record<string, unknown> }[];
 };
 const schema = JSON.parse(readFileSync(resolve(toolMachineRoot, "🧬️schema/🔣️node-graph-edit-rows/🔣️.json"), "utf8"));

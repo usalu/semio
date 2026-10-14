@@ -6,7 +6,7 @@ use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
 use semio_framework_value::ValueRefusalKind;
 #[test]
 fn sqlite_snapshot_forms_borrowed_whitespace_kind_cancels_before_semantic_refusal(){
- let contract:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/📏️preflight/🔤️whitespace/🔣️.json")).unwrap();
+ let contract:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📏️preflight/🔤️whitespace/🔣️.json")).unwrap();
  let mut owner=Owned(Some(specimen()));let kind=contract["kindUnit"].as_str().unwrap().repeat(usize::try_from(contract["repeat"].as_u64().unwrap()).unwrap());
  let bytes=usize::try_from(contract["utf8Bytes"].as_u64().unwrap()).unwrap();assert_eq!(kind.len(),bytes);assert_eq!(kind.chars().count(),usize::try_from(contract["unicodeScalars"].as_u64().unwrap()).unwrap());assert!(kind.trim().is_empty());owner.0.as_mut().unwrap().definition.steps[0].blocks[0].kind=kind;
  let threshold=usize::try_from(contract["cancelAfterBytes"].as_u64().unwrap()).unwrap();let limits=SqliteDatabaseLimits::default();
@@ -18,7 +18,7 @@ fn sqlite_snapshot_forms_borrowed_whitespace_kind_cancels_before_semantic_refusa
 }
 #[test]
 fn sqlite_snapshot_forms_borrowed_preflight_pays_scratch_before_native_fields(){
- let contract:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/📏️preflight/🔣️.json")).unwrap();
+ let contract:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📏️preflight/🔣️.json")).unwrap();
  assert_eq!(contract["scratchOwnership"],"paidFrontiersOnly");
  let f=fixture();let mut owner=Owned(Some(specimen()));
  let snapshot=owner.0.as_mut().unwrap();snapshot.title=Some(f["unicodeText"].as_str().unwrap().repeat(usize::try_from(f["unicodeRepeat"].as_u64().unwrap()).unwrap()));

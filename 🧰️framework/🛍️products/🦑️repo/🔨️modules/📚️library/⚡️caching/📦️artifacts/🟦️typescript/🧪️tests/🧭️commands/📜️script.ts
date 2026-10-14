@@ -1,5 +1,5 @@
 import {readFileSync} from "node:fs";
-import {BundleScript} from "./../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import {BundleScript} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runArtifactTypeScriptPackageMain} from "../../📜️script.ts";
 const fixture=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")),index=Number(process.env.SEMIO_COMMAND_VECTOR);
 if(!Number.isSafeInteger(index)||index<0||index>=fixture.cases.length)throw Error("A command corpus index is required");

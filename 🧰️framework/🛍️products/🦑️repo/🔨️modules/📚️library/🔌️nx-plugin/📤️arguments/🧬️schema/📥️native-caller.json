@@ -6,10 +6,12 @@
   "required": [
     "workspaceRoot",
     "arguments",
+    "buildMode",
     "native",
     "selection"
   ],
   "properties": {
+    "buildMode": { "type": "string", "pattern": "^(prototype|release)$" },
     "workspaceRoot": {
       "type": "string",
       "minLength": 1,

@@ -11,12 +11,12 @@ export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { decodeMeshPackBody, decodeMeshPackChunks } = dependencies;
   const { describe, expect, it } = vitest;
 
-  const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🧊️mesh/mesh-pack-body-v1.json", source.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("🧪️tests/🧫️fixtures/🧊️mesh/mesh-pack-body-v1.json", source.url), "utf8"));
   const bytes = Uint8Array.from(Buffer.from(fixture.packBodyBase64, "base64"));
 
   describe("mesh pack decode", () => {
     it("refuses malformed analytic references and missing component pick buffers", () => {
-      const fixture=JSON.parse(readFileSync(new URL("../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/🎯️component-picking/🔣️.json",source.url),"utf8"));
+      const fixture=JSON.parse(readFileSync(new URL("../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️component-picking/🔣️.json",source.url),"utf8"));
       for(const row of fixture.referenceRefusals) {
         const payload=new TextEncoder().encode(JSON.stringify({componentReferences:row.references}));
         const header=[0,1,13,8];let size=payload.length;
@@ -25,7 +25,7 @@ export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
     });
     it("preserves lossless analytic component references in the shared preview record", () => {
-      const fixture = JSON.parse(readFileSync(new URL("../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/🎯️component-picking/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️component-picking/🔣️.json", source.url), "utf8"));
       const mesh = decodeMeshPackBody(Uint8Array.from(Buffer.from(fixture.meshPack.bodyBase64, "base64")));
       expect(Array.from(mesh.faceIds)).toEqual(fixture.expected.faceIds);
       expect(Array.from(mesh.edgeIds)).toEqual(fixture.expected.edgeIds);
@@ -33,7 +33,7 @@ export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, 
       console.log("[DEBUG] Shared preview record retains four full analytic labels and segment pick ranges");
     });
     it("decodes owned indexed channels, seam values and texture bytes from the portable record", () => {
-      const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🧊️mesh/mesh-pack-attributes.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("🧪️tests/🧫️fixtures/🧊️mesh/mesh-pack-attributes.json", source.url), "utf8"));
       const mesh = decodeMeshPackBody(Uint8Array.from(Buffer.from(fixture.packBodyBase64, "base64")));
       expect(mesh.attributes).toEqual(fixture.mesh.attributes);
       expect(mesh.materials).toEqual(fixture.mesh.materials);

@@ -14,7 +14,7 @@ export type WgpuBrowserConfiguration = {
   readonly catalog: PluginCatalogRowsV1;
   readonly workspace: string;
   readonly root: string;
-  readonly profile: "dev" | "release";
+  readonly profile: "prototype" | "release";
   readonly variant?: string;
   readonly compilerRoot: string;
   readonly moduleRoot: string;
@@ -94,7 +94,7 @@ export function wgpuBrowserSelectionPlugin(variant: string | undefined): OwnedBu
 }
 
 export function createWgpuBrowserConfig(options: WgpuBrowserConfiguration): OwnedBuildConfig {
-  if (!["dev", "release"].includes(options.profile)) throw new Error("Select a WGPU browser profile");
+  if (!["prototype", "release"].includes(options.profile)) throw new Error("Select a WGPU browser profile");
   for (const [root, file] of [[options.compilerRoot, "semio-framework-os-renderer-wgpu-component.js"], [options.compilerRoot, "semio-framework-os-renderer-wgpu-component_bg.wasm"], [options.bootRoot, "🟨️.js"], [options.libraryRoot, "🟨️.js"], [options.workerRoot, "🟨️.js"], [join(options.moduleRoot, "🪞️vendor"), FONT_ASSET]]) if (!existsSync(join(root, file))) throw new Error("Missing prepared WGPU artifact: " + join(root, file));
   const mounts = wgpuBrowserMounts(options);
   return {

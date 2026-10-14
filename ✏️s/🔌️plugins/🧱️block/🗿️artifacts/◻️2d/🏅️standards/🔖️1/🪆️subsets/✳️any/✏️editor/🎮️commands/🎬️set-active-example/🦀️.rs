@@ -9,7 +9,7 @@ pub const BLOCK2D_EXAMPLE_RIGHT: &str = "hexagonal-cut-concrete-forest-right";
 /// 🗃️ The whole-document load an example switch or a JSON edit answers with. A `LoadDocument` effect is NOT an edit:
 /// it carries no mutation rows, no diff and no history row, so re-selecting the open example leaves `canUndo` false.
 pub fn load_document_effect(document: &Block2dSnapshot) -> semio_framework::kernel::Effect {
-    let pack = <Block2dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let pack = <Block2dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("block2d", crate::BLOCK_2D_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }

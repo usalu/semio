@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
 
 import equal from "fast-deep-equal";
 import { afterEach, describe, expect, it } from "vitest";
-import fixture from "../../../../📇️directory/🧫️fixtures/🪪️session-refresh/🔣️.json";
+import fixture from "../../../../📇️directory/🧪️tests/🧫️fixtures/🪪️session-refresh/🔣️.json";
 import { DIRECTORY_SESSION_AUTHORITY_TEXT_V1, directorySessionAuthorityTextV1, parseDirectorySessionAuthorityLocaleV1 } from "../../../../📇️directory/🪪️session-refresh/🟦️.ts";
 import { SessionAuthorityNotice } from "../../../../📇️directory/🪪️session-refresh/🪪️notice/🟦️.tsx";
 

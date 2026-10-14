@@ -1,6 +1,7 @@
 //! 📏️ Exact Layout native capability before the owned relational implementation.
 #[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
 mod original_owners;
+use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::*;
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_layout_actual_declaration_publishes_exact_native_codec(){
@@ -10,16 +11,16 @@ async fn sqlite_snapshot_layout_actual_declaration_publishes_exact_native_codec(
     assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<LayoutSnapshot>()));
     let snapshot=crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.layout.layout".into(),standard:"1".into(),subset:"*".into()};
-    let payload=store::io::IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(&snapshot));
+    let payload=store::io::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&snapshot));
     let database=original_owners::with_decoding(|native_owner|(provider.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut store::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,store::sqlite_snapshot::SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
     assert!(database.table("layout_document").is_ok());
 }
 #[test]
-fn sqlite_snapshot_layout_declared_owner_capability(){let snapshot=crate::standards::v1::subsets::any::io::text::snapshot::default_document();let provider=<LayoutSnapshot as store::os_store::serialization::ArtifactPack>::sqlite_snapshot_codec().expect("Layout must publish its complete typed semantic SQLite capability");let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.layout.layout".into(),standard:"1".into(),subset:"*".into()};let payload=store::io::IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(&snapshot));let result=original_owners::with_decoding(|native_owner|(provider.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut store::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,store::sqlite_snapshot::SqliteDatabaseLimits::default()), native_owner)).unwrap();assert!(result.value.table("layout_document").is_ok());}
+fn sqlite_snapshot_layout_declared_owner_capability(){let snapshot=crate::standards::v1::subsets::any::io::text::snapshot::default_document();let provider=<LayoutSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().expect("Layout must publish its complete typed semantic SQLite capability");let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.layout.layout".into(),standard:"1".into(),subset:"*".into()};let payload=store::io::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&snapshot));let result=original_owners::with_decoding(|native_owner|(provider.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut store::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,store::sqlite_snapshot::SqliteDatabaseLimits::default()), native_owner)).unwrap();assert!(result.value.table("layout_document").is_ok());}
 
 fn component_fixture()->crate::LayoutDrawingChild {
     use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, SemioPoint2};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let identity=fixture["childIdentity"].as_array().unwrap();
     let target=semio_framework_artifact_reference::ArtifactRef{dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:identity[1].as_str().unwrap().into(),standard:identity[2].as_str().unwrap().into(),subset:identity[3].as_str().unwrap().into()},artifact_id:identity[4].as_str().unwrap().into()};
     crate::LayoutDrawingChild{
@@ -54,7 +55,7 @@ fn sqlite_snapshot_layout_inline_drawing_owned_fields_controlled_input_output(){
 }
 #[test]
 fn sqlite_snapshot_layout_inline_drawing_long_native_copy_is_interior_controlled(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let total=fixture["intrinsicBytes"].as_u64().unwrap() as usize;
     let mut expected=component_fixture();expected.content.schema="x".repeat(total);
     let value=<crate::LayoutDrawingChild as semio_framework_dsl_record::DslField>::to_value(&expected);
@@ -68,7 +69,7 @@ fn sqlite_snapshot_layout_inline_drawing_long_native_copy_is_interior_controlled
 
 fn complete_fixture(word:f64,color:f32)->LayoutSnapshot{
     use crate::*;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let maximum=fixture["maximumU64"].as_str().unwrap().parse::<u64>().unwrap();
     let bounds=LayoutBounds{x:word,y:word,width:word,height:word,rotation:word};let rect=LayoutRect{x:word,y:word,width:word,height:word};
     let layers=vec![Layer{id:String::new(),name:String::new(),visible:false,locked:true,object_ids:vec![String::new(),"!".into()]}];
@@ -96,8 +97,8 @@ fn complete_fixture(word:f64,color:f32)->LayoutSnapshot{
 }
 #[test]
 fn sqlite_snapshot_layout_complete_owned_fields_words_and_literals_cross_both_native_encodings(){
-    use store::{os_store::serialization::ArtifactDsl,os_store::serialization::ArtifactPack};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    use store::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let codec=<LayoutSnapshot as ArtifactPack>::sqlite_snapshot_codec().expect("complete Layout native capability");
     let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.layout.layout".into(),standard:"1".into(),subset:"*".into()};
     for(index,bits)in fixture["float64Bits"].as_array().unwrap().iter().enumerate(){
@@ -118,7 +119,7 @@ fn sqlite_snapshot_layout_complete_owned_fields_words_and_literals_cross_both_na
 #[test]
 fn sqlite_snapshot_layout_deep_inline_drawing_component_has_owned_controlled_boundaries(){
     use semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let depth=fixture["componentDepth"].as_u64().unwrap() as usize;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let depth=fixture["componentDepth"].as_u64().unwrap() as usize;
     let mut expected=component_fixture();let mut node=std::mem::take(&mut expected.content.layers[0].root);
     for _ in 0..depth{let mut parent=DrawNode::default();let DrawNode::Group{children,..}=&mut parent else{panic!("declared default group")};children.push(node);node=parent;}
     expected.content.layers[0].root=node;
@@ -127,14 +128,14 @@ fn sqlite_snapshot_layout_deep_inline_drawing_component_has_owned_controlled_bou
     assert_eq!(restored.handle,expected.handle);let mut current=&restored.content.layers[0].root;let mut count=0;
     while let DrawNode::Group{children,..}=current{assert_eq!(children.len(),1);current=&children[0];count+=1;}
     assert_eq!(count,depth);let DrawNode::Image{bytes,..}=current else{panic!("complete image leaf")};assert_eq!(bytes,&[0,127,255]);
-    <crate::SemioDrawingSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(expected.content);<crate::SemioDrawingSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(restored.content);
+    <crate::SemioDrawingSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(expected.content);<crate::SemioDrawingSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(restored.content);
 }
 
 #[test]
 fn sqlite_snapshot_layout_inline_drawing_all_node_fields_preserve_ieee_words(){
     use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, PathSegment, SemioPoint2};
     use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for bits in fixture["float64Bits"].as_array().unwrap(){
         let word=u64::from_str_radix(bits.as_str().unwrap(),16).unwrap();let number=f64::from_bits(word);let point=SemioPoint2{x:number,y:-0.0};
         let mut transform=SemioTransform::identity();transform.translation.x=number;
@@ -146,11 +147,11 @@ fn sqlite_snapshot_layout_inline_drawing_all_node_fields_preserve_ieee_words(){
         let output=<crate::LayoutDrawingChild as semio_framework_dsl_record::DslField>::to_value_controlled(&expected,&mut semio_framework_value::NativeEncodeControl::new(8*1024*1024,&mut |_|true)).unwrap();
         let restored=<crate::LayoutDrawingChild as semio_framework_dsl_record::DslField>::from_value_controlled(&output,&mut semio_framework_value::NativeDecodeControl::new(8*1024*1024,&mut |_|true)).unwrap();
         assert_eq!(restored.handle,expected.handle);
-        assert!(store::os_store::serialization::ArtifactPack::encode_pack(&restored.content)==store::os_store::serialization::ArtifactPack::encode_pack(&expected.content),"every authored Drawing node and path field must remain exact");
+        assert!(pack::snapshot::ArtifactPack::encode_pack(&restored.content)==pack::snapshot::ArtifactPack::encode_pack(&expected.content),"every authored Drawing node and path field must remain exact");
         let DrawNode::Group{transform,children}=&restored.content.layers[0].root else{panic!("literal group")};
         assert_eq!(transform.translation.x.to_bits(),word);
         let DrawNode::Image{width,bytes,..}=&children[2] else{panic!("literal image")};assert_eq!(width.to_bits(),word);assert_eq!(bytes,&[0,127,255]);
-        <crate::SemioDrawingSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(expected.content);<crate::SemioDrawingSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(restored.content);
+        <crate::SemioDrawingSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(expected.content);<crate::SemioDrawingSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(restored.content);
     }
 }
 
@@ -158,7 +159,7 @@ fn sqlite_snapshot_layout_inline_drawing_all_node_fields_preserve_ieee_words(){
 
 mod public_populated_owner {
     use crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::*;
-    use store::{os_store::serialization::ArtifactDsl,os_store::serialization::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshot};
+    use store::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshotHost};
     use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
     struct Owned(Option<LayoutSnapshot>);
     impl Owned{fn new(value:LayoutSnapshot)->Self{Self(Some(value))}fn get(&self)->&LayoutSnapshot{self.0.as_ref().unwrap()}}
@@ -180,9 +181,9 @@ mod public_populated_owner {
         use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};
         register();let dialect=ArtifactDialect{artifact_kind:"s.layout.layout".into(),standard:"1".into(),subset:"*".into()};let sqlite=ArtifactDialect::from(SQLITE_SNAPSHOT);
         for route in[io_route(&dialect,&sqlite,1).await.unwrap().value,io_route(&sqlite,&dialect,1).await.unwrap().value]{assert_eq!(route.hops.len(),1);assert_eq!(route.fidelity,IoFidelity::Exact);}
-        let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
         for(index,bits)in fixture["float64Bits"].as_array().unwrap().iter().enumerate(){let word=u64::from_str_radix(bits.as_str().unwrap(),16).unwrap();let color=u32::from_str_radix(fixture["float32Bits"][index].as_str().unwrap(),16).unwrap();let expected=Owned::new(complete_fixture(f64::from_bits(word),f32::from_bits(color)));
-            for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=io_export_sqlite_snapshot(&dialect,expected.get(),encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;let actual=Owned::new(io_import_sqlite_snapshot::<LayoutSnapshot>(&dialect,&bytes,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value);exact(actual.get(),expected.get());}
+            for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=async{let original_file_dialect=&dialect;let original_file_input=expected.get();let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;let actual=Owned::new(async{let original_file_dialect=&dialect;let original_file_input=&bytes;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<LayoutSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value);exact(actual.get(),expected.get());}
         }
         eprintln!("[DEBUG] Layout public both native forms preserve populated complete owner and IEEE words");
     }
@@ -190,9 +191,9 @@ mod public_populated_owner {
     async fn sqlite_snapshot_layout_populated_public_independent_sql_edit_retirement(){
         use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot};use std::{io::Write,process::{Command,Stdio}};
         register();let dialect=ArtifactDialect{artifact_kind:"s.layout.layout".into(),standard:"1".into(),subset:"*".into()};let expected=Owned::new(complete_fixture(-0.0,-0.0));
-        for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=io_export_sqlite_snapshot(&dialect,expected.get(),encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;
+        for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=async{let original_file_dialect=&dialect;let original_file_input=expected.get();let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
             let script=r#"import{Database}from'bun:sqlite';const d=Database.deserialize(await Bun.stdin.bytes(),{safeIntegers:true});if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');if(d.query('SELECT COUNT(*) AS n FROM sqlite_schema WHERE type=\'table\'').get().n!==60n)throw Error('all43Layout16DrawingPlusMetadata');if(d.query('SELECT COUNT(*) AS n FROM layout_frame').get().n!==6n)throw Error('allFrameKinds');if(d.query('SELECT COUNT(*) AS n FROM layout_dictionary_entry').get().n!==9n)throw Error('allIntrinsicKinds');if(d.query('SELECT COUNT(*) AS n FROM layout_drawing_component').get().n!==1n)throw Error('inlineDrawing');if(d.query('SELECT content FROM layout_story WHERE id=1').get().content!=='語\u0000')throw Error('literalText');const m=d.query('SELECT * FROM semio_snapshot').get();if(JSON.stringify(Object.keys(m))!==JSON.stringify(['id','artifact_kind','standard','subset','schema_version','native_encoding'])||m.id!==1n||m.schema_version!==1n)throw Error('completePublicMetadata');if(m.artifact_kind!=='s.layout.layout'||m.standard!=='1'||m.subset!=='*'||m.native_encoding!==process.argv[1])throw Error('metadata');d.query('UPDATE layout_story SET content=? WHERE id=1').run('independent 日本\u0000');await Bun.write(Bun.stdout,d.serialize());d.close();"#;
-            let mut child=Command::new("bun").args(["--eval",script,encoding.as_str()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let edited=child.wait_with_output().unwrap();assert!(edited.status.success(),"{}",String::from_utf8_lossy(&edited.stderr));let actual=Owned::new(io_import_sqlite_snapshot::<LayoutSnapshot>(&dialect,&edited.stdout,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value);let mut literal=complete_fixture(-0.0,-0.0);literal.stories[0].content="independent 日本\0".into();let literal=Owned::new(literal);exact(actual.get(),literal.get());
+            let mut child=Command::new("bun").args(["--eval",script,encoding.as_str()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let edited=child.wait_with_output().unwrap();assert!(edited.status.success(),"{}",String::from_utf8_lossy(&edited.stderr));let actual=Owned::new(async{let original_file_dialect=&dialect;let original_file_input=&edited.stdout;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<LayoutSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value);let mut literal=complete_fixture(-0.0,-0.0);literal.stories[0].content="independent 日本\0".into();let literal=Owned::new(literal);exact(actual.get(),literal.get());
         }
         eprintln!("[DEBUG] Layout public independent SQLite edit preserves full owner and retires inline fields");
     }

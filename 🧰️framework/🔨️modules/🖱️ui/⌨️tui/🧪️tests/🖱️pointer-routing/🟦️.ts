@@ -1,6 +1,6 @@
 /** 🖱️ Independent oracle for the terminal pointer routing table.
  *
- * The Rust engine, the Rust painter and this file share nothing but `🧫️fixtures/🖱️pointer-routing/🔣️.json`.
+ * The Rust engine, the Rust painter and this file share nothing but `🧪️tests/🧫️fixtures/🖱️pointer-routing/🔣️.json`.
  * Here the table is read twice: the golden frame rows must show every declared chip, close glyph and maximize
  * glyph at its declared column (so the declared geometry is what a person sees), and a small independent model of
  * the routing rules re-derives the signals of every `chrome` case from that geometry alone.
@@ -8,7 +8,7 @@
 import cliTruncate from "cli-truncate";
 import stringWidth from "string-width";
 import { describe, expect, it } from "vitest";
-import fixture from "../../🧫️fixtures/🖱️pointer-routing/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/🖱️pointer-routing/🔣️.json" with { type: "json" };
 
 type Chip = { window: string; index: number; x: number; right: number; close: number };
 type Control = { window: string; x: number; right: number; maximize: number };

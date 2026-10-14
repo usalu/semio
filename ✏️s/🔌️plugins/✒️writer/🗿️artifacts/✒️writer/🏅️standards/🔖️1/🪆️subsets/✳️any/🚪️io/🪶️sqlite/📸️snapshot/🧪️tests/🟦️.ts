@@ -1,7 +1,7 @@
 /** ✒️ Shared Writer ownership and independent SQL edits. */
 import { Database } from "bun:sqlite";
 import { expect,test } from "bun:test";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import { writerSnapshotToSqliteDatabase,writerSnapshotFromSqliteDatabase,validateWriterSnapshotSqliteDialect } from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 test("Writer child reference components are independent owned text rather than a joined URI",async()=>{for(const document of fixture.referenceCases){const snapshot={...fixture.snapshot,document};const database=await writerSnapshotToSqliteDatabase(snapshot),oracle=Database.deserialize(await exportSqliteDatabase(database));try{expect(oracle.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(oracle.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(await writerSnapshotFromSqliteDatabase(await importSqliteDatabase(oracle.serialize()))).toEqual(snapshot);expect(await validateWriterSnapshotSqliteDialect(snapshot,fixture.dialect,database)).toEqual([]);}finally{oracle.close();}}});
@@ -17,7 +17,7 @@ import {Buffer} from "node:buffer";
 test("writer canonical native UTF8 fields refuse independently proven lossy UTF16 states",()=>{for(const units of fixture.invalidUtf16CodeUnits){const invalid=String.fromCharCode(...units);expect(Buffer.from(invalid,"utf8").toString("utf8")).not.toBe(invalid);const source={...fixture.snapshot,text:invalid};expect(()=>parseWriterSnapshot(source)).toThrow();}});
 
 test("Writer declared owner corpus pins complete authored SQL tables independently",async()=>{
- const {default:law}=await import("../🧫️fixtures/🧩️declaration/🔣️.json");
+ const {default:law}=await import("./🧫️fixtures/🧩️declaration/🔣️.json");
  
  const {default:Ajv}=await import("ajv");
  
@@ -27,15 +27,15 @@ test("Writer declared owner corpus pins complete authored SQL tables independent
 });
 
 test("Writer original authored examples keep every reference component and full owner",async()=>{
- const {default:law}=await import("../🧫️fixtures/🔗️authored-examples/🔣️.json");const {default:Ajv}=await import("ajv");
+ const {default:law}=await import("./🧫️fixtures/🔗️authored-examples/🔣️.json");const {default:Ajv}=await import("ajv");
  for(const entry of law.examples){const snapshot=parseWriterSnapshot(entry.snapshot);const db=Database.deserialize(await exportSqliteDatabase(await writerSnapshotToSqliteDatabase(snapshot)));try{expect(db.query("PRAGMA integrity_check").all()).toEqual([{integrity_check:"ok"}]);expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(db.query("SELECT child_id,target_artifact_id,target_artifact_kind,target_standard,target_subset FROM writer_document_child").get()).toEqual({child_id:snapshot.document.childId,target_artifact_id:snapshot.document.target.artifactId,target_artifact_kind:snapshot.document.target.dialect.artifactKind,target_standard:snapshot.document.target.dialect.standard,target_subset:snapshot.document.target.dialect.subset});expect(await writerSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).toEqual(entry.snapshot);}finally{db.close();}}
  console.log("[DEBUG] Writer authored examples complete owners=2 current literal reference fields=4 independently queryable");
 });
 
 test("Writer hub tail commits retain the complete current transition and content address",async()=>{
- const {default:law}=await import("../../../../🧫️fixtures/🔁️hub-tail-after-check-in/🧭️current-checkpoints/🔣️.json");
+ const {default:law}=await import("../../../../🧪️tests/🧫️fixtures/🔁️hub-tail-after-check-in/🧭️current-checkpoints/🔣️.json");
  
- const {default:captured}=await import("../../../../🧫️fixtures/🔁️hub-tail-after-check-in/🔣️.json");
+ const {default:captured}=await import("../../../../🧪️tests/🧫️fixtures/🔁️hub-tail-after-check-in/🔣️.json");
  const {default:Ajv}=await import("ajv");
  const {historyTransitionId}=await import("../../../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts");
  const {blake3}=await import("@noble/hashes/blake3.js");

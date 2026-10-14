@@ -2,7 +2,7 @@ import { constants, createReadStream } from "node:fs";
 import { copyFile, lstat, mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { createHash, randomUUID } from "node:crypto";
 import { dirname, join, relative, sep } from "node:path";
-import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🗃️ Stage cache policy: warm and fresh store names, the entry manifest and the temporary prefix. */

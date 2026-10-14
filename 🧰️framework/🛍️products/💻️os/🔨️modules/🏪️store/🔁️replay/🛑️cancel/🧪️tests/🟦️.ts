@@ -3,7 +3,7 @@ import { Database } from "bun:sqlite";
 import { readFileSync } from "node:fs";
 
 test("raw replay cancellation preserves original custody until separately admitted physical release", () => {
-  const law = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const law = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const database = new Database(":memory:");
   try {
     database.exec("CREATE TABLE originals(position INTEGER PRIMARY KEY, owner TEXT)");

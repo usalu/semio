@@ -780,6 +780,37 @@ mod renderer {
         (registry.active(), registry.faulted)
     }
 
+    /// ♻️ Retires exact first-party scene children and original command storage under supplied grants.
+    #[derive(Default)]
+    pub struct CanvasSceneRetirement{active:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,active_bytes:usize,image:Option<semio_framework_value::retirement::controlled::ControlledRetirement<RasterImage>>}
+    impl CanvasSceneRetirement{
+        pub fn terminal_is_empty(&self,scene:&Scene)->bool{scene.0.is_empty()&&scene.0.capacity()==0&&self.active.is_none()&&self.image.is_none()}
+        pub fn next_demands(&self,scene:&Scene,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+            use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
+            if let Some(active)=self.active.as_ref(){return if active.terminal_is_empty(){Ok(RetirementDemand{release_bytes:self.active_bytes,depth:1,..Default::default()})}else{active.next_demand(copy)}}
+            if let Some(image)=self.image.as_ref(){return image.selected_demand(copy)}
+            let shape=match scene.0.last(){Some(SceneCommand::Fill{shape,..})=>Some(shape),Some(SceneCommand::Stroke{stroke,shape,..})=>{if stroke.dash_capacity()!=0{return Ok(crate::CanvasStrokeRetirement::birth_demand())}Some(shape)},Some(SceneCommand::PushLayer{clip,..}|SceneCommand::PushClipLayer{clip,..})=>Some(clip),Some(SceneCommand::DrawImage{..})=>return Ok(RetirementDemand{depth:1,..Default::default()}),
+                #[cfg(not(all(target_arch="wasm32",target_env="p2")))]
+                Some(SceneCommand::VelloFragment{..})=>return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"opaque Vello scene has no priced original retirement owner")),_=>None};
+            if shape.is_some_and(|shape|matches!(shape,RecordedShape::BezPath(path)if path.retirement_backing_bytes()!=0)){return Ok(crate::CanvasPathRetirement::birth_demand())}
+            Ok(RetirementDemand{copy_bytes:if scene.0.is_empty(){0}else{size_of::<SceneCommand>()},release_bytes:if scene.0.is_empty(){scene.retirement_backing_bytes()}else{0},depth:usize::from(!self.terminal_is_empty(scene)),..Default::default()})
+        }
+        pub fn close_step(&mut self,scene:&mut Scene,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{
+            use semio_framework_value::{ErasedSnapshotRetirement,RetainedCloneStep as Step,RetainedCloneProgress as Progress};
+            let empty=Progress::default();if self.terminal_is_empty(scene){return Ok(Step::Complete(empty))}
+            let demand=self.next_demands(scene,grant.maximum_copy_bytes)?;
+            if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(Step::Progress(empty))}
+            if let Some(active)=self.active.as_mut(){if active.terminal_is_empty(){drop(self.active.take());let bytes=std::mem::take(&mut self.active_bytes);return Ok(Step::Progress(Progress{copied_items:1,released_bytes:bytes,..empty}))}return active.close_step(grant)}
+            if let Some(image)=self.image.as_mut(){let step=image.step(grant)?;if image.terminal_is_empty(){self.image=None}return Ok(Step::Progress(step.progress()))}
+            if let Some(SceneCommand::Stroke{stroke,..})=scene.0.last_mut(){if stroke.dash_capacity()!=0{let original=std::mem::replace(stroke,Stroke::new(0.0));let (owner,progress)=crate::CanvasStrokeRetirement::admit(original,grant).map_err(|(error,original)|{*stroke=original;error})?;self.active_bytes=size_of::<crate::CanvasStrokeRetirement>();self.active=Some(owner);return Ok(Step::Progress(progress))}}
+            let shape=match scene.0.last_mut(){Some(SceneCommand::Fill{shape,..}|SceneCommand::Stroke{shape,..})=>Some(shape),Some(SceneCommand::PushLayer{clip,..}|SceneCommand::PushClipLayer{clip,..})=>Some(clip),_=>None};
+            if let Some(RecordedShape::BezPath(path))=shape{if path.retirement_backing_bytes()!=0{let original=std::mem::take(path);let(owner,progress)=crate::CanvasPathRetirement::admit(original,grant).map_err(|(error,original)|{*path=original;error})?;self.active_bytes=size_of::<crate::CanvasPathRetirement>();self.active=Some(owner);return Ok(Step::Progress(progress))}}
+            if matches!(scene.0.last(),Some(SceneCommand::DrawImage{..})){let Some(SceneCommand::DrawImage{image,..})=scene.0.pop()else{unreachable!()};self.image=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(image).unwrap_or_else(|_|panic!("first-party raster image retirement admitted")));return Ok(Step::Progress(Progress{copied_items:1,..empty}))}
+            if scene.0.is_empty(){let bytes=scene.retirement_backing_bytes();drop(std::mem::take(&mut scene.0));return Ok(Step::Complete(Progress{copied_items:1,released_bytes:bytes,..empty}))}
+            scene.0.pop();Ok(Step::Progress(Progress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))
+        }
+    }
+
     impl Scene {
         pub fn new() -> Self {
             Self(Vec::new())
@@ -1220,7 +1251,7 @@ pub use path_retirement::CanvasPathRetirement;
 mod stroke_retirement;
 pub use stroke_retirement::CanvasStrokeRetirement;
 pub use renderer::{
-    advance_opaque_scene_retirement, opaque_scene_retirement_status, publish_opaque_scene_retirement, reserve_opaque_scene_retirement, BlendMode, Cap, Color, FillRule, OpaqueSceneRetirementStep, OpaqueSceneRetirementToken, Paint, RasterImage, Rgba8,
+    CanvasSceneRetirement, advance_opaque_scene_retirement, opaque_scene_retirement_status, publish_opaque_scene_retirement, reserve_opaque_scene_retirement, BlendMode, Cap, Color, FillRule, OpaqueSceneRetirementStep, OpaqueSceneRetirementToken, Paint, RasterImage, Rgba8,
     Scene, Stroke,
 };
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]

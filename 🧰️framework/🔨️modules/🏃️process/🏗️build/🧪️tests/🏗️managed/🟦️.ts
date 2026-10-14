@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { mkdtempSync, readdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
-import fixture from "../../🧫️fixtures/🏗️native/🔣️.json";
+import fixture from "../🧫️fixtures/🏗️native/🔣️.json";
 import { buildModePolicy, readBuildMode } from "../../🎚️mode/🟦️.ts";
 import { runOwnedCommand } from "../../../🎛️owned-execution/🟦️.ts";
 const root=resolve(import.meta.dir,"../../../../../..");

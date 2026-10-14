@@ -1,14 +1,14 @@
 /** 🧫️ Exact neutral TIFF words survive physical preferences with independent zlib proof. */
 import {expect,test} from 'bun:test';
 import {inflateSync,deflateSync} from 'node:zlib';
-import faxFixture from '../📠️fax/🧫️fixtures/🔣️.json';
+import faxFixture from '../📠️fax/🧪️tests/🧫️fixtures/🔣️.json';
 import {decodeFax} from '../📠️fax/🟦️.ts';
-import profiles from '../🧫️fixtures/🧮️native-profiles/🔣️.json';
-import halfPaint from '../../../../🧫️fixtures/🧮️ieee16-paint/🔣️.json';
+import profiles from './🧫️fixtures/🧮️native-profiles/🔣️.json';
+import halfPaint from '../../../../🧪️tests/🧫️fixtures/🧮️ieee16-paint/🔣️.json';
 import {paintTiffRegion,tiffRevision} from '../../../../🧬️schema/⚙️operations/🟦️.ts';
-import jpegFixture from '../../../../../../../../../📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/💾️binary/📸️snapshot/🧮️decoded-components/🧫️fixtures/🧮️owned-exact-components/🔣️.json';
+import jpegFixture from '../../../../../../../../../📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/💾️binary/📸️snapshot/🧮️decoded-components/🧪️tests/🧫️fixtures/🧮️owned-exact-components/🔣️.json';
 import {decodeJpgComponents} from '../../../../../../../../../📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/💾️binary/📸️snapshot/🧮️decoded-components/🟦️.ts';
-import fixture from '../../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json';
+import fixture from '../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json';
 import {parseTiffSnapshot} from '../../../../🧬️schema/📸️snapshot/🟦️.ts';
 import {NativeDecodeControl} from '../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts';
 import {decodeTiffSnapshot,encodeTiffSnapshot,type TiffNativeOptions} from '../🟦️.ts';

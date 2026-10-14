@@ -1,0 +1,32 @@
+{
+  "actions": [
+    {
+      "path": "✏️s/🔌️plugins/🧪️tests/📁fixture-placement/🧫️fixtures/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "cda8c96939da4957774401d94bd220f6b4c3a9e8c7ad609e5ca62297bfdd0814",
+      "afterSha256": "a48eb71bfa199ed5711422ae58affb0c376aada19025ccf03ee8db1112e5a6f0",
+      "exclusive": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧪️tests/📁fixture-placement/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "640b2777efe9214d1ef4045076d58c1d12428005151cf928a718889b3e6ac40d",
+      "afterSha256": "521b1d8989c5fa679dcec88d54677d40335c2b92c80337866cb217b71a85aa31",
+      "exclusive": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧪️tests/📁fixture-placement/🧫️fixtures/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "a48eb71bfa199ed5711422ae58affb0c376aada19025ccf03ee8db1112e5a6f0",
+      "afterSha256": "88a7aaae4cae937b91036f9432f8ad70301ff0fc399d2197be2bdc37aa9ad2fd",
+      "exclusive": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧪️tests/📁fixture-placement/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "521b1d8989c5fa679dcec88d54677d40335c2b92c80337866cb217b71a85aa31",
+      "afterSha256": "2d8c2f8622df8a3f3006789071090bf858fa0fb52e21659dc57d5aa165b8ee47",
+      "exclusive": false
+    }
+  ]
+}

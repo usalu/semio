@@ -178,7 +178,7 @@ async fn walls_without_a_type_a_storey_or_a_height_have_no_solid() {
     assert!(solids.contains_key("w-layered"));
 }
 
-const JOINS: &str = include_str!("../../../../../../🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json");
+const JOINS: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json");
 
 #[semio_framework_async_macros::async_test]
 async fn every_wall_of_the_join_fixture_fills_exactly_its_trimmed_footprint() {

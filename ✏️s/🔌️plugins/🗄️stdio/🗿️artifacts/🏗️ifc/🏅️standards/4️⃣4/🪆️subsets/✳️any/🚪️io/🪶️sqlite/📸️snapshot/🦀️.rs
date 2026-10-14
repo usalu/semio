@@ -1,6 +1,7 @@
 //! 🏗️ IFC4 headers, ordered value ownership and exact entity references.
+use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v4::subsets::any::schema::snapshot::{IfcSnapshot,IfcHeader,IfcEntity,IfcComplexType,IfcTypedValue, IfcValue};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,FloatColumn},*}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter,FloatColumn},*}};
 #[path="📏️encoding/💰️backing/🦀️.rs"]
 mod native_backing;
 #[path="🛬️reconstruction/🦀️.rs"]
@@ -43,15 +44,20 @@ fn visit_rows(snapshot:&IfcSnapshot,p:&mut RowWriter<'_,'_>)->Result<(),ValueErr
  for(index,part)in entity.complex.iter().enumerate(){let complex=p.insert("ifc_complex_type",&[Cell::Integer(id),Cell::Integer(ordinal(index)?),Cell::Text(&part.name)])?;p.check_rows(part.args.len())?;for(index,value)in part.args.iter().enumerate(){project_value(value,Owner::Argument(None,Some(complex),index),&identities,p)?;}}}Ok(())
  }
 impl IfcSnapshot{pub(crate)fn admit_sqlite_values(&self,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<(),ValueError>{semantic::extent(control.limits())?;let mut writer=RowWriter::borrowed(control,phase)?;visit_rows(self,&mut writer)?;writer.finish_borrowed()}pub(crate)fn admit_sqlite_record(value:&semio_framework_dsl_record::RecordValue,limits:SqliteDatabaseLimits,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),ValueError>{semantic::admit_record(value,limits,native)}}
-impl ArtifactSqliteSnapshot for IfcSnapshot{
- const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+impl ArtifactSqliteSnapshotHost for IfcSnapshot{
+ 
  fn retire_sqlite_snapshot(self){native::close(self)}
  fn decode_sqlite_snapshot_native(payload:&semio_framework_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native::decode(payload,control,native_control)}
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError>{native::encode(self,encoding,control,native_owner)}
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{native_backing::preflight(self,control)}
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic::extent(control.limits())?;let mut p=RowWriter::new(Self::SQLITE_SCHEMA,control)?;visit_rows(self,&mut p)?;p.finish()}
-    fn from_sqlite_database(db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{validate_sqlite_database_schema(db,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(db,SqliteSnapshotPhase::ReconstructSnapshot)?;reconstruction::read(db,control)}
+ 
+    
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{(||->Result<semio_framework_os_kernel::io_schema::IoOutcome<()>,ValueError>{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!="s.stdio.ifc"||dialect.standard!="4"||dialect.subset!="*"{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown owned IFC4 snapshot dialect"));}let root=db.table("ifc_document")?.single_row()?;if root.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"IFC4 document schema differs from its projection"));}Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics:Vec::new()})})().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for IfcSnapshot {
+const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic::extent(control.limits())?;let mut p=RowWriter::new(Self::SQLITE_SCHEMA,control)?;visit_rows(self,&mut p)?;p.finish()}
+fn from_sqlite_database(db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{validate_sqlite_database_schema(db,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(db,SqliteSnapshotPhase::ReconstructSnapshot)?;reconstruction::read(db,control)}
 }
 
 #[cfg(test)]

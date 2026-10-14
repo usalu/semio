@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 
 import { applyPatch } from "fast-json-patch";
-import fixture from "../../🧫️fixtures/🚪️provisioning-lifecycle/🔣️.json";
+import fixture from "../🧫️fixtures/🚪️provisioning-lifecycle/🔣️.json";
 
 type WindowKey = { windowId: string; windowKindId: string };
 type DocumentState = { revision: number; camera: string };

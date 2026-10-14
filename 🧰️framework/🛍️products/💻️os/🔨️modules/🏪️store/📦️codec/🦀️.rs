@@ -2,6 +2,7 @@
 //! codec-driven reductions, assembly registry guards and dialect migrations.
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
+use pack::snapshot::{ArtifactDsl,ArtifactPack};
 use crate::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory;
 use crate::os_vcs::io::binary::genesis::ArtifactGenesisCodec;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
@@ -21,7 +22,7 @@ use crate::os_vcs::{
     Identified, Patchable,
 };
 use super::store_schema::ArtifactCursor;
-use super::serialization::{ArtifactCodec, ArtifactDsl, ArtifactPack, ArtifactPackFiles, ArtifactSqliteSnapshot};
+use super::serialization::{ArtifactCodec, ArtifactPackFiles, ArtifactSqliteSnapshotHost};
 #[cfg(target_arch = "wasm32")]
 use super::serialization::{ArtifactCodecApplyFuture};
 use crate::os_pack::pack_rt;
@@ -39,7 +40,7 @@ use super::backbone::local_storage_backbone_key;
 use super::{ArtifactStore, ArtifactStoreCursorDisposer};
 
 /// 🛡️ Applies the owner's semantic policy and preserves warnings while refusing errors.
-pub fn validate_owned_sqlite_snapshot_subset<P: ArtifactSqliteSnapshot>(
+pub fn validate_owned_sqlite_snapshot_subset<P: ArtifactSqliteSnapshotHost>(
     snapshot: &P,
     dialect: &semio_framework_artifact_reference::ArtifactDialect,
     database: &crate::sqlite_snapshot::SqliteDatabase,

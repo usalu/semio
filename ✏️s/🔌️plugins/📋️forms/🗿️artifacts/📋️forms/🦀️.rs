@@ -367,7 +367,7 @@ pub fn forms_snapshot_with_state(schema: String, id: String, version: String, ti
 
 /// 🌱️ Materializes the exact derived child requested by the framework's archive loader.
 pub fn forms_genesis_child_pack(snapshot: &FormsSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::os_store::serialization::ArtifactPack;
+    use pack::snapshot::ArtifactPack;
     if slot == "structure" && child_id == snapshot.structure.child_id { return Some(forms_structure_from_steps(&snapshot.definition.steps).encode_pack()); }
     if slot == "results" && child_id == snapshot.results.child_id { return Some(forms_results_from_responses(&snapshot.responses).encode_pack()); }
     None

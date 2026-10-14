@@ -130,7 +130,7 @@ fn drive_retained(work: &mut EquationRetainedCommandWork, command: &EquationComm
 
 #[test]
 fn retained_schema_contract_and_factory_identity_are_exact() {
-    let fixture: Value = semio_framework_pack_json::parse(include_str!("../../../../../../../🧫️fixtures/⚖️equation-retained-command-law.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral retained fixture");
+    let fixture: Value = semio_framework_pack_json::parse(include_str!("../../../../../../../🧪️tests/🧫️fixtures/⚖️equation-retained-command-law.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral retained fixture");
     assert_eq!(fixture["contract"]["workItems"], 65_536);
     assert_eq!(fixture["contract"]["maximumStepMillis"], 8);
     assert_eq!(fixture["actions"], semio_framework_pack_json::array(EQUATION_TOOL_IDS.iter().map(|id| Value::from(*id))));
@@ -298,7 +298,7 @@ async fn retained_maximum_microturns_stay_below_eight_milliseconds() {
 
 //#region 🔖️NodeGraphRows
 /// 🧾️ The framework's committed node-graph row vocabulary (schema `🧰️framework/🔨️modules/🛠️tool-machine/🧬️schema/🔣️node-graph-edit-rows`).
-const NODE_GRAPH_EDIT_ROWS: &str = include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
+const NODE_GRAPH_EDIT_ROWS: &str = include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
 
 /// ⚖️ LAW: the equation guest decodes the renderer's committed node-graph rows through the ONE shared decoder: every refused
 /// row is refused, every accepted row its graph carries (`move`, `connect`, `disconnect`, `delete`) decodes, and the

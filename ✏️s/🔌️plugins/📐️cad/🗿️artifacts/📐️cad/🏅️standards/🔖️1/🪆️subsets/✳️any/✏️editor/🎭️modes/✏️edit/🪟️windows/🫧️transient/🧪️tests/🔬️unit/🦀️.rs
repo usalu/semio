@@ -2,7 +2,7 @@
 //! rest is idle, and every value survives the window-transient pack.
 
 use super::*;
-use store::os_store::serialization::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 
 const SCHEMA_JSON: &str = include_str!("../../🧬️schema/🔣️.json");
 
@@ -40,7 +40,7 @@ fn a_live_engagement_round_trips_through_the_pack() {
 /// to a transient whose wire form is that row.
 #[test]
 fn every_valid_fixture_row_is_its_own_wire_form() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🧫️fixtures/🪪️document/🔣️.json")).expect("fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("fixture parses");
     for row in fixture["valid"].as_array().expect("valid rows") {
         let decoded: CadWorldWindowTransient = semio_framework_value::FromValue::from_value(row.clone().into()).expect("a valid row decodes");
         assert_eq!(&wire(&decoded), row);

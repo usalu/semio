@@ -196,7 +196,7 @@ fn the_attic_export_is_deterministic_and_skips_nothing() {
 //#region 🔖️Committed attic
 use crate::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, projection::projection};
 
-const ATTIC_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🧗️wall-depth");
+const ATTIC_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🧗️wall-depth");
 
 fn read_attic(name: &str) -> Vec<u8> {
     std::fs::read(format!("{ATTIC_DIR}/{name}")).unwrap_or_else(|error| panic!("{name}: {error}. Run the test with BIM_BLESS=1 to write the file, then `python 🐍️.py write` of the export case."))

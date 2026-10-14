@@ -12,7 +12,7 @@ fn opening_preferences_default_is_empty() {
 /// (`🖱️ui/🎨️styling/🧪️tests/🧩️suite/🟦️.ts`); this half replays the very same event logs through the
 /// OS config projection that owns the vocabulary, so a boot script that agreed with itself but not
 /// with the shell would still fail.
-const APPEARANCE_BOOT_FIXTURE_JSON: &str = include_str!("../../../../../../🔨️modules/🖱️ui/🎨️styling/🧫️fixtures/🌓️appearance-boot.json");
+const APPEARANCE_BOOT_FIXTURE_JSON: &str = include_str!("../../../../../../🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧫️fixtures/🌓️appearance-boot.json");
 
 /// ⚖️ LAW: replaying a case's `events` through `apply_ui_preferences_config_mutation` yields the
 /// `appearance` the fixture declares — the projection the head script has to reproduce by hand.

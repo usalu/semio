@@ -61,7 +61,7 @@ const RECIPES: readonly Recipe[] = [
 //#endregion 🧬️Contract
 
 //#region 🏭️Generate
-const FIXTURE_PATH_PREFIX = "../🧫️fixtures/";
+const FIXTURE_PATH_PREFIX = "../🧪️tests/🧫️fixtures";
 
 function contentDigest(bytes: Buffer): string {
   return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
@@ -130,7 +130,7 @@ async function main(argv: readonly string[]): Promise<number> {
     console.error(`[jpg generator] no recipe matches ${JSON.stringify(only)} — known: ${RECIPES.map((recipe) => recipe.id).join(", ")}`);
     return 1;
   }
-  const outDir = process.env.SEMIO_FIXTURE_OUT ?? value("--out") ?? join(import.meta.dir, "..", "🧫️fixtures");
+  const outDir = process.env.SEMIO_FIXTURE_OUT ?? value("--out") ?? join(import.meta.dir, "..", "🧪️tests/🧫️fixtures");
   mkdirSync(outDir, { recursive: true });
   if (command === "witness") {
     const expected = JSON.parse(readFileSync(join(import.meta.dir, "🧪️tests", "🖼️replace-image", "🔣️.json"), "utf8"));

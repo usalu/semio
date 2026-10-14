@@ -17,7 +17,7 @@ use semio_framework_job::{
 };
 use semio_framework_trace::{Generation, InteractiveStage, OperationId};
 use std::{mem::size_of, sync::Arc};
-use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_job::{InteractiveJobCloseStep, OriginalTurnFailure, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress};
 
 //#region 📥️FrameBuildInputs
 /// 📥️ The fixed scalar `Send`-safe slice of `AppRuntime` this job needs.
@@ -60,9 +60,9 @@ impl FrameBuildJob {
 }
 
 impl InteractiveJob for FrameBuildJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
         if cx.is_cancelled() || self.closing {
-            return JobOutcomeBorrow::admit_cancelled(cx);
+            return JobOutcomeBorrow::admit_cancelled(cx).map_err(OriginalTurnFailure::from);
         }
         if self.complete.is_none() {
             let grant = cx.retained_grant();
@@ -73,7 +73,7 @@ impl InteractiveJob for FrameBuildJob {
             cx.consume_fuel(1);
             return Ok(None);
         }
-        JobOutcomeBorrow::admit_complete(cx, None, None)
+        JobOutcomeBorrow::admit_complete(cx, None, None).map_err(OriginalTurnFailure::from)
     }
 
     fn borrow_outcome<'a>(&'a self, original: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -87,19 +87,23 @@ impl InteractiveJob for FrameBuildJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
         if self.complete.is_none() {
-            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
+            return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
         }
+        let grant = cx.retained_grant();
         let copy_bytes = size_of::<FrameDirectives>();
-        if grant.maximum_items == 0 || grant.maximum_copy_bytes < copy_bytes {
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
+        if cx.should_yield() || grant.maximum_items == 0 || grant.maximum_copy_bytes < copy_bytes {
+            return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
         }
         if grant.maximum_depth == 0 {
-            return InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() };
+            return Err(OriginalTurnFailure::debit_original(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "original frame directive close requires admitted depth"), cx));
         }
+        let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, ..RetainedCloneProgress::default() };
+        cx.consume_retained(progress)?;
         self.complete = None;
-        InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, ..RetainedCloneProgress::default() } }
+        cx.consume_fuel(1);
+        Ok(InteractiveJobCloseStep::Pending { progress })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
@@ -168,8 +172,8 @@ impl std::task::Wake for FrameCompletionWake {
 }
 
 enum ActiveFramePhase {
+    DeadlineAdmission { job: Option<FrameBuildJob>, params: Option<BatchJobParams>, cancel_retirement: Option<semio_framework_async::CancelTokenRetirement> },
     Deadlines(BatchJobSession<FrameBuildJob>),
-    DeadlineAdmissionRejected(WorkerJobSessionAdmissionRejected<FrameBuildJob>),
     ApplyPending(FrameDirectives),
     Build(crate::FrameTransaction),
     Prepare(crate::AppFramePreparation),
@@ -198,6 +202,7 @@ struct ActiveFrameBuild {
 enum ActiveFrameStep {
     Pending,
     Fault(semio_framework_value::ValueError),
+    CloseFailure(OriginalTurnFailure),
     Complete(Option<crate::AppFramePresentation>),
 }
 
@@ -210,60 +215,80 @@ fn run_frame_owner_turn(cx: &mut StepContext<'_>, advance: impl FnOnce(&mut Step
     Some(step)
 }
 
-fn worker_close_step(step: semio_framework_job::WorkerJobCloseStep, grant: RetainedCloneGrant, terminal: bool) -> InteractiveJobCloseStep {
-    use semio_framework_job::WorkerJobCloseStep;
-    match step {
-        WorkerJobCloseStep::Pending { progress } => InteractiveJobCloseStep::Pending { progress },
-        WorkerJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Complete { progress },
-        WorkerJobCloseStep::Blocked => InteractiveJobCloseStep::Blocked,
-        WorkerJobCloseStep::Refused { kind, progress } => InteractiveJobCloseStep::Refused { kind, progress },
-    }.admit(grant, terminal)
-}
-
-fn retire_active_phase(phase: &mut ActiveFramePhase, grant: RetainedCloneGrant, witness: &CancelToken) -> InteractiveJobCloseStep {
+fn retire_active_phase(phase: &mut ActiveFramePhase, cx: &mut StepContext<'_>, witness: &CancelToken) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
+    let grant=cx.retained_grant();
+    if cx.should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
     let empty = match phase {
+        ActiveFramePhase::DeadlineAdmission { job, params, cancel_retirement } => {
+            if params.is_some() {
+                if let Some(step)=crate::frame_inline_gate(grant,0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
+                let original=params.take().expect("original deadline params remain held before paid transfer");
+                *cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(original.cancel));
+                return crate::frame_receive_close(crate::frame_inline_progress(0),cx);
+            }
+            if let Some(original)=cancel_retirement.as_mut() {
+                if !original.terminal_is_empty() {
+                    return crate::frame_receive_close(match original.return_alias_step(witness,grant) {
+                        Ok(step)=>Ok(InteractiveJobCloseStep::Pending{progress:step.progress()}),
+                        Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(InteractiveJobCloseStep::Blocked),
+                        Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error),
+                    },cx);
+                }
+                if let Some(step)=crate::frame_inline_gate(grant,0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
+                *cancel_retirement=None;
+                return crate::frame_receive_close(crate::frame_inline_progress(0),cx);
+            }
+            if let Some(original)=job.as_mut() {
+                original.begin_close();
+                if !original.terminal_is_empty(){return crate::frame_received_child(original.close_step(cx),grant,original.terminal_is_empty())}
+                if let Some(step)=crate::frame_inline_gate(grant,0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
+                *job=None;
+                return crate::frame_receive_close(crate::frame_inline_progress(0),cx);
+            }
+            true
+        }
         ActiveFramePhase::Deadlines(session) => {
             if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
                 session.begin_close();
-                return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
+                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
             }
-            if !session.terminal_is_empty() { return crate::frame_child_step(worker_close_step(session.close_step(grant), grant, session.terminal_is_empty()), grant, session.terminal_is_empty()); }
-            true
-        }
-        ActiveFramePhase::DeadlineAdmissionRejected(rejected) => {
-            if !rejected.terminal_is_empty() { return crate::frame_child_step(rejected.close_step(grant), grant, rejected.terminal_is_empty()); }
+            match session.has_original_cancel_alias_witness(witness) {
+                Ok(true)=>return crate::frame_receive_close(match session.return_original_cancel_alias_step(witness,grant) {
+                    Ok(Some(step))=>Ok(InteractiveJobCloseStep::Pending{progress:step.progress()}),
+                    Ok(None)|Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>Ok(InteractiveJobCloseStep::Blocked),
+                    Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>Err(error),
+                },cx),
+                Ok(false)=>{},
+                Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>return Ok(InteractiveJobCloseStep::Blocked),
+                Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx)),
+            }
+            if !session.terminal_is_empty() { let step=session.close_step(cx)?;return crate::frame_worker_child_step(step,grant,session.terminal_is_empty()).map_err(OriginalTurnFailure::from); }
             true
         }
         ActiveFramePhase::ApplyPending(_) => true,
         ActiveFramePhase::Build(transaction) => {
-            if !transaction.terminal_is_empty() { return crate::frame_child_step(transaction.close_step(grant), grant, transaction.terminal_is_empty()); }
+            if !transaction.terminal_is_empty() { return crate::frame_received_child(transaction.close_step(cx),grant,transaction.terminal_is_empty()); }
             true
         }
         ActiveFramePhase::Prepare(preparation) => {
-            if !preparation.terminal_is_empty() { return crate::frame_child_step(preparation.close_step(grant,Some(witness)), grant, preparation.terminal_is_empty()); }
+            if !preparation.terminal_is_empty() { return crate::frame_received_child(preparation.close_step(cx,Some(witness)), grant, preparation.terminal_is_empty()); }
             true
         }
-        ActiveFramePhase::Terminal => return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() },
+        ActiveFramePhase::Terminal => return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }),
     };
     if empty {
         let bytes = size_of::<ActiveFramePhase>();
-        if let Some(step) = crate::frame_inline_gate(grant, bytes) { return step; }
+        if let Some(step) = crate::frame_inline_gate(grant, bytes).map_err(|error|OriginalTurnFailure::debit_original(error,cx))? { return Ok(step); }
         *phase = ActiveFramePhase::Terminal;
-        return crate::frame_inline_progress(bytes);
+        return crate::frame_receive_close(crate::frame_inline_progress(bytes),cx);
     }
-    InteractiveJobCloseStep::Blocked
+    Ok(InteractiveJobCloseStep::Blocked)
 }
 
 impl ActiveFrameBuild {
     fn new(runtime: crate::RuntimeMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation, cancel: CancelToken, retained: RetainedCloneGrant) -> Self {
         let handle = runtime.downgrade();
-        let phase = match BatchJobSession::try_new(FrameBuildJob::new(inputs), batch_params(operation, generation, cancel.clone(), retained)) {
-            Ok(session) => ActiveFramePhase::Deadlines(session),
-            Err(mut rejected) => {
-                rejected.begin_close();
-                ActiveFramePhase::DeadlineAdmissionRejected(rejected)
-            }
-        };
+        let phase = ActiveFramePhase::DeadlineAdmission { job:Some(FrameBuildJob::new(inputs)),params:None,cancel_retirement:None };
         Self { retained, runtime, handle, operation, generation, cancel, preview_sequence: 0, phase, retiring_phase:None, deadline_receipt_received:false, deadline_outcome_pending:None, deadline_acknowledged:false, deadline_refused_receipt:None, overruns: semio_framework_trace::StepOverrunLedger::new(), completed: None, closing: false }
     }
 
@@ -271,18 +296,19 @@ impl ActiveFrameBuild {
         self.cancel.cancel_now();
     }
 
-    fn retire_cancelled_phase(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+    fn retire_cancelled_phase(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
+        let grant=cx.retained_grant();
         if let Some(phase)=self.retiring_phase.as_mut(){
-            let step=retire_active_phase(phase,grant,&self.cancel);
-            if !matches!(step,InteractiveJobCloseStep::Complete{progress} if progress==RetainedCloneProgress::default()){return crate::frame_child_step(step,grant,matches!(phase,ActiveFramePhase::Terminal))}
-            if let Some(step)=crate::frame_inline_gate(grant,0){return step}
+            let step=retire_active_phase(phase,cx,&self.cancel)?;
+            if !matches!(step,InteractiveJobCloseStep::Complete{progress} if progress==RetainedCloneProgress::default()){return crate::frame_received_child(Ok(step),grant,matches!(phase,ActiveFramePhase::Terminal))}
+            if let Some(step)=crate::frame_inline_gate(cx.retained_grant(),0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
             self.retiring_phase=None;
-            return crate::frame_inline_progress(0);
+            return crate::frame_receive_close(crate::frame_inline_progress(0),cx);
         }
         if matches!(self.phase,ActiveFramePhase::Terminal) && (self.deadline_receipt_received || self.deadline_outcome_pending.is_some() || self.deadline_acknowledged || self.deadline_refused_receipt.is_some()){
-            if let Some(step)=crate::frame_inline_gate(grant,0){return step}
+            if let Some(step)=crate::frame_inline_gate(grant,0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
             self.deadline_receipt_received=false;self.deadline_outcome_pending=None;self.deadline_acknowledged=false;self.deadline_refused_receipt=None;
-            return crate::frame_inline_progress(0);
+            return crate::frame_receive_close(crate::frame_inline_progress(0),cx);
         }
         let candidate_returned = match &mut self.phase {
             ActiveFramePhase::Build(transaction) => transaction.discard_presented_input_candidate(&self.runtime),
@@ -290,9 +316,9 @@ impl ActiveFrameBuild {
             _ => true,
         };
         if !candidate_returned {
-            return InteractiveJobCloseStep::Blocked;
+            return Ok(InteractiveJobCloseStep::Blocked);
         }
-        retire_active_phase(&mut self.phase, grant, &self.cancel)
+        retire_active_phase(&mut self.phase, cx, &self.cancel)
     }
 
     /// 🛑️ Terminates the frame for an overrun its own `StepOverrunLedger` attributed to the step —
@@ -343,9 +369,7 @@ impl ActiveFrameBuild {
     fn advance(&mut self, cx: &mut StepContext<'_>) -> ActiveFrameStep {
         if self.deadline_refused_receipt.is_some(){return ActiveFrameStep::Fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original deadline worker receipt remains refused"))}
         if let Some(phase)=self.retiring_phase.as_mut() {
-            let grant=cx.retained_grant();
-            let step=retire_active_phase(phase,grant,&self.cancel);
-            if let Err(error)=cx.consume_retained(step.progress()){return ActiveFrameStep::Fault(error)}
+            let step=match retire_active_phase(phase,cx,&self.cancel){Ok(step)=>step,Err(error)=>return ActiveFrameStep::CloseFailure(error)};
             if matches!(step,InteractiveJobCloseStep::Complete{..}) {
                 let remaining=cx.retained_grant();
                 if step.progress()!=RetainedCloneProgress::default() || remaining.maximum_items==0 || remaining.maximum_depth==0 { return ActiveFrameStep::Pending; }
@@ -355,9 +379,7 @@ impl ActiveFrameBuild {
             return ActiveFrameStep::Pending;
         }
         if self.cancel.is_cancelled_now() {
-            let grant = cx.retained_grant();
-            let step = self.retire_cancelled_phase(grant);
-            if cx.consume_retained(step.progress()).is_err() { return ActiveFrameStep::Pending; }
+            let step = match self.retire_cancelled_phase(cx){Ok(step)=>step,Err(error)=>return ActiveFrameStep::CloseFailure(error)};
             if matches!(step, InteractiveJobCloseStep::Complete { .. }) {
                 self.phase = ActiveFramePhase::Terminal;
                 return ActiveFrameStep::Complete(None);
@@ -376,6 +398,22 @@ impl ActiveFrameBuild {
             return ActiveFrameStep::Pending;
         }
         match &mut self.phase {
+            ActiveFramePhase::DeadlineAdmission { job, params, .. } => {
+                if params.is_none() {
+                    if self.operation!=cx.operation()||self.generation!=cx.generation()||!self.cancel.is_same_node(cx.original_cancel_token()){return ActiveFrameStep::Fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame deadline requires its admitted business identity and cancellation source"))}
+                    let Some(now)=cx.latest_us()else{return ActiveFrameStep::Fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original frame deadline requires its initiating clock"))};
+                    let cancel=match cx.admit_original_cancel_alias(){Ok(Some(cancel))=>cancel,Ok(None)=>return ActiveFrameStep::Pending,Err(error)=>return ActiveFrameStep::Fault(error)};
+                    let original=BatchJobParams{operation:self.operation,generation:self.generation,cancel,now_us:cx.clock_source(),config:BatchDriveConfig{retained:cx.retained_grant(),site:"os_renderer_frame_deadlines",stage:InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:cx.deadline_us().saturating_sub(now)}};
+                    *params=Some(original);
+                    return ActiveFrameStep::Pending;
+                }
+                match BatchJobSession::try_admit_owned(job,params,cx) {
+                    Ok(Some((session,_already_received)))=>self.phase=ActiveFramePhase::Deadlines(session),
+                    Ok(None)=>{},
+                    Err(error)=>return ActiveFrameStep::Fault(error),
+                }
+                ActiveFrameStep::Pending
+            }
             ActiveFramePhase::Deadlines(session) => {
                 if let Some(complete)=self.deadline_outcome_pending {
                     if !self.deadline_acknowledged {
@@ -398,13 +436,14 @@ impl ActiveFrameBuild {
                     return ActiveFrameStep::Pending;
                 }
                 if !self.deadline_receipt_received {
-                    if !matches!(session.step(cx.retained_grant()),Ok(semio_framework_job::WorkerJobPoll::Outcome|semio_framework_job::WorkerJobPoll::Terminal)) || !session.checkout_outcome(){return ActiveFrameStep::Pending}
-                    let remaining=cx.retained_grant();
-                    let expected=RetainedCloneGrant{maximum_items:remaining.maximum_items.min(self.retained.maximum_items),maximum_copy_bytes:remaining.maximum_copy_bytes.min(self.retained.maximum_copy_bytes),maximum_capacity_bytes:remaining.maximum_capacity_bytes.min(self.retained.maximum_capacity_bytes),maximum_release_bytes:remaining.maximum_release_bytes.min(self.retained.maximum_release_bytes),maximum_depth:remaining.maximum_depth.min(self.retained.maximum_depth)};
+                    let expected=cx.retained_grant();let before=cx.retained_progress();
+                    let poll=match session.step_on_original_caller(cx){Ok(poll)=>poll,Err(failure)=>return ActiveFrameStep::CloseFailure(failure)};
+                    if !matches!(poll,semio_framework_job::WorkerJobPoll::Outcome|semio_framework_job::WorkerJobPoll::Terminal)||!session.checkout_outcome(){return ActiveFrameStep::Pending}
                     let Some((issued,progress))=session.take_checked_out_retained_step_receipt()else{return ActiveFrameStep::Fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original deadline worker omitted its checked-out physical receipt"))};
                     self.deadline_receipt_received=true;
-                    let received=cx.consume_retained(progress);
-                    if issued!=expected || !progress.fits(issued) || received.is_err(){self.deadline_refused_receipt=Some((issued,progress));return ActiveFrameStep::Fault(received.err().unwrap_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original deadline worker tuple differs from issued authority")))}
+                    let after=cx.retained_progress();
+                    let posted=before.checked_add(progress).is_ok_and(|total|total==after);
+                    if issued!=expected||!progress.fits(issued)||!posted{self.deadline_refused_receipt=Some((issued,progress));return ActiveFrameStep::Fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original deadline worker tuple differs from its already posted original caller receipt"))}
                     return ActiveFrameStep::Pending;
                 }
                 match session.checked_out_outcome() {
@@ -414,17 +453,6 @@ impl ActiveFrameBuild {
                     Err(error)=>return ActiveFrameStep::Fault(error),
                 }
                 ActiveFrameStep::Pending
-            }
-            ActiveFramePhase::DeadlineAdmissionRejected(rejected) => {
-                let grant = cx.retained_grant();
-                let step = rejected.close_step(grant).admit(grant, rejected.terminal_is_empty());
-                if cx.consume_retained(step.progress()).is_err() { return ActiveFrameStep::Pending; }
-                if rejected.terminal_is_empty() {
-                    self.phase = ActiveFramePhase::Terminal;
-                    ActiveFrameStep::Complete(None)
-                } else {
-                    ActiveFrameStep::Pending
-                }
             }
             ActiveFramePhase::ApplyPending(_) => ActiveFrameStep::Pending,
             ActiveFramePhase::Build(transaction) => {
@@ -448,6 +476,7 @@ impl ActiveFrameBuild {
                         ActiveFrameStep::Pending
                     }
                     crate::AppFrameTransactionStep::Pending => ActiveFrameStep::Pending,
+                    crate::AppFrameTransactionStep::CloseFailure(failure)=>ActiveFrameStep::CloseFailure(failure),
                     crate::AppFrameTransactionStep::Superseded => {
                         if !transaction.discard_presented_input_candidate(&self.runtime) {
                             return ActiveFrameStep::Pending;
@@ -482,14 +511,15 @@ impl InteractiveJob for ActiveFrameBuild {
     /// ⏱️ One retained Worker turn advances exactly one frame phase and charges that attempt after it
     /// runs, including a terminal attempt. Native resubmits the retained owner through the process
     /// pool; browser wasm reschedules it inside the dedicated frame Worker.
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
         if matches!(self.phase, ActiveFramePhase::Terminal) && self.retiring_phase.is_none() {
-            return JobOutcomeBorrow::admit_complete(cx, None, None);
+            return JobOutcomeBorrow::admit_complete(cx, None, None).map_err(OriginalTurnFailure::from);
         }
         if cx.is_cancelled() { self.cancel(); }
         match run_frame_owner_turn(cx, |cx| self.advance(cx)) {
             None | Some(ActiveFrameStep::Pending) => Ok(None),
-            Some(ActiveFrameStep::Fault(error)) => Err(error),
+            Some(ActiveFrameStep::Fault(error)) => Err(OriginalTurnFailure::from(error)),
+            Some(ActiveFrameStep::CloseFailure(error)) => Err(error),
             Some(ActiveFrameStep::Complete(frame)) => {
                 self.completed = frame;
                 Ok(None)
@@ -506,17 +536,19 @@ impl InteractiveJob for ActiveFrameBuild {
         self.cancel();
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
         self.begin_close();
+        let grant=cx.retained_grant();
+        if cx.should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
         if let Some(frame) = self.completed.as_mut() {
-            if !frame.discard_presented_input_candidate(&self.runtime) { return InteractiveJobCloseStep::Blocked; }
-            if !frame.terminal_is_empty() { return crate::frame_child_step(frame.close_step(grant), grant, frame.terminal_is_empty()); }
+            if !frame.discard_presented_input_candidate(&self.runtime) { return Ok(InteractiveJobCloseStep::Blocked); }
+            if !frame.terminal_is_empty() { return crate::frame_receive_close(crate::frame_child_step(frame.close_step(grant), grant, frame.terminal_is_empty()),cx); }
             let bytes = size_of::<Option<crate::AppFramePresentation>>();
-            if let Some(step) = crate::frame_inline_gate(grant, bytes) { return step; }
+            if let Some(step) = crate::frame_inline_gate(grant, bytes).map_err(|error|OriginalTurnFailure::debit_original(error,cx))? { return Ok(step); }
             self.completed = None;
-            return crate::frame_inline_progress(bytes);
+            return crate::frame_receive_close(crate::frame_inline_progress(bytes),cx);
         }
-        self.retire_cancelled_phase(grant)
+        self.retire_cancelled_phase(cx)
     }
 
     fn terminal_is_empty(&self) -> bool {

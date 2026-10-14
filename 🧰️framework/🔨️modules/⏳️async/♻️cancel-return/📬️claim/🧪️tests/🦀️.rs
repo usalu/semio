@@ -8,7 +8,7 @@ fn close(mut cursor:ClaimRetirement)->usize{
 }
 #[test]
 fn original_publication_permit_return_slot_has_exact_allocator_and_parallel_custody(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let source=PublicationClaim::new();let aliases=row["aliases"].as_u64().unwrap()as usize;let other=(aliases>1).then(||source.clone());
   for _ in 0..row["repetitions"].as_u64().unwrap(){

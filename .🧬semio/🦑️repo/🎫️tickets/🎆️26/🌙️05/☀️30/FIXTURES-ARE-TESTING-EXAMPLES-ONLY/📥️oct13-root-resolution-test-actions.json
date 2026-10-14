@@ -1,0 +1,20 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🧭️fixture-resolution/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "7573cf48ffe5c2036d1b0f152fd55013324f8d9e3fa1c930bda5b5e54d599a46",
+      "afterSha256": "20de1831a6dfe2726306ca755653a14bb550ff45200c6380e0744979882ab4a8",
+      "exclusive": false,
+      "scope": "Original shared URI, hash and independent Ajv TestInput laws use actual testing collection; traversal/assets/local refusals unchanged; temporary work stays caller-owned"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧭️fixture-resolution/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "3a4f7db6c76d17093a5be7147d6aecb9df6cf29a4505a4a3b0e94b2a33383655",
+      "afterSha256": "7426be1c54ff9a8b8f66e276e5969927bb84e32c08564ecf040c2a75dc7388a4",
+      "exclusive": false,
+      "scope": "Original shared URI, hash and independent Ajv TestInput laws use actual testing collection; traversal/assets/local refusals unchanged; temporary work stays caller-owned"
+    }
+  ]
+}

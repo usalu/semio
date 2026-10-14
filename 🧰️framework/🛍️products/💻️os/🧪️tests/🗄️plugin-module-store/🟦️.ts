@@ -25,7 +25,7 @@ import { TrustedPluginModuleRefusalV1 } from "../../🔨️modules/🔌️plugin
 import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 const here = (path: string) => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8"));
-const fixture = here("../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧫️fixtures/🗄️store/🔣️.json");
+const fixture = here("../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧪️tests/🧫️fixtures/🗄️store/🔣️.json");
 const storeSchema = here("../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🔣️.json");
 const hubSchema = here("../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json");
 const origin: string = fixture.origin;

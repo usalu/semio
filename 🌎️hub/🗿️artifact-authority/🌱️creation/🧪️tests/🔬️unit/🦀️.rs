@@ -63,7 +63,7 @@ async fn genesis_materialization_binds_exact_zero_history_and_independent_sha256
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️artifact-genesis-v1/🔣️.json")).unwrap();
     let descriptor: DocumentDescriptor = semio_framework_pack_json::from_json_str(&fixture["expected"]["descriptor"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let expected: ArtifactCheckpoint = semio_framework_pack_json::from_json_str(&fixture["expected"]["checkpoint"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let open: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).unwrap();
+    let open: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).unwrap();
     let valid_plan: directory::os_directory::DocumentOpenPlanV1 = semio_framework_pack_json::from_json_str(&open["validPlan"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let valid_lease = directory::os_directory::lease_fields_from_plan_v1(&valid_plan, 1, 1, None).unwrap();
     for row in open["checkpointPresenceCases"].as_array().unwrap() {

@@ -5,7 +5,7 @@ import { parseJobReconcileRequestV1, parseJobReconcileResultV1 } from "../../�
 
 /** 🧪️ Shared neutral vectors agree with the independent draft-07 validator. */
 export function proveJobReconcileContract(): number {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const ajv = new Ajv({ strict: true }).addKeyword("x-semio-formats");
   const validators = {

@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "separate-optional",
+      "rows": [
+        {
+          "min": 0.5
+        },
+        {
+          "max": 0.5
+        }
+      ],
+      "source": "items=[ { min=0.5 } { max=0.5 } ]",
+      "nestedTableSource": "items=[ [ {min=0.5} {max=0.5} ] ]"
+    },
+    {
+      "id": "empty",
+      "rows": [
+        {},
+        {}
+      ],
+      "source": "items=[ { } { } ]",
+      "nestedTableSource": "items=[ [ {} {} ] ]"
+    },
+    {
+      "id": "ordered",
+      "rows": [
+        {
+          "max": 2.0
+        },
+        {},
+        {
+          "min": 1.0
+        },
+        {
+          "label": "Grün 雪"
+        }
+      ],
+      "source": "items=[ { max=2 } { } { min=1 } { label=\"Grün 雪\" } ]",
+      "nestedTableSource": "items=[ [ {max=2} {} {min=1} {label=\"Grün 雪\"} ] ]"
+    },
+    {
+      "id": "nested",
+      "rows": [
+        {
+          "children": [
+            {},
+            {
+              "min": 0.5
+            }
+          ]
+        },
+        {}
+      ],
+      "source": "items=[ { children=[ { } { min=0.5 } ] } { } ]",
+      "nestedTableSource": "items=[ [ {children=[ { } { min=0.5 } ]} {} ] ]"
+    },
+    {
+      "id": "no-items",
+      "rows": [],
+      "source": "items=[ ]",
+      "nestedTableSource": "items=[ [ ] ]"
+    },
+    {
+      "id": "same-key",
+      "rows": [
+        {
+          "min": 1.0
+        },
+        {
+          "min": 2.0
+        }
+      ],
+      "source": "items=[ { min=1 } { min=2 } ]",
+      "nestedTableSource": "items=[ [ {min=1} {min=2} ] ]"
+    }
+  ],
+  "invalid": [
+    "items=[ min=0.5 max=0.5 ]",
+    "items=[ {} min=1 ]",
+    "items=[ { unknown=1 } ]",
+    "items=[ { min=1 ]",
+    "items=[ { }",
+    "items=[ { min=1 min=2 } ]"
+  ],
+  "optionalBlocks": [
+    {
+      "value": null,
+      "source": ""
+    },
+    {
+      "value": "Grün",
+      "source": "child { value=Grün }"
+    },
+    {
+      "value": "",
+      "source": "child { value=\"\" }"
+    }
+  ]
+}

@@ -1,0 +1,191 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🧪️test/🔌️adapter/🧪️tests/🟦️.ts",
+    "sha256": "665c443da7c059d8fef893a9886ca392bcc6c869cbc220f448692b8d0022f3be",
+    "line": 10,
+    "before": "../../🧫️fixtures/🔌️adapter-ownership/🔣️.json",
+    "after": "../../🧪️tests/🧫️fixtures/🔌️adapter-ownership/🔣️.json",
+    "context": "import fixture from \"../../🧫️fixtures/🔌️adapter-ownership/🔣️.json\" with { type: \"json\" };",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🧪️tests/🟦️.ts",
+    "sha256": "6152b65a910abd3301ec8d8f59dffdc08d7a08eb6c3a9a2b730e472d8fc459bf",
+    "line": 9,
+    "before": "../🧫️fixtures/🔣️.json",
+    "after": "./🧫️fixtures/🔣️.json",
+    "context": "import fixture from \"../🧫️fixtures/🔣️.json\" with {type:\"json\"};",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🚪️command/🧪️tests/🟦️.ts",
+    "sha256": "0bde88ee63098da350a30a71b8b3a7c4ffd3e03ac2beb5baa489d49cf4d54d35",
+    "line": 9,
+    "before": "../🧫️fixtures/🔣️.json",
+    "after": "./🧫️fixtures/🔣️.json",
+    "context": "import fixture from \"../🧫️fixtures/🔣️.json\" with {type:\"json\"};",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🧪️tests/🟦️.ts",
+    "sha256": "c77bb7b4fea1c78658d1b271f83e610f6033460b10b8200888a6b51ed71821a3",
+    "line": 5,
+    "before": "../🧫️fixtures/🔣️.json",
+    "after": "./🧫️fixtures/🔣️.json",
+    "context": "import fixture from \"../🧫️fixtures/🔣️.json\";",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🧪️tests/🦀️.rs",
+    "sha256": "d58ed8397cc528e277a532b272cf0524657523506374be82db05b8881d4c7786",
+    "line": 17,
+    "before": "../🧫️fixtures/🔣️.json",
+    "after": "./🧫️fixtures/🔣️.json",
+    "context": "fn corpus() -> Value { serde_json::from_str(include_str!(\"../🧫️fixtures/🔣️.json\")).unwrap() }",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/📖️source/🧪️tests/🟦️.ts",
+    "sha256": "beaedd4abf2e59ba61d4c4d233a4ea307e7180b7c680a662a449843b5159605d",
+    "line": 1,
+    "before": "../🧫️fixtures/🔣️.json",
+    "after": "./🧫️fixtures/🔣️.json",
+    "context": "import{test,expect}from\"bun:test\";import Ajv from\"ajv\";import{Database}from\"bun:sqlite\";import{existsSync,readFileSync}from\"node:fs\";import schema from\"../🧬️schema/🔣️.json\";import law from\"../🧫️fixtures/🔣️.json\";",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/📖️source/🧪️tests/🦀️.rs",
+    "sha256": "1e718a8719ab9d3ac55ed65c801ea3a69634ee0d98201d0d042e6e9e7bbbdb19",
+    "line": 11,
+    "before": "../🧫️fixtures/🔣️.json",
+    "after": "./🧫️fixtures/🔣️.json",
+    "context": " let law:serde_json::Value=serde_json::from_str(include_str!(\"../🧫️fixtures/🔣️.json\")).unwrap();let p=&law[\"grant\"];let n=|k:&str|p[k].as_u64().unwrap()as usize;let g=RetainedCloneGrant{maximum_items:n(\"items\"),maximum_copy_bytes:n(\"copyBytes\"),maximum_capacity_bytes:n(\"capacityBytes\"),maximum_release_bytes:n(\"releaseBytes\"),maximum_depth:n(\"depth\")};",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "0efabcb7c777bc1f92b562dcb33efec259b7c23db549cd8262dd6f9283bdefef",
+    "line": 208,
+    "before": "../../🧪️fixtures/🪟️collection-tree-shape/🔣️.json",
+    "after": "../🧪️fixtures/🪟️collection-tree-shape/🔣️.json",
+    "context": "    let fixture: serde_json::Value = serde_json::from_str(include_str!(\"../../🧪️fixtures/🪟️collection-tree-shape/🔣️.json\")).expect(\"collection tree fixture\");",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🗄️stdio-details-tree/🟦️.tsx",
+    "sha256": "f0790f78bb6bcd4906c32cd726924ac8fedc9d5f7b561f8f36117ab1cfc40519",
+    "line": 18,
+    "before": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️fixtures/🪟️collection-tree-shape/🔣️.json",
+    "after": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️tests/🧪️fixtures/🪟️collection-tree-shape/🔣️.json",
+    "context": "  readFileSync(resolve(repoRoot, \"✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️fixtures/🪟️collection-tree-shape/🔣️.json\"), \"utf8\"),",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⏰️shell-chrome-deadline/🟦️.tsx",
+    "sha256": "2227c7e2d0807894e0c5c5f09551ba7bc30f76c3c5883958131c6f0fe7212b22",
+    "line": 7,
+    "before": "../../🧱️elements/🐚️Shell/🧪️fixtures/⏰️chrome-deadline/🔣️.json",
+    "after": "../../🧱️elements/🐚️Shell/🧪️tests/🧪️fixtures/⏰️chrome-deadline/🔣️.json",
+    "context": "import fixture from \"../../🧱️elements/🐚️Shell/🧪️fixtures/⏰️chrome-deadline/🔣️.json\" with { type: \"json\" };",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "ba5eeeac12de6e86e7adc9c8c5c400a3b2fb59619343b6dc6bf0a7f8ddaf2e7b",
+    "line": 26,
+    "before": "../../🧪️fixtures/📦️lifecycle/🔣️.json",
+    "after": "../🧪️fixtures/📦️lifecycle/🔣️.json",
+    "context": "    let fixture: serde_json::Value = serde_json::from_str(include_str!(\"../../🧪️fixtures/📦️lifecycle/🔣️.json\")).expect(\"retained clone preparation fixture\");",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🚚️handoff/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "0688d8096504421ca3b04533565061748059ed393fadcde38475d3e25f5590a1",
+    "line": 22,
+    "before": "../../../🧪️fixtures/📦️lifecycle/🔣️.json",
+    "after": "../../../🧪️tests/🧪️fixtures/📦️lifecycle/🔣️.json",
+    "context": "    let fixture: serde_json::Value = serde_json::from_str(include_str!(\"../../../🧪️fixtures/📦️lifecycle/🔣️.json\")).expect(\"retained cursor handoff fixture\");",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🟦️.ts",
+    "sha256": "dca42b9e96c9396dde30b9e7349a484045d7a8b13499f1baacbb0a1b189f622b",
+    "line": 29,
+    "before": "../../🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json",
+    "after": "../../🧬️snapshot-clone/🧪️tests/🧪️fixtures/📦️lifecycle/🔣️.json",
+    "context": "  const law = read(\"../../🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json\");",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "659d07ded9ad91e2a37ac9c123e8247c54ef876a6e1eb1044ad30bacef7ab09e",
+    "line": 5152,
+    "before": "../../🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json",
+    "after": "../../🧬️snapshot-clone/🧪️tests/🧪️fixtures/📦️lifecycle/🔣️.json",
+    "context": "    let fixture: serde_json::Value = serde_json::from_str(include_str!(\"../../🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json\")).expect(\"retained clone preparation lifecycle fixture\");",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "659d07ded9ad91e2a37ac9c123e8247c54ef876a6e1eb1044ad30bacef7ab09e",
+    "line": 5311,
+    "before": "../../🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json",
+    "after": "../../🧬️snapshot-clone/🧪️tests/🧪️fixtures/📦️lifecycle/🔣️.json",
+    "context": "    let fixture: serde_json::Value = serde_json::from_str(include_str!(\"../../🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json\")).expect(\"retained clone preparation lifecycle fixture\");",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "659d07ded9ad91e2a37ac9c123e8247c54ef876a6e1eb1044ad30bacef7ab09e",
+    "line": 5366,
+    "before": "../../🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json",
+    "after": "../../🧬️snapshot-clone/🧪️tests/🧪️fixtures/📦️lifecycle/🔣️.json",
+    "context": "    let fixture: serde_json::Value = serde_json::from_str(include_str!(\"../../🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json\")).expect(\"retained clone preparation lifecycle fixture\");",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
+    "sha256": "1aaa2161ad3d739bdd30301884cafe19d58475299255667d94f876c6379cc9e0",
+    "line": 12,
+    "before": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️fixtures/🪟️collection-tree-shape/🔣️.json",
+    "after": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️tests/🧪️fixtures/🪟️collection-tree-shape/🔣️.json",
+    "context": "      \"{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️fixtures/🪟️collection-tree-shape/🔣️.json\",",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
+    "sha256": "1aaa2161ad3d739bdd30301884cafe19d58475299255667d94f876c6379cc9e0",
+    "line": 107,
+    "before": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️fixtures/🪟️collection-tree-shape/🔣️.json",
+    "after": "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️tests/🧪️fixtures/🪟️collection-tree-shape/🔣️.json",
+    "context": "        \"{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️fixtures/🪟️collection-tree-shape/🔣️.json\"",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔌️plugin-runtime/🟦️.tsx",
+    "sha256": "2825ed3ab080bf17e7e786ca0bb9df7c7c6340b49d23f5a71c7c51c131ffa68d",
+    "line": 38,
+    "before": "../../../../🔌️plugin/⚛️reactor/🧪️fixtures/🏁️job-completion-ownership/🔣️.json",
+    "after": "../../../../🔌️plugin/⚛️reactor/🧪️tests/🧪️fixtures/🏁️job-completion-ownership/🔣️.json",
+    "context": "    const { default: fixture } = await import(\"../../../../🔌️plugin/⚛️reactor/🧪️fixtures/🏁️job-completion-ownership/🔣️.json\");",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧪️tests/🔬️job-render-binding/🦀️.rs",
+    "sha256": "4885499daa19e8a8258160eb13aa0900aa54a8a25b99d8885ba295aa67c0955c",
+    "line": 5,
+    "before": "../../🧪️fixtures/🏁️job-completion-ownership/🔣️.json",
+    "after": "../🧪️fixtures/🏁️job-completion-ownership/🔣️.json",
+    "context": "    let fixture: serde_json::Value = serde_json::from_str(include_str!(\"../../🧪️fixtures/🏁️job-completion-ownership/🔣️.json\")).expect(\"neutral job ownership fixture\");",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-agent-overlays/🦀️.rs",
+    "sha256": "b71e914858ec76c6a6df5f6ebf89232dc23b579ea463755fde342c5d8f08bb94",
+    "line": 50,
+    "before": "../../🧪️fixtures/⏰️chrome-deadline/🔣️.json",
+    "after": "../🧪️fixtures/⏰️chrome-deadline/🔣️.json",
+    "context": "    let fixture: serde_json::Value = serde_json::from_str(include_str!(\"../../🧪️fixtures/⏰️chrome-deadline/🔣️.json\")).expect(\"chrome deadline fixture\");",
+    "role": "exact original file coordinate; imported/include/Nx locator"
+  }
+]

@@ -2,12 +2,12 @@
 
 use crate::schema::CadArtifact;
 use crate::{CadDiff, CadSnapshot};
-use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
+use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 use semio_framework_os_kernel::{DiffBinary, DiffText};
 
 #[test]
 fn cad_document_contract_round_trips_exact_child_identities() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).unwrap();
     let source = fixture["document"].to_string();
     let artifact: CadArtifact = semio_framework_pack_json::from_json_str(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let snapshot: CadSnapshot = semio_framework_pack_json::from_json_str(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -52,18 +52,18 @@ fn cad_brep_events_preserve_ordered_geometry_ownership_and_exact_inverse() {
     use protocol::{Mutation, OpBinary, OpText};
     let cases = [
         (
-            include_str!("../../../🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../../🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🗣️.dsl.semio"),
-            include_str!("../../../🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🔺️diff/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🗣️.dsl.semio"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🔺️diff/🔣️.json"),
         ),
         (
-            include_str!("../../../🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../../🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🗣️.dsl.semio"),
-            include_str!("../../../🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🔺️diff/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🗣️.dsl.semio"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🔺️diff/🔣️.json"),
         ),
     ];
     for (before, after, input, text, diff) in cases {
@@ -88,12 +88,12 @@ fn cad_brep_events_preserve_ordered_geometry_ownership_and_exact_inverse() {
 async fn cad_brep_events_invert_to_the_negative_diff() {
     let cases = [
         (
-            include_str!("../../../🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json"),
         ),
         (
-            include_str!("../../../🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json"),
         ),
     ];
     for (before, input) in cases {

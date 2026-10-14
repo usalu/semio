@@ -1,0 +1,63 @@
+{
+  "exclusive": false,
+  "rows": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/project.json",
+      "beforeSha256": "740705bbf4b137991e29551d558730db260ad6e8d8e1eec6cf2d51833e951ea4",
+      "afterSha256": "b87eb045de4b5492c06981d257cc078ee36730adca4cfb58e53fb59ccadbc733"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "beforeSha256": "13a2ccb96dbb052e1ba1be4fabc1b2e1be8e4b3f670ed03aecbc541d1e0737eb",
+      "afterSha256": "70785b5ea7b386729fe39c1a738af19d5d78446d94a81e0b4206b2716936ae80"
+    }
+  ],
+  "configurations": [
+    {
+      "name": "🏙️fixture-components🧪️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/bim-model-rs:test --args=\"quick --lib the_committed_components_file_is_the_current_export -- --nocapture\" --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0586211
+      },
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/pluginfinish-bim-nx",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/pluginfinish-bim-cache",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated",
+        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/bim-components-cargo",
+        "BIM_BLESS": "1"
+      }
+    },
+    {
+      "name": "🏙️fixture-components🔬️three-oracle",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run ticket-fixture-verification:plugin-bim-components-measure --skip-nx-cache --outputStyle=static",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0586212
+      },
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/pluginfinish-hostdata",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/pluginfinish-cache",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    }
+  ],
+  "target": {
+    "executor": "nx:run-commands",
+    "cache": false,
+    "options": {
+      "command": "bun ./📜️script.ts plugin-bim-components-measure",
+      "forwardAllArgs": true
+    }
+  }
+}

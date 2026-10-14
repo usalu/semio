@@ -31,7 +31,7 @@ type DrawingSnapshotRetirementFactory = semio_framework_value::retirement::Owned
 type DrawingMutationRetirementFactory = semio_framework_value::retirement::OwnedValueRetirementFactory<DrawingMutation>;
 
 fn decode_drawing_snapshot_pack(bytes: &[u8]) -> Result<DrawingSnapshot, ()> {
-    <DrawingSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|_| ())
+    <DrawingSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|_| ())
 }
 
 fn decode_drawing_mutation_pack(bytes: &[u8]) -> Result<DrawingMutation, ()> {

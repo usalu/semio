@@ -1,3 +1,10 @@
+import type { ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { readWasmPackageOwnerV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import { collectArtifactFiles } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
+import { stageRepositoryArtifacts } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { bundleVirtualJavaScript } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 /** 📦️ Publishes the Flow browser, host and declaration projections beside wasm-bindgen output. */
 import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -27,47 +34,23 @@ function writePackageManifest(packageRoot: string, source?: Record<string, unkno
   writeFileSync(path, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
 }
 
-function replacePackageDirectory(staging: string, packageRoot: string, transactionRoot: string): void {
-  const prior = join(transactionRoot, "prior");
-  const hadPrior = existsSync(packageRoot);
-  if (hadPrior) renameSync(packageRoot, prior);
-  try {
-    renameSync(staging, packageRoot);
-  } catch (error) {
-    if (hadPrior) renameSync(prior, packageRoot);
-    throw error;
-  }
-  rmSync(transactionRoot, { recursive: true, force: true });
-}
-
 /** 🌐️ Bundles the browser entry while retaining only its native wrapper and owned host as package-relative externals. */
-export async function bundleFlowBrowserModule(write: boolean, packageRoot = corePackageRoot): Promise<FlowBrowserBundle> {
+export async function bundleFlowBrowserModule(write: boolean, invocation: ScriptInvocation, packageRoot = corePackageRoot): Promise<FlowBrowserBundle> {
   const source = readFileSync(browserSource, "utf8");
   const nativeInitializer = 'import("../../../🫀️core/🕸️bindings/flow_core.js")';
   const hostInitializer = '"../../🖥️host/🏃️runtime/🟨️.js"';
   if (source.split(nativeInitializer).length !== 2 || source.split(hostInitializer).length !== 2) throw new Error("Flow browser source requires one native initializer and one owned host binding");
   const contents = source.replace(nativeInitializer, 'import("../flow_core.js")').replace(hostInitializer, '"../🖥️host/🟨️.js"');
-  const browser = await Bun.build({
-    entrypoints: [browserSource],
-    // 💾️ Bun writes a build to disk exactly when it is given an `outdir` — there is no separate
-    // `write` switch — so the preview path simply asks for no output directory and reads the
-    // bundle out of the in-memory blob it gets back.
-    ...(write ? { outdir: join(packageRoot, "🌐️browser") } : {}),
-    target: "browser",
-    format: "esm",
-    plugins: [{ name: "flow-browser-publication", setup(build) {
-      build.onLoad({ filter: /.*/ }, (args) => args.path === browserSource ? { contents, loader: "js" } : undefined);
-      build.onResolve({ filter: /.*/ }, (args) => ["../flow_core.js", "../🖥️host/🟨️.js"].includes(args.path) ? { path: args.path, external: true } : undefined);
-    } }],
-  });
-  if (!browser.success) throw new AggregateError(browser.logs, "Flow browser package binding failed");
-  return browser.outputs;
+  const workspace = getWorkspaceRoot(), root = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated") : join(workspace, ".🧬semio/🦑️repo/⚡️cache/bun-workers");
+  const result = await bundleVirtualJavaScript({ version: 1, kind: "module", mode: readBuildMode(process.env.SEMIO_BUILD_MODE), entrypoint: browserSource, contents, external: ["../flow_core.js", "../🖥️host/🟨️.js"] }, { workspace, temporaryRoot: root, invocation });
+  if (write) { mkdirSync(join(packageRoot, "🌐️browser"), { recursive: true }); writeFileSync(join(packageRoot, "🌐️browser/🟨️.js"), result.source); }
+  return [{ text: async () => result.source }];
 }
 
 /** 👁️ Previews every package projection from current wasm-bindgen output without publishing files. */
-export async function previewFlowBrowserPackage(familyPackageRoot: string): Promise<Readonly<{ browserBytes: number; declarationBytes: number; files: readonly string[] }>> {
+export async function previewFlowBrowserPackage(familyPackageRoot: string, invocation: ScriptInvocation): Promise<Readonly<{ browserBytes: number; declarationBytes: number; files: readonly string[] }>> {
   for (const name of nativeFiles) if (!existsSync(join(familyPackageRoot, name))) throw new Error(`flow-core package preview is missing ${name}`);
-  const outputs = await bundleFlowBrowserModule(false);
+  const outputs = await bundleFlowBrowserModule(false, invocation);
   if (outputs.length !== 1) throw new Error(`flow-core browser preview emitted ${outputs.length} outputs`);
   return { browserBytes: Buffer.byteLength(await outputs[0].text()), declarationBytes: Buffer.byteLength(flowBrowserDeclaration()), files: packageFiles };
 }
@@ -90,11 +73,15 @@ export function bootstrapFlowCorePackage(): void {
 }
 
 /** 📤️ Copies native output, publishes browser projections and preserves wasm-bindgen snippets as one package. */
-export async function publishFlowBrowserPackage(familyPackageRoot: string, packageRoot = corePackageRoot): Promise<void> {
+export async function publishFlowBrowserPackage(familyPackageRoot: string, invocation: ScriptInvocation, packageRoot = corePackageRoot): Promise<void> {
+  const signal = invocation.control.signal;
   if (!existsSync(familyPackageRoot)) throw new Error(`flow-core wasm build did not emit ${familyPackageRoot}`);
   const familyManifestPath = join(familyPackageRoot, "package.json");
   if (!existsSync(familyManifestPath)) throw new Error("flow-core wasm build did not emit its transient compiler manifest");
-  const familyManifest = JSON.parse(readFileSync(familyManifestPath, "utf8"));
+  let familyManifest = JSON.parse(readFileSync(familyManifestPath, "utf8"));
+  const metadata = readWasmPackageOwnerV1(familyManifest.semioWasmOwner);
+  const canonical = join(getWorkspaceRoot(), metadata.sourceOwner, "dist/wasm", readBuildMode(process.env.SEMIO_BUILD_MODE));
+  familyPackageRoot = canonical; familyManifest = JSON.parse(readFileSync(join(canonical, "package.json"), "utf8"));
   for (const name of nativeFiles) if (!existsSync(join(familyPackageRoot, name))) throw new Error(`flow-core wasm build did not emit ${name}`);
   const parent = dirname(packageRoot);
   mkdirSync(parent, { recursive: true });
@@ -106,14 +93,19 @@ export async function publishFlowBrowserPackage(familyPackageRoot: string, packa
     writePackageManifest(staging, familyManifest);
     mkdirSync(join(staging, "🖥️host"), { recursive: true });
     copyFileSync(hostSource, join(staging, "🖥️host", "🟨️.js"));
-    await bundleFlowBrowserModule(true, staging);
+    await bundleFlowBrowserModule(true, invocation, staging);
     mkdirSync(join(staging, "🌐️browser"), { recursive: true });
     writeFileSync(join(staging, "🌐️browser", "🟦️.d.ts"), flowBrowserDeclaration(), "utf8");
     const snippets = join(familyPackageRoot, "snippets");
     if (existsSync(snippets)) cpSync(snippets, join(staging, "snippets"), { recursive: true });
     writeFlowBrowserDeclaration();
-    replacePackageDirectory(staging, packageRoot, transactionRoot);
-    rmSync(familyManifestPath);
+    const files = await collectArtifactFiles(staging, signal);
+    {
+      const owner = JSON.parse(readFileSync(join(canonical, ".nx-artifact.json"), "utf8")).owner;
+      await stageRepositoryArtifacts(canonical, owner, files, signal ? { signal } : {});
+      await stageRepositoryArtifacts(packageRoot, "flow-browser:active", files, signal ? { signal } : {});
+      rmSync(transactionRoot, { recursive: true, force: true });
+    }
   } catch (error) {
     rmSync(transactionRoot, { recursive: true, force: true });
     throw error;

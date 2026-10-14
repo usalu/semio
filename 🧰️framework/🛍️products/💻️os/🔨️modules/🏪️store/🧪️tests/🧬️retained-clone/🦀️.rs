@@ -111,7 +111,7 @@ struct FixtureGrant {
 }
 
 fn fixture() -> Fixture {
-    serde_json::from_str(include_str!("../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧫️fixtures/📦️nested/🔣️.json")).expect("retained clone fixture")
+    serde_json::from_str(include_str!("../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🧫️fixtures/📦️nested/🔣️.json")).expect("retained clone fixture")
 }
 
 fn source(fixture: &Fixture) -> NeutralSnapshot {
@@ -510,7 +510,7 @@ fn clone_under_depth(source: &RecursiveRecord, depth: usize) -> Option<Recursive
 
 #[test]
 fn recursive_depth_envelope_accepts_boundary_and_rejects_the_next_box() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧫️fixtures/🌳️structural-depth/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🧫️fixtures/🌳️structural-depth/🔣️.json")).unwrap();
     let mut boxes = law["cases"].as_array().unwrap().iter().map(|row| row["boxes"].as_u64().unwrap() as usize).collect::<Vec<_>>();
     boxes.sort_unstable();
     boxes.dedup();

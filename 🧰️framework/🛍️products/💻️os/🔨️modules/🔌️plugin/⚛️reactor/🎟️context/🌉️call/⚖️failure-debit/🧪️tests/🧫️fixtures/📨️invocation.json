@@ -1,0 +1,17 @@
+[
+  {
+    "outcome": "pending",
+    "ownerRetained": true,
+    "failureReturned": false
+  },
+  {
+    "outcome": "failed",
+    "ownerRetained": true,
+    "failureReturned": true
+  },
+  {
+    "outcome": "completed",
+    "ownerRetained": false,
+    "failureReturned": false
+  }
+]

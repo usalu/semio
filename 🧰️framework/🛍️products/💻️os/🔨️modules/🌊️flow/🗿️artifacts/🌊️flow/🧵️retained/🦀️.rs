@@ -6,7 +6,7 @@ use semio_framework_value::{ValueError,retirement::{RetireOwned,RetirementCursor
 //#region 📑️SelectedCopy
 #[path = "📑️copy/🦀️.rs"]
 pub mod copy;
-pub use copy::{FlowCopyAllocationBudget, FlowHostSnapshotCopy, FlowSynapseCopy, FlowWidgetCopy};
+pub use copy::{FlowHostSnapshotIntake,FlowSnapshotCopyIntakeSource,FlowCopyAllocations, FlowHostSnapshotCopy, FlowSynapseCopy, FlowWidgetCopy};
 
 #[path = "🧬️fields/🦀️.rs"]
 mod fields;
@@ -14,6 +14,7 @@ mod fields;
 
 //#region 🧹️TypedRetirement
 pub enum FlowOwner {
+    Spec(SynapseSpec),Neuron(neural::Neuron),Synapse(neural::Synapse),Preview(FlowPreviewGui),Channel(crate::FlowChannelRef),
     Bytes(Vec<u8>),Strings(Vec<String>),Set(OrderedSet),Dictionary(neural::Dictionary),Value(neural::Value),
     HostSnapshot(FlowHostSnapshot),Widget(Widget),Widgets(Vec<Widget>),Specs(Vec<SynapseSpec>),Layouts(OrderedMap<WidgetLayout>),
     Tree(neural::Tree),Neurons(Vec<neural::Neuron>),Synapses(Vec<neural::Synapse>),Gui(FlowGui),Nodes(OrderedMap<FlowNodeGui>),
@@ -26,7 +27,7 @@ macro_rules! owned_variant {
         fn controlled_retirement_supported()->bool {true}
     }};
 }
-owned_variant!(Bytes,Strings,Set,Dictionary,Value,HostSnapshot,Widget,Widgets,Specs,Layouts,Tree,Neurons,Synapses,Gui,Nodes,Previews,Layout,Chrome,Mutation);
+owned_variant!(Spec,Neuron,Synapse,Preview,Channel,Bytes,Strings,Set,Dictionary,Value,HostSnapshot,Widget,Widgets,Specs,Layouts,Tree,Neurons,Synapses,Gui,Nodes,Previews,Layout,Chrome,Mutation);
 
 #[must_use="Flow ownership must close every original owner and admitted scaffold"]
 pub struct FlowRetirement {root:Option<ControlledRetirement<FlowOwner>>,queue:RetirementQueue}
@@ -44,6 +45,7 @@ impl FlowRetirement {
         self.admit_owner(owner,RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:RetirementQueue::frame_birth_bytes::<FlowOwner>(),maximum_release_bytes:0,maximum_depth:self.queue.len()+1}).unwrap_or_else(|(error,_)|panic!("cold Flow frame admission refused: {error}"));
     }
     pub fn terminal_is_empty(&self)->bool {self.root.is_none()&&self.queue.terminal_is_empty()}
+    pub fn selected_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.root.as_ref().map_or_else(||Ok(semio_framework_value::RetirementDemand{copy_bytes:self.queue.next_copy_byte_demand()?,capacity_bytes:self.queue.next_capacity_byte_demand(body)?,release_bytes:self.queue.next_release_byte_demand()?,depth:self.queue.next_depth_demand()?}),|root|root.selected_demand(body))}
     pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.root.as_ref().map_or_else(||self.queue.next_copy_byte_demand(),ControlledRetirement::next_copy_byte_demand)}
     pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.root.as_ref().map_or_else(||self.queue.next_capacity_byte_demand(copy),|owner|owner.next_capacity_byte_demand(copy))}
     pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {self.root.as_ref().map_or_else(||self.queue.next_release_byte_demand(),ControlledRetirement::next_release_byte_demand)}

@@ -16,7 +16,7 @@
       "dependsOn": [],
       "inputs": [
         "{projectRoot}/../../**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧫️fixtures/🧱️neutrality/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧫️fixtures/🧱️neutrality/🔣️.json"
       ],
       "outputs": [],
       "options": {

@@ -1,6 +1,6 @@
 import schema from "./🧬️schema/🔣️.json";
 import {validateJsonSchemaSubset} from "../../../../../🧬️schema/✅️validator/🟦️.ts";
-import {checkScriptInvocation, scriptInvocationBudget, type ScriptInvocation} from "../../../../../🏃️process/🧭️routing/🟦️.ts";
+import {checkScriptInvocation, scriptInvocationBudget, type ScriptInvocation} from "../../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** 📥️ Declares the original JSON source command and its independently authored child ceiling. */
 export type JsonReadSourceCapabilities=Readonly<{sourceRoot:string;sourceCommand:"test-read-policy-source";maximumChildElapsedMilliseconds:number}>;

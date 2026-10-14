@@ -5,13 +5,13 @@ import {createHash} from "node:crypto";
 import {parseArgs} from "node:util";
 import {mkdirSync,mkdtempSync,readFileSync,writeFileSync,existsSync,rmSync} from "node:fs";
 import {join,resolve} from "node:path";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import policySchema from "../../🧬️schema/🔣️.json";
 import leaseSchema from "../../../../📦️artifacts/🏗️native-build/🔒️lease/🧬️schema/🔣️.json";
 import {acquireCargoBuildLeaseV1,cargoBuildLeaseIdentityV1} from "../../../../📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 import * as api from "../../🟦️.ts";
 
-const base=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json",import.meta.url),"utf8")).policies[0];
+const base=JSON.parse(readFileSync(new URL("../../🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8")).policies[0];
 const artifact=()=>{const path=process.env.SEMIO_TEST_ARTIFACT_DIR;expect(path).toBeTruthy();mkdirSync(path!,{recursive:true});return mkdtempSync(join(path!,"cargo-test-lease-"));};
 const policy=(root:string)=>({...base,manifestPath:join(root,"Cargo.toml"),targetDirectory:join(root,"target"),buildDirectory:join(root,"build"),leaseDirectory:join(root,"leases"),configPath:join(root,"nextest.toml"),artifactDirectory:root,level:"long",coverageEnabled:false,coveragePath:null,retainArtifacts:false,buildBudgetMs:corpus.maximumProcessMs});
 const request=(root:string,current:any)=>({manifestPath:current.manifestPath,packages:["owner-package"],cwd:root,environment:{...process.env,LEASE_ROOT:root},extraArgs:[]});

@@ -1,0 +1,9 @@
+{
+  "mutation": "dragBlocks",
+  "ids": [
+    "blk-ink",
+    "blk-group"
+  ],
+  "dx": 12.0,
+  "dy": -8.0
+}

@@ -16,6 +16,7 @@ role = "hub"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-puzzle-3d = { workspace = true, features = ["component-app-assembly"] }
